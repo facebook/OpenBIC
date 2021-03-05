@@ -1,0 +1,29 @@
+version: 1.0
+jobs:
+    lint:
+        docker:
+            - image: ubuntu:focal
+        resource_class: small
+        steps:
+            - run:
+                name: Install Ubuntu dependencies.
+                command: |
+                    apt-get update
+                    apt-get install -y \
+                        git \
+                        python3-pip \
+                        shellcheck
+            - run:
+                name: Install 'black'.
+                command: |
+                    python3 -m pip install "black==19.3b0"
+            - checkout
+            - run:
+                name: Run lint.
+                command: |
+                    ./tools/circle-ci/do-lint
+workflows:
+    version: 1
+    everything:
+        jobs:
+            - lint 
