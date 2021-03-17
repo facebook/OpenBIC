@@ -13,6 +13,7 @@ jobs:
                         git \
                         python3-pip \
                         shellcheck
+                        cppcheck
             - run:
                 name: Install 'black'.
                 command: |
@@ -21,7 +22,7 @@ jobs:
             - run:
                 name: Run lint.
                 command: |
-                    ./tools/circle-ci/do-lint
+                    .circleci/lint/do-lint
 workflows:
     version: 1
     everything:
