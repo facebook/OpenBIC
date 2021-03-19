@@ -20,12 +20,13 @@ do_lint_sh() {
 
 do_lint_cppcheck() {
   echo "CPPC: $1"
-  options=( -j2
-      --inconclusive
-      --enable=performance,style,portability,information
-      --language=c
-      --library=.circleci/lint/cppcheck/cppcheck.cfg
-      --suppressions-list=.circleci/lint/cppcheck/cppcheck-suppressions.txt )
+  options=( "-j2"
+      "--inconclusive"
+      "--error-exitcode=1"
+      "--enable=performance,style,portability,information"
+      "--language=c"
+      "--library=.circleci/lint/cppcheck/cppcheck.cfg"
+      "--suppressions-list=.circleci/lint/cppcheck/cppcheck-suppressions.txt" )
       cppcheck "${options[@]}" "$1"
 }
 
