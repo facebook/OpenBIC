@@ -1,0 +1,115 @@
+mainmenu "miniBMC Configuration"
+source	"include/Kconfig"
+source	"app/Kconfig"
+source	"drivers/Kconfig"
+source	"libraries/Kconfig"
+
+
+menuconfig OTP_MEM
+	bool "OTP Memory"
+
+if OTP_MEM
+
+config OTP_CONFIG
+	string "OTP config file path"
+
+config OTP_KEY_FOLDER
+	string "OTP key folder path"
+
+config OTP_USER_DATA_FOLDER
+	string "OTP user data folder path"
+
+config OTP_FPGA
+	bool "Padding OTP image to boot image for FPGA verifing"
+endif #OTP_MEM
+
+
+menuconfig SB_ENABLE
+	bool "Secure Boot"
+
+if SB_ENABLE
+
+choice
+	prompt "Secure Boot Mode"
+
+config SB_MODE_2
+	bool "Mode 2"
+
+config SB_MODE_GCM
+	bool "Mode GCM"
+
+endchoice
+
+# Mode 2
+menuconfig SB_MODE_2_AES
+	bool "Secure Boot Mode 2 Enable Encryption"
+	depends on SB_MODE_2
+
+if SB_MODE_2_AES
+
+choice
+	prompt "Mode 2 Encryption Mode Option"
+
+config SB_MODE_2_O1
+	bool "Option 1"
+
+config SB_MODE_2_O2
+	bool "Option 2"
+
+endchoice
+
+config SB_AES_KEY
+	string "AES key path"
+
+config SB_RSA_AES_KEY
+	string "RSA key path for encrypting AES key"
+	depends on SB_MODE_2_O2
+
+endif #SB_MODE_2_AES
+
+choice
+	prompt "Mode 2 RSA length"
+	depends on SB_MODE_2
+
+config SB_RSA_1024
+	bool "RSA1024"
+
+config SB_RSA_2048
+	bool "RSA2048"
+
+config SB_RSA_3072
+	bool "RSA3072"
+
+config SB_RSA_4096
+	bool "RSA4096"
+
+endchoice
+
+choice
+	prompt "Mode 2 SHA length"
+	depends on SB_MODE_2
+
+config SB_SHA_224
+	bool "SHA224"
+
+config SB_SHA_256
+	bool "SHA256"
+
+config SB_SHA_384
+	bool "SHA384"
+
+config SB_SHA_512
+	bool "SHA512"
+
+endchoice
+
+config SB_RSA_KEY
+	string "RSA key path for signing"
+	depends on SB_MODE_2
+
+# Mode GCM
+config SB_GCM_AES_KEY
+	string "Mode GCM AES key path"
+	depends on SB_MODE_GCM
+
+endif #SB_ENABLE

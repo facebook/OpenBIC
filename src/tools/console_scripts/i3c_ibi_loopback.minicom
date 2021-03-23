@@ -1,0 +1,269 @@
+send mw 1e6e2010 1688a8a8
+gosub WAIT_PROC
+send md 1e6e2f10 1
+gosub WAIT_PROC
+send md 1e6e2010 1
+gosub WAIT_PROC
+send mw 1e6e2054 0000ff80
+gosub WAIT_PROC
+send mw 1e6e2094 0000ff00
+gosub WAIT_PROC
+send md 1e6e2050 1
+gosub WAIT_PROC
+send md 1e6e2090 1
+gosub WAIT_PROC
+send mw 1e6e2438 000f3800
+gosub WAIT_PROC
+send md 1e6e2438 1
+gosub WAIT_PROC
+send mw 1e7a0014 000474c4
+gosub WAIT_PROC
+send mw 1e7a0024 000474c4
+gosub WAIT_PROC
+send mw 1e7a0034 000474c4
+gosub WAIT_PROC
+send mw 1e7a0044 000474c4
+gosub WAIT_PROC
+send mw 1e7a0054 000474c4
+gosub WAIT_PROC
+send mw 1e7a0064 000474c4
+gosub WAIT_PROC           
+send mw 1e7a2000 10000000
+gosub WAIT_PROC
+send mw 1e7a2004 80778050
+gosub WAIT_PROC
+send mw 1e7a2008 00000000
+gosub WAIT_PROC
+send mw 1e7a2010 00000000
+gosub WAIT_PROC
+send mw 1e7a2018 00000000
+gosub WAIT_PROC
+send mw 1e7a201c 04040200
+gosub WAIT_PROC
+send mw 1e7a2020 00000101
+gosub WAIT_PROC
+send mw 1e7a2024 00000001
+gosub WAIT_PROC
+send mw 1e7a2030 00000000
+gosub WAIT_PROC
+send mw 1e7a2034 00000000
+gosub WAIT_PROC
+send mw 1e7a2038 00000003
+gosub WAIT_PROC
+send mw 1e7a204c 00000000
+gosub WAIT_PROC
+send mw 1e7a2050 00000000
+gosub WAIT_PROC
+send mw 1e7a2054 00000000
+gosub WAIT_PROC
+send mw 1e7a2058 00000000
+gosub WAIT_PROC
+send mw 1e7a205c 00000000
+gosub WAIT_PROC
+send mw 1e7a2090 00000000
+gosub WAIT_PROC
+send md 1e7a2050 1
+gosub WAIT_PROC
+send mw 1e7a20b0 00000000
+gosub WAIT_PROC
+send mw 1e7a20b4 00110030
+gosub WAIT_PROC
+send mw 1e7a20b8 00110030
+gosub WAIT_PROC
+send mw 1e7a20bc 00c9012b
+gosub WAIT_PROC
+send mw 1e7a20c0 00ff00fd
+gosub WAIT_PROC
+send mw 1e7a20c8 5b071611
+gosub WAIT_PROC
+send mw 1e7a20cc 0000000c
+gosub WAIT_PROC
+send mw 1e7a20d4 01f4000a
+gosub WAIT_PROC
+send mw 1e7a20d8 000047a1
+gosub WAIT_PROC
+send mw 1e7a20e0 00000000
+gosub WAIT_PROC
+send mw 1e7a20e4 00000000
+gosub WAIT_PROC
+send mw 1e7a20e8 00000000
+gosub WAIT_PROC
+send mw 1e7a2040 00003b5b
+gosub WAIT_PROC
+send mw 1e7a2044 00003b5b
+gosub WAIT_PROC
+send md 1e7a2040 1
+gosub WAIT_PROC
+send md 1e7a2044 1
+gosub WAIT_PROC
+send mw 1e7a2040 0000333c
+gosub WAIT_PROC
+send md 1e7a2040 1
+gosub WAIT_PROC
+send mw 1e7a2000 10000000
+gosub WAIT_PROC
+send mw 1e7a2000 90000000
+gosub WAIT_PROC
+send md 1e7a2060 1
+gosub WAIT_PROC
+send md 1e7a2060 1
+gosub WAIT_PROC
+send md 1e7a2060 1
+gosub WAIT_PROC
+send md 1e7a2060 1
+gosub WAIT_PROC
+send md 1e7a2060 1
+gosub WAIT_PROC
+send md 1e7a2060 1
+gosub WAIT_PROC
+send md 1e7a2060 1
+gosub WAIT_PROC
+send md 1e7a2060 1
+gosub WAIT_PROC
+send mw 1e7a3000 10000000
+gosub WAIT_PROC
+send mw 1e7a3004 00008051
+gosub WAIT_PROC
+send md 10000000 1
+gosub WAIT_PROC
+send mw 1e7a3008 00000000
+gosub WAIT_PROC
+send mw 1e7a3010 00000000
+gosub WAIT_PROC
+send mw 1e7a3018 00000000
+gosub WAIT_PROC
+send mw 1e7a301c 00000000
+gosub WAIT_PROC
+send mw 1e7a3020 00000102
+gosub WAIT_PROC
+send mw 1e7a3024 00000000
+gosub WAIT_PROC
+send mw 1e7a3030 00000000
+gosub WAIT_PROC
+send mw 1e7a3034 00000000
+gosub WAIT_PROC
+send mw 1e7a3038 00000000
+gosub WAIT_PROC
+send mw 1e7a304c 00000000
+gosub WAIT_PROC
+send mw 1e7a3050 00000000
+gosub WAIT_PROC
+send mw 1e7a3054 00000000
+gosub WAIT_PROC
+send mw 1e7a3058 00000000
+gosub WAIT_PROC
+send mw 1e7a305c 00000000
+gosub WAIT_PROC
+send mw 1e7a3090 0000000e
+gosub WAIT_PROC
+send mw 1e7a30b0 00000001
+gosub WAIT_PROC
+send md 1e7a30b0 00000001
+gosub WAIT_PROC
+send mw 1e7a30b4 00110030
+gosub WAIT_PROC
+send mw 1e7a30b8 00110030
+gosub WAIT_PROC
+send mw 1e7a30bc 00f302f5
+gosub WAIT_PROC
+send mw 1e7a30c0 009d00f3
+gosub WAIT_PROC
+send mw 1e7a30c8 ba562c20
+gosub WAIT_PROC
+send mw 1e7a30cc 00000002
+gosub WAIT_PROC
+send mw 1e7a30d4 01f400cd
+gosub WAIT_PROC
+send mw 1e7a30d8 00003663
+gosub WAIT_PROC
+send mw 1e7a30e0 00000000
+gosub WAIT_PROC
+send mw 1e7a30e4 00000000
+gosub WAIT_PROC
+send mw 1e7a30e8 00000000
+gosub WAIT_PROC
+send mw 1e7a3040 00003b5b
+gosub WAIT_PROC
+send mw 1e7a3044 00003b5b
+gosub WAIT_PROC
+send mw 1e7a3000 10000000
+gosub WAIT_PROC
+send md 1e7a3060 1
+gosub WAIT_PROC
+send md 1e7a3060 1
+gosub WAIT_PROC
+send md 1e7a3060 1
+gosub WAIT_PROC
+send md 1e7a3060 1
+gosub WAIT_PROC
+send md 1e7a3060 1
+gosub WAIT_PROC
+send md 1e7a3060 1
+gosub WAIT_PROC
+send md 1e7a3060 1
+gosub WAIT_PROC
+send md 1e7a3060 1
+gosub WAIT_PROC
+send mw 1e7a3000 90000000
+gosub WAIT_PROC
+send md 1e7a3000 1
+gosub WAIT_PROC
+send md 1e7a3038 1
+gosub WAIT_PROC
+send mw 1e7a30cc 00060002
+gosub WAIT_PROC
+send md 1e7a303c 1
+gosub WAIT_PROC
+send mw 1e7a2280 00511051
+gosub WAIT_PROC
+send mw 1e7a200c 4420c383
+gosub WAIT_PROC
+send md 1e7a30b0 1
+gosub WAIT_PROC
+send md 1e7a2010 1
+gosub WAIT_PROC
+send mw 1e7a2000 c0000000
+gosub WAIT_PROC
+send md 1e7a30b0 1
+gosub WAIT_PROC
+send mw 1e7a200c 4420c383
+gosub WAIT_PROC
+send md 1e7a2010 1
+gosub WAIT_PROC
+send mw 1e7a2014 00074600
+gosub WAIT_PROC
+send mw 1e7a200c 00030001
+gosub WAIT_PROC
+send mw 1e7a200c 4420c500
+gosub WAIT_PROC
+send md 1e7a2010 1
+gosub WAIT_PROC
+send md 1e7a307c 1
+gosub WAIT_PROC
+send mw 1e7a3000 c0480250
+gosub WAIT_PROC
+send mw 1e7a3014 04030201
+gosub WAIT_PROC
+send mw 1e7a3014 08070605
+gosub WAIT_PROC
+send mw 1e7a3014 0c0b0a09
+gosub WAIT_PROC
+send mw 1e7a308c 1
+gosub WAIT_PROC
+send md 1e7a2018 1
+gosub WAIT_PROC
+send md 1e7a2018 1
+gosub WAIT_PROC
+send md 1e7a2018 1
+## (Master, Slave) = (I3C0, I3C1)
+## Sequence: dummy transfer -> SETMRL (Payload: 004607) -> Slave resume (is necessary when receiving SETMRL/SETMWL) -> SIR 
+
+_exit:
+exit
+
+WAIT_PROC:
+        expect {
+                "ast# "
+		timeout 100 goto _exit
+        }
+return

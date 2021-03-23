@@ -1,0 +1,6 @@
+if ARCH_ASPEED
+config SOC_VENDOR
+	default "aspeed"
+
+source "arch/arm/aspeed/Kconfig"
+endif

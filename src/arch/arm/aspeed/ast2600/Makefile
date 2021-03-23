@@ -1,0 +1,1 @@
+obj-y += startup_ast2600.o system_ast2600.o pin_table_ast2600.o
