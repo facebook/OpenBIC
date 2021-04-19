@@ -1,2 +1,12 @@
-# ignore cache
+# Ignore cache
 .phutil_module_cache
+
+# Ignore backup files from patch
+*.orig
+
+# Ignore build artifacts
+src/bin/*
+src/memory_analyze.log
+src/.config
+src/include/config.h
+src/tools/Kconfiglib/__pycache__/kconfiglib.cpython-38.pyc
