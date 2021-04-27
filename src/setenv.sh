@@ -1,3 +1,7 @@
+#!/bin/bash
+
+(cd os/FreeRTOS-Kernel/ && ../FreeRTOS-Kernel-patches/patch_files.sh)
+
 if [ "$(uname -s)" = "Darwin" ]; then
 	TOOLCHAIN=/usr/local/Cellar/arm-none-eabi-gcc/9-2019-q4-major/gcc
 else

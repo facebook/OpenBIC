@@ -29,6 +29,12 @@ The currently supported RTOSs are:
 
 ## Build Instructions
 
+### After Cloning Repo
+You must initialize and setup submodule using the following commands.
+
+* git submodule init
+* git submodule update
+
 ### Dependencies
 
 | Tool | Version |
