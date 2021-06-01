@@ -1,0 +1,16 @@
+diff --git a/include/portable.h b/include/portable.h
+index 47ceab9f2..4a431d2b5 100644
+--- a/include/portable.h
++++ b/include/portable.h
+@@ -166,6 +166,11 @@ void vPortInitialiseBlocks( void ) PRIVILEGED_FUNCTION;
+ size_t xPortGetFreeHeapSize( void ) PRIVILEGED_FUNCTION;
+ size_t xPortGetMinimumEverFreeHeapSize( void ) PRIVILEGED_FUNCTION;
+ 
++void *pvPortMallocNc( size_t xSize ) PRIVILEGED_FUNCTION;
++void vPortFreeNc( void *pv ) PRIVILEGED_FUNCTION;
++void vPortInitialiseBlocksNc( void ) PRIVILEGED_FUNCTION;
++size_t xPortGetFreeHeapSizeNc( void ) PRIVILEGED_FUNCTION;
++size_t xPortGetMinimumEverFreeHeapSizeNc( void ) PRIVILEGED_FUNCTION;
+ /*
+  * Setup the hardware ready for the scheduler to take control.  This generally
+  * sets up a tick interrupt and sets timers for the correct tick frequency.

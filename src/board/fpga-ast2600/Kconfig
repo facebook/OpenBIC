@@ -1,0 +1,11 @@
+if TARGET_FPGA_AST2600
+config BOARD_VENDOR
+	default "aspeed"
+
+config BOARD_NAME
+	default "fpga-ast2600"
+
+config IMG_NAME
+	default "ast2600_ssp.bin"
+
+endif

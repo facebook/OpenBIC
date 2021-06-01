@@ -1,0 +1,1516 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<device schemaVersion="1.1"
+xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+xs:noNamespaceSchemaLocation="CMSIS-SVD_Schema_1_1.xsd">
+  <name>AST2600</name>
+  <version>1.1</version>
+  <description>AST2600</description>
+  <!-- details about the cpu embedded in the device -->
+  <cpu>
+    <name>CM3</name>
+    <revision>r1p0</revision>
+    <endian>little</endian>
+    <mpuPresent>false</mpuPresent>
+    <fpuPresent>false</fpuPresent>
+    <nvicPrioBits>3</nvicPrioBits>
+    <vendorSystickConfig>false</vendorSystickConfig>
+  </cpu>  
+  <!--Bus Interface Properties-->
+  <!--Cortex-M4 is byte addressable-->
+  <addressUnitBits>8</addressUnitBits>
+  <!--the maximum data bit width accessible within a single transfer-->
+  <width>32</width>
+  <!--Register Default Properties-->
+  <size>0x20</size>
+  <resetValue>0x0</resetValue>
+  <resetMask>0xFFFFFFFF</resetMask>
+  <peripherals>
+    <peripheral>
+            <name>DCB</name>
+            <description>Debug Control Block</description>
+            <groupName></groupName>
+            <baseAddress>0xE000EDF0</baseAddress>
+            <addressBlock>
+              <offset>0x0</offset>
+              <size>0x10</size>
+              <usage>registers</usage>
+            </addressBlock>
+            <registers>
+              <register>
+                <name>Debug Halting Control and Status Register</name>
+                <displayName>DHCSR</displayName>
+                <description>Controls halting debug</description>
+                <addressOffset>0x0</addressOffset>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>DBGKEY</name>
+                    <description>Debug key</description>
+                    <bitRange>[31:16]</bitRange>
+                  </field>
+                  <field>
+                    <name>S_RESET_ST</name>
+                    <description>Indicates whether the processor has been reset since the last read of DHCSR</description>
+                    <bitRange>[25:25]</bitRange>
+                  </field>
+                  <field>
+                    <name>S_RETIRE_ST</name>
+                    <description>Set to 1 every time the processor retires one or more instructions</description>
+                    <bitRange>[24:24]</bitRange>
+                  </field>
+                  <field>
+                    <name>S_LOCKUP</name>
+                    <description>Indicates whether the processor is locked up because of an unrecoverable exception</description>
+                    <bitRange>[19:19]</bitRange>
+                  </field>
+                  <field>
+                    <name>S_SLEEP</name>
+                    <description>Indicates whether the processor is sleeping</description>
+                    <bitRange>[18:18]</bitRange>
+                  </field>
+                  <field>
+                    <name>S_HALT</name>
+                    <description>Indicates whether the processor is in Debug state</description>
+                    <bitRange>[17:17]</bitRange>
+                  </field>
+                  <field>
+                    <name>S_REGRDY</name>
+                    <description>A handshake flag for transfers through the DCRDR</description>
+                    <bitRange>[16:16]</bitRange>
+                  </field>
+                  <field>
+                    <name>C_SNAPSTALL</name>
+                    <description>Allow imprecise entry to Debug state</description>
+                    <bitRange>[5:5]</bitRange>
+                  </field>
+                  <field>
+                    <name>C_MASKINTS</name>
+                    <description>When debug is enabled, the debugger can write to this bit to mask PendSV, SysTick and external configurable interrupts</description>
+                    <bitRange>[3:3]</bitRange>
+                  </field>
+                  <field>
+                    <name>C_STEP</name>
+                    <description>Processor step bit</description>
+                    <bitRange>[2:2]</bitRange>
+                  </field>
+                  <field>
+                    <name>C_HALT</name>
+                    <description>Processor halt bit</description>
+                    <bitRange>[1:1]</bitRange>
+                  </field>
+                  <field>
+                    <name>C_DEBUGEN</name>
+                    <description>Halting debug enable bit</description>
+                    <bitRange>[0:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Debug Core Register Selector Register</name>
+                <displayName>DCRSR</displayName>
+                <description>provides debug access to the ARM core registers, special-purpose registers, and Floating-point extension regi</description>
+                <addressOffset>0x4</addressOffset>
+                <access>write-only</access>
+                <fields>
+                  <field>
+                    <name>REGWnR</name>
+                    <description>Specifies the access type for the transfer</description>
+                    <bitRange>[16:16]</bitRange>
+                  </field>
+                  <field>
+                    <name>REGSEL</name>
+                    <description>Specifies the ARM core register, special-purpose register, or Floating-point extension register, to transfer</description>
+                    <bitRange>[6:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Debug Core Register Data Register</name>
+                <displayName>DCRDR</displayName>
+                <description>provides debug access to the ARM core registers, special-purpose registers, and Floating-point extensio</description>
+                <addressOffset>0x8</addressOffset>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>DBGTMP</name>
+                    <description>Data temporary cache, for reading and writing the ARM core registers, special-purpose registers, and Floating-point extension registers</description>
+                    <bitRange>[31:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Debug Exception and Monitor Control Register</name>
+                <displayName>DEMCR</displayName>
+                <description>Manages vector catch behavior and DebugMonitor handling when debugging</description>
+                <addressOffset>0xC</addressOffset>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>TRCENA</name>
+                    <description>Global enable for all DWT and ITM features</description>
+                    <bitRange>[24:24]</bitRange>
+                  </field>
+                  <field>
+                    <name>MON_REQ</name>
+                    <description>DebugMonitor semaphore bit</description>
+                    <bitRange>[19:19]</bitRange>
+                  </field>
+                  <field>
+                    <name>MON_STEP</name>
+                    <description>When MON_EN is set to 0, this feature is disabled and the processor ignores MON_STEP</description>
+                    <bitRange>[18:18]</bitRange>
+                  </field>
+                  <field>
+                    <name>MON_PEND</name>
+                    <description>Sets or clears the pending state of the DebugMonitor exception</description>
+                    <bitRange>[17:17]</bitRange>
+                  </field>
+                  <field>
+                    <name>MON_EN</name>
+                    <description>Enable the DebugMonitor exception</description>
+                    <bitRange>[16:16]</bitRange>
+                  </field>
+                  <field>
+                    <name>VC_HARDERR</name>
+                    <description>Enable halting debug trap on a HardFault exception</description>
+                    <bitRange>[10:10]</bitRange>
+                  </field>
+                  <field>
+                    <name>VC_INTERR</name>
+                    <description>Enable halting debug trap on a fault occurring during exception entry or exception return</description>
+                    <bitRange>[9:9]</bitRange>
+                  </field>
+                  <field>
+                    <name>VC_BUSERR</name>
+                    <description>Enable halting debug trap on a BusFault exception</description>
+                    <bitRange>[8:8]</bitRange>
+                  </field>
+                  <field>
+                    <name>VC_STATERR</name>
+                    <description>Enable halting debug trap on a UsageFault exception caused by a state information error, for example an Undefined Instruction exception</description>
+                    <bitRange>[7:7]</bitRange>
+                  </field>
+                  <field>
+                    <name>VC_CHKERR</name>
+                    <description>Enable halting debug trap on a UsageFault exception caused by a checking error, for example an alignment check error</description>
+                    <bitRange>[6:6]</bitRange>
+                  </field>
+                  <field>
+                    <name>VC_NOCPERR</name>
+                    <description>Enable halting debug trap on a UsageFault caused by an access to a Coprocessor</description>
+                    <bitRange>[5:5]</bitRange>
+                  </field>
+                  <field>
+                    <name>VC_MMERR</name>
+                    <description>Enable halting debug trap on a MemManage exception</description>
+                    <bitRange>[4:4]</bitRange>
+                  </field>
+                  <field>
+                    <name>VC_CORERESET</name>
+                    <description>Enable Reset Vector Catch</description>
+                    <bitRange>[0:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+            </registers>
+          </peripheral>    
+    <peripheral>
+            <name>SCB</name>
+            <description>System Control Block</description>
+            <groupName></groupName>
+            <baseAddress>0xE000ED00</baseAddress>
+            <addressBlock>
+              <offset>0x0</offset>
+              <size>0x90</size>
+              <usage>registers</usage>
+            </addressBlock>
+            <registers>
+              <register>
+                <name>CPUID Base Register</name>
+                <displayName>CPUID</displayName>
+                <description>Provides identification information for the processor</description>
+                <addressOffset>0x0</addressOffset>
+                <access>read-only</access>
+                <fields>
+                  <field>
+                    <name>IMPLEMENTER</name>
+                    <description>Implementer code assigned by ARM</description>
+                    <bitRange>[31:24]</bitRange>
+                  </field>
+                  <field>
+                    <name>VARIANT</name>
+                    <description>IMPLEMENTATION DEFINED variant number</description>
+                    <bitRange>[23:20]</bitRange>
+                  </field>
+                  <field>
+                    <name>ARCHITECTURE</name>
+                    <description>Reads as 0xF</description>
+                    <bitRange>[19:16]</bitRange>
+                  </field>
+                  <field>
+                    <name>PARTNO</name>
+                    <description>IMPLEMENTATION DEFINED part number</description>
+                    <bitRange>[15:4]</bitRange>
+                  </field>
+                  <field>
+                    <name>REVISION</name>
+                    <description>IMPLEMENTATION DEFINED revision number</description>
+                    <bitRange>[3:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Interrupt Control and State Register</name>
+                <displayName>ICSR</displayName>
+                <description>Provides software control of the NMI, PendSV, and SysTick exceptions, and provides interrupt status information</description>
+                <addressOffset>0x4</addressOffset>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>NMIPENDSET</name>
+                    <description>On writes, makes the NMI exception active</description>
+                    <bitRange>[31:31]</bitRange>
+                  </field>
+                  <field>
+                    <name>PENDSVSET</name>
+                    <description>On writes, sets the PendSV exception as pending</description>
+                    <bitRange>[28:28]</bitRange>
+                  </field>
+                  <field>
+                    <name>PENDSVCLR</name>
+                    <description>Removes the pending status of the PendSV exception</description>
+                    <bitRange>[27:27]</bitRange>
+                  </field>
+                  <field>
+                    <name>PENDSTSET</name>
+                    <description>On writes, sets the SysTick exception as pending</description>
+                    <bitRange>[26:26]</bitRange>
+                  </field>
+                  <field>
+                    <name>PENDSTCLR</name>
+                    <description>Removes the pending status of the SysTick exception</description>
+                    <bitRange>[25:25]</bitRange>
+                  </field>
+                  <field>
+                    <name>ISRPREEMPT</name>
+                    <description>Indicates whether a pending exception will be serviced on exit from debug halt state</description>
+                    <bitRange>[23:23]</bitRange>
+                  </field>
+                  <field>
+                    <name>ISRPENDING</name>
+                    <description>Indicates whether an external interrupt, generated by the NVIC, is pending</description>
+                    <bitRange>[22:22]</bitRange>
+                  </field>
+                  <field>
+                    <name>VECTPENDING</name>
+                    <description>The exception number of the highest priority pending and enabled interrupt</description>
+                    <bitRange>[20:12]</bitRange>
+                  </field>
+                  <field>
+                    <name>RETTOBASE</name>
+                    <description>In Handler mode, indicates whether there is an active exception other than the exception indicated by the current value of the IPSR</description>
+                    <bitRange>[11:11]</bitRange>
+                  </field>
+                  <field>
+                    <name>VECTACTIVE</name>
+                    <description>The exception number of the current executing exception</description>
+                    <bitRange>[8:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Vector Table Offset Register</name>
+                <displayName>VTOR</displayName>
+                <description>Holds the vector table address</description>
+                <addressOffset>0x8</addressOffset>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>TBLOFF</name>
+                    <description>Bits[31:7] of the vector table address</description>
+                    <bitRange>[31:7]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Application Interrupt and Reset Control Register</name>
+                <displayName>AIRCR</displayName>
+                <description>Sets or returns interrupt control data</description>
+                <addressOffset>0xC</addressOffset>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>ENDIANNESS</name>
+                    <description>Indicates the memory system endianness</description>
+                    <bitRange>[15:15]</bitRange>
+                  </field>
+                  <field>
+                    <name>PRIGROUP</name>
+                    <description>Priority grouping, indicates the binary point position</description>
+                    <bitRange>[10:8]</bitRange>
+                  </field>
+                  <field>
+                    <name>SYSRESETREQ</name>
+                    <description>System Reset Request</description>
+                    <bitRange>[2:2]</bitRange>
+                  </field>
+                  <field>
+                    <name>VECTCLRACTIVE</name>
+                    <description>Writing 1 to this bit clears all active state information for fixed and configurable exceptions</description>
+                    <bitRange>[1:1]</bitRange>
+                  </field>
+                  <field>
+                    <name>VECTRESET</name>
+                    <description>Writing 1 to this bit causes a local system reset</description>
+                    <bitRange>[0:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>System Control Register</name>
+                <displayName>SCR</displayName>
+                <description>Sets or returns system control data</description>
+                <addressOffset>0x10</addressOffset>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>SEVONPEND</name>
+                    <description>Determines whether an interrupt transition from inactive state to pending state is a wakeup event</description>
+                    <bitRange>[4:4]</bitRange>
+                  </field>
+                  <field>
+                    <name>SLEEPDEEP</name>
+                    <description>Provides a qualifying hint indicating that waking from sleep might take longer</description>
+                    <bitRange>[2:2]</bitRange>
+                  </field>
+                  <field>
+                    <name>SLEEPONEXIT</name>
+                    <description>Determines whether, on an exit from an ISR that returns to the base level of execution priority, the processor enters a sleep state</description>
+                    <bitRange>[1:1]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Configuration and Control Register</name>
+                <displayName>CCR</displayName>
+                <description>Sets or returns configuration and control data, and provides control over caching and branch prediction</description>
+                <addressOffset>0x14</addressOffset>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>BP</name>
+                    <description>Branch prediction enable bit</description>
+                    <bitRange>[18:18]</bitRange>
+                  </field>
+                  <field>
+                    <name>IC</name>
+                    <description>Instruction cache enable bit</description>
+                    <bitRange>[17:17]</bitRange>
+                  </field>
+                  <field>
+                    <name>DC</name>
+                    <description>Cache enable bit</description>
+                    <bitRange>[16:16]</bitRange>
+                  </field>
+                  <field>
+                    <name>STKALIGN</name>
+                    <description>Determines whether the exception entry sequence guarantees 8-byte stack frame alignment, adjusting the SP if necessary before saving state</description>
+                    <bitRange>[9:9]</bitRange>
+                  </field>
+                  <field>
+                    <name>BFHFNMIGN</name>
+                    <description>Determines the effect of precise data access faults on handlers running at priority -1 or priority -2</description>
+                    <bitRange>[8:8]</bitRange>
+                  </field>
+                  <field>
+                    <name>DIV_0_TRP</name>
+                    <description>Controls the trap on divide by 0</description>
+                    <bitRange>[4:4]</bitRange>
+                  </field>
+                  <field>
+                    <name>UNALIGN_TRP</name>
+                    <description>Controls the trapping of unaligned word or halfword accesses</description>
+                    <bitRange>[3:3]</bitRange>
+                  </field>
+                  <field>
+                    <name>USERSETMPEND</name>
+                    <description>Controls whether unprivileged software can access the STIR</description>
+                    <bitRange>[1:1]</bitRange>
+                  </field>
+                  <field>
+                    <name>NONBASETHRDENA</name>
+                    <description>Controls whether the processor can enter Thread mode with exceptions active</description>
+                    <bitRange>[0:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>System Handler Priority Register 1</name>
+                <displayName>SHPR1</displayName>
+                <description>Sets or returns priority for system handlers 4-7</description>
+                <addressOffset>0x18</addressOffset>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>PRI_7</name>
+                    <description>Reserved for priority of system handler 7</description>
+                    <bitRange>[31:24]</bitRange>
+                  </field>
+                  <field>
+                    <name>PRI_6</name>
+                    <description>Priority of system handler 6, UsageFault</description>
+                    <bitRange>[23:16]</bitRange>
+                  </field>
+                  <field>
+                    <name>PRI_5</name>
+                    <description>Priority of system handler 5, BusFault</description>
+                    <bitRange>[15:8]</bitRange>
+                  </field>
+                  <field>
+                    <name>PRI_4</name>
+                    <description>Priority of system handler 4, MemManage</description>
+                    <bitRange>[7:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>System Handler Priority Register 2</name>
+                <displayName>SHPR2</displayName>
+                <description>Sets or returns priority for system handlers 8-11</description>
+                <addressOffset>0x1C</addressOffset>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>PRI_11</name>
+                    <description>Priority of system handler 11, SVCall</description>
+                    <bitRange>[31:24]</bitRange>
+                  </field>
+                  <field>
+                    <name>PRI_10</name>
+                    <description>Reserved for priority of system handler 10</description>
+                    <bitRange>[23:16]</bitRange>
+                  </field>
+                  <field>
+                    <name>PRI_9</name>
+                    <description>Reserved for priority of system handler 9</description>
+                    <bitRange>[15:8]</bitRange>
+                  </field>
+                  <field>
+                    <name>PRI_8</name>
+                    <description>Reserved for priority of system handler 8</description>
+                    <bitRange>[7:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>System Handler Priority Register 3</name>
+                <displayName>SHPR3</displayName>
+                <description>Sets or returns priority for system handlers 12-15</description>
+                <addressOffset>0x20</addressOffset>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>PRI_15</name>
+                    <description>Priority of system handler 15, SysTick</description>
+                    <bitRange>[31:24]</bitRange>
+                  </field>
+                  <field>
+                    <name>PRI_14</name>
+                    <description>Priority of system handler 14, PendSV</description>
+                    <bitRange>[23:16]</bitRange>
+                  </field>
+                  <field>
+                    <name>PRI_13</name>
+                    <description>Reserved for priority of system handler 13</description>
+                    <bitRange>[15:8]</bitRange>
+                  </field>
+                  <field>
+                    <name>PRI_12</name>
+                    <description>Priority of system handler 12, DebugMonitor</description>
+                    <bitRange>[7:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>System Handler Control and State Register</name>
+                <displayName>SHCSR</displayName>
+                <description>Controls and provides the active and pending status of system exceptions</description>
+                <addressOffset>0x24</addressOffset>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>USGFAULTENA</name>
+                    <description>UsageFault exception enable</description>
+                    <bitRange>[18:18]</bitRange>
+                  </field>
+                  <field>
+                    <name>BUSFAULTENA</name>
+                    <description>BusFault exception enable</description>
+                    <bitRange>[17:17]</bitRange>
+                  </field>
+                  <field>
+                    <name>MEMFAULTENA</name>
+                    <description>MemManage exception enable</description>
+                    <bitRange>[16:16]</bitRange>
+                  </field>
+                  <field>
+                    <name>SVCALLPENDED</name>
+                    <description>SVCall exception pended state</description>
+                    <bitRange>[15:15]</bitRange>
+                  </field>
+                  <field>
+                    <name>BUSFAULTPENDED</name>
+                    <description>BusFault exception pended state</description>
+                    <bitRange>[14:14]</bitRange>
+                  </field>
+                  <field>
+                    <name>MEMFAULTPENDED</name>
+                    <description>MemManage exception pended state</description>
+                    <bitRange>[13:13]</bitRange>
+                  </field>
+                  <field>
+                    <name>USGFAULTPENDED</name>
+                    <description>UsageFault exception pended state</description>
+                    <bitRange>[12:12]</bitRange>
+                  </field>
+                  <field>
+                    <name>SYSTICKACT</name>
+                    <description>SysTick exception active state</description>
+                    <bitRange>[11:11]</bitRange>
+                  </field>
+                  <field>
+                    <name>PENDSVACT</name>
+                    <description>PendSV exception active state</description>
+                    <bitRange>[10:10]</bitRange>
+                  </field>
+                  <field>
+                    <name>MONITORACT</name>
+                    <description>DebugMonitor exception active state</description>
+                    <bitRange>[8:8]</bitRange>
+                  </field>
+                  <field>
+                    <name>SVCALLACT</name>
+                    <description>SVCall exception active state</description>
+                    <bitRange>[7:7]</bitRange>
+                  </field>
+                  <field>
+                    <name>USGFAULTACT</name>
+                    <description>UsageFault exception active state</description>
+                    <bitRange>[3:3]</bitRange>
+                  </field>
+                  <field>
+                    <name>BUSFAULTACT</name>
+                    <description>BusFault exception active state</description>
+                    <bitRange>[1:1]</bitRange>
+                  </field>
+                  <field>
+                    <name>MEMFAULTACT</name>
+                    <description>MemManage exception active state</description>
+                    <bitRange>[0:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Configurable Fault Status Register</name>
+                <displayName>CFSR</displayName>
+                <description>Contains the three Configurable Fault Status Registers</description>
+                <addressOffset>0x28</addressOffset>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>UsageFault</name>
+                    <description>Provides information on UsageFault exceptions</description>
+                    <bitRange>[31:16]</bitRange>
+                  </field>
+                  <field>
+                    <name>BusFault</name>
+                    <description>Provides information on BusFault exceptions</description>
+                    <bitRange>[15:8]</bitRange>
+                  </field>
+                  <field>
+                    <name>MemManage</name>
+                    <description>Provides information on MemManage exceptions</description>
+                    <bitRange>[7:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Usage Fault Status Register</name>
+                <displayName>UFSR</displayName>
+                <description>Provides information on UsageFault exceptions</description>
+                <addressOffset>0x28</addressOffset>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>DIVBYZERO</name>
+                    <description>Divide by zero flag. Indicates whether an integer division by zero error has occurred</description>
+                    <bitRange>[25:25]</bitRange>
+                  </field>
+                  <field>
+                    <name>UNALIGNED</name>
+                    <description>Unaligned access flag. Indicates whether an unaligned access error has occurred</description>
+                    <bitRange>[24:24]</bitRange>
+                  </field>
+                  <field>
+                    <name>NOCP</name>
+                    <description>No coprocessor flag. Indicates whether a coprocessor disabled or not present error has occurred</description>
+                    <bitRange>[19:19]</bitRange>
+                  </field>
+                  <field>
+                    <name>INVPC</name>
+                    <description>Invalid PC flag. Indicates whether an integrity check error has occurred</description>
+                    <bitRange>[18:18]</bitRange>
+                  </field>
+                  <field>
+                    <name>INVSTATE</name>
+                    <description>Invalid state flag. Indicates whether an EPSR.T or EPSR.IT validity error has occurred</description>
+                    <bitRange>[17:17]</bitRange>
+                  </field>
+                  <field>
+                    <name>UNDEFINSTR</name>
+                    <description>Undefined instruction flag. Indicates whether an undefined instruction error has occurred</description>
+                    <bitRange>[16:16]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Bus Fault Status Register</name>
+                <displayName>BFSR</displayName>
+                <description>Provides information on BusFault exceptions</description>
+                <addressOffset>0x28</addressOffset>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>BFARVALID</name>
+                    <description>BFAR valid. Indicates validity of the contents of the BFAR register</description>
+                    <bitRange>[15:15]</bitRange>
+                  </field>
+                  <field>
+                    <name>LSPERR</name>
+                    <description>Lazy state preservation error. Records whether a BusFault occurred during FP lazy state preservation</description>
+                    <bitRange>[13:13]</bitRange>
+                  </field>
+                  <field>
+                    <name>STKERR</name>
+                    <description>Stack error. Records whether a derived BusFault occurred during exception entry stacking</description>
+                    <bitRange>[12:12]</bitRange>
+                  </field>
+                  <field>
+                    <name>UNSTKERR</name>
+                    <description>Unstack error. Records whether a derived BusFault occurred during exception return unstacking</description>
+                    <bitRange>[11:11]</bitRange>
+                  </field>
+                  <field>
+                    <name>IMPRECISERR</name>
+                    <description>Imprecise error. Records whether an imprecise data access error has occurred</description>
+                    <bitRange>[10:10]</bitRange>
+                  </field>
+                  <field>
+                    <name>PRECISERR</name>
+                    <description>Precise error. Records whether a precise data access error has occurred</description>
+                    <bitRange>[9:9]</bitRange>
+                  </field>
+                  <field>
+                    <name>IBUSERR</name>
+                    <description>Instruction bus error. Records whether a BusFault on an instruction prefetch has occurred</description>
+                    <bitRange>[8:8]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>MemManage Fault Status Register</name>
+                <displayName>MMFSR</displayName>
+                <description>Provides information on MemManage exceptions</description>
+                <addressOffset>0x28</addressOffset>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>MMARVALID</name>
+                    <description>MMFAR valid flag. Indicates validity of the MMFAR register</description>
+                    <bitRange>[7:7]</bitRange>
+                  </field>
+                  <field>
+                    <name>MLSPERR</name>
+                    <description>MemManage lazy state preservation error flag. Records whether a MemManage fault occurred during FP lazy state preservation</description>
+                    <bitRange>[5:5]</bitRange>
+                  </field>
+                  <field>
+                    <name>MSTKERR</name>
+                    <description>MemManage stacking error flag. Records whether a derived MemManage fault occurred during exception entry stacking</description>
+                    <bitRange>[4:4]</bitRange>
+                  </field>
+                  <field>
+                    <name>MUNSTKERR</name>
+                    <description>MemManage unstacking error flag. Records whether a derived MemManage fault occurred during exception return unstacking</description>
+                    <bitRange>[3:3]</bitRange>
+                  </field>
+                  <field>
+                    <name>DACCVIOL</name>
+                    <description>Data access violation flag. Records whether a data access violation has occurred</description>
+                    <bitRange>[1:1]</bitRange>
+                  </field>
+                  <field>
+                    <name>IACCVIOL</name>
+                    <description>Instruction access violation. Records whether an instruction related memory access violation has occurred</description>
+                    <bitRange>[0:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>HardFault Status Register</name>
+                <displayName>HFSR</displayName>
+                <description>Shows the cause of any HardFault</description>
+                <addressOffset>0x2C</addressOffset>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>DEBUGEVT</name>
+                    <description>Indicates that a debug event has occurred</description>
+                    <bitRange>[31:31]</bitRange>
+                  </field>
+                  <field>
+                    <name>FORCED</name>
+                    <description>Indicates that a fault with configurable priority has been escalated to a HardFault exception, because it could not be made active, because of priority or because it was disabled</description>
+                    <bitRange>[30:30]</bitRange>
+                  </field>
+                  <field>
+                    <name>VECTTBL</name>
+                    <description>Indicates when a fault has occurred because of a vector table read error on exception processing</description>
+                    <bitRange>[1:1]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Debug Fault Status Register</name>
+                <displayName>DFSR</displayName>
+                <description>Shows which debug event occurred</description>
+                <addressOffset>0x30</addressOffset>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>EXTERNAL</name>
+                    <description>External event. Indicates whether an external debug request has occurred</description>
+                    <bitRange>[4:4]</bitRange>
+                  </field>
+                  <field>
+                    <name>VCATCH</name>
+                    <description>Vector Catch event. Indicates whether a Vector catch debug event has occurred</description>
+                    <bitRange>[3:3]</bitRange>
+                  </field>
+                  <field>
+                    <name>DWTTRAP</name>
+                    <description>Watchpoint event. Indicates whether a Watchpoint debug event has occurred</description>
+                    <bitRange>[2:2]</bitRange>
+                  </field>
+                  <field>
+                    <name>BKPT</name>
+                    <description>Breakpoint event. Indicates whether a breakpoint debug event has occurred</description>
+                    <bitRange>[1:1]</bitRange>
+                  </field>
+                  <field>
+                    <name>HALTED</name>
+                    <description>Halt or step event. Indicates that a Halt request debug event or Step debug event has occurred</description>
+                    <bitRange>[0:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>MemManage Fault Address Register</name>
+                <displayName>MMFAR</displayName>
+                <description>Shows the address of the memory location that caused an MPU fault</description>
+                <addressOffset>0x34</addressOffset>
+                <access>read-write</access>
+              </register>
+              <register>
+                <name>BusFault Address Register</name>
+                <displayName>BFAR</displayName>
+                <description>Shows the address associated with a precise data access BusFault</description>
+                <addressOffset>0x38</addressOffset>
+                <access>read-write</access>
+              </register>
+              <register>
+                <name>Auxiliary Fault Status Register</name>
+                <displayName>AFSR</displayName>
+                <description>Provides implementation-specific fault status information and control</description>
+                <addressOffset>0x3C</addressOffset>
+                <access>read-write</access>
+              </register>
+              <register>
+                <name>Processor Feature Register 0</name>
+                <displayName>ID_PFR0</displayName>
+                <description>Gives top-level information about the instruction sets supported by the processor</description>
+                <addressOffset>0x40</addressOffset>
+                <access>read-only</access>
+                <fields>
+                  <field>
+                    <name>State3</name>
+                    <description>ARMv7-M reserved</description>
+                    <bitRange>[15:12]</bitRange>
+                  </field>
+                  <field>
+                    <name>State2</name>
+                    <description>ARMv7-M reserved</description>
+                    <bitRange>[11:8]</bitRange>
+                  </field>
+                  <field>
+                    <name>State1</name>
+                    <description>Thumb instruction set support</description>
+                    <bitRange>[7:4]</bitRange>
+                  </field>
+                  <field>
+                    <name>State0</name>
+                    <description>ARM instruction set support</description>
+                    <bitRange>[3:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Processor Feature Register 1</name>
+                <displayName>ID_PFR1</displayName>
+                <description>Gives top-level information about the instruction sets supported by the processor</description>
+                <addressOffset>0x44</addressOffset>
+                <access>read-only</access>
+                <fields>
+                  <field>
+                    <name>M profile programmers model</name>
+                    <description></description>
+                    <bitRange>[11:8]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Debug Feature Register 0</name>
+                <displayName>ID_DFR0</displayName>
+                <description>Gives top-level information about the debug system used in the processor</description>
+                <addressOffset>0x48</addressOffset>
+                <access>read-only</access>
+                <fields>
+                  <field>
+                    <name>Debug model, M profile</name>
+                    <description>Support for memory-mapped debug model for M profile processors</description>
+                    <bitRange>[23:20]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Auxiliary Feature Register 0</name>
+                <displayName>ID_AFR0</displayName>
+                <description>Gives information about the IMPLEMENTATION DEFINED features of a processor implementation</description>
+                <addressOffset>0x4C</addressOffset>
+                <access>read-only</access>
+              </register>
+              <register>
+                <name>Memory Model Feature Register 0</name>
+                <displayName>ID_MMFR0</displayName>
+                <description>Gives information about the implemented memory model and memory management support</description>
+                <addressOffset>0x50</addressOffset>
+                <access>read-only</access>
+                <fields>
+                  <field>
+                    <name>Auxiliary registers</name>
+                    <description>Indicates the support for Auxiliary registers</description>
+                    <bitRange>[23:20]</bitRange>
+                  </field>
+                  <field>
+                    <name>TCM support</name>
+                    <description>Indicates the support for Tightly Coupled Memory (TCM)</description>
+                    <bitRange>[19:16]</bitRange>
+                  </field>
+                  <field>
+                    <name>Shareability levels</name>
+                    <description>Indicates the number of shareability levels implemented</description>
+                    <bitRange>[15:12]</bitRange>
+                  </field>
+                  <field>
+                    <name>Outermost shareability</name>
+                    <description>Indicates the outermost shareability domain implemented</description>
+                    <bitRange>[11:8]</bitRange>
+                  </field>
+                  <field>
+                    <name>PMSA support</name>
+                    <description>Indicates support for a PMSA</description>
+                    <bitRange>[7:4]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Memory Model Feature Register 1</name>
+                <displayName>ID_MMFR1</displayName>
+                <description>Gives information about the implemented memory model and memory management support</description>
+                <addressOffset>0x54</addressOffset>
+                <access>read-only</access>
+              </register>
+              <register>
+                <name>Memory Model Feature Register 2</name>
+                <displayName>ID_MMFR2</displayName>
+                <description>Gives information about the implemented memory model and memory management support</description>
+                <addressOffset>0x58</addressOffset>
+                <access>read-only</access>
+                <fields>
+                  <field>
+                    <name>WFI stall</name>
+                    <description>Indicates the support for Wait For Interrupt (WFI) stalling</description>
+                    <bitRange>[27:24]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Memory Model Feature Register 3</name>
+                <displayName>ID_MMFR3</displayName>
+                <description>Gives information about the implemented memory model and memory management support</description>
+                <addressOffset>0x5C</addressOffset>
+                <access>read-only</access>
+              </register>
+              <register>
+                <name>Instruction Set Attribute Register 0</name>
+                <displayName>ID_ISAR0</displayName>
+                <description>Gives information about the instruction sets implemented by the processor</description>
+                <addressOffset>0x60</addressOffset>
+                <access>read-only</access>
+                <fields>
+                  <field>
+                    <name>Divide_instrs</name>
+                    <description>Indicates the supported Divide instructions</description>
+                    <bitRange>[27:24]</bitRange>
+                  </field>
+                  <field>
+                    <name>Debug_instrs</name>
+                    <description>Indicates the supported Debug instructions</description>
+                    <bitRange>[23:20]</bitRange>
+                  </field>
+                  <field>
+                    <name>Coproc_instrs</name>
+                    <description>Indicates the supported Coprocessor instructions</description>
+                    <bitRange>[19:16]</bitRange>
+                  </field>
+                  <field>
+                    <name>CmpBranch_instrs</name>
+                    <description>Indicates the supported combined Compare and Branch instructions</description>
+                    <bitRange>[15:12]</bitRange>
+                  </field>
+                  <field>
+                    <name>Bitfield_instrs</name>
+                    <description>Indicates the supported BitField instructions</description>
+                    <bitRange>[11:8]</bitRange>
+                  </field>
+                  <field>
+                    <name>BitCount_instrs</name>
+                    <description>Indicates the supported Bit Counting instructions</description>
+                    <bitRange>[7:4]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Instruction Set Attribute Register 1</name>
+                <displayName>ID_ISAR1</displayName>
+                <description>Gives information about the instruction sets implemented by the processor</description>
+                <addressOffset>0x64</addressOffset>
+                <access>read-only</access>
+                <fields>
+                  <field>
+                    <name>Interwork_instrs</name>
+                    <description>Indicates the supported Interworking instructions</description>
+                    <bitRange>[27:24]</bitRange>
+                  </field>
+                  <field>
+                    <name>Immediate_instrs</name>
+                    <description>Indicates the support for data-processing instructions with long immediates</description>
+                    <bitRange>[23:20]</bitRange>
+                  </field>
+                  <field>
+                    <name>IfThen_instrs</name>
+                    <description>Indicates the supported IfThen instructions</description>
+                    <bitRange>[19:16]</bitRange>
+                  </field>
+                  <field>
+                    <name>Extend_instrs</name>
+                    <description>Indicates the supported Extend instructions</description>
+                    <bitRange>[15:12]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Instruction Set Attribute Register 2</name>
+                <displayName>ID_ISAR2</displayName>
+                <description>Gives information about the instruction sets implemented by the processor</description>
+                <addressOffset>0x68</addressOffset>
+                <access>read-only</access>
+                <fields>
+                  <field>
+                    <name>Reversal_instrs</name>
+                    <description>Indicates the supported Reversal instructions</description>
+                    <bitRange>[31:28]</bitRange>
+                  </field>
+                  <field>
+                    <name>MultU_instrs</name>
+                    <description>Indicates the supported advanced unsigned Multiply instructions</description>
+                    <bitRange>[23:20]</bitRange>
+                  </field>
+                  <field>
+                    <name>MultS_instrs</name>
+                    <description>Indicates the supported advanced signed Multiply instructions</description>
+                    <bitRange>[19:16]</bitRange>
+                  </field>
+                  <field>
+                    <name>Mult_instrs</name>
+                    <description>Indicates the supported additional Multiply instructions</description>
+                    <bitRange>[15:12]</bitRange>
+                  </field>
+                  <field>
+                    <name>MultiAccessInt_instrs</name>
+                    <description>Indicates the support for multi-access interruptible instructions</description>
+                    <bitRange>[11:8]</bitRange>
+                  </field>
+                  <field>
+                    <name>MemHint_instrs</name>
+                    <description>Indicates the supported Memory Hint instructions</description>
+                    <bitRange>[7:4]</bitRange>
+                  </field>
+                  <field>
+                    <name>LoadStore_instrs</name>
+                    <description>Indicates the supported additional load and store instructions</description>
+                    <bitRange>[3:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Instruction Set Attribute Register 3</name>
+                <displayName>ID_ISAR3</displayName>
+                <description>Gives information about the instruction sets implemented by the processor</description>
+                <addressOffset>0x6C</addressOffset>
+                <access>read-only</access>
+                <fields>
+                  <field>
+                    <name>TrueNOP_instrs</name>
+                    <description>Indicates the support for a true NOP instruction</description>
+                    <bitRange>[27:24]</bitRange>
+                  </field>
+                  <field>
+                    <name>ThumbCopy_instrs</name>
+                    <description>Indicates the supported non flag-setting MOV instructions</description>
+                    <bitRange>[23:20]</bitRange>
+                  </field>
+                  <field>
+                    <name>TabBranch_instrs</name>
+                    <description>Indicates the supported Table Branch instructions</description>
+                    <bitRange>[19:16]</bitRange>
+                  </field>
+                  <field>
+                    <name>SynchPrim_instrs</name>
+                    <description>Must be interpreted with the ID_ISAR4</description>
+                    <bitRange>[15:12]</bitRange>
+                  </field>
+                  <field>
+                    <name>SVC_instrs</name>
+                    <description>Indicates the supported SVC instructions</description>
+                    <bitRange>[11:8]</bitRange>
+                  </field>
+                  <field>
+                    <name>SIMD_instrs</name>
+                    <description>Indicates the supported SIMD instructions</description>
+                    <bitRange>[7:4]</bitRange>
+                  </field>
+                  <field>
+                    <name>Saturate_instrs</name>
+                    <description>Indicates the supported Saturate instructions</description>
+                    <bitRange>[3:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Instruction Set Attribute Register 4</name>
+                <displayName>ID_ISAR4</displayName>
+                <description>Gives information about the instruction sets implemented by the processor</description>
+                <addressOffset>0x70</addressOffset>
+                <access>read-only</access>
+                <fields>
+                  <field>
+                    <name>PSR_M_instrs</name>
+                    <description>Indicates the supported M profile instructions to modify the PSRs</description>
+                    <bitRange>[27:24]</bitRange>
+                  </field>
+                  <field>
+                    <name>SynchPrim_instrs_frac</name>
+                    <description>Must be interpreted with the ID_ISAR3</description>
+                    <bitRange>[23:20]</bitRange>
+                  </field>
+                  <field>
+                    <name>Barrier_instrs</name>
+                    <description>Indicates the supported Barrier instructions</description>
+                    <bitRange>[19:16]</bitRange>
+                  </field>
+                  <field>
+                    <name>Writeback_instrs</name>
+                    <description>Indicates the support for Writeback addressing modes</description>
+                    <bitRange>[11:8]</bitRange>
+                  </field>
+                  <field>
+                    <name>WithShifts_instrs</name>
+                    <description>Indicates the support for instructions with shifts</description>
+                    <bitRange>[7:4]</bitRange>
+                  </field>
+                  <field>
+                    <name>Unpriv_instrs</name>
+                    <description>Indicates the supported unprivileged instructions</description>
+                    <bitRange>[3:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Cache Level ID Register</name>
+                <displayName>CLIDR</displayName>
+                <description>The CLIDR identifies: ? The type of cache, or caches, implemented at each level, up to a maximum of seven levels</description>
+                <addressOffset>0x78</addressOffset>
+                <access>read-only</access>
+                <fields>
+                  <field>
+                    <name>LoUU</name>
+                    <description>Level of Unification Uniprocessor for the cache hierarchy</description>
+                    <bitRange>[29:27]</bitRange>
+                  </field>
+                  <field>
+                    <name>LoC</name>
+                    <description>Level of Coherency for the cache hierarchy</description>
+                    <bitRange>[26:24]</bitRange>
+                  </field>
+                  <field>
+                    <name>LoUIS</name>
+                    <description>Level of Unification Inner Shareable for the cache hierarchy</description>
+                    <bitRange>[23:21]</bitRange>
+                  </field>
+                  <field>
+                    <name>CType_%s</name>
+                    <description>Indicates the type of cache implemented at each level</description>
+                    <bitRange>[1:0]</bitRange>
+                    <dim>7</dim>
+                    <dimIncrement>2</dimIncrement>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Cache Type Register</name>
+                <displayName>CTR</displayName>
+                <description>The CTR provides information about the architecture of the caches</description>
+                <addressOffset>0x7C</addressOffset>
+                <access>read-only</access>
+                <fields>
+                  <field>
+                    <name>Format</name>
+                    <description>Indicates the implemented CTR format</description>
+                    <bitRange>[31:29]</bitRange>
+                  </field>
+                  <field>
+                    <name>CWG</name>
+                    <description>Cache Write-back Granule</description>
+                    <bitRange>[27:24]</bitRange>
+                  </field>
+                  <field>
+                    <name>ERG</name>
+                    <description>Exclusives Reservation Granule</description>
+                    <bitRange>[23:20]</bitRange>
+                  </field>
+                  <field>
+                    <name>DminLine</name>
+                    <description>Log2 of the number of words in the smallest cache line of all the data caches and unified caches that are controlled by the processor</description>
+                    <bitRange>[19:16]</bitRange>
+                  </field>
+                  <field>
+                    <name>IminLine</name>
+                    <description>Log2 of the number of words in the smallest cache line of all the instruction caches that are controlled by the processor</description>
+                    <bitRange>[3:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Cache Size ID Registers</name>
+                <displayName>CCSIDR</displayName>
+                <description>The CCSIDR provides information about the architecture of the caches</description>
+                <addressOffset>0x80</addressOffset>
+                <access>read-only</access>
+                <fields>
+                  <field>
+                    <name>WT</name>
+                    <description>Indicates whether the cache level supports write-through</description>
+                    <bitRange>[31:31]</bitRange>
+                  </field>
+                  <field>
+                    <name>WB</name>
+                    <description>Indicates whether the cache level supports write-back</description>
+                    <bitRange>[30:30]</bitRange>
+                  </field>
+                  <field>
+                    <name>RA</name>
+                    <description>Indicates whether the cache level supports read-allocation</description>
+                    <bitRange>[29:29]</bitRange>
+                  </field>
+                  <field>
+                    <name>WA</name>
+                    <description>Indicates whether the cache level supports write-allocation</description>
+                    <bitRange>[28:28]</bitRange>
+                  </field>
+                  <field>
+                    <name>NumSets</name>
+                    <description>(Number of sets in cache)-1, therefore a value of 0 indicates 1 set in the cache</description>
+                    <bitRange>[27:13]</bitRange>
+                  </field>
+                  <field>
+                    <name>Associativity</name>
+                    <description>(Associativity of cache)-1, therefore a value of 0 indicates an associativity of 1</description>
+                    <bitRange>[12:3]</bitRange>
+                  </field>
+                  <field>
+                    <name>LineSize</name>
+                    <description>(Log2(Number of words in cache line))-2</description>
+                    <bitRange>[2:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Cache Size Selection Register</name>
+                <displayName>CSSELR</displayName>
+                <description>The CSSELR selects the current CCSIDR by specifying the required cache level</description>
+                <addressOffset>0x84</addressOffset>
+                <access>read-only</access>
+                <fields>
+                  <field>
+                    <name>Level</name>
+                    <description>Cache level of required cache</description>
+                    <bitRange>[3:1]</bitRange>
+                  </field>
+                  <field>
+                    <name>InD</name>
+                    <description>Instruction not data bit</description>
+                    <bitRange>[0:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>Coprocessor Access Control Register</name>
+                <displayName>CPACR</displayName>
+                <description>Specifies the access privileges for coprocessors</description>
+                <addressOffset>0x88</addressOffset>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>CP_%s</name>
+                    <description>for n values 0-7, 10 and 11 Access privileges for coprocessor n</description>
+                    <bitRange>[1:0]</bitRange>
+                    <dim>16</dim>
+                    <dimIncrement>2</dimIncrement>
+                  </field>
+                </fields>
+              </register>
+            </registers>
+          </peripheral>
+		  <peripheral>
+            <name>SIG</name>
+            <description>Software Interrupt Generation</description>
+            <groupName></groupName>
+            <baseAddress>0xE000EF00</baseAddress>
+            <addressBlock>
+              <offset>0x0</offset>
+              <size>0x4</size>
+              <usage>registers</usage>
+            </addressBlock>
+            <registers>
+              <register>
+                <name>Software Triggered Interrupt Register</name>
+                <displayName>STIR</displayName>
+                <description>Provides a mechanism for software to generate an interrupt</description>
+                <addressOffset>0x0</addressOffset>
+                <access>write-only</access>
+                <fields>
+                  <field>
+                    <name>INTID</name>
+                    <description>Indicates the interrupt to be triggered</description>
+                    <bitRange>[8:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+            </registers>
+          </peripheral>
+		  <peripheral>
+            <name>SYSTICK</name>
+            <description>SysTick Timer</description>
+            <groupName></groupName>
+            <baseAddress>0xE000E010</baseAddress>
+            <addressBlock>
+              <offset>0x0</offset>
+              <size>0x10</size>
+              <usage>registers</usage>
+            </addressBlock>
+            <registers>
+              <register>
+                <name>SysTick Control and Status Register</name>
+                <displayName>SYST_CSR</displayName>
+                <description>Controls the system timer and provides status data</description>
+                <addressOffset>0x0</addressOffset>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>COUNTFLAG</name>
+                    <description>Indicates whether the counter has counted to 0 since the last read of this register</description>
+                    <bitRange>[16:16]</bitRange>
+                  </field>
+                  <field>
+                    <name>CLKSOURCE</name>
+                    <description>Indicates the SysTick clock source</description>
+                    <bitRange>[2:2]</bitRange>
+                  </field>
+                  <field>
+                    <name>TICKINT</name>
+                    <description>Indicates whether counting to 0 causes the status of the SysTick exception to change to pending</description>
+                    <bitRange>[1:1]</bitRange>
+                  </field>
+                  <field>
+                    <name>ENABLE</name>
+                    <description>Indicates the enabled status of the SysTick counter</description>
+                    <bitRange>[0:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>SysTick Reload Value Register</name>
+                <displayName>SYST_RVR</displayName>
+                <description>Holds the reload value of the SYST_CVR</description>
+                <addressOffset>0x4</addressOffset>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>RELOAD</name>
+                    <description>The value to load into the SYST_CVR when the counter reaches 0</description>
+                    <bitRange>[23:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>SysTick Current Value Register</name>
+                <displayName>SYST_CVR</displayName>
+                <description>Reads or clears the current counter value</description>
+                <addressOffset>0x8</addressOffset>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>CURRENT</name>
+                    <description>Current counter value</description>
+                    <bitRange>[31:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+              <register>
+                <name>SysTick Calibration value Register</name>
+                <displayName>SYST_CALIB</displayName>
+                <description>Reads the calibration value and parameters for SysTick</description>
+                <addressOffset>0xC</addressOffset>
+                <access>read-only</access>
+                <fields>
+                  <field>
+                    <name>NOREF</name>
+                    <description>Indicates whether the IMPLEMENTATION DEFINED reference clock is implemented</description>
+                    <bitRange>[31:31]</bitRange>
+                  </field>
+                  <field>
+                    <name>SKEW</name>
+                    <description>Indicates whether the 10ms calibration value is exact</description>
+                    <bitRange>[30:30]</bitRange>
+                  </field>
+                  <field>
+                    <name>TENMS</name>
+                    <description>Optionally, holds a reload value to be used for 10ms (100Hz) timing, subject to system clock skew errors</description>
+                    <bitRange>[23:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+            </registers>
+          </peripheral>
+		  <peripheral>
+            <name>NVIC</name>
+            <description>Nested Vectored Interrupt Controller</description>
+            <groupName></groupName>
+            <baseAddress>0xE000E100</baseAddress>
+            <addressBlock>
+              <offset>0x0</offset>
+              <size>0x4F0</size>
+              <usage>registers</usage>
+            </addressBlock>
+            <registers>
+              <register>
+                <name>Interrupt Set-Enable Register %s</name>
+                <displayName>NVIC_ISER_%s</displayName>
+                <description>Enables, or reads the enable state of a group of interrupts</description>
+                <addressOffset>0x0</addressOffset>
+                <dim>8</dim>
+                <dimIncrement>4</dimIncrement>
+                <access>read-write</access>
+              </register>
+              <register>
+                <name>Interrupt Clear-Enable Register %s</name>
+                <displayName>NVIC_ICER_%s</displayName>
+                <description>Disables, or reads the enable state of, a group of registers</description>
+                <addressOffset>0x80</addressOffset>
+                <dim>8</dim>
+                <dimIncrement>4</dimIncrement>
+                <access>read-write</access>
+              </register>
+              <register>
+                <name>Interrupt Set-Pending Register %s</name>
+                <displayName>NVIC_ISPR_%s</displayName>
+                <description>For a group of interrupts, changes interrupt status to pending, or shows the current pending status</description>
+                <addressOffset>0x100</addressOffset>
+                <dim>8</dim>
+                <dimIncrement>4</dimIncrement>
+                <access>read-write</access>
+              </register>
+              <register>
+                <name>Interrupt Clear-Pending Register %s</name>
+                <displayName>NVIC_ICPR_%s</displayName>
+                <description>For a group of interrupts, clears the interrupt pending status, or shows the current pending status</description>
+                <addressOffset>0x180</addressOffset>
+                <dim>8</dim>
+                <dimIncrement>4</dimIncrement>
+                <access>read-write</access>
+              </register>
+              <register>
+                <name>Interrupt Active Bit Register %s</name>
+                <displayName>NVIC_IABR_%s</displayName>
+                <description>For a group of 32 interrupts, shows whether each interrupt is active</description>
+                <addressOffset>0x200</addressOffset>
+                <dim>8</dim>
+                <dimIncrement>4</dimIncrement>
+                <access>read-only</access>
+              </register>
+              <register>
+                <name>Interrupt Priority Register %s</name>
+                <displayName>NVIC_IPR_%s</displayName>
+                <description>Sets or reads interrupt priorities</description>
+                <addressOffset>0x300</addressOffset>
+                <dim>60</dim>
+                <dimIncrement>4</dimIncrement>
+                <access>read-write</access>
+                <fields>
+                  <field>
+                    <name>PRI_N3</name>
+                    <description>For register NVIC_IPRn, priority of interrupt number 4n+3</description>
+                    <bitRange>[31:24]</bitRange>
+                  </field>
+                  <field>
+                    <name>PRI_N2</name>
+                    <description>For register NVIC_IPRn, priority of interrupt number 4n+2</description>
+                    <bitRange>[23:16]</bitRange>
+                  </field>
+                  <field>
+                    <name>PRI_N1</name>
+                    <description>For register NVIC_IPRn, priority of interrupt number 4n+1</description>
+                    <bitRange>[15:8]</bitRange>
+                  </field>
+                  <field>
+                    <name>PRI_N0</name>
+                    <description>For register NVIC_IPRn, priority of interrupt number 4n</description>
+                    <bitRange>[7:0]</bitRange>
+                  </field>
+                </fields>
+              </register>
+            </registers>
+          </peripheral>
+		  </peripherals>
+</device>
