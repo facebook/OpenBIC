@@ -10,3 +10,4 @@ src/memory_analyze.log
 src/.config
 src/include/config.h
 src/tools/Kconfiglib/__pycache__/kconfiglib.cpython-38.pyc
+*.o
