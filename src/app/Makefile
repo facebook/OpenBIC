@@ -1,0 +1,25 @@
+-include $(KCONFIG_CONFIG)
+obj-y += main.o
+obj-$(CONFIG_CMD_CLK) += cmd_clk.o
+obj-$(CONFIG_CMD_MEM) += cmd_mem.o
+obj-$(CONFIG_DEMO_TASK_SW) += demo_task_sw.o
+obj-$(CONFIG_DEMO_GPIO) += demo_gpio.o
+obj-$(CONFIG_DEMO_I2C) += demo_i2c.o
+obj-$(CONFIG_DEMO_I3C) += demo_i3c/
+obj-$(CONFIG_DEMO_ESPI) += demo_espi.o
+obj-$(CONFIG_DEMO_PECI) += demo_peci.o
+obj-$(CONFIG_DEMO_PWM_TACH) += demo_pwm_tach.o
+obj-$(CONFIG_DEMO_ADC) += demo_adc.o
+obj-$(CONFIG_DEMO_JTAG) += demo_jtag.o
+obj-$(CONFIG_SVF) += svf/
+obj-$(CONFIG_DEMO_KCS) += demo_kcs.o
+obj-$(CONFIG_DEMO_BT) += demo_bt.o
+obj-$(CONFIG_DEMO_SNOOP) += demo_snoop.o
+obj-$(CONFIG_DEMO_PCC) += demo_pcc.o
+obj-$(CONFIG_DEMO_USB) += demo_usb.o
+obj-$(CONFIG_DEMO_CMB) += demo_cmb.o
+obj-$(CONFIG_DEMO_NET) += demo_net/
+obj-$(CONFIG_DEMO_FMC_SPI) += demo_fmc_spi.o
+obj-$(CONFIG_DEVICE_FMC_SPI) += spi_flash_op.o
+obj-$(CONFIG_DEMO_RSA) += demo_rsa.o
+obj-$(CONFIG_DEMO_VUART) += demo_vuart.o

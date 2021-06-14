@@ -1,0 +1,4 @@
+[submodule "src/os/FreeRTOS-Kernel"]
+	path = src/os/FreeRTOS-Kernel
+	url = https://github.com/FreeRTOS/FreeRTOS-Kernel.git
+	ignore = dirty

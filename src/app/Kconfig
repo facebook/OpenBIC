@@ -1,0 +1,132 @@
+menu "Aspeed commands"
+config CMD_MEM
+	bool "memory access command"
+	default y
+
+config CMD_CLK
+	bool "clock related commands"
+	default y
+endmenu
+
+menu "Demo APPs"
+config DEMO_TASK_SW
+	bool "demo task switch"
+	default n
+
+config DEMO_GPIO
+	bool "demo GPIO device"
+	depends on DEVICE_GPIO || DEVICE_SGPIOM
+	default n
+
+config DEMO_I2C
+	bool "demo I2C device"
+	depends on DEVICE_I2C
+	default n
+
+config DEMO_I3C
+	bool "demo I3C device"
+	depends on DEVICE_I3C
+	default n
+
+if DEMO_I3C
+	choice
+	prompt "topologies"
+	default DEMO_I3C_CASE_3
+
+	config DEMO_I3C_CASE_1
+		bool "case 1: Aspeed i3c master + Renesas slave devices"
+
+	config DEMO_I3C_CASE_2
+		bool "case 2: Stand alone Aspeed i3c slave"
+
+	config DEMO_I3C_CASE_3
+		bool "case 3: Aspeed i3c master + Aspeed i3c slave"
+	endchoice
+endif
+
+config DEMO_ESPI
+	bool "demo ESPI"
+	depends on DEVICE_ESPI
+	
+config DEMO_PECI
+	bool "demo PECI device"
+	depends on DEVICE_PECI
+	default n
+
+config DEMO_PWM_TACH
+	bool "demo PWM/TACH device"
+	depends on DEVICE_PWM_TACH
+	default n
+
+config DEMO_ADC
+	bool "demo ADC device"
+	depends on DEVICE_ADC
+	default n
+
+config DEMO_JTAG
+	bool "demo JTAG device"
+	depends on DEVICE_JTAG
+	default n
+
+config SVF
+	bool "demo svf player"
+	depends on DEVICE_USB
+	depends on DEVICE_JTAG
+	depends on DEMO_JTAG
+	default n
+
+config DEMO_KCS
+	bool "demo KCS device"
+	depends on DEVICE_KCS
+	default n
+
+config DEMO_BT
+	bool "demo BT device"
+	depends on DEVICE_BT
+	default n
+
+config DEMO_SNOOP
+	bool "demo Snoop device"
+	depends on DEVICE_SNOOP
+	default n
+
+config DEMO_PCC
+	bool "demo PCC device"
+	depends on DEVICE_PCC
+	default n
+
+config DEMO_USB
+	bool "demo USB device"
+	depends on DEVICE_USB
+	default n
+
+config DEMO_CMB
+	bool "demo CmBacktrace library"
+	depends on LIBRARIES_CMBACKTRACE
+	default n
+
+config DEMO_NET
+	bool "enable Ethernet test command"
+	default n
+
+config DEMO_MDIO
+	bool "enable mdio command"
+	depends on DEMO_NET
+	default y
+
+config DEMO_FMC_SPI
+	bool "demo fmc/spi device"
+	depends on DEVICE_FMC_SPI
+	default n
+
+config DEMO_RSA
+	bool "demo rsa device"
+	depends on DEVICE_CRYPTO
+	default n
+
+config DEMO_VUART
+	bool "demo VUART device"
+	depends on DEVICE_SERIAL
+	default n
+
+endmenu

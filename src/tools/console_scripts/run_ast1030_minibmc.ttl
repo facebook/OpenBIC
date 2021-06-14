@@ -1,0 +1,20 @@
+; -----------------------------------------------------------------------------
+; teraterm script for running miniBMC SDK image via AST1030 HW UART boot
+; 
+; prerequisite:
+;	1. boot strap is set to "UART boot"
+;   2. serial UART5 is working
+;   3. uart_ast1030_bic.bin
+; 
+; usage:
+;   teraterm -> Control -> Macro -> select this file
+; 
+; expected result:
+; 	UUP0c00
+; 	<AST1030 bic power-on message>
+; -----------------------------------------------------------------------------
+filename = 'd:\tftpboot\uart_ast1030_bic.bin'
+; -----------------------------------------------------------------------------
+;wait 'UU'
+sendfile filename 1
+;sendfile 'd:\tftpboot\uart_ast1030_bic.bin' 1
