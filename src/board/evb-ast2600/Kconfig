@@ -1,0 +1,14 @@
+if TARGET_EVB_AST2600
+config BOARD_VENDOR
+	default "aspeed"
+
+config BOARD_NAME
+	default "evb-ast2600"
+
+config IMG_NAME
+	default "ast2600_ssp.bin"
+
+config ARM_ICE
+	bool "Arm ICE debug enable"
+	default y
+endif

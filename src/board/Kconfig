@@ -1,0 +1,15 @@
+config BOARD_VENDOR
+	string
+
+config BOARD_NAME
+	string
+
+config IMG_NAME
+	string
+
+source "board/evb-ast2600/Kconfig"
+source "board/evb-ast2605/Kconfig"
+source "board/fpga-ast2600/Kconfig"
+source "board/evb-ast1030/Kconfig"
+source "board/fpga-ast1030/Kconfig"
+source "board/yv35-cl/Kconfig"

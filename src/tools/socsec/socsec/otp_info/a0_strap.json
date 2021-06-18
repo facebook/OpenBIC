@@ -1,0 +1,664 @@
+[
+    {
+        "key": "Enable secure boot",
+        "type": "boolean",
+        "bit_offset": 0,
+        "info": [
+            "Disable Secure Boot",
+            "Enable Secure Boot"
+        ]
+    },
+    {
+        "key": "Enable boot from eMMC",
+        "type": "boolean",
+        "bit_offset": 1,
+        "info": [
+            "Disable boot from eMMC",
+            "Enable boot from eMMC"
+        ]
+    },
+    {
+        "key": "Boot from debug SPI",
+        "type": "boolean",
+        "bit_offset": 2,
+        "info": [
+            "Disable Boot from debug SPI",
+            "Enable Boot from debug SPI"
+        ]
+    },
+    {
+        "key": "Disable ARM CM3",
+        "type": "boolean",
+        "bit_offset": 3,
+        "info": [
+            "Enable ARM CM3",
+            "Disable ARM CM3"
+        ]
+    },
+    {
+        "key": "Enable dedicated VGA BIOS ROM",
+        "type": "boolean",
+        "bit_offset": 4,
+        "info": [
+            "No VGA BIOS ROM, VGA BIOS is merged in the system BIOS",
+            "Enable dedicated VGA BIOS ROM"
+        ]
+    },
+    {
+        "key": "MAC 1 RMII mode",
+        "type": "string",
+        "value": [
+            {
+                "value": "RMII/NCSI",
+                "bit": 0
+            },
+            {
+                "value": "RGMII",
+                "bit": 1
+            }
+        ],
+        "bit_offset": 5,
+        "bit_length": 1,
+        "info": "MAC 1 : {}"
+    },
+    {
+        "key": "MAC 2 RMII mode",
+        "type": "string",
+        "value": [
+            {
+                "value": "RMII/NCSI",
+                "bit": 0
+            },
+            {
+                "value": "RGMII",
+                "bit": 1
+            }
+        ],
+        "bit_offset": 6,
+        "bit_length": 1,
+        "info": "MAC 2 : {}"
+    },
+    {
+        "key": "CPU frequency",
+        "type": "string",
+        "value": [
+            {
+                "value": "1GHz",
+                "bit": 0
+            },
+            {
+                "value": "800MHz",
+                "bit": 1
+            },
+            {
+                "value": "1.2GHz",
+                "bit": 2
+            },
+            {
+                "value": "1.4GHz",
+                "bit": 3
+            }
+        ],
+        "bit_offset": 7,
+        "bit_length": 2,
+        "info": "CPU Frequency : {}"
+    },
+    {
+        "key": "HCLK ratio",
+        "type": "string",
+        "value": [
+            {
+                "value": "default",
+                "bit": 0
+            },
+            {
+                "value": "2:1",
+                "bit": 1
+            },
+            {
+                "value": "3:1",
+                "bit": 2
+            },
+            {
+                "value": "4:1",
+                "bit": 3
+            }
+        ],
+        "bit_offset": 10,
+        "bit_length": 2,
+        "info": "HCLK ratio AXI:AHB = {}"
+    },
+    {
+        "key": "VGA memory size",
+        "type": "string",
+        "value": [
+            {
+                "value": "8MB",
+                "bit": 0
+            },
+            {
+                "value": "16MB",
+                "bit": 1
+            },
+            {
+                "value": "32MB",
+                "bit": 2
+            },
+            {
+                "value": "64MB",
+                "bit": 3
+            }
+        ],
+        "bit_offset": 12,
+        "bit_length": 2,
+        "info": "VGA memory size : {}"
+    },
+    {
+        "key": "CPU/AXI clock ratio",
+        "type": "string",
+        "value": [
+            {
+                "value": "2:1",
+                "bit": 0
+            },
+            {
+                "value": "1:1",
+                "bit": 1
+            }
+        ],
+        "bit_offset": 15,
+        "bit_length": 1,
+        "info": "CPU/AXI clock ratio : {}"
+    },
+    {
+        "key": "Disable ARM JTAG debug",
+        "type": "boolean",
+        "bit_offset": 16,
+        "info": [
+            "Enable ARM JTAG debug",
+            "Disable ARM JTAG debug"
+        ]
+    },
+    {
+        "key": "VGA class code",
+        "type": "string",
+        "value": [
+            {
+                "value": "video_device",
+                "bit": 0
+            },
+            {
+                "value": "vga_device",
+                "bit": 1
+            }
+        ],
+        "bit_offset": 17,
+        "bit_length": 1,
+        "info": "VGA class code : {}"
+    },
+    {
+        "key": "Disable debug 0",
+        "type": "boolean",
+        "bit_offset": 18,
+        "info": [
+            "Enable debug interfaces 0",
+            "Disable debug interfaces 0"
+        ]
+    },
+    {
+        "key": "Boot from eMMC speed mode",
+        "type": "string",
+        "value": [
+            {
+                "value": "normal",
+                "bit": 0
+            },
+            {
+                "value": "high",
+                "bit": 1
+            }
+        ],
+        "bit_offset": 19,
+        "bit_length": 1,
+        "info": "Boot from eMMC speed mode : {}"
+    },
+    {
+        "key": "Enable PCIe EHCI",
+        "type": "boolean",
+        "bit_offset": 20,
+        "info": [
+            "Disable Pcie EHCI device",
+            "Enable Pcie EHCI device"
+        ]
+    },
+    {
+        "key": "Disable ARM JTAG trust world debug",
+        "type": "boolean",
+        "bit_offset": 21,
+        "info": [
+            "Enable ARM JTAG trust world debug",
+            "Disable ARM JTAG trust world debug"
+        ]
+    },
+    {
+        "key": "Disable dedicated BMC function",
+        "type": "boolean",
+        "bit_offset": 22,
+        "info": [
+            "Normal BMC mode",
+            "Disable dedicated BMC functions for non-BMC application"
+        ]
+    },
+    {
+        "key": "Enable dedicate PCIe RC reset",
+        "type": "boolean",
+        "bit_offset": 23,
+        "info": [
+            "SSPRST# pin is for secondary processor dedicated reset pin",
+            "SSPRST# pin is for PCIE root complex dedicated reset pin"
+        ]
+    },
+    {
+        "key": "Disable watchdog to reset full chip",
+        "type": "boolean",
+        "bit_offset": 24,
+        "info": [
+            "Enable watchdog to reset full chip",
+            "Disable watchdog to reset full chip"
+        ]
+    },
+    {
+        "key": "Internal bridge speed selection",
+        "type": "string",
+        "value": [
+            {
+                "value": "1x",
+                "bit": 0
+            },
+            {
+                "value": "1/2x",
+                "bit": 1
+            },
+            {
+                "value": "1/4x",
+                "bit": 2
+            },
+            {
+                "value": "1/8x",
+                "bit": 3
+            }
+        ],
+        "bit_offset": 25,
+        "bit_length": 2,
+        "info": "Internal bridge speed selection : {}"
+    },
+    {
+        "key": "Disable RVAS function",
+        "type": "boolean",
+        "bit_offset": 29,
+        "info": [
+            "Enable RVAS function",
+            "Disable RVAS function"
+        ]
+    },
+    {
+        "key": "MAC 3 RMII mode",
+        "type": "string",
+        "value": [
+            {
+                "value": "RMII/NCSI",
+                "bit": 0
+            },
+            {
+                "value": "RGMII",
+                "bit": 1
+            }
+        ],
+        "bit_offset": 32,
+        "bit_length": 1,
+        "info": "MAC 3 : {}"
+    },
+    {
+        "key": "MAC 4 RMII mode",
+        "type": "string",
+        "value": [
+            {
+                "value": "RMII/NCSI",
+                "bit": 0
+            },
+            {
+                "value": "RGMII",
+                "bit": 1
+            }
+        ],
+        "bit_offset": 33,
+        "bit_length": 1,
+        "info": "MAC 4 : {}"
+    },
+    {
+        "key": "SuperIO configuration address selection",
+        "type": "string",
+        "value": [
+            {
+                "value": "0x2e",
+                "bit": 0
+            },
+            {
+                "value": "0x4e",
+                "bit": 1
+            }
+        ],
+        "bit_offset": 34,
+        "bit_length": 1,
+        "info": "SuperIO configuration address : {}"
+    },
+    {
+        "key": "Disable LPC to decode SuperIO",
+        "type": "boolean",
+        "bit_offset": 35,
+        "info": [
+            "Enable LPC to decode SuperIO",
+            "Disable LPC to decode SuperIO"
+        ]
+    },
+    {
+        "key": "Disable debug 1",
+        "type": "boolean",
+        "bit_offset": 36,
+        "info": [
+            "Enable debug interfaces 1",
+            "Disable debug interfaces 1"
+        ]
+    },
+    {
+        "key": "Enable ACPI",
+        "type": "boolean",
+        "bit_offset": 37,
+        "info": [
+            "Disable ACPI function",
+            "Enable ACPI function"
+        ]
+    },
+    {
+        "key": "Select LPC/eSPI",
+        "type": "string",
+        "value": [
+            {
+                "value": "eSPI",
+                "bit": 0
+            },
+            {
+                "value": "LPC",
+                "bit": 1
+            }
+        ],
+        "bit_offset": 38,
+        "bit_length": 1,
+        "info": "Select LPC/eSPI : {}"
+    },
+    {
+        "key": "Enable SAFS",
+        "type": "boolean",
+        "bit_offset": 39,
+        "info": [
+            "Disable SAFS mode",
+            "Enable SAFS mode"
+        ]
+    },
+    {
+        "key": "Enable boot from uart5",
+        "type": "boolean",
+        "bit_offset": 40,
+        "info": [
+            "Disable boot from uart5",
+            "Enable boot from uart5"
+        ]
+    },
+    {
+        "key": "Enable boot SPI 3B address mode auto-clear",
+        "type": "boolean",
+        "bit_offset": 41,
+        "info": [
+            "Disable boot SPI 3B address mode auto-clear",
+            "Enable boot SPI 3B address mode auto-clear"
+        ]
+    },
+    {
+        "key": "Enable SPI 3B/4B address mode auto detection",
+        "type": "boolean",
+        "bit_offset": 42,
+        "info": [
+            "Disable boot SPI 3B/4B address mode auto detection",
+            "Enable boot SPI 3B/4B address mode auto detection"
+        ]
+    },
+    {
+        "key": "Enable boot SPI or eMMC ABR",
+        "type": "boolean",
+        "bit_offset": 43,
+        "info": [
+            "Disable boot SPI or eMMC ABR",
+            "Enable boot SPI or eMMC ABR"
+        ]
+    },
+    {
+        "key": "Boot SPI ABR Mode",
+        "type": "string",
+        "value": [
+            {
+                "value": "dual",
+                "bit": 0
+            },
+            {
+                "value": "single",
+                "bit": 1
+            }
+        ],
+        "bit_offset": 44,
+        "bit_length": 1,
+        "info": "Boot SPI ABR Mode : {}"
+    },
+    {
+        "key": "Boot SPI flash size",
+        "type": "string",
+        "value": [
+            {
+                "value": "0",
+                "bit": 0
+            },
+            {
+                "value": "2",
+                "bit": 1
+            },
+            {
+                "value": "4",
+                "bit": 2
+            },
+            {
+                "value": "8",
+                "bit": 3
+            },
+            {
+                "value": "16",
+                "bit": 4
+            },
+            {
+                "value": "32",
+                "bit": 5
+            },
+            {
+                "value": "64",
+                "bit": 6
+            },
+            {
+                "value": "128",
+                "bit": 7
+            }
+        ],
+        "bit_offset": 45,
+        "bit_length": 3,
+        "info": "Boot SPI flash size : {}MB"
+    },
+    {
+        "key": "Enable host SPI ABR",
+        "type": "boolean",
+        "bit_offset": 48,
+        "info": [
+            "Disable host SPI ABR",
+            "Enable host SPI ABR"
+        ]
+    },
+    {
+        "key": "Enable host SPI ABR mode select pin",
+        "type": "boolean",
+        "bit_offset": 49,
+        "info": [
+            "Disable host SPI ABR mode select pin",
+            "Enable host SPI ABR mode select pin"
+        ]
+    },
+    {
+        "key": "Host SPI ABR Mode",
+        "type": "string",
+        "value": [
+            {
+                "value": "dual",
+                "bit": 0
+            },
+            {
+                "value": "single",
+                "bit": 1
+            }
+        ],
+        "bit_offset": 50,
+        "bit_length": 1,
+        "info": "Host SPI ABR mode : {}"
+    },
+    {
+        "key": "Host SPI flash size",
+        "type": "string",
+        "value": [
+            {
+                "value": "0",
+                "bit": 0
+            },
+            {
+                "value": "2",
+                "bit": 1
+            },
+            {
+                "value": "4",
+                "bit": 2
+            },
+            {
+                "value": "8",
+                "bit": 3
+            },
+            {
+                "value": "16",
+                "bit": 4
+            },
+            {
+                "value": "32",
+                "bit": 5
+            },
+            {
+                "value": "64",
+                "bit": 6
+            },
+            {
+                "value": "128",
+                "bit": 7
+            }
+        ],
+        "bit_offset": 51,
+        "bit_length": 3,
+        "info": "Host SPI flash size : {}MB"
+    },
+    {
+        "key": "Enable boot SPI auxiliary control pins",
+        "type": "boolean",
+        "bit_offset": 54,
+        "info": [
+            "Disable boot SPI auxiliary control pins",
+            "Enable boot SPI auxiliary control pins"
+        ]
+    },
+    {
+        "key": "Boot SPI CRTM size",
+        "type": "string",
+        "value": [
+            {
+                "value": "0",
+                "bit": 0
+            },
+            {
+                "value": "256",
+                "bit": 1
+            },
+            {
+                "value": "512",
+                "bit": 2
+            },
+            {
+                "value": "1024",
+                "bit": 3
+            }
+        ],
+        "bit_offset": 55,
+        "bit_length": 2,
+        "info": "Boot SPI CRTM size : {}KB"
+    },
+    {
+        "key": "Host SPI CRTM size",
+        "type": "string",
+        "value": [
+            {
+                "value": "0",
+                "bit": 0
+            },
+            {
+                "value": "1024",
+                "bit": 1
+            },
+            {
+                "value": "2048",
+                "bit": 2
+            },
+            {
+                "value": "4096",
+                "bit": 3
+            }
+        ],
+        "bit_offset": 57,
+        "bit_length": 2,
+        "info": "Host SPI CRTM size : {}KB"
+    },
+    {
+        "key": "Enable host SPI auxiliary control pins",
+        "type": "boolean",
+        "bit_offset": 59,
+        "info": [
+            "Disable host SPI auxiliary control pins",
+            "Enable host SPI auxiliary control pins"
+        ]
+    },
+    {
+        "key": "Enable GPIO Pass Through",
+        "type": "boolean",
+        "bit_offset": 60,
+        "info": [
+            "Disable GPIO pass through",
+            "Enable GPIO pass through"
+        ]
+    },
+    {
+        "key": "Enable Dedicate GPIO Strap Pins",
+        "type": "boolean",
+        "bit_offset": 62,
+        "info": [
+            "Disable dedicate GPIO strap pins",
+            "Enable dedicate GPIO strap pins"
+        ]
+    }
+]

@@ -1,0 +1,11 @@
+if TARGET_FPGA_AST1030
+config BOARD_VENDOR
+	default "aspeed"
+
+config BOARD_NAME
+	default "fpga-ast1030"
+
+config IMG_NAME
+	default "ast1030_bic.bin"
+
+endif

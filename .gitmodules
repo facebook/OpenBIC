@@ -1,0 +1,7 @@
+[submodule "src/os/--force"]
+	path = src/os/--force
+	url = https://github.com/FreeRTOS/FreeRTOS-Kernel.git
+[submodule "src/os/FreeRTOS-Kernel"]
+	path = src/os/FreeRTOS-Kernel
+	url = https://github.com/FreeRTOS/FreeRTOS-Kernel.git
+	ignore = dirty

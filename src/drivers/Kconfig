@@ -1,0 +1,149 @@
+menu "Devices"
+config DEVICE_SERIAL
+	bool "Serial device and driver"
+	default y
+
+config DEVICE_TIMER
+	bool "Aspeed HW timer device and driver"
+	default y
+
+config DEVICE_DELAY_TIMER
+	depends on DEVICE_TIMER
+	int "Aspeed timer used for the delay function before OS kernel start"
+	default 0
+
+config DEVICE_I2C
+	bool "I2C device and driver"
+	default y
+
+config DEVICE_I3C
+	bool "I3C device and driver"
+	default n
+
+if DEVICE_I3C
+config DEVICE_I3CDMA
+	bool "I3C DMA device and driver"
+	default n
+
+config I3C_IBI
+	bool "I3C in-band-interrupt support"
+	default y
+
+config I3C_IBI_MAX_PAYLOAD
+	depends on I3C_IBI
+	int "Max IBI payload size"
+	default 124
+
+config I3C_MRL
+	int "Max read length"
+	default 256
+endif
+
+config DEVICE_IPI
+	bool "Inter-processor-interrupt device and driver"
+	default n
+
+config DEVICE_ESPI
+	bool "eSPI device and driver"
+	default y
+
+config DEVICE_ESPI_HOST_MAP_ADDR
+	depends on DEVICE_ESPI
+	hex "Host mapping address of eSPI peripheral channel"
+	default 0x98000000
+
+config DEVICE_ESPI_HOST_MAP_SIZE
+	depends on DEVICE_ESPI
+	hex "Host mapping size of eSPI peripheral channel"
+	default 0x10000
+
+config DEVICE_PECI
+	bool "PECI device and driver"
+	default y	
+
+config DEVICE_PECI_CMD_TIMEOUT
+	depends on DEVICE_PECI
+	int "Command timeout: unit is tick"
+	default 1000
+
+config DEVICE_GPIO
+	bool "GPIO device and driver"
+	default n
+
+config DEVICE_SGPIOM
+	bool "SGPIO master device and driver"
+	default n
+
+config DEVICE_PWM_TACH
+	bool "PWM/TACH device and driver"
+	default n
+
+config DEVICE_ADC
+	bool "ADC device and driver"
+	default y
+
+config DEVICE_JTAG
+	bool "JTAG device and driver"
+	default n
+
+config JTAG0_ENABLE
+	bool "Enable JTAG0"
+	depends on DEVICE_JTAG
+	default n
+
+config JTAG1_ENABLE
+	bool "Enable JTAG1"
+	depends on DEVICE_JTAG
+	default y
+
+config DEVICE_KCS
+	bool "IPMI KCS device and driver"
+	default y
+
+config DEVICE_BT
+	bool "IPMI BT device and driver"
+	default n
+
+config DEVICE_SNOOP
+	bool "LPC Snoop device and driver"
+	default n
+
+config DEVICE_PCC
+	bool "LPC PCC device and driver"
+	default n
+
+config DEVICE_USB
+	bool "USB device and driver"
+	default y
+
+config DEVICE_MAC
+	bool "Ethernet MAC device and driver"
+	default n
+
+config DEVICE_MDIO
+	bool "MDIO device and driver"
+	default n
+
+config DEVICE_FMC_SPI
+	bool "FMC/SPI device and driver"
+	default y
+
+config DEVICE_WDT
+	bool "Watchdog device and driver"
+	default y
+
+config WDT_TIMEOUT_MS
+	depends on DEVICE_WDT
+	int "Watchdog timeout value, unit is ms"
+	default 2000
+
+config WDT_RESET_MASK
+	depends on DEVICE_WDT
+	hex "Watchdog reset mask 1"
+	default 0x3fffff1
+
+config DEVICE_CRYPTO
+	bool "Crypto device and driver"
+	default n
+
+endmenu

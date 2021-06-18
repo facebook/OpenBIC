@@ -1,0 +1,155 @@
+menu "Architecture select"
+config ARM
+	bool "ARM architecture"
+	default y
+endmenu
+
+if ARM
+menu "ARM architecture"
+config ARCH_ASPEED
+	bool "Aspeed SOC"
+	default y
+
+config SOC_VENDOR
+	string
+
+source "arch/arm/Kconfig"
+endmenu
+endif
+
+menu "Board select"
+choice
+	prompt "AST2600 board select"
+	depends on AST2600_SERIES
+	default TARGET_EVB_AST2600
+
+config TARGET_EVB_AST2600
+	bool "EVB-AST2600"
+	depends on AST2600_SERIES
+
+config TARGET_EVB_AST2605
+	bool "EVB-AST2605"
+	depends on AST2600_SERIES
+
+config TARGET_FPGA_AST2600
+	bool "FPGA-AST2600"
+	depends on AST2600_SERIES
+endchoice
+
+choice
+	prompt "AST1030 board select"
+	depends on AST1030_SERIES
+	default TARGET_FPGA_AST1030
+
+config TARGET_YV35_CL
+  bool "YV35-CL"
+  depends on AST1030_SERIES
+
+config TARGET_EVB_AST1030A0
+	bool "EVB-AST1030A0"
+	depends on AST1030_SERIES
+
+config TARGET_EVB_AST1030
+	bool "EVB-AST1030"
+	depends on AST1030_SERIES
+
+config TARGET_FPGA_AST1030
+	bool "FPGA-AST1030"
+	depends on AST1030_SERIES
+endchoice
+
+source 	"board/Kconfig"
+endmenu
+
+menu "Debug"
+config STDIO_UART
+	int "STDIO UART port: 0=UART1, 1=UART2, ... 12=UART13"
+	default 4
+config PRINT_REG_W
+	bool "print every register-write"
+	default n
+config PINCTRL_NAME_TABLE
+	bool "print pin/signal with string name"
+	default n
+endmenu
+
+menu "FreeRTOS kernel"
+config USE_PREEMPTION
+	bool "use preemption"
+	default y
+
+config USE_CO_ROUTINES
+	bool "use co-routines"
+	default n
+
+choice
+	prompt "memory management"
+	default HEAP_4
+
+config HEAP_1
+	bool "use heap 1"
+	help 
+	  the very simplest, does not permit memory to be freed
+config HEAP_2
+	bool "use heap 2"
+	help 
+	  permits memory to be freed, but does not coalescence adjacent free 
+	  blocks
+config HEAP_3
+	bool "use heap 3"
+	help 
+	  simply wraps the standard malloc() and free() for thread safety
+config HEAP_4
+	bool "use heap 4"
+	help
+	  coalescences adjacent free blocks to avoid fragmentation. Includes 
+	  absolute address placement option
+config HEAP_5
+	bool "use heap 5"
+	help 
+	  as per heap_4, with the ability to span the heap across multiple 
+	  non-adjacent memory areas
+endchoice
+
+config APPLICATION_ALLOCATED_HEAP
+	int "set non-zero value to declare the heap buffer from startup.c"
+	default 1
+
+config TOTAL_HEAP_SIZE
+	int "total heap size"
+	default 65536
+
+config TOTAL_HEAP_NC_SIZE
+	int "total non-cached heap size"
+	default 32768
+
+config CHECK_FOR_STACK_OVERFLOW
+	int "check for stack overflow. 0=don't check, 1=method1, 2=method2"
+	default 1
+	help
+	  see https://www.freertos.org/Stacks-and-stack-overflow-checking.html
+
+endmenu
+
+menu "FreeRTOS CLI"
+config CLI_BAUD_RATE
+	int "FreeRTOS CLI Baud"
+	default 115200
+
+config CMD_HISTORY_SIZE
+	int "FreeRTOS CLI dimensions the buffer into which history shell command are placed."
+	default 10
+
+config CMD_MAX_INPUT_SIZE
+	int "FreeRTOS CLI dimensions the buffer into which input characters are placed."
+	default 50
+
+config CMD_MAX_INPUT_ARGS
+	int "FreeRTOS CLI dimensions the buffer into which input args are placed."
+	default 10
+
+config INCLUDE_QUERY_HEAP_COMMAND
+	bool "include query heap command"
+	default y
+endmenu
+
