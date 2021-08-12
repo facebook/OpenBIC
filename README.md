@@ -68,4 +68,4 @@ The build ouput can be found in the `bin` directory.
 
 ## License
 
-OpenBIC is [Apache 2.0 licensed](https://github.com/facebookincubator/OpenBIC/blob/master/LICENSE)
+OpenBIC is [Apache 2.0 licensed](https://github.com/facebookincubator/OpenBIC/blob/main/LICENSE)
