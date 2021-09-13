@@ -1,7 +1,0 @@
--include $(KCONFIG_CONFIG)
-obj-$(CONFIG_TARGET_EVB_AST2600) += evb-ast2600/
-obj-$(CONFIG_TARGET_EVB_AST2605) += evb-ast2605/
-obj-$(CONFIG_TARGET_FPGA_AST2600) += fpga-ast2600/
-obj-$(CONFIG_TARGET_EVB_AST1030) += evb-ast1030/
-obj-$(CONFIG_TARGET_FPGA_AST1030) += fpga-ast1030/
-obj-$(CONFIG_TARGET_YV35_CL) += yv35-cl/

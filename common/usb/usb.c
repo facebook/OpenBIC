@@ -1,66 +1,111 @@
-/*
- * Copyright (c) 2020-2021 Aspeed Technology Inc.
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-#include <stdio.h>
-#include <string.h>
-#include "cmsis_os.h"
-#include "board_device.h"
-#include "objects.h"
-#include "cache_aspeed.h"
-#include "getopt.h"
-#include "usb_api.h"
-#include "log.h"
-#include "FreeRTOS_CLI.h"
+#include <device.h>
+#include <drivers/uart.h>
+#include <usb/usb_device.h>
+#include <logging/log.h>
+#include <sys/ring_buffer.h>
+#include "cmsis_os2.h"
+#include "ipmi.h"
+#include "usb.h"
+#include "pal.h"
 
-#define MAX_INPUT_LENGTH	50
-#define MAX_OUTPUT_LENGTH	100
+#define RX_BUFF_SIZE    64
+#define RING_BUF_SIZE   1024
 
-extern usb_t usb[];
+RING_BUF_DECLARE(ringbuf, RING_BUF_SIZE);
 
-static osEventFlagsId_t usb_task_event;
-static osThreadId_t tid_taskUSB, tid_tmp;
-static osThreadAttr_t tattr_taskUSB;
-uint8_t *rx_buff;
+static const struct device *dev;
 
-static void usb_slave_task(void *argv) {
-	int rx_len, wait_ret;
+struct k_thread USB_handler;
+K_KERNEL_STACK_MEMBER(USB_handler_stack, USB_HANDLER_STACK_SIZE);
 
-	rx_buff = pvPortMallocNc(1024);
-	memset(rx_buff, 0, 1024);
-	usb_acquire(&usb[0]);
-	while (1) {
-		rx_len = usb_read(&usb[0], 2, rx_buff, 1024);
-    if (rx_len <= 0) {
+int total_len;
+int transfer_wait;
+int data_print;
+
+void USB_write(ipmi_msg *ipmi_resp) {
+  uint8_t tx_buf[RX_BUFF_SIZE];
+  struct ipmi_response *resp = (struct ipmi_response *)tx_buf;
+
+  pack_ipmi_resp(resp, ipmi_resp);
+
+  if ( DEBUG_USB ) {
+    int i;
+    printk("usb resp: %x %x %x, ", resp->netfn, resp->cmd, resp->cmplt_code);
+    for (i = 0; i < ipmi_resp->data_len; i++)
+      printk("0x%x ", resp->data[i]);
+    printk("\n");
+  }
+  uart_fifo_fill(dev, tx_buf, ipmi_resp->data_len + 3); // return netfn + cmd + comltcode + data
+}
+
+static void USB_handle(void *arug0, void *arug1, void *arug2)
+{
+  uint8_t rx_buff[RX_BUFF_SIZE];
+  int rx_len;
+  int i;
+
+  while (1) {
+    k_msleep(100);
+
+    rx_len = ring_buf_get(&ringbuf, rx_buff, sizeof(rx_buff));
+    if (!rx_len) {
       continue;
     }
 
+    if ( DEBUG_USB ) {
+      printk("Print Data: ");
+      for (i = 0; i < rx_len; i++)
+        printk("0x%x ", rx_buff[i]);
+      printk("\n");
+    }
     pal_usb_handler(rx_buff, rx_len);
-
-		usb_write(&usb[0], 1, (uint8_t *)rx_buff, rx_len);
-		wait_ret = osEventFlagsWait(usb_task_event, 0x00000001U, osFlagsWaitAll, 1);
-		if (wait_ret == 1) {
-      printf("*****USB TIMEOUT*****\n");
-			usb_release(&usb[0]);
-			vPortFreeNc(rx_buff);
-			tid_tmp = tid_taskUSB;
-			tid_taskUSB = NULL;
-			osThreadTerminate(tid_tmp);
-		}
-	}
+  }
 }
 
-void usb_slavedev_init(void) {
-  usb_task_event = osEventFlagsNew(NULL);
-  tattr_taskUSB.name = "usb_slave_thread";
-  tattr_taskUSB.priority = osPriorityBelowNormal;
-  tattr_taskUSB.stack_size = 0x1000;
+// uart_fifo_fill
+static void interrupt_handler(const struct device *dev, void *user_data)
+{
+  uint8_t rx_buff[RX_BUFF_SIZE];
+  int recv_len, rx_len;
 
-  if (tid_taskUSB) {
-    log_warn("USB slave device is already running\n");
+  ARG_UNUSED(user_data);
+
+  while (uart_irq_is_pending(dev) && uart_irq_rx_ready(dev)) {
+    recv_len = uart_fifo_read(dev, rx_buff, sizeof(rx_buff));
+
+    if (recv_len) {
+      rx_len = ring_buf_put(&ringbuf, rx_buff, recv_len);
+      if (rx_len < recv_len) {
+        printk("Drop %u bytes\n", recv_len - rx_len);
+      }
+    }
+  }
+}
+
+void usb_dev_init(void) {
+  int ret;
+
+  ret = usb_enable(NULL);
+  if (ret) {
+    printk("Failed to enable USB");
     return;
   }
 
-  tid_taskUSB = osThreadNew(usb_slave_task, NULL, &tattr_taskUSB);
+  dev = device_get_binding("CDC_ACM_0");
+  if (!dev) {
+    printk("CDC ACM device not found");
+    return;
+  }
+
+  uart_irq_callback_set(dev, interrupt_handler);
+
+  /* Enable rx interrupts */
+  uart_irq_rx_enable(dev);
+
+  k_thread_create(&USB_handler, USB_handler_stack,
+                  K_THREAD_STACK_SIZEOF(USB_handler_stack),
+                  USB_handle,
+                  NULL, NULL, NULL,
+                  osPriorityBelowNormal, 0, K_NO_WAIT);
+  k_thread_name_set(&USB_handler, "USB_handler");
 }

@@ -1,1 +1,0 @@
-obj-y += FreeRTOS_CLI.o  Sample-CLI-commands.o  UARTCommandConsole.o
