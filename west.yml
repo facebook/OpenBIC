@@ -13,5 +13,5 @@ manifest:
       import: true
 
   self:
-    path: yv3.5_zephyr_bic
+    path: openbic
 
