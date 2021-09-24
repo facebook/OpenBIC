@@ -1,8 +1,0 @@
-diff --git a/portable/GCC/ARM_CM4F/Makefile b/portable/GCC/ARM_CM4F/Makefile
-new file mode 100644
-index 000000000..7df33506f
---- /dev/null
-+++ b/portable/GCC/ARM_CM4F/Makefile
-@@ -0,0 +1 @@
-+obj-y += port.o
-\ No newline at end of file

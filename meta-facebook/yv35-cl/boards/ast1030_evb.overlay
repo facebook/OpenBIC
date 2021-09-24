@@ -1,0 +1,300 @@
+
+&pwm {
+	status = "okay";
+	pinctrl-0 = <&pinctrl_pwm0_default &pinctrl_pwm1_default
+			&pinctrl_pwm2_default &pinctrl_pwm3_default
+			&pinctrl_pwm4_default &pinctrl_pwm5_default
+			&pinctrl_pwm6_default &pinctrl_pwm7_default
+			&pinctrl_pwm8_default &pinctrl_pwm9_default
+			&pinctrl_pwm10_default &pinctrl_pwm11_default
+			&pinctrl_pwm12_default &pinctrl_pwm13_default
+			&pinctrl_pwm14_default &pinctrl_pwm15_default>;
+
+};
+
+&adc0 {
+	status = "okay";
+	pinctrl-0 = <&pinctrl_adc0_default &pinctrl_adc1_default
+		&pinctrl_adc2_default &pinctrl_adc3_default
+		&pinctrl_adc4_default &pinctrl_adc5_default
+		&pinctrl_adc6_default &pinctrl_adc7_default>;
+};
+
+&adc1 {
+	status = "okay";
+	pinctrl-0 = <&pinctrl_adc8_default &pinctrl_adc9_default
+		&pinctrl_adc10_default &pinctrl_adc11_default
+		&pinctrl_adc12_default &pinctrl_adc13_default
+		&pinctrl_adc14_default &pinctrl_adc15_default>;
+};
+
+&jtag1{
+	status = "okay";
+};
+
+&tach {
+	status = "okay";
+	pinctrl-0 = <&pinctrl_tach0_default &pinctrl_tach1_default
+			&pinctrl_tach2_default &pinctrl_tach3_default
+			&pinctrl_tach4_default &pinctrl_tach5_default
+			&pinctrl_tach6_default &pinctrl_tach7_default
+			&pinctrl_tach8_default &pinctrl_tach9_default
+			&pinctrl_tach10_default &pinctrl_tach11_default
+			&pinctrl_tach12_default &pinctrl_tach13_default
+			&pinctrl_tach14_default &pinctrl_tach15_default>;
+	fan@0 {
+		reg = <0>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN0";
+	};
+
+	fan@1 {
+		reg = <1>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN1";
+	};
+
+	fan@2 {
+		reg = <2>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN2";
+	};
+
+	fan@3 {
+		reg = <3>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN3";
+	};
+
+	fan@4 {
+		reg = <4>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN4";
+	};
+
+	fan@5 {
+		reg = <5>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN5";
+	};
+
+	fan@6 {
+		reg = <6>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN6";
+	};
+
+	fan@7 {
+		reg = <7>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN7";
+	};
+
+	fan@8 {
+		reg = <8>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN8";
+	};
+
+	fan@9 {
+		reg = <9>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN9";
+	};
+
+	fan@a {
+		reg = <0xa>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN10";
+	};
+
+	fan@b {
+		reg = <0xb>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN11";
+	};
+
+	fan@c {
+		reg = <0xc>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN12";
+	};
+
+	fan@d {
+		reg = <0xd>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN13";
+	};
+
+	fan@e {
+		reg = <0xe>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN14";
+	};
+
+	fan@f {
+		reg = <0xf>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN15";
+	};
+};
+
+&i2c0 {
+	pinctrl-0 = <&pinctrl_i2c0_default>;
+	status = "okay";
+
+};
+
+&i2c1 {
+	pinctrl-0 = <&pinctrl_i2c1_default>;
+	status = "okay";
+
+};
+
+&i2c2 {
+	pinctrl-0 = <&pinctrl_i2c2_default>;
+  clock-frequency = <I2C_BITRATE_FAST_PLUS>;
+	status = "okay";
+
+	ipmb2: ipmb@20 {
+		compatible = "aspeed,ipmb";
+		reg = <0x20>;
+		label = "IPMB_2";
+		size = <10>;
+#ifdef CONFIG_I2C_IPMB_SLAVE
+		status = "okay";
+#endif
+	};
+
+};
+
+&i2c3 {
+	pinctrl-0 = <&pinctrl_i2c3_default>;
+	status = "okay";
+
+};
+
+&i2c4 {
+	pinctrl-0 = <&pinctrl_i2c4_default>;
+	status = "okay";
+
+};
+
+&i2c5 {
+	pinctrl-0 = <&pinctrl_i2c5_default>;
+	status = "okay";
+
+};
+
+&i2c6 {
+	pinctrl-0 = <&pinctrl_i2c6_default>;
+  clock-frequency = <I2C_BITRATE_FAST_PLUS>;
+	status = "okay";
+
+	ipmb6: ipmb@20 {
+		compatible = "aspeed,ipmb";
+		reg = <0x20>;
+		label = "IPMB_6";
+		size = <10>;
+		status = "okay";
+	};
+};
+
+&i2c7 {
+	pinctrl-0 = <&pinctrl_i2c7_default>;
+  clock-frequency = <I2C_BITRATE_FAST_PLUS>;
+	status = "okay";
+
+	ipmb7: ipmb@20 {
+		compatible = "aspeed,ipmb";
+		reg = <0x21>;
+		label = "IPMB_7";
+		size = <10>;
+#ifdef CONFIG_I2C_IPMB_SLAVE
+		status = "okay";
+#endif
+	};
+
+};
+
+&i2c8 {
+	pinctrl-0 = <&pinctrl_i2c8_default>;
+  clock-frequency = <I2C_BITRATE_FAST_PLUS>;
+	status = "okay";
+
+	ipmb8: ipmb@20 {
+		compatible = "aspeed,ipmb";
+		reg = <0x20>;
+		label = "IPMB_8";
+		size = <10>;
+#ifdef CONFIG_I2C_IPMB_SLAVE
+		status = "okay";
+#endif
+	};
+
+};
+
+&i2c9 {
+	pinctrl-0 = <&pinctrl_i2c9_default>;
+	status = "okay";
+
+};
+
+&espi {
+	status = "okay";
+
+	perif,dma-mode;
+	perif,memcyc-src-addr = <0x98000000>;
+	perif,memcyc-size = <0x10000>;
+
+	oob,dma-mode;
+
+	flash,dma-mode;
+	flash,safs-mode = <0x1>;
+};
+
+&udc {
+	status = "okay";
+};
+
+&kcs3 {
+  status = "okay";
+  addr = <0xca2>;
+};
+
+&uart5 {
+  current-speed = <57600>;
+};
+
