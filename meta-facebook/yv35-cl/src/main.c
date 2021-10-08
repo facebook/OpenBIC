@@ -17,6 +17,7 @@
 
 void device_init(){
   adc_init();
+  peci_init();
 }
 
 void main(void)
