@@ -1,5 +1,6 @@
 #ifndef PLAT_FUNC_H
 #define PLAT_FUNC_H
+#include <stdbool.h>
 
 void ISR_usbhub();
 void ISR_pltrst();

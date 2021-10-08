@@ -87,6 +87,70 @@ bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd) {
   return 0;
 }
 
+void pal_CHASSIS_GET_CHASSIS_STATUS(ipmi_msg *msg) {
+  if (msg->data_len != 0) {
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+  CHASSIS_STATUS chassis_status = {0};
+  uint8_t result = 0;
+
+  // CurrPwState
+  chassis_status.currPwState.pwOn = get_DC_status();
+  chassis_status.currPwState.pwFault = get_DC_status();
+  // Update pwRestorePolicy
+  chassis_status.currPwState.pwRestorePolicy = 0x2;
+  result = (result | chassis_status.currPwState.reserve) << 2;
+  result = (result | chassis_status.currPwState.pwRestorePolicy) << 1;
+  result = (result | chassis_status.currPwState.pwControlFault) << 1;
+  result = (result | chassis_status.currPwState.pwFault) << 1;
+  result = (result | chassis_status.currPwState.interlock) << 1;
+  result = (result | chassis_status.currPwState.pwOverload) << 1;
+  result = (result | chassis_status.currPwState.pwOn);
+  msg->data[0] = result;
+
+  // LastPwEvt
+  result = 0;
+  // Update pwOnIpmi
+  result = (result | chassis_status.lastPwEvt.reserve) << 1;
+  result = (result | chassis_status.lastPwEvt.pwOnIpmi) << 1;
+  result = (result | chassis_status.lastPwEvt.pwDownFault) << 1;
+  result = (result | chassis_status.lastPwEvt.pwDownInterlock) << 1;
+  result = (result | chassis_status.lastPwEvt.pwDownOverload) << 1;
+  result = (result | chassis_status.lastPwEvt.acFail);
+  msg->data[1] = result;
+
+  // Misc
+  result = 0;
+  // Update idLedSupport, idLedState, fanFault, fpcLockout, intru
+  result = (result | chassis_status.misc.reserve) << 1;
+  result = (result | chassis_status.misc.idLedSupport) << 2;
+  result = (result | chassis_status.misc.idLedState) << 1;
+  result = (result | chassis_status.misc.fanFault) << 1;
+  result = (result | chassis_status.misc.driveFault) << 1;
+  result = (result | chassis_status.misc.fpcLockout) << 1;
+  result = (result | chassis_status.misc.intru);
+  msg->data[2] = result;
+
+  // ChassisButtonEnables
+  result = 0;
+  result = (result | chassis_status.chassisButtonEnables.standbyDisableAllowed) << 1;
+  result = (result | chassis_status.chassisButtonEnables.diagnosticDisableAllowed) << 1;
+  result = (result | chassis_status.chassisButtonEnables.resetButtonDisableAllowed) << 1;
+  result = (result | chassis_status.chassisButtonEnables.powerOffButtonDisableAllowed) << 1;
+  result = (result | chassis_status.chassisButtonEnables.standbyDisable) << 1;
+  result = (result | chassis_status.chassisButtonEnables.diagnosticDisable) << 1;
+  result = (result | chassis_status.chassisButtonEnables.resetButtonDisable) << 1;
+  result = (result | chassis_status.chassisButtonEnables.powerOffButtonDisable);
+  msg->data[3] = result;
+
+  msg->data_len = 4;
+  msg->completion_code = CC_SUCCESS;
+  return;
+
+}
+
 void pal_APP_GET_DEVICE_ID(ipmi_msg *msg)
 {
 	if (msg->data_len != 0) {
