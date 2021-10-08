@@ -385,7 +385,6 @@ void IPMB_RXTask(void *pvParameters)
       if (!ret) {
         memcpy(ipmb_buffer_rx, (uint8_t *)msg, rx_len);
         ipmb_buffer_rx[0] = ipmb_buffer_rx[0] >> 1;
-        ipmb_slave_remove(dev_ipmb[ipmb_cfg.bus]);
       } else {
         continue;
       }
@@ -826,7 +825,6 @@ void ipmb_util_init(uint8_t index)
 void ipmb_init(void)
 {
   uint8_t index;
-
   init_ipmb_slave_dev();
 
   IPMB_config_table = malloc(MAX_IPMB_IDX * sizeof(IPMB_config));
