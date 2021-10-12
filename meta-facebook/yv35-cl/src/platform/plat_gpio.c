@@ -29,7 +29,7 @@ GPIO_CFG plat_gpio_cfg[] = {
 //  { chip_gpio,  9,       ENABLE,  GPIO_OUTPUT,  GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_EDGE_RISING,  ISR_usbhub      }, 
   { chip_gpio,  9,       ENABLE,  GPIO_OUTPUT,  GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL            }, 
   { chip_gpio,  10,      ENABLE,  GPIO_OUTPUT,  GPIO_LOW,   PUSH_PULL,   GPIO_INT_DISABLE,      NULL            },
-  { chip_gpio,  11,      ENABLE,  GPIO_OUTPUT,  GPIO_LOW,   PUSH_PULL,   GPIO_INT_DISABLE,      NULL            },
+  { chip_gpio,  11,      ENABLE,  GPIO_OUTPUT,  GPIO_HIGH,  PUSH_PULL,   GPIO_INT_DISABLE,      NULL            },
   { chip_gpio,  12,      ENABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL            },
   { chip_gpio,  13,      ENABLE,  GPIO_INPUT,   GPIO_HIGH,  PUSH_PULL,   GPIO_INT_DISABLE,      NULL            },
   { chip_gpio,  14,      ENABLE,  GPIO_INPUT,   GPIO_LOW,   OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL            },

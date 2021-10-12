@@ -280,6 +280,12 @@ void pal_APP_MASTER_WRITE_READ(ipmi_msg *msg) {
   }
 
   bus_7bit = ( (msg->data[0]-1) >> 1); // should ignore bit0, all bus public
+  if(bus_7bit >= I2C_BUS_NUM) {
+    printk("Accessing invalid bus with IPMI master write read\n");
+    msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+    return;
+  }
+
   i2c_msg.bus = i2c_bus_to_index[bus_7bit];
   i2c_msg.slave_addr = (msg->data[1] >> 1); // 8 bit address to 7 bit
   i2c_msg.rx_len = msg->data[2];
@@ -754,14 +760,14 @@ void pal_OEM_FW_UPDATE(ipmi_msg *msg) {
       msg->completion_code = CC_PARAM_OUT_OF_RANGE;
       return;
     }
-    //status = fw_update(offset, length, &msg->data[7], (target & UPDATE_EN), spi1_bus, spi0_cs);
+    status = fw_update(offset, length, &msg->data[7], (target & UPDATE_EN), devspi_spi1_cs0);
 
   } else if( (target == BIC_UPDATE) || (target == (BIC_UPDATE | UPDATE_EN)) ) {
     if(offset > 0x50000) { // Expect BIC firmware size not bigger than 320k
       msg->completion_code = CC_PARAM_OUT_OF_RANGE;
       return;
     }
-    status = fw_update(offset, length, &msg->data[7], (target & UPDATE_EN), devspi_fmc);
+    status = fw_update(offset, length, &msg->data[7], (target & UPDATE_EN), devspi_fmc_cs0);
   }
 
   msg->data_len = 0;

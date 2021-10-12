@@ -3,13 +3,20 @@
 
 #define NUM_SPI_DEV 3
 #define sector_sz_64k 0x10000
+#define sector_sz_32k 0x08000
+#define sector_sz_16k 0x04000
+#define sector_sz_4k  0x01000
+#define sector_sz_1k  0x00400
 
 #define FW_UPDATE_DEBUG 0
 
 enum {
-  devspi_fmc,
-  devspi_spi1,
-  devspi_spi2,
+  devspi_fmc_cs0,
+  devspi_fmc_cs1,
+  devspi_spi1_cs0,
+  devspi_spi1_cs1,
+  devspi_spi2_cs0,
+  devspi_spi2_cs1,
 };
 
 uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool update_en, uint8_t bus);
