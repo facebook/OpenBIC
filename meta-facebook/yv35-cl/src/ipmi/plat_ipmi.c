@@ -861,3 +861,23 @@ void pal_OEM_GET_FW_VERSION(ipmi_msg *msg) {
   }
   return;
 }
+
+void pal_OEM_I2C_DEV_SCAN(ipmi_msg *msg) {
+  if (msg->data[0] == 0x9C && msg->data[1] == 0x9C && msg->data[2] == 0x00) {
+    while(1); // hold firmware for debug only
+  }
+
+  if (msg->data_len != 1) { // only input scan bus
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+  uint8_t bus = i2c_bus_to_index[msg->data[0]];
+  uint8_t addr_buf_size = 20;
+  uint8_t addr_buf[addr_buf_size], addr_buf_len, i;
+
+  i2c_scan(bus, &msg->data[0], &msg->data_len);
+
+  msg->completion_code = CC_SUCCESS;
+  return;
+}

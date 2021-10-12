@@ -121,6 +121,31 @@ int i2c_master_write(I2C_MSG *msg, uint8_t retry) {
   return ECANCELED;
 }
 
+void i2c_scan(uint8_t bus, uint8_t *slave_addr, uint8_t *slave_addr_len) {
+  uint8_t  cnt = 0, first = 0x04, last = 0x77;
+  *slave_addr_len = 0;
+
+  for (uint8_t i = 0; i <= last; i += 16) {
+    for (uint8_t j = 0; j < 16; j++) {
+      if (i + j < first || i + j > last) {
+        continue;
+      }
+
+      struct i2c_msg msgs[1];
+      uint8_t dst;
+
+      /* Send the address to read from */
+      msgs[0].buf = &dst;
+      msgs[0].len = 0U;
+      msgs[0].flags = I2C_MSG_WRITE | I2C_MSG_STOP;
+      if (i2c_transfer(dev_i2c[bus], &msgs[0], 1, i + j) == 0) {
+        slave_addr[*slave_addr_len] = (i + j) << 1;
+        (*slave_addr_len)++;
+      }
+    }
+  }
+}
+
 void util_init_I2C(void) {
   int status;
 
