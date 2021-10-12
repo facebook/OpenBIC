@@ -8,11 +8,9 @@
 #include "usb.h"
 #include "pal.h"
 
-#define RX_BUFF_SIZE    64
-#define RING_BUF_SIZE   1024
-
 RING_BUF_DECLARE(ringbuf, RING_BUF_SIZE);
 
+static struct k_sem usbhandle_sem;
 static const struct device *dev;
 
 struct k_thread USB_handler;
@@ -41,10 +39,10 @@ static void USB_handle(void *arug0, void *arug1, void *arug2)
   int i;
 
   while (1) {
-    k_msleep(100);
-
+    k_sem_take(&usbhandle_sem, K_FOREVER);
     rx_len = ring_buf_get(&ringbuf, rx_buff, sizeof(rx_buff));
     if (!rx_len) {
+      k_msleep(10);
       continue;
     }
 
@@ -58,7 +56,6 @@ static void USB_handle(void *arug0, void *arug1, void *arug2)
   }
 }
 
-// uart_fifo_fill
 static void interrupt_handler(const struct device *dev, void *user_data)
 {
   uint8_t rx_buff[RX_BUFF_SIZE];
@@ -73,6 +70,8 @@ static void interrupt_handler(const struct device *dev, void *user_data)
       rx_len = ring_buf_put(&ringbuf, rx_buff, recv_len);
       if (rx_len < recv_len) {
         printk("Drop %u bytes\n", recv_len - rx_len);
+      } else {
+        k_sem_give(&usbhandle_sem);
       }
     }
   }
@@ -104,4 +103,7 @@ void usb_dev_init(void) {
                   NULL, NULL, NULL,
                   osPriorityBelowNormal, 0, K_NO_WAIT);
   k_thread_name_set(&USB_handler, "USB_handler");
+
+  uint8_t init_sem_count = RING_BUF_SIZE / RX_BUFF_SIZE;
+  k_sem_init(&usbhandle_sem, 0, init_sem_count);
 }
