@@ -11,7 +11,8 @@
 #include "worker.h"
 #include "sensor.h"
 #include "hal_i2c.h"
-#include "hal_gpio.h"
+#include "plat_gpio.h"
+#include "ipmi_def.h"
 #include "ipmi.h"
 #include "kcs.h"
 
@@ -20,9 +21,14 @@ void device_init(){
   peci_init();
 }
 
+void set_sys_status() {
+  gpio_set(BIC_READY, GPIO_HIGH);
+}
+
 void main(void)
 {
-  printk("Hello yv35 cl\n");
+  uint8_t proj_stage = (FIRMWARE_REVISION_1 & 0xf0) >> 4;
+  printk("Hello, wellcome to yv35 craterlake POC %d\n", FIRMWARE_REVISION_2);
 
   util_init_timer();
   util_init_I2C();
@@ -34,5 +40,6 @@ void main(void)
   kcs_init();
   usb_dev_init();
   device_init();
+  set_sys_status();
 }
 
