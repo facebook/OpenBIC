@@ -15,6 +15,7 @@
 #include "ipmi_def.h"
 #include "ipmi.h"
 #include "kcs.h"
+#include "plat_func.h"
 
 void device_init() {
   adc_init();
@@ -24,6 +25,8 @@ void device_init() {
 void set_sys_status() {
   gpio_set(FM_SPI_PCH_MASTER_SEL_R, GPIO_LOW);
   gpio_set(BIC_READY, GPIO_HIGH);
+  set_DC_status();
+  set_post_status();
 }
 
 void main(void)
