@@ -179,6 +179,19 @@ void pal_APP_GET_DEVICE_ID(ipmi_msg *msg)
 	return;
 }
 
+void pal_APP_WARM_RESET(ipmi_msg *msg)
+{
+  if (msg->data_len != 0) {
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+  submit_bic_warm_reset();
+
+  msg->completion_code = CC_SUCCESS;
+  return;
+}
+
 void pal_APP_GET_SELFTEST_RESULTS(ipmi_msg *msg) {
   if (msg->data_len != 0) {
     msg->completion_code = CC_INVALID_LENGTH;
