@@ -5,6 +5,24 @@
 #include "hal_gpio.h"
 #include "pal.h"
 
+/* get bic boot source through from SRST */
+#define SYS_RST_EVT_LOG_REG 0x7e6e2074
+#define SRST_POWER_ON_SET BIT(0)
+
+static bool is_boot_ACon = 0;
+
+void set_boot_source() {
+  uint32_t sys_rst_evt;
+
+  sys_rst_evt = sys_read32(SYS_RST_EVT_LOG_REG);
+  is_boot_ACon = sys_rst_evt & 0x1;
+  sys_write32(SRST_POWER_ON_SET, SYS_RST_EVT_LOG_REG);
+}
+
+bool get_boot_source_ACon() {
+  return is_boot_ACon;
+}
+/* get bic boot source through from SRST */
 
 /* bic warm reset work */
 #define bic_warm_reset_delay 100
