@@ -1,0 +1,72 @@
+From 612157039e8add6445f179c4e652cf2219308e4b Mon Sep 17 00:00:00 2001
+From: tommy-huang <tommy_huang@aspeedtech.com>
+Date: Thu, 30 Sep 2021 14:42:17 +0800
+Subject: [PATCH] drivers: i2c: add mutex to avoid re-entry
+
+Add mutux lock / unlock protect for api re-entry
+
+Signed-off-by: tommy-huang <tommy_huang@aspeedtech.com>
+Change-Id: Ia4459acfe8fcd382875aa5dfb64c7f9fac8dd6d1
+---
+ drivers/i2c/i2c_aspeed.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/drivers/i2c/i2c_aspeed.c b/drivers/i2c/i2c_aspeed.c
+index eba10e5fe0..ff29f250b1 100644
+--- a/drivers/i2c/i2c_aspeed.c
++++ b/drivers/i2c/i2c_aspeed.c
+@@ -301,6 +301,7 @@ struct i2c_aspeed_config {
+ 
+ struct i2c_aspeed_data {
+ 	struct k_sem sync_sem;
++	struct k_mutex trans_mutex;
+ 
+ 	int alert_enable;
+ 
+@@ -546,6 +547,7 @@ static uint32_t i2c_aspeed_select_clock(const struct device *dev)
+ 
+ /*Default maximum time we allow for an I2C transfer (unit:ms)*/
+ #define I2C_TRANS_TIMEOUT K_MSEC(100)
++#define I2C_ENTRY_TIMEOUT K_MSEC(200)
+ 
+ static int i2c_wait_completion(const struct device *dev)
+ {
+@@ -831,12 +833,18 @@ static int i2c_aspeed_transfer(const struct device *dev, struct i2c_msg *msgs,
+ 		return 0;
+ 	}
+ 
++	/* mutex lock for api re-entry */
++	if (k_mutex_lock(&(data->trans_mutex), I2C_ENTRY_TIMEOUT) != 0) {
++		return -ETIMEDOUT;
++	}
++
+ 	/*If bus is busy in a single master environment, attempt recovery.*/
+ 	if (!config->multi_master &&
+ 	(sys_read32(i2c_base + AST_I2CC_STS_AND_BUFF) & AST_I2CC_BUS_BUSY_STS)) {
+ 		int ret;
+ 		ret = aspeed_new_i2c_recover_bus(dev);
+ 		if (ret) {
++			k_mutex_unlock(&data->trans_mutex);
+ 			return ret;
+ 		}
+ 	}
+@@ -858,6 +866,7 @@ static int i2c_aspeed_transfer(const struct device *dev, struct i2c_msg *msgs,
+ 		    (sys_read32(i2c_base + AST_I2CC_STS_AND_BUFF) & AST_I2CC_BUS_BUSY_STS)) {
+ 			aspeed_new_i2c_recover_bus(dev);
+ 		}
++		k_mutex_unlock(&data->trans_mutex);
+ 		return -ETIMEDOUT;
+ 	}
+ 
+@@ -869,6 +878,8 @@ static int i2c_aspeed_transfer(const struct device *dev, struct i2c_msg *msgs,
+ 	}
+ 
+ 	LOG_DBG(" end %d\n", data->cmd_err);
++	/* mutex unlock */
++	k_mutex_unlock(&data->trans_mutex);
+ 
+ 	return data->cmd_err;
+ 
+-- 
+2.17.1
+

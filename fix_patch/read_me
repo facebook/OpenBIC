@@ -1,0 +1,5 @@
+  This file is for driver hot fix before Aspeed new tag is released.
+
+  To make sure application is competitive with driver from Aspeed SDK,
+  please patch drivers in zephyrproject/zephyr/ with git patch
+  correspoding to revision in yaml file.
