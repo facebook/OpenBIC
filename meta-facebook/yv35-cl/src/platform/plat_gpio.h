@@ -206,6 +206,6 @@ enum _GPIO_NUMS_ { name_gpioA name_gpioB name_gpioC name_gpioD name_gpioE name_g
 extern enum _GPIO_NUMS_ GPIO_NUMS;
 #undef gpio_name_to_num
 
-const char * const gpio_name[];
+extern const char * const gpio_name[];
 
 #endif
