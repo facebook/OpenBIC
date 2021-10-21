@@ -12,7 +12,7 @@ K_KERNEL_STACK_MEMBER(sensor_poll_stack, sensor_poll_stack_size);
 uint8_t SnrNum_SnrCfg_map[SENSOR_NUM_MAX];
 uint8_t SnrNum_SDR_map[SENSOR_NUM_MAX];
 
-bool enable_sensor_poll = 0;
+bool enable_sensor_poll = 1;
 
 const int negative_ten_power[16] = {1,1,1,1,1,1,1,1000000000,100000000,10000000,1000000,100000,10000,1000,100,10};
 
