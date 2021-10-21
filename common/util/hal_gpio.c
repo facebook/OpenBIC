@@ -113,12 +113,8 @@ void gpio_cb_irq_init(uint8_t gpio_num, gpio_flags_t flags) {
 }
 
 
-uint8_t gpio_conf(uint8_t gpio_num, uint8_t dir) {
-  if (dir) {
-    return gpio_pin_configure(dev_gpio[gpio_num/GPIO_GROUP_SIZE], (gpio_num%GPIO_GROUP_SIZE), GPIO_OUTPUT);
-  } else {
-    return gpio_pin_configure(dev_gpio[gpio_num/GPIO_GROUP_SIZE], (gpio_num%GPIO_GROUP_SIZE), GPIO_INPUT);
-  }
+uint8_t gpio_conf(uint8_t gpio_num, int dir) {
+  return gpio_pin_configure(dev_gpio[gpio_num/GPIO_GROUP_SIZE], (gpio_num%GPIO_GROUP_SIZE), dir);
 }
 
 int gpio_get(uint8_t gpio_num) {
@@ -137,7 +133,16 @@ int gpio_set(uint8_t gpio_num, uint8_t status) {
     return false;
   }
 
-  return gpio_pin_set(dev_gpio[gpio_num/GPIO_GROUP_SIZE], (gpio_num%GPIO_GROUP_SIZE), status);
+  if (gpio_cfg[gpio_num].property == OPEN_DRAIN) { // should release gpio ctrl for OD high
+    if(status) {
+      return gpio_conf(gpio_num, GPIO_INPUT);
+    } else {
+      gpio_conf(gpio_num, GPIO_OUTPUT);
+      return gpio_pin_set(dev_gpio[gpio_num/GPIO_GROUP_SIZE], (gpio_num%GPIO_GROUP_SIZE), status);
+    }
+  } else {
+    return gpio_pin_set(dev_gpio[gpio_num/GPIO_GROUP_SIZE], (gpio_num%GPIO_GROUP_SIZE), status);
+  }
 }
 
 /*void gpio_show(void) {
@@ -201,7 +206,9 @@ bool gpio_init(void) {
     if (gpio_cfg[i].is_init == ENABLE) {
       if (gpio_cfg[i].chip == chip_gpio) {
         gpio_set(gpio_cfg[i].number, gpio_cfg[i].status);
-        gpio_conf(gpio_cfg[i].number, gpio_cfg[i].direction);
+        if (gpio_cfg[i].property == PUSH_PULL) { // OD config is set during status set
+          gpio_conf(gpio_cfg[i].number, gpio_cfg[i].direction);
+        }
         gpio_set(gpio_cfg[i].number, gpio_cfg[i].status);
         if ( (gpio_cfg[i].int_type == GPIO_INT_EDGE_RISING) ||
           (gpio_cfg[i].int_type == GPIO_INT_EDGE_FALLING) || 
