@@ -21,6 +21,7 @@ void main(void)
 
   util_init_timer();
   util_init_I2C();
+  util_spi_init();
 
   gpio_init();
   sensor_init();
