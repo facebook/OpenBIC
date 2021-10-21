@@ -18,10 +18,6 @@ static const struct device *dev;
 struct k_thread USB_handler;
 K_KERNEL_STACK_MEMBER(USB_handler_stack, USB_HANDLER_STACK_SIZE);
 
-int total_len;
-int transfer_wait;
-int data_print;
-
 void USB_write(ipmi_msg *ipmi_resp) {
   uint8_t tx_buf[RX_BUFF_SIZE];
   struct ipmi_response *resp = (struct ipmi_response *)tx_buf;
