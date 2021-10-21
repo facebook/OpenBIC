@@ -3,7 +3,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include "cmsis_os2.h"
-#include "hal_dev.h"
 #include "hal_i2c.h"
 #include "timer.h"
 
