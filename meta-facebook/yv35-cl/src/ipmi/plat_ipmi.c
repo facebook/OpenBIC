@@ -92,10 +92,23 @@ void pal_APP_GET_DEVICE_ID(ipmi_msg *msg)
 		return;
 	}
 
-	msg->data[0] = 0xab;
-	msg->data[1] = 0xcd;
-	msg->data_len = 2;
-	msg->completion_code = CC_SUCCESS;
+  msg->data[0] = DEVICE_ID;
+  msg->data[1] = DEVICE_REVISION;
+  msg->data[2] = FIRMWARE_REVISION_1;
+  msg->data[3] = FIRMWARE_REVISION_2;
+  msg->data[4] = IPMI_VERSION;
+  msg->data[5] = ADDITIONAL_DEVICE_SUPPORT;
+  msg->data[6] = (WW_IANA_ID & 0xFF);
+  msg->data[7] = (WW_IANA_ID >> 8) & 0xFF;
+  msg->data[8] = (WW_IANA_ID >> 16) & 0xFF;
+  msg->data[9] = (PRODUCT_ID & 0xFF);
+  msg->data[10] = (PRODUCT_ID >> 8) & 0xFF;
+  msg->data[11] = (AUXILIARY_FW_REVISION >> 24) & 0xFF;
+  msg->data[12] = (AUXILIARY_FW_REVISION >> 16) & 0xFF;
+  msg->data[13] = (AUXILIARY_FW_REVISION >> 8) & 0xFF;
+  msg->data[14] = (AUXILIARY_FW_REVISION & 0xFF);
+  msg->data_len = 15;
+  msg->completion_code = CC_SUCCESS;
 
 	return;
 }
