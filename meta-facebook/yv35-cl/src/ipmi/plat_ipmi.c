@@ -113,15 +113,32 @@ void pal_APP_GET_SELFTEST_RESULTS(ipmi_msg *msg) {
   test_result = (test_result | is_SDR_not_init) << 1;
   // CannotAccessFru
   // Get common header
-  // Victor TODO after hal_eeprom finished.
-  test_result = (test_result | 0) << 1;
+  uint8_t i, checksum = 0;
+  EEPROM_ENTRY fru_entry;
+
+  fru_entry.config.dev_id = 0;
+  fru_entry.offset = 0;
+  fru_entry.data_len = 8;
+  FRU_read(&fru_entry);
+  for(i = 0; i < fru_entry.data_len; i++) {
+    checksum += fru_entry.data[i];
+  }
+
+  if (checksum == 0) {
+    test_result = (test_result | 0) << 1;
+  } else {
+    test_result = (test_result | 1) << 1;
+  }
   // IpmbLinesDead
   test_result = (test_result | GET_TEST_RESULT) << 1;
   // SdrrEmpty
   test_result = (test_result | is_SDR_not_init) << 1;
   // InternalCorrupt
-  // Victor TODO after hal_eeprom finished.
-  test_result = (test_result | 0) << 1;
+  if (checksum == 0) {
+    test_result = (test_result | 0) << 1;
+  } else {
+    test_result = (test_result | 1) << 1;
+  }
 
   // UpdateFWCorrupt
   test_result = (test_result | GET_TEST_RESULT) << 1;
