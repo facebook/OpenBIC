@@ -16,12 +16,13 @@
 #include "ipmi.h"
 #include "kcs.h"
 
-void device_init(){
+void device_init() {
   adc_init();
   peci_init();
 }
 
 void set_sys_status() {
+  gpio_set(FM_SPI_PCH_MASTER_SEL_R, GPIO_LOW);
   gpio_set(BIC_READY, GPIO_HIGH);
 }
 
@@ -33,7 +34,6 @@ void main(void)
   util_init_timer();
   util_init_I2C();
 
-  gpio_init();
   sensor_init();
   FRU_init();
   ipmi_init();
@@ -43,3 +43,10 @@ void main(void)
   set_sys_status();
 }
 
+#define DEF_PROJ_GPIO_PRIORITY 61
+
+DEVICE_DEFINE(PRE_DEF_PROJ_GPIO, "PRE_DEF_PROJ_GPIO_NAME",
+        &gpio_init, NULL,
+        NULL, NULL,
+        POST_KERNEL, DEF_PROJ_GPIO_PRIORITY,
+        NULL);
