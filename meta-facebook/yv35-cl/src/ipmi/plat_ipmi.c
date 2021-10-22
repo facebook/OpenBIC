@@ -586,7 +586,11 @@ void pal_OEM_GET_SET_GPIO(ipmi_msg *msg) {
       if(msg->data_len != 3) {
         break;
       }
-      gpio_conf(gpio_num, msg->data[2]);
+      if (msg->data[2]) {
+        gpio_conf(gpio_num, GPIO_OUTPUT);
+      } else {
+        gpio_conf(gpio_num, GPIO_INPUT);
+      }
       msg->data[0] = gpio_num;
       msg->data[1] = msg->data[2]; 
       completion_code = CC_SUCCESS;
