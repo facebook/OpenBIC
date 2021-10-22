@@ -28,6 +28,21 @@ bool peci_init(){
   return true;
 }
 
+bool peci_retry_transfer( struct peci_msg *msg ){
+  int retry = 0;
+  while ( retry < 3 ){
+    free(msg->rx_buffer.buf);
+    msg->rx_buffer.buf = malloc(msg->rx_buffer.len);
+    if ( !peci_transfer(dev, msg) ) {
+      if ( msg->rx_buffer.buf[0] == 0x40 ) {
+        return true;
+      }
+    }
+    retry++;
+  }
+  return false;
+}
+
 bool pal_peci_read(uint8_t sensor_num, int *reading) {
   struct peci_msg rdpkgcfg;
   uint8_t u8Index;
@@ -92,19 +107,29 @@ bool pal_peci_read(uint8_t sensor_num, int *reading) {
     }
     free(rdpkgcfg.tx_buffer.buf);
     free(rdpkgcfg.rx_buffer.buf);
+    sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_FAIL_TO_ACCESS;
     return false;
   }
   if ( complete_code != 0x40 ) {
+    bool retry_transfer_val = 0;
     if ( complete_code == 0x80 || complete_code == 0x81 ) {
-      printk("Response timeout. Retry is appropriate.\n");
+      retry_transfer_val = peci_retry_transfer( &rdpkgcfg ) ;
+      if ( !retry_transfer_val ){
+        printk("PECI sensor [%x] response timeout. Retry is appropriate.\n", sensor_num );
+        sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_FAIL_TO_ACCESS;
+      }
     }else if ( complete_code == 0x90 ) {
       printk("Unknown request\n");
-    }else{
+      sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_NOT_FOUND;
+    }else {
       printk("PECI control hardware, firmware or associated logic error\n");
+      sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_UNSPECIFIED_ERROR;
     }
-    free(rdpkgcfg.tx_buffer.buf);
-    free(rdpkgcfg.rx_buffer.buf);
-    return false;
+    if ( !retry_transfer_val ){
+      free(rdpkgcfg.tx_buffer.buf);
+      free(rdpkgcfg.rx_buffer.buf);
+      return false;
+    }
   }
   if ( sensor_num == SENSOR_NUM_TEMP_CPU_MARGIN ) {
     val = ( ( 0xFFFF - ( (rdpkgcfg.rx_buffer.buf[2] << 8) | rdpkgcfg.rx_buffer.buf[1] ) ) >> 6 ) +1;
@@ -114,15 +139,8 @@ bool pal_peci_read(uint8_t sensor_num, int *reading) {
     val = rdpkgcfg.rx_buffer.buf[3];
     cpu_temp_tjmax = val;
     get_tjmax = 1;
-  }else if ( ( sensor_num == SENSOR_NUM_TEMP_DIMM_A ) || ( sensor_num == SENSOR_NUM_TEMP_DIMM_C ) ||
-              ( sensor_num == SENSOR_NUM_TEMP_DIMM_D ) ||( sensor_num == SENSOR_NUM_TEMP_DIMM_E ) ||
-              ( sensor_num == SENSOR_NUM_TEMP_DIMM_G ) ||( sensor_num == SENSOR_NUM_TEMP_DIMM_H ) ) {
-    val = rdpkgcfg.rx_buffer.buf[1];
   }else {
-    printf("Unrecognized sensor reading result\n");
-    free(rdpkgcfg.tx_buffer.buf);
-    free(rdpkgcfg.rx_buffer.buf);
-    return false;
+    val = rdpkgcfg.rx_buffer.buf[1];
   }
   free(rdpkgcfg.tx_buffer.buf);
   free(rdpkgcfg.rx_buffer.buf);
