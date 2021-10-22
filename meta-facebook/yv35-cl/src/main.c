@@ -15,13 +15,16 @@
 #include "ipmi.h"
 #include "kcs.h"
 
+void device_init(){
+  adc_init();
+}
+
 void main(void)
 {
   printk("Hello yv35 cl\n");
 
   util_init_timer();
   util_init_I2C();
-  util_spi_init();
 
   gpio_init();
   sensor_init();
@@ -29,19 +32,6 @@ void main(void)
   ipmi_init();
   kcs_init();
   usb_dev_init();
-
-  ipmi_msg msg;
-  while(0) {
-    msg.data_len = 3;
-    msg.InF_source = Self_IFs;
-    msg.InF_target = BMC_IPMB_IFs;
-    msg.netfn = NETFN_OEM_1S_REQ;
-    msg.cmd = CMD_OEM_GET_GPIO;
-
-    msg.data[0] = 0x9c;
-    msg.data[1] = 0x9c;
-    msg.data[2] = 0x0;
-    ipmb_read(&msg, 0);
-k_msleep(5);
-  }
+  device_init();
 }
+
