@@ -13,6 +13,7 @@
 #include "fru.h"
 #include "plat_fru.h"
 #include "sensor_def.h"
+#include "util_spi.h"
 
 bool add_sel_evt_record(addsel_msg_t *sel_msg) {
   ipmb_error status;
@@ -630,6 +631,76 @@ void pal_OEM_SET_SYSTEM_GUID(ipmi_msg *msg) {
       break;
   }
   return;
+}
+
+void pal_OEM_FW_UPDATE(ipmi_msg *msg) {
+  /*********************************
+ * buf 0:   target, 0x80 indicate last byte
+ * buf 1~4: offset, 1 lsb
+ * buf 5~6: length, 5 lsb
+ * buf 7~N: data
+ ***********************************/
+  if (msg->data_len < 8) {
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+  uint8_t target = msg->data[0];
+  uint8_t status = -1;
+  uint32_t offset = ((msg->data[4] << 24) | (msg->data[3] << 16) | (msg->data[2] << 8) | msg->data[1]);
+  uint16_t length = ((msg->data[6] << 8) | msg->data[5]);
+
+  if( (length == 0) || (length != msg->data_len-7) ) {
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+  if(target == BIOS_UPDATE) {
+    if(offset > 0x4000000) { // BIOS size maximum 64M bytes
+      msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+      return;
+    }
+    //status = fw_update(offset, length, &msg->data[7], (target & UPDATE_EN), spi1_bus, spi0_cs);
+
+  } else if( (target == BIC_UPDATE) || (target == (BIC_UPDATE | UPDATE_EN)) ) {
+    if(offset > 0x50000) { // Expect BIC firmware size not bigger than 320k
+      msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+      return;
+    }
+    status = fw_update(offset, length, &msg->data[7], (target & UPDATE_EN), devspi_fmc);
+  }
+
+  msg->data_len = 0;
+
+  switch (status) {
+    case fwupdate_success:
+      msg->completion_code = CC_SUCCESS;
+      break;
+    case fwupdate_out_of_heap:
+      msg->completion_code = CC_LENGTH_EXCEEDED;
+      break;
+    case fwupdate_over_length:
+      msg->completion_code = CC_OUT_OF_SPACE;
+      break;
+    case fwupdate_repeated_updated:
+      msg->completion_code = CC_INVALID_DATA_FIELD;
+      break;
+    case fwupdate_update_fail:
+      msg->completion_code = CC_TIMEOUT;
+      break;
+    case fwupdate_error_offset:
+      msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+      break;
+    default:
+      msg->completion_code = CC_UNSPECIFIED_ERROR;
+      break;
+  }
+  if (status != fwupdate_success) {
+    printf("spi fw cc: %x\n", msg->completion_code);
+  }
+
+  return;
+
 }
 
 void pal_OEM_GET_FW_VERSION(ipmi_msg *msg) {
