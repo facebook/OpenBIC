@@ -2,10 +2,14 @@
 #include "plat_gpio.h"
 
 static bool is_DC_on;
-
+static bool is_post_complete;
 
 void ISR_slp3(uint32_t tmp0, uint32_t tmp1) {
   printk("slp3\n");
+}
+
+void ISR_post_complete() {
+  set_post_status();
 }
 
 void ISR_DC_on() {
@@ -20,3 +24,13 @@ void set_DC_status() {
 bool get_DC_status() {
   return is_DC_on;
 }
+
+void set_post_status() {
+  is_post_complete = !(gpio_get(FM_BIOS_POST_CMPLT_BMC_N));
+  printk("set is_post_complete %d\n", is_post_complete);
+}
+
+bool get_post_status() {
+  return is_post_complete;
+}
+
