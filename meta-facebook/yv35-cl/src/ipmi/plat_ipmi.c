@@ -12,6 +12,7 @@
 #include "plat_guid.h"
 #include "fru.h"
 #include "plat_fru.h"
+#include "sensor_def.h"
 
 bool add_sel_evt_record(addsel_msg_t *sel_msg) {
   ipmb_error status;
@@ -623,6 +624,98 @@ void pal_OEM_SET_SYSTEM_GUID(ipmi_msg *msg) {
       break;
     case GUID_FAIL_TO_ACCESS:
       msg->completion_code = CC_UNSPECIFIED_ERROR;
+      break;
+    default:
+      msg->completion_code = CC_UNSPECIFIED_ERROR;
+      break;
+  }
+  return;
+}
+
+void pal_OEM_GET_FW_VERSION(ipmi_msg *msg) {
+  if (msg->data_len != 1) {
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+  uint8_t component, retry = 3;
+  component = msg->data[0];
+  I2C_MSG i2c_msg;
+
+  if(component == CPNT_PVCCIN || component == CPNT_PVCCFA_EHV_FIVRA) { i2c_msg.slave_addr = PVCCIN_addr; }
+  if(component == CPNT_PVCCD_HV) { i2c_msg.slave_addr = PVCCD_HV_addr; }
+  if(component == CPNT_PVCCINFAON || component == CPNT_PVCCFA_EHV) { i2c_msg.slave_addr = PVCCFA_EHV_addr; }
+
+  switch (component) {
+    case CPNT_CPLD:
+      msg->completion_code = CC_UNSPECIFIED_ERROR;
+      break;
+    case CPNT_BIC:
+      msg->data[0] = FIRMWARE_REVISION_1;
+      msg->data[1] = FIRMWARE_REVISION_2;
+      msg->data_len = 2;
+      msg->completion_code = CC_SUCCESS;
+      break;
+    case CPNT_ME:
+    {
+      ipmb_error status;
+      ipmi_msg *bridge_msg;
+      bridge_msg = (ipmi_msg*)malloc(sizeof(ipmi_msg));
+
+      bridge_msg->data_len = 0;
+      bridge_msg->seq_source = 0xff;
+      bridge_msg->InF_source = Self_IFs;
+      bridge_msg->InF_target = ME_IPMB_IFs;
+      bridge_msg->netfn = NETFN_APP_REQ;
+      bridge_msg->cmd = CMD_APP_GET_DEVICE_ID;
+
+      status = ipmb_read(bridge_msg, IPMB_inf_index_map[bridge_msg->InF_target]);
+      if (status != ipmb_error_success) {
+        printf("ipmb read fail status: %x", status);
+        free(bridge_msg);
+        msg->completion_code = CC_BRIDGE_MSG_ERR;
+        return;
+      } else {
+        msg->data[0] = bridge_msg->data[2] & 0x7F;
+        msg->data[1] = bridge_msg->data[3] >> 4;
+        msg->data[2] = bridge_msg->data[3] & 0x0F;
+        msg->data[3] = bridge_msg->data[12];
+        msg->data[4] = bridge_msg->data[13] >> 4;
+        msg->data_len = 5;
+        msg->completion_code = CC_SUCCESS;
+        free(bridge_msg);
+      }
+      break;
+    }
+    case CPNT_PVCCIN:
+    case CPNT_PVCCFA_EHV_FIVRA:
+    case CPNT_PVCCD_HV:
+    case CPNT_PVCCINFAON:
+    case CPNT_PVCCFA_EHV:
+      i2c_msg.bus = i2c_bus5;
+      i2c_msg.tx_len = 3;
+      i2c_msg.data[0] = 0xC7;
+      i2c_msg.data[1] = 0x94;
+      i2c_msg.data[2] = 0x00;
+
+      if(!i2c_master_write(&i2c_msg, retry)) {
+        i2c_msg.tx_len = 1;
+        i2c_msg.data[0] = 0xC5;
+        i2c_msg.rx_len = 4;
+
+        if(!i2c_master_read(&i2c_msg, retry)) {
+          memcpy(&msg->data[0], &i2c_msg.data[3], 1);
+          memcpy(&msg->data[1], &i2c_msg.data[2], 1);
+          memcpy(&msg->data[2], &i2c_msg.data[1], 1);
+          memcpy(&msg->data[3], &i2c_msg.data[0], 1);
+          msg->data_len = 4;
+          msg->completion_code = CC_SUCCESS;
+        } else {
+          msg->completion_code = CC_UNSPECIFIED_ERROR;
+        }
+      } else {
+        msg->completion_code = CC_UNSPECIFIED_ERROR;
+      }
       break;
     default:
       msg->completion_code = CC_UNSPECIFIED_ERROR;
