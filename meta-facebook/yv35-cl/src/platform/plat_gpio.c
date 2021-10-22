@@ -12,9 +12,6 @@
 const char * const gpio_name[] = { name_gpioA name_gpioB name_gpioC name_gpioD name_gpioE name_gpioF name_gpioG name_gpioH name_gpioI name_gpioJ name_gpioK name_gpioL name_gpioM name_gpioN name_gpioO name_gpioP name_gpioQ name_gpioR name_gpioS name_gpioT name_gpioU };
 #undef gpio_name_to_num
 
-void ISR_slp3(uint32_t tmp0, uint32_t tmp1) {
-  printk("slp3\n");
-}
 
 GPIO_CFG plat_gpio_cfg[] = {
 //  chip,      number,   is_init, direction,    status,     property,    int_type,              int_cb
@@ -36,7 +33,7 @@ GPIO_CFG plat_gpio_cfg[] = {
   { chip_gpio,  12,      ENABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL            },
   { chip_gpio,  13,      ENABLE,  GPIO_INPUT,   GPIO_HIGH,  PUSH_PULL,   GPIO_INT_DISABLE,      NULL            },
   { chip_gpio,  14,      ENABLE,  GPIO_INPUT,   GPIO_LOW,   OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL            },
-  { chip_gpio,  15,      ENABLE,  GPIO_INPUT,   GPIO_LOW,   PUSH_PULL,   GPIO_INT_DISABLE,      NULL            },
+  { chip_gpio,  15,      ENABLE,  GPIO_INPUT,   GPIO_LOW,   PUSH_PULL,   GPIO_INT_EDGE_BOTH,    ISR_DC_on       },
   { chip_gpio,  16,      ENABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL            }, // GPIO C group
   { chip_gpio,  17,      ENABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL            }, 
   { chip_gpio,  18,      ENABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL            },
