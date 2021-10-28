@@ -36,6 +36,7 @@ void main(void)
   util_init_timer();
   util_init_I2C();
 
+  set_sys_config();
   sensor_init();
   FRU_init();
   ipmi_init();
