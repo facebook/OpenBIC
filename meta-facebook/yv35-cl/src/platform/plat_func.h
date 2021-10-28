@@ -8,6 +8,8 @@ void ISR_slp3();
 void ISR_DC_on();
 void ISR_post_complete();
 
+void set_DC_status();
 bool get_DC_status();
+void set_post_status();
 bool get_post_status();
 #endif
