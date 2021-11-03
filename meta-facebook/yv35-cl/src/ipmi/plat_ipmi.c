@@ -16,6 +16,8 @@
 #include "util_spi.h"
 #include "hal_jtag.h"
 #include "hal_snoop.h"
+#include "hal_peci.h"
+#include <drivers/peci.h>
 
 bool add_sel_evt_record(addsel_msg_t *sel_msg) {
   ipmb_error status;
@@ -720,6 +722,68 @@ void pal_OEM_GET_SET_GPIO(ipmi_msg *msg) {
 
   msg->data_len = 2;  // Return GPIO number, status
   msg->completion_code = completion_code;
+  return;
+}
+
+void pal_OEM_PECIaccess(ipmi_msg *msg) {
+  uint8_t addr, cmd, *writeBuf, *readBuf;
+  uint8_t u8WriteLen, u8ReadLen, u8Index;
+  uint16_t u16Param;
+  int ret;
+
+  if (msg->data_len < 3) {
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+  addr = msg->data[0];
+  if ((msg->data[1] == 0) && (msg->data[2] == 0)) {
+    ret = peci_ping(addr);
+    msg->data[0] = ret;
+    msg->data_len = 1;
+    msg->completion_code = CC_SUCCESS;
+    return;
+  }
+
+  u8WriteLen = msg->data[1];
+  u8ReadLen = msg->data[2];
+  cmd = msg->data[3];
+  u8Index = msg->data[5];
+  u16Param = msg->data[7];
+  u16Param = (u16Param << 8) + msg->data[6];
+  readBuf = (uint8_t *)malloc(sizeof(uint8_t) * u8ReadLen);
+  writeBuf = (uint8_t *)malloc(sizeof(uint8_t) * u8WriteLen);
+  memcpy(&writeBuf[0], &msg->data[4], u8WriteLen);
+
+  if (cmd == PECI_RD_PKG_CFG0_CMD) {
+    ret = peci_read(cmd, addr, u8Index, u16Param, u8ReadLen, readBuf);
+  } else if (cmd == PECI_WR_PKG_CFG0_CMD || cmd == PECI_CRASHDUMP_CMD) {
+    ret = peci_write(cmd, addr, u8Index, u16Param, u8ReadLen, readBuf, u8WriteLen, writeBuf);
+  } else {
+    printf("command not support\n");
+    msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+    free(writeBuf);
+    free(readBuf);
+    return;
+  }
+
+  if (ret) {
+    free(writeBuf);
+    free(readBuf);
+    msg->completion_code = CC_CAN_NOT_RESPOND;
+    return;
+  }
+
+  memcpy(&msg->data[0], &readBuf[0], u8ReadLen);
+  if (msg->data[0] != PECI_CC_RSP_SUCCESS) {
+    msg->data[0] = (msg->data[0] == 0xf9) ? PECI_CC_ILLEGAL_REQUEST : msg->data[0];
+    memset(&msg->data[1], 0xff, u8ReadLen - 1);
+  }
+
+  free(writeBuf);
+  free(readBuf);
+  msg->data_len = u8ReadLen;
+  msg->completion_code = CC_SUCCESS;
   return;
 }
 
