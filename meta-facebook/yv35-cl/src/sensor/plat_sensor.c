@@ -19,6 +19,9 @@ snr_cfg plat_sensor_config[] = {
   {SENSOR_NUM_TEMP_TMP75_IN          , type_tmp75     , i2c_bus2      , tmp75_in_addr           , tmp75_tmp_offset  , stby_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
   {SENSOR_NUM_TEMP_TMP75_OUT         , type_tmp75     , i2c_bus2      , tmp75_out_addr          , tmp75_tmp_offset  , stby_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
   {SENSOR_NUM_TEMP_TMP75_FIO         , type_tmp75     , i2c_bus2      , tmp75_fio_addr          , tmp75_tmp_offset  , stby_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
+
+  // NVME
+  {SENSOR_NUM_TEMP_SSD0              , type_nvme      , i2c_bus2      , SSD0_addr               , SSD0_offset       , DC_access        , 0     , 0     , 0      , SNR_INIT_STATUS},
                                                                                                                                                                  
   // PECI                                                                                                                                                        
   {SENSOR_NUM_TEMP_CPU               , type_peci      , NULL          , CPU_PECI_addr           , NULL              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},

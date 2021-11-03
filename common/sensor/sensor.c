@@ -60,7 +60,6 @@ bool access_check(uint8_t sensor_num) {
 bool sensor_read(uint8_t sensor_num, int *reading) {
   bool status;
   switch(sensor_config[SnrNum_SnrCfg_map[sensor_num]].type){
-
     case type_tmp75:
       status = pal_tmp75_read(sensor_num, reading);
       if (status)
@@ -88,6 +87,11 @@ bool sensor_read(uint8_t sensor_num, int *reading) {
       break;
     case type_hsc:
       status = pal_hsc_read(sensor_num, reading);
+      if (status)
+        return true;
+      break;
+    case type_nvme:
+      status = pal_nvme_read(sensor_num, reading);
       if (status)
         return true;
       break;

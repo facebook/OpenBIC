@@ -230,6 +230,10 @@ __weak bool pal_hsc_read(uint8_t sensor_num, int *reading) {
   return 0;
 }
 
+__weak bool pal_nvme_read(uint8_t sensor_num, int *reading) {
+  return 0;
+}
+
 // gpio
 __weak bool pal_load_gpio_config(void) {
   return 0;

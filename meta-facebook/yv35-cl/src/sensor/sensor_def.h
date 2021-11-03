@@ -25,6 +25,8 @@ enum {
 #define tmp75_out_addr         (0x94 >> 1)
 #define tmp75_fio_addr         (0x90 >> 1)
 #define tmp75_tmp_offset       0x00
+#define SSD0_addr              (0xD4 >> 1)
+#define SSD0_offset            0x00
 #define HSC_addr               (0x80 >> 1)
 #define PCH_addr               (0x2C >> 1)
 #define CPU_PECI_addr          0x30
@@ -54,6 +56,7 @@ enum {
 #define SENSOR_NUM_TEMP_DIMM_E            0x0A
 #define SENSOR_NUM_TEMP_DIMM_G            0x0B
 #define SENSOR_NUM_TEMP_DIMM_H            0x0C
+#define SENSOR_NUM_TEMP_SSD0              0x0D
 #define SENSOR_NUM_TEMP_HSC               0x0E
 #define SENSOR_NUM_TEMP_CPU_MARGIN        0x14
 #define SENSOR_NUM_TEMP_CPU_TJMAX         0x05
