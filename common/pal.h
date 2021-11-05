@@ -30,6 +30,7 @@ bool pal_peci_read(uint8_t sensor_num, int *reading);
 bool pal_vr_read(uint8_t sensor_num, int *reading);
 bool pal_pch_read(uint8_t sensor_num, int *reading);
 bool pal_hsc_read(uint8_t sensor_num, int *reading);
+bool pal_nvme_read(uint8_t sensor_num, int *reading);
 
 // gpio
 bool pal_load_gpio_config(void);

@@ -22,6 +22,7 @@
 #define type_peci  0x02
 #define type_vr    0x03
 #define type_hsc   0x04
+#define type_nvme  0x05
 #define type_pch   0x06
 
 
