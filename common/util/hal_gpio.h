@@ -42,11 +42,12 @@
 #define OPEN_DRAIN 0
 #define PUSH_PULL  1
 
-#define GPIO_CFG_SIZE 100
+#define GPIO_CFG_SIZE 168
 typedef struct _GPIO_CFG_ {
   uint8_t chip;
   uint8_t number;
   uint8_t is_init;
+  uint8_t is_latch;
   uint16_t direction;
   uint8_t status;
   uint8_t property;

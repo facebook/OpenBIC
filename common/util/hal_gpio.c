@@ -197,6 +197,10 @@ bool gpio_init(void) {
   init_gpio_dev();
   gpio_index_to_num();
 
+  // gpio init is much earily than main init seq
+  // set boot source here to skip gpio init for latched gpios
+  set_boot_source();
+
   k_work_queue_start(&gpio_work_queue, gpio_work_stack, STACK_SIZE, K_PRIO_PREEMPT(osPriorityBelowNormal), NULL);
   k_thread_name_set(&gpio_work_queue.thread, "gpio_workq");
 
@@ -204,6 +208,9 @@ bool gpio_init(void) {
 
   for(i = 0; i < total_gpio_num; i++) {
     if (gpio_cfg[i].is_init == ENABLE) {
+      if (gpio_cfg[i].is_latch == ENABLE && !get_boot_source_ACon()) {
+        continue;
+      }
       if (gpio_cfg[i].chip == chip_gpio) {
         gpio_set(gpio_cfg[i].number, gpio_cfg[i].status);
         if (gpio_cfg[i].property == PUSH_PULL) { // OD config is set during status set

@@ -298,3 +298,6 @@
   current-speed = <57600>;
 };
 
+&gpio0_a_d {
+  aspeed,persist-maps = <0x08000000>;
+};

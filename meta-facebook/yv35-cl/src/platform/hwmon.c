@@ -1,8 +1,8 @@
 #include "plat_func.h"
 #include "plat_gpio.h"
 
-static bool is_DC_on;
-static bool is_post_complete;
+static bool is_DC_on = 0;
+static bool is_post_complete = 0;
 
 void ISR_slp3(uint32_t tmp0, uint32_t tmp1) {
   printk("slp3\n");
