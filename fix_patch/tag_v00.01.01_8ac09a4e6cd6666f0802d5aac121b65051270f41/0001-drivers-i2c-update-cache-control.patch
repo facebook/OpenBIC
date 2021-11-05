@@ -1,0 +1,90 @@
+From e6239809c9b4d8b6696411833979e320306d748c Mon Sep 17 00:00:00 2001
+From: tommy-huang <tommy_huang@aspeedtech.com>
+Date: Wed, 22 Sep 2021 16:52:09 +0800
+Subject: [PATCH] drivers: i2c: update cache control
+
+Add cache invalid when the i2c received first offset.
+Add i2c test loop count into CI test.
+
+Signed-off-by: tommy-huang <tommy_huang@aspeedtech.com>
+Change-Id: I9db391779186e392f06a8566126a46a00d0633ec
+---
+ drivers/i2c/i2c_aspeed.c       | 15 ++++++++++++---
+ tests/boards/ast1030/src/i2c.c | 11 ++++++-----
+ 2 files changed, 18 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/i2c/i2c_aspeed.c b/drivers/i2c/i2c_aspeed.c
+index dea8234d9c..eba10e5fe0 100644
+--- a/drivers/i2c/i2c_aspeed.c
++++ b/drivers/i2c/i2c_aspeed.c
+@@ -861,6 +861,13 @@ static int i2c_aspeed_transfer(const struct device *dev, struct i2c_msg *msgs,
+ 		return -ETIMEDOUT;
+ 	}
+ 
++	if (msgs->flags & I2C_MSG_READ) {
++		if (config->mode == DMA_MODE) {
++			cache_data_range(&(msgs->buf)
++			, msgs->len, K_CACHE_INVD);
++		}
++	}
++
+ 	LOG_DBG(" end %d\n", data->cmd_err);
+ 
+ 	return data->cmd_err;
+@@ -1279,11 +1286,11 @@ int aspeed_i2c_slave_irq(const struct device *dev)
+ 				slave_rx_len =
+ 				AST_I2C_GET_RX_DMA_LEN(sys_read32(i2c_base + AST_I2CS_DMA_LEN_STS));
+ 				/*aspeed_cache_invalid_data*/
++				cache_data_range((&data->slave_dma_buf[i])
++				, slave_rx_len, K_CACHE_INVD);
+ 				for (i = 0; i < slave_rx_len; i++) {
+ 				/*LOG_DBG(data->dev, "[%02x]", data->slave_dma_buf[i]);*/
+ 					if (slave_cb->write_received) {
+-						cache_data_range((&data->slave_dma_buf[i])
+-						, 0, K_CACHE_INVD);
+ 						slave_cb->write_received(data->slave_cfg
+ 						, data->slave_dma_buf[i]);
+ 					}
+@@ -1345,6 +1352,8 @@ int aspeed_i2c_slave_irq(const struct device *dev)
+ 				AST_I2C_GET_RX_DMA_LEN(sys_read32(i2c_base + AST_I2CS_DMA_LEN_STS));
+ 
+ 				for (i = 0; i < slave_rx_len; i++) {
++					cache_data_range((&data->slave_dma_buf[i])
++					, 1, K_CACHE_INVD);
+ 					LOG_DBG("rx [%02x]", data->slave_dma_buf[i]);
+ 					if (slave_cb->write_received) {
+ 						slave_cb->write_received(data->slave_cfg
+@@ -1471,7 +1480,7 @@ int aspeed_i2c_slave_irq(const struct device *dev)
+ 					slave_cb->read_processed(data->slave_cfg
+ 					, &data->slave_dma_buf[0]);
+ 				}
+-				LOG_DBG("tx : [%02x]", data->slave_dma_buf[0]);
++				LOG_DBG("rx : [%02x]", data->slave_dma_buf[0]);
+ 				sys_write32(0, i2c_base + AST_I2CS_DMA_LEN_STS);
+ 				sys_write32(AST_I2CS_SET_TX_DMA_LEN(1)
+ 				, i2c_base + AST_I2CS_DMA_LEN);
+diff --git a/tests/boards/ast1030/src/i2c.c b/tests/boards/ast1030/src/i2c.c
+index 38ca2adf20..cb578ee8e9 100644
+--- a/tests/boards/ast1030/src/i2c.c
++++ b/tests/boards/ast1030/src/i2c.c
+@@ -208,11 +208,12 @@ int test_i2c(int count, enum aspeed_test_type type)
+ {
+ 	printk("%s, count: %d, type: %d\n", __func__, count, type);
+ 
+-	printk("I2C slave EEPROM\n");
+-	test_i2c_slave_EEPROM();
+-
+-	printk("I2C slave IPMB\n");
+-	test_i2c_slave_IPMB();
++	for (int i = 0; i < count; i++) {
++		printk("I2C slave EEPROM\n");
++		test_i2c_slave_EEPROM();
+ 
++		printk("I2C slave IPMB\n");
++		test_i2c_slave_IPMB();
++	}
+ 	return ast_ztest_result();
+ }
+-- 
+2.17.1
+
