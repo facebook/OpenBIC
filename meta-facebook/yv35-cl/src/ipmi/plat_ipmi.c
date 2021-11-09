@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <drivers/jtag.h>
 #include "plat_i2c.h"
 #include "sensor.h"
 #include "ipmi.h"
@@ -906,6 +907,110 @@ void pal_OEM_GET_FW_VERSION(ipmi_msg *msg) {
       msg->completion_code = CC_UNSPECIFIED_ERROR;
       break;
   }
+  return;
+}
+
+void pal_OEM_SET_JTAG_TAP_STA(ipmi_msg *msg) {
+
+  if (msg->data_len != 2) {
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+	const struct device *dev;
+	uint8_t tapbitlen, tapdata, value, index;
+
+	dev = device_get_binding("JTAG1");
+	if (!dev) {
+		printf("JTAG device not found\n");
+    msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	tapbitlen = msg->data[0];
+	tapdata = msg->data[1];
+
+	for (index = 0; index < tapbitlen; index++)	{
+		value = tapdata & 0x01;
+
+		jtag_sw_xfer(dev, JTAG_TCK, 0);
+		jtag_sw_xfer(dev, JTAG_TDI, 0);
+		jtag_sw_xfer(dev, JTAG_TMS, value);
+		jtag_sw_xfer(dev, JTAG_TCK, 1);
+		jtag_sw_xfer(dev, JTAG_TDI, 0);
+		jtag_sw_xfer(dev, JTAG_TMS, value);
+
+		tapdata = tapdata >> 1;
+	}
+
+  msg->data_len = 0;
+  msg->completion_code = CC_SUCCESS;
+  return;
+}
+
+void pal_OEM_JTAG_DATA_SHIFT(ipmi_msg *msg) {
+  
+  const struct device *dev;
+	uint8_t value, tdo_val, lastidx = 0;
+	uint16_t writebitlen, readbitlen, RnWbyte, index;
+  uint32_t databyte;
+
+	dev = device_get_binding("JTAG1");
+	if (!dev) {
+		printf("JTAG device not found\n");
+    msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	writebitlen = (msg->data[1] << 8) | msg->data[0];
+	databyte = (writebitlen + 7) >> 3;
+	readbitlen = (msg->data[3 + databyte] << 8) | msg->data[2 + databyte];
+	lastidx = msg->data[4 + databyte];
+
+  if (msg->data_len != (5 + databyte)) {
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+	RnWbyte = (writebitlen > readbitlen) ? writebitlen : readbitlen;
+
+	uint8_t shiftdata[RnWbyte], receivedata[RnWbyte];
+	memset(shiftdata, 0, RnWbyte);
+	memset(receivedata, 0, RnWbyte);
+
+  memcpy(shiftdata, &msg->data[2], databyte);
+
+	for (index = 0; index < RnWbyte - 1; index++)	{
+		value = shiftdata[index / 8] & 0x01;
+
+		jtag_sw_xfer(dev, JTAG_TCK, 0);
+		jtag_sw_xfer(dev, JTAG_TDI, value);
+		jtag_sw_xfer(dev, JTAG_TMS, 0);
+		jtag_sw_xfer(dev, JTAG_TCK, 1);
+		jtag_sw_xfer(dev, JTAG_TDI, value);
+		jtag_sw_xfer(dev, JTAG_TMS, 0);
+		jtag_tdo_get(dev, &tdo_val);
+
+		shiftdata[index / 8] = shiftdata[index / 8] >> 1;
+		receivedata[index / 8] |= tdo_val << index % 8;
+	}
+
+  // set TMS as variable lastidx at the last bit
+	value = shiftdata[(RnWbyte - 1) / 8] & 0x01;
+
+	jtag_sw_xfer(dev, JTAG_TCK, 0);
+	jtag_sw_xfer(dev, JTAG_TDI, value);
+	jtag_sw_xfer(dev, JTAG_TMS, lastidx);
+	jtag_sw_xfer(dev, JTAG_TCK, 1);
+	jtag_sw_xfer(dev, JTAG_TDI, value);
+	jtag_sw_xfer(dev, JTAG_TMS, lastidx);
+	jtag_tdo_get(dev, &tdo_val);
+
+	receivedata[(RnWbyte - 1) / 8] |= tdo_val << (RnWbyte - 1) % 8;
+
+  memcpy(&msg->data[0], &receivedata[0], (readbitlen + 7) >> 3);
+  msg->data_len = (readbitlen + 7) >> 3;
+  msg->completion_code = CC_SUCCESS;
   return;
 }
 
