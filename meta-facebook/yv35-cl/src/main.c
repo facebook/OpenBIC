@@ -8,7 +8,6 @@
 #include <kernel.h>
 #include <cmsis_os2.h>
 #include <sys/printk.h>
-#include "worker.h"
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "plat_gpio.h"

@@ -55,8 +55,10 @@
 #define IPMB_RESP_HEADER_LENGTH     7
 #define IPMI_MSG_MAX_LENGTH (IPMI_DATA_MAX_LENGTH + IPMB_RESP_HEADER_LENGTH)
 #define IPMB_MAX_RETRIES 5
-#define IPMB_TXQUEUE_LEN        10
-#define IPMB_RXQUEUE_LEN        1
+#define IPMB_TXQUEUE_LEN        1
+#define IPMB_RXQUEUE_LEN        2
+#define IPMB_TX_STACK_SIZE 1500
+#define IPMB_RX_STACK_SIZE 2000
 #define IPMI_HEADER_CHECKSUM_POSITION 2 
 #define IPMB_NETFN_MASK         0xFC
 #define IPMB_DEST_LUN_MASK      0x03
@@ -116,6 +118,7 @@ typedef enum ipmb_error {
   ipmb_error_msg_chksum,              /**< Invalid message checksum from incoming message */
   ipmb_error_queue_creation,          /**< Client queue couldn't be created. Invalid pointer to handler was given */
   ipmb_error_get_messageQueue,        /**< Failure on getting queue message */
+  ipmb_error_mutex_lock,              /**< Fail to lock mutex in time */
 } ipmb_error;
 
 typedef struct ipmi_msg {
