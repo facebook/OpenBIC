@@ -142,6 +142,12 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_GET_FW_VERSION:
 		pal_OEM_GET_FW_VERSION(msg);
 		break;
+	case CMD_OEM_SET_JTAG_TAP_STA:
+		pal_OEM_SET_JTAG_TAP_STA(msg);
+		break;
+	case CMD_OEM_JTAG_DATA_SHIFT:
+		pal_OEM_JTAG_DATA_SHIFT(msg);
+		break;
 	case CMD_OEM_GET_SET_GPIO:
 		pal_OEM_GET_SET_GPIO(msg);
 		break;
