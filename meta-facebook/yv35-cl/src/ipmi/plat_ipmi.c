@@ -14,6 +14,7 @@
 #include "plat_fru.h"
 #include "sensor_def.h"
 #include "util_spi.h"
+#include "hal_jtag.h"
 
 bool add_sel_evt_record(addsel_msg_t *sel_msg) {
   ipmb_error status;
@@ -906,6 +907,57 @@ void pal_OEM_GET_FW_VERSION(ipmi_msg *msg) {
       msg->completion_code = CC_UNSPECIFIED_ERROR;
       break;
   }
+  return;
+}
+
+void pal_OEM_SET_JTAG_TAP_STA(ipmi_msg *msg) {
+  if (!msg){
+    printf("pal_OEM_SET_JTAG_TAP_STA: parameter msg is NULL\n");
+    return;
+  }
+  if (msg->data_len != 2) {
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+  uint8_t tapbitlen, tapdata;
+
+  tapbitlen = msg->data[0];
+  tapdata = msg->data[1];
+  jtag_set_tap(tapdata, tapbitlen);
+
+  msg->data_len = 0;
+  msg->completion_code = CC_SUCCESS;
+  return;
+}
+
+void pal_OEM_JTAG_DATA_SHIFT(ipmi_msg *msg) {
+  if (!msg){
+    printf("pal_OEM_JTAG_DATA_SHIFT: parameter msg is NULL\n");
+    return;
+  }
+  uint8_t lastidx;
+  uint16_t writebitlen, readbitlen, readbyte, databyte;
+
+  writebitlen = (msg->data[1] << 8) | msg->data[0];
+  databyte = (writebitlen + 7) >> 3;
+  readbitlen = (msg->data[3 + databyte] << 8) | msg->data[2 + databyte];
+  readbyte = (readbitlen + 7) >> 3;
+  lastidx = msg->data[4 + databyte];
+
+  if (msg->data_len != (5 + databyte)) {
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+  uint8_t shiftdata[databyte], receivedata[readbyte];
+  memset(shiftdata, 0, databyte);
+  memset(receivedata, 0, readbyte);
+  memcpy(shiftdata, &msg->data[2], databyte);
+  jtag_shift_data(writebitlen, shiftdata, readbitlen, receivedata, lastidx);
+
+  memcpy(&msg->data[0], &receivedata[0], readbyte);
+  msg->data_len = readbyte;
+  msg->completion_code = CC_SUCCESS;
   return;
 }
 
