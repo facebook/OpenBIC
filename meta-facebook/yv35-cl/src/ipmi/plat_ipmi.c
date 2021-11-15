@@ -529,7 +529,16 @@ void pal_SENSOR_GET_SENSOR_READING(ipmi_msg *msg) {
 
   switch (status) {
     case SNR_READ_SUCCESS:
-      msg->data[0] = reading;
+      msg->data[0] = reading & 0xff;
+      // SDR sensor initialization bit6 enable scan, bit5 enable event
+      // retunr data 1 bit 7 set to 0 to disable all event msg. bit 6 set to 0 disable sensor scan
+      msg->data[1] = ( (full_sensor_table[SnrNum_SDR_map[snr_num]].sensor_init & 0x60) << 1 );
+      msg->data[2] = 0xc0; // fix to threshold deassert status, BMC will compare with UCR/UNR itself
+      msg->data_len = 3;
+      msg->completion_code = CC_SUCCESS;
+      break;
+    case SNR_READ_ACUR_SUCCESS:
+      msg->data[0] = (reading >> 8) & 0xff; // In accurate read case, scale reading to one byte
       // SDR sensor initialization bit6 enable scan, bit5 enable event
       // retunr data 1 bit 7 set to 0 to disable all event msg. bit 6 set to 0 disable sensor scan
       msg->data[1] = ( (full_sensor_table[SnrNum_SDR_map[snr_num]].sensor_init & 0x60) << 1 );
@@ -904,6 +913,82 @@ void pal_OEM_GET_FW_VERSION(ipmi_msg *msg) {
       break;
     default:
       msg->completion_code = CC_UNSPECIFIED_ERROR;
+      break;
+  }
+  return;
+}
+
+void pal_OEM_ACCURACY_SENSNR(ipmi_msg *msg) {
+  /*********************************
+   * buf 0: target sensor number
+   * buf 1: read option
+   *          0: read from cache
+   *          1: read from sensor
+   * buf 2: sensor report status
+   ***********************************/
+  uint8_t status, snr_num, option, snr_report_status;
+  uint8_t enable_snr_scan = 0xC0; // following IPMI sensor status response
+  uint8_t disable_snr_scan = 0x80;
+  int reading;
+
+  if (msg->data_len != 2) {
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+  if (enable_sensor_poll) {
+    snr_report_status = enable_snr_scan;
+  } else {
+    snr_report_status = disable_snr_scan;
+  }
+
+  option = msg->data[1];
+  snr_num = msg->data[0];
+
+  if (option == 0) {
+    if (enable_sensor_poll) {
+      status = get_sensor_reading(snr_num, &reading, get_from_cache);
+    } else {
+      status = SNR_POLLING_DISABLE;
+    }
+  } else if (option == 1) {
+      status = get_sensor_reading(snr_num, &reading, get_from_sensor);
+  }
+
+  switch (status) {
+    case SNR_READ_SUCCESS:
+      msg->data[0] = (reading << 8 ) & 0xff; // fix 1 byte data to 2 byte
+      msg->data[1] = 0x00;
+      msg->data[2] = snr_report_status; 
+      msg->data_len = 3;
+      msg->completion_code = CC_SUCCESS;
+      break;
+    case SNR_READ_ACUR_SUCCESS:
+      msg->data[0] = (reading >> 8) & 0xff;
+      msg->data[1] = reading & 0xff;
+      msg->data[2] = snr_report_status; 
+      msg->data_len = 3;
+      msg->completion_code = CC_SUCCESS;
+      break;
+    case SNR_NOT_ACCESSIBLE:
+      msg->data[0] = 0x00;
+      msg->data[1] = 0x00;
+      msg->data[2] = ( snr_report_status | 0x20 ); // notice BMC about sensor temporary in not accessible status
+      msg->data_len = 3;
+      msg->completion_code = CC_SUCCESS;
+      break;
+    case SNR_POLLING_DISABLE:
+      msg->completion_code = CC_SENSOR_NOT_PRESENT; // getting sensor cache while sensor polling disable
+      break;
+    case SNR_FAIL_TO_ACCESS:
+      msg->completion_code = CC_NODE_BUSY; // transection error
+      break;
+    case SNR_NOT_FOUND:
+      msg->completion_code = CC_INVALID_DATA_FIELD; // request sensor number not found
+      break;
+    case SNR_UNSPECIFIED_ERROR:
+    default :
+      msg->completion_code = CC_UNSPECIFIED_ERROR; // unknown error
       break;
   }
   return;

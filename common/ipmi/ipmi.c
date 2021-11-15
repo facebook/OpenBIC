@@ -142,6 +142,9 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_GET_FW_VERSION:
 		pal_OEM_GET_FW_VERSION(msg);
 		break;
+  case CMD_OEM_ACCURACY_SENSNR:
+    pal_OEM_ACCURACY_SENSNR(msg);
+    break;
 	case CMD_OEM_GET_SET_GPIO:
 		pal_OEM_GET_SET_GPIO(msg);
 		break;
