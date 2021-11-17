@@ -124,6 +124,12 @@ __weak void pal_OEM_SET_GPIO(ipmi_msg *msg)
 	return;
 }
 
+__weak void pal_OEM_SEND_INTERRUPT_TO_BMC(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
 __weak void pal_OEM_SENSOR_POLL_EN(ipmi_msg *msg)
 {
 	msg->completion_code = CC_UNSPECIFIED_ERROR;
