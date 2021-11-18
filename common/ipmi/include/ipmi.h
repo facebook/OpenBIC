@@ -72,6 +72,8 @@ void pal_OEM_GET_FW_VERSION(ipmi_msg *msg);
 void pal_OEM_GET_SET_GPIO(ipmi_msg *msg);
 void pal_OEM_SET_SYSTEM_GUID(ipmi_msg *msg);
 void pal_OEM_I2C_DEV_SCAN(ipmi_msg *msg);
+void pal_OEM_SET_JTAG_TAP_STA(ipmi_msg *msg);
+void pal_OEM_JTAG_DATA_SHIFT(ipmi_msg *msg);
 
 
 enum {
@@ -178,6 +180,8 @@ enum {
   CMD_OEM_SENSOR_POLL_EN = 0x7,
   CMD_OEM_FW_UPDATE = 0x9,
   CMD_OEM_GET_FW_VERSION = 0xB,
+  CMD_OEM_SET_JTAG_TAP_STA = 0x21,
+  CMD_OEM_JTAG_DATA_SHIFT = 0x22,
   CMD_OEM_GET_SET_GPIO = 0x41,
   CMD_OEM_SET_SYSTEM_GUID = 0xEF,
 // Debug command
