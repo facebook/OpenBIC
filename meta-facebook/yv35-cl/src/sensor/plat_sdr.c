@@ -42,7 +42,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit 
+    IPMI_SENSOR_UNIT_DEGREE_C,   // base unit 
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
     0x01,   // [7:0] M bits
@@ -57,7 +57,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0x00,   // UNRT
+    0x96,   // UNRT
     0x32,   // UCT
     0x00,   // UNCT
     0x00,   // LNRT
@@ -94,7 +94,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit
+    IPMI_SENSOR_UNIT_DEGREE_C,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
     0x01,   // [7:0] M bits
@@ -109,8 +109,8 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0x00,   // UNRT
-    0x32,   // UCT
+    0x96,   // UNRT
+    0x5D,   // UCT
     0x00,   // UNCT
     0x00,   // LNRT
     0x00,   // LCT
@@ -146,7 +146,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit
+    IPMI_SENSOR_UNIT_DEGREE_C,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
     0x01,   // [7:0] M bits
@@ -161,8 +161,8 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0x00,   // UNRT
-    0x32,   // UCT
+    0x96,   // UNRT
+    0x28,   // UCT
     0x00,   // UNCT
     0x00,   // LNRT
     0x00,   // LCT
@@ -198,7 +198,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x80,   // sensor unit
-    0x00,   // base unit 
+    IPMI_SENSOR_UNIT_DEGREE_C,   // base unit 
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
     0x01,   // [7:0] M bits
@@ -250,7 +250,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit 
+    IPMI_SENSOR_UNIT_DEGREE_C,   // base unit 
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
     0x01,   // [7:0] M bits
@@ -266,7 +266,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
     0x00,   // UNRT
-    0x4A,   // UCT
+    0x54,   // UCT
     0x00,   // UNCT
     0x00,   // LNRT
     0x00,   // LCT
@@ -302,7 +302,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit 
+    IPMI_SENSOR_UNIT_DEGREE_C,   // base unit 
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
     0x01,   // [7:0] M bits
@@ -354,7 +354,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit 
+    IPMI_SENSOR_UNIT_DEGREE_C,   // base unit 
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
     0x01,   // [7:0] M bits
@@ -370,7 +370,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
     0x00,   // UNRT
-    0x00,   // UCT
+    0x55,   // UCT
     0x00,   // UNCT
     0x00,   // LNRT
     0x00,   // LCT
@@ -406,7 +406,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit 
+    IPMI_SENSOR_UNIT_DEGREE_C,   // base unit 
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
     0x01,   // [7:0] M bits
@@ -422,7 +422,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
     0x00,   // UNRT
-    0x00,   // UCT
+    0x55,   // UCT
     0x00,   // UNCT
     0x00,   // LNRT
     0x00,   // LCT
@@ -458,7 +458,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit 
+    IPMI_SENSOR_UNIT_DEGREE_C,   // base unit 
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
     0x01,   // [7:0] M bits
@@ -474,7 +474,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
     0x00,   // UNRT
-    0x00,   // UCT
+    0x55,   // UCT
     0x00,   // UNCT
     0x00,   // LNRT
     0x00,   // LCT
@@ -510,7 +510,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit 
+    IPMI_SENSOR_UNIT_DEGREE_C,   // base unit 
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
     0x01,   // [7:0] M bits
@@ -526,7 +526,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
     0x00,   // UNRT
-    0x00,   // UCT
+    0x55,   // UCT
     0x00,   // UNCT
     0x00,   // LNRT
     0x00,   // LCT
@@ -562,7 +562,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit 
+    IPMI_SENSOR_UNIT_DEGREE_C,   // base unit 
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
     0x01,   // [7:0] M bits
@@ -578,7 +578,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
     0x00,   // UNRT
-    0x00,   // UCT
+    0x55,   // UCT
     0x00,   // UNCT
     0x00,   // LNRT
     0x00,   // LCT
@@ -614,7 +614,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit 
+    IPMI_SENSOR_UNIT_DEGREE_C,   // base unit 
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
     0x01,   // [7:0] M bits
@@ -630,7 +630,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
     0x00,   // UNRT
-    0x00,   // UCT
+    0x55,   // UCT
     0x00,   // UNCT
     0x00,   // LNRT
     0x00,   // LCT
@@ -718,7 +718,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit
+    IPMI_SENSOR_UNIT_DEGREE_C,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
     0x01,   // [7:0] M bits
@@ -770,7 +770,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit
+    IPMI_SENSOR_UNIT_DEGREE_C,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
     0x01,   // [7:0] M bits
@@ -785,8 +785,8 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0x00,   // UNRT
-    0x55,   // UCT
+    0x69,   // UNRT
+    0x57,   // UCT
     0x00,   // UNCT
     0x00,   // LNRT
     0x00,   // LCT
@@ -822,7 +822,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit
+    IPMI_SENSOR_UNIT_DEGREE_C,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
     0x01,   // [7:0] M bits
@@ -837,7 +837,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0x00,   // UNRT
+    0x7D,   // UNRT
     0x64,   // UCT
     0x00,   // UNCT
     0x00,   // LNRT
@@ -874,7 +874,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit
+    IPMI_SENSOR_UNIT_DEGREE_C,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
     0x01,   // [7:0] M bits
@@ -889,7 +889,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0x00,   // UNRT
+    0x7D,   // UNRT
     0x64,   // UCT
     0x00,   // UNCT
     0x00,   // LNRT
@@ -926,7 +926,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit
+    IPMI_SENSOR_UNIT_DEGREE_C,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
     0x01,   // [7:0] M bits
@@ -941,7 +941,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0x00,   // UNRT
+    0x7D,   // UNRT
     0x64,   // UCT
     0x00,   // UNCT
     0x00,   // LNRT
@@ -978,7 +978,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit
+    IPMI_SENSOR_UNIT_DEGREE_C,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
     0x01,   // [7:0] M bits
@@ -993,7 +993,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0x00,   // UNRT
+    0x7D,   // UNRT
     0x64,   // UCT
     0x00,   // UNCT
     0x00,   // LNRT
@@ -1030,7 +1030,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit
+    IPMI_SENSOR_UNIT_DEGREE_C,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
     0x01,   // [7:0] M bits
@@ -1045,7 +1045,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0x00,   // UNRT
+    0x7D,   // UNRT
     0x64,   // UCT
     0x00,   // UNCT
     0x00,   // LNRT
@@ -1082,7 +1082,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit 
+    IPMI_SENSOR_UNIT_VOL,   // base unit 
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
     0x40,   // [7:0] M bits
@@ -1097,12 +1097,12 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0x00,   // UNRT
-    0x00,   // UCT
-    0x00,   // UNCT
-    0x00,   // LNRT
-    0x00,   // LCT
-    0x00,   // LNCT
+    0xE0,   // UNRT
+    0xCF,   // UCT
+    0xCB,   // UNCT
+    0x9E,   // LNRT
+    0xA9,   // LCT
+    0xAD,   // LNCT
     0x00,   // positive-going threshold
     0x00,   // negative-going threshold
     0x00,   // reserved
@@ -1134,10 +1134,10 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit 
+    IPMI_SENSOR_UNIT_VOL,   // base unit 
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
-    0x11,   // [7:0] M bits
+    0x12,   // [7:0] M bits
     0x00,   // [9:8] M bits, tolerance
     0x00,   // [7:0] B bits
     0x00,   // [9:8] B bits, tolerance
@@ -1150,11 +1150,11 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
     0x00,   // UNRT
-    0x00,   // UCT
-    0x00,   // UNCT
+    0xC4,   // UCT
+    0xC1,   // UNCT
     0x00,   // LNRT
-    0x00,   // LCT
-    0x00,   // LNCT
+    0xAB,   // LCT
+    0xAE,   // LNCT
     0x00,   // positive-going threshold
     0x00,   // negative-going threshold
     0x00,   // reserved
@@ -1186,10 +1186,10 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit 
+    IPMI_SENSOR_UNIT_VOL,   // base unit 
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
-    0x11,   // [7:0] M bits
+    0x12,   // [7:0] M bits
     0x00,   // [9:8] M bits, tolerance
     0x00,   // [7:0] B bits
     0x00,   // [9:8] B bits, tolerance
@@ -1201,12 +1201,12 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0x00,   // UNRT
-    0x00,   // UCT
-    0x00,   // UNCT
-    0x00,   // LNRT
-    0x00,   // LCT
-    0x00,   // LNCT
+    0xDE,   // UNRT
+    0xC4,   // UCT
+    0xC1,   // UNCT
+    0x80,   // LNRT
+    0xAB,   // LCT
+    0xAE,   // LNCT
     0x00,   // positive-going threshold
     0x00,   // negative-going threshold
     0x00,   // reserved
@@ -1238,27 +1238,27 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit 
+    IPMI_SENSOR_UNIT_VOL,   // base unit 
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
-    0x37,   // [7:0] M bits
+    0x05,   // [7:0] M bits
     0x00,   // [9:8] M bits, tolerance
     0x00,   // [7:0] B bits
     0x00,   // [9:8] B bits, tolerance
     0x00,   // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
-    0xC0,   // Rexp, Bexp
+    0xD0,   // Rexp, Bexp
     0x00,   // analog characteristic
     0x00,   // nominal reading
     0x00,   // normal maximum
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0x00,   // UNRT
-    0x00,   // UCT
-    0x00,   // UNCT
-    0x00,   // LNRT
-    0x00,   // LCT
-    0x00,   // LNCT
+    0xF4,   // UNRT
+    0xDD,   // UCT
+    0xD8,   // UNCT
+    0xA8,   // LNRT
+    0xC4,   // LCT
+    0xC8,   // LNCT
     0x00,   // positive-going threshold
     0x00,   // negative-going threshold
     0x00,   // reserved
@@ -1290,7 +1290,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit 
+    IPMI_SENSOR_UNIT_VOL,   // base unit 
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
     0x01,   // [7:0] M bits
@@ -1305,12 +1305,12 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0x00,   // UNRT
-    0x00,   // UCT
-    0x00,   // UNCT
-    0x00,   // LNRT
-    0x00,   // LCT
-    0x00,   // LNCT
+    0xD1,   // UNRT
+    0xBE,   // UCT
+    0xBA,   // UNCT
+    0x90,   // LNRT
+    0xA9,   // LCT
+    0xAD,   // LNCT
     0x00,   // positive-going threshold
     0x00,   // negative-going threshold
     0x00,   // reserved
@@ -1318,6 +1318,214 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // OEM
     IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
     "P1V8_STBY Vol",
+  },
+  {   // P5V STBY ADC voltage
+    0x00,0x00,  // record ID
+    IPMI_SDR_VER_15,  // SDR ver
+    IPMI_SDR_FULL_SENSOR,   // record type
+    IPMI_SDR_FULL_SENSOR_MIN_LEN,   // size of struct
+
+    Self_I2C_ADDRESS<<1,   // owner id
+    0x00,   // owner lun
+    SENSOR_NUM_VOL_STBY5V,    // sensor number
+
+    IPMI_SDR_ENTITY_ID_SYS_BOARD,   // entity id
+    0x00,   // entity instance
+    IPMI_SDR_SENSOR_INIT_SCAN| IPMI_SDR_SENSOR_INIT_EVENT| IPMI_SDR_SENSOR_INIT_THRESHOLD| IPMI_SDR_SENSOR_INIT_TYPE| IPMI_SDR_SENSOR_INIT_DEF_EVENT| IPMI_SDR_SENSOR_INIT_DEF_SCAN,   // sensor init
+    IPMI_SDR_SENSOR_CAP_THRESHOLD_RW| IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO,    // sensor capabilities
+    IPMI_SDR_SENSOR_TYPE_TEMPERATURE,   // sensor type
+    IPMI_SDR_EVENT_TYPE_THRESHOLD,    // event/reading type
+    0x00,   // assert event mask
+    IPMI_SDR_CMP_RETURN_LCT| IPMI_SDR_ASSERT_MASK_UCT_HI| IPMI_SDR_ASSERT_MASK_LCT_LO,    // assert threshold reading mask
+    0x00,   // deassert event mask
+    IPMI_SDR_CMP_RETURN_UCT| IPMI_SDR_DEASSERT_MASK_UCT_LO| IPMI_SDR_DEASSERT_MASK_LCT_HI,    // deassert threshold reading mask
+    0x00,   // discrete reading mask/ settable
+    IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
+    0x00,   // sensor unit
+    IPMI_SENSOR_UNIT_VOL,   // base unit
+    0x00,   // modifier unit
+    IPMI_SDR_LINEAR_LINEAR,   // linearization
+    0x1B,   // [7:0] M bits
+    0x00,   // [9:8] M bits, tolerance
+    0x00,   // [7:0] B bits
+    0x00,   // [9:8] B bits, tolerance
+    0x00,   // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
+    0xD0,   // Rexp, Bexp
+    0x00,   // analog characteristic
+    0x00,   // nominal reading
+    0x00,   // normal maximum
+    0x00,   // normal minimum
+    0x00,   // sensor maximum reading
+    0x00,   // sensor minimum reading
+    0xD7,   // UNRT
+    0xC6,   // UCT
+    0xC2,   // UNCT
+    0x94,   // LNRT
+    0xAC,   // LCT
+    0xB0,   // LNCT
+    0x00,   // positive-going threshold
+    0x00,   // negative-going threshold
+    0x00,   // reserved
+    0x00,   // reserved
+    0x00,   // OEM
+    IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
+    "P5V_STBY Vol",
+  },
+  {   // P12V DIMM ADC voltage
+    0x00,0x00,  // record ID
+    IPMI_SDR_VER_15,  // SDR ver
+    IPMI_SDR_FULL_SENSOR,   // record type
+    IPMI_SDR_FULL_SENSOR_MIN_LEN,   // size of struct
+
+    Self_I2C_ADDRESS<<1,   // owner id
+    0x00,   // owner lun
+    SENSOR_NUM_VOL_DIMM12V,    // sensor number
+
+    IPMI_SDR_ENTITY_ID_SYS_BOARD,   // entity id
+    0x00,   // entity instance
+    IPMI_SDR_SENSOR_INIT_SCAN| IPMI_SDR_SENSOR_INIT_EVENT| IPMI_SDR_SENSOR_INIT_THRESHOLD| IPMI_SDR_SENSOR_INIT_TYPE| IPMI_SDR_SENSOR_INIT_DEF_EVENT| IPMI_SDR_SENSOR_INIT_DEF_SCAN,   // sensor init
+    IPMI_SDR_SENSOR_CAP_THRESHOLD_RW| IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO,    // sensor capabilities
+    IPMI_SDR_SENSOR_TYPE_TEMPERATURE,   // sensor type
+    IPMI_SDR_EVENT_TYPE_THRESHOLD,    // event/reading type
+    0x00,   // assert event mask
+    IPMI_SDR_CMP_RETURN_LCT| IPMI_SDR_ASSERT_MASK_UCT_HI| IPMI_SDR_ASSERT_MASK_LCT_LO,    // assert threshold reading mask
+    0x00,   // deassert event mask
+    IPMI_SDR_CMP_RETURN_UCT| IPMI_SDR_DEASSERT_MASK_UCT_LO| IPMI_SDR_DEASSERT_MASK_LCT_HI,    // deassert threshold reading mask
+    0x00,   // discrete reading mask/ settable
+    IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
+    0x00,   // sensor unit
+    IPMI_SENSOR_UNIT_VOL,   // base unit
+    0x00,   // modifier unit
+    IPMI_SDR_LINEAR_LINEAR,   // linearization
+    0x40,   // [7:0] M bits
+    0x00,   // [9:8] M bits, tolerance
+    0x00,   // [7:0] B bits
+    0x00,   // [9:8] B bits, tolerance
+    0x00,   // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
+    0xD0,   // Rexp, Bexp
+    0x00,   // analog characteristic
+    0x00,   // nominal reading
+    0x00,   // normal maximum
+    0x00,   // normal minimum
+    0x00,   // sensor maximum reading
+    0x00,   // sensor minimum reading
+    0x00,   // UNRT
+    0xDC,   // UCT
+    0xD8,   // UNCT
+    0x00,   // LNRT
+    0x9C,   // LCT
+    0x9F,   // LNCT
+    0x00,   // positive-going threshold
+    0x00,   // negative-going threshold
+    0x00,   // reserved
+    0x00,   // reserved
+    0x00,   // OEM
+    IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
+    "P12V_DIMM Vol",
+  },
+  {   // P1V2 STBY ADC voltage
+    0x00,0x00,  // record ID
+    IPMI_SDR_VER_15,  // SDR ver
+    IPMI_SDR_FULL_SENSOR,   // record type
+    IPMI_SDR_FULL_SENSOR_MIN_LEN,   // size of struct
+
+    Self_I2C_ADDRESS<<1,   // owner id
+    0x00,   // owner lun
+    SENSOR_NUM_VOL_STBY1V2,    // sensor number
+
+    IPMI_SDR_ENTITY_ID_SYS_BOARD,   // entity id
+    0x00,   // entity instance
+    IPMI_SDR_SENSOR_INIT_SCAN| IPMI_SDR_SENSOR_INIT_EVENT| IPMI_SDR_SENSOR_INIT_THRESHOLD| IPMI_SDR_SENSOR_INIT_TYPE| IPMI_SDR_SENSOR_INIT_DEF_EVENT| IPMI_SDR_SENSOR_INIT_DEF_SCAN,   // sensor init
+    IPMI_SDR_SENSOR_CAP_THRESHOLD_RW| IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO,    // sensor capabilities
+    IPMI_SDR_SENSOR_TYPE_TEMPERATURE,   // sensor type
+    IPMI_SDR_EVENT_TYPE_THRESHOLD,    // event/reading type
+    0x00,   // assert event mask
+    IPMI_SDR_CMP_RETURN_LCT| IPMI_SDR_ASSERT_MASK_UCT_HI| IPMI_SDR_ASSERT_MASK_LCT_LO,    // assert threshold reading mask
+    0x00,   // deassert event mask
+    IPMI_SDR_CMP_RETURN_UCT| IPMI_SDR_DEASSERT_MASK_UCT_LO| IPMI_SDR_DEASSERT_MASK_LCT_HI,    // deassert threshold reading mask
+    0x00,   // discrete reading mask/ settable
+    IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
+    0x00,   // sensor unit
+    IPMI_SENSOR_UNIT_VOL,   // base unit
+    0x00,   // modifier unit
+    IPMI_SDR_LINEAR_LINEAR,   // linearization
+    0x06,   // [7:0] M bits
+    0x00,   // [9:8] M bits, tolerance
+    0x00,   // [7:0] B bits
+    0x00,   // [9:8] B bits, tolerance
+    0x00,   // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
+    0xD0,   // Rexp, Bexp
+    0x00,   // analog characteristic
+    0x00,   // nominal reading
+    0x00,   // normal maximum
+    0x00,   // normal minimum
+    0x00,   // sensor maximum reading
+    0x00,   // sensor minimum reading
+    0xE8,   // UNRT
+    0xD6,   // UCT
+    0xD2,   // UNCT
+    0xA0,   // LNRT
+    0xBA,   // LCT
+    0xBE,   // LNCT
+    0x00,   // positive-going threshold
+    0x00,   // negative-going threshold
+    0x00,   // reserved
+    0x00,   // reserved
+    0x00,   // OEM
+    IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
+    "P1V2_STBY Vol",
+  },
+  {   // P3V3 M2 ADC voltage
+    0x00,0x00,  // record ID
+    IPMI_SDR_VER_15,  // SDR ver
+    IPMI_SDR_FULL_SENSOR,   // record type
+    IPMI_SDR_FULL_SENSOR_MIN_LEN,   // size of struct
+
+    Self_I2C_ADDRESS<<1,   // owner id
+    0x00,   // owner lun
+    SENSOR_NUM_VOL_M2_3V3,    // sensor number
+
+    IPMI_SDR_ENTITY_ID_SYS_BOARD,   // entity id
+    0x00,   // entity instance
+    IPMI_SDR_SENSOR_INIT_SCAN| IPMI_SDR_SENSOR_INIT_EVENT| IPMI_SDR_SENSOR_INIT_THRESHOLD| IPMI_SDR_SENSOR_INIT_TYPE| IPMI_SDR_SENSOR_INIT_DEF_EVENT| IPMI_SDR_SENSOR_INIT_DEF_SCAN,   // sensor init
+    IPMI_SDR_SENSOR_CAP_THRESHOLD_RW| IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO,    // sensor capabilities
+    IPMI_SDR_SENSOR_TYPE_TEMPERATURE,   // sensor type
+    IPMI_SDR_EVENT_TYPE_THRESHOLD,    // event/reading type
+    0x00,   // assert event mask
+    IPMI_SDR_CMP_RETURN_LCT| IPMI_SDR_ASSERT_MASK_UCT_HI| IPMI_SDR_ASSERT_MASK_LCT_LO,    // assert threshold reading mask
+    0x00,   // deassert event mask
+    IPMI_SDR_CMP_RETURN_UCT| IPMI_SDR_DEASSERT_MASK_UCT_LO| IPMI_SDR_DEASSERT_MASK_LCT_HI,    // deassert threshold reading mask
+    0x00,   // discrete reading mask/ settable
+    IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
+    0x00,   // sensor unit
+    IPMI_SENSOR_UNIT_VOL,   // base unit
+    0x00,   // modifier unit
+    IPMI_SDR_LINEAR_LINEAR,   // linearization
+    0x12,   // [7:0] M bits
+    0x00,   // [9:8] M bits, tolerance
+    0x00,   // [7:0] B bits
+    0x00,   // [9:8] B bits, tolerance
+    0x00,   // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
+    0xD0,   // Rexp, Bexp
+    0x00,   // analog characteristic
+    0x00,   // nominal reading
+    0x00,   // normal maximum
+    0x00,   // normal minimum
+    0x00,   // sensor maximum reading
+    0x00,   // sensor minimum reading
+    0x00,   // UNRT
+    0xCC,   // UCT
+    0xC8,   // UNCT
+    0x00,   // LNRT
+    0xA4,   // LCT
+    0xA7,   // LNCT
+    0x00,   // positive-going threshold
+    0x00,   // negative-going threshold
+    0x00,   // reserved
+    0x00,   // reserved
+    0x00,   // OEM
+    IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
+    "P3V3_M2 Vol",
   },
   {   // PVCCIN VR voltage
     0x00,0x00,  // record ID
@@ -1342,27 +1550,27 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit
+    IPMI_SENSOR_UNIT_VOL,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
-    0x5E,   // [7:0] M bits
+    0x01,   // [7:0] M bits
     0x00,   // [9:8] M bits, tolerance
     0x00,   // [7:0] B bits
     0x00,   // [9:8] B bits, tolerance
     0x00,   // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
-    0xC0,   // Rexp, Bexp
+    0xE0,   // Rexp, Bexp
     0x00,   // analog characteristic
     0x00,   // nominal reading
     0x00,   // normal maximum
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0x00,   // UNRT
-    0xC8,   // UCT
-    0x00,   // UNCT
-    0x00,   // LNRT
-    0x00,   // LCT
-    0x00,   // LNCT
+    0xDC,   // UNRT
+    0xB7,   // UCT
+    0xBB,   // UNCT
+    0x28,   // LNRT
+    0xAC,   // LCT
+    0xA9,   // LNCT
     0x00,   // positive-going threshold
     0x00,   // negative-going threshold
     0x00,   // reserved
@@ -1394,27 +1602,27 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit
+    IPMI_SENSOR_UNIT_VOL,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
-    0x5E,   // [7:0] M bits
+    0x01,   // [7:0] M bits
     0x00,   // [9:8] M bits, tolerance
     0x00,   // [7:0] B bits
     0x00,   // [9:8] B bits, tolerance
     0x00,   // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
-    0xC0,   // Rexp, Bexp
+    0xE0,   // Rexp, Bexp
     0x00,   // analog characteristic
     0x00,   // nominal reading
     0x00,   // normal maximum
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0x00,   // UNRT
-    0xC8,   // UCT
-    0x00,   // UNCT
-    0x00,   // LNRT
-    0x00,   // LCT
-    0x00,   // LNCT
+    0xDC,   // UNRT
+    0xB6,   // UCT
+    0xBA,   // UNCT
+    0x28,   // LNRT
+    0xB1,   // LCT
+    0xAE,   // LNCT
     0x00,   // positive-going threshold
     0x00,   // negative-going threshold
     0x00,   // reserved
@@ -1446,27 +1654,27 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit
+    IPMI_SENSOR_UNIT_VOL,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
-    0x5E,   // [7:0] M bits
+    0x01,   // [7:0] M bits
     0x00,   // [9:8] M bits, tolerance
     0x00,   // [7:0] B bits
     0x00,   // [9:8] B bits, tolerance
     0x00,   // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
-    0xC0,   // Rexp, Bexp
+    0xE0,   // Rexp, Bexp
     0x00,   // analog characteristic
     0x00,   // nominal reading
     0x00,   // normal maximum
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0x00,   // UNRT
-    0xC8,   // UCT
-    0x00,   // UNCT
-    0x00,   // LNRT
-    0x00,   // LCT
-    0x00,   // LNCT
+    0xDC,   // UNRT
+    0xBC,   // UCT
+    0xB8,   // UNCT
+    0x28,   // LNRT
+    0xAB,   // LCT
+    0xAF,   // LNCT
     0x00,   // positive-going threshold
     0x00,   // negative-going threshold
     0x00,   // reserved
@@ -1498,27 +1706,27 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // discrete reading mask/ settable
    IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
    0x00,   // sensor unit
-   0x00,   // base unit
+   IPMI_SENSOR_UNIT_VOL,   // base unit
    0x00,   // modifier unit
    IPMI_SDR_LINEAR_LINEAR,   // linearization
-   0x41,   // [7:0] M bits
-   0x80,   // [9:8] M bits, tolerance
+   0x07,   // [7:0] M bits
+   0x00,   // [9:8] M bits, tolerance
    0x00,   // [7:0] B bits
    0x00,   // [9:8] B bits, tolerance
    0x00,   // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
-   0xB0,   // Rexp, Bexp
+   0xD0,   // Rexp, Bexp
    0x00,   // analog characteristic
    0x00,   // nominal reading
    0x00,   // normal maximum
    0x00,   // normal minimum
    0x00,   // sensor maximum reading
    0x00,   // sensor minimum reading
-   0x00,   // UNRT
-   0xC8,   // UCT
-   0x00,   // UNCT
-   0x00,   // LNRT
-   0x00,   // LCT
-   0x00,   // LNCT
+   0xD6,   // UNRT
+   0xAD,   // UCT
+   0xAA,   // UNCT
+   0x39,   // LNRT
+   0x97,   // LCT
+   0x9A,   // LNCT
    0x00,   // positive-going threshold
    0x00,   // negative-going threshold
    0x00,   // reserved
@@ -1550,27 +1758,27 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // discrete reading mask/ settable
    IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
    0x00,   // sensor unit
-   0x00,   // base unit
+   IPMI_SENSOR_UNIT_VOL,   // base unit
    0x00,   // modifier unit
    IPMI_SDR_LINEAR_LINEAR,   // linearization
-   0x36,   // [7:0] M bits
+   0x07,   // [7:0] M bits
    0x00,   // [9:8] M bits, tolerance
    0x00,   // [7:0] B bits
    0x00,   // [9:8] B bits, tolerance
    0x00,   // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
-   0xC0,   // Rexp, Bexp
+   0xD0,   // Rexp, Bexp
    0x00,   // analog characteristic
    0x00,   // nominal reading
    0x00,   // normal maximum
    0x00,   // normal minimum
    0x00,   // sensor maximum reading
    0x00,   // sensor minimum reading
-   0x00,   // UNRT
-   0xC8,   // UCT
-   0x00,   // UNCT
-   0x00,   // LNRT
-   0x00,   // LCT
-   0x00,   // LNCT
+   0xC8,   // UNRT
+   0x99,   // UCT
+   0x96,   // UNCT
+   0x39,   // LNRT
+   0x82,   // LCT
+   0x85,   // LNCT
    0x00,   // positive-going threshold
    0x00,   // negative-going threshold
    0x00,   // reserved
@@ -1602,10 +1810,10 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
     0x00,   // sensor unit
-    0x00,   // base unit
+    IPMI_SENSOR_UNIT_VOL,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
-    0x33,   // [7:0] M bits
+    0x44,   // [7:0] M bits
     0x00,   // [9:8] M bits, tolerance
     0x00,   // [7:0] B bits
     0x00,   // [9:8] B bits, tolerance
@@ -1617,12 +1825,12 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0x00,   // UNRT
-    0xFF,   // UCT
-    0x00,   // UNCT
-    0x00,   // LNRT
-    0x00,   // LCT
-    0x00,   // LNCT
+    0xD3,   // UNRT
+    0xC2,   // UCT
+    0xBF,   // UNCT
+    0x94,   // LNRT
+    0x9F,   // LCT
+    0xA2,   // LNCT
     0x00,   // positive-going threshold
     0x00,   // negative-going threshold
     0x00,   // reserved
@@ -1654,15 +1862,15 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // discrete reading mask/ settable
    IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
    0x00,   // sensor unit
-   0x00,   // base unit
+   IPMI_SENSOR_UNIT_AMP,   // base unit
    0x00,   // modifier unit
    IPMI_SDR_LINEAR_LINEAR,   // linearization
-   0x7D,   // [7:0] M bits
+   0x13,   // [7:0] M bits
    0x00,   // [9:8] M bits, tolerance
    0x00,   // [7:0] B bits
    0x00,   // [9:8] B bits, tolerance
    0x00,   // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
-   0xD0,   // Rexp, Bexp
+   0xE0,   // Rexp, Bexp
    0x00,   // analog characteristic
    0x00,   // nominal reading
    0x00,   // normal maximum
@@ -1670,7 +1878,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // sensor maximum reading
    0x00,   // sensor minimum reading
    0x00,   // UNRT
-   0xFF,   // UCT
+   0xD3,   // UCT
    0x00,   // UNCT
    0x00,   // LNRT
    0x00,   // LCT
@@ -1706,10 +1914,10 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // discrete reading mask/ settable
    IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
    0x00,   // sensor unit
-   0x00,   // base unit
+   IPMI_SENSOR_UNIT_AMP,   // base unit
    0x00,   // modifier unit
    IPMI_SDR_LINEAR_LINEAR,   // linearization
-   0x2E,   // [7:0] M bits
+   0x4D,   // [7:0] M bits
    0x00,   // [9:8] M bits, tolerance
    0x00,   // [7:0] B bits
    0x00,   // [9:8] B bits, tolerance
@@ -1722,7 +1930,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // sensor maximum reading
    0x00,   // sensor minimum reading
    0x00,   // UNRT
-   0xC8,   // UCT
+   0xDD,   // UCT
    0x00,   // UNCT
    0x00,   // LNRT
    0x00,   // LCT
@@ -1758,10 +1966,10 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // discrete reading mask/ settable
    IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
    0x00,   // sensor unit
-   0x00,   // base unit
+   IPMI_SENSOR_UNIT_AMP,   // base unit
    0x00,   // modifier unit
    IPMI_SDR_LINEAR_LINEAR,   // linearization
-   0x1A,   // [7:0] M bits
+   0x27,   // [7:0] M bits
    0x00,   // [9:8] M bits, tolerance
    0x00,   // [7:0] B bits
    0x00,   // [9:8] B bits, tolerance
@@ -1774,7 +1982,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // sensor maximum reading
    0x00,   // sensor minimum reading
    0x00,   // UNRT
-   0xC8,   // UCT
+   0xDA,   // UCT
    0x00,   // UNCT
    0x00,   // LNRT
    0x00,   // LCT
@@ -1810,15 +2018,15 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // discrete reading mask/ settable
    IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
    0x00,   // sensor unit
-   0x00,   // base unit
+   IPMI_SENSOR_UNIT_AMP,   // base unit
    0x00,   // modifier unit
    IPMI_SDR_LINEAR_LINEAR,   // linearization
-   0x1F,   // [7:0] M bits
+   0x08,   // [7:0] M bits
    0x00,   // [9:8] M bits, tolerance
    0x00,   // [7:0] B bits
    0x00,   // [9:8] B bits, tolerance
    0x00,   // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
-   0xD0,   // Rexp, Bexp
+   0xE0,   // Rexp, Bexp
    0x00,   // analog characteristic
    0x00,   // nominal reading
    0x00,   // normal maximum
@@ -1826,7 +2034,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // sensor maximum reading
    0x00,   // sensor minimum reading
    0x00,   // UNRT
-   0xC8,   // UCT
+   0xE1,   // UCT
    0x00,   // UNCT
    0x00,   // LNRT
    0x00,   // LCT
@@ -1862,10 +2070,10 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // discrete reading mask/ settable
    IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
    0x00,   // sensor unit
-   0x00,   // base unit
+   IPMI_SENSOR_UNIT_AMP,   // base unit
    0x00,   // modifier unit
    IPMI_SDR_LINEAR_LINEAR,   // linearization
-   0x0F,   // [7:0] M bits
+   0x22,   // [7:0] M bits
    0x00,   // [9:8] M bits, tolerance
    0x00,   // [7:0] B bits
    0x00,   // [9:8] B bits, tolerance
@@ -1878,7 +2086,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // sensor maximum reading
    0x00,   // sensor minimum reading
    0x00,   // UNRT
-   0xC8,   // UCT
+   0xDA,   // UCT
    0x00,   // UNCT
    0x00,   // LNRT
    0x00,   // LCT
@@ -1914,10 +2122,10 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // discrete reading mask/ settable
    IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
    0x00,   // sensor unit
-   0x00,   // base unit
+   IPMI_SENSOR_UNIT_AMP,   // base unit
    0x00,   // modifier unit
    IPMI_SDR_LINEAR_LINEAR,   // linearization
-   0x17,   // [7:0] M bits
+   0x18,   // [7:0] M bits
    0x00,   // [9:8] M bits, tolerance
    0x00,   // [7:0] B bits
    0x00,   // [9:8] B bits, tolerance
@@ -1930,7 +2138,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // sensor maximum reading
    0x00,   // sensor minimum reading
    0x00,   // UNRT
-   0xC8,   // UCT
+   0xD9,   // UCT
    0x00,   // UNCT
    0x00,   // LNRT
    0x00,   // LCT
@@ -1943,6 +2151,58 @@ SDR_Full_sensor plat_sensor_table[] = {
    IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
    "PVCCINFAON Cur",
  },
+  {   // CPU power
+   0x00,0x00,  // record ID
+   IPMI_SDR_VER_15,  // SDR ver
+   IPMI_SDR_FULL_SENSOR,   // record type
+   IPMI_SDR_FULL_SENSOR_MIN_LEN,   // size of struct
+
+   Self_I2C_ADDRESS<<1,   // owner id
+   0x00,   // owner lun
+   SENSOR_NUM_PWR_CPU,    // sensor number
+
+   IPMI_SDR_ENTITY_ID_SYS_BOARD,   // entity id
+   0x00,   // entity instance
+   IPMI_SDR_SENSOR_INIT_SCAN| IPMI_SDR_SENSOR_INIT_EVENT| IPMI_SDR_SENSOR_INIT_THRESHOLD| IPMI_SDR_SENSOR_INIT_TYPE| IPMI_SDR_SENSOR_INIT_DEF_EVENT| IPMI_SDR_SENSOR_INIT_DEF_SCAN,   // sensor init
+   IPMI_SDR_SENSOR_CAP_THRESHOLD_RW| IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO,    // sensor capabilities
+   IPMI_SDR_SENSOR_TYPE_TEMPERATURE,   // sensor type
+   IPMI_SDR_EVENT_TYPE_THRESHOLD,    // event/reading type
+   0x00,   // assert event mask
+   IPMI_SDR_CMP_RETURN_LCT| IPMI_SDR_ASSERT_MASK_UCT_HI| IPMI_SDR_ASSERT_MASK_LCT_LO,    // assert threshold reading mask
+   0x00,   // deassert event mask
+   IPMI_SDR_CMP_RETURN_UCT| IPMI_SDR_DEASSERT_MASK_UCT_LO| IPMI_SDR_DEASSERT_MASK_LCT_HI,    // deassert threshold reading mask
+   0x00,   // discrete reading mask/ settable
+   IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
+   0x00,   // sensor unit
+   IPMI_SENSOR_UNIT_WATT,   // base unit
+   0x00,   // modifier unit
+   IPMI_SDR_LINEAR_LINEAR,   // linearization
+   0x01,   // [7:0] M bits
+   0x00,   // [9:8] M bits, tolerance
+   0x00,   // [7:0] B bits
+   0x00,   // [9:8] B bits, tolerance
+   0x00,   // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
+   0x00,   // Rexp, Bexp
+   0x00,   // analog characteristic
+   0x00,   // nominal reading
+   0x00,   // normal maximum
+   0x00,   // normal minimum
+   0x00,   // sensor maximum reading
+   0x00,   // sensor minimum reading
+   0x00,   // UNRT
+   0x00,   // UCT
+   0x00,   // UNCT
+   0x00,   // LNRT
+   0x00,   // LCT
+   0x00,   // LNCT
+   0x00,   // positive-going threshold
+   0x00,   // negative-going threshold
+   0x00,   // reserved
+   0x00,   // reserved
+   0x00,   // OEM
+   IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
+   "CPU Pwr",
+  },
   {   // HSCIN power
    0x00,0x00,  // record ID
    IPMI_SDR_VER_15,  // SDR ver
@@ -1966,15 +2226,15 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // discrete reading mask/ settable
    IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
    0x00,   // sensor unit
-   0x00,   // base unit
+   IPMI_SENSOR_UNIT_WATT,   // base unit
    0x00,   // modifier unit
    IPMI_SDR_LINEAR_LINEAR,   // linearization
-   0x9C,   // [7:0] M bits
+   0x01,   // [7:0] M bits
    0x00,   // [9:8] M bits, tolerance
    0x00,   // [7:0] B bits
    0x00,   // [9:8] B bits, tolerance
    0x00,   // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
-   0xE0,   // Rexp, Bexp
+   0x00,   // Rexp, Bexp
    0x00,   // analog characteristic
    0x00,   // nominal reading
    0x00,   // normal maximum
@@ -1982,7 +2242,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // sensor maximum reading
    0x00,   // sensor minimum reading
    0x00,   // UNRT
-   0xFF,   // UCT
+   0xB2,   // UCT
    0x00,   // UNCT
    0x00,   // LNRT
    0x00,   // LCT
@@ -2018,7 +2278,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // discrete reading mask/ settable
    IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
    0x00,   // sensor unit
-   0x00,   // base unit
+   IPMI_SENSOR_UNIT_WATT,   // base unit
    0x00,   // modifier unit
    IPMI_SDR_LINEAR_LINEAR,   // linearization
    0x52,   // [7:0] M bits
@@ -2034,7 +2294,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // sensor maximum reading
    0x00,   // sensor minimum reading
    0x00,   // UNRT
-   0xC8,   // UCT
+   0x00,   // UCT
    0x00,   // UNCT
    0x00,   // LNRT
    0x00,   // LCT
@@ -2070,7 +2330,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // discrete reading mask/ settable
    IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
    0x00,   // sensor unit
-   0x00,   // base unit
+   IPMI_SENSOR_UNIT_WATT,   // base unit
    0x00,   // modifier unit
    IPMI_SDR_LINEAR_LINEAR,   // linearization
    0x2F,   // [7:0] M bits
@@ -2086,7 +2346,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // sensor maximum reading
    0x00,   // sensor minimum reading
    0x00,   // UNRT
-   0xC8,   // UCT
+   0x00,   // UCT
    0x00,   // UNCT
    0x00,   // LNRT
    0x00,   // LCT
@@ -2122,7 +2382,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // discrete reading mask/ settable
    IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
    0x00,   // sensor unit
-   0x00,   // base unit
+   IPMI_SENSOR_UNIT_WATT,   // base unit
    0x00,   // modifier unit
    IPMI_SDR_LINEAR_LINEAR,   // linearization
    0x38,   // [7:0] M bits
@@ -2138,7 +2398,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // sensor maximum reading
    0x00,   // sensor minimum reading
    0x00,   // UNRT
-   0xC8,   // UCT
+   0x00,   // UCT
    0x00,   // UNCT
    0x00,   // LNRT
    0x00,   // LCT
@@ -2174,7 +2434,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // discrete reading mask/ settable
    IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
    0x00,   // sensor unit
-   0x00,   // base unit
+   IPMI_SENSOR_UNIT_WATT,   // base unit
    0x00,   // modifier unit
    IPMI_SDR_LINEAR_LINEAR,   // linearization
    0xA5,   // [7:0] M bits
@@ -2190,7 +2450,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // sensor maximum reading
    0x00,   // sensor minimum reading
    0x00,   // UNRT
-   0xC8,   // UCT
+   0x00,   // UCT
    0x00,   // UNCT
    0x00,   // LNRT
    0x00,   // LCT
@@ -2226,7 +2486,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // discrete reading mask/ settable
    IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
    0x00,   // sensor unit
-   0x00,   // base unit
+   IPMI_SENSOR_UNIT_WATT,   // base unit
    0x00,   // modifier unit
    IPMI_SDR_LINEAR_LINEAR,   // linearization
    0x17,   // [7:0] M bits
@@ -2242,7 +2502,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // sensor maximum reading
    0x00,   // sensor minimum reading
    0x00,   // UNRT
-   0xC8,   // UCT
+   0x00,   // UCT
    0x00,   // UNCT
    0x00,   // LNRT
    0x00,   // LCT
@@ -2264,7 +2524,7 @@ uint8_t fix_C2SDR_table[][10]= {
 SDR_Full_sensor fix_1ouSDR_table[] = {
 // SDR_Full_sensor struct member
 };
-SDR_Full_sensor fix_2ouSDR_table[] = {
+SDR_Full_sensor fix_DVPSDR_table[] = {
 // SDR_Full_sensor struct member
 };
 
@@ -2371,10 +2631,10 @@ void fix_fullSDR_table() {
     }
   }
   if ( get_2ou_status() ) {
-    // fix usage when fix_2ouSDR_table is defined
-    fix_array_num = sizeof( fix_2ouSDR_table ) / sizeof( fix_2ouSDR_table[0] );
+    // fix usage when fix_DVPSDR_table is defined
+    fix_array_num = sizeof( fix_DVPSDR_table ) / sizeof( fix_DVPSDR_table[0] );
     while( fix_array_num ) {
-      add_fullSDR_table( fix_2ouSDR_table[ fix_array_num - 1 ] );
+      add_fullSDR_table( fix_DVPSDR_table[ fix_array_num - 1 ] );
       fix_array_num--;
     }
   }

@@ -71,13 +71,16 @@ enum {
 #define SENSOR_NUM_VOL_STBY3V            0x22
 #define SENSOR_NUM_VOL_STBY1V05          0x23
 #define SENSOR_NUM_VOL_STBY1V8           0x24
-#define SENSOR_NUM_VOL_HSCIN             0x26
-#define SENSOR_NUM_VOL_VCCIN             0x0F
-#define SENSOR_NUM_VOL_PVCCIN            0x27
-#define SENSOR_NUM_VOL_PVCCFA_EHV_FIVRA  0x28
-#define SENSOR_NUM_VOL_PVCCFA_EHV        0x29
-#define SENSOR_NUM_VOL_PVCCD_HV          0x2A
-#define SENSOR_NUM_VOL_PVCCINFAON        0x2C
+#define SENSOR_NUM_VOL_STBY5V            0x25
+#define SENSOR_NUM_VOL_DIMM12V           0x26
+#define SENSOR_NUM_VOL_STBY1V2           0x27
+#define SENSOR_NUM_VOL_M2_3V3            0x28
+#define SENSOR_NUM_VOL_HSCIN             0x29
+#define SENSOR_NUM_VOL_PVCCIN            0x2A
+#define SENSOR_NUM_VOL_PVCCFA_EHV_FIVRA  0x2C
+#define SENSOR_NUM_VOL_PVCCFA_EHV        0x2D
+#define SENSOR_NUM_VOL_PVCCD_HV          0x2E
+#define SENSOR_NUM_VOL_PVCCINFAON        0x2F
 
 #define SENSOR_NUM_CUR_HSCOUT            0x30
 #define SENSOR_NUM_CUR_PVCCIN            0x31
@@ -86,6 +89,7 @@ enum {
 #define SENSOR_NUM_CUR_PVCCD_HV          0x34
 #define SENSOR_NUM_CUR_PVCCINFAON        0x35
 
+#define SENSOR_NUM_PWR_CPU               0x38
 #define SENSOR_NUM_PWR_HSCIN             0x39
 #define SENSOR_NUM_PWR_PVCCIN            0x3A
 #define SENSOR_NUM_PWR_PVCCFA_EHV_FIVRA  0x3C

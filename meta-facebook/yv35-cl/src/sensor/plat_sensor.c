@@ -35,12 +35,17 @@ snr_cfg plat_sensor_config[] = {
   {SENSOR_NUM_TEMP_DIMM_E            , type_peci      , NULL          , CPU_PECI_addr           , NULL              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
   {SENSOR_NUM_TEMP_DIMM_G            , type_peci      , NULL          , CPU_PECI_addr           , NULL              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
   {SENSOR_NUM_TEMP_DIMM_H            , type_peci      , NULL          , CPU_PECI_addr           , NULL              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_PWR_CPU                , type_peci      , NULL          , CPU_PECI_addr           , NULL              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
                                                                                                                                                                  
   // adc voltage                                                                                                                                                 
   {SENSOR_NUM_VOL_STBY12V            , type_adc       , adc_port0     , NULL                    , NULL              , stby_access      , 667   , 100   , 0      , SNR_INIT_STATUS},
   {SENSOR_NUM_VOL_STBY3V             , type_adc       , adc_port2     , NULL                    , NULL              , stby_access      , 2     , 1     , 0      , SNR_INIT_STATUS},
   {SENSOR_NUM_VOL_STBY1V05           , type_adc       , adc_port3     , NULL                    , NULL              , stby_access      , 1     , 1     , 0      , SNR_INIT_STATUS},
   {SENSOR_NUM_VOL_BAT3V              , type_adc       , adc_port4     , NULL                    , NULL              , stby_access      , 3     , 1     , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_VOL_STBY5V             , type_adc       , adc_port9     , NULL                    , NULL              , stby_access      , 711   , 200   , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_VOL_DIMM12V            , type_adc       , adc_port11    , NULL                    , NULL              , DC_access        , 667   , 100   , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_VOL_STBY1V2            , type_adc       , adc_port13    , NULL                    , NULL              , stby_access      , 1     , 1     , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_VOL_M2_3V3             , type_adc       , adc_port14    , NULL                    , NULL              , DC_access        , 2     , 1     , 0      , SNR_INIT_STATUS},
   {SENSOR_NUM_VOL_STBY1V8            , type_adc       , adc_port15    , NULL                    , NULL              , stby_access      , 1     , 1     , 0      , SNR_INIT_STATUS},
 
   // VR voltage
@@ -87,7 +92,7 @@ snr_cfg fix_C2Snrconfig_table[] = {
 snr_cfg fix_1ouSnrconfig_table[] = {
 // number , type , port , address , offset , access check , arg0 , arg1 , cache , cache_status
 };
-snr_cfg fix_2ouSnrconfig_table[] = {
+snr_cfg fix_DVPSnrconfig_table[] = {
 // number , type , port , address , offset , access check , arg0 , arg1 , cache , cache_status
 };
 
@@ -150,10 +155,10 @@ void fix_Snrconfig() {
     }
   }
   if ( get_2ou_status() ) {
-    // fix usage when fix_2ouSnrconfig_table is defined
-    fix_SnrCfg_num = sizeof( fix_2ouSnrconfig_table ) / sizeof( fix_2ouSnrconfig_table[0] );
+    // fix usage when fix_DVPSnrconfig_table is defined
+    fix_SnrCfg_num = sizeof( fix_DVPSnrconfig_table ) / sizeof( fix_DVPSnrconfig_table[0] );
     while ( fix_SnrCfg_num ) {
-      add_Snrconfig ( fix_2ouSnrconfig_table[ fix_SnrCfg_num - 1 ] );
+      add_Snrconfig ( fix_DVPSnrconfig_table[ fix_SnrCfg_num - 1 ] );
       fix_SnrCfg_num--;
     }
   }

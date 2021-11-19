@@ -48,6 +48,17 @@ bool pal_peci_read(uint8_t sensor_num, int *reading) {
   } else if ( sensor_num == SENSOR_NUM_TEMP_DIMM_H ){
     u8Index = 0x0E;
     u16Param = 0x0007;
+  } else if ( sensor_num == SENSOR_NUM_PWR_CPU ){
+    ret = peci_getPwr(sensor_num, &val);
+    if (ret) {
+      *reading = (acur_cal_MBR(sensor_num,val)) & 0xffff;
+      sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache = *reading;
+      sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_READ_ACUR_SUCCESS;
+      return true;
+    } else {
+      sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_FAIL_TO_ACCESS;
+      return false;
+    }
   } else {
     printf("Unrecognized sensor reading\n");
     return false;
