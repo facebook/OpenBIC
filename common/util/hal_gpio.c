@@ -13,12 +13,6 @@ static K_THREAD_STACK_DEFINE(gpio_work_stack, STACK_SIZE);
 
 struct k_work gpio_work[total_gpio_num];
 
-struct gpio_isr_info_t {
-  struct k_work gpio_isr_work;
-  uint32_t group;
-  uint32_t bit_pin;
-} gpio_isr_info;
-
 uint8_t gpio_ind_to_num_table[200];
 uint8_t gpio_ind_to_num_table_cnt;
 
@@ -28,37 +22,8 @@ GPIO_CFG gpio_cfg[GPIO_CFG_SIZE] = {
 //  Defalut              DISABLE  GPIO_INPUT    LOW         PUSH_PULL    GPIO_INT_DISABLE    NULL
 };
 
-
-
-
-//void gpio_isr_handler(uint32_t group, uint32_t pin) {
-void gpio_isr_handler(struct k_work *work) {
-  int i;
-  uint8_t gpio_num;
-  struct gpio_isr_info_t *drv_data = CONTAINER_OF(work, struct gpio_isr_info_t, gpio_isr_work);
-
-  for(i = 0; i < GPIO_GROUP_SIZE; i++) {
-    if ( (drv_data->bit_pin >> i) & 0x1 ) {
-      drv_data->bit_pin = i;
-      break;
-    }
-  }
-  if ( i == GPIO_GROUP_SIZE ) {
-    printk("gpio_isr_handler: pin %x not found\n", drv_data->bit_pin);
-    return;
-  }
-
-  gpio_num = (drv_data->group * GPIO_GROUP_SIZE) + drv_data->bit_pin;
-  if ( gpio_cfg[gpio_num].int_cb == NULL) {
-    printk("CB func pointer NULL for gpio num %d\n", gpio_num);
-    return;
-  }
-
-  k_work_submit_to_queue(&gpio_work_queue, &gpio_work[gpio_num]);
-}
-
 void irq_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pins) {
-  uint8_t group;
+  uint8_t group, index, gpio_num;
 
   if( dev == dev_gpio[gpio_a_d] ) {
     group = gpio_a_d;
@@ -77,10 +42,24 @@ void irq_callback(const struct device *dev, struct gpio_callback *cb, uint32_t p
     return;
   }
 
-  gpio_isr_info.group = group;
-  gpio_isr_info.bit_pin = pins;
+  for(index = 0; index < GPIO_GROUP_SIZE; index++) {
+    if ( (pins >> index) & 0x1 ) {
+      pins = index;
+      break;
+    }
+  }
+  if ( index == GPIO_GROUP_SIZE ) {
+    printk("irq_callback: pin %x not found\n", pins);
+    return;
+  }
+  gpio_num = (group * GPIO_GROUP_SIZE) + pins;
+
+  if ( gpio_cfg[gpio_num].int_cb == NULL) {
+    printk("CB func pointer NULL for gpio num %d\n", gpio_num);
+    return;
+  }
   
-  k_work_submit_to_queue(&gpio_work_queue, &gpio_isr_info.gpio_isr_work);
+  k_work_submit_to_queue(&gpio_work_queue, &gpio_work[gpio_num]);
 }
 
 static void gpio_init_cb(uint8_t gpio_num) {
@@ -203,8 +182,6 @@ bool gpio_init(void) {
 
   k_work_queue_start(&gpio_work_queue, gpio_work_stack, STACK_SIZE, K_PRIO_PREEMPT(osPriorityBelowNormal), NULL);
   k_thread_name_set(&gpio_work_queue.thread, "gpio_workq");
-
-  k_work_init(&gpio_isr_info.gpio_isr_work, gpio_isr_handler);
 
   for(i = 0; i < total_gpio_num; i++) {
     if (gpio_cfg[i].is_init == ENABLE) {

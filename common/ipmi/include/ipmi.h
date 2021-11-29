@@ -66,6 +66,7 @@ void pal_STORAGE_GET_SDR(ipmi_msg *msg);
 void pal_OEM_MSG_OUT(ipmi_msg *msg);
 void pal_OEM_GET_GPIO(ipmi_msg *msg);
 void pal_OEM_SET_GPIO(ipmi_msg *msg);
+void pal_OEM_SEND_INTERRUPT_TO_BMC(ipmi_msg *msg);
 void pal_OEM_SENSOR_POLL_EN(ipmi_msg *msg);
 void pal_OEM_FW_UPDATE(ipmi_msg *msg);
 void pal_OEM_GET_FW_VERSION(ipmi_msg *msg);
@@ -177,11 +178,12 @@ enum {
   CMD_OEM_SET_GPIO = 0x4,
   CMD_OEM_GET_GPIO_CONFIG = 0x5,
   CMD_OEM_SET_GPIO_CONFIG = 0x6,
-  CMD_OEM_SENSOR_POLL_EN = 0x7,
+  CMD_OEM_SEND_INTERRUPT_TO_BMC = 0x7,
   CMD_OEM_FW_UPDATE = 0x9,
   CMD_OEM_GET_FW_VERSION = 0xB,
   CMD_OEM_SET_JTAG_TAP_STA = 0x21,
   CMD_OEM_JTAG_DATA_SHIFT = 0x22,
+  CMD_OEM_SENSOR_POLL_EN = 0x30,
   CMD_OEM_GET_SET_GPIO = 0x41,
   CMD_OEM_SET_SYSTEM_GUID = 0xEF,
 // Debug command
