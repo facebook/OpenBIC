@@ -16,7 +16,7 @@ const char * const gpio_name[] = { name_gpioA name_gpioB name_gpioC name_gpioD n
 GPIO_CFG plat_gpio_cfg[] = {
 //  chip,      number,   is_init, is_latch, direction,    status,     property,    int_type,              int_cb
   { chip_gpio,  0,       ENABLE,  DISABLE,  GPIO_OUTPUT,  GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL              }, // GPIO A group
-  { chip_gpio,  1,       ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      ISR_post_complete },
+  { chip_gpio,  1,       ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_EDGE_BOTH,    ISR_post_complete },
   { chip_gpio,  2,       ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  PUSH_PULL,   GPIO_INT_EDGE_RISING,  ISR_slp3          },
   { chip_gpio,  3,       ENABLE,  DISABLE,  GPIO_OUTPUT,  GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL              },
   { chip_gpio,  4,       ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL              },

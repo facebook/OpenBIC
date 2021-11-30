@@ -15,6 +15,7 @@
 #include "sensor_def.h"
 #include "util_spi.h"
 #include "hal_jtag.h"
+#include "hal_snoop.h"
 
 bool add_sel_evt_record(addsel_msg_t *sel_msg) {
   ipmb_error status;
@@ -1061,6 +1062,25 @@ void pal_OEM_I2C_DEV_SCAN(ipmi_msg *msg) {
 
   i2c_scan(bus, &msg->data[0], &msg->data_len);
 
+  msg->completion_code = CC_SUCCESS;
+  return;
+}
+
+void pal_OEM_GET_POST_CODE(ipmi_msg *msg) {
+  int postcode_num = snoop_read_num;
+  if ( msg->data_len != 0 ){
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+  if ( postcode_num ){
+    uint8_t offset = 0;
+    if ( snoop_read_num > SNOOP_MAX_LEN ){
+      postcode_num = SNOOP_MAX_LEN;
+      offset = snoop_read_num % SNOOP_MAX_LEN;
+    }
+    copy_snoop_read_buffer( offset, postcode_num, msg->data );
+  }
+  msg->data_len = postcode_num;
   msg->completion_code = CC_SUCCESS;
   return;
 }
