@@ -2,6 +2,7 @@
 #include "plat_gpio.h"
 #include "plat_i2c.h"
 #include "plat_ipmi.h"
+#include "hal_snoop.h"
 
 static bool is_DC_on = 0;
 static bool is_post_complete = 0;
@@ -40,6 +41,12 @@ void ISR_DBP_PRSNT(){
 void set_DC_status() {
   is_DC_on = gpio_get(PWRGD_SYS_PWROK);
   printk("set dc status %d\n", is_DC_on);
+
+  if ( is_DC_on ){
+    snoop_start_thread();
+  }else{
+    free_snoop_buffer();
+  }
 }
 
 bool get_DC_status() {
@@ -49,6 +56,10 @@ bool get_DC_status() {
 void set_post_status() {
   is_post_complete = !(gpio_get(FM_BIOS_POST_CMPLT_BMC_N));
   printk("set is_post_complete %d\n", is_post_complete);
+
+  if ( is_post_complete ){
+    snoop_abort_thread();
+  }
 }
 
 bool get_post_status() {
