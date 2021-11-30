@@ -25,6 +25,12 @@
 #define type_nvme  0x05
 #define type_pch   0x06
 
+static inline int acur_cal_MBR(uint8_t sensor_num, int val) { // for better accuracy, enlarge SDR to two byte scale
+  if( SDR_M(sensor_num) == 0 ) {
+    return ( val * 0xff * SDR_Rexp(sensor_num) );
+  }
+  return ( val * 0xff / SDR_M(sensor_num) * SDR_Rexp(sensor_num) ); 
+}
 
 static inline int cal_MBR(uint8_t sensor_num, int val){
   if( SDR_M(sensor_num) == 0 ) {
@@ -35,11 +41,13 @@ static inline int cal_MBR(uint8_t sensor_num, int val){
 
 enum {
   SNR_READ_SUCCESS,
+  SNR_READ_ACUR_SUCCESS,
   SNR_NOT_FOUND,
   SNR_NOT_ACCESSIBLE,
   SNR_FAIL_TO_ACCESS,
   SNR_INIT_STATUS,
   SNR_UNSPECIFIED_ERROR,
+  SNR_POLLING_DISABLE,
 };
 
 typedef struct _snr_cfg__ {
@@ -51,7 +59,7 @@ typedef struct _snr_cfg__ {
   bool (*access_checker)(uint8_t);
   int arg0;
   int arg1;
-  uint8_t cache;
+  int cache;
   uint8_t cache_status;
 } snr_cfg;
   

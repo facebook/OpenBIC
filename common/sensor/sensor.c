@@ -124,7 +124,8 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode) 
       return sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status;
     }
   } else if (read_mode == get_from_cache) {
-    if (sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status == SNR_READ_SUCCESS ) {
+    if (sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status == SNR_READ_SUCCESS
+        || sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status == SNR_READ_ACUR_SUCCESS) {
       *reading = sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache;
       return sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status;
     } else {

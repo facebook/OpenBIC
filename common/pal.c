@@ -160,6 +160,12 @@ __weak void pal_OEM_JTAG_DATA_SHIFT(ipmi_msg *msg)
 	return;
 }
 
+__weak void pal_OEM_ACCURACY_SENSNR(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
 __weak void pal_OEM_GET_SET_GPIO(ipmi_msg *msg)
 {
 	msg->completion_code = CC_UNSPECIFIED_ERROR;

@@ -40,27 +40,26 @@ bool pal_vr_read(uint8_t sensor_num, int *reading) {
       if ( (sensor_num == SENSOR_NUM_VOL_PVCCD_HV) || (sensor_num == SENSOR_NUM_VOL_PVCCINFAON) || (sensor_num == SENSOR_NUM_VOL_PVCCFA_EHV)
             || (sensor_num == SENSOR_NUM_VOL_PVCCIN) || (sensor_num == SENSOR_NUM_VOL_PVCCFA_EHV_FIVRA)) {
         val = ((msg.data[1] << 8) | msg.data[0]);
-        *reading = (cal_MBR(sensor_num,val) / 1000) & 0xff;
-      
+        *reading = (acur_cal_MBR(sensor_num,val) / 1000) & 0xffff;
+
       // current
       } else if ( (sensor_num == SENSOR_NUM_CUR_PVCCD_HV) || (sensor_num == SENSOR_NUM_CUR_PVCCINFAON) || (sensor_num == SENSOR_NUM_CUR_PVCCFA_EHV)
             || (sensor_num == SENSOR_NUM_CUR_PVCCIN) || (sensor_num == SENSOR_NUM_CUR_PVCCFA_EHV_FIVRA) ) {
         val = (((msg.data[1] << 8) | msg.data[0]) / 10);
-        *reading = (cal_MBR(sensor_num,val)) & 0xff;
-        
+        *reading = (acur_cal_MBR(sensor_num,val)) & 0xffff;
+
       // temperature
       } else if ( (sensor_num == SENSOR_NUM_TEMP_PVCCD_HV) || (sensor_num == SENSOR_NUM_TEMP_PVCCINFAON) || (sensor_num == SENSOR_NUM_TEMP_PVCCFA_EHV)
             || (sensor_num == SENSOR_NUM_TEMP_PVCCIN) || (sensor_num == SENSOR_NUM_TEMP_PVCCFA_EHV_FIVRA) ) {         
         val = (((msg.data[1] << 8) | msg.data[0]));
-        *reading = (cal_MBR(sensor_num,val)) & 0xff;
-        
+        *reading = (acur_cal_MBR(sensor_num,val)) & 0xffff;
+
       // power
       } else if ( (sensor_num == SENSOR_NUM_PWR_PVCCD_HV) || (sensor_num == SENSOR_NUM_PWR_PVCCINFAON) || (sensor_num == SENSOR_NUM_PWR_PVCCFA_EHV) 
 	          || (sensor_num == SENSOR_NUM_PWR_PVCCIN) || (sensor_num == SENSOR_NUM_PWR_PVCCFA_EHV_FIVRA) ) {
         val = (((msg.data[1] << 8) | msg.data[0]));
-        *reading = (cal_MBR(sensor_num,val)) & 0xff;
+        *reading = (acur_cal_MBR(sensor_num,val)) & 0xffff;
       }
-    
     } else {
       sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_FAIL_TO_ACCESS;
       printf("Snr num %x read fail\n", sensor_num);
@@ -74,7 +73,7 @@ bool pal_vr_read(uint8_t sensor_num, int *reading) {
   }
 
   sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache = *reading;
-  sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_READ_SUCCESS;
+  sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_READ_ACUR_SUCCESS;
 
   return true;
 }
