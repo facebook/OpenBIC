@@ -174,7 +174,7 @@ bool sensor_init(void) {
   SDR_init();
 
   if( SDR_NUM != 0) {
-    sensor_config = k_malloc(SDR_NUM * sizeof(snr_cfg));
+    sensor_config = malloc(SDR_NUM * sizeof(snr_cfg));
     if(sensor_config != NULL) {
       pal_load_snr_config();
     } else {

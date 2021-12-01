@@ -9,7 +9,7 @@ manifest:
     - name: zephyr
       remote: aspeed
       path: zephyr
-      revision: 8ac09a4e6cd6666f0802d5aac121b65051270f41
+      revision: 653496121d08aab03c528132eafdab4d80c09680
       import: true
 
   self:
