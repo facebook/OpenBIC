@@ -70,6 +70,7 @@ void pal_OEM_SEND_INTERRUPT_TO_BMC(ipmi_msg *msg);
 void pal_OEM_SENSOR_POLL_EN(ipmi_msg *msg);
 void pal_OEM_FW_UPDATE(ipmi_msg *msg);
 void pal_OEM_GET_FW_VERSION(ipmi_msg *msg);
+void pal_OEM_PECIaccess(ipmi_msg *msg);
 void pal_OEM_GET_SET_GPIO(ipmi_msg *msg);
 void pal_OEM_SET_SYSTEM_GUID(ipmi_msg *msg);
 void pal_OEM_I2C_DEV_SCAN(ipmi_msg *msg);
@@ -185,6 +186,7 @@ enum {
   CMD_OEM_SET_JTAG_TAP_STA = 0x21,
   CMD_OEM_JTAG_DATA_SHIFT = 0x22,
   CMD_OEM_ACCURACY_SENSNR = 0x23,
+  CMD_OEM_PECIaccess = 0x29,
   CMD_OEM_SENSOR_POLL_EN = 0x30,
   CMD_OEM_GET_SET_GPIO = 0x41,
   CMD_OEM_SET_SYSTEM_GUID = 0xEF,
