@@ -1043,9 +1043,9 @@ void pal_OEM_ACCURACY_SENSNR(ipmi_msg *msg) {
 
   switch (status) {
     case SNR_READ_SUCCESS:
-      msg->data[0] = (reading << 8 ) & 0xff; // fix 1 byte data to 2 byte
+      msg->data[0] = reading & 0xff;
       msg->data[1] = 0x00;
-      msg->data[2] = snr_report_status;
+      msg->data[2] = snr_report_status; 
       msg->data_len = 3;
       msg->completion_code = CC_SUCCESS;
       break;
