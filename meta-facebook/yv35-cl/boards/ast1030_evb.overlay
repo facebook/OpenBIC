@@ -22,13 +22,13 @@
 &i2c0 {
 	pinctrl-0 = <&pinctrl_i2c0_default>;
 	status = "okay";
-
+  clock-frequency = <I2C_BITRATE_FAST>;
 };
 
 &i2c1 {
 	pinctrl-0 = <&pinctrl_i2c1_default>;
 	status = "okay";
-
+  clock-frequency = <I2C_BITRATE_STANDARD>;
 };
 
 &i2c2 {
@@ -51,19 +51,19 @@
 &i2c3 {
 	pinctrl-0 = <&pinctrl_i2c3_default>;
 	status = "okay";
-
+  clock-frequency = <I2C_BITRATE_STANDARD>;
 };
 
 &i2c4 {
 	pinctrl-0 = <&pinctrl_i2c4_default>;
 	status = "okay";
-
+  clock-frequency = <I2C_BITRATE_STANDARD>;
 };
 
 &i2c5 {
 	pinctrl-0 = <&pinctrl_i2c5_default>;
 	status = "okay";
-
+  clock-frequency = <I2C_BITRATE_FAST>;
 };
 
 &i2c6 {
@@ -116,7 +116,7 @@
 
 &i2c9 {
 	pinctrl-0 = <&pinctrl_i2c9_default>;
-	status = "okay";
+	status = "disabled";
 
 };
 
