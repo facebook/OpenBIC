@@ -27,9 +27,9 @@
 
 static inline int acur_cal_MBR(uint8_t sensor_num, int val) { // for better accuracy, enlarge SDR to two byte scale
   if( SDR_M(sensor_num) == 0 ) {
-    return ( val * 0xff * SDR_Rexp(sensor_num) );
+    return ( (val << 8) * SDR_Rexp(sensor_num) );
   }
-  return ( val * 0xff / SDR_M(sensor_num) * SDR_Rexp(sensor_num) ); 
+  return ( (val << 8) / SDR_M(sensor_num) * SDR_Rexp(sensor_num) ); 
 }
 
 static inline int cal_MBR(uint8_t sensor_num, int val){
