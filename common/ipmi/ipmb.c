@@ -540,54 +540,121 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
             if ( kcs_buff != NULL ) {
               free(kcs_buff);
             }
-  				} else {                                                        // Bridge response to other fru
-  					ipmb_error status;
-  					ipmi_msg find_msg;
-  					find_msg.data[0] = WW_IANA_ID & 0xFF; // Move target response to bridge response data
-  					find_msg.data[1] = (WW_IANA_ID >> 8) & 0xFF;
-  					find_msg.data[2] = (WW_IANA_ID >> 16) & 0xFF;
-  					find_msg.data[3] = IPMB_config_table[ipmb_cfg.index].Inf_source;        // return response source as request target
-  					find_msg.data[4] = current_msg_rx->buffer.netfn;                        // Move target response to bridge response data
-  					find_msg.data[5] = current_msg_rx->buffer.cmd;
-  					find_msg.data[6] = current_msg_rx->buffer.completion_code;
-  					find_msg.data_len = current_msg_rx->buffer.data_len + 7;        // add 7 byte len for bridge header
-  					memcpy(&find_msg.data[7], &current_msg_rx->buffer.data[0], current_msg_rx->buffer.data_len);
-  					find_msg.netfn = NETFN_OEM_REQ;                                 // Add bridge response header
-  					find_msg.cmd = CMD_OEM_MSG_OUT;
-  					find_msg.completion_code = CC_SUCCESS;
-  					find_msg.seq = current_msg_rx->buffer.seq_source;
+          } else if (current_msg_rx->buffer.InF_source == ME_IPMB_IFs) {
+            ipmb_error status;
+            ipmi_msg *bridge_msg = (ipmi_msg*)malloc(sizeof(ipmi_msg));
+            memset(bridge_msg, 0, sizeof(ipmi_msg));
 
-  					if (DEBUG_IPMI) {
-  						printf("bridge[%d] seq_s %x, seq_t %x, Inf_source %x, Inf_source_index %x :\n", find_msg.data_len, current_msg_rx->buffer.seq_source, current_msg_rx->buffer.seq_target, current_msg_rx->buffer.InF_source, IPMB_inf_index_map[current_msg_rx->buffer.InF_source]);
-  						for (i = 0; i < find_msg.data_len; i++) {
-  							printf(" %x", find_msg.data[i]);
-  						}
-  						printf("\n");
-  					}
+            bridge_msg->netfn = current_msg_rx->buffer.netfn;
+            bridge_msg->cmd = current_msg_rx->buffer.cmd;
+            bridge_msg->completion_code = current_msg_rx->buffer.completion_code;
+            bridge_msg->seq = current_msg_rx->buffer.seq_source;
+            memcpy(&bridge_msg->data[0], &current_msg_rx->buffer.data[0], current_msg_rx->buffer.data_len);
 
-  					status = ipmb_send_response(&find_msg, IPMB_inf_index_map[current_msg_rx->buffer.InF_source]);
-  					if (status != ipmb_error_success) {
-  						printf("IPMB_RXTask: Send IPMB resp fail status: %x", status);
-  					}
-  				}
-  			}
+            if (DEBUG_IPMI) {
+              printf("ME bridge[%d] seq_s %x, seq_t %x, Inf_source %x, Inf_source_index %x :\n", bridge_msg->data_len,
+                   current_msg_rx->buffer.seq_source, current_msg_rx->buffer.seq_target, current_msg_rx->buffer.InF_source,
+                   IPMB_inf_index_map[current_msg_rx->buffer.InF_source]);
+              for (i = 0; i < bridge_msg->data_len; i++) {
+                printf(" %x", bridge_msg->data[i]);
+              }
+              printf("\n");
+            }
 
-  		} else {
-  			/* The received message is a request */
-  			/* Record sequence number for later response */
-  			current_msg_rx->buffer.seq_source = current_msg_rx->buffer.seq;
-  			/* Record source interface for later bridge response */
-  			current_msg_rx->buffer.InF_source = IPMB_config_table[ipmb_cfg.index].Inf_source;
-  			/* Notify the client about the new request */
-  			if (DEBUG_IPMI) {
-  				printf("recv req: data: %x, InfS: %x, seq_s: %x\n", current_msg_rx->buffer.netfn, current_msg_rx->buffer.InF_source, current_msg_rx->buffer.seq_source);
-  			}
-  			ipmb_notify_client(current_msg_rx);
-  		}
-  	}
-    if ( current_msg_rx != NULL ) {
-      free(current_msg_rx);
+            status = ipmb_send_response(bridge_msg, IPMB_inf_index_map[current_msg_rx->buffer.InF_source]);
+            if (status != ipmb_error_success) {
+              printf("IPMB_RXTask: Send IPMB resp fail status: %x", status);
+            }
+
+            if ( bridge_msg != NULL ) {
+              free(bridge_msg);
+            }
+          } else {                                                        // Bridge response to other fru
+            ipmb_error status;
+            ipmi_msg *bridge_msg = (ipmi_msg*)malloc(sizeof(ipmi_msg));
+            memset(bridge_msg, 0, sizeof(ipmi_msg));
+
+            bridge_msg->data[0] = WW_IANA_ID & 0xFF; // Move target response to bridge response data
+            bridge_msg->data[1] = (WW_IANA_ID >> 8) & 0xFF;
+            bridge_msg->data[2] = (WW_IANA_ID >> 16) & 0xFF;
+            bridge_msg->data[3] = IPMB_config_table[ipmb_cfg.index].Inf_source;        // return response source as request target
+            bridge_msg->data[4] = current_msg_rx->buffer.netfn;                        // Move target response to bridge response data
+            bridge_msg->data[5] = current_msg_rx->buffer.cmd;
+            bridge_msg->data[6] = current_msg_rx->buffer.completion_code;
+            bridge_msg->data_len = current_msg_rx->buffer.data_len + 7;        // add 7 byte len for bridge header
+            memcpy(&bridge_msg->data[7], &current_msg_rx->buffer.data[0], current_msg_rx->buffer.data_len);
+            bridge_msg->netfn = NETFN_OEM_REQ;                                 // Add bridge response header
+            bridge_msg->cmd = CMD_OEM_MSG_OUT;
+            bridge_msg->completion_code = CC_SUCCESS;
+            bridge_msg->seq = current_msg_rx->buffer.seq_source;
+
+            if (DEBUG_IPMI) {
+              printf("bridge[%d] seq_s %x, seq_t %x, Inf_source %x, Inf_source_index %x :\n", bridge_msg->data_len,
+                  current_msg_rx->buffer.seq_source, current_msg_rx->buffer.seq_target, current_msg_rx->buffer.InF_source,
+                  IPMB_inf_index_map[current_msg_rx->buffer.InF_source]);
+              for (i = 0; i < bridge_msg->data_len; i++) {
+                printf(" %x", bridge_msg->data[i]);
+              }
+              printf("\n");
+            }
+
+            status = ipmb_send_response(bridge_msg, IPMB_inf_index_map[current_msg_rx->buffer.InF_source]);
+            if (status != ipmb_error_success) {
+              printf("IPMB_RXTask: Send IPMB resp fail status: %x", status);
+            }
+
+            if ( bridge_msg != NULL ) {
+              free(bridge_msg);
+            }
+          }
+        }
+
+      } else {
+        // Exception: ME sends standard IPMI commands to BMC but not BIC.
+        //            So BIC should bridge ME request to BMC directly, instead of
+        //            executing IPMI handler.
+        if ( current_msg_rx->buffer.InF_source == ME_IPMB_IFs ) {
+          ipmb_error status;
+          ipmi_msg *bridge_msg = (ipmi_msg*)malloc(sizeof(ipmi_msg));
+          memset(bridge_msg, 0, sizeof(ipmi_msg));
+
+          bridge_msg->data_len = current_msg_rx->buffer.data_len;
+          bridge_msg->seq_source = current_msg_rx->buffer.seq;
+          bridge_msg->InF_target = BMC_IPMB_IFs;
+          bridge_msg->InF_source = ME_IPMB_IFs;
+          bridge_msg->netfn = current_msg_rx->buffer.netfn;
+          bridge_msg->cmd = current_msg_rx->buffer.cmd;
+          if (bridge_msg->data_len != 0) {
+            memcpy( &bridge_msg->data[0], &current_msg_rx->buffer.data[0], current_msg_rx->buffer.data_len );
+          }
+
+          status = ipmb_send_request(bridge_msg, IPMB_inf_index_map[BMC_IPMB_IFs]);
+          if (status != ipmb_error_success) {
+            printf("OEM_MSG_OUT send IPMB req fail status: %x",status);
+            bridge_msg->completion_code = CC_TIMEOUT;
+            status = ipmb_send_response(bridge_msg, IPMB_inf_index_map[bridge_msg->InF_source]);
+            if (status != ipmb_error_success) {
+              printf("IPMI_handler send IPMB resp fail status: %x", status);
+            }
+          }
+          if ( bridge_msg != NULL ) {
+            free(bridge_msg);
+          }
+        } else {
+          /* The received message is a request */
+          /* Record sequence number for later response */
+          current_msg_rx->buffer.seq_source = current_msg_rx->buffer.seq;
+          /* Record source interface for later bridge response */
+          current_msg_rx->buffer.InF_source = IPMB_config_table[ipmb_cfg.index].Inf_source;
+          /* Notify the client about the new request */
+          if (DEBUG_IPMI) {
+            printf("recv req: data: %x, InfS: %x, seq_s: %x\n", current_msg_rx->buffer.netfn, current_msg_rx->buffer.InF_source, current_msg_rx->buffer.seq_source);
+          }
+          ipmb_notify_client(current_msg_rx);
+        }
+      }
     }
+    free(current_msg_rx);
   }
 }
 
