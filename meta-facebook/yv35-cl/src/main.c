@@ -26,6 +26,7 @@ void set_sys_status() {
   gpio_set(BIC_READY, GPIO_HIGH);
   set_DC_status();
   set_post_status();
+  set_SCU_setting();
 }
 
 void main(void)

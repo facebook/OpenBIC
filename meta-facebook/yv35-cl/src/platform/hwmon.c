@@ -38,6 +38,13 @@ void ISR_DBP_PRSNT(){
   send_gpio_interrupt(FM_DBP_PRESENT_N);
 }
 
+void set_SCU_setting() {
+  sys_write32(0xffffffff, 0x7e6e2610);
+  sys_write32(0xffffffff, 0x7e6e2614);
+  sys_write32(0x30000000, 0x7e6e2618);
+  sys_write32(0x00000F04, 0x7e6e261c);
+}
+
 void set_DC_status() {
   is_DC_on = gpio_get(PWRGD_SYS_PWROK);
   printk("set dc status %d\n", is_DC_on);
