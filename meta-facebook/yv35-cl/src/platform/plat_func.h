@@ -13,6 +13,7 @@ void ISR_PLTRST();
 void ISR_DBP_PRSNT();
 void ISR_post_complete();
 
+void set_SCU_setting();
 void set_DC_status();
 bool get_DC_status();
 void set_post_status();
