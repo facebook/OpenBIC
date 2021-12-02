@@ -1,17 +1,4 @@
 
-&pwm {
-	status = "okay";
-	pinctrl-0 = <&pinctrl_pwm0_default &pinctrl_pwm1_default
-			&pinctrl_pwm2_default &pinctrl_pwm3_default
-			&pinctrl_pwm4_default &pinctrl_pwm5_default
-			&pinctrl_pwm6_default &pinctrl_pwm7_default
-			&pinctrl_pwm8_default &pinctrl_pwm9_default
-			&pinctrl_pwm10_default &pinctrl_pwm11_default
-			&pinctrl_pwm12_default &pinctrl_pwm13_default
-			&pinctrl_pwm14_default &pinctrl_pwm15_default>;
-
-};
-
 &adc0 {
 	status = "okay";
 	pinctrl-0 = <&pinctrl_adc0_default &pinctrl_adc1_default
@@ -30,145 +17,6 @@
 
 &jtag1{
 	status = "okay";
-};
-
-&tach {
-	status = "okay";
-	pinctrl-0 = <&pinctrl_tach0_default &pinctrl_tach1_default
-			&pinctrl_tach2_default &pinctrl_tach3_default
-			&pinctrl_tach4_default &pinctrl_tach5_default
-			&pinctrl_tach6_default &pinctrl_tach7_default
-			&pinctrl_tach8_default &pinctrl_tach9_default
-			&pinctrl_tach10_default &pinctrl_tach11_default
-			&pinctrl_tach12_default &pinctrl_tach13_default
-			&pinctrl_tach14_default &pinctrl_tach15_default>;
-	fan@0 {
-		reg = <0>;
-		pulse-pr = <2>;
-		min-rpm = <1000>;
-		tach-div = <5>;
-		label = "FAN0";
-	};
-
-	fan@1 {
-		reg = <1>;
-		pulse-pr = <2>;
-		min-rpm = <1000>;
-		tach-div = <5>;
-		label = "FAN1";
-	};
-
-	fan@2 {
-		reg = <2>;
-		pulse-pr = <2>;
-		min-rpm = <1000>;
-		tach-div = <5>;
-		label = "FAN2";
-	};
-
-	fan@3 {
-		reg = <3>;
-		pulse-pr = <2>;
-		min-rpm = <1000>;
-		tach-div = <5>;
-		label = "FAN3";
-	};
-
-	fan@4 {
-		reg = <4>;
-		pulse-pr = <2>;
-		min-rpm = <1000>;
-		tach-div = <5>;
-		label = "FAN4";
-	};
-
-	fan@5 {
-		reg = <5>;
-		pulse-pr = <2>;
-		min-rpm = <1000>;
-		tach-div = <5>;
-		label = "FAN5";
-	};
-
-	fan@6 {
-		reg = <6>;
-		pulse-pr = <2>;
-		min-rpm = <1000>;
-		tach-div = <5>;
-		label = "FAN6";
-	};
-
-	fan@7 {
-		reg = <7>;
-		pulse-pr = <2>;
-		min-rpm = <1000>;
-		tach-div = <5>;
-		label = "FAN7";
-	};
-
-	fan@8 {
-		reg = <8>;
-		pulse-pr = <2>;
-		min-rpm = <1000>;
-		tach-div = <5>;
-		label = "FAN8";
-	};
-
-	fan@9 {
-		reg = <9>;
-		pulse-pr = <2>;
-		min-rpm = <1000>;
-		tach-div = <5>;
-		label = "FAN9";
-	};
-
-	fan@a {
-		reg = <0xa>;
-		pulse-pr = <2>;
-		min-rpm = <1000>;
-		tach-div = <5>;
-		label = "FAN10";
-	};
-
-	fan@b {
-		reg = <0xb>;
-		pulse-pr = <2>;
-		min-rpm = <1000>;
-		tach-div = <5>;
-		label = "FAN11";
-	};
-
-	fan@c {
-		reg = <0xc>;
-		pulse-pr = <2>;
-		min-rpm = <1000>;
-		tach-div = <5>;
-		label = "FAN12";
-	};
-
-	fan@d {
-		reg = <0xd>;
-		pulse-pr = <2>;
-		min-rpm = <1000>;
-		tach-div = <5>;
-		label = "FAN13";
-	};
-
-	fan@e {
-		reg = <0xe>;
-		pulse-pr = <2>;
-		min-rpm = <1000>;
-		tach-div = <5>;
-		label = "FAN14";
-	};
-
-	fan@f {
-		reg = <0xf>;
-		pulse-pr = <2>;
-		min-rpm = <1000>;
-		tach-div = <5>;
-		label = "FAN15";
-	};
 };
 
 &i2c0 {
@@ -220,7 +68,7 @@
 
 &i2c6 {
 	pinctrl-0 = <&pinctrl_i2c6_default>;
-  clock-frequency = <I2C_BITRATE_FAST_PLUS>;
+  clock-frequency = <I2C_BITRATE_FAST>;
 	status = "okay";
 
 	ipmb6: ipmb@20 {
@@ -282,7 +130,7 @@
 	oob,dma-mode;
 
 	flash,dma-mode;
-	flash,safs-mode = <0x1>;
+	flash,safs-mode = <0x2>;
 };
 
 &udc {
@@ -305,4 +153,82 @@
 &snoop {
   status = "okay";
   port = <0x80>, <0x81>;
+};
+
+&fmc {
+	status = "okay";
+};
+
+&fmc_cs0 {
+	status = "okay";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		boot_partition: partition@0 {
+			label = "image-0";
+			reg = <0x0 0x100000>;
+		};
+		dfu_partition: partition@1 {
+		       label = "image-1";
+		       reg = <0x0 0x100000>;
+	       };
+	};
+};
+
+&fmc_cs1 {
+	status = "disabled";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+};
+
+&spi1 {
+	status = "okay";
+};
+
+&spi1_cs0 {
+	status = "okay";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+};
+
+&spi1_cs1 {
+	status = "disabled";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+};
+
+&spi2 {
+	status = "disabled";
+};
+
+&spi2_cs0 {
+	status = "disabled";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+};
+
+&spi2_cs1 {
+	status = "disabled";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+};
+
+&wdt1 {
+	status = "okay";
+};
+
+&wdt2 {
+	status = "okay";
+};
+
+&wdt3 {
+	status = "okay";
+};
+
+&wdt4 {
+	status = "okay";
 };
