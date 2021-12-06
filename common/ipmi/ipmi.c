@@ -271,6 +271,7 @@ ipmi_error IPMI_handler(void *arug0, void *arug1, void *arug2)
       if (msg_cfg.buffer.InF_source == BMC_USB_IFs) {
         USB_write(&msg_cfg.buffer);
       } else if (msg_cfg.buffer.InF_source == HOST_KCS_IFs) {
+#ifdef CONFIG_IPMI_KCS_ASPEED
         kcs_buff = malloc(KCS_buff_size * sizeof(uint8_t));
         if ( kcs_buff == NULL ) { // allocate fail, retry allocate
             k_msleep(10);
@@ -298,6 +299,7 @@ ipmi_error IPMI_handler(void *arug0, void *arug1, void *arug2)
 
         if ( kcs_buff != NULL )
             free(kcs_buff);
+#endif
 
       } else {
         status = ipmb_send_response(&msg_cfg.buffer, IPMB_inf_index_map[msg_cfg.buffer.InF_source]);

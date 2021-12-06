@@ -536,6 +536,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
             current_msg = (struct ipmi_msg)current_msg_rx->buffer;
             k_msgq_put(&ipmb_rxqueue[IPMB_inf_index_map[current_msg_rx->buffer.InF_target]], &current_msg, K_NO_WAIT);
           } else if (current_msg_rx->buffer.InF_source == HOST_KCS_IFs) {
+#ifdef CONFIG_IPMI_KCS_ASPEED
             kcs_buff = malloc(KCS_buff_size * sizeof(uint8_t));
             if ( kcs_buff == NULL ) { // allocate fail, retry allocate
               k_msleep(10);
@@ -557,6 +558,8 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
             if ( kcs_buff != NULL ) {
               free(kcs_buff);
             }
+#endif
+
           } else if (current_msg_rx->buffer.InF_source == ME_IPMB_IFs) {
             ipmb_error status;
             ipmi_msg *bridge_msg = (ipmi_msg*)malloc(sizeof(ipmi_msg));

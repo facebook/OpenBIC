@@ -17,13 +17,15 @@
 #define DEBUG_SNR 0
 
 /*  define sensor type  */
-#define type_tmp75 0x00
-#define type_adc   0x01
-#define type_peci  0x02
-#define type_vr    0x03
-#define type_hsc   0x04
-#define type_nvme  0x05
-#define type_pch   0x06
+#define type_tmp75  0x00
+#define type_adc    0x01
+#define type_peci   0x02
+#define type_vr     0x03
+#define type_hsc    0x04
+#define type_nvme   0x05
+#define type_pch    0x06
+#define type_medusa 0x07
+#define type_fan    0x08
 
 static inline int acur_cal_MBR(uint8_t sensor_num, int val) { // for better accuracy, enlarge SDR to two byte scale
   if( SDR_M(sensor_num) == 0 ) {

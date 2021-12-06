@@ -84,6 +84,8 @@ enum{
   SERVER_IPMB_IFs = 0x04,
   EXP1_IPMB_IFs = 0x05,
   EXP2_IPMB_IFs = 0x06,
+  SLOT1_BIC_IFs = 0x07,
+  SLOT3_BIC_IFs = 0x08,
 
   BMC_USB_IFs = 0x10,
   Reserve_IFs,
