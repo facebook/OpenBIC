@@ -18,6 +18,7 @@
 #include "hal_snoop.h"
 #include "hal_peci.h"
 #include <drivers/peci.h>
+#include "plat_func.h"
 
 bool add_sel_evt_record(addsel_msg_t *sel_msg) {
   ipmb_error status;
@@ -1077,6 +1078,28 @@ void pal_OEM_ACCURACY_SENSNR(ipmi_msg *msg) {
       msg->completion_code = CC_UNSPECIFIED_ERROR; // unknown error
       break;
   }
+  return;
+}
+
+void pal_OEM_ASD_INIT(ipmi_msg *msg) {
+  if (!msg){
+    printf("pal_OEM_ASD_INIT: parameter msg is NULL\n");
+    return;
+  }
+
+  if (msg->data_len != 1) {
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+  if (msg->data[0] == 0x01) {
+    enable_asd_gpio_interrupt();
+  } else if (msg->data[0] == 0xff) {
+    disable_asd_gpio_interrupt();
+  }
+
+  msg->data_len = 0;
+  msg->completion_code = CC_SUCCESS;
   return;
 }
 
