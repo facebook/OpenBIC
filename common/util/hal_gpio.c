@@ -79,7 +79,7 @@ interrupt type:
   GPIO_INT_LEVEL_LOW
   GPIO_INT_LEVEL_HIGH
 */
-static int gpio_interrupt_conf(uint8_t gpio_num, gpio_flags_t flags) {
+int gpio_interrupt_conf(uint8_t gpio_num, gpio_flags_t flags) {
   return gpio_pin_interrupt_configure(dev_gpio[gpio_num / GPIO_GROUP_SIZE], (gpio_num % GPIO_GROUP_SIZE), flags);
 }
 

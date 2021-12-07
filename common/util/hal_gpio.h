@@ -76,5 +76,6 @@ void gpio_show(void);
 int gpio_get(uint8_t);
 int gpio_set(uint8_t, uint8_t);
 bool gpio_init(void);
+int gpio_interrupt_conf(uint8_t, gpio_flags_t);
 
 #endif
