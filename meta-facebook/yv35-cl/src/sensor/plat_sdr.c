@@ -58,7 +58,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
     0x96,   // UNRT
-    0x32,   // UCT
+    0x30,   // UCT
     0x00,   // UNCT
     0x00,   // LNRT
     0x00,   // LCT
@@ -161,7 +161,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0x96,   // UNRT
+    0x00,   // UNRT
     0x28,   // UCT
     0x00,   // UNCT
     0x00,   // LNRT
@@ -173,7 +173,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // reserved
     0x00,   // OEM
     IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
-    "Front IO Temp",
+    "FIO Temp",
   },
   {   // CPU margin on board temperature
     0x00,0x00,  // record ID
@@ -197,7 +197,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     IPMI_SDR_CMP_RETURN_UCT| IPMI_SDR_DEASSERT_MASK_UCT_LO| IPMI_SDR_DEASSERT_MASK_LCT_HI,    // deassert threshold reading mask
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
-    0x80,   // sensor unit
+    0x00,   // sensor unit
     IPMI_SENSOR_UNIT_DEGREE_C,   // base unit 
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
@@ -213,7 +213,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0x00,   // UNRT
+    0x7D,   // UNRT
     0x00,   // UCT
     0x00,   // UNCT
     0x00,   // LNRT
@@ -317,7 +317,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0x00,   // UNRT
+    0x7D,   // UNRT
     0x00,   // UCT
     0x00,   // UNCT
     0x00,   // LNRT
@@ -734,7 +734,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
     0x00,   // UNRT
-    0x4D,   // UCT
+    0x4A,   // UCT
     0x00,   // UNCT
     0x00,   // LNRT
     0x00,   // LCT
@@ -785,8 +785,8 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0x69,   // UNRT
-    0x57,   // UCT
+    0x7D,   // UNRT
+    0x56,   // UCT
     0x00,   // UNCT
     0x00,   // LNRT
     0x00,   // LCT
@@ -849,7 +849,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // reserved
     0x00,   // OEM
     IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
-    "PVCCIN Temp",
+    "VCCIN SPS Temp",
   },
   {   // PVCCFA_EHV_FIVRA VR temperature
     0x00,0x00,  // record ID
@@ -901,7 +901,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // reserved
     0x00,   // OEM
     IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
-    "EHV_FIVRA Temp",
+    "FIVRA SPS Temp",
   },
   {   // PVCCFA_EHV VR temperature
     0x00,0x00,  // record ID
@@ -953,7 +953,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // reserved
     0x00,   // OEM
     IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
-    "PVCCFA_EHV Temp",
+    "EHV SPS Temp",
   },
   {   // PVCCD_HV VR temperature
     0x00,0x00,  // record ID
@@ -1005,7 +1005,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // reserved
     0x00,   // OEM
     IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
-    "PVCCD_HV Temp",
+    "VCCD SPS Temp",
   },
   {   // PVCCINFAON VR temperature
     0x00,0x00,  // record ID
@@ -1057,7 +1057,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // reserved
     0x00,   // OEM
     IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
-    "PVCCINFAON Temp",
+    "FAON SPS Temp",
   },
   {   // P12V STBY ADC voltage 
     0x00,0x00,  // record ID
@@ -1085,7 +1085,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     IPMI_SENSOR_UNIT_VOL,   // base unit 
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
-    0x40,   // [7:0] M bits
+    0x3F,   // [7:0] M bits
     0x00,   // [9:8] M bits, tolerance
     0x00,   // [7:0] B bits
     0x00,   // [9:8] B bits, tolerance
@@ -1097,12 +1097,12 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0xE0,   // UNRT
-    0xCF,   // UCT
-    0xCB,   // UNCT
-    0x9E,   // LNRT
-    0xA9,   // LCT
-    0xAD,   // LNCT
+    0xE4,   // UNRT
+    0xD4,   // UCT
+    0xD2,   // UNCT
+    0xA0,   // LNRT
+    0xAA,   // LCT
+    0xAC,   // LNCT
     0x00,   // positive-going threshold
     0x00,   // negative-going threshold
     0x00,   // reserved
@@ -1137,7 +1137,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     IPMI_SENSOR_UNIT_VOL,   // base unit 
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
-    0x0E,   // [7:0] M bits
+    0x0F,   // [7:0] M bits
     0x00,   // [9:8] M bits, tolerance
     0x00,   // [7:0] B bits
     0x00,   // [9:8] B bits, tolerance
@@ -1150,11 +1150,11 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
     0x00,   // UNRT
-    0xE6,   // UCT
-    0xE1,   // UNCT
+    0xEA,   // UCT
+    0xE7,   // UNCT
     0x00,   // LNRT
-    0xC8,   // LCT
-    0xCC,   // LNCT
+    0xB8,   // LCT
+    0xBA,   // LNCT
     0x00,   // positive-going threshold
     0x00,   // negative-going threshold
     0x00,   // reserved
@@ -1202,11 +1202,11 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
     0xDE,   // UNRT
-    0xC4,   // UCT
-    0xC1,   // UNCT
+    0xC6,   // UCT
+    0xC4,   // UNCT
     0x80,   // LNRT
-    0xAB,   // LCT
-    0xAE,   // LNCT
+    0xA9,   // LCT
+    0xAB,   // LNCT
     0x00,   // positive-going threshold
     0x00,   // negative-going threshold
     0x00,   // reserved
@@ -1241,7 +1241,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     IPMI_SENSOR_UNIT_VOL,   // base unit 
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
-    0x05,   // [7:0] M bits
+    0x06,   // [7:0] M bits
     0x00,   // [9:8] M bits, tolerance
     0x00,   // [7:0] B bits
     0x00,   // [9:8] B bits, tolerance
@@ -1253,12 +1253,12 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0xF4,   // UNRT
-    0xDD,   // UCT
-    0xD8,   // UNCT
-    0xA8,   // LNRT
-    0xC4,   // LCT
-    0xC8,   // LNCT
+    0xCB,   // UNRT
+    0xBA,   // UCT
+    0xB8,   // UNCT
+    0x8C,   // LNRT
+    0xA1,   // LCT
+    0xA3,   // LNCT
     0x00,   // positive-going threshold
     0x00,   // negative-going threshold
     0x00,   // reserved
@@ -1293,24 +1293,24 @@ SDR_Full_sensor plat_sensor_table[] = {
     IPMI_SENSOR_UNIT_VOL,   // base unit 
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
-    0x01,   // [7:0] M bits
+    0x09,   // [7:0] M bits
     0x00,   // [9:8] M bits, tolerance
     0x00,   // [7:0] B bits
     0x00,   // [9:8] B bits, tolerance
     0x00,   // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
-    0xE0,   // Rexp, Bexp
+    0xD0,   // Rexp, Bexp
     0x00,   // analog characteristic
     0x00,   // nominal reading
     0x00,   // normal maximum
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0xD1,   // UNRT
-    0xBE,   // UCT
-    0xBA,   // UNCT
-    0x90,   // LNRT
-    0xA9,   // LCT
-    0xAD,   // LNCT
+    0xE8,   // UNRT
+    0xD5,   // UCT
+    0xD3,   // UNCT
+    0xA0,   // LNRT
+    0xBA,   // LCT
+    0xBC,   // LNCT
     0x00,   // positive-going threshold
     0x00,   // negative-going threshold
     0x00,   // reserved
@@ -1358,11 +1358,11 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
     0xD7,   // UNRT
-    0xC6,   // UCT
-    0xC2,   // UNCT
+    0xC8,   // UCT
+    0xC6,   // UNCT
     0x94,   // LNRT
-    0xAC,   // LCT
-    0xB0,   // LNCT
+    0xAA,   // LCT
+    0xAC,   // LNCT
     0x00,   // positive-going threshold
     0x00,   // negative-going threshold
     0x00,   // reserved
@@ -1397,12 +1397,12 @@ SDR_Full_sensor plat_sensor_table[] = {
     IPMI_SENSOR_UNIT_VOL,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
-    0x40,   // [7:0] M bits
+    0x07,   // [7:0] M bits
     0x00,   // [9:8] M bits, tolerance
     0x00,   // [7:0] B bits
     0x00,   // [9:8] B bits, tolerance
     0x00,   // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
-    0xD0,   // Rexp, Bexp
+    0xE0,   // Rexp, Bexp
     0x00,   // analog characteristic
     0x00,   // nominal reading
     0x00,   // normal maximum
@@ -1410,11 +1410,11 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
     0x00,   // UNRT
-    0xDC,   // UCT
-    0xD8,   // UNCT
+    0xCB,   // UCT
+    0xC9,   // UNCT
     0x00,   // LNRT
-    0x9C,   // LCT
-    0x9F,   // LNCT
+    0x8D,   // LCT
+    0x8F,   // LNCT
     0x00,   // positive-going threshold
     0x00,   // negative-going threshold
     0x00,   // reserved
@@ -1462,11 +1462,11 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
     0xE8,   // UNRT
-    0xD6,   // UCT
-    0xD2,   // UNCT
+    0xD8,   // UCT
+    0xD6,   // UNCT
     0xA0,   // LNRT
-    0xBA,   // LCT
-    0xBE,   // LNCT
+    0xB8,   // LCT
+    0xBA,   // LNCT
     0x00,   // positive-going threshold
     0x00,   // negative-going threshold
     0x00,   // reserved
@@ -1501,7 +1501,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     IPMI_SENSOR_UNIT_VOL,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
-    0x12,   // [7:0] M bits
+    0x11,   // [7:0] M bits
     0x00,   // [9:8] M bits, tolerance
     0x00,   // [7:0] B bits
     0x00,   // [9:8] B bits, tolerance
@@ -1514,11 +1514,11 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
     0x00,   // UNRT
-    0xCC,   // UCT
-    0xC8,   // UNCT
+    0xDA,   // UCT
+    0xD8,   // UNCT
     0x00,   // LNRT
-    0xA4,   // LCT
-    0xA7,   // LNCT
+    0xAB,   // LCT
+    0xAD,   // LNCT
     0x00,   // positive-going threshold
     0x00,   // negative-going threshold
     0x00,   // reserved
@@ -1566,18 +1566,18 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
     0xDC,   // UNRT
-    0xB7,   // UCT
-    0xBB,   // UNCT
+    0xC1,   // UCT
+    0xBF,   // UNCT
     0x28,   // LNRT
-    0xAC,   // LCT
-    0xA9,   // LNCT
+    0xA4,   // LCT
+    0xA6,   // LNCT
     0x00,   // positive-going threshold
     0x00,   // negative-going threshold
     0x00,   // reserved
     0x00,   // reserved
     0x00,   // OEM
     IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
-    "PVCCIN Vol",
+    "VCCIN VR Vol",
   },
   {   // PVCCFA_EHV_FIVRA VR voltage
     0x00,0x00,  // record ID
@@ -1618,18 +1618,18 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
     0xDC,   // UNRT
-    0xB6,   // UCT
-    0xBA,   // UNCT
+    0xC0,   // UCT
+    0xBE,   // UNCT
     0x28,   // LNRT
-    0xB1,   // LCT
-    0xAE,   // LNCT
+    0xA9,   // LCT
+    0xAB,   // LNCT
     0x00,   // positive-going threshold
     0x00,   // negative-going threshold
     0x00,   // reserved
     0x00,   // reserved
     0x00,   // OEM
     IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
-    "EHV_FIVRA Vol",
+    "FIVRA VR Vol",
   },
   {   // PVCCFA_EHV VR voltage
     0x00,0x00,  // record ID
@@ -1670,18 +1670,18 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
     0xDC,   // UNRT
-    0xBC,   // UCT
-    0xB8,   // UNCT
+    0xBE,   // UCT
+    0xBC,   // UNCT
     0x28,   // LNRT
-    0xAB,   // LCT
-    0xAF,   // LNCT
+    0xAA,   // LCT
+    0xAC,   // LNCT
     0x00,   // positive-going threshold
     0x00,   // negative-going threshold
     0x00,   // reserved
     0x00,   // reserved
     0x00,   // OEM
     IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
-    "PVCCFA_EHV Vol",
+    "EHV VR Vol",
   },
   {   // PVCCD_HV VR voltage
    0x00,0x00,  // record ID
@@ -1722,18 +1722,18 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // sensor maximum reading
    0x00,   // sensor minimum reading
    0xD6,   // UNRT
-   0xAD,   // UCT
-   0xAA,   // UNCT
+   0xAF,   // UCT
+   0xAD,   // UNCT
    0x39,   // LNRT
-   0x97,   // LCT
-   0x9A,   // LNCT
+   0x96,   // LCT
+   0x98,   // LNCT
    0x00,   // positive-going threshold
    0x00,   // negative-going threshold
    0x00,   // reserved
    0x00,   // reserved
    0x00,   // OEM
    IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
-   "PVCCD_HV Vol",
+   "VCCD VR Vol",
  },
  {   // PVCCINFAON VR voltage
    0x00,0x00,  // record ID
@@ -1774,18 +1774,18 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // sensor maximum reading
    0x00,   // sensor minimum reading
    0xC8,   // UNRT
-   0x99,   // UCT
-   0x96,   // UNCT
+   0x9B,   // UCT
+   0x99,   // UNCT
    0x39,   // LNRT
-   0x82,   // LCT
-   0x85,   // LNCT
+   0x81,   // LCT
+   0x82,   // LNCT
    0x00,   // positive-going threshold
    0x00,   // negative-going threshold
    0x00,   // reserved
    0x00,   // reserved
    0x00,   // OEM
    IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
-   "PVCCINFAON Vol",
+   "FAON VR Vol",
  },
  {   // HSCIN voltage
     0x00,0x00,  // record ID
@@ -1813,7 +1813,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     IPMI_SENSOR_UNIT_VOL,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
-    0x44,   // [7:0] M bits
+    0x3F,   // [7:0] M bits
     0x00,   // [9:8] M bits, tolerance
     0x00,   // [7:0] B bits
     0x00,   // [9:8] B bits, tolerance
@@ -1825,12 +1825,12 @@ SDR_Full_sensor plat_sensor_table[] = {
     0x00,   // normal minimum
     0x00,   // sensor maximum reading
     0x00,   // sensor minimum reading
-    0xD3,   // UNRT
-    0xC2,   // UCT
-    0xBF,   // UNCT
-    0x94,   // LNRT
-    0x9F,   // LCT
-    0xA2,   // LNCT
+    0xE4,   // UNRT
+    0xD4,   // UCT
+    0xD2,   // UNCT
+    0xA0,   // LNRT
+    0xAA,   // LCT
+    0xAC,   // LNCT
     0x00,   // positive-going threshold
     0x00,   // negative-going threshold
     0x00,   // reserved
@@ -1941,7 +1941,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // reserved
    0x00,   // OEM
    IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
-   "PVCCIN Cur",
+   "VCCIN VR Cur",
  },
  {   // PVCCFA_EHV_FIVRA VR current
    0x00,0x00,  // record ID
@@ -1993,7 +1993,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // reserved
    0x00,   // OEM
    IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
-   "EHV_FIVRA Cur",
+   "FIVRA VR Cur",
  },
  {   // PVCCFA_EHV VR current
    0x00,0x00,  // record ID
@@ -2045,7 +2045,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // reserved
    0x00,   // OEM
    IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
-   "PVCCFA_EHV Cur",
+   "EHV VR Cur",
  },
  {   // PVCCD_HV VR current
    0x00,0x00,  // record ID
@@ -2097,7 +2097,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // reserved
    0x00,   // OEM
    IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
-   "PVCCD_HV Cur",
+   "VCCD VR Cur",
  },
  {   // PVCCINFAON VR current
    0x00,0x00,  // record ID
@@ -2149,7 +2149,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // reserved
    0x00,   // OEM
    IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
-   "PVCCINFAON Cur",
+   "FAON VR Cur",
  },
   {   // CPU power
    0x00,0x00,  // record ID
@@ -2201,7 +2201,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // reserved
    0x00,   // OEM
    IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
-   "CPU Pwr",
+   "CPU PWR",
   },
   {   // HSCIN power
    0x00,0x00,  // record ID
@@ -2229,20 +2229,20 @@ SDR_Full_sensor plat_sensor_table[] = {
    IPMI_SENSOR_UNIT_WATT,   // base unit
    0x00,   // modifier unit
    IPMI_SDR_LINEAR_LINEAR,   // linearization
-   0x01,   // [7:0] M bits
+   0x15,   // [7:0] M bits
    0x00,   // [9:8] M bits, tolerance
    0x00,   // [7:0] B bits
    0x00,   // [9:8] B bits, tolerance
    0x00,   // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
-   0x00,   // Rexp, Bexp
+   0xF0,   // Rexp, Bexp
    0x00,   // analog characteristic
    0x00,   // nominal reading
    0x00,   // normal maximum
    0x00,   // normal minimum
    0x00,   // sensor maximum reading
    0x00,   // sensor minimum reading
-   0x00,   // UNRT
-   0xB2,   // UCT
+   0xE5,   // UNRT
+   0x00,   // UCT
    0x00,   // UNCT
    0x00,   // LNRT
    0x00,   // LCT
@@ -2305,7 +2305,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // reserved
    0x00,   // OEM
    IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
-   "PVCCIN Pwr",
+   "VCCIN VR Pout",
  },
  {   // PVCCFA_EHV_FIVRA power
    0x00,0x00,  // record ID
@@ -2357,7 +2357,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // reserved
    0x00,   // OEM
    IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
-   "EHV_FIVRA Pwr",
+   "FIVRA VR Pout",
  },
  {   // PVCCFA_EHV power
    0x00,0x00,  // record ID
@@ -2409,7 +2409,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // reserved
    0x00,   // OEM
    IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
-   "PVCCFA_EHV Pwr",
+   "EHV VR Pout",
  },
  {   // PVCCD_HV power
    0x00,0x00,  // record ID
@@ -2461,7 +2461,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // reserved
    0x00,   // OEM
    IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
-   "PVCCD_HV Pwr",
+   "VCCD VR Pout",
  },
  {   // PVCCINFAON power
    0x00,0x00,  // record ID
@@ -2513,7 +2513,7 @@ SDR_Full_sensor plat_sensor_table[] = {
    0x00,   // reserved
    0x00,   // OEM
    IPMI_SDR_STRING_TYPE_ASCII_8,   // ID len, should be same as "size of struct"
-   "PVCCINFAON Pwr",
+   "FAON VR Pout",
  },
 };
 

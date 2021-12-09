@@ -77,7 +77,7 @@ snr_cfg plat_sensor_config[] = {
   {SENSOR_NUM_PWR_PVCCFA_EHV_FIVRA   , type_vr        , i2c_bus5      , PVCCFA_EHV_FIVRA_addr   , VR_PWR_CMD        , DC_access        , 0     , 0     , 0      , SNR_INIT_STATUS},
   
   // ME
-  {SENSOR_NUM_TEMP_PCH               , type_pch       , i2c_bus3      , PCH_addr                , NULL              , stby_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_TEMP_PCH               , type_pch       , i2c_bus3      , PCH_addr                , NULL              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
   
   // HSC
   {SENSOR_NUM_TEMP_HSC               , type_hsc       , i2c_bus2      , HSC_addr                , HSC_TEMP_CMD      , stby_access      , 0     , 0     , 0      , SNR_INIT_STATUS},

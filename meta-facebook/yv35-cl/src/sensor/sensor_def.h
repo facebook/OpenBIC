@@ -49,7 +49,7 @@ enum {
 #define SENSOR_NUM_TEMP_TMP75_OUT         0x02
 #define SENSOR_NUM_TEMP_TMP75_FIO         0x03
 #define SENSOR_NUM_TEMP_PCH               0x04
-#define SENSOR_NUM_TEMP_CPU               0x15
+#define SENSOR_NUM_TEMP_CPU               0x05
 #define SENSOR_NUM_TEMP_DIMM_A            0x06
 #define SENSOR_NUM_TEMP_DIMM_C            0x07
 #define SENSOR_NUM_TEMP_DIMM_D            0x09
@@ -59,7 +59,7 @@ enum {
 #define SENSOR_NUM_TEMP_SSD0              0x0D
 #define SENSOR_NUM_TEMP_HSC               0x0E
 #define SENSOR_NUM_TEMP_CPU_MARGIN        0x14
-#define SENSOR_NUM_TEMP_CPU_TJMAX         0x05
+#define SENSOR_NUM_TEMP_CPU_TJMAX         0x15
 #define SENSOR_NUM_TEMP_PVCCIN            0x0F
 #define SENSOR_NUM_TEMP_PVCCFA_EHV_FIVRA  0x10
 #define SENSOR_NUM_TEMP_PVCCFA_EHV        0x11
@@ -69,8 +69,8 @@ enum {
 #define SENSOR_NUM_VOL_STBY12V           0x20
 #define SENSOR_NUM_VOL_BAT3V             0x21
 #define SENSOR_NUM_VOL_STBY3V            0x22
-#define SENSOR_NUM_VOL_STBY1V05          0x23
-#define SENSOR_NUM_VOL_STBY1V8           0x24
+#define SENSOR_NUM_VOL_STBY1V05          0x24
+#define SENSOR_NUM_VOL_STBY1V8           0x23
 #define SENSOR_NUM_VOL_STBY5V            0x25
 #define SENSOR_NUM_VOL_DIMM12V           0x26
 #define SENSOR_NUM_VOL_STBY1V2           0x27
