@@ -1097,6 +1097,7 @@ void pal_OEM_ASD_INIT(ipmi_msg *msg) {
   } else if (msg->data[0] == 0xff) {
     disable_asd_gpio_interrupt();
   } else {
+    disable_asd_gpio_interrupt();
     msg->completion_code = CC_INVALID_DATA_FIELD;
     return;
   }
