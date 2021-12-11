@@ -38,6 +38,7 @@ void main(void)
   util_init_I2C();
 
   set_sys_config();
+  disable_asd_gpio_interrupt();
   sensor_init();
   FRU_init();
   ipmi_init();

@@ -159,6 +159,9 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_ACCURACY_SENSNR:
 		pal_OEM_ACCURACY_SENSNR(msg);
 		break;
+	case CMD_OEM_ASD_INIT:
+		pal_OEM_ASD_INIT(msg);
+		break;
 	case CMD_OEM_GET_SET_GPIO:
 		pal_OEM_GET_SET_GPIO(msg);
 		break;

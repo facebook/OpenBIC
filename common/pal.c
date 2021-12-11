@@ -167,6 +167,12 @@ __weak void pal_OEM_ACCURACY_SENSNR(ipmi_msg *msg)
   return;
 }
 
+__weak void pal_OEM_ASD_INIT(ipmi_msg *msg)
+{
+  msg->completion_code = CC_UNSPECIFIED_ERROR;
+  return;
+}
+
 __weak void pal_OEM_PECIaccess(ipmi_msg *msg)
 {
   msg->completion_code = CC_UNSPECIFIED_ERROR;
