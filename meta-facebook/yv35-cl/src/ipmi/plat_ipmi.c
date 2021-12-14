@@ -635,7 +635,7 @@ void pal_OEM_GET_GPIO(ipmi_msg *msg) {
      return;
    }
 
-   uint8_t eight_bit_value, gpio_num, gpio_value, gpio_cnt, data_len;
+   uint8_t eight_bit_value, gpio_value, gpio_cnt, data_len;
    gpio_cnt = gpio_ind_to_num_table_cnt + (8 - (gpio_ind_to_num_table_cnt % 8)); // Bump up the gpio_ind_to_num_table_cnt to multiple of 8.
    data_len = gpio_cnt / 8;
    msg->data_len = data_len;
@@ -676,7 +676,6 @@ void pal_OEM_GET_GPIO(ipmi_msg *msg) {
 }
 
 void pal_OEM_GET_SET_GPIO(ipmi_msg *msg) {
-  uint8_t value;
   uint8_t completion_code = CC_INVALID_LENGTH;
   uint8_t gpio_num = gpio_ind_to_num_table[msg->data[1]];
 
@@ -1149,7 +1148,6 @@ void pal_OEM_I2C_DEV_SCAN(ipmi_msg *msg) {
   }
 
   uint8_t bus = i2c_bus_to_index[msg->data[0]];
-  uint8_t addr_buf_size = 20;
 
   i2c_scan(bus, &msg->data[0], &msg->data_len);
 

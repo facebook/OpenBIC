@@ -761,8 +761,6 @@ ipmb_error ipmb_read(ipmi_msg *msg, uint8_t index) {
 // run IPMI handler and notify command process status
 ipmb_error ipmb_notify_client(ipmi_msg_cfg *msg_cfg)
 {
-  ipmi_error status;
-
   /* Sends only the ipmi msg, not the control struct */
   if (!IS_RESPONSE(msg_cfg->buffer)) {
     while (k_msgq_put(&ipmi_msgq, msg_cfg, K_NO_WAIT) != 0) {
@@ -937,8 +935,6 @@ static void init_ipmb_slave_dev(void) {
 
 void ipmb_util_init(uint8_t index)
 {
-  osThreadId_t IPMB_thread_ids_Tx[MAX_IPMB_IDX];
-  osThreadId_t IPMB_thread_ids_Rx[MAX_IPMB_IDX];
   osThreadAttr_t IPMB_TxTask_attr;
   osThreadAttr_t IPMB_RxTask_attr;
 
