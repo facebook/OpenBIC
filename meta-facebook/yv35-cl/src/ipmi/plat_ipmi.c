@@ -378,6 +378,11 @@ void pal_STORAGE_READ_FRUID_DATA(ipmi_msg *msg) {
   fru_entry.offset = (msg->data[2] << 8) | msg->data[1];
   fru_entry.data_len = msg->data[3];
 
+  if ( fru_entry.data_len >= 32 ) { // According to IPMI, messages are limited to 32 bytes
+    msg->completion_code = CC_LENGTH_EXCEEDED;
+    return;
+  }
+
   status = FRU_read(&fru_entry);
 
   msg->data_len = fru_entry.data_len + 1;
@@ -419,6 +424,10 @@ void pal_STORAGE_WRITE_FRUID_DATA(ipmi_msg *msg) {
   fru_entry.config.dev_id = msg->data[0];
   fru_entry.offset = (msg->data[2] << 8) | msg->data[1];
   fru_entry.data_len = msg->data_len - 3; // skip id and offset
+  if ( fru_entry.data_len >= 32 ) { // According to IPMI, messages are limited to 32 bytes
+    msg->completion_code = CC_LENGTH_EXCEEDED;
+    return;
+  }
   memcpy(&fru_entry.data[0], &msg->data[3], fru_entry.data_len);
 
   msg->data[0] = msg->data_len - 3;
