@@ -979,7 +979,7 @@ void ipmb_init(void)
   	pal_load_IPMB_config();
   } else {
   	printf("IPMB_config_table alloc fail\n");
-  	return false;
+  	return;
   }
 
   map_inf_index();

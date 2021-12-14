@@ -2544,6 +2544,7 @@ uint8_t map_SnrNum_fullSDR( uint8_t sensor_num ) {
       }
     }
   }
+  return 0xFF;
 };
 
 void change_sensor_threshold( uint8_t sensor_num , uint8_t threshold_type , uint8_t change_value ) {

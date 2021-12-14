@@ -124,6 +124,7 @@ uint8_t map_SnrNum_Snrconfig( uint8_t sensor_num ) {
       }
     }
   }
+  return 0xFF;
 };
 
 void add_Snrconfig( snr_cfg add_Snrconfig ) {
