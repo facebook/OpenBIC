@@ -1,8 +1,7 @@
-#include <stdio.h>
 #include "fru.h"
-#include "plat_fru.h"
 #include "pal.h"
-#include "fru.h"
+#include "plat_fru.h"
+#include <string.h>
 
 #define MB_FRU_PORT 0x01
 #define MB_FRU_ADDR 0x54

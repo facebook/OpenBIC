@@ -2,6 +2,7 @@
 #define IPMB_H
 
 #include <devicetree.h>
+#include <stdio.h>
 
 #if DT_NODE_EXISTS(DT_NODELABEL(ipmb0))
 #define DEV_IPMB_0
