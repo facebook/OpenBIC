@@ -425,9 +425,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
     }
     ipmb_buffer_rx = malloc( (IPMI_MSG_MAX_LENGTH + IPMB_RESP_HEADER_LENGTH) * sizeof(uint8_t) );
     if ( ipmb_buffer_rx  == NULL ) {
-      if ( current_msg_rx != NULL ) {
-        free(current_msg_rx);
-      }
+      free(current_msg_rx);
       k_msleep(10); // allocate fail, retry later
       continue;
     }
@@ -439,12 +437,8 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
         memcpy(ipmb_buffer_rx, (uint8_t *)msg, rx_len);
         ipmb_buffer_rx[0] = ipmb_buffer_rx[0] >> 1;
       } else {
-        if ( current_msg_rx != NULL ) {
-          free(current_msg_rx);
-        }
-        if ( ipmb_buffer_rx != NULL ) {
-          free(ipmb_buffer_rx);
-        }
+        free(current_msg_rx);
+        free(ipmb_buffer_rx);
         continue;
       }
   	} else if (ipmb_cfg.Inf == I3C_IF) {
