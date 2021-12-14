@@ -119,23 +119,35 @@ void insert_node(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
     printk("insert_node: mutex get fail status:%x\n", ret);
     return;
   } else {
+    // No more room, remove the first node.
     if (seq_current_count[index] == MAX_DATA_QUENE) {
       ipmi_msg_cfg *temp;
       temp = pnode->next;
-      pnode->next = temp->next;
-      if ( temp != NULL ) {
-        free(temp);
+      if (temp == NULL) {
+      	printk("insert_node: pnode list is not circular");
+	k_mutex_unlock(&mutex_id[index]);
+	return;
       }
+      
+      pnode->next = temp->next;
+      free(temp);
       seq_current_count[index]--;
     }
 
-    while (pnode->next != ptr_start) {
+    while (pnode && pnode->next != ptr_start) {
       pnode = pnode->next;
+    }
+
+    if(pnode == NULL) {
+    	printk("insert_node: pnode list is not circular");
+	k_mutex_unlock(&mutex_id[index]);
+	return;
     }
 
     /* Allocate memory for the new node and put data in it.*/
     pnode->next = malloc(sizeof(ipmi_msg_cfg));
     if (pnode->next == NULL) {
+      k_mutex_unlock(&mutex_id[index]);
       return;
     }
     pnode = pnode->next;
