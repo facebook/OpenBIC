@@ -175,15 +175,21 @@ bool find_node(ipmi_msg_cfg *pnode, ipmi_msg *msg, int seq_index, uint8_t index)
     return false;
   } else {
     if (seq_index == 0) { // receive response and find sent request
-      while ((pnode->next != ptr_start) &&
+      while ((pnode != NULL && pnode->next != ptr_start) &&
           (((pnode->next)->buffer.netfn != (msg->netfn - 1)) || ((pnode->next)->buffer.cmd != msg->cmd) || ((pnode->next)->buffer.seq_target != msg->seq_target))) {
         pnode = pnode->next;
       }
     } else {
-      while ((pnode->next != ptr_start) &&
+      while ((pnode != NULL && pnode->next != ptr_start) &&
           (((pnode->next)->buffer.netfn != msg->netfn) || ((pnode->next)->buffer.cmd != msg->cmd) || ((pnode->next)->buffer.seq_source != msg->seq_source))) {
         pnode = pnode->next;
       }
+    }
+
+    if(pnode == NULL) {
+      printf("pnode list should be circular, list end found\n");
+      k_mutex_unlock(&mutex_id[index]);
+      return false;
     }
 
     if (pnode->next == ptr_start) {
@@ -197,6 +203,13 @@ bool find_node(ipmi_msg_cfg *pnode, ipmi_msg *msg, int seq_index, uint8_t index)
     /* Now pointer points to a node and the node next to it has to be removed */
     ipmi_msg_cfg *temp;
     temp = pnode->next;
+    
+    if(temp == NULL) {
+      printf("pnode list should be circular, list end found\n");
+      k_mutex_unlock(&mutex_id[index]);
+      return false;
+    }
+    
     /*get the target<->Bridge IC IPMB seq number*/
     if (seq_index == 0) {
       // find source sequence for responding
@@ -215,9 +228,7 @@ bool find_node(ipmi_msg_cfg *pnode, ipmi_msg *msg, int seq_index, uint8_t index)
     /* Beacuse we deleted the node, we no longer require the memory used for it .
        free() will deallocate the memory.
      */
-    if ( temp != NULL ) {
-      free(temp);
-    }
+    free(temp);
     seq_current_count[index]--;
 
     k_mutex_unlock(&mutex_id[index]);
