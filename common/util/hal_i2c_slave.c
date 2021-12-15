@@ -103,14 +103,6 @@ static int i2c_slave_stop(struct i2c_slave_config *config)
   if (data->buffer_idx){
     data->current_msg.msg_length = data->buffer_idx;
 
-#if DEBUG_MODE
-    printk("recv: ");
-    for (int i=0; i<data->current_msg.msg_length; i++){
-      printk("[%d]", data->current_msg.msg[i]);
-    }
-    printk("\n");
-#endif
-
     /* try to put new node to message queue */
     uint8_t ret = k_msgq_put(&data->z_msgq_id, &data->current_msg, K_NO_WAIT);
     if (ret){

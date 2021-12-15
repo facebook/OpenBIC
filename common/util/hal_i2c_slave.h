@@ -4,8 +4,6 @@
 #include <drivers/i2c.h>
 #include "hal_i2c.h"
 
-#define DEBUG_MODE 0
-
 #define MAX_I2C_SLAVE_BUFF 512
 #define MAX_SLAVE_NUM 16
 #define I2C_DEVICE_PREFIX "I2C_"
