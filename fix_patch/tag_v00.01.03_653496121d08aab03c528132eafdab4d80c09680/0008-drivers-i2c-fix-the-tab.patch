@@ -1,0 +1,348 @@
+From 5763f6116b5828f0d324956fd71ceb58caac1b65 Mon Sep 17 00:00:00 2001
+From: tommy-huang <tommy_huang@aspeedtech.com>
+Date: Thu, 9 Dec 2021 16:12:01 +0800
+Subject: [PATCH 08/10] drivers: i2c: fix the tab
+
+Arrange define list with tab
+
+Signed-off-by: tommy-huang <tommy_huang@aspeedtech.com>
+Change-Id: Ic56e4b244b4ccbc04ba84550ad54feaab60979a9
+---
+ drivers/i2c/i2c_aspeed.c | 240 +++++++++++++++++++--------------------
+ 1 file changed, 119 insertions(+), 121 deletions(-)
+
+diff --git a/drivers/i2c/i2c_aspeed.c b/drivers/i2c/i2c_aspeed.c
+index 8c01311ad1..2f3345e1e7 100644
+--- a/drivers/i2c/i2c_aspeed.c
++++ b/drivers/i2c/i2c_aspeed.c
+@@ -41,167 +41,165 @@ LOG_MODULE_REGISTER(i2c_aspeed);
+ #define AST_I2CC_M_SDA_LOCK_EN		BIT(16)
+ #define AST_I2CC_MULTI_MASTER_DIS	BIT(15)
+ #define AST_I2CC_M_SCL_DRIVE_EN		BIT(14)
+-#define AST_I2CC_MSB_STS			BIT(9)
++#define AST_I2CC_MSB_STS		BIT(9)
+ #define AST_I2CC_SDA_DRIVE_1T_EN	BIT(8)
+ #define AST_I2CC_M_SDA_DRIVE_1T_EN	BIT(7)
+ #define AST_I2CC_M_HIGH_SPEED_EN	BIT(6)
+ /* reserver 5 : 2 */
+-#define AST_I2CC_SLAVE_EN			BIT(1)
+-#define AST_I2CC_MASTER_EN			BIT(0)
++#define AST_I2CC_SLAVE_EN		BIT(1)
++#define AST_I2CC_MASTER_EN		BIT(0)
+ 
+ /* 0x04 : I2CC Master/Slave Clock and AC Timing Control Register #1 */
+-#define AST_I2CC_AC_TIMING			0x04
+-#define AST_I2CC_tTIMEOUT(x)			((x & 0x1f) << 24)	/* 0~7 */
++#define AST_I2CC_AC_TIMING		0x04
++#define AST_I2CC_tTIMEOUT(x)		((x & 0x1f) << 24)	/* 0~7 */
+ #define AST_I2CC_tCKHIGHMin(x)		((x & 0xf) << 20)	/* 0~f */
+-#define AST_I2CC_tCKHIGH(x)			((x & 0xf) << 16)	/* 0~7 */
+-#define AST_I2CC_tCKLOW(x)			((x & 0xf) << 12)	/* 0~7 */
+-#define AST_I2CC_tHDDAT(x)			((x & 0x3) << 10)	/* 0~3 */
++#define AST_I2CC_tCKHIGH(x)		((x & 0xf) << 16)	/* 0~7 */
++#define AST_I2CC_tCKLOW(x)		((x & 0xf) << 12)	/* 0~7 */
++#define AST_I2CC_tHDDAT(x)		((x & 0x3) << 10)	/* 0~3 */
+ #define AST_I2CC_toutBaseCLK(x)		((x & 0x3) << 8)	/* 0~3 */
+-#define AST_I2CC_tBaseCLK(x)			(x & 0xf)			/* 0~0xf */
++#define AST_I2CC_tBaseCLK(x)		(x & 0xf)		/* 0~0xf */
+ 
+ /* 0x08 : I2CC Master/Slave Transmit/Receive Byte Buffer Register */
+ #define AST_I2CC_STS_AND_BUFF		0x08
+ #define AST_I2CC_TX_DIR_MASK		(0x7 << 29)
+-#define AST_I2CC_SDA_OE				BIT(28)
+-#define AST_I2CC_SDA_O				BIT(27)
+-#define AST_I2CC_SCL_OE				BIT(26)
+-#define AST_I2CC_SCL_O				BIT(25)
++#define AST_I2CC_SDA_OE			BIT(28)
++#define AST_I2CC_SDA_O			BIT(27)
++#define AST_I2CC_SCL_OE			BIT(26)
++#define AST_I2CC_SCL_O			BIT(25)
+ 
+ /* Tx State Machine */
+ #define AST_I2CM_MTXACK			0xf
+-#define AST_I2CM_MRXD				0xe
++#define AST_I2CM_MRXD			0xe
+ #define AST_I2CM_MRXACK			0xd
+-#define AST_I2CM_MTXD				0xc
+-#define AST_I2CM_MSTOP				0xb
+-#define AST_I2CM_MSTARTR			0xa
++#define AST_I2CM_MTXD			0xc
++#define AST_I2CM_MSTOP			0xb
++#define AST_I2CM_MSTARTR		0xa
+ #define AST_I2CM_MSTART			0x9
+-#define AST_I2CM_MACTIVE			0x8
++#define AST_I2CM_MACTIVE		0x8
+ #define AST_I2CM_SRXACK			0x7
+-#define AST_I2CM_STXD				0x6
++#define AST_I2CM_STXD			0x6
+ #define AST_I2CM_STXACK			0x5
+-#define AST_I2CM_SRXD				0x4
+-#define AST_I2CM_RECOVER			0x3
+-#define AST_I2CM_SWAIT				0x1
+-#define AST_I2CM_IDLE				0x0
++#define AST_I2CM_SRXD			0x4
++#define AST_I2CM_RECOVER		0x3
++#define AST_I2CM_SWAIT			0x1
++#define AST_I2CM_IDLE			0x0
+ 
+-#define AST_I2CC_SCL_LINE_STS			BIT(18)
+-#define AST_I2CC_SDA_LINE_STS			BIT(17)
+-#define AST_I2CC_BUS_BUSY_STS			BIT(16)
++#define AST_I2CC_SCL_LINE_STS		BIT(18)
++#define AST_I2CC_SDA_LINE_STS		BIT(17)
++#define AST_I2CC_BUS_BUSY_STS		BIT(16)
+ 
+ #define AST_I2CC_GET_RX_BUFF(x)		((x >> 8) & 0xff)
+ 
+ /* 0x0C : I2CC Master/Slave Pool Buffer Control Register  */
+-#define AST_I2CC_BUFF_CTRL			0x0C
++#define AST_I2CC_BUFF_CTRL		0x0C
+ #define AST_I2CC_GET_RX_BUF_LEN(x)	((x >> 24) & 0x3f)
+ #define AST_I2CC_SET_RX_BUF_LEN(x)	(((x - 1) & 0x1f) << 16)
+ #define AST_I2CC_SET_TX_BUF_LEN(x)	(((x - 1) & 0x1f) << 8)
+ #define AST_I2CC_GET_TX_BUF_LEN(x)	(((x >> 8) & 0x1f) + 1)
+ 
+ /* 0x10 : I2CM Master Interrupt Control Register */
+-#define AST_I2CM_IER				0x10
++#define AST_I2CM_IER			0x10
+ /* 0x14 : I2CM Master Interrupt Status Register   : WC */
+-#define AST_I2CM_ISR				0x14
++#define AST_I2CM_ISR			0x14
+ 
+-#define AST_I2CM_SMBUS_ALT			BIT(12)
+-#define AST_I2CM_BUS_RECOVER		BIT(13)
+-#define AST_I2CM_SDA_DL_TO			BIT(14)
+-#define AST_I2CM_BUS_RECOVER_FAIL	BIT(15)
+-
+-#define AST_I2CM_PKT_DONE			BIT(16)
+-#define AST_I2CM_PKT_ERROR			BIT(17)
+ #define AST_I2CM_PKT_TIMEOUT		BIT(18)
++#define AST_I2CM_PKT_ERROR		BIT(17)
++#define AST_I2CM_PKT_DONE		BIT(16)
++#define AST_I2CM_BUS_RECOVER_FAIL	BIT(15)
++#define AST_I2CM_SDA_DL_TO		BIT(14)
++#define AST_I2CM_BUS_RECOVER		BIT(13)
++#define AST_I2CM_SMBUS_ALT		BIT(12)
+ 
+-#define AST_I2CM_TX_ACK				BIT(0)
+-#define AST_I2CM_TX_NAK				BIT(1)
+-#define AST_I2CM_RX_DONE			BIT(2)
+-#define AST_I2CM_ARBIT_LOSS			BIT(3)
+-#define AST_I2CM_NORMAL_STOP		BIT(4)
+-#define AST_I2CM_ABNORMAL			BIT(5)
+ #define AST_I2CM_SCL_LOW_TO		BIT(6)
++#define AST_I2CM_ABNORMAL		BIT(5)
++#define AST_I2CM_NORMAL_STOP		BIT(4)
++#define AST_I2CM_ARBIT_LOSS		BIT(3)
++#define AST_I2CM_RX_DONE		BIT(2)
++#define AST_I2CM_TX_NAK			BIT(1)
++#define AST_I2CM_TX_ACK			BIT(0)
+ 
+ /* 0x18 : I2CM Master Command/Status Register   */
+-#define AST_I2CM_CMD_STS			0x18
+-#define AST_I2CM_RECOVER_CMD_EN	BIT(11)
+-#define AST_I2CM_SCL_O_OUT_DIR		BIT(12)
+-#define AST_I2CM_SCL_OE_OUT_DIR		BIT(13)
++#define AST_I2CM_CMD_STS		0x18
++
++#define AST_I2CM_PKT_EN			BIT(16)
++#define AST_I2CM_SDA_OE_OUT_DIR		BIT(15)
+ #define AST_I2CM_SDA_O_OUT_DIR		BIT(14)
+-#define AST_I2CM_SDA_OE_OUT_DIR	BIT(15)
+-#define AST_I2CM_PKT_EN				BIT(16)
+-#define AST_I2CM_PKT_ADDR(x)		((x & 0x7f) << 24)
++#define AST_I2CM_SCL_OE_OUT_DIR		BIT(13)
++#define AST_I2CM_SCL_O_OUT_DIR		BIT(12)
++#define AST_I2CM_RECOVER_CMD_EN		BIT(11)
+ 
+-#define AST_I2CM_RX_DMA_EN			BIT(9)
+-#define AST_I2CM_TX_DMA_EN			BIT(8)
+-#define AST_I2CM_RX_BUFF_EN			BIT(7)
+-#define AST_I2CM_TX_BUFF_EN			BIT(6)
++#define AST_I2CM_RX_DMA_EN		BIT(9)
++#define AST_I2CM_TX_DMA_EN		BIT(8)
+ 
+ /* Command Bit */
+-#define AST_I2CM_RX_BUFF_EN			BIT(7)
+-#define AST_I2CM_TX_BUFF_EN			BIT(6)
+-#define AST_I2CM_STOP_CMD			BIT(5)
+-#define AST_I2CM_RX_CMD_LAST			BIT(4)
++#define AST_I2CM_RX_BUFF_EN		BIT(7)
++#define AST_I2CM_TX_BUFF_EN		BIT(6)
++#define AST_I2CM_STOP_CMD		BIT(5)
++#define AST_I2CM_RX_CMD_LAST		BIT(4)
+ #define AST_I2CM_RX_CMD			BIT(3)
+-
+ #define AST_I2CM_TX_CMD			BIT(1)
+-#define AST_I2CM_START_CMD			BIT(0)
++#define AST_I2CM_START_CMD		BIT(0)
++
++#define AST_I2CM_PKT_ADDR(x)		((x & 0x7f) << 24)
+ 
+ /* 0x1C : I2CM Master DMA Transfer Length Register   */
+-#define AST_I2CM_DMA_LEN			0x1C
+-#define AST_I2CM_SET_RX_DMA_LEN(x)		((((x) & 0xfff) << 16) | BIT(31)) /* 1 ~ 4096 */
+-#define AST_I2CM_SET_TX_DMA_LEN(x)		(((x) & 0xfff) | BIT(15)) /* 1 ~ 4096 */
++#define AST_I2CM_DMA_LEN		0x1C
++#define AST_I2CM_SET_RX_DMA_LEN(x)	((((x) & 0xfff) << 16) | BIT(31))	/* 1 ~ 4096 */
++#define AST_I2CM_SET_TX_DMA_LEN(x)	(((x) & 0xfff) | BIT(15))		/* 1 ~ 4096 */
+ 
+ /* 0x20 : I2CS Slave Interrupt Control Register */
+-#define AST_I2CS_IER				0x20
++#define AST_I2CS_IER			0x20
+ /* 0x24 : I2CS Slave Interrupt Status Register */
+-#define AST_I2CS_ISR				0x24
++#define AST_I2CS_ISR			0x24
+ 
+ #define AST_I2CS_ADDR_INDICAT_MASK      (3 << 30)
+-#define AST_I2CS_SLAVE_PENDING			BIT(29)
+-
+-#define AST_I2CS_Wait_TX_DMA			BIT(25)
+-#define AST_I2CS_Wait_RX_DMA			BIT(24)
+-
+-#define AST_I2CS_ADDR3_NAK			BIT(22)
+-#define AST_I2CS_ADDR2_NAK			BIT(21)
+-#define AST_I2CS_ADDR1_NAK			BIT(20)
+-
+-#define AST_I2CS_ADDR_MASK			(3 << 18)
+-#define AST_I2CS_PKT_ERROR			BIT(17)
+-#define AST_I2CS_PKT_DONE			BIT(16)
+-#define AST_I2CS_INACTIVE_TO			BIT(15)
+-#define AST_I2CS_SLAVE_MATCH			BIT(7)
+-#define AST_I2CS_ABNOR_STOP			BIT(5)
+-#define AST_I2CS_STOP				BIT(4)
+-#define AST_I2CS_RX_DONE_NAK			BIT(3)
+-#define AST_I2CS_RX_DONE			BIT(2)
++#define AST_I2CS_SLAVE_PENDING		BIT(29)
++
++#define AST_I2CS_Wait_TX_DMA		BIT(25)
++#define AST_I2CS_Wait_RX_DMA		BIT(24)
++
++#define AST_I2CS_ADDR3_NAK		BIT(22)
++#define AST_I2CS_ADDR2_NAK		BIT(21)
++#define AST_I2CS_ADDR1_NAK		BIT(20)
++
++#define AST_I2CS_ADDR_MASK		(3 << 18)
++#define AST_I2CS_PKT_ERROR		BIT(17)
++#define AST_I2CS_PKT_DONE		BIT(16)
++#define AST_I2CS_INACTIVE_TO		BIT(15)
++#define AST_I2CS_SLAVE_MATCH		BIT(7)
++#define AST_I2CS_ABNOR_STOP		BIT(5)
++#define AST_I2CS_STOP			BIT(4)
++#define AST_I2CS_RX_DONE_NAK		BIT(3)
++#define AST_I2CS_RX_DONE		BIT(2)
+ #define AST_I2CS_TX_NAK			BIT(1)
+ #define AST_I2CS_TX_ACK			BIT(0)
+ 
+ /* 0x28 : I2CS Slave CMD/Status Register   */
+-#define AST_I2CS_CMD_STS			0x28
+-#define AST_I2CS_ACTIVE_ALL			(0x3 << 17)
+-#define AST_I2CS_PKT_MODE_EN			BIT(16)
+-#define AST_I2CS_AUTO_NAK_NOADDR		BIT(15)
+-#define AST_I2CS_AUTO_NAK_EN			BIT(14)
++#define AST_I2CS_CMD_STS		0x28
++#define AST_I2CS_ACTIVE_ALL		(0x3 << 17)
++#define AST_I2CS_PKT_MODE_EN		BIT(16)
++#define AST_I2CS_AUTO_NAK_NOADDR	BIT(15)
++#define AST_I2CS_AUTO_NAK_EN		BIT(14)
+ 
+ /* new for i2c snoop */
+-#define AST_I2CS_SNOOP_LOOP			BIT(12)
+-#define AST_I2CS_SNOOP_EN			BIT(11)
++#define AST_I2CS_SNOOP_LOOP		BIT(12)
++#define AST_I2CS_SNOOP_EN		BIT(11)
+ 
+ #define AST_I2CS_ALT_EN			BIT(10)
+-#define AST_I2CS_RX_DMA_EN			BIT(9)
+-#define AST_I2CS_TX_DMA_EN			BIT(8)
+-#define AST_I2CS_RX_BUFF_EN			BIT(7)
+-#define AST_I2CS_TX_BUFF_EN			BIT(6)
+-#define AST_I2CS_RX_CMD_LAST			BIT(4)
++#define AST_I2CS_RX_DMA_EN		BIT(9)
++#define AST_I2CS_TX_DMA_EN		BIT(8)
++#define AST_I2CS_RX_BUFF_EN		BIT(7)
++#define AST_I2CS_TX_BUFF_EN		BIT(6)
++#define AST_I2CS_RX_CMD_LAST		BIT(4)
+ 
+ #define AST_I2CS_TX_CMD			BIT(2)
+ 
+-#define AST_I2CS_DMA_LEN			0x2C
+-#define AST_I2CS_SET_RX_DMA_LEN(x)		((((x - 1) & 0xfff) << 16) | BIT(31))
+-#define AST_I2CS_RX_DMA_LEN_MASK		(0xfff << 16)
++#define AST_I2CS_DMA_LEN		0x2C
++#define AST_I2CS_SET_RX_DMA_LEN(x)	((((x - 1) & 0xfff) << 16) | BIT(31))
++#define AST_I2CS_RX_DMA_LEN_MASK	(0xfff << 16)
+ 
+-#define AST_I2CS_SET_TX_DMA_LEN(x)		(((x - 1) & 0xfff) | BIT(15))
+-#define AST_I2CS_TX_DMA_LEN_MASK		0xfff
++#define AST_I2CS_SET_TX_DMA_LEN(x)	(((x - 1) & 0xfff) | BIT(15))
++#define AST_I2CS_TX_DMA_LEN_MASK	0xfff
+ 
+ /* I2CM Master DMA Tx Buffer Register   */
+ #define AST_I2CM_TX_DMA			0x30
+@@ -213,40 +211,40 @@ LOG_MODULE_REGISTER(i2c_aspeed);
+ #define AST_I2CS_RX_DMA			0x3C
+ 
+ /* 0x40 : Slave Device Address Register */
+-#define AST_I2CS_ADDR_CTRL			0x40
++#define AST_I2CS_ADDR_CTRL		0x40
+ 
+-#define AST_I2CS_ADDR3_MBX_TYPE(x)		(x << 28)
+-#define AST_I2CS_ADDR2_MBX_TYPE(x)		(x << 26)
+-#define AST_I2CS_ADDR1_MBX_TYPE(x)		(x << 24)
+-#define AST_I2CS_ADDR3_ENABLE			BIT(23)
+-#define AST_I2CS_ADDR3(x)			((x & 0x7f) << 16)
+-#define AST_I2CS_ADDR2_ENABLE			BIT(15)
+-#define AST_I2CS_ADDR2(x)			((x & 0x7f) << 8)
+-#define AST_I2CS_ADDR1_ENABLE			BIT(7)
+-#define AST_I2CS_ADDR1(x)			(x & 0x7f)
++#define AST_I2CS_ADDR3_MBX_TYPE(x)	(x << 28)
++#define AST_I2CS_ADDR2_MBX_TYPE(x)	(x << 26)
++#define AST_I2CS_ADDR1_MBX_TYPE(x)	(x << 24)
++#define AST_I2CS_ADDR3_ENABLE		BIT(23)
++#define AST_I2CS_ADDR3(x)		((x & 0x7f) << 16)
++#define AST_I2CS_ADDR2_ENABLE		BIT(15)
++#define AST_I2CS_ADDR2(x)		((x & 0x7f) << 8)
++#define AST_I2CS_ADDR1_ENABLE		BIT(7)
++#define AST_I2CS_ADDR1(x)		(x & 0x7f)
+ 
+-#define AST_I2CS_ADDR3_MASK			(0x7f << 16)
+-#define AST_I2CS_ADDR2_MASK			(0x7f << 8)
+-#define AST_I2CS_ADDR1_MASK			0x7f
++#define AST_I2CS_ADDR3_MASK		(0x7f << 16)
++#define AST_I2CS_ADDR2_MASK		(0x7f << 8)
++#define AST_I2CS_ADDR1_MASK		0x7f
+ 
+-#define AST_I2CM_DMA_LEN_STS			0x48
+-#define AST_I2CS_DMA_LEN_STS			0x4C
++#define AST_I2CM_DMA_LEN_STS		0x48
++#define AST_I2CS_DMA_LEN_STS		0x4C
+ 
+-#define AST_I2C_GET_TX_DMA_LEN(x)		(x & 0x1fff)
+-#define AST_I2C_GET_RX_DMA_LEN(x)		((x >> 16) & 0x1fff)
++#define AST_I2C_GET_TX_DMA_LEN(x)	(x & 0x1fff)
++#define AST_I2C_GET_RX_DMA_LEN(x)	((x >> 16) & 0x1fff)
+ 
+ /* new for i2c snoop */
+-#define AST_I2CS_SNOOP_DMA_WPT			0x50
+-#define AST_I2CS_SNOOP_DMA_RPT			0x58
++#define AST_I2CS_SNOOP_DMA_WPT		0x50
++#define AST_I2CS_SNOOP_DMA_RPT		0x58
+ /***************************************************************************/
+ /* Use platform_data instead of module parameters */
+ /* Fast Mode = 400 kHz, Standard = 100 kHz */
+ /* static int clock = 100;  Default: 100 kHz */
+ /***************************************************************************/
+-#define AST_LOCKUP_DETECTED			BIT(15)
+-#define AST_I2C_LOW_TIMEOUT			0x07
++#define AST_LOCKUP_DETECTED		BIT(15)
++#define AST_I2C_LOW_TIMEOUT		0x07
+ /***************************************************************************/
+-#define ASPEED_I2C_DMA_SIZE			4096
++#define ASPEED_I2C_DMA_SIZE		4096
+ /***************************************************************************/
+ 
+ #define DEV_CFG(dev) \
+-- 
+2.17.1
+
