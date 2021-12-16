@@ -8,6 +8,7 @@ void pal_usb_handler(uint8_t *rx_buff, int rx_len);
 
 // IPMI
 bool pal_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd);
+bool pal_ME_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd);
 bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd);
 
 // IPMI CHASSIS
@@ -31,17 +32,21 @@ void pal_STORAGE_RSV_SDR(ipmi_msg *msg);
 void pal_STORAGE_GET_SDR(ipmi_msg *msg);
 
 // IPMI OEM
-void pal_OEM_MSG_OUT(ipmi_msg *msg);
-void pal_OEM_GET_GPIO(ipmi_msg *msg);
-void pal_OEM_SET_GPIO(ipmi_msg *msg);
-void pal_OEM_SENSOR_POLL_EN(ipmi_msg *msg);
-void pal_OEM_FW_UPDATE(ipmi_msg *msg);
-void pal_OEM_GET_FW_VERSION(ipmi_msg *msg);
-void pal_OEM_ACCURACY_SENSNR(ipmi_msg *msg);
-void pal_OEM_ASD_INIT(ipmi_msg *msg);
-void pal_OEM_GET_SET_GPIO(ipmi_msg *msg);
+void pal_OEM_SENSOR_READ(ipmi_msg *msg);
 void pal_OEM_SET_SYSTEM_GUID(ipmi_msg *msg);
-void pal_OEM_I2C_DEV_SCAN(ipmi_msg *msg);
+
+// IPMI OEM 1S
+void pal_OEM_1S_MSG_OUT(ipmi_msg *msg);
+void pal_OEM_1S_GET_GPIO(ipmi_msg *msg);
+void pal_OEM_1S_SET_GPIO(ipmi_msg *msg);
+void pal_OEM_1S_SENSOR_POLL_EN(ipmi_msg *msg);
+void pal_OEM_1S_FW_UPDATE(ipmi_msg *msg);
+void pal_OEM_1S_GET_POST_CODE(ipmi_msg *msg);
+void pal_OEM_1S_GET_FW_VERSION(ipmi_msg *msg);
+void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg);
+void pal_OEM_1S_ASD_INIT(ipmi_msg *msg);
+void pal_OEM_1S_GET_SET_GPIO(ipmi_msg *msg);
+void pal_OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg);
 
 // init
 void pal_I2C_init(void);
@@ -54,6 +59,8 @@ void pal_set_sensor_poll_interval(int *interval_ms);
 // sensor accessible
 uint8_t pal_load_sdr_table(void);
 bool pal_load_snr_config(void);
+void pal_fix_fullSDR_table(void);
+void pal_fix_Snrconfig(void);
 
 // fru
 void pal_load_fru_config(void);

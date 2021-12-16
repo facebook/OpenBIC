@@ -73,7 +73,15 @@ bool add_sel_evt_record(addsel_msg_t *sel_msg) {
 }
 
 bool pal_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd) {
-  if ( (netfn == NETFN_OEM_1S_REQ) && (cmd == CMD_OEM_FW_UPDATE) ) {
+  if ( (netfn == NETFN_OEM_1S_REQ) && (cmd == CMD_OEM_1S_FW_UPDATE) ) {
+    return 1;
+  }
+
+  return 0;
+}
+
+bool pal_ME_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd) {
+  if ( (netfn == NETFN_OEM_REQ) && (cmd == CMD_OEM_SENSOR_READ) ) {
     return 1;
   }
 
@@ -81,9 +89,9 @@ bool pal_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd) {
 }
 
 bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd) {
-  if ( (netfn == NETFN_OEM_1S_REQ) && (cmd == CMD_OEM_MSG_OUT) ) {
+  if ( (netfn == NETFN_OEM_1S_REQ) && (cmd == CMD_OEM_1S_MSG_OUT) ) {
     return 1;
-  } else if ( (netfn == NETFN_OEM_1S_REQ) && (cmd == CMD_OEM_MSG_IN) ) {
+  } else if ( (netfn == NETFN_OEM_1S_REQ) && (cmd == CMD_OEM_1S_MSG_IN) ) {
     return 1;
   }
 
@@ -577,7 +585,49 @@ void pal_SENSOR_GET_SENSOR_READING(ipmi_msg *msg) {
   return;
 }
 
-void pal_OEM_MSG_OUT(ipmi_msg *msg) {
+void pal_OEM_SENSOR_READ(ipmi_msg *msg) {
+  uint8_t status, snr_num;
+  int reading;
+
+  if (msg->data_len < 3) { // only input enable status
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+  // Follow INTEL NM SPEC
+  if (msg->data[0] == 0x00) { // read platform pwr from HSC
+    snr_num = SENSOR_NUM_PWR_HSCIN;
+    status = get_sensor_reading(snr_num, &reading, get_from_cache);
+    reading = (reading >> 8) * SDR_M(snr_num); // scale down to one byte and times SDR to get original reading
+  } else {
+    msg->completion_code = CC_INVALID_DATA_FIELD;
+    return;
+  }
+
+  switch (status) {
+    case SNR_READ_ACUR_SUCCESS:
+      msg->data[1] = reading & 0xFF;
+      msg->data[2] = ( reading >> 8 ) & 0xFF;
+      msg->data_len = 3;
+      msg->completion_code = CC_SUCCESS;
+      break;
+    case SNR_FAIL_TO_ACCESS:
+      msg->completion_code = CC_NODE_BUSY; // transection error
+      break;
+    case SNR_NOT_ACCESSIBLE:
+      msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE; // DC off
+      break;
+    case SNR_NOT_FOUND:
+      msg->completion_code = CC_INVALID_DATA_FIELD; // request sensor number not found
+      break;
+    default :
+      msg->completion_code = CC_UNSPECIFIED_ERROR; // unknown error
+      break;
+  }
+  return;
+}
+
+void pal_OEM_1S_MSG_OUT(ipmi_msg *msg) {
   uint8_t  target_IF;
   ipmb_error status;
   ipmi_msg *bridge_msg = (ipmi_msg*)malloc(sizeof(ipmi_msg));
@@ -638,7 +688,7 @@ void pal_OEM_MSG_OUT(ipmi_msg *msg) {
   return;
 }
 
-void pal_OEM_GET_GPIO(ipmi_msg *msg) {
+void pal_OEM_1S_GET_GPIO(ipmi_msg *msg) {
    if (msg->data_len != 0) { // only input enable status
      msg->completion_code = CC_INVALID_LENGTH;
      return;
@@ -684,7 +734,8 @@ void pal_OEM_GET_GPIO(ipmi_msg *msg) {
    return;
 }
 
-void pal_OEM_GET_SET_GPIO(ipmi_msg *msg) {
+void pal_OEM_1S_GET_SET_GPIO(ipmi_msg *msg) {
+  uint8_t value;
   uint8_t completion_code = CC_INVALID_LENGTH;
   uint8_t gpio_num = gpio_ind_to_num_table[msg->data[1]];
 
@@ -734,7 +785,7 @@ void pal_OEM_GET_SET_GPIO(ipmi_msg *msg) {
   return;
 }
 
-void pal_OEM_PECIaccess(ipmi_msg *msg) {
+void pal_OEM_1S_PECIaccess(ipmi_msg *msg) {
   uint8_t addr, cmd, *writeBuf, *readBuf;
   uint8_t u8WriteLen, u8ReadLen, u8Index;
   uint16_t u16Param;
@@ -796,7 +847,7 @@ void pal_OEM_PECIaccess(ipmi_msg *msg) {
   return;
 }
 
-void pal_OEM_SET_SYSTEM_GUID(ipmi_msg *msg) {
+void pal_OEM_1S_SET_SYSTEM_GUID(ipmi_msg *msg) {
   uint8_t status;
   EEPROM_ENTRY guid_entry;
 
@@ -809,7 +860,7 @@ void pal_OEM_SET_SYSTEM_GUID(ipmi_msg *msg) {
   guid_entry.data_len = msg->data_len;
   guid_entry.config.dev_id = MB_SYS_GUID_ID;
   memcpy(&guid_entry.data[0], &msg->data, guid_entry.data_len);
-  GUID_write(&guid_entry);
+  status = GUID_write(&guid_entry);
 
   switch (status) {
     case GUID_WRITE_SUCCESS:
@@ -831,7 +882,7 @@ void pal_OEM_SET_SYSTEM_GUID(ipmi_msg *msg) {
   return;
 }
 
-void pal_OEM_FW_UPDATE(ipmi_msg *msg) {
+void pal_OEM_1S_FW_UPDATE(ipmi_msg *msg) {
   /*********************************
  * buf 0:   target, 0x80 indicate last byte
  * buf 1~4: offset, 1 lsb
@@ -901,7 +952,7 @@ void pal_OEM_FW_UPDATE(ipmi_msg *msg) {
 
 }
 
-void pal_OEM_GET_FW_VERSION(ipmi_msg *msg) {
+void pal_OEM_1S_GET_FW_VERSION(ipmi_msg *msg) {
   if (msg->data_len != 1) {
     msg->completion_code = CC_INVALID_LENGTH;
     return;
@@ -998,9 +1049,9 @@ void pal_OEM_GET_FW_VERSION(ipmi_msg *msg) {
   return;
 }
 
-void pal_OEM_SET_JTAG_TAP_STA(ipmi_msg *msg) {
+void pal_OEM_1S_SET_JTAG_TAP_STA(ipmi_msg *msg) {
   if (!msg){
-    printf("pal_OEM_SET_JTAG_TAP_STA: parameter msg is NULL\n");
+    printf("pal_OEM_1S_SET_JTAG_TAP_STA: parameter msg is NULL\n");
     return;
   }
   if (msg->data_len != 2) {
@@ -1018,7 +1069,7 @@ void pal_OEM_SET_JTAG_TAP_STA(ipmi_msg *msg) {
   return;
 }
 
-void pal_OEM_ACCURACY_SENSNR(ipmi_msg *msg) {
+void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg) {
   /*********************************
    * buf 0: target sensor number
    * buf 1: read option
@@ -1094,9 +1145,9 @@ void pal_OEM_ACCURACY_SENSNR(ipmi_msg *msg) {
   return;
 }
 
-void pal_OEM_ASD_INIT(ipmi_msg *msg) {
+void pal_OEM_1S_ASD_INIT(ipmi_msg *msg) {
   if (!msg){
-    printf("pal_OEM_ASD_INIT: parameter msg is NULL\n");
+    printf("pal_OEM_1S_ASD_INIT: parameter msg is NULL\n");
     return;
   }
 
@@ -1120,9 +1171,9 @@ void pal_OEM_ASD_INIT(ipmi_msg *msg) {
   return;
 }
 
-void pal_OEM_JTAG_DATA_SHIFT(ipmi_msg *msg) {
+void pal_OEM_1S_JTAG_DATA_SHIFT(ipmi_msg *msg) {
   if (!msg){
-    printf("pal_OEM_JTAG_DATA_SHIFT: parameter msg is NULL\n");
+    printf("pal_OEM_1S_JTAG_DATA_SHIFT: parameter msg is NULL\n");
     return;
   }
   uint8_t lastidx;
@@ -1151,7 +1202,7 @@ void pal_OEM_JTAG_DATA_SHIFT(ipmi_msg *msg) {
   return;
 }
 
-void pal_OEM_I2C_DEV_SCAN(ipmi_msg *msg) {
+void pal_OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg) {
   if (msg->data[0] == 0x9C && msg->data[1] == 0x9C && msg->data[2] == 0x00) {
     while(1); // hold firmware for debug only
   }
@@ -1169,7 +1220,7 @@ void pal_OEM_I2C_DEV_SCAN(ipmi_msg *msg) {
   return;
 }
 
-void pal_OEM_GET_POST_CODE(ipmi_msg *msg) {
+void pal_OEM_1S_GET_POST_CODE(ipmi_msg *msg) {
   int postcode_num = snoop_read_num;
   if ( msg->data_len != 0 ){
     msg->completion_code = CC_INVALID_LENGTH;

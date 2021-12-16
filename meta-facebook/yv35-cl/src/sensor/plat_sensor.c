@@ -135,7 +135,7 @@ void add_Snrconfig( snr_cfg add_Snrconfig ) {
   sensor_config[ SnrCfg_num++ ] = add_Snrconfig;
 };
 
-void fix_Snrconfig() {
+void pal_fix_Snrconfig() {
 /*
   SnrCfg_num = sizeof(plat_sensor_config) / sizeof(plat_sensor_config[0]);
   uint8_t fix_SnrCfg_num;

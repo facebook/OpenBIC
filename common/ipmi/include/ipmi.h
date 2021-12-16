@@ -63,20 +63,25 @@ void pal_STORAGE_RSV_SDR(ipmi_msg *msg);
 void pal_STORAGE_GET_SDR(ipmi_msg *msg);
 
 // IPMI OEM
-void pal_OEM_MSG_OUT(ipmi_msg *msg);
-void pal_OEM_GET_GPIO(ipmi_msg *msg);
-void pal_OEM_SET_GPIO(ipmi_msg *msg);
-void pal_OEM_SEND_INTERRUPT_TO_BMC(ipmi_msg *msg);
-void pal_OEM_SENSOR_POLL_EN(ipmi_msg *msg);
-void pal_OEM_FW_UPDATE(ipmi_msg *msg);
-void pal_OEM_GET_FW_VERSION(ipmi_msg *msg);
-void pal_OEM_PECIaccess(ipmi_msg *msg);
-void pal_OEM_ASD_INIT(ipmi_msg *msg);
-void pal_OEM_GET_SET_GPIO(ipmi_msg *msg);
+void pal_OEM_SENSOR_READ(ipmi_msg *msg);
 void pal_OEM_SET_SYSTEM_GUID(ipmi_msg *msg);
-void pal_OEM_I2C_DEV_SCAN(ipmi_msg *msg);
-void pal_OEM_SET_JTAG_TAP_STA(ipmi_msg *msg);
-void pal_OEM_JTAG_DATA_SHIFT(ipmi_msg *msg);
+
+// IPMI OEM 1S
+void pal_OEM_1S_MSG_OUT(ipmi_msg *msg);
+void pal_OEM_1S_GET_GPIO(ipmi_msg *msg);
+void pal_OEM_1S_SET_GPIO(ipmi_msg *msg);
+void pal_OEM_1S_SEND_INTERRUPT_TO_BMC(ipmi_msg *msg);
+void pal_OEM_1S_SENSOR_POLL_EN(ipmi_msg *msg);
+void pal_OEM_1S_FW_UPDATE(ipmi_msg *msg);
+void pal_OEM_1S_GET_FW_VERSION(ipmi_msg *msg);
+void pal_OEM_1S_GET_POST_CODE(ipmi_msg *msg);
+void pal_OEM_1S_PECIaccess(ipmi_msg *msg);
+void pal_OEM_1S_ASD_INIT(ipmi_msg *msg);
+void pal_OEM_1S_GET_SET_GPIO(ipmi_msg *msg);
+void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg);
+void pal_OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg);
+void pal_OEM_1S_SET_JTAG_TAP_STA(ipmi_msg *msg);
+void pal_OEM_1S_JTAG_DATA_SHIFT(ipmi_msg *msg);
 
 
 enum {
@@ -172,28 +177,33 @@ enum {
   CMD_STORAGE_ADD_SEL = 0x44,
 };
 
-// OEM Command Codes 
+// OEM Command Codes
 enum {
-  CMD_OEM_MSG_IN = 0x1,
-  CMD_OEM_MSG_OUT = 0x2,
-  CMD_OEM_GET_GPIO = 0x3,
-  CMD_OEM_SET_GPIO = 0x4,
-  CMD_OEM_GET_GPIO_CONFIG = 0x5,
-  CMD_OEM_SET_GPIO_CONFIG = 0x6,
-  CMD_OEM_SEND_INTERRUPT_TO_BMC = 0x7,
-  CMD_OEM_FW_UPDATE = 0x9,
-  CMD_OEM_GET_FW_VERSION = 0xB,
-  CMD_OEM_GET_POST_CODE = 0x12,
-  CMD_OEM_SET_JTAG_TAP_STA = 0x21,
-  CMD_OEM_JTAG_DATA_SHIFT = 0x22,
-  CMD_OEM_ACCURACY_SENSNR = 0x23,
-  CMD_OEM_ASD_INIT = 0x28,
-  CMD_OEM_PECIaccess = 0x29,
-  CMD_OEM_SENSOR_POLL_EN = 0x30,
-  CMD_OEM_GET_SET_GPIO = 0x41,
+  CMD_OEM_SENSOR_READ = 0xE2,
   CMD_OEM_SET_SYSTEM_GUID = 0xEF,
+};
+
+// OEM 1S Command Codes 
+enum {
+  CMD_OEM_1S_MSG_IN = 0x1,
+  CMD_OEM_1S_MSG_OUT = 0x2,
+  CMD_OEM_1S_GET_GPIO = 0x3,
+  CMD_OEM_1S_SET_GPIO = 0x4,
+  CMD_OEM_1S_GET_GPIO_CONFIG = 0x5,
+  CMD_OEM_1S_SET_GPIO_CONFIG = 0x6,
+  CMD_OEM_1S_SEND_INTERRUPT_TO_BMC = 0x7,
+  CMD_OEM_1S_FW_UPDATE = 0x9,
+  CMD_OEM_1S_GET_FW_VERSION = 0xB,
+  CMD_OEM_1S_GET_POST_CODE = 0x12,
+  CMD_OEM_1S_SET_JTAG_TAP_STA = 0x21,
+  CMD_OEM_1S_JTAG_DATA_SHIFT = 0x22,
+  CMD_OEM_1S_ACCURACY_SENSNR = 0x23,
+  CMD_OEM_1S_ASD_INIT = 0x28,
+  CMD_OEM_1S_PECIaccess = 0x29,
+  CMD_OEM_1S_SENSOR_POLL_EN = 0x30,
+  CMD_OEM_1S_GET_SET_GPIO = 0x41,
 // Debug command
-  CMD_OEM_I2C_DEV_SCAN = 0x60,
+  CMD_OEM_1S_I2C_DEV_SCAN = 0x60,
 };
 
 #endif

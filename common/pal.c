@@ -25,6 +25,11 @@ __weak bool pal_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd)
   return 0;
 }
 
+__weak bool pal_ME_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd)
+{
+  return 0;
+}
+
 __weak bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd)
 {
 	return 0;
@@ -107,79 +112,7 @@ __weak void pal_STORAGE_GET_SDR(ipmi_msg *msg)
 }
 
 // IPMI OEM
-__weak void pal_OEM_MSG_OUT(ipmi_msg *msg)
-{
-	msg->completion_code = CC_UNSPECIFIED_ERROR;
-	return;
-}
-
-__weak void pal_OEM_GET_GPIO(ipmi_msg *msg)
-{
-	msg->completion_code = CC_UNSPECIFIED_ERROR;
-	return;
-}
-
-__weak void pal_OEM_SET_GPIO(ipmi_msg *msg)
-{
-	msg->completion_code = CC_UNSPECIFIED_ERROR;
-	return;
-}
-
-__weak void pal_OEM_SEND_INTERRUPT_TO_BMC(ipmi_msg *msg)
-{
-	msg->completion_code = CC_UNSPECIFIED_ERROR;
-	return;
-}
-
-__weak void pal_OEM_SENSOR_POLL_EN(ipmi_msg *msg)
-{
-	msg->completion_code = CC_UNSPECIFIED_ERROR;
-	return;
-}
-
-__weak void pal_OEM_FW_UPDATE(ipmi_msg *msg)
-{
-	msg->completion_code = CC_UNSPECIFIED_ERROR;
-	return;
-}
-
-__weak void pal_OEM_GET_FW_VERSION(ipmi_msg *msg)
-{
-	msg->completion_code = CC_UNSPECIFIED_ERROR;
-	return;
-}
-
-__weak void pal_OEM_SET_JTAG_TAP_STA(ipmi_msg *msg)
-{
-	msg->completion_code = CC_UNSPECIFIED_ERROR;
-	return;
-}
-
-__weak void pal_OEM_JTAG_DATA_SHIFT(ipmi_msg *msg)
-{
-	msg->completion_code = CC_UNSPECIFIED_ERROR;
-	return;
-}
-
-__weak void pal_OEM_ACCURACY_SENSNR(ipmi_msg *msg)
-{
-  msg->completion_code = CC_UNSPECIFIED_ERROR;
-  return;
-}
-
-__weak void pal_OEM_ASD_INIT(ipmi_msg *msg)
-{
-  msg->completion_code = CC_UNSPECIFIED_ERROR;
-  return;
-}
-
-__weak void pal_OEM_PECIaccess(ipmi_msg *msg)
-{
-  msg->completion_code = CC_UNSPECIFIED_ERROR;
-  return;
-}
-
-__weak void pal_OEM_GET_SET_GPIO(ipmi_msg *msg)
+__weak void pal_OEM_SENSOR_READ(ipmi_msg *msg)
 {
 	msg->completion_code = CC_UNSPECIFIED_ERROR;
 	return;
@@ -191,7 +124,92 @@ __weak void pal_OEM_SET_SYSTEM_GUID(ipmi_msg *msg)
 	return;
 }
 
-__weak void pal_OEM_I2C_DEV_SCAN(ipmi_msg *msg)
+// IPMI OEM 1S
+__weak void pal_OEM_1S_MSG_OUT(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
+__weak void pal_OEM_1S_GET_GPIO(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
+__weak void pal_OEM_1S_SET_GPIO(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
+__weak void pal_OEM_1S_SEND_INTERRUPT_TO_BMC(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
+__weak void pal_OEM_1S_SENSOR_POLL_EN(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
+__weak void pal_OEM_1S_FW_UPDATE(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
+__weak void pal_OEM_1S_GET_POST_CODE(ipmi_msg *msg)
+{
+    msg->completion_code = CC_UNSPECIFIED_ERROR;
+    return;
+}
+
+__weak void pal_OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
+__weak void pal_OEM_1S_SET_JTAG_TAP_STA(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
+__weak void pal_OEM_1S_JTAG_DATA_SHIFT(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
+__weak void pal_OEM_1S_ASD_INIT(ipmi_msg *msg)
+{
+  msg->completion_code = CC_UNSPECIFIED_ERROR;
+  return;
+}
+
+__weak void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg)
+{
+  msg->completion_code = CC_UNSPECIFIED_ERROR;
+  return;
+}
+
+__weak void pal_OEM_1S_PECIaccess(ipmi_msg *msg)
+{
+  msg->completion_code = CC_UNSPECIFIED_ERROR;
+  return;
+}
+
+__weak void pal_OEM_1S_GET_SET_GPIO(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
+__weak void pal_OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg)
 {
 	msg->completion_code = CC_UNSPECIFIED_ERROR;
 	return;
@@ -230,6 +248,16 @@ __weak uint8_t pal_load_sdr_table(void)
 __weak bool pal_load_snr_config(void)
 {
 	return 0;
+}
+
+__weak void pal_fix_fullSDR_table(void)
+{
+    return 0;
+}
+
+__weak void pal_fix_Snrconfig(void)
+{
+    return 0;
 }
 
 // fru

@@ -117,7 +117,7 @@ void send_gpio_interrupt(uint8_t gpio_num)
   msg.InF_source = Self_IFs;
   msg.InF_target = BMC_IPMB_IFs;
   msg.netfn = NETFN_OEM_1S_REQ;
-  msg.cmd = CMD_OEM_SEND_INTERRUPT_TO_BMC;
+  msg.cmd = CMD_OEM_1S_SEND_INTERRUPT_TO_BMC;
 
   msg.data[0] = WW_IANA_ID & 0xFF;
   msg.data[1] = (WW_IANA_ID >> 8) & 0xFF;

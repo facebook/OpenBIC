@@ -2607,7 +2607,7 @@ void add_fullSDR_table( SDR_Full_sensor add_item ) {
   full_sensor_table[ SDR_NUM++ ] = add_item;
 };
 
-void fix_fullSDR_table() {
+void pal_fix_fullSDR_table() {
   uint8_t fix_array_num;
   if ( get_bic_class() ) {
     // fix usage when fix_C2SDR_table is defined
