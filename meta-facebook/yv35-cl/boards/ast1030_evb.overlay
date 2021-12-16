@@ -38,7 +38,7 @@
 
 	ipmb2: ipmb@10 {
 		compatible = "aspeed,ipmb";
-		reg = <0x10>;
+		reg = <0x20>;
 		label = "IPMB_2";
 		size = <10>;
 #ifdef CONFIG_I2C_IPMB_SLAVE

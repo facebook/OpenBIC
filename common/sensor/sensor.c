@@ -186,7 +186,7 @@ bool sensor_init(void) {
     return false;
   }
 
-  fix_Snrconfig();
+  pal_fix_Snrconfig();
   map_SnrNum_SDR_CFG();  
   
   if (DEBUG_SNR) {

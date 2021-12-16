@@ -55,7 +55,7 @@ uint8_t SDR_init(void)
 	int i;
 
 	SDR_NUM = pal_load_sdr_table();
-  fix_fullSDR_table();
+  pal_fix_fullSDR_table();
 	sdr_info.start_ID = 0x0000;
 	sdr_info.current_ID = sdr_info.start_ID;
 

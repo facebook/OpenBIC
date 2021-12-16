@@ -104,6 +104,9 @@ void IPMI_Storage_handler(ipmi_msg *msg)
 void IPMI_OEM_handler(ipmi_msg *msg)
 {
 	switch (msg->cmd) {
+  case CMD_OEM_SENSOR_READ:
+    pal_OEM_SENSOR_READ(msg);
+    break;
 	case CMD_OEM_SET_SYSTEM_GUID:
 		pal_OEM_SET_SYSTEM_GUID(msg);
 		break;
@@ -118,55 +121,52 @@ void IPMI_OEM_handler(ipmi_msg *msg)
 void IPMI_OEM_1S_handler(ipmi_msg *msg)
 {
 	switch (msg->cmd) {
-	case CMD_OEM_MSG_IN:
+	case CMD_OEM_1S_MSG_IN:
 		break;
-	case CMD_OEM_MSG_OUT:
-		pal_OEM_MSG_OUT(msg);
+	case CMD_OEM_1S_MSG_OUT:
+		pal_OEM_1S_MSG_OUT(msg);
 		break;
-	case CMD_OEM_GET_GPIO:
-		pal_OEM_GET_GPIO(msg);
+	case CMD_OEM_1S_GET_GPIO:
+		pal_OEM_1S_GET_GPIO(msg);
 		break;
-	case CMD_OEM_SET_GPIO:
-		pal_OEM_SET_GPIO(msg);
+	case CMD_OEM_1S_SET_GPIO:
+		pal_OEM_1S_SET_GPIO(msg);
 		break;
-	case CMD_OEM_GET_GPIO_CONFIG:
+	case CMD_OEM_1S_SEND_INTERRUPT_TO_BMC:
+		pal_OEM_1S_SEND_INTERRUPT_TO_BMC(msg);
 		break;
-	case CMD_OEM_SET_GPIO_CONFIG:
+	case CMD_OEM_1S_FW_UPDATE:
+		pal_OEM_1S_FW_UPDATE(msg);
 		break;
-	case CMD_OEM_SEND_INTERRUPT_TO_BMC:
-		pal_OEM_SEND_INTERRUPT_TO_BMC(msg);
+	case CMD_OEM_1S_GET_FW_VERSION:
+		pal_OEM_1S_GET_FW_VERSION(msg);
 		break;
-	case CMD_OEM_FW_UPDATE:
-		pal_OEM_FW_UPDATE(msg);
-		break;
-	case CMD_OEM_GET_FW_VERSION:
-		pal_OEM_GET_FW_VERSION(msg);
-		break;
-  case CMD_OEM_PECIaccess:
-    pal_OEM_PECIaccess(msg);
+  case CMD_OEM_1S_PECIaccess:
+    pal_OEM_1S_PECIaccess(msg);
     break;
-  case CMD_OEM_GET_POST_CODE:
-    pal_OEM_GET_POST_CODE(msg);
+  case CMD_OEM_1S_GET_POST_CODE:
+    pal_OEM_1S_GET_POST_CODE(msg);
     break;
-	case CMD_OEM_SET_JTAG_TAP_STA:
-		pal_OEM_SET_JTAG_TAP_STA(msg);
+	case CMD_OEM_1S_SET_JTAG_TAP_STA:
+		pal_OEM_1S_SET_JTAG_TAP_STA(msg);
 		break;
-	case CMD_OEM_JTAG_DATA_SHIFT:
-		pal_OEM_JTAG_DATA_SHIFT(msg);
+	case CMD_OEM_1S_JTAG_DATA_SHIFT:
+		pal_OEM_1S_JTAG_DATA_SHIFT(msg);
 		break;
-	case CMD_OEM_SENSOR_POLL_EN:
-		pal_OEM_SENSOR_POLL_EN(msg);
-	case CMD_OEM_ACCURACY_SENSNR:
-		pal_OEM_ACCURACY_SENSNR(msg);
+	case CMD_OEM_1S_SENSOR_POLL_EN:
+		pal_OEM_1S_SENSOR_POLL_EN(msg);
+    break;
+	case CMD_OEM_1S_ACCURACY_SENSNR:
+		pal_OEM_1S_ACCURACY_SENSNR(msg);
 		break;
-	case CMD_OEM_ASD_INIT:
-		pal_OEM_ASD_INIT(msg);
+	case CMD_OEM_1S_ASD_INIT:
+		pal_OEM_1S_ASD_INIT(msg);
 		break;
-	case CMD_OEM_GET_SET_GPIO:
-		pal_OEM_GET_SET_GPIO(msg);
+	case CMD_OEM_1S_GET_SET_GPIO:
+		pal_OEM_1S_GET_SET_GPIO(msg);
 		break;
-	case CMD_OEM_I2C_DEV_SCAN: // debug command
-		pal_OEM_I2C_DEV_SCAN(msg);
+	case CMD_OEM_1S_I2C_DEV_SCAN: // debug command
+		pal_OEM_1S_I2C_DEV_SCAN(msg);
 		break;
 	default:
 		printf("invalid OEM msg netfn: %x, cmd: %x\n", msg->netfn, msg->cmd);

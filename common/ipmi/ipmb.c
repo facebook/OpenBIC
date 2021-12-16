@@ -387,8 +387,8 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
   				} else {
   					ipmb_error status;
   					current_msg_tx->buffer.data_len = 0;
-  					current_msg_tx->buffer.netfn = NETFN_OEM_REQ;
-  					current_msg_tx->buffer.cmd = CMD_OEM_MSG_OUT;
+  					current_msg_tx->buffer.netfn = NETFN_OEM_1S_REQ;
+  					current_msg_tx->buffer.cmd = CMD_OEM_1S_MSG_OUT;
   					current_msg_tx->buffer.completion_code = CC_NODE_BUSY;
   					status = ipmb_send_response(&current_msg_tx->buffer, IPMB_inf_index_map[current_msg_tx->buffer.InF_source]);
 
@@ -534,7 +534,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
           if (current_msg_rx->buffer.InF_source == SELF_IPMB_IF) {        // Send from other thread
             struct ipmi_msg current_msg;
             current_msg = (struct ipmi_msg)current_msg_rx->buffer;
-            k_msgq_put(&ipmb_rxqueue[ipmb_cfg.index], &current_msg, K_NO_WAIT);
+            k_msgq_put(&ipmb_rxqueue[IPMB_inf_index_map[current_msg_rx->buffer.InF_target]], &current_msg, K_NO_WAIT);
           } else if (current_msg_rx->buffer.InF_source == HOST_KCS_IFs) {
             kcs_buff = malloc(KCS_buff_size * sizeof(uint8_t));
             if ( kcs_buff == NULL ) { // allocate fail, retry allocate
@@ -562,10 +562,11 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
             ipmi_msg *bridge_msg = (ipmi_msg*)malloc(sizeof(ipmi_msg));
             memset(bridge_msg, 0, sizeof(ipmi_msg));
 
-            bridge_msg->netfn = current_msg_rx->buffer.netfn;
+            bridge_msg->netfn = current_msg_rx->buffer.netfn -1; // fix response netfn and would be shift later in ipmb_send_response
             bridge_msg->cmd = current_msg_rx->buffer.cmd;
             bridge_msg->completion_code = current_msg_rx->buffer.completion_code;
             bridge_msg->seq = current_msg_rx->buffer.seq_source;
+            bridge_msg->data_len = current_msg_rx->buffer.data_len;
             memcpy(&bridge_msg->data[0], &current_msg_rx->buffer.data[0], current_msg_rx->buffer.data_len);
 
             if (DEBUG_IPMI) {
@@ -600,8 +601,8 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
             bridge_msg->data[6] = current_msg_rx->buffer.completion_code;
             bridge_msg->data_len = current_msg_rx->buffer.data_len + 7;        // add 7 byte len for bridge header
             memcpy(&bridge_msg->data[7], &current_msg_rx->buffer.data[0], current_msg_rx->buffer.data_len);
-            bridge_msg->netfn = NETFN_OEM_REQ;                                 // Add bridge response header
-            bridge_msg->cmd = CMD_OEM_MSG_OUT;
+            bridge_msg->netfn = NETFN_OEM_1S_REQ;                                 // Add bridge response header
+            bridge_msg->cmd = CMD_OEM_1S_MSG_OUT;
             bridge_msg->completion_code = CC_SUCCESS;
             bridge_msg->seq = current_msg_rx->buffer.seq_source;
 
@@ -630,7 +631,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
         // Exception: ME sends standard IPMI commands to BMC but not BIC.
         //            So BIC should bridge ME request to BMC directly, instead of
         //            executing IPMI handler.
-        if ( current_msg_rx->buffer.InF_source == ME_IPMB_IFs ) {
+        if ( IPMB_config_table[ipmb_cfg.index].Inf_source == ME_IPMB_IFs && (!pal_ME_is_to_ipmi_handler(current_msg_rx->buffer.netfn, current_msg_rx->buffer.cmd)) ) {
           ipmb_error status;
           ipmi_msg *bridge_msg = (ipmi_msg*)malloc(sizeof(ipmi_msg));
           memset(bridge_msg, 0, sizeof(ipmi_msg));
@@ -765,7 +766,7 @@ ipmb_error ipmb_read(ipmi_msg *msg, uint8_t index) {
   // Reset a Message Queue to initial empty state
   k_msgq_purge(&ipmb_rxqueue[index]);
 
-  status = ipmb_send_request(msg, IPMB_inf_index_map[msg->InF_target]);
+  status = ipmb_send_request(msg, index);
   if (status != ipmb_error_success) {
     printf("ipmb send request fail status: %x", status);
     k_mutex_unlock(&mutex_read);

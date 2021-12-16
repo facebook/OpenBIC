@@ -25,7 +25,7 @@ void pal_usb_handler(uint8_t *rx_buff,int rx_len) {
   // USB driver must receive 64 byte package from bmc
   // it takes 512 + 64 byte package to receive ipmi command + 512 byte image data
   // if cmd fw_update, record next usb package as image until receive complete data
-  if ( (rx_buff[0] == (NETFN_OEM_1S_REQ << 2) ) && (rx_buff[1] == CMD_OEM_FW_UPDATE) ) {
+  if ( (rx_buff[0] == (NETFN_OEM_1S_REQ << 2) ) && (rx_buff[1] == CMD_OEM_1S_FW_UPDATE) ) {
     fwupdate_keep_data = true;
   }
 
