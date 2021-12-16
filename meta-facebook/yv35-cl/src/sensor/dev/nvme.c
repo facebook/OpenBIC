@@ -5,9 +5,12 @@
 
 #define SSD0_mux_addr (0xE2 >> 1)
 #define SSD0_channel 2
+#define NVMe_NOT_AVAILABLE 0x80
+#define NVMe_TMPSNR_FAILURE 0x81
 
 bool pal_nvme_read(uint8_t sensor_num, int *reading) {
   uint8_t retry = 5;
+  static uint8_t NOT_AVAILABLE_retry_num = 0;
   int val;
   I2C_MSG msg;
   msg.bus = sensor_config[SnrNum_SnrCfg_map[sensor_num]].port;
@@ -25,6 +28,21 @@ bool pal_nvme_read(uint8_t sensor_num, int *reading) {
     msg.rx_len = 4;
     if ( !i2c_master_read(&msg, retry) ) {
       val = msg.data[3];
+      // Check reading value
+      if ( val == NVMe_NOT_AVAILABLE ) {
+        if ( NOT_AVAILABLE_retry_num >= 3 ) {
+          sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_NOT_ACCESSIBLE;
+          return false;
+        } else {
+          NOT_AVAILABLE_retry_num += 1;
+          sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_READ_SUCCESS;
+          return true;
+        }
+      } else if ( val == NVMe_TMPSNR_FAILURE ) {
+        sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_UNSPECIFIED_ERROR;
+        return false;
+      }
+      NOT_AVAILABLE_retry_num = 0;
     } else {
       sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_FAIL_TO_ACCESS;
       return false;
