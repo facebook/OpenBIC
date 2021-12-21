@@ -26,7 +26,6 @@
 
 static struct device *dev_adc[ADC_NUM];
 static int16_t sample_buffer[BUFFER_SIZE];
-int32_t adc_vref;
 
 struct adc_channel_cfg channel_cfg = {
   .gain = ADC_GAIN,
@@ -72,21 +71,24 @@ bool adc_init(){
   return true;
 }
 
-static bool adc_read_mv(uint32_t index, uint32_t channel, int *adc_val){
-  int err;
-  adc_vref = adc_get_ref(dev_adc[index]);
+static bool adc_read_mv(uint8_t sensor_num, uint32_t index, uint32_t channel, int *adc_val){
+  int err, retval;
   sequence.channels = BIT(channel);
   channel_cfg.channel_id = channel;
-  adc_channel_setup(dev_adc[index], &channel_cfg) ;
-  err = adc_read(dev_adc[index], &sequence);
-  if (err != 0){
-    printk("ADC reading failed with error %d.\n", err);
+  retval = adc_channel_setup(dev_adc[index], &channel_cfg);
+  if (retval){
+    printk("ADC sensor %x channel set fail\n", sensor_num);
     return false;
   }
+  err = adc_read(dev_adc[index], &sequence);
+  if (err != 0){
+    printk("ADC sensor %x reading fail with error %d\n", sensor_num, err);
+    return false;
+  }  
   int32_t raw_value = sample_buffer[0];
-  if ( adc_vref > 0 ){
+  if (adc_get_ref(dev_adc[index]) > 0){
     *adc_val = raw_value;
-    adc_raw_to_millivolts( adc_get_ref(dev_adc[index]), ADC_GAIN, ADC_RESOLUTION, adc_val);
+    adc_raw_to_millivolts( adc_get_ref(dev_adc[index]), channel_cfg.gain, sequence.resolution, adc_val);
     return true;
   }
   return false;
@@ -96,12 +98,12 @@ bool pal_adc_read(uint8_t sensor_num, int *reading) {
   uint8_t chip = sensor_config[snrcfg_sensor_num].port / ADC_CHAN_NUM;
   uint8_t number = sensor_config[snrcfg_sensor_num].port % ADC_CHAN_NUM;
   int val = 1;
-  int ret = adc_read_mv(chip, number, &val);
+  int ret = adc_read_mv(sensor_num, chip, number, &val);
   if ( ret ){
     if( sensor_num == SENSOR_NUM_VOL_BAT3V) {
       gpio_set(A_P3V_BAT_SCALED_EN_R, GPIO_HIGH);
       osDelay(1);
-      adc_read_mv(chip, number, &val);
+      adc_read_mv(sensor_num, chip, number, &val);
       val = val * sensor_config[snrcfg_sensor_num].arg0 / sensor_config[snrcfg_sensor_num].arg1;
       gpio_set(A_P3V_BAT_SCALED_EN_R, GPIO_LOW);
     }else{
