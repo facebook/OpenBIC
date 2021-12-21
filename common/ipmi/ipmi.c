@@ -230,7 +230,7 @@ ipmi_error IPMI_handler(void *arug0, void *arug1, void *arug2)
           break;
         } else if (pal_is_not_return_cmd(msg_cfg.buffer.netfn, msg_cfg.buffer.cmd)) {
           msg_cfg.buffer.completion_code = CC_INVALID_IANA;
-          IPMI_OEM_1S_handler(&msg_cfg.buffer); // Due to command not returning, enter command handler and return with other invalid CC
+          IPMI_OEM_1S_handler(&msg_cfg.buffer); // Due to command not returning to bridge command source, enter command handler and return with other invalid CC
           break;
         } else {
           msg_cfg.buffer.completion_code = CC_INVALID_IANA;
