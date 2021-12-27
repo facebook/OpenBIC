@@ -1158,11 +1158,11 @@ void pal_OEM_1S_ASD_INIT(ipmi_msg *msg) {
   }
 
   if (msg->data[0] == 0x01) {
-    enable_asd_gpio_interrupt();
+    enable_PRDY_interrupt();
   } else if (msg->data[0] == 0xff) {
-    disable_asd_gpio_interrupt();
+    disable_PRDY_interrupt();
   } else {
-    disable_asd_gpio_interrupt();
+    disable_PRDY_interrupt();
     msg->completion_code = CC_INVALID_DATA_FIELD;
     return;
   }
