@@ -13,19 +13,6 @@ K_KERNEL_STACK_MEMBER(KCS_POLL_stack, KCS_POLL_stack_STACK_SIZE);
 
 static const struct device *kcs_dev;
 
-struct kcs_request {
-  uint8_t netfn;
-  uint8_t cmd;
-  uint8_t data[0];
-};
-
-struct kcs_response {
-  uint8_t netfn;
-  uint8_t cmd;
-  uint8_t cmplt_code;
-  uint8_t data[0];
-};
-
 int kcs_aspeed_read(const struct device *dev,
         uint8_t *buf, uint32_t buf_sz);
 
@@ -94,19 +81,7 @@ void kcs_read(void* arvg0, void* arvg1, void* arvg2)
         k_msgq_purge(&ipmi_msgq);
         printf("KCS retrying put ipmi msgq\n");
       }
-
-      res = (struct kcs_response *)ibuf;
-      res->netfn = (current_msg.buffer.netfn + 1) << 2; // ipmi netfn response package
-      res->cmd = current_msg.buffer.cmd;
-      res->cmplt_code = current_msg.buffer.completion_code;
-      if (current_msg.buffer.data_len != 0) {
-        memcpy(res->data, current_msg.buffer.data, current_msg.buffer.data_len);
-      }
-      if ( DEBUG_KCS ) {
-        printk("kcs from ipmi netfn %x, cmd %x, length %d, cc %x\n", res->netfn, res->cmd, current_msg.buffer.data_len, res->cmplt_code);
-      }
-
-      kcs_write(ibuf, current_msg.buffer.data_len + 3);
+      
     } else { // default command for BMC, should add BIC firmware update, BMC reset, real time sensor read in future
       bridge_msg.data_len = rc - 2; // exclude netfn, cmd
       bridge_msg.seq_source = 0xff; // No seq for KCS

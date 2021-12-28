@@ -215,6 +215,18 @@ __weak void pal_OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg)
 	return;
 }
 
+__weak void pal_OEM_1S_GET_BIC_STATUS(ipmi_msg *msg)
+{
+  msg->completion_code = CC_UNSPECIFIED_ERROR;
+  return;
+}
+
+__weak void pal_OEM_1S_RESET_BIC(ipmi_msg *msg)
+{
+  msg->completion_code = CC_UNSPECIFIED_ERROR;
+  return;
+}
+
 // init
 __weak void pal_I2C_init(void)
 {
