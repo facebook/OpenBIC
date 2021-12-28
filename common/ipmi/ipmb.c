@@ -312,7 +312,7 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
   		if (status) {
   			/* Message couldn't be transmitted right now, increase retry counter and try again later */
   			current_msg_tx->retries++;
-  			k_msgq_put(&ipmb_txqueue[ipmb_cfg.index], &current_msg_tx, K_NO_WAIT);
+  			k_msgq_put(&ipmb_txqueue[ipmb_cfg.index], current_msg_tx, K_NO_WAIT);
   			k_msleep(IPMB_RETRY_DELAY_ms);
   		} else {
   			/* Success case*/
