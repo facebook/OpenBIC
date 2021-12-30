@@ -9,6 +9,7 @@ void ISR_slp3();
 void ISR_DC_on();
 void ISR_BMC_PRDY();
 void ISR_PWRGD_CPU();
+void ISR_CATERR();
 void ISR_PLTRST();
 void ISR_DBP_PRSNT();
 void ISR_post_complete();

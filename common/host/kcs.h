@@ -9,6 +9,8 @@
 
 void kcs_write(uint8_t *buf, uint32_t buf_sz);
 void kcs_init(void);
+bool get_kcs_ok();
+void reset_kcs_ok();
 
 #endif
 

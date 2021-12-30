@@ -12,6 +12,7 @@ struct k_thread kcs_polling;
 K_KERNEL_STACK_MEMBER(KCS_POLL_stack, KCS_POLL_stack_STACK_SIZE);
 
 static const struct device *kcs_dev;
+static bool proc_kcs_ok = false;
 
 struct kcs_request {
   uint8_t netfn;
@@ -41,6 +42,14 @@ void kcs_write(uint8_t *buf, uint32_t buf_sz) {
   }
 }
 
+bool get_kcs_ok() {
+  return proc_kcs_ok;
+}
+
+void reset_kcs_ok() {
+  proc_kcs_ok = false;
+}
+
 void kcs_read(void* arvg0, void* arvg1, void* arvg2)
 {
   int i, rc;
@@ -48,7 +57,6 @@ void kcs_read(void* arvg0, void* arvg1, void* arvg2)
   ipmi_msg bridge_msg;
   ipmi_msg_cfg current_msg;
   ipmb_error status;
-
 
   struct kcs_request *req;
   struct kcs_response *res;
@@ -73,6 +81,7 @@ void kcs_read(void* arvg0, void* arvg1, void* arvg2)
       printk("\n");
     }
 
+    proc_kcs_ok = true;
     req = (struct kcs_request *)ibuf;
     req->netfn = req->netfn >> 2;
 
