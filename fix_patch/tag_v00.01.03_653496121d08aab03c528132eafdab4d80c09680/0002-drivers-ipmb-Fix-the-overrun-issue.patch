@@ -1,7 +1,7 @@
 From 332f1e68b7c2f5ec08612942bcdd06af42f6f6a6 Mon Sep 17 00:00:00 2001
 From: tommy-huang <tommy_huang@aspeedtech.com>
 Date: Fri, 19 Nov 2021 18:24:24 +0800
-Subject: [PATCH] drivers:ipmb:Fix the overrun issue
+Subject: [PATCH 02/18] drivers:ipmb:Fix the overrun issue
 
 Change back into link list behavior.
 Fix the buffer overrun issue.
