@@ -35,8 +35,13 @@ bool pal_nvme_read(uint8_t sensor_num, int *reading) {
           return false;
         } else {
           NOT_AVAILABLE_retry_num += 1;
-          sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_READ_SUCCESS;
-          return true;
+          if (sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache != 0xFF){
+            sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_READ_SUCCESS;
+            return true;
+          } else{
+            sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_FAIL_TO_ACCESS;
+            return false;
+          }
         }
       } else if ( val == NVMe_TMPSNR_FAILURE ) {
         sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_UNSPECIFIED_ERROR;
