@@ -41,7 +41,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     IPMI_SDR_CMP_RETURN_UCT| IPMI_SDR_DEASSERT_MASK_UCT_LO| IPMI_SDR_DEASSERT_MASK_LCT_HI,    // deassert threshold reading mask
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
-    0x00,   // sensor unit
+    0x80,   // sensor unit
     IPMI_SENSOR_UNIT_DEGREE_C,   // base unit 
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
@@ -93,7 +93,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     IPMI_SDR_CMP_RETURN_UCT| IPMI_SDR_DEASSERT_MASK_UCT_LO| IPMI_SDR_DEASSERT_MASK_LCT_HI,    // deassert threshold reading mask
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
-    0x00,   // sensor unit
+    0x80,   // sensor unit
     IPMI_SENSOR_UNIT_DEGREE_C,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
@@ -145,7 +145,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     IPMI_SDR_CMP_RETURN_UCT| IPMI_SDR_DEASSERT_MASK_UCT_LO| IPMI_SDR_DEASSERT_MASK_LCT_HI,    // deassert threshold reading mask
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
-    0x00,   // sensor unit
+    0x80,   // sensor unit
     IPMI_SENSOR_UNIT_DEGREE_C,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
@@ -665,7 +665,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     IPMI_SDR_CMP_RETURN_UCT| IPMI_SDR_DEASSERT_MASK_UCT_LO| IPMI_SDR_DEASSERT_MASK_LCT_HI,    // deassert threshold reading mask
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
-    0x00,   // sensor unit
+    0x80,   // sensor unit
     IPMI_SENSOR_UNIT_DEGREE_C,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
@@ -769,7 +769,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     IPMI_SDR_CMP_RETURN_UCT| IPMI_SDR_DEASSERT_MASK_UCT_LO| IPMI_SDR_DEASSERT_MASK_LCT_HI,    // deassert threshold reading mask
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
-    0x00,   // sensor unit
+    0x80,   // sensor unit
     IPMI_SENSOR_UNIT_DEGREE_C,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
@@ -821,7 +821,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     IPMI_SDR_CMP_RETURN_UCT| IPMI_SDR_DEASSERT_MASK_UCT_LO| IPMI_SDR_DEASSERT_MASK_LCT_HI,    // deassert threshold reading mask
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
-    0x00,   // sensor unit
+    0x80,   // sensor unit
     IPMI_SENSOR_UNIT_DEGREE_C,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
@@ -873,7 +873,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     IPMI_SDR_CMP_RETURN_UCT| IPMI_SDR_DEASSERT_MASK_UCT_LO| IPMI_SDR_DEASSERT_MASK_LCT_HI,    // deassert threshold reading mask
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
-    0x00,   // sensor unit
+    0x80,   // sensor unit
     IPMI_SENSOR_UNIT_DEGREE_C,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
@@ -925,7 +925,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     IPMI_SDR_CMP_RETURN_UCT| IPMI_SDR_DEASSERT_MASK_UCT_LO| IPMI_SDR_DEASSERT_MASK_LCT_HI,    // deassert threshold reading mask
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
-    0x00,   // sensor unit
+    0x80,   // sensor unit
     IPMI_SENSOR_UNIT_DEGREE_C,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
@@ -977,7 +977,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     IPMI_SDR_CMP_RETURN_UCT| IPMI_SDR_DEASSERT_MASK_UCT_LO| IPMI_SDR_DEASSERT_MASK_LCT_HI,    // deassert threshold reading mask
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
-    0x00,   // sensor unit
+    0x80,   // sensor unit
     IPMI_SENSOR_UNIT_DEGREE_C,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
@@ -1029,7 +1029,7 @@ SDR_Full_sensor plat_sensor_table[] = {
     IPMI_SDR_CMP_RETURN_UCT| IPMI_SDR_DEASSERT_MASK_UCT_LO| IPMI_SDR_DEASSERT_MASK_LCT_HI,    // deassert threshold reading mask
     0x00,   // discrete reading mask/ settable
     IPMI_SDR_UCT_SETTABLE| IPMI_SDR_LCT_SETTABLE| IPMI_SDR_UCT_READABLE| IPMI_SDR_LCT_READABLE,   // threshold mask/ readable threshold mask
-    0x00,   // sensor unit
+    0x80,   // sensor unit
     IPMI_SENSOR_UNIT_DEGREE_C,   // base unit
     0x00,   // modifier unit
     IPMI_SDR_LINEAR_LINEAR,   // linearization
