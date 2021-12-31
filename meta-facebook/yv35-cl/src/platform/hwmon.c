@@ -189,18 +189,12 @@ void send_gpio_interrupt(uint8_t gpio_num)
   }
 }
 
-void enable_asd_gpio_interrupt() {
+void enable_PRDY_interrupt() {
   gpio_interrupt_conf(H_BMC_PRDY_BUF_N, GPIO_INT_EDGE_FALLING);
-  gpio_interrupt_conf(PWRGD_CPU_LVC3, GPIO_INT_EDGE_BOTH);
-  gpio_interrupt_conf(RST_PLTRST_BUF_N, GPIO_INT_EDGE_BOTH);
-  gpio_interrupt_conf(FM_DBP_PRESENT_N, GPIO_INT_EDGE_BOTH);
 }
 
-void disable_asd_gpio_interrupt() {
+void disable_PRDY_interrupt() {
   gpio_interrupt_conf(H_BMC_PRDY_BUF_N, GPIO_INT_DISABLE);
-  gpio_interrupt_conf(PWRGD_CPU_LVC3, GPIO_INT_DISABLE);
-  gpio_interrupt_conf(RST_PLTRST_BUF_N, GPIO_INT_DISABLE);
-  gpio_interrupt_conf(FM_DBP_PRESENT_N, GPIO_INT_DISABLE);
 }
 
 static void proc_fail_handler(void *arug0, void *arug1, void *arug2) {
