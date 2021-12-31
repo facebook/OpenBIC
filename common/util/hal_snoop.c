@@ -11,9 +11,10 @@ const struct device *snoop_dev;
 uint8_t *snoop_data;
 static uint8_t *snoop_read_buffer;
 int snoop_read_num = 0;
+static bool proc_postcode_ok = false;
 
 K_THREAD_STACK_DEFINE( snoop_thread , SNOOP_STACK_SIZE );
-struct k_thread snoop_thread_handler;;
+struct k_thread snoop_thread_handler;
 k_tid_t snoop_tid;
 
 struct k_mutex snoop_mutex;
@@ -39,6 +40,14 @@ void copy_snoop_read_buffer( uint8_t offset ,int size_num, uint8_t *buffer ){
   }
 }
 
+bool get_postcode_ok() {
+  return proc_postcode_ok;
+}
+
+void reset_postcode_ok() {
+  proc_postcode_ok = false;
+}
+
 void snoop_read(){
   int rc;
   snoop_read_buffer = malloc( sizeof(uint8_t) * SNOOP_MAX_LEN );
@@ -48,6 +57,7 @@ void snoop_read(){
   while (1) {
     rc = snoop_aspeed_read(snoop_dev, 0, snoop_data, true);
     if (rc == 0){
+      proc_postcode_ok = true;
       if ( ! k_mutex_lock(&snoop_mutex, K_MSEC(1000)) ){
         snoop_read_buffer[ snoop_read_num % SNOOP_MAX_LEN ] = *snoop_data;
         snoop_read_num++;
