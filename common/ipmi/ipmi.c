@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "cmsis_os2.h"
 #include "ipmi.h"
+#include "kcs.h"
 #include <string.h>
 #define IPMI_QUEUE_SIZE 5
 
@@ -168,6 +169,12 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_I2C_DEV_SCAN: // debug command
 		pal_OEM_1S_I2C_DEV_SCAN(msg);
 		break;
+	case CMD_OEM_1S_GET_BIC_STATUS:
+		pal_OEM_1S_GET_BIC_STATUS(msg);
+		break;
+	case CMD_OEM_1S_RESET_BIC:
+		pal_OEM_1S_RESET_BIC(msg);
+		break;
 	default:
 		printf("invalid OEM msg netfn: %x, cmd: %x\n", msg->netfn, msg->cmd);
 		msg->data_len = 0;
@@ -179,8 +186,9 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 
 ipmi_error IPMI_handler(void *arug0, void *arug1, void *arug2)
 {
-	uint8_t i;
+  uint8_t i;
   ipmi_msg_cfg msg_cfg;
+  uint8_t *kcs_buff;
 
   while(1) {
 
@@ -263,7 +271,34 @@ ipmi_error IPMI_handler(void *arug0, void *arug1, void *arug2)
       if (msg_cfg.buffer.InF_source == BMC_USB_IFs) {
         USB_write(&msg_cfg.buffer);
       } else if (msg_cfg.buffer.InF_source == HOST_KCS_IFs) {
-        ;
+        kcs_buff = malloc(KCS_buff_size * sizeof(uint8_t));
+        if ( kcs_buff == NULL ) { // allocate fail, retry allocate
+            k_msleep(10);
+            kcs_buff = malloc(KCS_buff_size * sizeof(uint8_t));
+            if ( kcs_buff == NULL ) {
+                printk("IPMI_handler: Fail to malloc for kcs_buff\n");
+                continue;
+            }
+        }
+        kcs_buff[0] = (msg_cfg.buffer.netfn + 1) << 2; // ipmi netfn response package
+        kcs_buff[1] = msg_cfg.buffer.cmd;
+        kcs_buff[2] = msg_cfg.buffer.completion_code;
+        if(msg_cfg.buffer.data_len) {
+            if ( msg_cfg.buffer.data_len <= (KCS_buff_size-3))
+                memcpy(&kcs_buff[3], msg_cfg.buffer.data, msg_cfg.buffer.data_len);
+            else
+                memcpy(&kcs_buff[3], msg_cfg.buffer.data, (KCS_buff_size-3));
+        }
+
+        if ( DEBUG_KCS ) {
+            printk("kcs from ipmi netfn %x, cmd %x, length %d, cc %x\n", kcs_buff[0], kcs_buff[1], msg_cfg.buffer.data_len, kcs_buff[2]);
+        }
+
+        kcs_write(kcs_buff, msg_cfg.buffer.data_len + 3);
+
+        if ( kcs_buff != NULL )
+            free(kcs_buff);
+
       } else {
         status = ipmb_send_response(&msg_cfg.buffer, IPMB_inf_index_map[msg_cfg.buffer.InF_source]);
         if (status != ipmb_error_success) {

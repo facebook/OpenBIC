@@ -47,6 +47,8 @@ void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg);
 void pal_OEM_1S_ASD_INIT(ipmi_msg *msg);
 void pal_OEM_1S_GET_SET_GPIO(ipmi_msg *msg);
 void pal_OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg);
+void pal_OEM_1S_GET_BIC_STATUS(ipmi_msg *msg);
+void pal_OEM_1S_RESET_BIC(ipmi_msg *msg);
 
 // init
 void pal_I2C_init(void);

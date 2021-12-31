@@ -71,8 +71,11 @@ bool add_sel_evt_record(addsel_msg_t *sel_msg) {
 }
 
 bool pal_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd) {
-  if ( (netfn == NETFN_OEM_1S_REQ) && (cmd == CMD_OEM_1S_FW_UPDATE) ) {
-    return 1;
+  if (netfn == NETFN_OEM_1S_REQ) {
+    if (  (cmd == CMD_OEM_1S_FW_UPDATE) ||
+          (cmd == CMD_OEM_1S_GET_BIC_STATUS) ||
+          (cmd == CMD_OEM_1S_RESET_BIC) )
+      return 1;
   }
 
   return 0;
@@ -1234,6 +1237,43 @@ void pal_OEM_1S_GET_POST_CODE(ipmi_msg *msg) {
     copy_snoop_read_buffer( offset, postcode_num, msg->data );
   }
   msg->data_len = postcode_num;
+  msg->completion_code = CC_SUCCESS;
+  return;
+}
+
+void pal_OEM_1S_GET_BIC_STATUS(ipmi_msg *msg) {
+  if (!msg){
+    printf("<error> pal_OEM_1S_GET_BIC_STATUS: parameter msg is NULL\n");
+    return;
+  }
+
+  if ( msg->data_len != 0 ){
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+  msg->data[0] = FIRMWARE_REVISION_1;
+  msg->data[1] = FIRMWARE_REVISION_2;
+
+  msg->data_len = 2;
+  msg->completion_code = CC_SUCCESS;
+  return;
+}
+
+void pal_OEM_1S_RESET_BIC(ipmi_msg *msg) {
+  if (!msg){
+    printf("<error> pal_OEM_1S_RESET_BIC: parameter msg is NULL\n");
+    return;
+  }
+
+  if ( msg->data_len != 0 ){
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+  submit_bic_warm_reset();
+
+  msg->data_len = 0;
   msg->completion_code = CC_SUCCESS;
   return;
 }
