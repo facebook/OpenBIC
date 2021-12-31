@@ -118,6 +118,9 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode) 
   if (read_mode == get_from_sensor) {
     status = sensor_read(sensor_num, reading);
     if (status) {
+      if( !access_check(sensor_num) ) { // double check access to avoid not accessible read at same moment status change
+        return SNR_NOT_ACCESSIBLE;
+      }
       return sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status;
     } else {
       printf("sensor[%x] read fail\n",sensor_num);
@@ -127,6 +130,9 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode) 
     if (sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status == SNR_READ_SUCCESS
         || sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status == SNR_READ_ACUR_SUCCESS) {
       *reading = sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache;
+      if( !access_check(sensor_num) ) { // double check access to avoid not accessible read at same moment status change
+        return SNR_NOT_ACCESSIBLE;
+      }
       return sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status;
     } else {
       sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache = sensor_fail;
