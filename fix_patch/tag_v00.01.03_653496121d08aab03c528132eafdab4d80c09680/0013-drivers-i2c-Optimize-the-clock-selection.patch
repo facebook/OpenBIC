@@ -1,0 +1,197 @@
+From c8cd767235534611047887f484947e5c7ece50be Mon Sep 17 00:00:00 2001
+From: Tommy Haung <tommy_huang@aspeedtech.com>
+Date: Thu, 16 Dec 2021 09:36:54 +0800
+Subject: [PATCH 13/18] drivers: i2c: Optimize the clock selection
+
+Update the i2c clock selection rule
+
+Signed-off-by: Tommy Haung <tommy_huang@aspeedtech.com>
+Change-Id: I6f2862e424edd0ceb511f5379ba2ae86ebbec502
+---
+ drivers/i2c/i2c_aspeed.c        | 56 +++++++++++++++++++++++--------
+ drivers/i2c/i2c_global_aspeed.c | 59 +++++++++++++++++++++++++++++----
+ 2 files changed, 95 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/i2c/i2c_aspeed.c b/drivers/i2c/i2c_aspeed.c
+index 374f0326ff..e45c1e892a 100644
+--- a/drivers/i2c/i2c_aspeed.c
++++ b/drivers/i2c/i2c_aspeed.c
+@@ -478,36 +478,64 @@ static uint32_t i2c_aspeed_select_clock(const struct device *dev)
+ 	int divider_ratio = 0;
+ 	uint32_t clk_div_reg;
+ 	int inc = 0;
++	unsigned long base_clk1;
++	unsigned long base_clk2;
++	unsigned long base_clk3;
+ 	unsigned long base_clk4;
+ 	uint32_t scl_low, scl_high;
+ 	uint32_t hl_ratio_term = 3;
+ 
+-	/*LOG_DBG("clk src %d, targe %d\n", config->clk_src, data->bus_frequency);*/
+ 	if (config->clk_div_mode) {
+ 		clk_div_reg = sys_read32(config->global_reg + ASPEED_I2CG_CLK_DIV);
++
++		base_clk1 = (config->clk_src * 10) /
++		((((clk_div_reg & 0xff) + 2) * 10) / 2);
++		base_clk2 = (config->clk_src * 10) /
++		(((((clk_div_reg >> 8) & 0xff) + 2) * 10) / 2);
++		base_clk3 = (config->clk_src * 10) /
++		(((((clk_div_reg >> 16) & 0xff) + 2) * 10) / 2);
+ 		base_clk4 = (config->clk_src * 10) /
+ 		(((((clk_div_reg >> 24) & 0xff) + 2) * 10) / 2);
+ 
+-		div = 4;
+-		divider_ratio = base_clk4 / data->bus_frequency;
+-		inc = 0;
+-		while ((divider_ratio + inc) > 32) {
+-			inc |= divider_ratio & 0x1;
+-			divider_ratio >>= 1;
+-			div++;
++		if ((config->clk_src / data->bus_frequency) <= 32) {
++			div = 0;
++			divider_ratio = config->clk_src / data->bus_frequency;
++		} else if ((base_clk1 / data->bus_frequency) <= 32) {
++			div = 1;
++			divider_ratio = base_clk1 / data->bus_frequency;
++		} else if ((base_clk2 / data->bus_frequency) <= 32) {
++			div = 2;
++			divider_ratio = base_clk2 / data->bus_frequency;
++		} else if ((base_clk3 / data->bus_frequency) <= 32) {
++			div = 3;
++			divider_ratio = base_clk3 / data->bus_frequency;
++		} else {
++			div = 4;
++			divider_ratio = base_clk4 / data->bus_frequency;
++			inc = 0;
++			while ((divider_ratio + inc) > 32) {
++				inc |= divider_ratio & 0x1;
++				divider_ratio >>= 1;
++				div++;
++			}
++			divider_ratio += inc;
+ 		}
+-		divider_ratio += inc;
+ 
+-		div &= 0xf;
++		LOG_DBG("div %d", div);
++		LOG_DBG("ratio %x", divider_ratio);
+ 
++		div &= 0xf;
+ 		scl_low = ((divider_ratio >> 1) - 1) & 0xf;
+ 		scl_high = (divider_ratio - scl_low - 2) & 0xf;
+ 
+-		if (data->bus_frequency == I2C_BITRATE_STANDARD)
+-			hl_ratio_term = 1;
++		/* modified the H/L ratio for spec request */
++		if (data->bus_frequency != I2C_BITRATE_STANDARD) {
++			scl_low += hl_ratio_term;
++			scl_high -= hl_ratio_term;
++		}
+ 
+-		scl_low += hl_ratio_term;
+-		scl_high -= hl_ratio_term;
++		LOG_DBG("scl_low %x", scl_low);
++		LOG_DBG("scl_high %x", scl_high);
+ 
+ 		/*Divisor : Base Clock : tCKHighMin : tCK High : tCK Low*/
+ 		ac_timing = ((scl_high-1) << 20) | (scl_high << 16) | (scl_low << 12) | (div);
+diff --git a/drivers/i2c/i2c_global_aspeed.c b/drivers/i2c/i2c_global_aspeed.c
+index 307fe3a11b..6a3a572349 100644
+--- a/drivers/i2c/i2c_global_aspeed.c
++++ b/drivers/i2c/i2c_global_aspeed.c
+@@ -29,24 +29,63 @@ LOG_MODULE_REGISTER(i2c_global);
+ 			REG_NEW_MODE |\
+ 			ISSUE_NAK_EMPTY)
+ 
+-#define CLK_DIV		0x03020100
+-
+ /* Device config */
+ struct i2c_global_config {
+ 	uintptr_t base; /* i2c controller base address */
++	const struct device *clock_dev;
+ 	const clock_control_subsys_t clk_id;
+ 	const reset_control_subsys_t rst_id;
++	uint32_t clk_src;
+ };
+ 
+-#define DEV_CFG(dev)				 \
+-	((const struct i2c_global_config *const) \
++#define DEV_CFG(dev)			 \
++	((struct i2c_global_config *) \
+ 	 (dev)->config)
+ 
++#define BASE_CLK_COUNT	4
++
++static uint32_t base_freq[BASE_CLK_COUNT] = {
++	20000000,	/* 20M */
++	10000000,	/* 10M */
++	3250000,	/* 3.25M */
++	1000000,	/* 1M */
++};
++
++/* I2C controller driver registration */
++static uint32_t i2c_get_new_clk_divider(uint32_t base_clk)
++{
++	uint32_t i, j, base_freq_loop, clk_divider = 0;
++
++	/* calculate clock divider */
++	for (i = 0; i < BASE_CLK_COUNT; i++) {
++		for (j = 0; j < 0xff ; j++) {
++			/*
++			 * j maps to div:
++			 * 0x00: div 1
++			 * 0x01: div 1.5
++			 * 0x02: div 2
++			 * 0x03: div 2.5
++			 * 0x04: div 3
++			 * ...
++			 * 0xFE: div 128
++			 * 0xFF: div 128.5
++			 */
++			base_freq_loop = base_clk * 2 / (j + 2);
++			if (base_freq_loop <= base_freq[i])
++				break;
++		}
++		LOG_DBG("i2c divider %d : 0x%x\n", i, j);
++		clk_divider |= (j << (i << 3));
++	}
++	return clk_divider;
++}
+ 
+ /* I2C controller driver registration */
+ static int i2c_global_init(const struct device *dev)
+ {
+-	uint32_t i2c_global_base = DEV_CFG(dev)->base;
++	struct i2c_global_config *config = DEV_CFG(dev);
++	uint32_t i2c_global_base = config->base;
++	uint32_t clk_divider = 0;
+ 
+ 	const struct device *reset_dev = device_get_binding(ASPEED_RST_CTRL_NAME);
+ 
+@@ -58,7 +97,14 @@ static int i2c_global_init(const struct device *dev)
+ 
+ 	/* set i2c global setting */
+ 	sys_write32(I2CG_SET, i2c_global_base + ASPEED_I2CG_CONTROL);
+-	sys_write32(CLK_DIV, i2c_global_base + ASPEED_I2CG_NEW_CLK_DIV);
++
++	/* calculate divider */
++	clock_control_get_rate(config->clock_dev, config->clk_id, &config->clk_src);
++	LOG_DBG("i2c global clk src %d\n", config->clk_src);
++
++	clk_divider = i2c_get_new_clk_divider(config->clk_src);
++	LOG_DBG("i2c clk divider %x\n", clk_divider);
++	sys_write32(clk_divider, i2c_global_base + ASPEED_I2CG_NEW_CLK_DIV);
+ 
+ 	return 0;
+ }
+@@ -67,6 +113,7 @@ static const struct i2c_global_config i2c_aspeed_config = {
+ 	.base = DT_REG_ADDR(DT_NODELABEL(i2c_gr)),
+ 	.clk_id = (clock_control_subsys_t)DT_INST_CLOCKS_CELL(0, clk_id),
+ 	.rst_id = (reset_control_subsys_t)DT_INST_RESETS_CELL(0, rst_id),
++	.clock_dev = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR(0)),
+ };
+ 
+ 
+-- 
+2.17.1
+

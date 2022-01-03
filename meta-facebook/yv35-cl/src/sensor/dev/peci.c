@@ -131,8 +131,10 @@ bool pal_peci_read(uint8_t sensor_num, int *reading) {
   // PECI_CC_RSP_SUCCESS
   if ( sensor_num == SENSOR_NUM_TEMP_CPU_MARGIN ) {
     val = ( ( 0xFFFF - ( (readBuf[2] << 8) | readBuf[1] ) ) >> 6 ) +1;
-    sensor_config[SnrNum_SnrCfg_map[SENSOR_NUM_TEMP_CPU]].cache = cpu_temp_tjmax - (cal_MBR(sensor_num,val) & 0xff);
-    sensor_config[SnrNum_SnrCfg_map[SENSOR_NUM_TEMP_CPU]].cache_status = SNR_READ_SUCCESS;
+    if ( get_tjmax ){
+      sensor_config[SnrNum_SnrCfg_map[SENSOR_NUM_TEMP_CPU]].cache = cpu_temp_tjmax - (cal_MBR(sensor_num,val) & 0xff);
+      sensor_config[SnrNum_SnrCfg_map[SENSOR_NUM_TEMP_CPU]].cache_status = SNR_READ_SUCCESS;
+    }
   } else if ( sensor_num == SENSOR_NUM_TEMP_CPU_TJMAX ) {
     val = readBuf[3];
     cpu_temp_tjmax = val;

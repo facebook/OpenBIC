@@ -1,0 +1,36 @@
+From 2f007d055c685b440bffeb1a89eb826a4929d28d Mon Sep 17 00:00:00 2001
+From: tommy-huang <tommy_huang@aspeedtech.com>
+Date: Fri, 19 Nov 2021 13:39:59 +0800
+Subject: [PATCH 01/18] drivers: i2c: Refine i2c interrupt
+
+Clear i2c isr first then trigger command.
+
+Signed-off-by: tommy-huang <tommy_huang@aspeedtech.com>
+Change-Id: Ia30bfebb3aab134d356ee66b7047b30d9ab7c53e
+---
+ drivers/i2c/i2c_aspeed.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/i2c/i2c_aspeed.c b/drivers/i2c/i2c_aspeed.c
+index f42b1408fc..b8222da0b6 100644
+--- a/drivers/i2c/i2c_aspeed.c
++++ b/drivers/i2c/i2c_aspeed.c
+@@ -1254,6 +1254,7 @@ int aspeed_i2c_slave_irq(const struct device *dev)
+ 
+ 	if (AST_I2CS_PKT_DONE & sts) {
+ 		sts &= ~(AST_I2CS_PKT_DONE | AST_I2CS_PKT_ERROR);
++		sys_write32(AST_I2CS_PKT_DONE, i2c_base + AST_I2CS_ISR);
+ 		switch (sts) {
+ 		case AST_I2CS_SLAVE_MATCH | AST_I2CS_STOP:
+ 			LOG_DBG("S : Sw | P\n");
+@@ -1570,7 +1571,6 @@ int aspeed_i2c_slave_irq(const struct device *dev)
+ 			break;
+ 
+ 		}
+-		sys_write32(AST_I2CS_PKT_DONE, i2c_base + AST_I2CS_ISR);
+ 		ret = 1;
+ 	} else {
+ 		LOG_DBG("byte mode\n");
+-- 
+2.17.1
+

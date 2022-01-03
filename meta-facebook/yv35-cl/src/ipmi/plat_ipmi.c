@@ -22,7 +22,7 @@
 
 bool add_sel_evt_record(addsel_msg_t *sel_msg) {
   ipmb_error status;
-  ipmi_msg *msg;
+  ipmi_msg msg;
   uint8_t system_event_record = 0x02; // IPMI spec definition
   uint8_t evt_msg_version = 0x04; // IPMI spec definition
   static uint16_t record_id = 0x1;
@@ -32,35 +32,33 @@ bool add_sel_evt_record(addsel_msg_t *sel_msg) {
     record_id = 0x1;
   }
 
-  msg = (ipmi_msg*)malloc(sizeof(ipmi_msg));
-  memset(msg, 0, sizeof(ipmi_msg));
+  memset(&msg, 0, sizeof(ipmi_msg));
 
-  msg->data_len = 16;
-  msg->InF_source = Self_IFs;
-  msg->InF_target = BMC_IPMB_IFs;
-  msg->netfn = NETFN_STORAGE_REQ;
-  msg->cmd = CMD_STORAGE_ADD_SEL;
+  msg.data_len = 16;
+  msg.InF_source = Self_IFs;
+  msg.InF_target = BMC_IPMB_IFs;
+  msg.netfn = NETFN_STORAGE_REQ;
+  msg.cmd = CMD_STORAGE_ADD_SEL;
 
-  msg->data[0] = (record_id & 0xFF);                   // record id byte 0, lsb
-  msg->data[1] = ( (record_id >> 8) & 0xFF);           // record id byte 1
-  msg->data[2] = system_event_record;                  // record type
-  msg->data[3] = 0x00;                                 // timestamp, bmc would fill up for bic
-  msg->data[4] = 0x00;                                 // timestamp, bmc would fill up for bic
-  msg->data[5] = 0x00;                                 // timestamp, bmc would fill up for bic
-  msg->data[6] = 0x00;                                 // timestamp, bmc would fill up for bic
-  msg->data[7] = (Self_I2C_ADDRESS << 1);              // generator id
-  msg->data[8] = 0x00;                                // generator id
-  msg->data[9] = evt_msg_version;                     // event message format version
-  msg->data[10] = 0x00;                                // sensor type, TBD
-  msg->data[11] = sel_msg->snr_name;                   // sensor name
-  msg->data[12] = sel_msg->evt_type;                   // sensor type
-  msg->data[13] = sel_msg->evt_data1;                  // sensor data 1
-  msg->data[14] = sel_msg->evt_data2;                  // sensor data 2
-  msg->data[15] = sel_msg->evt_data3;                  // sensor data 3
+  msg.data[0] = (record_id & 0xFF);                   // record id byte 0, lsb
+  msg.data[1] = ( (record_id >> 8) & 0xFF);           // record id byte 1
+  msg.data[2] = system_event_record;                  // record type
+  msg.data[3] = 0x00;                                 // timestamp, bmc would fill up for bic
+  msg.data[4] = 0x00;                                 // timestamp, bmc would fill up for bic
+  msg.data[5] = 0x00;                                 // timestamp, bmc would fill up for bic
+  msg.data[6] = 0x00;                                 // timestamp, bmc would fill up for bic
+  msg.data[7] = (Self_I2C_ADDRESS << 1);              // generator id
+  msg.data[8] = 0x00;                                 // generator id
+  msg.data[9] = evt_msg_version;                      // event message format version
+  msg.data[10] = sel_msg->snr_type;                   // sensor type, TBD
+  msg.data[11] = sel_msg->snr_number;                 // sensor number
+  msg.data[12] = sel_msg->evt_type;                   // event dir/event type
+  msg.data[13] = sel_msg->evt_data1;                  // sensor data 1
+  msg.data[14] = sel_msg->evt_data2;                  // sensor data 2
+  msg.data[15] = sel_msg->evt_data3;                  // sensor data 3
   record_id++;
 
-  status = ipmb_read(msg, IPMB_inf_index_map[msg->InF_target]);
-  free(msg);
+  status = ipmb_read(&msg, IPMB_inf_index_map[msg.InF_target]);
   if (status == ipmb_error_failure) {
     printf("Fail to post msg to txqueue for addsel\n");
     return false;
@@ -73,8 +71,11 @@ bool add_sel_evt_record(addsel_msg_t *sel_msg) {
 }
 
 bool pal_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd) {
-  if ( (netfn == NETFN_OEM_1S_REQ) && (cmd == CMD_OEM_1S_FW_UPDATE) ) {
-    return 1;
+  if (netfn == NETFN_OEM_1S_REQ) {
+    if (  (cmd == CMD_OEM_1S_FW_UPDATE) ||
+          (cmd == CMD_OEM_1S_GET_BIC_STATUS) ||
+          (cmd == CMD_OEM_1S_RESET_BIC) )
+      return 1;
   }
 
   return 0;
@@ -1158,11 +1159,11 @@ void pal_OEM_1S_ASD_INIT(ipmi_msg *msg) {
   }
 
   if (msg->data[0] == 0x01) {
-    enable_asd_gpio_interrupt();
+    enable_PRDY_interrupt();
   } else if (msg->data[0] == 0xff) {
-    disable_asd_gpio_interrupt();
+    disable_PRDY_interrupt();
   } else {
-    disable_asd_gpio_interrupt();
+    disable_PRDY_interrupt();
     msg->completion_code = CC_INVALID_DATA_FIELD;
     return;
   }
@@ -1236,6 +1237,43 @@ void pal_OEM_1S_GET_POST_CODE(ipmi_msg *msg) {
     copy_snoop_read_buffer( offset, postcode_num, msg->data );
   }
   msg->data_len = postcode_num;
+  msg->completion_code = CC_SUCCESS;
+  return;
+}
+
+void pal_OEM_1S_GET_BIC_STATUS(ipmi_msg *msg) {
+  if (!msg){
+    printf("<error> pal_OEM_1S_GET_BIC_STATUS: parameter msg is NULL\n");
+    return;
+  }
+
+  if ( msg->data_len != 0 ){
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+  msg->data[0] = FIRMWARE_REVISION_1;
+  msg->data[1] = FIRMWARE_REVISION_2;
+
+  msg->data_len = 2;
+  msg->completion_code = CC_SUCCESS;
+  return;
+}
+
+void pal_OEM_1S_RESET_BIC(ipmi_msg *msg) {
+  if (!msg){
+    printf("<error> pal_OEM_1S_RESET_BIC: parameter msg is NULL\n");
+    return;
+  }
+
+  if ( msg->data_len != 0 ){
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+  submit_bic_warm_reset();
+
+  msg->data_len = 0;
   msg->completion_code = CC_SUCCESS;
   return;
 }

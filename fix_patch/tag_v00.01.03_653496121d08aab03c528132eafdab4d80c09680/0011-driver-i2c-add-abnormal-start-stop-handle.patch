@@ -1,0 +1,44 @@
+From b39607f47ca83495a560dc8e5efd0b2ac9d1bca3 Mon Sep 17 00:00:00 2001
+From: tommy-huang <tommy_huang@aspeedtech.com>
+Date: Thu, 9 Dec 2021 19:22:55 +0800
+Subject: [PATCH 11/18] driver: i2c: add abnormal start / stop handle
+
+Add abnormal start / stop handle.
+
+Signed-off-by: tommy-huang <tommy_huang@aspeedtech.com>
+Change-Id: I1a13fbd31323014233d4f3f2a9b3a869f9b15124
+---
+ drivers/i2c/i2c_aspeed.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/i2c/i2c_aspeed.c b/drivers/i2c/i2c_aspeed.c
+index 2f3345e1e7..d6a1332db2 100644
+--- a/drivers/i2c/i2c_aspeed.c
++++ b/drivers/i2c/i2c_aspeed.c
+@@ -637,10 +637,11 @@ static int i2c_aspeed_configure(const struct device *dev,
+ 	/*Set interrupt generation of I2C master controller*/
+ 	if (config->smbus_alert) {
+ 		sys_write32(AST_I2CM_PKT_DONE | AST_I2CM_BUS_RECOVER |
+-			    AST_I2CM_SMBUS_ALT,
++			    AST_I2CM_ABNORMAL | AST_I2CM_SMBUS_ALT,
+ 			    i2c_base + AST_I2CM_IER);
+ 	} else {
+-		sys_write32(AST_I2CM_PKT_DONE | AST_I2CM_BUS_RECOVER,
++		sys_write32(AST_I2CM_PKT_DONE | AST_I2CM_BUS_RECOVER |
++			    AST_I2CM_ABNORMAL,
+ 			    i2c_base + AST_I2CM_IER);
+ 	}
+ 
+@@ -1131,7 +1132,8 @@ int aspeed_i2c_master_irq(const struct device *dev)
+ 	if (data->cmd_err) {
+ 		LOG_DBG("received error interrupt: 0x%02x\n",
+ 			sts);
+-		sys_write32(AST_I2CM_PKT_DONE, i2c_base + AST_I2CM_ISR);
++		sys_write32(AST_I2CM_PKT_DONE | AST_I2CM_PKT_ERROR,
++			i2c_base + AST_I2CM_ISR);
+ 		k_sem_give(&data->sync_sem);
+ 		return 1;
+ 	}
+-- 
+2.17.1
+
