@@ -271,9 +271,7 @@ void pal_SENSOR_GET_SENSOR_READING(ipmi_msg *msg) {
 void pal_OEM_1S_MSG_OUT(ipmi_msg *msg) {
   uint8_t  target_IF;
   ipmb_error status;
-  ipmi_msg *bridge_msg = (ipmi_msg*)malloc(sizeof(ipmi_msg));
-
-  memset(bridge_msg, 0, sizeof(ipmi_msg));
+  ipmi_msg *bridge_msg;
 
   if (msg->completion_code != CC_INVALID_IANA) {
     msg->completion_code = CC_SUCCESS;
@@ -291,29 +289,35 @@ void pal_OEM_1S_MSG_OUT(ipmi_msg *msg) {
   }
 
   if (msg->completion_code == CC_SUCCESS) { // only send to target while msg is valid
-    if (DEBUG_IPMI) {
-      printf("bridge targetIf %x, len %d, netfn %x, cmd %x\n", target_IF, msg->data_len, msg->data[1] >> 2, msg->data[2]);
+    bridge_msg = (ipmi_msg*)malloc(sizeof(ipmi_msg));
+    if (bridge_msg == NULL) {
+      msg->completion_code = CC_OUT_OF_SPACE;
+    } else {
+      memset(bridge_msg, 0, sizeof(ipmi_msg));
+
+      if (DEBUG_IPMI) {
+        printf("bridge targetIf %x, len %d, netfn %x, cmd %x\n", target_IF, msg->data_len, msg->data[1] >> 2, msg->data[2]);
+      }
+
+      bridge_msg->data_len = msg->data_len -3;
+      bridge_msg->seq_source = msg->seq_source;
+      bridge_msg->InF_target = msg->data[0];
+      bridge_msg->InF_source = msg->InF_source;
+      bridge_msg->netfn = msg->data[1] >> 2;
+      bridge_msg->cmd = msg->data[2];
+
+      if (bridge_msg->data_len != 0) {
+        memcpy(&bridge_msg->data[0], &msg->data[3], bridge_msg->data_len * sizeof(msg->data[0]));
+      }
+
+      status = ipmb_send_request(bridge_msg, IPMB_inf_index_map[target_IF]);
+
+      if (status != ipmb_error_success) {
+        printf("OEM_MSG_OUT send IPMB req fail status: %x",status);
+        msg->completion_code = CC_BRIDGE_MSG_ERR;
+      }
+      free(bridge_msg);
     }
-
-    bridge_msg->data_len = msg->data_len -3;
-    bridge_msg->seq_source = msg->seq_source;
-    bridge_msg->InF_target = msg->data[0];
-    bridge_msg->InF_source = msg->InF_source;
-    bridge_msg->netfn = msg->data[1] >> 2;
-    bridge_msg->cmd = msg->data[2];
-
-    if (bridge_msg->data_len != 0) {
-      memcpy(&bridge_msg->data[0], &msg->data[3], bridge_msg->data_len * sizeof(msg->data[0]));
-    }
-
-    status = ipmb_send_request(bridge_msg, IPMB_inf_index_map[target_IF]);
-
-    if (status != ipmb_error_success) {
-      printf("OEM_MSG_OUT send IPMB req fail status: %x",status);
-      msg->completion_code = CC_BRIDGE_MSG_ERR;
-    }
-
-    free(bridge_msg);
   }
 
   if (msg->completion_code != CC_SUCCESS) { // Return to source while data is invalid or sending req to Tx task fail
