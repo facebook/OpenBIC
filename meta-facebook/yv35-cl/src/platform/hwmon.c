@@ -103,6 +103,7 @@ void ISR_PWRGD_CPU() {
     }
     reset_kcs_ok();
     reset_postcode_ok();
+    clear_unaccessible_sensor_cache();
   }
   send_gpio_interrupt(PWRGD_CPU_LVC3);
 }

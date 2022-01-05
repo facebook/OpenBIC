@@ -1136,6 +1136,7 @@ void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg) {
       msg->completion_code = CC_SUCCESS;
       break;
     case SNR_NOT_ACCESSIBLE:
+    case SNR_INIT_STATUS:
       msg->data[0] = 0x00;
       msg->data[1] = 0x00;
       msg->data[2] = ( snr_report_status | 0x20 ); // notice BMC about sensor temporary in not accessible status
