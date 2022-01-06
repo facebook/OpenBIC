@@ -15,8 +15,8 @@ static bool bic_class = sys_class_1;
 static bool is_1ou_present = 0;
 static bool is_2ou_present = 0;
 
-#define PROC_FAIL_STACK_SIZE 1024
-#define CATERR_THREAD_STACK_SIZE 1024
+#define PROC_FAIL_STACK_SIZE 2000
+#define CATERR_THREAD_STACK_SIZE 2000
 
 #define PROC_FAIL_START_DELAY_SECOND 10
 #define CATERR_START_DELAY_SECOND 2
