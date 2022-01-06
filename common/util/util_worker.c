@@ -56,17 +56,24 @@ static void work_handler(struct k_work *item) {
   free(work_job);
 }
 
+/* Get number of works in worker now.
+ *
+ * @retval number of works
+ */
 uint8_t get_work_count() {
   return work_count;
 }
 
 /* Attempt to add new work to worker.
+ *
+ * @param job pointer to the worker_job to be added
+ *
  * @retval 1 if successfully queued.
  * @retval -1 if work queue is full.
- * @retval -2 if memory allocate fail.
+ * @retval -2 if memory allocation fail.
  * @retval -3 if mutex lock fail.
  */
-int add_work(worker_job job) {
+int add_work(worker_job *job) {
   if (work_count >= MAX_WORK_COUNT) {
     printk("add_work work queue full\n");
     return -1;
@@ -81,11 +88,11 @@ int add_work(worker_job job) {
   }
   memset(new_job, 0, sizeof(work_info));
 
-  new_job->fn = job.fn;
-  new_job->ptr_arg = job.ptr_arg;
-  new_job->ui32_arg = job.ui32_arg;
-  if (job.name != NULL) {
-    snprintf(new_job->name, sizeof(new_job->name), "%s", job.name);
+  new_job->fn = job->fn;
+  new_job->ptr_arg = job->ptr_arg;
+  new_job->ui32_arg = job->ui32_arg;
+  if (job->name != NULL) {
+    snprintf(new_job->name, sizeof(new_job->name), "%s", job->name);
   }
 
   if (k_mutex_lock(&mutex_use_count, K_MSEC(1000))) {
@@ -94,16 +101,16 @@ int add_work(worker_job job) {
     return -3;
   }
 
-  if (job.delay_ms == 0) {
+  if (job->delay_ms == 0) {  /* no need to be delayed */
     k_work_init(&(new_job->work.normal_work), work_handler);
     ret = k_work_submit_to_queue(&worker_work_q, &(new_job->work.normal_work));
     if (ret != 1) {  /* queued fail */
       printk("add_work add work to queue fail\n");
       goto error;
     }
-  } else {
+  } else {  /* need to be delayed */
     k_work_init_delayable(&(new_job->work.delay_work), work_handler);
-    ret = k_work_schedule_for_queue(&worker_work_q, &(new_job->work.delay_work), K_MSEC(job.delay_ms));
+    ret = k_work_schedule_for_queue(&worker_work_q, &(new_job->work.delay_work), K_MSEC(job->delay_ms));
     if (ret != 1) {  /* queued fail */
       printk("add_work add work to queue fail\n");
       goto error;
@@ -119,6 +126,11 @@ error:
   return ret;
 }
 
+/* Initialize worker
+ *
+ * Should call this function to initialize worker before use other APIs.
+ * This function initialize a workqueue and mutex.
+ */
 void init_worker() {
   k_work_queue_start(&worker_work_q, worker_stack_area, K_THREAD_STACK_SIZEOF(worker_stack_area), WORKER_PRIORITY, NULL);
   k_thread_name_set(&worker_work_q.thread, "util_worker");
