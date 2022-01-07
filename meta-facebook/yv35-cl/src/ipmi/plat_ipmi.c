@@ -32,30 +32,34 @@ bool add_sel_evt_record(addsel_msg_t *sel_msg) {
     record_id = 0x1;
   }
 
-  memset(&msg, 0, sizeof(ipmi_msg));
+  msg = (ipmi_msg*)malloc(sizeof(ipmi_msg));
+  if (msg == NULL) {
+    return;
+  }
+  memset(msg, 0, sizeof(ipmi_msg));
 
-  msg.data_len = 16;
-  msg.InF_source = Self_IFs;
-  msg.InF_target = BMC_IPMB_IFs;
-  msg.netfn = NETFN_STORAGE_REQ;
-  msg.cmd = CMD_STORAGE_ADD_SEL;
+  msg->data_len = 16;
+  msg->InF_source = Self_IFs;
+  msg->InF_target = BMC_IPMB_IFs;
+  msg->netfn = NETFN_STORAGE_REQ;
+  msg->cmd = CMD_STORAGE_ADD_SEL;
 
-  msg.data[0] = (record_id & 0xFF);                   // record id byte 0, lsb
-  msg.data[1] = ( (record_id >> 8) & 0xFF);           // record id byte 1
-  msg.data[2] = system_event_record;                  // record type
-  msg.data[3] = 0x00;                                 // timestamp, bmc would fill up for bic
-  msg.data[4] = 0x00;                                 // timestamp, bmc would fill up for bic
-  msg.data[5] = 0x00;                                 // timestamp, bmc would fill up for bic
-  msg.data[6] = 0x00;                                 // timestamp, bmc would fill up for bic
-  msg.data[7] = (Self_I2C_ADDRESS << 1);              // generator id
-  msg.data[8] = 0x00;                                 // generator id
-  msg.data[9] = evt_msg_version;                      // event message format version
-  msg.data[10] = sel_msg->snr_type;                   // sensor type, TBD
-  msg.data[11] = sel_msg->snr_number;                 // sensor number
-  msg.data[12] = sel_msg->evt_type;                   // event dir/event type
-  msg.data[13] = sel_msg->evt_data1;                  // sensor data 1
-  msg.data[14] = sel_msg->evt_data2;                  // sensor data 2
-  msg.data[15] = sel_msg->evt_data3;                  // sensor data 3
+  msg->data[0] = (record_id & 0xFF);                   // record id byte 0, lsb
+  msg->data[1] = ( (record_id >> 8) & 0xFF);           // record id byte 1
+  msg->data[2] = system_event_record;                  // record type
+  msg->data[3] = 0x00;                                 // timestamp, bmc would fill up for bic
+  msg->data[4] = 0x00;                                 // timestamp, bmc would fill up for bic
+  msg->data[5] = 0x00;                                 // timestamp, bmc would fill up for bic
+  msg->data[6] = 0x00;                                 // timestamp, bmc would fill up for bic
+  msg->data[7] = (Self_I2C_ADDRESS << 1);              // generator id
+  msg->data[8] = 0x00;                                // generator id
+  msg->data[9] = evt_msg_version;                     // event message format version
+  msg->data[10] = 0x00;                                // sensor type, TBD
+  msg->data[11] = sel_msg->snr_name;                   // sensor name
+  msg->data[12] = sel_msg->evt_type;                   // sensor type
+  msg->data[13] = sel_msg->evt_data1;                  // sensor data 1
+  msg->data[14] = sel_msg->evt_data2;                  // sensor data 2
+  msg->data[15] = sel_msg->evt_data3;                  // sensor data 3
   record_id++;
 
   status = ipmb_read(&msg, IPMB_inf_index_map[msg.InF_target]);
@@ -212,7 +216,7 @@ void pal_APP_GET_SELFTEST_RESULTS(ipmi_msg *msg) {
     return;
   }
 
-  uint8_t test_result;
+  uint8_t test_result = 0;
   // CannotAccessSel
   test_result = (test_result | GET_TEST_RESULT) << 1;
   // CannotAccessSdrr
@@ -376,7 +380,7 @@ void pal_STORAGE_GET_FRUID_INFO(ipmi_msg *msg) {
 }
 
 void pal_STORAGE_READ_FRUID_DATA(ipmi_msg *msg) {
-  uint8_t status;  
+  uint8_t status;
   EEPROM_ENTRY fru_entry;
 
   if (msg->data_len != 4) {
@@ -458,7 +462,7 @@ void pal_STORAGE_WRITE_FRUID_DATA(ipmi_msg *msg) {
       msg->completion_code = CC_UNSPECIFIED_ERROR;
       break;
   }
-  
+
   return;
 }
 
@@ -474,7 +478,7 @@ void pal_STORAGE_RSV_SDR(ipmi_msg *msg) {
   msg->data[0] = RSV_ID & 0xFF;
   msg->data[1] = (RSV_ID >> 8) & 0xFF;
   msg->data_len = 2;
-  msg->completion_code = CC_SUCCESS;  
+  msg->completion_code = CC_SUCCESS;
 
   return;
 }
@@ -489,8 +493,8 @@ void pal_STORAGE_GET_SDR(ipmi_msg *msg) {
   record_ID = (msg->data[3] << 8) | msg->data[2];
   offset = msg->data[4];
   req_len = msg->data[5];
-   
- 
+
+
   if (msg->data_len != 6) {
     msg->completion_code = CC_INVALID_LENGTH;
     return;
@@ -515,7 +519,7 @@ void pal_STORAGE_GET_SDR(ipmi_msg *msg) {
     msg->completion_code = CC_PARAM_OUT_OF_RANGE;
     return;
   }
-  
+
   next_record_ID = SDR_get_record_ID(record_ID);
   msg->data[0] = next_record_ID & 0xFF;
   msg->data[1] = (next_record_ID >> 8) & 0xFF;
@@ -526,7 +530,7 @@ void pal_STORAGE_GET_SDR(ipmi_msg *msg) {
   msg->data_len = req_len + 2; // return next record ID + sdr data
   msg->completion_code = CC_SUCCESS;
 
-  return;  
+  return;
 }
 
 void pal_SENSOR_GET_SENSOR_READING(ipmi_msg *msg) {
@@ -628,7 +632,7 @@ void pal_OEM_SENSOR_READ(ipmi_msg *msg) {
 void pal_OEM_1S_MSG_OUT(ipmi_msg *msg) {
   uint8_t  target_IF;
   ipmb_error status;
-  ipmi_msg *bridge_msg;
+  ipmi_msg *bridge_msg = NULL;
 
   if (msg->completion_code != CC_INVALID_IANA) {
     msg->completion_code = CC_SUCCESS;
@@ -777,7 +781,7 @@ void pal_OEM_1S_GET_SET_GPIO(ipmi_msg *msg) {
         gpio_conf(gpio_num, GPIO_INPUT);
       }
       msg->data[0] = gpio_num;
-      msg->data[1] = msg->data[2]; 
+      msg->data[1] = msg->data[2];
       completion_code = CC_SUCCESS;
     }
   } while(0);
@@ -815,6 +819,10 @@ void pal_OEM_1S_PECIaccess(ipmi_msg *msg) {
   u16Param = (u16Param << 8) + msg->data[6];
   readBuf = (uint8_t *)malloc(sizeof(uint8_t) * u8ReadLen);
   writeBuf = (uint8_t *)malloc(sizeof(uint8_t) * u8WriteLen);
+  if ((readBuf == NULL) || (writeBuf == NULL)) {
+    msg->completion_code = CC_OUT_OF_SPACE;
+    return;
+  }
   memcpy(&writeBuf[0], &msg->data[4], u8WriteLen);
 
   if (cmd == PECI_RD_PKG_CFG0_CMD) {
@@ -988,7 +996,10 @@ void pal_OEM_1S_GET_FW_VERSION(ipmi_msg *msg) {
       ipmb_error status;
       ipmi_msg *bridge_msg;
       bridge_msg = (ipmi_msg*)malloc(sizeof(ipmi_msg));
-
+      if (bridge_msg == NULL) {
+        msg->completion_code = CC_OUT_OF_SPACE;
+        return;
+      }
       bridge_msg->data_len = 0;
       bridge_msg->seq_source = 0xff;
       bridge_msg->InF_source = Self_IFs;
@@ -1112,7 +1123,7 @@ void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg) {
     case SNR_READ_SUCCESS:
       msg->data[0] = reading & 0xff;
       msg->data[1] = 0x00;
-      msg->data[2] = snr_report_status; 
+      msg->data[2] = snr_report_status;
       msg->data_len = 3;
       msg->completion_code = CC_SUCCESS;
       break;
