@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <sys/printk.h>
 #include <device.h>
-#include "cmsis_os.h"
 #include "hal_snoop.h"
 
 const struct device *snoop_dev;
@@ -86,7 +85,7 @@ void snoop_start_thread(){
   snoop_tid = k_thread_create(&snoop_thread_handler, snoop_thread,
                               K_THREAD_STACK_SIZEOF(snoop_thread),
                               snoop_read, NULL, NULL, NULL,
-                              osPriorityBelowNormal, 0, K_NO_WAIT);
+                              CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
   k_thread_name_set(&snoop_thread_handler, "snoop_thread");
 }
 

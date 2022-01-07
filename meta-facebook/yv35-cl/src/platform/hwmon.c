@@ -4,7 +4,6 @@
 #include "plat_ipmi.h"
 #include "hal_snoop.h"
 #include "kcs.h"
-#include "cmsis_os2.h"
 #include "libipmi.h"
 #include "sensor_def.h"
 #include "plat_def.h"
@@ -14,6 +13,8 @@ static bool is_post_complete = 0;
 static bool bic_class = sys_class_1;
 static bool is_1ou_present = 0;
 static bool is_2ou_present = 0;
+static uint8_t card_type_1ou = 0;
+static uint8_t card_type_2ou = 0;
 
 #define PROC_FAIL_STACK_SIZE 2000
 #define CATERR_THREAD_STACK_SIZE 2000
@@ -57,7 +58,7 @@ void ISR_PWRGD_CPU() {
     proc_fail_tid = k_thread_create(&proc_fail_thread_handler, proc_fail_thread,
                                     K_THREAD_STACK_SIZEOF(proc_fail_thread),
                                     proc_fail_handler, NULL, NULL, NULL,
-                                    osPriorityBelowNormal, 0, K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
+                                    CONFIG_MAIN_THREAD_PRIORITY, 0, K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
     k_thread_name_set(&proc_fail_thread_handler, "proc_fail_thread");
   } else {
     if (proc_fail_tid != NULL) {
@@ -82,7 +83,7 @@ void ISR_CATERR() {
     CatErr_tid = k_thread_create(&CatErr_thread_handler, CatErr_thread,
                                 K_THREAD_STACK_SIZEOF(CatErr_thread),
                                 CatErr_handler, NULL, NULL, NULL,
-                                osPriorityBelowNormal, 0, K_SECONDS(CATERR_START_DELAY_SECOND));
+                                CONFIG_MAIN_THREAD_PRIORITY, 0, K_SECONDS(CATERR_START_DELAY_SECOND));
     k_thread_name_set(&CatErr_thread_handler, "CatErr_thread");
   }
 }
@@ -130,6 +131,10 @@ bool get_post_status() {
   return is_post_complete;
 }
 
+uint8_t get_2ou_cardtype() {
+  return card_type_2ou;
+}
+
 void set_sys_config() {
   I2C_MSG i2c_msg;
   uint8_t retry = 3;
@@ -159,11 +164,27 @@ void set_sys_config() {
       if ( (i2c_msg.data[0] & 0x10) != bic_class ) {
         printk("Set class type %x but read %x\n", bic_class, (i2c_msg.data[0] & 0x10));
       }
-    }else {
+    } else {
       printk("Read expansion present from CPLD error\n");
     }
+  }
+  printk( "bic class type : %d  1ou present status : %d  2ou present status : %d\n" , bic_class+1 , is_1ou_present , is_2ou_present );
 
-    printk( "bic class type : %d  1ou present status : %d  2ou present status : %d\n" , bic_class+1 , is_1ou_present , is_2ou_present );
+  if ( is_2ou_present ) {
+    i2c_msg.data[0] = 0x6;
+    if ( !i2c_master_read(&i2c_msg, retry) ) {
+      if ( (i2c_msg.data[0] == type_2ou_dpv2) ) {
+        card_type_2ou = type_2ou_dpv2;
+      } else if (i2c_msg.data[0] == type_2ou_spe) {
+        card_type_2ou = type_2ou_spe;
+      } else if (i2c_msg.data[0] == type_2ou_exp) {
+        card_type_2ou = type_2ou_exp;
+      } else if (i2c_msg.data[0] == type_2ou_dpv2_8) { // in case the SKU exist
+        card_type_2ou = type_2ou_dpv2_8;
+      } else if (i2c_msg.data[0] == type_2ou_dpv2_16) { // in case the SKU exist
+        card_type_2ou = type_2ou_dpv2_16;
+      }
+    }
   }
 }
 
