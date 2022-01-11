@@ -22,7 +22,7 @@
 
 bool add_sel_evt_record(addsel_msg_t *sel_msg) {
   ipmb_error status;
-  ipmi_msg msg;
+  ipmi_msg *msg;
   uint8_t system_event_record = 0x02; // IPMI spec definition
   uint8_t evt_msg_version = 0x04; // IPMI spec definition
   static uint16_t record_id = 0x1;
@@ -34,7 +34,8 @@ bool add_sel_evt_record(addsel_msg_t *sel_msg) {
 
   msg = (ipmi_msg*)malloc(sizeof(ipmi_msg));
   if (msg == NULL) {
-    return;
+    printf("add_sel_evt_record malloc fail\n");
+    return false;
   }
   memset(msg, 0, sizeof(ipmi_msg));
 
@@ -52,17 +53,18 @@ bool add_sel_evt_record(addsel_msg_t *sel_msg) {
   msg->data[5] = 0x00;                                 // timestamp, bmc would fill up for bic
   msg->data[6] = 0x00;                                 // timestamp, bmc would fill up for bic
   msg->data[7] = (Self_I2C_ADDRESS << 1);              // generator id
-  msg->data[8] = 0x00;                                // generator id
-  msg->data[9] = evt_msg_version;                     // event message format version
-  msg->data[10] = 0x00;                                // sensor type, TBD
-  msg->data[11] = sel_msg->snr_name;                   // sensor name
-  msg->data[12] = sel_msg->evt_type;                   // sensor type
+  msg->data[8] = 0x00;                                 // generator id
+  msg->data[9] = evt_msg_version;                      // event message format version
+  msg->data[10] = sel_msg->snr_type;                   // sensor type, TBD
+  msg->data[11] = sel_msg->snr_number;                 // sensor number
+  msg->data[12] = sel_msg->evt_type;                   // event dir/event type
   msg->data[13] = sel_msg->evt_data1;                  // sensor data 1
   msg->data[14] = sel_msg->evt_data2;                  // sensor data 2
   msg->data[15] = sel_msg->evt_data3;                  // sensor data 3
   record_id++;
 
-  status = ipmb_read(&msg, IPMB_inf_index_map[msg.InF_target]);
+  status = ipmb_read(msg, IPMB_inf_index_map[msg->InF_target]);
+  free(msg);
   if (status == ipmb_error_failure) {
     printf("Fail to post msg to txqueue for addsel\n");
     return false;
