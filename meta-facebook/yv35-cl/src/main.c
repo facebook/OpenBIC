@@ -28,6 +28,7 @@ void set_sys_status() {
   set_DC_status();
   set_DCon_5s_status();
   set_post_status();
+  set_post_thread();
   set_SCU_setting();
 }
 

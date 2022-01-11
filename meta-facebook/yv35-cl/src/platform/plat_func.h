@@ -29,6 +29,7 @@ bool get_post_status();
 void set_DCon_5s_status();
 bool get_DCon_5s_status();
 void set_sys_config();
+void set_post_thread();
 bool get_bic_class();
 bool get_1ou_status();
 bool get_2ou_status();
