@@ -97,7 +97,11 @@ enum {
 #define SENSOR_NUM_PWR_PVCCD_HV          0x3E
 #define SENSOR_NUM_PWR_PVCCINFAON        0x3F
 
+#define SENSOR_NUM_SYSTEM_STATUS         0x10
+#define SENSOR_NUM_POWER_ERROR           0x56
 #define SENSOR_NUM_PROC_FAIL             0x65
+#define SENSOR_NUM_VR_HOT                0xB2
+#define SENSOR_NUM_CPUDIMM_HOT           0xB3
 #define SENSOR_NUM_CATERR                0xEB
 
 #endif
