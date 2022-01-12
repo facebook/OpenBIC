@@ -164,7 +164,7 @@ void SNR_poll_handler(void *arug0, void *arug1, void *arug2) {
   while(1) {
     for (poll_num = 0; poll_num < SENSOR_NUM_MAX; poll_num++) {
       if (snr_poll_eanble_flag == 0) { /* skip if disable sesnor poll */
-        continue;
+        break;
       }
       if (SnrNum_SnrCfg_map[poll_num] == sensor_null) { // sensor not exist
         continue;
