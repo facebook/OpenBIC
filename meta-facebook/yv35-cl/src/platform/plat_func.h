@@ -26,6 +26,8 @@ void set_DC_status();
 bool get_DC_status();
 void set_post_status();
 bool get_post_status();
+void set_DCon_5s_status();
+bool get_DCon_5s_status();
 void send_gpio_interrupt(uint8_t gpio_num);
 void enable_PRDY_interrupt();
 void disable_PRDY_interrupt();

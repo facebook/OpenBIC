@@ -101,7 +101,7 @@ bool stby_access(uint8_t snr_num) {
 }
 
 bool DC_access(uint8_t snr_num) {
-  return get_DC_status();
+  return get_DCon_5s_status();
 }
 
 bool post_access(uint8_t snr_num) {

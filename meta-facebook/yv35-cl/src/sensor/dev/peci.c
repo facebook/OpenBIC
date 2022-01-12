@@ -13,18 +13,18 @@ bool pal_peci_read(uint8_t sensor_num, int *reading) {
   uint16_t u16Param;
   int val , ret , complete_code;
   static uint8_t cpu_temp_tjmax = 0;
-  static bool get_tjmax = 0;
   if ( sensor_num == SENSOR_NUM_TEMP_CPU_MARGIN ) {
     u8Index = 0x02;
     u16Param = 0x00ff;
   } else if ( sensor_num == SENSOR_NUM_TEMP_CPU ){
-    if( !get_tjmax ) {
-      return false;
-    } else {
+    if ( (sensor_config[SnrNum_SnrCfg_map[SENSOR_NUM_TEMP_CPU_TJMAX]].cache_status == SNR_READ_ACUR_SUCCESS) ||
+            (sensor_config[SnrNum_SnrCfg_map[SENSOR_NUM_TEMP_CPU_MARGIN]].cache_status == SNR_READ_ACUR_SUCCESS) ) {
       return true;
+    } else {
+      return false;
     }
   } else if ( sensor_num == SENSOR_NUM_TEMP_CPU_TJMAX ){
-    if( get_tjmax ) {
+    if ( sensor_config[SnrNum_SnrCfg_map[SENSOR_NUM_TEMP_CPU]].cache_status == SNR_READ_ACUR_SUCCESS ) {
       return true;
     } else {
       u8Index = 0x10;
@@ -131,14 +131,13 @@ bool pal_peci_read(uint8_t sensor_num, int *reading) {
   // PECI_CC_RSP_SUCCESS
   if ( sensor_num == SENSOR_NUM_TEMP_CPU_MARGIN ) {
     val = ( ( 0xFFFF - ( (readBuf[2] << 8) | readBuf[1] ) ) >> 6 ) +1;
-    if ( get_tjmax ){
+    if ( sensor_config[SnrNum_SnrCfg_map[SENSOR_NUM_TEMP_CPU_TJMAX]].cache_status == SNR_READ_ACUR_SUCCESS ){
       sensor_config[SnrNum_SnrCfg_map[SENSOR_NUM_TEMP_CPU]].cache = cpu_temp_tjmax - (cal_MBR(sensor_num,val) & 0xff);
       sensor_config[SnrNum_SnrCfg_map[SENSOR_NUM_TEMP_CPU]].cache_status = SNR_READ_SUCCESS;
     }
   } else if ( sensor_num == SENSOR_NUM_TEMP_CPU_TJMAX ) {
     val = readBuf[3];
     cpu_temp_tjmax = val;
-    get_tjmax = 1;
   } else {
     val = readBuf[1];
   }
