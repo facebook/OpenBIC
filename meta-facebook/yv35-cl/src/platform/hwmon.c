@@ -24,8 +24,31 @@ static void CatErr_handler(void*, void*, void*);
 K_WORK_DELAYABLE_DEFINE(proc_fail_work, proc_fail_handler);
 K_WORK_DELAYABLE_DEFINE(CatErr_work, CatErr_handler);
 
-void ISR_slp3(uint32_t tmp0, uint32_t tmp1) {
-  printk("slp3\n");
+void SLP3_handler() {
+  addsel_msg_t sel_msg;
+  if(gpio_get(FM_SLPS3_PLD_N) && (gpio_get(PWRGD_SYS_PWROK) == 0)) {
+    sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+    sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
+    sel_msg.snr_number = SENSOR_NUM_SYSTEM_STATUS;
+    sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_SYS_VRWATCHDOG;
+    sel_msg.evt_data2 = 0xFF;
+    sel_msg.evt_data3 = 0xFF;
+    if (!add_sel_evt_record(&sel_msg)) {
+      printk("VR watchdog timeout addsel fail\n");
+    }
+  }
+}
+
+K_WORK_DELAYABLE_DEFINE(SLP3_work, SLP3_handler);
+void ISR_slp3() {
+  if (gpio_get(FM_SLPS3_PLD_N)) {
+    printk("slp3\n");
+    k_work_schedule(&SLP3_work, K_MSEC(10000));
+  } else {
+    if (k_work_cancel_delayable(&SLP3_work) != 0) {
+      printk("Cancel SLP3 delay work fail\n");
+    }
+  }
 }
 
 void ISR_post_complete() {
@@ -34,6 +57,20 @@ void ISR_post_complete() {
 
 void ISR_DC_on() {
   set_DC_status();
+  if (is_DC_on == 0) {
+    addsel_msg_t sel_msg;
+    if (gpio_get(FM_SLPS3_PLD_N) && gpio_get(RST_RSMRST_BMC_N)) {
+      sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_OEM_C3;
+      sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
+      sel_msg.snr_number = SENSOR_NUM_POWER_ERROR;
+      sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_SYS_PWROK_FAIL;
+      sel_msg.evt_data2 = 0xFF;
+      sel_msg.evt_data3 = 0xFF;
+      if (!add_sel_evt_record(&sel_msg)) {
+        printk("System PWROK failure addsel fail\n");
+      }
+    }
+  }
 }
 
 void ISR_BMC_PRDY(){
@@ -70,6 +107,136 @@ void ISR_PLTRST(){
 
 void ISR_DBP_PRSNT(){
   send_gpio_interrupt(FM_DBP_PRESENT_N);
+}
+
+void ISR_SOC_THMALTRIP() {
+  addsel_msg_t sel_msg;
+  if (gpio_get(RST_PLTRST_PLD_N)) {
+    sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
+    sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+    sel_msg.snr_number = SENSOR_NUM_SYSTEM_STATUS;
+    sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_SYS_THERMAL_TRIP;
+    sel_msg.evt_data2 = 0xFF;
+    sel_msg.evt_data3 = 0xFF;
+    if (!add_sel_evt_record(&sel_msg)) {
+      printk("SOC Thermal trip addsel fail\n");
+    }
+  }
+}
+
+void ISR_SYS_THROTTLE() {
+  addsel_msg_t sel_msg;
+  if (gpio_get(RST_PLTRST_PLD_N) && gpio_get(PWRGD_SYS_PWROK)) {
+    if (gpio_get(FM_CPU_BIC_PROCHOT_LVT3_N)) {
+      sel_msg.evt_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+    } else {
+      sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
+    }
+    sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+    sel_msg.snr_number = SENSOR_NUM_SYSTEM_STATUS;
+    sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_SYS_THROTTLE;
+    sel_msg.evt_data2 = 0xFF;
+    sel_msg.evt_data3 = 0xFF;
+    if (!add_sel_evt_record(&sel_msg)) {
+      printk("System Throttle addsel fail\n");
+    }
+  }
+}
+
+void ISR_PCH_THMALTRIP() {
+  addsel_msg_t sel_msg;
+  static bool is_PCH_assert = 0;
+  if (gpio_get(FM_PCHHOT_N) == 0) {
+    if (gpio_get(RST_PLTRST_PLD_N) && is_post_complete && (is_PCH_assert == 0)) {
+      sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
+      is_PCH_assert = 1;
+    }
+  } else if (gpio_get(FM_PCHHOT_N) && (is_PCH_assert == 1)) {
+    sel_msg.evt_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+    is_PCH_assert = 0;
+  } else {
+    return;
+  }
+  sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+  sel_msg.snr_number = SENSOR_NUM_SYSTEM_STATUS;
+  sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_SYS_PCHHOT;
+  sel_msg.evt_data2 = 0xFF;
+  sel_msg.evt_data3 = 0xFF;
+  if (!add_sel_evt_record(&sel_msg)) {
+    printk("PCH Thermal trip addsel fail\n");
+  }
+}
+
+void ISR_HSC_OC() {
+  addsel_msg_t sel_msg;
+  if (gpio_get(RST_RSMRST_BMC_N)) {
+    if (gpio_get(FM_HSC_TIMER)) {
+      sel_msg.evt_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+    } else {
+      sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
+    }
+    sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+    sel_msg.snr_number = SENSOR_NUM_SYSTEM_STATUS;
+    sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_SYS_HSCTIMER;
+    sel_msg.evt_data2 = 0xFF;
+    sel_msg.evt_data3 = 0xFF;
+    if (!add_sel_evt_record(&sel_msg)) {
+      printk("HSC OC addsel fail\n");
+    }
+  }
+}
+
+void ISR_CPU_MEMHOT() {
+  addsel_msg_t sel_msg;
+  if (gpio_get(RST_PLTRST_PLD_N) && gpio_get(PWRGD_SYS_PWROK)) {
+    if (gpio_get(H_CPU_MEMHOT_OUT_LVC3_N)) {
+      sel_msg.evt_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+    } else {
+      sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
+    }
+    sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_CPU_DIMM_HOT;
+    sel_msg.snr_number = SENSOR_NUM_CPUDIMM_HOT;
+    sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_DIMM_HOT;
+    sel_msg.evt_data2 = 0xFF;
+    sel_msg.evt_data3 = 0xFF;
+    if (!add_sel_evt_record(&sel_msg)) {
+      printk("CPU MEM HOT addsel fail\n");
+    }
+  }
+}   
+
+void ISR_CPUVR_HOT() {
+  addsel_msg_t sel_msg;
+  if (gpio_get(RST_PLTRST_PLD_N) && gpio_get(PWRGD_SYS_PWROK)) {
+    if (gpio_get(IRQ_CPU0_VRHOT_N)) {
+      sel_msg.evt_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+    } else {
+      sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
+    }
+    sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_CPU_DIMM_VR_HOT;
+    sel_msg.snr_number = SENSOR_NUM_VR_HOT;
+    sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_CPU_VR_HOT;
+    sel_msg.evt_data2 = 0xFF;
+    sel_msg.evt_data3 = 0xFF;
+    if (!add_sel_evt_record(&sel_msg)) {
+      printk("CPU VR HOT addsel fail\n");
+    }
+  }
+}
+
+void ISR_PCH_PWRGD() {
+  addsel_msg_t sel_msg;
+  if (gpio_get(FM_SLPS3_PLD_N)) {
+    sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_OEM_C3;
+    sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
+    sel_msg.snr_number = SENSOR_NUM_POWER_ERROR;
+    sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_PCH_PWROK_FAIL;
+    sel_msg.evt_data2 = 0xFF;
+    sel_msg.evt_data3 = 0xFF;
+    if (!add_sel_evt_record(&sel_msg)) {
+      printk("PCH PWROK failure addsel fail\n");
+    }
+  }
 }
 
 void set_SCU_setting() {

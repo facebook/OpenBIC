@@ -17,7 +17,7 @@ GPIO_CFG plat_gpio_cfg[] = {
 //  chip,      number,   is_init, is_latch, direction,    status,     property,    int_type,              int_cb
   { chip_gpio,  0,       ENABLE,  DISABLE,  GPIO_OUTPUT,  GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL              }, // GPIO A group
   { chip_gpio,  1,       ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_EDGE_BOTH,    ISR_post_complete },
-  { chip_gpio,  2,       ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  PUSH_PULL,   GPIO_INT_EDGE_RISING,  ISR_slp3          },
+  { chip_gpio,  2,       ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  PUSH_PULL,   GPIO_INT_EDGE_BOTH,    ISR_slp3          },
   { chip_gpio,  3,       ENABLE,  DISABLE,  GPIO_OUTPUT,  GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL              },
   { chip_gpio,  4,       ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL              },
   { chip_gpio,  5,       ENABLE,  DISABLE,  GPIO_OUTPUT,  GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL              },
@@ -27,17 +27,17 @@ GPIO_CFG plat_gpio_cfg[] = {
   { chip_gpio,  9,       ENABLE,  DISABLE,  GPIO_OUTPUT,  GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL              },
   { chip_gpio,  10,      ENABLE,  DISABLE,  GPIO_OUTPUT,  GPIO_LOW,   PUSH_PULL,   GPIO_INT_DISABLE,      NULL              },
   { chip_gpio,  11,      ENABLE,  DISABLE,  GPIO_OUTPUT,  GPIO_HIGH,  PUSH_PULL,   GPIO_INT_DISABLE,      NULL              },
-  { chip_gpio,  12,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL              },
+  { chip_gpio,  12,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_EDGE_BOTH,    ISR_PCH_THMALTRIP },
   { chip_gpio,  13,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  PUSH_PULL,   GPIO_INT_DISABLE,      NULL              },
   { chip_gpio,  14,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_LOW,   OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL              },
   { chip_gpio,  15,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_LOW,   PUSH_PULL,   GPIO_INT_EDGE_BOTH,    ISR_DC_on         },
-  { chip_gpio,  16,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL              }, // GPIO C group
+  { chip_gpio,  16,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_EDGE_BOTH,    ISR_HSC_OC        }, // GPIO C group
   { chip_gpio,  17,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL              },
-  { chip_gpio,  18,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL              },
+  { chip_gpio,  18,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_EDGE_BOTH,    ISR_CPUVR_HOT     },
   { chip_gpio,  19,      ENABLE,  DISABLE,  GPIO_OUTPUT,  GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL              },
-  { chip_gpio,  20,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL              },
+  { chip_gpio,  20,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_EDGE_FALLING, ISR_SOC_THMALTRIP },
   { chip_gpio,  21,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL              },
-  { chip_gpio,  22,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  PUSH_PULL,   GPIO_INT_DISABLE,      NULL              },
+  { chip_gpio,  22,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  PUSH_PULL,   GPIO_INT_EDGE_BOTH,    ISR_CPU_MEMHOT    },
   { chip_gpio,  23,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_LOW,   PUSH_PULL,   GPIO_INT_DISABLE,      NULL              },
   { chip_gpio,  24,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL              }, // GPIO D group
   { chip_gpio,  25,      ENABLE,  DISABLE,  GPIO_OUTPUT,  GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL              },
@@ -71,10 +71,10 @@ GPIO_CFG plat_gpio_cfg[] = {
   { chip_gpio,  53,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  PUSH_PULL,   GPIO_INT_DISABLE,      NULL              },
   { chip_gpio,  54,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  PUSH_PULL,   GPIO_INT_DISABLE,      NULL              },
   { chip_gpio,  55,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  PUSH_PULL,   GPIO_INT_DISABLE,      NULL              },
-  { chip_gpio,  56,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_LOW,   PUSH_PULL,   GPIO_INT_DISABLE,      NULL              }, // GPIO H group
+  { chip_gpio,  56,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_LOW,   PUSH_PULL,   GPIO_INT_EDGE_FALLING, ISR_PCH_PWRGD     }, // GPIO H group
   { chip_gpio,  57,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL              },
   { chip_gpio,  58,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL              },
-  { chip_gpio,  59,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  PUSH_PULL,   GPIO_INT_DISABLE,      NULL              },
+  { chip_gpio,  59,      ENABLE,  DISABLE,  GPIO_INPUT,   GPIO_HIGH,  PUSH_PULL,   GPIO_INT_EDGE_BOTH,    ISR_SYS_THROTTLE  },
   { chip_gpio,  60,      DISABLE, DISABLE,  GPIO_INPUT,   GPIO_LOW,   PUSH_PULL,   GPIO_INT_DISABLE,      NULL              },
   { chip_gpio,  61,      DISABLE, DISABLE,  GPIO_INPUT,   GPIO_LOW,   PUSH_PULL,   GPIO_INT_DISABLE,      NULL              },
   { chip_gpio,  62,      DISABLE, DISABLE,  GPIO_INPUT,   GPIO_LOW,   PUSH_PULL,   GPIO_INT_DISABLE,      NULL              },
