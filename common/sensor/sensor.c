@@ -13,6 +13,7 @@ uint8_t SnrNum_SnrCfg_map[SENSOR_NUM_MAX];
 uint8_t SnrNum_SDR_map[SENSOR_NUM_MAX];
 
 bool enable_sensor_poll = 1;
+static bool snr_poll_eanble_flag = 1;
 
 const int negative_ten_power[16] = {1,1,1,1,1,1,1,1000000000,100000000,10000000,1000000,100000,10000,1000,100,10};
 
@@ -145,6 +146,14 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode) 
   return SNR_UNSPECIFIED_ERROR; // should not reach here
 }
 
+void disable_snr_poll() {
+  snr_poll_eanble_flag = 0;
+}
+
+void enable_snr_poll() {
+  snr_poll_eanble_flag = 1;
+}
+
 void SNR_poll_handler(void *arug0, void *arug1, void *arug2) {
   uint8_t poll_num;
   int reading, SNR_POLL_INTERVEL_ms;
@@ -154,6 +163,9 @@ void SNR_poll_handler(void *arug0, void *arug1, void *arug2) {
 
   while(1) {
     for (poll_num = 0; poll_num < SENSOR_NUM_MAX; poll_num++) {
+      if (snr_poll_eanble_flag == 0) { /* skip if disable sesnor poll */
+        continue;
+      }
       if (SnrNum_SnrCfg_map[poll_num] == sensor_null) { // sensor not exist
         continue;
       }
