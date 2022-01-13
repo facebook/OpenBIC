@@ -10,8 +10,9 @@
 
 bool pal_nvme_read(uint8_t sensor_num, int *reading) {
   uint8_t retry = 5;
-  static uint8_t NOT_AVAILABLE_retry_num = 0;
+  static uint8_t NOT_AVAILABLE_retry_num = 0 , drive_notready_retry = 0;
   int val;
+  bool is_drive_ready;
   I2C_MSG msg;
   msg.bus = sensor_config[SnrNum_SnrCfg_map[sensor_num]].port;
   // Mux
@@ -27,7 +28,28 @@ bool pal_nvme_read(uint8_t sensor_num, int *reading) {
     msg.tx_len = 1;
     msg.rx_len = 4;
     if ( !i2c_master_read(&msg, retry) ) {
+      is_drive_ready = ( ( msg.data[1] & 0x40 ) == 0 ? true : false );
       val = msg.data[3];
+
+      // Check SSD drive ready
+      if ( !is_drive_ready ) {
+        if ( drive_notready_retry >= 3 ) {
+          sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_NOT_ACCESSIBLE;
+          return false;
+        } else {
+          if ( sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status == SNR_READ_SUCCESS ) {
+            drive_notready_retry += 1;
+            return true;
+          } else {
+            sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_FAIL_TO_ACCESS;
+            return false;
+          }
+        }
+      } else {
+        if ( drive_notready_retry != 0 ) {
+          drive_notready_retry = 0;
+        }
+      }
       // Check reading value
       if ( val == NVMe_NOT_AVAILABLE ) {
         if ( NOT_AVAILABLE_retry_num >= 3 ) {
