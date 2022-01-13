@@ -53,6 +53,7 @@ void IPMI_APP_handler(ipmi_msg *msg)
 		pal_APP_GET_DEVICE_ID(msg);
 		break;
 	case CMD_APP_COLD_RESET:
+    pal_APP_COLD_RESET(msg);
 		break;
 	case CMD_APP_WARM_RESET:
 		pal_APP_WARM_RESET(msg);
@@ -147,6 +148,9 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
     break;
   case CMD_OEM_1S_GET_POST_CODE:
     pal_OEM_1S_GET_POST_CODE(msg);
+    break;
+  case CMD_OEM_1S_RESET_BMC:
+    pal_OEM_1S_RESET_BMC(msg);
     break;
 	case CMD_OEM_1S_SET_JTAG_TAP_STA:
 		pal_OEM_1S_SET_JTAG_TAP_STA(msg);

@@ -79,6 +79,7 @@ bool add_sel_evt_record(addsel_msg_t *sel_msg) {
 bool pal_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd) {
   if (netfn == NETFN_OEM_1S_REQ) {
     if (  (cmd == CMD_OEM_1S_FW_UPDATE) ||
+          (cmd == CMD_OEM_1S_RESET_BMC) ||
           (cmd == CMD_OEM_1S_GET_BIC_STATUS) ||
           (cmd == CMD_OEM_1S_RESET_BIC) )
       return 1;
@@ -197,6 +198,19 @@ void pal_APP_GET_DEVICE_ID(ipmi_msg *msg)
   msg->completion_code = CC_SUCCESS;
 
 	return;
+}
+
+void pal_APP_COLD_RESET(ipmi_msg *msg)
+{
+  if (msg->data_len != 0) {
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+  submit_bic_cold_reset();
+
+  msg->completion_code = CC_SUCCESS;
+  return;
 }
 
 void pal_APP_WARM_RESET(ipmi_msg *msg)
@@ -1249,6 +1263,20 @@ void pal_OEM_1S_GET_POST_CODE(ipmi_msg *msg) {
     }
     copy_snoop_read_buffer( offset, postcode_num, msg->data );
   }
+  msg->data_len = postcode_num;
+  msg->completion_code = CC_SUCCESS;
+  return;
+}
+
+void pal_OEM_1S_RESET_BMC(ipmi_msg *msg) {
+  int postcode_num = snoop_read_num;
+  if ( msg->data_len != 0 ){
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+  submit_bmc_warm_reset();
+
   msg->data_len = postcode_num;
   msg->completion_code = CC_SUCCESS;
   return;

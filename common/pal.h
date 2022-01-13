@@ -19,6 +19,7 @@ void pal_SENSOR_GET_SENSOR_READING(ipmi_msg *msg);
 
 // IPMI APP
 void pal_APP_GET_DEVICE_ID(ipmi_msg *msg);
+void pal_APP_COLD_RESET(ipmi_msg *msg);
 void pal_APP_WARM_RESET(ipmi_msg *msg);
 void pal_APP_GET_SELFTEST_RESULTS(ipmi_msg *msg);
 void pal_APP_GET_SYSTEM_GUID(ipmi_msg *msg);
@@ -42,6 +43,7 @@ void pal_OEM_1S_SET_GPIO(ipmi_msg *msg);
 void pal_OEM_1S_SENSOR_POLL_EN(ipmi_msg *msg);
 void pal_OEM_1S_FW_UPDATE(ipmi_msg *msg);
 void pal_OEM_1S_GET_POST_CODE(ipmi_msg *msg);
+void pal_OEM_1S_RESET_BMC(ipmi_msg *msg);
 void pal_OEM_1S_GET_FW_VERSION(ipmi_msg *msg);
 void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg);
 void pal_OEM_1S_ASD_INIT(ipmi_msg *msg);

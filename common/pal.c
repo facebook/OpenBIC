@@ -56,6 +56,12 @@ __weak void pal_APP_GET_DEVICE_ID(ipmi_msg *msg)
 	return;
 }
 
+__weak void pal_APP_COLD_RESET(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
 __weak void pal_APP_WARM_RESET(ipmi_msg *msg)
 {
 	msg->completion_code = CC_UNSPECIFIED_ERROR;
@@ -171,6 +177,12 @@ __weak void pal_OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 {
 	msg->completion_code = CC_UNSPECIFIED_ERROR;
 	return;
+}
+
+__weak void pal_OEM_1S_RESET_BMC(ipmi_msg *msg)
+{
+  msg->completion_code = CC_UNSPECIFIED_ERROR;
+  return;
 }
 
 __weak void pal_OEM_1S_SET_JTAG_TAP_STA(ipmi_msg *msg)

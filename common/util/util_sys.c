@@ -29,7 +29,7 @@ bool get_boot_source_ACon() {
 
 void bic_warm_reset() {
   k_msleep(bic_warm_reset_delay);
-  sys_reboot(0); // arvg unused
+  sys_reboot(SYS_REBOOT_WARM);
 }
 
 K_WORK_DEFINE(bic_warm_reset_work, bic_warm_reset);
@@ -37,3 +37,17 @@ void submit_bic_warm_reset() {
   k_work_submit(&bic_warm_reset_work);
 }
 /* bic warm reset work */
+
+/* bic cold reset work */
+#define bic_cold_reset_delay 100
+
+void bic_cold_reset() {
+  k_msleep(bic_cold_reset_delay);
+  sys_reboot(SYS_REBOOT_COLD);
+}
+
+K_WORK_DEFINE(bic_cold_reset_work, bic_cold_reset);
+void submit_bic_cold_reset() {
+  k_work_submit(&bic_cold_reset_work);
+}
+/* bic cold reset work */
