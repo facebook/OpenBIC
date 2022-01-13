@@ -58,6 +58,21 @@ bool access_check(uint8_t sensor_num) {
   return (access_checker)(sensor_config[SnrNum_SnrCfg_map[sensor_num]].num);
 }
 
+void clear_unaccessible_sensor_cache() {
+  uint8_t poll_num;
+
+  for (poll_num = 0; poll_num < SENSOR_NUM_MAX; poll_num++) {
+    if (SnrNum_SnrCfg_map[poll_num] == sensor_null) { // sensor not exist
+      continue;
+    }
+
+    if ( !access_check(poll_num) ) {
+      sensor_config[SnrNum_SnrCfg_map[poll_num]].cache = sensor_fail;
+      sensor_config[SnrNum_SnrCfg_map[poll_num]].cache_status = SNR_INIT_STATUS;
+    }
+  }
+}
+
 bool sensor_read(uint8_t sensor_num, int *reading) {
   bool status;
   switch(sensor_config[SnrNum_SnrCfg_map[sensor_num]].type){
@@ -149,10 +164,12 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode) 
         return SNR_NOT_ACCESSIBLE;
       }
       return sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status;
+    } else if (sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status == SNR_INIT_STATUS) {
+      sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache = sensor_fail;
+      return sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status;
     } else {
       sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache = sensor_fail;
-      sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_FAIL_TO_ACCESS;
-      printf("sensor[%x] cache read fail\n",sensor_num);
+      printf("sensor[%x] cache read fail status %x\n", sensor_num, sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status);
       return sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status;
     }
   }
@@ -171,7 +188,7 @@ void enable_snr_poll() {
 void SNR_poll_handler(void *arug0, void *arug1, void *arug2) {
   uint8_t poll_num;
   int reading, SNR_POLL_INTERVEL_ms;
-  k_msleep(3000); // delay 3 second to wait for drivers ready before start sensor polling
+  k_msleep(1000); // delay 1 second to wait for drivers ready before start sensor polling
 
   pal_set_sensor_poll_interval(&SNR_POLL_INTERVEL_ms);
 
