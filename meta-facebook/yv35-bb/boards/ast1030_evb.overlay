@@ -1,0 +1,212 @@
+
+&pwm {
+	status = "okay";
+	pinctrl-0 = <&pinctrl_pwm0_default &pinctrl_pwm1_default
+		&pinctrl_pwm2_default &pinctrl_pwm3_default>;
+};
+
+&adc0 {
+	status = "okay";
+	pinctrl-0 = <&pinctrl_adc0_default &pinctrl_adc1_default
+		&pinctrl_adc2_default &pinctrl_adc3_default
+		&pinctrl_adc4_default &pinctrl_adc5_default
+		&pinctrl_adc6_default &pinctrl_adc7_default>;
+};
+
+&adc1 {
+	status = "okay";
+	pinctrl-0 = <&pinctrl_adc8_default &pinctrl_adc9_default
+		&pinctrl_adc10_default &pinctrl_adc11_default
+		&pinctrl_adc12_default &pinctrl_adc13_default
+		&pinctrl_adc14_default &pinctrl_adc15_default>;
+};
+
+&tach {
+	status = "okay";
+	pinctrl-0 = <&pinctrl_tach0_default &pinctrl_tach1_default
+		&pinctrl_tach2_default &pinctrl_tach3_default
+		&pinctrl_tach4_default &pinctrl_tach5_default
+		&pinctrl_tach6_default &pinctrl_tach7_default>;
+
+	fan@0 {
+		reg = <0>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN0";
+	};
+
+	fan@1 {
+		reg = <1>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN1";
+	};
+
+	fan@2 {
+		reg = <2>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN2";
+	};
+
+	fan@3 {
+		reg = <3>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN3";
+	};
+
+	fan@4 {
+		reg = <4>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN4";
+	};
+
+	fan@5 {
+		reg = <5>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN5";
+	};
+
+	fan@6 {
+		reg = <6>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN6";
+	};
+
+	fan@7 {
+		reg = <7>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN7";
+	};
+};
+
+&i2c0 {
+	pinctrl-0 = <&pinctrl_i2c0_default>;
+	status = "okay";
+};
+
+&i2c1 {
+	pinctrl-0 = <&pinctrl_i2c1_default>;
+	status = "okay";
+};
+
+&i2c2 {
+	pinctrl-0 = <&pinctrl_i2c2_default>;
+	status = "okay";
+};
+
+&i2c6 {
+	pinctrl-0 = <&pinctrl_i2c6_default>;
+	clock-frequency = <I2C_BITRATE_FAST_PLUS>;
+	status = "okay";
+
+	ipmb6: ipmb@20 {
+		compatible = "aspeed,ipmb";
+		reg = <0x20>;
+		label = "IPMB_6";
+		size = <10>;
+#ifdef CONFIG_I2C_IPMB_SLAVE
+		status = "okay";
+#endif
+	};
+};
+
+&i2c7 {
+	pinctrl-0 = <&pinctrl_i2c7_default>;
+	clock-frequency = <I2C_BITRATE_FAST_PLUS>;
+	status = "okay";
+
+	ipmb7: ipmb@20 {
+		compatible = "aspeed,ipmb";
+		reg = <0x20>;
+		label = "IPMB_7";
+		size = <10>;
+#ifdef CONFIG_I2C_IPMB_SLAVE
+		status = "okay";
+#endif
+	};
+
+};
+
+&udc {
+	status = "okay";
+};
+
+&uart5 {
+	current-speed = <57600>;
+};
+
+&fmc {
+	status = "okay";
+};
+
+&fmc_cs0 {
+	status = "okay";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		boot_partition: partition@0 {
+			label = "image-0";
+			reg = <0x0 0x100000>;
+		};
+		dfu_partition: partition@1 {
+			label = "image-1";
+			reg = <0x0 0x100000>;
+		};
+	};
+};
+
+&fmc_cs1 {
+	status = "disabled";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+};
+
+&spi1 {
+	status = "disabled";
+};
+
+&spi1_cs0 {
+	status = "disabled";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+};
+
+&spi1_cs1 {
+	status = "disabled";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+};
+
+&spi2 {
+	status = "disabled";
+};
+
+&spi2_cs0 {
+	status = "disabled";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+};
+
+&spi2_cs1 {
+	status = "disabled";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+};

@@ -95,6 +95,20 @@ bool sensor_read(uint8_t sensor_num, int *reading) {
       if (status)
         return true;
       break;
+    case type_medusa:
+      //TODO: get sensors data of medusa
+      reading = 0;
+      status = 1;
+      if (status)
+        return true;
+      break;
+    case type_fan:
+      //TODO: get sensors data of fan
+      reading = 0;
+      status = 1;
+      if (status)
+        return true;
+      break;
 
     default:
       printf("sensor_read with unexpected sensor type\n");
