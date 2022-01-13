@@ -834,8 +834,13 @@ void pal_OEM_1S_PECIaccess(ipmi_msg *msg) {
   u16Param = msg->data[7];
   u16Param = (u16Param << 8) + msg->data[6];
   readBuf = (uint8_t *)malloc(sizeof(uint8_t) * u8ReadLen);
+  if (readBuf == NULL) {
+    msg->completion_code = CC_OUT_OF_SPACE;
+    return;
+  }
   writeBuf = (uint8_t *)malloc(sizeof(uint8_t) * u8WriteLen);
-  if ((readBuf == NULL) || (writeBuf == NULL)) {
+  if (writeBuf == NULL) {
+    free(readBuf);
     msg->completion_code = CC_OUT_OF_SPACE;
     return;
   }
