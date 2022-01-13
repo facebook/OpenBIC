@@ -873,14 +873,18 @@ void pal_OEM_1S_PECIaccess(ipmi_msg *msg) {
   return;
 }
 
-void pal_OEM_1S_SET_SYSTEM_GUID(ipmi_msg *msg) {
-  uint8_t status;
-  EEPROM_ENTRY guid_entry;
-
+void pal_OEM_SET_SYSTEM_GUID(ipmi_msg *msg) {
+  if (!msg){
+    printf("pal_OEM_SET_SYSTEM_GUID: parameter msg is NULL\n");
+    return;
+  }
   if (msg->data_len != 16) {
     msg->completion_code = CC_INVALID_LENGTH;
     return;
   }
+
+  uint8_t status;
+  EEPROM_ENTRY guid_entry;
 
   guid_entry.offset = 0;
   guid_entry.data_len = msg->data_len;
@@ -905,6 +909,8 @@ void pal_OEM_1S_SET_SYSTEM_GUID(ipmi_msg *msg) {
       msg->completion_code = CC_UNSPECIFIED_ERROR;
       break;
   }
+  
+  msg->data_len = 0;
   return;
 }
 
