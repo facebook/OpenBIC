@@ -15,19 +15,14 @@ static bool bic_class = sys_class_1;
 static bool is_1ou_present = 0;
 static bool is_2ou_present = 0;
 
-#define PROC_FAIL_STACK_SIZE 2000
-#define CATERR_THREAD_STACK_SIZE 2000
-
 #define PROC_FAIL_START_DELAY_SECOND 10
 #define CATERR_START_DELAY_SECOND 2
 
-K_THREAD_STACK_DEFINE(proc_fail_thread, PROC_FAIL_STACK_SIZE);
-struct k_thread proc_fail_thread_handler;
-K_THREAD_STACK_DEFINE(CatErr_thread, CATERR_THREAD_STACK_SIZE);
-struct k_thread CatErr_thread_handler;
-
 static void proc_fail_handler(void*, void*, void*);
 static void CatErr_handler(void*, void*, void*);
+
+K_WORK_DELAYABLE_DEFINE(proc_fail_work, proc_fail_handler);
+K_WORK_DELAYABLE_DEFINE(CatErr_work, CatErr_handler);
 
 void SLP3_handler() {
   addsel_msg_t sel_msg;
@@ -83,23 +78,12 @@ void ISR_BMC_PRDY(){
 }
 
 void ISR_PWRGD_CPU() {
-  static k_tid_t proc_fail_tid = NULL;
-
   if (gpio_get(PWRGD_CPU_LVC3) == 1) {
     /* start thread proc_fail_handler after 10 seconds */
-    if (proc_fail_tid != NULL) {
-      k_thread_abort(proc_fail_tid);
-      proc_fail_tid = NULL;
-    }
-    proc_fail_tid = k_thread_create(&proc_fail_thread_handler, proc_fail_thread,
-                                    K_THREAD_STACK_SIZEOF(proc_fail_thread),
-                                    proc_fail_handler, NULL, NULL, NULL,
-                                    osPriorityBelowNormal, 0, K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
-    k_thread_name_set(&proc_fail_thread_handler, "proc_fail_thread");
+    k_work_schedule(&proc_fail_work, K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
   } else {
-    if (proc_fail_tid != NULL) {
-      k_thread_abort(proc_fail_tid);
-      proc_fail_tid = NULL;
+    if (k_work_cancel_delayable(&proc_fail_work) != 0) {
+      printk("Cancel proc_fail delay work fail\n");
     }
     reset_kcs_ok();
     reset_postcode_ok();
@@ -108,19 +92,12 @@ void ISR_PWRGD_CPU() {
 }
 
 void ISR_CATERR() {
-  static k_tid_t CatErr_tid = NULL;
-
   if ((gpio_get(RST_PLTRST_BUF_N) == 1)) {
-    /* start thread CatErr_handler after 2 seconds */
-    if (CatErr_tid != NULL) {
-      k_thread_abort(CatErr_tid);
-      CatErr_tid = NULL;
+    if (k_work_cancel_delayable(&CatErr_work) != 0) {
+      printk("Cancel caterr delay work fail\n");
     }
-    CatErr_tid = k_thread_create(&CatErr_thread_handler, CatErr_thread,
-                                K_THREAD_STACK_SIZEOF(CatErr_thread),
-                                CatErr_handler, NULL, NULL, NULL,
-                                osPriorityBelowNormal, 0, K_SECONDS(CATERR_START_DELAY_SECOND));
-    k_thread_name_set(&CatErr_thread_handler, "CatErr_thread");
+    /* start thread CatErr_handler after 2 seconds */
+    k_work_schedule(&CatErr_work, K_SECONDS(CATERR_START_DELAY_SECOND));
   }
 }
 

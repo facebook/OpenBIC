@@ -34,7 +34,8 @@ bool add_sel_evt_record(addsel_msg_t *sel_msg) {
 
   msg = (ipmi_msg*)malloc(sizeof(ipmi_msg));
   if (msg == NULL) {
-    return;
+    printf("add_sel_evt_record malloc fail\n");
+    return false;
   }
   memset(msg, 0, sizeof(ipmi_msg));
 
