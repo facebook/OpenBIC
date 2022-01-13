@@ -1318,3 +1318,27 @@ void pal_OEM_1S_RESET_BIC(ipmi_msg *msg) {
   msg->completion_code = CC_SUCCESS;
   return;
 }
+
+void pal_OEM_1S_SENSOR_POLL_EN(ipmi_msg *msg) {
+  if (!msg){
+    printf("pal_OEM_1S_SENSOR_POLL_EN: parameter msg is NULL\n");
+    return;
+  }
+  if (msg->data_len != 1) {
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+  if (msg->data[0] == 0) {  /* enable sensor poll */
+    enable_snr_poll();
+  } else if (msg->data[0] == 1) {  /* disable sensor poll */
+    disable_snr_poll();
+  } else {
+    msg->completion_code = CC_INVALID_DATA_FIELD;
+    return;
+  }
+
+  msg->data_len = 0;
+  msg->completion_code = CC_SUCCESS;
+  return;
+}

@@ -72,5 +72,7 @@ extern uint8_t SnrNum_SnrCfg_map[SENSOR_NUM_MAX];
 
 uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode);
 bool sensor_init(void);
+void disable_snr_poll();
+void enable_snr_poll();
 
 #endif
