@@ -156,6 +156,126 @@ void pal_APP_MASTER_WRITE_READ(ipmi_msg *msg) {
   return;
 }
 
+void pal_STORAGE_GET_FRUID_INFO(ipmi_msg *msg) {
+  uint8_t fruid;
+  uint16_t fru_size;
+
+  if (msg->data_len != 1) {
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+  fruid = msg->data[0];
+
+  if (fruid >= MAX_FRU_ID) { // check if FRU is defined
+    msg->completion_code = CC_INVALID_DATA_FIELD;
+    return;
+  }
+
+  fru_size = find_FRU_size(fruid);
+  if(fru_size == 0xFFFF) { // indicate ID not found
+    msg->completion_code = CC_UNSPECIFIED_ERROR;
+    return;
+  }
+
+  msg->data[0] = fru_size & 0xFF;          // lsb
+  msg->data[1] = (fru_size >> 8) & 0xFF;   // msb
+  msg->data[2] = get_FRU_access(fruid);    // access type
+
+  msg->data_len = 3;
+  msg->completion_code = CC_SUCCESS;
+
+  return;
+}
+
+void pal_STORAGE_READ_FRUID_DATA(ipmi_msg *msg) {
+  uint8_t status;
+  EEPROM_ENTRY fru_entry;
+
+  if (msg->data_len != 4) {
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+  fru_entry.config.dev_id = msg->data[0];
+  fru_entry.offset = (msg->data[2] << 8) | msg->data[1];
+  fru_entry.data_len = msg->data[3];
+
+  if ( fru_entry.data_len > 32 ) { // According to IPMI, messages are limited to 32 bytes
+    msg->completion_code = CC_LENGTH_EXCEEDED;
+    return;
+  }
+
+  status = FRU_read(&fru_entry);
+
+  msg->data_len = fru_entry.data_len + 1;
+  msg->data[0] = fru_entry.data_len;
+  memcpy(&msg->data[1], &fru_entry.data[0], fru_entry.data_len);
+
+  switch (status) {
+    case FRU_READ_SUCCESS:
+      msg->completion_code = CC_SUCCESS;
+      break;
+    case FRU_INVALID_ID:
+      msg->completion_code = CC_INVALID_PARAM;
+      break;
+    case FRU_OUT_OF_RANGE:
+      msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+      break;
+    case FRU_FAIL_TO_ACCESS:
+      msg->completion_code = CC_FRU_DEV_BUSY;
+      break;
+    default:
+      msg->completion_code = CC_UNSPECIFIED_ERROR;
+      break;
+  }
+
+  return;
+}
+
+void pal_STORAGE_WRITE_FRUID_DATA(ipmi_msg *msg) {
+  uint8_t status;
+  EEPROM_ENTRY fru_entry;
+
+  if (msg->data_len < 4) {
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+  fru_entry.config.dev_id = msg->data[0];
+  fru_entry.offset = (msg->data[2] << 8) | msg->data[1];
+  fru_entry.data_len = msg->data_len - 3; // skip id and offset
+  if ( fru_entry.data_len > 32 ) { // According to IPMI, messages are limited to 32 bytes
+    msg->completion_code = CC_LENGTH_EXCEEDED;
+    return;
+  }
+  memcpy(&fru_entry.data[0], &msg->data[3], fru_entry.data_len);
+
+  msg->data[0] = msg->data_len - 3;
+  msg->data_len = 1;
+  status = FRU_write(&fru_entry);
+
+  switch (status) {
+    case FRU_WRITE_SUCCESS:
+      msg->completion_code = CC_SUCCESS;
+      break;
+    case FRU_INVALID_ID:
+      msg->completion_code = CC_INVALID_PARAM;
+      break;
+    case FRU_OUT_OF_RANGE:
+      msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+      break;
+    case FRU_FAIL_TO_ACCESS:
+      msg->completion_code = CC_FRU_DEV_BUSY;
+      break;
+    default:
+      msg->completion_code = CC_UNSPECIFIED_ERROR;
+      break;
+  }
+
+  return;
+}
+
 void pal_STORAGE_RSV_SDR(ipmi_msg *msg) {
   uint16_t RSV_ID;
 
