@@ -10,6 +10,7 @@
 #include "plat_def.h"
 
 static bool is_DC_on = 0;
+static bool is_DC_on_5s = 0;
 static bool is_post_complete = 0;
 static bool bic_class = sys_class_1;
 static bool is_1ou_present = 0;
@@ -55,11 +56,18 @@ void ISR_post_complete() {
   set_post_status();
 }
 
+K_WORK_DELAYABLE_DEFINE(set_DCon_5s_work, set_DCon_5s_status);
+#define DC_ON_5_SECOND 5
 void ISR_DC_on() {
   set_DC_status();
-  if (is_DC_on == 0) {
-    addsel_msg_t sel_msg;
+
+  if (is_DC_on == 1) {
+    k_work_schedule(&set_DCon_5s_work, K_SECONDS(DC_ON_5_SECOND));
+  } else {
+    set_DCon_5s_status();
+
     if (gpio_get(FM_SLPS3_PLD_N) && gpio_get(RST_RSMRST_BMC_N)) {
+      addsel_msg_t sel_msg;
       sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_OEM_C3;
       sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
       sel_msg.snr_number = SENSOR_NUM_POWER_ERROR;
@@ -260,6 +268,14 @@ void set_DC_status() {
 
 bool get_DC_status() {
   return is_DC_on;
+}
+
+void set_DCon_5s_status() {
+  is_DC_on_5s = is_DC_on;
+}
+
+bool get_DCon_5s_status() {
+  return is_DC_on_5s;
 }
 
 void set_post_status() {
