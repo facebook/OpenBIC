@@ -3,7 +3,6 @@
 #include <usb/usb_device.h>
 #include <logging/log.h>
 #include <sys/ring_buffer.h>
-#include "cmsis_os2.h"
 #include "ipmi.h"
 #include "usb.h"
 #include "pal.h"
@@ -101,7 +100,7 @@ void usb_dev_init(void) {
                   K_THREAD_STACK_SIZEOF(USB_handler_stack),
                   USB_handle,
                   NULL, NULL, NULL,
-                  osPriorityBelowNormal, 0, K_NO_WAIT);
+                  CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
   k_thread_name_set(&USB_handler, "USB_handler");
 
   uint8_t init_sem_count = RING_BUF_SIZE / RX_BUFF_SIZE;

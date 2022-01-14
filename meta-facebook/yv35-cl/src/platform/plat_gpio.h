@@ -155,6 +155,7 @@
 #define name_gpioQ \
   gpio_name_to_num(Reserve_GPIOQ0) \
   gpio_name_to_num(Reserve_GPIOQ1) \
+  gpio_name_to_num(Reserve_GPIOQ2) \
   gpio_name_to_num(Reserve_GPIOQ3) \
   gpio_name_to_num(Reserve_GPIOQ4) \
   gpio_name_to_num(Reserve_GPIOQ5) \

@@ -11,6 +11,14 @@ static const struct device *dev_i2c[MAX_I2C_BUS_NUM];
 
 struct k_mutex i2c_mutex[MAX_I2C_BUS_NUM];
 
+
+void i2c_freq_set(uint8_t i2c_bus,uint8_t i2c_speed_mode) {
+  uint32_t dev_config_raw;
+
+  dev_config_raw = I2C_MODE_MASTER |I2C_SPEED_SET(i2c_speed_mode);
+  i2c_configure(dev_i2c[i2c_bus], dev_config_raw);
+}
+
 int i2c_master_read(I2C_MSG *msg, uint8_t retry) {
   uint8_t i;
   uint8_t *txbuf, *rxbuf;

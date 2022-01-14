@@ -87,7 +87,7 @@
 
 	ipmb7: ipmb@20 {
 		compatible = "aspeed,ipmb";
-		reg = <0x21>;
+		reg = <0x20>;
 		label = "IPMB_7";
 		size = <10>;
 #ifdef CONFIG_I2C_IPMB_SLAVE

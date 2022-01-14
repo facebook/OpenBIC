@@ -473,7 +473,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
   	if (rx_len > 0) {
 
   		if (DEBUG_IPMI) {
-  			printf("recv[%d]", rx_len);
+  			printf("bus %d recv[%d]",ipmb_cfg.bus, rx_len);
   			for (i = 0; i < rx_len; i++) {
   				printf(" %x", ipmb_buffer_rx[i + 1]);
   			}
@@ -982,11 +982,11 @@ void ipmb_util_init(uint8_t index)
 
   IPMB_TX_ID[index] = k_thread_create(&IPMB_TX[index], ipmb_tx_stacks[index], IPMB_TX_STACK_SIZE,
           IPMB_TXTask, (void *)&IPMB_config_table[index], NULL,
-          NULL, K_PRIO_PREEMPT(10), 0, K_NO_WAIT);
+          NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
   k_thread_name_set(&IPMB_TX[index], IPMB_config_table[index].Tx_attr_name);
   IPMB_RX_ID[index] = k_thread_create(&IPMB_RX[index], ipmb_rx_stacks[index], IPMB_RX_STACK_SIZE,
           IPMB_RXTask, (void *)&IPMB_config_table[index], NULL,
-          NULL, K_PRIO_PREEMPT(10), 0, K_NO_WAIT);
+          NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
   k_thread_name_set(&IPMB_RX[index], IPMB_config_table[index].Rx_attr_name);
 
   if (DEBUG_IPMI) {
@@ -1036,7 +1036,7 @@ void ipmb_init(void)
                   K_THREAD_STACK_SIZEOF(IPMB_SeqTimeout_stack),
                   IPMB_SeqTimeout_handler,
                   NULL, NULL, NULL,
-                  osPriorityBelowNormal, 0, K_NO_WAIT);
+                  CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
   k_thread_name_set(&IPMB_SeqTimeout, "IPMB_SeqTimeout");
 }
 

@@ -3,7 +3,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <device.h>
-#include "cmsis_os2.h"
 #include "ipmi.h"
 #include "kcs.h"
 #include "pal.h"
@@ -121,6 +120,6 @@ void kcs_init(void) {
                   K_THREAD_STACK_SIZEOF(KCS_POLL_stack),
                   kcs_read,
                   NULL, NULL, NULL,
-                  osPriorityBelowNormal, 0, K_NO_WAIT);
+                  CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
   k_thread_name_set(&kcs_polling, "kcs_polling");
 }

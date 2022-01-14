@@ -327,7 +327,7 @@ void ipmi_init(void)
                   K_THREAD_STACK_SIZEOF(IPMI_thread_stack),
                   IPMI_handler,
                   NULL, NULL, NULL,
-                  osPriorityBelowNormal, 0, K_NO_WAIT);
+                  CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
   k_thread_name_set(&IPMI_thread, "IPMI_thread");
 
   ipmb_init();

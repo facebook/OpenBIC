@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include "cmsis_os2.h"
 #include "sdr.h"
 #include "pal.h"
 #include "sensor.h"
@@ -213,7 +212,7 @@ void sensor_poll_init() {
                   K_THREAD_STACK_SIZEOF(sensor_poll_stack),
                   SNR_poll_handler,
                   NULL, NULL, NULL,
-                  osPriorityBelowNormal, 0, K_NO_WAIT);
+                  CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
   k_thread_name_set(&sensor_poll, "sensor_poll");
   return;
 }

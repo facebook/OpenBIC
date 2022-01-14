@@ -1,6 +1,5 @@
 #include <zephyr.h>
 #include <stdio.h>
-#include "cmsis_os.h"
 #include "hal_gpio.h"
 #include "pal.h"
 
@@ -180,7 +179,7 @@ bool gpio_init(void) {
   // set boot source here to skip gpio init for latched gpios
   set_boot_source();
 
-  k_work_queue_start(&gpio_work_queue, gpio_work_stack, STACK_SIZE, K_PRIO_PREEMPT(osPriorityBelowNormal), NULL);
+  k_work_queue_start(&gpio_work_queue, gpio_work_stack, STACK_SIZE, K_PRIO_PREEMPT(CONFIG_MAIN_THREAD_PRIORITY), NULL);
   k_thread_name_set(&gpio_work_queue.thread, "gpio_workq");
 
   for(i = 0; i < total_gpio_num; i++) {
