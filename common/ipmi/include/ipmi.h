@@ -86,6 +86,7 @@ void pal_OEM_1S_SET_JTAG_TAP_STA(ipmi_msg *msg);
 void pal_OEM_1S_JTAG_DATA_SHIFT(ipmi_msg *msg);
 void pal_OEM_1S_GET_BIC_STATUS(ipmi_msg *msg);
 void pal_OEM_1S_RESET_BIC(ipmi_msg *msg);
+void pal_OEM_1S_12V_CYCLE_SLOT(ipmi_msg *msg);
 
 enum {
   CC_SUCCESS = 0x00,
@@ -210,6 +211,8 @@ enum {
   CMD_OEM_1S_GET_SET_GPIO = 0x41,
 // Debug command
   CMD_OEM_1S_I2C_DEV_SCAN = 0x60,
+
+  CMD_OEM_1S_12V_CYCLE_SLOT = 0x64,
 };
 
 #endif
