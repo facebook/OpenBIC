@@ -48,14 +48,14 @@ ipmb_error ipmb_notify_client(ipmi_msg_cfg *msg_cfg);
 
 void Queue_timeout_handler(uint32_t arug0, uint32_t arug1);
 
-uint8_t IPMB_inf_index_map[MAX_IPMB_IDX + 1]; // map IPMB source/target interface to bus
+uint8_t IPMB_inf_index_map[Reserve_IFs]; // map IPMB source/target interface to bus
 
 // map IPMB interface to index
 void map_inf_index(void)
 {
   uint8_t inf, index_num;
 
-  memset(IPMB_inf_index_map, MAX_IPMB_IDX, sizeof(IPMB_inf_index_map));
+  memset(IPMB_inf_index_map, Reserve_IFs, sizeof(IPMB_inf_index_map));
   for (inf = 0x01; inf != Reserve_IFs; inf++) { // interface 0x0 reserved for BIC itself
   	for (index_num = 0; index_num < MAX_IPMB_IDX; index_num++) {
   		if (IPMB_config_table[index_num].Inf_source == inf) {
