@@ -66,6 +66,7 @@ void ISR_DC_on() {
     k_work_schedule(&set_DCon_5s_work, K_SECONDS(DC_ON_5_SECOND));
   } else {
     set_DCon_5s_status();
+    clear_unaccessible_sensor_cache();
 
     if (gpio_get(FM_SLPS3_PLD_N) && gpio_get(RST_RSMRST_BMC_N)) {
       addsel_msg_t sel_msg;
@@ -96,7 +97,6 @@ void ISR_PWRGD_CPU() {
     }
     reset_kcs_ok();
     reset_postcode_ok();
-    clear_unaccessible_sensor_cache();
   }
   send_gpio_interrupt(PWRGD_CPU_LVC3);
 }
