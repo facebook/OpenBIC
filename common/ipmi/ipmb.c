@@ -56,13 +56,13 @@ void map_inf_index(void)
   uint8_t inf, index_num;
 
   memset(IPMB_inf_index_map, Reserve_IFs, sizeof(IPMB_inf_index_map));
-  for (inf = 0x01; inf != Reserve_IFs; inf++) { // interface 0x0 reserved for BIC itself
-  	for (index_num = 0; index_num < MAX_IPMB_IDX; index_num++) {
-  		if (IPMB_config_table[index_num].Inf_source == inf) {
-  			IPMB_inf_index_map[inf] = index_num;
-  			break;
-  		}
-  	}
+  for(index_num = 0; IPMB_config_table[index_num].index != IPMB_RESERVE_IDX; index_num++) {
+    for(inf = 0; inf < Reserve_IFs; inf++) {
+      if (IPMB_config_table[index_num].Inf_source == inf) {
+        IPMB_inf_index_map[inf] = index_num;
+        break;
+      }
+    }
   }
 }
 

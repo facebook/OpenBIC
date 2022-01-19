@@ -70,6 +70,7 @@
 #define IPMB_MQUEUE_POLL_DELAY_ms 10
 #define IPMB_SEQ_TIMEOUT_ms 1000
 #define IPMB_SEQ_TIMEOUT_STACK_SIZE 500
+#define IPMB_RESERVE_IDX 0xFF
 
 #define Enable  1
 #define Disable 0
@@ -77,17 +78,18 @@
 #define IS_RESPONSE(msg) (msg.netfn & 0x01) 
 
 enum{
-  Self_IFs = 0x0,
-  ME_IPMB_IFs = 0x01,
-  BMC_IPMB_IFs = 0x02,
-  HOST_KCS_IFs = 0x03,
+  Self_IFs        = 0x0,
+  ME_IPMB_IFs     = 0x01,
+  BMC_IPMB_IFs    = 0x02,
+  HOST_KCS_IFs    = 0x03,
   SERVER_IPMB_IFs = 0x04,
-  EXP1_IPMB_IFs = 0x05,
-  EXP2_IPMB_IFs = 0x06,
-  SLOT1_BIC_IFs = 0x07,
-  SLOT3_BIC_IFs = 0x08,
+  EXP1_IPMB_IFs   = 0x05,
+  SLOT1_BIC_IFs   = 0x07,
+  SLOT3_BIC_IFs   = 0x08,
+  BB_IPMB_IFs     = 0x10,
+  EXP2_IPMB_IFs   = 0x15,
 
-  BMC_USB_IFs = 0x10,
+  BMC_USB_IFs     = 0x20,
   Reserve_IFs,
 };
 
