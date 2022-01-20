@@ -509,3 +509,32 @@ void pal_OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg) {
   msg->completion_code = CC_SUCCESS;
   return;
 }
+
+void pal_OEM_1S_GET_FW_VERSION(ipmi_msg *msg) {
+  if (msg->data_len != 1) {
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+
+  uint8_t component = 0;
+
+  component = msg->data[0];
+  switch (component) {
+    case CPNT_CPLD:
+      msg->completion_code = CC_UNSPECIFIED_ERROR;
+      break;
+    case CPNT_BIC:
+      msg->data[0] = BIC_FW_YEAR_MSB;
+      msg->data[1] = BIC_FW_YEAR_LSB;
+      msg->data[2] = BIC_FW_WEEK;
+      msg->data[3] = BIC_FW_VER;
+      msg->data[4] = BIC_FW_platform_0;
+      msg->data[5] = BIC_FW_platform_1;
+      msg->data[6] = BIC_FW_platform_2;
+      msg->data_len = 7;
+      msg->completion_code = CC_SUCCESS;
+      break;
+    default:
+      msg->completion_code = CC_UNSPECIFIED_ERROR;
+  }
+}
