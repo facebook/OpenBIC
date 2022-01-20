@@ -45,8 +45,8 @@ bool pal_vr_read(uint8_t sensor_num, int *reading) {
       // current
       } else if ( (sensor_num == SENSOR_NUM_CUR_PVCCD_HV) || (sensor_num == SENSOR_NUM_CUR_PVCCINFAON) || (sensor_num == SENSOR_NUM_CUR_PVCCFA_EHV)
             || (sensor_num == SENSOR_NUM_CUR_PVCCIN) || (sensor_num == SENSOR_NUM_CUR_PVCCFA_EHV_FIVRA) ) {
-        val = (((msg.data[1] << 8) | msg.data[0]) / 10);
-        *reading = (acur_cal_MBR(sensor_num,val)) & 0xffff;
+        val = ((msg.data[1] << 8) | msg.data[0]);
+        *reading = (acur_cal_MBR(sensor_num,val) / 10) & 0xffff;
 
       // temperature
       } else if ( (sensor_num == SENSOR_NUM_TEMP_PVCCD_HV) || (sensor_num == SENSOR_NUM_TEMP_PVCCINFAON) || (sensor_num == SENSOR_NUM_TEMP_PVCCFA_EHV)
