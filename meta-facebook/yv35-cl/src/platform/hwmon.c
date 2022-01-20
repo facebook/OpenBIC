@@ -112,6 +112,11 @@ void ISR_CATERR() {
 }
 
 void ISR_PLTRST(){
+  if (gpio_get(RST_PLTRST_BUF_N) == 1) {
+    snoop_read_num[0] = 0;
+    snoop_read_num[1] = 0;
+  }
+
   send_gpio_interrupt(RST_PLTRST_BUF_N);
 }
 
@@ -259,12 +264,6 @@ void set_SCU_setting() {
 void set_DC_status() {
   is_DC_on = gpio_get(PWRGD_SYS_PWROK);
   printk("set dc status %d\n", is_DC_on);
-
-  if ( is_DC_on ){
-    snoop_start_thread();
-  }else{
-    free_snoop_buffer();
-  }
 }
 
 bool get_DC_status() {
@@ -282,10 +281,6 @@ bool get_DCon_5s_status() {
 void set_post_status() {
   is_post_complete = !(gpio_get(FM_BIOS_POST_CMPLT_BMC_N));
   printk("set is_post_complete %d\n", is_post_complete);
-
-  if ( is_post_complete ){
-    snoop_abort_thread();
-  }
 }
 
 bool get_post_status() {

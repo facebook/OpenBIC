@@ -1262,18 +1262,25 @@ void pal_OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg) {
 }
 
 void pal_OEM_1S_GET_POST_CODE(ipmi_msg *msg) {
-  int postcode_num = snoop_read_num;
-  if ( msg->data_len != 0 ){
+  int postcode_num = snoop_read_num[0];
+  int overwrite_flag = snoop_read_num[1];
+  if ( msg->data_len != 0 ) {
     msg->completion_code = CC_INVALID_LENGTH;
     return;
   }
-  if ( postcode_num ){
+  if (postcode_num) {
     uint8_t offset = 0;
-    if ( snoop_read_num > SNOOP_MAX_LEN ){
+    if (overwrite_flag) {
       postcode_num = SNOOP_MAX_LEN;
-      offset = snoop_read_num % SNOOP_MAX_LEN;
+      offset = snoop_read_num[0];
     }
     copy_snoop_read_buffer( offset, postcode_num, msg->data );
+  }
+  /* reverse postcode array */
+  for (int i=0; i<(postcode_num/2); i++) {
+    uint8_t tmp = *(msg->data + i);
+    *(msg->data + i) = *(msg->data + postcode_num - i - 1);
+    *(msg->data + postcode_num - i - 1) = tmp;
   }
   msg->data_len = postcode_num;
   msg->completion_code = CC_SUCCESS;
@@ -1281,7 +1288,13 @@ void pal_OEM_1S_GET_POST_CODE(ipmi_msg *msg) {
 }
 
 void pal_OEM_1S_RESET_BMC(ipmi_msg *msg) {
-  int postcode_num = snoop_read_num;
+  int postcode_num;
+
+  if (snoop_read_num[1])
+    postcode_num = SNOOP_MAX_LEN;
+  else
+    postcode_num = snoop_read_num[0];
+
   if ( msg->data_len != 0 ){
     msg->completion_code = CC_INVALID_LENGTH;
     return;

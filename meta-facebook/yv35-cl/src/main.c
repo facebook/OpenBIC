@@ -15,6 +15,7 @@
 #include "ipmi.h"
 #include "kcs.h"
 #include "plat_func.h"
+#include "hal_snoop.h"
 
 void device_init() {
   adc_init();
@@ -48,6 +49,8 @@ void main(void)
   usb_dev_init();
   device_init();
   set_sys_status();
+
+  snoop_start_thread();
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 61
