@@ -18,4 +18,10 @@
 
 #define I2C_BUS_NUM 10
 
+#define CPLD_IO_I2C_BUS   i2c_bus1
+#define CPLD_IO_I2C_ADDR  (0x1E >> 1)
+
+#define CPLD_IO_REG_OFS_HSC_EN_SLOT1 0x09
+#define CPLD_IO_REG_OFS_HSC_EN_SLOT3 0x0B
+
 #endif
