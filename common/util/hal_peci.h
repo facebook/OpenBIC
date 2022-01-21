@@ -20,6 +20,8 @@ enum peci_cmd {
   PECI_RD_IAMSR1_CMD           = 0xB2,
   PECI_WR_IAMSR0_CMD           = 0xB5,
   PECI_WR_IAMSR1_CMD           = 0xB6,
+  PECI_RD_ENDPOINT_CFG_CMD     = 0xC1,
+  PECI_WR_ENDPOINT_CFG_CMD     = 0xC5,
   PECI_RD_PCI_CFG_LOCAL0_CMD   = 0xE1,
   PECI_RD_PCI_CFG_LOCAL1_CMD   = 0xE2,
   PECI_WR_PCI_CFG_LOCAL0_CMD   = 0xE5,
@@ -31,7 +33,7 @@ enum peci_cmd {
 int peci_init();
 int peci_ping(uint8_t address);
 int peci_read(uint8_t cmd, uint8_t address, uint8_t u8Index, uint16_t u16Param, uint8_t u8ReadLen, uint8_t *readBuf);
-int peci_write(uint8_t cmd, uint8_t address, uint8_t u8Index, uint16_t u16Param, uint8_t u8ReadLen, uint8_t *readBuf, uint8_t u8WriteLen, uint8_t *writeBuf);
+int peci_write(uint8_t cmd, uint8_t address, uint8_t u8ReadLen, uint8_t *readBuf, uint8_t u8WriteLen, uint8_t *writeBuf);
 bool peci_retry_read(uint8_t cmd, uint8_t address, uint8_t u8Index, uint16_t u16Param, uint8_t u8ReadLen, uint8_t *readBuf);
 bool peci_getPwr(uint8_t sensor_num, int *reading);
 
