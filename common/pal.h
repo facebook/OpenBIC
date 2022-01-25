@@ -87,4 +87,8 @@ void gpio_IL_callback_handler(uint32_t pins);
 void gpio_MP_callback_handler(uint32_t pins);
 void gpio_QT_callback_handler(uint32_t pins);
 void gpio_UV_callback_handler(uint32_t pins);
+
+// platform
+void pal_warm_reset_prepare();
+void pal_cold_reset_prepare();
 #endif

@@ -48,6 +48,7 @@ void main(void)
   usb_dev_init();
   device_init();
   set_sys_status();
+  set_ME_restore();
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 61
