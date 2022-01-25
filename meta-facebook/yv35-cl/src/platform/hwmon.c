@@ -10,6 +10,7 @@
 
 static bool is_DC_on = 0;
 static bool is_DC_on_5s = 0;
+static bool is_DC_off_10s = 0;
 static bool is_post_complete = 0;
 static bool bic_class = sys_class_1;
 static bool is_1ou_present = 0;
@@ -57,16 +58,24 @@ void ISR_post_complete() {
   set_post_status();
 }
 
-K_WORK_DELAYABLE_DEFINE(set_DCon_5s_work, set_DCon_5s_status);
+K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_5s_status);
+K_WORK_DELAYABLE_DEFINE(set_DC_off_10s_work, set_DC_off_10s_status);
 #define DC_ON_5_SECOND 5
+#define DC_OFF_10_SECOND 10
 void ISR_DC_on() {
   set_DC_status();
 
   if (is_DC_on == 1) {
-    k_work_schedule(&set_DCon_5s_work, K_SECONDS(DC_ON_5_SECOND));
+    k_work_schedule(&set_DC_on_5s_work, K_SECONDS(DC_ON_5_SECOND));
+
+    if (k_work_cancel_delayable(&set_DC_off_10s_work) != 0) {
+      printk("Cancel set dc off delay work fail\n");
+    }
+    set_DC_off_10s_status();
   } else {
-    set_DCon_5s_status();
+    set_DC_on_5s_status();
     clear_unaccessible_sensor_cache();
+    k_work_schedule(&set_DC_off_10s_work, K_SECONDS(DC_OFF_10_SECOND));
 
     if (gpio_get(FM_SLPS3_PLD_N) && gpio_get(RST_RSMRST_BMC_N)) {
       addsel_msg_t sel_msg;
@@ -117,6 +126,67 @@ void ISR_PLTRST(){
 
 void ISR_DBP_PRSNT(){
   send_gpio_interrupt(FM_DBP_PRESENT_N);
+}
+
+void ISR_FM_THROTTLE(){
+  addsel_msg_t sel_msg;
+  if (gpio_get(PWRGD_CPU_LVC3)){
+    if (gpio_get(FM_THROTTLE_R_N)){
+      sel_msg.evt_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+    } else{
+      sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
+    }
+    sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+    sel_msg.snr_number = SENSOR_NUM_SYSTEM_STATUS;
+    sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_SYS_FMTHROTTLE;
+    sel_msg.evt_data2 = 0xFF;
+    sel_msg.evt_data3 = 0xFF;
+    if (!add_sel_evt_record(&sel_msg)) {
+      printk("FM Throttle addsel fail\n");
+    }
+  }
+}
+
+void ISR_HSC_THROTTLE(){
+  addsel_msg_t sel_msg;
+  if (gpio_get(RST_RSMRST_BMC_N)) {
+    if ((gpio_get(PWRGD_SYS_PWROK) == 0 && is_DC_off_10s == 0)) {
+      return;
+    } else {
+      if (gpio_get(IRQ_SML1_PMBUS_ALERT_N)){
+        sel_msg.evt_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+      } else{
+        sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
+      }
+      sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+      sel_msg.snr_number = SENSOR_NUM_SYSTEM_STATUS;
+      sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_SYS_PMBUSALERT;
+      sel_msg.evt_data2 = 0xFF;
+      sel_msg.evt_data3 = 0xFF;
+      if (!add_sel_evt_record(&sel_msg)){
+        printk("HSC Throttle addsel fail\n");
+      }
+    }
+  }
+}
+
+void ISR_MB_THROTTLE(){
+  addsel_msg_t sel_msg;
+  if (gpio_get(RST_RSMRST_BMC_N)){
+    if (gpio_get(FAST_PROCHOT_N)){
+      sel_msg.evt_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+    } else{
+      sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
+    }
+    sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+    sel_msg.snr_number = SENSOR_NUM_SYSTEM_STATUS;
+    sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_SYS_FIRMWAREASSERT;
+    sel_msg.evt_data2 = 0xFF;
+    sel_msg.evt_data3 = 0xFF;
+    if (!add_sel_evt_record(&sel_msg)){
+      printk("MB Throttle addsel fail\n");
+    }
+  }
 }
 
 void ISR_SOC_THMALTRIP() {
@@ -271,12 +341,16 @@ bool get_DC_status() {
   return is_DC_on;
 }
 
-void set_DCon_5s_status() {
+void set_DC_on_5s_status() {
   is_DC_on_5s = is_DC_on;
 }
 
-bool get_DCon_5s_status() {
+bool get_DC_on_5s_status() {
   return is_DC_on_5s;
+}
+
+void set_DC_off_10s_status() {
+  is_DC_off_10s = !is_DC_on;
 }
 
 void set_post_status() {
