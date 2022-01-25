@@ -10,7 +10,9 @@ manifest:
       remote: aspeed
       path: zephyr
       revision: 653496121d08aab03c528132eafdab4d80c09680
-      import: true
+      import: 
+        name-allowlist:
+          - cmsis
 
   self:
     path: openbic
