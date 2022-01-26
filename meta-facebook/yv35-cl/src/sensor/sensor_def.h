@@ -43,6 +43,7 @@ enum {
 #define HSC_CUR_CMD            0x8C
 #define HSC_TEMP_CMD           0x8D
 #define HSC_PWR_CMD            0x97
+#define PCH_TEMP_SNR_NUM       0x08
 
 /*  threshold sensor number, 1 based  */
 #define SENSOR_NUM_TEMP_TMP75_IN          0x01

@@ -782,7 +782,7 @@ ipmb_error ipmb_read(ipmi_msg *msg, uint8_t index) {
   }
 
   k_mutex_unlock(&mutex_read);
-  return ipmi_error_success;
+  return ipmb_error_success;
 }
 
 // run IPMI handler and notify command process status

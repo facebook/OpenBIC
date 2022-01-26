@@ -16,12 +16,6 @@
 #include "kcs.h"
 #include "plat_func.h"
 
-void device_init() {
-  adc_init();
-  peci_init();
-  hsc_init();
-}
-
 void set_sys_status() {
   gpio_set(FM_SPI_PCH_MASTER_SEL_R, GPIO_LOW);
   gpio_set(BIC_READY, GPIO_HIGH);
@@ -48,7 +42,6 @@ void main(void)
   ipmi_init();
   kcs_init();
   usb_dev_init();
-  device_init();
   set_sys_status();
 }
 

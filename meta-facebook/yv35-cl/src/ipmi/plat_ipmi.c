@@ -586,6 +586,9 @@ void pal_SENSOR_GET_SENSOR_READING(ipmi_msg *msg) {
       msg->data_len = 3;
       msg->completion_code = CC_SUCCESS;
       break;
+    case SNR_READ_4BYTE_ACUR_SUCCESS:
+      msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+      break;
     case SNR_FAIL_TO_ACCESS:
       msg->completion_code = CC_NODE_BUSY; // transection error
       break;
@@ -1159,6 +1162,12 @@ void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg) {
       msg->data[1] = reading & 0xff;
       msg->data[2] = snr_report_status;
       msg->data_len = 3;
+      msg->completion_code = CC_SUCCESS;
+      break;
+    case SNR_READ_4BYTE_ACUR_SUCCESS:
+      memcpy(msg->data, &reading, sizeof(reading));
+      msg->data[4] = snr_report_status;
+      msg->data_len = 5;
       msg->completion_code = CC_SUCCESS;
       break;
     case SNR_NOT_ACCESSIBLE:

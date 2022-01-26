@@ -1,9 +1,17 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "sdr.h"
 #include "pal.h"
 #include "sensor.h"
 #include "sensor_def.h"
+
+#define SEN_DRIVE_INIT_DECLARE(name) \
+  uint8_t name##_init(uint8_t snr_num)
+
+#define SEN_DRIVE_TYPE_INIT_MAP(name) {sen_dev_##name, name##_init}
+
+#define SEN_READ_RETRY_MAX 3
 
 struct k_thread sensor_poll;
 K_KERNEL_STACK_MEMBER(sensor_poll_stack, sensor_poll_stack_size);
@@ -17,6 +25,33 @@ static bool snr_poll_eanble_flag = 1;
 const int negative_ten_power[16] = {1,1,1,1,1,1,1,1000000000,100000000,10000000,1000000,100000,10000,1000,100,10};
 
 snr_cfg *sensor_config;
+
+SEN_DRIVE_INIT_DECLARE(tmp75);
+SEN_DRIVE_INIT_DECLARE(ast_adc);
+SEN_DRIVE_INIT_DECLARE(isl69259);
+SEN_DRIVE_INIT_DECLARE(nvme);
+SEN_DRIVE_INIT_DECLARE(mp5990);
+SEN_DRIVE_INIT_DECLARE(isl28022);
+SEN_DRIVE_INIT_DECLARE(pex89000);
+SEN_DRIVE_INIT_DECLARE(intel_peci);
+SEN_DRIVE_INIT_DECLARE(pch);
+SEN_DRIVE_INIT_DECLARE(adm1278);
+
+struct sen_drive_api {
+  enum sen_dev dev;
+  uint8_t (*init)(uint8_t);
+} sen_drive_tbl[] = {
+  SEN_DRIVE_TYPE_INIT_MAP(tmp75),
+  SEN_DRIVE_TYPE_INIT_MAP(ast_adc),
+  SEN_DRIVE_TYPE_INIT_MAP(isl69259),
+  SEN_DRIVE_TYPE_INIT_MAP(nvme),
+  SEN_DRIVE_TYPE_INIT_MAP(mp5990),
+  SEN_DRIVE_TYPE_INIT_MAP(isl28022),
+  SEN_DRIVE_TYPE_INIT_MAP(pex89000),
+  SEN_DRIVE_TYPE_INIT_MAP(intel_peci),
+  SEN_DRIVE_TYPE_INIT_MAP(pch),
+  SEN_DRIVE_TYPE_INIT_MAP(adm1278),
+};
 
 static void init_SnrNum(void) {
   for (int i = 0; i < SENSOR_NUM_MAX; i++) {
@@ -72,70 +107,7 @@ void clear_unaccessible_sensor_cache() {
   }
 }
 
-bool sensor_read(uint8_t sensor_num, int *reading) {
-  bool status;
-  switch(sensor_config[SnrNum_SnrCfg_map[sensor_num]].type){
-    case type_tmp75:
-      status = pal_tmp75_read(sensor_num, reading);
-      if (status)
-        return true;
-      break;
-    case type_adc:
-      status = pal_adc_read(sensor_num, reading);
-      if (status)
-        return true;
-      break;
-    case type_peci:
-      status = pal_peci_read(sensor_num, reading);
-      if (status)
-        return true;
-      break;
-    case type_vr:
-      status = pal_vr_read(sensor_num, reading);
-      if (status)
-        return true;
-      break;
-    case type_pch:
-      status = pal_pch_read(sensor_num, reading);
-      if (status)
-        return true;
-      break;
-    case type_hsc:
-      status = pal_hsc_read(sensor_num, reading);
-      if (status)
-        return true;
-      break;
-    case type_nvme:
-      status = pal_nvme_read(sensor_num, reading);
-      if (status)
-        return true;
-      break;
-    case type_medusa:
-      //TODO: get sensors data of medusa
-      reading = 0;
-      status = 1;
-      if (status)
-        return true;
-      break;
-    case type_fan:
-      //TODO: get sensors data of fan
-      reading = 0;
-      status = 1;
-      if (status)
-        return true;
-      break;
-
-    default:
-      printf("sensor_read with unexpected sensor type\n");
-      return false;
-      break;
-  }
-  return false;
-}
-
 uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode) {
-  uint8_t status;
-
   if(SnrNum_SDR_map[sensor_num] == 0xFF) { // look for sensor in SDR table
     return SNR_NOT_FOUND;
   }
@@ -144,32 +116,66 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode) 
     return SNR_NOT_ACCESSIBLE;
   }
 
+  snr_cfg *cfg = &sensor_config[SnrNum_SnrCfg_map[sensor_num]];
   if (read_mode == get_from_sensor) {
-    status = sensor_read(sensor_num, reading);
-    if (status) {
+    if (cfg->pre_sen_read_hook) {
+      if (cfg->pre_sen_read_hook(sensor_num, cfg->pre_sen_read_args) == false) {
+        printf("sen %d pre sensor read failed!\n", sensor_num);
+        return SNR_PRE_READ_ERROR;
+      }
+    }
+    
+    int status = SNR_READ_API_UNREGISTER;
+    if (cfg->read)
+      status = cfg->read(sensor_num, reading);
+
+    if (status == SNR_READ_SUCCESS || status == SNR_READ_ACUR_SUCCESS) {
+      cfg->retry = 0;
       if( !access_check(sensor_num) ) { // double check access to avoid not accessible read at same moment status change
         return SNR_NOT_ACCESSIBLE;
       }
-      return sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status;
+
+      if (cfg->post_sen_read_hook) {
+        if (cfg->post_sen_read_hook(sensor_num, cfg->post_sen_read_args, reading) == false) {
+          printf("sen %d post sensor read failed!\n", sensor_num);
+          cfg->cache_status = SNR_POST_READ_ERROR;
+          return SNR_POST_READ_ERROR;
+        }
+      }
+      memcpy(&cfg->cache, reading, sizeof(*reading));
+      status = SNR_READ_4BYTE_ACUR_SUCCESS;
+      cfg->cache_status = status;
+      return cfg->cache_status;
     } else {
-      printf("sensor[%x] read fail\n",sensor_num);
-      return sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status;
+      /* common retry */
+      if (cfg->retry >= SEN_READ_RETRY_MAX)
+        cfg->cache_status = status;
+      else
+        cfg->retry++;
+
+      return cfg->cache_status;
     }
   } else if (read_mode == get_from_cache) {
-    if (sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status == SNR_READ_SUCCESS
-        || sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status == SNR_READ_ACUR_SUCCESS) {
-      *reading = sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache;
+    if (cfg->cache_status == SNR_READ_SUCCESS
+        || cfg->cache_status == SNR_READ_ACUR_SUCCESS
+        || cfg->cache_status == SNR_READ_4BYTE_ACUR_SUCCESS) {
+      
+      if (cfg->cache_status == SNR_READ_4BYTE_ACUR_SUCCESS)
+        memcpy(reading, &cfg->cache, sizeof(cfg->cache));
+      else
+        *reading = cfg->cache;
+
       if( !access_check(sensor_num) ) { // double check access to avoid not accessible read at same moment status change
         return SNR_NOT_ACCESSIBLE;
       }
-      return sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status;
-    } else if (sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status == SNR_INIT_STATUS) {
-      sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache = sensor_fail;
-      return sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status;
+      return cfg->cache_status;
+    } else if (cfg->cache_status == SNR_INIT_STATUS) {
+      cfg->cache = sensor_fail;
+      return cfg->cache_status;
     } else {
-      sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache = sensor_fail;
-      printf("sensor[%x] cache read fail status %x\n", sensor_num, sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status);
-      return sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status;
+      cfg->cache = sensor_fail;
+      printf("sensor[%x] cache read fail, status %x\n", sensor_num, cfg->cache_status);
+      return cfg->cache_status;
     }
   }
 
@@ -186,7 +192,7 @@ void enable_snr_poll() {
 
 void SNR_poll_handler(void *arug0, void *arug1, void *arug2) {
   uint8_t poll_num;
-  int reading, SNR_POLL_INTERVEL_ms;
+  int SNR_POLL_INTERVEL_ms;
   k_msleep(1000); // delay 1 second to wait for drivers ready before start sensor polling
 
   pal_set_sensor_poll_interval(&SNR_POLL_INTERVEL_ms);
@@ -199,6 +205,8 @@ void SNR_poll_handler(void *arug0, void *arug1, void *arug2) {
       if (SnrNum_SnrCfg_map[poll_num] == sensor_null) { // sensor not exist
         continue;
       }
+
+      int reading = 0;
       get_sensor_reading(poll_num, &reading, get_from_sensor);
 
       k_yield();
@@ -217,12 +225,33 @@ void sensor_poll_init() {
   return;
 }
 
+static void drive_init(void)
+{
+  uint16_t drive_num = ARRAY_SIZE(sen_drive_tbl);
+  uint16_t i, j;
+
+  for (i = 0; i < SDR_NUM; i++) {
+    snr_cfg *p = sensor_config + i;
+    for (j = 0; j < drive_num; j++) {
+      if (p->type == sen_drive_tbl[j].dev) {
+        sen_drive_tbl[j].init(p->num);
+      break;
+      }
+    }
+
+    if (j == drive_num) {
+      printk("sen %d, type = %d is not supported!\n", i, p->type);
+      p->read = NULL;
+    }
+  }
+}
+
 bool sensor_init(void) {
   init_SnrNum();
   SDR_init();
 
   if( SDR_NUM != 0) {
-    sensor_config = malloc(SDR_NUM * sizeof(snr_cfg));
+    sensor_config = (snr_cfg *)malloc(SDR_NUM * sizeof(snr_cfg));
     if(sensor_config != NULL) {
       pal_load_snr_config();
     } else {
@@ -237,6 +266,9 @@ bool sensor_init(void) {
   pal_fix_Snrconfig();
   map_SnrNum_SDR_CFG();  
   
+  /* register read api of sensor_config */
+  drive_init();
+
   if (DEBUG_SNR) {
     printf("SNR0: %s\n",full_sensor_table[SnrNum_SDR_map[1]].ID_str);
   }
