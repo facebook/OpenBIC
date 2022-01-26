@@ -38,7 +38,7 @@ GPIO_CFG plat_gpio_cfg[] = {
   { chip_gpio,  19,      ENABLE,  DISABLE,   GPIO_OUTPUT,  GPIO_HIGH,  PUSH_PULL,   GPIO_INT_DISABLE,      NULL              },
   { chip_gpio,  20,      ENABLE,  DISABLE,   GPIO_OUTPUT,  GPIO_HIGH,  PUSH_PULL,   GPIO_INT_DISABLE,      NULL              },
   { chip_gpio,  21,      ENABLE,  DISABLE,   GPIO_OUTPUT,  GPIO_HIGH,  PUSH_PULL,   GPIO_INT_DISABLE,      NULL              },
-  { chip_gpio,  22,      ENABLE,  DISABLE,   GPIO_INPUT,   GPIO_HIGH,  OPEN_DRAIN,  GPIO_INT_DISABLE,      NULL              },
+  { chip_gpio,  22,      ENABLE,  DISABLE,   GPIO_INPUT,   GPIO_LOW,   PUSH_PULL,   GPIO_INT_EDGE_BOTH,    ISR_sled_cycle    },
   { chip_gpio,  23,      ENABLE,  DISABLE,   GPIO_OUTPUT,  GPIO_HIGH,  PUSH_PULL,   GPIO_INT_DISABLE,      NULL              },
   { chip_gpio,  24,      ENABLE,  DISABLE,   GPIO_INPUT,   GPIO_LOW,   PUSH_PULL,   GPIO_INT_DISABLE,      NULL              }, // GPIO D group
   { chip_gpio,  25,      ENABLE,  DISABLE,   GPIO_INPUT,   GPIO_HIGH,  PUSH_PULL,   GPIO_INT_DISABLE,      NULL              },
