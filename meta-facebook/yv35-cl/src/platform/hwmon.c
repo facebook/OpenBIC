@@ -77,6 +77,8 @@ void ISR_DC_on() {
     clear_unaccessible_sensor_cache();
     k_work_schedule(&set_DC_off_10s_work, K_SECONDS(DC_OFF_10_SECOND));
 
+    snoop_abort_thread();
+
     if (gpio_get(FM_SLPS3_PLD_N) && gpio_get(RST_RSMRST_BMC_N)) {
       addsel_msg_t sel_msg;
       sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_OEM_C3;
@@ -121,6 +123,11 @@ void ISR_CATERR() {
 }
 
 void ISR_PLTRST(){
+  if (gpio_get(RST_PLTRST_BUF_N) == 1) {
+    snoop_start_thread();
+    init_send_postcode_thread();
+  }
+
   send_gpio_interrupt(RST_PLTRST_BUF_N);
 }
 
@@ -329,12 +336,6 @@ void set_SCU_setting() {
 void set_DC_status() {
   is_DC_on = gpio_get(PWRGD_SYS_PWROK);
   printk("set dc status %d\n", is_DC_on);
-
-  if ( is_DC_on ){
-    snoop_start_thread();
-  }else{
-    free_snoop_buffer();
-  }
 }
 
 bool get_DC_status() {
@@ -420,6 +421,13 @@ void set_sys_config() {
         card_type_2ou = type_2ou_dpv2_16;
       }
     }
+  }
+}
+
+void set_post_thread() {
+  if (get_DC_status() == 1 && get_post_status() == 0) {
+    snoop_start_thread();
+    init_send_postcode_thread();
   }
 }
 

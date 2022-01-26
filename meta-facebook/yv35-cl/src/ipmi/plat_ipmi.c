@@ -97,10 +97,10 @@ bool pal_ME_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd) {
 }
 
 bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd) {
-  if ( (netfn == NETFN_OEM_1S_REQ) && (cmd == CMD_OEM_1S_MSG_OUT) ) {
-    return 1;
-  } else if ( (netfn == NETFN_OEM_1S_REQ) && (cmd == CMD_OEM_1S_MSG_IN) ) {
-    return 1;
+  if ( (netfn == NETFN_OEM_1S_REQ) ) {
+    if ( cmd == CMD_OEM_1S_MSG_OUT || cmd == CMD_OEM_1S_MSG_IN ) {
+      return 1;
+    }
   }
 
   // Reserve for future commands
@@ -1267,14 +1267,22 @@ void pal_OEM_1S_GET_POST_CODE(ipmi_msg *msg) {
     msg->completion_code = CC_INVALID_LENGTH;
     return;
   }
+
   if ( postcode_num ){
     uint8_t offset = 0;
     if ( snoop_read_num > SNOOP_MAX_LEN ){
       postcode_num = SNOOP_MAX_LEN;
       offset = snoop_read_num % SNOOP_MAX_LEN;
     }
-    copy_snoop_read_buffer( offset, postcode_num, msg->data );
+    copy_snoop_read_buffer( offset, postcode_num, msg->data, copy_all_postcode );
   }
+
+  for (int i = 0 ; i < (postcode_num / 2) ; ++i ) {
+    uint8_t tmp = * (msg->data + i);
+    * (msg->data + i) = * (msg->data + postcode_num - i - 1);
+    * (msg->data + postcode_num - i - 1) = tmp;
+  }
+
   msg->data_len = postcode_num;
   msg->completion_code = CC_SUCCESS;
   return;
