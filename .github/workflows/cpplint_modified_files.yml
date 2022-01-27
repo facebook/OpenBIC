@@ -1,0 +1,77 @@
+name: build_and_analyze 
+on: pull_request
+jobs:
+    Build_Platforms:
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                # This job matrix will generate a seperate job for all platforms listed.
+                platforms: [yv35-cl, yv35-bb]
+ 
+        steps:
+
+          - uses: actions/checkout@v2
+            with:
+                        path: ${{ github.event.repository.name }} 
+          - name: Install Dependencies
+            run: |
+                sudo apt install --no-install-recommends \
+                ninja-build \
+                gperf \
+                ccache \
+                dfu-util \
+                device-tree-compiler \
+                make \
+                gcc \
+                gcc-multilib \
+                g++-multilib \
+                libsdl2-dev \
+                
+          - name: Setup Python
+            uses: actions/setup-python@v2
+
+            # Exactly what it says on the tin.    
+          - name: Install requirements
+            run: |
+                pip install --user -U west
+                pip install pyelftools
+          
+          - name: Init West Project
+            run: |
+                west init --local ${{ github.event.repository.name }}
+
+          # Sets up python and loads packages from the cache.
+          - name: Try Python Module Cache
+            id: python-cache
+            uses: actions/cache@v2
+            with:
+                path: |
+                        ./modules
+                        ./zephyr
+                key: west-yml-${{ hashFiles('openbic_zephyr_project/openbic/west.yml') }}
+    
+          - name: Update West Project
+            run: |
+                cd ${{ github.event.repository.name }} 
+                west update
+          
+          - name: Cache SDK Toolchain
+            id: cache-sdk
+            uses: actions/cache@v2
+            with:
+                path: ~/openbic_zephyr_project/zephyr-sdk-0.12.4
+                key: zephyr-sdk-cache-0.12.4
+
+          - name: Get SDK Toolchain
+            if: steps.cache-sdk.outputs.cache-hit != 'true'
+            id: download-sdk
+            run: |
+                wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.12.4/zephyr-sdk-0.12.4-x86_64-linux-setup.run
+                chmod +x zephyr-sdk-0.12.4-x86_64-linux-setup.run
+                ./zephyr-sdk-0.12.4-x86_64-linux-setup.run --quiet -- -d ~/zephyr-sdk-0.12.4
+
+          - name: Build Platform
+            run: |
+                cd ${{ github.event.repository.name }} 
+                touch meta-facebook/${{ matrix.platform }}/CMakeLists.txt
+                west build -p auto -b ast1030_evb meta-facebook/${{ matrix.platform }}/
