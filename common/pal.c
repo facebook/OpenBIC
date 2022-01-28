@@ -358,3 +358,11 @@ __weak void gpio_UV_callback_handler(uint32_t pins) {
   return;
 }
 
+// platform
+__weak void pal_warm_reset_prepare() {
+  return;
+}
+
+__weak void pal_cold_reset_prepare() {
+  return;
+}

@@ -28,6 +28,7 @@ bool get_boot_source_ACon() {
 #define bic_warm_reset_delay 100
 
 void bic_warm_reset() {
+  pal_warm_reset_prepare();
   k_msleep(bic_warm_reset_delay);
   sys_reboot(SYS_REBOOT_WARM);
 }
@@ -42,6 +43,7 @@ void submit_bic_warm_reset() {
 #define bic_cold_reset_delay 100
 
 void bic_cold_reset() {
+  pal_cold_reset_prepare();
   k_msleep(bic_cold_reset_delay);
   sys_reboot(SYS_REBOOT_COLD);
 }
