@@ -327,16 +327,16 @@ bool pex89000_init(uint8_t sensor_num)
 
   if (sensor_config[SnrNum_SnrCfg_map[sensor_num]].init_args == NULL) {
     printk("pex89000_init: init_arg is NULL\n");
-    return false;
+    return SENSOR_INIT_UNSPECIFIED_ERROR;
   }
 
   pex89000_init_arg *init_arg = (pex89000_init_arg *)sensor_config[SnrNum_SnrCfg_map[sensor_num]].init_args;
   if ( k_mutex_init(&init_arg->brcm_pciesw) ) {
   	printf("pex89000 mutex %d init fail\n", init_arg->idx);
     init_arg->is_init = false;
-    return false;
+    return SENSOR_INIT_UNSPECIFIED_ERROR;
   }
 
   init_arg->is_init = true;
-  return true;
+  return SENSOR_INIT_SUCCESS;
 }

@@ -24,7 +24,7 @@ int peci_init() {
     return ret;
   }
 
-  return ret;
+  return true;
 }
 
 int peci_ping(uint8_t address) {

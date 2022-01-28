@@ -56,5 +56,5 @@ uint8_t mp5990_read(uint8_t sensor_num, int *reading)
 uint8_t mp5990_init(uint8_t sensor_num)
 {
   sensor_config[SnrNum_SnrCfg_map[sensor_num]].read = mp5990_read;
-  return true;
+  return SENSOR_INIT_SUCCESS;
 }

@@ -229,13 +229,16 @@ static void drive_init(void)
 {
   uint16_t drive_num = ARRAY_SIZE(sen_drive_tbl);
   uint16_t i, j;
+  uint8_t ret;
 
   for (i = 0; i < SDR_NUM; i++) {
     snr_cfg *p = sensor_config + i;
     for (j = 0; j < drive_num; j++) {
       if (p->type == sen_drive_tbl[j].dev) {
-        sen_drive_tbl[j].init(p->num);
-      break;
+        ret = sen_drive_tbl[j].init(p->num);
+        if (ret != SENSOR_INIT_SUCCESS)
+          printk("sensor num %d initial fail, ret %d\n", p->num, ret);
+        break;
       }
     }
 

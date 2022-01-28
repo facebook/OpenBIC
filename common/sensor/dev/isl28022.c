@@ -71,13 +71,13 @@ uint8_t isl28022_read(uint8_t sensor_num, int* reading) {
 uint8_t isl28022_init(uint8_t sensor_num) {
   if (sensor_config[SnrNum_SnrCfg_map[sensor_num]].init_args == NULL) {
     printk("isl28022_init: init_arg is NULL\n");
-    return false;
+    return SENSOR_INIT_UNSPECIFIED_ERROR;
   }
 
   sensor_config[SnrNum_SnrCfg_map[sensor_num]].read = isl28022_read;
   isl28022_init_arg *init_arg = (isl28022_init_arg*)sensor_config[SnrNum_SnrCfg_map[sensor_num]].init_args;
   if (init_arg->is_init == true) {
-    return true;
+    return SENSOR_INIT_SUCCESS;
   }
 
   I2C_MSG msg;
@@ -92,7 +92,7 @@ uint8_t isl28022_init(uint8_t sensor_num) {
   msg.data[2] = init_arg->config.value & 0xFF;
   if (i2c_master_write(&msg, retry)) {
     printk("isl28022_init, set configuration register fail\n");
-    return false;
+    return SENSOR_INIT_UNSPECIFIED_ERROR  ;
   }
 
   /* calculate and set calibration */
@@ -116,9 +116,9 @@ uint8_t isl28022_init(uint8_t sensor_num) {
   msg.data[2] = calibration & 0xFF;
   if (i2c_master_write(&msg, retry)) {
     printk("isl28022_init, set calibration register fail\n");
-    return false;
+    return SENSOR_INIT_UNSPECIFIED_ERROR;
   }
 
   init_arg->is_init = true;
-  return true;
+  return SENSOR_INIT_SUCCESS;
 }

@@ -74,7 +74,7 @@ uint8_t adm1278_init(uint8_t sensor_num)
 {
   if ( !sensor_config[SnrNum_SnrCfg_map[sensor_num]].init_args ) {
     printk("<error> ADM1278 init args not provide!\n");
-    return false;
+    return SENSOR_INIT_UNSPECIFIED_ERROR;
   }
 
   adm1278_init_arg *init_args = (adm1278_init_arg *) sensor_config[SnrNum_SnrCfg_map[sensor_num]].init_args;
@@ -92,7 +92,7 @@ uint8_t adm1278_init(uint8_t sensor_num)
 
   if (i2c_master_write(&msg, retry)) {
     printf("<error> ADM1278 initail failed while i2c writing\n");
-    return false;
+    return SENSOR_INIT_UNSPECIFIED_ERROR;
   }
       
   memset(&msg, 0, sizeof(msg));
@@ -104,16 +104,16 @@ uint8_t adm1278_init(uint8_t sensor_num)
 
   if (i2c_master_read(&msg, retry)) {
     printf("<error> ADM1278 initail failed while i2c reading\n");
-    return false;
+    return SENSOR_INIT_UNSPECIFIED_ERROR;
   }
 
   if ( (msg.data[0] != (init_args->config.value & 0xFF)) || (msg.data[1] != ((init_args->config.value >> 8) & 0xFF)) ) {
     printf("<error> ADM1278 initail failed with wrong reading data\n");
-    return false;
+    return SENSOR_INIT_UNSPECIFIED_ERROR;
   }
   init_args->is_init = 1;
 
 skip_init:
   sensor_config[SnrNum_SnrCfg_map[sensor_num]].read = adm1278_read;
-  return true;
+  return SENSOR_INIT_SUCCESS;
 }

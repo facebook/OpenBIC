@@ -81,6 +81,11 @@ enum {
   SNR_READ_4BYTE_ACUR_SUCCESS
 };
 
+enum {
+  SENSOR_INIT_SUCCESS,
+  SENSOR_INIT_UNSPECIFIED_ERROR
+};
+
 typedef struct _snr_cfg__ {
   uint8_t num;
   uint8_t type;

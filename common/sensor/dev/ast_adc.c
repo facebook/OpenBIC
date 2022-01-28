@@ -136,7 +136,7 @@ uint8_t ast_adc_init(uint8_t sensor_num)
 {
   if ( !sensor_config[SnrNum_SnrCfg_map[sensor_num]].init_args ) {
     printk("<error> ADC init args not provide!\n");
-    return false;
+    return SENSOR_INIT_UNSPECIFIED_ERROR;
   }
 
   adc_asd_init_arg *init_args = (adc_asd_init_arg *) sensor_config[SnrNum_SnrCfg_map[sensor_num]].init_args;
@@ -147,7 +147,7 @@ uint8_t ast_adc_init(uint8_t sensor_num)
 
   if (!is_ready[0] && !is_ready[1]) {
     printk("<error> Both of ADC0 and ADC1 are not ready to use!\n");
-    return false;
+    return SENSOR_INIT_UNSPECIFIED_ERROR;
   }
 
   static struct adc_channel_cfg channel_cfg;
@@ -178,5 +178,5 @@ uint8_t ast_adc_init(uint8_t sensor_num)
 skip_init:
   sensor_config[SnrNum_SnrCfg_map[sensor_num]].read = ast_adc_read;
 
-  return true;
+  return SENSOR_INIT_SUCCESS;
 }
