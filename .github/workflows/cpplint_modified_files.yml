@@ -1,77 +1,175 @@
 name: build_and_analyze 
 on: pull_request
 jobs:
-    Build_Platforms:
-        runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                # This job matrix will generate a seperate job for all platforms listed.
-                platforms: [yv35-cl, yv35-bb]
- 
-        steps:
+  Build-Platforms:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # This job matrix will generate a seperate job for all platforms listed.
+        platforms: [yv35-cl, yv35-bb]
 
-          - uses: actions/checkout@v2
-            with:
-                        path: ${{ github.event.repository.name }} 
-          - name: Install Dependencies
-            run: |
-                sudo apt install --no-install-recommends \
-                ninja-build \
-                gperf \
-                ccache \
-                dfu-util \
-                device-tree-compiler \
-                make \
-                gcc \
-                gcc-multilib \
-                g++-multilib \
-                libsdl2-dev \
-                
-          - name: Setup Python
-            uses: actions/setup-python@v2
+    steps:
 
-            # Exactly what it says on the tin.    
-          - name: Install requirements
-            run: |
-                pip install --user -U west
-                pip install pyelftools
-          
-          - name: Init West Project
-            run: |
-                west init --local ${{ github.event.repository.name }}
+    - uses: actions/checkout@v2
+      with:
+        path: ${{ github.event.repository.name }} 
+    - name: Install Dependencies
+      run: |
+        sudo apt install --no-install-recommends \
+        ninja-build \
+        gperf \
+        ccache \
+        dfu-util \
+        device-tree-compiler \
+        make \
+        gcc \
+        gcc-multilib \
+        g++-multilib \
+        libsdl2-dev \
+  
+    - name: Setup Python
+      uses: actions/setup-python@v2
 
-          # Sets up python and loads packages from the cache.
-          - name: Try Python Module Cache
-            id: python-cache
-            uses: actions/cache@v2
-            with:
-                path: |
-                        ./modules
-                        ./zephyr
-                key: west-yml-${{ hashFiles('openbic_zephyr_project/openbic/west.yml') }}
-    
-          - name: Update West Project
-            run: |
-                cd ${{ github.event.repository.name }} 
-                west update
-          
-          - name: Cache SDK Toolchain
-            id: cache-sdk
-            uses: actions/cache@v2
-            with:
-                path: ~/openbic_zephyr_project/zephyr-sdk-0.12.4
-                key: zephyr-sdk-cache-0.12.4
+    # Exactly what it says on the tin.    
+    - name: Install requirements
+      run: |
+        pip install --user -U west
+        pip install pyelftools
+        
+    - name: Init West Project
+      run: |
+        west init --local ${{ github.event.repository.name }}
 
-          - name: Get SDK Toolchain
-            if: steps.cache-sdk.outputs.cache-hit != 'true'
-            id: download-sdk
-            run: |
-                wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.12.4/zephyr-sdk-0.12.4-x86_64-linux-setup.run
-                chmod +x zephyr-sdk-0.12.4-x86_64-linux-setup.run
-                ./zephyr-sdk-0.12.4-x86_64-linux-setup.run --quiet -- -d ~/zephyr-sdk-0.12.4
+    # Sets up python and loads packages from the cache.
+    - name: Try Python Module Cache
+      id: python-cache
+      uses: actions/cache@v2
+      with:
+        path: |
+          ./modules
+          ./zephyr
+        key: west-yml-${{ hashFiles('openbic_zephyr_project/openbic/west.yml') }}
+  
+    - name: Update West Project
+      run: |
+        cd ${{ github.event.repository.name }} 
+        west update
+  
+    - name: Cache SDK Toolchain
+      id: cache-sdk
+      uses: actions/cache@v2
+      with:
+        path: ~/openbic_zephyr_project/zephyr-sdk-0.12.4
+        key: zephyr-sdk-cache-0.12.4
 
-          - name: Build Platform
-            run: |
-                cd ${{ github.event.repository.name }} 
-                touch meta-facebook/${{ matrix.platform }}/CMakeLists.txt
-                west build -p auto -b ast1030_evb meta-facebook/${{ matrix.platform }}/
+    - name: Get SDK Toolchain
+      if: steps.cache-sdk.outputs.cache-hit != 'true'
+      id: download-sdk
+      run: |
+        wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.12.4/zephyr-sdk-0.12.4-x86_64-linux-setup.run
+        chmod +x zephyr-sdk-0.12.4-x86_64-linux-setup.run
+        ./zephyr-sdk-0.12.4-x86_64-linux-setup.run --quiet -- -d ~/zephyr-sdk-0.12.4
+
+    - name: Build Platform
+      run: |
+        cd ${{ github.event.repository.name }} 
+        touch meta-facebook/${{ matrix.platform }}/CMakeLists.txt
+        west build -p auto -b ast1030_evb meta-facebook/${{ matrix.platform }}/
+
+  Run-CPPCheck:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Get PR File List 
+        run: |
+          URL="https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls/${{ github.event.pull_request.number }}/files"
+          curl -s -X GET -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" $URL | jq -r '.[] | .filename' > git_diff.log
+          cat git_diff.log 
+  
+      - name: Check for C/CPP Sources
+        run : |
+          # Only keep the source files to check or CPPCheck gets confused.
+          sed '/\(c$\|cpp$\|c$\|cc$\|cu$\|cxx$\|h$\|hh$\|hpp$\|hxx$\|tcc$\)/!d' git_diff.log > /tmp/cppcheck_file_list.log
+
+          if [ -s /tmp/cppcheck_file_list.log ]; then
+            echo "contains_c_source=true" >> $GITHUB_ENV
+          else
+            echo "contains_c_source=false" >> $GITHUB_ENV
+          fi
+
+      - uses: actions/checkout@v2
+        name: Checkout Repo
+        if: env.contains_c_source == 'true'
+        
+      - uses: actions/setup-python@v2
+        name: Setup Python
+        if: env.contains_c_source == 'true'
+
+      - name: Install CPPCheck
+        if: env.contains_c_source == 'true'
+        run: sudo apt-get install -y cppcheck
+
+      - name: Run CPPCheck on Modified Source Files
+        if: env.contains_c_source == 'true'
+        continue-on-error: true
+        shell: bash
+        run: |
+          # These files specify the config for cppcheck and a list of errors to suppress
+          CPPCHECK_CONFIG=.circleci/lint/cppcheck/cppcheck.cfg
+          CPPCHECK_SUPPRESSED=.circleci/lint/cppcheck/cppcheck-suppressions.txt
+
+          echo "Files to check:"
+          cat /tmp/cppcheck_file_list.log
+
+          options=( "-j2"
+            "--inconclusive"
+            "--enable=performance,style,portability,information"
+            "--library=.circleci/lint/cppcheck/cppcheck.cfg"
+            "--suppressions-list=.circleci/lint/cppcheck/cppcheck-suppressions.txt"
+            "--file-list=/tmp/cppcheck_file_list.log"
+            "--template='{file}:{line}:{column}:{message}'"
+            "--output-file=/tmp/cppcheck.log"
+            "--report-progress")
+  
+          cppcheck "${options[@]}"
+
+          echo "Errors Found:"
+          cat /tmp/cppcheck.log
+
+      - uses: actions/upload-artifact@master
+        name: Upload CPPCheck error log
+        if: env.contains_c_source == 'true'
+        with:
+          name: cppcheck-output
+          path: /tmp/cppcheck.log
+
+      - name: Check for cppcheck output
+        if: env.contains_c_source == 'true'
+        run : |
+          if [ -s /tmp/cppcheck_file_list.log ]; then
+            exit 1
+          fi
+
+  Reviewdog-Output:
+    needs: [Run-CPPCheck]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      
+      - uses: actions/checkout@v2
+        name: Checkout Repo
+       
+      - uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest 
+
+      - name: Download CPPCheck Error Log
+        uses: actions/download-artifact@v2
+        with:
+          name: cppcheck-output
+
+      - name: Run reviewdog
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat cppcheck.log | reviewdog -efm="%f:%l:%c:%m" -filter-mode=nofilter -reporter=github-pr-check
