@@ -1,7 +1,7 @@
 name: build_and_analyze 
 on: pull_request
 jobs:
-  Build_Platforms:
+  Build-Platforms:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -76,7 +76,7 @@ jobs:
         touch meta-facebook/${{ matrix.platform }}/CMakeLists.txt
         west build -p auto -b ast1030_evb meta-facebook/${{ matrix.platform }}/
 
-  run_ccpcheck:
+  Run-CPPCheck:
     runs-on: ubuntu-latest
     steps:
 
@@ -127,7 +127,7 @@ jobs:
             "--library=.circleci/lint/cppcheck/cppcheck.cfg"
             "--suppressions-list=.circleci/lint/cppcheck/cppcheck-suppressions.txt"
             "--file-list=/tmp/cppcheck_file_list.log"
-            "--template='{file}:{line}:{column}:{message}'"
+            "--template={file}:{line}:{column}:{message}"
             "--output-file=/tmp/cppcheck.log"
             "--report-progress")
   
@@ -150,3 +150,30 @@ jobs:
             exit 1
           fi
 
+  Aggregate-Lint-Output:
+    needs: [Run-CPPCheck]
+    if: always() && (needs.Run-CPPCheck.result == 'failure')
+    runs-on: ubuntu-latest
+    steps:
+      
+      - uses: actions/checkout@v2
+        name: Checkout Repo
+       
+      - uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest 
+
+      - name: Download CPPCheck Error Log
+        uses: actions/download-artifact@v2
+        with:
+          name: cppcheck-output
+
+      - name: catFile
+        run: |
+          cat cppcheck.log
+
+      - name: Run reviewdog
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat cppcheck.log | reviewdog -efm="%f:%l:%c:%m" -filter-mode=nofilter -reporter=github-pr-check
