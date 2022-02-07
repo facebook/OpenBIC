@@ -760,7 +760,6 @@ void pal_OEM_1S_GET_GPIO(ipmi_msg *msg) {
 }
 
 void pal_OEM_1S_GET_SET_GPIO(ipmi_msg *msg) {
-  uint8_t value;
   uint8_t completion_code = CC_INVALID_LENGTH;
   uint8_t gpio_num = gpio_ind_to_num_table[msg->data[1]];
 
@@ -812,8 +811,7 @@ void pal_OEM_1S_GET_SET_GPIO(ipmi_msg *msg) {
 
 void pal_OEM_1S_PECIaccess(ipmi_msg *msg) {
   uint8_t addr, cmd, *writeBuf, *readBuf;
-  uint8_t u8WriteLen, u8ReadLen, u8Index;
-  uint16_t u16Param;
+  uint8_t u8WriteLen, u8ReadLen;
   int ret;
 
   if (msg->data_len < 3) {
@@ -822,63 +820,75 @@ void pal_OEM_1S_PECIaccess(ipmi_msg *msg) {
   }
 
   addr = msg->data[0];
-  if ((msg->data[1] == 0) && (msg->data[2] == 0)) {
-    ret = peci_ping(addr);
-    msg->data[0] = ret;
-    msg->data_len = 1;
-    msg->completion_code = CC_SUCCESS;
-    return;
-  }
-
   u8WriteLen = msg->data[1];
   u8ReadLen = msg->data[2];
   cmd = msg->data[3];
-  u8Index = msg->data[5];
-  u16Param = msg->data[7];
-  u16Param = (u16Param << 8) + msg->data[6];
-  readBuf = (uint8_t *)malloc(sizeof(uint8_t) * u8ReadLen);
-  if (readBuf == NULL) {
-    msg->completion_code = CC_OUT_OF_SPACE;
-    return;
-  }
-  writeBuf = (uint8_t *)malloc(sizeof(uint8_t) * u8WriteLen);
-  if (writeBuf == NULL) {
-    free(readBuf);
-    msg->completion_code = CC_OUT_OF_SPACE;
-    return;
-  }
-  memcpy(&writeBuf[0], &msg->data[4], u8WriteLen);
 
-  if (cmd == PECI_RD_PKG_CFG0_CMD) {
-    ret = peci_read(cmd, addr, u8Index, u16Param, u8ReadLen, readBuf);
-  } else if (cmd == PECI_WR_PKG_CFG0_CMD || cmd == PECI_CRASHDUMP_CMD) {
-    ret = peci_write(cmd, addr, u8Index, u16Param, u8ReadLen, readBuf, u8WriteLen, writeBuf);
+  // PECI driver would add 1 byte to check that data writing to host is correct, so input data len would one less then input writelen in write command.
+  if ((msg->data_len - 3 != u8WriteLen) && (msg->data_len - 3 != u8WriteLen - 1)) {
+    msg->completion_code = CC_INVALID_LENGTH;
+    return;
+  }
+  
+  if (msg->data_len == 3) {
+    if ((u8WriteLen == 0) && (u8ReadLen == 0)) {
+      ret = peci_ping(addr);
+      msg->data[0] = ret;
+      msg->data_len = 1;
+      msg->completion_code = CC_SUCCESS;
+      return;
+    } else {
+      msg->completion_code = CC_INVALID_LENGTH;
+      return;
+    }
   } else {
-    printf("command not support\n");
-    msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
-    free(writeBuf);
-    free(readBuf);
+    if (cmd == PECI_GET_DIB_CMD || cmd == PECI_GET_TEMP0_CMD) {
+      readBuf = (uint8_t *)malloc(sizeof(uint8_t) * (u8ReadLen + 1));
+    } else {
+      readBuf = (uint8_t *)malloc(sizeof(uint8_t) * u8ReadLen);
+    }
+    writeBuf = (uint8_t *)malloc(sizeof(uint8_t) * u8WriteLen);
+    if (readBuf == NULL || writeBuf == NULL) {
+      printk("PECI access util buffer alloc fail\n");
+      if(writeBuf != NULL) {
+        free(writeBuf);
+      }
+      if(readBuf != NULL) {
+        free(readBuf);
+      }
+      msg->completion_code = CC_OUT_OF_SPACE;
+      return;
+    }
+    memcpy(&writeBuf[0], &msg->data[4], u8WriteLen);
+
+    ret = peci_write(cmd, addr, u8ReadLen, readBuf, u8WriteLen, writeBuf);
+    if (ret) {
+      if(writeBuf != NULL) {
+        free(writeBuf);
+      }
+      if(readBuf != NULL) {
+        free(readBuf);
+      }
+      msg->completion_code = CC_UNSPECIFIED_ERROR;
+      return;
+    }
+    memcpy(&msg->data[0], &readBuf[0], u8ReadLen);
+    if ( cmd != PECI_GET_DIB_CMD && cmd != PECI_GET_TEMP0_CMD) {
+      if (msg->data[0] != PECI_CC_RSP_SUCCESS) {
+        msg->data[0] = (msg->data[0] == 0xf9) ? PECI_CC_ILLEGAL_REQUEST : msg->data[0];
+        memset(&msg->data[1], 0xff, u8ReadLen - 1);
+      }
+    }
+    if(writeBuf != NULL) {
+      free(writeBuf);
+    }
+    if(readBuf != NULL) {
+      free(readBuf);
+    }
+    msg->data_len = u8ReadLen;
+    msg->completion_code = CC_SUCCESS;
     return;
   }
-
-  if (ret) {
-    free(writeBuf);
-    free(readBuf);
-    msg->completion_code = CC_CAN_NOT_RESPOND;
-    return;
-  }
-
-  memcpy(&msg->data[0], &readBuf[0], u8ReadLen);
-  if (msg->data[0] != PECI_CC_RSP_SUCCESS) {
-    msg->data[0] = (msg->data[0] == 0xf9) ? PECI_CC_ILLEGAL_REQUEST : msg->data[0];
-    memset(&msg->data[1], 0xff, u8ReadLen - 1);
-  }
-
-  free(writeBuf);
-  free(readBuf);
-  msg->data_len = u8ReadLen;
-  msg->completion_code = CC_SUCCESS;
-  return;
 }
 
 void pal_OEM_SET_SYSTEM_GUID(ipmi_msg *msg) {

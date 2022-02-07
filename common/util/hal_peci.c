@@ -80,7 +80,7 @@ int peci_read(uint8_t cmd, uint8_t address, uint8_t u8Index, uint16_t u16Param, 
   return ret;  
 }
 
-int peci_write(uint8_t cmd, uint8_t address, uint8_t u8Index, uint16_t u16Param, uint8_t u8ReadLen, uint8_t *readBuf, uint8_t u8WriteLen, uint8_t *writeBuf) {
+int peci_write(uint8_t cmd, uint8_t address, uint8_t u8ReadLen, uint8_t *readBuf, uint8_t u8WriteLen, uint8_t *writeBuf) {
   struct peci_msg wrpkgcfg;
   int ret;
 
@@ -89,23 +89,25 @@ int peci_write(uint8_t cmd, uint8_t address, uint8_t u8Index, uint16_t u16Param,
   wrpkgcfg.tx_buffer.len = u8WriteLen;
   wrpkgcfg.rx_buffer.len = u8ReadLen;
   wrpkgcfg.rx_buffer.buf = readBuf;
-  wrpkgcfg.tx_buffer.buf = (uint8_t *)malloc(u8WriteLen * sizeof(uint8_t));
-  memcpy(&wrpkgcfg.tx_buffer.buf[0], &writeBuf[0], u8WriteLen);
+  wrpkgcfg.tx_buffer.buf = writeBuf;
   
   ret = peci_transfer(dev, &wrpkgcfg);
   if (ret) {
-    free(wrpkgcfg.tx_buffer.buf);
     printk("peci write failed %d\n", ret);
     return ret;
   }
   
-  free(wrpkgcfg.tx_buffer.buf);
   return ret;
 }
 
 bool peci_retry_read(uint8_t cmd, uint8_t address, uint8_t u8Index, uint16_t u16Param, uint8_t u8ReadLen, uint8_t *readBuf) {
-  uint8_t i, ret, retry = 3;
+  uint8_t i, ret, retry = 5;
+  
+  if(readBuf == NULL)
+    return false;
+
   for(i = 0; i < retry; ++i) {
+    k_msleep(10);
     memcpy(&readBuf[0], 0, u8ReadLen * sizeof(uint8_t));
     ret = peci_read(cmd, address, u8Index, u16Param, u8ReadLen, readBuf);
     if (!ret) {

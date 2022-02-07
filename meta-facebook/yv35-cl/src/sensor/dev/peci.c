@@ -88,18 +88,7 @@ bool pal_peci_read(uint8_t sensor_num, int *reading) {
     // retry block
     bool is_retry_success = false;
     if ( complete_code == PECI_CC_RSP_TIMEOUT || complete_code == PECI_CC_OUT_OF_RESOURCES_TIMEOUT ) {
-      uint8_t i, retry = 3;
-       for(i = 0; i < retry; i++) {
-         memcpy(&readBuf[0], 0, u8ReadLen * sizeof(uint8_t));
-         ret = peci_read(cmd, address, u8Index, u16Param, u8ReadLen, readBuf);
-         if (!ret) {
-           if ( readBuf[0] == PECI_CC_RSP_SUCCESS ) {
-             is_retry_success = true;
-             complete_code = PECI_CC_RSP_SUCCESS;
-             break;
-           }
-         }
-       }
+      is_retry_success = peci_retry_read(cmd, address, u8Index, u16Param, u8ReadLen, readBuf);
     // retry block
 
       if (!is_retry_success) {

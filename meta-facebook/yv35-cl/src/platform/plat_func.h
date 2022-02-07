@@ -41,4 +41,5 @@ uint8_t get_2ou_cardtype();
 void send_gpio_interrupt(uint8_t gpio_num);
 void enable_PRDY_interrupt();
 void disable_PRDY_interrupt();
+void set_ME_restore();
 #endif
