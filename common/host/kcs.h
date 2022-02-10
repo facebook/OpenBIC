@@ -8,16 +8,16 @@
 #define DEBUG_KCS 0
 
 struct kcs_request {
-  uint8_t netfn;
-  uint8_t cmd;
-  uint8_t data[0];
+	uint8_t netfn;
+	uint8_t cmd;
+	uint8_t data[0];
 };
 
 struct kcs_response {
-  uint8_t netfn;
-  uint8_t cmd;
-  uint8_t cmplt_code;
-  uint8_t data[0];
+	uint8_t netfn;
+	uint8_t cmd;
+	uint8_t cmplt_code;
+	uint8_t data[0];
 };
 
 void kcs_write(uint8_t *buf, uint32_t buf_sz);
@@ -26,4 +26,3 @@ bool get_kcs_ok();
 void reset_kcs_ok();
 
 #endif
-
