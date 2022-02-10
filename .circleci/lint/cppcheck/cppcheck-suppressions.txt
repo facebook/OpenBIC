@@ -1,4 +1,0 @@
-variableScope
-
-// This output confuses CI, get rid of it.
-unmatchedSuppression
