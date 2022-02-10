@@ -12,10 +12,10 @@
 
 // firmware update interface
 enum {
-  BIOS_UPDATE,
-  CPLD_UPDATE,
-  BIC_UPDATE,
-  UPDATE_EN = 0x80,
+	BIOS_UPDATE,
+	CPLD_UPDATE,
+	BIC_UPDATE,
+	UPDATE_EN = 0x80,
 };
 
 #endif
