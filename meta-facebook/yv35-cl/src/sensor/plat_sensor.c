@@ -14,6 +14,8 @@ bool post_access(uint8_t snr_num);
 
 static uint8_t SnrCfg_num;
 
+#define NONE 0
+
 snr_cfg plat_sensor_config[] = {
   /* number,                           type,            port,           address,                  offset,             access check       arg0,   arg1,   cache,   cache_status */
 
@@ -26,27 +28,27 @@ snr_cfg plat_sensor_config[] = {
   {SENSOR_NUM_TEMP_SSD0              , type_nvme      , i2c_bus2      , SSD0_addr               , SSD0_offset       , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
                                                                                                                                                                  
   // PECI                                                                                                                                                        
-  {SENSOR_NUM_TEMP_CPU               , type_peci      , NULL          , CPU_PECI_addr           , NULL              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
-  {SENSOR_NUM_TEMP_CPU_MARGIN        , type_peci      , NULL          , CPU_PECI_addr           , NULL              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
-  {SENSOR_NUM_TEMP_CPU_TJMAX         , type_peci      , NULL          , CPU_PECI_addr           , NULL              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
-  {SENSOR_NUM_TEMP_DIMM_A            , type_peci      , NULL          , CPU_PECI_addr           , NULL              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
-  {SENSOR_NUM_TEMP_DIMM_C            , type_peci      , NULL          , CPU_PECI_addr           , NULL              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
-  {SENSOR_NUM_TEMP_DIMM_D            , type_peci      , NULL          , CPU_PECI_addr           , NULL              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
-  {SENSOR_NUM_TEMP_DIMM_E            , type_peci      , NULL          , CPU_PECI_addr           , NULL              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
-  {SENSOR_NUM_TEMP_DIMM_G            , type_peci      , NULL          , CPU_PECI_addr           , NULL              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
-  {SENSOR_NUM_TEMP_DIMM_H            , type_peci      , NULL          , CPU_PECI_addr           , NULL              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
-  {SENSOR_NUM_PWR_CPU                , type_peci      , NULL          , CPU_PECI_addr           , NULL              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_TEMP_CPU               , type_peci      , NONE          , CPU_PECI_addr           , NONE              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_TEMP_CPU_MARGIN        , type_peci      , NONE          , CPU_PECI_addr           , NONE              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_TEMP_CPU_TJMAX         , type_peci      , NONE          , CPU_PECI_addr           , NONE              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_TEMP_DIMM_A            , type_peci      , NONE          , CPU_PECI_addr           , NONE              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_TEMP_DIMM_C            , type_peci      , NONE          , CPU_PECI_addr           , NONE              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_TEMP_DIMM_D            , type_peci      , NONE          , CPU_PECI_addr           , NONE              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_TEMP_DIMM_E            , type_peci      , NONE          , CPU_PECI_addr           , NONE              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_TEMP_DIMM_G            , type_peci      , NONE          , CPU_PECI_addr           , NONE              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_TEMP_DIMM_H            , type_peci      , NONE          , CPU_PECI_addr           , NONE              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_PWR_CPU                , type_peci      , NONE          , CPU_PECI_addr           , NONE              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
                                                                                                                                                                  
   // adc voltage                                                                                                                                                 
-  {SENSOR_NUM_VOL_STBY12V            , type_adc       , adc_port0     , NULL                    , NULL              , stby_access      , 667   , 100   , 0      , SNR_INIT_STATUS},
-  {SENSOR_NUM_VOL_STBY3V             , type_adc       , adc_port2     , NULL                    , NULL              , stby_access      , 2     , 1     , 0      , SNR_INIT_STATUS},
-  {SENSOR_NUM_VOL_STBY1V05           , type_adc       , adc_port3     , NULL                    , NULL              , stby_access      , 1     , 1     , 0      , SNR_INIT_STATUS},
-  {SENSOR_NUM_VOL_BAT3V              , type_adc       , adc_port4     , NULL                    , NULL              , stby_access      , 3     , 1     , 0      , SNR_INIT_STATUS},
-  {SENSOR_NUM_VOL_STBY5V             , type_adc       , adc_port9     , NULL                    , NULL              , stby_access      , 711   , 200   , 0      , SNR_INIT_STATUS},
-  {SENSOR_NUM_VOL_DIMM12V            , type_adc       , adc_port11    , NULL                    , NULL              , DC_access        , 667   , 100   , 0      , SNR_INIT_STATUS},
-  {SENSOR_NUM_VOL_STBY1V2            , type_adc       , adc_port13    , NULL                    , NULL              , stby_access      , 1     , 1     , 0      , SNR_INIT_STATUS},
-  {SENSOR_NUM_VOL_M2_3V3             , type_adc       , adc_port14    , NULL                    , NULL              , DC_access        , 2     , 1     , 0      , SNR_INIT_STATUS},
-  {SENSOR_NUM_VOL_STBY1V8            , type_adc       , adc_port15    , NULL                    , NULL              , stby_access      , 1     , 1     , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_VOL_STBY12V            , type_adc       , adc_port0     , NONE                    , NONE              , stby_access      , 667   , 100   , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_VOL_STBY3V             , type_adc       , adc_port2     , NONE                    , NONE              , stby_access      , 2     , 1     , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_VOL_STBY1V05           , type_adc       , adc_port3     , NONE                    , NONE              , stby_access      , 1     , 1     , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_VOL_BAT3V              , type_adc       , adc_port4     , NONE                    , NONE              , stby_access      , 3     , 1     , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_VOL_STBY5V             , type_adc       , adc_port9     , NONE                    , NONE              , stby_access      , 711   , 200   , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_VOL_DIMM12V            , type_adc       , adc_port11    , NONE                    , NONE              , DC_access        , 667   , 100   , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_VOL_STBY1V2            , type_adc       , adc_port13    , NONE                    , NONE              , stby_access      , 1     , 1     , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_VOL_M2_3V3             , type_adc       , adc_port14    , NONE                    , NONE              , DC_access        , 2     , 1     , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_VOL_STBY1V8            , type_adc       , adc_port15    , NONE                    , NONE              , stby_access      , 1     , 1     , 0      , SNR_INIT_STATUS},
 
   // VR voltage
   {SENSOR_NUM_VOL_PVCCD_HV           , type_vr        , i2c_bus5      , PVCCD_HV_addr           , VR_VOL_CMD        , DC_access        , 0     , 0     , 0      , SNR_INIT_STATUS},
@@ -77,7 +79,7 @@ snr_cfg plat_sensor_config[] = {
   {SENSOR_NUM_PWR_PVCCFA_EHV_FIVRA   , type_vr        , i2c_bus5      , PVCCFA_EHV_FIVRA_addr   , VR_PWR_CMD        , DC_access        , 0     , 0     , 0      , SNR_INIT_STATUS},
   
   // ME
-  {SENSOR_NUM_TEMP_PCH               , type_pch       , i2c_bus3      , PCH_addr                , NULL              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
+  {SENSOR_NUM_TEMP_PCH               , type_pch       , i2c_bus3      , PCH_addr                , NONE              , post_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
   
   // HSC
   {SENSOR_NUM_TEMP_HSC               , type_hsc       , i2c_bus2      , HSC_addr                , HSC_TEMP_CMD      , stby_access      , 0     , 0     , 0      , SNR_INIT_STATUS},
