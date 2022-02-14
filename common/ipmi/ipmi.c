@@ -111,6 +111,9 @@ void IPMI_OEM_handler(ipmi_msg *msg)
 	case CMD_OEM_SET_SYSTEM_GUID:
 		pal_OEM_SET_SYSTEM_GUID(msg);
 		break;
+	case CMD_OEM_GET_MB_INDEX:
+		pal_OEM_GET_MB_INDEX(msg);
+		break;
 	default:
 		printf("invalid OEM msg netfn: %x, cmd: %x\n", msg->netfn, msg->cmd);
 		msg->data_len = 0;

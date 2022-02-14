@@ -35,6 +35,7 @@ void pal_STORAGE_GET_SDR(ipmi_msg *msg);
 // IPMI OEM
 void pal_OEM_SENSOR_READ(ipmi_msg *msg);
 void pal_OEM_SET_SYSTEM_GUID(ipmi_msg *msg);
+void pal_OEM_GET_MB_INDEX(ipmi_msg *msg);
 
 // IPMI OEM 1S
 void pal_OEM_1S_MSG_OUT(ipmi_msg *msg);

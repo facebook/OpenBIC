@@ -129,6 +129,12 @@ __weak void pal_OEM_SET_SYSTEM_GUID(ipmi_msg *msg)
 	return;
 }
 
+__weak void pal_OEM_GET_MB_INDEX(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
 // IPMI OEM 1S
 __weak void pal_OEM_1S_MSG_OUT(ipmi_msg *msg)
 {
