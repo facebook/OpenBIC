@@ -716,7 +716,8 @@ void pal_OEM_1S_GET_GPIO(ipmi_msg *msg) {
      return;
    }
 
-   uint8_t eight_bit_value, gpio_value, gpio_cnt, data_len;
+   uint8_t gpio_value, gpio_cnt, data_len;
+   uint8_t eight_bit_value = 0;
    gpio_cnt = gpio_ind_to_num_table_cnt + (8 - (gpio_ind_to_num_table_cnt % 8)); // Bump up the gpio_ind_to_num_table_cnt to multiple of 8.
    data_len = gpio_cnt / 8;
    msg->data_len = data_len;
