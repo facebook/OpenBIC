@@ -46,7 +46,6 @@ void kcs_read(void *arvg0, void *arvg1, void *arvg2)
 	ipmb_error status;
 
 	struct kcs_request *req;
-	struct kcs_response *res;
 
 	while (1) {
 		k_msleep(KCS_POLLING_INTERVAL);
