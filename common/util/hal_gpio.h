@@ -52,7 +52,7 @@ typedef struct _GPIO_CFG_ {
   uint8_t status;
   uint8_t property;
   int int_type;
-  void* (*int_cb)(int);
+  void (*int_cb)();
 } GPIO_CFG;
 
 extern GPIO_CFG gpio_cfg[];
