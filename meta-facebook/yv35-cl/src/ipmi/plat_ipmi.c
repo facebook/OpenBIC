@@ -1154,6 +1154,8 @@ void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg) {
     }
   } else if (option == 1) {
       status = get_sensor_reading(snr_num, &reading, get_from_sensor);
+  } else {
+      status = SNR_UNSPECIFIED_ERROR;
   }
 
   switch (status) {
