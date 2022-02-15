@@ -401,6 +401,8 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 					/* Return fail status to request source */
 					if (current_msg_tx->buffer.InF_source == Reserve_IFs) {
 						printf("IPMB_TXTask: Bridging msg from reserve IFs\n");
+					} else if (current_msg_tx->buffer.InF_source == HOST_KCS_IFs) {
+						printf("IPMB_TXTask: Bridging msg from HOST fail\n");
 					} else if (current_msg_tx->buffer.InF_source == Self_IFs) {
 						printf("IPMB_TXTask: BIC sending command fail\n"); // Rain - Should record or notice command fail
 					} else {
