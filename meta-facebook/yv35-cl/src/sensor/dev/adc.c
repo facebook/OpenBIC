@@ -6,6 +6,7 @@
 #include <zephyr.h>
 #include <sys/printk.h>
 #include <drivers/adc.h>
+#include <cmsis_os2.h>
 
 #define ADC_CHAN_NUM 8
 #define ADC_NUM 2
