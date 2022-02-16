@@ -5,14 +5,14 @@
 #include "plat_ipmb.h"
 
 enum {
-   CPNT_CPLD = 1,
-   CPNT_BIC,
-   CPNT_ME,
-   CPNT_PVCCIN = 5,
-   CPNT_PVCCFA_EHV_FIVRA,
-   CPNT_PVCCD_HV,
-   CPNT_PVCCINFAON,
-   CPNT_PVCCFA_EHV
+	CPNT_CPLD = 1,
+	CPNT_BIC,
+	CPNT_ME,
+	CPNT_PVCCIN = 5,
+	CPNT_PVCCFA_EHV_FIVRA,
+	CPNT_PVCCD_HV,
+	CPNT_PVCCINFAON,
+	CPNT_PVCCFA_EHV
 };
 
 typedef struct CHASSIS_STATUS_STRUCT {
@@ -58,12 +58,12 @@ typedef struct CHASSIS_STATUS_STRUCT {
 } CHASSIS_STATUS;
 
 typedef struct addsel_msg_t {
-  uint8_t snr_type;
-  uint8_t snr_number;
-  uint8_t evt_type;
-  uint8_t evt_data1;
-  uint8_t evt_data2;
-  uint8_t evt_data3;
+	uint8_t snr_type;
+	uint8_t snr_number;
+	uint8_t evt_type;
+	uint8_t evt_data1;
+	uint8_t evt_data2;
+	uint8_t evt_data3;
 } addsel_msg_t;
 
 bool add_sel_evt_record(addsel_msg_t *sel_msg);
