@@ -292,7 +292,7 @@ __weak void pal_fix_Snrconfig(void)
 // fru
 __weak void pal_load_fru_config(void)
 {
-	return;
+return;
 }
 
 // sensor read
