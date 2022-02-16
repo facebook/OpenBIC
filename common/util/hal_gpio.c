@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "hal_gpio.h"
 #include "pal.h"
+#include "util_sys.h"
 
 #define STACK_SIZE 1024
 
