@@ -345,6 +345,22 @@ void ISR_PCH_PWRGD()
 	}
 }
 
+void ISR_RMCA()
+{
+	if ((gpio_get(RST_PLTRST_BUF_N) == GPIO_HIGH) || (gpio_get(PWRGD_CPU_LVC3) == GPIO_HIGH)) {
+		addsel_msg_t sel_msg;
+		sel_msg.snr_type = IPMI_SENSOR_TYPE_PROCESSOR;
+		sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
+		sel_msg.snr_number = SENSOR_NUM_CATERR;
+		sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_MEM_RMCA;
+		sel_msg.evt_data2 = 0xFF;
+		sel_msg.evt_data3 = 0xFF;
+		if (!add_sel_evt_record(&sel_msg)) {
+			printk("RMCA addsel fail\n");
+		}
+	}
+}
+
 void set_SCU_setting()
 {
 	sys_write32(0xffffffff, 0x7e6e2610);
