@@ -11,7 +11,8 @@
 #define spi1_cs 1
 #define spi2_cs 2
 
-uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool update_en, uint8_t bus, uint8_t cs);
+uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool update_en, uint8_t bus,
+		  uint8_t cs);
 
 enum {
 	fwupdate_success,

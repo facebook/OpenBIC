@@ -8,11 +8,10 @@
 #define DPV2_FRU_ADDR 0x51
 
 enum {
-  MB_FRU_ID,
-  DPV2_FRU_ID,
-  // OTHER_FRU_ID,
-  MAX_FRU_ID,
+	MB_FRU_ID,
+	DPV2_FRU_ID,
+	// OTHER_FRU_ID,
+	MAX_FRU_ID,
 };
 
 #endif
-

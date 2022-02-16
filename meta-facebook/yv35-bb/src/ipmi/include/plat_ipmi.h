@@ -5,8 +5,8 @@
 #include "plat_ipmb.h"
 
 enum {
-  CPNT_CPLD = 1,
-  CPNT_BIC,
+	CPNT_CPLD = 1,
+	CPNT_BIC,
 };
 
 #endif
