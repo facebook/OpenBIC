@@ -3,10 +3,9 @@
 #include <string.h>
 
 enum {
-  BB_FRU_ID,
-  // OTHER_FRU_ID,
-  MAX_FRU_ID,
+	BB_FRU_ID,
+	// OTHER_FRU_ID,
+	MAX_FRU_ID,
 };
 
 #endif
-

@@ -2,10 +2,9 @@
 #define PLAT_GUID_H
 
 enum {
-  BB_GUID_ID,
-  // OTHER_GUID_ID
-   MAX_GUID_ID,
+	BB_GUID_ID,
+	// OTHER_GUID_ID
+	MAX_GUID_ID,
 };
-  
-#endif
 
+#endif
