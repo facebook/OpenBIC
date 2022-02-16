@@ -239,6 +239,18 @@ jobs:
         fi
 
   Aggregate-Lint-Output:
+    permissions:
+      actions: read
+      checks: read
+      contents: read
+      deployments: read
+      issues: read
+      packages: read
+      pull-requests: write
+      repository-projects: read
+      security-events: read
+      statuses: read
+
     needs: [run-cppcheck, run-clang-format]
     if: |
         always() && 
