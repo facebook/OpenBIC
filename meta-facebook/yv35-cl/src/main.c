@@ -13,6 +13,7 @@
 #include "plat_gpio.h"
 #include "ipmi_def.h"
 #include "ipmi.h"
+#include "usb.h"
 #include "kcs.h"
 #include "plat_func.h"
 
