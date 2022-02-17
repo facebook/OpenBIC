@@ -253,6 +253,7 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 	I2C_MSG *msg;
 	uint8_t ipmb_buffer_tx[IPMI_MSG_MAX_LENGTH + IPMB_RESP_HEADER_LENGTH], status = 0,
 									       retry = 5;
+	uint8_t *kcs_buff;
 
 	memcpy(&ipmb_cfg, (IPMB_config *)pvParameters, sizeof(IPMB_config));
 
@@ -403,6 +404,38 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 						printf("IPMB_TXTask: Bridging msg from reserve IFs\n");
 					} else if (current_msg_tx->buffer.InF_source == Self_IFs) {
 						printf("IPMB_TXTask: BIC sending command fail\n"); // Rain - Should record or notice command fail
+					} else if (current_msg_tx->buffer.InF_source ==
+						   HOST_KCS_IFs) {
+						kcs_buff = malloc(KCS_buff_size * sizeof(uint8_t));
+						if (kcs_buff ==
+						    NULL) { // allocate fail, retry allocate
+							k_msleep(10);
+							kcs_buff = malloc(KCS_buff_size *
+									  sizeof(uint8_t));
+							if (kcs_buff == NULL) {
+								printk("IPMB_TXTask: Fail to malloc for kcs_buff\n");
+								free(current_msg_tx);
+								continue;
+							}
+						}
+						current_msg_tx->buffer.completion_code =
+							CC_CAN_NOT_RESPOND;
+						kcs_buff[0] = current_msg_tx->buffer.netfn << 2;
+						kcs_buff[1] = current_msg_tx->buffer.cmd;
+						kcs_buff[2] =
+							current_msg_tx->buffer.completion_code;
+						if (current_msg_tx->buffer.data_len > 0) {
+							memcpy(&kcs_buff[3],
+							       &current_msg_tx->buffer.data[0],
+							       current_msg_tx->buffer.data_len);
+						}
+
+						kcs_write(kcs_buff,
+							  current_msg_tx->buffer.data_len +
+								  3); // data len + netfn + cmd + cc
+						if (kcs_buff != NULL) {
+							free(kcs_buff);
+						}
 					} else {
 						ipmb_error status;
 						current_msg_tx->buffer.data_len = 0;
