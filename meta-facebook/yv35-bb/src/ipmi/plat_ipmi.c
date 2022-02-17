@@ -402,6 +402,27 @@ void pal_SENSOR_GET_SENSOR_READING(ipmi_msg *msg)
 	return;
 }
 
+void pal_OEM_GET_MB_INDEX(ipmi_msg *msg)
+{
+	if (msg->data_len != 0) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	if (msg->InF_source == SLOT1_BIC_IFs) {
+		msg->data[0] = 0x01;
+	} else if (msg->InF_source == SLOT3_BIC_IFs) {
+		msg->data[0] = 0x03;
+	} else {
+		msg->data[0] = 0xFF;
+		return;
+	}
+
+	msg->data_len = 1;
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
 void pal_OEM_1S_MSG_OUT(ipmi_msg *msg)
 {
 	uint8_t target_IF;
