@@ -29,44 +29,44 @@
 #endif
 
 #define dedicate_gpio_num 9
-#define total_gpio_num    168
-#define ENABLE      1
-#define DISABLE     0
-#define chip_gpio   0
-#define chip_sgpio  1
-#define GPIO_LOW    0
-#define GPIO_HIGH   1
+#define total_gpio_num 168
+#define ENABLE 1
+#define DISABLE 0
+#define chip_gpio 0
+#define chip_sgpio 1
+#define GPIO_LOW 0
+#define GPIO_HIGH 1
 #define GPIO_GROUP_NUM 6
 #define GPIO_GROUP_SIZE 32
 
 #define OPEN_DRAIN 0
-#define PUSH_PULL  1
+#define PUSH_PULL 1
 
 #define GPIO_CFG_SIZE 168
 typedef struct _GPIO_CFG_ {
-  uint8_t chip;
-  uint8_t number;
-  uint8_t is_init;
-  uint8_t is_latch;
-  uint16_t direction;
-  uint8_t status;
-  uint8_t property;
-  int int_type;
-  void* (*int_cb)(int);
+	uint8_t chip;
+	uint8_t number;
+	uint8_t is_init;
+	uint8_t is_latch;
+	uint16_t direction;
+	uint8_t status;
+	uint8_t property;
+	int int_type;
+	void (*int_cb)();
 } GPIO_CFG;
 
 extern GPIO_CFG gpio_cfg[];
 
 enum {
-  gpio_a_d,
-  gpio_e_h,
-  gpio_i_l,
-  gpio_m_p,
-  gpio_q_t,
-  gpio_u_v,
+	gpio_a_d,
+	gpio_e_h,
+	gpio_i_l,
+	gpio_m_p,
+	gpio_q_t,
+	gpio_u_v,
 };
 
-extern const char * const gpio_name[];
+extern const char *const gpio_name[];
 
 extern uint8_t gpio_ind_to_num_table[];
 extern uint8_t gpio_ind_to_num_table_cnt;

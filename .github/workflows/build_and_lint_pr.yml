@@ -15,14 +15,14 @@ jobs:
         path: ${{ github.event.repository.name }} 
     - name: Install Dependencies
       run: |
-        sudo apt install --no-install-recommends \
+        sudo apt-get update
+
+        sudo apt-get install --no-install-recommends \
         ninja-build \
         gperf \
         ccache \
         dfu-util \
         device-tree-compiler \
-        make \
-        gcc \
         gcc-multilib \
         g++-multilib \
         libsdl2-dev \
@@ -239,6 +239,18 @@ jobs:
         fi
 
   Aggregate-Lint-Output:
+    permissions:
+      actions: read
+      checks: read
+      contents: read
+      deployments: read
+      issues: read
+      packages: read
+      pull-requests: write
+      repository-projects: read
+      security-events: read
+      statuses: read
+
     needs: [run-cppcheck, run-clang-format]
     if: |
         always() && 
@@ -263,7 +275,7 @@ jobs:
       id: load-clang-env-variable
       run: echo "::set-output name=clang-format-comment::$(cat /tmp/artifacts/clang-format-output/clang-format.log)"
 
-    - uses: actions/github-script@v5
+    - uses: actions/github-script@v6
       if: needs.run-clang-format.result == 'failure'
       name: Comment on clang-format
       with:
@@ -273,7 +285,7 @@ jobs:
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: "These files have clang-format errors:\n ${{ steps.load-clang-env-variable.outputs.clang-format-comment}}\n\n You can fix these errors by running \"clang-format -i\" on the effected files"
+            body: "These files have clang-format errors:\n ${{ steps.load-clang-env-variable.outputs.clang-format-comment}}\n\n You can fix these errors by running \"clang-format --style=file -i $file\" on the effected files"
           })
 
     - name: Run reviewdog

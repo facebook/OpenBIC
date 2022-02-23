@@ -9,10 +9,11 @@ manifest:
     - name: zephyr
       remote: aspeed
       path: zephyr
-      revision: 653496121d08aab03c528132eafdab4d80c09680
+      revision: edb7dc6f3cc5cde814dd10e8ec02da62f833bdaf
       import: 
         name-allowlist:
           - cmsis
+          - mcuboot
 
   self:
     path: openbic

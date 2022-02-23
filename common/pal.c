@@ -4,7 +4,6 @@
 #include "ipmi.h"
 #include "pal.h"
 
-
 /***********************************************************
 *
 * Create weak function here
@@ -22,12 +21,12 @@ __weak void pal_usb_handler(uint8_t *rx_buff, int rx_len)
 
 __weak bool pal_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd)
 {
-  return 0;
+	return 0;
 }
 
 __weak bool pal_ME_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd)
 {
-  return 0;
+	return 0;
 }
 
 __weak bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd)
@@ -130,6 +129,12 @@ __weak void pal_OEM_SET_SYSTEM_GUID(ipmi_msg *msg)
 	return;
 }
 
+__weak void pal_OEM_GET_MB_INDEX(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
 // IPMI OEM 1S
 __weak void pal_OEM_1S_MSG_OUT(ipmi_msg *msg)
 {
@@ -169,8 +174,8 @@ __weak void pal_OEM_1S_FW_UPDATE(ipmi_msg *msg)
 
 __weak void pal_OEM_1S_GET_POST_CODE(ipmi_msg *msg)
 {
-    msg->completion_code = CC_UNSPECIFIED_ERROR;
-    return;
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
 }
 
 __weak void pal_OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
@@ -181,8 +186,8 @@ __weak void pal_OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 
 __weak void pal_OEM_1S_RESET_BMC(ipmi_msg *msg)
 {
-  msg->completion_code = CC_UNSPECIFIED_ERROR;
-  return;
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
 }
 
 __weak void pal_OEM_1S_SET_JTAG_TAP_STA(ipmi_msg *msg)
@@ -199,20 +204,20 @@ __weak void pal_OEM_1S_JTAG_DATA_SHIFT(ipmi_msg *msg)
 
 __weak void pal_OEM_1S_ASD_INIT(ipmi_msg *msg)
 {
-  msg->completion_code = CC_UNSPECIFIED_ERROR;
-  return;
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
 }
 
 __weak void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg)
 {
-  msg->completion_code = CC_UNSPECIFIED_ERROR;
-  return;
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
 }
 
 __weak void pal_OEM_1S_PECIaccess(ipmi_msg *msg)
 {
-  msg->completion_code = CC_UNSPECIFIED_ERROR;
-  return;
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
 }
 
 __weak void pal_OEM_1S_GET_SET_GPIO(ipmi_msg *msg)
@@ -263,10 +268,10 @@ __weak bool pal_load_IPMB_config(void)
 
 // sensor
 
-__weak void pal_set_sensor_poll_interval(int *interval_ms) 
+__weak void pal_set_sensor_poll_interval(int *interval_ms)
 {
-  *interval_ms = 1000;
-  return;
+	*interval_ms = 1000;
+	return;
 }
 
 // sensor accessible
@@ -282,12 +287,12 @@ __weak bool pal_load_snr_config(void)
 
 __weak void pal_fix_fullSDR_table(void)
 {
-    return 0;
+	return 0;
 }
 
 __weak void pal_fix_Snrconfig(void)
 {
-    return 0;
+	return 0;
 }
 
 // fru
@@ -317,52 +322,64 @@ __weak bool pal_vr_read(uint8_t sensor_num, int *reading)
 	return 0;
 }
 
-__weak bool pal_pch_read(uint8_t sensor_num, int *reading) {
-  return 0;
+__weak bool pal_pch_read(uint8_t sensor_num, int *reading)
+{
+	return 0;
 }
 
-__weak bool pal_hsc_read(uint8_t sensor_num, int *reading) {
-  return 0;
+__weak bool pal_hsc_read(uint8_t sensor_num, int *reading)
+{
+	return 0;
 }
 
-__weak bool pal_nvme_read(uint8_t sensor_num, int *reading) {
-  return 0;
+__weak bool pal_nvme_read(uint8_t sensor_num, int *reading)
+{
+	return 0;
 }
 
 // gpio
-__weak bool pal_load_gpio_config(void) {
-  return 0;
+__weak bool pal_load_gpio_config(void)
+{
+	return 0;
 }
 
-__weak void gpio_AD_callback_handler(uint32_t pins) {
-  return;
+__weak void gpio_AD_callback_handler(uint32_t pins)
+{
+	return;
 }
 
-__weak void gpio_EH_callback_handler(uint32_t pins) {
-  return;
+__weak void gpio_EH_callback_handler(uint32_t pins)
+{
+	return;
 }
 
-__weak void gpio_IL_callback_handler(uint32_t pins) {
-  return;
+__weak void gpio_IL_callback_handler(uint32_t pins)
+{
+	return;
 }
 
-__weak void gpio_MP_callback_handler(uint32_t pins) {
-  return;
+__weak void gpio_MP_callback_handler(uint32_t pins)
+{
+	return;
 }
 
-__weak void gpio_QT_callback_handler(uint32_t pins) {
-  return;
+__weak void gpio_QT_callback_handler(uint32_t pins)
+{
+	return;
 }
 
-__weak void gpio_UV_callback_handler(uint32_t pins) {
-  return;
+__weak void gpio_UV_callback_handler(uint32_t pins)
+{
+	return;
 }
 
 // platform
-__weak void pal_warm_reset_prepare() {
-  return;
+__weak void pal_warm_reset_prepare()
+{
+	return;
 }
 
-__weak void pal_cold_reset_prepare() {
-  return;
+__weak void pal_cold_reset_prepare()
+{
+	return;
 }

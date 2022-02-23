@@ -53,28 +53,28 @@ extern const uint8_t i2c_bus_to_index[];
 #define DEBUG_I2C 0
 
 enum {
-  smc_i2c0,
-  smc_i2c1,
-  smc_i2c2,
-  smc_i2c3,
-  smc_i2c4,
-  smc_i2c5,
-  smc_i2c6,
-  smc_i2c7,
-  smc_i2c8,
-  smc_i2c9,
+	smc_i2c0,
+	smc_i2c1,
+	smc_i2c2,
+	smc_i2c3,
+	smc_i2c4,
+	smc_i2c5,
+	smc_i2c6,
+	smc_i2c7,
+	smc_i2c8,
+	smc_i2c9,
 };
 
 typedef struct _I2C_MSG_ {
-  uint8_t slave_addr;
-  uint8_t bus;
-  uint8_t rx_len;
-  uint8_t tx_len;
-  uint8_t data[I2C_BUFF_SIZE];
-  struct k_mutex lock;
+	uint8_t slave_addr;
+	uint8_t bus;
+	uint8_t rx_len;
+	uint8_t tx_len;
+	uint8_t data[I2C_BUFF_SIZE];
+	struct k_mutex lock;
 } I2C_MSG;
 
-void i2c_freq_set(uint8_t i2c_bus,uint8_t i2c_speed_mode);
+void i2c_freq_set(uint8_t i2c_bus, uint8_t i2c_speed_mode);
 int i2c_master_read(I2C_MSG *msg, uint8_t retry);
 int i2c_master_write(I2C_MSG *msg, uint8_t retry);
 void util_init_I2C(void);

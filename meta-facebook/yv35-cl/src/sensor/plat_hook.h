@@ -2,18 +2,18 @@
 #define PLAT_HOOK_H
 
 typedef struct _isl69259_pre_proc_arg {
-  /* vr page to set */
-  uint8_t vr_page;
+	/* vr page to set */
+	uint8_t vr_page;
 } isl69259_pre_proc_arg;
 
 /**************************************************************************************************
- * INIT ARGS 
+ * INIT ARGS
 **************************************************************************************************/
 extern adc_asd_init_arg adc_asd_init_args[];
 extern adm1278_init_arg adm1278_init_args[];
 
 /**************************************************************************************************
- *  PRE-HOOK/POST-HOOK ARGS 
+ *  PRE-HOOK/POST-HOOK ARGS
  **************************************************************************************************/
 extern struct tca9548 mux_conf_addr_0xe2[];
 extern isl69259_pre_proc_arg isl69259_pre_read_args[];
