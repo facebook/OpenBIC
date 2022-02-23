@@ -6,7 +6,9 @@ jobs:
     strategy:
       matrix:
         # This job matrix will generate a seperate job for all platforms listed.
-        platforms: [yv35-cl, yv35-bb]
+        platform: [yv35-cl, yv35-bb]
+        # Need to set this to false otherwise it will cancle all platform builds if one fails.
+      fail-fast: false
 
     steps:
 
@@ -41,35 +43,40 @@ jobs:
         west init --local ${{ github.event.repository.name }}
 
     # Sets up python and loads packages from the cache.
-    - name: Try Python Module Cache
-      id: python-cache
+    - name: Try Cache
+      id: python
       uses: actions/cache@v2
       with:
         path: |
           ./modules
           ./zephyr
-        key: west-yml-${{ hashFiles('openbic_zephyr_project/openbic/west.yml') }}
-  
-    - name: Update West Project
-      run: |
-        cd ${{ github.event.repository.name }} 
-        west update
-  
+        key: west-yml-${{ hashFiles('OpenBIC/west.yml') }}
+ 
     - name: Cache SDK Toolchain
       id: cache-sdk
       uses: actions/cache@v2
       with:
-        path: ~/openbic_zephyr_project/zephyr-sdk-0.12.4
-        key: zephyr-sdk-cache-0.12.4
+        path: /home/runner/zephyr-sdk-0.12.4
+        key: zephyr-sdk-0.12.4
 
     - name: Get SDK Toolchain
       if: steps.cache-sdk.outputs.cache-hit != 'true'
       id: download-sdk
       run: |
         wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.12.4/zephyr-sdk-0.12.4-x86_64-linux-setup.run
+        
         chmod +x zephyr-sdk-0.12.4-x86_64-linux-setup.run
-        ./zephyr-sdk-0.12.4-x86_64-linux-setup.run --quiet -- -d ~/zephyr-sdk-0.12.4
+        
+        ./zephyr-sdk-0.12.4-x86_64-linux-setup.run --quiet -- -d /home/runner/zephyr-sdk-0.12.4
 
+        export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
+        export ZEPHYR_SDK_INSTALL_DIR=/home/runner/zephyr-sdk-0.12.4
+
+    - name: Update West Project
+      run: |
+        cd ${{ github.event.repository.name }} 
+        west update
+  
     - name: Build Platform
       run: |
         cd ${{ github.event.repository.name }} 
