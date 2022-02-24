@@ -25,8 +25,8 @@ uint8_t isl28022_read(uint8_t sensor_num, int *reading)
 	uint8_t retry = 5;
 	I2C_MSG msg;
 	uint8_t offset = sensor_config[SnrNum_SnrCfg_map[sensor_num]].offset;
-	sen_val *snr_val = (sen_val *)reading;
-	memset(snr_val, 0, sizeof(sen_val));
+	sensor_val *sval = (sensor_val *)reading;
+	memset(sval, 0, sizeof(sensor_val));
 
 	msg.bus = sensor_config[SnrNum_SnrCfg_map[sensor_num]].port;
 	msg.slave_addr = sensor_config[SnrNum_SnrCfg_map[sensor_num]].slave_addr;
@@ -50,19 +50,19 @@ uint8_t isl28022_read(uint8_t sensor_num, int *reading)
 		} else {
 			read_mv = (((msg.data[0] & BIT_MASK(7)) << 5) | (msg.data[1] >> 3)) * 4;
 		}
-		snr_val->integer = read_mv / 1000;
-		snr_val->fraction = read_mv % 1000;
+		sval->integer = read_mv / 1000;
+		sval->fraction = read_mv % 1000;
 	} else if (offset == ISL28022_CURRENT_REG) {
 		/* signed */
 		float read_current =
 			((int16_t)(msg.data[0] << 8) | msg.data[1]) * init_arg->current_LSB;
-		snr_val->integer = read_current;
-		snr_val->fraction = (read_current - snr_val->integer) * 1000;
+		sval->integer = read_current;
+		sval->fraction = (read_current - sval->integer) * 1000;
 	} else if (offset == ISL28022_POWER_REG) {
 		/* unsigned */
 		float read_power = ((msg.data[0] << 8) | msg.data[1]) * init_arg->current_LSB * 20;
-		snr_val->integer = read_power;
-		snr_val->fraction = ((read_power - snr_val->integer) * 1000);
+		sval->integer = read_power;
+		sval->fraction = ((read_power - sval->integer) * 1000);
 	} else {
 		return SNR_FAIL_TO_ACCESS;
 	}

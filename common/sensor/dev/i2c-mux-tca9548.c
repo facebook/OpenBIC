@@ -3,12 +3,12 @@
 #include "hal_i2c.h"
 #include "pal.h"
 
-bool tca9548_select_chan(uint8_t snr_num, void *args)
+bool tca9548_select_chan(uint8_t sensor_num, void *args)
 {
 	if (!args)
 		return false;
 
-	snr_cfg *cfg = &sensor_config[SnrNum_SnrCfg_map[snr_num]];
+	snr_cfg *cfg = &sensor_config[SnrNum_SnrCfg_map[sensor_num]];
 	struct tca9548 *p = (struct tca9548 *)args;
 
 	uint8_t retry = 5;

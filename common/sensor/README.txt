@@ -22,24 +22,24 @@ Usage:
             Take TMP75 sensor as an example.
             1. common/sensor/sensor.c
                 '''
-                SEN_DRIVE_INIT_DECLARE(tmp75);
+                SENSOR_DRIVE_INIT_DECLARE(tmp75);
 
-                sen_drive_tbl[] = {
-                    SEN_DRIVE_TYPE_INIT_MAP(tmp75),
+                sensor_drive_tbl[] = {
+                    SENSOR_DRIVE_TYPE_INIT_MAP(tmp75),
                     .....
                 }
                 '''
             2. common/sensor/sensor.h
                 '''
-                enum sen_dev {
-                    sen_dev_tmp75 = 0,
+                enum sensor_dev {
+                    sensor_dev_tmp75 = 0,
                     .....
                 }
                 '''
             Note1: (IMPORTANT)Following rules need to be bellowed. 
-                Ex: (1) SEN_DRIVE_INIT_DECLARE( <type-name> )
-                    (2) SEN_DRIVE_TYPE_INIT_MAP( <type-name> )
-                    (3) sen_dev_<type-name>
+                Ex: (1) SENSOR_DRIVE_INIT_DECLARE( <type-name> )
+                    (2) SENSOR_DRIVE_TYPE_INIT_MAP( <type-name> )
+                    (3) sensor_dev_<type-name>
 
         [STEP2] Add a new sensor file including reading & init function if it's new from existed sensor-type.
             Take TMP75 sensor as an example.
@@ -63,7 +63,7 @@ Usage:
             Note4: <type-name>_read must to be put to ".read" in <type-name>_init
 
         [STEP3] (optional)Add <pre-hook>/<post-hook> function if there's some actions need to take before/after sensor reading.
-                (optional)Add "*pre_sen_read_args"/"*post_sen_read_args"/"*init_args" if needed in function of <pre-hook>/<post-hook>/<type-name>_init.
+                (optional)Add "*pre_sensor_read_args"/"*post_sensor_read_args"/"*init_args" if needed in function of <pre-hook>/<post-hook>/<type-name>_init.
             Take AST ADC sensor as an example.
             1. meta-facebook/yv35-cl/src/sensor/plat_hook.c
                 '''
@@ -73,25 +73,25 @@ Usage:
                 };
                 .....
                 /* <pre-hook> function */
-                bool pre_vol_bat3v_read(uint8_t snr_num, void *args) {
+                bool pre_vol_bat3v_read(uint8_t sensor_num, void *args) {
                     .....
                 }
                 /* <post-hook> function */
-                bool post_vol_bat3v_read(uint8_t snr_num, void *args, int *reading) {
+                bool post_vol_bat3v_read(uint8_t sensor_num, void *args, int *reading) {
                     .....
                 }
                 '''
             2. meta-facebook/yv35-cl/src/sensor/plat_hook.h
                 '''
                 extern adc_asd_init_arg adc_asd_init_args[];
-                bool pre_vol_bat3v_read(uint8_t snr_num, void *args);
-                bool post_vol_bat3v_read(uint8_t snr_num, void *args, int *reading);
+                bool pre_vol_bat3v_read(uint8_t sensor_num, void *args);
+                bool post_vol_bat3v_read(uint8_t sensor_num, void *args, int *reading);
                 '''
 
             Note1: Please follow input/output args' type in <pre-hook>/<post-hook> function of this example.
             Note2: <pre-hook>/<post-hook> function name is not restricted.
             Note3: One pre-hook/post-hook function per sensor-type is recommended.
-            Note4: *pre_sen_read_args/*post_sen_read_args/*init_args could be any type of variable.
+            Note4: *pre_sensor_read_args/*post_sensor_read_args/*init_args could be any type of variable.
 
         [STEP4] Put your new sensor config into "plat_sensor_config" table.
             Take AST ADC sensor as an example.
@@ -99,7 +99,7 @@ Usage:
                 '''
                 snr_cfg plat_sensor_config[] = {
                 .....
-                { SENSOR_NUM_VOL_STBY5V  , sen_dev_ast_adc  , adc_port9  , 0  , 0   , stby_access  , 711   , 200   , 0  , SNR_INIT_STATUS   , 
+                { SENSOR_NUM_VOL_STBY5V  , sensor_dev_ast_adc  , adc_port9  , 0  , 0   , stby_access  , 711   , 200   , 0  , SNR_INIT_STATUS   , 
                   NULL  , NULL  , NULL  , NULL  , &adc_asd_init_args[0] },
                 .....
                 };

@@ -38,13 +38,13 @@ isl69259_pre_proc_arg isl69259_pre_read_args[] = {
  *
  * set mux and VR page
  *
- * @param snr_num sensor number
+ * @param sensor_num sensor number
  * @param args pointer to isl69259_pre_proc_arg
  * @param reading pointer to reading from previous step
  * @retval true if setting mux and page is successful.
  * @retval false if setting mux or page fails.
  */
-bool pre_isl69259_read(uint8_t snr_num, void *args)
+bool pre_isl69259_read(uint8_t sensor_num, void *args)
 {
 	if (args == NULL) {
 		return false;
@@ -55,8 +55,8 @@ bool pre_isl69259_read(uint8_t snr_num, void *args)
 	I2C_MSG msg;
 
 	/* set page */
-	msg.bus = sensor_config[SnrNum_SnrCfg_map[snr_num]].port;
-	msg.slave_addr = sensor_config[SnrNum_SnrCfg_map[snr_num]].slave_addr;
+	msg.bus = sensor_config[SnrNum_SnrCfg_map[sensor_num]].port;
+	msg.slave_addr = sensor_config[SnrNum_SnrCfg_map[sensor_num]].slave_addr;
 	msg.tx_len = 2;
 	msg.data[0] = 0x00;
 	msg.data[1] = pre_proc_args->vr_page;
@@ -71,17 +71,17 @@ bool pre_isl69259_read(uint8_t snr_num, void *args)
  *
  * set mux
  *
- * @param snr_num sensor number
+ * @param sensor_num sensor number
  * @param args pointer to struct tca9548
  * @param reading pointer to reading from previous step
  * @retval true if setting mux is successful.
  * @retval false if setting mux fails.
  */
-bool pre_nvme_read(uint8_t snr_num, void *args)
+bool pre_nvme_read(uint8_t sensor_num, void *args)
 {
 	if (!args)
 		return false;
-	if (!tca9548_select_chan(snr_num, (struct tca9548 *)args))
+	if (!tca9548_select_chan(sensor_num, (struct tca9548 *)args))
 		return false;
 
 	return true;
@@ -91,17 +91,17 @@ bool pre_nvme_read(uint8_t snr_num, void *args)
  *
  * set gpio high if sensor is "SENSOR_NUM_VOL_BAT3V"
  *
- * @param snr_num sensor number
+ * @param sensor_num sensor number
  * @param args pointer to NULL
  * @param reading pointer to reading from previous step
  * @retval true always.
  * @retval false NULL
  */
-bool pre_vol_bat3v_read(uint8_t snr_num, void *args)
+bool pre_vol_bat3v_read(uint8_t sensor_num, void *args)
 {
 	ARG_UNUSED(args);
 
-	if (snr_num == SENSOR_NUM_VOL_BAT3V) {
+	if (sensor_num == SENSOR_NUM_VOL_BAT3V) {
 		gpio_set(A_P3V_BAT_SCALED_EN_R, GPIO_HIGH);
 		k_msleep(1);
 	}
@@ -113,18 +113,18 @@ bool pre_vol_bat3v_read(uint8_t snr_num, void *args)
  *
  * set gpio low if sensor is "SENSOR_NUM_VOL_BAT3V"
  *
- * @param snr_num sensor number
+ * @param sensor_num sensor number
  * @param args pointer to NULL
  * @param reading pointer to reading from previous step
  * @retval true always.
  * @retval false NULL
  */
-bool post_vol_bat3v_read(uint8_t snr_num, void *args, int *reading)
+bool post_vol_bat3v_read(uint8_t sensor_num, void *args, int *reading)
 {
 	ARG_UNUSED(args);
 	ARG_UNUSED(reading);
 
-	if (snr_num == SENSOR_NUM_VOL_BAT3V)
+	if (sensor_num == SENSOR_NUM_VOL_BAT3V)
 		gpio_set(A_P3V_BAT_SCALED_EN_R, GPIO_LOW);
 
 	return true;
@@ -134,20 +134,20 @@ bool post_vol_bat3v_read(uint8_t snr_num, void *args, int *reading)
  *
  * modify certain sensor value after reading
  *
- * @param snr_num sensor number
+ * @param sensor_num sensor number
  * @param args pointer to NULL
  * @param reading pointer to reading from previous step
  * @retval true if no error
  * @retval false if reading get NULL
  */
 
-bool post_cpu_margin_read(uint8_t snr_num, void *args, int *reading)
+bool post_cpu_margin_read(uint8_t sensor_num, void *args, int *reading)
 {
 	if (!reading)
 		return false;
 	ARG_UNUSED(args);
 
-	sen_val *sval = (sen_val *)reading;
+	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = -sval->integer; /* for BMC minus */
 	return true;
 }
@@ -155,17 +155,17 @@ bool post_cpu_margin_read(uint8_t snr_num, void *args, int *reading)
 /**************************************************************************************************
  *  ACCESS CHECK FUNC
  **************************************************************************************************/
-bool stby_access(uint8_t snr_num)
+bool stby_access(uint8_t sensor_num)
 {
 	return 1;
 }
 
-bool DC_access(uint8_t snr_num)
+bool DC_access(uint8_t sensor_num)
 {
 	return get_DC_on_5s_status();
 }
 
-bool post_access(uint8_t snr_num)
+bool post_access(uint8_t sensor_num)
 {
 	return get_post_status();
 }

@@ -9,7 +9,7 @@
 
 enum adc_device_idx { adc0, adc1, ADC_NUM };
 
-#define ADC_CHAN_NUM 8
+#define ADC_CHANNEL_NUM 8
 #define BUFFER_SIZE 1
 
 #if DT_NODE_EXISTS(DT_NODELABEL(adc0))
@@ -112,17 +112,17 @@ uint8_t ast_adc_read(uint8_t sensor_num, int *reading)
 	if (!reading)
 		return SNR_UNSPECIFIED_ERROR;
 
-	uint8_t snrcfg_sensor_num = SnrNum_SnrCfg_map[sensor_num];
-	uint8_t chip = sensor_config[snrcfg_sensor_num].port / ADC_CHAN_NUM;
-	uint8_t number = sensor_config[snrcfg_sensor_num].port % ADC_CHAN_NUM;
+	snr_cfg *cfg = &sensor_config[SnrNum_SnrCfg_map[sensor_num]];
+	uint8_t chip = cfg->port / ADC_CHANNEL_NUM;
+	uint8_t number = cfg->port % ADC_CHANNEL_NUM;
 	int val = 1;
 
 	if (!adc_read_mv(sensor_num, chip, number, &val))
 		return SNR_FAIL_TO_ACCESS;
 
-	val = val * sensor_config[snrcfg_sensor_num].arg0 / sensor_config[snrcfg_sensor_num].arg1;
+	val = val * cfg->arg0 / cfg->arg1;
 
-	sen_val *sval = (sen_val *)reading;
+	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = (val / 1000) & 0xFFFF;
 	sval->fraction = (val % 1000) & 0xFFFF;
 

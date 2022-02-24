@@ -42,7 +42,7 @@ uint8_t mp5990_read(uint8_t sensor_num, int *reading)
 		return SNR_NOT_FOUND;
 	}
 
-	sen_val *sval = (sen_val *)reading;
+	sensor_val *sval = (sensor_val *)reading;
 	memset(sval, 0, sizeof(*sval));
 
 	sval->integer = (int32_t)val;

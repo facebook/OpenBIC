@@ -9,13 +9,13 @@
 #define get_from_sensor 0x00
 #define get_from_cache 0x01
 
-#define MAX_SNR_SIZE 60
+#define MAX_SENSOR_SIZER 60
 
 #define sensor_null 0xFF
 #define sensor_fail 0xFF
 #define SENSOR_NUM_MAX 0xFF
 
-#define DEBUG_SNR 0
+#define DEBUG_SENSOR 0
 
 /*  define sensor type  */
 #define type_tmp75 0x00
@@ -28,24 +28,24 @@
 #define type_medusa 0x07
 #define type_fan 0x08
 
-enum sen_dev {
-	sen_dev_tmp75 = 0,
-	sen_dev_ast_adc = 0x01,
-	sen_dev_intel_peci = 0x02,
-	sen_dev_isl69259 = 0x03,
-	sen_dev_adm1278 = 0x04,
-	sen_dev_nvme = 0x05,
-	sen_dev_pch = 0x06,
-	sen_dev_mp5990 = 0x10,
-	sen_dev_isl28022 = 0x11,
-	sen_dev_pex89000 = 0x12,
-	sen_dev_max
+enum sensor_dev {
+	sensor_dev_tmp75 = 0,
+	sensor_dev_ast_adc = 0x01,
+	sensor_dev_intel_peci = 0x02,
+	sensor_dev_isl69259 = 0x03,
+	sensor_dev_adm1278 = 0x04,
+	sensor_dev_nvme = 0x05,
+	sensor_dev_pch = 0x06,
+	sensor_dev_mp5990 = 0x10,
+	sensor_dev_isl28022 = 0x11,
+	sensor_dev_pex89000 = 0x12,
+	sensor_dev_max
 };
 
-typedef struct _sen_val {
+typedef struct _sensor_val {
 	int16_t integer;
 	int16_t fraction;
-} sen_val;
+} sensor_val;
 
 struct tca9548 {
 	uint8_t addr;
@@ -96,10 +96,10 @@ typedef struct _snr_cfg__ {
 	int arg1;
 	int cache;
 	uint8_t cache_status;
-	bool (*pre_sen_read_hook)(uint8_t, void *);
-	void *pre_sen_read_args;
-	bool (*post_sen_read_hook)(uint8_t, void *, int *);
-	void *post_sen_read_args;
+	bool (*pre_sensor_read_hook)(uint8_t, void *);
+	void *pre_sensor_read_args;
+	bool (*post_sensor_read_hook)(uint8_t, void *, int *);
+	void *post_sensor_read_args;
 	void *init_args;
 
 	/* if there is new parameter should be added, please add on above */
@@ -180,5 +180,5 @@ void disable_snr_poll();
 void enable_snr_poll();
 
 /* i2c-mux tca9548 */
-bool tca9548_select_chan(uint8_t snr_num, void *args);
+bool tca9548_select_chan(uint8_t sensor_num, void *args);
 #endif

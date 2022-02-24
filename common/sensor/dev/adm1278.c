@@ -61,10 +61,10 @@ uint8_t adm1278_read(uint8_t sensor_num, int *reading)
 
 	default:
 		printf("Invalid sensor 0x%x\n", sensor_num);
-		return false;
+		return SNR_UNSPECIFIED_ERROR;
 	}
 
-	sen_val *sval = (sen_val *)reading;
+	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = (int)val & 0xFFFF;
 	sval->fraction = (val - sval->integer) * 1000;
 

@@ -13,7 +13,7 @@ uint8_t pch_read(uint8_t sensor_num, int *reading)
 	bridge_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
 	if (bridge_msg == NULL) {
 		printk("pch_read bridge message alloc fail\n");
-		return false;
+		return SNR_UNSPECIFIED_ERROR;
 	}
 
 	/* read sensor from ME */
@@ -33,8 +33,8 @@ uint8_t pch_read(uint8_t sensor_num, int *reading)
 		return SNR_UNSPECIFIED_ERROR;
 	}
 
-	sen_val *sval = (sen_val *)reading;
-	memset(sval, 0, sizeof(sen_val));
+	sensor_val *sval = (sensor_val *)reading;
+	memset(sval, 0, sizeof(sensor_val));
 	sval->integer = bridge_msg->data[0];
 
 	free(bridge_msg);

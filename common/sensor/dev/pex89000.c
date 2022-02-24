@@ -96,17 +96,17 @@ static uint8_t set_full_addr(uint8_t bus, uint8_t addr, uint32_t oft)
 	if (i2c_master_write(&msg, retry)) {
 		/* write fail */
 		printf("set AXI register to full mode failed!\n");
-		return 0;
+		return 1;
 	}
 
-	return 1;
+	return 0;
 }
 
 static uint8_t pex89000_chime_read(uint8_t bus, uint8_t addr, uint32_t oft, uint8_t *resp,
 				   uint16_t resp_len)
 {
-	if (!set_full_addr(bus, addr, oft)) // fail to set full addr
-		return 0;
+	if (set_full_addr(bus, addr, oft)) // fail to set full addr
+		return 1;
 
 	HW_I2C_Cmd cmd;
 	pex89000_i2c_encode(oft, 0xF, BRCM_I2C5_CMD_READ, BRCM_I2C5_ACCESS_MODE_FULL, &cmd);
@@ -123,19 +123,19 @@ static uint8_t pex89000_chime_read(uint8_t bus, uint8_t addr, uint32_t oft, uint
 	if (i2c_master_read(&msg, retry)) {
 		/* read fail */
 		printf("pex89000 read failed!!\n");
-		return 0;
+		return 1;
 	}
 
 	memcpy(resp, &msg.data[0], resp_len);
 
-	return 1;
+	return 0;
 }
 
 static uint8_t pex89000_chime_write(uint8_t bus, uint8_t addr, uint32_t oft, uint8_t *data,
 				    uint8_t data_len)
 {
-	if (!set_full_addr(bus, addr, oft))
-		return 0;
+	if (set_full_addr(bus, addr, oft))
+		return 1;
 
 	HW_I2C_Cmd cmd;
 	pex89000_i2c_encode(oft, 0xF, BRCM_I2C5_CMD_WRITE, BRCM_I2C5_ACCESS_MODE_FULL, &cmd);
@@ -143,7 +143,7 @@ static uint8_t pex89000_chime_write(uint8_t bus, uint8_t addr, uint32_t oft, uin
 	/* This buffer is for PEC calculated and write to switch by I2C */
 	uint8_t *data_buf = (uint8_t *)malloc(sizeof(cmd) + data_len);
 	if (!data_buf)
-		return 0;
+		return 1;
 	memcpy(data_buf, &cmd, sizeof(cmd));
 	memcpy(data_buf + sizeof(cmd), data, data_len);
 
@@ -159,11 +159,11 @@ static uint8_t pex89000_chime_write(uint8_t bus, uint8_t addr, uint32_t oft, uin
 		/* write fail */
 		printf("pex89000 write failed!!\n");
 		free(data_buf);
-		return 0;
+		return 1;
 	}
 
 	free(data_buf);
-	return 1;
+	return 0;
 }
 
 static uint8_t pend_for_read_valid(uint8_t bus, uint8_t addr)
@@ -172,125 +172,113 @@ static uint8_t pend_for_read_valid(uint8_t bus, uint8_t addr)
 	uint32_t resp = 0;
 
 	while (rty--) {
-		if (!pex89000_chime_read(bus, addr, BRCM_CHIME_AXI_CSR_CTL, (uint8_t *)&resp,
-					 sizeof(resp))) {
+		if (pex89000_chime_read(bus, addr, BRCM_CHIME_AXI_CSR_CTL, (uint8_t *)&resp,
+					sizeof(resp))) {
 			k_msleep(10);
 			continue;
 		}
 
 		if ((resp >> 24) & 0x8) { // CHIME_to_AXI_CSR Control Status -> Read_data_vaild
-			return 1; //  success
+			return 0; //  success
 		}
 
 		k_msleep(10);
 	}
 
-	return 0;
+	return 1;
 }
 
 static uint8_t pex89000_chime_to_axi_write(uint8_t bus, uint8_t addr, uint32_t oft, uint32_t data)
 {
-	uint8_t rc = 0;
-
 	uint32_t wbuf = oft;
 
 	swap32(&wbuf);
-	if (!pex89000_chime_write(bus, addr, BRCM_CHIME_AXI_CSR_ADDR, (uint8_t *)&wbuf,
-				  sizeof(wbuf))) {
-		goto exit;
+	if (pex89000_chime_write(bus, addr, BRCM_CHIME_AXI_CSR_ADDR, (uint8_t *)&wbuf,
+				 sizeof(wbuf))) {
+		return 1;
 	}
 	wbuf = data;
 	swap32(&wbuf);
-	if (!pex89000_chime_write(bus, addr, BRCM_CHIME_AXI_CSR_DATA, (uint8_t *)&wbuf,
-				  sizeof(wbuf))) {
-		goto exit;
+	if (pex89000_chime_write(bus, addr, BRCM_CHIME_AXI_CSR_DATA, (uint8_t *)&wbuf,
+				 sizeof(wbuf))) {
+		return 1;
 	}
 	wbuf = 0x1; // CHIME_to_AXI_CSR Control Status: write command
 	swap32(&wbuf);
-	if (!pex89000_chime_write(bus, addr, BRCM_CHIME_AXI_CSR_CTL, (uint8_t *)&wbuf,
-				  sizeof(wbuf))) {
-		goto exit;
+	if (pex89000_chime_write(bus, addr, BRCM_CHIME_AXI_CSR_CTL, (uint8_t *)&wbuf,
+				 sizeof(wbuf))) {
+		return 1;
 	}
 
-	rc = 1;
-
-exit:
-	return rc;
+	return 0;
 }
 
 static uint8_t pex89000_chime_to_axi_read(uint8_t bus, uint8_t addr, uint32_t oft, uint32_t *resp)
 {
-	uint8_t rc = 0;
-
 	uint32_t data = oft;
 	swap32(&data);
-	if (!pex89000_chime_write(bus, addr, BRCM_CHIME_AXI_CSR_ADDR, (uint8_t *)&data,
-				  sizeof(data))) {
-		goto exit;
+	if (pex89000_chime_write(bus, addr, BRCM_CHIME_AXI_CSR_ADDR, (uint8_t *)&data,
+				 sizeof(data))) {
+		return 1;
 	}
 	data = 0x2; // CHIME_to_AXI_CSR Control Status: read command
 	swap32(&data);
-	if (!pex89000_chime_write(bus, addr, BRCM_CHIME_AXI_CSR_CTL, (uint8_t *)&data,
-				  sizeof(data))) {
-		goto exit;
+	if (pex89000_chime_write(bus, addr, BRCM_CHIME_AXI_CSR_CTL, (uint8_t *)&data,
+				 sizeof(data))) {
+		return 1;
 	}
 
 	k_msleep(10);
-	if (!pend_for_read_valid(bus, addr)) {
+	if (pend_for_read_valid(bus, addr)) {
 		printf("read data invaild\n");
-		goto exit;
+		return 1;
 	}
 
-	if (!pex89000_chime_read(bus, addr, BRCM_CHIME_AXI_CSR_DATA, (uint8_t *)resp,
-				 sizeof(resp))) {
-		goto exit;
+	if (pex89000_chime_read(bus, addr, BRCM_CHIME_AXI_CSR_DATA, (uint8_t *)resp,
+				sizeof(resp))) {
+		return 1;
 	}
 
 	swap32(resp);
-	rc = 1;
 
-exit:
-	return rc;
+	return 0;
 }
 
-uint8_t pex89000_die_temp(uint8_t bus, uint8_t addr, sen_val *val)
+uint8_t pex89000_die_temp(uint8_t bus, uint8_t addr, sensor_val *val)
 {
 	if (!val)
-		return 0;
+		return 1;
 
-	uint8_t rc = 0;
 	uint32_t resp = 0;
 
 	//check 0xFFE78504 value
-	if (pex89000_chime_to_axi_read(bus, addr, BRCM_TEMP_SNR0_CTL_REG1, &resp)) {
+	if (!pex89000_chime_to_axi_read(bus, addr, BRCM_TEMP_SNR0_CTL_REG1, &resp)) {
 		if (resp != BRCM_TEMP_SNR0_CTL_REG1_RESET) {
 			printf("ADC temperature control register1 check fail!\n");
-			goto exit;
+			return 1;
 		}
 		resp = 0;
 	} else {
 		printf("CHIME to AXI Read 0xFFE78504 fail!\n");
-		goto exit;
+		return 1;
 	}
 
 	//Write 0xFFE78504 = 200653E8
-	if (!pex89000_chime_to_axi_write(bus, addr, BRCM_TEMP_SNR0_CTL_REG1,
-					 BRCM_TEMP_SNR0_CTL_REG1_RESET)) {
+	if (pex89000_chime_to_axi_write(bus, addr, BRCM_TEMP_SNR0_CTL_REG1,
+					BRCM_TEMP_SNR0_CTL_REG1_RESET)) {
 		printf("CHIME to AXI Write 0xFFE78504 fail!\n");
-		goto exit;
+		return 1;
 	}
 
 	//Read 0xFFE78538
-	if (pex89000_chime_to_axi_read(bus, addr, BRCM_TEMP_SNR0_STAT_REG0, &resp)) {
+	if (!pex89000_chime_to_axi_read(bus, addr, BRCM_TEMP_SNR0_STAT_REG0, &resp)) {
 		float tmp = (resp & 0xFFFF) / 128;
 		val->integer = (int)tmp;
 		val->fraction = (int)(tmp * 1000) % 1000;
-		rc = 1;
-		goto exit;
+		return 0;
 	}
 
-exit:
-	return rc;
+	return 1;
 }
 
 uint8_t pex89000_read(uint8_t sensor_num, int *reading)
@@ -310,9 +298,9 @@ uint8_t pex89000_read(uint8_t sensor_num, int *reading)
 
 	switch (sensor_config[SnrNum_SnrCfg_map[sensor_num]].offset) {
 	case TEMP:
-		if (!pex89000_die_temp(sensor_config[SnrNum_SnrCfg_map[sensor_num]].port,
-				       sensor_config[SnrNum_SnrCfg_map[sensor_num]].slave_addr,
-				       (sen_val *)reading)) {
+		if (pex89000_die_temp(sensor_config[SnrNum_SnrCfg_map[sensor_num]].port,
+				      sensor_config[SnrNum_SnrCfg_map[sensor_num]].slave_addr,
+				      (sensor_val *)reading)) {
 			printf("sensor pex89000_read read temp fail!\n");
 			rc = SNR_FAIL_TO_ACCESS;
 			goto exit;

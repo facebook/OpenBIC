@@ -20,7 +20,7 @@ uint8_t tmp75_read(uint8_t sensor_num, int *reading)
 	if (i2c_master_read(&msg, retry))
 		return SNR_FAIL_TO_ACCESS;
 
-	sen_val *sval = (sen_val *)reading;
+	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = msg.data[0];
 	return SNR_READ_SUCCESS;
 }

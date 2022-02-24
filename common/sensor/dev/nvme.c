@@ -37,7 +37,7 @@ uint8_t nvme_read(uint8_t sensor_num, int *reading)
 	} else
 		return SNR_FAIL_TO_ACCESS;
 
-	sen_val *sval = (sen_val *)reading;
+	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = val & 0xFF;
 
 	return SNR_READ_SUCCESS;

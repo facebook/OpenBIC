@@ -51,7 +51,7 @@ static bool get_cpu_tjmax(uint8_t addr, int *reading)
 	    false)
 		return false;
 
-	sen_val *sval = (sen_val *)reading;
+	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = rbuf[3];
 	return true;
 }
@@ -70,21 +70,21 @@ static bool get_cpu_margin(uint8_t addr, int *reading)
 	    false)
 		return false;
 
-	sen_val *sval = (sen_val *)reading;
+	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = ((int16_t)((rbuf[2] << 8) | rbuf[1]) >> 6) + 1;
 	return true;
 }
 
-static bool get_cpu_pwr(uint8_t sen_num, int *reading)
+static bool get_cpu_pwr(uint8_t sensor_num, int *reading)
 {
 	if (!reading)
 		return false;
 
 	int pwr = 0;
-	if (peci_getPwr(sen_num, &pwr) == false)
+	if (peci_getPwr(sensor_num, &pwr) == false)
 		return false;
 
-	sen_val *sval = (sen_val *)reading;
+	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = (int16_t)pwr;
 	return true;
 }
@@ -94,15 +94,15 @@ static bool get_cpu_temp(uint8_t addr, int *reading)
 	if (!reading)
 		return false;
 
-	sen_val tjmax = { 0 };
+	sensor_val tjmax = { 0 };
 	if (get_cpu_tjmax(addr, (int *)&tjmax) == false)
 		return false;
 
-	sen_val margin = { 0 };
+	sensor_val margin = { 0 };
 	if (get_cpu_margin(addr, (int *)&margin) == false)
 		return false;
 
-	sen_val *sval = (sen_val *)reading;
+	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = tjmax.integer + margin.integer;
 	return true;
 }
@@ -194,7 +194,7 @@ static bool get_dimm_temp(uint8_t addr, uint8_t type, int *reading)
 	    false)
 		return false;
 
-	sen_val *sval = (sen_val *)reading;
+	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = rbuf[temp_ofs];
 	return true;
 }
