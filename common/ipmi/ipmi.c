@@ -184,6 +184,12 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_12V_CYCLE_SLOT:
 		pal_OEM_1S_12V_CYCLE_SLOT(msg);
 		break;
+	case CMD_OEM_1S_READ_BIC_REGISTER:
+		pal_OEM_1S_READ_BIC_REGISTER(msg);
+		break;
+	case CMD_OEM_1S_WRITE_BIC_REGISTER:
+		pal_OEM_1S_WRITE_BIC_REGISTER(msg);
+		break;
 	default:
 		printf("invalid OEM msg netfn: %x, cmd: %x\n", msg->netfn, msg->cmd);
 		msg->data_len = 0;

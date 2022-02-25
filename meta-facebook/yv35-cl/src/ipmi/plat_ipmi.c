@@ -1168,7 +1168,7 @@ void pal_OEM_1S_SET_JTAG_TAP_STA(ipmi_msg *msg)
 
 void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg)
 {
-  	uint8_t status, snr_num, option, snr_report_status;
+	uint8_t status, snr_num, option, snr_report_status;
 	uint8_t enable_snr_scan = 0xC0; // following IPMI sensor status response
 	uint8_t disable_snr_scan = 0x80;
 	int reading;
@@ -1419,6 +1419,72 @@ void pal_OEM_1S_SENSOR_POLL_EN(ipmi_msg *msg)
 		msg->completion_code = CC_INVALID_DATA_FIELD;
 		return;
 	}
+
+	msg->data_len = 0;
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
+void pal_OEM_1S_READ_BIC_REGISTER(ipmi_msg *msg)
+{
+	/*********************************
+ 	* buf 0~3: start of register address to read, LSB first
+ 	* buf 4  : bytes to read
+	***********************************/
+	if (!msg) {
+		printf("pal_OEM_1S_READ_BIC_REGISTER: parameter msg is NULL\n");
+		return;
+	}
+	if (msg->data_len != 5) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint32_t addr =
+		msg->data[0] | (msg->data[1] << 8) | (msg->data[2] << 16) | (msg->data[3] << 24);
+	uint8_t read_len = msg->data[4];
+	for (uint8_t i = 0; i < read_len; i++) {
+		msg->data[i] = *(uint8_t *)(addr + i);
+	}
+
+	msg->data_len = read_len;
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
+void pal_OEM_1S_WRITE_BIC_REGISTER(ipmi_msg *msg)
+{
+	/*********************************
+ 	* buf 0~3: start of register address to write, LSB first
+ 	* buf 4  : bytes to write, <= 4 bytes
+	* buf 5~N: date to write, LSB first
+	*
+	* NOTE: The register address must be a multiple of 4
+	***********************************/
+	if (!msg) {
+		printf("pal_OEM_1S_WRITE_BIC_REGISTER: parameter msg is NULL\n");
+		return;
+	}
+	if (msg->data[4] < 1 || msg->data[4] > 4 || (msg->data_len != 5 + msg->data[4])) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint32_t addr =
+		msg->data[0] | (msg->data[1] << 8) | (msg->data[2] << 16) | (msg->data[3] << 24);
+	if (addr % 4) {
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		return;
+	}
+
+	uint8_t write_len = msg->data[4];
+	uint32_t reg_data = *(uint32_t *)addr;
+	/* replace write_len bytes */
+	reg_data &= ~BIT_MASK(write_len * 8);
+	for (uint8_t i = 0; i < write_len; i++) {
+		reg_data |= msg->data[i + 5] << (i * 8);
+	}
+	*(uint32_t *)addr = reg_data;
 
 	msg->data_len = 0;
 	msg->completion_code = CC_SUCCESS;
