@@ -16,6 +16,7 @@
 #include "usb.h"
 #include "kcs.h"
 #include "plat_func.h"
+#include "fru.h"
 
 void device_init()
 {
