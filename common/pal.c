@@ -250,6 +250,18 @@ __weak void pal_OEM_1S_12V_CYCLE_SLOT(ipmi_msg *msg)
 	return;
 }
 
+__weak void pal_OEM_1S_READ_BIC_REGISTER(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
+__weak void pal_OEM_1S_WRITE_BIC_REGISTER(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
 // init
 __weak void pal_I2C_init(void)
 {
