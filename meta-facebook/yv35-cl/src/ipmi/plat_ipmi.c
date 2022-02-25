@@ -19,6 +19,7 @@
 #include "hal_peci.h"
 #include <drivers/peci.h>
 #include "plat_func.h"
+#include "util_sys.h"
 
 bool add_sel_evt_record(addsel_msg_t *sel_msg)
 {
