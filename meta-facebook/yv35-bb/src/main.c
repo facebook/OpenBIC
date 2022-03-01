@@ -18,6 +18,7 @@ void device_init()
 {
 	adc_init();
 	hsc_init();
+	fan_mode_init();
 }
 
 void set_sys_status()

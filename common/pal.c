@@ -135,6 +135,18 @@ __weak void pal_OEM_GET_MB_INDEX(ipmi_msg *msg)
 	return;
 }
 
+__weak void pal_OEM_SET_FAN_DUTY_MANUAL(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
+__weak void pal_OEM_GET_SET_FAN_CTRL_MODE(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
 // IPMI OEM 1S
 __weak void pal_OEM_1S_MSG_OUT(ipmi_msg *msg)
 {
@@ -257,6 +269,24 @@ __weak void pal_OEM_1S_READ_BIC_REGISTER(ipmi_msg *msg)
 }
 
 __weak void pal_OEM_1S_WRITE_BIC_REGISTER(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
+__weak void pal_OEM_1S_SET_FAN_DUTY_AUTO(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
+__weak void pal_OEM_1S_GET_FAN_DUTY(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
+__weak void pal_OEM_1S_GET_FAN_RPM(ipmi_msg *msg)
 {
 	msg->completion_code = CC_UNSPECIFIED_ERROR;
 	return;

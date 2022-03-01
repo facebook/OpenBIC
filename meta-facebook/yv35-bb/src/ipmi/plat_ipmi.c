@@ -15,6 +15,7 @@
 #include "plat_fru.h"
 #include "sensor_def.h"
 #include "util_spi.h"
+#include "dev/fan.h"
 
 bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd)
 {
@@ -755,5 +756,263 @@ void pal_OEM_1S_12V_CYCLE_SLOT(ipmi_msg *msg)
 	gpio_set(isolator_num, GPIO_HIGH);
 
 	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
+void pal_OEM_SET_FAN_DUTY_MANUAL(ipmi_msg *msg)
+{
+	/*********************************
+		data 0: fan pwm index
+		data 1: duty
+	***********************************/
+	if (msg == NULL) {
+		printf("%s failed due to paremeter *msg is NULL\n", __func__);
+		return;
+	}
+
+	if (msg->data_len != 2) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t pwm_id = msg->data[0];
+	uint8_t duty = msg->data[1];
+	uint8_t current_fan_mode = FAN_AUTO_MODE, slot_index = 0;
+	int ret = 0, i = 0;
+
+	msg->data_len = 0;
+	msg->completion_code = CC_SUCCESS;
+
+	if (msg->InF_source == SLOT1_BIC_IFs) {
+		slot_index = 0x01;
+	} else if (msg->InF_source == SLOT3_BIC_IFs) {
+		slot_index = 0x03;
+	} else {
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		return;
+	}
+
+	if ((duty > MAX_FAN_DUTY) ||
+	    ((pwm_id >= MAX_FAN_PWM_INDEX) && (pwm_id != ID_ALL_PWM))) {
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		return;
+	}
+
+	ret = pal_get_fan_ctrl_mode(&current_fan_mode);
+	if (ret < 0) {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	if (current_fan_mode != FAN_MANUAL_MODE) {
+		printf("%s() is called when it's not at manual mode\n", __func__);
+		return;
+	}
+
+	if (pwm_id == ID_ALL_PWM) {
+		for (i = 0; i < MAX_FAN_PWM_INDEX; i++) {
+			ret = pal_set_fan_duty(i, duty, slot_index);
+			if (ret < 0) {
+				msg->completion_code = CC_UNSPECIFIED_ERROR;
+				break;
+			}
+		}
+	} else {
+		ret = pal_set_fan_duty(pwm_id, duty, slot_index);
+		if (ret < 0) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+		}
+	}
+
+	return;
+}
+
+void pal_OEM_GET_SET_FAN_CTRL_MODE(ipmi_msg *msg)
+{
+	/*********************************
+		data 0:   target
+		  0x00 Set fan mode manual
+		  0x01 Set fan mode auto
+		  0x02 Get fan mode
+	***********************************/
+	if (msg == NULL) {
+		printf("%s failed due to paremeter *msg is NULL\n", __func__);
+		return;
+	}
+
+	if (msg->data_len != 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t ctrl_cmd = msg->data[0];
+	uint8_t ctrl_mode_get = 0;
+	int ret = 0;
+
+	msg->data_len = 0;
+	msg->completion_code = CC_SUCCESS;
+
+	if (ctrl_cmd == FAN_SET_MANUAL_MODE) {
+		pal_set_fan_ctrl_mode(FAN_MANUAL_MODE);
+
+	} else if (ctrl_cmd == FAN_SET_AUTO_MODE) {
+		pal_set_fan_ctrl_mode(FAN_AUTO_MODE);
+
+	} else if (ctrl_cmd == FAN_GET_MODE) {
+		ret = pal_get_fan_ctrl_mode(&ctrl_mode_get);
+		if (ret < 0) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+
+		} else {
+			msg->data_len = 1;
+			msg->data[0] = ctrl_mode_get;
+		}
+
+	} else {
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+	}
+
+	return;
+}
+
+void pal_OEM_1S_GET_FAN_RPM(ipmi_msg *msg)
+{
+	/*********************************
+		data 0: fan index
+	***********************************/
+	if (msg == NULL) {
+		printf("%s failed due to paremeter *msg is NULL\n", __func__);
+		return;
+	}
+
+	if (msg->data_len != 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t fan_id = msg->data[0];
+	uint16_t data = 0;
+	int ret = 0;
+
+	ret = pal_get_fan_rpm(fan_id, &data);
+	if (ret < 0) {
+		msg->data_len = 0;
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+
+	} else {
+		msg->data[0] = (data >> 8) & 0xFF;
+		msg->data[1] = data & 0xFF;
+		msg->data_len = 2;
+		msg->completion_code = CC_SUCCESS;
+	}
+
+	return;
+}
+
+void pal_OEM_1S_GET_FAN_DUTY(ipmi_msg *msg)
+{
+	/*********************************
+		data 0: fan pwm index
+	***********************************/
+	if (msg == NULL) {
+		printf("%s failed due to paremeter *msg is NULL\n", __func__);
+		return;
+	}
+
+	if (msg->data_len != 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t pwm_id = msg->data[0];
+	uint8_t duty = 0, slot_index = 0;
+	int ret = 0;
+
+	if (msg->InF_source == SLOT1_BIC_IFs) {
+		slot_index = 0x01;
+	} else if (msg->InF_source == SLOT3_BIC_IFs) {
+		slot_index = 0x03;
+	} else {
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		return;
+	}
+
+	if (pwm_id >= MAX_FAN_PWM_INDEX) {
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		return;
+	}
+
+	ret = pal_get_fan_duty(pwm_id, &duty, slot_index);
+	if (ret < 0) {
+		msg->data_len = 0;
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+
+	} else {
+		msg->data[0] = duty;
+		msg->data_len = 1;
+		msg->completion_code = CC_SUCCESS;
+	}
+
+	return;
+}
+
+void pal_OEM_1S_SET_FAN_DUTY_AUTO(ipmi_msg *msg)
+{
+	/*********************************
+		data 0: fan pwm index
+		data 1: duty
+	***********************************/
+	if (msg == NULL) {
+		printf("%s failed due to paremeter *msg is NULL\n", __func__);
+		return;
+	}
+
+	if (msg->data_len != 2) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t pwm_id = msg->data[0];
+	uint8_t duty = msg->data[1];
+	uint8_t current_fan_mode = FAN_AUTO_MODE, slot_index = 0;
+	int ret = 0;
+
+	msg->data_len = 0;
+	msg->completion_code = CC_SUCCESS;
+
+	if (msg->InF_source == SLOT1_BIC_IFs) {
+		slot_index = 0x01;
+	} else if (msg->InF_source == SLOT3_BIC_IFs) {
+		slot_index = 0x03;
+	} else {
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		return;
+	}
+
+	if (pwm_id >= MAX_FAN_PWM_INDEX) {
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		return;
+	}
+
+	ret = pal_get_fan_ctrl_mode(&current_fan_mode);
+	if (ret < 0) {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	if (current_fan_mode != FAN_AUTO_MODE) {
+		printf("%s() is called when it's not at auto mode\n", __func__);
+		return;
+	}
+
+	if (duty > MAX_FAN_DUTY) {
+		duty = MAX_FAN_DUTY;
+	}
+
+	ret = pal_set_fan_duty(pwm_id, duty, slot_index);
+	if (ret < 0) {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+	}
+
 	return;
 }

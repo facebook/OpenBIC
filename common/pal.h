@@ -36,6 +36,8 @@ void pal_STORAGE_GET_SDR(ipmi_msg *msg);
 void pal_OEM_SENSOR_READ(ipmi_msg *msg);
 void pal_OEM_SET_SYSTEM_GUID(ipmi_msg *msg);
 void pal_OEM_GET_MB_INDEX(ipmi_msg *msg);
+void pal_OEM_SET_FAN_DUTY_MANUAL(ipmi_msg *msg);
+void pal_OEM_GET_SET_FAN_CTRL_MODE(ipmi_msg *msg);
 
 // IPMI OEM 1S
 void pal_OEM_1S_MSG_OUT(ipmi_msg *msg);
@@ -55,6 +57,9 @@ void pal_OEM_1S_RESET_BIC(ipmi_msg *msg);
 void pal_OEM_1S_12V_CYCLE_SLOT(ipmi_msg *msg);
 void pal_OEM_1S_READ_BIC_REGISTER(ipmi_msg *msg);
 void pal_OEM_1S_WRITE_BIC_REGISTER(ipmi_msg *msg);
+void pal_OEM_1S_SET_FAN_DUTY_AUTO(ipmi_msg *msg);
+void pal_OEM_1S_GET_FAN_DUTY(ipmi_msg *msg);
+void pal_OEM_1S_GET_FAN_RPM(ipmi_msg *msg);
 
 // init
 void pal_I2C_init(void);
