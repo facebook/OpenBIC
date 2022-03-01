@@ -53,6 +53,8 @@ void pal_OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg);
 void pal_OEM_1S_GET_BIC_STATUS(ipmi_msg *msg);
 void pal_OEM_1S_RESET_BIC(ipmi_msg *msg);
 void pal_OEM_1S_12V_CYCLE_SLOT(ipmi_msg *msg);
+void pal_OEM_1S_READ_BIC_REGISTER(ipmi_msg *msg);
+void pal_OEM_1S_WRITE_BIC_REGISTER(ipmi_msg *msg);
 
 // init
 void pal_I2C_init(void);

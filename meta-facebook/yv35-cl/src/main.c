@@ -16,6 +16,9 @@
 #include "usb.h"
 #include "kcs.h"
 #include "plat_func.h"
+#include "fru.h"
+#include "timer.h"
+#include "hal_peci.h"
 
 void switch_spi_mux()
 {
