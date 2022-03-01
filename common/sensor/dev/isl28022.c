@@ -11,31 +11,32 @@
 
 uint8_t isl28022_read(uint8_t sensor_num, int *reading)
 {
-	if ((reading == NULL) || (sensor_config[SnrNum_SnrCfg_map[sensor_num]].init_args == NULL)) {
-		return SNR_UNSPECIFIED_ERROR;
+	if ((reading == NULL) ||
+	    (sensor_config[SensorNum_SensorCfg_map[sensor_num]].init_args == NULL)) {
+		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	isl28022_init_arg *init_arg =
-		(isl28022_init_arg *)sensor_config[SnrNum_SnrCfg_map[sensor_num]].init_args;
+		(isl28022_init_arg *)sensor_config[SensorNum_SensorCfg_map[sensor_num]].init_args;
 	if (init_arg->is_init == false) {
 		printk("isl28022_read, device isn't initialized\n");
-		return SNR_UNSPECIFIED_ERROR;
+		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	uint8_t retry = 5;
 	I2C_MSG msg;
-	uint8_t offset = sensor_config[SnrNum_SnrCfg_map[sensor_num]].offset;
+	uint8_t offset = sensor_config[SensorNum_SensorCfg_map[sensor_num]].offset;
 	sensor_val *sval = (sensor_val *)reading;
 	memset(sval, 0, sizeof(sensor_val));
 
-	msg.bus = sensor_config[SnrNum_SnrCfg_map[sensor_num]].port;
-	msg.slave_addr = sensor_config[SnrNum_SnrCfg_map[sensor_num]].slave_addr;
+	msg.bus = sensor_config[SensorNum_SensorCfg_map[sensor_num]].port;
+	msg.slave_addr = sensor_config[SensorNum_SensorCfg_map[sensor_num]].slave_addr;
 	msg.tx_len = 1;
 	msg.rx_len = 2;
 	msg.data[0] = offset;
 	if (i2c_master_read(&msg, retry)) {
 		/* read fail */
-		return SNR_FAIL_TO_ACCESS;
+		return SENSOR_FAIL_TO_ACCESS;
 	}
 
 	if (offset == ISL28022_BUS_VOLTAGE_REG) {
@@ -64,22 +65,22 @@ uint8_t isl28022_read(uint8_t sensor_num, int *reading)
 		sval->integer = read_power;
 		sval->fraction = ((read_power - sval->integer) * 1000);
 	} else {
-		return SNR_FAIL_TO_ACCESS;
+		return SENSOR_FAIL_TO_ACCESS;
 	}
 
-	return SNR_READ_SUCCESS;
+	return SENSOR_READ_SUCCESS;
 }
 
 uint8_t isl28022_init(uint8_t sensor_num)
 {
-	if (sensor_config[SnrNum_SnrCfg_map[sensor_num]].init_args == NULL) {
+	if (sensor_config[SensorNum_SensorCfg_map[sensor_num]].init_args == NULL) {
 		printk("isl28022_init: init_arg is NULL\n");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	sensor_config[SnrNum_SnrCfg_map[sensor_num]].read = isl28022_read;
+	sensor_config[SensorNum_SensorCfg_map[sensor_num]].read = isl28022_read;
 	isl28022_init_arg *init_arg =
-		(isl28022_init_arg *)sensor_config[SnrNum_SnrCfg_map[sensor_num]].init_args;
+		(isl28022_init_arg *)sensor_config[SensorNum_SensorCfg_map[sensor_num]].init_args;
 	if (init_arg->is_init == true) {
 		return SENSOR_INIT_SUCCESS;
 	}
@@ -88,8 +89,8 @@ uint8_t isl28022_init(uint8_t sensor_num)
 	uint8_t retry = 5;
 
 	/* set configuration register */
-	msg.bus = sensor_config[SnrNum_SnrCfg_map[sensor_num]].port;
-	msg.slave_addr = sensor_config[SnrNum_SnrCfg_map[sensor_num]].slave_addr;
+	msg.bus = sensor_config[SensorNum_SensorCfg_map[sensor_num]].port;
+	msg.slave_addr = sensor_config[SensorNum_SensorCfg_map[sensor_num]].slave_addr;
 	msg.tx_len = 3;
 	msg.data[0] = ISL28022_CONFIG_REG;
 	msg.data[1] = (init_arg->config.value >> 8) & 0xFF;
@@ -113,8 +114,8 @@ uint8_t isl28022_init(uint8_t sensor_num)
 	calibration = (40.96 / (init_arg->current_LSB * init_arg->r_shunt));
 	calibration = calibration << 1; /* 15 bits, bit[0] is fix to 0 */
 
-	msg.bus = sensor_config[SnrNum_SnrCfg_map[sensor_num]].port;
-	msg.slave_addr = sensor_config[SnrNum_SnrCfg_map[sensor_num]].slave_addr;
+	msg.bus = sensor_config[SensorNum_SensorCfg_map[sensor_num]].port;
+	msg.slave_addr = sensor_config[SensorNum_SensorCfg_map[sensor_num]].slave_addr;
 	msg.tx_len = 3;
 	msg.data[0] = ISL28022_CALIBRATION_REG;
 	msg.data[1] = (calibration >> 8) & 0xFF;

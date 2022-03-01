@@ -55,8 +55,8 @@ bool pre_isl69259_read(uint8_t sensor_num, void *args)
 	I2C_MSG msg;
 
 	/* set page */
-	msg.bus = sensor_config[SnrNum_SnrCfg_map[sensor_num]].port;
-	msg.slave_addr = sensor_config[SnrNum_SnrCfg_map[sensor_num]].slave_addr;
+	msg.bus = sensor_config[SensorNum_SensorCfg_map[sensor_num]].port;
+	msg.slave_addr = sensor_config[SensorNum_SensorCfg_map[sensor_num]].slave_addr;
 	msg.tx_len = 2;
 	msg.data[0] = 0x00;
 	msg.data[1] = pre_proc_args->vr_page;

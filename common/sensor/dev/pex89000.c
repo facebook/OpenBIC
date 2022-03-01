@@ -15,10 +15,10 @@
 #define BRCM_CHIME_AXI_CSR_DATA 0x001F0104
 #define BRCM_CHIME_AXI_CSR_CTL 0x001F0108
 
-#define BRCM_TEMP_SNR0_CTL_REG1 0xFFE78504
-#define BRCM_TEMP_SNR0_STAT_REG0 0xFFE78538
+#define BRCM_TEMP_SENSOR0_CTL_REG1 0xFFE78504
+#define BRCM_TEMP_SENSOR0_STAT_REG0 0xFFE78538
 
-#define BRCM_TEMP_SNR0_CTL_REG1_RESET 0x000653E8
+#define BRCM_TEMP_SENSOR0_CTL_REG1_RESET 0x000653E8
 
 #define BRCM_FULL_ADDR_BIT 0x007C0000 // bits[22:18]
 
@@ -252,8 +252,8 @@ uint8_t pex89000_die_temp(uint8_t bus, uint8_t addr, sensor_val *val)
 	uint32_t resp = 0;
 
 	//check 0xFFE78504 value
-	if (!pex89000_chime_to_axi_read(bus, addr, BRCM_TEMP_SNR0_CTL_REG1, &resp)) {
-		if (resp != BRCM_TEMP_SNR0_CTL_REG1_RESET) {
+	if (!pex89000_chime_to_axi_read(bus, addr, BRCM_TEMP_SENSOR0_CTL_REG1, &resp)) {
+		if (resp != BRCM_TEMP_SENSOR0_CTL_REG1_RESET) {
 			printf("ADC temperature control register1 check fail!\n");
 			return 1;
 		}
@@ -264,14 +264,14 @@ uint8_t pex89000_die_temp(uint8_t bus, uint8_t addr, sensor_val *val)
 	}
 
 	//Write 0xFFE78504 = 200653E8
-	if (pex89000_chime_to_axi_write(bus, addr, BRCM_TEMP_SNR0_CTL_REG1,
-					BRCM_TEMP_SNR0_CTL_REG1_RESET)) {
+	if (pex89000_chime_to_axi_write(bus, addr, BRCM_TEMP_SENSOR0_CTL_REG1,
+					BRCM_TEMP_SENSOR0_CTL_REG1_RESET)) {
 		printf("CHIME to AXI Write 0xFFE78504 fail!\n");
 		return 1;
 	}
 
 	//Read 0xFFE78538
-	if (!pex89000_chime_to_axi_read(bus, addr, BRCM_TEMP_SNR0_STAT_REG0, &resp)) {
+	if (!pex89000_chime_to_axi_read(bus, addr, BRCM_TEMP_SENSOR0_STAT_REG0, &resp)) {
 		float tmp = (resp & 0xFFFF) / 128;
 		val->integer = (int)tmp;
 		val->fraction = (int)(tmp * 1000) % 1000;
@@ -284,11 +284,11 @@ uint8_t pex89000_die_temp(uint8_t bus, uint8_t addr, sensor_val *val)
 uint8_t pex89000_read(uint8_t sensor_num, int *reading)
 {
 	if (reading == NULL)
-		return SNR_UNSPECIFIED_ERROR;
+		return SENSOR_UNSPECIFIED_ERROR;
 
 	pex89000_init_arg *init_arg =
-		(pex89000_init_arg *)sensor_config[SnrNum_SnrCfg_map[sensor_num]].init_args;
-	uint8_t rc = SNR_UNSPECIFIED_ERROR;
+		(pex89000_init_arg *)sensor_config[SensorNum_SensorCfg_map[sensor_num]].init_args;
+	uint8_t rc = SENSOR_UNSPECIFIED_ERROR;
 	int ret = k_mutex_lock(&init_arg->brcm_pciesw, K_MSEC(5000)); //  TBD: timeout 5s
 
 	if (ret) {
@@ -296,23 +296,23 @@ uint8_t pex89000_read(uint8_t sensor_num, int *reading)
 		return rc;
 	}
 
-	switch (sensor_config[SnrNum_SnrCfg_map[sensor_num]].offset) {
+	switch (sensor_config[SensorNum_SensorCfg_map[sensor_num]].offset) {
 	case TEMP:
-		if (pex89000_die_temp(sensor_config[SnrNum_SnrCfg_map[sensor_num]].port,
-				      sensor_config[SnrNum_SnrCfg_map[sensor_num]].slave_addr,
+		if (pex89000_die_temp(sensor_config[SensorNum_SensorCfg_map[sensor_num]].port,
+				      sensor_config[SensorNum_SensorCfg_map[sensor_num]].slave_addr,
 				      (sensor_val *)reading)) {
 			printf("sensor pex89000_read read temp fail!\n");
-			rc = SNR_FAIL_TO_ACCESS;
+			rc = SENSOR_FAIL_TO_ACCESS;
 			goto exit;
 		}
 		break;
 	default:
 		printf("sensor pex89000_read type fail!\n");
-		rc = SNR_UNSPECIFIED_ERROR;
+		rc = SENSOR_UNSPECIFIED_ERROR;
 		goto exit;
 	}
 
-	rc = SNR_READ_SUCCESS;
+	rc = SENSOR_READ_SUCCESS;
 
 exit:
 	k_mutex_unlock(&init_arg->brcm_pciesw);
@@ -321,15 +321,15 @@ exit:
 
 bool pex89000_init(uint8_t sensor_num)
 {
-	sensor_config[SnrNum_SnrCfg_map[sensor_num]].read = pex89000_read;
+	sensor_config[SensorNum_SensorCfg_map[sensor_num]].read = pex89000_read;
 
-	if (sensor_config[SnrNum_SnrCfg_map[sensor_num]].init_args == NULL) {
+	if (sensor_config[SensorNum_SensorCfg_map[sensor_num]].init_args == NULL) {
 		printk("pex89000_init: init_arg is NULL\n");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
 	pex89000_init_arg *init_arg =
-		(pex89000_init_arg *)sensor_config[SnrNum_SnrCfg_map[sensor_num]].init_args;
+		(pex89000_init_arg *)sensor_config[SensorNum_SensorCfg_map[sensor_num]].init_args;
 	if (k_mutex_init(&init_arg->brcm_pciesw)) {
 		printf("pex89000 mutex %d init fail\n", init_arg->idx);
 		init_arg->is_init = false;

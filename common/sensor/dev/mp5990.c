@@ -10,7 +10,7 @@ uint8_t mp5990_read(uint8_t sensor_num, int *reading)
 	double val;
 	I2C_MSG msg = { 0 };
 
-	snr_cfg *cfg = &sensor_config[SnrNum_SnrCfg_map[sensor_num]];
+	sensor_cfg *cfg = &sensor_config[SensorNum_SensorCfg_map[sensor_num]];
 
 	msg.bus = cfg->port;
 	msg.slave_addr = cfg->slave_addr;
@@ -19,7 +19,7 @@ uint8_t mp5990_read(uint8_t sensor_num, int *reading)
 	msg.data[0] = cfg->offset;
 
 	if (i2c_master_read(&msg, retry))
-		return SNR_FAIL_TO_ACCESS;
+		return SENSOR_FAIL_TO_ACCESS;
 
 	switch (cfg->offset) {
 	case PMBUS_READ_VOUT:
@@ -39,7 +39,7 @@ uint8_t mp5990_read(uint8_t sensor_num, int *reading)
 		val = ((msg.data[1] << 8) | msg.data[0]);
 		break;
 	default:
-		return SNR_NOT_FOUND;
+		return SENSOR_NOT_FOUND;
 	}
 
 	sensor_val *sval = (sensor_val *)reading;
@@ -48,11 +48,11 @@ uint8_t mp5990_read(uint8_t sensor_num, int *reading)
 	sval->integer = (int32_t)val;
 	sval->fraction = (int32_t)(val * 1000) % 1000;
 
-	return SNR_READ_SUCCESS;
+	return SENSOR_READ_SUCCESS;
 }
 
 uint8_t mp5990_init(uint8_t sensor_num)
 {
-	sensor_config[SnrNum_SnrCfg_map[sensor_num]].read = mp5990_read;
+	sensor_config[SensorNum_SensorCfg_map[sensor_num]].read = mp5990_read;
 	return SENSOR_INIT_SUCCESS;
 }

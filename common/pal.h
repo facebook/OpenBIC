@@ -46,7 +46,7 @@ void pal_OEM_1S_FW_UPDATE(ipmi_msg *msg);
 void pal_OEM_1S_GET_POST_CODE(ipmi_msg *msg);
 void pal_OEM_1S_RESET_BMC(ipmi_msg *msg);
 void pal_OEM_1S_GET_FW_VERSION(ipmi_msg *msg);
-void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg);
+void pal_OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg);
 void pal_OEM_1S_ASD_INIT(ipmi_msg *msg);
 void pal_OEM_1S_GET_SET_GPIO(ipmi_msg *msg);
 void pal_OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg);
@@ -66,9 +66,9 @@ void pal_set_sensor_poll_interval(int *interval_ms);
 
 // sensor accessible
 uint8_t pal_load_sdr_table(void);
-bool pal_load_snr_config(void);
+bool pal_load_sensor_config(void);
 void pal_fix_fullSDR_table(void);
-void pal_fix_Snrconfig(void);
+void pal_fix_Sensorconfig(void);
 
 // fru
 void pal_load_fru_config(void);

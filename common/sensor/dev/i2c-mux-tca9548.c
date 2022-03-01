@@ -8,7 +8,7 @@ bool tca9548_select_chan(uint8_t sensor_num, void *args)
 	if (!args)
 		return false;
 
-	snr_cfg *cfg = &sensor_config[SnrNum_SnrCfg_map[sensor_num]];
+	sensor_cfg *cfg = &sensor_config[SensorNum_SensorCfg_map[sensor_num]];
 	struct tca9548 *p = (struct tca9548 *)args;
 
 	uint8_t retry = 5;

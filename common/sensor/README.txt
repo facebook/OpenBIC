@@ -47,12 +47,12 @@ Usage:
                 '''
                 uint8_t tmp75_read(uint8_t sensor_num, int *reading) {
                     if (!reading)
-                        return SNR_UNSPECIFIED_ERROR;
+                        return SENSOR_UNSPECIFIED_ERROR;
                     .....
                 }
 
                 uint8_t tmp75_init(uint8_t sensor_num) {
-                    sensor_config[SnrNum_SnrCfg_map[sensor_num]].read = tmp75_read;
+                    sensor_config[SensorNum_SensorCfg_map[sensor_num]].read = tmp75_read;
                     .....
                 }
                 '''
@@ -97,9 +97,9 @@ Usage:
             Take AST ADC sensor as an example.
             1. meta-facebook/yv35-cl/src/sensor/plat_sensor.c
                 '''
-                snr_cfg plat_sensor_config[] = {
+                sensor_cfg plat_sensor_config[] = {
                 .....
-                { SENSOR_NUM_VOL_STBY5V  , sensor_dev_ast_adc  , adc_port9  , 0  , 0   , stby_access  , 711   , 200   , 0  , SNR_INIT_STATUS   , 
+                { SENSOR_NUM_VOL_STBY5V  , sensor_dev_ast_adc  , adc_port9  , 0  , 0   , stby_access  , 711   , 200   , 0  , SENSOR_INIT_STATUS   , 
                   NULL  , NULL  , NULL  , NULL  , &adc_asd_init_args[0] },
                 .....
                 };

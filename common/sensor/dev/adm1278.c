@@ -8,20 +8,21 @@
 
 uint8_t adm1278_read(uint8_t sensor_num, int *reading)
 {
-	if ((reading == NULL) || (sensor_config[SnrNum_SnrCfg_map[sensor_num]].init_args == NULL)) {
-		return SNR_UNSPECIFIED_ERROR;
+	if ((reading == NULL) ||
+	    (sensor_config[SensorNum_SensorCfg_map[sensor_num]].init_args == NULL)) {
+		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	adm1278_init_arg *init_arg =
-		(adm1278_init_arg *)sensor_config[SnrNum_SnrCfg_map[sensor_num]].init_args;
+		(adm1278_init_arg *)sensor_config[SensorNum_SensorCfg_map[sensor_num]].init_args;
 	if (init_arg->is_init == false) {
 		printk("adm1278_read, device isn't initialized\n");
-		return SNR_UNSPECIFIED_ERROR;
+		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	if (!init_arg->r_sense) {
 		printk("adm1278_read, Rsense hasn't given\n");
-		return SNR_UNSPECIFIED_ERROR;
+		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	float Rsense = init_arg->r_sense;
@@ -29,14 +30,14 @@ uint8_t adm1278_read(uint8_t sensor_num, int *reading)
 	uint8_t retry = 5;
 	I2C_MSG msg;
 
-	msg.bus = sensor_config[SnrNum_SnrCfg_map[sensor_num]].port;
-	msg.slave_addr = sensor_config[SnrNum_SnrCfg_map[sensor_num]].slave_addr;
+	msg.bus = sensor_config[SensorNum_SensorCfg_map[sensor_num]].port;
+	msg.slave_addr = sensor_config[SensorNum_SensorCfg_map[sensor_num]].slave_addr;
 	msg.tx_len = 1;
-	msg.data[0] = sensor_config[SnrNum_SnrCfg_map[sensor_num]].offset;
+	msg.data[0] = sensor_config[SensorNum_SensorCfg_map[sensor_num]].offset;
 	msg.rx_len = 2;
 
 	if (i2c_master_read(&msg, retry))
-		return SNR_FAIL_TO_ACCESS;
+		return SENSOR_FAIL_TO_ACCESS;
 
 	switch (sensor_num) {
 	case SENSOR_NUM_VOL_HSCIN:
@@ -61,32 +62,32 @@ uint8_t adm1278_read(uint8_t sensor_num, int *reading)
 
 	default:
 		printf("Invalid sensor 0x%x\n", sensor_num);
-		return SNR_UNSPECIFIED_ERROR;
+		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = (int)val & 0xFFFF;
 	sval->fraction = (val - sval->integer) * 1000;
 
-	return SNR_READ_SUCCESS;
+	return SENSOR_READ_SUCCESS;
 }
 
 uint8_t adm1278_init(uint8_t sensor_num)
 {
-	if (!sensor_config[SnrNum_SnrCfg_map[sensor_num]].init_args) {
+	if (!sensor_config[SensorNum_SensorCfg_map[sensor_num]].init_args) {
 		printk("<error> ADM1278 init args not provide!\n");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
 	adm1278_init_arg *init_args =
-		(adm1278_init_arg *)sensor_config[SnrNum_SnrCfg_map[sensor_num]].init_args;
+		(adm1278_init_arg *)sensor_config[SensorNum_SensorCfg_map[sensor_num]].init_args;
 	if (init_args->is_init)
 		goto skip_init;
 
 	uint8_t retry = 5;
 	I2C_MSG msg;
-	msg.bus = sensor_config[SnrNum_SnrCfg_map[sensor_num]].port;
-	msg.slave_addr = sensor_config[SnrNum_SnrCfg_map[sensor_num]].slave_addr;
+	msg.bus = sensor_config[SensorNum_SensorCfg_map[sensor_num]].port;
+	msg.slave_addr = sensor_config[SensorNum_SensorCfg_map[sensor_num]].slave_addr;
 	msg.tx_len = 3;
 	msg.data[0] = REG_PWR_MT_CFG;
 	msg.data[1] = init_args->config.value & 0xFF;
@@ -98,8 +99,8 @@ uint8_t adm1278_init(uint8_t sensor_num)
 	}
 
 	memset(&msg, 0, sizeof(msg));
-	msg.bus = sensor_config[SnrNum_SnrCfg_map[sensor_num]].port;
-	msg.slave_addr = sensor_config[SnrNum_SnrCfg_map[sensor_num]].slave_addr;
+	msg.bus = sensor_config[SensorNum_SensorCfg_map[sensor_num]].port;
+	msg.slave_addr = sensor_config[SensorNum_SensorCfg_map[sensor_num]].slave_addr;
 	msg.tx_len = 1;
 	msg.data[0] = REG_PWR_MT_CFG;
 	msg.rx_len = 2;
@@ -117,6 +118,6 @@ uint8_t adm1278_init(uint8_t sensor_num)
 	init_args->is_init = 1;
 
 skip_init:
-	sensor_config[SnrNum_SnrCfg_map[sensor_num]].read = adm1278_read;
+	sensor_config[SensorNum_SensorCfg_map[sensor_num]].read = adm1278_read;
 	return SENSOR_INIT_SUCCESS;
 }

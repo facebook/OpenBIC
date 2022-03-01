@@ -100,9 +100,9 @@ static bool adc_read_mv(uint8_t sensor_num, uint32_t index, uint32_t channel, in
 }
 bool pal_adc_read(uint8_t sensor_num, int *reading)
 {
-	uint8_t snrcfg_sensor_num = SnrNum_SnrCfg_map[sensor_num];
-	uint8_t chip = sensor_config[snrcfg_sensor_num].port / ADC_CHAN_NUM;
-	uint8_t number = sensor_config[snrcfg_sensor_num].port % ADC_CHAN_NUM;
+	uint8_t sensorcfg_sensor_num = SensorNum_SensorCfg_map[sensor_num];
+	uint8_t chip = sensor_config[sensorcfg_sensor_num].port / ADC_CHAN_NUM;
+	uint8_t number = sensor_config[sensorcfg_sensor_num].port % ADC_CHAN_NUM;
 	int val = 1;
 	int ret = adc_read_mv(sensor_num, chip, number, &val);
 	if (ret) {
@@ -110,16 +110,16 @@ bool pal_adc_read(uint8_t sensor_num, int *reading)
 			gpio_set(A_P3V_BAT_SCALED_EN_R, GPIO_HIGH);
 			osDelay(1);
 			adc_read_mv(sensor_num, chip, number, &val);
-			val = val * sensor_config[snrcfg_sensor_num].arg0 /
-			      sensor_config[snrcfg_sensor_num].arg1;
+			val = val * sensor_config[sensorcfg_sensor_num].arg0 /
+			      sensor_config[sensorcfg_sensor_num].arg1;
 			gpio_set(A_P3V_BAT_SCALED_EN_R, GPIO_LOW);
 		} else {
-			val = val * sensor_config[snrcfg_sensor_num].arg0 /
-			      sensor_config[snrcfg_sensor_num].arg1;
+			val = val * sensor_config[sensorcfg_sensor_num].arg0 /
+			      sensor_config[sensorcfg_sensor_num].arg1;
 		}
 		*reading = (acur_cal_MBR(sensor_num, val) / 1000) & 0xFFFF;
-		sensor_config[snrcfg_sensor_num].cache = *reading;
-		sensor_config[snrcfg_sensor_num].cache_status = SNR_READ_ACUR_SUCCESS;
+		sensor_config[sensorcfg_sensor_num].cache = *reading;
+		sensor_config[sensorcfg_sensor_num].cache_status = SENSOR_READ_ACUR_SUCCESS;
 		return true;
 	} else {
 		return false;

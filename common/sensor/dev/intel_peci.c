@@ -202,13 +202,13 @@ static bool get_dimm_temp(uint8_t addr, uint8_t type, int *reading)
 uint8_t intel_peci_read(uint8_t sensor_num, int *reading)
 {
 	if (!reading)
-		return SNR_UNSPECIFIED_ERROR;
+		return SENSOR_UNSPECIFIED_ERROR;
 
 	bool ret_val = false;
-	snr_cfg *cfg = &sensor_config[SnrNum_SnrCfg_map[sensor_num]];
+	sensor_cfg *cfg = &sensor_config[SensorNum_SensorCfg_map[sensor_num]];
 	const uint8_t read_type = cfg->offset;
 	if (read_type <= PECI_UNKNOWN || read_type >= PECI_MAX)
-		return SNR_NOT_FOUND;
+		return SENSOR_NOT_FOUND;
 
 	switch (read_type) {
 	case PECI_TEMP_CHANNEL0_DIMM0:
@@ -245,13 +245,13 @@ uint8_t intel_peci_read(uint8_t sensor_num, int *reading)
 		break;
 	}
 
-	return ret_val ? SNR_READ_SUCCESS : SNR_FAIL_TO_ACCESS;
+	return ret_val ? SENSOR_READ_SUCCESS : SENSOR_FAIL_TO_ACCESS;
 }
 
 uint8_t intel_peci_init(uint8_t sensor_num)
 {
 	static bool is_init = false;
-	sensor_config[SnrNum_SnrCfg_map[sensor_num]].read = intel_peci_read;
+	sensor_config[SensorNum_SensorCfg_map[sensor_num]].read = intel_peci_read;
 	if (!is_init) {
 		int ret;
 		ret = peci_init();

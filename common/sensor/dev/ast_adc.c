@@ -110,15 +110,15 @@ static bool adc_read_mv(uint8_t sensor_num, uint32_t index, uint32_t channel, in
 uint8_t ast_adc_read(uint8_t sensor_num, int *reading)
 {
 	if (!reading)
-		return SNR_UNSPECIFIED_ERROR;
+		return SENSOR_UNSPECIFIED_ERROR;
 
-	snr_cfg *cfg = &sensor_config[SnrNum_SnrCfg_map[sensor_num]];
+	sensor_cfg *cfg = &sensor_config[SensorNum_SensorCfg_map[sensor_num]];
 	uint8_t chip = cfg->port / ADC_CHANNEL_NUM;
 	uint8_t number = cfg->port % ADC_CHANNEL_NUM;
 	int val = 1;
 
 	if (!adc_read_mv(sensor_num, chip, number, &val))
-		return SNR_FAIL_TO_ACCESS;
+		return SENSOR_FAIL_TO_ACCESS;
 
 	val = val * cfg->arg0 / cfg->arg1;
 
@@ -126,18 +126,18 @@ uint8_t ast_adc_read(uint8_t sensor_num, int *reading)
 	sval->integer = (val / 1000) & 0xFFFF;
 	sval->fraction = (val % 1000) & 0xFFFF;
 
-	return SNR_READ_SUCCESS;
+	return SENSOR_READ_SUCCESS;
 }
 
 uint8_t ast_adc_init(uint8_t sensor_num)
 {
-	if (!sensor_config[SnrNum_SnrCfg_map[sensor_num]].init_args) {
+	if (!sensor_config[SensorNum_SensorCfg_map[sensor_num]].init_args) {
 		printk("<error> ADC init args not provide!\n");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
 	adc_asd_init_arg *init_args =
-		(adc_asd_init_arg *)sensor_config[SnrNum_SnrCfg_map[sensor_num]].init_args;
+		(adc_asd_init_arg *)sensor_config[SensorNum_SensorCfg_map[sensor_num]].init_args;
 	if (init_args->is_init)
 		goto skip_init;
 
@@ -174,7 +174,7 @@ uint8_t ast_adc_init(uint8_t sensor_num)
 	init_args->is_init = true;
 
 skip_init:
-	sensor_config[SnrNum_SnrCfg_map[sensor_num]].read = ast_adc_read;
+	sensor_config[SensorNum_SensorCfg_map[sensor_num]].read = ast_adc_read;
 
 	return SENSOR_INIT_SUCCESS;
 }

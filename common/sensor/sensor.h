@@ -69,23 +69,23 @@ static inline int cal_MBR(uint8_t sensor_num, int val)
 }
 
 enum {
-	SNR_READ_SUCCESS,
-	SNR_READ_ACUR_SUCCESS,
-	SNR_NOT_FOUND,
-	SNR_NOT_ACCESSIBLE,
-	SNR_FAIL_TO_ACCESS,
-	SNR_INIT_STATUS,
-	SNR_UNSPECIFIED_ERROR,
-	SNR_POLLING_DISABLE,
-	SNR_PRE_READ_ERROR,
-	SNR_POST_READ_ERROR,
-	SNR_READ_API_UNREGISTER,
-	SNR_READ_4BYTE_ACUR_SUCCESS
+	SENSOR_READ_SUCCESS,
+	SENSOR_READ_ACUR_SUCCESS,
+	SENSOR_NOT_FOUND,
+	SENSOR_NOT_ACCESSIBLE,
+	SENSOR_FAIL_TO_ACCESS,
+	SENSOR_INIT_STATUS,
+	SENSOR_UNSPECIFIED_ERROR,
+	SENSOR_POLLING_DISABLE,
+	SENSOR_PRE_READ_ERROR,
+	SENSOR_POST_READ_ERROR,
+	SENSOR_READ_API_UNREGISTER,
+	SENSOR_READ_4BYTE_ACUR_SUCCESS
 };
 
 enum { SENSOR_INIT_SUCCESS, SENSOR_INIT_UNSPECIFIED_ERROR };
 
-typedef struct _snr_cfg__ {
+typedef struct _sensor_cfg__ {
 	uint8_t num;
 	uint8_t type;
 	uint8_t port; // port, bus, channel, etc.
@@ -106,7 +106,7 @@ typedef struct _snr_cfg__ {
 	uint8_t retry;
 	uint8_t (*init)(uint8_t, int *);
 	uint8_t (*read)(uint8_t, int *);
-} snr_cfg;
+} sensor_cfg;
 
 /* INIT arg */
 typedef struct _isl28022_init_arg {
@@ -171,13 +171,13 @@ typedef struct _pex89000_init_arg {
 
 extern bool enable_sensor_poll;
 extern uint8_t SDR_NUM;
-extern snr_cfg *sensor_config;
-extern uint8_t SnrNum_SnrCfg_map[SENSOR_NUM_MAX];
+extern sensor_cfg *sensor_config;
+extern uint8_t SensorNum_SensorCfg_map[SENSOR_NUM_MAX];
 
 uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode);
 bool sensor_init(void);
-void disable_snr_poll();
-void enable_snr_poll();
+void sensor_poll_disable();
+void sensor_poll_enable();
 
 /* i2c-mux tca9548 */
 bool tca9548_select_chan(uint8_t sensor_num, void *args);

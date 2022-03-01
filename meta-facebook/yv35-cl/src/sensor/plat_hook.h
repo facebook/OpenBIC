@@ -21,17 +21,17 @@ extern isl69259_pre_proc_arg isl69259_pre_read_args[];
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
  **************************************************************************************************/
-bool pre_isl69259_read(uint8_t snr_num, void *args);
-bool pre_nvme_read(uint8_t snr_num, void *args);
-bool pre_vol_bat3v_read(uint8_t snr_num, void *args);
-bool post_vol_bat3v_read(uint8_t snr_num, void *args, int *reading);
-bool post_cpu_margin_read(uint8_t snr_num, void *args, int *reading);
+bool pre_isl69259_read(uint8_t sensor_num, void *args);
+bool pre_nvme_read(uint8_t sensor_num, void *args);
+bool pre_vol_bat3v_read(uint8_t sensor_num, void *args);
+bool post_vol_bat3v_read(uint8_t sensor_num, void *args, int *reading);
+bool post_cpu_margin_read(uint8_t sensor_num, void *args, int *reading);
 
 /**************************************************************************************************
  *  ACCESS CHECK FUNC
  **************************************************************************************************/
-bool stby_access(uint8_t snr_num);
-bool DC_access(uint8_t snr_num);
-bool post_access(uint8_t snr_num);
+bool stby_access(uint8_t sensor_num);
+bool DC_access(uint8_t sensor_num);
+bool post_access(uint8_t sensor_num);
 
 #endif
