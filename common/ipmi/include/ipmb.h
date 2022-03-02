@@ -77,26 +77,25 @@
 
 #define IS_RESPONSE(msg) (msg.netfn & 0x01)
 
-enum {
-	Self_IFs = 0x0,
-	ME_IPMB_IFs = 0x01,
-	BMC_IPMB_IFs = 0x02,
-	HOST_KCS_IFs = 0x03,
-	SERVER_IPMB_IFs = 0x04,
-	EXP1_IPMB_IFs = 0x05,
-	SLOT1_BIC_IFs = 0x07,
-	SLOT3_BIC_IFs = 0x08,
-	BB_IPMB_IFs = 0x10,
-	EXP2_IPMB_IFs = 0x15,
+enum { Self_IFs = 0x0,
+       ME_IPMB_IFs = 0x01,
+       BMC_IPMB_IFs = 0x02,
+       HOST_KCS_IFs = 0x03,
+       SERVER_IPMB_IFs = 0x04,
+       EXP1_IPMB_IFs = 0x05,
+       SLOT1_BIC_IFs = 0x07,
+       SLOT3_BIC_IFs = 0x08,
+       BB_IPMB_IFs = 0x10,
+       EXP2_IPMB_IFs = 0x15,
 
-	BMC_USB_IFs = 0x20,
-	Reserve_IFs,
+       BMC_USB_IFs = 0x20,
+       PLDM_IFs = 0x40,
+       Reserve_IFs,
 };
 
-enum {
-	I2C_IF,
-	I3C_IF,
-	Reserve_IF,
+enum { I2C_IF,
+       I3C_IF,
+       Reserve_IF,
 };
 
 typedef struct IPMB_config {
