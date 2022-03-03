@@ -3,8 +3,8 @@
 
 #include <string.h>
 #include "ipmb.h"
+#include "plat_version.h"
 
-#define WW_IANA_ID 0x009c9c
 #define IPMI_THREAD_STACK_SIZE 4000
 #define ipmi_buf_len 10
 
@@ -40,55 +40,12 @@ static inline void pack_ipmi_resp(struct ipmi_response *resp, ipmi_msg *ipmi_res
 	}
 }
 
+bool pal_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd);
+bool pal_ME_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd);
+bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd);
+
 void ipmi_init(void);
 ipmi_error IPMI_handler(void *arug0, void *arug1, void *arug2);
-
-// IPMI CHASSIS
-void pal_CHASSIS_GET_CHASSIS_STATUS(ipmi_msg *msg);
-
-// IPMI SENSOR
-void pal_SENSOR_GET_SENSOR_READING(ipmi_msg *msg);
-
-// IPMI APP
-void pal_APP_GET_DEVICE_ID(ipmi_msg *msg);
-void pal_APP_COLD_RESET(ipmi_msg *msg);
-void pal_APP_WARM_RESET(ipmi_msg *msg);
-void pal_APP_GET_SELFTEST_RESULTS(ipmi_msg *msg);
-void pal_APP_GET_SYSTEM_GUID(ipmi_msg *msg);
-void pal_APP_MASTER_WRITE_READ(ipmi_msg *msg);
-
-// IPMI STORAGE
-void pal_STORAGE_GET_FRUID_INFO(ipmi_msg *msg);
-void pal_STORAGE_READ_FRUID_DATA(ipmi_msg *msg);
-void pal_STORAGE_WRITE_FRUID_DATA(ipmi_msg *msg);
-void pal_STORAGE_RSV_SDR(ipmi_msg *msg);
-void pal_STORAGE_GET_SDR(ipmi_msg *msg);
-
-// IPMI OEM
-void pal_OEM_SENSOR_READ(ipmi_msg *msg);
-void pal_OEM_SET_SYSTEM_GUID(ipmi_msg *msg);
-void pal_OEM_GET_MB_INDEX(ipmi_msg *msg);
-
-// IPMI OEM 1S
-void pal_OEM_1S_MSG_OUT(ipmi_msg *msg);
-void pal_OEM_1S_GET_GPIO(ipmi_msg *msg);
-void pal_OEM_1S_SET_GPIO(ipmi_msg *msg);
-void pal_OEM_1S_SEND_INTERRUPT_TO_BMC(ipmi_msg *msg);
-void pal_OEM_1S_SENSOR_POLL_EN(ipmi_msg *msg);
-void pal_OEM_1S_FW_UPDATE(ipmi_msg *msg);
-void pal_OEM_1S_GET_FW_VERSION(ipmi_msg *msg);
-void pal_OEM_1S_GET_POST_CODE(ipmi_msg *msg);
-void pal_OEM_1S_RESET_BMC(ipmi_msg *msg);
-void pal_OEM_1S_PECIaccess(ipmi_msg *msg);
-void pal_OEM_1S_ASD_INIT(ipmi_msg *msg);
-void pal_OEM_1S_GET_SET_GPIO(ipmi_msg *msg);
-void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg);
-void pal_OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg);
-void pal_OEM_1S_SET_JTAG_TAP_STA(ipmi_msg *msg);
-void pal_OEM_1S_JTAG_DATA_SHIFT(ipmi_msg *msg);
-void pal_OEM_1S_GET_BIC_STATUS(ipmi_msg *msg);
-void pal_OEM_1S_RESET_BIC(ipmi_msg *msg);
-void pal_OEM_1S_12V_CYCLE_SLOT(ipmi_msg *msg);
 
 enum {
 	CC_SUCCESS = 0x00,
@@ -185,7 +142,7 @@ enum {
 
 // OEM Command Codes
 enum {
-	CMD_OEM_SENSOR_READ = 0xE2,
+	CMD_OEM_NM_SENSOR_READ = 0xE2,
 	CMD_OEM_SET_SYSTEM_GUID = 0xEF,
 	CMD_OEM_GET_MB_INDEX = 0xF0,
 };
@@ -208,7 +165,7 @@ enum {
 	CMD_OEM_1S_JTAG_DATA_SHIFT = 0x22,
 	CMD_OEM_1S_ACCURACY_SENSNR = 0x23,
 	CMD_OEM_1S_ASD_INIT = 0x28,
-	CMD_OEM_1S_PECIaccess = 0x29,
+	CMD_OEM_1S_PECI_ACCESS = 0x29,
 	CMD_OEM_1S_SENSOR_POLL_EN = 0x30,
 	CMD_OEM_1S_GET_BIC_STATUS = 0x31,
 	CMD_OEM_1S_RESET_BIC = 0x32,

@@ -1,7 +1,7 @@
 #ifndef FRU_H
 #define FRU_H
 
-#include "hal_eeprom.h"
+#include "eeprom.h"
 #define FRU_CFG_NUM 5
 
 enum {

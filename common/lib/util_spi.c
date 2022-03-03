@@ -11,6 +11,7 @@
 #include <sys/util.h>
 #include "cmsis_os2.h"
 #include "util_spi.h"
+#include "util_sys.h"
 
 static char *flash_device[6] = { "fmc_cs0",  "fmc_cs1",	 "spi1_cs0",
 				 "spi1_cs1", "spi2_cs0", "spi2_cs1" };
@@ -261,4 +262,9 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool upda
 	}
 
 	return fwupdate_success;
+}
+
+__weak int pal_get_bios_flash_pos()
+{
+	return -1;
 }

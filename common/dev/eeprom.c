@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "hal_eeprom.h"
+#include "eeprom.h"
 #include "hal_i2c.h"
 #include <string.h>
 

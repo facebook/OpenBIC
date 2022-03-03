@@ -60,3 +60,23 @@ void submit_bic_cold_reset()
 	k_work_submit(&bic_cold_reset_work);
 }
 /* bic cold reset work */
+
+__weak void pal_warm_reset_prepare()
+{
+	return;
+}
+
+__weak void pal_cold_reset_prepare()
+{
+	return;
+}
+
+__weak int pal_submit_bmc_warm_reset()
+{
+	return -1;
+}
+
+__weak int pal_submit_12v_cycle_slot()
+{
+	return NOT_SUPPORT_12V_CYCLE_SLOT;
+}

@@ -5,9 +5,9 @@
 #include <sys/printk.h>
 #include <device.h>
 #include <drivers/misc/aspeed/snoop_aspeed.h>
-#include "hal_snoop.h"
-#include "plat_func.h"
+#include "snoop.h"
 #include "ipmi.h"
+#include "power_status.h"
 
 const struct device *snoop_dev;
 uint8_t *snoop_data;
@@ -166,9 +166,9 @@ void send_post_code_to_BMC()
 			send_postcode_msg->cmd = CMD_OEM_1S_SEND_POST_CODE_TO_BMC;
 			send_postcode_msg->data_len =
 				send_postcode_end_position - send_postcode_start_position + 4;
-			send_postcode_msg->data[0] = WW_IANA_ID & 0xFF;
-			send_postcode_msg->data[1] = (WW_IANA_ID >> 8) & 0xFF;
-			send_postcode_msg->data[2] = (WW_IANA_ID >> 16) & 0xFF;
+			send_postcode_msg->data[0] = IANA_ID & 0xFF;
+			send_postcode_msg->data[1] = (IANA_ID >> 8) & 0xFF;
+			send_postcode_msg->data[2] = (IANA_ID >> 16) & 0xFF;
 			send_postcode_msg->data[3] =
 				send_postcode_end_position - send_postcode_start_position;
 			copy_snoop_read_buffer(send_postcode_start_position % SNOOP_MAX_LEN,

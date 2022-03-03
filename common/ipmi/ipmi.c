@@ -5,6 +5,14 @@
 #include "ipmi.h"
 #include "kcs.h"
 #include <string.h>
+#include <stdlib.h>
+#include "app_handler.h"
+#include "chassis_handler.h"
+#include "oem_handler.h"
+#include "oem_1s_handler.h"
+#include "sensor_handler.h"
+#include "storage_handler.h"
+
 #define IPMI_QUEUE_SIZE 5
 
 struct k_thread IPMI_thread;
@@ -13,183 +21,37 @@ K_KERNEL_STACK_MEMBER(IPMI_thread_stack, IPMI_THREAD_STACK_SIZE);
 char __aligned(4) ipmi_msgq_buffer[ipmi_buf_len * sizeof(struct ipmi_msg_cfg)];
 struct k_msgq ipmi_msgq;
 
-__weak bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd)
+__weak bool pal_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd)
 {
+	if (netfn == NETFN_OEM_1S_REQ) {
+		if ((cmd == CMD_OEM_1S_FW_UPDATE) || (cmd == CMD_OEM_1S_RESET_BMC) ||
+		    (cmd == CMD_OEM_1S_GET_BIC_STATUS) || (cmd == CMD_OEM_1S_RESET_BIC))
+			return 1;
+	}
+
 	return 0;
 }
 
-void IPMI_CHASSIS_handler(ipmi_msg *msg)
+__weak bool pal_ME_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd)
 {
-	switch (msg->cmd) {
-	case CMD_CHASSIS_GET_CHASSIS_STATUS:
-		pal_CHASSIS_GET_CHASSIS_STATUS(msg);
-		break;
-	default:
-		printf("invalid chassis msg netfn: %x, cmd: %x\n", msg->netfn, msg->cmd);
-		msg->data_len = 0;
-		break;
+	if ((netfn == NETFN_OEM_REQ) && (cmd == CMD_OEM_NM_SENSOR_READ)) {
+		return 1;
 	}
-	return;
+
+	return 0;
 }
 
-void IPMI_SENSOR_handler(ipmi_msg *msg)
+__weak bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd)
 {
-	switch (msg->cmd) {
-	case CMD_SENSOR_GET_SENSOR_READING:
-		pal_SENSOR_GET_SENSOR_READING(msg);
-		break;
-	default:
-		printf("invalid sensor msg netfn: %x, cmd: %x\n", msg->netfn, msg->cmd);
-		msg->data_len = 0;
-		break;
-	}
-	return;
-}
-
-void IPMI_APP_handler(ipmi_msg *msg)
-{
-	switch (msg->cmd) {
-	case CMD_APP_GET_DEVICE_ID:
-		pal_APP_GET_DEVICE_ID(msg);
-		break;
-	case CMD_APP_COLD_RESET:
-		pal_APP_COLD_RESET(msg);
-		break;
-	case CMD_APP_WARM_RESET:
-		pal_APP_WARM_RESET(msg);
-		break;
-	case CMD_APP_GET_SELFTEST_RESULTS:
-		pal_APP_GET_SELFTEST_RESULTS(msg);
-		break;
-	case CMD_APP_GET_SYSTEM_GUID:
-		pal_APP_GET_SYSTEM_GUID(msg);
-		break;
-	case CMD_APP_MASTER_WRITE_READ:
-		pal_APP_MASTER_WRITE_READ(msg);
-		break;
-	default:
-		printf("invalid APP msg netfn: %x, cmd: %x\n", msg->netfn, msg->cmd);
-		msg->data_len = 0;
-		break;
+	if ((netfn == NETFN_OEM_1S_REQ)) {
+		if ((cmd == CMD_OEM_1S_MSG_OUT) || (cmd == CMD_OEM_1S_MSG_IN)) {
+			return 1;
+		}
 	}
 
-	return;
-}
+	// Reserve for future commands
 
-void IPMI_Storage_handler(ipmi_msg *msg)
-{
-	switch (msg->cmd) {
-	case CMD_STORAGE_GET_FRUID_INFO:
-		pal_STORAGE_GET_FRUID_INFO(msg);
-		break;
-	case CMD_STORAGE_READ_FRUID_DATA:
-		pal_STORAGE_READ_FRUID_DATA(msg);
-		break;
-	case CMD_STORAGE_WRITE_FRUID_DATA:
-		pal_STORAGE_WRITE_FRUID_DATA(msg);
-		break;
-	case CMD_STORAGE_RSV_SDR:
-		pal_STORAGE_RSV_SDR(msg);
-		break;
-	case CMD_STORAGE_GET_SDR:
-		pal_STORAGE_GET_SDR(msg);
-		break;
-	default:
-		printf("invalid Storage msg netfn: %x, cmd: %x\n", msg->netfn, msg->cmd);
-		msg->data_len = 0;
-		break;
-	}
-	return;
-}
-
-void IPMI_OEM_handler(ipmi_msg *msg)
-{
-	switch (msg->cmd) {
-	case CMD_OEM_SENSOR_READ:
-		pal_OEM_SENSOR_READ(msg);
-		break;
-	case CMD_OEM_SET_SYSTEM_GUID:
-		pal_OEM_SET_SYSTEM_GUID(msg);
-		break;
-	case CMD_OEM_GET_MB_INDEX:
-		pal_OEM_GET_MB_INDEX(msg);
-		break;
-	default:
-		printf("invalid OEM msg netfn: %x, cmd: %x\n", msg->netfn, msg->cmd);
-		msg->data_len = 0;
-		break;
-	}
-	return;
-}
-
-void IPMI_OEM_1S_handler(ipmi_msg *msg)
-{
-	switch (msg->cmd) {
-	case CMD_OEM_1S_MSG_IN:
-		break;
-	case CMD_OEM_1S_MSG_OUT:
-		pal_OEM_1S_MSG_OUT(msg);
-		break;
-	case CMD_OEM_1S_GET_GPIO:
-		pal_OEM_1S_GET_GPIO(msg);
-		break;
-	case CMD_OEM_1S_SET_GPIO:
-		pal_OEM_1S_SET_GPIO(msg);
-		break;
-	case CMD_OEM_1S_SEND_INTERRUPT_TO_BMC:
-		pal_OEM_1S_SEND_INTERRUPT_TO_BMC(msg);
-		break;
-	case CMD_OEM_1S_FW_UPDATE:
-		pal_OEM_1S_FW_UPDATE(msg);
-		break;
-	case CMD_OEM_1S_GET_FW_VERSION:
-		pal_OEM_1S_GET_FW_VERSION(msg);
-		break;
-	case CMD_OEM_1S_PECIaccess:
-		pal_OEM_1S_PECIaccess(msg);
-		break;
-	case CMD_OEM_1S_GET_POST_CODE:
-		pal_OEM_1S_GET_POST_CODE(msg);
-		break;
-	case CMD_OEM_1S_RESET_BMC:
-		pal_OEM_1S_RESET_BMC(msg);
-		break;
-	case CMD_OEM_1S_SET_JTAG_TAP_STA:
-		pal_OEM_1S_SET_JTAG_TAP_STA(msg);
-		break;
-	case CMD_OEM_1S_JTAG_DATA_SHIFT:
-		pal_OEM_1S_JTAG_DATA_SHIFT(msg);
-		break;
-	case CMD_OEM_1S_SENSOR_POLL_EN:
-		pal_OEM_1S_SENSOR_POLL_EN(msg);
-		break;
-	case CMD_OEM_1S_ACCURACY_SENSNR:
-		pal_OEM_1S_ACCURACY_SENSNR(msg);
-		break;
-	case CMD_OEM_1S_ASD_INIT:
-		pal_OEM_1S_ASD_INIT(msg);
-		break;
-	case CMD_OEM_1S_GET_SET_GPIO:
-		pal_OEM_1S_GET_SET_GPIO(msg);
-		break;
-	case CMD_OEM_1S_I2C_DEV_SCAN: // debug command
-		pal_OEM_1S_I2C_DEV_SCAN(msg);
-		break;
-	case CMD_OEM_1S_GET_BIC_STATUS:
-		pal_OEM_1S_GET_BIC_STATUS(msg);
-		break;
-	case CMD_OEM_1S_RESET_BIC:
-		pal_OEM_1S_RESET_BIC(msg);
-		break;
-	case CMD_OEM_1S_12V_CYCLE_SLOT:
-		pal_OEM_1S_12V_CYCLE_SLOT(msg);
-		break;
-	default:
-		printf("invalid OEM msg netfn: %x, cmd: %x\n", msg->netfn, msg->cmd);
-		msg->data_len = 0;
-		break;
-	}
-	return;
+	return 0;
 }
 
 ipmi_error IPMI_handler(void *arug0, void *arug1, void *arug2)
@@ -240,7 +102,7 @@ ipmi_error IPMI_handler(void *arug0, void *arug1, void *arug2)
 			break;
 		case NETFN_OEM_1S_REQ:
 			if ((msg_cfg.buffer.data[0] | (msg_cfg.buffer.data[1] << 8) |
-			     (msg_cfg.buffer.data[2] << 16)) == WW_IANA_ID) {
+			     (msg_cfg.buffer.data[2] << 16)) == IANA_ID) {
 				memcpy(&msg_cfg.buffer.data[0], &msg_cfg.buffer.data[3],
 				       msg_cfg.buffer.data_len);
 				msg_cfg.buffer.data_len -= 3;
@@ -278,9 +140,9 @@ ipmi_error IPMI_handler(void *arug0, void *arug1, void *arug2)
 				memcpy(&msg_cfg.buffer.data[3], &copy_data[0],
 				       msg_cfg.buffer.data_len);
 				msg_cfg.buffer.data_len += 3;
-				msg_cfg.buffer.data[0] = WW_IANA_ID & 0xFF;
-				msg_cfg.buffer.data[1] = (WW_IANA_ID >> 8) & 0xFF;
-				msg_cfg.buffer.data[2] = (WW_IANA_ID >> 16) & 0xFF;
+				msg_cfg.buffer.data[0] = IANA_ID & 0xFF;
+				msg_cfg.buffer.data[1] = (IANA_ID >> 8) & 0xFF;
+				msg_cfg.buffer.data[2] = (IANA_ID >> 16) & 0xFF;
 			}
 
 			if (msg_cfg.buffer.InF_source == BMC_USB_IFs) {

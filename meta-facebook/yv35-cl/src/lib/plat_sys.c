@@ -1,6 +1,11 @@
-#include <zephyr.h>
+#include "plat_sys.h"
+
+#include <stdio.h>
 #include <stdlib.h>
+
+#include "util_sys.h"
 #include "ipmi.h"
+#include "hal_gpio.h"
 #include "plat_gpio.h"
 
 #define ME_FW_recovery 0x01
@@ -13,7 +18,7 @@ static void set_ME_FW_mode(uint8_t ME_FW_mode)
 
 	me_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
 	if (me_msg == NULL) {
-		printk("ME restore msg alloc fail\n");
+		printf("ME restore msg alloc fail\n");
 		return false;
 	}
 
@@ -37,12 +42,6 @@ static void set_ME_FW_mode(uint8_t ME_FW_mode)
 	return;
 }
 
-static void ME_enter_restore()
-{
-	set_ME_FW_mode(ME_FW_restore);
-	return;
-}
-
 static void ME_enter_recovery()
 {
 	ipmi_msg *me_msg;
@@ -55,7 +54,7 @@ static void ME_enter_recovery()
 
 		me_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
 		if (me_msg == NULL) {
-			printk("ME recovery msg alloc fail\n");
+			printf("ME recovery msg alloc fail\n");
 			k_msleep(10);
 			continue;
 		}
@@ -81,6 +80,12 @@ static void ME_enter_recovery()
 		}
 	}
 
+	return;
+}
+
+static void ME_enter_restore()
+{
+	set_ME_FW_mode(ME_FW_restore);
 	return;
 }
 
@@ -133,8 +138,9 @@ void BMC_reset_handler()
 }
 
 K_DELAYED_WORK_DEFINE(BMC_reset_work, BMC_reset_handler);
-void submit_bmc_warm_reset()
+int pal_submit_bmc_warm_reset()
 {
 	k_work_schedule(&BMC_reset_work, K_MSEC(1000));
+	return 0;
 }
 /* BMC reset */

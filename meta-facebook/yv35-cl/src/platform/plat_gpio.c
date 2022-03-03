@@ -5,7 +5,7 @@
 #include "hal_gpio.h"
 #include "pal.h"
 #include "plat_gpio.h"
-#include "plat_func.h"
+#include "plat_isr.h"
 
 #define gpio_name_to_num(x) #x,
 const char *const gpio_name[] = {
@@ -20,9 +20,9 @@ GPIO_CFG plat_gpio_cfg[] = {
 	{ chip_gpio, 0, ENABLE, DISABLE, GPIO_OUTPUT, GPIO_HIGH, OPEN_DRAIN, GPIO_INT_DISABLE,
 	  NULL }, // GPIO A group
 	{ chip_gpio, 1, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, OPEN_DRAIN, GPIO_INT_EDGE_BOTH,
-	  ISR_post_complete },
+	  ISR_POST_COMPLETE },
 	{ chip_gpio, 2, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_EDGE_BOTH,
-	  ISR_slp3 },
+	  ISR_SLP3 },
 	{ chip_gpio, 3, ENABLE, DISABLE, GPIO_OUTPUT, GPIO_HIGH, OPEN_DRAIN, GPIO_INT_DISABLE,
 	  NULL },
 	{ chip_gpio, 4, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, OPEN_DRAIN, GPIO_INT_DISABLE,
@@ -47,7 +47,7 @@ GPIO_CFG plat_gpio_cfg[] = {
 	{ chip_gpio, 14, ENABLE, DISABLE, GPIO_INPUT, GPIO_LOW, OPEN_DRAIN, GPIO_INT_DISABLE,
 	  NULL },
 	{ chip_gpio, 15, ENABLE, DISABLE, GPIO_INPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_EDGE_BOTH,
-	  ISR_DC_on },
+	  ISR_DC_ON },
 	{ chip_gpio, 16, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, OPEN_DRAIN, GPIO_INT_EDGE_BOTH,
 	  ISR_HSC_OC }, // GPIO C group
 	{ chip_gpio, 17, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, OPEN_DRAIN, GPIO_INT_DISABLE,
@@ -353,3 +353,29 @@ bool pal_load_gpio_config(void)
 	memcpy(&gpio_cfg[0], &plat_gpio_cfg[0], sizeof(plat_gpio_cfg));
 	return 1;
 };
+
+SCU_CFG scu_cfg[] = {
+	//  register     value
+	{ 0x7e6e2610, 0xffffffff },
+	{ 0x7e6e2614, 0xffffffff },
+	{ 0x7e6e2618, 0x30000000 },
+	{ 0x7e6e261c, 0x00000F04 },
+};
+
+void scu_init(void)
+{
+	size_t size = sizeof(scu_cfg) / sizeof(SCU_CFG);
+	for (int i = 0; i < size; ++i) {
+		sys_write32(scu_cfg[i].value, scu_cfg[i].reg);
+	}
+}
+
+void enable_PRDY_interrupt()
+{
+	gpio_interrupt_conf(H_BMC_PRDY_BUF_N, GPIO_INT_EDGE_FALLING);
+}
+
+void disable_PRDY_interrupt()
+{
+	gpio_interrupt_conf(H_BMC_PRDY_BUF_N, GPIO_INT_DISABLE);
+}
