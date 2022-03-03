@@ -1167,7 +1167,7 @@ void pal_OEM_1S_SET_JTAG_TAP_STA(ipmi_msg *msg)
 
 void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg)
 {
-  	uint8_t status, snr_num, option, snr_report_status;
+	uint8_t status, snr_num, option, snr_report_status;
 	uint8_t enable_snr_scan = 0xC0; // following IPMI sensor status response
 	uint8_t disable_snr_scan = 0x80;
 	int reading;
