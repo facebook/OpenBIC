@@ -140,4 +140,6 @@ extern enum _GPIO_NUMS_ GPIO_NUMS;
 
 extern const char *const gpio_name[];
 
+void enable_PRDY_interrupt();
+void disable_PRDY_interrupt();
 #endif

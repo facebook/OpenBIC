@@ -1,6 +1,9 @@
 #ifndef KCS_H
 #define KCS_H
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #define KCS_POLL_stack_STACK_SIZE 2500
 #define KCS_POLLING_INTERVAL 100
 #define KCS_buff_size 256

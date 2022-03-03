@@ -3,7 +3,7 @@
 #include "sdr.h"
 #include "pal.h"
 #include "sensor.h"
-#include "sensor_def.h"
+#include "plat_sensor.h"
 
 struct k_thread sensor_poll;
 K_KERNEL_STACK_MEMBER(sensor_poll_stack, sensor_poll_stack_size);

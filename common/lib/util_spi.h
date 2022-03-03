@@ -1,6 +1,10 @@
 #ifndef UTIL_SPI_H
 #define UTIL_SPI_H
 
+#include <zephyr.h>
+#include <stdbool.h>
+#include <stdint.h>
+
 #define NUM_SPI_DEV 3
 #define sector_sz_64k 0x10000
 #define sector_sz_32k 0x08000
@@ -21,6 +25,8 @@ enum {
 
 uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool update_en,
 		  uint8_t spi_bus);
+
+int pal_get_bios_flash_pos();
 
 enum {
 	fwupdate_success,

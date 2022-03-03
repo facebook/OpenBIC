@@ -1,5 +1,5 @@
-#ifndef HAL_EEPROM_H
-#define HAL_EEPROM_H
+#ifndef EEPROM_H
+#define EEPROM_H
 
 #include <stdint.h>
 

@@ -11,11 +11,12 @@
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "plat_gpio.h"
-#include "ipmi_def.h"
 #include "ipmi.h"
 #include "usb.h"
 #include "kcs.h"
-#include "plat_func.h"
+#include "power_status.h"
+#include "plat_class.h"
+#include "plat_sys.h"
 
 void device_init()
 {
@@ -32,12 +33,11 @@ void switch_spi_mux()
 void set_sys_status()
 {
 	gpio_set(BIC_READY, GPIO_HIGH);
-	set_DC_status();
-	set_DC_on_5s_status();
-	set_DC_off_10s_status();
-	set_post_status();
+	set_DC_status(PWRGD_SYS_PWROK);
+	set_DC_on_delayed_status();
+	set_DC_off_delayed_status();
+	set_post_status(FM_BIOS_POST_CMPLT_BMC_N);
 	set_post_thread();
-	set_SCU_setting();
 }
 
 void main(void)
@@ -49,7 +49,7 @@ void main(void)
 	util_init_timer();
 	util_init_I2C();
 
-	set_sys_config();
+	init_platform_config();
 	disable_PRDY_interrupt();
 	sensor_init();
 	FRU_init();
@@ -58,6 +58,7 @@ void main(void)
 	usb_dev_init();
 	device_init();
 	set_sys_status();
+	scu_init();
 	set_ME_restore();
 }
 

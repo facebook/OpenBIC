@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include "cmsis_os2.h"
 #include <string.h>
-#include "ipmi_def.h"
+#include "ipmb.h"
 #include "plat_i2c.h"
+#include "plat_ipmb.h"
 #include "plat_ipmi.h"
-#include "plat_def.h"
+#include "plat_class.h"
 
 IPMB_config pal_IPMB_config_table[] = {
 	//   index             interface         interface_source  bus              Target_addr          EnStatus  slave_addr            Rx_attr_name          Tx_attr_name//

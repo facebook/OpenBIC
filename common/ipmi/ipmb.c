@@ -701,10 +701,10 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 						memset(bridge_msg, 0, sizeof(ipmi_msg));
 
 						bridge_msg->data[0] =
-							WW_IANA_ID &
+							IANA_ID &
 							0xFF; // Move target response to bridge response data
-						bridge_msg->data[1] = (WW_IANA_ID >> 8) & 0xFF;
-						bridge_msg->data[2] = (WW_IANA_ID >> 16) & 0xFF;
+						bridge_msg->data[1] = (IANA_ID >> 8) & 0xFF;
+						bridge_msg->data[2] = (IANA_ID >> 16) & 0xFF;
 						bridge_msg->data[3] =
 							IPMB_config_table[ipmb_cfg.index]
 								.Inf_source; // return response source as request target
