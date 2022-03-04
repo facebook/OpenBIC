@@ -36,8 +36,8 @@ __weak void OEM_1S_MSG_OUT(ipmi_msg *msg)
 	target_IF = msg->data[0];
 
 	// Bridge to invalid or disabled interface
-	if ((IPMB_config_table[IPMB_inf_index_map[target_IF]].Inf == Reserve_IFs) ||
-	    (IPMB_config_table[IPMB_inf_index_map[target_IF]].EnStatus == Disable)) {
+	if ((IPMB_config_table[IPMB_inf_index_map[target_IF]].interface == RESERVED_IF) ||
+	    (IPMB_config_table[IPMB_inf_index_map[target_IF]].enable_status == DISABLE)) {
 		printf("OEM_MSG_OUT: Invalid bridge interface: %x\n", target_IF);
 		msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
 	}
@@ -255,8 +255,8 @@ __weak void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		}
 		bridge_msg->data_len = 0;
 		bridge_msg->seq_source = 0xff;
-		bridge_msg->InF_source = Self_IFs;
-		bridge_msg->InF_target = ME_IPMB_IFs;
+		bridge_msg->InF_source = SELF;
+		bridge_msg->InF_target = ME_IPMB;
 		bridge_msg->netfn = NETFN_APP_REQ;
 		bridge_msg->cmd = CMD_APP_GET_DEVICE_ID;
 
@@ -761,8 +761,8 @@ void send_gpio_interrupt(uint8_t gpio_num)
 	gpio_val = gpio_get(gpio_num);
 
 	msg.data_len = 5;
-	msg.InF_source = Self_IFs;
-	msg.InF_target = BMC_IPMB_IFs;
+	msg.InF_source = SELF;
+	msg.InF_target = BMC_IPMB;
 	msg.netfn = NETFN_OEM_1S_REQ;
 	msg.cmd = CMD_OEM_1S_SEND_INTERRUPT_TO_BMC;
 

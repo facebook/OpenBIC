@@ -32,7 +32,7 @@ __weak bool pal_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd)
 	return 0;
 }
 
-__weak bool pal_ME_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd)
+__weak bool pal_request_msg_to_BIC_from_ME(uint8_t netfn, uint8_t cmd)
 {
 	if ((netfn == NETFN_OEM_REQ) && (cmd == CMD_OEM_NM_SENSOR_READ)) {
 		return 1;
@@ -145,9 +145,9 @@ ipmi_error IPMI_handler(void *arug0, void *arug1, void *arug2)
 				msg_cfg.buffer.data[2] = (IANA_ID >> 16) & 0xFF;
 			}
 
-			if (msg_cfg.buffer.InF_source == BMC_USB_IFs) {
+			if (msg_cfg.buffer.InF_source == BMC_USB) {
 				USB_write(&msg_cfg.buffer);
-			} else if (msg_cfg.buffer.InF_source == HOST_KCS_IFs) {
+			} else if (msg_cfg.buffer.InF_source == HOST_KCS) {
 #ifdef CONFIG_IPMI_KCS_ASPEED
 				kcs_buff = malloc(KCS_buff_size * sizeof(uint8_t));
 				if (kcs_buff == NULL) { // allocate fail, retry allocate

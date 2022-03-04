@@ -160,8 +160,8 @@ void send_post_code_to_BMC()
 					send_postcode_start_position + SNOOP_MAX_LEN;
 			}
 			memset(send_postcode_msg, 0, sizeof(ipmi_msg));
-			send_postcode_msg->InF_source = Self_IFs;
-			send_postcode_msg->InF_target = BMC_IPMB_IFs;
+			send_postcode_msg->InF_source = SELF;
+			send_postcode_msg->InF_target = BMC_IPMB;
 			send_postcode_msg->netfn = NETFN_OEM_1S_REQ;
 			send_postcode_msg->cmd = CMD_OEM_1S_SEND_POST_CODE_TO_BMC;
 			send_postcode_msg->data_len =

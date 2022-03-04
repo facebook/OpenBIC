@@ -25,8 +25,8 @@ static void set_ME_FW_mode(uint8_t ME_FW_mode)
 	me_msg->seq_source = 0xFF;
 	me_msg->netfn = NETFN_NM_REQ;
 	me_msg->cmd = 0xDF; // Get Intel ME FW Capabilities
-	me_msg->InF_source = Self_IFs;
-	me_msg->InF_target = ME_IPMB_IFs;
+	me_msg->InF_source = SELF;
+	me_msg->InF_target = ME_IPMB;
 	me_msg->data_len = 4;
 	me_msg->data[0] = 0x57;
 	me_msg->data[1] = 0x01;
@@ -62,8 +62,8 @@ static void ME_enter_recovery()
 		me_msg->seq_source = 0xFF;
 		me_msg->netfn = NETFN_APP_REQ;
 		me_msg->cmd = CMD_APP_GET_SELFTEST_RESULTS;
-		me_msg->InF_source = Self_IFs;
-		me_msg->InF_target = ME_IPMB_IFs;
+		me_msg->InF_source = SELF;
+		me_msg->InF_target = ME_IPMB;
 		me_msg->data_len = 0;
 		status = ipmb_read(me_msg, IPMB_inf_index_map[me_msg->InF_target]);
 		if (status == ipmb_error_success) {
@@ -103,8 +103,8 @@ void set_ME_restore()
 	me_msg->seq_source = 0xFF;
 	me_msg->netfn = NETFN_APP_REQ;
 	me_msg->cmd = CMD_APP_GET_SELFTEST_RESULTS;
-	me_msg->InF_source = Self_IFs;
-	me_msg->InF_target = ME_IPMB_IFs;
+	me_msg->InF_source = SELF;
+	me_msg->InF_target = ME_IPMB;
 	me_msg->data_len = 0;
 	status = ipmb_read(me_msg, IPMB_inf_index_map[me_msg->InF_target]);
 	if (status == ipmb_error_success) {

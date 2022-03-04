@@ -27,8 +27,8 @@ bool add_sel_evt_record(addsel_msg_t *sel_msg)
 	memset(msg, 0, sizeof(ipmi_msg));
 
 	msg->data_len = 16;
-	msg->InF_source = Self_IFs;
-	msg->InF_target = BMC_IPMB_IFs;
+	msg->InF_source = SELF;
+	msg->InF_target = BMC_IPMB;
 	msg->netfn = NETFN_STORAGE_REQ;
 	msg->cmd = CMD_STORAGE_ADD_SEL;
 
@@ -39,7 +39,7 @@ bool add_sel_evt_record(addsel_msg_t *sel_msg)
 	msg->data[4] = 0x00; // timestamp, bmc would fill up for bic
 	msg->data[5] = 0x00; // timestamp, bmc would fill up for bic
 	msg->data[6] = 0x00; // timestamp, bmc would fill up for bic
-	msg->data[7] = (Self_I2C_ADDRESS << 1); // generator id
+	msg->data[7] = (SELF_I2C_ADDRESS << 1); // generator id
 	msg->data[8] = 0x00; // generator id
 	msg->data[9] = evt_msg_version; // event message format version
 	msg->data[10] = sel_msg->snr_type; // sensor type, TBD

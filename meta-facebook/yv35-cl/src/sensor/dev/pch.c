@@ -14,8 +14,8 @@ ipmb_error pch_ipmb_read(ipmi_msg *bridge_msg)
 	bridge_msg->seq_source = 0xff;
 	bridge_msg->netfn = NETFN_SENSOR_REQ;
 	bridge_msg->cmd = CMD_SENSOR_GET_SENSOR_READING;
-	bridge_msg->InF_source = Self_IFs;
-	bridge_msg->InF_target = ME_IPMB_IFs;
+	bridge_msg->InF_source = SELF;
+	bridge_msg->InF_target = ME_IPMB;
 	bridge_msg->data_len = 1;
 	bridge_msg->data[0] = 0x08;
 	return ipmb_read(bridge_msg, IPMB_inf_index_map[bridge_msg->InF_target]);

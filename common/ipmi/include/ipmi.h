@@ -7,6 +7,7 @@
 
 #define IPMI_THREAD_STACK_SIZE 4000
 #define ipmi_buf_len 10
+#define DEBUG_IPMI 0
 
 extern uint8_t IPMB_inf_index_map[];
 extern uint8_t isPwOn;
@@ -41,7 +42,7 @@ static inline void pack_ipmi_resp(struct ipmi_response *resp, ipmi_msg *ipmi_res
 }
 
 bool pal_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd);
-bool pal_ME_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd);
+bool pal_request_msg_to_BIC_from_ME(uint8_t netfn, uint8_t cmd);
 bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd);
 
 void ipmi_init(void);
