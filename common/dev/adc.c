@@ -1,12 +1,12 @@
-#include <stdio.h>
-#include "sensor.h"
-#include "plat_sensor.h"
-#include "pal.h"
-#include "plat_gpio.h"
-#include <zephyr.h>
-#include <sys/printk.h>
-#include <drivers/adc.h>
+#include "adc.h"
+
 #include <cmsis_os2.h>
+#include <drivers/adc.h>
+#include <stdio.h>
+
+#include "sensor.h"
+#include "plat_gpio.h"
+#include "plat_sensor_table.h"
 
 #define ADC_CHAN_NUM 8
 #define ADC_NUM 2
@@ -49,13 +49,13 @@ enum {
 	adc1,
 };
 
-void init_adc_dev(void)
+static void init_adc_dev(void)
 {
 #ifdef DEV_ADC0
-	dev_adc[adc0] = device_get_binding("ADC0");
+	dev_adc[adc0] = (struct device *)device_get_binding("ADC0");
 #endif
 #ifdef DEV_ADC1
-	dev_adc[adc1] = device_get_binding("ADC1");
+	dev_adc[adc1] = (struct device *)device_get_binding("ADC1");
 #endif
 }
 
@@ -63,7 +63,7 @@ bool adc_init()
 {
 	init_adc_dev();
 	if (!(device_is_ready(dev_adc[0]) && device_is_ready(dev_adc[1]))) {
-		printk("ADC device not found\n");
+		printf("ADC device not found\n");
 		return false;
 	}
 	for (uint8_t i = 0; i < ADC_NUM; i++) {
@@ -72,6 +72,17 @@ bool adc_init()
 		sequence.channels |= BIT(i);
 	}
 	return true;
+}
+
+int bat_3v_set_gpio(uint8_t sensor_num, void *arg)
+{
+	SET_GPIO_VALUE_CFG *cfg = arg;
+	gpio_set(cfg->gpio_num, cfg->gpio_value);
+	if (cfg->gpio_value == GPIO_HIGH) {
+		osDelay(1);
+	}
+
+	return 0;
 }
 
 static bool adc_read_mv(uint8_t sensor_num, uint32_t index, uint32_t channel, int *adc_val)
@@ -98,28 +109,18 @@ static bool adc_read_mv(uint8_t sensor_num, uint32_t index, uint32_t channel, in
 	}
 	return false;
 }
-bool pal_adc_read(uint8_t sensor_num, int *reading)
+
+bool adc_sensor_read(uint8_t sensor_num, float *reading)
 {
-	uint8_t snrcfg_sensor_num = SnrNum_SnrCfg_map[sensor_num];
-	uint8_t chip = sensor_config[snrcfg_sensor_num].port / ADC_CHAN_NUM;
-	uint8_t number = sensor_config[snrcfg_sensor_num].port % ADC_CHAN_NUM;
+	snr_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+	uint8_t chip = cfg->port / ADC_CHAN_NUM;
+	uint8_t number = cfg->port % ADC_CHAN_NUM;
 	int val = 1;
 	int ret = adc_read_mv(sensor_num, chip, number, &val);
 	if (ret) {
-		if (sensor_num == SENSOR_NUM_VOL_BAT3V) {
-			gpio_set(A_P3V_BAT_SCALED_EN_R, GPIO_HIGH);
-			osDelay(1);
-			adc_read_mv(sensor_num, chip, number, &val);
-			val = val * sensor_config[snrcfg_sensor_num].arg0 /
-			      sensor_config[snrcfg_sensor_num].arg1;
-			gpio_set(A_P3V_BAT_SCALED_EN_R, GPIO_LOW);
-		} else {
-			val = val * sensor_config[snrcfg_sensor_num].arg0 /
-			      sensor_config[snrcfg_sensor_num].arg1;
-		}
-		*reading = (acur_cal_MBR(sensor_num, val) / 1000) & 0xFFFF;
-		sensor_config[snrcfg_sensor_num].cache = *reading;
-		sensor_config[snrcfg_sensor_num].cache_status = SNR_READ_ACUR_SUCCESS;
+		*reading = (float)val * cfg->arg0 / cfg->arg1 / 1000;
+		cfg->cache = *reading;
+		cfg->cache_status = SNR_READ_SUCCESS;
 		return true;
 	} else {
 		return false;

@@ -27,75 +27,10 @@ __weak bool pal_load_IPMB_config(void)
 	return 0;
 }
 
-// sensor
-
-__weak void pal_set_sensor_poll_interval(int *interval_ms)
-{
-	*interval_ms = 1000;
-	return;
-}
-
-// sensor accessible
-__weak uint8_t pal_load_sdr_table(void)
-{
-	return 0;
-}
-
-__weak bool pal_load_snr_config(void)
-{
-	return 0;
-}
-
-__weak void pal_fix_fullSDR_table(void)
-{
-	return 0;
-}
-
-__weak void pal_fix_Snrconfig(void)
-{
-	return 0;
-}
-
 // fru
 __weak void pal_load_fru_config(void)
 {
 	return;
-}
-
-// sensor read
-__weak bool pal_tmp75_read(uint8_t sensor_num, int *reading)
-{
-	return 0;
-}
-
-__weak bool pal_adc_read(uint8_t sensor_num, int *reading)
-{
-	return 0;
-}
-
-__weak bool pal_peci_read(uint8_t sensor_num, int *reading)
-{
-	return 0;
-}
-
-__weak bool pal_vr_read(uint8_t sensor_num, int *reading)
-{
-	return 0;
-}
-
-__weak bool pal_pch_read(uint8_t sensor_num, int *reading)
-{
-	return 0;
-}
-
-__weak bool pal_hsc_read(uint8_t sensor_num, int *reading)
-{
-	return 0;
-}
-
-__weak bool pal_nvme_read(uint8_t sensor_num, int *reading)
-{
-	return 0;
 }
 
 // gpio

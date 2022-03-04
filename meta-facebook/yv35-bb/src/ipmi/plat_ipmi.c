@@ -379,7 +379,7 @@ void pal_SENSOR_GET_SENSOR_READING(ipmi_msg *msg)
 		// SDR sensor initialization bit6 enable scan, bit5 enable event
 		// retunr data 1 bit 7 set to 0 to disable all event msg. bit 6 set to 0 disable sensor scan
 		msg->data[1] =
-			((full_sensor_table[SnrNum_SDR_map[snr_num]].sensor_init & 0x60) << 1);
+			((full_sensor_table[sdr_index_map[snr_num]].sensor_init & 0x60) << 1);
 		msg->data[2] =
 			0xc0; // fix to threshold deassert status, BMC will compare with UCR/UNR itself
 		msg->data_len = 3;

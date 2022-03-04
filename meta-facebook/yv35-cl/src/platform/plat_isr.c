@@ -7,7 +7,7 @@
 #include "snoop.h"
 #include "plat_gpio.h"
 #include "plat_ipmi.h"
-#include "plat_sensor.h"
+#include "plat_sensor_table.h"
 #include "oem_1s_handler.h"
 
 static void SLP3_handler()

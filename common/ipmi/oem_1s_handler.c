@@ -13,7 +13,7 @@
 #include "plat_gpio.h"
 #include "plat_i2c.h"
 #include "plat_ipmi.h"
-#include "plat_sensor.h"
+#include "plat_sensor_table.h"
 #include "plat_sys.h"
 #include "util_spi.h"
 #include "util_sys.h"
@@ -283,15 +283,15 @@ __weak void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 	case CPNT_PVCCINFAON:
 	case CPNT_PVCCFA_EHV:
 		if ((component == CPNT_PVCCIN) || (component == CPNT_PVCCFA_EHV_FIVRA)) {
-			i2c_msg.slave_addr = PVCCIN_addr;
+			i2c_msg.slave_addr = PVCCIN_ADDR;
 		}
 		if ((component == CPNT_PVCCD_HV)) {
-			i2c_msg.slave_addr = PVCCD_HV_addr;
+			i2c_msg.slave_addr = PVCCD_HV_ADDR;
 		}
 		if ((component == CPNT_PVCCINFAON) || (component == CPNT_PVCCFA_EHV)) {
-			i2c_msg.slave_addr = PVCCFA_EHV_addr;
+			i2c_msg.slave_addr = PVCCFA_EHV_ADDR;
 		}
-		i2c_msg.bus = i2c_bus5;
+		i2c_msg.bus = I2C_BUS5;
 		i2c_msg.tx_len = 3;
 		i2c_msg.data[0] = 0xC7;
 		i2c_msg.data[1] = 0x94;
@@ -560,7 +560,7 @@ __weak void OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg)
      * buf 2: sensor report status
      ***********************************/
 	uint8_t status = -1, snr_num, option, snr_report_status;
-	int reading;
+	float reading;
 
 	if (msg->data_len != 2) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -587,19 +587,17 @@ __weak void OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg)
 		status = get_sensor_reading(snr_num, &reading, get_from_sensor);
 	}
 
+	uint16_t decimal = (uint16_t)reading;
+	uint16_t fraction = (uint16_t)((reading - decimal + 0.0005) * 1000);
+
 	switch (status) {
 	case SNR_READ_SUCCESS:
-		msg->data[0] = reading & 0xff;
-		msg->data[1] = 0x00;
-		msg->data[2] = snr_report_status;
-		msg->data_len = 3;
-		msg->completion_code = CC_SUCCESS;
-		break;
-	case SNR_READ_ACUR_SUCCESS:
-		msg->data[0] = (reading >> 8) & 0xff;
-		msg->data[1] = reading & 0xff;
-		msg->data[2] = snr_report_status;
-		msg->data_len = 3;
+		msg->data[0] = decimal & 0xff;
+		msg->data[1] = (decimal >> 8) & 0xff;
+		msg->data[2] = fraction & 0xff;
+		msg->data[3] = (fraction >> 8) & 0xff;
+		msg->data[4] = snr_report_status;
+		msg->data_len = 5;
 		msg->completion_code = CC_SUCCESS;
 		break;
 	case SNR_NOT_ACCESSIBLE:

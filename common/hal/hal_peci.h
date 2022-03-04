@@ -37,6 +37,5 @@ int peci_write(uint8_t cmd, uint8_t address, uint8_t u8ReadLen, uint8_t *readBuf
 	       uint8_t u8WriteLen, uint8_t *writeBuf);
 bool peci_retry_read(uint8_t cmd, uint8_t address, uint8_t u8Index, uint16_t u16Param,
 		     uint8_t u8ReadLen, uint8_t *readBuf);
-bool peci_getPwr(uint8_t sensor_num, int *reading);
 
 #endif

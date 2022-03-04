@@ -5,18 +5,18 @@
 
 // map i2c bus to peripherial bus
 // i2c peripheral 1 based, as used i2c index 0 in firmware.
-#define i2c_bus1 0
-#define i2c_bus2 1
-#define i2c_bus3 2
-#define i2c_bus4 3
-#define i2c_bus5 4
-#define i2c_bus6 5
-#define i2c_bus7 6
-#define i2c_bus8 7
-#define i2c_bus9 8
-#define i2c_bus10 9
+#define I2C_BUS1 0
+#define I2C_BUS2 1
+#define I2C_BUS3 2
+#define I2C_BUS4 3
+#define I2C_BUS5 4
+#define I2C_BUS6 5
+#define I2C_BUS7 6
+#define I2C_BUS8 7
+#define I2C_BUS9 8
+#define I2C_BUS10 9
 
-#define IPMB_I2C_BMC i2c_bus7
+#define IPMB_I2C_BMC I2C_BUS7
 #define I2C_BUS_NUM 10
 
 #endif

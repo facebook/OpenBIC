@@ -17,12 +17,17 @@
 #include "power_status.h"
 #include "plat_class.h"
 #include "plat_sys.h"
+#include "adc.h"
+#include "hal_peci.h"
+#include "adm1278.h"
+#include "timer.h"
+#include "fru.h"
 
 void device_init()
 {
 	adc_init();
 	peci_init();
-	hsc_init();
+	adm1278_init();
 }
 
 void switch_spi_mux()
@@ -42,7 +47,6 @@ void set_sys_status()
 
 void main(void)
 {
-	uint8_t proj_stage = (FIRMWARE_REVISION_1 & 0xf0) >> 4;
 	printk("Hello, wellcome to yv35 craterlake %x%x.%x.%x\n", BIC_FW_YEAR_MSB, BIC_FW_YEAR_LSB,
 	       BIC_FW_WEEK, BIC_FW_VER);
 
