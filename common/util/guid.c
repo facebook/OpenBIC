@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "guid.h"
 #include "plat_guid.h"
 

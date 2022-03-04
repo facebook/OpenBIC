@@ -11,6 +11,7 @@
 #include <sys/util.h>
 #include "cmsis_os2.h"
 #include "util_spi.h"
+#include "util_sys.h"
 
 static char *flash_device[6] = { "fmc_cs0",  "fmc_cs1",	 "spi1_cs0",
 				 "spi1_cs1", "spi2_cs0", "spi2_cs1" };

@@ -5,6 +5,7 @@
 #include "sensor.h"
 #include "sensor_def.h"
 #include "plat_ipmb.h"
+#include "plat_func.h"
 
 enum {
 	threshold_UNR,

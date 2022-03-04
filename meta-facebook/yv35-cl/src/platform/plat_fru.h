@@ -14,4 +14,5 @@ enum {
 	MAX_FRU_ID,
 };
 
+void pal_load_fru_config(void);
 #endif

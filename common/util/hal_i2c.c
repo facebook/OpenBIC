@@ -135,7 +135,6 @@ int i2c_master_write(I2C_MSG *msg, uint8_t retry)
 void i2c_scan(uint8_t bus, uint8_t *slave_addr, uint8_t *slave_addr_len)
 {
 	uint8_t first = 0x04, last = 0x77;
-	*slave_addr_len = 0;
 
 	for (uint8_t i = 0; i <= last; i += 16) {
 		for (uint8_t j = 0; j < 16; j++) {

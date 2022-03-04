@@ -41,7 +41,7 @@ static inline void pack_ipmi_resp(struct ipmi_response *resp, ipmi_msg *ipmi_res
 }
 
 void ipmi_init(void);
-ipmi_error IPMI_handler(void *arug0, void *arug1, void *arug2);
+void IPMI_handler(void *arug0, void *arug1, void *arug2);
 
 // IPMI CHASSIS
 void pal_CHASSIS_GET_CHASSIS_STATUS(ipmi_msg *msg);

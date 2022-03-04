@@ -37,7 +37,7 @@ bool hsc_init()
 bool pal_hsc_read(uint8_t sensor_num, int *reading)
 {
 	uint8_t retry = 5;
-	int val;
+	int val = -1;
 	I2C_MSG msg;
 
 	msg.bus = sensor_config[SensorNum_SensorCfg_map[sensor_num]].port;

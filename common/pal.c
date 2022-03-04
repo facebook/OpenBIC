@@ -299,12 +299,12 @@ __weak bool pal_load_sensor_config(void)
 
 __weak void pal_fix_fullSDR_table(void)
 {
-	return 0;
+	return;
 }
 
 __weak void pal_fix_Sensorconfig(void)
 {
-	return 0;
+	return;
 }
 
 // fru

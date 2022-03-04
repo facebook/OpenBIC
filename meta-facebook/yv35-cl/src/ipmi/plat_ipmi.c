@@ -20,6 +20,7 @@
 #include <drivers/peci.h>
 #include "plat_func.h"
 #include "util_sys.h"
+#include "hal_i2c.h"
 
 bool add_sel_evt_record(addsel_msg_t *sel_msg)
 {
@@ -1173,7 +1174,7 @@ void pal_OEM_1S_SET_JTAG_TAP_STA(ipmi_msg *msg)
 
 void pal_OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg)
 {
-	uint8_t status, sensor_num, option, sensor_report_status;
+	uint8_t status = -1, sensor_num, option, sensor_report_status;
 	uint8_t enable_sensor_scan = 0xC0; // following IPMI sensor status response
 	uint8_t disable_sensor_scan = 0x80;
 	int reading;
@@ -1322,8 +1323,10 @@ void pal_OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg)
 	}
 
 	uint8_t bus = i2c_bus_to_index[msg->data[0]];
+	uint8_t i2c_scan_len = 0;
 
-	i2c_scan(bus, &msg->data[0], &msg->data_len);
+	i2c_scan(bus, &msg->data[0], &i2c_scan_len);
+	msg->data_len = i2c_scan_len;
 
 	msg->completion_code = CC_SUCCESS;
 	return;

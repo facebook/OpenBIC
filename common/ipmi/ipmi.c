@@ -4,7 +4,9 @@
 #include "cmsis_os2.h"
 #include "ipmi.h"
 #include "kcs.h"
+#include "usb.h"
 #include <string.h>
+#include <stdlib.h>
 #define IPMI_QUEUE_SIZE 5
 
 struct k_thread IPMI_thread;
@@ -198,7 +200,7 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	return;
 }
 
-ipmi_error IPMI_handler(void *arug0, void *arug1, void *arug2)
+void IPMI_handler(void *arug0, void *arug1, void *arug2)
 {
 	uint8_t i;
 	ipmi_msg_cfg msg_cfg;

@@ -7,4 +7,6 @@ enum {
 	MAX_GUID_ID,
 };
 
+extern const EEPROM_CFG guid_config[];
+
 #endif
