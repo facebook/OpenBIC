@@ -17,6 +17,6 @@ void set_boot_source();
 void pal_warm_reset_prepare();
 void pal_cold_reset_prepare();
 int pal_submit_bmc_warm_reset();
-int submit_12v_cycle_slot();
+int pal_submit_12v_cycle_slot();
 
 #endif

@@ -9,7 +9,10 @@
 #define FWUPDATE_HEADER_SIZE 12
 #define SIZE_NETFN_CMD 2
 
-void usb_dev_init(void);
+#include "ipmb.h"
+
 void usb_slavedev_init(void);
+void USB_write(ipmi_msg *ipmi_resp);
+void usb_dev_init(void);
 
 #endif

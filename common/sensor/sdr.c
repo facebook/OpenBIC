@@ -2,6 +2,7 @@
 #include <string.h>
 #include "sdr.h"
 #include "sensor.h"
+#include "plat_sdr_table.h"
 #include "plat_sensor_table.h"
 #include "plat_ipmb.h"
 

@@ -22,6 +22,7 @@
 #include "adm1278.h"
 #include "timer.h"
 #include "fru.h"
+#include "usb.h"
 
 void device_init()
 {
@@ -30,9 +31,10 @@ void device_init()
 	adm1278_init();
 }
 
-void switch_spi_mux()
+int switch_spi_mux(const struct device *args)
 {
 	gpio_set(FM_SPI_PCH_MASTER_SEL_R, GPIO_LOW);
+	return 1;
 }
 
 void set_sys_status()

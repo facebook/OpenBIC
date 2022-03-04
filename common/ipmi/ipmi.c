@@ -4,6 +4,7 @@
 #include "cmsis_os2.h"
 #include "ipmi.h"
 #include "kcs.h"
+#include "usb.h"
 #include <string.h>
 #include <stdlib.h>
 #include "app_handler.h"
@@ -54,7 +55,7 @@ __weak bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd)
 	return 0;
 }
 
-ipmi_error IPMI_handler(void *arug0, void *arug1, void *arug2)
+void IPMI_handler(void *arug0, void *arug1, void *arug2)
 {
 	uint8_t i;
 	ipmi_msg_cfg msg_cfg;

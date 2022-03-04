@@ -86,7 +86,7 @@ void ISR_BMC_PRDY()
 	send_gpio_interrupt(H_BMC_PRDY_BUF_N);
 }
 
-static void proc_fail_handler(void *arug0, void *arug1, void *arug2)
+static void PROC_FAIL_handler()
 {
 	/* if have not received kcs and post code, add FRB3 event log. */
 	if ((get_kcs_ok() == 0) && (get_postcode_ok() == 0)) {
@@ -108,15 +108,15 @@ static void proc_fail_handler(void *arug0, void *arug1, void *arug2)
 	}
 }
 
-K_WORK_DELAYABLE_DEFINE(proc_fail_work, proc_fail_handler);
+K_WORK_DELAYABLE_DEFINE(PROC_FAIL_work, PROC_FAIL_handler);
 #define PROC_FAIL_START_DELAY_SECOND 10
 void ISR_PWRGD_CPU()
 {
 	if (gpio_get(PWRGD_CPU_LVC3) == 1) {
 		/* start thread proc_fail_handler after 10 seconds */
-		k_work_schedule(&proc_fail_work, K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
+		k_work_schedule(&PROC_FAIL_work, K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
 	} else {
-		if (k_work_cancel_delayable(&proc_fail_work) != 0) {
+		if (k_work_cancel_delayable(&PROC_FAIL_work) != 0) {
 			printk("Cancel proc_fail delay work fail\n");
 		}
 		reset_kcs_ok();
@@ -125,7 +125,7 @@ void ISR_PWRGD_CPU()
 	send_gpio_interrupt(PWRGD_CPU_LVC3);
 }
 
-static void CatErr_handler(void *arug0, void *arug1, void *arug2)
+static void CAT_ERR_handler()
 {
 	if ((gpio_get(RST_PLTRST_BUF_N) == 1) || (gpio_get(PWRGD_SYS_PWROK) == 1)) {
 		addsel_msg_t sel_msg;
@@ -151,16 +151,16 @@ static void CatErr_handler(void *arug0, void *arug1, void *arug2)
 	}
 }
 
-K_WORK_DELAYABLE_DEFINE(CatErr_work, CatErr_handler);
+K_WORK_DELAYABLE_DEFINE(CAT_ERR_work, CAT_ERR_handler);
 #define CATERR_START_DELAY_SECOND 2
 void ISR_CATERR()
 {
 	if ((gpio_get(RST_PLTRST_BUF_N) == 1)) {
-		if (k_work_cancel_delayable(&CatErr_work) != 0) {
+		if (k_work_cancel_delayable(&CAT_ERR_work) != 0) {
 			printk("Cancel caterr delay work fail\n");
 		}
 		/* start thread CatErr_handler after 2 seconds */
-		k_work_schedule(&CatErr_work, K_SECONDS(CATERR_START_DELAY_SECOND));
+		k_work_schedule(&CAT_ERR_work, K_SECONDS(CATERR_START_DELAY_SECOND));
 	}
 }
 

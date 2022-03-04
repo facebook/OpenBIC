@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include "cmsis_os.h"
 #include "hal_gpio.h"
-#include "pal.h"
 #include "util_sys.h"
 
 /* get bic boot source through from SRST */

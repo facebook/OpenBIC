@@ -46,7 +46,7 @@ bool pal_request_msg_to_BIC_from_ME(uint8_t netfn, uint8_t cmd);
 bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd);
 
 void ipmi_init(void);
-ipmi_error IPMI_handler(void *arug0, void *arug1, void *arug2);
+void IPMI_handler(void *arug0, void *arug1, void *arug2);
 
 enum {
 	CC_SUCCESS = 0x00,

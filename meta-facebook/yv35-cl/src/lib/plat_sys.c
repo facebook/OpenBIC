@@ -137,7 +137,7 @@ void BMC_reset_handler()
 	gpio_set(RST_BMC_R_N, GPIO_HIGH);
 }
 
-K_DELAYED_WORK_DEFINE(BMC_reset_work, BMC_reset_handler);
+K_WORK_DELAYABLE_DEFINE(BMC_reset_work, BMC_reset_handler);
 int pal_submit_bmc_warm_reset()
 {
 	k_work_schedule(&BMC_reset_work, K_MSEC(1000));

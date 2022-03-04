@@ -5,7 +5,6 @@
 #include <device.h>
 #include "ipmi.h"
 #include "kcs.h"
-#include "pal.h"
 
 struct k_thread kcs_polling;
 K_KERNEL_STACK_MEMBER(KCS_POLL_stack, KCS_POLL_stack_STACK_SIZE);

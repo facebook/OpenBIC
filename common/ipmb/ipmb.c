@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include "cmsis_os2.h"
 #include "hal_i2c.h"
-#include "pal.h"
 #include "timer.h"
 #include "ipmi.h"
 #include "kcs.h"
@@ -1113,6 +1112,11 @@ void create_ipmb_threads(uint8_t index)
 	}
 
 	return;
+}
+
+__weak bool pal_load_ipmb_config(void)
+{
+	return true;
 }
 
 void ipmb_init(void)

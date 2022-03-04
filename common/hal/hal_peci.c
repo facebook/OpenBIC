@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <drivers/peci.h>
 #include "hal_peci.h"
 
@@ -58,7 +60,7 @@ int peci_read(uint8_t cmd, uint8_t address, uint8_t u8Index, uint16_t u16Param, 
 	rdpkgcfg.addr = address;
 	rdpkgcfg.tx_buffer.len = 0x05;
 	rdpkgcfg.rx_buffer.len = u8ReadLen;
-	rdpkgcfg.tx_buffer.buf = malloc(rdpkgcfg.tx_buffer.len * sizeof(uint8_t));
+	rdpkgcfg.tx_buffer.buf = (uint8_t *)malloc(rdpkgcfg.tx_buffer.len * sizeof(uint8_t));
 	rdpkgcfg.rx_buffer.buf = readBuf;
 	rdpkgcfg.tx_buffer.buf[0] = 0x00;
 	rdpkgcfg.tx_buffer.buf[1] = u8Index;

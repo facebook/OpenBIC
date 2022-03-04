@@ -1,7 +1,7 @@
 #include <zephyr.h>
 #include <stdio.h>
+#include <string.h>
 #include "hal_gpio.h"
-#include "pal.h"
 #include "util_sys.h"
 
 #define STACK_SIZE 1024
@@ -182,7 +182,12 @@ void init_gpio_dev(void)
 #endif
 }
 
-bool gpio_init(void)
+__weak bool pal_load_gpio_config(void)
+{
+	return true;
+}
+
+int gpio_init(const struct device *args)
 {
 	uint8_t i;
 

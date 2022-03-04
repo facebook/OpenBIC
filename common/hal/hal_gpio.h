@@ -81,13 +81,12 @@ typedef struct _SCU_CFG_ {
 	int value;
 } SCU_CFG;
 
-extern SCU_CFG scu_cfg[];
-
 //void gpio_int_cb_test(void);
 void gpio_show(void);
 int gpio_get(uint8_t);
 int gpio_set(uint8_t, uint8_t);
-bool gpio_init(void);
+bool pal_load_gpio_config(void);
+int gpio_init(const struct device *args);
 int gpio_interrupt_conf(uint8_t, gpio_flags_t);
 uint8_t gpio_conf(uint8_t gpio_num, int dir);
 void scu_init(void);
