@@ -6,6 +6,8 @@
 #include "hal_i2c.h"
 #include "plat_sensor_table.h"
 
+#ifdef ENABLE_ISL69260
+
 #define RETRY 5
 
 struct isl69260_page_data isl69260_page_data_args[] = { [0] = { 0x0, 0x0 }, [1] = { 0x0, 0x1 } };
@@ -74,3 +76,4 @@ bool isl69260_read(uint8_t sensor_num, float *reading)
 
 	return true;
 }
+#endif

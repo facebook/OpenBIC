@@ -10,6 +10,7 @@
 
 #define PECI_READ_LEN 5
 
+#ifdef CONFIG_PECI
 static bool peci_get_power(uint8_t sensor_num, int *reading)
 {
 	snr_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
@@ -224,3 +225,4 @@ bool peci_sensor_read(uint8_t sensor_num, float *reading)
 
 	return false;
 }
+#endif

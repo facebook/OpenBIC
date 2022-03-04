@@ -1,31 +1,14 @@
-#ifndef SENSOR_DEF_H
-#define SENSOR_DEF_H
+#ifndef PLAT_SENSOR_TABLE_H
+#define PLAT_SENSOR_TABLE_H
 
-enum {
-	adc_port0 = 0,
-	adc_port1,
-	adc_port2,
-	adc_port3,
-	adc_port4,
-	adc_port5,
-	adc_port6,
-	adc_port7,
-	adc_port8,
-	adc_port9,
-	adc_port10,
-	adc_port11,
-	adc_port12,
-	adc_port13,
-	adc_port14,
-	adc_port15,
-};
+#include <stdint.h>
 
 /*  define config for sensors  */
-#define tmp75_in_addr (0x9C >> 1)
-#define tmp75_out_addr (0x9E >> 1)
-#define HSC_addr (0x80 >> 1)
-#define medusa_addr (0x88 >> 1)
-#define fan_addr 0x00
+#define TMP75_IN_ADDR (0x9C >> 1)
+#define TMP75_OUT_ADDR (0x9E >> 1)
+#define HSC_ADDR (0x80 >> 1)
+#define MEDUSA_ADDR (0x88 >> 1)
+#define FAN_ADDR 0x00
 
 #define TMP75_TEMP_OFFSET 0x00
 #define HSC_VOL_OFFSET 0x88
@@ -76,6 +59,6 @@ enum {
 #define SENSOR_NUM_SINGLE_FAN_BMC_TACH_2 0xEC
 #define SENSOR_NUM_SINGLE_FAN_BMC_TACH_3 0xED
 
-#define HSC_DEVICE_READY_DELAY_ms 2000
+uint8_t load_sensor_config(void);
 
 #endif

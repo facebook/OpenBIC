@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "plat_def.h"
 #include "sdr.h"
 
 #define NONE 0

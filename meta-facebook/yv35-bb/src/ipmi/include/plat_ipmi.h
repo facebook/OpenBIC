@@ -1,12 +1,8 @@
 #ifndef PLAT_IPMI_H
 #define PLAT_IPMI_H
 
-#include "ipmi.h"
-#include "plat_ipmb.h"
+#include <stdbool.h>
+#include <stdint.h>
 
-enum {
-	CPNT_CPLD = 1,
-	CPNT_BIC,
-};
 
 #endif

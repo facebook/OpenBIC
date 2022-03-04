@@ -252,7 +252,6 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 	IPMB_config ipmb_cfg;
 	I2C_MSG *i2c_msg;
 	uint8_t ipmb_buffer_tx[IPMI_MSG_MAX_LENGTH + IPMB_RESP_HEADER_LENGTH];
-	uint8_t *kcs_buff;
 	uint8_t ret = 0;
 
 	memcpy(&ipmb_cfg, (IPMB_config *)pvParameters, sizeof(IPMB_config));
@@ -385,6 +384,8 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 					} else if (current_msg_tx->buffer.InF_source == SELF) {
 						printf("[%s] Failed to send command\n", __func__);
 					} else if (current_msg_tx->buffer.InF_source == HOST_KCS) {
+#ifdef CONFIG_IPMI_KCS_ASPEED
+						uint8_t *kcs_buff;
 						kcs_buff = malloc(KCS_buff_size * sizeof(uint8_t));
 						if (kcs_buff ==
 						    NULL) { // allocate fail, retry allocate
@@ -415,6 +416,7 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 						if (kcs_buff != NULL) {
 							free(kcs_buff);
 						}
+#endif
 					} else {
 						// Return the error code(node busy) to the source channel
 						current_msg_tx->buffer.data_len = 0;
@@ -480,7 +482,6 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 	struct IPMB_config ipmb_cfg;
 	struct ipmb_msg *ipmb_msg = NULL;
 	uint8_t *ipmb_buffer_rx;
-	uint8_t *kcs_buff;
 	uint8_t rx_len;
 	static uint16_t i = 0;
 	int ret;
@@ -580,6 +581,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 							&current_msg, K_NO_WAIT);
 					} else if (current_msg_rx->buffer.InF_source == HOST_KCS) {
 #ifdef CONFIG_IPMI_KCS_ASPEED
+						uint8_t *kcs_buff;
 						int retry = 0;
 						do {
 							kcs_buff = malloc(KCS_buff_size *

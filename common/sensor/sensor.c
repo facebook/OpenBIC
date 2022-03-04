@@ -126,12 +126,16 @@ bool sensor_read(uint8_t sensor_num, float *reading)
 	case TYPE_ADC:
 		status = adc_sensor_read(sensor_num, reading);
 		break;
+#ifdef CONFIG_PECI
 	case TYPE_PECI:
 		status = peci_sensor_read(sensor_num, reading);
 		break;
+#endif
+#ifdef ENABLE_ISL69260
 	case TYPE_ISL69260:
 		status = isl69260_read(sensor_num, reading);
 		break;
+#endif
 	case TYPE_PCH:
 		status = pch_read(sensor_num, reading);
 		break;
