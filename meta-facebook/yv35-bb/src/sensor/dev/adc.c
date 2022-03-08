@@ -44,9 +44,8 @@ struct adc_sequence sequence = {
 	.calibrate = ADC_CALIBRATE,
 };
 
-enum {
-	adc0,
-	adc1,
+enum { adc0,
+       adc1,
 };
 
 void init_adc_dev(void)
