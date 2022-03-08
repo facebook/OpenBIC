@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "sensor.h"
 #include "hal_i2c.h"
-#include "sensor_def.h"
+#include "plat_sensor.h"
 #include <string.h>
 
 bool hsc_init()

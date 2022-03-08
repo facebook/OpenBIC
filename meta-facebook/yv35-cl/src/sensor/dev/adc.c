@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "sensor.h"
-#include "sensor_def.h"
+#include "plat_sensor.h"
 #include "pal.h"
 #include "plat_gpio.h"
 #include <zephyr.h>
