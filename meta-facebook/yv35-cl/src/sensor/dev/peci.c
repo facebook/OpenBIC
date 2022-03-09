@@ -18,17 +18,17 @@ bool pal_peci_read(uint8_t sensor_num, int *reading)
 		u8Index = 0x02;
 		u16Param = 0x00ff;
 	} else if (sensor_num == SENSOR_NUM_TEMP_CPU) {
-		if ((sensor_config[SensorNum_SensorCfg_map[SENSOR_NUM_TEMP_CPU_TJMAX]]
-			     .cache_status == SENSOR_READ_ACUR_SUCCESS) ||
-		    (sensor_config[SensorNum_SensorCfg_map[SENSOR_NUM_TEMP_CPU_MARGIN]]
-			     .cache_status == SENSOR_READ_ACUR_SUCCESS)) {
+		if ((sensor_config[SnrNum_SnrCfg_map[SENSOR_NUM_TEMP_CPU_TJMAX]].cache_status ==
+		     SNR_READ_ACUR_SUCCESS) ||
+		    (sensor_config[SnrNum_SnrCfg_map[SENSOR_NUM_TEMP_CPU_MARGIN]].cache_status ==
+		     SNR_READ_ACUR_SUCCESS)) {
 			return true;
 		} else {
 			return false;
 		}
 	} else if (sensor_num == SENSOR_NUM_TEMP_CPU_TJMAX) {
-		if (sensor_config[SensorNum_SensorCfg_map[SENSOR_NUM_TEMP_CPU]].cache_status ==
-		    SENSOR_READ_ACUR_SUCCESS) {
+		if (sensor_config[SnrNum_SnrCfg_map[SENSOR_NUM_TEMP_CPU]].cache_status ==
+		    SNR_READ_ACUR_SUCCESS) {
 			return true;
 		} else {
 			u8Index = 0x10;
@@ -56,20 +56,20 @@ bool pal_peci_read(uint8_t sensor_num, int *reading)
 		ret = peci_getPwr(sensor_num, &val);
 		if (ret) {
 			*reading = (acur_cal_MBR(sensor_num, val)) & 0xffff;
-			sensor_config[SensorNum_SensorCfg_map[sensor_num]].cache = *reading;
-			sensor_config[SensorNum_SensorCfg_map[sensor_num]].cache_status =
-				SENSOR_READ_ACUR_SUCCESS;
+			sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache = *reading;
+			sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status =
+				SNR_READ_ACUR_SUCCESS;
 			return true;
 		} else {
-			sensor_config[SensorNum_SensorCfg_map[sensor_num]].cache_status =
-				SENSOR_FAIL_TO_ACCESS;
+			sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status =
+				SNR_FAIL_TO_ACCESS;
 			return false;
 		}
 	} else {
 		printf("Unrecognized sensor reading\n");
 		return false;
 	}
-	address = sensor_config[SensorNum_SensorCfg_map[sensor_num]].slave_addr;
+	address = sensor_config[SnrNum_SnrCfg_map[sensor_num]].slave_addr;
 	readBuf = (uint8_t *)malloc(u8ReadLen * sizeof(uint8_t));
 	if (readBuf == NULL) {
 		return false;
@@ -80,14 +80,13 @@ bool pal_peci_read(uint8_t sensor_num, int *reading)
 
 	if (ret) {
 		if (sensor_num == SENSOR_NUM_TEMP_CPU_MARGIN) {
-			sensor_config[SensorNum_SensorCfg_map[SENSOR_NUM_TEMP_CPU]].cache_status =
-				SENSOR_FAIL_TO_ACCESS;
+			sensor_config[SnrNum_SnrCfg_map[SENSOR_NUM_TEMP_CPU]].cache_status =
+				SNR_FAIL_TO_ACCESS;
 		}
 		if (readBuf != NULL) {
 			free(readBuf);
 		}
-		sensor_config[SensorNum_SensorCfg_map[sensor_num]].cache_status =
-			SENSOR_FAIL_TO_ACCESS;
+		sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_FAIL_TO_ACCESS;
 		return false;
 	}
 
@@ -103,8 +102,8 @@ bool pal_peci_read(uint8_t sensor_num, int *reading)
 			if (!is_retry_success) {
 				printf("PECI sensor [%x] response timeout. Reach Max retry.\n",
 				       sensor_num);
-				sensor_config[SensorNum_SensorCfg_map[sensor_num]].cache_status =
-					SENSOR_FAIL_TO_ACCESS;
+				sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status =
+					SNR_FAIL_TO_ACCESS;
 				if (readBuf != NULL) {
 					free(readBuf);
 				}
@@ -113,16 +112,15 @@ bool pal_peci_read(uint8_t sensor_num, int *reading)
 
 		} else if (complete_code == PECI_CC_ILLEGAL_REQUEST) {
 			printf("Unknown request\n");
-			sensor_config[SensorNum_SensorCfg_map[sensor_num]].cache_status =
-				SENSOR_NOT_FOUND;
+			sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_NOT_FOUND;
 			if (readBuf != NULL) {
 				free(readBuf);
 			}
 			return false;
 		} else {
 			printf("PECI control hardware, firmware or associated logic error\n");
-			sensor_config[SensorNum_SensorCfg_map[sensor_num]].cache_status =
-				SENSOR_UNSPECIFIED_ERROR;
+			sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status =
+				SNR_UNSPECIFIED_ERROR;
 			if (readBuf != NULL) {
 				free(readBuf);
 			}
@@ -133,12 +131,12 @@ bool pal_peci_read(uint8_t sensor_num, int *reading)
 	// PECI_CC_RSP_SUCCESS
 	if (sensor_num == SENSOR_NUM_TEMP_CPU_MARGIN) {
 		val = ((0xFFFF - ((readBuf[2] << 8) | readBuf[1])) >> 6) + 1;
-		if (sensor_config[SensorNum_SensorCfg_map[SENSOR_NUM_TEMP_CPU_TJMAX]].cache_status ==
-		    SENSOR_READ_ACUR_SUCCESS) {
-			sensor_config[SensorNum_SensorCfg_map[SENSOR_NUM_TEMP_CPU]].cache =
+		if (sensor_config[SnrNum_SnrCfg_map[SENSOR_NUM_TEMP_CPU_TJMAX]].cache_status ==
+		    SNR_READ_ACUR_SUCCESS) {
+			sensor_config[SnrNum_SnrCfg_map[SENSOR_NUM_TEMP_CPU]].cache =
 				cpu_temp_tjmax - (cal_MBR(sensor_num, val) & 0xff);
-			sensor_config[SensorNum_SensorCfg_map[SENSOR_NUM_TEMP_CPU]].cache_status =
-				SENSOR_READ_SUCCESS;
+			sensor_config[SnrNum_SnrCfg_map[SENSOR_NUM_TEMP_CPU]].cache_status =
+				SNR_READ_SUCCESS;
 		}
 	} else if (sensor_num == SENSOR_NUM_TEMP_CPU_TJMAX) {
 		val = readBuf[3];
@@ -150,7 +148,7 @@ bool pal_peci_read(uint8_t sensor_num, int *reading)
 		free(readBuf);
 	}
 	*reading = (acur_cal_MBR(sensor_num, val)) & 0xffff;
-	sensor_config[SensorNum_SensorCfg_map[sensor_num]].cache = *reading;
-	sensor_config[SensorNum_SensorCfg_map[sensor_num]].cache_status = SENSOR_READ_ACUR_SUCCESS;
+	sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache = *reading;
+	sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_READ_ACUR_SUCCESS;
 	return true;
 }

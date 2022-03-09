@@ -33,8 +33,7 @@ bool pal_pch_read(uint8_t sensor_num, int *reading)
 
 	status = pch_ipmb_read(bridge_msg);
 	if (status != ipmb_error_success) {
-		sensor_config[SensorNum_SensorCfg_map[sensor_num]].cache_status =
-			SENSOR_FAIL_TO_ACCESS;
+		sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_FAIL_TO_ACCESS;
 		printk("ipmb read fail status: %x\n", status);
 		free(bridge_msg);
 		return false;
@@ -42,9 +41,8 @@ bool pal_pch_read(uint8_t sensor_num, int *reading)
 
 	if (bridge_msg->completion_code == CC_SUCCESS) {
 		*reading = (cal_MBR(sensor_num, bridge_msg->data[0])) & 0xff;
-		sensor_config[SensorNum_SensorCfg_map[sensor_num]].cache = *reading;
-		sensor_config[SensorNum_SensorCfg_map[sensor_num]].cache_status =
-			SENSOR_READ_SUCCESS;
+		sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache = *reading;
+		sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_READ_SUCCESS;
 		free(bridge_msg);
 		return true;
 	} else if (bridge_msg->completion_code == CC_NODE_BUSY) {
@@ -58,28 +56,26 @@ bool pal_pch_read(uint8_t sensor_num, int *reading)
 				return false;
 			}
 			if (bridge_msg->completion_code == CC_SUCCESS) {
-				sensor_config[SensorNum_SensorCfg_map[sensor_num]].cache =
+				sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache =
 					cal_MBR(sensor_num, bridge_msg->data[0]) & 0xff;
-				sensor_config[SensorNum_SensorCfg_map[sensor_num]].cache_status =
-					SENSOR_READ_SUCCESS;
+				sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status =
+					SNR_READ_SUCCESS;
 				free(bridge_msg);
 				return true;
 			} else if (bridge_msg->completion_code != CC_NODE_BUSY) {
 				free(bridge_msg);
-				sensor_config[SensorNum_SensorCfg_map[sensor_num]].cache_status =
-					SENSOR_UNSPECIFIED_ERROR;
+				sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status =
+					SNR_UNSPECIFIED_ERROR;
 				return false;
 			}
 		}
 		free(bridge_msg);
 		printk("PCH retry read fail\n");
-		sensor_config[SensorNum_SensorCfg_map[sensor_num]].cache_status =
-			SENSOR_UNSPECIFIED_ERROR;
+		sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_UNSPECIFIED_ERROR;
 		return false;
 	} else {
 		free(bridge_msg);
-		sensor_config[SensorNum_SensorCfg_map[sensor_num]].cache_status =
-			SENSOR_UNSPECIFIED_ERROR;
+		sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_UNSPECIFIED_ERROR;
 		return false;
 	}
 }

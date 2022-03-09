@@ -354,7 +354,7 @@ void pal_STORAGE_GET_SDR(ipmi_msg *msg)
 
 void pal_SENSOR_GET_SENSOR_READING(ipmi_msg *msg)
 {
-	uint8_t status, sensor_num;
+	uint8_t status, snr_num;
 	int reading;
 
 	if (msg->data_len != 1) {
@@ -368,34 +368,33 @@ void pal_SENSOR_GET_SENSOR_READING(ipmi_msg *msg)
 		return;
 	}
 
-	sensor_num = msg->data[0];
+	snr_num = msg->data[0];
 	status = get_sensor_reading(
-		sensor_num, &reading,
+		snr_num, &reading,
 		get_from_cache); // Fix to get_from_cache. As need real time reading, use OEM command to get_from_sensor.
 
 	switch (status) {
-	case SENSOR_READ_SUCCESS:
+	case SNR_READ_SUCCESS:
 		msg->data[0] = reading;
 		// SDR sensor initialization bit6 enable scan, bit5 enable event
 		// retunr data 1 bit 7 set to 0 to disable all event msg. bit 6 set to 0 disable sensor scan
 		msg->data[1] =
-			((full_sensor_table[SensorNum_SDR_map[sensor_num]].sensor_init & 0x60)
-			 << 1);
+			((full_sensor_table[SnrNum_SDR_map[snr_num]].sensor_init & 0x60) << 1);
 		msg->data[2] =
 			0xc0; // fix to threshold deassert status, BMC will compare with UCR/UNR itself
 		msg->data_len = 3;
 		msg->completion_code = CC_SUCCESS;
 		break;
-	case SENSOR_FAIL_TO_ACCESS:
+	case SNR_FAIL_TO_ACCESS:
 		msg->completion_code = CC_NODE_BUSY; // transection error
 		break;
-	case SENSOR_NOT_ACCESSIBLE:
+	case SNR_NOT_ACCESSIBLE:
 		msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE; // DC off
 		break;
-	case SENSOR_NOT_FOUND:
+	case SNR_NOT_FOUND:
 		msg->completion_code = CC_INVALID_DATA_FIELD; // request sensor number not found
 		break;
-	case SENSOR_UNSPECIFIED_ERROR:
+	case SNR_UNSPECIFIED_ERROR:
 	default:
 		msg->completion_code = CC_UNSPECIFIED_ERROR; // unknown error
 		break;

@@ -82,7 +82,7 @@ void pal_OEM_1S_RESET_BMC(ipmi_msg *msg);
 void pal_OEM_1S_PECIaccess(ipmi_msg *msg);
 void pal_OEM_1S_ASD_INIT(ipmi_msg *msg);
 void pal_OEM_1S_GET_SET_GPIO(ipmi_msg *msg);
-void pal_OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg);
+void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg);
 void pal_OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg);
 void pal_OEM_1S_SET_JTAG_TAP_STA(ipmi_msg *msg);
 void pal_OEM_1S_JTAG_DATA_SHIFT(ipmi_msg *msg);
@@ -208,7 +208,7 @@ enum {
 	CMD_OEM_1S_RESET_BMC = 0x16,
 	CMD_OEM_1S_SET_JTAG_TAP_STA = 0x21,
 	CMD_OEM_1S_JTAG_DATA_SHIFT = 0x22,
-	CMD_OEM_1S_ACCURACY_SENSOR_READING = 0x23,
+	CMD_OEM_1S_ACCURACY_SENSNR = 0x23,
 	CMD_OEM_1S_ASD_INIT = 0x28,
 	CMD_OEM_1S_PECIaccess = 0x29,
 	CMD_OEM_1S_SENSOR_POLL_EN = 0x30,
