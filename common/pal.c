@@ -208,7 +208,7 @@ __weak void pal_OEM_1S_ASD_INIT(ipmi_msg *msg)
 	return;
 }
 
-__weak void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg)
+__weak void pal_OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg)
 {
 	msg->completion_code = CC_UNSPECIFIED_ERROR;
 	return;
@@ -292,7 +292,7 @@ __weak uint8_t pal_load_sdr_table(void)
 	return 0;
 }
 
-__weak bool pal_load_snr_config(void)
+__weak bool pal_load_sensor_config(void)
 {
 	return 0;
 }
@@ -302,7 +302,7 @@ __weak void pal_fix_fullSDR_table(void)
 	return 0;
 }
 
-__weak void pal_fix_Snrconfig(void)
+__weak void pal_fix_Sensorconfig(void)
 {
 	return 0;
 }

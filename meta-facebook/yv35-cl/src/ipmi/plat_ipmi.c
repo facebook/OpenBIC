@@ -57,8 +57,8 @@ bool add_sel_evt_record(addsel_msg_t *sel_msg)
 	msg->data[7] = (Self_I2C_ADDRESS << 1); // generator id
 	msg->data[8] = 0x00; // generator id
 	msg->data[9] = evt_msg_version; // event message format version
-	msg->data[10] = sel_msg->snr_type; // sensor type, TBD
-	msg->data[11] = sel_msg->snr_number; // sensor number
+	msg->data[10] = sel_msg->sensor_type; // sensor type, TBD
+	msg->data[11] = sel_msg->sensor_number; // sensor number
 	msg->data[12] = sel_msg->evt_type; // event dir/event type
 	msg->data[13] = sel_msg->evt_data1; // sensor data 1
 	msg->data[14] = sel_msg->evt_data2; // sensor data 2
@@ -562,7 +562,7 @@ void pal_STORAGE_GET_SDR(ipmi_msg *msg)
 
 void pal_SENSOR_GET_SENSOR_READING(ipmi_msg *msg)
 {
-	uint8_t status, snr_num;
+	uint8_t status, sensor_num;
 	int reading;
 
 	if (msg->data_len != 1) {
@@ -576,45 +576,50 @@ void pal_SENSOR_GET_SENSOR_READING(ipmi_msg *msg)
 		return;
 	}
 
-	snr_num = msg->data[0];
+	sensor_num = msg->data[0];
 	status = get_sensor_reading(
-		snr_num, &reading,
+		sensor_num, &reading,
 		get_from_cache); // Fix to get_from_cache. As need real time reading, use OEM command to get_from_sensor.
 
 	switch (status) {
-	case SNR_READ_SUCCESS:
+	case SENSOR_READ_SUCCESS:
 		msg->data[0] = reading & 0xff;
 		// SDR sensor initialization bit6 enable scan, bit5 enable event
 		// retunr data 1 bit 7 set to 0 to disable all event msg. bit 6 set to 0 disable sensor scan
 		msg->data[1] =
-			((full_sensor_table[SnrNum_SDR_map[snr_num]].sensor_init & 0x60) << 1);
+			((full_sensor_table[SensorNum_SDR_map[sensor_num]].sensor_init & 0x60)
+			 << 1);
 		msg->data[2] =
 			0xc0; // fix to threshold deassert status, BMC will compare with UCR/UNR itself
 		msg->data_len = 3;
 		msg->completion_code = CC_SUCCESS;
 		break;
-	case SNR_READ_ACUR_SUCCESS:
+	case SENSOR_READ_ACUR_SUCCESS:
 		msg->data[0] =
 			(reading >> 8) & 0xff; // In accurate read case, scale reading to one byte
 		// SDR sensor initialization bit6 enable scan, bit5 enable event
 		// retunr data 1 bit 7 set to 0 to disable all event msg. bit 6 set to 0 disable sensor scan
 		msg->data[1] =
-			((full_sensor_table[SnrNum_SDR_map[snr_num]].sensor_init & 0x60) << 1);
+			((full_sensor_table[SensorNum_SDR_map[sensor_num]].sensor_init & 0x60)
+			 << 1);
 		msg->data[2] =
 			0xc0; // fix to threshold deassert status, BMC will compare with UCR/UNR itself
 		msg->data_len = 3;
 		msg->completion_code = CC_SUCCESS;
 		break;
-	case SNR_FAIL_TO_ACCESS:
+	case SENSOR_READ_4BYTE_ACUR_SUCCESS:
+		msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+		break;
+	case SENSOR_FAIL_TO_ACCESS:
 		msg->completion_code = CC_NODE_BUSY; // transection error
 		break;
-	case SNR_NOT_ACCESSIBLE:
+	case SENSOR_NOT_ACCESSIBLE:
 		msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE; // DC off
 		break;
-	case SNR_NOT_FOUND:
+	case SENSOR_NOT_FOUND:
 		msg->completion_code = CC_INVALID_DATA_FIELD; // request sensor number not found
 		break;
-	case SNR_UNSPECIFIED_ERROR:
+	case SENSOR_UNSPECIFIED_ERROR:
 	default:
 		msg->completion_code = CC_UNSPECIFIED_ERROR; // unknown error
 		break;
@@ -624,7 +629,7 @@ void pal_SENSOR_GET_SENSOR_READING(ipmi_msg *msg)
 
 void pal_OEM_SENSOR_READ(ipmi_msg *msg)
 {
-	uint8_t status, snr_num;
+	uint8_t status, sensor_num;
 	int reading;
 
 	if (msg->data_len < 3) { // only input enable status
@@ -634,30 +639,30 @@ void pal_OEM_SENSOR_READ(ipmi_msg *msg)
 
 	// Follow INTEL NM SPEC
 	if (msg->data[0] == 0x00) { // read platform pwr from HSC
-		snr_num = SENSOR_NUM_PWR_HSCIN;
-		status = get_sensor_reading(snr_num, &reading, get_from_cache);
+		sensor_num = SENSOR_NUM_PWR_HSCIN;
+		status = get_sensor_reading(sensor_num, &reading, get_from_cache);
 		reading =
 			(reading >> 8) *
-			SDR_M(snr_num); // scale down to one byte and times SDR to get original reading
+			SDR_M(sensor_num); // scale down to one byte and times SDR to get original reading
 	} else {
 		msg->completion_code = CC_INVALID_DATA_FIELD;
 		return;
 	}
 
 	switch (status) {
-	case SNR_READ_ACUR_SUCCESS:
+	case SENSOR_READ_ACUR_SUCCESS:
 		msg->data[1] = reading & 0xFF;
 		msg->data[2] = (reading >> 8) & 0xFF;
 		msg->data_len = 3;
 		msg->completion_code = CC_SUCCESS;
 		break;
-	case SNR_FAIL_TO_ACCESS:
+	case SENSOR_FAIL_TO_ACCESS:
 		msg->completion_code = CC_NODE_BUSY; // transection error
 		break;
-	case SNR_NOT_ACCESSIBLE:
+	case SENSOR_NOT_ACCESSIBLE:
 		msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE; // DC off
 		break;
-	case SNR_NOT_FOUND:
+	case SENSOR_NOT_FOUND:
 		msg->completion_code = CC_INVALID_DATA_FIELD; // request sensor number not found
 		break;
 	default:
@@ -1166,11 +1171,11 @@ void pal_OEM_1S_SET_JTAG_TAP_STA(ipmi_msg *msg)
 	return;
 }
 
-void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg)
+void pal_OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg)
 {
-	uint8_t status, snr_num, option, snr_report_status;
-	uint8_t enable_snr_scan = 0xC0; // following IPMI sensor status response
-	uint8_t disable_snr_scan = 0x80;
+	uint8_t status, sensor_num, option, sensor_report_status;
+	uint8_t enable_sensor_scan = 0xC0; // following IPMI sensor status response
+	uint8_t disable_sensor_scan = 0x80;
 	int reading;
 
 	if (msg->data_len != 2) {
@@ -1179,59 +1184,65 @@ void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg)
 	}
 
 	if (enable_sensor_poll) {
-		snr_report_status = enable_snr_scan;
+		sensor_report_status = enable_sensor_scan;
 	} else {
-		snr_report_status = disable_snr_scan;
+		sensor_report_status = disable_sensor_scan;
 	}
 
 	option = msg->data[1];
-	snr_num = msg->data[0];
+	sensor_num = msg->data[0];
 
 	if (option == 0) {
 		if (enable_sensor_poll) {
-			status = get_sensor_reading(snr_num, &reading, get_from_cache);
+			status = get_sensor_reading(sensor_num, &reading, get_from_cache);
 		} else {
-			status = SNR_POLLING_DISABLE;
+			status = SENSOR_POLLING_DISABLE;
 		}
 	} else if (option == 1) {
-		status = get_sensor_reading(snr_num, &reading, get_from_sensor);
+		status = get_sensor_reading(sensor_num, &reading, get_from_sensor);
 	}
 
 	switch (status) {
-	case SNR_READ_SUCCESS:
+	case SENSOR_READ_SUCCESS:
 		msg->data[0] = reading & 0xff;
 		msg->data[1] = 0x00;
-		msg->data[2] = snr_report_status;
+		msg->data[2] = sensor_report_status;
 		msg->data_len = 3;
 		msg->completion_code = CC_SUCCESS;
 		break;
-	case SNR_READ_ACUR_SUCCESS:
+	case SENSOR_READ_ACUR_SUCCESS:
 		msg->data[0] = (reading >> 8) & 0xff;
 		msg->data[1] = reading & 0xff;
-		msg->data[2] = snr_report_status;
+		msg->data[2] = sensor_report_status;
 		msg->data_len = 3;
 		msg->completion_code = CC_SUCCESS;
 		break;
-	case SNR_NOT_ACCESSIBLE:
-	case SNR_INIT_STATUS:
+	case SENSOR_READ_4BYTE_ACUR_SUCCESS:
+		memcpy(msg->data, &reading, sizeof(reading));
+		msg->data[4] = sensor_report_status;
+		msg->data_len = 5;
+		msg->completion_code = CC_SUCCESS;
+		break;
+	case SENSOR_NOT_ACCESSIBLE:
+	case SENSOR_INIT_STATUS:
 		msg->data[0] = 0x00;
 		msg->data[1] = 0x00;
-		msg->data[2] = (snr_report_status |
+		msg->data[2] = (sensor_report_status |
 				0x20); // notice BMC about sensor temporary in not accessible status
 		msg->data_len = 3;
 		msg->completion_code = CC_SUCCESS;
 		break;
-	case SNR_POLLING_DISABLE:
+	case SENSOR_POLLING_DISABLE:
 		msg->completion_code =
 			CC_SENSOR_NOT_PRESENT; // getting sensor cache while sensor polling disable
 		break;
-	case SNR_FAIL_TO_ACCESS:
+	case SENSOR_FAIL_TO_ACCESS:
 		msg->completion_code = CC_NODE_BUSY; // transection error
 		break;
-	case SNR_NOT_FOUND:
+	case SENSOR_NOT_FOUND:
 		msg->completion_code = CC_INVALID_DATA_FIELD; // request sensor number not found
 		break;
-	case SNR_UNSPECIFIED_ERROR:
+	case SENSOR_UNSPECIFIED_ERROR:
 	default:
 		msg->completion_code = CC_UNSPECIFIED_ERROR; // unknown error
 		break;
@@ -1412,9 +1423,9 @@ void pal_OEM_1S_SENSOR_POLL_EN(ipmi_msg *msg)
 	}
 
 	if (msg->data[0] == 0) { /* enable sensor poll */
-		enable_snr_poll();
+		sensor_poll_enable();
 	} else if (msg->data[0] == 1) { /* disable sensor poll */
-		disable_snr_poll();
+		sensor_poll_disable();
 	} else {
 		msg->completion_code = CC_INVALID_DATA_FIELD;
 		return;

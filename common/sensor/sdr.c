@@ -10,7 +10,7 @@ SDR_INFO sdr_info;
 static uint16_t RSV_ID = 0;
 uint8_t is_SDR_not_init = 1;
 
-SDR_Full_sensor full_sensor_table[MAX_SNR_SIZE];
+SDR_Full_sensor full_sensor_table[MAX_SENSOR_SIZER];
 
 uint8_t SDR_NUM = 0;
 
@@ -55,7 +55,7 @@ uint8_t SDR_init(void)
 	int i;
 
 	SDR_NUM = pal_load_sdr_table();
-  pal_fix_fullSDR_table();
+	pal_fix_fullSDR_table();
 	sdr_info.start_ID = 0x0000;
 	sdr_info.current_ID = sdr_info.start_ID;
 
@@ -65,19 +65,23 @@ uint8_t SDR_init(void)
 		full_sensor_table[i].ID_len += strlen(full_sensor_table[i].ID_str);
 		full_sensor_table[i].record_len += strlen(full_sensor_table[i].ID_str);
 
-		if (DEBUG_SNR) {
-			printf("%s ID: 0x%x%x, size: %d, recordlen: %d\n", full_sensor_table[i].ID_str, full_sensor_table[i].record_id_h, full_sensor_table[i].record_id_l, full_sensor_table[i].ID_len, full_sensor_table[i].record_len);
+		if (DEBUG_SENSOR) {
+			printf("%s ID: 0x%x%x, size: %d, recordlen: %d\n",
+			       full_sensor_table[i].ID_str, full_sensor_table[i].record_id_h,
+			       full_sensor_table[i].record_id_l, full_sensor_table[i].ID_len,
+			       full_sensor_table[i].record_len);
 		}
 	}
 
 	i--;
-	sdr_info.last_ID =  (full_sensor_table[i].record_id_h << 8) | (full_sensor_table[i].record_id_l);
-	if (DEBUG_SNR) {
-		printf("%s ID: 0x%x%x, size: %d, recordlen: %d\n", full_sensor_table[i].ID_str, full_sensor_table[i].record_id_h, full_sensor_table[i].record_id_l, full_sensor_table[i].ID_len, full_sensor_table[i].record_len);
+	sdr_info.last_ID =
+		(full_sensor_table[i].record_id_h << 8) | (full_sensor_table[i].record_id_l);
+	if (DEBUG_SENSOR) {
+		printf("%s ID: 0x%x%x, size: %d, recordlen: %d\n", full_sensor_table[i].ID_str,
+		       full_sensor_table[i].record_id_h, full_sensor_table[i].record_id_l,
+		       full_sensor_table[i].ID_len, full_sensor_table[i].record_len);
 	}
 
 	is_SDR_not_init = 0;
 	return true;
 }
-
-
