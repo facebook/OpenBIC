@@ -44,9 +44,8 @@ struct adc_sequence sequence = {
 	.calibrate = ADC_CALIBRATE,
 };
 
-enum {
-	adc0,
-	adc1,
+enum { adc0,
+       adc1,
 };
 
 void init_adc_dev(void)
@@ -97,20 +96,20 @@ static bool adc_read_mv(uint32_t index, uint32_t channel, int *adc_val)
 }
 bool pal_adc_read(uint8_t sensor_num, int *reading)
 {
-	uint8_t snrcfg_sensor_num = SnrNum_SnrCfg_map[sensor_num];
-	uint8_t chip = sensor_config[snrcfg_sensor_num].port / ADC_CHAN_NUM;
-	uint8_t number = sensor_config[snrcfg_sensor_num].port % ADC_CHAN_NUM;
+	uint8_t sensorcfg_sensor_num = SensorNum_SensorCfg_map[sensor_num];
+	uint8_t chip = sensor_config[sensorcfg_sensor_num].port / ADC_CHAN_NUM;
+	uint8_t number = sensor_config[sensorcfg_sensor_num].port % ADC_CHAN_NUM;
 	int val = 1;
 	int ret = adc_read_mv(chip, number, &val);
 	if (ret) {
-		val = val * sensor_config[snrcfg_sensor_num].arg0 /
-		      sensor_config[snrcfg_sensor_num].arg1;
+		val = val * sensor_config[sensorcfg_sensor_num].arg0 /
+		      sensor_config[sensorcfg_sensor_num].arg1;
 		if (sensor_num == SENSOR_NUM_CUR_P12V_FAN) {
 			val = (float)val / 0.22 / 0.665;
 		}
 		*reading = (cal_MBR(sensor_num, val) / 1000) & 0xFF;
-		sensor_config[snrcfg_sensor_num].cache = *reading;
-		sensor_config[snrcfg_sensor_num].cache_status = SNR_READ_SUCCESS;
+		sensor_config[sensorcfg_sensor_num].cache = *reading;
+		sensor_config[sensorcfg_sensor_num].cache_status = SENSOR_READ_SUCCESS;
 		return true;
 	} else {
 		return false;

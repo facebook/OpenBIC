@@ -20,13 +20,6 @@
 #include "timer.h"
 #include "hal_peci.h"
 
-void device_init()
-{
-	adc_init();
-	peci_init();
-	hsc_init();
-}
-
 void switch_spi_mux()
 {
 	gpio_set(FM_SPI_PCH_MASTER_SEL_R, GPIO_LOW);
@@ -59,7 +52,6 @@ void main(void)
 	ipmi_init();
 	kcs_init();
 	usb_dev_init();
-	device_init();
 	set_sys_status();
 	set_ME_restore();
 }

@@ -2968,7 +2968,7 @@ uint8_t pal_load_sdr_table(void)
 	return (sizeof(plat_sensor_table) / sizeof(plat_sensor_table[0]));
 };
 
-uint8_t map_SnrNum_fullSDR(uint8_t sensor_num)
+uint8_t map_SensorNum_fullSDR(uint8_t sensor_num)
 {
 	uint8_t i, j;
 	for (i = 0; i < SENSOR_NUM_MAX; i++) {
@@ -2985,23 +2985,23 @@ uint8_t map_SnrNum_fullSDR(uint8_t sensor_num)
 
 void change_sensor_threshold(uint8_t sensor_num, uint8_t threshold_type, uint8_t change_value)
 {
-	uint8_t SnrNum_SDR_map = map_SnrNum_fullSDR(sensor_num);
-	if (SnrNum_SDR_map == 0xFF) {
+	uint8_t SensorNum_SDR_map = map_SensorNum_fullSDR(sensor_num);
+	if (SensorNum_SDR_map == 0xFF) {
 		printk("Not found change threshold sensor\n");
 		return;
 	}
 	if (threshold_type == threshold_UNR) {
-		full_sensor_table[SnrNum_SDR_map].UNRT = change_value;
+		full_sensor_table[SensorNum_SDR_map].UNRT = change_value;
 	} else if (threshold_type == threshold_UCR) {
-		full_sensor_table[SnrNum_SDR_map].UCT = change_value;
+		full_sensor_table[SensorNum_SDR_map].UCT = change_value;
 	} else if (threshold_type == threshold_UNC) {
-		full_sensor_table[SnrNum_SDR_map].UNCT = change_value;
+		full_sensor_table[SensorNum_SDR_map].UNCT = change_value;
 	} else if (threshold_type == threshold_LNR) {
-		full_sensor_table[SnrNum_SDR_map].LNRT = change_value;
+		full_sensor_table[SensorNum_SDR_map].LNRT = change_value;
 	} else if (threshold_type == threshold_LCR) {
-		full_sensor_table[SnrNum_SDR_map].LCT = change_value;
+		full_sensor_table[SensorNum_SDR_map].LCT = change_value;
 	} else if (threshold_type == threshold_LNC) {
-		full_sensor_table[SnrNum_SDR_map].LNCT = change_value;
+		full_sensor_table[SensorNum_SDR_map].LNCT = change_value;
 	} else {
 		printk("Not found want changing threshold\n");
 		return;
@@ -3010,29 +3010,29 @@ void change_sensor_threshold(uint8_t sensor_num, uint8_t threshold_type, uint8_t
 
 void change_sensor_MBR(uint8_t sensor_num, uint8_t MBR_type, uint16_t change_value)
 {
-	uint8_t SnrNum_SDR_map = map_SnrNum_fullSDR(sensor_num);
-	if (SnrNum_SDR_map == 0xFF) {
+	uint8_t SensorNum_SDR_map = map_SensorNum_fullSDR(sensor_num);
+	if (SensorNum_SDR_map == 0xFF) {
 		printk("Not found change threshold sensor\n");
 		return;
 	}
 	if (MBR_type == MBR_M) {
-		full_sensor_table[SnrNum_SDR_map].M = change_value & 0xFF;
+		full_sensor_table[SensorNum_SDR_map].M = change_value & 0xFF;
 		if (change_value >> 8) {
-			full_sensor_table[SnrNum_SDR_map].M_tolerance =
+			full_sensor_table[SensorNum_SDR_map].M_tolerance =
 				((change_value >> 8) << 6) & 0xFF;
 		} else {
-			full_sensor_table[SnrNum_SDR_map].M_tolerance = 0;
+			full_sensor_table[SensorNum_SDR_map].M_tolerance = 0;
 		}
 	} else if (MBR_type == MBR_B) {
-		full_sensor_table[SnrNum_SDR_map].B = change_value;
+		full_sensor_table[SensorNum_SDR_map].B = change_value;
 		if (change_value >> 8) {
-			full_sensor_table[SnrNum_SDR_map].B_accuracy =
+			full_sensor_table[SensorNum_SDR_map].B_accuracy =
 				((change_value >> 8) << 6) & 0xFF;
 		} else {
-			full_sensor_table[SnrNum_SDR_map].B_accuracy = 0;
+			full_sensor_table[SensorNum_SDR_map].B_accuracy = 0;
 		}
 	} else if (MBR_type == MBR_R) {
-		full_sensor_table[SnrNum_SDR_map].RexpBexp = change_value & 0xFF;
+		full_sensor_table[SensorNum_SDR_map].RexpBexp = change_value & 0xFF;
 	} else {
 		printk("Not found want changing MBR type\n");
 		return;
@@ -3041,7 +3041,7 @@ void change_sensor_MBR(uint8_t sensor_num, uint8_t MBR_type, uint16_t change_val
 
 void add_fullSDR_table(SDR_Full_sensor add_item)
 {
-	if (map_SnrNum_fullSDR(add_item.sensor_num) != 0xFF) {
+	if (map_SensorNum_fullSDR(add_item.sensor_num) != 0xFF) {
 		printk("add sensor num is already exists\n");
 		return;
 	}

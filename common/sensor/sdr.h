@@ -407,13 +407,13 @@ typedef struct _SDR_INFO_ {
 } SDR_INFO;
 
 extern uint8_t is_SDR_not_init;
-extern uint8_t SnrNum_SDR_map[];
+extern uint8_t SensorNum_SDR_map[];
 extern SDR_Full_sensor full_sensor_table[];
 extern const int negative_ten_power[16];
 #define SDR_M(sensor_num)                                                                          \
-	(((full_sensor_table[SnrNum_SDR_map[sensor_num]].M_tolerance & 0xC0) << 2) |               \
-	 full_sensor_table[SnrNum_SDR_map[sensor_num]].M)
-#define SDR_R(sensor_num) ((full_sensor_table[SnrNum_SDR_map[sensor_num]].RexpBexp >> 4) & 0x0F)
+	(((full_sensor_table[SensorNum_SDR_map[sensor_num]].M_tolerance & 0xC0) << 2) |            \
+	 full_sensor_table[SensorNum_SDR_map[sensor_num]].M)
+#define SDR_R(sensor_num) ((full_sensor_table[SensorNum_SDR_map[sensor_num]].RexpBexp >> 4) & 0x0F)
 #define SDR_Rexp(sensor_num) negative_ten_power[SDR_R(sensor_num)]
 
 static inline uint8_t round_add(uint8_t sensor_num, int val)
