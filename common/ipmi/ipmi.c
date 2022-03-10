@@ -163,8 +163,8 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_SENSOR_POLL_EN:
 		pal_OEM_1S_SENSOR_POLL_EN(msg);
 		break;
-	case CMD_OEM_1S_ACCURACY_SENSNR:
-		pal_OEM_1S_ACCURACY_SENSNR(msg);
+	case CMD_OEM_1S_ACCURACY_SENSOR_READING:
+		pal_OEM_1S_ACCURACY_SENSOR_READING(msg);
 		break;
 	case CMD_OEM_1S_ASD_INIT:
 		pal_OEM_1S_ASD_INIT(msg);

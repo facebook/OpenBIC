@@ -2189,7 +2189,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SENSOR_UNIT_AMP, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x13, // [7:0] M bits
+		0x11, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -2201,9 +2201,9 @@ SDR_Full_sensor plat_sensor_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0x00, // UNRT
-		0xD3, // UCT
-		0x00, // UNCT
+		0xEB, // UNRT
+		0xBC, // UCT
+		0xA9, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -2250,7 +2250,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SENSOR_UNIT_AMP, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x4D, // [7:0] M bits
+		0x4E, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -2262,9 +2262,9 @@ SDR_Full_sensor plat_sensor_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0x00, // UNRT
-		0xDD, // UCT
-		0x00, // UNCT
+		0xE7, // UNRT
+		0xB5, // UCT
+		0x99, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -2311,7 +2311,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SENSOR_UNIT_AMP, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x27, // [7:0] M bits
+		0x1F, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -2323,9 +2323,9 @@ SDR_Full_sensor plat_sensor_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0x00, // UNRT
-		0xDA, // UCT
-		0x00, // UNCT
+		0xE5, // UNRT
+		0xAB, // UCT
+		0x9B, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -2384,9 +2384,9 @@ SDR_Full_sensor plat_sensor_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0x00, // UNRT
-		0xE1, // UCT
-		0x00, // UNCT
+		0xE1, // UNRT
+		0x4E, // UCT
+		0x3F, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -2433,7 +2433,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SENSOR_UNIT_AMP, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x22, // [7:0] M bits
+		0x13, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -2445,9 +2445,9 @@ SDR_Full_sensor plat_sensor_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0x00, // UNRT
-		0xDA, // UCT
-		0x00, // UNCT
+		0xE2, // UNRT
+		0x9E, // UCT
+		0x8E, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -2494,7 +2494,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SENSOR_UNIT_AMP, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x18, // [7:0] M bits
+		0x1A, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -2506,9 +2506,9 @@ SDR_Full_sensor plat_sensor_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0x00, // UNRT
-		0xD9, // UCT
-		0x00, // UNCT
+		0xE7, // UNRT
+		0xB1, // UCT
+		0xA2, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -2616,21 +2616,21 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x15, // [7:0] M bits
+		0xD9, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
 		0x00, // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
-		0xF0, // Rexp, Bexp
+		0xE0, // Rexp, Bexp
 		0x00, // analog characteristic
 		0x00, // nominal reading
 		0x00, // normal maximum
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xE5, // UNRT
-		0x00, // UCT
-		0x00, // UNCT
+		0xE6, // UNRT
+		0xB8, // UCT
+		0xA6, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -2677,7 +2677,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x52, // [7:0] M bits
+		0x8D, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -2689,9 +2689,9 @@ SDR_Full_sensor plat_sensor_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0x00, // UNRT
-		0x00, // UCT
-		0x00, // UNCT
+		0xE6, // UNRT
+		0xB4, // UCT
+		0x98, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -2738,7 +2738,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x2F, // [7:0] M bits
+		0x39, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -2750,9 +2750,9 @@ SDR_Full_sensor plat_sensor_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0x00, // UNRT
-		0x00, // UCT
-		0x00, // UNCT
+		0xE0, // UNRT
+		0xA7, // UCT
+		0x98, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -2799,7 +2799,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x38, // [7:0] M bits
+		0x98, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -2811,9 +2811,9 @@ SDR_Full_sensor plat_sensor_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0x00, // UNRT
-		0x00, // UCT
-		0x00, // UNCT
+		0xD5, // UNRT
+		0x4A, // UCT
+		0x3B, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -2860,21 +2860,21 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0xA5, // [7:0] M bits
+		0x16, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
 		0x00, // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
-		0xD0, // Rexp, Bexp
+		0xE0, // Rexp, Bexp
 		0x00, // analog characteristic
 		0x00, // nominal reading
 		0x00, // normal maximum
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0x00, // UNRT
-		0x00, // UCT
-		0x00, // UNCT
+		0xE0, // UNRT
+		0x9C, // UCT
+		0x8D, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -2921,7 +2921,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x17, // [7:0] M bits
+		0x1C, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -2933,9 +2933,9 @@ SDR_Full_sensor plat_sensor_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0x00, // UNRT
-		0x00, // UCT
-		0x00, // UNCT
+		0xE5, // UNRT
+		0xB0, // UCT
+		0xA1, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -2951,6 +2951,8 @@ SDR_Full_sensor plat_sensor_table[] = {
 
 uint8_t fix_C2SDR_table[][10] = {
 	// sensor_num , UNR , UCR , UNC , LNR , LCR , LNC , ( M_tolerance >> 6 ) || M , ( B_accuracy >> 6 ) || B , R
+	{ SENSOR_NUM_CUR_HSCOUT, 0xE2, 0xBF, 0xAC, 0x00, 0x00, 0x00, 0x1F, 0x00, 0xE0 },
+	{ SENSOR_NUM_PWR_HSCIN, 0xE0, 0xBD, 0xAB, 0x00, 0x00, 0x00, 0x27, 0x00, 0xF0 },
 };
 
 SDR_Full_sensor fix_1ouSDR_table[] = {
@@ -2966,7 +2968,7 @@ uint8_t pal_load_sdr_table(void)
 	return (sizeof(plat_sensor_table) / sizeof(plat_sensor_table[0]));
 };
 
-uint8_t map_SnrNum_fullSDR(uint8_t sensor_num)
+uint8_t map_SensorNum_fullSDR(uint8_t sensor_num)
 {
 	uint8_t i, j;
 	for (i = 0; i < SENSOR_NUM_MAX; i++) {
@@ -2983,23 +2985,23 @@ uint8_t map_SnrNum_fullSDR(uint8_t sensor_num)
 
 void change_sensor_threshold(uint8_t sensor_num, uint8_t threshold_type, uint8_t change_value)
 {
-	uint8_t SnrNum_SDR_map = map_SnrNum_fullSDR(sensor_num);
-	if (SnrNum_SDR_map == 0xFF) {
+	uint8_t SensorNum_SDR_map = map_SensorNum_fullSDR(sensor_num);
+	if (SensorNum_SDR_map == 0xFF) {
 		printk("Not found change threshold sensor\n");
 		return;
 	}
 	if (threshold_type == threshold_UNR) {
-		full_sensor_table[SnrNum_SDR_map].UNRT = change_value;
+		full_sensor_table[SensorNum_SDR_map].UNRT = change_value;
 	} else if (threshold_type == threshold_UCR) {
-		full_sensor_table[SnrNum_SDR_map].UCT = change_value;
+		full_sensor_table[SensorNum_SDR_map].UCT = change_value;
 	} else if (threshold_type == threshold_UNC) {
-		full_sensor_table[SnrNum_SDR_map].UNCT = change_value;
+		full_sensor_table[SensorNum_SDR_map].UNCT = change_value;
 	} else if (threshold_type == threshold_LNR) {
-		full_sensor_table[SnrNum_SDR_map].LNRT = change_value;
+		full_sensor_table[SensorNum_SDR_map].LNRT = change_value;
 	} else if (threshold_type == threshold_LCR) {
-		full_sensor_table[SnrNum_SDR_map].LCT = change_value;
+		full_sensor_table[SensorNum_SDR_map].LCT = change_value;
 	} else if (threshold_type == threshold_LNC) {
-		full_sensor_table[SnrNum_SDR_map].LNCT = change_value;
+		full_sensor_table[SensorNum_SDR_map].LNCT = change_value;
 	} else {
 		printk("Not found want changing threshold\n");
 		return;
@@ -3008,29 +3010,29 @@ void change_sensor_threshold(uint8_t sensor_num, uint8_t threshold_type, uint8_t
 
 void change_sensor_MBR(uint8_t sensor_num, uint8_t MBR_type, uint16_t change_value)
 {
-	uint8_t SnrNum_SDR_map = map_SnrNum_fullSDR(sensor_num);
-	if (SnrNum_SDR_map == 0xFF) {
+	uint8_t SensorNum_SDR_map = map_SensorNum_fullSDR(sensor_num);
+	if (SensorNum_SDR_map == 0xFF) {
 		printk("Not found change threshold sensor\n");
 		return;
 	}
 	if (MBR_type == MBR_M) {
-		full_sensor_table[SnrNum_SDR_map].M = change_value & 0xFF;
+		full_sensor_table[SensorNum_SDR_map].M = change_value & 0xFF;
 		if (change_value >> 8) {
-			full_sensor_table[SnrNum_SDR_map].M_tolerance =
+			full_sensor_table[SensorNum_SDR_map].M_tolerance =
 				((change_value >> 8) << 6) & 0xFF;
 		} else {
-			full_sensor_table[SnrNum_SDR_map].M_tolerance = 0;
+			full_sensor_table[SensorNum_SDR_map].M_tolerance = 0;
 		}
 	} else if (MBR_type == MBR_B) {
-		full_sensor_table[SnrNum_SDR_map].B = change_value;
+		full_sensor_table[SensorNum_SDR_map].B = change_value;
 		if (change_value >> 8) {
-			full_sensor_table[SnrNum_SDR_map].B_accuracy =
+			full_sensor_table[SensorNum_SDR_map].B_accuracy =
 				((change_value >> 8) << 6) & 0xFF;
 		} else {
-			full_sensor_table[SnrNum_SDR_map].B_accuracy = 0;
+			full_sensor_table[SensorNum_SDR_map].B_accuracy = 0;
 		}
 	} else if (MBR_type == MBR_R) {
-		full_sensor_table[SnrNum_SDR_map].RexpBexp = change_value & 0xFF;
+		full_sensor_table[SensorNum_SDR_map].RexpBexp = change_value & 0xFF;
 	} else {
 		printk("Not found want changing MBR type\n");
 		return;
@@ -3039,7 +3041,7 @@ void change_sensor_MBR(uint8_t sensor_num, uint8_t MBR_type, uint16_t change_val
 
 void add_fullSDR_table(SDR_Full_sensor add_item)
 {
-	if (map_SnrNum_fullSDR(add_item.sensor_num) != 0xFF) {
+	if (map_SensorNum_fullSDR(add_item.sensor_num) != 0xFF) {
 		printk("add sensor num is already exists\n");
 		return;
 	}
