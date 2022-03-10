@@ -1,17 +1,16 @@
 #ifndef SHELL_PLATFORM_H
 #define SHELL_PLATFORM_H
 
-/* Declare Command Enable */
-#define COMMAND_GPIO 1
-#define COMMAND_SENSOR 0
-#define COMMAND_PORT 0
+#include <stdint.h>
+
+/* Include GPIO */
+#include <drivers/gpio.h>
 
 /* Declare Common */
 #define sensor_name_to_num(x) #x,
 #define GET_BIT_VAL(val, n) ((val & BIT(n)) >> (n))
 
 /* Declare GPIO */
-#if COMMAND_GPIO == 1
 #define PINMASK_RESERVE_CHECK 1
 #define GPIO_DEVICE_PREFIX "GPIO0_"
 #define GPIO_RESERVE_PREFIX "Reserve"
@@ -58,10 +57,8 @@ gpio_flags_t int_type_table[] = { GPIO_INT_DISABLE,   GPIO_INT_EDGE_RISING, GPIO
 				  GPIO_INT_EDGE_BOTH, GPIO_INT_LEVEL_LOW,   GPIO_INT_LEVEL_HIGH };
 
 enum GPIO_ACCESS { GPIO_READ, GPIO_WRITE };
-#endif
 
 /* Declare SENSOR */
-#if COMMAND_SENSOR == 1
 const char *const sensor_type_name[] = { sensor_name_to_num(tmp75) sensor_name_to_num(
 	adc) sensor_name_to_num(peci) sensor_name_to_num(vr) sensor_name_to_num(hsc)
 						 sensor_name_to_num(nvme) sensor_name_to_num(pch) };
@@ -75,6 +72,5 @@ const char *const sensor_status_name[] = {
 };
 
 enum SENSOR_ACCESS { SENSOR_READ, SENSOR_WRITE };
-#endif
 
-#endif
+#endif /* SHELL_PLATFORM_H */

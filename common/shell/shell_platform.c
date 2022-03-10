@@ -20,7 +20,6 @@
             * Set polling en    Set one sensor polling      x           TODO
             * Set mbr           Set one sensor mbr          x           TODO
             * Set threshold     Set one sensor threshold    x           TODO
-        * I2C SLAVE                                         X
 
     (2) Some hard code features need to be modified if CHIP is different
 
@@ -56,7 +55,6 @@
 /* 
     Command GPIO 
 */
-#if COMMAND_GPIO == 1
 #if PINMASK_RESERVE_CHECK
 enum CHECK_RESV { CHECK_BY_GROUP_IDX, CHECK_BY_GLOBAL_IDX };
 static int gpio_check_reserve(const struct device *dev, int gpio_idx, enum CHECK_RESV mode)
@@ -179,21 +177,19 @@ static const char *gpio_get_name(const char *dev_name, int pin_num)
 
 	return gpio_name[name_idx];
 }
-#endif
 
 /* 
     Command SENSOR 
 */
-#if COMMAND_SENSOR == 1
 static bool sensor_access_check(uint8_t sensor_num)
 {
 	bool (*access_checker)(uint8_t);
-	access_checker = sensor_config[SnrNum_SnrCfg_map[sensor_num]].access_checker;
+	access_checker = sensor_config[SensorNum_SensorCfg_map[sensor_num]].access_checker;
 
-	return (access_checker)(sensor_config[SnrNum_SnrCfg_map[sensor_num]].num);
+	return (access_checker)(sensor_config[SensorNum_SensorCfg_map[sensor_num]].num);
 }
 
-static int sensor_get_idx_by_snr_num(uint16_t sensor_num)
+static int sensor_get_idx_by_sensor_num(uint16_t sensor_num)
 {
 	for (int sen_idx = 0; sen_idx < SDR_NUM; sen_idx++) {
 		if (sensor_num == sensor_config[sen_idx].num)
@@ -203,18 +199,18 @@ static int sensor_get_idx_by_snr_num(uint16_t sensor_num)
 	return -1;
 }
 
-static int sensor_access(const struct shell *shell, int snr_num, enum SENSOR_ACCESS mode)
+static int sensor_access(const struct shell *shell, int sensor_num, enum SENSOR_ACCESS mode)
 {
 	if (!shell)
 		return 1;
 
-	if (snr_num >= SENSOR_NUM_MAX || snr_num < 0)
+	if (sensor_num >= SENSOR_NUM_MAX || sensor_num < 0)
 		return 1;
 
 	switch (mode) {
 	/* Get sensor info by "sensor_config" table */
 	case SENSOR_READ:;
-		int sen_idx = sensor_get_idx_by_snr_num(snr_num);
+		int sen_idx = sensor_get_idx_by_sensor_num(sensor_num);
 		if (sen_idx == -1) {
 			shell_error(shell, "No such sensor number!");
 			return 1;
@@ -238,7 +234,6 @@ static int sensor_access(const struct shell *shell, int snr_num, enum SENSOR_ACC
 
 	return 0;
 }
-#endif
 
 /*********************************************************************************************************
  * COMMAND FUNCTION SECTION
@@ -255,25 +250,7 @@ static int cmd_info_print(const struct shell *shell, size_t argc, char **argv)
 	shell_print(shell, "* DESCRIPTION:   Commands that could be used to debug or validate.");
 	shell_print(shell, "* DATE/VERSION:  none");
 	shell_print(shell, "* CHIP/OS:       AST1030 - Zephyr");
-	shell_print(shell, "* Note:          1.Support commands status:");
-#if COMMAND_GPIO == 1
-	shell_print(shell, "                   + GPIO       enabled");
-#else
-	shell_print(shell, "                   + GPIO       disabled");
-#endif
-#if COMMAND_SENSOR == 1
-	shell_print(shell, "                   + SENSOR     enabled");
-#else
-	shell_print(shell, "                   + SENSOR     disabled");
-#endif
-#if COMMAND_PORT == 1
-	shell_print(shell, "                   + PORT       enabled");
-#else
-	shell_print(shell, "                   + PORT       disabled");
-#endif
-	shell_print(
-		shell,
-		"                 2.If using these commands in other boards or os may cause problems!");
+	shell_print(shell, "* Note:          none");
 	shell_print(
 		shell,
 		"========================{SHELL COMMAND INFO}========================================");
@@ -283,7 +260,6 @@ static int cmd_info_print(const struct shell *shell, size_t argc, char **argv)
 /* 
     Command GPIO
 */
-#if COMMAND_GPIO == 1
 static void cmd_gpio_cfg_list_group(const struct shell *shell, size_t argc, char **argv)
 {
 	if (argc != 2) {
@@ -393,14 +369,6 @@ static void cmd_gpio_cfg_set_val(const struct shell *shell, size_t argc, char **
 	return;
 }
 
-static void cmd_gpio_cfg_set_dir(const struct shell *shell, size_t argc, char **argv)
-{
-	shell_warn(shell, "GPIO set DIR command not supported!");
-	/* TODO */
-
-	return;
-}
-
 static void cmd_gpio_cfg_set_int_type(const struct shell *shell, size_t argc, char **argv)
 {
 	if (argc != 3) {
@@ -453,12 +421,10 @@ static void cmd_gpio_muti_fn_ctl_list(const struct shell *shell, size_t argc, ch
 
 	shell_print(shell, "\n");
 }
-#endif
 
 /*
     Command SENSOR
 */
-#if COMMAND_SENSOR == 1
 static void cmd_sensor_cfg_list_all(const struct shell *shell, size_t argc, char **argv)
 {
 	if (argc != 1) {
@@ -489,53 +455,11 @@ static void cmd_sensor_cfg_get(const struct shell *shell, size_t argc, char **ar
 	sensor_access(shell, sen_num, SENSOR_READ);
 }
 
-static void cmd_sensor_cfg_set_polling(const struct shell *shell, size_t argc, char **argv)
-{
-	if (argc != 3) {
-		shell_warn(shell,
-			   "Help: platform sensor set polling <sensor_num> <enable/disable>");
-		return;
-	}
-	/* TODO */
-}
-
-static void cmd_sensor_cfg_set_mbr(const struct shell *shell, size_t argc, char **argv)
-{
-	shell_warn(shell, "Set sensor MBR is not support!");
-	/* TODO */
-}
-
-static void cmd_sensor_cfg_set_threshold(const struct shell *shell, size_t argc, char **argv)
-{
-	shell_warn(shell, "Set sensor THRESHOLD is not support!");
-	/* TODO */
-}
-#endif
-
-/* 
-    Command PORT
-*/
-#if COMMAND_PORT == 1
-static void cmd_port_monitor_all(const struct shell *shell, size_t argc, char **argv)
-{
-	if (argc != 1) {
-		shell_warn(shell, "Help: platform port monitor_all");
-		return;
-	}
-}
-#endif
-
-/* 
-    Command I2C SLAVE
-*/
-//TODO
-
 /*********************************************************************************************************
  * COMMAND DECLARE SECTION
 **********************************************************************************************************/
 
 /* GPIO sub command */
-#if COMMAND_GPIO == 1
 static void device_gpio_name_get(size_t idx, struct shell_static_entry *entry)
 {
 	const struct device *dev = shell_device_lookup(idx, GPIO_DEVICE_PREFIX);
@@ -549,7 +473,6 @@ SHELL_DYNAMIC_CMD_CREATE(gpio_device_name, device_gpio_name_get);
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_gpio_set_cmds,
 			       SHELL_CMD(val, NULL, "Set pin value.", cmd_gpio_cfg_set_val),
-			       SHELL_CMD(dir, NULL, "Set pin direction.", cmd_gpio_cfg_set_dir),
 			       SHELL_CMD(int_type, NULL, "Set interrupt pin type.",
 					 cmd_gpio_cfg_set_int_type),
 			       SHELL_SUBCMD_SET_END);
@@ -564,50 +487,20 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 	SHELL_CMD(multifnctl, NULL, "List all GPIO multi-function control regs.",
 		  cmd_gpio_muti_fn_ctl_list),
 	SHELL_SUBCMD_SET_END);
-#endif
 
 /* Sensor sub command */
-#if COMMAND_SENSOR == 1
-SHELL_STATIC_SUBCMD_SET_CREATE(sub_sensor_set_cmds,
-			       SHELL_CMD(polling, NULL, "Set sensor polling enable/disable.",
-					 cmd_sensor_cfg_set_polling),
-			       SHELL_CMD(mbr, NULL, "Set sensor MBR.", cmd_sensor_cfg_set_mbr),
-			       SHELL_CMD(threshold, NULL, "Set sensor THRESHOLD.",
-					 cmd_sensor_cfg_set_threshold),
-			       SHELL_SUBCMD_SET_END);
-
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_sensor_cmds,
 			       SHELL_CMD(list_all, NULL, "List all SENSOR config.",
 					 cmd_sensor_cfg_list_all),
 			       SHELL_CMD(get, NULL, "Get SENSOR config", cmd_sensor_cfg_get),
-			       SHELL_CMD(set, &sub_sensor_set_cmds, "Set SENSOR config", NULL),
 			       SHELL_SUBCMD_SET_END);
-#endif
-
-/* PORT sub command */
-#if COMMAND_PORT == 1
-SHELL_STATIC_SUBCMD_SET_CREATE(sub_port_cmds,
-			       SHELL_CMD(monitor_all, NULL, "Monitor all PORT status.",
-					 cmd_port_monitor_all),
-			       SHELL_SUBCMD_SET_END);
-#endif
-
-/* I2C slave sub command */
-// TODO
 
 /* MAIN command */
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_platform_cmds,
 			       SHELL_CMD(note, NULL, "Note list.", cmd_info_print),
-#if COMMAND_GPIO == 1
 			       SHELL_CMD(gpio, &sub_gpio_cmds, "GPIO relative command.", NULL),
-#endif
-#if COMMAND_SENSOR == 1
 			       SHELL_CMD(sensor, &sub_sensor_cmds, "SENSOR relative command.",
 					 NULL),
-#endif
-#if COMMAND_PORT == 1
-			       SHELL_CMD(port, &sub_port_cmds, "PORT relative command.", NULL),
-#endif
 			       SHELL_SUBCMD_SET_END);
 
 SHELL_CMD_REGISTER(platform, &sub_platform_cmds, "Platform commands", NULL);
