@@ -24,9 +24,9 @@ uint8_t SensorNum_SDR_map[SENSOR_NUM_MAX];
 bool enable_sensor_poll = 1;
 static bool sensor_poll_eanble_flag = 1;
 
-const int negative_ten_power[16] = { 1,	    1,		1,	   1,	     1,	      1,
-				     1,	    1000000000, 100000000, 10000000, 1000000, 100000,
-				     10000, 1000,	100,	   10 };
+const int negative_ten_power[16] = { 1,     1,		1,	 1,	1,       1,
+				     1,     1000000000, 100000000, 10000000, 1000000, 100000,
+				     10000, 1000,       100,       10 };
 
 sensor_cfg *sensor_config;
 
@@ -40,6 +40,8 @@ SENSOR_DRIVE_INIT_DECLARE(pex89000);
 SENSOR_DRIVE_INIT_DECLARE(intel_peci);
 SENSOR_DRIVE_INIT_DECLARE(pch);
 SENSOR_DRIVE_INIT_DECLARE(adm1278);
+SENSOR_DRIVE_INIT_DECLARE(tps53689);
+SENSOR_DRIVE_INIT_DECLARE(xdpe15284);
 
 struct sensor_drive_api {
 	enum sensor_dev dev;
@@ -50,6 +52,7 @@ struct sensor_drive_api {
 	SENSOR_DRIVE_TYPE_INIT_MAP(mp5990),   SENSOR_DRIVE_TYPE_INIT_MAP(isl28022),
 	SENSOR_DRIVE_TYPE_INIT_MAP(pex89000), SENSOR_DRIVE_TYPE_INIT_MAP(intel_peci),
 	SENSOR_DRIVE_TYPE_INIT_MAP(pch),      SENSOR_DRIVE_TYPE_INIT_MAP(adm1278),
+	SENSOR_DRIVE_TYPE_INIT_MAP(tps53689), SENSOR_DRIVE_TYPE_INIT_MAP(xdpe15284),
 };
 
 static void init_SensorNum(void)

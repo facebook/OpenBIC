@@ -33,5 +33,6 @@ bool post_cpu_margin_read(uint8_t sensor_num, void *args, int *reading);
 bool stby_access(uint8_t sensor_num);
 bool DC_access(uint8_t sensor_num);
 bool post_access(uint8_t sensor_num);
+bool VR_access(uint8_t sensor_num);
 
 #endif

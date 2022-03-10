@@ -169,3 +169,12 @@ bool post_access(uint8_t sensor_num)
 {
 	return get_post_status();
 }
+
+bool VR_access(uint8_t sensor_num)
+{
+	if (DC_access(sensor_num)) {
+		return get_vr_monitor_status();
+	} else {
+		return false;
+	}
+}

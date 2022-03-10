@@ -151,6 +151,12 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_GET_POST_CODE:
 		pal_OEM_1S_GET_POST_CODE(msg);
 		break;
+	case CMD_OEM_1S_SET_VR_MONITOR_STATUS:
+		pal_OEM_1S_SET_VR_MONITOR_STATUS(msg);
+		break;
+	case CMD_OEM_1S_GET_VR_MONITOR_STATUS:
+		pal_OEM_1S_GET_VR_MONITOR_STATUS(msg);
+		break;
 	case CMD_OEM_1S_RESET_BMC:
 		pal_OEM_1S_RESET_BMC(msg);
 		break;
