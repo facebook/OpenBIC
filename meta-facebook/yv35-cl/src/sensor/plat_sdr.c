@@ -322,7 +322,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"CPU Temp",
+		"SOC CPU Temp",
 	},
 	{
 		// CPU TJMAX on board temperature
