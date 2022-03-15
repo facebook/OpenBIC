@@ -131,8 +131,8 @@ jobs:
       shell: bash
       run: |
         # These files specify the config for cppcheck and a list of errors to suppress
-        CPPCHECK_CONFIG=.circleci/lint/cppcheck/cppcheck.cfg
-        CPPCHECK_SUPPRESSED=.circleci/lint/cppcheck/cppcheck-suppressions.txt
+        CPPCHECK_CONFIG=scripts/linters/cppcheck/cppcheck.cfg
+        CPPCHECK_SUPPRESSED=scripts/linters/cppcheck/cppcheck-suppressions.txt
 
         echo "Files to check:"
         cat /tmp/cppcheck_file_list.log
@@ -140,8 +140,8 @@ jobs:
         options=( "-j2"
           "--inconclusive"
           "--enable=performance,style,portability,information"
-          "--library=.circleci/lint/cppcheck/cppcheck.cfg"
-          "--suppressions-list=.circleci/lint/cppcheck/cppcheck-suppressions.txt"
+          "--library=scripts/linters/cppcheck/cppcheck.cfg"
+          "--suppressions-list=scripts/linters/cppcheck/cppcheck-suppressions.txt"
           "--file-list=/tmp/cppcheck_file_list.log"
           "--template={file}:{line}:{column}:{message}"
           "--output-file=/tmp/cppcheck.log"
