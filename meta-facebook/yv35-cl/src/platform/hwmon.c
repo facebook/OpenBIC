@@ -11,6 +11,7 @@
 static bool is_DC_on = 0;
 static bool is_DC_on_5s = 0;
 static bool is_DC_off_10s = 0;
+static bool is_CPU_power_good = 0;
 static bool is_post_complete = 0;
 static bool bic_class = sys_class_1;
 static bool is_1ou_present = 0;
@@ -81,8 +82,6 @@ void ISR_DC_on()
 		clear_unaccessible_sensor_cache();
 		k_work_schedule(&set_DC_off_10s_work, K_SECONDS(DC_OFF_10_SECOND));
 
-		snoop_abort_thread();
-
 		if (gpio_get(FM_SLPS3_PLD_N) && gpio_get(RST_RSMRST_BMC_N)) {
 			addsel_msg_t sel_msg;
 			sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_OEM_C3;
@@ -105,10 +104,16 @@ void ISR_BMC_PRDY()
 
 void ISR_PWRGD_CPU()
 {
+	set_CPU_power_status();
 	if (gpio_get(PWRGD_CPU_LVC3) == 1) {
+		init_snoop_thread();
+		init_send_postcode_thread();
+
 		/* start thread proc_fail_handler after 10 seconds */
 		k_work_schedule(&proc_fail_work, K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
 	} else {
+		abort_snoop_thread();
+
 		if (k_work_cancel_delayable(&proc_fail_work) != 0) {
 			printk("Cancel proc_fail delay work fail\n");
 		}
@@ -131,11 +136,6 @@ void ISR_CATERR()
 
 void ISR_PLTRST()
 {
-	if (gpio_get(RST_PLTRST_BUF_N) == 1) {
-		snoop_start_thread();
-		init_send_postcode_thread();
-	}
-
 	send_gpio_interrupt(RST_PLTRST_BUF_N);
 }
 
@@ -415,15 +415,21 @@ void set_post_status()
 {
 	is_post_complete = !(gpio_get(FM_BIOS_POST_CMPLT_BMC_N));
 	printk("set is_post_complete %d\n", is_post_complete);
-
-	if (is_post_complete) {
-		snoop_abort_thread();
-	}
 }
 
 bool get_post_status()
 {
 	return is_post_complete;
+}
+
+void set_CPU_power_status()
+{
+	is_CPU_power_good = gpio_get(PWRGD_CPU_LVC3);
+}
+
+bool CPU_power_good()
+{
+	return is_CPU_power_good;
 }
 
 uint8_t get_2ou_cardtype()
@@ -489,8 +495,8 @@ void set_sys_config()
 
 void set_post_thread()
 {
-	if (get_DC_status() == 1 && get_post_status() == 0) {
-		snoop_start_thread();
+	if (CPU_power_good() == true) {
+		init_snoop_thread();
 		init_send_postcode_thread();
 	}
 }

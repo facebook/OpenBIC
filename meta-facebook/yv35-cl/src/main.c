@@ -32,6 +32,7 @@ void set_sys_status()
 	set_DC_on_5s_status();
 	set_DC_off_10s_status();
 	set_post_status();
+	set_CPU_power_status();
 	set_post_thread();
 	set_SCU_setting();
 }
