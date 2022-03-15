@@ -19,8 +19,9 @@
 #define BIC_FW_platform_2 0x00 // char: '\0'
 
 // firmware update interface
-#define BIC_UPDATE 0x02
-#define UPDATE_EN 0x80
+#define CPLD_UPDATE (1 << 0)
+#define BIC_UPDATE (1 << 1)
+#define UPDATE_EN (1 << 7)
 #define GET_TEST_RESULT 0
 
 #endif

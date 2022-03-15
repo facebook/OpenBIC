@@ -15,6 +15,7 @@
 #include "plat_fru.h"
 #include "sensor_def.h"
 #include "util_spi.h"
+#include "dev/altera.h"
 
 bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd)
 {
@@ -627,6 +628,15 @@ void pal_OEM_1S_FW_UPDATE(ipmi_msg *msg)
 		}
 		status = fw_update(offset, length, &msg->data[7], (target & UPDATE_EN),
 				   devspi_fmc_cs0);
+
+	} else if (target & CPLD_UPDATE) {
+		if (offset == 0) {
+			printf("[CPLD] CPLD update start\n");
+		}
+
+		status = cpld_altera_fw_update(offset, length, &msg->data[7]);
+	} else {
+		return msg->completion_code = CC_PARAM_OUT_OF_RANGE;
 	}
 
 	msg->data_len = 0;
@@ -654,8 +664,9 @@ void pal_OEM_1S_FW_UPDATE(ipmi_msg *msg)
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
 		break;
 	}
+
 	if (status != fwupdate_success) {
-		printf("spi fw cc: %x\n", msg->completion_code);
+		printf("firmware (0x%02X) update failed cc: %x\n", target, msg->completion_code);
 	}
 
 	return;
