@@ -663,6 +663,11 @@ void pal_OEM_1S_FW_UPDATE(ipmi_msg *msg)
 
 void pal_OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg)
 {
+	if (msg == NULL) {
+		printf("%s() is failed due to paremeter msg is NULL.\n", __func__);
+		return;
+	}
+
 	if (msg->data[0] == 0x9C && msg->data[1] == 0x9C && msg->data[2] == 0x00) {
 		while (1)
 			; // hold firmware for debug only
@@ -673,9 +678,20 @@ void pal_OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg)
 		return;
 	}
 
-	uint8_t bus = i2c_bus_to_index[msg->data[0]];
+	const struct device *dev;
+	uint8_t bus = msg->data[0];
+	char dev_name[8] = { 0 };
+	int ret = 0;
 
-	i2c_scan(bus, &msg->data[0], &msg->data_len);
+	snprintf(dev_name, sizeof(dev_name), "I2C_%d", bus);
+
+	dev = device_get_binding(dev_name);
+	if (dev == NULL) {
+		msg->data_len = 0;
+
+	} else {
+		i2c_scan(bus, &msg->data[0], &msg->data_len);
+	}
 
 	msg->completion_code = CC_SUCCESS;
 	return;
