@@ -176,6 +176,7 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode);
 bool sensor_init(void);
 void sensor_poll_disable();
 void sensor_poll_enable();
+void clear_unaccessible_sensor_cache();
 
 /* i2c-mux tca9548 */
 bool tca9548_select_chan(uint8_t sensor_num, void *args);

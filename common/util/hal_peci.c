@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include <drivers/peci.h>
 #include "hal_peci.h"
 

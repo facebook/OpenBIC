@@ -182,7 +182,7 @@ void init_gpio_dev(void)
 #endif
 }
 
-bool gpio_init(void)
+void gpio_init(void)
 {
 	uint8_t i;
 
@@ -222,6 +222,4 @@ bool gpio_init(void)
 			}
 		}
 	}
-
-	return 1;
 }
