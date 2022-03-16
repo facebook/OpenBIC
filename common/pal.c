@@ -178,6 +178,18 @@ __weak void pal_OEM_1S_GET_POST_CODE(ipmi_msg *msg)
 	return;
 }
 
+__weak void pal_OEM_1S_SET_VR_MONITOR_STATUS(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
+__weak void pal_OEM_1S_GET_VR_MONITOR_STATUS(ipmi_msg *msg)
+{
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+	return;
+}
+
 __weak void pal_OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 {
 	msg->completion_code = CC_UNSPECIFIED_ERROR;

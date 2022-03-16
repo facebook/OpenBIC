@@ -39,6 +39,8 @@ enum sensor_dev {
 	sensor_dev_mp5990 = 0x10,
 	sensor_dev_isl28022 = 0x11,
 	sensor_dev_pex89000 = 0x12,
+	sensor_dev_tps53689 = 0x13,
+	sensor_dev_xdpe15284 = 0x14,
 	sensor_dev_max
 };
 

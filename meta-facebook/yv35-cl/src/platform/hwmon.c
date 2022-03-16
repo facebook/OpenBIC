@@ -13,6 +13,7 @@ static bool is_DC_on = 0;
 static bool is_DC_on_5s = 0;
 static bool is_DC_off_10s = 0;
 static bool is_post_complete = 0;
+static bool vr_monitor_status = 1;
 static bool bic_class = sys_class_1;
 static bool is_1ou_present = 0;
 static bool is_2ou_present = 0;
@@ -425,6 +426,16 @@ void set_post_status()
 bool get_post_status()
 {
 	return is_post_complete;
+}
+
+void set_vr_monitor_status(bool value)
+{
+	vr_monitor_status = value;
+}
+
+bool get_vr_monitor_status()
+{
+	return vr_monitor_status;
 }
 
 uint8_t get_2ou_cardtype()

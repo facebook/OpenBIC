@@ -914,7 +914,7 @@ void pal_OEM_1S_PECIaccess(ipmi_msg *msg)
 		if (cmd != PECI_GET_DIB_CMD && cmd != PECI_GET_TEMP0_CMD) {
 			if (msg->data[0] != PECI_CC_RSP_SUCCESS) {
 				msg->data[0] = (msg->data[0] == 0xf9) ? PECI_CC_ILLEGAL_REQUEST :
-									      msg->data[0];
+									msg->data[0];
 				memset(&msg->data[1], 0xff, u8ReadLen - 1);
 			}
 		}
@@ -1119,27 +1119,103 @@ void pal_OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 	case CPNT_PVCCD_HV:
 	case CPNT_PVCCINFAON:
 	case CPNT_PVCCFA_EHV:
+		i2c_msg.tx_len = 1;
+		i2c_msg.rx_len = 7;
 		i2c_msg.bus = i2c_bus5;
-		i2c_msg.tx_len = 3;
-		i2c_msg.data[0] = 0xC7;
-		i2c_msg.data[1] = 0x94;
-		i2c_msg.data[2] = 0x00;
+		i2c_msg.data[0] = PMBUS_IC_DEVICE_ID;
 
-		if (!i2c_master_write(&i2c_msg, retry)) {
-			i2c_msg.tx_len = 1;
-			i2c_msg.data[0] = 0xC5;
-			i2c_msg.rx_len = 4;
+		if (i2c_master_read(&i2c_msg, retry)) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
 
-			if (!i2c_master_read(&i2c_msg, retry)) {
-				memcpy(&msg->data[0], &i2c_msg.data[3], 1);
-				memcpy(&msg->data[1], &i2c_msg.data[2], 1);
-				memcpy(&msg->data[2], &i2c_msg.data[1], 1);
-				memcpy(&msg->data[3], &i2c_msg.data[0], 1);
-				msg->data_len = 4;
-				msg->completion_code = CC_SUCCESS;
-			} else {
+		if (i2c_msg.data[0] == 0x04 && i2c_msg.data[1] == 0x00 && i2c_msg.data[2] == 0x81 &&
+		    i2c_msg.data[3] == 0xD2 && i2c_msg.data[4] == 0x49) {
+			/* Renesas isl69259 */
+			i2c_msg.tx_len = 3;
+			i2c_msg.data[0] = 0xC7;
+			i2c_msg.data[1] = 0x94;
+			i2c_msg.data[2] = 0x00;
+
+			if (i2c_master_write(&i2c_msg, retry)) {
 				msg->completion_code = CC_UNSPECIFIED_ERROR;
+				return;
 			}
+
+			i2c_msg.tx_len = 1;
+			i2c_msg.rx_len = 4;
+			i2c_msg.data[0] = 0xC5;
+
+			if (i2c_master_read(&i2c_msg, retry)) {
+				msg->completion_code = CC_UNSPECIFIED_ERROR;
+				return;
+			}
+
+			msg->data[0] = i2c_msg.data[3];
+			msg->data[1] = i2c_msg.data[2];
+			msg->data[2] = i2c_msg.data[1];
+			msg->data[3] = i2c_msg.data[0];
+			msg->data_len = 4;
+			msg->completion_code = CC_SUCCESS;
+
+		} else if (i2c_msg.data[0] == 0x06 && i2c_msg.data[1] == 0x54 &&
+			   i2c_msg.data[2] == 0x49 && i2c_msg.data[3] == 0x53 &&
+			   i2c_msg.data[4] == 0x68 && i2c_msg.data[5] == 0x90 &&
+			   i2c_msg.data[6] == 0x00) {
+			/* TI tps53689 */
+			i2c_msg.tx_len = 1;
+			i2c_msg.rx_len = 2;
+			i2c_msg.data[0] = 0xF4;
+
+			if (i2c_master_read(&i2c_msg, retry)) {
+				msg->completion_code = CC_UNSPECIFIED_ERROR;
+				return;
+			}
+
+			msg->data[0] = i2c_msg.data[1];
+			msg->data[1] = i2c_msg.data[0];
+			msg->data_len = 2;
+			msg->completion_code = CC_SUCCESS;
+
+		} else if (i2c_msg.data[0] == 0x02 && i2c_msg.data[2] == 0x8A) {
+			/* Infineon xdpe15284 */
+			i2c_msg.tx_len = 6;
+			i2c_msg.data[0] = 0xFD;
+			i2c_msg.data[1] = 0x04;
+			i2c_msg.data[2] = 0x00;
+			i2c_msg.data[3] = 0x00;
+			i2c_msg.data[4] = 0x00;
+			i2c_msg.data[5] = 0x00;
+
+			if (i2c_master_write(&i2c_msg, retry)) {
+				msg->completion_code = CC_UNSPECIFIED_ERROR;
+				return;
+			}
+
+			i2c_msg.tx_len = 2;
+			i2c_msg.data[0] = 0xFE;
+			i2c_msg.data[1] = 0x2D;
+
+			if (i2c_master_write(&i2c_msg, retry)) {
+				msg->completion_code = CC_UNSPECIFIED_ERROR;
+				return;
+			}
+
+			i2c_msg.tx_len = 1;
+			i2c_msg.rx_len = 5;
+			i2c_msg.data[0] = 0xFD;
+
+			if (i2c_master_read(&i2c_msg, retry)) {
+				msg->completion_code = CC_UNSPECIFIED_ERROR;
+				return;
+			}
+
+			msg->data[0] = i2c_msg.data[4];
+			msg->data[1] = i2c_msg.data[3];
+			msg->data[2] = i2c_msg.data[2];
+			msg->data[3] = i2c_msg.data[1];
+			msg->data_len = 4;
+			msg->completion_code = CC_SUCCESS;
 		} else {
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 		}
@@ -1357,6 +1433,40 @@ void pal_OEM_1S_GET_POST_CODE(ipmi_msg *msg)
 	}
 
 	msg->data_len = postcode_num;
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
+void pal_OEM_1S_SET_VR_MONITOR_STATUS(ipmi_msg *msg)
+{
+	if (msg->data_len != 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	if (msg->data[0] == 0) {
+		set_vr_monitor_status(0);
+	} else if (msg->data[0] == 1) {
+		set_vr_monitor_status(1);
+	} else {
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		return;
+	}
+
+	msg->data_len = 0;
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
+void pal_OEM_1S_GET_VR_MONITOR_STATUS(ipmi_msg *msg)
+{
+	if (msg->data_len != 0) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	msg->data[0] = get_vr_monitor_status();
+	msg->data_len = 1;
 	msg->completion_code = CC_SUCCESS;
 	return;
 }

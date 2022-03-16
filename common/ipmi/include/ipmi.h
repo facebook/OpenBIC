@@ -78,6 +78,8 @@ void pal_OEM_1S_SENSOR_POLL_EN(ipmi_msg *msg);
 void pal_OEM_1S_FW_UPDATE(ipmi_msg *msg);
 void pal_OEM_1S_GET_FW_VERSION(ipmi_msg *msg);
 void pal_OEM_1S_GET_POST_CODE(ipmi_msg *msg);
+void pal_OEM_1S_SET_VR_MONITOR_STATUS(ipmi_msg *msg);
+void pal_OEM_1S_GET_VR_MONITOR_STATUS(ipmi_msg *msg);
 void pal_OEM_1S_RESET_BMC(ipmi_msg *msg);
 void pal_OEM_1S_PECIaccess(ipmi_msg *msg);
 void pal_OEM_1S_ASD_INIT(ipmi_msg *msg);
@@ -197,6 +199,8 @@ enum { CMD_OEM_1S_MSG_IN = 0x1,
        CMD_OEM_1S_FW_UPDATE = 0x9,
        CMD_OEM_1S_GET_FW_VERSION = 0xB,
        CMD_OEM_1S_GET_POST_CODE = 0x12,
+       CMD_OEM_1S_SET_VR_MONITOR_STATUS = 0x14,
+       CMD_OEM_1S_GET_VR_MONITOR_STATUS = 0x15,
        CMD_OEM_1S_RESET_BMC = 0x16,
        CMD_OEM_1S_SET_JTAG_TAP_STA = 0x21,
        CMD_OEM_1S_JTAG_DATA_SHIFT = 0x22,
