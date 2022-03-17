@@ -24,8 +24,8 @@ static uint8_t card_type_2ou = 0;
 #define PROC_FAIL_START_DELAY_SECOND 10
 #define CATERR_START_DELAY_SECOND 2
 
-static void proc_fail_handler();
-static void CatErr_handler();
+static void proc_fail_handler(struct k_work *);
+static void CatErr_handler(struct k_work *);
 
 K_WORK_DELAYABLE_DEFINE(proc_fail_work, proc_fail_handler);
 K_WORK_DELAYABLE_DEFINE(CatErr_work, CatErr_handler);
@@ -567,7 +567,7 @@ void disable_PRDY_interrupt()
 	gpio_interrupt_conf(H_BMC_PRDY_BUF_N, GPIO_INT_DISABLE);
 }
 
-static void proc_fail_handler()
+static void proc_fail_handler(struct k_work *work)
 {
 	/* if have not received kcs and post code, add FRB3 event log. */
 	if ((get_kcs_ok() == 0) && (get_postcode_ok() == 0)) {
@@ -589,7 +589,7 @@ static void proc_fail_handler()
 	}
 }
 
-static void CatErr_handler()
+static void CatErr_handler(struct k_work *work)
 {
 	if ((gpio_get(RST_PLTRST_BUF_N) == 1) || (gpio_get(PWRGD_SYS_PWROK) == 1)) {
 		addsel_msg_t sel_msg;
