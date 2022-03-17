@@ -1,3 +1,6 @@
+#include <stdint.h>
+#include <stdbool.h>
+
 #ifndef FW_UPDATE_H
 #define FW_UPDATE_H
 
