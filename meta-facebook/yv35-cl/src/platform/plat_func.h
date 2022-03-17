@@ -35,6 +35,8 @@ bool get_DC_on_5s_status();
 void set_DC_off_10s_status();
 void set_vr_monitor_status(bool);
 bool get_vr_monitor_status();
+void set_CPU_power_status();
+bool CPU_power_good();
 void set_sys_config();
 void set_post_thread();
 bool get_bic_class();
