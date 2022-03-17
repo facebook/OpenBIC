@@ -200,6 +200,7 @@ extern sensor_cfg *sensor_config;
 extern uint8_t SensorNum_SensorCfg_map[SENSOR_NUM_MAX];
 
 uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode);
+void clear_unaccessible_sensor_cache();
 bool sensor_init(void);
 void sensor_poll_disable();
 void sensor_poll_enable();
