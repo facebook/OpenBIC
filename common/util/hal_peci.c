@@ -133,7 +133,7 @@ bool peci_getPwr(uint8_t sensor_num, int *reading)
 	uint8_t rdpkgcfgCmd = PECI_RD_PKG_CFG0_CMD;
 	uint8_t PECIaddr = 0x30;
 	uint8_t readlen = 0x05;
-	uint8_t *readbuf = malloc(2 * readlen * sizeof(uint8_t));
+	uint8_t *readbuf = (uint8_t*)malloc(2 * readlen * sizeof(uint8_t));
 	uint8_t u8index[2] = { 0x03, 0x1F };
 	uint16_t u16Param[2] = { 0x00FF, 0x0000 };
 	uint8_t ret, complete_code;
