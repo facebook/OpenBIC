@@ -796,12 +796,11 @@ void pal_OEM_SET_FAN_DUTY_MANUAL(ipmi_msg *msg)
 		printf("%s failed due to parameter *msg is NULL\n", __func__);
 		return;
 	}
-
+	
 	if (msg->data_len != 2) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
 	}
-
 	uint8_t pwm_id = msg->data[0];
 	uint8_t duty = msg->data[1];
 	uint8_t current_fan_mode = FAN_AUTO_MODE, slot_index = 0;
@@ -1039,6 +1038,88 @@ void pal_OEM_1S_SET_FAN_DUTY_AUTO(ipmi_msg *msg)
 	ret = pal_set_fan_duty(pwm_id, duty, slot_index);
 	if (ret < 0) {
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
+	}
+
+	return;
+}
+
+void pal_OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg)
+{
+	uint8_t status, sensor_num, option, sensor_report_status;
+	uint8_t enable_sensor_scan = 0xC0; // following IPMI sensor status response
+	uint8_t disable_sensor_scan = 0x80;
+	int reading;
+
+	if (msg->data_len != 2) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	if (enable_sensor_poll) {
+		sensor_report_status = enable_sensor_scan;
+	} else {
+		sensor_report_status = disable_sensor_scan;
+	}
+
+	option = msg->data[1];
+	sensor_num = msg->data[0];
+
+	if (option == GET_SENSOR_CACHE_DATA) {
+		if (enable_sensor_poll) {
+			status = get_sensor_reading(sensor_num, &reading, get_from_cache);
+		} else {
+			status = SENSOR_POLLING_DISABLE;
+		}
+	} else if (option == GET_SENSOR_DATA) {
+		status = get_sensor_reading(sensor_num, &reading, get_from_sensor);
+	} else {
+		status = SENSOR_UNSPECIFIED_ERROR;
+	}
+
+	switch (status) {
+	case SENSOR_READ_SUCCESS:
+		msg->data[0] = reading & 0xff;
+		msg->data[1] = 0x00;
+		msg->data[2] = sensor_report_status;
+		msg->data_len = 3;
+		msg->completion_code = CC_SUCCESS;
+		break;
+	case SENSOR_READ_ACUR_SUCCESS:
+		msg->data[0] = (reading >> 8) & 0xff;
+		msg->data[1] = reading & 0xff;
+		msg->data[2] = sensor_report_status;
+		msg->data_len = 3;
+		msg->completion_code = CC_SUCCESS;
+		break;
+	case SENSOR_READ_4BYTE_ACUR_SUCCESS:
+		memcpy(msg->data, &reading, sizeof(reading));
+		msg->data[4] = sensor_report_status;
+		msg->data_len = 5;
+		msg->completion_code = CC_SUCCESS;
+		break;
+	case SENSOR_NOT_ACCESSIBLE:
+	case SENSOR_INIT_STATUS:
+		msg->data[0] = 0x00;
+		msg->data[1] = 0x00;
+		msg->data[2] = (sensor_report_status |
+				0x20); // notice BMC about sensor temporary in not accessible status
+		msg->data_len = 3;
+		msg->completion_code = CC_SUCCESS;
+		break;
+	case SENSOR_POLLING_DISABLE:
+		msg->completion_code =
+			CC_SENSOR_NOT_PRESENT; // getting sensor cache while sensor polling disable
+		break;
+	case SENSOR_FAIL_TO_ACCESS:
+		msg->completion_code = CC_NODE_BUSY; // transection error
+		break;
+	case SENSOR_NOT_FOUND:
+		msg->completion_code = CC_INVALID_DATA_FIELD; // request sensor number not found
+		break;
+	case SENSOR_UNSPECIFIED_ERROR:
+	default:
+		msg->completion_code = CC_UNSPECIFIED_ERROR; // unknown error
+		break;
 	}
 
 	return;
