@@ -28,15 +28,15 @@ static uint8_t send_msg_by_pldm(ipmi_msg_cfg *msg_cfg)
 
 	/* get the mctp/pldm for sending response from buffer */
 	uint16_t pldm_hdr_ofs = sizeof(msg_cfg->buffer.data) - sizeof(pldm_hdr);
-	uint16_t mctp_ext_param_ofs = pldm_hdr_ofs - sizeof(mctp_ext_param);
-	uint16_t mctp_inst_ofs = mctp_ext_param_ofs - 4;
+	uint16_t mctp_ext_params_ofs = pldm_hdr_ofs - sizeof(mctp_ext_params);
+	uint16_t mctp_inst_ofs = mctp_ext_params_ofs - 4;
 
 	/* get the mctp_inst */
 	mctp *mctp_inst;
 	memcpy(&mctp_inst, msg_cfg->buffer.data + mctp_inst_ofs, 4);
 	LOG_DBG("mctp_inst = %p", mctp_inst);
 
-	LOG_HEXDUMP_DBG(msg_cfg->buffer.data + mctp_ext_param_ofs, sizeof(mctp_ext_param),
+	LOG_HEXDUMP_DBG(msg_cfg->buffer.data + mctp_ext_params_ofs, sizeof(mctp_ext_params),
 			"mctp ext param");
 
 	/* get the pldm hdr for response */
@@ -68,7 +68,8 @@ static uint8_t send_msg_by_pldm(ipmi_msg_cfg *msg_cfg)
 	resp.len = sizeof(*cmd_resp) - 1 + msg_cfg->buffer.data_len;
 	LOG_HEXDUMP_DBG(&resp, sizeof(resp.hdr) + resp.len, "pldm resp data");
 
-	memcpy(&resp.ext_param, msg_cfg->buffer.data + mctp_ext_param_ofs, sizeof(resp.ext_param));
+	memcpy(&resp.ext_params, msg_cfg->buffer.data + mctp_ext_params_ofs,
+	       sizeof(resp.ext_params));
 	mctp_pldm_send_msg(mctp_inst, &resp);
 
 	return 1;

@@ -9,7 +9,7 @@
 LOG_MODULE_DECLARE(pldm);
 
 uint8_t set_tid(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp, uint16_t *resp_len,
-		void *ext_param)
+		void *ext_params)
 {
 	if (!mctp_inst || !buf || !resp || !resp_len)
 		return PLDM_ERROR;
@@ -24,7 +24,7 @@ uint8_t set_tid(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp, uint
 }
 
 uint8_t get_tid(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp, uint16_t *resp_len,
-		void *ext_param)
+		void *ext_params)
 {
 	if (!mctp_inst || !buf || !resp || !resp_len)
 		return PLDM_ERROR;

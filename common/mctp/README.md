@@ -57,13 +57,13 @@ uint8_t ret = mctp_set_medium_configure(p, MCTP_MEDIUM_TYPE_SMBUS, medium_config
 ```
 Assign a function use the MCTP instance as one parameter to find a suitable instance by endpoint ID for routing the MCTP message
 ```c
-static uint8_t get_mctp_route_info(uint8_t dest_endpoint, void **mctp_inst, mctp_ext_param *ext_params);
+static uint8_t get_mctp_route_info(uint8_t dest_endpoint, void **mctp_inst, mctp_ext_params *ext_params);
 
 mctp_reg_endpoint_resolve_func(p, get_mctp_route_info)
 ```
 Assign a function to handle when the MCTP message receive
 ```c
-static uint8_t mctp_msg_recv(void *mctp_p, uint8_t *buf, uin32_t len, mctp_ext_param ext_params);
+static uint8_t mctp_msg_recv(void *mctp_p, uint8_t *buf, uin32_t len, mctp_ext_params ext_params);
 
 mctp_reg_msg_rx_func(p, mctp_msg_recv);
 ```

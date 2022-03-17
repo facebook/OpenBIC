@@ -75,7 +75,7 @@ typedef struct _pldm_msg {
 	pldm_hdr hdr;
 	uint8_t *buf;
 	uint16_t len;
-	mctp_ext_param ext_param;
+	mctp_ext_params ext_params;
 	void (*recv_resp_cb_fn)(void *, uint8_t *, uint16_t);
 	void *recv_resp_cb_args;
 	uint16_t timeout_ms;
@@ -103,7 +103,7 @@ typedef struct _pldm {
 } pldm_t;
 
 /* the pldm command handler */
-uint8_t mctp_pldm_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_param ext_params);
+uint8_t mctp_pldm_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_params ext_params);
 
 /* send the pldm command message through mctp */
 uint8_t mctp_pldm_send_msg(void *mctp_p, pldm_msg *msg);

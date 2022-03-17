@@ -55,18 +55,18 @@ typedef enum {
 } MCTP_MEDIUM_TYPE;
 
 /* smbus extra medium data of endpoint */
-typedef struct _mctp_i3c_ext_param {
+typedef struct _mctp_i3c_ext_params {
 	uint8_t addr; /* 8 bit address */
 	uint32_t dummy; // TODO: test only
-} mctp_i3c_ext_param;
+} mctp_i3c_ext_params;
 
 /* smbus extra medium data of endpoint */
-typedef struct _mctp_smbus_ext_param {
+typedef struct _mctp_smbus_ext_params {
 	uint8_t addr; /* 8 bit address */
-} mctp_smbus_ext_param;
+} mctp_smbus_ext_params;
 
 /* mctp extra parameters prototype */
-typedef struct _mctp_ext_param {
+typedef struct _mctp_ext_params {
 	/* mctp transport layer parameters */
 	uint8_t tag_owner;
 	uint8_t msg_tag;
@@ -75,22 +75,23 @@ typedef struct _mctp_ext_param {
 	/* medium parameters */
 	MCTP_MEDIUM_TYPE type;
 	union {
-		mctp_smbus_ext_param smbus_ext_param;
-		mctp_i3c_ext_param i3c_ext_param;
+		mctp_smbus_ext_params smbus_ext_params;
+		mctp_i3c_ext_params i3c_ext_params;
 	};
-} mctp_ext_param;
+} mctp_ext_params;
 
 /* mctp recevice data callback function prototype */
 /* ext_params shoule be bypass to mctp_send_msg if need */
-typedef uint8_t (*mctp_fn_cb)(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_param ext_params);
+typedef uint8_t (*mctp_fn_cb)(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_params ext_params);
 
 /* medium write/read function prototype */
-typedef uint16_t (*medium_tx)(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_param ext_params);
-typedef uint16_t (*medium_rx)(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_param *ext_params);
+typedef uint16_t (*medium_tx)(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_params ext_params);
+typedef uint16_t (*medium_rx)(void *mctp_p, uint8_t *buf, uint32_t len,
+			      mctp_ext_params *ext_params);
 
 /* prototype for destitation endpoint resloved */
 typedef uint8_t (*endpoint_resolve)(uint8_t dest_endpoint, void **mctp_inst,
-				    mctp_ext_param *ext_params);
+				    mctp_ext_params *ext_params);
 
 /* smbus config for mctp medium_conf */
 typedef struct _mctp_i3c_conf {
@@ -116,7 +117,7 @@ typedef struct __attribute__((aligned(4))) {
 	uint8_t is_bridge_packet;
 	uint8_t *buf;
 	uint16_t len;
-	mctp_ext_param ext_param;
+	mctp_ext_params ext_params;
 } mctp_tx_msg;
 
 /* mctp main struct */
@@ -179,10 +180,10 @@ uint8_t mctp_start(mctp *mctp_inst);
 uint8_t mctp_stop(mctp *mctp_inst);
 
 /* send message to destination endpoint */
-uint8_t mctp_send_msg(mctp *mctp_inst, uint8_t *buf, uint16_t len, mctp_ext_param ext_params);
+uint8_t mctp_send_msg(mctp *mctp_inst, uint8_t *buf, uint16_t len, mctp_ext_params ext_params);
 
 /* bridge message to destination endpoint */
-uint8_t mctp_bridge_msg(mctp *mctp_inst, uint8_t *buf, uint16_t len, mctp_ext_param ext_params);
+uint8_t mctp_bridge_msg(mctp *mctp_inst, uint8_t *buf, uint16_t len, mctp_ext_params ext_params);
 
 /* medium init/deinit */
 uint8_t mctp_smbus_init(mctp *mctp_inst, mctp_medium_conf medium_conf);

@@ -34,7 +34,7 @@ uint8_t set_iana(uint8_t *buf, uint8_t buf_len)
 }
 
 static uint8_t cmd_echo(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
-			uint16_t *resp_len, void *ext_param)
+			uint16_t *resp_len, void *ext_params)
 {
 	if (!mctp_inst || !buf || !resp || !resp_len)
 		return PLDM_ERROR;
@@ -55,9 +55,9 @@ static uint8_t cmd_echo(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *re
 }
 
 static uint8_t ipmi_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
-			uint16_t *resp_len, void *ext_param)
+			uint16_t *resp_len, void *ext_params)
 {
-	if (!mctp_inst || !buf || !resp || !resp_len || !ext_param)
+	if (!mctp_inst || !buf || !resp || !resp_len || !ext_params)
 		return PLDM_ERROR;
 
 	struct _ipmi_cmd_req *req_p = (struct _ipmi_cmd_req *)buf;
@@ -97,18 +97,18 @@ static uint8_t ipmi_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *re
 	msg.buffer.InF_source = PLDM_IFs;
 
 	/*
-* Store the mctp_inst/pldm header/mctp_ext_param in the last of buffer data
+* Store the mctp_inst/pldm header/mctp_ext_params in the last of buffer data
 * those will use for the ipmi/ipmb service that is done the request.
 */
 	uint16_t pldm_hdr_ofs = sizeof(msg.buffer.data) - sizeof(pldm_hdr);
-	uint16_t mctp_ext_param_ofs = pldm_hdr_ofs - sizeof(mctp_ext_param);
-	uint16_t mctp_inst_ofs = mctp_ext_param_ofs - sizeof(mctp_inst);
+	uint16_t mctp_ext_params_ofs = pldm_hdr_ofs - sizeof(mctp_ext_params);
+	uint16_t mctp_inst_ofs = mctp_ext_params_ofs - sizeof(mctp_inst);
 
 	/* store the address of mctp_inst in the buffer */
 	memcpy(msg.buffer.data + mctp_inst_ofs, &mctp_inst, 4);
 
-	/* store the ext_param in the buffer */
-	memcpy(msg.buffer.data + mctp_ext_param_ofs, ext_param, sizeof(mctp_ext_param));
+	/* store the ext_params in the buffer */
+	memcpy(msg.buffer.data + mctp_ext_params_ofs, ext_params, sizeof(mctp_ext_params));
 
 	/* store the pldm header in the buffer */
 	memcpy(msg.buffer.data + pldm_hdr_ofs, buf - sizeof(pldm_hdr), sizeof(pldm_hdr));

@@ -91,7 +91,7 @@ static uint8_t bridge_msg(mctp *mctp_inst, uint8_t *buf, uint16_t len)
 		return MCTP_ERROR;
 
 	mctp *target_mctp = NULL;
-	mctp_ext_param target_ext_params;
+	mctp_ext_params target_ext_params;
 	memset(&target_ext_params, 0, sizeof(target_ext_params));
 
 	mctp_hdr *hdr = (mctp_hdr *)buf;
@@ -159,12 +159,12 @@ static void mctp_rx_task(void *arg, void *dummy0, void *dummy1)
 
 	while (1) {
 		uint8_t read_buf[256] = { 0 };
-		mctp_ext_param ext_param;
+		mctp_ext_params ext_params;
 		uint8_t ret = MCTP_ERROR;
-		memset(&ext_param, 0, sizeof(ext_param));
+		memset(&ext_params, 0, sizeof(ext_params));
 
 		uint16_t read_len =
-			mctp_inst->read_data(mctp_inst, read_buf, sizeof(read_buf), &ext_param);
+			mctp_inst->read_data(mctp_inst, read_buf, sizeof(read_buf), &ext_params);
 
 		if (!read_len)
 			continue;
@@ -176,13 +176,13 @@ static void mctp_rx_task(void *arg, void *dummy0, void *dummy1)
 			hdr->flags_seq_to_tag);
 
 		/* Set the tranport layer extra parameters */
-		ext_param.msg_tag = hdr->msg_tag;
+		ext_params.msg_tag = hdr->msg_tag;
 		/*
 * The high-level application won't modify the tag_owner flag, change the
 * tag_owner for response if needs
 */
-		ext_param.tag_owner = 0;
-		ext_param.ep = hdr->src_ep;
+		ext_params.tag_owner = 0;
+		ext_params.ep = hdr->src_ep;
 
 		if ((hdr->dest_ep != mctp_inst->endpoint) && (hdr->dest_ep != MCTP_NULL_EID)) {
 			/* try to bridge this packet */
@@ -215,7 +215,7 @@ static void mctp_rx_task(void *arg, void *dummy0, void *dummy1)
 			}
 
 			/* handle the mctp messsage */
-			mctp_inst->rx_cb(mctp_inst, p, len, ext_param);
+			mctp_inst->rx_cb(mctp_inst, p, len, ext_params);
 		}
 
 		if (mctp_inst->temp_msg_buf[hdr->msg_tag].buf) {
@@ -259,7 +259,7 @@ static void mctp_tx_task(void *arg, void *dummy0, void *dummy1)
 			continue;
 		}
 
-		LOG_DBG("tx endpoint %x", mctp_msg.ext_param.ep);
+		LOG_DBG("tx endpoint %x", mctp_msg.ext_params.ep);
 		LOG_HEXDUMP_DBG(mctp_msg.buf, mctp_msg.len, "mctp tx task receive data");
 
 		/*
@@ -268,7 +268,7 @@ static void mctp_tx_task(void *arg, void *dummy0, void *dummy1)
 */
 		if (mctp_msg.is_bridge_packet) {
 			mctp_inst->write_data(mctp_inst, mctp_msg.buf, mctp_msg.len,
-					      mctp_msg.ext_param);
+					      mctp_msg.ext_params);
 			free(mctp_msg.buf);
 			continue;
 		}
@@ -299,18 +299,18 @@ static void mctp_tx_task(void *arg, void *dummy0, void *dummy1)
 				cp_msg_size = remain ? remain : max_msg_size; /* remain data */
 			}
 
-			hdr->to = mctp_msg.ext_param.tag_owner;
+			hdr->to = mctp_msg.ext_params.tag_owner;
 			hdr->pkt_seq = i & MCTP_HDR_SEQ_MASK;
 
 			/*
 * TODO: should avoid the msg_tag if there are pending mctp
 * response packets?
-       * If the message is response, keep the original msg_tag of ext_param
+       * If the message is response, keep the original msg_tag of ext_params
 */
 			hdr->msg_tag = (hdr->to) ? (msg_tag & MCTP_HDR_TAG_MASK) :
-						   mctp_msg.ext_param.msg_tag;
+						   mctp_msg.ext_params.msg_tag;
 
-			hdr->dest_ep = mctp_msg.ext_param.ep;
+			hdr->dest_ep = mctp_msg.ext_params.ep;
 			hdr->src_ep = mctp_inst->endpoint;
 			hdr->hdr_ver = MCTP_HDR_HDR_VER;
 
@@ -320,13 +320,13 @@ static void mctp_tx_task(void *arg, void *dummy0, void *dummy1)
 			       cp_msg_size);
 			mctp_inst->write_data(mctp_inst, buf,
 					      cp_msg_size + MCTP_TRANSPORT_HEADER_SIZE,
-					      mctp_msg.ext_param);
+					      mctp_msg.ext_params);
 		}
 
 		free(mctp_msg.buf);
 
 		/* Only request mctp message needs to increase msg_tag */
-		if (mctp_msg.ext_param.tag_owner)
+		if (mctp_msg.ext_params.tag_owner)
 			msg_tag++;
 	}
 }
@@ -470,7 +470,7 @@ error:
 	return MCTP_ERROR;
 }
 
-uint8_t mctp_bridge_msg(mctp *mctp_inst, uint8_t *buf, uint16_t len, mctp_ext_param ext_param)
+uint8_t mctp_bridge_msg(mctp *mctp_inst, uint8_t *buf, uint16_t len, mctp_ext_params ext_params)
 {
 	if (!mctp_inst || !buf || !len)
 		return MCTP_ERROR;
@@ -488,7 +488,7 @@ uint8_t mctp_bridge_msg(mctp *mctp_inst, uint8_t *buf, uint16_t len, mctp_ext_pa
 		goto error;
 	memcpy(mctp_msg.buf, buf, len);
 
-	mctp_msg.ext_param = ext_param;
+	mctp_msg.ext_params = ext_params;
 
 	int ret = k_msgq_put(&mctp_inst->mctp_tx_queue, &mctp_msg, K_NO_WAIT);
 	if (!ret)
@@ -501,7 +501,7 @@ error:
 	return MCTP_ERROR;
 }
 
-uint8_t mctp_send_msg(mctp *mctp_inst, uint8_t *buf, uint16_t len, mctp_ext_param ext_param)
+uint8_t mctp_send_msg(mctp *mctp_inst, uint8_t *buf, uint16_t len, mctp_ext_params ext_params)
 {
 	if (!mctp_inst || !buf || !len)
 		return MCTP_ERROR;
@@ -520,7 +520,7 @@ uint8_t mctp_send_msg(mctp *mctp_inst, uint8_t *buf, uint16_t len, mctp_ext_para
 	}
 
 	memcpy(mctp_msg.buf, buf, len);
-	mctp_msg.ext_param = ext_param;
+	mctp_msg.ext_params = ext_params;
 
 	int ret = k_msgq_put(&mctp_inst->mctp_tx_queue, &mctp_msg, K_NO_WAIT);
 	if (!ret)

@@ -28,7 +28,7 @@ static K_MUTEX_DEFINE(wait_recv_resp_mutex);
 static sys_slist_t wait_recv_resp_list = SYS_SLIST_STATIC_INIT(&wait_recv_resp_list);
 
 uint8_t mctp_ctrl_cmd_get_endpoint_id(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
-				      uint16_t *resp_len, void *ext_param)
+				      uint16_t *resp_len, void *ext_params)
 {
 	if (!mctp_inst || !buf || !resp || !resp_len)
 		return MCTP_ERROR;
@@ -98,7 +98,7 @@ static void mctp_ctrl_msg_timeout_monitor(void *dummy0, void *dummy1, void *dumm
 }
 
 static uint8_t mctp_ctrl_cmd_resp_process(mctp *mctp_inst, uint8_t *buf, uint32_t len,
-					  mctp_ext_param ext_params)
+					  mctp_ext_params ext_params)
 {
 	if (!mctp_inst || !buf || !len)
 		return MCTP_ERROR;
@@ -145,7 +145,7 @@ static mctp_ctrl_cmd_handler_t mctp_ctrl_cmd_tbl[] = {
 	{ MCTP_CTRL_CMD_GET_ENDPOINT_ID, mctp_ctrl_cmd_get_endpoint_id },
 };
 
-uint8_t mctp_ctrl_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_param ext_params)
+uint8_t mctp_ctrl_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_params ext_params)
 {
 	if (!mctp_p || !buf || !len)
 		return MCTP_ERROR;
@@ -222,7 +222,7 @@ uint8_t mctp_ctrl_send_msg(void *mctp_p, mctp_ctrl_msg *msg)
 		msg->hdr.inst_id = (inst_id++) & MCTP_CTRL_INST_ID_MASK;
 		msg->hdr.msg_type = MCTP_MSG_TYPE_CTRL;
 
-		msg->ext_param.tag_owner = 1;
+		msg->ext_params.tag_owner = 1;
 	}
 
 	uint16_t len = sizeof(msg->hdr) + msg->cmd_data_len;
@@ -233,7 +233,7 @@ uint8_t mctp_ctrl_send_msg(void *mctp_p, mctp_ctrl_msg *msg)
 
 	LOG_HEXDUMP_DBG(buf, len, __func__);
 
-	uint8_t rc = mctp_send_msg(mctp_inst, buf, len, msg->ext_param);
+	uint8_t rc = mctp_send_msg(mctp_inst, buf, len, msg->ext_params);
 	if (rc == MCTP_ERROR) {
 		LOG_WRN("mctp_send_msg error!!");
 		return MCTP_ERROR;

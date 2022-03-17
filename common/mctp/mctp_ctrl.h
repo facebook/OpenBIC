@@ -88,7 +88,7 @@ typedef struct {
 	mctp_ctrl_hdr hdr;
 	uint8_t *cmd_data;
 	uint16_t cmd_data_len;
-	mctp_ext_param ext_param;
+	mctp_ext_params ext_params;
 	void (*recv_resp_cb_fn)(void *, uint8_t *, uint16_t);
 	void *recv_resp_cb_args;
 	uint16_t timeout_ms;
@@ -96,7 +96,7 @@ typedef struct {
 	void *timeout_cb_fn_args;
 } mctp_ctrl_msg;
 
-uint8_t mctp_ctrl_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_param ext_params);
+uint8_t mctp_ctrl_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_params ext_params);
 
 uint8_t mctp_ctrl_send_msg(void *mctp_p, mctp_ctrl_msg *msg);
 

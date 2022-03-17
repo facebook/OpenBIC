@@ -23,16 +23,6 @@ typedef struct _wait_msg {
 	pldm_msg msg;
 } wait_msg;
 
-typedef struct _wait_resp_pldm_msg {
-	sys_snode_t node;
-	pldm_hdr hdr;
-	int64_t exp_timeout_time;
-	void (*resp_fn)(void *, uint8_t *, uint16_t);
-	void *cb_args;
-	void (*to_fn)(void *);
-	void *to_fn_args;
-} wait_resp_pldm_msg;
-
 struct _pldm_handler_query_entry {
 	PLDM_TYPE type;
 	uint8_t (*handler_query)(uint8_t, void **);
@@ -95,7 +85,7 @@ static void pldm_msg_timeout_monitor(void *dummy0, void *dummy1, void *dummy2)
 }
 
 static uint8_t pldm_resp_msg_process(mctp *mctp_inst, uint8_t *buf, uint32_t len,
-				     mctp_ext_param ext_params)
+				     mctp_ext_params ext_params)
 {
 	if (!mctp_inst || !buf || !len)
 		return PLDM_ERROR;
@@ -140,7 +130,7 @@ static uint8_t pldm_resp_msg_process(mctp *mctp_inst, uint8_t *buf, uint32_t len
 	return PLDM_SUCCESS;
 }
 
-uint8_t mctp_pldm_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_param ext_params)
+uint8_t mctp_pldm_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_params ext_params)
 {
 	if (!mctp_p || !buf || !len)
 		return PLDM_ERROR;
@@ -229,7 +219,7 @@ uint8_t mctp_pldm_send_msg(void *mctp_p, pldm_msg *msg)
 		msg->hdr.msg_type = MCTP_MSG_TYPE_PLDM;
 
 		/* set mctp extra parameters */
-		msg->ext_param.tag_owner = 1;
+		msg->ext_params.tag_owner = 1;
 	}
 
 	uint16_t len = sizeof(msg->hdr) + msg->len;
@@ -240,7 +230,7 @@ uint8_t mctp_pldm_send_msg(void *mctp_p, pldm_msg *msg)
 
 	LOG_HEXDUMP_DBG(buf, len, __func__);
 
-	uint8_t rc = mctp_send_msg(mctp_inst, buf, len, msg->ext_param);
+	uint8_t rc = mctp_send_msg(mctp_inst, buf, len, msg->ext_params);
 
 	if (rc == MCTP_ERROR) {
 		LOG_WRN("mctp_send_msg error!!");

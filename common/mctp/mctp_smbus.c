@@ -55,7 +55,7 @@ static bool is_pec_vaild(uint8_t dest_addr, uint8_t *buf, uint32_t len)
 }
 
 static uint8_t make_send_buf(mctp *mctp_inst, uint8_t *send_buf, uint32_t send_len,
-			     uint8_t *mctp_data, uint32_t mctp_data_len, mctp_ext_param extra_data)
+			     uint8_t *mctp_data, uint32_t mctp_data_len, mctp_ext_params extra_data)
 {
 	if (!mctp_inst || !send_buf || !send_len || !mctp_data || !mctp_data_len)
 		return MCTP_ERROR;
@@ -69,7 +69,7 @@ static uint8_t make_send_buf(mctp *mctp_inst, uint8_t *send_buf, uint32_t send_l
 	memcpy(send_buf + sizeof(*hdr), mctp_data, mctp_data_len);
 
 	uint8_t pec = 0;
-	if (cal_pec(extra_data.smbus_ext_param.addr, send_buf, send_len, &pec) == MCTP_ERROR)
+	if (cal_pec(extra_data.smbus_ext_params.addr, send_buf, send_len, &pec) == MCTP_ERROR)
 		return MCTP_ERROR;
 
 	send_buf[send_len - 1] = pec;
@@ -77,7 +77,7 @@ static uint8_t make_send_buf(mctp *mctp_inst, uint8_t *send_buf, uint32_t send_l
 }
 
 static uint16_t mctp_smbus_read(void *mctp_p, uint8_t *buf, uint32_t len,
-				mctp_ext_param *extra_data)
+				mctp_ext_params *extra_data)
 {
 	if (!mctp_p || !buf || !len || !extra_data)
 		return 0;
@@ -114,7 +114,7 @@ static uint16_t mctp_smbus_read(void *mctp_p, uint8_t *buf, uint32_t len,
 		return 0;
 
 	extra_data->type = MCTP_MEDIUM_TYPE_SMBUS;
-	extra_data->smbus_ext_param.addr = hdr->src_addr - 1;
+	extra_data->smbus_ext_params.addr = hdr->src_addr - 1;
 
 	uint8_t rt_size = rlen - sizeof(smbus_hdr) - is_pec_exist;
 	memcpy(buf, rdata + sizeof(smbus_hdr), rt_size);
@@ -123,7 +123,7 @@ static uint16_t mctp_smbus_read(void *mctp_p, uint8_t *buf, uint32_t len,
 }
 
 static uint16_t mctp_smbus_write(void *mctp_p, uint8_t *buf, uint32_t len,
-				 mctp_ext_param extra_data)
+				 mctp_ext_params extra_data)
 {
 	if (!mctp_p || !buf || !len)
 		return 0;
@@ -145,14 +145,14 @@ static uint16_t mctp_smbus_write(void *mctp_p, uint8_t *buf, uint32_t len,
 		return 0;
 	}
 
-	LOG_DBG("smbus_ext_param addr = %x", extra_data.smbus_ext_param.addr);
+	LOG_DBG("smbus_ext_params addr = %x", extra_data.smbus_ext_params.addr);
 	LOG_HEXDUMP_DBG(send_buf, send_len, "mctp_smbus_write make header");
 
 	/* TODO: write data to smbus */
 	int status;
 	I2C_MSG i2c_msg;
 	i2c_msg.bus = mctp_inst->medium_conf.smbus_conf.bus;
-	i2c_msg.slave_addr = extra_data.smbus_ext_param.addr >> 1;
+	i2c_msg.slave_addr = extra_data.smbus_ext_params.addr >> 1;
 	i2c_msg.tx_len = send_len;
 	memcpy(&i2c_msg.data[0], send_buf, send_len);
 	status = i2c_master_write(&i2c_msg, 5);
