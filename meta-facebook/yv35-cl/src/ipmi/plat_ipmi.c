@@ -17,10 +17,12 @@
 #include "hal_jtag.h"
 #include "hal_snoop.h"
 #include "hal_peci.h"
+#include "hal_i2c.h"
 #include <drivers/peci.h>
 #include "plat_func.h"
 #include "util_sys.h"
 #include "hal_i2c.h"
+#include "util_sys.h"
 
 bool add_sel_evt_record(addsel_msg_t *sel_msg)
 {
@@ -101,7 +103,7 @@ bool pal_ME_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd)
 
 bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd)
 {
-	if ((netfn == NETFN_OEM_1S_REQ)) {
+	if (netfn == NETFN_OEM_1S_REQ) {
 		if (cmd == CMD_OEM_1S_MSG_OUT || cmd == CMD_OEM_1S_MSG_IN) {
 			return 1;
 		}
@@ -1278,6 +1280,8 @@ void pal_OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg)
 		}
 	} else if (option == 1) {
 		status = get_sensor_reading(sensor_num, &reading, get_from_sensor);
+	} else {
+		status = SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	switch (status) {

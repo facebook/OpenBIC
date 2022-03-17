@@ -78,5 +78,6 @@ int gpio_set(uint8_t, uint8_t);
 uint8_t gpio_conf(uint8_t gpio_num, int dir);
 void gpio_init(void);
 int gpio_interrupt_conf(uint8_t, gpio_flags_t);
+uint8_t gpio_conf(uint8_t gpio_num, int dir);
 
 #endif
