@@ -92,7 +92,7 @@ void set_ME_restore()
 	me_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
 	if (me_msg == NULL) {
 		printk("ME restore msg alloc fail\n");
-		return false;
+		return;
 	}
 
 	me_msg->seq_source = 0xFF;
