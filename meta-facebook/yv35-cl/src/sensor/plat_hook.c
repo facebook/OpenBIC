@@ -15,6 +15,10 @@ adc_asd_init_arg adc_asd_init_args[] = { [0] = { .is_init = false } };
 adm1278_init_arg adm1278_init_args[] = {
 	[0] = { .is_init = false, .config = { 0x3F1C }, .r_sense = 0.25 }
 };
+mp5990_init_arg mp5990_init_args[] = {
+	[0] = { .is_init = false, .iout_cal_gain = 0x0104, .iout_oc_fault_limit = 0x0028 },
+	[1] = { .is_init = false, .iout_cal_gain = 0x01BF, .iout_oc_fault_limit = 0x0046 }
+};
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS

@@ -7,11 +7,12 @@
 #include "plat_i2c.h"
 #include "plat_func.h"
 #include "pal.h"
+#include "plat_def.h"
 #include "plat_gpio.h"
 #include "plat_hook.h"
 #include "intel_peci.h"
 
-static uint8_t SensorCfg_num;
+static uint8_t sensor_config_num;
 
 #define NONE 0
 
@@ -153,15 +154,33 @@ sensor_cfg plat_sensor_config[] = {
 	// ME
 	{ SENSOR_NUM_TEMP_PCH, sensor_dev_pch, i2c_bus3, PCH_addr, PCH_TEMP_SENSOR_NUM, post_access,
 	  0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+};
 
-	// HSC
-	{ SENSOR_NUM_TEMP_HSC, sensor_dev_adm1278, i2c_bus2, HSC_addr, HSC_TEMP_CMD, stby_access, 0,
+sensor_cfg class1_mp5990_sensor_config_table[] = {
+	/* number,                  type,       port,      address,      offset,
+	   access check arg0, arg1, cache, cache_status, mux_address, mux_offset,
+	   pre_sensor_read_fn, pre_sensor_read_args, post_sensor_read_fn, post_sensor_read_fn  */
+	{ SENSOR_NUM_TEMP_HSC, sensor_dev_mp5990, i2c_bus2, CLASS1_MPS_MP5990_ADDR, PMBUS_READ_TEMPERATURE_1, stby_access, 0,
+	  0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
+	{ SENSOR_NUM_VOL_HSCIN, sensor_dev_mp5990, i2c_bus2, CLASS1_MPS_MP5990_ADDR, PMBUS_READ_VIN, stby_access, 0,
+	  0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
+	{ SENSOR_NUM_CUR_HSCOUT, sensor_dev_mp5990, i2c_bus2, CLASS1_MPS_MP5990_ADDR, PMBUS_READ_IOUT, stby_access,
+	  0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
+	{ SENSOR_NUM_PWR_HSCIN, sensor_dev_mp5990, i2c_bus2, CLASS1_MPS_MP5990_ADDR, PMBUS_READ_PIN, stby_access, 0,
+	  0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
+};
+
+sensor_cfg class1_adm1278_sensor_config_table[] = {
+	/* number,                  type,       port,      address,      offset,
+	   access check arg0, arg1, cache, cache_status, mux_address, mux_offset,
+	   pre_sensor_read_fn, pre_sensor_read_args, post_sensor_read_fn, post_sensor_read_fn  */
+	{ SENSOR_NUM_TEMP_HSC, sensor_dev_adm1278, i2c_bus2, CLASS1_ADI_ADM1278_ADDR, PMBUS_READ_TEMPERATURE_1, stby_access, 0,
 	  0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1278_init_args[0] },
-	{ SENSOR_NUM_VOL_HSCIN, sensor_dev_adm1278, i2c_bus2, HSC_addr, HSC_VOL_CMD, stby_access, 0,
+	{ SENSOR_NUM_VOL_HSCIN, sensor_dev_adm1278, i2c_bus2, CLASS1_ADI_ADM1278_ADDR, PMBUS_READ_VIN, stby_access, 0,
 	  0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1278_init_args[0] },
-	{ SENSOR_NUM_CUR_HSCOUT, sensor_dev_adm1278, i2c_bus2, HSC_addr, HSC_CUR_CMD, stby_access,
+	{ SENSOR_NUM_CUR_HSCOUT, sensor_dev_adm1278, i2c_bus2, CLASS1_ADI_ADM1278_ADDR, PMBUS_READ_IOUT, stby_access,
 	  0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1278_init_args[0] },
-	{ SENSOR_NUM_PWR_HSCIN, sensor_dev_adm1278, i2c_bus2, HSC_addr, HSC_PWR_CMD, stby_access, 0,
+	{ SENSOR_NUM_PWR_HSCIN, sensor_dev_adm1278, i2c_bus2, CLASS1_ADI_ADM1278_ADDR, PMBUS_READ_PIN, stby_access, 0,
 	  0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1278_init_args[0] },
 };
 
@@ -178,17 +197,18 @@ sensor_cfg fix_DVPSensorconfig_table[] = {
 bool pal_load_sensor_config(void)
 {
 	memcpy(&sensor_config[0], &plat_sensor_config[0], sizeof(plat_sensor_config));
-	return 1;
+	sensor_config_num = sizeof(plat_sensor_config) / sizeof(plat_sensor_config[0]);
+	return true;
 };
 
 uint8_t map_SensorNum_Sensorconfig(uint8_t sensor_num)
 {
 	uint8_t i, j;
 	for (i = 0; i < SENSOR_NUM_MAX; i++) {
-		for (j = 0; j < SensorCfg_num; ++j) {
+		for (j = 0; j < sensor_config_num; ++j) {
 			if (sensor_num == sensor_config[j].num) {
 				return j;
-			} else if (i == SensorCfg_num) {
+			} else if (i == sensor_config_num) {
 				return 0xFF;
 			}
 		}
@@ -202,7 +222,7 @@ void add_Sensorconfig(sensor_cfg add_Sensorconfig)
 		printk("add sensor num is already exists\n");
 		return;
 	}
-	sensor_config[SensorCfg_num++] = add_Sensorconfig;
+	sensor_config[sensor_config_num++] = add_Sensorconfig;
 };
 
 void check_vr_type(uint8_t index)
@@ -238,6 +258,54 @@ void pal_fix_Sensorconfig()
 	for (uint8_t index = 0; index < sensor_num; index++) {
 		if (sensor_config[index].type == sensor_dev_isl69259) {
 			check_vr_type(index);
+		}
+	}
+
+	/* Fix sensor table according to the different class types and board revisions */
+	if (get_bic_class() == sys_class_1) {
+		uint8_t board_revision = get_board_revision();
+		switch (board_revision) {
+		case SYS_BOARD_POC:
+		case SYS_BOARD_EVT:
+		case SYS_BOARD_EVT2:
+			sensor_num = sizeof(class1_adm1278_sensor_config_table) / sizeof(class1_adm1278_sensor_config_table[0]);
+			while (sensor_num) {
+				add_Sensorconfig(class1_adm1278_sensor_config_table[sensor_num - 1]);
+				sensor_num--;
+			}
+			break;
+		case SYS_BOARD_EVT3_EFUSE:
+		case SYS_BOARD_DVT_EFUSE:
+		case SYS_BOARD_MP_EFUSE:
+			sensor_num = sizeof(class1_mp5990_sensor_config_table) / sizeof(class1_mp5990_sensor_config_table[0]);
+			while (sensor_num) {
+				if (get_2ou_status()) {
+					/* For the class type 1 and 2OU system,
+					 * set the IMON based total over current fault limit to 70A(0x0046),
+					 * set the gain for output current reporting to 0x01BF following the power team's experiment
+					 * and set GPIOA7(HSC_SET_EN_R) to high.
+					 */
+					class1_mp5990_sensor_config_table[sensor_num - 1].init_args = &mp5990_init_args[1];
+					gpio_set(HSC_SET_EN_R, GPIO_HIGH);
+				} else {
+					/* For the class type 1 and 2OU system,
+					 * set the IMON based total over current fault limit to 40A(0x0028),
+					 * set the gain for output current reporting to 0x0104 following the power team's experiment
+					 * and set GPIOA7(HSC_SET_EN_R) to low.
+					 */
+					class1_mp5990_sensor_config_table[sensor_num - 1].init_args = &mp5990_init_args[0];
+					gpio_set(HSC_SET_EN_R, GPIO_LOW);
+				}
+				add_Sensorconfig(class1_mp5990_sensor_config_table[sensor_num - 1]);
+				sensor_num--;
+			}
+			break;
+		case SYS_BOARD_EVT3_HOTSWAP:
+		case SYS_BOARD_DVT_HOTSWAP:
+		case SYS_BOARD_MP_HOTSWAP:
+			break;
+		default:
+			break;
 		}
 	}
 };

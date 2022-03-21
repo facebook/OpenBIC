@@ -194,6 +194,17 @@ typedef struct _ltc4282_init_arg {
 
 } ltc4282_init_arg;
 
+typedef struct _mp5990_init_arg {
+	/* value to sets the gain for output current reporting */
+	uint16_t iout_cal_gain;
+	/* value to sets the IMON based total over current fault limit */
+	uint16_t iout_oc_fault_limit;
+
+	/* Initailize function will set following arguments, no need to give value */
+	bool is_init;
+
+} mp5990_init_arg;
+
 extern bool enable_sensor_poll;
 extern uint8_t SDR_NUM;
 extern sensor_cfg *sensor_config;
