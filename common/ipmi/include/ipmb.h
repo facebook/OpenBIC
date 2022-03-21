@@ -90,6 +90,7 @@ enum {
 	EXP2_IPMB_IFs = 0x15,
 
 	BMC_USB_IFs = 0x20,
+	PLDM_IFs = 0x40,
 	Reserve_IFs,
 };
 

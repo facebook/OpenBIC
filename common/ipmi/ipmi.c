@@ -1,12 +1,18 @@
-#include <zephyr.h>
-#include <kernel.h>
-#include <stdio.h>
-#include "cmsis_os2.h"
 #include "ipmi.h"
+#include "cmsis_os2.h"
 #include "kcs.h"
 #include "usb.h"
 #include <string.h>
 #include <stdlib.h>
+#include "mctp.h"
+#include "pldm.h"
+#include <kernel.h>
+#include <logging/log.h>
+#include <stdio.h>
+#include <string.h>
+#include <zephyr.h>
+
+LOG_MODULE_REGISTER(ipmi);
 #define IPMI_QUEUE_SIZE 5
 
 struct k_thread IPMI_thread;
@@ -14,6 +20,60 @@ K_KERNEL_STACK_MEMBER(IPMI_thread_stack, IPMI_THREAD_STACK_SIZE);
 
 char __aligned(4) ipmi_msgq_buffer[ipmi_buf_len * sizeof(struct ipmi_msg_cfg)];
 struct k_msgq ipmi_msgq;
+
+static uint8_t send_msg_by_pldm(ipmi_msg_cfg *msg_cfg)
+{
+	if (!msg_cfg)
+		return 0;
+
+	/* get the mctp/pldm for sending response from buffer */
+	uint16_t pldm_hdr_ofs = sizeof(msg_cfg->buffer.data) - sizeof(pldm_hdr);
+	uint16_t mctp_ext_params_ofs = pldm_hdr_ofs - sizeof(mctp_ext_params);
+	uint16_t mctp_inst_ofs = mctp_ext_params_ofs - 4;
+
+	/* get the mctp_inst */
+	mctp *mctp_inst;
+	memcpy(&mctp_inst, msg_cfg->buffer.data + mctp_inst_ofs, 4);
+	LOG_DBG("mctp_inst = %p", mctp_inst);
+
+	LOG_HEXDUMP_DBG(msg_cfg->buffer.data + mctp_ext_params_ofs, sizeof(mctp_ext_params),
+			"mctp ext param");
+
+	/* get the pldm hdr for response */
+	pldm_hdr *hdr = (pldm_hdr *)(msg_cfg->buffer.data + pldm_hdr_ofs);
+	LOG_HEXDUMP_DBG(msg_cfg->buffer.data + pldm_hdr_ofs, sizeof(pldm_hdr), "pldm header");
+
+	/* make response data */
+	uint8_t resp_buf[PLDM_MAX_DATA_SIZE] = { 0 };
+	pldm_msg resp;
+	memset(&resp, 0, sizeof(resp));
+
+	/* pldm header */
+	resp.buf = resp_buf;
+	resp.hdr = *hdr;
+	resp.hdr.rq = 0;
+
+	LOG_DBG("msg_cfg->buffer.data_len = %d", msg_cfg->buffer.data_len);
+	LOG_DBG("msg_cfg->buffer.completion_code = %x", msg_cfg->buffer.completion_code);
+
+	/* setup ipmi response data of pldm */
+	struct _ipmi_cmd_resp *cmd_resp = (struct _ipmi_cmd_resp *)resp.buf;
+	set_iana(cmd_resp->iana, sizeof(cmd_resp->iana));
+	cmd_resp->completion_code = PLDM_BASE_CODES_SUCCESS;
+	cmd_resp->netfn_lun = (msg_cfg->buffer.netfn | 0x01) << 2;
+	cmd_resp->cmd = msg_cfg->buffer.cmd;
+	cmd_resp->ipmi_comp_code = msg_cfg->buffer.completion_code;
+	memcpy(&cmd_resp->first_data, msg_cfg->buffer.data, msg_cfg->buffer.data_len);
+
+	resp.len = sizeof(*cmd_resp) - 1 + msg_cfg->buffer.data_len;
+	LOG_HEXDUMP_DBG(&resp, sizeof(resp.hdr) + resp.len, "pldm resp data");
+
+	memcpy(&resp.ext_params, msg_cfg->buffer.data + mctp_ext_params_ofs,
+	       sizeof(resp.ext_params));
+	mctp_pldm_send_msg(mctp_inst, &resp);
+
+	return 1;
+}
 
 __weak bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd)
 {
@@ -349,6 +409,10 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 				if (kcs_buff != NULL)
 					free(kcs_buff);
 #endif
+			} else if (msg_cfg.buffer.InF_source == PLDM_IFs) {
+				/* the message should be passed to source by pldm
+                           * format */
+				send_msg_by_pldm(&msg_cfg);
 			} else {
 				status = ipmb_send_response(
 					&msg_cfg.buffer,
