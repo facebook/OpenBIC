@@ -5,9 +5,9 @@
 #include <sys/printk.h>
 #include <device.h>
 #include <drivers/misc/aspeed/snoop_aspeed.h>
-#include "hal_snoop.h"
-#include "plat_func.h"
+#include "snoop.h"
 #include "ipmi.h"
+#include "power_status.h"
 
 const struct device *snoop_dev;
 uint8_t *snoop_data;
@@ -43,7 +43,7 @@ void copy_snoop_read_buffer(uint8_t offset, int size_num, uint8_t *buffer, uint8
 		return;
 	}
 	if (!k_mutex_lock(&snoop_mutex, K_MSEC(1000))) {
-		if (copy_mode == copy_all_postcode) {
+		if (copy_mode == COPY_ALL_POSTCODE) {
 			memcpy(&buffer[0], &snoop_read_buffer[offset], size_num - offset);
 			memcpy(&buffer[size_num - offset], &snoop_read_buffer[0], offset);
 		} else {
@@ -166,14 +166,14 @@ void send_post_code_to_BMC()
 			send_postcode_msg->cmd = CMD_OEM_1S_SEND_POST_CODE_TO_BMC;
 			send_postcode_msg->data_len =
 				send_postcode_end_position - send_postcode_start_position + 4;
-			send_postcode_msg->data[0] = WW_IANA_ID & 0xFF;
-			send_postcode_msg->data[1] = (WW_IANA_ID >> 8) & 0xFF;
-			send_postcode_msg->data[2] = (WW_IANA_ID >> 16) & 0xFF;
+			send_postcode_msg->data[0] = IANA_ID & 0xFF;
+			send_postcode_msg->data[1] = (IANA_ID >> 8) & 0xFF;
+			send_postcode_msg->data[2] = (IANA_ID >> 16) & 0xFF;
 			send_postcode_msg->data[3] =
 				send_postcode_end_position - send_postcode_start_position;
 			copy_snoop_read_buffer(send_postcode_start_position % SNOOP_MAX_LEN,
 					       send_postcode_msg->data[3],
-					       &send_postcode_msg->data[4], copy_specific_postcode);
+					       &send_postcode_msg->data[4], COPY_SPECIFIC_POSTCODE);
 
 			status = ipmb_read(send_postcode_msg,
 					   IPMB_inf_index_map[send_postcode_msg->InF_target]);

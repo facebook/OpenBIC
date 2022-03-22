@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "sensor.h"
-#include "sensor_def.h"
+#include "plat_sensor.h"
 #include "ipmi.h"
 
 ipmb_error pch_ipmb_read(ipmi_msg *bridge_msg)

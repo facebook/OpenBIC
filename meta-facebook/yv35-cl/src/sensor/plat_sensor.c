@@ -2,11 +2,11 @@
 #include <string.h>
 #include "sdr.h"
 #include "sensor.h"
-#include "sensor_def.h"
+#include "plat_sensor.h"
 #include "hal_i2c.h"
 #include "plat_i2c.h"
-#include "plat_func.h"
 #include "pal.h"
+#include "power_status.h"
 
 bool stby_access(uint8_t snr_num);
 bool DC_access(uint8_t snr_num);
@@ -153,7 +153,7 @@ bool stby_access(uint8_t snr_num)
 
 bool DC_access(uint8_t snr_num)
 {
-	return get_DC_on_5s_status();
+	return get_DC_on_delayed_status();
 }
 
 bool post_access(uint8_t snr_num)

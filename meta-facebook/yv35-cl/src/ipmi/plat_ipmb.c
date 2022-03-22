@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include "cmsis_os2.h"
 #include <string.h>
-#include "ipmi_def.h"
+#include "ipmb.h"
 #include "plat_i2c.h"
+#include "plat_ipmb.h"
 #include "plat_ipmi.h"
-#include "plat_def.h"
+#include "plat_class.h"
 
 IPMB_config pal_IPMB_config_table[] = {
 	//   index             interface         interface_source  bus              Target_addr          EnStatus  slave_addr            Rx_attr_name          Tx_attr_name//
@@ -26,9 +27,9 @@ bool pal_load_IPMB_config(void)
 	bic_class = get_bic_class();
 
 	// class1 1ou ipmi bus and class2 bb ipmi bus shared same i2c bus
-	if (get_1ou_status() && (bic_class == sys_class_1)) {
+	if (get_1ou_status() && (bic_class == SYS_CLASS_1)) {
 		pal_IPMB_config_table[EXP1_IPMB_IDX].EnStatus = Enable;
-	} else if (get_1ou_status() && (bic_class == sys_class_2)) {
+	} else if (get_1ou_status() && (bic_class == SYS_CLASS_2)) {
 		pal_IPMB_config_table[EXP1_IPMB_IDX].index = BB_IPMB_IDX;
 		pal_IPMB_config_table[BB_IPMB_IDX].Inf_source = BB_IPMB_IFs;
 		pal_IPMB_config_table[BB_IPMB_IDX].bus = IPMB_BB_BIC_BUS;
@@ -44,8 +45,8 @@ bool pal_load_IPMB_config(void)
 
 		// for dpv2 sku, disable ipmb and set i2c freq to 400Khz for slave devices reading
 		// for reset of expansion board, enable ipmb and set i2c freq to 1Mhz
-		if ((card_type_2ou == type_2ou_dpv2) || (card_type_2ou == type_2ou_dpv2_8) ||
-		    (card_type_2ou == type_2ou_dpv2_16)) {
+		if ((card_type_2ou == TYPE_2OU_DPV2) || (card_type_2ou == TYPE_2OU_DPV2_8) ||
+		    (card_type_2ou == TYPE_2OU_DPV2_16)) {
 			i2c_freq_set(pal_IPMB_config_table[EXP2_IPMB_IDX].bus, I2C_SPEED_FAST);
 			pal_IPMB_config_table[EXP2_IPMB_IDX].EnStatus = Disable;
 		} else {

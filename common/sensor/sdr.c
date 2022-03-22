@@ -2,7 +2,7 @@
 #include <string.h>
 #include "sdr.h"
 #include "sensor.h"
-#include "sensor_def.h"
+#include "plat_sensor.h"
 #include "plat_ipmb.h"
 #include "pal.h"
 
@@ -55,7 +55,7 @@ uint8_t SDR_init(void)
 	int i;
 
 	SDR_NUM = pal_load_sdr_table();
-  pal_fix_fullSDR_table();
+	pal_fix_fullSDR_table();
 	sdr_info.start_ID = 0x0000;
 	sdr_info.current_ID = sdr_info.start_ID;
 
@@ -66,18 +66,22 @@ uint8_t SDR_init(void)
 		full_sensor_table[i].record_len += strlen(full_sensor_table[i].ID_str);
 
 		if (DEBUG_SNR) {
-			printf("%s ID: 0x%x%x, size: %d, recordlen: %d\n", full_sensor_table[i].ID_str, full_sensor_table[i].record_id_h, full_sensor_table[i].record_id_l, full_sensor_table[i].ID_len, full_sensor_table[i].record_len);
+			printf("%s ID: 0x%x%x, size: %d, recordlen: %d\n",
+			       full_sensor_table[i].ID_str, full_sensor_table[i].record_id_h,
+			       full_sensor_table[i].record_id_l, full_sensor_table[i].ID_len,
+			       full_sensor_table[i].record_len);
 		}
 	}
 
 	i--;
-	sdr_info.last_ID =  (full_sensor_table[i].record_id_h << 8) | (full_sensor_table[i].record_id_l);
+	sdr_info.last_ID =
+		(full_sensor_table[i].record_id_h << 8) | (full_sensor_table[i].record_id_l);
 	if (DEBUG_SNR) {
-		printf("%s ID: 0x%x%x, size: %d, recordlen: %d\n", full_sensor_table[i].ID_str, full_sensor_table[i].record_id_h, full_sensor_table[i].record_id_l, full_sensor_table[i].ID_len, full_sensor_table[i].record_len);
+		printf("%s ID: 0x%x%x, size: %d, recordlen: %d\n", full_sensor_table[i].ID_str,
+		       full_sensor_table[i].record_id_h, full_sensor_table[i].record_id_l,
+		       full_sensor_table[i].ID_len, full_sensor_table[i].record_len);
 	}
 
 	is_SDR_not_init = 0;
 	return true;
 }
-
-

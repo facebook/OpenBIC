@@ -8,7 +8,7 @@
 #include "pal.h"
 
 struct k_thread kcs_polling;
-K_KERNEL_STACK_MEMBER(KCS_POLL_stack, KCS_POLL_stack_STACK_SIZE);
+K_KERNEL_STACK_MEMBER(KCS_POLL_stack, KCS_POLL_STACK_SIZE);
 
 static const struct device *kcs_dev;
 static bool proc_kcs_ok = false;
@@ -40,7 +40,7 @@ void reset_kcs_ok()
 void kcs_read(void *arvg0, void *arvg1, void *arvg2)
 {
 	int i, rc;
-	uint8_t ibuf[KCS_buff_size];
+	uint8_t ibuf[KCS_BUFF_SIZE];
 	ipmi_msg bridge_msg;
 	ipmi_msg_cfg current_msg;
 	ipmb_error status;

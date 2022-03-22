@@ -3,10 +3,10 @@
 
 #include <string.h>
 #include "ipmb.h"
+#include "plat_version.h"
 
-#define WW_IANA_ID 0x009c9c
 #define IPMI_THREAD_STACK_SIZE 4000
-#define ipmi_buf_len 10
+#define IPMI_BUF_LEN 10
 
 extern uint8_t IPMB_inf_index_map[];
 extern uint8_t isPwOn;
@@ -40,65 +40,20 @@ static inline void pack_ipmi_resp(struct ipmi_response *resp, ipmi_msg *ipmi_res
 	}
 }
 
+// If command is from KCS, we need to check whether BIC support this command.
+bool pal_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd);
+// If command is from ME, we need to check whether BIC support this command.
+bool pal_ME_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd);
+// For the command that BIC only bridges it, BIC doesn't return the command directly
+// For this kind of commands we return through IPMB that receiving the responses from the other devices.
+bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd);
+
 void ipmi_init(void);
 ipmi_error IPMI_handler(void *arug0, void *arug1, void *arug2);
 
-// IPMI CHASSIS
-void pal_CHASSIS_GET_CHASSIS_STATUS(ipmi_msg *msg);
-
-// IPMI SENSOR
-void pal_SENSOR_GET_SENSOR_READING(ipmi_msg *msg);
-
-// IPMI APP
-void pal_APP_GET_DEVICE_ID(ipmi_msg *msg);
-void pal_APP_COLD_RESET(ipmi_msg *msg);
-void pal_APP_WARM_RESET(ipmi_msg *msg);
-void pal_APP_GET_SELFTEST_RESULTS(ipmi_msg *msg);
-void pal_APP_GET_SYSTEM_GUID(ipmi_msg *msg);
-void pal_APP_MASTER_WRITE_READ(ipmi_msg *msg);
-
-// IPMI STORAGE
-void pal_STORAGE_GET_FRUID_INFO(ipmi_msg *msg);
-void pal_STORAGE_READ_FRUID_DATA(ipmi_msg *msg);
-void pal_STORAGE_WRITE_FRUID_DATA(ipmi_msg *msg);
-void pal_STORAGE_RSV_SDR(ipmi_msg *msg);
-void pal_STORAGE_GET_SDR(ipmi_msg *msg);
-
-// IPMI OEM
-void pal_OEM_SENSOR_READ(ipmi_msg *msg);
-void pal_OEM_SET_SYSTEM_GUID(ipmi_msg *msg);
-void pal_OEM_GET_MB_INDEX(ipmi_msg *msg);
-
-// IPMI OEM 1S
-void pal_OEM_1S_MSG_OUT(ipmi_msg *msg);
-void pal_OEM_1S_GET_GPIO(ipmi_msg *msg);
-void pal_OEM_1S_SET_GPIO(ipmi_msg *msg);
-void pal_OEM_1S_SEND_INTERRUPT_TO_BMC(ipmi_msg *msg);
-void pal_OEM_1S_SENSOR_POLL_EN(ipmi_msg *msg);
-void pal_OEM_1S_FW_UPDATE(ipmi_msg *msg);
-void pal_OEM_1S_GET_FW_VERSION(ipmi_msg *msg);
-void pal_OEM_1S_GET_POST_CODE(ipmi_msg *msg);
-void pal_OEM_1S_RESET_BMC(ipmi_msg *msg);
-void pal_OEM_1S_PECIaccess(ipmi_msg *msg);
-void pal_OEM_1S_ASD_INIT(ipmi_msg *msg);
-void pal_OEM_1S_GET_SET_GPIO(ipmi_msg *msg);
-void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg);
-void pal_OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg);
-void pal_OEM_1S_SET_JTAG_TAP_STA(ipmi_msg *msg);
-void pal_OEM_1S_JTAG_DATA_SHIFT(ipmi_msg *msg);
-void pal_OEM_1S_GET_BIC_STATUS(ipmi_msg *msg);
-void pal_OEM_1S_RESET_BIC(ipmi_msg *msg);
-void pal_OEM_1S_12V_CYCLE_SLOT(ipmi_msg *msg);
-
 enum {
+	/* generic completion codes 00h, C0h-FFh */
 	CC_SUCCESS = 0x00,
-
-	CC_INVALID_PARAM = 0x80,
-	CC_FRU_DEV_BUSY = 0x81,
-	CC_BRIDGE_MSG_ERR = 0x82,
-	CC_I2C_BUS_ERROR = 0x83,
-	CC_INVALID_IANA = 0x84,
-
 	CC_NODE_BUSY = 0xC0,
 	CC_INVALID_CMD = 0xC1,
 	CC_INVALID_LUN = 0xC2,
@@ -114,6 +69,15 @@ enum {
 	CC_CAN_NOT_RESPOND = 0xCE,
 	CC_NOT_SUPP_IN_CURR_STATE = 0xD5,
 	CC_UNSPECIFIED_ERROR = 0xFF,
+
+	/* device-specific (OEM) codes 01h-7Eh */
+
+	/* command-specific codes 80h-BEh */
+	CC_INVALID_PARAM = 0x80,
+	CC_FRU_DEV_BUSY = 0x81,
+	CC_BRIDGE_MSG_ERR = 0x82,
+	CC_I2C_BUS_ERROR = 0x83,
+	CC_INVALID_IANA = 0x84,
 };
 
 // Network Function Codes (IPMI/Section 5.1)
@@ -150,7 +114,7 @@ enum {
 	NETFN_OEM_USB_DBG_RES = 0x3D,
 };
 
-// Application Command Codes
+// Application Command Codes (0x06)
 enum {
 	CMD_APP_GET_DEVICE_ID = 0x01,
 	CMD_APP_COLD_RESET = 0x02,
@@ -160,17 +124,17 @@ enum {
 	CMD_APP_MASTER_WRITE_READ = 0x52,
 };
 
-// Chassis Command Codes
+// Chassis Command Codes (0x00)
 enum {
 	CMD_CHASSIS_GET_CHASSIS_STATUS = 0x01,
 };
 
-// Sensor Command Codes
+// Sensor Command Codes (0x04)
 enum {
 	CMD_SENSOR_GET_SENSOR_READING = 0x2D,
 };
 
-// Storage Command Codes
+// Storage Command Codes (0x0A)
 enum {
 	CMD_STORAGE_GET_FRUID_INFO = 0x10,
 	CMD_STORAGE_READ_FRUID_DATA = 0x11,
@@ -183,14 +147,14 @@ enum {
 	CMD_STORAGE_ADD_SEL = 0x44,
 };
 
-// OEM Command Codes
+// OEM Command Codes (0x30)
 enum {
-	CMD_OEM_SENSOR_READ = 0xE2,
+	CMD_OEM_NM_SENSOR_READ = 0xE2,
 	CMD_OEM_SET_SYSTEM_GUID = 0xEF,
 	CMD_OEM_GET_MB_INDEX = 0xF0,
 };
 
-// OEM 1S Command Codes
+// OEM 1S Command Codes (0x38)
 enum {
 	CMD_OEM_1S_MSG_IN = 0x1,
 	CMD_OEM_1S_MSG_OUT = 0x2,
@@ -208,7 +172,7 @@ enum {
 	CMD_OEM_1S_JTAG_DATA_SHIFT = 0x22,
 	CMD_OEM_1S_ACCURACY_SENSNR = 0x23,
 	CMD_OEM_1S_ASD_INIT = 0x28,
-	CMD_OEM_1S_PECIaccess = 0x29,
+	CMD_OEM_1S_PECI_ACCESS = 0x29,
 	CMD_OEM_1S_SENSOR_POLL_EN = 0x30,
 	CMD_OEM_1S_GET_BIC_STATUS = 0x31,
 	CMD_OEM_1S_RESET_BIC = 0x32,

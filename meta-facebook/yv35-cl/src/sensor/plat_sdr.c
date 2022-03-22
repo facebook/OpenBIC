@@ -3,7 +3,7 @@
 #include "sdr.h"
 #include "pal.h"
 #include "sensor.h"
-#include "sensor_def.h"
+#include "plat_sensor.h"
 #include "plat_ipmb.h"
 
 enum {

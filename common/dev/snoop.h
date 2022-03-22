@@ -5,9 +5,9 @@
 #define SENDPOSTCODE_STACK_SIZE 1000
 #define SNOOP_MAX_LEN 244
 
-enum {
-	copy_all_postcode,
-	copy_specific_postcode,
+enum POSTCODE_COPY_TYPES {
+	COPY_ALL_POSTCODE,
+	COPY_SPECIFIC_POSTCODE,
 };
 
 extern int snoop_read_num;
