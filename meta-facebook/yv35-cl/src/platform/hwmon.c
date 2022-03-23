@@ -18,7 +18,7 @@ static bool vr_monitor_status = 1;
 static bool bic_class = sys_class_1;
 static bool is_1ou_present = 0;
 static bool is_2ou_present = 0;
-static uint8_t card_type_1ou = 0;
+static uint8_t __attribute__((unused)) card_type_1ou = 0;
 static uint8_t card_type_2ou = 0;
 
 #define PROC_FAIL_START_DELAY_SECOND 10
