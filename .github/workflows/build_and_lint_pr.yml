@@ -1,20 +1,32 @@
-name: build_and_analyze 
-on: pull_request
+name: Build and Analyze 
+
+
+on:
+  pull_request:   # Kick off thise on every PR
+  workflow_call:  # We may want to run this workflow from other places, like nightly builds
+    inputs:
+      nightly:
+        required: false 
+        type: boolean 
+    secrets:
+      GIST_SECRET:
+        required: true
+
 jobs:
   Build-Platforms:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # This job matrix will generate a seperate job for all platforms listed.
+        # This job matrix will generate a separate job for all platforms listed.
         platform: [yv35-cl, yv35-bb]
-        # Need to set this to false otherwise it will cancle all platform builds if one fails.
+        # Need to set this to false otherwise it will cancel all platform builds if one fails.
       fail-fast: false
 
     steps:
-
     - uses: actions/checkout@v2
       with:
         path: ${{ github.event.repository.name }} 
+    
     - name: Install Dependencies
       run: |
         sudo apt-get update
@@ -78,13 +90,43 @@ jobs:
         west update
   
     - name: Build Platform
+      id: build
+      continue-on-error: true
       run: |
         cd ${{ github.event.repository.name }} 
         touch meta-facebook/${{ matrix.platform }}/CMakeLists.txt
         west build -p auto -b ast1030_evb meta-facebook/${{ matrix.platform }}/
 
+  
+        if [ $? -ne 0 ]; then
+          echo "badge_message=SUCCESS" >> $GITHUB_ENV
+          echo "badge_color=green" >> $GITHUB_ENV
+          echo "build_ret_code=1" >> $GITHUB_ENV
+        else
+          echo "badge_message=FAILED" >> $GITHUB_ENV
+          echo "badge_color=red" >> $GITHUB_ENV
+          echo "build_ret_code=0" >> $GITHUB_ENV
+        fi
+
+    - name: Update Build Badges
+      if: ${{ inputs.nightly == true }}
+      uses: schneegans/dynamic-badges-action@v1.1.0
+      with:
+        auth: ${{ secrets.GIST_SECRET }}
+        gistID: 62fb115c4fa43a02acad226534e10932 
+        filename: ${{ matrix.platform }}.json 
+        label: Build
+        message: ${{ env.badge_message }}
+        color: ${{ env.badge_color }}
+
+    - name: Check Build Failure
+      if: ${{ env.build_ret_code != '0' }} 
+      run : |
+          exit 1
+
   run-cppcheck:
     runs-on: ubuntu-latest
+    if: ${{ inputs.nightly != true }}
     steps:
 
     - name: Get PR File List 
@@ -171,6 +213,7 @@ jobs:
 
   run-clang-format:
     runs-on: ubuntu-latest
+    if: ${{ inputs.nightly != true }}
     steps:
       
     - uses: actions/checkout@v2
@@ -245,7 +288,8 @@ jobs:
     if: |
         always() && 
         (needs.run-cppcheck.result == 'failure' || 
-         needs.run-clang-format.result == 'failure')
+         needs.run-clang-format.result == 'failure') &&
+        ${{ inputs.nightly != true }}
     runs-on: ubuntu-latest
     steps:
       
