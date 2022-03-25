@@ -102,11 +102,11 @@ jobs:
         if [ "$ret" -eq 0 ]; then
           echo "badge_message=SUCCESS" >> $GITHUB_ENV
           echo "badge_color=green" >> $GITHUB_ENV
-          echo "build_ret_code=0" >> $GITHUB_ENV
+          echo "build_return_code=0" >> $GITHUB_ENV
         else
           echo "badge_message=FAILED" >> $GITHUB_ENV
           echo "badge_color=red" >> $GITHUB_ENV
-          echo "build_ret_code=1" >> $GITHUB_ENV
+          echo "build_return_code=1" >> $GITHUB_ENV
         fi
 
     - name: Update Build Badges
@@ -121,7 +121,7 @@ jobs:
         color: ${{ env.badge_color }}
 
     - name: Check Build Failure
-      if: ${{ env.build_ret_code != '0' }} 
+      if: ${{ env.build_return_code != '0' }} 
       run : |
           exit 1
 
