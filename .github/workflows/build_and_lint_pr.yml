@@ -99,7 +99,7 @@ jobs:
 
     - name: Get Build Status
       env:
-        OUTCOME: ${{ steps.mvn-build.outcome }}
+        OUTCOME: ${{ steps.build.outcome }}
       run: |
         ret="$OUTCOME"
         echo "$ret"
