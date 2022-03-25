@@ -51,7 +51,9 @@ uint16_t find_FRU_size(uint8_t FRUID)
 
 uint8_t FRU_read(EEPROM_ENTRY *entry)
 {
-	uint8_t status;
+	if (entry == NULL) {
+		return FRU_FAIL_TO_ACCESS;
+	}
 
 	if (entry->config.dev_id >= MAX_FRU_ID) { // check if FRU is defined
 		printf("fru read device ID %x not exist\n", entry->config.dev_id);
@@ -67,9 +69,8 @@ uint8_t FRU_read(EEPROM_ENTRY *entry)
 
 	memcpy(&entry->config, &fru_config[entry->config.dev_id],
 	       sizeof(fru_config[entry->config.dev_id]));
-	status = eeprom_read(entry);
 
-	if (!status) {
+	if (!eeprom_read(entry)) {
 		return FRU_FAIL_TO_ACCESS;
 	}
 
@@ -78,7 +79,9 @@ uint8_t FRU_read(EEPROM_ENTRY *entry)
 
 uint8_t FRU_write(EEPROM_ENTRY *entry)
 {
-	uint8_t status;
+	if (entry == NULL) {
+		return FRU_FAIL_TO_ACCESS;
+	}
 
 	if (entry->config.dev_id >= MAX_FRU_ID) { // check if FRU is defined
 		printf("fru write device ID %x not exist\n", entry->config.dev_id);
@@ -94,9 +97,8 @@ uint8_t FRU_write(EEPROM_ENTRY *entry)
 
 	memcpy(&entry->config, &fru_config[entry->config.dev_id],
 	       sizeof(fru_config[entry->config.dev_id]));
-	status = eeprom_write(entry);
 
-	if (!status) {
+	if (!eeprom_write(entry)) {
 		return FRU_FAIL_TO_ACCESS;
 	}
 

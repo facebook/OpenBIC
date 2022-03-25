@@ -1,13 +1,5 @@
 #include "hal_gpio.h"
-#include "adc.h"
-#include "adm1278.h"
 #include "plat_gpio.h"
-
-void pal_device_init()
-{
-	adc_init();
-	adm1278_init();
-}
 
 void pal_set_sys_status()
 {

@@ -8,7 +8,9 @@ __weak const EEPROM_CFG guid_config[] = {};
 
 uint8_t GUID_read(EEPROM_ENTRY *entry)
 {
-	uint8_t status;
+	if (entry == NULL) {
+		return GUID_FAIL_TO_ACCESS;
+	}
 
 	if (entry->config.dev_id >= MAX_GUID_ID) {
 		printf("GUID read device ID %x not exist\n", entry->config.dev_id);
@@ -27,9 +29,8 @@ uint8_t GUID_read(EEPROM_ENTRY *entry)
 	}
 
 	memcpy(&entry->config, &guid_config[entry->config.dev_id], sizeof(EEPROM_CFG));
-	status = eeprom_read(entry);
 
-	if (!status) {
+	if (!eeprom_read(entry)) {
 		return GUID_FAIL_TO_ACCESS;
 	}
 
@@ -38,7 +39,9 @@ uint8_t GUID_read(EEPROM_ENTRY *entry)
 
 uint8_t GUID_write(EEPROM_ENTRY *entry)
 {
-	uint8_t status;
+	if (entry == NULL) {
+		return GUID_FAIL_TO_ACCESS;
+	}
 
 	if (entry->config.dev_id >= MAX_GUID_ID) {
 		printf("GUID write device ID %x not exist\n", entry->config.dev_id);
@@ -57,9 +60,8 @@ uint8_t GUID_write(EEPROM_ENTRY *entry)
 	}
 
 	memcpy(&entry->config, &guid_config[entry->config.dev_id], sizeof(EEPROM_CFG));
-	status = eeprom_write(entry);
 
-	if (!status) {
+	if (!eeprom_write(entry)) {
 		return GUID_FAIL_TO_ACCESS;
 	}
 

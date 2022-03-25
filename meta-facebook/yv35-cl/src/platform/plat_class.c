@@ -36,7 +36,8 @@ void init_platform_config()
 	I2C_MSG i2c_msg;
 	uint8_t retry = 3;
 
-	if (gpio_get(BOARD_ID0) == GPIO_HIGH) { // HW design: class1 board_ID 0000, class2 board_ID 0001
+	if (gpio_get(BOARD_ID0) ==
+	    GPIO_HIGH) { // HW design: class1 board_ID 0000, class2 board_ID 0001
 		bic_class = SYS_CLASS_2;
 	} else {
 		bic_class = SYS_CLASS_1;
@@ -66,7 +67,7 @@ void init_platform_config()
 			printf("Read expansion present from CPLD error\n");
 		}
 	}
-	printk("bic class type : %d  1ou present status : %d  2ou present status : %d\n", bic_class,
+	printf("bic class type : %d  1ou present status : %d  2ou present status : %d\n", bic_class,
 	       is_1ou_present, is_2ou_present);
 
 	if (is_2ou_present) {

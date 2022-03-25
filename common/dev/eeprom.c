@@ -3,8 +3,12 @@
 #include "hal_i2c.h"
 #include <string.h>
 
-uint8_t eeprom_write(EEPROM_ENTRY *entry)
+bool eeprom_write(EEPROM_ENTRY *entry)
 {
+	if (entry == NULL) {
+		return false;
+	}
+
 	I2C_MSG msg;
 	uint8_t retry = 5;
 
@@ -22,8 +26,12 @@ uint8_t eeprom_write(EEPROM_ENTRY *entry)
 	return true;
 }
 
-uint8_t eeprom_read(EEPROM_ENTRY *entry)
+bool eeprom_read(EEPROM_ENTRY *entry)
 {
+	if (entry == NULL) {
+		return false;
+	}
+
 	I2C_MSG msg;
 	uint8_t retry = 5;
 

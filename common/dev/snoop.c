@@ -5,6 +5,7 @@
 #include <device.h>
 #include <drivers/misc/aspeed/snoop_aspeed.h>
 #include "snoop.h"
+#include "libutil.h"
 #include "ipmi.h"
 #include "power_status.h"
 
@@ -37,6 +38,10 @@ void snoop_init()
 
 void copy_snoop_read_buffer(uint8_t offset, int size_num, uint8_t *buffer, uint8_t copy_mode)
 {
+	if (buffer == NULL) {
+		return;
+	}
+
 	if (size_num > SNOOP_MAX_LEN) {
 		printf("copy snoop buffer size exceeded\n");
 		return;
@@ -176,9 +181,7 @@ void send_post_code_to_BMC()
 
 			status = ipmb_read(send_postcode_msg,
 					   IPMB_inf_index_map[send_postcode_msg->InF_target]);
-			if (send_postcode_msg != NULL) {
-				free(send_postcode_msg);
-			}
+			SAFE_FREE(send_postcode_msg);
 			if (status == IPMB_ERROR_FAILURE) {
 				printf("Fail to post msg to txqueue for send post code from %d to %d\n",
 				       send_postcode_start_position, send_postcode_end_position);

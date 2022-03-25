@@ -1,41 +1,36 @@
-#include "tmp75.h"
-
 #include <stdio.h>
-
 #include "sensor.h"
 #include "hal_i2c.h"
 
-#define RETRY 5
-
-bool tmp75_read(uint8_t sensor_num, float *reading)
+uint8_t tmp75_read(uint8_t sensor_num, int *reading)
 {
-	int8_t val;
-	I2C_MSG msg;
-	snr_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+	if (!reading || (sensor_num > SENSOR_NUM_MAX)) {
+		return SENSOR_UNSPECIFIED_ERROR;
+	}
 
-	msg.bus = cfg->port;
-	msg.target_addr = cfg->target_addr;
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+
+	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
+	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
 	msg.tx_len = 1;
 	msg.rx_len = 1;
-	msg.data[0] = cfg->offset;
+	msg.data[0] = sensor_config[sensor_config_index_map[sensor_num]].offset;
 
-	if (i2c_master_read(&msg, RETRY)) {
-		cfg->cache_status = SENSOR_FAIL_TO_ACCESS;
-		printf("Sensor number %x read tmp75 fail\n", sensor_num);
-		return false;
+	if (i2c_master_read(&msg, retry))
+		return SENSOR_FAIL_TO_ACCESS;
+
+	sensor_val *sval = (sensor_val *)reading;
+	sval->integer = msg.data[0];
+	return SENSOR_READ_SUCCESS;
+}
+
+uint8_t tmp75_init(uint8_t sensor_num)
+{
+	if (sensor_num > SENSOR_NUM_MAX) {
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	// convert uint8_t to int8_t, tmp75 reading is signed.
-	val = (int8_t)msg.data[0];
-
-	// For now report 0 when reading is negative.
-	if (val < 0) {
-		val = 0;
-	}
-
-	*reading = (float)val;
-	cfg->cache = *reading;
-	cfg->cache_status = SENSOR_READ_SUCCESS;
-
-	return true;
+	sensor_config[sensor_config_index_map[sensor_num]].read = tmp75_read;
+	return SENSOR_INIT_SUCCESS;
 }

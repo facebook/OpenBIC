@@ -3,6 +3,7 @@
 #include <string.h>
 #include <drivers/peci.h>
 #include "hal_peci.h"
+#include "libutil.h"
 
 const struct device *dev;
 
@@ -42,12 +43,11 @@ int peci_ping(uint8_t address)
 
 	ret = peci_transfer(dev, &pkgcfg);
 	if (ret) {
-		printf("ping failed %d\n", ret);
-		free(pkgcfg.tx_buffer.buf);
-		return ret;
+		printf("[%s] Failed to send the PECI PING command(0x%x), status: %d\n", __func__,
+		       pkgcfg.cmd_code, ret);
 	}
 
-	free(pkgcfg.tx_buffer.buf);
+	SAFE_FREE(pkgcfg.tx_buffer.buf);
 	return ret;
 }
 
@@ -85,12 +85,11 @@ int peci_read(uint8_t cmd, uint8_t address, uint8_t u8Index, uint16_t u16Param, 
 	}
 
 	if (ret) {
-		printf("peci read failed %d\n", ret);
-		free(rdpkgcfg.tx_buffer.buf);
-		return ret;
+		printf("[%s] Failed to send PECI Command(0x%x), status: %d\n", __func__,
+		       rdpkgcfg.cmd_code, ret);
 	}
 
-	free(rdpkgcfg.tx_buffer.buf);
+	SAFE_FREE(rdpkgcfg.tx_buffer.buf);
 	return ret;
 }
 

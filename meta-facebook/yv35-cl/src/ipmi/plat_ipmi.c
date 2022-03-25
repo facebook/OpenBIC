@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "libutil.h"
 #include "ipmi.h"
 #include "plat_ipmb.h"
 
@@ -51,7 +52,7 @@ bool add_sel_evt_record(addsel_msg_t *sel_msg)
 	record_id++;
 
 	status = ipmb_read(msg, IPMB_inf_index_map[msg->InF_target]);
-	free(msg);
+	SAFE_FREE(msg);
 	if (status == IPMB_ERROR_FAILURE) {
 		printf("Fail to post msg to txqueue for addsel\n");
 		return false;

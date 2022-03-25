@@ -1,7 +1,5 @@
 #include "hal_gpio.h"
 #include "hal_peci.h"
-#include "adc.h"
-#include "adm1278.h"
 #include "power_status.h"
 #include "util_sys.h"
 #include "plat_class.h"
@@ -25,13 +23,6 @@ void pal_pre_init()
 void pal_post_init()
 {
 	init_me_firmware();
-}
-
-void pal_device_init()
-{
-	adc_init();
-	peci_init();
-	adm1278_init();
 }
 
 void pal_set_sys_status()
