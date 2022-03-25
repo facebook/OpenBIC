@@ -98,8 +98,10 @@ jobs:
         west build -p auto -b ast1030_evb meta-facebook/${{ matrix.platform }}/
 
     - name: Get Build Status
+      env:
+        OUTCOME: ${{ steps.mvn-build.outcome }}
       run: |
-        ret=${{ steps.build.outputs.exit_code }}
+        ret="$OUTCOME"
         echo "$ret"
         if [ "$ret" -eq 0 ]; then
           echo "badge_message=SUCCESS" >> $GITHUB_ENV
