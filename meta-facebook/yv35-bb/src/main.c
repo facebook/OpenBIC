@@ -20,6 +20,7 @@ void set_sys_status()
 	gpio_set(BIC_READY_R, GPIO_HIGH);
 }
 
+void main(void)
 {
 	printk("Hello, welcome to yv35 baseboard %x%x.%x.%x\n", BIC_FW_YEAR_MSB, BIC_FW_YEAR_LSB,
 	       BIC_FW_WEEK, BIC_FW_VER);
