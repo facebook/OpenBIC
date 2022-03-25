@@ -97,7 +97,9 @@ jobs:
         touch meta-facebook/${{ matrix.platform }}/CMakeLists.txt
         west build -p auto -b ast1030_evb meta-facebook/${{ matrix.platform }}/
 
-        ret=$?
+    - name: Get Build Status
+      run: |
+        ret=${{ steps.build.outputs.exit_code }}
         echo "$ret"
         if [ "$ret" -eq 0 ]; then
           echo "badge_message=SUCCESS" >> $GITHUB_ENV
