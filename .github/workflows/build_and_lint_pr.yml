@@ -104,7 +104,7 @@ jobs:
         ret="$OUTCOME"
         echo "$ret"
         if [ "$ret" = "success" ]; then
-          echo "badge_message=SUCCESS" >> $GITHUB_ENV
+          echo "badge_message=PASS" >> $GITHUB_ENV
           echo "badge_color=green" >> $GITHUB_ENV
           echo "build_return_code=0" >> $GITHUB_ENV
         else
