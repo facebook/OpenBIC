@@ -12,6 +12,7 @@
 #define SSD0_ADDR (0xD4 >> 1)
 #define SSD0_OFFSET 0x00
 #define ADI_ADM1278_ADDR (0x80 >> 1)
+#define ADI_LTC4286_ADDR (0x84 >> 1)
 #define MPS_MP5990_ADDR (0x16 >> 1)
 #define PCH_ADDR (0x2C >> 1)
 #define ME_SENSOR_NUM_TEMP_PCH 0x08
