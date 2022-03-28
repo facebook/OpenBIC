@@ -10,7 +10,7 @@
 
 uint8_t mp5990_read(uint8_t sensor_num, int *reading)
 {
-	if ((reading == NULL) ||
+	if ((reading == NULL) || (sensor_num > SENSOR_NUM_MAX) ||
 	    (sensor_config[sensor_config_index_map[sensor_num]].init_args == NULL)) {
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
@@ -71,6 +71,10 @@ uint8_t mp5990_read(uint8_t sensor_num, int *reading)
 
 uint8_t mp5990_init(uint8_t sensor_num)
 {
+	if (sensor_num > SENSOR_NUM_MAX) {
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+
 	if (!sensor_config[sensor_config_index_map[sensor_num]].init_args) {
 		printf("<error> MP5990 init args are not provided!\n");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;

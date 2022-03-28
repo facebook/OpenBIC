@@ -155,26 +155,107 @@ sensor_cfg plat_sensor_config[] = {
 	// ME
 	{ SENSOR_NUM_TEMP_PCH, sensor_dev_pch, I2C_BUS3, PCH_ADDR, ME_SENSOR_NUM_TEMP_PCH,
 	  post_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+};
 
-	// HSC
-	{ SENSOR_NUM_TEMP_HSC, sensor_dev_adm1278, I2C_BUS2, HSC_ADDR, PMBUS_READ_TEMPERATURE_1,
+sensor_cfg mp5990_sensor_config_table[] = {
+	/* number,                  type,       port,      address,      offset,
+	   access check arg0, arg1, cache, cache_status, mux_address, mux_offset,
+	   pre_sensor_read_fn, pre_sensor_read_args, post_sensor_read_fn, post_sensor_read_fn  */
+	{ SENSOR_NUM_TEMP_HSC, sensor_dev_mp5990, I2C_BUS2, MPS_MP5990_ADDR,
+	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL,
+	  NULL, &mp5990_init_args[0] },
+	{ SENSOR_NUM_VOL_HSCIN, sensor_dev_mp5990, I2C_BUS2, MPS_MP5990_ADDR, PMBUS_READ_VIN,
+	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
+	{ SENSOR_NUM_CUR_HSCOUT, sensor_dev_mp5990, I2C_BUS2, MPS_MP5990_ADDR, PMBUS_READ_IOUT,
+	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
+	{ SENSOR_NUM_PWR_HSCIN, sensor_dev_mp5990, I2C_BUS2, MPS_MP5990_ADDR, PMBUS_READ_PIN,
+	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
+};
+
+sensor_cfg adm1278_sensor_config_table[] = {
+	/* number,                  type,       port,      address,      offset,
+	   access check arg0, arg1, cache, cache_status, mux_address, mux_offset,
+	   pre_sensor_read_fn, pre_sensor_read_args, post_sensor_read_fn, post_sensor_read_fn  */
+	{ SENSOR_NUM_TEMP_HSC, sensor_dev_adm1278, I2C_BUS2, ADI_ADM1278_ADDR,
+	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL,
+	  NULL, &adm1278_init_args[0] },
+	{ SENSOR_NUM_VOL_HSCIN, sensor_dev_adm1278, I2C_BUS2, ADI_ADM1278_ADDR, PMBUS_READ_VIN,
 	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1278_init_args[0] },
-	{ SENSOR_NUM_VOL_HSCIN, sensor_dev_adm1278, I2C_BUS2, HSC_ADDR, PMBUS_READ_VIN, stby_access,
-	  0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1278_init_args[0] },
-	{ SENSOR_NUM_CUR_HSCOUT, sensor_dev_adm1278, I2C_BUS2, HSC_ADDR, PMBUS_READ_IOUT,
+	{ SENSOR_NUM_CUR_HSCOUT, sensor_dev_adm1278, I2C_BUS2, ADI_ADM1278_ADDR, PMBUS_READ_IOUT,
 	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1278_init_args[0] },
-	{ SENSOR_NUM_PWR_HSCIN, sensor_dev_adm1278, I2C_BUS2, HSC_ADDR, PMBUS_READ_PIN, stby_access,
-	  0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1278_init_args[0] },
+	{ SENSOR_NUM_PWR_HSCIN, sensor_dev_adm1278, I2C_BUS2, ADI_ADM1278_ADDR, PMBUS_READ_PIN,
+	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1278_init_args[0] },
 };
 
 uint8_t load_sensor_config(void)
 {
 	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
-	return sizeof(plat_sensor_config) / sizeof(sensor_cfg);
+	return ARRAY_SIZE(plat_sensor_config);
 }
 
 void pal_fix_sensor_config()
 {
+	uint8_t sensor_count = ARRAY_SIZE(plat_sensor_config);
+
+	/* Fix sensor table according to the different class types and board revisions */
+	if (get_system_class() == SYS_CLASS_1) {
+		uint8_t board_revision = get_board_revision();
+		switch (board_revision) {
+		case SYS_BOARD_POC:
+		case SYS_BOARD_EVT:
+		case SYS_BOARD_EVT2:
+			sensor_count = ARRAY_SIZE(adm1278_sensor_config_table);
+			while (sensor_count != 0) {
+				add_sensor_config(adm1278_sensor_config_table[--sensor_count]);
+				if (sensor_count == 0) {
+					break;
+				}
+			}
+			break;
+		case SYS_BOARD_EVT3_EFUSE:
+			sensor_count = ARRAY_SIZE(mp5990_sensor_config_table);
+			while (sensor_count != 0) {
+				--sensor_count;
+				if (get_2ou_status()) {
+					/* For the class type 1 and 2OU system,
+					 * set the IMON based total over current fault limit to 70A(0x0046),
+					 * set the gain for output current reporting to 0x01BF following the power team's experiment
+					 * and set GPIOA7(HSC_SET_EN_R) to high.
+					 */
+					mp5990_sensor_config_table[sensor_count].init_args =
+						&mp5990_init_args[1];
+					gpio_set(HSC_SET_EN_R, GPIO_HIGH);
+				} else {
+					/* For the class type 1 and 2OU system,
+					 * set the IMON based total over current fault limit to 40A(0x0028),
+					 * set the gain for output current reporting to 0x0104 following the power team's experiment
+					 * and set GPIOA7(HSC_SET_EN_R) to low.
+					 */
+					mp5990_sensor_config_table[sensor_count].init_args =
+						&mp5990_init_args[0];
+					gpio_set(HSC_SET_EN_R, GPIO_LOW);
+				}
+				add_sensor_config(mp5990_sensor_config_table[sensor_count]);
+				if (sensor_count == 0) {
+					break;
+				}
+			}
+			break;
+		case SYS_BOARD_EVT3_HOTSWAP:
+			break;
+		default:
+			break;
+		}
+	} else { // Class-2
+		sensor_count = ARRAY_SIZE(adm1278_sensor_config_table);
+		while (sensor_count != 0) {
+			add_sensor_config(adm1278_sensor_config_table[--sensor_count]);
+			if (sensor_count == 0) {
+				break;
+			}
+		}
+	}
+
 	if (sensor_config_num != SDR_NUM) {
 		printf("fix sensor SDR and config table not match\n");
 	}

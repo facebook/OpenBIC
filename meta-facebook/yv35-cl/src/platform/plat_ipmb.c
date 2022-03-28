@@ -23,7 +23,7 @@ IPMB_config pal_IPMB_config_table[] = {
 
 bool pal_load_ipmb_config(void)
 {
-	uint8_t bic_class = get_bic_class();
+	uint8_t bic_class = get_system_class();
 
 	// class1 1ou ipmi bus and class2 bb ipmi bus shared same i2c bus
 	if (get_1ou_status() && (bic_class == SYS_CLASS_1)) {
