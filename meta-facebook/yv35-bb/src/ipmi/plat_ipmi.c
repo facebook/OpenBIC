@@ -464,6 +464,17 @@ void pal_OEM_1S_MSG_OUT(ipmi_msg *msg)
 
 	target_IF = msg->data[0];
 
+	// To do: send SEL to another BMC
+	if (target_IF == PEER_BMC_IPMB_IFs) {
+		if (msg->InF_source == SLOT1_BIC_IFs) {
+			target_IF = SLOT3_BIC_IFs;
+		} else if (msg->InF_source == SLOT3_BIC_IFs) {
+			target_IF = SLOT1_BIC_IFs;
+		} else {
+			msg->completion_code = CC_INVALID_DATA_FIELD;
+		}
+	}
+
 	if ((IPMB_config_table[IPMB_inf_index_map[target_IF]].Inf == Reserve_IFs) ||
 	    (IPMB_config_table[IPMB_inf_index_map[target_IF]].EnStatus ==
 	     Disable)) { // Bridge to invalid or disabled interface
