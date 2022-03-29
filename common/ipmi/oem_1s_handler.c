@@ -600,7 +600,9 @@ __weak void OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg)
 		status = get_sensor_reading(req->sensor_num, &reading, GET_FROM_SENSOR);
 	} else {
 		printf("Error: read_option was not either GET_FROM_CACHE or GET_FROM_SENSOR.\n");
+		status = SENSOR_UNSPECIFIED_ERROR;
 	}
+
 	switch (status) {
 	case SENSOR_READ_SUCCESS:
 	case SENSOR_READ_ACUR_SUCCESS:
