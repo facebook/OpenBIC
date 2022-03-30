@@ -11,6 +11,7 @@
 #include "plat_gpio.h"
 #include "plat_hook.h"
 #include "intel_peci.h"
+#include "tmp431.h"
 
 static uint8_t sensor_config_num;
 
@@ -184,6 +185,14 @@ sensor_cfg class1_adm1278_sensor_config_table[] = {
 	  0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1278_init_args[0] },
 };
 
+sensor_cfg evt3_class1_adi_temperature_sensor_table[] = {
+	{ SENSOR_NUM_TEMP_TMP75_OUT, sensor_dev_tmp431, i2c_bus2, tmp431_addr,
+	  TMP431_LOCAL_TEMPERATRUE, stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL,
+	  NULL, NULL },
+	{ SENSOR_NUM_TEMP_HSC, sensor_dev_tmp431, i2c_bus2, tmp431_addr, TMP431_REMOTE_TEMPERATRUE,
+	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+};
+
 sensor_cfg fix_C2Sensorconfig_table[] = {
 	// number , type , port , address , offset , access check , arg0 , arg1 , cache , cache_status
 };
@@ -218,8 +227,10 @@ uint8_t map_SensorNum_Sensorconfig(uint8_t sensor_num)
 
 void add_Sensorconfig(sensor_cfg add_Sensorconfig)
 {
-	if (map_SensorNum_Sensorconfig(add_Sensorconfig.num) != 0xFF) {
-		printk("add sensor num is already exists\n");
+	uint8_t index = map_SensorNum_Sensorconfig(add_Sensorconfig.num);
+	if (index != 0xFF) {
+		memcpy(&sensor_config[index], &add_Sensorconfig, sizeof(add_Sensorconfig));
+		printf("Replace the sensor[0x%02x] configuration\n", add_Sensorconfig.num);
 		return;
 	}
 	sensor_config[sensor_config_num++] = add_Sensorconfig;
@@ -252,10 +263,10 @@ void check_vr_type(uint8_t index)
 
 void pal_fix_Sensorconfig()
 {
-	uint8_t sensor_num = sizeof(plat_sensor_config) / sizeof(plat_sensor_config[0]);
+	uint8_t sensor_count = sizeof(plat_sensor_config) / sizeof(plat_sensor_config[0]);
 
 	/* check sensor type of VR */
-	for (uint8_t index = 0; index < sensor_num; index++) {
+	for (uint8_t index = 0; index < sensor_count; index++) {
 		if (sensor_config[index].type == sensor_dev_isl69259) {
 			check_vr_type(index);
 		}
@@ -268,24 +279,28 @@ void pal_fix_Sensorconfig()
 		case SYS_BOARD_POC:
 		case SYS_BOARD_EVT:
 		case SYS_BOARD_EVT2:
-			sensor_num = sizeof(class1_adm1278_sensor_config_table) / sizeof(class1_adm1278_sensor_config_table[0]);
-			while (sensor_num) {
-				add_Sensorconfig(class1_adm1278_sensor_config_table[sensor_num - 1]);
-				sensor_num--;
+			sensor_count = sizeof(class1_adm1278_sensor_config_table) /
+				       sizeof(class1_adm1278_sensor_config_table[0]);
+			while (sensor_count) {
+				add_Sensorconfig(
+					class1_adm1278_sensor_config_table[sensor_count - 1]);
+				sensor_count--;
 			}
 			break;
 		case SYS_BOARD_EVT3_EFUSE:
 		case SYS_BOARD_DVT_EFUSE:
 		case SYS_BOARD_MP_EFUSE:
-			sensor_num = sizeof(class1_mp5990_sensor_config_table) / sizeof(class1_mp5990_sensor_config_table[0]);
-			while (sensor_num) {
+			sensor_count = sizeof(class1_mp5990_sensor_config_table) /
+				       sizeof(class1_mp5990_sensor_config_table[0]);
+			while (sensor_count) {
 				if (get_2ou_status()) {
 					/* For the class type 1 and 2OU system,
 					 * set the IMON based total over current fault limit to 70A(0x0046),
 					 * set the gain for output current reporting to 0x01BF following the power team's experiment
 					 * and set GPIOA7(HSC_SET_EN_R) to high.
 					 */
-					class1_mp5990_sensor_config_table[sensor_num - 1].init_args = &mp5990_init_args[1];
+					class1_mp5990_sensor_config_table[sensor_count - 1]
+						.init_args = &mp5990_init_args[1];
 					gpio_set(HSC_SET_EN_R, GPIO_HIGH);
 				} else {
 					/* For the class type 1 and 2OU system,
@@ -293,16 +308,37 @@ void pal_fix_Sensorconfig()
 					 * set the gain for output current reporting to 0x0104 following the power team's experiment
 					 * and set GPIOA7(HSC_SET_EN_R) to low.
 					 */
-					class1_mp5990_sensor_config_table[sensor_num - 1].init_args = &mp5990_init_args[0];
+					class1_mp5990_sensor_config_table[sensor_count - 1]
+						.init_args = &mp5990_init_args[0];
 					gpio_set(HSC_SET_EN_R, GPIO_LOW);
 				}
-				add_Sensorconfig(class1_mp5990_sensor_config_table[sensor_num - 1]);
-				sensor_num--;
+				add_Sensorconfig(
+					class1_mp5990_sensor_config_table[sensor_count - 1]);
+				sensor_count--;
 			}
 			break;
 		case SYS_BOARD_EVT3_HOTSWAP:
 		case SYS_BOARD_DVT_HOTSWAP:
 		case SYS_BOARD_MP_HOTSWAP:
+			sensor_count = ARRAY_SIZE(class1_adm1278_sensor_config_table);
+			while (sensor_count != 0) {
+				add_Sensorconfig(
+					class1_adm1278_sensor_config_table[--sensor_count]);
+				if (sensor_count == 0) {
+					break;
+				}
+			}
+			/* Replace the temperature sensors configuration including "HSC Temp" and "MB Outlet Temp."
+			 * For these two sensors, the reading values are read from TMP431 chip.data.num
+			 */
+			sensor_count = ARRAY_SIZE(evt3_class1_adi_temperature_sensor_table);
+			while (sensor_count != 0) {
+				add_Sensorconfig(
+					evt3_class1_adi_temperature_sensor_table[--sensor_count]);
+				if (sensor_count == 0) {
+					break;
+				}
+			}
 			break;
 		default:
 			break;

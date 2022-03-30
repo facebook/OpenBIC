@@ -24,6 +24,7 @@ enum {
 #define tmp75_in_addr (0x92 >> 1)
 #define tmp75_out_addr (0x94 >> 1)
 #define tmp75_fio_addr (0x90 >> 1)
+#define tmp431_addr (0x98 >> 1)
 #define tmp75_tmp_offset 0x00
 #define SSD0_addr (0xD4 >> 1)
 #define SSD0_offset 0x00
