@@ -21,7 +21,7 @@ K_KERNEL_STACK_MEMBER(IPMI_thread_stack, IPMI_THREAD_STACK_SIZE);
 char __aligned(4) ipmi_msgq_buffer[IPMI_BUF_LEN * sizeof(struct ipmi_msg_cfg)];
 struct k_msgq ipmi_msgq;
 
-__weak bool pal_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd)
+__weak bool pal_request_msg_to_BIC_from_KCS(uint8_t netfn, uint8_t cmd)
 {
 	if (netfn == NETFN_OEM_1S_REQ) {
 		if ((cmd == CMD_OEM_1S_FW_UPDATE) || (cmd == CMD_OEM_1S_RESET_BMC) ||
@@ -32,7 +32,7 @@ __weak bool pal_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd)
 	return false;
 }
 
-__weak bool pal_ME_is_to_ipmi_handler(uint8_t netfn, uint8_t cmd)
+__weak bool pal_request_msg_to_BIC_from_ME(uint8_t netfn, uint8_t cmd)
 {
 	if ((netfn == NETFN_OEM_REQ) && (cmd == CMD_OEM_NM_SENSOR_READ)) {
 		return true;
@@ -146,9 +146,9 @@ ipmi_error IPMI_handler(void *arug0, void *arug1, void *arug2)
 				msg_cfg.buffer.data[2] = (IANA_ID >> 16) & 0xFF;
 			}
 
-			if (msg_cfg.buffer.InF_source == BMC_USB_IFs) {
+			if (msg_cfg.buffer.InF_source == BMC_USB) {
 				USB_write(&msg_cfg.buffer);
-			} else if (msg_cfg.buffer.InF_source == HOST_KCS_IFs) {
+			} else if (msg_cfg.buffer.InF_source == HOST_KCS) {
 #ifdef CONFIG_IPMI_KCS_ASPEED
 				kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
 				if (kcs_buff == NULL) { // allocate fail, retry allocate
@@ -188,7 +188,7 @@ ipmi_error IPMI_handler(void *arug0, void *arug1, void *arug2)
 				status = ipmb_send_response(
 					&msg_cfg.buffer,
 					IPMB_inf_index_map[msg_cfg.buffer.InF_source]);
-				if (status != ipmb_error_success) {
+				if (status != IPMB_ERROR_SUCCESS) {
 					printf("IPMI_handler send IPMB resp fail status: %x",
 					       status);
 				}

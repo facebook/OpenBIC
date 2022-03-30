@@ -4,6 +4,10 @@
 
 __weak void SENSOR_GET_SENSOR_READING(ipmi_msg *msg)
 {
+	if (msg == NULL) {
+		return;
+	}
+
 	uint8_t status, snr_num;
 	int reading;
 
@@ -19,14 +23,14 @@ __weak void SENSOR_GET_SENSOR_READING(ipmi_msg *msg)
 	}
 
 	snr_num = msg->data[0];
-	// Fix to get_from_cache. As need real time reading, use OEM command to get_from_sensor.
+	// Default is to get_from_cache. As need real time reading, use OEM command to get_from_sensor.
 	status = get_sensor_reading(snr_num, &reading, get_from_cache);
 
 	switch (status) {
 	case SNR_READ_SUCCESS:
 		msg->data[0] = reading & 0xff;
 		// SDR sensor initialization bit6 enable scan, bit5 enable event
-		// retunr data 1 bit 7 set to 0 to disable all event msg. bit 6 set to 0 disable sensor scan
+		// return data 1 bit 7 set to 0 to disable all event msg. bit 6 set to 0 disable sensor scan
 		msg->data[1] =
 			((full_sensor_table[SnrNum_SDR_map[snr_num]].sensor_init & 0x60) << 1);
 		// fix to threshold deassert status, BMC will compare with UCR/UNR itself
@@ -38,7 +42,7 @@ __weak void SENSOR_GET_SENSOR_READING(ipmi_msg *msg)
 		// In accurate read case, scale reading to one byte
 		msg->data[0] = (reading >> 8) & 0xff;
 		// SDR sensor initialization bit6 enable scan, bit5 enable event
-		// retunr data 1 bit 7 set to 0 to disable all event msg. bit 6 set to 0 disable sensor scan
+		// return data 1 bit 7 set to 0 to disable all event msg. bit 6 set to 0 disable sensor scan
 		msg->data[1] =
 			((full_sensor_table[SnrNum_SDR_map[snr_num]].sensor_init & 0x60) << 1);
 		// fix to threshold deassert status, BMC will compare with UCR/UNR itself
@@ -47,7 +51,7 @@ __weak void SENSOR_GET_SENSOR_READING(ipmi_msg *msg)
 		msg->completion_code = CC_SUCCESS;
 		break;
 	case SNR_FAIL_TO_ACCESS:
-		// transection error
+		// transaction error
 		msg->completion_code = CC_NODE_BUSY;
 		break;
 	case SNR_NOT_ACCESSIBLE:
@@ -70,6 +74,10 @@ __weak void SENSOR_GET_SENSOR_READING(ipmi_msg *msg)
 
 void IPMI_SENSOR_handler(ipmi_msg *msg)
 {
+	if (msg == NULL) {
+		return;
+	}
+
 	switch (msg->cmd) {
 	case CMD_SENSOR_GET_SENSOR_READING:
 		SENSOR_GET_SENSOR_READING(msg);

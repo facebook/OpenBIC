@@ -50,7 +50,8 @@ bool pal_vr_read(uint8_t sensor_num, int *reading)
 			    (sensor_num == SENSOR_NUM_VOL_PVCCIN) ||
 			    (sensor_num == SENSOR_NUM_VOL_PVCCFA_EHV_FIVRA)) {
 				val = ((msg.data[1] << 8) | msg.data[0]);
-				*reading = (acur_cal_MBR(sensor_num, val) / 1000) & 0xffff;
+				*reading =
+					(calculate_accurate_MBR(sensor_num, val) / 1000) & 0xffff;
 
 				// current
 			} else if ((sensor_num == SENSOR_NUM_CUR_PVCCD_HV) ||
@@ -59,7 +60,7 @@ bool pal_vr_read(uint8_t sensor_num, int *reading)
 				   (sensor_num == SENSOR_NUM_CUR_PVCCIN) ||
 				   (sensor_num == SENSOR_NUM_CUR_PVCCFA_EHV_FIVRA)) {
 				val = ((msg.data[1] << 8) | msg.data[0]);
-				*reading = (acur_cal_MBR(sensor_num, val) / 10) & 0xffff;
+				*reading = (calculate_accurate_MBR(sensor_num, val) / 10) & 0xffff;
 
 				// temperature
 			} else if ((sensor_num == SENSOR_NUM_TEMP_PVCCD_HV) ||
@@ -68,7 +69,7 @@ bool pal_vr_read(uint8_t sensor_num, int *reading)
 				   (sensor_num == SENSOR_NUM_TEMP_PVCCIN) ||
 				   (sensor_num == SENSOR_NUM_TEMP_PVCCFA_EHV_FIVRA)) {
 				val = (((msg.data[1] << 8) | msg.data[0]));
-				*reading = (acur_cal_MBR(sensor_num, val)) & 0xffff;
+				*reading = (calculate_accurate_MBR(sensor_num, val)) & 0xffff;
 
 				// power
 			} else if ((sensor_num == SENSOR_NUM_PWR_PVCCD_HV) ||
@@ -77,7 +78,7 @@ bool pal_vr_read(uint8_t sensor_num, int *reading)
 				   (sensor_num == SENSOR_NUM_PWR_PVCCIN) ||
 				   (sensor_num == SENSOR_NUM_PWR_PVCCFA_EHV_FIVRA)) {
 				val = (((msg.data[1] << 8) | msg.data[0]));
-				*reading = (acur_cal_MBR(sensor_num, val)) & 0xffff;
+				*reading = (calculate_accurate_MBR(sensor_num, val)) & 0xffff;
 			}
 		} else {
 			sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status =

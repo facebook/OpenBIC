@@ -8,6 +8,10 @@
 #ifdef CONFIG_ESPI
 __weak void OEM_NM_SENSOR_READ(ipmi_msg *msg)
 {
+	if (msg == NULL) {
+		return;
+	}
+
 	uint8_t status, snr_num;
 	int reading;
 
@@ -57,6 +61,10 @@ __weak void OEM_NM_SENSOR_READ(ipmi_msg *msg)
 
 __weak void OEM_SET_SYSTEM_GUID(ipmi_msg *msg)
 {
+	if (msg == NULL) {
+		return;
+	}
+
 	if (msg->data_len != 16) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
@@ -96,6 +104,10 @@ __weak void OEM_SET_SYSTEM_GUID(ipmi_msg *msg)
 
 void IPMI_OEM_handler(ipmi_msg *msg)
 {
+	if (msg == NULL) {
+		return;
+	}
+
 	switch (msg->cmd) {
 #ifdef CONFIG_ESPI
 	case CMD_OEM_NM_SENSOR_READ:

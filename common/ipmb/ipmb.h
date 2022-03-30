@@ -44,18 +44,16 @@
 #define DEV_IPMB_9
 #endif
 
-#define DEBUG_IPMI 0
+#define DEBUG_IPMB 0
 
 #define SEQ_NUM 64
-#define MAX_DATA_QUENE 15
-#define MAX_IPMB_IDX 5
-#define IPMB_timeout_S 1
-#define SELF_IPMB_IF 0x00
+#define MAX_SEQ_QUENE 15
+#define MEM_ALLOCATE_RETRY_TIME 2
 #define IPMI_DATA_MAX_LENGTH 520
 #define IPMB_REQ_HEADER_LENGTH 6
 #define IPMB_RESP_HEADER_LENGTH 7
 #define IPMI_MSG_MAX_LENGTH (IPMI_DATA_MAX_LENGTH + IPMB_RESP_HEADER_LENGTH)
-#define IPMB_MAX_RETRIES 5
+#define IPMB_TX_RETRY_TIME 5
 #define IPMB_TXQUEUE_LEN 1
 #define IPMB_RXQUEUE_LEN 2
 #define IPMB_TX_STACK_SIZE 1500
@@ -65,65 +63,68 @@
 #define IPMB_DEST_LUN_MASK 0x03
 #define IPMB_SEQ_MASK 0xFC
 #define IPMB_SRC_LUN_MASK 0x03
-#define CLIENT_NOTIFY_TIMEOUT 5
-#define IPMB_RETRY_DELAY_ms 500
-#define IPMB_MQUEUE_POLL_DELAY_ms 10
-#define IPMB_SEQ_TIMEOUT_ms 1000
+#define IPMB_RETRY_DELAY_MS 500
+#define IPMB_POLLING_TIME_MS 10
+#define IPMB_SEQ_TIMEOUT_MS 1000
 #define IPMB_SEQ_TIMEOUT_STACK_SIZE 500
-#define IPMB_RESERVE_IDX 0xFF
+#define I2C_RETRY_TIME 5
 
-#define Enable 1
-#define Disable 0
+#define RESERVED_IDX 0xFF
+#define RESERVED_BUS 0xFF
+#define RESERVED_ADDRESS 0xFF
+
+#define ENABLE 1
+#define DISABLE 0
 
 #define IS_RESPONSE(msg) (msg.netfn & 0x01)
 
-enum {
-	Self_IFs = 0x0,
-	ME_IPMB_IFs = 0x01,
-	BMC_IPMB_IFs = 0x02,
-	HOST_KCS_IFs = 0x03,
-	SERVER_IPMB_IFs = 0x04,
-	EXP1_IPMB_IFs = 0x05,
-	SLOT1_BIC_IFs = 0x07,
-	SLOT3_BIC_IFs = 0x08,
-	BB_IPMB_IFs = 0x10,
-	EXP2_IPMB_IFs = 0x15,
+enum Channel_Target {
+	SELF = 0x0,
+	ME_IPMB = 0x01,
+	BMC_IPMB = 0x02,
+	HOST_KCS = 0x03,
+	SERVER_IPMB = 0x04,
+	EXP1_IPMB = 0x05,
+	SLOT1_BIC = 0x07,
+	SLOT3_BIC = 0x08,
+	BB_IPMB = 0x10,
+	EXP2_IPMB = 0x15,
 
-	BMC_USB_IFs = 0x20,
-	Reserve_IFs,
+	BMC_USB = 0x20,
+	RESERVED,
 };
 
-enum {
+enum Interface {
 	I2C_IF,
 	I3C_IF,
-	Reserve_IF,
+	RESERVED_IF,
 };
 
 typedef struct IPMB_config {
 	uint8_t index;
-	uint8_t Inf;
-	uint8_t Inf_source;
+	uint8_t interface;
+	uint8_t channel;
 	uint8_t bus;
-	uint8_t target_addr;
-	bool EnStatus;
-	uint8_t slave_addr;
-	char *Rx_attr_name;
-	char *Tx_attr_name;
+	uint8_t channel_target_address;
+	bool enable_status;
+	uint8_t self_address;
+	char *rx_thread_name;
+	char *tx_thread_name;
 } IPMB_config;
 
 extern IPMB_config *IPMB_config_table;
 
 typedef enum ipmb_error {
-	ipmb_error_success = 0, /**< Generic no-error flag  */
-	ipmb_error_unknown, /**< Unknown error */
-	ipmb_error_failure, /**< Generic failure on IPMB */
-	ipmb_error_timeout, /**< Error raised when a message takes too long to be responded */
-	ipmb_error_invalid_req, /**< A invalid request was received */
-	ipmb_error_hdr_chksum, /**< Invalid header checksum from incoming message */
-	ipmb_error_msg_chksum, /**< Invalid message checksum from incoming message */
-	ipmb_error_queue_creation, /**< Client queue couldn't be created. Invalid pointer to handler was given */
-	ipmb_error_get_messageQueue, /**< Failure on getting queue message */
-	ipmb_error_mutex_lock, /**< Fail to lock mutex in time */
+	IPMB_ERROR_SUCCESS = 0, /**< Generic no-error flag  */
+	IPMB_ERROR_UNKNOWN, /**< Unknown error */
+	IPMB_ERROR_FAILURE, /**< Generic failure on IPMB */
+	IPMB_ERROR_TIMEOUT, /**< Error raised when a message takes too long to be responded */
+	IPMB_ERROR_INVALID_REQ, /**< A invalid request was received */
+	IPMB_ERROR_HDR_CHECKSUM, /**< Invalid header checksum from incoming message */
+	IPMB_ERROR_MSG_CHECKSUM, /**< Invalid message checksum from incoming message */
+	IPMB_ERROR_QUEUE_CREATION, /**< Client queue couldn't be created. Invalid pointer to handler was given */
+	IPMB_ERROR_GET_MESSAGE_QUEUE, /**< Failure on getting queue message */
+	IPMB_ERROR_MUTEX_LOCK, /**< Fail to lock mutex in time */
 } ipmb_error;
 
 typedef struct ipmi_msg {
@@ -156,8 +157,8 @@ typedef struct ipmi_msg_cfg {
 } __packed __aligned(4) ipmi_msg_cfg;
 
 void ipmb_init(void);
-ipmb_error ipmb_send_request(ipmi_msg *req, uint8_t bus);
-ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t bus);
+ipmb_error ipmb_send_request(ipmi_msg *req, uint8_t index);
+ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index);
 ipmb_error ipmb_read(ipmi_msg *msg, uint8_t bus);
 
 #endif

@@ -16,7 +16,7 @@
 #define i2c_bus9 8
 #define i2c_bus10 9
 
-#define I2C_BUS_NUM 10
+#define I2C_BUS_MAX_NUM 10
 
 #define CPLD_IO_I2C_BUS i2c_bus1
 #define CPLD_IO_I2C_ADDR (0x1E >> 1)

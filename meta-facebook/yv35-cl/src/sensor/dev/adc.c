@@ -117,7 +117,7 @@ bool pal_adc_read(uint8_t sensor_num, int *reading)
 			val = val * sensor_config[snrcfg_sensor_num].arg0 /
 			      sensor_config[snrcfg_sensor_num].arg1;
 		}
-		*reading = (acur_cal_MBR(sensor_num, val) / 1000) & 0xFFFF;
+		*reading = (calculate_accurate_MBR(sensor_num, val) / 1000) & 0xFFFF;
 		sensor_config[snrcfg_sensor_num].cache = *reading;
 		sensor_config[snrcfg_sensor_num].cache_status = SNR_READ_ACUR_SUCCESS;
 		return true;

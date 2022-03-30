@@ -27,7 +27,7 @@
 #define type_medusa 0x07
 #define type_fan 0x08
 
-static inline int acur_cal_MBR(uint8_t sensor_num, int val)
+static inline int calculate_accurate_MBR(uint8_t sensor_num, int val)
 { // for better accuracy, enlarge SDR to two byte scale
 	if (SDR_M(sensor_num) == 0) {
 		return ((val << 8) * SDR_Rexp(sensor_num));
@@ -35,7 +35,7 @@ static inline int acur_cal_MBR(uint8_t sensor_num, int val)
 	return ((val << 8) / SDR_M(sensor_num) * SDR_Rexp(sensor_num));
 }
 
-static inline int cal_MBR(uint8_t sensor_num, int val)
+static inline int calculate_MBR(uint8_t sensor_num, int val)
 {
 	if (SDR_M(sensor_num) == 0) {
 		return (val * SDR_Rexp(sensor_num) + round_add(sensor_num, val));
