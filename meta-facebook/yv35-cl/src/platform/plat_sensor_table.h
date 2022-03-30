@@ -7,6 +7,7 @@
 #define TMP75_IN_ADDR (0x92 >> 1)
 #define TMP75_OUT_ADDR (0x94 >> 1)
 #define TMP75_FIO_ADDR (0x90 >> 1)
+#define TMP431_ADDR (0x98 >> 1)
 #define TMP75_TEMP_OFFSET 0x00
 #define SSD0_ADDR (0xD4 >> 1)
 #define SSD0_OFFSET 0x00
