@@ -110,7 +110,7 @@ uint8_t adm1278_read(uint8_t sensor_num, int *reading)
 	switch (offset) {
 	case ADM1278_VSOURCE_OFFSET:
 		// m = +19599, b = 0, R = -2
-		val = (float)(((msg.data[1] << 8) | msg.data[0]) * 100 / 19599);
+		val = (float)(((msg.data[1] << 8) | msg.data[0]) * 100 / 19599.0);
 		break;
 
 	case ADM1278_CURRENT_OFFSET:
