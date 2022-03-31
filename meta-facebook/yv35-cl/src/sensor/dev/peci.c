@@ -55,7 +55,7 @@ bool pal_peci_read(uint8_t sensor_num, int *reading)
 	} else if (sensor_num == SENSOR_NUM_PWR_CPU) {
 		ret = peci_getPwr(sensor_num, &val);
 		if (ret) {
-			*reading = (acur_cal_MBR(sensor_num, val)) & 0xffff;
+			*reading = (calculate_accurate_MBR(sensor_num, val)) & 0xffff;
 			sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache = *reading;
 			sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status =
 				SNR_READ_ACUR_SUCCESS;
@@ -134,7 +134,7 @@ bool pal_peci_read(uint8_t sensor_num, int *reading)
 		if (sensor_config[SnrNum_SnrCfg_map[SENSOR_NUM_TEMP_CPU_TJMAX]].cache_status ==
 		    SNR_READ_ACUR_SUCCESS) {
 			sensor_config[SnrNum_SnrCfg_map[SENSOR_NUM_TEMP_CPU]].cache =
-				cpu_temp_tjmax - (cal_MBR(sensor_num, val) & 0xff);
+				cpu_temp_tjmax - (calculate_MBR(sensor_num, val) & 0xff);
 			sensor_config[SnrNum_SnrCfg_map[SENSOR_NUM_TEMP_CPU]].cache_status =
 				SNR_READ_SUCCESS;
 		}
@@ -147,7 +147,7 @@ bool pal_peci_read(uint8_t sensor_num, int *reading)
 	if (readBuf != NULL) {
 		free(readBuf);
 	}
-	*reading = (acur_cal_MBR(sensor_num, val)) & 0xffff;
+	*reading = (calculate_accurate_MBR(sensor_num, val)) & 0xffff;
 	sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache = *reading;
 	sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_READ_ACUR_SUCCESS;
 	return true;

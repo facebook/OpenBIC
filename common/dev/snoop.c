@@ -160,8 +160,8 @@ void send_post_code_to_BMC()
 					send_postcode_start_position + SNOOP_MAX_LEN;
 			}
 			memset(send_postcode_msg, 0, sizeof(ipmi_msg));
-			send_postcode_msg->InF_source = Self_IFs;
-			send_postcode_msg->InF_target = BMC_IPMB_IFs;
+			send_postcode_msg->InF_source = SELF;
+			send_postcode_msg->InF_target = BMC_IPMB;
 			send_postcode_msg->netfn = NETFN_OEM_1S_REQ;
 			send_postcode_msg->cmd = CMD_OEM_1S_SEND_POST_CODE_TO_BMC;
 			send_postcode_msg->data_len =
@@ -180,11 +180,11 @@ void send_post_code_to_BMC()
 			if (send_postcode_msg != NULL) {
 				free(send_postcode_msg);
 			}
-			if (status == ipmb_error_failure) {
+			if (status == IPMB_ERROR_FAILURE) {
 				printf("Fail to post msg to txqueue for send post code from %d to %d\n",
 				       send_postcode_start_position, send_postcode_end_position);
 				continue;
-			} else if (status == ipmb_error_get_messageQueue) {
+			} else if (status == IPMB_ERROR_GET_MESSAGE_QUEUE) {
 				printf("No response from bmc for send post code\n");
 				continue;
 			}

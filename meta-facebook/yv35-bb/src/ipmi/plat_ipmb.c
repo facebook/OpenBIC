@@ -15,8 +15,8 @@ IPMB_config pal_IPMB_config_table[] = {
 	  Reserve_ADDRESS, "Reserve_ATTR", "Reserve_ATTR" },
 };
 
-bool pal_load_IPMB_config(void)
+bool pal_load_ipmb_config(void)
 {
 	memcpy(&IPMB_config_table[0], &pal_IPMB_config_table[0], sizeof(pal_IPMB_config_table));
-	return 1;
+	return true;
 };

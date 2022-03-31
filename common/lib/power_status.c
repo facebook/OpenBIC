@@ -12,8 +12,8 @@ static bool is_post_complete = false;
 
 void set_DC_status(uint8_t gpio_num)
 {
-	is_DC_on = gpio_get(gpio_num);
-	printf("set dc status %d\n", is_DC_on);
+	is_DC_on = (gpio_get(gpio_num) == 1) ? true : false;
+	printf("[%s] gpio number(%d) status(%d)\n", __func__, gpio_num, is_DC_on);
 }
 
 bool get_DC_status()
@@ -43,8 +43,8 @@ bool get_DC_off_delayed_status()
 
 void set_post_status(uint8_t gpio_num)
 {
-	is_post_complete = !(gpio_get(gpio_num));
-	printf("set is_post_complete %d\n", is_post_complete);
+	is_post_complete = (gpio_get(gpio_num) == 1) ? false : true;
+	printf("[%s] gpio number(%d) status(%d)\n", __func__, gpio_num, is_post_complete);
 
 	if (is_post_complete) {
 		snoop_abort_thread();
@@ -58,7 +58,7 @@ bool get_post_status()
 
 void set_post_thread()
 {
-	if ((get_DC_status() == 1) && (get_post_status() == 0)) {
+	if ((get_DC_status() == true) && (get_post_status() == false)) {
 		snoop_start_thread();
 		init_send_postcode_thread();
 	}

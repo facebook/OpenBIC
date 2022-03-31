@@ -123,7 +123,7 @@ void pal_APP_MASTER_WRITE_READ(ipmi_msg *msg)
 	}
 
 	bus_7bit = ((msg->data[0] - 1) >> 1); // should ignore bit0, all bus public
-	if (bus_7bit >= I2C_BUS_NUM) {
+	if (bus_7bit >= I2C_BUS_MAX_NUM) {
 		printk("Accessing invalid bus with IPMI master write read\n");
 		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
 		return;
@@ -472,7 +472,7 @@ void pal_OEM_1S_MSG_OUT(ipmi_msg *msg)
 
 			status = ipmb_send_request(bridge_msg, IPMB_inf_index_map[target_IF]);
 
-			if (status != ipmb_error_success) {
+			if (status != IPMB_ERROR_SUCCESS) {
 				printf("OEM_MSG_OUT send IPMB req fail status: %x", status);
 				msg->completion_code = CC_BRIDGE_MSG_ERR;
 			}
@@ -486,7 +486,7 @@ void pal_OEM_1S_MSG_OUT(ipmi_msg *msg)
 		msg->data_len = 0;
 		status = ipmb_send_response(msg, IPMB_inf_index_map[msg->InF_source]);
 
-		if (status != ipmb_error_success) {
+		if (status != IPMB_ERROR_SUCCESS) {
 			printf("OEM_MSG_OUT send IPMB resp fail status: %x", status);
 		}
 	}

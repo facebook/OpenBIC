@@ -6,7 +6,7 @@
 // init
 void pal_I2C_init(void);
 void pal_BIC_init(void);
-bool pal_load_IPMB_config(void);
+bool pal_load_ipmb_config(void);
 
 // sensor
 void pal_set_sensor_poll_interval(int *interval_ms);

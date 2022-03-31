@@ -18,7 +18,7 @@ void usb_handler(uint8_t *rx_buff, int rx_len)
 {
 	uint16_t record_offset;
 	static ipmi_msg_cfg current_msg;
-	static bool fwupdate_keep_data = 0;
+	static bool fwupdate_keep_data = false;
 	static uint16_t keep_data_len = 0;
 	static uint16_t fwupdate_data_len = 0;
 
@@ -46,7 +46,7 @@ void usb_handler(uint8_t *rx_buff, int rx_len)
 		} else if (!keep_data_len) { // only fill up ipmb buffer from first package
 			current_msg.buffer.netfn = rx_buff[0] >> 2;
 			current_msg.buffer.cmd = rx_buff[1];
-			current_msg.buffer.InF_source = BMC_USB_IFs;
+			current_msg.buffer.InF_source = BMC_USB;
 			current_msg.buffer.data_len = rx_len - SIZE_NETFN_CMD;
 			fwupdate_data_len = ((rx_buff[11] << 8) | rx_buff[10]);
 			memcpy(&current_msg.buffer.data[0], &rx_buff[SIZE_NETFN_CMD],
@@ -70,7 +70,7 @@ void usb_handler(uint8_t *rx_buff, int rx_len)
 	} else {
 		current_msg.buffer.netfn = rx_buff[0] >> 2;
 		current_msg.buffer.cmd = rx_buff[1];
-		current_msg.buffer.InF_source = BMC_USB_IFs;
+		current_msg.buffer.InF_source = BMC_USB;
 		current_msg.buffer.data_len = rx_len - SIZE_NETFN_CMD;
 		memcpy(&current_msg.buffer.data[0], &rx_buff[2], current_msg.buffer.data_len);
 		while (k_msgq_put(&ipmi_msgq, &current_msg, K_NO_WAIT) != 0) {

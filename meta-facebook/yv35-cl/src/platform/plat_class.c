@@ -9,7 +9,7 @@
 static bool bic_class = SYS_CLASS_1;
 static bool is_1ou_present = 0;
 static bool is_2ou_present = 0;
-static uint8_t card_type_2ou = 0;
+static uint8_t card_type_2ou = TYPE_UNKNOWN;
 
 bool get_bic_class()
 {
@@ -72,7 +72,7 @@ void init_platform_config()
 	if (is_2ou_present) {
 		i2c_msg.data[0] = 0x6;
 		if (!i2c_master_read(&i2c_msg, retry)) {
-			if ((i2c_msg.data[0] == TYPE_2OU_DPV2)) {
+			if (i2c_msg.data[0] == TYPE_2OU_DPV2) {
 				card_type_2ou = TYPE_2OU_DPV2;
 			} else if (i2c_msg.data[0] == TYPE_2OU_SPE) {
 				card_type_2ou = TYPE_2OU_SPE;
@@ -82,6 +82,8 @@ void init_platform_config()
 				card_type_2ou = TYPE_2OU_DPV2_8;
 			} else if (i2c_msg.data[0] == TYPE_2OU_DPV2_16) { // in case the SKU exist
 				card_type_2ou = TYPE_2OU_DPV2_16;
+			} else {
+				card_type_2ou = TYPE_UNKNOWN;
 			}
 		}
 	}
