@@ -496,14 +496,19 @@ void pal_STORAGE_WRITE_FRUID_DATA(ipmi_msg *msg)
 
 void pal_STORAGE_RSV_SDR(ipmi_msg *msg)
 {
-	uint16_t RSV_ID;
+	if (msg == NULL) {
+		printf("%s: parameter msg is NULL\n", __func__);
+		return;
+	}
 
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
 	}
 
-	RSV_ID = SDR_get_RSV_ID();
+	uint16_t RSV_ID;
+
+	RSV_ID = SDR_get_RSV_ID(RSV_TABLE_INDEX_0);
 	msg->data[0] = RSV_ID & 0xFF;
 	msg->data[1] = (RSV_ID >> 8) & 0xFF;
 	msg->data_len = 2;
@@ -514,6 +519,16 @@ void pal_STORAGE_RSV_SDR(ipmi_msg *msg)
 
 void pal_STORAGE_GET_SDR(ipmi_msg *msg)
 {
+	if (msg == NULL) {
+		printf("%s: parameter msg is NULL\n", __func__);
+		return;
+	}
+
+	if (msg->data_len != 6) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
 	uint16_t next_record_ID;
 	uint16_t rsv_ID, record_ID;
 	uint8_t offset, req_len;
@@ -524,12 +539,7 @@ void pal_STORAGE_GET_SDR(ipmi_msg *msg)
 	offset = msg->data[4];
 	req_len = msg->data[5];
 
-	if (msg->data_len != 6) {
-		msg->completion_code = CC_INVALID_LENGTH;
-		return;
-	}
-
-	if (!SDR_RSV_ID_check(rsv_ID)) {
+	if (!SDR_RSV_ID_check(rsv_ID, RSV_TABLE_INDEX_0)) {
 		msg->completion_code = CC_INVALID_RESERVATION;
 		return;
 	}
@@ -916,7 +926,7 @@ void pal_OEM_1S_PECIaccess(ipmi_msg *msg)
 		if (cmd != PECI_GET_DIB_CMD && cmd != PECI_GET_TEMP0_CMD) {
 			if (msg->data[0] != PECI_CC_RSP_SUCCESS) {
 				msg->data[0] = (msg->data[0] == 0xf9) ? PECI_CC_ILLEGAL_REQUEST :
-									msg->data[0];
+									      msg->data[0];
 				memset(&msg->data[1], 0xff, u8ReadLen - 1);
 			}
 		}

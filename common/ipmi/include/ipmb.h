@@ -88,6 +88,7 @@ enum {
 	SLOT3_BIC_IFs = 0x08,
 	BB_IPMB_IFs = 0x10,
 	EXP2_IPMB_IFs = 0x15,
+	PEER_BMC_IPMB_IFs = 0x1A,
 
 	BMC_USB_IFs = 0x20,
 	PLDM_IFs = 0x40,

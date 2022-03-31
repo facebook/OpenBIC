@@ -27,7 +27,8 @@ enum {
 #define tmp75_tmp_offset 0x00
 #define SSD0_addr (0xD4 >> 1)
 #define SSD0_offset 0x00
-#define HSC_addr (0x80 >> 1)
+#define CLASS1_ADI_ADM1278_ADDR (0x80 >> 1)
+#define CLASS1_MPS_MP5990_ADDR (0x16 >> 1)
 #define PCH_addr (0x2C >> 1)
 #define CPU_PECI_addr 0x30
 #define PVCCD_HV_addr (0xC4 >> 1)
@@ -39,10 +40,6 @@ enum {
 #define VR_CUR_CMD 0x8C
 #define VR_TEMP_CMD 0x8D
 #define VR_PWR_CMD 0x96
-#define HSC_VOL_CMD 0x88
-#define HSC_CUR_CMD 0x8C
-#define HSC_TEMP_CMD 0x8D
-#define HSC_PWR_CMD 0x97
 #define PCH_TEMP_SENSOR_NUM 0x08
 
 /*  threshold sensor number, 1 based  */

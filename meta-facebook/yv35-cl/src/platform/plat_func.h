@@ -42,6 +42,7 @@ void set_post_thread();
 bool get_bic_class();
 bool get_1ou_status();
 bool get_2ou_status();
+uint8_t get_board_revision();
 uint8_t get_2ou_cardtype();
 void send_gpio_interrupt(uint8_t gpio_num);
 void enable_PRDY_interrupt();

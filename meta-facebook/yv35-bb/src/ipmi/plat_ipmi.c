@@ -287,14 +287,25 @@ void pal_STORAGE_WRITE_FRUID_DATA(ipmi_msg *msg)
 
 void pal_STORAGE_RSV_SDR(ipmi_msg *msg)
 {
-	uint16_t RSV_ID;
+	if (msg == NULL) {
+		printf("%s: parameter msg is NULL\n", __func__);
+		return;
+	}
 
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
 	}
 
-	RSV_ID = SDR_get_RSV_ID();
+	uint16_t RSV_ID;
+	uint8_t rsv_table_index = RSV_TABLE_INDEX_0;
+
+	// Config D: slot1 and slot3 need to use different reservation id
+	if (msg->InF_source == SLOT3_BIC_IFs) {
+		rsv_table_index = RSV_TABLE_INDEX_1;
+	}
+
+	RSV_ID = SDR_get_RSV_ID(rsv_table_index);
 	msg->data[0] = RSV_ID & 0xFF;
 	msg->data[1] = (RSV_ID >> 8) & 0xFF;
 	msg->data_len = 2;
@@ -305,22 +316,33 @@ void pal_STORAGE_RSV_SDR(ipmi_msg *msg)
 
 void pal_STORAGE_GET_SDR(ipmi_msg *msg)
 {
-	uint16_t next_record_ID;
-	uint16_t rsv_ID, record_ID;
-	uint8_t offset, req_len;
-	uint8_t *table_ptr;
-
-	rsv_ID = (msg->data[1] << 8) | msg->data[0];
-	record_ID = (msg->data[3] << 8) | msg->data[2];
-	offset = msg->data[4];
-	req_len = msg->data[5];
+	if (msg == NULL) {
+		printf("%s: parameter msg is NULL\n", __func__);
+		return;
+	}
 
 	if (msg->data_len != 6) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
 	}
 
-	if (!SDR_RSV_ID_check(rsv_ID)) {
+	uint16_t next_record_ID;
+	uint16_t rsv_ID, record_ID;
+	uint8_t offset, req_len;
+	uint8_t *table_ptr;
+	uint8_t rsv_table_index = RSV_TABLE_INDEX_0;
+
+	rsv_ID = (msg->data[1] << 8) | msg->data[0];
+	record_ID = (msg->data[3] << 8) | msg->data[2];
+	offset = msg->data[4];
+	req_len = msg->data[5];
+
+	// Config D: slot1 and slot3 need to use different reservation id
+	if (msg->InF_source == SLOT3_BIC_IFs) {
+		rsv_table_index = RSV_TABLE_INDEX_1;
+	}
+
+	if (!SDR_RSV_ID_check(rsv_ID, rsv_table_index)) {
 		msg->completion_code = CC_INVALID_RESERVATION;
 		return;
 	}
@@ -441,6 +463,17 @@ void pal_OEM_1S_MSG_OUT(ipmi_msg *msg)
 	}
 
 	target_IF = msg->data[0];
+
+	// To do: send SEL to another BMC
+	if (target_IF == PEER_BMC_IPMB_IFs) {
+		if (msg->InF_source == SLOT1_BIC_IFs) {
+			target_IF = SLOT3_BIC_IFs;
+		} else if (msg->InF_source == SLOT3_BIC_IFs) {
+			target_IF = SLOT1_BIC_IFs;
+		} else {
+			msg->completion_code = CC_INVALID_DATA_FIELD;
+		}
+	}
 
 	if ((IPMB_config_table[IPMB_inf_index_map[target_IF]].Inf == Reserve_IFs) ||
 	    (IPMB_config_table[IPMB_inf_index_map[target_IF]].EnStatus ==
@@ -796,7 +829,7 @@ void pal_OEM_SET_FAN_DUTY_MANUAL(ipmi_msg *msg)
 		printf("%s failed due to parameter *msg is NULL\n", __func__);
 		return;
 	}
-	
+
 	if (msg->data_len != 2) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
@@ -818,8 +851,7 @@ void pal_OEM_SET_FAN_DUTY_MANUAL(ipmi_msg *msg)
 		return;
 	}
 
-	if ((duty > MAX_FAN_DUTY) ||
-	    ((pwm_id >= MAX_FAN_PWM_INDEX) && (pwm_id != ID_ALL_PWM))) {
+	if ((duty > MAX_FAN_DUTY) || ((pwm_id >= MAX_FAN_PWM_INDEX) && (pwm_id != ID_ALL_PWM))) {
 		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
 		return;
 	}

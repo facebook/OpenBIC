@@ -10,6 +10,29 @@ static const struct device *dev_i2c[MAX_I2C_BUS_NUM];
 
 struct k_mutex i2c_mutex[MAX_I2C_BUS_NUM];
 
+/*
+ * @brief Construct an I2C message buffer.
+ *
+ * @param bus_id The I2C bus ID.
+ * @param address Slave device address(7-bit address).
+ * @param tx_len the data length that transmits to slave device.
+ * @param data the data buffer that ready to transmit to slave.
+ * @param rx_len the data length that receive the response from slave device.
+ *
+ * @retval The I2C message buffer.
+ */
+I2C_MSG construct_i2c_message(uint8_t bus_id, uint8_t address, uint8_t tx_len, uint8_t *data,
+			      uint8_t rx_len)
+{
+	I2C_MSG i2c_msg;
+	i2c_msg.bus = bus_id;
+	i2c_msg.slave_addr = address;
+	i2c_msg.tx_len = tx_len;
+	memcpy(i2c_msg.data, data, tx_len);
+	i2c_msg.rx_len = rx_len;
+	return i2c_msg;
+}
+
 void i2c_freq_set(uint8_t i2c_bus, uint8_t i2c_speed_mode)
 {
 	uint32_t dev_config_raw;
