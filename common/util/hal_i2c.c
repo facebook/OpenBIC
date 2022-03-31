@@ -15,9 +15,9 @@ struct k_mutex i2c_mutex[MAX_I2C_BUS_NUM];
  *
  * @param bus_id The I2C bus ID.
  * @param address Slave device address(7-bit address).
- * @param tx_len the data length that transmits to slave device.
- * @param data the data buffer that ready to transmit to slave.
- * @param rx_len the data length that receive the response from slave device.
+ * @param tx_len the data length that transmits to target device.
+ * @param data the data buffer that ready to transmit to target.
+ * @param rx_len the data length that receive the response from target device.
  *
  * @retval The I2C message buffer.
  */
