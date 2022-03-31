@@ -11,12 +11,12 @@
 #include "plat_def.h"
 #include "sensor.h"
 
-static bool is_DC_on = 0;
-static bool is_DC_on_5s = 0;
-static bool is_DC_off_10s = 0;
-static bool is_CPU_power_good = 0;
-static bool is_post_complete = 0;
-static bool vr_monitor_status = 1;
+static bool is_DC_on = false;
+static bool is_DC_on_5s = false;
+static bool is_DC_off_10s = false;
+static bool is_CPU_power_good = false;
+static bool is_post_complete = false;
+static bool vr_monitor_status = true;
 static bool bic_class = sys_class_1;
 static bool is_1ou_present = false;
 static bool is_2ou_present = false;
@@ -480,6 +480,11 @@ void set_sys_config()
 	uint8_t tx_len, rx_len;
 	uint8_t class_type = 0x0;
 	char *data = (uint8_t *)malloc(I2C_DATA_SIZE * sizeof(uint8_t));
+	if (data == NULL) {
+		printf("Could not allocate memory for I2C data.\n");
+		return;
+	}
+
 	/* Read the expansion present from CPLD's class type register
 	 * CPLD Class Type Register(05h)
 	 * Bit[7:4] - Board ID(0000b: Class-1, 0001b: Class-2)
@@ -534,9 +539,10 @@ void set_sys_config()
 		rx_len = 1;
 		memset(data, 0, I2C_DATA_SIZE);
 		data[0] = CPLD_2OU_EXPANSION_CARD_REG;
-		i2c_msg = construct_i2c_message(i2c_bus_to_index[1], CPLD_ADDR, tx_len, data, rx_len);
+		i2c_msg =
+			construct_i2c_message(i2c_bus_to_index[1], CPLD_ADDR, tx_len, data, rx_len);
 		if (!i2c_master_read(&i2c_msg, retry)) {
-			if ((i2c_msg.data[0] == type_2ou_dpv2)) {
+			if (i2c_msg.data[0] == type_2ou_dpv2) {
 				card_type_2ou = type_2ou_dpv2;
 			} else if (i2c_msg.data[0] == type_2ou_spe) {
 				card_type_2ou = type_2ou_spe;

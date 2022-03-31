@@ -83,6 +83,10 @@ uint8_t mp5990_init(uint8_t sensor_num)
 	uint8_t retry = 5;
 	I2C_MSG msg;
 	char *data = (uint8_t *)malloc(I2C_DATA_SIZE * sizeof(uint8_t));
+	if (data == NULL) {
+		printf("Failed to allocate memory for I2C data.\n");
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
 
 	uint8_t bus = sensor_config[SensorNum_SensorCfg_map[sensor_num]].port;
 	uint8_t slave_addr = sensor_config[SensorNum_SensorCfg_map[sensor_num]].slave_addr;
