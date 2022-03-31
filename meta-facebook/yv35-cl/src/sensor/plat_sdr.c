@@ -3083,6 +3083,13 @@ void pal_fix_fullSDR_table()
 		case SYS_BOARD_EVT3_HOTSWAP:
 		case SYS_BOARD_DVT_HOTSWAP:
 		case SYS_BOARD_MP_HOTSWAP:
+			fix_array_num = sizeof(class1_adm1278_mp5990_sdr_table) /
+					sizeof(class1_adm1278_mp5990_sdr_table[0]);
+			while (fix_array_num) {
+				add_fullSDR_table(
+					class1_adm1278_mp5990_sdr_table[fix_array_num - 1]);
+				fix_array_num--;
+			}
 			break;
 		default:
 			break;
