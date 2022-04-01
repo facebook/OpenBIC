@@ -219,6 +219,7 @@ void pal_set_sensor_poll_interval(int *interval_ms);
 bool stby_access(uint8_t sensor_num);
 bool dc_access(uint8_t sensor_num);
 bool post_access(uint8_t sensor_num);
+bool vr_access(uint8_t sensor_num);
 bool sensor_init(void);
 void disable_sensor_poll();
 void enable_sensor_poll();
