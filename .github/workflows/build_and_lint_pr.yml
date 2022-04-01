@@ -86,7 +86,7 @@ jobs:
 
     - name: Update West Project
       run: |
-        cd ${{ github.event.repository.name }} 
+        cd OpenBIC 
         west update
   
     - name: Build Platform
