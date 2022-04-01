@@ -10,6 +10,7 @@ static bool is_DC_on_delayed = false;
 static bool is_DC_off_delayed = false;
 static bool is_CPU_power_good = false;
 static bool is_post_complete = false;
+static bool vr_monitor_status = true;
 
 void set_DC_status(uint8_t gpio_num)
 {
@@ -69,4 +70,14 @@ void set_post_thread()
 		init_snoop_thread();
 		init_send_postcode_thread();
 	}
+}
+
+void set_vr_monitor_status(bool value)
+{
+	vr_monitor_status = value;
+}
+
+bool get_vr_monitor_status()
+{
+	return vr_monitor_status;
 }

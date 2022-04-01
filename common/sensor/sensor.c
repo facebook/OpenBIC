@@ -281,6 +281,14 @@ bool post_access(uint8_t sensor_number)
 	return get_post_status();
 }
 
+bool vr_access(uint8_t sensor_num)
+{
+	if (get_DC_on_delayed_status() == false) {
+		return false;
+	}
+	return get_vr_monitor_status();
+}
+
 void sensor_poll_init()
 {
 	k_thread_create(&sensor_poll, sensor_poll_stack, K_THREAD_STACK_SIZEOF(sensor_poll_stack),
