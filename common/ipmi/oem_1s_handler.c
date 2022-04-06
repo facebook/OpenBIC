@@ -799,6 +799,71 @@ __weak void OEM_1S_12V_CYCLE_SLOT(ipmi_msg *msg)
 	return;
 }
 
+__weak void OEM_1S_READ_BIC_REGISTER(ipmi_msg *msg)
+{
+	/*********************************
+	* data 0~3: start of register address to read, LSB first
+	* data 4  : bytes to read
+	***********************************/
+	if (!msg) {
+		printf("pal_OEM_1S_READ_BIC_REGISTER: parameter msg is NULL\n");
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+	if (msg->data_len != 5) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+	uint32_t *addr = (uint32_t *)(msg->data[0] | (msg->data[1] << 8) | (msg->data[2] << 16) |
+				      (msg->data[3] << 24));
+	uint8_t read_len = msg->data[4];
+	memcpy(&msg->data[0], addr, read_len);
+
+	msg->data_len = read_len;
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
+__weak void OEM_1S_WRITE_BIC_REGISTER(ipmi_msg *msg)
+{
+	/*********************************
+ 	* data 0~3: start of register address to write, LSB first
+ 	* data 4  : bytes to write, <= 4 bytes
+	* data 5~N: date to write, LSB first
+	*
+	* NOTE: The register address must be a multiple of 4
+	***********************************/
+	if (!msg) {
+		printf("pal_OEM_1S_WRITE_BIC_REGISTER: parameter msg is NULL\n");
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+	if (msg->data[4] < 1 || msg->data[4] > 4 || (msg->data_len != 5 + msg->data[4])) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint32_t addr =
+		msg->data[0] | (msg->data[1] << 8) | (msg->data[2] << 16) | (msg->data[3] << 24);
+	if (addr % 4) {
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		return;
+	}
+
+	uint8_t write_len = msg->data[4];
+	uint32_t reg_data = *(uint32_t *)addr;
+	/* replace write_len bytes */
+	reg_data &= ~BIT_MASK(write_len * 8);
+	for (uint8_t i = 0; i < write_len; i++) {
+		reg_data |= msg->data[i + 5] << (i * 8);
+	}
+	*(uint32_t *)addr = reg_data;
+
+	msg->data_len = 0;
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
 void IPMI_OEM_1S_handler(ipmi_msg *msg)
 {
 	if (msg == NULL) {
@@ -845,6 +910,12 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 		break;
 	case CMD_OEM_1S_12V_CYCLE_SLOT:
 		OEM_1S_12V_CYCLE_SLOT(msg);
+		break;
+	case CMD_OEM_1S_READ_BIC_REGISTER:
+		OEM_1S_READ_BIC_REGISTER(msg);
+		break;
+	case CMD_OEM_1S_WRITE_BIC_REGISTER:
+		OEM_1S_WRITE_BIC_REGISTER(msg);
 		break;
 #ifdef CONFIG_IPMI_KCS_ASPEED
 	case CMD_OEM_1S_GET_POST_CODE:
