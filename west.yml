@@ -6,9 +6,9 @@ manifest:
   # Please add items below based on alphabetical order.
   # These dependencies may need updating if new features are added to the firmware.
   projects:
-    - name: zephyr
+    - name: zephyrss
       remote: aspeed
-      path: zephyr
+      path: zephyrss
       revision: edb7dc6f3cc5cde814dd10e8ec02da62f833bdaf
       import: 
         name-allowlist:
