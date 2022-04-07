@@ -4,8 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define SYS_CLASS_1 0
-#define SYS_CLASS_2 1
+#define SYS_CLASS_1 1
+#define SYS_CLASS_2 2
 
 enum BIC_CLASS_TYPE {
 	TYPE_2OU_EXP = 0x1,
@@ -16,7 +16,7 @@ enum BIC_CLASS_TYPE {
 	TYPE_UNKNOWN = 0xFF,
 };
 
-bool get_bic_class();
+uint8_t get_bic_class();
 bool get_1ou_status();
 bool get_2ou_status();
 uint8_t get_2ou_cardtype();

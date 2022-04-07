@@ -4,11 +4,11 @@
 #include "plat_i2c.h"
 #include "ipmb.h"
 
-#define IPMB_BMC_BUS i2c_bus7
-#define IPMB_ME_BUS i2c_bus3
-#define IPMB_EXP1_BUS i2c_bus8
-#define IPMB_EXP2_BUS i2c_bus9
-#define IPMB_BB_BIC_BUS i2c_bus8
+#define IPMB_BMC_BUS I2C_BUS7
+#define IPMB_ME_BUS I2C_BUS3
+#define IPMB_EXP1_BUS I2C_BUS8
+#define IPMB_EXP2_BUS I2C_BUS9
+#define IPMB_BB_BIC_BUS I2C_BUS8
 
 #define BMC_I2C_ADDRESS 0x10
 #define ME_I2C_ADDRESS 0x16

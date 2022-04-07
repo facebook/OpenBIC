@@ -1,24 +1,11 @@
-#include <stdio.h>
-#include <string.h>
+#include "plat_sdr_table.h"
+
 #include "sdr.h"
-#include "pal.h"
-#include "sensor.h"
-#include "plat_sensor.h"
+#include "plat_class.h"
 #include "plat_ipmb.h"
+#include "plat_sensor_table.h"
 
-enum {
-	threshold_UNR,
-	threshold_UCR,
-	threshold_UNC,
-	threshold_LNR,
-	threshold_LCR,
-	threshold_LNC,
-	MBR_M,
-	MBR_B,
-	MBR_R,
-};
-
-SDR_Full_sensor plat_sensor_table[] = {
+SDR_Full_sensor plat_sdr_table[] = {
 	{
 		// TMP75 on board temperature
 		0x00,
@@ -2949,137 +2936,55 @@ SDR_Full_sensor plat_sensor_table[] = {
 	},
 };
 
-uint8_t fix_C2SDR_table[][10] = {
+uint8_t fix_class2_sdr_table[][10] = {
 	// sensor_num , UNR , UCR , UNC , LNR , LCR , LNC , ( M_tolerance >> 6 ) || M , ( B_accuracy >> 6 ) || B , R
 };
 
-SDR_Full_sensor fix_1ouSDR_table[] = {
+SDR_Full_sensor fix_1ou_sdr_table[] = {
 	// SDR_Full_sensor struct member
 };
-SDR_Full_sensor fix_DVPSDR_table[] = {
+SDR_Full_sensor fix_dvp_sdr_table[] = {
 	// SDR_Full_sensor struct member
 };
 
-uint8_t pal_load_sdr_table(void)
+uint8_t load_sdr_table(void)
 {
-	memcpy(&full_sensor_table, &plat_sensor_table, sizeof(plat_sensor_table));
-	return (sizeof(plat_sensor_table) / sizeof(plat_sensor_table[0]));
-};
+	memcpy(full_sdr_table, plat_sdr_table, sizeof(plat_sdr_table));
+	return sizeof(plat_sdr_table) / sizeof(SDR_Full_sensor);
+}
 
-uint8_t map_SnrNum_fullSDR(uint8_t sensor_num)
+void pal_fix_full_sdr_table()
 {
-	uint8_t i, j;
-	for (i = 0; i < SENSOR_NUM_MAX; i++) {
-		for (j = 0; j < SDR_NUM; ++j) {
-			if (sensor_num == full_sensor_table[j].sensor_num) {
-				return j;
-			} else if (i == SDR_NUM) {
-				return 0xFF;
-			}
-		}
-	}
-	return 0xFF;
-};
-
-void change_sensor_threshold(uint8_t sensor_num, uint8_t threshold_type, uint8_t change_value)
-{
-	uint8_t SnrNum_SDR_map = map_SnrNum_fullSDR(sensor_num);
-	if (SnrNum_SDR_map == 0xFF) {
-		printk("Not found change threshold sensor\n");
-		return;
-	}
-	if (threshold_type == threshold_UNR) {
-		full_sensor_table[SnrNum_SDR_map].UNRT = change_value;
-	} else if (threshold_type == threshold_UCR) {
-		full_sensor_table[SnrNum_SDR_map].UCT = change_value;
-	} else if (threshold_type == threshold_UNC) {
-		full_sensor_table[SnrNum_SDR_map].UNCT = change_value;
-	} else if (threshold_type == threshold_LNR) {
-		full_sensor_table[SnrNum_SDR_map].LNRT = change_value;
-	} else if (threshold_type == threshold_LCR) {
-		full_sensor_table[SnrNum_SDR_map].LCT = change_value;
-	} else if (threshold_type == threshold_LNC) {
-		full_sensor_table[SnrNum_SDR_map].LNCT = change_value;
-	} else {
-		printk("Not found want changing threshold\n");
-		return;
-	}
-};
-
-void change_sensor_MBR(uint8_t sensor_num, uint8_t MBR_type, uint16_t change_value)
-{
-	uint8_t SnrNum_SDR_map = map_SnrNum_fullSDR(sensor_num);
-	if (SnrNum_SDR_map == 0xFF) {
-		printk("Not found change threshold sensor\n");
-		return;
-	}
-	if (MBR_type == MBR_M) {
-		full_sensor_table[SnrNum_SDR_map].M = change_value & 0xFF;
-		if (change_value >> 8) {
-			full_sensor_table[SnrNum_SDR_map].M_tolerance =
-				((change_value >> 8) << 6) & 0xFF;
-		} else {
-			full_sensor_table[SnrNum_SDR_map].M_tolerance = 0;
-		}
-	} else if (MBR_type == MBR_B) {
-		full_sensor_table[SnrNum_SDR_map].B = change_value;
-		if (change_value >> 8) {
-			full_sensor_table[SnrNum_SDR_map].B_accuracy =
-				((change_value >> 8) << 6) & 0xFF;
-		} else {
-			full_sensor_table[SnrNum_SDR_map].B_accuracy = 0;
-		}
-	} else if (MBR_type == MBR_R) {
-		full_sensor_table[SnrNum_SDR_map].RexpBexp = change_value & 0xFF;
-	} else {
-		printk("Not found want changing MBR type\n");
-		return;
-	}
-};
-
-void add_fullSDR_table(SDR_Full_sensor add_item)
-{
-	if (map_SnrNum_fullSDR(add_item.sensor_num) != 0xFF) {
-		printk("add sensor num is already exists\n");
-		return;
-	}
-	full_sensor_table[SDR_NUM++] = add_item;
-};
-
-void pal_fix_fullSDR_table()
-{
+	// Fix sdr table according to bic type.
 	uint8_t fix_array_num;
-	if (get_bic_class()) {
-		// fix usage when fix_C2SDR_table is defined
-		fix_array_num = sizeof(fix_C2SDR_table) / sizeof(fix_C2SDR_table[0]);
+	if (get_bic_class() == SYS_CLASS_2) {
+		fix_array_num = sizeof(fix_class2_sdr_table) / sizeof(fix_class2_sdr_table[0]);
 		while (fix_array_num) {
-			for (int i = MBR_R; i >= threshold_UNR; --i) {
+			for (int i = MBR_R; i >= THRESHOLD_UNR; --i) {
 				if (i < MBR_M) {
 					change_sensor_threshold(
-						fix_C2SDR_table[fix_array_num - 1][0], i,
-						fix_C2SDR_table[fix_array_num - 1][i + 1]);
+						fix_class2_sdr_table[fix_array_num - 1][0], i,
+						fix_class2_sdr_table[fix_array_num - 1][i + 1]);
 				} else {
-					change_sensor_MBR(
-						fix_C2SDR_table[fix_array_num - 1][0], i,
-						fix_C2SDR_table[fix_array_num - 1][i + 1]);
+					change_sensor_mbr(
+						fix_class2_sdr_table[fix_array_num - 1][0], i,
+						fix_class2_sdr_table[fix_array_num - 1][i + 1]);
 				}
 			}
 			fix_array_num--;
 		}
 	}
 	if (get_1ou_status()) {
-		// fix usage when fix_1ouSDR_table is defined
-		fix_array_num = sizeof(fix_1ouSDR_table) / sizeof(fix_1ouSDR_table[0]);
+		fix_array_num = sizeof(fix_1ou_sdr_table) / sizeof(fix_1ou_sdr_table[0]);
 		while (fix_array_num) {
-			add_fullSDR_table(fix_1ouSDR_table[fix_array_num - 1]);
+			add_full_sdr_table(fix_1ou_sdr_table[fix_array_num - 1]);
 			fix_array_num--;
 		}
 	}
 	if (get_2ou_status()) {
-		// fix usage when fix_DVPSDR_table is defined
-		fix_array_num = sizeof(fix_DVPSDR_table) / sizeof(fix_DVPSDR_table[0]);
+		fix_array_num = sizeof(fix_dvp_sdr_table) / sizeof(fix_dvp_sdr_table[0]);
 		while (fix_array_num) {
-			add_fullSDR_table(fix_DVPSDR_table[fix_array_num - 1]);
+			add_full_sdr_table(fix_dvp_sdr_table[fix_array_num - 1]);
 			fix_array_num--;
 		}
 	}

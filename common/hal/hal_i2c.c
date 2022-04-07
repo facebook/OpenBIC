@@ -26,7 +26,7 @@ int i2c_master_read(I2C_MSG *msg, uint8_t retry)
 	int ret, status;
 	if (DEBUG_I2C) {
 		printf("i2c_master_read: bus %d, addr %x, rxlen %d, txlen %d, txbuf:", msg->bus,
-		       msg->slave_addr, msg->rx_len, msg->tx_len);
+		       msg->target_addr, msg->rx_len, msg->tx_len);
 		for (int i = 0; i < msg->tx_len; i++) {
 			printf(" %x", msg->data[i]);
 		}
@@ -47,7 +47,7 @@ int i2c_master_read(I2C_MSG *msg, uint8_t retry)
 
 				memcpy(txbuf, &msg->data[0], msg->tx_len);
 
-				ret = i2c_write_read(dev_i2c[msg->bus], msg->slave_addr, txbuf,
+				ret = i2c_write_read(dev_i2c[msg->bus], msg->target_addr, txbuf,
 						     msg->tx_len, rxbuf, msg->rx_len);
 
 				memcpy(&msg->data[0], rxbuf, msg->rx_len);
@@ -92,7 +92,7 @@ int i2c_master_write(I2C_MSG *msg, uint8_t retry)
 
 	if (DEBUG_I2C) {
 		printf("i2c_master_write: bus %d, addr %x, txlen %d, txbuf:", msg->bus,
-		       msg->slave_addr, msg->tx_len);
+		       msg->target_addr, msg->tx_len);
 		for (int i = 0; i < msg->tx_len; i++) {
 			printf(" %x", msg->data[i]);
 		}
@@ -104,7 +104,7 @@ int i2c_master_write(I2C_MSG *msg, uint8_t retry)
 		for (i = 0; i < retry; i++) {
 			txbuf = (uint8_t *)malloc(I2C_BUFF_SIZE * sizeof(uint8_t));
 			memcpy(txbuf, &msg->data[0], msg->tx_len);
-			ret = i2c_write(dev_i2c[msg->bus], txbuf, msg->tx_len, msg->slave_addr);
+			ret = i2c_write(dev_i2c[msg->bus], txbuf, msg->tx_len, msg->target_addr);
 			if (ret) {
 				free(txbuf);
 				continue;
@@ -133,10 +133,10 @@ int i2c_master_write(I2C_MSG *msg, uint8_t retry)
 	return ECANCELED;
 }
 
-void i2c_scan(uint8_t bus, uint8_t *slave_addr, uint8_t *slave_addr_len)
+void i2c_scan(uint8_t bus, uint8_t *target_addr, uint8_t *target_addr_len)
 {
 	uint8_t first = 0x04, last = 0x77;
-	*slave_addr_len = 0;
+	*target_addr_len = 0;
 
 	for (uint8_t i = 0; i <= last; i += 16) {
 		for (uint8_t j = 0; j < 16; j++) {
@@ -152,8 +152,8 @@ void i2c_scan(uint8_t bus, uint8_t *slave_addr, uint8_t *slave_addr_len)
 			msgs[0].len = 0U;
 			msgs[0].flags = I2C_MSG_WRITE | I2C_MSG_STOP;
 			if (i2c_transfer(dev_i2c[bus], &msgs[0], 1, i + j) == 0) {
-				slave_addr[*slave_addr_len] = (i + j) << 1;
-				(*slave_addr_len)++;
+				target_addr[*target_addr_len] = (i + j) << 1;
+				(*target_addr_len)++;
 			}
 		}
 	}

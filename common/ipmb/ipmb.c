@@ -82,6 +82,10 @@ uint8_t calculate_checksum(uint8_t *buffer, uint8_t range)
 
 ipmb_error validate_checksum(uint8_t *buffer, uint8_t buffer_len)
 {
+	if (buffer == NULL) {
+		return IPMB_ERROR_UNKNOWN;
+	}
+
 	uint8_t header_checksum = buffer[2];
 	uint8_t msg_checksum = buffer[buffer_len - 1];
 	uint8_t calc_header_checksum = calculate_checksum(buffer, IPMI_HEADER_CHECKSUM_POSITION);
@@ -304,7 +308,7 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 				}
 
 				i2c_msg->bus = ipmb_cfg.bus;
-				i2c_msg->slave_addr = ipmb_cfg.channel_target_address;
+				i2c_msg->target_addr = ipmb_cfg.channel_target_address;
 				i2c_msg->tx_len = resp_tx_size;
 				memcpy(&i2c_msg->data[0], &ipmb_buffer_tx[1], resp_tx_size);
 				ret = i2c_master_write(i2c_msg, I2C_RETRY_TIME);
@@ -366,7 +370,7 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 				}
 
 				i2c_msg->bus = ipmb_cfg.bus;
-				i2c_msg->slave_addr = ipmb_cfg.channel_target_address;
+				i2c_msg->target_addr = ipmb_cfg.channel_target_address;
 				i2c_msg->tx_len = req_tx_size;
 				memcpy(&i2c_msg->data[0], &ipmb_buffer_tx[1], req_tx_size);
 
@@ -840,7 +844,7 @@ ipmb_error ipmb_send_request(ipmi_msg *req, uint8_t index)
 		return IPMB_ERROR_FAILURE;
 	}
 	k_mutex_unlock(&mutex_send_req);
-	return ipmi_error_success;
+	return IPMB_ERROR_SUCCESS;
 }
 
 ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index)
@@ -890,7 +894,7 @@ ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index)
 		return IPMB_ERROR_FAILURE;
 	}
 	k_mutex_unlock(&mutex_send_res);
-	return ipmi_error_success;
+	return IPMB_ERROR_SUCCESS;
 }
 
 ipmb_error ipmb_read(ipmi_msg *msg, uint8_t index)
@@ -912,7 +916,7 @@ ipmb_error ipmb_read(ipmi_msg *msg, uint8_t index)
 	}
 
 	k_mutex_unlock(&mutex_read);
-	return ipmi_error_success;
+	return IPMB_ERROR_SUCCESS;
 }
 
 // Send message to IPMI message queue
@@ -1135,10 +1139,14 @@ void ipmb_init(void)
 	register_target_device();
 
 	IPMB_config_table = malloc(MAX_IPMB_IDX * sizeof(IPMB_config));
-	if (IPMB_config_table != NULL) {
-		pal_load_ipmb_config();
-	} else {
+	if (IPMB_config_table == NULL) {
 		printf("[%s] Failed to allocate memory\n", __func__);
+		return;
+	}
+
+	bool ret = pal_load_ipmb_config();
+	if (!ret) {
+		printf("[%s] Failed to load IPMB configuration\n", __func__);
 		return;
 	}
 

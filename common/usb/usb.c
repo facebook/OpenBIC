@@ -59,9 +59,14 @@ void usb_handler(uint8_t *rx_buff, int rx_len)
 			keep_data_len += rx_len;
 		}
 		if (keep_data_len == fwupdate_data_len) {
+			int retry = 3;
 			while (k_msgq_put(&ipmi_msgq, &current_msg, K_NO_WAIT) != 0) {
 				k_msgq_purge(&ipmi_msgq);
 				printf("KCS retrying put ipmi msgq\n");
+				retry--;
+				if (retry < 0) {
+					break;
+				}
 			}
 			keep_data_len = 0;
 			fwupdate_data_len = 0;
@@ -73,9 +78,14 @@ void usb_handler(uint8_t *rx_buff, int rx_len)
 		current_msg.buffer.InF_source = BMC_USB;
 		current_msg.buffer.data_len = rx_len - SIZE_NETFN_CMD;
 		memcpy(&current_msg.buffer.data[0], &rx_buff[2], current_msg.buffer.data_len);
+		int retry = 3;
 		while (k_msgq_put(&ipmi_msgq, &current_msg, K_NO_WAIT) != 0) {
 			k_msgq_purge(&ipmi_msgq);
 			printf("KCS retrying put ipmi msgq\n");
+			retry--;
+			if (retry < 0) {
+				break;
+			}
 		}
 	}
 

@@ -9,7 +9,7 @@ uint8_t eeprom_write(EEPROM_ENTRY *entry)
 	uint8_t retry = 5;
 
 	msg.bus = entry->config.port;
-	msg.slave_addr = entry->config.slave_addr;
+	msg.target_addr = entry->config.target_addr;
 	msg.tx_len = entry->data_len + 2; // write 2 byte offset to EEPROM
 	msg.data[0] = ((entry->config.start_offset + entry->offset) >> 8) & 0xFF; // offset msb
 	msg.data[1] = (entry->config.start_offset + entry->offset) & 0xFF; // offset lsb
@@ -28,7 +28,7 @@ uint8_t eeprom_read(EEPROM_ENTRY *entry)
 	uint8_t retry = 5;
 
 	msg.bus = entry->config.port;
-	msg.slave_addr = entry->config.slave_addr;
+	msg.target_addr = entry->config.target_addr;
 	msg.tx_len = 2; // write 2 byte offset to EEPROM
 	msg.rx_len = entry->data_len;
 	msg.data[0] = ((entry->config.start_offset + entry->offset) >> 8) & 0xFF; // offset msb

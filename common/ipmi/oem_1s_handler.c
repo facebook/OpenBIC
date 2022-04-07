@@ -13,7 +13,7 @@
 #include "plat_gpio.h"
 #include "plat_i2c.h"
 #include "plat_ipmi.h"
-#include "plat_sensor.h"
+#include "plat_sensor_table.h"
 #include "plat_sys.h"
 #include "util_spi.h"
 #include "util_sys.h"
@@ -116,33 +116,7 @@ __weak void OEM_1S_GET_GPIO(ipmi_msg *msg)
 		gpio_value =
 			(i >= gpio_ind_to_num_table_cnt) ? 0 : gpio_get(gpio_ind_to_num_table[i]);
 
-		switch (i % 8) {
-		case 0:
-			eight_bit_value = gpio_value;
-			break;
-		case 1:
-			eight_bit_value = eight_bit_value | (gpio_value << 1);
-			break;
-		case 2:
-			eight_bit_value = eight_bit_value | (gpio_value << 2);
-			break;
-		case 3:
-			eight_bit_value = eight_bit_value | (gpio_value << 3);
-			break;
-		case 4:
-			eight_bit_value = eight_bit_value | (gpio_value << 4);
-			break;
-		case 5:
-			eight_bit_value = eight_bit_value | (gpio_value << 5);
-			break;
-		case 6:
-			eight_bit_value = eight_bit_value | (gpio_value << 6);
-			break;
-		case 7:
-			eight_bit_value = eight_bit_value | (gpio_value << 7);
-			break;
-		}
-
+		eight_bit_value = eight_bit_value | (gpio_value << (i % 8));
 		msg->data[i / 8] = eight_bit_value;
 	}
 	msg->completion_code = CC_SUCCESS;
@@ -307,15 +281,15 @@ __weak void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 	case COMPNT_PVCCINFAON:
 	case COMPNT_PVCCFA_EHV:
 		if ((component == COMPNT_PVCCIN) || (component == COMPNT_PVCCFA_EHV_FIVRA)) {
-			i2c_msg.slave_addr = PVCCIN_addr;
+			i2c_msg.target_addr = PVCCIN_ADDR;
 		}
 		if (component == COMPNT_PVCCD_HV) {
-			i2c_msg.slave_addr = PVCCD_HV_addr;
+			i2c_msg.target_addr = PVCCD_HV_ADDR;
 		}
 		if ((component == COMPNT_PVCCINFAON) || (component == COMPNT_PVCCFA_EHV)) {
-			i2c_msg.slave_addr = PVCCFA_EHV_addr;
+			i2c_msg.target_addr = PVCCFA_EHV_ADDR;
 		}
-		i2c_msg.bus = i2c_bus5;
+		i2c_msg.bus = I2C_BUS5;
 		i2c_msg.tx_len = 3;
 		i2c_msg.data[0] = 0xC7;
 		i2c_msg.data[1] = 0x94;
@@ -583,9 +557,9 @@ __weak void OEM_1S_SENSOR_POLL_EN(ipmi_msg *msg)
 	}
 
 	if (msg->data[0] == 1) {
-		enable_snr_poll();
+		enable_sensor_poll();
 	} else if (msg->data[0] == 0) {
-		disable_snr_poll();
+		disable_sensor_poll();
 	} else {
 		msg->completion_code = CC_INVALID_DATA_FIELD;
 		return;
@@ -596,84 +570,72 @@ __weak void OEM_1S_SENSOR_POLL_EN(ipmi_msg *msg)
 	return;
 }
 
-__weak void OEM_1S_ACCURACY_SENSOR(ipmi_msg *msg)
+__weak void OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg)
 {
 	if (msg == NULL) {
 		return;
 	}
 
-	/*********************************
-     * buf 0: target sensor number
-     * buf 1: read option
-     *          0: read from cache
-     *          1: read from sensor
-     * buf 2: sensor report status
-     ***********************************/
-	uint8_t status = -1, snr_num, option, snr_report_status;
-	int reading;
-
+	ACCURACY_SENSOR_READING_REQ *req = (ACCURACY_SENSOR_READING_REQ *)msg->data;
+	ACCURACY_SENSOR_READING_RES *res = (ACCURACY_SENSOR_READING_RES *)msg->data;
+	uint8_t status = -1, sensor_report_status;
+	float reading;
 	if (msg->data_len != 2) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
 	}
 
 	// following IPMI sensor status response
-	if (enable_sensor_poll) {
-		snr_report_status = 0xC0;
+	if (enable_sensor_poll_thread) {
+		sensor_report_status = SENSOR_EVENT_MESSAGES_ENABLE | SENSOR_SCANNING_ENABLE;
 	} else {
-		snr_report_status = 0x80;
+		sensor_report_status = SENSOR_EVENT_MESSAGES_ENABLE;
 	}
 
-	snr_num = msg->data[0];
-	option = msg->data[1];
-
-	if (option == 0) {
-		if (enable_sensor_poll) {
-			status = get_sensor_reading(snr_num, &reading, get_from_cache);
+	if (req->read_option == GET_FROM_CACHE) {
+		if (enable_sensor_poll_thread) {
+			status = get_sensor_reading(req->sensor_num, &reading, GET_FROM_CACHE);
 		} else {
-			status = SNR_POLLING_DISABLE;
+			status = SENSOR_POLLING_DISABLE;
 		}
-	} else if (option == 1) {
-		status = get_sensor_reading(snr_num, &reading, get_from_sensor);
+	} else if (req->read_option == GET_FROM_SENSOR) {
+		status = get_sensor_reading(req->sensor_num, &reading, GET_FROM_SENSOR);
 	}
 
 	switch (status) {
-	case SNR_READ_SUCCESS:
-		msg->data[0] = reading & 0xff;
-		msg->data[1] = 0x00;
-		msg->data[2] = snr_report_status;
-		msg->data_len = 3;
+	case SENSOR_READ_SUCCESS:
+		res->decimal = (int16_t)reading;
+		if (reading < 0) {
+			res->fraction = (uint16_t)((res->decimal - reading + 0.0005) * 1000);
+		} else {
+			res->fraction = (uint16_t)((reading - res->decimal + 0.0005) * 1000);
+		}
+		msg->data[4] = sensor_report_status;
+		msg->data_len = 5;
 		msg->completion_code = CC_SUCCESS;
 		break;
-	case SNR_READ_ACUR_SUCCESS:
-		msg->data[0] = (reading >> 8) & 0xff;
-		msg->data[1] = reading & 0xff;
-		msg->data[2] = snr_report_status;
-		msg->data_len = 3;
-		msg->completion_code = CC_SUCCESS;
-		break;
-	case SNR_NOT_ACCESSIBLE:
-	case SNR_INIT_STATUS:
-		msg->data[0] = 0x00;
-		msg->data[1] = 0x00;
+	case SENSOR_NOT_ACCESSIBLE:
+	case SENSOR_INIT_STATUS:
+		res->decimal = 0;
+		res->fraction = 0;
 		// notice BMC about sensor temporary in not accessible status
-		msg->data[2] = (snr_report_status | 0x20);
-		msg->data_len = 3;
+		msg->data[4] = (sensor_report_status | SENSOR_READING_STATE_UNAVAILABLE);
+		msg->data_len = 5;
 		msg->completion_code = CC_SUCCESS;
 		break;
-	case SNR_POLLING_DISABLE:
+	case SENSOR_POLLING_DISABLE:
 		// getting sensor cache while sensor polling disable
 		msg->completion_code = CC_SENSOR_NOT_PRESENT;
 		break;
-	case SNR_FAIL_TO_ACCESS:
+	case SENSOR_FAIL_TO_ACCESS:
 		// transaction error
 		msg->completion_code = CC_NODE_BUSY;
 		break;
-	case SNR_NOT_FOUND:
+	case SENSOR_NOT_FOUND:
 		// request sensor number not found
 		msg->completion_code = CC_INVALID_DATA_FIELD;
 		break;
-	case SNR_UNSPECIFIED_ERROR:
+	case SENSOR_UNSPECIFIED_ERROR:
 	default:
 		// unknown error
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
@@ -848,8 +810,8 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_SENSOR_POLL_EN: // debug command
 		OEM_1S_SENSOR_POLL_EN(msg);
 		break;
-	case CMD_OEM_1S_ACCURACY_SENSOR:
-		OEM_1S_ACCURACY_SENSOR(msg);
+	case CMD_OEM_1S_ACCURACY_SENSOR_READING:
+		OEM_1S_ACCURACY_SENSOR_READING(msg);
 		break;
 	case CMD_OEM_1S_GET_SET_GPIO:
 		OEM_1S_GET_SET_GPIO(msg);

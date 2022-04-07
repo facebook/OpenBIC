@@ -1,40 +1,23 @@
-#ifndef SENSOR_DEF_H
-#define SENSOR_DEF_H
+#ifndef PLAT_SENSOR_TABLE_H
+#define PLAT_SENSOR_TABLE_H
 
-enum {
-	adc_port0 = 0,
-	adc_port1,
-	adc_port2,
-	adc_port3,
-	adc_port4,
-	adc_port5,
-	adc_port6,
-	adc_port7,
-	adc_port8,
-	adc_port9,
-	adc_port10,
-	adc_port11,
-	adc_port12,
-	adc_port13,
-	adc_port14,
-	adc_port15,
-};
+#include <stdint.h>
 
 /*  define config for sensors  */
-#define tmp75_in_addr (0x92 >> 1)
-#define tmp75_out_addr (0x94 >> 1)
-#define tmp75_fio_addr (0x90 >> 1)
-#define tmp75_tmp_offset 0x00
-#define SSD0_addr (0xD4 >> 1)
-#define SSD0_offset 0x00
-#define HSC_addr (0x80 >> 1)
-#define PCH_addr (0x2C >> 1)
-#define CPU_PECI_addr 0x30
-#define PVCCD_HV_addr (0xC4 >> 1)
-#define PVCCINFAON_addr (0xEC >> 1)
-#define PVCCFA_EHV_addr (0xEC >> 1)
-#define PVCCIN_addr (0xC0 >> 1)
-#define PVCCFA_EHV_FIVRA_addr (0xC0 >> 1)
+#define TMP75_IN_ADDR (0x92 >> 1)
+#define TMP75_OUT_ADDR (0x94 >> 1)
+#define TMP75_FIO_ADDR (0x90 >> 1)
+#define TMP75_TEMP_OFFSET 0x00
+#define SSD0_ADDR (0xD4 >> 1)
+#define SSD0_OFFSET 0x00
+#define HSC_ADDR (0x80 >> 1)
+#define PCH_ADDR (0x2C >> 1)
+#define ME_SENSOR_NUM_TEMP_PCH 0x08
+#define PVCCD_HV_ADDR (0xC4 >> 1)
+#define PVCCINFAON_ADDR (0xEC >> 1)
+#define PVCCFA_EHV_ADDR (0xEC >> 1)
+#define PVCCIN_ADDR (0xC0 >> 1)
+#define PVCCFA_EHV_FIVRA_ADDR (0xC0 >> 1)
 #define VR_VOL_CMD 0x8B
 #define VR_CUR_CMD 0x8C
 #define VR_TEMP_CMD 0x8D
@@ -43,6 +26,20 @@ enum {
 #define HSC_CUR_CMD 0x8C
 #define HSC_TEMP_CMD 0x8D
 #define HSC_PWR_CMD 0x97
+#define SSD0_MUX_ADDR (0xE2 >> 1)
+#define SSD0_CHANNEL 2
+#define CPU_PECI_ADDR 0x30
+#define TEMP_CPU_MARGIN_INDEX 0x02
+#define TEMP_CPU_MARGIN_PARAM 0x00FF
+#define TEMP_CPU_TJMAX_INDEX 0x10
+#define TEMP_CPU_TJMAX_PARAM 0x0000
+#define TEMP_DIMM_INDEX 0x0E
+#define TEMP_DIMM_A_PARAM 0x0000
+#define TEMP_DIMM_C_PARAM 0x0002
+#define TEMP_DIMM_D_PARAM 0x0003
+#define TEMP_DIMM_E_PARAM 0x0004
+#define TEMP_DIMM_G_PARAM 0x0006
+#define TEMP_DIMM_H_PARAM 0x0007
 
 /*  threshold sensor number, 1 based  */
 #define SENSOR_NUM_TEMP_TMP75_IN 0x01
@@ -103,5 +100,7 @@ enum {
 #define SENSOR_NUM_VR_HOT 0xB2
 #define SENSOR_NUM_CPUDIMM_HOT 0xB3
 #define SENSOR_NUM_CATERR 0xEB
+
+uint8_t load_sensor_config(void);
 
 #endif

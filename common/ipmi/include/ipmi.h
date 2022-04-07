@@ -13,11 +13,6 @@ extern uint8_t IPMB_inf_index_map[];
 extern uint8_t isPwOn;
 extern struct k_msgq ipmi_msgq;
 
-typedef enum ipmi_error {
-	ipmi_error_success = 0, /**< Generic no-error flag    */
-	ipmi_error_mutex_timeout, /**< Fail to get mutex in time*/
-} ipmi_error;
-
 struct ipmi_request {
 	uint8_t netfn;
 	uint8_t cmd;
@@ -50,7 +45,7 @@ bool pal_request_msg_to_BIC_from_ME(uint8_t netfn, uint8_t cmd);
 bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd);
 
 void ipmi_init(void);
-ipmi_error IPMI_handler(void *arug0, void *arug1, void *arug2);
+void IPMI_handler(void *arug0, void *arug1, void *arug2);
 
 enum {
 	/* generic completion codes 00h, C0h-FFh */
@@ -171,7 +166,7 @@ enum {
 	CMD_OEM_1S_RESET_BMC = 0x16,
 	CMD_OEM_1S_SET_JTAG_TAP_STA = 0x21,
 	CMD_OEM_1S_JTAG_DATA_SHIFT = 0x22,
-	CMD_OEM_1S_ACCURACY_SENSOR = 0x23,
+	CMD_OEM_1S_ACCURACY_SENSOR_READING = 0x23,
 	CMD_OEM_1S_ASD_INIT = 0x28,
 	CMD_OEM_1S_PECI_ACCESS = 0x29,
 	CMD_OEM_1S_SENSOR_POLL_EN = 0x30,

@@ -3,6 +3,10 @@
 
 #include "ipmi.h"
 
+#define SENSOR_EVENT_MESSAGES_ENABLE (1 << 7)
+#define SENSOR_SCANNING_ENABLE (1 << 6)
+#define SENSOR_READING_STATE_UNAVAILABLE (1 << 5)
+
 enum FIRMWARE_COMPONENT {
 	COMPNT_CPLD = 1,
 	COMPNT_BIC,
@@ -28,13 +32,24 @@ enum GET_SET_GPIO_OPTIONS {
 	GET_GPIO_DIRECTION_STATUS,
 	SET_GPIO_DIRECTION_STATUS,
 };
+typedef struct _ACCURACY_SENSOR_READING_REQ {
+	uint8_t sensor_num;
+	uint8_t read_option;
+} ACCURACY_SENSOR_READING_REQ;
+
+typedef struct _ACCURACY_SENSOR_READING_RES {
+	uint16_t decimal;
+	uint16_t fraction;
+	uint8_t status;
+} ACCURACY_SENSOR_READING_RES;
+
 void OEM_1S_MSG_OUT(ipmi_msg *msg);
 void OEM_1S_GET_GPIO(ipmi_msg *msg);
 void OEM_1S_FW_UPDATE(ipmi_msg *msg);
 void OEM_1S_GET_FW_VERSION(ipmi_msg *msg);
 void OEM_1S_RESET_BMC(ipmi_msg *msg);
 void OEM_1S_SENSOR_POLL_EN(ipmi_msg *msg);
-void OEM_1S_ACCURACY_SENSOR(ipmi_msg *msg);
+void OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg);
 void OEM_1S_GET_SET_GPIO(ipmi_msg *msg);
 void OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg);
 void OEM_1S_GET_BIC_STATUS(ipmi_msg *msg);

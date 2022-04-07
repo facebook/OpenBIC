@@ -54,6 +54,11 @@ typedef struct _GPIO_CFG_ {
 	void (*int_cb)();
 } GPIO_CFG;
 
+typedef struct _SET_GPIO_VALUE_CFG_ {
+	uint8_t gpio_num;
+	uint8_t gpio_value;
+} SET_GPIO_VALUE_CFG;
+
 extern GPIO_CFG gpio_cfg[];
 
 enum {

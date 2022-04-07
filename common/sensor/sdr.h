@@ -1,7 +1,8 @@
 #ifndef SDR_H
 #define SDR_H
 
-#include <zephyr.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 /* SDR definition follow IPMI specification V2 */
 
@@ -406,14 +407,33 @@ typedef struct _SDR_INFO_ {
 	uint16_t current_ID;
 } SDR_INFO;
 
+enum {
+	THRESHOLD_UNR,
+	THRESHOLD_UCR,
+	THRESHOLD_UNC,
+	THRESHOLD_LNR,
+	THRESHOLD_LCR,
+	THRESHOLD_LNC,
+	/* Follow the section 36.3 of IPMI spec,
+	 * there are three parameters for sensor reading conversion formula.
+	 * M: Signed integer constant multiplier
+	 * B: Signed additive "offset"
+	 * R: Signed Exponent
+	 */
+	MBR_M,
+	MBR_B,
+	MBR_R,
+};
+
 extern uint8_t is_SDR_not_init;
-extern uint8_t SnrNum_SDR_map[];
-extern SDR_Full_sensor full_sensor_table[];
+// Mapping sensor number to sdr config index
+extern uint8_t sdr_index_map[];
+extern SDR_Full_sensor full_sdr_table[];
 extern const int negative_ten_power[16];
 #define SDR_M(sensor_num)                                                                          \
-	(((full_sensor_table[SnrNum_SDR_map[sensor_num]].M_tolerance & 0xC0) << 2) |               \
-	 full_sensor_table[SnrNum_SDR_map[sensor_num]].M)
-#define SDR_R(sensor_num) ((full_sensor_table[SnrNum_SDR_map[sensor_num]].RexpBexp >> 4) & 0x0F)
+	(((full_sdr_table[sdr_index_map[sensor_num]].M_tolerance & 0xC0) << 2) |                   \
+	 full_sdr_table[sdr_index_map[sensor_num]].M)
+#define SDR_R(sensor_num) ((full_sdr_table[sdr_index_map[sensor_num]].RexpBexp >> 4) & 0x0F)
 #define SDR_Rexp(sensor_num) negative_ten_power[SDR_R(sensor_num)]
 
 static inline uint8_t round_add(uint8_t sensor_num, int val)
@@ -429,6 +449,11 @@ uint16_t SDR_get_record_ID(uint16_t current_ID);
 uint16_t SDR_check_record_ID(uint16_t current_ID);
 uint16_t SDR_get_RSV_ID(void);
 bool SDR_RSV_ID_check(uint16_t ID);
-uint8_t SDR_init(void);
+uint8_t sdr_init(void);
+void pal_fix_full_sdr_table(void);
+bool check_sdr_num_exist(uint8_t sensor_num);
+void add_full_sdr_table(SDR_Full_sensor add_item);
+void change_sensor_threshold(uint8_t sensor_num, uint8_t threshold_type, uint8_t change_value);
+void change_sensor_mbr(uint8_t sensor_num, uint8_t mbr_type, uint16_t change_value);
 
 #endif
