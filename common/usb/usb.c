@@ -14,6 +14,15 @@ static const struct device *dev;
 struct k_thread USB_handler;
 K_KERNEL_STACK_MEMBER(USB_handler_stack, USB_HANDLER_STACK_SIZE);
 
+static inline void try_ipmi_message(ipmi_msg_cfg *current_msg, int retry)
+{
+	for (/*retry*/; k_msgq_put(&ipmi_msgq, current_msg, K_NO_WAIT) != 0 && retry >= 0;
+	     retry--) {
+		k_msgq_purge(&ipmi_msgq);
+		printf("KCS retrying put ipmi msgq\n");
+	}
+}
+
 void usb_handler(uint8_t *rx_buff, int rx_len)
 {
 	uint16_t record_offset;
@@ -59,10 +68,7 @@ void usb_handler(uint8_t *rx_buff, int rx_len)
 			keep_data_len += rx_len;
 		}
 		if (keep_data_len == fwupdate_data_len) {
-			while (k_msgq_put(&ipmi_msgq, &current_msg, K_NO_WAIT) != 0) {
-				k_msgq_purge(&ipmi_msgq);
-				printf("KCS retrying put ipmi msgq\n");
-			}
+			try_ipmi_message(&current_msg, 3);
 			keep_data_len = 0;
 			fwupdate_data_len = 0;
 			fwupdate_keep_data = false;
@@ -73,10 +79,7 @@ void usb_handler(uint8_t *rx_buff, int rx_len)
 		current_msg.buffer.InF_source = BMC_USB;
 		current_msg.buffer.data_len = rx_len - SIZE_NETFN_CMD;
 		memcpy(&current_msg.buffer.data[0], &rx_buff[2], current_msg.buffer.data_len);
-		while (k_msgq_put(&ipmi_msgq, &current_msg, K_NO_WAIT) != 0) {
-			k_msgq_purge(&ipmi_msgq);
-			printf("KCS retrying put ipmi msgq\n");
-		}
+		try_ipmi_message(&current_msg, 3);
 	}
 
 	return;

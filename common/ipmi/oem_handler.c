@@ -1,7 +1,7 @@
 #include "oem_handler.h"
 
 #include "sensor.h"
-#include "plat_sensor.h"
+#include "plat_sensor_table.h"
 #include "guid.h"
 #include "plat_guid.h"
 
@@ -12,8 +12,9 @@ __weak void OEM_NM_SENSOR_READ(ipmi_msg *msg)
 		return;
 	}
 
-	uint8_t status, snr_num;
-	int reading;
+	uint8_t status, sensor_num;
+	float reading;
+	int val;
 
 	// only input enable status
 	if (msg->data_len < 3) {
@@ -23,31 +24,34 @@ __weak void OEM_NM_SENSOR_READ(ipmi_msg *msg)
 
 	// Follow INTEL NM SPEC, read platform pwr from HSC
 	if (msg->data[0] == 0x00) {
-		snr_num = SENSOR_NUM_PWR_HSCIN;
-		status = get_sensor_reading(snr_num, &reading, get_from_cache);
+		sensor_num = SENSOR_NUM_PWR_HSCIN;
+		status = get_sensor_reading(sensor_num, &reading, GET_FROM_CACHE);
+
+		val = (calculate_accurate_MBR(sensor_num, (int)reading) / 1000) & 0xffff;
+
 		// scale down to one byte and times SDR to get original reading
-		reading = (reading >> 8) * SDR_M(snr_num);
+		val = (val >> 8) * SDR_M(sensor_num);
 	} else {
 		msg->completion_code = CC_INVALID_DATA_FIELD;
 		return;
 	}
 
 	switch (status) {
-	case SNR_READ_ACUR_SUCCESS:
-		msg->data[1] = reading & 0xFF;
-		msg->data[2] = (reading >> 8) & 0xFF;
+	case SENSOR_READ_SUCCESS:
+		msg->data[1] = val & 0xFF;
+		msg->data[2] = (val >> 8) & 0xFF;
 		msg->data_len = 3;
 		msg->completion_code = CC_SUCCESS;
 		break;
-	case SNR_FAIL_TO_ACCESS:
+	case SENSOR_FAIL_TO_ACCESS:
 		// transection error
 		msg->completion_code = CC_NODE_BUSY;
 		break;
-	case SNR_NOT_ACCESSIBLE:
+	case SENSOR_NOT_ACCESSIBLE:
 		// DC off
 		msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
 		break;
-	case SNR_NOT_FOUND:
+	case SENSOR_NOT_FOUND:
 		// request sensor number not found
 		msg->completion_code = CC_INVALID_DATA_FIELD;
 		break;

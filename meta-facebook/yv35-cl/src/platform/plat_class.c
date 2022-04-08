@@ -6,12 +6,12 @@
 #include "hal_i2c.h"
 #include "plat_gpio.h"
 
-static bool bic_class = SYS_CLASS_1;
+static uint8_t bic_class = SYS_CLASS_1;
 static bool is_1ou_present = 0;
 static bool is_2ou_present = 0;
 static uint8_t card_type_2ou = TYPE_UNKNOWN;
 
-bool get_bic_class()
+uint8_t get_bic_class()
 {
 	return bic_class;
 }
@@ -43,11 +43,11 @@ void init_platform_config()
 	}
 
 	i2c_msg.bus = i2c_bus_to_index[1];
-	i2c_msg.slave_addr = 0x42 >> 1;
+	i2c_msg.target_addr = 0x42 >> 1;
 	i2c_msg.rx_len = 0x0;
 	i2c_msg.tx_len = 0x2;
 	i2c_msg.data[0] = 0x5;
-	i2c_msg.data[1] = (bic_class << 4) & 0x10; // set CPLD class in reg 0x5, bit 4
+	i2c_msg.data[1] = ((bic_class - 1) << 4) & 0x10; // set CPLD class in reg 0x5, bit 4
 	if (i2c_master_write(&i2c_msg, retry)) {
 		printf("Set CPLD class type fail\n");
 	} else {
@@ -58,32 +58,39 @@ void init_platform_config()
 			is_1ou_present = (i2c_msg.data[0] & 0x4 ? 0 : 1);
 			is_2ou_present = (i2c_msg.data[0] & 0x8 ? 0 : 1);
 
-			if ((i2c_msg.data[0] & 0x10) != bic_class) {
-				printf("Set class type %x but read %x\n", bic_class,
+			if ((i2c_msg.data[0] & 0x10) != (bic_class - 1)) {
+				printf("Set class type %x but read %x\n", bic_class - 1,
 				       (i2c_msg.data[0] & 0x10));
 			}
 		} else {
 			printf("Read expansion present from CPLD error\n");
 		}
 	}
-	printk("bic class type : %d  1ou present status : %d  2ou present status : %d\n",
-	       bic_class + 1, is_1ou_present, is_2ou_present);
+	printk("bic class type : %d  1ou present status : %d  2ou present status : %d\n", bic_class,
+	       is_1ou_present, is_2ou_present);
 
 	if (is_2ou_present) {
 		i2c_msg.data[0] = 0x6;
 		if (!i2c_master_read(&i2c_msg, retry)) {
-			if (i2c_msg.data[0] == TYPE_2OU_DPV2) {
+			switch (i2c_msg.data[0]) {
+			case TYPE_2OU_DPV2:
 				card_type_2ou = TYPE_2OU_DPV2;
-			} else if (i2c_msg.data[0] == TYPE_2OU_SPE) {
+				break;
+			case TYPE_2OU_SPE:
 				card_type_2ou = TYPE_2OU_SPE;
-			} else if (i2c_msg.data[0] == TYPE_2OU_EXP) {
+				break;
+			case TYPE_2OU_EXP:
 				card_type_2ou = TYPE_2OU_EXP;
-			} else if (i2c_msg.data[0] == TYPE_2OU_DPV2_8) { // in case the SKU exist
+				break;
+			case TYPE_2OU_DPV2_8:
 				card_type_2ou = TYPE_2OU_DPV2_8;
-			} else if (i2c_msg.data[0] == TYPE_2OU_DPV2_16) { // in case the SKU exist
+				break;
+			case TYPE_2OU_DPV2_16:
 				card_type_2ou = TYPE_2OU_DPV2_16;
-			} else {
+				break;
+			default:
 				card_type_2ou = TYPE_UNKNOWN;
+				break;
 			}
 		}
 	}

@@ -11,7 +11,7 @@ int peci_init()
 	uint32_t bitrate = 1000;
 	if (!dev) {
 		printf("peci device not found");
-		return false;
+		return 0;
 	}
 	ret = peci_config(dev, bitrate);
 	if (ret) {
@@ -54,11 +54,20 @@ int peci_read(uint8_t cmd, uint8_t address, uint8_t u8Index, uint16_t u16Param, 
 {
 	struct peci_msg rdpkgcfg;
 	int ret;
+
+	if (readBuf == NULL) {
+		printf("PECI read buffer was passed in as null\n");
+		return -1;
+	}
 	rdpkgcfg.cmd_code = cmd;
 	rdpkgcfg.addr = address;
 	rdpkgcfg.tx_buffer.len = 0x05;
 	rdpkgcfg.rx_buffer.len = u8ReadLen;
 	rdpkgcfg.tx_buffer.buf = malloc(rdpkgcfg.tx_buffer.len * sizeof(uint8_t));
+	if (rdpkgcfg.tx_buffer.buf == NULL) {
+		printf("Could not initialize memory for tx_buffer\n");
+		return -1;
+	}
 	rdpkgcfg.rx_buffer.buf = readBuf;
 	rdpkgcfg.tx_buffer.buf[0] = 0x00;
 	rdpkgcfg.tx_buffer.buf[1] = u8Index;
@@ -124,99 +133,4 @@ bool peci_retry_read(uint8_t cmd, uint8_t address, uint8_t u8Index, uint16_t u16
 		}
 	}
 	return false;
-}
-
-bool peci_getPwr(uint8_t sensor_num, int *reading)
-{
-	uint8_t rdpkgcfgCmd = PECI_RD_PKG_CFG0_CMD;
-	uint8_t PECIaddr = 0x30;
-	uint8_t readlen = 0x05;
-	uint8_t *readbuf = malloc(2 * readlen * sizeof(uint8_t));
-	uint8_t u8index[2] = { 0x03, 0x1F };
-	uint16_t u16Param[2] = { 0x00FF, 0x0000 };
-	uint8_t ret, complete_code;
-	bool is_retry_success = false;
-	uint32_t pkg_energy, run_time, diff_energy, diff_time;
-	static uint32_t last_pkg_energy = 0, last_run_time = 0;
-
-	peci_read(rdpkgcfgCmd, PECIaddr, u8index[0], u16Param[0], readlen, readbuf);
-	complete_code = readbuf[0];
-	if (complete_code == PECI_CC_RSP_TIMEOUT ||
-	    complete_code == PECI_CC_OUT_OF_RESOURCES_TIMEOUT) {
-		is_retry_success = peci_retry_read(rdpkgcfgCmd, PECIaddr, u8index[0], u16Param[0],
-						   readlen, readbuf);
-		if (!is_retry_success) {
-			printf("PECI sensor [%x] response timeout. Reach Max retry.\n", sensor_num);
-			free(readbuf);
-			return false;
-		}
-	}
-	ret = peci_read(rdpkgcfgCmd, PECIaddr, u8index[1], u16Param[1], readlen, &readbuf[5]);
-	complete_code = readbuf[5];
-	if (complete_code == PECI_CC_RSP_TIMEOUT ||
-	    complete_code == PECI_CC_OUT_OF_RESOURCES_TIMEOUT) {
-		is_retry_success = peci_retry_read(rdpkgcfgCmd, PECIaddr, u8index[1], u16Param[1],
-						   readlen, &readbuf[5]);
-		if (!is_retry_success) {
-			printf("PECI sensor [%x] response timeout. Reach Max retry.\n", sensor_num);
-			free(readbuf);
-			return false;
-		}
-	}
-	if (ret) {
-		free(readbuf);
-		return false;
-	}
-	if (readbuf[0] != PECI_CC_RSP_SUCCESS || readbuf[5] != PECI_CC_RSP_SUCCESS) {
-		if (readbuf[0] == PECI_CC_ILLEGAL_REQUEST ||
-		    readbuf[5] == PECI_CC_ILLEGAL_REQUEST) {
-			printf("Unknown request\n");
-		} else {
-			printf("PECI control hardware, firmware or associated logic error\n");
-		}
-		free(readbuf);
-		return false;
-	}
-
-	pkg_energy = readbuf[4];
-	pkg_energy = (pkg_energy << 8) | readbuf[3];
-	pkg_energy = (pkg_energy << 8) | readbuf[2];
-	pkg_energy = (pkg_energy << 8) | readbuf[1];
-
-	run_time = readbuf[9];
-	run_time = (run_time << 8) | readbuf[8];
-	run_time = (run_time << 8) | readbuf[7];
-	run_time = (run_time << 8) | readbuf[6];
-
-	if (last_pkg_energy == 0 &&
-	    last_run_time == 0) { // first read, need second data to calculate
-		last_pkg_energy = pkg_energy;
-		last_run_time = run_time;
-		free(readbuf);
-		return false;
-	}
-
-	if (pkg_energy >= last_pkg_energy) {
-		diff_energy = pkg_energy - last_pkg_energy;
-	} else {
-		diff_energy = pkg_energy + (0xffffffff - last_pkg_energy + 1);
-	}
-	last_pkg_energy = pkg_energy;
-
-	if (run_time >= last_run_time) {
-		diff_time = run_time - last_run_time;
-	} else {
-		diff_time = run_time + (0xffffffff - last_run_time + 1);
-	}
-	last_run_time = run_time;
-
-	if (diff_time == 0) {
-		free(readbuf);
-		return false;
-	} else {
-		free(readbuf);
-		*reading = ((float)diff_energy / (float)diff_time *
-			    0.06103515625); // energy / unit time
-		return true;
-	}
 }

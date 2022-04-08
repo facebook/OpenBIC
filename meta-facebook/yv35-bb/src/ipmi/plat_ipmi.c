@@ -130,7 +130,7 @@ void pal_APP_MASTER_WRITE_READ(ipmi_msg *msg)
 	}
 
 	i2c_msg.bus = i2c_bus_to_index[bus_7bit];
-	i2c_msg.slave_addr = (msg->data[1] >> 1); // 8 bit address to 7 bit
+	i2c_msg.target_addr = (msg->data[1] >> 1); // 8 bit address to 7 bit
 	i2c_msg.rx_len = msg->data[2];
 	i2c_msg.tx_len = msg->data_len - 3;
 
@@ -379,7 +379,7 @@ void pal_SENSOR_GET_SENSOR_READING(ipmi_msg *msg)
 		// SDR sensor initialization bit6 enable scan, bit5 enable event
 		// retunr data 1 bit 7 set to 0 to disable all event msg. bit 6 set to 0 disable sensor scan
 		msg->data[1] =
-			((full_sensor_table[SnrNum_SDR_map[snr_num]].sensor_init & 0x60) << 1);
+			((full_sensor_table[sdr_index_map[snr_num]].sensor_init & 0x60) << 1);
 		msg->data[2] =
 			0xc0; // fix to threshold deassert status, BMC will compare with UCR/UNR itself
 		msg->data_len = 3;
@@ -721,7 +721,7 @@ void pal_OEM_1S_12V_CYCLE_SLOT(ipmi_msg *msg)
 	I2C_MSG i2c_msg;
 
 	i2c_msg.bus = CPLD_IO_I2C_BUS;
-	i2c_msg.slave_addr = CPLD_IO_I2C_ADDR;
+	i2c_msg.target_addr = CPLD_IO_I2C_ADDR;
 	i2c_msg.tx_len = 2;
 
 	if (msg->InF_source == SLOT1_BIC_IFs) {

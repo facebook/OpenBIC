@@ -28,7 +28,6 @@ __weak bool pal_load_ipmb_config(void)
 }
 
 // sensor
-
 __weak void pal_set_sensor_poll_interval(int *interval_ms)
 {
 	*interval_ms = 1000;
