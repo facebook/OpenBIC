@@ -4,6 +4,10 @@
 #include "plat_sensor_table.h"
 #include "guid.h"
 #include "plat_guid.h"
+#include "plat_ipmi.h"
+#ifdef ENABLE_FAN
+#include "plat_fan.h"
+#endif
 
 #ifdef CONFIG_ESPI
 __weak void OEM_NM_SENSOR_READ(ipmi_msg *msg)
@@ -106,6 +110,134 @@ __weak void OEM_SET_SYSTEM_GUID(ipmi_msg *msg)
 }
 #endif
 
+#ifdef ENABLE_FAN
+__weak void OEM_SET_FAN_DUTY_MANUAL(ipmi_msg *msg)
+{
+	/*********************************
+	Request
+	data 0: fan pwm index
+	data 1: duty
+	Response
+	data 0: completion code
+	***********************************/
+	if (msg == NULL) {
+		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		return;
+	}
+
+	if (msg->data_len != 2) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t pwm_id = msg->data[0];
+	uint8_t duty = msg->data[1];
+	uint8_t current_fan_mode = FAN_AUTO_MODE, slot_index = 0;
+	int ret = 0, i = 0;
+
+	msg->data_len = 0;
+	msg->completion_code = CC_SUCCESS;
+
+	if (msg->InF_source == SLOT1_BIC) {
+		slot_index = INDEX_SLOT1;
+	} else if (msg->InF_source == SLOT3_BIC) {
+		slot_index = INDEX_SLOT3;
+	} else {
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		return;
+	}
+
+	if ((duty > MAX_FAN_DUTY_VALUE) ||
+	    ((pwm_id >= MAX_FAN_PWM_INDEX_COUNT) && (pwm_id != INDEX_ALL_PWM))) {
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		return;
+	}
+
+	ret = pal_get_fan_ctrl_mode(&current_fan_mode);
+	if (ret < 0) {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	if (current_fan_mode != FAN_MANUAL_MODE) {
+		printf("%s() is called when it's not at manual mode\n", __func__);
+		return;
+	}
+
+	if (pwm_id == INDEX_ALL_PWM) {
+		for (i = 0; i < MAX_FAN_PWM_INDEX_COUNT; i++) {
+			ret = pal_set_fan_duty(i, duty, slot_index);
+			if (ret < 0) {
+				msg->completion_code = CC_UNSPECIFIED_ERROR;
+				break;
+			}
+		}
+	} else {
+		ret = pal_set_fan_duty(pwm_id, duty, slot_index);
+		if (ret < 0) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+		}
+	}
+
+	return;
+}
+
+__weak void OEM_GET_SET_FAN_CTRL_MODE(ipmi_msg *msg)
+{
+	/*********************************
+	Request -
+	data 0: Target
+	  0x00 Set fan mode manual
+	  0x01 Set fan mode auto
+	  0x02 Get fan mode
+	Response -
+	data 0: Completion code
+	if request data 0 == 0x02
+	data 1: Current fan mode
+	  0x00 manual fan mode
+	  0x01 auto fan mode
+	***********************************/
+	if (msg == NULL) {
+		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		return;
+	}
+
+	if (msg->data_len != 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t ctrl_cmd = msg->data[0];
+	uint8_t ctrl_mode_get = 0;
+	int ret = 0;
+
+	msg->data_len = 0;
+	msg->completion_code = CC_SUCCESS;
+
+	if (ctrl_cmd == FAN_SET_MANUAL_MODE) {
+		pal_set_fan_ctrl_mode(FAN_MANUAL_MODE);
+
+	} else if (ctrl_cmd == FAN_SET_AUTO_MODE) {
+		pal_set_fan_ctrl_mode(FAN_AUTO_MODE);
+
+	} else if (ctrl_cmd == FAN_GET_MODE) {
+		ret = pal_get_fan_ctrl_mode(&ctrl_mode_get);
+		if (ret < 0) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+
+		} else {
+			msg->data_len = 1;
+			msg->data[0] = ctrl_mode_get;
+		}
+
+	} else {
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+	}
+
+	return;
+}
+#endif
+
 void IPMI_OEM_handler(ipmi_msg *msg)
 {
 	if (msg == NULL) {
@@ -119,6 +251,14 @@ void IPMI_OEM_handler(ipmi_msg *msg)
 		break;
 	case CMD_OEM_SET_SYSTEM_GUID:
 		OEM_SET_SYSTEM_GUID(msg);
+		break;
+#endif
+#ifdef ENABLE_FAN
+	case CMD_OEM_SET_FAN_DUTY_MANUAL:
+		OEM_SET_FAN_DUTY_MANUAL(msg);
+		break;
+	case CMD_OEM_GET_SET_FAN_CTRL_MODE:
+		OEM_GET_SET_FAN_CTRL_MODE(msg);
 		break;
 #endif
 	default:

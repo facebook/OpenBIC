@@ -16,6 +16,9 @@
 #include "plat_ipmi.h"
 #include "plat_sensor_table.h"
 #include "plat_sys.h"
+#ifdef ENABLE_FAN
+#include "plat_fan.h"
+#endif
 #include "util_spi.h"
 #include "util_sys.h"
 
@@ -865,6 +868,160 @@ __weak void OEM_1S_WRITE_BIC_REGISTER(ipmi_msg *msg)
 	return;
 }
 
+#ifdef ENABLE_FAN
+__weak void OEM_1S_SET_FAN_DUTY_AUTO(ipmi_msg *msg)
+{
+	/*********************************
+	Request -
+	data 0: Fan pwm index
+	data 1: Duty value
+	Response -
+	data 0: Completion code
+	***********************************/
+	if (msg == NULL) {
+		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		return;
+	}
+
+	if (msg->data_len != 2) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t pwm_id = msg->data[0];
+	uint8_t duty = msg->data[1];
+	uint8_t current_fan_mode = FAN_AUTO_MODE, slot_index = 0;
+	int ret = 0;
+
+	msg->data_len = 0;
+	msg->completion_code = CC_SUCCESS;
+
+	if (msg->InF_source == SLOT1_BIC) {
+		slot_index = INDEX_SLOT1;
+	} else if (msg->InF_source == SLOT3_BIC) {
+		slot_index = INDEX_SLOT3;
+	} else {
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		return;
+	}
+
+	if (pwm_id >= MAX_FAN_PWM_INDEX_COUNT) {
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		return;
+	}
+
+	ret = pal_get_fan_ctrl_mode(&current_fan_mode);
+	if (ret < 0) {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	if (current_fan_mode != FAN_AUTO_MODE) {
+		printf("%s() is called when it's not at auto mode\n", __func__);
+		return;
+	}
+
+	if (duty > MAX_FAN_DUTY_VALUE) {
+		duty = MAX_FAN_DUTY_VALUE;
+	}
+
+	ret = pal_set_fan_duty(pwm_id, duty, slot_index);
+	if (ret < 0) {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+	}
+
+	return;
+}
+
+__weak void OEM_1S_GET_FAN_DUTY(ipmi_msg *msg)
+{
+	/*********************************
+	Request -
+	data 0: Fan pwm index
+	Response -
+	data 0: Completion code
+	data 1: current fan duty
+	***********************************/
+	if (msg == NULL) {
+		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		return;
+	}
+
+	if (msg->data_len != 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t pwm_id = msg->data[0];
+	uint8_t duty = 0, slot_index = 0;
+	int ret = 0;
+
+	msg->data_len = 0;
+	if (msg->InF_source == SLOT1_BIC) {
+		slot_index = INDEX_SLOT1;
+	} else if (msg->InF_source == SLOT3_BIC) {
+		slot_index = INDEX_SLOT3;
+	} else {
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		return;
+	}
+
+	if (pwm_id >= MAX_FAN_PWM_INDEX_COUNT) {
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		return;
+	}
+
+	ret = pal_get_fan_duty(pwm_id, &duty, slot_index);
+	if (ret < 0) {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+	} else {
+		msg->data[0] = duty;
+		msg->data_len = 1;
+		msg->completion_code = CC_SUCCESS;
+	}
+
+	return;
+}
+
+__weak void OEM_1S_GET_FAN_RPM(ipmi_msg *msg)
+{
+	/*********************************
+	Request -
+	data 0: Fan index
+	Response -
+	data 0: Completion code
+	data 1: Current fan rpm
+	***********************************/
+	if (msg == NULL) {
+		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		return;
+	}
+
+	if (msg->data_len != 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t fan_id = msg->data[0];
+	uint16_t data = 0;
+	int ret = 0;
+
+	ret = pal_get_fan_rpm(fan_id, &data);
+	if (ret < 0) {
+		msg->data_len = 0;
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+
+	} else {
+		msg->data[0] = (data >> 8) & 0xFF;
+		msg->data[1] = data & 0xFF;
+		msg->data_len = 2;
+		msg->completion_code = CC_SUCCESS;
+	}
+
+	return;
+}
+#endif
+
 void IPMI_OEM_1S_handler(ipmi_msg *msg)
 {
 	if (msg == NULL) {
@@ -940,6 +1097,17 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 		OEM_1S_ASD_INIT(msg);
 		break;
 #endif
+#endif
+#ifdef ENABLE_FAN
+	case CMD_OEM_1S_SET_FAN_DUTY_AUTO:
+		OEM_1S_SET_FAN_DUTY_AUTO(msg);
+		break;
+	case CMD_OEM_1S_GET_FAN_DUTY:
+		OEM_1S_GET_FAN_DUTY(msg);
+		break;
+	case CMD_OEM_1S_GET_FAN_RPM:
+		OEM_1S_GET_FAN_RPM(msg);
+		break;
 #endif
 	default:
 		printf("Invalid OEM message, netfn(0x%x) cmd(0x%x)\n", msg->netfn, msg->cmd);

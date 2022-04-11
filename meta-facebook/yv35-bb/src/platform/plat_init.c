@@ -1,5 +1,11 @@
 #include "hal_gpio.h"
 #include "plat_gpio.h"
+#include "plat_fan.h"
+
+void pal_pre_init()
+{
+	init_fan_mode();
+}
 
 void pal_set_sys_status()
 {
