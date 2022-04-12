@@ -238,6 +238,33 @@ __weak void OEM_GET_SET_FAN_CTRL_MODE(ipmi_msg *msg)
 }
 #endif
 
+__weak void OEM_GET_MB_INDEX(ipmi_msg *msg)
+{
+	if (msg == NULL) {
+		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		return;
+	}
+
+	if (msg->data_len != 0) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	if (msg->InF_source == SLOT1_BIC) {
+		msg->data[0] = INDEX_SLOT1;
+	} else if (msg->InF_source == SLOT3_BIC) {
+		msg->data[0] = INDEX_SLOT3;
+	} else {
+		msg->data_len = 0;
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	msg->data_len = 1;
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
 void IPMI_OEM_handler(ipmi_msg *msg)
 {
 	if (msg == NULL) {
@@ -261,6 +288,9 @@ void IPMI_OEM_handler(ipmi_msg *msg)
 		OEM_GET_SET_FAN_CTRL_MODE(msg);
 		break;
 #endif
+	case CMD_OEM_GET_MB_INDEX:
+		OEM_GET_MB_INDEX(msg);
+		break;
 	default:
 		printf("invalid OEM msg netfn: %x, cmd: %x\n", msg->netfn, msg->cmd);
 		msg->data_len = 0;
