@@ -36,7 +36,7 @@ void init_platform_config()
 	I2C_MSG i2c_msg;
 	uint8_t retry = 3;
 
-	if (gpio_get(BOARD_ID0)) { // HW design: class1 board_ID 0000, class2 board_ID 0001
+	if (gpio_get(BOARD_ID0) == GPIO_HIGH) { // HW design: class1 board_ID 0000, class2 board_ID 0001
 		bic_class = SYS_CLASS_2;
 	} else {
 		bic_class = SYS_CLASS_1;

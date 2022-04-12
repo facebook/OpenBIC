@@ -1,7 +1,7 @@
 #include <zephyr.h>
 #include <stdio.h>
+#include <string.h>
 #include "hal_gpio.h"
-#include "pal.h"
 #include "util_sys.h"
 
 #define STACK_SIZE 2048
@@ -39,7 +39,7 @@ void irq_callback(const struct device *dev, struct gpio_callback *cb, uint32_t p
 	} else if (dev == dev_gpio[GPIO_U_V]) {
 		group = GPIO_U_V;
 	} else {
-		printk("invalid dev group for isr cb\n");
+		printf("invalid dev group for isr cb\n");
 		return;
 	}
 
@@ -50,13 +50,13 @@ void irq_callback(const struct device *dev, struct gpio_callback *cb, uint32_t p
 		}
 	}
 	if (index == GPIO_GROUP_SIZE) {
-		printk("irq_callback: pin %x not found\n", pins);
+		printf("irq_callback: pin %x not found\n", pins);
 		return;
 	}
 	gpio_num = (group * GPIO_GROUP_SIZE) + pins;
 
 	if (gpio_cfg[gpio_num].int_cb == NULL) {
-		printk("CB func pointer NULL for gpio num %d\n", gpio_num);
+		printf("Callback function pointer NULL for gpio num %d\n", gpio_num);
 		return;
 	}
 
@@ -168,7 +168,12 @@ void init_gpio_dev(void)
 #endif
 }
 
-bool gpio_init(void)
+__weak bool pal_load_gpio_config(void)
+{
+	return true;
+}
+
+int gpio_init(const struct device *args)
 {
 	uint8_t i;
 
@@ -176,9 +181,7 @@ bool gpio_init(void)
 	init_gpio_dev();
 	gpio_index_to_num();
 
-	// gpio init is much earily than main init seq
-	// set boot source here to skip gpio init for latched gpios
-	set_boot_source();
+	bool ac_lost = is_ac_lost();
 
 	k_work_queue_start(&gpio_work_queue, gpio_work_stack, STACK_SIZE,
 			   K_PRIO_PREEMPT(CONFIG_MAIN_THREAD_PRIORITY), NULL);
@@ -186,7 +189,7 @@ bool gpio_init(void)
 
 	for (i = 0; i < TOTAL_GPIO_NUM; i++) {
 		if (gpio_cfg[i].is_init == ENABLE) {
-			if (gpio_cfg[i].is_latch == ENABLE && !get_boot_source_ACon()) {
+			if ((gpio_cfg[i].is_latch == ENABLE) && (!ac_lost)) {
 				continue;
 			}
 			if (gpio_cfg[i].chip == CHIP_GPIO) {

@@ -1,5 +1,8 @@
 #include "plat_sdr_table.h"
 
+#include <stdio.h>
+#include <string.h>
+
 #include "sdr.h"
 #include "plat_class.h"
 #include "plat_ipmb.h"

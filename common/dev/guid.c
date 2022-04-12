@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "guid.h"
 #include "plat_guid.h"
 
@@ -20,8 +22,11 @@ uint8_t GUID_read(EEPROM_ENTRY *entry)
 		return GUID_OUT_OF_RANGE;
 	}
 
-	memcpy(&entry->config, &guid_config[entry->config.dev_id],
-	       sizeof(guid_config[entry->config.dev_id]));
+	if (entry->config.dev_id >= (sizeof(guid_config) / sizeof(EEPROM_CFG))) {
+		return GUID_OUT_OF_RANGE;
+	}
+
+	memcpy(&entry->config, &guid_config[entry->config.dev_id], sizeof(EEPROM_CFG));
 	status = eeprom_read(entry);
 
 	if (!status) {
@@ -47,8 +52,11 @@ uint8_t GUID_write(EEPROM_ENTRY *entry)
 		return GUID_OUT_OF_RANGE;
 	}
 
-	memcpy(&entry->config, &guid_config[entry->config.dev_id],
-	       sizeof(guid_config[entry->config.dev_id]));
+	if (entry->config.dev_id >= (sizeof(guid_config) / sizeof(EEPROM_CFG))) {
+		return GUID_OUT_OF_RANGE;
+	}
+
+	memcpy(&entry->config, &guid_config[entry->config.dev_id], sizeof(EEPROM_CFG));
 	status = eeprom_write(entry);
 
 	if (!status) {

@@ -99,7 +99,7 @@ __weak void APP_GET_SELFTEST_RESULTS(ipmi_msg *msg)
 
 	res.result.opFwCorrupt = 0;
 	res.result.updateFwCorrupt = 0;
-	res.result.sdrRepoEmpty = is_SDR_not_init;
+	res.result.sdrRepoEmpty = is_sdr_not_init;
 	res.result.ipmbLinesDead = 0;
 
 	if (checksum == 0) {
@@ -110,7 +110,7 @@ __weak void APP_GET_SELFTEST_RESULTS(ipmi_msg *msg)
 		res.result.internalCorrupt = 1;
 	}
 
-	res.result.cannotAccessSdrRepo = is_SDR_not_init;
+	res.result.cannotAccessSdrRepo = is_sdr_not_init;
 	res.result.cannotAccessSelDev = 0;
 
 	memcpy(&msg->data[1], &res.result, 1);

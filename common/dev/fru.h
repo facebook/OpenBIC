@@ -29,6 +29,7 @@ uint8_t get_FRU_access(uint8_t FRUID);
 uint16_t find_FRU_size(uint8_t FRUID);
 uint8_t FRU_read(EEPROM_ENTRY *entry);
 uint8_t FRU_write(EEPROM_ENTRY *entry);
+void pal_load_fru_config(void);
 void FRU_init(void);
 
 #endif

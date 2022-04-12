@@ -425,7 +425,7 @@ enum {
 	MBR_R,
 };
 
-extern uint8_t is_SDR_not_init;
+extern bool is_sdr_not_init;
 // Mapping sensor number to sdr config index
 extern uint8_t sdr_index_map[];
 extern SDR_Full_sensor full_sdr_table[];

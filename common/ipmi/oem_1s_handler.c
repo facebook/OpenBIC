@@ -427,7 +427,7 @@ __weak void OEM_1S_PECI_ACCESS(ipmi_msg *msg)
 		}
 		writeBuf = (uint8_t *)malloc(sizeof(uint8_t) * writeLen);
 		if ((readBuf == NULL) || (writeBuf == NULL)) {
-			printk("PECI access util buffer alloc fail\n");
+			printf("PECI access util buffer alloc fail\n");
 			if (writeBuf != NULL) {
 				free(writeBuf);
 			}

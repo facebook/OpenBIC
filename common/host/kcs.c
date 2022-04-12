@@ -1,11 +1,9 @@
 #include <zephyr.h>
-#include <sys/printk.h>
 #include <string.h>
 #include <stdio.h>
 #include <device.h>
 #include "ipmi.h"
 #include "kcs.h"
-#include "pal.h"
 
 struct k_thread kcs_polling;
 K_KERNEL_STACK_MEMBER(KCS_POLL_stack, KCS_POLL_STACK_SIZE);
@@ -23,7 +21,7 @@ void kcs_write(uint8_t *buf, uint32_t buf_sz)
 
 	rc = kcs_aspeed_write(kcs_dev, buf, buf_sz);
 	if (rc < 0) {
-		printk("failed to write KCS data, rc=%d\n", rc);
+		printf("failed to write KCS data, rc=%d\n", rc);
 	}
 }
 
@@ -53,19 +51,19 @@ void kcs_read(void *arvg0, void *arvg1, void *arvg2)
 		rc = kcs_aspeed_read(kcs_dev, ibuf, sizeof(ibuf));
 		if (rc < 0) {
 			if (rc != -ENODATA)
-				printk("failed to read KCS data, rc=%d\n", rc);
+				printf("failed to read KCS data, rc=%d\n", rc);
 			continue;
 		}
 
 		if (DEBUG_KCS) {
-			printk("host KCS read: netfn=0x%02x, cmd=0x%02x, data:\n", ibuf[0],
+			printf("host KCS read: netfn=0x%02x, cmd=0x%02x, data:\n", ibuf[0],
 			       ibuf[1]);
 			for (i = 2; i < rc; ++i) {
 				if (i && (i % 16 == 0))
-					printk("\n");
-				printk("%02x ", ibuf[i]);
+					printf("\n");
+				printf("%02x ", ibuf[i]);
 			}
-			printk("\n");
+			printf("\n");
 		}
 
 		proc_kcs_ok = true;
@@ -84,7 +82,7 @@ void kcs_read(void *arvg0, void *arvg1, void *arvg2)
 			}
 
 			if (DEBUG_KCS) {
-				printk("kcs to ipmi netfn %x, cmd %x, length %d\n",
+				printf("kcs to ipmi netfn %x, cmd %x, length %d\n",
 				       current_msg.buffer.netfn, current_msg.buffer.cmd,
 				       current_msg.buffer.data_len);
 			}
@@ -108,7 +106,7 @@ void kcs_read(void *arvg0, void *arvg1, void *arvg2)
 
 			status = ipmb_send_request(&bridge_msg, IPMB_inf_index_map[BMC_IPMB]);
 			if (status != IPMB_ERROR_SUCCESS) {
-				printk("kcs_read_task send to BMC fail status: %x", status);
+				printf("kcs_read_task send to BMC fail status: %x", status);
 			}
 		}
 	}
@@ -118,7 +116,7 @@ void kcs_init(void)
 {
 	kcs_dev = device_get_binding(DT_LABEL(DT_NODELABEL(kcs3)));
 	if (!kcs_dev) {
-		printk("No KCS device found\n");
+		printf("No KCS device found\n");
 		return;
 	}
 

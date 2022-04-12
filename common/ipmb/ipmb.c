@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include "cmsis_os2.h"
 #include "hal_i2c.h"
-#include "pal.h"
 #include "timer.h"
 #include "ipmi.h"
 #include "kcs.h"
@@ -401,7 +400,7 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 							kcs_buff = malloc(KCS_BUFF_SIZE *
 									  sizeof(uint8_t));
 							if (kcs_buff == NULL) {
-								printk("IPMB_TXTask: Fail to malloc for kcs_buff\n");
+								printf("IPMB_TXTask: Fail to malloc for kcs_buff\n");
 								free(current_msg_tx);
 								continue;
 							}
@@ -1131,6 +1130,11 @@ void create_ipmb_threads(uint8_t index)
 	}
 
 	return;
+}
+
+__weak bool pal_load_ipmb_config(void)
+{
+	return true;
 }
 
 void ipmb_init(void)
