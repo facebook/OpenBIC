@@ -143,6 +143,11 @@ enum {
 	CMD_STORAGE_ADD_SEL = 0x44,
 };
 
+// OEM NM Command Codes (0x2E)
+enum {
+	CMD_OEM_NM_FORCE_ME_RECOVERY = 0xDF,
+};
+
 // OEM Command Codes (0x30)
 enum {
 	CMD_OEM_NM_SENSOR_READ = 0xE2,

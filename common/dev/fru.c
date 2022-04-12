@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "fru.h"
 #include "plat_fru.h"
 
@@ -15,7 +17,7 @@ static uint8_t find_FRU_ID(uint8_t FRUID)
 	}
 
 	if (ret == MAX_FRU_ID) { // FRU ID not found
-		return -1;
+		return MAX_FRU_ID;
 	}
 
 	return ret;
@@ -27,7 +29,7 @@ uint8_t get_FRU_access(uint8_t FRUID)
 
 	ID_No = find_FRU_ID(FRUID);
 
-	if (!ID_No == -1) { // FRU ID not found
+	if (ID_No == MAX_FRU_ID) { // FRU ID not found
 		return 0xFF;
 	}
 
@@ -40,7 +42,7 @@ uint16_t find_FRU_size(uint8_t FRUID)
 
 	ID_No = find_FRU_ID(FRUID);
 
-	if (ID_No == -1) { // FRU ID not found
+	if (ID_No == MAX_FRU_ID) { // FRU ID not found
 		return 0xFFFF;
 	}
 
@@ -99,6 +101,11 @@ uint8_t FRU_write(EEPROM_ENTRY *entry)
 	}
 
 	return FRU_WRITE_SUCCESS;
+}
+
+__weak void pal_load_fru_config(void)
+{
+	return;
 }
 
 void FRU_init(void)

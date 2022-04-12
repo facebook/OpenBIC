@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <sys/printk.h>
 #include <device.h>
 #include <drivers/misc/aspeed/snoop_aspeed.h>
 #include "snoop.h"
@@ -30,7 +29,7 @@ void snoop_init()
 {
 	snoop_dev = device_get_binding(DT_LABEL(DT_NODELABEL(snoop)));
 	if (!snoop_dev) {
-		printk("No snoop device found\n");
+		printf("No snoop device found\n");
 		return;
 	}
 	return;
@@ -39,7 +38,7 @@ void snoop_init()
 void copy_snoop_read_buffer(uint8_t offset, int size_num, uint8_t *buffer, uint8_t copy_mode)
 {
 	if (size_num > SNOOP_MAX_LEN) {
-		printk("copy snoop buffer size exceeded\n");
+		printf("copy snoop buffer size exceeded\n");
 		return;
 	}
 	if (!k_mutex_lock(&snoop_mutex, K_MSEC(1000))) {
@@ -57,10 +56,10 @@ void copy_snoop_read_buffer(uint8_t offset, int size_num, uint8_t *buffer, uint8
 			}
 		}
 	} else {
-		printk("copy snoop buffer lock fail\n");
+		printf("copy snoop buffer lock fail\n");
 	}
 	if (k_mutex_unlock(&snoop_mutex)) {
-		printk("copy snoop buffer unlock fail\n");
+		printf("copy snoop buffer unlock fail\n");
 	}
 }
 
@@ -81,7 +80,7 @@ void snoop_read()
 		snoop_read_buffer = malloc(sizeof(uint8_t) * SNOOP_MAX_LEN);
 	}
 	if (snoop_read_buffer == NULL) {
-		printk("snoop read buffer alloc fail\n");
+		printf("snoop read buffer alloc fail\n");
 		return;
 	}
 
@@ -93,10 +92,10 @@ void snoop_read()
 				snoop_read_buffer[snoop_read_num % SNOOP_MAX_LEN] = *snoop_data;
 				snoop_read_num++;
 			} else {
-				printk("snoop read lock fail\n");
+				printf("snoop read lock fail\n");
 			}
 			if (k_mutex_unlock(&snoop_mutex)) {
-				printk("snoop read unlock fail\n");
+				printf("snoop read unlock fail\n");
 			}
 		}
 	}
@@ -141,13 +140,13 @@ void send_post_code_to_BMC()
 				if (get_post_status()) {
 					alloc_sendmsg_retry += 1;
 					if (alloc_sendmsg_retry > 3) {
-						printk("post complete and send post code thread alloc fail three times continuously\n");
+						printf("post complete and send post code thread alloc fail three times continuously\n");
 						return;
 					} else {
 						continue;
 					}
 				} else {
-					printk("send post code thread alloc fail\n");
+					printf("send post code thread alloc fail\n");
 					continue;
 				}
 			}

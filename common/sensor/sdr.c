@@ -2,12 +2,13 @@
 #include <string.h>
 #include "sdr.h"
 #include "sensor.h"
+#include "plat_sdr_table.h"
 #include "plat_sensor_table.h"
 #include "plat_ipmb.h"
 
 SDR_INFO sdr_info;
 static uint16_t RSV_ID = 0;
-uint8_t is_SDR_not_init = 1;
+bool is_sdr_not_init = true;
 
 SDR_Full_sensor full_sdr_table[MAX_SENSOR_SIZE];
 
@@ -179,6 +180,6 @@ uint8_t sdr_init(void)
 		       full_sdr_table[i].ID_len, full_sdr_table[i].record_len);
 	}
 
-	is_SDR_not_init = 0;
+	is_sdr_not_init = false;
 	return true;
 }

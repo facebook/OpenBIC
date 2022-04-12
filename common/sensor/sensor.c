@@ -107,7 +107,7 @@ bool sensor_read(uint8_t sensor_num, float *reading)
 	snr_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 
 	// Switch i2c mux
-	if ((cfg->mux_address != 0) && (cfg->mux_offset != 0)) {
+	if ((cfg->mux_address != NONE) && (cfg->mux_offset != NONE)) {
 		I2C_MSG msg;
 		msg.bus = cfg->port;
 		msg.target_addr = cfg->mux_address;

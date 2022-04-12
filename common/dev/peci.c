@@ -195,7 +195,7 @@ bool peci_sensor_read(uint8_t sensor_num, float *reading)
 		*reading = cfg->cache;
 		return true;
 	} else { // The other sensors
-		if (cfg->port == NULL) {
+		if (cfg->port == NONE) {
 			cfg->cache_status = SENSOR_NOT_FOUND;
 			return false;
 		}

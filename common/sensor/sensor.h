@@ -7,6 +7,7 @@
 #include "sdr.h"
 
 #define SENSOR_POLL_STACK_SIZE 2048
+#define NONE 0
 
 #define GET_FROM_CACHE 0x00
 #define GET_FROM_SENSOR 0x01

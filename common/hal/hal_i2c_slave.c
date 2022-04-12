@@ -32,7 +32,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <drivers/i2c.h>
-#include <sys/printk.h>
 #include "hal_i2c_slave.h"
 
 /* LOG SET */
@@ -227,14 +226,14 @@ uint8_t i2c_slave_status_print(uint8_t bus_num)
 
 	struct i2c_slave_data *data = &i2c_slave_device_global[bus_num].data;
 	struct i2c_slave_device *slave_info = &i2c_slave_device_global[bus_num];
-	printk("=============================\n");
-	printk("Slave bus[%d] monitor\n", bus_num);
-	printk("* init:        %d\n", slave_info->is_init);
-	printk("* register:    %d\n", slave_info->is_register);
-	printk("* address:     0x%x\n", data->config.address);
-	printk("* status:      %d/%d\n", k_msgq_num_used_get(&data->z_msgq_id),
+	printf("=============================\n");
+	printf("Slave bus[%d] monitor\n", bus_num);
+	printf("* init:        %d\n", slave_info->is_init);
+	printf("* register:    %d\n", slave_info->is_register);
+	printf("* address:     0x%x\n", data->config.address);
+	printf("* status:      %d/%d\n", k_msgq_num_used_get(&data->z_msgq_id),
 	       data->z_msgq_id.max_msgs);
-	printk("=============================\n");
+	printf("=============================\n");
 
 	return I2C_SLAVE_API_NO_ERR;
 }

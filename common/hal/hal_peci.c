@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <drivers/peci.h>
 #include "hal_peci.h"
 
@@ -63,7 +65,7 @@ int peci_read(uint8_t cmd, uint8_t address, uint8_t u8Index, uint16_t u16Param, 
 	rdpkgcfg.addr = address;
 	rdpkgcfg.tx_buffer.len = 0x05;
 	rdpkgcfg.rx_buffer.len = u8ReadLen;
-	rdpkgcfg.tx_buffer.buf = malloc(rdpkgcfg.tx_buffer.len * sizeof(uint8_t));
+	rdpkgcfg.tx_buffer.buf = (uint8_t *)malloc(rdpkgcfg.tx_buffer.len * sizeof(uint8_t));
 	if (rdpkgcfg.tx_buffer.buf == NULL) {
 		printf("Could not initialize memory for tx_buffer\n");
 		return -1;
@@ -95,6 +97,10 @@ int peci_read(uint8_t cmd, uint8_t address, uint8_t u8Index, uint16_t u16Param, 
 int peci_write(uint8_t cmd, uint8_t address, uint8_t u8ReadLen, uint8_t *readBuf,
 	       uint8_t u8WriteLen, uint8_t *writeBuf)
 {
+	if ((readBuf == NULL) || (writeBuf == NULL)) {
+		return -1;
+	}
+
 	struct peci_msg wrpkgcfg;
 	int ret;
 
@@ -107,7 +113,7 @@ int peci_write(uint8_t cmd, uint8_t address, uint8_t u8ReadLen, uint8_t *readBuf
 
 	ret = peci_transfer(dev, &wrpkgcfg);
 	if (ret) {
-		printk("peci write failed %d\n", ret);
+		printf("peci write failed %d\n", ret);
 		return ret;
 	}
 

@@ -1,5 +1,8 @@
 #include "plat_sensor_table.h"
 
+#include <stdio.h>
+#include <string.h>
+
 #include "sensor.h"
 #include "adc.h"
 #include "isl69260.h"
@@ -7,8 +10,6 @@
 #include "plat_class.h"
 #include "plat_i2c.h"
 #include "plat_gpio.h"
-
-#define NONE 0
 
 SET_GPIO_VALUE_CFG pre_bat_3v = { A_P3V_BAT_SCALED_EN_R, GPIO_HIGH };
 SET_GPIO_VALUE_CFG post_bat_3v = { A_P3V_BAT_SCALED_EN_R, GPIO_LOW };
