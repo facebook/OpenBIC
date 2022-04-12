@@ -289,7 +289,7 @@ __weak void pal_fix_sensor_config(void)
 
 bool stby_access(uint8_t sensor_number)
 {
-	return 1;
+	return true;
 }
 
 bool DC_access(uint8_t sensor_number)

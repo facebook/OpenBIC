@@ -77,7 +77,7 @@ uint8_t get_sdr_index(uint8_t sensor_num)
 void add_full_sdr_table(SDR_Full_sensor add_item)
 {
 	if (get_sdr_index(add_item.sensor_num) != SENSOR_NUM_MAX) {
-		printf("add sensor num [0x%x] already exists\n", add_item.sensor_num);
+		printf("add sensor num [0x%x] - sensor already exists\n", add_item.sensor_num);
 	} else {
 		full_sdr_table[SDR_NUM++] = add_item;
 	}
