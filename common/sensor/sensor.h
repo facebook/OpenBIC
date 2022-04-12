@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "plat_def.h"
 #include "sdr.h"
 
 #define SENSOR_POLL_STACK_SIZE 2048

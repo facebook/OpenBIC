@@ -227,11 +227,15 @@ __weak void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		return;
 	}
 
-	uint8_t component, retry = 3;
+	uint8_t component;
 	component = msg->data[0];
-	I2C_MSG i2c_msg;
 	ipmb_error status;
 	ipmi_msg *bridge_msg;
+
+#ifdef ENABLE_ISL69260
+	I2C_MSG i2c_msg;
+	uint8_t retry = 3;
+#endif
 
 	switch (component) {
 	case COMPNT_CPLD:
@@ -278,6 +282,7 @@ __weak void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 			free(bridge_msg);
 		}
 		break;
+#ifdef ENABLE_ISL69260
 	case COMPNT_PVCCIN:
 	case COMPNT_PVCCFA_EHV_FIVRA:
 	case COMPNT_PVCCD_HV:
@@ -317,6 +322,7 @@ __weak void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 		}
 		break;
+#endif
 	default:
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
 		break;
@@ -769,7 +775,7 @@ __weak void OEM_1S_12V_CYCLE_SLOT(ipmi_msg *msg)
 		return;
 	}
 
-	int ret = pal_submit_12v_cycle_slot();
+	int ret = pal_submit_12v_cycle_slot(msg);
 	switch (ret) {
 	case SUCCESS_12V_CYCLE_SLOT:
 		msg->completion_code = CC_SUCCESS;

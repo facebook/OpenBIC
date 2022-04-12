@@ -3,9 +3,8 @@
 #include <string.h>
 #include "cmsis_os.h"
 #include "hal_gpio.h"
-#include "pal.h"
 #include "plat_gpio.h"
-#include "plat_func.h"
+#include "plat_isr.h"
 
 #define gpio_name_to_num(x) #x,
 const char *const gpio_name[] = {
@@ -55,7 +54,7 @@ GPIO_CFG plat_gpio_cfg[] = {
 	{ CHIP_GPIO, 21, ENABLE, DISABLE, GPIO_OUTPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE,
 	  NULL },
 	{ CHIP_GPIO, 22, ENABLE, DISABLE, GPIO_INPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_EDGE_BOTH,
-	  ISR_sled_cycle },
+	  ISR_SLED_CYCLE },
 	{ CHIP_GPIO, 23, ENABLE, DISABLE, GPIO_OUTPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE,
 	  NULL },
 	{ CHIP_GPIO, 24, ENABLE, DISABLE, GPIO_INPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE,
