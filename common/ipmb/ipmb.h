@@ -89,6 +89,7 @@ enum Channel_Target {
 	SLOT3_BIC = 0x08,
 	BB_IPMB = 0x10,
 	EXP2_IPMB = 0x15,
+	PEER_BMC_IPMB = 0x1A,
 
 	BMC_USB = 0x20,
 	RESERVED,

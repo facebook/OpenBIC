@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "storage_handler.h"
 #include "plat_fru.h"
 #include "fru.h"
@@ -217,6 +218,54 @@ __weak void STORAGE_GET_SDR(ipmi_msg *msg)
 	return;
 }
 
+__weak void STORAGE_ADD_SEL(ipmi_msg *msg)
+{
+	if (msg == NULL) {
+		printf("%s failed due to parameter is NULL\n", __func__);
+		return;
+	}
+
+	if (msg->data_len != 16) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	ipmb_error status;
+	ipmi_msg *add_sel_msg;
+
+	add_sel_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
+	if (add_sel_msg == NULL) {
+		printf("%s malloc fail\n", __func__);
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	memset(add_sel_msg, 0, sizeof(ipmi_msg));
+	add_sel_msg->InF_source = SELF;
+	add_sel_msg->InF_target = BMC_IPMB;
+	add_sel_msg->netfn = NETFN_STORAGE_REQ;
+	add_sel_msg->cmd = CMD_STORAGE_ADD_SEL;
+	add_sel_msg->data_len = msg->data_len;
+	memcpy(add_sel_msg->data, msg->data, add_sel_msg->data_len);
+
+	status = ipmb_read(add_sel_msg, IPMB_inf_index_map[add_sel_msg->InF_target]);
+	free(add_sel_msg);
+
+	msg->data_len = 0;
+	if (status == IPMB_ERROR_FAILURE) {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		printf("%s Fail to post msg to txqueue for addsel\n", __func__);
+		return;
+	} else if (status == IPMB_ERROR_GET_MESSAGE_QUEUE) {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		printf("%s No response from bmc for addsel\n", __func__);
+		return;
+	}
+
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
 void IPMI_Storage_handler(ipmi_msg *msg)
 {
 	if (msg == NULL) {
@@ -238,6 +287,9 @@ void IPMI_Storage_handler(ipmi_msg *msg)
 		break;
 	case CMD_STORAGE_GET_SDR:
 		STORAGE_GET_SDR(msg);
+		break;
+	case CMD_STORAGE_ADD_SEL:
+		STORAGE_ADD_SEL(msg);
 		break;
 	default:
 		printf("invalid Storage msg netfn: %x, cmd: %x\n", msg->netfn, msg->cmd);
