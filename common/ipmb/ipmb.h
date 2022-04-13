@@ -89,9 +89,12 @@ enum Channel_Target {
 	SLOT3_BIC = 0x08,
 	BB_IPMB = 0x10,
 	EXP2_IPMB = 0x15,
+	/* 16h-19h reserved. */
 	PEER_BMC_IPMB = 0x1A,
-
+	/* 1Bh-1Fh reserved. */
 	BMC_USB = 0x20,
+	/* 21h-39h reserved. */
+	PLDM = 0x40,
 	RESERVED,
 };
 
