@@ -1,12 +1,13 @@
+#include "plat_sdr_table.h"
+
 #include <stdio.h>
 #include <string.h>
-#include "sdr.h"
-#include "pal.h"
-#include "sensor.h"
-#include "sensor_def.h"
-#include "plat_ipmb.h"
 
-SDR_Full_sensor plat_sensor_table[] = {
+#include "sdr.h"
+#include "plat_ipmb.h"
+#include "plat_sensor_table.h"
+
+SDR_Full_sensor plat_sdr_table[] = {
 	{
 		// TMP75 on board temperature
 		0x00,
@@ -15,7 +16,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_TEMP_TMP75_IN, // sensor number
 
@@ -76,7 +77,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_TEMP_TMP75_OUT, // sensor number
 
@@ -137,7 +138,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_TEMP_HSC, // sensor number
 
@@ -198,7 +199,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_VOL_P5V_STBY, // sensor number
 
@@ -259,7 +260,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_VOL_P12V_STBY, // sensor number
 
@@ -320,7 +321,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_VOL_P3V3_STBY, // sensor number
 
@@ -381,7 +382,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_VOL_P5V_USB, // sensor number
 
@@ -442,7 +443,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_VOL_P1V2_BIC_STBY, // sensor number
 
@@ -503,7 +504,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_VOL_P1V0_STBY, // sensor number
 
@@ -564,7 +565,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_VOL_MEDUSA_12V_IN, // sensor number
 
@@ -625,7 +626,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_VOL_MEDUSA_12V_OUT, // sensor number
 
@@ -686,7 +687,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_VOL_HSCIN, // sensor number
 
@@ -747,7 +748,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_CUR_MEDUSA_IOUT, // sensor number
 
@@ -808,7 +809,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_CUR_HSCOUT, // sensor number
 
@@ -869,7 +870,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_CUR_P12V_FAN, // sensor number
 
@@ -930,7 +931,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_PWR_MEDUSA_12V, // sensor number
 
@@ -991,7 +992,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_PWR_HSCIN, // sensor number
 
@@ -1052,7 +1053,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_DUAL_FAN_BMC_TACH_0, // sensor number
 
@@ -1113,7 +1114,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_DUAL_FAN_BMC_TACH_1, // sensor number
 
@@ -1174,7 +1175,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_DUAL_FAN_BMC_TACH_2, // sensor number
 
@@ -1235,7 +1236,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_DUAL_FAN_BMC_TACH_3, // sensor number
 
@@ -1296,7 +1297,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_DUAL_FAN_BMC_TACH_4, // sensor number
 
@@ -1357,7 +1358,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_DUAL_FAN_BMC_TACH_5, // sensor number
 
@@ -1418,7 +1419,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_DUAL_FAN_BMC_TACH_6, // sensor number
 
@@ -1479,7 +1480,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_DUAL_FAN_BMC_TACH_7, // sensor number
 
@@ -1540,7 +1541,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_SINGLE_FAN_BMC_TACH_0, // sensor number
 
@@ -1601,7 +1602,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_SINGLE_FAN_BMC_TACH_1, // sensor number
 
@@ -1662,7 +1663,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_SINGLE_FAN_BMC_TACH_2, // sensor number
 
@@ -1723,7 +1724,7 @@ SDR_Full_sensor plat_sensor_table[] = {
 		IPMI_SDR_FULL_SENSOR, // record type
 		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
 
-		Self_I2C_ADDRESS << 1, // owner id
+		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
 		SENSOR_NUM_SINGLE_FAN_BMC_TACH_3, // sensor number
 
@@ -1778,8 +1779,8 @@ SDR_Full_sensor plat_sensor_table[] = {
 	},
 };
 
-uint8_t pal_load_sdr_table(void)
+uint8_t load_sdr_table(void)
 {
-	memcpy(&full_sensor_table, &plat_sensor_table, sizeof(plat_sensor_table));
-	return (sizeof(plat_sensor_table) / sizeof(plat_sensor_table[0]));
+	memcpy(full_sdr_table, plat_sdr_table, sizeof(plat_sdr_table));
+	return (sizeof(plat_sdr_table) / sizeof(plat_sdr_table[0]));
 };

@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "fru.h"
 #include "plat_fru.h"
-#include "pal.h"
 #include "fru.h"
 
 #define BB_FRU_PORT 0x01
