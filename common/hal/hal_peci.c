@@ -35,11 +35,9 @@ int peci_ping(uint8_t address)
 	struct peci_msg pkgcfg;
 	int ret;
 
+	memset(&pkgcfg, 0, sizeof(struct peci_msg));
 	pkgcfg.addr = address;
 	pkgcfg.cmd_code = PECI_CMD_PING;
-	pkgcfg.tx_buffer.buf = NULL;
-	pkgcfg.tx_buffer.len = 0x0;
-	pkgcfg.rx_buffer.len = 0x0;
 
 	ret = peci_transfer(dev, &pkgcfg);
 	if (ret) {
@@ -47,7 +45,6 @@ int peci_ping(uint8_t address)
 		       pkgcfg.cmd_code, ret);
 	}
 
-	SAFE_FREE(pkgcfg.tx_buffer.buf);
 	return ret;
 }
 
