@@ -7,8 +7,12 @@
 #include "util_sys.h"
 #include "ipmi.h"
 #include "libutil.h"
+#include "sensor.h"
 
 #define SYS_RST_EVT_LOG_REG 0x7e6e2074
+
+#define MAX_RETRY 10
+#define CHECK_READY_FLAG_DELAY_MS 500
 
 static uint8_t ME_mode = ME_INIT_MODE;
 
@@ -216,4 +220,29 @@ void init_me_firmware()
 uint8_t get_me_mode()
 {
 	return ME_mode;
+}
+
+void set_sys_ready_pin(uint8_t ready_gpio_name)
+{
+	bool is_bic_ready = false;
+	int retry = 0;
+
+	for (retry = 0; retry < MAX_RETRY; retry++) {
+		k_msleep(CHECK_READY_FLAG_DELAY_MS);
+
+		if (check_is_sensor_ready() == true) {
+			is_bic_ready = true;
+		}
+
+		if (is_bic_ready == true) {
+			break;
+		}
+	}
+
+	if ((is_bic_ready == false) && (retry == MAX_RETRY)) {
+		// TODO: add SEL to BMC to notify that BIC sensor polling doesn't ready
+	}
+
+	gpio_set(ready_gpio_name, GPIO_HIGH);
+	printf("BIC Ready\n");
 }

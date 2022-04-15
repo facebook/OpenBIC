@@ -227,5 +227,6 @@ void enable_sensor_poll();
 void pal_fix_sensor_config(void);
 bool check_sensor_num_exist(uint8_t sensor_num);
 void add_sensor_config(sensor_cfg config);
+bool check_is_sensor_ready();
 
 #endif
