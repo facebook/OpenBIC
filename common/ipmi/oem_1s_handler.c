@@ -740,7 +740,7 @@ __weak void OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg)
 		return;
 	}
 
-	uint8_t bus = i2c_bus_to_index[msg->data[0]];
+	uint8_t bus = msg->data[0];
 
 	i2c_scan(bus, &msg->data[0], (uint8_t *)&msg->data_len);
 
