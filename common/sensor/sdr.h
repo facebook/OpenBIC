@@ -344,6 +344,11 @@
 #define SDR_END_ID 0xFFFF
 #define SDR_INVALID_ID 0xFFFE
 
+enum rsv_table_index {
+	RSV_TABLE_INDEX_0 = 0,
+	RSV_TABLE_INDEX_1,
+};
+
 typedef struct _SDR_Full_sensor_ {
 	/*** sensor record header ***/
 	uint8_t record_id_h; /* Record ID high byte */
@@ -439,16 +444,16 @@ extern const int negative_ten_power[16];
 static inline uint8_t round_add(uint8_t sensor_num, int val)
 {
 	return (SDR_R(sensor_num) > 0) ?
-			     (((negative_ten_power[((SDR_R(sensor_num) + 1) & 0xF)] * val) % 10) > 5 ?
-				      1 :
+		       (((negative_ten_power[((SDR_R(sensor_num) + 1) & 0xF)] * val) % 10) > 5 ?
+				1 :
 				      0) :
 			     0;
 }
 
 uint16_t SDR_get_record_ID(uint16_t current_ID);
 bool SDR_check_record_ID(uint16_t current_ID);
-uint16_t SDR_get_RSV_ID(void);
-bool SDR_RSV_ID_check(uint16_t ID);
+uint16_t SDR_get_RSV_ID(uint8_t rsv_table_index);
+bool SDR_RSV_ID_check(uint16_t ID, uint8_t rsv_table_index);
 uint8_t sdr_init(void);
 void pal_fix_full_sdr_table(void);
 bool check_sdr_num_exist(uint8_t sensor_num);

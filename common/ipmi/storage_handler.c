@@ -148,13 +148,18 @@ __weak void STORAGE_RSV_SDR(ipmi_msg *msg)
 	}
 
 	uint16_t RSV_ID;
+	uint8_t rsv_table_index = RSV_TABLE_INDEX_0;
 
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
 	}
 
-	RSV_ID = SDR_get_RSV_ID();
+	if (msg->InF_source == SLOT3_BIC) {
+		rsv_table_index = RSV_TABLE_INDEX_1;
+	}
+
+	RSV_ID = SDR_get_RSV_ID(rsv_table_index);
 	msg->data[0] = RSV_ID & 0xFF;
 	msg->data[1] = (RSV_ID >> 8) & 0xFF;
 	msg->data_len = 2;
@@ -173,6 +178,12 @@ __weak void STORAGE_GET_SDR(ipmi_msg *msg)
 	uint16_t rsv_ID, record_ID;
 	uint8_t offset, req_len;
 	uint8_t *table_ptr;
+	uint8_t rsv_table_index = RSV_TABLE_INDEX_0;
+
+	// Config D: slot1 and slot3 need to use different reservation id
+	if (msg->InF_source == SLOT3_BIC) {
+		rsv_table_index = RSV_TABLE_INDEX_1;
+	}
 
 	rsv_ID = (msg->data[1] << 8) | msg->data[0];
 	record_ID = (msg->data[3] << 8) | msg->data[2];
@@ -184,7 +195,8 @@ __weak void STORAGE_GET_SDR(ipmi_msg *msg)
 		return;
 	}
 
-	if (!SDR_RSV_ID_check(rsv_ID)) {
+	// If SDR_RSV_ID_check gets false is represent reservation id is incorrect
+	if (SDR_RSV_ID_check(rsv_ID, rsv_table_index) == false) {
 		msg->completion_code = CC_INVALID_RESERVATION;
 		return;
 	}
