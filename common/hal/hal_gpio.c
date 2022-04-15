@@ -168,6 +168,13 @@ void init_gpio_dev(void)
 #endif
 }
 
+void scu_init(SCU_CFG cfg[], size_t size)
+{
+	for (int i = 0; i < size; ++i) {
+		sys_write32(cfg[i].value, cfg[i].reg);
+	}
+}
+
 __weak bool pal_load_gpio_config(void)
 {
 	return true;

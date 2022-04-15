@@ -1,6 +1,8 @@
 #ifndef KCS_H
 #define KCS_H
 
+#ifdef CONFIG_IPMI_KCS_ASPEED
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -27,5 +29,7 @@ void kcs_write(uint8_t *buf, uint32_t buf_sz);
 void kcs_init(void);
 bool get_kcs_ok();
 void reset_kcs_ok();
+
+#endif
 
 #endif
