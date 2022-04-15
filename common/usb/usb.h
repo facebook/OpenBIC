@@ -1,6 +1,8 @@
 #ifndef USB_H
 #define USB_H
 
+#ifdef CONFIG_USB
+
 #define DEBUG_USB 0
 #define USB_HANDLER_STACK_SIZE 2000
 #define RX_BUFF_SIZE 64
@@ -14,5 +16,7 @@
 void usb_slavedev_init(void);
 void usb_write_by_ipmi(ipmi_msg *ipmi_resp);
 void usb_dev_init(void);
+
+#endif
 
 #endif

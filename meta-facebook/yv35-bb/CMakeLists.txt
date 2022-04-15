@@ -6,7 +6,7 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(yv35-bb)
 
 set(common_path ../../common)
-FILE(GLOB app_sources src/*.c src/ipmi/*.c src/platform/*.c src/lib/*.c )
+FILE(GLOB app_sources src/ipmi/*.c src/platform/*.c src/lib/*.c )
 FILE(GLOB common_sources ${common_path}/*.c ${common_path}/ipmi/*.c ${common_path}/host/*.c ${common_path}/sensor/*.c ${common_path}/usb/*.c ${common_path}/hal/*.c ${common_path}/dev/*.c ${common_path}/lib/*.c ${common_path}/ipmb/*.c)
 
 target_sources(app PRIVATE ${app_sources})
