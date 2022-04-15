@@ -190,7 +190,7 @@ __weak void APP_MASTER_WRITE_READ(ipmi_msg *msg)
 		return;
 	}
 
-	i2c_msg.bus = i2c_bus_to_index[bus_7bit];
+	i2c_msg.bus = bus_7bit;
 	// 8 bit address to 7 bit
 	i2c_msg.target_addr = msg->data[1] >> 1;
 	i2c_msg.rx_len = msg->data[2];
