@@ -183,9 +183,11 @@ sensor_cfg adm1278_sensor_config_table[] = {
 	{ SENSOR_NUM_VOL_HSCIN, sensor_dev_adm1278, I2C_BUS2, ADI_ADM1278_ADDR, PMBUS_READ_VIN,
 	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1278_init_args[0] },
 	{ SENSOR_NUM_CUR_HSCOUT, sensor_dev_adm1278, I2C_BUS2, ADI_ADM1278_ADDR, PMBUS_READ_IOUT,
-	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1278_init_args[0] },
+	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, post_adm1278_current_read, NULL,
+	  &adm1278_init_args[0] },
 	{ SENSOR_NUM_PWR_HSCIN, sensor_dev_adm1278, I2C_BUS2, ADI_ADM1278_ADDR, PMBUS_READ_PIN,
-	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1278_init_args[0] },
+	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, post_adm1278_power_read, NULL,
+	  &adm1278_init_args[0] },
 };
 
 sensor_cfg evt3_class1_adi_temperature_sensor_table[] = {
