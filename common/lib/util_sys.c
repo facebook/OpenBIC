@@ -10,6 +10,8 @@
 
 #define SYS_RST_EVT_LOG_REG 0x7e6e2074
 
+static uint8_t ME_mode = ME_INIT_MODE;
+
 /* Check AC lost */
 bool is_ac_lost()
 {
@@ -89,11 +91,11 @@ enum RECOVERY_MODE_CAUSE {
 	RECOVERY_MODE_CAUSE_INTERNAL_ERROR
 };
 
-void set_me_firmware_mode(uint8_t me_fw_mode)
+int set_me_firmware_mode(uint8_t me_fw_mode)
 {
 	if ((me_fw_mode != ME_FW_RECOVERY) && (me_fw_mode != ME_FW_RESTORE)) {
 		printf("Unsupported ME firmware mode 0x%x setting", me_fw_mode);
-		return;
+		return -1;
 	}
 
 	ipmi_msg *me_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
@@ -105,7 +107,7 @@ void set_me_firmware_mode(uint8_t me_fw_mode)
 	ipmb_error ret;
 	uint16_t data_len = 0;
 	uint8_t seq_source = 0xFF;
-	int i = 0, retry = 3;
+	int i = 0, retry = 3, result = 0;
 
 	for (i = 0; i < retry; i++) {
 		seq_source = 0xFF;
@@ -148,12 +150,16 @@ void set_me_firmware_mode(uint8_t me_fw_mode)
 				if ((me_msg->data_len == 2) &&
 				    (me_msg->data[0] == FIRMWARE_ENTERED_RECOVERY_MODE) &&
 				    (me_msg->data[1] == RECOVERY_MODE_CAUSE_IPMI_COMMAND)) {
+					ME_mode = ME_RECOVERY_MODE;
+					result = 0;
 					goto cleanup;
 				}
 				break;
 			case ME_FW_RESTORE:
 				if ((me_msg->data_len == 2) && (me_msg->data[0] == NO_ERROR) &&
 				    (me_msg->data[1] == 0x00)) {
+					ME_mode = ME_NORMAL_MODE;
+					result = 0;
 					goto cleanup;
 				}
 				break;
@@ -165,21 +171,20 @@ void set_me_firmware_mode(uint8_t me_fw_mode)
 			       me_fw_mode, ret);
 		}
 	}
-	if (i == retry) {
-		printf("Failed to set ME firmware mode to 0x%x, retry time: %d\n", me_fw_mode,
-		       retry);
-	}
+	printf("Failed to set ME firmware mode to 0x%x, retry time: %d\n", me_fw_mode, retry);
+	result = -1;
 
 cleanup:
 	SAFE_FREE(data);
 	SAFE_FREE(me_msg);
-	return;
+	return result;
 }
 
 void init_me_firmware()
 {
 	ipmi_msg me_msg;
 	ipmb_error ret;
+	int result = 0;
 	uint8_t data_len = 0;
 	uint8_t seq_source = 0xFF;
 
@@ -189,10 +194,26 @@ void init_me_firmware()
 	if (ret == IPMB_ERROR_SUCCESS) {
 		if ((me_msg.data_len == 2) && (me_msg.data[0] == FIRMWARE_ENTERED_RECOVERY_MODE) &&
 		    (me_msg.data[1] == RECOVERY_MODE_CAUSE_IPMI_COMMAND)) {
-			set_me_firmware_mode(ME_FW_RESTORE);
+			ME_mode = ME_RECOVERY_MODE;
+			result = set_me_firmware_mode(ME_FW_RESTORE);
+
+			if (result == 0) {
+				ME_mode = ME_NORMAL_MODE;
+			}
+		} else if ((me_msg.data_len == 2) && (me_msg.data[0] == NO_ERROR) &&
+			   (me_msg.data[1] == 0x00)) {
+			ME_mode = ME_NORMAL_MODE;
+		} else {
+			ME_mode = ME_INIT_MODE;
 		}
 	} else {
 		printf("Failed to get ME self test result, ret: 0x%x\n", ret);
 	}
+
 	return;
+}
+
+uint8_t get_me_mode()
+{
+	return ME_mode;
 }

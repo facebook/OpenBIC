@@ -158,7 +158,7 @@ sensor_cfg plat_sensor_config[] = {
 
 	// ME
 	{ SENSOR_NUM_TEMP_PCH, sensor_dev_pch, I2C_BUS3, PCH_ADDR, ME_SENSOR_NUM_TEMP_PCH,
-	  post_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	  me_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 };
 
 sensor_cfg mp5990_sensor_config_table[] = {
