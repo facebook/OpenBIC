@@ -277,14 +277,23 @@ void ISR_SOC_THMALTRIP()
 {
 	addsel_msg_t sel_msg;
 	if (gpio_get(RST_PLTRST_PLD_N) == GPIO_HIGH) {
+		if (gpio_get(H_CPU_MEMTRIP_LVC3_N) ==
+		    GPIO_HIGH) { // Reference pin for memory thermal trip event
+			sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_THERMAL_TRIP;
+		} else {
+			sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_MEMORY_THERMALTRIP;
+		}
 		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
 		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
 		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
-		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_THERMAL_TRIP;
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!add_sel_evt_record(&sel_msg)) {
-			printf("SOC Thermal trip addsel fail\n");
+			if (sel_msg.event_data1 == IPMI_OEM_EVENT_OFFSET_SYS_THERMAL_TRIP) {
+				printf("SOC Thermal trip addsel fail\n");
+			} else {
+				printf("Memory Thermal trip addsel fail\n");
+			}
 		}
 	}
 }
