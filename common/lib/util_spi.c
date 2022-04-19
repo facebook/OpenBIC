@@ -75,7 +75,7 @@ static int do_update(const struct device *flash_device, off_t offset, uint8_t *b
 	bool update_it = false;
 
 	if (flash_sz < flash_offset + len) {
-		printf("ERROR: update boundary exceeds flash size. (%d, %d, %d)\n", flash_sz,
+		printf("ERROR: update boundary exceeds flash size. (%d, %d, %u)\n", flash_sz,
 		       flash_offset, len);
 		ret = -EINVAL;
 		goto end;
