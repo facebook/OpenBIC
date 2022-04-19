@@ -5,6 +5,7 @@
 void pal_pre_init()
 {
 	init_fan_mode();
+	init_fan_duty();
 }
 
 void pal_set_sys_status()
