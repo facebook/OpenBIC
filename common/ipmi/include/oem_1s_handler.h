@@ -55,6 +55,8 @@ void OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg);
 void OEM_1S_GET_BIC_STATUS(ipmi_msg *msg);
 void OEM_1S_RESET_BIC(ipmi_msg *msg);
 void OEM_1S_12V_CYCLE_SLOT(ipmi_msg *msg);
+void OEM_1S_READ_BIC_REGISTER(ipmi_msg *msg);
+void OEM_1S_WRITE_BIC_REGISTER(ipmi_msg *msg);
 
 #ifdef CONFIG_IPMI_KCS_ASPEED
 void OEM_1S_GET_POST_CODE(ipmi_msg *msg);
