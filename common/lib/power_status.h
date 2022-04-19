@@ -12,6 +12,8 @@ void set_DC_off_delayed_status();
 bool get_DC_off_delayed_status();
 void set_post_status(uint8_t gpio_num);
 bool get_post_status();
+void set_CPU_power_status(uint8_t gpio_num);
+bool CPU_power_good();
 void set_post_thread();
 
 #endif

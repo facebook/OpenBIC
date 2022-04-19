@@ -93,7 +93,6 @@ void ISR_DC_ON()
 		clear_unaccessible_sensor_cache();
 		k_work_schedule(&set_DC_off_10s_work, K_SECONDS(DC_OFF_10_SECOND));
 
-		snoop_abort_thread();
 
 		if ((gpio_get(FM_SLPS3_PLD_N) == GPIO_HIGH) &&
 		    (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH)) {
@@ -142,10 +141,15 @@ K_WORK_DELAYABLE_DEFINE(PROC_FAIL_work, PROC_FAIL_handler);
 #define PROC_FAIL_START_DELAY_SECOND 10
 void ISR_PWRGD_CPU()
 {
+  set_CPU_power_status(PWRGD_CPU_LVC3);
 	if (gpio_get(PWRGD_CPU_LVC3) == GPIO_HIGH) {
+		init_snoop_thread();
+		init_send_postcode_thread();
 		/* start thread proc_fail_handler after 10 seconds */
 		k_work_schedule(&PROC_FAIL_work, K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
 	} else {
+		abort_snoop_thread();
+
 		if (k_work_cancel_delayable(&PROC_FAIL_work) != 0) {
 			printf("Cancel proc_fail delay work fail\n");
 		}
@@ -196,11 +200,6 @@ void ISR_CATERR()
 
 void ISR_PLTRST()
 {
-	if (gpio_get(RST_PLTRST_BUF_N) == GPIO_HIGH) {
-		snoop_start_thread();
-		init_send_postcode_thread();
-	}
-
 	send_gpio_interrupt(RST_PLTRST_BUF_N);
 }
 
