@@ -31,7 +31,7 @@ uint16_t SDR_get_record_ID(uint16_t current_ID)
 	return SDR_INVALID_ID;
 }
 
-uint16_t SDR_check_record_ID(uint16_t current_ID)
+bool SDR_check_record_ID(uint16_t current_ID)
 {
 	if (current_ID > sdr_info.last_ID) {
 		return false;
@@ -165,7 +165,7 @@ uint8_t sdr_init(void)
 		full_sdr_table[i].ID_len += strlen(full_sdr_table[i].ID_str);
 		full_sdr_table[i].record_len += strlen(full_sdr_table[i].ID_str);
 
-		if (DEBUG_SNR) {
+		if (DEBUG_SENSOR) {
 			printf("%s ID: 0x%x%x, size: %d, recordlen: %d\n", full_sdr_table[i].ID_str,
 			       full_sdr_table[i].record_id_h, full_sdr_table[i].record_id_l,
 			       full_sdr_table[i].ID_len, full_sdr_table[i].record_len);
@@ -174,7 +174,7 @@ uint8_t sdr_init(void)
 
 	i--;
 	sdr_info.last_ID = (full_sdr_table[i].record_id_h << 8) | (full_sdr_table[i].record_id_l);
-	if (DEBUG_SNR) {
+	if (DEBUG_SENSOR) {
 		printf("%s ID: 0x%x%x, size: %d, recordlen: %d\n", full_sdr_table[i].ID_str,
 		       full_sdr_table[i].record_id_h, full_sdr_table[i].record_id_l,
 		       full_sdr_table[i].ID_len, full_sdr_table[i].record_len);

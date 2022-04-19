@@ -446,7 +446,7 @@ static inline uint8_t round_add(uint8_t sensor_num, int val)
 }
 
 uint16_t SDR_get_record_ID(uint16_t current_ID);
-uint16_t SDR_check_record_ID(uint16_t current_ID);
+bool SDR_check_record_ID(uint16_t current_ID);
 uint16_t SDR_get_RSV_ID(void);
 bool SDR_RSV_ID_check(uint16_t ID);
 uint8_t sdr_init(void);

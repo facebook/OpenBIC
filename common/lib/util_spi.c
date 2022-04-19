@@ -11,6 +11,7 @@
 #include "cmsis_os2.h"
 #include "util_spi.h"
 #include "util_sys.h"
+#include "libutil.h"
 
 static char *flash_device[6] = { "fmc_cs0",  "fmc_cs1",	 "spi1_cs0",
 				 "spi1_cs1", "spi2_cs0", "spi2_cs1" };
@@ -153,11 +154,8 @@ static int do_update(const struct device *flash_device, off_t offset, uint8_t *b
 	}
 
 end:
-
-	if (op_buf != NULL)
-		free(op_buf);
-	if (read_back_buf != NULL)
-		free(read_back_buf);
+	SAFE_FREE(op_buf);
+	SAFE_FREE(read_back_buf);
 
 	return ret;
 }
@@ -176,10 +174,7 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 			return FWUPDATE_ERROR_OFFSET;
 		}
 
-		if (txbuf != NULL) {
-			free(txbuf);
-			txbuf = NULL;
-		}
+		SAFE_FREE(txbuf);
 		txbuf = (uint8_t *)malloc(SECTOR_SZ_64K);
 		if (txbuf == NULL) { // Retry alloc
 			k_msleep(100);
@@ -197,8 +192,7 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 	if ((buf_offset + msg_len) > SECTOR_SZ_64K) {
 		printf("spi bus%x recv data %d over sector size %d\n", flash_position,
 		       buf_offset + msg_len, SECTOR_SZ_64K);
-		free(txbuf);
-		txbuf = NULL;
+		SAFE_FREE(txbuf);
 		k_msleep(10);
 		is_init = 0;
 		return FWUPDATE_OVER_LENGTH;
@@ -207,7 +201,7 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 	if ((offset % SECTOR_SZ_64K) != buf_offset) {
 		printf("spi bus%x recorded offset 0x%x but updating 0x%x\n", flash_position,
 		       buf_offset, offset % SECTOR_SZ_64K);
-		free(txbuf);
+		SAFE_FREE(txbuf);
 		txbuf = NULL;
 		k_msleep(10);
 		is_init = 0;
@@ -243,8 +237,7 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 		if (!ret) {
 			printf("Update success\n");
 		}
-		free(txbuf);
-		txbuf = NULL;
+		SAFE_FREE(txbuf);
 		k_msleep(10);
 		is_init = 0;
 

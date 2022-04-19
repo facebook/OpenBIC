@@ -123,7 +123,7 @@ static void usb_handler(void *arug0, void *arug1, void *arug2)
 	ARG_UNUSED(arug0);
 	ARG_UNUSED(arug1);
 	ARG_UNUSED(arug2);
-	
+
 	uint8_t rx_buff[RX_BUFF_SIZE];
 	int rx_len;
 	int i;

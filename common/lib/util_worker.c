@@ -54,7 +54,7 @@ static void work_handler(struct k_work *item)
 	work_count--;
 	k_mutex_unlock(&mutex_use_count);
 
-	free(work_job);
+	SAFE_FREE(work_job);
 }
 
 /* Get number of works in worker now.
@@ -100,7 +100,7 @@ int add_work(worker_job *job)
 
 	if (k_mutex_lock(&mutex_use_count, K_MSEC(1000))) {
 		printf("add_work mutex lock fail\n");
-		free(new_job);
+		SAFE_FREE(new_job);
 		return -3;
 	}
 
@@ -125,7 +125,7 @@ int add_work(worker_job *job)
 	return ret;
 
 error:
-	free(new_job);
+	SAFE_FREE(new_job);
 	k_mutex_unlock(&mutex_use_count);
 	return ret;
 }

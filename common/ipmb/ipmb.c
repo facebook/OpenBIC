@@ -9,6 +9,7 @@
 #include "ipmi.h"
 #include "kcs.h"
 #include "plat_ipmb.h"
+#include "libutil.h"
 
 static struct k_mutex mutex_id[MAX_IPMB_IDX]; // mutex for sequence linked list insert/find
 static struct k_mutex mutex_send_req, mutex_send_res, mutex_read;
@@ -152,7 +153,7 @@ void insert_req_ipmi_msg(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
 			}
 
 			pnode->next = temp->next;
-			free(temp);
+			SAFE_FREE(temp);
 			seq_current_count[index]--;
 		}
 
@@ -243,7 +244,7 @@ bool find_req_ipmi_msg(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
 	/* Because we deleted the node, we no longer require the memory used for it
 	 * free() will deallocate the memory.
 	 */
-	free(temp);
+	SAFE_FREE(temp);
 	seq_current_count[index]--;
 
 	k_mutex_unlock(&mutex_id[index]);
@@ -310,10 +311,7 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 				i2c_msg->tx_len = resp_tx_size;
 				memcpy(&i2c_msg->data[0], &ipmb_buffer_tx[1], resp_tx_size);
 				ret = i2c_master_write(i2c_msg, I2C_RETRY_TIME);
-
-				if (i2c_msg != NULL) {
-					free(i2c_msg);
-				}
+				SAFE_FREE(i2c_msg);
 			} else {
 				printf("[%s] Unsupported interface(%d) for index(%d)\n", __func__,
 				       ipmb_cfg.interface, ipmb_cfg.index);
@@ -373,9 +371,7 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 				memcpy(&i2c_msg->data[0], &ipmb_buffer_tx[1], req_tx_size);
 
 				ret = i2c_master_write(i2c_msg, I2C_RETRY_TIME);
-				if (i2c_msg != NULL) {
-					free(i2c_msg);
-				}
+				SAFE_FREE(i2c_msg);
 			} else {
 				printf("[%s] Unsupported interface(%d) for index(%d)\n", __func__,
 				       ipmb_cfg.interface, ipmb_cfg.index);
@@ -402,7 +398,7 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 									  sizeof(uint8_t));
 							if (kcs_buff == NULL) {
 								printf("IPMB_TXTask: Fail to malloc for kcs_buff\n");
-								free(current_msg_tx);
+								SAFE_FREE(current_msg_tx);
 								continue;
 							}
 						}
@@ -421,9 +417,7 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 						kcs_write(kcs_buff,
 							  current_msg_tx->buffer.data_len +
 								  3); // data len + netfn + cmd + cc
-						if (kcs_buff != NULL) {
-							free(kcs_buff);
-						}
+						SAFE_FREE(kcs_buff);
 #endif
 					} else {
 						// Return the error code(node busy) to the source channel
@@ -477,9 +471,7 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 		}
 
 	cleanup:
-		if (current_msg_tx != NULL) {
-			free(current_msg_tx);
-		}
+		SAFE_FREE(current_msg_tx);
 		k_msleep(IPMB_POLLING_TIME_MS);
 	}
 }
@@ -514,7 +506,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 		ipmb_buffer_rx =
 			malloc((IPMI_MSG_MAX_LENGTH + IPMB_RESP_HEADER_LENGTH) * sizeof(uint8_t));
 		if (ipmb_buffer_rx == NULL) {
-			free(current_msg_rx);
+			SAFE_FREE(current_msg_rx);
 			k_msleep(10); // allocate fail, retry later
 			continue;
 		}
@@ -623,9 +615,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 						kcs_write(kcs_buff,
 							  current_msg_rx->buffer.data_len +
 								  3); // data len + netfn + cmd + cc
-						if (kcs_buff != NULL) {
-							free(kcs_buff);
-						}
+						SAFE_FREE(kcs_buff);
 #endif
 					} else if (current_msg_rx->buffer.InF_source == ME_IPMB) {
 						ipmi_msg *bridge_msg =
@@ -666,9 +656,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 							       __func__, __LINE__);
 						}
 
-						if (bridge_msg != NULL) {
-							free(bridge_msg);
-						}
+						SAFE_FREE(bridge_msg);
 					} else { // Bridge response to other fru
 						ipmi_msg *bridge_msg =
 							(ipmi_msg *)malloc(sizeof(ipmi_msg));
@@ -722,9 +710,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 							       __func__, __LINE__);
 						}
 
-						if (bridge_msg != NULL) {
-							free(bridge_msg);
-						}
+						SAFE_FREE(bridge_msg);
 					}
 				}
 
@@ -767,9 +753,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 							       __func__, __LINE__);
 						}
 					}
-					if (bridge_msg != NULL) {
-						free(bridge_msg);
-					}
+					SAFE_FREE(bridge_msg);
 				} else {
 					/* The received message is a request
 					 * Record sequence number for later response
@@ -791,12 +775,8 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 			}
 		}
 	cleanup:
-		if (current_msg_rx != NULL) {
-			free(current_msg_rx);
-		}
-		if (ipmb_buffer_rx != NULL) {
-			free(ipmb_buffer_rx);
-		}
+		SAFE_FREE(current_msg_rx);
+		SAFE_FREE(ipmb_buffer_rx);
 		k_msleep(IPMB_POLLING_TIME_MS);
 	}
 }
@@ -1014,9 +994,7 @@ void IPMB_SeqTimeout_handler(void *arug0, void *arug1, void *arug2)
 						temp = pnode->next;
 						pnode->next = temp->next;
 						unregister_seq(index, temp->buffer.seq_target);
-						if (temp != NULL) {
-							free(temp);
-						}
+						SAFE_FREE(temp);
 						seq_current_count[index]--;
 					}
 

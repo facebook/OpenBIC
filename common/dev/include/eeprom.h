@@ -1,6 +1,7 @@
 #ifndef EEPROM_H
 #define EEPROM_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #define EEPROM_WRITE_SIZE 0x20
@@ -36,7 +37,7 @@ typedef struct _EEPROM_ENTRY_ {
 	uint8_t data[EEPROM_WRITE_SIZE];
 } EEPROM_ENTRY;
 
-uint8_t eeprom_write(EEPROM_ENTRY *entry);
-uint8_t eeprom_read(EEPROM_ENTRY *entry);
+bool eeprom_write(EEPROM_ENTRY *entry);
+bool eeprom_read(EEPROM_ENTRY *entry);
 
 #endif

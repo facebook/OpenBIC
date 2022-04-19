@@ -10,7 +10,8 @@
 #define TMP75_TEMP_OFFSET 0x00
 #define SSD0_ADDR (0xD4 >> 1)
 #define SSD0_OFFSET 0x00
-#define HSC_ADDR (0x80 >> 1)
+#define ADI_ADM1278_ADDR (0x80 >> 1)
+#define MPS_MP5990_ADDR (0x16 >> 1)
 #define PCH_ADDR (0x2C >> 1)
 #define ME_SENSOR_NUM_TEMP_PCH 0x08
 #define PVCCD_HV_ADDR (0xC4 >> 1)
@@ -22,10 +23,6 @@
 #define VR_CUR_CMD 0x8C
 #define VR_TEMP_CMD 0x8D
 #define VR_PWR_CMD 0x96
-#define HSC_VOL_CMD 0x88
-#define HSC_CUR_CMD 0x8C
-#define HSC_TEMP_CMD 0x8D
-#define HSC_PWR_CMD 0x97
 #define SSD0_MUX_ADDR (0xE2 >> 1)
 #define SSD0_CHANNEL 2
 #define CPU_PECI_ADDR 0x30

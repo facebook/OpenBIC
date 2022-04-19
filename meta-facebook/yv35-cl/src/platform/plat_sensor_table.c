@@ -4,169 +4,258 @@
 #include <string.h>
 
 #include "sensor.h"
-#include "adc.h"
-#include "isl69260.h"
+#include "ast_adc.h"
+#include "intel_peci.h"
 #include "hal_gpio.h"
 #include "plat_class.h"
-#include "plat_i2c.h"
 #include "plat_gpio.h"
+#include "plat_hook.h"
+#include "plat_i2c.h"
+#include "pmbus.h"
 
 SET_GPIO_VALUE_CFG pre_bat_3v = { A_P3V_BAT_SCALED_EN_R, GPIO_HIGH };
 SET_GPIO_VALUE_CFG post_bat_3v = { A_P3V_BAT_SCALED_EN_R, GPIO_LOW };
 
-snr_cfg plat_sensor_config[] = {
+sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
-	   access check arg0, arg1, cache, cache_status, mux_address, mux_offset,
+	   access check arg0, arg1, cache, cache_status, mux_ADDRess, mux_offset,
 	   pre_sensor_read_fn, pre_sensor_read_args, post_sensor_read_fn, post_sensor_read_fn  */
 
 	// temperature
-	{ SENSOR_NUM_TEMP_TMP75_IN, TYPE_TMP75, I2C_BUS2, TMP75_IN_ADDR, TMP75_TEMP_OFFSET,
-	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_TEMP_TMP75_OUT, TYPE_TMP75, I2C_BUS2, TMP75_OUT_ADDR, TMP75_TEMP_OFFSET,
-	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_TEMP_TMP75_FIO, TYPE_TMP75, I2C_BUS2, TMP75_FIO_ADDR, TMP75_TEMP_OFFSET,
-	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_TMP75_IN, sensor_dev_tmp75, I2C_BUS2, TMP75_IN_ADDR, TMP75_TEMP_OFFSET,
+	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_TMP75_OUT, sensor_dev_tmp75, I2C_BUS2, TMP75_OUT_ADDR, TMP75_TEMP_OFFSET,
+	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_TMP75_FIO, sensor_dev_tmp75, I2C_BUS2, TMP75_FIO_ADDR, TMP75_TEMP_OFFSET,
+	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 
 	// NVME
-	{ SENSOR_NUM_TEMP_SSD0, TYPE_NVME, I2C_BUS2, SSD0_ADDR, SSD0_OFFSET, post_access, 0, 0, 0,
-	  SENSOR_INIT_STATUS, SSD0_MUX_ADDR, SSD0_CHANNEL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_SSD0, sensor_dev_nvme, I2C_BUS2, SSD0_ADDR, SSD0_OFFSET, post_access, 0,
+	  0, 0, SENSOR_INIT_STATUS, pre_nvme_read, &mux_conf_addr_0xe2[1], NULL, NULL, NULL },
 
 	// PECI
-	{ SENSOR_NUM_TEMP_CPU, TYPE_PECI, CPU_PECI_ADDR, NONE, NONE, post_access, 0, 0, 0,
-	  SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_TEMP_CPU_MARGIN, TYPE_PECI, CPU_PECI_ADDR, TEMP_CPU_MARGIN_INDEX,
-	  TEMP_CPU_MARGIN_PARAM, post_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL,
+	{ SENSOR_NUM_TEMP_CPU, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR, PECI_TEMP_CPU,
+	  post_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_CPU_MARGIN, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
+	  PECI_TEMP_CPU_MARGIN, post_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL,
+	  post_cpu_margin_read, NULL, NULL },
+	{ SENSOR_NUM_TEMP_CPU_TJMAX, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
+	  PECI_TEMP_CPU_TJMAX, post_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  NULL },
+	{ SENSOR_NUM_TEMP_DIMM_A, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
+	  PECI_TEMP_CHANNEL0_DIMM0, post_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL,
 	  NULL, NULL },
-	{ SENSOR_NUM_TEMP_CPU_TJMAX, TYPE_PECI, CPU_PECI_ADDR, TEMP_CPU_TJMAX_INDEX,
-	  TEMP_CPU_TJMAX_PARAM, post_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL,
+	{ SENSOR_NUM_TEMP_DIMM_C, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
+	  PECI_TEMP_CHANNEL2_DIMM0, post_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL,
 	  NULL, NULL },
-	{ SENSOR_NUM_TEMP_DIMM_A, TYPE_PECI, CPU_PECI_ADDR, TEMP_DIMM_INDEX, TEMP_DIMM_A_PARAM,
-	  post_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_TEMP_DIMM_C, TYPE_PECI, CPU_PECI_ADDR, TEMP_DIMM_INDEX, TEMP_DIMM_C_PARAM,
-	  post_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_TEMP_DIMM_D, TYPE_PECI, CPU_PECI_ADDR, TEMP_DIMM_INDEX, TEMP_DIMM_D_PARAM,
-	  post_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_TEMP_DIMM_E, TYPE_PECI, CPU_PECI_ADDR, TEMP_DIMM_INDEX, TEMP_DIMM_E_PARAM,
-	  post_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_TEMP_DIMM_G, TYPE_PECI, CPU_PECI_ADDR, TEMP_DIMM_INDEX, TEMP_DIMM_G_PARAM,
-	  post_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_TEMP_DIMM_H, TYPE_PECI, CPU_PECI_ADDR, TEMP_DIMM_INDEX, TEMP_DIMM_H_PARAM,
-	  post_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_PWR_CPU, TYPE_PECI, CPU_PECI_ADDR, NONE, NONE, post_access, 0, 0, 0,
-	  SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_DIMM_D, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
+	  PECI_TEMP_CHANNEL3_DIMM0, post_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL,
+	  NULL, NULL },
+	{ SENSOR_NUM_TEMP_DIMM_E, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
+	  PECI_TEMP_CHANNEL4_DIMM0, post_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL,
+	  NULL, NULL },
+	{ SENSOR_NUM_TEMP_DIMM_G, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
+	  PECI_TEMP_CHANNEL6_DIMM0, post_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL,
+	  NULL, NULL },
+	{ SENSOR_NUM_TEMP_DIMM_H, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
+	  PECI_TEMP_CHANNEL7_DIMM0, post_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL,
+	  NULL, NULL },
+	{ SENSOR_NUM_PWR_CPU, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR, PECI_PWR_CPU, post_access,
+	  0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 
 	// adc voltage
-	{ SENSOR_NUM_VOL_STBY12V, TYPE_ADC, ADC_PORT0, NONE, NONE, stby_access, 667, 100, 0,
-	  SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_VOL_STBY3V, TYPE_ADC, ADC_PORT2, NONE, NONE, stby_access, 2, 1, 0,
-	  SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_VOL_STBY1V05, TYPE_ADC, ADC_PORT3, NONE, NONE, stby_access, 1, 1, 0,
-	  SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_VOL_BAT3V, TYPE_ADC, ADC_PORT4, NONE, NONE, stby_access, 3, 1, 0,
-	  SENSOR_INIT_STATUS, NONE, NONE, &bat_3v_set_gpio, &pre_bat_3v, &bat_3v_set_gpio,
-	  &post_bat_3v },
-	{ SENSOR_NUM_VOL_STBY5V, TYPE_ADC, ADC_PORT9, NONE, NONE, stby_access, 711, 200, 0,
-	  SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_VOL_DIMM12V, TYPE_ADC, ADC_PORT11, NONE, NONE, DC_access, 667, 100, 0,
-	  SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_VOL_STBY1V2, TYPE_ADC, ADC_PORT13, NONE, NONE, stby_access, 1, 1, 0,
-	  SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_VOL_M2_3V3, TYPE_ADC, ADC_PORT14, NONE, NONE, DC_access, 2, 1, 0,
-	  SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_VOL_STBY1V8, TYPE_ADC, ADC_PORT15, NONE, NONE, stby_access, 1, 1, 0,
-	  SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_VOL_STBY12V, sensor_dev_ast_adc, ADC_PORT0, NONE, NONE, stby_access, 667, 100,
+	  0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	{ SENSOR_NUM_VOL_STBY3V, sensor_dev_ast_adc, ADC_PORT2, NONE, NONE, stby_access, 2, 1, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	{ SENSOR_NUM_VOL_STBY1V05, sensor_dev_ast_adc, ADC_PORT3, NONE, NONE, stby_access, 1, 1, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	{ SENSOR_NUM_VOL_BAT3V, sensor_dev_ast_adc, ADC_PORT4, NONE, NONE, stby_access, 3, 1, 0,
+	  SENSOR_INIT_STATUS, pre_vol_bat3v_read, NULL, post_vol_bat3v_read, NULL,
+	  &adc_asd_init_args[0] },
+	{ SENSOR_NUM_VOL_STBY5V, sensor_dev_ast_adc, ADC_PORT9, NONE, NONE, stby_access, 711, 200,
+	  0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	{ SENSOR_NUM_VOL_DIMM12V, sensor_dev_ast_adc, ADC_PORT11, NONE, NONE, dc_access, 667, 100,
+	  0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	{ SENSOR_NUM_VOL_STBY1V2, sensor_dev_ast_adc, ADC_PORT13, NONE, NONE, stby_access, 1, 1, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	{ SENSOR_NUM_VOL_M2_3V3, sensor_dev_ast_adc, ADC_PORT14, NONE, NONE, dc_access, 2, 1, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	{ SENSOR_NUM_VOL_STBY1V8, sensor_dev_ast_adc, ADC_PORT15, NONE, NONE, stby_access, 1, 1, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
 
 	// VR voltage
-	{ SENSOR_NUM_VOL_PVCCD_HV, TYPE_ISL69260, I2C_BUS5, PVCCD_HV_ADDR, VR_VOL_CMD, DC_access, 0,
-	  0, 0, SENSOR_INIT_STATUS, NONE, NONE, isl69260_switch_page, &isl69260_page_data_args[0],
-	  NULL, NULL },
-	{ SENSOR_NUM_VOL_PVCCINFAON, TYPE_ISL69260, I2C_BUS5, PVCCINFAON_ADDR, VR_VOL_CMD,
-	  DC_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, isl69260_switch_page,
-	  &isl69260_page_data_args[0], NULL, NULL },
-	{ SENSOR_NUM_VOL_PVCCFA_EHV, TYPE_ISL69260, I2C_BUS5, PVCCFA_EHV_ADDR, VR_VOL_CMD,
-	  DC_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, isl69260_switch_page,
-	  &isl69260_page_data_args[1], NULL, NULL },
-	{ SENSOR_NUM_VOL_PVCCIN, TYPE_ISL69260, I2C_BUS5, PVCCIN_ADDR, VR_VOL_CMD, DC_access, 0, 0,
-	  0, SENSOR_INIT_STATUS, NONE, NONE, isl69260_switch_page, &isl69260_page_data_args[0],
-	  NULL, NULL },
-	{ SENSOR_NUM_VOL_PVCCFA_EHV_FIVRA, TYPE_ISL69260, I2C_BUS5, PVCCFA_EHV_FIVRA_ADDR,
-	  VR_VOL_CMD, DC_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, isl69260_switch_page,
-	  &isl69260_page_data_args[1], NULL, NULL },
+	{ SENSOR_NUM_VOL_PVCCD_HV, sensor_dev_isl69259, I2C_BUS5, PVCCD_HV_ADDR, VR_VOL_CMD,
+	  dc_access, 0, 0, 0, SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[0],
+	  NULL, NULL, NULL },
+	{ SENSOR_NUM_VOL_PVCCINFAON, sensor_dev_isl69259, I2C_BUS5, PVCCINFAON_ADDR, VR_VOL_CMD,
+	  dc_access, 0, 0, 0, SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[0],
+	  NULL, NULL, NULL },
+	{ SENSOR_NUM_VOL_PVCCFA_EHV, sensor_dev_isl69259, I2C_BUS5, PVCCFA_EHV_ADDR, VR_VOL_CMD,
+	  dc_access, 0, 0, 0, SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[1],
+	  NULL, NULL, NULL },
+	{ SENSOR_NUM_VOL_PVCCIN, sensor_dev_isl69259, I2C_BUS5, PVCCIN_ADDR, VR_VOL_CMD, dc_access,
+	  0, 0, 0, SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[0], NULL, NULL,
+	  NULL },
+	{ SENSOR_NUM_VOL_PVCCFA_EHV_FIVRA, sensor_dev_isl69259, I2C_BUS5, PVCCFA_EHV_FIVRA_ADDR,
+	  VR_VOL_CMD, dc_access, 0, 0, 0, SENSOR_INIT_STATUS, pre_isl69259_read,
+	  &isl69259_pre_read_args[1], NULL, NULL, NULL },
 
 	// VR current
-	{ SENSOR_NUM_CUR_PVCCD_HV, TYPE_ISL69260, I2C_BUS5, PVCCD_HV_ADDR, VR_CUR_CMD, DC_access, 0,
-	  0, 0, SENSOR_INIT_STATUS, NONE, NONE, isl69260_switch_page, &isl69260_page_data_args[0],
-	  NULL, NULL },
-	{ SENSOR_NUM_CUR_PVCCINFAON, TYPE_ISL69260, I2C_BUS5, PVCCINFAON_ADDR, VR_CUR_CMD,
-	  DC_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, isl69260_switch_page,
-	  &isl69260_page_data_args[0], NULL, NULL },
-	{ SENSOR_NUM_CUR_PVCCFA_EHV, TYPE_ISL69260, I2C_BUS5, PVCCFA_EHV_ADDR, VR_CUR_CMD,
-	  DC_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, isl69260_switch_page,
-	  &isl69260_page_data_args[1], NULL, NULL },
-	{ SENSOR_NUM_CUR_PVCCIN, TYPE_ISL69260, I2C_BUS5, PVCCIN_ADDR, VR_CUR_CMD, DC_access, 0, 0,
-	  0, SENSOR_INIT_STATUS, NONE, NONE, isl69260_switch_page, &isl69260_page_data_args[0],
-	  NULL, NULL },
-	{ SENSOR_NUM_CUR_PVCCFA_EHV_FIVRA, TYPE_ISL69260, I2C_BUS5, PVCCFA_EHV_FIVRA_ADDR,
-	  VR_CUR_CMD, DC_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, isl69260_switch_page,
-	  &isl69260_page_data_args[1], NULL, NULL },
+	{ SENSOR_NUM_CUR_PVCCD_HV, sensor_dev_isl69259, I2C_BUS5, PVCCD_HV_ADDR, VR_CUR_CMD,
+	  dc_access, 0, 0, 0, SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[0],
+	  NULL, NULL, NULL },
+	{ SENSOR_NUM_CUR_PVCCINFAON, sensor_dev_isl69259, I2C_BUS5, PVCCINFAON_ADDR, VR_CUR_CMD,
+	  dc_access, 0, 0, 0, SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[0],
+	  NULL, NULL, NULL },
+	{ SENSOR_NUM_CUR_PVCCFA_EHV, sensor_dev_isl69259, I2C_BUS5, PVCCFA_EHV_ADDR, VR_CUR_CMD,
+	  dc_access, 0, 0, 0, SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[1],
+	  NULL, NULL, NULL },
+	{ SENSOR_NUM_CUR_PVCCIN, sensor_dev_isl69259, I2C_BUS5, PVCCIN_ADDR, VR_CUR_CMD, dc_access,
+	  0, 0, 0, SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[0], NULL, NULL,
+	  NULL },
+	{ SENSOR_NUM_CUR_PVCCFA_EHV_FIVRA, sensor_dev_isl69259, I2C_BUS5, PVCCFA_EHV_FIVRA_ADDR,
+	  VR_CUR_CMD, dc_access, 0, 0, 0, SENSOR_INIT_STATUS, pre_isl69259_read,
+	  &isl69259_pre_read_args[1], NULL, NULL, NULL },
 
 	// VR temperature
-	{ SENSOR_NUM_TEMP_PVCCD_HV, TYPE_ISL69260, I2C_BUS5, PVCCD_HV_ADDR, VR_TEMP_CMD, DC_access,
-	  0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, isl69260_switch_page,
-	  &isl69260_page_data_args[0], NULL, NULL },
-	{ SENSOR_NUM_TEMP_PVCCINFAON, TYPE_ISL69260, I2C_BUS5, PVCCINFAON_ADDR, VR_TEMP_CMD,
-	  DC_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, isl69260_switch_page,
-	  &isl69260_page_data_args[0], NULL, NULL },
-	{ SENSOR_NUM_TEMP_PVCCFA_EHV, TYPE_ISL69260, I2C_BUS5, PVCCFA_EHV_ADDR, VR_TEMP_CMD,
-	  DC_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, isl69260_switch_page,
-	  &isl69260_page_data_args[1], NULL, NULL },
-	{ SENSOR_NUM_TEMP_PVCCIN, TYPE_ISL69260, I2C_BUS5, PVCCIN_ADDR, VR_TEMP_CMD, DC_access, 0,
-	  0, 0, SENSOR_INIT_STATUS, NONE, NONE, isl69260_switch_page, &isl69260_page_data_args[0],
-	  NULL, NULL },
-	{ SENSOR_NUM_TEMP_PVCCFA_EHV_FIVRA, TYPE_ISL69260, I2C_BUS5, PVCCFA_EHV_FIVRA_ADDR,
-	  VR_TEMP_CMD, DC_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, isl69260_switch_page,
-	  &isl69260_page_data_args[1], NULL, NULL },
+	{ SENSOR_NUM_TEMP_PVCCD_HV, sensor_dev_isl69259, I2C_BUS5, PVCCD_HV_ADDR, VR_TEMP_CMD,
+	  dc_access, 0, 0, 0, SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[0],
+	  NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_PVCCINFAON, sensor_dev_isl69259, I2C_BUS5, PVCCINFAON_ADDR, VR_TEMP_CMD,
+	  dc_access, 0, 0, 0, SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[0],
+	  NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_PVCCFA_EHV, sensor_dev_isl69259, I2C_BUS5, PVCCFA_EHV_ADDR, VR_TEMP_CMD,
+	  dc_access, 0, 0, 0, SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[1],
+	  NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_PVCCIN, sensor_dev_isl69259, I2C_BUS5, PVCCIN_ADDR, VR_TEMP_CMD,
+	  dc_access, 0, 0, 0, SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[0],
+	  NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_PVCCFA_EHV_FIVRA, sensor_dev_isl69259, I2C_BUS5, PVCCFA_EHV_FIVRA_ADDR,
+	  VR_TEMP_CMD, dc_access, 0, 0, 0, SENSOR_INIT_STATUS, pre_isl69259_read,
+	  &isl69259_pre_read_args[1], NULL, NULL, NULL },
 
 	// VR power
-	{ SENSOR_NUM_PWR_PVCCD_HV, TYPE_ISL69260, I2C_BUS5, PVCCD_HV_ADDR, VR_PWR_CMD, DC_access, 0,
-	  0, 0, SENSOR_INIT_STATUS, NONE, NONE, isl69260_switch_page, &isl69260_page_data_args[0],
-	  NULL, NULL },
-	{ SENSOR_NUM_PWR_PVCCINFAON, TYPE_ISL69260, I2C_BUS5, PVCCINFAON_ADDR, VR_PWR_CMD,
-	  DC_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, isl69260_switch_page,
-	  &isl69260_page_data_args[0], NULL, NULL },
-	{ SENSOR_NUM_PWR_PVCCFA_EHV, TYPE_ISL69260, I2C_BUS5, PVCCFA_EHV_ADDR, VR_PWR_CMD,
-	  DC_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, isl69260_switch_page,
-	  &isl69260_page_data_args[1], NULL, NULL },
-	{ SENSOR_NUM_PWR_PVCCIN, TYPE_ISL69260, I2C_BUS5, PVCCIN_ADDR, VR_PWR_CMD, DC_access, 0, 0,
-	  0, SENSOR_INIT_STATUS, NONE, NONE, isl69260_switch_page, &isl69260_page_data_args[0],
-	  NULL, NULL },
-	{ SENSOR_NUM_PWR_PVCCFA_EHV_FIVRA, TYPE_ISL69260, I2C_BUS5, PVCCFA_EHV_FIVRA_ADDR,
-	  VR_PWR_CMD, DC_access, 0, 0, 0, SENSOR_INIT_STATUS, NONE, NONE, isl69260_switch_page,
-	  &isl69260_page_data_args[1], NULL, NULL },
+	{ SENSOR_NUM_PWR_PVCCD_HV, sensor_dev_isl69259, I2C_BUS5, PVCCD_HV_ADDR, VR_PWR_CMD,
+	  dc_access, 0, 0, 0, SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[0],
+	  NULL, NULL, NULL },
+	{ SENSOR_NUM_PWR_PVCCINFAON, sensor_dev_isl69259, I2C_BUS5, PVCCINFAON_ADDR, VR_PWR_CMD,
+	  dc_access, 0, 0, 0, SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[0],
+	  NULL, NULL, NULL },
+	{ SENSOR_NUM_PWR_PVCCFA_EHV, sensor_dev_isl69259, I2C_BUS5, PVCCFA_EHV_ADDR, VR_PWR_CMD,
+	  dc_access, 0, 0, 0, SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[1],
+	  NULL, NULL, NULL },
+	{ SENSOR_NUM_PWR_PVCCIN, sensor_dev_isl69259, I2C_BUS5, PVCCIN_ADDR, VR_PWR_CMD, dc_access,
+	  0, 0, 0, SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[0], NULL, NULL,
+	  NULL },
+	{ SENSOR_NUM_PWR_PVCCFA_EHV_FIVRA, sensor_dev_isl69259, I2C_BUS5, PVCCFA_EHV_FIVRA_ADDR,
+	  VR_PWR_CMD, dc_access, 0, 0, 0, SENSOR_INIT_STATUS, pre_isl69259_read,
+	  &isl69259_pre_read_args[1], NULL, NULL, NULL },
 
 	// ME
-	{ SENSOR_NUM_TEMP_PCH, TYPE_PCH, I2C_BUS3, PCH_ADDR, ME_SENSOR_NUM_TEMP_PCH, post_access, 0,
-	  0, 0, SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_PCH, sensor_dev_pch, I2C_BUS3, PCH_ADDR, ME_SENSOR_NUM_TEMP_PCH,
+	  post_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+};
 
-	// HSC
-	{ SENSOR_NUM_TEMP_HSC, TYPE_HSC, I2C_BUS2, HSC_ADDR, HSC_TEMP_CMD, stby_access, 0, 0, 0,
-	  SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_VOL_HSCIN, TYPE_HSC, I2C_BUS2, HSC_ADDR, HSC_VOL_CMD, stby_access, 0, 0, 0,
-	  SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_CUR_HSCOUT, TYPE_HSC, I2C_BUS2, HSC_ADDR, HSC_CUR_CMD, stby_access, 0, 0, 0,
-	  SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_PWR_HSCIN, TYPE_HSC, I2C_BUS2, HSC_ADDR, HSC_PWR_CMD, stby_access, 0, 0, 0,
-	  SENSOR_INIT_STATUS, NONE, NONE, NULL, NULL, NULL, NULL }
+sensor_cfg mp5990_sensor_config_table[] = {
+	/* number,                  type,       port,      address,      offset,
+	   access check arg0, arg1, cache, cache_status, mux_address, mux_offset,
+	   pre_sensor_read_fn, pre_sensor_read_args, post_sensor_read_fn, post_sensor_read_fn  */
+	{ SENSOR_NUM_TEMP_HSC, sensor_dev_mp5990, I2C_BUS2, MPS_MP5990_ADDR,
+	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL,
+	  NULL, &mp5990_init_args[0] },
+	{ SENSOR_NUM_VOL_HSCIN, sensor_dev_mp5990, I2C_BUS2, MPS_MP5990_ADDR, PMBUS_READ_VIN,
+	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
+	{ SENSOR_NUM_CUR_HSCOUT, sensor_dev_mp5990, I2C_BUS2, MPS_MP5990_ADDR, PMBUS_READ_IOUT,
+	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
+	{ SENSOR_NUM_PWR_HSCIN, sensor_dev_mp5990, I2C_BUS2, MPS_MP5990_ADDR, PMBUS_READ_PIN,
+	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
+};
+
+sensor_cfg adm1278_sensor_config_table[] = {
+	/* number,                  type,       port,      address,      offset,
+	   access check arg0, arg1, cache, cache_status, mux_address, mux_offset,
+	   pre_sensor_read_fn, pre_sensor_read_args, post_sensor_read_fn, post_sensor_read_fn  */
+	{ SENSOR_NUM_TEMP_HSC, sensor_dev_adm1278, I2C_BUS2, ADI_ADM1278_ADDR,
+	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL,
+	  NULL, &adm1278_init_args[0] },
+	{ SENSOR_NUM_VOL_HSCIN, sensor_dev_adm1278, I2C_BUS2, ADI_ADM1278_ADDR, PMBUS_READ_VIN,
+	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1278_init_args[0] },
+	{ SENSOR_NUM_CUR_HSCOUT, sensor_dev_adm1278, I2C_BUS2, ADI_ADM1278_ADDR, PMBUS_READ_IOUT,
+	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1278_init_args[0] },
+	{ SENSOR_NUM_PWR_HSCIN, sensor_dev_adm1278, I2C_BUS2, ADI_ADM1278_ADDR, PMBUS_READ_PIN,
+	  stby_access, 0, 0, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1278_init_args[0] },
 };
 
 uint8_t load_sensor_config(void)
 {
 	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
-	return sizeof(plat_sensor_config) / sizeof(snr_cfg);
+	return ARRAY_SIZE(plat_sensor_config);
 }
 
 void pal_fix_sensor_config()
 {
+	uint8_t sensor_count = ARRAY_SIZE(plat_sensor_config);
+
+	/* Fix sensor table according to the different class types and board revisions */
+	if (get_system_class() == SYS_CLASS_1) {
+		uint8_t board_revision = get_board_revision();
+		switch (board_revision) {
+		case SYS_BOARD_POC:
+		case SYS_BOARD_EVT:
+		case SYS_BOARD_EVT2:
+			sensor_count = ARRAY_SIZE(adm1278_sensor_config_table);
+			while (sensor_count != 0) {
+				add_sensor_config(adm1278_sensor_config_table[--sensor_count]);
+				if (sensor_count == 0) {
+					break;
+				}
+			}
+			break;
+		case SYS_BOARD_EVT3_EFUSE:
+			sensor_count = ARRAY_SIZE(mp5990_sensor_config_table);
+			while (sensor_count != 0) {
+				--sensor_count;
+				if (get_2ou_status()) {
+					/* For the class type 1 and 2OU system,
+					 * set the IMON based total over current fault limit to 70A(0x0046),
+					 * set the gain for output current reporting to 0x01BF following the power team's experiment
+					 * and set GPIOA7(HSC_SET_EN_R) to high.
+					 */
+					mp5990_sensor_config_table[sensor_count].init_args =
+						&mp5990_init_args[1];
+					gpio_set(HSC_SET_EN_R, GPIO_HIGH);
+				} else {
+					/* For the class type 1 and 2OU system,
+					 * set the IMON based total over current fault limit to 40A(0x0028),
+					 * set the gain for output current reporting to 0x0104 following the power team's experiment
+					 * and set GPIOA7(HSC_SET_EN_R) to low.
+					 */
+					mp5990_sensor_config_table[sensor_count].init_args =
+						&mp5990_init_args[0];
+					gpio_set(HSC_SET_EN_R, GPIO_LOW);
+				}
+				add_sensor_config(mp5990_sensor_config_table[sensor_count]);
+				if (sensor_count == 0) {
+					break;
+				}
+			}
+			break;
+		case SYS_BOARD_EVT3_HOTSWAP:
+			break;
+		default:
+			break;
+		}
+	} else { // Class-2
+		sensor_count = ARRAY_SIZE(adm1278_sensor_config_table);
+		while (sensor_count != 0) {
+			add_sensor_config(adm1278_sensor_config_table[--sensor_count]);
+			if (sensor_count == 0) {
+				break;
+			}
+		}
+	}
+
 	if (sensor_config_num != SDR_NUM) {
 		printf("fix sensor SDR and config table not match\n");
 	}
