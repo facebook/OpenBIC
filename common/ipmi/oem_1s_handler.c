@@ -1,5 +1,4 @@
 #include "oem_1s_handler.h"
-
 #include <stdlib.h>
 #include <drivers/peci.h>
 #include "libutil.h"
@@ -186,8 +185,23 @@ __weak void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 			msg->completion_code = CC_INVALID_PARAM;
 			return;
 		}
+
+		// Switch GPIO(BIOS SPI Selection Pin) to BIC
+		bool ret = pal_switch_bios_spi_mux(GPIO_HIGH);
+		if (!ret) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+
 		status = fw_update(offset, length, &msg->data[7], (target & IS_SECTOR_END_MASK),
 				   pos);
+
+		// Switch GPIO(BIOS SPI Selection Pin) to PCH
+		ret = pal_switch_bios_spi_mux(GPIO_LOW);
+		if (!ret) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
 
 	} else if ((target == BIC_UPDATE) || (target == (BIC_UPDATE | IS_SECTOR_END_MASK))) {
 		// Expect BIC firmware size not bigger than 320k

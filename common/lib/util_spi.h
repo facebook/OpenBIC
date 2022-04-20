@@ -27,6 +27,7 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 		  uint8_t flash_position);
 
 int pal_get_bios_flash_position();
+bool pal_switch_bios_spi_mux(int gpio_status);
 
 enum FIRMWARE_UPDATE_RETURN_CODE {
 	FWUPDATE_SUCCESS,
