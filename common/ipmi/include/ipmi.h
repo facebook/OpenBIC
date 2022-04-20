@@ -5,7 +5,7 @@
 #include "ipmb.h"
 #include "plat_version.h"
 
-#define IPMI_THREAD_STACK_SIZE 4000
+#define IPMI_THREAD_STACK_SIZE 4096
 #define IPMI_BUF_LEN 10
 #define DEBUG_IPMI 0
 

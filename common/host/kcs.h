@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define KCS_POLL_STACK_SIZE 2500
+#define KCS_POLL_STACK_SIZE 2560
 #define KCS_POLLING_INTERVAL 100
 #define KCS_BUFF_SIZE 256
 
