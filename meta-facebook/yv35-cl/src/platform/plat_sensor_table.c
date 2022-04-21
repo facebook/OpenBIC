@@ -1,5 +1,6 @@
 #include "plat_sensor_table.h"
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -11,8 +12,10 @@
 #include "plat_gpio.h"
 #include "plat_hook.h"
 #include "plat_i2c.h"
+#include "power_status.h"
 #include "pmbus.h"
 #include "tmp431.h"
+#include "libutil.h"
 
 SET_GPIO_VALUE_CFG pre_bat_3v = { A_P3V_BAT_SCALED_EN_R, GPIO_HIGH };
 SET_GPIO_VALUE_CFG post_bat_3v = { A_P3V_BAT_SCALED_EN_R, GPIO_LOW };
@@ -202,10 +205,64 @@ uint8_t load_sensor_config(void)
 	return ARRAY_SIZE(plat_sensor_config);
 }
 
+void check_vr_type(uint8_t index)
+{
+	uint8_t retry = 5;
+	I2C_MSG msg;
+	char *data = (uint8_t *)malloc(sizeof(uint8_t));
+
+	/* Get IC Device ID from VR chip
+	 * - Command code: 0xAD
+	 * - The response data 
+	 *   byte-1: Block read count
+	 *   byte-2: Device ID
+	 * For the ISL69259 chip,
+	 * the byte-1 of response data is 4 and the byte-2 to 5 is 49D28100h.
+	 * For the TPS53689 chip,
+	 * the byte-1 of response data is 6 and the byte-2 to 7 is 544953689000h.
+	 * For the XDPE15284 chip,
+	 * the byte-1 is returned as 2 and the byte-2 is 8Ah(XDPE15284).
+	 */
+	uint8_t bus = sensor_config[index].port;
+	uint8_t target_addr = sensor_config[index].target_addr;
+	uint8_t tx_len = 1;
+	uint8_t rx_len = 7;
+	data[0] = PMBUS_IC_DEVICE_ID;
+	msg = construct_i2c_message(bus, target_addr, tx_len, data, rx_len);
+
+	if (i2c_master_read(&msg, retry)) {
+		printf("Failed to read VR register(0x%x)\n", data[0]);
+		return;
+	}
+
+	if ((msg.data[0] == 0x06) && (msg.data[1] == 0x54) && (msg.data[2] == 0x49) &&
+	    (msg.data[3] == 0x53) && (msg.data[4] == 0x68) && (msg.data[5] == 0x90) &&
+	    (msg.data[6] == 0x00)) {
+		printf("VR type: TPS53689\n");
+		sensor_config[index].type = sensor_dev_tps53689;
+	} else if ((msg.data[0] == 0x02) && (msg.data[2] == 0x8A)) {
+		printf("VR type: XDPE15284\n");
+		sensor_config[index].type = sensor_dev_xdpe15284;
+	} else if ((msg.data[0] == 0x04) && (msg.data[1] == 0x00) && (msg.data[2] == 0x81) &&
+		   (msg.data[3] == 0xD2) && (msg.data[4] == 0x49)) {
+		printf("VR type: ISL69259\n");
+	} else {
+		printf("Unknown VR type\n");
+	}
+}
+
 void pal_fix_sensor_config()
 {
-	uint8_t sensor_count = ARRAY_SIZE(plat_sensor_config);
+	uint8_t sensor_count;
 	float voltage_hsc_type_adc;
+
+	/* Check the VR sensor type */
+	sensor_count = ARRAY_SIZE(plat_sensor_config);
+	for (uint8_t index = 0; index < sensor_count; index++) {
+		if (sensor_config[index].type == sensor_dev_isl69259) {
+			check_vr_type(index);
+		}
+	}
 
 	/* Fix sensor table according to the different class types and board revisions */
 	if (get_system_class() == SYS_CLASS_1) {
