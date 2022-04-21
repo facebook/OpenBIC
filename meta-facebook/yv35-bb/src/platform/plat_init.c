@@ -1,10 +1,15 @@
 #include "hal_gpio.h"
 #include "plat_gpio.h"
 #include "plat_fan.h"
+#include <plat_def.h>
 
 void pal_pre_init()
 {
 	init_fan_mode();
+
+	// Due to BB CPLD bind HSC device need times
+	// wait HSC ready before sensor read
+	k_msleep(HSC_DEVICE_READY_DELAY_MS);
 }
 
 void pal_set_sys_status()
