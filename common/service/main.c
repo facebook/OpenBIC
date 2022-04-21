@@ -1,4 +1,5 @@
 #include "hal_i2c.h"
+#include "hal_wdt.h"
 #include "timer.h"
 #include "sensor.h"
 #include "ipmi.h"
@@ -31,6 +32,7 @@ void main(void)
 	printf("Hello, welcome to %s %s %x%x.%x.%x\n", PLATFORM_NAME, PROJECT_NAME, BIC_FW_YEAR_MSB,
 	       BIC_FW_YEAR_LSB, BIC_FW_WEEK, BIC_FW_VER);
 
+	wdt_init();
 	util_init_timer();
 	util_init_I2C();
 	pal_pre_init();
