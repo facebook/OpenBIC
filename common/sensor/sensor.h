@@ -213,12 +213,13 @@ extern sensor_cfg *sensor_config;
 extern uint8_t sensor_config_index_map[SENSOR_NUM_MAX];
 extern uint8_t sensor_config_num;
 
-void clear_unaccessible_sensor_cache();
+void clear_unaccessible_sensor_cache(uint8_t sensor_num);
 uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode);
 void pal_set_sensor_poll_interval(int *interval_ms);
 bool stby_access(uint8_t sensor_num);
 bool dc_access(uint8_t sensor_num);
 bool post_access(uint8_t sensor_num);
+bool me_access(uint8_t sensor_num);
 bool vr_access(uint8_t sensor_num);
 bool sensor_init(void);
 void disable_sensor_poll();

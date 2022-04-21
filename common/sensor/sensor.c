@@ -11,6 +11,7 @@
 #include "plat_sdr_table.h"
 #include "ast_adc.h"
 #include "intel_peci.h"
+#include "util_sys.h"
 
 #define SENSOR_DRIVE_INIT_DECLARE(name) uint8_t name##_init(uint8_t sensor_num)
 
@@ -110,20 +111,12 @@ bool access_check(uint8_t sensor_num)
 	return (access_checker)(sensor_config[sensor_config_index_map[sensor_num]].num);
 }
 
-void clear_unaccessible_sensor_cache()
+void clear_unaccessible_sensor_cache(uint8_t sensor_num)
 {
-	uint8_t poll_num;
-
-	for (poll_num = 0; poll_num < SENSOR_NUM_MAX; poll_num++) {
-		if (sensor_config_index_map[poll_num] == SENSOR_NULL) { // sensor not exist
-			continue;
-		}
-
-		if (!access_check(poll_num)) {
-			sensor_config[sensor_config_index_map[poll_num]].cache = SENSOR_FAIL;
-			sensor_config[sensor_config_index_map[poll_num]].cache_status =
-				SENSOR_INIT_STATUS;
-		}
+	if (sensor_config[sensor_config_index_map[sensor_num]].cache_status != SENSOR_INIT_STATUS) {
+		sensor_config[sensor_config_index_map[sensor_num]].cache = SENSOR_FAIL;
+		sensor_config[sensor_config_index_map[sensor_num]].cache_status =
+			SENSOR_INIT_STATUS;
 	}
 }
 
@@ -138,6 +131,7 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 	}
 
 	if (!access_check(sensor_num)) { // sensor not accessable
+		clear_unaccessible_sensor_cache(sensor_num);
 		return SENSOR_NOT_ACCESSIBLE;
 	}
 
@@ -162,6 +156,7 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 			cfg->retry = 0;
 			if (!access_check(
 				    sensor_num)) { // double check access to avoid not accessible read at same moment status change
+				clear_unaccessible_sensor_cache(sensor_num);
 				return SENSOR_NOT_ACCESSIBLE;
 			}
 
@@ -279,6 +274,15 @@ bool dc_access(uint8_t sensor_number)
 bool post_access(uint8_t sensor_number)
 {
 	return get_post_status();
+}
+
+bool me_access(uint8_t sensor_number)
+{
+	if (get_me_mode() == ME_NORMAL_MODE) {
+		return get_post_status();
+	} else {
+		return false;
+	}
 }
 
 bool vr_access(uint8_t sensor_num)

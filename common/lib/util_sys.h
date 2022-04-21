@@ -13,6 +13,12 @@ enum CC_12V_CYCLE_SLOT {
 	SLOT_ON_FAILED
 };
 
+enum ME_MODE {
+	ME_INIT_MODE = 0x00,
+	ME_NORMAL_MODE = 0x01,
+	ME_RECOVERY_MODE = 0x02,
+};
+
 enum FORCE_ME_RECOVERY_CMD {
 	ME_FW_RECOVERY = 0x01,
 	ME_FW_RESTORE = 0x02,
@@ -28,8 +34,9 @@ void pal_cold_reset_prepare();
 int pal_submit_bmc_cold_reset();
 int submit_12v_cycle_slot();
 
-void set_me_firmware_mode(uint8_t me_fw_mode);
+int set_me_firmware_mode(uint8_t me_fw_mode);
 void init_me_firmware();
+uint8_t get_me_mode();
 
 int pal_submit_bmc_cold_reset();
 int pal_submit_12v_cycle_slot();
