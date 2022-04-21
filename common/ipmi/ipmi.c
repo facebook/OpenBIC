@@ -122,6 +122,7 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 	ipmi_msg_cfg msg_cfg;
 
 	while (1) {
+		memset(&msg_cfg, 0, sizeof(ipmi_msg_cfg));
 		k_msgq_get(&ipmi_msgq, &msg_cfg, K_FOREVER);
 
 		if (DEBUG_IPMI) {
@@ -164,9 +165,9 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 		case NETFN_OEM_1S_REQ:
 			if ((msg_cfg.buffer.data[0] | (msg_cfg.buffer.data[1] << 8) |
 			     (msg_cfg.buffer.data[2] << 16)) == IANA_ID) {
+				msg_cfg.buffer.data_len -= 3;
 				memcpy(&msg_cfg.buffer.data[0], &msg_cfg.buffer.data[3],
 				       msg_cfg.buffer.data_len);
-				msg_cfg.buffer.data_len -= 3;
 				IPMI_OEM_1S_handler(&msg_cfg.buffer);
 				break;
 			} else if (pal_is_not_return_cmd(msg_cfg.buffer.netfn,
