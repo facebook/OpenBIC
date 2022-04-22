@@ -973,7 +973,7 @@ __weak void OEM_1S_READ_BIC_REGISTER(ipmi_msg *msg)
 	uint32_t *addr = (uint32_t *)(msg->data[0] | (msg->data[1] << 8) | (msg->data[2] << 16) |
 				      (msg->data[3] << 24));
 	uint8_t read_len = msg->data[4];
-	memcpy(&msg->data[0], addr, read_len);
+	memcpy(&msg->data[0], (uint8_t *)addr, read_len);
 
 	msg->data_len = read_len;
 	msg->completion_code = CC_SUCCESS;
