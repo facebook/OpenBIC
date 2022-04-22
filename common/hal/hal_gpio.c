@@ -9,7 +9,7 @@
 static const struct device *dev_gpio[GPIO_GROUP_NUM];
 static struct gpio_callback callbacks[TOTAL_GPIO_NUM];
 static struct k_work_q gpio_work_queue;
-static K_THREAD_STACK_DEFINE(gpio_work_stack, STACK_SIZE);
+static K_THREAD_STACK_DEFINE(gpio_work_stack, GPIO_STACK_SIZE);
 
 struct k_work gpio_work[TOTAL_GPIO_NUM];
 
@@ -190,7 +190,7 @@ int gpio_init(const struct device *args)
 
 	bool ac_lost = is_ac_lost();
 
-	k_work_queue_start(&gpio_work_queue, gpio_work_stack, STACK_SIZE,
+	k_work_queue_start(&gpio_work_queue, gpio_work_stack, GPIO_STACK_SIZE,
 			   K_PRIO_PREEMPT(CONFIG_MAIN_THREAD_PRIORITY), NULL);
 	k_thread_name_set(&gpio_work_queue.thread, "gpio_workq");
 
