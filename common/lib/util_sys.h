@@ -41,4 +41,6 @@ uint8_t get_me_mode();
 int pal_submit_bmc_cold_reset();
 int pal_submit_12v_cycle_slot();
 
+void set_sys_ready_pin(uint8_t ready_gpio_name);
+
 #endif

@@ -27,13 +27,13 @@ void pal_post_init()
 
 void pal_set_sys_status()
 {
-	gpio_set(BIC_READY, GPIO_HIGH);
 	set_DC_status(PWRGD_SYS_PWROK);
 	set_DC_on_delayed_status();
 	set_DC_off_delayed_status();
 	set_post_status(FM_BIOS_POST_CMPLT_BMC_N);
 	set_CPU_power_status(PWRGD_CPU_LVC3);
 	set_post_thread();
+	set_sys_ready_pin(BIC_READY);
 }
 
 int switch_spi_mux(const struct device *args)
