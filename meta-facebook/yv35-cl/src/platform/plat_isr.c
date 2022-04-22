@@ -229,16 +229,24 @@ void ISR_FM_THROTTLE()
 void ISR_HSC_THROTTLE()
 {
 	addsel_msg_t sel_msg;
+	static bool is_hsc_throttle_assert = false; // Flag for filt out fake alert
 	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
 		if ((gpio_get(PWRGD_SYS_PWROK) == GPIO_LOW) &&
 		    (get_DC_off_delayed_status() == false)) {
 			return;
 		} else {
-			if (gpio_get(IRQ_SML1_PMBUS_ALERT_N) == GPIO_HIGH) {
+			if ((gpio_get(IRQ_SML1_PMBUS_ALERT_N) == GPIO_HIGH) &&
+			    (is_hsc_throttle_assert == true)) {
 				sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
-			} else {
+				is_hsc_throttle_assert = false;
+			} else if ((gpio_get(IRQ_SML1_PMBUS_ALERT_N) == GPIO_LOW) &&
+				   (is_hsc_throttle_assert == false)) {
 				sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
+				is_hsc_throttle_assert = true;
+			} else { // Fake alert
+				return;
 			}
+
 			sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
 			sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
 			sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_PMBUSALERT;
