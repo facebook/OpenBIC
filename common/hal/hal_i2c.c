@@ -39,6 +39,11 @@ int i2c_master_read(I2C_MSG *msg, uint8_t retry)
 		return EMSGSIZE;
 	}
 
+	if (check_i2c_bus_valid(msg->bus) < 0) {
+		printf("i2c bus %d is invalid\n", msg->bus);
+		return -1;
+	}
+
 	do { // break while getting mutex success but tranmission fail
 		status = k_mutex_lock(&i2c_mutex[msg->bus], K_MSEC(1000));
 		if (status == osOK) {
@@ -98,6 +103,11 @@ int i2c_master_write(I2C_MSG *msg, uint8_t retry)
 			printf(" %x", msg->data[i]);
 		}
 		printf("\n");
+	}
+
+	if (check_i2c_bus_valid(msg->bus) < 0) {
+		printf("i2c bus %d is invalid\n", msg->bus);
+		return -1;
 	}
 
 	status = k_mutex_lock(&i2c_mutex[msg->bus], K_MSEC(1000));
