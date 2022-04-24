@@ -12,6 +12,7 @@ typedef struct _isl69259_pre_proc_arg {
 extern adc_asd_init_arg adc_asd_init_args[];
 extern adm1278_init_arg adm1278_init_args[];
 extern mp5990_init_arg mp5990_init_args[];
+extern pmic_init_arg pmic_init_args[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
@@ -24,6 +25,7 @@ extern isl69259_pre_proc_arg isl69259_pre_read_args[];
  **************************************************************************************************/
 bool pre_isl69259_read(uint8_t sensor_num, void *args);
 bool pre_nvme_read(uint8_t sensor_num, void *args);
+bool pre_pmic_read(uint8_t sensor_num, void *args);
 bool pre_vol_bat3v_read(uint8_t sensor_num, void *args);
 bool post_vol_bat3v_read(uint8_t sensor_num, void *args, int *reading);
 bool post_cpu_margin_read(uint8_t sensor_num, void *args, int *reading);
