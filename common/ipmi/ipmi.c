@@ -54,7 +54,7 @@ __weak bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd)
 	return false;
 }
 
-ipmi_error IPMI_handler(void *arug0, void *arug1, void *arug2)
+void IPMI_handler(void *arug0, void *arug1, void *arug2)
 {
 	uint8_t i;
 	ipmi_msg_cfg msg_cfg;

@@ -4,7 +4,7 @@
 #include "pal.h"
 #include "util_sys.h"
 
-#define STACK_SIZE 1024
+#define STACK_SIZE 2048
 
 static const struct device *dev_gpio[GPIO_GROUP_NUM];
 static struct gpio_callback callbacks[TOTAL_GPIO_NUM];

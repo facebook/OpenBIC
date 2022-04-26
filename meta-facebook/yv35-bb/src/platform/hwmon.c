@@ -62,7 +62,7 @@ void set_sled_cycle()
 	I2C_MSG msg;
 
 	msg.bus = CPLD_IO_I2C_BUS;
-	msg.slave_addr = CPLD_IO_I2C_ADDR;
+	msg.target_addr = CPLD_IO_I2C_ADDR;
 	msg.tx_len = 2;
 	msg.data[0] = CPLD_IO_REG_OFS_SLED_CYCLE; // offset
 	msg.data[1] = 0x01; // value

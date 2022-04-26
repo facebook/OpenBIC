@@ -199,7 +199,7 @@ __weak void STORAGE_GET_SDR(ipmi_msg *msg)
 		return;
 	}
 
-	if ((offset + req_len) > IPMI_SDR_HEADER_LEN + full_sensor_table[record_ID].record_len) {
+	if ((offset + req_len) > IPMI_SDR_HEADER_LEN + full_sdr_table[record_ID].record_len) {
 		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
 		return;
 	}
@@ -208,7 +208,7 @@ __weak void STORAGE_GET_SDR(ipmi_msg *msg)
 	msg->data[0] = next_record_ID & 0xFF;
 	msg->data[1] = (next_record_ID >> 8) & 0xFF;
 
-	table_ptr = (uint8_t *)&full_sensor_table[record_ID];
+	table_ptr = (uint8_t *)&full_sdr_table[record_ID];
 	memcpy(&msg->data[2], (table_ptr + offset), req_len);
 
 	msg->data_len = req_len + 2; // return next record ID + sdr data
