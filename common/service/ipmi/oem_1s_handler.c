@@ -139,6 +139,10 @@ __weak void OEM_1S_GET_GPIO(ipmi_msg *msg)
 		gpio_value =
 			(i >= gpio_ind_to_num_table_cnt) ? 0 : gpio_get(gpio_ind_to_num_table[i]);
 
+		// clear temporary variable to avoid return wrong GPIO value
+		if (i % 8 == 0) {
+			eight_bit_value = 0;
+		}
 		eight_bit_value = eight_bit_value | (gpio_value << (i % 8));
 		msg->data[i / 8] = eight_bit_value;
 	}
