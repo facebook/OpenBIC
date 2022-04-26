@@ -10,10 +10,42 @@
 #include "plat_sensor.h"
 #include "oem_1s_handler.h"
 
+#define GPIO_HIGH 1
+#define GPIO_LOW 0
+
+void send_gpio_interrupt(uint8_t gpio_num)
+{
+	ipmb_error status;
+	ipmi_msg msg;
+	uint8_t gpio_val;
+
+	gpio_val = gpio_get(gpio_num);
+	printf("Send gpio interrupt to BMC, gpio number(%d) status(%d)\n", gpio_num, gpio_val);
+
+	msg.data_len = 5;
+	msg.InF_source = SELF;
+	msg.InF_target = BMC_IPMB;
+	msg.netfn = NETFN_OEM_1S_REQ;
+	msg.cmd = CMD_OEM_1S_SEND_INTERRUPT_TO_BMC;
+
+	msg.data[0] = IANA_ID & 0xFF;
+	msg.data[1] = (IANA_ID >> 8) & 0xFF;
+	msg.data[2] = (IANA_ID >> 16) & 0xFF;
+	msg.data[3] = gpio_num;
+	msg.data[4] = gpio_val;
+
+	status = ipmb_read(&msg, IPMB_inf_index_map[msg.InF_target]);
+	if (status == IPMB_ERROR_FAILURE) {
+		printf("Fail to post msg to txqueue for gpio %d interrupt\n", gpio_num);
+	} else if (status == IPMB_ERROR_GET_MESSAGE_QUEUE) {
+		printf("No response from bmc for gpio %d interrupt\n", gpio_num);
+	}
+}
+
 static void SLP3_handler()
 {
 	addsel_msg_t sel_msg;
-	if (gpio_get(FM_SLPS3_PLD_N) && (gpio_get(PWRGD_SYS_PWROK) == 0)) {
+	if ((gpio_get(FM_SLPS3_PLD_N) == GPIO_HIGH) && (gpio_get(PWRGD_SYS_PWROK) == GPIO_LOW)) {
 		sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
 		sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
 		sel_msg.snr_number = SENSOR_NUM_SYSTEM_STATUS;
@@ -29,7 +61,7 @@ static void SLP3_handler()
 K_WORK_DELAYABLE_DEFINE(SLP3_work, SLP3_handler);
 void ISR_SLP3()
 {
-	if (gpio_get(FM_SLPS3_PLD_N)) {
+	if ((gpio_get(FM_SLPS3_PLD_N) == GPIO_HIGH)) {
 		printk("slp3\n");
 		k_work_schedule(&SLP3_work, K_MSEC(10000));
 	} else {
@@ -52,7 +84,7 @@ void ISR_DC_ON()
 {
 	set_DC_status(PWRGD_SYS_PWROK);
 
-	if (get_DC_status() == 1) {
+	if (get_DC_status() == true) {
 		k_work_schedule(&set_DC_on_5s_work, K_SECONDS(DC_ON_5_SECOND));
 
 		if (k_work_cancel_delayable(&set_DC_off_10s_work) != 0) {
@@ -66,7 +98,8 @@ void ISR_DC_ON()
 
 		snoop_abort_thread();
 
-		if (gpio_get(FM_SLPS3_PLD_N) && gpio_get(RST_RSMRST_BMC_N)) {
+		if ((gpio_get(FM_SLPS3_PLD_N) == GPIO_HIGH) &&
+		    (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH)) {
 			addsel_msg_t sel_msg;
 			sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_OEM_C3;
 			sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
@@ -89,9 +122,9 @@ void ISR_BMC_PRDY()
 static void proc_fail_handler(void *arug0, void *arug1, void *arug2)
 {
 	/* if have not received kcs and post code, add FRB3 event log. */
-	if ((get_kcs_ok() == 0) && (get_postcode_ok() == 0)) {
+	if ((get_kcs_ok() == false) && (get_postcode_ok() == false)) {
 		addsel_msg_t sel_msg;
-		bool ret = 0;
+		bool ret = false;
 
 		memset(&sel_msg, 0, sizeof(addsel_msg_t));
 
@@ -112,7 +145,7 @@ K_WORK_DELAYABLE_DEFINE(proc_fail_work, proc_fail_handler);
 #define PROC_FAIL_START_DELAY_SECOND 10
 void ISR_PWRGD_CPU()
 {
-	if (gpio_get(PWRGD_CPU_LVC3) == 1) {
+	if (gpio_get(PWRGD_CPU_LVC3) == GPIO_HIGH) {
 		/* start thread proc_fail_handler after 10 seconds */
 		k_work_schedule(&proc_fail_work, K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
 	} else {
@@ -127,9 +160,9 @@ void ISR_PWRGD_CPU()
 
 static void CatErr_handler(void *arug0, void *arug1, void *arug2)
 {
-	if ((gpio_get(RST_PLTRST_BUF_N) == 1) || (gpio_get(PWRGD_SYS_PWROK) == 1)) {
+	if ((gpio_get(RST_PLTRST_BUF_N) == GPIO_HIGH) || (gpio_get(PWRGD_SYS_PWROK) == GPIO_HIGH)) {
 		addsel_msg_t sel_msg;
-		bool ret = 0;
+		bool ret = false;
 
 		memset(&sel_msg, 0, sizeof(addsel_msg_t));
 
@@ -137,7 +170,7 @@ static void CatErr_handler(void *arug0, void *arug1, void *arug2)
 		sel_msg.snr_number = SENSOR_NUM_CATERR;
 		sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
 		/* MCERR: one pulse, IERR: keep low */
-		if (gpio_get(FM_CPU_RMCA_CATERR_LVT3_N) == 1) {
+		if (gpio_get(FM_CPU_RMCA_CATERR_LVT3_N) == GPIO_HIGH) {
 			sel_msg.evt_data1 = IPMI_EVENT_OFFSET_PROCESSOR_MCERR;
 		} else {
 			sel_msg.evt_data1 = IPMI_EVENT_OFFSET_PROCESSOR_IERR;
@@ -155,7 +188,7 @@ K_WORK_DELAYABLE_DEFINE(CatErr_work, CatErr_handler);
 #define CATERR_START_DELAY_SECOND 2
 void ISR_CATERR()
 {
-	if ((gpio_get(RST_PLTRST_BUF_N) == 1)) {
+	if ((gpio_get(RST_PLTRST_BUF_N) == GPIO_HIGH)) {
 		if (k_work_cancel_delayable(&CatErr_work) != 0) {
 			printk("Cancel caterr delay work fail\n");
 		}
@@ -166,7 +199,7 @@ void ISR_CATERR()
 
 void ISR_PLTRST()
 {
-	if (gpio_get(RST_PLTRST_BUF_N) == 1) {
+	if (gpio_get(RST_PLTRST_BUF_N) == GPIO_HIGH) {
 		snoop_start_thread();
 		init_send_postcode_thread();
 	}
@@ -182,8 +215,8 @@ void ISR_DBP_PRSNT()
 void ISR_FM_THROTTLE()
 {
 	addsel_msg_t sel_msg;
-	if (gpio_get(PWRGD_CPU_LVC3)) {
-		if (gpio_get(FM_THROTTLE_R_N)) {
+	if (gpio_get(PWRGD_CPU_LVC3) == GPIO_HIGH) {
+		if (gpio_get(FM_THROTTLE_R_N) == GPIO_HIGH) {
 			sel_msg.evt_type = IPMI_OEM_EVENT_TYPE_DEASSART;
 		} else {
 			sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
@@ -202,11 +235,12 @@ void ISR_FM_THROTTLE()
 void ISR_HSC_THROTTLE()
 {
 	addsel_msg_t sel_msg;
-	if (gpio_get(RST_RSMRST_BMC_N)) {
-		if ((gpio_get(PWRGD_SYS_PWROK) == 0 && get_DC_off_delayed_status() == 0)) {
+	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
+		if ((gpio_get(PWRGD_SYS_PWROK) == GPIO_LOW) &&
+		    (get_DC_off_delayed_status() == false)) {
 			return;
 		} else {
-			if (gpio_get(IRQ_SML1_PMBUS_ALERT_N)) {
+			if (gpio_get(IRQ_SML1_PMBUS_ALERT_N) == GPIO_HIGH) {
 				sel_msg.evt_type = IPMI_OEM_EVENT_TYPE_DEASSART;
 			} else {
 				sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
@@ -226,8 +260,8 @@ void ISR_HSC_THROTTLE()
 void ISR_MB_THROTTLE()
 {
 	addsel_msg_t sel_msg;
-	if (gpio_get(RST_RSMRST_BMC_N)) {
-		if (gpio_get(FAST_PROCHOT_N)) {
+	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
+		if (gpio_get(FAST_PROCHOT_N) == GPIO_HIGH) {
 			sel_msg.evt_type = IPMI_OEM_EVENT_TYPE_DEASSART;
 		} else {
 			sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
@@ -246,7 +280,7 @@ void ISR_MB_THROTTLE()
 void ISR_SOC_THMALTRIP()
 {
 	addsel_msg_t sel_msg;
-	if (gpio_get(RST_PLTRST_PLD_N)) {
+	if (gpio_get(RST_PLTRST_PLD_N) == GPIO_HIGH) {
 		sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
 		sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
 		sel_msg.snr_number = SENSOR_NUM_SYSTEM_STATUS;
@@ -262,8 +296,8 @@ void ISR_SOC_THMALTRIP()
 void ISR_SYS_THROTTLE()
 {
 	addsel_msg_t sel_msg;
-	if (gpio_get(RST_PLTRST_PLD_N) && gpio_get(PWRGD_SYS_PWROK)) {
-		if (gpio_get(FM_CPU_BIC_PROCHOT_LVT3_N)) {
+	if ((gpio_get(RST_PLTRST_PLD_N) == GPIO_HIGH) && (gpio_get(PWRGD_SYS_PWROK) == GPIO_HIGH)) {
+		if (gpio_get(FM_CPU_BIC_PROCHOT_LVT3_N) == GPIO_HIGH) {
 			sel_msg.evt_type = IPMI_OEM_EVENT_TYPE_DEASSART;
 		} else {
 			sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
@@ -282,13 +316,14 @@ void ISR_SYS_THROTTLE()
 void ISR_PCH_THMALTRIP()
 {
 	addsel_msg_t sel_msg;
-	static bool is_PCH_assert = 0;
-	if (gpio_get(FM_PCHHOT_N) == 0) {
-		if (gpio_get(RST_PLTRST_PLD_N) && get_post_status() && (is_PCH_assert == 0)) {
+	static bool is_PCH_assert = false;
+	if (gpio_get(FM_PCHHOT_N) == GPIO_LOW) {
+		if ((gpio_get(RST_PLTRST_PLD_N) == GPIO_HIGH) && (get_post_status() == true) &&
+		    (is_PCH_assert == false)) {
 			sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
 			is_PCH_assert = 1;
 		}
-	} else if (gpio_get(FM_PCHHOT_N) && (is_PCH_assert == 1)) {
+	} else if ((gpio_get(FM_PCHHOT_N) == GPIO_HIGH) && (is_PCH_assert == true)) {
 		sel_msg.evt_type = IPMI_OEM_EVENT_TYPE_DEASSART;
 		is_PCH_assert = 0;
 	} else {
@@ -307,8 +342,8 @@ void ISR_PCH_THMALTRIP()
 void ISR_HSC_OC()
 {
 	addsel_msg_t sel_msg;
-	if (gpio_get(RST_RSMRST_BMC_N)) {
-		if (gpio_get(FM_HSC_TIMER)) {
+	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
+		if (gpio_get(FM_HSC_TIMER) == GPIO_HIGH) {
 			sel_msg.evt_type = IPMI_OEM_EVENT_TYPE_DEASSART;
 		} else {
 			sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
@@ -327,8 +362,8 @@ void ISR_HSC_OC()
 void ISR_CPU_MEMHOT()
 {
 	addsel_msg_t sel_msg;
-	if (gpio_get(RST_PLTRST_PLD_N) && gpio_get(PWRGD_SYS_PWROK)) {
-		if (gpio_get(H_CPU_MEMHOT_OUT_LVC3_N)) {
+	if ((gpio_get(RST_PLTRST_PLD_N) == GPIO_HIGH) && (gpio_get(PWRGD_SYS_PWROK) == GPIO_HIGH)) {
+		if (gpio_get(H_CPU_MEMHOT_OUT_LVC3_N) == GPIO_HIGH) {
 			sel_msg.evt_type = IPMI_OEM_EVENT_TYPE_DEASSART;
 		} else {
 			sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
@@ -347,8 +382,8 @@ void ISR_CPU_MEMHOT()
 void ISR_CPUVR_HOT()
 {
 	addsel_msg_t sel_msg;
-	if (gpio_get(RST_PLTRST_PLD_N) && gpio_get(PWRGD_SYS_PWROK)) {
-		if (gpio_get(IRQ_CPU0_VRHOT_N)) {
+	if ((gpio_get(RST_PLTRST_PLD_N) == GPIO_HIGH) && (gpio_get(PWRGD_SYS_PWROK) == GPIO_HIGH)) {
+		if (gpio_get(IRQ_CPU0_VRHOT_N) == GPIO_HIGH) {
 			sel_msg.evt_type = IPMI_OEM_EVENT_TYPE_DEASSART;
 		} else {
 			sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
@@ -367,7 +402,7 @@ void ISR_CPUVR_HOT()
 void ISR_PCH_PWRGD()
 {
 	addsel_msg_t sel_msg;
-	if (gpio_get(FM_SLPS3_PLD_N)) {
+	if (gpio_get(FM_SLPS3_PLD_N) == GPIO_HIGH) {
 		sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_OEM_C3;
 		sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
 		sel_msg.snr_number = SENSOR_NUM_POWER_ERROR;

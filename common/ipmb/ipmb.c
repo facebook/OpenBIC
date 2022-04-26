@@ -9,10 +9,11 @@
 #include "timer.h"
 #include "ipmi.h"
 #include "kcs.h"
+#include "plat_ipmb.h"
 
-static struct k_mutex mutex_id[MAX_IPMB_IDX]; // mutex for sequence link list insert/find
+static struct k_mutex mutex_id[MAX_IPMB_IDX]; // mutex for sequence linked list insert/find
 static struct k_mutex mutex_send_req, mutex_send_res, mutex_read;
-static const struct device *dev_ipmb[MAX_I2C_BUS_NUM];
+static const struct device *dev_ipmb[I2C_BUS_MAX_NUM];
 
 char __aligned(4) ipmb_txqueue_buffer[MAX_IPMB_IDX][IPMB_TXQUEUE_LEN * sizeof(struct ipmi_msg_cfg)];
 char __aligned(4) ipmb_rxqueue_buffer[MAX_IPMB_IDX][IPMB_RXQUEUE_LEN * sizeof(struct ipmi_msg)];
@@ -41,45 +42,59 @@ static uint8_t
 	current_seq[MAX_IPMB_IDX]; // Sequence in BIC for sending sequence to other IPMB devices
 static bool seq_table[MAX_IPMB_IDX][SEQ_NUM]; // Sequence table in BIC for register record
 
-ipmb_error ipmb_assert_chksum(uint8_t *buffer, uint8_t buffer_len);
+ipmb_error validate_checksum(uint8_t *buffer, uint8_t buffer_len);
 ipmb_error ipmb_encode(uint8_t *buffer, ipmi_msg *msg);
 ipmb_error ipmb_decode(ipmi_msg *msg, uint8_t *buffer, uint8_t len);
 ipmb_error ipmb_notify_client(ipmi_msg_cfg *msg_cfg);
 
-void Queue_timeout_handler(uint32_t arug0, uint32_t arug1);
+uint8_t IPMB_inf_index_map[RESERVED]; // map IPMB source/target interface to bus
 
-uint8_t IPMB_inf_index_map[Reserve_IFs]; // map IPMB source/target interface to bus
-
-// map IPMB interface to index
-void map_inf_index(void)
+/* Map channel to index */
+void channel_index_mapping(void)
 {
-	uint8_t inf, index_num;
-
-	memset(IPMB_inf_index_map, Reserve_IFs, sizeof(IPMB_inf_index_map));
-	for (index_num = 0; IPMB_config_table[index_num].index != IPMB_RESERVE_IDX; index_num++) {
-		for (inf = 0; inf < Reserve_IFs; inf++) {
-			if (IPMB_config_table[index_num].Inf_source == inf) {
-				IPMB_inf_index_map[inf] = index_num;
+	uint8_t channel, index_num;
+	memset(IPMB_inf_index_map, RESERVED, sizeof(IPMB_inf_index_map));
+	for (index_num = 0; IPMB_config_table[index_num].index != RESERVED_IDX; index_num++) {
+		for (channel = 0; channel < RESERVED; channel++) {
+			if (IPMB_config_table[index_num].channel == channel) {
+				IPMB_inf_index_map[channel] = index_num;
 				break;
 			}
 		}
 	}
 }
 
-uint8_t calculate_chksum(uint8_t *buffer, uint8_t range)
+uint8_t calculate_checksum(uint8_t *buffer, uint8_t range)
 {
-	uint8_t chksum = 0;
+	uint8_t checksum = 0;
 	uint8_t i;
 
-	chksum -=
+	checksum -=
 		buffer[0]
 		<< 1; // Use 7bit address for I2C transection, but 8bit address for checksum calculate
 
 	for (i = 1; i < range; i++) {
-		chksum -= buffer[i];
+		checksum -= buffer[i];
 	}
 
-	return chksum;
+	return checksum;
+}
+
+ipmb_error validate_checksum(uint8_t *buffer, uint8_t buffer_len)
+{
+	uint8_t header_checksum = buffer[2];
+	uint8_t msg_checksum = buffer[buffer_len - 1];
+	uint8_t calc_header_checksum = calculate_checksum(buffer, IPMI_HEADER_CHECKSUM_POSITION);
+	uint8_t calc_msg_checksum = calculate_checksum(buffer, buffer_len - 1);
+
+	if (header_checksum == calc_header_checksum) {
+		if (msg_checksum == calc_msg_checksum) {
+			return IPMB_ERROR_SUCCESS;
+		}
+
+		return IPMB_ERROR_HDR_CHECKSUM;
+	}
+	return IPMB_ERROR_MSG_CHECKSUM;
 }
 
 void unregister_seq(uint8_t index, uint8_t seq_num)
@@ -104,7 +119,7 @@ uint8_t get_free_seq(uint8_t index)
 
 		count++; // break in case no free seq found
 		if (count == SEQ_NUM) {
-			printk("IPMB[%x] free seq not found!!\n", index);
+			printf("IPMB[%x] free seq not found!!\n", index);
 			break;
 		}
 	} while (1);
@@ -112,23 +127,23 @@ uint8_t get_free_seq(uint8_t index)
 	return current_seq[index];
 }
 
-// Record IPMB request for checking response sequence and finding source sequence for bridge command
-void insert_node(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
+/* Record IPMB request for checking response sequence and finding source sequence for bridge command */
+void insert_req_ipmi_msg(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
 {
 	ipmi_msg_cfg *ptr_start = pnode;
 	int ret;
 
 	ret = k_mutex_lock(&mutex_id[index], K_MSEC(1000));
 	if (ret) {
-		printk("insert_node: mutex get fail status:%x\n", ret);
+		printf("[%s] Failed to lock the mutex(%d)\n", __func__, ret);
 		return;
 	} else {
 		// No more room, remove the first node.
-		if (seq_current_count[index] == MAX_DATA_QUENE) {
+		if (seq_current_count[index] == MAX_SEQ_QUENE) {
 			ipmi_msg_cfg *temp;
 			temp = pnode->next;
 			if (temp == NULL) {
-				printk("insert_node: pnode list is not circular");
+				printf("[%s] Not a circular linked list", __func__);
 				k_mutex_unlock(&mutex_id[index]);
 				return;
 			}
@@ -143,7 +158,7 @@ void insert_node(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
 		}
 
 		if (pnode == NULL) {
-			printk("insert_node: pnode list is not circular");
+			printf("[%s] Not a circular linked list", __func__);
 			k_mutex_unlock(&mutex_id[index]);
 			return;
 		}
@@ -167,99 +182,89 @@ void insert_node(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
 	}
 }
 
-// find if any IPMB request record match receiving response
-bool find_node(ipmi_msg_cfg *pnode, ipmi_msg *msg, int seq_index, uint8_t index)
+/* Find if any IPMB request record match receiving response */
+bool find_req_ipmi_msg(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
 {
 	ipmi_msg_cfg *ptr_start = pnode;
 	int ret;
 
 	ret = k_mutex_lock(&mutex_id[index], K_MSEC(1000));
 	if (ret) {
-		printk("find_node: mutex get fail status:%x\n", ret);
+		printf("[%s] Failed to lock the mutex(%d)\n", __func__, ret);
 		return false;
-	} else {
-		if (seq_index == 0) { // receive response and find sent request
-			while ((pnode != NULL && pnode->next != ptr_start) &&
-			       (((pnode->next)->buffer.netfn != (msg->netfn - 1)) ||
-				((pnode->next)->buffer.cmd != msg->cmd) ||
-				((pnode->next)->buffer.seq_target != msg->seq_target))) {
-				pnode = pnode->next;
-			}
-		} else {
-			while ((pnode != NULL && pnode->next != ptr_start) &&
-			       (((pnode->next)->buffer.netfn != msg->netfn) ||
-				((pnode->next)->buffer.cmd != msg->cmd) ||
-				((pnode->next)->buffer.seq_source != msg->seq_source))) {
-				pnode = pnode->next;
-			}
-		}
-
-		if (pnode == NULL) {
-			printf("pnode list should be circular, list end found\n");
-			k_mutex_unlock(&mutex_id[index]);
-			return false;
-		}
-
-		if (pnode->next == ptr_start) {
-			printf("no req match recv resp\n");
-			printf("node netfn: %x,cmd: %x, seq_t: %x\n", (pnode->next)->buffer.netfn,
-			       (pnode->next)->buffer.cmd, (pnode->next)->buffer.seq_target);
-			printf("msg netfn: %x,cmd: %x, seq_t: %x\n\n", msg->netfn, msg->cmd,
-			       msg->seq_target);
-			k_mutex_unlock(&mutex_id[index]);
-			return false;
-		}
-
-		/* Now pointer points to a node and the node next to it has to be removed */
-		ipmi_msg_cfg *temp;
-		temp = pnode->next;
-
-		if (temp == NULL) {
-			printf("pnode list should be circular, list end found\n");
-			k_mutex_unlock(&mutex_id[index]);
-			return false;
-		}
-
-		/*get the target<->Bridge IC IPMB seq number*/
-		if (seq_index == 0) {
-			// find source sequence for responding
-			msg->seq_source = temp->buffer.seq_source;
-			unregister_seq(index, temp->buffer.seq_target);
-		} else {
-			msg->seq_target = temp->buffer.seq_target;
-		}
-
-		msg->InF_source = temp->buffer.InF_source;
-		msg->InF_target = temp->buffer.InF_target;
-		/*temp points to the node which has to be removed*/
-		pnode->next = temp->next;
-		/*We removed the node which is next to the pointer (which is also temp) */
-
-		/* Beacuse we deleted the node, we no longer require the memory used for it .
-       free() will deallocate the memory.
-     */
-		free(temp);
-		seq_current_count[index]--;
-
-		k_mutex_unlock(&mutex_id[index]);
-		return true;
 	}
+
+	while ((pnode != NULL && pnode->next != ptr_start) &&
+	       (((pnode->next)->buffer.netfn != (msg->netfn - 1)) ||
+		((pnode->next)->buffer.cmd != msg->cmd) ||
+		((pnode->next)->buffer.seq_target != msg->seq_target))) {
+		pnode = pnode->next;
+	}
+
+	if (pnode == NULL) {
+		printf("pnode list should be circular, list end found\n");
+		k_mutex_unlock(&mutex_id[index]);
+		return false;
+	}
+
+	if (pnode->next == ptr_start) {
+		printf("no req match recv resp\n");
+		printf("node netfn: %x,cmd: %x, seq_t: %x\n", (pnode->next)->buffer.netfn,
+		       (pnode->next)->buffer.cmd, (pnode->next)->buffer.seq_target);
+		printf("msg netfn: %x,cmd: %x, seq_t: %x\n\n", msg->netfn, msg->cmd,
+		       msg->seq_target);
+		k_mutex_unlock(&mutex_id[index]);
+		return false;
+	}
+
+	/* Now pointer points to a node and the node next to it has to be removed */
+	ipmi_msg_cfg *temp;
+	temp = pnode->next;
+
+	if (temp == NULL) {
+		printf("pnode list should be circular, list end found\n");
+		k_mutex_unlock(&mutex_id[index]);
+		return false;
+	}
+
+	// find source sequence for responding
+	msg->seq_source = temp->buffer.seq_source;
+	unregister_seq(index, temp->buffer.seq_target);
+
+	msg->InF_source = temp->buffer.InF_source;
+	msg->InF_target = temp->buffer.InF_target;
+	/*temp points to the node which has to be removed*/
+	pnode->next = temp->next;
+	/*We removed the node which is next to the pointer (which is also temp) */
+
+	/* Because we deleted the node, we no longer require the memory used for it
+	 * free() will deallocate the memory.
+	 */
+	free(temp);
+	seq_current_count[index]--;
+
+	k_mutex_unlock(&mutex_id[index]);
+	return true;
 }
 
 void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 {
+	if (pvParameters == NULL) {
+		return;
+	}
+
 	struct ipmi_msg_cfg *current_msg_tx;
 	IPMB_config ipmb_cfg;
-	I2C_MSG *msg;
-	uint8_t ipmb_buffer_tx[IPMI_MSG_MAX_LENGTH + IPMB_RESP_HEADER_LENGTH], status = 0,
-									       retry = 5;
+	I2C_MSG *i2c_msg;
+	uint8_t ipmb_buffer_tx[IPMI_MSG_MAX_LENGTH + IPMB_RESP_HEADER_LENGTH];
 	uint8_t *kcs_buff;
+	uint8_t ret = 0;
 
 	memcpy(&ipmb_cfg, (IPMB_config *)pvParameters, sizeof(IPMB_config));
 
 	while (1) {
 		current_msg_tx = (struct ipmi_msg_cfg *)malloc(sizeof(struct ipmi_msg_cfg));
-		if (current_msg_tx == NULL) { // allocate memory fail, retry later
+		if (current_msg_tx == NULL) {
 			k_msleep(10);
 			continue;
 		}
@@ -267,145 +272,124 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 		k_msgq_get(&ipmb_txqueue[ipmb_cfg.index], (ipmi_msg_cfg *)current_msg_tx,
 			   K_FOREVER); // Wait for OS queue send interrupt
 
-		if (IS_RESPONSE(current_msg_tx->buffer)) {
-			/* We're sending a response */
-
-			/**********************************/
-			/*       Error checking           */
-			/**********************************/
-
-			/* See if we've already tried sending this message 3 times */
-			if (current_msg_tx->retries > IPMB_MAX_RETRIES) {
-				/* Free the message buffer */
-				printf("IPMB IF %x write reach MAX retry\n",
+		if (IS_RESPONSE(current_msg_tx->buffer)) { // Send a response message
+			if (current_msg_tx->retries > IPMB_TX_RETRY_TIME) {
+				printf("Reach the MAX retry times for sending a response message, source(%d)\n",
 				       current_msg_tx->buffer.InF_source);
-				if (current_msg_tx != NULL) {
-					free(current_msg_tx);
-				}
-				continue;
+				goto cleanup;
 			}
-			/**********************************/
-			/*     Try sending the message    */
-			/**********************************/
-			/* Fix IPMB target address */
-			current_msg_tx->buffer.dest_addr = ipmb_cfg.target_addr;
-			/* Encode the message buffer to the IPMB format */
+
+			// Fix IPMB target address
+			current_msg_tx->buffer.dest_addr = ipmb_cfg.channel_target_address;
+			// Encode the IPMB message
 			ipmb_encode(&ipmb_buffer_tx[0], &current_msg_tx->buffer);
 			uint8_t resp_tx_size =
 				current_msg_tx->buffer.data_len + IPMB_RESP_HEADER_LENGTH;
 
-			if (ipmb_cfg.Inf == I2C_IF) {
-				msg = malloc(sizeof(I2C_MSG));
-				if (msg == NULL) { // allocate fail, retry allocate
-					k_msleep(10);
-					msg = malloc(sizeof(I2C_MSG));
-					if (msg == NULL) {
-						printk("IPMB_TXTask: Fail to malloc for i2c resp msg\n");
-						if (current_msg_tx != NULL) {
-							free(current_msg_tx);
-						}
-						continue;
+			if (ipmb_cfg.interface == I2C_IF) {
+				int retry = 0;
+				do {
+					i2c_msg = malloc(sizeof(I2C_MSG));
+					if (i2c_msg == NULL) {
+						k_msleep(10);
+					} else {
+						break;
 					}
+					retry++;
+				} while (retry < MEM_ALLOCATE_RETRY_TIME);
+				if (i2c_msg == NULL) {
+					printf("[%s] Failed to allocate memory for I2C resp msg\n",
+					       __func__);
+					goto cleanup;
 				}
-				msg->bus = ipmb_cfg.bus;
-				msg->slave_addr = ipmb_cfg.target_addr;
-				msg->tx_len = resp_tx_size;
-				memcpy(&msg->data[0], &ipmb_buffer_tx[1], resp_tx_size);
-				status = i2c_master_write(msg, retry);
 
-				if (msg != NULL) {
-					free(msg);
+				i2c_msg->bus = ipmb_cfg.bus;
+				i2c_msg->slave_addr = ipmb_cfg.channel_target_address;
+				i2c_msg->tx_len = resp_tx_size;
+				memcpy(&i2c_msg->data[0], &ipmb_buffer_tx[1], resp_tx_size);
+				ret = i2c_master_write(i2c_msg, I2C_RETRY_TIME);
+
+				if (i2c_msg != NULL) {
+					free(i2c_msg);
 				}
-			} else { // TODO: else if (ipmb_cfg.Inf == I3C_IF)
-				printf("IPMB %d using not support interface: %x\n", ipmb_cfg.index,
-				       ipmb_cfg.Inf);
-				if (current_msg_tx != NULL) {
-					free(current_msg_tx);
-				}
-				continue;
+			} else {
+				printf("[%s] Unsupported interface(%d) for index(%d)\n", __func__,
+				       ipmb_cfg.interface, ipmb_cfg.index);
+				goto cleanup;
 			}
 
-			if (status) {
-				/* Message couldn't be transmitted right now, increase retry counter and try again later */
+			if (ret) {
+				// Message couldn't be transmitted right now, increase retry counter and try again later
 				current_msg_tx->retries++;
 				k_msgq_put(&ipmb_txqueue[ipmb_cfg.index], current_msg_tx,
 					   K_NO_WAIT);
-				k_msleep(IPMB_RETRY_DELAY_ms);
+				k_msleep(IPMB_RETRY_DELAY_MS);
 			} else {
-				/* Success case*/
-				/* Free the message buffer */
-				if (DEBUG_IPMI) {
-					printf("ipmb_txqueue[%x] resp netfn: %x, cmd: %x, CC: %x, target_addr: %x\n",
-					       ipmb_cfg.index, current_msg_tx->buffer.netfn,
+				if (DEBUG_IPMB) {
+					printf("[%s] Send a response message, from(%d) to(%d) netfn(0x%x) cmd(0x%x) CC(0x%x)\n",
+					       __func__, current_msg_tx->buffer.InF_source,
+					       current_msg_tx->buffer.InF_target,
+					       current_msg_tx->buffer.netfn,
 					       current_msg_tx->buffer.cmd,
-					       current_msg_tx->buffer.completion_code,
-					       ipmb_cfg.target_addr);
-					for (int i = 0; i < resp_tx_size + 1; i++) {
-						printf(" %x", ipmb_buffer_tx[i]);
+					       current_msg_tx->buffer.completion_code);
+					printf("response data[%d](",
+					       current_msg_tx->buffer.data_len);
+					for (int i = 0; i < current_msg_tx->buffer.data_len + 1;
+					     i++) {
+						printf(" %x", current_msg_tx->buffer.data[i]);
 					}
-					printf("\n");
+					printf(")\n");
 				}
 			}
 
-		} else {
-			/***************************************/
-			/* Sending new outgoing request        */
-			/***************************************/
+		} else { // Send a request message (bridge)
 			ipmb_encode(&ipmb_buffer_tx[0], &current_msg_tx->buffer);
 
 			uint8_t req_tx_size =
 				current_msg_tx->buffer.data_len + IPMB_REQ_HEADER_LENGTH;
-			if (DEBUG_IPMI) {
-				uint8_t i;
-				printf("Tx send req: ");
-				for (i = 0; i < req_tx_size + 1; i++) {
-					printf(" %x", ipmb_buffer_tx[i]);
-				}
-				printf("\n");
-			}
 
-			if (ipmb_cfg.Inf == I2C_IF) {
-				msg = malloc(sizeof(I2C_MSG));
-				if (msg == NULL) { // allocate fail, retry allocate
-					k_msleep(10);
-					msg = malloc(sizeof(I2C_MSG));
-					if (msg == NULL) {
-						printk("IPMB_TXTask: Fail to malloc for i2c req msg\n");
-						if (current_msg_tx != NULL) {
-							free(current_msg_tx);
-						}
-						continue;
+			if (ipmb_cfg.interface == I2C_IF) {
+				int retry = 0;
+				do {
+					i2c_msg = malloc(sizeof(I2C_MSG));
+					if (i2c_msg == NULL) {
+						k_msleep(10);
+					} else {
+						break;
 					}
+					retry++;
+				} while (retry < MEM_ALLOCATE_RETRY_TIME);
+				if (i2c_msg == NULL) {
+					printf("[%s] Failed to allocate memory for I2C resp msg\n",
+					       __func__);
+					goto cleanup;
 				}
-				msg->bus = ipmb_cfg.bus;
-				msg->slave_addr = ipmb_cfg.target_addr;
-				msg->tx_len = req_tx_size;
-				memcpy(&msg->data[0], &ipmb_buffer_tx[1], req_tx_size);
 
-				status = i2c_master_write(msg, retry);
-				if (msg != NULL) {
-					free(msg);
+				i2c_msg->bus = ipmb_cfg.bus;
+				i2c_msg->slave_addr = ipmb_cfg.channel_target_address;
+				i2c_msg->tx_len = req_tx_size;
+				memcpy(&i2c_msg->data[0], &ipmb_buffer_tx[1], req_tx_size);
+
+				ret = i2c_master_write(i2c_msg, I2C_RETRY_TIME);
+				if (i2c_msg != NULL) {
+					free(i2c_msg);
 				}
-			} else { // TODO: else if (ipmb_cfg.Inf == I3C_IF)
-				printf("IPMB %d using not support interface: %x\n", ipmb_cfg.index,
-				       ipmb_cfg.Inf);
-				if (current_msg_tx != NULL) {
-					free(current_msg_tx);
-				}
-				continue;
+			} else {
+				printf("[%s] Unsupported interface(%d) for index(%d)\n", __func__,
+				       ipmb_cfg.interface, ipmb_cfg.index);
+				goto cleanup;
 			}
 
-			if (status) {
+			if (ret) {
 				current_msg_tx->retries += 1;
 
-				if (current_msg_tx->retries > IPMB_MAX_RETRIES) {
-					/* Return fail status to request source */
-					if (current_msg_tx->buffer.InF_source == Reserve_IFs) {
-						printf("IPMB_TXTask: Bridging msg from reserve IFs\n");
-					} else if (current_msg_tx->buffer.InF_source == Self_IFs) {
-						printf("IPMB_TXTask: BIC sending command fail\n"); // Rain - Should record or notice command fail
-					} else if (current_msg_tx->buffer.InF_source ==
-						   HOST_KCS_IFs) {
+				if (current_msg_tx->retries > IPMB_TX_RETRY_TIME) {
+					if (current_msg_tx->buffer.InF_source == RESERVED) {
+						printf("[%s] The request message is from RESERVED\n",
+						       __func__);
+					} else if (current_msg_tx->buffer.InF_source == SELF) {
+						printf("[%s] Failed to send command\n", __func__);
+					} else if (current_msg_tx->buffer.InF_source == HOST_KCS) {
 						kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
 						if (kcs_buff ==
 						    NULL) { // allocate fail, retry allocate
@@ -437,62 +421,73 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 							free(kcs_buff);
 						}
 					} else {
-						ipmb_error status;
+						// Return the error code(node busy) to the source channel
 						current_msg_tx->buffer.data_len = 0;
 						current_msg_tx->buffer.netfn = NETFN_OEM_1S_REQ;
 						current_msg_tx->buffer.cmd = CMD_OEM_1S_MSG_OUT;
 						current_msg_tx->buffer.completion_code =
 							CC_NODE_BUSY;
-						status = ipmb_send_response(
-							&current_msg_tx->buffer,
-							IPMB_inf_index_map[current_msg_tx->buffer
-										   .InF_source]);
 
-						if (status != ipmb_error_success) {
-							printf("IPMB_TXTask: Send IPMB req fail status: %x",
-							       status);
+						if (ipmb_send_response(
+							    &current_msg_tx->buffer,
+							    IPMB_inf_index_map[current_msg_tx->buffer
+										       .InF_source]) !=
+						    IPMB_ERROR_SUCCESS) {
+							printf("[%s][%d] Failed to send IPMB response message",
+							       __func__, __LINE__);
 						}
 					}
 
-					/* Free the message buffer */
-					printf("IPMB send fail after retry %d times, source: %x, cmd: 0x%x 0x%x\n",
-					       current_msg_tx->retries,
-					       current_msg_tx->buffer.InF_source,
+					printf("[%s] Failed to send a request message, from(%d) to(%d) netfn(0x%x) cmd(0x%x)\n",
+					       __func__, current_msg_tx->buffer.InF_source,
+					       current_msg_tx->buffer.InF_target,
 					       current_msg_tx->buffer.netfn,
 					       current_msg_tx->buffer.cmd);
 				} else {
 					k_msgq_put(&ipmb_txqueue[ipmb_cfg.index], current_msg_tx,
 						   K_NO_WAIT);
-					k_msleep(IPMB_RETRY_DELAY_ms);
+					k_msleep(IPMB_RETRY_DELAY_MS);
 				}
 
 			} else {
-				/* Request was successfully sent, keep a copy here for future comparison and clean the last used buffer */
-				// void insert_node(ipmi_msg_cfg *pnode, ipmi_msg *msg)
 				current_msg_tx->buffer.seq_target = current_msg_tx->buffer.seq;
-				insert_node(P_start[ipmb_cfg.index], &current_msg_tx->buffer,
-					    ipmb_cfg.index);
-				if (DEBUG_IPMI) {
-					printf("Insert node[%x] seq_s: %x, seq_t: %x\n",
-					       ipmb_cfg.Inf_source,
-					       current_msg_tx->buffer.seq_source,
-					       current_msg_tx->buffer.seq_target);
+				insert_req_ipmi_msg(P_start[ipmb_cfg.index],
+						    &current_msg_tx->buffer, ipmb_cfg.index);
+				if (DEBUG_IPMB) {
+					printf("[%s] Send a request message, from(%d) to(%d) netfn(0x%x) cmd(0x%x) CC(0x%x)\n",
+					       __func__, current_msg_tx->buffer.InF_source,
+					       current_msg_tx->buffer.InF_target,
+					       current_msg_tx->buffer.netfn,
+					       current_msg_tx->buffer.cmd,
+					       current_msg_tx->buffer.completion_code);
+					printf("request data[%d](",
+					       current_msg_tx->buffer.data_len);
+					for (int i = 0; i < current_msg_tx->buffer.data_len + 1;
+					     i++) {
+						printf("%x ", current_msg_tx->buffer.data[i]);
+					}
+					printf(")\n");
 				}
 			}
 		}
+
+	cleanup:
 		if (current_msg_tx != NULL) {
 			free(current_msg_tx);
 		}
-
-		k_msleep(10);
+		k_msleep(IPMB_POLLING_TIME_MS);
 	}
 }
 
 void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 {
+	if (pvParameters == NULL) {
+		return;
+	}
+
 	struct ipmi_msg_cfg *current_msg_rx;
 	struct IPMB_config ipmb_cfg;
-	struct ipmb_msg *msg = NULL;
+	struct ipmb_msg *ipmb_msg = NULL;
 	uint8_t *ipmb_buffer_rx;
 	uint8_t *kcs_buff;
 	uint8_t rx_len;
@@ -501,12 +496,12 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 
 	memcpy(&ipmb_cfg, (IPMB_config *)pvParameters, sizeof(IPMB_config));
 
-	if (DEBUG_IPMI) {
-		printf("Rx poll bus %d, index %d\n", ipmb_cfg.bus, ipmb_cfg.index);
+	if (DEBUG_IPMB) {
+		printf("[%s] IPMB RXTask thread, bus(%d) index(%d)\n", __func__, ipmb_cfg.bus,
+		       ipmb_cfg.index);
 	}
 
 	while (1) {
-		k_msleep(IPMB_MQUEUE_POLL_DELAY_ms);
 		current_msg_rx = (struct ipmi_msg_cfg *)malloc(sizeof(struct ipmi_msg_cfg));
 		if (current_msg_rx == NULL) {
 			k_msleep(10); // allocate fail, retry later
@@ -521,91 +516,69 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 		}
 
 		rx_len = 0;
-		if (ipmb_cfg.Inf == I2C_IF) {
-			ret = ipmb_slave_read(dev_ipmb[ipmb_cfg.bus], &msg, &rx_len);
+		if (ipmb_cfg.interface == I2C_IF) {
+			ret = ipmb_slave_read(dev_ipmb[ipmb_cfg.bus], &ipmb_msg, &rx_len);
 			if (!ret) {
-				memcpy(ipmb_buffer_rx, (uint8_t *)msg, rx_len);
+				memcpy(ipmb_buffer_rx, (uint8_t *)ipmb_msg, rx_len);
 				ipmb_buffer_rx[0] = ipmb_buffer_rx[0] >> 1;
 			} else {
-				free(current_msg_rx);
-				free(ipmb_buffer_rx);
-				continue;
+				goto cleanup;
 			}
-		} else if (ipmb_cfg.Inf == I3C_IF) {
-			;
 		} else {
-			printf("IPMB_RXTask: Invalid IPMB interface \n");
+			printf("[%s] Unsupported interface(%d) for index(%d)\n", __func__,
+			       ipmb_cfg.interface, ipmb_cfg.index);
 		}
 
 		if (rx_len > 0) {
-			if (DEBUG_IPMI) {
-				printf("bus %d recv[%d]", ipmb_cfg.bus, rx_len);
+			if (DEBUG_IPMB) {
+				printf("Received an IPMB message from bus(%d) data[%d](",
+				       ipmb_cfg.bus, rx_len);
 				for (i = 0; i < rx_len; i++) {
-					printf(" %x", ipmb_buffer_rx[i + 1]);
+					printf("0x%x ", ipmb_buffer_rx[i + 1]);
 				}
-				printf("\n");
+				printf(")\n");
 			}
 
-			/* Perform a checksum test on the message, if it doesn't pass, just ignore it.
-  		 * Following the IPMB specs, we have no way to know if we're the one who should
-  		 * receive it. In MicroTCA crates with star topology for IPMB, we are assured we
-  		 * are the recipients, however, malformed messages may be safely ignored as the
-  		 * MCMC should take care of retrying.
-  		 */
-			if (ipmb_assert_chksum(ipmb_buffer_rx, rx_len) != ipmb_error_success) {
-				printf("Recv invalid chksum from index %d\n", ipmb_cfg.index);
-				if (current_msg_rx != NULL) {
-					free(current_msg_rx);
-				}
-				if (ipmb_buffer_rx != NULL) {
-					free(ipmb_buffer_rx);
-				}
-				continue;
+			/* Perform a checksum test on the message, if it doesn't pass, just ignore it */
+			if (validate_checksum(ipmb_buffer_rx, rx_len) != IPMB_ERROR_SUCCESS) {
+				printf("Invalid IPMB message checksum, index(%d)\n",
+				       ipmb_cfg.index);
+				goto cleanup;
 			}
 
 			/* Clear our local buffer before writing new data into it */
-			ipmb_error IPMB_ERR_STATUS;
-			IPMB_ERR_STATUS =
-				ipmb_decode(&(current_msg_rx->buffer), ipmb_buffer_rx, rx_len);
+			ipmb_error ret;
+			ret = ipmb_decode(&(current_msg_rx->buffer), ipmb_buffer_rx, rx_len);
 
-			if (ipmb_buffer_rx != NULL) {
-				free(ipmb_buffer_rx);
+			if (ret != IPMB_ERROR_SUCCESS) {
+				printf("Failed to decode IPMI message, ret(%d)\n", ret);
 			}
 
-			if (IPMB_ERR_STATUS != ipmb_error_success) {
-				printf("IPMB_ERR_STATUS: %x\n", IPMB_ERR_STATUS);
-			}
-
-			if (DEBUG_IPMI) {
-				printf("buff[%d]", current_msg_rx->buffer.data_len);
+			if (DEBUG_IPMB) {
+				printf("Decode the IPMB message, netfn(0x%x) Cmd(0x%x) Data[%d](",
+				       current_msg_rx->buffer.netfn, current_msg_rx->buffer.cmd,
+				       current_msg_rx->buffer.data_len);
 				for (i = 0; i < current_msg_rx->buffer.data_len; i++) {
-					printf(" %x", current_msg_rx->buffer.data[i]);
+					printf("0x%x ", current_msg_rx->buffer.data[i]);
 				}
-				printf("\n");
+				printf(")\n");
 			}
 
-			if (IS_RESPONSE(current_msg_rx->buffer)) {
-				/* The message is a response, check if it's request from BIC and respond in time */
+			if (IS_RESPONSE(current_msg_rx->buffer)) { // Response message
+				/* Find the corresponding request message*/
 				current_msg_rx->buffer.seq_target = current_msg_rx->buffer.seq;
-				if (find_node(P_start[ipmb_cfg.index], &(current_msg_rx->buffer), 0,
-					      ipmb_cfg.index)) {
-					if (DEBUG_IPMI) {
-						printf("find node IFs:%x, IFt:%x\n",
+				if (find_req_ipmi_msg(P_start[ipmb_cfg.index],
+						      &(current_msg_rx->buffer), ipmb_cfg.index)) {
+					if (DEBUG_IPMB) {
+						printf("Found the corresponding request message, \
+								from(0x%x) to(0x%x) target_seq_num(%d)\n",
 						       current_msg_rx->buffer.InF_source,
-						       current_msg_rx->buffer.InF_target);
-						printf("find buff[%d] seq %x:",
-						       current_msg_rx->buffer.data_len,
+						       current_msg_rx->buffer.InF_target,
 						       current_msg_rx->buffer.seq_target);
-						for (i = 0; i < current_msg_rx->buffer.data_len;
-						     i++) {
-							printf(" %x",
-							       current_msg_rx->buffer.data[i]);
-						}
-						printf("\n");
 					}
 
 					if (current_msg_rx->buffer.InF_source ==
-					    SELF_IPMB_IF) { // Send from other thread
+					    SELF) { // Send from other thread
 						struct ipmi_msg current_msg;
 						current_msg =
 							(struct ipmi_msg)current_msg_rx->buffer;
@@ -614,20 +587,23 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 									      [current_msg_rx->buffer
 										       .InF_target]],
 							&current_msg, K_NO_WAIT);
-					} else if (current_msg_rx->buffer.InF_source ==
-						   HOST_KCS_IFs) {
+					} else if (current_msg_rx->buffer.InF_source == HOST_KCS) {
 #ifdef CONFIG_IPMI_KCS_ASPEED
-						kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
-						if (kcs_buff ==
-						    NULL) { // allocate fail, retry allocate
-							k_msleep(10);
+						int retry = 0;
+						do {
 							kcs_buff = malloc(KCS_BUFF_SIZE *
 									  sizeof(uint8_t));
 							if (kcs_buff == NULL) {
-								printk("IPMB_RXTask: Fail to malloc for kcs_buff\n");
-								free(current_msg_rx);
-								continue;
+								k_msleep(10);
+							} else {
+								break;
 							}
+							retry++;
+						} while (retry < MEM_ALLOCATE_RETRY_TIME);
+						if (kcs_buff == NULL) {
+							printf("[%s] Failed to allocate memory for I2C resp msg\n",
+							       __func__);
+							goto cleanup;
 						}
 						kcs_buff[0] = current_msg_rx->buffer.netfn << 2;
 						kcs_buff[1] = current_msg_rx->buffer.cmd;
@@ -646,10 +622,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 							free(kcs_buff);
 						}
 #endif
-
-					} else if (current_msg_rx->buffer.InF_source ==
-						   ME_IPMB_IFs) {
-						ipmb_error status;
+					} else if (current_msg_rx->buffer.InF_source == ME_IPMB) {
 						ipmi_msg *bridge_msg =
 							(ipmi_msg *)malloc(sizeof(ipmi_msg));
 						memset(bridge_msg, 0, sizeof(ipmi_msg));
@@ -667,35 +640,31 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 						       &current_msg_rx->buffer.data[0],
 						       current_msg_rx->buffer.data_len);
 
-						if (DEBUG_IPMI) {
-							printf("ME bridge[%d] seq_s %x, seq_t %x, Inf_source %x, Inf_source_index %x :\n",
-							       bridge_msg->data_len,
+						if (DEBUG_IPMB) {
+							printf("Send the response message to ME, source_seq_num(%d), target_seq_num(%d)\n",
 							       current_msg_rx->buffer.seq_source,
-							       current_msg_rx->buffer.seq_target,
-							       current_msg_rx->buffer.InF_source,
-							       IPMB_inf_index_map
-								       [current_msg_rx->buffer
-										.InF_source]);
+							       current_msg_rx->buffer.seq_target);
+							printf("response data[%d](",
+							       bridge_msg->data_len);
 							for (i = 0; i < bridge_msg->data_len; i++) {
-								printf(" %x", bridge_msg->data[i]);
+								printf("%x ", bridge_msg->data[i]);
 							}
-							printf("\n");
+							printf(")\n");
 						}
 
-						status = ipmb_send_response(
-							bridge_msg,
-							IPMB_inf_index_map[current_msg_rx->buffer
-										   .InF_source]);
-						if (status != ipmb_error_success) {
-							printf("IPMB_RXTask: Send IPMB resp fail status: %x",
-							       status);
+						if (ipmb_send_response(
+							    bridge_msg,
+							    IPMB_inf_index_map[current_msg_rx->buffer
+										       .InF_source]) !=
+						    IPMB_ERROR_SUCCESS) {
+							printf("[%s][%d] Failed to send IPMB response message",
+							       __func__, __LINE__);
 						}
 
 						if (bridge_msg != NULL) {
 							free(bridge_msg);
 						}
 					} else { // Bridge response to other fru
-						ipmb_error status;
 						ipmi_msg *bridge_msg =
 							(ipmi_msg *)malloc(sizeof(ipmi_msg));
 						memset(bridge_msg, 0, sizeof(ipmi_msg));
@@ -707,7 +676,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 						bridge_msg->data[2] = (IANA_ID >> 16) & 0xFF;
 						bridge_msg->data[3] =
 							IPMB_config_table[ipmb_cfg.index]
-								.Inf_source; // return response source as request target
+								.channel; // return response source as request target
 						bridge_msg->data[4] =
 							current_msg_rx->buffer
 								.netfn; // Move target response to bridge response data
@@ -726,28 +695,26 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 						bridge_msg->completion_code = CC_SUCCESS;
 						bridge_msg->seq = current_msg_rx->buffer.seq_source;
 
-						if (DEBUG_IPMI) {
-							printf("bridge[%d] seq_s %x, seq_t %x, Inf_source %x, Inf_source_index %x :\n",
-							       bridge_msg->data_len,
-							       current_msg_rx->buffer.seq_source,
-							       current_msg_rx->buffer.seq_target,
+						if (DEBUG_IPMB) {
+							printf("Send the response message to the source(%d), source_seq_num(%d), target_seq_num(%d)\n",
 							       current_msg_rx->buffer.InF_source,
-							       IPMB_inf_index_map
-								       [current_msg_rx->buffer
-										.InF_source]);
+							       current_msg_rx->buffer.seq_source,
+							       current_msg_rx->buffer.seq_target);
+							printf("response data[%d](",
+							       bridge_msg->data_len);
 							for (i = 0; i < bridge_msg->data_len; i++) {
-								printf(" %x", bridge_msg->data[i]);
+								printf("%x ", bridge_msg->data[i]);
 							}
-							printf("\n");
+							printf(")\n");
 						}
 
-						status = ipmb_send_response(
-							bridge_msg,
-							IPMB_inf_index_map[current_msg_rx->buffer
-										   .InF_source]);
-						if (status != ipmb_error_success) {
-							printf("IPMB_RXTask: Send IPMB resp fail status: %x",
-							       status);
+						if (ipmb_send_response(
+							    bridge_msg,
+							    IPMB_inf_index_map[current_msg_rx->buffer
+										       .InF_source]) !=
+						    IPMB_ERROR_SUCCESS) {
+							printf("[%s][%d] Failed to send IPMB response message",
+							       __func__, __LINE__);
 						}
 
 						if (bridge_msg != NULL) {
@@ -756,21 +723,22 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 					}
 				}
 
-			} else {
-				// Exception: ME sends standard IPMI commands to BMC but not BIC.
-				//            So BIC should bridge ME request to BMC directly, instead of
-				//            executing IPMI handler.
-				if (IPMB_config_table[ipmb_cfg.index].Inf_source == ME_IPMB_IFs &&
-				    (!pal_ME_is_to_ipmi_handler(current_msg_rx->buffer.netfn,
-								current_msg_rx->buffer.cmd))) {
-					ipmb_error status;
+			} else { // Request message
+				if (IPMB_config_table[ipmb_cfg.index].channel == ME_IPMB &&
+				    (!pal_request_msg_to_BIC_from_ME(current_msg_rx->buffer.netfn,
+								     /* Special Case:
+					 * ME sends standard IPMI commands to BMC but not BIC.
+					 * So, BIC should bridge ME request to BMC directly,
+					 * instead of calling IPMI handler.
+					 */
+								     current_msg_rx->buffer.cmd))) {
 					ipmi_msg *bridge_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
 					memset(bridge_msg, 0, sizeof(ipmi_msg));
 
 					bridge_msg->data_len = current_msg_rx->buffer.data_len;
 					bridge_msg->seq_source = current_msg_rx->buffer.seq;
-					bridge_msg->InF_target = BMC_IPMB_IFs;
-					bridge_msg->InF_source = ME_IPMB_IFs;
+					bridge_msg->InF_target = BMC_IPMB;
+					bridge_msg->InF_source = ME_IPMB;
 					bridge_msg->netfn = current_msg_rx->buffer.netfn;
 					bridge_msg->cmd = current_msg_rx->buffer.cmd;
 					if (bridge_msg->data_len != 0) {
@@ -779,35 +747,37 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 						       current_msg_rx->buffer.data_len);
 					}
 
-					status = ipmb_send_request(
-						bridge_msg, IPMB_inf_index_map[BMC_IPMB_IFs]);
-					if (status != ipmb_error_success) {
-						printf("OEM_MSG_OUT send IPMB req fail status: %x",
-						       status);
+					if (ipmb_send_request(bridge_msg,
+							      IPMB_inf_index_map[BMC_IPMB]) !=
+					    IPMB_ERROR_SUCCESS) {
+						printf("[%s] Failed to send the request message to BMC from ME",
+						       __func__);
 						bridge_msg->completion_code = CC_TIMEOUT;
-						status = ipmb_send_response(
-							bridge_msg,
-							IPMB_inf_index_map[bridge_msg->InF_source]);
-						if (status != ipmb_error_success) {
-							printf("IPMI_handler send IPMB resp fail status: %x",
-							       status);
+						if (ipmb_send_response(
+							    bridge_msg,
+							    IPMB_inf_index_map
+								    [bridge_msg->InF_source]) !=
+						    IPMB_ERROR_SUCCESS) {
+							printf("[%s][%d] Failed to send IPMB response message",
+							       __func__, __LINE__);
 						}
 					}
 					if (bridge_msg != NULL) {
 						free(bridge_msg);
 					}
 				} else {
-					/* The received message is a request */
-					/* Record sequence number for later response */
+					/* The received message is a request
+					 * Record sequence number for later response
+					 */
 					current_msg_rx->buffer.seq_source =
 						current_msg_rx->buffer.seq;
 					/* Record source interface for later bridge response */
 					current_msg_rx->buffer.InF_source =
-						IPMB_config_table[ipmb_cfg.index].Inf_source;
+						IPMB_config_table[ipmb_cfg.index].channel;
 					/* Notify the client about the new request */
-					if (DEBUG_IPMI) {
-						printf("recv req: data: %x, InfS: %x, seq_s: %x\n",
-						       current_msg_rx->buffer.netfn,
+					if (DEBUG_IPMB) {
+						printf("[%s] Received a request message, netfn(0x%x) InfS(0x%x) seq_s(%d)\n",
+						       __func__, current_msg_rx->buffer.netfn,
 						       current_msg_rx->buffer.InF_source,
 						       current_msg_rx->buffer.seq_source);
 					}
@@ -815,7 +785,14 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 				}
 			}
 		}
-		free(current_msg_rx);
+	cleanup:
+		if (current_msg_rx != NULL) {
+			free(current_msg_rx);
+		}
+		if (ipmb_buffer_rx != NULL) {
+			free(ipmb_buffer_rx);
+		}
+		k_msleep(IPMB_POLLING_TIME_MS);
 	}
 }
 
@@ -824,7 +801,8 @@ ipmb_error ipmb_send_request(ipmi_msg *req, uint8_t index)
 	int ret;
 	ret = k_mutex_lock(&mutex_send_req, K_MSEC(1000));
 	if (ret) {
-		return ipmb_error_mutex_lock;
+		printf("[%s] Failed to lock the mutex\n", __func__);
+		return IPMB_ERROR_MUTEX_LOCK;
 	}
 
 	struct ipmi_msg_cfg req_cfg;
@@ -838,17 +816,28 @@ ipmb_error ipmb_send_request(ipmi_msg *req, uint8_t index)
 	req_cfg.buffer.InF_target = req->InF_target;
 	req_cfg.buffer.completion_code = req->completion_code;
 	/* Write necessary fields */
-	req_cfg.buffer.dest_addr = IPMB_config_table[index].target_addr;
+	req_cfg.buffer.dest_addr = IPMB_config_table[index].channel_target_address;
 	req_cfg.buffer.dest_LUN = 0;
-	req_cfg.buffer.src_addr = IPMB_config_table[index].slave_addr << 1;
+	req_cfg.buffer.src_addr = IPMB_config_table[index].self_address << 1;
 	req_cfg.buffer.seq = get_free_seq(index);
 	req_cfg.buffer.seq_source = req->seq_source;
 	req_cfg.buffer.src_LUN = 0;
 	req_cfg.retries = 0;
+
+	if (DEBUG_IPMB) {
+		uint8_t i;
+		printf("Send req message, index(%d) cc(0x%x) data[%d](", index,
+		       req_cfg.buffer.completion_code, req_cfg.buffer.data_len);
+		for (i = 0; i < req_cfg.buffer.data_len; i++) {
+			printf("0x%x ", req_cfg.buffer.data[i]);
+		}
+		printf(")\n");
+	}
+
 	/* Blocks here until is able put message in tx queue */
 	if (k_msgq_put(&ipmb_txqueue[index], &req_cfg, K_FOREVER) != osOK) {
 		k_mutex_unlock(&mutex_send_req);
-		return ipmb_error_failure;
+		return IPMB_ERROR_FAILURE;
 	}
 	k_mutex_unlock(&mutex_send_req);
 	return ipmi_error_success;
@@ -859,7 +848,8 @@ ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index)
 	int ret;
 	ret = k_mutex_lock(&mutex_send_res, K_MSEC(1000));
 	if (ret) {
-		return ipmb_error_mutex_lock;
+		printf("[%s] Failed to lock the mutex\n", __func__);
+		return IPMB_ERROR_MUTEX_LOCK;
 	}
 
 	struct ipmi_msg_cfg resp_cfg;
@@ -873,10 +863,10 @@ ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index)
 	resp_cfg.buffer.InF_source = resp->InF_source;
 	resp_cfg.buffer.InF_target = resp->InF_target;
 	resp_cfg.buffer.completion_code = resp->completion_code;
-	resp_cfg.buffer.dest_addr = IPMB_config_table[index].target_addr;
+	resp_cfg.buffer.dest_addr = IPMB_config_table[index].channel_target_address;
 	resp_cfg.buffer.netfn = resp->netfn + 1;
 	resp_cfg.buffer.dest_LUN = resp->src_LUN;
-	resp_cfg.buffer.src_addr = IPMB_config_table[index].slave_addr << 1;
+	resp_cfg.buffer.src_addr = IPMB_config_table[index].self_address << 1;
 	resp_cfg.buffer.seq = resp->seq;
 	resp_cfg.buffer.seq_source = resp_cfg.buffer.seq;
 	resp_cfg.buffer.InF_source = resp->InF_source;
@@ -884,20 +874,20 @@ ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index)
 	resp_cfg.buffer.cmd = resp->cmd;
 	resp_cfg.retries = 0;
 
-	if (DEBUG_IPMI) {
+	if (DEBUG_IPMB) {
 		uint8_t i;
-		printf("send resp[%d] index %x cc %x :", resp_cfg.buffer.data_len, index,
-		       resp_cfg.buffer.completion_code);
+		printf("Send resp message, index(%d) cc(0x%x) data[%d](", index,
+		       resp_cfg.buffer.completion_code, resp_cfg.buffer.data_len);
 		for (i = 0; i < resp_cfg.buffer.data_len; i++) {
-			printf(" %x", resp_cfg.buffer.data[i]);
+			printf("0x%x ", resp_cfg.buffer.data[i]);
 		}
-		printf("\n");
+		printf(")\n");
 	}
 
 	/* Blocks here until is able put message in tx queue */
 	if (k_msgq_put(&ipmb_txqueue[index], &resp_cfg, K_FOREVER) != osOK) {
 		k_mutex_unlock(&mutex_send_res);
-		return ipmb_error_failure;
+		return IPMB_ERROR_FAILURE;
 	}
 	k_mutex_unlock(&mutex_send_res);
 	return ipmi_error_success;
@@ -905,56 +895,38 @@ ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index)
 
 ipmb_error ipmb_read(ipmi_msg *msg, uint8_t index)
 {
-	ipmb_error status;
 	// Set mutex timeout 10ms more than messageQueue timeout, prevent mutex timeout before messageQueue
-	k_mutex_lock(&mutex_read, K_MSEC(IPMB_SEQ_TIMEOUT_ms + 10));
-	// Reset a Message Queue to initial empty state
+	k_mutex_lock(&mutex_read, K_MSEC(IPMB_SEQ_TIMEOUT_MS + 10));
+	// Reset a Message Queue to initialize empty state
 	k_msgq_purge(&ipmb_rxqueue[index]);
 
-	status = ipmb_send_request(msg, index);
-	if (status != ipmb_error_success) {
-		printf("ipmb send request fail status: %x", status);
+	if (ipmb_send_request(msg, index) != IPMB_ERROR_SUCCESS) {
+		printf("[%s] Failed to send IPMB request message", __func__);
 		k_mutex_unlock(&mutex_read);
-		return ipmb_error_failure;
+		return IPMB_ERROR_FAILURE;
 	}
 
-	if (k_msgq_get(&ipmb_rxqueue[index], (ipmi_msg *)msg, K_MSEC(IPMB_SEQ_TIMEOUT_ms))) {
+	if (k_msgq_get(&ipmb_rxqueue[index], (ipmi_msg *)msg, K_MSEC(IPMB_SEQ_TIMEOUT_MS))) {
 		k_mutex_unlock(&mutex_read);
-		return ipmb_error_get_messageQueue;
+		return IPMB_ERROR_GET_MESSAGE_QUEUE;
 	}
 
 	k_mutex_unlock(&mutex_read);
 	return ipmi_error_success;
 }
 
-// run IPMI handler and notify command process status
+// Send message to IPMI message queue
 ipmb_error ipmb_notify_client(ipmi_msg_cfg *msg_cfg)
 {
 	/* Sends only the ipmi msg, not the control struct */
 	if (!IS_RESPONSE(msg_cfg->buffer)) {
 		while (k_msgq_put(&ipmi_msgq, msg_cfg, K_NO_WAIT) != 0) {
+			/* message queue is full: purge old data & try again */
 			k_msgq_purge(&ipmi_msgq);
-			printf("Retrying put ipmi msgq\n");
+			printf("Retry to send message to IPMI message queue\n");
 		}
 	}
-	return ipmb_error_success;
-}
-
-ipmb_error ipmb_assert_chksum(uint8_t *buffer, uint8_t buffer_len)
-{
-	uint8_t header_chksum = buffer[2];
-	uint8_t msg_chksum = buffer[buffer_len - 1];
-	uint8_t calc_header_chksum = calculate_chksum(buffer, IPMI_HEADER_CHECKSUM_POSITION);
-	uint8_t calc_msg_chksum = calculate_chksum(buffer, buffer_len - 1);
-
-	if (header_chksum == calc_header_chksum) {
-		if (msg_chksum == calc_msg_chksum) {
-			return ipmb_error_success;
-		}
-
-		return ipmb_error_hdr_chksum;
-	}
-	return ipmb_error_msg_chksum;
+	return IPMB_ERROR_SUCCESS;
 }
 
 ipmb_error ipmb_encode(uint8_t *buffer, ipmi_msg *msg)
@@ -966,7 +938,7 @@ ipmb_error ipmb_encode(uint8_t *buffer, ipmi_msg *msg)
 	buffer[i++] = msg->dest_addr;
 	buffer[i++] =
 		(((msg->netfn << 2) & IPMB_NETFN_MASK) | (msg->dest_LUN & IPMB_DEST_LUN_MASK));
-	buffer[i++] = calculate_chksum(&buffer[0], IPMI_HEADER_CHECKSUM_POSITION);
+	buffer[i++] = calculate_checksum(&buffer[0], IPMI_HEADER_CHECKSUM_POSITION);
 	buffer[i++] = msg->src_addr;
 	buffer[i++] = (((msg->seq << 2) & IPMB_SEQ_MASK) | (msg->src_LUN & IPMB_SRC_LUN_MASK));
 	buffer[i++] = msg->cmd;
@@ -976,8 +948,8 @@ ipmb_error ipmb_encode(uint8_t *buffer, ipmi_msg *msg)
 	memcpy(&buffer[i], &msg->data[0], msg->data_len);
 	i += msg->data_len;
 
-	buffer[i] = calculate_chksum(&buffer[0], i);
-	return ipmb_error_success;
+	buffer[i] = calculate_checksum(&buffer[0], i);
+	return IPMB_ERROR_SUCCESS;
 }
 
 ipmb_error ipmb_decode(ipmi_msg *msg, uint8_t *buffer, uint8_t len)
@@ -1001,7 +973,7 @@ ipmb_error ipmb_decode(ipmi_msg *msg, uint8_t *buffer, uint8_t len)
 	memcpy(&msg->data[0], &buffer[i], msg->data_len);
 	msg->msg_chksum = buffer[len - 1];
 
-	return ipmb_error_success;
+	return IPMB_ERROR_SUCCESS;
 }
 
 void IPMB_SeqTimeout_handler(void *arug0, void *arug1, void *arug2)
@@ -1012,17 +984,16 @@ void IPMB_SeqTimeout_handler(void *arug0, void *arug1, void *arug2)
 	uint32_t current_time;
 
 	while (1) {
-		// k_msleep(IPMB_SEQ_TIMEOUT_ms);
-		k_msleep(IPMB_SEQ_TIMEOUT_ms);
+		k_msleep(IPMB_SEQ_TIMEOUT_MS);
 		for (index = 0; index < MAX_IPMB_IDX; index++) {
-			if (!IPMB_config_table[index].EnStatus) {
+			if (!IPMB_config_table[index].enable_status) {
 				continue;
 			}
 
 			ret = k_mutex_lock(&mutex_id[index], K_MSEC(1000));
 
 			if (ret) {
-				printk("IPMB_SeqTimeout_handler: mutex get fail status:%x\n", ret);
+				printf("[%s] Failed to lock the mutex, ret(%d)\n", __func__, ret);
 			} else {
 				pnode = P_start[index];
 				while (pnode->next != P_start[index]) {
@@ -1030,7 +1001,7 @@ void IPMB_SeqTimeout_handler(void *arug0, void *arug1, void *arug2)
 					// The queue stay more than 1000 ms need to be killed
 					if (current_time + tick_fix -
 							    ((pnode->next)->buffer.timestamp) >
-						    IPMB_timeout_S * sys_tick_freq ||
+						    (IPMB_SEQ_TIMEOUT_MS / 1000) * sys_tick_freq ||
 					    (current_time + tick_fix -
 					     ((pnode->next)->buffer.timestamp)) &
 						    0x80000000) {
@@ -1053,61 +1024,61 @@ void IPMB_SeqTimeout_handler(void *arug0, void *arug1, void *arug2)
 	}
 }
 
-static void init_ipmb_slave_dev(void)
+static void register_target_device(void)
 {
 #ifdef DEV_IPMB_0
 	dev_ipmb[0] = device_get_binding("IPMB_0");
 	if (i2c_slave_driver_register(dev_ipmb[0]))
-		printk("IPMB0: Slave Device driver not found.");
+		printf("IPMB0: Slave Device driver not found.");
 #endif
 #ifdef DEV_IPMB_1
 	dev_ipmb[1] = device_get_binding("IPMB_1");
 	if (i2c_slave_driver_register(dev_ipmb[1]))
-		printk("IPMB: Slave Device driver not found.");
+		printf("IPMB: Slave Device driver not found.");
 #endif
 #ifdef DEV_IPMB_2
 	dev_ipmb[2] = device_get_binding("IPMB_2");
 	if (i2c_slave_driver_register(dev_ipmb[2]))
-		printk("IPMB2: Slave Device driver not found.");
+		printf("IPMB2: Slave Device driver not found.");
 #endif
 #ifdef DEV_IPMB_3
 	dev_ipmb[3] = device_get_binding("IPMB_3");
 	if (i2c_slave_driver_register(dev_ipmb[3]))
-		printk("IPMB3: Slave Device driver not found.");
+		printf("IPMB3: Slave Device driver not found.");
 #endif
 #ifdef DEV_IPMB_4
 	dev_ipmb[4] = device_get_binding("IPMB_4");
 	if (i2c_slave_driver_register(dev_ipmb[4]))
-		printk("IPMB4: Slave Device driver not found.");
+		printf("IPMB4: Slave Device driver not found.");
 #endif
 #ifdef DEV_IPMB_5
 	dev_ipmb[5] = device_get_binding("IPMB_5");
 	if (i2c_slave_driver_register(dev_ipmb[5]))
-		printk("IPMB5: Slave Device driver not found.");
+		printf("IPMB5: Slave Device driver not found.");
 #endif
 #ifdef DEV_IPMB_6
 	dev_ipmb[6] = device_get_binding("IPMB_6");
 	if (i2c_slave_driver_register(dev_ipmb[6]))
-		printk("IPMB6: Slave Device driver not found.");
+		printf("IPMB6: Slave Device driver not found.");
 #endif
 #ifdef DEV_IPMB_7
 	dev_ipmb[7] = device_get_binding("IPMB_7");
 	if (i2c_slave_driver_register(dev_ipmb[7]))
-		printk("IPMB7: Slave Device driver not found.");
+		printf("IPMB7: Slave Device driver not found.");
 #endif
 #ifdef DEV_IPMB_8
 	dev_ipmb[8] = device_get_binding("IPMB_8");
 	if (i2c_slave_driver_register(dev_ipmb[8]))
-		printk("IPMB8: Slave Device driver not found.");
+		printf("IPMB8: Slave Device driver not found.");
 #endif
 #ifdef DEV_IPMB_9
 	dev_ipmb[9] = device_get_binding("IPMB_9");
 	if (i2c_slave_driver_register(dev_ipmb[9]))
-		printk("IPMB9: Slave Device driver not found.");
+		printf("IPMB9: Slave Device driver not found.");
 #endif
 }
 
-void ipmb_util_init(uint8_t index)
+void create_ipmb_threads(uint8_t index)
 {
 	osThreadAttr_t IPMB_TxTask_attr;
 	osThreadAttr_t IPMB_RxTask_attr;
@@ -1120,8 +1091,17 @@ void ipmb_util_init(uint8_t index)
 	P_temp = P_start[index];
 	P_temp->next = P_temp;
 
-	if (k_mutex_init(&mutex_id[index])) {
-		printf("IPMB mutex %d init fail\n", index);
+	int i = 0, retry = 3;
+	for (i = 0; i <= retry; ++i) {
+		if (k_mutex_init(&mutex_id[index]) == 0) {
+			break;
+		}
+	}
+	if (i > retry) {
+		printf("Failed to create threads,Tx(%s) Rx(%s) retry time(%d)\n",
+		       IPMB_config_table[index].tx_thread_name,
+		       IPMB_config_table[index].rx_thread_name, retry);
+		return;
 	}
 
 	k_msgq_init(&ipmb_txqueue[index], ipmb_txqueue_buffer[index], sizeof(struct ipmi_msg_cfg),
@@ -1133,16 +1113,17 @@ void ipmb_util_init(uint8_t index)
 		k_thread_create(&IPMB_TX[index], ipmb_tx_stacks[index], IPMB_TX_STACK_SIZE,
 				IPMB_TXTask, (void *)&IPMB_config_table[index], NULL, NULL,
 				CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
-	k_thread_name_set(&IPMB_TX[index], IPMB_config_table[index].Tx_attr_name);
+	k_thread_name_set(&IPMB_TX[index], IPMB_config_table[index].tx_thread_name);
 	IPMB_RX_ID[index] =
 		k_thread_create(&IPMB_RX[index], ipmb_rx_stacks[index], IPMB_RX_STACK_SIZE,
 				IPMB_RXTask, (void *)&IPMB_config_table[index], NULL, NULL,
 				CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
-	k_thread_name_set(&IPMB_RX[index], IPMB_config_table[index].Rx_attr_name);
+	k_thread_name_set(&IPMB_RX[index], IPMB_config_table[index].rx_thread_name);
 
-	if (DEBUG_IPMI) {
-		printf("Init IPMB bus %d, addr %x\n", IPMB_config_table[index].bus,
-		       IPMB_config_table[index].slave_addr);
+	if (DEBUG_IPMB) {
+		printf("Initial IPMB TX/RX threads, bus(0x%x), addr(0x%x)\n",
+		       IPMB_config_table[index].bus,
+		       IPMB_config_table[index].channel_target_address);
 	}
 
 	return;
@@ -1151,39 +1132,43 @@ void ipmb_util_init(uint8_t index)
 void ipmb_init(void)
 {
 	uint8_t index;
-	init_ipmb_slave_dev();
+	register_target_device();
 
 	IPMB_config_table = malloc(MAX_IPMB_IDX * sizeof(IPMB_config));
 	if (IPMB_config_table != NULL) {
-		pal_load_IPMB_config();
+		pal_load_ipmb_config();
 	} else {
-		printf("IPMB_config_table alloc fail\n");
+		printf("[%s] Failed to allocate memory\n", __func__);
 		return;
 	}
 
-	map_inf_index();
+	channel_index_mapping();
 
 	memset(&current_seq, 0, sizeof(uint8_t) * MAX_IPMB_IDX);
 
+	// Get the RTOS kernel system timer
 	sys_tick_freq = osKernelGetSysTimerFreq();
 	tick_fix = sys_tick_freq / 1000;
 
+	// Initial mutex
 	if (k_mutex_init(&mutex_send_req)) {
-		printf("IPMB send req mutex init fail\n");
+		printf("Failed to initialize IPMB send request mutex\n");
 	}
 	if (k_mutex_init(&mutex_send_res)) {
-		printf("IPMB send seq mutex init fail\n");
+		printf("Failed to initialize IPMB send response mutex\n");
 	}
 	if (k_mutex_init(&mutex_read)) {
-		printf("IPMB read mutex init fail\n");
+		printf("Failed to initialize IPMB read mutex\n");
 	}
 
+	// Create IPMB threads for each index
 	for (index = 0; index < MAX_IPMB_IDX; index++) {
-		if (IPMB_config_table[index].EnStatus) {
-			ipmb_util_init(index);
+		if (IPMB_config_table[index].enable_status) {
+			create_ipmb_threads(index);
 		}
 	}
 
+	// Create IPMB sequence number timout thread
 	k_thread_create(&IPMB_SeqTimeout, IPMB_SeqTimeout_stack,
 			K_THREAD_STACK_SIZEOF(IPMB_SeqTimeout_stack), IPMB_SeqTimeout_handler, NULL,
 			NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);

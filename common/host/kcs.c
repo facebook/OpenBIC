@@ -72,9 +72,9 @@ void kcs_read(void *arvg0, void *arvg1, void *arvg2)
 		req = (struct kcs_request *)ibuf;
 		req->netfn = req->netfn >> 2;
 
-		if (pal_is_to_ipmi_handler(
+		if (pal_request_msg_to_BIC_from_KCS(
 			    req->netfn, req->cmd)) { // In-band update command, not bridging to bmc
-			current_msg.buffer.InF_source = HOST_KCS_IFs;
+			current_msg.buffer.InF_source = HOST_KCS;
 			current_msg.buffer.netfn = req->netfn;
 			current_msg.buffer.cmd = req->cmd;
 			current_msg.buffer.data_len = rc - 2; // exclude netfn, cmd
@@ -98,17 +98,17 @@ void kcs_read(void *arvg0, void *arvg1, void *arvg2)
 		} else { // default command for BMC, should add BIC firmware update, BMC reset, real time sensor read in future
 			bridge_msg.data_len = rc - 2; // exclude netfn, cmd
 			bridge_msg.seq_source = 0xff; // No seq for KCS
-			bridge_msg.InF_source = HOST_KCS_IFs;
+			bridge_msg.InF_source = HOST_KCS;
 			bridge_msg.InF_target =
-				BMC_IPMB_IFs; // default bypassing IPMI standard command to BMC
+				BMC_IPMB; // default bypassing IPMI standard command to BMC
 			bridge_msg.netfn = req->netfn;
 			bridge_msg.cmd = req->cmd;
 			if (bridge_msg.data_len != 0) {
 				memcpy(&bridge_msg.data[0], &ibuf[2], rc);
 			}
 
-			status = ipmb_send_request(&bridge_msg, IPMB_inf_index_map[BMC_IPMB_IFs]);
-			if (status != ipmb_error_success) {
+			status = ipmb_send_request(&bridge_msg, IPMB_inf_index_map[BMC_IPMB]);
+			if (status != IPMB_ERROR_SUCCESS) {
 				printk("kcs_read_task send to BMC fail status: %x", status);
 			}
 		}

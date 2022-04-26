@@ -5,10 +5,11 @@
 #include "cmsis_os2.h"
 #include "hal_i2c.h"
 #include "timer.h"
+#include "plat_i2c.h"
 
-static const struct device *dev_i2c[MAX_I2C_BUS_NUM];
+static const struct device *dev_i2c[I2C_BUS_MAX_NUM];
 
-struct k_mutex i2c_mutex[MAX_I2C_BUS_NUM];
+struct k_mutex i2c_mutex[I2C_BUS_MAX_NUM];
 
 void i2c_freq_set(uint8_t i2c_bus, uint8_t i2c_speed_mode)
 {

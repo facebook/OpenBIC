@@ -10,6 +10,10 @@
 
 __weak void APP_GET_DEVICE_ID(ipmi_msg *msg)
 {
+	if (msg == NULL) {
+		return;
+	}
+
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
@@ -38,6 +42,10 @@ __weak void APP_GET_DEVICE_ID(ipmi_msg *msg)
 
 __weak void APP_COLD_RESET(ipmi_msg *msg)
 {
+	if (msg == NULL) {
+		return;
+	}
+
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
@@ -51,6 +59,10 @@ __weak void APP_COLD_RESET(ipmi_msg *msg)
 
 __weak void APP_WARM_RESET(ipmi_msg *msg)
 {
+	if (msg == NULL) {
+		return;
+	}
+
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
@@ -64,6 +76,10 @@ __weak void APP_WARM_RESET(ipmi_msg *msg)
 
 __weak void APP_GET_SELFTEST_RESULTS(ipmi_msg *msg)
 {
+	if (msg == NULL) {
+		return;
+	}
+
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
@@ -109,6 +125,10 @@ __weak void APP_GET_SELFTEST_RESULTS(ipmi_msg *msg)
 #ifdef CONFIG_ESPI
 __weak void APP_GET_SYSTEM_GUID(ipmi_msg *msg)
 {
+	if (msg == NULL) {
+		return;
+	}
+
 	uint8_t status;
 	EEPROM_ENTRY guid_entry;
 
@@ -148,6 +168,10 @@ __weak void APP_GET_SYSTEM_GUID(ipmi_msg *msg)
 
 __weak void APP_MASTER_WRITE_READ(ipmi_msg *msg)
 {
+	if (msg == NULL) {
+		return;
+	}
+
 	uint8_t retry = 3;
 	uint8_t bus_7bit;
 	I2C_MSG i2c_msg;
@@ -160,7 +184,7 @@ __weak void APP_MASTER_WRITE_READ(ipmi_msg *msg)
 
 	// should ignore bit0, all bus public
 	bus_7bit = msg->data[0] >> 1;
-	if (bus_7bit >= I2C_BUS_NUM) {
+	if (bus_7bit >= I2C_BUS_MAX_NUM) {
 		printf("Accessing invalid bus with IPMI master write read\n");
 		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
 		return;
@@ -200,6 +224,10 @@ __weak void APP_MASTER_WRITE_READ(ipmi_msg *msg)
 
 void IPMI_APP_handler(ipmi_msg *msg)
 {
+	if (msg == NULL) {
+		return;
+	}
+
 	switch (msg->cmd) {
 	case CMD_APP_GET_DEVICE_ID:
 		APP_GET_DEVICE_ID(msg);

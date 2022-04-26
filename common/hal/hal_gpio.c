@@ -135,20 +135,6 @@ int gpio_set(uint8_t gpio_num, uint8_t status)
 	}
 }
 
-/*void gpio_show(void) {
-  uint8_t i, j, status;
-  char direction[6];
-  printf("Number: Group Status Direction Name\n");
-  for(i = 0; i < TOTAL_GPIO_NUM; i++) {
-    if (gpio_cfg[i].is_init == ENABLE) {
-      printf("%02d:     %c%d    %d      %s    %s\n", j++, ((i/8)+65), (i%8), gpio[0].get(&gpio[0], i), gpio[0].get_direction(&gpio[0], i) == 1 ? "Output" : "Input ", gpio_name[i]);
-    }
-  }
-  printf("\n");
-
-  return;
-}*/
-
 void gpio_index_to_num(void)
 {
 	uint8_t i = 0;

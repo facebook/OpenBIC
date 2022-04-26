@@ -5,6 +5,10 @@
 
 __weak void STORAGE_GET_FRUID_INFO(ipmi_msg *msg)
 {
+	if (msg == NULL) {
+		return;
+	}
+
 	uint8_t fruid;
 	uint16_t fru_size;
 
@@ -39,6 +43,10 @@ __weak void STORAGE_GET_FRUID_INFO(ipmi_msg *msg)
 
 __weak void STORAGE_READ_FRUID_DATA(ipmi_msg *msg)
 {
+	if (msg == NULL) {
+		return;
+	}
+
 	uint8_t status;
 	EEPROM_ENTRY fru_entry;
 
@@ -86,6 +94,10 @@ __weak void STORAGE_READ_FRUID_DATA(ipmi_msg *msg)
 
 __weak void STORAGE_WRITE_FRUID_DATA(ipmi_msg *msg)
 {
+	if (msg == NULL) {
+		return;
+	}
+
 	uint8_t status;
 	EEPROM_ENTRY fru_entry;
 
@@ -130,6 +142,10 @@ __weak void STORAGE_WRITE_FRUID_DATA(ipmi_msg *msg)
 
 __weak void STORAGE_RSV_SDR(ipmi_msg *msg)
 {
+	if (msg == NULL) {
+		return;
+	}
+
 	uint16_t RSV_ID;
 
 	if (msg->data_len != 0) {
@@ -148,6 +164,10 @@ __weak void STORAGE_RSV_SDR(ipmi_msg *msg)
 
 __weak void STORAGE_GET_SDR(ipmi_msg *msg)
 {
+	if (msg == NULL) {
+		return;
+	}
+
 	uint16_t next_record_ID;
 	uint16_t rsv_ID, record_ID;
 	uint8_t offset, req_len;
@@ -199,6 +219,10 @@ __weak void STORAGE_GET_SDR(ipmi_msg *msg)
 
 void IPMI_Storage_handler(ipmi_msg *msg)
 {
+	if (msg == NULL) {
+		return;
+	}
+
 	switch (msg->cmd) {
 	case CMD_STORAGE_GET_FRUID_INFO:
 		STORAGE_GET_FRUID_INFO(msg);

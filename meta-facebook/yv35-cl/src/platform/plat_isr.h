@@ -1,6 +1,9 @@
 #ifndef PLAT_FUNC_H
 #define PLAT_FUNC_H
 
+#include <stdint.h>
+
+void send_gpio_interrupt(uint8_t gpio_num);
 void ISR_PLTRST();
 void ISR_SLP3();
 void ISR_DC_ON();

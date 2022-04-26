@@ -13,6 +13,7 @@ enum BIC_CLASS_TYPE {
 	TYPE_2OU_DPV2 = 0x77,
 	TYPE_2OU_DPV2_8 = 0x7,
 	TYPE_2OU_DPV2_16 = 0x70,
+	TYPE_UNKNOWN = 0xFF,
 };
 
 bool get_bic_class();
