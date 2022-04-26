@@ -7,7 +7,7 @@
 #include "plat_ipmb.h"
 
 SDR_INFO sdr_info;
-static uint16_t RSV_ID = 0;
+static uint16_t RSV_ID[2] = { 0 };
 bool is_sdr_not_init = true;
 
 SDR_Full_sensor full_sdr_table[MAX_SENSOR_SIZE];
@@ -40,14 +40,14 @@ bool SDR_check_record_ID(uint16_t current_ID)
 	return true;
 }
 
-uint16_t SDR_get_RSV_ID(void)
+uint16_t SDR_get_RSV_ID(uint8_t rsv_table_index)
 {
-	return (++RSV_ID);
+	return (++RSV_ID[rsv_table_index]);
 }
 
-bool SDR_RSV_ID_check(uint16_t ID)
+bool SDR_RSV_ID_check(uint16_t ID, uint8_t rsv_table_index)
 {
-	return (RSV_ID == ID) ? 1 : 0;
+	return (RSV_ID[rsv_table_index] == ID) ? true : false;
 }
 
 __weak void pal_fix_full_sdr_table(void)
