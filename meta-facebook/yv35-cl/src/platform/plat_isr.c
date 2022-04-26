@@ -10,6 +10,7 @@
 #include "plat_sensor_table.h"
 #include "oem_1s_handler.h"
 #include "hal_gpio.h"
+#include "util_sys.h"
 
 void send_gpio_interrupt(uint8_t gpio_num)
 {
@@ -71,6 +72,12 @@ void ISR_SLP3()
 void ISR_POST_COMPLETE()
 {
 	set_post_status(FM_BIOS_POST_CMPLT_BMC_N);
+
+	if (gpio_get(FM_BIOS_POST_CMPLT_BMC_N) == GPIO_LOW) { // Post complete
+		if (get_me_mode() == ME_INIT_MODE) {
+			init_me_firmware();
+		}
+	}
 }
 
 K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_delayed_status);
