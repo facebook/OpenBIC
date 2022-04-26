@@ -27,6 +27,25 @@ void init_fan_mode()
 	return;
 }
 
+void init_fan_duty()
+{
+	const struct device *pwm_dev;
+	int i = 0, ret = 0;
+
+	pwm_dev = device_get_binding(PWM_DEVICE_NAME);
+	if (pwm_dev == NULL) {
+		printf("%s: FAN PWM init failed due to device not found\n", __func__);
+		return;
+	}
+
+	for (i = 0; i < MAX_FAN_PWM_INDEX_COUNT; i++) {
+		ret = pwm_pin_set_cycles(pwm_dev, i, MAX_FAN_DUTY_VALUE, DEFAULT_FAN_DUTY_VALUE, 0);
+		if (ret < 0) {
+			printf("%s: FAN PWM%d init failed status%d\n", __func__, i, ret);
+		}
+	}
+}
+
 int pal_get_fan_ctrl_mode(uint8_t *ctrl_mode)
 {
 	if (ctrl_mode == NULL) {
