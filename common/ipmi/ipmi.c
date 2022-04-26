@@ -200,7 +200,6 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 void ipmi_init(void)
 {
 	printf("ipmi_init\n"); // rain
-
 	k_msgq_init(&ipmi_msgq, ipmi_msgq_buffer, sizeof(struct ipmi_msg_cfg), IPMI_BUF_LEN);
 
 	k_thread_create(&IPMI_thread, IPMI_thread_stack, K_THREAD_STACK_SIZEOF(IPMI_thread_stack),

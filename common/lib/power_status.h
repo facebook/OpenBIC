@@ -15,5 +15,7 @@ bool get_post_status();
 void set_CPU_power_status(uint8_t gpio_num);
 bool CPU_power_good();
 void set_post_thread();
+void set_vr_monitor_status(bool value);
+bool get_vr_monitor_status();
 
 #endif
