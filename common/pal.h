@@ -36,8 +36,6 @@ void pal_STORAGE_GET_SDR(ipmi_msg *msg);
 void pal_OEM_SENSOR_READ(ipmi_msg *msg);
 void pal_OEM_SET_SYSTEM_GUID(ipmi_msg *msg);
 void pal_OEM_GET_MB_INDEX(ipmi_msg *msg);
-void pal_OEM_SET_FAN_DUTY_MANUAL(ipmi_msg *msg);
-void pal_OEM_GET_SET_FAN_CTRL_MODE(ipmi_msg *msg);
 
 // IPMI OEM 1S
 void pal_OEM_1S_MSG_OUT(ipmi_msg *msg);
@@ -46,22 +44,15 @@ void pal_OEM_1S_SET_GPIO(ipmi_msg *msg);
 void pal_OEM_1S_SENSOR_POLL_EN(ipmi_msg *msg);
 void pal_OEM_1S_FW_UPDATE(ipmi_msg *msg);
 void pal_OEM_1S_GET_POST_CODE(ipmi_msg *msg);
-void pal_OEM_1S_SET_VR_MONITOR_STATUS(ipmi_msg *msg);
-void pal_OEM_1S_GET_VR_MONITOR_STATUS(ipmi_msg *msg);
 void pal_OEM_1S_RESET_BMC(ipmi_msg *msg);
 void pal_OEM_1S_GET_FW_VERSION(ipmi_msg *msg);
-void pal_OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg);
+void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg);
 void pal_OEM_1S_ASD_INIT(ipmi_msg *msg);
 void pal_OEM_1S_GET_SET_GPIO(ipmi_msg *msg);
 void pal_OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg);
 void pal_OEM_1S_GET_BIC_STATUS(ipmi_msg *msg);
 void pal_OEM_1S_RESET_BIC(ipmi_msg *msg);
 void pal_OEM_1S_12V_CYCLE_SLOT(ipmi_msg *msg);
-void pal_OEM_1S_READ_BIC_REGISTER(ipmi_msg *msg);
-void pal_OEM_1S_WRITE_BIC_REGISTER(ipmi_msg *msg);
-void pal_OEM_1S_SET_FAN_DUTY_AUTO(ipmi_msg *msg);
-void pal_OEM_1S_GET_FAN_DUTY(ipmi_msg *msg);
-void pal_OEM_1S_GET_FAN_RPM(ipmi_msg *msg);
 
 // init
 void pal_I2C_init(void);
@@ -73,9 +64,9 @@ void pal_set_sensor_poll_interval(int *interval_ms);
 
 // sensor accessible
 uint8_t pal_load_sdr_table(void);
-bool pal_load_sensor_config(void);
+bool pal_load_snr_config(void);
 void pal_fix_fullSDR_table(void);
-void pal_fix_Sensorconfig(void);
+void pal_fix_Snrconfig(void);
 
 // fru
 void pal_load_fru_config(void);

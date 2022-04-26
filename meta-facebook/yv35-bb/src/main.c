@@ -12,8 +12,13 @@
 #include "hal_i2c.h"
 #include "plat_gpio.h"
 #include "ipmi_def.h"
-#include "sensor_def.h"
 #include "ipmi.h"
+
+void device_init()
+{
+	adc_init();
+	hsc_init();
+}
 
 void set_sys_status()
 {
@@ -22,21 +27,18 @@ void set_sys_status()
 
 void main(void)
 {
+	uint8_t proj_stage = (FIRMWARE_REVISION_1 & 0xf0) >> 4;
 	printk("Hello, welcome to yv35 baseboard %x%x.%x.%x\n", BIC_FW_YEAR_MSB, BIC_FW_YEAR_LSB,
 	       BIC_FW_WEEK, BIC_FW_VER);
 
 	util_init_timer();
 	util_init_I2C();
 
-	// Due to BB CPLD bind HSC device need times
-	// wait HSC ready before sensor read
-	k_msleep(HSC_DEVICE_READY_DELAY_ms);
 	sensor_init();
-
 	FRU_init();
 	ipmi_init();
 	usb_dev_init();
-	fan_mode_init();
+	device_init();
 	set_sys_status();
 }
 

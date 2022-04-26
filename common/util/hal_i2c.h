@@ -1,7 +1,6 @@
 #ifndef HAL_I2C_H
 #define HAL_I2C_H
 
-#include <stdlib.h>
 #include <drivers/i2c.h>
 #include <drivers/i2c/slave/ipmb.h>
 
@@ -48,11 +47,6 @@ extern const uint8_t i2c_bus_to_index[];
 #endif
 
 #define DEV_I2C(n) DEV_I2C_##n
-#define SAFE_FREE(p) \
-if(p) { \
-    free(p); \
-    p = NULL; \
-}
 
 #define I2C_BUFF_SIZE 256
 #define MAX_I2C_BUS_NUM 16
@@ -80,12 +74,9 @@ typedef struct _I2C_MSG_ {
 	struct k_mutex lock;
 } I2C_MSG;
 
-I2C_MSG construct_i2c_message(uint8_t bus_id, uint8_t address, uint8_t tx_len, uint8_t *data,
-			      uint8_t rx_len);
 void i2c_freq_set(uint8_t i2c_bus, uint8_t i2c_speed_mode);
 int i2c_master_read(I2C_MSG *msg, uint8_t retry);
 int i2c_master_write(I2C_MSG *msg, uint8_t retry);
 void util_init_I2C(void);
-void i2c_scan(uint8_t bus, uint8_t *slave_addr, uint8_t *slave_addr_len);
 
 #endif

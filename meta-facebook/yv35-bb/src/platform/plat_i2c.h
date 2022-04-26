@@ -21,9 +21,6 @@
 #define CPLD_IO_I2C_BUS i2c_bus1
 #define CPLD_IO_I2C_ADDR (0x1E >> 1)
 
-#define CPLD_UPDATE_I2C_BUS i2c_bus1
-#define CPLD_UPDATE_ADDR (0x80 >> 1)
-
 #define CPLD_IO_REG_OFS_HSC_EN_SLOT1 0x09
 #define CPLD_IO_REG_OFS_HSC_EN_SLOT3 0x0B
 #define CPLD_IO_REG_OFS_SLED_CYCLE 0x2B

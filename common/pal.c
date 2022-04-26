@@ -135,18 +135,6 @@ __weak void pal_OEM_GET_MB_INDEX(ipmi_msg *msg)
 	return;
 }
 
-__weak void pal_OEM_SET_FAN_DUTY_MANUAL(ipmi_msg *msg)
-{
-	msg->completion_code = CC_UNSPECIFIED_ERROR;
-	return;
-}
-
-__weak void pal_OEM_GET_SET_FAN_CTRL_MODE(ipmi_msg *msg)
-{
-	msg->completion_code = CC_UNSPECIFIED_ERROR;
-	return;
-}
-
 // IPMI OEM 1S
 __weak void pal_OEM_1S_MSG_OUT(ipmi_msg *msg)
 {
@@ -190,18 +178,6 @@ __weak void pal_OEM_1S_GET_POST_CODE(ipmi_msg *msg)
 	return;
 }
 
-__weak void pal_OEM_1S_SET_VR_MONITOR_STATUS(ipmi_msg *msg)
-{
-	msg->completion_code = CC_UNSPECIFIED_ERROR;
-	return;
-}
-
-__weak void pal_OEM_1S_GET_VR_MONITOR_STATUS(ipmi_msg *msg)
-{
-	msg->completion_code = CC_UNSPECIFIED_ERROR;
-	return;
-}
-
 __weak void pal_OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 {
 	msg->completion_code = CC_UNSPECIFIED_ERROR;
@@ -232,7 +208,7 @@ __weak void pal_OEM_1S_ASD_INIT(ipmi_msg *msg)
 	return;
 }
 
-__weak void pal_OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg)
+__weak void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg)
 {
 	msg->completion_code = CC_UNSPECIFIED_ERROR;
 	return;
@@ -274,36 +250,6 @@ __weak void pal_OEM_1S_12V_CYCLE_SLOT(ipmi_msg *msg)
 	return;
 }
 
-__weak void pal_OEM_1S_READ_BIC_REGISTER(ipmi_msg *msg)
-{
-	msg->completion_code = CC_UNSPECIFIED_ERROR;
-	return;
-}
-
-__weak void pal_OEM_1S_WRITE_BIC_REGISTER(ipmi_msg *msg)
-{
-	msg->completion_code = CC_UNSPECIFIED_ERROR;
-	return;
-}
-
-__weak void pal_OEM_1S_SET_FAN_DUTY_AUTO(ipmi_msg *msg)
-{
-	msg->completion_code = CC_UNSPECIFIED_ERROR;
-	return;
-}
-
-__weak void pal_OEM_1S_GET_FAN_DUTY(ipmi_msg *msg)
-{
-	msg->completion_code = CC_UNSPECIFIED_ERROR;
-	return;
-}
-
-__weak void pal_OEM_1S_GET_FAN_RPM(ipmi_msg *msg)
-{
-	msg->completion_code = CC_UNSPECIFIED_ERROR;
-	return;
-}
-
 // init
 __weak void pal_I2C_init(void)
 {
@@ -334,19 +280,19 @@ __weak uint8_t pal_load_sdr_table(void)
 	return 0;
 }
 
-__weak bool pal_load_sensor_config(void)
+__weak bool pal_load_snr_config(void)
 {
 	return 0;
 }
 
 __weak void pal_fix_fullSDR_table(void)
 {
-	return;
+	return 0;
 }
 
-__weak void pal_fix_Sensorconfig(void)
+__weak void pal_fix_Snrconfig(void)
 {
-	return;
+	return 0;
 }
 
 // fru

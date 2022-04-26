@@ -16,6 +16,3 @@ build
 
 # Ignore Vim swap files
 *.swp
-
-# Ignore pycache
-__pycache__

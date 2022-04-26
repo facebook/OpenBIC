@@ -1,10 +1,8 @@
 #include <stdio.h>
-#include <string.h>
 #include "guid.h"
 #include "plat_guid.h"
 
-// size of 1 to satisfy compiler warning
-__weak const EEPROM_CFG guid_config[1] = {};
+__weak const EEPROM_CFG guid_config[] = {};
 
 uint8_t GUID_read(EEPROM_ENTRY *entry)
 {

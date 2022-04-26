@@ -11,7 +11,6 @@
 #include <sys/util.h>
 #include "cmsis_os2.h"
 #include "util_spi.h"
-#include "util_sys.h"
 
 static char *flash_device[6] = { "fmc_cs0",  "fmc_cs1",	 "spi1_cs0",
 				 "spi1_cs1", "spi2_cs0", "spi2_cs1" };
@@ -75,7 +74,7 @@ static int do_update(const struct device *flash_device, off_t offset, uint8_t *b
 	bool update_it = false;
 
 	if (flash_sz < flash_offset + len) {
-		printk("ERROR: update boundary exceeds flash size. (%d, %d, %u)\n", flash_sz,
+		printk("ERROR: update boundary exceeds flash size. (%d, %d, %d)\n", flash_sz,
 		       flash_offset, len);
 		ret = -EINVAL;
 		goto end;

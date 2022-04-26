@@ -16,9 +16,6 @@ bool hsc_init()
 	msg.data[1] = 0x1C;
 	msg.data[2] = 0x3F;
 
-	// CPLD will check BIC heartbeat before opening HSC device
-	k_msleep(HSC_DEVICE_READY_DELAY_ms);
-
 	if (!i2c_master_write(&msg, retry)) {
 		memset(&msg, 0, sizeof(msg));
 		msg.bus = sensor_config[SnrNum_SnrCfg_map[SENSOR_NUM_TEMP_HSC]].port;
@@ -32,14 +29,14 @@ bool hsc_init()
 			}
 		}
 	}
-	printf("HSC initialize failed\n");
+	printf("HSC initail fail\n");
 	return false;
 }
 
 bool pal_hsc_read(uint8_t sensor_num, int *reading)
 {
 	uint8_t retry = 5;
-	int val = 0;
+	int val;
 	I2C_MSG msg;
 
 	msg.bus = sensor_config[SnrNum_SnrCfg_map[sensor_num]].port;
@@ -67,8 +64,8 @@ bool pal_hsc_read(uint8_t sensor_num, int *reading)
 		printf("Snr num %x read fail\n", sensor_num);
 		return false;
 	}
-	*reading = (cal_MBR(sensor_num, val) / 1000) & 0xff;
+	*reading = (acur_cal_MBR(sensor_num, val) / 1000) & 0xffff;
 	sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache = *reading;
-	sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_READ_SUCCESS;
+	sensor_config[SnrNum_SnrCfg_map[sensor_num]].cache_status = SNR_READ_ACUR_SUCCESS;
 	return true;
 }

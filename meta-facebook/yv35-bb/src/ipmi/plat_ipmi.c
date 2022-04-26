@@ -15,8 +15,6 @@
 #include "plat_fru.h"
 #include "sensor_def.h"
 #include "util_spi.h"
-#include "dev/altera.h"
-#include "dev/fan.h"
 
 bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd)
 {
@@ -287,25 +285,14 @@ void pal_STORAGE_WRITE_FRUID_DATA(ipmi_msg *msg)
 
 void pal_STORAGE_RSV_SDR(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		printf("%s: parameter msg is NULL\n", __func__);
-		return;
-	}
+	uint16_t RSV_ID;
 
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
 	}
 
-	uint16_t RSV_ID;
-	uint8_t rsv_table_index = RSV_TABLE_INDEX_0;
-
-	// Config D: slot1 and slot3 need to use different reservation id
-	if (msg->InF_source == SLOT3_BIC_IFs) {
-		rsv_table_index = RSV_TABLE_INDEX_1;
-	}
-
-	RSV_ID = SDR_get_RSV_ID(rsv_table_index);
+	RSV_ID = SDR_get_RSV_ID();
 	msg->data[0] = RSV_ID & 0xFF;
 	msg->data[1] = (RSV_ID >> 8) & 0xFF;
 	msg->data_len = 2;
@@ -316,33 +303,22 @@ void pal_STORAGE_RSV_SDR(ipmi_msg *msg)
 
 void pal_STORAGE_GET_SDR(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		printf("%s: parameter msg is NULL\n", __func__);
-		return;
-	}
-
-	if (msg->data_len != 6) {
-		msg->completion_code = CC_INVALID_LENGTH;
-		return;
-	}
-
 	uint16_t next_record_ID;
 	uint16_t rsv_ID, record_ID;
 	uint8_t offset, req_len;
 	uint8_t *table_ptr;
-	uint8_t rsv_table_index = RSV_TABLE_INDEX_0;
 
 	rsv_ID = (msg->data[1] << 8) | msg->data[0];
 	record_ID = (msg->data[3] << 8) | msg->data[2];
 	offset = msg->data[4];
 	req_len = msg->data[5];
 
-	// Config D: slot1 and slot3 need to use different reservation id
-	if (msg->InF_source == SLOT3_BIC_IFs) {
-		rsv_table_index = RSV_TABLE_INDEX_1;
+	if (msg->data_len != 6) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
 	}
 
-	if (!SDR_RSV_ID_check(rsv_ID, rsv_table_index)) {
+	if (!SDR_RSV_ID_check(rsv_ID)) {
 		msg->completion_code = CC_INVALID_RESERVATION;
 		return;
 	}
@@ -378,7 +354,7 @@ void pal_STORAGE_GET_SDR(ipmi_msg *msg)
 
 void pal_SENSOR_GET_SENSOR_READING(ipmi_msg *msg)
 {
-	uint8_t status, sensor_num;
+	uint8_t status, snr_num;
 	int reading;
 
 	if (msg->data_len != 1) {
@@ -392,34 +368,33 @@ void pal_SENSOR_GET_SENSOR_READING(ipmi_msg *msg)
 		return;
 	}
 
-	sensor_num = msg->data[0];
+	snr_num = msg->data[0];
 	status = get_sensor_reading(
-		sensor_num, &reading,
+		snr_num, &reading,
 		get_from_cache); // Fix to get_from_cache. As need real time reading, use OEM command to get_from_sensor.
 
 	switch (status) {
-	case SENSOR_READ_SUCCESS:
+	case SNR_READ_SUCCESS:
 		msg->data[0] = reading;
 		// SDR sensor initialization bit6 enable scan, bit5 enable event
 		// retunr data 1 bit 7 set to 0 to disable all event msg. bit 6 set to 0 disable sensor scan
 		msg->data[1] =
-			((full_sensor_table[SensorNum_SDR_map[sensor_num]].sensor_init & 0x60)
-			 << 1);
+			((full_sensor_table[SnrNum_SDR_map[snr_num]].sensor_init & 0x60) << 1);
 		msg->data[2] =
 			0xc0; // fix to threshold deassert status, BMC will compare with UCR/UNR itself
 		msg->data_len = 3;
 		msg->completion_code = CC_SUCCESS;
 		break;
-	case SENSOR_FAIL_TO_ACCESS:
+	case SNR_FAIL_TO_ACCESS:
 		msg->completion_code = CC_NODE_BUSY; // transection error
 		break;
-	case SENSOR_NOT_ACCESSIBLE:
+	case SNR_NOT_ACCESSIBLE:
 		msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE; // DC off
 		break;
-	case SENSOR_NOT_FOUND:
+	case SNR_NOT_FOUND:
 		msg->completion_code = CC_INVALID_DATA_FIELD; // request sensor number not found
 		break;
-	case SENSOR_UNSPECIFIED_ERROR:
+	case SNR_UNSPECIFIED_ERROR:
 	default:
 		msg->completion_code = CC_UNSPECIFIED_ERROR; // unknown error
 		break;
@@ -463,17 +438,6 @@ void pal_OEM_1S_MSG_OUT(ipmi_msg *msg)
 	}
 
 	target_IF = msg->data[0];
-
-	// To do: send SEL to another BMC
-	if (target_IF == PEER_BMC_IPMB_IFs) {
-		if (msg->InF_source == SLOT1_BIC_IFs) {
-			target_IF = SLOT3_BIC_IFs;
-		} else if (msg->InF_source == SLOT3_BIC_IFs) {
-			target_IF = SLOT1_BIC_IFs;
-		} else {
-			msg->completion_code = CC_INVALID_DATA_FIELD;
-		}
-	}
 
 	if ((IPMB_config_table[IPMB_inf_index_map[target_IF]].Inf == Reserve_IFs) ||
 	    (IPMB_config_table[IPMB_inf_index_map[target_IF]].EnStatus ==
@@ -662,15 +626,6 @@ void pal_OEM_1S_FW_UPDATE(ipmi_msg *msg)
 		}
 		status = fw_update(offset, length, &msg->data[7], (target & UPDATE_EN),
 				   devspi_fmc_cs0);
-
-	} else if (target & CPLD_UPDATE) {
-		if (offset == 0) {
-			printf("[CPLD] CPLD update start\n");
-		}
-
-		status = cpld_altera_fw_update(offset, length, &msg->data[7]);
-	} else {
-		return msg->completion_code = CC_PARAM_OUT_OF_RANGE;
 	}
 
 	msg->data_len = 0;
@@ -698,9 +653,8 @@ void pal_OEM_1S_FW_UPDATE(ipmi_msg *msg)
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
 		break;
 	}
-
 	if (status != fwupdate_success) {
-		printf("firmware (0x%02X) update failed cc: %x\n", target, msg->completion_code);
+		printf("spi fw cc: %x\n", msg->completion_code);
 	}
 
 	return;
@@ -708,11 +662,6 @@ void pal_OEM_1S_FW_UPDATE(ipmi_msg *msg)
 
 void pal_OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		printf("%s() is failed due to parameter msg is NULL.\n", __func__);
-		return;
-	}
-
 	if (msg->data[0] == 0x9C && msg->data[1] == 0x9C && msg->data[2] == 0x00) {
 		while (1)
 			; // hold firmware for debug only
@@ -723,20 +672,9 @@ void pal_OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg)
 		return;
 	}
 
-	const struct device *dev;
-	uint8_t bus = msg->data[0];
-	char dev_name[8] = { 0 };
-	int ret = 0;
+	uint8_t bus = i2c_bus_to_index[msg->data[0]];
 
-	snprintf(dev_name, sizeof(dev_name), "I2C_%d", bus);
-
-	dev = device_get_binding(dev_name);
-	if (dev == NULL) {
-		msg->data_len = 0;
-
-	} else {
-		i2c_scan(bus, &msg->data[0], &msg->data_len);
-	}
+	i2c_scan(bus, &msg->data[0], &msg->data_len);
 
 	msg->completion_code = CC_SUCCESS;
 	return;
@@ -816,343 +754,5 @@ void pal_OEM_1S_12V_CYCLE_SLOT(ipmi_msg *msg)
 	gpio_set(isolator_num, GPIO_HIGH);
 
 	msg->completion_code = CC_SUCCESS;
-	return;
-}
-
-void pal_OEM_SET_FAN_DUTY_MANUAL(ipmi_msg *msg)
-{
-	/*********************************
-		data 0: fan pwm index
-		data 1: duty
-	***********************************/
-	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
-
-	if (msg->data_len != 2) {
-		msg->completion_code = CC_INVALID_LENGTH;
-		return;
-	}
-	uint8_t pwm_id = msg->data[0];
-	uint8_t duty = msg->data[1];
-	uint8_t current_fan_mode = FAN_AUTO_MODE, slot_index = 0;
-	int ret = 0, i = 0;
-
-	msg->data_len = 0;
-	msg->completion_code = CC_SUCCESS;
-
-	if (msg->InF_source == SLOT1_BIC_IFs) {
-		slot_index = 0x01;
-	} else if (msg->InF_source == SLOT3_BIC_IFs) {
-		slot_index = 0x03;
-	} else {
-		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
-		return;
-	}
-
-	if ((duty > MAX_FAN_DUTY) || ((pwm_id >= MAX_FAN_PWM_INDEX) && (pwm_id != ID_ALL_PWM))) {
-		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
-		return;
-	}
-
-	ret = pal_get_fan_ctrl_mode(&current_fan_mode);
-	if (ret < 0) {
-		msg->completion_code = CC_UNSPECIFIED_ERROR;
-		return;
-	}
-
-	if (current_fan_mode != FAN_MANUAL_MODE) {
-		printf("%s() is called when it's not at manual mode\n", __func__);
-		return;
-	}
-
-	if (pwm_id == ID_ALL_PWM) {
-		for (i = 0; i < MAX_FAN_PWM_INDEX; i++) {
-			ret = pal_set_fan_duty(i, duty, slot_index);
-			if (ret < 0) {
-				msg->completion_code = CC_UNSPECIFIED_ERROR;
-				break;
-			}
-		}
-	} else {
-		ret = pal_set_fan_duty(pwm_id, duty, slot_index);
-		if (ret < 0) {
-			msg->completion_code = CC_UNSPECIFIED_ERROR;
-		}
-	}
-
-	return;
-}
-
-void pal_OEM_GET_SET_FAN_CTRL_MODE(ipmi_msg *msg)
-{
-	/*********************************
-		data 0:   target
-		  0x00 Set fan mode manual
-		  0x01 Set fan mode auto
-		  0x02 Get fan mode
-	***********************************/
-	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
-
-	if (msg->data_len != 1) {
-		msg->completion_code = CC_INVALID_LENGTH;
-		return;
-	}
-
-	uint8_t ctrl_cmd = msg->data[0];
-	uint8_t ctrl_mode_get = 0;
-	int ret = 0;
-
-	msg->data_len = 0;
-	msg->completion_code = CC_SUCCESS;
-
-	if (ctrl_cmd == FAN_SET_MANUAL_MODE) {
-		pal_set_fan_ctrl_mode(FAN_MANUAL_MODE);
-
-	} else if (ctrl_cmd == FAN_SET_AUTO_MODE) {
-		pal_set_fan_ctrl_mode(FAN_AUTO_MODE);
-
-	} else if (ctrl_cmd == FAN_GET_MODE) {
-		ret = pal_get_fan_ctrl_mode(&ctrl_mode_get);
-		if (ret < 0) {
-			msg->completion_code = CC_UNSPECIFIED_ERROR;
-
-		} else {
-			msg->data_len = 1;
-			msg->data[0] = ctrl_mode_get;
-		}
-
-	} else {
-		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
-	}
-
-	return;
-}
-
-void pal_OEM_1S_GET_FAN_RPM(ipmi_msg *msg)
-{
-	/*********************************
-		data 0: fan index
-	***********************************/
-	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
-
-	if (msg->data_len != 1) {
-		msg->completion_code = CC_INVALID_LENGTH;
-		return;
-	}
-
-	uint8_t fan_id = msg->data[0];
-	uint16_t data = 0;
-	int ret = 0;
-
-	ret = pal_get_fan_rpm(fan_id, &data);
-	if (ret < 0) {
-		msg->data_len = 0;
-		msg->completion_code = CC_UNSPECIFIED_ERROR;
-
-	} else {
-		msg->data[0] = (data >> 8) & 0xFF;
-		msg->data[1] = data & 0xFF;
-		msg->data_len = 2;
-		msg->completion_code = CC_SUCCESS;
-	}
-
-	return;
-}
-
-void pal_OEM_1S_GET_FAN_DUTY(ipmi_msg *msg)
-{
-	/*********************************
-		data 0: fan pwm index
-	***********************************/
-	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
-
-	if (msg->data_len != 1) {
-		msg->completion_code = CC_INVALID_LENGTH;
-		return;
-	}
-
-	uint8_t pwm_id = msg->data[0];
-	uint8_t duty = 0, slot_index = 0;
-	int ret = 0;
-
-	if (msg->InF_source == SLOT1_BIC_IFs) {
-		slot_index = 0x01;
-	} else if (msg->InF_source == SLOT3_BIC_IFs) {
-		slot_index = 0x03;
-	} else {
-		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
-		return;
-	}
-
-	if (pwm_id >= MAX_FAN_PWM_INDEX) {
-		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
-		return;
-	}
-
-	ret = pal_get_fan_duty(pwm_id, &duty, slot_index);
-	if (ret < 0) {
-		msg->data_len = 0;
-		msg->completion_code = CC_UNSPECIFIED_ERROR;
-
-	} else {
-		msg->data[0] = duty;
-		msg->data_len = 1;
-		msg->completion_code = CC_SUCCESS;
-	}
-
-	return;
-}
-
-void pal_OEM_1S_SET_FAN_DUTY_AUTO(ipmi_msg *msg)
-{
-	/*********************************
-		data 0: fan pwm index
-		data 1: duty
-	***********************************/
-	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
-
-	if (msg->data_len != 2) {
-		msg->completion_code = CC_INVALID_LENGTH;
-		return;
-	}
-
-	uint8_t pwm_id = msg->data[0];
-	uint8_t duty = msg->data[1];
-	uint8_t current_fan_mode = FAN_AUTO_MODE, slot_index = 0;
-	int ret = 0;
-
-	msg->data_len = 0;
-	msg->completion_code = CC_SUCCESS;
-
-	if (msg->InF_source == SLOT1_BIC_IFs) {
-		slot_index = 0x01;
-	} else if (msg->InF_source == SLOT3_BIC_IFs) {
-		slot_index = 0x03;
-	} else {
-		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
-		return;
-	}
-
-	if (pwm_id >= MAX_FAN_PWM_INDEX) {
-		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
-		return;
-	}
-
-	ret = pal_get_fan_ctrl_mode(&current_fan_mode);
-	if (ret < 0) {
-		msg->completion_code = CC_UNSPECIFIED_ERROR;
-		return;
-	}
-
-	if (current_fan_mode != FAN_AUTO_MODE) {
-		printf("%s() is called when it's not at auto mode\n", __func__);
-		return;
-	}
-
-	if (duty > MAX_FAN_DUTY) {
-		duty = MAX_FAN_DUTY;
-	}
-
-	ret = pal_set_fan_duty(pwm_id, duty, slot_index);
-	if (ret < 0) {
-		msg->completion_code = CC_UNSPECIFIED_ERROR;
-	}
-
-	return;
-}
-
-void pal_OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg)
-{
-	uint8_t status, sensor_num, option, sensor_report_status;
-	uint8_t enable_sensor_scan = 0xC0; // following IPMI sensor status response
-	uint8_t disable_sensor_scan = 0x80;
-	int reading;
-
-	if (msg->data_len != 2) {
-		msg->completion_code = CC_INVALID_LENGTH;
-		return;
-	}
-
-	if (enable_sensor_poll) {
-		sensor_report_status = enable_sensor_scan;
-	} else {
-		sensor_report_status = disable_sensor_scan;
-	}
-
-	option = msg->data[1];
-	sensor_num = msg->data[0];
-
-	if (option == GET_SENSOR_CACHE_DATA) {
-		if (enable_sensor_poll) {
-			status = get_sensor_reading(sensor_num, &reading, get_from_cache);
-		} else {
-			status = SENSOR_POLLING_DISABLE;
-		}
-	} else if (option == GET_SENSOR_DATA) {
-		status = get_sensor_reading(sensor_num, &reading, get_from_sensor);
-	} else {
-		status = SENSOR_UNSPECIFIED_ERROR;
-	}
-
-	switch (status) {
-	case SENSOR_READ_SUCCESS:
-		msg->data[0] = reading & 0xff;
-		msg->data[1] = 0x00;
-		msg->data[2] = sensor_report_status;
-		msg->data_len = 3;
-		msg->completion_code = CC_SUCCESS;
-		break;
-	case SENSOR_READ_ACUR_SUCCESS:
-		msg->data[0] = (reading >> 8) & 0xff;
-		msg->data[1] = reading & 0xff;
-		msg->data[2] = sensor_report_status;
-		msg->data_len = 3;
-		msg->completion_code = CC_SUCCESS;
-		break;
-	case SENSOR_READ_4BYTE_ACUR_SUCCESS:
-		memcpy(msg->data, &reading, sizeof(reading));
-		msg->data[4] = sensor_report_status;
-		msg->data_len = 5;
-		msg->completion_code = CC_SUCCESS;
-		break;
-	case SENSOR_NOT_ACCESSIBLE:
-	case SENSOR_INIT_STATUS:
-		msg->data[0] = 0x00;
-		msg->data[1] = 0x00;
-		msg->data[2] = (sensor_report_status |
-				0x20); // notice BMC about sensor temporary in not accessible status
-		msg->data_len = 3;
-		msg->completion_code = CC_SUCCESS;
-		break;
-	case SENSOR_POLLING_DISABLE:
-		msg->completion_code =
-			CC_SENSOR_NOT_PRESENT; // getting sensor cache while sensor polling disable
-		break;
-	case SENSOR_FAIL_TO_ACCESS:
-		msg->completion_code = CC_NODE_BUSY; // transection error
-		break;
-	case SENSOR_NOT_FOUND:
-		msg->completion_code = CC_INVALID_DATA_FIELD; // request sensor number not found
-		break;
-	case SENSOR_UNSPECIFIED_ERROR:
-	default:
-		msg->completion_code = CC_UNSPECIFIED_ERROR; // unknown error
-		break;
-	}
-
 	return;
 }

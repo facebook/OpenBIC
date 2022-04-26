@@ -1,39 +1,28 @@
-#include <stdlib.h>
 #include "plat_func.h"
 #include "plat_gpio.h"
 #include "plat_i2c.h"
 #include "plat_ipmi.h"
-#include "hal_i2c.h"
 #include "hal_snoop.h"
 #include "kcs.h"
 #include "libipmi.h"
 #include "sensor_def.h"
 #include "plat_def.h"
-#include "sensor.h"
 
-static bool is_DC_on = false;
-static bool is_DC_on_5s = false;
-static bool is_DC_off_10s = false;
-static bool is_CPU_power_good = false;
-static bool is_post_complete = false;
-static bool vr_monitor_status = true;
+static bool is_DC_on = 0;
+static bool is_DC_on_5s = 0;
+static bool is_DC_off_10s = 0;
+static bool is_post_complete = 0;
 static bool bic_class = sys_class_1;
-static bool is_1ou_present = false;
-static bool is_2ou_present = false;
-static uint8_t __attribute__((unused)) card_type_1ou = 0;
+static bool is_1ou_present = 0;
+static bool is_2ou_present = 0;
+static uint8_t card_type_1ou = 0;
 static uint8_t card_type_2ou = 0;
-static uint8_t board_revision = 0x0F;
 
 #define PROC_FAIL_START_DELAY_SECOND 10
 #define CATERR_START_DELAY_SECOND 2
-#define CPLD_ADDR 0x21 // 7-bit address
-#define CPLD_CLASS_TYPE_REG 0x05
-#define CPLD_2OU_EXPANSION_CARD_REG 0x06
-#define CPLD_BOARD_REV_ID_REG 0x08
-#define I2C_DATA_SIZE 5
 
-static void proc_fail_handler(struct k_work *);
-static void CatErr_handler(struct k_work *);
+static void proc_fail_handler(void *, void *, void *);
+static void CatErr_handler(void *, void *, void *);
 
 K_WORK_DELAYABLE_DEFINE(proc_fail_work, proc_fail_handler);
 K_WORK_DELAYABLE_DEFINE(CatErr_work, CatErr_handler);
@@ -42,9 +31,9 @@ void SLP3_handler()
 {
 	addsel_msg_t sel_msg;
 	if (gpio_get(FM_SLPS3_PLD_N) && (gpio_get(PWRGD_SYS_PWROK) == 0)) {
-		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+		sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
 		sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
-		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+		sel_msg.snr_number = SENSOR_NUM_SYSTEM_STATUS;
 		sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_SYS_VRWATCHDOG;
 		sel_msg.evt_data2 = 0xFF;
 		sel_msg.evt_data3 = 0xFF;
@@ -92,11 +81,13 @@ void ISR_DC_on()
 		clear_unaccessible_sensor_cache();
 		k_work_schedule(&set_DC_off_10s_work, K_SECONDS(DC_OFF_10_SECOND));
 
+		snoop_abort_thread();
+
 		if (gpio_get(FM_SLPS3_PLD_N) && gpio_get(RST_RSMRST_BMC_N)) {
 			addsel_msg_t sel_msg;
-			sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_OEM_C3;
+			sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_OEM_C3;
 			sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
-			sel_msg.sensor_number = SENSOR_NUM_POWER_ERROR;
+			sel_msg.snr_number = SENSOR_NUM_POWER_ERROR;
 			sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_SYS_PWROK_FAIL;
 			sel_msg.evt_data2 = 0xFF;
 			sel_msg.evt_data3 = 0xFF;
@@ -114,16 +105,10 @@ void ISR_BMC_PRDY()
 
 void ISR_PWRGD_CPU()
 {
-	set_CPU_power_status();
 	if (gpio_get(PWRGD_CPU_LVC3) == 1) {
-		init_snoop_thread();
-		init_send_postcode_thread();
-
 		/* start thread proc_fail_handler after 10 seconds */
 		k_work_schedule(&proc_fail_work, K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
 	} else {
-		abort_snoop_thread();
-
 		if (k_work_cancel_delayable(&proc_fail_work) != 0) {
 			printk("Cancel proc_fail delay work fail\n");
 		}
@@ -146,6 +131,11 @@ void ISR_CATERR()
 
 void ISR_PLTRST()
 {
+	if (gpio_get(RST_PLTRST_BUF_N) == 1) {
+		snoop_start_thread();
+		init_send_postcode_thread();
+	}
+
 	send_gpio_interrupt(RST_PLTRST_BUF_N);
 }
 
@@ -163,8 +153,8 @@ void ISR_FM_THROTTLE()
 		} else {
 			sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
 		}
-		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
-		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+		sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+		sel_msg.snr_number = SENSOR_NUM_SYSTEM_STATUS;
 		sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_SYS_FMTHROTTLE;
 		sel_msg.evt_data2 = 0xFF;
 		sel_msg.evt_data3 = 0xFF;
@@ -194,8 +184,8 @@ void ISR_HSC_THROTTLE()
 			} else {
 				return;
 			}
-			sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
-			sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+			sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+			sel_msg.snr_number = SENSOR_NUM_SYSTEM_STATUS;
 			sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_SYS_PMBUSALERT;
 			sel_msg.evt_data2 = 0xFF;
 			sel_msg.evt_data3 = 0xFF;
@@ -215,8 +205,8 @@ void ISR_MB_THROTTLE()
 		} else {
 			sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
 		}
-		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
-		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+		sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+		sel_msg.snr_number = SENSOR_NUM_SYSTEM_STATUS;
 		sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_SYS_FIRMWAREASSERT;
 		sel_msg.evt_data2 = 0xFF;
 		sel_msg.evt_data3 = 0xFF;
@@ -230,22 +220,14 @@ void ISR_SOC_THMALTRIP()
 {
 	addsel_msg_t sel_msg;
 	if (gpio_get(RST_PLTRST_PLD_N)) {
-		if (gpio_get(H_CPU_MEMTRIP_LVC3_N) == GPIO_HIGH) {
-			sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_SYS_THERMAL_TRIP;
-		} else {
-			sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_SYS_MEMORY_THERMALTRIP;
-		}
 		sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
-		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
-		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+		sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+		sel_msg.snr_number = SENSOR_NUM_SYSTEM_STATUS;
+		sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_SYS_THERMAL_TRIP;
 		sel_msg.evt_data2 = 0xFF;
 		sel_msg.evt_data3 = 0xFF;
 		if (!add_sel_evt_record(&sel_msg)) {
-			if (sel_msg.evt_data1 == IPMI_OEM_EVENT_OFFSET_SYS_THERMAL_TRIP) {
-				printk("SOC Thermal trip addsel fail\n");
-			} else {
-				printk("Memory Thermal trip addsel fail\n");
-			}
+			printk("SOC Thermal trip addsel fail\n");
 		}
 	}
 }
@@ -259,8 +241,8 @@ void ISR_SYS_THROTTLE()
 		} else {
 			sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
 		}
-		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
-		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+		sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+		sel_msg.snr_number = SENSOR_NUM_SYSTEM_STATUS;
 		sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_SYS_THROTTLE;
 		sel_msg.evt_data2 = 0xFF;
 		sel_msg.evt_data3 = 0xFF;
@@ -285,8 +267,8 @@ void ISR_PCH_THMALTRIP()
 	} else {
 		return;
 	}
-	sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
-	sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+	sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+	sel_msg.snr_number = SENSOR_NUM_SYSTEM_STATUS;
 	sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_SYS_PCHHOT;
 	sel_msg.evt_data2 = 0xFF;
 	sel_msg.evt_data3 = 0xFF;
@@ -304,8 +286,8 @@ void ISR_HSC_OC()
 		} else {
 			sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
 		}
-		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
-		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+		sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+		sel_msg.snr_number = SENSOR_NUM_SYSTEM_STATUS;
 		sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_SYS_HSCTIMER;
 		sel_msg.evt_data2 = 0xFF;
 		sel_msg.evt_data3 = 0xFF;
@@ -324,8 +306,8 @@ void ISR_CPU_MEMHOT()
 		} else {
 			sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
 		}
-		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_CPU_DIMM_HOT;
-		sel_msg.sensor_number = SENSOR_NUM_CPUDIMM_HOT;
+		sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_CPU_DIMM_HOT;
+		sel_msg.snr_number = SENSOR_NUM_CPUDIMM_HOT;
 		sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_DIMM_HOT;
 		sel_msg.evt_data2 = 0xFF;
 		sel_msg.evt_data3 = 0xFF;
@@ -344,8 +326,8 @@ void ISR_CPUVR_HOT()
 		} else {
 			sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
 		}
-		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_CPU_DIMM_VR_HOT;
-		sel_msg.sensor_number = SENSOR_NUM_VR_HOT;
+		sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_CPU_DIMM_VR_HOT;
+		sel_msg.snr_number = SENSOR_NUM_VR_HOT;
 		sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_CPU_VR_HOT;
 		sel_msg.evt_data2 = 0xFF;
 		sel_msg.evt_data3 = 0xFF;
@@ -359,9 +341,9 @@ void ISR_PCH_PWRGD()
 {
 	addsel_msg_t sel_msg;
 	if (gpio_get(FM_SLPS3_PLD_N)) {
-		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_OEM_C3;
+		sel_msg.snr_type = IPMI_OEM_SENSOR_TYPE_OEM_C3;
 		sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
-		sel_msg.sensor_number = SENSOR_NUM_POWER_ERROR;
+		sel_msg.snr_number = SENSOR_NUM_POWER_ERROR;
 		sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_PCH_PWROK_FAIL;
 		sel_msg.evt_data2 = 0xFF;
 		sel_msg.evt_data3 = 0xFF;
@@ -375,9 +357,9 @@ void ISR_RMCA()
 {
 	if ((gpio_get(RST_PLTRST_BUF_N) == GPIO_HIGH) || (gpio_get(PWRGD_CPU_LVC3) == GPIO_HIGH)) {
 		addsel_msg_t sel_msg;
-		sel_msg.sensor_type = IPMI_SENSOR_TYPE_PROCESSOR;
+		sel_msg.snr_type = IPMI_SENSOR_TYPE_PROCESSOR;
 		sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
-		sel_msg.sensor_number = SENSOR_NUM_CATERR;
+		sel_msg.snr_number = SENSOR_NUM_CATERR;
 		sel_msg.evt_data1 = IPMI_OEM_EVENT_OFFSET_MEM_RMCA;
 		sel_msg.evt_data2 = 0xFF;
 		sel_msg.evt_data3 = 0xFF;
@@ -425,6 +407,10 @@ void set_post_status()
 {
 	is_post_complete = !(gpio_get(FM_BIOS_POST_CMPLT_BMC_N));
 	printk("set is_post_complete %d\n", is_post_complete);
+
+	if (is_post_complete) {
+		snoop_abort_thread();
+	}
 }
 
 bool get_post_status()
@@ -432,34 +418,9 @@ bool get_post_status()
 	return is_post_complete;
 }
 
-void set_vr_monitor_status(bool value)
-{
-	vr_monitor_status = value;
-}
-
-bool get_vr_monitor_status()
-{
-	return vr_monitor_status;
-}
-
-void set_CPU_power_status()
-{
-	is_CPU_power_good = gpio_get(PWRGD_CPU_LVC3);
-}
-
-bool CPU_power_good()
-{
-	return is_CPU_power_good;
-}
-
 uint8_t get_2ou_cardtype()
 {
 	return card_type_2ou;
-}
-
-uint8_t get_board_revision()
-{
-	return board_revision;
 }
 
 void set_sys_config()
@@ -467,82 +428,43 @@ void set_sys_config()
 	I2C_MSG i2c_msg;
 	uint8_t retry = 3;
 
-	/* According hardware design, BIC can check the class type through GPIOs.
-	 * The board ID is "0000" if the class type is class1.
-	 * The board ID is "0001" if the class type is calss2.
-	 */
 	if (gpio_get(BOARD_ID0)) { // HW design: class1 board_ID 0000, class2 board_ID 0001
 		bic_class = sys_class_2;
 	} else {
 		bic_class = sys_class_1;
 	}
 
-	uint8_t tx_len, rx_len;
-	uint8_t class_type = 0x0;
-	char *data = (uint8_t *)malloc(I2C_DATA_SIZE * sizeof(uint8_t));
-	if (data == NULL) {
-		printf("Could not allocate memory for I2C data.\n");
-		return;
-	}
-
-	/* Read the expansion present from CPLD's class type register
-	 * CPLD Class Type Register(05h)
-	 * Bit[7:4] - Board ID(0000b: Class-1, 0001b: Class-2)
-	 * Bit[3] - 2ou x8/x16 Riser Expansion Present
-	 * Bit[2] - 1ou Expansion Present Pin
-	 * Bit[1:0] - Reserved
-	 */
-	tx_len = 1;
-	rx_len = 1;
-	memset(data, 0, I2C_DATA_SIZE);
-	data[0] = CPLD_CLASS_TYPE_REG;
-	i2c_msg = construct_i2c_message(i2c_bus_to_index[1], CPLD_ADDR, tx_len, data, rx_len);
-	if (!i2c_master_read(&i2c_msg, retry)) {
-		class_type = i2c_msg.data[0];
-		is_1ou_present = (class_type & 0x4 ? false : true);
-		is_2ou_present = (class_type & 0x8 ? false : true);
-	} else {
-		printf("Failed to read expansion present from CPLD\n");
-	}
-	/* Set the class type to CPLD's class type register(the bit[4] of offset 05h) */
-	tx_len = 2;
-	rx_len = 0;
-	memset(data, 0, I2C_DATA_SIZE);
-	data[0] = CPLD_CLASS_TYPE_REG;
-	data[1] = (((uint8_t)bic_class << 4) & 0x10) | class_type;
-	i2c_msg = construct_i2c_message(i2c_bus_to_index[1], CPLD_ADDR, tx_len, data, rx_len);
+	i2c_msg.bus = i2c_bus_to_index[1];
+	i2c_msg.slave_addr = 0x42 >> 1;
+	i2c_msg.rx_len = 0x0;
+	i2c_msg.tx_len = 0x2;
+	i2c_msg.data[0] = 0x5;
+	i2c_msg.data[1] = (bic_class << 4) & 0x10; // set CPLD class in reg 0x5, bit 4
 	if (i2c_master_write(&i2c_msg, retry)) {
-		printf("Failed to set class type to CPLD)\n");
-	}
-
-	/* Get the board revision to CPLD's board rev id reg(the bit[3:0] of offset 08h)
-	 * CPLD Board REV ID Register(08h)
-	 * Bit[7:4] - Reserved
-	 * Bit[3:0] - Board revision
-	 */
-	tx_len = 1;
-	rx_len = 1;
-	memset(data, 0, I2C_DATA_SIZE);
-	data[0] = CPLD_BOARD_REV_ID_REG;
-	i2c_msg = construct_i2c_message(i2c_bus_to_index[1], CPLD_ADDR, tx_len, data, rx_len);
-	int ret = i2c_master_read(&i2c_msg, retry);
-	if (ret == 0) {
-		board_revision = i2c_msg.data[0] & 0xF;
+		printk("Set CPLD class type fail\n");
 	} else {
-		printf("Failed to read board ID from CPLD\n");
+		i2c_msg.rx_len = 0x1;
+		i2c_msg.tx_len = 0x1;
+		i2c_msg.data[0] = 0x5;
+		if (!i2c_master_read(&i2c_msg, retry)) {
+			is_1ou_present = (i2c_msg.data[0] & 0x4 ? 0 : 1);
+			is_2ou_present = (i2c_msg.data[0] & 0x8 ? 0 : 1);
+
+			if ((i2c_msg.data[0] & 0x10) != bic_class) {
+				printk("Set class type %x but read %x\n", bic_class,
+				       (i2c_msg.data[0] & 0x10));
+			}
+		} else {
+			printk("Read expansion present from CPLD error\n");
+		}
 	}
-	printk("BIC class type(class-%d), 1ou present status(%d), 2ou present status(%d), board revision(0x%x)\n",
-	       (int)bic_class + 1, (int)is_1ou_present, (int)is_2ou_present, board_revision);
+	printk("bic class type : %d  1ou present status : %d  2ou present status : %d\n",
+	       bic_class + 1, is_1ou_present, is_2ou_present);
 
 	if (is_2ou_present) {
-		tx_len = 1;
-		rx_len = 1;
-		memset(data, 0, I2C_DATA_SIZE);
-		data[0] = CPLD_2OU_EXPANSION_CARD_REG;
-		i2c_msg =
-			construct_i2c_message(i2c_bus_to_index[1], CPLD_ADDR, tx_len, data, rx_len);
+		i2c_msg.data[0] = 0x6;
 		if (!i2c_master_read(&i2c_msg, retry)) {
-			if (i2c_msg.data[0] == type_2ou_dpv2) {
+			if ((i2c_msg.data[0] == type_2ou_dpv2)) {
 				card_type_2ou = type_2ou_dpv2;
 			} else if (i2c_msg.data[0] == type_2ou_spe) {
 				card_type_2ou = type_2ou_spe;
@@ -555,13 +477,12 @@ void set_sys_config()
 			}
 		}
 	}
-	SAFE_FREE(data);
 }
 
 void set_post_thread()
 {
-	if (CPU_power_good() == true) {
-		init_snoop_thread();
+	if (get_DC_status() == 1 && get_post_status() == 0) {
+		snoop_start_thread();
 		init_send_postcode_thread();
 	}
 }
@@ -620,7 +541,7 @@ void disable_PRDY_interrupt()
 	gpio_interrupt_conf(H_BMC_PRDY_BUF_N, GPIO_INT_DISABLE);
 }
 
-static void proc_fail_handler(struct k_work *work)
+static void proc_fail_handler(void *arug0, void *arug1, void *arug2)
 {
 	/* if have not received kcs and post code, add FRB3 event log. */
 	if ((get_kcs_ok() == 0) && (get_postcode_ok() == 0)) {
@@ -629,8 +550,8 @@ static void proc_fail_handler(struct k_work *work)
 
 		memset(&sel_msg, 0, sizeof(addsel_msg_t));
 
-		sel_msg.sensor_type = IPMI_SENSOR_TYPE_PROCESSOR;
-		sel_msg.sensor_number = SENSOR_NUM_PROC_FAIL;
+		sel_msg.snr_type = IPMI_SENSOR_TYPE_PROCESSOR;
+		sel_msg.snr_number = SENSOR_NUM_PROC_FAIL;
 		sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
 		sel_msg.evt_data1 = IPMI_EVENT_OFFSET_PROCESSOR_FRB3;
 		sel_msg.evt_data2 = 0xFF;
@@ -642,7 +563,7 @@ static void proc_fail_handler(struct k_work *work)
 	}
 }
 
-static void CatErr_handler(struct k_work *work)
+static void CatErr_handler(void *arug0, void *arug1, void *arug2)
 {
 	if ((gpio_get(RST_PLTRST_BUF_N) == 1) || (gpio_get(PWRGD_SYS_PWROK) == 1)) {
 		addsel_msg_t sel_msg;
@@ -650,8 +571,8 @@ static void CatErr_handler(struct k_work *work)
 
 		memset(&sel_msg, 0, sizeof(addsel_msg_t));
 
-		sel_msg.sensor_type = IPMI_SENSOR_TYPE_PROCESSOR;
-		sel_msg.sensor_number = SENSOR_NUM_CATERR;
+		sel_msg.snr_type = IPMI_SENSOR_TYPE_PROCESSOR;
+		sel_msg.snr_number = SENSOR_NUM_CATERR;
 		sel_msg.evt_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
 		/* MCERR: one pulse, IERR: keep low */
 		if (gpio_get(FM_CPU_RMCA_CATERR_LVT3_N) == 1) {

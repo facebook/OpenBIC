@@ -102,7 +102,7 @@ void snoop_read()
 	}
 }
 
-void init_snoop_thread()
+void snoop_start_thread()
 {
 	snoop_init();
 	snoop_read_num = 0;
@@ -115,7 +115,7 @@ void init_snoop_thread()
 	k_thread_name_set(&snoop_thread_handler, "snoop_thread");
 }
 
-void abort_snoop_thread()
+void snoop_abort_thread()
 {
 	if (snoop_tid != NULL && strcmp(k_thread_state_str(snoop_tid), "dead") != 0) {
 		k_thread_abort(snoop_tid);
@@ -190,7 +190,7 @@ void send_post_code_to_BMC()
 			}
 			send_postcode_start_position = send_postcode_end_position;
 		} else {
-			if (CPU_power_good() == false) {
+			if (get_post_status()) {
 				return;
 			}
 		}

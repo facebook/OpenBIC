@@ -92,7 +92,7 @@ void set_ME_restore()
 	me_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
 	if (me_msg == NULL) {
 		printk("ME restore msg alloc fail\n");
-		return;
+		return false;
 	}
 
 	me_msg->seq_source = 0xFF;
@@ -132,7 +132,7 @@ void BMC_reset_handler()
 	gpio_set(RST_BMC_R_N, GPIO_HIGH);
 }
 
-K_WORK_DELAYABLE_DEFINE(BMC_reset_work, BMC_reset_handler);
+K_DELAYED_WORK_DEFINE(BMC_reset_work, BMC_reset_handler);
 void submit_bmc_warm_reset()
 {
 	k_work_schedule(&BMC_reset_work, K_MSEC(1000));

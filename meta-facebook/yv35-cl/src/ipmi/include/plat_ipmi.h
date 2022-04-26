@@ -58,8 +58,8 @@ typedef struct CHASSIS_STATUS_STRUCT {
 } CHASSIS_STATUS;
 
 typedef struct addsel_msg_t {
-	uint8_t sensor_type;
-	uint8_t sensor_number;
+	uint8_t snr_type;
+	uint8_t snr_number;
 	uint8_t evt_type;
 	uint8_t evt_data1;
 	uint8_t evt_data2;

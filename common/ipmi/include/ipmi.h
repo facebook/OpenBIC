@@ -41,7 +41,7 @@ static inline void pack_ipmi_resp(struct ipmi_response *resp, ipmi_msg *ipmi_res
 }
 
 void ipmi_init(void);
-void IPMI_handler(void *arug0, void *arug1, void *arug2);
+ipmi_error IPMI_handler(void *arug0, void *arug1, void *arug2);
 
 // IPMI CHASSIS
 void pal_CHASSIS_GET_CHASSIS_STATUS(ipmi_msg *msg);
@@ -68,8 +68,6 @@ void pal_STORAGE_GET_SDR(ipmi_msg *msg);
 void pal_OEM_SENSOR_READ(ipmi_msg *msg);
 void pal_OEM_SET_SYSTEM_GUID(ipmi_msg *msg);
 void pal_OEM_GET_MB_INDEX(ipmi_msg *msg);
-void pal_OEM_SET_FAN_DUTY_MANUAL(ipmi_msg *msg);
-void pal_OEM_GET_SET_FAN_CTRL_MODE(ipmi_msg *msg);
 
 // IPMI OEM 1S
 void pal_OEM_1S_MSG_OUT(ipmi_msg *msg);
@@ -80,24 +78,17 @@ void pal_OEM_1S_SENSOR_POLL_EN(ipmi_msg *msg);
 void pal_OEM_1S_FW_UPDATE(ipmi_msg *msg);
 void pal_OEM_1S_GET_FW_VERSION(ipmi_msg *msg);
 void pal_OEM_1S_GET_POST_CODE(ipmi_msg *msg);
-void pal_OEM_1S_SET_VR_MONITOR_STATUS(ipmi_msg *msg);
-void pal_OEM_1S_GET_VR_MONITOR_STATUS(ipmi_msg *msg);
 void pal_OEM_1S_RESET_BMC(ipmi_msg *msg);
 void pal_OEM_1S_PECIaccess(ipmi_msg *msg);
 void pal_OEM_1S_ASD_INIT(ipmi_msg *msg);
 void pal_OEM_1S_GET_SET_GPIO(ipmi_msg *msg);
-void pal_OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg);
+void pal_OEM_1S_ACCURACY_SENSNR(ipmi_msg *msg);
 void pal_OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg);
 void pal_OEM_1S_SET_JTAG_TAP_STA(ipmi_msg *msg);
 void pal_OEM_1S_JTAG_DATA_SHIFT(ipmi_msg *msg);
 void pal_OEM_1S_GET_BIC_STATUS(ipmi_msg *msg);
 void pal_OEM_1S_RESET_BIC(ipmi_msg *msg);
 void pal_OEM_1S_12V_CYCLE_SLOT(ipmi_msg *msg);
-void pal_OEM_1S_READ_BIC_REGISTER(ipmi_msg *msg);
-void pal_OEM_1S_WRITE_BIC_REGISTER(ipmi_msg *msg);
-void pal_OEM_1S_SET_FAN_DUTY_AUTO(ipmi_msg *msg);
-void pal_OEM_1S_GET_FAN_DUTY(ipmi_msg *msg);
-void pal_OEM_1S_GET_FAN_RPM(ipmi_msg *msg);
 
 enum {
 	CC_SUCCESS = 0x00,
@@ -197,8 +188,6 @@ enum {
 	CMD_OEM_SENSOR_READ = 0xE2,
 	CMD_OEM_SET_SYSTEM_GUID = 0xEF,
 	CMD_OEM_GET_MB_INDEX = 0xF0,
-	CMD_OEM_SET_FAN_DUTY_MANUAL = 0xF1,
-	CMD_OEM_GET_SET_FAN_CTRL_MODE = 0xF2,
 };
 
 // OEM 1S Command Codes
@@ -214,28 +203,20 @@ enum {
 	CMD_OEM_1S_FW_UPDATE = 0x9,
 	CMD_OEM_1S_GET_FW_VERSION = 0xB,
 	CMD_OEM_1S_GET_POST_CODE = 0x12,
-	CMD_OEM_1S_SET_VR_MONITOR_STATUS = 0x14,
-	CMD_OEM_1S_GET_VR_MONITOR_STATUS = 0x15,
 	CMD_OEM_1S_RESET_BMC = 0x16,
 	CMD_OEM_1S_SET_JTAG_TAP_STA = 0x21,
 	CMD_OEM_1S_JTAG_DATA_SHIFT = 0x22,
-	CMD_OEM_1S_ACCURACY_SENSOR_READING = 0x23,
+	CMD_OEM_1S_ACCURACY_SENSNR = 0x23,
 	CMD_OEM_1S_ASD_INIT = 0x28,
 	CMD_OEM_1S_PECIaccess = 0x29,
 	CMD_OEM_1S_SENSOR_POLL_EN = 0x30,
 	CMD_OEM_1S_GET_BIC_STATUS = 0x31,
 	CMD_OEM_1S_RESET_BIC = 0x32,
 	CMD_OEM_1S_GET_SET_GPIO = 0x41,
-	CMD_OEM_1S_SET_FAN_DUTY_AUTO = 0x50,
-	CMD_OEM_1S_GET_FAN_DUTY = 0x51,
-	CMD_OEM_1S_GET_FAN_RPM = 0x52,
-
 	// Debug command
 	CMD_OEM_1S_I2C_DEV_SCAN = 0x60,
 
 	CMD_OEM_1S_12V_CYCLE_SLOT = 0x64,
-	CMD_OEM_1S_READ_BIC_REGISTER = 0x68,
-	CMD_OEM_1S_WRITE_BIC_REGISTER = 0x69
 };
 
 #endif

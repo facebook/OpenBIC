@@ -7,7 +7,6 @@
 #include "kcs.h"
 #include "pal.h"
 
-#ifdef CONFIG_IPMI_KCS_ASPEED
 struct k_thread kcs_polling;
 K_KERNEL_STACK_MEMBER(KCS_POLL_stack, KCS_POLL_stack_STACK_SIZE);
 
@@ -128,5 +127,3 @@ void kcs_init(void)
 			kcs_read, NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
 	k_thread_name_set(&kcs_polling, "kcs_polling");
 }
-
-#endif

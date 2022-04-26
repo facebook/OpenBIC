@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "fru.h"
 #include "plat_fru.h"
-#include <string.h>
 
 EEPROM_CFG fru_config[FRU_CFG_NUM];
 
@@ -28,7 +27,7 @@ uint8_t get_FRU_access(uint8_t FRUID)
 
 	ID_No = find_FRU_ID(FRUID);
 
-	if (ID_No == -1) { // FRU ID not found
+	if (!ID_No == -1) { // FRU ID not found
 		return 0xFF;
 	}
 

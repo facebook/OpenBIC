@@ -253,6 +253,8 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 	I2C_MSG *msg;
 	uint8_t ipmb_buffer_tx[IPMI_MSG_MAX_LENGTH + IPMB_RESP_HEADER_LENGTH], status = 0,
 									       retry = 5;
+	uint8_t *kcs_buff;
+
 	memcpy(&ipmb_cfg, (IPMB_config *)pvParameters, sizeof(IPMB_config));
 
 	while (1) {
@@ -402,10 +404,8 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 						printf("IPMB_TXTask: Bridging msg from reserve IFs\n");
 					} else if (current_msg_tx->buffer.InF_source == Self_IFs) {
 						printf("IPMB_TXTask: BIC sending command fail\n"); // Rain - Should record or notice command fail
-#ifdef CONFIG_IPMI_KCS_ASPEED
 					} else if (current_msg_tx->buffer.InF_source ==
 						   HOST_KCS_IFs) {
-						uint8_t *kcs_buff;
 						kcs_buff = malloc(KCS_buff_size * sizeof(uint8_t));
 						if (kcs_buff ==
 						    NULL) { // allocate fail, retry allocate
@@ -436,7 +436,6 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 						if (kcs_buff != NULL) {
 							free(kcs_buff);
 						}
-#endif
 					} else {
 						ipmb_error status;
 						current_msg_tx->buffer.data_len = 0;
@@ -495,6 +494,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 	struct IPMB_config ipmb_cfg;
 	struct ipmb_msg *msg = NULL;
 	uint8_t *ipmb_buffer_rx;
+	uint8_t *kcs_buff;
 	uint8_t rx_len;
 	static uint16_t i = 0;
 	int ret;
@@ -614,10 +614,9 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 									      [current_msg_rx->buffer
 										       .InF_target]],
 							&current_msg, K_NO_WAIT);
-#ifdef CONFIG_IPMI_KCS_ASPEED
 					} else if (current_msg_rx->buffer.InF_source ==
 						   HOST_KCS_IFs) {
-						uint8_t *kcs_buff;
+#ifdef CONFIG_IPMI_KCS_ASPEED
 						kcs_buff = malloc(KCS_buff_size * sizeof(uint8_t));
 						if (kcs_buff ==
 						    NULL) { // allocate fail, retry allocate
@@ -647,6 +646,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 							free(kcs_buff);
 						}
 #endif
+
 					} else if (current_msg_rx->buffer.InF_source ==
 						   ME_IPMB_IFs) {
 						ipmb_error status;
@@ -924,7 +924,7 @@ ipmb_error ipmb_read(ipmi_msg *msg, uint8_t index)
 	}
 
 	k_mutex_unlock(&mutex_read);
-	return ipmb_error_success;
+	return ipmi_error_success;
 }
 
 // run IPMI handler and notify command process status

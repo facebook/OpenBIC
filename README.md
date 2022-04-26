@@ -4,8 +4,7 @@ OpenBIC is an open software framework to build a complete firmware image for a B
 
 | Platform | Status | Description |
 |-------|--------|-------------|
-oby35-cl | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/yv35-cl.json) | Yosemite v3.5 Crater Lake Board
-oby35-bb | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/yv35-bb.json) | Yosemite v3.5 Baseboard
+Yosemite v3.5 | N/A | Yosemite Compute
 
 ## Contents
 
@@ -94,8 +93,6 @@ Clean build application and Zephyr code
 cd $zephyrproject/openbic.odm
 touch meta-facebook/yv35-cl/CMakeLists.txt
 west build -p auto -b ast1030_evb meta-facebook/yv35-cl/
-```
-
-## License
+```## License
 
 OpenBIC is [Apache 2.0 licensed](https://github.com/facebookincubator/OpenBIC/blob/main/LICENSE)

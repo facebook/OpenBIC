@@ -14,8 +14,8 @@ extern int snoop_read_num;
 void copy_snoop_read_buffer(uint8_t offset, int size_num, uint8_t *buffer, uint8_t copy_mode);
 bool get_postcode_ok();
 void reset_postcode_ok();
-void init_snoop_thread();
-void abort_snoop_thread();
+void snoop_start_thread();
+void snoop_abort_thread();
 void init_send_postcode_thread();
 
 #endif
