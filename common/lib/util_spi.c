@@ -11,6 +11,7 @@
 #include <sys/util.h>
 #include "cmsis_os2.h"
 #include "util_spi.h"
+#include "util_sys.h"
 
 static char *flash_device[6] = { "fmc_cs0",  "fmc_cs1",	 "spi1_cs0",
 				 "spi1_cs1", "spi2_cs0", "spi2_cs1" };
@@ -162,8 +163,8 @@ end:
 	return ret;
 }
 
-uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool update_en,
-		  uint8_t spi_bus)
+uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sector_end,
+		  uint8_t flash_position)
 {
 	static bool is_init = 0;
 	static uint8_t *txbuf = NULL;
@@ -173,68 +174,68 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool upda
 
 	if (!is_init) {
 		if ((offset & 0x0000) != 0) {
-			return fwupdate_error_offset;
+			return FWUPDATE_ERROR_OFFSET;
 		}
 
 		if (txbuf != NULL) {
 			free(txbuf);
 			txbuf = NULL;
 		}
-		txbuf = (uint8_t *)malloc(sector_sz_64k);
+		txbuf = (uint8_t *)malloc(SECTOR_SZ_64K);
 		if (txbuf == NULL) { // Retry alloc
 			k_msleep(100);
-			txbuf = (uint8_t *)malloc(sector_sz_64k);
+			txbuf = (uint8_t *)malloc(SECTOR_SZ_64K);
 		}
 		if (txbuf == NULL) {
-			printk("spi index%x update buffer alloc fail\n", spi_bus);
-			return fwupdate_out_of_heap;
+			printk("spi index%x update buffer alloc fail\n", flash_position);
+			return FWUPDATE_OUT_OF_HEAP;
 		}
 		is_init = 1;
 		buf_offset = 0;
 		k_msleep(10);
 	}
 
-	if ((buf_offset + msg_len) > sector_sz_64k) {
-		printk("spi bus%x recv data %d over sector size %d\n", spi_bus,
-		       buf_offset + msg_len, sector_sz_64k);
+	if ((buf_offset + msg_len) > SECTOR_SZ_64K) {
+		printk("spi bus%x recv data %d over sector size %d\n", flash_position,
+		       buf_offset + msg_len, SECTOR_SZ_64K);
 		free(txbuf);
 		txbuf = NULL;
 		k_msleep(10);
 		is_init = 0;
-		return fwupdate_over_length;
+		return FWUPDATE_OVER_LENGTH;
 	}
 
-	if ((offset % sector_sz_64k) != buf_offset) {
-		printk("spi bus%x recorded offset 0x%x but updating 0x%x\n", spi_bus, buf_offset,
-		       offset % sector_sz_64k);
+	if ((offset % SECTOR_SZ_64K) != buf_offset) {
+		printk("spi bus%x recorded offset 0x%x but updating 0x%x\n", flash_position,
+		       buf_offset, offset % SECTOR_SZ_64K);
 		free(txbuf);
 		txbuf = NULL;
 		k_msleep(10);
 		is_init = 0;
-		return fwupdate_repeated_updated;
+		return FWUPDATE_REPEATED_UPDATED;
 	}
 
 	if (FW_UPDATE_DEBUG) {
-		printk("spi bus%x update offset %x %x, msg_len %d, update_en %d, msg_buf: %2x %2x %2x %2x\n",
-		       spi_bus, offset, buf_offset, msg_len, update_en, msg_buf[0], msg_buf[1],
-		       msg_buf[2], msg_buf[3]);
+		printk("spi bus%x update offset %x %x, msg_len %d, sector_end %d, msg_buf: %2x %2x %2x %2x\n",
+		       flash_position, offset, buf_offset, msg_len, sector_end, msg_buf[0],
+		       msg_buf[1], msg_buf[2], msg_buf[3]);
 	}
 
 	memcpy(&txbuf[buf_offset], msg_buf, msg_len);
 	buf_offset += msg_len;
 
-	if ((buf_offset == sector_sz_64k) ||
-	    update_en) { // Update fmc while collect 64k bytes data or BMC signal last image package with target | 0x80
-		flash_dev = device_get_binding(flash_device[spi_bus]);
+	// Update fmc while collect 64k bytes data or BMC signal last image package with target | 0x80
+	if ((buf_offset == SECTOR_SZ_64K) || sector_end) {
+		flash_dev = device_get_binding(flash_device[flash_position]);
 		uint8_t sector = 16;
 		uint32_t txbuf_offset;
 		uint32_t update_offset;
 
 		for (int i = 0; i < sector; i++) {
-			txbuf_offset = sector_sz_4k * i;
-			update_offset = (offset / sector_sz_64k) * sector_sz_64k + txbuf_offset;
+			txbuf_offset = SECTOR_SZ_4K * i;
+			update_offset = (offset / SECTOR_SZ_64K) * SECTOR_SZ_64K + txbuf_offset;
 			ret = do_update(flash_dev, update_offset, &txbuf[txbuf_offset],
-					sector_sz_4k);
+					SECTOR_SZ_4K);
 			if (ret) {
 				printk("SPI update fail status: %x\n", ret);
 				break;
@@ -249,16 +250,22 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool upda
 		is_init = 0;
 
 		if (FW_UPDATE_DEBUG) {
-			printk("***update %x, offset %x, sector_sz_16k %x\n",
-			       (offset / sector_sz_16k) * sector_sz_16k, offset, sector_sz_16k);
+			printk("***update %x, offset %x, SECTOR_SZ_16K %x\n",
+			       (offset / SECTOR_SZ_16K) * SECTOR_SZ_16K, offset, SECTOR_SZ_16K);
 		}
 
-		if (update_en && spi_bus == (devspi_fmc_cs0)) { // reboot bic itself after fw update
+		if (sector_end &&
+		    (flash_position == DEVSPI_FMC_CS0)) { // reboot bic itself after fw update
 			submit_bic_warm_reset();
 		}
 
 		return ret;
 	}
 
-	return fwupdate_success;
+	return FWUPDATE_SUCCESS;
+}
+
+__weak int pal_get_bios_flash_position()
+{
+	return -1;
 }

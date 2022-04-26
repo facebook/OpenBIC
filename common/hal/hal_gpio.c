@@ -7,11 +7,11 @@
 #define STACK_SIZE 1024
 
 static const struct device *dev_gpio[GPIO_GROUP_NUM];
-static struct gpio_callback callbacks[total_gpio_num];
+static struct gpio_callback callbacks[TOTAL_GPIO_NUM];
 static struct k_work_q gpio_work_queue;
 static K_THREAD_STACK_DEFINE(gpio_work_stack, STACK_SIZE);
 
-struct k_work gpio_work[total_gpio_num];
+struct k_work gpio_work[TOTAL_GPIO_NUM];
 
 uint8_t gpio_ind_to_num_table[200];
 uint8_t gpio_ind_to_num_table_cnt;
@@ -26,18 +26,18 @@ void irq_callback(const struct device *dev, struct gpio_callback *cb, uint32_t p
 {
 	uint8_t group, index, gpio_num;
 
-	if (dev == dev_gpio[gpio_a_d]) {
-		group = gpio_a_d;
-	} else if (dev == dev_gpio[gpio_e_h]) {
-		group = gpio_e_h;
-	} else if (dev == dev_gpio[gpio_i_l]) {
-		group = gpio_i_l;
-	} else if (dev == dev_gpio[gpio_m_p]) {
-		group = gpio_m_p;
-	} else if (dev == dev_gpio[gpio_q_t]) {
-		group = gpio_q_t;
-	} else if (dev == dev_gpio[gpio_u_v]) {
-		group = gpio_u_v;
+	if (dev == dev_gpio[GPIO_A_D]) {
+		group = GPIO_A_D;
+	} else if (dev == dev_gpio[GPIO_E_H]) {
+		group = GPIO_E_H;
+	} else if (dev == dev_gpio[GPIO_I_L]) {
+		group = GPIO_I_L;
+	} else if (dev == dev_gpio[GPIO_M_P]) {
+		group = GPIO_M_P;
+	} else if (dev == dev_gpio[GPIO_Q_T]) {
+		group = GPIO_Q_T;
+	} else if (dev == dev_gpio[GPIO_U_V]) {
+		group = GPIO_U_V;
 	} else {
 		printk("invalid dev group for isr cb\n");
 		return;
@@ -105,7 +105,7 @@ uint8_t gpio_conf(uint8_t gpio_num, int dir)
 
 int gpio_get(uint8_t gpio_num)
 {
-	if (gpio_num >= total_gpio_num) {
+	if (gpio_num >= TOTAL_GPIO_NUM) {
 		printf("getting invalid gpio num %d", gpio_num);
 		return false;
 	}
@@ -116,7 +116,7 @@ int gpio_get(uint8_t gpio_num)
 
 int gpio_set(uint8_t gpio_num, uint8_t status)
 {
-	if (gpio_num >= total_gpio_num) {
+	if (gpio_num >= TOTAL_GPIO_NUM) {
 		printf("setting invalid gpio num %d", gpio_num);
 		return false;
 	}
@@ -139,7 +139,7 @@ int gpio_set(uint8_t gpio_num, uint8_t status)
   uint8_t i, j, status;
   char direction[6];
   printf("Number: Group Status Direction Name\n");
-  for(i = 0; i < total_gpio_num; i++) {
+  for(i = 0; i < TOTAL_GPIO_NUM; i++) {
     if (gpio_cfg[i].is_init == ENABLE) {
       printf("%02d:     %c%d    %d      %s    %s\n", j++, ((i/8)+65), (i%8), gpio[0].get(&gpio[0], i), gpio[0].get_direction(&gpio[0], i) == 1 ? "Output" : "Input ", gpio_name[i]);
     }
@@ -152,7 +152,7 @@ int gpio_set(uint8_t gpio_num, uint8_t status)
 void gpio_index_to_num(void)
 {
 	uint8_t i = 0;
-	for (uint8_t j = 0; j < total_gpio_num; j++) {
+	for (uint8_t j = 0; j < TOTAL_GPIO_NUM; j++) {
 		if (gpio_cfg[j].is_init == ENABLE) {
 			gpio_ind_to_num_table[i++] = gpio_cfg[j].number;
 		}
@@ -163,22 +163,22 @@ void gpio_index_to_num(void)
 void init_gpio_dev(void)
 {
 #ifdef DEV_GPIO_A_D
-	dev_gpio[gpio_a_d] = device_get_binding("GPIO0_A_D");
+	dev_gpio[GPIO_A_D] = device_get_binding("GPIO0_A_D");
 #endif
 #ifdef DEV_GPIO_E_H
-	dev_gpio[gpio_e_h] = device_get_binding("GPIO0_E_H");
+	dev_gpio[GPIO_E_H] = device_get_binding("GPIO0_E_H");
 #endif
 #ifdef DEV_GPIO_I_L
-	dev_gpio[gpio_i_l] = device_get_binding("GPIO0_I_L");
+	dev_gpio[GPIO_I_L] = device_get_binding("GPIO0_I_L");
 #endif
 #ifdef DEV_GPIO_M_P
-	dev_gpio[gpio_m_p] = device_get_binding("GPIO0_M_P");
+	dev_gpio[GPIO_M_P] = device_get_binding("GPIO0_M_P");
 #endif
 #ifdef DEV_GPIO_Q_T
-	dev_gpio[gpio_q_t] = device_get_binding("GPIO0_Q_T");
+	dev_gpio[GPIO_Q_T] = device_get_binding("GPIO0_Q_T");
 #endif
 #ifdef DEV_GPIO_U_V
-	dev_gpio[gpio_u_v] = device_get_binding("GPIO0_U_V");
+	dev_gpio[GPIO_U_V] = device_get_binding("GPIO0_U_V");
 #endif
 }
 
@@ -198,12 +198,12 @@ bool gpio_init(void)
 			   K_PRIO_PREEMPT(CONFIG_MAIN_THREAD_PRIORITY), NULL);
 	k_thread_name_set(&gpio_work_queue.thread, "gpio_workq");
 
-	for (i = 0; i < total_gpio_num; i++) {
+	for (i = 0; i < TOTAL_GPIO_NUM; i++) {
 		if (gpio_cfg[i].is_init == ENABLE) {
 			if (gpio_cfg[i].is_latch == ENABLE && !get_boot_source_ACon()) {
 				continue;
 			}
-			if (gpio_cfg[i].chip == chip_gpio) {
+			if (gpio_cfg[i].chip == CHIP_GPIO) {
 				gpio_set(gpio_cfg[i].number, gpio_cfg[i].status);
 				if (gpio_cfg[i].property ==
 				    PUSH_PULL) { // OD config is set during status set
@@ -223,5 +223,5 @@ bool gpio_init(void)
 		}
 	}
 
-	return 1;
+	return true;
 }

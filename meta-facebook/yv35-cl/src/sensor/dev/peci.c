@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "sensor.h"
-#include "sensor_def.h"
+#include "plat_sensor.h"
 #include "pal.h"
 #include <drivers/peci.h>
 #include "hal_peci.h"

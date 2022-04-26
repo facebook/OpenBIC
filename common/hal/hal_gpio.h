@@ -28,12 +28,11 @@
 #define DEV_GPIO_U_V
 #endif
 
-#define dedicate_gpio_num 9
-#define total_gpio_num 168
+#define TOTAL_GPIO_NUM 168
 #define ENABLE 1
 #define DISABLE 0
-#define chip_gpio 0
-#define chip_sgpio 1
+#define CHIP_GPIO 0
+#define CHIP_SGPIO 1
 #define GPIO_LOW 0
 #define GPIO_HIGH 1
 #define GPIO_GROUP_NUM 6
@@ -58,12 +57,12 @@ typedef struct _GPIO_CFG_ {
 extern GPIO_CFG gpio_cfg[];
 
 enum {
-	gpio_a_d,
-	gpio_e_h,
-	gpio_i_l,
-	gpio_m_p,
-	gpio_q_t,
-	gpio_u_v,
+	GPIO_A_D,
+	GPIO_E_H,
+	GPIO_I_L,
+	GPIO_M_P,
+	GPIO_Q_T,
+	GPIO_U_V,
 };
 
 extern const char *const gpio_name[];
@@ -71,11 +70,20 @@ extern const char *const gpio_name[];
 extern uint8_t gpio_ind_to_num_table[];
 extern uint8_t gpio_ind_to_num_table_cnt;
 
+typedef struct _SCU_CFG_ {
+	int reg;
+	int value;
+} SCU_CFG;
+
+extern SCU_CFG scu_cfg[];
+
 //void gpio_int_cb_test(void);
 void gpio_show(void);
 int gpio_get(uint8_t);
 int gpio_set(uint8_t, uint8_t);
 bool gpio_init(void);
 int gpio_interrupt_conf(uint8_t, gpio_flags_t);
+uint8_t gpio_conf(uint8_t gpio_num, int dir);
+void scu_init(void);
 
 #endif

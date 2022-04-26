@@ -1,7 +1,7 @@
 #ifndef GUID_H
 #define GUID_H
 
-#include "hal_eeprom.h"
+#include "eeprom.h"
 
 enum {
 	GUID_WRITE_SUCCESS,

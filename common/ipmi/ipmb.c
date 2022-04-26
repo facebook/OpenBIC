@@ -406,11 +406,11 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 						printf("IPMB_TXTask: BIC sending command fail\n"); // Rain - Should record or notice command fail
 					} else if (current_msg_tx->buffer.InF_source ==
 						   HOST_KCS_IFs) {
-						kcs_buff = malloc(KCS_buff_size * sizeof(uint8_t));
+						kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
 						if (kcs_buff ==
 						    NULL) { // allocate fail, retry allocate
 							k_msleep(10);
-							kcs_buff = malloc(KCS_buff_size *
+							kcs_buff = malloc(KCS_BUFF_SIZE *
 									  sizeof(uint8_t));
 							if (kcs_buff == NULL) {
 								printk("IPMB_TXTask: Fail to malloc for kcs_buff\n");
@@ -617,11 +617,11 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 					} else if (current_msg_rx->buffer.InF_source ==
 						   HOST_KCS_IFs) {
 #ifdef CONFIG_IPMI_KCS_ASPEED
-						kcs_buff = malloc(KCS_buff_size * sizeof(uint8_t));
+						kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
 						if (kcs_buff ==
 						    NULL) { // allocate fail, retry allocate
 							k_msleep(10);
-							kcs_buff = malloc(KCS_buff_size *
+							kcs_buff = malloc(KCS_BUFF_SIZE *
 									  sizeof(uint8_t));
 							if (kcs_buff == NULL) {
 								printk("IPMB_RXTask: Fail to malloc for kcs_buff\n");
@@ -701,10 +701,10 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 						memset(bridge_msg, 0, sizeof(ipmi_msg));
 
 						bridge_msg->data[0] =
-							WW_IANA_ID &
+							IANA_ID &
 							0xFF; // Move target response to bridge response data
-						bridge_msg->data[1] = (WW_IANA_ID >> 8) & 0xFF;
-						bridge_msg->data[2] = (WW_IANA_ID >> 16) & 0xFF;
+						bridge_msg->data[1] = (IANA_ID >> 8) & 0xFF;
+						bridge_msg->data[2] = (IANA_ID >> 16) & 0xFF;
 						bridge_msg->data[3] =
 							IPMB_config_table[ipmb_cfg.index]
 								.Inf_source; // return response source as request target
