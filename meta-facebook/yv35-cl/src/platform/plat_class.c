@@ -18,6 +18,7 @@
 static uint8_t system_class = SYS_CLASS_1;
 static bool is_1ou_present = false;
 static bool is_2ou_present = false;
+static uint8_t __attribute__((unused)) card_type_1ou = 0;
 static uint8_t card_type_2ou = TYPE_UNKNOWN;
 static uint8_t board_revision = 0x0F;
 
