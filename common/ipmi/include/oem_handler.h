@@ -9,6 +9,11 @@ void OEM_NM_SENSOR_READ(ipmi_msg *msg);
 void OEM_SET_SYSTEM_GUID(ipmi_msg *msg);
 #endif
 
+#ifdef ENABLE_FAN
+void OEM_SET_FAN_DUTY_MANUAL(ipmi_msg *msg);
+void OEM_GET_SET_FAN_CTRL_MODE(ipmi_msg *msg);
+#endif
+
 void IPMI_OEM_handler(ipmi_msg *msg);
 
 #endif
