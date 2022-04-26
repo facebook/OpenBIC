@@ -232,7 +232,6 @@ __weak void STORAGE_ADD_SEL(ipmi_msg *msg)
 
 	ipmb_error status;
 	ipmi_msg *add_sel_msg;
-	int i = 0;
 
 	add_sel_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
 	if (add_sel_msg == NULL) {
