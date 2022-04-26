@@ -37,6 +37,7 @@
 #define GPIO_HIGH 1
 #define GPIO_GROUP_NUM 6
 #define GPIO_GROUP_SIZE 32
+#define GPIO_STACK_SIZE 3072
 
 #define OPEN_DRAIN 0
 #define PUSH_PULL 1
