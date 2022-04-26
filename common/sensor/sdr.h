@@ -444,8 +444,8 @@ extern const int negative_ten_power[16];
 static inline uint8_t round_add(uint8_t sensor_num, int val)
 {
 	return (SDR_R(sensor_num) > 0) ?
-			     (((negative_ten_power[((SDR_R(sensor_num) + 1) & 0xF)] * val) % 10) > 5 ?
-				      1 :
+		       (((negative_ten_power[((SDR_R(sensor_num) + 1) & 0xF)] * val) % 10) > 5 ?
+				1 :
 				      0) :
 			     0;
 }

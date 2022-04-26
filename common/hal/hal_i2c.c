@@ -139,6 +139,11 @@ void i2c_scan(uint8_t bus, uint8_t *target_addr, uint8_t *target_addr_len)
 	uint8_t first = 0x04, last = 0x77;
 	*target_addr_len = 0;
 
+	if (check_i2c_bus_valid(bus) < 0) {
+		printf("i2c bus %d is invalid\n", bus);
+		return;
+	}
+
 	for (uint8_t i = 0; i <= last; i += 16) {
 		for (uint8_t j = 0; j < 16; j++) {
 			if (i + j < first || i + j > last) {
@@ -224,4 +229,12 @@ void util_init_I2C(void)
 	if (status)
 		printf("i2c9 mutex init fail\n");
 #endif
+}
+
+int check_i2c_bus_valid(uint8_t bus)
+{
+	if (dev_i2c[bus] == NULL) {
+		return -1;
+	}
+	return 0;
 }
