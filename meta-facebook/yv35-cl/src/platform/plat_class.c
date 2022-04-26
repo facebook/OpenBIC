@@ -8,6 +8,7 @@
 #include "hal_i2c.h"
 #include "libutil.h"
 #include "plat_gpio.h"
+#include "plat_i2c.h"
 
 #define CPLD_ADDR 0x21 // 7-bit address
 #define CPLD_CLASS_TYPE_REG 0x05
@@ -109,7 +110,7 @@ void init_platform_config()
 	rx_len = 1;
 	memset(data, 0, I2C_DATA_SIZE);
 	data[0] = CPLD_CLASS_TYPE_REG;
-	i2c_msg = construct_i2c_message(i2c_bus_to_index[1], CPLD_ADDR, tx_len, data, rx_len);
+	i2c_msg = construct_i2c_message(I2C_BUS1, CPLD_ADDR, tx_len, data, rx_len);
 	if (!i2c_master_read(&i2c_msg, retry)) {
 		class_type = i2c_msg.data[0];
 		is_1ou_present = (class_type & 0x4 ? false : true);
@@ -123,7 +124,7 @@ void init_platform_config()
 	memset(data, 0, I2C_DATA_SIZE);
 	data[0] = CPLD_CLASS_TYPE_REG;
 	data[1] = (((system_class - 1) << 4) & 0x10) | class_type;
-	i2c_msg = construct_i2c_message(i2c_bus_to_index[1], CPLD_ADDR, tx_len, data, rx_len);
+	i2c_msg = construct_i2c_message(I2C_BUS1, CPLD_ADDR, tx_len, data, rx_len);
 	if (i2c_master_write(&i2c_msg, retry)) {
 		printf("Failed to set class type to CPLD)\n");
 	}
@@ -137,7 +138,7 @@ void init_platform_config()
 	rx_len = 1;
 	memset(data, 0, I2C_DATA_SIZE);
 	data[0] = CPLD_BOARD_REV_ID_REG;
-	i2c_msg = construct_i2c_message(i2c_bus_to_index[1], CPLD_ADDR, tx_len, data, rx_len);
+	i2c_msg = construct_i2c_message(I2C_BUS1, CPLD_ADDR, tx_len, data, rx_len);
 	int ret = i2c_master_read(&i2c_msg, retry);
 	if (ret == 0) {
 		board_revision = i2c_msg.data[0] & 0xF;
@@ -153,7 +154,7 @@ void init_platform_config()
 		memset(data, 0, I2C_DATA_SIZE);
 		data[0] = CPLD_2OU_EXPANSION_CARD_REG;
 		i2c_msg =
-			construct_i2c_message(i2c_bus_to_index[1], CPLD_ADDR, tx_len, data, rx_len);
+			construct_i2c_message(I2C_BUS1, CPLD_ADDR, tx_len, data, rx_len);
 		if (!i2c_master_read(&i2c_msg, retry)) {
 			switch (i2c_msg.data[0]) {
 			case TYPE_2OU_DPV2:
