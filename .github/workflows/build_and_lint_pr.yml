@@ -1,20 +1,32 @@
-name: build_and_analyze 
-on: pull_request
+name: Build and Analyze 
+
+
+on:
+  pull_request:   # Kick off this on every PR
+  workflow_call:  # We may want to run this workflow from other places, like nightly builds
+    inputs:
+      nightly:
+        required: false 
+        type: boolean 
+    secrets:
+      GIST_SECRET:
+        required: true
+
 jobs:
   Build-Platforms:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # This job matrix will generate a seperate job for all platforms listed.
+        # This job matrix will generate a separate job for all platforms listed.
         platform: [yv35-cl, yv35-bb]
-        # Need to set this to false otherwise it will cancle all platform builds if one fails.
+        # Need to set this to false otherwise it will cancel all platform builds if one fails.
       fail-fast: false
 
     steps:
-
     - uses: actions/checkout@v2
       with:
         path: ${{ github.event.repository.name }} 
+    
     - name: Install Dependencies
       run: |
         sudo apt-get update
@@ -74,17 +86,52 @@ jobs:
 
     - name: Update West Project
       run: |
-        cd ${{ github.event.repository.name }} 
+        cd OpenBIC 
         west update
   
     - name: Build Platform
+      id: build
+      continue-on-error: true
       run: |
         cd ${{ github.event.repository.name }} 
         touch meta-facebook/${{ matrix.platform }}/CMakeLists.txt
         west build -p auto -b ast1030_evb meta-facebook/${{ matrix.platform }}/
 
+    - name: Get Build Status
+      env:
+        OUTCOME: ${{ steps.build.outcome }}
+      run: |
+        ret="$OUTCOME"
+        echo "$ret"
+        if [ "$ret" = "success" ]; then
+          echo "badge_message=PASS" >> $GITHUB_ENV
+          echo "badge_color=green" >> $GITHUB_ENV
+          echo "build_return_code=0" >> $GITHUB_ENV
+        else
+          echo "badge_message=FAIL" >> $GITHUB_ENV
+          echo "badge_color=red" >> $GITHUB_ENV
+          echo "build_return_code=1" >> $GITHUB_ENV
+        fi
+
+    - name: Update Build Badges
+      if: ${{ inputs.nightly == true }}
+      uses: schneegans/dynamic-badges-action@v1.1.0
+      with:
+        auth: ${{ secrets.GIST_SECRET }}
+        gistID: 62fb115c4fa43a02acad226534e10932 
+        filename: ${{ matrix.platform }}.json 
+        label: Build
+        message: ${{ env.badge_message }}
+        color: ${{ env.badge_color }}
+
+    - name: Check Build Failure
+      if: ${{ env.build_return_code != '0' }} 
+      run : |
+          exit 1
+
   run-cppcheck:
     runs-on: ubuntu-latest
+    if: ${{ inputs.nightly != true }}
     steps:
 
     - name: Get PR File List 
@@ -100,7 +147,7 @@ jobs:
         CPP_FILE_LIST="/tmp/cppcheck_file_list.log"
         
         # Only keep the source files to check or CPPCheck gets confused.
-        sed '/\(c$\|cpp$\|c$\|cc$\|cu$\|cxx$\|h$\|hh$\|hpp$\|hxx$\|tcc$\)/!d' git_diff.log > $CPP_FILE_LIST
+        sed '/\(\.c$\|\.cpp$\|\.c$\|\.cc$\|\.cu$\|\.cxx$\|\.h$\|\.hh$\|\.hpp$\|\.hxx$\|\.tcc$\)/!d' git_diff.log > $CPP_FILE_LIST
 
         if [ -s $CPP_FILE_LIST ]; then
           echo "C/C++ source files kept:"
@@ -131,8 +178,8 @@ jobs:
       shell: bash
       run: |
         # These files specify the config for cppcheck and a list of errors to suppress
-        CPPCHECK_CONFIG=.circleci/lint/cppcheck/cppcheck.cfg
-        CPPCHECK_SUPPRESSED=.circleci/lint/cppcheck/cppcheck-suppressions.txt
+        CPPCHECK_CONFIG=scripts/linters/cppcheck/cppcheck.cfg
+        CPPCHECK_SUPPRESSED=scripts/linters/cppcheck/cppcheck-suppressions.txt
 
         echo "Files to check:"
         cat /tmp/cppcheck_file_list.log
@@ -140,8 +187,8 @@ jobs:
         options=( "-j2"
           "--inconclusive"
           "--enable=performance,style,portability,information"
-          "--library=.circleci/lint/cppcheck/cppcheck.cfg"
-          "--suppressions-list=.circleci/lint/cppcheck/cppcheck-suppressions.txt"
+          "--library=scripts/linters/cppcheck/cppcheck.cfg"
+          "--suppressions-list=scripts/linters/cppcheck/cppcheck-suppressions.txt"
           "--file-list=/tmp/cppcheck_file_list.log"
           "--template={file}:{line}:{column}:{message}"
           "--output-file=/tmp/cppcheck.log"
@@ -171,6 +218,7 @@ jobs:
 
   run-clang-format:
     runs-on: ubuntu-latest
+    if: ${{ inputs.nightly != true }}
     steps:
       
     - uses: actions/checkout@v2
@@ -189,7 +237,7 @@ jobs:
         CLANG_FORMAT_FILE_LIST="/tmp/clang_format_file_list.log"
         
         # Only keep the source files to check or clang-format starts checking everything.
-        sed '/\(c$\|cpp$\|c$\|cc$\|cu$\|cxx$\|h$\|hh$\|hpp$\|hxx$\|tcc$\)/!d' /tmp/change_set.log > $CLANG_FORMAT_FILE_LIST
+        sed '/\(\.c$\|\.cpp$\|\.c$\|\.cc$\|\.cu$\|\.cxx$\|\.h$\|\.hh$\|\.hpp$\|\.hxx$\|\.tcc$\)/!d' /tmp/change_set.log > $CLANG_FORMAT_FILE_LIST
 
         if [ -s $CLANG_FORMAT_FILE_LIST ]; then
           echo "C/C++ source files kept for clang-format:"
@@ -198,6 +246,7 @@ jobs:
         
         if [ -s $CLANG_FORMAT_FILE_LIST ]; then
           echo "contains_c_source=true" >> $GITHUB_ENV
+          echo "contains_clang_errors=false" >> $GITHUB_ENV
         else
           echo "contains_c_source=false" >> $GITHUB_ENV
         fi
@@ -225,44 +274,27 @@ jobs:
          
           # Clang format outputs to stderr... why do you do this clang-format 
           if ! clang-format "${options[@]}" $FILE_PATH &> /dev/null ; then
-            echo $FILE_PATH "has clang-format errors!"
+            echo -e "\u001b[31;1m$FILE_PATH has clang-format errors!\u001b[0m"
             echo $FILE_PATH >> /tmp/clang-format.log
+            echo "contains_clang_errors=true" >> $GITHUB_ENV
           fi
 
         done
-  
-    - uses: actions/upload-artifact@master
-      if: env.contains_c_source == 'true'
-      name: Upload clang-format error log
-      with:
-        name: clang-format-output
-        path: /tmp/clang-format.log
-
+ 
     - name: Check for clang-format output
-      if: env.contains_c_source == 'true'
+      if: env.contains_c_source == 'true' && env.contains_clang_errors == 'true'
       run : |
         if [ -s /tmp/clang-format.log ]; then
           exit 1
         fi
 
   Aggregate-Lint-Output:
-    permissions:
-      actions: read
-      checks: read
-      contents: read
-      deployments: read
-      issues: read
-      packages: read
-      pull-requests: write
-      repository-projects: read
-      security-events: read
-      statuses: read
-
     needs: [run-cppcheck, run-clang-format]
     if: |
         always() && 
         (needs.run-cppcheck.result == 'failure' || 
-         needs.run-clang-format.result == 'failure')
+         needs.run-clang-format.result == 'failure') &&
+        ${{ inputs.nightly != true }}
     runs-on: ubuntu-latest
     steps:
       
@@ -277,23 +309,6 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         path: /tmp/artifacts
-
-    - name: Load comment variable
-      id: load-clang-env-variable
-      run: echo "::set-output name=clang-format-comment::$(cat /tmp/artifacts/clang-format-output/clang-format.log)"
-
-    - uses: actions/github-script@v6
-      if: needs.run-clang-format.result == 'failure'
-      name: Comment on clang-format
-      with:
-        github-token: ${{secrets.GITHUB_TOKEN}}
-        script: |
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: "These files have clang-format errors:\n ${{ steps.load-clang-env-variable.outputs.clang-format-comment}}\n\n You can fix these errors by running \"clang-format --style=file -i $file\" on the effected files"
-          })
 
     - name: Run reviewdog
       env:
