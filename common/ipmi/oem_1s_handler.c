@@ -48,6 +48,20 @@ __weak void OEM_1S_MSG_OUT(ipmi_msg *msg)
 
 	target_IF = msg->data[0];
 
+	if (target_IF == PEER_BMC_IPMB) {
+		if (msg->InF_source == SLOT1_BIC) {
+			target_IF = msg->data[0] = SLOT3_BIC;
+		} else if (msg->InF_source == SLOT3_BIC) {
+			target_IF = msg->data[0] = SLOT1_BIC;
+		} else {
+			msg->completion_code = CC_INVALID_DATA_FIELD;
+		}
+
+		if (msg->data[1] == NETFN_STORAGE_REQ) {
+			msg->data[1] = msg->data[1] << 2;
+		}
+	}
+
 	// Bridge to invalid or disabled interface
 	if ((IPMB_config_table[IPMB_inf_index_map[target_IF]].interface == RESERVED_IF) ||
 	    (IPMB_config_table[IPMB_inf_index_map[target_IF]].enable_status == DISABLE)) {
