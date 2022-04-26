@@ -398,7 +398,7 @@ typedef struct _SDR_Full_sensor_ {
 	uint8_t reserved1;
 	uint8_t OEM;
 	uint8_t ID_len;
-	uint8_t ID_str[16];
+	uint8_t ID_str[29];
 } SDR_Full_sensor;
 
 typedef struct _SDR_INFO_ {
