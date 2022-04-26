@@ -16,7 +16,7 @@ static bool peci_get_power(uint8_t sensor_num, int *reading)
 {
 	snr_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 	uint8_t cmd = PECI_RD_PKG_CFG0_CMD;
-	uint8_t *read_buf = malloc(2 * PECI_READ_LEN * sizeof(uint8_t));
+	uint8_t *read_buf = calloc(sizeof(uint8_t), 2 * PECI_READ_LEN);
 	uint8_t index[2] = { 0x03, 0x1F };
 	uint16_t param[2] = { 0x00FF, 0x0000 };
 	uint8_t ret;
@@ -29,20 +29,17 @@ static bool peci_get_power(uint8_t sensor_num, int *reading)
 	}
 
 	uint8_t *complete_code = &read_buf[0];
-	int retry_count = PECI_RETRY_MAX;
-	while (1) {
+	for (int retry_count = PECI_RETRY_MAX; retry_count > 0; --retry_count) {
 		ret = peci_read(cmd, cfg->port, index[0], param[0], PECI_READ_LEN, read_buf);
 		if (ret == 0) {
 			if (*complete_code == PECI_CC_RSP_SUCCESS) {
 				break;
 			}
-		} else if (--retry_count) { // wait for 10ms before next retry
+		} else { // wait for 10ms before next retry
 			k_msleep(10);
-		} else { // all retries failed exit the loop
-			break;
 		}
 	}
-	if (retry_count == 0) {
+	if (*complete_code != PECI_CC_RSP_SUCCESS) {
 		if (ret) {
 			printf("PECI sensor [0x%x] retry read fail, retry time: %d, completion_code: 0x%x\n",
 			       sensor_num, PECI_RETRY_MAX, *complete_code);
@@ -71,21 +68,18 @@ static bool peci_get_power(uint8_t sensor_num, int *reading)
 	}
 
 	complete_code = &read_buf[PECI_READ_LEN];
-	retry_count = PECI_RETRY_MAX;
-	while (1) {
+	for (int retry_count = PECI_RETRY_MAX; retry_count > 0; --retry_count) {
 		ret = peci_read(cmd, cfg->port, index[1], param[1], PECI_READ_LEN,
 				&read_buf[PECI_READ_LEN]);
 		if (ret == 0) {
 			if (*complete_code == PECI_CC_RSP_SUCCESS) {
 				break;
 			}
-		} else if (--retry_count) { // wait for 10ms before next retry
+		} else {
 			k_msleep(10);
-		} else { // all retries failed exit the loop
-			break;
 		}
 	}
-	if (retry_count == 0) {
+	if (*complete_code != PECI_CC_RSP_SUCCESS) {
 		if (ret) {
 			printf("PECI sensor [0x%x] retry read fail, retry time: %d, completion_code: 0x%x\n",
 			       sensor_num, PECI_RETRY_MAX, *complete_code);
@@ -200,28 +194,25 @@ bool peci_sensor_read(uint8_t sensor_num, float *reading)
 			return false;
 		}
 
-		read_buf = (uint8_t *)malloc(PECI_READ_LEN * sizeof(uint8_t));
+		read_buf = (uint8_t *)calloc(sizeof(uint8_t), PECI_READ_LEN);
 		if (read_buf == NULL) {
 			printf("PECI buffer alloc fail\n");
 			return false;
 		}
 
 		uint8_t *complete_code = &read_buf[0];
-		int retry_count = PECI_RETRY_MAX;
-		while (1) {
+		for (int retry_count = PECI_RETRY_MAX; retry_count > 0; --retry_count) {
 			ret = peci_read(cmd, cfg->port, cfg->target_addr, cfg->offset,
 					PECI_READ_LEN, read_buf);
 			if (ret == 0) {
 				if (*complete_code == PECI_CC_RSP_SUCCESS) {
 					break;
 				}
-			} else if (--retry_count) { // wait for 10ms before next retry
+			} else { // wait for 10ms before next retry
 				k_msleep(10);
-			} else { // all retries failed exit the loop
-				break;
 			}
 		}
-		if (retry_count == 0) {
+		if (*complete_code != PECI_CC_RSP_SUCCESS) {
 			if (ret) {
 				printf("PECI sensor [0x%x] retry read fail, retry time: %d, completion_code: 0x%x\n",
 				       sensor_num, PECI_RETRY_MAX, *complete_code);

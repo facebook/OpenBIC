@@ -2959,10 +2959,10 @@ uint8_t load_sdr_table(void)
 void pal_fix_full_sdr_table()
 {
 	// Fix sdr table according to bic type.
-	uint8_t fix_array_num;
 	if (get_bic_class() == SYS_CLASS_2) {
-		fix_array_num = sizeof(fix_class2_sdr_table) / sizeof(fix_class2_sdr_table[0]);
-		while (fix_array_num) {
+		for (uint8_t fix_array_num =
+			     sizeof(fix_class2_sdr_table) / sizeof(fix_class2_sdr_table[0]);
+		     fix_array_num > 0; fix_array_num--) {
 			for (int i = MBR_R; i >= THRESHOLD_UNR; --i) {
 				if (i < MBR_M) {
 					change_sensor_threshold(
@@ -2974,21 +2974,20 @@ void pal_fix_full_sdr_table()
 						fix_class2_sdr_table[fix_array_num - 1][i + 1]);
 				}
 			}
-			fix_array_num--;
 		}
 	}
 	if (get_1ou_status()) {
-		fix_array_num = sizeof(fix_1ou_sdr_table) / sizeof(fix_1ou_sdr_table[0]);
-		while (fix_array_num) {
+		for (uint8_t fix_array_num =
+			     sizeof(fix_1ou_sdr_table) / sizeof(fix_1ou_sdr_table[0]);
+		     fix_array_num > 0; fix_array_num--) {
 			add_full_sdr_table(fix_1ou_sdr_table[fix_array_num - 1]);
-			fix_array_num--;
 		}
 	}
 	if (get_2ou_status()) {
-		fix_array_num = sizeof(fix_dvp_sdr_table) / sizeof(fix_dvp_sdr_table[0]);
-		while (fix_array_num) {
+		for (uint8_t fix_array_num =
+			     sizeof(fix_dvp_sdr_table) / sizeof(fix_dvp_sdr_table[0]);
+		     fix_array_num > 0; fix_array_num--) {
 			add_full_sdr_table(fix_dvp_sdr_table[fix_array_num - 1]);
-			fix_array_num--;
 		}
 	}
 };
