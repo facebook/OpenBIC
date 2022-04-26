@@ -13,7 +13,7 @@ __weak void OEM_NM_SENSOR_READ(ipmi_msg *msg)
 	}
 
 	uint8_t status, sensor_num;
-	float reading;
+	int reading;
 	int val;
 
 	// only input enable status

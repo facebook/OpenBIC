@@ -7,6 +7,7 @@
 #include "usb.h"
 #include <string.h>
 #include <stdlib.h>
+#include "libutil.h"
 #include "app_handler.h"
 #include "chassis_handler.h"
 #include "oem_handler.h"
@@ -180,9 +181,7 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 				}
 
 				kcs_write(kcs_buff, msg_cfg.buffer.data_len + 3);
-
-				if (kcs_buff != NULL)
-					free(kcs_buff);
+				SAFE_FREE(kcs_buff);
 #endif
 
 			} else {

@@ -6,6 +6,7 @@
 #include "hal_i2c.h"
 #include "timer.h"
 #include "plat_i2c.h"
+#include "libutil.h"
 
 static const struct device *dev_i2c[I2C_BUS_MAX_NUM];
 
@@ -60,8 +61,8 @@ int i2c_master_read(I2C_MSG *msg, uint8_t retry)
 					printf("\n");
 				}
 
-				free(txbuf);
-				free(rxbuf);
+				SAFE_FREE(txbuf);
+				SAFE_FREE(rxbuf);
 
 				status = k_mutex_unlock(&i2c_mutex[msg->bus]);
 				if (status != osOK) {
@@ -106,7 +107,7 @@ int i2c_master_write(I2C_MSG *msg, uint8_t retry)
 			memcpy(txbuf, &msg->data[0], msg->tx_len);
 			ret = i2c_write(dev_i2c[msg->bus], txbuf, msg->tx_len, msg->target_addr);
 			if (ret) {
-				free(txbuf);
+				SAFE_FREE(txbuf);
 				continue;
 			} else { // i2c write success
 				status = k_mutex_unlock(&i2c_mutex[msg->bus]);
@@ -114,7 +115,7 @@ int i2c_master_write(I2C_MSG *msg, uint8_t retry)
 					printf("I2C %d master write release mutex fail\n",
 					       msg->bus);
 				}
-				free(txbuf);
+				SAFE_FREE(txbuf);
 				return ret;
 			}
 		}

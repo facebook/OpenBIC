@@ -33,6 +33,7 @@
 #include <string.h>
 #include <drivers/i2c.h>
 #include "hal_i2c_slave.h"
+#include "libutil.h"
 
 /* LOG SET */
 #include <logging/log.h>
@@ -445,10 +446,7 @@ static int do_i2c_slave_cfg(uint8_t bus_num, struct _i2c_slave_config *cfg)
 
 		k_msgq_purge(&data->z_msgq_id);
 
-		if (data->z_msgq_id.buffer_start != NULL) {
-			free(data->z_msgq_id.buffer_start);
-			data->z_msgq_id.buffer_start = NULL;
-		}
+		SAFE_FREE(data->z_msgq_id.buffer_start);
 	}
 
 	data->max_msg_count = _max_msg_count;

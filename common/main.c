@@ -28,8 +28,8 @@ __weak void pal_set_sys_status()
 
 void main(void)
 {
-	printf("Hello, welcome to %s %s %x%x.%x.%x\n", PLATFORM_NAME, PROJECT_NAME,
-	       BIC_FW_YEAR_MSB, BIC_FW_YEAR_LSB, BIC_FW_WEEK, BIC_FW_VER);
+	printf("Hello, welcome to %s %s %x%x.%x.%x\n", PLATFORM_NAME, PROJECT_NAME, BIC_FW_YEAR_MSB,
+	       BIC_FW_YEAR_LSB, BIC_FW_WEEK, BIC_FW_VER);
 
 	util_init_timer();
 	util_init_I2C();

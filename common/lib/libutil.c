@@ -31,3 +31,26 @@ ipmi_msg construct_ipmi_message(uint8_t seq_source, uint8_t netFn, uint8_t comma
 	}
 	return ipmi_message;
 }
+
+/*
+ * @brief Construct an I2C message buffer.
+ *
+ * @param bus_id The I2C bus ID.
+ * @param address Slave device address(7-bit address).
+ * @param tx_len the data length that transmits to slave device.
+ * @param data the data buffer that ready to transmit to slave.
+ * @param rx_len the data length that receive the response from slave device.
+ *
+ * @retval The I2C message buffer.
+ */
+I2C_MSG construct_i2c_message(uint8_t bus_id, uint8_t address, uint8_t tx_len, uint8_t *data,
+			      uint8_t rx_len)
+{
+	I2C_MSG i2c_msg;
+	i2c_msg.bus = bus_id;
+	i2c_msg.target_addr = address;
+	i2c_msg.tx_len = tx_len;
+	memcpy(i2c_msg.data, data, tx_len);
+	i2c_msg.rx_len = rx_len;
+	return i2c_msg;
+}

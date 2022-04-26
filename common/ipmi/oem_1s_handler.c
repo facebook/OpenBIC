@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <drivers/peci.h>
+#include "libutil.h"
 #include "ipmb.h"
 #include "sensor.h"
 #include "snoop.h"
@@ -82,7 +83,7 @@ __weak void OEM_1S_MSG_OUT(ipmi_msg *msg)
 				printf("OEM_MSG_OUT send IPMB req fail status: %x", status);
 				msg->completion_code = CC_BRIDGE_MSG_ERR;
 			}
-			free(bridge_msg);
+			SAFE_FREE(bridge_msg);
 		}
 	}
 
@@ -268,7 +269,7 @@ __weak void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		status = ipmb_read(bridge_msg, IPMB_inf_index_map[bridge_msg->InF_target]);
 		if (status != IPMB_ERROR_SUCCESS) {
 			printf("ipmb read fail status: %x", status);
-			free(bridge_msg);
+			SAFE_FREE(bridge_msg);
 			msg->completion_code = CC_BRIDGE_MSG_ERR;
 			return;
 		} else {
@@ -279,7 +280,7 @@ __weak void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 			msg->data[4] = bridge_msg->data[13] >> 4;
 			msg->data_len = 5;
 			msg->completion_code = CC_SUCCESS;
-			free(bridge_msg);
+			SAFE_FREE(bridge_msg);
 		}
 		break;
 #ifdef ENABLE_ISL69260
@@ -434,12 +435,8 @@ __weak void OEM_1S_PECI_ACCESS(ipmi_msg *msg)
 		writeBuf = (uint8_t *)malloc(sizeof(uint8_t) * writeLen);
 		if ((readBuf == NULL) || (writeBuf == NULL)) {
 			printf("PECI access util buffer alloc fail\n");
-			if (writeBuf != NULL) {
-				free(writeBuf);
-			}
-			if (readBuf != NULL) {
-				free(readBuf);
-			}
+			SAFE_FREE(writeBuf);
+			SAFE_FREE(readBuf);
 			msg->completion_code = CC_OUT_OF_SPACE;
 			return;
 		}
@@ -447,23 +444,15 @@ __weak void OEM_1S_PECI_ACCESS(ipmi_msg *msg)
 
 		ret = peci_write(cmd, addr, readLen, readBuf, writeLen, writeBuf);
 		if (ret) {
-			if (writeBuf != NULL) {
-				free(writeBuf);
-			}
-			if (readBuf != NULL) {
-				free(readBuf);
-			}
+			SAFE_FREE(writeBuf);
+			SAFE_FREE(readBuf);
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			return;
 		}
 		memcpy(&msg->data[0], &readBuf[0], readLen);
 
-		if (writeBuf != NULL) {
-			free(writeBuf);
-		}
-		if (readBuf != NULL) {
-			free(readBuf);
-		}
+		SAFE_FREE(writeBuf);
+		SAFE_FREE(readBuf);
 		msg->data_len = readLen;
 		msg->completion_code = CC_SUCCESS;
 		return;
@@ -588,7 +577,7 @@ __weak void OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg)
 	ACCURACY_SENSOR_READING_REQ *req = (ACCURACY_SENSOR_READING_REQ *)msg->data;
 	ACCURACY_SENSOR_READING_RES *res = (ACCURACY_SENSOR_READING_RES *)msg->data;
 	uint8_t status = -1, sensor_report_status;
-	float reading;
+	int reading;
 	if (msg->data_len != 2) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
@@ -612,15 +601,27 @@ __weak void OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg)
 	} else {
 		printf("Error: read_option was not either GET_FROM_CACHE or GET_FROM_SENSOR.\n");
 	}
-
 	switch (status) {
 	case SENSOR_READ_SUCCESS:
+	case SENSOR_READ_ACUR_SUCCESS:
 		res->decimal = (int16_t)reading;
 		if (reading < 0) {
 			res->fraction = (uint16_t)((res->decimal - reading + 0.0005) * 1000);
 		} else {
 			res->fraction = (uint16_t)((reading - res->decimal + 0.0005) * 1000);
 		}
+		msg->data[3] = sensor_report_status;
+		msg->data_len = 4;
+		msg->completion_code = CC_SUCCESS;
+		break;
+	case SENSOR_READ_4BYTE_ACUR_SUCCESS:
+		res->decimal = (int32_t)reading;
+		if (reading < 0) {
+			res->fraction = (int32_t)((res->decimal - reading + 0.0005) * 1000);
+		} else {
+			res->fraction = (int32_t)((reading - res->decimal + 0.0005) * 1000);
+		}
+		memcpy(msg->data, &reading, sizeof(reading));
 		msg->data[4] = sensor_report_status;
 		msg->data_len = 5;
 		msg->completion_code = CC_SUCCESS;

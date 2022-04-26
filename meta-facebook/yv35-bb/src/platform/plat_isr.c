@@ -56,7 +56,7 @@ void set_BIC_slot_isolator(uint8_t pwr_state_gpio_num, uint8_t isolator_gpio_num
 	}
 
 	if (ret < 0) {
-		printk("failed to set slot isolator due to set gpio %d is failed\n",
+		printf("failed to set slot isolator due to set gpio %d is failed\n",
 		       isolator_gpio_num);
 	}
 }
@@ -78,6 +78,6 @@ void set_sled_cycle()
 	msg.data[1] = 0x01; // value
 
 	if (i2c_master_write(&msg, retry) < 0) {
-		printk("sled cycle fail\n");
+		printf("sled cycle fail\n");
 	}
 }
