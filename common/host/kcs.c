@@ -1,9 +1,13 @@
+
+#ifdef CONFIG_IPMI_KCS_ASPEED
+
 #include <zephyr.h>
 #include <string.h>
 #include <stdio.h>
 #include <device.h>
 #include "ipmi.h"
 #include "kcs.h"
+#include "plat_def.h"
 
 struct k_thread kcs_polling;
 K_KERNEL_STACK_MEMBER(KCS_POLL_stack, KCS_POLL_STACK_SIZE);
@@ -114,7 +118,7 @@ void kcs_read(void *arvg0, void *arvg1, void *arvg2)
 
 void kcs_init(void)
 {
-	kcs_dev = device_get_binding(DT_LABEL(DT_NODELABEL(kcs3)));
+	kcs_dev = device_get_binding(DT_LABEL(DT_NODELABEL(HOST_KCS_PORT)));
 	if (!kcs_dev) {
 		printf("No KCS device found\n");
 		return;
@@ -124,3 +128,5 @@ void kcs_init(void)
 			kcs_read, NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
 	k_thread_name_set(&kcs_polling, "kcs_polling");
 }
+
+#endif

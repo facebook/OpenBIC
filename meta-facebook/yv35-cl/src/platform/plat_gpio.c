@@ -353,22 +353,6 @@ bool pal_load_gpio_config(void)
 	return 1;
 };
 
-SCU_CFG scu_cfg[] = {
-	//  register     value
-	{ 0x7e6e2610, 0xffffffff },
-	{ 0x7e6e2614, 0xffffffff },
-	{ 0x7e6e2618, 0x30000000 },
-	{ 0x7e6e261c, 0x00000F04 },
-};
-
-void scu_init(void)
-{
-	size_t size = sizeof(scu_cfg) / sizeof(SCU_CFG);
-	for (int i = 0; i < size; ++i) {
-		sys_write32(scu_cfg[i].value, scu_cfg[i].reg);
-	}
-}
-
 void enable_PRDY_interrupt()
 {
 	gpio_interrupt_conf(H_BMC_PRDY_BUF_N, GPIO_INT_EDGE_FALLING);

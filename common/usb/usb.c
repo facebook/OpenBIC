@@ -5,6 +5,9 @@
 #include <sys/ring_buffer.h>
 #include "ipmi.h"
 #include "usb.h"
+#include "plat_def.h"
+
+#ifdef CONFIG_USB
 
 RING_BUF_DECLARE(ringbuf, RING_BUF_SIZE);
 
@@ -174,7 +177,7 @@ void usb_dev_init(void)
 		return;
 	}
 
-	dev = device_get_binding("CDC_ACM_0");
+	dev = device_get_binding(BMC_USB_PORT);
 	if (!dev) {
 		printf("CDC ACM device not found");
 		return;
@@ -192,3 +195,5 @@ void usb_dev_init(void)
 	uint8_t init_sem_count = RING_BUF_SIZE / RX_BUFF_SIZE;
 	k_sem_init(&usbhandle_sem, 0, init_sem_count);
 }
+
+#endif
