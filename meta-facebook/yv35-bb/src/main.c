@@ -11,13 +11,18 @@
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "plat_gpio.h"
-#include "ipmi_def.h"
 #include "ipmi.h"
+#include "plat_sys.h"
+#include "adm1278.h"
+#include "adc.h"
+#include "timer.h"
+#include "fru.h"
+#include "usb.h"
 
 void device_init()
 {
 	adc_init();
-	hsc_init();
+	adm1278_init();
 }
 
 void set_sys_status()
@@ -27,7 +32,6 @@ void set_sys_status()
 
 void main(void)
 {
-	uint8_t proj_stage = (FIRMWARE_REVISION_1 & 0xf0) >> 4;
 	printk("Hello, welcome to yv35 baseboard %x%x.%x.%x\n", BIC_FW_YEAR_MSB, BIC_FW_YEAR_LSB,
 	       BIC_FW_WEEK, BIC_FW_VER);
 

@@ -1,11 +1,21 @@
-#include <stdint.h>
-#include "plat_func.h"
+#include "plat_isr.h"
+
+#include "libipmi.h"
+#include "plat_isr.h"
+
+#include "kcs.h"
+#include "power_status.h"
+#include "sensor.h"
+#include "snoop.h"
 #include "plat_gpio.h"
+#include "plat_ipmi.h"
+#include "plat_sensor_table.h"
+#include "oem_1s_handler.h"
 #include "plat_i2c.h"
 
-struct k_delayed_work sled_cycle_work;
+void sled_cycle_work_handler(struct k_work *item);
 
-K_DELAYED_WORK_DEFINE(sled_cycle_work, sled_cycle_work_handler);
+K_WORK_DELAYABLE_DEFINE(sled_cycle_work, sled_cycle_work_handler);
 
 void ISR_PWROK_SLOT1()
 {
@@ -17,18 +27,18 @@ void ISR_PWROK_SLOT3()
 	set_BIC_slot_isolator(PWROK_STBY_BIC_SLOT3_R, FM_BIC_SLOT3_ISOLATED_EN_R);
 }
 
-void ISR_sled_cycle()
+void ISR_SLED_CYCLE()
 {
 	uint8_t bb_btn_status = GPIO_HIGH;
 
 	bb_btn_status = gpio_get(BB_BUTTON_BMC_BIC_N_R);
 	// press sled cycle button
 	if (bb_btn_status == GPIO_LOW) {
-		k_delayed_work_submit(&sled_cycle_work, K_SECONDS(MAX_PRESS_SLED_BTN_TIME_s));
+		k_work_schedule(&sled_cycle_work, K_SECONDS(MAX_PRESS_SLED_BTN_TIME_s));
 
 		// release sled cycle button
 	} else if (bb_btn_status == GPIO_HIGH) {
-		k_delayed_work_cancel(&sled_cycle_work);
+		k_work_cancel_delayable(&sled_cycle_work);
 	}
 }
 
