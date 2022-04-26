@@ -7,7 +7,6 @@
 #include <zephyr.h>
 #include <kernel.h>
 #include <cmsis_os2.h>
-#include <sys/printk.h>
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "plat_gpio.h"
@@ -16,12 +15,13 @@
 #include "kcs.h"
 #include "power_status.h"
 #include "plat_class.h"
-#include "plat_sys.h"
 #include "adc.h"
 #include "hal_peci.h"
 #include "adm1278.h"
 #include "timer.h"
 #include "fru.h"
+#include "usb.h"
+#include "util_sys.h"
 
 void device_init()
 {
@@ -30,9 +30,10 @@ void device_init()
 	adm1278_init();
 }
 
-void switch_spi_mux()
+int switch_spi_mux(const struct device *args)
 {
 	gpio_set(FM_SPI_PCH_MASTER_SEL_R, GPIO_LOW);
+	return 1;
 }
 
 void set_sys_status()
@@ -47,7 +48,7 @@ void set_sys_status()
 
 void main(void)
 {
-	printk("Hello, wellcome to yv35 craterlake %x%x.%x.%x\n", BIC_FW_YEAR_MSB, BIC_FW_YEAR_LSB,
+	printf("Hello, welcome to yv35 craterlake %x%x.%x.%x\n", BIC_FW_YEAR_MSB, BIC_FW_YEAR_LSB,
 	       BIC_FW_WEEK, BIC_FW_VER);
 
 	util_init_timer();
@@ -63,7 +64,7 @@ void main(void)
 	device_init();
 	set_sys_status();
 	scu_init();
-	set_ME_restore();
+	init_me_firmware();
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78

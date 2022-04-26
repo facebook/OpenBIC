@@ -1,5 +1,4 @@
 #include "fru.h"
-#include "pal.h"
 #include "plat_fru.h"
 #include <string.h>
 

@@ -1,5 +1,4 @@
 #include <zephyr.h>
-#include <sys/printk.h>
 #include <logging/log.h>
 #include <shell/shell.h>
 #include <drivers/flash.h>
@@ -24,37 +23,37 @@ static int do_erase_write_verify(const struct device *flash_device, uint32_t op_
 
 	ret = flash_erase(flash_device, op_addr, erase_sz);
 	if (ret != 0) {
-		printk("[%s][%d] erase failed at %d.\n", __func__, __LINE__, op_addr);
+		printf("[%s][%d] erase failed at %d.\n", __func__, __LINE__, op_addr);
 		goto end;
 	}
 
 	ret = flash_write(flash_device, op_addr, write_buf, erase_sz);
 	if (ret != 0) {
-		printk("[%s][%d] write failed at %d.\n", __func__, __LINE__, op_addr);
+		printf("[%s][%d] write failed at %d.\n", __func__, __LINE__, op_addr);
 		goto end;
 	}
 
 	ret = flash_read(flash_device, op_addr, read_back_buf, erase_sz);
 	if (ret != 0) {
-		printk("[%s][%d] write failed at %d.\n", __func__, __LINE__, op_addr);
+		printf("[%s][%d] write failed at %d.\n", __func__, __LINE__, op_addr);
 		goto end;
 	}
 
 	if (memcmp(write_buf, read_back_buf, erase_sz) != 0) {
 		ret = -EINVAL;
-		printk("ERROR: %s %d fail to write flash at 0x%x\n", __func__, __LINE__, op_addr);
-		printk("to be written:\n");
+		printf("ERROR: %s %d fail to write flash at 0x%x\n", __func__, __LINE__, op_addr);
+		printf("to be written:\n");
 		for (i = 0; i < 256; i++) {
-			printk("%x ", write_buf[i]);
+			printf("%x ", write_buf[i]);
 			if (i % 16 == 15)
-				printk("\n");
+				printf("\n");
 		}
 
-		printk("readback:\n");
+		printf("readback:\n");
 		for (i = 0; i < 256; i++) {
-			printk("%x ", read_back_buf[i]);
+			printf("%x ", read_back_buf[i]);
 			if (i % 16 == 15)
-				printk("\n");
+				printf("\n");
 		}
 
 		goto end;
@@ -75,7 +74,7 @@ static int do_update(const struct device *flash_device, off_t offset, uint8_t *b
 	bool update_it = false;
 
 	if (flash_sz < flash_offset + len) {
-		printk("ERROR: update boundary exceeds flash size. (%d, %d, %d)\n", flash_sz,
+		printf("ERROR: update boundary exceeds flash size. (%d, %d, %d)\n", flash_sz,
 		       flash_offset, len);
 		ret = -EINVAL;
 		goto end;
@@ -83,14 +82,14 @@ static int do_update(const struct device *flash_device, off_t offset, uint8_t *b
 
 	op_buf = (uint8_t *)malloc(sector_sz);
 	if (op_buf == NULL) {
-		printk("heap full %d %d\n", __LINE__, sector_sz);
+		printf("heap full %d %d\n", __LINE__, sector_sz);
 		ret = -EINVAL;
 		goto end;
 	}
 
 	read_back_buf = (uint8_t *)malloc(sector_sz);
 	if (read_back_buf == NULL) {
-		printk("heap full %d %d\n", __LINE__, sector_sz);
+		printf("heap full %d %d\n", __LINE__, sector_sz);
 		ret = -EINVAL;
 		goto end;
 	}
@@ -187,7 +186,7 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 			txbuf = (uint8_t *)malloc(SECTOR_SZ_64K);
 		}
 		if (txbuf == NULL) {
-			printk("spi index%x update buffer alloc fail\n", flash_position);
+			printf("spi index%x update buffer alloc fail\n", flash_position);
 			return FWUPDATE_OUT_OF_HEAP;
 		}
 		is_init = 1;
@@ -196,7 +195,7 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 	}
 
 	if ((buf_offset + msg_len) > SECTOR_SZ_64K) {
-		printk("spi bus%x recv data %d over sector size %d\n", flash_position,
+		printf("spi bus%x recv data %d over sector size %d\n", flash_position,
 		       buf_offset + msg_len, SECTOR_SZ_64K);
 		free(txbuf);
 		txbuf = NULL;
@@ -206,7 +205,7 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 	}
 
 	if ((offset % SECTOR_SZ_64K) != buf_offset) {
-		printk("spi bus%x recorded offset 0x%x but updating 0x%x\n", flash_position,
+		printf("spi bus%x recorded offset 0x%x but updating 0x%x\n", flash_position,
 		       buf_offset, offset % SECTOR_SZ_64K);
 		free(txbuf);
 		txbuf = NULL;
@@ -216,7 +215,7 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 	}
 
 	if (FW_UPDATE_DEBUG) {
-		printk("spi bus%x update offset %x %x, msg_len %d, sector_end %d, msg_buf: %2x %2x %2x %2x\n",
+		printf("spi bus%x update offset %x %x, msg_len %d, sector_end %d, msg_buf: %2x %2x %2x %2x\n",
 		       flash_position, offset, buf_offset, msg_len, sector_end, msg_buf[0],
 		       msg_buf[1], msg_buf[2], msg_buf[3]);
 	}
@@ -237,12 +236,12 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 			ret = do_update(flash_dev, update_offset, &txbuf[txbuf_offset],
 					SECTOR_SZ_4K);
 			if (ret) {
-				printk("SPI update fail status: %x\n", ret);
+				printf("SPI update fail status: %x\n", ret);
 				break;
 			}
 		}
 		if (!ret) {
-			printk("Update success\n");
+			printf("Update success\n");
 		}
 		free(txbuf);
 		txbuf = NULL;
@@ -250,7 +249,7 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 		is_init = 0;
 
 		if (FW_UPDATE_DEBUG) {
-			printk("***update %x, offset %x, SECTOR_SZ_16K %x\n",
+			printf("***update %x, offset %x, SECTOR_SZ_16K %x\n",
 			       (offset / SECTOR_SZ_16K) * SECTOR_SZ_16K, offset, SECTOR_SZ_16K);
 		}
 

@@ -156,6 +156,7 @@ typedef struct ipmi_msg_cfg {
 	struct ipmi_msg_cfg *next;
 } __packed __aligned(4) ipmi_msg_cfg;
 
+bool pal_load_ipmb_config(void);
 void ipmb_init(void);
 ipmb_error ipmb_send_request(ipmi_msg *req, uint8_t index);
 ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index);

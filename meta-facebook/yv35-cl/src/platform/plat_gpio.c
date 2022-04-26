@@ -3,7 +3,6 @@
 #include <string.h>
 #include "cmsis_os.h"
 #include "hal_gpio.h"
-#include "pal.h"
 #include "plat_gpio.h"
 #include "plat_isr.h"
 

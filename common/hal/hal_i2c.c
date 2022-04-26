@@ -167,60 +167,60 @@ void util_init_I2C(void)
 	dev_i2c[0] = device_get_binding("I2C_0");
 	status = k_mutex_init(&i2c_mutex[0]);
 	if (status)
-		printk("i2c0 mutex init fail\n");
+		printf("i2c0 mutex init fail\n");
 #endif
 #ifdef DEV_I2C_1
 	dev_i2c[1] = device_get_binding("I2C_1");
 	status = k_mutex_init(&i2c_mutex[1]);
 	if (status)
-		printk("i2c1 mutex init fail\n");
+		printf("i2c1 mutex init fail\n");
 #endif
 #ifdef DEV_I2C_2
 	dev_i2c[2] = device_get_binding("I2C_2");
 	status = k_mutex_init(&i2c_mutex[2]);
 	if (status)
-		printk("i2c2 mutex init fail\n");
+		printf("i2c2 mutex init fail\n");
 #endif
 #ifdef DEV_I2C_3
 	dev_i2c[3] = device_get_binding("I2C_3");
 	status = k_mutex_init(&i2c_mutex[3]);
 	if (status)
-		printk("i2c3 mutex init fail\n");
+		printf("i2c3 mutex init fail\n");
 #endif
 #ifdef DEV_I2C_4
 	dev_i2c[4] = device_get_binding("I2C_4");
 	status = k_mutex_init(&i2c_mutex[4]);
 	if (status)
-		printk("i2c4 mutex init fail\n");
+		printf("i2c4 mutex init fail\n");
 #endif
 #ifdef DEV_I2C_5
 	dev_i2c[5] = device_get_binding("I2C_5");
 	status = k_mutex_init(&i2c_mutex[5]);
 	if (status)
-		printk("i2c5 mutex init fail\n");
+		printf("i2c5 mutex init fail\n");
 #endif
 #ifdef DEV_I2C_6
 	dev_i2c[6] = device_get_binding("I2C_6");
 	status = k_mutex_init(&i2c_mutex[6]);
 	if (status)
-		printk("i2c6 mutex init fail\n");
+		printf("i2c6 mutex init fail\n");
 #endif
 #ifdef DEV_I2C_7
 	dev_i2c[7] = device_get_binding("I2C_7");
 	status = k_mutex_init(&i2c_mutex[7]);
 	if (status)
-		printk("i2c7 mutex init fail\n");
+		printf("i2c7 mutex init fail\n");
 #endif
 #ifdef DEV_I2C_8
 	dev_i2c[8] = device_get_binding("I2C_8");
 	status = k_mutex_init(&i2c_mutex[8]);
 	if (status)
-		printk("i2c8 mutex init fail\n");
+		printf("i2c8 mutex init fail\n");
 #endif
 #ifdef DEV_I2C_9
 	dev_i2c[9] = device_get_binding("I2C_9");
 	status = k_mutex_init(&i2c_mutex[9]);
 	if (status)
-		printk("i2c9 mutex init fail\n");
+		printf("i2c9 mutex init fail\n");
 #endif
 }

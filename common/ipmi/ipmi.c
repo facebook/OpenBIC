@@ -4,6 +4,7 @@
 #include "cmsis_os2.h"
 #include "ipmi.h"
 #include "kcs.h"
+#include "usb.h"
 #include <string.h>
 #include <stdlib.h>
 #include "app_handler.h"
@@ -147,7 +148,7 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 			}
 
 			if (msg_cfg.buffer.InF_source == BMC_USB) {
-				USB_write(&msg_cfg.buffer);
+				usb_write_by_ipmi(&msg_cfg.buffer);
 			} else if (msg_cfg.buffer.InF_source == HOST_KCS) {
 #ifdef CONFIG_IPMI_KCS_ASPEED
 				kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
@@ -155,7 +156,7 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 					k_msleep(10);
 					kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
 					if (kcs_buff == NULL) {
-						printk("IPMI_handler: Fail to malloc for kcs_buff\n");
+						printf("IPMI_handler: Fail to malloc for kcs_buff\n");
 						continue;
 					}
 				}
@@ -173,7 +174,7 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 				}
 
 				if (DEBUG_KCS) {
-					printk("kcs from ipmi netfn %x, cmd %x, length %d, cc %x\n",
+					printf("kcs from ipmi netfn %x, cmd %x, length %d, cc %x\n",
 					       kcs_buff[0], kcs_buff[1], msg_cfg.buffer.data_len,
 					       kcs_buff[2]);
 				}
