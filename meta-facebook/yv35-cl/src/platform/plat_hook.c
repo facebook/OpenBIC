@@ -8,6 +8,9 @@
 
 #include "i2c-mux-tca9548.h"
 
+#define ADJUST_ADM1278_POWER(x) (x * 0.98)
+#define ADJUST_ADM1278_CURRENT(x) ((x * 0.98) + 0.1)
+
 /**************************************************************************************************
  * INIT ARGS
 **************************************************************************************************/
@@ -154,5 +157,55 @@ bool post_cpu_margin_read(uint8_t sensor_num, void *args, int *reading)
 
 	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = -sval->integer; /* for BMC minus */
+	return true;
+}
+
+/* ADM1278 post read function
+ *
+ * modify ADM1278 power value after reading
+ *
+ * @param sensor_num sensor number
+ * @param args pointer to NULL
+ * @param reading pointer to reading from previous step
+ * @retval true if no error
+ * @retval false if reading get NULL
+ */
+bool post_adm1278_power_read(uint8_t sensor_num, void *args, int *reading)
+{
+	if (!reading)
+		return false;
+	ARG_UNUSED(args);
+
+	sensor_val *sval = (sensor_val *)reading;
+	float val = (float)sval->integer + (sval->fraction / 1000.0);
+
+	val = ADJUST_ADM1278_POWER(val);
+	sval->integer = (int)val & 0xFFFF;
+	sval->fraction = (val - sval->integer) * 1000;
+	return true;
+}
+
+/* ADM1278 post read function
+ *
+ * modify ADM1278 current value after reading
+ *
+ * @param sensor_num sensor number
+ * @param args pointer to NULL
+ * @param reading pointer to reading from previous step
+ * @retval true if no error
+ * @retval false if reading get NULL
+ */
+bool post_adm1278_current_read(uint8_t sensor_num, void *args, int *reading)
+{
+	if (!reading)
+		return false;
+	ARG_UNUSED(args);
+
+	sensor_val *sval = (sensor_val *)reading;
+	float val = (float)sval->integer + (sval->fraction / 1000.0);
+
+	val = ADJUST_ADM1278_CURRENT(val);
+	sval->integer = (int)val & 0xFFFF;
+	sval->fraction = (val - sval->integer) * 1000;
 	return true;
 }
