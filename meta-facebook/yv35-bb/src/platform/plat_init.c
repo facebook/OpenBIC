@@ -1,3 +1,4 @@
+#include "util_sys.h"
 #include "hal_gpio.h"
 #include "plat_gpio.h"
 #include "plat_fan.h"
@@ -14,7 +15,7 @@ void pal_pre_init()
 
 void pal_set_sys_status()
 {
-	gpio_set(BIC_READY_R, GPIO_HIGH);
+	set_sys_ready_pin(BIC_READY_R);
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 61
