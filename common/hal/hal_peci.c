@@ -129,7 +129,7 @@ bool peci_retry_read(uint8_t cmd, uint8_t address, uint8_t u8Index, uint16_t u16
 
 	for (i = 0; i < retry; ++i) {
 		k_msleep(10);
-		memcpy(&readBuf[0], 0, u8ReadLen * sizeof(uint8_t));
+		memset(&readBuf[0], 0, u8ReadLen * sizeof(uint8_t));
 		ret = peci_read(cmd, address, u8Index, u16Param, u8ReadLen, readBuf);
 		if (!ret) {
 			if (readBuf[0] == PECI_CC_RSP_SUCCESS) {
