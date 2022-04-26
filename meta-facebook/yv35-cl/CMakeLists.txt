@@ -7,10 +7,10 @@ project(yv35-cl)
 
 set(common_path ../../common)
 FILE(GLOB app_sources src/ipmi/*.c src/platform/*.c src/lib/*.c)
-FILE(GLOB common_sources ${common_path}/*.c ${common_path}/ipmi/*.c ${common_path}/host/*.c ${common_path}/sensor/*.c ${common_path}/usb/*.c ${common_path}/hal/*.c ${common_path}/dev/*.c ${common_path}/lib/*.c ${common_path}/ipmb/*.c)
+FILE(GLOB common_sources ${common_path}/*.c ${common_path}/ipmi/*.c ${common_path}/host/*.c ${common_path}/sensor/*.c ${common_path}/usb/*.c ${common_path}/hal/*.c ${common_path}/dev/*.c ${common_path}/lib/*.c ${common_path}/ipmb/*.c ${common_path}/shell/*.c)
 
 target_sources(app PRIVATE ${app_sources})
 target_sources(app PRIVATE ${common_sources})
 target_include_directories(app PRIVATE ${ZEPHYR_BASE}/include/portability)
-target_include_directories(app PRIVATE ${common_path} ${common_path}/dev/include ${common_path}/ipmi/include ${common_path}/host ${common_path}/sensor ${common_path}/hal ${common_path}/dev ${common_path}/lib ${common_path}/usb ${common_path}/ipmb)
+target_include_directories(app PRIVATE ${common_path} ${common_path}/dev/include ${common_path}/ipmi/include ${common_path}/host ${common_path}/sensor ${common_path}/hal ${common_path}/dev ${common_path}/lib ${common_path}/usb ${common_path}/ipmb ${common_path}/shell)
 target_include_directories(app PRIVATE src/ipmi/include src/lib src/platform)
