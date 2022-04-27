@@ -35,6 +35,4 @@ uint8_t get_board_revision();
 uint8_t get_2ou_cardtype();
 float get_hsc_type_adc_voltage();
 
-void init_platform_config();
-
 #endif
