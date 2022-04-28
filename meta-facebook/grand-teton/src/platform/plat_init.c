@@ -4,6 +4,7 @@
 #include "util_sys.h"
 #include "plat_class.h"
 #include "plat_gpio.h"
+#include "plat_i2c_slave.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -11,10 +12,16 @@ SCU_CFG scu_cfg[] = {
 
 void pal_pre_init()
 {
+  /* init i2c slave */
+	for (int index = 0; index < MAX_SLAVE_NUM; index++) {
+		if (I2C_SLAVE_ENABLE_TABLE[index])
+			i2c_slave_control(index, (struct _i2c_slave_config *)&I2C_SLAVE_CONFIG_TABLE[index], 1);
+	}
 }
 
 void pal_post_init()
 {
+  plat_mctp_init();
 }
 
 void pal_set_sys_status()
