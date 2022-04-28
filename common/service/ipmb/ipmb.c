@@ -1135,6 +1135,11 @@ void ipmb_init(void)
 	uint8_t index;
 	register_target_device();
 
+	if (MAX_IPMB_IDX == 0) {
+		printf("[%s] Not any IPMB interface\n", __func__);
+		return;
+	}
+
 	IPMB_config_table = malloc(MAX_IPMB_IDX * sizeof(IPMB_config));
 	if (IPMB_config_table == NULL) {
 		printf("[%s] Failed to allocate memory\n", __func__);
