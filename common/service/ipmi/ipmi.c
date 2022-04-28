@@ -163,7 +163,8 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 			IPMI_OEM_handler(&msg_cfg.buffer);
 			break;
 		case NETFN_OEM_1S_REQ:
-			if ((msg_cfg.buffer.data[0] | (msg_cfg.buffer.data[1] << 8) |
+			if (msg_cfg.buffer.data_len >= 3 &&
+			    (msg_cfg.buffer.data[0] | (msg_cfg.buffer.data[1] << 8) |
 			     (msg_cfg.buffer.data[2] << 16)) == IANA_ID) {
 				msg_cfg.buffer.data_len -= 3;
 				memcpy(&msg_cfg.buffer.data[0], &msg_cfg.buffer.data[3],
