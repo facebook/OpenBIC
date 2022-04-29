@@ -102,16 +102,19 @@ int set_me_firmware_mode(uint8_t me_fw_mode)
 		return -1;
 	}
 
+	int result = 0;
 	ipmi_msg *me_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
 	uint8_t *data = (uint8_t *)malloc(5 * sizeof(uint8_t));
 	if ((me_msg == NULL) || (data == NULL)) {
 		printf("[%s] Failed to allocate memory\n", __func__);
+		result = -1;
 		goto cleanup;
 	}
+
 	ipmb_error ret;
 	uint16_t data_len = 0;
 	uint8_t seq_source = 0xFF;
-	int i = 0, retry = 3, result = 0;
+	int i = 0, retry = 3;
 
 	for (i = 0; i < retry; i++) {
 		seq_source = 0xFF;
