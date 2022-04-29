@@ -22,6 +22,8 @@
 
 #define DEBUG_SENSOR 0
 
+#define SAMPLE_COUNT_DEFAULT 1
+
 enum LTC4282_OFFSET {
 	LTC4282_ADJUST_OFFSET = 0x11,
 	LTC4282_VSENSE_OFFSET = 0x40,
@@ -115,6 +117,7 @@ typedef struct _sensor_cfg__ {
 	bool (*access_checker)(uint8_t);
 	int arg0;
 	int arg1;
+	int sample_count;
 	int cache;
 	uint8_t cache_status;
 	bool (*pre_sensor_read_hook)(uint8_t, void *);
