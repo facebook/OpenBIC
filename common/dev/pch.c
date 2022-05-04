@@ -27,20 +27,33 @@ uint8_t pch_read(uint8_t sensor_num, int *reading)
 	bridge_msg->data_len = 1;
 	/* parameter offset is the sensor number to read from pch */
 	bridge_msg->data[0] = sensor_config[sensor_config_index_map[sensor_num]].offset;
-	status = ipmb_read(bridge_msg, IPMB_inf_index_map[bridge_msg->InF_target]);
 
-	if (status != IPMB_ERROR_SUCCESS) {
-		printf("pch_read ipmb read fail, ret %d\n", status);
-		SAFE_FREE(bridge_msg);
-		return SENSOR_UNSPECIFIED_ERROR;
+	uint8_t pch_retry_num = 0;
+	for (pch_retry_num = 0; pch_retry_num < 4; pch_retry_num++) {
+		status = ipmb_read(bridge_msg, IPMB_inf_index_map[bridge_msg->InF_target]);
+		if (status != IPMB_ERROR_SUCCESS) {
+			printf("pch_read ipmb read fail, ret %d\n", status);
+			SAFE_FREE(bridge_msg);
+			return SENSOR_FAIL_TO_ACCESS;
+		}
+
+		if (bridge_msg->completion_code == CC_SUCCESS) {
+			sensor_val *sval = (sensor_val *)reading;
+			memset(sval, 0, sizeof(sensor_val));
+			sval->integer = bridge_msg->data[0];
+			SAFE_FREE(bridge_msg);
+			return SENSOR_READ_SUCCESS;
+		} else if (bridge_msg->completion_code == CC_NODE_BUSY) {
+			continue;
+		} else {
+			SAFE_FREE(bridge_msg);
+			return SENSOR_UNSPECIFIED_ERROR;
+		}
 	}
 
-	sensor_val *sval = (sensor_val *)reading;
-	memset(sval, 0, sizeof(sensor_val));
-	sval->integer = bridge_msg->data[0];
-
+	printf("pch_read retry read fail\n");
 	SAFE_FREE(bridge_msg);
-	return SENSOR_READ_SUCCESS;
+	return SENSOR_UNSPECIFIED_ERROR;
 }
 
 uint8_t pch_init(uint8_t sensor_num)
