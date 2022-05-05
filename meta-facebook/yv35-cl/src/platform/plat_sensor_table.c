@@ -320,6 +320,8 @@ void pal_fix_sensor_config()
 		}
 	}
 
+	bool ret = false;
+	CARD_STATUS _2ou_status = get_2ou_status();
 	/* Fix sensor table according to the different class types and board revisions */
 	if (get_system_class() == SYS_CLASS_1) {
 		uint8_t board_revision = get_board_revision();
@@ -335,7 +337,7 @@ void pal_fix_sensor_config()
 		case SYS_BOARD_EVT3_EFUSE:
 			sensor_count = ARRAY_SIZE(mp5990_sensor_config_table);
 			for (int index = 0; index < sensor_count; index++) {
-				if (get_2ou_status()) {
+				if (_2ou_status.present) {
 					/* For the class type 1 and 2OU system,
 					 * set the IMON based total over current fault limit to 70A(0x0046),
 					 * set the gain for output current reporting to 0x01BF following the power team's experiment
@@ -363,7 +365,11 @@ void pal_fix_sensor_config()
 			 * If the voltage of ADC-7 is 1.0V(+/- 15%), the hotswap model is LTC4282.
 			 * If the voltage of ADC-7 is 1.5V(+/- 15%), the hotswap model is LTC4286.
 			 */
-			voltage_hsc_type_adc = get_hsc_type_adc_voltage();
+			ret = get_adc_voltage(CHANNEL_7, &voltage_hsc_type_adc);
+			if (!ret) {
+				break;
+			}
+
 			if ((voltage_hsc_type_adc > 0.5 - (0.5 * 0.15)) &&
 			    (voltage_hsc_type_adc < 0.5 + (0.5 * 0.15))) {
 				printf("Added ADM1278 sensor configuration\n");
@@ -400,9 +406,9 @@ void pal_fix_sensor_config()
 	}
 
 	/* Fix sensor table if 2ou card is present */
-	if (get_2ou_status() == CARD_PRESENT) {
+	if (_2ou_status.present) {
 		// Add DPV2 sensor config if DPV2_16 is present
-		if ((get_2ou_cardtype() & TYPE_2OU_DPV2_16) == TYPE_2OU_DPV2_16) {
+		if ((_2ou_status.card_type & TYPE_2OU_DPV2_16) == TYPE_2OU_DPV2_16) {
 			sensor_count = ARRAY_SIZE(DPV2_sensor_config_table);
 			// Check sensor config table max size avoiding over table max size after adding new sensor config
 			if ((sensor_config_num + sensor_count) > sensor_max_num) {

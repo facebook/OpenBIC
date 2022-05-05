@@ -3634,6 +3634,7 @@ uint8_t load_sdr_table(void)
 void pal_fix_full_sdr_table()
 {
 	// Fix sdr table according to bic type.
+	bool ret = false;
 	uint8_t fix_array_num;
 	uint8_t array_max_num = MAX_SENSOR_SIZE;
 	float voltage_hsc_type_adc;
@@ -3655,7 +3656,11 @@ void pal_fix_full_sdr_table()
 			 * If the voltage of ADC-7 is 1.0V(+/- 15%), the hotswap model is LTC4282.
 			 * If the voltage of ADC-7 is 1.5V(+/- 15%), the hotswap model is LTC4286.
 			 */
-			voltage_hsc_type_adc = get_hsc_type_adc_voltage();
+			ret = get_adc_voltage(CHANNEL_7, &voltage_hsc_type_adc);
+			if (!ret) {
+				break;
+			}
+
 			if ((voltage_hsc_type_adc > 0.5 - (0.5 * 0.15)) &&
 			    (voltage_hsc_type_adc < 0.5 + (0.5 * 0.15))) {
 				fix_array_num = ARRAY_SIZE(hotswap_sdr_table);
@@ -3699,9 +3704,10 @@ void pal_fix_full_sdr_table()
 	}
 
 	// Fix sdr table if 2ou card is present
-	if (get_2ou_status() == CARD_PRESENT) {
+	CARD_STATUS _2ou_status = get_2ou_status();
+	if (_2ou_status.present) {
 		// Add DPV2 sdr if DPV2_16 is present
-		if ((get_2ou_cardtype() & TYPE_2OU_DPV2_16) == TYPE_2OU_DPV2_16) {
+		if ((_2ou_status.card_type & TYPE_2OU_DPV2_16) == TYPE_2OU_DPV2_16) {
 			fix_array_num = ARRAY_SIZE(dpv2_sdr_table);
 			// Check sdr table max size before adding new sdr, avoiding over sdr table max size after adding new sdr
 			if ((SDR_NUM + fix_array_num) > array_max_num) {
