@@ -4,7 +4,6 @@
 #include "plat_sensor_table.h"
 #include "guid.h"
 #include "plat_guid.h"
-#include "plat_ipmi.h"
 #ifdef ENABLE_FAN
 #include "plat_fan.h"
 #endif
@@ -265,6 +264,18 @@ __weak void OEM_GET_MB_INDEX(ipmi_msg *msg)
 	return;
 }
 
+__weak void OEM_CABLE_DETECTION(ipmi_msg *msg)
+{
+	if (msg == NULL) {
+		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		return;
+	}
+
+	msg->data_len = 0;
+	msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+	return;
+}
+
 void IPMI_OEM_handler(ipmi_msg *msg)
 {
 	if (msg == NULL) {
@@ -272,6 +283,9 @@ void IPMI_OEM_handler(ipmi_msg *msg)
 	}
 
 	switch (msg->cmd) {
+	case CMD_OEM_CABLE_DETECTION:
+		OEM_CABLE_DETECTION(msg);
+		break;
 #ifdef CONFIG_ESPI
 	case CMD_OEM_NM_SENSOR_READ:
 		OEM_NM_SENSOR_READ(msg);

@@ -4,7 +4,6 @@
 #include <drivers/i2c.h>
 #include <drivers/i2c/slave/ipmb.h>
 
-
 #if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c0), okay)
 #define DEV_I2C_0
 #endif

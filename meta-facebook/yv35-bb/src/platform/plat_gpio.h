@@ -2,6 +2,8 @@
 #define PLAT_GPIO_H
 
 #include "hal_gpio.h"
+#define BB_CABLE_MATCH_SLOT1 0x3
+#define BB_CABLE_MATCH_SLOT3 0x1
 
 // gpio_cfg(chip, number, is_init, direction, status, int_type, int_callback)
 // dedicate gpio A0~A7, B0~B7, C0~C7, D0~D7, E0~E7, total 40 gpios
