@@ -1,6 +1,7 @@
 #include <zephyr.h>
 #include <kernel.h>
 #include <stdio.h>
+#include <logging/log.h>
 #include "cmsis_os2.h"
 #include "ipmi.h"
 #include "kcs.h"
@@ -16,7 +17,7 @@
 #include "storage_handler.h"
 #include "mctp.h"
 #include "pldm.h"
-#include <logging/log.h>
+#include "plat_ipmb.h"
 
 LOG_MODULE_REGISTER(ipmi);
 
@@ -114,6 +115,61 @@ __weak bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd)
 	// Reserve for future commands
 
 	return false;
+}
+
+bool common_add_sel_evt_record(common_addsel_msg_t *sel_msg)
+{
+	if (sel_msg == NULL) {
+		printf("%s failed due to parameter *sel_msg is NULL\n", __func__);
+		return false;
+	}
+	ipmb_error status;
+	static uint16_t record_id = 0x1;
+	uint8_t system_event_record = 0x02;
+	uint8_t evt_msg_version = 0x04;
+	ipmi_msg *msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
+	if (msg == NULL) {
+		printf("%s malloc fail\n", __func__);
+		return false;
+	}
+	memset(msg, 0, sizeof(ipmi_msg));
+
+	msg->data_len = 16;
+	msg->InF_source = SELF;
+	msg->InF_target = sel_msg->InF_target;
+	msg->netfn = NETFN_STORAGE_REQ;
+	msg->cmd = CMD_STORAGE_ADD_SEL;
+	msg->data[0] = (record_id & 0xFF); // Record id byte 0, lsb
+	msg->data[1] = ((record_id >> 8) & 0xFF); // Record id byte 1
+	msg->data[2] = system_event_record; // Record type
+	msg->data[3] = 0x00; // Timestamp, bmc would fill up for bic
+	msg->data[4] = 0x00; // Timestamp, bmc would fill up for bic
+	msg->data[5] = 0x00; // Timestamp, bmc would fill up for bic
+	msg->data[6] = 0x00; // Timestamp, bmc would fill up for bic
+	msg->data[7] = (SELF_I2C_ADDRESS << 1); // Generator id
+	msg->data[8] = 0x00; // Generator id
+	msg->data[9] = evt_msg_version; // Event message format version
+	memcpy(&msg->data[10], &sel_msg->sensor_type,
+	       sizeof(common_addsel_msg_t) - sizeof(uint8_t));
+	record_id++;
+
+	bool ipmb_flag = true;
+	status = ipmb_read(msg, IPMB_inf_index_map[msg->InF_target]);
+	switch(status) {
+		case IPMB_ERROR_FAILURE:
+			ipmb_flag = false;
+			printf("Fail to post msg to InF_target 0x%x txqueue for addsel\n", msg->InF_target);
+			break;
+		case IPMB_ERROR_GET_MESSAGE_QUEUE:
+			ipmb_flag = false;
+			printf("No response from InF_target 0x%x for addsel\n", msg->InF_target);
+			break;
+		default:
+			break;
+	}
+
+	SAFE_FREE(msg);
+	return ipmb_flag;
 }
 
 void IPMI_handler(void *arug0, void *arug1, void *arug2)

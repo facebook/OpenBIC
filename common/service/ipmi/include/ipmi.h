@@ -26,6 +26,16 @@ struct ipmi_response {
 	uint8_t data[0];
 };
 
+typedef struct common_addsel_msg_t {
+	uint8_t InF_target;
+	uint8_t sensor_type;
+	uint8_t sensor_number;
+	uint8_t event_type;
+	uint8_t event_data1;
+	uint8_t event_data2;
+	uint8_t event_data3;
+} common_addsel_msg_t;
+
 static inline void pack_ipmi_resp(struct ipmi_response *resp, ipmi_msg *ipmi_resp)
 {
 	resp->netfn = (ipmi_resp->netfn + 1) << 2; // ipmi netfn response package
@@ -43,7 +53,7 @@ bool pal_request_msg_to_BIC_from_ME(uint8_t netfn, uint8_t cmd);
 // For the command that BIC only bridges it, BIC doesn't return the command directly
 // For this kind of commands we return through IPMB that receiving the responses from the other devices.
 bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd);
-
+bool common_add_sel_evt_record(common_addsel_msg_t *sel_msg);
 void ipmi_init(void);
 void IPMI_handler(void *arug0, void *arug1, void *arug2);
 
@@ -150,6 +160,7 @@ enum {
 
 // OEM Command Codes (0x30)
 enum {
+	CMD_OEM_CABLE_DETECTION = 0xCB,
 	CMD_OEM_NM_SENSOR_READ = 0xE2,
 	CMD_OEM_SET_SYSTEM_GUID = 0xEF,
 	CMD_OEM_GET_MB_INDEX = 0xF0,
