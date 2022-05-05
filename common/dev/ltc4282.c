@@ -34,12 +34,13 @@ uint8_t ltc4282_read(uint8_t sensor_num, int *reading)
 	if (i2c_master_read(&msg, retry) != 0)
 		return SENSOR_FAIL_TO_ACCESS;
 
+	// Refer to LTC4282 datasheet page 23.
 	switch (cfg->offset) {
 	case LTC4282_VSENSE_OFFSET:
-		val = (((msg.data[0] << 8) | msg.data[1]) * 0.4 / 65535 / Rsense);
+		val = (((msg.data[0] << 8) | msg.data[1]) * 0.04 / 65535 / Rsense);
 		break;
 	case LTC4282_POWER_OFFSET:
-		val = (((msg.data[0] << 8) | msg.data[1]) * 16.64 * 0.4 / 65535 / Rsense);
+		val = (((msg.data[0] << 8) | msg.data[1]) * 16.64 * 0.04 * 65536 / 65535 / 65535 / Rsense);
 		break;
 	case LTC4282_VSOURCE_OFFSET:
 		val = (((msg.data[0] << 8) | msg.data[1]) * 16.64 / 65535);
