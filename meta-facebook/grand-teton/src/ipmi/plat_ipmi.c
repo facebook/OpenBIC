@@ -6,6 +6,17 @@
 #include "libutil.h"
 #include "ipmi.h"
 #include "plat_ipmb.h"
+#include "plat_gpio.h"
+#include "hal_jtag.h"
+#include "eeprom.h"
+#include "fru.h"
+#include "sdr.h"
+#include "app_handler.h"
+#include "util_spi.h"
+#include <drivers/spi_nor.h>
+#include <drivers/flash.h>
+
+static bool spi_isInitialized = false;
 
 bool add_sel_evt_record(addsel_msg_t *sel_msg)
 {
@@ -62,4 +73,114 @@ bool add_sel_evt_record(addsel_msg_t *sel_msg)
 	}
 
 	return true;
+}
+void OEM_1S_PEX_FLASH_READ(ipmi_msg *msg)
+{
+	if (!msg) {
+		printf("<error> OEM_1S_PEX_FLASH_READ: parameter msg is NULL\n");
+		return;
+	}
+
+	if (msg->data_len != 4) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	if (msg->data[0] > 3 || msg->data[0] < 0) {
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		return;
+	}
+
+	static const uint8_t flash_sel_pin[4] = { BIC_SEL_FLASH_SW0, BIC_SEL_FLASH_SW1,
+						  BIC_SEL_FLASH_SW2, BIC_SEL_FLASH_SW3 };
+	uint8_t read_len = msg->data[3];
+	uint32_t addr = msg->data[1] | (msg->data[2] << 8);
+	const struct device *flash_dev;
+
+	if (read_len > 64) {
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		return;
+	}
+	/* pull high select pin to active flash and other should keep low*/
+	for (int i = 0; i < ARRAY_SIZE(flash_sel_pin); i++) {
+		if (msg->data[0] == i)
+			gpio_set(flash_sel_pin[i], GPIO_HIGH);
+		else
+			gpio_set(flash_sel_pin[i], GPIO_LOW);
+	}
+
+	flash_dev = device_get_binding("spi1_cs0");
+	if (!flash_dev) {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+	if (!spi_isInitialized) {
+		/* Due to the SPI in this project has mux so call this function to re-init*/
+		if (spi_nor_re_init(flash_dev)) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+		spi_isInitialized = true;
+	}
+
+	if (flash_read(flash_dev, addr, &msg->data[0], read_len) != 0) {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	msg->data_len = read_len;
+	msg->completion_code = CC_SUCCESS;
+
+	return;
+}
+
+void OEM_1S_GET_FPGA_USER_CODE(ipmi_msg *msg)
+{
+	if (!msg) {
+		printf("<error> OEM_1S_GET_FPGA_USER_CODE: parameter msg is NULL\n");
+		return;
+	}
+
+	if (msg->data_len != 0) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t buffer[4] = { 0 };
+	uint8_t ir_value = 0xc0;
+	uint8_t dr_value = 0x00;
+	const struct device *jtag_dev;
+
+	jtag_dev = device_get_binding("JTAG0");
+
+	if (!jtag_dev) {
+		printf("JTAG device not found\n");
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	gpio_set(JTAG_BIC_EN, GPIO_HIGH);
+
+	if (jtag_tap_set(jtag_dev, TAP_RESET)) {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	k_msleep(10);
+
+	if (jtag_ir_scan(jtag_dev, 8, &ir_value, buffer, TAP_IDLE)) {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	if (jtag_dr_scan(jtag_dev, 32, &dr_value, buffer, TAP_IDLE)) {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	gpio_set(JTAG_BIC_EN, GPIO_LOW);
+
+	memcpy(msg->data, buffer, 4);
+	msg->data_len = 4;
+	msg->completion_code = CC_SUCCESS;
 }

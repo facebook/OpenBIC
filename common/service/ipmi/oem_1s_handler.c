@@ -1190,6 +1190,16 @@ __weak void OEM_1S_INFORM_PEER_SLED_CYCLE(ipmi_msg *msg)
 	return;
 }
 
+__weak void OEM_1S_PEX_FLASH_READ(ipmi_msg *msg)
+{
+	return;
+}
+
+__weak void OEM_1S_GET_FPGA_USER_CODE(ipmi_msg *msg)
+{
+	return;
+}
+
 void IPMI_OEM_1S_handler(ipmi_msg *msg)
 {
 	if (msg == NULL) {
@@ -1285,6 +1295,11 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 #endif
 	case CMD_OEM_1S_INFORM_PEER_SLED_CYCLE:
 		OEM_1S_INFORM_PEER_SLED_CYCLE(msg);
+	case CMD_OEM_1S_PEX_FLASH_READ:
+		OEM_1S_PEX_FLASH_READ(msg);
+		break;
+	case CMD_OEM_1S_GET_FPGA_USER_CODE:
+		OEM_1S_GET_FPGA_USER_CODE(msg);
 		break;
 	default:
 		printf("Invalid OEM message, netfn(0x%x) cmd(0x%x)\n", msg->netfn, msg->cmd);
