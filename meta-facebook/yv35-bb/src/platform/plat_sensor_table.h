@@ -69,6 +69,8 @@
 #define SENSOR_NUM_CUR_LEAKAGE 0xF0
 #define SENSOR_NUM_FAN_PWR 0xF1
 
+#define SENSOR_NUM_POWER_DETECT 0xE1
+
 uint8_t load_sensor_config(void);
 
 #endif

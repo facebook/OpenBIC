@@ -8,6 +8,7 @@
 #include "plat_ipmb.h"
 #include "plat_gpio.h"
 #include "plat_isr.h"
+#include "plat_sensor_table.h"
 
 void OEM_CABLE_DETECTION(ipmi_msg *msg)
 {
@@ -48,6 +49,58 @@ void OEM_CABLE_DETECTION(ipmi_msg *msg)
 		}
 	} else {
 		printf("%s Unknown request", __func__);
+	}
+
+	SAFE_FREE(sel_msg);
+	return;
+}
+
+void OEM_1S_INFORM_PEER_SLED_CYCLE(ipmi_msg *msg)
+{
+	if (msg == NULL) {
+		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		return;
+	}
+
+	if (msg->data_len != 0) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t peer_slot_interface = 0;
+	common_addsel_msg_t *sel_msg;
+	bool ret = false;
+
+	if (msg->InF_source == SLOT1_BIC) {
+		peer_slot_interface = SLOT3_BIC;
+	} else if (msg->InF_source == SLOT3_BIC) {
+		peer_slot_interface = SLOT1_BIC;
+	} else {
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		return;
+	}
+
+	sel_msg = (common_addsel_msg_t *)malloc(sizeof(common_addsel_msg_t));
+	if (sel_msg == NULL) {
+		printf("%s: failed to malloc sel_msg\n", __func__);
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	sel_msg->InF_target = peer_slot_interface;
+	sel_msg->sensor_type = IPMI_SENSOR_TYPE_POWER_UNIT;
+	sel_msg->sensor_number = SENSOR_NUM_POWER_DETECT;
+	sel_msg->event_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
+	sel_msg->event_data1 = 0x00;
+	sel_msg->event_data2 = 0x00;
+	sel_msg->event_data3 = 0x00;
+
+	ret = common_add_sel_evt_record(sel_msg);
+	if (ret == false) {
+		printf("%s failed to add SEL to interface: 0x%x\n", __func__, sel_msg->InF_target);
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+	} else {
+		msg->completion_code = CC_SUCCESS;
 	}
 
 	SAFE_FREE(sel_msg);
