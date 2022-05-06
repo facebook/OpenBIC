@@ -7,6 +7,7 @@
 #include "ipmi.h"
 #include "plat_ipmb.h"
 #include "plat_gpio.h"
+#include "plat_fru.h"
 #include "hal_jtag.h"
 #include "eeprom.h"
 #include "fru.h"
@@ -183,4 +184,55 @@ void OEM_1S_GET_FPGA_USER_CODE(ipmi_msg *msg)
 	memcpy(msg->data, buffer, 4);
 	msg->data_len = 4;
 	msg->completion_code = CC_SUCCESS;
+}
+
+void APP_GET_SELFTEST_RESULTS(ipmi_msg *msg)
+{
+	if (msg == NULL) {
+		return;
+	}
+
+	if (msg->data_len != 0) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	EEPROM_ENTRY fru_entry;
+	fru_entry.config.dev_id = 0;
+	fru_entry.offset = 0;
+	fru_entry.data_len = 8;
+	fru_entry.config.have_mux = true;
+	fru_entry.config.mux_addr = SWB_FRU_MUX_ADDR;
+	fru_entry.config.mux_channel = SWB_FRU_MUX_CHAN;
+	FRU_read(&fru_entry);
+	uint8_t checksum = 0;
+	for (uint8_t i = 0; i < fru_entry.data_len; i++) {
+		checksum += fru_entry.data[i];
+	}
+
+	SELF_TEST_RESULT res;
+
+	res.result.opFwCorrupt = 0;
+	res.result.updateFwCorrupt = 0;
+	res.result.sdrRepoEmpty = is_sdr_not_init;
+	res.result.ipmbLinesDead = 0;
+
+	if (checksum == 0) {
+		res.result.cannotAccessBmcFruDev = 0;
+		res.result.internalCorrupt = 0;
+	} else {
+		res.result.cannotAccessBmcFruDev = 1;
+		res.result.internalCorrupt = 1;
+	}
+
+	res.result.cannotAccessSdrRepo = is_sdr_not_init;
+	res.result.cannotAccessSelDev = 0;
+
+	memcpy(&msg->data[1], &res.result, 1);
+	// 55h = No error, 57h = Corrupted or inaccessible data or devices
+	msg->data[0] = (msg->data[1] == 0x00) ? 0x55 : 0x57;
+	msg->data_len = 2;
+	msg->completion_code = CC_SUCCESS;
+
+	return;
 }
