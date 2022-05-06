@@ -75,6 +75,107 @@ bool add_sel_evt_record(addsel_msg_t *sel_msg)
 
 	return true;
 }
+
+void OEM_1S_FW_UPDATE(ipmi_msg *msg)
+{
+	if (msg == NULL) {
+		return;
+	}
+
+	/*********************************
+	* Request Data
+	*
+	* Byte   0: [6:0] fw update target, [7] indicate last packet
+	* Byte 1-4: offset, lsb first
+	* Byte 5-6: length, lsb first
+	* Byte 7-N: data
+	***********************************/
+	if (msg->data_len < 8) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t target = msg->data[0];
+	uint8_t status = -1;
+	uint32_t offset =
+		((msg->data[4] << 24) | (msg->data[3] << 16) | (msg->data[2] << 8) | msg->data[1]);
+	uint16_t length = ((msg->data[6] << 8) | msg->data[5]);
+
+	if ((length == 0) || (length != msg->data_len - 7)) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	if ((target == SWB_BIC_UPDATE) || (target == (SWB_BIC_UPDATE | IS_SECTOR_END_MASK))) {
+		// Expect BIC firmware size not bigger than 320k
+		if (offset > BIC_UPDATE_MAX_OFFSET) {
+			msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+			return;
+		}
+		status = fw_update(offset, length, &msg->data[7], (target & IS_SECTOR_END_MASK),
+				   DEVSPI_FMC_CS0);
+	} else if (((target & WITHOUT_SENCTOR_END_MASK) == PEX0_UPDATE) ||
+		   ((target & WITHOUT_SENCTOR_END_MASK) == PEX1_UPDATE) ||
+		   ((target & WITHOUT_SENCTOR_END_MASK) == PEX2_UPDATE) ||
+		   ((target & WITHOUT_SENCTOR_END_MASK) == PEX3_UPDATE)) {
+		uint8_t flash_sel_pin[4] = { BIC_SEL_FLASH_SW0, BIC_SEL_FLASH_SW1,
+					     BIC_SEL_FLASH_SW2, BIC_SEL_FLASH_SW3 };
+		uint8_t flash_sel_base = BIC_SEL_FLASH_SW0 - PEX0_UPDATE;
+		uint8_t current_sel_pin;
+
+		/* change mux to pex flash */
+		for (int i = 0; i < ARRAY_SIZE(flash_sel_pin); i++) {
+			if (flash_sel_base + (target & WITHOUT_SENCTOR_END_MASK) ==
+			    flash_sel_pin[i]) {
+				current_sel_pin = flash_sel_pin[i];
+				gpio_set(current_sel_pin, GPIO_HIGH);
+			} else {
+				gpio_set(flash_sel_pin[i], GPIO_LOW);
+			}
+		}
+		status = fw_update(offset, length, &msg->data[7], (target & IS_SECTOR_END_MASK),
+				   DEVSPI_SPI1_CS0);
+
+		/* change mux to default */
+		gpio_set(current_sel_pin, GPIO_LOW);
+
+	} else {
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		return;
+	}
+
+	msg->data_len = 0;
+
+	switch (status) {
+	case FWUPDATE_SUCCESS:
+		msg->completion_code = CC_SUCCESS;
+		break;
+	case FWUPDATE_OUT_OF_HEAP:
+		msg->completion_code = CC_LENGTH_EXCEEDED;
+		break;
+	case FWUPDATE_OVER_LENGTH:
+		msg->completion_code = CC_OUT_OF_SPACE;
+		break;
+	case FWUPDATE_REPEATED_UPDATED:
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		break;
+	case FWUPDATE_UPDATE_FAIL:
+		msg->completion_code = CC_TIMEOUT;
+		break;
+	case FWUPDATE_ERROR_OFFSET:
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		break;
+	default:
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		break;
+	}
+	if (status != FWUPDATE_SUCCESS) {
+		printf("firmware (0x%02X) update failed cc: %x\n", target, msg->completion_code);
+	}
+
+	return;
+}
+
 void OEM_1S_PEX_FLASH_READ(ipmi_msg *msg)
 {
 	if (!msg) {
