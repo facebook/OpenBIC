@@ -15,40 +15,14 @@
 
 /* I2C slave init-enable table */
 const bool I2C_SLAVE_ENABLE_TABLE[MAX_SLAVE_NUM] = {
-  SLAVE_ENABLE,
-  SLAVE_DISABLE,
-  SLAVE_DISABLE,
-  SLAVE_DISABLE,
-  SLAVE_DISABLE,
-  SLAVE_DISABLE,
-  SLAVE_ENABLE,
-  SLAVE_DISABLE,
-  SLAVE_ENABLE,
-  SLAVE_DISABLE,
-  SLAVE_DISABLE,
-  SLAVE_DISABLE,
-  SLAVE_DISABLE,
-  SLAVE_DISABLE,
-  SLAVE_DISABLE,
-  SLAVE_DISABLE
+	SLAVE_ENABLE,  SLAVE_DISABLE, SLAVE_DISABLE, SLAVE_DISABLE, SLAVE_DISABLE, SLAVE_DISABLE,
+	SLAVE_ENABLE,  SLAVE_DISABLE, SLAVE_ENABLE,  SLAVE_DISABLE, SLAVE_DISABLE, SLAVE_DISABLE,
+	SLAVE_DISABLE, SLAVE_DISABLE, SLAVE_DISABLE, SLAVE_DISABLE,
 };
 
 /* I2C slave init-config table */
 const struct _i2c_slave_config I2C_SLAVE_CONFIG_TABLE[MAX_SLAVE_NUM] = {
-  { 0x40,   0xA },
-  { 0x40,   0xA },
-  { 0xFF,   0xA },
-  { 0xFF,   0xA },
-  { 0xFF,   0xA },
-  { 0xFF,   0xA },
-  { 0x40,   0x5 },
-  { 0xFF,   0xA },
-  { 0x40,   0x4 },
-  { 0xFF,   0xA },
-  { 0xFF,   0xA },
-  { 0xFF,   0xA },
-  { 0xFF,   0xA },
-  { 0xFF,   0xA },
-  { 0xFF,   0xA },
-  { 0xFF,   0xA }
+	{ 0x40, 0xA }, { 0x40, 0xA }, { 0xFF, 0xA }, { 0xFF, 0xA }, { 0xFF, 0xA }, { 0xFF, 0xA },
+	{ 0x40, 0x5 }, { 0xFF, 0xA }, { 0x40, 0x4 }, { 0xFF, 0xA }, { 0xFF, 0xA }, { 0xFF, 0xA },
+	{ 0xFF, 0xA }, { 0xFF, 0xA }, { 0xFF, 0xA }, { 0xFF, 0xA },
 };

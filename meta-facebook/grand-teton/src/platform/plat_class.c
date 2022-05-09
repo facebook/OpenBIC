@@ -9,4 +9,3 @@
 #include "libutil.h"
 #include "plat_gpio.h"
 #include "plat_i2c.h"
-

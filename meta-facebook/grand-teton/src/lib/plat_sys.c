@@ -4,11 +4,10 @@
 #include "hal_gpio.h"
 #include "plat_gpio.h"
 
-
 /* BMC reset */
 void BMC_reset_handler()
 {
-  /* TBD */
+	/* TBD */
 }
 
 K_WORK_DELAYABLE_DEFINE(BMC_reset_work, BMC_reset_handler);

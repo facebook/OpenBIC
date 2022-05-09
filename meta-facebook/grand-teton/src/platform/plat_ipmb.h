@@ -18,12 +18,11 @@
 #define BB_BIC_I2C_ADDRESS 0x20
 #define MAX_IPMB_IDX 0
 
-enum {
-	BMC_IPMB_IDX,
-	ME_IPMB_IDX,
-	EXP1_IPMB_IDX,
-	BB_IPMB_IDX = EXP1_IPMB_IDX,
-	EXP2_IPMB_IDX,
+enum { BMC_IPMB_IDX,
+       ME_IPMB_IDX,
+       EXP1_IPMB_IDX,
+       BB_IPMB_IDX = EXP1_IPMB_IDX,
+       EXP2_IPMB_IDX,
 };
 
 extern IPMB_config pal_IPMB_config_table[];

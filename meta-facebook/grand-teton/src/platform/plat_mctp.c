@@ -55,10 +55,8 @@ static mctp_smbus_port smbus_port[] = {
 	{ .conf.smbus_conf.addr = I2C_ADDR_BIC, .conf.smbus_conf.bus = I2C_BUS_NIC_0 }
 };
 
-mctp_route_entry mctp_route_tbl[] = { 
-  { MCTP_EID_BMC, I2C_BUS_BMC, I2C_ADDR_BMC },
-	{ MCTP_EID_NIC_0, I2C_BUS_NIC_0, I2C_ADDR_NIC } 
-};
+mctp_route_entry mctp_route_tbl[] = { { MCTP_EID_BMC, I2C_BUS_BMC, I2C_ADDR_BMC },
+				      { MCTP_EID_NIC_0, I2C_BUS_NIC_0, I2C_ADDR_NIC } };
 
 static mctp *find_mctp_by_smbus(uint8_t bus)
 {
@@ -116,7 +114,7 @@ static void set_dev_endpoint(void)
 			msg.cmd_data_len = sizeof(req);
 
 			msg.recv_resp_cb_fn = set_endpoint_resp_handler;
-      msg.timeout_cb_fn = set_endpoint_resp_timeout;
+			msg.timeout_cb_fn = set_endpoint_resp_timeout;
 			msg.timeout_cb_fn_args = p;
 
 			mctp_ctrl_send_msg(find_mctp_by_smbus(p->bus), &msg);
@@ -142,10 +140,10 @@ static uint8_t mctp_msg_recv(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_
 	case MCTP_MSG_TYPE_PLDM:
 		mctp_pldm_cmd_handler(mctp_p, buf, len, ext_params);
 		break;
-  
-  default:
-	  LOG_WRN("Cannot find message receive function!!");
-	  return MCTP_ERROR;
+
+	default:
+		LOG_WRN("Cannot find message receive function!!");
+		return MCTP_ERROR;
 	}
 
 	return MCTP_SUCCESS;
