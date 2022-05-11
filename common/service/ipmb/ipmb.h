@@ -132,11 +132,11 @@ typedef enum ipmb_error {
 } ipmb_error;
 
 typedef struct ipmi_msg {
-	uint8_t dest_addr; /**< Destination slave address */
+	uint8_t dest_addr; /**< Destination target address */
 	uint8_t netfn; /**< Net Function */
 	uint8_t dest_LUN; /**< Destination LUN (Logical Unit Number) */
 	uint8_t hdr_chksum; /**< Connection Header Checksum */
-	uint8_t src_addr; /**< Source slave address */
+	uint8_t src_addr; /**< Source target address */
 	uint8_t seq_source; /**< Source sequence Number */
 	uint8_t seq_target; /**< Target sequence Number */
 	uint8_t seq; /**< Sequence Number */

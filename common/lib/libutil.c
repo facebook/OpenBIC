@@ -36,10 +36,10 @@ ipmi_msg construct_ipmi_message(uint8_t seq_source, uint8_t netFn, uint8_t comma
  * @brief Construct an I2C message buffer.
  *
  * @param bus_id The I2C bus ID.
- * @param address Slave device address(7-bit address).
- * @param tx_len the data length that transmits to slave device.
- * @param data the data buffer that ready to transmit to slave.
- * @param rx_len the data length that receive the response from slave device.
+ * @param address Target device address(7-bit address).
+ * @param tx_len the data length that transmits to target device.
+ * @param data the data buffer that ready to transmit to target.
+ * @param rx_len the data length that receive the response from target device.
  *
  * @retval The I2C message buffer.
  */

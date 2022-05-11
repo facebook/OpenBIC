@@ -1,5 +1,5 @@
 #include "mctp.h"
-#include "hal_i2c_slave.h"
+#include "hal_i2c_target.h"
 #include <logging/log.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -89,9 +89,9 @@ static uint16_t mctp_smbus_read(void *mctp_p, uint8_t *buf, uint32_t len,
 
 	/* TODO: read data from smbus */
 	uint8_t ret = 0;
-	ret = i2c_slave_read(mctp_inst->medium_conf.smbus_conf.bus, rdata, 256, &rlen);
+	ret = i2c_target_read(mctp_inst->medium_conf.smbus_conf.bus, rdata, 256, &rlen);
 	if (ret) {
-		LOG_ERR("i2c_slave_read fail, ret %d\n", ret);
+		LOG_ERR("i2c_target_read fail, ret %d\n", ret);
 		return 0;
 	}
 

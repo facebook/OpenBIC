@@ -13,7 +13,7 @@
 
 #include "ipmb.h"
 
-void usb_slavedev_init(void);
+void usb_targetdev_init(void);
 void usb_write_by_ipmi(ipmi_msg *ipmi_resp);
 void usb_dev_init(void);
 
