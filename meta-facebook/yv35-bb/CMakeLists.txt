@@ -14,3 +14,6 @@ target_sources(app PRIVATE ${common_sources})
 target_include_directories(app PRIVATE ${ZEPHYR_BASE}/include/portability)
 target_include_directories(app PRIVATE ${common_path} ${common_path}/service/ipmi/include ${common_path}/service/host ${common_path}/service/sensor ${common_path}/service/usb ${common_path}/service/ipmb ${common_path}/service/mctp ${common_path}/service/pldm ${common_path}/hal ${common_path}/dev/include ${common_path}/lib ${common_path}/shell)
 target_include_directories(app PRIVATE src/ipmi/include src/platform src/lib)
+
+# Fail build if there are any warnings 
+target_compile_options(app PRIVATE -Werror)
