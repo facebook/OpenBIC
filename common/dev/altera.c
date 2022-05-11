@@ -7,6 +7,18 @@
 #include "hal_i2c.h"
 
 #define MAX_RETRY 3
+#define CHECK_ALTERA_STATUS_DELAY_US 100
+
+// Change bit 1010 1010b(0xaa) and 0101 0101b (0x55)
+// e.g. 0123 4567 -> 1032 5476
+// Change bit 1100 1100b(0xcc) and 0011 0011b(0x33)
+// e.g. 1032 5476 -> 3210 7654
+// Change bit 1111 0000b(0xf0) and 0000 1111b(0x0f)
+// e.g. 3210 7654 -> 7654 3210
+#define SWAP_LSB_TO_MSB(x)                                                                         \
+	x = (((x & 0xaa) >> 1) | ((x & 0x55) << 1));                                               \
+	x = (((x & 0xcc) >> 2) | ((x & 0x33) << 2));                                               \
+	x = (((x & 0xf0) >> 4) | ((x & 0x0f) << 4));
 
 static altera_max10_attr altera_max10_config;
 
@@ -157,12 +169,7 @@ int cpld_altera_max10_fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg)
 
 		// Swap LSB with MSB before write into CFM
 		for (byte = 0; byte < 4; byte++) {
-			receive_buffer[byte] = (((receive_buffer[byte] & 0xaa) >> 1) |
-						((receive_buffer[byte] & 0x55) << 1));
-			receive_buffer[byte] = (((receive_buffer[byte] & 0xcc) >> 2) |
-						((receive_buffer[byte] & 0x33) << 2));
-			receive_buffer[byte] = (((receive_buffer[byte] & 0xf0) >> 4) |
-						((receive_buffer[byte] & 0x0f) << 4));
+			SWAP_LSB_TO_MSB(receive_buffer[byte]);
 		}
 
 		// Combine 4 bytes to 1 word before write operation
@@ -186,7 +193,7 @@ int cpld_altera_max10_fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg)
 
 			} else {
 				printf("status: %x retry...\n", status);
-				k_usleep(100);
+				k_usleep(CHECK_ALTERA_STATUS_DELAY_US);
 				retry--;
 			}
 
