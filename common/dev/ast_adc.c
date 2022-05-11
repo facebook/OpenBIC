@@ -23,6 +23,8 @@ enum adc_device_idx { adc0, adc1, ADC_NUM };
 #define ADC_REFERENCE ADC_REF_INTERNAL
 #define ADC_ACQUISITION_TIME ADC_ACQ_TIME_DEFAULT
 
+#define ADC_AVERAGE_DELAY_MSEC 50
+
 static const struct device *dev_adc[ADC_NUM];
 static int16_t sample_buffer[BUFFER_SIZE];
 static int is_ready[2];
@@ -114,16 +116,26 @@ uint8_t ast_adc_read(uint8_t sensor_num, int *reading)
 	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 	uint8_t chip = cfg->port / ADC_CHANNEL_COUNT;
 	uint8_t number = cfg->port % ADC_CHANNEL_COUNT;
-	int val = 1;
+	int val = 1, i = 0, average_val = 0;
 
-	if (!adc_read_mv(sensor_num, chip, number, &val))
-		return SENSOR_FAIL_TO_ACCESS;
+	for (i = 0; i < cfg->sample_count; i++) {
+		val = 1;
+		if (!adc_read_mv(sensor_num, chip, number, &val))
+			return SENSOR_FAIL_TO_ACCESS;
+		average_val += val;
 
-	val = val * cfg->arg0 / cfg->arg1;
+		// To avoid too busy
+		if (cfg->sample_count > SAMPLE_COUNT_DEFAULT) {
+			k_msleep(ADC_AVERAGE_DELAY_MSEC);
+		}
+	}
+
+	average_val = average_val / cfg->sample_count;
+	average_val = average_val * cfg->arg0 / cfg->arg1;
 
 	sensor_val *sval = (sensor_val *)reading;
-	sval->integer = (val / 1000) & 0xFFFF;
-	sval->fraction = (val % 1000) & 0xFFFF;
+	sval->integer = (average_val / 1000) & 0xFFFF;
+	sval->fraction = (average_val % 1000) & 0xFFFF;
 
 	return SENSOR_READ_SUCCESS;
 }
