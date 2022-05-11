@@ -19,7 +19,7 @@ adm1278_init_arg adm1278_init_args[] = {
 	[0] = { .is_init = false, .config = { 0x3F1C }, .r_sense = 0.25 }
 };
 
-ltc4282_init_arg ltc4282_init_args[] = { [0] = { .r_sense = 0.0001875 } };
+ltc4282_init_arg ltc4282_init_args[] = { [0] = { .r_sense = 0.0001 } };
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
