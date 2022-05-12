@@ -241,3 +241,6 @@
 &wdt4 {
 	status = "okay";
 };
+&sram0 {
+	reg = <0 DT_SIZE_K(512)>, <0x80000 DT_SIZE_K(256)>;
+};
