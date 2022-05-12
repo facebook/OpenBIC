@@ -23,7 +23,7 @@ enum adc_device_idx { adc0, adc1, ADC_NUM };
 #define ADC_REFERENCE ADC_REF_INTERNAL
 #define ADC_ACQUISITION_TIME ADC_ACQ_TIME_DEFAULT
 
-#define ADC_AVERAGE_DELAY_MSEC 50
+#define ADC_AVERAGE_DELAY_MSEC 1
 
 static const struct device *dev_adc[ADC_NUM];
 static int16_t sample_buffer[BUFFER_SIZE];
