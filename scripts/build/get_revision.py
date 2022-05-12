@@ -35,7 +35,7 @@ def get_manifest(manifest_path) -> str:
         print(e)
         sys.exit(255)
 
-    file_match = re.search("\nmanifest:", file_contents)
+    file_match = re.search("manifest:", file_contents)
     if file_match is None:
         print("File does not appear to be a manifest file.")
         print("Missing \"manifest\" key in file.")
@@ -55,8 +55,15 @@ def parse_revisions(manifest_contents) -> dict:
     :return: Dictionary containing project name and revision as key, values.
     :rtype: dict
     """
+    project_body_pattern = r"projects:([\s\S]*)self:"
+    body_match = re.findall(project_body_pattern, manifest_contents, re.M)
+    if body_match is []:
+        print("Could not identify project field of manifest.")
+        sys.exit(255)
+
+    body = body_match[0]
     regex_pattern = r"- name:[ ]*([^ \n]*)[\s\S]*?revision:[ ]*([a-z,0-9,\.]*)"
-    matches = re.findall(regex_pattern, manifest_contents, re.M)
+    matches = re.findall(regex_pattern, body, re.M)
 
     revisions = {}
     for revision_pair in matches:
