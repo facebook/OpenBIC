@@ -10,9 +10,3 @@ IPMB_config pal_IPMB_config_table[] = {
 	// index, interface, channel, bus, channel_target_address, enable_status, self_address,
 	// rx_thread_name, tx_thread_name
 };
-
-bool pal_load_ipmb_config(void)
-{
-	memcpy(&IPMB_config_table[0], &pal_IPMB_config_table[0], sizeof(pal_IPMB_config_table));
-	return true;
-};

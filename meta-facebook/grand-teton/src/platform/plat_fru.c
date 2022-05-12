@@ -11,7 +11,7 @@ const EEPROM_CFG plat_fru_config[] = {
 		FRU_DEV_ACCESS_BYTE,
 		FRU_START,
 		FRU_SIZE,
-		true,
+		true, /*Because there has mux before eeprom, so mux_present is true to access mux first */
 		SWB_FRU_MUX_ADDR,
 		SWB_FRU_MUX_CHAN,
 	},

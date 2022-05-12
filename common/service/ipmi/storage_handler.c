@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "storage_handler.h"
 #include "plat_fru.h"
+#include "plat_ipmb.h"
 #include "fru.h"
 #include "sdr.h"
 
@@ -236,7 +237,7 @@ __weak void STORAGE_ADD_SEL(ipmi_msg *msg)
 		printf("%s failed due to parameter is NULL\n", __func__);
 		return;
 	}
-
+#if MAX_IPMB_IDX
 	if (msg->data_len != 16) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
@@ -275,6 +276,9 @@ __weak void STORAGE_ADD_SEL(ipmi_msg *msg)
 	}
 
 	msg->completion_code = CC_SUCCESS;
+#else
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+#endif
 	return;
 }
 

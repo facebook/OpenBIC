@@ -2,7 +2,7 @@
 #define PLAT_VERSION_H
 
 #define PLATFORM_NAME "grand-teton"
-#define PROJECT_NAME "grand-teton"
+#define PROJECT_NAME "cascade-creek"
 #define IANA_ID 0x00A015
 #define DEVICE_ID 0x00
 #define DEVICE_REVISION 0x80

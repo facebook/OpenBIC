@@ -10,7 +10,7 @@ bool eeprom_mux_check(EEPROM_ENTRY *entry)
 	}
 	I2C_MSG msg;
 	uint8_t retry = 5;
-	if (entry->config.have_mux) {
+	if (entry->config.mux_present) {
 		msg.bus = entry->config.port;
 		msg.target_addr = entry->config.mux_addr;
 		msg.tx_len = 1;
@@ -28,9 +28,9 @@ bool eeprom_write(EEPROM_ENTRY *entry)
 	}
 	I2C_MSG msg;
 	uint8_t retry = 5;
-	uint8_t count = 0;
+	uint8_t i;
 
-	do {
+	for (i = 0; i < retry; i++) {
 		/* Check if there have a MUX before EEPROM and access it to change channel first */
 		if (eeprom_mux_check(entry) == false)
 			continue;
@@ -45,9 +45,9 @@ bool eeprom_write(EEPROM_ENTRY *entry)
 
 		if (i2c_master_write(&msg, retry) == 0)
 			break;
-	} while (count++ < retry);
+	}
 
-	return ((count == retry) ? false : true);
+	return ((i == retry) ? false : true);
 }
 
 bool eeprom_read(EEPROM_ENTRY *entry)
@@ -58,9 +58,9 @@ bool eeprom_read(EEPROM_ENTRY *entry)
 
 	I2C_MSG msg;
 	uint8_t retry = 5;
-	uint8_t count = 0;
+	uint8_t i;
 
-	do {
+	for (i = 0; i < retry; i++) {
 		/* Check if there have a MUX before EEPROM and access it to change channel first */
 		if (eeprom_mux_check(entry) == false)
 			continue;
@@ -78,7 +78,7 @@ bool eeprom_read(EEPROM_ENTRY *entry)
 			memcpy(&entry->data, &msg.data, msg.rx_len);
 			break;
 		}
-	} while (count++ < retry);
+	}
 
-	return ((count == retry) ? false : true);
+	return ((i == retry) ? false : true);
 }

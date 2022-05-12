@@ -4,7 +4,8 @@
 #include "util_sys.h"
 #include "plat_class.h"
 #include "plat_gpio.h"
-#include "plat_i2c_slave.h"
+#include "plat_i2c_target.h"
+#include "plat_mctp.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -13,11 +14,11 @@ SCU_CFG scu_cfg[] = {
 
 void pal_pre_init()
 {
-	/* init i2c slave */
-	for (int index = 0; index < MAX_SLAVE_NUM; index++) {
-		if (I2C_SLAVE_ENABLE_TABLE[index])
-			i2c_slave_control(
-				index, (struct _i2c_slave_config *)&I2C_SLAVE_CONFIG_TABLE[index],
+	/* init i2c target */
+	for (int index = 0; index < MAX_TARGET_NUM; index++) {
+		if (I2C_TARGET_ENABLE_TABLE[index])
+			i2c_target_control(
+				index, (struct _i2c_target_config *)&I2C_TARGET_CONFIG_TABLE[index],
 				1);
 	}
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));

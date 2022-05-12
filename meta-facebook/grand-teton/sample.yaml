@@ -2,7 +2,7 @@ tests:
   portability.cmsis_rtos_v2:
     tags: cmsis_rtos
 sample:
-  description: yv35_tmp 
+  description: gt_tmp 
   name: tmp
 common:
     tags: introduction

@@ -18,6 +18,7 @@
 #ifdef ENABLE_FAN
 #include "plat_fan.h"
 #endif
+#include "plat_ipmb.h"
 #include "power_status.h"
 #include "pmbus.h"
 #include "altera.h"
@@ -32,7 +33,7 @@ __weak void OEM_1S_MSG_OUT(ipmi_msg *msg)
 	if (msg == NULL) {
 		return;
 	}
-
+#if MAX_IPMB_IDX
 	uint8_t target_IF;
 	ipmb_error status;
 	ipmi_msg *bridge_msg = NULL;
@@ -114,7 +115,9 @@ __weak void OEM_1S_MSG_OUT(ipmi_msg *msg)
 			printf("OEM_MSG_OUT send IPMB resp fail status: %x", status);
 		}
 	}
-
+#else
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+#endif
 	return;
 }
 
@@ -272,8 +275,10 @@ __weak void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 
 	uint8_t component;
 	component = msg->data[0];
+#if MAX_IPMB_IDX
 	ipmb_error status;
 	ipmi_msg *bridge_msg;
+#endif
 
 #ifdef ENABLE_ISL69260
 	I2C_MSG i2c_msg;
@@ -295,6 +300,7 @@ __weak void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		msg->data_len = 7;
 		msg->completion_code = CC_SUCCESS;
 		break;
+#if MAX_IPMB_IDX
 	case COMPNT_ME:
 		bridge_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
 		if (bridge_msg == NULL) {
@@ -325,6 +331,7 @@ __weak void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 			SAFE_FREE(bridge_msg);
 		}
 		break;
+#endif
 #ifdef ENABLE_ISL69260
 	case COMPNT_PVCCIN:
 	case COMPNT_PVCCFA_EHV_FIVRA:

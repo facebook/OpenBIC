@@ -28,7 +28,7 @@ typedef struct _EEPROM_CFG_ {
 	uint8_t access;
 	uint16_t start_offset;
 	uint16_t max_size;
-	bool have_mux;
+	bool mux_present;
 	uint8_t mux_addr;
 	uint8_t mux_channel;
 } EEPROM_CFG;
