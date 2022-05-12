@@ -153,8 +153,7 @@ void init_platform_config()
 		rx_len = 1;
 		memset(data, 0, I2C_DATA_SIZE);
 		data[0] = CPLD_2OU_EXPANSION_CARD_REG;
-		i2c_msg =
-			construct_i2c_message(I2C_BUS1, CPLD_ADDR, tx_len, data, rx_len);
+		i2c_msg = construct_i2c_message(I2C_BUS1, CPLD_ADDR, tx_len, data, rx_len);
 		if (!i2c_master_read(&i2c_msg, retry)) {
 			switch (i2c_msg.data[0]) {
 			case TYPE_2OU_DPV2:
