@@ -1,4 +1,8 @@
+// This doesn't help clean up the code much.
 variableScope
+
+// This doesn't provide much value most of the time.
+unusedStructMember
 
 // This output confuses CI, get rid of it.
 unmatchedSuppression
