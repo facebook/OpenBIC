@@ -1,6 +1,5 @@
 name: Build and Analyze 
 
-
 on:
   pull_request:   # Kick off this on every PR
   workflow_call:  # We may want to run this workflow from other places, like nightly builds
@@ -8,6 +7,7 @@ on:
       nightly:
         required: false 
         type: boolean 
+        default: false
     secrets:
       GIST_SECRET:
         required: true
@@ -88,7 +88,11 @@ jobs:
       run: |
         cd OpenBIC 
         west update
-  
+ 
+    - name: Apply Kernel Patches
+      run: |
+        ${{ github.event.repository.name }}/scripts/build/apply_patches.py --source="${{ github.event.repository.name }}/fix_patch/" --destination="zephyr"
+ 
     - name: Build Platform
       id: build
       continue-on-error: true
@@ -131,7 +135,7 @@ jobs:
 
   run-cppcheck:
     runs-on: ubuntu-latest
-    if: ${{ inputs.nightly != true }}
+    if: ${{ inputs.nightly == false }}
     steps:
 
     - name: Get PR File List 
@@ -218,7 +222,7 @@ jobs:
 
   run-clang-format:
     runs-on: ubuntu-latest
-    if: ${{ inputs.nightly != true }}
+    if: ${{ inputs.nightly == false }}
     steps:
       
     - uses: actions/checkout@v2
@@ -290,11 +294,7 @@ jobs:
 
   Aggregate-Lint-Output:
     needs: [run-cppcheck, run-clang-format]
-    if: |
-        always() && 
-        (needs.run-cppcheck.result == 'failure' || 
-         needs.run-clang-format.result == 'failure') &&
-        ${{ inputs.nightly != true }}
+    if: ${{ always()  && inputs.nightly == false }}
     runs-on: ubuntu-latest
     steps:
       
