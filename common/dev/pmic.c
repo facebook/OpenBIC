@@ -5,7 +5,7 @@
 #include "pmic.h"
 #include "sensor.h"
 #include "libutil.h"
-
+#include "plat_ipmb.h"
 uint8_t *compose_memory_write_read_req(uint8_t smbus_identifier, uint8_t smbus_address,
 				       uint32_t addr_value, uint8_t *write_data, uint8_t write_len)
 {
@@ -95,7 +95,7 @@ uint8_t pmic_read(uint8_t sensor_num, int *reading)
 		printf("[%s] device isn't initialized\n", __func__);
 		return SENSOR_NOT_FOUND;
 	}
-
+#if MAX_IPMB_IDX
 	int total_pmic_power = 0, ret = 0;
 	uint8_t seq_source = 0xFF;
 	uint8_t *compose_memory_write_read_msg = compose_memory_write_read_req(
@@ -118,6 +118,9 @@ uint8_t pmic_read(uint8_t sensor_num, int *reading)
 	sval->fraction = (total_pmic_power % 1000) & 0xFFFF;
 
 	return SENSOR_READ_SUCCESS;
+#else
+	return SENSOR_FAIL_TO_ACCESS;
+#endif
 }
 
 uint8_t pmic_init(uint8_t sensor_num)
