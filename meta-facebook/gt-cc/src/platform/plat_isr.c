@@ -10,6 +10,8 @@
 #include "hal_gpio.h"
 #include "util_sys.h"
 #include "pex89000.h"
+#include "pldm.h"
+#include "plat_mctp.h"
 
 void dc_on_init_component()
 {
@@ -48,6 +50,11 @@ void dc_on_init_component()
 			}
 		}
 	}
+	/* Call function to set endpoint and get parameters for the device, the
+   * function description is as defined by zephyr but argument is not used in
+   * this function so put NULL here.
+   */
+	send_cmd_to_dev(NULL);
 }
 
 K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, dc_on_init_component);
@@ -59,6 +66,6 @@ void ISR_DC_ON()
 	set_DC_on_delayed_status();
 	/* Check whether DC on to send work to initial PEX, 
     this pin will be change in next CPLD firmware release */
-	if (get_DC_status() == true)
+	if (get_DC_status())
 		k_work_schedule(&set_DC_on_5s_work, K_SECONDS(DC_ON_5_SECOND));
 }

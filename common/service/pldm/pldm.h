@@ -102,6 +102,33 @@ typedef struct _pldm {
                        layer */
 } pldm_t;
 
+struct pldm_variable_field {
+	uint8_t *ptr;
+	size_t length;
+};
+
+struct pldm_get_firmware_parameters_resp {
+	uint8_t completion_code;
+	union {
+		struct {
+			uint8_t fail_recovery : 1;
+			uint8_t fail_retry : 1;
+			uint8_t func_during_update : 1;
+			uint8_t partial_update : 1;
+			uint8_t update_mode_restrict : 4;
+			/* Bit [31:8] reserved */
+			uint8_t : 8;
+			uint16_t : 16;
+		};
+		uint32_t capabilities_during_update;
+	};
+	uint16_t comp_count;
+	uint8_t active_comp_image_set_ver_str_type;
+	uint8_t active_comp_image_set_ver_str_len;
+	uint8_t pending_comp_image_set_ver_str_type;
+	uint8_t pending_comp_image_set_ver_str_len;
+} __attribute__((packed));
+
 /* the pldm command handler */
 uint8_t mctp_pldm_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_params ext_params);
 
