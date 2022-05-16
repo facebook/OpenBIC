@@ -20,7 +20,6 @@
 #define I2C_BUS13 12
 #define I2C_BUS14 13
 
-#define IPMB_I2C_BMC I2C_BUS7
 #define I2C_BUS_MAX_NUM 14
 
 #endif

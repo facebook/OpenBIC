@@ -1,22 +1,4 @@
 #ifndef PLAT_CLASS_H
 #define PLAT_CLASS_H
 
-#include <stdbool.h>
-#include <stdint.h>
-
-#define SYS_CLASS_1 1
-#define SYS_CLASS_2 2
-
-enum BIC_BOARD_REVISION {
-	SYS_BOARD_POC = 0x0,
-	SYS_BOARD_EVT,
-	SYS_BOARD_EVT2,
-	SYS_BOARD_EVT3_HOTSWAP,
-	SYS_BOARD_EVT3_EFUSE,
-	SYS_BOARD_DVT_HOTSWAP,
-	SYS_BOARD_DVT_EFUSE,
-	SYS_BOARD_MP_HOTSWAP,
-	SYS_BOARD_MP_EFUSE,
-};
-
 #endif

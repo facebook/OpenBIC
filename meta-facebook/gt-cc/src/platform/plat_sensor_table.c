@@ -24,17 +24,6 @@ sensor_cfg plat_sensor_config[] = {
 
 };
 
-sensor_cfg adm1278_sensor_config_table[] = {
-	/* number,                  type,       port,      address,      offset,
-	   access check arg0, arg1, cache, cache_status, mux_address, mux_offset,
-	   pre_sensor_read_fn, pre_sensor_read_args, post_sensor_read_fn, post_sensor_read_fn  */
-
-};
-
-sensor_cfg evt3_class1_adi_temperature_sensor_table[] = {
-
-};
-
 uint8_t load_sensor_config(void)
 {
 	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));

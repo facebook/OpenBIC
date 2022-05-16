@@ -8,7 +8,7 @@
 /* BMC reset */
 void BMC_reset_handler()
 {
-	printf("[%s] BMC reset no supported\n", __func__);
+	printf("[%s] BMC reset not supported\n", __func__);
 }
 
 K_WORK_DELAYABLE_DEFINE(BMC_reset_work, BMC_reset_handler);
