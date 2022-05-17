@@ -189,6 +189,7 @@ jobs:
         cat /tmp/cppcheck_file_list.log
 
         options=( "-j2"
+          "--force"
           "--inconclusive"
           "--enable=performance,style,portability,information"
           "--library=scripts/linters/cppcheck/cppcheck.cfg"
