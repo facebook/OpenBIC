@@ -1,8 +1,9 @@
 name: Nightly Regression Build
 
 on:
-  schedule:
-      - cron: '0 0 * * *' # Once per day at midnight
+  pull_request:
+#  schedule:
+#      - cron: '0 0 * * *' # Once per day at midnight
 
 jobs:
   # This will skip the nightly if there are no new commits since the previous nightly.
@@ -26,9 +27,8 @@ jobs:
   # Only kick off the nightly when there are changes.
   kickoff_nightly:
     needs: check_date
-    if: ${{ needs.check_date.outputs.should_run != 'false' }}
     name: kickoff nightly
-    uses: facebook/OpenBIC/.github/workflows/build_and_lint_pr.yml@nightly_build
+    uses: facebook/OpenBIC/.github/workflows/build_and_lint_pr.yml@main
     with:
       nightly: true # We don't want to run linters on nightly because it creates a lot of pointless noise.
     secrets:
