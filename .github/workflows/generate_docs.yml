@@ -1,0 +1,33 @@
+name: Nightly Regression Build
+
+on:
+  pull_request:
+#  schedule:
+#      - cron: '0 0 * * *' # Once per day at midnight
+
+jobs:
+  # This will skip the nightly if there are no new commits since the previous nightly.
+  # Might as well save some electrons on the weekend.
+  deploy_docs:
+    concurrency: ci-${{ github.ref }} # Kill old runs.
+    runs-on: ubuntu-latest
+    name: Check latest commit
+
+    steps:
+      - name: Checkout Repo 🛎️
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+      - run: git checkout HEAD^
+    
+      - name: Generate Docs 🔧
+        uses: mattnotmitt/doxygen-action@v1.9.2
+        with:
+          doxyfile-path: 'docs/'
+
+      - name: Deploy Docs 🚀
+        uses: JamesIves/github-pages-deploy-action@v4.3.3
+        with:
+          branch: gh-pages 
+          folder: docs/html 
+          single-commit: true
