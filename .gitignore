@@ -19,3 +19,6 @@ src/tools/Kconfiglib/__pycache__/kconfiglib.cpython-38.pyc
 
 # Ignore pycache
 __pycache__
+
+# Ignore doxygen output
+html
