@@ -22,10 +22,14 @@ enum BIC_BOARD_REVISION {
 enum BIC_CLASS_TYPE {
 	TYPE_2OU_EXP = 0x1,
 	TYPE_2OU_SPE = 0x2,
-	TYPE_2OU_DPV2 = 0x77,
 	TYPE_2OU_DPV2_8 = 0x7,
 	TYPE_2OU_DPV2_16 = 0x70,
 	TYPE_UNKNOWN = 0xFF,
+};
+
+enum BIC_CARD_PRESENT {
+	CARD_UNPRESENT = false,
+	CARD_PRESENT = true,
 };
 
 uint8_t get_system_class();

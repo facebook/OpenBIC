@@ -43,9 +43,8 @@ bool pal_load_ipmb_config(void)
 		card_type_2ou = get_2ou_cardtype();
 
 		// for dpv2 sku, disable ipmb and set i2c freq to 400Khz for target devices reading
-		// for reset of expansion board, enable ipmb and set i2c freq to 1Mhz
-		if ((card_type_2ou == TYPE_2OU_DPV2) || (card_type_2ou == TYPE_2OU_DPV2_8) ||
-		    (card_type_2ou == TYPE_2OU_DPV2_16)) {
+		// for rest of expansion board, enable ipmb
+		if ((card_type_2ou & TYPE_2OU_DPV2_16) == TYPE_2OU_DPV2_16) {
 			i2c_freq_set(pal_IPMB_config_table[EXP2_IPMB_IDX].bus, I2C_SPEED_FAST);
 			pal_IPMB_config_table[EXP2_IPMB_IDX].enable_status = DISABLE;
 		} else {

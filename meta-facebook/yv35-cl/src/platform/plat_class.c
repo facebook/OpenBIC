@@ -156,9 +156,6 @@ void init_platform_config()
 		i2c_msg = construct_i2c_message(I2C_BUS1, CPLD_ADDR, tx_len, data, rx_len);
 		if (!i2c_master_read(&i2c_msg, retry)) {
 			switch (i2c_msg.data[0]) {
-			case TYPE_2OU_DPV2:
-				card_type_2ou = TYPE_2OU_DPV2;
-				break;
 			case TYPE_2OU_SPE:
 				card_type_2ou = TYPE_2OU_SPE;
 				break;
@@ -170,6 +167,10 @@ void init_platform_config()
 				break;
 			case TYPE_2OU_DPV2_16:
 				card_type_2ou = TYPE_2OU_DPV2_16;
+				break;
+			case (TYPE_2OU_DPV2_8 | TYPE_2OU_DPV2_16):
+				// Case is 2ou_DPV2_8 and 2ou_DPV2_16 are present
+				card_type_2ou = (TYPE_2OU_DPV2_8 | TYPE_2OU_DPV2_16);
 				break;
 			default:
 				card_type_2ou = TYPE_UNKNOWN;

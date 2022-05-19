@@ -56,6 +56,7 @@ enum SENSOR_DEV {
 	sensor_dev_pmic = 0x19,
 	sensor_dev_ina233 = 0x20,
 	sensor_dev_isl69254iraz_t = 0x21,
+	sensor_dev_max16550a = 0x22,
 	sensor_dev_max
 };
 
@@ -94,18 +95,20 @@ static inline float convert_MBR_to_reading(uint8_t sensor_num, uint8_t val)
 	return (val - round_add(sensor_num, val)) * SDR_M(sensor_num) / SDR_Rexp(sensor_num);
 }
 
-enum { SENSOR_READ_SUCCESS,
-       SENSOR_READ_ACUR_SUCCESS,
-       SENSOR_NOT_FOUND,
-       SENSOR_NOT_ACCESSIBLE,
-       SENSOR_FAIL_TO_ACCESS,
-       SENSOR_INIT_STATUS,
-       SENSOR_UNSPECIFIED_ERROR,
-       SENSOR_POLLING_DISABLE,
-       SENSOR_PRE_READ_ERROR,
-       SENSOR_POST_READ_ERROR,
-       SENSOR_READ_API_UNREGISTER,
-       SENSOR_READ_4BYTE_ACUR_SUCCESS };
+enum {
+	SENSOR_READ_SUCCESS,
+	SENSOR_READ_ACUR_SUCCESS,
+	SENSOR_NOT_FOUND,
+	SENSOR_NOT_ACCESSIBLE,
+	SENSOR_FAIL_TO_ACCESS,
+	SENSOR_INIT_STATUS,
+	SENSOR_UNSPECIFIED_ERROR,
+	SENSOR_POLLING_DISABLE,
+	SENSOR_PRE_READ_ERROR,
+	SENSOR_POST_READ_ERROR,
+	SENSOR_READ_API_UNREGISTER,
+	SENSOR_READ_4BYTE_ACUR_SUCCESS
+};
 
 enum { SENSOR_INIT_SUCCESS, SENSOR_INIT_UNSPECIFIED_ERROR };
 
@@ -220,6 +223,10 @@ typedef struct _pmic_init_arg {
 typedef struct _ina233_init_arg_ {
 	bool is_init;
 } ina233_init_arg;
+
+typedef struct _max16550a_init_arg_ {
+	float r_load;
+} max16550a_init_arg;
 
 extern bool enable_sensor_poll_thread;
 extern uint8_t SDR_NUM;

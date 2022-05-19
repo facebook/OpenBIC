@@ -35,6 +35,9 @@ pmic_init_arg pmic_init_args[] = {
 	[5] = { .is_init = false, .smbus_bus_identifier = 0x01, .smbus_addr = 0x98 }
 };
 
+// R_load is the value of resistance connected to EFUSE , and EFUSE would adjust the reading accuracy according to r_load
+max16550a_init_arg max16550a_init_args[] = { [0] = { .r_load = 14000 } };
+
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
  **************************************************************************************************/
