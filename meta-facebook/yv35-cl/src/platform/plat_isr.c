@@ -176,7 +176,7 @@ static void CAT_ERR_handler(struct k_work *work)
 		sel_msg.sensor_number = SENSOR_NUM_CATERR;
 		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
 		/* MCERR: one pulse, IERR: keep low */
-		if (gpio_get(FM_CPU_RMCA_CATERR_LVT3_N) == GPIO_HIGH) {
+		if (gpio_get(FM_CATERR_LVT3_N) == GPIO_HIGH) {
 			sel_msg.event_data1 = IPMI_EVENT_OFFSET_PROCESSOR_MCERR;
 		} else {
 			sel_msg.event_data1 = IPMI_EVENT_OFFSET_PROCESSOR_IERR;
