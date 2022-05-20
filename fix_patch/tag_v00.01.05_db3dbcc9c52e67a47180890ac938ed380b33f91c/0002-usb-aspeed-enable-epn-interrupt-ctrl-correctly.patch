@@ -1,0 +1,50 @@
+From 2d54311ec15dcd889d2652cd44eda9889dbaa6f0 Mon Sep 17 00:00:00 2001
+From: Neal Liu <neal_liu@aspeedtech.com>
+Date: Tue, 14 Jun 2022 15:19:12 +0800
+Subject: [PATCH] usb: aspeed: enable epn interrupt ctrl correctly
+
+Enable epn interrupt ctrl correctly.
+
+Signed-off-by: Neal Liu <neal_liu@aspeedtech.com>
+Change-Id: Ica0426b1072943f7e7e8832f18980f5f30b96338
+---
+ drivers/usb/device/usb_dc_aspeed.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/usb/device/usb_dc_aspeed.c b/drivers/usb/device/usb_dc_aspeed.c
+index bda6ad081c..2997073407 100644
+--- a/drivers/usb/device/usb_dc_aspeed.c
++++ b/drivers/usb/device/usb_dc_aspeed.c
+@@ -651,7 +651,8 @@ static int usb_aspeed_init(const struct device *dev)
+ 	k_thread_name_set(&usbd_work_queue.thread, "usbdworkq");
+ 	k_work_init(&dev_data.usb_work, usbd_work_handler);
+ 
+-	sys_write32(ISR_SUSPEND_RESUME |
++	sys_write32(ISR_EP_ACK_STALL |
++		    ISR_SUSPEND_RESUME |
+ 		    ISR_BUS_SUSPEND |
+ 		    ISR_BUS_RESET |
+ 		    ISR_EP0_IN_ACK_STALL |
+@@ -1042,7 +1043,7 @@ int usb_dc_ep_halt(const uint8_t ep)
+ int usb_dc_ep_enable(const uint8_t ep)
+ {
+ 	uint8_t ep_num = USB_EP_GET_IDX(ep);
+-	uint32_t ep_reg;
++	uint32_t ep_reg, val;
+ 
+ 	LOG_DBG("enable ep[0x%x]", ep);
+ 
+@@ -1070,7 +1071,9 @@ int usb_dc_ep_enable(const uint8_t ep)
+ 	}
+ 
+ 	/* enable interrupts */
+-	sys_write32(ep_num, dev_data.base + ASPEED_USB_EP_ACK_IER);
++	val = sys_read32(dev_data.base + ASPEED_USB_EP_ACK_IER);
++	val |= BIT(ep_num - 1);
++	sys_write32(val, dev_data.base + ASPEED_USB_EP_ACK_IER);
+ 
+ 	return 0;
+ }
+-- 
+2.36.1
+
