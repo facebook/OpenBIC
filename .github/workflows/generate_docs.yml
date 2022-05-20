@@ -1,0 +1,29 @@
+name: Generate and Deploy Documentation
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Once per day at midnight
+
+jobs:
+  deploy_docs:
+    concurrency: ci-${{ github.ref }} # Kill old runs.
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo 🛎️
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+          ref: 'main'
+  
+      - name: Generate Docs 🔧
+        uses: mattnotmitt/doxygen-action@v1.9.2
+        with:
+          doxyfile-path: 'docs/openbic.cfg'
+
+      - name: Deploy Docs 🚀
+        uses: JamesIves/github-pages-deploy-action@v4.3.3
+        with:
+          branch: gh-pages 
+          folder: docs/html 
+          single-commit: true
