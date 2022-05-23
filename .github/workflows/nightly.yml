@@ -28,7 +28,7 @@ jobs:
     needs: check_date
     if: ${{ needs.check_date.outputs.should_run != 'false' }}
     name: kickoff nightly
-    uses: facebook/OpenBIC/.github/workflows/build_and_lint_pr.yml@nightly_build
+    uses: facebook/OpenBIC/.github/workflows/build_and_lint_pr.yml@main
     with:
       nightly: true # We don't want to run linters on nightly because it creates a lot of pointless noise.
     secrets:

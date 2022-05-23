@@ -119,7 +119,7 @@ jobs:
 
     - name: Update Build Badges
       if: ${{ inputs.nightly == true }}
-      uses: schneegans/dynamic-badges-action@v1.1.0
+      uses: schneegans/dynamic-badges-action@v1.4.0
       with:
         auth: ${{ secrets.GIST_SECRET }}
         gistID: 62fb115c4fa43a02acad226534e10932 
