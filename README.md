@@ -9,19 +9,7 @@ oby35-bb | ![badge](https://img.shields.io/endpoint?url=https://gist.githubuserc
 
 ## Contents
 
-This repo currently contains the following directories 
-* Code common to all platforms under the `common` directory.
-* Platform specific code in the `meta-facebook` directory.
-* The ASPEED OpenBIC SDK under the `src` directory.
-  * **app** - An example application to test the various drivers
-  * **arch** - Supporting files for the board architecture (ARM) and CMSIS.
-  * **board** - Definitions for the various supported boards.
-  * **configs** - configuration files used for building the supported board types
-  * **Drivers** - Currently implemented drivers.
-  * **libraries** - Supporting libraries such as getopt and FreeRTOS+
-  * **os** - Supported RTOSs (currently only FreeRTOS)
-  * **toolchain** - The included cross compilation toolchain used to build OpenBIC
-  * **tools** - Misc tools
+Documentation: https://facebook.github.io/OpenBIC/
 
 ### Currently supported RTOS
 OpenBIC functionality is written using the CMSIS RTOS API as an RTOS wrapper. This allows for RTOS agnostic design and feature implementations.
