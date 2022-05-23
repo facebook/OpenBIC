@@ -4,6 +4,8 @@
 #include "libutil.h"
 #include "ipmi.h"
 
+#define VALID_READING 0x40
+
 uint8_t pch_read(uint8_t sensor_num, int *reading)
 {
 	if (!reading || (sensor_num > SENSOR_NUM_MAX)) {
@@ -37,7 +39,17 @@ uint8_t pch_read(uint8_t sensor_num, int *reading)
 			return SENSOR_FAIL_TO_ACCESS;
 		}
 
-		if (bridge_msg->completion_code == CC_SUCCESS) {
+		/* BIC reads the PCH sensors from ME through IPMI command.
+		 * The completion code, the scanning and reading state should be checked.
+		 * If the completion code is not successfully or the scanning and reading state are disabled or unavailable,
+		 * BIC returns the unspecified error completion code.
+		 * Follow the IPMI spec table 35 - get sensor reading command,
+		 * the byte 3 of response data is
+		 * bit-6: 0b means sensor scanning disabled
+		 * bit-5: 1b means reading state unavailable
+		 */
+		if ((bridge_msg->completion_code == CC_SUCCESS) &&
+		    ((bridge_msg->data[1] & (BIT(5) | BIT(6))) == VALID_READING)) {
 			sensor_val *sval = (sensor_val *)reading;
 			memset(sval, 0, sizeof(sensor_val));
 			sval->integer = bridge_msg->data[0];
