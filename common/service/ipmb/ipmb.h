@@ -89,7 +89,8 @@ enum Channel_Target {
 	SLOT3_BIC = 0x08,
 	BB_IPMB = 0x10,
 	EXP2_IPMB = 0x15,
-	/* 16h-19h reserved. */
+	CL_BIC_IPMB = 0x16, // Rainbow falls IPMB channel
+	/* 17h-19h reserved. */
 	PEER_BMC_IPMB = 0x1A,
 	/* 1Bh-1Fh reserved. */
 	BMC_USB = 0x20,
