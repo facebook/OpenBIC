@@ -198,6 +198,7 @@ enum { CMD_OEM_1S_MSG_IN = 0x1,
 
        CMD_OEM_1S_PEX_FLASH_READ = 0x72,
        CMD_OEM_1S_GET_FPGA_USER_CODE = 0x73,
+       CMD_OEM_1S_GET_BOARD_ID = 0xA0,
 };
 
 enum { INDEX_SLOT1 = 0x01,
