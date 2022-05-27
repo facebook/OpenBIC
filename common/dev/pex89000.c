@@ -42,7 +42,7 @@ typedef struct {
 	uint8_t be : 4;
 	uint8_t oft13_12bit : 2;
 	uint8_t oft9_2bit : 8;
-} __packed __aligned(4) HW_I2C_Cmd;
+} __packed __aligned HW_I2C_Cmd;
 
 static void pex89000_i2c_encode(uint32_t oft, uint8_t be, uint8_t cmd, HW_I2C_Cmd *buf);
 static uint8_t pex89000_chime_read(uint8_t bus, uint8_t addr, uint32_t oft, uint8_t *resp,
@@ -393,7 +393,7 @@ exit:
 
 pex89000_unit *find_pex89000_from_idx(uint8_t idx)
 {
-	sys_snode_t *node;
+	sys_snode_t *node = NULL;
 	SYS_SLIST_FOR_EACH_NODE (&pex89000_list, node) {
 		pex89000_unit *p;
 		p = CONTAINER_OF(node, pex89000_unit, node);
