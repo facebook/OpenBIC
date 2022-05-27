@@ -126,7 +126,7 @@ typedef struct _sensor_cfg__ {
 	bool (*post_sensor_read_hook)(uint8_t, void *, int *);
 	void *post_sensor_read_args;
 	void *init_args;
-
+	void *priv_data;
 	/* if there is new parameter should be added, please add on above */
 	uint8_t retry;
 	uint8_t (*init)(uint8_t, int *);
