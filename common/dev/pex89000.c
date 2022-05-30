@@ -11,6 +11,7 @@
 #include <zephyr.h>
 #include <sys/util.h>
 #include <sys/byteorder.h>
+#include "libutil.h"
 
 #include "sensor.h"
 #include "hal_i2c.h"
@@ -34,7 +35,7 @@
 
 static sys_slist_t pex89000_list;
 
-typedef struct __attribute__((aligned(4))) {
+typedef struct {
 	uint8_t cmd : 3;
 	uint8_t reserve1 : 5;
 	uint8_t oft21_14bit : 8;
@@ -44,6 +45,7 @@ typedef struct __attribute__((aligned(4))) {
 	uint8_t oft9_2bit : 8;
 } __packed HW_I2C_Cmd;
 
+static uint8_t pex_dev_get(uint8_t bus, uint8_t addr, uint8_t idx, pex_dev_t *dev);
 static void pex89000_i2c_encode(uint32_t oft, uint8_t be, uint8_t cmd, HW_I2C_Cmd *buf);
 static uint8_t pex89000_chime_read(uint8_t bus, uint8_t addr, uint32_t oft, uint8_t *resp,
 				   uint16_t resp_len);
@@ -52,8 +54,26 @@ static uint8_t pex89000_chime_write(uint8_t bus, uint8_t addr, uint32_t oft, uin
 static uint8_t pend_for_read_valid(uint8_t bus, uint8_t addr);
 static uint8_t pex89000_chime_to_axi_write(uint8_t bus, uint8_t addr, uint32_t oft, uint32_t data);
 static uint8_t pex89000_chime_to_axi_read(uint8_t bus, uint8_t addr, uint32_t oft, uint32_t *resp);
-static uint8_t pex89000_temp(uint8_t bus, uint8_t addr, uint32_t *val);
+static uint8_t pex89000_temp(uint8_t bus, uint8_t addr, pex_dev_t dev, uint32_t *val);
 pex89000_unit *find_pex89000_from_idx(uint8_t idx);
+
+static uint8_t pex_dev_get(uint8_t bus, uint8_t addr, uint8_t idx, pex_dev_t *dev)
+{
+	uint32_t resp;
+	if (pex_access_engine(bus, addr, idx, pex_access_id, &resp)) {
+		return pex_api_unspecific_err;
+	};
+
+	uint16_t dev_id = (resp >> 16) & 0xFFFF;
+	if (dev_id == 0xC010 || dev_id == 0xC012)
+		*dev = pex_dev_atlas1;
+	else if (dev_id == 0xC030)
+		*dev = pex_dev_atlas2;
+	else
+		*dev = pex_dev_unknown;
+
+	return pex_api_success;
+}
 
 /*
  * be: byte enables
@@ -225,7 +245,7 @@ exit:
 
 uint8_t pex_access_engine(uint8_t bus, uint8_t addr, uint8_t idx, pex_access_t key, uint32_t *resp)
 {
-	uint8_t rc = pex_api_unspecific_err;
+	uint8_t rc = pex_api_success;
 
 	if (!resp) {
 		printf("%s: *resp does not exist !!\n", __func__);
@@ -233,9 +253,12 @@ uint8_t pex_access_engine(uint8_t bus, uint8_t addr, uint8_t idx, pex_access_t k
 	}
 
 	pex89000_unit *p = find_pex89000_from_idx(idx);
+	if (!p) {
+		printk("%s: pex89000 node %d not found!\n", __func__, idx);
+		return pex_api_unspecific_err;
+	}
 
 	int ret = k_mutex_lock(&p->mutex, K_MSEC(5000));
-
 	if (ret) {
 		printk("%s: pex89000 mutex %d lock failed status: %x\n", __func__, p->idx, ret);
 		return pex_api_mutex_err;
@@ -243,58 +266,58 @@ uint8_t pex_access_engine(uint8_t bus, uint8_t addr, uint8_t idx, pex_access_t k
 
 	switch (key) {
 	case pex_access_temp:
-		if (pex89000_temp(bus, addr, resp)) {
+		if (pex89000_temp(bus, addr, p->pex_type, resp)) {
 			printf("%s: TEMP access failed!\n", __func__);
-			goto exit;
+			rc = pex_api_unspecific_err;
 		}
 		break;
 
 	case pex_access_adc:
 		printf("%s: ADC value get not support yet!\n", __func__);
-		goto exit;
+		rc = pex_api_unspecific_err;
+		break;
 
 	case pex_access_id:
 		if (pex89000_chime_to_axi_read(bus, addr, BRCM_REG_CHIP_ID, resp)) {
 			printf("%s: ID access failed!\n", __func__);
-			goto exit;
+			rc = pex_api_unspecific_err;
 		}
 		break;
 
 	case pex_access_rev_id:
 		if (pex89000_chime_to_axi_read(bus, addr, BRCM_REG_CHIP_REVID, resp)) {
 			printf("%s: REVISION ID access failed!\n", __func__);
-			goto exit;
+			rc = pex_api_unspecific_err;
 		}
 		break;
 
 	case pex_access_sbr_ver:
 		if (pex89000_chime_to_axi_read(bus, addr, BRCM_REG_SBR_ID, resp)) {
 			printf("%s: SVR VERSION access failed!\n", __func__);
-			goto exit;
+			rc = pex_api_unspecific_err;
 		}
 		break;
 
 	case pex_access_flash_ver:
 		if (pex89000_chime_to_axi_read(bus, addr, BRCM_REG_FLASH_VER, resp)) {
 			printf("%s: FLASH VERSION access failed!\n", __func__);
-			goto exit;
+			rc = pex_api_unspecific_err;
 		}
 		break;
 
 	default:
 		printf("%s: Invalid key %d\n", __func__, key);
+		rc = pex_api_unspecific_err;
 		break;
 	}
 
-	rc = pex_api_success;
-exit:
 	if (k_mutex_unlock(&p->mutex))
 		printf("%s: pex89000 mutex %d unlock failed!\n", __func__, p->idx);
 
 	return rc;
 }
 
-static uint8_t pex89000_temp(uint8_t bus, uint8_t addr, uint32_t *val)
+static uint8_t pex89000_temp(uint8_t bus, uint8_t addr, pex_dev_t dev, uint32_t *val)
 {
 	uint8_t rc = pex_api_unspecific_err;
 
@@ -308,20 +331,6 @@ static uint8_t pex89000_temp(uint8_t bus, uint8_t addr, uint32_t *val)
 	float temp_arr[12];
 	uint32_t CmdAddr;
 	uint32_t resp = 0;
-
-	if (pex89000_chime_to_axi_read(bus, addr, BRCM_REG_CHIP_ID, &resp)) {
-		printf("Device id access failed!\n");
-		goto exit;
-	}
-
-	pex_dev_t dev;
-	uint16_t dev_id = (resp >> 16) & 0xFFFF;
-	if (dev_id == 0xC010 || dev_id == 0xC012)
-		dev = pex_dev_atlas1;
-	else if (dev_id == 0xC030)
-		dev = pex_dev_atlas2;
-	else
-		dev = pex_dev_unknown;
 
 	if (dev == pex_dev_atlas1) {
 		if (pex89000_chime_to_axi_read(bus, addr, BRCM_REG_TEMP_SNR0_CTL, &resp)) {
@@ -378,7 +387,7 @@ static uint8_t pex89000_temp(uint8_t bus, uint8_t addr, uint32_t *val)
 
 		temp = pre_highest_temp;
 	} else {
-		printf("%s: device not support!\n", __func__);
+		printf("%s: device type %d not support!\n", __func__, dev);
 		goto exit;
 	}
 
@@ -440,8 +449,6 @@ exit:
 
 uint8_t pex89000_init(uint8_t sensor_num)
 {
-	sensor_config[sensor_config_index_map[sensor_num]].read = pex89000_read;
-
 	if (sensor_config[sensor_config_index_map[sensor_num]].init_args == NULL) {
 		printf("%s: init_arg is NULL!\n", __func__);
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
@@ -463,6 +470,15 @@ uint8_t pex89000_init(uint8_t sensor_num)
 
 		if (k_mutex_init(&p->mutex)) {
 			printf("%s: pex89000 mutex %d init failed!\n", __func__, p->idx);
+			SAFE_FREE(p);
+			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		}
+
+		if (pex_dev_get(sensor_config[sensor_config_index_map[sensor_num]].port,
+				sensor_config[sensor_config_index_map[sensor_num]].target_addr,
+				p->idx, &p->pex_type)) {
+			printf("%s: get pex type failed!\n", __func__);
+			SAFE_FREE(p);
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
 		}
 
@@ -470,6 +486,7 @@ uint8_t pex89000_init(uint8_t sensor_num)
 	}
 
 	sensor_config[sensor_config_index_map[sensor_num]].priv_data = p;
+	sensor_config[sensor_config_index_map[sensor_num]].read = pex89000_read;
 
 	return SENSOR_INIT_SUCCESS;
 }
