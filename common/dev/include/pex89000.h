@@ -3,11 +3,7 @@
 
 #include <stdint.h>
 
-typedef enum pex_dev {
-	pex_dev_atlas1,
-	pex_dev_atlas2,
-	pex_dev_unknown
-} pex_dev_t;
+typedef enum pex_dev { pex_dev_atlas1, pex_dev_atlas2, pex_dev_unknown } pex_dev_t;
 
 typedef enum pex_access {
 	pex_access_temp,
