@@ -34,7 +34,7 @@
 
 static sys_slist_t pex89000_list;
 
-typedef struct {
+typedef struct __attribute__((aligned(4))) {
 	uint8_t cmd : 3;
 	uint8_t reserve1 : 5;
 	uint8_t oft21_14bit : 8;
@@ -42,7 +42,7 @@ typedef struct {
 	uint8_t be : 4;
 	uint8_t oft13_12bit : 2;
 	uint8_t oft9_2bit : 8;
-} __packed __aligned HW_I2C_Cmd;
+} __packed HW_I2C_Cmd;
 
 static void pex89000_i2c_encode(uint32_t oft, uint8_t be, uint8_t cmd, HW_I2C_Cmd *buf);
 static uint8_t pex89000_chime_read(uint8_t bus, uint8_t addr, uint32_t oft, uint8_t *resp,
