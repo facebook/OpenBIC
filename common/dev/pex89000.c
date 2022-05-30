@@ -245,11 +245,9 @@ exit:
 
 uint8_t pex_access_engine(uint8_t bus, uint8_t addr, uint8_t idx, pex_access_t key, uint32_t *resp)
 {
-	uint8_t rc = pex_api_success;
-
 	if (!resp) {
-		printf("%s: *resp does not exist !!\n", __func__);
-		return rc;
+		printf("%s: *resp does not exist!\n", __func__);
+		return pex_api_unspecific_err;
 	}
 
 	pex89000_unit *p = find_pex89000_from_idx(idx);
@@ -263,6 +261,8 @@ uint8_t pex_access_engine(uint8_t bus, uint8_t addr, uint8_t idx, pex_access_t k
 		printk("%s: pex89000 mutex %d lock failed status: %x\n", __func__, p->idx, ret);
 		return pex_api_mutex_err;
 	}
+
+	uint8_t rc = pex_api_success;
 
 	switch (key) {
 	case pex_access_temp:
