@@ -54,6 +54,8 @@ enum SENSOR_DEV {
 	sensor_dev_ast_fan = 0x16,
 	sensor_dev_tmp431 = 0x18,
 	sensor_dev_pmic = 0x19,
+	sensor_dev_ina233 = 0x20,
+	sensor_dev_isl69254iraz_t = 0x21,
 	sensor_dev_max
 };
 
@@ -214,6 +216,10 @@ typedef struct _pmic_init_arg {
 	uint8_t smbus_bus_identifier;
 	uint8_t smbus_addr;
 } pmic_init_arg;
+
+typedef struct _ina233_init_arg_ {
+	bool is_init;
+} ina233_init_arg;
 
 extern bool enable_sensor_poll_thread;
 extern uint8_t SDR_NUM;
