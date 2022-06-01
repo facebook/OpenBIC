@@ -239,6 +239,42 @@ void util_init_I2C(void)
 	if (status)
 		printf("i2c9 mutex init fail\n");
 #endif
+#ifdef DEV_I2C_10
+	dev_i2c[10] = device_get_binding("I2C_10");
+	status = k_mutex_init(&i2c_mutex[10]);
+	if (status)
+		printk("i2c10 mutex init fail\n");
+#endif
+#ifdef DEV_I2C_11
+	dev_i2c[11] = device_get_binding("I2C_11");
+	status = k_mutex_init(&i2c_mutex[11]);
+	if (status)
+		printk("i2c11 mutex init fail\n");
+#endif
+#ifdef DEV_I2C_12
+	dev_i2c[12] = device_get_binding("I2C_12");
+	status = k_mutex_init(&i2c_mutex[12]);
+	if (status)
+		printk("i2c12 mutex init fail\n");
+#endif
+#ifdef DEV_I2C_13
+	dev_i2c[13] = device_get_binding("I2C_13");
+	status = k_mutex_init(&i2c_mutex[13]);
+	if (status)
+		printk("i2c13 mutex init fail\n");
+#endif
+#ifdef DEV_I2C_14
+	dev_i2c[14] = device_get_binding("I2C_14");
+	status = k_mutex_init(&i2c_mutex[14]);
+	if (status)
+		printk("i2c14 mutex init fail\n");
+#endif
+#ifdef DEV_I2C_15
+	dev_i2c[15] = device_get_binding("I2C_15");
+	status = k_mutex_init(&i2c_mutex[15]);
+	if (status)
+		printk("i2c15 mutex init fail\n");
+#endif
 }
 
 int check_i2c_bus_valid(uint8_t bus)

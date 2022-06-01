@@ -10,6 +10,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <zephyr.h>
+#include "plat_ipmb.h"
+/*
+ * If MAX_IPMB_IDX which define by plat_ipmb.h is not equal to zero 
+ * then compile ipmb.c to avoid creating redundant memory space.
+ */
+#if MAX_IPMB_IDX
 
 static struct k_mutex mutex_id[MAX_IPMB_IDX]; // mutex for sequence linked list insert/find
 static struct k_mutex mutex_send_req, mutex_send_res, mutex_read;
@@ -1179,3 +1185,4 @@ void ipmb_init(void)
 			NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
 	k_thread_name_set(&IPMB_SeqTimeout, "IPMB_SeqTimeout");
 }
+#endif

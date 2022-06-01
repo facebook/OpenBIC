@@ -63,6 +63,9 @@ enum i2c_target_api_control_mode {
 	I2C_CONTROL_MAX = 0xFF
 };
 
+extern const bool I2C_TARGET_ENABLE_TABLE[MAX_TARGET_NUM];
+extern const struct _i2c_target_config I2C_TARGET_CONFIG_TABLE[MAX_TARGET_NUM];
+
 uint8_t i2c_target_status_get(uint8_t bus_num);
 uint8_t i2c_target_status_print(uint8_t bus_num);
 uint8_t i2c_target_cfg_get(uint8_t bus_num, struct _i2c_target_config *cfg);

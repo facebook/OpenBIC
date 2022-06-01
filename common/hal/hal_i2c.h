@@ -44,6 +44,30 @@
 #define DEV_I2C_9
 #endif
 
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c10), okay)
+#define DEV_I2C_10
+#endif
+
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c11), okay)
+#define DEV_I2C_11
+#endif
+
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c12), okay)
+#define DEV_I2C_12
+#endif
+
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c13), okay)
+#define DEV_I2C_13
+#endif
+
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c14), okay)
+#define DEV_I2C_14
+#endif
+
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c15), okay)
+#define DEV_I2C_15
+#endif
+
 #define DEV_I2C(n) DEV_I2C_##n
 
 #define I2C_BUFF_SIZE 256
