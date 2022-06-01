@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         # This job matrix will generate a separate job for all platforms listed.
-        platform: [yv35-cl, yv35-bb]
+        platform: [yv35-cl, yv35-bb, gt-cc]
         # Need to set this to false otherwise it will cancel all platform builds if one fails.
       fail-fast: false
 
