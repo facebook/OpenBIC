@@ -1,6 +1,7 @@
 #ifndef UTIL_SYS_H
 #define UTIL_SYS_H
 
+#include <sys/reboot.h>
 #include "stdbool.h"
 #include "stdint.h"
 
@@ -22,6 +23,12 @@ enum ME_MODE {
 enum FORCE_ME_RECOVERY_CMD {
 	ME_FW_RECOVERY = 0x01,
 	ME_FW_RESTORE = 0x02,
+};
+
+enum SYSTEM_RESET_TYPE {
+	// Aspeed system warm reset default setting is SOC reset, and system cold reset is full chip reset
+	SOC_RESET = SYS_REBOOT_WARM,
+	FULL_CHIP_RESET = SYS_REBOOT_COLD,
 };
 
 void submit_bic_cold_reset();
