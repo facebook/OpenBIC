@@ -24,6 +24,12 @@
 #define BRCM_CHIME_AXI_CSR_DATA 0x001F0104
 #define BRCM_CHIME_AXI_CSR_CTL 0x001F0108
 
+/* Control register of Chime to AXI by SMBus */
+#define BRCM_REG_SMB_WR_CMD 0xFFE00004
+#define BRCM_REG_SMB_WR_DATA 0xFFE00008
+#define BRCM_REG_SMB_RD_CMD 0xFFE0000C
+#define BRCM_REG_SMB_RD_DATA 0xFFE00010
+
 #define BRCM_REG_TEMP_SNR0_CTL 0xFFE78504
 #define BRCM_REG_TEMP_SNR0_STAT 0xFFE78538
 #define BRCM_REG_CHIP_ID 0xFFF00000
@@ -59,6 +65,11 @@ pex89000_unit *find_pex89000_from_idx(uint8_t idx);
 
 static uint8_t pex_dev_get(uint8_t bus, uint8_t addr, uint8_t idx, pex_dev_t *dev)
 {
+	if (!dev) {
+		printf("%s: *dev is NULL!\n", __func__);
+		return pex_api_unspecific_err;
+	}
+
 	uint32_t resp;
 	if (pex_access_engine(bus, addr, idx, pex_access_id, &resp)) {
 		return pex_api_unspecific_err;
@@ -84,7 +95,7 @@ static uint8_t pex_dev_get(uint8_t bus, uint8_t addr, uint8_t idx, pex_dev_t *de
 static void pex89000_i2c_encode(uint32_t oft, uint8_t be, uint8_t cmd, HW_I2C_Cmd *buf)
 {
 	if (!buf) {
-		printf("%s: *buf does not exist!\n", __func__);
+		printf("%s: *buf is NULL!\n", __func__);
 		return;
 	}
 
@@ -101,7 +112,7 @@ static uint8_t pex89000_chime_read(uint8_t bus, uint8_t addr, uint32_t oft, uint
 				   uint16_t resp_len)
 {
 	if (!resp) {
-		printf("%s: *resp does not exist !!\n", __func__);
+		printf("%s: *resp is NULL!\n", __func__);
 		return pex_api_unspecific_err;
 	}
 
@@ -131,7 +142,7 @@ static uint8_t pex89000_chime_write(uint8_t bus, uint8_t addr, uint32_t oft, uin
 				    uint8_t data_len)
 {
 	if (!data) {
-		printf("%s: *data does not exist!\n", __func__);
+		printf("%s: *data is NULL!\n", __func__);
 		return pex_api_unspecific_err;
 	}
 
@@ -160,7 +171,7 @@ static uint8_t pend_for_read_valid(uint8_t bus, uint8_t addr)
 	uint8_t rty = 50;
 	uint32_t resp = 0;
 
-	while (rty--) {
+	for (int i = rty; i > 0; i--) {
 		if (pex89000_chime_read(bus, addr, BRCM_CHIME_AXI_CSR_CTL, (uint8_t *)&resp,
 					sizeof(resp))) {
 			k_msleep(10);
@@ -208,7 +219,7 @@ static uint8_t pex89000_chime_to_axi_read(uint8_t bus, uint8_t addr, uint32_t of
 	uint8_t rc = pex_api_unspecific_err;
 
 	if (!resp) {
-		printf("%s: *resp does not exist !!\n", __func__);
+		printf("%s: *resp is NULL!\n", __func__);
 		return rc;
 	}
 
@@ -246,7 +257,7 @@ exit:
 uint8_t pex_access_engine(uint8_t bus, uint8_t addr, uint8_t idx, pex_access_t key, uint32_t *resp)
 {
 	if (!resp) {
-		printf("%s: *resp does not exist!\n", __func__);
+		printf("%s: *resp is NULL!\n", __func__);
 		return pex_api_unspecific_err;
 	}
 
@@ -322,7 +333,7 @@ static uint8_t pex89000_temp(uint8_t bus, uint8_t addr, pex_dev_t dev, uint32_t 
 	uint8_t rc = pex_api_unspecific_err;
 
 	if (!val) {
-		printf("%s: *val does not exist !\n", __func__);
+		printf("%s: *val is NULL!\n", __func__);
 		return rc;
 	}
 
@@ -334,7 +345,7 @@ static uint8_t pex89000_temp(uint8_t bus, uint8_t addr, pex_dev_t dev, uint32_t 
 
 	if (dev == pex_dev_atlas1) {
 		if (pex89000_chime_to_axi_read(bus, addr, BRCM_REG_TEMP_SNR0_CTL, &resp)) {
-			printf("CHIME to AXI Read 0xFFE78504 fail!\n");
+			printf("CHIME to AXI Read 0x%x fail!\n", BRCM_REG_TEMP_SNR0_CTL);
 			goto exit;
 		}
 		if (resp != BRCM_VAL_TEMP_SNR0_CTL_RESET) {
@@ -344,12 +355,12 @@ static uint8_t pex89000_temp(uint8_t bus, uint8_t addr, pex_dev_t dev, uint32_t 
 
 		if (pex89000_chime_to_axi_write(bus, addr, BRCM_REG_TEMP_SNR0_CTL,
 						BRCM_VAL_TEMP_SNR0_CTL_RESET)) {
-			printf("CHIME to AXI Write 0xFFE78504 fail!\n");
+			printf("CHIME to AXI Write 0x%x fail!\n", BRCM_REG_TEMP_SNR0_CTL);
 			goto exit;
 		}
 
 		if (pex89000_chime_to_axi_read(bus, addr, BRCM_REG_TEMP_SNR0_STAT, &resp)) {
-			printf("CHIME to AXI Write 0xFFE78538 fail!\n");
+			printf("CHIME to AXI Write 0x%x fail!\n", BRCM_REG_TEMP_SNR0_STAT);
 			goto exit;
 		}
 
@@ -357,24 +368,25 @@ static uint8_t pex89000_temp(uint8_t bus, uint8_t addr, pex_dev_t dev, uint32_t 
 	} else if (dev == pex_dev_atlas2) {
 		for (int8_t i = 7; i < 12; i++) {
 			CmdAddr = (0x21 << 16) | (0x4C << 8) | (0x0B);
-			if (pex89000_chime_to_axi_write(bus, addr, 0xFFE00004, CmdAddr)) {
-				printf("CHIME to AXI Write 0xFFE00004 fail!\n");
+			if (pex89000_chime_to_axi_write(bus, addr, BRCM_REG_SMB_WR_CMD, CmdAddr)) {
+				printf("CHIME to AXI Write 0x%x fail!\n", BRCM_REG_SMB_WR_CMD);
 				goto exit;
 			}
 
-			if (pex89000_chime_to_axi_write(bus, addr, 0xFFE00008, i | 0x10000)) {
-				printf("CHIME to AXI Write 0xFFE00008 fail!\n");
+			if (pex89000_chime_to_axi_write(bus, addr, BRCM_REG_SMB_WR_DATA,
+							i | 0x10000)) {
+				printf("CHIME to AXI Write 0x%x fail!\n", BRCM_REG_SMB_WR_DATA);
 				goto exit;
 			}
 
 			CmdAddr = (0x22 << 16) | (0x4C << 8) | (0x14);
-			if (pex89000_chime_to_axi_write(bus, addr, 0xFFE0000C, CmdAddr)) {
-				printf("CHIME to AXI Write 0xFFE0000C fail!\n");
+			if (pex89000_chime_to_axi_write(bus, addr, BRCM_REG_SMB_RD_CMD, CmdAddr)) {
+				printf("CHIME to AXI Write 0x%x fail!\n", BRCM_REG_SMB_RD_CMD);
 				goto exit;
 			}
 
-			if (pex89000_chime_to_axi_read(bus, addr, 0xFFE00010, &resp)) {
-				printf("CHIME to AXI Write 0xFFE00010 fail!\n");
+			if (pex89000_chime_to_axi_read(bus, addr, BRCM_REG_SMB_RD_DATA, &resp)) {
+				printf("CHIME to AXI Write 0x%x fail!\n", BRCM_REG_SMB_RD_DATA);
 				goto exit;
 			}
 
@@ -419,7 +431,7 @@ uint8_t pex89000_read(uint8_t sensor_num, int *reading)
 	uint8_t rc = SENSOR_UNSPECIFIED_ERROR;
 
 	if (!reading) {
-		printf("%s: *reading does not exist !!\n", __func__);
+		printf("%s: *reading is NULL!\n", __func__);
 		return rc;
 	}
 
