@@ -92,20 +92,18 @@ static inline float convert_MBR_to_reading(uint8_t sensor_num, uint8_t val)
 	return (val - round_add(sensor_num, val)) * SDR_M(sensor_num) / SDR_Rexp(sensor_num);
 }
 
-enum {
-	SENSOR_READ_SUCCESS,
-	SENSOR_READ_ACUR_SUCCESS,
-	SENSOR_NOT_FOUND,
-	SENSOR_NOT_ACCESSIBLE,
-	SENSOR_FAIL_TO_ACCESS,
-	SENSOR_INIT_STATUS,
-	SENSOR_UNSPECIFIED_ERROR,
-	SENSOR_POLLING_DISABLE,
-	SENSOR_PRE_READ_ERROR,
-	SENSOR_POST_READ_ERROR,
-	SENSOR_READ_API_UNREGISTER,
-	SENSOR_READ_4BYTE_ACUR_SUCCESS
-};
+enum { SENSOR_READ_SUCCESS,
+       SENSOR_READ_ACUR_SUCCESS,
+       SENSOR_NOT_FOUND,
+       SENSOR_NOT_ACCESSIBLE,
+       SENSOR_FAIL_TO_ACCESS,
+       SENSOR_INIT_STATUS,
+       SENSOR_UNSPECIFIED_ERROR,
+       SENSOR_POLLING_DISABLE,
+       SENSOR_PRE_READ_ERROR,
+       SENSOR_POST_READ_ERROR,
+       SENSOR_READ_API_UNREGISTER,
+       SENSOR_READ_4BYTE_ACUR_SUCCESS };
 
 enum { SENSOR_INIT_SUCCESS, SENSOR_INIT_UNSPECIFIED_ERROR };
 
@@ -128,6 +126,7 @@ typedef struct _sensor_cfg__ {
 	void *init_args;
 
 	/* if there is new parameter should be added, please add on above */
+	void *priv_data;
 	uint8_t retry;
 	uint8_t (*init)(uint8_t, int *);
 	uint8_t (*read)(uint8_t, int *);
