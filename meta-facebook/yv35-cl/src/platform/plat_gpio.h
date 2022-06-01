@@ -28,16 +28,15 @@
 #define name_gpioD                                                                                 \
 	gpio_name_to_num(PWRBTN_N) gpio_name_to_num(RST_BMC_R_N)                                   \
 		gpio_name_to_num(H_BMC_PRDY_BUF_N) gpio_name_to_num(BMC_READY)                     \
-			gpio_name_to_num(BIC_READY) gpio_name_to_num(FM_SOL_UART_CH_SEL_R)         \
+			gpio_name_to_num(BIC_READY) gpio_name_to_num(FM_RMCA_LVT3_N)               \
 				gpio_name_to_num(HSC_MUX_SWITCH_R)                                 \
 					gpio_name_to_num(FM_FORCE_ADR_N_R)
 #define name_gpioE                                                                                 \
 	gpio_name_to_num(PWRGD_CPU_LVC3) gpio_name_to_num(FM_PCH_BMC_THERMTRIP_N)                  \
 		gpio_name_to_num(FM_THROTTLE_R_N) gpio_name_to_num(IRQ_HSC_ALERT2_N)               \
 			gpio_name_to_num(SMB_SENSOR_LVC3_ALERT_N)                                  \
-				gpio_name_to_num(FM_CPU_RMCA_CATERR_LVT3_N)                        \
-					gpio_name_to_num(SYS_PWRBTN_N)                             \
-						gpio_name_to_num(RST_PLTRST_BUF_N)
+				gpio_name_to_num(FM_CATERR_LVT3_N) gpio_name_to_num(SYS_PWRBTN_N)  \
+					gpio_name_to_num(RST_PLTRST_BUF_N)
 #define name_gpioF                                                                                 \
 	gpio_name_to_num(IRQ_BMC_PCH_NMI_R) gpio_name_to_num(IRQ_SML1_PMBUS_ALERT_N)               \
 		gpio_name_to_num(IRQ_PCH_CPU_NMI_EVENT_N) gpio_name_to_num(FM_BMC_DEBUG_ENABLE_N)  \
@@ -73,16 +72,16 @@
 				gpio_name_to_num(Reserve_GPIOK6) gpio_name_to_num(Reserve_GPIOK7)
 #define name_gpioL                                                                                 \
 	gpio_name_to_num(Reserve_GPIOL0) gpio_name_to_num(Reserve_GPIOL1)                          \
-		gpio_name_to_num(Reserve_GPIOL2) gpio_name_to_num(Reserve_GPIOL3)                  \
+		gpio_name_to_num(Reserve_GPIOL2) gpio_name_to_num(BOARD_ID2)                       \
 			gpio_name_to_num(IRQ_PVCCD_CPU0_VRHOT_LVC3_N)                              \
 				gpio_name_to_num(FM_PVCCIN_CPU0_PWR_IN_ALERT_N)                    \
 					gpio_name_to_num(BOARD_ID0) gpio_name_to_num(BOARD_ID1)
 // GPIOM6, M7 hardware not define
 #define name_gpioM                                                                                 \
-	gpio_name_to_num(BOARD_ID2) gpio_name_to_num(BOARD_ID3) gpio_name_to_num(FM_THROTTLE_IN_N) \
-		gpio_name_to_num(Reserve_GPIOM3) gpio_name_to_num(Reserve_GPIOM4)                  \
-			gpio_name_to_num(Reserve_GPIOM5) gpio_name_to_num(Reserve_GPIOM6)          \
-				gpio_name_to_num(Reserve_GPIOM7)
+	gpio_name_to_num(Reserve_GPIOM0) gpio_name_to_num(BOARD_ID3)                               \
+		gpio_name_to_num(Reserve_GPIOM2) gpio_name_to_num(FM_THROTTLE_IN_N)                \
+			gpio_name_to_num(AUTH_COMPLETE) gpio_name_to_num(AUTH_PRSNT_N)             \
+				gpio_name_to_num(Reserve_GPIOM6) gpio_name_to_num(Reserve_GPIOM7)
 #define name_gpioN                                                                                 \
 	gpio_name_to_num(SGPIO_BMC_CLK_R) gpio_name_to_num(SGPIO_BMC_LD_R_N)                       \
 		gpio_name_to_num(SGPIO_BMC_DOUT_R) gpio_name_to_num(SGPIO_BMC_DIN)                 \
