@@ -263,10 +263,14 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 				msg_cfg.buffer.data[2] = (IANA_ID >> 16) & 0xFF;
 			}
 
-			if (msg_cfg.buffer.InF_source == BMC_USB) {
+			switch (msg_cfg.buffer.InF_source) {
+#ifdef CONFIG_USB
+			case BMC_USB:
 				usb_write_by_ipmi(&msg_cfg.buffer);
-			} else if (msg_cfg.buffer.InF_source == HOST_KCS) {
+				break;
+#endif
 #ifdef CONFIG_IPMI_KCS_ASPEED
+			case HOST_KCS: {
 				uint8_t *kcs_buff;
 				kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
 				if (kcs_buff == NULL) { // allocate fail, retry allocate
@@ -298,11 +302,14 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 
 				kcs_write(kcs_buff, msg_cfg.buffer.data_len + 3);
 				SAFE_FREE(kcs_buff);
+				break;
+			}
 #endif
-			} else if (msg_cfg.buffer.InF_source == PLDM) {
+			case PLDM:
 				/* the message should be passed to source by pldm format */
 				send_msg_by_pldm(&msg_cfg);
-			} else {
+				break;
+			default: {
 #if MAX_IPMB_IDX
 				ipmb_error status;
 				status = ipmb_send_response(
@@ -313,6 +320,8 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 					       status);
 				}
 #endif
+				break;
+			}
 			}
 		}
 	}
