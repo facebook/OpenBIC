@@ -2,6 +2,7 @@
 #include <string.h>
 #include <zephyr.h>
 #include "hal_gpio.h"
+#include "plat_isr.h"
 #include "plat_gpio.h"
 
 #define gpio_name_to_num(x) #x,
@@ -75,8 +76,8 @@ GPIO_CFG plat_gpio_cfg[] = {
 	{ CHIP_GPIO, 31, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE,
 	  NULL },
 	/** Group E: 32-39 **/
-	{ CHIP_GPIO, 32, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE,
-	  NULL },
+	{ CHIP_GPIO, 32, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_EDGE_BOTH,
+	  ISR_MB_DC_STATE },
 	{ CHIP_GPIO, 33, ENABLE, DISABLE, GPIO_OUTPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE,
 	  NULL },
 	{ CHIP_GPIO, 34, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE,

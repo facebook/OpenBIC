@@ -71,6 +71,18 @@ enum {
 	GPIO_U_V,
 };
 
+enum POWER_STATUS {
+	POWER_ON = GPIO_HIGH,
+	POWER_OFF = GPIO_LOW,
+};
+
+enum GPIO_STATUS {
+	LOW_ACTIVE = GPIO_LOW,
+	LOW_INACTIVE = GPIO_HIGH,
+	HIGH_ACTIVE = GPIO_HIGH,
+	HIGH_INACTIVE = GPIO_LOW,
+};
+
 extern const char *const gpio_name[];
 
 extern uint8_t gpio_ind_to_num_table[];
