@@ -14,28 +14,29 @@
 #define CPLD_CLASS_TYPE_REG 0x05
 #define CPLD_2OU_EXPANSION_CARD_REG 0x06
 #define CPLD_BOARD_REV_ID_REG 0x08
+#define CPLD_1OU_CARD_DETECTION 0x09
 #define I2C_DATA_SIZE 5
+#define NUMBER_OF_ADC_CHANNEL 16
+#define AST1030_ADC_BASE_ADDR 0x7e6e9000
 
 static uint8_t system_class = SYS_CLASS_1;
-static bool is_1ou_present = false;
-static bool is_2ou_present = false;
-static uint8_t __attribute__((unused)) card_type_1ou = 0;
-static uint8_t card_type_2ou = TYPE_UNKNOWN;
 static uint8_t board_revision = 0x0F;
+static CARD_STATUS _1ou_status = { false, TYPE_1OU_UNKNOWN };
+static CARD_STATUS _2ou_status = { false, TYPE_2OU_UNKNOWN };
 
 uint8_t get_system_class()
 {
 	return system_class;
 }
 
-bool get_1ou_status()
+CARD_STATUS get_1ou_status()
 {
-	return is_1ou_present;
+	return _1ou_status;
 }
 
-bool get_2ou_status()
+CARD_STATUS get_2ou_status()
 {
-	return is_2ou_present;
+	return _2ou_status;
 }
 
 uint8_t get_board_revision()
@@ -43,42 +44,95 @@ uint8_t get_board_revision()
 	return board_revision;
 }
 
-uint8_t get_2ou_cardtype()
-{
-	return card_type_2ou;
-}
+/* ADC information for each channel
+ * offset: register offset
+ * shift: data of channel
+ */
+struct ADC_INFO {
+	long unsigned int offset;
+	int shift;
+};
 
-float get_hsc_type_adc_voltage()
+struct ADC_INFO adc_info[NUMBER_OF_ADC_CHANNEL] = {
+	{ 0x10, 0 },  { 0x10, 16 },  { 0x14, 0 },  { 0x14, 16 },  { 0x18, 0 },	{ 0x18, 16 },
+	{ 0x1C, 0 },  { 0x1C, 16 },  { 0x110, 0 }, { 0x110, 16 }, { 0x114, 0 }, { 0x114, 16 },
+	{ 0x118, 0 }, { 0x118, 16 }, { 0x11C, 0 }, { 0x11C, 16 }
+};
+
+enum ADC_REF_VOL_SELECTION {
+	REF_VOL_2_5V = 0x0, // 2.5V reference voltage selection
+	REF_VOL_1_2V = 0x40 // 1.2V reference voltage selection
+};
+
+struct _1OU_CARD_MAPPING_TABLE {
+	float voltage;
+	uint8_t condition;
+	uint8_t card_type;
+};
+
+/* The condition is used for 1OU card mapping table
+ * "LOWER" means the voltage is lower than the setting value
+ * "HIGHER" means the voltage is higher than the setting value
+ * "RANGE" means the voltage is within a range
+ */
+enum CONDITION {
+	LOWER = 0x0,
+	HIGHER = 0x01,
+	RANGE = 0x02,
+};
+
+struct _1OU_CARD_MAPPING_TABLE _1ou_card_mapping_table[] = {
+	{ 0.3, LOWER, TYPE_1OU_SI_TEST_CARD },
+	{ 0.5, RANGE, TYPE_1OU_EXP_WITH_6_M2 },
+	{ 0.75, RANGE, TYPE_1OU_RAINBOW_FALLS },
+	{ 1.0, RANGE, TYPE_1OU_VERNAL_FALLS_WITH_TI },
+	{ 1.26, RANGE, TYPE_1OU_WAIMANO_FALLS },
+	{ 1.5, RANGE, TYPE_1OU_EXP_WITH_NIC },
+	{ 1.75, RANGE, TYPE_1OU_VERNAL_FALLS_WITH_AST },
+	{ 2.0, RANGE, TYPE_1OU_KAHUNA_FALLS },
+};
+
+bool get_adc_voltage(int channel, float *voltage)
 {
-	uint32_t adc_base_address = 0x7e6e9000, adc7_raw, reg_val;
-	long unsigned int engine_control = 0x0, adc_data_of_ch7_and_6 = 0x1C;
+	if (!voltage) {
+		return false;
+	}
+
+	if (channel >= NUMBER_OF_ADC_CHANNEL) {
+		printf("Invalid ADC channel-%d\n", channel);
+		return false;
+	}
+
+	uint32_t raw_value, reg_value;
+	long unsigned int engine_control = 0x0;
 	float reference_voltage = 0.0f;
-	uint8_t reference_voltage_selection;
 
 	/* Get ADC reference voltage from Aspeed chip
 	 * ADC000: Engine Control
 	 * [7:6] Reference Voltage Selection
 	 * 00b - 2.5V / 01b - 1.2V / 10b and 11b - External Voltage
 	 */
-	reg_val = sys_read32(adc_base_address + engine_control);
-	reference_voltage_selection = (reg_val >> 6) & 0x3;
-	if (reference_voltage_selection == 0b00) {
+	reg_value = sys_read32(AST1030_ADC_BASE_ADDR + engine_control);
+	switch (reg_value & (BIT(7) | BIT(6))) {
+	case REF_VOL_2_5V:
 		reference_voltage = 2.5;
-	} else if (reference_voltage_selection == 0b01) {
+		break;
+	case REF_VOL_1_2V:
 		reference_voltage = 1.2;
-	} else {
-		printf("Not supported the external reference voltage\n");
+		break;
+	default:
+		printf("Unsupported the external reference voltage\n");
+		return false;
 	}
 
-	/* Read ADC channel-7 raw value
-	 * ADC01C: Data of Channel 7 and 6
-	 * [25:16] Data of channel 7
-	 */
-	reg_val = sys_read32(adc_base_address + adc_data_of_ch7_and_6);
-	adc7_raw = (reg_val & 0x3FF0000) >> 16;
+	// Read ADC raw value
+	reg_value = sys_read32(AST1030_ADC_BASE_ADDR + adc_info[channel].offset);
+	raw_value = (reg_value >> adc_info[channel].shift) & 0x3FF; // 10-bit(0x3FF) resolution
 
 	// Real voltage = raw data * reference voltage / 2 ^ resolution(10)
-	return ((adc7_raw * reference_voltage) / (1024));
+	*voltage = (raw_value * reference_voltage) / 1024;
+
+	return true;
 }
 
 void init_platform_config()
@@ -113,8 +167,8 @@ void init_platform_config()
 	i2c_msg = construct_i2c_message(I2C_BUS1, CPLD_ADDR, tx_len, data, rx_len);
 	if (!i2c_master_read(&i2c_msg, retry)) {
 		class_type = i2c_msg.data[0];
-		is_1ou_present = (class_type & 0x4 ? false : true);
-		is_2ou_present = (class_type & 0x8 ? false : true);
+		_1ou_status.present = ((class_type & BIT(2)) ? false : true);
+		_2ou_status.present = ((class_type & BIT(3)) ? false : true);
 	} else {
 		printf("Failed to read expansion present from CPLD\n");
 	}
@@ -146,9 +200,85 @@ void init_platform_config()
 		printf("Failed to read board ID from CPLD\n");
 	}
 	printk("BIC class type(class-%d), 1ou present status(%d), 2ou present status(%d), board revision(0x%x)\n",
-	       system_class, (int)is_1ou_present, (int)is_2ou_present, board_revision);
+	       system_class, (int)_1ou_status.present, (int)_2ou_status.present, board_revision);
 
-	if (is_2ou_present) {
+	/* BIC judges the 1OU card type according the ADC-6(0-based) voltage.
+	 * The 1OU card type is
+	 *  - "SI test board" if voltage is lower than 0.3V
+	 *  - "Expansion with 6 M.2" if the voltage is 0.5V(+/- 5%)
+	 *  - "Rainbow falls ( CXL with 4 DDR4 DIMMs)" if the voltage is 0.75V(+/- 5%)
+	 *  - "Vernal falls (4 E1S, with TI chip)" if the voltage is 1.0V(+/- 5%)
+	 *  - "Waimano falls (CXL with 2 DDR4 DIMMs+2 E1S)" if the voltage is 1.26V(+/- 5%)
+	 *  - "Expansion with NIC" if the voltage is 1.5V(+/- 5%)
+	 * And then, BIC sets the type to CL CPLD register(slave address 21h, register 09h)
+	 * CPLD register 09h - 1OU Card Detection
+	 *  - 00h: 1OU SI test card
+	 *  - 01h: Expansion with 6 M.2
+	 *  - 02h: Rainbow falls ( CXL with 4 DDR4 DIMMs)
+	 *  - 03h: Vernal falls (with TI chip)
+	 *  - 04h: Vernal falls (with AST1030 chip)
+	 *  - 05h: Kahuna Falls
+	 *  - 06h: Waimano falls (CXL with 2 DDR4 DIMMs+2 E1S)
+	 *  - 07h: Expansion with NIC
+	 */
+	if (_1ou_status.present) {
+		float voltage;
+		bool success = get_adc_voltage(CHANNEL_6, &voltage);
+		if (success) {
+			for (int cnt = 0; cnt < ARRAY_SIZE(_1ou_card_mapping_table); cnt++) {
+				float typical_voltage = _1ou_card_mapping_table[cnt].voltage;
+				switch (_1ou_card_mapping_table[cnt].condition) {
+				case LOWER:
+					if (voltage <= typical_voltage) {
+						_1ou_status.card_type =
+							_1ou_card_mapping_table[cnt].card_type;
+					}
+					break;
+				case HIGHER:
+					if (voltage >= typical_voltage) {
+						_1ou_status.card_type =
+							_1ou_card_mapping_table[cnt].card_type;
+					}
+					break;
+				case RANGE:
+					if ((voltage >
+					     typical_voltage - (typical_voltage * 0.05)) &&
+					    (voltage <
+					     typical_voltage + (typical_voltage * 0.05))) {
+						_1ou_status.card_type =
+							_1ou_card_mapping_table[cnt].card_type;
+					}
+					break;
+				default:
+					printf("[%s] Unknown condition 0x%x", __func__,
+					       _1ou_card_mapping_table[cnt].condition);
+					break;
+				}
+
+				if (_1ou_status.card_type != TYPE_1OU_UNKNOWN) {
+					tx_len = 2;
+					rx_len = 0;
+					memset(data, 0, I2C_DATA_SIZE);
+					data[0] = CPLD_1OU_CARD_DETECTION;
+					data[1] = _1ou_status.card_type;
+					i2c_msg = construct_i2c_message(I2C_BUS1, CPLD_ADDR, tx_len,
+									data, rx_len);
+					if (i2c_master_write(&i2c_msg, retry)) {
+						printf("Failed to set 1OU card detection to CPLD register(0x%x)\n",
+						       data[0]);
+					}
+					break;
+				}
+				if ((cnt == ARRAY_SIZE(_1ou_card_mapping_table)) &&
+				    (_1ou_status.card_type == TYPE_1OU_UNKNOWN)) {
+					printf("Unknown the 1OU card type, the voltage of ADC channel-6 is %fV\n",
+					       voltage);
+				}
+			}
+		}
+	}
+
+	if (_2ou_status.present) {
 		tx_len = 1;
 		rx_len = 1;
 		memset(data, 0, I2C_DATA_SIZE);
@@ -156,24 +286,15 @@ void init_platform_config()
 		i2c_msg = construct_i2c_message(I2C_BUS1, CPLD_ADDR, tx_len, data, rx_len);
 		if (!i2c_master_read(&i2c_msg, retry)) {
 			switch (i2c_msg.data[0]) {
-			case TYPE_2OU_SPE:
-				card_type_2ou = TYPE_2OU_SPE;
-				break;
-			case TYPE_2OU_EXP:
-				card_type_2ou = TYPE_2OU_EXP;
-				break;
 			case TYPE_2OU_DPV2_8:
-				card_type_2ou = TYPE_2OU_DPV2_8;
-				break;
 			case TYPE_2OU_DPV2_16:
-				card_type_2ou = TYPE_2OU_DPV2_16;
-				break;
 			case (TYPE_2OU_DPV2_8 | TYPE_2OU_DPV2_16):
-				// Case is 2ou_DPV2_8 and 2ou_DPV2_16 are present
-				card_type_2ou = (TYPE_2OU_DPV2_8 | TYPE_2OU_DPV2_16);
+				_2ou_status.card_type = i2c_msg.data[0];
 				break;
 			default:
-				card_type_2ou = TYPE_UNKNOWN;
+				_2ou_status.card_type = TYPE_2OU_UNKNOWN;
+				printf("Unknown the 2OU card type, the card type read from CPLD is 0x%x\n",
+				       i2c_msg.data[0]);
 				break;
 			}
 		}
