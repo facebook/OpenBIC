@@ -56,6 +56,7 @@ enum SENSOR_DEV {
 	sensor_dev_pmic = 0x19,
 	sensor_dev_ina233 = 0x20,
 	sensor_dev_isl69254iraz_t = 0x21,
+	sensor_dev_max16550a = 0x22,
 	sensor_dev_max
 };
 
@@ -222,6 +223,10 @@ typedef struct _pmic_init_arg {
 typedef struct _ina233_init_arg_ {
 	bool is_init;
 } ina233_init_arg;
+
+typedef struct _max16550a_init_arg_ {
+	float r_load;
+} max16550a_init_arg;
 
 extern bool enable_sensor_poll_thread;
 extern uint8_t SDR_NUM;

@@ -238,6 +238,24 @@ sensor_cfg evt3_class1_adi_temperature_sensor_table[] = {
 	  NULL },
 };
 
+sensor_cfg DPV2_sensor_config_table[] = {
+	{ SENSOR_NUM_VOL_DPV2_12VIN, sensor_dev_max16550a, I2C_BUS9, DPV2_16_ADDR, PMBUS_READ_VIN,
+	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &max16550a_init_args[0] },
+	{ SENSOR_NUM_VOL_DPV2_12VOUT, sensor_dev_max16550a, I2C_BUS9, DPV2_16_ADDR, PMBUS_READ_VOUT,
+	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &max16550a_init_args[0] },
+	{ SENSOR_NUM_CUR_DPV2OUT, sensor_dev_max16550a, I2C_BUS9, DPV2_16_ADDR, PMBUS_READ_IOUT,
+	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &max16550a_init_args[0] },
+	{ SENSOR_NUM_TEMP_DPV2_EFUSE, sensor_dev_max16550a, I2C_BUS9, DPV2_16_ADDR,
+	  PMBUS_READ_TEMPERATURE_1, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS,
+	  NULL, NULL, NULL, NULL, &max16550a_init_args[0] },
+	{ SENSOR_NUM_PWR_DPV2, sensor_dev_max16550a, I2C_BUS9, DPV2_16_ADDR, PMBUS_READ_PIN,
+	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &max16550a_init_args[0] },
+};
+
 uint8_t load_sensor_config(void)
 {
 	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
@@ -277,14 +295,11 @@ void check_vr_type(uint8_t index)
 	if ((msg.data[0] == 0x06) && (msg.data[1] == 0x54) && (msg.data[2] == 0x49) &&
 	    (msg.data[3] == 0x53) && (msg.data[4] == 0x68) && (msg.data[5] == 0x90) &&
 	    (msg.data[6] == 0x00)) {
-		printf("VR type: TPS53689\n");
 		sensor_config[index].type = sensor_dev_tps53689;
 	} else if ((msg.data[0] == 0x02) && (msg.data[2] == 0x8A)) {
-		printf("VR type: XDPE15284\n");
 		sensor_config[index].type = sensor_dev_xdpe15284;
 	} else if ((msg.data[0] == 0x04) && (msg.data[1] == 0x00) && (msg.data[2] == 0x81) &&
 		   (msg.data[3] == 0xD2) && (msg.data[4] == 0x49)) {
-		printf("VR type: ISL69259\n");
 	} else {
 		printf("Unknown VR type\n");
 	}
@@ -293,6 +308,8 @@ void check_vr_type(uint8_t index)
 void pal_fix_sensor_config()
 {
 	uint8_t sensor_count;
+	// Sensor config table max size is set according to sdr table size
+	uint8_t sensor_max_num = SDR_NUM;
 	float voltage_hsc_type_adc;
 
 	/* Check the VR sensor type */
@@ -379,6 +396,23 @@ void pal_fix_sensor_config()
 		sensor_count = ARRAY_SIZE(adm1278_sensor_config_table);
 		for (int index = 0; index < sensor_count; index++) {
 			add_sensor_config(adm1278_sensor_config_table[index]);
+		}
+	}
+
+	/* Fix sensor table if 2ou card is present */
+	if (get_2ou_status() == CARD_PRESENT) {
+		// Add DPV2 sensor config if DPV2_16 is present
+		if ((get_2ou_cardtype() & TYPE_2OU_DPV2_16) == TYPE_2OU_DPV2_16) {
+			sensor_count = ARRAY_SIZE(DPV2_sensor_config_table);
+			// Check sensor config table max size avoiding over table max size after adding new sensor config
+			if ((sensor_config_num + sensor_count) > sensor_max_num) {
+				printf("[%s] over sensor config table max size after adding DPV2_16 sensor config, config table max size: %d  config table size after adding: %d\n",
+				       __func__, sensor_max_num, sensor_config_num + sensor_count);
+				return;
+			}
+			memcpy(&sensor_config[sensor_config_num], &DPV2_sensor_config_table[0],
+			       sensor_count * sizeof(sensor_cfg));
+			sensor_config_num += sensor_count;
 		}
 	}
 

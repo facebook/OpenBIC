@@ -38,6 +38,7 @@
 #define TEMP_DIMM_E_PARAM 0x0004
 #define TEMP_DIMM_G_PARAM 0x0006
 #define TEMP_DIMM_H_PARAM 0x0007
+#define DPV2_16_ADDR 0x50
 
 /*  threshold sensor number, 1 based  */
 #define SENSOR_NUM_TEMP_TMP75_IN 0x01
@@ -104,6 +105,13 @@
 #define SENSOR_NUM_VR_HOT 0xB2
 #define SENSOR_NUM_CPUDIMM_HOT 0xB3
 #define SENSOR_NUM_CATERR 0xEB
+
+/*  threshold sensor number, DPV2  */
+#define SENSOR_NUM_VOL_DPV2_12VIN 0x91
+#define SENSOR_NUM_VOL_DPV2_12VOUT 0x92
+#define SENSOR_NUM_CUR_DPV2OUT 0x93
+#define SENSOR_NUM_TEMP_DPV2_EFUSE 0x94
+#define SENSOR_NUM_PWR_DPV2 0x95
 
 uint8_t load_sensor_config(void);
 
