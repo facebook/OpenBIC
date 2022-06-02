@@ -4,6 +4,7 @@
 #include "kcs.h"
 #include "libutil.h"
 #include "plat_ipmb.h"
+#include "plat_i2c.h"
 #include "timer.h"
 #include <kernel.h>
 #include <stdio.h>
