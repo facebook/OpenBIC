@@ -18,7 +18,13 @@ jobs:
     strategy:
       matrix:
         # This job matrix will generate a separate job for all platforms listed.
-        platform: [yv35-cl, yv35-bb, gt-cc]
+        # Add platforms in alphabetical order.
+        platform: [
+          gt-cc,
+          yv35-bb, 
+          yv35-cl, 
+          yv35-rf,
+        ]
         # Need to set this to false otherwise it will cancel all platform builds if one fails.
       fail-fast: false
 
