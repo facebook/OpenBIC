@@ -1,0 +1,40 @@
+From 88ae093af71c7dee2b68290939b48f5e51b5e07d Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Thu, 2 Jun 2022 09:52:30 +0800
+Subject: [PATCH] soc: ast10x0: Fix the pin define order of GPIU0~7
+
+Following the latest datasheet ast1030_v0.7 and ast1060_v0.5
+
+Fixed: 8a6983 ("soc: ast10x0: Fix the pin define order")
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I1f99fecfcc676bb5e89f98c03be8a4c3e16fde57
+---
+ soc/arm/aspeed/ast10x0/pin_def_list.h | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/soc/arm/aspeed/ast10x0/pin_def_list.h b/soc/arm/aspeed/ast10x0/pin_def_list.h
+index 71fcd50d4f..b4f7242572 100644
+--- a/soc/arm/aspeed/ast10x0/pin_def_list.h
++++ b/soc/arm/aspeed/ast10x0/pin_def_list.h
+@@ -163,11 +163,11 @@ PIN_DEFINE(C2)
+ PIN_DEFINE(D1)
+ PIN_DEFINE(D2)
+ PIN_DEFINE(E3)
+-PIN_DEFINE(H2)
+-PIN_DEFINE(H1)
+-PIN_DEFINE(J4)
+-PIN_DEFINE(J2)
+-PIN_DEFINE(J1)
+-PIN_DEFINE(K3)
+-PIN_DEFINE(K4)
+ PIN_DEFINE(K2)
++PIN_DEFINE(K4)
++PIN_DEFINE(K3)
++PIN_DEFINE(J1)
++PIN_DEFINE(J2)
++PIN_DEFINE(J4)
++PIN_DEFINE(H1)
++PIN_DEFINE(H2)
+-- 
+2.25.1
+
