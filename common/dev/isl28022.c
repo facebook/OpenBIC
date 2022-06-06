@@ -2,12 +2,7 @@
 #include <string.h>
 #include "sensor.h"
 #include "hal_i2c.h"
-
-#define ISL28022_CONFIG_REG 0
-#define ISL28022_BUS_VOLTAGE_REG 2
-#define ISL28022_POWER_REG 3
-#define ISL28022_CURRENT_REG 4
-#define ISL28022_CALIBRATION_REG 5
+#include "isl28022.h"
 
 uint8_t isl28022_read(uint8_t sensor_num, int *reading)
 {
@@ -62,6 +57,11 @@ uint8_t isl28022_read(uint8_t sensor_num, int *reading)
 	} else if (offset == ISL28022_POWER_REG) {
 		/* unsigned */
 		float read_power = ((msg.data[0] << 8) | msg.data[1]) * init_arg->current_LSB * 20;
+
+		if (init_arg->config.fields.BRNG > 1) {
+			/* follow from spec, the power multiplied by 2 if usable full scale range is 60 */
+			read_power *= 2;
+		}
 		sval->integer = read_power;
 		sval->fraction = ((read_power - sval->integer) * 1000);
 	} else {
@@ -78,7 +78,7 @@ uint8_t isl28022_init(uint8_t sensor_num)
 	}
 
 	if (sensor_config[sensor_config_index_map[sensor_num]].init_args == NULL) {
-		printf("isl28022_init: init_arg is NULL\n");
+		printf("isl28022_init: init_arg is NULL sensor_num = 0x%x\n", sensor_num);
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
@@ -116,7 +116,7 @@ uint8_t isl28022_init(uint8_t sensor_num)
 	}
 	init_arg->current_LSB = (float)v_shunt_fs / (init_arg->r_shunt * adc_res);
 	calibration = (40.96 / (init_arg->current_LSB * init_arg->r_shunt));
-	calibration = calibration << 1; /* 15 bits, bit[0] is fix to 0 */
+	calibration = calibration & 0xFFFE; /* 16 bits, bit[0] is fix to 0 */
 
 	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
 	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
