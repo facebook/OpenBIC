@@ -22,6 +22,7 @@ uint8_t tmp75_read(uint8_t sensor_num, int *reading)
 
 	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = msg.data[0];
+	sval->fraction = 0;
 	return SENSOR_READ_SUCCESS;
 }
 
