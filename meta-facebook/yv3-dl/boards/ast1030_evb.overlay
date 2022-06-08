@@ -1,0 +1,243 @@
+
+&adc0 {
+	status = "okay";
+	pinctrl-0 = <&pinctrl_adc0_default &pinctrl_adc1_default
+		&pinctrl_adc2_default &pinctrl_adc3_default
+		&pinctrl_adc4_default &pinctrl_adc5_default
+		&pinctrl_adc6_default &pinctrl_adc7_default>;
+};
+
+&adc1 {
+	status = "okay";
+	pinctrl-0 = <&pinctrl_adc8_default &pinctrl_adc9_default
+		&pinctrl_adc10_default &pinctrl_adc11_default
+		&pinctrl_adc12_default &pinctrl_adc13_default
+		&pinctrl_adc14_default &pinctrl_adc15_default>;
+};
+
+&jtag1{
+	status = "okay";
+};
+
+&i2c0 {
+	pinctrl-0 = <&pinctrl_i2c0_default>;
+	status = "okay";
+  clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c1 {
+	pinctrl-0 = <&pinctrl_i2c1_default>;
+  clock-frequency = <I2C_BITRATE_FAST_PLUS>;
+	status = "okay";
+
+	ipmb1: ipmb@20 {
+		compatible = "aspeed,ipmb";
+		reg = <0x20>;
+		label = "IPMB_1";
+		size = <10>;
+		status = "okay";
+	};
+};
+
+&i2c2 {
+	pinctrl-0 = <&pinctrl_i2c2_default>;
+  clock-frequency = <I2C_BITRATE_FAST>;
+	status = "okay";
+};
+
+&i2c3 {
+	pinctrl-0 = <&pinctrl_i2c3_default>;
+  clock-frequency = <I2C_BITRATE_FAST_PLUS>;
+	status = "okay";
+
+	ipmb3: ipmb@20 {
+		compatible = "aspeed,ipmb";
+		reg = <0x20>;
+		label = "IPMB_3";
+		size = <10>;
+#ifdef CONFIG_I2C_IPMB_SLAVE
+		status = "okay";
+#endif
+	};
+
+};
+
+&i2c4 {
+	pinctrl-0 = <&pinctrl_i2c4_default>;
+	clock-frequency = <I2C_BITRATE_FAST_PLUS>;
+	status = "okay";
+
+	ipmb4: ipmb@20 {
+		compatible = "aspeed,ipmb";
+		reg = <0x20>;
+		label = "IPMB_4";
+		size = <10>;
+#ifdef CONFIG_I2C_IPMB_SLAVE
+		status = "okay";
+#endif
+	};
+};
+
+&i2c5 {
+	pinctrl-0 = <&pinctrl_i2c5_default>;
+	status = "okay";
+  clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c6 {
+	pinctrl-0 = <&pinctrl_i2c6_default>;
+  clock-frequency = <I2C_BITRATE_FAST_PLUS>;
+	status = "okay";
+
+	ipmb6: ipmb@20 {
+		compatible = "aspeed,ipmb";
+		reg = <0x20>;
+		label = "IPMB_6";
+		size = <10>;
+		status = "okay";
+	};
+};
+
+&i2c7 {
+	pinctrl-0 = <&pinctrl_i2c7_default>;
+	status = "okay";
+  clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c8 {
+	pinctrl-0 = <&pinctrl_i2c8_default>;
+  status = "okay";
+  clock-frequency = <I2C_BITRATE_FAST>;
+
+};
+
+&i2c9 {
+	pinctrl-0 = <&pinctrl_i2c9_default>;
+	status = "disabled";
+
+};
+
+&espi {
+	status = "okay";
+
+	perif,dma-mode;
+	perif,memcyc-src-addr = <0x98000000>;
+	perif,memcyc-size = <0x10000>;
+
+	oob,dma-mode;
+
+	flash,dma-mode;
+	flash,safs-mode = <0x2>;
+};
+
+&udc {
+	status = "okay";
+};
+
+&kcs3 {
+  status = "okay";
+  addr = <0xca2>;
+};
+
+&uart5 {
+  current-speed = <57600>;
+};
+
+&gpio0_a_d {
+  aspeed,persist-maps = <0x08000000>;
+};
+
+&snoop {
+  status = "okay";
+  port = <0x80>, <0x81>;
+};
+
+&fmc {
+	status = "okay";
+};
+
+&fmc_cs0 {
+	status = "okay";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		boot_partition: partition@0 {
+			label = "image-0";
+			reg = <0x0 0x100000>;
+		};
+		dfu_partition: partition@1 {
+		       label = "image-1";
+		       reg = <0x0 0x100000>;
+	       };
+	};
+};
+
+&fmc_cs1 {
+	status = "disabled";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+};
+
+&spi1 {
+	status = "okay";
+};
+
+&spi1_cs0 {
+	status = "okay";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+	re-init-support;
+};
+
+&spi1_cs1 {
+	status = "disabled";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+	re-init-support;
+};
+
+&spi2 {
+	status = "disabled";
+};
+
+&spi2_cs0 {
+	status = "disabled";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+	re-init-support;
+};
+
+&spi2_cs1 {
+	status = "disabled";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+	re-init-support;
+};
+
+&wdt0 {
+  status = "okay";
+};
+
+
+&wdt1 {
+	status = "okay";
+};
+
+&wdt2 {
+	status = "okay";
+};
+
+&wdt3 {
+	status = "okay";
+};
+
+&wdt4 {
+	status = "okay";
+};
+&sram0 {
+	reg = <0 DT_SIZE_K(512)>, <0x80000 DT_SIZE_K(256)>;
+};
