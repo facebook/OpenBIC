@@ -1308,6 +1308,7 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 #endif
 	case CMD_OEM_1S_INFORM_PEER_SLED_CYCLE:
 		OEM_1S_INFORM_PEER_SLED_CYCLE(msg);
+		break;
 	case CMD_OEM_1S_PEX_FLASH_READ:
 		OEM_1S_PEX_FLASH_READ(msg);
 		break;
