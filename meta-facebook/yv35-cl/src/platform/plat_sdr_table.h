@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define MAX_SENSOR_SIZE 60
+
 uint8_t load_sdr_table(void);
 
 #endif

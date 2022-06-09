@@ -14,8 +14,6 @@
 #define GET_FROM_CACHE 0x00
 #define GET_FROM_SENSOR 0x01
 
-#define MAX_SENSOR_SIZE 60
-
 #define SENSOR_NULL 0xFF
 #define SENSOR_FAIL 0xFF
 #define SENSOR_NUM_MAX 0xFF
