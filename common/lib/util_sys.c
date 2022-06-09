@@ -36,7 +36,7 @@ void bic_warm_reset()
 {
 	pal_warm_reset_prepare();
 	k_msleep(bic_warm_reset_delay);
-	sys_reboot(SYS_REBOOT_WARM);
+	sys_reboot(SOC_RESET);
 }
 
 K_WORK_DEFINE(bic_warm_reset_work, bic_warm_reset);
@@ -52,7 +52,7 @@ void bic_cold_reset()
 {
 	pal_cold_reset_prepare();
 	k_msleep(bic_cold_reset_delay);
-	sys_reboot(SYS_REBOOT_COLD);
+	sys_reboot(SOC_RESET);
 }
 
 K_WORK_DEFINE(bic_cold_reset_work, bic_cold_reset);
