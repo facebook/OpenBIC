@@ -54,19 +54,19 @@ enum SENSOR_DEV {
 	sensor_dev_adm1278 = 0x04,
 	sensor_dev_nvme = 0x05,
 	sensor_dev_pch = 0x06,
-	sensor_dev_mp5990 = 0x10,
-	sensor_dev_isl28022 = 0x11,
-	sensor_dev_pex89000 = 0x12,
-	sensor_dev_tps53689 = 0x13,
-	sensor_dev_xdpe15284 = 0x14,
-	sensor_dev_ltc4282 = 0x15,
-	sensor_dev_ast_fan = 0x16,
-	sensor_dev_tmp431 = 0x18,
-	sensor_dev_pmic = 0x19,
-	sensor_dev_ina233 = 0x20,
-	sensor_dev_isl69254iraz_t = 0x21,
-	sensor_dev_max16550a = 0x22,
-	sensor_dev_ina230 = 0x23,
+	sensor_dev_mp5990 = 0x07,
+	sensor_dev_isl28022 = 0x08,
+	sensor_dev_pex89000 = 0x09,
+	sensor_dev_tps53689 = 0x0A,
+	sensor_dev_xdpe15284 = 0x0B,
+	sensor_dev_ltc4282 = 0x0C,
+	sensor_dev_ast_fan = 0x0D,
+	sensor_dev_tmp431 = 0x0E,
+	sensor_dev_pmic = 0x0F,
+	sensor_dev_ina233 = 0x10,
+	sensor_dev_isl69254iraz_t = 0x11,
+	sensor_dev_max16550a = 0x12,
+	sensor_dev_ina230 = 0x13,
 	sensor_dev_max
 };
 
@@ -294,7 +294,7 @@ typedef struct _ina230_init_arg {
 } ina230_init_arg;
 
 extern bool enable_sensor_poll_thread;
-extern uint8_t SDR_NUM;
+extern uint8_t SDR_COUNT;
 extern sensor_cfg *sensor_config;
 // Mapping sensor number to sensor config index
 extern uint8_t sensor_config_index_map[SENSOR_NUM_MAX];

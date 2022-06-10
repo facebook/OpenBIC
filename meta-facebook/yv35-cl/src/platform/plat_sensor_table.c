@@ -313,7 +313,7 @@ void pal_fix_sensor_config()
 {
 	uint8_t sensor_count;
 	// Sensor config table max size is set according to sdr table size
-	uint8_t sensor_max_num = SDR_NUM;
+	uint8_t sensor_max_num = SDR_COUNT;
 	float voltage_hsc_type_adc;
 
 	/* Check the VR sensor type */
@@ -426,7 +426,7 @@ void pal_fix_sensor_config()
 		}
 	}
 
-	if (sensor_config_num != SDR_NUM) {
+	if (sensor_config_num != SDR_COUNT) {
 		printf("fix sensor SDR and config table not match\n");
 	}
 }
