@@ -266,12 +266,36 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 	return FWUPDATE_SUCCESS;
 }
 
+uint8_t fw_update_cxl(uint8_t flash_position)
+{
+	int ret = 0;
+	const struct device *flash_dev;
+
+	flash_dev = device_get_binding(flash_device[flash_position]);
+	ret = spi_nor_re_init(flash_dev);
+	if (ret != 0) {
+		return FWUPDATE_UPDATE_FAIL;
+	}
+	//TODO: do real update until know CXL fw update format and progress
+	return FWUPDATE_SUCCESS;
+}
+
 __weak int pal_get_bios_flash_position()
 {
 	return -1;
 }
 
 __weak bool pal_switch_bios_spi_mux(int gpio_status)
+{
+	return false;
+}
+
+__weak int pal_get_cxl_flash_position()
+{
+	return -1;
+}
+
+__weak bool pal_switch_cxl_spi_mux()
 {
 	return false;
 }
