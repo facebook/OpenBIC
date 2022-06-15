@@ -369,6 +369,7 @@ static void drive_init(void)
 						    p->num, p->pre_sensor_read_args) == false) {
 						printk("[%s] sensor %d pre sensor read failed!\n",
 						       __func__, p->num);
+						continue;
 					}
 				}
 				ret = sensor_drive_tbl[j].init(p->num);

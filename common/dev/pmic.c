@@ -130,5 +130,7 @@ uint8_t pmic_init(uint8_t sensor_num)
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 	sensor_config[sensor_config_index_map[sensor_num]].read = pmic_read;
+	pmic_init_arg *init_arg = sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	init_arg->is_init = true;
 	return SENSOR_INIT_SUCCESS;
 }
