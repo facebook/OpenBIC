@@ -69,6 +69,7 @@
 #define SENSOR_NUM_PWR_VRVDDQAB 0x78
 #define SENSOR_NUM_PWR_VRVDDQCD 0x79
 
-extern uint8_t load_sensor_config(void);
+extern uint8_t plat_get_config_size();
+extern void load_sensor_config(void);
 
 #endif

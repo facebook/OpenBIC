@@ -50,6 +50,14 @@ enum ADC_CHANNEL {
 	CHANNEL_7 = 7,
 };
 
+enum HSC_MODULE {
+	HSC_MODULE_ADM1278,
+	HSC_MODULE_MP5990,
+	HSC_MODULE_LTC4282,
+	HSC_MODULE_LTC4286,
+	HSC_MODULE_UNKNOWN,
+};
+
 enum BIC_CARD_PRESENT {
 	CARD_UNPRESENT = false,
 	CARD_PRESENT = true,
@@ -59,8 +67,9 @@ uint8_t get_system_class();
 CARD_STATUS get_1ou_status();
 CARD_STATUS get_2ou_status();
 uint8_t get_board_revision();
+uint8_t get_hsc_module();
 bool get_adc_voltage(int channel, float *voltage);
-
+void init_hsc_module(uint8_t board_revision);
 void init_platform_config();
 
 #endif

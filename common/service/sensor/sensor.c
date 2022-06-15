@@ -12,6 +12,8 @@
 #include "ast_adc.h"
 #include "intel_peci.h"
 #include "util_sys.h"
+#include "plat_def.h"
+#include "libutil.h"
 
 #define SENSOR_DRIVE_INIT_DECLARE(name) uint8_t name##_init(uint8_t sensor_num)
 
@@ -38,7 +40,7 @@ const int negative_ten_power[16] = { 1,	    1,		1,	   1,	     1,	      1,
 				     10000, 1000,	100,	   10 };
 
 sensor_cfg *sensor_config;
-uint8_t sensor_config_num;
+uint8_t sensor_config_count;
 
 SENSOR_DRIVE_INIT_DECLARE(tmp75);
 SENSOR_DRIVE_INIT_DECLARE(ast_adc);
@@ -98,21 +100,21 @@ void map_sensor_num_to_sdr_cfg(void)
 	uint8_t i, j;
 
 	for (i = 0; i < SENSOR_NUM_MAX; i++) {
-		for (j = 0; j < SDR_COUNT; j++) {
+		for (j = 0; j < sdr_count; j++) {
 			if (i == full_sdr_table[j].sensor_num) {
 				sdr_index_map[i] = j;
 				break;
-			} else if (i == SDR_COUNT) {
+			} else if (i == sdr_count) {
 				sdr_index_map[i] = SENSOR_NULL;
 			} else {
 				continue;
 			}
 		}
-		for (j = 0; j < SDR_COUNT; j++) {
+		for (j = 0; j < sdr_count; j++) {
 			if (i == sensor_config[j].num) {
 				sensor_config_index_map[i] = j;
 				break;
-			} else if (i == SDR_COUNT) {
+			} else if (i == sdr_count) {
 				sensor_config_index_map[i] = SENSOR_NULL;
 			} else {
 				continue;
@@ -146,7 +148,11 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	if (sdr_index_map[sensor_num] == 0xFF) { // look for sensor in SDR table
+	// Check sensor information in sensor config table
+	// Block BMC send invalid sensor number by OEM accurate read command
+	if (sensor_config_index_map[sensor_num] == SENSOR_FAIL) {
+		printf("[%s] fail to find sensor info in config table, sensor_num: 0x%x\n",
+		       __func__, sensor_num);
 		return SENSOR_NOT_FOUND;
 	}
 
@@ -274,7 +280,7 @@ void sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 	pal_set_sensor_poll_interval(&sensor_poll_interval_ms);
 
 	while (1) {
-		for (index = 0; index < sensor_config_num; index++) {
+		for (index = 0; index < sensor_config_count; index++) {
 			// Perform sensor polling according to the sensor number of the sensor config table
 			sensor_num = sensor_config[index].num;
 			if (sensor_poll_enable_flag == false) { /* skip if disable sensor poll */
@@ -302,10 +308,39 @@ __weak void pal_set_sensor_poll_interval(int *interval_ms)
 	return;
 }
 
-__weak void pal_fix_sensor_config(void)
+__weak void pal_extend_sensor_config(void)
 {
-	printf("Function %s is not implemented\n", __func__);
 	return;
+}
+
+__weak uint8_t pal_get_extend_sdr()
+{
+	return 0;
+}
+
+__weak uint8_t pal_get_extend_sensor_config()
+{
+	return 0;
+}
+
+void check_init_sensor_size()
+{
+	uint8_t init_sdr_size = plat_get_sdr_size();
+	uint8_t init_sensor_config_size = plat_get_config_size();
+	uint8_t extend_sdr_size = pal_get_extend_sdr();
+	uint8_t extend_sensor_config_size = pal_get_extend_sensor_config();
+
+	init_sdr_size += extend_sdr_size;
+	init_sensor_config_size += extend_sensor_config_size;
+
+	if (init_sdr_size != init_sensor_config_size) {
+		enable_sensor_poll_thread = false;
+		printf("[%s] init sdr size is not equal to config size, sdr size: 0x%x, config size: 0x%x\n",
+		       __func__, init_sdr_size, init_sensor_config_size);
+		printf("BIC should not monitor sensors if SDR size and sensor config size is not match, BIC would not start sensor thread\n");
+		return;
+	}
+	sensor_config_size = init_sdr_size;
 }
 
 bool stby_access(uint8_t sensor_num)
@@ -352,7 +387,7 @@ void sensor_poll_init()
 uint8_t get_sensor_config_index(uint8_t sensor_num)
 {
 	uint8_t i = 0;
-	for (i = 0; i < sensor_config_num; ++i) {
+	for (i = 0; i < sensor_config_count; ++i) {
 		if (sensor_num == sensor_config[i].num) {
 			return i;
 		}
@@ -364,10 +399,15 @@ void add_sensor_config(sensor_cfg config)
 {
 	uint8_t index = get_sensor_config_index(config.num);
 	if (index != SENSOR_NUM_MAX) {
-		memcpy(&sensor_config[index], &config, sizeof(config));
-		printf("Replace the sensor[0x%02x] configuration\n", config.num);
+		memcpy(&sensor_config[index], &config, sizeof(sensor_cfg));
+		printf("[%s] replace the sensor[0x%02x] configuration\n", __func__, config.num);
+		return;
+	}
+	// Check config table size before adding sensor config
+	if (sensor_config_count + 1 <= sdr_count) {
+		sensor_config[sensor_config_count++] = config;
 	} else {
-		sensor_config[sensor_config_num++] = config;
+		printf("[%s] add config would over config max size\n", __func__);
 	}
 }
 
@@ -404,7 +444,7 @@ static void drive_init(void)
 	const uint16_t max_drive_num = ARRAY_SIZE(sensor_drive_tbl);
 	uint16_t current_drive;
 
-	for (int i = 0; i < SDR_COUNT; i++) {
+	for (int i = 0; i < sdr_count; i++) {
 		sensor_cfg *p = sensor_config + i;
 		for (current_drive = 0; current_drive < max_drive_num; current_drive++) {
 			if (init_drive_type(p, current_drive)) {
@@ -422,22 +462,36 @@ static void drive_init(void)
 bool sensor_init(void)
 {
 	init_sensor_num();
-	sdr_init();
-
-	if (SDR_COUNT != 0) {
-		sensor_config = (sensor_cfg *)malloc(SDR_COUNT * sizeof(sensor_cfg));
-		if (sensor_config != NULL) {
-			sensor_config_num = load_sensor_config();
+	// Check init SDR size is equal to sensor config size
+	check_init_sensor_size();
+	if (sensor_config_size != 0) {
+		full_sdr_table =
+			(SDR_Full_sensor *)malloc(sensor_config_size * sizeof(SDR_Full_sensor));
+		if (full_sdr_table != NULL) {
+			sdr_init();
 		} else {
-			printf("Failed to allocate memory\n");
+			printf("[%s] fail to allocate memory to SDR table\n", __func__);
 			return false;
 		}
 	} else {
-		printf("The SDR number is equal to 0\n");
+		printf("[%s] init sensor size is zero\n", __func__);
 		return false;
 	}
 
-	pal_fix_sensor_config();
+	if (sdr_count != 0) {
+		sensor_config = (sensor_cfg *)malloc(sdr_count * sizeof(sensor_cfg));
+		if (sensor_config != NULL) {
+			load_sensor_config();
+		} else {
+			SAFE_FREE(full_sdr_table);
+			printf("[%s] fail to allocate memory to config table\n", __func__);
+			return false;
+		}
+	} else {
+		printf("[%s] SDR number is zero\n", __func__);
+		return false;
+	}
+
 	map_sensor_num_to_sdr_cfg();
 
 	/* register read api of sensor_config */

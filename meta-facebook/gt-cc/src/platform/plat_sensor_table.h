@@ -237,6 +237,7 @@
 #define SENSOR_NUM_CURR_E1S_15 0xBE
 #define SENSOR_NUM_POUT_E1S_15 0xBF
 
-uint8_t load_sensor_config(void);
+uint8_t plat_get_config_size();
+void load_sensor_config(void);
 
 #endif

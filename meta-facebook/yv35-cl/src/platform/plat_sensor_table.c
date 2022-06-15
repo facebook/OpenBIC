@@ -256,10 +256,48 @@ sensor_cfg DPV2_sensor_config_table[] = {
 	  &max16550a_init_args[0] },
 };
 
-uint8_t load_sensor_config(void)
+uint8_t plat_get_config_size()
+{
+	return ARRAY_SIZE(plat_sensor_config);
+}
+
+void load_sensor_config(void)
 {
 	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
-	return ARRAY_SIZE(plat_sensor_config);
+	sensor_config_count = ARRAY_SIZE(plat_sensor_config);
+
+	// Fix config table in different system/config
+	pal_extend_sensor_config();
+}
+
+uint8_t pal_get_extend_sensor_config()
+{
+	uint8_t extend_sensor_config_size = 0;
+	uint8_t hsc_module = get_hsc_module();
+	switch (hsc_module) {
+	case HSC_MODULE_ADM1278:
+		extend_sensor_config_size += ARRAY_SIZE(adm1278_sensor_config_table);
+		break;
+	case HSC_MODULE_MP5990:
+		extend_sensor_config_size += ARRAY_SIZE(mp5990_sensor_config_table);
+		break;
+	case HSC_MODULE_LTC4282:
+	case HSC_MODULE_LTC4286:
+	default:
+		printf("[%s] not support on this hsc module, hsc module: 0x%x\n", __func__,
+		       hsc_module);
+		break;
+	}
+
+	// Fix sensor config table if 2ou card is present
+	CARD_STATUS _2ou_status = get_2ou_status();
+	if (_2ou_status.present) {
+		// Add DPV2 config if DPV2_16 is present
+		if ((_2ou_status.card_type & TYPE_2OU_DPV2_16) == TYPE_2OU_DPV2_16) {
+			extend_sensor_config_size += ARRAY_SIZE(DPV2_sensor_config_table);
+		}
+	}
+	return extend_sensor_config_size;
 }
 
 void check_vr_type(uint8_t index)
@@ -309,12 +347,10 @@ void check_vr_type(uint8_t index)
 	}
 }
 
-void pal_fix_sensor_config()
+void pal_extend_sensor_config()
 {
-	uint8_t sensor_count;
-	// Sensor config table max size is set according to sdr table size
-	uint8_t sensor_max_num = SDR_COUNT;
-	float voltage_hsc_type_adc;
+	uint8_t sensor_count = 0;
+	uint8_t hsc_module = get_hsc_module();
 
 	/* Check the VR sensor type */
 	sensor_count = ARRAY_SIZE(plat_sensor_config);
@@ -324,88 +360,51 @@ void pal_fix_sensor_config()
 		}
 	}
 
-	bool ret = false;
 	CARD_STATUS _2ou_status = get_2ou_status();
-	/* Fix sensor table according to the different class types and board revisions */
-	if (get_system_class() == SYS_CLASS_1) {
-		uint8_t board_revision = get_board_revision();
-		switch (board_revision) {
-		case SYS_BOARD_POC:
-		case SYS_BOARD_EVT:
-		case SYS_BOARD_EVT2:
-			sensor_count = ARRAY_SIZE(adm1278_sensor_config_table);
-			for (int index = 0; index < sensor_count; index++) {
-				add_sensor_config(adm1278_sensor_config_table[index]);
-			}
-			break;
-		case SYS_BOARD_EVT3_EFUSE:
-			sensor_count = ARRAY_SIZE(mp5990_sensor_config_table);
-			for (int index = 0; index < sensor_count; index++) {
-				if (_2ou_status.present) {
-					/* For the class type 1 and 2OU system,
-					 * set the IMON based total over current fault limit to 70A(0x0046),
-					 * set the gain for output current reporting to 0x01BF following the power team's experiment
-					 * and set GPIOA7(HSC_SET_EN_R) to high.
-					 */
-					mp5990_sensor_config_table[index].init_args =
-						&mp5990_init_args[1];
-					gpio_set(HSC_SET_EN_R, GPIO_HIGH);
-				} else {
-					/* For the class type 1 and 2OU system,
-					 * set the IMON based total over current fault limit to 40A(0x0028),
-					 * set the gain for output current reporting to 0x0104 following the power team's experiment
-					 * and set GPIOA7(HSC_SET_EN_R) to low.
-					 */
-					mp5990_sensor_config_table[index].init_args =
-						&mp5990_init_args[0];
-					gpio_set(HSC_SET_EN_R, GPIO_LOW);
-				}
-				add_sensor_config(mp5990_sensor_config_table[index]);
-			}
-			break;
-		case SYS_BOARD_EVT3_HOTSWAP:
-			/* Follow the GPIO table, the HSC device type can be by ADC7(net name: HSC_TYPE_ADC)
-			 * If the voltage of ADC-7 is 0.5V(+/- 15%), the hotswap model is ADM1278.
-			 * If the voltage of ADC-7 is 1.0V(+/- 15%), the hotswap model is LTC4282.
-			 * If the voltage of ADC-7 is 1.5V(+/- 15%), the hotswap model is LTC4286.
-			 */
-			ret = get_adc_voltage(CHANNEL_7, &voltage_hsc_type_adc);
-			if (!ret) {
-				break;
-			}
-
-			if ((voltage_hsc_type_adc > 0.5 - (0.5 * 0.15)) &&
-			    (voltage_hsc_type_adc < 0.5 + (0.5 * 0.15))) {
-				printf("Added ADM1278 sensor configuration\n");
-				sensor_count = ARRAY_SIZE(adm1278_sensor_config_table);
-				for (int index = 0; index < sensor_count; index++) {
-					add_sensor_config(adm1278_sensor_config_table[index]);
-				}
-			} else if ((voltage_hsc_type_adc > 1.0 - (1.0 * 0.15)) &&
-				   (voltage_hsc_type_adc < 1.0 + (1.0 * 0.15))) {
-				printf("TODO: Support LTC4282 sensor config\n");
-			} else if ((voltage_hsc_type_adc > 1.5 - (1.5 * 0.15)) &&
-				   (voltage_hsc_type_adc < 1.5 + (1.5 * 0.15))) {
-				printf("TODO: Support LTC4286 sensor config\n");
-			} else {
-				printf("Unknown hotswap model type, HSC_TYPE_ADC voltage: %fV\n",
-				       voltage_hsc_type_adc);
-			}
-			/* Replace the temperature sensors configuration including "HSC Temp" and "MB Outlet Temp."
-			 * For these two sensors, the reading values are read from TMP431 chip.data.num
-			 */
-			sensor_count = ARRAY_SIZE(evt3_class1_adi_temperature_sensor_table);
-			for (int index = 0; index < sensor_count; index++) {
-				add_sensor_config(evt3_class1_adi_temperature_sensor_table[index]);
-			}
-			break;
-		default:
-			break;
-		}
-	} else { // Class-2
+	switch (hsc_module) {
+	case HSC_MODULE_ADM1278:
 		sensor_count = ARRAY_SIZE(adm1278_sensor_config_table);
 		for (int index = 0; index < sensor_count; index++) {
 			add_sensor_config(adm1278_sensor_config_table[index]);
+		}
+		break;
+	case HSC_MODULE_MP5990:
+		sensor_count = ARRAY_SIZE(mp5990_sensor_config_table);
+		for (int index = 0; index < sensor_count; index++) {
+			if (_2ou_status.present) {
+				/* For the class type 1 and 2OU system,
+        * set the IMON based total over current fault limit to 70A(0x0046),
+        * set the gain for output current reporting to 0x01BF following the power team's experiment
+        * and set GPIOA7(HSC_SET_EN_R) to high.
+        */
+				mp5990_sensor_config_table[index].init_args = &mp5990_init_args[1];
+				gpio_set(HSC_SET_EN_R, GPIO_HIGH);
+			} else {
+				/* For the class type 1 and 2OU system,
+        * set the IMON based total over current fault limit to 40A(0x0028),
+        * set the gain for output current reporting to 0x0104 following the power team's experiment
+        * and set GPIOA7(HSC_SET_EN_R) to low.
+        */
+				mp5990_sensor_config_table[index].init_args = &mp5990_init_args[0];
+				gpio_set(HSC_SET_EN_R, GPIO_LOW);
+			}
+			add_sensor_config(mp5990_sensor_config_table[index]);
+		}
+		break;
+	case HSC_MODULE_LTC4282:
+	case HSC_MODULE_LTC4286:
+	default:
+		printf("[%s] not support on this hsc module, hsc module: 0x%x\n", __func__,
+		       hsc_module);
+		break;
+	}
+	if (get_board_revision() == SYS_BOARD_EVT3_HOTSWAP) {
+		/* Replace the temperature sensors configuration including "HSC Temp" and "MB Outlet Temp."
+    * For these two sensors, the reading values are read from TMP431 chip.data.num
+    */
+		sensor_count = ARRAY_SIZE(evt3_class1_adi_temperature_sensor_table);
+		for (int index = 0; index < sensor_count; index++) {
+			add_sensor_config(evt3_class1_adi_temperature_sensor_table[index]);
 		}
 	}
 
@@ -414,19 +413,14 @@ void pal_fix_sensor_config()
 		// Add DPV2 sensor config if DPV2_16 is present
 		if ((_2ou_status.card_type & TYPE_2OU_DPV2_16) == TYPE_2OU_DPV2_16) {
 			sensor_count = ARRAY_SIZE(DPV2_sensor_config_table);
-			// Check sensor config table max size avoiding over table max size after adding new sensor config
-			if ((sensor_config_num + sensor_count) > sensor_max_num) {
-				printf("[%s] over sensor config table max size after adding DPV2_16 sensor config, config table max size: %d  config table size after adding: %d\n",
-				       __func__, sensor_max_num, sensor_config_num + sensor_count);
-				return;
+			for (int index = 0; index < sensor_count; index++) {
+				add_sensor_config(DPV2_sensor_config_table[index]);
 			}
-			memcpy(&sensor_config[sensor_config_num], &DPV2_sensor_config_table[0],
-			       sensor_count * sizeof(sensor_cfg));
-			sensor_config_num += sensor_count;
 		}
 	}
 
-	if (sensor_config_num != SDR_COUNT) {
-		printf("fix sensor SDR and config table not match\n");
+	if (sensor_config_count != sdr_count) {
+		printf("[%s] extend sensor SDR and config table not match, sdr size: 0x%x, sensor config size: 0x%x\n",
+		       __func__, sdr_count, sensor_config_count);
 	}
 }

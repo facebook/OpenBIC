@@ -298,11 +298,10 @@ typedef struct _ina230_init_arg {
 } ina230_init_arg;
 
 extern bool enable_sensor_poll_thread;
-extern uint8_t SDR_COUNT;
 extern sensor_cfg *sensor_config;
 // Mapping sensor number to sensor config index
 extern uint8_t sensor_config_index_map[SENSOR_NUM_MAX];
-extern uint8_t sensor_config_num;
+extern uint8_t sensor_config_count;
 
 void clear_unaccessible_sensor_cache(uint8_t sensor_num);
 uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode);
@@ -315,7 +314,7 @@ bool vr_access(uint8_t sensor_num);
 bool sensor_init(void);
 void disable_sensor_poll();
 void enable_sensor_poll();
-void pal_fix_sensor_config(void);
+void pal_extend_sensor_config(void);
 bool check_sensor_num_exist(uint8_t sensor_num);
 void add_sensor_config(sensor_cfg config);
 bool check_is_sensor_ready();

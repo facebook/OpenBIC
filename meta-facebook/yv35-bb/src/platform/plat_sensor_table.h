@@ -49,16 +49,6 @@
 #define SENSOR_NUM_CUR_HSCOUT 0xDE
 #define SENSOR_NUM_CUR_P12V_FAN 0xE8
 
-/* Fan sensor number */
-#define SENSOR_NUM_FAN_BMC_TACH_0 0xE0
-#define SENSOR_NUM_FAN_BMC_TACH_1 0xE1
-#define SENSOR_NUM_FAN_BMC_TACH_2 0xE2
-#define SENSOR_NUM_FAN_BMC_TACH_3 0xE3
-#define SENSOR_NUM_FAN_BMC_TACH_4 0xE4
-#define SENSOR_NUM_FAN_BMC_TACH_5 0xE5
-#define SENSOR_NUM_FAN_BMC_TACH_6 0xE6
-#define SENSOR_NUM_FAN_BMC_TACH_7 0xE7
-
 #define SENSOR_NUM_HSC_EIN 0xEA
 #define SENSOR_NUM_HSC_PEAK_IOUT 0xEB
 #define SENSOR_NUM_HSC_PEAK_PIN 0xEC
@@ -72,6 +62,7 @@
 #define SAMPLE_COUNT_FAN_IOUT 100
 #define SENSOR_NUM_POWER_DETECT 0xE1
 
-uint8_t load_sensor_config(void);
+uint8_t plat_get_config_size();
+void load_sensor_config(void);
 
 #endif
