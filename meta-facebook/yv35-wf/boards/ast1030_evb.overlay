@@ -1,0 +1,161 @@
+&adc0 {
+	status = "okay";
+	pinctrl-0 = <	
+				&pinctrl_adc0_default &pinctrl_adc1_default &pinctrl_adc2_default 
+				&pinctrl_adc3_default &pinctrl_adc6_default &pinctrl_adc7_default	
+				>;
+};
+
+&adc1 {
+	status = "okay";
+	pinctrl-0 = <  
+				&pinctrl_adc8_default
+				&pinctrl_adc9_default
+				&pinctrl_adc11_default
+				&pinctrl_adc13_default
+				>;
+};
+
+&i2c0 {
+	pinctrl-0 = <&pinctrl_i2c0_default>;
+	status = "okay";
+  clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c1 {
+	pinctrl-0 = <&pinctrl_i2c1_default>;
+	status = "okay";
+  clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c2 {
+	pinctrl-0 = <&pinctrl_i2c2_default>;
+  status = "okay";
+  clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c3 {
+	pinctrl-0 = <&pinctrl_i2c3_default>;
+	status = "okay";
+  clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c4 {
+  pinctrl-0 = <&pinctrl_i2c4_default>;
+  status = "okay";
+  clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c5 {
+  pinctrl-0 = <&pinctrl_i2c5_default>;
+  status = "okay";
+  clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c6 {
+  pinctrl-0 = <&pinctrl_i2c6_default>;
+  status = "okay";
+  clock-frequency = <I2C_BITRATE_FAST>;
+
+};
+
+&i2c8 {
+  pinctrl-0 = <&pinctrl_i2c8_default>;
+  status = "okay";
+  clock-frequency = <I2C_BITRATE_FAST>;
+
+  ipmb8: ipmb@20 {
+    compatible = "aspeed,ipmb";
+    reg = <0x20>;
+    label = "IPMB_8";
+    size = <10>;
+#ifdef CONFIG_I2C_IPMB_SLAVE
+    status = "okay";
+#endif
+  };
+
+};
+
+&i2c9 {
+	pinctrl-0 = <&pinctrl_i2c9_default>;
+  status = "okay";
+  clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&udc {
+	status = "okay";
+};
+
+&fmc {
+	status = "okay";
+};
+
+&fmc_cs0 {
+	status = "okay";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		boot_partition: partition@0 {
+			label = "image-0";
+			reg = <0x0 0x100000>;
+		};
+		dfu_partition: partition@1 {
+		  label = "image-1";
+	    reg = <0x0 0x100000>;
+    };
+	};
+};
+
+&spi1 {
+	status = "okay";
+};
+
+&spi1_cs0 {
+	status = "okay";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+};
+
+&uart5 {
+  current-speed = <57600>;
+};
+
+&gpio0_a_d {
+  aspeed,persist-maps = <0xB9290028>;
+};
+
+&gpio0_e_h {
+  aspeed,persist-maps = <0x0c870402>;
+};
+
+&gpio0_i_l {
+  aspeed,persist-maps = <0x00000400>;
+};
+
+&gpio0_m_p {
+  aspeed,persist-maps = <0xc000c019>;
+};
+
+&gpio0_q_t {
+  aspeed,persist-maps = <0x00000001>;
+};
+
+&jtag1{
+	status = "okay";
+};
+
+&wdt0 {
+	status = "okay";
+};
+
+&wdt1 {
+	status = "okay";
+};
+
+&wdt2 {
+	status = "okay";
+};
