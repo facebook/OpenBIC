@@ -5,7 +5,6 @@
 
 #include "ast_adc.h"
 #include "sensor.h"
-#include "plat_hook.h"
 #include "plat_i2c.h"
 #include "plat_def.h"
 
