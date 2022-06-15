@@ -968,7 +968,6 @@ __weak void OEM_1S_READ_BIC_REGISTER(ipmi_msg *msg)
 	***********************************/
 	if (!msg) {
 		printf("pal_OEM_1S_READ_BIC_REGISTER: parameter msg is NULL\n");
-		msg->completion_code = CC_UNSPECIFIED_ERROR;
 		return;
 	}
 	if (msg->data_len != 5) {
@@ -996,7 +995,6 @@ __weak void OEM_1S_WRITE_BIC_REGISTER(ipmi_msg *msg)
 	***********************************/
 	if (!msg) {
 		printf("pal_OEM_1S_WRITE_BIC_REGISTER: parameter msg is NULL\n");
-		msg->completion_code = CC_UNSPECIFIED_ERROR;
 		return;
 	}
 	if (msg->data[4] < 1 || msg->data[4] > 4 || (msg->data_len != 5 + msg->data[4])) {
