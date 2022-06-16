@@ -1091,6 +1091,11 @@ void create_ipmb_threads(uint8_t index)
 	memset(&seq_table[index], 0, sizeof(bool) * SEQ_NUM);
 
 	P_start[index] = (void *)malloc(sizeof(struct ipmi_msg_cfg));
+	if (P_start[index] == NULL) {
+		printf("[%s], Memory allocation failed!\n", __func__);
+		return;
+	}
+
 	P_temp = P_start[index];
 	P_temp->next = P_temp;
 

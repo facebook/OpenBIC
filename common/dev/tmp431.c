@@ -79,7 +79,12 @@ uint8_t tmp431_init(uint8_t sensor_num)
 
 	uint8_t retry = 5;
 	I2C_MSG msg;
+
 	char *data = (uint8_t *)malloc(I2C_DATA_SIZE * sizeof(uint8_t));
+	if (data == NULL) {
+		printf("[%s], Memory allocation failed!\n", __func__);
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
 
 	// Get the temperature range from chip
 	uint8_t bus = sensor_config[sensor_config_index_map[sensor_num]].port;

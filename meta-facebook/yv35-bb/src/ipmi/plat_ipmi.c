@@ -25,6 +25,11 @@ void OEM_CABLE_DETECTION(ipmi_msg *msg)
 	msg->completion_code = CC_SUCCESS;
 
 	common_addsel_msg_t *sel_msg = (common_addsel_msg_t *)malloc(sizeof(common_addsel_msg_t));
+	if (sel_msg == NULL) {
+		printf("%s Memory allocation failed!\n", __func__);
+		return;
+	}
+
 	sel_msg->sensor_type = IPMI_OEM_SENSOR_TYPE_OEM;
 	sel_msg->event_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
 	sel_msg->sensor_number = CMD_OEM_CABLE_DETECTION;

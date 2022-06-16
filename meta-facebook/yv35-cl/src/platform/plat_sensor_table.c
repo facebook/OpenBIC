@@ -267,6 +267,10 @@ void check_vr_type(uint8_t index)
 	uint8_t retry = 5;
 	I2C_MSG msg;
 	char *data = (uint8_t *)malloc(sizeof(uint8_t));
+	if (data == NULL) {
+		printf("[%s], Memory allocation failed!\n", __func__);
+		return;
+	}
 
 	/* Get IC Device ID from VR chip
 	 * - Command code: 0xAD
