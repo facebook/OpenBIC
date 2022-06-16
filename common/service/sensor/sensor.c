@@ -192,6 +192,19 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 			cfg->cache_status = status;
 			return cfg->cache_status;
 		} else {
+			/* If sensor read fails, let the reading argument in the
+       * post_sensor_read_hook function to NULL.
+       * All post_sensor_read_hook function define in each platform should check
+       * reading whether is NULL to do the corresponding thing. (Ex: mutex_unlock)
+       */
+			if (cfg->post_sensor_read_hook) {
+				if (cfg->post_sensor_read_hook(sensor_num,
+							       cfg->post_sensor_read_args,
+							       NULL) == false) {
+					printf("[%s]sensor number 0x%x reading and post_read fail\n",
+					       __func__, sensor_num);
+				}
+			}
 			/* common retry */
 			if (cfg->retry >= SENSOR_READ_RETRY_MAX)
 				cfg->cache_status = status;
@@ -367,13 +380,23 @@ static void drive_init(void)
 				if (p->pre_sensor_read_hook) {
 					if (p->pre_sensor_read_hook(
 						    p->num, p->pre_sensor_read_args) == false) {
-						printk("[%s] sensor %d pre sensor read failed!\n",
+						printf("[%s] sensor 0x%x pre sensor read failed!\n",
 						       __func__, p->num);
+						continue;
 					}
 				}
 				ret = sensor_drive_tbl[j].init(p->num);
 				if (ret != SENSOR_INIT_SUCCESS)
 					printf("sensor num %d initial fail, ret %d\n", p->num, ret);
+
+				if (p->post_sensor_read_hook) {
+					if (p->post_sensor_read_hook(p->num,
+								     p->post_sensor_read_args,
+								     NULL) == false) {
+						printf("[%s] sensor 0x%x post sensor read failed!\n",
+						       __func__, p->num);
+					}
+				}
 				break;
 			}
 		}

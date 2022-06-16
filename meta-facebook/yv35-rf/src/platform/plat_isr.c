@@ -68,6 +68,19 @@ void abort_power_thread()
 	}
 }
 
+void check_power_abnormal(uint8_t power_good_gpio_num, uint8_t control_power_gpio_num)
+{
+	if (gpio_get(power_good_gpio_num) == POWER_OFF) {
+		// If the control power pin is high when the power good pin is falling
+		// This means that the behavior of turning off is not expected
+		if (gpio_get(control_power_gpio_num) == CONTROL_ON) {
+			// Sequentially turn off the power
+			abort_power_thread();
+			init_power_off_thread();
+		}
+	}
+}
+
 void ISR_MB_DC_STATE()
 {
 	set_MB_DC_status(FM_POWER_EN);
@@ -88,4 +101,54 @@ void ISR_MB_RST()
 		// Disable ASIC reset pin
 		gpio_set(ASIC_PERST0_N, HIGH_INACTIVE);
 	}
+}
+
+void ISR_P0V8_ASICA_POWER_GOOD_LOST()
+{
+	check_power_abnormal(P0V8_ASICA_PWRGD, FM_P0V8_ASICA_EN);
+}
+
+void ISR_P0V8_ASICD_POWER_GOOD_LOST()
+{
+	check_power_abnormal(P0V8_ASICD_PWRGD, FM_P0V8_ASICD_EN);
+}
+
+void ISR_P0V9_ASICA_POWER_GOOD_LOST()
+{
+	check_power_abnormal(P0V9_ASICA_PWRGD, FM_P0V9_ASICA_EN);
+}
+
+void ISR_P1V8_ASIC_POWER_GOOD_LOST()
+{
+	check_power_abnormal(P1V8_ASIC_PG_R, P1V8_ASIC_EN_R);
+}
+
+void ISR_PVPP_AB_POWER_GOOD_LOST()
+{
+	check_power_abnormal(PVPP_AB_PG_R, PVPP_AB_EN_R);
+}
+
+void ISR_PVPP_CD_POWER_GOOD_LOST()
+{
+	check_power_abnormal(PVPP_CD_PG_R, PVPP_CD_EN_R);
+}
+
+void ISR_PVDDQ_AB_POWER_GOOD_LOST()
+{
+	check_power_abnormal(PWRGD_PVDDQ_AB, FM_PVDDQ_AB_EN);
+}
+
+void ISR_PVDDQ_CD_POWER_GOOD_LOST()
+{
+	check_power_abnormal(PWRGD_PVDDQ_CD, FM_PVDDQ_CD_EN);
+}
+
+void ISR_PVTT_AB_POWER_GOOD_LOST()
+{
+	check_power_abnormal(PVTT_AB_PG_R, PVTT_AB_EN_R);
+}
+
+void ISR_PVTT_CD_POWER_GOOD_LOST()
+{
+	check_power_abnormal(PVTT_CD_PG_R, PVTT_CD_EN_R);
 }

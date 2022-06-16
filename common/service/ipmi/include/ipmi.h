@@ -7,6 +7,7 @@
 
 #define IPMI_THREAD_STACK_SIZE 4096
 #define IPMI_BUF_LEN 10
+#define IANA_ID 0x00A015 // Meta's IANA
 #define DEBUG_IPMI 0
 
 extern uint8_t IPMB_inf_index_map[];
@@ -206,7 +207,8 @@ enum {
 
 	CMD_OEM_1S_PEX_FLASH_READ = 0x72,
 	CMD_OEM_1S_GET_FPGA_USER_CODE = 0x73,
-	CMD_OEM_1S_GET_CARD_TYPE = 0xA0,
+	CMD_OEM_1S_GET_BOARD_ID = 0xA0,
+	CMD_OEM_1S_GET_CARD_TYPE = 0xA1,
 };
 
 enum {

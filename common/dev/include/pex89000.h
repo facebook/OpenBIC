@@ -36,5 +36,6 @@ typedef struct {
 
 /* Note: Could be used only after pex89000 sensor init successed */
 uint8_t pex_access_engine(uint8_t bus, uint8_t addr, uint8_t idx, pex_access_t key, uint32_t *resp);
+uint8_t pex89000_init(uint8_t sensor_num);
 
 #endif

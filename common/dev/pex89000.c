@@ -486,19 +486,21 @@ uint8_t pex89000_init(uint8_t sensor_num)
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
 		}
 
+		sys_slist_append(&pex89000_list, &p->node);
+
 		if (pex_dev_get(sensor_config[sensor_config_index_map[sensor_num]].port,
 				sensor_config[sensor_config_index_map[sensor_num]].target_addr,
 				p->idx, &p->pex_type)) {
 			printf("%s: get pex type failed!\n", __func__);
+			sys_slist_remove(&pex89000_list, NULL, &p->node);
 			SAFE_FREE(p);
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
 		}
-
-		sys_slist_append(&pex89000_list, &p->node);
 	}
 
 	sensor_config[sensor_config_index_map[sensor_num]].priv_data = p;
 	sensor_config[sensor_config_index_map[sensor_num]].read = pex89000_read;
+	init_arg->is_init = true;
 
 	return SENSOR_INIT_SUCCESS;
 }

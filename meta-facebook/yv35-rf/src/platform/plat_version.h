@@ -3,7 +3,6 @@
 
 #define PLATFORM_NAME "yv35"
 #define PROJECT_NAME "Rainbow Falls"
-#define IANA_ID 0x009c9c
 #define DEVICE_ID 0x00
 #define DEVICE_REVISION 0x80
 // BIT 0:3  1: CraterLake 2: Baseboard 3: Rainbow falls

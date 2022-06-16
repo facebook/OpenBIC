@@ -66,6 +66,11 @@ void ISR_SLOT1_PRESENT()
 	uint8_t gpio_ret = gpio_get(PRSNT_MB_BIC_SLOT1_BB_N_R);
 
 	common_addsel_msg_t *sel_msg = (common_addsel_msg_t *)malloc(sizeof(common_addsel_msg_t));
+	if (sel_msg == NULL) {
+		printf("%s Memory allocation failed!\n", __func__);
+		return;
+	}
+
 	sel_msg->InF_target = SLOT3_BIC;
 	sel_msg->sensor_type = IPMI_OEM_SENSOR_TYPE_OEM;
 	sel_msg->event_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
@@ -107,6 +112,11 @@ void ISR_SLOT3_PRESENT()
 	uint8_t gpio_ret = gpio_get(PRSNT_MB_BIC_SLOT3_BB_N_R);
 
 	common_addsel_msg_t *sel_msg = (common_addsel_msg_t *)malloc(sizeof(common_addsel_msg_t));
+	if (sel_msg == NULL) {
+		printf("%s Memory allocation failed!\n", __func__);
+		return;
+	}
+
 	sel_msg->InF_target = SLOT1_BIC;
 	sel_msg->sensor_type = IPMI_OEM_SENSOR_TYPE_OEM;
 	sel_msg->event_type = IPMI_EVENT_TYPE_SENSOR_SPEC;

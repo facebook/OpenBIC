@@ -381,6 +381,26 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 				i2c_msg->tx_len = req_tx_size;
 				memcpy(&i2c_msg->data[0], &ipmb_buffer_tx[1], req_tx_size);
 
+				current_msg_tx->buffer.seq_target = current_msg_tx->buffer.seq;
+				insert_req_ipmi_msg(P_start[ipmb_cfg.index],
+						    &current_msg_tx->buffer, ipmb_cfg.index);
+				if (DEBUG_IPMB) {
+					printf("[%s] Send a request message, from(%d) to(%d) netfn(0x%x) "
+					       "cmd(0x%x) CC(0x%x)\n",
+					       __func__, current_msg_tx->buffer.InF_source,
+					       current_msg_tx->buffer.InF_target,
+					       current_msg_tx->buffer.netfn,
+					       current_msg_tx->buffer.cmd,
+					       current_msg_tx->buffer.completion_code);
+					printf("request data[%d](",
+					       current_msg_tx->buffer.data_len);
+					for (int i = 0; i < current_msg_tx->buffer.data_len + 1;
+					     i++) {
+						printf("%x ", current_msg_tx->buffer.data[i]);
+					}
+					printf(")\n");
+				}
+
 				ret = i2c_master_write(i2c_msg, I2C_RETRY_TIME);
 				SAFE_FREE(i2c_msg);
 			} else {
@@ -390,6 +410,9 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 			}
 
 			if (ret) {
+				find_req_ipmi_msg(P_start[ipmb_cfg.index],
+						  &(current_msg_tx->buffer), ipmb_cfg.index);
+
 				current_msg_tx->retries += 1;
 
 				if (current_msg_tx->retries > IPMB_TX_RETRY_TIME) {
@@ -458,27 +481,6 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 					k_msgq_put(&ipmb_txqueue[ipmb_cfg.index], current_msg_tx,
 						   K_NO_WAIT);
 					k_msleep(IPMB_RETRY_DELAY_MS);
-				}
-
-			} else {
-				current_msg_tx->buffer.seq_target = current_msg_tx->buffer.seq;
-				insert_req_ipmi_msg(P_start[ipmb_cfg.index],
-						    &current_msg_tx->buffer, ipmb_cfg.index);
-				if (DEBUG_IPMB) {
-					printf("[%s] Send a request message, from(%d) to(%d) netfn(0x%x) "
-					       "cmd(0x%x) CC(0x%x)\n",
-					       __func__, current_msg_tx->buffer.InF_source,
-					       current_msg_tx->buffer.InF_target,
-					       current_msg_tx->buffer.netfn,
-					       current_msg_tx->buffer.cmd,
-					       current_msg_tx->buffer.completion_code);
-					printf("request data[%d](",
-					       current_msg_tx->buffer.data_len);
-					for (int i = 0; i < current_msg_tx->buffer.data_len + 1;
-					     i++) {
-						printf("%x ", current_msg_tx->buffer.data[i]);
-					}
-					printf(")\n");
 				}
 			}
 		}
@@ -1091,6 +1093,11 @@ void create_ipmb_threads(uint8_t index)
 	memset(&seq_table[index], 0, sizeof(bool) * SEQ_NUM);
 
 	P_start[index] = (void *)malloc(sizeof(struct ipmi_msg_cfg));
+	if (P_start[index] == NULL) {
+		printf("[%s], Memory allocation failed!\n", __func__);
+		return;
+	}
+
 	P_temp = P_start[index];
 	P_temp->next = P_temp;
 

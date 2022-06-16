@@ -968,7 +968,6 @@ __weak void OEM_1S_READ_BIC_REGISTER(ipmi_msg *msg)
 	***********************************/
 	if (!msg) {
 		printf("pal_OEM_1S_READ_BIC_REGISTER: parameter msg is NULL\n");
-		msg->completion_code = CC_UNSPECIFIED_ERROR;
 		return;
 	}
 	if (msg->data_len != 5) {
@@ -996,7 +995,6 @@ __weak void OEM_1S_WRITE_BIC_REGISTER(ipmi_msg *msg)
 	***********************************/
 	if (!msg) {
 		printf("pal_OEM_1S_WRITE_BIC_REGISTER: parameter msg is NULL\n");
-		msg->completion_code = CC_UNSPECIFIED_ERROR;
 		return;
 	}
 	if (msg->data[4] < 1 || msg->data[4] > 4 || (msg->data_len != 5 + msg->data[4])) {
@@ -1201,6 +1199,24 @@ __weak void OEM_1S_GET_FPGA_USER_CODE(ipmi_msg *msg)
 	return;
 }
 
+__weak void OEM_1S_GET_BOARD_ID(ipmi_msg *msg)
+{
+	if (msg == NULL) {
+		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		return;
+	}
+
+	if (msg->data_len != 0) {
+		msg->data_len = 0;
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+	return;
+}
+
 __weak void OEM_1S_GET_CARD_TYPE(ipmi_msg *msg)
 {
 	if (msg == NULL) {
@@ -1314,6 +1330,9 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 		break;
 	case CMD_OEM_1S_GET_FPGA_USER_CODE:
 		OEM_1S_GET_FPGA_USER_CODE(msg);
+		break;
+	case CMD_OEM_1S_GET_BOARD_ID:
+		OEM_1S_GET_BOARD_ID(msg);
 		break;
 	case CMD_OEM_1S_GET_CARD_TYPE:
 		OEM_1S_GET_CARD_TYPE(msg);
