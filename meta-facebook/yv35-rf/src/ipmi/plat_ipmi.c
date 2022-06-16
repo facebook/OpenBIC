@@ -6,7 +6,7 @@
 #include "plat_ipmb.h"
 #include "plat_class.h"
 
-void OEM_1S_GET_CARD_TYPE(ipmi_msg *msg)
+void OEM_1S_GET_BOARD_ID(ipmi_msg *msg)
 {
 	if (msg == NULL) {
 		printf("%s failed due to parameter *msg is NULL\n", __func__);
