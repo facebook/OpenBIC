@@ -27,6 +27,34 @@
 #include "pex89000.h"
 #include "power_status.h"
 
+struct bridge_compnt_info_s {
+	uint8_t compnt_id;
+	uint8_t i2c_bus;
+	uint8_t i2c_addr;
+	bool mux_present;
+	uint8_t mux_addr;
+	uint8_t mux_channel;
+	struct k_mutex *bus_mutex;
+};
+
+extern struct k_mutex i2c_bus6_mutex;
+struct bridge_compnt_info_s bridge_compnt_info[] = {
+	[0] = { .compnt_id = GT_COMPNT_VR0,
+		.i2c_bus = I2C_BUS6,
+		.i2c_addr = PEX_0_1_P0V8_VR_ADDR,
+		.mux_present = true,
+		.mux_addr = 0xe0,
+		.mux_channel = 6,
+		.bus_mutex = &i2c_bus6_mutex },
+	[1] = { .compnt_id = GT_COMPNT_VR1,
+		.i2c_bus = I2C_BUS6,
+		.i2c_addr = PEX_2_3_P0V8_VR_ADDR,
+		.mux_present = true,
+		.mux_addr = 0xe0,
+		.mux_channel = 6,
+		.bus_mutex = &i2c_bus6_mutex },
+};
+
 void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 {
 	if (msg == NULL) {
@@ -469,6 +497,73 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 	default:
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
 		break;
+	}
+	return;
+}
+
+void OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT(ipmi_msg *msg)
+{
+	if (!msg)
+		return;
+
+	if (msg->data_len < 2) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t compnt_id = msg->data[0];
+	uint8_t i;
+	uint8_t retry = 5;
+	I2C_MSG i2c_msg = { 0 };
+	ipmi_msg bridge_msg = { 0 };
+	struct bridge_compnt_info_s *p;
+
+	for (i = 0; i < ARRAY_SIZE(bridge_compnt_info); i++) {
+		p = bridge_compnt_info + i;
+
+		if (p->compnt_id == compnt_id)
+			break;
+	}
+
+	if (i == ARRAY_SIZE(bridge_compnt_info)) {
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		return;
+	}
+
+	if (p->bus_mutex) {
+		if (k_mutex_lock(p->bus_mutex, K_MSEC(100))) {
+			printf("[%s]mutex lock fail on bus %d\n", __func__, p->i2c_bus);
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+	}
+
+	if (p->mux_present) {
+		i2c_msg.bus = p->i2c_bus;
+		i2c_msg.target_addr = p->mux_addr >> 1;
+		i2c_msg.tx_len = 1;
+		i2c_msg.data[0] = (1 << p->mux_channel);
+
+		if (i2c_master_write(&i2c_msg, retry)) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+	}
+	bridge_msg.data[0] = (p->i2c_bus << 1);
+	bridge_msg.data[1] = (p->i2c_addr << 1);
+	bridge_msg.data[2] = msg->data[1];
+	memcpy(&bridge_msg.data[2], &msg->data[1], msg->data_len - 1);
+	bridge_msg.data_len = msg->data_len + 1;
+
+	APP_MASTER_WRITE_READ(&bridge_msg);
+
+	msg->completion_code = bridge_msg.completion_code;
+	msg->data_len = bridge_msg.data_len;
+	memcpy(&msg->data[0], &bridge_msg.data[0], bridge_msg.data_len);
+
+	if (p->bus_mutex) {
+		if (k_mutex_unlock(p->bus_mutex))
+			printf("[%s]mutex unlock fail on bus %d\n", __func__, p->i2c_bus);
 	}
 	return;
 }
