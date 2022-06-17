@@ -3,7 +3,6 @@
 
 #include "stdint.h"
 
-
 extern uint8_t load_sensor_config(void);
 
 #endif
