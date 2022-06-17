@@ -30,7 +30,6 @@
 #define PMIC_ENABLE_ADC_BIT BIT(7)
 
 //PMIC PMIC setting delay msec
-#define ME_COLD_RESET_DELAY_MSEC 1000
 #define PMIC_COMMAND_DELAY_MSEC 250
 
 //Send PMIC memory write read parameter
