@@ -4,16 +4,6 @@
 #include "hal_gpio.h"
 #include "plat_gpio.h"
 
-void pal_warm_reset_prepare()
-{
-	set_me_firmware_mode(ME_FW_RECOVERY);
-}
-
-void pal_cold_reset_prepare()
-{
-	set_me_firmware_mode(ME_FW_RECOVERY);
-}
-
 /* BMC reset */
 void BMC_reset_handler()
 {
