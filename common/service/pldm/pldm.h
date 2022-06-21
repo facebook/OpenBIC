@@ -108,6 +108,8 @@ uint8_t mctp_pldm_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext
 /* send the pldm command message through mctp */
 uint8_t mctp_pldm_send_msg(void *mctp_p, pldm_msg *msg);
 
+uint16_t mctp_pldm_read(void *mctp_p, pldm_msg *msg, uint8_t *rbuf, uint16_t rbuf_len);
+
 pldm_t *pldm_init(void *interface, uint8_t user_idx);
 
 #ifdef __cplusplus
