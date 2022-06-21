@@ -28,6 +28,9 @@
 #define BIOS_UPDATE_MAX_OFFSET 0x4000000
 #define BIC_UPDATE_MAX_OFFSET 0x50000
 
+#define _4BYTE_ACCURACY_SENSOR_READING_RES_LEN 5
+#define MAX_MULTI_ACCURACY_SENSOR_READING_QUERY_NUM 32
+
 __weak void OEM_1S_MSG_OUT(ipmi_msg *msg)
 {
 	if (msg == NULL) {
@@ -1229,6 +1232,65 @@ __weak void OEM_1S_GET_CARD_TYPE(ipmi_msg *msg)
 	return;
 }
 
+__weak void OEM_1S_MULTI_ACCURACY_SENSOR_READING(ipmi_msg *msg)
+{
+	/*********************************
+	Request -
+	data 0 ~ N: multiple sensor numbers
+	Response -
+	data 0: Completion code
+	***********************************/
+	if (!msg) {
+		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		return;
+	}
+
+	if (!msg->data_len) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t query_sensor_number = msg->data_len;
+
+	if (query_sensor_number > MAX_MULTI_ACCURACY_SENSOR_READING_QUERY_NUM) {
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		return;
+	}
+
+	uint8_t query_sensor[query_sensor_number];
+	memcpy(query_sensor, msg->data, query_sensor_number);
+
+	uint16_t ofs = 0;
+	/* get accuracy sensor reading by sensor number */
+	for (uint8_t i = 0; i < query_sensor_number; i++) {
+		ipmi_msg temp_msg = { 0 };
+
+		ACCURACY_SENSOR_READING_REQ *req = (ACCURACY_SENSOR_READING_REQ *)temp_msg.data;
+		req->sensor_num = query_sensor[i];
+		req->read_option = GET_FROM_CACHE;
+		temp_msg.data_len = 2;
+		OEM_1S_ACCURACY_SENSOR_READING(&temp_msg);
+
+		ACCURACY_SENSOR_READING_RES resp;
+		memset(&resp, 0xFF, sizeof(resp));
+
+		msg->data[ofs++] = query_sensor[i];
+
+		if (temp_msg.completion_code == CC_SUCCESS) {
+			if (temp_msg.data_len ==
+			    _4BYTE_ACCURACY_SENSOR_READING_RES_LEN) { /* only support 4 bytes accuracy reading */
+				memcpy(&resp, temp_msg.data, temp_msg.data_len);
+			}
+		}
+
+		memcpy(msg->data + ofs, &resp, _4BYTE_ACCURACY_SENSOR_READING_RES_LEN);
+		ofs += _4BYTE_ACCURACY_SENSOR_READING_RES_LEN;
+	}
+
+	msg->data_len = ofs;
+	msg->completion_code = CC_SUCCESS;
+}
+
 void IPMI_OEM_1S_handler(ipmi_msg *msg)
 {
 	if (msg == NULL) {
@@ -1336,6 +1398,9 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 		break;
 	case CMD_OEM_1S_GET_CARD_TYPE:
 		OEM_1S_GET_CARD_TYPE(msg);
+		break;
+	case CMD_OEM_1S_MULTI_ACCURACY_SENSOR_READING:
+		OEM_1S_MULTI_ACCURACY_SENSOR_READING(msg);
 		break;
 	default:
 		printf("Invalid OEM message, netfn(0x%x) cmd(0x%x)\n", msg->netfn, msg->cmd);
