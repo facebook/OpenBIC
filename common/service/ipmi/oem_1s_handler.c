@@ -1306,6 +1306,11 @@ __weak void OEM_1S_MULTI_ACCURACY_SENSOR_READING(ipmi_msg *msg)
 	msg->completion_code = CC_SUCCESS;
 }
 
+__weak void OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT(ipmi_msg *msg)
+{
+	return;
+}
+
 void IPMI_OEM_1S_handler(ipmi_msg *msg)
 {
 	if (msg == NULL) {
@@ -1416,6 +1421,9 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 		break;
 	case CMD_OEM_1S_MULTI_ACCURACY_SENSOR_READING:
 		OEM_1S_MULTI_ACCURACY_SENSOR_READING(msg);
+		break;
+	case CMD_OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT:
+		OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT(msg);
 		break;
 	default:
 		printf("Invalid OEM message, netfn(0x%x) cmd(0x%x)\n", msg->netfn, msg->cmd);

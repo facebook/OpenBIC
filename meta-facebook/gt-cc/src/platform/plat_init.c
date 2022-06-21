@@ -5,6 +5,7 @@
 #include "plat_class.h"
 #include "plat_gpio.h"
 #include "plat_i2c_target.h"
+#include "pldm.h"
 #include "plat_mctp.h"
 
 SCU_CFG scu_cfg[] = {
