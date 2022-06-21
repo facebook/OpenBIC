@@ -228,6 +228,21 @@ __weak void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 	} else if ((target == CPLD_UPDATE) || (target == (CPLD_UPDATE | IS_SECTOR_END_MASK))) {
 		status = cpld_altera_max10_fw_update(offset, length, &msg->data[7]);
 
+	} else if (target == CXL_UPDATE) {
+		int pos = pal_get_cxl_flash_position();
+		if (pos == -1) {
+			msg->completion_code = CC_INVALID_PARAM;
+			return;
+		}
+
+		bool ret = pal_switch_cxl_spi_mux();
+		if (ret == false) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+
+		status = fw_update_cxl(pos);
+
 	} else {
 		msg->completion_code = CC_INVALID_DATA_FIELD;
 		return;
