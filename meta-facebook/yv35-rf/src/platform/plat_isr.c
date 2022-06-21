@@ -7,6 +7,9 @@
 #include "plat_isr.h"
 
 #define POWER_SEQ_CTRL_STACK_SIZE 1000
+#define DC_ON_5_SECOND 5
+
+K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_delayed_status);
 
 K_THREAD_STACK_DEFINE(power_thread, POWER_SEQ_CTRL_STACK_SIZE);
 struct k_thread power_thread_handler;
@@ -90,6 +93,17 @@ void ISR_MB_DC_STATE()
 void ISR_DC_STATE()
 {
 	set_DC_status(PWRGD_CARD_PWROK);
+
+	// Set a access flag after DC on 5 secs
+	if (get_DC_status() == true) {
+		k_work_schedule(&set_DC_on_5s_work, K_SECONDS(DC_ON_5_SECOND));
+
+	} else {
+		if (k_work_cancel_delayable(&set_DC_on_5s_work) != 0) {
+			printf("Cancel set dc off delay work fail\n");
+		}
+		set_DC_on_delayed_status();
+	}
 }
 
 void ISR_MB_RST()
