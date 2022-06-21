@@ -9,11 +9,7 @@
  *  FIRMWARE REVISION_1 
  *  [bit 0-3] 
  *    board id: 
- *      0x01 CraterLake
- *      0x02 Baseboard
- *      0x03 RainbowFalls
- *      0x04 WaimanoFalls
- *      0x05 WaimeaCanyon
+ *      0x01 WaimeaCanyon
  *  [bit 4-7]
  *    stage: 
  *      0x00 POC
@@ -24,7 +20,7 @@
  *  FIRMWARE_REVISION_2
  *    Count of release firmware at each stage.
  */
-#define FIRMWARE_REVISION_1 0x05
+#define FIRMWARE_REVISION_1 0x01
 #define FIRMWARE_REVISION_2 0x01
 #define IPMI_VERSION 0x02
 #define ADDITIONAL_DEVICE_SUPPORT 0xBF
