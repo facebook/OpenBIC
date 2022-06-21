@@ -344,9 +344,8 @@ bool pre_pex89000_read(uint8_t sensor_num, void *args)
 	}
 	pex89000_pre_proc_arg *pre_read_args = (pex89000_pre_proc_arg *)args;
 
-	/* Can not access i2c mux and PEX89000 when DC off, this pin will change to low active in 
-      next SWB CPLD firmware release */
-	if (!gpio_get(SYS_PWR_READY_N))
+	/* Can not access i2c mux and PEX89000 when DC off */
+	if (is_mb_dc_on() == false)
 		return false;
 
 	if (!pre_i2c_bus_read(sensor_num, pre_read_args->mux_info_p)) {
@@ -411,4 +410,18 @@ struct k_mutex *find_bus_mutex(uint8_t sensor_num)
 		return NULL;
 
 	return mutex;
+}
+
+bool is_mb_dc_on()
+{
+	/* SYS_PWR_READY_N is low active,
+   * 0 -> power on
+   * 1 -> power off
+   */
+	return !gpio_get(SYS_PWR_READY_N);
+}
+
+bool is_dc_access(uint8_t sensor_num)
+{
+	return is_mb_dc_on();
 }
