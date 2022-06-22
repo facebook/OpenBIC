@@ -25,19 +25,19 @@ static int do_erase_write_verify(const struct device *flash_device, uint32_t op_
 
 	ret = flash_erase(flash_device, op_addr, erase_sz);
 	if (ret != 0) {
-		printf("[%s][%d] erase failed at %d.\n", __func__, __LINE__, op_addr);
+		printf("[%s][%d] erase failed at %u.\n", __func__, __LINE__, op_addr);
 		goto end;
 	}
 
 	ret = flash_write(flash_device, op_addr, write_buf, erase_sz);
 	if (ret != 0) {
-		printf("[%s][%d] write failed at %d.\n", __func__, __LINE__, op_addr);
+		printf("[%s][%d] write failed at %u.\n", __func__, __LINE__, op_addr);
 		goto end;
 	}
 
 	ret = flash_read(flash_device, op_addr, read_back_buf, erase_sz);
 	if (ret != 0) {
-		printf("[%s][%d] write failed at %d.\n", __func__, __LINE__, op_addr);
+		printf("[%s][%d] write failed at %u.\n", __func__, __LINE__, op_addr);
 		goto end;
 	}
 
@@ -76,7 +76,7 @@ static int do_update(const struct device *flash_device, off_t offset, uint8_t *b
 	bool update_it = false;
 
 	if (flash_sz < flash_offset + len) {
-		printf("ERROR: update boundary exceeds flash size. (%d, %d, %u)\n", flash_sz,
+		printf("ERROR: update boundary exceeds flash size. (%u, %u, %lu)\n", flash_sz,
 		       flash_offset, len);
 		ret = -EINVAL;
 		goto end;
@@ -84,14 +84,14 @@ static int do_update(const struct device *flash_device, off_t offset, uint8_t *b
 
 	op_buf = (uint8_t *)malloc(sector_sz);
 	if (op_buf == NULL) {
-		printf("heap full %d %d\n", __LINE__, sector_sz);
+		printf("heap full %d %u\n", __LINE__, sector_sz);
 		ret = -EINVAL;
 		goto end;
 	}
 
 	read_back_buf = (uint8_t *)malloc(sector_sz);
 	if (read_back_buf == NULL) {
-		printf("heap full %d %d\n", __LINE__, sector_sz);
+		printf("heap full %d %u\n", __LINE__, sector_sz);
 		ret = -EINVAL;
 		goto end;
 	}
@@ -171,10 +171,6 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 	const struct device *flash_dev;
 
 	if (!is_init) {
-		if ((offset & 0x0000) != 0) {
-			return FWUPDATE_ERROR_OFFSET;
-		}
-
 		SAFE_FREE(txbuf);
 		txbuf = (uint8_t *)malloc(SECTOR_SZ_64K);
 		if (txbuf == NULL) { // Retry alloc
