@@ -7,6 +7,7 @@
 
 #include "plat_def.h"
 #include "sdr.h"
+#include "libutil.h"
 
 #define SENSOR_POLL_STACK_SIZE 2048
 #define NONE 0
@@ -27,6 +28,9 @@ enum LTC4282_OFFSET {
 	LTC4282_VSENSE_OFFSET = 0x40,
 	LTC4282_POWER_OFFSET = 0x46,
 	LTC4282_VSOURCE_OFFSET = 0x3A,
+	LTC4282_ADC_CONTROL_OFFSET = 0x1D,
+	LTC4282_ENERGY_OFFSET = 0x12,
+	LTC4282_STATUS_OFFSET = 0x1F,
 };
 
 enum ADM1278_OFFSET {
