@@ -156,8 +156,8 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 
 	if (!access_check(sensor_num)) { // sensor not accessable
 		clear_unaccessible_sensor_cache(sensor_num);
-		current_status = SENSOR_NOT_ACCESSIBLE;
-		goto return_cache_status;
+		cfg->cache_status = SENSOR_NOT_ACCESSIBLE;
+		return cfg->cache_status;
 	}
 
 	switch (read_mode) {
@@ -167,8 +167,8 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 			    false) {
 				printf("Failed to do pre sensor read function, sensor number: 0x%x\n",
 				       sensor_num);
-				current_status = SENSOR_PRE_READ_ERROR;
-				goto return_cache_status;
+				cfg->cache_status = SENSOR_PRE_READ_ERROR;
+				return cfg->cache_status;
 			}
 		}
 
@@ -182,8 +182,8 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 			if (!access_check(
 				    sensor_num)) { // double check access to avoid not accessible read at same moment status change
 				clear_unaccessible_sensor_cache(sensor_num);
-				current_status = SENSOR_NOT_ACCESSIBLE;
-				goto return_cache_status;
+				cfg->cache_status = SENSOR_NOT_ACCESSIBLE;
+				return cfg->cache_status;
 			}
 
 			if (cfg->post_sensor_read_hook) {
@@ -192,13 +192,13 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 							       reading) == false) {
 					printf("Failed to do post sensor read function, sensor number: 0x%x\n",
 					       sensor_num);
-					current_status = SENSOR_POST_READ_ERROR;
-					goto return_cache_status;
+					cfg->cache_status = SENSOR_POST_READ_ERROR;
+					return cfg->cache_status;
 				}
 			}
 			memcpy(&cfg->cache, reading, sizeof(*reading));
-			current_status = SENSOR_READ_4BYTE_ACUR_SUCCESS;
-			goto return_cache_status;
+			cfg->cache_status = SENSOR_READ_4BYTE_ACUR_SUCCESS;
+			return cfg->cache_status;
 		} else {
 			/* If sensor read fails, let the reading argument in the
        * post_sensor_read_hook function to NULL.
@@ -216,11 +216,11 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 			/* common retry */
 			// Return current status if retry reach max retry count, otherwise return cache status instead of current status
 			if (cfg->retry >= SENSOR_READ_RETRY_MAX) {
-				goto return_cache_status;
+				cfg->cache_status = current_status;
 			} else {
 				cfg->retry++;
-				return cfg->cache_status;
 			}
+			return cfg->cache_status;
 		}
 		break;
 	case GET_FROM_CACHE:
@@ -250,7 +250,6 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 		break;
 	}
 
-return_cache_status:
 	cfg->cache_status = current_status;
 	return cfg->cache_status;
 }
