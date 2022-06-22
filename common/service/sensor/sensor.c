@@ -374,7 +374,7 @@ void add_sensor_config(sensor_cfg config)
 static inline bool init_drive_type(sensor_cfg *p, uint16_t current_drive)
 {
 	int ret = -1;
-	if (p->type == sensor_drive_tbl[current_drive].dev) {
+	if (p->type != sensor_drive_tbl[current_drive].dev) {
 		return false;
 	}
 
