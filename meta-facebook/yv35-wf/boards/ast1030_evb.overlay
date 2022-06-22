@@ -62,7 +62,7 @@
 &i2c8 {
   pinctrl-0 = <&pinctrl_i2c8_default>;
   status = "okay";
-  clock-frequency = <I2C_BITRATE_FAST>;
+  clock-frequency = <I2C_BITRATE_FAST_PLUS>;
 
   ipmb8: ipmb@20 {
     compatible = "aspeed,ipmb";
@@ -125,7 +125,7 @@
 };
 
 &gpio0_a_d {
-  aspeed,persist-maps = <0xB9290028>;
+  aspeed,persist-maps = <0xB9E90028>;
 };
 
 &gpio0_e_h {
