@@ -12,7 +12,7 @@ bool is_sdr_not_init = true;
 
 SDR_Full_sensor full_sdr_table[MAX_SENSOR_SIZE];
 
-uint8_t SDR_NUM = 0;
+uint8_t SDR_COUNT = 0;
 
 void SDR_clear_ID(void)
 {
@@ -60,10 +60,10 @@ uint8_t get_sdr_index(uint8_t sensor_num)
 {
 	uint8_t i, j;
 	for (i = 0; i < SENSOR_NUM_MAX; i++) {
-		for (j = 0; j < SDR_NUM; ++j) {
+		for (j = 0; j < SDR_COUNT; ++j) {
 			if (sensor_num == full_sdr_table[j].sensor_num) {
 				return j;
-			} else if (i == SDR_NUM) {
+			} else if (i == SDR_COUNT) {
 				return SENSOR_NUM_MAX;
 			} else {
 				continue;
@@ -79,7 +79,7 @@ void add_full_sdr_table(SDR_Full_sensor add_item)
 	if (get_sdr_index(add_item.sensor_num) != SENSOR_NUM_MAX) {
 		printf("add sensor num [0x%x] - sensor already exists\n", add_item.sensor_num);
 	} else {
-		full_sdr_table[SDR_NUM++] = add_item;
+		full_sdr_table[SDR_COUNT++] = add_item;
 	}
 }
 
@@ -154,12 +154,12 @@ uint8_t sdr_init(void)
 {
 	int i;
 
-	SDR_NUM = load_sdr_table();
+	SDR_COUNT = load_sdr_table();
 	pal_fix_full_sdr_table();
 	sdr_info.start_ID = 0x0000;
 	sdr_info.current_ID = sdr_info.start_ID;
 
-	for (i = 0; i < SDR_NUM; i++) {
+	for (i = 0; i < SDR_COUNT; i++) {
 		full_sdr_table[i].record_id_h = (i >> 8) & 0xFF;
 		full_sdr_table[i].record_id_l = (i & 0xFF);
 		full_sdr_table[i].ID_len += strlen(full_sdr_table[i].ID_str);
@@ -172,13 +172,9 @@ uint8_t sdr_init(void)
 		}
 	}
 
-	i--;
-	sdr_info.last_ID = (full_sdr_table[i].record_id_h << 8) | (full_sdr_table[i].record_id_l);
-	if (DEBUG_SENSOR) {
-		printf("%s ID: 0x%x%x, size: %d, recordlen: %d\n", full_sdr_table[i].ID_str,
-		       full_sdr_table[i].record_id_h, full_sdr_table[i].record_id_l,
-		       full_sdr_table[i].ID_len, full_sdr_table[i].record_len);
-	}
+	// Record last SDR record ID to sdr_info
+	sdr_info.last_ID = (full_sdr_table[SDR_COUNT - 1].record_id_h << 8) |
+			   (full_sdr_table[SDR_COUNT - 1].record_id_l);
 
 	is_sdr_not_init = false;
 	return true;

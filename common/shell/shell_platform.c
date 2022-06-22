@@ -199,7 +199,7 @@ static bool sensor_access_check(uint8_t sensor_num)
 
 static int sensor_get_idx_by_sensor_num(uint16_t sensor_num)
 {
-	for (int sen_idx = 0; sen_idx < SDR_NUM; sen_idx++) {
+	for (int sen_idx = 0; sen_idx < SDR_COUNT; sen_idx++) {
 		if (sensor_num == sensor_config[sen_idx].num)
 			return sen_idx;
 	}
@@ -227,7 +227,7 @@ static int sensor_access(const struct shell *shell, int sensor_num, enum SENSOR_
 		}
 		char *check_access =
 			(sensor_access_check(sensor_config[sen_idx].num) == true) ? "O" : "X";
-		shell_print(shell, "[0x%-2x] %-35s: %-5s | access[%s] | %-20s | %-8d",
+		shell_print(shell, "[0x%-2x] %-35s: %-10s | access[%s] | %-30s | %-8d",
 			    sensor_config[sen_idx].num, "Unsupported name",
 			    sensor_type_name[sensor_config[sen_idx].type], check_access,
 			    sensor_status_name[sensor_config[sen_idx].cache_status],
@@ -449,7 +449,7 @@ static void cmd_sensor_cfg_list_all(const struct shell *shell, size_t argc, char
 	shell_print(
 		shell,
 		"---------------------------------------------------------------------------------");
-	for (int sen_idx = 0; sen_idx < SDR_NUM; sen_idx++)
+	for (int sen_idx = 0; sen_idx < SDR_COUNT; sen_idx++)
 		sensor_access(shell, sensor_config[sen_idx].num, SENSOR_READ);
 
 	shell_print(

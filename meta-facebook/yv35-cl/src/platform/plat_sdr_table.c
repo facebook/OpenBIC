@@ -3710,14 +3710,14 @@ void pal_fix_full_sdr_table()
 		if ((_2ou_status.card_type & TYPE_2OU_DPV2_16) == TYPE_2OU_DPV2_16) {
 			fix_array_num = ARRAY_SIZE(dpv2_sdr_table);
 			// Check sdr table max size before adding new sdr, avoiding over sdr table max size after adding new sdr
-			if ((SDR_NUM + fix_array_num) > array_max_num) {
+			if ((SDR_COUNT + fix_array_num) > array_max_num) {
 				printf("[%s] over sdr table max size after adding DPV2_16 sdr, sdr table max size: %d  sdr table size after adding: %d\n",
-				       __func__, array_max_num, SDR_NUM + fix_array_num);
+				       __func__, array_max_num, SDR_COUNT + fix_array_num);
 				return;
 			}
-			memcpy(&full_sdr_table[SDR_NUM], &dpv2_sdr_table[0],
+			memcpy(&full_sdr_table[SDR_COUNT], &dpv2_sdr_table[0],
 			       fix_array_num * sizeof(SDR_Full_sensor));
-			SDR_NUM += fix_array_num;
+			SDR_COUNT += fix_array_num;
 		}
 	}
 };
