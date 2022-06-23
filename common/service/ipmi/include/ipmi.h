@@ -10,6 +10,10 @@
 #define IANA_ID 0x00A015 // Meta's IANA
 #define DEBUG_IPMI 0
 
+#define SENSOR_EVENT_MESSAGES_ENABLE (1 << 7)
+#define SENSOR_SCANNING_ENABLE (1 << 6)
+#define SENSOR_READING_STATE_UNAVAILABLE (1 << 5)
+
 extern uint8_t IPMB_inf_index_map[];
 extern uint8_t isPwOn;
 extern struct k_msgq ipmi_msgq;
