@@ -430,10 +430,12 @@ enum {
 	MBR_R,
 };
 
+extern uint8_t sdr_count;
 extern bool is_sdr_not_init;
 // Mapping sensor number to sdr config index
 extern uint8_t sdr_index_map[];
-extern SDR_Full_sensor full_sdr_table[];
+extern SDR_Full_sensor *full_sdr_table;
+extern uint8_t sensor_config_size;
 extern const int negative_ten_power[16];
 #define SDR_M(sensor_num)                                                                          \
 	(((full_sdr_table[sdr_index_map[sensor_num]].M_tolerance & 0xC0) << 2) |                   \
@@ -444,8 +446,8 @@ extern const int negative_ten_power[16];
 static inline uint8_t round_add(uint8_t sensor_num, int val)
 {
 	return (SDR_R(sensor_num) > 0) ?
-			     (((negative_ten_power[((SDR_R(sensor_num) + 1) & 0xF)] * val) % 10) > 5 ?
-				      1 :
+		       (((negative_ten_power[((SDR_R(sensor_num) + 1) & 0xF)] * val) % 10) > 5 ?
+				1 :
 				      0) :
 			     0;
 }

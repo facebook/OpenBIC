@@ -113,6 +113,8 @@
 #define SENSOR_NUM_TEMP_DPV2_EFUSE 0x94
 #define SENSOR_NUM_PWR_DPV2 0x95
 
-uint8_t load_sensor_config(void);
+uint8_t plat_get_config_size();
+uint8_t pal_get_extend_sensor_config();
+void load_sensor_config(void);
 
 #endif

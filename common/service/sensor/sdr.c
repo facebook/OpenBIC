@@ -10,9 +10,10 @@ SDR_INFO sdr_info;
 static uint16_t RSV_ID[2] = { 0 };
 bool is_sdr_not_init = true;
 
-SDR_Full_sensor full_sdr_table[MAX_SENSOR_SIZE];
+SDR_Full_sensor *full_sdr_table;
 
-uint8_t SDR_COUNT = 0;
+uint8_t sensor_config_size = 0;
+uint8_t sdr_count = 0;
 
 void SDR_clear_ID(void)
 {
@@ -50,45 +51,67 @@ bool SDR_RSV_ID_check(uint16_t ID, uint8_t rsv_table_index)
 	return (RSV_ID[rsv_table_index] == ID) ? true : false;
 }
 
-__weak void pal_fix_full_sdr_table(void)
+__weak void pal_extend_full_sdr_table(void)
 {
-	printf("Function %s is not implemented\n", __func__);
+	/* This function is for the BIC which connects to expansion boards and need to add expansion board's sensor to itself.
+   * For the BIC (eg. RF/WF) which doesn't connect expandion boards has no need to implement this function. 
+   */
 	return;
 }
 
-uint8_t get_sdr_index(uint8_t sensor_num)
+int get_sdr_index(uint8_t sensor_num)
 {
-	uint8_t i, j;
-	for (i = 0; i < SENSOR_NUM_MAX; i++) {
-		for (j = 0; j < SDR_COUNT; ++j) {
-			if (sensor_num == full_sdr_table[j].sensor_num) {
-				return j;
-			} else if (i == SDR_COUNT) {
-				return SENSOR_NUM_MAX;
-			} else {
-				continue;
-			}
-		}
+	if (full_sdr_table == NULL) {
+		printf("[%s] full_sdr_table is NULL\n", __func__);
+		return -1;
 	}
 
+	uint8_t i = 0;
+	for (i = 0; i < sdr_count; ++i) {
+		if (sensor_num == full_sdr_table[i].sensor_num) {
+			return i;
+		}
+	}
 	return SENSOR_NUM_MAX;
 }
 
 void add_full_sdr_table(SDR_Full_sensor add_item)
 {
-	if (get_sdr_index(add_item.sensor_num) != SENSOR_NUM_MAX) {
-		printf("add sensor num [0x%x] - sensor already exists\n", add_item.sensor_num);
+	if (full_sdr_table == NULL) {
+		printf("[%s] full_sdr_table is NULL\n", __func__);
+		return;
+	}
+
+	int index = get_sdr_index(add_item.sensor_num);
+	if (index == -1) {
+		printf("[%s] fail to get sdr index\n", __func__);
+		return;
+	}
+
+	if (index != SENSOR_NUM_MAX) {
+		memcpy(&full_sdr_table[index], &add_item, sizeof(SDR_Full_sensor));
+		printf("[%s] replace the sensor[0x%02x] SDR\n", __func__, add_item.sensor_num);
+		return;
+	}
+	// Check SDR table size before adding SDR
+	if (sdr_count + 1 <= sensor_config_size) {
+		full_sdr_table[sdr_count++] = add_item;
 	} else {
-		full_sdr_table[SDR_COUNT++] = add_item;
+		printf("[%s] add SDR would over SDR max size\n", __func__);
 	}
 }
 
 void change_sensor_threshold(uint8_t sensor_num, uint8_t threshold_type, uint8_t change_value)
 {
-	uint8_t sdr_index = get_sdr_index(sensor_num);
-	if (sdr_index == SENSOR_NUM_MAX) {
-		printf("[%s] Failed to find sensor index, sensor number(0x%02x)\n", __func__,
-		       sensor_num);
+	if (full_sdr_table == NULL) {
+		printf("[%s] full_sdr_table is NULL\n", __func__);
+		return;
+	}
+
+	int sdr_index = get_sdr_index(sensor_num);
+	if ((sdr_index == SENSOR_NUM_MAX) || (sdr_index == -1)) {
+		printf("[%s] Failed to find sensor index, sensor number(0x%02x), sdr index(%d)\n",
+		       __func__, sensor_num, sdr_index);
 		return;
 	}
 	switch (threshold_type) {
@@ -118,10 +141,15 @@ void change_sensor_threshold(uint8_t sensor_num, uint8_t threshold_type, uint8_t
 
 void change_sensor_mbr(uint8_t sensor_num, uint8_t mbr_type, uint16_t change_value)
 {
-	uint8_t sdr_index = get_sdr_index(sensor_num);
-	if (sdr_index == SENSOR_NUM_MAX) {
-		printf("[%s] Failed to find sensor index, sensor number(0x%02x)\n", __func__,
-		       sensor_num);
+	if (full_sdr_table == NULL) {
+		printf("[%s] full_sdr_table is NULL\n", __func__);
+		return;
+	}
+
+	int sdr_index = get_sdr_index(sensor_num);
+	if ((sdr_index == SENSOR_NUM_MAX) || (sdr_index == -1)) {
+		printf("[%s] Failed to find sensor index, sensor number(0x%02x), sdr index(%d)\n",
+		       __func__, sensor_num, sdr_index);
 		return;
 	}
 	switch (mbr_type) {
@@ -154,12 +182,16 @@ uint8_t sdr_init(void)
 {
 	int i;
 
-	SDR_COUNT = load_sdr_table();
-	pal_fix_full_sdr_table();
+	load_sdr_table();
 	sdr_info.start_ID = 0x0000;
 	sdr_info.current_ID = sdr_info.start_ID;
 
-	for (i = 0; i < SDR_COUNT; i++) {
+	if (full_sdr_table == NULL) {
+		printf("[%s] full_sdr_table is NULL\n", __func__);
+		return false;
+	}
+
+	for (i = 0; i < sdr_count; i++) {
 		full_sdr_table[i].record_id_h = (i >> 8) & 0xFF;
 		full_sdr_table[i].record_id_l = (i & 0xFF);
 		full_sdr_table[i].ID_len += strlen(full_sdr_table[i].ID_str);
@@ -173,8 +205,8 @@ uint8_t sdr_init(void)
 	}
 
 	// Record last SDR record ID to sdr_info
-	sdr_info.last_ID = (full_sdr_table[SDR_COUNT - 1].record_id_h << 8) |
-			   (full_sdr_table[SDR_COUNT - 1].record_id_l);
+	sdr_info.last_ID = (full_sdr_table[sdr_count - 1].record_id_h << 8) |
+			   (full_sdr_table[sdr_count - 1].record_id_l);
 
 	is_sdr_not_init = false;
 	return true;

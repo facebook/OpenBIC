@@ -199,7 +199,7 @@ static bool sensor_access_check(uint8_t sensor_num)
 
 static int sensor_get_idx_by_sensor_num(uint16_t sensor_num)
 {
-	for (int sen_idx = 0; sen_idx < SDR_COUNT; sen_idx++) {
+	for (int sen_idx = 0; sen_idx < sensor_config_count; sen_idx++) {
 		if (sensor_num == sensor_config[sen_idx].num)
 			return sen_idx;
 	}
@@ -446,10 +446,15 @@ static void cmd_sensor_cfg_list_all(const struct shell *shell, size_t argc, char
 		return;
 	}
 
+	if (sensor_config_count == 0) {
+		shell_warn(shell, "[%s]: sensor monitor count is zero", __func__);
+		return;
+	}
+
 	shell_print(
 		shell,
 		"---------------------------------------------------------------------------------");
-	for (int sen_idx = 0; sen_idx < SDR_COUNT; sen_idx++)
+	for (int sen_idx = 0; sen_idx < sensor_config_count; sen_idx++)
 		sensor_access(shell, sensor_config[sen_idx].num, SENSOR_READ);
 
 	shell_print(

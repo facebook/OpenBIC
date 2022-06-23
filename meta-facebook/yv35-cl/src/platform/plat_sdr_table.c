@@ -3625,72 +3625,73 @@ SDR_Full_sensor dpv2_sdr_table[] = {
 	},
 };
 
-uint8_t load_sdr_table(void)
+uint8_t plat_get_sdr_size()
 {
-	memcpy(full_sdr_table, plat_sdr_table, sizeof(plat_sdr_table));
 	return ARRAY_SIZE(plat_sdr_table);
 }
 
-void pal_fix_full_sdr_table()
+void load_sdr_table(void)
+{
+	memcpy(full_sdr_table, plat_sdr_table, sizeof(plat_sdr_table));
+	sdr_count = ARRAY_SIZE(plat_sdr_table);
+
+	// Fix SDR table in different system/config
+	pal_extend_full_sdr_table();
+}
+
+uint8_t pal_get_extend_sdr()
+{
+	uint8_t extend_sdr_size = 0;
+	uint8_t hsc_module = get_hsc_module();
+	switch (hsc_module) {
+	case HSC_MODULE_ADM1278:
+	case HSC_MODULE_MP5990:
+		extend_sdr_size += ARRAY_SIZE(hotswap_sdr_table);
+		break;
+	case HSC_MODULE_LTC4282:
+	case HSC_MODULE_LTC4286:
+	default:
+		printf("[%s] not support on this hsc module, hsc module: 0x%x\n", __func__,
+		       hsc_module);
+		break;
+	}
+
+	// Fix sdr table if 2ou card is present
+	CARD_STATUS _2ou_status = get_2ou_status();
+	if (_2ou_status.present) {
+		// Add DPV2 sdr if DPV2_16 is present
+		if ((_2ou_status.card_type & TYPE_2OU_DPV2_16) == TYPE_2OU_DPV2_16) {
+			extend_sdr_size += ARRAY_SIZE(dpv2_sdr_table);
+		}
+	}
+	return extend_sdr_size;
+}
+
+void pal_extend_full_sdr_table()
 {
 	// Fix sdr table according to bic type.
-	bool ret = false;
-	uint8_t fix_array_num;
-	uint8_t array_max_num = MAX_SENSOR_SIZE;
-	float voltage_hsc_type_adc;
-	if (get_system_class() == SYS_CLASS_1) {
-		uint8_t board_revision = get_board_revision();
-		switch (board_revision) {
-		case SYS_BOARD_POC:
-		case SYS_BOARD_EVT:
-		case SYS_BOARD_EVT2:
-		case SYS_BOARD_EVT3_EFUSE:
-			fix_array_num = ARRAY_SIZE(hotswap_sdr_table);
-			for (int index = 0; index < fix_array_num; index++) {
-				add_full_sdr_table(hotswap_sdr_table[index]);
-			}
-			break;
-		case SYS_BOARD_EVT3_HOTSWAP:
-			/* Follow the GPIO table, the HSC device type can be by ADC7(net name: HSC_TYPE_ADC)
-			 * If the voltage of ADC-7 is 0.5V(+/- 15%), the hotswap model is ADM1278.
-			 * If the voltage of ADC-7 is 1.0V(+/- 15%), the hotswap model is LTC4282.
-			 * If the voltage of ADC-7 is 1.5V(+/- 15%), the hotswap model is LTC4286.
-			 */
-			ret = get_adc_voltage(CHANNEL_7, &voltage_hsc_type_adc);
-			if (!ret) {
-				break;
-			}
-
-			if ((voltage_hsc_type_adc > 0.5 - (0.5 * 0.15)) &&
-			    (voltage_hsc_type_adc < 0.5 + (0.5 * 0.15))) {
-				fix_array_num = ARRAY_SIZE(hotswap_sdr_table);
-				for (int index = 0; index < fix_array_num; index++) {
-					add_full_sdr_table(hotswap_sdr_table[index]);
-				}
-			} else if ((voltage_hsc_type_adc > 1.0 - (1.0 * 0.15)) &&
-				   (voltage_hsc_type_adc < 1.0 + (1.0 * 0.15))) {
-				printf("TODO: Support LTC4282 sensor config\n");
-			} else if ((voltage_hsc_type_adc > 1.5 - (1.5 * 0.15)) &&
-				   (voltage_hsc_type_adc < 1.5 + (1.5 * 0.15))) {
-				printf("TODO: Support LTC4286 sensor config\n");
-			} else {
-				printf("Unknown hotswap model type, HSC_TYPE_ADC voltage: %fV\n",
-				       voltage_hsc_type_adc);
-			}
-			break;
-		default:
-			break;
-		}
-
-	} else { // Class-2
-
-		fix_array_num = ARRAY_SIZE(hotswap_sdr_table);
-		for (int index = 0; index < fix_array_num; index++) {
+	uint8_t extend_array_num = 0;
+	uint8_t hsc_module = get_hsc_module();
+	switch (hsc_module) {
+	case HSC_MODULE_ADM1278:
+	case HSC_MODULE_MP5990:
+		extend_array_num = ARRAY_SIZE(hotswap_sdr_table);
+		for (int index = 0; index < extend_array_num; index++) {
 			add_full_sdr_table(hotswap_sdr_table[index]);
 		}
+		break;
+	case HSC_MODULE_LTC4282:
+	case HSC_MODULE_LTC4286:
+	default:
+		printf("[%s] not support on this hsc module, hsc module: 0x%x\n", __func__,
+		       hsc_module);
+		break;
+	}
 
-		fix_array_num = ARRAY_SIZE(fix_class2_sdr_table);
-		for (int index = 0; index < fix_array_num; index++) {
+	// Fix class2 SDR table
+	if (get_system_class() == SYS_CLASS_2) {
+		extend_array_num = ARRAY_SIZE(fix_class2_sdr_table);
+		for (int index = 0; index < extend_array_num; index++) {
 			for (int i = MBR_R; i >= THRESHOLD_UNR; --i) {
 				if (i < MBR_M) {
 					change_sensor_threshold(fix_class2_sdr_table[index][0], i,
@@ -3708,16 +3709,10 @@ void pal_fix_full_sdr_table()
 	if (_2ou_status.present) {
 		// Add DPV2 sdr if DPV2_16 is present
 		if ((_2ou_status.card_type & TYPE_2OU_DPV2_16) == TYPE_2OU_DPV2_16) {
-			fix_array_num = ARRAY_SIZE(dpv2_sdr_table);
-			// Check sdr table max size before adding new sdr, avoiding over sdr table max size after adding new sdr
-			if ((SDR_COUNT + fix_array_num) > array_max_num) {
-				printf("[%s] over sdr table max size after adding DPV2_16 sdr, sdr table max size: %d  sdr table size after adding: %d\n",
-				       __func__, array_max_num, SDR_COUNT + fix_array_num);
-				return;
+			extend_array_num = ARRAY_SIZE(dpv2_sdr_table);
+			for (int index = 0; index < extend_array_num; index++) {
+				add_full_sdr_table(dpv2_sdr_table[index]);
 			}
-			memcpy(&full_sdr_table[SDR_COUNT], &dpv2_sdr_table[0],
-			       fix_array_num * sizeof(SDR_Full_sensor));
-			SDR_COUNT += fix_array_num;
 		}
 	}
 };
