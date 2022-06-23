@@ -25,31 +25,15 @@ static bool read_cpu_power(uint8_t addr, int *reading)
 	uint8_t *readbuf = (uint8_t *)malloc(2 * readlen * sizeof(uint8_t));
 	uint8_t u8index[2] = { 0x03, 0x1F };
 	uint16_t u16Param[2] = { 0x00FF, 0x0000 };
-	uint8_t ret, complete_code;
-	bool is_retry_success = false;
+	int ret = 0;
 	uint32_t pkg_energy, run_time, diff_energy, diff_time;
 	static uint32_t last_pkg_energy = 0, last_run_time = 0;
 
-	peci_read(command, addr, u8index[0], u16Param[0], readlen, readbuf);
-	complete_code = readbuf[0];
-	if (complete_code == PECI_CC_RSP_TIMEOUT ||
-	    complete_code == PECI_CC_OUT_OF_RESOURCES_TIMEOUT) {
-		is_retry_success =
-			peci_retry_read(command, addr, u8index[0], u16Param[0], readlen, readbuf);
-		if (!is_retry_success) {
-			goto cleanup;
-		}
+	ret = peci_read(command, addr, u8index[0], u16Param[0], readlen, readbuf);
+	if (ret) {
+		goto cleanup;
 	}
 	ret = peci_read(command, addr, u8index[1], u16Param[1], readlen, &readbuf[5]);
-	complete_code = readbuf[5];
-	if (complete_code == PECI_CC_RSP_TIMEOUT ||
-	    complete_code == PECI_CC_OUT_OF_RESOURCES_TIMEOUT) {
-		is_retry_success = peci_retry_read(command, addr, u8index[1], u16Param[1], readlen,
-						   &readbuf[5]);
-		if (!is_retry_success) {
-			goto cleanup;
-		}
-	}
 	if (ret) {
 		goto cleanup;
 	}
@@ -118,9 +102,9 @@ static bool get_cpu_tjmax(uint8_t addr, int *reading)
 	uint8_t rbuf[rlen];
 	memset(rbuf, 0, sizeof(rbuf));
 
-	bool success = peci_retry_read(PECI_CMD_RD_PKG_CFG0, addr, RDPKG_IDX_TJMAX_TEMP, param,
+	int ret = peci_read(PECI_CMD_RD_PKG_CFG0, addr, RDPKG_IDX_TJMAX_TEMP, param,
 				       rlen, rbuf);
-	if (success == false) {
+	if (ret != 0) {
 		return false;
 	}
 
@@ -140,9 +124,8 @@ static bool get_cpu_margin(uint8_t addr, int *reading)
 	uint8_t rbuf[rlen];
 	memset(rbuf, 0, sizeof(rbuf));
 
-	bool success =
-		peci_retry_read(PECI_CMD_RD_PKG_CFG0, addr, RDPKG_IDX_PKG_TEMP, param, rlen, rbuf);
-	if (success == false) {
+	int ret = peci_read(PECI_CMD_RD_PKG_CFG0, addr, RDPKG_IDX_PKG_TEMP, param, rlen, rbuf);
+	if (ret != 0) {
 		return false;
 	}
 
@@ -270,10 +253,9 @@ static bool get_dimm_temp(uint8_t addr, uint8_t type, int *reading)
 	uint8_t rbuf[rlen];
 	memset(rbuf, 0, sizeof(rbuf));
 
-	if (peci_retry_read(PECI_CMD_RD_PKG_CFG0, addr, RDPKG_IDX_DIMM_TEMP, param, rlen, rbuf) ==
-	    false)
+	if (peci_read(PECI_CMD_RD_PKG_CFG0, addr, RDPKG_IDX_DIMM_TEMP, param, rlen, rbuf) != 0) {
 		return false;
-
+	}
 	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = rbuf[temp_ofs];
 	return true;
@@ -325,7 +307,6 @@ uint8_t intel_peci_read(uint8_t sensor_num, int *reading)
 	default:
 		break;
 	}
-
 	return ret_val ? SENSOR_READ_SUCCESS : SENSOR_FAIL_TO_ACCESS;
 }
 

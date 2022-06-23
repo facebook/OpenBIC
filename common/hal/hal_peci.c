@@ -7,6 +7,9 @@
 
 const struct device *dev;
 
+struct k_mutex peci_lock;
+struct k_timer retry_timer;
+
 int peci_init()
 {
 	dev = device_get_binding("PECI");
@@ -26,6 +29,8 @@ int peci_init()
 		printf("peci enable failed %d\n", ret);
 		return ret;
 	}
+	k_mutex_init(&peci_lock);
+	k_timer_init(&retry_timer, NULL, NULL);
 
 	return ret;
 }
@@ -45,6 +50,77 @@ int peci_ping(uint8_t address)
 		       pkgcfg.cmd_code, ret);
 	}
 
+	return ret;
+}
+
+/*
+* For some commands, the PECI originator may need to retry a command if
+* the processor PECI client responds with a 0x8x completion code. In
+* each instance, the processor PECI client may have started the
+* operation but not completed it yet. When the 'retry' bit is set, the
+* PECI client will ignore a new request if it exactly matches a
+* previous valid request. For better performance and for reducing
+* retry traffic, the interval time will be increased exponentially.
+*/
+int peci_xfer_with_retries(struct peci_msg* msg) {
+	int interval = PECI_DEV_RETRY_INTERVAL_MIN_MSEC;
+	int ret = 0;
+
+	if (msg == NULL) {
+		printf("%s(): NULL PECI command\n", __func__);
+		return -1;
+	}
+
+	k_timer_start(&retry_timer, K_MSEC(PECI_DEV_RETRY_TIMEOUT), K_NO_WAIT);
+	while (1) {
+		ret = peci_transfer(dev, msg);
+		if ((ret != 0) || (msg->rx_buffer.buf == NULL)) {
+			break;
+		}
+		/* Retry is needed when completion code is 0x8x */
+		if (!IS_PECI_CC_NEED_RETRY(msg->rx_buffer.buf[0])) {
+			break;
+		}
+		/* Set the retry bit to indicate a retry attempt */
+		msg->tx_buffer.buf[0] |= PECI_DEV_RETRY_BIT;
+
+		/* Retry it for 'timeout' before returning an error. */
+		if (k_timer_status_get(&retry_timer) > 0) {
+			printf("%s(): Timeout retrying transfer!\n", __func__);
+			break;
+		}
+
+		k_msleep(interval);
+
+		interval *= 2;
+		if (interval > PECI_DEV_RETRY_INTERVAL_MAX_MSEC) {
+			interval = PECI_DEV_RETRY_INTERVAL_MAX_MSEC;
+		}
+	}
+	return ret;
+}
+
+int peci_cmd_xfer(struct peci_msg* msg) {
+	int ret = 0;
+
+	if (msg == NULL) {
+		printf("%s(): NULL PECI command\n", __func__);
+		return -1;
+	}
+	if (k_mutex_lock(&peci_lock, K_MSEC(1000)) != 0) {
+		printf("%s(): Can not get lock\n", __func__);
+		return -1;
+	}
+	switch (msg->cmd_code) {
+		case PECI_CMD_GET_DIB:
+		case PECI_CMD_GET_TEMP0:
+		case PECI_CMD_GET_TEMP1:
+			ret = peci_transfer(dev, msg);
+			break;
+		default:
+			ret = peci_xfer_with_retries(msg);
+	}
+	k_mutex_unlock(&peci_lock);
 	return ret;
 }
 
@@ -72,7 +148,7 @@ int peci_read(uint8_t cmd, uint8_t address, uint8_t u8Index, uint16_t u16Param, 
 	rdpkgcfg.tx_buffer.buf[1] = u8Index;
 	rdpkgcfg.tx_buffer.buf[2] = u16Param & 0xff;
 	rdpkgcfg.tx_buffer.buf[3] = u16Param >> 8;
-	ret = peci_transfer(dev, &rdpkgcfg);
+	ret = peci_cmd_xfer(&rdpkgcfg);
 
 	if (DEBUG_PECI) {
 		uint8_t index;
@@ -107,32 +183,11 @@ int peci_write(uint8_t cmd, uint8_t address, uint8_t u8ReadLen, uint8_t *readBuf
 	wrpkgcfg.rx_buffer.buf = readBuf;
 	wrpkgcfg.tx_buffer.buf = writeBuf;
 
-	ret = peci_transfer(dev, &wrpkgcfg);
+	ret = peci_cmd_xfer(&wrpkgcfg);
 	if (ret) {
 		printf("peci write failed %d\n", ret);
 		return ret;
 	}
 
 	return ret;
-}
-
-bool peci_retry_read(uint8_t cmd, uint8_t address, uint8_t u8Index, uint16_t u16Param,
-		     uint8_t u8ReadLen, uint8_t *readBuf)
-{
-	uint8_t i, ret, retry = 5;
-
-	if (readBuf == NULL)
-		return false;
-
-	for (i = 0; i < retry; ++i) {
-		k_msleep(10);
-		memset(&readBuf[0], 0, u8ReadLen * sizeof(uint8_t));
-		ret = peci_read(cmd, address, u8Index, u16Param, u8ReadLen, readBuf);
-		if (!ret) {
-			if (readBuf[0] == PECI_CC_RSP_SUCCESS) {
-				return true;
-			}
-		}
-	}
-	return false;
 }
