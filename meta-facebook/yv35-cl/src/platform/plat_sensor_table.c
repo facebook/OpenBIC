@@ -304,11 +304,6 @@ void check_vr_type(uint8_t index)
 {
 	uint8_t retry = 5;
 	I2C_MSG msg;
-	char *data = (uint8_t *)malloc(sizeof(uint8_t));
-	if (data == NULL) {
-		printf("[%s], Memory allocation failed!\n", __func__);
-		return;
-	}
 
 	/* Get IC Device ID from VR chip
 	 * - Command code: 0xAD
@@ -322,15 +317,15 @@ void check_vr_type(uint8_t index)
 	 * For the XDPE15284 chip,
 	 * the byte-1 is returned as 2 and the byte-2 is 8Ah(XDPE15284).
 	 */
-	uint8_t bus = sensor_config[index].port;
-	uint8_t target_addr = sensor_config[index].target_addr;
-	uint8_t tx_len = 1;
-	uint8_t rx_len = 7;
-	data[0] = PMBUS_IC_DEVICE_ID;
-	msg = construct_i2c_message(bus, target_addr, tx_len, data, rx_len);
+	memset(&msg, 0, sizeof(msg));
+	msg.bus = sensor_config[index].port;
+	msg.target_addr = sensor_config[index].target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 7;
+	msg.data[0] = PMBUS_IC_DEVICE_ID;
 
 	if (i2c_master_read(&msg, retry)) {
-		printf("Failed to read VR register(0x%x)\n", data[0]);
+		printf("Failed to read VR IC_DEVICE_ID: register(0x%x)\n", PMBUS_IC_DEVICE_ID);
 		return;
 	}
 
