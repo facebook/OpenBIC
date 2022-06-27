@@ -5,6 +5,7 @@
 #include "plat_class.h"
 #include "plat_gpio.h"
 #include "plat_i2c_target.h"
+#include "pldm.h"
 #include "plat_mctp.h"
 
 SCU_CFG scu_cfg[] = {
@@ -32,6 +33,8 @@ void pal_post_init()
 void pal_set_sys_status()
 {
 	gpio_set(BIC_SYS_READY_N, GPIO_LOW);
+	set_DC_status(SYS_PWR_READY_N);
+	set_DC_on_delayed_status();
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78

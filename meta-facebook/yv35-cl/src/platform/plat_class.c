@@ -21,6 +21,7 @@
 
 static uint8_t system_class = SYS_CLASS_1;
 static uint8_t board_revision = 0x0F;
+static uint8_t hsc_module = HSC_MODULE_UNKNOWN;
 static CARD_STATUS _1ou_status = { false, TYPE_1OU_UNKNOWN };
 static CARD_STATUS _2ou_status = { false, TYPE_2OU_UNKNOWN };
 
@@ -42,6 +43,11 @@ CARD_STATUS get_2ou_status()
 uint8_t get_board_revision()
 {
 	return board_revision;
+}
+
+uint8_t get_hsc_module()
+{
+	return hsc_module;
 }
 
 /* ADC information for each channel
@@ -135,6 +141,60 @@ bool get_adc_voltage(int channel, float *voltage)
 	return true;
 }
 
+void init_hsc_module(uint8_t board_revision)
+{
+	bool ret = false;
+	float voltage_hsc_type_adc = 0;
+
+	if (get_system_class() == SYS_CLASS_1) {
+		/* Class 1 */
+		switch (board_revision) {
+		case SYS_BOARD_POC:
+		case SYS_BOARD_EVT:
+		case SYS_BOARD_EVT2:
+			hsc_module = HSC_MODULE_ADM1278;
+			break;
+		case SYS_BOARD_EVT3_EFUSE:
+			hsc_module = HSC_MODULE_MP5990;
+			break;
+		case SYS_BOARD_EVT3_HOTSWAP:
+			/* Follow the GPIO table, the HSC device type can be by ADC7(net name: HSC_TYPE_ADC)
+      * If the voltage of ADC-7 is 0.5V(+/- 15%), the hotswap model is ADM1278.
+      * If the voltage of ADC-7 is 1.0V(+/- 15%), the hotswap model is LTC4282.
+      * If the voltage of ADC-7 is 1.5V(+/- 15%), the hotswap model is LTC4286.
+      */
+			ret = get_adc_voltage(CHANNEL_7, &voltage_hsc_type_adc);
+			if (ret == false) {
+				printf("[%s] fail to get hsc type by adc\n", __func__);
+				break;
+			}
+			if ((voltage_hsc_type_adc > 0.5 - (0.5 * 0.15)) &&
+			    (voltage_hsc_type_adc < 0.5 + (0.5 * 0.15))) {
+				hsc_module = HSC_MODULE_ADM1278;
+				break;
+			} else if ((voltage_hsc_type_adc > 1.0 - (1.0 * 0.15)) &&
+				   (voltage_hsc_type_adc < 1.0 + (1.0 * 0.15))) {
+				hsc_module = HSC_MODULE_LTC4282;
+				break;
+			} else if ((voltage_hsc_type_adc > 1.5 - (1.5 * 0.15)) &&
+				   (voltage_hsc_type_adc < 1.5 + (1.5 * 0.15))) {
+				hsc_module = HSC_MODULE_LTC4286;
+				break;
+			} else {
+				printf("[%s] unknown hotswap model type, HSC_TYPE_ADC voltage: %fV\n",
+				       __func__, voltage_hsc_type_adc);
+				break;
+			}
+		default:
+			printf("[%s] unknown board revision: 0x%x\n", __func__, board_revision);
+			break;
+		}
+	} else {
+		/* Class 2 */
+		hsc_module = HSC_MODULE_ADM1278;
+	}
+}
+
 void init_platform_config()
 {
 	I2C_MSG i2c_msg;
@@ -196,6 +256,7 @@ void init_platform_config()
 	int ret = i2c_master_read(&i2c_msg, retry);
 	if (ret == 0) {
 		board_revision = i2c_msg.data[0] & 0xF;
+		init_hsc_module(board_revision);
 	} else {
 		printf("Failed to read board ID from CPLD\n");
 	}

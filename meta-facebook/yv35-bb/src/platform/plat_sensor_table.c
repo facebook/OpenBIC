@@ -88,8 +88,13 @@ sensor_cfg plat_sensor_config[] = {
 	  &adm1278_init_args[0] },
 };
 
-uint8_t load_sensor_config(void)
+uint8_t plat_get_config_size()
+{
+	return ARRAY_SIZE(plat_sensor_config);
+}
+
+void load_sensor_config(void)
 {
 	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
-	return ARRAY_SIZE(plat_sensor_config);
+	sensor_config_count = ARRAY_SIZE(plat_sensor_config);
 }

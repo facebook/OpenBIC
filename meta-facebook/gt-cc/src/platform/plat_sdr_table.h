@@ -5,6 +5,7 @@
 
 #define MAX_SENSOR_SIZE 150
 
-uint8_t load_sdr_table(void);
+uint8_t plat_get_sdr_size();
+void load_sdr_table(void);
 
 #endif

@@ -1,7 +1,10 @@
+#include "pldm.h"
 #include "plat_ipmi.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <drivers/spi_nor.h>
+#include <drivers/flash.h>
 
 #include "libutil.h"
 #include "ipmi.h"
@@ -14,10 +17,43 @@
 #include "sdr.h"
 #include "app_handler.h"
 #include "util_spi.h"
-#include <drivers/spi_nor.h>
-#include <drivers/flash.h>
+#include "sensor.h"
+#include "pmbus.h"
+#include "hal_i2c.h"
+#include "i2c-mux-tca9548.h"
+#include "plat_hook.h"
+#include "plat_sensor_table.h"
+#include "plat_mctp.h"
+#include "pex89000.h"
+#include "power_status.h"
 
-static bool spi_isInitialized = false;
+struct bridge_compnt_info_s {
+	uint8_t compnt_id;
+	uint8_t i2c_bus;
+	uint8_t i2c_addr;
+	bool mux_present;
+	uint8_t mux_addr;
+	uint8_t mux_channel;
+	struct k_mutex *bus_mutex;
+};
+
+extern struct k_mutex i2c_bus6_mutex;
+struct bridge_compnt_info_s bridge_compnt_info[] = {
+	[0] = { .compnt_id = GT_COMPNT_VR0,
+		.i2c_bus = I2C_BUS6,
+		.i2c_addr = PEX_0_1_P0V8_VR_ADDR,
+		.mux_present = true,
+		.mux_addr = 0xe0,
+		.mux_channel = 6,
+		.bus_mutex = &i2c_bus6_mutex },
+	[1] = { .compnt_id = GT_COMPNT_VR1,
+		.i2c_bus = I2C_BUS6,
+		.i2c_addr = PEX_2_3_P0V8_VR_ADDR,
+		.mux_present = true,
+		.mux_addr = 0xe0,
+		.mux_channel = 6,
+		.bus_mutex = &i2c_bus6_mutex },
+};
 
 void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 {
@@ -49,7 +85,7 @@ void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 		return;
 	}
 
-	if ((target == SWB_BIC_UPDATE) || (target == (SWB_BIC_UPDATE | IS_SECTOR_END_MASK))) {
+	if ((target == GT_COMPNT_BIC) || (target == (GT_COMPNT_BIC | IS_SECTOR_END_MASK))) {
 		// Expect BIC firmware size not bigger than 320k
 		if (offset > BIC_UPDATE_MAX_OFFSET) {
 			msg->completion_code = CC_PARAM_OUT_OF_RANGE;
@@ -57,13 +93,13 @@ void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 		}
 		status = fw_update(offset, length, &msg->data[7], (target & IS_SECTOR_END_MASK),
 				   DEVSPI_FMC_CS0);
-	} else if (((target & WITHOUT_SENCTOR_END_MASK) == PEX0_UPDATE) ||
-		   ((target & WITHOUT_SENCTOR_END_MASK) == PEX1_UPDATE) ||
-		   ((target & WITHOUT_SENCTOR_END_MASK) == PEX2_UPDATE) ||
-		   ((target & WITHOUT_SENCTOR_END_MASK) == PEX3_UPDATE)) {
+	} else if (((target & WITHOUT_SENCTOR_END_MASK) == GT_COMPNT_PEX0) ||
+		   ((target & WITHOUT_SENCTOR_END_MASK) == GT_COMPNT_PEX1) ||
+		   ((target & WITHOUT_SENCTOR_END_MASK) == GT_COMPNT_PEX2) ||
+		   ((target & WITHOUT_SENCTOR_END_MASK) == GT_COMPNT_PEX3)) {
 		uint8_t flash_sel_pin[4] = { BIC_SEL_FLASH_SW0, BIC_SEL_FLASH_SW1,
 					     BIC_SEL_FLASH_SW2, BIC_SEL_FLASH_SW3 };
-		uint8_t flash_sel_base = BIC_SEL_FLASH_SW0 - PEX0_UPDATE;
+		uint8_t flash_sel_base = BIC_SEL_FLASH_SW0 - GT_COMPNT_PEX0;
 		uint8_t current_sel_pin = 0xFF;
 
 		/* change mux to pex flash */
@@ -142,6 +178,7 @@ void OEM_1S_PEX_FLASH_READ(ipmi_msg *msg)
 	uint8_t read_len = msg->data[3];
 	uint32_t addr = msg->data[1] | (msg->data[2] << 8);
 	const struct device *flash_dev;
+	uint8_t current_sel_pin = 0xFF;
 
 	if (read_len > 64) {
 		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
@@ -149,34 +186,35 @@ void OEM_1S_PEX_FLASH_READ(ipmi_msg *msg)
 	}
 	/* pull high select pin to active flash and other should keep low*/
 	for (int i = 0; i < ARRAY_SIZE(flash_sel_pin); i++) {
-		if (msg->data[0] == i)
-			gpio_set(flash_sel_pin[i], GPIO_HIGH);
-		else
+		if (msg->data[0] == i) {
+			current_sel_pin = flash_sel_pin[i];
+			gpio_set(current_sel_pin, GPIO_HIGH);
+		} else {
 			gpio_set(flash_sel_pin[i], GPIO_LOW);
+		}
 	}
 
 	flash_dev = device_get_binding("spi1_cs0");
-	if (!flash_dev) {
-		msg->completion_code = CC_UNSPECIFIED_ERROR;
-		return;
-	}
-	if (!spi_isInitialized) {
-		/* Due to the SPI in this project has mux so call this function to re-init*/
-		if (spi_nor_re_init(flash_dev)) {
-			msg->completion_code = CC_UNSPECIFIED_ERROR;
-			return;
-		}
-		spi_isInitialized = true;
-	}
+	if (!flash_dev)
+		goto exit;
+	/* Due to the SPI in this project has mux so call this function to re-init*/
+	if (spi_nor_re_init(flash_dev))
+		goto exit;
 
-	if (flash_read(flash_dev, addr, &msg->data[0], read_len) != 0) {
-		msg->completion_code = CC_UNSPECIFIED_ERROR;
-		return;
-	}
+	if (flash_read(flash_dev, addr, &msg->data[0], read_len) != 0)
+		goto exit;
+
+	if (current_sel_pin != 0xFF)
+		gpio_set(current_sel_pin, GPIO_LOW);
 
 	msg->data_len = read_len;
 	msg->completion_code = CC_SUCCESS;
+	return;
 
+exit:
+	if (current_sel_pin != 0xFF)
+		gpio_set(current_sel_pin, GPIO_LOW);
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
 	return;
 }
 
@@ -279,5 +317,253 @@ void APP_GET_SELFTEST_RESULTS(ipmi_msg *msg)
 	msg->data_len = 2;
 	msg->completion_code = CC_SUCCESS;
 
+	return;
+}
+
+void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
+{
+	if (msg == NULL) {
+		return;
+	}
+
+	if (msg->data_len != 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t component;
+	ipmi_msg bridge_msg = { 0 };
+	component = msg->data[0];
+
+	if (component >= GT_COMPNT_MAX) {
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		return;
+	}
+	/* 
+   * Return data format: 
+   * data[0] = component id
+   * data[1] = data length
+   * data[2] - data[data length + 1] = firmware version
+   */
+	switch (component) {
+	case GT_COMPNT_BIC:
+		msg->data[0] = GT_COMPNT_BIC;
+		msg->data[1] = 7;
+		msg->data[2] = BIC_FW_YEAR_MSB;
+		msg->data[3] = BIC_FW_YEAR_LSB;
+		msg->data[4] = BIC_FW_WEEK;
+		msg->data[5] = BIC_FW_VER;
+		msg->data[6] = BIC_FW_platform_0;
+		msg->data[7] = BIC_FW_platform_1;
+		msg->data[8] = BIC_FW_platform_2;
+		msg->data_len = 9;
+		msg->completion_code = CC_SUCCESS;
+		break;
+	case GT_COMPNT_PEX0:
+	case GT_COMPNT_PEX1:
+	case GT_COMPNT_PEX2:
+	case GT_COMPNT_PEX3: {
+		/* Only can be read when DC is on */
+		if (!get_DC_status()) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+		uint8_t pex_sensor_num_table[PEX_MAX_NUMBER] = { SENSOR_NUM_BB_TEMP_PEX_0,
+								 SENSOR_NUM_BB_TEMP_PEX_1,
+								 SENSOR_NUM_BB_TEMP_PEX_2,
+								 SENSOR_NUM_BB_TEMP_PEX_3 };
+		int reading;
+
+		uint8_t pex_sensor_num = pex_sensor_num_table[component - GT_COMPNT_PEX0];
+		sensor_cfg *cfg = &sensor_config[sensor_config_index_map[pex_sensor_num]];
+		pex89000_unit *p = (pex89000_unit *)cfg->priv_data;
+
+		if (pex_access_engine(cfg->port, cfg->target_addr, p->idx, pex_access_flash_ver,
+				      &reading)) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+		memcpy(&msg->data[2], &reading, sizeof(reading));
+
+		msg->data[0] = component;
+		msg->data[1] = sizeof(reading);
+		msg->data_len = sizeof(reading) + 2;
+		msg->completion_code = bridge_msg.completion_code;
+		break;
+	}
+	case GT_COMPNT_CPLD:
+		bridge_msg.data_len = 0;
+		OEM_1S_GET_FPGA_USER_CODE(&bridge_msg);
+		memcpy(&msg->data[2], &bridge_msg.data[0], bridge_msg.data_len);
+		msg->data[0] = component;
+		msg->data[1] = bridge_msg.data_len;
+		msg->data_len = bridge_msg.data_len + 2;
+		msg->completion_code = bridge_msg.completion_code;
+		break;
+	case GT_COMPNT_VR0:
+	case GT_COMPNT_VR1: {
+		I2C_MSG i2c_msg = { 0 };
+		uint8_t retry = 3;
+		uint8_t buf[5] = { 0 };
+		/* Assign VR 0/1 related sensor number to get information for accessing VR */
+		uint8_t sensor_num = (component == GT_COMPNT_VR0) ? SENSOR_NUM_TEMP_PEX_1 :
+									  SENSOR_NUM_TEMP_PEX_3;
+		if (!tca9548_select_chan(sensor_num, &mux_conf_addr_0xe0[6])) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+		/* Get bus and target address by sensor number in sensor configuration */
+		i2c_msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
+		i2c_msg.target_addr =
+			sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+
+		/* Write to PMBus command DMAADDR (0xC7) and configuration id address is 0x3F*/
+		i2c_msg.tx_len = 3;
+		i2c_msg.data[0] = 0xC7;
+		i2c_msg.data[1] = 0x3F;
+		i2c_msg.data[2] = 0x00;
+
+		if (i2c_master_write(&i2c_msg, retry)) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+		/* Read DMA data register */
+		i2c_msg.tx_len = 2;
+		i2c_msg.rx_len = 4;
+		i2c_msg.data[0] = 0xC5;
+		i2c_msg.data[1] = 0xC1;
+
+		if (i2c_master_read(&i2c_msg, retry)) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+
+		memcpy(buf, i2c_msg.data, 4);
+
+		/* Write to PMBus command DMAADDR (0xC7) and number of available NVM slots address is 0xC2 */
+		i2c_msg.tx_len = 3;
+		i2c_msg.data[0] = 0xC7;
+		i2c_msg.data[1] = 0xC2;
+		i2c_msg.data[2] = 0x00;
+
+		if (i2c_master_write(&i2c_msg, retry)) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+
+		/* Read DMA data register */
+		i2c_msg.tx_len = 2;
+		i2c_msg.rx_len = 4;
+		i2c_msg.data[0] = 0xC5;
+		i2c_msg.data[1] = 0xC1;
+
+		if (i2c_master_read(&i2c_msg, retry)) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+
+		memcpy(&buf[4], i2c_msg.data, 1);
+
+		msg->data[0] = component;
+		msg->data[1] = 5;
+		memcpy(&msg->data[2], &buf[0], sizeof(buf));
+		msg->data_len = 7;
+		msg->completion_code = CC_SUCCESS;
+		break;
+	};
+	case GT_COMPNT_NIC0:
+	case GT_COMPNT_NIC1:
+	case GT_COMPNT_NIC2:
+	case GT_COMPNT_NIC3:
+	case GT_COMPNT_NIC4:
+	case GT_COMPNT_NIC5:
+	case GT_COMPNT_NIC6:
+	case GT_COMPNT_NIC7: {
+		/* Only can be read when DC is on */
+		if (!get_DC_status()) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+		uint8_t idx = component - GT_COMPNT_NIC0;
+
+		msg->data[0] = component;
+		msg->data[1] = nic_vesion[idx].length;
+
+		memcpy(&msg->data[2], nic_vesion[idx].ptr, nic_vesion[idx].length);
+		msg->data_len = nic_vesion[idx].length + 2;
+		msg->completion_code = CC_SUCCESS;
+		break;
+	}
+	default:
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		break;
+	}
+	return;
+}
+
+void OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT(ipmi_msg *msg)
+{
+	if (!msg)
+		return;
+
+	if (msg->data_len < 2) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t compnt_id = msg->data[0];
+	uint8_t i;
+	uint8_t retry = 5;
+	I2C_MSG i2c_msg = { 0 };
+	ipmi_msg bridge_msg = { 0 };
+	struct bridge_compnt_info_s *p;
+
+	for (i = 0; i < ARRAY_SIZE(bridge_compnt_info); i++) {
+		p = bridge_compnt_info + i;
+
+		if (p->compnt_id == compnt_id)
+			break;
+	}
+
+	if (i == ARRAY_SIZE(bridge_compnt_info)) {
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		return;
+	}
+
+	if (p->bus_mutex) {
+		if (k_mutex_lock(p->bus_mutex, K_MSEC(100))) {
+			printf("[%s]mutex lock fail on bus %d\n", __func__, p->i2c_bus);
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+	}
+
+	if (p->mux_present) {
+		i2c_msg.bus = p->i2c_bus;
+		i2c_msg.target_addr = p->mux_addr >> 1;
+		i2c_msg.tx_len = 1;
+		i2c_msg.data[0] = (1 << p->mux_channel);
+
+		if (i2c_master_write(&i2c_msg, retry)) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+	}
+	bridge_msg.data[0] = (p->i2c_bus << 1);
+	bridge_msg.data[1] = (p->i2c_addr << 1);
+	bridge_msg.data[2] = msg->data[1];
+	memcpy(&bridge_msg.data[2], &msg->data[1], msg->data_len - 1);
+	bridge_msg.data_len = msg->data_len + 1;
+
+	APP_MASTER_WRITE_READ(&bridge_msg);
+
+	msg->completion_code = bridge_msg.completion_code;
+	msg->data_len = bridge_msg.data_len;
+	memcpy(&msg->data[0], &bridge_msg.data[0], bridge_msg.data_len);
+
+	if (p->bus_mutex) {
+		if (k_mutex_unlock(p->bus_mutex))
+			printf("[%s]mutex unlock fail on bus %d\n", __func__, p->i2c_bus);
+	}
 	return;
 }

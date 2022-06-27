@@ -1,15 +1,15 @@
-From baec32a93ee1f26d9a1cb2be587ad62316efdf24 Mon Sep 17 00:00:00 2001
+From dcad04ae4b08b57e7f1a9e80d1594b05f7d1f6b2 Mon Sep 17 00:00:00 2001
 From: Ren Chen <ren_chen@wiwynn.com>
 Date: Fri, 27 May 2022 10:33:12 +0800
-Subject: [PATCH 2/2] Revise the I2C baseclock3 to 2.8MHz to improve I2C clock
- rate accuracy
+Subject: [PATCH] Revise the I2C baseclock3 to 2.8MHz to improve I2C clock rate
+ accuracy
 
 ---
  drivers/i2c/i2c_global_aspeed.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/i2c/i2c_global_aspeed.c b/drivers/i2c/i2c_global_aspeed.c
-index 087aabf373..a91fe62696 100644
+index e3038ad039..c04a95e0c4 100644
 --- a/drivers/i2c/i2c_global_aspeed.c
 +++ b/drivers/i2c/i2c_global_aspeed.c
 @@ -59,7 +59,7 @@ struct i2c_global_config {
@@ -22,5 +22,5 @@ index 087aabf373..a91fe62696 100644
  };
  
 -- 
-2.25.1
+2.36.1
 
