@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
-uint8_t load_sensor_config(void);
+uint8_t plat_get_config_size();
+void load_sensor_config(void);
 
 #endif
