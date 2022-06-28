@@ -15,6 +15,10 @@ LOG_MODULE_REGISTER(pldm);
 #define PLDM_MSG_TIMEOUT_MS 5000
 #define PLDM_RESP_MSG_PROC_MUTEX_TIMEOUT_MS 500
 #define PLDM_TASK_NAME_MAX_SIZE 32
+#define PLDM_MSG_MAX_RETRY 3
+
+#define PLDM_READ_EVENT_SUCCESS BIT(0)
+#define PLDM_READ_EVENT_TIMEOUT BIT(1)
 
 typedef struct _wait_msg {
 	sys_snode_t node;
@@ -28,12 +32,90 @@ struct _pldm_handler_query_entry {
 	uint8_t (*handler_query)(uint8_t, void **);
 };
 
+typedef struct _pldm_recv_resp_arg {
+	struct k_msgq *msgq;
+	uint8_t *rbuf;
+	uint16_t rbuf_len;
+	uint16_t return_len;
+} pldm_recv_resp_arg;
+
 static struct _pldm_handler_query_entry query_tbl[] = { { PLDM_TYPE_BASE, pldm_base_handler_query },
 							{ PLDM_TYPE_OEM, pldm_oem_handler_query } };
 
 static K_MUTEX_DEFINE(wait_recv_resp_mutex);
 
 static sys_slist_t wait_recv_resp_list = SYS_SLIST_STATIC_INIT(&wait_recv_resp_list);
+
+void pldm_read_resp_handler(void *args, uint8_t *rbuf, uint16_t rlen)
+{
+	if (!args || !rbuf || !rlen)
+		return;
+
+	pldm_recv_resp_arg *recv_arg = (pldm_recv_resp_arg *)args;
+
+	if (rlen > recv_arg->rbuf_len) {
+		LOG_WRN("[%s] response length(%d) is greater than buffer length(%d)!", __func__,
+			rlen, recv_arg->rbuf_len);
+		recv_arg->return_len = recv_arg->rbuf_len;
+	} else {
+		recv_arg->return_len = rlen;
+	}
+	memcpy(recv_arg->rbuf, rbuf, recv_arg->return_len);
+	uint8_t status = PLDM_READ_EVENT_SUCCESS;
+	k_msgq_put(recv_arg->msgq, &status, K_NO_WAIT);
+}
+
+static void pldm_read_timeout_handler(void *args)
+{
+	if (!args) {
+		return;
+	}
+	struct k_msgq *msgq = (struct k_msgq *)args;
+	uint8_t status = PLDM_READ_EVENT_TIMEOUT;
+	k_msgq_put(msgq, &status, K_NO_WAIT);
+}
+
+/*
+ * The return value is the read length from PLDM device
+ */
+uint16_t mctp_pldm_read(void *mctp_p, pldm_msg *msg, uint8_t *rbuf, uint16_t rbuf_len)
+{
+	if (!mctp_p || !msg || !rbuf || !rbuf_len)
+		return 0;
+
+	uint8_t event_msgq_buffer[1];
+	struct k_msgq event_msgq;
+
+	k_msgq_init(&event_msgq, event_msgq_buffer, sizeof(uint8_t), 1);
+
+	pldm_recv_resp_arg recv_arg;
+	recv_arg.msgq = &event_msgq;
+	recv_arg.rbuf = rbuf;
+	recv_arg.rbuf_len = rbuf_len;
+
+	msg->recv_resp_cb_fn = pldm_read_resp_handler;
+	msg->recv_resp_cb_args = (void *)&recv_arg;
+	msg->timeout_cb_fn = pldm_read_timeout_handler;
+	msg->timeout_cb_fn_args = (void *)&event_msgq;
+	msg->timeout_ms = PLDM_MSG_TIMEOUT_MS;
+
+	for (uint8_t retry_count = 0; retry_count < PLDM_MSG_MAX_RETRY; retry_count++) {
+		uint8_t event = 0;
+		if (mctp_pldm_send_msg(mctp_p, msg) == PLDM_ERROR) {
+			LOG_WRN("[%s] send msg failed!", __func__);
+			continue;
+		}
+		if (k_msgq_get(&event_msgq, &event, K_MSEC(PLDM_MSG_TIMEOUT_MS + 1000))) {
+			LOG_WRN("[%s] Failed to get status from msgq!", __func__);
+			continue;
+		}
+		if (event == PLDM_READ_EVENT_SUCCESS) {
+			return recv_arg.return_len;
+		}
+	}
+	LOG_WRN("[%s] retry reach max!", __func__);
+	return 0;
+}
 
 static uint8_t pldm_msg_timeout_check(sys_slist_t *list, struct k_mutex *mutex)
 {
