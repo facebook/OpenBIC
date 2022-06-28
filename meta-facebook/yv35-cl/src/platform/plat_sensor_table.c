@@ -305,6 +305,18 @@ void check_vr_type(uint8_t index)
 	uint8_t retry = 5;
 	I2C_MSG msg;
 
+	isl69259_pre_proc_arg *args = sensor_config[index].pre_sensor_read_args;
+	memset(&msg, 0, sizeof(msg));
+	msg.bus = sensor_config[index].port;
+	msg.target_addr = sensor_config[index].target_addr;
+	msg.tx_len = 2;
+	msg.data[0] = 0x00;
+	msg.data[1] = args->vr_page;
+	if (i2c_master_write(&msg, retry)) {
+		printf("Failed to switch to VR page %d\n", args->vr_page);
+		return;
+	}
+
 	/* Get IC Device ID from VR chip
 	 * - Command code: 0xAD
 	 * - The response data 
