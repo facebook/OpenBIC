@@ -7,7 +7,9 @@
 
 #define IPMI_THREAD_STACK_SIZE 4096
 #define IPMI_BUF_LEN 10
+#ifndef IANA_ID
 #define IANA_ID 0x00A015 // Meta's IANA
+#endif
 #define DEBUG_IPMI 0
 
 extern uint8_t IPMB_inf_index_map[];
