@@ -6,3 +6,9 @@ unusedStructMember
 
 // This output confuses CI, get rid of it.
 unmatchedSuppression
+
+// CPPcheck doesn't know about different configurations.
+ConfigurationNotChecked
+
+// assigning a variable a value before it's used isn't very important.
+unreadVariable
