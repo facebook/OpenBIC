@@ -23,6 +23,8 @@
 
 #define SAMPLE_COUNT_DEFAULT 1
 
+#define POLL_TIME_DEFAULT 1
+
 enum LTC4282_OFFSET {
 	LTC4282_ADJUST_OFFSET = 0x11,
 	LTC4282_VSENSE_OFFSET = 0x40,
@@ -145,6 +147,7 @@ typedef struct _sensor_cfg__ {
 	int arg0;
 	int arg1;
 	int sample_count;
+	int64_t poll_time; // sec
 	int cache;
 	uint8_t cache_status;
 	bool (*pre_sensor_read_hook)(uint8_t, void *);
@@ -159,6 +162,11 @@ typedef struct _sensor_cfg__ {
 	uint8_t (*init)(uint8_t, int *);
 	uint8_t (*read)(uint8_t, int *);
 } sensor_cfg;
+
+typedef struct _sensor_poll_time_cfg {
+	uint8_t sensor_num;
+	int64_t last_access_time;
+} sensor_poll_time_cfg;
 
 /* INIT arg */
 typedef struct _isl28022_init_arg {
@@ -327,5 +335,6 @@ void pal_extend_sensor_config(void);
 bool check_sensor_num_exist(uint8_t sensor_num);
 void add_sensor_config(sensor_cfg config);
 bool check_is_sensor_ready();
+bool pal_is_time_to_poll(uint8_t sensor_num, int poll_time);
 
 #endif
