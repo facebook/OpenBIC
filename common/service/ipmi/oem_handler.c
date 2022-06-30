@@ -17,7 +17,6 @@ __weak void OEM_NM_SENSOR_READ(ipmi_msg *msg)
 
 	uint8_t status, sensor_num;
 	int reading;
-	int val;
 
 	// only input enable status
 	if (msg->data_len < 3) {
@@ -29,20 +28,18 @@ __weak void OEM_NM_SENSOR_READ(ipmi_msg *msg)
 	if (msg->data[0] == 0x00) {
 		sensor_num = SENSOR_NUM_PWR_HSCIN;
 		status = get_sensor_reading(sensor_num, &reading, GET_FROM_CACHE);
-
-		val = (calculate_accurate_MBR(sensor_num, (int)reading) / 1000) & 0xffff;
-
-		// scale down to one byte and times SDR to get original reading
-		val = (val >> 8) * SDR_M(sensor_num);
 	} else {
 		msg->completion_code = CC_INVALID_DATA_FIELD;
 		return;
 	}
 
+	sensor_val *sval = (sensor_val *)(&reading);
 	switch (status) {
 	case SENSOR_READ_SUCCESS:
-		msg->data[1] = val & 0xFF;
-		msg->data[2] = (val >> 8) & 0xFF;
+	case SENSOR_READ_ACUR_SUCCESS:
+	case SENSOR_READ_4BYTE_ACUR_SUCCESS:
+		msg->data[1] = sval->integer & 0xFF;
+		msg->data[2] = (sval->integer >> 8) & 0xFF;
 		msg->data_len = 3;
 		msg->completion_code = CC_SUCCESS;
 		break;
