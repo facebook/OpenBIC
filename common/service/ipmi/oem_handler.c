@@ -3,7 +3,6 @@
 #include "sensor.h"
 #include "plat_sensor_table.h"
 #include "guid.h"
-#include "plat_guid.h"
 #ifdef ENABLE_FAN
 #include "plat_fan.h"
 #endif
@@ -65,6 +64,7 @@ __weak void OEM_NM_SENSOR_READ(ipmi_msg *msg)
 	}
 	return;
 }
+#endif
 
 __weak void OEM_SET_SYSTEM_GUID(ipmi_msg *msg)
 {
@@ -77,14 +77,7 @@ __weak void OEM_SET_SYSTEM_GUID(ipmi_msg *msg)
 		return;
 	}
 
-	uint8_t status;
-	EEPROM_ENTRY guid_entry;
-
-	guid_entry.offset = 0;
-	guid_entry.data_len = msg->data_len;
-	guid_entry.config.dev_id = MB_SYS_GUID_ID;
-	memcpy(&guid_entry.data[0], &msg->data, guid_entry.data_len);
-	status = GUID_write(&guid_entry);
+	uint8_t status = set_system_guid(&msg->data_len, &msg->data[0]);
 
 	switch (status) {
 	case GUID_WRITE_SUCCESS:
@@ -107,7 +100,6 @@ __weak void OEM_SET_SYSTEM_GUID(ipmi_msg *msg)
 	msg->data_len = 0;
 	return;
 }
-#endif
 
 #ifdef ENABLE_FAN
 __weak void OEM_SET_FAN_DUTY_MANUAL(ipmi_msg *msg)

@@ -19,4 +19,7 @@ enum {
 uint8_t GUID_read(EEPROM_ENTRY *entry);
 uint8_t GUID_write(EEPROM_ENTRY *entry);
 
+uint8_t get_system_guid(uint16_t *data_len, uint8_t *data);
+uint8_t set_system_guid(uint16_t *data_len, uint8_t *data);
+
 #endif

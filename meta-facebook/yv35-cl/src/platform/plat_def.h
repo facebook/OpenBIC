@@ -2,6 +2,7 @@
 #define PLAT_DEF_H
 
 #define ENABLE_ASD
+#define ENABLE_GUID
 #define ENABLE_ISL69260
 #define ENABLE_FIX_SENSOR
 
