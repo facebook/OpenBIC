@@ -42,6 +42,7 @@
 
 /* Include SENSOR */
 #include "sensor.h"
+#include "sdr.h"
 
 /* Include config settings */
 #include "shell_platform.h"
@@ -207,14 +208,32 @@ static int sensor_get_idx_by_sensor_num(uint16_t sensor_num)
 	return -1;
 }
 
+static int get_sdr_index_by_sensor_num(uint8_t sensor_num)
+{
+	int index = 0;
+	for (index = 0; index < sdr_count; ++index) {
+		if (sensor_num == full_sdr_table[index].sensor_num) {
+			return index;
+		}
+	}
+
+	return -1;
+}
+
 static int sensor_access(const struct shell *shell, int sensor_num, enum SENSOR_ACCESS mode)
 {
 	if (!shell) {
-		return 1;
+		return -1;
 	}
 
 	if (sensor_num >= SENSOR_NUM_MAX || sensor_num < 0) {
-		return 1;
+		return -1;
+	}
+
+	int sdr_index = get_sdr_index_by_sensor_num(sensor_num);
+	if (sdr_index == -1) {
+		shell_error(shell, "[%s] can't find sensor number in sdr table.\n", __func__);
+		return -1;
 	}
 
 	switch (mode) {
@@ -223,12 +242,15 @@ static int sensor_access(const struct shell *shell, int sensor_num, enum SENSOR_
 		int sen_idx = sensor_get_idx_by_sensor_num(sensor_num);
 		if (sen_idx == -1) {
 			shell_error(shell, "No such sensor number!");
-			return 1;
+			return -1;
 		}
+		char sensor_name[MAX_SENSOR_NAME_LENGTH] = { 0 };
+		snprintf(sensor_name, sizeof(sensor_name), "%s", full_sdr_table[sdr_index].ID_str);
+
 		char *check_access =
 			(sensor_access_check(sensor_config[sen_idx].num) == true) ? "O" : "X";
-		shell_print(shell, "[0x%-2x] %-35s: %-10s | access[%s] | %-30s | %-8d",
-			    sensor_config[sen_idx].num, "Unsupported name",
+		shell_print(shell, "[0x%-2x] %-25s: %-10s | access[%s] | %-25s | %-8d",
+			    sensor_config[sen_idx].num, sensor_name,
 			    sensor_type_name[sensor_config[sen_idx].type], check_access,
 			    sensor_status_name[sensor_config[sen_idx].cache_status],
 			    sensor_config[sen_idx].cache);
