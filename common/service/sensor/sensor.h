@@ -71,6 +71,7 @@ enum SENSOR_DEV {
 	sensor_dev_isl69254iraz_t = 0x11,
 	sensor_dev_max16550a = 0x12,
 	sensor_dev_ina230 = 0x13,
+	sensor_dev_xdpe12284c = 0x14,
 	sensor_dev_max
 };
 
