@@ -117,3 +117,11 @@
 &wdt3 {
 	status = "okay";
 };
+
+&gpio0_a_d {
+  aspeed,persist-maps = <0x03ff0003>;
+};
+
+&gpio0_e_h {
+  aspeed,persist-maps = <0x00000402>;
+};
