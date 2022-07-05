@@ -5,7 +5,6 @@
 #include "guid.h"
 #include "plat_i2c.h"
 #include "plat_ipmi.h"
-#include "plat_guid.h"
 #include "util_sys.h"
 
 __weak void APP_GET_DEVICE_ID(ipmi_msg *msg)
@@ -122,30 +121,20 @@ __weak void APP_GET_SELFTEST_RESULTS(ipmi_msg *msg)
 	return;
 }
 
-#ifdef CONFIG_ESPI
 __weak void APP_GET_SYSTEM_GUID(ipmi_msg *msg)
 {
 	if (msg == NULL) {
 		return;
 	}
 
-	uint8_t status;
-	EEPROM_ENTRY guid_entry;
-
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
 	}
 
-	guid_entry.offset = 0;
-	guid_entry.data_len = 16;
-	guid_entry.config.dev_id = MB_SYS_GUID_ID;
-	status = GUID_read(&guid_entry);
-
+	uint8_t status = get_system_guid(&msg->data_len, &msg->data[0]);
 	switch (status) {
 	case GUID_READ_SUCCESS:
-		msg->data_len = guid_entry.data_len;
-		memcpy(&msg->data[0], &guid_entry.data, guid_entry.data_len);
 		msg->completion_code = CC_SUCCESS;
 		break;
 	case GUID_INVALID_ID:
@@ -164,7 +153,6 @@ __weak void APP_GET_SYSTEM_GUID(ipmi_msg *msg)
 
 	return;
 }
-#endif
 
 __weak void APP_MASTER_WRITE_READ(ipmi_msg *msg)
 {
