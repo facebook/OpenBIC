@@ -12,7 +12,7 @@
 #include "pex89000.h"
 #include "pldm.h"
 #include "plat_mctp.h"
-
+#include "plat_hook.h"
 void dc_on_init_component()
 {
 	uint8_t pex_sensor_num_table[PEX_MAX_NUMBER] = { SENSOR_NUM_BB_TEMP_PEX_0,
@@ -62,11 +62,7 @@ K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, dc_on_init_component);
 
 void ISR_DC_ON()
 {
-	set_DC_status(SYS_PWR_READY_N);
-	set_DC_on_delayed_status();
-	/* Check whether DC on to send work to initial PEX, 
-    	 * this pin will be change in next CPLD firmware release 
-	 */
-	if (get_DC_status())
+	/* Check whether DC on to send work to initial PEX */
+	if (is_mb_dc_on())
 		k_work_schedule(&set_DC_on_5s_work, K_SECONDS(DC_ON_5_SECOND));
 }

@@ -14,7 +14,8 @@
 #include "pldm.h"
 #include "ipmi.h"
 #include "plat_mctp.h"
-#include "power_status.h"
+#include "sensor.h"
+#include "plat_hook.h"
 
 LOG_MODULE_REGISTER(plat_mctp);
 
@@ -306,6 +307,6 @@ void plat_mctp_init(void)
 	}
 
 	/* Only send command to device when DC on */
-	if (get_DC_status())
+	if (is_mb_dc_on())
 		k_timer_start(&send_cmd_timer, K_MSEC(3000), K_NO_WAIT);
 }

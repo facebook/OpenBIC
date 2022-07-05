@@ -304,16 +304,16 @@ sensor_cfg plat_sensor_config[] = {
 	  &pex_p1v8_sensor_init_args[0] },
 
 	{ SENSOR_NUM_BB_TEMP_PEX_0, sensor_dev_pex89000, I2C_BUS10, PEX_SWITCH_I2C_ADDR, PEX_TEMP,
-	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, pre_pex89000_read,
+	  is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, pre_pex89000_read,
 	  &pex89000_pre_read_args[0], post_i2c_bus_read, NULL, &pex_sensor_init_args[0] },
 	{ SENSOR_NUM_BB_TEMP_PEX_1, sensor_dev_pex89000, I2C_BUS10, PEX_SWITCH_I2C_ADDR, PEX_TEMP,
-	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, pre_pex89000_read,
+	  is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, pre_pex89000_read,
 	  &pex89000_pre_read_args[1], post_i2c_bus_read, NULL, &pex_sensor_init_args[1] },
 	{ SENSOR_NUM_BB_TEMP_PEX_2, sensor_dev_pex89000, I2C_BUS10, PEX_SWITCH_I2C_ADDR, PEX_TEMP,
-	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, pre_pex89000_read,
+	  is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, pre_pex89000_read,
 	  &pex89000_pre_read_args[2], post_i2c_bus_read, NULL, &pex_sensor_init_args[2] },
 	{ SENSOR_NUM_BB_TEMP_PEX_3, sensor_dev_pex89000, I2C_BUS10, PEX_SWITCH_I2C_ADDR, PEX_TEMP,
-	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, pre_pex89000_read,
+	  is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, pre_pex89000_read,
 	  &pex89000_pre_read_args[3], post_i2c_bus_read, NULL, &pex_sensor_init_args[3] },
 
 	/* SYSTEM INLET TEMP */
