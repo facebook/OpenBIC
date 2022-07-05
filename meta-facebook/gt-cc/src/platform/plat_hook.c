@@ -365,7 +365,7 @@ bool pre_i2c_bus_read(uint8_t sensor_num, void *args)
 	if (!mutex)
 		return false;
 
-	if (k_mutex_lock(mutex, K_MSEC(10))) {
+	if (k_mutex_lock(mutex, K_MSEC(300))) {
 		printf("[%s] sensor number 0x%x mutex lock fail\n", __func__, sensor_num);
 		return false;
 	}
