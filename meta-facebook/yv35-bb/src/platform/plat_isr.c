@@ -17,8 +17,10 @@
 #include "plat_i2c.h"
 
 void sled_cycle_work_handler(struct k_work *item);
+void re_enable_usb_power_handler(struct k_work *item);
 
 K_WORK_DELAYABLE_DEFINE(sled_cycle_work, sled_cycle_work_handler);
+K_WORK_DELAYABLE_DEFINE(re_enable_usb_power_work, re_enable_usb_power_handler);
 
 void ISR_PWROK_SLOT1()
 {
@@ -37,7 +39,7 @@ void ISR_SLED_CYCLE()
 	bb_btn_status = gpio_get(BB_BUTTON_BMC_BIC_N_R);
 	// press sled cycle button
 	if (bb_btn_status == GPIO_LOW) {
-		k_work_schedule(&sled_cycle_work, K_SECONDS(MAX_PRESS_SLED_BTN_TIME_s));
+		k_work_schedule(&sled_cycle_work, K_SECONDS(MAX_PRESS_SLED_BTN_TIME_S));
 
 		// release sled cycle button
 	} else if (bb_btn_status == GPIO_HIGH) {
@@ -137,6 +139,15 @@ void ISR_SLOT3_PRESENT()
 	return;
 }
 
+void ISR_USB_POWER_LOST()
+{
+	if (gpio_get(USB_CPLD_BIC_EN_R) == POWER_ON) {
+		// Re-enable USB power
+		gpio_set(USB_CPLD_BIC_EN_R, POWER_OFF);
+		k_work_schedule(&re_enable_usb_power_work, K_MSEC(MAX_RE_ENABLE_USB_POWER_TIME_MS));
+	}
+}
+
 void set_BIC_slot_isolator(uint8_t pwr_state_gpio_num, uint8_t isolator_gpio_num)
 {
 	int ret = 0;
@@ -159,6 +170,11 @@ void set_BIC_slot_isolator(uint8_t pwr_state_gpio_num, uint8_t isolator_gpio_num
 void sled_cycle_work_handler(struct k_work *item)
 {
 	set_sled_cycle();
+}
+
+void re_enable_usb_power_handler(struct k_work *item)
+{
+	gpio_set(USB_CPLD_BIC_EN_R, POWER_ON);
 }
 
 void set_sled_cycle()
