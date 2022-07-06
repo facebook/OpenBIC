@@ -17,6 +17,15 @@ void pal_set_sys_status()
 	control_power_sequence();
 }
 
+void pal_post_init()
+{
+	gpio_set(SPI_RST_FLASH_N, GPIO_HIGH);
+
+	k_usleep(100);
+
+	gpio_set(ASIC_DEV_RST_N, GPIO_HIGH);
+}
+
 #define DEF_PROJ_GPIO_PRIORITY 61
 
 DEVICE_DEFINE(PRE_DEF_PROJ_GPIO, "PRE_DEF_PROJ_GPIO_NAME", &gpio_init, NULL, NULL, NULL,
