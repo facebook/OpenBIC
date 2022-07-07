@@ -56,7 +56,7 @@ void init_platform_config()
 		printf("[%s] Failed to allocate memory\n", __func__);
 		return;
 	}
-	
+
 	/* Read the expansion present from CPLD's class type register
 	 * CPLD Class Type Register(0Dh)
 	 * Bit[7:4] - Reserved

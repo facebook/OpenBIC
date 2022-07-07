@@ -18,7 +18,8 @@ enum {
 /*  Reference: Infineon spec section 8.24: VID table
  *  PMBUS spec section 8.2: VOUT mode
  */
-static float vid_to_float(int val, uint8_t vout_mode) {
+static float vid_to_float(int val, uint8_t vout_mode)
+{
 	uint8_t mode = 0;
 	uint8_t parameter = 0;
 
@@ -36,15 +37,15 @@ static float vid_to_float(int val, uint8_t vout_mode) {
 
 	switch (vout_mode & 0x1f) {
 	case VR12:
-		if(val > 0) {
+		if (val > 0) {
 			return ((val - 1) * 5 + 250);
 		}
 	case VR13:
-		if(val > 0) {
+		if (val > 0) {
 			return ((val - 1) * 10 + 500);
 		}
 	case IMVP9:
-		if(val > 0) {
+		if (val > 0) {
 			return ((val - 1) * 10 + 200);
 		}
 	default:
@@ -81,7 +82,7 @@ uint8_t xdpe12284c_read(uint8_t sensor_num, int *reading)
 
 	val = (msg.data[1] << 8) | msg.data[0];
 
-	switch (offset)	 {
+	switch (offset) {
 	case PMBUS_READ_IOUT:
 	case PMBUS_READ_POUT:
 	case PMBUS_READ_TEMPERATURE_1:
@@ -100,7 +101,7 @@ uint8_t xdpe12284c_read(uint8_t sensor_num, int *reading)
 		msg.tx_len = 1;
 		msg.rx_len = 1;
 		msg.data[0] = PMBUS_VOUT_MODE;
-	
+
 		if (i2c_master_read(&msg, retry)) {
 			return SENSOR_FAIL_TO_ACCESS;
 		}

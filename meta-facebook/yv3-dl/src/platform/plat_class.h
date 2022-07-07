@@ -20,7 +20,7 @@ enum _1OU_CARD_TYPE_ {
 enum _2OU_CARD_TYPE_ {
 	TYPE_2OU_EXP = 0x1,
 	TYPE_2OU_EXP_E1S = 0x2,
-	TYPE_2OU_HSM = 0x6,     //Hardware Security Module
+	TYPE_2OU_HSM = 0x6, //Hardware Security Module
 	TYPE_2OU_ABSENT = 0xFE,
 	TYPE_2OU_UNKNOWN = 0xFF,
 };
