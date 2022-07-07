@@ -2,6 +2,7 @@
 #include <string.h>
 #include "hal_gpio.h"
 #include "plat_gpio.h"
+#include "plat_isr.h"
 
 #define gpio_name_to_num(x) #x,
 const char *const gpio_name[] = {
@@ -15,8 +16,8 @@ GPIO_CFG plat_gpio_cfg[] = {
 	//  chip, number, is_init, is_latch, direction, status, property, int_type, int_cb
 	/** Group A: 00-07 **/
 	{ CHIP_GPIO, 0, DISABLE, DISABLE, GPIO_INPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
-	{ CHIP_GPIO, 1, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, OPEN_DRAIN, GPIO_INT_DISABLE,
-	  NULL },
+	{ CHIP_GPIO, 1, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, OPEN_DRAIN, GPIO_INT_EDGE_BOTH,
+	  ISR_POST_COMPLETE },
 	{ CHIP_GPIO, 2, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
 	{ CHIP_GPIO, 3, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, OPEN_DRAIN, GPIO_INT_DISABLE,
 	  NULL },
@@ -94,7 +95,8 @@ GPIO_CFG plat_gpio_cfg[] = {
 	  NULL },
 	{ CHIP_GPIO, 38, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, OPEN_DRAIN, GPIO_INT_DISABLE,
 	  NULL },
-	{ CHIP_GPIO, 39, ENABLE, DISABLE, GPIO_INPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+	{ CHIP_GPIO, 39, ENABLE, DISABLE, GPIO_INPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_EDGE_BOTH,
+	  ISR_DC_ON },
 
 	/** Group F: 40-47 **/
 	{ CHIP_GPIO, 40, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, OPEN_DRAIN, GPIO_INT_DISABLE,
