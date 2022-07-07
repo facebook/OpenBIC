@@ -21,7 +21,6 @@ enum {
 static float vid_to_float(int val, uint8_t vout_mode)
 {
 	uint8_t mode = 0;
-	uint8_t parameter = 0;
 
 	//VID 0 is always 0 V
 	if (val == 0) {
