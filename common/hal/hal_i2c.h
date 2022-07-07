@@ -79,7 +79,7 @@ typedef struct _I2C_MSG_ {
 	uint8_t rx_len;
 	uint8_t tx_len;
 	uint8_t data[I2C_BUFF_SIZE];
-	struct k_mutex lock;
+	struct k_mutex *lock;
 } I2C_MSG;
 
 void i2c_freq_set(uint8_t i2c_bus, uint8_t i2c_speed_mode);
