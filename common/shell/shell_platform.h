@@ -62,14 +62,14 @@ enum GPIO_ACCESS { GPIO_READ, GPIO_WRITE };
 const char *const sensor_type_name[] = {
 	sensor_name_to_num(tmp75) sensor_name_to_num(adc) sensor_name_to_num(
 		peci) sensor_name_to_num(isl69259) sensor_name_to_num(hsc) sensor_name_to_num(nvme)
-		sensor_name_to_num(pch) sensor_name_to_num(mp5990) sensor_name_to_num(isl28022)
-			sensor_name_to_num(pex89000) sensor_name_to_num(tps53689)
-				sensor_name_to_num(xdpe15284) sensor_name_to_num(ltc4282)
-					sensor_name_to_num(fan) sensor_name_to_num(tmp431)
-						sensor_name_to_num(pmic) sensor_name_to_num(ina233)
-							sensor_name_to_num(isl69254)
-								sensor_name_to_num(max16550a)
-									sensor_name_to_num(ina230)
+		sensor_name_to_num(pch) sensor_name_to_num(mp5990) sensor_name_to_num(
+			isl28022) sensor_name_to_num(pex89000) sensor_name_to_num(tps53689)
+			sensor_name_to_num(xdpe15284) sensor_name_to_num(
+				ltc4282) sensor_name_to_num(fan) sensor_name_to_num(tmp431)
+				sensor_name_to_num(pmic) sensor_name_to_num(ina233)
+					sensor_name_to_num(isl69254) sensor_name_to_num(max16550a)
+						sensor_name_to_num(ina230)
+							sensor_name_to_num(raa229621)
 };
 
 const char *const sensor_status_name[] = {
