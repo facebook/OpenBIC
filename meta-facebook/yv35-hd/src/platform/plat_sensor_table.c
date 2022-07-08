@@ -1,11 +1,92 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include "plat_sensor_table.h"
+#include "sensor.h"
+#include "ast_adc.h"
+#include "plat_hook.h"
+#include "pmbus.h"
+#include "plat_i2c.h"
+
+sensor_cfg plat_sensor_config[] = {
+	/* number, type, port, address, offset, access check, arg0, arg1, cache, cache_status, 
+	   pre_sensor_read_fn, pre_sensor_read_args, post_sensor_read_fn, post_sensor_read_fn,
+	   init_arg */
+
+	/* temperature */
+	{ SENSOR_NUM_TEMP_TMP75_IN, sensor_dev_tmp75, I2C_BUS2, TMP75_IN_ADDR, TMP75_TEMP_OFFSET,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  NULL },
+	{ SENSOR_NUM_TEMP_TMP75_OUT, sensor_dev_tmp75, I2C_BUS2, TMP75_OUT_ADDR, TMP75_TEMP_OFFSET,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  NULL },
+	{ SENSOR_NUM_TEMP_TMP75_FIO, sensor_dev_tmp75, I2C_BUS2, TMP75_FIO_ADDR, TMP75_TEMP_OFFSET,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  NULL },
+
+	/* NVME */
+	{ SENSOR_NUM_TEMP_SSD, sensor_dev_nvme, I2C_BUS2, SSD_ADDR, SSD_TEMP_OFFSET, post_access, 0,
+	  0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, pre_nvme_read, &mux_conf_addr_0xe2[1],
+	  NULL, NULL, NULL },
+
+	/* adc voltage */
+	{ SENSOR_NUM_VOL_P12V_STBY, sensor_dev_ast_adc, ADC_PORT0, NONE, NONE, stby_access, 66, 10,
+	  SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &ast_adc_init_args[0] },
+	{ SENSOR_NUM_VOL_PVDD18_S5, sensor_dev_ast_adc, ADC_PORT1, NONE, NONE, dc_access, 1, 1,
+	  SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &ast_adc_init_args[0] },
+	{ SENSOR_NUM_VOL_P3V3_STBY, sensor_dev_ast_adc, ADC_PORT2, NONE, NONE, stby_access, 2, 1,
+	  SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &ast_adc_init_args[0] },
+	{ SENSOR_NUM_VOL_PVDD11_S3, sensor_dev_ast_adc, ADC_PORT3, NONE, NONE, dc_access, 1, 1,
+	  SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &ast_adc_init_args[0] },
+	{ SENSOR_NUM_VOL_P3V_BAT, sensor_dev_ast_adc, ADC_PORT4, NONE, NONE, stby_access, 3, 1,
+	  SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, pre_vol_bat3v_read, NULL,
+	  post_vol_bat3v_read, NULL, &ast_adc_init_args[0] },
+	{ SENSOR_NUM_VOL_PVDD33_S5, sensor_dev_ast_adc, ADC_PORT5, NONE, NONE, dc_access, 2, 1,
+	  SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &ast_adc_init_args[0] },
+	{ SENSOR_NUM_VOL_P5V_STBY, sensor_dev_ast_adc, ADC_PORT14, NONE, NONE, stby_access, 711,
+	  200, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &ast_adc_init_args[0] },
+	{ SENSOR_NUM_VOL_P12V_MEM_1, sensor_dev_ast_adc, ADC_PORT13, NONE, NONE, dc_access, 66, 10,
+	  SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &ast_adc_init_args[0] },
+	{ SENSOR_NUM_VOL_P12V_MEM_0, sensor_dev_ast_adc, ADC_PORT12, NONE, NONE, dc_access, 66, 10,
+	  SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &ast_adc_init_args[0] },
+	{ SENSOR_NUM_VOL_P1V2_STBY, sensor_dev_ast_adc, ADC_PORT10, NONE, NONE, stby_access, 1, 1,
+	  SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &ast_adc_init_args[0] },
+	{ SENSOR_NUM_VOL_P3V3_M2, sensor_dev_ast_adc, ADC_PORT9, NONE, NONE, dc_access, 2, 1,
+	  SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &ast_adc_init_args[0] },
+	{ SENSOR_NUM_VOL_P1V8_STBY, sensor_dev_ast_adc, ADC_PORT8, NONE, NONE, stby_access, 1, 1,
+	  SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &ast_adc_init_args[0] },
+
+	/* HSC */
+	{ SENSOR_NUM_VOL_HSCIN, sensor_dev_adm1278, I2C_BUS5, HSC_ADDR, PMBUS_READ_VIN, stby_access,
+	  0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &adm1278_init_args[0] },
+	{ SENSOR_NUM_CUR_HSCOUT, sensor_dev_adm1278, I2C_BUS5, HSC_ADDR, PMBUS_READ_IOUT,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &adm1278_init_args[0] },
+	{ SENSOR_NUM_PWR_HSCIN, sensor_dev_adm1278, I2C_BUS5, HSC_ADDR, PMBUS_READ_PIN, stby_access,
+	  0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &adm1278_init_args[0] },
+
+};
 
 uint8_t plat_get_config_size()
 {
-	return 0;
+	return ARRAY_SIZE(plat_sensor_config);
 }
 
 void load_sensor_config(void)
 {
-	return;
+	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
+	sensor_config_count = ARRAY_SIZE(plat_sensor_config);
 }
