@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define SENSOR_NUM_PWR_HSCIN 0x61
+
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
 
