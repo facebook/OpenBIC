@@ -136,6 +136,9 @@ sensor_cfg plat_sensor_config[] = {
 	  pre_raa229621_read, &raa229621_pre_read_args[0], NULL, NULL, NULL },
 
 	/* HSC */
+	{ SENSOR_NUM_TEMP_HSC, sensor_dev_nct7718w, I2C_BUS5, TEMP_HSC_ADDR,
+	  NCT7718W_REMOTE_TEMP_MSB_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 	{ SENSOR_NUM_VOL_HSCIN, sensor_dev_adm1278, I2C_BUS5, HSC_ADDR, PMBUS_READ_VIN, stby_access,
 	  0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &adm1278_init_args[0] },

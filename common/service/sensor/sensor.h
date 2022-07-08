@@ -39,6 +39,12 @@ enum ADM1278_OFFSET {
 	ADM1278_EIN_EXT_OFFSET = 0xDC,
 };
 
+enum NCT7718W_OFFSET {
+	NCT7718W_LOCAL_TEMP_OFFSET = 0x00,
+	NCT7718W_REMOTE_TEMP_MSB_OFFSET = 0x01,
+	NCT7718W_REMOTE_TEMP_LSB_OFFSET = 0x10,
+};
+
 enum INA230_OFFSET {
 	INA230_CFG_OFFSET = 0x00,
 	INA230_VSH_VOL_OFFSET = 0x01,
@@ -73,6 +79,7 @@ enum SENSOR_DEV {
 	sensor_dev_ina230 = 0x13,
 	sensor_dev_xdpe12284c = 0x14,
 	sensor_dev_raa229621 = 0x15,
+	sensor_dev_nct7718w = 0x16,
 	sensor_dev_max
 };
 

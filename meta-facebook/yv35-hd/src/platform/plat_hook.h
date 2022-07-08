@@ -1,9 +1,6 @@
 #ifndef PLAT_HOOK_H
 #define PLAT_HOOK_H
 
-#include <stdio.h>
-#include <stdint.h>
-
 typedef struct _raa229621_pre_proc_arg {
 	/* vr page to set */
 	uint8_t vr_page;
