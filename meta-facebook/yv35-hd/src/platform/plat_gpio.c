@@ -1,4 +1,4 @@
-
+#include <stdio.h>
 #include <string.h>
 #include "hal_gpio.h"
 #include "plat_gpio.h"
