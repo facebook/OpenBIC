@@ -30,6 +30,7 @@
 
 #define _4BYTE_ACCURACY_SENSOR_READING_RES_LEN 5
 #define MAX_MULTI_ACCURACY_SENSOR_READING_QUERY_NUM 32
+#define MAX_CONTROL_SENSOR_POLLING_COUNT 10
 
 __weak void OEM_1S_MSG_OUT(ipmi_msg *msg)
 {
@@ -849,6 +850,73 @@ __weak void OEM_1S_GET_SET_GPIO(ipmi_msg *msg)
 	return;
 }
 
+__weak void OEM_1S_CONTROL_SENSOR_POLLING(ipmi_msg *msg)
+{
+	/***************************************************
+	Request:
+	Data 0 - total sensor count to be polling controlled
+	Data 1 - control operation [ 0 is disable, 1 is enable ]
+	Data 2:N - sensor number list to be polling controlled
+	Note: Sensor count should be less than or equal to 10
+
+	Response:
+	Data 0:N - [sensor numer] [status]
+	***************************************************/
+
+	if (msg == NULL) {
+		printf("[%s] input msg is NULL\n", __func__);
+		return;
+	}
+
+	uint8_t total_sensor_count = msg->data[0];
+	uint8_t operation = msg->data[1];
+	if (total_sensor_count > MAX_CONTROL_SENSOR_POLLING_COUNT) {
+		printf("[%s] total sensor count over maximum value, total sensor count: %d, maximum: %d\n",
+		       __func__, total_sensor_count, MAX_CONTROL_SENSOR_POLLING_COUNT);
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		return;
+	}
+
+	if ((operation != DISABLE_SENSOR_POLLING) && (operation != ENABLE_SENSOR_POLLING)) {
+		printf("[%s] input operation is invalid, operation: %d\n", __func__, operation);
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		return;
+	}
+
+	// Data length subtract two bytes (one byte is total sensor count, one byte is operation) should be equal to the input number of sensor number list
+	if ((msg->data_len - 2) != total_sensor_count) {
+		printf("[%s] input data length is invalid, total sensor count: %d, number of sensor list: %d\n",
+		       __func__, total_sensor_count, msg->data_len - 2);
+		msg->completion_code = CC_LENGTH_EXCEEDED;
+		return;
+	}
+
+	uint8_t index = 0, control_sensor_index = 0, return_data_index = 0;
+	uint8_t sensor_number[total_sensor_count];
+	memcpy(&sensor_number[0], &msg->data[2], total_sensor_count);
+	for (index = 0; index < total_sensor_count; ++index) {
+		// Response data is a set of two
+		return_data_index = 2 * index;
+
+		control_sensor_index = sensor_config_index_map[sensor_number[index]];
+		msg->data[return_data_index] = sensor_number[index];
+		if (control_sensor_index != SENSOR_FAIL) {
+			// Enable or Disable sensor polling
+			sensor_config[control_sensor_index].is_enable_polling =
+				((operation == DISABLE_SENSOR_POLLING) ? DISABLE_SENSOR_POLLING :
+									       ENABLE_SENSOR_POLLING);
+			msg->data[return_data_index + 1] =
+				sensor_config[control_sensor_index].is_enable_polling;
+		} else {
+			msg->data[return_data_index + 1] = SENSOR_FAIL;
+		}
+	}
+
+	msg->data_len = 2 * total_sensor_count;
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
 __weak void OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg)
 {
 	if (msg == NULL) {
@@ -1345,6 +1413,9 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 		break;
 	case CMD_OEM_1S_GET_SET_GPIO:
 		OEM_1S_GET_SET_GPIO(msg);
+		break;
+	case CMD_OEM_1S_CONTROL_SENSOR_POLLING:
+		OEM_1S_CONTROL_SENSOR_POLLING(msg);
 		break;
 	case CMD_OEM_1S_I2C_DEV_SCAN: // debug command
 		OEM_1S_I2C_DEV_SCAN(msg);
