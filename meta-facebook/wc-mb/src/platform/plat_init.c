@@ -23,11 +23,44 @@ SCU_CFG scu_cfg[] = {
 	{ 0x7e6e2634, 0x0000007D },
 };
 
+/* port80 bypass signal to GPIOF(postcode led) */
+static void postcode_led_ctl()
+{
+	uint32_t val = 0;
+
+	/* LPC config - set address */
+	val = sys_read32(0x7e789090);
+	sys_write32((val & 0xFFFFFF00) | 0x80, 0x7e789090);
+
+	/* LPC config - enable snoop */
+	val = sys_read32(0x7e789080);
+	sys_write32((val & 0xFFFFFFFE) | 0x1, 0x7e789080);
+
+	/* GPIO config - set GPIOF to output */
+	val = sys_read32(0x7e780024);
+	sys_write32((val & 0xFFFF00FF) | 0xFF00, 0x7e780024);
+
+	/* GPIO config - set GPIOF source #0 */
+	val = sys_read32(0x7e780068);
+	sys_write32((val & 0xFFFFFEFF) | 0x100, 0x7e780068);
+
+	/* GPIO config - set GPIOF source #1 */
+	val = sys_read32(0x7e78006C);
+	sys_write32((val & 0xFFFFFEFF) | 0x0, 0x7e78006C);
+
+	/* Super IO config - set SIOR7_30h to 0x80 */
+	// These configs should set by BIOS
+
+	/* Super IO config - set SIOR7_38h to 0x5(GPIOF) */
+	// These configs should set by BIOS
+}
+
 void pal_pre_init()
 {
 	init_platform_config();
 	disable_PRDY_interrupt();
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
+	postcode_led_ctl();
 }
 
 void pal_post_init()
