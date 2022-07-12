@@ -113,6 +113,8 @@
 #define SENSOR_NUM_TEMP_DPV2_EFUSE 0x94
 #define SENSOR_NUM_PWR_DPV2 0x95
 
+#define POLL_TIME_BAT3V 3600 // sec
+
 uint8_t plat_get_config_size();
 uint8_t pal_get_extend_sensor_config();
 void load_sensor_config(void);

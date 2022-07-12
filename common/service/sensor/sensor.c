@@ -281,6 +281,7 @@ void sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 	uint8_t index = 0, sensor_num = 0;
 	int sensor_poll_interval_ms;
 	int reading;
+
 	k_msleep(1000); // delay 1 second to wait for drivers ready before start sensor polling
 
 	pal_set_sensor_poll_interval(&sensor_poll_interval_ms);
@@ -297,6 +298,14 @@ void sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 				       __func__, sensor_num);
 				continue;
 			}
+
+			if (sensor_config[index].poll_time != POLL_TIME_DEFAULT) {
+				if (pal_is_time_to_poll(sensor_num,
+							sensor_config[index].poll_time) == false) {
+					continue;
+				}
+			}
+
 			get_sensor_reading(sensor_num, &reading, GET_FROM_SENSOR);
 
 			k_yield();
@@ -306,6 +315,11 @@ void sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 
 		k_msleep(sensor_poll_interval_ms);
 	}
+}
+
+__weak bool pal_is_time_to_poll(uint8_t sensor_num, int poll_time)
+{
+	return true;
 }
 
 __weak void pal_set_sensor_poll_interval(int *interval_ms)
