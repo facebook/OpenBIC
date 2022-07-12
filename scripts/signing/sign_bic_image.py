@@ -16,20 +16,33 @@ stage_map = {
 
 # Supported boards for each platform.
 valid_projects = {
-    "yv35": {"cl", "bb", },
     "gt": {"cc", }
+    "wf": {"mb", }
+    "yv3": {"dl", }
+    "yv35": {"cl", "bb", "rf", "hd", },
 }
 
 # Numeric encoding of boards.
 board_map = {
+    # GT
+    "cc": "00001",
+    # WF
+    "wf": "00001",
+    # Yv3
+    "dl": "00001",
+    # Yv3.5
     "cl": "00001",
     "bb": "00010",
+    "rf": "00011",
+    "hd": "00100",
 }
 
 # Mapping between short and full project names.
 project_name_mapping = {
+    "gt": "Grand Teton",
+    "wf": "Waimea Canyon",
+    "yv3": "Yosemite V3",
     "yv35": "Yosemite V3.5",
-    "gt": "Grand Teton"
 }
 
 

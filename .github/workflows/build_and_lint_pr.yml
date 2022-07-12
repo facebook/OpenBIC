@@ -21,8 +21,11 @@ jobs:
         # Add platforms in alphabetical order.
         platform: [
           gt-cc,
+          wf-mb,
+          yv3-dl,
           yv35-bb, 
           yv35-cl, 
+          yv35-hd,
           yv35-rf,
         ]
         # Need to set this to false otherwise it will cancel all platform builds if one fails.
