@@ -19,6 +19,9 @@
 #define REG_GPIO_BASE 0x7e780000
 #define REG_SCU 0x7E6E2000
 
+/* According to IPMI specification Table 43, length of sensor name maximum is 16 bytes. */
+#define MAX_SENSOR_NAME_LENGTH 17 // 16 bytes sensor name and 1 byte null character
+
 int num_of_pin_in_one_group_lst[NUM_OF_GROUP] = { 32, 32, 32, 32, 32, 16 };
 char GPIO_GROUP_NAME_LST[NUM_OF_GROUP][10] = { "GPIO0_A_D", "GPIO0_E_H", "GPIO0_I_L",
 					       "GPIO0_M_P", "GPIO0_Q_T", "GPIO0_U_V" };
