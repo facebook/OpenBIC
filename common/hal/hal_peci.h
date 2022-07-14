@@ -3,6 +3,16 @@
 
 #define DEBUG_PECI 0
 
+/* Completion Code mask to check retry needs */
+#define PECI_DEV_CC_RETRY_CHECK_MASK 0xf0
+#define PECI_DEV_CC_NEED_RETRY 0x80
+#define IS_PECI_CC_NEED_RETRY(cc)                                                                  \
+	(((cc)&PECI_DEV_CC_RETRY_CHECK_MASK) == PECI_DEV_CC_NEED_RETRY) ? true : false
+#define PECI_DEV_RETRY_BIT 0x01
+#define PECI_DEV_RETRY_TIMEOUT 700 // ms
+#define PECI_DEV_RETRY_INTERVAL_MAX_MSEC 100
+#define PECI_DEV_RETRY_INTERVAL_MIN_MSEC 1
+
 enum peci_cmd {
 	PECI_PING_CMD = 0x00,
 	PECI_GET_TEMP0_CMD = 0x01,
