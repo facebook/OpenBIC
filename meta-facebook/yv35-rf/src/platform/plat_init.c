@@ -19,8 +19,6 @@ void pal_set_sys_status()
 
 void pal_post_init()
 {
-	gpio_set(SPI_RST_FLASH_N, GPIO_HIGH);
-
 	k_usleep(100);
 
 	gpio_set(ASIC_DEV_RST_N, GPIO_HIGH);
