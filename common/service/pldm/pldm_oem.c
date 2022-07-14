@@ -43,12 +43,12 @@ static uint8_t cmd_echo(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *re
 	struct _cmd_echo_resp *resp_p = (struct _cmd_echo_resp *)resp;
 
 	if (check_iana(req_p->iana) == PLDM_ERROR) {
-		resp_p->completion_code = PLDM_BASE_CODES_ERROR_INVALID_DATA;
+		resp_p->completion_code = PLDM_ERROR_INVALID_DATA;
 		return PLDM_SUCCESS;
 	}
 
 	set_iana(resp_p->iana, sizeof(resp_p->iana));
-	resp_p->completion_code = PLDM_BASE_CODES_SUCCESS;
+	resp_p->completion_code = PLDM_SUCCESS;
 	memcpy(&resp_p->first_data, &req_p->first_data, len);
 	*resp_len = len + 1;
 	return PLDM_SUCCESS;
@@ -65,7 +65,7 @@ static uint8_t ipmi_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *re
 	if (len < (sizeof(*req_p) - 1)) {
 		LOG_WRN("request len %d is invalid", len);
 		struct _ipmi_cmd_resp *resp_p = (struct _ipmi_cmd_resp *)resp;
-		resp_p->completion_code = PLDM_BASE_CODES_ERROR_INVALID_LENGTH;
+		resp_p->completion_code = PLDM_ERROR_INVALID_LENGTH;
 		set_iana(resp_p->iana, sizeof(resp_p->iana));
 
 		*resp_len += sizeof(resp_p->iana);
@@ -76,7 +76,7 @@ static uint8_t ipmi_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *re
 	if (check_iana(req_p->iana) == PLDM_ERROR) {
 		LOG_WRN("iana %08x is uncorret", (uint32_t)req_p->iana);
 		struct _ipmi_cmd_resp *resp_p = (struct _ipmi_cmd_resp *)resp;
-		resp_p->completion_code = PLDM_BASE_CODES_ERROR_INVALID_DATA;
+		resp_p->completion_code = PLDM_ERROR_INVALID_DATA;
 		set_iana(resp_p->iana, sizeof(resp_p->iana));
 		return PLDM_SUCCESS;
 	}

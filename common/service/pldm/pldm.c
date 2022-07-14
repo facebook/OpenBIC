@@ -39,8 +39,11 @@ typedef struct _pldm_recv_resp_arg {
 	uint16_t return_len;
 } pldm_recv_resp_arg;
 
-static struct _pldm_handler_query_entry query_tbl[] = { { PLDM_TYPE_BASE, pldm_base_handler_query },
-							{ PLDM_TYPE_OEM, pldm_oem_handler_query } };
+static struct _pldm_handler_query_entry query_tbl[] = {
+	{ PLDM_TYPE_BASE, pldm_base_handler_query },
+	{ PLDM_TYPE_PLAT_MON_CTRL, pldm_monitor_handler_query },
+	{ PLDM_TYPE_OEM, pldm_oem_handler_query },
+};
 
 static K_MUTEX_DEFINE(wait_recv_resp_mutex);
 
@@ -260,7 +263,7 @@ uint8_t mctp_pldm_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext
 	}
 
 	if (!handler_query) {
-		*comp = PLDM_BASE_CODES_ERROR_UNSUPPORT_PLDM_TYPE;
+		*comp = PLDM_ERROR_UNSUPPORTED_PLDM_CMD;
 		goto send_msg;
 	}
 
@@ -268,7 +271,7 @@ uint8_t mctp_pldm_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext
 	/* found the proper cmd handler in the pldm_type_cmd table */
 	rc = handler_query(hdr->cmd, (void **)&handler);
 	if (rc == PLDM_ERROR || !handler) {
-		*comp = PLDM_BASE_CODES_ERROR_UNSUPPORT_PLDM_CMD;
+		*comp = PLDM_ERROR_UNSUPPORTED_PLDM_CMD;
 		goto send_msg;
 	}
 

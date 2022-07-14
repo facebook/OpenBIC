@@ -8,26 +8,9 @@ extern "C" {
 #include "mctp.h"
 #include "pldm_base.h"
 #include "pldm_oem.h"
-#include <stdint.h>
-#include <sys/printk.h>
-#include <zephyr.h>
-
-#define PLDM_DEBUG 1
-
-#define PLDM_SUCCESS 0
-#define PLDM_ERROR 1
-#define PLDM_LATER_RESP 2
+#include "pldm_monitor.h"
 
 #define MONITOR_THREAD_STACK_SIZE 1024
-
-/* generic pldm completion codes  */
-#define PLDM_BASE_CODES_SUCCESS 0x00
-#define PLDM_BASE_CODES_ERROR 0x01
-#define PLDM_BASE_CODES_ERROR_INVALID_DATA 0x02
-#define PLDM_BASE_CODES_ERROR_INVALID_LENGTH 0x03
-#define PLDM_BASE_CODES_ERROR_NOT_READY 0x04
-#define PLDM_BASE_CODES_ERROR_UNSUPPORT_PLDM_CMD 0x05
-#define PLDM_BASE_CODES_ERROR_UNSUPPORT_PLDM_TYPE 0x20
 
 #define PLDM_MAX_DATA_SIZE 256
 

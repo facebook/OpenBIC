@@ -17,6 +17,19 @@ extern "C" {
 
 #define DEFAULT_TID 0x86
 
+enum pldm_completion_codes {
+	PLDM_SUCCESS = 0x00,
+	PLDM_ERROR = 0x01,
+	PLDM_ERROR_INVALID_DATA = 0x02,
+	PLDM_ERROR_INVALID_LENGTH = 0x03,
+	PLDM_ERROR_NOT_READY = 0x04,
+	PLDM_ERROR_UNSUPPORTED_PLDM_CMD = 0x05,
+	PLDM_ERROR_INVALID_PLDM_TYPE = 0x20,
+	PLDM_INVALID_TRANSFER_OPERATION_FLAG = 0x21,
+	/* Use reserved region for oem define */
+	PLDM_LATER_RESP = 0x30,
+};
+
 struct _set_tid_req {
 	uint8_t tid;
 } __attribute__((packed));
