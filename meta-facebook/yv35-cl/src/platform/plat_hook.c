@@ -7,11 +7,14 @@
 #include "plat_gpio.h"
 #include "plat_hook.h"
 #include "plat_sensor_table.h"
+#include "pmbus.h"
 
 #include "i2c-mux-tca9548.h"
 
 #define ADJUST_ADM1278_POWER(x) (x * 0.98)
 #define ADJUST_ADM1278_CURRENT(x) ((x * 0.98) + 0.1)
+#define ADJUST_LTC4286_POWER(x) ((x * 0.97) - 8)
+#define ADJUST_LTC4286_CURRENT(x) ((x * 0.97) - 0.4)
 
 /**************************************************************************************************
  * INIT ARGS
@@ -24,6 +27,10 @@ adm1278_init_arg adm1278_init_args[] = {
 mp5990_init_arg mp5990_init_args[] = {
 	[0] = { .is_init = false, .iout_cal_gain = 0x0104, .iout_oc_fault_limit = 0x0028 },
 	[1] = { .is_init = false, .iout_cal_gain = 0x01BF, .iout_oc_fault_limit = 0x0046 }
+};
+ltc4286_init_arg ltc4286_init_args[] = {
+	[0] = { .is_init = false, .r_sense_mohm = 0.25, .mfr_config_1 = { 0x1570 } },
+	[1] = { .is_init = false, .r_sense_mohm = 0.25, .mfr_config_1 = { 0x3570 } }
 };
 
 pmic_init_arg pmic_init_args[] = {
@@ -314,6 +321,49 @@ bool post_adm1278_current_read(uint8_t sensor_num, void *args, int *reading)
 	float val = (float)sval->integer + (sval->fraction / 1000.0);
 
 	val = ADJUST_ADM1278_CURRENT(val);
+	sval->integer = (int)val & 0xFFFF;
+	sval->fraction = (val - sval->integer) * 1000;
+	return true;
+}
+
+/* LTC4286 post read function
+ *
+ * modify LTC4286 current and power value after reading
+ *
+ * @param sensor_num sensor number
+ * @param args pointer to NULL
+ * @param reading pointer to reading from previous step
+ * @retval true if no error
+ * @retval false if reading get NULL or the offset is unknown
+ */
+bool post_ltc4286_read(uint8_t sensor_num, void *args, int *reading)
+{
+	if (!reading) {
+		return false;
+	}
+	ARG_UNUSED(args);
+
+	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+
+	sensor_val *sval = (sensor_val *)reading;
+	float val = (float)sval->integer + (sval->fraction / 1000.0);
+
+	switch (cfg->offset) {
+	case PMBUS_READ_VIN:
+	case PMBUS_READ_VOUT:
+	case PMBUS_READ_TEMPERATURE_1:
+		return true;
+	case PMBUS_READ_IOUT:
+		val = ADJUST_LTC4286_CURRENT(val);
+		break;
+	case PMBUS_READ_PIN:
+		val = ADJUST_LTC4286_POWER(val);
+		break;
+	default:
+		printf("[%s] Unknown register(0x%x)\n", __func__, cfg->offset);
+		return false;
+	}
+
 	sval->integer = (int)val & 0xFFFF;
 	sval->fraction = (val - sval->integer) * 1000;
 	return true;

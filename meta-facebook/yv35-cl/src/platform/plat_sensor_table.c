@@ -242,6 +242,24 @@ sensor_cfg adm1278_sensor_config_table[] = {
 	  SENSOR_INIT_STATUS, NULL, NULL, post_adm1278_power_read, NULL, &adm1278_init_args[0] },
 };
 
+sensor_cfg ltc4286_sensor_config_table[] = {
+	/* number,                  type,       port,      address,      offset,
+	   access check arg0, arg1, sample_count, cache, cache_status, mux_address, mux_offset,
+	   pre_sensor_read_fn, pre_sensor_read_args, post_sensor_read_fn, post_sensor_read_fn  */
+	{ SENSOR_NUM_TEMP_HSC, sensor_dev_ltc4286, I2C_BUS2, ADI_LTC4286_ADDR,
+	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS,
+	  NULL, NULL, NULL, NULL, &ltc4286_init_args[0] },
+	{ SENSOR_NUM_VOL_HSCIN, sensor_dev_ltc4286, I2C_BUS2, ADI_LTC4286_ADDR, PMBUS_READ_VIN,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &ltc4286_init_args[0] },
+	{ SENSOR_NUM_CUR_HSCOUT, sensor_dev_ltc4286, I2C_BUS2, ADI_LTC4286_ADDR, PMBUS_READ_IOUT,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL,
+	  post_ltc4286_read, NULL, &ltc4286_init_args[0] },
+	{ SENSOR_NUM_PWR_HSCIN, sensor_dev_ltc4286, I2C_BUS2, ADI_LTC4286_ADDR, PMBUS_READ_PIN,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, 0, SENSOR_INIT_STATUS, NULL, NULL,
+	  post_ltc4286_read, NULL, &ltc4286_init_args[0] },
+};
+
 sensor_cfg evt3_class1_adi_temperature_sensor_table[] = {
 	{ SENSOR_NUM_TEMP_TMP75_OUT, sensor_dev_tmp431, I2C_BUS2, TMP431_ADDR,
 	  TMP431_LOCAL_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
@@ -295,11 +313,12 @@ uint8_t pal_get_extend_sensor_config()
 	case HSC_MODULE_MP5990:
 		extend_sensor_config_size += ARRAY_SIZE(mp5990_sensor_config_table);
 		break;
-	case HSC_MODULE_LTC4282:
 	case HSC_MODULE_LTC4286:
+		extend_sensor_config_size += ARRAY_SIZE(ltc4286_sensor_config_table);
+		break;
+	case HSC_MODULE_LTC4282:
 	default:
-		printf("[%s] not support on this hsc module, hsc module: 0x%x\n", __func__,
-		       hsc_module);
+		printf("[%s] unsupported HSC module, HSC module: 0x%x\n", __func__, hsc_module);
 		break;
 	}
 
@@ -381,7 +400,25 @@ void pal_extend_sensor_config()
 		}
 	}
 
+	/* Follow the hardware design,
+	 * the GPIOA7(HSC_SET_EN_R) should be set to "H"
+	 * and the 2OU configuration is set if the 2OU is present.
+	 */
 	CARD_STATUS _2ou_status = get_2ou_status();
+
+	int arg_index = (_2ou_status.present) ? 1 : 0;
+	int gpio_state = (_2ou_status.present) ? GPIO_HIGH : GPIO_LOW;
+
+	sensor_count = ARRAY_SIZE(mp5990_sensor_config_table);
+	for (int index = 0; index < sensor_count; index++) {
+		mp5990_sensor_config_table[index].init_args = &mp5990_init_args[arg_index];
+	}
+	sensor_count = ARRAY_SIZE(ltc4286_sensor_config_table);
+	for (int index = 0; index < sensor_count; index++) {
+		ltc4286_sensor_config_table[index].init_args = &ltc4286_init_args[arg_index];
+	}
+	gpio_set(HSC_SET_EN_R, gpio_state);
+
 	switch (hsc_module) {
 	case HSC_MODULE_ADM1278:
 		sensor_count = ARRAY_SIZE(adm1278_sensor_config_table);
@@ -392,37 +429,24 @@ void pal_extend_sensor_config()
 	case HSC_MODULE_MP5990:
 		sensor_count = ARRAY_SIZE(mp5990_sensor_config_table);
 		for (int index = 0; index < sensor_count; index++) {
-			if (_2ou_status.present) {
-				/* For the class type 1 and 2OU system,
-        * set the IMON based total over current fault limit to 70A(0x0046),
-        * set the gain for output current reporting to 0x01BF following the power team's experiment
-        * and set GPIOA7(HSC_SET_EN_R) to high.
-        */
-				mp5990_sensor_config_table[index].init_args = &mp5990_init_args[1];
-				gpio_set(HSC_SET_EN_R, GPIO_HIGH);
-			} else {
-				/* For the class type 1 and 2OU system,
-        * set the IMON based total over current fault limit to 40A(0x0028),
-        * set the gain for output current reporting to 0x0104 following the power team's experiment
-        * and set GPIOA7(HSC_SET_EN_R) to low.
-        */
-				mp5990_sensor_config_table[index].init_args = &mp5990_init_args[0];
-				gpio_set(HSC_SET_EN_R, GPIO_LOW);
-			}
 			add_sensor_config(mp5990_sensor_config_table[index]);
 		}
 		break;
-	case HSC_MODULE_LTC4282:
 	case HSC_MODULE_LTC4286:
+		sensor_count = ARRAY_SIZE(ltc4286_sensor_config_table);
+		for (int index = 0; index < sensor_count; index++) {
+			add_sensor_config(ltc4286_sensor_config_table[index]);
+		}
+		break;
+	case HSC_MODULE_LTC4282:
 	default:
-		printf("[%s] not support on this hsc module, hsc module: 0x%x\n", __func__,
-		       hsc_module);
+		printf("[%s] unsupported HSC module, HSC module: 0x%x\n", __func__, hsc_module);
 		break;
 	}
 	if (get_board_revision() == SYS_BOARD_EVT3_HOTSWAP) {
 		/* Replace the temperature sensors configuration including "HSC Temp" and "MB Outlet Temp."
-    * For these two sensors, the reading values are read from TMP431 chip.data.num
-    */
+		 * For these two sensors, the reading values are read from TMP431 chip.data.num
+		 */
 		sensor_count = ARRAY_SIZE(evt3_class1_adi_temperature_sensor_table);
 		for (int index = 0; index < sensor_count; index++) {
 			add_sensor_config(evt3_class1_adi_temperature_sensor_table[index]);
