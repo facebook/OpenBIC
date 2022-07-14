@@ -912,7 +912,7 @@ __weak void OEM_1S_CONTROL_SENSOR_POLLING(ipmi_msg *msg)
 			// Enable or Disable sensor polling
 			sensor_config[control_sensor_index].is_enable_polling =
 				((operation == DISABLE_SENSOR_POLLING) ? DISABLE_SENSOR_POLLING :
-									 ENABLE_SENSOR_POLLING);
+									       ENABLE_SENSOR_POLLING);
 			msg->data[return_data_index + 1] =
 				sensor_config[control_sensor_index].is_enable_polling;
 		} else {

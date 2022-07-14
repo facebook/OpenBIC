@@ -18,8 +18,8 @@ uint8_t set_tid(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp, uint
 	struct _set_tid_resp *resp_p = (struct _set_tid_resp *)resp;
 
 	*resp_len = 1;
-	resp_p->completion_code = (sizeof(*req_p) != len) ? PLDM_BASE_CODES_ERROR_INVALID_LENGTH :
-								  PLDM_BASE_CODES_SUCCESS;
+	resp_p->completion_code =
+		(sizeof(*req_p) != len) ? PLDM_ERROR_INVALID_LENGTH : PLDM_SUCCESS;
 	return PLDM_SUCCESS;
 }
 
@@ -30,7 +30,7 @@ uint8_t get_tid(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp, uint
 		return PLDM_ERROR;
 
 	struct _get_tid_resp *p = (struct _get_tid_resp *)resp;
-	p->completion_code = PLDM_BASE_CODES_SUCCESS;
+	p->completion_code = PLDM_SUCCESS;
 	p->tid = DEFAULT_TID;
 	*resp_len = sizeof(*p);
 	return PLDM_SUCCESS;
