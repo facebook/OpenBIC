@@ -95,6 +95,7 @@ jobs:
 
     - name: Update West Project
       run: |
+        ls
         cd OpenBIC 
         west update
  

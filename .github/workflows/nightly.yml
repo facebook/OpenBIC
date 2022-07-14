@@ -1,32 +1,11 @@
 name: Nightly Regression Build
 
 on:
-  schedule:
-      - cron: '0 0 * * *' # Once per day at midnight
+  pull_request:   # Kick off this on every PR
 
 jobs:
-  # This will skip the nightly if there are no new commits since the previous nightly.
-  # Might as well save some electrons on the weekend.
-  check_date:
-    runs-on: ubuntu-latest
-    name: Check latest commit
-    outputs:
-      should_run: ${{ steps.should_run.outputs.should_run }}
-    steps:
-      - uses: actions/checkout@v2
-      - name: print latest_commit
-        run: echo ${{ github.sha }}
-
-      - id: should_run
-        continue-on-error: true
-        name: check latest commit is less than a day
-        if: ${{ github.event_name == 'schedule' }}
-        run: test -z $(git rev-list  --after="24 hours"  ${{ github.sha }}) && echo "::set-output name=should_run::false"
-
   # Only kick off the nightly when there are changes.
   kickoff_nightly:
-    needs: check_date
-    if: ${{ needs.check_date.outputs.should_run != 'false' }}
     name: kickoff nightly
     uses: facebook/OpenBIC/.github/workflows/build_and_lint_pr.yml@main
     with:
