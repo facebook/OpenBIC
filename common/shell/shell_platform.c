@@ -496,6 +496,37 @@ static void cmd_sensor_cfg_get(const struct shell *shell, size_t argc, char **ar
 	sensor_access(shell, sen_num, SENSOR_READ);
 }
 
+static void cmd_control_sensor_polling(const struct shell *shell, size_t argc, char **argv)
+{
+	if (argc != 3) {
+		shell_warn(shell, "[%s]: input parameter count is invalid", __func__);
+		return;
+	}
+
+	uint8_t sensor_num = strtol(argv[1], NULL, 16);
+	uint8_t operation = strtol(argv[2], NULL, 16);
+	int sensor_index = sensor_get_idx_by_sensor_num(sensor_num);
+	if (sensor_index == -1) {
+		shell_warn(
+			shell,
+			"[%s]: can't find sensor number in sensor config table, sensor number: 0x%x",
+			__func__, sensor_num);
+		return;
+	}
+
+	if ((operation != DISABLE_SENSOR_POLLING) && (operation != ENABLE_SENSOR_POLLING)) {
+		shell_warn(shell, "[%s]: operation is invalid, operation: %d", __func__, operation);
+		return;
+	}
+
+	sensor_config[sensor_index].is_enable_polling =
+		((operation == DISABLE_SENSOR_POLLING) ? DISABLE_SENSOR_POLLING :
+							       ENABLE_SENSOR_POLLING);
+	shell_print(shell, "Sensor number 0x%x %s sensor polling success", sensor_num,
+		    ((operation == DISABLE_SENSOR_POLLING) ? "disable" : "enable"));
+	return;
+}
+
 /*********************************************************************************************************
  * COMMAND DECLARE SECTION
 **********************************************************************************************************/
@@ -539,6 +570,9 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_sensor_cmds,
 			       SHELL_CMD(list_all, NULL, "List all SENSOR config.",
 					 cmd_sensor_cfg_list_all),
 			       SHELL_CMD(get, NULL, "Get SENSOR config", cmd_sensor_cfg_get),
+			       SHELL_CMD(control_sensor_polling, NULL,
+					 "Enable/Disable sensor polling",
+					 cmd_control_sensor_polling),
 			       SHELL_SUBCMD_SET_END);
 
 /* MAIN command */

@@ -85,6 +85,11 @@ enum SENSOR_DEV {
 	sensor_dev_max
 };
 
+enum CONTROL_SENSOR_POLLING_OPTION {
+	DISABLE_SENSOR_POLLING = false,
+	ENABLE_SENSOR_POLLING = true,
+};
+
 typedef struct _sensor_val {
 	int16_t integer;
 	int16_t fraction;
@@ -148,6 +153,7 @@ typedef struct _sensor_cfg__ {
 	int arg1;
 	int sample_count;
 	int64_t poll_time; // sec
+	bool is_enable_polling;
 	int cache;
 	uint8_t cache_status;
 	bool (*pre_sensor_read_hook)(uint8_t, void *);

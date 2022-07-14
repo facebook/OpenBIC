@@ -293,6 +293,15 @@ void sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 			if (sensor_poll_enable_flag == false) { /* skip if disable sensor poll */
 				break;
 			}
+
+			// Check whether monitoring sensor is enabled
+			sensor_cfg *config = &sensor_config[sensor_config_index_map[sensor_num]];
+			if (config->is_enable_polling == DISABLE_SENSOR_POLLING) {
+				config->cache = SENSOR_FAIL;
+				config->cache_status = SENSOR_POLLING_DISABLE;
+				continue;
+			}
+
 			if (sdr_index_map[sensor_num] == SENSOR_NULL) { // Check sensor info
 				printf("[%s] fail to find sensor SDR info, sensor number: 0x%x\n",
 				       __func__, sensor_num);
