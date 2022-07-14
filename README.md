@@ -89,6 +89,20 @@ touch meta-facebook/yv35-cl/CMakeLists.txt
 west build -p auto -b ast1030_evb meta-facebook/yv35-cl/
 ```
 
+## Contributing
+
+### Git Hooks
+
+This repository uses clang-format to format all c code.
+Getting code merged requires that it conforms to the clang-format style file.
+
+The easiest way to do this is to copy the git pre-commit hook from the scripts directory so that the code
+is automatically formatted whenever code is added to a commit.
+
+```
+cp scripts/hooks/pre-commit .git/hooks/
+```
+
 ## License
 
 OpenBIC is [Apache 2.0 licensed](https://github.com/facebookincubator/OpenBIC/blob/main/LICENSE)

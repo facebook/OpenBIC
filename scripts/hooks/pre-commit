@@ -1,0 +1,48 @@
+#!/bin/sh
+
+ERROR=false
+
+for FILE in $(git diff --cached --name-only)
+do
+	if [[ "$FILE" =~ \.(c|h|cpp|cc)$ ]]; then
+		echo "Checking $FILE"
+		clang-format --dry-run --Werror --style=file $FILE > /dev/null 2>&1
+		if [ $? = "1" ] ; then
+			ERROR=true
+		fi
+		clang-format -i --style=file $FILE	
+	fi
+done
+
+if [ $ERROR = true ] ; then
+
+	cat << 'EOF'
+
+ /$$$$$$$$ /$$$$$$  /$$$$$$$  /$$      /$$  /$$$$$$  /$$$$$$$$
+| $$_____//$$__  $$| $$__  $$| $$$    /$$$ /$$__  $$|__  $$__/
+| $$     | $$  \ $$| $$  \ $$| $$$$  /$$$$| $$  \ $$   | $$
+| $$$$$  | $$  | $$| $$$$$$$/| $$ $$/$$ $$| $$$$$$$$   | $$
+| $$__/  | $$  | $$| $$__  $$| $$  $$$| $$| $$__  $$   | $$
+| $$     | $$  | $$| $$  \ $$| $$\  $ | $$| $$  | $$   | $$
+| $$     |  $$$$$$/| $$  | $$| $$ \/  | $$| $$  | $$   | $$
+|__/      \______/ |__/  |__/|__/     |__/|__/  |__/   |__/
+
+
+
+ /$$$$$$$$ /$$$$$$$  /$$$$$$$   /$$$$$$  /$$$$$$$
+| $$_____/| $$__  $$| $$__  $$ /$$__  $$| $$__  $$
+| $$      | $$  \ $$| $$  \ $$| $$  \ $$| $$  \ $$
+| $$$$$   | $$$$$$$/| $$$$$$$/| $$  | $$| $$$$$$$/
+| $$__/   | $$__  $$| $$__  $$| $$  | $$| $$__  $$
+| $$      | $$  \ $$| $$  \ $$| $$  | $$| $$  \ $$
+| $$$$$$$$| $$  | $$| $$  | $$|  $$$$$$/| $$  | $$
+|________/|__/  |__/|__/  |__/ \______/ |__/  |__/
+
+Clang-Format errors were found in the code being commited.
+This pre-commit hook has automatically fixed the formatting errors.
+
+Please "git add" the files that have been formatted and attempt to commit them again.
+
+EOF
+	exit 1
+fi
