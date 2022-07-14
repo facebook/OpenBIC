@@ -100,3 +100,8 @@ void load_sensor_config(void)
 	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
 	sensor_config_count = ARRAY_SIZE(plat_sensor_config);
 }
+
+uint8_t get_hsc_pwr_reading(int *reading)
+{
+	return get_sensor_reading(SENSOR_NUM_PWR_HSCIN, reading, GET_FROM_CACHE);
+}
