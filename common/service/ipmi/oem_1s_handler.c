@@ -1382,6 +1382,29 @@ __weak void OEM_1S_MULTI_ACCURACY_SENSOR_READING(ipmi_msg *msg)
 	msg->completion_code = CC_SUCCESS;
 }
 
+__weak void OEM_1S_CLEAR_CMOS(ipmi_msg *msg)
+{
+	if (msg == NULL) {
+		return;
+	}
+
+	if (msg->data_len != 0) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	int ret = pal_clear_cmos();
+
+	if (ret < 0) {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	msg->data_len = 0;
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
 __weak void OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT(ipmi_msg *msg)
 {
 	return;
@@ -1448,6 +1471,9 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 		break;
 	case CMD_OEM_1S_WRITE_BIC_REGISTER:
 		OEM_1S_WRITE_BIC_REGISTER(msg);
+		break;
+	case CMD_OEM_1S_CLEAR_CMOS:
+		OEM_1S_CLEAR_CMOS(msg);
 		break;
 #ifdef CONFIG_IPMI_KCS_ASPEED
 	case CMD_OEM_1S_GET_POST_CODE:

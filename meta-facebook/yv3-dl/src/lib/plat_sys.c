@@ -19,3 +19,17 @@ int pal_submit_bmc_cold_reset()
 	return 0;
 }
 /* BMC reset */
+
+void clear_cmos_handler()
+{
+	gpio_set(FM_BIC_RST_RTCRST, GPIO_HIGH);
+	k_msleep(200);
+	gpio_set(FM_BIC_RST_RTCRST, GPIO_LOW);
+}
+
+K_WORK_DEFINE(clear_cmos_work, clear_cmos_handler);
+int pal_clear_cmos()
+{
+	k_work_submit(&clear_cmos_work);
+	return 0;
+}

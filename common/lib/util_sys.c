@@ -81,6 +81,11 @@ __weak int pal_submit_12v_cycle_slot()
 	return NOT_SUPPORT_12V_CYCLE_SLOT;
 }
 
+__weak int pal_clear_cmos()
+{
+	return -1;
+}
+
 /* The byte-2 of ME response for "Get Self-Test Result" command */
 enum GET_SELF_TEST_RESULT_RESPONSE {
 	NO_ERROR = 0x55,
