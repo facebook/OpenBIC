@@ -70,7 +70,8 @@ __weak void OEM_1S_MSG_OUT(ipmi_msg *msg)
 	}
 
 	// Bridge to invalid or disabled interface
-	if ((IPMB_config_table[IPMB_inf_index_map[target_IF]].interface == RESERVED_IF) ||
+	if ((IPMB_inf_index_map[target_IF] == RESERVED) ||
+	    (IPMB_config_table[IPMB_inf_index_map[target_IF]].interface == RESERVED_IF) ||
 	    (IPMB_config_table[IPMB_inf_index_map[target_IF]].enable_status == DISABLE)) {
 		printf("OEM_MSG_OUT: Invalid bridge interface: %x\n", target_IF);
 		msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
@@ -321,6 +322,13 @@ __weak void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		break;
 #if MAX_IPMB_IDX
 	case COMPNT_ME:
+		if ((IPMB_inf_index_map[ME_IPMB] == RESERVED) ||
+		    (IPMB_config_table[IPMB_inf_index_map[ME_IPMB]].enable_status == DISABLE)) {
+			printf("[%s] IPMB ME interface not enabled.\n", __func__);
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+
 		bridge_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
 		if (bridge_msg == NULL) {
 			msg->completion_code = CC_OUT_OF_SPACE;
@@ -904,7 +912,7 @@ __weak void OEM_1S_CONTROL_SENSOR_POLLING(ipmi_msg *msg)
 			// Enable or Disable sensor polling
 			sensor_config[control_sensor_index].is_enable_polling =
 				((operation == DISABLE_SENSOR_POLLING) ? DISABLE_SENSOR_POLLING :
-									       ENABLE_SENSOR_POLLING);
+									 ENABLE_SENSOR_POLLING);
 			msg->data[return_data_index + 1] =
 				sensor_config[control_sensor_index].is_enable_polling;
 		} else {
