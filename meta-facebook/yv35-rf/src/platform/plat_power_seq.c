@@ -110,7 +110,7 @@ int check_power_stage(uint8_t check_mode, uint8_t check_seq)
 
 		sel_msg.InF_target = CL_BIC_IPMB;
 		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_OEM_C3;
-		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
+		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		sel_msg.sensor_number = SENSOR_NUM_POWER_ERROR;
 		sel_msg.event_data1 =
 			((check_mode == ENABLE_POWER_MODE) ? IPMI_OEM_EVENT_OFFSET_EXP_PWRON_FAIL :

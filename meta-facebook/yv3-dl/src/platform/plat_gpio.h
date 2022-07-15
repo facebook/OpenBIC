@@ -242,4 +242,8 @@ extern const char *const gpio_name[];
 
 void enable_PRDY_interrupt();
 void disable_PRDY_interrupt();
+void enable_UV_detect_interrupt();
+void disable_UV_detect_interrupt();
+void enable_SYS_Throttle_interrupt();
+void disable_SYS_Throttle_interrupt();
 #endif

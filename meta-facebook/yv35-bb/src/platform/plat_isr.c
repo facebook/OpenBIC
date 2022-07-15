@@ -75,7 +75,7 @@ void ISR_SLOT1_PRESENT()
 
 	sel_msg->InF_target = SLOT3_BIC;
 	sel_msg->sensor_type = IPMI_OEM_SENSOR_TYPE_OEM;
-	sel_msg->event_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
+	sel_msg->event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 	sel_msg->sensor_number = CMD_OEM_CABLE_DETECTION;
 	sel_msg->event_data2 = 0xFF;
 	sel_msg->event_data3 = 0xFF;
@@ -121,7 +121,7 @@ void ISR_SLOT3_PRESENT()
 
 	sel_msg->InF_target = SLOT1_BIC;
 	sel_msg->sensor_type = IPMI_OEM_SENSOR_TYPE_OEM;
-	sel_msg->event_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
+	sel_msg->event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 	sel_msg->sensor_number = CMD_OEM_CABLE_DETECTION;
 	sel_msg->event_data2 = 0xFF;
 	sel_msg->event_data3 = 0xFF;

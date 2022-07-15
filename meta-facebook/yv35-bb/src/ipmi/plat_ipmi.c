@@ -31,7 +31,7 @@ void OEM_CABLE_DETECTION(ipmi_msg *msg)
 	}
 
 	sel_msg->sensor_type = IPMI_OEM_SENSOR_TYPE_OEM;
-	sel_msg->event_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
+	sel_msg->event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 	sel_msg->sensor_number = CMD_OEM_CABLE_DETECTION;
 	sel_msg->event_data2 = 0xFF;
 	sel_msg->event_data3 = 0xFF;
@@ -95,7 +95,7 @@ void OEM_1S_INFORM_PEER_SLED_CYCLE(ipmi_msg *msg)
 	sel_msg->InF_target = peer_slot_interface;
 	sel_msg->sensor_type = IPMI_SENSOR_TYPE_POWER_UNIT;
 	sel_msg->sensor_number = SENSOR_NUM_POWER_DETECT;
-	sel_msg->event_type = IPMI_EVENT_TYPE_SENSOR_SPEC;
+	sel_msg->event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 	sel_msg->event_data1 = 0x00;
 	sel_msg->event_data2 = 0x00;
 	sel_msg->event_data3 = 0x00;
