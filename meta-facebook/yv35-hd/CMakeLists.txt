@@ -12,7 +12,7 @@ FILE(GLOB common_sources ${common_path}/service/*.c ${common_path}/service/*/*.c
 target_sources(app PRIVATE ${app_sources})
 target_sources(app PRIVATE ${common_sources})
 target_include_directories(app PRIVATE ${ZEPHYR_BASE}/include/portability)
-target_include_directories(app PRIVATE ${common_path} ${common_path}/service/ipmi/include ${common_path}/service/host ${common_path}/service/sensor ${common_path}/service/usb ${common_path}/service/ipmb ${common_path}/service/mctp ${common_path}/service/pldm ${common_path}/hal ${common_path}/dev/include ${common_path}/lib ${common_path}/shell)
+target_include_directories(app PRIVATE ${common_path} ${common_path}/service/ipmi/include ${common_path}/service/host ${common_path}/service/sensor ${common_path}/service/usb ${common_path}/service/ipmb ${common_path}/service/mctp ${common_path}/service/pldm ${common_path}/service/apml ${common_path}/hal ${common_path}/dev/include ${common_path}/lib ${common_path}/shell)
 target_include_directories(app PRIVATE src/ipmi/include src/lib src/platform)
 
 # Fail build if there are any warnings

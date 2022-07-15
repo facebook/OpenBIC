@@ -3,6 +3,7 @@
 #include "util_sys.h"
 #include "plat_gpio.h"
 #include "snoop.h"
+#include "apml.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -15,6 +16,7 @@ SCU_CFG scu_cfg[] = {
 void pal_pre_init()
 {
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
+	apml_init();
 }
 
 void pal_set_sys_status()
