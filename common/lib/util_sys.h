@@ -31,6 +31,9 @@ enum SYSTEM_RESET_TYPE {
 	FULL_CHIP_RESET = SYS_REBOOT_COLD,
 };
 
+extern uint8_t ISL69254_DEVICE_ID[5];
+extern uint8_t XDPE12284C_DEVICE_ID[3];
+
 void submit_bic_cold_reset();
 void bic_cold_reset();
 void submit_bic_warm_reset();
