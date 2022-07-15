@@ -408,7 +408,6 @@ void pal_extend_sensor_config()
 	CARD_STATUS _2ou_status = get_2ou_status();
 
 	int arg_index = (_2ou_status.present) ? 1 : 0;
-	int gpio_state = (_2ou_status.present) ? GPIO_HIGH : GPIO_LOW;
 
 	sensor_count = ARRAY_SIZE(mp5990_sensor_config_table);
 	for (int index = 0; index < sensor_count; index++) {
@@ -418,7 +417,6 @@ void pal_extend_sensor_config()
 	for (int index = 0; index < sensor_count; index++) {
 		ltc4286_sensor_config_table[index].init_args = &ltc4286_init_args[arg_index];
 	}
-	gpio_set(HSC_SET_EN_R, gpio_state);
 
 	switch (hsc_module) {
 	case HSC_MODULE_ADM1278:
