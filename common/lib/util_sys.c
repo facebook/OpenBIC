@@ -30,7 +30,7 @@ bool is_ac_lost()
 }
 
 /* bic warm reset work */
-#define bic_warm_reset_delay 100
+#define bic_warm_reset_delay 200
 
 void bic_warm_reset()
 {
