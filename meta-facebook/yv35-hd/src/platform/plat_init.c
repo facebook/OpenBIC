@@ -19,7 +19,7 @@ void pal_pre_init()
 
 void pal_set_sys_status()
 {
-	set_DC_status(RST_PLTRST_BIC_N);
+	set_DC_status(PWRGD_CPU_LVC3);
 	set_DC_on_delayed_status();
 	set_post_status(FM_BIOS_POST_CMPLT_BIC_N);
 	set_CPU_power_status(PWRGD_CPU_LVC3);
