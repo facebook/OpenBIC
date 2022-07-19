@@ -15,12 +15,18 @@
 #include "plat_ipmi.h"
 #include "plat_sensor_table.h"
 #include "plat_i2c.h"
+#include "plat_sys.h"
 
 void sled_cycle_work_handler(struct k_work *item);
 void re_enable_usb_power_handler(struct k_work *item);
 
+void slot1_cycle_work_handler(struct k_work *item);
+void slot3_cycle_work_handler(struct k_work *item);
+
 K_WORK_DELAYABLE_DEFINE(sled_cycle_work, sled_cycle_work_handler);
 K_WORK_DELAYABLE_DEFINE(re_enable_usb_power_work, re_enable_usb_power_handler);
+K_WORK_DELAYABLE_DEFINE(slot1_cycle_work, slot1_cycle_work_handler);
+K_WORK_DELAYABLE_DEFINE(slot3_cycle_work, slot3_cycle_work_handler);
 
 void ISR_PWROK_SLOT1()
 {
@@ -34,16 +40,26 @@ void ISR_PWROK_SLOT3()
 
 void ISR_SLED_CYCLE()
 {
-	uint8_t bb_btn_status = GPIO_HIGH;
+	static int64_t press_button_time = 0;
+	static int64_t release_button_time = 0;
+	uint8_t bb_btn_status = LOW_INACTIVE;
 
 	bb_btn_status = gpio_get(BB_BUTTON_BMC_BIC_N_R);
 	// press sled cycle button
-	if (bb_btn_status == GPIO_LOW) {
-		k_work_schedule(&sled_cycle_work, K_SECONDS(MAX_PRESS_SLED_BTN_TIME_S));
+	if (bb_btn_status == LOW_ACTIVE) {
+		press_button_time = k_uptime_get() / 1000; // Transfer ms unit to s unit
+		submit_button_event(BASEBOARD_SLED_BUTTON, SLOT1_BIC, IPMI_EVENT_TYPE_SENSOR_SPEC);
+		submit_button_event(BASEBOARD_SLED_BUTTON, SLOT3_BIC, IPMI_EVENT_TYPE_SENSOR_SPEC);
 
-		// release sled cycle button
-	} else if (bb_btn_status == GPIO_HIGH) {
-		k_work_cancel_delayable(&sled_cycle_work);
+	// release sled cycle button
+	} else if (bb_btn_status == LOW_INACTIVE) {
+		release_button_time = k_uptime_get() / 1000; // Transfer ms unit to s unit
+		submit_button_event(BASEBOARD_SLED_BUTTON, SLOT1_BIC, IPMI_OEM_EVENT_TYPE_DEASSART);
+		submit_button_event(BASEBOARD_SLED_BUTTON, SLOT3_BIC, IPMI_OEM_EVENT_TYPE_DEASSART);
+
+		if ((release_button_time - press_button_time) >= MAX_PRESS_SLED_BTN_TIME_S) {
+			k_work_schedule(&sled_cycle_work, K_MSEC(ADD_BUTTON_SEL_DELAY_MS));
+		}
 	}
 }
 
@@ -148,6 +164,52 @@ void ISR_USB_POWER_LOST()
 	}
 }
 
+void ISR_SLOT1_BUTTON()
+{
+	static int64_t press_button_time = 0;
+	static int64_t release_button_time = 0;
+	uint8_t slot1_btn_status = LOW_INACTIVE;
+	slot1_btn_status = gpio_get(AC_ON_OFF_BTN_BIC_SLOT1_N_R);
+
+	// press slot button
+	if (slot1_btn_status == LOW_ACTIVE) {
+		press_button_time = k_uptime_get() / 1000; // Transfer ms unit to s unit
+		submit_button_event(SLOT1_SLOT_BUTTON, SLOT1_BIC, IPMI_EVENT_TYPE_SENSOR_SPEC);
+
+	// release slot cycle button
+	} else if (slot1_btn_status == LOW_INACTIVE) {
+		release_button_time = k_uptime_get() / 1000; // Transfer ms unit to s unit
+		submit_button_event(SLOT1_SLOT_BUTTON, SLOT1_BIC, IPMI_OEM_EVENT_TYPE_DEASSART);
+
+		if ((release_button_time - press_button_time) >= MAX_PRESS_SLOT_BTN_TIME_S) {
+			k_work_schedule(&slot1_cycle_work, K_MSEC(ADD_BUTTON_SEL_DELAY_MS));
+		}
+	}
+}
+
+void ISR_SLOT3_BUTTON()
+{
+	static int64_t press_button_time = 0;
+	static int64_t release_button_time = 0;
+	uint8_t slot3_btn_status = LOW_INACTIVE;
+
+	slot3_btn_status = gpio_get(AC_ON_OFF_BTN_BIC_SLOT3_N_R);
+	// press slot button
+	if (slot3_btn_status == LOW_ACTIVE) {
+		press_button_time = k_uptime_get() / 1000; // Transfer ms unit to s unit
+		submit_button_event(SLOT3_SLOT_BUTTON, SLOT3_BIC, IPMI_EVENT_TYPE_SENSOR_SPEC);
+
+	// release slot cycle button
+	} else if (slot3_btn_status == LOW_INACTIVE) {
+		release_button_time = k_uptime_get() / 1000; // Transfer ms unit to s unit
+		submit_button_event(SLOT3_SLOT_BUTTON, SLOT3_BIC, IPMI_OEM_EVENT_TYPE_DEASSART);
+
+		if ((release_button_time - press_button_time) >= MAX_PRESS_SLOT_BTN_TIME_S) {
+			k_work_schedule(&slot3_cycle_work, K_MSEC(ADD_BUTTON_SEL_DELAY_MS));
+		}
+	}
+}
+
 void set_BIC_slot_isolator(uint8_t pwr_state_gpio_num, uint8_t isolator_gpio_num)
 {
 	int ret = 0;
@@ -191,4 +253,18 @@ void set_sled_cycle()
 	if (i2c_master_write(&msg, retry) < 0) {
 		printf("sled cycle fail\n");
 	}
+}
+
+void slot1_cycle_work_handler(struct k_work *item)
+{
+	control_slot_12V_power(SLOT1_SLOT_BUTTON, SLOT_12V_OFF);
+	k_msleep(MAX_BUTTON_12V_CYCLE_INTERVAL_TIME_MS);
+	control_slot_12V_power(SLOT1_SLOT_BUTTON, SLOT_12V_ON);
+}
+
+void slot3_cycle_work_handler(struct k_work *item)
+{
+	control_slot_12V_power(SLOT3_SLOT_BUTTON, SLOT_12V_OFF);
+	k_msleep(MAX_BUTTON_12V_CYCLE_INTERVAL_TIME_MS);
+	control_slot_12V_power(SLOT3_SLOT_BUTTON, SLOT_12V_ON);
 }
