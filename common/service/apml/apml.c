@@ -17,6 +17,9 @@ apml_buffer apml_resp_buffer[APML_RESP_BUFFER_SIZE];
 
 uint8_t apml_read_byte(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t *read_data)
 {
+	if (read_data == NULL) {
+		return APML_ERROR;
+	}
 	uint8_t retry = 5;
 	I2C_MSG msg;
 	msg.bus = bus;
@@ -52,6 +55,9 @@ uint8_t apml_write_byte(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t write
 
 static bool wait_HwAlert_set(apml_msg *msg, uint8_t retry)
 {
+	if (msg == NULL) {
+		return false;
+	}
 	uint8_t read_data = 0;
 	for (uint8_t i = 0; i < retry; i++) {
 		if (!apml_read_byte(msg->bus, msg->target_addr, SBRMI_STATUS, &read_data)) {
@@ -67,6 +73,9 @@ static bool wait_HwAlert_set(apml_msg *msg, uint8_t retry)
 
 static uint8_t write_MCA_request(apml_msg *msg)
 {
+	if (msg == NULL) {
+		return APML_ERROR;
+	}
 	uint8_t retry = 5;
 	I2C_MSG i2c_msg;
 	i2c_msg.bus = msg->bus;
@@ -86,6 +95,9 @@ static uint8_t write_MCA_request(apml_msg *msg)
 
 static uint8_t read_MCA_response(apml_msg *msg)
 {
+	if (msg == NULL) {
+		return APML_ERROR;
+	}
 	uint8_t retry = 5;
 	I2C_MSG i2c_msg;
 	i2c_msg.bus = msg->bus;
@@ -103,6 +115,9 @@ static uint8_t read_MCA_response(apml_msg *msg)
 
 static uint8_t access_MCA(apml_msg *msg)
 {
+	if (msg == NULL) {
+		return APML_ERROR;
+	}
 	if (write_MCA_request(msg)) {
 		printf("[%s] write MCA request failed.\n", __func__);
 		return APML_ERROR;
@@ -128,6 +143,9 @@ static uint8_t access_MCA(apml_msg *msg)
 
 static uint8_t write_CPUID_request(apml_msg *msg)
 {
+	if (msg == NULL) {
+		return APML_ERROR;
+	}
 	uint8_t retry = 5;
 	I2C_MSG i2c_msg;
 	i2c_msg.bus = msg->bus;
@@ -147,6 +165,9 @@ static uint8_t write_CPUID_request(apml_msg *msg)
 
 static uint8_t read_CPUID_response(apml_msg *msg)
 {
+	if (msg == NULL) {
+		return APML_ERROR;
+	}
 	uint8_t retry = 5;
 	I2C_MSG i2c_msg;
 	i2c_msg.bus = msg->bus;
@@ -164,6 +185,9 @@ static uint8_t read_CPUID_response(apml_msg *msg)
 
 static uint8_t access_CPUID(apml_msg *msg)
 {
+	if (msg == NULL) {
+		return APML_ERROR;
+	}
 	if (write_CPUID_request(msg)) {
 		printf("[%s] write CPUID request failed.\n", __func__);
 		return APML_ERROR;
@@ -189,6 +213,9 @@ static uint8_t access_CPUID(apml_msg *msg)
 
 static bool check_mailbox_command_complete(apml_msg *msg, uint8_t retry)
 {
+	if (msg == NULL) {
+		return false;
+	}
 	uint8_t read_data = 0;
 	for (uint8_t i = 0; i < retry; i++) {
 		if (!apml_read_byte(msg->bus, msg->target_addr, SBRMI_SOFTWARE_INTERRUPT,
@@ -204,6 +231,9 @@ static bool check_mailbox_command_complete(apml_msg *msg, uint8_t retry)
 
 static uint8_t write_mailbox_request(apml_msg *msg)
 {
+	if (msg == NULL) {
+		return APML_ERROR;
+	}
 	/* indicates command be serviced by firmware */
 	uint8_t read_data;
 	if (apml_read_byte(msg->bus, msg->target_addr, SBRMI_INBANDMSG_INST7, &read_data)) {
@@ -237,6 +267,9 @@ static uint8_t write_mailbox_request(apml_msg *msg)
 
 static uint8_t read_mailbox_response(apml_msg *msg)
 {
+	if (msg == NULL) {
+		return APML_ERROR;
+	}
 	mailbox_RdData *rd_data = (mailbox_RdData *)msg->RdData;
 	if (apml_read_byte(msg->bus, msg->target_addr, SBRMI_OUTBANDMSG_INST0, &rd_data->command)) {
 		return APML_ERROR;
@@ -256,6 +289,9 @@ static uint8_t read_mailbox_response(apml_msg *msg)
 
 static uint8_t access_RMI_mailbox(apml_msg *msg)
 {
+	if (msg == NULL) {
+		return APML_ERROR;
+	}
 	int i = 0;
 
 	if (!check_mailbox_command_complete(msg, RETRY_MAX)) {
@@ -317,6 +353,9 @@ void apml_request_callback(apml_msg *msg)
 
 uint8_t get_apml_response_by_index(apml_msg *msg, uint8_t index)
 {
+	if (msg == NULL) {
+		return APML_ERROR;
+	}
 	for (int i = 0; i < APML_RESP_BUFFER_SIZE; i++) {
 		if (apml_resp_buffer[i].index == index) {
 			memcpy(msg, &apml_resp_buffer[i].msg, sizeof(apml_msg));
@@ -342,36 +381,34 @@ uint8_t apml_read(apml_msg *msg)
 
 static void apml_handler(void *arvg0, void *arvg1, void *arvg2)
 {
+	uint8_t ret;
 	apml_msg msg_cfg;
 	while (1) {
+		ret = APML_ERROR;
 		memset(&msg_cfg, 0, sizeof(apml_msg));
 		k_msgq_get(&apml_msgq, &msg_cfg, K_FOREVER);
 
 		switch (msg_cfg.msg_type) {
 		case APML_MSG_TYPE_MAILBOX:
-			if (access_RMI_mailbox(&msg_cfg)) {
-				printf("[%s] access RMI mailbox failed.\n", __func__);
-				continue;
-			}
+			ret = access_RMI_mailbox(&msg_cfg);
 			break;
 		case APML_MSG_TYPE_CPUID:
-			if (access_CPUID(&msg_cfg)) {
-				printf("[%s] access CPUID failed.\n", __func__);
-				continue;
-			}
+			ret = access_CPUID(&msg_cfg);
 			break;
 		case APML_MSG_TYPE_MCA:
-			if (access_MCA(&msg_cfg)) {
-				printf("[%s] access MCA failed.\n", __func__);
-				continue;
-			}
+			ret = access_MCA(&msg_cfg);
 			break;
 		default:
 			break;
 		}
 
-		if (msg_cfg.cb_fn) {
-			msg_cfg.cb_fn(&msg_cfg);
+		if (ret) {
+			printf("[%s] APML access failed, msg type %d.\n", __func__,
+			       msg_cfg.msg_type);
+		} else {
+			if (msg_cfg.cb_fn) {
+				msg_cfg.cb_fn(&msg_cfg);
+			}
 		}
 		k_msleep(10);
 	}
