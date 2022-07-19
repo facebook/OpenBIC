@@ -383,11 +383,36 @@ bool post_i2c_bus_read(uint8_t sensor_num, void *args, int *reading)
 	ARG_UNUSED(args);
 	ARG_UNUSED(reading);
 
+	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 	struct k_mutex *mutex = find_bus_mutex(sensor_num);
 
 	if (!mutex)
 		return false;
 
+	if (cfg->port == I2C_BUS9) {
+		/* Check whether has pre-reading argument, if yes use it to get the i2c mux address. */
+		struct tca9548 *p = (struct tca9548 *)cfg->pre_sensor_read_args;
+
+		if (p) {
+			/**
+       * Because BUS9 has two mux behind 16 E1.S with the same i2c address, 
+       * so close all mux channels after the sensor read to avoid conflict with 
+       * other devices reading.
+       */
+			I2C_MSG msg = { 0 };
+			uint8_t retry = 5;
+			msg.bus = cfg->port;
+			msg.target_addr = ((p->addr) >> 1);
+			msg.tx_len = 1;
+			msg.data[0] = 0x00;
+
+			if (i2c_master_write(&msg, retry)) {
+				k_mutex_unlock(mutex);
+				printf("Close mux address 0x%x channel failed!\n", p->addr);
+				return false;
+			}
+		}
+	}
 	if (k_mutex_unlock(mutex)) {
 		printf("[%s] sensor num 0x%x mutex unlock failed!\n", __func__, sensor_num);
 		return false;
