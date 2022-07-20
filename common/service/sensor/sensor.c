@@ -167,6 +167,7 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 	*reading = 0; // Initial return reading value
 	uint8_t current_status = SENSOR_UNSPECIFIED_ERROR;
 	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+	bool post_ret = false;
 
 	if (!access_check(sensor_num)) { // sensor not accessable
 		clear_unaccessible_sensor_cache(sensor_num);
@@ -193,6 +194,11 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 		if (current_status == SENSOR_READ_SUCCESS ||
 		    current_status == SENSOR_READ_ACUR_SUCCESS) {
 			cfg->retry = 0;
+			if (cfg->post_sensor_read_hook) { // makesure post hook function be called
+				post_ret = cfg->post_sensor_read_hook(
+					sensor_num, cfg->post_sensor_read_args, reading);
+			}
+
 			if (!access_check(
 				    sensor_num)) { // double check access to avoid not accessible read at same moment status change
 				clear_unaccessible_sensor_cache(sensor_num);
@@ -200,15 +206,11 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 				return cfg->cache_status;
 			}
 
-			if (cfg->post_sensor_read_hook) {
-				if (cfg->post_sensor_read_hook(sensor_num,
-							       cfg->post_sensor_read_args,
-							       reading) == false) {
-					printf("Failed to do post sensor read function, sensor number: 0x%x\n",
-					       sensor_num);
-					cfg->cache_status = SENSOR_POST_READ_ERROR;
-					return cfg->cache_status;
-				}
+			if (cfg->post_sensor_read_hook && post_ret == false) {
+				printf("Failed to do post sensor read function, sensor number: 0x%x\n",
+				       sensor_num);
+				cfg->cache_status = SENSOR_POST_READ_ERROR;
+				return cfg->cache_status;
 			}
 			memcpy(&cfg->cache, reading, sizeof(*reading));
 			cfg->cache_status = SENSOR_READ_4BYTE_ACUR_SUCCESS;
