@@ -14,7 +14,7 @@ K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_delayed_status);
 #define DC_ON_5_SECOND 5
 void ISR_DC_ON()
 {
-	set_DC_status(RST_PLTRST_BIC_N);
+	set_DC_status(PWRGD_CPU_LVC3);
 	if (get_DC_status() == true) {
 		k_work_schedule(&set_DC_on_5s_work, K_SECONDS(DC_ON_5_SECOND));
 	} else {
