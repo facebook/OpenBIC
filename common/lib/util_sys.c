@@ -16,6 +16,9 @@
 
 static uint8_t ME_mode = ME_INIT_MODE;
 
+uint8_t ISL69254_DEVICE_ID[5] = { 0x04, 0x00, 0x67, 0xD2, 0x49 };
+uint8_t XDPE12284C_DEVICE_ID[3] = { 0x02, 0x79, 0x02 };
+
 /* Check AC lost */
 bool is_ac_lost()
 {
