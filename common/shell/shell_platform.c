@@ -35,6 +35,9 @@
 #include <device.h>
 #include <devicetree.h>
 
+/* Include VERSION */
+#include "plat_version.h"
+
 /* Include GPIO */
 #include <drivers/gpio.h>
 #include "plat_gpio.h"
@@ -283,6 +286,11 @@ static int cmd_info_print(const struct shell *shell, size_t argc, char **argv)
 	shell_print(shell, "* DATE/VERSION:  none");
 	shell_print(shell, "* CHIP/OS:       AST1030 - Zephyr");
 	shell_print(shell, "* Note:          none");
+	shell_print(shell, "------------------------------------------------------------------");
+	shell_print(shell, "* PLATFORM:      %s-%s", PLATFORM_NAME, PROJECT_NAME);
+	shell_print(shell, "* FW VERSION:    %d.%d", FIRMWARE_REVISION_1, FIRMWARE_REVISION_2);
+	shell_print(shell, "* FW DATE:       %x%x.%x.%x", BIC_FW_YEAR_MSB, BIC_FW_YEAR_LSB,
+		    BIC_FW_WEEK, BIC_FW_VER);
 	shell_print(
 		shell,
 		"========================{SHELL COMMAND INFO}========================================");
@@ -521,7 +529,7 @@ static void cmd_control_sensor_polling(const struct shell *shell, size_t argc, c
 
 	sensor_config[sensor_index].is_enable_polling =
 		((operation == DISABLE_SENSOR_POLLING) ? DISABLE_SENSOR_POLLING :
-							       ENABLE_SENSOR_POLLING);
+							 ENABLE_SENSOR_POLLING);
 	shell_print(shell, "Sensor number 0x%x %s sensor polling success", sensor_num,
 		    ((operation == DISABLE_SENSOR_POLLING) ? "disable" : "enable"));
 	return;
@@ -577,7 +585,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_sensor_cmds,
 
 /* MAIN command */
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_platform_cmds,
-			       SHELL_CMD(note, NULL, "Note list.", cmd_info_print),
+			       SHELL_CMD(info, NULL, "Platform/Commands info.", cmd_info_print),
 			       SHELL_CMD(gpio, &sub_gpio_cmds, "GPIO relative command.", NULL),
 			       SHELL_CMD(sensor, &sub_sensor_cmds, "SENSOR relative command.",
 					 NULL),
