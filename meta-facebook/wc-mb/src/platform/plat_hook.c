@@ -163,28 +163,6 @@ bool post_vol_bat3v_read(uint8_t sensor_num, void *args, int *reading)
 	return true;
 }
 
-/* INTEL PECI post read function
- *
- * modify certain sensor value after reading
- *
- * @param sensor_num sensor number
- * @param args pointer to NULL
- * @param reading pointer to reading from previous step
- * @retval true if no error
- * @retval false if reading get NULL
- */
-
-bool post_cpu_margin_read(uint8_t sensor_num, void *args, int *reading)
-{
-	if (!reading)
-		return false;
-	ARG_UNUSED(args);
-
-	sensor_val *sval = (sensor_val *)reading;
-	sval->integer = -sval->integer; /* for BMC minus */
-	return true;
-}
-
 /* ADM1278 post read function
  *
  * modify ADM1278 power value after reading
