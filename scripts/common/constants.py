@@ -52,7 +52,7 @@ TITLE_TAGS = {
     "hd",
     "mb",
     "rf:",
-    "wf",
+    "wc",
 }
 
 
