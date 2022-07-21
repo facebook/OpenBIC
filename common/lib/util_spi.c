@@ -283,7 +283,7 @@ __weak int pal_get_bios_flash_position()
 
 __weak bool pal_switch_bios_spi_mux(int gpio_status)
 {
-	return false;
+	return true;
 }
 
 __weak int pal_get_cxl_flash_position()
