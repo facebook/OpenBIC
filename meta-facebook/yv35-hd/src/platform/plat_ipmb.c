@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "plat_ipmb.h"
+#include "plat_class.h"
 
 IPMB_config pal_IPMB_config_table[] = {
 	// index, interface, channel, bus, channel_target_address, enable_status, self_address,
@@ -17,6 +18,11 @@ IPMB_config pal_IPMB_config_table[] = {
 
 bool pal_load_ipmb_config(void)
 {
+	CARD_STATUS _1ou_status = get_1ou_status();
+	if (_1ou_status.present) {
+		pal_IPMB_config_table[EXP1_IPMB_IDX].enable_status = ENABLE;
+	}
+
 	memcpy(IPMB_config_table, pal_IPMB_config_table, sizeof(pal_IPMB_config_table));
 	return true;
 }
