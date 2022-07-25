@@ -10,8 +10,9 @@
 
 #define MAX_IPMB_IDX 2
 
-enum { CL_BIC_IPMB_IDX,
-       RESERVE_IPMB_IDX,
+enum {
+	CL_BIC_IPMB_IDX,
+	RESERVE_IPMB_IDX,
 };
 
 #endif
