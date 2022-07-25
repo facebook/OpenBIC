@@ -70,6 +70,13 @@ void OEM_1S_GET_POST_CODE(ipmi_msg *msg);
 void OEM_1S_PECI_ACCESS(ipmi_msg *msg);
 #endif
 
+#ifdef ENABLE_APML
+void OEM_1S_APML_READ(ipmi_msg *msg);
+void OEM_1S_APML_WRITE(ipmi_msg *msg);
+void OEM_1S_SEND_APML_REQUEST(ipmi_msg *msg);
+void OEM_1S_GET_APML_RESPONSE(ipmi_msg *msg);
+#endif
+
 #ifdef CONFIG_JTAG
 void OEM_1S_SET_JTAG_TAP_STA(ipmi_msg *msg);
 void OEM_1S_JTAG_DATA_SHIFT(ipmi_msg *msg);

@@ -24,6 +24,9 @@
 #include "altera.h"
 #include "util_spi.h"
 #include "util_sys.h"
+#ifdef ENABLE_APML
+#include "apml.h"
+#endif
 
 #define BIOS_UPDATE_MAX_OFFSET 0x4000000
 #define BIC_UPDATE_MAX_OFFSET 0x50000
@@ -912,7 +915,7 @@ __weak void OEM_1S_CONTROL_SENSOR_POLLING(ipmi_msg *msg)
 			// Enable or Disable sensor polling
 			sensor_config[control_sensor_index].is_enable_polling =
 				((operation == DISABLE_SENSOR_POLLING) ? DISABLE_SENSOR_POLLING :
-									       ENABLE_SENSOR_POLLING);
+									 ENABLE_SENSOR_POLLING);
 			msg->data[return_data_index + 1] =
 				sensor_config[control_sensor_index].is_enable_polling;
 		} else {
@@ -1410,6 +1413,177 @@ __weak void OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT(ipmi_msg *msg)
 	return;
 }
 
+#ifdef ENABLE_APML
+__weak void OEM_1S_APML_READ(ipmi_msg *msg)
+{
+	if (msg == NULL) {
+		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		return;
+	}
+	if (msg->data_len != 2) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t read_data;
+	switch (msg->data[0]) {
+	case 0x00: /* RMI */
+		if (apml_read_byte(APML_BUS, SB_RMI_ADDR, msg->data[1], &read_data)) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+		} else {
+			msg->data[0] = read_data;
+			msg->data_len = 1;
+			msg->completion_code = CC_SUCCESS;
+		}
+		break;
+	case 0x01: /* TSI */
+		if (apml_read_byte(APML_BUS, SB_TSI_ADDR, msg->data[1], &read_data)) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+		} else {
+			msg->data[0] = read_data;
+			msg->data_len = 1;
+			msg->completion_code = CC_SUCCESS;
+		}
+		break;
+	default:
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		break;
+	}
+	return;
+}
+
+__weak void OEM_1S_APML_WRITE(ipmi_msg *msg)
+{
+	if (msg == NULL) {
+		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		return;
+	}
+	if (msg->data_len != 3) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	switch (msg->data[0]) {
+	case 0x00: /* RMI */
+		if (apml_write_byte(APML_BUS, SB_RMI_ADDR, msg->data[1], msg->data[2])) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+		} else {
+			msg->completion_code = CC_SUCCESS;
+		}
+		break;
+	case 0x01: /* TSI */
+		if (apml_write_byte(APML_BUS, SB_TSI_ADDR, msg->data[1], msg->data[2])) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+		} else {
+			msg->completion_code = CC_SUCCESS;
+		}
+		break;
+	default:
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		break;
+	}
+	msg->data_len = 0;
+	return;
+}
+
+__weak void OEM_1S_SEND_APML_REQUEST(ipmi_msg *msg)
+{
+	if (msg == NULL) {
+		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		return;
+	}
+
+	if (msg->data_len < 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	static uint8_t index = 0;
+	apml_msg apml_data;
+
+	switch (msg->data[0]) {
+	case APML_MSG_TYPE_MAILBOX: /* Mailbox */
+		if (msg->data_len != 1 + sizeof(mailbox_WrData)) {
+			msg->completion_code = CC_INVALID_LENGTH;
+			return;
+		}
+		memcpy(apml_data.WrData, &msg->data[1], sizeof(mailbox_WrData));
+		break;
+	case APML_MSG_TYPE_CPUID: /* CPUID */
+		if (msg->data_len != 1 + sizeof(cpuid_WrData)) {
+			msg->completion_code = CC_INVALID_LENGTH;
+			return;
+		}
+		memcpy(apml_data.WrData, &msg->data[1], sizeof(cpuid_WrData));
+		break;
+	case APML_MSG_TYPE_MCA: /* MCA */
+		if (msg->data_len != 1 + sizeof(mca_WrData)) {
+			msg->completion_code = CC_INVALID_LENGTH;
+			return;
+		}
+		memcpy(apml_data.WrData, &msg->data[1], sizeof(mca_WrData));
+		break;
+	default:
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+	apml_data.msg_type = msg->data[0];
+	apml_data.bus = APML_BUS;
+	apml_data.target_addr = SB_RMI_ADDR;
+	apml_data.cb_fn = apml_request_callback;
+	apml_data.ui32_arg = index;
+	if (apml_read(&apml_data)) {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	msg->data[0] = index;
+	msg->data_len = 1;
+	msg->completion_code = CC_SUCCESS;
+	index++;
+	return;
+}
+
+__weak void OEM_1S_GET_APML_RESPONSE(ipmi_msg *msg)
+{
+	if (msg == NULL) {
+		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		return;
+	}
+	if (msg->data_len != 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	apml_msg apml_data;
+	if (get_apml_response_by_index(&apml_data, msg->data[0])) {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	switch (apml_data.msg_type) {
+	case APML_MSG_TYPE_MAILBOX: /* Mailbox */
+		memcpy(&msg->data[0], apml_data.RdData, sizeof(mailbox_RdData));
+		msg->data_len = sizeof(mailbox_RdData);
+		break;
+	case APML_MSG_TYPE_CPUID: /* CPUID */
+		memcpy(&msg->data[0], apml_data.RdData, sizeof(cpuid_RdData));
+		msg->data_len = sizeof(cpuid_RdData);
+		break;
+	case APML_MSG_TYPE_MCA: /* MCA */
+		memcpy(&msg->data[0], apml_data.RdData, sizeof(mca_RdData));
+		msg->data_len = sizeof(mca_RdData);
+		break;
+	default:
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
+#endif
+
 void IPMI_OEM_1S_handler(ipmi_msg *msg)
 {
 	if (msg == NULL) {
@@ -1483,6 +1657,20 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 #ifdef CONFIG_PECI
 	case CMD_OEM_1S_PECI_ACCESS:
 		OEM_1S_PECI_ACCESS(msg);
+		break;
+#endif
+#ifdef ENABLE_APML
+	case CMD_OEM_1S_APML_READ:
+		OEM_1S_APML_READ(msg);
+		break;
+	case CMD_OEM_1S_APML_WRITE:
+		OEM_1S_APML_WRITE(msg);
+		break;
+	case CMD_OEM_1S_SEND_APML_REQUEST:
+		OEM_1S_SEND_APML_REQUEST(msg);
+		break;
+	case CMD_OEM_1S_GET_APML_RESPONSE:
+		OEM_1S_GET_APML_RESPONSE(msg);
 		break;
 #endif
 #ifdef CONFIG_JTAG
