@@ -255,3 +255,23 @@ void disable_PRDY_interrupt()
 {
 	gpio_interrupt_conf(IRQ_BMC_PRDY_NODE_OD_N, GPIO_INT_DISABLE);
 }
+
+void enable_UV_detect_interrupt()
+{
+	gpio_interrupt_conf(IRQ_UV_DETECT_N, GPIO_INT_EDGE_BOTH);
+}
+
+void disable_UV_detect_interrupt()
+{
+	gpio_interrupt_conf(IRQ_UV_DETECT_N, GPIO_INT_DISABLE);
+}
+
+void enable_SYS_Throttle_interrupt()
+{
+	gpio_interrupt_conf(FAST_PROCHOT_N, GPIO_INT_EDGE_BOTH);
+}
+
+void disable_SYS_Throttle_interrupt()
+{
+	gpio_interrupt_conf(FAST_PROCHOT_N, GPIO_INT_DISABLE);
+}
