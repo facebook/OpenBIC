@@ -7,6 +7,11 @@
 #include "plat_fan.h"
 #endif
 
+__weak uint8_t get_hsc_pwr_reading(int *reading)
+{
+	return SENSOR_NOT_FOUND;
+}
+
 #ifdef CONFIG_ESPI
 __weak void OEM_NM_SENSOR_READ(ipmi_msg *msg)
 {
@@ -14,7 +19,7 @@ __weak void OEM_NM_SENSOR_READ(ipmi_msg *msg)
 		return;
 	}
 
-	uint8_t status, sensor_num;
+	uint8_t status;
 	int reading;
 
 	// only input enable status
@@ -25,8 +30,7 @@ __weak void OEM_NM_SENSOR_READ(ipmi_msg *msg)
 
 	// Follow INTEL NM SPEC, read platform pwr from HSC
 	if (msg->data[0] == 0x00) {
-		sensor_num = SENSOR_NUM_PWR_HSCIN;
-		status = get_sensor_reading(sensor_num, &reading, GET_FROM_CACHE);
+		status = get_hsc_pwr_reading(&reading);
 	} else {
 		msg->completion_code = CC_INVALID_DATA_FIELD;
 		return;

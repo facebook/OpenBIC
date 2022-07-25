@@ -492,3 +492,9 @@ bool pal_is_time_to_poll(uint8_t sensor_num, int poll_time)
 	printf("[%s] can't find sensor 0x%x last accest time\n", __func__, sensor_num);
 	return true;
 }
+
+uint8_t get_hsc_pwr_reading(int *reading)
+{
+	return get_sensor_reading(SENSOR_NUM_PWR_HSCIN, reading, GET_FROM_CACHE);
+}
+
