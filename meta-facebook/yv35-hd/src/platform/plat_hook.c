@@ -7,6 +7,9 @@
 #include "plat_sensor_table.h"
 #include "i2c-mux-tca9548.h"
 
+#define ADJUST_ADM1278_CURRENT(x) (x * 0.94)
+#define ADJUST_ADM1278_POWER(x) (x * 0.95)
+
 /**************************************************************************************************
  * INIT ARGS
 **************************************************************************************************/
@@ -87,6 +90,28 @@ bool post_vol_bat3v_read(uint8_t sensor_num, void *args, int *reading)
 		gpio_set(P3V_BAT_SCALED_EN_R, GPIO_LOW);
 		k_msleep(1);
 	}
+
+	return true;
+}
+
+bool post_adm1278_cur_read(uint8_t sensor_num, void *args, int *reading)
+{
+	sensor_val *sval = (sensor_val *)reading;
+	float val = sval->integer + (sval->fraction * 0.001);
+	val = ADJUST_ADM1278_CURRENT(val);
+	sval->integer = (int16_t)val;
+	sval->fraction = (val - sval->integer) * 1000;
+
+	return true;
+}
+
+bool post_adm1278_pwr_read(uint8_t sensor_num, void *args, int *reading)
+{
+	sensor_val *sval = (sensor_val *)reading;
+	float val = sval->integer + (sval->fraction * 0.001);
+	val = ADJUST_ADM1278_POWER(val);
+	sval->integer = (int16_t)val;
+	sval->fraction = (val - sval->integer) * 1000;
 
 	return true;
 }
