@@ -473,12 +473,12 @@ bool pal_is_time_to_poll(uint8_t sensor_num, int poll_time)
 {
 	int i = 0;
 	int table_size = sizeof(diff_poll_time_sensor_table) / sizeof(sensor_poll_time_cfg);
-	int64_t current_access_time = k_uptime_get();
-	int64_t last_access_time = diff_poll_time_sensor_table[i].last_access_time;
-	int64_t diff_time = (current_access_time - last_access_time) / 1000; // sec
 
 	for (i = 0; i < table_size; i++) {
 		if (sensor_num == diff_poll_time_sensor_table[i].sensor_num) {
+			int64_t current_access_time = k_uptime_get();
+			int64_t last_access_time = diff_poll_time_sensor_table[i].last_access_time;
+			int64_t diff_time = (current_access_time - last_access_time) / 1000; // sec
 			if ((last_access_time != 0) && (diff_time < poll_time)) {
 				return false;
 			} else {
@@ -497,4 +497,3 @@ uint8_t get_hsc_pwr_reading(int *reading)
 {
 	return get_sensor_reading(SENSOR_NUM_PWR_HSCIN, reading, GET_FROM_CACHE);
 }
-
