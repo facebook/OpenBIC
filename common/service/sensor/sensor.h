@@ -83,6 +83,8 @@ enum SENSOR_DEV {
 	sensor_dev_raa229621 = 0x15,
 	sensor_dev_nct7718w = 0x16,
 	sensor_dev_ltc4286 = 0x17,
+	sensor_dev_amd_tsi = 0x18,
+	sensor_dev_apml_mailbox = 0x19,
 	sensor_dev_max
 };
 
@@ -338,6 +340,10 @@ typedef struct _ina230_init_arg {
 	bool is_init;
 
 } ina230_init_arg;
+
+typedef struct _apml_mailbox_init_arg_ {
+	uint32_t data;
+} apml_mailbox_init_arg;
 
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;
