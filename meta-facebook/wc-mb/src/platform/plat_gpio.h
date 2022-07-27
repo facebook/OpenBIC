@@ -172,9 +172,9 @@
 
 // GPIOQ5 hardware not define
 #define name_gpioQ \
-	gpio_name_to_num(FM_BOARD_SKU_ID0) \
-	gpio_name_to_num(FM_BOARD_SKU_ID1) \
-	gpio_name_to_num(FM_BOARD_SKU_ID2) \
+	gpio_name_to_num(Reserve_GPIOQ0) \
+	gpio_name_to_num(Reserve_GPIOQ1) \
+	gpio_name_to_num(Reserve_GPIOQ2) \
 	gpio_name_to_num(Reserve_GPIOQ3) \
 	gpio_name_to_num(Reserve_GPIOQ4) \
 	gpio_name_to_num(Reserve_GPIOQ5) \
