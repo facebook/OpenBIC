@@ -2,6 +2,7 @@
 #include "power_status.h"
 #include "util_sys.h"
 #include "plat_gpio.h"
+#include "plat_class.h"
 #include "snoop.h"
 #include "apml.h"
 
@@ -15,6 +16,7 @@ SCU_CFG scu_cfg[] = {
 
 void pal_pre_init()
 {
+	init_platform_config();
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
 	apml_init();
 }
