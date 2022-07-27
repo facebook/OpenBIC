@@ -388,6 +388,71 @@ void ISR_CPUVR_HOT()
 	}
 }
 
+void ISR_PVCCIO_VR_HOT()
+{
+	common_addsel_msg_t sel_msg;
+	if ((gpio_get(RST_PLTRST_BMC_N) == GPIO_HIGH) && (gpio_get(PWRGD_SYS_PWROK) == GPIO_HIGH)) {
+		if (gpio_get(IRQ_PVCCIO_CPU_VRHOT_LVC3_N) == GPIO_HIGH) {
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+		} else {
+			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+		}
+
+		sel_msg.InF_target = BMC_IPMB;
+		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_CPU_DIMM_VR_HOT;
+		sel_msg.sensor_number = SENSOR_NUM_VR_HOT;
+		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_IO_VR_HOT;
+		sel_msg.event_data2 = 0xFF;
+		sel_msg.event_data3 = 0xFF;
+		if (!common_add_sel_evt_record(&sel_msg)) {
+			printf("PVCCIO VR HOT addsel fail\n");
+		}
+	}
+}
+
+void ISR_DIMM_ABC_VR_HOT()
+{
+	common_addsel_msg_t sel_msg;
+	if ((gpio_get(RST_PLTRST_BMC_N) == GPIO_HIGH) && (gpio_get(PWRGD_SYS_PWROK) == GPIO_HIGH)) {
+		if (gpio_get(IRQ_PVDDQ_ABC_VRHOT_LVT3_N) == GPIO_HIGH) {
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+		} else {
+			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+		}
+
+		sel_msg.InF_target = BMC_IPMB;
+		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_CPU_DIMM_VR_HOT;
+		sel_msg.sensor_number = SENSOR_NUM_VR_HOT;
+		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_DIMM_ABC_VR_HOT;
+		sel_msg.event_data2 = 0xFF;
+		sel_msg.event_data3 = 0xFF;
+		if (!common_add_sel_evt_record(&sel_msg)) {
+			printf("DIMM ABC VR HOT addsel fail\n");
+		}
+	}
+}
+
+void ISR_DIMM_DEF_VR_HOT()
+{
+	common_addsel_msg_t sel_msg;
+	if ((gpio_get(RST_PLTRST_BMC_N) == GPIO_HIGH) && (gpio_get(PWRGD_SYS_PWROK) == GPIO_HIGH)) {
+		if (gpio_get(IRQ_PVDDQ_DEF_VRHOT_LVT3_N) == GPIO_HIGH) {
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+		} else {
+			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+		}
+
+		sel_msg.InF_target = BMC_IPMB;
+		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_CPU_DIMM_VR_HOT;
+		sel_msg.sensor_number = SENSOR_NUM_VR_HOT;
+		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_DIMM_DEF_VR_HOT;
+		sel_msg.event_data2 = 0xFF;
+		sel_msg.event_data3 = 0xFF;
+		if (!common_add_sel_evt_record(&sel_msg)) {
+			printf("DIMM DEF VR HOT addsel fail\n");
+		}
+	}
+}
 void ISR_NMI()
 {
 	if ((gpio_get(RST_PLTRST_BMC_N) == GPIO_HIGH) && (gpio_get(PWRGD_SYS_PWROK) == GPIO_HIGH)) {
