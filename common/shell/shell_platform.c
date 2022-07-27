@@ -35,6 +35,9 @@
 #include <device.h>
 #include <devicetree.h>
 
+/* Include VERSION */
+#include "plat_version.h"
+
 /* Include GPIO */
 #include <drivers/gpio.h>
 #include "plat_gpio.h"
@@ -283,6 +286,12 @@ static int cmd_info_print(const struct shell *shell, size_t argc, char **argv)
 	shell_print(shell, "* DATE/VERSION:  none");
 	shell_print(shell, "* CHIP/OS:       AST1030 - Zephyr");
 	shell_print(shell, "* Note:          none");
+	shell_print(shell, "------------------------------------------------------------------");
+	shell_print(shell, "* PLATFORM:      %s-%s", PLATFORM_NAME, PROJECT_NAME);
+	shell_print(shell, "* FW VERSION:    %d.%d", FIRMWARE_REVISION_1, FIRMWARE_REVISION_2);
+	shell_print(shell, "* FW DATE:       %x%x.%x.%x", BIC_FW_YEAR_MSB, BIC_FW_YEAR_LSB,
+		    BIC_FW_WEEK, BIC_FW_VER);
+	shell_print(shell, "* FW IMAGE:      %s.bin", CONFIG_KERNEL_BIN_NAME);
 	shell_print(
 		shell,
 		"========================{SHELL COMMAND INFO}========================================");
@@ -577,7 +586,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_sensor_cmds,
 
 /* MAIN command */
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_platform_cmds,
-			       SHELL_CMD(note, NULL, "Note list.", cmd_info_print),
+			       SHELL_CMD(info, NULL, "Platform info.", cmd_info_print),
 			       SHELL_CMD(gpio, &sub_gpio_cmds, "GPIO relative command.", NULL),
 			       SHELL_CMD(sensor, &sub_sensor_cmds, "SENSOR relative command.",
 					 NULL),
