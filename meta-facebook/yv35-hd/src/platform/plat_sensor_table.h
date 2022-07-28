@@ -83,6 +83,8 @@
 #define SENSOR_NUM_PWR_DIMM_I 0x39
 #define SENSOR_NUM_PWR_DIMM_K 0x3A
 
+#define POLL_TIME_BAT3V 3600 // second
+
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
 
