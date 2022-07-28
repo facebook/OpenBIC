@@ -94,7 +94,7 @@
 /**********************Event**********************/
 
 #define SENSOR_NUM_SYS_STA 0x46
-#define SENSOR_NUM_POWER_ERROR 0x56
+#define SENSOR_NUM_POWER_ERR 0x56
 #define SENSOR_NUM_PROC_FAIL 0x65
 #define SENSOR_NUM_VR_HOT 0xB4
 #define SENSOR_NUM_CPUDIMM_HOT 0xB3
