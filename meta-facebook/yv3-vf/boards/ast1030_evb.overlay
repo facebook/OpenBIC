@@ -19,6 +19,22 @@
 				 			 &pinctrl_adc15_default>;
 };
 
+&gpio0_a_d {
+	aspeed,persist-maps = <0xBEF00000>;
+};
+
+&gpio0_e_h {
+	aspeed,persist-maps = <0x00000802>;
+};
+
+&gpio0_m_p {
+	aspeed,persist-maps = <0xC001B000>;
+};
+
+&gpio0_q_t {
+	aspeed,persist-maps = <0x0000001F>;
+};
+
 &i2c0 {
 	pinctrl-0 = <&pinctrl_i2c0_default>;
 	status = "okay";
