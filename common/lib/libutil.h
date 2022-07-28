@@ -15,6 +15,16 @@
 #define GETBIT(x, y) ((x & (1ULL << y)) > y)
 #define CLEARBIT(x, y) (x & (~(1ULL << y)))
 
+enum BIT_SETTING_READING {
+	BIT_SET = 1,
+	BIT_CLEAR = 0,
+};
+
+enum BIT_SETTING_READING_N {
+	BIT_SET_N = 0,
+	BIT_CLEAR_N = 1,
+};
+
 ipmi_msg construct_ipmi_message(uint8_t seq_source, uint8_t netFn, uint8_t command,
 				uint8_t source_inft, uint8_t target_inft, uint16_t data_len,
 				uint8_t *data);
