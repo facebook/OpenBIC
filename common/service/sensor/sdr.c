@@ -10,6 +10,9 @@ SDR_INFO sdr_info;
 static uint16_t RSV_ID[2] = { 0 };
 bool is_sdr_not_init = true;
 
+extern SDR_Full_sensor plat_sdr_table[];
+extern const int SDR_TABLE_SIZE;
+
 SDR_Full_sensor *full_sdr_table;
 
 uint8_t sensor_config_size = 0;
@@ -210,4 +213,15 @@ uint8_t sdr_init(void)
 
 	is_sdr_not_init = false;
 	return true;
+}
+
+uint8_t plat_get_sdr_size()
+{
+	return SDR_TABLE_SIZE;
+}
+
+__weak void load_sdr_table(void)
+{
+	memcpy(full_sdr_table, plat_sdr_table, SDR_TABLE_SIZE);
+	sdr_count = SDR_TABLE_SIZE;
 }
