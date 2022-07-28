@@ -497,4 +497,3 @@ uint8_t get_hsc_pwr_reading(int *reading)
 {
 	return get_sensor_reading(SENSOR_NUM_PWR_HSCIN, reading, GET_FROM_CACHE);
 }
-
