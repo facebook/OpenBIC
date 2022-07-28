@@ -7,6 +7,7 @@ OpenBIC is an open software framework to build a complete firmware image for a B
 obgt-cc | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/gt-cc.json) | Grand Teton Clear Creek
 obwc-mb | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/wc-mb.json) | Waimea Canyon Mainboard
 oby3-dl | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/y3-dl.json) | Yosemite v3 Delta Lake
+oby3-vf | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/y3-vf.json) | Yosemite v3 Vernal Falls
 oby35-bb | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/yv35-bb.json) | Yosemite v3.5 Baseboard
 oby35-cl | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/yv35-cl.json) | Yosemite v3.5 Crater Lake
 oby35-hd | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/y35-hd.json) | Yosemite v3.5 Half Dome
