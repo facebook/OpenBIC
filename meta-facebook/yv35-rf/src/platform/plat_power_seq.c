@@ -5,7 +5,7 @@
 #include "libipmi.h"
 #include "plat_gpio.h"
 #include "plat_isr.h"
-#include "plat_class.h"
+#include "expansion_board.h"
 #include "plat_sensor_table.h"
 #include "plat_power_seq.h"
 

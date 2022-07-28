@@ -8,7 +8,6 @@
 #include "ast_adc.h"
 #include "intel_peci.h"
 #include "hal_gpio.h"
-#include "plat_class.h"
 #include "plat_gpio.h"
 #include "plat_hook.h"
 #include "plat_i2c.h"

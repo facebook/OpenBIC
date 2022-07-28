@@ -2,7 +2,6 @@
 #include "hal_peci.h"
 #include "power_status.h"
 #include "util_sys.h"
-#include "plat_class.h"
 #include "plat_gpio.h"
 #include "plat_i2c_target.h"
 #include "pldm.h"
