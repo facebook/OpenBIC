@@ -556,6 +556,6 @@ uint8_t plat_get_config_size()
 
 __weak void load_sensor_config(void)
 {
-	memcpy(sensor_config, plat_sensor_config, SENSOR_CONFIG_SIZE);
+	memcpy(sensor_config, plat_sensor_config, sizeof(sensor_cfg) * SENSOR_CONFIG_SIZE);
 	sensor_config_count = SENSOR_CONFIG_SIZE;
 }
