@@ -25,6 +25,7 @@
 #define PMIC_PWR_CURR_ADDR_VAL 0x0000001B
 #define PMIC_ADC_ADDR_VAL 0x00000030
 #define PMIC_SWA_ADDR_VAL 0x0000000C
+#define PMIC_POR_ERROR_LOG_ADDR_VAL 0x00000005
 
 //PMIC enable ADC bit
 #define PMIC_ENABLE_ADC_BIT BIT(7)
@@ -56,4 +57,6 @@ extern uint8_t *compose_memory_write_read_req(uint8_t smbus_identifier, uint8_t 
 extern int pmic_ipmb_transfer(int *total_pmic_power, uint8_t seq_source, uint8_t netFn,
 			      uint8_t command, uint8_t source_inft, uint8_t target_inft,
 			      uint16_t data_len, uint8_t *data);
+int pal_set_pmic_error_flag(uint8_t dimm_id, uint8_t error_type);
+
 #endif

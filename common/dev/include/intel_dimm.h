@@ -70,4 +70,16 @@ typedef struct _get_cpu_memory_temp_req {
 	uint16_t cpu3_read_dimm_req;
 } get_cpu_memory_temp_req;
 
+enum DIMM_CHANNEL_ADDR {
+	ADDR_DIMM_CHANNEL_0_4 = 0x90, // slave address for channel 0 and channel 4
+	ADDR_DIMM_CHANNEL_1_5 = 0x94, // slave address for channel 1 and channel 5
+	ADDR_DIMM_CHANNEL_2_6 = 0x98, // slave address for channel 2 and channel 6
+	ADDR_DIMM_CHANNEL_3_7 = 0x9C, // slave address for channel 3 and channel 7
+};
+
+enum BUS_ID {
+	BUS_ID_DIMM_CHANNEL_0_TO_3, // bus id for channel 0~3
+	BUS_ID_DIMM_CHANNEL_4_TO_7, // bus id for channel 4~7
+};
+
 #endif

@@ -5,6 +5,7 @@
 #include "ipmb.h"
 #include "sensor.h"
 #include "snoop.h"
+#include "pmic.h"
 #include "hal_gpio.h"
 #include "hal_i2c.h"
 #include "hal_jtag.h"
@@ -1637,6 +1638,41 @@ __weak void OEM_1S_GET_APML_RESPONSE(ipmi_msg *msg)
 }
 #endif
 
+__weak void OEM_1S_NOTIFY_PMIC_ERROR(ipmi_msg *msg)
+{
+	int ret = 0;
+
+	if (msg == NULL) {
+		return;
+	}
+
+	if (msg->data_len != 2) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	ret = pal_set_pmic_error_flag(msg->data[0], msg->data[1]);
+
+	switch (ret) {
+	case NOT_SUPPORT:
+		msg->completion_code = CC_INVALID_CMD;
+		break;
+	case INVALID_ERROR_TYPE:
+	case INVALID_DIMM_ID:
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		break;
+	case SUCCESS:
+		msg->completion_code = CC_SUCCESS;
+		break;
+	default:
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		break;
+	}
+	msg->data_len = 0;
+
+	return;
+}
+
 void IPMI_OEM_1S_handler(ipmi_msg *msg)
 {
 	if (msg == NULL) {
@@ -1775,6 +1811,9 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 		break;
 	case CMD_OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT:
 		OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT(msg);
+		break;
+	case CMD_OEM_1S_NOTIFY_PMIC_ERROR:
+		OEM_1S_NOTIFY_PMIC_ERROR(msg);
 		break;
 	default:
 		printf("Invalid OEM message, netfn(0x%x) cmd(0x%x)\n", msg->netfn, msg->cmd);
