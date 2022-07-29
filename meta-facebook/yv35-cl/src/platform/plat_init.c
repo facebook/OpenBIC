@@ -20,7 +20,7 @@ void pal_pre_init()
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
 }
 
-void pal_post_init()
+void pal_device_init()
 {
 	init_me_firmware();
 }
