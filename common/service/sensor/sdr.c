@@ -222,6 +222,6 @@ uint8_t plat_get_sdr_size()
 
 __weak void load_sdr_table(void)
 {
-	memcpy(full_sdr_table, plat_sdr_table, SDR_TABLE_SIZE);
+	memcpy(full_sdr_table, plat_sdr_table, SDR_TABLE_SIZE * sizeof(SDR_Full_sensor));
 	sdr_count = SDR_TABLE_SIZE;
 }

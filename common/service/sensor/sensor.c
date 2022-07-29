@@ -38,9 +38,9 @@ static bool sensor_poll_enable_flag = true;
 
 static bool is_sensor_ready_flag = false;
 
-const int negative_ten_power[16] = { 1,	    1,		1,	   1,	     1,	      1,
-				     1,	    1000000000, 100000000, 10000000, 1000000, 100000,
-				     10000, 1000,	100,	   10 };
+const int negative_ten_power[16] = { 1,     1,		1,	 1,	1,       1,
+				     1,     1000000000, 100000000, 10000000, 1000000, 100000,
+				     10000, 1000,       100,       10 };
 
 sensor_cfg *sensor_config;
 uint8_t sensor_config_count;
@@ -556,6 +556,6 @@ uint8_t plat_get_config_size()
 
 __weak void load_sensor_config(void)
 {
-	memcpy(sensor_config, plat_sensor_config, SENSOR_CONFIG_SIZE);
+	memcpy(sensor_config, plat_sensor_config, SENSOR_CONFIG_SIZE * sizeof(sensor_cfg));
 	sensor_config_count = SENSOR_CONFIG_SIZE;
 }
