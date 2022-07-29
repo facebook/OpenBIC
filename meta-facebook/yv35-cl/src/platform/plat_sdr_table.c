@@ -3625,10 +3625,7 @@ SDR_Full_sensor dpv2_sdr_table[] = {
 	},
 };
 
-uint8_t plat_get_sdr_size()
-{
-	return ARRAY_SIZE(plat_sdr_table);
-}
+const int SDR_TABLE_SIZE = ARRAY_SIZE(plat_sdr_table);
 
 void load_sdr_table(void)
 {

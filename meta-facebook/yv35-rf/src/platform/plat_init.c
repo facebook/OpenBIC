@@ -1,6 +1,6 @@
 #include "hal_gpio.h"
 #include "plat_gpio.h"
-#include "plat_class.h"
+#include "expansion_board.h"
 #include "plat_isr.h"
 #include "plat_power_seq.h"
 #include "power_status.h"

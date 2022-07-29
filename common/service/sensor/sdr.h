@@ -462,5 +462,7 @@ bool check_sdr_num_exist(uint8_t sensor_num);
 void add_full_sdr_table(SDR_Full_sensor add_item);
 void change_sensor_threshold(uint8_t sensor_num, uint8_t threshold_type, uint8_t change_value);
 void change_sensor_mbr(uint8_t sensor_num, uint8_t mbr_type, uint16_t change_value);
+uint8_t plat_get_sdr_size();
+void load_sdr_table(void);
 
 #endif

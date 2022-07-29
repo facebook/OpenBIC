@@ -90,18 +90,4 @@ sensor_cfg plat_sensor_config[] = {
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1278_init_args[0] },
 };
 
-uint8_t plat_get_config_size()
-{
-	return ARRAY_SIZE(plat_sensor_config);
-}
-
-void load_sensor_config(void)
-{
-	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
-	sensor_config_count = ARRAY_SIZE(plat_sensor_config);
-}
-
-uint8_t get_hsc_pwr_reading(int *reading)
-{
-	return get_sensor_reading(SENSOR_NUM_PWR_HSCIN, reading, GET_FROM_CACHE);
-}
+const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);

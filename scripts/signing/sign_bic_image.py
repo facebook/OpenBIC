@@ -12,13 +12,14 @@ stage_map = {
     "evt": "001",
     "dvt": "010",
     "pvt": "011",
-    "mp": "100"}
+    "mp": "100"
+}
 
 # Supported boards for each platform.
 valid_projects = {
-    "gt": {"cc", }
-    "wc": {"mb", }
-    "yv3": {"dl", }
+    "gt": {"cc", },
+    "wc": {"mb", },
+    "yv3": {"dl", "vf", },
     "yv35": {"cl", "bb", "rf", "hd", },
 }
 
@@ -30,6 +31,7 @@ board_map = {
     "wc": "00001",
     # Yv3
     "dl": "00001",
+    "vf": "00010",
     # Yv3.5
     "cl": "00001",
     "bb": "00010",

@@ -155,9 +155,15 @@ void init_hsc_module(uint8_t board_revision)
 			hsc_module = HSC_MODULE_ADM1278;
 			break;
 		case SYS_BOARD_EVT3_EFUSE:
+		case SYS_BOARD_DVT_EFUSE:
+		case SYS_BOARD_PVT_EFUSE:
+		case SYS_BOARD_MP_EFUSE:
 			hsc_module = HSC_MODULE_MP5990;
 			break;
 		case SYS_BOARD_EVT3_HOTSWAP:
+		case SYS_BOARD_DVT_HOTSWAP:
+		case SYS_BOARD_PVT_HOTSWAP:
+		case SYS_BOARD_MP_HOTSWAP:
 			/* Follow the GPIO table, the HSC device type can be by ADC7(net name: HSC_TYPE_ADC)
       * If the voltage of ADC-7 is 0.5V(+/- 15%), the hotswap model is ADM1278.
       * If the voltage of ADC-7 is 1.0V(+/- 15%), the hotswap model is LTC4282.

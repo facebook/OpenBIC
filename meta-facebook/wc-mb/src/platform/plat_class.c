@@ -25,5 +25,4 @@ void init_platform_config()
 		system_class = SYS_CLASS_1;
 
 	printf("SYS_SKU: %s Compute System\n", system_class == SYS_CLASS_2 ? "Single" : "Dual");
-	printf("BRD_SKU: %s\n", gpio_get(FM_BOARD_SKU_ID0) == GPIO_HIGH ? "VR-INS" : "VR-RTT");
 }

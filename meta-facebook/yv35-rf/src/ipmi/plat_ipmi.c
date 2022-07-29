@@ -4,7 +4,7 @@
 #include "libutil.h"
 #include "plat_ipmi.h"
 #include "plat_ipmb.h"
-#include "plat_class.h"
+#include "expansion_board.h"
 
 void OEM_1S_GET_BOARD_ID(ipmi_msg *msg)
 {

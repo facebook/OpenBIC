@@ -7,6 +7,99 @@
 #include "ipmi.h"
 #include "plat_i2c.h"
 #include "plat_gpio.h"
+#include "libipmi.h"
+#include "plat_sensor_table.h"
+
+void control_slot_12V_power(uint8_t slot_id, uint8_t control_mode)
+{
+	int ret = -1;
+	uint8_t retry = 5;
+	uint8_t isolator_num = 0;
+	I2C_MSG msg = { 0 };
+
+	msg.bus = CPLD_IO_I2C_BUS;
+	msg.target_addr = CPLD_IO_I2C_ADDR;
+	msg.tx_len = 2;
+
+	switch (slot_id) {
+	case SLOT1_SLOT_BUTTON:
+		isolator_num = FM_BIC_SLOT1_ISOLATED_EN_R;
+		msg.data[0] = CPLD_IO_REG_OFS_HSC_EN_SLOT1;
+		break;
+	case SLOT3_SLOT_BUTTON:
+		isolator_num = FM_BIC_SLOT3_ISOLATED_EN_R;
+		msg.data[0] = CPLD_IO_REG_OFS_HSC_EN_SLOT3;
+		break;
+	default:
+		printf("[%s] input slot id is invalid, slot id: %d\n", __func__, slot_id);
+		return;
+	}
+
+	switch (control_mode) {
+	case SLOT_12V_ON:
+		msg.data[1] = SLOT_12V_ON;
+		break;
+	case SLOT_12V_OFF:
+		msg.data[1] = SLOT_12V_OFF;
+		break;
+	default:
+		printf("[%s] input control mode is invalid, control mode: %d\n", __func__,
+		       control_mode);
+		return;
+	}
+
+	// Disable SMBus isolator before 12V-off
+	if (control_mode == SLOT_12V_OFF) {
+		gpio_set(isolator_num, CONTROL_OFF);
+	}
+
+	ret = i2c_master_write(&msg, retry);
+	if (ret < 0) {
+		printf("[%s] i2c write failed, ret: %d\n", __func__, ret);
+		return;
+	}
+
+	// Enable SMBus isolator after 12V-on
+	if (control_mode == SLOT_12V_ON) {
+		gpio_set(isolator_num, CONTROL_ON);
+	}
+
+	return;
+}
+
+void submit_button_event(uint8_t button_id, uint8_t target_slot, uint8_t event_type)
+{
+	common_addsel_msg_t sel_msg = { 0 };
+	sel_msg.sensor_type = IPMI_SENSOR_TYPE_POWER_UNIT;
+	sel_msg.event_type = event_type;
+	sel_msg.sensor_number = SENSOR_NUM_BUTTON_DETECT;
+	sel_msg.event_data2 = 0xFF;
+	sel_msg.event_data3 = 0xFF;
+
+	if ((target_slot != SLOT1_BIC) && (target_slot != SLOT3_BIC)) {
+		printf("[%s] input target slot is invalid, button id: %d, target slot: %d\n",
+		       __func__, button_id, target_slot);
+		return;
+	}
+	sel_msg.InF_target = target_slot;
+
+	switch (button_id) {
+	case SLOT1_SLOT_BUTTON:
+		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_PRESS_SLOT1_BUTTON;
+		break;
+	case SLOT3_SLOT_BUTTON:
+		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_PRESS_SLOT3_BUTTON;
+		break;
+	case BASEBOARD_SLED_BUTTON:
+		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_PRESS_SLED_BUTTON;
+		break;
+	default:
+		printf("[%s] input button id is invalid, button id: %d\n", __func__, button_id);
+		return;
+	}
+
+	common_add_sel_evt_record(&sel_msg);
+}
 
 int pal_submit_12v_cycle_slot(ipmi_msg *msg)
 {

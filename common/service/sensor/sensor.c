@@ -24,6 +24,9 @@
 
 #define SENSOR_READ_RETRY_MAX 3
 
+extern sensor_cfg plat_sensor_config[];
+extern const int SENSOR_CONFIG_SIZE;
+
 struct k_thread sensor_poll;
 K_KERNEL_STACK_MEMBER(sensor_poll_stack, SENSOR_POLL_STACK_SIZE);
 
@@ -552,4 +555,15 @@ bool sensor_init(void)
 bool check_is_sensor_ready()
 {
 	return is_sensor_ready_flag;
+}
+
+uint8_t plat_get_config_size()
+{
+	return SENSOR_CONFIG_SIZE;
+}
+
+__weak void load_sensor_config(void)
+{
+	memcpy(sensor_config, plat_sensor_config, SENSOR_CONFIG_SIZE);
+	sensor_config_count = SENSOR_CONFIG_SIZE;
 }

@@ -61,6 +61,7 @@
 
 #define SAMPLE_COUNT_FAN_IOUT 100
 #define SENSOR_NUM_POWER_DETECT 0xE1
+#define SENSOR_NUM_BUTTON_DETECT 0xE2
 
 uint8_t plat_get_config_size();
 void load_sensor_config(void);

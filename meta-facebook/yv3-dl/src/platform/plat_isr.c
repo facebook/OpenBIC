@@ -454,8 +454,6 @@ static void SMI_handler(struct k_work *work)
 {
 	if (gpio_get(IRQ_SMI_ACTIVE_BMC_N) == GPIO_LOW) {
 		common_addsel_msg_t sel_msg;
-		bool ret = false;
-
 		memset(&sel_msg, 0, sizeof(common_addsel_msg_t));
 
 		sel_msg.InF_target = BMC_IPMB;
@@ -485,7 +483,6 @@ void ISR_SMI()
 		} else {
 			if (is_smi_assert == true) {
 				common_addsel_msg_t sel_msg;
-				bool ret = false;
 				memset(&sel_msg, 0, sizeof(common_addsel_msg_t));
 
 				sel_msg.InF_target = BMC_IPMB;

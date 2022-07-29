@@ -14,6 +14,11 @@ sensor_poll_time_cfg diff_poll_time_sensor_table[] = {
 	{ SENSOR_NUM_VOL_P3V_BAT, 0 },
 };
 
+sensor_poll_time_cfg diff_poll_time_sensor_table[] = {
+	// sensor_number, last_access_time
+	{ SENSOR_NUM_VOL_P3V_BAT, 0 },
+};
+
 sensor_cfg plat_sensor_config[] = {
 	/* number, type, port, address, offset, access check, arg0, arg1, cache, cache_status, 
 	   pre_sensor_read_fn, pre_sensor_read_args, post_sensor_read_fn, post_sensor_read_fn,
@@ -271,13 +276,4 @@ bool pal_is_time_to_poll(uint8_t sensor_num, int poll_time)
 	return true;
 }
 
-uint8_t plat_get_config_size()
-{
-	return ARRAY_SIZE(plat_sensor_config);
-}
-
-void load_sensor_config(void)
-{
-	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
-	sensor_config_count = ARRAY_SIZE(plat_sensor_config);
-}
+const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);

@@ -365,5 +365,7 @@ bool check_sensor_num_exist(uint8_t sensor_num);
 void add_sensor_config(sensor_cfg config);
 bool check_is_sensor_ready();
 bool pal_is_time_to_poll(uint8_t sensor_num, int poll_time);
+uint8_t plat_get_config_size();
+void load_sensor_config(void);
 
 #endif

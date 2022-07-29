@@ -5,6 +5,7 @@ PLATFORM_NAME_MAP = {
     "obgt-cc": "Grand Teton : Clear Creek",
     "obwc-mb": "Waimea Canyon : MainBoard",
     "oby3-dl": "Yosemite v3 : Delta Lake",
+    "oby3-vf": "Yosemite v3 : Vernal Falls",
     "oby35-bb": "Yosemite v3.5 : BaseBoard",
     "oby35-cl": "Yosemite v3.5 : Crater Lake",
     "oby35-hd": "Yosemite v3.5 : Half Dome",
@@ -18,6 +19,7 @@ SUPPORTED_PLATFORMS = {
     "obgt-cc",
     "obwc-mb",
     "oby3-dl",
+    "oby3-vf",
     "oby35-bb",
     "oby35-cl",
     "oby35-hd",
@@ -28,6 +30,7 @@ PLATFORM_DIRECTORIES = {
     "gt-cc",
     "wc-mb",
     "yv3-dl",
+    "yv3-vf",
     "yv35-bb",
     "yv35-cl",
     "yv35-hd",
@@ -52,6 +55,7 @@ TITLE_TAGS = {
     "hd",
     "mb",
     "rf:",
+    "vf"
     "wc",
 }
 
