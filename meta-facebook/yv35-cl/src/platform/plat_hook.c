@@ -15,6 +15,8 @@
 #define ADJUST_ADM1278_CURRENT(x) ((x * 0.98) + 0.1)
 #define ADJUST_LTC4286_POWER(x) ((x * 0.97) - 8)
 #define ADJUST_LTC4286_CURRENT(x) ((x * 0.97) - 0.4)
+#define ADJUST_LTC4282_POWER(x) ((x * 0.98) - 0.2)
+#define ADJUST_LTC4282_CURRENT(x) ((x * 0.99) - 0.2)
 
 /**************************************************************************************************
  * INIT ARGS
@@ -32,6 +34,14 @@ ltc4286_init_arg ltc4286_init_args[] = {
 	[0] = { .is_init = false, .r_sense_mohm = 0.25, .mfr_config_1 = { 0x1570 } },
 	[1] = { .is_init = false, .r_sense_mohm = 0.25, .mfr_config_1 = { 0x3570 } }
 };
+ltc4282_init_arg ltc4282_init_args[] = { [0] = { .is_init = false,
+						 .r_sense_mohm = 0.25,
+						 .is_register_setting_needed = 0x01,
+						 .ilim_adjust = { 0x13 } },
+					 [1] = { .is_init = false,
+						 .r_sense_mohm = 0.25,
+						 .is_register_setting_needed = 0x01,
+						 .ilim_adjust = { 0x53 } } };
 
 pmic_init_arg pmic_init_args[] = {
 	[0] = { .is_init = false, .smbus_bus_identifier = 0x00, .smbus_addr = 0x90 },
@@ -361,6 +371,46 @@ bool post_ltc4286_read(uint8_t sensor_num, void *args, int *reading)
 		break;
 	default:
 		printf("[%s] Unknown register(0x%x)\n", __func__, cfg->offset);
+		return false;
+	}
+
+	sval->integer = (int)val & 0xFFFF;
+	sval->fraction = (val - sval->integer) * 1000;
+	return true;
+}
+
+/* LTC4282 post read function
+ *
+ * modify LTC4282 current and power value after reading
+ *
+ * @param sensor_num sensor number
+ * @param args pointer to NULL
+ * @param reading pointer to reading from previous step
+ * @retval true if no error
+ * @retval false if reading get NULL
+ */
+bool post_ltc4282_read(uint8_t sensor_num, void *args, int *reading)
+{
+	if (!reading) {
+		return false;
+	}
+	ARG_UNUSED(args);
+
+	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+
+	sensor_val *sval = (sensor_val *)reading;
+	float val = (float)sval->integer + (sval->fraction / 1000.0);
+
+	switch (cfg->offset) {
+	case LTC4282_VSOURCE_OFFSET:
+		return true;
+	case LTC4282_VSENSE_OFFSET:
+		val = ADJUST_LTC4282_CURRENT(val);
+		break;
+	case LTC4282_POWER_OFFSET:
+		val = ADJUST_LTC4282_POWER(val);
+		break;
+	default:
 		return false;
 	}
 

@@ -26,7 +26,7 @@
 #define POLL_TIME_DEFAULT 1
 
 enum LTC4282_OFFSET {
-	LTC4282_ADJUST_OFFSET = 0x11,
+	LTC4282_ILIM_ADJUST_OFFSET = 0x11,
 	LTC4282_VSENSE_OFFSET = 0x40,
 	LTC4282_POWER_OFFSET = 0x46,
 	LTC4282_VSOURCE_OFFSET = 0x3A,
@@ -237,8 +237,29 @@ typedef struct _pex89000_init_arg {
 } pex89000_init_arg;
 
 typedef struct _ltc4282_init_arg {
-	float r_sense;
+	/* value to get/set ILIM ADJUST register */
+	union {
+		uint8_t value;
+		struct {
+			uint8_t _16_bit : 1;
+			uint8_t gpio_mode : 1;
+			uint8_t vsource_vdd : 1;
+			uint8_t foldback_mode : 2;
+			uint8_t ilim_adjust : 3;
+		} fields;
+	} ilim_adjust;
 
+	/* Rsense valus, unit: milliohm */
+	float r_sense_mohm;
+
+	/* Initialize function will set following arguments, no need to give value */
+	bool is_init;
+
+	/* Initialized chip registers if it's needed
+	 * bit 0 - ilim adjust register setting
+	 * bit 1 to 7 are reserved
+	 */
+	uint8_t is_register_setting_needed;
 } ltc4282_init_arg;
 
 typedef struct _ltc4286_init_arg {
