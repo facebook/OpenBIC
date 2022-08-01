@@ -14,11 +14,6 @@ sensor_poll_time_cfg diff_poll_time_sensor_table[] = {
 	{ SENSOR_NUM_VOL_P3V_BAT, 0 },
 };
 
-sensor_poll_time_cfg diff_poll_time_sensor_table[] = {
-	// sensor_number, last_access_time
-	{ SENSOR_NUM_VOL_P3V_BAT, 0 },
-};
-
 sensor_cfg plat_sensor_config[] = {
 	/* number, type, port, address, offset, access check, arg0, arg1, cache, cache_status, 
 	   pre_sensor_read_fn, pre_sensor_read_args, post_sensor_read_fn, post_sensor_read_fn,
