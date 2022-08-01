@@ -1,5 +1,3 @@
-#include "plat_sdr_table.h"
-
 #include <stdio.h>
 #include <string.h>
 
