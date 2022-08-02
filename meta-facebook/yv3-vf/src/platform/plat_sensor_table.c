@@ -1,16 +1,16 @@
-#include "ast_adc.h"
-#include "plat_class.h"
-#include "plat_hook.h"
-#include "plat_i2c.h"
-#include "plat_m2.h"
-#include "plat_power_seq.h"
-#include "plat_sensor_table.h"
-#include "sensor.h"
 #include <stdio.h>
 #include <string.h>
 
+#include "sensor.h"
+#include "ast_adc.h"
+#include "plat_sensor_table.h"
+#include "plat_class.h"
+#include "plat_i2c.h"
+#include "plat_hook.h"
+#include "plat_power_seq.h"
+#include "plat_m2.h"
+
 #define CONFIG_ISL69260 false
-bool stby_access(uint8_t sensor_number);
 
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
@@ -27,16 +27,16 @@ sensor_cfg plat_sensor_config[] = {
  	*/
 
 	// Voltage
-	{ SENSOR_NUM_V_12_AUX, sensor_dev_ast_adc, ADC_PORT1, NONE, NONE, stby_access, 704, 100,
+	{ SENSOR_NUM_V_12_AUX, sensor_dev_ast_adc, ADC_PORT1, NONE, NONE, dc_access, 704, 100,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
 	{ SENSOR_NUM_V_12_EDGE, sensor_dev_ast_adc, ADC_PORT2, NONE, NONE, stby_access, 704, 100,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
-	{ SENSOR_NUM_V_12_STBY, sensor_dev_ast_adc, ADC_PORT15, NONE, NONE, stby_access, 1, 1,
+	{ SENSOR_NUM_V_3_3_AUX, sensor_dev_ast_adc, ADC_PORT7, NONE, NONE, stby_access, 487, 200,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
-	{ SENSOR_NUM_V_3_3_AUX, sensor_dev_ast_adc, ADC_PORT7, NONE, NONE, stby_access, 487, 200,
+	{ SENSOR_NUM_V_1_2_STBY, sensor_dev_ast_adc, ADC_PORT15, NONE, NONE, stby_access, 1, 1,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
 	{ SENSOR_NUM_ADC_12V_VOL_M2A, sensor_dev_ast_adc, ADC_PORT8, NONE, NONE, is_m2_sen_readable,
@@ -117,8 +117,6 @@ sensor_cfg plat_sensor_config[] = {
 	  0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 
 };
-
-const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
 
 uint8_t plat_get_config_size()
 {
