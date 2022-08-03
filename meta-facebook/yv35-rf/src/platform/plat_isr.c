@@ -96,9 +96,11 @@ void ISR_DC_STATE()
 
 	// Set a access flag after DC on 5 secs
 	if (get_DC_status() == true) {
+		gpio_set(LED_CXL_POWER, GPIO_HIGH);
 		k_work_schedule(&set_DC_on_5s_work, K_SECONDS(DC_ON_5_SECOND));
 
 	} else {
+		gpio_set(LED_CXL_POWER, GPIO_LOW);
 		if (k_work_cancel_delayable(&set_DC_on_5s_work) != 0) {
 			printf("Cancel set dc off delay work fail\n");
 		}
