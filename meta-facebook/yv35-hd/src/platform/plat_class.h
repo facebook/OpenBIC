@@ -37,6 +37,13 @@ enum _1OU_CARD_TYPE_ {
 	TYPE_1OU_UNKNOWN = 0xFF,
 };
 
+enum _2OU_CARD_TYPE_ {
+	TYPE_2OU_DPV2_8 = 0x07, // DPV2x8
+	TYPE_2OU_DPV2_16 = 0x70, // DPV2x16
+	TYPE_2OU_ABSENT = 0xFE,
+	TYPE_2OU_UNKNOWN = 0xFF,
+};
+
 /* ADC channel number */
 enum ADC_CHANNEL {
 	CHANNEL_6 = 6,
@@ -49,6 +56,7 @@ enum BIC_CARD_PRESENT {
 
 uint8_t get_system_class();
 CARD_STATUS get_1ou_status();
+CARD_STATUS get_2ou_status();
 uint8_t get_board_revision();
 bool get_adc_voltage(int channel, float *voltage);
 void init_platform_config();

@@ -8,6 +8,7 @@
 
 #define CPLD_ADDR 0x21 // 7-bit address
 #define CPLD_CLASS_TYPE_REG 0x05
+#define CPLD_2OU_EXPANSION_CARD_REG 0x06
 #define CPLD_BOARD_REV_ID_REG 0x08
 #define CPLD_1OU_CARD_DETECTION 0x09
 #define I2C_DATA_SIZE 5
@@ -17,6 +18,7 @@
 static uint8_t system_class = SYS_CLASS_1;
 static uint8_t board_revision = 0x3F;
 static CARD_STATUS _1ou_status = { false, TYPE_1OU_UNKNOWN };
+static CARD_STATUS _2ou_status = { false, TYPE_2OU_UNKNOWN };
 
 /* ADC information for each channel
  * offset: register offset
@@ -74,6 +76,11 @@ uint8_t get_system_class()
 CARD_STATUS get_1ou_status()
 {
 	return _1ou_status;
+}
+
+CARD_STATUS get_2ou_status()
+{
+	return _2ou_status;
 }
 
 uint8_t get_board_revision()
@@ -156,6 +163,7 @@ void init_platform_config()
 	if (!i2c_master_read(&i2c_msg, retry)) {
 		class_type = i2c_msg.data[0];
 		_1ou_status.present = ((class_type & BIT(2)) ? false : true);
+		_2ou_status.present = ((class_type & BIT(3)) ? false : true);
 	} else {
 		printf("Failed to read expansion present from CPLD\n");
 	}
@@ -186,8 +194,8 @@ void init_platform_config()
 	} else {
 		printf("Failed to read board ID from CPLD\n");
 	}
-	printk("BIC class type(class-%d), 1ou present status(%d), board revision(0x%x)\n",
-	       system_class, (int)_1ou_status.present, board_revision);
+	printk("BIC class type(class-%d), 1ou present status(%d), 2ou present status(%d), board revision(0x%x)\n",
+	       system_class, (int)_1ou_status.present, (int)_2ou_status.present, board_revision);
 
 	/* BIC judges the 1OU card type according the ADC-6(0-based) voltage.
 	 * The 1OU card type is
@@ -262,6 +270,28 @@ void init_platform_config()
 				       voltage);
 			} else if (_1ou_status.card_type == TYPE_1OU_RAINBOW_FALLS) {
 				gpio_set(HSC_OCP_GPIO1_R, GPIO_HIGH);
+			}
+		}
+	}
+
+	if (_2ou_status.present) {
+		tx_len = 1;
+		rx_len = 1;
+		memset(data, 0, I2C_DATA_SIZE);
+		data[0] = CPLD_2OU_EXPANSION_CARD_REG;
+		i2c_msg = construct_i2c_message(I2C_BUS1, CPLD_ADDR, tx_len, data, rx_len);
+		if (!i2c_master_read(&i2c_msg, retry)) {
+			switch (i2c_msg.data[0]) {
+			case TYPE_2OU_DPV2_8:
+			case TYPE_2OU_DPV2_16:
+			case (TYPE_2OU_DPV2_8 | TYPE_2OU_DPV2_16):
+				_2ou_status.card_type = i2c_msg.data[0];
+				break;
+			default:
+				_2ou_status.card_type = TYPE_2OU_UNKNOWN;
+				printf("Unknown the 2OU card type, the card type read from CPLD is 0x%x\n",
+				       i2c_msg.data[0]);
+				break;
 			}
 		}
 	}
