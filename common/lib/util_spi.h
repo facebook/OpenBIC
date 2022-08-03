@@ -13,6 +13,7 @@
 #define SECTOR_SZ_1K 0x00400
 
 #define FW_UPDATE_DEBUG 0
+#define SHA256_DIGEST_SIZE 32
 
 enum DEVICE_POSITIONS {
 	DEVSPI_FMC_CS0,
@@ -26,6 +27,8 @@ enum DEVICE_POSITIONS {
 uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sector_end,
 		  uint8_t flash_position);
 uint8_t fw_update_cxl(uint8_t flash_position);
+
+uint8_t get_fw_sha256(uint8_t *msg_buf, uint32_t offset, uint32_t length, uint8_t flash_position);
 
 int pal_get_bios_flash_position();
 bool pal_switch_bios_spi_mux(int gpio_status);

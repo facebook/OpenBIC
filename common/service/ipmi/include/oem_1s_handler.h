@@ -50,6 +50,7 @@ void OEM_1S_RESET_BMC(ipmi_msg *msg);
 void OEM_1S_SENSOR_POLL_EN(ipmi_msg *msg);
 void OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg);
 void OEM_1S_GET_SET_GPIO(ipmi_msg *msg);
+void OEM_1S_GET_FW_SHA256(ipmi_msg *msg);
 void OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg);
 void OEM_1S_GET_BIC_STATUS(ipmi_msg *msg);
 void OEM_1S_RESET_BIC(ipmi_msg *msg);
