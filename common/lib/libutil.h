@@ -22,4 +22,6 @@ ipmi_msg construct_ipmi_message(uint8_t seq_source, uint8_t netFn, uint8_t comma
 I2C_MSG construct_i2c_message(uint8_t bus_id, uint8_t address, uint8_t tx_len, uint8_t *data,
 			      uint8_t rx_len);
 
+void reverse_array(uint8_t arr[], uint8_t size);
+
 #endif

@@ -4,6 +4,74 @@
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "pmbus.h"
+#include "isl69254iraz_t.h"
+
+bool isl69254iraz_t_get_checksum(uint8_t bus, uint8_t target_addr, uint8_t *checksum)
+{
+	if (checksum == NULL) {
+		printf("<error> isl69254iraz_t checksum is NULL\n");
+		return false;
+	}
+
+	I2C_MSG i2c_msg;
+	uint8_t retry = 3;
+
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = target_addr;
+	i2c_msg.tx_len = 3;
+	i2c_msg.data[0] = 0xC7; //DMAADDR command code
+	i2c_msg.data[1] = 0x3F; //DMA register offset
+	i2c_msg.data[2] = 0x00; //dummy data
+
+	if (i2c_master_write(&i2c_msg, retry)) {
+		printf("<error> isl69254iraz_t get checksum while i2c writing\n");
+		return false;
+	}
+
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = isl69254iraz_t_checksum_length;
+	i2c_msg.data[0] = 0xC5; //DMAFIX command code
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		printf("<error> isl69254iraz_t get checksum while i2c reading\n");
+		return false;
+	}
+
+	memcpy(checksum, i2c_msg.data, isl69254iraz_t_checksum_length);
+	reverse_array(checksum, isl69254iraz_t_checksum_length);
+
+	return true;
+}
+
+bool isl69254iraz_t_get_remaining_write(uint8_t bus, uint8_t target_addr, uint8_t *remain_write)
+{
+	I2C_MSG i2c_msg;
+	uint8_t retry = 3;
+
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = target_addr;
+	i2c_msg.tx_len = 3;
+	i2c_msg.data[0] = 0xC7; //DMAADDR command code
+	i2c_msg.data[1] = 0xC2; //DMA register offset
+	i2c_msg.data[2] = 0x00; //dummy data
+
+	if (i2c_master_write(&i2c_msg, retry)) {
+		printf("<error> isl69254iraz_t get remaining write while i2c writing\n");
+		return false;
+	}
+
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = 0xC5; //DMAFIX command code
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		printf("<error> isl69254iraz_t get remaining write while i2c reading\n");
+		return false;
+	}
+
+	*remain_write = i2c_msg.data[0];
+	return true;
+}
 
 uint8_t isl69254iraz_t_read(uint8_t sensor_num, int *reading)
 {
