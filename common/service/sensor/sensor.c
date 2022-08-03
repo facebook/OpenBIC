@@ -68,6 +68,10 @@ SENSOR_DRIVE_INIT_DECLARE(xdpe12284c);
 SENSOR_DRIVE_INIT_DECLARE(raa229621);
 SENSOR_DRIVE_INIT_DECLARE(nct7718w);
 SENSOR_DRIVE_INIT_DECLARE(ltc4286);
+#ifdef ENABLE_APML
+SENSOR_DRIVE_INIT_DECLARE(amd_tsi);
+SENSOR_DRIVE_INIT_DECLARE(apml_mailbox);
+#endif
 
 struct sensor_drive_api {
 	enum SENSOR_DEV dev;
@@ -96,6 +100,10 @@ struct sensor_drive_api {
 	SENSOR_DRIVE_TYPE_INIT_MAP(raa229621),
 	SENSOR_DRIVE_TYPE_INIT_MAP(nct7718w),
 	SENSOR_DRIVE_TYPE_INIT_MAP(ltc4286),
+#ifdef ENABLE_APML
+	SENSOR_DRIVE_TYPE_INIT_MAP(amd_tsi),
+	SENSOR_DRIVE_TYPE_INIT_MAP(apml_mailbox),
+#endif
 };
 
 static void init_sensor_num(void)
@@ -259,7 +267,7 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 			return cfg->cache_status;
 		default:
 			cfg->cache = SENSOR_FAIL;
-			printf("Failed to read sensor value from cache, sensor number: 0x%x\n, cache status: 0x%x",
+			printf("Failed to read sensor value from cache, sensor number: 0x%x, cache status: 0x%x\n",
 			       sensor_num, cfg->cache_status);
 			return cfg->cache_status;
 		}
