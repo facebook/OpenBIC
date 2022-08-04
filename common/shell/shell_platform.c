@@ -47,6 +47,9 @@
 #include "sensor.h"
 #include "sdr.h"
 
+/* Include LOG */
+#include "log_util.h"
+
 /* Include config settings */
 #include "shell_platform.h"
 
@@ -530,9 +533,72 @@ static void cmd_control_sensor_polling(const struct shell *shell, size_t argc, c
 
 	sensor_config[sensor_index].is_enable_polling =
 		((operation == DISABLE_SENSOR_POLLING) ? DISABLE_SENSOR_POLLING :
-							       ENABLE_SENSOR_POLLING);
+							 ENABLE_SENSOR_POLLING);
 	shell_print(shell, "Sensor number 0x%x %s sensor polling success", sensor_num,
 		    ((operation == DISABLE_SENSOR_POLLING) ? "disable" : "enable"));
+	return;
+}
+
+/*
+    Command LOG
+*/
+static void cmd_log_control(const struct shell *shell, size_t argc, char **argv)
+{
+	if (argc != 3) {
+		shell_warn(shell, "Help: platform log control <log_idx> <log_status>");
+		return;
+	}
+
+	uint8_t log_idx = strtol(argv[1], NULL, 10);
+	uint8_t log_status = strtol(argv[2], NULL, 10);
+
+	if (log_idx >= LOG_CONFIG_SIZE) {
+		shell_error(shell, "Invalid <log_idx>.");
+		return;
+	}
+
+	if (log_status != LOG_ENABLE && log_status != LOG_DISABLE) {
+		shell_error(shell, "Invalid <log_status>.");
+		return;
+	}
+
+	if (!log_status_ctl(log_idx, log_status)) {
+		shell_error(shell, "Log %d status set %d failed!", log_idx, log_status);
+		return;
+	}
+
+	shell_print(shell, "Log %d status set %d success!", log_idx, log_status);
+	return;
+}
+
+static void cmd_log_halt(const struct shell *shell, size_t argc, char **argv)
+{
+	if (argc != 1) {
+		shell_warn(shell, "Help: platform log halt");
+		return;
+	}
+
+	for (int i = 0; i < LOG_CONFIG_SIZE; i++) {
+		log_status_ctl(i, LOG_DISABLE);
+	}
+
+	shell_print(shell, "All log has been halt!");
+	return;
+}
+
+static void cmd_log_list_all(const struct shell *shell, size_t argc, char **argv)
+{
+	if (argc != 1) {
+		shell_warn(shell, "Help: platform log list_all");
+		return;
+	}
+
+	shell_print(shell, "--------------------------");
+	for (int i = 0; i < LOG_CONFIG_SIZE; i++) {
+		shell_print(shell, "%-15s: %d", log_name[i], is_log_en(i));
+	}
+	shell_print(shell, "--------------------------");
+
 	return;
 }
 
@@ -584,12 +650,17 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_sensor_cmds,
 					 cmd_control_sensor_polling),
 			       SHELL_SUBCMD_SET_END);
 
+/* Log sub command */
+SHELL_STATIC_SUBCMD_SET_CREATE(
+	sub_log_cmds, SHELL_CMD(list_all, NULL, "List all debug log status.", cmd_log_list_all),
+	SHELL_CMD(control, NULL, "Enable/Disable certain debug log.", cmd_log_control),
+	SHELL_CMD(halt, NULL, "Disable all debug log.", cmd_log_halt), SHELL_SUBCMD_SET_END);
+
 /* MAIN command */
-SHELL_STATIC_SUBCMD_SET_CREATE(sub_platform_cmds,
-			       SHELL_CMD(info, NULL, "Platform info.", cmd_info_print),
-			       SHELL_CMD(gpio, &sub_gpio_cmds, "GPIO relative command.", NULL),
-			       SHELL_CMD(sensor, &sub_sensor_cmds, "SENSOR relative command.",
-					 NULL),
-			       SHELL_SUBCMD_SET_END);
+SHELL_STATIC_SUBCMD_SET_CREATE(
+	sub_platform_cmds, SHELL_CMD(info, NULL, "Platform info.", cmd_info_print),
+	SHELL_CMD(gpio, &sub_gpio_cmds, "GPIO relative command.", NULL),
+	SHELL_CMD(sensor, &sub_sensor_cmds, "SENSOR relative command.", NULL),
+	SHELL_CMD(log, &sub_log_cmds, "Debug log relative command.", NULL), SHELL_SUBCMD_SET_END);
 
 SHELL_CMD_REGISTER(platform, &sub_platform_cmds, "Platform commands", NULL);
