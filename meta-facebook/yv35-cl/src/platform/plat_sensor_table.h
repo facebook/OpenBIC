@@ -2,6 +2,7 @@
 #define PLAT_SENSOR_TABLE_H
 
 #include <stdint.h>
+#include "sensor.h"
 
 /*  define config for sensors  */
 #define TMP75_IN_ADDR (0x92 >> 1)
@@ -33,12 +34,12 @@
 #define TEMP_CPU_TJMAX_INDEX 0x10
 #define TEMP_CPU_TJMAX_PARAM 0x0000
 #define TEMP_DIMM_INDEX 0x0E
-#define TEMP_DIMM_A_PARAM 0x0000
-#define TEMP_DIMM_C_PARAM 0x0002
-#define TEMP_DIMM_D_PARAM 0x0003
-#define TEMP_DIMM_E_PARAM 0x0004
-#define TEMP_DIMM_G_PARAM 0x0006
-#define TEMP_DIMM_H_PARAM 0x0007
+#define TEMP_DIMM_A0_PARAM 0x0000
+#define TEMP_DIMM_A2_PARAM 0x0002
+#define TEMP_DIMM_A3_PARAM 0x0003
+#define TEMP_DIMM_A4_PARAM 0x0004
+#define TEMP_DIMM_A6_PARAM 0x0006
+#define TEMP_DIMM_A7_PARAM 0x0007
 #define DPV2_16_ADDR 0x50
 
 /*  threshold sensor number, 1 based  */
@@ -47,12 +48,12 @@
 #define SENSOR_NUM_TEMP_TMP75_FIO 0x03
 #define SENSOR_NUM_TEMP_PCH 0x04
 #define SENSOR_NUM_TEMP_CPU 0x05
-#define SENSOR_NUM_TEMP_DIMM_A 0x06
-#define SENSOR_NUM_TEMP_DIMM_C 0x07
-#define SENSOR_NUM_TEMP_DIMM_D 0x09
-#define SENSOR_NUM_TEMP_DIMM_E 0x0A
-#define SENSOR_NUM_TEMP_DIMM_G 0x0B
-#define SENSOR_NUM_TEMP_DIMM_H 0x0C
+#define SENSOR_NUM_TEMP_DIMM_A0 0x06
+#define SENSOR_NUM_TEMP_DIMM_A2 0x07
+#define SENSOR_NUM_TEMP_DIMM_A3 0x09
+#define SENSOR_NUM_TEMP_DIMM_A4 0x0A
+#define SENSOR_NUM_TEMP_DIMM_A6 0x0B
+#define SENSOR_NUM_TEMP_DIMM_A7 0x0C
 #define SENSOR_NUM_TEMP_SSD0 0x0D
 #define SENSOR_NUM_TEMP_HSC 0x0E
 #define SENSOR_NUM_TEMP_CPU_MARGIN 0x14
@@ -93,12 +94,12 @@
 #define SENSOR_NUM_PWR_PVCCFA_EHV 0x3D
 #define SENSOR_NUM_PWR_PVCCD_HV 0x3E
 #define SENSOR_NUM_PWR_PVCCINFAON 0x3F
-#define SENSOR_NUM_PWR_DIMMA_PMIC 0x1E
-#define SENSOR_NUM_PWR_DIMMC_PMIC 0x1F
-#define SENSOR_NUM_PWR_DIMMD_PMIC 0x36
-#define SENSOR_NUM_PWR_DIMME_PMIC 0x37
-#define SENSOR_NUM_PWR_DIMMG_PMIC 0x42
-#define SENSOR_NUM_PWR_DIMMH_PMIC 0x47
+#define SENSOR_NUM_PWR_DIMMA0_PMIC 0x1E
+#define SENSOR_NUM_PWR_DIMMA2_PMIC 0x1F
+#define SENSOR_NUM_PWR_DIMMA3_PMIC 0x36
+#define SENSOR_NUM_PWR_DIMMA4_PMIC 0x37
+#define SENSOR_NUM_PWR_DIMMA6_PMIC 0x42
+#define SENSOR_NUM_PWR_DIMMA7_PMIC 0x47
 
 #define SENSOR_NUM_SYSTEM_STATUS 0x10
 #define SENSOR_NUM_POWER_ERROR 0x56
@@ -116,8 +117,14 @@
 
 #define POLL_TIME_BAT3V 3600 // sec
 
+typedef struct _dimm_pmic_mapping_cfg {
+	uint8_t dimm_sensor_num;
+	uint8_t mapping_pmic_sensor_num;
+} dimm_pmic_mapping_cfg;
+
 uint8_t plat_get_config_size();
 uint8_t pal_get_extend_sensor_config();
 void load_sensor_config(void);
+bool disable_dimm_pmic_sensor(uint8_t sensor_num);
 
 #endif

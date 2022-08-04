@@ -778,6 +778,7 @@ __weak void OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg)
 		break;
 	case SENSOR_NOT_ACCESSIBLE:
 	case SENSOR_INIT_STATUS:
+	case SENSOR_NOT_PRESENT:
 		res->decimal = 0;
 		res->fraction = 0;
 		// notice BMC about sensor temporary in not accessible status
