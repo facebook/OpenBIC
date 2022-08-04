@@ -3644,9 +3644,9 @@ uint8_t pal_get_extend_sdr()
 	case HSC_MODULE_ADM1278:
 	case HSC_MODULE_MP5990:
 	case HSC_MODULE_LTC4286:
+	case HSC_MODULE_LTC4282:
 		extend_sdr_size += ARRAY_SIZE(hotswap_sdr_table);
 		break;
-	case HSC_MODULE_LTC4282:
 	default:
 		printf("[%s] unsupported HSC module, HSC module: 0x%x\n", __func__, hsc_module);
 		break;
@@ -3672,12 +3672,12 @@ void pal_extend_full_sdr_table()
 	case HSC_MODULE_ADM1278:
 	case HSC_MODULE_MP5990:
 	case HSC_MODULE_LTC4286:
+	case HSC_MODULE_LTC4282:
 		extend_array_num = ARRAY_SIZE(hotswap_sdr_table);
 		for (int index = 0; index < extend_array_num; index++) {
 			add_full_sdr_table(hotswap_sdr_table[index]);
 		}
 		break;
-	case HSC_MODULE_LTC4282:
 	default:
 		printf("[%s] unsupported HSC module, HSC module: 0x%x\n", __func__, hsc_module);
 		break;
