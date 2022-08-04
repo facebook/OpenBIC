@@ -69,12 +69,14 @@ const char *const sensor_type_name[] = {
 			isl28022) sensor_name_to_num(pex89000) sensor_name_to_num(tps53689)
 			sensor_name_to_num(xdpe15284) sensor_name_to_num(
 				ltc4282) sensor_name_to_num(fan) sensor_name_to_num(tmp431)
-				sensor_name_to_num(pmic) sensor_name_to_num(ina233)
-					sensor_name_to_num(isl69254) sensor_name_to_num(max16550a)
-						sensor_name_to_num(ina230) sensor_name_to_num(
-							xdpe12284c) sensor_name_to_num(raa229621)
-							sensor_name_to_num(nct7718w)
-								sensor_name_to_num(ltc4286)
+				sensor_name_to_num(pmic) sensor_name_to_num(
+					ina233) sensor_name_to_num(isl69254)
+					sensor_name_to_num(max16550a) sensor_name_to_num(
+						ina230) sensor_name_to_num(xdpe12284c)
+						sensor_name_to_num(raa229621) sensor_name_to_num(
+							nct7718w) sensor_name_to_num(ltc4286)
+							sensor_name_to_num(amd_tsi)
+								sensor_name_to_num(apml_mailbox)
 };
 
 const char *const sensor_status_name[] = {

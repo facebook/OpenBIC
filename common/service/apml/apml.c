@@ -382,21 +382,21 @@ uint8_t apml_read(apml_msg *msg)
 static void apml_handler(void *arvg0, void *arvg1, void *arvg2)
 {
 	uint8_t ret;
-	apml_msg msg_cfg;
+	apml_msg msg_data;
 	while (1) {
 		ret = APML_ERROR;
-		memset(&msg_cfg, 0, sizeof(apml_msg));
-		k_msgq_get(&apml_msgq, &msg_cfg, K_FOREVER);
+		memset(&msg_data, 0, sizeof(apml_msg));
+		k_msgq_get(&apml_msgq, &msg_data, K_FOREVER);
 
-		switch (msg_cfg.msg_type) {
+		switch (msg_data.msg_type) {
 		case APML_MSG_TYPE_MAILBOX:
-			ret = access_RMI_mailbox(&msg_cfg);
+			ret = access_RMI_mailbox(&msg_data);
 			break;
 		case APML_MSG_TYPE_CPUID:
-			ret = access_CPUID(&msg_cfg);
+			ret = access_CPUID(&msg_data);
 			break;
 		case APML_MSG_TYPE_MCA:
-			ret = access_MCA(&msg_cfg);
+			ret = access_MCA(&msg_data);
 			break;
 		default:
 			break;
@@ -404,10 +404,13 @@ static void apml_handler(void *arvg0, void *arvg1, void *arvg2)
 
 		if (ret) {
 			printf("[%s] APML access failed, msg type %d.\n", __func__,
-			       msg_cfg.msg_type);
+			       msg_data.msg_type);
+			if (msg_data.error_cb_fn) {
+				msg_data.error_cb_fn(&msg_data);
+			}
 		} else {
-			if (msg_cfg.cb_fn) {
-				msg_cfg.cb_fn(&msg_cfg);
+			if (msg_data.cb_fn) {
+				msg_data.cb_fn(&msg_data);
 			}
 		}
 		k_msleep(10);

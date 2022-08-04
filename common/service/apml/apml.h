@@ -10,6 +10,25 @@ enum APML_MSG_TYPE {
 	APML_MSG_TYPE_MCA,
 };
 
+enum SBRMI_MAILBOX_CMD {
+	SBRMI_MAILBOX_PKGPWR = 0x01,
+	SBRMI_MAILBOX_GET_DIMM_PWR = 0x47,
+	SBRMI_MAILBOX_GET_DIMM_TEMP = 0x48,
+};
+
+enum SBTSI_REGISTER {
+	SBTSI_CPU_TEMP_INT = 0x01,
+	SBTSI_CONFIG = 0x03,
+	SBTSI_CPU_TEMP_DEC = 0x10,
+};
+
+enum SBRMI_MAILBOX_ERR_CODE {
+	SBRMI_MAILBOX_NO_ERR = 0x00,
+	SBRMI_MAILBOX_CMD_ABORT = 0x01,
+	SBRMI_MAILBOX_UNKNOWN_CMD = 0x02,
+	SBRMI_MAILBOX_INVALID_CORE = 0x03,
+};
+
 enum SBRMI_REGISTER {
 	SBRMI_STATUS = 0x02,
 	SBRMI_OUTBANDMSG_INST0 = 0x30,
@@ -71,6 +90,7 @@ typedef __aligned(4) struct _apml_msg_ {
 	uint8_t WrData[7];
 	uint8_t RdData[9];
 	void (*cb_fn)(struct _apml_msg_ *msg);
+	void (*error_cb_fn)(struct _apml_msg_ *msg);
 	void *ptr_arg;
 	uint32_t ui32_arg;
 } __packed apml_msg;
