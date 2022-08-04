@@ -12,6 +12,7 @@
 #include <string.h>
 #include <zephyr.h>
 #include "plat_ipmb.h"
+#include "log_util.h"
 /*
  * If MAX_IPMB_IDX which define by plat_ipmb.h is not equal to zero 
  * then compile ipmb.c to avoid creating redundant memory space.
@@ -335,7 +336,7 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 					   K_NO_WAIT);
 				k_msleep(IPMB_RETRY_DELAY_MS);
 			} else {
-				if (DEBUG_IPMB) {
+				if (is_log_en(DEBUG_IPMB)) {
 					printf("[%s] Send a response message, from(%d) to(%d) netfn(0x%x) "
 					       "cmd(0x%x) CC(0x%x)\n",
 					       __func__, current_msg_tx->buffer.InF_source,
@@ -384,7 +385,7 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 				current_msg_tx->buffer.seq_target = current_msg_tx->buffer.seq;
 				insert_req_ipmi_msg(P_start[ipmb_cfg.index],
 						    &current_msg_tx->buffer, ipmb_cfg.index);
-				if (DEBUG_IPMB) {
+				if (is_log_en(DEBUG_IPMB)) {
 					printf("[%s] Send a request message, from(%d) to(%d) netfn(0x%x) "
 					       "cmd(0x%x) CC(0x%x)\n",
 					       __func__, current_msg_tx->buffer.InF_source,
@@ -507,7 +508,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 
 	memcpy(&ipmb_cfg, (IPMB_config *)pvParameters, sizeof(IPMB_config));
 
-	if (DEBUG_IPMB) {
+	if (is_log_en(DEBUG_IPMB)) {
 		printf("[%s] IPMB RXTask thread, bus(%d) index(%d)\n", __func__, ipmb_cfg.bus,
 		       ipmb_cfg.index);
 	}
@@ -541,7 +542,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 		}
 
 		if (rx_len > 0) {
-			if (DEBUG_IPMB) {
+			if (is_log_en(DEBUG_IPMB)) {
 				printf("Received an IPMB message from bus(%d) data[%d](",
 				       ipmb_cfg.bus, rx_len);
 				for (i = 0; i < rx_len; i++) {
@@ -566,7 +567,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 				printf("Failed to decode IPMI message, ret(%d)\n", ret);
 			}
 
-			if (DEBUG_IPMB) {
+			if (is_log_en(DEBUG_IPMB)) {
 				printf("Decode the IPMB message, netfn(0x%x) Cmd(0x%x) Data[%d](",
 				       current_msg_rx->buffer.netfn, current_msg_rx->buffer.cmd,
 				       current_msg_rx->buffer.data_len);
@@ -581,7 +582,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 				current_msg_rx->buffer.seq_target = current_msg_rx->buffer.seq;
 				if (find_req_ipmi_msg(P_start[ipmb_cfg.index],
 						      &(current_msg_rx->buffer), ipmb_cfg.index)) {
-					if (DEBUG_IPMB) {
+					if (is_log_en(DEBUG_IPMB)) {
 						printf("Found the corresponding request message, \
 								from(0x%x) to(0x%x) target_seq_num(%d)\n",
 						       current_msg_rx->buffer.InF_source,
@@ -652,7 +653,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 						       &current_msg_rx->buffer.data[0],
 						       current_msg_rx->buffer.data_len);
 
-						if (DEBUG_IPMB) {
+						if (is_log_en(DEBUG_IPMB)) {
 							printf("Send the response message to ME, source_seq_num(%d), "
 							       "target_seq_num(%d)\n",
 							       current_msg_rx->buffer.seq_source,
@@ -706,7 +707,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 						bridge_msg->completion_code = CC_SUCCESS;
 						bridge_msg->seq = current_msg_rx->buffer.seq_source;
 
-						if (DEBUG_IPMB) {
+						if (is_log_en(DEBUG_IPMB)) {
 							printf("Send the response message to the source(%d), "
 							       "source_seq_num(%d), target_seq_num(%d)\n",
 							       current_msg_rx->buffer.InF_source,
@@ -783,7 +784,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 					current_msg_rx->buffer.InF_source =
 						IPMB_config_table[ipmb_cfg.index].channel;
 					/* Notify the client about the new request */
-					if (DEBUG_IPMB) {
+					if (is_log_en(DEBUG_IPMB)) {
 						printf("[%s] Received a request message, netfn(0x%x) InfS(0x%x) "
 						       "seq_s(%d)\n",
 						       __func__, current_msg_rx->buffer.netfn,
@@ -829,7 +830,7 @@ ipmb_error ipmb_send_request(ipmi_msg *req, uint8_t index)
 	req_cfg.buffer.src_LUN = 0;
 	req_cfg.retries = 0;
 
-	if (DEBUG_IPMB) {
+	if (is_log_en(DEBUG_IPMB)) {
 		uint8_t i;
 		printf("Send req message, index(%d) cc(0x%x) data[%d](", index,
 		       req_cfg.buffer.completion_code, req_cfg.buffer.data_len);
@@ -879,7 +880,7 @@ ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index)
 	resp_cfg.buffer.cmd = resp->cmd;
 	resp_cfg.retries = 0;
 
-	if (DEBUG_IPMB) {
+	if (is_log_en(DEBUG_IPMB)) {
 		uint8_t i;
 		printf("Send resp message, index(%d) cc(0x%x) data[%d](", index,
 		       resp_cfg.buffer.completion_code, resp_cfg.buffer.data_len);
@@ -1130,7 +1131,7 @@ void create_ipmb_threads(uint8_t index)
 				CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
 	k_thread_name_set(&IPMB_RX[index], IPMB_config_table[index].rx_thread_name);
 
-	if (DEBUG_IPMB) {
+	if (is_log_en(DEBUG_IPMB)) {
 		printf("Initial IPMB TX/RX threads, bus(0x%x), addr(0x%x)\n",
 		       IPMB_config_table[index].bus,
 		       IPMB_config_table[index].channel_target_address);

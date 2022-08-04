@@ -18,6 +18,7 @@
 #include "mctp.h"
 #include "pldm.h"
 #include "plat_ipmb.h"
+#include "log_util.h"
 
 LOG_MODULE_REGISTER(ipmi);
 
@@ -181,7 +182,7 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 		memset(&msg_cfg, 0, sizeof(ipmi_msg_cfg));
 		k_msgq_get(&ipmi_msgq, &msg_cfg, K_FOREVER);
 
-		if (DEBUG_IPMI) {
+		if (is_log_en(DEBUG_IPMI)) {
 			printf("IPMI_handler[%d]: netfn: %x\n", msg_cfg.buffer.data_len,
 			       msg_cfg.buffer.netfn);
 			for (i = 0; i < msg_cfg.buffer.data_len; i++) {
@@ -294,7 +295,7 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 						       (KCS_BUFF_SIZE - 3));
 				}
 
-				if (DEBUG_KCS) {
+				if (is_log_en(DEBUG_KCS)) {
 					printf("kcs from ipmi netfn %x, cmd %x, length %d, cc %x\n",
 					       kcs_buff[0], kcs_buff[1], msg_cfg.buffer.data_len,
 					       kcs_buff[2]);

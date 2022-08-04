@@ -14,6 +14,7 @@
 #include "util_sys.h"
 #include "plat_def.h"
 #include "libutil.h"
+#include "log_util.h"
 
 #define SENSOR_DRIVE_INIT_DECLARE(name) uint8_t name##_init(uint8_t sensor_num)
 
@@ -541,7 +542,7 @@ bool sensor_init(void)
 	/* register read api of sensor_config */
 	drive_init();
 
-	if (DEBUG_SENSOR) {
+	if (is_log_en(DEBUG_SENSOR)) {
 		printf("[%s] sensor name: %s\n", __func__, full_sdr_table[sdr_index_map[1]].ID_str);
 	}
 

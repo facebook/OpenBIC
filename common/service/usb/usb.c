@@ -6,6 +6,7 @@
 #include "ipmi.h"
 #include "usb.h"
 #include "plat_def.h"
+#include "log_util.h"
 
 #ifdef CONFIG_USB
 
@@ -42,7 +43,7 @@ void handle_usb_data(uint8_t *rx_buff, int rx_len)
 	static uint16_t keep_data_len = 0;
 	static uint16_t fwupdate_data_len = 0;
 
-	if (DEBUG_USB) {
+	if (is_log_en(DEBUG_USB)) {
 		printf("USB: len %d, req: %x %x ID: %x %x %x target: %x offset: %x %x %x %x len: %x %x\n",
 		       rx_len, rx_buff[0], rx_buff[1], rx_buff[2], rx_buff[3], rx_buff[4],
 		       rx_buff[5], rx_buff[6], rx_buff[7], rx_buff[8], rx_buff[9], rx_buff[10],
@@ -107,7 +108,7 @@ void usb_write_by_ipmi(ipmi_msg *ipmi_resp)
 
 	pack_ipmi_resp(resp, ipmi_resp);
 
-	if (DEBUG_USB) {
+	if (is_log_en(DEBUG_USB)) {
 		int i;
 		printf("usb resp: %x %x %x, ", resp->netfn, resp->cmd, resp->cmplt_code);
 		for (i = 0; i < ipmi_resp->data_len; i++)
@@ -136,7 +137,7 @@ static void usb_handler(void *arug0, void *arug1, void *arug2)
 			continue;
 		}
 
-		if (DEBUG_USB) {
+		if (is_log_en(DEBUG_USB)) {
 			printf("Print Data: ");
 			for (i = 0; i < rx_len; i++)
 				printf("0x%x ", rx_buff[i]);

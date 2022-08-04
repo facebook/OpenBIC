@@ -5,6 +5,7 @@
 #include "plat_sdr_table.h"
 #include "plat_sensor_table.h"
 #include "plat_ipmb.h"
+#include "log_util.h"
 
 SDR_INFO sdr_info;
 static uint16_t RSV_ID[2] = { 0 };
@@ -200,7 +201,7 @@ uint8_t sdr_init(void)
 		full_sdr_table[i].ID_len += strlen(full_sdr_table[i].ID_str);
 		full_sdr_table[i].record_len += strlen(full_sdr_table[i].ID_str);
 
-		if (DEBUG_SENSOR) {
+		if (is_log_en(DEBUG_SENSOR)) {
 			printf("%s ID: 0x%x%x, size: %d, recordlen: %d\n", full_sdr_table[i].ID_str,
 			       full_sdr_table[i].record_id_h, full_sdr_table[i].record_id_l,
 			       full_sdr_table[i].ID_len, full_sdr_table[i].record_len);

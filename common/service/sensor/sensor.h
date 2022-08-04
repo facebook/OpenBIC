@@ -19,8 +19,6 @@
 #define SENSOR_FAIL 0xFF
 #define SENSOR_NUM_MAX 0xFF
 
-#define DEBUG_SENSOR 0
-
 #define SAMPLE_COUNT_DEFAULT 1
 
 #define POLL_TIME_DEFAULT 1

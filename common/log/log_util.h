@@ -8,22 +8,16 @@
 #define LOG_DISABLE 0
 
 typedef enum {
-	M_DEBUG_I2C,
-	M_DEBUG_PECI,
-	M_DEBUG_KCS,
-	M_DEBUG_IPMB,
-	M_DEBUG_IPMI,
-	M_DEBUG_SENSOR,
-	M_DEBUG_USB,
+	DEBUG_I2C,
+	DEBUG_PECI,
+	DEBUG_KCS,
+	DEBUG_IPMB,
+	DEBUG_IPMI,
+	DEBUG_SENSOR,
+	DEBUG_USB,
+	DEBUG_MAX,
 } log_type_t;
 
-typedef struct _log_cfg__ {
-	uint8_t log_idx;
-	char name[15];
-	uint8_t status;
-} log_cfg_t;
-
-extern const int LOG_CONFIG_SIZE;
 extern const char *const log_name[];
 
 uint8_t is_log_en(log_type_t log_idx);
