@@ -15,6 +15,93 @@ enum {
 	VID_IDENTIFIER = 1,
 };
 
+bool xdpe12284c_get_checksum(uint8_t bus, uint8_t target_addr, uint8_t *checksum)
+{
+	if (checksum == NULL) {
+		printf("<error> XDPE12284C checksum is NULL\n");
+		return false;
+	}
+
+	I2C_MSG i2c_msg;
+	uint8_t retry = 3;
+
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = target_addr;
+	i2c_msg.tx_len = 2;
+	i2c_msg.data[0] = 0x00;
+	i2c_msg.data[1] = 0x62; //set page to 0x62
+
+	if (i2c_master_write(&i2c_msg, retry)) {
+		printf("<error> XDPE12284C get checksum while set page\n");
+		return false;
+	}
+
+	//Read lower word for the 32bit checksum value
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 2;
+	i2c_msg.data[0] = 0x43;
+	if (i2c_master_read(&i2c_msg, retry)) {
+		printf("<error> XDPE12284C get checksum while i2c reading\n");
+		return false;
+	}
+
+	checksum[0] = i2c_msg.data[1];
+	checksum[1] = i2c_msg.data[0];
+
+	i2c_msg.tx_len = 2;
+	i2c_msg.data[0] = 0x00;
+	i2c_msg.data[1] = 0x62; //set page to 0x62
+
+	if (i2c_master_write(&i2c_msg, retry)) {
+		printf("<error> XDPE12284C get checksum while set page\n");
+		return false;
+	}
+
+	//Read higher word for the 32bit checksum value
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 2;
+	i2c_msg.data[0] = 0x42;
+	if (i2c_master_read(&i2c_msg, retry)) {
+		printf("<error> XDPE12284C get checksum while i2c reading\n");
+		return false;
+	}
+
+	checksum[2] = i2c_msg.data[1];
+	checksum[3] = i2c_msg.data[0];
+
+	return true;
+}
+
+bool xdpe12284c_get_remaining_write(uint8_t bus, uint8_t target_addr, uint8_t *remain_write)
+{
+	I2C_MSG i2c_msg;
+	uint8_t retry = 3;
+
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = target_addr;
+	i2c_msg.tx_len = 2;
+	i2c_msg.data[0] = 0x00;
+	i2c_msg.data[1] = 0x50; //set page to 0x50
+
+	if (i2c_master_write(&i2c_msg, retry)) {
+		printf("<error> XDPE12284C get remaining write while i2c writing\n");
+		return false;
+	}
+
+	//Read the remaining writes from register address 0x82
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 2;
+	i2c_msg.data[0] = 0x82;
+	if (i2c_master_read(&i2c_msg, retry)) {
+		printf("<error> XDPE12284C get remaining write while i2c reading\n");
+		return false;
+	}
+
+	//the data residing in bit11~bit6 is the number of the remaining writes.
+	*remain_write = (((i2c_msg.data[1] << 8) | i2c_msg.data[0]) & 0xFC0) >> 6;
+	return true;
+}
+
 /*  Reference: Infineon spec section 8.24: VID table
  *  PMBUS spec section 8.2: VOUT mode
  */

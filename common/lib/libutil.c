@@ -54,3 +54,13 @@ I2C_MSG construct_i2c_message(uint8_t bus_id, uint8_t address, uint8_t tx_len, u
 	i2c_msg.rx_len = rx_len;
 	return i2c_msg;
 }
+
+void reverse_array(uint8_t arr[], uint8_t size)
+{
+	uint8_t i;
+	for (i = 0; i < size / 2; i++) {
+		uint8_t temp = arr[i];
+		arr[i] = arr[size - 1 - i];
+		arr[size - 1 - i] = temp;
+	}
+}
