@@ -266,7 +266,7 @@ init_param:
 	msg.tx_len = 1;
 	msg.rx_len = 1;
 	msg.data[0] = LTC4282_ILIM_ADJUST_OFFSET;
-	if (i2c_master_write(&msg, retry) != 0) {
+	if (i2c_master_read(&msg, retry) != 0) {
 		printf("Failed to read LTC4282 register(0x%x)\n", msg.data[0]);
 		init_args->is_init = false;
 		goto error;
