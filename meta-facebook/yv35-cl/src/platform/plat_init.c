@@ -4,6 +4,7 @@
 #include "util_sys.h"
 #include "plat_class.h"
 #include "plat_gpio.h"
+#include "plat_pmic.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -23,6 +24,8 @@ void pal_pre_init()
 void pal_device_init()
 {
 	init_me_firmware();
+
+	start_monitor_pmic_error_thread();
 }
 
 void pal_set_sys_status()
