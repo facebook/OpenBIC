@@ -60,6 +60,12 @@ enum INA230_OFFSET {
 	INA230_ALT_OFFSET = 0x07,
 };
 
+enum G788P81U_OFFSET {
+	G788P81U_LOCAL_TEMP_OFFSET = 0x00,
+	G788P81U_REMOTE_TEMP_OFFSET = 0x01,
+	G788P81U_REMOTE_TEMP_EXT_OFFSET = 0x10,
+};
+
 enum SENSOR_DEV {
 	sensor_dev_tmp75 = 0,
 	sensor_dev_ast_adc = 0x01,
@@ -87,6 +93,8 @@ enum SENSOR_DEV {
 	sensor_dev_ltc4286 = 0x17,
 	sensor_dev_amd_tsi = 0x18,
 	sensor_dev_apml_mailbox = 0x19,
+	sensor_dev_xdpe19283b = 0x1A,
+	sensor_dev_g788p81u = 0x1B,
 	sensor_dev_max
 };
 

@@ -72,6 +72,8 @@ SENSOR_DRIVE_INIT_DECLARE(ltc4286);
 SENSOR_DRIVE_INIT_DECLARE(amd_tsi);
 SENSOR_DRIVE_INIT_DECLARE(apml_mailbox);
 #endif
+SENSOR_DRIVE_INIT_DECLARE(xdpe19283b);
+SENSOR_DRIVE_INIT_DECLARE(g788p81u);
 
 struct sensor_drive_api {
 	enum SENSOR_DEV dev;
@@ -104,6 +106,8 @@ struct sensor_drive_api {
 	SENSOR_DRIVE_TYPE_INIT_MAP(amd_tsi),
 	SENSOR_DRIVE_TYPE_INIT_MAP(apml_mailbox),
 #endif
+	SENSOR_DRIVE_TYPE_INIT_MAP(xdpe19283b),
+	SENSOR_DRIVE_TYPE_INIT_MAP(g788p81u),
 };
 
 static void init_sensor_num(void)

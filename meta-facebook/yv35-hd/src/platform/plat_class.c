@@ -5,6 +5,8 @@
 #include "libutil.h"
 #include "plat_gpio.h"
 #include "plat_i2c.h"
+#include "plat_sensor_table.h"
+#include "sensor.h"
 
 #define CPLD_ADDR 0x21 // 7-bit address
 #define CPLD_CLASS_TYPE_REG 0x05
@@ -17,6 +19,7 @@
 
 static uint8_t system_class = SYS_CLASS_1;
 static uint8_t board_revision = 0x3F;
+static uint8_t hsc_module = HSC_MODULE_UNKNOWN;
 static CARD_STATUS _1ou_status = { false, TYPE_1OU_UNKNOWN };
 static CARD_STATUS _2ou_status = { false, TYPE_2OU_UNKNOWN };
 
@@ -88,6 +91,11 @@ uint8_t get_board_revision()
 	return board_revision;
 }
 
+uint8_t get_hsc_module()
+{
+	return hsc_module;
+}
+
 bool get_adc_voltage(int channel, float *voltage)
 {
 	if (!voltage) {
@@ -134,6 +142,8 @@ void init_platform_config()
 {
 	I2C_MSG i2c_msg;
 	uint8_t retry = 3;
+
+	hsc_module = ((gpio_get(HSC_TYPE_1) << 1) & 0x02) | (gpio_get(HSC_TYPE_0) & 0x01);
 
 	/* According hardware design, BIC can check the class type through GPIOs.
 	 * The board ID is "0000" if the class type is class1.
@@ -269,7 +279,34 @@ void init_platform_config()
 				printf("Unknown the 1OU card type, the voltage of ADC channel-6 is %fV\n",
 				       voltage);
 			} else if (_1ou_status.card_type == TYPE_1OU_RAINBOW_FALLS) {
-				gpio_set(HSC_OCP_GPIO1_R, GPIO_HIGH);
+				if (hsc_module == HSC_MODULE_ADM1278) {
+					gpio_set(HSC_OCP_GPIO1_R, GPIO_HIGH);
+				} else if (hsc_module == HSC_MODULE_LTC4282) {
+					uint8_t ilim_adjust_data = 0;
+
+					tx_len = 1;
+					rx_len = 1;
+					memset(data, 0, I2C_DATA_SIZE);
+					data[0] = LTC4282_ILIM_ADJUST_OFFSET;
+					i2c_msg = construct_i2c_message(I2C_BUS5, LTC4282_ADDR,
+									tx_len, data, rx_len);
+					if (!i2c_master_read(&i2c_msg, retry)) {
+						ilim_adjust_data = i2c_msg.data[0];
+					} else {
+						printf("Failed to read ILIM_ADJUST from LTC4282\n");
+					}
+					/* Set ILIM to 15.625mV by writing 0b001 to bits[7:0] */
+					tx_len = 2;
+					rx_len = 0;
+					memset(data, 0, I2C_DATA_SIZE);
+					data[0] = LTC4282_ILIM_ADJUST_OFFSET;
+					data[1] = (ilim_adjust_data & 0x1f) | 0x20;
+					i2c_msg = construct_i2c_message(I2C_BUS5, LTC4282_ADDR,
+									tx_len, data, rx_len);
+					if (i2c_master_write(&i2c_msg, retry)) {
+						printf("Failed to set ILIM_ADJUST to LTC4282\n");
+					}
+				}
 			}
 		}
 	}
