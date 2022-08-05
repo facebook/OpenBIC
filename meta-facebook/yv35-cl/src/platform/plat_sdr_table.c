@@ -377,7 +377,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"CPU TjMax",
 	},
 	{
-		// DIMM A on board temperature
+		// DIMM A0 on board temperature
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -386,7 +386,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_TEMP_DIMM_A, // sensor number
+		SENSOR_NUM_TEMP_DIMM_A0, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -438,7 +438,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"DIMMA Temp",
 	},
 	{
-		// DIMM C on board temperature
+		// DIMM A2 on board temperature
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -447,7 +447,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_TEMP_DIMM_C, // sensor number
+		SENSOR_NUM_TEMP_DIMM_A2, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -499,7 +499,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"DIMMC Temp",
 	},
 	{
-		// DIMM D on board temperature
+		// DIMM A3 on board temperature
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -508,7 +508,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_TEMP_DIMM_D, // sensor number
+		SENSOR_NUM_TEMP_DIMM_A3, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -560,7 +560,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"DIMMD Temp",
 	},
 	{
-		// DIMM E on board temperature
+		// DIMM A4 on board temperature
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -569,7 +569,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_TEMP_DIMM_E, // sensor number
+		SENSOR_NUM_TEMP_DIMM_A4, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -621,7 +621,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"DIMME Temp",
 	},
 	{
-		// DIMM G on board temperature
+		// DIMM A6 on board temperature
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -630,7 +630,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_TEMP_DIMM_G, // sensor number
+		SENSOR_NUM_TEMP_DIMM_A6, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -682,7 +682,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"DIMMG Temp",
 	},
 	{
-		// DIMM H on board temperature
+		// DIMM A7 on board temperature
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -691,7 +691,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_TEMP_DIMM_H, // sensor number
+		SENSOR_NUM_TEMP_DIMM_A7, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2695,7 +2695,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"FAON VR Pout",
 	},
 	{
-		// DIMMA power
+		// DIMMA0 power
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -2704,7 +2704,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_PWR_DIMMA_PMIC, // sensor number
+		SENSOR_NUM_PWR_DIMMA0_PMIC, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2756,7 +2756,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"DIMMA PMIC_Pout",
 	},
 	{
-		// DIMMC power
+		// DIMMA2 power
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -2765,7 +2765,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_PWR_DIMMC_PMIC, // sensor number
+		SENSOR_NUM_PWR_DIMMA2_PMIC, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2817,7 +2817,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"DIMMC PMIC_Pout",
 	},
 	{
-		// DIMMD power
+		// DIMMA3 power
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -2826,7 +2826,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_PWR_DIMMD_PMIC, // sensor number
+		SENSOR_NUM_PWR_DIMMA3_PMIC, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2878,7 +2878,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"DIMMD PMIC_Pout",
 	},
 	{
-		// DIMME power
+		// DIMMA4 power
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -2887,7 +2887,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_PWR_DIMME_PMIC, // sensor number
+		SENSOR_NUM_PWR_DIMMA4_PMIC, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2939,7 +2939,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"DIMME PMIC_Pout",
 	},
 	{
-		// DIMMG power
+		// DIMMA6 power
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -2948,7 +2948,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_PWR_DIMMG_PMIC, // sensor number
+		SENSOR_NUM_PWR_DIMMA6_PMIC, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -3000,7 +3000,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"DIMMG PMIC_Pout",
 	},
 	{
-		// DIMMH power
+		// DIMMA7 power
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -3009,7 +3009,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_PWR_DIMMH_PMIC, // sensor number
+		SENSOR_NUM_PWR_DIMMA7_PMIC, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -3644,9 +3644,9 @@ uint8_t pal_get_extend_sdr()
 	case HSC_MODULE_ADM1278:
 	case HSC_MODULE_MP5990:
 	case HSC_MODULE_LTC4286:
+	case HSC_MODULE_LTC4282:
 		extend_sdr_size += ARRAY_SIZE(hotswap_sdr_table);
 		break;
-	case HSC_MODULE_LTC4282:
 	default:
 		printf("[%s] unsupported HSC module, HSC module: 0x%x\n", __func__, hsc_module);
 		break;
@@ -3672,12 +3672,12 @@ void pal_extend_full_sdr_table()
 	case HSC_MODULE_ADM1278:
 	case HSC_MODULE_MP5990:
 	case HSC_MODULE_LTC4286:
+	case HSC_MODULE_LTC4282:
 		extend_array_num = ARRAY_SIZE(hotswap_sdr_table);
 		for (int index = 0; index < extend_array_num; index++) {
 			add_full_sdr_table(hotswap_sdr_table[index]);
 		}
 		break;
-	case HSC_MODULE_LTC4282:
 	default:
 		printf("[%s] unsupported HSC module, HSC module: 0x%x\n", __func__, hsc_module);
 		break;

@@ -196,6 +196,9 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 				cfg->cache_status = SENSOR_PRE_READ_ERROR;
 				return cfg->cache_status;
 			}
+			if (cfg->cache_status == SENSOR_NOT_PRESENT) {
+				return cfg->cache_status;
+			}
 		}
 
 		if (cfg->read) {
@@ -263,6 +266,8 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 			return cfg->cache_status;
 			;
 		case SENSOR_INIT_STATUS:
+		case SENSOR_NOT_PRESENT:
+		case SENSOR_NOT_ACCESSIBLE:
 			cfg->cache = SENSOR_FAIL;
 			return cfg->cache_status;
 		default:
@@ -309,8 +314,12 @@ void sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 				break;
 			}
 
-			// Check whether monitoring sensor is enabled
 			sensor_cfg *config = &sensor_config[sensor_config_index_map[sensor_num]];
+			if (config->cache_status == SENSOR_NOT_PRESENT) {
+				continue;
+			}
+
+			// Check whether monitoring sensor is enabled
 			if (config->is_enable_polling == DISABLE_SENSOR_POLLING) {
 				config->cache = SENSOR_FAIL;
 				config->cache_status = SENSOR_POLLING_DISABLE;
@@ -566,4 +575,21 @@ __weak void load_sensor_config(void)
 {
 	memcpy(sensor_config, plat_sensor_config, sizeof(sensor_cfg) * SENSOR_CONFIG_SIZE);
 	sensor_config_count = SENSOR_CONFIG_SIZE;
+}
+
+void control_sensor_polling(uint8_t sensor_num, uint8_t optional, uint8_t cache_status)
+{
+	if ((sensor_num == SENSOR_NOT_SUPPORT) ||
+	    (sensor_config_index_map[sensor_num] == SENSOR_FAIL)) {
+		return;
+	}
+
+	if ((optional != DISABLE_SENSOR_POLLING) && (optional != ENABLE_SENSOR_POLLING)) {
+		printf("[%s] input optional is not support, optional: %d\n", __func__, optional);
+		return;
+	}
+
+	sensor_cfg *config = &sensor_config[sensor_config_index_map[sensor_num]];
+	config->is_enable_polling = optional;
+	config->cache_status = cache_status;
 }

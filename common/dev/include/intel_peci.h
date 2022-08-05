@@ -30,5 +30,6 @@ enum {
 };
 
 bool peci_sensor_read(uint8_t sensor_num, int *reading);
+bool check_dimm_present(uint8_t dimm_channel, uint8_t dimm_num, uint8_t *present_result);
 
 #endif

@@ -87,6 +87,7 @@ const char *const sensor_status_name[] = {
 				sensor_name_to_num(post_read_error)
 					sensor_name_to_num(api_unregister)
 						sensor_name_to_num(4byte_acur_read_success)
+							sensor_name_to_num(sensor_not_present)
 };
 
 enum SENSOR_ACCESS { SENSOR_READ, SENSOR_WRITE };

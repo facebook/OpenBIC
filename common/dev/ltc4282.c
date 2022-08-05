@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "sensor.h"
 #include "hal_i2c.h"
@@ -10,6 +11,16 @@ enum {
 
 #define LTC4282_METER_HALT_BIT 5
 #define LTC4282_METER_RESET_BIT 6
+
+struct VOLTAGE_FULL_SCALE_RANGE_INFO {
+	long unsigned int v_range_selection;
+	float full_scale_output_voltage;
+};
+
+struct VOLTAGE_FULL_SCALE_RANGE_INFO FOLDBACK_MODE_TABLE[4] = { { 0x0, 5.547 },
+								{ 0x1, 8.32 },
+								{ 0x2, 16.64 },
+								{ 0x3, 33.28 } };
 
 static int set_clear_bit(I2C_MSG *msg, uint8_t reg, uint8_t bit, uint8_t op, uint8_t retry)
 {
@@ -135,12 +146,32 @@ uint8_t ltc4282_read(uint8_t sensor_num, int *reading)
 	ltc4282_init_arg *init_arg =
 		(ltc4282_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
 
-	if (!init_arg->r_sense) {
+	if (!init_arg->is_init) {
+		printf("[%s], device isn't initialized\n", __func__);
+		return SENSOR_UNSPECIFIED_ERROR;
+	}
+
+	if (!init_arg->r_sense_mohm) {
 		printf("%s, Rsense hasn't given\n", __func__);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	float Rsense = init_arg->r_sense;
+	float rsense_mohm = init_arg->r_sense_mohm / 1000;
+	float full_scale_output_voltage;
+	for (uint8_t cnt = 0; cnt <= ARRAY_SIZE(FOLDBACK_MODE_TABLE); cnt++) {
+		if (init_arg->ilim_adjust.fields.foldback_mode ==
+		    FOLDBACK_MODE_TABLE[cnt].v_range_selection) {
+			full_scale_output_voltage =
+				FOLDBACK_MODE_TABLE[cnt].full_scale_output_voltage;
+			break;
+		}
+		if (cnt == ARRAY_SIZE(FOLDBACK_MODE_TABLE)) {
+			printf("[%s] Unknown voltage range, the foldback mode 0x%x\n", __func__,
+			       init_arg->ilim_adjust.fields.foldback_mode);
+			return SENSOR_UNSPECIFIED_ERROR;
+		}
+	}
+
 	uint8_t retry = 5;
 	double val = 0;
 	I2C_MSG msg = { 0 };
@@ -160,20 +191,20 @@ uint8_t ltc4282_read(uint8_t sensor_num, int *reading)
 	// Refer to LTC4282 datasheet page 23.
 	switch (cfg->offset) {
 	case LTC4282_VSENSE_OFFSET:
-		val = (((msg.data[0] << 8) | msg.data[1]) * 0.04 / 65535 / Rsense);
+		val = (((msg.data[0] << 8) | msg.data[1]) * 0.04 / 65535 / rsense_mohm);
 		break;
 	case LTC4282_POWER_OFFSET:
-		val = (((msg.data[0] << 8) | msg.data[1]) * 16.64 * 0.04 * 65536 / 65535 / 65535 /
-		       Rsense);
+		val = (((msg.data[0] << 8) | msg.data[1]) * full_scale_output_voltage * 0.04 *
+		       65536 / 65535 / 65535 / rsense_mohm);
 		break;
 	case LTC4282_VSOURCE_OFFSET:
-		val = (((msg.data[0] << 8) | msg.data[1]) * 16.64 / 65535);
+		val = (((msg.data[0] << 8) | msg.data[1]) * full_scale_output_voltage / 65535);
 		break;
 	case LTC4282_ENERGY_OFFSET:
 		if (ltc4282_read_ein(&msg, &val, retry) < 0) {
 			return SENSOR_FAIL_TO_ACCESS;
 		}
-		val = (val * 16.64 * 0.04 * 256 / 65535 / 65535 / Rsense);
+		val = (val * 16.64 * 0.04 * 256 / 65535 / 65535 / rsense_mohm);
 		break;
 	default:
 		printf("Invalid sensor 0x%x offset 0x%x\n", sensor_num, cfg->offset);
@@ -195,6 +226,59 @@ uint8_t ltc4282_init(uint8_t sensor_num)
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
+	I2C_MSG msg;
+	uint8_t retry = 5;
+
+	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
+	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+
+	ltc4282_init_arg *init_args =
+		(ltc4282_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+
+	if (init_args->is_init) {
+		goto exit;
+	}
+
+	if (init_args->is_register_setting_needed == 0x0) {
+		goto init_param;
+	}
+
+	for(int bit = 0; bit < 8; ++bit) {
+		switch (init_args->is_register_setting_needed & (BIT(bit))) {
+		case BIT(0):
+			// Set ILIM_ADJUST register
+			msg.tx_len = 2;
+			msg.rx_len = 0;
+			msg.data[0] = LTC4282_ILIM_ADJUST_OFFSET;
+			msg.data[1] = init_args->ilim_adjust.value;
+			if (i2c_master_write(&msg, retry) != 0) {
+				printf("Failed to set LTC4282 register(0x%x)\n", msg.data[0]);
+				goto error;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+
+init_param:
+	// Read ILIM_ADJUST register value
+	msg.tx_len = 1;
+	msg.rx_len = 1;
+	msg.data[0] = LTC4282_ILIM_ADJUST_OFFSET;
+	if (i2c_master_write(&msg, retry) != 0) {
+		printf("Failed to read LTC4282 register(0x%x)\n", msg.data[0]);
+		init_args->is_init = false;
+		goto error;
+	}
+	init_args->ilim_adjust.value = msg.data[0];
+
+	init_args->is_init = true;
+
+exit:
 	sensor_config[sensor_config_index_map[sensor_num]].read = ltc4282_read;
 	return SENSOR_INIT_SUCCESS;
+
+error:
+	return SENSOR_INIT_UNSPECIFIED_ERROR;
 }
