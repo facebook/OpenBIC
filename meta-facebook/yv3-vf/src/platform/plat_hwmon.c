@@ -10,7 +10,6 @@
 #include "plat_util.h"
 #include "plat_i2c.h"
 #include "plat_sensor_table.h"
-#include "plat_tmp.h"
 
 #include "plat_hwmon.h"
 

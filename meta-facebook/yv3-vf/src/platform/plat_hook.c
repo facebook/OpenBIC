@@ -19,9 +19,9 @@ ina230_init_arg ina231_init_args[] = {
 	.is_init = false,
 	.config = {
 		.MODE = 0b111,		// Measure voltage of shunt resistor and bus(default).
-		.VSH_CT = 0b100,	// The Vshunt conversion time is 1.1ms(default).
-		.VBUS_CT = 0b100,	// The Vbus conversion time is 1.1ms(default).
-		.AVG = 0b000,		// Average number is 1(default).
+		.VSH_CT = 0b001,	// The Vshunt conversion time is 1.1ms(default).
+		.VBUS_CT = 0b001,	// The Vbus conversion time is 1.1ms(default).
+		.AVG = 0b111,		// Average number is 1(default).
 	},
 	.alt_cfg = {
 		.LEN = 0,			// Alert Latch enabled.
@@ -29,15 +29,15 @@ ina230_init_arg ina231_init_args[] = {
 	},
 	.r_shunt = 0.01,
 	.alert_value = 16.0,	// Unit: Watt
-	.i_max = 16.384
+	.i_max = 32.768
 	},
 	[1] = {
 	.is_init = false,
 	.config = {
 		.MODE = 0b111,		// Measure voltage of shunt resistor and bus(default).
-		.VSH_CT = 0b100,	// The Vshunt conversion time is 1.1ms(default).
-		.VBUS_CT = 0b100,	// The Vbus conversion time is 1.1ms(default).
-		.AVG = 0b000,		// Average number is 1(default).
+		.VSH_CT = 0b001,	// The Vshunt conversion time is 1.1ms(default).
+		.VBUS_CT = 0b001,	// The Vbus conversion time is 1.1ms(default).
+		.AVG = 0b111,		// Average number is 1(default).
 	},
 	.alt_cfg = {
 		.LEN = 0,			// Alert Latch enabled.
@@ -45,15 +45,15 @@ ina230_init_arg ina231_init_args[] = {
 	},
 	.r_shunt = 0.01,
 	.alert_value = 16.0,	// Unit: Watt
-	.i_max = 16.384
+	.i_max = 32.768
 	},
 	[2] = {
 	.is_init = false,
 	.config = {
 		.MODE = 0b111,		// Measure voltage of shunt resistor and bus(default).
-		.VSH_CT = 0b100,	// The Vshunt conversion time is 1.1ms(default).
-		.VBUS_CT = 0b100,	// The Vbus conversion time is 1.1ms(default).
-		.AVG = 0b000,		// Average number is 1(default).
+		.VSH_CT = 0b001,	// The Vshunt conversion time is 1.1ms(default).
+		.VBUS_CT = 0b001,	// The Vbus conversion time is 1.1ms(default).
+		.AVG = 0b111,		// Average number is 1(default).
 	},
 	.alt_cfg = {
 		.LEN = 0,			// Alert Latch enabled.
@@ -61,15 +61,15 @@ ina230_init_arg ina231_init_args[] = {
 	},
 	.r_shunt = 0.01,
 	.alert_value = 16.0,	// Unit: Watt
-	.i_max = 16.384
+	.i_max = 32.768
 	},
 	[3] = {
 	.is_init = false,
 	.config = {
 		.MODE = 0b111,		// Measure voltage of shunt resistor and bus(default).
-		.VSH_CT = 0b100,	// The Vshunt conversion time is 1.1ms(default).
-		.VBUS_CT = 0b100,	// The Vbus conversion time is 1.1ms(default).
-		.AVG = 0b000,		// Average number is 1(default).
+		.VSH_CT = 0b001,	// The Vshunt conversion time is 1.1ms(default).
+		.VBUS_CT = 0b001,	// The Vbus conversion time is 1.1ms(default).
+		.AVG = 0b111,		// Average number is 1(default).
 	},
 	.alt_cfg = {
 		.LEN = 0,			// Alert Latch enabled.
@@ -77,7 +77,7 @@ ina230_init_arg ina231_init_args[] = {
 	},
 	.r_shunt = 0.01,
 	.alert_value = 16.0,	// Unit: Watt
-	.i_max = 16.384
+	.i_max = 32.768
 	},
 };
 

@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include "plat_gpio.h"
@@ -99,7 +98,6 @@ uint8_t m2_prsnt(uint8_t idx)
 
 uint8_t rst_edsff(uint8_t idx, uint8_t val)
 {
-	printf("%s()[%d][%d] idx: %d, val: %d\n", __func__, __LINE__, k_uptime_get_32(), idx, val);
 	const uint8_t pin = (idx == M2_IDX_E_A) ? RST_BIC_E1S_0_N :
 			    (idx == M2_IDX_E_B) ? RST_BIC_E1S_1_N :
 			    (idx == M2_IDX_E_C) ? RST_BIC_E1S_2_N :

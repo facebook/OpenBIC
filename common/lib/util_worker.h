@@ -1,6 +1,8 @@
 #ifndef SMC_WORKER_H
 #define SMC_WORKER_H
 
+#include <stdint.h>
+
 #define MAX_WORK_NAME_LEN 32
 
 /* A structure used to submit work. */

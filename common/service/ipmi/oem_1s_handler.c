@@ -1080,6 +1080,42 @@ __weak void OEM_1S_RESET_BIC(ipmi_msg *msg)
 	return;
 }
 
+__weak void OEM_1S_GET_SET_M2(ipmi_msg *msg)
+{
+	if (msg == NULL) {
+		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		return;
+	}
+
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+	return;
+}
+
+__weak void OEM_1S_SET_SSD_LED(ipmi_msg *msg)
+{
+	if (msg == NULL) {
+		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		return;
+	}
+
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+	return;
+}
+
+__weak void OEM_1S_GET_SSD_STATUS(ipmi_msg *msg)
+{
+	if (msg == NULL) {
+		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		return;
+	}
+
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+	return;
+}
+
 __weak void OEM_1S_12V_CYCLE_SLOT(ipmi_msg *msg)
 {
 	if (msg == NULL) {
@@ -1730,6 +1766,15 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 		break;
 	case CMD_OEM_1S_RESET_BIC:
 		OEM_1S_RESET_BIC(msg);
+		break;
+	case CMD_OEM_1S_GET_SET_M2:
+		OEM_1S_GET_SET_M2(msg);
+		break;
+	case CMD_OEM_1S_SET_SSD_LED:
+		OEM_1S_SET_SSD_LED(msg);
+		break;
+	case CMD_OEM_1S_GET_SSD_STATUS:
+		OEM_1S_GET_SSD_STATUS(msg);
 		break;
 	case CMD_OEM_1S_12V_CYCLE_SLOT:
 		OEM_1S_12V_CYCLE_SLOT(msg);
