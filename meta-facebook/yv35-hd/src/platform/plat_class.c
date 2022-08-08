@@ -306,7 +306,11 @@ void init_platform_config()
 					if (i2c_master_write(&i2c_msg, retry)) {
 						printf("Failed to set ILIM_ADJUST to LTC4282\n");
 					}
+				} else {
+					printf("Unsupported HSC module %d\n", hsc_module);
 				}
+			} else {
+				printf("Unsupported 1ou card type %d\n", _1ou_status.card_type);
 			}
 		}
 	}

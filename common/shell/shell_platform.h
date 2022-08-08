@@ -61,36 +61,37 @@ gpio_flags_t int_type_table[] = { GPIO_INT_DISABLE,   GPIO_INT_EDGE_RISING, GPIO
 
 enum GPIO_ACCESS { GPIO_READ, GPIO_WRITE };
 
+// clang-format off
+
 /* Declare SENSOR */
 const char *const sensor_type_name[] = {
-	sensor_name_to_num(tmp75) sensor_name_to_num(adc) sensor_name_to_num(
-		peci) sensor_name_to_num(isl69259) sensor_name_to_num(hsc) sensor_name_to_num(nvme)
-		sensor_name_to_num(pch) sensor_name_to_num(mp5990) sensor_name_to_num(
-			isl28022) sensor_name_to_num(pex89000) sensor_name_to_num(tps53689)
-			sensor_name_to_num(xdpe15284) sensor_name_to_num(ltc4282) sensor_name_to_num(
-				fan) sensor_name_to_num(tmp431) sensor_name_to_num(pmic)
-				sensor_name_to_num(ina233) sensor_name_to_num(
-					isl69254) sensor_name_to_num(max16550a)
-					sensor_name_to_num(ina230) sensor_name_to_num(
-						xdpe12284c) sensor_name_to_num(raa229621)
-						sensor_name_to_num(nct7718w) sensor_name_to_num(
-							ltc4286) sensor_name_to_num(amd_tsi)
-							sensor_name_to_num(apml_mailbox)
-								sensor_name_to_num(xdpe19283b)
-									sensor_name_to_num(g788p81u)
-
+	sensor_name_to_num(tmp75)		sensor_name_to_num(adc)
+	sensor_name_to_num(peci)		sensor_name_to_num(isl69259)
+	sensor_name_to_num(hsc)			sensor_name_to_num(nvme)
+	sensor_name_to_num(pch)			sensor_name_to_num(mp5990)
+	sensor_name_to_num(isl28022)	sensor_name_to_num(pex89000)
+	sensor_name_to_num(tps53689)	sensor_name_to_num(xdpe15284)
+	sensor_name_to_num(ltc4282)		sensor_name_to_num(fan)
+	sensor_name_to_num(tmp431)		sensor_name_to_num(pmic)
+	sensor_name_to_num(ina233)		sensor_name_to_num(isl69254)
+	sensor_name_to_num(max16550a)	sensor_name_to_num(ina230)
+	sensor_name_to_num(xdpe12284c)	sensor_name_to_num(raa229621)
+	sensor_name_to_num(nct7718w)	sensor_name_to_num(ltc4286)
+	sensor_name_to_num(amd_tsi) 	sensor_name_to_num(apml_mailbox)
+	sensor_name_to_num(xdpe19283b)	sensor_name_to_num(g788p81u)
 };
 
 const char *const sensor_status_name[] = {
-	sensor_name_to_num(read_success) sensor_name_to_num(read_acur_success) sensor_name_to_num(
-		not_found) sensor_name_to_num(not_accesible) sensor_name_to_num(fail_to_access)
-		sensor_name_to_num(init_status) sensor_name_to_num(unspecified_err)
-			sensor_name_to_num(polling_disable) sensor_name_to_num(pre_read_error)
-				sensor_name_to_num(post_read_error)
-					sensor_name_to_num(api_unregister)
-						sensor_name_to_num(4byte_acur_read_success)
-							sensor_name_to_num(sensor_not_present)
+	sensor_name_to_num(read_success)		sensor_name_to_num(read_acur_success)
+	sensor_name_to_num(not_found)			sensor_name_to_num(not_accesible) 
+	sensor_name_to_num(fail_to_access)		sensor_name_to_num(init_status)
+	sensor_name_to_num(unspecified_err)		sensor_name_to_num(polling_disable)
+	sensor_name_to_num(pre_read_error)		sensor_name_to_num(post_read_error)
+	sensor_name_to_num(api_unregister)		sensor_name_to_num(4byte_acur_read_success)
+	sensor_name_to_num(sensor_not_present)
 };
+
+// clang-format on
 
 enum SENSOR_ACCESS { SENSOR_READ, SENSOR_WRITE };
 
