@@ -6,12 +6,19 @@
 
 #include "log_util.h"
 
-#define log_name_to_num(x) #x,
-const char *const log_name[] = { log_name_to_num(DEBUG_I2C) log_name_to_num(DEBUG_PECI)
-					 log_name_to_num(DEBUG_KCS) log_name_to_num(DEBUG_IPMB)
-						 log_name_to_num(DEBUG_IPMI)
-							 log_name_to_num(DEBUG_SENSOR)
-								 log_name_to_num(DEBUG_USB) };
+#define log_num_to_name(x) #x,
+
+// clang-format off
+const char *const log_name[] = {
+	log_num_to_name(DEBUG_I2C)
+	log_num_to_name(DEBUG_PECI)
+	log_num_to_name(DEBUG_KCS)
+	log_num_to_name(DEBUG_IPMB)
+	log_num_to_name(DEBUG_IPMI)
+	log_num_to_name(DEBUG_SENSOR)
+	log_num_to_name(DEBUG_USB)
+};
+// clang-format on
 
 static uint8_t log_cfg[DEBUG_MAX];
 

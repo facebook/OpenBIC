@@ -15,6 +15,7 @@ typedef enum {
 	DEBUG_IPMI,
 	DEBUG_SENSOR,
 	DEBUG_USB,
+	DEBUG_FW_UPDATE,
 	DEBUG_MAX,
 } log_type_t;
 
