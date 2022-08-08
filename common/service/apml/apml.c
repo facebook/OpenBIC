@@ -6,7 +6,7 @@
 #define RETRY_MAX 3
 #define APML_RESP_BUFFER_SIZE 10
 #define APML_HANDLER_STACK_SIZE 1024
-#define APML_MSGQ_LEN 20
+#define APML_MSGQ_LEN 32
 #define WAIT_TIME_MS 10
 
 struct k_msgq apml_msgq;
