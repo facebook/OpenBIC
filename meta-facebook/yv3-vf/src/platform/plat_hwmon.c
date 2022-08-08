@@ -58,7 +58,7 @@ int8_t mb_cpld_dev_prsnt_set(uint32_t idx, uint32_t val)
 	}
 
 	buf = msg.data[0];
-	buf = (buf & ~(1 << prsnt_ofs)) | (!val << prsnt_ofs);
+	WRITE_BIT(buf, prsnt_ofs, !val);
 
 	msg.tx_len = sizeof(buf) + 1;
 	msg.data[0] = reg;

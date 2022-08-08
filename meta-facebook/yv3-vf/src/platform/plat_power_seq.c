@@ -90,7 +90,6 @@ uint8_t get_fm_p12v_sw_en(uint8_t idx)
 
 uint8_t clkbuf_oe_en(uint8_t idx, uint8_t val)
 {
-	printf("%s()[%d][%d] idx: %d, val: %d\n", __func__, __LINE__, k_uptime_get_32(), idx, val);
 	const uint8_t pin = (idx == M2_IDX_E_A) ? CLKBUF_E1S_0_OE_N :
 			    (idx == M2_IDX_E_B) ? CLKBUF_E1S_1_OE_N :
 			    (idx == M2_IDX_E_C) ? CLKBUF_E1S_2_OE_N :
@@ -192,11 +191,10 @@ uint8_t m2_dev_power_switch_with_pwrdis_chk(uint8_t idx, uint8_t enable, uint8_t
 		delay_function(3, fm_p12v_sw_en, idx, en_12v);
 	}
 
-	if (force_ctl_3v3 && (enable == 0)) {
-		is_force_disable_3v3[idx] = 1;
-		fm_p3v3_sw_en(idx, en_3v3);
-	} else if (force_ctl_3v3 && (enable == 1)) {
-		is_force_disable_3v3[idx] = 0;
+	if (force_ctl_3v3) {
+		is_force_disable_3v3[idx] = !enable;
+		if (!enable)
+			fm_p3v3_sw_en(idx, en_3v3);
 	}
 
 	// check whether force disable
@@ -224,9 +222,9 @@ uint8_t m2_dev_power_switch(uint8_t idx, uint8_t enable)
 
 uint8_t device_all_power_set(uint8_t idx, uint8_t set_val)
 {
-	uint8_t is_on = (set_val & DEV_PWR_ON ? 1 : 0);
-	uint8_t chk_pwrdis = (set_val & DEV_CHK_DISABLE ? 1 : 0);
-	uint8_t force_ctl_3v3 = (set_val & DEV_FORCE_3V3 ? 1 : 0);
+	uint8_t is_on = ((set_val & DEV_PWR_ON) ? 1 : 0);
+	uint8_t chk_pwrdis = ((set_val & DEV_CHK_DISABLE) ? 1 : 0);
+	uint8_t force_ctl_3v3 = ((set_val & DEV_FORCE_3V3) ? 1 : 0);
 
 	if (is_on) {
 		if (set_val & DEV_PWR_CTRL)

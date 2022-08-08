@@ -125,11 +125,6 @@ void prsnt_int_handler(uint32_t idx, uint32_t arg1)
 {
 	const uint8_t is_prsnt = m2_prsnt(idx);
 
-	/* reserve for gpio debounce can't work
-	if (!ignore_noise(idx, 10)) {
-		return;
-	}
-	*/
 	m2_presen_evt(idx, is_prsnt);
 
 	uint8_t val = DEV_PWR_CTRL | DEV_PRSNT_SET | DEV_PCIE_RST | DEV_CHK_DISABLE |
@@ -141,6 +136,12 @@ void prsnt_int_handler(uint32_t idx, uint32_t arg1)
 #define DEV_PRSNT_HANDLER(idx)                                                                     \
 	void prsnt_int_handler_dev##idx(void)                                                      \
 	{                                                                                          \
+		static int64_t pre_time;                                                           \
+		int64_t current_time = k_uptime_get();                                             \
+		if ((current_time - pre_time) < 10) {                                              \
+			return;                                                                    \
+		}                                                                                  \
+		pre_time = current_time;                                                           \
 		delay_function(10, prsnt_int_handler, idx, 0);                                     \
 	}
 
