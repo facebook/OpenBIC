@@ -98,6 +98,8 @@ uint8_t SSDLEDCtrl(uint8_t idx, uint8_t ctrl)
 	case SSD_STOP_BLINK:
 		stop_blink_timer(idx);
 		break;
+	default:
+		printf("error control for SSD %d!\n", idx);
 	}
 
 	return 0;
