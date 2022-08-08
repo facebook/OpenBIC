@@ -315,8 +315,13 @@ void init_platform_config()
 			gpio_set(HSC_OCP_GPIO3_R, GPIO_HIGH);
 		} else if (hsc_module == HSC_MODULE_LTC4282) {
 			ilim_adjust = ILIM_ADJUST_2OU_EXP;
+		} else {
+			printf("Unsupported HSC module %d\n", hsc_module);
 		}
-	} else if (_1ou_status.present && (_1ou_status.card_type != TYPE_1OU_RAINBOW_FALLS)) {
+	} else if ((!_1ou_status.present && !_2ou_status.present) ||
+		   (_1ou_status.present && (_1ou_status.card_type == TYPE_1OU_RAINBOW_FALLS))) {
+		printf("Default HSC OCP setting\n");
+	} else {
 		printf("Unsupported configuration, 1ou card type %d\n", _1ou_status.card_type);
 	}
 
