@@ -2,6 +2,7 @@
 #define PLAT_SENSOR_TABLE_H
 
 #include <stdint.h>
+#include "sensor.h"
 
 /*  define config for sensors  */
 #define TMP75_IN_ADDR (0x92 >> 1)
@@ -99,7 +100,13 @@
 #define SENSOR_NUM_CATERR 0xEB
 #define SENSOR_NUM_RMCA 0xEC //TBD: BMC should know this
 
+typedef struct _dimm_pmic_mapping_cfg {
+	uint8_t dimm_sensor_num;
+	uint8_t mapping_pmic_sensor_num;
+} dimm_pmic_mapping_cfg;
+
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
+bool disable_dimm_pmic_sensor(uint8_t sensor_num);
 
 #endif

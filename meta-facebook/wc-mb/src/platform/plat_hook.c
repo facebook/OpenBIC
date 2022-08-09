@@ -6,6 +6,9 @@
 #include "plat_gpio.h"
 #include "plat_hook.h"
 #include "plat_sensor_table.h"
+#include "intel_peci.h"
+#include "intel_dimm.h"
+#include "power_status.h"
 
 #include "i2c-mux-tca9548.h"
 #include "pmic.h"
@@ -79,10 +82,19 @@ vr_pre_proc_arg vr_pre_read_args[] = {
 	[1] = { 0x1 },
 };
 
-pmic_pre_proc_arg pmic_pre_read_args[] = { [0] = { .pre_read_init = false },
-					   [1] = { .pre_read_init = false },
-					   [2] = { .pre_read_init = false },
-					   [3] = { .pre_read_init = false } };
+pmic_pre_proc_arg pmic_pre_read_args[] = {
+	[0] = { .pre_read_init = false },
+	[1] = { .pre_read_init = false },
+	[2] = { .pre_read_init = false },
+	[3] = { .pre_read_init = false },
+};
+
+dimm_pre_proc_arg dimm_pre_proc_args[] = {
+	[0] = { .is_present_checked = false },
+	[1] = { .is_present_checked = false },
+	[2] = { .is_present_checked = false },
+	[3] = { .is_present_checked = false },
+};
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
@@ -305,4 +317,57 @@ bool pre_pmic_read(uint8_t sensor_num, void *args)
 		return false;
 	}
 	return true;
+}
+
+bool pre_intel_peci_dimm_read(uint8_t sensor_num, void *args)
+{
+	if (get_post_status() == false) {
+		// BIC can't check DIMM temperature by ME, return true to keep do sensor initial
+		return true;
+	}
+
+	dimm_pre_proc_arg *pre_proc_args = (dimm_pre_proc_arg *)args;
+	if (pre_proc_args->is_present_checked == true) {
+		return true;
+	}
+
+	bool ret = false;
+	uint8_t dimm_present_result = 0;
+	sensor_cfg cfg = sensor_config[sensor_config_index_map[sensor_num]];
+	switch (cfg.offset) {
+	case PECI_TEMP_CHANNEL0_DIMM0:
+		ret = check_dimm_present(DIMM_CHANNEL_NUM_0, DIMM_NUMBER_0, &dimm_present_result);
+		break;
+	case PECI_TEMP_CHANNEL2_DIMM0:
+		ret = check_dimm_present(DIMM_CHANNEL_NUM_2, DIMM_NUMBER_0, &dimm_present_result);
+		break;
+	case PECI_TEMP_CHANNEL3_DIMM0:
+		ret = check_dimm_present(DIMM_CHANNEL_NUM_3, DIMM_NUMBER_0, &dimm_present_result);
+		break;
+	case PECI_TEMP_CHANNEL4_DIMM0:
+		ret = check_dimm_present(DIMM_CHANNEL_NUM_4, DIMM_NUMBER_0, &dimm_present_result);
+		break;
+	case PECI_TEMP_CHANNEL6_DIMM0:
+		ret = check_dimm_present(DIMM_CHANNEL_NUM_6, DIMM_NUMBER_0, &dimm_present_result);
+		break;
+	case PECI_TEMP_CHANNEL7_DIMM0:
+		ret = check_dimm_present(DIMM_CHANNEL_NUM_7, DIMM_NUMBER_0, &dimm_present_result);
+		break;
+	default:
+		printf("[%s] input sensor 0x%x offset is invalid, offset: 0x%x\n", __func__,
+		       sensor_num, cfg.offset);
+		return ret;
+	}
+
+	if (ret == false) {
+		return ret;
+	}
+
+	// Check dimm temperature result, report 0xFF if dimm not present
+	if (dimm_present_result == DIMM_NOT_PRESENT) {
+		ret = disable_dimm_pmic_sensor(sensor_num);
+	}
+
+	pre_proc_args->is_present_checked = true;
+	return ret;
 }
