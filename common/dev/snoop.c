@@ -96,7 +96,8 @@ void snoop_read()
 			proc_postcode_ok = true;
 			if (!k_mutex_lock(&snoop_mutex, K_MSEC(1000))) {
 				if (is_log_en(DEBUG_SNOOP)) {
-					printf("* new postcode[%d] 0x%x\n", snoop_read_num, *snoop_data);
+					printf("* new postcode[%d] 0x%x\n", snoop_read_num,
+					       *snoop_data);
 				}
 				snoop_read_buffer[snoop_read_num % SNOOP_MAX_LEN] = *snoop_data;
 				snoop_read_num++;
