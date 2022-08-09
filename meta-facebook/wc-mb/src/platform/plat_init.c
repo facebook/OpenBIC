@@ -63,7 +63,7 @@ void pal_pre_init()
 	postcode_led_ctl();
 }
 
-void pal_post_init()
+void pal_device_init()
 {
 	init_me_firmware();
 }
