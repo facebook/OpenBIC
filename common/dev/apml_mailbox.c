@@ -70,6 +70,7 @@ void dimm_temp_write(apml_msg *msg)
 	}
 	sensor_cfg *cfg = (sensor_cfg *)msg->ptr_arg;
 	mailbox_RdData *rddata = (mailbox_RdData *)msg->RdData;
+
 	if (rddata->error_code != SBRMI_MAILBOX_NO_ERR) {
 		printf("[%s] Read dimm temperature failed, sensor number 0x%x, error code %d\n",
 		       __func__, cfg->num, rddata->error_code);
@@ -81,6 +82,11 @@ void dimm_temp_write(apml_msg *msg)
 	bool is_ts1 = rddata->data_out[0] & 0x40;
 	if (is_ts1) {
 		float *TS0_temp = &(((dimm_temp_priv_data *)(cfg->priv_data))->ts0_temp);
+		if (TS0_temp == NULL) {
+			printf("[%s] TS0_temp is NULL!\n", __func__);
+			cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
+			return;
+		}
 		if (temp < *TS0_temp) {
 			temp = *TS0_temp;
 		}
@@ -93,6 +99,11 @@ void dimm_temp_write(apml_msg *msg)
 	} else {
 		if (cfg->priv_data) {
 			float *TS0_temp = &(((dimm_temp_priv_data *)(cfg->priv_data))->ts0_temp);
+			if (TS0_temp == NULL) {
+				printf("[%s] TS0_temp is NULL!\n", __func__);
+				cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
+				return;
+			}
 			*TS0_temp = temp;
 		} else {
 			printf("[%s] private data is NULL!\n", __func__);
