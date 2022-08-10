@@ -13,7 +13,7 @@
 **************************************************************************************************/
 adc_asd_init_arg adc_asd_init_args[] = { [0] = { .is_init = false } };
 
-ltc4282_init_arg ltc4282_init_args[] = { [0] = { .is_init = true, .r_sense_mohm = 0.25 } };
+ltc4282_init_arg ltc4282_init_args[] = { [0] = { .is_init = false, .r_sense_mohm = 0.25 } };
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
