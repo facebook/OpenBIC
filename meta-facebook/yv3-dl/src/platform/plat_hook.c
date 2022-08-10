@@ -13,7 +13,7 @@
 **************************************************************************************************/
 adc_asd_init_arg adc_asd_init_args[] = { [0] = { .is_init = false } };
 
-ltc4282_init_arg ltc4282_init_args[] = { [0] = { .r_sense = 0.00025 } };
+ltc4282_init_arg ltc4282_init_args[] = { [0] = { .is_init = true, .r_sense_mohm = 0.25 } };
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
@@ -140,14 +140,23 @@ bool pre_vr_read(uint8_t sensor_num, void *args)
 	uint8_t retry = 5;
 	I2C_MSG msg;
 
+	if (k_mutex_lock(&vr_page_mutex, K_MSEC(VR_PAGE_MUTEX_TIMEOUT_MS))) {
+		printf("[%s] Failed to lock vr page\n", __func__);
+		return false;
+	}
+
 	/* set page */
 	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
 	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
 	msg.tx_len = 2;
 	msg.data[0] = 0x00;
 	msg.data[1] = vr_page_sel->vr_page;
+
 	if (i2c_master_write(&msg, retry)) {
 		printf("%s, set page fail\n", __func__);
+		if (k_mutex_unlock(&vr_page_mutex)) {
+			printf("[%s] Failed to unlock vr page\n", __func__);
+		}
 		return false;
 	}
 	return true;
@@ -164,6 +173,10 @@ bool pre_vr_read(uint8_t sensor_num, void *args)
  */
 bool post_xdpe12284c_read(uint8_t sensor_num, void *args, int *reading)
 {
+	if (k_mutex_unlock(&vr_page_mutex)) {
+		printf("[%s] Failed to unlock vr page\n", __func__);
+	}
+
 	if (reading == NULL) {
 		return false;
 	}
@@ -193,6 +206,10 @@ bool post_xdpe12284c_read(uint8_t sensor_num, void *args, int *reading)
  */
 bool post_isl69254_read(uint8_t sensor_num, void *args, int *reading)
 {
+	if (k_mutex_unlock(&vr_page_mutex)) {
+		printf("[%s] Failed to unlock vr page\n", __func__);
+	}
+
 	if (reading == NULL) {
 		return false;
 	}

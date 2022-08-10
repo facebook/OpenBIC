@@ -8,6 +8,9 @@
 #include "plat_hook.h"
 #include "plat_sensor_table.h"
 #include "pmbus.h"
+#include "intel_peci.h"
+#include "intel_dimm.h"
+#include "power_status.h"
 
 #include "i2c-mux-tca9548.h"
 
@@ -15,6 +18,8 @@
 #define ADJUST_ADM1278_CURRENT(x) ((x * 0.98) + 0.1)
 #define ADJUST_LTC4286_POWER(x) ((x * 0.97) - 8)
 #define ADJUST_LTC4286_CURRENT(x) ((x * 0.97) - 0.4)
+#define ADJUST_LTC4282_POWER(x) ((x * 0.98) - 0.2)
+#define ADJUST_LTC4282_CURRENT(x) ((x * 0.99) - 0.2)
 
 /**************************************************************************************************
  * INIT ARGS
@@ -32,6 +37,14 @@ ltc4286_init_arg ltc4286_init_args[] = {
 	[0] = { .is_init = false, .r_sense_mohm = 0.25, .mfr_config_1 = { 0x1570 } },
 	[1] = { .is_init = false, .r_sense_mohm = 0.25, .mfr_config_1 = { 0x3570 } }
 };
+ltc4282_init_arg ltc4282_init_args[] = { [0] = { .is_init = false,
+						 .r_sense_mohm = 0.25,
+						 .is_register_setting_needed = 0x01,
+						 .ilim_adjust = { 0x13 } },
+					 [1] = { .is_init = false,
+						 .r_sense_mohm = 0.25,
+						 .is_register_setting_needed = 0x01,
+						 .ilim_adjust = { 0x53 } } };
 
 pmic_init_arg pmic_init_args[] = {
 	[0] = { .is_init = false, .smbus_bus_identifier = 0x00, .smbus_addr = 0x90 },
@@ -64,6 +77,12 @@ pmic_pre_proc_arg pmic_pre_read_args[] = {
 	[0] = { .pre_read_init = false }, [1] = { .pre_read_init = false },
 	[2] = { .pre_read_init = false }, [3] = { .pre_read_init = false },
 	[4] = { .pre_read_init = false }, [5] = { .pre_read_init = false }
+};
+
+dimm_pre_proc_arg dimm_pre_proc_args[] = {
+	[0] = { .is_present_checked = false }, [1] = { .is_present_checked = false },
+	[2] = { .is_present_checked = false }, [3] = { .is_present_checked = false },
+	[4] = { .is_present_checked = false }, [5] = { .is_present_checked = false }
 };
 
 /**************************************************************************************************
@@ -233,6 +252,59 @@ bool pre_pmic_read(uint8_t sensor_num, void *args)
 	return true;
 }
 
+bool pre_intel_peci_dimm_read(uint8_t sensor_num, void *args)
+{
+	if (get_post_status() == false) {
+		// BIC can't check DIMM temperature by ME, return true to keep do sensor initial
+		return true;
+	}
+
+	dimm_pre_proc_arg *pre_proc_args = (dimm_pre_proc_arg *)args;
+	if (pre_proc_args->is_present_checked == true) {
+		return true;
+	}
+
+	bool ret = false;
+	uint8_t dimm_present_result = 0;
+	sensor_cfg cfg = sensor_config[sensor_config_index_map[sensor_num]];
+	switch (cfg.offset) {
+	case PECI_TEMP_CHANNEL0_DIMM0:
+		ret = check_dimm_present(DIMM_CHANNEL_NUM_0, DIMM_NUMBER_0, &dimm_present_result);
+		break;
+	case PECI_TEMP_CHANNEL2_DIMM0:
+		ret = check_dimm_present(DIMM_CHANNEL_NUM_2, DIMM_NUMBER_0, &dimm_present_result);
+		break;
+	case PECI_TEMP_CHANNEL3_DIMM0:
+		ret = check_dimm_present(DIMM_CHANNEL_NUM_3, DIMM_NUMBER_0, &dimm_present_result);
+		break;
+	case PECI_TEMP_CHANNEL4_DIMM0:
+		ret = check_dimm_present(DIMM_CHANNEL_NUM_4, DIMM_NUMBER_0, &dimm_present_result);
+		break;
+	case PECI_TEMP_CHANNEL6_DIMM0:
+		ret = check_dimm_present(DIMM_CHANNEL_NUM_6, DIMM_NUMBER_0, &dimm_present_result);
+		break;
+	case PECI_TEMP_CHANNEL7_DIMM0:
+		ret = check_dimm_present(DIMM_CHANNEL_NUM_7, DIMM_NUMBER_0, &dimm_present_result);
+		break;
+	default:
+		printf("[%s] input sensor 0x%x offset is invalid, offset: 0x%x\n", __func__,
+		       sensor_num, cfg.offset);
+		return ret;
+	}
+
+	if (ret == false) {
+		return ret;
+	}
+
+	// Check dimm temperature result, report 0xFF if dimm not present
+	if (dimm_present_result == DIMM_NOT_PRESENT) {
+		ret = disable_dimm_pmic_sensor(sensor_num);
+	}
+
+	pre_proc_args->is_present_checked = true;
+	return ret;
+}
+
 /* AST ADC post read function
  *
  * set gpio low if sensor is "SENSOR_NUM_VOL_BAT3V"
@@ -361,6 +433,46 @@ bool post_ltc4286_read(uint8_t sensor_num, void *args, int *reading)
 		break;
 	default:
 		printf("[%s] Unknown register(0x%x)\n", __func__, cfg->offset);
+		return false;
+	}
+
+	sval->integer = (int)val & 0xFFFF;
+	sval->fraction = (val - sval->integer) * 1000;
+	return true;
+}
+
+/* LTC4282 post read function
+ *
+ * modify LTC4282 current and power value after reading
+ *
+ * @param sensor_num sensor number
+ * @param args pointer to NULL
+ * @param reading pointer to reading from previous step
+ * @retval true if no error
+ * @retval false if reading get NULL
+ */
+bool post_ltc4282_read(uint8_t sensor_num, void *args, int *reading)
+{
+	if (!reading) {
+		return false;
+	}
+	ARG_UNUSED(args);
+
+	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+
+	sensor_val *sval = (sensor_val *)reading;
+	float val = (float)sval->integer + (sval->fraction / 1000.0);
+
+	switch (cfg->offset) {
+	case LTC4282_VSOURCE_OFFSET:
+		return true;
+	case LTC4282_VSENSE_OFFSET:
+		val = ADJUST_LTC4282_CURRENT(val);
+		break;
+	case LTC4282_POWER_OFFSET:
+		val = ADJUST_LTC4282_POWER(val);
+		break;
+	default:
 		return false;
 	}
 

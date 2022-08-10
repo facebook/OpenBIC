@@ -10,6 +10,8 @@
 #include "pmbus.h"
 #include "plat_sensor_table.h"
 #include "util_sys.h"
+#include "isl69254iraz_t.h"
+#include "xdpe12284c.h"
 
 void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 {
@@ -99,85 +101,65 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 
 		if (memcmp(i2c_msg.data, ISL69254_DEVICE_ID, sizeof(ISL69254_DEVICE_ID)) == 0) {
 			/* Renesas isl69254 */
-			i2c_msg.tx_len = 3;
-			i2c_msg.data[0] = 0xC7; //command code
-			i2c_msg.data[1] = 0x3F; //register
-			i2c_msg.data[2] = 0x00; //dummy data
 
-			if (i2c_master_write(&i2c_msg, retry)) {
+			if (isl69254iraz_t_get_checksum(i2c_msg.bus, i2c_msg.target_addr,
+							&(msg->data[0])) == false) {
 				msg->completion_code = CC_UNSPECIFIED_ERROR;
 				return;
 			}
 
-			i2c_msg.tx_len = 1;
-			i2c_msg.rx_len = 4;
-			i2c_msg.data[0] = 0xC5; //command code
-
-			if (i2c_master_read(&i2c_msg, retry)) {
+			if (isl69254iraz_t_get_remaining_write(i2c_msg.bus, i2c_msg.target_addr,
+							       &(msg->data[4])) == false) {
 				msg->completion_code = CC_UNSPECIFIED_ERROR;
 				return;
 			}
 
-			msg->data[0] = i2c_msg.data[3];
-			msg->data[1] = i2c_msg.data[2];
-			msg->data[2] = i2c_msg.data[1];
-			msg->data[3] = i2c_msg.data[0];
-			msg->data_len = 4;
+			msg->data[5] = VENDOR_RENESAS;
+			msg->data_len = 6;
 			msg->completion_code = CC_SUCCESS;
 
 		} else if (memcmp(i2c_msg.data, XDPE12284C_DEVICE_ID,
 				  sizeof(XDPE12284C_DEVICE_ID)) == 0) {
 			/* Infineon xdpe12284c */
-			i2c_msg.tx_len = 2;
-			i2c_msg.data[0] = 0x00;
-			i2c_msg.data[1] = 0x62; //set page to 0x62
 
-			if (i2c_master_write(&i2c_msg, retry)) {
+			if (k_mutex_lock(&vr_page_mutex, K_MSEC(VR_PAGE_MUTEX_TIMEOUT_MS))) {
+				printf("[%s] Failed to lock vr page\n", __func__);
 				msg->completion_code = CC_UNSPECIFIED_ERROR;
 				return;
 			}
 
-			//Read lower word for the 32bit checksum value
-			i2c_msg.tx_len = 1;
-			i2c_msg.rx_len = 2;
-			i2c_msg.data[0] = 0x43;
-			if (i2c_master_read(&i2c_msg, retry)) {
+			if (xdpe12284c_get_checksum(i2c_msg.bus, i2c_msg.target_addr,
+						    &(msg->data[0])) == false) {
 				msg->completion_code = CC_UNSPECIFIED_ERROR;
-				return;
+				goto unlock_exit;
 			}
 
-			msg->data[0] = i2c_msg.data[1];
-			msg->data[1] = i2c_msg.data[0];
-
-			i2c_msg.tx_len = 2;
-			i2c_msg.data[0] = 0x00;
-			i2c_msg.data[1] = 0x62; //set page to 0x62
-
-			if (i2c_master_write(&i2c_msg, retry)) {
+			if (xdpe12284c_get_remaining_write(i2c_msg.bus, i2c_msg.target_addr,
+							   &(msg->data[4])) == false) {
 				msg->completion_code = CC_UNSPECIFIED_ERROR;
-				return;
+				goto unlock_exit;
 			}
-
-			//Read higher word for the 32bit checksum value
-			i2c_msg.tx_len = 1;
-			i2c_msg.rx_len = 2;
-			i2c_msg.data[0] = 0x42;
-			if (i2c_master_read(&i2c_msg, retry)) {
-				msg->completion_code = CC_UNSPECIFIED_ERROR;
-				return;
-			}
-
-			msg->data[2] = i2c_msg.data[1];
-			msg->data[3] = i2c_msg.data[0];
-			msg->data_len = 4;
+			msg->data[5] = VENDOR_INFINEON;
+			msg->data_len = 6;
 			msg->completion_code = CC_SUCCESS;
+
+			goto unlock_exit;
+
 		} else {
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 		}
+
 		break;
 	default:
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
 		break;
 	}
+	return;
+
+unlock_exit:
+	if (k_mutex_unlock(&vr_page_mutex)) {
+		printf("[%s] Failed to unlock vr page\n", __func__);
+	}
+
 	return;
 }

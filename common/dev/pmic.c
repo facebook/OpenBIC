@@ -134,3 +134,8 @@ uint8_t pmic_init(uint8_t sensor_num)
 	init_arg->is_init = true;
 	return SENSOR_INIT_SUCCESS;
 }
+
+__weak int pal_set_pmic_error_flag(uint8_t dimm_id, uint8_t error_type)
+{
+	return -1;
+}

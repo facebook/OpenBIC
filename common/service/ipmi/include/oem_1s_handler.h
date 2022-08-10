@@ -15,6 +15,13 @@ enum FIRMWARE_COMPONENT {
 	COMPNT_PVCCFA_EHV
 };
 
+enum ERROR_CODE_SET_PMIC_ERROR_FLAG {
+	SUCCESS = 0,
+	NOT_SUPPORT = -1,
+	INVALID_ERROR_TYPE = -2,
+	INVALID_DIMM_ID = -3,
+};
+
 #define IS_SECTOR_END_MASK 0x80
 enum FIRWARE_UPDATE_TARGET {
 	BIOS_UPDATE = 0,
@@ -62,6 +69,7 @@ void OEM_1S_PEX_FLASH_READ(ipmi_msg *msg);
 void OEM_1S_GET_FPGA_USER_CODE(ipmi_msg *msg);
 void OEM_1S_GET_CARD_TYPE(ipmi_msg *msg);
 void OEM_1S_CLEAR_CMOS(ipmi_msg *msg);
+void OEM_1S_NOTIFY_PMIC_ERROR(ipmi_msg *msg);
 
 #ifdef CONFIG_IPMI_KCS_ASPEED
 void OEM_1S_GET_POST_CODE(ipmi_msg *msg);

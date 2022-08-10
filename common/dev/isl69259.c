@@ -87,6 +87,11 @@ uint8_t isl69259_read(uint8_t sensor_num, int *reading)
 		sval->integer = (int16_t)val / 10;
 		sval->fraction = (int16_t)(val - (sval->integer * 10)) * 100;
 		break;
+	case PMBUS_READ_IIN:
+		/* 0.01 A/LSB, 2's complement */
+		sval->integer = (int16_t)val / 100;
+		sval->fraction = (int16_t)(val - (sval->integer * 100)) * 10;
+		break;
 	case PMBUS_READ_TEMPERATURE_1:
 		/* 1 Degree C/LSB, 2's complement */
 		sval->integer = val;

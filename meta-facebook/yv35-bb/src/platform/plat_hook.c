@@ -19,7 +19,7 @@ adm1278_init_arg adm1278_init_args[] = {
 	[0] = { .is_init = false, .config = { 0x3F1C }, .r_sense = 0.25 }
 };
 
-ltc4282_init_arg ltc4282_init_args[] = { [0] = { .r_sense = 0.0001 } };
+ltc4282_init_arg ltc4282_init_args[] = { [0] = { .is_init = true, .r_sense_mohm = 0.1 } };
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
@@ -57,7 +57,7 @@ bool pre_ltc4282_read(uint8_t sensor_num, void *args)
 	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
 	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
 	msg.tx_len = 1;
-	msg.data[0] = LTC4282_ADJUST_OFFSET;
+	msg.data[0] = LTC4282_ILIM_ADJUST_OFFSET;
 	msg.rx_len = 1;
 	if (i2c_master_read(&msg, retry) != 0) {
 		printf("%s, get voltage adjust register fail\n", __func__);

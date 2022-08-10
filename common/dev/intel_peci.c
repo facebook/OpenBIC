@@ -6,6 +6,9 @@
 #include "hal_peci.h"
 #include "libutil.h"
 #include "intel_peci.h"
+#include "ipmi.h"
+#include "util_sys.h"
+#include "intel_dimm.h"
 
 #define RDPKG_IDX_PKG_TEMP 0x02
 #define RDPKG_IDX_DIMM_TEMP 0x0E
@@ -13,6 +16,135 @@
 
 #define DIMM_TEMP_OFS_0 0x01
 #define DIMM_TEMP_OFS_1 0x02
+
+bool check_dimm_present(uint8_t dimm_channel, uint8_t dimm_num, uint8_t *present_result)
+{
+	// BIC can check DIMM present or not by NM IPMI get CPU and memory temperature commnad
+	if (present_result == NULL) {
+		printf("[%s] input present result pointer is NULL\n", __func__);
+		return false;
+	}
+
+	ipmi_msg *dimm_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
+	if (dimm_msg == NULL) {
+		printf("[%s] fail to allocate dimm message memory\n", __func__);
+		return false;
+	}
+	memset(dimm_msg, 0, sizeof(ipmi_msg));
+
+	get_cpu_memory_temp_req *get_dimm_temp_req =
+		(get_cpu_memory_temp_req *)malloc(sizeof(get_cpu_memory_temp_req));
+	if (get_dimm_temp_req == NULL) {
+		printf("[%s] fail to allocate request array memory\n", __func__);
+		SAFE_FREE(dimm_msg);
+		return false;
+	}
+	memset(get_dimm_temp_req, 0, sizeof(get_cpu_memory_temp_req));
+
+	bool ret = false;
+	uint32_t intel_iana = INTEL_IANA;
+
+	memcpy(&get_dimm_temp_req->intel_id[0], (uint8_t *)&intel_iana, 3); // Intel Manufacturer ID
+	if (dimm_channel < DIMM_CHANNEL_NUM_4) {
+		get_dimm_temp_req->set_memory_channel = MEMORY_CHANNEL_0_TO_3;
+	} else {
+		get_dimm_temp_req->set_memory_channel = MEMORY_CHANNEL_4_TO_7;
+	}
+
+	switch (dimm_channel) {
+	case DIMM_CHANNEL_NUM_0:
+	case DIMM_CHANNEL_NUM_4:
+		switch (dimm_num) {
+		case DIMM_NUMBER_0:
+			get_dimm_temp_req->cpu0_read_dimm_req = CHANNEL_0_4_DIMM_NUM_0;
+			break;
+		case DIMM_NUMBER_1:
+			get_dimm_temp_req->cpu0_read_dimm_req = CHANNEL_0_4_DIMM_NUM_1;
+			break;
+		case DIMM_NUMBER_2:
+			get_dimm_temp_req->cpu0_read_dimm_req = CHANNEL_0_4_DIMM_NUM_2;
+			break;
+		case DIMM_NUMBER_3:
+			get_dimm_temp_req->cpu0_read_dimm_req = CHANNEL_0_4_DIMM_NUM_3;
+			break;
+		}
+		break;
+	case DIMM_CHANNEL_NUM_1:
+	case DIMM_CHANNEL_NUM_5:
+		switch (dimm_num) {
+		case DIMM_NUMBER_0:
+			get_dimm_temp_req->cpu0_read_dimm_req = CHANNEL_1_5_DIMM_NUM_0;
+			break;
+		case DIMM_NUMBER_1:
+			get_dimm_temp_req->cpu0_read_dimm_req = CHANNEL_1_5_DIMM_NUM_1;
+			break;
+		case DIMM_NUMBER_2:
+			get_dimm_temp_req->cpu0_read_dimm_req = CHANNEL_1_5_DIMM_NUM_2;
+			break;
+		case DIMM_NUMBER_3:
+			get_dimm_temp_req->cpu0_read_dimm_req = CHANNEL_1_5_DIMM_NUM_3;
+			break;
+		}
+		break;
+	case DIMM_CHANNEL_NUM_2:
+	case DIMM_CHANNEL_NUM_6:
+		switch (dimm_num) {
+		case DIMM_NUMBER_0:
+			get_dimm_temp_req->cpu0_read_dimm_req = CHANNEL_2_6_DIMM_NUM_0;
+			break;
+		case DIMM_NUMBER_1:
+			get_dimm_temp_req->cpu0_read_dimm_req = CHANNEL_2_6_DIMM_NUM_1;
+			break;
+		case DIMM_NUMBER_2:
+			get_dimm_temp_req->cpu0_read_dimm_req = CHANNEL_2_6_DIMM_NUM_2;
+			break;
+		case DIMM_NUMBER_3:
+			get_dimm_temp_req->cpu0_read_dimm_req = CHANNEL_2_6_DIMM_NUM_3;
+			break;
+		}
+		break;
+	case DIMM_CHANNEL_NUM_3:
+	case DIMM_CHANNEL_NUM_7:
+		switch (dimm_num) {
+		case DIMM_NUMBER_0:
+			get_dimm_temp_req->cpu0_read_dimm_req = CHANNEL_3_7_DIMM_NUM_0;
+			break;
+		case DIMM_NUMBER_1:
+			get_dimm_temp_req->cpu0_read_dimm_req = CHANNEL_3_7_DIMM_NUM_1;
+			break;
+		case DIMM_NUMBER_2:
+			get_dimm_temp_req->cpu0_read_dimm_req = CHANNEL_3_7_DIMM_NUM_2;
+			break;
+		case DIMM_NUMBER_3:
+			get_dimm_temp_req->cpu0_read_dimm_req = CHANNEL_3_7_DIMM_NUM_3;
+			break;
+		}
+		break;
+	default:
+		printf("[%s] dimm channel is invalid, dimm channel: %d\n", __func__, dimm_channel);
+		goto safe_free;
+		break;
+	}
+
+	uint8_t seq_source = 0xFF;
+	*dimm_msg = construct_ipmi_message(seq_source, NETFN_NM_REQ, CMD_GET_CPU_MEMORY_TEMP, SELF,
+					   ME_IPMB, CMD_GET_CPU_MEMORY_TEMP_DATA_LEN,
+					   (uint8_t *)get_dimm_temp_req);
+	ipmb_error ipmb_ret = ipmb_read(dimm_msg, IPMB_inf_index_map[dimm_msg->InF_target]);
+	if ((ipmb_ret != IPMB_ERROR_SUCCESS) || (dimm_msg->completion_code != CC_SUCCESS)) {
+		printf("[%s] fail to send get dimm temperature command ret: 0x%x CC: 0x%x\n",
+		       __func__, ipmb_ret, dimm_msg->completion_code);
+		goto safe_free;
+	}
+
+	*present_result = dimm_msg->data[RESPONSE_DIMM_TEMP_INDEX];
+	ret = true;
+
+safe_free:
+	SAFE_FREE(dimm_msg);
+	SAFE_FREE(get_dimm_temp_req);
+	return ret;
+}
 
 static bool read_cpu_power(uint8_t addr, int *reading)
 {

@@ -6,6 +6,10 @@
 #ifdef ENABLE_APML
 #include "apml.h"
 
+typedef struct _dimm_temp_priv_data {
+	float ts0_temp;
+} dimm_temp_priv_data;
+
 void apml_read_fail_cb(apml_msg *msg)
 {
 	if ((msg == NULL) || (msg->ptr_arg == NULL)) {
@@ -66,6 +70,7 @@ void dimm_temp_write(apml_msg *msg)
 	}
 	sensor_cfg *cfg = (sensor_cfg *)msg->ptr_arg;
 	mailbox_RdData *rddata = (mailbox_RdData *)msg->RdData;
+
 	if (rddata->error_code != SBRMI_MAILBOX_NO_ERR) {
 		printf("[%s] Read dimm temperature failed, sensor number 0x%x, error code %d\n",
 		       __func__, cfg->num, rddata->error_code);
@@ -74,11 +79,36 @@ void dimm_temp_write(apml_msg *msg)
 	}
 	uint16_t raw_data = (rddata->data_out[3] << 3) | (rddata->data_out[2] >> 5);
 	float temp = 0.25 * raw_data;
-	sensor_val sval;
-	sval.integer = (int16_t)temp;
-	sval.fraction = (temp - sval.integer) * 1000;
-	memcpy(&cfg->cache, &sval, sizeof(sensor_val));
-	cfg->cache_status = SENSOR_READ_4BYTE_ACUR_SUCCESS;
+	bool is_ts1 = rddata->data_out[0] & 0x40;
+	if (is_ts1) {
+		float *TS0_temp = &(((dimm_temp_priv_data *)(cfg->priv_data))->ts0_temp);
+		if (TS0_temp == NULL) {
+			printf("[%s] TS0_temp is NULL!\n", __func__);
+			cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
+			return;
+		}
+		if (temp < *TS0_temp) {
+			temp = *TS0_temp;
+		}
+		*TS0_temp = 0;
+		sensor_val sval;
+		sval.integer = (int16_t)temp;
+		sval.fraction = (temp - sval.integer) * 1000;
+		memcpy(&cfg->cache, &sval, sizeof(sensor_val));
+		cfg->cache_status = SENSOR_READ_4BYTE_ACUR_SUCCESS;
+	} else {
+		if (cfg->priv_data) {
+			float *TS0_temp = &(((dimm_temp_priv_data *)(cfg->priv_data))->ts0_temp);
+			if (TS0_temp == NULL) {
+				printf("[%s] TS0_temp is NULL!\n", __func__);
+				cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
+				return;
+			}
+			*TS0_temp = temp;
+		} else {
+			printf("[%s] private data is NULL!\n", __func__);
+		}
+	}
 }
 
 uint8_t apml_mailbox_read(uint8_t sensor_num, int *reading)
@@ -117,6 +147,10 @@ uint8_t apml_mailbox_read(uint8_t sensor_num, int *reading)
 		mailbox_msg.cb_fn = dimm_temp_write;
 		wrdata->data_in[0] = init_arg->data & 0xFF;
 		apml_read(&mailbox_msg);
+
+		mailbox_msg.cb_fn = dimm_temp_write;
+		wrdata->data_in[0] = (init_arg->data & 0xFF) | 0x40;
+		apml_read(&mailbox_msg);
 		break;
 
 	default:
@@ -131,8 +165,16 @@ uint8_t apml_mailbox_init(uint8_t sensor_num)
 	if (sensor_num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
+	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 
-	sensor_config[sensor_config_index_map[sensor_num]].read = apml_mailbox_read;
+	if (cfg->offset == SBRMI_MAILBOX_GET_DIMM_TEMP) {
+		cfg->priv_data = malloc(sizeof(dimm_temp_priv_data));
+		if (cfg->priv_data == NULL) {
+			printf("[%s] Allocate private data failed.\n", __func__);
+			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		}
+	}
+	cfg->read = apml_mailbox_read;
 	return SENSOR_INIT_SUCCESS;
 }
 #endif

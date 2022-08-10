@@ -25,6 +25,16 @@ sensor_poll_time_cfg diff_poll_time_sensor_table[] = {
 	{ SENSOR_NUM_VOL_BAT3V, 0 },
 };
 
+dimm_pmic_mapping_cfg dimm_pmic_map_table[] = {
+	// dimm_sensor_num, mapping_pmic_sensor_num
+	{ SENSOR_NUM_TEMP_DIMM_A0, SENSOR_NUM_PWR_DIMMA0_PMIC },
+	{ SENSOR_NUM_TEMP_DIMM_A2, SENSOR_NUM_PWR_DIMMA2_PMIC },
+	{ SENSOR_NUM_TEMP_DIMM_A3, SENSOR_NUM_PWR_DIMMA3_PMIC },
+	{ SENSOR_NUM_TEMP_DIMM_A4, SENSOR_NUM_PWR_DIMMA4_PMIC },
+	{ SENSOR_NUM_TEMP_DIMM_A6, SENSOR_NUM_PWR_DIMMA6_PMIC },
+	{ SENSOR_NUM_TEMP_DIMM_A7, SENSOR_NUM_PWR_DIMMA7_PMIC },
+};
+
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
 	   access check arg0, arg1, sample_count, cache, cache_status, mux_ADDRess, mux_offset,
@@ -57,24 +67,30 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_TEMP_CPU_TJMAX, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
 	  PECI_TEMP_CPU_TJMAX, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_TEMP_DIMM_A, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
+	{ SENSOR_NUM_TEMP_DIMM_A0, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
 	  PECI_TEMP_CHANNEL0_DIMM0, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_TEMP_DIMM_C, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_intel_peci_dimm_read,
+	  &dimm_pre_proc_args[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_DIMM_A2, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
 	  PECI_TEMP_CHANNEL2_DIMM0, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_TEMP_DIMM_D, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_intel_peci_dimm_read,
+	  &dimm_pre_proc_args[1], NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_DIMM_A3, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
 	  PECI_TEMP_CHANNEL3_DIMM0, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_TEMP_DIMM_E, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_intel_peci_dimm_read,
+	  &dimm_pre_proc_args[2], NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_DIMM_A4, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
 	  PECI_TEMP_CHANNEL4_DIMM0, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_TEMP_DIMM_G, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_intel_peci_dimm_read,
+	  &dimm_pre_proc_args[3], NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_DIMM_A6, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
 	  PECI_TEMP_CHANNEL6_DIMM0, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_TEMP_DIMM_H, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_intel_peci_dimm_read,
+	  &dimm_pre_proc_args[4], NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_DIMM_A7, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
 	  PECI_TEMP_CHANNEL7_DIMM0, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_intel_peci_dimm_read,
+	  &dimm_pre_proc_args[5], NULL, NULL, NULL },
 	{ SENSOR_NUM_PWR_CPU, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR, PECI_PWR_CPU, post_access,
 	  0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
@@ -184,22 +200,22 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_TEMP_PCH, sensor_dev_pch, I2C_BUS3, PCH_ADDR, ME_SENSOR_NUM_TEMP_PCH,
 	  me_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_PWR_DIMMA_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
+	{ SENSOR_NUM_PWR_DIMMA0_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  pre_pmic_read, &pmic_pre_read_args[0], NULL, NULL, &pmic_init_args[0] },
-	{ SENSOR_NUM_PWR_DIMMC_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
+	{ SENSOR_NUM_PWR_DIMMA2_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  pre_pmic_read, &pmic_pre_read_args[1], NULL, NULL, &pmic_init_args[1] },
-	{ SENSOR_NUM_PWR_DIMMD_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
+	{ SENSOR_NUM_PWR_DIMMA3_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  pre_pmic_read, &pmic_pre_read_args[2], NULL, NULL, &pmic_init_args[2] },
-	{ SENSOR_NUM_PWR_DIMME_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
+	{ SENSOR_NUM_PWR_DIMMA4_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  pre_pmic_read, &pmic_pre_read_args[3], NULL, NULL, &pmic_init_args[3] },
-	{ SENSOR_NUM_PWR_DIMMG_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
+	{ SENSOR_NUM_PWR_DIMMA6_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  pre_pmic_read, &pmic_pre_read_args[4], NULL, NULL, &pmic_init_args[4] },
-	{ SENSOR_NUM_PWR_DIMMH_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
+	{ SENSOR_NUM_PWR_DIMMA7_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  pre_pmic_read, &pmic_pre_read_args[5], NULL, NULL, &pmic_init_args[5] },
 };
@@ -261,6 +277,28 @@ sensor_cfg ltc4286_sensor_config_table[] = {
 	  SENSOR_INIT_STATUS, NULL, NULL, post_ltc4286_read, NULL, &ltc4286_init_args[0] },
 };
 
+sensor_cfg ltc4282_sensor_config_table[] = {
+	/* number,                  type,       port,      address,      offset,
+	   access check arg0, arg1, sample_count, cache, cache_status, mux_address, mux_offset,
+	   pre_sensor_read_fn, pre_sensor_read_args, post_sensor_read_fn, post_sensor_read_fn  */
+	{ SENSOR_NUM_TEMP_HSC, sensor_dev_ltc4282, I2C_BUS2, ADI_LTC4282_ADDR,
+	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, post_ltc4282_read, NULL,
+	  &ltc4282_init_args[0] },
+	{ SENSOR_NUM_VOL_HSCIN, sensor_dev_ltc4282, I2C_BUS2, ADI_LTC4282_ADDR,
+	  LTC4282_VSOURCE_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, post_ltc4282_read, NULL,
+	  &ltc4282_init_args[0] },
+	{ SENSOR_NUM_CUR_HSCOUT, sensor_dev_ltc4282, I2C_BUS2, ADI_LTC4282_ADDR,
+	  LTC4282_VSENSE_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, post_ltc4282_read, NULL,
+	  &ltc4282_init_args[0] },
+	{ SENSOR_NUM_PWR_HSCIN, sensor_dev_ltc4282, I2C_BUS2, ADI_LTC4282_ADDR,
+	  LTC4282_POWER_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, post_ltc4282_read, NULL,
+	  &ltc4282_init_args[0] },
+};
+
 sensor_cfg evt3_class1_adi_temperature_sensor_table[] = {
 	{ SENSOR_NUM_TEMP_TMP75_OUT, sensor_dev_tmp431, I2C_BUS2, TMP431_ADDR,
 	  TMP431_LOCAL_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
@@ -315,6 +353,8 @@ uint8_t pal_get_extend_sensor_config()
 		extend_sensor_config_size += ARRAY_SIZE(ltc4286_sensor_config_table);
 		break;
 	case HSC_MODULE_LTC4282:
+		extend_sensor_config_size += ARRAY_SIZE(ltc4282_sensor_config_table);
+		break;
 	default:
 		printf("[%s] unsupported HSC module, HSC module: 0x%x\n", __func__, hsc_module);
 		break;
@@ -407,15 +447,6 @@ void pal_extend_sensor_config()
 
 	int arg_index = (_2ou_status.present) ? 1 : 0;
 
-	sensor_count = ARRAY_SIZE(mp5990_sensor_config_table);
-	for (int index = 0; index < sensor_count; index++) {
-		mp5990_sensor_config_table[index].init_args = &mp5990_init_args[arg_index];
-	}
-	sensor_count = ARRAY_SIZE(ltc4286_sensor_config_table);
-	for (int index = 0; index < sensor_count; index++) {
-		ltc4286_sensor_config_table[index].init_args = &ltc4286_init_args[arg_index];
-	}
-
 	switch (hsc_module) {
 	case HSC_MODULE_ADM1278:
 		sensor_count = ARRAY_SIZE(adm1278_sensor_config_table);
@@ -426,16 +457,24 @@ void pal_extend_sensor_config()
 	case HSC_MODULE_MP5990:
 		sensor_count = ARRAY_SIZE(mp5990_sensor_config_table);
 		for (int index = 0; index < sensor_count; index++) {
+			mp5990_sensor_config_table[index].init_args = &mp5990_init_args[arg_index];
 			add_sensor_config(mp5990_sensor_config_table[index]);
 		}
 		break;
 	case HSC_MODULE_LTC4286:
 		sensor_count = ARRAY_SIZE(ltc4286_sensor_config_table);
 		for (int index = 0; index < sensor_count; index++) {
+			ltc4286_sensor_config_table[index].init_args = &ltc4286_init_args[arg_index];
 			add_sensor_config(ltc4286_sensor_config_table[index]);
 		}
 		break;
 	case HSC_MODULE_LTC4282:
+		sensor_count = ARRAY_SIZE(ltc4282_sensor_config_table);
+		for (int index = 0; index < sensor_count; index++) {
+			ltc4282_sensor_config_table[index].init_args = &ltc4282_init_args[arg_index];
+			add_sensor_config(ltc4282_sensor_config_table[index]);
+		}
+		break;
 	default:
 		printf("[%s] unsupported HSC module, HSC module: 0x%x\n", __func__, hsc_module);
 		break;
@@ -502,4 +541,23 @@ bool pal_is_time_to_poll(uint8_t sensor_num, int poll_time)
 uint8_t get_hsc_pwr_reading(int *reading)
 {
 	return get_sensor_reading(SENSOR_NUM_PWR_HSCIN, reading, GET_FROM_CACHE);
+}
+
+bool disable_dimm_pmic_sensor(uint8_t sensor_num)
+{
+	uint8_t table_size = ARRAY_SIZE(dimm_pmic_map_table);
+
+	for (uint8_t index = 0; index < table_size; ++index) {
+		if (sensor_num == dimm_pmic_map_table[index].dimm_sensor_num) {
+			control_sensor_polling(dimm_pmic_map_table[index].dimm_sensor_num,
+					       DISABLE_SENSOR_POLLING, SENSOR_NOT_PRESENT);
+			control_sensor_polling(dimm_pmic_map_table[index].mapping_pmic_sensor_num,
+					       DISABLE_SENSOR_POLLING, SENSOR_NOT_PRESENT);
+			return true;
+		}
+	}
+
+	printf("[%s] input sensor 0x%x can't find in dimm pmic mapping table\n", __func__,
+	       sensor_num);
+	return false;
 }

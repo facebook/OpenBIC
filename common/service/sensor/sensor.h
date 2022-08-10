@@ -18,13 +18,15 @@
 #define SENSOR_NULL 0xFF
 #define SENSOR_FAIL 0xFF
 #define SENSOR_NUM_MAX 0xFF
+#define SENSOR_NOT_SUPPORT 0xFF
+#define DIMM_NOT_PRESENT 0xFF
 
 #define SAMPLE_COUNT_DEFAULT 1
 
 #define POLL_TIME_DEFAULT 1
 
 enum LTC4282_OFFSET {
-	LTC4282_ADJUST_OFFSET = 0x11,
+	LTC4282_ILIM_ADJUST_OFFSET = 0x11,
 	LTC4282_VSENSE_OFFSET = 0x40,
 	LTC4282_POWER_OFFSET = 0x46,
 	LTC4282_VSOURCE_OFFSET = 0x3A,
@@ -56,6 +58,12 @@ enum INA230_OFFSET {
 	INA230_ALT_OFFSET = 0x07,
 };
 
+enum G788P81U_OFFSET {
+	G788P81U_LOCAL_TEMP_OFFSET = 0x00,
+	G788P81U_REMOTE_TEMP_OFFSET = 0x01,
+	G788P81U_REMOTE_TEMP_EXT_OFFSET = 0x10,
+};
+
 enum SENSOR_DEV {
 	sensor_dev_tmp75 = 0,
 	sensor_dev_ast_adc = 0x01,
@@ -83,6 +91,8 @@ enum SENSOR_DEV {
 	sensor_dev_ltc4286 = 0x17,
 	sensor_dev_amd_tsi = 0x18,
 	sensor_dev_apml_mailbox = 0x19,
+	sensor_dev_xdpe19283b = 0x1A,
+	sensor_dev_g788p81u = 0x1B,
 	sensor_dev_max
 };
 
@@ -126,18 +136,21 @@ static inline float convert_MBR_to_reading(uint8_t sensor_num, uint8_t val)
 	return (val - round_add(sensor_num, val)) * SDR_M(sensor_num) / SDR_Rexp(sensor_num);
 }
 
-enum { SENSOR_READ_SUCCESS,
-       SENSOR_READ_ACUR_SUCCESS,
-       SENSOR_NOT_FOUND,
-       SENSOR_NOT_ACCESSIBLE,
-       SENSOR_FAIL_TO_ACCESS,
-       SENSOR_INIT_STATUS,
-       SENSOR_UNSPECIFIED_ERROR,
-       SENSOR_POLLING_DISABLE,
-       SENSOR_PRE_READ_ERROR,
-       SENSOR_POST_READ_ERROR,
-       SENSOR_READ_API_UNREGISTER,
-       SENSOR_READ_4BYTE_ACUR_SUCCESS };
+enum {
+	SENSOR_READ_SUCCESS,
+	SENSOR_READ_ACUR_SUCCESS,
+	SENSOR_NOT_FOUND,
+	SENSOR_NOT_ACCESSIBLE, // Only use to check sensor access fail
+	SENSOR_FAIL_TO_ACCESS,
+	SENSOR_INIT_STATUS,
+	SENSOR_UNSPECIFIED_ERROR,
+	SENSOR_POLLING_DISABLE,
+	SENSOR_PRE_READ_ERROR,
+	SENSOR_POST_READ_ERROR,
+	SENSOR_READ_API_UNREGISTER,
+	SENSOR_READ_4BYTE_ACUR_SUCCESS,
+	SENSOR_NOT_PRESENT
+};
 
 enum { SENSOR_INIT_SUCCESS, SENSOR_INIT_UNSPECIFIED_ERROR };
 
@@ -235,8 +248,29 @@ typedef struct _pex89000_init_arg {
 } pex89000_init_arg;
 
 typedef struct _ltc4282_init_arg {
-	float r_sense;
+	/* value to get/set ILIM ADJUST register */
+	union {
+		uint8_t value;
+		struct {
+			uint8_t _16_bit : 1;
+			uint8_t gpio_mode : 1;
+			uint8_t vsource_vdd : 1;
+			uint8_t foldback_mode : 2;
+			uint8_t ilim_adjust : 3;
+		} fields;
+	} ilim_adjust;
 
+	/* Rsense valus, unit: milliohm */
+	float r_sense_mohm;
+
+	/* Initialize function will set following arguments, no need to give value */
+	bool is_init;
+
+	/* Initialized chip registers if it's needed
+	 * bit 0 - ilim adjust register setting
+	 * bit 1 to 7 are reserved
+	 */
+	uint8_t is_register_setting_needed;
 } ltc4282_init_arg;
 
 typedef struct _ltc4286_init_arg {
@@ -365,5 +399,6 @@ bool check_is_sensor_ready();
 bool pal_is_time_to_poll(uint8_t sensor_num, int poll_time);
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
+void control_sensor_polling(uint8_t sensor_num, uint8_t optional, uint8_t cache_status);
 
 #endif
