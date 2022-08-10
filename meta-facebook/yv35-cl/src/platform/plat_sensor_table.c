@@ -202,22 +202,22 @@ sensor_cfg plat_sensor_config[] = {
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 	{ SENSOR_NUM_PWR_DIMMA0_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_pmic_read, &pmic_pre_read_args[0], NULL, NULL, &pmic_init_args[0] },
+	  NULL, NULL, NULL, NULL, &pmic_init_args[0] },
 	{ SENSOR_NUM_PWR_DIMMA2_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_pmic_read, &pmic_pre_read_args[1], NULL, NULL, &pmic_init_args[1] },
+	  NULL, NULL, NULL, NULL, &pmic_init_args[1] },
 	{ SENSOR_NUM_PWR_DIMMA3_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_pmic_read, &pmic_pre_read_args[2], NULL, NULL, &pmic_init_args[2] },
+	  NULL, NULL, NULL, NULL, &pmic_init_args[2] },
 	{ SENSOR_NUM_PWR_DIMMA4_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_pmic_read, &pmic_pre_read_args[3], NULL, NULL, &pmic_init_args[3] },
+	  NULL, NULL, NULL, NULL, &pmic_init_args[3] },
 	{ SENSOR_NUM_PWR_DIMMA6_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_pmic_read, &pmic_pre_read_args[4], NULL, NULL, &pmic_init_args[4] },
+	  NULL, NULL, NULL, NULL, &pmic_init_args[4] },
 	{ SENSOR_NUM_PWR_DIMMA7_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_pmic_read, &pmic_pre_read_args[5], NULL, NULL, &pmic_init_args[5] },
+	  NULL, NULL, NULL, NULL, &pmic_init_args[5] },
 };
 
 sensor_cfg mp5990_sensor_config_table[] = {
@@ -464,14 +464,16 @@ void pal_extend_sensor_config()
 	case HSC_MODULE_LTC4286:
 		sensor_count = ARRAY_SIZE(ltc4286_sensor_config_table);
 		for (int index = 0; index < sensor_count; index++) {
-			ltc4286_sensor_config_table[index].init_args = &ltc4286_init_args[arg_index];
+			ltc4286_sensor_config_table[index].init_args =
+				&ltc4286_init_args[arg_index];
 			add_sensor_config(ltc4286_sensor_config_table[index]);
 		}
 		break;
 	case HSC_MODULE_LTC4282:
 		sensor_count = ARRAY_SIZE(ltc4282_sensor_config_table);
 		for (int index = 0; index < sensor_count; index++) {
-			ltc4282_sensor_config_table[index].init_args = &ltc4282_init_args[arg_index];
+			ltc4282_sensor_config_table[index].init_args =
+				&ltc4282_init_args[arg_index];
 			add_sensor_config(ltc4282_sensor_config_table[index]);
 		}
 		break;
