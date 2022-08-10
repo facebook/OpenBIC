@@ -197,6 +197,7 @@ uint8_t xdpe12284c_read(uint8_t sensor_num, int *reading)
 			return SENSOR_FAIL_TO_ACCESS;
 		}
 
+		actual_value /= 1000; // mV to V
 		sval->integer = actual_value;
 		sval->fraction = (actual_value - sval->integer) * 1000;
 		break;
