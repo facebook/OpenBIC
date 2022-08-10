@@ -16,6 +16,11 @@
 #include "pmbus.h"
 #include "libutil.h"
 
+sensor_poll_time_cfg diff_poll_time_sensor_table[] = {
+	// sensor_number, last_access_time
+	{ SENSOR_NUM_VOL_BAT3V, 0 },
+};
+
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
 	   access check arg0, arg1, sample_count, cache, cache_status, mux_ADDRess, mux_offset,
@@ -77,7 +82,7 @@ sensor_cfg plat_sensor_config[] = {
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
 	{ SENSOR_NUM_VOL_BAT3V, sensor_dev_ast_adc, ADC_PORT4, NONE, NONE, stby_access, 3, 1,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_BAT3V, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  pre_vol_bat3v_read, NULL, post_vol_bat3v_read, NULL, &adc_asd_init_args[0] },
 	{ SENSOR_NUM_VOL_M2_3V3, sensor_dev_ast_adc, ADC_PORT5, NONE, NONE, dc_access, 2, 1,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
@@ -212,3 +217,27 @@ sensor_cfg plat_sensor_config[] = {
 };
 
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
+
+bool pal_is_time_to_poll(uint8_t sensor_num, int poll_time)
+{
+	int i = 0;
+	int table_size = sizeof(diff_poll_time_sensor_table) / sizeof(sensor_poll_time_cfg);
+
+	for (i = 0; i < table_size; i++) {
+		if (sensor_num == diff_poll_time_sensor_table[i].sensor_num) {
+			int64_t current_access_time = k_uptime_get();
+			int64_t last_access_time = diff_poll_time_sensor_table[i].last_access_time;
+			int64_t diff_time = (current_access_time - last_access_time) / 1000;
+			if ((last_access_time != 0) && (diff_time < poll_time)) {
+				return false;
+			} else {
+				diff_poll_time_sensor_table[i].last_access_time =
+					current_access_time;
+				return true;
+			}
+		}
+	}
+
+	printf("[%s] can't find sensor 0x%x last access time\n", __func__, sensor_num);
+	return true;
+}

@@ -3,7 +3,10 @@
 
 #include <stdint.h>
 
-/*  define config for sensors  */
+/* SENSOR POLLING TIME(second) */
+#define POLL_TIME_BAT3V 3600
+
+/* SENSOR ADDRESS(7-bit)/OFFSET */
 #define TMP75_IN_ADDR (0x92 >> 1)
 #define TMP75_OUT_ADDR (0x94 >> 1)
 #define TMP75_IOM_ADDR (0x94 >> 1)
@@ -32,7 +35,7 @@
 #define CPU_PECI_ADDR 0x30
 #define INA230_ADDR (0x82 >> 1)
 
-/*  threshold sensor number, 1 based  */
+/* SENSOR NUMBER(1 based) - temperature */
 #define SENSOR_NUM_TEMP_TMP75_IN 0x01
 #define SENSOR_NUM_TEMP_TMP75_OUT 0x02
 #define SENSOR_NUM_TEMP_TMP75_IOM 0x03
@@ -52,6 +55,7 @@
 #define SENSOR_NUM_TEMP_PVCCD_HV 0x11
 #define SENSOR_NUM_TEMP_PVCCINFAON 0x12
 
+/* SENSOR NUMBER(1 based) - voltage */
 #define SENSOR_NUM_VOL_STBY12V 0x20
 #define SENSOR_NUM_VOL_BAT3V 0x21
 #define SENSOR_NUM_VOL_STBY3V 0x22
@@ -69,6 +73,7 @@
 #define SENSOR_NUM_VOL_PVCCINFAON 0x2E
 #define SENSOR_NUM_VOL_IOM_INA 0x2F
 
+/* SENSOR NUMBER(1 based) - current */
 #define SENSOR_NUM_CUR_HSCOUT 0x40
 #define SENSOR_NUM_CUR_PVCCIN 0x41
 #define SENSOR_NUM_CUR_PVCCFA_EHV_FIVRA 0x42
@@ -78,6 +83,7 @@
 #define SENSOR_NUM_CUR_PVCCINFAON 0x46
 #define SENSOR_NUM_CUR_IOM_INA 0x47
 
+/* SENSOR NUMBER(1 based) - power */
 #define SENSOR_NUM_PWR_CPU 0x60
 #define SENSOR_NUM_PWR_HSCIN 0x61
 #define SENSOR_NUM_PWR_DIMMA_PMIC 0x62
@@ -91,6 +97,7 @@
 #define SENSOR_NUM_PWR_PVCCINFAON 0x6A
 #define SENSOR_NUM_PWR_IOM_INA 0x6B
 
+/* SENSOR NUMBER - sel */
 #define SENSOR_NUM_SYSTEM_STATUS 0x10
 #define SENSOR_NUM_POWER_ERROR 0x56
 #define SENSOR_NUM_PROC_FAIL 0x65
