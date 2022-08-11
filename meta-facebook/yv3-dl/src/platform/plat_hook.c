@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "ipmi.h"
 #include "sensor.h"
 #include "plat_i2c.h"
@@ -7,6 +8,9 @@
 #include "plat_hook.h"
 #include "plat_sensor_table.h"
 #include "i2c-mux-tca9548.h"
+#include "pmbus.h"
+#include "libipmi.h"
+#include "plat_sys.h"
 
 /**************************************************************************************************
  * INIT ARGS
@@ -173,26 +177,38 @@ bool pre_vr_read(uint8_t sensor_num, void *args)
  */
 bool post_xdpe12284c_read(uint8_t sensor_num, void *args, int *reading)
 {
-	if (k_mutex_unlock(&vr_page_mutex)) {
-		printf("[%s] Failed to unlock vr page\n", __func__);
-	}
+	bool ret = true;
 
 	if (reading == NULL) {
-		return false;
+		ret = false;
+		goto error_exit;
 	}
 	ARG_UNUSED(args);
 
 	sensor_val *sval = (sensor_val *)reading;
 	float val = 0;
 
-	if (sensor_num == SENSOR_NUM_VOL_P3V3_STBY_VR) {
+	switch (sensor_num) {
+	case SENSOR_NUM_VOL_P3V3_STBY_VR:
 		val = (float)sval->integer + (sval->fraction / 1000.0);
 		val *= 2;
 		sval->integer = (int)val & 0xFFFF;
 		sval->fraction = (val - sval->integer) * 1000;
+		break;
+	case SENSOR_NUM_VOL_PVCCIO_VR:
+		// Check VCCIO UV fault
+		check_Infineon_VR_VCCIO_UV_fault(sensor_num);
+		break;
+	default:
+		break;
 	}
 
-	return true;
+error_exit:
+	if (k_mutex_unlock(&vr_page_mutex)) {
+		printf("[%s] Failed to unlock vr page\n", __func__);
+	}
+
+	return ret;
 }
 
 /* isl69254 post read function
@@ -218,11 +234,19 @@ bool post_isl69254_read(uint8_t sensor_num, void *args, int *reading)
 	sensor_val *sval = (sensor_val *)reading;
 	float val = 0;
 
-	if (sensor_num == SENSOR_NUM_VOL_P3V3_STBY_VR) {
+	switch (sensor_num) {
+	case SENSOR_NUM_VOL_P3V3_STBY_VR:
 		val = (float)sval->integer + (sval->fraction / 1000.0);
 		val = (val * 996 / 499);
 		sval->integer = (int)val & 0xFFFF;
 		sval->fraction = (val - sval->integer) * 1000;
+		break;
+	case SENSOR_NUM_VOL_PVCCIO_VR:
+		// Check VCCIO UV fault
+		check_Renesas_VR_VCCIO_UV_fault(sensor_num);
+		break;
+	default:
+		break;
 	}
 
 	return true;
