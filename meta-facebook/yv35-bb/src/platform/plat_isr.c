@@ -48,8 +48,10 @@ void ISR_SLED_CYCLE()
 	// press sled cycle button
 	if (bb_btn_status == LOW_ACTIVE) {
 		press_button_time = k_uptime_get() / 1000; // Transfer ms unit to s unit
-		submit_button_event(BASEBOARD_SLED_BUTTON, SLOT1_BIC, IPMI_EVENT_TYPE_SENSOR_SPECIFIC);
-		submit_button_event(BASEBOARD_SLED_BUTTON, SLOT3_BIC, IPMI_EVENT_TYPE_SENSOR_SPECIFIC);
+		submit_button_event(BASEBOARD_SLED_BUTTON, SLOT1_BIC,
+				    IPMI_EVENT_TYPE_SENSOR_SPECIFIC);
+		submit_button_event(BASEBOARD_SLED_BUTTON, SLOT3_BIC,
+				    IPMI_EVENT_TYPE_SENSOR_SPECIFIC);
 
 		// release sled cycle button
 	} else if (bb_btn_status == LOW_INACTIVE) {

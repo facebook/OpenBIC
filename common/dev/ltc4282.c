@@ -243,7 +243,7 @@ uint8_t ltc4282_init(uint8_t sensor_num)
 		goto init_param;
 	}
 
-	for(int bit = 0; bit < 8; ++bit) {
+	for (int bit = 0; bit < 8; ++bit) {
 		switch (init_args->is_register_setting_needed & (BIT(bit))) {
 		case BIT(0):
 			// Set ILIM_ADJUST register

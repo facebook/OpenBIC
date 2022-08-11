@@ -464,14 +464,16 @@ void pal_extend_sensor_config()
 	case HSC_MODULE_LTC4286:
 		sensor_count = ARRAY_SIZE(ltc4286_sensor_config_table);
 		for (int index = 0; index < sensor_count; index++) {
-			ltc4286_sensor_config_table[index].init_args = &ltc4286_init_args[arg_index];
+			ltc4286_sensor_config_table[index].init_args =
+				&ltc4286_init_args[arg_index];
 			add_sensor_config(ltc4286_sensor_config_table[index]);
 		}
 		break;
 	case HSC_MODULE_LTC4282:
 		sensor_count = ARRAY_SIZE(ltc4282_sensor_config_table);
 		for (int index = 0; index < sensor_count; index++) {
-			ltc4282_sensor_config_table[index].init_args = &ltc4282_init_args[arg_index];
+			ltc4282_sensor_config_table[index].init_args =
+				&ltc4282_init_args[arg_index];
 			add_sensor_config(ltc4282_sensor_config_table[index]);
 		}
 		break;
