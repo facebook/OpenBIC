@@ -105,21 +105,17 @@ static int gpio_access_cfg(const struct shell *shell, int gpio_idx, enum GPIO_AC
 			return 1;
 		}
 
-		uint32_t g_val = sys_read32(GPIO_GROUP_REG_ACCESS[gpio_idx / 32]);
-		uint32_t g_dir = sys_read32(GPIO_GROUP_REG_ACCESS[gpio_idx / 32] + 0x4);
-
 		char *pin_prop = (gpio_cfg[gpio_idx].property == OPEN_DRAIN) ? "OD" : "PP";
 		char *pin_dir = (gpio_cfg[gpio_idx].direction == GPIO_INPUT) ? "input" : "output";
 
 		char *pin_dir_reg = "I";
-		if (g_dir & BIT(gpio_idx % 32))
+		if (gpio_get_direction(gpio_idx))
 			pin_dir_reg = "O";
 
 		int val = gpio_get(gpio_idx);
 		if (val == 0 || val == 1) {
-			shell_print(shell, "[%-3d] %-35s: %-3s | %-6s(%s) | %d(%d)", gpio_idx,
-				    gpio_name[gpio_idx], pin_prop, pin_dir, pin_dir_reg, val,
-				    GET_BIT_VAL(g_val, gpio_idx % 32));
+			shell_print(shell, "[%-3d] %-35s: %-3s | %-6s(%s) | %d", gpio_idx,
+				    gpio_name[gpio_idx], pin_prop, pin_dir, pin_dir_reg, val);
 		} else {
 			shell_print(shell, "[%-3d] %-35s: %-3s | %-6s(%s) | %s", gpio_idx,
 				    gpio_name[gpio_idx], pin_prop, pin_dir, pin_dir_reg, "resv");

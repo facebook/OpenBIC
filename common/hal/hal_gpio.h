@@ -111,6 +111,7 @@ bool pal_load_gpio_config(void);
 int gpio_init(const struct device *args);
 int gpio_interrupt_conf(uint8_t, gpio_flags_t);
 uint8_t gpio_conf(uint8_t gpio_num, int dir);
+int gpio_get_direction(uint8_t gpio_num);
 void scu_init(SCU_CFG cfg[], size_t size);
 
 #endif

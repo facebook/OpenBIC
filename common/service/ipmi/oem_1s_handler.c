@@ -891,14 +891,8 @@ __weak void OEM_1S_GET_SET_GPIO(ipmi_msg *msg)
 		break;
 	case GET_GPIO_DIRECTION_STATUS:
 		if (msg->data_len == 2) {
-			uint8_t dir = 0xFF;
-			uint32_t g_dir = sys_read32(GPIO_GROUP_REG_ACCESS[gpio_num / 32] + 0x4);
-			if (g_dir & BIT(gpio_num % 32))
-				dir = 0x01;
-			else
-				dir = 0x00;
 			msg->data[0] = gpio_num;
-			msg->data[1] = dir;
+			msg->data[1] = gpio_get_direction(gpio_num);
 			completion_code = CC_SUCCESS;
 		}
 		break;

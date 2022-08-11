@@ -134,6 +134,24 @@ uint8_t gpio_conf(uint8_t gpio_num, int dir)
 				  (gpio_num % GPIO_GROUP_SIZE), dir);
 }
 
+int gpio_get_direction(uint8_t gpio_num)
+{
+	uint8_t dir = 0xFF;
+
+	if (gpio_num >= TOTAL_GPIO_NUM) {
+		printf("getting invalid gpio num %d", gpio_num);
+		return dir;
+	}
+
+	uint32_t g_dir = sys_read32(GPIO_GROUP_REG_ACCESS[gpio_num / 32] + 0x4);
+	if (g_dir & BIT(gpio_num % 32))
+		dir = 0x01;
+	else
+		dir = 0x00;
+
+	return dir;
+}
+
 int gpio_get(uint8_t gpio_num)
 {
 	if (gpio_num >= TOTAL_GPIO_NUM) {
