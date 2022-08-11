@@ -808,17 +808,72 @@ __weak void OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg)
 	return;
 }
 
+/* For command Get Set GPIO NetFn:0x38 Cmd:0x41 */
+static uint8_t gpio_idx_exchange(ipmi_msg *msg)
+{
+	if (msg == NULL)
+		return 1;
+	if (msg->data_len < 2)
+		return 1;
+
+	int need_change = 1;
+	switch (msg->data[0]) {
+	case GET_GPIO_STATUS:
+	case GET_GPIO_DIRECTION_STATUS:
+		if (msg->data_len == 3) {
+			if (msg->data[2] == GLOBAL_GPIO_IDX_KEY) {
+				need_change = 0;
+			}
+			msg->data_len--;
+		}
+		break;
+	case SET_GPIO_OUTPUT_STATUS:
+	case SET_GPIO_DIRECTION_STATUS:
+		if (msg->data_len == 4) {
+			if (msg->data[3] == GLOBAL_GPIO_IDX_KEY) {
+				need_change = 0;
+			}
+			msg->data_len--;
+		}
+		break;
+	default:
+		break;
+	}
+
+	if (need_change)
+		msg->data[1] = gpio_ind_to_num_table[msg->data[1]];
+	return 0;
+}
+
 __weak void OEM_1S_GET_SET_GPIO(ipmi_msg *msg)
 {
 	if (msg == NULL) {
 		return;
 	}
 
-	uint8_t completion_code = CC_INVALID_LENGTH;
-	uint8_t gpio_num = gpio_ind_to_num_table[msg->data[1]];
+	// whether need to change gpio index type
+	if (gpio_idx_exchange(msg)) {
+		msg->data_len = 0;
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		return;
+	}
 
+	uint8_t gpio_num = msg->data[1];
+	if (gpio_num >= TOTAL_GPIO_NUM) {
+		msg->data_len = 0;
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	if (gpio_cfg[gpio_num].is_init == DISABLE) {
+		msg->data_len = 0;
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		return;
+	}
+
+	uint8_t completion_code = CC_INVALID_LENGTH;
 	switch (msg->data[0]) {
-	case GET_GPIO_OUTPUT_STATUS:
+	case GET_GPIO_STATUS:
 		if (msg->data_len == 2) {
 			msg->data[0] = gpio_num;
 			msg->data[1] = gpio_get(gpio_num);
@@ -835,7 +890,17 @@ __weak void OEM_1S_GET_SET_GPIO(ipmi_msg *msg)
 		}
 		break;
 	case GET_GPIO_DIRECTION_STATUS:
-		completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+		if (msg->data_len == 2) {
+			uint8_t dir = 0xFF;
+			uint32_t g_dir = sys_read32(GPIO_GROUP_REG_ACCESS[gpio_num / 32] + 0x4);
+			if (g_dir & BIT(gpio_num % 32))
+				dir = 0x01;
+			else
+				dir = 0x00;
+			msg->data[0] = gpio_num;
+			msg->data[1] = dir;
+			completion_code = CC_SUCCESS;
+		}
 		break;
 	case SET_GPIO_DIRECTION_STATUS:
 		if (msg->data_len == 3) {
@@ -917,7 +982,7 @@ __weak void OEM_1S_CONTROL_SENSOR_POLLING(ipmi_msg *msg)
 			// Enable or Disable sensor polling
 			sensor_config[control_sensor_index].is_enable_polling =
 				((operation == DISABLE_SENSOR_POLLING) ? DISABLE_SENSOR_POLLING :
-									       ENABLE_SENSOR_POLLING);
+									 ENABLE_SENSOR_POLLING);
 			msg->data[return_data_index + 1] =
 				sensor_config[control_sensor_index].is_enable_polling;
 		} else {

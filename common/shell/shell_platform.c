@@ -449,7 +449,7 @@ static void cmd_gpio_muti_fn_ctl_list(const struct shell *shell, size_t argc, ch
 	}
 
 	printf("[   REG    ]  hi                                      lo\n");
-	for (int lst_idx = 0; lst_idx < ARRAY_SIZE(GPIO_MULTI_FUNC_PIN_CTL_REG_ACCESS); lst_idx++) {
+	for (int lst_idx = 0; lst_idx < GPIO_MULTI_FUNC_CFG_SIZE; lst_idx++) {
 		uint32_t cur_status = sys_read32(GPIO_MULTI_FUNC_PIN_CTL_REG_ACCESS[lst_idx]);
 		printf("[0x%x]", GPIO_MULTI_FUNC_PIN_CTL_REG_ACCESS[lst_idx]);
 		for (int i = 32; i > 0; i--) {
@@ -530,7 +530,7 @@ static void cmd_control_sensor_polling(const struct shell *shell, size_t argc, c
 
 	sensor_config[sensor_index].is_enable_polling =
 		((operation == DISABLE_SENSOR_POLLING) ? DISABLE_SENSOR_POLLING :
-							       ENABLE_SENSOR_POLLING);
+							 ENABLE_SENSOR_POLLING);
 	shell_print(shell, "Sensor number 0x%x %s sensor polling success", sensor_num,
 		    ((operation == DISABLE_SENSOR_POLLING) ? "disable" : "enable"));
 	return;
