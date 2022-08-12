@@ -7,7 +7,7 @@ project(yv35-rf)
 
 set(common_path ../../common)
 FILE(GLOB app_sources src/ipmi/*.c src/platform/*.c src/lib/*.c)
-FILE(GLOB common_sources ${common_path}/service/*.c ${common_path}/service/*/*.c ${common_path}/hal/*.c ${common_path}/dev/*.c ${common_path}/shell/*.c ${common_path}/log/*.c)
+FILE(GLOB common_sources ${common_path}/service/*.c ${common_path}/service/*/*.c ${common_path}/hal/*.c ${common_path}/dev/*.c ${common_path}/shell/*.c)
 
 target_sources(app PRIVATE ${app_sources})
 target_sources(app PRIVATE ${common_sources})
@@ -23,7 +23,7 @@ target_sources(app PRIVATE ${common_path}/lib/util_sys.c)
 target_sources(app PRIVATE ${common_path}/lib/util_worker.c)
 
 target_include_directories(app PRIVATE ${ZEPHYR_BASE}/include/portability)
-target_include_directories(app PRIVATE ${common_path} ${common_path}/service/ipmi/include ${common_path}/service/host ${common_path}/service/sensor ${common_path}/service/usb ${common_path}/service/ipmb ${common_path}/service/mctp ${common_path}/service/pldm ${common_path}/hal ${common_path}/dev/include ${common_path}/lib ${common_path}/shell ${common_path}/log)
+target_include_directories(app PRIVATE ${common_path} ${common_path}/service/ipmi/include ${common_path}/service/host ${common_path}/service/sensor ${common_path}/service/usb ${common_path}/service/ipmb ${common_path}/service/mctp ${common_path}/service/pldm ${common_path}/hal ${common_path}/dev/include ${common_path}/lib ${common_path}/shell)
 target_include_directories(app PRIVATE src/ipmi/include src/platform src/lib)
 
 # Fail build if there are any warnings 

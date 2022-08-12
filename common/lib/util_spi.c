@@ -14,7 +14,6 @@
 #include "util_sys.h"
 #include "libutil.h"
 #include "ipmi.h"
-#include "log_util.h"
 #include <crypto/hash.h>
 
 static char *flash_device[6] = { "fmc_cs0",  "fmc_cs1",	 "spi1_cs0",
@@ -295,7 +294,7 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 		return FWUPDATE_REPEATED_UPDATED;
 	}
 
-	if (is_log_en(DEBUG_FW_UPDATE)) {
+	if (FW_UPDATE_DEBUG) {
 		printf("spi bus%x update offset %x %x, msg_len %d, sector_end %d, msg_buf: %2x %2x %2x %2x\n",
 		       flash_position, offset, buf_offset, msg_len, sector_end, msg_buf[0],
 		       msg_buf[1], msg_buf[2], msg_buf[3]);
@@ -336,7 +335,7 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 		k_msleep(10);
 		is_init = 0;
 
-		if (is_log_en(DEBUG_FW_UPDATE)) {
+		if (FW_UPDATE_DEBUG) {
 			printf("***update %x, offset %x, SECTOR_SZ_16K %x\n",
 			       (offset / SECTOR_SZ_16K) * SECTOR_SZ_16K, offset, SECTOR_SZ_16K);
 		}

@@ -4,7 +4,6 @@
 #include <drivers/peci.h>
 #include "hal_peci.h"
 #include "libutil.h"
-#include "log_util.h"
 
 const struct device *dev;
 
@@ -153,7 +152,7 @@ int peci_read(uint8_t cmd, uint8_t address, uint8_t u8Index, uint16_t u16Param, 
 	rdpkgcfg.tx_buffer.buf[3] = u16Param >> 8;
 	ret = peci_cmd_xfer(&rdpkgcfg);
 
-	if (is_log_en(DEBUG_PECI)) {
+	if (DEBUG_PECI) {
 		uint8_t index;
 		for (index = 0; index < 5; index++)
 			printf("%02x ", readBuf[index]);

@@ -7,7 +7,6 @@
 #include "timer.h"
 #include "plat_i2c.h"
 #include "libutil.h"
-#include "log_util.h"
 
 static const struct device *dev_i2c[I2C_BUS_MAX_NUM];
 
@@ -26,7 +25,7 @@ int i2c_master_read(I2C_MSG *msg, uint8_t retry)
 	uint8_t i;
 	uint8_t *txbuf, *rxbuf;
 	int ret, status;
-	if (is_log_en(DEBUG_I2C)) {
+	if (DEBUG_I2C) {
 		printf("i2c_master_read: bus %d, addr %x, rxlen %d, txlen %d, txbuf:", msg->bus,
 		       msg->target_addr, msg->rx_len, msg->tx_len);
 		for (int i = 0; i < msg->tx_len; i++) {
@@ -59,7 +58,7 @@ int i2c_master_read(I2C_MSG *msg, uint8_t retry)
 
 				memcpy(&msg->data[0], rxbuf, msg->rx_len);
 
-				if (is_log_en(DEBUG_I2C)) {
+				if (DEBUG_I2C) {
 					printf("rxbuf:");
 					for (int i = 0; i < msg->rx_len; i++) {
 						printf(" %x", msg->data[i]);
@@ -97,7 +96,7 @@ int i2c_master_write(I2C_MSG *msg, uint8_t retry)
 	uint8_t *txbuf;
 	int status, ret;
 
-	if (is_log_en(DEBUG_I2C)) {
+	if (DEBUG_I2C) {
 		printf("i2c_master_write: bus %d, addr %x, txlen %d, txbuf:", msg->bus,
 		       msg->target_addr, msg->tx_len);
 		for (int i = 0; i < msg->tx_len; i++) {

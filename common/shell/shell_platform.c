@@ -47,9 +47,6 @@
 #include "sensor.h"
 #include "sdr.h"
 
-/* Include LOG */
-#include "log_util.h"
-
 /* Include config settings */
 #include "shell_platform.h"
 
@@ -251,42 +248,11 @@ static int sensor_access(const struct shell *shell, int sensor_num, enum SENSOR_
 
 		char *check_access =
 			(sensor_access_check(sensor_config[sen_idx].num) == true) ? "O" : "X";
-
-		if (!strcmp(check_access, "O")) {
-			if (sensor_config[sen_idx].cache_status == SENSOR_READ_4BYTE_ACUR_SUCCESS) {
-				int16_t fraction = sensor_config[sen_idx].cache >> 16;
-				int16_t integer = sensor_config[sen_idx].cache & 0xFFFF;
-				shell_print(
-					shell,
-					"[0x%-2x] %-25s: %-10s | access[%s] | %-25s | %-4d sec | %.2f",
-					sensor_config[sen_idx].num, sensor_name,
-					sensor_type_name[sensor_config[sen_idx].type], check_access,
-					sensor_status_name[sensor_config[sen_idx].cache_status],
-					sensor_config[sen_idx].poll_time,
-					integer + (0.001 * fraction));
-				break;
-			} else if (sensor_config[sen_idx].cache_status == SENSOR_READ_SUCCESS ||
-				   sensor_config[sen_idx].cache_status ==
-					   SENSOR_READ_ACUR_SUCCESS) {
-				shell_print(
-					shell,
-					"[0x%-2x] %-25s: %-10s | access[%s] | %-25s | %-4d sec | %-8d",
-					sensor_config[sen_idx].num, sensor_name,
-					sensor_type_name[sensor_config[sen_idx].type], check_access,
-					sensor_status_name[sensor_config[sen_idx].cache_status],
-					sensor_config[sen_idx].poll_time,
-					sensor_config[sen_idx].cache);
-				break;
-			} else {
-				shell_print(shell, "Invalid sensor cache status!");
-			}
-		}
-
-		shell_print(shell, "[0x%-2x] %-25s: %-10s | access[%s] | %-25s | %-4d sec | na",
+		shell_print(shell, "[0x%-2x] %-25s: %-10s | access[%s] | %-25s | %-8d",
 			    sensor_config[sen_idx].num, sensor_name,
 			    sensor_type_name[sensor_config[sen_idx].type], check_access,
 			    sensor_status_name[sensor_config[sen_idx].cache_status],
-			    sensor_config[sen_idx].poll_time);
+			    sensor_config[sen_idx].cache);
 		break;
 
 	case SENSOR_WRITE:
@@ -566,70 +532,6 @@ static void cmd_control_sensor_polling(const struct shell *shell, size_t argc, c
 	return;
 }
 
-/*
-    Command LOG
-*/
-static void cmd_log_list_all(const struct shell *shell, size_t argc, char **argv)
-{
-	if (argc != 1) {
-		shell_warn(shell, "Help: platform log list_all");
-		return;
-	}
-
-	shell_print(shell, "--------------------------");
-	for (int i = 0; i < DEBUG_MAX; i++) {
-		char *log_status = (is_log_en(i) == LOG_ENABLE) ? "o" : "x";
-		shell_print(shell, "[%-2d] %-15s: %s", i, log_name[i], log_status);
-	}
-	shell_print(shell, "--------------------------");
-
-	return;
-}
-
-static void cmd_log_control(const struct shell *shell, size_t argc, char **argv)
-{
-	if (argc != 3) {
-		shell_warn(shell, "Help: platform log control <log_idx> <log_status>");
-		return;
-	}
-
-	uint8_t log_idx = strtol(argv[1], NULL, 10);
-	uint8_t log_status = strtol(argv[2], NULL, 10);
-
-	if (log_idx >= DEBUG_MAX) {
-		shell_error(shell, "Invalid <log_idx>, should lower than %d.", log_idx);
-		return;
-	}
-
-	if (log_status != LOG_ENABLE && log_status != LOG_DISABLE) {
-		shell_error(shell, "Invalid <log_status>, try 0:enable / 1:disable.");
-		return;
-	}
-
-	if (!log_status_ctl(log_idx, log_status)) {
-		shell_error(shell, "Log %d status set %d failed!", log_idx, log_status);
-		return;
-	}
-
-	shell_print(shell, "Log %d status set %d success!", log_idx, log_status);
-	return;
-}
-
-static void cmd_log_halt(const struct shell *shell, size_t argc, char **argv)
-{
-	if (argc != 1) {
-		shell_warn(shell, "Help: platform log halt");
-		return;
-	}
-
-	for (int i = 0; i < DEBUG_MAX; i++) {
-		log_status_ctl(i, LOG_DISABLE);
-	}
-
-	shell_print(shell, "All log has been halt!");
-	return;
-}
-
 /*********************************************************************************************************
  * COMMAND DECLARE SECTION
 **********************************************************************************************************/
@@ -678,17 +580,12 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_sensor_cmds,
 					 cmd_control_sensor_polling),
 			       SHELL_SUBCMD_SET_END);
 
-/* Log sub command */
-SHELL_STATIC_SUBCMD_SET_CREATE(
-	sub_log_cmds, SHELL_CMD(list_all, NULL, "List all debug log status.", cmd_log_list_all),
-	SHELL_CMD(control, NULL, "Enable/Disable certain debug log.", cmd_log_control),
-	SHELL_CMD(halt, NULL, "Disable all debug log.", cmd_log_halt), SHELL_SUBCMD_SET_END);
-
 /* MAIN command */
-SHELL_STATIC_SUBCMD_SET_CREATE(
-	sub_platform_cmds, SHELL_CMD(info, NULL, "Platform info.", cmd_info_print),
-	SHELL_CMD(gpio, &sub_gpio_cmds, "GPIO relative command.", NULL),
-	SHELL_CMD(sensor, &sub_sensor_cmds, "SENSOR relative command.", NULL),
-	SHELL_CMD(log, &sub_log_cmds, "Debug log relative command.", NULL), SHELL_SUBCMD_SET_END);
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_platform_cmds,
+			       SHELL_CMD(info, NULL, "Platform info.", cmd_info_print),
+			       SHELL_CMD(gpio, &sub_gpio_cmds, "GPIO relative command.", NULL),
+			       SHELL_CMD(sensor, &sub_sensor_cmds, "SENSOR relative command.",
+					 NULL),
+			       SHELL_SUBCMD_SET_END);
 
 SHELL_CMD_REGISTER(platform, &sub_platform_cmds, "Platform commands", NULL);

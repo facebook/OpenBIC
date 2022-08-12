@@ -8,7 +8,6 @@
 #include "ipmi.h"
 #include "kcs.h"
 #include "plat_def.h"
-#include "log_util.h"
 
 struct k_thread kcs_polling;
 K_KERNEL_STACK_MEMBER(KCS_POLL_stack, KCS_POLL_STACK_SIZE);
@@ -60,7 +59,7 @@ void kcs_read(void *arvg0, void *arvg1, void *arvg2)
 			continue;
 		}
 
-		if (is_log_en(DEBUG_KCS)) {
+		if (DEBUG_KCS) {
 			printf("host KCS read: netfn=0x%02x, cmd=0x%02x, data:\n", ibuf[0],
 			       ibuf[1]);
 			for (i = 2; i < rc; ++i) {
@@ -86,7 +85,7 @@ void kcs_read(void *arvg0, void *arvg1, void *arvg2)
 				       current_msg.buffer.data_len);
 			}
 
-			if (is_log_en(DEBUG_KCS)) {
+			if (DEBUG_KCS) {
 				printf("kcs to ipmi netfn %x, cmd %x, length %d\n",
 				       current_msg.buffer.netfn, current_msg.buffer.cmd,
 				       current_msg.buffer.data_len);
