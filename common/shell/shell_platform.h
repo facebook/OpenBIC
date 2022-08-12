@@ -79,6 +79,7 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(nct7718w)	sensor_name_to_num(ltc4286)
 	sensor_name_to_num(amd_tsi) 	sensor_name_to_num(apml_mailbox)
 	sensor_name_to_num(xdpe19283b)	sensor_name_to_num(g788p81u)
+	sensor_name_to_num(mp2856gut)
 };
 
 const char *const sensor_status_name[] = {

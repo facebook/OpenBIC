@@ -95,6 +95,7 @@ enum SENSOR_DEV {
 	sensor_dev_apml_mailbox = 0x19,
 	sensor_dev_xdpe19283b = 0x1A,
 	sensor_dev_g788p81u = 0x1B,
+	sensor_dev_mp2856gut = 0x1C,
 	sensor_dev_max
 };
 
