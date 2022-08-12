@@ -42,6 +42,12 @@
 #define OPEN_DRAIN 0
 #define PUSH_PULL 1
 
+#define REG_GPIO_BASE 0x7e780000
+#define REG_SCU 0x7E6E2000
+extern uint32_t GPIO_GROUP_REG_ACCESS[];
+extern uint32_t GPIO_MULTI_FUNC_PIN_CTL_REG_ACCESS[];
+extern const int GPIO_MULTI_FUNC_CFG_SIZE;
+
 #define GPIO_CFG_SIZE 168
 typedef struct _GPIO_CFG_ {
 	uint8_t chip;
@@ -106,6 +112,7 @@ bool pal_load_gpio_config(void);
 int gpio_init(const struct device *args);
 int gpio_interrupt_conf(uint8_t, gpio_flags_t);
 uint8_t gpio_conf(uint8_t gpio_num, int dir);
+int gpio_get_direction(uint8_t gpio_num);
 void scu_init(SCU_CFG cfg[], size_t size);
 
 #endif

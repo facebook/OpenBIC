@@ -22,6 +22,37 @@ GPIO_CFG gpio_cfg[GPIO_CFG_SIZE] = {
 	//  Defalut              DISABLE  GPIO_INPUT    LOW         PUSH_PULL    GPIO_INT_DISABLE    NULL
 };
 
+uint32_t GPIO_GROUP_REG_ACCESS[GPIO_GROUP_NUM] = {
+	REG_GPIO_BASE + 0x00, /* GPIO_A/B/C/D Data Value Register */
+	REG_GPIO_BASE + 0x20, /* GPIO_E/F/G/H Data Value Register */
+	REG_GPIO_BASE + 0x70, /* GPIO_I/J/K/L Data Value Register */
+	REG_GPIO_BASE + 0x78, /* GPIO_M/N/O/P Data Value Register */
+	REG_GPIO_BASE + 0x80, /* GPIO_Q/R/S/T Data Value Register */
+	REG_GPIO_BASE + 0x88, /* GPIO_U Data Value Register */
+};
+
+uint32_t GPIO_MULTI_FUNC_PIN_CTL_REG_ACCESS[] = {
+	REG_SCU + 0x410, /* Multi-function pin ctl #1 */
+	REG_SCU + 0x414, /* Multi-function pin ctl #2 */
+	REG_SCU + 0x418, /* Multi-function pin ctl #3 */
+	REG_SCU + 0x41C, /* Multi-function pin ctl #4 */
+	REG_SCU + 0x430, /* Multi-function pin ctl #5 */
+	REG_SCU + 0x434, /* Multi-function pin ctl #6 */
+	REG_SCU + 0x438, /* Multi-function pin ctl #7 */
+	REG_SCU + 0x450, /* Multi-function pin ctl #9 */
+	REG_SCU + 0x454, /* Multi-function pin ctl #10 */
+	REG_SCU + 0x458, /* Multi-function pin ctl #11 */
+	REG_SCU + 0x4B0, /* Multi-function pin ctl #13 */
+	REG_SCU + 0x4B4, /* Multi-function pin ctl #14 */
+	REG_SCU + 0x4B8, /* Multi-function pin ctl #15 */
+	REG_SCU + 0x4BC, /* Multi-function pin ctl #16 */
+	REG_SCU + 0x4D4, /* Multi-function pin ctl #18 */
+	REG_SCU + 0x4D8, /* Multi-function pin ctl #19 */
+	REG_SCU + 0x510, /* Hardware Strap2 Register */
+	REG_SCU + 0x51C, /* Hardware Strap2 Clear Register */
+};
+const int GPIO_MULTI_FUNC_CFG_SIZE = ARRAY_SIZE(GPIO_MULTI_FUNC_PIN_CTL_REG_ACCESS);
+
 void irq_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pins)
 {
 	uint8_t group, index, gpio_num;
@@ -101,6 +132,24 @@ uint8_t gpio_conf(uint8_t gpio_num, int dir)
 {
 	return gpio_pin_configure(dev_gpio[gpio_num / GPIO_GROUP_SIZE],
 				  (gpio_num % GPIO_GROUP_SIZE), dir);
+}
+
+int gpio_get_direction(uint8_t gpio_num)
+{
+	uint8_t dir = 0xFF;
+
+	if (gpio_num >= TOTAL_GPIO_NUM) {
+		printf("getting invalid gpio num %d", gpio_num);
+		return dir;
+	}
+
+	uint32_t g_dir = sys_read32(GPIO_GROUP_REG_ACCESS[gpio_num / 32] + 0x4);
+	if (g_dir & BIT(gpio_num % 32))
+		dir = 0x01;
+	else
+		dir = 0x00;
+
+	return dir;
 }
 
 int gpio_get(uint8_t gpio_num)
