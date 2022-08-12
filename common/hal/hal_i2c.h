@@ -71,7 +71,6 @@
 #define DEV_I2C(n) DEV_I2C_##n
 
 #define I2C_BUFF_SIZE 256
-#define DEBUG_I2C 0
 
 typedef struct _I2C_MSG_ {
 	uint8_t bus;

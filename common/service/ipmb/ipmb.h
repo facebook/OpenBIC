@@ -44,8 +44,6 @@
 #define DEV_IPMB_9
 #endif
 
-#define DEBUG_IPMB 0
-
 #define SEQ_NUM 64
 #define MAX_SEQ_QUENE 15
 #define MEM_ALLOCATE_RETRY_TIME 2

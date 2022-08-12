@@ -9,8 +9,6 @@ extern "C" {
 #include <sys/printk.h>
 #include <zephyr.h>
 
-#define MCTP_DEBUG 1
-
 #define MCTP_SUCCESS 0
 #define MCTP_ERROR 1
 

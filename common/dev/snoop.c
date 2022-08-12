@@ -8,6 +8,7 @@
 #include "libutil.h"
 #include "ipmi.h"
 #include "power_status.h"
+#include "log_util.h"
 
 const struct device *snoop_dev;
 uint8_t *snoop_data;
@@ -94,6 +95,10 @@ void snoop_read()
 		if (rc == 0) {
 			proc_postcode_ok = true;
 			if (!k_mutex_lock(&snoop_mutex, K_MSEC(1000))) {
+				if (is_log_en(DEBUG_SNOOP)) {
+					printf("* new postcode[%d] 0x%x\n", snoop_read_num,
+					       *snoop_data);
+				}
 				snoop_read_buffer[snoop_read_num % SNOOP_MAX_LEN] = *snoop_data;
 				snoop_read_num++;
 			} else {

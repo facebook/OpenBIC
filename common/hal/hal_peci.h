@@ -1,8 +1,6 @@
 #ifndef HAL_PECI_H
 #define HAL_PECI_H
 
-#define DEBUG_PECI 0
-
 /* Completion Code mask to check retry needs */
 #define PECI_DEV_CC_RETRY_CHECK_MASK 0xf0
 #define PECI_DEV_CC_NEED_RETRY 0x80
