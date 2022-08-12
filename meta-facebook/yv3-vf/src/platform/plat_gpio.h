@@ -29,10 +29,10 @@ void gpio_int_default();
 	gpio_name_to_num(RST_SMB_E1S_3_N) \
 	gpio_name_to_num(RST_SMB_E1S_2_N)
 #define name_gpioC	\
-	gpio_name_to_num(FM_BOARD_ID_0) \
-	gpio_name_to_num(FM_BOARD_ID_1) \
-	gpio_name_to_num(FM_BOARD_ID_2) \
-	gpio_name_to_num(FM_BOARD_ID_3) \
+	gpio_name_to_num(BOARD_ID0) \
+	gpio_name_to_num(BOARD_ID1) \
+	gpio_name_to_num(BOARD_ID2) \
+	gpio_name_to_num(BOARD_ID3) \
 	gpio_name_to_num(RST_BIC_E1S_3_N) \
 	gpio_name_to_num(RST_BIC_E1S_2_N) \
 	gpio_name_to_num(RST_BIC_E1S_1_N) \

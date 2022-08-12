@@ -7,7 +7,7 @@
 #include "libutil.h"
 
 #define WORKER_STACK_SIZE 10000
-#define WORKER_PRIORITY osPriorityBelowNormal
+#define WORKER_PRIORITY CONFIG_MAIN_THREAD_PRIORITY
 
 #define MAX_WORK_COUNT 32
 #define WARN_WORK_PROC_TIME_MS 1000
@@ -42,7 +42,7 @@ static void work_handler(struct k_work *item)
 
 		/* Processing time too long, print warning message */
 		if ((fn_finish_time - fn_start_time) > WARN_WORK_PROC_TIME_MS) {
-			printf("WARN: work %s Processing time too long, %lld ms\n", work_job->name,
+			printf("WARN: work %s Processing time too long, %llu ms\n", work_job->name,
 			       (fn_finish_time - fn_start_time));
 		}
 	}
@@ -122,6 +122,7 @@ int add_work(worker_job *job)
 	}
 	work_count++;
 	k_mutex_unlock(&mutex_use_count);
+	// free new_job in work_handler()
 	return ret;
 
 error:

@@ -10,11 +10,8 @@ void init_sys_board_id(uint8_t board_id)
 	case RAINBOW_FALLS:
 		system_board_id = RAINBOW_FALLS;
 		break;
-	case WAIMANO_FALLS:
-		system_board_id = WAIMANO_FALLS;
-		break;
 	case VERNAL_FALLS:
-		system_board_id = VERNAL_FALLS;
+		system_board_id = VERNAL_FALLS_BOARD_TYPE;
 		break;
 	default:
 		printf("[%s] input board id not support: 0x%x\n", __func__, board_id);

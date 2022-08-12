@@ -116,7 +116,7 @@ static void m2_presen_evt(uint32_t dev, uint32_t status)
 {
 	uint8_t assert;
 
-	assert = (!status) ? IPMI_EVENT_TYPE_SENSOR_SPEC : IPMI_OEM_EVENT_TYPE_DEASSART;
+	assert = (!status) ? IPMI_EVENT_TYPE_SENSOR_SPECIFIC : IPMI_OEM_EVENT_TYPE_DEASSART;
 	add_sel(IPMI_OEM_SENSOR_TYPE_OEM, assert, SENSOR_NUM_SYS_STA,
 		IPMI_EVENT_OFFSET_SYS_M2PRESENT, E1S_BOARD_TYPE, dev);
 }

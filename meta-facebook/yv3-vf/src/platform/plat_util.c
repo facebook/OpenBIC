@@ -238,7 +238,7 @@ uint8_t assert_func(DEASSERT_CHK_TYPE_E assert_type) // 0:success
 
 	gpio_interrupt_conf(p->gpio_num, GPIO_INT_DISABLE);
 
-	add_sel(IPMI_OEM_SENSOR_TYPE_OEM, IPMI_EVENT_TYPE_SENSOR_SPEC, SENSOR_NUM_SYS_STA,
+	add_sel(IPMI_OEM_SENSOR_TYPE_OEM, IPMI_EVENT_TYPE_SENSOR_SPECIFIC, SENSOR_NUM_SYS_STA,
 		IPMI_EVENT_OFFSET_SYS_INA231_PWR_ALERT, E1S_BOARD_TYPE, assert_type);
 
 	worker_job job = { 0 };
