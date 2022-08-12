@@ -89,6 +89,7 @@ void ISR_DC_ON()
 	set_DC_status(PWRGD_SYS_PWROK);
 
 	if (get_DC_status() == true) {
+		gpio_set(BMC_PWR_LED, GPIO_HIGH);
 		k_work_schedule(&set_DC_on_5s_work, K_SECONDS(DC_ON_5_SECOND));
 
 		if (k_work_cancel_delayable(&set_DC_off_10s_work) != 0) {
@@ -96,6 +97,7 @@ void ISR_DC_ON()
 		}
 		set_DC_off_delayed_status();
 	} else {
+		gpio_set(BMC_PWR_LED, GPIO_LOW);
 		set_DC_on_delayed_status();
 		k_work_schedule(&set_DC_off_10s_work, K_SECONDS(DC_OFF_10_SECOND));
 

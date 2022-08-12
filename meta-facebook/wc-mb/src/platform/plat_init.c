@@ -55,6 +55,15 @@ static void postcode_led_ctl()
 	// These configs should set by BIOS
 }
 
+/* control mb host status led */
+static void mb_pwr_led_ctl()
+{
+	if (get_DC_status())
+		gpio_set(BMC_PWR_LED, GPIO_HIGH);
+	else
+		gpio_set(BMC_PWR_LED, GPIO_LOW);
+}
+
 void pal_pre_init()
 {
 	init_platform_config();
@@ -77,6 +86,7 @@ void pal_set_sys_status()
 	set_CPU_power_status(PWRGD_CPU_LVC3);
 	set_post_thread();
 	set_sys_ready_pin(FM_BIC_READY);
+	mb_pwr_led_ctl();
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78
