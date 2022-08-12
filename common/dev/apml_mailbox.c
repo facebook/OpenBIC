@@ -87,6 +87,7 @@ void dimm_temp_write(apml_msg *msg)
 			cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
 			return;
 		}
+
 		if (temp < *TS0_temp) {
 			temp = *TS0_temp;
 		}
