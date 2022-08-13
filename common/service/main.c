@@ -1,11 +1,13 @@
+#include "fru.h"
 #include "hal_i2c.h"
 #include "hal_wdt.h"
-#include "timer.h"
-#include "sensor.h"
 #include "ipmi.h"
 #include "kcs.h"
+#include "sensor.h"
+#include "timer.h"
 #include "usb.h"
-#include "fru.h"
+#include <bic_logging.h>
+#include <logging/log.h>
 
 __weak void pal_pre_init()
 {

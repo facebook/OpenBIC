@@ -22,9 +22,27 @@ target_sources(app PRIVATE ${common_path}/lib/util_sys.c)
 target_sources(app PRIVATE ${common_path}/lib/util_worker.c)
 
 target_include_directories(app PRIVATE ${ZEPHYR_BASE}/include/portability)
-target_include_directories(app PRIVATE ${common_path} ${common_path}/service/ipmi/include ${common_path}/service/host ${common_path}/service/sensor ${common_path}/service/usb ${common_path}/service/ipmb ${common_path}/service/mctp ${common_path}/service/pldm ${common_path}/hal ${common_path}/dev/include ${common_path}/lib ${common_path}/shell)
+
+# Common Includes
+target_include_directories(app PRIVATE ${common_path}) 
+target_include_directories(app PRIVATE ${common_path}/dev/include) 
+target_include_directories(app PRIVATE ${common_path}/hal) 
+target_include_directories(app PRIVATE ${common_path}/lib) 
+target_include_directories(app PRIVATE ${common_path}/service/host)
+target_include_directories(app PRIVATE ${common_path}/service/ipmb) 
+target_include_directories(app PRIVATE ${common_path}/service/ipmi/include) 
+target_include_directories(app PRIVATE ${common_path}/service/logging) 
+target_include_directories(app PRIVATE ${common_path}/service/mctp) 
+target_include_directories(app PRIVATE ${common_path}/service/pldm) 
+target_include_directories(app PRIVATE ${common_path}/service/sensor) 
+target_include_directories(app PRIVATE ${common_path}/service/usb) 
 target_include_directories(app PRIVATE ${common_path}/shell/commands)
-target_include_directories(app PRIVATE src/ipmi/include src/lib src/platform)
+target_include_directories(app PRIVATE ${common_path}/shell)
+
+# Platform Specific Includes
+target_include_directories(app PRIVATE src/ipmi/include)
+target_include_directories(app PRIVATE src/lib)
+target_include_directories(app PRIVATE src/platform)
 
 # Fail build if there are any warnings 
 target_compile_options(app PRIVATE -Werror)
