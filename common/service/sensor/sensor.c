@@ -274,6 +274,7 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 		case SENSOR_INIT_STATUS:
 		case SENSOR_NOT_PRESENT:
 		case SENSOR_NOT_ACCESSIBLE:
+		case SENSOR_POLLING_DISABLE:
 			cfg->cache = SENSOR_FAIL;
 			return cfg->cache_status;
 		default:
