@@ -1,14 +1,17 @@
-#include <stdio.h>
-#include <string.h>
-#include "sensor.h"
 #include "hal_i2c.h"
 #include "pmbus.h"
+#include "sensor.h"
+#include <logging/log.h>
+#include <stdio.h>
+#include <string.h>
 
 #define REG_PWR_MT_CFG 0xD4
 
 #define ADM1278_EIN_ROLLOVER_CNT_MAX 0x10000
 #define ADM1278_EIN_SAMPLE_CNT_MAX 0x1000000
 #define ADM1278_EIN_ENERGY_CNT_MAX 0x800000
+
+LOG_MODULE_REGISTER(ADM1278_LOG);
 
 int adm1278_read_ein_ext(float rsense, float *val, uint8_t sensor_num)
 {
@@ -30,8 +33,10 @@ int adm1278_read_ein_ext(float rsense, float *val, uint8_t sensor_num)
 	msg.data[0] = sensor_config[sensor_config_index_map[sensor_num]].offset;
 	msg.rx_len = 8;
 
-	if (i2c_master_read(&msg, retry))
+	if (i2c_master_read(&msg, retry)) {
+		LOG_WRN("i2c read failed.\n");
 		return SENSOR_FAIL_TO_ACCESS;
+	}
 
 	//record the previous data
 	pre_energy = last_energy;
@@ -60,11 +65,13 @@ int adm1278_read_ein_ext(float rsense, float *val, uint8_t sensor_num)
 	energy_diff = (double)(rollover - pre_rollover) * ADM1278_EIN_ENERGY_CNT_MAX +
 		      (double)energy - (double)pre_energy;
 	if (energy_diff < 0) {
+		LOG_DBG("Energy difference is less than zero.\n");
 		return -1;
 	}
 
 	sample_diff = sample - pre_sample;
 	if (sample_diff == 0) {
+		LOG_DBG("Sample difference is less than zero.\n");
 		return -1;
 	}
 
@@ -75,20 +82,26 @@ int adm1278_read_ein_ext(float rsense, float *val, uint8_t sensor_num)
 
 uint8_t adm1278_read(uint8_t sensor_num, int *reading)
 {
-	if ((reading == NULL) || (sensor_num > SENSOR_NUM_MAX) ||
-	    (sensor_config[sensor_config_index_map[sensor_num]].init_args == NULL)) {
+	if (reading == NULL) {
+		LOG_ERR("Reading pointer passed in as NULL.\n");
 		return SENSOR_UNSPECIFIED_ERROR;
+	} else if (sensor_num > SENSOR_NUM_MAX) {
+		LOG_ERR("Sensor number out of range.\n");
+		return SENSOR_UNSPECIFIED_ERROR;
+	} else if ((sensor_config[sensor_config_index_map[sensor_num]].init_args == NULL)) {
+		LOG_ERR("Init args for sensor are NULL.\n");
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
 	adm1278_init_arg *init_arg =
 		(adm1278_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
 	if (init_arg->is_init == false) {
-		printf("adm1278_read, device isn't initialized\n");
+		LOG_ERR("adm1278_read, device isn't initialized\n");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	if (!init_arg->r_sense) {
-		printf("adm1278_read, Rsense hasn't given\n");
+		LOG_ERR("adm1278_read, Rsense not provided\n");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -141,7 +154,7 @@ uint8_t adm1278_read(uint8_t sensor_num, int *reading)
 		break;
 
 	default:
-		printf("Invalid sensor 0x%x\n", sensor_num);
+		LOG_WRN("Invalid sensor 0x%x\n", sensor_num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -154,18 +167,21 @@ uint8_t adm1278_read(uint8_t sensor_num, int *reading)
 uint8_t adm1278_init(uint8_t sensor_num)
 {
 	if (sensor_num > SENSOR_NUM_MAX) {
+		LOG_ERR("Sensor number out of range.\n");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
 	if (!sensor_config[sensor_config_index_map[sensor_num]].init_args) {
-		printf("<error> ADM1278 init args not provide!\n");
+		LOG_ERR("ADM1278 init args not provide!\n");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
 	adm1278_init_arg *init_args =
 		(adm1278_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
-	if (init_args->is_init)
+	if (init_args->is_init) {
+		LOG_DBG("adm1278 already initialized.\n");
 		goto skip_init;
+	}
 
 	uint8_t retry = 5;
 	I2C_MSG msg;
@@ -177,7 +193,7 @@ uint8_t adm1278_init(uint8_t sensor_num)
 	msg.data[2] = (init_args->config.value >> 8) & 0xFF;
 
 	if (i2c_master_write(&msg, retry)) {
-		printf("<error> ADM1278 initial failed while i2c writing\n");
+		LOG_ERR("ADM1278 initial failed while i2c writing\n");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
@@ -189,13 +205,13 @@ uint8_t adm1278_init(uint8_t sensor_num)
 	msg.rx_len = 2;
 
 	if (i2c_master_read(&msg, retry)) {
-		printf("<error> ADM1278 initial failed while i2c reading\n");
+		LOG_ERR("ADM1278 failed while reading sensor\n");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
 	if ((msg.data[0] != (init_args->config.value & 0xFF)) ||
 	    (msg.data[1] != ((init_args->config.value >> 8) & 0xFF))) {
-		printf("<error> ADM1278 initial failed with wrong reading data\n");
+		LOG_ERR("ADM1278 initialization failed, invalid data returned\n");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 	init_args->is_init = 1;
