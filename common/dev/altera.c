@@ -1,13 +1,16 @@
-#include <zephyr.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdint.h>
 #include "altera.h"
-#include "util_spi.h"
 #include "hal_i2c.h"
+#include "util_spi.h"
+#include <logging/log.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include <zephyr.h>
 
 #define MAX_RETRY 3
 #define CHECK_ALTERA_STATUS_DELAY_US 100
+
+LOG_MODULE_REGISTER(ALTERA_LOG);
 
 // Change bit 1010 1010b(0xaa) and 0101 0101b (0x55)
 // e.g. 0123 4567 -> 1032 5476
@@ -30,6 +33,7 @@ __weak int pal_load_altera_max10_attr(altera_max10_attr *altera_max10_config)
 int change_word_to_byte(uint8_t *output, int intput)
 {
 	if (output == NULL) {
+		LOG_WRN("Output passed in as NULL.\n");
 		return -1;
 	}
 
@@ -44,6 +48,7 @@ int change_word_to_byte(uint8_t *output, int intput)
 int get_register_via_i2c(int reg, int *val)
 {
 	if (val == NULL) {
+		LOG_WRN("val passed in as NULL.\n");
 		return -1;
 	}
 
@@ -65,8 +70,7 @@ int get_register_via_i2c(int reg, int *val)
 
 	ret = i2c_master_read(&i2c_msg, MAX_RETRY);
 	if (ret != 0) {
-		printf("%s() read register fails after retry %d times. ret=%d \n", __func__,
-		       MAX_RETRY, ret);
+		LOG_ERR("Read register fails after retry %d times. ret=%d \n", MAX_RETRY, ret);
 		return ret;
 	}
 
@@ -81,7 +85,7 @@ int max10_reg_read(int address)
 
 	ret = get_register_via_i2c(address, &data);
 	if (ret != 0) {
-		printf("%s() Cannot read 0x%x data %d\n", __func__, address, data);
+		LOG_ERR("%s() Cannot read 0x%x data %d\n", __func__, address, data);
 	}
 
 	return data;
@@ -117,8 +121,7 @@ int set_register_via_i2c(int reg, int val)
 
 	ret = i2c_master_write(&i2c_msg, MAX_RETRY);
 	if (ret != 0) {
-		printf("%s() write register fails after retry %d times. ret=%d \n", __func__,
-		       MAX_RETRY, ret);
+		LOG_ERR("write register fails after retry %d times. ret=%d \n", MAX_RETRY, ret);
 	}
 	return ret;
 }
@@ -148,12 +151,14 @@ int cpld_altera_max10_fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg)
 	bool is_done = false;
 
 	if (msg == NULL) {
+		LOG_WRN("msg passed in as NULL.\n");
 		return FWUPDATE_UPDATE_FAIL;
 	}
 
 	if (offset == 0) {
 		ret = pal_load_altera_max10_attr(&altera_max10_config);
 		if (ret < 0) {
+			LOG_ERR("Failed to load max10 attribute.");
 			return FWUPDATE_UPDATE_FAIL;
 		}
 	}
@@ -177,7 +182,7 @@ int cpld_altera_max10_fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg)
 		       (receive_buffer[1] << 8) | (receive_buffer[0]);
 		ret = max10_write_flash_data(addr, data);
 		if (ret != 0) {
-			printf("[CPLD] write flash data failed\n");
+			LOG_ERR("[CPLD] write flash data failed\n");
 			return FWUPDATE_UPDATE_FAIL;
 		}
 
@@ -192,7 +197,7 @@ int cpld_altera_max10_fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg)
 				is_done = true;
 
 			} else {
-				printf("status: %x retry...\n", status);
+				LOG_DBG("status: %x retry...\n", status);
 				k_usleep(CHECK_ALTERA_STATUS_DELAY_US);
 				retry--;
 			}
@@ -200,6 +205,7 @@ int cpld_altera_max10_fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg)
 		} while ((is_done == false) && (retry > 0));
 
 		if (retry == 0) {
+			LOG_ERR("Attempted %d retries, giving up!\n", MAX_RETRY);
 			return FWUPDATE_UPDATE_FAIL;
 		}
 

@@ -5,8 +5,9 @@
 
 // clang-format off
 
-#define FOREACH_LOG_MODULE(MODULE) \
-	MODULE(ADM1278_LOG)
+#define FOREACH_LOG_MODULE(MODULE) 	\
+	MODULE(ADM1278_LOG)		\
+	MODULE(ALTERA_LOG)
 
 // clang-format on
 
