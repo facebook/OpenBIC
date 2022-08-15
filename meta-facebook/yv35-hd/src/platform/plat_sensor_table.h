@@ -100,6 +100,12 @@
 
 #define POLL_TIME_BAT3V 3600 // second
 
+#define SENSOR_NUM_SYSTEM_STATUS 0x10
+#define SENSOR_NUM_POWER_ERROR 0x56
+#define SENSOR_NUM_VR_OCP 0x71
+#define SENSOR_NUM_VR_ALERT 0x72
+#define SENSOR_NUM_HDT_PRESENT 0xBD
+
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
 
