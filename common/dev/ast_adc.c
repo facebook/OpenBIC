@@ -3,6 +3,9 @@
 #include "plat_gpio.h"
 #include <zephyr.h>
 #include <drivers/adc.h>
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(dev_ast_adc);
 
 enum adc_device_idx { adc0, adc1, ADC_NUM };
 
@@ -34,7 +37,7 @@ static void init_adc_dev()
 #ifdef DEV_ADC0
 	dev_adc[adc0] = device_get_binding("ADC0");
 	if (!(device_is_ready(dev_adc[adc0])))
-		printf("<warn> ADC[%d] device not ready!\n", adc0);
+		LOG_WRN("ADC[%d] device not ready!\n", adc0);
 	else
 		is_ready[adc0] = 1;
 #endif
@@ -42,7 +45,7 @@ static void init_adc_dev()
 #ifdef DEV_ADC1
 	dev_adc[adc1] = device_get_binding("ADC1");
 	if (!(device_is_ready(dev_adc[adc1])))
-		printf("<warn> ADC[%d] device not ready!\n", adc1);
+		LOG_WRN("ADC[%d] device not ready!\n", adc1);
 	else
 		is_ready[adc1] = 1;
 #endif
@@ -50,17 +53,23 @@ static void init_adc_dev()
 
 static bool adc_read_mv(uint8_t sensor_num, uint32_t index, uint32_t channel, int *adc_val)
 {
-	if (!adc_val || (sensor_num > SENSOR_NUM_MAX)) {
+	if (!adc_val) {
+		LOG_DBG("ADC val was passed in as null");
+		return false;
+	}
+
+	if (sensor_num > SENSOR_NUM_MAX) {
+		LOG_DBG("Invalid sensor number");
 		return false;
 	}
 
 	if (index >= ADC_NUM) {
-		printf("<error> ADC[%d] is invalid device!\n", index);
+		LOG_ERR("ADC[%d] is invalid device!\n", index);
 		return false;
 	}
 
 	if (!is_ready[index]) {
-		printf("<error> ADC[%d] is not ready to read!\n", index);
+		LOG_ERR("ADC[%d] is not ready to read!\n", index);
 		return false;
 	}
 
@@ -83,21 +92,21 @@ static bool adc_read_mv(uint8_t sensor_num, uint32_t index, uint32_t channel, in
 	retval = adc_channel_setup(dev_adc[index], &channel_cfg);
 
 	if (retval) {
-		printf("<error> ADC[%d] with sensor[0x%x] channel set fail\n", index, sensor_num);
+		LOG_ERR("ADC[%d] with sensor[0x%x] channel set fail\n", index, sensor_num);
 		return false;
 	}
 
 	retval = adc_read(dev_adc[index], &sequence);
 	if (retval != 0) {
-		printf("<error> ADC[%d] with sensor[0x%x] reading fail with error %d\n", index,
-		       sensor_num, retval);
+		LOG_ERR("ADC[%d] with sensor[0x%x] reading fail with error %d\n", index, sensor_num,
+			retval);
 		return false;
 	}
 
 	int32_t raw_value = sample_buffer[0];
 	int32_t ref_mv = adc_get_ref(dev_adc[index]);
 	if (ref_mv <= 0) {
-		printf("<error> ADC[%d] with sensor[0x%x] ref-mv get fail\n", index, sensor_num);
+		LOG_ERR("ADC[%d] with sensor[0x%x] ref-mv get fail\n", index, sensor_num);
 		return false;
 	}
 
@@ -109,7 +118,13 @@ static bool adc_read_mv(uint8_t sensor_num, uint32_t index, uint32_t channel, in
 
 uint8_t ast_adc_read(uint8_t sensor_num, int *reading)
 {
-	if (!reading || (sensor_num > SENSOR_NUM_MAX)) {
+	if (!reading) {
+		LOG_DBG("Reading pointer passed in as null");
+		return SENSOR_UNSPECIFIED_ERROR;
+	}
+
+	if (sensor_num > SENSOR_NUM_MAX) {
+		LOG_DBG("Invalid sensor number");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -143,11 +158,12 @@ uint8_t ast_adc_read(uint8_t sensor_num, int *reading)
 uint8_t ast_adc_init(uint8_t sensor_num)
 {
 	if (sensor_num > SENSOR_NUM_MAX) {
+		LOG_DBG("Invalid sensor number");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
 	if (!sensor_config[sensor_config_index_map[sensor_num]].init_args) {
-		printf("<error> ADC init args not provide!\n");
+		LOG_ERR("ADC init args not provide!\n");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
@@ -159,7 +175,7 @@ uint8_t ast_adc_init(uint8_t sensor_num)
 	init_adc_dev();
 
 	if (!is_ready[0] && !is_ready[1]) {
-		printf("<error> Both of ADC0 and ADC1 are not ready to use!\n");
+		LOG_ERR("Both of ADC0 and ADC1 are not ready to use!\n");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
