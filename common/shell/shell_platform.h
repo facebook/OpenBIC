@@ -1,4 +1,0 @@
-#ifndef SHELL_PLATFORM_H
-#define SHELL_PLATFORM_H
-
-#endif /* SHELL_PLATFORM_H */

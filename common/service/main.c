@@ -6,7 +6,6 @@
 #include "sensor.h"
 #include "timer.h"
 #include "usb.h"
-#include <bic_logging.h>
 #include <logging/log.h>
 
 __weak void pal_pre_init()

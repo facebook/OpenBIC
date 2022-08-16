@@ -11,7 +11,7 @@
 #define ADM1278_EIN_SAMPLE_CNT_MAX 0x1000000
 #define ADM1278_EIN_ENERGY_CNT_MAX 0x800000
 
-LOG_MODULE_REGISTER(ADM1278_LOG);
+LOG_MODULE_REGISTER(dev_adm1278);
 
 int adm1278_read_ein_ext(float rsense, float *val, uint8_t sensor_num)
 {

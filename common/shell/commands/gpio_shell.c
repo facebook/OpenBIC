@@ -1,7 +1,6 @@
 #include "gpio_shell.h"
 #include "hal_gpio.h"
 #include "plat_gpio.h"
-#include "shell_platform.h"
 #include <drivers/gpio.h>
 #include <stdio.h>
 
