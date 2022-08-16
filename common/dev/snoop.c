@@ -1,3 +1,5 @@
+#ifdef CONFIG_SNOOP_ASPEED
+
 #include <zephyr.h>
 #include <stdio.h>
 #include <string.h>
@@ -212,3 +214,5 @@ void init_send_postcode_thread()
 				NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
 	k_thread_name_set(&send_postcode_thread_handler, "send_postcode_thread");
 }
+
+#endif

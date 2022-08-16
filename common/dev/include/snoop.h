@@ -1,6 +1,8 @@
 #ifndef SNOOP_H
 #define SNOOP_H
 
+#ifdef CONFIG_SNOOP_ASPEED
+
 #define SENDPOSTCODE_STACK_SIZE 1024
 #define SNOOP_STACK_SIZE 512
 #define SNOOP_MAX_LEN 244
@@ -17,5 +19,7 @@ void reset_postcode_ok();
 void init_snoop_thread();
 void abort_snoop_thread();
 void init_send_postcode_thread();
+
+#endif
 
 #endif
