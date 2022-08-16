@@ -809,7 +809,7 @@ __weak void OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg)
 }
 
 /* For command Get Set GPIO NetFn:0x38 Cmd:0x41 */
-static uint8_t gpio_idx_exchange(ipmi_msg *msg)
+__weak uint8_t gpio_idx_exchange(ipmi_msg *msg)
 {
 	if (msg == NULL)
 		return 1;
