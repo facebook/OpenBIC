@@ -13,9 +13,59 @@
 #define RDPKG_IDX_PKG_TEMP 0x02
 #define RDPKG_IDX_DIMM_TEMP 0x0E
 #define RDPKG_IDX_TJMAX_TEMP 0x10
+#define RDPKG_IDX_PWR_SKU_UNIT_READ 0x1E
 
 #define DIMM_TEMP_OFS_0 0x01
 #define DIMM_TEMP_OFS_1 0x02
+
+static intel_peci_unit unit_info;
+
+static bool get_power_sku_unit(uint8_t addr)
+{
+	static int is_read_before;
+
+	if (is_read_before)
+		return true;
+
+	uint8_t command = PECI_RD_PKG_CFG0_CMD;
+	uint8_t readlen = 0x05;
+
+	int ret = 0;
+	uint8_t *readbuf = (uint8_t *)malloc(readlen * sizeof(uint8_t));
+	if (!readbuf) {
+		printf("[%s] fail to allocate readbuf memory\n", __func__);
+		return false;
+	}
+	ret = peci_read(command, addr, RDPKG_IDX_PWR_SKU_UNIT_READ, 0, readlen, readbuf);
+	if (ret) {
+		goto cleanup;
+	}
+
+	if (readbuf[0] != PECI_CC_RSP_SUCCESS) {
+		if (readbuf[0] == PECI_CC_ILLEGAL_REQUEST) {
+			printf("[%s] Unknown request\n", __func__);
+		} else {
+			printf("[%s] PECI control hardware, firmware or associated logic error\n",
+			       __func__);
+		}
+		goto cleanup;
+	}
+
+	uint32_t pwr_sku_unit;
+	pwr_sku_unit = readbuf[1] | (readbuf[2] << 8) | (readbuf[3] << 16) | (readbuf[4] << 24);
+	unit_info.time_unit = (pwr_sku_unit >> 16) & 0xF;
+	unit_info.energy_unit = (pwr_sku_unit >> 8) & 0x1F;
+	unit_info.power_unit = pwr_sku_unit & 0xF;
+
+	is_read_before = 1;
+
+	SAFE_FREE(readbuf);
+	return true;
+
+cleanup:
+	SAFE_FREE(readbuf);
+	return false;
+}
 
 bool check_dimm_present(uint8_t dimm_channel, uint8_t dimm_num, uint8_t *present_result)
 {
@@ -154,12 +204,17 @@ static bool read_cpu_power(uint8_t addr, int *reading)
 
 	uint8_t command = PECI_RD_PKG_CFG0_CMD;
 	uint8_t readlen = 0x05;
-	uint8_t *readbuf = (uint8_t *)malloc(2 * readlen * sizeof(uint8_t));
 	uint8_t u8index[2] = { 0x03, 0x1F };
 	uint16_t u16Param[2] = { 0x00FF, 0x0000 };
 	int ret = 0;
 	uint32_t pkg_energy, run_time, diff_energy, diff_time;
 	static uint32_t last_pkg_energy = 0, last_run_time = 0;
+
+	uint8_t *readbuf = (uint8_t *)malloc(2 * readlen * sizeof(uint8_t));
+	if (!readbuf) {
+		printf("[%s] fail to allocate readbuf memory\n", __func__);
+		return false;
+	}
 
 	ret = peci_read(command, addr, u8index[0], u16Param[0], readlen, readbuf);
 	if (ret) {
@@ -172,10 +227,16 @@ static bool read_cpu_power(uint8_t addr, int *reading)
 	if (readbuf[0] != PECI_CC_RSP_SUCCESS || readbuf[5] != PECI_CC_RSP_SUCCESS) {
 		if (readbuf[0] == PECI_CC_ILLEGAL_REQUEST ||
 		    readbuf[5] == PECI_CC_ILLEGAL_REQUEST) {
-			printf("Unknown request\n");
+			printf("[%s] Unknown request\n", __func__);
 		} else {
-			printf("PECI control hardware, firmware or associated logic error\n");
+			printf("[%s] PECI control hardware, firmware or associated logic error\n",
+			       __func__);
 		}
+		goto cleanup;
+	}
+
+	if (!get_power_sku_unit(addr)) {
+		printf("[%s] PECI get power sku unit failed!\n", __func__);
 		goto cleanup;
 	}
 
@@ -212,12 +273,20 @@ static bool read_cpu_power(uint8_t addr, int *reading)
 
 	if (diff_time == 0) {
 		goto cleanup;
-	} else {
-		*reading = ((float)diff_energy / (float)diff_time *
-			    0.06103515625); // energy / unit time
-		SAFE_FREE(readbuf);
-		return true;
 	}
+
+	float pwr_scale = 1;
+	if (unit_info.energy_unit > unit_info.time_unit)
+		pwr_scale =
+			(float)(1 / (float)(1 << (unit_info.energy_unit - unit_info.time_unit)));
+	else
+		pwr_scale = (float)(1 << (unit_info.energy_unit - unit_info.time_unit));
+
+	*reading = ((float)diff_energy / (float)diff_time) * pwr_scale;
+
+	SAFE_FREE(readbuf);
+	return true;
+
 cleanup:
 	SAFE_FREE(readbuf);
 	return false;
