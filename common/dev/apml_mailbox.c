@@ -3,8 +3,11 @@
 #include <stdlib.h>
 #include "sensor.h"
 #include "plat_def.h"
+#include <logging/log.h>
 #ifdef ENABLE_APML
 #include "apml.h"
+
+LOG_MODULE_REGISTER(dev_apml_mailbox);
 
 typedef struct _dimm_temp_priv_data {
 	float ts0_temp;
@@ -13,6 +16,7 @@ typedef struct _dimm_temp_priv_data {
 void apml_read_fail_cb(apml_msg *msg)
 {
 	if ((msg == NULL) || (msg->ptr_arg == NULL)) {
+		LOG_DBG("msg passed in as NULL");
 		return;
 	}
 	sensor_cfg *cfg = (sensor_cfg *)msg->ptr_arg;
@@ -22,13 +26,14 @@ void apml_read_fail_cb(apml_msg *msg)
 void cpu_power_write(apml_msg *msg)
 {
 	if ((msg == NULL) || (msg->ptr_arg == NULL)) {
+		LOG_DBG("msg passed in as NULL");
 		return;
 	}
 	sensor_cfg *cfg = (sensor_cfg *)msg->ptr_arg;
 	mailbox_RdData *rddata = (mailbox_RdData *)msg->RdData;
 	if (rddata->error_code != SBRMI_MAILBOX_NO_ERR) {
-		printf("[%s] Read cpu power failed, sensor number 0x%x, error code %d\n", __func__,
-		       cfg->num, rddata->error_code);
+		LOG_ERR("Read cpu power failed, sensor number 0x%x, error code %d\n", cfg->num,
+			rddata->error_code);
 		cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
 		return;
 	}
@@ -45,13 +50,14 @@ void cpu_power_write(apml_msg *msg)
 void dimm_pwr_write(apml_msg *msg)
 {
 	if ((msg == NULL) || (msg->ptr_arg == NULL)) {
+		LOG_DBG("msg passed in as NULL");
 		return;
 	}
 	sensor_cfg *cfg = (sensor_cfg *)msg->ptr_arg;
 	mailbox_RdData *rddata = (mailbox_RdData *)msg->RdData;
 	if (rddata->error_code != SBRMI_MAILBOX_NO_ERR) {
-		printf("[%s] Read dimm power failed, sensor number 0x%x, error code %d\n", __func__,
-		       cfg->num, rddata->error_code);
+		LOG_ERR("Read dimm power failed, sensor number 0x%x, error code %d\n", cfg->num,
+			rddata->error_code);
 		cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
 		return;
 	}
@@ -66,14 +72,15 @@ void dimm_pwr_write(apml_msg *msg)
 void dimm_temp_write(apml_msg *msg)
 {
 	if ((msg == NULL) || (msg->ptr_arg == NULL)) {
+		LOG_DBG("msg passed in as NULL");
 		return;
 	}
 	sensor_cfg *cfg = (sensor_cfg *)msg->ptr_arg;
 	mailbox_RdData *rddata = (mailbox_RdData *)msg->RdData;
 
 	if (rddata->error_code != SBRMI_MAILBOX_NO_ERR) {
-		printf("[%s] Read dimm temperature failed, sensor number 0x%x, error code %d\n",
-		       __func__, cfg->num, rddata->error_code);
+		LOG_ERR("Read dimm temperature failed, sensor number 0x%x, error code %d\n",
+			cfg->num, rddata->error_code);
 		cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
 		return;
 	}
@@ -83,7 +90,7 @@ void dimm_temp_write(apml_msg *msg)
 	if (is_ts1) {
 		float *TS0_temp = &(((dimm_temp_priv_data *)(cfg->priv_data))->ts0_temp);
 		if (TS0_temp == NULL) {
-			printf("[%s] TS0_temp is NULL!\n", __func__);
+			LOG_DBG("TS0_temp is NULL!\n");
 			cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
 			return;
 		}
@@ -101,13 +108,13 @@ void dimm_temp_write(apml_msg *msg)
 		if (cfg->priv_data) {
 			float *TS0_temp = &(((dimm_temp_priv_data *)(cfg->priv_data))->ts0_temp);
 			if (TS0_temp == NULL) {
-				printf("[%s] TS0_temp is NULL!\n", __func__);
+				LOG_DBG("TS0_temp is NULL!\n");
 				cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
 				return;
 			}
 			*TS0_temp = temp;
 		} else {
-			printf("[%s] private data is NULL!\n", __func__);
+			LOG_ERR("Private data is NULL!\n");
 		}
 	}
 }
@@ -115,6 +122,7 @@ void dimm_temp_write(apml_msg *msg)
 uint8_t apml_mailbox_read(uint8_t sensor_num, int *reading)
 {
 	if (reading == NULL || (sensor_num > SENSOR_NUM_MAX)) {
+		LOG_DBG("msg passed in as NULL");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -164,6 +172,7 @@ uint8_t apml_mailbox_read(uint8_t sensor_num, int *reading)
 uint8_t apml_mailbox_init(uint8_t sensor_num)
 {
 	if (sensor_num > SENSOR_NUM_MAX) {
+		LOG_DBG("msg passed in as NULL");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
@@ -171,7 +180,7 @@ uint8_t apml_mailbox_init(uint8_t sensor_num)
 	if (cfg->offset == SBRMI_MAILBOX_GET_DIMM_TEMP) {
 		cfg->priv_data = malloc(sizeof(dimm_temp_priv_data));
 		if (cfg->priv_data == NULL) {
-			printf("[%s] Allocate private data failed.\n", __func__);
+			LOG_DBG("Allocate private data failed.\n");
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
 		}
 	}
