@@ -47,7 +47,7 @@
 	gpio_name_to_num(BIC_READY) \
 	gpio_name_to_num(FM_SOL_UART_CH_SEL_R) \
 	gpio_name_to_num(HSC_MUX_SWITCH_R) \
-	gpio_name_to_num(FM_FORCE_ADR_N_R)
+	gpio_name_to_num(RST_PLTRST_BMC_N)
 
 #define name_gpioE \
 	gpio_name_to_num(PWRGD_CPU_LVC3_R) \
@@ -154,7 +154,7 @@
 	gpio_name_to_num(Reserve_GPIOO0) \
 	gpio_name_to_num(Reserve_GPIOO1) \
 	gpio_name_to_num(Reserve_GPIOO2) \
-	gpio_name_to_num(RST_PLTRST_BMC_N) \
+	gpio_name_to_num(Reserve_GPIOO3) \
 	gpio_name_to_num(Reserve_GPIOO4) \
 	gpio_name_to_num(JTAG_BMC_NTRST_R_N) \
 	gpio_name_to_num(Reserve_GPIOO6) \
@@ -238,7 +238,8 @@ extern enum _GPIO_NUMS_ GPIO_NUMS;
 
 //align ti bic for bmc get gpio inform
 #define PVCCIO_CPU 0xFF
-#define BMC_HARTBEAT_LED_R 0xFF
+#define BMC_HEARTBEAT_LED_R 0xFF
+#define FM_FORCE_ADR_N_R 0xFF
 
 extern const char *const gpio_name[];
 //  GPIO Table SET/GET GPIO Configuration align to Ti BIC
