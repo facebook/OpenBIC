@@ -134,7 +134,7 @@
 	status = "okay";
 };
 
-&kcs3 {
+&kcs4 {
   status = "okay";
   addr = <0xca2>;
 };

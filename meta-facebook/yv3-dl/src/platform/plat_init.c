@@ -11,6 +11,7 @@ SCU_CFG scu_cfg[] = {
 	{ 0x7e6e2614, 0xffffffff }, //disable GPIO internal pull down #1
 	{ 0x7e6e2618, 0xF8000000 }, //disable GPIO internal pull down #2
 	{ 0x7e6e261c, 0xC0200F3A }, //disable GPIO internal pull down #3
+	{ 0x7e789110, 0x0ca60ca2 }, //set kcs data addr:ca2, cmd addr:ca6
 };
 
 void pal_pre_init()
