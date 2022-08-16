@@ -2,10 +2,14 @@
 #include "eeprom.h"
 #include "hal_i2c.h"
 #include <string.h>
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(dev_eeprom);
 
 bool eeprom_mux_check(EEPROM_ENTRY *entry)
 {
 	if (entry == NULL) {
+		LOG_DBG("entry pointer passed in as NULL");
 		return false;
 	}
 	I2C_MSG msg;
@@ -24,6 +28,7 @@ bool eeprom_mux_check(EEPROM_ENTRY *entry)
 bool eeprom_write(EEPROM_ENTRY *entry)
 {
 	if (entry == NULL) {
+		LOG_DBG("entry pointer passed in as NULL");
 		return false;
 	}
 	I2C_MSG msg;
@@ -53,6 +58,7 @@ bool eeprom_write(EEPROM_ENTRY *entry)
 bool eeprom_read(EEPROM_ENTRY *entry)
 {
 	if (entry == NULL) {
+		LOG_DBG("entry pointer passed in as NULL");
 		return false;
 	}
 
