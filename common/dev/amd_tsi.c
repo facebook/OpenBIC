@@ -2,10 +2,13 @@
 #include <string.h>
 #include "sensor.h"
 #include "plat_def.h"
+#include <logging/log.h>
 #ifdef ENABLE_APML
 #include "apml.h"
 
 #define READ_ORDER_BIT 5
+
+LOG_MODULE_REGISTER(hal_amd_tsi);
 
 uint8_t amd_tsi_read(uint8_t sensor_num, int *reading)
 {
@@ -18,6 +21,7 @@ uint8_t amd_tsi_read(uint8_t sensor_num, int *reading)
 	/* check read order */
 	uint8_t read_val;
 	if (apml_read_byte(cfg->port, cfg->target_addr, SBTSI_CONFIG, &read_val)) {
+		LOG_WRN("apml read failed.");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -31,11 +35,13 @@ uint8_t amd_tsi_read(uint8_t sensor_num, int *reading)
 	if (read_order) {
 		if (apml_read_byte(cfg->port, cfg->target_addr, SBTSI_CPU_TEMP_DEC, &decimal) ||
 		    apml_read_byte(cfg->port, cfg->target_addr, SBTSI_CPU_TEMP_INT, &integer)) {
+			LOG_ERR("Read SBTSI_CPU_TEMP DEC or INT failed");
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 	} else {
 		if (apml_read_byte(cfg->port, cfg->target_addr, SBTSI_CPU_TEMP_INT, &integer) ||
 		    apml_read_byte(cfg->port, cfg->target_addr, SBTSI_CPU_TEMP_DEC, &decimal)) {
+			LOG_ERR("Read SBTSI_CPU_TEMP DEC or INT failed");
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 	}
@@ -51,6 +57,7 @@ uint8_t amd_tsi_read(uint8_t sensor_num, int *reading)
 uint8_t amd_tsi_init(uint8_t sensor_num)
 {
 	if (sensor_num > SENSOR_NUM_MAX) {
+		LOG_DBG("Sensor Num outside range");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
