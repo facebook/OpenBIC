@@ -19,7 +19,7 @@ adm1278_init_arg adm1278_init_args[] = {
 	[0] = { .is_init = false, .config = { 0x3F1C }, .r_sense = 0.25 }
 };
 
-ltc4282_init_arg ltc4282_init_args[] = { [0] = { .is_init = true, .r_sense_mohm = 0.1 } };
+ltc4282_init_arg ltc4282_init_args[] = { [0] = { .is_init = false, .r_sense_mohm = 0.1 } };
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
@@ -84,7 +84,7 @@ bool pre_ltc4282_read(uint8_t sensor_num, void *args)
 		return false;
 	}
 
-	if (val | ADC_16BIT_MODE_BIT) {
+	if (val & ADC_16BIT_MODE_BIT) {
 		k_msleep(ADC_16BIT_MODE_DELAY_MS);
 	} else {
 		k_msleep(ADC_12BIT_MODE_DELAY_MS);
