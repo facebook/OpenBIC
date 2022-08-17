@@ -156,7 +156,7 @@
 	gpio_name_to_num(Reserve_GPIOO2) \
 	gpio_name_to_num(Reserve_GPIOO3) \
 	gpio_name_to_num(Reserve_GPIOO4) \
-	gpio_name_to_num(JTAG_BMC_NTRST_R_N) \
+	gpio_name_to_num(Reserve_GPIOO5) \
 	gpio_name_to_num(Reserve_GPIOO6) \
 	gpio_name_to_num(Reserve_GPIOO7)
 
@@ -240,6 +240,7 @@ extern enum _GPIO_NUMS_ GPIO_NUMS;
 #define PVCCIO_CPU 0xFF
 #define BMC_HEARTBEAT_LED_R 0xFF
 #define FM_FORCE_ADR_N_R 0xFF
+#define JTAG_BMC_NTRST_R_N 0xff
 
 extern const char *const gpio_name[];
 //  GPIO Table SET/GET GPIO Configuration align to Ti BIC
