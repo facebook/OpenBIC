@@ -28,6 +28,7 @@
 #ifdef ENABLE_APML
 #include "apml.h"
 #endif
+#include "pcc.h"
 
 #define BIOS_UPDATE_MAX_OFFSET 0x4000000
 #define BIC_UPDATE_MAX_OFFSET 0x50000
@@ -35,6 +36,7 @@
 #define _4BYTE_ACCURACY_SENSOR_READING_RES_LEN 5
 #define MAX_MULTI_ACCURACY_SENSOR_READING_QUERY_NUM 32
 #define MAX_CONTROL_SENSOR_POLLING_COUNT 10
+#define FOUR_BYTE_POST_CODE_PAGE_SIZE 60
 
 __weak void OEM_1S_MSG_OUT(ipmi_msg *msg)
 {
@@ -509,7 +511,7 @@ __weak void OEM_1S_RESET_BMC(ipmi_msg *msg)
 	return;
 }
 
-#ifdef CONFIG_IPMI_KCS_ASPEED
+#ifdef CONFIG_SNOOP_ASPEED
 __weak void OEM_1S_GET_POST_CODE(ipmi_msg *msg)
 {
 	if (msg == NULL) {
@@ -538,6 +540,33 @@ __weak void OEM_1S_GET_POST_CODE(ipmi_msg *msg)
 	}
 
 	msg->data_len = postcode_num;
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
+#endif
+
+#ifdef CONFIG_PCC_ASPEED
+__weak void OEM_1S_GET_4BYTE_POST_CODE(ipmi_msg *msg)
+{
+	if (msg == NULL) {
+		return;
+	}
+	if (msg->data_len != 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t page = msg->data[0];
+	if ((page > 17)) {
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		return;
+	}
+	uint16_t read_len, start_idx;
+	start_idx = page * FOUR_BYTE_POST_CODE_PAGE_SIZE;
+	read_len = copy_pcc_read_buffer(start_idx, FOUR_BYTE_POST_CODE_PAGE_SIZE, msg->data,
+					IPMI_MSG_MAX_LENGTH);
+
+	msg->data_len = read_len & 0xFF;
 	msg->completion_code = CC_SUCCESS;
 	return;
 }
@@ -1849,9 +1878,14 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_CLEAR_CMOS:
 		OEM_1S_CLEAR_CMOS(msg);
 		break;
-#ifdef CONFIG_IPMI_KCS_ASPEED
+#ifdef CONFIG_SNOOP_ASPEED
 	case CMD_OEM_1S_GET_POST_CODE:
 		OEM_1S_GET_POST_CODE(msg);
+		break;
+#endif
+#ifdef CONFIG_PCC_ASPEED
+	case CMD_OEM_1S_GET_4BYTE_POST_CODE:
+		OEM_1S_GET_4BYTE_POST_CODE(msg);
 		break;
 #endif
 #ifdef CONFIG_PECI

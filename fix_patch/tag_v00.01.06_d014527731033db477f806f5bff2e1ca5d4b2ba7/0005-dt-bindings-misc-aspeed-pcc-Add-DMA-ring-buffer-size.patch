@@ -1,0 +1,31 @@
+From 51ed2a6a73f5b86788bf2eb43356abf9ea218fc2 Mon Sep 17 00:00:00 2001
+From: Chia-Wei Wang <chiawei_wang@aspeedtech.com>
+Date: Fri, 29 Jul 2022 10:51:09 +0800
+Subject: [PATCH 1/3] dt-bindings: misc/aspeed-pcc: Add DMA ring buffer size
+ property
+
+Add property to define the ring buffer size available to
+the PCC DMA engine.
+
+Signed-off-by: Chia-Wei Wang <chiawei_wang@aspeedtech.com>
+Change-Id: I243fa9b9bfd1059f3c16d65b2babaab62dbcb757
+---
+ dts/bindings/misc/aspeed,pcc.yaml | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/dts/bindings/misc/aspeed,pcc.yaml b/dts/bindings/misc/aspeed,pcc.yaml
+index 106a175d6f..a90f5c8a9c 100644
+--- a/dts/bindings/misc/aspeed,pcc.yaml
++++ b/dts/bindings/misc/aspeed,pcc.yaml
+@@ -32,3 +32,8 @@ properties:
+       type: boolean
+       required: false
+       description: enable DMA
++
++    dma-ringbuf-size:
++      type: int
++      required: false
++      description: 4-bytes aligned DMA ringbuffer size
+-- 
+2.25.1
+
