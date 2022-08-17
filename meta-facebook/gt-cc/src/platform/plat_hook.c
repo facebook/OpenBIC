@@ -22,7 +22,7 @@ K_MUTEX_DEFINE(i2c_bus10_mutex);
  * PG: 320 mv
  * BRNG: 16 V
  */
-isl28022_init_arg nic_sensor_init_args[] = {
+isl28022_init_arg isl28022_nic_sensor_init_args[] = {
 	[0] = { .config.fields.MODE = 0b111,
 		.config.fields.SADC = 0b1111,
 		.config.fields.BADC = 0b1111,
@@ -81,9 +81,133 @@ isl28022_init_arg nic_sensor_init_args[] = {
 		.is_init = false },
 };
 
-mp5990_init_arg mp5990_init_args[] = {
+ina230_init_arg ina230_nic_sensor_init_args[] = {
+	[0] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [1] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [2] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [3] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [4] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [5] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [6] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+};
+
+mp5990_init_arg mp5990_hsc_init_args[] = {
 	/* Use default value by specification */
 	[0] = { .is_init = false, .iout_cal_gain = 0x0140, .iout_oc_fault_limit = 0x0037 },
+};
+
+ltc4282_init_arg ltc4282_hsc_init_args[] = {
+	[0] = {
+    .is_init = false,
+		.r_sense_mohm = 0.25,
+		.is_register_setting_needed = 0x01,
+		.ilim_adjust = { 0x13 },
+  },
 };
 
 adc_asd_init_arg adc_asd_init_args[] = { [0] = { .is_init = false } };
@@ -94,7 +218,7 @@ adc_asd_init_arg adc_asd_init_args[] = { [0] = { .is_init = false } };
  * PG: 320 mv
  * BRNG: 16 V
  */
-isl28022_init_arg pex_p1v25_sensor_init_args[] = {
+isl28022_init_arg isl28022_pex_p1v25_sensor_init_args[] = {
 	[0] = { .config.fields.MODE = 0b111,
 		.config.fields.SADC = 0b1111,
 		.config.fields.BADC = 0b1111,
@@ -124,13 +248,80 @@ isl28022_init_arg pex_p1v25_sensor_init_args[] = {
 		.r_shunt = 2,
 		.is_init = false },
 };
+
+ina230_init_arg ina230_pex_p1v25_sensor_init_args[] = {
+	[0] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [1] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [2] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [3] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+};
 /*
  * MODE: Shunt and bus, continuous
  * SADC/BADC: 128 samples
  * PG: 320 mv
  * BRNG: 16 V
  */
-isl28022_init_arg pex_p1v8_sensor_init_args[] = {
+isl28022_init_arg isl28022_pex_p1v8_sensor_init_args[] = {
 	[0] = { .config.fields.MODE = 0b111,
 		.config.fields.SADC = 0b1111,
 		.config.fields.BADC = 0b1111,
@@ -139,13 +330,32 @@ isl28022_init_arg pex_p1v8_sensor_init_args[] = {
 		.r_shunt = 2,
 		.is_init = false },
 };
+
+ina230_init_arg ina230_pex_p1v8_sensor_init_args[] = {
+  [0] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+};
 /*
  * MODE: Shunt and bus, continuous
  * SADC/BADC: 128 samples
  * PG: 320 mv
  * BRNG: 16 V
  */
-isl28022_init_arg ssd_sensor_init_args[] = {
+isl28022_init_arg isl28022_ssd_sensor_init_args[] = {
 	[0] = { .config.fields.MODE = 0b111,
 		.config.fields.SADC = 0b1111,
 		.config.fields.BADC = 0b1111,
@@ -260,12 +470,272 @@ isl28022_init_arg ssd_sensor_init_args[] = {
 		 .is_init = false },
 };
 
+ina230_init_arg ina230_ssd_sensor_init_args[] = {
+  [0] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [1] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [2] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [3] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [4] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [5] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [6] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [7] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [8] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [9] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [10] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [11] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [12] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [13] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [14] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+  [15] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
+};
+
 pex89000_init_arg pex_sensor_init_args[] = {
 	[0] = { .idx = 0, .is_init = false },
 	[1] = { .idx = 1, .is_init = false },
 	[2] = { .idx = 2, .is_init = false },
 	[3] = { .idx = 3, .is_init = false },
 };
+
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
  **************************************************************************************************/
@@ -283,7 +753,7 @@ struct tca9548 mux_conf_addr_0xe2[] = {
 	[6] = { .addr = 0xe2, .chan = 6 }, [7] = { .addr = 0xe2, .chan = 7 },
 };
 
-isl69259_pre_proc_arg isl69259_pre_read_args[] = {
+vr_pre_proc_arg vr_pre_read_args[] = {
 	[0] = { .mux_info_p = &mux_conf_addr_0xe0[6], .vr_page = 0x0 },
 	[1] = { .mux_info_p = &mux_conf_addr_0xe0[6], .vr_page = 0x1 },
 	[2] = { .mux_info_p = &mux_conf_addr_0xe0[6], .vr_page = 0x0 },
@@ -299,22 +769,22 @@ pex89000_pre_proc_arg pex89000_pre_read_args[] = {
  *  PRE-HOOK/POST-HOOK FUNC
  **************************************************************************************************/
 
-/* ISL69259 pre read function
+/* VR pre read function
  *
  * set mux and VR page
  *
  * @param sensor_num sensor number
- * @param args pointer to isl69259_pre_proc_arg
+ * @param args pointer to vr_pre_proc_arg
  * @param reading pointer to reading from previous step
  * @retval true if setting mux and page is successful.
  * @retval false if setting mux or page fails.
  */
-bool pre_isl69259_read(uint8_t sensor_num, void *args)
+bool pre_vr_read(uint8_t sensor_num, void *args)
 {
 	if (!args) {
 		return false;
 	}
-	isl69259_pre_proc_arg *pre_proc_args = (isl69259_pre_proc_arg *)args;
+	vr_pre_proc_arg *pre_proc_args = (vr_pre_proc_arg *)args;
 	uint8_t retry = 5;
 	I2C_MSG msg = { 0 };
 
@@ -330,7 +800,7 @@ bool pre_isl69259_read(uint8_t sensor_num, void *args)
 	msg.data[0] = 0x00;
 	msg.data[1] = pre_proc_args->vr_page;
 	if (i2c_master_write(&msg, retry)) {
-		printf("pre_isl69259_read, set page fail\n");
+		printf("[%s] set page fail\n", __func__);
 		k_mutex_unlock(&i2c_bus6_mutex);
 		return false;
 	}

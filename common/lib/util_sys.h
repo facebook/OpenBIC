@@ -40,6 +40,7 @@ typedef enum {
 
 extern uint8_t ISL69254_DEVICE_ID[5];
 extern uint8_t XDPE12284C_DEVICE_ID[3];
+extern uint8_t ISL69259_DEVICE_ID[5];
 
 void submit_bic_cold_reset();
 void bic_cold_reset();
