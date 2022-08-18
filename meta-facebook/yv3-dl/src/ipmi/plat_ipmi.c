@@ -186,7 +186,8 @@ void OEM_1S_GET_GPIO(ipmi_msg *msg)
 	msg->data_len = data_len;
 	for (uint8_t i = 0; i < gpio_cnt; i++) {
 		if ((gpio_align_t[i] == PVCCIO_CPU) || (gpio_align_t[i] == BMC_HEARTBEAT_LED_R) ||
-		    (gpio_align_t[i] == FM_FORCE_ADR_N_R)) {
+		    (gpio_align_t[i] == FM_FORCE_ADR_N_R) ||
+		    (gpio_align_t[i] == JTAG_BMC_NTRST_R_N)) {
 			//pass dummy data to bmc, because AST bic do not have this gpio
 			gpio_value = 0;
 		} else {
@@ -272,7 +273,7 @@ void OEM_1S_GET_SET_GPIO(ipmi_msg *msg)
 	}
 
 	if ((gpio_num == PVCCIO_CPU) || (gpio_num == BMC_HEARTBEAT_LED_R) ||
-	    (gpio_num == FM_FORCE_ADR_N_R)) {
+	    (gpio_num == FM_FORCE_ADR_N_R) || (gpio_num == JTAG_BMC_NTRST_R_N)) {
 		msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
 		msg->data_len = 0;
 		return;
