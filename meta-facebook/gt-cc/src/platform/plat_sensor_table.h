@@ -16,6 +16,7 @@
 #define NIC_7_POWER_MONITOR_ADDR (0x8E >> 1)
 
 #define HSC_MP5990_ADDR (0x40 >> 1)
+#define HSC_LTC4282_ADDR (0x82 >> 1)
 
 #define PEX_0_1_P0V8_VR_ADDR (0xC0 >> 1)
 #define PEX_2_3_P0V8_VR_ADDR (0xC4 >> 1)
@@ -236,6 +237,11 @@
 #define SENSOR_NUM_VOLT_E1S_15 0xBD
 #define SENSOR_NUM_CURR_E1S_15 0xBE
 #define SENSOR_NUM_POUT_E1S_15 0xBF
+
+typedef enum {
+	VR_RNS_ISL69259,
+	VR_INF_XDPE12284,
+} gt_vr_type_t;
 
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
