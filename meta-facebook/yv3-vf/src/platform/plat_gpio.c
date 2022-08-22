@@ -365,12 +365,3 @@ bool pal_load_gpio_config(void)
 	memcpy(&gpio_cfg[0], &plat_gpio_cfg[0], sizeof(plat_gpio_cfg));
 	return 1;
 };
-
-void set_gpio_debounce(void)
-{
-	const uint8_t debounce_table[] = { FM_PRSNT_E1S_0_N, FM_PRSNT_E1S_1_N, FM_PRSNT_E1S_2_N,
-					   FM_PRSNT_E1S_3_N };
-
-	for (int i = 0; i < ARRAY_SIZE(debounce_table); i++)
-		gpio_debounce_conf(debounce_table[i], 1);
-}
