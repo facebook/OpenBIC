@@ -25,6 +25,7 @@
 #include "altera.h"
 #include "util_spi.h"
 #include "util_sys.h"
+#include <logging/log.h>
 #ifdef ENABLE_APML
 #include "apml.h"
 #endif
@@ -38,11 +39,11 @@
 #define MAX_CONTROL_SENSOR_POLLING_COUNT 10
 #define FOUR_BYTE_POST_CODE_PAGE_SIZE 60
 
+LOG_MODULE_DECLARE(ipmi);
+
 __weak void OEM_1S_MSG_OUT(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 #if MAX_IPMB_IDX
 	uint8_t target_IF;
 	ipmb_error status;
@@ -79,7 +80,7 @@ __weak void OEM_1S_MSG_OUT(ipmi_msg *msg)
 	if ((IPMB_inf_index_map[target_IF] == RESERVED) ||
 	    (IPMB_config_table[IPMB_inf_index_map[target_IF]].interface == RESERVED_IF) ||
 	    (IPMB_config_table[IPMB_inf_index_map[target_IF]].enable_status == DISABLE)) {
-		printf("OEM_MSG_OUT: Invalid bridge interface: %x\n", target_IF);
+		LOG_ERR("OEM_MSG_OUT: Invalid bridge interface: %x", target_IF);
 		msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
 	}
 
@@ -91,10 +92,8 @@ __weak void OEM_1S_MSG_OUT(ipmi_msg *msg)
 		} else {
 			memset(bridge_msg, 0, sizeof(ipmi_msg));
 
-			if (DEBUG_IPMI) {
-				printf("bridge targetIf %x, len %d, netfn %x, cmd %x\n", target_IF,
-				       msg->data_len, msg->data[1] >> 2, msg->data[2]);
-			}
+			LOG_ERR("bridge targetIf %x, len %d, netfn %x, cmd %x", target_IF,
+				msg->data_len, msg->data[1] >> 2, msg->data[2]);
 
 			bridge_msg->data_len = msg->data_len - 3;
 			bridge_msg->seq_source = msg->seq_source;
@@ -111,7 +110,7 @@ __weak void OEM_1S_MSG_OUT(ipmi_msg *msg)
 			status = ipmb_send_request(bridge_msg, IPMB_inf_index_map[target_IF]);
 
 			if (status != IPMB_ERROR_SUCCESS) {
-				printf("OEM_MSG_OUT send IPMB req fail status: %x", status);
+				LOG_ERR("OEM_MSG_OUT send IPMB req fail status: %x", status);
 				msg->completion_code = CC_BRIDGE_MSG_ERR;
 			}
 			SAFE_FREE(bridge_msg);
@@ -123,7 +122,7 @@ __weak void OEM_1S_MSG_OUT(ipmi_msg *msg)
 		msg->data_len = 0;
 		status = ipmb_send_response(msg, IPMB_inf_index_map[msg->InF_source]);
 		if (status != IPMB_ERROR_SUCCESS) {
-			printf("OEM_MSG_OUT send IPMB resp fail status: %x", status);
+			LOG_ERR("OEM_MSG_OUT send IPMB resp fail status: %x", status);
 		}
 	}
 #else
@@ -134,9 +133,7 @@ __weak void OEM_1S_MSG_OUT(ipmi_msg *msg)
 
 __weak void OEM_1S_GET_GPIO(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	// only input enable status
 	if (msg->data_len != 0) {
@@ -167,9 +164,7 @@ __weak void OEM_1S_GET_GPIO(ipmi_msg *msg)
 
 __weak void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	/*********************************
 	* Request Data
@@ -282,7 +277,7 @@ __weak void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 		break;
 	}
 	if (status != FWUPDATE_SUCCESS) {
-		printf("firmware (0x%02X) update failed cc: %x\n", target, msg->completion_code);
+		LOG_ERR("firmware (0x%02X) update failed cc: %x", target, msg->completion_code);
 	}
 
 	return;
@@ -290,9 +285,7 @@ __weak void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 
 __weak void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 1) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -330,7 +323,7 @@ __weak void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 	case COMPNT_ME:
 		if ((IPMB_inf_index_map[ME_IPMB] == RESERVED) ||
 		    (IPMB_config_table[IPMB_inf_index_map[ME_IPMB]].enable_status == DISABLE)) {
-			printf("[%s] IPMB ME interface not enabled.\n", __func__);
+			LOG_ERR("IPMB ME interface not enabled.");
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			return;
 		}
@@ -349,7 +342,7 @@ __weak void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 
 		status = ipmb_read(bridge_msg, IPMB_inf_index_map[bridge_msg->InF_target]);
 		if (status != IPMB_ERROR_SUCCESS) {
-			printf("ipmb read fail status: %x", status);
+			LOG_ERR("ipmb read fail status: %x", status);
 			SAFE_FREE(bridge_msg);
 			msg->completion_code = CC_BRIDGE_MSG_ERR;
 			return;
@@ -491,9 +484,7 @@ __weak void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 
 __weak void OEM_1S_RESET_BMC(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -514,9 +505,7 @@ __weak void OEM_1S_RESET_BMC(ipmi_msg *msg)
 #ifdef CONFIG_SNOOP_ASPEED
 __weak void OEM_1S_GET_POST_CODE(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	int postcode_num = snoop_read_num;
 	if (msg->data_len != 0) {
@@ -548,9 +537,8 @@ __weak void OEM_1S_GET_POST_CODE(ipmi_msg *msg)
 #ifdef CONFIG_PCC_ASPEED
 __weak void OEM_1S_GET_4BYTE_POST_CODE(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
+
 	if (msg->data_len != 1) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
@@ -575,9 +563,7 @@ __weak void OEM_1S_GET_4BYTE_POST_CODE(ipmi_msg *msg)
 #ifdef CONFIG_PECI
 __weak void OEM_1S_PECI_ACCESS(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	uint8_t addr, cmd, *writeBuf, *readBuf;
 	uint8_t writeLen, readLen;
@@ -619,7 +605,7 @@ __weak void OEM_1S_PECI_ACCESS(ipmi_msg *msg)
 		}
 		writeBuf = (uint8_t *)malloc(sizeof(uint8_t) * writeLen);
 		if ((readBuf == NULL) || (writeBuf == NULL)) {
-			printf("PECI access util buffer alloc fail\n");
+			LOG_DBG("PECI access util buffer alloc fail");
 			SAFE_FREE(writeBuf);
 			SAFE_FREE(readBuf);
 			msg->completion_code = CC_OUT_OF_SPACE;
@@ -648,9 +634,7 @@ __weak void OEM_1S_PECI_ACCESS(ipmi_msg *msg)
 #ifdef CONFIG_JTAG
 __weak void OEM_1S_SET_JTAG_TAP_STA(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 2) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -669,9 +653,7 @@ __weak void OEM_1S_SET_JTAG_TAP_STA(ipmi_msg *msg)
 
 __weak void OEM_1S_JTAG_DATA_SHIFT(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	uint8_t lastidx;
 	uint16_t writebitlen, readbitlen, readbyte, databyte;
@@ -702,9 +684,7 @@ __weak void OEM_1S_JTAG_DATA_SHIFT(ipmi_msg *msg)
 #ifdef ENABLE_ASD
 __weak void OEM_1S_ASD_INIT(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 1) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -730,9 +710,7 @@ __weak void OEM_1S_ASD_INIT(ipmi_msg *msg)
 
 __weak void OEM_1S_SENSOR_POLL_EN(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 1) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -755,9 +733,7 @@ __weak void OEM_1S_SENSOR_POLL_EN(ipmi_msg *msg)
 
 __weak void OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	ACCURACY_SENSOR_READING_REQ *req = (ACCURACY_SENSOR_READING_REQ *)msg->data;
 	ACCURACY_SENSOR_READING_RES *res = (ACCURACY_SENSOR_READING_RES *)msg->data;
@@ -784,7 +760,7 @@ __weak void OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg)
 	} else if (req->read_option == GET_FROM_SENSOR) {
 		status = get_sensor_reading(req->sensor_num, &reading, GET_FROM_SENSOR);
 	} else {
-		printf("Error: read_option was not either GET_FROM_CACHE or GET_FROM_SENSOR.\n");
+		LOG_ERR("Error: read_option was not either GET_FROM_CACHE or GET_FROM_SENSOR.");
 		status = SENSOR_UNSPECIFIED_ERROR;
 	}
 	switch (status) {
@@ -840,8 +816,8 @@ __weak void OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg)
 /* For command Get Set GPIO NetFn:0x38 Cmd:0x41 */
 __weak uint8_t gpio_idx_exchange(ipmi_msg *msg)
 {
-	if (msg == NULL)
-		return 1;
+	CHECK_NULL_ARG_WITH_RETURN(msg, 1);
+
 	if (msg->data_len < 2)
 		return 1;
 
@@ -878,9 +854,7 @@ __weak uint8_t gpio_idx_exchange(ipmi_msg *msg)
 
 __weak void OEM_1S_GET_SET_GPIO(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	// whether need to change gpio index type
 	if (gpio_idx_exchange(msg)) {
@@ -940,7 +914,7 @@ __weak void OEM_1S_GET_SET_GPIO(ipmi_msg *msg)
 		}
 		break;
 	default:
-		printf("[%s] Unknown options(0x%x)", __func__, msg->data[0]);
+		LOG_ERR("Unknown options(0x%x)", msg->data[0]);
 		return;
 	}
 
@@ -966,30 +940,27 @@ __weak void OEM_1S_CONTROL_SENSOR_POLLING(ipmi_msg *msg)
 	Data 0:N - [sensor numer] [status]
 	***************************************************/
 
-	if (msg == NULL) {
-		printf("[%s] input msg is NULL\n", __func__);
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	uint8_t total_sensor_count = msg->data[0];
 	uint8_t operation = msg->data[1];
 	if (total_sensor_count > MAX_CONTROL_SENSOR_POLLING_COUNT) {
-		printf("[%s] total sensor count over maximum value, total sensor count: %d, maximum: %d\n",
-		       __func__, total_sensor_count, MAX_CONTROL_SENSOR_POLLING_COUNT);
+		LOG_ERR("Total sensor count over maximum value, total sensor count: %d, maximum: %d",
+			total_sensor_count, MAX_CONTROL_SENSOR_POLLING_COUNT);
 		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
 		return;
 	}
 
 	if ((operation != DISABLE_SENSOR_POLLING) && (operation != ENABLE_SENSOR_POLLING)) {
-		printf("[%s] input operation is invalid, operation: %d\n", __func__, operation);
+		LOG_ERR("Input operation is invalid, operation: %d", operation);
 		msg->completion_code = CC_INVALID_DATA_FIELD;
 		return;
 	}
 
 	// Data length subtract two bytes (one byte is total sensor count, one byte is operation) should be equal to the input number of sensor number list
 	if ((msg->data_len - 2) != total_sensor_count) {
-		printf("[%s] input data length is invalid, total sensor count: %d, number of sensor list: %d\n",
-		       __func__, total_sensor_count, msg->data_len - 2);
+		LOG_ERR("Input data length is invalid, total sensor count: %d, number of sensor list: %d",
+			total_sensor_count, msg->data_len - 2);
 		msg->completion_code = CC_LENGTH_EXCEEDED;
 		return;
 	}
@@ -1023,9 +994,7 @@ __weak void OEM_1S_CONTROL_SENSOR_POLLING(ipmi_msg *msg)
 #ifdef CONFIG_CRYPTO_ASPEED
 __weak void OEM_1S_GET_FW_SHA256(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	uint8_t status = -1;
 	uint32_t target = msg->data[0];
@@ -1074,9 +1043,7 @@ __weak void OEM_1S_GET_FW_SHA256(ipmi_msg *msg)
 
 __weak void OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 1) { // only input scan bus
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -1093,9 +1060,7 @@ __weak void OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg)
 
 __weak void OEM_1S_GET_BIC_STATUS(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -1112,9 +1077,7 @@ __weak void OEM_1S_GET_BIC_STATUS(ipmi_msg *msg)
 
 __weak void OEM_1S_SET_VR_MONITOR_STATUS(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 1) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -1137,9 +1100,7 @@ __weak void OEM_1S_SET_VR_MONITOR_STATUS(ipmi_msg *msg)
 
 __weak void OEM_1S_GET_VR_MONITOR_STATUS(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -1154,9 +1115,7 @@ __weak void OEM_1S_GET_VR_MONITOR_STATUS(ipmi_msg *msg)
 
 __weak void OEM_1S_RESET_BIC(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -1172,10 +1131,7 @@ __weak void OEM_1S_RESET_BIC(ipmi_msg *msg)
 
 __weak void OEM_1S_GET_SET_M2(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	msg->data_len = 0;
 	msg->completion_code = CC_INVALID_CMD;
@@ -1184,10 +1140,7 @@ __weak void OEM_1S_GET_SET_M2(ipmi_msg *msg)
 
 __weak void OEM_1S_SET_SSD_LED(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	msg->data_len = 0;
 	msg->completion_code = CC_INVALID_CMD;
@@ -1196,10 +1149,7 @@ __weak void OEM_1S_SET_SSD_LED(ipmi_msg *msg)
 
 __weak void OEM_1S_GET_SSD_STATUS(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	msg->data_len = 0;
 	msg->completion_code = CC_INVALID_CMD;
@@ -1208,9 +1158,7 @@ __weak void OEM_1S_GET_SSD_STATUS(ipmi_msg *msg)
 
 __weak void OEM_1S_12V_CYCLE_SLOT(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -1244,7 +1192,7 @@ __weak void OEM_1S_READ_BIC_REGISTER(ipmi_msg *msg)
 	* data 4  : bytes to read
 	***********************************/
 	if (!msg) {
-		printf("pal_OEM_1S_READ_BIC_REGISTER: parameter msg is NULL\n");
+		LOG_DBG("pal_OEM_1S_READ_BIC_REGISTER: parameter msg is NULL");
 		return;
 	}
 	if (msg->data_len != 5) {
@@ -1271,7 +1219,7 @@ __weak void OEM_1S_WRITE_BIC_REGISTER(ipmi_msg *msg)
 	* NOTE: The register address must be a multiple of 4
 	***********************************/
 	if (!msg) {
-		printf("pal_OEM_1S_WRITE_BIC_REGISTER: parameter msg is NULL\n");
+		LOG_DBG("pal_OEM_1S_WRITE_BIC_REGISTER: parameter msg is NULL");
 		return;
 	}
 	if (msg->data[4] < 1 || msg->data[4] > 4 || (msg->data_len != 5 + msg->data[4])) {
@@ -1310,10 +1258,7 @@ __weak void OEM_1S_SET_FAN_DUTY_AUTO(ipmi_msg *msg)
 	Response -
 	data 0: Completion code
 	***********************************/
-	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 2) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -1349,7 +1294,7 @@ __weak void OEM_1S_SET_FAN_DUTY_AUTO(ipmi_msg *msg)
 	}
 
 	if (current_fan_mode != FAN_AUTO_MODE) {
-		printf("%s() is called when it's not at auto mode\n", __func__);
+		LOG_WRN("Set Fan was called when it's not at auto mode");
 		return;
 	}
 
@@ -1374,10 +1319,7 @@ __weak void OEM_1S_GET_FAN_DUTY(ipmi_msg *msg)
 	data 0: Completion code
 	data 1: current fan duty
 	***********************************/
-	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 1) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -1424,10 +1366,7 @@ __weak void OEM_1S_GET_FAN_RPM(ipmi_msg *msg)
 	data 0: Completion code
 	data 1: Current fan rpm
 	***********************************/
-	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 1) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -1456,10 +1395,7 @@ __weak void OEM_1S_GET_FAN_RPM(ipmi_msg *msg)
 
 __weak void OEM_1S_INFORM_PEER_SLED_CYCLE(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	msg->data_len = 0;
 	msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
@@ -1478,10 +1414,7 @@ __weak void OEM_1S_GET_FPGA_USER_CODE(ipmi_msg *msg)
 
 __weak void OEM_1S_GET_BOARD_ID(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 0) {
 		msg->data_len = 0;
@@ -1496,10 +1429,7 @@ __weak void OEM_1S_GET_BOARD_ID(ipmi_msg *msg)
 
 __weak void OEM_1S_GET_CARD_TYPE(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	msg->data_len = 0;
 	msg->completion_code = CC_INVALID_CMD;
@@ -1515,7 +1445,7 @@ __weak void OEM_1S_MULTI_ACCURACY_SENSOR_READING(ipmi_msg *msg)
 	data 0: Completion code
 	***********************************/
 	if (!msg) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		LOG_DBG("failed due to parameter *msg is NULL");
 		return;
 	}
 
@@ -1567,9 +1497,7 @@ __weak void OEM_1S_MULTI_ACCURACY_SENSOR_READING(ipmi_msg *msg)
 
 __weak void OEM_1S_CLEAR_CMOS(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -1596,10 +1524,8 @@ __weak void OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT(ipmi_msg *msg)
 #ifdef ENABLE_APML
 __weak void OEM_1S_APML_READ(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
+	CHECK_NULL_ARG(msg);
+
 	if (msg->data_len != 2) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
@@ -1634,10 +1560,8 @@ __weak void OEM_1S_APML_READ(ipmi_msg *msg)
 
 __weak void OEM_1S_APML_WRITE(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
+	CHECK_NULL_ARG(msg);
+
 	if (msg->data_len != 3) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
@@ -1668,10 +1592,7 @@ __weak void OEM_1S_APML_WRITE(ipmi_msg *msg)
 
 __weak void OEM_1S_SEND_APML_REQUEST(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len < 1) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -1726,10 +1647,8 @@ __weak void OEM_1S_SEND_APML_REQUEST(ipmi_msg *msg)
 
 __weak void OEM_1S_GET_APML_RESPONSE(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
+	CHECK_NULL_ARG(msg);
+
 	if (msg->data_len != 1) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
@@ -1768,9 +1687,7 @@ __weak void OEM_1S_NOTIFY_PMIC_ERROR(ipmi_msg *msg)
 {
 	int ret = 0;
 
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 2) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -1801,162 +1718,205 @@ __weak void OEM_1S_NOTIFY_PMIC_ERROR(ipmi_msg *msg)
 
 void IPMI_OEM_1S_handler(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	switch (msg->cmd) {
 	case CMD_OEM_1S_MSG_IN:
+		LOG_DBG("Received 1S Message In command");
 		break;
 	case CMD_OEM_1S_MSG_OUT:
+		LOG_DBG("Received 1S Message Out command");
 		OEM_1S_MSG_OUT(msg);
 		break;
 	case CMD_OEM_1S_GET_GPIO:
+		LOG_DBG("Received 1S Get GPIO command");
 		OEM_1S_GET_GPIO(msg);
 		break;
 	case CMD_OEM_1S_SET_GPIO:
+		LOG_DBG("Received 1S Set GPIO command");
 		break;
 	case CMD_OEM_1S_FW_UPDATE:
+		LOG_DBG("Received 1S Firmware Update command");
 		OEM_1S_FW_UPDATE(msg);
 		break;
 	case CMD_OEM_1S_GET_FW_VERSION:
+		LOG_DBG("Received 1S Get Firmware Version command");
 		OEM_1S_GET_FW_VERSION(msg);
 		break;
 	case CMD_OEM_1S_RESET_BMC:
+		LOG_DBG("Received 1S BMC Reset command");
 		OEM_1S_RESET_BMC(msg);
 		break;
 	case CMD_OEM_1S_SENSOR_POLL_EN: // debug command
+		LOG_DBG("Received 1S Sensor Poll Enable (Debug) command");
 		OEM_1S_SENSOR_POLL_EN(msg);
 		break;
 	case CMD_OEM_1S_ACCURACY_SENSOR_READING:
+		LOG_DBG("Received 1S Sesnor Reading (Accuracy) command");
 		OEM_1S_ACCURACY_SENSOR_READING(msg);
 		break;
 	case CMD_OEM_1S_GET_SET_GPIO:
+		LOG_DBG("Received 1S Get/Set GPIO command");
 		OEM_1S_GET_SET_GPIO(msg);
 		break;
 	case CMD_OEM_1S_CONTROL_SENSOR_POLLING:
+		LOG_DBG("Received 1S Sensor Polling Control command");
 		OEM_1S_CONTROL_SENSOR_POLLING(msg);
 		break;
 #ifdef CONFIG_CRYPTO_ASPEED
 	case CMD_OEM_1S_GET_FW_SHA256:
+		LOG_DBG("Received 1S Get Firmware SHA256 command");
 		OEM_1S_GET_FW_SHA256(msg);
 		break;
 #endif
 	case CMD_OEM_1S_I2C_DEV_SCAN: // debug command
+		LOG_DBG("Received 1S I2C Device Scan (Debug) command");
 		OEM_1S_I2C_DEV_SCAN(msg);
 		break;
 	case CMD_OEM_1S_GET_BIC_STATUS:
+		LOG_DBG("Received 1S Get BIC Status command");
 		OEM_1S_GET_BIC_STATUS(msg);
 		break;
 	case CMD_OEM_1S_SET_VR_MONITOR_STATUS:
+		LOG_DBG("Received 1S Set VR Monitor Status command");
 		OEM_1S_SET_VR_MONITOR_STATUS(msg);
 		break;
 	case CMD_OEM_1S_GET_VR_MONITOR_STATUS:
+		LOG_DBG("Received 1S Get VR Monitor Status command");
 		OEM_1S_GET_VR_MONITOR_STATUS(msg);
 		break;
 	case CMD_OEM_1S_RESET_BIC:
+		LOG_DBG("Received 1S Reset BIC command");
 		OEM_1S_RESET_BIC(msg);
 		break;
 	case CMD_OEM_1S_GET_SET_M2:
+		LOG_DBG("Received 1S Get/Set M2 command");
 		OEM_1S_GET_SET_M2(msg);
 		break;
 	case CMD_OEM_1S_SET_SSD_LED:
+		LOG_DBG("Received 1S Set SSD LED command");
 		OEM_1S_SET_SSD_LED(msg);
 		break;
 	case CMD_OEM_1S_GET_SSD_STATUS:
+		LOG_DBG("Received 1S Get SSD Status command");
 		OEM_1S_GET_SSD_STATUS(msg);
 		break;
 	case CMD_OEM_1S_12V_CYCLE_SLOT:
+		LOG_DBG("Received 1S 12v-Cycle Slot command");
 		OEM_1S_12V_CYCLE_SLOT(msg);
 		break;
 	case CMD_OEM_1S_READ_BIC_REGISTER:
+		LOG_DBG("Received 1S Read BIC Register command");
 		OEM_1S_READ_BIC_REGISTER(msg);
 		break;
 	case CMD_OEM_1S_WRITE_BIC_REGISTER:
+		LOG_DBG("Received 1S Write BIC Register command");
 		OEM_1S_WRITE_BIC_REGISTER(msg);
 		break;
 	case CMD_OEM_1S_CLEAR_CMOS:
+		LOG_DBG("Received 1S Clear CMOS command");
 		OEM_1S_CLEAR_CMOS(msg);
 		break;
 #ifdef CONFIG_SNOOP_ASPEED
 	case CMD_OEM_1S_GET_POST_CODE:
+		LOG_DBG("Received 1S Get Post Code command");
 		OEM_1S_GET_POST_CODE(msg);
 		break;
 #endif
 #ifdef CONFIG_PCC_ASPEED
 	case CMD_OEM_1S_GET_4BYTE_POST_CODE:
+		LOG_DBG("Received 1S Get Post Code (4-Byte) command");
 		OEM_1S_GET_4BYTE_POST_CODE(msg);
 		break;
 #endif
 #ifdef CONFIG_PECI
 	case CMD_OEM_1S_PECI_ACCESS:
+		LOG_DBG("Received 1S Access PECI command");
 		OEM_1S_PECI_ACCESS(msg);
 		break;
 #endif
 #ifdef ENABLE_APML
 	case CMD_OEM_1S_APML_READ:
+		LOG_DBG("Received 1S APML Read command");
 		OEM_1S_APML_READ(msg);
 		break;
 	case CMD_OEM_1S_APML_WRITE:
+		LOG_DBG("Received 1S APML Write command");
 		OEM_1S_APML_WRITE(msg);
 		break;
 	case CMD_OEM_1S_SEND_APML_REQUEST:
+		LOG_DBG("Received 1S Send APML Request command");
 		OEM_1S_SEND_APML_REQUEST(msg);
 		break;
 	case CMD_OEM_1S_GET_APML_RESPONSE:
+		LOG_DBG("Received 1S Get APML Response command");
 		OEM_1S_GET_APML_RESPONSE(msg);
 		break;
 #endif
 #ifdef CONFIG_JTAG
 	case CMD_OEM_1S_SET_JTAG_TAP_STA:
+		LOG_DBG("Received 1S Set JTAG Tap Status command");
 		OEM_1S_SET_JTAG_TAP_STA(msg);
 		break;
 	case CMD_OEM_1S_JTAG_DATA_SHIFT:
+		LOG_DBG("Received 1S JTAG Data Shift command");
 		OEM_1S_JTAG_DATA_SHIFT(msg);
 		break;
 #ifdef ENABLE_ASD
 	case CMD_OEM_1S_ASD_INIT:
+		LOG_DBG("Received 1S ASD Initialize command");
 		OEM_1S_ASD_INIT(msg);
 		break;
 #endif
 #endif
 #ifdef ENABLE_FAN
 	case CMD_OEM_1S_SET_FAN_DUTY_AUTO:
+		LOG_DBG("Received 1S Set Fan Duty (Auto) command");
 		OEM_1S_SET_FAN_DUTY_AUTO(msg);
 		break;
 	case CMD_OEM_1S_GET_FAN_DUTY:
+		LOG_DBG("Received 1S Get Fan Duty command");
 		OEM_1S_GET_FAN_DUTY(msg);
 		break;
 	case CMD_OEM_1S_GET_FAN_RPM:
+		LOG_DBG("Received 1S Get Fan RPM command");
 		OEM_1S_GET_FAN_RPM(msg);
 		break;
 #endif
 	case CMD_OEM_1S_INFORM_PEER_SLED_CYCLE:
+		LOG_DBG("Received 1S Inform Peer Sled-cycle command");
 		OEM_1S_INFORM_PEER_SLED_CYCLE(msg);
 		break;
 	case CMD_OEM_1S_PEX_FLASH_READ:
+		LOG_DBG("Received 1S Read PEX Flash command");
 		OEM_1S_PEX_FLASH_READ(msg);
 		break;
 	case CMD_OEM_1S_GET_FPGA_USER_CODE:
+		LOG_DBG("Received 1S Get FPGA User Code command");
 		OEM_1S_GET_FPGA_USER_CODE(msg);
 		break;
 	case CMD_OEM_1S_GET_BOARD_ID:
+		LOG_DBG("Received 1S Get Board ID command");
 		OEM_1S_GET_BOARD_ID(msg);
 		break;
 	case CMD_OEM_1S_GET_CARD_TYPE:
+		LOG_DBG("Received 1S Get Card Type command");
 		OEM_1S_GET_CARD_TYPE(msg);
 		break;
 	case CMD_OEM_1S_MULTI_ACCURACY_SENSOR_READING:
+		LOG_DBG("Received 1S Multi-accuracy Sensor Read command");
 		OEM_1S_MULTI_ACCURACY_SENSOR_READING(msg);
 		break;
 	case CMD_OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT:
+		LOG_DBG("Received 1S Bridge I2C Message by Component command");
 		OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT(msg);
 		break;
 	case CMD_OEM_1S_NOTIFY_PMIC_ERROR:
+		LOG_DBG("Received 1S Notify PMIC Error command");
 		OEM_1S_NOTIFY_PMIC_ERROR(msg);
 		break;
 	default:
-		printf("Invalid OEM message, netfn(0x%x) cmd(0x%x)\n", msg->netfn, msg->cmd);
+		LOG_ERR("Invalid OEM message, netfn(0x%x) cmd(0x%x)", msg->netfn, msg->cmd);
 		msg->data_len = 0;
 		msg->completion_code = CC_INVALID_CMD;
 		break;

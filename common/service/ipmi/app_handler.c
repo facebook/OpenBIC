@@ -6,12 +6,14 @@
 #include "plat_i2c.h"
 #include "plat_ipmi.h"
 #include "util_sys.h"
+#include <logging/log.h>
+#include <libutil.h>
+
+LOG_MODULE_DECLARE(ipmi);
 
 __weak void APP_GET_DEVICE_ID(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -41,9 +43,7 @@ __weak void APP_GET_DEVICE_ID(ipmi_msg *msg)
 
 __weak void APP_COLD_RESET(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -58,9 +58,7 @@ __weak void APP_COLD_RESET(ipmi_msg *msg)
 
 __weak void APP_WARM_RESET(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -75,9 +73,7 @@ __weak void APP_WARM_RESET(ipmi_msg *msg)
 
 __weak void APP_GET_SELFTEST_RESULTS(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -123,9 +119,7 @@ __weak void APP_GET_SELFTEST_RESULTS(ipmi_msg *msg)
 
 __weak void APP_GET_SYSTEM_GUID(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -156,9 +150,7 @@ __weak void APP_GET_SYSTEM_GUID(ipmi_msg *msg)
 
 __weak void APP_MASTER_WRITE_READ(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	uint8_t retry = 3;
 	uint8_t bus_7bit;
@@ -173,7 +165,7 @@ __weak void APP_MASTER_WRITE_READ(ipmi_msg *msg)
 	// should ignore bit0, all bus public
 	bus_7bit = msg->data[0] >> 1;
 	if (bus_7bit >= I2C_BUS_MAX_NUM) {
-		printf("Accessing invalid bus with IPMI master write read\n");
+		LOG_ERR("Accessing invalid bus with IPMI master write read\n");
 		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
 		return;
 	}
@@ -212,9 +204,7 @@ __weak void APP_MASTER_WRITE_READ(ipmi_msg *msg)
 
 void IPMI_APP_handler(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	switch (msg->cmd) {
 	case CMD_APP_GET_DEVICE_ID:
@@ -238,7 +228,7 @@ void IPMI_APP_handler(ipmi_msg *msg)
 		break;
 #endif
 	default:
-		printf("invalid APP msg netfn: %x, cmd: %x\n", msg->netfn, msg->cmd);
+		LOG_ERR("invalid APP msg netfn: %x, cmd: %x\n", msg->netfn, msg->cmd);
 		msg->data_len = 0;
 		msg->completion_code = CC_INVALID_CMD;
 		break;

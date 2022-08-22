@@ -3,21 +3,24 @@
 #include "sensor.h"
 #include "plat_sensor_table.h"
 #include "guid.h"
+#include <logging/log.h>
+#include "libutil.h"
 #ifdef ENABLE_FAN
 #include "plat_fan.h"
 #endif
 
+LOG_MODULE_DECLARE(ipmi);
+
 __weak uint8_t get_hsc_pwr_reading(int *reading)
 {
+	LOG_WRN("HSC Power Reading Not Supported");
 	return SENSOR_NOT_FOUND;
 }
 
 #ifdef CONFIG_ESPI
 __weak void OEM_NM_SENSOR_READ(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	uint8_t status;
 	int reading;
@@ -69,12 +72,11 @@ __weak void OEM_NM_SENSOR_READ(ipmi_msg *msg)
 
 __weak void OEM_SET_SYSTEM_GUID(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 16) {
 		msg->completion_code = CC_INVALID_LENGTH;
+		LOG_DBG("Message Data invalid length");
 		return;
 	}
 
@@ -112,10 +114,7 @@ __weak void OEM_SET_FAN_DUTY_MANUAL(ipmi_msg *msg)
 	Response
 	data 0: completion code
 	***********************************/
-	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 2) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -152,7 +151,7 @@ __weak void OEM_SET_FAN_DUTY_MANUAL(ipmi_msg *msg)
 	}
 
 	if (current_fan_mode != FAN_MANUAL_MODE) {
-		printf("%s() is called when it's not at manual mode\n", __func__);
+		LOG_WRN("Fan must be in Manual Mode to set fan.");
 		return;
 	}
 
@@ -189,10 +188,7 @@ __weak void OEM_GET_SET_FAN_CTRL_MODE(ipmi_msg *msg)
 	  0x00 manual fan mode
 	  0x01 auto fan mode
 	***********************************/
-	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 1) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -232,10 +228,7 @@ __weak void OEM_GET_SET_FAN_CTRL_MODE(ipmi_msg *msg)
 
 __weak void OEM_GET_MB_INDEX(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -259,47 +252,49 @@ __weak void OEM_GET_MB_INDEX(ipmi_msg *msg)
 
 __weak void OEM_CABLE_DETECTION(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	msg->data_len = 0;
 	msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+	LOG_WRN("Cable Detection IPMI command not supported");
 	return;
 }
 
 void IPMI_OEM_handler(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	switch (msg->cmd) {
 	case CMD_OEM_CABLE_DETECTION:
+		LOG_DBG("Received Cable Detect command");
 		OEM_CABLE_DETECTION(msg);
 		break;
 #ifdef CONFIG_ESPI
 	case CMD_OEM_NM_SENSOR_READ:
+		LOG_DBG("Received NM Sensor Read command");
 		OEM_NM_SENSOR_READ(msg);
 		break;
 	case CMD_OEM_SET_SYSTEM_GUID:
+		LOG_DBG("Received Set System GUID command");
 		OEM_SET_SYSTEM_GUID(msg);
 		break;
 #endif
 #ifdef ENABLE_FAN
 	case CMD_OEM_SET_FAN_DUTY_MANUAL:
+		LOG_DBG("Received Set Fan Duty (manual) command");
 		OEM_SET_FAN_DUTY_MANUAL(msg);
 		break;
 	case CMD_OEM_GET_SET_FAN_CTRL_MODE:
+		LOG_DBG("Received Set Fan Control Mode command");
 		OEM_GET_SET_FAN_CTRL_MODE(msg);
 		break;
 #endif
 	case CMD_OEM_GET_MB_INDEX:
+		LOG_DBG("Received Get MB Index command");
 		OEM_GET_MB_INDEX(msg);
 		break;
 	default:
-		printf("invalid OEM msg netfn: %x, cmd: %x\n", msg->netfn, msg->cmd);
+		LOG_ERR("invalid OEM msg netfn: %x, cmd: %x", msg->netfn, msg->cmd);
 		msg->data_len = 0;
 		msg->completion_code = CC_INVALID_CMD;
 		break;

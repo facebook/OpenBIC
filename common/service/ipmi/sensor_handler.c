@@ -1,12 +1,14 @@
 #include "sensor_handler.h"
 
 #include "sensor.h"
+#include <logging/log.h>
+#include "libutil.h"
+
+LOG_MODULE_DECLARE(ipmi);
 
 __weak void SENSOR_GET_SENSOR_READING(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	uint8_t status = -1;
 	uint8_t sensor_report_status = SENSOR_EVENT_MESSAGES_ENABLE;
@@ -73,16 +75,14 @@ __weak void SENSOR_GET_SENSOR_READING(ipmi_msg *msg)
 
 void IPMI_SENSOR_handler(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	switch (msg->cmd) {
 	case CMD_SENSOR_GET_SENSOR_READING:
 		SENSOR_GET_SENSOR_READING(msg);
 		break;
 	default:
-		printf("invalid sensor msg netfn: %x, cmd: %x\n", msg->netfn, msg->cmd);
+		LOG_ERR("invalid sensor msg netfn: %x, cmd: %x", msg->netfn, msg->cmd);
 		msg->data_len = 0;
 		msg->completion_code = CC_INVALID_CMD;
 		break;

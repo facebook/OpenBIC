@@ -31,9 +31,7 @@ struct k_msgq ipmi_msgq;
 
 static uint8_t send_msg_by_pldm(ipmi_msg_cfg *msg_cfg)
 {
-	if (!msg_cfg) {
-		return 0;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(msg_cfg, 0);
 
 	/* get the mctp/pldm for sending response from buffer */
 	uint16_t pldm_hdr_ofs = sizeof(msg_cfg->buffer.data) - sizeof(pldm_hdr);
@@ -106,7 +104,7 @@ __weak bool pal_request_msg_to_BIC_from_ME(uint8_t netfn, uint8_t cmd)
 
 __weak bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd)
 {
-	if ((netfn == NETFN_OEM_1S_REQ)) {
+	if (netfn == NETFN_OEM_1S_REQ) {
 		if ((cmd == CMD_OEM_1S_MSG_OUT) || (cmd == CMD_OEM_1S_MSG_IN)) {
 			return true;
 		}
@@ -119,17 +117,15 @@ __weak bool pal_is_not_return_cmd(uint8_t netfn, uint8_t cmd)
 
 bool common_add_sel_evt_record(common_addsel_msg_t *sel_msg)
 {
-	if (sel_msg == NULL) {
-		printf("%s failed due to parameter *sel_msg is NULL\n", __func__);
-		return false;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(sel_msg, false);
+
 	ipmb_error status;
 	static uint16_t record_id = 0x1;
 	uint8_t system_event_record = 0x02;
 	uint8_t evt_msg_version = 0x04;
 	ipmi_msg *msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
 	if (msg == NULL) {
-		printf("%s malloc fail\n", __func__);
+		LOG_DBG("Malloc fail");
 		return false;
 	}
 	memset(msg, 0, sizeof(ipmi_msg));
@@ -158,11 +154,11 @@ bool common_add_sel_evt_record(common_addsel_msg_t *sel_msg)
 	switch (status) {
 	case IPMB_ERROR_FAILURE:
 		ipmb_flag = false;
-		printf("Fail to post msg to InF_target 0x%x txqueue for addsel\n", msg->InF_target);
+		LOG_ERR("Fail to post msg to InF_target 0x%x txqueue for addsel", msg->InF_target);
 		break;
 	case IPMB_ERROR_GET_MESSAGE_QUEUE:
 		ipmb_flag = false;
-		printf("No response from InF_target 0x%x for addsel\n", msg->InF_target);
+		LOG_ERR("No response from InF_target 0x%x for addsel", msg->InF_target);
 		break;
 	default:
 		break;
@@ -174,21 +170,15 @@ bool common_add_sel_evt_record(common_addsel_msg_t *sel_msg)
 
 void IPMI_handler(void *arug0, void *arug1, void *arug2)
 {
-	uint8_t i;
 	ipmi_msg_cfg msg_cfg;
 
 	while (1) {
 		memset(&msg_cfg, 0, sizeof(ipmi_msg_cfg));
 		k_msgq_get(&ipmi_msgq, &msg_cfg, K_FOREVER);
 
-		if (DEBUG_IPMI) {
-			printf("IPMI_handler[%d]: netfn: %x\n", msg_cfg.buffer.data_len,
-			       msg_cfg.buffer.netfn);
-			for (i = 0; i < msg_cfg.buffer.data_len; i++) {
-				printf(" 0x%2x", msg_cfg.buffer.data[i]);
-			}
-			printf("\n");
-		}
+		LOG_DBG("IPMI_handler[%d]: netfn: %x", msg_cfg.buffer.data_len,
+			msg_cfg.buffer.netfn);
+		LOG_HEXDUMP_DBG(msg_cfg.buffer.data, msg_cfg.buffer.data_len, "");
 
 		msg_cfg.buffer.completion_code = CC_INVALID_CMD;
 		switch (msg_cfg.buffer.netfn) {
@@ -240,8 +230,8 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 				break;
 			}
 		default: // invalid net function
-			printf("invalid msg netfn: %x, cmd: %x\n", msg_cfg.buffer.netfn,
-			       msg_cfg.buffer.cmd);
+			LOG_ERR("invalid msg netfn: %x, cmd: %x", msg_cfg.buffer.netfn,
+				msg_cfg.buffer.cmd);
 			msg_cfg.buffer.data_len = 0;
 			break;
 		}
@@ -277,7 +267,7 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 					k_msleep(10);
 					kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
 					if (kcs_buff == NULL) {
-						printf("IPMI_handler: Fail to malloc for kcs_buff\n");
+						LOG_DBG("IPMI_handler: Fail to malloc for kcs_buff");
 						continue;
 					}
 				}
@@ -294,11 +284,9 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 						       (KCS_BUFF_SIZE - 3));
 				}
 
-				if (DEBUG_KCS) {
-					printf("kcs from ipmi netfn %x, cmd %x, length %d, cc %x\n",
-					       kcs_buff[0], kcs_buff[1], msg_cfg.buffer.data_len,
-					       kcs_buff[2]);
-				}
+				LOG_DBG("kcs from ipmi netfn %x, cmd %x, length %d, cc %x",
+					kcs_buff[0], kcs_buff[1], msg_cfg.buffer.data_len,
+					kcs_buff[2]);
 
 				kcs_write(kcs_buff, msg_cfg.buffer.data_len + 3);
 				SAFE_FREE(kcs_buff);
@@ -316,8 +304,8 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 					&msg_cfg.buffer,
 					IPMB_inf_index_map[msg_cfg.buffer.InF_source]);
 				if (status != IPMB_ERROR_SUCCESS) {
-					printf("IPMI_handler send IPMB resp fail status: %x",
-					       status);
+					LOG_ERR("IPMI_handler send IPMB resp fail status: %x",
+						status);
 				}
 #endif
 				break;
@@ -329,7 +317,7 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 
 void ipmi_init(void)
 {
-	printf("ipmi_init\n"); // rain
+	LOG_DBG("ipmi_init");
 	k_msgq_init(&ipmi_msgq, ipmi_msgq_buffer, sizeof(struct ipmi_msg_cfg), IPMI_BUF_LEN);
 
 	k_thread_create(&IPMI_thread, IPMI_thread_stack, K_THREAD_STACK_SIZEOF(IPMI_thread_stack),

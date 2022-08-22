@@ -4,12 +4,14 @@
 #include "plat_ipmb.h"
 #include "fru.h"
 #include "sdr.h"
+#include <logging/log.h>
+#include "libutil.h"
+
+LOG_MODULE_DECLARE(ipmi);
 
 __weak void STORAGE_GET_FRUID_INFO(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	uint8_t fruid;
 	uint16_t fru_size;
@@ -45,9 +47,7 @@ __weak void STORAGE_GET_FRUID_INFO(ipmi_msg *msg)
 
 __weak void STORAGE_READ_FRUID_DATA(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	uint8_t status;
 	EEPROM_ENTRY fru_entry;
@@ -96,9 +96,7 @@ __weak void STORAGE_READ_FRUID_DATA(ipmi_msg *msg)
 
 __weak void STORAGE_WRITE_FRUID_DATA(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	uint8_t status;
 	EEPROM_ENTRY fru_entry;
@@ -144,9 +142,7 @@ __weak void STORAGE_WRITE_FRUID_DATA(ipmi_msg *msg)
 
 __weak void STORAGE_RSV_SDR(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	uint16_t RSV_ID;
 	uint8_t rsv_table_index = RSV_TABLE_INDEX_0;
@@ -171,9 +167,7 @@ __weak void STORAGE_RSV_SDR(ipmi_msg *msg)
 
 __weak void STORAGE_GET_SDR(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	uint16_t next_record_ID;
 	uint16_t rsv_ID, record_ID;
@@ -233,10 +227,7 @@ __weak void STORAGE_GET_SDR(ipmi_msg *msg)
 
 __weak void STORAGE_ADD_SEL(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		printf("%s failed due to parameter is NULL\n", __func__);
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 #if MAX_IPMB_IDX
 	if (msg->data_len != 16) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -248,7 +239,7 @@ __weak void STORAGE_ADD_SEL(ipmi_msg *msg)
 
 	add_sel_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
 	if (add_sel_msg == NULL) {
-		printf("%s malloc fail\n", __func__);
+		LOG_DBG("Malloc fail");
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
 		return;
 	}
@@ -267,11 +258,11 @@ __weak void STORAGE_ADD_SEL(ipmi_msg *msg)
 	msg->data_len = 0;
 	if (status == IPMB_ERROR_FAILURE) {
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
-		printf("%s Fail to post msg to txqueue for addsel\n", __func__);
+		LOG_ERR("Fail to post msg to txqueue for addsel");
 		return;
 	} else if (status == IPMB_ERROR_GET_MESSAGE_QUEUE) {
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
-		printf("%s No response from bmc for addsel\n", __func__);
+		LOG_ERR("No response from bmc for addsel");
 		return;
 	}
 
@@ -284,9 +275,7 @@ __weak void STORAGE_ADD_SEL(ipmi_msg *msg)
 
 void IPMI_Storage_handler(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	switch (msg->cmd) {
 	case CMD_STORAGE_GET_FRUID_INFO:
@@ -308,7 +297,7 @@ void IPMI_Storage_handler(ipmi_msg *msg)
 		STORAGE_ADD_SEL(msg);
 		break;
 	default:
-		printf("invalid Storage msg netfn: %x, cmd: %x\n", msg->netfn, msg->cmd);
+		LOG_ERR("invalid Storage msg netfn: %x, cmd: %x", msg->netfn, msg->cmd);
 		msg->data_len = 0;
 		msg->completion_code = CC_INVALID_CMD;
 		break;
