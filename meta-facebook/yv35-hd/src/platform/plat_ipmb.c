@@ -23,6 +23,18 @@ bool pal_load_ipmb_config(void)
 		pal_IPMB_config_table[EXP1_IPMB_IDX].enable_status = ENABLE;
 	}
 
+	CARD_STATUS _2ou_status = get_2ou_status();
+	if (_2ou_status.present) {
+		// for dpv2 sku, disable ipmb and set i2c freq to 400Khz for slave devices reading
+		// for reset of expansion board, enable ipmb and set i2c freq to 1Mhz
+		if ((_2ou_status.card_type & TYPE_2OU_DPV2_16) == TYPE_2OU_DPV2_16) {
+			i2c_freq_set(pal_IPMB_config_table[EXP2_IPMB_IDX].bus, I2C_SPEED_FAST);
+			pal_IPMB_config_table[EXP2_IPMB_IDX].enable_status = DISABLE;
+		} else {
+			pal_IPMB_config_table[EXP2_IPMB_IDX].enable_status = ENABLE;
+		}
+	}
+
 	memcpy(IPMB_config_table, pal_IPMB_config_table, sizeof(pal_IPMB_config_table));
 	return true;
 }
