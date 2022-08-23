@@ -9,6 +9,7 @@ from os.path import exists
 
 # Numeric encoding of development stage names.
 stage_map = {
+    "poc": "000",
     "evt": "001",
     "dvt": "010",
     "pvt": "011",
@@ -107,30 +108,23 @@ def hex_dump_to_image(data, output_path):
         image.write(binascii.unhexlify(data))
 
 
-def sign_image(args):
-    """
-    Main driving function for generating checksum info and appending it to the
-    image file before writing it to an output file.
-
-    :param args: Validated CLI arguments.
-    :type args: obj
-    """
+def sign_image(input_file, output_file, project, version, stage, board):
 
     # Read in the file as a hex string of the binary.
-    with open(args.input_file, "rb") as image:
+    with open(input_file, "rb") as image:
         image_dump = binascii.hexlify(image.read())
 
     # Generate the MD5 and append it onto the image.
-    md5_digest = get_md5_from_file(args.input_file)
+    md5_digest = get_md5_from_file(input_file)
     image_dump += bytes(md5_digest, 'utf-8')
 
     # Generate project code hex and append to binary.
-    padded_project_name = get_padded_project_name(args.project)
+    padded_project_name = get_padded_project_name(project)
     project_hex = binascii.hexlify(padded_project_name.encode())[0:32]
     image_dump += project_hex
 
     # Generate project version hex and append to binary.
-    padded_version = args.version.ljust(13)
+    padded_version = version.ljust(13)
     version_hex = binascii.hexlify(padded_version.encode())[0:26]
     image_dump += version_hex
 
@@ -143,8 +137,8 @@ def sign_image(args):
     # Concatenate the project info into a single string.
     identity_string = INSTANCE_ID
     identity_string += COMPONENT_CODE
-    identity_string += stage_map[args.stage]
-    identity_string += board_map[args.board]
+    identity_string += stage_map[stage]
+    identity_string += board_map[board]
 
     # Generate short string for project identity string.
     byte3_errorPoof = f'{int(identity_string, 2):x}'
@@ -167,7 +161,7 @@ def sign_image(args):
     image_dump += bytes(md5_2, 'utf-8')
 
     # Write new image with checksum to file.
-    hex_dump_to_image(image_dump, args.output_file)
+    hex_dump_to_image(image_dump, output_file)
 
 
 def validate_version_number(version) -> str:
@@ -332,4 +326,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     validate_inputs(args)
-    sign_image(args)
+    sign_image(args.input_file, args.output_file, args.project,
+               args.version, args.stage, args.board)
