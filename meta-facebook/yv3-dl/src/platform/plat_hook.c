@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <logging/log.h>
 #include "ipmi.h"
 #include "sensor.h"
 #include "plat_i2c.h"
@@ -11,6 +12,8 @@
 #include "pmbus.h"
 #include "libipmi.h"
 #include "plat_sys.h"
+
+LOG_MODULE_DECLARE(sensor);
 
 /**************************************************************************************************
  * INIT ARGS
@@ -145,7 +148,7 @@ bool pre_vr_read(uint8_t sensor_num, void *args)
 	I2C_MSG msg;
 
 	if (k_mutex_lock(&vr_page_mutex, K_MSEC(VR_PAGE_MUTEX_TIMEOUT_MS))) {
-		printf("[%s] Failed to lock vr page\n", __func__);
+		LOG_ERR("[%s] Failed to lock vr page\n", __func__);
 		return false;
 	}
 
@@ -157,9 +160,9 @@ bool pre_vr_read(uint8_t sensor_num, void *args)
 	msg.data[1] = vr_page_sel->vr_page;
 
 	if (i2c_master_write(&msg, retry)) {
-		printf("%s, set page fail\n", __func__);
+		LOG_ERR("%s, set page fail\n", __func__);
 		if (k_mutex_unlock(&vr_page_mutex)) {
-			printf("[%s] Failed to unlock vr page\n", __func__);
+			LOG_ERR("[%s] Failed to unlock vr page\n", __func__);
 		}
 		return false;
 	}
@@ -186,11 +189,46 @@ bool post_xdpe12284c_read(uint8_t sensor_num, void *args, int *reading)
 	ARG_UNUSED(args);
 
 	sensor_val *sval = (sensor_val *)reading;
-	float val = 0;
+	float val = (float)sval->integer + (sval->fraction / 1000.0);
 
 	switch (sensor_num) {
+	case SENSOR_NUM_CUR_PVCCIN_VR:
+	case SENSOR_NUM_CUR_PVCCSA_VR:
+	case SENSOR_NUM_CUR_PVCCIO_VR:
+	case SENSOR_NUM_CUR_P3V3_STBY_VR:
+	case SENSOR_NUM_CURR_DIMM_ABC_VR:
+	case SENSOR_NUM_CURR_DIMM_DEF_VR:
+		if (val < (-2)) {
+			LOG_ERR("Sensor %x unexpected current reading\n", sensor_num);
+			ret = false;
+			goto error_exit;
+		}
+
+		//the tolerance of current is -2 amps.
+		if ((val >= (-2)) && (val < 0)) {
+			sval->integer = 0;
+			sval->fraction = 0;
+		}
+		break;
+	case SENSOR_NUM_PWR_PVCCIN_VR:
+	case SENSOR_NUM_PWR_PVCCSA_VR:
+	case SENSOR_NUM_PWR_PVCCIO_VR:
+	case SENSOR_NUM_PWR_P3V3_STBY_VR:
+	case SENSOR_NUM_PWR_DIMM_ABC_VR:
+	case SENSOR_NUM_PWR_DIMM_DEF_VR:
+		if (val < (-4)) {
+			LOG_ERR("Sensor %x unexpected power reading\n", sensor_num);
+			ret = false;
+			goto error_exit;
+		}
+
+		//the tolerance of power is -4 watts.
+		if ((val >= (-4)) && (val < 0)) {
+			sval->integer = 0;
+			sval->fraction = 0;
+		}
+		break;
 	case SENSOR_NUM_VOL_P3V3_STBY_VR:
-		val = (float)sval->integer + (sval->fraction / 1000.0);
 		val *= 2;
 		sval->integer = (int)val & 0xFFFF;
 		sval->fraction = (val - sval->integer) * 1000;
@@ -205,7 +243,7 @@ bool post_xdpe12284c_read(uint8_t sensor_num, void *args, int *reading)
 
 error_exit:
 	if (k_mutex_unlock(&vr_page_mutex)) {
-		printf("[%s] Failed to unlock vr page\n", __func__);
+		LOG_ERR("[%s] Failed to unlock vr page\n", __func__);
 	}
 
 	return ret;
@@ -223,7 +261,7 @@ error_exit:
 bool post_isl69254_read(uint8_t sensor_num, void *args, int *reading)
 {
 	if (k_mutex_unlock(&vr_page_mutex)) {
-		printf("[%s] Failed to unlock vr page\n", __func__);
+		LOG_ERR("[%s] Failed to unlock vr page\n", __func__);
 	}
 
 	if (reading == NULL) {
@@ -232,11 +270,44 @@ bool post_isl69254_read(uint8_t sensor_num, void *args, int *reading)
 	ARG_UNUSED(args);
 
 	sensor_val *sval = (sensor_val *)reading;
-	float val = 0;
+	float val = (float)sval->integer + (sval->fraction / 1000.0);
 
 	switch (sensor_num) {
+	case SENSOR_NUM_CUR_PVCCIN_VR:
+	case SENSOR_NUM_CUR_PVCCSA_VR:
+	case SENSOR_NUM_CUR_PVCCIO_VR:
+	case SENSOR_NUM_CUR_P3V3_STBY_VR:
+	case SENSOR_NUM_CURR_DIMM_ABC_VR:
+	case SENSOR_NUM_CURR_DIMM_DEF_VR:
+		if (val < (-2)) {
+			LOG_ERR("Sensor %x unexpected current reading\n", sensor_num);
+			return false;
+		}
+
+		//the tolerance of current is -2 amps.
+		if ((val >= (-2)) && (val < 0)) {
+			sval->integer = 0;
+			sval->fraction = 0;
+		}
+		break;
+	case SENSOR_NUM_PWR_PVCCIN_VR:
+	case SENSOR_NUM_PWR_PVCCSA_VR:
+	case SENSOR_NUM_PWR_PVCCIO_VR:
+	case SENSOR_NUM_PWR_P3V3_STBY_VR:
+	case SENSOR_NUM_PWR_DIMM_ABC_VR:
+	case SENSOR_NUM_PWR_DIMM_DEF_VR:
+		if (val < (-4)) {
+			LOG_ERR("Sensor %x unexpected power reading\n", sensor_num);
+			return false;
+		}
+
+		//the tolerance of power is -4 watts.
+		if ((val >= (-4)) && (val < 0)) {
+			sval->integer = 0;
+			sval->fraction = 0;
+		}
+		break;
 	case SENSOR_NUM_VOL_P3V3_STBY_VR:
-		val = (float)sval->integer + (sval->fraction / 1000.0);
 		val = (val * 996 / 499);
 		sval->integer = (int)val & 0xFFFF;
 		sval->fraction = (val - sval->integer) * 1000;
