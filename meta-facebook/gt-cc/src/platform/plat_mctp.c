@@ -13,9 +13,9 @@
 #include "mctp_ctrl.h"
 #include "pldm.h"
 #include "ipmi.h"
-#include "plat_mctp.h"
 #include "sensor.h"
 #include "plat_hook.h"
+#include "plat_mctp.h"
 
 LOG_MODULE_REGISTER(plat_mctp);
 
@@ -215,6 +215,59 @@ static void get_dev_firmware_parameters(void)
 
 		mctp_pldm_send_msg(find_mctp_by_smbus(p->bus), &msg);
 	}
+}
+
+bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(sel_msg, false);
+
+	uint8_t system_event_record = 0x02;
+	uint8_t evt_msg_version = 0x04;
+
+	pldm_msg msg = { 0 };
+	struct mctp_to_ipmi_sel_req req = { 0 };
+
+	msg.ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
+	msg.ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
+
+	msg.hdr.pldm_type = PLDM_TYPE_OEM;
+	msg.hdr.cmd = PLDM_OEM_IPMI_BRIDGE;
+	msg.hdr.rq = 1;
+
+	msg.buf = (uint8_t *)&req;
+	msg.len = sizeof(struct mctp_to_ipmi_sel_req);
+
+	if (set_iana(req.header.iana, sizeof(req.header.iana))) {
+		LOG_ERR("[%s] Set IANA fail", __func__);
+		return false;
+	}
+
+	req.header.netfn_lun = NETFN_STORAGE_REQ;
+	req.header.ipmi_cmd = CMD_STORAGE_ADD_SEL;
+	req.req_data.event.record_type = system_event_record;
+	req.req_data.event.gen_id[0] = (I2C_ADDR_BIC << 1);
+	req.req_data.event.evm_rev = evt_msg_version;
+
+	memcpy(&req.req_data.event.sensor_type, &sel_msg->sensor_type,
+	       sizeof(common_addsel_msg_t) - sizeof(uint8_t));
+
+	uint8_t resp_len = sizeof(struct mctp_to_ipmi_sel_resp);
+	uint8_t rbuf[resp_len];
+
+	if (!mctp_pldm_read(find_mctp_by_smbus(I2C_BUS_BMC), &msg, rbuf, resp_len)) {
+		LOG_ERR("[%s] mctp_pldm_read fail", __func__);
+		return false;
+	}
+
+	struct mctp_to_ipmi_sel_resp *resp = (struct mctp_to_ipmi_sel_resp *)rbuf;
+
+	if ((resp->header.completion_code != MCTP_SUCCESS) ||
+	    (resp->header.ipmi_comp_code != CC_SUCCESS)) {
+		LOG_ERR("[%s] Check reponse completion code fail", __func__);
+		return false;
+	}
+
+	return true;
 }
 
 static uint8_t mctp_msg_recv(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_params ext_params)

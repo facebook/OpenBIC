@@ -4,6 +4,7 @@
 #include "util_sys.h"
 #include "plat_gpio.h"
 #include "plat_i2c_target.h"
+#include "ipmi.h"
 #include "pldm.h"
 #include "plat_mctp.h"
 
