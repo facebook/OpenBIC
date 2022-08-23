@@ -4,6 +4,23 @@
 #include "hal_i2c.h"
 #include "pmbus.h"
 
+static bool adjust_of_twos_complement(uint8_t offset, int *val)
+{
+	if (val == NULL) {
+		printf("[%s] input value is NULL\n", __func__);
+		return false;
+	}
+
+	if ((offset == PMBUS_READ_IOUT) || (offset == PMBUS_READ_POUT)) {
+		bool is_negative_val = ((*val & BIT(15)) == 0 ? false : true);
+		if (is_negative_val) {
+			*val = 0;
+		}
+		return true;
+	}
+	return false;
+}
+
 uint8_t raa229621_read(uint8_t sensor_num, int *reading)
 {
 	if (reading == NULL || (sensor_num > SENSOR_NUM_MAX)) {
@@ -28,6 +45,7 @@ uint8_t raa229621_read(uint8_t sensor_num, int *reading)
 
 	sensor_val *sval = (sensor_val *)reading;
 	memset(sval, 0, sizeof(sensor_val));
+	bool ret = false;
 	int val = 0;
 	val = (msg.data[1] << 8) | msg.data[0];
 
@@ -39,6 +57,12 @@ uint8_t raa229621_read(uint8_t sensor_num, int *reading)
 		break;
 	case PMBUS_READ_IOUT:
 		/* 0.1 A/LSB, 2's complement */
+		ret = adjust_of_twos_complement(offset, &val);
+		if (ret == false) {
+			printf("[%s] adjust reading IOUT value failed - sensor number: 0x%x\n",
+			       __func__, sensor_num);
+			return SENSOR_UNSPECIFIED_ERROR;
+		}
 		sval->integer = (int16_t)val / 10;
 		sval->fraction = ((int16_t)val - (sval->integer * 10)) * 100;
 		break;
@@ -49,6 +73,12 @@ uint8_t raa229621_read(uint8_t sensor_num, int *reading)
 		break;
 	case PMBUS_READ_POUT:
 		/* 1 Watt/LSB, 2's complement */
+		ret = adjust_of_twos_complement(offset, &val);
+		if (ret == false) {
+			printf("[%s] adjust reading POUT value failed - sensor number: 0x%x\n",
+			       __func__, sensor_num);
+			return SENSOR_UNSPECIFIED_ERROR;
+		}
 		sval->integer = val;
 		sval->fraction = 0;
 		break;
