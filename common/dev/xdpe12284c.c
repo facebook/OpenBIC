@@ -173,13 +173,6 @@ uint8_t xdpe12284c_read(uint8_t sensor_num, int *reading)
 	case PMBUS_READ_POUT:
 	case PMBUS_READ_TEMPERATURE_1:
 		actual_value = slinear11_to_float(val);
-
-		if (offset == PMBUS_READ_IOUT || offset == PMBUS_READ_POUT) {
-			if (actual_value < 0) {
-				return SENSOR_FAIL_TO_ACCESS;
-			}
-		}
-
 		sval->integer = actual_value;
 		sval->fraction = (actual_value - sval->integer) * 1000;
 		break;
@@ -193,10 +186,6 @@ uint8_t xdpe12284c_read(uint8_t sensor_num, int *reading)
 		}
 
 		actual_value = vid_to_float(val, msg.data[0]);
-		if (actual_value < 0) {
-			return SENSOR_FAIL_TO_ACCESS;
-		}
-
 		actual_value /= 1000; // mV to V
 		sval->integer = actual_value;
 		sval->fraction = (actual_value - sval->integer) * 1000;
