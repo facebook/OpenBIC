@@ -10,6 +10,7 @@
 #include "pmbus.h"
 #include "kcs.h"
 #include "pcc.h"
+#include "libutil.h"
 
 void ISR_POST_COMPLETE()
 {
@@ -305,7 +306,7 @@ static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num
 
 		if (i2c_master_write(msg, retry)) {
 			printf("[%s] Failed to write page.\n", __func__);
-			return;
+			continue;
 		}
 
 		msg->bus = I2C_BUS5;
@@ -316,7 +317,7 @@ static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num
 
 		if (i2c_master_read(msg, retry)) {
 			printf("[%s] Failed to read PMBUS_STATUS_WORD.\n", __func__);
-			return;
+			continue;
 		}
 
 		common_addsel_msg_t sel_msg;
@@ -335,6 +336,7 @@ static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num
 			printf("[%s] Failed to add VR PMALERT sel.\n", __func__);
 		}
 	}
+	SAFE_FREE(msg);
 }
 
 void ISR_PVDDCR_CPU0_PMALERT()
@@ -375,6 +377,27 @@ void ISR_PVDD11_S3_PMALERT()
 			add_vr_pmalert_sel(PVDD11_S3_PMALERT_N, MP2856GUT_PVDD11_S3_ADDR, 2);
 		} else {
 			add_vr_pmalert_sel(PVDD11_S3_PMALERT_N, RAA229621_PVDD11_S3_ADDR, 2);
+		}
+	}
+}
+
+void ISR_UV_DETECT()
+{
+	common_addsel_msg_t sel_msg;
+	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
+		if (gpio_get(IRQ_UV_DETECT_N) == GPIO_HIGH) {
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+		} else {
+			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+		}
+		sel_msg.InF_target = BMC_IPMB;
+		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_UV;
+		sel_msg.event_data2 = 0xFF;
+		sel_msg.event_data3 = 0xFF;
+		if (!common_add_sel_evt_record(&sel_msg)) {
+			printf("[%s] Failed to add under voltage sel.\n", __func__);
 		}
 	}
 }
