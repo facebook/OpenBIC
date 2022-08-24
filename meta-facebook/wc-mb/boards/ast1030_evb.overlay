@@ -103,6 +103,36 @@
 	clock-frequency = <I2C_BITRATE_STANDARD>;
 };
 
+&i3c_gr {
+       status = "okay";
+       pull-up-resistor-ohm = <2000>, <2000>, <2000>, <2000>;
+};
+&i3c2 {
+       status = "okay";
+       assigned-address = <0x20>;
+       pinctrl-0 = <&pinctrl_i3c2_default>;
+       i2c-scl-hz = < 1000000 >;
+       i3c-scl-hz = < 1000000 >;
+	   i3c-pp-scl-hi-period-ns = < 0x17c >;
+	   i3c-pp-scl-lo-period-ns = < 0x26c >;
+	   i3c-od-scl-hi-period-ns = < 0x17c >;
+	   i3c-od-scl-lo-period-ns = < 0x26c >;
+	   sda-tx-hold-ns = < 0xf >;
+};
+
+&i3c3 {
+       status = "okay";
+       assigned-address = <0x20>;
+       pinctrl-0 = <&pinctrl_i3c3_default>;
+       i2c-scl-hz = < 1000000 >;
+       i3c-scl-hz = < 1000000 >;
+	   i3c-pp-scl-hi-period-ns = < 0x17c >;
+	   i3c-pp-scl-lo-period-ns = < 0x26c >;
+	   i3c-od-scl-hi-period-ns = < 0x17c >;
+	   i3c-od-scl-lo-period-ns = < 0x26c >;
+	   sda-tx-hold-ns = < 0xf >;
+};
+
 &espi {
 	status = "okay";
 
