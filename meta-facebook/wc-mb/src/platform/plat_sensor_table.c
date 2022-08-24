@@ -254,6 +254,11 @@ bool pal_is_time_to_poll(uint8_t sensor_num, int poll_time)
 	return true;
 }
 
+uint8_t get_hsc_pwr_reading(int *reading)
+{
+	return get_sensor_reading(SENSOR_NUM_PWR_HSCIN, reading, GET_FROM_CACHE);
+}
+
 bool disable_dimm_pmic_sensor(uint8_t sensor_num)
 {
 	uint8_t table_size = ARRAY_SIZE(dimm_pmic_map_table);
