@@ -888,7 +888,6 @@ __weak void OEM_1S_GET_SET_GPIO(ipmi_msg *msg)
 	case SET_GPIO_OUTPUT_STATUS:
 		if (msg->data_len == 3) {
 			msg->data[0] = gpio_num;
-			gpio_conf(gpio_num, GPIO_OUTPUT);
 			gpio_set(gpio_num, msg->data[2]);
 			msg->data[1] = gpio_get(gpio_num);
 			completion_code = CC_SUCCESS;
