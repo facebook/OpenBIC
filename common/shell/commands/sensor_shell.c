@@ -125,17 +125,17 @@ static int sensor_access(const struct shell *shell, int sensor_num, enum SENSOR_
 		char sensor_name[MAX_SENSOR_NAME_LENGTH] = { 0 };
 		snprintf(sensor_name, sizeof(sensor_name), "%s", full_sdr_table[sdr_index].ID_str);
 
-		char *check_access =
-			(sensor_access_check(sensor_config[sen_idx].num) == true) ? "O" : "X";
-		char *check_poll = (sensor_config[sen_idx].is_enable_polling == true) ? "O" : "X";
+		char check_access =
+			(sensor_access_check(sensor_config[sen_idx].num) == true) ? 'O' : 'X';
+		char check_poll = (sensor_config[sen_idx].is_enable_polling == true) ? 'O' : 'X';
 
-		if (!strcmp(check_access, "O")) {
+		if (check_access == 'O') {
 			if (sensor_config[sen_idx].cache_status == SENSOR_READ_4BYTE_ACUR_SUCCESS) {
 				int16_t fraction = sensor_config[sen_idx].cache >> 16;
 				int16_t integer = sensor_config[sen_idx].cache & 0xFFFF;
 				shell_print(
 					shell,
-					"[0x%-2x] %-25s: %-10s | access[%s] | poll[%s] %-4d sec | %-25s | %d.%d",
+					"[0x%-2x] %-25s: %-10s | access[%c] | poll[%c] %-4d sec | %-25s | %d.%d",
 					sensor_config[sen_idx].num, sensor_name,
 					sensor_type_name[sensor_config[sen_idx].type], check_access,
 					check_poll, (int)sensor_config[sen_idx].poll_time,
@@ -147,7 +147,7 @@ static int sensor_access(const struct shell *shell, int sensor_num, enum SENSOR_
 					   SENSOR_READ_ACUR_SUCCESS) {
 				shell_print(
 					shell,
-					"[0x%-2x] %-25s: %-10s | access[%s] | poll[%s] %-4d sec | %-25s | %-8d",
+					"[0x%-2x] %-25s: %-10s | access[%c] | poll[%c] %-4d sec | %-25s | %-8d",
 					sensor_config[sen_idx].num, sensor_name,
 					sensor_type_name[sensor_config[sen_idx].type], check_access,
 					check_poll, (int)sensor_config[sen_idx].poll_time,
@@ -158,7 +158,7 @@ static int sensor_access(const struct shell *shell, int sensor_num, enum SENSOR_
 		}
 
 		shell_print(shell,
-			    "[0x%-2x] %-25s: %-10s | access[%s] | poll[%s] %-4d sec | %-25s | na",
+			    "[0x%-2x] %-25s: %-10s | access[%c] | poll[%c] %-4d sec | %-25s | na",
 			    sensor_config[sen_idx].num, sensor_name,
 			    sensor_type_name[sensor_config[sen_idx].type], check_access, check_poll,
 			    (int)sensor_config[sen_idx].poll_time,
@@ -250,8 +250,8 @@ void cmd_control_sensor_polling(const struct shell *shell, size_t argc, char **a
 		for (int sen_idx = 0; sen_idx < sensor_config_count; sen_idx++) {
 			sensor_config[sen_idx].is_enable_polling = operation;
 		}
-		shell_print(shell, "All Sensors' polling %s success",
-			    ((operation == DISABLE_SENSOR_POLLING) ? "disable" : "enable"));
+		shell_print(shell, "All Sensors' polling successfully %s.",
+			    ((operation == DISABLE_SENSOR_POLLING) ? "disabled" : "enabled"));
 		return;
 	}
 
