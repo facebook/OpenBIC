@@ -125,41 +125,44 @@ static int sensor_access(const struct shell *shell, int sensor_num, enum SENSOR_
 		char sensor_name[MAX_SENSOR_NAME_LENGTH] = { 0 };
 		snprintf(sensor_name, sizeof(sensor_name), "%s", full_sdr_table[sdr_index].ID_str);
 
-		char *check_access =
-			(sensor_access_check(sensor_config[sen_idx].num) == true) ? "O" : "X";
-		if (!strcmp(check_access, "O")) {
+		char check_access =
+			(sensor_access_check(sensor_config[sen_idx].num) == true) ? 'O' : 'X';
+		char check_poll = (sensor_config[sen_idx].is_enable_polling == true) ? 'O' : 'X';
+
+		if (check_access == 'O') {
 			if (sensor_config[sen_idx].cache_status == SENSOR_READ_4BYTE_ACUR_SUCCESS) {
 				int16_t fraction = sensor_config[sen_idx].cache >> 16;
 				int16_t integer = sensor_config[sen_idx].cache & 0xFFFF;
 				shell_print(
 					shell,
-					"[0x%-2x] %-25s: %-10s | access[%s] | %-25s | %-4d sec | %.2f",
+					"[0x%-2x] %-25s: %-10s | access[%c] | poll[%c] %-4d sec | %-25s | %d.%d",
 					sensor_config[sen_idx].num, sensor_name,
 					sensor_type_name[sensor_config[sen_idx].type], check_access,
+					check_poll, (int)sensor_config[sen_idx].poll_time,
 					sensor_status_name[sensor_config[sen_idx].cache_status],
-					sensor_config[sen_idx].poll_time,
-					integer + (0.001 * fraction));
+					integer, fraction);
 				break;
 			} else if (sensor_config[sen_idx].cache_status == SENSOR_READ_SUCCESS ||
 				   sensor_config[sen_idx].cache_status ==
 					   SENSOR_READ_ACUR_SUCCESS) {
 				shell_print(
 					shell,
-					"[0x%-2x] %-25s: %-10s | access[%s] | %-25s | %-4d sec | %-8d",
+					"[0x%-2x] %-25s: %-10s | access[%c] | poll[%c] %-4d sec | %-25s | %-8d",
 					sensor_config[sen_idx].num, sensor_name,
 					sensor_type_name[sensor_config[sen_idx].type], check_access,
+					check_poll, (int)sensor_config[sen_idx].poll_time,
 					sensor_status_name[sensor_config[sen_idx].cache_status],
-					sensor_config[sen_idx].poll_time,
 					sensor_config[sen_idx].cache);
 				break;
 			}
 		}
 
-		shell_print(shell, "[0x%-2x] %-25s: %-10s | access[%s] | %-25s | %-4d sec | na",
+		shell_print(shell,
+			    "[0x%-2x] %-25s: %-10s | access[%c] | poll[%c] %-4d sec | %-25s | na",
 			    sensor_config[sen_idx].num, sensor_name,
-			    sensor_type_name[sensor_config[sen_idx].type], check_access,
-			    sensor_status_name[sensor_config[sen_idx].cache_status],
-			    sensor_config[sen_idx].poll_time);
+			    sensor_type_name[sensor_config[sen_idx].type], check_access, check_poll,
+			    (int)sensor_config[sen_idx].poll_time,
+			    sensor_status_name[sensor_config[sen_idx].cache_status]);
 		break;
 
 	case SENSOR_WRITE:
@@ -221,13 +224,21 @@ void cmd_control_sensor_polling(const struct shell *shell, size_t argc, char **a
 
 	uint8_t sensor_num = strtol(argv[1], NULL, 16);
 	uint8_t operation = strtol(argv[2], NULL, 16);
+
+	uint8_t is_set_all = 0;
+
 	int sensor_index = sensor_get_idx_by_sensor_num(sensor_num);
 	if (sensor_index == -1) {
-		shell_warn(
-			shell,
-			"[%s]: can't find sensor number in sensor config table, sensor number: 0x%x",
-			__func__, sensor_num);
-		return;
+		/* Set all sensor polling mode only suppot 1-base sensor number */
+		if (sensor_num == 0) {
+			is_set_all = 1;
+		} else {
+			shell_warn(
+				shell,
+				"[%s]: can't find sensor number in sensor config table, sensor number: 0x%x",
+				__func__, sensor_num);
+			return;
+		}
 	}
 
 	if ((operation != DISABLE_SENSOR_POLLING) && (operation != ENABLE_SENSOR_POLLING)) {
@@ -235,9 +246,18 @@ void cmd_control_sensor_polling(const struct shell *shell, size_t argc, char **a
 		return;
 	}
 
+	if (is_set_all) {
+		for (int sen_idx = 0; sen_idx < sensor_config_count; sen_idx++) {
+			sensor_config[sen_idx].is_enable_polling = operation;
+		}
+		shell_print(shell, "All Sensors' polling successfully %s.",
+			    ((operation == DISABLE_SENSOR_POLLING) ? "disabled" : "enabled"));
+		return;
+	}
+
 	sensor_config[sensor_index].is_enable_polling =
 		((operation == DISABLE_SENSOR_POLLING) ? DISABLE_SENSOR_POLLING :
-							       ENABLE_SENSOR_POLLING);
+							 ENABLE_SENSOR_POLLING);
 	shell_print(shell, "Sensor number 0x%x %s sensor polling success", sensor_num,
 		    ((operation == DISABLE_SENSOR_POLLING) ? "disable" : "enable"));
 	return;
