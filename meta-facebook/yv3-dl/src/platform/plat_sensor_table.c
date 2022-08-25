@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <logging/log.h>
 #include "plat_sensor_table.h"
 #include "sensor.h"
 #include "ast_adc.h"
@@ -15,6 +16,8 @@
 #include "tmp431.h"
 #include "libutil.h"
 #include "util_sys.h"
+
+LOG_MODULE_DECLARE(sensor);
 
 struct k_mutex vr_page_mutex;
 
@@ -365,4 +368,10 @@ void pal_extend_sensor_config()
 	}
 
 	return;
+}
+
+uint8_t get_hsc_pwr_reading(int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+	return get_sensor_reading(SENSOR_NUM_HSC_PIN, reading, GET_FROM_CACHE);
 }
