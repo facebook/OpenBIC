@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <logging/log.h>
 
 #include "sensor.h"
 #include "ast_adc.h"
@@ -15,6 +16,8 @@
 #include "power_status.h"
 #include "pmbus.h"
 #include "libutil.h"
+
+LOG_MODULE_REGISTER(plat_sensor_table);
 
 sensor_poll_time_cfg diff_poll_time_sensor_table[] = {
 	// sensor_number, last_access_time
@@ -250,12 +253,13 @@ bool pal_is_time_to_poll(uint8_t sensor_num, int poll_time)
 		}
 	}
 
-	printf("[%s] can't find sensor 0x%x last access time\n", __func__, sensor_num);
+	LOG_WRN("[%s] can't find sensor 0x%x last access time", __func__, sensor_num);
 	return true;
 }
 
 uint8_t get_hsc_pwr_reading(int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR)
 	return get_sensor_reading(SENSOR_NUM_PWR_HSCIN, reading, GET_FROM_CACHE);
 }
 
@@ -273,7 +277,7 @@ bool disable_dimm_pmic_sensor(uint8_t sensor_num)
 		}
 	}
 
-	printf("[%s] input sensor 0x%x can't find in dimm pmic mapping table\n", __func__,
+	LOG_WRN("[%s] input sensor 0x%x can't find in dimm pmic mapping table", __func__,
 	       sensor_num);
 	return false;
 }
