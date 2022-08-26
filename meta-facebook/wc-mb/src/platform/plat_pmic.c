@@ -96,7 +96,8 @@ void monitor_pmic_error_handler()
 			pmic_req.intel_id = INTEL_ID;
 			pmic_req.addr_size = PMIC_ADDR_SIZE;
 			pmic_req.addr_value = PMIC_POR_ERROR_LOG_ADDR_VAL;
-			pmic_req.data_len = MAX_LEN_GET_PMIC_ERROR_INFO; //get R05~R0B 7-1 based on spec
+			pmic_req.data_len =
+				MAX_LEN_GET_PMIC_ERROR_INFO; //get R05~R0B 7-1 based on spec
 			pmic_msg = construct_ipmi_message(seq_source, NETFN_NM_REQ,
 							  CMD_SMBUS_READ_MEMORY, SELF, ME_IPMB,
 							  PMIC_READ_DATA_LEN, (uint8_t *)&pmic_req);
