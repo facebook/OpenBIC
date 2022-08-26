@@ -82,13 +82,6 @@ vr_pre_proc_arg vr_pre_read_args[] = {
 	[1] = { 0x1 },
 };
 
-pmic_pre_proc_arg pmic_pre_read_args[] = {
-	[0] = { .pre_read_init = false },
-	[1] = { .pre_read_init = false },
-	[2] = { .pre_read_init = false },
-	[3] = { .pre_read_init = false },
-};
-
 dimm_pre_proc_arg dimm_pre_proc_args[] = {
 	[0] = { .is_present_checked = false },
 	[1] = { .is_present_checked = false },
@@ -222,100 +215,6 @@ bool post_adm1278_current_read(uint8_t sensor_num, void *args, int *reading)
 	val = ADJUST_ADM1278_CURRENT(val);
 	sval->integer = (int)val & 0xFFFF;
 	sval->fraction = (val - sval->integer) * 1000;
-	return true;
-}
-
-bool pre_pmic_read(uint8_t sensor_num, void *args)
-{
-	ARG_UNUSED(args);
-
-	pmic_init_arg *init_arg = sensor_config[sensor_config_index_map[sensor_num]].init_args;
-	if (init_arg == NULL || init_arg->is_init == false) {
-		return true;
-	}
-
-	pmic_pre_proc_arg *pre_proc_arg =
-		sensor_config[sensor_config_index_map[sensor_num]].pre_sensor_read_args;
-
-	if (pre_proc_arg == NULL) {
-		return false;
-	}
-
-	if (pre_proc_arg->pre_read_init == false) {
-		int ret = 0;
-		uint8_t seq_source = 0xFF, write_data = 0x0;
-		uint8_t *compose_memory_write_read_msg = NULL;
-
-		// Enable PMIC ADC
-		write_data = PMIC_ENABLE_ADC_BIT;
-		compose_memory_write_read_msg =
-			compose_memory_write_read_req(init_arg->smbus_bus_identifier,
-						      init_arg->smbus_addr, PMIC_ADC_ADDR_VAL,
-						      &write_data, 0x1);
-		if (compose_memory_write_read_msg == NULL) {
-			goto COMPOSE_MSG_ERR;
-		}
-
-		ret = pmic_ipmb_transfer(NULL, seq_source, NETFN_NM_REQ, CMD_SMBUS_WRITE_MEMORY,
-					 SELF, ME_IPMB, PMIC_WRITE_DATA_LEN,
-					 compose_memory_write_read_msg);
-		if (ret != 0) {
-			goto PMIC_IPMB_TRANSFER_ERR;
-		}
-		k_msleep(PMIC_COMMAND_DELAY_MSEC);
-
-		// Initialize PMIC to report total mode (could be total power, total current, etc.)
-		write_data = SET_DEV_REPORT_TOTAL;
-		compose_memory_write_read_msg =
-			compose_memory_write_read_req(init_arg->smbus_bus_identifier,
-						      init_arg->smbus_addr,
-						      PMIC_TOTAL_INDIV_ADDR_VAL, &write_data, 0x1);
-		if (compose_memory_write_read_msg == NULL) {
-			goto COMPOSE_MSG_ERR;
-		}
-
-		ret = pmic_ipmb_transfer(NULL, seq_source, NETFN_NM_REQ, CMD_SMBUS_WRITE_MEMORY,
-					 SELF, ME_IPMB, PMIC_WRITE_DATA_LEN,
-					 compose_memory_write_read_msg);
-		if (ret != 0) {
-			goto PMIC_IPMB_TRANSFER_ERR;
-		}
-		k_msleep(PMIC_COMMAND_DELAY_MSEC);
-
-		// Initialize PMIC to report power mode
-		write_data = SET_DEV_REPORT_POWER;
-		compose_memory_write_read_msg =
-			compose_memory_write_read_req(init_arg->smbus_bus_identifier,
-						      init_arg->smbus_addr, PMIC_PWR_CURR_ADDR_VAL,
-						      &write_data, 0x1);
-		if (compose_memory_write_read_msg == NULL) {
-			goto COMPOSE_MSG_ERR;
-		}
-
-		ret = pmic_ipmb_transfer(NULL, seq_source, NETFN_NM_REQ, CMD_SMBUS_WRITE_MEMORY,
-					 SELF, ME_IPMB, PMIC_WRITE_DATA_LEN,
-					 compose_memory_write_read_msg);
-		if (ret != 0) {
-			goto PMIC_IPMB_TRANSFER_ERR;
-		}
-		k_msleep(PMIC_COMMAND_DELAY_MSEC);
-
-		pre_proc_arg->pre_read_init = true;
-		return true;
-
-	PMIC_IPMB_TRANSFER_ERR:
-		if (write_data == 0x0) {
-			printf("[%s] PMIC ipmb transfer me reset command error\n", __func__);
-		} else {
-			printf("[%s] PMIC ipmb transfer command error write_data: 0x%x\n", __func__,
-			       write_data);
-		}
-		return false;
-
-	COMPOSE_MSG_ERR:
-		printf("[%s] compose msg error write_data: 0x%x\n", __func__, write_data);
-		return false;
-	}
 	return true;
 }
 
