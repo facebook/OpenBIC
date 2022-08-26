@@ -278,6 +278,6 @@ bool disable_dimm_pmic_sensor(uint8_t sensor_num)
 	}
 
 	LOG_WRN("[%s] input sensor 0x%x can't find in dimm pmic mapping table", __func__,
-	       sensor_num);
+		sensor_num);
 	return false;
 }
