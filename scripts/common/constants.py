@@ -26,6 +26,17 @@ SUPPORTED_PLATFORMS = {
     "oby35-rf",
 }
 
+PLATFORM_RELEASE_MAPPINGS = {
+    "gt-cc": "obgt-cc",
+    "wc-mb": "obwc-mb",
+    "yv3-dl": "oby3-dl",
+    "yv3-vf": "oby3-vf",
+    "yv35-bb": "oby35-bb",
+    "yv35-cl": "oby35-cl",
+    "yv35-hd": "oby35-hd",
+    "yv35-rf": "oby35-rf",
+}
+
 PLATFORM_DIRECTORIES = {
     "gt-cc",
     "wc-mb",
@@ -45,18 +56,20 @@ PLATFORM_DIRECTORIES = {
 # alphabetical order.
 TITLE_TAGS = {
     "bb:",
-    "cc:"
+    "cc:",
     "cl:",
-    "dl",
-    "fby3",
+    "dl:",
+    "fby3:",
     "fby3.5:",
-    "fby35",
+    "fby35:",
     "gt:",
-    "hd",
-    "mb",
+    "hd:",
+    "mb:",
     "rf:",
-    "vf"
-    "wc",
+    "vf:",
+    "wc:",
+    "Common",
+    "common",
 }
 
 
