@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <zephyr.h>
+#include <logging/log.h>
 #include "ipmb.h"
 #include "ipmi.h"
 #include "intel_dimm.h"
@@ -13,6 +14,8 @@
 #include "libutil.h"
 #include "plat_ipmi.h"
 #include "plat_sensor_table.h"
+
+LOG_MODULE_REGISTER(plat_pmic);
 
 K_THREAD_STACK_DEFINE(monitor_pmic_error_stack, MONITOR_PMIC_ERROR_STACK_SIZE);
 struct k_thread monitor_pmic_error_thread;
@@ -57,7 +60,7 @@ static bool is_pmic_error_flag[MAX_COUNT_DIMM][MAX_COUNT_PMIC_ERROR_TYPE];
 
 void start_monitor_pmic_error_thread()
 {
-	printf("Start thread to monitor PMIC error\n");
+	LOG_INF("Start thread to monitor PMIC error");
 
 	monitor_pmic_error_tid =
 		k_thread_create(&monitor_pmic_error_thread, monitor_pmic_error_stack,
@@ -70,7 +73,7 @@ void start_monitor_pmic_error_thread()
 void monitor_pmic_error_handler()
 {
 	ipmb_error status = 0;
-	int ret = 0, dimm_id = 0;
+	int dimm_id = 0;
 	uint8_t seq_source = 0xFF;
 	memory_write_read_req pmic_req;
 	ipmi_msg pmic_msg;
@@ -86,13 +89,12 @@ void monitor_pmic_error_handler()
 		}
 
 		for (dimm_id = 0; dimm_id < MAX_COUNT_DIMM; dimm_id++) {
-			// Read PMIC error
 			memset(&pmic_req, 0, sizeof(memory_write_read_req));
-			ret = get_dimm_info(dimm_id, &pmic_req.smbus_identifier,
-					    &pmic_req.smbus_address);
-			if (ret < 0) {
+
+			if (get_dimm_info(dimm_id, &pmic_req.smbus_identifier,
+					  &pmic_req.smbus_address))
 				continue;
-			}
+
 			pmic_req.intel_id = INTEL_ID;
 			pmic_req.addr_size = PMIC_ADDR_SIZE;
 			pmic_req.addr_value = PMIC_POR_ERROR_LOG_ADDR_VAL;
@@ -103,26 +105,22 @@ void monitor_pmic_error_handler()
 							  PMIC_READ_DATA_LEN, (uint8_t *)&pmic_req);
 
 			// Double check post status before send IPMB to get PMIC error
-			if (get_post_status() == false) {
+			if (get_post_status() == false)
 				continue;
-			}
+
 			status = ipmb_read(&pmic_msg, IPMB_inf_index_map[pmic_msg.InF_target]);
 			if (status == IPMB_ERROR_SUCCESS) {
 				// Check completion code before compare error
-				if (pmic_msg.completion_code != CC_SUCCESS) {
+				if (pmic_msg.completion_code != CC_SUCCESS)
 					continue;
-				}
 
 				// Compare error pattern, if status change add SEL to BMC and update record
-				ret = compare_pmic_error(dimm_id, pmic_msg.data);
-				if (ret < 0) {
+				if (compare_pmic_error(dimm_id, pmic_msg.data))
 					continue;
-				}
-
 			} else {
-				printf("%s(): Failed to get PMIC error, dimm %s bus %d addr 0x%x status 0x%x\n",
-				       __func__, dimm_lable[dimm_id], pmic_req.smbus_identifier,
-				       pmic_req.smbus_address, status);
+				LOG_ERR("%s: Failed to get PMIC error, dimm %s bus %d addr 0x%x status 0x%x",
+					__func__, dimm_lable[dimm_id], pmic_req.smbus_identifier,
+					pmic_req.smbus_address, status);
 				continue;
 			}
 		}
@@ -133,22 +131,18 @@ void monitor_pmic_error_handler()
 
 int get_dimm_info(uint8_t dimm_id, uint8_t *bus, uint8_t *addr)
 {
-	int ret = 0;
-
-	if ((bus == NULL) || (addr == NULL)) {
-		return -1;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(bus, 1)
+	CHECK_NULL_ARG_WITH_RETURN(addr, 1)
 
 	if (dimm_id >= MAX_COUNT_DIMM) {
-		printf("%s(): wrong dimm index 0x%x\n", __func__, dimm_id);
-		return -1;
+		LOG_ERR("%s: wrong dimm index 0x%x", __func__, dimm_id);
+		return 1;
 	}
 
-	if (dimm_id < (MAX_COUNT_DIMM / 2)) {
+	if (dimm_id < (MAX_COUNT_DIMM / 2))
 		*bus = BUS_ID_DIMM_CHANNEL_0_TO_3;
-	} else {
+	else
 		*bus = BUS_ID_DIMM_CHANNEL_4_TO_7;
-	}
 
 	switch (dimm_id % (MAX_COUNT_DIMM / 2)) {
 	case 0:
@@ -161,23 +155,22 @@ int get_dimm_info(uint8_t dimm_id, uint8_t *bus, uint8_t *addr)
 		*addr = ADDR_DIMM_CHANNEL_3_7;
 		break;
 	default:
-		ret = -1;
-		printf("%s(): wrong dimm index 0x%x\n", __func__, dimm_id);
-		break;
+		LOG_ERR("%s: wrong dimm index 0x%x", __func__, dimm_id);
+		return 1;
 	}
 
-	return ret;
+	return 0;
 }
 
 int pal_set_pmic_error_flag(uint8_t dimm_id, uint8_t error_type)
 {
 	if (dimm_id >= MAX_COUNT_DIMM) {
-		printf("%s(): Invalid dimm id %d\n", __func__, dimm_id);
+		LOG_ERR("%s: Invalid dimm id %d", __func__, dimm_id);
 		return INVALID_DIMM_ID;
 	}
 
 	if (error_type >= MAX_COUNT_PMIC_ERROR_TYPE) {
-		printf("%s(): Invalid pmic error type 0x%x\n", __func__, error_type);
+		LOG_ERR("%s: Invalid pmic error type 0x%x", __func__, error_type);
 		return INVALID_ERROR_TYPE;
 	}
 
@@ -188,12 +181,15 @@ int pal_set_pmic_error_flag(uint8_t dimm_id, uint8_t error_type)
 
 int compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data)
 {
+	CHECK_NULL_ARG_WITH_RETURN(pmic_err_data, 1)
+
+	if (dimm_id >= MAX_COUNT_DIMM) {
+		LOG_ERR("%s: Invalid dimm id %d", __func__, dimm_id);
+		return 1;
+	}
+
 	uint8_t err_index = 0, reg_index = 0, data_index = 0;
 	uint8_t pattern = 0;
-
-	if (pmic_err_data == NULL) {
-		return -1;
-	}
 
 	for (err_index = 0; err_index < MAX_COUNT_PMIC_ERROR_TYPE; err_index++) {
 		for (reg_index = 0; reg_index < MAX_LEN_GET_PMIC_ERROR_INFO; reg_index++) {
@@ -224,8 +220,17 @@ int compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data)
 
 void add_pmic_error_sel(uint8_t dimm_id, uint8_t error_type)
 {
-	common_addsel_msg_t sel_msg;
+	if (dimm_id >= MAX_COUNT_DIMM) {
+		LOG_ERR("%s: Invalid dimm id %d", __func__, dimm_id);
+		return;
+	}
 
+	if (error_type >= MAX_COUNT_PMIC_ERROR_TYPE) {
+		LOG_ERR("%s: Invalid error type %d", __func__, error_type);
+		return;
+	}
+
+	common_addsel_msg_t sel_msg;
 	memset(&sel_msg, 0, sizeof(common_addsel_msg_t));
 	sel_msg.InF_target = BMC_IPMB;
 	sel_msg.sensor_type = IPMI_SENSOR_TYPE_PROCESSOR;
@@ -235,7 +240,7 @@ void add_pmic_error_sel(uint8_t dimm_id, uint8_t error_type)
 	sel_msg.event_data2 = error_type;
 	sel_msg.event_data3 = 0xFF;
 	if (!common_add_sel_evt_record(&sel_msg)) {
-		printf("Fail to add PMIC error event log: dimm%d error 0x%x\n", dimm_id,
-		       error_type);
+		LOG_ERR("%s: Fail to add PMIC error event log: dimm%d error 0x%x", __func__,
+			dimm_id, error_type);
 	}
 }
