@@ -94,28 +94,36 @@ uint8_t mp5990_init(uint8_t sensor_num)
 	}
 	uint8_t bus = sensor_config[sensor_config_index_map[sensor_num]].port;
 	uint8_t target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
-	uint8_t tx_len = 3;
-	uint8_t rx_len = 0;
+	uint8_t tx_len, rx_len;
 
-	data[0] = PMBUS_IOUT_CAL_GAIN;
-	data[1] = init_args->iout_cal_gain & 0xFF;
-	data[2] = (init_args->iout_cal_gain >> 8) & 0xFF;
-	msg = construct_i2c_message(bus, target_addr, tx_len, data, rx_len);
-	if (i2c_master_write(&msg, retry) != 0) {
-		printf("Failed to write MP5990 register(0x%x)\n", data[0]);
-		goto cleanup;
+	/* Skip setting iout_cal_gain if given 0xFFFF */
+	if ((init_args->iout_cal_gain & 0xFFFF) != 0xFFFF) {
+		tx_len = 3;
+		rx_len = 0;
+		data[0] = PMBUS_IOUT_CAL_GAIN;
+		data[1] = init_args->iout_cal_gain & 0xFF;
+		data[2] = (init_args->iout_cal_gain >> 8) & 0xFF;
+		msg = construct_i2c_message(bus, target_addr, tx_len, data, rx_len);
+		if (i2c_master_write(&msg, retry) != 0) {
+			printf("Failed to write MP5990 register(0x%x)\n", data[0]);
+			goto cleanup;
+		}
 	}
 
-	tx_len = 3;
-	rx_len = 0;
-	data[0] = PMBUS_IOUT_OC_FAULT_LIMIT;
-	data[1] = init_args->iout_oc_fault_limit & 0xFF;
-	data[2] = (init_args->iout_oc_fault_limit >> 8) & 0xFF;
-	msg = construct_i2c_message(bus, target_addr, tx_len, data, rx_len);
-	if (i2c_master_write(&msg, retry) != 0) {
-		printf("Failed to write MP5990 register(0x%x)\n", data[0]);
-		goto cleanup;
+	/* Skip setting iout_oc_fault_limit if given 0xFFFF */
+	if ((init_args->iout_oc_fault_limit & 0xFFFF) != 0xFFFF) {
+		tx_len = 3;
+		rx_len = 0;
+		data[0] = PMBUS_IOUT_OC_FAULT_LIMIT;
+		data[1] = init_args->iout_oc_fault_limit & 0xFF;
+		data[2] = (init_args->iout_oc_fault_limit >> 8) & 0xFF;
+		msg = construct_i2c_message(bus, target_addr, tx_len, data, rx_len);
+		if (i2c_master_write(&msg, retry) != 0) {
+			printf("Failed to write MP5990 register(0x%x)\n", data[0]);
+			goto cleanup;
+		}
 	}
+
 	init_args->is_init = true;
 
 cleanup:
