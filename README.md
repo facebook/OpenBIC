@@ -1,4 +1,4 @@
-# OpenBIC
+<img src="./docs/images/OpenBIC.svg" align="center" height="100%" width="100%" >
 
 OpenBIC is an open software framework to build a complete firmware image for a BridgeIC.
 
