@@ -276,7 +276,7 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 	}
 
 	if ((buf_offset + msg_len) > SECTOR_SZ_64K) {
-		printf("spi bus%x recv data %d over sector size %d\n", flash_position,
+		printf("spi bus%x recv data %u over sector size %d\n", flash_position,
 		       buf_offset + msg_len, SECTOR_SZ_64K);
 		SAFE_FREE(txbuf);
 		k_msleep(10);
