@@ -25,6 +25,7 @@ void control_power_sequence()
 		} else {
 			// If the last stage of power on sequence already power on , no need to recheck power on sequence
 			// Update the flag of power on sequence number
+			set_DC_on_delayed_status();
 			set_power_on_seq(NUMBER_OF_POWER_ON_SEQ);
 		}
 	} else { // CraterLake DC off
