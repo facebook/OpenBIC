@@ -1,7 +1,7 @@
 #ifndef PLAT_VERSION_H
 #define PLAT_VERSION_H
 
-#define PLATFORM_NAME "wc"
+#define PLATFORM_NAME "Waimea Canyon"
 #define PROJECT_NAME "mainboard"
 #define DEVICE_ID 0x00
 #define DEVICE_REVISION 0x80
@@ -9,7 +9,7 @@
  *  FIRMWARE REVISION_1 
  *  [bit 0-3] 
  *    board id: 
- *      0x01 WaimeaCanyon
+ *      0x01 mainboard
  *  [bit 4-7]
  *    stage: 
  *      0x00 POC
