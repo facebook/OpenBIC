@@ -403,5 +403,6 @@ bool pal_is_time_to_poll(uint8_t sensor_num, int poll_time);
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
 void control_sensor_polling(uint8_t sensor_num, uint8_t optional, uint8_t cache_status);
+bool check_reading_pointer_null_is_allowed(uint8_t sensor_num);
 
 #endif

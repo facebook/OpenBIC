@@ -245,7 +245,7 @@ bool post_vol_bat3v_read(uint8_t sensor_num, void *args, int *reading)
 bool post_cpu_margin_read(uint8_t sensor_num, void *args, int *reading)
 {
 	if (!reading)
-		return false;
+		return check_reading_pointer_null_is_allowed(sensor_num);
 	ARG_UNUSED(args);
 
 	sensor_val *sval = (sensor_val *)reading;
@@ -266,7 +266,7 @@ bool post_cpu_margin_read(uint8_t sensor_num, void *args, int *reading)
 bool post_adm1278_power_read(uint8_t sensor_num, void *args, int *reading)
 {
 	if (!reading)
-		return false;
+		return check_reading_pointer_null_is_allowed(sensor_num);
 	ARG_UNUSED(args);
 
 	sensor_val *sval = (sensor_val *)reading;
@@ -291,7 +291,7 @@ bool post_adm1278_power_read(uint8_t sensor_num, void *args, int *reading)
 bool post_adm1278_current_read(uint8_t sensor_num, void *args, int *reading)
 {
 	if (!reading)
-		return false;
+		return check_reading_pointer_null_is_allowed(sensor_num);
 	ARG_UNUSED(args);
 
 	sensor_val *sval = (sensor_val *)reading;
@@ -316,7 +316,7 @@ bool post_adm1278_current_read(uint8_t sensor_num, void *args, int *reading)
 bool post_ltc4286_read(uint8_t sensor_num, void *args, int *reading)
 {
 	if (!reading) {
-		return false;
+		return check_reading_pointer_null_is_allowed(sensor_num);
 	}
 	ARG_UNUSED(args);
 
@@ -359,7 +359,7 @@ bool post_ltc4286_read(uint8_t sensor_num, void *args, int *reading)
 bool post_ltc4282_read(uint8_t sensor_num, void *args, int *reading)
 {
 	if (!reading) {
-		return false;
+		return check_reading_pointer_null_is_allowed(sensor_num);
 	}
 	ARG_UNUSED(args);
 
