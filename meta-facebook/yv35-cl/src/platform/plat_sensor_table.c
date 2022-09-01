@@ -446,7 +446,8 @@ void check_outlet_temp_type(uint8_t index)
 	msg.data[0] = NCT7718W_CHIP_ID_OFFSET;
 
 	if (i2c_master_read(&msg, retry)) {
-		printf("Failed to read Outlet_Temp chip ID: register(0x%x)\n", NCT7718W_CHIP_ID_OFFSET);
+		printf("Failed to read Outlet_Temp chip ID: register(0x%x)\n",
+		       NCT7718W_CHIP_ID_OFFSET);
 		return;
 	}
 	CID = msg.data[0];
@@ -459,13 +460,13 @@ void check_outlet_temp_type(uint8_t index)
 	msg.data[0] = NCT7718W_VENDOR_ID_OFFSET;
 
 	if (i2c_master_read(&msg, retry)) {
-		printf("Failed to read Outlet_Temp vendor ID: register(0x%x)\n", NCT7718W_VENDOR_ID_OFFSET);
+		printf("Failed to read Outlet_Temp vendor ID: register(0x%x)\n",
+		       NCT7718W_VENDOR_ID_OFFSET);
 		return;
 	}
 	VID = msg.data[0];
 
-
-	if ((CID == 0x31) && (VID == 0x55)){
+	if ((CID == 0x31) && (VID == 0x55)) {
 		sensor_config[index].type = sensor_dev_tmp431;
 	} else if ((CID == 0x50) && (VID == 0x50)) {
 		sensor_config[index].type = sensor_dev_nct7718w;
