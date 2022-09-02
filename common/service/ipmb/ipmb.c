@@ -17,6 +17,7 @@
  * then compile ipmb.c to avoid creating redundant memory space.
  */
 #if MAX_IPMB_IDX
+static bool is_ipmb_ready;
 
 static struct k_mutex mutex_id[MAX_IPMB_IDX]; // mutex for sequence linked list insert/find
 static struct k_mutex mutex_send_req, mutex_send_res, mutex_read;
@@ -900,23 +901,35 @@ ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index)
 
 ipmb_error ipmb_read(ipmi_msg *msg, uint8_t index)
 {
-	// Set mutex timeout 10ms more than messageQueue timeout, prevent mutex
-	// timeout before messageQueue
-	k_mutex_lock(&mutex_read, K_MSEC(IPMB_SEQ_TIMEOUT_MS + 10));
-	// Reset a Message Queue to initialize empty state
-	k_msgq_purge(&ipmb_rxqueue[index]);
-
-	if (ipmb_send_request(msg, index) != IPMB_ERROR_SUCCESS) {
-		printf("[%s] Failed to send IPMB request message", __func__);
-		k_mutex_unlock(&mutex_read);
+	if (!is_ipmb_ready) {
+		printf("[%s] ipmb threads are not ready yet!\n", __func__);
 		return IPMB_ERROR_FAILURE;
 	}
 
-	if (k_msgq_get(&ipmb_rxqueue[index], (ipmi_msg *)msg, K_MSEC(IPMB_SEQ_TIMEOUT_MS))) {
-		k_mutex_unlock(&mutex_read);
-		return IPMB_ERROR_GET_MESSAGE_QUEUE;
+	// Set mutex timeout 10ms more than messageQueue timeout, prevent mutex
+	// timeout before messageQueue
+	if (k_mutex_lock(&mutex_read, K_MSEC(IPMB_SEQ_TIMEOUT_MS + 10))) {
+		printf("[%s] Failed to lock mutex in time\n", __func__);
+		return IPMB_ERROR_MUTEX_LOCK;
 	}
 
+	// Reset a Message Queue to initialize empty state
+	k_msgq_purge(&ipmb_rxqueue[index]);
+
+	ipmb_error ret = IPMB_ERROR_SUCCESS;
+	if (ipmb_send_request(msg, index) != IPMB_ERROR_SUCCESS) {
+		printf("[%s] Failed to send IPMB request message", __func__);
+		ret = IPMB_ERROR_FAILURE;
+		goto exit;
+	}
+
+	if (k_msgq_get(&ipmb_rxqueue[index], (ipmi_msg *)msg, K_MSEC(IPMB_SEQ_TIMEOUT_MS))) {
+		printf("[%s] Failed to get IPMB message from RX queue", __func__);
+		ret = IPMB_ERROR_GET_MESSAGE_QUEUE;
+		goto exit;
+	}
+
+exit:
 	k_mutex_unlock(&mutex_read);
 	return IPMB_ERROR_SUCCESS;
 }
@@ -1192,5 +1205,7 @@ void ipmb_init(void)
 			K_THREAD_STACK_SIZEOF(IPMB_SeqTimeout_stack), IPMB_SeqTimeout_handler, NULL,
 			NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
 	k_thread_name_set(&IPMB_SeqTimeout, "IPMB_SeqTimeout");
+
+	is_ipmb_ready = true;
 }
 #endif
