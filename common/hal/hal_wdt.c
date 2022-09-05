@@ -8,11 +8,19 @@ struct k_thread wdt_thread;
 K_KERNEL_STACK_MEMBER(wdt_thread_stack, WDT_THREAD_STACK_SIZE);
 
 const struct device *wdt_dev = NULL;
+static bool is_wdt_continue_feed = true;
+
+void set_wdt_continue_feed(bool value)
+{
+	is_wdt_continue_feed = value;
+}
 
 void wdt_handler(void *arug0, void *arug1, void *arug2)
 {
 	while (1) {
-		wdt_feed(wdt_dev, 0);
+		if (is_wdt_continue_feed) {
+			wdt_feed(wdt_dev, 0);
+		}
 		k_sleep(K_MSEC(WDT_FEED_DELAY_MS));
 	}
 }
