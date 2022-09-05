@@ -72,6 +72,11 @@
 
 #define I2C_BUFF_SIZE 256
 
+enum I2C_TRANSFER_TYPE {
+	I2C_READ,
+	I2C_WRITE,
+};
+
 typedef struct _I2C_MSG_ {
 	uint8_t bus;
 	uint8_t target_addr;
