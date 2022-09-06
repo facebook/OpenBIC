@@ -231,20 +231,9 @@ __weak void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 	} else if ((target == CPLD_UPDATE) || (target == (CPLD_UPDATE | IS_SECTOR_END_MASK))) {
 		status = cpld_altera_max10_fw_update(offset, length, &msg->data[7]);
 
-	} else if (target == CXL_UPDATE) {
-		int pos = pal_get_cxl_flash_position();
-		if (pos == -1) {
-			msg->completion_code = CC_INVALID_PARAM;
-			return;
-		}
-
-		bool ret = pal_switch_cxl_spi_mux();
-		if (ret == false) {
-			msg->completion_code = CC_UNSPECIFIED_ERROR;
-			return;
-		}
-
-		status = fw_update_cxl(pos);
+	} else if (target == CXL_UPDATE || (target == (CXL_UPDATE | IS_SECTOR_END_MASK))) {
+		status =
+			fw_update_cxl(offset, length, &msg->data[7], (target & IS_SECTOR_END_MASK));
 
 	} else {
 		msg->completion_code = CC_INVALID_DATA_FIELD;
@@ -271,6 +260,9 @@ __weak void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 		break;
 	case FWUPDATE_ERROR_OFFSET:
 		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		break;
+	case FWUPDATE_NOT_SUPPORT:
+		msg->completion_code = CC_INVALID_PARAM;
 		break;
 	default:
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
@@ -977,7 +969,7 @@ __weak void OEM_1S_CONTROL_SENSOR_POLLING(ipmi_msg *msg)
 			// Enable or Disable sensor polling
 			sensor_config[control_sensor_index].is_enable_polling =
 				((operation == DISABLE_SENSOR_POLLING) ? DISABLE_SENSOR_POLLING :
-									       ENABLE_SENSOR_POLLING);
+									 ENABLE_SENSOR_POLLING);
 			msg->data[return_data_index + 1] =
 				sensor_config[control_sensor_index].is_enable_polling;
 		} else {

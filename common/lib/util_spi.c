@@ -276,7 +276,7 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 	}
 
 	if ((buf_offset + msg_len) > SECTOR_SZ_64K) {
-		printf("spi bus%x recv data %d over sector size %d\n", flash_position,
+		printf("spi bus%x recv data %u over sector size %d\n", flash_position,
 		       buf_offset + msg_len, SECTOR_SZ_64K);
 		SAFE_FREE(txbuf);
 		k_msleep(10);
@@ -351,18 +351,9 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 	return FWUPDATE_SUCCESS;
 }
 
-uint8_t fw_update_cxl(uint8_t flash_position)
+__weak uint8_t fw_update_cxl(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sector_end)
 {
-	int ret = 0;
-	const struct device *flash_dev;
-
-	flash_dev = device_get_binding(flash_device[flash_position]);
-	ret = spi_nor_re_init(flash_dev);
-	if (ret != 0) {
-		return FWUPDATE_UPDATE_FAIL;
-	}
-	//TODO: do real update until know CXL fw update format and progress
-	return FWUPDATE_SUCCESS;
+	return FWUPDATE_NOT_SUPPORT;
 }
 
 __weak int pal_get_bios_flash_position()
@@ -373,14 +364,4 @@ __weak int pal_get_bios_flash_position()
 __weak bool pal_switch_bios_spi_mux(int gpio_status)
 {
 	return true;
-}
-
-__weak int pal_get_cxl_flash_position()
-{
-	return -1;
-}
-
-__weak bool pal_switch_cxl_spi_mux()
-{
-	return false;
 }
