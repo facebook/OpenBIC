@@ -11,13 +11,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <zephyr.h>
+#include <logging/log.h>
 #include "plat_ipmb.h"
+
+LOG_MODULE_REGISTER(ipmb);
+
 /*
  * If MAX_IPMB_IDX which define by plat_ipmb.h is not equal to zero 
  * then compile ipmb.c to avoid creating redundant memory space.
  */
 #if MAX_IPMB_IDX
-static bool is_ipmb_ready;
 
 static struct k_mutex mutex_id[MAX_IPMB_IDX]; // mutex for sequence linked list insert/find
 static struct k_mutex mutex_send_req, mutex_send_res, mutex_read;
@@ -75,6 +78,8 @@ void channel_index_mapping(void)
 
 uint8_t calculate_checksum(uint8_t *buffer, uint8_t range)
 {
+	CHECK_NULL_ARG_WITH_RETURN(buffer, 0);
+
 	uint8_t checksum = 0;
 	uint8_t i;
 
@@ -90,9 +95,7 @@ uint8_t calculate_checksum(uint8_t *buffer, uint8_t range)
 
 ipmb_error validate_checksum(uint8_t *buffer, uint8_t buffer_len)
 {
-	if (buffer == NULL) {
-		return IPMB_ERROR_UNKNOWN;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(buffer, IPMB_ERROR_UNKNOWN);
 
 	uint8_t header_checksum = buffer[2];
 	uint8_t msg_checksum = buffer[buffer_len - 1];
@@ -143,6 +146,9 @@ uint8_t get_free_seq(uint8_t index)
  * sequence for bridge command */
 void insert_req_ipmi_msg(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
 {
+	CHECK_NULL_ARG(pnode);
+	CHECK_NULL_ARG(msg);
+
 	ipmi_msg_cfg *ptr_start = pnode;
 	int ret;
 
@@ -198,6 +204,9 @@ void insert_req_ipmi_msg(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
 /* Find if any IPMB request record match receiving response */
 bool find_req_ipmi_msg(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
 {
+	CHECK_NULL_ARG_WITH_RETURN(pnode, false);
+	CHECK_NULL_ARG_WITH_RETURN(msg, false);
+
 	ipmi_msg_cfg *ptr_start = pnode;
 	int ret;
 
@@ -262,9 +271,7 @@ bool find_req_ipmi_msg(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
 
 void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 {
-	if (pvParameters == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(pvParameters);
 
 	struct ipmi_msg_cfg *current_msg_tx;
 	IPMB_config ipmb_cfg;
@@ -494,9 +501,7 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 
 void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 {
-	if (pvParameters == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(pvParameters);
 
 	struct ipmi_msg_cfg *current_msg_rx;
 	struct IPMB_config ipmb_cfg;
@@ -804,10 +809,14 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 
 ipmb_error ipmb_send_request(ipmi_msg *req, uint8_t index)
 {
+	CHECK_NULL_ARG_WITH_RETURN(req, IPMB_ERROR_UNKNOWN);
+	CHECK_MSGQ_INIT_WITH_RETURN(&ipmb_txqueue[index], IPMB_ERROR_UNKNOWN);
+	CHECK_MUTEX_INIT_WITH_RETURN(&mutex_send_req, IPMB_ERROR_UNKNOWN);
+
 	int ret;
 	ret = k_mutex_lock(&mutex_send_req, K_MSEC(1000));
 	if (ret) {
-		printf("[%s] Failed to lock the mutex\n", __func__);
+		LOG_ERR("[%s] Failed to lock the mutex", __func__);
 		return IPMB_ERROR_MUTEX_LOCK;
 	}
 
@@ -830,18 +839,11 @@ ipmb_error ipmb_send_request(ipmi_msg *req, uint8_t index)
 	req_cfg.buffer.src_LUN = 0;
 	req_cfg.retries = 0;
 
-	if (DEBUG_IPMB) {
-		uint8_t i;
-		printf("Send req message, index(%d) cc(0x%x) data[%d](", index,
-		       req_cfg.buffer.completion_code, req_cfg.buffer.data_len);
-		for (i = 0; i < req_cfg.buffer.data_len; i++) {
-			printf("0x%x ", req_cfg.buffer.data[i]);
-		}
-		printf(")\n");
-	}
+	LOG_DBG("Send req message, index(%d) cc(0x%x) data[%d]:", index,
+		req_cfg.buffer.completion_code, req_cfg.buffer.data_len);
+	LOG_HEXDUMP_DBG(req_cfg.buffer.data, req_cfg.buffer.data_len, "");
 
-	/* Blocks here until is able put message in tx queue */
-	if (k_msgq_put(&ipmb_txqueue[index], &req_cfg, K_FOREVER) != osOK) {
+	if (k_msgq_put(&ipmb_txqueue[index], &req_cfg, K_MSEC(1000)) != osOK) {
 		k_mutex_unlock(&mutex_send_req);
 		return IPMB_ERROR_FAILURE;
 	}
@@ -851,10 +853,14 @@ ipmb_error ipmb_send_request(ipmi_msg *req, uint8_t index)
 
 ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index)
 {
+	CHECK_NULL_ARG_WITH_RETURN(resp, IPMB_ERROR_UNKNOWN);
+	CHECK_MSGQ_INIT_WITH_RETURN(&ipmb_txqueue[index], IPMB_ERROR_UNKNOWN);
+	CHECK_MUTEX_INIT_WITH_RETURN(&mutex_send_res, IPMB_ERROR_UNKNOWN);
+
 	int ret;
 	ret = k_mutex_lock(&mutex_send_res, K_MSEC(1000));
 	if (ret) {
-		printf("[%s] Failed to lock the mutex\n", __func__);
+		LOG_ERR("[%s] Failed to lock the mutex", __func__);
 		return IPMB_ERROR_MUTEX_LOCK;
 	}
 
@@ -880,15 +886,9 @@ ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index)
 	resp_cfg.buffer.cmd = resp->cmd;
 	resp_cfg.retries = 0;
 
-	if (DEBUG_IPMB) {
-		uint8_t i;
-		printf("Send resp message, index(%d) cc(0x%x) data[%d](", index,
-		       resp_cfg.buffer.completion_code, resp_cfg.buffer.data_len);
-		for (i = 0; i < resp_cfg.buffer.data_len; i++) {
-			printf("0x%x ", resp_cfg.buffer.data[i]);
-		}
-		printf(")\n");
-	}
+	LOG_DBG("Send resp message, index(%d) cc(0x%x) data[%d]:", index,
+		resp_cfg.buffer.completion_code, resp_cfg.buffer.data_len);
+	LOG_HEXDUMP_DBG(resp_cfg.buffer.data, resp_cfg.buffer.data_len, "");
 
 	/* Blocks here until is able put message in tx queue */
 	if (k_msgq_put(&ipmb_txqueue[index], &resp_cfg, K_FOREVER) != osOK) {
@@ -901,15 +901,14 @@ ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index)
 
 ipmb_error ipmb_read(ipmi_msg *msg, uint8_t index)
 {
-	if (!is_ipmb_ready) {
-		printf("[%s] ipmb threads are not ready yet!\n", __func__);
-		return IPMB_ERROR_FAILURE;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(msg, IPMB_ERROR_UNKNOWN);
+	CHECK_MSGQ_INIT_WITH_RETURN(&ipmb_rxqueue[index], IPMB_ERROR_UNKNOWN);
+	CHECK_MUTEX_INIT_WITH_RETURN(&mutex_read, IPMB_ERROR_UNKNOWN);
 
 	// Set mutex timeout 10ms more than messageQueue timeout, prevent mutex
 	// timeout before messageQueue
 	if (k_mutex_lock(&mutex_read, K_MSEC(IPMB_SEQ_TIMEOUT_MS + 10))) {
-		printf("[%s] Failed to lock mutex in time\n", __func__);
+		LOG_ERR("[%s] Failed to lock mutex in time", __func__);
 		return IPMB_ERROR_MUTEX_LOCK;
 	}
 
@@ -918,13 +917,13 @@ ipmb_error ipmb_read(ipmi_msg *msg, uint8_t index)
 
 	ipmb_error ret = IPMB_ERROR_SUCCESS;
 	if (ipmb_send_request(msg, index) != IPMB_ERROR_SUCCESS) {
-		printf("[%s] Failed to send IPMB request message", __func__);
+		LOG_ERR("[%s] Failed to send IPMB request message", __func__);
 		ret = IPMB_ERROR_FAILURE;
 		goto exit;
 	}
 
 	if (k_msgq_get(&ipmb_rxqueue[index], (ipmi_msg *)msg, K_MSEC(IPMB_SEQ_TIMEOUT_MS))) {
-		printf("[%s] Failed to get IPMB message from RX queue", __func__);
+		LOG_ERR("[%s] Failed to get IPMB message from RX queue", __func__);
 		ret = IPMB_ERROR_GET_MESSAGE_QUEUE;
 		goto exit;
 	}
@@ -937,6 +936,8 @@ exit:
 // Send message to IPMI message queue
 ipmb_error ipmb_notify_client(ipmi_msg_cfg *msg_cfg)
 {
+	CHECK_NULL_ARG_WITH_RETURN(msg_cfg, IPMB_ERROR_UNKNOWN);
+
 	/* Sends only the ipmi msg, not the control struct */
 	if (!IS_RESPONSE(msg_cfg->buffer)) {
 		while (k_msgq_put(&ipmi_msgq, msg_cfg, K_NO_WAIT) != 0) {
@@ -950,6 +951,9 @@ ipmb_error ipmb_notify_client(ipmi_msg_cfg *msg_cfg)
 
 ipmb_error ipmb_encode(uint8_t *buffer, ipmi_msg *msg)
 {
+	CHECK_NULL_ARG_WITH_RETURN(buffer, IPMB_ERROR_UNKNOWN);
+	CHECK_NULL_ARG_WITH_RETURN(msg, IPMB_ERROR_UNKNOWN);
+
 	uint8_t i = 0;
 
 	/* Use this variable to address the buffer dynamically */
@@ -973,6 +977,9 @@ ipmb_error ipmb_encode(uint8_t *buffer, ipmi_msg *msg)
 
 ipmb_error ipmb_decode(ipmi_msg *msg, uint8_t *buffer, uint8_t len)
 {
+	CHECK_NULL_ARG_WITH_RETURN(buffer, IPMB_ERROR_UNKNOWN);
+	CHECK_NULL_ARG_WITH_RETURN(msg, IPMB_ERROR_UNKNOWN);
+
 	/* Use this variable to address the buffer dynamically */
 	uint8_t i = 0;
 
@@ -1047,52 +1054,52 @@ static void register_target_device(void)
 #ifdef DEV_IPMB_0
 	dev_ipmb[0] = device_get_binding("IPMB_0");
 	if (i2c_slave_driver_register(dev_ipmb[0]))
-		printf("IPMB0: Target Device driver not found.");
+		LOG_ERR("IPMB0: Target Device driver not found.");
 #endif
 #ifdef DEV_IPMB_1
 	dev_ipmb[1] = device_get_binding("IPMB_1");
 	if (i2c_slave_driver_register(dev_ipmb[1]))
-		printf("IPMB: Target Device driver not found.");
+		LOG_ERR("IPMB1: Target Device driver not found.");
 #endif
 #ifdef DEV_IPMB_2
 	dev_ipmb[2] = device_get_binding("IPMB_2");
 	if (i2c_slave_driver_register(dev_ipmb[2]))
-		printf("IPMB2: Target Device driver not found.");
+		LOG_ERR("IPMB2: Target Device driver not found.");
 #endif
 #ifdef DEV_IPMB_3
 	dev_ipmb[3] = device_get_binding("IPMB_3");
 	if (i2c_slave_driver_register(dev_ipmb[3]))
-		printf("IPMB3: Target Device driver not found.");
+		LOG_ERR("IPMB3: Target Device driver not found.");
 #endif
 #ifdef DEV_IPMB_4
 	dev_ipmb[4] = device_get_binding("IPMB_4");
 	if (i2c_slave_driver_register(dev_ipmb[4]))
-		printf("IPMB4: Target Device driver not found.");
+		LOG_ERR("IPMB4: Target Device driver not found.");
 #endif
 #ifdef DEV_IPMB_5
 	dev_ipmb[5] = device_get_binding("IPMB_5");
 	if (i2c_slave_driver_register(dev_ipmb[5]))
-		printf("IPMB5: Target Device driver not found.");
+		LOG_ERR("IPMB5: Target Device driver not found.");
 #endif
 #ifdef DEV_IPMB_6
 	dev_ipmb[6] = device_get_binding("IPMB_6");
 	if (i2c_slave_driver_register(dev_ipmb[6]))
-		printf("IPMB6: Target Device driver not found.");
+		LOG_ERR("IPMB6: Target Device driver not found.");
 #endif
 #ifdef DEV_IPMB_7
 	dev_ipmb[7] = device_get_binding("IPMB_7");
 	if (i2c_slave_driver_register(dev_ipmb[7]))
-		printf("IPMB7: Target Device driver not found.");
+		LOG_ERR("IPMB7: Target Device driver not found.");
 #endif
 #ifdef DEV_IPMB_8
 	dev_ipmb[8] = device_get_binding("IPMB_8");
 	if (i2c_slave_driver_register(dev_ipmb[8]))
-		printf("IPMB8: Target Device driver not found.");
+		LOG_ERR("IPMB8: Target Device driver not found.");
 #endif
 #ifdef DEV_IPMB_9
 	dev_ipmb[9] = device_get_binding("IPMB_9");
 	if (i2c_slave_driver_register(dev_ipmb[9]))
-		printf("IPMB9: Target Device driver not found.");
+		LOG_ERR("IPMB9: Target Device driver not found.");
 #endif
 }
 
@@ -1107,7 +1114,7 @@ void create_ipmb_threads(uint8_t index)
 
 	P_start[index] = (void *)malloc(sizeof(struct ipmi_msg_cfg));
 	if (P_start[index] == NULL) {
-		printf("[%s], Memory allocation failed!\n", __func__);
+		LOG_ERR("[%s], Memory allocation failed!", __func__);
 		return;
 	}
 
@@ -1121,9 +1128,9 @@ void create_ipmb_threads(uint8_t index)
 		}
 	}
 	if (i > retry) {
-		printf("Failed to create threads,Tx(%s) Rx(%s) retry time(%d)\n",
-		       IPMB_config_table[index].tx_thread_name,
-		       IPMB_config_table[index].rx_thread_name, retry);
+		LOG_ERR("[%s] Failed to create threads,Tx(%s) Rx(%s) retry time(%d)", __func__,
+			IPMB_config_table[index].tx_thread_name,
+			IPMB_config_table[index].rx_thread_name, retry);
 		return;
 	}
 
@@ -1143,11 +1150,9 @@ void create_ipmb_threads(uint8_t index)
 				CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
 	k_thread_name_set(&IPMB_RX[index], IPMB_config_table[index].rx_thread_name);
 
-	if (DEBUG_IPMB) {
-		printf("Initial IPMB TX/RX threads, bus(0x%x), addr(0x%x)\n",
-		       IPMB_config_table[index].bus,
-		       IPMB_config_table[index].channel_target_address);
-	}
+	LOG_INF("Initial IPMB TX/RX threads, bus(0x%x), addr(0x%x)",
+			IPMB_config_table[index].bus,
+			IPMB_config_table[index].channel_target_address);
 
 	return;
 }
@@ -1164,13 +1169,13 @@ void ipmb_init(void)
 
 	IPMB_config_table = malloc(MAX_IPMB_IDX * sizeof(IPMB_config));
 	if (IPMB_config_table == NULL) {
-		printf("[%s] Failed to allocate memory\n", __func__);
+		LOG_ERR("[%s] Failed to allocate memory", __func__);
 		return;
 	}
 
 	bool ret = pal_load_ipmb_config();
 	if (!ret) {
-		printf("[%s] Failed to load IPMB configuration\n", __func__);
+		LOG_ERR("[%s] Failed to load IPMB configuration", __func__);
 		return;
 	}
 
@@ -1184,13 +1189,13 @@ void ipmb_init(void)
 
 	// Initial mutex
 	if (k_mutex_init(&mutex_send_req)) {
-		printf("Failed to initialize IPMB send request mutex\n");
+		LOG_ERR("[%s] Failed to initialize IPMB send request mutex", __func__);
 	}
 	if (k_mutex_init(&mutex_send_res)) {
-		printf("Failed to initialize IPMB send response mutex\n");
+		LOG_ERR("[%s] Failed to initialize IPMB send response mutex", __func__);
 	}
 	if (k_mutex_init(&mutex_read)) {
-		printf("Failed to initialize IPMB read mutex\n");
+		LOG_ERR("[%s] Failed to initialize IPMB read mutex", __func__);
 	}
 
 	// Create IPMB threads for each index
@@ -1205,7 +1210,5 @@ void ipmb_init(void)
 			K_THREAD_STACK_SIZEOF(IPMB_SeqTimeout_stack), IPMB_SeqTimeout_handler, NULL,
 			NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
 	k_thread_name_set(&IPMB_SeqTimeout, "IPMB_SeqTimeout");
-
-	is_ipmb_ready = true;
 }
 #endif
