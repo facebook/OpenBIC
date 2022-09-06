@@ -9,4 +9,5 @@
 
 void wdt_init();
 void wdt_handler(void *arug0, void *arug1, void *arug2);
+void set_wdt_continue_feed(bool value);
 #endif

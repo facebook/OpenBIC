@@ -30,6 +30,7 @@
 #include "apml.h"
 #endif
 #include "pcc.h"
+#include "hal_wdt.h"
 
 #define BIOS_UPDATE_MAX_OFFSET 0x4000000
 #define BIC_UPDATE_MAX_OFFSET 0x50000
@@ -491,6 +492,26 @@ __weak void OEM_1S_RESET_BMC(ipmi_msg *msg)
 	}
 
 	msg->data_len = 0;
+	return;
+}
+
+__weak void OEM_1S_SET_WDT_FEED(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	if ((msg->data[0] != 0) && (msg->data[0] != 1)) {
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		return;
+	}
+
+	set_wdt_continue_feed(msg->data[0]);
+	msg->data_len = 0;
+	msg->completion_code = CC_SUCCESS;
 	return;
 }
 
@@ -969,7 +990,7 @@ __weak void OEM_1S_CONTROL_SENSOR_POLLING(ipmi_msg *msg)
 			// Enable or Disable sensor polling
 			sensor_config[control_sensor_index].is_enable_polling =
 				((operation == DISABLE_SENSOR_POLLING) ? DISABLE_SENSOR_POLLING :
-									 ENABLE_SENSOR_POLLING);
+									       ENABLE_SENSOR_POLLING);
 			msg->data[return_data_index + 1] =
 				sensor_config[control_sensor_index].is_enable_polling;
 		} else {
@@ -1737,6 +1758,10 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_RESET_BMC:
 		LOG_DBG("Received 1S BMC Reset command");
 		OEM_1S_RESET_BMC(msg);
+		break;
+	case CMD_OEM_1S_SET_WDT_FEED:
+		LOG_DBG("Received 1S Set WatchDogTimer Feed command");
+		OEM_1S_SET_WDT_FEED(msg);
 		break;
 	case CMD_OEM_1S_SENSOR_POLL_EN: // debug command
 		LOG_DBG("Received 1S Sensor Poll Enable (Debug) command");
