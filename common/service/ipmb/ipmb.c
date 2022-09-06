@@ -1150,9 +1150,8 @@ void create_ipmb_threads(uint8_t index)
 				CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
 	k_thread_name_set(&IPMB_RX[index], IPMB_config_table[index].rx_thread_name);
 
-	LOG_INF("Initial IPMB TX/RX threads, bus(0x%x), addr(0x%x)",
-			IPMB_config_table[index].bus,
-			IPMB_config_table[index].channel_target_address);
+	LOG_INF("Initial IPMB TX/RX threads, bus(0x%x), addr(0x%x)", IPMB_config_table[index].bus,
+		IPMB_config_table[index].channel_target_address);
 
 	return;
 }
