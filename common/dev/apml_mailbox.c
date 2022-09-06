@@ -7,6 +7,8 @@
 #ifdef ENABLE_APML
 #include "apml.h"
 
+#define SENSOR_READ_RETRY_MAX 3
+
 LOG_MODULE_REGISTER(dev_apml_mailbox);
 
 typedef struct _dimm_temp_priv_data {
@@ -20,7 +22,14 @@ void apml_read_fail_cb(apml_msg *msg)
 		return;
 	}
 	sensor_cfg *cfg = (sensor_cfg *)msg->ptr_arg;
-	cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
+	apml_mailbox_init_arg *init_arg = (apml_mailbox_init_arg *)cfg->init_args;
+
+	if (init_arg->retry < SENSOR_READ_RETRY_MAX) {
+		init_arg->retry++;
+	} else {
+		LOG_ERR("Access APML mailbox failed, sensor number 0x%x\n", cfg->num);
+		cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
+	}
 }
 
 void cpu_power_write(apml_msg *msg)
@@ -31,13 +40,20 @@ void cpu_power_write(apml_msg *msg)
 	}
 	sensor_cfg *cfg = (sensor_cfg *)msg->ptr_arg;
 	mailbox_RdData *rddata = (mailbox_RdData *)msg->RdData;
-	if (rddata->error_code != SBRMI_MAILBOX_NO_ERR) {
-		LOG_ERR("Read cpu power failed, sensor number 0x%x, error code %d\n", cfg->num,
-			rddata->error_code);
-		cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
-		return;
-	}
+	apml_mailbox_init_arg *init_arg = (apml_mailbox_init_arg *)cfg->init_args;
 
+	if (rddata->error_code != SBRMI_MAILBOX_NO_ERR) {
+		if (init_arg->retry < SENSOR_READ_RETRY_MAX) {
+			init_arg->retry++;
+			return;
+		} else {
+			LOG_ERR("Read cpu power failed, sensor number 0x%x, error code %d\n",
+				cfg->num, rddata->error_code);
+			cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
+			return;
+		}
+	}
+	init_arg->retry = 0;
 	uint32_t raw_data = (rddata->data_out[3] << 24) | (rddata->data_out[2] << 16) |
 			    (rddata->data_out[1] << 8) | rddata->data_out[0];
 	sensor_val sval;
@@ -55,12 +71,20 @@ void dimm_pwr_write(apml_msg *msg)
 	}
 	sensor_cfg *cfg = (sensor_cfg *)msg->ptr_arg;
 	mailbox_RdData *rddata = (mailbox_RdData *)msg->RdData;
+	apml_mailbox_init_arg *init_arg = (apml_mailbox_init_arg *)cfg->init_args;
+
 	if (rddata->error_code != SBRMI_MAILBOX_NO_ERR) {
-		LOG_ERR("Read dimm power failed, sensor number 0x%x, error code %d\n", cfg->num,
-			rddata->error_code);
-		cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
-		return;
+		if (init_arg->retry < SENSOR_READ_RETRY_MAX) {
+			init_arg->retry++;
+			return;
+		} else {
+			LOG_ERR("Read dimm power failed, sensor number 0x%x, error code %d\n",
+				cfg->num, rddata->error_code);
+			cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
+			return;
+		}
 	}
+	init_arg->retry = 0;
 	uint16_t raw_data = (rddata->data_out[3] << 7) | (rddata->data_out[2] >> 1);
 	sensor_val sval;
 	sval.integer = raw_data / 1000;
@@ -77,13 +101,20 @@ void dimm_temp_write(apml_msg *msg)
 	}
 	sensor_cfg *cfg = (sensor_cfg *)msg->ptr_arg;
 	mailbox_RdData *rddata = (mailbox_RdData *)msg->RdData;
+	apml_mailbox_init_arg *init_arg = (apml_mailbox_init_arg *)cfg->init_args;
 
 	if (rddata->error_code != SBRMI_MAILBOX_NO_ERR) {
-		LOG_ERR("Read dimm temperature failed, sensor number 0x%x, error code %d\n",
-			cfg->num, rddata->error_code);
-		cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
-		return;
+		if (init_arg->retry < SENSOR_READ_RETRY_MAX) {
+			init_arg->retry++;
+			return;
+		} else {
+			LOG_ERR("Read dimm temperature failed, sensor number 0x%x, error code %d\n",
+				cfg->num, rddata->error_code);
+			cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
+			return;
+		}
 	}
+	init_arg->retry = 0;
 	uint16_t raw_data = (rddata->data_out[3] << 3) | (rddata->data_out[2] >> 5);
 	float temp = 0.25 * raw_data;
 	bool is_ts1 = rddata->data_out[0] & 0x40;
