@@ -27,6 +27,16 @@
 		return ret_val;                                                                    \
 	}
 
+#define CHECK_MSGQ_INIT(msgq) CHECK_NULL_ARG((msgq)->buffer_start);
+
+#define CHECK_MSGQ_INIT_WITH_RETURN(msgq, ret_val)                                                 \
+	CHECK_NULL_ARG_WITH_RETURN((msgq)->buffer_start, ret_val);
+
+#define CHECK_MUTEX_INIT(mutex) CHECK_NULL_ARG((mutex)->wait_q.waitq.head);
+
+#define CHECK_MUTEX_INIT_WITH_RETURN(mutex, ret_val)                                               \
+	CHECK_NULL_ARG_WITH_RETURN((mutex)->wait_q.waitq.head, ret_val);
+
 enum BIT_SETTING_READING {
 	BIT_SET = 1,
 	BIT_CLEAR = 0,
