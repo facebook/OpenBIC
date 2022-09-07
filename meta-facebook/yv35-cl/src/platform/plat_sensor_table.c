@@ -427,6 +427,11 @@ void check_vr_type(uint8_t index)
 
 void check_outlet_temp_type(uint8_t index)
 {
+	if (index >= sensor_config_count) {
+		printf("Out of sensor_config_count\n");
+		return;
+	}
+
 	uint8_t retry = 5;
 	I2C_MSG msg;
 	uint8_t CID = 0;
