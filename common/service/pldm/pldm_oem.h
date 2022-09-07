@@ -8,7 +8,6 @@ extern "C" {
 #include "pldm.h"
 #include <stdint.h>
 
-#define FIANA 0x00A015
 #define IANA_LEN 0x03
 
 /* commands of pldm type 0x3F : PLDM_TYPE_OEM */
