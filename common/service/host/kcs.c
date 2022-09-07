@@ -103,14 +103,10 @@ void kcs_read(void *arvg0, void *arvg1, void *arvg2)
 				do { // break if malloc fail.
 					uint8_t *kcs_buff;
 					kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
-					if (kcs_buff == NULL) { // allocate fail, retry allocate
-						k_msleep(10);
-						kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
-						if (kcs_buff == NULL) {
-							printf("[%s] Failed to malloc for kcs_buff\n",
-							       __func__);
-							break;
-						}
+					if (kcs_buff == NULL) {
+						printf("[%s] Failed to malloc for kcs_buff\n",
+						       __func__);
+						break;
 					}
 					kcs_buff[0] = (req->netfn | BIT(0)) << 2;
 					kcs_buff[1] = req->cmd;
