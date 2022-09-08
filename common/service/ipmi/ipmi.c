@@ -93,6 +93,16 @@ __weak bool pal_request_msg_to_BIC_from_KCS(uint8_t netfn, uint8_t cmd)
 	return false;
 }
 
+__weak bool pal_immediate_respond_from_KCS(uint8_t netfn, uint8_t cmd)
+{
+	if ((netfn == NETFN_STORAGE_REQ && cmd == CMD_STORAGE_ADD_SEL) ||
+	    ((netfn == NETFN_SENSOR_REQ) && (cmd == CMD_SENSOR_PLATFORM_EVENT))) {
+		return true;
+	}
+
+	return false;
+}
+
 __weak bool pal_request_msg_to_BIC_from_ME(uint8_t netfn, uint8_t cmd)
 {
 	if ((netfn == NETFN_OEM_REQ) && (cmd == CMD_OEM_NM_SENSOR_READ)) {
