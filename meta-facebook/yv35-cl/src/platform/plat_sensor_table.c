@@ -425,6 +425,63 @@ void check_vr_type(uint8_t index)
 	}
 }
 
+void check_outlet_temp_type(uint8_t index)
+{
+	if (index >= sensor_config_count) {
+		printf("Out of sensor_config_count\n");
+		return;
+	}
+
+	uint8_t retry = 5;
+	I2C_MSG msg;
+	uint8_t CID = 0;
+	uint8_t VID = 0;
+
+	/* Get Chip ID and Manufacturer ID
+	 * - Command code: 0xFD, 0xFE
+	 * TMP431: 0x31 0x55
+	 * NCT7718W: 0x50 0x50
+	 * G788P81U: 0x50 0x47
+	 */
+	memset(&msg, 0, sizeof(msg));
+	msg.bus = sensor_config[index].port;
+	msg.target_addr = sensor_config[index].target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 1;
+	msg.data[0] = NCT7718W_CHIP_ID_OFFSET;
+
+	if (i2c_master_read(&msg, retry)) {
+		printf("Failed to read Outlet_Temp chip ID: register(0x%x)\n",
+		       NCT7718W_CHIP_ID_OFFSET);
+		return;
+	}
+	CID = msg.data[0];
+
+	memset(&msg, 0, sizeof(msg));
+	msg.bus = sensor_config[index].port;
+	msg.target_addr = sensor_config[index].target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 1;
+	msg.data[0] = NCT7718W_VENDOR_ID_OFFSET;
+
+	if (i2c_master_read(&msg, retry)) {
+		printf("Failed to read Outlet_Temp vendor ID: register(0x%x)\n",
+		       NCT7718W_VENDOR_ID_OFFSET);
+		return;
+	}
+	VID = msg.data[0];
+
+	if ((CID == 0x31) && (VID == 0x55)) {
+		sensor_config[index].type = sensor_dev_tmp431;
+	} else if ((CID == 0x50) && (VID == 0x50)) {
+		sensor_config[index].type = sensor_dev_nct7718w;
+	} else if ((CID == 0x50) && (VID == 0x47)) {
+		sensor_config[index].type = sensor_dev_g788p81u;
+	} else {
+		printf("Unknown Outlet_Temp type\n");
+	}
+}
+
 void pal_extend_sensor_config()
 {
 	uint8_t sensor_count = 0;
@@ -493,6 +550,13 @@ void pal_extend_sensor_config()
 		sensor_count = ARRAY_SIZE(evt3_class1_adi_temperature_sensor_table);
 		for (int index = 0; index < sensor_count; index++) {
 			add_sensor_config(evt3_class1_adi_temperature_sensor_table[index]);
+		}
+
+		/* Check outlet temperature sensor type */
+		for (uint8_t index = 0; index < sensor_config_count; index++) {
+			if (sensor_config[index].type == sensor_dev_tmp431) {
+				check_outlet_temp_type(index);
+			}
 		}
 		break;
 	default:
