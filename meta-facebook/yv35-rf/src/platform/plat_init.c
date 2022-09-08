@@ -5,9 +5,16 @@
 #include "plat_power_seq.h"
 #include "power_status.h"
 
+SCU_CFG scu_cfg[] = {
+	//register    value
+	{ 0x7e6e2610, 0x0000D7BF },
+	{ 0x7e6e2614, 0x00044300 },
+};
+
 void pal_pre_init()
 {
 	init_platform_config();
+	scu_init(scu_cfg, ARRAY_SIZE(scu_cfg));
 }
 
 void pal_set_sys_status()
