@@ -15,7 +15,7 @@ uint8_t check_iana(uint8_t *iana)
 		return PLDM_ERROR;
 
 	for (uint8_t i = 0; i < IANA_LEN; i++) {
-		if (iana[i] != ((FIANA >> (i * 8)) & 0xFF))
+		if (iana[i] != ((IANA_ID >> (i * 8)) & 0xFF))
 			return PLDM_ERROR;
 	}
 
@@ -28,7 +28,7 @@ uint8_t set_iana(uint8_t *buf, uint8_t buf_len)
 		return PLDM_ERROR;
 
 	for (uint8_t i = 0; i < IANA_LEN; i++)
-		buf[i] = (FIANA >> (i * 8)) & 0xFF;
+		buf[i] = (IANA_ID >> (i * 8)) & 0xFF;
 
 	return PLDM_SUCCESS;
 }
