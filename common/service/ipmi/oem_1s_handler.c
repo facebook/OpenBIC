@@ -304,7 +304,11 @@ __weak void OEM_1S_GET_BIC_FW_INFO(ipmi_msg *msg)
 
 	case BIC_PLAT_BOARD_ID:
 		msg->data_len = 1;
+#ifdef BOARD_ID
+		msg->data[0] = BOARD_ID;
+#else
 		msg->data[0] = FIRMWARE_REVISION_1 & 0x0F;
+#endif
 		break;
 
 	case BIC_PROJ_NAME:
@@ -314,7 +318,11 @@ __weak void OEM_1S_GET_BIC_FW_INFO(ipmi_msg *msg)
 
 	case BIC_PROJ_STAGE:
 		msg->data_len = 1;
+#ifdef PROJECT_STAGE
+		msg->data[0] = PROJECT_STAGE;
+#else
 		msg->data[0] = FIRMWARE_REVISION_1 & 0xF0;
+#endif
 		break;
 
 	default:
