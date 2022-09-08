@@ -1771,6 +1771,67 @@ __weak void OEM_1S_NOTIFY_PMIC_ERROR(ipmi_msg *msg)
 	return;
 }
 
+__weak void OEM_1S_GET_SDR(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	uint16_t next_record_ID = 0;
+	uint16_t rsv_ID = 0, record_ID = 0;
+	uint8_t offset = 0, req_len = 0;
+	uint8_t *table_ptr = NULL;
+	uint8_t rsv_table_index = RSV_TABLE_INDEX_0;
+
+	// Config D: slot1 and slot3 need to use different reservation id
+	if (msg->InF_source == SLOT3_BIC) {
+		rsv_table_index = RSV_TABLE_INDEX_1;
+	}
+
+	rsv_ID = (msg->data[1] << 8) | msg->data[0];
+	record_ID = (msg->data[3] << 8) | msg->data[2];
+	offset = msg->data[4];
+	req_len = msg->data[5];
+
+	if (msg->data_len != 6) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	// If SDR_RSV_ID_check gets false is represent reservation id is incorrect
+	if (SDR_RSV_ID_check(rsv_ID, rsv_table_index) == false) {
+		msg->completion_code = CC_INVALID_RESERVATION;
+		return;
+	}
+
+	if (!SDR_check_record_ID(record_ID)) {
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		return;
+	}
+
+	// request length + next record ID (2 bytes) should not over IPMB data limit
+	if ((req_len + 2) > IPMI_DATA_MAX_LENGTH) {
+		msg->completion_code = CC_LENGTH_EXCEEDED;
+		return;
+	}
+
+	if ((offset + req_len) > IPMI_SDR_HEADER_LEN + full_sdr_table[record_ID].record_len) {
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		return;
+	}
+
+	next_record_ID = SDR_get_record_ID(record_ID);
+	msg->data[0] = next_record_ID & 0xFF;
+	msg->data[1] = (next_record_ID >> 8) & 0xFF;
+
+	table_ptr = (uint8_t *)&full_sdr_table[record_ID];
+	memcpy(&msg->data[2], (table_ptr + offset), req_len);
+
+	// return next record ID (2 bytes) + sdr data
+	msg->data_len = req_len + 2;
+	msg->completion_code = CC_SUCCESS;
+
+	return;
+}
+
 void IPMI_OEM_1S_handler(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -1977,6 +2038,10 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_NOTIFY_PMIC_ERROR:
 		LOG_DBG("Received 1S Notify PMIC Error command");
 		OEM_1S_NOTIFY_PMIC_ERROR(msg);
+		break;
+	case CMD_OEM_1S_GET_SDR:
+		LOG_DBG("Received 1S Get SDR command");
+		OEM_1S_GET_SDR(msg);
 		break;
 	default:
 		LOG_ERR("Invalid OEM message, netfn(0x%x) cmd(0x%x)", msg->netfn, msg->cmd);
