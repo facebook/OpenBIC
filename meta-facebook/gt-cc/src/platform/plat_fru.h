@@ -7,12 +7,16 @@
 #define SWB_FRU_MUX_CHAN 7
 #define FIO_FRU_PORT 0x04
 #define FIO_FRU_ADDR (0xA2 >> 1)
+#define HSC_MODULE_FRU_PORT 0x05
+#define HSC_MODULE_FRU_ADDR (0xA2 >> 1)
+#define HSC_MODULE_FRU_MUX_ADDR (0xE0 >> 1)
+#define HSC_MODULE_FRU_MUX_CHAN 6
 
-enum {
-	SWB_FRU_ID,
-	FIO_FRU_ID,
-	// OTHER_FRU_ID,
-	MAX_FRU_ID,
+enum { SWB_FRU_ID,
+       FIO_FRU_ID,
+       HSC_MODULE_FRU_ID,
+       // OTHER_FRU_ID,
+       MAX_FRU_ID,
 };
 
 #endif

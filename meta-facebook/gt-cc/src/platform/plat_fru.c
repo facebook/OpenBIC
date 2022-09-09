@@ -11,7 +11,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		FRU_DEV_ACCESS_BYTE,
 		FRU_START,
 		FRU_SIZE,
-		true, /*Because there has mux before eeprom, so mux_present is true to access mux first */
+		/* Because there has mux before eeprom, so mux_present is true to access mux first */
+		true,
 		SWB_FRU_MUX_ADDR,
 		SWB_FRU_MUX_CHAN,
 	},
@@ -23,6 +24,19 @@ const EEPROM_CFG plat_fru_config[] = {
 		FRU_DEV_ACCESS_BYTE,
 		FRU_START,
 		FRU_SIZE,
+	},
+	{
+		NV_ATMEL_24C64,
+		HSC_MODULE_FRU_ID,
+		HSC_MODULE_FRU_PORT,
+		HSC_MODULE_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		FRU_START,
+		FRU_SIZE,
+		/* Because there has mux before eeprom, so mux_present is true to access mux first */
+		true,
+		HSC_MODULE_FRU_MUX_ADDR,
+		HSC_MODULE_FRU_MUX_CHAN,
 	},
 };
 
