@@ -10,6 +10,7 @@
             0x02 DVT
             0x03 PVT
             0x04 MP
+
     FIRMWARE REVISION_2
         Count of release firmware at each stage.
 */

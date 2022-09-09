@@ -1,12 +1,19 @@
 #ifndef PLAT_VERSION_H
 #define PLAT_VERSION_H
 
-#define PLATFORM_NAME "yv35"
-#define PROJECT_NAME "halfdome"
+#include "version.h"
+
+#define PLATFORM_NAME "Yosemite 3.5"
+#define PROJECT_NAME "Half Dome"
+#define PROJECT_STAGE POC
+
+#define BOARD_ID 0x01
 #define DEVICE_ID 0x00
 #define DEVICE_REVISION 0x80
+
 #define FIRMWARE_REVISION_1 0xff
 #define FIRMWARE_REVISION_2 0xff
+
 #define IPMI_VERSION 0x02
 #define ADDITIONAL_DEVICE_SUPPORT 0xBF
 #define PRODUCT_ID 0x0000

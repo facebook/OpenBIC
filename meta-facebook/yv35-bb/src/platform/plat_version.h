@@ -1,14 +1,24 @@
 #ifndef PLAT_VERSION_H
 #define PLAT_VERSION_H
 
-#define PLATFORM_NAME "yv35"
-#define PROJECT_NAME "baseboard"
+#include "version.h"
+
+#define PLATFORM_NAME "Yosemite 3.5"
+#define PROJECT_NAME "Baseboard"
+#define PROJECT_STAGE EVT
+
+/*
+ * 0x01 Motherboard
+ * 0x02 Baseboard
+ * 0x03 Rainbow Falls
+ */
+#define BOARD_ID 0x02
 #define DEVICE_ID 0x00
 #define DEVICE_REVISION 0x80
-// Byte 0 boade: 01h CL  02h BB
-// Byte 1 stage: 00h POC 01h EVT
-#define FIRMWARE_REVISION_1 0x12
+
+#define FIRMWARE_REVISION_1 GET_FW_VERSION1(BOARD_ID, PROJECT_STAGE)
 #define FIRMWARE_REVISION_2 0x05
+
 #define IPMI_VERSION 0x02
 #define ADDITIONAL_DEVICE_SUPPORT 0xBF
 #define PRODUCT_ID 0x0000

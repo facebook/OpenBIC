@@ -4,15 +4,16 @@
 #include "version.h"
 
 #define PLATFORM_NAME "Waimea Canyon"
-#define PROJECT_NAME "mainboard"
+#define PROJECT_NAME "Mainboard"
 #define PROJECT_STAGE POC
+
 /*
-    BOARD_ID
-        0x01 mainboard
-*/
+ * 0x01 mainboard
+ */
 #define BOARD_ID 0x01
 #define DEVICE_ID 0x00
 #define DEVICE_REVISION 0x80
+
 #define FIRMWARE_REVISION_1 GET_FW_VERSION1(BOARD_ID, PROJECT_STAGE)
 #define FIRMWARE_REVISION_2 0x01 // Count of release firmware at each stage.
 
