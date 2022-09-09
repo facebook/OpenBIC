@@ -25,6 +25,7 @@ target_include_directories(app PRIVATE ${ZEPHYR_BASE}/include/portability)
 
 # Common Includes
 target_include_directories(app PRIVATE ${common_path})
+target_include_directories(app PRIVATE ${common_path}/include)
 target_include_directories(app PRIVATE ${common_path}/dev/include)
 target_include_directories(app PRIVATE ${common_path}/hal)
 target_include_directories(app PRIVATE ${common_path}/lib)

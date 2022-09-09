@@ -1,27 +1,21 @@
 #ifndef PLAT_VERSION_H
 #define PLAT_VERSION_H
 
-#define PLATFORM_NAME "wc"
+#include "version.h"
+
+#define PLATFORM_NAME "Waimea Canyon"
 #define PROJECT_NAME "mainboard"
+#define PROJECT_STAGE POC
+/*
+    BOARD_ID
+        0x01 mainboard
+*/
+#define BOARD_ID 0x01
 #define DEVICE_ID 0x00
 #define DEVICE_REVISION 0x80
-/*
- *  FIRMWARE REVISION_1 
- *  [bit 0-3] 
- *    board id: 
- *      0x01 WaimeaCanyon
- *  [bit 4-7]
- *    stage: 
- *      0x00 POC
- *      0x01 EVT
- *      0x02 DVT
- *      0x03 PVT
- *      0x04 MP
- *  FIRMWARE_REVISION_2
- *    Count of release firmware at each stage.
- */
-#define FIRMWARE_REVISION_1 0x01
-#define FIRMWARE_REVISION_2 0x01
+#define FIRMWARE_REVISION_1 GET_FW_VERSION1(BOARD_ID, PROJECT_STAGE)
+#define FIRMWARE_REVISION_2 0x01 // Count of release firmware at each stage.
+
 #define IPMI_VERSION 0x02
 #define ADDITIONAL_DEVICE_SUPPORT 0xBF
 #define PRODUCT_ID 0x0000
