@@ -197,8 +197,8 @@ ina230_init_arg ina230_nic_sensor_init_args[] = {
 };
 
 mp5990_init_arg mp5990_hsc_init_args[] = {
-	/* Use default value by specification */
-	[0] = { .is_init = false, .iout_cal_gain = 0x0140, .iout_oc_fault_limit = 0x0037 },
+	/* MP5990 register value is written by OTP, so set to 0xFFFF to skip setting */
+	[0] = { .is_init = false, .iout_cal_gain = 0xFFFF, .iout_oc_fault_limit = 0xFFFF },
 };
 
 ltc4282_init_arg ltc4282_hsc_init_args[] = {
@@ -890,6 +890,35 @@ bool post_i2c_bus_read(uint8_t sensor_num, void *args, int *reading)
 	return true;
 }
 
+bool post_mp5990_power_read(uint8_t sensor_num, void *args, int *reading)
+{
+	if (!reading) {
+		post_i2c_bus_read(sensor_num, args, reading);
+		return false;
+	}
+	ARG_UNUSED(args);
+
+	if (!post_i2c_bus_read(sensor_num, args, reading))
+		return false;
+
+	sensor_val *sval = (sensor_val *)reading;
+	float val = sval->integer + (sval->fraction * 0.001);
+	/* Adjust the power value for accuracy by power team requirement */
+	if (val <= 65) {
+		val *= 1.098;
+	} else if (val > 65 && val <= 200) {
+		val *= 1.057;
+	} else if (val > 200 && val <= 210) {
+		val *= 1.033;
+	} else {
+		val *= 1.015;
+	}
+
+	sval->integer = (int16_t)val;
+	sval->fraction = (val - sval->integer) * 1000;
+
+	return true;
+}
 struct k_mutex *find_bus_mutex(uint8_t sensor_num)
 {
 	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
