@@ -9,6 +9,8 @@
 
 #define ADJUST_ADM1278_CURRENT(x) (x * 0.94)
 #define ADJUST_ADM1278_POWER(x) (x * 0.95)
+#define ADJUST_LTC4282_CURRENT(x) ((x * 0.96) - 0.04)
+#define ADJUST_LTC4282_POWER(x) ((x * 0.96) - 0.6)
 
 /**************************************************************************************************
  * INIT ARGS
@@ -124,6 +126,28 @@ bool post_adm1278_pwr_read(uint8_t sensor_num, void *args, int *reading)
 	sensor_val *sval = (sensor_val *)reading;
 	float val = sval->integer + (sval->fraction * 0.001);
 	val = ADJUST_ADM1278_POWER(val);
+	sval->integer = (int16_t)val;
+	sval->fraction = (val - sval->integer) * 1000;
+
+	return true;
+}
+
+bool post_ltc4282_cur_read(uint8_t sensor_num, void *args, int *reading)
+{
+	sensor_val *sval = (sensor_val *)reading;
+	float val = sval->integer + (sval->fraction * 0.001);
+	val = ADJUST_LTC4282_CURRENT(val);
+	sval->integer = (int16_t)val;
+	sval->fraction = (val - sval->integer) * 1000;
+
+	return true;
+}
+
+bool post_ltc4282_pwr_read(uint8_t sensor_num, void *args, int *reading)
+{
+	sensor_val *sval = (sensor_val *)reading;
+	float val = sval->integer + (sval->fraction * 0.001);
+	val = ADJUST_LTC4282_POWER(val);
 	sval->integer = (int16_t)val;
 	sval->fraction = (val - sval->integer) * 1000;
 

@@ -29,5 +29,7 @@ bool pre_vol_bat3v_read(uint8_t sensor_num, void *args);
 bool post_vol_bat3v_read(uint8_t sensor_num, void *args, int *reading);
 bool post_adm1278_cur_read(uint8_t sensor_num, void *args, int *reading);
 bool post_adm1278_pwr_read(uint8_t sensor_num, void *args, int *reading);
+bool post_ltc4282_cur_read(uint8_t sensor_num, void *args, int *reading);
+bool post_ltc4282_pwr_read(uint8_t sensor_num, void *args, int *reading);
 
 #endif
