@@ -77,7 +77,7 @@ bool pre_nvme_read(uint8_t sensor_num, void *args)
 bool post_cpu_margin_read(uint8_t sensor_num, void *args, int *reading)
 {
 	if (reading == NULL) {
-		return false;
+		return check_reading_pointer_null_is_allowed(sensor_num);
 	}
 	ARG_UNUSED(args);
 
@@ -183,7 +183,7 @@ bool post_xdpe12284c_read(uint8_t sensor_num, void *args, int *reading)
 	bool ret = true;
 
 	if (reading == NULL) {
-		ret = false;
+		ret = check_reading_pointer_null_is_allowed(sensor_num);
 		goto error_exit;
 	}
 	ARG_UNUSED(args);
@@ -265,7 +265,7 @@ bool post_isl69254_read(uint8_t sensor_num, void *args, int *reading)
 	}
 
 	if (reading == NULL) {
-		return false;
+		return check_reading_pointer_null_is_allowed(sensor_num);
 	}
 	ARG_UNUSED(args);
 
