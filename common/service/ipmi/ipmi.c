@@ -28,6 +28,8 @@ K_KERNEL_STACK_MEMBER(IPMI_thread_stack, IPMI_THREAD_STACK_SIZE);
 
 char __aligned(4) ipmi_msgq_buffer[IPMI_BUF_LEN * sizeof(struct ipmi_msg_cfg)];
 struct k_msgq ipmi_msgq;
+char __aligned(4) self_ipmi_msgq_buffer[1 * sizeof(struct ipmi_msg_cfg)];
+struct k_msgq self_ipmi_msgq;
 
 static uint8_t send_msg_by_pldm(ipmi_msg_cfg *msg_cfg)
 {
@@ -308,6 +310,13 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 				/* the message should be passed to source by pldm format */
 				send_msg_by_pldm(&msg_cfg);
 				break;
+			case SELF:
+				/* for bic self test */
+				if (k_msgq_put(&self_ipmi_msgq, &msg_cfg, K_NO_WAIT)) {
+					k_msgq_purge(&self_ipmi_msgq);
+					LOG_ERR("Failed to put msg into self ipmi msgq");
+				}
+				break;
 			default: {
 #if MAX_IPMB_IDX
 				ipmb_error status;
@@ -330,6 +339,7 @@ void ipmi_init(void)
 {
 	LOG_DBG("ipmi_init");
 	k_msgq_init(&ipmi_msgq, ipmi_msgq_buffer, sizeof(struct ipmi_msg_cfg), IPMI_BUF_LEN);
+	k_msgq_init(&self_ipmi_msgq, self_ipmi_msgq_buffer, sizeof(struct ipmi_msg_cfg), 1);
 
 	k_thread_create(&IPMI_thread, IPMI_thread_stack, K_THREAD_STACK_SIZEOF(IPMI_thread_stack),
 			IPMI_handler, NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);

@@ -18,6 +18,7 @@
 extern uint8_t IPMB_inf_index_map[];
 extern uint8_t isPwOn;
 extern struct k_msgq ipmi_msgq;
+extern struct k_msgq self_ipmi_msgq;
 
 struct ipmi_request {
 	uint8_t netfn;
@@ -188,8 +189,8 @@ enum {
 	CMD_OEM_1S_SEND_INTERRUPT_TO_BMC = 0x7,
 	CMD_OEM_1S_SEND_POST_CODE_TO_BMC = 0x8,
 	CMD_OEM_1S_FW_UPDATE = 0x9,
-	CMD_OEM_1S_GET_FW_VERSION = 0xB,
 	CMD_OEM_1S_GET_BIC_FW_INFO = 0xA,
+	CMD_OEM_1S_GET_FW_VERSION = 0xB,
 	CMD_OEM_1S_GET_POST_CODE = 0x12,
 	CMD_OEM_1S_SET_VR_MONITOR_STATUS = 0x14,
 	CMD_OEM_1S_GET_VR_MONITOR_STATUS = 0x15,
