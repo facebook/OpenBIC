@@ -5,7 +5,7 @@
 
 #define PLATFORM_NAME "Grand Teton"
 #define PROJECT_NAME "Cascade Creek"
-#define PROJECT_STAGE POC
+#define PROJECT_STAGE EVT
 
 /* 
  * 0x01 cascade-creek 
@@ -24,7 +24,7 @@
 
 #define BIC_FW_YEAR_MSB 0x20
 #define BIC_FW_YEAR_LSB 0x22
-#define BIC_FW_WEEK 0x33
+#define BIC_FW_WEEK 0x37
 #define BIC_FW_VER 0x01
 #define BIC_FW_platform_0 0x47 // char: G
 #define BIC_FW_platform_1 0x54 // char: T
