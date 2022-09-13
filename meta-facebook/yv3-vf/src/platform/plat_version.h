@@ -22,6 +22,7 @@
 #define PRODUCT_ID 0x0000
 #define AUXILIARY_FW_REVISION 0x00000000
 #define IANA_ID 0x009C9C // same as TI BIC
+#define IANA_ID2 0x00A015 // for OEM 1S command supports YV3.5
 
 #define BIC_FW_YEAR_MSB 0x20
 #define BIC_FW_YEAR_LSB 0x22

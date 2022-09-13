@@ -29,6 +29,31 @@ K_KERNEL_STACK_MEMBER(IPMI_thread_stack, IPMI_THREAD_STACK_SIZE);
 char __aligned(4) ipmi_msgq_buffer[IPMI_BUF_LEN * sizeof(struct ipmi_msg_cfg)];
 struct k_msgq ipmi_msgq;
 
+static uint32_t iana_list[] = {
+	IANA_ID,
+#ifdef IANA_ID2
+	IANA_ID2,
+#endif
+};
+
+static int8_t find_iana_index(uint8_t *iana_buf)
+{
+	CHECK_NULL_ARG_WITH_RETURN(iana_buf, -1);
+
+	for (uint8_t iana_idx = 0; iana_idx < ARRAY_SIZE(iana_list); iana_idx++) {
+		uint8_t i;
+		for (i = 0; i < 3; i++) {
+			if (iana_buf[i] != ((iana_list[iana_idx] >> (i * 8)) & 0xFF))
+				break;
+		}
+
+		if (i == 3)
+			return iana_idx;
+	}
+
+	return -1;
+}
+
 static uint8_t send_msg_by_pldm(ipmi_msg_cfg *msg_cfg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg_cfg, 0);
@@ -184,6 +209,7 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 	ipmi_msg_cfg msg_cfg;
 
 	while (1) {
+		int8_t iana_idx = -1;
 		memset(&msg_cfg, 0, sizeof(ipmi_msg_cfg));
 		k_msgq_get(&ipmi_msgq, &msg_cfg, K_FOREVER);
 
@@ -221,8 +247,7 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 			break;
 		case NETFN_OEM_1S_REQ:
 			if (msg_cfg.buffer.data_len >= 3 &&
-			    (msg_cfg.buffer.data[0] | (msg_cfg.buffer.data[1] << 8) |
-			     (msg_cfg.buffer.data[2] << 16)) == IANA_ID) {
+			    ((iana_idx = find_iana_index(msg_cfg.buffer.data)) >= 0)) {
 				msg_cfg.buffer.data_len -= 3;
 				memcpy(&msg_cfg.buffer.data[0], &msg_cfg.buffer.data[3],
 				       msg_cfg.buffer.data_len);
@@ -259,9 +284,9 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 				memcpy(&msg_cfg.buffer.data[3], &copy_data[0],
 				       msg_cfg.buffer.data_len);
 				msg_cfg.buffer.data_len += 3;
-				msg_cfg.buffer.data[0] = IANA_ID & 0xFF;
-				msg_cfg.buffer.data[1] = (IANA_ID >> 8) & 0xFF;
-				msg_cfg.buffer.data[2] = (IANA_ID >> 16) & 0xFF;
+				msg_cfg.buffer.data[0] = iana_list[iana_idx] & 0xFF;
+				msg_cfg.buffer.data[1] = (iana_list[iana_idx] >> 8) & 0xFF;
+				msg_cfg.buffer.data[2] = (iana_list[iana_idx] >> 16) & 0xFF;
 			}
 
 			switch (msg_cfg.buffer.InF_source) {
