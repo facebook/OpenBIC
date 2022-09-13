@@ -109,6 +109,7 @@
 #define SENSOR_NUM_CPUDIMM_HOT 0xB3
 #define SENSOR_NUM_PMIC_ERROR 0xB4
 #define SENSOR_NUM_CATERR 0xEB
+#define SENSOR_NUM_VPP_POWER_CONTROL 0x46
 
 /*  threshold sensor number, DPV2  */
 #define SENSOR_NUM_VOL_DPV2_12VIN 0x91

@@ -23,5 +23,6 @@ void ISR_MB_THROTTLE();
 void ISR_HSC_THROTTLE();
 void ISR_FM_THROTTLE();
 void ISR_RMCA();
+void ISR_CPU_VPP_INT();
 
 #endif
