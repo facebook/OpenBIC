@@ -47,6 +47,11 @@ struct k_msgq ipmi_msgq;
 char __aligned(4) self_ipmi_msgq_buffer[1 * sizeof(struct ipmi_msg_cfg)];
 struct k_msgq self_ipmi_msgq;
 
+__weak uint32_t get_iana(uint8_t *iana_buf)
+{
+	return IANA_ID;
+}
+
 static uint8_t send_msg_by_pldm(ipmi_msg_cfg *msg_cfg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg_cfg, 0);
@@ -202,6 +207,7 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 	ipmi_msg_cfg msg_cfg;
 
 	while (1) {
+		uint32_t iana = 0;
 		memset(&msg_cfg, 0, sizeof(ipmi_msg_cfg));
 		k_msgq_get(&ipmi_msgq, &msg_cfg, K_FOREVER);
 
@@ -238,9 +244,8 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 			IPMI_OEM_handler(&msg_cfg.buffer);
 			break;
 		case NETFN_OEM_1S_REQ:
-			if (msg_cfg.buffer.data_len >= 3 &&
-			    (msg_cfg.buffer.data[0] | (msg_cfg.buffer.data[1] << 8) |
-			     (msg_cfg.buffer.data[2] << 16)) == IANA_ID) {
+			iana = get_iana(msg_cfg.buffer.data);
+			if ((msg_cfg.buffer.data_len >= 3) && (iana != 0)) {
 				msg_cfg.buffer.data_len -= 3;
 				memcpy(&msg_cfg.buffer.data[0], &msg_cfg.buffer.data[3],
 				       msg_cfg.buffer.data_len);
@@ -266,87 +271,82 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 		}
 
 		if (pal_is_not_return_cmd(msg_cfg.buffer.netfn, msg_cfg.buffer.cmd)) {
-			;
-		} else {
-			if (msg_cfg.buffer.completion_code != CC_SUCCESS) {
-				msg_cfg.buffer.data_len = 0;
-			} else if (msg_cfg.buffer.netfn == NETFN_OEM_1S_REQ) {
-				uint8_t copy_data[msg_cfg.buffer.data_len];
-				memcpy(&copy_data[0], &msg_cfg.buffer.data[0],
-				       msg_cfg.buffer.data_len);
-				memcpy(&msg_cfg.buffer.data[3], &copy_data[0],
-				       msg_cfg.buffer.data_len);
-				msg_cfg.buffer.data_len += 3;
-				msg_cfg.buffer.data[0] = IANA_ID & 0xFF;
-				msg_cfg.buffer.data[1] = (IANA_ID >> 8) & 0xFF;
-				msg_cfg.buffer.data[2] = (IANA_ID >> 16) & 0xFF;
-			}
+			return;
+		}
 
-			switch (msg_cfg.buffer.InF_source) {
+		if (msg_cfg.buffer.completion_code != CC_SUCCESS) {
+			msg_cfg.buffer.data_len = 0;
+		} else if (msg_cfg.buffer.netfn == NETFN_OEM_1S_REQ) {
+			uint8_t copy_data[msg_cfg.buffer.data_len];
+			memcpy(&copy_data[0], &msg_cfg.buffer.data[0], msg_cfg.buffer.data_len);
+			memcpy(&msg_cfg.buffer.data[3], &copy_data[0], msg_cfg.buffer.data_len);
+			msg_cfg.buffer.data_len += 3;
+			msg_cfg.buffer.data[0] = iana & 0xFF;
+			msg_cfg.buffer.data[1] = (iana >> 8) & 0xFF;
+			msg_cfg.buffer.data[2] = (iana >> 16) & 0xFF;
+		}
+
+		switch (msg_cfg.buffer.InF_source) {
 #ifdef CONFIG_USB
-			case BMC_USB:
-				usb_write_by_ipmi(&msg_cfg.buffer);
-				break;
+		case BMC_USB:
+			usb_write_by_ipmi(&msg_cfg.buffer);
+			break;
 #endif
 #ifdef CONFIG_IPMI_KCS_ASPEED
-			case HOST_KCS: {
-				uint8_t *kcs_buff;
+		case HOST_KCS: {
+			uint8_t *kcs_buff;
+			kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
+			if (kcs_buff == NULL) { // allocate fail, retry allocate
+				k_msleep(10);
 				kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
-				if (kcs_buff == NULL) { // allocate fail, retry allocate
-					k_msleep(10);
-					kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
-					if (kcs_buff == NULL) {
-						LOG_DBG("IPMI_handler: Fail to malloc for kcs_buff");
-						continue;
-					}
+				if (kcs_buff == NULL) {
+					LOG_DBG("IPMI_handler: Fail to malloc for kcs_buff");
+					continue;
 				}
-				kcs_buff[0] = (msg_cfg.buffer.netfn + 1)
-					      << 2; // ipmi netfn response package
-				kcs_buff[1] = msg_cfg.buffer.cmd;
-				kcs_buff[2] = msg_cfg.buffer.completion_code;
-				if (msg_cfg.buffer.data_len) {
-					if (msg_cfg.buffer.data_len <= (KCS_BUFF_SIZE - 3))
-						memcpy(&kcs_buff[3], msg_cfg.buffer.data,
-						       msg_cfg.buffer.data_len);
-					else
-						memcpy(&kcs_buff[3], msg_cfg.buffer.data,
-						       (KCS_BUFF_SIZE - 3));
-				}
-
-				LOG_DBG("kcs from ipmi netfn %x, cmd %x, length %d, cc %x",
-					kcs_buff[0], kcs_buff[1], msg_cfg.buffer.data_len,
-					kcs_buff[2]);
-
-				kcs_write(kcs_buff, msg_cfg.buffer.data_len + 3);
-				SAFE_FREE(kcs_buff);
-				break;
 			}
+			kcs_buff[0] = (msg_cfg.buffer.netfn + 1)
+				      << 2; // ipmi netfn response package
+			kcs_buff[1] = msg_cfg.buffer.cmd;
+			kcs_buff[2] = msg_cfg.buffer.completion_code;
+			if (msg_cfg.buffer.data_len) {
+				if (msg_cfg.buffer.data_len <= (KCS_BUFF_SIZE - 3))
+					memcpy(&kcs_buff[3], msg_cfg.buffer.data,
+					       msg_cfg.buffer.data_len);
+				else
+					memcpy(&kcs_buff[3], msg_cfg.buffer.data,
+					       (KCS_BUFF_SIZE - 3));
+			}
+
+			LOG_DBG("kcs from ipmi netfn %x, cmd %x, length %d, cc %x", kcs_buff[0],
+				kcs_buff[1], msg_cfg.buffer.data_len, kcs_buff[2]);
+
+			kcs_write(kcs_buff, msg_cfg.buffer.data_len + 3);
+			SAFE_FREE(kcs_buff);
+			break;
+		}
 #endif
-			case PLDM:
-				/* the message should be passed to source by pldm format */
-				send_msg_by_pldm(&msg_cfg);
-				break;
-			case SELF:
-				/* for bic self test */
-				if (k_msgq_put(&self_ipmi_msgq, &msg_cfg, K_NO_WAIT)) {
-					k_msgq_purge(&self_ipmi_msgq);
-					LOG_ERR("Failed to put msg into self ipmi msgq");
-				}
-				break;
-			default: {
+		case PLDM:
+			/* the message should be passed to source by pldm format */
+			send_msg_by_pldm(&msg_cfg);
+			break;
+		case SELF:
+			/* for bic self test */
+			if (k_msgq_put(&self_ipmi_msgq, &msg_cfg, K_NO_WAIT)) {
+				k_msgq_purge(&self_ipmi_msgq);
+				LOG_ERR("Failed to put msg into self ipmi msgq");
+			}
+			break;
+		default: {
 #if MAX_IPMB_IDX
-				ipmb_error status;
-				status = ipmb_send_response(
-					&msg_cfg.buffer,
-					IPMB_inf_index_map[msg_cfg.buffer.InF_source]);
-				if (status != IPMB_ERROR_SUCCESS) {
-					LOG_ERR("IPMI_handler send IPMB resp fail status: %x",
-						status);
-				}
+			ipmb_error status;
+			status = ipmb_send_response(&msg_cfg.buffer,
+						    IPMB_inf_index_map[msg_cfg.buffer.InF_source]);
+			if (status != IPMB_ERROR_SUCCESS) {
+				LOG_ERR("IPMI_handler send IPMB resp fail status: %x", status);
+			}
 #endif
-				break;
-			}
-			}
+			break;
+		}
 		}
 	}
 }
