@@ -21,6 +21,9 @@
 #include "hal_gpio.h"
 #include "plat_gpio.h"
 #include "plat_isr.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(gpio);
 
 #define gpio_name_to_num(x) #x,
 const char *const gpio_name[] = {
@@ -375,4 +378,19 @@ void enable_SYS_Throttle_interrupt()
 void disable_SYS_Throttle_interrupt()
 {
 	gpio_interrupt_conf(FAST_PROCHOT_N, GPIO_INT_DISABLE);
+}
+
+uint8_t get_exported_gpio_num(uint8_t internal_gpio_num)
+{
+	uint8_t index = 0;
+	uint8_t ret = 0xff;
+
+	for (index = 0; index < gpio_align_table_length; index++) {
+		if (gpio_align_t[index] == internal_gpio_num) {
+			return index;
+		}
+	}
+
+	LOG_ERR("Fail to convert GPIO num: %u\n", internal_gpio_num);
+	return ret;
 }

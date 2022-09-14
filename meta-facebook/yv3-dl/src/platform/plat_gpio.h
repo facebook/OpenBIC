@@ -269,4 +269,5 @@ void enable_UV_detect_interrupt();
 void disable_UV_detect_interrupt();
 void enable_SYS_Throttle_interrupt();
 void disable_SYS_Throttle_interrupt();
+uint8_t get_exported_gpio_num(uint8_t internal_gpio_num);
 #endif

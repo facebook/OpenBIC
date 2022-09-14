@@ -45,7 +45,7 @@ void send_gpio_interrupt(uint8_t gpio_num)
 	msg.data[0] = IANA_ID & 0xFF;
 	msg.data[1] = (IANA_ID >> 8) & 0xFF;
 	msg.data[2] = (IANA_ID >> 16) & 0xFF;
-	msg.data[3] = gpio_num;
+	msg.data[3] = get_exported_gpio_num(gpio_num);
 	msg.data[4] = gpio_val;
 
 	status = ipmb_read(&msg, IPMB_inf_index_map[msg.InF_target]);
