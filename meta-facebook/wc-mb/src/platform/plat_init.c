@@ -16,12 +16,12 @@ SCU_CFG scu_cfg[] = {
 	{ 0x7e6e2614, 0xFFFFFFFF },
 	/* Set GPIOJ/K/L internal pull-up/down after gpio init */
 	{ 0x7e6e2618, 0xF0000000 },
-	/* Set GPIOM/N/OP internal pull-up/down after gpio init */
+	/* Set GPIOM/N/O/P internal pull-up/down after gpio init */
 	{ 0x7e6e261c, 0x0000000B },
-	/* Set GPIOQ/R/S internal pull-up/down after gpio init */
-	{ 0x7e6e2630, 0x00000007 },
+	/* Set GPIOQ/R/S/T internal pull-up/down after gpio init */
+	{ 0x7e6e2630, 0xFF000000 },
 	/* Set GPIOU/V/X internal pull-up/down after gpio init */
-	{ 0x7e6e2634, 0x0000007D },
+	{ 0x7e6e2634, 0x000000FD },
 };
 
 /* port80 bypass signal to GPIOF(postcode led) */
