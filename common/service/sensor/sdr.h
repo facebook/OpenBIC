@@ -359,6 +359,7 @@
 
 #define SDR_END_ID 0xFFFF
 #define SDR_INVALID_ID 0xFFFE
+#define MAX_SDR_SENSOR_NAME_LEN 32
 
 enum rsv_table_index {
 	RSV_TABLE_INDEX_0 = 0,
@@ -419,7 +420,7 @@ typedef struct _SDR_Full_sensor_ {
 	uint8_t reserved1;
 	uint8_t OEM;
 	uint8_t ID_len;
-	uint8_t ID_str[29];
+	uint8_t ID_str[MAX_SDR_SENSOR_NAME_LEN];
 } SDR_Full_sensor;
 
 typedef struct _SDR_INFO_ {
@@ -462,8 +463,8 @@ extern const int negative_ten_power[16];
 static inline uint8_t round_add(uint8_t sensor_num, int val)
 {
 	return (SDR_R(sensor_num) > 0) ?
-			     (((negative_ten_power[((SDR_R(sensor_num) + 1) & 0xF)] * val) % 10) > 5 ?
-				      1 :
+		       (((negative_ten_power[((SDR_R(sensor_num) + 1) & 0xF)] * val) % 10) > 5 ?
+				1 :
 				      0) :
 			     0;
 }
