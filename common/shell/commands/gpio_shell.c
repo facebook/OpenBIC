@@ -256,10 +256,8 @@ void cmd_gpio_cfg_list_all(const struct shell *shell, size_t argc, char **argv)
 		key_word = argv[1];
 
 	for (int gpio_idx = 0; gpio_idx < GPIO_CFG_SIZE; gpio_idx++) {
-		if (key_word) {
-			if (!strstr(gpio_name[gpio_idx], key_word))
-				continue;
-		}
+		if (key_word && !strstr(gpio_name[gpio_idx], key_word))
+			continue;
 		gpio_access_cfg(shell, gpio_idx, GPIO_READ, NULL);
 	}
 
