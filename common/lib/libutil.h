@@ -31,6 +31,18 @@
 #define GETBIT(x, y) ((x & (1ULL << y)) > y)
 #define CLEARBIT(x, y) (x & (~(1ULL << y)))
 
+#define SHELL_CHECK_NULL_ARG(arg_ptr)                                                              \
+	if (arg_ptr == NULL) {                                                                     \
+		shell_error(shell, "Parameter \"" #arg_ptr "\" passed in as NULL");                \
+		return;                                                                            \
+	}
+
+#define SHELL_CHECK_NULL_ARG_WITH_RETURN(arg_ptr, ret_val)                                         \
+	if (arg_ptr == NULL) {                                                                     \
+		shell_error(shell, "Parameter \"" #arg_ptr "\" passed in as NULL");                \
+		return ret_val;                                                                    \
+	}
+
 #define CHECK_NULL_ARG(arg_ptr)                                                                    \
 	if (arg_ptr == NULL) {                                                                     \
 		LOG_DBG("Parameter \"" #arg_ptr "\" passed in as NULL");                           \
