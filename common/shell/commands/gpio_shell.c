@@ -246,13 +246,22 @@ void cmd_gpio_cfg_list_group(const struct shell *shell, size_t argc, char **argv
 
 void cmd_gpio_cfg_list_all(const struct shell *shell, size_t argc, char **argv)
 {
-	if (argc != 1) {
-		shell_warn(shell, "Help: platform gpio list_all");
+	if (argc != 1 && argc != 2) {
+		shell_warn(shell, "Help: platform gpio list_all <key_word(optional)>");
 		return;
 	}
 
-	for (int gpio_idx = 0; gpio_idx < GPIO_CFG_SIZE; gpio_idx++)
+	char *key_word = NULL;
+	if (argc == 2)
+		key_word = argv[1];
+
+	for (int gpio_idx = 0; gpio_idx < GPIO_CFG_SIZE; gpio_idx++) {
+		if (key_word) {
+			if (!strstr(gpio_name[gpio_idx], key_word))
+				continue;
+		}
 		gpio_access_cfg(shell, gpio_idx, GPIO_READ, NULL);
+	}
 
 	return;
 }
