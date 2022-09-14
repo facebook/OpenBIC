@@ -78,7 +78,7 @@ ina230_init_arg ina230_init_args[] = {
 				.LEN = 1, // Alert Latch enabled.
 				.POL = 1, // Enable the Over-Limit Power alert function.
 			},
-		.r_shunt = 0.01,
+		.r_shunt = 0.001,
 		.alert_value = 18.0, // Unit: Watt
 		.i_max = 16.384 },
 };
