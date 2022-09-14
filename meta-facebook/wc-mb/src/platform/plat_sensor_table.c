@@ -275,15 +275,21 @@ void check_vr_type(uint8_t index)
 	if ((msg.data[0] == 0x02) && (msg.data[2] == 0x8A)) {
 		LOG_INF("sensor #%-2xh vr type: XDPE15284", sensor_config[index].num);
 		sensor_config[index].type = sensor_dev_xdpe15284;
-		if (sensor_config[index].target_addr == VR_PU14_SRC0_ADDR)
+		switch (sensor_config[index].target_addr) {
+		case VR_PU14_SRC0_ADDR:
 			sensor_config[index].target_addr = VR_PU14_SRC1_ADDR;
-		else if (sensor_config[index].target_addr == VR_PU5_SRC0_ADDR)
+			break;
+		case VR_PU5_SRC0_ADDR:
 			sensor_config[index].target_addr = VR_PU5_SRC1_ADDR;
-		else if (sensor_config[index].target_addr == VR_PU35_SRC0_ADDR)
+			break;
+		case VR_PU35_SRC0_ADDR:
 			sensor_config[index].target_addr = VR_PU35_SRC1_ADDR;
-		else
+			break;
+		default:
 			LOG_ERR("sensor #%-2xh vr type: invalid address, using default VR address...",
 				sensor_config[index].num);
+			break;
+		}
 	} else if ((msg.data[0] == 0x04) && (msg.data[1] == 0x00) && (msg.data[2] == 0x81) &&
 		   (msg.data[3] == 0xD2) && (msg.data[4] == 0x49)) {
 		LOG_INF("sensor #%-2xh vr type: ISL69259", sensor_config[index].num);
