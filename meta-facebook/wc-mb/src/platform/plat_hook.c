@@ -157,7 +157,7 @@ bool pre_vol_bat3v_read(uint8_t sensor_num, void *args)
 
 	if (sensor_num == SENSOR_NUM_VOL_BAT3V) {
 		gpio_set(FM_P3V_BAT_SCALED_EN_R, GPIO_HIGH);
-		k_msleep(1);
+		k_msleep(500);
 	}
 
 	return true;
