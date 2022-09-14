@@ -66,7 +66,7 @@ void cmd_flash_sfdp_read(const struct shell *shell, size_t argc, char **argv)
 		shell_error(shell, "Failed to malloc memory for raw");
 		return;
 	}
-	memset(raw, 0, sizeof(raw));
+	memset(raw, 0, read_bytes);
 
 	int ret = flash_sfdp_read(flash_dev, offset, raw, read_bytes);
 	if (ret) {
