@@ -171,7 +171,7 @@ void ISR_HSC_THROTTLE()
 void ISR_MB_THROTTLE()
 {
 	common_addsel_msg_t sel_msg;
-	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
+	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH && get_DC_status()) {
 		if (gpio_get(FAST_PROCHOT_N) == GPIO_HIGH) {
 			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
 		} else {
