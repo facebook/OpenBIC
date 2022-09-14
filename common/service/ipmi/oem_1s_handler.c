@@ -109,7 +109,7 @@ __weak void OEM_1S_MSG_OUT(ipmi_msg *msg)
 		} else {
 			memset(bridge_msg, 0, sizeof(ipmi_msg));
 
-			LOG_ERR("bridge targetIf %x, len %d, netfn %x, cmd %x", target_IF,
+			LOG_DBG("bridge targetIf %x, len %d, netfn %x, cmd %x", target_IF,
 				msg->data_len, msg->data[1] >> 2, msg->data[2]);
 
 			bridge_msg->data_len = msg->data_len - 3;
