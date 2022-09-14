@@ -7,7 +7,7 @@
 #include <drivers/flash.h>
 
 #define SPI_DEVICE_PREFIX "spi"
-#define SFDP_BUFF_SIZE 256
+#define MAX_SFDP_BUFF_SIZE 256
 
 void cmd_flash_re_init(const struct shell *shell, size_t argc, char **argv);
 void cmd_flash_sfdp_read(const struct shell *shell, size_t argc, char **argv);

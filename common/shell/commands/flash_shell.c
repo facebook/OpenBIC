@@ -33,18 +33,20 @@ void cmd_flash_re_init(const struct shell *shell, size_t argc, char **argv)
 
 void cmd_flash_sfdp_read(const struct shell *shell, size_t argc, char **argv)
 {
-	if (argc != 2 && argc != 3 && argc != 4) {
+	if (argc < 2 || argc > 4) {
 		shell_warn(
 			shell,
-			"Help: platform flash sfdp_read <spi_device> <offset(optional, default 0)> <read_bytes(optional, default 256)>");
+			"Help: platform flash sfdp_read <spi_device> <offset(optional, default 0h)> <read_bytes(optional, default_max 256)>");
 		return;
 	}
 
-	int read_bytes = SFDP_BUFF_SIZE;
+	int read_bytes = MAX_SFDP_BUFF_SIZE;
 	int offset = 0;
 	if (argc == 4) {
 		offset = strtol(argv[2], NULL, 16);
 		read_bytes = strtol(argv[3], NULL, 10);
+		if (read_bytes > MAX_SFDP_BUFF_SIZE)
+			read_bytes = MAX_SFDP_BUFF_SIZE;
 	} else if (argc == 3) {
 		offset = strtol(argv[2], NULL, 10);
 	}
@@ -62,10 +64,7 @@ void cmd_flash_sfdp_read(const struct shell *shell, size_t argc, char **argv)
 	}
 
 	uint8_t *raw = malloc(read_bytes * sizeof(uint8_t));
-	if (!raw) {
-		shell_error(shell, "Failed to malloc memory for raw");
-		return;
-	}
+	SHELL_CHECK_NULL_ARG(raw);
 	memset(raw, 0, read_bytes);
 
 	int ret = flash_sfdp_read(flash_dev, offset, raw, read_bytes);
