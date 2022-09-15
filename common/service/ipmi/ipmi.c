@@ -281,7 +281,7 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 		}
 
 		if (pal_is_not_return_cmd(msg_cfg.buffer.netfn, msg_cfg.buffer.cmd)) {
-			return;
+			continue;
 		}
 
 		if (msg_cfg.buffer.completion_code != CC_SUCCESS) {
