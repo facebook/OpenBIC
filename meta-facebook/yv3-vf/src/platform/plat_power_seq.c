@@ -158,7 +158,7 @@ void check_dc_off_process(void)
 	}
 
 	if (i == M2_IDX_E_MAX) {
-		dev_12v_fault_hander(); // control PWRGD_EXP_PWROK & LED_PWRGD_P12V_E1S_ALL
+		dev_12v_fault_handler(); // control PWRGD_EXP_PWROK & LED_PWRGD_P12V_E1S_ALL
 		gpio_set(FM_P12V_EDGE_EN, 0);
 		gpio_set(FM_CLKBUF_EN, 0);
 	}

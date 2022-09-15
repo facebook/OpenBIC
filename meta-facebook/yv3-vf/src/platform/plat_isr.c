@@ -1,21 +1,6 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 #include <zephyr.h>
 #include <stdio.h>
+#include <logging/log.h>
 
 #include "libipmi.h"
 #include "power_status.h"
@@ -28,7 +13,9 @@
 #include "plat_util.h"
 #include "plat_isr.h"
 
-void dev_12v_fault_hander(void)
+LOG_MODULE_REGISTER(plat_isr);
+
+void dev_12v_fault_handler(void)
 {
 	const uint8_t all_12v_pwrgd = check_12v_dev_pwrgd();
 
@@ -49,7 +36,7 @@ void pwrgd_p12v_aux_int_handler(void)
 			m2_dev_power_switch(i, val);
 	}
 
-	dev_12v_fault_hander(); // control PWRGD_EXP_PWROK & LED_PWRGD_P12V_E1S_ALL
+	dev_12v_fault_handler(); // control PWRGD_EXP_PWROK & LED_PWRGD_P12V_E1S_ALL
 	delay_function((val ? 110 : 1), pwrgd_p12v_aux_100ms_set, val, 0);
 }
 
@@ -149,6 +136,81 @@ void prsnt_int_handler(uint32_t idx, uint32_t arg1)
 	device_all_power_set((uint8_t)idx, val);
 }
 
+void irq_fault_sel(uint8_t idx, uint8_t type, uint8_t is_check)
+{
+	uint8_t pin = 0xFF;
+	uint8_t event_data1 = 0xFF;
+	uint8_t en_pin = 0xFF;
+
+	switch (type) {
+	case P12V_E1S:
+		event_data1 = IPMI_EVENT_OFFSET_SYS_IRQ_P12V_E1S_FLT;
+		pin = (idx == 0) ? IRQ_P12V_E1S_0_FLT_N :
+		      (idx == 1) ? IRQ_P12V_E1S_1_FLT_N :
+		      (idx == 2) ? IRQ_P12V_E1S_2_FLT_N :
+		      (idx == 3) ? IRQ_P12V_E1S_3_FLT_N :
+					 0xFF;
+		en_pin = (idx == 0) ? FM_P12V_E1S_0_EN :
+			 (idx == 1) ? FM_P12V_E1S_1_EN :
+			 (idx == 2) ? FM_P12V_E1S_2_EN :
+			 (idx == 3) ? FM_P12V_E1S_3_EN :
+					    0xFF;
+		break;
+	case P3V3_E1S:
+		event_data1 = IPMI_EVENT_OFFSET_SYS_IRQ_P3V3_E1S_FLT;
+		pin = (idx == 0) ? IRQ_P3V3_E1S_0_FLT_N :
+		      (idx == 1) ? IRQ_P3V3_E1S_1_FLT_N :
+		      (idx == 2) ? IRQ_P3V3_E1S_2_FLT_N :
+		      (idx == 3) ? IRQ_P3V3_E1S_3_FLT_N :
+					 0xFF;
+		en_pin = (idx == 0) ? FM_P3V3_E1S_0_SW_EN :
+			 (idx == 1) ? FM_P3V3_E1S_1_SW_EN :
+			 (idx == 2) ? FM_P3V3_E1S_2_SW_EN :
+			 (idx == 3) ? FM_P3V3_E1S_3_SW_EN :
+					    0xFF;
+		break;
+	case P12V_EDGE:
+		event_data1 = IPMI_EVENT_OFFSET_SYS_IRQ_P12V_EDGE_FLT;
+		pin = IRQ_P12V_EDGE_FLT_N;
+		en_pin = FM_P12V_EDGE_EN;
+		break;
+	default:
+		LOG_DBG("invaild irq fault type: %d!\n", type);
+		return;
+	}
+
+	if (is_check) {
+		// run in init, if irq_pin still low
+		if (!gpio_get(pin)) {
+			add_sel(IPMI_OEM_SENSOR_TYPE_OEM, IPMI_EVENT_TYPE_SENSOR_SPECIFIC,
+				SENSOR_NUM_SYS_STA, event_data1, E1S_BOARD_TYPE, idx);
+		}
+		return;
+	}
+
+	// check enable pin
+	if (!gpio_get(en_pin)) {
+		LOG_DBG("enable pin %d does not set high!\n", en_pin);
+		return;
+	}
+
+	uint8_t event_type =
+		gpio_get(pin) ? IPMI_OEM_EVENT_TYPE_DEASSART : IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+
+	add_sel(IPMI_OEM_SENSOR_TYPE_OEM, event_type, SENSOR_NUM_SYS_STA, event_data1,
+		E1S_BOARD_TYPE, idx);
+}
+
+void check_irq_fault(void)
+{
+	uint8_t i;
+	for (i = 0; i < M2_IDX_E_MAX; i++)
+		irq_fault_sel(i, P12V_E1S, 1);
+	for (i = 0; i < M2_IDX_E_MAX; i++)
+		irq_fault_sel(i, P3V3_E1S, 1);
+	irq_fault_sel(0, P12V_EDGE, 1);
+}
+
 #define DEV_PRSNT_HANDLER(idx)                                                                     \
 	void prsnt_int_handler_dev##idx(void)                                                      \
 	{                                                                                          \
@@ -162,10 +224,40 @@ void prsnt_int_handler(uint32_t idx, uint32_t arg1)
 	}
 
 #define DEV_FAULT_HANDLER(idx)                                                                     \
-	void dev_12v_fault_hander_dev##idx(void)                                                   \
+	void dev_12v_fault_handler_dev##idx(void)                                                  \
 	{                                                                                          \
-		dev_12v_fault_hander();                                                            \
+		dev_12v_fault_handler();                                                           \
+		static int64_t pre_time[M2_IDX_E_MAX];                                             \
+		int64_t current_time = k_uptime_get();                                             \
+		if ((current_time - pre_time[idx]) < 10) {                                         \
+			return;                                                                    \
+		}                                                                                  \
+		pre_time[idx] = current_time;                                                      \
+		irq_fault_sel(idx, P12V_E1S, 0);                                                   \
 	}
+
+#define DEV_3V3_FAULT_HANDLER(idx)                                                                 \
+	void dev_3v3_fault_handler_dev##idx(void)                                                  \
+	{                                                                                          \
+		static int64_t pre_time[M2_IDX_E_MAX];                                             \
+		int64_t current_time = k_uptime_get();                                             \
+		if ((current_time - pre_time[idx]) < 10) {                                         \
+			return;                                                                    \
+		}                                                                                  \
+		pre_time[idx] = current_time;                                                      \
+		irq_fault_sel(idx, P3V3_E1S, 0);                                                   \
+	}
+
+void p12v_edge_fault_sel(void)
+{
+	static int64_t pre_time;
+	int64_t current_time = k_uptime_get();
+	if ((current_time - pre_time) < 10) {
+		return;
+	}
+	pre_time = current_time;
+	irq_fault_sel(0, P12V_EDGE, 0);
+}
 
 DEV_PRSNT_HANDLER(0);
 DEV_PRSNT_HANDLER(1);
