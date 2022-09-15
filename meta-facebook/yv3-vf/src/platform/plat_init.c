@@ -91,6 +91,7 @@ void pal_set_sys_status()
 	set_DC_status(FM_POWER_EN);
 	set_DC_on_delayed_status();
 
+	check_irq_fault();
 	// BIC up 1 sec handler
 	k_work_schedule(&up_1sec_handler, K_SECONDS(1));
 	// BIC up 5 sec handler

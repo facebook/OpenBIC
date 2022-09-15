@@ -40,13 +40,13 @@ GPIO_CFG plat_gpio_cfg[] = {
 	//  chip,      number,   is_init, is_latch, direction,    status,     property,    int_type,              int_cb
 	// GPIO A group
 	{ CHIP_GPIO, 0, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_EDGE_BOTH,
-	  dev_12v_fault_hander_dev3 },
+	  dev_12v_fault_handler_dev3 },
 	{ CHIP_GPIO, 1, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_EDGE_BOTH,
-	  dev_12v_fault_hander_dev2 },
+	  dev_12v_fault_handler_dev2 },
 	{ CHIP_GPIO, 2, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_EDGE_BOTH,
-	  dev_12v_fault_hander_dev1 },
+	  dev_12v_fault_handler_dev1 },
 	{ CHIP_GPIO, 3, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_EDGE_BOTH,
-	  dev_12v_fault_hander_dev0 },
+	  dev_12v_fault_handler_dev0 },
 	{ CHIP_GPIO, 4, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
 	{ CHIP_GPIO, 5, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
 	{ CHIP_GPIO, 6, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
@@ -121,8 +121,8 @@ GPIO_CFG plat_gpio_cfg[] = {
 	  NULL },
 	{ CHIP_GPIO, 45, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE,
 	  NULL },
-	{ CHIP_GPIO, 46, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE,
-	  NULL },
+	{ CHIP_GPIO, 46, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_EDGE_BOTH,
+	  p12v_edge_fault_sel },
 	{ CHIP_GPIO, 47, DISABLE, DISABLE, GPIO_INPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE,
 	  NULL },
 	// GPIO G group
