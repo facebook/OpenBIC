@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef IPMI_H
 #define IPMI_H
 
@@ -18,6 +34,7 @@
 extern uint8_t IPMB_inf_index_map[];
 extern uint8_t isPwOn;
 extern struct k_msgq ipmi_msgq;
+extern struct k_msgq self_ipmi_msgq;
 
 struct ipmi_request {
 	uint8_t netfn;
@@ -188,8 +205,8 @@ enum {
 	CMD_OEM_1S_SEND_INTERRUPT_TO_BMC = 0x7,
 	CMD_OEM_1S_SEND_POST_CODE_TO_BMC = 0x8,
 	CMD_OEM_1S_FW_UPDATE = 0x9,
-	CMD_OEM_1S_GET_FW_VERSION = 0xB,
 	CMD_OEM_1S_GET_BIC_FW_INFO = 0xA,
+	CMD_OEM_1S_GET_FW_VERSION = 0xB,
 	CMD_OEM_1S_GET_POST_CODE = 0x12,
 	CMD_OEM_1S_SET_VR_MONITOR_STATUS = 0x14,
 	CMD_OEM_1S_GET_VR_MONITOR_STATUS = 0x15,
@@ -235,6 +252,7 @@ enum {
 	CMD_OEM_1S_GET_BOARD_ID = 0xA0,
 	CMD_OEM_1S_GET_CARD_TYPE = 0xA1,
 	CMD_OEM_1S_NOTIFY_PMIC_ERROR = 0xB0,
+	CMD_OEM_1S_GET_SDR = 0xC0,
 };
 
 enum {

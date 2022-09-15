@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -8,6 +24,7 @@
 #include "plat_m2.h"
 #include "plat_led.h"
 #include "plat_power_seq.h"
+#include <logging/log.h>
 
 // for GET_SET_M2
 #define DRIVE_PWR_OFF 0 /* normal device power off/on */
@@ -19,6 +36,30 @@
 #define DRIVE_PWR_ON_ALL 7
 #define DRIVE_PWR_OFF_BY_12V_3V3 8 /* power off/on device by 12V/3V3 */
 #define DRIVE_PWR_ON_BY_12V_3V3 9
+
+LOG_MODULE_DECLARE(ipmi);
+
+static uint32_t iana_list[] = {
+	IANA_ID,
+	IANA_ID2,
+};
+
+// IANA 0 is reserved so it should never be a valid IANA
+uint32_t get_iana(uint8_t *iana_buf)
+{
+	CHECK_NULL_ARG_WITH_RETURN(iana_buf, 0);
+
+	uint32_t recieved_iana = iana_buf[2];
+	recieved_iana = (recieved_iana << 8) | (uint32_t)iana_buf[1];
+	recieved_iana = (recieved_iana << 8) | (uint32_t)iana_buf[0];
+
+	for (uint8_t iana_idx = 0; iana_idx < ARRAY_SIZE(iana_list); iana_idx++) {
+		if (recieved_iana == iana_list[iana_idx])
+			return iana_list[iana_idx];
+	}
+
+	return 0;
+}
 
 void OEM_1S_GET_BOARD_ID(ipmi_msg *msg)
 {

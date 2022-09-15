@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "gpio_shell.h"
 #include "hal_gpio.h"
 #include "plat_gpio.h"
@@ -230,13 +246,20 @@ void cmd_gpio_cfg_list_group(const struct shell *shell, size_t argc, char **argv
 
 void cmd_gpio_cfg_list_all(const struct shell *shell, size_t argc, char **argv)
 {
-	if (argc != 1) {
-		shell_warn(shell, "Help: platform gpio list_all");
+	if (argc != 1 && argc != 2) {
+		shell_warn(shell, "Help: platform gpio list_all <key_word(optional)>");
 		return;
 	}
 
-	for (int gpio_idx = 0; gpio_idx < GPIO_CFG_SIZE; gpio_idx++)
+	char *key_word = NULL;
+	if (argc == 2)
+		key_word = argv[1];
+
+	for (int gpio_idx = 0; gpio_idx < GPIO_CFG_SIZE; gpio_idx++) {
+		if (key_word && !strstr(gpio_name[gpio_idx], key_word))
+			continue;
 		gpio_access_cfg(shell, gpio_idx, GPIO_READ, NULL);
+	}
 
 	return;
 }

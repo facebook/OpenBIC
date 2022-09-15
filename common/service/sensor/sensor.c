@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "sensor.h"
 
 #include <stdio.h>
@@ -37,7 +53,7 @@ uint8_t sdr_index_map[SENSOR_NUM_MAX];
 
 bool enable_sensor_poll_thread = true;
 static bool sensor_poll_enable_flag = true;
-
+static bool is_sensor_initial_done = false;
 static bool is_sensor_ready_flag = false;
 
 const int negative_ten_power[16] = { 1,	    1,		1,	   1,	     1,	      1,
@@ -238,6 +254,13 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 			cfg->cache_status = SENSOR_READ_4BYTE_ACUR_SUCCESS;
 			return cfg->cache_status;
 		} else {
+			/* Return current status if retry reach max retry count, otherwise return cache status instead of current status */
+			if (cfg->retry >= SENSOR_READ_RETRY_MAX) {
+				cfg->cache_status = current_status;
+			} else {
+				cfg->retry++;
+			}
+
 			/* If sensor read fails, let the reading argument in the
        * post_sensor_read_hook function to NULL.
        * All post_sensor_read_hook function define in each platform should check
@@ -251,13 +274,7 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 					       __func__, sensor_num);
 				}
 			}
-			/* common retry */
-			// Return current status if retry reach max retry count, otherwise return cache status instead of current status
-			if (cfg->retry >= SENSOR_READ_RETRY_MAX) {
-				cfg->cache_status = current_status;
-			} else {
-				cfg->retry++;
-			}
+
 			return cfg->cache_status;
 		}
 		break;
@@ -567,6 +584,7 @@ bool sensor_init(void)
 		sensor_poll_init();
 	}
 
+	is_sensor_initial_done = true;
 	return true;
 }
 
@@ -601,4 +619,17 @@ void control_sensor_polling(uint8_t sensor_num, uint8_t optional, uint8_t cache_
 	sensor_cfg *config = &sensor_config[sensor_config_index_map[sensor_num]];
 	config->is_enable_polling = optional;
 	config->cache_status = cache_status;
+}
+
+bool check_reading_pointer_null_is_allowed(uint8_t sensor_num)
+{
+	uint8_t sensor_retry_count = sensor_config[sensor_config_index_map[sensor_num]].retry;
+
+	/* Reading pointer NULL is allowed in sensor initial stage and sensor reading fail */
+	/* Sensor retry count will be set to zero when the sensor read success */
+	if (is_sensor_initial_done && (sensor_retry_count == 0)) {
+		return false;
+	} else {
+		return true;
+	}
 }

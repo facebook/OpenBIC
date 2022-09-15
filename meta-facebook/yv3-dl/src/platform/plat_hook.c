@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -77,7 +93,7 @@ bool pre_nvme_read(uint8_t sensor_num, void *args)
 bool post_cpu_margin_read(uint8_t sensor_num, void *args, int *reading)
 {
 	if (reading == NULL) {
-		return false;
+		return check_reading_pointer_null_is_allowed(sensor_num);
 	}
 	ARG_UNUSED(args);
 
@@ -183,7 +199,7 @@ bool post_xdpe12284c_read(uint8_t sensor_num, void *args, int *reading)
 	bool ret = true;
 
 	if (reading == NULL) {
-		ret = false;
+		ret = check_reading_pointer_null_is_allowed(sensor_num);
 		goto error_exit;
 	}
 	ARG_UNUSED(args);
@@ -265,7 +281,7 @@ bool post_isl69254_read(uint8_t sensor_num, void *args, int *reading)
 	}
 
 	if (reading == NULL) {
-		return false;
+		return check_reading_pointer_null_is_allowed(sensor_num);
 	}
 	ARG_UNUSED(args);
 

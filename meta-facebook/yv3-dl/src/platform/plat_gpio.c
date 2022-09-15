@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <zephyr.h>
 #include <stdio.h>
 #include <string.h>
@@ -5,6 +21,9 @@
 #include "hal_gpio.h"
 #include "plat_gpio.h"
 #include "plat_isr.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(gpio);
 
 #define gpio_name_to_num(x) #x,
 const char *const gpio_name[] = {
@@ -359,4 +378,19 @@ void enable_SYS_Throttle_interrupt()
 void disable_SYS_Throttle_interrupt()
 {
 	gpio_interrupt_conf(FAST_PROCHOT_N, GPIO_INT_DISABLE);
+}
+
+uint8_t get_exported_gpio_num(uint8_t internal_gpio_num)
+{
+	uint8_t index = 0;
+	uint8_t ret = 0xff;
+
+	for (index = 0; index < gpio_align_table_length; index++) {
+		if (gpio_align_t[index] == internal_gpio_num) {
+			return index;
+		}
+	}
+
+	LOG_ERR("Fail to convert GPIO num: %u\n", internal_gpio_num);
+	return ret;
 }

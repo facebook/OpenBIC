@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef _LIBIPMI_H_
 #define _LIBIPMI_H_
 
@@ -40,6 +56,7 @@
 #define IPMI_EVENT_TYPE_PRESENT 0x08
 #define IPMI_EVENT_TYPE_EN_DIS 0x09
 #define IPMI_EVENT_TYPE_SENSOR_SPECIFIC 0x6F
+#define IPMI_OEM_EVENT_TYPE_NOTIFY 0x77
 #define IPMI_OEM_EVENT_TYPE_DEASSART 0xEF
 
 #define IPMI_EVENT_DIR_ASSERT 0x00
@@ -159,6 +176,11 @@
 #define IPMI_OEM_EVENT_OFFSET_PRESS_SLED_BUTTON 0x01
 #define IPMI_OEM_EVENT_OFFSET_PRESS_SLOT1_BUTTON 0x02
 #define IPMI_OEM_EVENT_OFFSET_PRESS_SLOT3_BUTTON 0x03
+
+/* sensor-specific offset for VPP_POWER_EVENT */
+#define IPMI_OEM_EVENT_OFFSET_VPP_EVENT 0x0B
+#define IPMI_OEM_EVENT_OFFSET_1OU 0x01
+#define IPMI_OEM_EVENT_OFFSET_2OU 0x02
 
 enum ipmi_chassis_control_e {
 	IPMI_CHASSIS_CTRL_POWER_DOWN,

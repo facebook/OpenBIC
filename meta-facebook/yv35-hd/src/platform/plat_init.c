@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "hal_gpio.h"
 #include "power_status.h"
 #include "util_sys.h"
@@ -29,6 +45,7 @@ void pal_set_sys_status()
 	set_DC_on_delayed_status();
 	set_DC_off_delayed_status();
 	set_post_status(FM_BIOS_POST_CMPLT_BIC_N);
+	gpio_set(BIC_JTAG_SEL_R, gpio_get(FM_DBP_PRESENT_N));
 	set_sys_ready_pin(BIC_READY);
 }
 

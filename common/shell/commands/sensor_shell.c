@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "sdr.h"
 #include "sensor.h"
 #include "sensor_shell.h"
@@ -257,7 +273,7 @@ void cmd_control_sensor_polling(const struct shell *shell, size_t argc, char **a
 
 	sensor_config[sensor_index].is_enable_polling =
 		((operation == DISABLE_SENSOR_POLLING) ? DISABLE_SENSOR_POLLING :
-							 ENABLE_SENSOR_POLLING);
+							       ENABLE_SENSOR_POLLING);
 	shell_print(shell, "Sensor number 0x%x %s sensor polling success", sensor_num,
 		    ((operation == DISABLE_SENSOR_POLLING) ? "disable" : "enable"));
 	return;

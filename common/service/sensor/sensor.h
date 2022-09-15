@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef SENSOR_H
 #define SENSOR_H
 
@@ -406,5 +422,6 @@ bool pal_is_time_to_poll(uint8_t sensor_num, int poll_time);
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
 void control_sensor_polling(uint8_t sensor_num, uint8_t optional, uint8_t cache_status);
+bool check_reading_pointer_null_is_allowed(uint8_t sensor_num);
 
 #endif

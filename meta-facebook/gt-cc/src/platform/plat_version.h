@@ -1,11 +1,27 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef PLAT_VERSION_H
 #define PLAT_VERSION_H
 
 #include "version.h"
 
 #define PLATFORM_NAME "Grand Teton"
-#define PROJECT_NAME "Cascade Creek"
-#define PROJECT_STAGE POC
+#define PROJECT_NAME "Cascade Creek (SWB)"
+#define PROJECT_STAGE EVT
 
 /* 
  * 0x01 cascade-creek 
@@ -24,7 +40,7 @@
 
 #define BIC_FW_YEAR_MSB 0x20
 #define BIC_FW_YEAR_LSB 0x22
-#define BIC_FW_WEEK 0x33
+#define BIC_FW_WEEK 0x37
 #define BIC_FW_VER 0x01
 #define BIC_FW_platform_0 0x47 // char: G
 #define BIC_FW_platform_1 0x54 // char: T

@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "hal_gpio.h"
 #include "hal_peci.h"
 #include "power_status.h"
@@ -16,12 +32,12 @@ SCU_CFG scu_cfg[] = {
 	{ 0x7e6e2614, 0xFFFFFFFF },
 	/* Set GPIOJ/K/L internal pull-up/down after gpio init */
 	{ 0x7e6e2618, 0xF0000000 },
-	/* Set GPIOM/N/OP internal pull-up/down after gpio init */
+	/* Set GPIOM/N/O/P internal pull-up/down after gpio init */
 	{ 0x7e6e261c, 0x0000000B },
-	/* Set GPIOQ/R/S internal pull-up/down after gpio init */
-	{ 0x7e6e2630, 0x00000007 },
+	/* Set GPIOQ/R/S/T internal pull-up/down after gpio init */
+	{ 0x7e6e2630, 0xFF000000 },
 	/* Set GPIOU/V/X internal pull-up/down after gpio init */
-	{ 0x7e6e2634, 0x0000007D },
+	{ 0x7e6e2634, 0x000000FD },
 };
 
 /* port80 bypass signal to GPIOF(postcode led) */

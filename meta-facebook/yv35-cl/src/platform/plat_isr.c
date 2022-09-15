@@ -1,16 +1,45 @@
-#include "plat_isr.h"
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
+#include "plat_isr.h"
+#include <logging/log.h>
 #include "libipmi.h"
 #include "kcs.h"
 #include "power_status.h"
 #include "sensor.h"
 #include "snoop.h"
 #include "plat_gpio.h"
+#include "plat_class.h"
 #include "plat_ipmi.h"
 #include "plat_sensor_table.h"
+#include "plat_i2c.h"
 #include "oem_1s_handler.h"
 #include "hal_gpio.h"
+#include "hal_i2c.h"
 #include "util_sys.h"
+
+LOG_MODULE_REGISTER(plat_isr);
+
+uint8_t _1ou_m2_mapping_table[4] = { 4, 3, 2, 1 };
+uint8_t _1ou_m2_name_mapping_table[4] = {
+	0x3A,
+	0x3B,
+	0x3C,
+	0x3D,
+};
 
 void send_gpio_interrupt(uint8_t gpio_num)
 {
@@ -467,5 +496,97 @@ void ISR_RMCA()
 		if (!common_add_sel_evt_record(&sel_msg)) {
 			printf("RMCA addsel fail\n");
 		}
+	}
+}
+
+void ISR_CPU_VPP_INT()
+{
+	if (gpio_get(PWRGD_CPU_LVC3) == POWER_ON) {
+		int i = 0;
+		uint8_t retry = 3;
+		uint8_t vpp_pwr_status_bit = 0;
+		uint8_t device_id = 0;
+		uint8_t set_power_status = POWER_OFF;
+		uint32_t iana = IANA_ID;
+		static uint8_t last_vpp_pwr_status =
+			0xE1; // default all devices are on (bit1~4 = 0)
+		ipmb_error status = IPMB_ERROR_FAILURE;
+		I2C_MSG i2c_msg;
+		ipmi_msg msg;
+		common_addsel_msg_t sel_msg;
+
+		// Read VPP power status from SB CPLD
+		memset(&i2c_msg, 0, sizeof(I2C_MSG));
+		i2c_msg.bus = I2C_BUS1;
+		i2c_msg.target_addr = CPLD_ADDR;
+		i2c_msg.data[0] = CPLD_1OU_VPP_POWER_STATUS;
+		i2c_msg.tx_len = 1;
+		i2c_msg.rx_len = 1;
+		if (i2c_master_read(&i2c_msg, retry)) {
+			LOG_ERR("%s: Failed to read CPU VPP status, bus0x%x addr0x%x offset0x%x\n",
+				__func__, i2c_msg.bus, i2c_msg.target_addr, i2c_msg.data[0]);
+			return;
+		}
+
+		// Check BIOS is ready to handle VPP (post complete)
+		if (gpio_get(FM_BIOS_POST_CMPLT_BMC_N) != LOW_ACTIVE) {
+			return;
+		}
+
+		for (device_id = 0; device_id < MAX_1OU_M2_COUNT; device_id++) {
+			// Shift to skip bit 0
+			// VPP power status is start on bit 1
+			vpp_pwr_status_bit = (i2c_msg.data[0] >> (device_id + 1)) & 0x1;
+			if (vpp_pwr_status_bit ==
+			    ((last_vpp_pwr_status >> (device_id + 1)) & 0x1)) {
+				continue;
+			}
+
+			if (vpp_pwr_status_bit == 0) {
+				set_power_status = POWER_ON;
+			} else {
+				set_power_status = POWER_OFF;
+			}
+
+			// Notify 1OU BIC to turn on/off E1.S power
+			memset(&msg, 0, sizeof(msg));
+			msg.InF_source = SELF;
+			msg.InF_target = EXP1_IPMB;
+			msg.netfn = NETFN_OEM_1S_REQ;
+			msg.cmd = CMD_OEM_1S_GET_SET_M2;
+			msg.data_len = 5;
+			memcpy(&msg.data[0], (uint8_t *)&iana, 3);
+			msg.data[3] = _1ou_m2_mapping_table[device_id];
+			msg.data[4] = set_power_status;
+			for (i = 0; i < retry; i++) {
+				status = ipmb_read(&msg, IPMB_inf_index_map[msg.InF_target]);
+				if (status == IPMB_ERROR_SUCCESS) {
+					break;
+				}
+			}
+
+			if (i == retry) {
+				LOG_ERR("Failed to send OEM_1S_GET_SET_M2 command 0x%x to 0x%x device%x\n",
+					CMD_OEM_1S_GET_SET_M2, EXP1_IPMB,
+					_1ou_m2_name_mapping_table[device_id]);
+				continue;
+			}
+
+			// Add SEL about VPP power event
+			if (gpio_get(FM_SLPS3_PLD_N) == LOW_INACTIVE) {
+				memset(&sel_msg, 0, sizeof(common_addsel_msg_t));
+				sel_msg.InF_target = BMC_IPMB;
+				sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+				sel_msg.event_type = IPMI_OEM_EVENT_TYPE_NOTIFY;
+				sel_msg.sensor_number = SENSOR_NUM_VPP_POWER_CONTROL;
+				sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_VPP_EVENT;
+				sel_msg.event_data2 = _1ou_m2_name_mapping_table[device_id];
+				sel_msg.event_data3 = IPMI_OEM_EVENT_OFFSET_1OU;
+				if (!common_add_sel_evt_record(&sel_msg)) {
+					LOG_ERR("%s addsel fail\n", __func__);
+				}
+			}
+		}
+		last_vpp_pwr_status = i2c_msg.data[0];
 	}
 }
