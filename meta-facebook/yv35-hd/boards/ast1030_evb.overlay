@@ -222,3 +222,7 @@
 	dma-mode;
 	dma-ringbuf-size = <0x4000>;
 };
+
+&sram0 {
+    reg = <0 DT_SIZE_K(512)>, <0x80000 DT_SIZE_K(256)>;
+};

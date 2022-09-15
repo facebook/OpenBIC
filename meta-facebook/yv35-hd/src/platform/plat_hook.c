@@ -6,11 +6,14 @@
 #include "plat_hook.h"
 #include "plat_sensor_table.h"
 #include "i2c-mux-tca9548.h"
+#include "logging/log.h"
 
 #define ADJUST_ADM1278_CURRENT(x) (x * 0.94)
 #define ADJUST_ADM1278_POWER(x) (x * 0.95)
 #define ADJUST_LTC4282_CURRENT(x) ((x * 0.96) - 0.04)
 #define ADJUST_LTC4282_POWER(x) ((x * 0.96) - 0.6)
+
+LOG_MODULE_REGISTER(plat_hook);
 
 /**************************************************************************************************
  * INIT ARGS
@@ -56,17 +59,13 @@ apml_mailbox_init_arg apml_mailbox_init_args[] = {
 
 bool pre_nvme_read(uint8_t sensor_num, void *args)
 {
-	if (!args) {
-		return false;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
 	return tca9548_select_chan(sensor_num, (struct tca9548 *)args);
 }
 
 bool pre_vr_read(uint8_t sensor_num, void *args)
 {
-	if (args == NULL) {
-		return false;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
 	vr_pre_proc_arg *pre_proc_args = (vr_pre_proc_arg *)args;
 	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
@@ -80,7 +79,7 @@ bool pre_vr_read(uint8_t sensor_num, void *args)
 	msg.data[0] = 0x00;
 	msg.data[1] = pre_proc_args->vr_page;
 	if (i2c_master_write(&msg, retry)) {
-		printf("[%s] set page fail\n", __func__);
+		LOG_ERR("Failed to set VR page, sensor_num 0x%x \n", sensor_num);
 		return false;
 	}
 	return true;
@@ -101,6 +100,7 @@ bool pre_vol_bat3v_read(uint8_t sensor_num, void *args)
 bool post_vol_bat3v_read(uint8_t sensor_num, void *args, int *reading)
 {
 	ARG_UNUSED(args);
+	ARG_UNUSED(reading);
 
 	if (sensor_num == SENSOR_NUM_VOL_P3V_BAT) {
 		gpio_set(P3V_BAT_SCALED_EN_R, GPIO_LOW);
@@ -112,6 +112,9 @@ bool post_vol_bat3v_read(uint8_t sensor_num, void *args, int *reading)
 
 bool post_adm1278_cur_read(uint8_t sensor_num, void *args, int *reading)
 {
+	ARG_UNUSED(args);
+	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+
 	sensor_val *sval = (sensor_val *)reading;
 	float val = sval->integer + (sval->fraction * 0.001);
 	val = ADJUST_ADM1278_CURRENT(val);
@@ -123,6 +126,9 @@ bool post_adm1278_cur_read(uint8_t sensor_num, void *args, int *reading)
 
 bool post_adm1278_pwr_read(uint8_t sensor_num, void *args, int *reading)
 {
+	ARG_UNUSED(args);
+	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+
 	sensor_val *sval = (sensor_val *)reading;
 	float val = sval->integer + (sval->fraction * 0.001);
 	val = ADJUST_ADM1278_POWER(val);
@@ -134,6 +140,9 @@ bool post_adm1278_pwr_read(uint8_t sensor_num, void *args, int *reading)
 
 bool post_ltc4282_cur_read(uint8_t sensor_num, void *args, int *reading)
 {
+	ARG_UNUSED(args);
+	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+
 	sensor_val *sval = (sensor_val *)reading;
 	float val = sval->integer + (sval->fraction * 0.001);
 	val = ADJUST_LTC4282_CURRENT(val);
@@ -145,6 +154,9 @@ bool post_ltc4282_cur_read(uint8_t sensor_num, void *args, int *reading)
 
 bool post_ltc4282_pwr_read(uint8_t sensor_num, void *args, int *reading)
 {
+	ARG_UNUSED(args);
+	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+
 	sensor_val *sval = (sensor_val *)reading;
 	float val = sval->integer + (sval->fraction * 0.001);
 	val = ADJUST_LTC4282_POWER(val);
