@@ -25,8 +25,8 @@
 #include "plat_sensor_table.h"
 
 SDR_Full_sensor plat_sdr_table[] = {
+	/* =============================== TEMPARUTURE SENSOR =============================== */
 	{
-		/* TEMPARUTURE SENSOR */
 		// TMP75 on board temperature - inlet
 		0x00,
 		0x00, // record ID
@@ -1125,7 +1125,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"FAON SPS Temp",
 	},
 
-	/* VOLTAGE SENSOR */
+	/* =============================== VOLTAGE SENSOR =============================== */
 	{
 		// P12V STBY ADC voltage
 		0x00,
@@ -2103,7 +2103,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"IOM INA vol",
 	},
 
-	/* CURRENT SENSOR */
+	/* =============================== CURRENT SENSOR =============================== */
 	{
 		// HSCOUT current
 		0x00,
@@ -2593,7 +2593,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"IOM INA Cur",
 	},
 
-	/* POWER SENSOR */
+	/* =============================== POWER SENSOR =============================== */
 	{
 		// CPU power
 		0x00,

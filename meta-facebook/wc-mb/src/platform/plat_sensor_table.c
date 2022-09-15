@@ -249,6 +249,90 @@ sensor_cfg plat_sensor_config[] = {
 
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
 
+void load_sensor_config(void)
+{
+	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
+	sensor_config_count = ARRAY_SIZE(plat_sensor_config);
+
+	// Fix config table in different system/config
+	pal_extend_sensor_config();
+}
+
+void check_vr_type(uint8_t index)
+{
+	uint8_t retry = 5;
+	I2C_MSG msg;
+	char data = PMBUS_IC_DEVICE_ID;
+
+	/* Get IC Device ID from VR chip
+	 * - Command code: 0xAD
+	 * - The response data
+	 *   byte-1: Block read count
+	 *   byte-2: Device ID
+	 * For the ISL69259 chip,
+	 * the byte-1 of response data is 4 and the byte-2 to 5 is 49D28100h.
+	 * For the TPS53689 chip,
+	 * the byte-1 of response data is 6 and the byte-2 to 7 is 544953689000h.
+	 * For the XDPE15284 chip,
+	 * the byte-1 is returned as 2 and the byte-2 is 8Ah(XDPE15284).
+	 */
+	uint8_t bus = sensor_config[index].port;
+	uint8_t target_addr = sensor_config[index].target_addr;
+	uint8_t tx_len = 1;
+	uint8_t rx_len = 7;
+	msg = construct_i2c_message(bus, target_addr, tx_len, &data, rx_len);
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("sensor #%-2xh vr type: failed to read VR register(0x%x), using default type ISL69259...",
+			sensor_config[index].num, data);
+		return;
+	}
+
+	if ((msg.data[0] == 0x02) && (msg.data[2] == 0x8A)) {
+		LOG_INF("sensor #%-2xh vr type: XDPE15284", sensor_config[index].num);
+		sensor_config[index].type = sensor_dev_xdpe15284;
+		switch (sensor_config[index].target_addr) {
+		case VR_PU14_SRC0_ADDR:
+			sensor_config[index].target_addr = VR_PU14_SRC1_ADDR;
+			break;
+		case VR_PU5_SRC0_ADDR:
+			sensor_config[index].target_addr = VR_PU5_SRC1_ADDR;
+			break;
+		case VR_PU35_SRC0_ADDR:
+			sensor_config[index].target_addr = VR_PU35_SRC1_ADDR;
+			break;
+		default:
+			LOG_ERR("sensor #%-2xh vr type: invalid address, using default VR address...",
+				sensor_config[index].num);
+			break;
+		}
+	} else if ((msg.data[0] == 0x04) && (msg.data[1] == 0x00) && (msg.data[2] == 0x81) &&
+		   (msg.data[3] == 0xD2) && (msg.data[4] == 0x49)) {
+		LOG_INF("sensor #%-2xh vr type: ISL69259", sensor_config[index].num);
+	} else {
+		LOG_WRN("sensor #%-2xh vr type: non-support type, using default type ISL69259...",
+			sensor_config[index].num);
+	}
+}
+
+void pal_extend_sensor_config()
+{
+	uint8_t sensor_count = 0;
+
+	/* Check the VR sensor type */
+	sensor_count = ARRAY_SIZE(plat_sensor_config);
+	for (uint8_t index = 0; index < sensor_count; index++) {
+		if (sensor_config[index].type == sensor_dev_isl69259) {
+			check_vr_type(index);
+		}
+	}
+
+	if (sensor_config_count != sdr_count) {
+		LOG_WRN("[%s] extend sensor SDR and config table not match, sdr size: 0x%x, sensor config size: 0x%x",
+			__func__, sdr_count, sensor_config_count);
+	}
+}
+
 bool pal_is_time_to_poll(uint8_t sensor_num, int poll_time)
 {
 	int i = 0;
