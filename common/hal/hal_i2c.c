@@ -52,13 +52,18 @@ int i2c_master_read(I2C_MSG *msg, uint8_t retry)
 		msg->rx_len, msg->tx_len);
 	LOG_HEXDUMP_DBG(msg->data, msg->tx_len, "txbuf");
 
+	if (check_i2c_bus_valid(msg->bus) < 0) {
+		LOG_ERR("%s: i2c bus %d is invalid", __func__, msg->bus);
+		return -1;
+	}
+
 	if (msg->rx_len == 0) {
-		LOG_ERR("%s: i2c_master_read with rx_len = 0", __func__);
+		LOG_ERR("%s: rx_len = 0", __func__);
 		return EMSGSIZE;
 	}
 
-	if (check_i2c_bus_valid(msg->bus) < 0) {
-		LOG_ERR("%s: i2c bus %d is invalid", __func__, msg->bus);
+	if (msg->tx_len > I2C_BUFF_SIZE) {
+		LOG_ERR("%s: tx_len %d is over limit %d", __func__, msg->tx_len, I2C_BUFF_SIZE);
 		return -1;
 	}
 
@@ -71,8 +76,8 @@ int i2c_master_read(I2C_MSG *msg, uint8_t retry)
 	}
 
 	int ret = 0;
-	uint8_t txbuf[I2C_BUFF_SIZE] = {0};
-	uint8_t rxbuf[I2C_BUFF_SIZE] = {0};
+	uint8_t txbuf[I2C_BUFF_SIZE] = { 0 };
+	uint8_t rxbuf[I2C_BUFF_SIZE] = { 0 };
 	memcpy(txbuf, &msg->data[0], msg->tx_len);
 
 	uint8_t i;
@@ -106,7 +111,12 @@ int i2c_master_write(I2C_MSG *msg, uint8_t retry)
 	LOG_HEXDUMP_DBG(msg->data, msg->tx_len, "txbuf");
 
 	if (check_i2c_bus_valid(msg->bus) < 0) {
-		LOG_ERR("i2c bus %d is invalid", msg->bus);
+		LOG_ERR("%s: i2c bus %d is invalid", __func__, msg->bus);
+		return -1;
+	}
+
+	if (msg->tx_len > I2C_BUFF_SIZE) {
+		LOG_ERR("%s: tx_len %d is over limit %d", __func__, msg->tx_len, I2C_BUFF_SIZE);
 		return -1;
 	}
 
@@ -119,7 +129,7 @@ int i2c_master_write(I2C_MSG *msg, uint8_t retry)
 	}
 
 	int ret = 0;
-	uint8_t txbuf[I2C_BUFF_SIZE] = {0};
+	uint8_t txbuf[I2C_BUFF_SIZE] = { 0 };
 	memcpy(txbuf, &msg->data[0], msg->tx_len);
 
 	uint8_t i;
