@@ -71,10 +71,8 @@ int i2c_master_read(I2C_MSG *msg, uint8_t retry)
 	}
 
 	int ret = 0;
-	uint8_t *txbuf = (uint8_t *)malloc(I2C_BUFF_SIZE * sizeof(uint8_t));
-	uint8_t *rxbuf = (uint8_t *)malloc(I2C_BUFF_SIZE * sizeof(uint8_t));
-	CHECK_NULL_ARG_WITH_RETURN(txbuf, -1);
-	CHECK_NULL_ARG_WITH_RETURN(rxbuf, -1);
+	uint8_t txbuf[I2C_BUFF_SIZE] = {0};
+	uint8_t rxbuf[I2C_BUFF_SIZE] = {0};
 	memcpy(txbuf, &msg->data[0], msg->tx_len);
 
 	uint8_t i;
@@ -91,9 +89,6 @@ int i2c_master_read(I2C_MSG *msg, uint8_t retry)
 	if (i == retry)
 		LOG_ERR("%s: I2C %d master read retry reach max with ret %d", __func__, msg->bus,
 			ret);
-
-	SAFE_FREE(txbuf);
-	SAFE_FREE(rxbuf);
 
 	status = k_mutex_unlock(&i2c_mutex[msg->bus]);
 	if (status)
@@ -124,8 +119,7 @@ int i2c_master_write(I2C_MSG *msg, uint8_t retry)
 	}
 
 	int ret = 0;
-	uint8_t *txbuf = (uint8_t *)malloc(I2C_BUFF_SIZE * sizeof(uint8_t));
-	CHECK_NULL_ARG_WITH_RETURN(txbuf, -1);
+	uint8_t txbuf[I2C_BUFF_SIZE] = {0};
 	memcpy(txbuf, &msg->data[0], msg->tx_len);
 
 	uint8_t i;
@@ -138,8 +132,6 @@ int i2c_master_write(I2C_MSG *msg, uint8_t retry)
 	if (i == retry)
 		LOG_ERR("%s: I2C %d master write retry reach max with ret %d", __func__, msg->bus,
 			ret);
-
-	SAFE_FREE(txbuf);
 
 	status = k_mutex_unlock(&i2c_mutex[msg->bus]);
 	if (status)
