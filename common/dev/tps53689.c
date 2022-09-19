@@ -51,8 +51,8 @@ uint8_t tps53689_read(uint8_t sensor_num, int *reading)
 		float actual_value = ((msg.data[1] << 8) | msg.data[0]) * exponent;
 		sval->integer = actual_value;
 		sval->fraction = (actual_value - sval->integer) * 1000;
-	} else if (offset == PMBUS_READ_IOUT || offset == PMBUS_READ_TEMPERATURE_1 ||
-		   offset == PMBUS_READ_POUT) {
+	} else if (offset == PMBUS_READ_IOUT || offset == PMBUS_READ_IIN ||
+		   offset == PMBUS_READ_TEMPERATURE_1 || offset == PMBUS_READ_POUT) {
 		/* SLINEAR11 */
 		uint16_t read_value = (msg.data[1] << 8) | msg.data[0];
 		float actual_value = slinear11_to_float(read_value);
