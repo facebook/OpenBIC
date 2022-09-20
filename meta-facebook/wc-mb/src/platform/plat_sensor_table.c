@@ -264,6 +264,16 @@ void check_vr_type(uint8_t index)
 	I2C_MSG msg;
 	char data = PMBUS_IC_DEVICE_ID;
 
+	/* Temporarily use PU14 to determine all vr sensors' type */
+	static bool vr_type_check = false;
+	static int vr_type;
+
+	if (vr_type_check)
+		return;
+
+	if (sensor_config[index].target_addr != VR_PU14_SRC0_ADDR)
+		return;
+
 	/* Get IC Device ID from VR chip
 	 * - Command code: 0xAD
 	 * - The response data
@@ -288,31 +298,43 @@ void check_vr_type(uint8_t index)
 		return;
 	}
 
-	if ((msg.data[0] == 0x02) && (msg.data[2] == 0x8A)) {
-		LOG_INF("sensor #%-2xh vr type: XDPE15284", sensor_config[index].num);
-		sensor_config[index].type = sensor_dev_xdpe15284;
-		switch (sensor_config[index].target_addr) {
-		case VR_PU14_SRC0_ADDR:
-			sensor_config[index].target_addr = VR_PU14_SRC1_ADDR;
-			break;
-		case VR_PU5_SRC0_ADDR:
-			sensor_config[index].target_addr = VR_PU5_SRC1_ADDR;
-			break;
-		case VR_PU35_SRC0_ADDR:
-			sensor_config[index].target_addr = VR_PU35_SRC1_ADDR;
-			break;
-		default:
-			LOG_ERR("sensor #%-2xh vr type: invalid address, using default VR address...",
-				sensor_config[index].num);
-			break;
-		}
+	if ((msg.data[0] == 0x06) && (msg.data[1] == 0x54) && (msg.data[2] == 0x49) &&
+	    (msg.data[3] == 0x53) && (msg.data[4] == 0x68) && (msg.data[5] == 0x90) &&
+	    (msg.data[6] == 0x00)) {
+		LOG_WRN("sensor #%-2xh vr type: TPS53689", sensor_config[index].num);
+		vr_type = sensor_dev_tps53689;
+	} else if ((msg.data[0] == 0x02) && (msg.data[2] == 0x8A)) {
+		LOG_WRN("sensor #%-2xh vr type: XDPE15284", sensor_config[index].num);
+		vr_type = sensor_dev_xdpe15284;
 	} else if ((msg.data[0] == 0x04) && (msg.data[1] == 0x00) && (msg.data[2] == 0x81) &&
 		   (msg.data[3] == 0xD2) && (msg.data[4] == 0x49)) {
 		LOG_INF("sensor #%-2xh vr type: ISL69259", sensor_config[index].num);
+		vr_type = sensor_dev_isl69259;
 	} else {
 		LOG_WRN("sensor #%-2xh vr type: non-support type, using default type ISL69259...",
 			sensor_config[index].num);
+		vr_type = sensor_dev_isl69259;
 	}
+
+	for (uint8_t index = 0; index < ARRAY_SIZE(plat_sensor_config); index++) {
+		if (sensor_config[index].type == sensor_dev_isl69259) {
+			/* if 2nd source, slave adress needed to be changed */
+			if (vr_type == sensor_dev_tps53689) {
+				if (sensor_config[index].target_addr == VR_PU14_SRC0_ADDR)
+					sensor_config[index].target_addr = VR_PU14_SRC1_ADDR;
+				else if (sensor_config[index].target_addr == VR_PU5_SRC0_ADDR)
+					sensor_config[index].target_addr = VR_PU5_SRC1_ADDR;
+				else if (sensor_config[index].target_addr == VR_PU35_SRC0_ADDR)
+					sensor_config[index].target_addr = VR_PU35_SRC1_ADDR;
+				else
+					LOG_ERR("sensor #%-2xh vr type: invalid address, using default VR address...",
+						sensor_config[index].num);
+			}
+			sensor_config[index].type = vr_type;
+		}
+	}
+
+	vr_type_check = true;
 }
 
 void pal_extend_sensor_config()
