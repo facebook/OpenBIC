@@ -19,7 +19,7 @@
 
 #ifdef CONFIG_BOARD_AST1030_EVB
 #define BIC_CHIP_NAME "AST1030"
-#elif
+#else
 #define BIC_CHIP_NAME "Unknown"
 #endif
 
