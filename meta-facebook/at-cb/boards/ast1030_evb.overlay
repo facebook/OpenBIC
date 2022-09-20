@@ -110,6 +110,21 @@
 	current-speed = <57600>;
 };
 
+&uart6 {
+	status = "okay";
+	current-speed = <57600>;
+};
+
+&uart7 {
+	status = "okay";
+	current-speed = <57600>;
+};
+
+&uart8 {
+	status = "okay";
+	current-speed = <57600>;
+};
+
 &fmc {
 	status = "okay";
 };
