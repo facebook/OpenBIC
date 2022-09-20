@@ -14,26 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_CLASS_H
-#define PLAT_CLASS_H
+#ifndef PLAT_INFO_SHELL_H
+#define PLAT_INFO_SHELL_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <shell/shell.h>
 
-typedef enum {
-    SYS_DUAL,
-    SYS_SINGLE,
-} system_class_t;
-
-typedef enum {
-    SRC_MAIN,
-    SRC_SECOND,
-} source_class_t;
-
-uint8_t get_system_class();
-uint8_t get_source_class();
-void set_source_class(source_class_t idx);
-
-void init_platform_config();
+int cmd_wcmb_info_print(const struct shell *shell, size_t argc, char **argv);
 
 #endif

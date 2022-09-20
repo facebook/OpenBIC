@@ -14,26 +14,13 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_CLASS_H
-#define PLAT_CLASS_H
+#include <zephyr.h>
+#include <shell/shell.h>
+#include "commands/plat_info_shell.h"
 
-#include <stdbool.h>
-#include <stdint.h>
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_wcmb_cmds,
+			       SHELL_CMD(info, NULL, "WC-MB info command", cmd_wcmb_info_print),
+			       SHELL_SUBCMD_SET_END);
 
-typedef enum {
-    SYS_DUAL,
-    SYS_SINGLE,
-} system_class_t;
-
-typedef enum {
-    SRC_MAIN,
-    SRC_SECOND,
-} source_class_t;
-
-uint8_t get_system_class();
-uint8_t get_source_class();
-void set_source_class(source_class_t idx);
-
-void init_platform_config();
-
-#endif
+/* Root of command test */
+SHELL_CMD_REGISTER(wcmb, &sub_wcmb_cmds, "Commands for WC-MB", NULL);

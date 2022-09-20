@@ -6,7 +6,7 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(wc-mb)
 
 set(common_path ../../common)
-FILE(GLOB app_sources src/ipmi/*.c src/platform/*.c src/lib/*.c)
+FILE(GLOB app_sources src/ipmi/*.c src/platform/*.c src/lib/*.c src/shell/*.c src/shell/commands/*.c)
 FILE(GLOB common_sources ${common_path}/service/*.c ${common_path}/service/*/*.c ${common_path}/hal/*.c ${common_path}/dev/*.c ${common_path}/shell/*.c ${common_path}/shell/commands/*.c)
 
 target_sources(app PRIVATE ${app_sources})
@@ -44,6 +44,8 @@ target_include_directories(app PRIVATE ${common_path}/shell/commands)
 target_include_directories(app PRIVATE src/ipmi/include)
 target_include_directories(app PRIVATE src/lib)
 target_include_directories(app PRIVATE src/platform)
+target_include_directories(app PRIVATE src/shell)
+target_include_directories(app PRIVATE src/shell/commands)
 
 # Fail build if there are any warnings 
 target_compile_options(app PRIVATE -Werror)
