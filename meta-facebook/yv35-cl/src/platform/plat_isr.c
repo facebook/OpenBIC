@@ -36,9 +36,9 @@ LOG_MODULE_REGISTER(plat_isr);
 uint8_t _1ou_m2_mapping_table[4] = { 4, 3, 2, 1 };
 uint8_t _1ou_m2_name_mapping_table[4] = {
 	0x3A,
-	0x3B,
 	0x3C,
-	0x3D,
+	0x3E,
+	0x37,
 };
 
 void send_gpio_interrupt(uint8_t gpio_num)
@@ -578,10 +578,10 @@ void ISR_CPU_VPP_INT()
 				sel_msg.InF_target = BMC_IPMB;
 				sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
 				sel_msg.event_type = IPMI_OEM_EVENT_TYPE_NOTIFY;
-				sel_msg.sensor_number = SENSOR_NUM_VPP_POWER_CONTROL;
+				sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
 				sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_VPP_EVENT;
-				sel_msg.event_data2 = _1ou_m2_name_mapping_table[device_id];
-				sel_msg.event_data3 = IPMI_OEM_EVENT_OFFSET_1OU;
+				sel_msg.event_data2 = IPMI_OEM_EVENT_OFFSET_1OU;
+				sel_msg.event_data3 = _1ou_m2_name_mapping_table[device_id];
 				if (!common_add_sel_evt_record(&sel_msg)) {
 					LOG_ERR("%s addsel fail\n", __func__);
 				}
