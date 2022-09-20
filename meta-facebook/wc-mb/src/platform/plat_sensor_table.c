@@ -316,21 +316,21 @@ void check_vr_type(uint8_t index)
 		vr_type = sensor_dev_isl69259;
 	}
 
-	for (uint8_t index = 0; index < ARRAY_SIZE(plat_sensor_config); index++) {
-		if (sensor_config[index].type == sensor_dev_isl69259) {
+	for (uint8_t idx = 0; idx < ARRAY_SIZE(plat_sensor_config); idx++) {
+		if (sensor_config[idx].type == sensor_dev_isl69259) {
 			/* if 2nd source, slave adress needed to be changed */
 			if (vr_type == sensor_dev_tps53689) {
-				if (sensor_config[index].target_addr == VR_PU14_SRC0_ADDR)
-					sensor_config[index].target_addr = VR_PU14_SRC1_ADDR;
-				else if (sensor_config[index].target_addr == VR_PU5_SRC0_ADDR)
-					sensor_config[index].target_addr = VR_PU5_SRC1_ADDR;
-				else if (sensor_config[index].target_addr == VR_PU35_SRC0_ADDR)
-					sensor_config[index].target_addr = VR_PU35_SRC1_ADDR;
+				if (sensor_config[idx].target_addr == VR_PU14_SRC0_ADDR)
+					sensor_config[idx].target_addr = VR_PU14_SRC1_ADDR;
+				else if (sensor_config[idx].target_addr == VR_PU5_SRC0_ADDR)
+					sensor_config[idx].target_addr = VR_PU5_SRC1_ADDR;
+				else if (sensor_config[idx].target_addr == VR_PU35_SRC0_ADDR)
+					sensor_config[idx].target_addr = VR_PU35_SRC1_ADDR;
 				else
 					LOG_ERR("sensor #%-2xh vr type: invalid address, using default VR address...",
-						sensor_config[index].num);
+						sensor_config[idx].num);
 			}
-			sensor_config[index].type = vr_type;
+			sensor_config[idx].type = vr_type;
 		}
 	}
 
