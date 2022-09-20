@@ -37,6 +37,8 @@ int cmd_info_print(const struct shell *shell, size_t argc, char **argv)
 	shell_print(shell, "* Note:          none");
 	shell_print(shell, "------------------------------------------------------------------");
 	shell_print(shell, "* PLATFORM:      %s-%s", PLATFORM_NAME, PROJECT_NAME);
+	shell_print(shell, "* BOARD ID:      %d", BOARD_ID);
+	shell_print(shell, "* STAGE:         %d", PROJECT_STAGE);
 	shell_print(shell, "* FW VERSION:    %d.%d", FIRMWARE_REVISION_1, FIRMWARE_REVISION_2);
 	shell_print(shell, "* FW DATE:       %x%x.%x.%x", BIC_FW_YEAR_MSB, BIC_FW_YEAR_LSB,
 		    BIC_FW_WEEK, BIC_FW_VER);
