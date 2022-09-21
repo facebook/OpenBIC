@@ -1903,7 +1903,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x8B, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
-		0x84, // LCT
+		0x7D, // LCT
 		0x00, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
