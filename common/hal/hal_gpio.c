@@ -17,8 +17,11 @@
 #include <zephyr.h>
 #include <stdio.h>
 #include <string.h>
+#include <logging/log.h>
 #include "hal_gpio.h"
 #include "util_sys.h"
+
+LOG_MODULE_REGISTER(hal_gpio);
 
 #define STACK_SIZE 2048
 
@@ -29,7 +32,7 @@ static K_THREAD_STACK_DEFINE(gpio_work_stack, GPIO_STACK_SIZE);
 
 struct k_work gpio_work[TOTAL_GPIO_NUM];
 
-uint8_t gpio_ind_to_num_table[200];
+uint8_t gpio_ind_to_num_table[TOTAL_GPIO_NUM];
 uint8_t gpio_ind_to_num_table_cnt;
 
 __weak const char *const gpio_name[] = {};
@@ -86,7 +89,7 @@ void irq_callback(const struct device *dev, struct gpio_callback *cb, uint32_t p
 	} else if (dev == dev_gpio[GPIO_U_V]) {
 		group = GPIO_U_V;
 	} else {
-		printf("invalid dev group for isr cb\n");
+		LOG_ERR("invalid dev group for isr cb\n");
 		return;
 	}
 
@@ -97,13 +100,13 @@ void irq_callback(const struct device *dev, struct gpio_callback *cb, uint32_t p
 		}
 	}
 	if (index == GPIO_GROUP_SIZE) {
-		printf("irq_callback: pin %x not found\n", pins);
+		LOG_ERR("irq_callback: pin %x not found\n", pins);
 		return;
 	}
 	gpio_num = (group * GPIO_GROUP_SIZE) + pins;
 
 	if (gpio_cfg[gpio_num].int_cb == NULL) {
-		printf("Callback function pointer NULL for gpio num %d\n", gpio_num);
+		LOG_ERR("Callback function pointer NULL for gpio num %d\n", gpio_num);
 		return;
 	}
 
@@ -120,15 +123,7 @@ static int gpio_add_cb(uint8_t gpio_num)
 {
 	return gpio_add_callback(dev_gpio[gpio_num / GPIO_GROUP_SIZE], &callbacks[gpio_num]);
 }
-/*
-interrupt type:
-  GPIO_INT_DISABLE
-  GPIO_INT_EDGE_RISING
-  GPIO_INT_EDGE_FALLING
-  GPIO_INT_EDGE_BOTH
-  GPIO_INT_LEVEL_LOW
-  GPIO_INT_LEVEL_HIGH
-*/
+
 int gpio_interrupt_conf(uint8_t gpio_num, gpio_flags_t flags)
 {
 	return gpio_pin_interrupt_configure(dev_gpio[gpio_num / GPIO_GROUP_SIZE],
@@ -155,12 +150,14 @@ int gpio_get_direction(uint8_t gpio_num)
 	uint8_t dir = 0xFF;
 
 	if (gpio_num >= TOTAL_GPIO_NUM) {
-		printf("getting invalid gpio num %d", gpio_num);
+		LOG_ERR("getting invalid gpio num %d", gpio_num);
 		return dir;
 	}
 
-	uint32_t g_dir = sys_read32(GPIO_GROUP_REG_ACCESS[gpio_num / 32] + 0x4);
-	if (g_dir & BIT(gpio_num % 32))
+	uint8_t gpio_group = gpio_num / GPIO_GROUP_SIZE;
+	uint8_t gpio_group_index = gpio_num % GPIO_GROUP_SIZE;
+	uint32_t g_dir = sys_read32(GPIO_GROUP_REG_ACCESS[gpio_group] + REG_DIRECTION_OFFSET);
+	if (g_dir & BIT(gpio_group_index))
 		dir = 0x01;
 	else
 		dir = 0x00;
@@ -171,33 +168,33 @@ int gpio_get_direction(uint8_t gpio_num)
 int gpio_get(uint8_t gpio_num)
 {
 	if (gpio_num >= TOTAL_GPIO_NUM) {
-		printf("getting invalid gpio num %d", gpio_num);
+		LOG_ERR("getting invalid gpio num %d", gpio_num);
 		return false;
 	}
 
 	return gpio_pin_get(dev_gpio[gpio_num / GPIO_GROUP_SIZE], (gpio_num % GPIO_GROUP_SIZE));
-	//  return gpio[0].get(&gpio[0], gpio_num);
 }
 
 int gpio_set(uint8_t gpio_num, uint8_t status)
 {
 	if (gpio_num >= TOTAL_GPIO_NUM) {
-		printf("setting invalid gpio num %d", gpio_num);
+		LOG_ERR("setting invalid gpio num %d", gpio_num);
 		return false;
 	}
 
+	uint8_t gpio_group = gpio_num / GPIO_GROUP_SIZE;
+	uint8_t gpio_group_index = gpio_num % GPIO_GROUP_SIZE;
+
 	if (gpio_cfg[gpio_num].property == OPEN_DRAIN) { // should release gpio ctrl for OD high
-		if (status) {
+		if (status == GPIO_HIGH) {
 			return gpio_conf(gpio_num, GPIO_INPUT);
 		} else {
 			gpio_conf(gpio_num, GPIO_OUTPUT);
-			return gpio_pin_set(dev_gpio[gpio_num / GPIO_GROUP_SIZE],
-					    (gpio_num % GPIO_GROUP_SIZE), status);
+			return gpio_pin_set(dev_gpio[gpio_group], gpio_group_index, GPIO_LOW);
 		}
-	} else {
-		return gpio_pin_set(dev_gpio[gpio_num / GPIO_GROUP_SIZE],
-				    (gpio_num % GPIO_GROUP_SIZE), status);
 	}
+
+	return gpio_pin_set(dev_gpio[gpio_group], gpio_group_index, status);
 }
 
 void gpio_index_to_num(void)
@@ -254,6 +251,8 @@ int gpio_init(const struct device *args)
 	gpio_index_to_num();
 
 	bool ac_lost = is_ac_lost();
+	uint8_t gpio_group = 0;
+	uint8_t gpio_group_index = 0;
 
 	k_work_queue_start(&gpio_work_queue, gpio_work_stack, GPIO_STACK_SIZE,
 			   K_PRIO_PREEMPT(CONFIG_MAIN_THREAD_PRIORITY), NULL);
@@ -261,25 +260,43 @@ int gpio_init(const struct device *args)
 
 	for (i = 0; i < TOTAL_GPIO_NUM; i++) {
 		if (gpio_cfg[i].is_init == ENABLE) {
-			if ((gpio_cfg[i].is_latch == ENABLE) && (!ac_lost)) {
+			if ((gpio_cfg[i].is_latch == ENABLE) && (ac_lost == false)) {
 				continue;
 			}
 			if (gpio_cfg[i].chip == CHIP_GPIO) {
-				gpio_set(gpio_cfg[i].number, gpio_cfg[i].status);
-				if (gpio_cfg[i].property ==
-				    PUSH_PULL) { // OD config is set during status set
-					gpio_conf(gpio_cfg[i].number, gpio_cfg[i].direction);
+				switch (gpio_cfg[i].property) {
+				case OPEN_DRAIN:
+					gpio_conf(gpio_cfg[i].number, GPIO_INPUT);
+					break;
+				case PUSH_PULL:
+					switch (gpio_cfg[i].direction) {
+					case GPIO_INPUT:
+						gpio_conf(gpio_cfg[i].number,
+							  gpio_cfg[i].direction);
+						break;
+					case GPIO_OUTPUT:
+						gpio_group = gpio_cfg[i].number / GPIO_GROUP_SIZE;
+						gpio_group_index =
+							gpio_cfg[i].number % GPIO_GROUP_SIZE;
+						gpio_pin_set(dev_gpio[gpio_group], gpio_group_index,
+							     gpio_cfg[i].status);
+						gpio_conf(gpio_cfg[i].number,
+							  gpio_cfg[i].direction);
+						break;
+					}
 				}
-				gpio_set(gpio_cfg[i].number, gpio_cfg[i].status);
-				if ((gpio_cfg[i].int_type == GPIO_INT_EDGE_RISING) ||
-				    (gpio_cfg[i].int_type == GPIO_INT_EDGE_FALLING) ||
-				    (gpio_cfg[i].int_type == GPIO_INT_EDGE_BOTH) ||
-				    (gpio_cfg[i].int_type == GPIO_INT_LEVEL_LOW) ||
-				    (gpio_cfg[i].int_type == GPIO_INT_LEVEL_HIGH)) {
+
+				switch (gpio_cfg[i].int_type) {
+				case GPIO_INT_EDGE_RISING:
+				case GPIO_INT_EDGE_FALLING:
+				case GPIO_INT_EDGE_BOTH:
+				case GPIO_INT_LEVEL_LOW:
+				case GPIO_INT_LEVEL_HIGH:
 					gpio_cb_irq_init(gpio_cfg[i].number, gpio_cfg[i].int_type);
+					break;
 				}
 			} else {
-				printf("TODO: add sgpio handler\n");
+				LOG_DBG("TODO: add sgpio handler\n");
 			}
 		}
 	}
