@@ -90,7 +90,7 @@ int i2c_master_read(I2C_MSG *msg, uint8_t retry)
 	memcpy(txbuf, &msg->data[0], msg->tx_len);
 
 	uint8_t i;
-	for (i = 0; i < retry; i++) {
+	for (i = 0; i <= retry; i++) {
 		ret = i2c_write_read(dev_i2c[msg->bus], msg->target_addr, txbuf, msg->tx_len, rxbuf,
 				     msg->rx_len);
 		if (ret == 0) { // i2c write read success
@@ -100,7 +100,7 @@ int i2c_master_read(I2C_MSG *msg, uint8_t retry)
 		}
 	}
 
-	if (i == retry)
+	if (i > retry)
 		LOG_ERR("%s: I2C %d master read retry reach max with ret %d", __func__, msg->bus,
 			ret);
 
@@ -151,13 +151,13 @@ int i2c_master_write(I2C_MSG *msg, uint8_t retry)
 	memcpy(txbuf, &msg->data[0], msg->tx_len);
 
 	uint8_t i;
-	for (i = 0; i < retry; i++) {
+	for (i = 0; i <= retry; i++) {
 		ret = i2c_write(dev_i2c[msg->bus], txbuf, msg->tx_len, msg->target_addr);
 		if (ret == 0) // i2c write success
 			break;
 	}
 
-	if (i == retry)
+	if (i > retry)
 		LOG_ERR("%s: I2C %d master write retry reach max with ret %d", __func__, msg->bus,
 			ret);
 
