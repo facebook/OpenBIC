@@ -18,10 +18,8 @@
 #include "plat_version.h"
 #include "util_sys.h"
 
-#ifdef CONFIG_BOARD_AST1030_EVB
-#define BIC_CHIP_NAME "AST1030"
-#else
-#define BIC_CHIP_NAME "Unknown"
+#ifndef CONFIG_BOARD
+#define CONFIG_BOARD "unknown"
 #endif
 
 #define RTOS_TYPE "Zephyr"
@@ -34,7 +32,7 @@ int cmd_info_print(const struct shell *shell, size_t argc, char **argv)
 	shell_print(shell, "* NAME:          Platform command");
 	shell_print(shell, "* DESCRIPTION:   Commands that could be used to debug or validate.");
 	shell_print(shell, "* DATE/VERSION:  none");
-	shell_print(shell, "* CHIP/OS:       %s - %s", BIC_CHIP_NAME, RTOS_TYPE);
+	shell_print(shell, "* CHIP/OS:       %s - %s", CONFIG_BOARD, RTOS_TYPE);
 	shell_print(shell, "* Note:          none");
 	shell_print(shell, "------------------------------------------------------------------");
 	shell_print(shell, "* PLATFORM:      %s-%s", PLATFORM_NAME, PROJECT_NAME);
