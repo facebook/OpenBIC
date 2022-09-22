@@ -30,21 +30,10 @@
 LOG_MODULE_REGISTER(plat_class);
 
 static uint8_t system_class = SYS_DUAL;
-static uint8_t source_class = SRC_MAIN;
 
 uint8_t get_system_class()
 {
 	return system_class;
-}
-
-uint8_t get_source_class()
-{
-	return source_class;
-}
-
-void set_source_class(source_class_t idx)
-{
-	source_class = idx;
 }
 
 void init_platform_config()

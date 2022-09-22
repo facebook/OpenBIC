@@ -25,14 +25,7 @@ typedef enum {
 	SYS_SINGLE,
 } system_class_t;
 
-typedef enum {
-	SRC_MAIN,
-	SRC_SECOND,
-} source_class_t;
-
 uint8_t get_system_class();
-uint8_t get_source_class();
-void set_source_class(source_class_t idx);
 
 void init_platform_config();
 

@@ -79,4 +79,6 @@ int pal_clear_cmos();
 
 void set_sys_ready_pin(uint8_t ready_gpio_name);
 
+uint8_t get_system_class();
+
 #endif
