@@ -18,8 +18,16 @@
 #define PLAT_FUNC_H
 
 #include <stdint.h>
+#include "ipmi.h"
+
+enum GET_SET_M2_OPTION {
+	DEVICE_SET_POWER_OFF = 0x00,
+	DEVICE_SET_POWER_ON = 0x01,
+	DEVICE_GET_POWER_STATUS = 0x03,
+};
 
 void send_gpio_interrupt(uint8_t gpio_num);
+int get_set_1ou_m2_power(ipmi_msg *msg, uint8_t device_id, uint8_t option);
 void ISR_PLTRST();
 void ISR_SLP3();
 void ISR_DC_ON();
