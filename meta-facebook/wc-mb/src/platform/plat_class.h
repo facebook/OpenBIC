@@ -20,8 +20,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define SYS_CLASS_1 1
-#define SYS_CLASS_2 2
+typedef enum {
+	SYS_DUAL,
+	SYS_SINGLE,
+} system_class_t;
 
 uint8_t get_system_class();
 

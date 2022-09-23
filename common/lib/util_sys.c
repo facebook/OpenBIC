@@ -106,6 +106,11 @@ __weak int pal_clear_cmos()
 	return -1;
 }
 
+__weak uint8_t get_system_class()
+{
+	return -1;
+}
+
 /* The byte-2 of ME response for "Get Self-Test Result" command */
 enum GET_SELF_TEST_RESULT_RESPONSE {
 	NO_ERROR = 0x55,
