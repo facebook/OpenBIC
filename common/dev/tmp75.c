@@ -30,7 +30,7 @@ uint8_t tmp75_read(uint8_t sensor_num, int *reading)
 	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
 	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
 	msg.tx_len = 1;
-	msg.rx_len = 1;
+	msg.rx_len = 2;
 	msg.data[0] = sensor_config[sensor_config_index_map[sensor_num]].offset;
 
 	if (i2c_master_read(&msg, retry))
