@@ -454,6 +454,11 @@ bool vr_access(uint8_t sensor_num)
 	return get_vr_monitor_status();
 }
 
+bool vr_stby_access(uint8_t sensor_num)
+{
+	return get_vr_monitor_status();
+}
+
 void sensor_poll_init()
 {
 	k_thread_create(&sensor_poll, sensor_poll_stack, K_THREAD_STACK_SIZEOF(sensor_poll_stack),

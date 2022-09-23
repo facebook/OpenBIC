@@ -411,6 +411,7 @@ bool dc_access(uint8_t sensor_num);
 bool post_access(uint8_t sensor_num);
 bool me_access(uint8_t sensor_num);
 bool vr_access(uint8_t sensor_num);
+bool vr_stby_access(uint8_t sensor_num);
 bool sensor_init(void);
 void disable_sensor_poll();
 void enable_sensor_poll();
