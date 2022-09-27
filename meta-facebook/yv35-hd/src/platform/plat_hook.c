@@ -23,6 +23,7 @@
 #include "plat_sensor_table.h"
 #include "i2c-mux-tca9548.h"
 #include "logging/log.h"
+#include "apml.h"
 
 #define ADJUST_ADM1278_CURRENT(x) (x * 0.94)
 #define ADJUST_ADM1278_POWER(x) (x * 0.95)
@@ -57,16 +58,20 @@ vr_pre_proc_arg vr_pre_read_args[] = {
 	[1] = { 0x1 },
 };
 
-apml_mailbox_init_arg apml_mailbox_init_args[] = {
-	[0] = { .data = 0x00000000, .retry = 0 },  [1] = { .data = 0x00000002, .retry = 0 },
-	[2] = { .data = 0x00000001, .retry = 0 },  [3] = { .data = 0x00000003, .retry = 0 },
-	[4] = { .data = 0x00000010, .retry = 0 },  [5] = { .data = 0x00000012, .retry = 0 },
-	[6] = { .data = 0x00000011, .retry = 0 },  [7] = { .data = 0x00000013, .retry = 0 },
-	[8] = { .data = 0x00000000, .retry = 0 },  [9] = { .data = 0x00000002, .retry = 0 },
-	[10] = { .data = 0x00000001, .retry = 0 }, [11] = { .data = 0x00000003, .retry = 0 },
-	[12] = { .data = 0x00000010, .retry = 0 }, [13] = { .data = 0x00000012, .retry = 0 },
-	[14] = { .data = 0x00000011, .retry = 0 }, [15] = { .data = 0x00000013, .retry = 0 },
-	[16] = { .data = 0x00000000, .retry = 0 },
+apml_mailbox_init_arg apml_mailbox_init_args[] = { [0] = { .data = 0x00000000, .retry = 0 } };
+
+ddr5_init_temp_arg ddr5_init_temp_args[] = {
+	[0] = { .HID_code = 0x00, .port_number = 0 }, [1] = { .HID_code = 0x02, .port_number = 0 },
+	[2] = { .HID_code = 0x01, .port_number = 0 }, [3] = { .HID_code = 0x03, .port_number = 0 },
+	[4] = { .HID_code = 0x00, .port_number = 1 }, [5] = { .HID_code = 0x02, .port_number = 1 },
+	[6] = { .HID_code = 0x01, .port_number = 1 }, [7] = { .HID_code = 0x03, .port_number = 1 },
+};
+
+ddr5_init_power_arg ddr5_init_power_args[] = {
+	[0] = { .HID_code = 0x00, .port_number = 0 }, [1] = { .HID_code = 0x02, .port_number = 0 },
+	[2] = { .HID_code = 0x01, .port_number = 0 }, [3] = { .HID_code = 0x03, .port_number = 0 },
+	[4] = { .HID_code = 0x00, .port_number = 1 }, [5] = { .HID_code = 0x02, .port_number = 1 },
+	[6] = { .HID_code = 0x01, .port_number = 1 }, [7] = { .HID_code = 0x03, .port_number = 1 },
 };
 
 /**************************************************************************************************
@@ -178,6 +183,127 @@ bool post_ltc4282_pwr_read(uint8_t sensor_num, void *args, int *reading)
 	val = ADJUST_LTC4282_POWER(val);
 	sval->integer = (int16_t)val;
 	sval->fraction = (val - sval->integer) * 1000;
+
+	return true;
+}
+
+void apml_report_fail_cb(apml_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+	CHECK_NULL_ARG(msg->ptr_arg);
+
+	sensor_cfg *cfg = (sensor_cfg *)msg->ptr_arg;
+	LOG_ERR("Failed to report DIMM power/temperature to CPU, sensor number 0x%x.", cfg->num);
+}
+
+void apml_report_result_check(apml_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+	CHECK_NULL_ARG(msg->ptr_arg);
+
+	sensor_cfg *cfg = (sensor_cfg *)msg->ptr_arg;
+	mailbox_RdData *rddata = (mailbox_RdData *)msg->RdData;
+
+	if (rddata->error_code != SBRMI_MAILBOX_NO_ERR) {
+		LOG_ERR("Error when report DIMM power/temperature, error code %d, sensor number 0x%x.",
+			rddata->error_code, cfg->num);
+	}
+}
+
+bool post_ddr5_pwr_read(uint8_t sensor_num, void *args, int *reading)
+{
+	ARG_UNUSED(args);
+	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+
+	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+	ddr5_init_power_arg *init_arg = cfg->init_args;
+	CHECK_NULL_ARG_WITH_RETURN(init_arg, false);
+
+	if (cfg->cache_status != SENSOR_READ_4BYTE_ACUR_SUCCESS) {
+		return true;
+	}
+
+	/* report DIMM power consumption
+	 * Command: 40h
+	 * Data in:
+	 * 		[7:0]  : DIMM address
+	 * 		[16:8] : Update rate
+	 * 		[31:17]: DIMM power(mWatt)
+	 */
+	apml_msg mailbox_msg;
+	memset(&mailbox_msg, 0, sizeof(apml_msg));
+	mailbox_msg.msg_type = APML_MSG_TYPE_MAILBOX;
+	mailbox_msg.bus = I2C_BUS14;
+	mailbox_msg.target_addr = APML_ADDR;
+	mailbox_msg.error_cb_fn = apml_report_fail_cb;
+	mailbox_msg.cb_fn = apml_report_result_check;
+	mailbox_msg.ptr_arg = cfg;
+
+	mailbox_WrData *wrdata = (mailbox_WrData *)mailbox_msg.WrData;
+	report_dimm_power_data_in *data_in = (report_dimm_power_data_in *)wrdata->data_in;
+	sensor_val *sval = (sensor_val *)&cfg->cache;
+	uint16_t pwr_mw = (sval->integer * 1000) + sval->fraction;
+
+	wrdata->command = SBRMI_MAILBOX_REPORT_DIMM_POWER;
+	data_in->dimm_addr = (init_arg->HID_code & 0x07) | ((init_arg->port_number << 4) & 0x30);
+	data_in->update_rate = 0x1FF;
+	data_in->dimm_power_mw = pwr_mw & 0x7FFF;
+
+	apml_read(&mailbox_msg);
+	return true;
+}
+
+bool post_ddr5_temp_read(uint8_t sensor_num, void *args, int *reading)
+{
+	ARG_UNUSED(args);
+	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+
+	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+	ddr5_init_temp_arg *init_arg = cfg->init_args;
+	CHECK_NULL_ARG_WITH_RETURN(init_arg, false);
+
+	if (cfg->cache_status != SENSOR_READ_4BYTE_ACUR_SUCCESS) {
+		return true;
+	}
+
+	/* report DIMM thermal sensor(TS0/TS1)
+	 * Command: 41h
+	 * Data in:
+	 * 		[7:0]  : DIMM address
+	 * 		[16:8] : Update rate
+	 * 		[31:21]: Temperature(0.25 degree C/LSB)
+	 */
+	apml_msg mailbox_msg;
+	memset(&mailbox_msg, 0, sizeof(apml_msg));
+
+	mailbox_msg.msg_type = APML_MSG_TYPE_MAILBOX;
+	mailbox_msg.bus = I2C_BUS14;
+	mailbox_msg.target_addr = APML_ADDR;
+	mailbox_msg.error_cb_fn = apml_report_fail_cb;
+	mailbox_msg.cb_fn = apml_report_result_check;
+	mailbox_msg.ptr_arg = cfg;
+	mailbox_WrData *wrdata = (mailbox_WrData *)mailbox_msg.WrData;
+	report_dimm_temp_data_in *data_in = (report_dimm_temp_data_in *)wrdata->data_in;
+
+	/* TS0 */
+	uint16_t temp = (uint16_t)(init_arg->ts0_temp * 4);
+
+	wrdata->command = SBRMI_MAILBOX_REPORT_DIMM_TEMP;
+	data_in->dimm_addr = (init_arg->HID_code & 0x07) | ((init_arg->port_number << 4) & 0x30);
+	data_in->update_rate = 0x1FF;
+	data_in->dimm_temp = temp & 0x7FF;
+	apml_read(&mailbox_msg);
+
+	/* TS1 */
+	memset(&wrdata, 0, sizeof(mailbox_WrData));
+	temp = (uint16_t)(init_arg->ts1_temp * 4);
+
+	wrdata->command = SBRMI_MAILBOX_REPORT_DIMM_TEMP;
+	data_in->dimm_addr =
+		(init_arg->HID_code & 0x07) | ((init_arg->port_number << 4) & 0x30) | 0x40;
+	data_in->update_rate = 0x1FF;
+	data_in->dimm_temp = temp & 0x7FF;
+	apml_read(&mailbox_msg);
 
 	return true;
 }
