@@ -32,38 +32,6 @@
 #define NUM_OF_GPIO_IS_DEFINE 167
 
 // clang-format off
-const char *const sensor_type_name[] = {
-	sensor_name_to_num(tmp75)
-	sensor_name_to_num(adc)
-	sensor_name_to_num(peci)
-	sensor_name_to_num(isl69259)
-	sensor_name_to_num(hsc)
-	sensor_name_to_num(nvme)
-	sensor_name_to_num(pch)
-	sensor_name_to_num(mp5990)
-	sensor_name_to_num(isl28022)
-	sensor_name_to_num(pex89000)
-	sensor_name_to_num(tps53689)
-	sensor_name_to_num(xdpe15284)
-	sensor_name_to_num(ltc4282)
-	sensor_name_to_num(fan)
-	sensor_name_to_num(tmp431)
-	sensor_name_to_num(pmic)
-	sensor_name_to_num(ina233)
-	sensor_name_to_num(isl69254)
-	sensor_name_to_num(max16550a)
-	sensor_name_to_num(ina230)
-	sensor_name_to_num(xdpe12284c)
-	sensor_name_to_num(raa229621)
-	sensor_name_to_num(nct7718w)
-	sensor_name_to_num(ltc4286)
-	sensor_name_to_num(amd_tsi)
-	sensor_name_to_num(apml_mailbox)
-	sensor_name_to_num(xdpe19283b)
-	sensor_name_to_num(g788p81u)
-	sensor_name_to_num(mp2856gut)
-};
-
 const char *const sensor_status_name[] = {
 	sensor_name_to_num(read_success)
 	sensor_name_to_num(read_acur_success)
@@ -151,7 +119,7 @@ static int sensor_access(const struct shell *shell, int sensor_num, enum SENSOR_
 				int16_t integer = sensor_config[sen_idx].cache & 0xFFFF;
 				shell_print(
 					shell,
-					"[0x%-2x] %-25s: %-10s | access[%c] | poll[%c] %-4d sec | %-25s | %d.%d",
+					"[0x%-2x] %-25s: %-10s | access[%c] | poll[%c] %-4d sec | %-25s | %5d.%03d",
 					sensor_config[sen_idx].num, sensor_name,
 					sensor_type_name[sensor_config[sen_idx].type], check_access,
 					check_poll, (int)sensor_config[sen_idx].poll_time,
@@ -198,10 +166,14 @@ static int sensor_access(const struct shell *shell, int sensor_num, enum SENSOR_
 
 void cmd_sensor_cfg_list_all(const struct shell *shell, size_t argc, char **argv)
 {
-	if (argc != 1) {
-		shell_warn(shell, "Help: platform sensor list_all");
+	if (argc != 1 && argc != 2) {
+		shell_warn(shell, "Help: platform sensor list_all <key_word(optional)>");
 		return;
 	}
+
+	char *key_word = NULL;
+	if (argc == 2)
+		key_word = argv[1];
 
 	if (sensor_config_count == 0) {
 		shell_warn(shell, "[%s]: sensor monitor count is zero", __func__);
@@ -211,8 +183,19 @@ void cmd_sensor_cfg_list_all(const struct shell *shell, size_t argc, char **argv
 	shell_print(
 		shell,
 		"---------------------------------------------------------------------------------");
-	for (int sen_idx = 0; sen_idx < sensor_config_count; sen_idx++)
+	for (int sen_idx = 0; sen_idx < sensor_config_count; sen_idx++) {
+		int sdr_index = get_sdr_index_by_sensor_num(sensor_config[sen_idx].num);
+		if (sdr_index == -1) {
+			shell_error(shell, "[%s] can't find sensor number in sdr table.\n",
+				    __func__);
+			return;
+		}
+		if (key_word && !strstr(full_sdr_table[sdr_index].ID_str, key_word) &&
+		    !strstr(sensor_type_name[sensor_config[sen_idx].type], key_word))
+			continue;
+
 		sensor_access(shell, sensor_config[sen_idx].num, SENSOR_READ);
+	}
 
 	shell_print(
 		shell,
@@ -273,7 +256,7 @@ void cmd_control_sensor_polling(const struct shell *shell, size_t argc, char **a
 
 	sensor_config[sensor_index].is_enable_polling =
 		((operation == DISABLE_SENSOR_POLLING) ? DISABLE_SENSOR_POLLING :
-							       ENABLE_SENSOR_POLLING);
+							 ENABLE_SENSOR_POLLING);
 	shell_print(shell, "Sensor number 0x%x %s sensor polling success", sensor_num,
 		    ((operation == DISABLE_SENSOR_POLLING) ? "disable" : "enable"));
 	return;

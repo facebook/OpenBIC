@@ -56,12 +56,48 @@ static bool sensor_poll_enable_flag = true;
 static bool is_sensor_initial_done = false;
 static bool is_sensor_ready_flag = false;
 
-const int negative_ten_power[16] = { 1,	    1,		1,	   1,	     1,	      1,
-				     1,	    1000000000, 100000000, 10000000, 1000000, 100000,
-				     10000, 1000,	100,	   10 };
+const int negative_ten_power[16] = { 1,     1,		1,	 1,	1,       1,
+				     1,     1000000000, 100000000, 10000000, 1000000, 100000,
+				     10000, 1000,       100,       10 };
 
 sensor_cfg *sensor_config;
 uint8_t sensor_config_count;
+
+// clang-format off
+const char *const sensor_type_name[] = {
+	sensor_name_to_num(tmp75)
+	sensor_name_to_num(adc)
+	sensor_name_to_num(peci)
+	sensor_name_to_num(isl69259)
+	sensor_name_to_num(hsc)
+	sensor_name_to_num(nvme)
+	sensor_name_to_num(pch)
+	sensor_name_to_num(mp5990)
+	sensor_name_to_num(isl28022)
+	sensor_name_to_num(pex89000)
+	sensor_name_to_num(tps53689)
+	sensor_name_to_num(xdpe15284)
+	sensor_name_to_num(ltc4282)
+	sensor_name_to_num(fan)
+	sensor_name_to_num(tmp431)
+	sensor_name_to_num(pmic)
+	sensor_name_to_num(ina233)
+	sensor_name_to_num(isl69254)
+	sensor_name_to_num(max16550a)
+	sensor_name_to_num(ina230)
+	sensor_name_to_num(xdpe12284c)
+	sensor_name_to_num(raa229621)
+	sensor_name_to_num(nct7718w)
+	sensor_name_to_num(ltc4286)
+#ifdef ENABLE_APML
+	sensor_name_to_num(amd_tsi)
+	sensor_name_to_num(apml_mailbox)
+#endif
+	sensor_name_to_num(xdpe19283b)
+	sensor_name_to_num(g788p81u)
+	sensor_name_to_num(mp2856gut)
+};
+// clang-format on
 
 SENSOR_DRIVE_INIT_DECLARE(tmp75);
 SENSOR_DRIVE_INIT_DECLARE(ast_adc);
