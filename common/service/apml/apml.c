@@ -18,6 +18,7 @@
 #include <string.h>
 #include "hal_i2c.h"
 #include "apml.h"
+#include "power_status.h"
 
 #define RETRY_MAX 3
 #define MAILBOX_COMPLETE_RETRY_MAX 200
@@ -404,6 +405,14 @@ static void apml_handler(void *arvg0, void *arvg1, void *arvg2)
 		ret = APML_ERROR;
 		memset(&msg_data, 0, sizeof(apml_msg));
 		k_msgq_get(&apml_msgq, &msg_data, K_FOREVER);
+
+		if (get_post_status() == false) {
+			if (msg_data.error_cb_fn) {
+				msg_data.error_cb_fn(&msg_data);
+			}
+			k_msleep(10);
+			continue;
+		}
 
 		switch (msg_data.msg_type) {
 		case APML_MSG_TYPE_MAILBOX:
