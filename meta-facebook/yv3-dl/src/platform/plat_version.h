@@ -32,7 +32,7 @@
 
 // Firmware revision manually set
 #define FIRMWARE_REVISION_1 0x51
-#define FIRMWARE_REVISION_2 0x02
+#define FIRMWARE_REVISION_2 0x03
 
 #define IPMI_VERSION 0x02
 #define ADDITIONAL_DEVICE_SUPPORT 0xBF
@@ -42,7 +42,7 @@
 
 #define BIC_FW_YEAR_MSB 0x20
 #define BIC_FW_YEAR_LSB 0x22
-#define BIC_FW_WEEK 0x34
+#define BIC_FW_WEEK 0x39
 #define BIC_FW_VER 0x01
 #define BIC_FW_platform_0 0x64 // char: d
 #define BIC_FW_platform_1 0x6c // char: l
