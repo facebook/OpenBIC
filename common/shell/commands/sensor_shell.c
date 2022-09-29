@@ -153,7 +153,7 @@ static int sensor_access(const struct shell *shell, int sensor_num, enum SENSOR_
 				int16_t integer = sensor_config[sen_idx].cache & 0xFFFF;
 				shell_print(
 					shell,
-					"[0x%-2x] %-25s: %-10s | access[%c] | poll[%c] %-4d sec | %-25s | %d.%d",
+					"[0x%-2x] %-25s: %-10s | access[%c] | poll[%c] %-4d sec | %-25s | %5d.%03d",
 					sensor_config[sen_idx].num, sensor_name,
 					sensor_type_name[sensor_config[sen_idx].type], check_access,
 					check_poll, (int)sensor_config[sen_idx].poll_time,
@@ -200,10 +200,14 @@ static int sensor_access(const struct shell *shell, int sensor_num, enum SENSOR_
 
 void cmd_sensor_cfg_list_all(const struct shell *shell, size_t argc, char **argv)
 {
-	if (argc != 1) {
-		shell_warn(shell, "Help: platform sensor list_all");
+	if (argc != 1 && argc != 2) {
+		shell_warn(shell, "Help: platform sensor list_all <keyword(optional)>");
 		return;
 	}
+
+	char *keyword = NULL;
+	if (argc == 2)
+		keyword = argv[1];
 
 	if (sensor_config_count == 0) {
 		shell_warn(shell, "[%s]: sensor monitor count is zero", __func__);
@@ -213,8 +217,19 @@ void cmd_sensor_cfg_list_all(const struct shell *shell, size_t argc, char **argv
 	shell_print(
 		shell,
 		"---------------------------------------------------------------------------------");
-	for (int sen_idx = 0; sen_idx < sensor_config_count; sen_idx++)
+	for (int sen_idx = 0; sen_idx < sensor_config_count; sen_idx++) {
+		int sdr_index = get_sdr_index_by_sensor_num(sensor_config[sen_idx].num);
+		if (sdr_index == -1) {
+			shell_error(shell, "[%s] can't find sensor number in sdr table.\n",
+				    __func__);
+			return;
+		}
+		if (keyword && !strstr(full_sdr_table[sdr_index].ID_str, keyword) &&
+		    !strstr(sensor_type_name[sensor_config[sen_idx].type], keyword))
+			continue;
+
 		sensor_access(shell, sensor_config[sen_idx].num, SENSOR_READ);
+	}
 
 	shell_print(
 		shell,

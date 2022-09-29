@@ -25,6 +25,8 @@
 #include "sdr.h"
 #include "libutil.h"
 
+#define sensor_name_to_num(x) #x,
+
 #define SENSOR_POLL_STACK_SIZE 2048
 #define NONE 0
 
@@ -416,6 +418,7 @@ extern sensor_cfg *sensor_config;
 // Mapping sensor number to sensor config index
 extern uint8_t sensor_config_index_map[SENSOR_NUM_MAX];
 extern uint8_t sensor_config_count;
+extern const char *const sensor_type_name[];
 
 void clear_unaccessible_sensor_cache(uint8_t sensor_num);
 uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode);
