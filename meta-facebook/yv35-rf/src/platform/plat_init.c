@@ -42,12 +42,6 @@ void pal_set_sys_status()
 	set_DC_off_delayed_status();
 }
 
-void pal_post_init()
-{
-	k_usleep(100);
-
-	gpio_set(ASIC_DEV_RST_N, GPIO_HIGH);
-}
 
 #define DEF_PROJ_GPIO_PRIORITY 61
 
