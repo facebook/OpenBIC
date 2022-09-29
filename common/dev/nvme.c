@@ -28,7 +28,6 @@ uint8_t nvme_read(uint8_t sensor_num, int *reading)
 	}
 
 	uint8_t retry = 5;
-	int val;
 	bool is_drive_ready;
 	I2C_MSG msg;
 
@@ -45,11 +44,10 @@ uint8_t nvme_read(uint8_t sensor_num, int *reading)
 			return SENSOR_NOT_ACCESSIBLE;
 
 		/* Check reading value */
-		val = msg.data[3];
-		if (val == NVMe_NOT_AVAILABLE) {
+		if (msg.data[3] == NVMe_NOT_AVAILABLE) {
 			return SENSOR_FAIL_TO_ACCESS;
 		}
-		if (val == NVMe_TMP_SENSOR_FAILURE) {
+		if (msg.data[3] == NVMe_TMP_SENSOR_FAILURE) {
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 	} else {
@@ -57,7 +55,7 @@ uint8_t nvme_read(uint8_t sensor_num, int *reading)
 	}
 
 	sensor_val *sval = (sensor_val *)reading;
-	sval->integer = val & 0xFF;
+	sval->integer = (int8_t)msg.data[3];
 	sval->fraction = 0;
 
 	return SENSOR_READ_SUCCESS;
