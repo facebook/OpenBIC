@@ -93,6 +93,8 @@ SENSOR_DRIVE_INIT_DECLARE(apml_mailbox);
 SENSOR_DRIVE_INIT_DECLARE(xdpe19283b);
 SENSOR_DRIVE_INIT_DECLARE(g788p81u);
 SENSOR_DRIVE_INIT_DECLARE(mp2856gut);
+SENSOR_DRIVE_INIT_DECLARE(ddr5_power);
+SENSOR_DRIVE_INIT_DECLARE(ddr5_temp);
 
 struct sensor_drive_api {
 	enum SENSOR_DEV dev;
@@ -128,6 +130,8 @@ struct sensor_drive_api {
 	SENSOR_DRIVE_TYPE_INIT_MAP(xdpe19283b),
 	SENSOR_DRIVE_TYPE_INIT_MAP(g788p81u),
 	SENSOR_DRIVE_TYPE_INIT_MAP(mp2856gut),
+	SENSOR_DRIVE_TYPE_INIT_MAP(ddr5_power),
+	SENSOR_DRIVE_TYPE_INIT_MAP(ddr5_temp),
 };
 
 static void init_sensor_num(void)
