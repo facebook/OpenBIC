@@ -32,40 +32,6 @@
 #define NUM_OF_GPIO_IS_DEFINE 167
 
 // clang-format off
-const char *const sensor_type_name[] = {
-	sensor_name_to_num(tmp75)
-	sensor_name_to_num(adc)
-	sensor_name_to_num(peci)
-	sensor_name_to_num(isl69259)
-	sensor_name_to_num(hsc)
-	sensor_name_to_num(nvme)
-	sensor_name_to_num(pch)
-	sensor_name_to_num(mp5990)
-	sensor_name_to_num(isl28022)
-	sensor_name_to_num(pex89000)
-	sensor_name_to_num(tps53689)
-	sensor_name_to_num(xdpe15284)
-	sensor_name_to_num(ltc4282)
-	sensor_name_to_num(fan)
-	sensor_name_to_num(tmp431)
-	sensor_name_to_num(pmic)
-	sensor_name_to_num(ina233)
-	sensor_name_to_num(isl69254)
-	sensor_name_to_num(max16550a)
-	sensor_name_to_num(ina230)
-	sensor_name_to_num(xdpe12284c)
-	sensor_name_to_num(raa229621)
-	sensor_name_to_num(nct7718w)
-	sensor_name_to_num(ltc4286)
-	sensor_name_to_num(amd_tsi)
-	sensor_name_to_num(apml_mailbox)
-	sensor_name_to_num(xdpe19283b)
-	sensor_name_to_num(g788p81u)
-	sensor_name_to_num(mp2856gut)
-	sensor_name_to_num(ddr5_power)
-	sensor_name_to_num(ddr5_temp)
-};
-
 const char *const sensor_status_name[] = {
 	sensor_name_to_num(read_success)
 	sensor_name_to_num(read_acur_success)
