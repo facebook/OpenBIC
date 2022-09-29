@@ -79,7 +79,6 @@ static bool control_flash_power(int power_state)
 uint8_t fw_update_cxl(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sector_end)
 {
 	uint8_t ret = FWUPDATE_UPDATE_FAIL;
-	bool last = ((offset + msg_len) == CXL_UPDATE_MAX_OFFSET);
 
 	if (offset > CXL_UPDATE_MAX_OFFSET) {
 		return FWUPDATE_OVER_LENGTH;
@@ -98,7 +97,7 @@ uint8_t fw_update_cxl(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool 
 
 	ret = fw_update(offset, msg_len, msg_buf, sector_end, DEVSPI_SPI1_CS0);
 
-	if (last || ret != FWUPDATE_SUCCESS) {
+	if (sector_end || ret != FWUPDATE_SUCCESS) {
 		control_flash_power(POWER_OFF);
 		switch_cxl_spi_mux(CXL_FLASH_TO_CXL);
 	}
