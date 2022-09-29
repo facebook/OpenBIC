@@ -43,9 +43,86 @@ isl69254iraz_t_pre_arg isl69254iraz_t_pre_read_args[] = {
 	[1] = { 0x1 },
 };
 
+vr_pre_proc_arg vr_page_select[] = {
+	[0] = { 0x0 },
+	[1] = { 0x1 },
+};
+
+ina230_init_arg SQ5220x_init_args[] = {
+	[0] = {
+	.is_init = false,
+	.config = {
+		.MODE = 0b111,		// Measure voltage of shunt resistor and bus(default).
+		.VSH_CT = 0b100,	// The Vshunt conversion time is 1.1ms(default).
+		.VBUS_CT = 0b100,	// The Vbus conversion time is 1.1ms(default).
+		.AVG = 0b000,		// Average number is 1(default).
+	},
+	.alt_cfg = {
+		.LEN = 1,			// Alert Latch enabled.
+		.POL = 1,			// Enable the Over-Limit Power alert function.
+	},
+	.r_shunt = 0.005,
+	.alert_value = 16.0,	// Unit: Watt
+	.i_max = 4.8
+	},
+	[1] = {
+	.is_init = false,
+	.config = {
+		.MODE = 0b111,		// Measure voltage of shunt resistor and bus(default).
+		.VSH_CT = 0b100,	// The Vshunt conversion time is 1.1ms(default).
+		.VBUS_CT = 0b100,	// The Vbus conversion time is 1.1ms(default).
+		.AVG = 0b000,		// Average number is 1(default).
+	},
+	.alt_cfg = {
+		.LEN = 1,			// Alert Latch enabled.
+		.POL = 1,			// Enable the Over-Limit Power alert function.
+	},
+	.r_shunt = 0.005,
+	.alert_value = 16.0,	// Unit: Watt
+	.i_max = 4.8
+	},
+};
+
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
  **************************************************************************************************/
+/* VR pre read function
+ *
+ * set mux and VR page
+ *
+ * @param sensor_num sensor number
+ * @param args pointer to vr_pre_proc_arg
+ * @param reading pointer to reading from previous step
+ * @retval true if setting mux and page is successful.
+ * @retval false if setting mux or page fails.
+ */
+bool pre_vr_read(uint8_t sensor_num, void *args)
+{
+	if (args == NULL) {
+		return false;
+	}
+
+	vr_pre_proc_arg *vr_page_sel = (vr_pre_proc_arg *)args;
+	uint8_t retry = 5;
+	I2C_MSG msg;
+	int ret = 0;
+
+	/* set page */
+	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
+	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.tx_len = 2;
+	msg.data[0] = 0x00;
+	msg.data[1] = vr_page_sel->vr_page;
+
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		printf("[%s] i2c write fail  ret: %d\n", __func__, ret);
+		return false;
+	}
+
+	return true;
+}
+
 bool pre_ina233_read(uint8_t sensor_num, void *args)
 {
 	ARG_UNUSED(args);

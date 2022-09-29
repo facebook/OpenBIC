@@ -88,4 +88,10 @@
 extern uint8_t plat_get_config_size();
 extern void load_sensor_config(void);
 
+enum { VR_INF = 0,
+       VR_RNS,
+       PWR_INA233,
+       PWR_SGY,
+};
+
 #endif
