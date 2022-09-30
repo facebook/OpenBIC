@@ -81,7 +81,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB Inlet Temp",
+		"MB_INLET_TEMP_C",
 	},
 	{
 		// MB Outlet temperature
@@ -142,7 +142,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB Outlet Temp",
+		"MB_OUTLET_TEMP_C",
 	},
 	{
 		// Front IO temperature
@@ -203,7 +203,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FIO Temp",
+		"FIO_FRONT_TEMP_C",
 	},
 	{
 		// CPU temperature
@@ -264,10 +264,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"CPU Temp",
+		"MB_SOC_CPU_TEMP_C",
 	},
 	{
-		// DIMMA temperature
+		// DIMMA0 temperature
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -276,7 +276,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_TEMP_DIMM_A, // sensor number
+		SENSOR_NUM_TEMP_DIMM_A0, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -325,10 +325,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMMA Temp",
+		"MB_DIMMA0_TEMP_C",
 	},
 	{
-		// DIMMB temperature
+		// DIMMA1 temperature
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -337,7 +337,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_TEMP_DIMM_B, // sensor number
+		SENSOR_NUM_TEMP_DIMM_A1, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -386,10 +386,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMMB Temp",
+		"MB_DIMMA1_TEMP_C",
 	},
 	{
-		// DIMMC temperature
+		// DIMMA2 temperature
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -398,7 +398,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_TEMP_DIMM_C, // sensor number
+		SENSOR_NUM_TEMP_DIMM_A2, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -447,10 +447,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMMC Temp",
+		"MB_DIMMA2_TEMP_C",
 	},
 	{
-		// DIMME temperature
+		// DIMMA4 temperature
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -459,7 +459,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_TEMP_DIMM_E, // sensor number
+		SENSOR_NUM_TEMP_DIMM_A4, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -508,10 +508,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMME Temp",
+		"MB_DIMMA4_TEMP_C",
 	},
 	{
-		// DIMMG temperature
+		// DIMMA6 temperature
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -520,7 +520,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_TEMP_DIMM_G, // sensor number
+		SENSOR_NUM_TEMP_DIMM_A6, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -569,10 +569,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMMG Temp",
+		"MB_DIMMA6_TEMP_C",
 	},
 	{
-		// DIMMH temperature
+		// DIMMA7 temperature
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -581,7 +581,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_TEMP_DIMM_H, // sensor number
+		SENSOR_NUM_TEMP_DIMM_A7, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -630,10 +630,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMMH Temp",
+		"MB_DIMMA7_TEMP_C",
 	},
 	{
-		// DIMMI temperature
+		// DIMMA8 temperature
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -642,7 +642,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_TEMP_DIMM_I, // sensor number
+		SENSOR_NUM_TEMP_DIMM_A8, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -691,10 +691,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMMI Temp",
+		"MB_DIMMA8_TEMP_C",
 	},
 	{
-		// DIMMK temperature
+		// DIMMA10 temperature
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -703,7 +703,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_TEMP_DIMM_K, // sensor number
+		SENSOR_NUM_TEMP_DIMM_A10, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -752,7 +752,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMMK Temp",
+		"MB_DIMMA10_TEMP_C",
 	},
 	{
 		// CPU Power
@@ -813,10 +813,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"CPU Pwr",
+		"MB_SOC_PACKAGE_PWR_W",
 	},
 	{
-		// DIMMA Power
+		// DIMMA0 Power
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -825,7 +825,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_PWR_DIMM_A, // sensor number
+		SENSOR_NUM_PWR_DIMM_A0, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -874,10 +874,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMMA Pwr",
+		"MB_VR_DIMMA0_PMIC_PWR_W",
 	},
 	{
-		// DIMMB Power
+		// DIMMA1 Power
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -886,7 +886,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_PWR_DIMM_B, // sensor number
+		SENSOR_NUM_PWR_DIMM_A1, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -935,10 +935,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMMB Pwr",
+		"MB_VR_DIMMA1_PMIC_PWR_W",
 	},
 	{
-		// DIMMC Power
+		// DIMMA2 Power
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -947,7 +947,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_PWR_DIMM_C, // sensor number
+		SENSOR_NUM_PWR_DIMM_A2, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -996,10 +996,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMMC Pwr",
+		"MB_VR_DIMMA2_PMIC_PWR_W",
 	},
 	{
-		// DIMME Power
+		// DIMMA4 Power
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -1008,7 +1008,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_PWR_DIMM_E, // sensor number
+		SENSOR_NUM_PWR_DIMM_A4, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1057,10 +1057,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMME Pwr",
+		"MB_VR_DIMMA4_PMIC_PWR_W",
 	},
 	{
-		// DIMMG Power
+		// DIMMA6 Power
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -1069,7 +1069,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_PWR_DIMM_G, // sensor number
+		SENSOR_NUM_PWR_DIMM_A6, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1118,10 +1118,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMMG Pwr",
+		"MB_VR_DIMMA6_PMIC_PWR_W",
 	},
 	{
-		// DIMMH Power
+		// DIMMA7 Power
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -1130,7 +1130,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_PWR_DIMM_H, // sensor number
+		SENSOR_NUM_PWR_DIMM_A7, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1179,10 +1179,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMMH Pwr",
+		"MB_VR_DIMMA7_PMIC_PWR_W",
 	},
 	{
-		// DIMMI Power
+		// DIMMA8 Power
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -1191,7 +1191,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_PWR_DIMM_I, // sensor number
+		SENSOR_NUM_PWR_DIMM_A8, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1240,10 +1240,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMMI Pwr",
+		"MB_VR_DIMMA8_PMIC_PWR_W",
 	},
 	{
-		// DIMMK Power
+		// DIMMA10 Power
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -1252,7 +1252,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_PWR_DIMM_K, // sensor number
+		SENSOR_NUM_PWR_DIMM_A10, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1301,7 +1301,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMMK Pwr",
+		"MB_VR_DIMMA10_PMIC_PWR_W",
 	},
 	{
 		// SSD temperature
@@ -1362,7 +1362,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"SSD Temp",
+		"MB_SSD0_M2A_TEMP_C",
 	},
 	{
 		// HSC temperature
@@ -1423,7 +1423,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"HSC Temp",
+		"MB_HSC_TEMP_C",
 	},
 	{
 		// CPU0 VR temperature
@@ -1484,7 +1484,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"CPU0 VR Temp",
+		"MB_VR_CPU0_TEMP_C",
 	},
 	{
 		// SOC VR temperature
@@ -1545,7 +1545,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"SOC VR Temp",
+		"MB_VR_SOC_TEMP_C",
 	},
 	{
 		// CPU1 VR temperature
@@ -1606,7 +1606,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"CPU1 VR Temp",
+		"MB_VR_CPU1_TEMP_C",
 	},
 	{
 		// PVDDIO VR temperature
@@ -1667,7 +1667,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"PVDDIO VR Temp",
+		"MB_VR_PVDDIO_TEMP_C",
 	},
 	{
 		// PVDD11 VR temperature
@@ -1728,7 +1728,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"PVDD11 VR Temp",
+		"MB_VR_PVDD11_TEMP_C",
 	},
 	{
 		// P12V_STBY Voltage
@@ -1789,7 +1789,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"P12V_STBY Vol",
+		"MB_ADC_P12V_STBY_VOLT_V",
 	},
 	{
 		// PVDD18_S5 Voltage
@@ -1850,7 +1850,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"PVDD18_S5 Vol",
+		"MB_ADC_PVDD18_S5_VOLT_V",
 	},
 	{
 		// P3V3_STBY Voltage
@@ -1911,7 +1911,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"P3V3_STBY Vol",
+		"MB_ADC_P3V3_STBY_VOLT_V",
 	},
 	{
 		// PVDD11_S3 Voltage
@@ -1972,7 +1972,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"PVDD11_S3 Vol",
+		"MB_ADC_PVDD11_S3_VOLT_V",
 	},
 	{
 		// P3V_BAT Voltage
@@ -2033,7 +2033,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"P3V_BAT Vol",
+		"MB_ADC_P3V_BAT_VOLT_V",
 	},
 	{
 		// PVDD33_S5 Voltage
@@ -2094,7 +2094,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"PVDD33_S5 Vol",
+		"MB_ADC_PVDD33_S5_VOLT_V",
 	},
 	{
 		// P5V_STBY Voltage
@@ -2155,7 +2155,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"P5V_STBY Vol",
+		"MB_ADC_P5V_STBY_VOLT_V",
 	},
 	{
 		// P12V_MEM_1 Voltage
@@ -2216,7 +2216,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"P12V_MEM_1 Vol",
+		"MB_ADC_P12V_MEM_1_VOLT_V",
 	},
 	{
 		// P12V_MEM_0 Voltage
@@ -2277,7 +2277,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"P12V_MEM_0 Vol",
+		"MB_ADC_P12V_MEM_0_VOLT_V",
 	},
 	{
 		// P1V2_STBY Voltage
@@ -2338,7 +2338,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"P1V2_STBY Vol",
+		"MB_ADC_P1V2_STBY_VOLT_V",
 	},
 	{
 		// P3V3_M2 Voltage
@@ -2399,7 +2399,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"P3V3_M2 Vol",
+		"MB_ADC_P3V3_M2_VOLT_V",
 	},
 	{
 		// P1V8_STBY Voltage
@@ -2460,7 +2460,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"P1V8_STBY Vol",
+		"MB_ADC_P1V8_STBY_VOLT_V",
 	},
 	{
 		// HSC Input Voltage
@@ -2521,7 +2521,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"HSC Input Vol",
+		"MB_HSC_INPUT_VOLT_V",
 	},
 	{
 		// CPU0 VR Voltage
@@ -2582,7 +2582,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"CPU0 VR Vol",
+		"MB_VR_CPU0_VOLT_V",
 	},
 	{
 		// SOC VR Voltage
@@ -2643,7 +2643,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"SOC VR Vol",
+		"MB_VR_SOC_VOLT_V",
 	},
 	{
 		// CPU1 VR Voltage
@@ -2704,7 +2704,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"CPU1 VR Vol",
+		"MB_VR_CPU1_VOLT_V",
 	},
 	{
 		// PVDDIO VR Voltage
@@ -2765,7 +2765,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"PVDDIO VR Vol",
+		"MB_VR_PVDDIO_VOLT_V",
 	},
 	{
 		// PVDD11 VR Voltage
@@ -2826,7 +2826,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"PVDD11 VR Vol",
+		"MB_VR_PVDD11_VOLT_V",
 	},
 	{
 		// HSC Output Current
@@ -2887,7 +2887,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"HSC Output Cur",
+		"HSC_OUTPUT_CURR_A",
 	},
 	{
 		// CPU0 VR Current
@@ -2948,7 +2948,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"CPU0 VR Cur",
+		"MB_VR_CPU0_CURR_A",
 	},
 	{
 		// SOC VR Current
@@ -3009,7 +3009,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"SOC VR Cur",
+		"MB_VR_SOC_CURR_A",
 	},
 	{
 		// CPU1 VR Current
@@ -3070,7 +3070,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"CPU1 VR Cur",
+		"MB_VR_CPU1_CURR_A",
 	},
 	{
 		// PVDDIO VR Current
@@ -3131,7 +3131,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"PVDDIO VR Cur",
+		"MB_VR_PVDDIO_CURR_A",
 	},
 	{
 		// PVDD11 VR Current
@@ -3192,7 +3192,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"PVDD11 VR Cur",
+		"MB_VR_PVDD11_CURR_A",
 	},
 	{
 		// HSC Input Power
@@ -3253,7 +3253,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"HSC Input Pwr",
+		"MB_HSC_INPUT_PWR_W",
 	},
 	{
 		// CPU0 VR Power
@@ -3314,7 +3314,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"CPU0 VR Pwr",
+		"MB_VR_CPU0_PWR_W",
 	},
 	{
 		// SOC VR Power
@@ -3375,7 +3375,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"SOC VR Pwr",
+		"MB_VR_SOC_PWR_W",
 	},
 	{
 		// CPU1 VR Power
@@ -3436,7 +3436,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"CPU1 VR Pwr",
+		"MB_VR_CPU1_PWR_W",
 	},
 	{
 		// PVDDIO VR Power
@@ -3497,7 +3497,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"PVDDIO VR Pwr",
+		"MB_VR_PVDDIO_PWR_W",
 	},
 	{
 		// PVDD11 VR Power
@@ -3558,7 +3558,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"PVDD11 VR Pwr",
+		"MB_VR_PVDD11_PWR_W",
 	},
 };
 
