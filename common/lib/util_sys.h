@@ -54,10 +54,10 @@ typedef enum {
 	VENDOR_VISHAY,
 } VR_VENDOR_ID;
 
-typedef enum{
-    POWER_CTL_ON,
-    POWER_CTL_OFF,
-    POWER_CTL_RESET,
+typedef enum {
+	POWER_CTL_ON,
+	POWER_CTL_OFF,
+	POWER_CTL_RESET,
 } power_ctl_t;
 
 extern uint8_t ISL69254_DEVICE_ID[5];
