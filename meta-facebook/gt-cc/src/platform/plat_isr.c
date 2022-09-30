@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <logging/log.h>
+
 #include "libipmi.h"
 #include "kcs.h"
 #include "power_status.h"
@@ -29,6 +31,9 @@
 #include "pldm.h"
 #include "plat_mctp.h"
 #include "plat_hook.h"
+
+LOG_MODULE_REGISTER(plat_isr);
+
 void dc_on_init_component()
 {
 	uint8_t pex_sensor_num_table[PEX_MAX_NUMBER] = { SENSOR_NUM_BB_TEMP_PEX_0,
@@ -42,34 +47,32 @@ void dc_on_init_component()
 		pex89000_init_arg *init_arg = (pex89000_init_arg *)cfg->init_args;
 
 		/* Only need initial when not initial yet */
-		if (init_arg->is_init == false) {
+		if (!init_arg->is_init) {
 			if (cfg->pre_sensor_read_hook) {
-				if (cfg->pre_sensor_read_hook(cfg->num,
-							      cfg->pre_sensor_read_args) == false) {
-					printf("[%s] sensor 0x%x pre sensor read failed!\n",
-					       __func__, cfg->num);
+				if (!cfg->pre_sensor_read_hook(cfg->num,
+							       cfg->pre_sensor_read_args)) {
+					LOG_ERR("[%s]sensor 0x%x pre sensor read failed!", __func__,
+						cfg->num);
 					continue;
-				} else {
-					/* pre_read success call PEX initial function */
-					if (pex89000_init(sensor_num) != SENSOR_INIT_SUCCESS)
-						printf("[%s] sensor 0x%x init fail \n", __func__,
-						       cfg->num);
 				}
 			}
+			if (pex89000_init(sensor_num) != SENSOR_INIT_SUCCESS) {
+				LOG_ERR("[%s]sensor 0x%x init fail", __func__, cfg->num);
+			}
 			if (cfg->post_sensor_read_hook) {
-				if (cfg->post_sensor_read_hook(sensor_num,
-							       cfg->post_sensor_read_args,
-							       NULL) == false) {
-					printf("[%s]sensor number 0x%x post_read fail\n", __func__,
-					       sensor_num);
+				if (!cfg->post_sensor_read_hook(sensor_num,
+								cfg->post_sensor_read_args, NULL)) {
+					LOG_ERR("[%s]sensor number 0x%x post_read fail\n", __func__,
+						sensor_num);
 				}
 			}
 		}
 	}
-	/* Call function to set endpoint and get parameters for the device, the
-   	 * function description is as defined by zephyr but argument is not used in
-   	 * this function so put NULL here.
-   	 */
+	/**
+   * Call function to set endpoint and get parameters for the device, the
+   * function description is as defined by zephyr but argument is not used in
+   * this function so put NULL here.
+   */
 	send_cmd_to_dev(NULL);
 }
 

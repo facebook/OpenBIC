@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <logging/log.h>
 
 #include "sensor.h"
 #include "ast_adc.h"
@@ -35,8 +36,15 @@
 #include "isl28022.h"
 #include "pex89000.h"
 #include "util_sys.h"
+#include "plat_class.h"
+
+LOG_MODULE_REGISTER(plat_sensor_table);
 
 static int check_vr_type(void);
+static void load_hsc_sensor_table(void);
+static void load_vr_sensor_table(void);
+static void load_power_ic_sensor_table(void);
+static void change_p1v8_sensor_i2c_addr(void);
 bool e1s_access(uint8_t sensor_num);
 bool nic_access(uint8_t sensor_num);
 
@@ -99,24 +107,6 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_BB_P1V8_PEX3, sensor_dev_ast_adc, ADC_PORT14, NONE, NONE, stby_access, 4, 3,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
-
-	/* PEX on-chip temperature */
-	{ SENSOR_NUM_BB_TEMP_PEX_0, sensor_dev_pex89000, I2C_BUS10, PEX_SWITCH_I2C_ADDR, PEX_TEMP,
-	  is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, pre_pex89000_read, &pex89000_pre_read_args[0], post_i2c_bus_read,
-	  NULL, &pex_sensor_init_args[0] },
-	{ SENSOR_NUM_BB_TEMP_PEX_1, sensor_dev_pex89000, I2C_BUS10, PEX_SWITCH_I2C_ADDR, PEX_TEMP,
-	  is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, pre_pex89000_read, &pex89000_pre_read_args[1], post_i2c_bus_read,
-	  NULL, &pex_sensor_init_args[1] },
-	{ SENSOR_NUM_BB_TEMP_PEX_2, sensor_dev_pex89000, I2C_BUS10, PEX_SWITCH_I2C_ADDR, PEX_TEMP,
-	  is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, pre_pex89000_read, &pex89000_pre_read_args[2], post_i2c_bus_read,
-	  NULL, &pex_sensor_init_args[2] },
-	{ SENSOR_NUM_BB_TEMP_PEX_3, sensor_dev_pex89000, I2C_BUS10, PEX_SWITCH_I2C_ADDR, PEX_TEMP,
-	  is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, pre_pex89000_read, &pex89000_pre_read_args[3], post_i2c_bus_read,
-	  NULL, &pex_sensor_init_args[3] },
 
 	/* SYSTEM INLET TEMP */
 	{ SENSOR_NUM_SYSTEM_INLET_TEMP, sensor_dev_tmp75, I2C_BUS5, SYSTEM_INLET_TEMP_ADDR,
@@ -208,6 +198,46 @@ sensor_cfg plat_sensor_config[] = {
 	  NULL },
 };
 
+sensor_cfg evt_pex_sensor_config_table[] = {
+	/* PEX on-chip temperature */
+	{ SENSOR_NUM_BB_TEMP_PEX_0, sensor_dev_pex89000, I2C_BUS10, EVT_PEX_SWITCH_I2C_ADDR,
+	  PEX_TEMP, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_pex89000_read,
+	  &pex89000_pre_read_args[0], post_i2c_bus_read, NULL, &pex_sensor_init_args[0] },
+	{ SENSOR_NUM_BB_TEMP_PEX_1, sensor_dev_pex89000, I2C_BUS10, EVT_PEX_SWITCH_I2C_ADDR,
+	  PEX_TEMP, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_pex89000_read,
+	  &pex89000_pre_read_args[1], post_i2c_bus_read, NULL, &pex_sensor_init_args[1] },
+	{ SENSOR_NUM_BB_TEMP_PEX_2, sensor_dev_pex89000, I2C_BUS10, EVT_PEX_SWITCH_I2C_ADDR,
+	  PEX_TEMP, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_pex89000_read,
+	  &pex89000_pre_read_args[2], post_i2c_bus_read, NULL, &pex_sensor_init_args[2] },
+	{ SENSOR_NUM_BB_TEMP_PEX_3, sensor_dev_pex89000, I2C_BUS10, EVT_PEX_SWITCH_I2C_ADDR,
+	  PEX_TEMP, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_pex89000_read,
+	  &pex89000_pre_read_args[3], post_i2c_bus_read, NULL, &pex_sensor_init_args[3] },
+};
+
+sensor_cfg dvt_pex_sensor_config_table[] = {
+	/* PEX on-chip temperature */
+	{ SENSOR_NUM_BB_TEMP_PEX_0, sensor_dev_pex89000, I2C_BUS10, DVT_PEX_SWITCH_0_I2C_ADDR,
+	  PEX_TEMP, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &pex_sensor_init_args[0] },
+	{ SENSOR_NUM_BB_TEMP_PEX_1, sensor_dev_pex89000, I2C_BUS10, DVT_PEX_SWITCH_1_I2C_ADDR,
+	  PEX_TEMP, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &pex_sensor_init_args[1] },
+	{ SENSOR_NUM_BB_TEMP_PEX_2, sensor_dev_pex89000, I2C_BUS10, DVT_PEX_SWITCH_2_I2C_ADDR,
+	  PEX_TEMP, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &pex_sensor_init_args[2] },
+	{ SENSOR_NUM_BB_TEMP_PEX_3, sensor_dev_pex89000, I2C_BUS10, DVT_PEX_SWITCH_3_I2C_ADDR,
+	  PEX_TEMP, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &pex_sensor_init_args[3] },
+};
+
 sensor_cfg mp5990_hsc_sensor_config_table[] = {
 	/* number,                  type,       port,      address,      offset,
 	   access check arg0, arg1, sample_count, cache, cache_status, mux_address, mux_offset,
@@ -239,10 +269,10 @@ sensor_cfg ltc4282_hsc_sensor_config_table[] = {
 	/* HSC */
 	/* TBD: Because LTC4282 have no register for temperature, confirming with EE 
           whether has temperature sensor in front of the HSC */
-	{ SENSOR_NUM_TEMP_PDB_HSC, sensor_dev_ltc4282, I2C_BUS6, HSC_LTC4282_ADDR,
-	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6],
-	  post_i2c_bus_read, NULL, &ltc4282_hsc_init_args[0] },
+	{ SENSOR_NUM_TEMP_PDB_HSC, sensor_dev_nct7718w, I2C_BUS6, HSC_TEMP_NCT7718W_ADDR,
+	  NCT7718W_LOCAL_TEMP_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[1],
+	  post_i2c_bus_read, NULL, NULL },
 	{ SENSOR_NUM_VOUT_PDB_HSC, sensor_dev_ltc4282, I2C_BUS6, HSC_LTC4282_ADDR,
 	  LTC4282_VSOURCE_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6],
@@ -1207,64 +1237,218 @@ void load_sensor_config(void)
  */
 void pal_extend_sensor_config()
 {
-	switch (check_vr_type()) {
-	case VR_RNS_ISL69259:
-		printf("[%s]VR type: RNS_ISL69259\n", __func__);
+	uint8_t stage = get_stage_by_rev_id();
 
-		memcpy(&sensor_config[sensor_config_count], mp5990_hsc_sensor_config_table,
-		       ARRAY_SIZE(mp5990_hsc_sensor_config_table) * sizeof(sensor_cfg));
-		sensor_config_count += ARRAY_SIZE(mp5990_hsc_sensor_config_table);
+	if (stage == EVT) {
+		LOG_INF(" The board is on EVT stage");
+		memcpy(&sensor_config[sensor_config_count], evt_pex_sensor_config_table,
+		       ARRAY_SIZE(evt_pex_sensor_config_table) * sizeof(sensor_cfg));
+		sensor_config_count += ARRAY_SIZE(evt_pex_sensor_config_table);
 
-		memcpy(&sensor_config[sensor_config_count], isl69259_vr_sensor_config_table,
-		       ARRAY_SIZE(isl69259_vr_sensor_config_table) * sizeof(sensor_cfg));
-		sensor_config_count += ARRAY_SIZE(isl69259_vr_sensor_config_table);
+		switch (check_vr_type()) {
+		case VR_RNS_ISL69259:
+			LOG_INF("VR type: RNS_ISL69259");
 
-		memcpy(&sensor_config[sensor_config_count],
-		       isl28022_power_monitor_sensor_config_table,
-		       ARRAY_SIZE(isl28022_power_monitor_sensor_config_table) * sizeof(sensor_cfg));
-		sensor_config_count += ARRAY_SIZE(isl28022_power_monitor_sensor_config_table);
-		break;
-	case VR_INF_XDPE12284:
-		printf("[%s]VR type: INF_XDPE12284\n", __func__);
+			memcpy(&sensor_config[sensor_config_count], mp5990_hsc_sensor_config_table,
+			       ARRAY_SIZE(mp5990_hsc_sensor_config_table) * sizeof(sensor_cfg));
+			sensor_config_count += ARRAY_SIZE(mp5990_hsc_sensor_config_table);
 
-		memcpy(&sensor_config[sensor_config_count], ltc4282_hsc_sensor_config_table,
-		       ARRAY_SIZE(ltc4282_hsc_sensor_config_table) * sizeof(sensor_cfg));
-		sensor_config_count += ARRAY_SIZE(ltc4282_hsc_sensor_config_table);
+			memcpy(&sensor_config[sensor_config_count], isl69259_vr_sensor_config_table,
+			       ARRAY_SIZE(isl69259_vr_sensor_config_table) * sizeof(sensor_cfg));
+			sensor_config_count += ARRAY_SIZE(isl69259_vr_sensor_config_table);
 
-		memcpy(&sensor_config[sensor_config_count], xdpe12284_vr_sensor_config_table,
-		       ARRAY_SIZE(xdpe12284_vr_sensor_config_table) * sizeof(sensor_cfg));
-		sensor_config_count += ARRAY_SIZE(xdpe12284_vr_sensor_config_table);
+			memcpy(&sensor_config[sensor_config_count],
+			       isl28022_power_monitor_sensor_config_table,
+			       ARRAY_SIZE(isl28022_power_monitor_sensor_config_table) *
+				       sizeof(sensor_cfg));
+			sensor_config_count +=
+				ARRAY_SIZE(isl28022_power_monitor_sensor_config_table);
+			break;
+		case VR_INF_XDPE12284:
+			LOG_INF("VR type: INF_XDPE12284");
 
-		memcpy(&sensor_config[sensor_config_count],
-		       ina230_power_monitor_sensor_config_table,
-		       ARRAY_SIZE(ina230_power_monitor_sensor_config_table) * sizeof(sensor_cfg));
-		sensor_config_count += ARRAY_SIZE(ina230_power_monitor_sensor_config_table);
-		break;
-	default:
-		printf("[%s] unsupported VR type\n", __func__);
-		break;
+			memcpy(&sensor_config[sensor_config_count], ltc4282_hsc_sensor_config_table,
+			       ARRAY_SIZE(ltc4282_hsc_sensor_config_table) * sizeof(sensor_cfg));
+			sensor_config_count += ARRAY_SIZE(ltc4282_hsc_sensor_config_table);
+
+			memcpy(&sensor_config[sensor_config_count],
+			       xdpe12284_vr_sensor_config_table,
+			       ARRAY_SIZE(xdpe12284_vr_sensor_config_table) * sizeof(sensor_cfg));
+			sensor_config_count += ARRAY_SIZE(xdpe12284_vr_sensor_config_table);
+
+			memcpy(&sensor_config[sensor_config_count],
+			       ina230_power_monitor_sensor_config_table,
+			       ARRAY_SIZE(ina230_power_monitor_sensor_config_table) *
+				       sizeof(sensor_cfg));
+			sensor_config_count += ARRAY_SIZE(ina230_power_monitor_sensor_config_table);
+			break;
+		default:
+			LOG_ERR("Unsupported VR type\n");
+			break;
+		}
+	} else if (stage == DVT) {
+		LOG_INF(" The board is on DVT stage");
+		memcpy(&sensor_config[sensor_config_count], dvt_pex_sensor_config_table,
+		       ARRAY_SIZE(dvt_pex_sensor_config_table) * sizeof(sensor_cfg));
+		sensor_config_count += ARRAY_SIZE(dvt_pex_sensor_config_table);
+		load_hsc_sensor_table();
+		load_vr_sensor_table();
+		load_power_ic_sensor_table();
+		change_p1v8_sensor_i2c_addr();
+	} else {
+		LOG_ERR("Unsupport stage, the number is %d \n", stage);
 	}
 }
 
 uint8_t pal_get_extend_sensor_config()
 {
 	uint8_t extend_sensor_config_size = 0;
-	switch (check_vr_type()) {
-	case VR_RNS_ISL69259:
+	uint8_t stage = get_stage_by_rev_id();
+
+	if (stage == EVT) {
+		extend_sensor_config_size += ARRAY_SIZE(evt_pex_sensor_config_table);
+		switch (check_vr_type()) {
+		case VR_RNS_ISL69259:
+			extend_sensor_config_size += ARRAY_SIZE(mp5990_hsc_sensor_config_table);
+			extend_sensor_config_size += ARRAY_SIZE(isl69259_vr_sensor_config_table);
+			extend_sensor_config_size +=
+				ARRAY_SIZE(isl28022_power_monitor_sensor_config_table);
+			break;
+		case VR_INF_XDPE12284:
+			extend_sensor_config_size += ARRAY_SIZE(ltc4282_hsc_sensor_config_table);
+			extend_sensor_config_size += ARRAY_SIZE(xdpe12284_vr_sensor_config_table);
+			extend_sensor_config_size +=
+				ARRAY_SIZE(ina230_power_monitor_sensor_config_table);
+			break;
+		default:
+			LOG_ERR("Unsupported VR type");
+			break;
+		}
+	} else if (stage == DVT) {
+		extend_sensor_config_size += ARRAY_SIZE(dvt_pex_sensor_config_table);
 		extend_sensor_config_size += ARRAY_SIZE(mp5990_hsc_sensor_config_table);
 		extend_sensor_config_size += ARRAY_SIZE(isl69259_vr_sensor_config_table);
 		extend_sensor_config_size += ARRAY_SIZE(isl28022_power_monitor_sensor_config_table);
-		break;
-	case VR_INF_XDPE12284:
-		extend_sensor_config_size += ARRAY_SIZE(ltc4282_hsc_sensor_config_table);
-		extend_sensor_config_size += ARRAY_SIZE(xdpe12284_vr_sensor_config_table);
-		extend_sensor_config_size += ARRAY_SIZE(ina230_power_monitor_sensor_config_table);
-		break;
-	default:
-		printf("[%s] unsupported VR type\n", __func__);
-		break;
+	} else {
+		LOG_ERR("Unsupport stage, the number is %d \n", stage);
 	}
 	return extend_sensor_config_size;
+}
+
+void change_p1v8_sensor_i2c_addr()
+{
+	LOG_INF("Change p1v8_pex sensor to the i2c address of DVT stage");
+	for (int i = 0; i < sensor_config_count; i++) {
+		switch (sensor_config[i].num) {
+		case SENSOR_NUM_P1V8_VOLT_PEX:
+		case SENSOR_NUM_P1V8_IOUT_PEX:
+		case SENSOR_NUM_P1V8_POUT_PEX:
+			sensor_config[i].target_addr = DVT_PEX_P1V8_POWER_MONITOR_ADDR;
+			break;
+		default:
+			break;
+		}
+	}
+}
+/**
+ * Follow the schematic diagram, the HSC device can be distinguished by ADC11 (HSC_TYPE_ADC_R).
+ * 0.0V(+/- 15%), the hotswap model is MP5990.
+ * 1.0V(+/- 15%), the hotswap model is LTC4282.
+ * 1.5V(+/- 15%), the hotswap model is LTC4286.
+ */
+static void load_hsc_sensor_table()
+{
+	float voltage_hsc_type_adc = 0;
+
+	if (!get_adc_voltage(HSC_TYPE_ADC_CHANNEL, &voltage_hsc_type_adc)) {
+		LOG_ERR("Fail to get hsc type by ADC\n");
+		return;
+	}
+
+	if (voltage_hsc_type_adc < 0.15) {
+		memcpy(&sensor_config[sensor_config_count], mp5990_hsc_sensor_config_table,
+		       ARRAY_SIZE(mp5990_hsc_sensor_config_table) * sizeof(sensor_cfg));
+		sensor_config_count += ARRAY_SIZE(mp5990_hsc_sensor_config_table);
+	} else if ((voltage_hsc_type_adc > 1.0 - (1.0 * 0.15)) &&
+		   (voltage_hsc_type_adc < 1.0 + (1.0 * 0.15))) {
+		memcpy(&sensor_config[sensor_config_count], ltc4282_hsc_sensor_config_table,
+		       ARRAY_SIZE(ltc4282_hsc_sensor_config_table) * sizeof(sensor_cfg));
+		sensor_config_count += ARRAY_SIZE(ltc4282_hsc_sensor_config_table);
+	} else {
+		LOG_ERR("Unknown hotswap model type, HSC_TYPE_ADC voltage: %d.%dV",
+			(uint16_t)voltage_hsc_type_adc,
+			(uint16_t)((voltage_hsc_type_adc - (uint16_t)voltage_hsc_type_adc) * 100));
+	}
+
+	return;
+}
+/**
+ * Follow the schematic diagram, the VR chip can be distinguished by ADC12 (VR_TYPE_ADC_R).
+ * 0.0V(+/- 15%), the VR chip is ISL69259.
+ * 0.5V(+/- 15%), the VR chip is XDPE12284.
+ */
+static void load_vr_sensor_table()
+{
+	float voltage_vr_type_adc = 0;
+
+	if (!get_adc_voltage(VR_TYPE_ADC_CHANNEL, &voltage_vr_type_adc)) {
+		LOG_ERR("Fail to get VR type by ADC");
+		return;
+	}
+
+	if (voltage_vr_type_adc < 0.15) {
+		memcpy(&sensor_config[sensor_config_count], isl69259_vr_sensor_config_table,
+		       ARRAY_SIZE(isl69259_vr_sensor_config_table) * sizeof(sensor_cfg));
+		sensor_config_count += ARRAY_SIZE(isl69259_vr_sensor_config_table);
+	} else if ((voltage_vr_type_adc > 0.5 - (0.5 * 0.15)) &&
+		   (voltage_vr_type_adc < 0.5 + (0.5 * 0.15))) {
+		memcpy(&sensor_config[sensor_config_count], xdpe12284_vr_sensor_config_table,
+		       ARRAY_SIZE(xdpe12284_vr_sensor_config_table) * sizeof(sensor_cfg));
+		sensor_config_count += ARRAY_SIZE(xdpe12284_vr_sensor_config_table);
+	} else {
+		LOG_ERR("Unknown VR type, vr_type_adc voltage: %d.%dV\n",
+			(uint16_t)voltage_vr_type_adc,
+			(uint16_t)((voltage_vr_type_adc - (uint16_t)voltage_vr_type_adc) * 100));
+	}
+
+	return;
+}
+
+/**
+ * Follow the schematic diagram, the power monitor ic can be distinguished by ADC13 (ADC_TYPE_ADC_R).
+ * 0.0V(+/- 15%), the power monitor ic is ISL28022.
+ * 0.5V(+/- 15%), the power monitor ic is INA230.
+ */
+
+static void load_power_ic_sensor_table()
+{
+	float voltage_power_ic_type_adc = 0;
+
+	if (!get_adc_voltage(POWER_IC_TYPE_ADC_CHANNEL, &voltage_power_ic_type_adc)) {
+		LOG_ERR("Fail to get power monitor IC type by ADC");
+		return;
+	}
+
+	if (voltage_power_ic_type_adc < 0.15) {
+		memcpy(&sensor_config[sensor_config_count],
+		       isl28022_power_monitor_sensor_config_table,
+		       ARRAY_SIZE(isl28022_power_monitor_sensor_config_table) * sizeof(sensor_cfg));
+		sensor_config_count += ARRAY_SIZE(isl28022_power_monitor_sensor_config_table);
+	} else if ((voltage_power_ic_type_adc > 0.5 - (0.5 * 0.15)) &&
+		   (voltage_power_ic_type_adc < 0.5 + (0.5 * 0.15))) {
+		memcpy(&sensor_config[sensor_config_count],
+		       ina230_power_monitor_sensor_config_table,
+		       ARRAY_SIZE(ina230_power_monitor_sensor_config_table) * sizeof(sensor_cfg));
+		sensor_config_count += ARRAY_SIZE(ina230_power_monitor_sensor_config_table);
+	} else {
+		LOG_ERR("Unknown power monitor IC type, power_ic_type_adc voltage: %d.%dV",
+			(uint16_t)voltage_power_ic_type_adc,
+			(uint16_t)(
+				(voltage_power_ic_type_adc - (uint16_t)voltage_power_ic_type_adc) *
+				100));
+	}
+
+	return;
 }
 
 static int check_vr_type(void)
@@ -1279,7 +1463,7 @@ static int check_vr_type(void)
 	msg.data[0] = (1 << 6);
 
 	if (i2c_master_write(&msg, retry)) {
-		printf("[%s]Change i2c mux channel on bus 6 failed\n", __func__);
+		LOG_ERR("[%s]Change i2c mux channel on bus 6 failed", __func__);
 		return -1;
 	}
 
@@ -1289,7 +1473,7 @@ static int check_vr_type(void)
 	msg.data[0] = PMBUS_IC_DEVICE_ID;
 
 	if (i2c_master_read(&msg, retry)) {
-		printf("[%s]Failed to read VR IC_DEVICE_ID\n", __func__);
+		LOG_ERR("[%s]Failed to read VR IC_DEVICE_ID", __func__);
 		return -1;
 	}
 
@@ -1299,7 +1483,7 @@ static int check_vr_type(void)
 		return VR_INF_XDPE12284;
 	}
 
-	printf("[%s] unsupported VR type\n", __func__);
+	LOG_ERR("[%s]Unsupported VR type", __func__);
 	return -1;
 }
 
@@ -1314,7 +1498,7 @@ bool e1s_access(uint8_t sensor_num)
 	uint8_t group = (sensor_num >> 4) % 8;
 	uint8_t index = ((sensor_num & BIT_MASK(4)) / 4);
 
-	return !gpio_get(e1s_prsnt_pin[group][index]) ? true : false;
+	return (!gpio_get(e1s_prsnt_pin[group][index]) && is_mb_dc_on());
 }
 
 bool nic_access(uint8_t sensor_num)
