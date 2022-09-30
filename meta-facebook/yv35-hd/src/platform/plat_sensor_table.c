@@ -59,7 +59,7 @@ sensor_cfg plat_sensor_config[] = {
 	/* CPU */
 	{ SENSOR_NUM_TEMP_CPU, sensor_dev_amd_tsi, I2C_BUS14, TSI_ADDR, NONE, post_access, 0, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  NULL, NULL, NULL, NULL, NULL },
+	  NULL, NULL, post_amd_tsi_read, NULL, NULL },
 	{ SENSOR_NUM_TEMP_DIMM_A0, sensor_dev_ddr5_temp, I2C_BUS11, NONE, NONE, post_access, 0, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, post_ddr5_temp_read, NULL, &ddr5_init_temp_args[0] },

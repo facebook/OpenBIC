@@ -22,6 +22,7 @@
 #include "snoop.h"
 #include "apml.h"
 #include "pcc.h"
+#include "plat_def.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -45,6 +46,10 @@ void pal_set_sys_status()
 	set_DC_on_delayed_status();
 	set_DC_off_delayed_status();
 	set_post_status(FM_BIOS_POST_CMPLT_BIC_N);
+	if (get_post_status()) {
+		apml_write_byte(I2C_BUS14, SB_TSI_ADDR, SBTSI_HIGH_TEMP_INTEGER_THRESHOLD,
+				TSI_HIGH_TEMP_THRESHOLD);
+	}
 	gpio_set(BIC_JTAG_SEL_R, gpio_get(FM_DBP_PRESENT_N));
 	set_sys_ready_pin(BIC_READY);
 }

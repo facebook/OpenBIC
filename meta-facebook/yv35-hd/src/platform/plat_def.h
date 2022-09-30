@@ -26,5 +26,6 @@
 #define APML_BUS I2C_BUS14
 #define SB_RMI_ADDR 0x3C
 #define SB_TSI_ADDR 0x4C
+#define TSI_HIGH_TEMP_THRESHOLD 0x5F
 
 #endif

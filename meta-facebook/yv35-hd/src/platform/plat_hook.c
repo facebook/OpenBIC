@@ -24,6 +24,8 @@
 #include "i2c-mux-tca9548.h"
 #include "logging/log.h"
 #include "apml.h"
+#include "libipmi.h"
+#include "ipmi.h"
 
 #define ADJUST_ADM1278_CURRENT(x) (x * 0.94)
 #define ADJUST_ADM1278_POWER(x) (x * 0.95)
@@ -305,5 +307,46 @@ bool post_ddr5_temp_read(uint8_t sensor_num, void *args, int *reading)
 	data_in->dimm_temp = temp & 0x7FF;
 	apml_read(&mailbox_msg);
 
+	return true;
+}
+
+bool post_amd_tsi_read(uint8_t sensor_num, void *args, int *reading)
+{
+	ARG_UNUSED(args);
+	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+
+	static bool is_cpu_throttle_assert = false;
+	static uint8_t deassert_count = 0;
+
+	uint8_t tsi_status = 0;
+	if (apml_read_byte(I2C_BUS14, TSI_ADDR, SBTSI_STATUS, &tsi_status)) {
+		LOG_ERR("Failed to read TSI status");
+		return true;
+	}
+
+	common_addsel_msg_t sel_msg;
+	if ((tsi_status & BIT(4)) && !is_cpu_throttle_assert) {
+		deassert_count = 0;
+		is_cpu_throttle_assert = true;
+		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+	} else if (!(tsi_status & BIT(4)) && is_cpu_throttle_assert) {
+		deassert_count++;
+		if (deassert_count < 6) {
+			return true;
+		}
+		is_cpu_throttle_assert = false;
+		sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+	} else {
+		return true;
+	}
+	sel_msg.InF_target = BMC_IPMB;
+	sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+	sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+	sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_FMTHROTTLE;
+	sel_msg.event_data2 = 0xFF;
+	sel_msg.event_data3 = 0xFF;
+	if (!common_add_sel_evt_record(&sel_msg)) {
+		LOG_ERR("[%s] Failed to add FM Throttle sel.\n", __func__);
+	}
 	return true;
 }
