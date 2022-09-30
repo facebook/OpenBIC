@@ -54,6 +54,12 @@ typedef enum {
 	VENDOR_VISHAY,
 } VR_VENDOR_ID;
 
+typedef enum{
+    POWER_CTL_ON,
+    POWER_CTL_OFF,
+    POWER_CTL_RESET,
+} power_ctl_t;
+
 extern uint8_t ISL69254_DEVICE_ID[5];
 extern uint8_t XDPE12284C_DEVICE_ID[3];
 extern uint8_t ISL69259_DEVICE_ID[5];
@@ -66,6 +72,7 @@ bool is_ac_lost();
 void pal_warm_reset_prepare();
 void pal_cold_reset_prepare();
 int pal_submit_bmc_cold_reset();
+int pal_host_power_control(power_ctl_t ctl_type);
 int submit_12v_cycle_slot();
 
 int set_me_firmware_mode(uint8_t me_fw_mode);

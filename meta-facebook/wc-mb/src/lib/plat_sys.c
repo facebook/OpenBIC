@@ -20,6 +20,43 @@
 #include "hal_gpio.h"
 #include "plat_gpio.h"
 
+/* HOST control */
+int pal_host_power_control(power_ctl_t ctl_type)
+{
+	uint32_t reg_val = sys_read32(PASSTHROUGH_REG);
+
+	/* disable passthrough */
+	sys_write32(reg_val & PASSTHROUGH_DISABLE, PASSTHROUGH_REG);
+
+	switch (ctl_type) {
+	case POWER_ON:
+		gpio_set(PWR_BTN_BIC_OUT_R_N, GPIO_LOW);
+		k_msleep(100);
+		gpio_set(PWR_BTN_BIC_OUT_R_N, GPIO_HIGH);
+		break;
+
+	case POWER_OFF:
+		gpio_set(PWR_BTN_BIC_OUT_R_N, GPIO_LOW);
+		k_msleep(5000);
+		gpio_set(PWR_BTN_BIC_OUT_R_N, GPIO_HIGH);
+		break;
+
+	case POWER_CTL_RESET:
+		gpio_set(RST_BIC_RSTBTN_OUT_R_N, GPIO_LOW);
+		k_msleep(100);
+		gpio_set(RST_BIC_RSTBTN_OUT_R_N, GPIO_HIGH);
+		break;
+
+	default:
+		break;
+	}
+
+	/* enable passthrough */
+	sys_write32(reg_val | PASSTHROUGH_ENABLE, PASSTHROUGH_REG);
+
+	return 0;
+}
+
 /* BMC reset */
 void BMC_reset_handler()
 {
