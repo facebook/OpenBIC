@@ -271,8 +271,7 @@ void ISR_HSC_THROTTLE()
 	common_addsel_msg_t sel_msg;
 	static bool is_hsc_throttle_assert = false; // Flag for filt out fake alert
 	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
-		if ((gpio_get(PWRGD_SYS_PWROK) == GPIO_LOW) &&
-		    (get_DC_off_delayed_status() == false)) {
+		if (gpio_get(PWRGD_SYS_PWROK) == GPIO_LOW) {
 			return;
 		} else {
 			if ((gpio_get(IRQ_SML1_PMBUS_ALERT_N) == GPIO_HIGH) &&
