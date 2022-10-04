@@ -1240,7 +1240,7 @@ void pal_extend_sensor_config()
 	uint8_t stage = get_stage_by_rev_id();
 
 	if (stage == EVT) {
-		LOG_INF(" The board is on EVT stage");
+		LOG_INF("The board is in EVT stage");
 		memcpy(&sensor_config[sensor_config_count], evt_pex_sensor_config_table,
 		       ARRAY_SIZE(evt_pex_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(evt_pex_sensor_config_table);
@@ -1283,11 +1283,11 @@ void pal_extend_sensor_config()
 			sensor_config_count += ARRAY_SIZE(ina230_power_monitor_sensor_config_table);
 			break;
 		default:
-			LOG_ERR("Unsupported VR type\n");
+			LOG_ERR("Unsupported VR type");
 			break;
 		}
 	} else if (stage == DVT) {
-		LOG_INF(" The board is on DVT stage");
+		LOG_INF("The board is in DVT stage");
 		memcpy(&sensor_config[sensor_config_count], dvt_pex_sensor_config_table,
 		       ARRAY_SIZE(dvt_pex_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(dvt_pex_sensor_config_table);
@@ -1296,7 +1296,7 @@ void pal_extend_sensor_config()
 		load_power_ic_sensor_table();
 		change_p1v8_sensor_i2c_addr();
 	} else {
-		LOG_ERR("Unsupport stage, the number is %d \n", stage);
+		LOG_ERR("Unsupport stage, (%d)", stage);
 	}
 }
 
@@ -1330,7 +1330,7 @@ uint8_t pal_get_extend_sensor_config()
 		extend_sensor_config_size += ARRAY_SIZE(isl69259_vr_sensor_config_table);
 		extend_sensor_config_size += ARRAY_SIZE(isl28022_power_monitor_sensor_config_table);
 	} else {
-		LOG_ERR("Unsupport stage, the number is %d \n", stage);
+		LOG_ERR("Unsupport stage, (%d)", stage);
 	}
 	return extend_sensor_config_size;
 }
@@ -1361,7 +1361,7 @@ static void load_hsc_sensor_table()
 	float voltage_hsc_type_adc = 0;
 
 	if (!get_adc_voltage(HSC_TYPE_ADC_CHANNEL, &voltage_hsc_type_adc)) {
-		LOG_ERR("Fail to get hsc type by ADC\n");
+		LOG_ERR("Failed to get hsc type by ADC");
 		return;
 	}
 
@@ -1375,7 +1375,7 @@ static void load_hsc_sensor_table()
 		       ARRAY_SIZE(ltc4282_hsc_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(ltc4282_hsc_sensor_config_table);
 	} else {
-		LOG_ERR("Unknown hotswap model type, HSC_TYPE_ADC voltage: %d.%dV",
+		LOG_ERR("Unknown hotswap model type, HSC_TYPE_ADC voltage: %d.%d V",
 			(uint16_t)voltage_hsc_type_adc,
 			(uint16_t)((voltage_hsc_type_adc - (uint16_t)voltage_hsc_type_adc) * 100));
 	}
@@ -1392,7 +1392,7 @@ static void load_vr_sensor_table()
 	float voltage_vr_type_adc = 0;
 
 	if (!get_adc_voltage(VR_TYPE_ADC_CHANNEL, &voltage_vr_type_adc)) {
-		LOG_ERR("Fail to get VR type by ADC");
+		LOG_ERR("Failed to get VR type by ADC");
 		return;
 	}
 
@@ -1406,7 +1406,7 @@ static void load_vr_sensor_table()
 		       ARRAY_SIZE(xdpe12284_vr_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(xdpe12284_vr_sensor_config_table);
 	} else {
-		LOG_ERR("Unknown VR type, vr_type_adc voltage: %d.%dV\n",
+		LOG_ERR("Unknown VR type, vr_type_adc voltage: %d.%d V",
 			(uint16_t)voltage_vr_type_adc,
 			(uint16_t)((voltage_vr_type_adc - (uint16_t)voltage_vr_type_adc) * 100));
 	}
@@ -1425,7 +1425,7 @@ static void load_power_ic_sensor_table()
 	float voltage_power_ic_type_adc = 0;
 
 	if (!get_adc_voltage(POWER_IC_TYPE_ADC_CHANNEL, &voltage_power_ic_type_adc)) {
-		LOG_ERR("Fail to get power monitor IC type by ADC");
+		LOG_ERR("Failed to get power monitor IC type by ADC");
 		return;
 	}
 
@@ -1463,7 +1463,7 @@ static int check_vr_type(void)
 	msg.data[0] = (1 << 6);
 
 	if (i2c_master_write(&msg, retry)) {
-		LOG_ERR("[%s]Change i2c mux channel on bus 6 failed", __func__);
+		LOG_ERR("Change i2c mux channel on bus 6 failed");
 		return -1;
 	}
 
@@ -1473,7 +1473,7 @@ static int check_vr_type(void)
 	msg.data[0] = PMBUS_IC_DEVICE_ID;
 
 	if (i2c_master_read(&msg, retry)) {
-		LOG_ERR("[%s]Failed to read VR IC_DEVICE_ID", __func__);
+		LOG_ERR("Failed to read VR IC_DEVICE_ID");
 		return -1;
 	}
 
@@ -1483,7 +1483,7 @@ static int check_vr_type(void)
 		return VR_INF_XDPE12284;
 	}
 
-	LOG_ERR("[%s]Unsupported VR type", __func__);
+	LOG_ERR("Unsupported VR type");
 	return -1;
 }
 

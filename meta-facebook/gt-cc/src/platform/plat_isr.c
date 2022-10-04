@@ -51,19 +51,17 @@ void dc_on_init_component()
 			if (cfg->pre_sensor_read_hook) {
 				if (!cfg->pre_sensor_read_hook(cfg->num,
 							       cfg->pre_sensor_read_args)) {
-					LOG_ERR("[%s]sensor 0x%x pre sensor read failed!", __func__,
-						cfg->num);
+					LOG_ERR("sensor 0x%x pre sensor read failed!", cfg->num);
 					continue;
 				}
 			}
 			if (pex89000_init(sensor_num) != SENSOR_INIT_SUCCESS) {
-				LOG_ERR("[%s]sensor 0x%x init fail", __func__, cfg->num);
+				LOG_ERR("sensor 0x%x init failed", cfg->num);
 			}
 			if (cfg->post_sensor_read_hook) {
 				if (!cfg->post_sensor_read_hook(sensor_num,
 								cfg->post_sensor_read_args, NULL)) {
-					LOG_ERR("[%s]sensor number 0x%x post_read fail\n", __func__,
-						sensor_num);
+					LOG_ERR("sensor number 0x%x post_read failed", cfg->num);
 				}
 			}
 		}

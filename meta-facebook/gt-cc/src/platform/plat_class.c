@@ -56,7 +56,7 @@ bool get_adc_voltage(int channel, float *voltage)
 	CHECK_NULL_ARG_WITH_RETURN(voltage, false)
 
 	if (channel >= NUMBER_OF_ADC_CHANNEL) {
-		LOG_ERR("[%s]Invalid ADC channel-%d", __func__, channel);
+		LOG_ERR("Invalid ADC channel-%d", channel);
 		return false;
 	}
 
@@ -77,13 +77,14 @@ bool get_adc_voltage(int channel, float *voltage)
 		reference_voltage = 1.2;
 		break;
 	default:
-		LOG_ERR("Unsupported external reference voltage\n");
+		LOG_ERR("Unsupported external reference voltage");
 		return false;
 	}
 
 	// Read ADC raw value
 	reg_value = sys_read32(AST1030_ADC_BASE_ADDR + adc_info[channel].offset);
-	raw_value = (reg_value >> adc_info[channel].shift) & 0x3FF; // 10-bit(0x3FF) resolution
+	raw_value =
+		(reg_value >> adc_info[channel].shift) & BIT_MASK(10); // 10-bit(0x3FF) resolution
 
 	// Real voltage = raw data * reference voltage / 2 ^ resolution(10)
 	*voltage = (raw_value * reference_voltage) / 1024;
