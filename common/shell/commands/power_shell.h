@@ -20,12 +20,6 @@
 #include <stdlib.h>
 #include <shell/shell.h>
 
-#define HOST_KEYWORD "host"
-#define BMC_KEYWORD "bmc"
-#define POWER_ON_KEYWORD "on"
-#define POWER_OFF_KEYWORD "off"
-#define POWER_RESET_KEYWORD "reset"
-
 struct device_arr {
 	uint8_t enable;
 	char *name;
@@ -34,7 +28,7 @@ struct device_arr {
 enum device_id {
 	DEVICE_HOST,
 	DEVICE_BMC,
-	MAX_DEVICE_CNT,
+	MAX_DEVICE_COUNT,
 };
 
 void cmd_power_status(const struct shell *shell, size_t argc, char **argv);

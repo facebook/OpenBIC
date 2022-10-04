@@ -22,9 +22,15 @@
 #include <zephyr.h>
 #include <string.h>
 
-static struct device_arr device_info[MAX_DEVICE_CNT] = {
-	[DEVICE_HOST] = { ENABLE, "HOST" },
-	[DEVICE_BMC] = { DISABLE, "BMC" },
+static struct device_arr device_info[MAX_DEVICE_COUNT] = {
+	[DEVICE_HOST] = { ENABLE, "host" },
+	[DEVICE_BMC] = { ENABLE, "bmc" },
+};
+
+static const char *power_ctl_info[MAX_POWER_CTL_COUNT] = {
+	[POWER_CTL_ON] = "on",
+	[POWER_CTL_OFF] = "off",
+	[POWER_CTL_RESET] = "reset",
 };
 
 int check_pwr_ctl_valid(const struct shell *shell, uint8_t ctl_opt, uint8_t pwr_state)
@@ -50,22 +56,24 @@ void cmd_power_status(const struct shell *shell, size_t argc, char **argv)
 	}
 
 	shell_print(shell, "------------------------------------");
-	for (int i = 0; i < MAX_DEVICE_CNT; i++) {
+	for (int i = 0; i < MAX_DEVICE_COUNT; i++) {
+		shell_print(shell, "[%s]", device_info[i].name);
 		if (device_info[i].enable == DISABLE) {
-			shell_print(shell, "[%s]", device_info[i].name);
-			shell_print(shell, "* status: non-support", device_info[i].name);
+			shell_print(shell, "* status: not supported", device_info[i].name);
 			continue;
 		}
 		switch (i) {
 		case DEVICE_HOST:
-			shell_print(shell, "[%s]", device_info[i].name);
 			shell_print(shell, "* status:      %s", get_DC_status() ? "on" : "off");
 			shell_print(shell, "* cpu status:  %s", CPU_power_good() ? "on" : "off");
 			shell_print(shell, "* post status: %s", get_post_status() ? "on" : "off");
 			break;
 
 		case DEVICE_BMC:
-			/* TODO */
+			shell_print(shell, "* present:     %s",
+				    pal_is_bmc_present() ? "yes" : "no");
+			shell_print(shell, "* status:      %s",
+				    pal_is_bmc_ready() ? "ready" : "not ready");
 			break;
 
 		default:
@@ -79,36 +87,43 @@ void cmd_power_control(const struct shell *shell, size_t argc, char **argv)
 {
 	if (argc != 3) {
 		shell_warn(shell, "Help: platform power control <device> <status>");
+		shell_warn(shell, "      <device>");
+		for (int i = 0; i < MAX_DEVICE_COUNT; i++)
+			shell_warn(shell, "      * %s", device_info[i].name);
+		shell_warn(shell, "      <status>");
+		for (int i = 0; i < MAX_POWER_CTL_COUNT; i++)
+			shell_warn(shell, "      * %s", power_ctl_info[i]);
 		return;
 	}
 
-	int dev_idx = -1;
-	if (!strcmp(argv[1], HOST_KEYWORD)) {
-		dev_idx = DEVICE_HOST;
-	} else if (!strcmp(argv[1], BMC_KEYWORD)) {
-		dev_idx = DEVICE_BMC;
-	} else {
+	int dev_idx;
+	for (dev_idx = 0; dev_idx < MAX_DEVICE_COUNT; dev_idx++) {
+		if (!strcmp(argv[1], device_info[dev_idx].name))
+			break;
+	}
+
+	if (dev_idx == MAX_DEVICE_COUNT) {
 		shell_warn(shell, "Uknown device type %s", argv[1]);
 		return;
 	}
 
 	if (device_info[dev_idx].enable == DISABLE) {
-		shell_warn(shell, "%s power control is not support", device_info[dev_idx].name);
+		shell_warn(shell, "%s power control is not supported", device_info[dev_idx].name);
 		return;
 	}
 
-	int control_opt = -1;
-	if (!strcmp(argv[2], POWER_ON_KEYWORD)) {
-		control_opt = POWER_CTL_ON;
-	} else if (!strcmp(argv[2], POWER_OFF_KEYWORD)) {
-		control_opt = POWER_CTL_OFF;
-	} else if (!strcmp(argv[2], POWER_RESET_KEYWORD)) {
-		control_opt = POWER_CTL_RESET;
-	} else {
+	int control_opt;
+	for (control_opt = 0; control_opt < MAX_POWER_CTL_COUNT; control_opt++) {
+		if (!strcmp(argv[2], power_ctl_info[control_opt]))
+			break;
+	}
+
+	if (control_opt == MAX_POWER_CTL_COUNT) {
 		shell_warn(shell, "Uknown status control type %s", argv[2]);
 		return;
 	}
 
+	int ret;
 	switch (dev_idx) {
 	case DEVICE_HOST:
 		if (control_opt != POWER_CTL_ON && control_opt != POWER_CTL_OFF &&
@@ -120,12 +135,12 @@ void cmd_power_control(const struct shell *shell, size_t argc, char **argv)
 		if (check_pwr_ctl_valid(shell, control_opt, get_DC_status()))
 			return;
 
-		int ret = pal_host_power_control(control_opt);
+		ret = pal_host_power_control(control_opt);
 		if (ret == 0)
-			shell_print(shell, "%s power %s successed!", device_info[DEVICE_HOST].name,
+			shell_print(shell, "%s power %s succeeded!", device_info[DEVICE_HOST].name,
 				    argv[2]);
 		else if (ret == -1)
-			shell_error(shell, "%s power %s not support in this project!",
+			shell_error(shell, "%s power %s not supported in this project!",
 				    device_info[DEVICE_HOST].name, argv[2]);
 		else
 			shell_error(shell, "%s power %s failed!", device_info[DEVICE_HOST].name,
@@ -133,7 +148,27 @@ void cmd_power_control(const struct shell *shell, size_t argc, char **argv)
 		break;
 
 	case DEVICE_BMC:
-		/* TODO */
+		if (control_opt != POWER_CTL_RESET) {
+			shell_warn(shell, "Selected device not support %s", argv[2]);
+			return;
+		}
+
+		/* check BMC present */
+		if (!pal_is_bmc_present()) {
+			shell_warn(shell, "%s is not present!", device_info[DEVICE_HOST].name);
+			return;
+		}
+
+		ret = pal_submit_bmc_cold_reset();
+		if (ret == 0)
+			shell_print(shell, "%s power %s succeeded!", device_info[DEVICE_HOST].name,
+				    argv[2]);
+		else if (ret == -1)
+			shell_error(shell, "%s power %s not supported in this project!",
+				    device_info[DEVICE_HOST].name, argv[2]);
+		else
+			shell_error(shell, "%s power %s failed!", device_info[DEVICE_HOST].name,
+				    argv[2]);
 		break;
 
 	default:
