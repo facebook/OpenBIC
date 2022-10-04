@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
+#include "fru.h"
+#include "plat_fru.h"
+#include <logging/log.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "fru.h"
-#include "plat_fru.h"
+
+LOG_MODULE_REGISTER(dev_fru);
 
 EEPROM_CFG fru_config[FRU_CFG_NUM];
 
@@ -72,14 +75,14 @@ uint8_t FRU_read(EEPROM_ENTRY *entry)
 	}
 
 	if (entry->config.dev_id >= MAX_FRU_ID) { // check if FRU is defined
-		printf("fru read device ID %x not exist\n", entry->config.dev_id);
+		LOG_ERR("fru read device ID %x doesn't exist\n", entry->config.dev_id);
 		return FRU_INVALID_ID;
 	}
 
 	if ((entry->offset + entry->data_len) >=
 	    (FRU_START + FRU_SIZE)) { // Check data write out of range
-		printf("fru read out of range, type: %x, ID: %x\n", entry->config.dev_type,
-		       entry->config.dev_id);
+		LOG_ERR("fru read out of range, type: %x, ID: %x\n", entry->config.dev_type,
+			entry->config.dev_id);
 		return FRU_OUT_OF_RANGE;
 	}
 
@@ -100,14 +103,14 @@ uint8_t FRU_write(EEPROM_ENTRY *entry)
 	}
 
 	if (entry->config.dev_id >= MAX_FRU_ID) { // check if FRU is defined
-		printf("fru write device ID %x not exist\n", entry->config.dev_id);
+		LOG_ERR("fru write device ID %x doesn't exist\n", entry->config.dev_id);
 		return FRU_INVALID_ID;
 	}
 
 	if ((entry->offset + entry->data_len) >=
 	    (FRU_START + FRU_SIZE)) { // Check data write out of range
-		printf("fru write out of range, type: %x, ID: %x\n", entry->config.dev_type,
-		       entry->config.dev_id);
+		LOG_ERR("fru write out of range, type: %x, ID: %x\n", entry->config.dev_type,
+			entry->config.dev_id);
 		return FRU_OUT_OF_RANGE;
 	}
 
