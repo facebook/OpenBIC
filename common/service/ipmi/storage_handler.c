@@ -255,7 +255,7 @@ __weak void STORAGE_ADD_SEL(ipmi_msg *msg)
 
 	add_sel_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
 	if (add_sel_msg == NULL) {
-		LOG_DBG("Malloc fail");
+		LOG_ERR("Storge add sel msg malloc fail");
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
 		return;
 	}

@@ -677,7 +677,7 @@ __weak void OEM_1S_PECI_ACCESS(ipmi_msg *msg)
 		}
 		writeBuf = (uint8_t *)malloc(sizeof(uint8_t) * writeLen);
 		if ((readBuf == NULL) || (writeBuf == NULL)) {
-			LOG_DBG("PECI access util buffer alloc fail");
+			LOG_ERR("PECI access util buffer alloc fail");
 			SAFE_FREE(writeBuf);
 			SAFE_FREE(readBuf);
 			msg->completion_code = CC_OUT_OF_SPACE;
@@ -1262,10 +1262,8 @@ __weak void OEM_1S_READ_BIC_REGISTER(ipmi_msg *msg)
 	* data 0~3: start of register address to read, LSB first
 	* data 4  : bytes to read
 	***********************************/
-	if (!msg) {
-		LOG_DBG("pal_OEM_1S_READ_BIC_REGISTER: parameter msg is NULL");
-		return;
-	}
+	CHECK_NULL_ARG(msg);
+
 	if (msg->data_len != 5) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
@@ -1289,10 +1287,8 @@ __weak void OEM_1S_WRITE_BIC_REGISTER(ipmi_msg *msg)
 	*
 	* NOTE: The register address must be a multiple of 4
 	***********************************/
-	if (!msg) {
-		LOG_DBG("pal_OEM_1S_WRITE_BIC_REGISTER: parameter msg is NULL");
-		return;
-	}
+	CHECK_NULL_ARG(msg);
+
 	if (msg->data[4] < 1 || msg->data[4] > 4 || (msg->data_len != 5 + msg->data[4])) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
@@ -1515,10 +1511,7 @@ __weak void OEM_1S_MULTI_ACCURACY_SENSOR_READING(ipmi_msg *msg)
 	Response -
 	data 0: Completion code
 	***********************************/
-	if (!msg) {
-		LOG_DBG("failed due to parameter *msg is NULL");
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (!msg->data_len) {
 		msg->completion_code = CC_INVALID_LENGTH;

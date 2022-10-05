@@ -169,7 +169,7 @@ bool common_add_sel_evt_record(common_addsel_msg_t *sel_msg)
 	uint8_t evt_msg_version = 0x04;
 	ipmi_msg *msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
 	if (msg == NULL) {
-		LOG_DBG("Malloc fail");
+		LOG_ERR("Add sel msg malloc fail");
 		return false;
 	}
 	memset(msg, 0, sizeof(ipmi_msg));
@@ -310,7 +310,7 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 				k_msleep(10);
 				kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
 				if (kcs_buff == NULL) {
-					LOG_DBG("IPMI_handler: Fail to malloc for kcs_buff");
+					LOG_ERR("IPMI_handler: Fail to malloc for kcs_buff");
 					continue;
 				}
 			}

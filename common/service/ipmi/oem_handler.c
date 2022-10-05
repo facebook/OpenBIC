@@ -92,7 +92,7 @@ __weak void OEM_SET_SYSTEM_GUID(ipmi_msg *msg)
 
 	if (msg->data_len != 16) {
 		msg->completion_code = CC_INVALID_LENGTH;
-		LOG_DBG("Message Data invalid length");
+		LOG_ERR("Message Data invalid length");
 		return;
 	}
 
