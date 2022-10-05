@@ -14,11 +14,29 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_SYS_H
-#define PLAT_SYS_H
+#ifndef POWER_SHELL_H
+#define POWER_SHELL_H
 
-#define PASSTHROUGH_REG 0x7E6E24B0
-#define PASSTHROUGH_ENABLE 0x00C30000
-#define PASSTHROUGH_DISABLE 0x00000000
+#include <stdlib.h>
+#include <shell/shell.h>
+
+struct device_arr {
+	uint8_t enable;
+	char *name;
+};
+
+enum device_id {
+	DEVICE_HOST,
+	DEVICE_BMC,
+	MAX_DEVICE_COUNT,
+};
+
+void cmd_power_status(const struct shell *shell, size_t argc, char **argv);
+void cmd_power_control(const struct shell *shell, size_t argc, char **argv);
+
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_power_cmds,
+			       SHELL_CMD(status, NULL, "List power status", cmd_power_status),
+			       SHELL_CMD(control, NULL, "Power control", cmd_power_control),
+			       SHELL_SUBCMD_SET_END);
 
 #endif

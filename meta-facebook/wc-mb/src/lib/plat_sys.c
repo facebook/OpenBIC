@@ -20,6 +20,59 @@
 #include "hal_gpio.h"
 #include "plat_gpio.h"
 
+/* HOST control */
+int pal_host_power_control(power_ctl_t ctl_type)
+{
+	uint32_t reg_val = sys_read32(PASSTHROUGH_REG);
+
+	/* disable passthrough */
+	sys_write32(reg_val & PASSTHROUGH_DISABLE, PASSTHROUGH_REG);
+
+	switch (ctl_type) {
+	case POWER_CTL_ON:
+		gpio_set(PWR_BTN_BIC_OUT_R_N, GPIO_LOW);
+		k_msleep(100);
+		gpio_set(PWR_BTN_BIC_OUT_R_N, GPIO_HIGH);
+		break;
+
+	case POWER_CTL_OFF:
+		gpio_set(PWR_BTN_BIC_OUT_R_N, GPIO_LOW);
+		k_msleep(5000);
+		gpio_set(PWR_BTN_BIC_OUT_R_N, GPIO_HIGH);
+		break;
+
+	case POWER_CTL_RESET:
+		gpio_set(RST_BIC_RSTBTN_OUT_R_N, GPIO_LOW);
+		k_msleep(100);
+		gpio_set(RST_BIC_RSTBTN_OUT_R_N, GPIO_HIGH);
+		break;
+
+	default:
+		break;
+	}
+
+	/* enable passthrough */
+	sys_write32(reg_val | PASSTHROUGH_ENABLE, PASSTHROUGH_REG);
+
+	return 0;
+}
+
+/* BMC present */
+bool pal_is_bmc_present()
+{
+	if (gpio_get(FM_SCM_PRSNT_R_N) == GPIO_LOW)
+		return true;
+	return false;
+}
+
+/* BMC ready */
+bool pal_is_bmc_ready()
+{
+	if (gpio_get(FM_BMC_READY) == GPIO_HIGH)
+		return true;
+	return false;
+}
+
 /* BMC reset */
 void BMC_reset_handler()
 {

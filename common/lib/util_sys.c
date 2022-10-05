@@ -96,6 +96,21 @@ __weak int pal_submit_bmc_cold_reset()
 	return -1;
 }
 
+__weak int pal_host_power_control(power_ctl_t ctl_type)
+{
+	return -1;
+}
+
+__weak bool pal_is_bmc_present()
+{
+	return false;
+}
+
+__weak bool pal_is_bmc_ready()
+{
+	return false;
+}
+
 __weak int pal_submit_12v_cycle_slot()
 {
 	return NOT_SUPPORT_12V_CYCLE_SLOT;
