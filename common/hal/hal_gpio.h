@@ -60,6 +60,8 @@
 
 #define REG_GPIO_BASE 0x7e780000
 #define REG_SCU 0x7E6E2000
+#define REG_DIRECTION_OFFSET 4
+
 extern uint32_t GPIO_GROUP_REG_ACCESS[];
 extern uint32_t GPIO_MULTI_FUNC_PIN_CTL_REG_ACCESS[];
 extern const int GPIO_MULTI_FUNC_CFG_SIZE;
@@ -84,7 +86,7 @@ typedef struct _SET_GPIO_VALUE_CFG_ {
 
 extern GPIO_CFG gpio_cfg[];
 
-enum {
+enum GPIO_GROUP {
 	GPIO_A_D,
 	GPIO_E_H,
 	GPIO_I_L,
