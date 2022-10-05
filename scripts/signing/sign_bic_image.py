@@ -33,6 +33,7 @@ stage_map = {
 
 # Supported boards for each platform.
 valid_projects = {
+    "at": {"cb", },
     "gt": {"cc", },
     "wc": {"mb", },
     "yv3": {"dl", "vf", },
@@ -41,6 +42,8 @@ valid_projects = {
 
 # Numeric encoding of boards.
 board_map = {
+    # AT
+    "cb": "00010",
     # GT
     "cc": "00001",
     # WC
@@ -57,6 +60,7 @@ board_map = {
 
 # Mapping between short and full project names.
 project_name_mapping = {
+    "at": "Artemis",
     "gt": "Grand Teton",
     "wc": "Waimea Canyon",
     "yv3": "Yosemite V3",

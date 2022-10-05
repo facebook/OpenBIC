@@ -17,6 +17,7 @@
 # When onboarding a new OpenBIC platform it should be added here in
 # alphabetical order.
 PLATFORM_NAME_MAP = {
+    "obat-cb": "Artemis : Colter Bay",
     "obgt-cc": "Grand Teton : Clear Creek",
     "obwc-mb": "Waimea Canyon : MainBoard",
     "oby3-dl": "Yosemite v3 : Delta Lake",
@@ -31,6 +32,7 @@ PLATFORM_NAME_MAP = {
 # When onboarding a new OpenBIC platform it should be added here in
 # alphabetical order.
 SUPPORTED_PLATFORMS = {
+    "obat-cb",
     "obgt-cc",
     "obwc-mb",
     "oby3-dl",
@@ -42,6 +44,7 @@ SUPPORTED_PLATFORMS = {
 }
 
 PLATFORM_RELEASE_MAPPINGS = {
+    "at-cb": "obat-cb",
     "gt-cc": "obgt-cc",
     "wc-mb": "obwc-mb",
     "yv3-dl": "oby3-dl",
@@ -53,6 +56,7 @@ PLATFORM_RELEASE_MAPPINGS = {
 }
 
 PLATFORM_DIRECTORIES = {
+    "at-cb",
     "gt-cc",
     "wc-mb",
     "yv3-dl",
@@ -70,21 +74,23 @@ PLATFORM_DIRECTORIES = {
 # When onboarding a new OpenBIC platform it should be added here in
 # alphabetical order.
 TITLE_TAGS = {
+    "Common",
+    "at:"
     "bb:",
+    "cb:"
     "cc:",
     "cl:",
+    "common",
     "dl:",
-    "fby3:",
     "fby3.5:",
     "fby35:",
+    "fby3:",
     "gt:",
     "hd:",
     "mb:",
     "rf:",
     "vf:",
     "wc:",
-    "Common",
-    "common",
 }
 
 

@@ -20,6 +20,7 @@ jobs:
         # This job matrix will generate a separate job for all platforms listed.
         # Add platforms in alphabetical order.
         platform: [
+          at-cb,
           gt-cc,
           wc-mb,
           yv3-dl,

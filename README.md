@@ -4,6 +4,7 @@ OpenBIC is an open software framework to build a complete firmware image for a B
 
 | Platform | Status | Description |
 |-------|--------|-------------|
+obat-cb | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/at-cb.json) | Artemis Colter Bay
 obgt-cc | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/gt-cc.json) | Grand Teton Clear Creek
 obwc-mb | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/wc-mb.json) | Waimea Canyon Mainboard
 oby3-dl | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/y3-dl.json) | Yosemite v3 Delta Lake
