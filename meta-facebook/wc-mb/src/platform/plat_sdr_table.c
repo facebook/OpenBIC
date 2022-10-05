@@ -85,7 +85,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB Inlet Temp",
+		"MB_INLET_TEMP_C",
 	},
 	{
 		// TMP75 on board temperature - outlet
@@ -146,7 +146,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB Outlet Temp",
+		"MB_OUTLET_TEMP_C",
 	},
 	{
 		// TMP75 on board temperature - IOM
@@ -207,7 +207,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"IOM Temp",
+		"IOM_TEMP_C",
 	},
 	{
 		// PCH temperature
@@ -268,7 +268,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"PCH Temp",
+		"MB_PCH_TEMP_C",
 	},
 	{
 		// CPU TEMP on board temperature
@@ -329,7 +329,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"SOC CPU Temp",
+		"MB_SOC_CPU_TEMP_C",
 	},
 	{
 		// CPU margin on board temperature
@@ -390,7 +390,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"SOC Therm Margin",
+		"MB_SOC_THERMAL_MARGIN_C",
 	},
 	{
 		// CPU TJMAX on board temperature
@@ -451,7 +451,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"CPU TjMax",
+		"MB_SOC_TJMAX_C",
 	},
 	{
 		// SSD0 temperature
@@ -512,7 +512,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"SSD0 Temp",
+		"MB_SSD_M2_TEMP_C",
 	},
 	{
 		// HSC temperature
@@ -573,7 +573,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"HSC Temp",
+		"MB_HSC_TEMP_C",
 	},
 	{
 		// DIMM A on board temperature
@@ -634,7 +634,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMMA Temp",
+		"MB_DIMMA_TEMP_C",
 	},
 	{
 		// DIMM C on board temperature
@@ -695,7 +695,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMMC Temp",
+		"MB_DIMMC_TEMP_C",
 	},
 	{
 		// DIMM E on board temperature
@@ -756,7 +756,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMME Temp",
+		"MB_DIMME_TEMP_C",
 	},
 	{
 		// DIMM G on board temperature
@@ -817,7 +817,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMMG Temp",
+		"MB_DIMMG_TEMP_C",
 	},
 	{
 		// PVCCIN VR temperature
@@ -878,7 +878,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"VCCIN SPS Temp",
+		"MB_VR_VCCIN_TEMP_C",
 	},
 	{
 		// PVCCFA_EHV_FIVRA VR temperature
@@ -939,7 +939,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FIVRA SPS Temp",
+		"MB_VR_FIVRA_TEMP_C",
 	},
 	{
 		// PVCCFA_EHV VR temperature
@@ -1000,7 +1000,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"EHV SPS Temp",
+		"MB_VR_EHV_TEMP_C",
 	},
 	{
 		// PVCCD_HV VR temperature
@@ -1061,7 +1061,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"VCCD SPS Temp",
+		"MB_VR_VCCD_TEMP_C",
 	},
 	{
 		// PVCCINFAON VR temperature
@@ -1122,7 +1122,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FAON SPS Temp",
+		"MB_VR_FAON_TEMP_C",
 	},
 
 	/* =============================== VOLTAGE SENSOR =============================== */
@@ -1185,7 +1185,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"P12V_STBY Vol",
+		"MB_ADC_P12V_STBY_VOLT_V",
 	},
 	{
 		// BATTERY 3V ADC voltage
@@ -1246,7 +1246,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"P3V_BAT Vol",
+		"MB_ADC_P3V_BAT_VOLT_V",
 	},
 	{
 		// P3V3 STBY ADC voltage
@@ -1307,7 +1307,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"P3V3_STBY Vol",
+		"MB_ADC_P3V3_STBY_VOLT_V",
 	},
 	{
 		// P1V8 STBY ADC voltage
@@ -1368,7 +1368,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"P1V8_STBY Vol",
+		"MB_ADC_P1V8_STBY_VOLT_V",
 	},
 	{
 		// P1V05 STBY ADC voltage
@@ -1429,7 +1429,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"P1V05_PCH Vol",
+		"MB_ADC_P1V05_PCH_VOLT_V",
 	},
 	{
 		// P5V STBY ADC voltage
@@ -1490,7 +1490,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"P5V_STBY Vol",
+		"MB_ADC_P5V_STBY_VOLT_V",
 	},
 	{
 		// P12V DIMM ADC voltage
@@ -1551,7 +1551,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"P12V_DIMM Vol",
+		"MB_ADC_P12V_DIMM_VOLT_V",
 	},
 	{
 		// P1V2 STBY ADC voltage
@@ -1612,7 +1612,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"P1V2_STBY Vol",
+		"MB_ADC_P1V2_STBY_VOLT_V",
 	},
 	{
 		// P3V3 M2 ADC voltage
@@ -1673,7 +1673,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"P3V3_M2 Vol",
+		"MB_ADC_P3V3_M2_VOLT_V",
 	},
 	{
 		// HSCIN voltage
@@ -1734,7 +1734,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"HSC Input Vol",
+		"MB_HSC_INPUT_VOLT_V",
 	},
 	{
 		// PVCCIN VR voltage
@@ -1795,7 +1795,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"VCCIN VR Vol",
+		"MB_VR_VCCIN_VOLT_V",
 	},
 	{
 		// PVCCFA_EHV_FIVRA VR voltage
@@ -1856,7 +1856,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FIVRA VR Vol",
+		"MB_VR_FIVRA_VOLT_V",
 	},
 	{
 		// PVCCFA_EHV VR voltage
@@ -1917,7 +1917,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"EHV VR Vol",
+		"MB_VR_EHV_VOLT_V",
 	},
 	{
 		// PVCCD_HV VR voltage
@@ -1978,7 +1978,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"VCCD VR Vol",
+		"MB_VR_VCCD_VOLT_V",
 	},
 	{
 		// PVCCINFAON VR voltage
@@ -2039,7 +2039,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FAON VR Vol",
+		"MB_VR_FAON_VOLT_V",
 	},
 	{
 		// IOM INA230 voltage
@@ -2100,7 +2100,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"IOM INA vol",
+		"IOM_INA_VOLT_V",
 	},
 
 	/* =============================== CURRENT SENSOR =============================== */
@@ -2163,7 +2163,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"HSC Output Cur",
+		"MB_HSC_OUTPUT_CURR_A",
 	},
 	{
 		// PVCCIN VR current
@@ -2224,7 +2224,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"VCCIN VR Cur",
+		"MB_VR_VCCIN_CURR_A",
 	},
 	{
 		// PVCCFA_EHV_FIVRA VR current
@@ -2285,7 +2285,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FIVRA VR Cur",
+		"MB_VR_FIVRA_CURR_A",
 	},
 	{
 		// PVCCFA_EHV VR current
@@ -2346,7 +2346,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"EHV VR Cur",
+		"MB_VR_EHV_CURR_A",
 	},
 	{
 		// PVCCD_HV VR current
@@ -2407,7 +2407,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"VCCD VR Cur",
+		"MB_VR_VCCD_CURR_A",
 	},
 	{
 		// PVCCD_HV VR current in
@@ -2468,7 +2468,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"VCCD VR Cur in",
+		"MB_VR_VCCD_IN_CURR_A",
 	},
 	{
 		// PVCCINFAON VR current
@@ -2529,7 +2529,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FAON VR Cur",
+		"MB_VR_FAON_CURR_A",
 	},
 	{
 		// IOM INA230 current
@@ -2590,7 +2590,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"IOM INA Cur",
+		"IOM_INA_CURR_A",
 	},
 
 	/* =============================== POWER SENSOR =============================== */
@@ -2653,7 +2653,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"CPU Pwr",
+		"MB_SOC_CPU_PWR_W",
 	},
 	{
 		// HSCIN power
@@ -2714,7 +2714,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"HSC Input Pwr",
+		"MB_HSC_INPUT_PWR_W",
 	},
 	{
 		// DIMMA power
@@ -2775,7 +2775,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMMA PMIC_Pout",
+		"MB_VR_DIMMA_PMIC_PWR_W",
 	},
 	{
 		// DIMMC power
@@ -2836,7 +2836,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMMC PMIC_Pout",
+		"MB_VR_DIMMC_PMIC_PWR_W",
 	},
 	{
 		// DIMME power
@@ -2897,7 +2897,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMME PMIC_Pout",
+		"MB_VR_DIMME_PMIC_PWR_W",
 	},
 	{
 		// DIMMG power
@@ -2958,7 +2958,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"DIMMG PMIC_Pout",
+		"MB_VR_DIMMG_PMIC_PWR_W",
 	},
 	{
 		// PVCCIN power
@@ -3019,7 +3019,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"VCCIN VR Pout",
+		"MB_VR_VCCIN_PWR_W",
 	},
 	{
 		// PVCCFA_EHV_FIVRA power
@@ -3080,7 +3080,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FIVRA VR Pout",
+		"MB_VR_FIVRA_PWR_W",
 	},
 	{
 		// PVCCFA_EHV power
@@ -3141,7 +3141,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"EHV VR Pout",
+		"MB_VR_EHV_PWR_W",
 	},
 	{
 		// PVCCD_HV power
@@ -3202,7 +3202,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"VCCD VR Pout",
+		"MB_VR_VCCD_PWR_W",
 	},
 	{
 		// PVCCINFAON power
@@ -3263,7 +3263,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FAON VR Pout",
+		"MB_VR_FAON_PWR_W",
 	},
 	{
 		// IOM INA230 power
@@ -3324,7 +3324,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"IOM INA Pwr",
+		"IOM_INA_PWR_A",
 	},
 };
 
