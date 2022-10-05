@@ -405,7 +405,7 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 			}
 		}
 
-		if (pex_access_engine(cfg->port, cfg->target_addr, p->idx, pex_access_flash_ver,
+		if (pex_access_engine(cfg->port, cfg->target_addr, p->idx, pex_access_sbr_ver,
 				      &reading)) {
 			if (k_mutex_unlock(&i2c_bus10_mutex))
 				printf("[%s]mutex unlock fail on PEX bus\n", __func__);
@@ -445,7 +445,7 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		uint8_t buf[5] = { 0 };
 		/* Assign VR 0/1 related sensor number to get information for accessing VR */
 		uint8_t sensor_num = (component == GT_COMPNT_VR0) ? SENSOR_NUM_TEMP_PEX_1 :
-									  SENSOR_NUM_TEMP_PEX_3;
+								    SENSOR_NUM_TEMP_PEX_3;
 		if (!tca9548_select_chan(sensor_num, &mux_conf_addr_0xe0[6])) {
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			return;
