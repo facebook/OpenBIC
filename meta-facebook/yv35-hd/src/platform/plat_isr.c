@@ -27,10 +27,19 @@
 #include "kcs.h"
 #include "pcc.h"
 #include "libutil.h"
+#include "logging/log.h"
+#include "apml.h"
+#include "plat_def.h"
+
+LOG_MODULE_REGISTER(plat_isr);
 
 void ISR_POST_COMPLETE()
 {
 	set_post_status(FM_BIOS_POST_CMPLT_BIC_N);
+	if (apml_write_byte(I2C_BUS14, SB_TSI_ADDR, SBTSI_HIGH_TEMP_INTEGER_THRESHOLD,
+			    TSI_HIGH_TEMP_THRESHOLD)) {
+		LOG_ERR("Failed to set TSI high temperature threshold.");
+	}
 }
 
 static void PROC_FAIL_handler(struct k_work *work)
@@ -46,7 +55,7 @@ static void PROC_FAIL_handler(struct k_work *work)
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("[%s] Failed to assert FRE3 event log.\n", __func__);
+			LOG_ERR("Failed to assert FRE3 event log.");
 		}
 	}
 }
@@ -65,12 +74,12 @@ void ISR_DC_ON()
 		k_work_schedule(&set_DC_on_5s_work, K_SECONDS(DC_ON_5_SECOND));
 		k_work_schedule(&PROC_FAIL_work, K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
 		if (k_work_cancel_delayable(&set_DC_off_10s_work) != 0) {
-			printf("[%s] Failed to cancel set dc off delay work.\n", __func__);
+			LOG_ERR("Failed to cancel set dc off delay work.");
 		}
 		set_DC_off_delayed_status();
 	} else {
 		if (k_work_cancel_delayable(&PROC_FAIL_work) != 0) {
-			printf("[%s] Failed to cancel proc_fail delay work.\n", __func__);
+			LOG_ERR("Failed to cancel proc_fail delay work.");
 		}
 		reset_kcs_ok();
 		reset_4byte_postcode_ok();
@@ -78,7 +87,7 @@ void ISR_DC_ON()
 		k_work_schedule(&set_DC_off_10s_work, K_SECONDS(DC_OFF_10_SECOND));
 
 		if (k_work_cancel_delayable(&set_DC_on_5s_work) != 0) {
-			printf("[%s] Failed to cancel set dc on delay work.\n", __func__);
+			LOG_ERR("Failed to cancel set dc on delay work.");
 		}
 		set_DC_on_delayed_status();
 
@@ -93,7 +102,7 @@ void ISR_DC_ON()
 			sel_msg.event_data2 = 0xFF;
 			sel_msg.event_data3 = 0xFF;
 			if (!common_add_sel_evt_record(&sel_msg)) {
-				printf("[%s] Failed to add system PWROK failure sel.\n", __func__);
+				LOG_ERR("Failed to add system PWROK failure sel");
 			}
 		}
 	}
@@ -112,7 +121,7 @@ static void SLP3_handler()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("[%s] Failed to add VR watchdog timeout sel.\n", __func__);
+			LOG_ERR("Failed to add VR watchdog timeout sel.");
 		}
 	}
 }
@@ -121,12 +130,12 @@ K_WORK_DELAYABLE_DEFINE(SLP3_work, SLP3_handler);
 void ISR_SLP3()
 {
 	if (gpio_get(FM_CPU_BIC_SLP_S3_N) == GPIO_HIGH) {
-		printf("slp3\n");
+		LOG_ERR("slp3");
 		k_work_schedule(&SLP3_work, K_MSEC(10000));
 		return;
 	} else {
 		if (k_work_cancel_delayable(&SLP3_work) != 0) {
-			printf("[%s] Failed to cancel delayable work.\n", __func__);
+			LOG_ERR("Failed to cancel delayable work.");
 		}
 	}
 }
@@ -147,7 +156,7 @@ void ISR_DBP_PRSNT()
 	sel_msg.event_data2 = 0xFF;
 	sel_msg.event_data3 = 0xFF;
 	if (!common_add_sel_evt_record(&sel_msg)) {
-		printf("[%s] Failed to add HDT present sel.\n", __func__);
+		LOG_ERR("Failed to add HDT present sel.");
 	}
 }
 
@@ -179,7 +188,7 @@ void ISR_HSC_THROTTLE()
 			sel_msg.event_data2 = 0xFF;
 			sel_msg.event_data3 = 0xFF;
 			if (!common_add_sel_evt_record(&sel_msg)) {
-				printf("[%s] Failed to add HSC Throttle sel.\n", __func__);
+				LOG_ERR("Failed to add HSC Throttle sel.");
 			}
 		}
 	}
@@ -201,7 +210,7 @@ void ISR_MB_THROTTLE()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("[%s] Failed to add MB Throttle sel.\n", __func__);
+			LOG_ERR("Failed to add MB Throttle sel.\n");
 		}
 	}
 }
@@ -218,7 +227,7 @@ void ISR_SOC_THMALTRIP()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("[%s] Failed to add SOC Thermal trip sel.\n", __func__);
+			LOG_ERR("Failed to add SOC Thermal trip sel.");
 		}
 	}
 }
@@ -239,7 +248,7 @@ void ISR_SYS_THROTTLE()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("[%s] Failed to add System Throttle sel.\n", __func__);
+			LOG_ERR("Failed to add System Throttle sel.");
 		}
 	}
 }
@@ -260,7 +269,7 @@ void ISR_HSC_OC()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("[%s] Failed to add HSC OC sel.\n", __func__);
+			LOG_ERR("Failed to add HSC OC sel.");
 		}
 	}
 }
@@ -280,7 +289,7 @@ static void add_vr_ocp_sel(uint8_t gpio_num, uint8_t vr_num)
 	sel_msg.event_data2 = 0xFF;
 	sel_msg.event_data3 = 0xFF;
 	if (!common_add_sel_evt_record(&sel_msg)) {
-		printf("[%s] Failed to add VR OCP sel.\n", __func__);
+		LOG_ERR("Failed to add VR OCP sel.");
 	}
 }
 
@@ -310,7 +319,7 @@ static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num
 	uint8_t retry = 5;
 	I2C_MSG *msg = (I2C_MSG *)malloc(sizeof(I2C_MSG));
 	if (msg == NULL) {
-		printf("[%s] Failed to allocate I2C_MSG.\n", __func__);
+		LOG_ERR("Failed to allocate I2C_MSG.");
 		return;
 	}
 
@@ -322,7 +331,7 @@ static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num
 		msg->data[1] = page;
 
 		if (i2c_master_write(msg, retry)) {
-			printf("[%s] Failed to write page.\n", __func__);
+			LOG_ERR("Failed to write page.");
 			continue;
 		}
 
@@ -333,7 +342,7 @@ static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num
 		msg->data[0] = PMBUS_STATUS_WORD;
 
 		if (i2c_master_read(msg, retry)) {
-			printf("[%s] Failed to read PMBUS_STATUS_WORD.\n", __func__);
+			LOG_ERR("Failed to read PMBUS_STATUS_WORD.");
 			continue;
 		}
 
@@ -350,7 +359,7 @@ static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num
 		sel_msg.event_data2 = msg->data[0];
 		sel_msg.event_data3 = msg->data[1];
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("[%s] Failed to add VR PMALERT sel.\n", __func__);
+			LOG_ERR("Failed to add VR PMALERT sel.");
 		}
 	}
 	SAFE_FREE(msg);
@@ -414,7 +423,7 @@ void ISR_UV_DETECT()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("[%s] Failed to add under voltage sel.\n", __func__);
+			LOG_ERR("Failed to add under voltage sel.");
 		}
 	}
 }

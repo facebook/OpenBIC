@@ -64,5 +64,6 @@ bool post_ltc4282_cur_read(uint8_t sensor_num, void *args, int *reading);
 bool post_ltc4282_pwr_read(uint8_t sensor_num, void *args, int *reading);
 bool post_ddr5_pwr_read(uint8_t sensor_num, void *args, int *reading);
 bool post_ddr5_temp_read(uint8_t sensor_num, void *args, int *reading);
+bool post_amd_tsi_read(uint8_t sensor_num, void *args, int *reading);
 
 #endif
