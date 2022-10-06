@@ -232,6 +232,10 @@ ltc4282_init_arg ltc4282_hsc_init_args[] = {
   },
 };
 
+ltc4286_init_arg ltc4286_hsc_init_args[] = {
+	[0] = { .is_init = false, .r_sense_mohm = 0.142, .mfr_config_1 = { 0x3C72 } },
+};
+
 adc_asd_init_arg adc_asd_init_args[] = { [0] = { .is_init = false } };
 
 /*

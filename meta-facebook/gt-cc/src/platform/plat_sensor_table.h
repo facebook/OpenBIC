@@ -33,6 +33,7 @@
 
 #define HSC_MP5990_ADDR (0x40 >> 1)
 #define HSC_LTC4282_ADDR (0x82 >> 1)
+#define HSC_LTC4286_ADDR (0x82 >> 1)
 #define HSC_TEMP_NCT7718W_ADDR (0x98 >> 1)
 
 #define PEX_0_1_P0V8_VR_ADDR (0xC0 >> 1)
