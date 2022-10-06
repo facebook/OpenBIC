@@ -417,7 +417,24 @@ void ISR_PCH_THMALTRIP()
 
 void ISR_HSC_OC()
 {
-	// TODO
+	common_addsel_msg_t sel_msg;
+	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
+		if (gpio_get(P12V_HS_D_OC_R_N) == GPIO_HIGH) {
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+		} else {
+			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+		}
+
+		sel_msg.InF_target = BMC_IPMB;
+		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_OCALERT; // for mp5990
+		sel_msg.event_data2 = 0xFF;
+		sel_msg.event_data3 = 0xFF;
+		if (!common_add_sel_evt_record(&sel_msg)) {
+			LOG_ERR("HSC OC addsel fail");
+		}
+	}
 }
 
 void ISR_CPU_MEMHOT()
