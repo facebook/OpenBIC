@@ -161,7 +161,6 @@ uint8_t ltc4286_read(uint8_t sensor_num, int *reading)
 
 uint8_t ltc4286_init(uint8_t sensor_num)
 {
-	static bool isParameterInitialized = false;
 	if (!sensor_config[sensor_config_index_map[sensor_num]].init_args) {
 		printf("<error> LTC4286 init args are not provided!\n");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
@@ -195,14 +194,13 @@ init_param:
 	msg.tx_len = 1;
 	msg.rx_len = 3;
 	msg.data[0] = LTC4286_MFR_CONFIG1;
-	if (i2c_master_write(&msg, retry) != 0) {
+	if (i2c_master_read(&msg, retry) != 0) {
 		printf("Failed to read LTC4286 register(0x%x)\n", msg.data[0]);
 		init_args->is_init = false;
 		goto cleanup;
 	}
-	if ((msg.data[0] == LTC4286_MFR_CONFIG1) && (isParameterInitialized == false)) {
+	if (msg.data[0] == LTC4286_MFR_CONFIG1) {
 		init_args->mfr_config_1.value = (msg.data[1] | (msg.data[2] << 8));
-		isParameterInitialized = true;
 	}
 
 	init_args->is_init = true;
