@@ -193,6 +193,10 @@ bool common_add_sel_evt_record(common_addsel_msg_t *sel_msg)
 	       sizeof(common_addsel_msg_t) - sizeof(uint8_t));
 	record_id++;
 
+	LOG_DBG("BIC add sel to target(%xh) with gen_id[%xh %xh] sensor[type %xh #%xh] event[type %xh] data[%xh %xh %xh]",
+		msg->InF_target, msg->data[7], msg->data[8], msg->data[10], msg->data[11],
+		msg->data[12], msg->data[13], msg->data[14], msg->data[15]);
+
 	bool ipmb_flag = true;
 	status = ipmb_read(msg, IPMB_inf_index_map[msg->InF_target]);
 	switch (status) {
