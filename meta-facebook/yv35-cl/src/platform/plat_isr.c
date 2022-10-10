@@ -498,18 +498,41 @@ void ISR_RMCA()
 	}
 }
 
+int get_set_1ou_m2_power(ipmi_msg *msg, uint8_t device_id, uint8_t option)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, -1);
+	uint32_t iana = IANA_ID;
+	ipmb_error status;
+
+	memset(msg, 0, sizeof(ipmi_msg));
+	msg->InF_source = SELF;
+	msg->InF_target = EXP1_IPMB;
+	msg->netfn = NETFN_OEM_1S_REQ;
+	msg->cmd = CMD_OEM_1S_GET_SET_M2;
+	msg->data_len = 5;
+	memcpy(&msg->data[0], (uint8_t *)&iana, 3);
+	msg->data[3] = _1ou_m2_mapping_table[device_id];
+	msg->data[4] = option;
+	status = ipmb_read(msg, IPMB_inf_index_map[msg->InF_target]);
+	if (status != IPMB_ERROR_SUCCESS) {
+		LOG_ERR("Failed to set get 1OU E1.S power: status 0x%x, id %d, option 0x%x", status,
+			device_id, option);
+		return -1;
+	}
+
+	return 0;
+}
+
 void ISR_CPU_VPP_INT()
 {
 	if (gpio_get(PWRGD_CPU_LVC3) == POWER_ON) {
-		int i = 0;
+		int i = 0, ret = 0;
 		uint8_t retry = 3;
 		uint8_t vpp_pwr_status_bit = 0;
 		uint8_t device_id = 0;
-		uint8_t set_power_status = POWER_OFF;
-		uint32_t iana = IANA_ID;
+		uint8_t set_power_status = DEVICE_SET_POWER_OFF;
 		static uint8_t last_vpp_pwr_status =
 			0xE1; // default all devices are on (bit1~4 = 0)
-		ipmb_error status = IPMB_ERROR_FAILURE;
 		I2C_MSG i2c_msg;
 		ipmi_msg msg;
 		common_addsel_msg_t sel_msg;
@@ -542,33 +565,29 @@ void ISR_CPU_VPP_INT()
 			}
 
 			if (vpp_pwr_status_bit == 0) {
-				set_power_status = POWER_ON;
+				set_power_status = DEVICE_SET_POWER_ON;
 			} else {
-				set_power_status = POWER_OFF;
+				set_power_status = DEVICE_SET_POWER_OFF;
 			}
 
-			// Notify 1OU BIC to turn on/off E1.S power
-			memset(&msg, 0, sizeof(msg));
-			msg.InF_source = SELF;
-			msg.InF_target = EXP1_IPMB;
-			msg.netfn = NETFN_OEM_1S_REQ;
-			msg.cmd = CMD_OEM_1S_GET_SET_M2;
-			msg.data_len = 5;
-			memcpy(&msg.data[0], (uint8_t *)&iana, 3);
-			msg.data[3] = _1ou_m2_mapping_table[device_id];
-			msg.data[4] = set_power_status;
-			for (i = 0; i < retry; i++) {
-				status = ipmb_read(&msg, IPMB_inf_index_map[msg.InF_target]);
-				if (status == IPMB_ERROR_SUCCESS) {
-					break;
+			// Check 1OU E1.S power status before control
+			// If power status isn't changed, control the power
+			ret = get_set_1ou_m2_power(&msg, device_id, DEVICE_GET_POWER_STATUS);
+			if ((msg.data[3] != set_power_status) || (ret < 0)) {
+				// Notify 1OU BIC to turn on/off E1.S power
+				for (i = 0; i < retry; i++) {
+					ret = get_set_1ou_m2_power(&msg, device_id, set_power_status);
+					if (ret == 0) {
+						break;
+					}
 				}
-			}
 
-			if (i == retry) {
-				LOG_ERR("Failed to send OEM_1S_GET_SET_M2 command 0x%x to 0x%x device%x\n",
-					CMD_OEM_1S_GET_SET_M2, EXP1_IPMB,
-					_1ou_m2_name_mapping_table[device_id]);
-				continue;
+				if (i == retry) {
+					LOG_ERR("Failed to send OEM_1S_GET_SET_M2 command 0x%x to 0x%x device%x\n",
+						CMD_OEM_1S_GET_SET_M2, EXP1_IPMB,
+						_1ou_m2_name_mapping_table[device_id]);
+					continue;
+				}
 			}
 
 			// Add SEL about VPP power event
