@@ -33,6 +33,7 @@
 
 #define HSC_MP5990_ADDR (0x40 >> 1)
 #define HSC_LTC4282_ADDR (0x82 >> 1)
+#define HSC_TEMP_NCT7718W_ADDR (0x98 >> 1)
 
 #define PEX_0_1_P0V8_VR_ADDR (0xC0 >> 1)
 #define PEX_2_3_P0V8_VR_ADDR (0xC4 >> 1)
@@ -42,8 +43,15 @@
 #define PEX_2_P1V25_POWER_MONITOR_ADDR (0x88 >> 1)
 #define PEX_3_P1V25_POWER_MONITOR_ADDR (0x8A >> 1)
 #define PEX_P1V8_POWER_MONITOR_ADDR (0x98 >> 1)
+#define DVT_PEX_P1V8_POWER_MONITOR_ADDR (0x9A >> 1)
 
-#define PEX_SWITCH_I2C_ADDR (0xD8 >> 1)
+#define EVT_PEX_SWITCH_I2C_ADDR (0xD8 >> 1)
+
+#define DVT_PEX_SWITCH_0_I2C_ADDR (0xC0 >> 1)
+#define DVT_PEX_SWITCH_1_I2C_ADDR (0xC2 >> 1)
+#define DVT_PEX_SWITCH_2_I2C_ADDR (0xC4 >> 1)
+#define DVT_PEX_SWITCH_3_I2C_ADDR (0xC6 >> 1)
+
 #define PEX_MAX_NUMBER 4
 
 #define SYSTEM_INLET_TEMP_ADDR (0x90 >> 1)
