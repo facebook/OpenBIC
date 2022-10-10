@@ -3331,9 +3331,16 @@ uint8_t fix_class2_sdr_table[][10] = {
 	{ SENSOR_NUM_PWR_HSCIN, 0xE0, 0xBD, 0xAB, 0x00, 0x00, 0x00, 0x27, 0x00, 0xF0 },
 };
 
+uint8_t fix_2ou_sdr_table[][10] = {
+	// sensor_num , UNR , UCR , UNC , LNR , LCR , LNC , ( M_tolerance >> 6 ) || M , ( B_accuracy >> 6 ) || B , R
+	{ SENSOR_NUM_CUR_HSCOUT, 0xE2, 0xBF, 0xAC, 0x00, 0x00, 0x00, 0x1F, 0x00, 0xE0 },
+	{ SENSOR_NUM_PWR_HSCIN, 0xE0, 0xBD, 0xAB, 0x00, 0x00, 0x00, 0x27, 0x00, 0xF0 },
+};
+
 SDR_Full_sensor fix_1ou_sdr_table[] = {
 	// SDR_Full_sensor struct member
 };
+
 SDR_Full_sensor dpv2_sdr_table[] = {
 	{
 		// DPV2_2_12V Voltage in
@@ -3718,6 +3725,20 @@ void pal_extend_full_sdr_table()
 	// Fix sdr table if 2ou card is present
 	CARD_STATUS _2ou_status = get_2ou_status();
 	if (_2ou_status.present) {
+		// Change HSC threshold to meet the 2ou setting
+		extend_array_num = ARRAY_SIZE(fix_2ou_sdr_table);
+		for (int index = 0; index < extend_array_num; index++) {
+			for (int i = MBR_R; i >= THRESHOLD_UNR; --i) {
+				if (i < MBR_M) {
+					change_sensor_threshold(fix_2ou_sdr_table[index][0], i,
+								fix_2ou_sdr_table[index][i + 1]);
+				} else {
+					change_sensor_mbr(fix_2ou_sdr_table[index][0], i,
+							  fix_2ou_sdr_table[index][i + 1]);
+				}
+			}
+		}
+
 		// Add DPV2 sdr if DPV2_16 is present
 		if ((_2ou_status.card_type & TYPE_2OU_DPV2_16) == TYPE_2OU_DPV2_16) {
 			extend_array_num = ARRAY_SIZE(dpv2_sdr_table);
