@@ -314,7 +314,7 @@ void ISR_PVDD11_S3_OCP()
 	}
 }
 
-static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num)
+static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num, uint8_t page_num)
 {
 	uint8_t retry = 5;
 	I2C_MSG *msg = (I2C_MSG *)malloc(sizeof(I2C_MSG));
@@ -323,43 +323,51 @@ static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num
 		return;
 	}
 
-	for (int page = 0; page < 2; page++) {
-		msg->bus = I2C_BUS5;
-		msg->target_addr = vr_addr;
-		msg->tx_len = 2;
-		msg->data[0] = PMBUS_PAGE;
-		msg->data[1] = page;
-
-		if (i2c_master_write(msg, retry)) {
-			LOG_ERR("Failed to write page.");
-			continue;
-		}
-
-		msg->bus = I2C_BUS5;
-		msg->target_addr = vr_addr;
-		msg->tx_len = 1;
-		msg->rx_len = 2;
-		msg->data[0] = PMBUS_STATUS_WORD;
-
-		if (i2c_master_read(msg, retry)) {
-			LOG_ERR("Failed to read PMBUS_STATUS_WORD.");
-			continue;
-		}
-
+	for (uint8_t page = 0; page < page_num; page++) {
 		common_addsel_msg_t sel_msg;
+
 		if (gpio_get(gpio_num) == GPIO_HIGH) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+			sel_msg.InF_target = BMC_IPMB;
+			sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_VR;
+			sel_msg.sensor_number = SENSOR_NUM_VR_ALERT;
+			sel_msg.event_data1 = (vr_num << 1) | (page & 0x01);
+			sel_msg.event_data2 = 0xFF;
+			sel_msg.event_data3 = 0xFF;
+			if (!common_add_sel_evt_record(&sel_msg)) {
+				LOG_ERR("Failed to add VR PMALERT sel.");
+			}
 		} else {
+			msg->bus = I2C_BUS5;
+			msg->target_addr = vr_addr;
+			msg->tx_len = 2;
+			msg->data[0] = PMBUS_PAGE;
+			msg->data[1] = page;
+			if (i2c_master_write(msg, retry)) {
+				LOG_ERR("Failed to write page.");
+				continue;
+			}
+
+			msg->bus = I2C_BUS5;
+			msg->target_addr = vr_addr;
+			msg->tx_len = 1;
+			msg->rx_len = 2;
+			msg->data[0] = PMBUS_STATUS_WORD;
+			if (i2c_master_read(msg, retry)) {
+				LOG_ERR("Failed to read PMBUS_STATUS_WORD.");
+				continue;
+			}
+
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
-		}
-		sel_msg.InF_target = BMC_IPMB;
-		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_VR;
-		sel_msg.sensor_number = SENSOR_NUM_VR_ALERT;
-		sel_msg.event_data1 = (vr_num << 1) | (page & 0x01);
-		sel_msg.event_data2 = msg->data[0];
-		sel_msg.event_data3 = msg->data[1];
-		if (!common_add_sel_evt_record(&sel_msg)) {
-			LOG_ERR("Failed to add VR PMALERT sel.");
+			sel_msg.InF_target = BMC_IPMB;
+			sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_VR;
+			sel_msg.sensor_number = SENSOR_NUM_VR_ALERT;
+			sel_msg.event_data1 = (vr_num << 1) | (page & 0x01);
+			sel_msg.event_data2 = msg->data[0];
+			sel_msg.event_data3 = msg->data[1];
+			if (!common_add_sel_evt_record(&sel_msg)) {
+				LOG_ERR("Failed to add VR PMALERT sel.");
+			}
 		}
 	}
 	SAFE_FREE(msg);
@@ -370,11 +378,12 @@ void ISR_PVDDCR_CPU0_PMALERT()
 	if (get_DC_status() == true) {
 		uint8_t board_rev = get_board_revision();
 		if (board_rev == SYS_BOARD_EVT_BOM2) {
-			add_vr_pmalert_sel(PVDDCR_CPU0_PMALERT_N, XDPE19283B_PVDDCR_CPU0_ADDR, 0);
+			add_vr_pmalert_sel(PVDDCR_CPU0_PMALERT_N, XDPE19283B_PVDDCR_CPU0_ADDR, 0,
+					   2);
 		} else if (board_rev == SYS_BOARD_EVT_BOM3) {
-			add_vr_pmalert_sel(PVDDCR_CPU0_PMALERT_N, MP2856GUT_PVDDCR_CPU0_ADDR, 0);
+			add_vr_pmalert_sel(PVDDCR_CPU0_PMALERT_N, MP2856GUT_PVDDCR_CPU0_ADDR, 0, 2);
 		} else {
-			add_vr_pmalert_sel(PVDDCR_CPU0_PMALERT_N, RAA229621_PVDDCR_CPU0_ADDR, 0);
+			add_vr_pmalert_sel(PVDDCR_CPU0_PMALERT_N, RAA229621_PVDDCR_CPU0_ADDR, 0, 2);
 		}
 	}
 }
@@ -384,11 +393,12 @@ void ISR_PVDDCR_CPU1_PMALERT()
 	if (get_DC_status() == true) {
 		uint8_t board_rev = get_board_revision();
 		if (board_rev == SYS_BOARD_EVT_BOM2) {
-			add_vr_pmalert_sel(PVDDCR_CPU1_PMALERT_N, XDPE19283B_PVDDCR_CPU1_ADDR, 1);
+			add_vr_pmalert_sel(PVDDCR_CPU1_PMALERT_N, XDPE19283B_PVDDCR_CPU1_ADDR, 1,
+					   2);
 		} else if (board_rev == SYS_BOARD_EVT_BOM3) {
-			add_vr_pmalert_sel(PVDDCR_CPU1_PMALERT_N, MP2856GUT_PVDDCR_CPU1_ADDR, 1);
+			add_vr_pmalert_sel(PVDDCR_CPU1_PMALERT_N, MP2856GUT_PVDDCR_CPU1_ADDR, 1, 2);
 		} else {
-			add_vr_pmalert_sel(PVDDCR_CPU1_PMALERT_N, RAA229621_PVDDCR_CPU1_ADDR, 1);
+			add_vr_pmalert_sel(PVDDCR_CPU1_PMALERT_N, RAA229621_PVDDCR_CPU1_ADDR, 1, 2);
 		}
 	}
 }
@@ -398,11 +408,11 @@ void ISR_PVDD11_S3_PMALERT()
 	if (get_DC_status() == true) {
 		uint8_t board_rev = get_board_revision();
 		if (board_rev == SYS_BOARD_EVT_BOM2) {
-			add_vr_pmalert_sel(PVDD11_S3_PMALERT_N, XDPE19283B_PVDD11_S3_ADDR, 2);
+			add_vr_pmalert_sel(PVDD11_S3_PMALERT_N, XDPE19283B_PVDD11_S3_ADDR, 2, 1);
 		} else if (board_rev == SYS_BOARD_EVT_BOM3) {
-			add_vr_pmalert_sel(PVDD11_S3_PMALERT_N, MP2856GUT_PVDD11_S3_ADDR, 2);
+			add_vr_pmalert_sel(PVDD11_S3_PMALERT_N, MP2856GUT_PVDD11_S3_ADDR, 2, 1);
 		} else {
-			add_vr_pmalert_sel(PVDD11_S3_PMALERT_N, RAA229621_PVDD11_S3_ADDR, 2);
+			add_vr_pmalert_sel(PVDD11_S3_PMALERT_N, RAA229621_PVDD11_S3_ADDR, 2, 1);
 		}
 	}
 }
