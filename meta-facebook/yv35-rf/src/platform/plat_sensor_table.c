@@ -322,9 +322,11 @@ int check_vr_type(void)
 	} else if (memcmp(msg.data, XDPE12284C_DEVICE_ID, sizeof(XDPE12284C_DEVICE_ID)) == 0) {
 		printf("VR type: INF\n");
 		ret = VR_INF;
+	} else {
+		printf("Unknown VR type\n");
+		ret = -1;
 	}
 
-	printf("Unknown VR type\n");
 	return ret;
 }
 
