@@ -52,7 +52,11 @@ uint8_t ddr5_temp_read(uint8_t sensor_num, int *reading)
 
 	float tmp;
 	// 0.25 degree C/LSB
-	tmp = 0.25 * ((((msg.data[1] << 8) | msg.data[0]) >> 2) & 0x3FF);
+	if (msg.data[1] & BIT(4)) { // negative
+		tmp = -0.25 * (((~((msg.data[1] << 8) | msg.data[0]) >> 2) + 1) & 0x3FF);
+	} else {
+		tmp = 0.25 * ((((msg.data[1] << 8) | msg.data[0]) >> 2) & 0x3FF);
+	}
 	init_arg->ts0_temp = tmp;
 
 	msg.bus = cfg->port;
@@ -66,7 +70,11 @@ uint8_t ddr5_temp_read(uint8_t sensor_num, int *reading)
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
-	tmp = 0.25 * ((((msg.data[1] << 8) | msg.data[0]) >> 2) & 0x3FF);
+	if (msg.data[1] & BIT(4)) { // negative
+		tmp = -0.25 * (((~((msg.data[1] << 8) | msg.data[0]) >> 2) + 1) & 0x3FF);
+	} else {
+		tmp = 0.25 * ((((msg.data[1] << 8) | msg.data[0]) >> 2) & 0x3FF);
+	}
 	init_arg->ts1_temp = tmp;
 
 	float val =
