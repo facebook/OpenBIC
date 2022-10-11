@@ -43,6 +43,7 @@ extern isl28022_init_arg isl28022_ssd_sensor_init_args[];
 extern ina230_init_arg ina230_ssd_sensor_init_args[];
 extern pex89000_init_arg pex_sensor_init_args[];
 extern ltc4282_init_arg ltc4282_hsc_init_args[];
+extern ltc4286_init_arg ltc4286_hsc_init_args[];
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
  **************************************************************************************************/

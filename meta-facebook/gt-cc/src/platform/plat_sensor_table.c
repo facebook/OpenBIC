@@ -267,8 +267,6 @@ sensor_cfg ltc4282_hsc_sensor_config_table[] = {
     access check arg0, arg1, sample_count, cache, cache_status, mux_address, mux_offset,
     pre_sensor_read_fn, pre_sensor_read_args, post_sensor_read_fn, post_sensor_read_fn  */
 	/* HSC */
-	/* TBD: Because LTC4282 have no register for temperature, confirming with EE 
-          whether has temperature sensor in front of the HSC */
 	{ SENSOR_NUM_TEMP_PDB_HSC, sensor_dev_nct7718w, I2C_BUS6, HSC_TEMP_NCT7718W_ADDR,
 	  NCT7718W_LOCAL_TEMP_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[1],
@@ -285,6 +283,29 @@ sensor_cfg ltc4282_hsc_sensor_config_table[] = {
 	  LTC4282_POWER_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6],
 	  post_ltc4282_read, NULL, &ltc4282_hsc_init_args[0] },
+};
+
+sensor_cfg ltc4286_hsc_sensor_config_table[] = {
+	/* number,                  type,       port,      address,      offset,
+    access check arg0, arg1, sample_count, cache, cache_status, mux_address, mux_offset,
+    pre_sensor_read_fn, pre_sensor_read_args, post_sensor_read_fn, post_sensor_read_fn  */
+	/* HSC */
+	{ SENSOR_NUM_TEMP_PDB_HSC, sensor_dev_nct7718w, I2C_BUS6, HSC_TEMP_NCT7718W_ADDR,
+	  NCT7718W_LOCAL_TEMP_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[1],
+	  post_i2c_bus_read, NULL, NULL },
+	{ SENSOR_NUM_VOUT_PDB_HSC, sensor_dev_ltc4286, I2C_BUS6, HSC_LTC4286_ADDR, PMBUS_READ_VOUT,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6], post_i2c_bus_read, NULL,
+	  &ltc4286_hsc_init_args[0] },
+	{ SENSOR_NUM_IOUT_PDB_HSC, sensor_dev_ltc4286, I2C_BUS6, HSC_LTC4286_ADDR, PMBUS_READ_IOUT,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6], post_i2c_bus_read, NULL,
+	  &ltc4286_hsc_init_args[0] },
+	{ SENSOR_NUM_POUT_PDB_HSC, sensor_dev_ltc4286, I2C_BUS6, HSC_LTC4286_ADDR, PMBUS_READ_PIN,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6], post_i2c_bus_read, NULL,
+	  &ltc4286_hsc_init_args[0] },
 };
 
 sensor_cfg isl69259_vr_sensor_config_table[] = {
@@ -1330,7 +1351,7 @@ uint8_t pal_get_extend_sensor_config()
 		extend_sensor_config_size += ARRAY_SIZE(isl69259_vr_sensor_config_table);
 		extend_sensor_config_size += ARRAY_SIZE(isl28022_power_monitor_sensor_config_table);
 	} else {
-		LOG_ERR("Unsupported stage, (%d)", stage);
+		LOG_ERR("Unsupport stage, (%d)", stage);
 	}
 	return extend_sensor_config_size;
 }
@@ -1366,17 +1387,27 @@ static void load_hsc_sensor_table()
 	}
 
 	if (voltage_hsc_type_adc < 0.15) {
+		LOG_INF("The HSC is MP5990, (%d.%d V)", (uint16_t)voltage_hsc_type_adc,
+			(uint16_t)((voltage_hsc_type_adc - (uint16_t)voltage_hsc_type_adc) * 100));
 		memcpy(&sensor_config[sensor_config_count], mp5990_hsc_sensor_config_table,
 		       ARRAY_SIZE(mp5990_hsc_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(mp5990_hsc_sensor_config_table);
 	} else if ((voltage_hsc_type_adc > 1.0 - (1.0 * 0.15)) &&
 		   (voltage_hsc_type_adc < 1.0 + (1.0 * 0.15))) {
+		LOG_INF("The HSC is LTC4282, (%d.%d V)", (uint16_t)voltage_hsc_type_adc,
+			(uint16_t)((voltage_hsc_type_adc - (uint16_t)voltage_hsc_type_adc) * 100));
 		memcpy(&sensor_config[sensor_config_count], ltc4282_hsc_sensor_config_table,
 		       ARRAY_SIZE(ltc4282_hsc_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(ltc4282_hsc_sensor_config_table);
+	} else if ((voltage_hsc_type_adc > 1.5 - (1.5 * 0.15)) &&
+		   (voltage_hsc_type_adc < 1.5 + (1.5 * 0.15))) {
+		LOG_INF("The HSC is LTC4286, (%d.%d V)", (uint16_t)voltage_hsc_type_adc,
+			(uint16_t)((voltage_hsc_type_adc - (uint16_t)voltage_hsc_type_adc) * 100));
+		memcpy(&sensor_config[sensor_config_count], ltc4286_hsc_sensor_config_table,
+		       ARRAY_SIZE(ltc4286_hsc_sensor_config_table) * sizeof(sensor_cfg));
+		sensor_config_count += ARRAY_SIZE(ltc4286_hsc_sensor_config_table);
 	} else {
-		LOG_ERR("Unknown hotswap model type, HSC_TYPE_ADC voltage: %d.%d V",
-			(uint16_t)voltage_hsc_type_adc,
+		LOG_ERR("Unknown hotswap model type, (%d.%d V)", (uint16_t)voltage_hsc_type_adc,
 			(uint16_t)((voltage_hsc_type_adc - (uint16_t)voltage_hsc_type_adc) * 100));
 	}
 
@@ -1397,17 +1428,20 @@ static void load_vr_sensor_table()
 	}
 
 	if (voltage_vr_type_adc < 0.15) {
+		LOG_INF("The VR is RENESAS ISL69259, (%d.%d V)", (uint16_t)voltage_vr_type_adc,
+			(uint16_t)((voltage_vr_type_adc - (uint16_t)voltage_vr_type_adc) * 100));
 		memcpy(&sensor_config[sensor_config_count], isl69259_vr_sensor_config_table,
 		       ARRAY_SIZE(isl69259_vr_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(isl69259_vr_sensor_config_table);
 	} else if ((voltage_vr_type_adc > 0.5 - (0.5 * 0.15)) &&
 		   (voltage_vr_type_adc < 0.5 + (0.5 * 0.15))) {
+		LOG_INF("The VR is INFINEON XDPE12284, (%d.%d V)", (uint16_t)voltage_vr_type_adc,
+			(uint16_t)((voltage_vr_type_adc - (uint16_t)voltage_vr_type_adc) * 100));
 		memcpy(&sensor_config[sensor_config_count], xdpe12284_vr_sensor_config_table,
 		       ARRAY_SIZE(xdpe12284_vr_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(xdpe12284_vr_sensor_config_table);
 	} else {
-		LOG_ERR("Unknown VR type, vr_type_adc voltage: %d.%d V",
-			(uint16_t)voltage_vr_type_adc,
+		LOG_ERR("Unknown VR type, (%d.%d V)", (uint16_t)voltage_vr_type_adc,
 			(uint16_t)((voltage_vr_type_adc - (uint16_t)voltage_vr_type_adc) * 100));
 	}
 
@@ -1430,18 +1464,28 @@ static void load_power_ic_sensor_table()
 	}
 
 	if (voltage_power_ic_type_adc < 0.15) {
+		LOG_INF("The power monitor IC is RENESAS ISL28022, (%d.%d V)",
+			(uint16_t)voltage_power_ic_type_adc,
+			(uint16_t)((voltage_power_ic_type_adc -
+				    (uint16_t)voltage_power_ic_type_adc) *
+				   100));
 		memcpy(&sensor_config[sensor_config_count],
 		       isl28022_power_monitor_sensor_config_table,
 		       ARRAY_SIZE(isl28022_power_monitor_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(isl28022_power_monitor_sensor_config_table);
 	} else if ((voltage_power_ic_type_adc > 0.5 - (0.5 * 0.15)) &&
 		   (voltage_power_ic_type_adc < 0.5 + (0.5 * 0.15))) {
+		LOG_INF("The power monitor IC is TI INA230, (%d.%d V)",
+			(uint16_t)voltage_power_ic_type_adc,
+			(uint16_t)((voltage_power_ic_type_adc -
+				    (uint16_t)voltage_power_ic_type_adc) *
+				   100));
 		memcpy(&sensor_config[sensor_config_count],
 		       ina230_power_monitor_sensor_config_table,
 		       ARRAY_SIZE(ina230_power_monitor_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(ina230_power_monitor_sensor_config_table);
 	} else {
-		LOG_ERR("Unknown power monitor IC type, power_ic_type_adc voltage: %d.%dV",
+		LOG_ERR("Unknown power monitor IC type, (%d.%d V)",
 			(uint16_t)voltage_power_ic_type_adc,
 			(uint16_t)((voltage_power_ic_type_adc -
 				    (uint16_t)voltage_power_ic_type_adc) *
