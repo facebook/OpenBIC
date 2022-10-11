@@ -253,7 +253,7 @@ void ISR_HSC_THROTTLE()
 		} else {
 			if ((gpio_get(IRQ_SML1_PMBUS_ALERT_N) == GPIO_HIGH) &&
 			    (is_hsc_throttle_assert == true)) {
-				sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+				sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 				is_hsc_throttle_assert = false;
 			} else if ((gpio_get(IRQ_SML1_PMBUS_ALERT_N) == GPIO_LOW) &&
 				   (is_hsc_throttle_assert == false)) {
@@ -281,7 +281,7 @@ void ISR_SYS_THROTTLE()
 	common_addsel_msg_t sel_msg;
 	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
 		if (gpio_get(FAST_PROCHOT_N) == GPIO_HIGH) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		} else {
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}
@@ -325,7 +325,7 @@ void ISR_PCH_THMALTRIP()
 			is_pch_assert = true;
 		}
 	} else if (gpio_get(FM_PCH_BMC_THERMTRIP_N) && (is_pch_assert == true)) {
-		sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+		sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		is_pch_assert = false;
 	} else {
 		printf("Ignoring PCH thermal trip interrupt.\n");
@@ -350,7 +350,7 @@ void ISR_HSC_OC()
 		if (gpio_get(FM_HSC_TIMER) == GPIO_HIGH) {
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		} else {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		}
 
 		sel_msg.InF_target = BMC_IPMB;
@@ -387,7 +387,7 @@ void ISR_CPUVR_HOT()
 	common_addsel_msg_t sel_msg;
 	if ((gpio_get(RST_PLTRST_BMC_N) == GPIO_HIGH) && (gpio_get(PWRGD_SYS_PWROK) == GPIO_HIGH)) {
 		if (gpio_get(IRQ_PVCCIN_CPU_VRHOT_LVC3_N) == GPIO_HIGH) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		} else {
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}
@@ -409,7 +409,7 @@ void ISR_PVCCIO_VR_HOT()
 	common_addsel_msg_t sel_msg;
 	if ((gpio_get(RST_PLTRST_BMC_N) == GPIO_HIGH) && (gpio_get(PWRGD_SYS_PWROK) == GPIO_HIGH)) {
 		if (gpio_get(IRQ_PVCCIO_CPU_VRHOT_LVC3_N) == GPIO_HIGH) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		} else {
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}
@@ -431,7 +431,7 @@ void ISR_DIMM_ABC_VR_HOT()
 	common_addsel_msg_t sel_msg;
 	if ((gpio_get(RST_PLTRST_BMC_N) == GPIO_HIGH) && (gpio_get(PWRGD_SYS_PWROK) == GPIO_HIGH)) {
 		if (gpio_get(IRQ_PVDDQ_ABC_VRHOT_LVT3_N) == GPIO_HIGH) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		} else {
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}
@@ -453,7 +453,7 @@ void ISR_DIMM_DEF_VR_HOT()
 	common_addsel_msg_t sel_msg;
 	if ((gpio_get(RST_PLTRST_BMC_N) == GPIO_HIGH) && (gpio_get(PWRGD_SYS_PWROK) == GPIO_HIGH)) {
 		if (gpio_get(IRQ_PVDDQ_DEF_VRHOT_LVT3_N) == GPIO_HIGH) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		} else {
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}
@@ -491,7 +491,7 @@ void ISR_FIVR()
 	common_addsel_msg_t sel_msg;
 	if ((gpio_get(RST_PLTRST_BMC_N) == GPIO_HIGH) && (gpio_get(PWRGD_SYS_PWROK) == GPIO_HIGH)) {
 		if (gpio_get(FM_CPU_FIVR_FAULT_LVT3_N) == GPIO_HIGH) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		} else {
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}
@@ -513,7 +513,7 @@ void ISR_UV_DETECT()
 	common_addsel_msg_t sel_msg;
 	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
 		if (gpio_get(IRQ_UV_DETECT_N) == GPIO_HIGH) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		} else {
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}
@@ -569,7 +569,7 @@ void ISR_SMI()
 				sel_msg.InF_target = BMC_IPMB;
 				sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
 				sel_msg.sensor_number = SENSOR_NUM_SYS_STA;
-				sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+				sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 				sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_SMI90s;
 				sel_msg.event_data2 = 0xFF;
 				sel_msg.event_data3 = 0xFF;

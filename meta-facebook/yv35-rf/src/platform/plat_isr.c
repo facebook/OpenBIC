@@ -17,13 +17,29 @@
 #include <zephyr.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <ipmi.h>
+#include <pmbus.h>
+#include <libipmi.h>
+#include <ipmb.h>
+#include <libutil.h>
+
+#include <hal_i2c.h>
+
 #include "plat_power_seq.h"
 #include "power_status.h"
 #include "plat_gpio.h"
 #include "plat_isr.h"
+#include "plat_i2c.h"
+#include "plat_sensor_table.h"
 
 #define POWER_SEQ_CTRL_STACK_SIZE 1000
 #define DC_ON_5_SECOND 5
+#define I2C_RETRY 5
+
+#define P0V8_P0V9_VR 3
+#define PVDDQ_AB_P0V8_VR 4
+#define PVDDQ_CD_VR 5
 
 K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_delayed_status);
 
@@ -183,4 +199,83 @@ void ISR_PVTT_AB_POWER_GOOD_LOST()
 void ISR_PVTT_CD_POWER_GOOD_LOST()
 {
 	check_power_abnormal(PVTT_CD_PG_R, PVTT_CD_EN_R);
+}
+
+static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num)
+{
+	I2C_MSG msg = { 0 };
+
+	msg.bus = I2C_BUS10;
+	msg.target_addr = vr_addr;
+
+	for (int page = 0; page < 2; page++) {
+		msg.tx_len = 2;
+		msg.rx_len = 0;
+
+		memset(&msg.data, 0, sizeof(I2C_BUFF_SIZE));
+		msg.data[0] = PMBUS_PAGE;
+		msg.data[1] = page;
+
+		if (i2c_master_write(&msg, I2C_RETRY)) {
+			printf("[%s] Failed to write page.\n", __func__);
+			continue;
+		}
+
+		msg.tx_len = 1;
+		msg.rx_len = 2;
+
+		memset(&msg.data, 0, sizeof(I2C_BUFF_SIZE));
+		msg.data[0] = PMBUS_STATUS_WORD;
+
+		if (i2c_master_read(&msg, I2C_RETRY)) {
+			printf("[%s] Failed to read PMBUS_STATUS_WORD.\n", __func__);
+			continue;
+		}
+
+		common_addsel_msg_t sel_msg = { 0 };
+
+		if (gpio_get(gpio_num) == GPIO_HIGH) {
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
+		} else {
+			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+		}
+
+		sel_msg.InF_target = CL_BIC_IPMB;
+		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_VR;
+		sel_msg.sensor_number = SENSOR_NUM_VR_ALERT;
+		sel_msg.event_data1 = (vr_num << 1) | page;
+		sel_msg.event_data2 = msg.data[0];
+		sel_msg.event_data3 = msg.data[1];
+
+		if (!common_add_sel_evt_record(&sel_msg)) {
+			printf("[%s] Failed to add VR PMALERT sel.\n", __func__);
+		}
+	}
+}
+
+void ISR_PASICA_PMALT()
+{
+	if (get_DC_status() == false) {
+		return;
+	}
+
+	add_vr_pmalert_sel(SMB_VR_PASICA_ALERT_N, VR_A0V9_ADDR, P0V8_P0V9_VR);
+}
+
+void ISR_PVDDQ_AB_PMALT()
+{
+	if (get_DC_status() == false) {
+		return;
+	}
+
+	add_vr_pmalert_sel(SMB_VR_PVDDQ_AB_ALERT_N, VR_VDDQAB_ADDR, PVDDQ_AB_P0V8_VR);
+}
+
+void ISR_PVDDQ_CD_PMALT()
+{
+	if (get_DC_status() == false) {
+		return;
+	}
+
+	add_vr_pmalert_sel(SMB_VR_PVDDQ_CD_ALERT_N, VR_VDDQCD_ADDR, PVDDQ_CD_VR);
 }

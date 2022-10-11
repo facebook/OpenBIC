@@ -280,7 +280,7 @@ void ISR_FM_THROTTLE()
 	common_addsel_msg_t sel_msg;
 	if (gpio_get(PWRGD_CPU_LVC3) == GPIO_HIGH) {
 		if (gpio_get(FM_THROTTLE_R_N) == GPIO_HIGH) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		} else {
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}
@@ -308,7 +308,7 @@ void ISR_HSC_THROTTLE()
 		} else {
 			if ((gpio_get(IRQ_SML1_PMBUS_BMC_ALERT_N) == GPIO_HIGH) &&
 			    (is_hsc_throttle_assert == true)) {
-				sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+				sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 				is_hsc_throttle_assert = false;
 			} else if ((gpio_get(IRQ_SML1_PMBUS_BMC_ALERT_N) == GPIO_LOW) &&
 				   (is_hsc_throttle_assert == false)) {
@@ -370,7 +370,7 @@ void ISR_SYS_THROTTLE()
 	common_addsel_msg_t sel_msg;
 	if ((gpio_get(RST_PLTRST_PLD_N) == GPIO_HIGH) && (gpio_get(PWRGD_SYS_PWROK) == GPIO_HIGH)) {
 		if (gpio_get(FM_CPU_BIC_PROCHOT_LVT3_N) == GPIO_HIGH) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		} else {
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}
@@ -399,7 +399,7 @@ void ISR_PCH_THMALTRIP()
 			is_pch_assert = true;
 		}
 	} else if (gpio_get(FM_PCHHOT_N) && (is_pch_assert == true)) {
-		sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+		sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		is_pch_assert = false;
 	} else {
 		return;
@@ -427,7 +427,7 @@ void ISR_CPU_MEMHOT()
 	common_addsel_msg_t sel_msg;
 	if ((gpio_get(RST_PLTRST_PLD_N) == GPIO_HIGH) && (gpio_get(PWRGD_SYS_PWROK) == GPIO_HIGH)) {
 		if (gpio_get(H_CPU0_MEMHOT_OUT_LVC3_N) == GPIO_HIGH) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		} else {
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}
@@ -450,7 +450,7 @@ void ISR_CPUVR_HOT()
 	common_addsel_msg_t sel_msg;
 	if ((gpio_get(RST_PLTRST_PLD_N) == GPIO_HIGH) && (gpio_get(PWRGD_SYS_PWROK) == GPIO_HIGH)) {
 		if (gpio_get(IRQ_CPU0_VRHOT_N) == GPIO_HIGH) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		} else {
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}

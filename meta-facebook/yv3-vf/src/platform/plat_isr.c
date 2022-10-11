@@ -119,7 +119,7 @@ static void m2_presen_evt(uint32_t dev, uint32_t status)
 {
 	uint8_t assert;
 
-	assert = (!status) ? IPMI_EVENT_TYPE_SENSOR_SPECIFIC : IPMI_OEM_EVENT_TYPE_DEASSART;
+	assert = (!status) ? IPMI_EVENT_TYPE_SENSOR_SPECIFIC : IPMI_OEM_EVENT_TYPE_DEASSERT;
 	add_sel(IPMI_OEM_SENSOR_TYPE_OEM, assert, SENSOR_NUM_SYS_STA,
 		IPMI_EVENT_OFFSET_SYS_M2PRESENT, E1S_BOARD_TYPE, dev);
 }
@@ -195,7 +195,7 @@ void irq_fault_sel(uint8_t idx, uint8_t type, uint8_t is_check)
 	}
 
 	uint8_t event_type =
-		gpio_get(pin) ? IPMI_OEM_EVENT_TYPE_DEASSART : IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+		gpio_get(pin) ? IPMI_OEM_EVENT_TYPE_DEASSERT : IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 
 	add_sel(IPMI_OEM_SENSOR_TYPE_OEM, event_type, SENSOR_NUM_SYS_STA, event_data1,
 		E1S_BOARD_TYPE, idx);

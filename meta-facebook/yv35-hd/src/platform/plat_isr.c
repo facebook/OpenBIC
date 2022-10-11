@@ -145,7 +145,7 @@ void ISR_DBP_PRSNT()
 	common_addsel_msg_t sel_msg;
 	gpio_set(BIC_JTAG_SEL_R, gpio_get(FM_DBP_PRESENT_N));
 	if ((gpio_get(FM_DBP_PRESENT_N) == GPIO_HIGH)) {
-		sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+		sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 	} else {
 		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 	}
@@ -171,7 +171,7 @@ void ISR_HSC_THROTTLE()
 		} else {
 			if ((gpio_get(IRQ_HSC_ALERT1_N) == GPIO_HIGH) &&
 			    (is_hsc_throttle_assert == true)) {
-				sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+				sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 				is_hsc_throttle_assert = false;
 			} else if ((gpio_get(IRQ_HSC_ALERT1_N) == GPIO_LOW) &&
 				   (is_hsc_throttle_assert == false)) {
@@ -199,7 +199,7 @@ void ISR_MB_THROTTLE()
 	common_addsel_msg_t sel_msg;
 	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH && get_DC_status()) {
 		if (gpio_get(FAST_PROCHOT_N) == GPIO_HIGH) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		} else {
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}
@@ -237,7 +237,7 @@ void ISR_SYS_THROTTLE()
 	common_addsel_msg_t sel_msg;
 	if ((gpio_get(RST_PLTRST_BIC_N) == GPIO_HIGH) && (gpio_get(PWRGD_CPU_LVC3) == GPIO_HIGH)) {
 		if (gpio_get(FM_CPU_BIC_PROCHOT_LVT3_N) == GPIO_HIGH) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		} else {
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}
@@ -258,7 +258,7 @@ void ISR_HSC_OC()
 	common_addsel_msg_t sel_msg;
 	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
 		if (gpio_get(FM_HSC_TIMER) == GPIO_LOW) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		} else {
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}
@@ -278,7 +278,7 @@ static void add_vr_ocp_sel(uint8_t gpio_num, uint8_t vr_num)
 {
 	common_addsel_msg_t sel_msg;
 	if (gpio_get(gpio_num) == GPIO_HIGH) {
-		sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+		sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 	} else {
 		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 	}
@@ -348,7 +348,7 @@ static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num
 
 		common_addsel_msg_t sel_msg;
 		if (gpio_get(gpio_num) == GPIO_HIGH) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		} else {
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}
@@ -412,7 +412,7 @@ void ISR_UV_DETECT()
 	common_addsel_msg_t sel_msg;
 	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
 		if (gpio_get(IRQ_UV_DETECT_N) == GPIO_HIGH) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		} else {
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}

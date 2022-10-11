@@ -72,8 +72,8 @@ void ISR_SLED_CYCLE()
 		// release sled cycle button
 	} else if (bb_btn_status == LOW_INACTIVE) {
 		release_button_time = k_uptime_get() / 1000; // Transfer ms unit to s unit
-		submit_button_event(BASEBOARD_SLED_BUTTON, SLOT1_BIC, IPMI_OEM_EVENT_TYPE_DEASSART);
-		submit_button_event(BASEBOARD_SLED_BUTTON, SLOT3_BIC, IPMI_OEM_EVENT_TYPE_DEASSART);
+		submit_button_event(BASEBOARD_SLED_BUTTON, SLOT1_BIC, IPMI_OEM_EVENT_TYPE_DEASSERT);
+		submit_button_event(BASEBOARD_SLED_BUTTON, SLOT3_BIC, IPMI_OEM_EVENT_TYPE_DEASSERT);
 
 		if ((release_button_time - press_button_time) >= MAX_PRESS_SLED_BTN_TIME_S) {
 			k_work_schedule(&sled_cycle_work, K_MSEC(ADD_BUTTON_SEL_DELAY_MS));
@@ -199,7 +199,7 @@ void ISR_SLOT1_BUTTON()
 		// release slot cycle button
 	} else if (slot1_btn_status == LOW_INACTIVE) {
 		release_button_time = k_uptime_get() / 1000; // Transfer ms unit to s unit
-		submit_button_event(SLOT1_SLOT_BUTTON, SLOT1_BIC, IPMI_OEM_EVENT_TYPE_DEASSART);
+		submit_button_event(SLOT1_SLOT_BUTTON, SLOT1_BIC, IPMI_OEM_EVENT_TYPE_DEASSERT);
 
 		if ((release_button_time - press_button_time) >= MAX_PRESS_SLOT_BTN_TIME_S) {
 			k_work_schedule(&slot1_cycle_work, K_MSEC(ADD_BUTTON_SEL_DELAY_MS));
@@ -224,7 +224,7 @@ void ISR_SLOT3_BUTTON()
 		// release slot cycle button
 	} else if (slot3_btn_status == LOW_INACTIVE) {
 		release_button_time = k_uptime_get() / 1000; // Transfer ms unit to s unit
-		submit_button_event(SLOT3_SLOT_BUTTON, SLOT3_BIC, IPMI_OEM_EVENT_TYPE_DEASSART);
+		submit_button_event(SLOT3_SLOT_BUTTON, SLOT3_BIC, IPMI_OEM_EVENT_TYPE_DEASSERT);
 
 		if ((release_button_time - press_button_time) >= MAX_PRESS_SLOT_BTN_TIME_S) {
 			k_work_schedule(&slot3_cycle_work, K_MSEC(ADD_BUTTON_SEL_DELAY_MS));

@@ -232,7 +232,7 @@ static void deassert_chk(void *unused, uint32_t assert_type)
 		return;
 	}
 
-	add_sel(IPMI_OEM_SENSOR_TYPE_OEM, IPMI_OEM_EVENT_TYPE_DEASSART, SENSOR_NUM_SYS_STA,
+	add_sel(IPMI_OEM_SENSOR_TYPE_OEM, IPMI_OEM_EVENT_TYPE_DEASSERT, SENSOR_NUM_SYS_STA,
 		IPMI_EVENT_OFFSET_SYS_INA231_PWR_ALERT, E1S_BOARD_TYPE, assert_type);
 
 	gpio_interrupt_conf(p->gpio_num, p->int_type);
