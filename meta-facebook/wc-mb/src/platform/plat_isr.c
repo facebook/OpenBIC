@@ -545,7 +545,7 @@ void ISR_SMI()
 				sel_msg.InF_target = BMC_IPMB;
 				sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
 				sel_msg.sensor_number = SENSOR_NUM_SYS_STA;
-				sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+				sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 				sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_SMI90s;
 				sel_msg.event_data2 = 0xFF;
 				sel_msg.event_data3 = 0xFF;

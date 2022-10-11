@@ -254,12 +254,12 @@ sensor_cfg mp5990_hsc_sensor_config_table[] = {
 	  &mp5990_hsc_init_args[0] },
 	{ SENSOR_NUM_IOUT_PDB_HSC, sensor_dev_mp5990, I2C_BUS6, HSC_MP5990_ADDR, PMBUS_READ_IOUT,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6], post_i2c_bus_read, NULL,
+	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6], post_mp5990_read, NULL,
 	  &mp5990_hsc_init_args[0] },
 	{ SENSOR_NUM_POUT_PDB_HSC, sensor_dev_mp5990, I2C_BUS6, HSC_MP5990_ADDR, PMBUS_READ_PIN,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6], post_mp5990_power_read,
-	  NULL, &mp5990_hsc_init_args[0] },
+	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6], post_mp5990_read, NULL,
+	  &mp5990_hsc_init_args[0] },
 };
 
 sensor_cfg ltc4282_hsc_sensor_config_table[] = {
@@ -276,15 +276,15 @@ sensor_cfg ltc4282_hsc_sensor_config_table[] = {
 	{ SENSOR_NUM_VOUT_PDB_HSC, sensor_dev_ltc4282, I2C_BUS6, HSC_LTC4282_ADDR,
 	  LTC4282_VSOURCE_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6],
-	  post_i2c_bus_read, NULL, &ltc4282_hsc_init_args[0] },
+	  post_ltc4282_read, NULL, &ltc4282_hsc_init_args[0] },
 	{ SENSOR_NUM_IOUT_PDB_HSC, sensor_dev_ltc4282, I2C_BUS6, HSC_LTC4282_ADDR,
 	  LTC4282_VSENSE_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6],
-	  post_i2c_bus_read, NULL, &ltc4282_hsc_init_args[0] },
+	  post_ltc4282_read, NULL, &ltc4282_hsc_init_args[0] },
 	{ SENSOR_NUM_POUT_PDB_HSC, sensor_dev_ltc4282, I2C_BUS6, HSC_LTC4282_ADDR,
 	  LTC4282_POWER_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6],
-	  post_i2c_bus_read, NULL, &ltc4282_hsc_init_args[0] },
+	  post_ltc4282_read, NULL, &ltc4282_hsc_init_args[0] },
 };
 
 sensor_cfg isl69259_vr_sensor_config_table[] = {
@@ -1330,7 +1330,7 @@ uint8_t pal_get_extend_sensor_config()
 		extend_sensor_config_size += ARRAY_SIZE(isl69259_vr_sensor_config_table);
 		extend_sensor_config_size += ARRAY_SIZE(isl28022_power_monitor_sensor_config_table);
 	} else {
-		LOG_ERR("Unsupport stage, (%d)", stage);
+		LOG_ERR("Unsupported stage, (%d)", stage);
 	}
 	return extend_sensor_config_size;
 }
@@ -1443,9 +1443,9 @@ static void load_power_ic_sensor_table()
 	} else {
 		LOG_ERR("Unknown power monitor IC type, power_ic_type_adc voltage: %d.%dV",
 			(uint16_t)voltage_power_ic_type_adc,
-			(uint16_t)(
-				(voltage_power_ic_type_adc - (uint16_t)voltage_power_ic_type_adc) *
-				100));
+			(uint16_t)((voltage_power_ic_type_adc -
+				    (uint16_t)voltage_power_ic_type_adc) *
+				   100));
 	}
 
 	return;
@@ -1463,7 +1463,7 @@ static int check_vr_type(void)
 	msg.data[0] = (1 << 6);
 
 	if (i2c_master_write(&msg, retry)) {
-		LOG_ERR("Change i2c mux channel on bus 6 failed");
+		LOG_ERR("Change i2c mux channel on bus %d failed", msg.bus);
 		return -1;
 	}
 

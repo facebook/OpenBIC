@@ -335,7 +335,7 @@ bool post_amd_tsi_read(uint8_t sensor_num, void *args, int *reading)
 			return true;
 		}
 		is_cpu_throttle_assert = false;
-		sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+		sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 	} else {
 		return true;
 	}
