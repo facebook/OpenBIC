@@ -508,7 +508,7 @@ uint8_t pex89000_init(uint8_t sensor_num)
 				sensor_config[sensor_config_index_map[sensor_num]].target_addr,
 				p->idx, &p->pex_type)) {
 			printf("%s: get pex type failed!\n", __func__);
-			sys_slist_remove(&pex89000_list, NULL, &p->node);
+			sys_slist_find_and_remove(&pex89000_list, &p->node);
 			SAFE_FREE(p);
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
 		}

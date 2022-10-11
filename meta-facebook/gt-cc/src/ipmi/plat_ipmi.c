@@ -405,7 +405,7 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 			}
 		}
 
-		if (pex_access_engine(cfg->port, cfg->target_addr, p->idx, pex_access_flash_ver,
+		if (pex_access_engine(cfg->port, cfg->target_addr, p->idx, pex_access_sbr_ver,
 				      &reading)) {
 			if (k_mutex_unlock(&i2c_bus10_mutex))
 				printf("[%s]mutex unlock fail on PEX bus\n", __func__);
