@@ -44,6 +44,9 @@ typedef struct {
 	char name[MAX_WORK_NAME_LEN];
 } worker_job;
 
+extern struct k_work_q plat_work_q;
+
+void init_plat_worker(int);
 uint8_t get_work_count();
 int add_work(worker_job *);
 void init_worker();

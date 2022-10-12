@@ -30,6 +30,7 @@
 #include "util_sys.h"
 #include "plat_class.h"
 #include "plat_i2c.h"
+#include "util_worker.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -87,7 +88,7 @@ K_WORK_DELAYABLE_DEFINE(SLP3_work, SLP3_handler);
 void ISR_SLP3()
 {
 	if (gpio_get(FM_SLPS3_R_N) == GPIO_HIGH) {
-		k_work_schedule(&SLP3_work, K_MSEC(10000));
+		k_work_schedule_for_queue(&plat_work_q, &SLP3_work, K_MSEC(10000));
 		return;
 	}
 	if (k_work_cancel_delayable(&SLP3_work) != 0) {
@@ -121,7 +122,8 @@ void ISR_DC_ON()
 	set_DC_status(PWRGD_SYS_PWROK);
 
 	if (get_DC_status() == true) {
-		k_work_schedule(&set_DC_on_15s_work, K_SECONDS(DC_ON_15_SECOND));
+		k_work_schedule_for_queue(&plat_work_q, &set_DC_on_15s_work,
+					  K_SECONDS(DC_ON_15_SECOND));
 
 		if (k_work_cancel_delayable(&set_DC_off_10s_work) != 0) {
 			printf("Cancel set dc off delay work fail\n");
@@ -129,7 +131,8 @@ void ISR_DC_ON()
 		set_DC_off_delayed_status();
 	} else {
 		set_DC_on_delayed_status();
-		k_work_schedule(&set_DC_off_10s_work, K_SECONDS(DC_OFF_10_SECOND));
+		k_work_schedule_for_queue(&plat_work_q, &set_DC_off_10s_work,
+					  K_SECONDS(DC_OFF_10_SECOND));
 
 		if ((gpio_get(FM_SLPS3_R_N) == GPIO_HIGH) &&
 		    (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH)) {
@@ -187,7 +190,8 @@ void ISR_PWRGD_CPU()
 
 		gpio_set(FM_SPD_DDRCPU_LVLSHFT_EN, GPIO_HIGH);
 		/* start thread proc_fail_handler after 10 seconds */
-		k_work_schedule(&PROC_FAIL_work, K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
+		k_work_schedule_for_queue(&plat_work_q, &PROC_FAIL_work,
+					  K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
 	} else {
 		abort_snoop_thread();
 
@@ -239,7 +243,8 @@ void ISR_CATERR()
 			printf("Cancel caterr delay work fail\n");
 		}
 		/* start thread CatErr_handler after 2 seconds */
-		k_work_schedule(&CAT_ERR_work, K_SECONDS(CATERR_START_DELAY_SECOND));
+		k_work_schedule_for_queue(&plat_work_q, &CAT_ERR_work,
+					  K_SECONDS(CATERR_START_DELAY_SECOND));
 	}
 }
 
@@ -571,7 +576,8 @@ void ISR_SMI()
 	if (gpio_get(RST_PLTRST_BMC_N) == GPIO_HIGH) {
 		if (gpio_get(IRQ_SMI_ACTIVE_BMC_N) == GPIO_LOW) {
 			/* start thread SMI_handler after 90 seconds */
-			k_work_schedule(&SMI_work, K_SECONDS(SMI_START_DELAY_SECOND));
+			k_work_schedule_for_queue(&plat_work_q, &SMI_work,
+						  K_SECONDS(SMI_START_DELAY_SECOND));
 		} else {
 			if (is_smi_assert == true) {
 				common_addsel_msg_t sel_msg;
