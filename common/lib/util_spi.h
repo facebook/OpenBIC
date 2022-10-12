@@ -42,6 +42,7 @@ enum DEVICE_POSITIONS {
 
 uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sector_end,
 		  uint8_t flash_position);
+int read_fw_image(uint32_t offset, uint8_t msg_len, uint8_t *msg_buf, uint8_t flash_position);
 uint8_t fw_update_cxl(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sector_end);
 
 uint8_t get_fw_sha256(uint8_t *msg_buf, uint32_t offset, uint32_t length, uint8_t flash_position);

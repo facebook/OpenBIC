@@ -367,6 +367,27 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 	return FWUPDATE_SUCCESS;
 }
 
+int read_fw_image(uint32_t offset, uint8_t msg_len, uint8_t *msg_buf, uint8_t flash_position)
+{
+	const struct device *flash_dev;
+	flash_dev = device_get_binding(flash_device[flash_position]);
+
+	if (flash_position == DEVSPI_SPI1_CS0 && !isInitialized) {
+		int rc = 0;
+		rc = spi_nor_re_init(flash_dev);
+		if (rc != 0) {
+			return rc;
+		}
+		isInitialized = true;
+	}
+	uint32_t flash_sz = flash_get_flash_size(flash_dev);
+	if (flash_sz < offset + msg_len) {
+		return -EINVAL;
+	}
+
+	return flash_read(flash_dev, offset, msg_buf, msg_len);
+}
+
 __weak uint8_t fw_update_cxl(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sector_end)
 {
 	return FWUPDATE_NOT_SUPPORT;
