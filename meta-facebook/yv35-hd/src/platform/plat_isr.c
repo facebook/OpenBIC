@@ -30,6 +30,7 @@
 #include "logging/log.h"
 #include "apml.h"
 #include "plat_def.h"
+#include "plat_pmic.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -105,6 +106,7 @@ void ISR_DC_ON()
 				LOG_ERR("Failed to add system PWROK failure sel");
 			}
 		}
+		pmic_error_check();
 	}
 }
 
@@ -130,7 +132,7 @@ K_WORK_DELAYABLE_DEFINE(SLP3_work, SLP3_handler);
 void ISR_SLP3()
 {
 	if (gpio_get(FM_CPU_BIC_SLP_S3_N) == GPIO_HIGH) {
-		LOG_ERR("slp3");
+		LOG_INF("slp3");
 		k_work_schedule(&SLP3_work, K_MSEC(10000));
 		return;
 	} else {
