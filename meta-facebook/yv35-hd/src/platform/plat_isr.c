@@ -327,7 +327,7 @@ static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num
 		common_addsel_msg_t sel_msg;
 
 		if (gpio_get(gpio_num) == GPIO_HIGH) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 			sel_msg.InF_target = BMC_IPMB;
 			sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_VR;
 			sel_msg.sensor_number = SENSOR_NUM_VR_ALERT;

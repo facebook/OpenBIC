@@ -420,7 +420,7 @@ void ISR_HSC_OC()
 	common_addsel_msg_t sel_msg;
 	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
 		if (gpio_get(P12V_HS_D_OC_R_N) == GPIO_HIGH) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSART;
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		} else {
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}
