@@ -1049,7 +1049,7 @@ __weak void OEM_1S_CONTROL_SENSOR_POLLING(ipmi_msg *msg)
 			// Enable or Disable sensor polling
 			sensor_config[control_sensor_index].is_enable_polling =
 				((operation == DISABLE_SENSOR_POLLING) ? DISABLE_SENSOR_POLLING :
-									       ENABLE_SENSOR_POLLING);
+									 ENABLE_SENSOR_POLLING);
 			msg->data[return_data_index + 1] =
 				sensor_config[control_sensor_index].is_enable_polling;
 		} else {
@@ -1841,6 +1841,50 @@ __weak void OEM_1S_GET_SDR(ipmi_msg *msg)
 	return;
 }
 
+__weak void OEM_1S_BMC_IPMB_ACCESS(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len < 2) {
+		msg->data_len = 0;
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	if ((IPMB_inf_index_map[BMC_IPMB] == RESERVED) ||
+	    (IPMB_config_table[IPMB_inf_index_map[BMC_IPMB]].interface == RESERVED_IF) ||
+	    (IPMB_config_table[IPMB_inf_index_map[BMC_IPMB]].enable_status == DISABLE)) {
+		LOG_ERR("BMC IPMB interface doesn't support in this platform");
+		msg->data_len = 0;
+		msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+		return;
+	}
+
+	ipmi_msg msgtobmc;
+	memset(&msgtobmc, 0, sizeof(ipmi_msg));
+
+	msgtobmc.InF_source = SELF;
+	msgtobmc.InF_target = BMC_IPMB;
+	msgtobmc.netfn = msg->data[0];
+	msgtobmc.cmd = msg->data[1];
+	msgtobmc.data_len = msg->data_len - 2;
+	memcpy(msgtobmc.data, &msg->data[2], msgtobmc.data_len);
+
+	ipmb_error status = ipmb_read(&msgtobmc, IPMB_inf_index_map[msgtobmc.InF_target]);
+	if (status != IPMB_ERROR_SUCCESS) {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		msg->data_len = 0;
+		return;
+	}
+
+	msg->data_len = 1 + msgtobmc.data_len;
+	msg->data[0] = msgtobmc.completion_code;
+	memcpy(&msg->data[1], msgtobmc.data, msgtobmc.data_len);
+	msg->completion_code = CC_SUCCESS;
+
+	return;
+}
+
 void IPMI_OEM_1S_handler(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -2051,6 +2095,10 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_GET_SDR:
 		LOG_DBG("Received 1S Get SDR command");
 		OEM_1S_GET_SDR(msg);
+		break;
+	case CMD_OEM_1S_BMC_IPMB_ACCESS:
+		LOG_DBG("Received 1S BMC IPMB Access command");
+		OEM_1S_BMC_IPMB_ACCESS(msg);
 		break;
 	default:
 		LOG_ERR("Invalid OEM message, netfn(0x%x) cmd(0x%x)", msg->netfn, msg->cmd);
