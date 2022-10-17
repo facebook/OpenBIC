@@ -46,6 +46,7 @@ extern struct k_mutex vr_page_mutex;
 #define VR_PWR_CMD 0x96
 
 #define LTC4282_ADDR (0x80 >> 1)
+#define MPS_MP5990_ADDR (0x40 >> 1)
 
 /*  YV3 DL sensor numbers  */
 #define SENSOR_NUM_T_MB1 0x01
@@ -127,5 +128,6 @@ enum {
 
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
+uint8_t pal_get_extend_sensor_config();
 
 #endif

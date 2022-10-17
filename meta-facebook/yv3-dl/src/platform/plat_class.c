@@ -32,6 +32,7 @@
 #define I2C_DATA_SIZE 5
 
 static uint8_t system_class = SYS_CLASS_1;
+static uint8_t hsc_module = HSC_MODULE_UNKNOWN;
 static CARD_STATUS _1ou_status = { false, TYPE_1OU_UNKNOWN };
 static CARD_STATUS _2ou_status = { false, TYPE_2OU_UNKNOWN };
 
@@ -50,6 +51,16 @@ CARD_STATUS get_2ou_status()
 	return _2ou_status;
 }
 
+uint8_t get_hsc_module()
+{
+	return hsc_module;
+}
+
+void init_hsc_module()
+{
+	hsc_module = (gpio_get(HSC_DETECT2) << 2) | (gpio_get(HSC_DETECT1) << 1) | gpio_get(HSC_DETECT0);
+}
+
 void init_platform_config()
 {
 	I2C_MSG i2c_msg;
@@ -64,6 +75,14 @@ void init_platform_config()
 	} else {
 		system_class = SYS_CLASS_1;
 	}
+
+	/* HSC_DETECT[2:0]
+	 * ADM1278    000
+	 * LTC4282    001
+	 * MP5990     010
+	 * ADM1276    011
+	 */
+	init_hsc_module();
 
 	uint8_t tx_len, rx_len;
 	uint8_t class_type = 0x0;

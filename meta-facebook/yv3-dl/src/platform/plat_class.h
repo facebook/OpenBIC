@@ -41,6 +41,14 @@ enum _2OU_CARD_TYPE_ {
 	TYPE_2OU_UNKNOWN = 0xFF,
 };
 
+enum HSC_MODULE {
+	HSC_MODULE_ADM1278,
+	HSC_MODULE_LTC4282,
+	HSC_MODULE_MP5990,
+	HSC_MODULE_ADM1276,
+	HSC_MODULE_UNKNOWN = 0xFF,
+};
+
 enum BIC_CARD_PRESENT {
 	CARD_UNPRESENT = false,
 	CARD_PRESENT = true,
@@ -49,7 +57,8 @@ enum BIC_CARD_PRESENT {
 uint8_t get_system_class();
 CARD_STATUS get_1ou_status();
 CARD_STATUS get_2ou_status();
-
+uint8_t get_hsc_module();
+void init_hsc_module();
 void init_platform_config();
 
 #endif
