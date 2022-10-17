@@ -1845,8 +1845,8 @@ __weak void OEM_1S_BMC_IPMB_ACCESS(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
 
+#if MAX_IPMB_IDX
 	if (msg->data_len < 2) {
-		msg->data_len = 0;
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
 	}
@@ -1855,7 +1855,6 @@ __weak void OEM_1S_BMC_IPMB_ACCESS(ipmi_msg *msg)
 	    (IPMB_config_table[IPMB_inf_index_map[BMC_IPMB]].interface == RESERVED_IF) ||
 	    (IPMB_config_table[IPMB_inf_index_map[BMC_IPMB]].enable_status == DISABLE)) {
 		LOG_ERR("BMC IPMB interface doesn't support in this platform");
-		msg->data_len = 0;
 		msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
 		return;
 	}
@@ -1873,7 +1872,6 @@ __weak void OEM_1S_BMC_IPMB_ACCESS(ipmi_msg *msg)
 	ipmb_error status = ipmb_read(&msgtobmc, IPMB_inf_index_map[msgtobmc.InF_target]);
 	if (status != IPMB_ERROR_SUCCESS) {
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
-		msg->data_len = 0;
 		return;
 	}
 
@@ -1881,6 +1879,11 @@ __weak void OEM_1S_BMC_IPMB_ACCESS(ipmi_msg *msg)
 	msg->data[0] = msgtobmc.completion_code;
 	memcpy(&msg->data[1], msgtobmc.data, msgtobmc.data_len);
 	msg->completion_code = CC_SUCCESS;
+
+#else
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+
+#endif
 
 	return;
 }
