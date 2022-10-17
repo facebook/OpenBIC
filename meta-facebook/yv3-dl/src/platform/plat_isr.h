@@ -42,4 +42,5 @@ void ISR_NMI();
 void ISR_FIVR();
 void ISR_UV_DETECT();
 void ISR_SMI();
+void ISR_CPU_VPP_INT();
 #endif
