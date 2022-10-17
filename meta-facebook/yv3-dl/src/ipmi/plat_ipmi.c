@@ -48,23 +48,21 @@ void OEM_1S_GET_CARD_TYPE(ipmi_msg *msg)
 	CARD_STATUS _2ou_status = get_2ou_status();
 	switch (msg->data[0]) {
 	case GET_1OU_CARD_TYPE:
-		msg->data_len = 2;
+		msg->data_len = 1;
 		msg->completion_code = CC_SUCCESS;
-		msg->data[0] = GET_1OU_CARD_TYPE;
 		if (_1ou_status.present) {
-			msg->data[1] = _1ou_status.card_type;
+			msg->data[0] = _1ou_status.card_type;
 		} else {
-			msg->data[1] = TYPE_1OU_ABSENT;
+			msg->data[0] = TYPE_1OU_ABSENT;
 		}
 		break;
 	case GET_2OU_CARD_TYPE:
-		msg->data_len = 2;
+		msg->data_len = 1;
 		msg->completion_code = CC_SUCCESS;
-		msg->data[0] = GET_2OU_CARD_TYPE;
 		if (_2ou_status.present) {
-			msg->data[1] = _2ou_status.card_type;
+			msg->data[0] = _2ou_status.card_type;
 		} else {
-			msg->data[1] = TYPE_2OU_ABSENT;
+			msg->data[0] = TYPE_2OU_ABSENT;
 		}
 		break;
 	default:
