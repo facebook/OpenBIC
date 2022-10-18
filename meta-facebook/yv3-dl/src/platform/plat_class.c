@@ -95,7 +95,7 @@ bool get_adc_voltage(int channel, float *voltage)
 	CHECK_NULL_ARG_WITH_RETURN(voltage, false);
 
 	if (channel >= NUMBER_OF_ADC_CHANNEL) {
-		printf("Invalid ADC channel-%d\n", channel);
+		LOG_ERR("Invalid ADC channel-%d", channel);
 		return false;
 	}
 
@@ -117,7 +117,7 @@ bool get_adc_voltage(int channel, float *voltage)
 		reference_voltage = 1.2;
 		break;
 	default:
-		printf("Unsupported the external reference voltage\n");
+		LOG_ERR("Unsupported the external reference voltage");
 		return false;
 	}
 
@@ -165,7 +165,7 @@ void init_platform_config()
 	uint8_t class_type = 0x0;
 	char *data = (uint8_t *)malloc(I2C_DATA_SIZE * sizeof(uint8_t));
 	if (data == NULL) {
-		printf("[%s] Failed to allocate memory\n", __func__);
+		LOG_WRN("Failed to allocate memory");
 		return;
 	}
 
@@ -183,11 +183,11 @@ void init_platform_config()
 	i2c_msg = construct_i2c_message(I2C_BUS2, CPLD_ADDR, tx_len, data, rx_len);
 	if (!i2c_master_read(&i2c_msg, retry)) {
 		class_type = i2c_msg.data[0];
-		printf("class_type = %x\n", class_type);
+		LOG_INF("class_type = %x", class_type);
 		_1ou_status.present = ((class_type & BIT(2)) ? false : true);
 		_2ou_status.present = ((class_type & BIT(3)) ? false : true);
 	} else {
-		printf("Failed to read expansion present from CPLD\n");
+		LOG_WRN("Failed to read expansion present from CPLD");
 	}
 
 	/* Set the class type to CPLD's class type register(the bit[1:0] of offset 0Dh) 
@@ -199,7 +199,7 @@ void init_platform_config()
 	data[1] = system_class | class_type;
 	i2c_msg = construct_i2c_message(I2C_BUS2, CPLD_ADDR, tx_len, data, rx_len);
 	if (i2c_master_write(&i2c_msg, retry)) {
-		printf("Failed to set class type to CPLD)\n");
+		LOG_WRN("Failed to set class type to CPLD");
 	}
 
 	/* BIC judges the 1OU card type according the ADC-6(0-based) voltage.
@@ -250,7 +250,7 @@ void init_platform_config()
 					}
 					break;
 				default:
-					printf("Unknown condition 0x%x",
+					LOG_ERR("Unknown condition 0x%x",
 					       _1ou_card_mapping_table[cnt].condition);
 					break;
 				}
@@ -264,14 +264,14 @@ void init_platform_config()
 					i2c_msg = construct_i2c_message(I2C_BUS1, CPLD_ADDR, tx_len,
 									data, rx_len);
 					if (i2c_master_write(&i2c_msg, retry)) {
-						printf("Failed to set 1OU card detection to CPLD register(0x%x)\n",
+						LOG_ERR("Failed to set 1OU card detection to CPLD register(0x%x)",
 						       data[0]);
 					}
 					break;
 				}
 				if ((cnt == ARRAY_SIZE(_1ou_card_mapping_table)) &&
 				    (_1ou_status.card_type == TYPE_1OU_UNKNOWN)) {
-					printf("Unknown the 1OU card type, the voltage of ADC channel-6 is %fV\n",
+					LOG_ERR("Unknown the 1OU card type, the voltage of ADC channel-6 is %fV",
 					       voltage);
 				}
 			}
@@ -293,7 +293,7 @@ void init_platform_config()
 				break;
 			default:
 				_2ou_status.card_type = TYPE_2OU_UNKNOWN;
-				printf("Unknown the 2OU card type, the card type read from CPLD is 0x%x\n",
+				LOG_WRN("Unknown the 2OU card type, the card type read from CPLD is 0x%x",
 				       i2c_msg.data[0]);
 				break;
 			}
