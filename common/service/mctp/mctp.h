@@ -53,6 +53,8 @@ extern "C" {
 #define MCTP_HDR_SEQ_MASK 0x03
 #define MCTP_HDR_TAG_MASK 0x07
 
+#define MCTP_POLL_TIME_MS 1
+
 typedef enum {
 	MCTP_MSG_TYPE_CTRL = 0x00,
 	MCTP_MSG_TYPE_PLDM,
