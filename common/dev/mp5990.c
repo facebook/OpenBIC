@@ -52,7 +52,7 @@ int mp5990_read_ein(double *val, uint8_t sensor_num)
 	msg.rx_len = 7;
 
 	if (i2c_master_read(&msg, retry)) {
-		LOG_WRN("i2c read failed.\n");
+		LOG_WRN("i2c read failed.");
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
@@ -83,13 +83,13 @@ int mp5990_read_ein(double *val, uint8_t sensor_num)
 	energy_diff = (double)(rollover - pre_rollover) * MP5990_EIN_ENERGY_CNT_MAX +
 		      (double)energy - (double)pre_energy;
 	if (energy_diff < 0) {
-		LOG_DBG("Energy difference is less than zero.\n");
+		LOG_DBG("Energy difference is less than zero.");
 		return -1;
 	}
 
 	sample_diff = sample - pre_sample;
 	if (sample_diff == 0) {
-		LOG_DBG("Sample difference is less than zero.\n");
+		LOG_DBG("Sample difference is less than zero.");
 		return -1;
 	}
 

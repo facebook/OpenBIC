@@ -371,7 +371,7 @@ uint8_t pal_get_extend_sensor_config()
 		extend_sensor_config_size += ARRAY_SIZE(ltc4282_sensor_config_table);
 		break;
 	default:
-		printf("[%s] unsupported HSC module, HSC module: 0x%x\n", __func__, hsc_module);
+		LOG_ERR("unsupported HSC module, HSC module: 0x%x", hsc_module);
 		break;
 	}
 
@@ -503,7 +503,7 @@ void pal_extend_sensor_config()
 		}
 		break;
 	default:
-		printf("[%s] unsupported HSC module, HSC module: 0x%x\n", __func__, hsc_module);
+		LOG_ERR("unsupported HSC module, HSC module: 0x%x", hsc_module);
 		break;
 	}
 
