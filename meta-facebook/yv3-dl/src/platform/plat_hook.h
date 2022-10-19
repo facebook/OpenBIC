@@ -28,6 +28,7 @@ typedef struct _vr_pre_proc_arg {
 
 extern adc_asd_init_arg adc_asd_init_args[];
 extern ltc4282_init_arg ltc4282_init_args[];
+extern mp5990_init_arg mp5990_init_args[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS

@@ -46,9 +46,6 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_T_MB1, sensor_dev_tmp75, I2C_BUS5, TMP75_IN_ADDR, TMP75_TEMP_OFFSET,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_T_MB2, sensor_dev_tmp431, I2C_BUS5, TMP431_ADDR, TMP431_LOCAL_TEMPERATRUE,
-	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 	{ SENSOR_NUM_T_FIO, sensor_dev_tmp75, I2C_BUS5, TMP75_FIO_ADDR, TMP75_TEMP_OFFSET,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
@@ -200,8 +197,12 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_NM_T_PCH, sensor_dev_pch, I2C_BUS6, PCH_ADDR, ME_SENSOR_NUM_TEMP_PCH,
 	  me_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+};
 
-	// HSC
+sensor_cfg ltc4282_sensor_config_table[] = {
+	{ SENSOR_NUM_T_MB2, sensor_dev_tmp431, I2C_BUS5, TMP431_ADDR, TMP431_LOCAL_TEMPERATRUE,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 	{ SENSOR_NUM_HSC_TEMP, sensor_dev_tmp431, I2C_BUS5, TMP431_ADDR, TMP431_REMOTE_TEMPERATRUE,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
@@ -217,7 +218,28 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_HSC_COUT, sensor_dev_ltc4282, I2C_BUS5, LTC4282_ADDR, LTC4282_VSENSE_OFFSET,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &ltc4282_init_args[0] },
+};
 
+sensor_cfg mp5990_sensor_config_table[] = {
+	{ SENSOR_NUM_T_MB2, sensor_dev_tmp75, I2C_BUS5, TMP75_OUT_ADDR, TMP75_TEMP_OFFSET,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_HSC_TEMP, sensor_dev_mp5990, I2C_BUS5, MPS_MP5990_ADDR,
+	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &mp5990_init_args[0] },
+	{ SENSOR_NUM_HSC_VIN, sensor_dev_mp5990, I2C_BUS5, MPS_MP5990_ADDR, PMBUS_READ_VIN,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
+	{ SENSOR_NUM_HSC_PIN, sensor_dev_mp5990, I2C_BUS5, MPS_MP5990_ADDR, PMBUS_READ_PIN,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
+	{ SENSOR_NUM_HSC_COUT, sensor_dev_mp5990, I2C_BUS5, MPS_MP5990_ADDR, PMBUS_READ_IOUT,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
+	{ SENSOR_NUM_HSC_EIN, sensor_dev_mp5990, I2C_BUS5, MPS_MP5990_ADDR, PMBUS_READ_EIN,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
 };
 
 sensor_cfg isl69254_sensor_config_table[] = {
@@ -337,6 +359,25 @@ void load_sensor_config(void)
 	pal_extend_sensor_config();
 }
 
+uint8_t pal_get_extend_sensor_config()
+{
+	uint8_t extend_sensor_config_size = 0;
+	uint8_t hsc_module = get_hsc_module();
+	switch (hsc_module) {
+	case HSC_MODULE_MP5990:
+		extend_sensor_config_size += ARRAY_SIZE(mp5990_sensor_config_table);
+		break;
+	case HSC_MODULE_LTC4282:
+		extend_sensor_config_size += ARRAY_SIZE(ltc4282_sensor_config_table);
+		break;
+	default:
+		LOG_ERR("unsupported HSC module, HSC module: 0x%x", hsc_module);
+		break;
+	}
+
+	return extend_sensor_config_size;
+}
+
 static int check_vr_type(void)
 {
 	uint8_t retry = 5;
@@ -426,6 +467,7 @@ void check_outlet_temp_type(uint8_t index)
 void pal_extend_sensor_config()
 {
 	uint8_t sensor_count = 0;
+	uint8_t hsc_module = get_hsc_module();
 
 	switch (check_vr_type()) {
 	case VR_RNS:
@@ -445,6 +487,24 @@ void pal_extend_sensor_config()
 		if (sensor_config[index].type == sensor_dev_tmp431) {
 			check_outlet_temp_type(index);
 		}
+	}
+
+	switch (hsc_module) {
+	case HSC_MODULE_MP5990:
+		sensor_count = ARRAY_SIZE(mp5990_sensor_config_table);
+		for (int index = 0; index < sensor_count; index++) {
+			add_sensor_config(mp5990_sensor_config_table[index]);
+		}
+		break;
+	case HSC_MODULE_LTC4282:
+		sensor_count = ARRAY_SIZE(ltc4282_sensor_config_table);
+		for (int index = 0; index < sensor_count; index++) {
+			add_sensor_config(ltc4282_sensor_config_table[index]);
+		}
+		break;
+	default:
+		LOG_ERR("unsupported HSC module, HSC module: 0x%x", hsc_module);
+		break;
 	}
 
 	return;
