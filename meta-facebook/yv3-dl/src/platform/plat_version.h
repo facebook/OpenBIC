@@ -32,7 +32,7 @@
 
 // Firmware revision manually set
 #define FIRMWARE_REVISION_1 0x51
-#define FIRMWARE_REVISION_2 0x03
+#define FIRMWARE_REVISION_2 0x04
 
 #define IPMI_VERSION 0x02
 #define ADDITIONAL_DEVICE_SUPPORT 0xBF
