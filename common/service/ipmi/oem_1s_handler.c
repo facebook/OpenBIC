@@ -582,15 +582,13 @@ __weak void OEM_1S_READ_FW_IMAGE(ipmi_msg *msg)
 		int pos = pal_get_bios_flash_position();
 		if (pos == -1) {
 			msg->completion_code = CC_INVALID_PARAM;
-			return;
-		}
-
-		if (read_fw_image(offset, length, msg->data, pos)) {
-			msg->completion_code = CC_UNSPECIFIED_ERROR;
-			return;
 		} else {
-			msg->data_len = length;
-			msg->completion_code = CC_SUCCESS;
+			if (read_fw_image(offset, length, msg->data, pos)) {
+				msg->completion_code = CC_UNSPECIFIED_ERROR;
+			} else {
+				msg->data_len = length;
+				msg->completion_code = CC_SUCCESS;
+			}
 		}
 
 		if (!pal_switch_bios_spi_mux(GPIO_LOW)) {
