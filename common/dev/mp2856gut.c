@@ -72,7 +72,11 @@ uint8_t mp2856gut_read(uint8_t sensor_num, int *reading)
 		uint16_t read_value = (msg.data[1] << 8) | msg.data[0];
 		val = slinear11_to_float(read_value);
 	} else if (cfg->offset == PMBUS_READ_TEMPERATURE_1) {
-		val = msg.data[0];
+		if (msg.data[1] == 0x07) {
+			val = -(((~msg.data[0]) & 0xFF) + 1);
+		} else {
+			val = msg.data[0];
+		}
 	} else {
 		return SENSOR_FAIL_TO_ACCESS;
 	}
