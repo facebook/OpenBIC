@@ -24,6 +24,9 @@
 #include "expansion_board.h"
 #include "plat_sensor_table.h"
 #include "plat_power_seq.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(power_sequence);
 
 static uint8_t power_on_seq = DEFAULT_POWER_ON_SEQ;
 static uint8_t power_off_seq = DEFAULT_POWER_OFF_SEQ;
@@ -32,7 +35,7 @@ void set_MB_DC_status(uint8_t gpio_num)
 {
 	static bool is_MB_DC_ON = false;
 	is_MB_DC_ON = (gpio_get(gpio_num) == GPIO_HIGH) ? true : false;
-	printf("[%s] gpio number(%d) status(%d)\n", __func__, gpio_num, is_MB_DC_ON);
+	LOG_INF("gpio number(%d) status(%d)", gpio_num, is_MB_DC_ON);
 }
 
 void set_power_on_seq(uint8_t seq_num)
@@ -54,16 +57,16 @@ void control_power_on_sequence()
 		gpio_set(PWRGD_CARD_PWROK, POWER_ON);
 		k_usleep(100);
 		control_power_stage(ENABLE_POWER_MODE, ASIC_DEV_RST_N);
-		printf("[%s] power on success\n", __func__);
+		LOG_INF("Power on success");
 	} else {
-		printf("[%s] power on fail\n", __func__);
+		LOG_ERR("Power on fail");
 	}
 }
 
 void control_power_off_sequence()
 {
 	bool is_power_off = false;
-	// Inform CraterLake expansion board power off
+	// Inform Server Board expansion board power off
 	gpio_set(PWRGD_CARD_PWROK, POWER_OFF);
 	gpio_set(ASIC_DEV_RST_N, POWER_OFF);
 
@@ -74,9 +77,9 @@ void control_power_off_sequence()
 	is_power_off = power_off_handler(DIMM_POWER_OFF_STAGE1);
 
 	if (is_power_off == true) {
-		printf("[%s] power off success\n", __func__);
+		LOG_INF("Power off success");
 	} else {
-		printf("[%s] power off fail\n", __func__);
+		LOG_ERR("Power off fail");
 	}
 }
 
@@ -94,7 +97,7 @@ void control_power_stage(uint8_t control_mode, uint8_t control_seq)
 		}
 		break;
 	default:
-		printf("[%s] not support control mode 0x%x\n", __func__, control_mode);
+		LOG_ERR("Not support control mode 0x%x", control_mode);
 		break;
 	}
 }
@@ -116,7 +119,7 @@ int check_power_stage(uint8_t check_mode, uint8_t check_seq)
 		}
 		break;
 	default:
-		printf("[%s] not support check mode 0x%x\n", __func__, check_mode);
+		LOG_ERR("Check mode 0x%x not supported!", check_mode);
 		ret = 1;
 		break;
 	}
@@ -132,15 +135,15 @@ int check_power_stage(uint8_t check_mode, uint8_t check_seq)
 		sel_msg.sensor_number = SENSOR_NUM_POWER_ERROR;
 		sel_msg.event_data1 =
 			((check_mode == ENABLE_POWER_MODE) ? IPMI_OEM_EVENT_OFFSET_EXP_PWRON_FAIL :
-							     IPMI_OEM_EVENT_OFFSET_EXP_PWROFF_FAIL);
+								   IPMI_OEM_EVENT_OFFSET_EXP_PWROFF_FAIL);
 		sel_msg.event_data2 =
 			((check_mode == ENABLE_POWER_MODE) ? power_on_seq : power_off_seq);
 		sel_msg.event_data3 = get_board_id();
 
 		is_addsel_success = common_add_sel_evt_record(&sel_msg);
 		if (is_addsel_success == false) {
-			printf("[%s] control power event addsel fail  mode: 0x%x  seq: 0x%x\n",
-			       __func__, check_mode, check_seq);
+			LOG_ERR("Control power event addsel fail  mode: 0x%x  seq: 0x%x",
+				check_mode, check_seq);
 		}
 	}
 
@@ -176,7 +179,7 @@ bool power_on_handler(uint8_t initial_stage)
 			control_power_stage(ENABLE_POWER_MODE, CLK_100M_OSC_EN);
 			break;
 		default:
-			printf("[%s] not support stage 0x%x\n", __func__, initial_stage);
+			LOG_ERR("Stage 0x%x not supported", initial_stage);
 			enable_power_on_handler = false;
 			break;
 		}
@@ -185,18 +188,22 @@ bool power_on_handler(uint8_t initial_stage)
 		switch (control_stage) { // Check VR power machine
 		case ASIC_POWER_ON_STAGE:
 			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_01) != 0) {
+				LOG_ERR("P0V8_ASICA_PWRGD is not enabled!");
 				check_power_ret = -1;
 				break;
 			}
 			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_02) != 0) {
+				LOG_ERR("P0V8_ASICD_PWRGD is not enabled!");
 				check_power_ret = -1;
 				break;
 			}
 			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_03) != 0) {
+				LOG_ERR("P0V9_ASICA_PWRGD is not enabled!");
 				check_power_ret = -1;
 				break;
 			}
 			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_04) != 0) {
+				LOG_ERR("P1V8_ASIC_PG_R is not enabled!");
 				check_power_ret = -1;
 				break;
 			}
@@ -205,10 +212,12 @@ bool power_on_handler(uint8_t initial_stage)
 			break;
 		case DIMM_POWER_ON_STAGE1:
 			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_05) != 0) {
+				LOG_ERR("PVPP_AB_PG_R is not enabled!");
 				check_power_ret = -1;
 				break;
 			}
 			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_06) != 0) {
+				LOG_ERR("PVPP_CD_PG_R is not enabled!");
 				check_power_ret = -1;
 				break;
 			}
@@ -217,10 +226,12 @@ bool power_on_handler(uint8_t initial_stage)
 			break;
 		case DIMM_POWER_ON_STAGE2:
 			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_07) != 0) {
+				LOG_ERR("PWRGD_PVDDQ_AB is not enabled!");
 				check_power_ret = -1;
 				break;
 			}
 			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_08) != 0) {
+				LOG_ERR("PWRGD_PVDDQ_CD is not enabled!");
 				check_power_ret = -1;
 				break;
 			}
@@ -229,10 +240,12 @@ bool power_on_handler(uint8_t initial_stage)
 			break;
 		case DIMM_POWER_ON_STAGE3:
 			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_09) != 0) {
+				LOG_ERR("PVTT_AB_PG_R is not enabled!");
 				check_power_ret = -1;
 				break;
 			}
 			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_10) != 0) {
+				LOG_ERR("PVTT_CD_PG_R is not enabled!");
 				check_power_ret = -1;
 				break;
 			}
@@ -249,7 +262,7 @@ bool power_on_handler(uint8_t initial_stage)
 			enable_power_on_handler = false;
 			break;
 		default:
-			printf("[%s] not support stage 0x%x\n", __func__, initial_stage);
+			LOG_ERR("Not support stage 0x%x", initial_stage);
 			enable_power_on_handler = false;
 			break;
 		}
@@ -301,7 +314,7 @@ bool power_off_handler(uint8_t initial_stage)
 			control_power_stage(DISABLE_POWER_MODE, CLK_100M_OSC_EN);
 			break;
 		default:
-			printf("[%s] not support stage 0x%x\n", __func__, initial_stage);
+			LOG_ERR("Stage 0x%x not supported", initial_stage);
 			enable_power_off_handler = false;
 			break;
 		}
@@ -372,7 +385,7 @@ bool power_off_handler(uint8_t initial_stage)
 			enable_power_off_handler = false;
 			break;
 		default:
-			printf("[%s] not support stage 0x%x\n", __func__, initial_stage);
+			LOG_ERR("Stage 0x%x not supported", initial_stage);
 			enable_power_off_handler = false;
 			break;
 		}
