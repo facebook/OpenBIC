@@ -32,6 +32,8 @@
 #include "ipmi.h"
 #include <crypto/hash.h>
 
+LOG_MODULE_REGISTER(util_spi);
+
 static char *flash_device[6] = { "fmc_cs0",  "fmc_cs1",	 "spi1_cs0",
 				 "spi1_cs1", "spi2_cs0", "spi2_cs1" };
 static bool isInitialized = false;
@@ -39,43 +41,30 @@ static int do_erase_write_verify(const struct device *flash_device, uint32_t op_
 				 uint8_t *write_buf, uint8_t *read_back_buf, uint32_t erase_sz)
 {
 	uint32_t ret = 0;
-	uint32_t i;
 
 	ret = flash_erase(flash_device, op_addr, erase_sz);
 	if (ret != 0) {
-		printf("[%s][%d] erase failed at %u.\n", __func__, __LINE__, op_addr);
+		LOG_ERR("Failed to erase %u.", op_addr);
 		goto end;
 	}
 
 	ret = flash_write(flash_device, op_addr, write_buf, erase_sz);
 	if (ret != 0) {
-		printf("[%s][%d] write failed at %u.\n", __func__, __LINE__, op_addr);
+		LOG_ERR("Failed to write %u.", op_addr);
 		goto end;
 	}
 
 	ret = flash_read(flash_device, op_addr, read_back_buf, erase_sz);
 	if (ret != 0) {
-		printf("[%s][%d] write failed at %u.\n", __func__, __LINE__, op_addr);
+		LOG_ERR("Failed to read %u.", op_addr);
 		goto end;
 	}
 
 	if (memcmp(write_buf, read_back_buf, erase_sz) != 0) {
 		ret = -EINVAL;
-		printf("ERROR: %s %d fail to write flash at 0x%x\n", __func__, __LINE__, op_addr);
-		printf("to be written:\n");
-		for (i = 0; i < 256; i++) {
-			printf("%x ", write_buf[i]);
-			if (i % 16 == 15)
-				printf("\n");
-		}
-
-		printf("readback:\n");
-		for (i = 0; i < 256; i++) {
-			printf("%x ", read_back_buf[i]);
-			if (i % 16 == 15)
-				printf("\n");
-		}
-
+		LOG_ERR("Failed to write flash at 0x%x.", op_addr);
+		LOG_HEXDUMP_ERR(write_buf, erase_sz, "to be written:");
+		LOG_HEXDUMP_ERR(read_back_buf, erase_sz, "readback:");
 		goto end;
 	}
 
@@ -94,22 +83,22 @@ static int do_update(const struct device *flash_device, off_t offset, uint8_t *b
 	bool update_it = false;
 
 	if (flash_sz < flash_offset + len) {
-		printf("ERROR: update boundary exceeds flash size. (%u, %u, %u)\n", flash_sz,
-		       flash_offset, (unsigned int)len);
+		LOG_ERR("Update boundary exceeds flash size. (%u, %u, %u)", flash_sz, flash_offset,
+			(unsigned int)len);
 		ret = -EINVAL;
 		goto end;
 	}
 
 	op_buf = (uint8_t *)malloc(sector_sz);
 	if (op_buf == NULL) {
-		printf("heap full %d %u\n", __LINE__, sector_sz);
+		LOG_ERR("Failed to allocate op_buf.");
 		ret = -EINVAL;
 		goto end;
 	}
 
 	read_back_buf = (uint8_t *)malloc(sector_sz);
 	if (read_back_buf == NULL) {
-		printf("heap full %d %u\n", __LINE__, sector_sz);
+		LOG_ERR("Failed to allocate read_back_buf.");
 		ret = -EINVAL;
 		goto end;
 	}
@@ -199,7 +188,7 @@ uint8_t get_fw_sha256(uint8_t *msg_buf, uint32_t offset, uint32_t length, uint8_
 
 	buf = (uint8_t *)malloc(length);
 	if (buf == NULL) {
-		printf("spi index%x update buffer alloc fail\n", flash_position);
+		LOG_ERR("Failed to allocate buf.");
 		return CC_OUT_OF_SPACE;
 	}
 
@@ -207,7 +196,7 @@ uint8_t get_fw_sha256(uint8_t *msg_buf, uint32_t offset, uint32_t length, uint8_
 	if (flash_position == DEVSPI_SPI1_CS0 && !isInitialized) {
 		ret = spi_nor_re_init(flash_dev);
 		if (ret != 0) {
-			printf("flash init fail %u \n", ret);
+			LOG_ERR("Failed to re-init flash, ret %d.", ret);
 			ret = CC_UNSPECIFIED_ERROR;
 			goto end;
 		}
@@ -215,7 +204,7 @@ uint8_t get_fw_sha256(uint8_t *msg_buf, uint32_t offset, uint32_t length, uint8_
 	}
 	ret = flash_read(flash_dev, offset, buf, length);
 	if (ret != 0) {
-		printf("flash read fail, error: %d\n", ret);
+		LOG_ERR("Failed to read flash, ret %d.", ret);
 		ret = CC_UNSPECIFIED_ERROR;
 		goto end;
 	}
@@ -233,7 +222,7 @@ uint8_t get_fw_sha256(uint8_t *msg_buf, uint32_t offset, uint32_t length, uint8_
 
 	ret = hash_begin_session(dev, &ini, HASH_SHA256);
 	if (ret) {
-		printf("hash_begin_session error: %d\n", ret);
+		LOG_ERR("hash_begin_session error, ret %d.", ret);
 		ret = CC_UNSPECIFIED_ERROR;
 		goto end;
 	}
@@ -242,14 +231,14 @@ uint8_t get_fw_sha256(uint8_t *msg_buf, uint32_t offset, uint32_t length, uint8_
 
 	ret = hash_update(&ini, &pkt);
 	if (ret) {
-		printf("hash_update error: %d\n", ret);
+		LOG_ERR("hash_update error, ret %d.", ret);
 		ret = CC_UNSPECIFIED_ERROR;
 		goto end;
 	}
 
 	ret = hash_final(&ini, &pkt);
 	if (ret) {
-		printf("hash_final error: %d\n", ret);
+		LOG_ERR("hash_final error, ret %d.", ret);
 		ret = CC_UNSPECIFIED_ERROR;
 		goto end;
 	}
@@ -283,7 +272,7 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 			txbuf = (uint8_t *)malloc(SECTOR_SZ_64K);
 		}
 		if (txbuf == NULL) {
-			printf("spi index%x update buffer alloc fail\n", flash_position);
+			LOG_ERR("SPI index %d, failed to allocate txbuf.", flash_position);
 			return FWUPDATE_OUT_OF_HEAP;
 		}
 		is_init = 1;
@@ -292,8 +281,8 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 	}
 
 	if ((buf_offset + msg_len) > SECTOR_SZ_64K) {
-		printf("spi bus%x recv data %u over sector size %d\n", flash_position,
-		       buf_offset + msg_len, SECTOR_SZ_64K);
+		LOG_ERR("SPI index %d, recv data 0x%x over sector size 0x%x", flash_position,
+			buf_offset + msg_len, SECTOR_SZ_64K);
 		SAFE_FREE(txbuf);
 		k_msleep(10);
 		is_init = 0;
@@ -301,8 +290,8 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 	}
 
 	if ((offset % SECTOR_SZ_64K) != buf_offset) {
-		printf("spi bus%x recorded offset 0x%x but updating 0x%x\n", flash_position,
-		       buf_offset, offset % SECTOR_SZ_64K);
+		LOG_ERR("SPI index %d, recorded offset 0x%x but updating 0x%x\n", flash_position,
+			buf_offset, offset % SECTOR_SZ_64K);
 		SAFE_FREE(txbuf);
 		txbuf = NULL;
 		k_msleep(10);
@@ -310,11 +299,10 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 		return FWUPDATE_REPEATED_UPDATED;
 	}
 
-	if (FW_UPDATE_DEBUG) {
-		printf("spi bus%x update offset %x %x, msg_len %d, sector_end %d, msg_buf: %2x %2x %2x %2x\n",
-		       flash_position, offset, buf_offset, msg_len, sector_end, msg_buf[0],
-		       msg_buf[1], msg_buf[2], msg_buf[3]);
-	}
+	LOG_DBG("SPI index %d, update offset 0x%x 0x%x, msg_len %d, sector_end %d,"
+		" msg_buf: 0x%2x 0x%2x 0x%2x 0x%2x\n",
+		flash_position, offset, buf_offset, msg_len, sector_end, msg_buf[0], msg_buf[1],
+		msg_buf[2], msg_buf[3]);
 
 	memcpy(&txbuf[buf_offset], msg_buf, msg_len);
 	buf_offset += msg_len;
@@ -340,21 +328,19 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 			ret = do_update(flash_dev, update_offset, &txbuf[txbuf_offset],
 					SECTOR_SZ_4K);
 			if (ret) {
-				printf("SPI update fail status: %x\n", ret);
+				LOG_ERR("Failed to update SPI, status %d", ret);
 				break;
 			}
 		}
 		if (!ret) {
-			printf("Update success\n");
+			LOG_INF("Update success");
 		}
 		SAFE_FREE(txbuf);
 		k_msleep(10);
 		is_init = 0;
 
-		if (FW_UPDATE_DEBUG) {
-			printf("***update %x, offset %x, SECTOR_SZ_16K %x\n",
-			       (offset / SECTOR_SZ_16K) * SECTOR_SZ_16K, offset, SECTOR_SZ_16K);
-		}
+		LOG_DBG("Update 0x%x, offset 0x%x, SECTOR_SZ_16K 0x%x\n",
+			(offset / SECTOR_SZ_16K) * SECTOR_SZ_16K, offset, SECTOR_SZ_16K);
 
 		if (sector_end &&
 		    (flash_position == DEVSPI_FMC_CS0)) { // reboot bic itself after fw update
@@ -365,6 +351,31 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 	}
 
 	return FWUPDATE_SUCCESS;
+}
+
+int read_fw_image(uint32_t offset, uint8_t msg_len, uint8_t *msg_buf, uint8_t flash_position)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg_buf, -EINVAL);
+
+	const struct device *flash_dev;
+	flash_dev = device_get_binding(flash_device[flash_position]);
+
+	if (flash_position == DEVSPI_SPI1_CS0 && !isInitialized) {
+		int rc = 0;
+		rc = spi_nor_re_init(flash_dev);
+		if (rc != 0) {
+			LOG_ERR("Failed to re-init flash, ret %d.", rc);
+			return rc;
+		}
+		isInitialized = true;
+	}
+	uint32_t flash_sz = flash_get_flash_size(flash_dev);
+	if (flash_sz < offset + msg_len) {
+		LOG_ERR("Read boundary 0x%x exceeds flash size 0x%x.", offset + msg_len, flash_sz);
+		return -EINVAL;
+	}
+
+	return flash_read(flash_dev, offset, msg_buf, msg_len);
 }
 
 __weak uint8_t fw_update_cxl(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sector_end)

@@ -554,6 +554,54 @@ __weak void OEM_1S_RESET_BMC(ipmi_msg *msg)
 	return;
 }
 
+__weak void OEM_1S_READ_FW_IMAGE(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 6) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	if (get_DC_status()) {
+		msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+		return;
+	}
+
+	uint8_t target = msg->data[0];
+	uint32_t offset =
+		((msg->data[4] << 24) | (msg->data[3] << 16) | (msg->data[2] << 8) | msg->data[1]);
+	uint8_t length = msg->data[5];
+
+	if (target == BIOS_UPDATE) {
+		if (!pal_switch_bios_spi_mux(GPIO_HIGH)) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+
+		int pos = pal_get_bios_flash_position();
+		if (pos == -1) {
+			msg->completion_code = CC_INVALID_PARAM;
+		} else {
+			if (read_fw_image(offset, length, msg->data, pos)) {
+				msg->completion_code = CC_UNSPECIFIED_ERROR;
+			} else {
+				msg->data_len = length;
+				msg->completion_code = CC_SUCCESS;
+			}
+		}
+
+		if (!pal_switch_bios_spi_mux(GPIO_LOW)) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+	} else {
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		return;
+	}
+	return;
+}
+
 __weak void OEM_1S_SET_WDT_FEED(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -1922,6 +1970,10 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_RESET_BMC:
 		LOG_DBG("Received 1S BMC Reset command");
 		OEM_1S_RESET_BMC(msg);
+		break;
+	case CMD_OEM_1S_READ_FW_IMAGE:
+		LOG_DBG("Received 1S read fw image command");
+		OEM_1S_READ_FW_IMAGE(msg);
 		break;
 	case CMD_OEM_1S_SET_WDT_FEED:
 		LOG_DBG("Received 1S Set WatchDogTimer Feed command");

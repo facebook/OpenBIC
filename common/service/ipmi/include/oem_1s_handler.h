@@ -81,6 +81,7 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg);
 void OEM_1S_SET_VR_MONITOR_STATUS(ipmi_msg *msg);
 void OEM_1S_GET_VR_MONITOR_STATUS(ipmi_msg *msg);
 void OEM_1S_RESET_BMC(ipmi_msg *msg);
+void OEM_1S_READ_FW_IMAGE(ipmi_msg *msg);
 void OEM_1S_SENSOR_POLL_EN(ipmi_msg *msg);
 void OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg);
 void OEM_1S_GET_SET_GPIO(ipmi_msg *msg);
