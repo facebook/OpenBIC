@@ -122,6 +122,7 @@
 #define SENSOR_NUM_VR_OCP 0x71
 #define SENSOR_NUM_VR_ALERT 0x72
 #define SENSOR_NUM_HDT_PRESENT 0xBD
+#define SENSOR_NUM_PMIC_ERROR 0xB4
 
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
