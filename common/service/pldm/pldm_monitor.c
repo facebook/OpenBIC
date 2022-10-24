@@ -18,7 +18,9 @@
 #include <string.h>
 #include <stdio.h>
 #include "sensor.h"
-#include "pldm_monitor.h"
+#include "pldm.h"
+
+LOG_MODULE_REGISTER(pldm_monitor);
 
 uint8_t pldm_get_sensor_reading(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
 				uint16_t *resp_len, void *ext_params)
@@ -93,6 +95,136 @@ ret:
 
 	memcpy(res_p->present_reading, &reading, sizeof(reading));
 	*resp_len = sizeof(struct pldm_get_sensor_reading_resp) + res_p->sensor_data_size - 1;
+	return PLDM_SUCCESS;
+}
+
+uint16_t pldm_platform_monitor_read(void *mctp_inst, mctp_ext_params ext_params,
+				    pldm_platform_monitor_commands_t cmd, uint8_t *req,
+				    uint16_t req_len, uint8_t *rbuf, uint16_t rbuf_len)
+{
+	/* return read length */
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, 0);
+	CHECK_NULL_ARG_WITH_RETURN(req, 0);
+	CHECK_NULL_ARG_WITH_RETURN(rbuf, 0);
+
+	pldm_msg msg = { 0 };
+
+	memcpy(&msg.ext_params, &ext_params, sizeof(mctp_ext_params));
+
+	msg.hdr.pldm_type = PLDM_TYPE_PLAT_MON_CTRL;
+	msg.hdr.cmd = cmd;
+	msg.hdr.rq = 1;
+
+	msg.buf = req;
+	msg.len = req_len;
+
+	LOG_HEXDUMP_DBG(msg.buf, msg.len, "Buf: ");
+
+	return mctp_pldm_read(mctp_inst, &msg, rbuf, rbuf_len);
+}
+uint8_t pldm_encode_sensor_event_data(struct pldm_sensor_event_data *sensor_event,
+				      uint16_t sensor_id,
+				      pldm_sensor_event_class_t sensor_event_class,
+				      const uint8_t *sensor_event_data, uint8_t event_data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(sensor_event, PLDM_ERROR_INVALID_DATA);
+	CHECK_NULL_ARG_WITH_RETURN(sensor_event_data, PLDM_ERROR_INVALID_DATA);
+
+	if ((sensor_event_class == PLDM_SENSOR_OP_STATE)) {
+		if (event_data_length != PLDM_MONITOR_SENSOR_EVENT_SENSOR_OP_STATE_DATA_LENGTH)
+			return PLDM_ERROR_INVALID_LENGTH;
+	} else if (sensor_event_class == PLDM_STATE_SENSOR_STATE) {
+		if (event_data_length != PLDM_MONITOR_SENSOR_EVENT_STATE_SENSOR_STATE_DATA_LENGTH)
+			return PLDM_ERROR_INVALID_LENGTH;
+	} else if (sensor_event_class == PLDM_NUMERIC_SENSOR_STATE) {
+		if (event_data_length <
+			    PLDM_MONITOR_SENSOR_EVENT_NUMERIC_SENSOR_STATE_MIN_DATA_LENGTH ||
+		    event_data_length >
+			    PLDM_MONITOR_SENSOR_EVENT_NUMERIC_SENSOR_STATE_MAX_DATA_LENGTH)
+			return PLDM_ERROR_INVALID_LENGTH;
+	} else {
+		return PLDM_ERROR_INVALID_DATA;
+	}
+
+	sensor_event->sensor_id = sensor_id;
+	sensor_event->sensor_event_class_type = sensor_event_class;
+	memcpy(sensor_event->event_class_data, sensor_event_data, event_data_length);
+
+	return PLDM_SUCCESS;
+}
+
+uint8_t pldm_send_sensor_event_message(void *mctp_inst, mctp_ext_params ext_params,
+				       uint16_t sensor_id,
+				       pldm_sensor_event_class_t sensor_event_class,
+				       const uint8_t *sensor_event_data, uint8_t event_data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(sensor_event_data, PLDM_ERROR_INVALID_DATA);
+
+	struct pldm_sensor_event_data sensor_event = { 0 };
+
+	if (pldm_encode_sensor_event_data(&sensor_event, sensor_id, sensor_event_class,
+					  sensor_event_data, event_data_length) != PLDM_SUCCESS) {
+		LOG_ERR("Encode event data failed");
+		return PLDM_ERROR;
+	}
+
+	return pldm_platform_event_message_req(
+		mctp_inst, ext_params, PLDM_SENSOR_EVENT, (uint8_t *)&sensor_event,
+		sizeof(struct pldm_sensor_event_data) + event_data_length - 1);
+}
+
+uint8_t pldm_send_effecter_event_message(void *mctp_inst, mctp_ext_params ext_params,
+					 struct pldm_effecter_event_data event_data)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+
+	if (event_data.effecter_event_class != PLDM_EFFECTER_OP_STATE) {
+		LOG_ERR("Unsupport effecter event class, (%d)", event_data.effecter_event_class);
+		return PLDM_ERROR;
+	}
+
+	return pldm_platform_event_message_req(mctp_inst, ext_params, PLDM_EFFECTER_EVENT,
+					       (uint8_t *)&event_data,
+					       sizeof(struct pldm_effecter_event_data));
+}
+
+uint8_t pldm_platform_event_message_req(void *mctp_inst, mctp_ext_params ext_params,
+					uint8_t event_class, const uint8_t *event_data,
+					uint8_t event_data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(event_data, PLDM_ERROR_INVALID_DATA);
+
+	uint8_t req_len = sizeof(struct pldm_platform_event_message_req) + event_data_length - 1;
+	uint8_t resp_len = sizeof(struct pldm_platform_event_message_resp);
+	uint8_t rbuf[resp_len];
+
+	struct pldm_platform_event_message_req req = { 0 };
+	struct pldm_platform_event_message_resp *resp_p =
+		(struct pldm_platform_event_message_resp *)rbuf;
+
+	req.event_class = event_class;
+	req.format_version = 0x01;
+	req.tid = DEFAULT_TID;
+
+	memcpy(&req.event_data, event_data, event_data_length);
+
+	uint16_t read_len = pldm_platform_monitor_read(mctp_inst, ext_params,
+						       PLDM_MONITOR_CMD_CODE_PLATFORM_EVENT_MESSAGE,
+						       (uint8_t *)&req, req_len, rbuf, resp_len);
+
+	if ((!read_len) || (resp_p->completion_code != PLDM_SUCCESS)) {
+		LOG_ERR("Send event message failed, read_len (%d) comp_code (0x%x)", read_len,
+			resp_p->completion_code);
+		return PLDM_ERROR;
+	}
+
+	if (resp_p->platform_event_status != PLDM_EVENT_LOGGED) {
+		LOG_ERR("Event not logged, status (0x%x)", resp_p->platform_event_status);
+		return PLDM_ERROR;
+	}
+
 	return PLDM_SUCCESS;
 }
 
