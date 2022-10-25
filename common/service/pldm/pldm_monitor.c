@@ -20,7 +20,7 @@
 #include "sensor.h"
 #include "pldm.h"
 
-LOG_MODULE_REGISTER(pldm_monitor);
+LOG_MODULE_DECLARE(pldm);
 
 uint8_t pldm_get_sensor_reading(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
 				uint16_t *resp_len, void *ext_params)
@@ -122,10 +122,12 @@ uint16_t pldm_platform_monitor_read(void *mctp_inst, mctp_ext_params ext_params,
 
 	return mctp_pldm_read(mctp_inst, &msg, rbuf, rbuf_len);
 }
-uint8_t pldm_encode_sensor_event_data(struct pldm_sensor_event_data *sensor_event,
-				      uint16_t sensor_id,
-				      pldm_sensor_event_class_t sensor_event_class,
-				      const uint8_t *sensor_event_data, uint8_t event_data_length)
+
+static uint8_t pldm_encode_sensor_event_data(struct pldm_sensor_event_data *sensor_event,
+					     uint16_t sensor_id,
+					     pldm_sensor_event_class_t sensor_event_class,
+					     const uint8_t *sensor_event_data,
+					     uint8_t event_data_length)
 {
 	CHECK_NULL_ARG_WITH_RETURN(sensor_event, PLDM_ERROR_INVALID_DATA);
 	CHECK_NULL_ARG_WITH_RETURN(sensor_event_data, PLDM_ERROR_INVALID_DATA);

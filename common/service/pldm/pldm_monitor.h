@@ -183,10 +183,6 @@ uint8_t pldm_send_sensor_event_message(void *mctp_inst, mctp_ext_params ext_para
 uint16_t pldm_platform_monitor_read(void *mctp_inst, mctp_ext_params ext_params,
 				    pldm_platform_monitor_commands_t cmd, uint8_t *req,
 				    uint16_t req_len, uint8_t *rbuf, uint16_t rbuf_len);
-uint8_t pldm_encode_sensor_event_data(struct pldm_sensor_event_data *sensor_event,
-				      uint16_t sensor_id,
-				      pldm_sensor_event_class_t sensor_event_class,
-				      const uint8_t *sensor_event_data, uint8_t event_data_length);
 uint8_t pldm_send_effecter_event_message(void *mctp_inst, mctp_ext_params ext_params,
 					 struct pldm_effecter_event_data event_data);
 #ifdef __cplusplus
