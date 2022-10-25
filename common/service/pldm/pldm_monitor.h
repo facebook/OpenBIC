@@ -24,12 +24,19 @@ extern "C" {
 #include "pldm.h"
 
 /* command number of pldm type 0x02 : PLDM for platform monitor and control */
-#define PLDM_MONITOR_CMD_CODE_GET_SENSOR_READING 0x11
+typedef enum pldm_platform_monitor_commands {
+	PLDM_MONITOR_CMD_CODE_GET_SENSOR_READING = 0x11,
+	PLDM_MONITOR_CMD_CODE_PLATFORM_EVENT_MESSAGE = 0x0A,
+} pldm_platform_monitor_commands_t;
 
 /* define size of request */
 #define PLDM_GET_SENSOR_READING_REQ_BYTES 3
 
 #define PLDM_MONITOR_SENSOR_SUPPORT_MAX 0xFF
+#define PLDM_MONITOR_SENSOR_EVENT_SENSOR_OP_STATE_DATA_LENGTH 2
+#define PLDM_MONITOR_SENSOR_EVENT_STATE_SENSOR_STATE_DATA_LENGTH 3
+#define PLDM_MONITOR_SENSOR_EVENT_NUMERIC_SENSOR_STATE_MIN_DATA_LENGTH 4
+#define PLDM_MONITOR_SENSOR_EVENT_NUMERIC_SENSOR_STATE_MAX_DATA_LENGTH 7
 
 enum pldm_sensor_readings_data_type {
 	PLDM_SENSOR_DATA_SIZE_UINT8,
@@ -95,8 +102,88 @@ struct pldm_get_sensor_reading_resp {
 	uint8_t present_reading[1];
 } __attribute__((packed));
 
-uint8_t pldm_monitor_handler_query(uint8_t code, void **ret_fn);
+enum pldm_event_types {
+	PLDM_SENSOR_EVENT = 0x00,
+	PLDM_EFFECTER_EVENT = 0x01,
+	PLDM_REDFISH_TASK_EXECUTED_EVENT = 0x02,
+	PLDM_REDFISH_MESSAGE_EVENT = 0x03,
+	PLDM_PDR_REPOSITORY_CHG_EVENT = 0x04,
+	PLDM_MESSAGE_POLL_EVENT = 0x05,
+	PLDM_HEARTBEAT_TIMER_ELAPSED_EVENT = 0x06
+};
 
+typedef enum pldm_sensor_event_class {
+	PLDM_SENSOR_OP_STATE,
+	PLDM_STATE_SENSOR_STATE,
+	PLDM_NUMERIC_SENSOR_STATE
+} pldm_sensor_event_class_t;
+
+typedef enum pldm_effecter_event_class { PLDM_EFFECTER_OP_STATE } pldm_effecter_event_class_t;
+
+enum pldm_platform_event_status {
+	PLDM_EVENT_NO_LOGGING = 0x00,
+	PLDM_EVENT_LOGGING_DISABLED = 0x01,
+	PLDM_EVENT_LOG_FULL = 0x02,
+	PLDM_EVENT_ACCEPTED_FOR_LOGGING = 0x03,
+	PLDM_EVENT_LOGGED = 0x04,
+	PLDM_EVENT_LOGGING_REJECTED = 0x05
+};
+
+struct pldm_platform_event_message_req {
+	uint8_t format_version;
+	uint8_t tid;
+	uint8_t event_class;
+	uint8_t event_data[1];
+} __attribute__((packed));
+
+struct pldm_platform_event_message_resp {
+	uint8_t completion_code;
+	uint8_t platform_event_status;
+} __attribute__((packed));
+
+struct pldm_sensor_event_data {
+	uint16_t sensor_id;
+	uint8_t sensor_event_class_type;
+	uint8_t event_class_data[1];
+} __attribute__((packed));
+
+struct pldm_sensor_event_state_sensor_state {
+	uint8_t sensor_offset;
+	uint8_t event_state;
+	uint8_t previous_event_state;
+} __attribute__((packed));
+
+struct pldm_sensor_event_numeric_sensor_state {
+	uint8_t event_state;
+	uint8_t previous_event_state;
+	uint8_t sensor_data_size;
+	uint8_t present_reading[1];
+} __attribute__((packed));
+
+struct pldm_sensor_event_sensor_op_state {
+	uint8_t present_op_state;
+	uint8_t previous_op_state;
+} __attribute__((packed));
+
+struct pldm_effecter_event_data {
+	uint16_t effecter_id;
+	uint8_t effecter_event_class;
+	uint8_t present_op_state;
+	uint8_t previous_op_state;
+} __attribute__((packed));
+
+uint8_t pldm_monitor_handler_query(uint8_t code, void **ret_fn);
+uint8_t pldm_platform_event_request(void *mctp_inst, mctp_ext_params ext_params,
+				    uint8_t event_class, const uint8_t *event_data,
+				    uint8_t event_data_length);
+uint8_t pldm_send_sensor_event(void *mctp_inst, mctp_ext_params ext_params, uint16_t sensor_id,
+			       pldm_sensor_event_class_t sensor_event_class,
+			       const uint8_t *sensor_event_data, uint8_t event_data_length);
+uint16_t pldm_platform_monitor_read(void *mctp_inst, mctp_ext_params ext_params,
+				    pldm_platform_monitor_commands_t cmd, uint8_t *req,
+				    uint16_t req_len, uint8_t *rbuf, uint16_t rbuf_len);
+uint8_t pldm_send_effecter_event(void *mctp_inst, mctp_ext_params ext_params,
+				 struct pldm_effecter_event_data event_data);
 #ifdef __cplusplus
 }
 #endif
