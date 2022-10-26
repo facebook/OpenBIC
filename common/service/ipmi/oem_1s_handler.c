@@ -252,6 +252,22 @@ __weak void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 		status =
 			fw_update_cxl(offset, length, &msg->data[7], (target & IS_SECTOR_END_MASK));
 
+	} else if (target == PRoT_FLASH_UPDATE ||
+		   (target == (PRoT_FLASH_UPDATE | IS_SECTOR_END_MASK))) {
+		if (offset > BIOS_UPDATE_MAX_OFFSET) {
+			msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+			return;
+		}
+
+		int pos = pal_get_prot_flash_position();
+		if (pos == -1) {
+			msg->completion_code = CC_INVALID_PARAM;
+			return;
+		}
+
+		status = fw_update(offset, length, &msg->data[7], (target & IS_SECTOR_END_MASK),
+				   pos);
+
 	} else {
 		msg->completion_code = CC_INVALID_DATA_FIELD;
 		return;
@@ -594,6 +610,19 @@ __weak void OEM_1S_READ_FW_IMAGE(ipmi_msg *msg)
 		if (!pal_switch_bios_spi_mux(GPIO_LOW)) {
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			return;
+		}
+	} else if (target == PRoT_FLASH_UPDATE) {
+		int pos = pal_get_prot_flash_position();
+
+		if (pos == -1) {
+			msg->completion_code = CC_INVALID_PARAM;
+		} else {
+			if (read_fw_image(offset, length, msg->data, pos)) {
+				msg->completion_code = CC_UNSPECIFIED_ERROR;
+			} else {
+				msg->data_len = length;
+				msg->completion_code = CC_SUCCESS;
+			}
 		}
 	} else {
 		msg->completion_code = CC_INVALID_DATA_FIELD;
