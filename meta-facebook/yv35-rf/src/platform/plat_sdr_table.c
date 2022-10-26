@@ -81,7 +81,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"RF MB Inlet Temp",
+		"RF MB_Inlet Temp",
 	},
 	{
 		// TMP75 on CXL temperature
@@ -142,7 +142,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"RF CXL_cntr_Temp",
+		"RF CXL_Cntr Temp",
 	},
 	{
 		// P5V STBY ADC voltage
