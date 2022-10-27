@@ -18,7 +18,7 @@
 # alphabetical order.
 PLATFORM_NAME_MAP = {
     "obat-cb": "Artemis : Colter Bay",
-    "obgt-cc": "Grand Teton : Clear Creek",
+    "obgt-cc": "Grand Teton : Cascade Creek",
     "obwc-mb": "Waimea Canyon : MainBoard",
     "oby3-dl": "Yosemite v3 : Delta Lake",
     "oby3-vf": "Yosemite v3 : Vernal Falls",
