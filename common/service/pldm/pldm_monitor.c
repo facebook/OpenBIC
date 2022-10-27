@@ -17,10 +17,30 @@
 #include <logging/log.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "sensor.h"
 #include "pldm.h"
 
 LOG_MODULE_DECLARE(pldm);
+
+K_FIFO_DEFINE(send_event_pkt_fifo);
+
+struct pldm_event_pkt {
+	void *fifo_reserved; /* 1st word reserved for use by fifo */
+	uint8_t event_class;
+	uint16_t id;
+	uint8_t ext_class;
+	uint8_t event_data[PLDM_MONITOR_EVENT_DATA_SIZE_MAX];
+	uint8_t event_data_length;
+};
+
+static struct pldm_event_receiver_info {
+	mctp *mctp_inst_p;
+	mctp_ext_params ext_params;
+} event_receiver_info = {
+	.mctp_inst_p = NULL,
+	.ext_params = { 0 },
+};
 
 static uint8_t get_sensor_data_size(pldm_sensor_readings_data_type_t data_type)
 {
@@ -173,9 +193,11 @@ static uint8_t pldm_encode_sensor_event_data(struct pldm_sensor_event_data *sens
 	return PLDM_SUCCESS;
 }
 
-uint8_t pldm_send_sensor_event(void *mctp_inst, mctp_ext_params ext_params, uint16_t sensor_id,
-			       pldm_sensor_event_class_t sensor_event_class,
-			       const uint8_t *sensor_event_data, uint8_t event_data_length)
+static uint8_t pldm_send_sensor_event_message(void *mctp_inst, mctp_ext_params ext_params,
+					      uint16_t sensor_id,
+					      pldm_sensor_event_class_t sensor_event_class,
+					      const uint8_t *sensor_event_data,
+					      uint8_t event_data_length)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(sensor_event_data, PLDM_ERROR_INVALID_DATA);
@@ -188,29 +210,43 @@ uint8_t pldm_send_sensor_event(void *mctp_inst, mctp_ext_params ext_params, uint
 		return PLDM_ERROR;
 	}
 
-	return pldm_platform_event_request(
+	return pldm_platform_event_message_req(
 		mctp_inst, ext_params, PLDM_SENSOR_EVENT, (uint8_t *)&sensor_event,
 		sizeof(struct pldm_sensor_event_data) + event_data_length - 1);
 }
 
-uint8_t pldm_send_effecter_event(void *mctp_inst, mctp_ext_params ext_params,
-				 struct pldm_effecter_event_data event_data)
+static uint8_t pldm_send_effecter_event_message(void *mctp_inst, mctp_ext_params ext_params,
+						uint16_t effecter_id,
+						pldm_effecter_event_class_t effecter_event_class,
+						const uint8_t *effecter_event_data,
+						uint8_t event_data_length)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(effecter_event_data, PLDM_ERROR_INVALID_DATA);
 
-	if (event_data.effecter_event_class != PLDM_EFFECTER_OP_STATE) {
-		LOG_ERR("Unsupport effecter event class, (%d)", event_data.effecter_event_class);
+	if (effecter_event_class != PLDM_EFFECTER_OP_STATE) {
+		LOG_ERR("Unsupport effecter event class, (%d)", effecter_event_class);
 		return PLDM_ERROR;
 	}
 
-	return pldm_platform_event_request(mctp_inst, ext_params, PLDM_EFFECTER_EVENT,
-					   (uint8_t *)&event_data,
-					   sizeof(struct pldm_effecter_event_data));
+	if (event_data_length != sizeof(struct pldm_effeter_event_op_state)) {
+		LOG_ERR("Invalid event data length, (%d)", event_data_length);
+		return PLDM_ERROR_INVALID_LENGTH;
+	}
+
+	struct pldm_effecter_event_data effecter_event = { 0 };
+	effecter_event.effecter_id = effecter_id;
+	effecter_event.effecter_event_class = effecter_event_class;
+	memcpy(effecter_event.event_class_data, effecter_event_data, event_data_length);
+
+	return pldm_platform_event_message_req(
+		mctp_inst, ext_params, PLDM_EFFECTER_EVENT, (uint8_t *)&effecter_event,
+		sizeof(struct pldm_effecter_event_data) + event_data_length - 1);
 }
 
-uint8_t pldm_platform_event_request(void *mctp_inst, mctp_ext_params ext_params,
-				    uint8_t event_class, const uint8_t *event_data,
-				    uint8_t event_data_length)
+uint8_t pldm_platform_event_message_req(void *mctp_inst, mctp_ext_params ext_params,
+					uint8_t event_class, const uint8_t *event_data,
+					uint8_t event_data_length)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(event_data, PLDM_ERROR_INVALID_DATA);
@@ -247,8 +283,149 @@ uint8_t pldm_platform_event_request(void *mctp_inst, mctp_ext_params ext_params,
 	return PLDM_SUCCESS;
 }
 
+static void process_event_message_queue()
+{
+	struct pldm_event_pkt *pkt;
+
+	while ((pkt = k_fifo_get(&send_event_pkt_fifo, K_NO_WAIT)) != NULL) {
+		if (pldm_send_platform_event(pkt->event_class, pkt->id, pkt->ext_class,
+					     pkt->event_data,
+					     pkt->event_data_length) != PLDM_SUCCESS) {
+			LOG_ERR("Send event failed, event_class (0x%x) id (0x%x) ext_class (%x)",
+				pkt->event_class, pkt->id, pkt->ext_class);
+			LOG_HEXDUMP_ERR(pkt->event_data, pkt->event_data_length, "Event data:");
+		} else {
+			LOG_DBG("Send event succeeded, event_class (0x%x) id (0x%x) ext_class (%x)",
+				pkt->event_class, pkt->id, pkt->ext_class);
+			LOG_HEXDUMP_DBG(pkt->event_data, pkt->event_data_length, "Event data:");
+		}
+
+		SAFE_FREE(pkt);
+		k_sleep(K_MSEC(1000));
+	}
+}
+
+K_WORK_DELAYABLE_DEFINE(send_event_pkt_work, process_event_message_queue);
+
+static uint8_t send_event_to_queue(uint8_t event_class, uint16_t id, uint8_t ext_class,
+				   const uint8_t *event_data, uint8_t event_data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(event_data, PLDM_ERROR);
+
+	static uint8_t count = 0;
+	struct pldm_event_pkt *pkt;
+
+	if (event_data_length > PLDM_MONITOR_EVENT_DATA_SIZE_MAX) {
+		LOG_ERR("Invalid event data length, (%d)", event_data_length);
+		return PLDM_ERROR_INVALID_LENGTH;
+	}
+
+	if (count > PLDM_MONITOR_EVENT_QUEUE_MSG_NUM_MAX - 1) {
+		LOG_ERR("Number of messages in the queue has reached maximum");
+		return PLDM_ERROR;
+	}
+
+	pkt = (struct pldm_event_pkt *)malloc(sizeof(struct pldm_event_pkt));
+
+	if (!pkt) {
+		LOG_ERR("Event packet memory allocate failed");
+		return PLDM_ERROR;
+	}
+
+	pkt->event_class = event_class;
+	pkt->id = id;
+	pkt->ext_class = ext_class;
+	pkt->event_data_length = event_data_length;
+
+	memcpy(pkt->event_data, event_data, event_data_length);
+
+	k_fifo_put(&send_event_pkt_fifo, pkt);
+	count++;
+
+	return PLDM_SUCCESS;
+}
+
+uint8_t pldm_send_platform_event(uint8_t event_class, uint16_t id, uint8_t ext_class,
+				 const uint8_t *event_data, uint8_t event_data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(event_data, PLDM_ERROR);
+
+	struct pldm_event_receiver_info *event_receiver_info_p = &event_receiver_info;
+
+	if (!event_receiver_info_p->mctp_inst_p) {
+		return send_event_to_queue(event_class, id, ext_class, event_data,
+					   event_data_length);
+	}
+
+	switch (event_class) {
+	case PLDM_SENSOR_EVENT:
+		return pldm_send_sensor_event_message(event_receiver_info_p->mctp_inst_p,
+						      event_receiver_info_p->ext_params, id,
+						      ext_class, event_data, event_data_length);
+	case PLDM_EFFECTER_EVENT:
+		return pldm_send_effecter_event_message(event_receiver_info_p->mctp_inst_p,
+							event_receiver_info_p->ext_params, id,
+							ext_class, event_data, event_data_length);
+	default:
+		LOG_ERR("Unsupported event class, (%d)", event_class);
+		return PLDM_ERROR;
+	}
+}
+
+uint8_t pldm_set_event_receiver(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
+				uint16_t *resp_len, void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
+
+	struct pldm_set_event_receiver_req *req_p = (struct pldm_set_event_receiver_req *)buf;
+	uint8_t *completion_code_p = resp;
+	mctp_ext_params *ext_params_p = (mctp_ext_params *)ext_params;
+	*resp_len = 1;
+
+	if (len != sizeof(struct pldm_set_event_receiver_req)) {
+		*completion_code_p = PLDM_ERROR_INVALID_LENGTH;
+		return PLDM_SUCCESS;
+	}
+
+	if (req_p->event_message_global_enable >
+	    PLDM_EVENT_MESSAGE_GLOBAL_ENABLE_ASYNC_KEEP_ALIVE) {
+		LOG_ERR("Unsupport event message global enable, (%d)",
+			req_p->event_message_global_enable);
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+		return PLDM_SUCCESS;
+	}
+
+	/* Only support MCTP protocol type currently */
+	if (req_p->transport_protocol_type != PLDM_TRANSPORT_PROTOCOL_TYPE_MCTP) {
+		LOG_ERR("Unsupport transport protocol type, (%d)", req_p->transport_protocol_type);
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+		return PLDM_SUCCESS;
+	}
+
+	if (req_p->event_receiver_address_info != ext_params_p->ep) {
+		LOG_ERR("Require set event receiver EID (0x%x) not match command sender (0x%x)",
+			req_p->event_receiver_address_info, ext_params_p->ep);
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+		return PLDM_SUCCESS;
+	}
+
+	event_receiver_info.mctp_inst_p = (mctp *)mctp_inst;
+	memcpy(&event_receiver_info.ext_params, ext_params_p, sizeof(*ext_params_p));
+
+	*completion_code_p = PLDM_SUCCESS;
+
+	k_work_schedule(&send_event_pkt_work, K_MSEC(1000));
+
+	return PLDM_SUCCESS;
+}
+
 static pldm_cmd_handler pldm_monitor_cmd_tbl[] = {
 	{ PLDM_MONITOR_CMD_CODE_GET_SENSOR_READING, pldm_get_sensor_reading },
+	{ PLDM_MONITOR_CMD_CODE_SET_EVENT_RECEIVER, pldm_set_event_receiver },
 };
 
 uint8_t pldm_monitor_handler_query(uint8_t code, void **ret_fn)
