@@ -335,6 +335,8 @@ typedef struct _pmic_init_arg {
 
 typedef struct _ina233_init_arg_ {
 	bool is_init;
+	float current_lsb;
+	float r_shunt;
 } ina233_init_arg;
 
 typedef struct _max16550a_init_arg_ {
