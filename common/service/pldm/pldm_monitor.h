@@ -38,14 +38,18 @@ typedef enum pldm_platform_monitor_commands {
 #define PLDM_MONITOR_SENSOR_EVENT_NUMERIC_SENSOR_STATE_MIN_DATA_LENGTH 4
 #define PLDM_MONITOR_SENSOR_EVENT_NUMERIC_SENSOR_STATE_MAX_DATA_LENGTH 7
 
-enum pldm_sensor_readings_data_type {
+#define PLDM_MONITOR_SENSOR_DATA_SIZE_INT8 1
+#define PLDM_MONITOR_SENSOR_DATA_SIZE_INT16 2
+#define PLDM_MONITOR_SENSOR_DATA_SIZE_INT32 4
+
+typedef enum pldm_sensor_readings_data_type {
 	PLDM_SENSOR_DATA_SIZE_UINT8,
 	PLDM_SENSOR_DATA_SIZE_SINT8,
 	PLDM_SENSOR_DATA_SIZE_UINT16,
 	PLDM_SENSOR_DATA_SIZE_SINT16,
 	PLDM_SENSOR_DATA_SIZE_UINT32,
 	PLDM_SENSOR_DATA_SIZE_SINT32
-};
+} pldm_sensor_readings_data_type_t;
 
 enum pldm_sensor_operational_state {
 	PLDM_SENSOR_ENABLED,

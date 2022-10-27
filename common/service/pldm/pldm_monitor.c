@@ -22,6 +22,24 @@
 
 LOG_MODULE_DECLARE(pldm);
 
+static uint8_t get_sensor_data_size(pldm_sensor_readings_data_type_t data_type)
+{
+	switch (data_type) {
+	case PLDM_SENSOR_DATA_SIZE_UINT8:
+	case PLDM_SENSOR_DATA_SIZE_SINT8:
+		return PLDM_MONITOR_SENSOR_DATA_SIZE_INT8;
+	case PLDM_SENSOR_DATA_SIZE_UINT16:
+	case PLDM_SENSOR_DATA_SIZE_SINT16:
+		return PLDM_MONITOR_SENSOR_DATA_SIZE_INT16;
+	case PLDM_SENSOR_DATA_SIZE_UINT32:
+	case PLDM_SENSOR_DATA_SIZE_SINT32:
+		return PLDM_MONITOR_SENSOR_DATA_SIZE_INT32;
+	default:
+		LOG_ERR("Unsupported data type, (%d)", data_type);
+		return 0;
+	}
+}
+
 uint8_t pldm_get_sensor_reading(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
 				uint16_t *resp_len, void *ext_params)
 {
@@ -80,7 +98,7 @@ uint8_t pldm_get_sensor_reading(void *mctp_inst, uint8_t *buf, uint16_t len, uin
 
 ret:
 	/* Only support 4-bytes unsinged sensor data */
-	res_p->sensor_data_size = PLDM_SENSOR_DATA_SIZE_UINT32;
+	res_p->sensor_data_size = get_sensor_data_size(PLDM_SENSOR_DATA_SIZE_UINT32);
 	res_p->sensor_event_message_enable = PLDM_EVENTS_DISABLED;
 	res_p->previous_state =
 		(res_p->completion_code == PLDM_SUCCESS) ? PLDM_SENSOR_NORMAL : PLDM_SENSOR_UNKNOWN;
