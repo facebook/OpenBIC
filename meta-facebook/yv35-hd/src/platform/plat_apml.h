@@ -14,14 +14,20 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_DEF_H
-#define PLAT_DEF_H
+#ifndef PLAT_APML_H
+#define PLAT_APML_H
 
+#include "apml.h"
 #include "plat_i2c.h"
 
-#define HOST_KCS_PORT kcs3
-#define BMC_USB_PORT "CDC_ACM_0"
+#define APML_BUS I2C_BUS14
+#define SB_RMI_ADDR 0x3C
+#define SB_TSI_ADDR 0x4C
+#define TSI_HIGH_TEMP_THRESHOLD 0x5F
+#define TSI_TEMP_ALERT_UPDATE_RATE 0x0A
 
-#define ENABLE_APML
+bool get_tsi_status();
+void reset_tsi_status();
+void set_tsi_threshold();
 
 #endif

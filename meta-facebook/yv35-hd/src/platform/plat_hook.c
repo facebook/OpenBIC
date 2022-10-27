@@ -23,9 +23,10 @@
 #include "plat_sensor_table.h"
 #include "i2c-mux-tca9548.h"
 #include "logging/log.h"
-#include "apml.h"
 #include "libipmi.h"
 #include "ipmi.h"
+#include "plat_apml.h"
+#include "power_status.h"
 
 #define ADJUST_ADM1278_CURRENT(x) (x * 0.94)
 #define ADJUST_ADM1278_POWER(x) (x * 0.95)
@@ -317,6 +318,15 @@ bool post_amd_tsi_read(uint8_t sensor_num, void *args, int *reading)
 
 	static bool is_cpu_throttle_assert = false;
 	static uint8_t deassert_count = 0;
+
+	if (!get_tsi_status()) {
+		LOG_DBG("TSI not initialized.");
+		return true;
+	}
+	if (!get_post_status()) {
+		LOG_DBG("Post code not complete.");
+		return true;
+	}
 
 	uint8_t tsi_status = 0;
 	if (apml_read_byte(I2C_BUS14, TSI_ADDR, SBTSI_STATUS, &tsi_status)) {
