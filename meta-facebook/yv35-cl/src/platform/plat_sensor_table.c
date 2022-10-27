@@ -519,6 +519,8 @@ void pal_extend_sensor_config()
 	CARD_STATUS _2ou_status = get_2ou_status();
 
 	int arg_index = (_2ou_status.present) ? 1 : 0;
+	int gpio_state = (_2ou_status.present) ? GPIO_HIGH : GPIO_LOW;
+	gpio_set(HSC_SET_EN_R, gpio_state);
 
 	switch (hsc_module) {
 	case HSC_MODULE_ADM1278:
