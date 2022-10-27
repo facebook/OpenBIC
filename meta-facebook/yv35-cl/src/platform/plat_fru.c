@@ -60,13 +60,18 @@ void pal_load_fru_config(void)
 	memcpy(&fru_config, &plat_fru_config, sizeof(plat_fru_config));
 }
 
-int set_bios_version(EEPROM_ENTRY *entry)
+int set_bios_version(EEPROM_ENTRY *entry, uint8_t block_index)
 {
 	CHECK_NULL_ARG_WITH_RETURN(entry, -1);
 
+	if (block_index >= BIOS_FW_VERSION_BLOCK_NUM)
+		return -1;
+
 	bool ret = false;
 	entry->config = plat_bios_version_area_config;
-	entry->data_len = BIOS_FW_VERSION_MAX_SIZE;
+	if (block_index == 1)
+		entry->config.start_offset += BIOS_FW_VERSION_SECOND_BLOCK_OFFSET;
+	entry->data_len = BIOS_FW_VERSION_BLOCK_MAX_SIZE;
 
 	ret = eeprom_write(entry);
 	if (ret == false) {
@@ -77,13 +82,18 @@ int set_bios_version(EEPROM_ENTRY *entry)
 	return 0;
 }
 
-int get_bios_version(EEPROM_ENTRY *entry)
+int get_bios_version(EEPROM_ENTRY *entry, uint8_t block_index)
 {
 	CHECK_NULL_ARG_WITH_RETURN(entry, -1);
 
+	if (block_index >= BIOS_FW_VERSION_BLOCK_NUM)
+		return -1;
+
 	bool ret = false;
 	entry->config = plat_bios_version_area_config;
-	entry->data_len = BIOS_FW_VERSION_MAX_SIZE;
+	if (block_index == 1)
+		entry->config.start_offset += BIOS_FW_VERSION_SECOND_BLOCK_OFFSET;
+	entry->data_len = BIOS_FW_VERSION_BLOCK_MAX_SIZE;
 
 	ret = eeprom_read(entry);
 	if (ret == false) {
