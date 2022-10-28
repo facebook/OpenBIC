@@ -322,15 +322,9 @@ static uint8_t access_RMI_mailbox(apml_msg *msg)
 		return APML_ERROR;
 	}
 
-	/* wait for the requested command to complete */
-	if (!check_mailbox_command_complete(msg, MAILBOX_COMPLETE_RETRY_MAX)) {
-		printf("[%s] command not complete, retry %d times.\n", __func__, RETRY_MAX);
-		return APML_ERROR;
-	}
-
 	/* wait for SwAlertSts to be set */
 	uint8_t status;
-	for (i = 0; i < RETRY_MAX; i++) {
+	for (i = 0; i < MAILBOX_COMPLETE_RETRY_MAX; i++) {
 		if (apml_read_byte(msg->bus, msg->target_addr, SBRMI_STATUS, &status)) {
 			printf("[%s] read SwAlertSts failed.\n", __func__);
 			return APML_ERROR;
@@ -339,9 +333,13 @@ static uint8_t access_RMI_mailbox(apml_msg *msg)
 			break;
 		}
 		k_msleep(WAIT_TIME_MS);
+		if (!get_post_status()) {
+			return APML_ERROR;
+		}
 	}
-	if (i == RETRY_MAX) {
-		printf("[%s] SwAlertSts not be set, retry %d times.\n", __func__, RETRY_MAX);
+	if (i == MAILBOX_COMPLETE_RETRY_MAX) {
+		printf("[%s] SwAlertSts not be set, retry %d times.\n", __func__,
+		       MAILBOX_COMPLETE_RETRY_MAX);
 		return APML_ERROR;
 	}
 
