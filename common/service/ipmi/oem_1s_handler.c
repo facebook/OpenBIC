@@ -43,7 +43,7 @@
 #include "util_sys.h"
 #include <logging/log.h>
 #ifdef ENABLE_APML
-#include "apml.h"
+#include "plat_apml.h"
 #endif
 #include "pcc.h"
 #include "hal_wdt.h"

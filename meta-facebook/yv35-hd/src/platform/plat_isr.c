@@ -28,18 +28,17 @@
 #include "pcc.h"
 #include "libutil.h"
 #include "logging/log.h"
-#include "apml.h"
 #include "plat_def.h"
 #include "plat_pmic.h"
+#include "plat_apml.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
 void ISR_POST_COMPLETE()
 {
 	set_post_status(FM_BIOS_POST_CMPLT_BIC_N);
-	if (apml_write_byte(I2C_BUS14, SB_TSI_ADDR, SBTSI_HIGH_TEMP_INTEGER_THRESHOLD,
-			    TSI_HIGH_TEMP_THRESHOLD)) {
-		LOG_ERR("Failed to set TSI high temperature threshold.");
+	if (get_post_status()) {
+		set_tsi_threshold();
 	}
 }
 
@@ -438,4 +437,9 @@ void ISR_UV_DETECT()
 			LOG_ERR("Failed to add under voltage sel.");
 		}
 	}
+}
+
+void IST_PLTRST()
+{
+	reset_tsi_status();
 }
