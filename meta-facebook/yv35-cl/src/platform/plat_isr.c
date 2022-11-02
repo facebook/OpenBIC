@@ -26,6 +26,7 @@
 #include "plat_ipmi.h"
 #include "plat_sensor_table.h"
 #include "plat_i2c.h"
+#include "plat_pmic.h"
 #include "oem_1s_handler.h"
 #include "hal_gpio.h"
 #include "hal_i2c.h"
@@ -112,8 +113,11 @@ void ISR_POST_COMPLETE()
 
 K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_delayed_status);
 K_WORK_DELAYABLE_DEFINE(set_DC_off_10s_work, set_DC_off_delayed_status);
+K_WORK_DELAYABLE_DEFINE(read_pmic_critical_work, read_pmic_error_via_i3c);
 #define DC_ON_5_SECOND 5
 #define DC_OFF_10_SECOND 10
+// The PMIC needs a total of 100ms from CAMP signal assertion to complete the write operation
+#define READ_PMIC_CRITICAL_ERROR_MS 100
 void ISR_DC_ON()
 {
 	set_DC_status(PWRGD_SYS_PWROK);
@@ -128,6 +132,9 @@ void ISR_DC_ON()
 	} else {
 		set_DC_on_delayed_status();
 		k_work_schedule(&set_DC_off_10s_work, K_SECONDS(DC_OFF_10_SECOND));
+
+		// Read PMIC error when DC off
+		k_work_schedule(&read_pmic_critical_work, K_MSEC(READ_PMIC_CRITICAL_ERROR_MS));
 
 		if ((gpio_get(FM_SLPS3_PLD_N) == GPIO_HIGH) &&
 		    (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH)) {
