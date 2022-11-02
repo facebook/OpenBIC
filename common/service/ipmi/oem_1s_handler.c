@@ -1961,7 +1961,14 @@ __weak void OEM_1S_BMC_IPMB_ACCESS(ipmi_msg *msg)
 	msg->completion_code = CC_UNSPECIFIED_ERROR;
 
 #endif
+}
 
+__weak void OEM_1S_GET_BIOS_VERSION(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
 	return;
 }
 
@@ -2183,6 +2190,10 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_BMC_IPMB_ACCESS:
 		LOG_DBG("Received 1S BMC IPMB Access command");
 		OEM_1S_BMC_IPMB_ACCESS(msg);
+		break;
+	case CMD_OEM_1S_GET_BIOS_VERSION:
+		LOG_DBG("Received 1S Get BIOS version command");
+		OEM_1S_GET_BIOS_VERSION(msg);
 		break;
 	default:
 		LOG_ERR("Invalid OEM message, netfn(0x%x) cmd(0x%x)", msg->netfn, msg->cmd);
