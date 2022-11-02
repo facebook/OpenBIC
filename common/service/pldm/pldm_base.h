@@ -46,6 +46,12 @@ enum pldm_completion_codes {
 	PLDM_LATER_RESP = 0x30,
 };
 
+enum pldm_transport_protocol_type {
+	PLDM_TRANSPORT_PROTOCOL_TYPE_MCTP = 0x00,
+	PLDM_TRANSPORT_PROTOCOL_TYPE_NCSI = 0x01,
+	PLDM_TRANSPORT_PROTOCOL_TYPE_OEM = 0xFF,
+};
+
 struct _set_tid_req {
 	uint8_t tid;
 } __attribute__((packed));

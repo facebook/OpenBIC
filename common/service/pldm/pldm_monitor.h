@@ -26,12 +26,17 @@ extern "C" {
 /* command number of pldm type 0x02 : PLDM for platform monitor and control */
 typedef enum pldm_platform_monitor_commands {
 	PLDM_MONITOR_CMD_CODE_GET_SENSOR_READING = 0x11,
+	PLDM_MONITOR_CMD_CODE_SET_EVENT_RECEIVER = 0x04,
 	PLDM_MONITOR_CMD_CODE_PLATFORM_EVENT_MESSAGE = 0x0A,
 } pldm_platform_monitor_commands_t;
 
 /* define size of request */
 #define PLDM_GET_SENSOR_READING_REQ_BYTES 3
 
+/* The maximum event data size of event type currently support */
+#define PLDM_MONITOR_EVENT_DATA_SIZE_MAX 7
+/* The maximum event message number in the queue */
+#define PLDM_MONITOR_EVENT_QUEUE_MSG_NUM_MAX 15
 #define PLDM_MONITOR_SENSOR_SUPPORT_MAX 0xFF
 #define PLDM_MONITOR_SENSOR_EVENT_SENSOR_OP_STATE_DATA_LENGTH 2
 #define PLDM_MONITOR_SENSOR_EVENT_STATE_SENSOR_STATE_DATA_LENGTH 3
@@ -133,6 +138,13 @@ enum pldm_platform_event_status {
 	PLDM_EVENT_LOGGING_REJECTED = 0x05
 };
 
+enum pldm_event_message_global_enable {
+	PLDM_EVENT_MESSAGE_GLOBAL_DISABLE,
+	PLDM_EVENT_MESSAGE_GLOBAL_ENABLE_ASYNC,
+	PLDM_EVENT_MESSAGE_GLOBAL_ENABLE_POLLING,
+	PLDM_EVENT_MESSAGE_GLOBAL_ENABLE_ASYNC_KEEP_ALIVE
+};
+
 struct pldm_platform_event_message_req {
 	uint8_t format_version;
 	uint8_t tid;
@@ -172,22 +184,34 @@ struct pldm_sensor_event_sensor_op_state {
 struct pldm_effecter_event_data {
 	uint16_t effecter_id;
 	uint8_t effecter_event_class;
+	uint8_t event_class_data[1];
+} __attribute__((packed));
+
+struct pldm_effeter_event_op_state {
 	uint8_t present_op_state;
 	uint8_t previous_op_state;
 } __attribute__((packed));
 
+struct pldm_set_event_receiver_req {
+	uint8_t event_message_global_enable;
+	uint8_t transport_protocol_type;
+	uint8_t event_receiver_address_info;
+	uint16_t heartbeat_timer;
+} __attribute__((packed));
+
 uint8_t pldm_monitor_handler_query(uint8_t code, void **ret_fn);
-uint8_t pldm_platform_event_request(void *mctp_inst, mctp_ext_params ext_params,
-				    uint8_t event_class, const uint8_t *event_data,
-				    uint8_t event_data_length);
-uint8_t pldm_send_sensor_event(void *mctp_inst, mctp_ext_params ext_params, uint16_t sensor_id,
-			       pldm_sensor_event_class_t sensor_event_class,
-			       const uint8_t *sensor_event_data, uint8_t event_data_length);
+
+uint8_t pldm_platform_event_message_req(void *mctp_inst, mctp_ext_params ext_params,
+					uint8_t event_class, const uint8_t *event_data,
+					uint8_t event_data_length);
+
 uint16_t pldm_platform_monitor_read(void *mctp_inst, mctp_ext_params ext_params,
 				    pldm_platform_monitor_commands_t cmd, uint8_t *req,
 				    uint16_t req_len, uint8_t *rbuf, uint16_t rbuf_len);
-uint8_t pldm_send_effecter_event(void *mctp_inst, mctp_ext_params ext_params,
-				 struct pldm_effecter_event_data event_data);
+
+uint8_t pldm_send_platform_event(uint8_t event_class, uint16_t id, uint8_t ext_class,
+				 const uint8_t *event_data, uint8_t event_data_length);
+
 #ifdef __cplusplus
 }
 #endif
