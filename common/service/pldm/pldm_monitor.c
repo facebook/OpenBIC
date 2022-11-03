@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include "sensor.h"
 #include "pldm.h"
+#include "hal_gpio.h"
 
 LOG_MODULE_DECLARE(pldm);
 
@@ -402,7 +403,7 @@ uint8_t pldm_set_event_receiver(void *mctp_inst, uint8_t *buf, uint16_t len, uin
 	/* Only support MCTP protocol type currently */
 	if (req_p->transport_protocol_type != PLDM_TRANSPORT_PROTOCOL_TYPE_MCTP) {
 		LOG_ERR("Unsupport transport protocol type, (%d)", req_p->transport_protocol_type);
-		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+		*completion_code_p = PLDM_PLATFORM_INVALID_PROTOCOL_TYPE;
 		return PLDM_SUCCESS;
 	}
 
@@ -423,9 +424,202 @@ uint8_t pldm_set_event_receiver(void *mctp_inst, uint8_t *buf, uint16_t len, uin
 	return PLDM_SUCCESS;
 }
 
+static void oem_set_effecter_type_gpio_handler(uint8_t *buf, uint16_t len, uint8_t *resp,
+					       uint16_t *resp_len)
+{
+	CHECK_NULL_ARG(buf);
+	CHECK_NULL_ARG(resp);
+	CHECK_NULL_ARG(resp_len);
+
+	struct pldm_set_state_effecter_states_req *req_p =
+		(struct pldm_set_state_effecter_states_req *)buf;
+	uint8_t *completion_code_p = resp;
+	*resp_len = 1;
+
+	uint8_t gpio_pin = req_p->effecter_id & BIT_MASK(8);
+
+	/* Check whether the range of AST1030 gpio pins is correct */
+	if (gpio_pin > PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX) {
+		LOG_ERR("Unsupport GPIO pin number, (%d)", gpio_pin);
+		*completion_code_p = PLDM_OEM_GPIO_UNSUPPORT_RANGE;
+		return;
+	}
+
+	if (req_p->composite_effecter_count != PLDM_PLATFORM_OEM_GPIO_EFFECTER_STATE_FIELD_COUNT) {
+		LOG_ERR("Unsupport GPIO effecter count, (%d)", req_p->composite_effecter_count);
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+		return;
+	}
+
+	set_effecter_state_field_t *gpio_dir_state = &req_p->field[0];
+	set_effecter_state_field_t *gpio_val_state = &req_p->field[1];
+
+	/* Not support change GPIO direction and GPIO direciton value doesn't mater */
+	if ((gpio_dir_state->set_request != PLDM_NO_CHANGE) ||
+	    (gpio_val_state->set_request >= PLDM_SET_REQUEST_MAX)) {
+		LOG_ERR("Unsupport GPIO effecter set request, direction (%d) value (%d)",
+			gpio_dir_state->set_request, gpio_val_state->set_request);
+		*completion_code_p = PLDM_PLATFORM_UNSUPPORTED_EFFECTERSTATE;
+		return;
+	}
+
+	if ((gpio_dir_state->effecter_state >= EFFECTER_STATE_GPIO_DIRECTION_MAX) ||
+	    (gpio_val_state->effecter_state >= EFFECTER_STATE_GPIO_VALUE_MAX)) {
+		LOG_ERR("Unsupport GPIO effecter state, direction (%d) value (%d)",
+			gpio_dir_state->effecter_state, gpio_val_state->effecter_state);
+		*completion_code_p = PLDM_PLATFORM_INVALID_STATE_VALUE;
+		return;
+	}
+
+	/* Set output pin value only */
+	if (!gpio_get_direction(gpio_pin)) {
+		LOG_ERR("Can't set input pin (%d) value", gpio_pin);
+		*completion_code_p = PLDM_OEM_GPIO_EFFECTER_VALUE_UNKNOWN;
+		return;
+	} else {
+		if (gpio_val_state->effecter_state == EFFECTER_STATE_GPIO_VALUE_UNKNOWN) {
+			*completion_code_p = PLDM_OEM_GPIO_EFFECTER_VALUE_UNKNOWN;
+			return;
+		} else {
+			uint8_t gpio_val =
+				((gpio_val_state->effecter_state == EFFECTER_STATE_GPIO_VALUE_LOW) ?
+					 GPIO_LOW :
+					 GPIO_HIGH);
+			gpio_set(gpio_pin, gpio_val);
+			*completion_code_p = PLDM_SUCCESS;
+			return;
+		}
+	}
+}
+
+uint8_t pldm_set_state_effecter_states(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
+				       uint16_t *resp_len, void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
+
+	struct pldm_set_state_effecter_states_req *req_p =
+		(struct pldm_set_state_effecter_states_req *)buf;
+	uint8_t *completion_code_p = resp;
+	*resp_len = 1;
+
+	if (req_p->composite_effecter_count < 0x01 || req_p->composite_effecter_count > 0x08) {
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+		return PLDM_SUCCESS;
+	}
+
+	if (len != (PLDM_SET_STATE_EFFECTER_REQ_NO_STATE_FIELD_BYTES +
+		    sizeof(set_effecter_state_field_t) * req_p->composite_effecter_count)) {
+		*completion_code_p = PLDM_ERROR_INVALID_LENGTH;
+		return PLDM_SUCCESS;
+	}
+
+	uint8_t oem_effecter_type = req_p->effecter_id >> 8;
+
+	switch (oem_effecter_type) {
+	case OEM_EFFECTER_TYPE_GPIO:
+		oem_set_effecter_type_gpio_handler(buf, len, resp, resp_len);
+		break;
+	default:
+		LOG_ERR("Unsupport effecter type, (%d)", oem_effecter_type);
+		*completion_code_p = PLDM_PLATFORM_INVALID_EFFECTER_ID;
+		break;
+	}
+
+	return PLDM_SUCCESS;
+}
+
+static void oem_get_effecter_type_gpio_handler(uint8_t *buf, uint16_t len, uint8_t *resp,
+					       uint16_t *resp_len)
+{
+	CHECK_NULL_ARG(buf);
+	CHECK_NULL_ARG(resp);
+	CHECK_NULL_ARG(resp_len);
+
+	struct pldm_get_state_effecter_states_req *req_p =
+		(struct pldm_get_state_effecter_states_req *)buf;
+	struct pldm_get_state_effecter_states_resp *res_p =
+		(struct pldm_get_state_effecter_states_resp *)resp;
+
+	uint8_t gpio_pin = req_p->effecter_id & BIT_MASK(8);
+
+	if (gpio_pin > PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX) {
+		LOG_ERR("Unsupport GPIO pin number, (%d)", gpio_pin);
+		res_p->completion_code = PLDM_OEM_GPIO_UNSUPPORT_RANGE;
+		return;
+	}
+
+	get_effecter_state_field_t *gpio_dir_state = &res_p->field[0];
+	get_effecter_state_field_t *gpio_val_state = &res_p->field[1];
+
+	if (!gpio_cfg[gpio_pin].is_init) {
+		LOG_WRN("Pin %d is not configured as GPIO", gpio_pin);
+		gpio_dir_state->effecter_op_state = gpio_val_state->effecter_op_state =
+			PLDM_EFFECTER_DISABLED;
+		gpio_dir_state->previous_state = gpio_dir_state->pending_state =
+			EFFECTER_STATE_GPIO_DIRECTION_UNKNOWN;
+		gpio_val_state->previous_state = gpio_val_state->pending_state =
+			EFFECTER_STATE_GPIO_VALUE_UNKNOWN;
+	} else {
+		gpio_dir_state->effecter_op_state = gpio_val_state->effecter_op_state =
+			PLDM_EFFECTER_ENABLED_NOUPDATEPENDING;
+		gpio_dir_state->previous_state = gpio_dir_state->pending_state =
+			(!gpio_get_direction(gpio_pin) ? EFFECTER_STATE_GPIO_DIRECTION_INPUT :
+							 EFFECTER_STATE_GPIO_DIRECTION_OUTPUT);
+		gpio_val_state->previous_state = gpio_val_state->pending_state =
+			(!gpio_get(gpio_pin) ? EFFECTER_STATE_GPIO_VALUE_LOW :
+					       EFFECTER_STATE_GPIO_VALUE_HIGH);
+	}
+
+	*resp_len = PLDM_GET_STATE_EFFECTER_RESP_NO_STATE_FIELD_BYTES +
+		    (sizeof(get_effecter_state_field_t) *
+		     PLDM_PLATFORM_OEM_GPIO_EFFECTER_STATE_FIELD_COUNT);
+	res_p->composite_effecter_count = PLDM_PLATFORM_OEM_GPIO_EFFECTER_STATE_FIELD_COUNT;
+	res_p->completion_code = PLDM_SUCCESS;
+}
+
+uint8_t pldm_get_state_effecter_states(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
+				       uint16_t *resp_len, void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
+
+	struct pldm_get_state_effecter_states_req *req_p =
+		(struct pldm_get_state_effecter_states_req *)buf;
+	struct pldm_get_state_effecter_states_resp *res_p =
+		(struct pldm_get_state_effecter_states_resp *)resp;
+	*resp_len = 1;
+
+	if (len != sizeof(struct pldm_get_state_effecter_states_req)) {
+		res_p->completion_code = PLDM_ERROR_INVALID_LENGTH;
+		return PLDM_SUCCESS;
+	}
+
+	uint8_t oem_effecter_type = req_p->effecter_id >> 8;
+
+	switch (oem_effecter_type) {
+	case OEM_EFFECTER_TYPE_GPIO:
+		oem_get_effecter_type_gpio_handler(buf, len, resp, resp_len);
+		break;
+	default:
+		res_p->completion_code = PLDM_PLATFORM_INVALID_EFFECTER_ID;
+		break;
+	}
+
+	return PLDM_SUCCESS;
+}
+
 static pldm_cmd_handler pldm_monitor_cmd_tbl[] = {
 	{ PLDM_MONITOR_CMD_CODE_GET_SENSOR_READING, pldm_get_sensor_reading },
 	{ PLDM_MONITOR_CMD_CODE_SET_EVENT_RECEIVER, pldm_set_event_receiver },
+	{ PLDM_MONITOR_CMD_CODE_SET_STATE_EFFECTER_STATES, pldm_set_state_effecter_states },
+	{ PLDM_MONITOR_CMD_CODE_GET_STATE_EFFECTER_STATES, pldm_get_state_effecter_states },
 };
 
 uint8_t pldm_monitor_handler_query(uint8_t code, void **ret_fn)

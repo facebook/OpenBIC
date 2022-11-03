@@ -28,10 +28,16 @@ typedef enum pldm_platform_monitor_commands {
 	PLDM_MONITOR_CMD_CODE_GET_SENSOR_READING = 0x11,
 	PLDM_MONITOR_CMD_CODE_SET_EVENT_RECEIVER = 0x04,
 	PLDM_MONITOR_CMD_CODE_PLATFORM_EVENT_MESSAGE = 0x0A,
+	PLDM_MONITOR_CMD_CODE_SET_STATE_EFFECTER_STATES = 0x39,
+	PLDM_MONITOR_CMD_CODE_GET_STATE_EFFECTER_STATES = 0x3A,
 } pldm_platform_monitor_commands_t;
 
 /* define size of request */
 #define PLDM_GET_SENSOR_READING_REQ_BYTES 3
+#define PLDM_SET_STATE_EFFECTER_REQ_NO_STATE_FIELD_BYTES 3
+
+/* Define size of response */
+#define PLDM_GET_STATE_EFFECTER_RESP_NO_STATE_FIELD_BYTES 2
 
 /* The maximum event data size of event type currently support */
 #define PLDM_MONITOR_EVENT_DATA_SIZE_MAX 7
@@ -46,6 +52,9 @@ typedef enum pldm_platform_monitor_commands {
 #define PLDM_MONITOR_SENSOR_DATA_SIZE_INT8 1
 #define PLDM_MONITOR_SENSOR_DATA_SIZE_INT16 2
 #define PLDM_MONITOR_SENSOR_DATA_SIZE_INT32 4
+
+#define PLDM_PLATFORM_OEM_GPIO_EFFECTER_STATE_FIELD_COUNT 2
+#define PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX 167
 
 typedef enum pldm_sensor_readings_data_type {
 	PLDM_SENSOR_DATA_SIZE_UINT8,
@@ -65,6 +74,42 @@ enum pldm_sensor_operational_state {
 	PLDM_SENSOR_INITIALIZING,
 	PLDM_SENSOR_SHUTTINGDOWN,
 	PLDM_SENSOR_INTEST
+};
+
+enum pldm_effecter_operational_state {
+	PLDM_EFFECTER_ENABLED_UPDATEPENDING,
+	PLDM_EFFECTER_ENABLED_NOUPDATEPENDING,
+	PLDM_EFFECTER_DISABLED,
+	PLDM_EFFECTER_UNAVAILABLE,
+	PLDM_EFFECTER_STATUSUNKNOWN,
+	PLDM_EFFECTER_FAILED,
+	PLDM_EFFECTER_INITIALIZING,
+	PLDM_EFFECTER_SHUTTINGDOWN,
+	PLDM_EFFECTER_INTEST
+};
+
+enum pldm_oem_effecter_type {
+	OEM_EFFECTER_TYPE_GPIO = 0xFF,
+};
+
+enum set_request {
+	PLDM_NO_CHANGE = 0x00,
+	PLDM_REQUEST_SET = 0x01,
+	PLDM_SET_REQUEST_MAX,
+};
+
+enum oem_effecter_states_gpio_direction {
+	EFFECTER_STATE_GPIO_DIRECTION_UNKNOWN = 0x00,
+	EFFECTER_STATE_GPIO_DIRECTION_INPUT = 0x01,
+	EFFECTER_STATE_GPIO_DIRECTION_OUTPUT = 0x02,
+	EFFECTER_STATE_GPIO_DIRECTION_MAX,
+};
+
+enum oem_effecter_states_gpio_value {
+	EFFECTER_STATE_GPIO_VALUE_UNKNOWN = 0x00,
+	EFFECTER_STATE_GPIO_VALUE_LOW = 0x01,
+	EFFECTER_STATE_GPIO_VALUE_HIGH = 0x02,
+	EFFECTER_STATE_GPIO_VALUE_MAX
 };
 
 enum pldm_sensor_present_state {
@@ -90,9 +135,27 @@ enum pldm_sensor_event_message_enable {
 };
 
 enum pldm_platform_completion_codes {
+	/* GetStateSensorReadings */
 	PLDM_PLATFORM_INVALID_SENSOR_ID = 0x80,
 	PLDM_PLATFORM_REARM_UNAVAILABLE_IN_PRESENT_STATE = 0x81,
 
+	/* SetEventReceiver */
+	PLDM_PLATFORM_INVALID_PROTOCOL_TYPE = 0x80,
+	PLDM_PLATFORM_ENABLE_METHOD_NOT_SUPPORTED = 0x81,
+	PLDM_PLATFORM_HEARTBEAT_FREQUENCY_TOO_HIGH = 0x82,
+
+	/* SetStateEffecterStates, GetStateEffecterStates */
+	PLDM_PLATFORM_INVALID_EFFECTER_ID = 0x80,
+	PLDM_PLATFORM_INVALID_STATE_VALUE = 0x81,
+	PLDM_PLATFORM_UNSUPPORTED_EFFECTERSTATE = 0x82,
+
+};
+
+enum pldm_oem_platform_completion_codes {
+	/* SetStateEffecterStates, GetStateEffecterStates */
+	PLDM_OEM_GPIO_UNSUPPORT_RANGE = 0x83,
+	PLDM_OEM_GPIO_EFFECTER_INVALID_SET_VALUE = 0x84,
+	PLDM_OEM_GPIO_EFFECTER_VALUE_UNKNOWN = 0x85,
 };
 
 struct pldm_get_sensor_reading_req {
@@ -197,6 +260,33 @@ struct pldm_set_event_receiver_req {
 	uint8_t transport_protocol_type;
 	uint8_t event_receiver_address_info;
 	uint16_t heartbeat_timer;
+} __attribute__((packed));
+
+typedef struct state_field_state_effecter_set {
+	uint8_t set_request;
+	uint8_t effecter_state;
+} __attribute__((packed)) set_effecter_state_field_t;
+
+typedef struct state_field_state_effecter_get {
+	uint8_t effecter_op_state;
+	uint8_t pending_state;
+	uint8_t previous_state;
+} __attribute__((packed)) get_effecter_state_field_t;
+
+struct pldm_set_state_effecter_states_req {
+	uint16_t effecter_id;
+	uint8_t composite_effecter_count;
+	set_effecter_state_field_t field[8];
+} __attribute__((packed));
+
+struct pldm_get_state_effecter_states_req {
+	uint16_t effecter_id;
+} __attribute__((packed));
+
+struct pldm_get_state_effecter_states_resp {
+	uint8_t completion_code;
+	uint8_t composite_effecter_count;
+	get_effecter_state_field_t field[8];
 } __attribute__((packed));
 
 uint8_t pldm_monitor_handler_query(uint8_t code, void **ret_fn);
