@@ -19,6 +19,7 @@
 #include "ipmi.h"
 #include "kcs.h"
 #include "libutil.h"
+#include "plat_def.h"
 #include "plat_ipmb.h"
 #include "plat_i2c.h"
 #include "timer.h"
@@ -715,9 +716,15 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 						bridge_msg->data[3] =
 							IPMB_config_table[ipmb_cfg.index]
 								.channel; // return response source as request target
+#ifdef ENABLE_OEM_BRIDGE_NETFN_SHIFT
+						bridge_msg->data[4] =
+							current_msg_rx->buffer
+								.netfn << 2; // Shift response NetFn to bridge response
+#else
 						bridge_msg->data[4] =
 							current_msg_rx->buffer
 								.netfn; // Move target response to bridge response data
+#endif
 						bridge_msg->data[5] = current_msg_rx->buffer.cmd;
 						bridge_msg->data[6] =
 							current_msg_rx->buffer.completion_code;
