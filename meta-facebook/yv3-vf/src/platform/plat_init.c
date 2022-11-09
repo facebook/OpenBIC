@@ -30,6 +30,7 @@
 #include "plat_power_seq.h"
 #include "plat_led.h"
 #include "plat_gpio.h"
+#include "plat_util.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -88,8 +89,7 @@ void pal_set_sys_status()
 
 	SSDLEDInit();
 
-	set_DC_status(FM_POWER_EN);
-	set_DC_on_delayed_status();
+	delay_function(100, plat_set_dc_status, FM_POWER_EN, 0);
 
 	check_irq_fault();
 	// BIC up 1 sec handler

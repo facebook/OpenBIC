@@ -42,14 +42,14 @@ void pwrgd_p12v_aux_int_handler(void)
 
 void power_en_int_handler(void)
 {
-	set_DC_status(FM_POWER_EN);
-	set_DC_on_delayed_status();
 	/* disable 12V switch first when the system power off */
 	if (!gpio_get(FM_POWER_EN)) {
+		plat_set_dc_status(FM_POWER_EN, 0);
 		uint8_t i;
 		for (i = M2_IDX_E_A; i < M2_IDX_E_MAX; i++)
 			m2_dev_power_switch(i, 0);
 	} else {
+		delay_function(100, plat_set_dc_status, FM_POWER_EN, 0);
 		if (get_e1s_hsc_config() != CONFIG_HSC_BYPASS)
 			gpio_set(FM_P12V_EDGE_EN, gpio_get(FM_POWER_EN));
 		/* Bypass config doesn't has HSC, so direct call p12v aux handler here*/
