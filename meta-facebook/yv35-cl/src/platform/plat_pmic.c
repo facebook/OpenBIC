@@ -127,7 +127,7 @@ void monitor_pmic_error_handler()
 				}
 
 				// Compare error pattern, if status change add SEL to BMC and update record
-				ret = compare_pmic_error(dimm_id, pmic_msg.data,
+				ret = compare_pmic_error(dimm_id, pmic_msg.data, pmic_msg.data_len,
 							 READ_PMIC_ERROR_VIA_ME);
 				if (ret < 0) {
 					continue;
@@ -200,7 +200,8 @@ int pal_set_pmic_error_flag(uint8_t dimm_id, uint8_t error_type)
 	return SUCCESS;
 }
 
-int compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data, uint8_t read_path)
+int compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data, uint8_t pmic_err_data_len,
+		       uint8_t read_path)
 {
 	uint8_t err_index = 0, reg_index = 0, data_index = 0;
 	uint8_t pattern = 0;
@@ -221,6 +222,11 @@ int compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data, uint8_t read_pat
 			default:
 				LOG_ERR("Wrong path 0x%x to read PMIC error", read_path);
 				return -1;
+			}
+
+			// Not enough data
+			if (data_index >= pmic_err_data_len) {
+				break;
 			}
 
 			pattern = pmic_err_pattern[err_index][reg_index];
@@ -420,7 +426,8 @@ void read_pmic_error_via_i3c()
 		}
 
 		// Compare error pattern, add SEL to BMC and update record
-		ret = compare_pmic_error(dimm_id, i3c_msg.data, READ_PMIC_ERROR_VIA_I3C);
+		ret = compare_pmic_error(dimm_id, i3c_msg.data, i3c_msg.rx_len,
+					 READ_PMIC_ERROR_VIA_I3C);
 		if (ret < 0) {
 			continue;
 		}
