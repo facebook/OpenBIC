@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <logging/log.h>
 
 #include "hal_gpio.h"
 #include "libutil.h"
@@ -31,6 +32,180 @@
 #include "util_sys.h"
 #include "isl69254iraz_t.h"
 #include "xdpe12284c.h"
+
+LOG_MODULE_DECLARE(ipmi);
+
+#define I2C_MAX_RETRY 3
+
+#define FEXP_BIC_I2C_WRITE_IF   0x20
+#define FEXP_BIC_I2C_READ_IF    0x21
+#define FEXP_BIC_I2C_UPDATE_IF  0x22
+#define FEXP_BIC_IPMI_I2C_SW_IF 0x23
+
+enum {
+	BIC_COMMAND_STATUS = 0x23
+};
+
+#define SNOWFLAKE_BIC_CMD_STATUS_SIZE 3
+#define SNOWFLAKE_BIC_BOOTLOADER_RESPONSE_SIZE 5 // ack 2 + response 3
+#define SNOWFLAKE_BIC_BOOTLOADER_ACK_SIZE 2
+#define EXTEND_MSG_OUT_CC_OFFSET 4
+
+static void fexp_bic_i2c_read(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	msg->data[EXTEND_MSG_OUT_CC_OFFSET] = 0;
+
+	I2C_MSG i2c_msg = {.bus = IPMB_EXP1_BUS, .target_addr = BIC1_I2C_ADDRESS};
+	i2c_msg.rx_len = SNOWFLAKE_BIC_BOOTLOADER_ACK_SIZE;
+	if (i2c_master_read(&i2c_msg, I2C_MAX_RETRY)) {
+		LOG_ERR("read response from snowflake bootloader failed");
+		msg->data[EXTEND_MSG_OUT_CC_OFFSET] = 1;
+	}
+
+	if (i2c_msg.data[0] != 0x00 || i2c_msg.data[1] != 0xCC)
+		msg->data[EXTEND_MSG_OUT_CC_OFFSET] = 1;
+
+	return;
+}
+
+static void fexp_bic_i2c_write(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+	
+	I2C_MSG i2c_msg = {.bus = IPMB_EXP1_BUS, .target_addr = BIC1_I2C_ADDRESS};
+	i2c_msg.tx_len = msg->data_len;
+	memcpy(i2c_msg.data, msg->data, msg->data_len);
+	if (i2c_master_write(&i2c_msg, I2C_MAX_RETRY)) {
+		LOG_ERR("write to snowflake bootloader failed");
+		msg->data[EXTEND_MSG_OUT_CC_OFFSET] = 1;
+	} else {
+		msg->data[EXTEND_MSG_OUT_CC_OFFSET] = 0;
+	}
+
+	return;
+}
+
+static void fexp_bic_update(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	I2C_MSG i2c_msg = {.bus = IPMB_EXP1_BUS, .target_addr = BIC1_I2C_ADDRESS};
+
+	// step 1. send "get status" command
+	i2c_msg.tx_len = SNOWFLAKE_BIC_CMD_STATUS_SIZE;
+	i2c_msg.data[0] = SNOWFLAKE_BIC_CMD_STATUS_SIZE;
+	i2c_msg.data[1] = BIC_COMMAND_STATUS;
+	i2c_msg.data[2] = BIC_COMMAND_STATUS;
+	if (i2c_master_write(&i2c_msg, I2C_MAX_RETRY)) {
+		LOG_ERR("write command to snowflake bootloader failed");
+		return;
+	}
+
+	// step 2. read response data of "get status"
+	memset(i2c_msg.data, 0, sizeof(i2c_msg.data));
+	i2c_msg.tx_len = 0;
+	i2c_msg.rx_len = SNOWFLAKE_BIC_BOOTLOADER_RESPONSE_SIZE;
+	if (i2c_master_read(&i2c_msg, I2C_MAX_RETRY)) {
+		LOG_ERR("read response from snowflake bootloader failed");
+		return;
+	}
+
+	// step 3. send ack
+	memset(i2c_msg.data, 0, sizeof(i2c_msg.data));
+	i2c_msg.rx_len = 0;
+	i2c_msg.tx_len = 1;
+	i2c_msg.data[0] = 0xCC;
+	if (i2c_master_write(&i2c_msg, I2C_MAX_RETRY)) {
+		LOG_ERR("write ack to snowflake bootloader failed");
+		return;
+	}
+
+	// step 4. brdige message to bootloader
+	// LOG_HEXDUMP_INF(msg->data, msg->data_len, "bridge message to bootloader");
+	i2c_msg.tx_len = msg->data_len;
+	memcpy(i2c_msg.data, msg->data, msg->data_len);
+	if (i2c_master_write(&i2c_msg, I2C_MAX_RETRY)) {
+		LOG_ERR("brdige message to snowflake bootloader failed");
+		return;
+	}
+
+	// step 5. read the ack for previous step
+	memset(i2c_msg.data, 0xFF, sizeof(i2c_msg.data));
+	i2c_msg.tx_len = 0;
+	i2c_msg.rx_len = SNOWFLAKE_BIC_BOOTLOADER_ACK_SIZE;
+	if (i2c_master_read(&i2c_msg, I2C_MAX_RETRY)) {
+		LOG_ERR("read response from snowflake bootloader failed");
+		return;
+	}
+
+	msg->data[EXTEND_MSG_OUT_CC_OFFSET] = 1;
+}
+
+int pal_extend_msg_out_interface_handler(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, 0);
+	// LOG_HEXDUMP_INF(msg, 32, "req msg");
+
+	static uint8_t fexp_i2c_freq = I2C_SPEED_FAST_PLUS;
+	const uint8_t target_IF = msg->data[0];
+	// LOG_ERR("target_IF = %x", target_IF);
+
+	// remove target_IF
+	memmove(msg->data, msg->data + 1, msg->data_len - 1);
+	msg->data_len -= 1;
+	
+	switch (target_IF) {
+	case FEXP_BIC_I2C_WRITE_IF:
+		fexp_bic_i2c_write(msg);
+		break;
+
+	case FEXP_BIC_I2C_READ_IF:
+		fexp_bic_i2c_read(msg);
+		break;
+
+	case FEXP_BIC_I2C_UPDATE_IF:
+		fexp_bic_update(msg);
+		break;
+
+	case FEXP_BIC_IPMI_I2C_SW_IF:
+		msg->data[EXTEND_MSG_OUT_CC_OFFSET] = 1;
+
+		if ((msg->data[0] == 0) && (fexp_i2c_freq == I2C_SPEED_FAST_PLUS)) {
+			// switch to 100K
+			fexp_i2c_freq = I2C_SPEED_STANDARD;
+			ipmb_suspend(2);
+		} else if ((msg->data[0] == 1) && (fexp_i2c_freq == I2C_SPEED_STANDARD)) {
+			// switch to 1M
+			fexp_i2c_freq = I2C_SPEED_FAST_PLUS;
+			ipmb_resume(2);
+		} else {
+			msg->data[EXTEND_MSG_OUT_CC_OFFSET] = 0;
+		}
+
+		if (msg->data[EXTEND_MSG_OUT_CC_OFFSET])
+			i2c_freq_set(IPMB_EXP1_BUS, fexp_i2c_freq, 1);
+		break;
+
+	default:
+		LOG_ERR("unsupported target interface %x", target_IF);
+		break;
+	}
+
+	msg->completion_code = CC_SUCCESS;
+	msg->data_len = 5;
+	msg->data[0] = IANA_ID & 0xFF;
+	msg->data[1] = (IANA_ID >> 8) & 0xFF;
+	msg->data[2] = (IANA_ID >> 16) & 0xFF;
+	msg->data[3] = target_IF;
+	// LOG_HEXDUMP_INF(msg, 32, "resp msg");
+
+	ipmb_error status = ipmb_send_response(msg, IPMB_inf_index_map[msg->InF_source]);
+	if (status != IPMB_ERROR_SUCCESS)
+			LOG_ERR("OEM_MSG_OUT send IPMB resp fail status: %x", status);			
+	return 0;
+}
 
 void OEM_1S_GET_CARD_TYPE(ipmi_msg *msg)
 {

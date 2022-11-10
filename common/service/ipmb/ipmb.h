@@ -81,7 +81,7 @@
 #define IPMB_SRC_LUN_MASK 0x03
 #define IPMB_RETRY_DELAY_MS 500
 #define IPMB_POLLING_TIME_MS 1
-#define IPMB_SEQ_TIMEOUT_MS 1000
+#define IPMB_SEQ_TIMEOUT_MS 3000
 #define IPMB_SEQ_TIMEOUT_STACK_SIZE 512
 #define I2C_RETRY_TIME 5
 
@@ -182,5 +182,7 @@ void ipmb_init(void);
 ipmb_error ipmb_send_request(ipmi_msg *req, uint8_t index);
 ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index);
 ipmb_error ipmb_read(ipmi_msg *msg, uint8_t bus);
+void ipmb_suspend(uint8_t index);
+void ipmb_resume(uint8_t index);
 
 #endif

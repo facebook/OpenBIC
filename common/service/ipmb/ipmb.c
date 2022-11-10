@@ -1182,6 +1182,35 @@ __weak bool pal_load_ipmb_config(void)
 	return true;
 }
 
+void ipmb_suspend(uint8_t index)
+{
+	uint8_t sl = strlen(k_thread_name_get(IPMB_TX_ID[index]));
+	uint8_t *name = (uint8_t *)malloc(sl + 1);
+	if (!name)
+		return;
+
+	snprintf(name, sl + 1, "%s", k_thread_name_get(IPMB_TX_ID[index]));
+	printf("ipmb_suspend %d, %s\n", index, name);
+	k_thread_suspend(IPMB_TX_ID[index]);
+	free(name);
+
+	uint32_t *addr = (uint32_t *)0x7e7b0200;
+	printf("[%s:%d]%x val %x\n", __func__, __LINE__, (uint32_t)addr, *addr);
+}
+
+void ipmb_resume(uint8_t index)
+{
+	uint8_t sl = strlen(k_thread_name_get(IPMB_TX_ID[index]));
+	uint8_t *name = (uint8_t *)malloc(sl + 1);
+	if (!name)
+		return;
+
+	snprintf(name, sl + 1, "%s", k_thread_name_get(IPMB_TX_ID[index]));
+	printf("ipmb_resume %d, %s\n", index, name);
+	k_thread_resume(IPMB_TX_ID[index]);
+	free(name);
+}
+
 void ipmb_init(void)
 {
 	uint8_t index;
