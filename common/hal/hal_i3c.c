@@ -189,6 +189,36 @@ int i3c_transfer(I3C_MSG *msg)
 	return -ret;
 }
 
+int i3c_spd_reg_read(I3C_MSG *msg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, -EINVAL);
+
+	if (!dev_i3c[msg->bus]) {
+		LOG_ERR("Failed to read spd 0x%x due to undefined bus%u", msg->target_addr,
+			msg->bus);
+		return -ENODEV;
+	}
+
+	int ret = 0;
+	struct i3c_dev_desc *desc;
+	uint8_t offset[2] = { msg->data[0] & GENMASK(5, 0), 0 };
+
+	desc = find_matching_desc(dev_i3c[msg->bus], msg->target_addr);
+	if (desc == NULL) {
+		LOG_ERR("Failed to transfer messages to address 0x%x due to unknown address",
+			msg->target_addr);
+		return -ENODEV;
+	}
+
+	ret = i3c_jesd403_read(desc, offset, sizeof(offset), msg->data, msg->rx_len);
+	if (ret != 0) {
+		LOG_ERR("Failed to read SPD bus0x%x addr0x%x offset0x%x, ret: %d", msg->bus,
+			msg->target_addr, offset[0], ret);
+	}
+
+	return ret;
+}
+
 void util_init_i3c(void)
 {
 #ifdef DEV_I3C_0

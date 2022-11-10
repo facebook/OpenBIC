@@ -22,7 +22,6 @@
 #include <logging/log.h>
 #include "ipmb.h"
 #include "ipmi.h"
-#include "intel_dimm.h"
 #include "pmic.h"
 #include "sensor.h"
 #include "libipmi.h"
@@ -34,6 +33,7 @@
 #include "plat_sensor_table.h"
 #include "plat_class.h"
 #include "plat_i2c.h"
+#include "plat_dimm.h"
 
 LOG_MODULE_REGISTER(plat_pmic);
 
@@ -41,9 +41,8 @@ K_THREAD_STACK_DEFINE(monitor_pmic_error_stack, MONITOR_PMIC_ERROR_STACK_SIZE);
 struct k_thread monitor_pmic_error_thread;
 k_tid_t monitor_pmic_error_tid;
 
-static const char dimm_lable[MAX_COUNT_DIMM][4] = { "A0", "A2", "A3", "A4", "A6", "A7" };
-static const uint8_t pmic_err_data_index[MAX_LEN_GET_PMIC_ERROR_INFO] = { 3, 4, 6, 7, 8, 9 };
-static const uint8_t pmic_err_pattern[MAX_COUNT_PMIC_ERROR_TYPE][MAX_LEN_GET_PMIC_ERROR_INFO] = {
+static const uint8_t pmic_err_data_index[MAX_LEN_I3C_GET_PMIC_ERR] = { 3, 4, 6, 7, 8, 9 };
+static const uint8_t pmic_err_pattern[MAX_COUNT_PMIC_ERROR_TYPE][MAX_LEN_I3C_GET_PMIC_ERR] = {
 	// R05,  R06,  R08,  R09,  R0A,  R0B
 	{ 0x02, 0x08, 0x00, 0x00, 0x00, 0x00 }, // SWAOUT_OV
 	{ 0x02, 0x04, 0x00, 0x00, 0x00, 0x00 }, // SWBOUT_OV
@@ -66,9 +65,7 @@ static const uint8_t pmic_err_pattern[MAX_COUNT_PMIC_ERROR_TYPE][MAX_LEN_GET_PMI
 
 static bool is_pmic_error_flag[MAX_COUNT_DIMM][MAX_COUNT_PMIC_ERROR_TYPE];
 
-static uint8_t pmic_i3c_err_data_index[MAX_LEN_GET_PMIC_ERROR_INFO] = { 0, 1, 3, 4, 5, 6 };
-static uint8_t pmic_i3c_addr_list[MAX_COUNT_DIMM / 2] = { PMIC_A0_A4_ADDR, PMIC_A2_A6_ADDR,
-							  PMIC_A3_A7_ADDR };
+static uint8_t pmic_i3c_err_data_index[MAX_LEN_I3C_GET_PMIC_ERR] = { 0, 1, 3, 4, 5, 6 };
 
 void start_monitor_pmic_error_thread()
 {
@@ -84,127 +81,38 @@ void start_monitor_pmic_error_thread()
 
 void monitor_pmic_error_handler()
 {
-	ipmb_error status = 0;
 	int ret = 0, dimm_id = 0;
-	uint8_t seq_source = 0xFF;
-	memory_write_read_req pmic_req;
-	ipmi_msg pmic_msg;
+	uint8_t error_data[MAX_LEN_I3C_GET_PMIC_ERR] = { 0 };
 
 	// initialize PMIC error flag array
 	memset(is_pmic_error_flag, false, sizeof(is_pmic_error_flag));
 
 	while (1) {
-		// Check sensor poll enable
-		if (get_sensor_poll_enable_flag() == false) {
-			k_msleep(MONITOR_PMIC_ERROR_TIME_MS);
-			continue;
-		}
-
-		// If post isn't complete, BIC doesn't monitor PMIC error
-		if (get_post_status() == false) {
-			k_msleep(MONITOR_PMIC_ERROR_TIME_MS);
-			continue;
-		}
-
 		for (dimm_id = 0; dimm_id < MAX_COUNT_DIMM; dimm_id++) {
-			// Read PMIC error
-			memset(&pmic_req, 0, sizeof(memory_write_read_req));
-			ret = get_dimm_info(dimm_id, &pmic_req.smbus_identifier,
-					    &pmic_req.smbus_address);
+			if (!get_post_status()) {
+				break;
+			}
+
+			if (!is_dimm_present(dimm_id)) {
+				continue;
+			}
+
+			memset(&error_data, 0, sizeof(error_data));
+			ret = get_pmic_error_raw_data(dimm_id, error_data);
 			if (ret < 0) {
 				continue;
 			}
-			pmic_req.intel_id = INTEL_ID;
-			pmic_req.addr_size = PMIC_ADDR_SIZE;
-			pmic_req.addr_value = PMIC_POR_ERROR_LOG_ADDR_VAL;
-			pmic_req.data_len = MAX_LEN_GET_PMIC_ERROR_INFO;
-			pmic_msg = construct_ipmi_message(seq_source, NETFN_NM_REQ,
-							  CMD_SMBUS_READ_MEMORY, SELF, ME_IPMB,
-							  PMIC_READ_DATA_LEN, (uint8_t *)&pmic_req);
 
-			// Double check post status before send IPMB to get PMIC error
-			if (get_post_status() == false) {
-				continue;
-			}
-			status = ipmb_read(&pmic_msg, IPMB_inf_index_map[pmic_msg.InF_target]);
-			if (status == IPMB_ERROR_SUCCESS) {
-				// Check completion code before compare error
-				if (pmic_msg.completion_code != CC_SUCCESS) {
-					continue;
-				}
-
-				// Compare error pattern, if status change add SEL to BMC and update record
-				ret = compare_pmic_error(dimm_id, pmic_msg.data, pmic_msg.data_len,
-							 READ_PMIC_ERROR_VIA_ME);
-				if (ret < 0) {
-					continue;
-				}
-
-			} else {
-				LOG_ERR("Failed to get PMIC error, dimm %s bus %d addr 0x%x status 0x%x",
-					dimm_lable[dimm_id], pmic_req.smbus_identifier,
-					pmic_req.smbus_address, status);
+			// Compare error pattern, add SEL to BMC and update record
+			ret = compare_pmic_error(dimm_id, error_data, sizeof(error_data),
+						 READ_PMIC_ERROR_VIA_I3C);
+			if (ret < 0) {
 				continue;
 			}
 		}
 
 		k_msleep(MONITOR_PMIC_ERROR_TIME_MS);
 	}
-}
-
-int get_dimm_info(uint8_t dimm_id, uint8_t *bus, uint8_t *addr)
-{
-	int ret = 0;
-
-	if ((bus == NULL) || (addr == NULL)) {
-		return -1;
-	}
-
-	if (dimm_id >= MAX_COUNT_DIMM) {
-		LOG_ERR("Wrong dimm index 0x%x", dimm_id);
-		return -1;
-	}
-
-	if (dimm_id < (MAX_COUNT_DIMM / 2)) {
-		*bus = BUS_ID_DIMM_CHANNEL_0_TO_3;
-	} else {
-		*bus = BUS_ID_DIMM_CHANNEL_4_TO_7;
-	}
-
-	switch (dimm_id % (MAX_COUNT_DIMM / 2)) {
-	case 0:
-		*addr = ADDR_DIMM_CHANNEL_0_4;
-		break;
-	case 1:
-		*addr = ADDR_DIMM_CHANNEL_2_6;
-		break;
-	case 2:
-		*addr = ADDR_DIMM_CHANNEL_3_7;
-		break;
-	default:
-		ret = -1;
-		LOG_ERR("Wrong dimm index 0x%x", dimm_id);
-		break;
-	}
-
-	return ret;
-}
-
-int pal_set_pmic_error_flag(uint8_t dimm_id, uint8_t error_type)
-{
-	if (dimm_id >= MAX_COUNT_DIMM) {
-		LOG_ERR("Invalid dimm id %d", dimm_id);
-		return INVALID_DIMM_ID;
-	}
-
-	if (error_type >= MAX_COUNT_PMIC_ERROR_TYPE) {
-		LOG_ERR("Invalid pmic error type 0x%x", error_type);
-		return INVALID_ERROR_TYPE;
-	}
-
-	is_pmic_error_flag[dimm_id][error_type] = true;
-
-	return SUCCESS;
 }
 
 int compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data, uint8_t pmic_err_data_len,
@@ -218,7 +126,7 @@ int compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data, uint8_t pmic_err
 	}
 
 	for (err_index = 0; err_index < MAX_COUNT_PMIC_ERROR_TYPE; err_index++) {
-		for (reg_index = 0; reg_index < MAX_LEN_GET_PMIC_ERROR_INFO; reg_index++) {
+		for (reg_index = 0; reg_index < MAX_LEN_I3C_GET_PMIC_ERR; reg_index++) {
 			switch (read_path) {
 			case READ_PMIC_ERROR_VIA_ME:
 				data_index = pmic_err_data_index[reg_index];
@@ -245,7 +153,7 @@ int compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data, uint8_t pmic_err
 		}
 
 		// All bytes of error pattern are match
-		if (reg_index == MAX_LEN_GET_PMIC_ERROR_INFO) {
+		if (reg_index == MAX_LEN_I3C_GET_PMIC_ERR) {
 			if (is_pmic_error_flag[dimm_id][err_index] == false) {
 				add_pmic_error_sel(dimm_id, err_index);
 				is_pmic_error_flag[dimm_id][err_index] = true;
@@ -258,6 +166,23 @@ int compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data, uint8_t pmic_err
 	}
 
 	return 0;
+}
+
+int pal_set_pmic_error_flag(uint8_t dimm_id, uint8_t error_type)
+{
+	if (dimm_id >= MAX_COUNT_DIMM) {
+		LOG_ERR("Invalid dimm id %d", dimm_id);
+		return INVALID_DIMM_ID;
+	}
+
+	if (error_type >= MAX_COUNT_PMIC_ERROR_TYPE) {
+		LOG_ERR("Invalid pmic error type 0x%x", error_type);
+		return INVALID_ERROR_TYPE;
+	}
+
+	is_pmic_error_flag[dimm_id][error_type] = true;
+
+	return SUCCESS;
 }
 
 void add_pmic_error_sel(uint8_t dimm_id, uint8_t error_type)
@@ -277,170 +202,57 @@ void add_pmic_error_sel(uint8_t dimm_id, uint8_t error_type)
 	}
 }
 
-int get_pmic_fault_status()
+void read_pmic_error_when_dc_off()
 {
-	uint8_t cpld_bus = 0;
-	ipmb_error status = IPMB_ERROR_UNKNOWN;
-	ipmi_msg ipmi_msg = { 0 };
-
-	// Get slot ID
-	ipmi_msg.InF_source = SELF;
-	ipmi_msg.InF_target = BMC_IPMB;
-	ipmi_msg.netfn = NETFN_OEM_REQ;
-	ipmi_msg.cmd = CMD_OEM_GET_BOARD_ID;
-	ipmi_msg.data_len = 0;
-	status = ipmb_read(&ipmi_msg, IPMB_inf_index_map[ipmi_msg.InF_target]);
-	if (status != IPMB_ERROR_SUCCESS) {
-		LOG_ERR("Failed to get slot ID, status 0x%x", status);
-		return -1;
-	}
-
-	// slot1 SB CPLD BUS is 4
-	// slot2 SB CPLD BUS is 5
-	// slot3 SB CPLD BUS is 6
-	// slot4 SB CPLD BUS is 7
-	cpld_bus = ipmi_msg.data[2] + 3;
-
-	// Read SB CPLD (BMC channel) to know which PMIC happen critical error
-	ipmi_msg.InF_source = SELF;
-	ipmi_msg.InF_target = BMC_IPMB;
-	ipmi_msg.netfn = NETFN_APP_REQ;
-	ipmi_msg.cmd = CMD_APP_MASTER_WRITE_READ;
-	ipmi_msg.data_len = 4;
-	ipmi_msg.data[0] = (cpld_bus << 1) + 1; // bus
-	ipmi_msg.data[1] = CL_CPLD_BMC_CHANNEL_ADDR; // addr
-	ipmi_msg.data[2] = 1; // read len
-	ipmi_msg.data[3] = PMIC_FAULT_STATUS_OFFSET; // offset
-	status = ipmb_read(&ipmi_msg, IPMB_inf_index_map[ipmi_msg.InF_target]);
-	if (status != IPMB_ERROR_SUCCESS) {
-		LOG_ERR("Failed to read PMIC critical error from SB CPLD (BMC channel), status 0x%x",
-			status);
-		return -1;
-	}
-
-	return ipmi_msg.data[0];
-}
-
-int switch_i3c_dimm_mux(uint8_t i3c_mux_position, uint8_t dimm_mux_position)
-{
-	I2C_MSG i2c_msg = { 0 };
-	int ret = 0, retry = 3;
-
-	i2c_msg.bus = I2C_BUS1;
-	i2c_msg.target_addr = CPLD_ADDR;
-	i2c_msg.tx_len = 2;
-	i2c_msg.rx_len = 0;
-	i2c_msg.data[0] = DIMM_I3C_MUX_CONTROL_OFFSET; // CPLD_I3C_DIMM_MUX
-	i2c_msg.data[1] = (dimm_mux_position << 1) | i3c_mux_position;
-
-	ret = i2c_master_write(&i2c_msg, retry);
-	if (ret != 0) {
-		LOG_ERR("Failed to switch I3C MUX: 0x%x, ret=%d", i3c_mux_position, ret);
-	}
-	return ret;
-}
-
-void read_pmic_error_via_i3c()
-{
-	int ret = 0, i = 0;
-	uint8_t dimm_id = 0;
-	int pmic_fault_status = 0;
+	int ret = 0, dimm_id = 0;
 	I3C_MSG i3c_msg = { 0 };
-	bool is_pmic_fault[MAX_COUNT_DIMM] = { false, false, false, false, false, false };
 
-	// Attach PMIC I3C address
-	i3c_msg.bus = I3C_BUS3;
-	for (i = 0; i < (MAX_COUNT_DIMM / 2); i++) {
-		i3c_msg.target_addr = pmic_i3c_addr_list[i];
-		ret = i3c_attach(&i3c_msg);
-		if (ret < 0) {
-			LOG_ERR("Failed to attach addr 0x%x", i3c_msg.target_addr);
-		}
-	}
-
-	// Check PMIC fault status from SB CPLD (BMC channel)
-	pmic_fault_status = get_pmic_fault_status();
-	if (pmic_fault_status < 0) {
-		LOG_ERR("Failed to read PMIC fault status.");
+	if (k_mutex_lock(&i3c_dimm_mux_mutex, K_MSEC(I3C_DIMM_MUX_MUTEX_TIMEOUT_MS))) {
+		LOG_ERR("Failed to lock I3C dimm MUX");
 		return;
-	} else if (pmic_fault_status == 0) {
-		// No PMIC critical error, doesn't need to read register
-		return;
-	}
-
-	// Check which PMIC is error
-	// DIMM PMIC Fault (1: Fault 0: Normal)
-	// bit 0: DIMM A6 A7 Fault
-	// bit 1: DIMM A4 A5 Fault
-	// bit 2: DIMM A2 A3 Fault
-	// bit 3: DIMM A0 A1 Fault
-	if (GETBIT(pmic_fault_status, 0)) {
-		is_pmic_fault[DIMM_ID_A6] = true;
-		is_pmic_fault[DIMM_ID_A7] = true;
-	}
-	if (GETBIT(pmic_fault_status, 1)) {
-		is_pmic_fault[DIMM_ID_A4] = true;
-	}
-	if (GETBIT(pmic_fault_status, 2)) {
-		is_pmic_fault[DIMM_ID_A2] = true;
-		is_pmic_fault[DIMM_ID_A3] = true;
-	}
-	if (GETBIT(pmic_fault_status, 3)) {
-		is_pmic_fault[DIMM_ID_A0] = true;
 	}
 
 	for (dimm_id = 0; dimm_id < MAX_COUNT_DIMM; dimm_id++) {
-		// If no PMIC critical error doesn't need to read
-		if (!is_pmic_fault[dimm_id]) {
+		if (!is_dimm_present(dimm_id)) {
 			continue;
 		}
 
-		// Switch I3C mux to BIC and switch DIMM mux
-		switch (dimm_id / (MAX_COUNT_DIMM / 2)) {
-		case 0:
-			switch_i3c_dimm_mux(I3C_MUX_TO_BIC, DIMM_MUX_TO_DIMM_A0A1A3);
-			break;
-		case 1:
-			switch_i3c_dimm_mux(I3C_MUX_TO_BIC, DIMM_MUX_TO_DIMM_A4A6A7);
-			break;
-		default:
-			LOG_ERR("Invalid dimm id %d", dimm_id);
-			return;
-		}
-
-		// Brocase CCC after switch DIMM mux
-		ret = i3c_brocast_ccc(&i3c_msg, I3C_CCC_RSTDAA, I3C_BROADCAST_ADDR);
+		ret = switch_i3c_dimm_mux(I3C_MUX_TO_BIC, dimm_id / (MAX_COUNT_DIMM / 2));
 		if (ret < 0) {
 			continue;
 		}
 
-		ret = i3c_brocast_ccc(&i3c_msg, I3C_CCC_SETAASA, I3C_BROADCAST_ADDR);
-		if (ret < 0) {
+		i3c_msg.bus = I3C_BUS4;
+		// I3C_CCC_RSTDAA: Reset dynamic address assignment
+		// I3C_CCC_SETAASA: Set all addresses to static address
+		ret = all_brocast_ccc(&i3c_msg);
+		if (ret != 0) {
+			LOG_ERR("Failed to brocast CCC, ret%d bus%d", ret, i3c_msg.bus);
 			continue;
 		}
 
-		// Read PMIC error via I3C
 		i3c_msg.target_addr = pmic_i3c_addr_list[dimm_id % (MAX_COUNT_DIMM / 2)];
 		i3c_msg.tx_len = 1;
-		i3c_msg.rx_len = MAX_LEN_I3C_GET_PMIC_ERROR_INFO;
-		memset(&i3c_msg.data, 0, MAX_LEN_I3C_GET_PMIC_ERROR_INFO);
+		i3c_msg.rx_len = MAX_LEN_I3C_GET_PMIC_ERR;
+		memset(&i3c_msg.data, 0, i3c_msg.rx_len);
 		i3c_msg.data[0] = PMIC_POR_ERROR_LOG_ADDR_VAL;
 
 		ret = i3c_transfer(&i3c_msg);
 		if (ret != 0) {
-			LOG_ERR("Failed to read PMIC error via I3C");
+			LOG_ERR("Failed to read DIMM %d PMIC error via I3C, ret%d", dimm_id, ret);
 			continue;
 		}
 
+		LOG_HEXDUMP_DBG(i3c_msg.data, i3c_msg.rx_len, "PMIC error data");
 		// Compare error pattern, add SEL to BMC and update record
-		ret = compare_pmic_error(dimm_id, i3c_msg.data, i3c_msg.rx_len,
+		ret = compare_pmic_error(dimm_id, &i3c_msg.data[0], i3c_msg.rx_len,
 					 READ_PMIC_ERROR_VIA_I3C);
 		if (ret < 0) {
 			continue;
 		}
 	}
 
-	// Switch I3C MUX to CPU after read finish
-	switch_i3c_dimm_mux(I3C_MUX_TO_CPU, DIMM_MUX_TO_DIMM_A0A1A3);
-	return;
+	if (k_mutex_unlock(&i3c_dimm_mux_mutex)) {
+		LOG_ERR("Failed to unlock I3C dimm MUX");
+	}
 }
