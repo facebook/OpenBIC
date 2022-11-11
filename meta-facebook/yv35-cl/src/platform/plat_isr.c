@@ -31,6 +31,7 @@
 #include "hal_gpio.h"
 #include "hal_i2c.h"
 #include "util_sys.h"
+#include "util_worker.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -88,11 +89,13 @@ static void SLP3_handler()
 }
 
 K_WORK_DELAYABLE_DEFINE(SLP3_work, SLP3_handler);
+#define DETECT_VR_WDT_DELAY_S 10
 void ISR_SLP3()
 {
 	if (gpio_get(FM_SLPS3_PLD_N) == GPIO_HIGH) {
 		printf("slp3\n");
-		k_work_schedule(&SLP3_work, K_MSEC(10000));
+		k_work_schedule_for_queue(&plat_work_q, &SLP3_work,
+					  K_SECONDS(DETECT_VR_WDT_DELAY_S));
 		return;
 	}
 	if (k_work_cancel_delayable(&SLP3_work) != 0) {
@@ -112,10 +115,8 @@ void ISR_POST_COMPLETE()
 }
 
 K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_delayed_status);
-K_WORK_DELAYABLE_DEFINE(set_DC_off_10s_work, set_DC_off_delayed_status);
 K_WORK_DELAYABLE_DEFINE(read_pmic_critical_work, read_pmic_error_via_i3c);
 #define DC_ON_5_SECOND 5
-#define DC_OFF_10_SECOND 10
 // The PMIC needs a total of 100ms from CAMP signal assertion to complete the write operation
 #define READ_PMIC_CRITICAL_ERROR_MS 100
 void ISR_DC_ON()
@@ -125,13 +126,8 @@ void ISR_DC_ON()
 	if (get_DC_status() == true) {
 		k_work_schedule(&set_DC_on_5s_work, K_SECONDS(DC_ON_5_SECOND));
 
-		if (k_work_cancel_delayable(&set_DC_off_10s_work) != 0) {
-			printf("Cancel set dc off delay work fail\n");
-		}
-		set_DC_off_delayed_status();
 	} else {
 		set_DC_on_delayed_status();
-		k_work_schedule(&set_DC_off_10s_work, K_SECONDS(DC_OFF_10_SECOND));
 
 		// Read PMIC error when DC off
 		k_work_schedule(&read_pmic_critical_work, K_MSEC(READ_PMIC_CRITICAL_ERROR_MS));
@@ -189,7 +185,8 @@ void ISR_PWRGD_CPU()
 		init_snoop_thread();
 		init_send_postcode_thread();
 		/* start thread proc_fail_handler after 10 seconds */
-		k_work_schedule(&PROC_FAIL_work, K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
+		k_work_schedule_for_queue(&plat_work_q, &PROC_FAIL_work,
+					  K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
 	} else {
 		abort_snoop_thread();
 
@@ -237,7 +234,8 @@ void ISR_CATERR()
 			printf("Cancel caterr delay work fail\n");
 		}
 		/* start thread CatErr_handler after 2 seconds */
-		k_work_schedule(&CAT_ERR_work, K_SECONDS(CATERR_START_DELAY_SECOND));
+		k_work_schedule_for_queue(&plat_work_q, &CAT_ERR_work,
+					  K_SECONDS(CATERR_START_DELAY_SECOND));
 	}
 }
 
@@ -344,7 +342,8 @@ void ISR_MB_THROTTLE()
 			LOG_ERR("Cancel caterr delay work fail");
 		}
 		/* start thread mb_throttle_handler after 4us */
-		k_work_schedule(&mb_throttle_work, K_USEC(MB_THROTTLE_DELAY_US));
+		k_work_schedule_for_queue(&plat_work_q, &mb_throttle_work,
+					  K_USEC(MB_THROTTLE_DELAY_US));
 	}
 }
 

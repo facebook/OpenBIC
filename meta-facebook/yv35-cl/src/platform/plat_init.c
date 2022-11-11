@@ -21,6 +21,7 @@
 #include "plat_class.h"
 #include "plat_gpio.h"
 #include "plat_pmic.h"
+#include "util_worker.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -35,6 +36,7 @@ void pal_pre_init()
 	init_platform_config();
 	disable_PRDY_interrupt();
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
+	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY + 1); // work queue for low priority jobs
 }
 
 void pal_device_init()
@@ -48,7 +50,6 @@ void pal_set_sys_status()
 {
 	set_DC_status(PWRGD_SYS_PWROK);
 	set_DC_on_delayed_status();
-	set_DC_off_delayed_status();
 	set_post_status(FM_BIOS_POST_CMPLT_BMC_N);
 	set_CPU_power_status(PWRGD_CPU_LVC3);
 	set_post_thread();
