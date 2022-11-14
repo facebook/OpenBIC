@@ -17,7 +17,11 @@
 #include "cmsis_os2.h"
 #include "hal_i2c.h"
 #include "ipmi.h"
+
+#ifdef CONFIG_IPMI_KCS_ASPEED
 #include "kcs.h"
+#endif
+
 #include "libutil.h"
 #include "plat_def.h"
 #include "plat_ipmb.h"

@@ -20,7 +20,11 @@
 #include <logging/log.h>
 #include "cmsis_os2.h"
 #include "ipmi.h"
+
+#ifdef CONFIG_IPMI_KCS_ASPEED
 #include "kcs.h"
+#endif
+
 #include "usb.h"
 #include <string.h>
 #include <stdlib.h>
