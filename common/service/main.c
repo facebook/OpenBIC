@@ -19,7 +19,11 @@
 #include "hal_i3c.h"
 #include "hal_wdt.h"
 #include "ipmi.h"
+
+#ifdef CONFIG_IPMI_KCS_ASPEED
 #include "kcs.h"
+#endif
+
 #include "sensor.h"
 #include "timer.h"
 #include "usb.h"
