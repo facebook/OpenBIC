@@ -84,5 +84,7 @@ void control_power_stage(uint8_t control_mode, uint8_t control_seq);
 int check_power_stage(uint8_t check_mode, uint8_t check_seq);
 bool power_on_handler(uint8_t initial_stage);
 bool power_off_handler(uint8_t initial_stage);
+void set_CXL_update_status(uint8_t set_status);
+bool get_CXL_update_status();
 
 #endif
