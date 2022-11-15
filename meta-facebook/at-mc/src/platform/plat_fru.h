@@ -14,42 +14,41 @@
  * limitations under the License.
  */
 
-#ifndef FRU_H
-#define FRU_H
+#ifndef PLAT_FRU_H
+#define PLAT_FRU_H
 
-#include "eeprom.h"
-#define FRU_CFG_NUM 5
+#include "plat_i2c.h"
+
+#define MC_FRU_PORT I2C_BUS1
+#define MC_FRU_ADDR (0xA0 >> 1)
+#define CXL_FRU_PORT I2C_BUS2
+#define CXL_FRU_ADDR (0xA8 >> 1)
+#define CXL_FRU_MUX0_ADDR (0xE0 >> 1)
+#define CXL_FRU_MUX1_ADDR (0xE2 >> 1)
 
 enum {
-	NV_ATMEL_24C02,
-	NV_ATMEL_24C64,
-	NV_ATMEL_24C128,
-	PUYA_P24C128F,
-	ST_M24C64_W,
-	ST_M24128_BW,
+	MC_FRU_ID,
+	CXL_FRU_ID1,
+	CXL_FRU_ID2,
+	CXL_FRU_ID3,
+	CXL_FRU_ID4,
+	CXL_FRU_ID5,
+	CXL_FRU_ID6,
+	CXL_FRU_ID7,
+	CXL_FRU_ID8,
+	// OTHER_FRU_ID,
+	MAX_FRU_ID,
 };
 
 enum {
-	FRU_WRITE_SUCCESS,
-	FRU_READ_SUCCESS,
-	FRU_INVALID_ID,
-	FRU_OUT_OF_RANGE,
-	FRU_FAIL_TO_ACCESS,
+	CXL_FRU_MUX0_CHANNEL0,
+	CXL_FRU_MUX0_CHANNEL1,
+	CXL_FRU_MUX0_CHANNEL2,
+	CXL_FRU_MUX0_CHANNEL3,
+	CXL_FRU_MUX0_CHANNEL4,
+	CXL_FRU_MUX0_CHANNEL5,
+	CXL_FRU_MUX0_CHANNEL6,
+	CXL_FRU_MUX0_CHANNEL7,
 };
-
-enum {
-	FRU_DEV_ACCESS_BYTE,
-	FRU_DEV_ACCESS_WORD,
-};
-
-extern EEPROM_CFG fru_config[];
-
-uint8_t get_FRU_access(uint8_t FRUID);
-uint16_t find_FRU_size(uint8_t FRUID);
-uint8_t FRU_read(EEPROM_ENTRY *entry);
-uint8_t FRU_write(EEPROM_ENTRY *entry);
-void pal_load_fru_config(void);
-void FRU_init(void);
-bool write_psb_inform(EEPROM_ENTRY *entry);
 
 #endif

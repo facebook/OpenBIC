@@ -14,42 +14,20 @@
  * limitations under the License.
  */
 
-#ifndef FRU_H
-#define FRU_H
+/*
+ * Copyright (c) 2012-2014 Wind River Systems, Inc.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-#include "eeprom.h"
-#define FRU_CFG_NUM 5
+#ifndef _PLAT_MCTP_H
+#define _PLAT_MCTP_H
 
-enum {
-	NV_ATMEL_24C02,
-	NV_ATMEL_24C64,
-	NV_ATMEL_24C128,
-	PUYA_P24C128F,
-	ST_M24C64_W,
-	ST_M24128_BW,
-};
+#include "plat_i2c.h"
 
-enum {
-	FRU_WRITE_SUCCESS,
-	FRU_READ_SUCCESS,
-	FRU_INVALID_ID,
-	FRU_OUT_OF_RANGE,
-	FRU_FAIL_TO_ACCESS,
-};
+#define I2C_BUS_BMC I2C_BUS5
+#define I2C_ADDR_BIC 0x40
 
-enum {
-	FRU_DEV_ACCESS_BYTE,
-	FRU_DEV_ACCESS_WORD,
-};
-
-extern EEPROM_CFG fru_config[];
-
-uint8_t get_FRU_access(uint8_t FRUID);
-uint16_t find_FRU_size(uint8_t FRUID);
-uint8_t FRU_read(EEPROM_ENTRY *entry);
-uint8_t FRU_write(EEPROM_ENTRY *entry);
-void pal_load_fru_config(void);
-void FRU_init(void);
-bool write_psb_inform(EEPROM_ENTRY *entry);
+void plat_mctp_init(void);
 
 #endif
