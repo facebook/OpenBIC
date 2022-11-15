@@ -25,7 +25,9 @@
 #include "plat_sensor_table.h"
 #include "plat_power_seq.h"
 #include <logging/log.h>
+#include "plat_spi.h"
 
+extern int cxl_update_stat;
 LOG_MODULE_REGISTER(power_sequence);
 
 static uint8_t power_on_seq = DEFAULT_POWER_ON_SEQ;
@@ -284,7 +286,7 @@ bool power_on_handler(uint8_t initial_stage)
 }
 
 bool power_off_handler(uint8_t initial_stage)
-{
+{	
 	bool enable_power_off_handler = true;
 	int check_power_ret = -1;
 	uint8_t control_stage = initial_stage;
@@ -303,12 +305,18 @@ bool power_off_handler(uint8_t initial_stage)
 			control_power_stage(DISABLE_POWER_MODE, CONTROL_POWER_SEQ_06);
 			break;
 		case ASIC_POWER_OFF_STAGE1:
-			control_power_stage(DISABLE_POWER_MODE, CONTROL_POWER_SEQ_04);
+			if(cxl_update_stat == POWER_OFF){
+				control_power_stage(DISABLE_POWER_MODE, CONTROL_POWER_SEQ_04);
+				break;
+			}
 			break;
 		case ASIC_POWER_OFF_STAGE2:
-			control_power_stage(DISABLE_POWER_MODE, CONTROL_POWER_SEQ_01);
-			control_power_stage(DISABLE_POWER_MODE, CONTROL_POWER_SEQ_02);
-			control_power_stage(DISABLE_POWER_MODE, CONTROL_POWER_SEQ_03);
+			if(cxl_update_stat == POWER_OFF){
+				control_power_stage(DISABLE_POWER_MODE, CONTROL_POWER_SEQ_01);
+				control_power_stage(DISABLE_POWER_MODE, CONTROL_POWER_SEQ_02);
+				control_power_stage(DISABLE_POWER_MODE, CONTROL_POWER_SEQ_03);
+				break;
+			}
 			break;
 		case BOARD_POWER_OFF_STAGE:
 			control_power_stage(DISABLE_POWER_MODE, CLK_100M_OSC_EN);
@@ -358,7 +366,7 @@ bool power_off_handler(uint8_t initial_stage)
 			control_stage = ASIC_POWER_OFF_STAGE1;
 			break;
 		case ASIC_POWER_OFF_STAGE1:
-			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_04) != 0) {
+			if (cxl_update_stat == POWER_OFF && check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_04) != 0) {
 				check_power_ret = -1;
 				break;
 			}
@@ -366,15 +374,15 @@ bool power_off_handler(uint8_t initial_stage)
 			control_stage = ASIC_POWER_OFF_STAGE2;
 			break;
 		case ASIC_POWER_OFF_STAGE2:
-			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_03) != 0) {
+			if (cxl_update_stat == POWER_OFF && check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_03) != 0) {
 				check_power_ret = -1;
 				break;
 			}
-			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_02) != 0) {
+			if (cxl_update_stat == POWER_OFF && check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_02) != 0) {
 				check_power_ret = -1;
 				break;
 			}
-			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_01) != 0) {
+			if (cxl_update_stat == POWER_OFF && check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_01) != 0) {
 				check_power_ret = -1;
 				break;
 			}

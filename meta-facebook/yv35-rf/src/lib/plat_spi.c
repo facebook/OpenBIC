@@ -21,11 +21,13 @@
 #include "util_spi.h"
 #include "util_sys.h"
 #include "plat_gpio.h"
+#include "plat_spi.h"
 
 #define CXL_FLASH_TO_BIC 1
 #define CXL_FLASH_TO_CXL 0
 
 #define CXL_UPDATE_MAX_OFFSET 0x2000000
+int cxl_update_stat = POWER_OFF;
 
 static bool switch_cxl_spi_mux(int gpio_status)
 {
@@ -66,7 +68,6 @@ static bool control_flash_power(int power_state)
 		if (!retry) {
 			break;
 		}
-
 		control_power_stage(control_mode, P1V8_ASIC_EN_R);
 		k_msleep(CHKPWR_DELAY_MSEC);
 	}
@@ -79,7 +80,7 @@ static bool control_flash_power(int power_state)
 uint8_t fw_update_cxl(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sector_end)
 {
 	uint8_t ret = FWUPDATE_UPDATE_FAIL;
-
+	cxl_update_stat = POWER_ON;
 	if (offset > CXL_UPDATE_MAX_OFFSET) {
 		return FWUPDATE_OVER_LENGTH;
 	}
@@ -99,7 +100,8 @@ uint8_t fw_update_cxl(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool 
 
 	if (sector_end || ret != FWUPDATE_SUCCESS) {
 		control_flash_power(POWER_OFF);
-		switch_cxl_spi_mux(CXL_FLASH_TO_CXL);
+		switch_cxl_spi_mux(CXL_FLASH_TO_CXL);	
+		cxl_update_stat = POWER_OFF;
 	}
 
 	return ret;
