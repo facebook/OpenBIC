@@ -329,12 +329,11 @@ void ISR_PCH_THMALTRIP()
 {
 	common_addsel_msg_t sel_msg;
 	static bool is_pch_assert = 0;
-	if (gpio_get(FM_PCH_BMC_THERMTRIP_N) == GPIO_LOW) {
-		if ((gpio_get(RST_PLTRST_BMC_N) == GPIO_HIGH) && (get_post_status() == true) &&
-		    (is_pch_assert == false)) {
-			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
-			is_pch_assert = true;
-		}
+	if ((gpio_get(FM_PCH_BMC_THERMTRIP_N) == GPIO_LOW) &&
+	    (gpio_get(RST_PLTRST_BMC_N) == GPIO_HIGH) && (get_post_status() == true) &&
+	    (is_pch_assert == false)) {
+		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+		is_pch_assert = true;
 	} else if (gpio_get(FM_PCH_BMC_THERMTRIP_N) && (is_pch_assert == true)) {
 		sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		is_pch_assert = false;
