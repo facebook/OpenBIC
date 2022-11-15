@@ -25,7 +25,9 @@
 #include "plat_sensor_table.h"
 #include "plat_power_seq.h"
 #include <logging/log.h>
+#include "plat_spi.h"
 
+extern int cxl_update_stat;
 LOG_MODULE_REGISTER(power_sequence);
 
 static uint8_t power_on_seq = DEFAULT_POWER_ON_SEQ;
@@ -135,7 +137,7 @@ int check_power_stage(uint8_t check_mode, uint8_t check_seq)
 		sel_msg.sensor_number = SENSOR_NUM_POWER_ERROR;
 		sel_msg.event_data1 =
 			((check_mode == ENABLE_POWER_MODE) ? IPMI_OEM_EVENT_OFFSET_EXP_PWRON_FAIL :
-								   IPMI_OEM_EVENT_OFFSET_EXP_PWROFF_FAIL);
+							     IPMI_OEM_EVENT_OFFSET_EXP_PWROFF_FAIL);
 		sel_msg.event_data2 =
 			((check_mode == ENABLE_POWER_MODE) ? power_on_seq : power_off_seq);
 		sel_msg.event_data3 = get_board_id();
@@ -303,12 +305,18 @@ bool power_off_handler(uint8_t initial_stage)
 			control_power_stage(DISABLE_POWER_MODE, CONTROL_POWER_SEQ_06);
 			break;
 		case ASIC_POWER_OFF_STAGE1:
-			control_power_stage(DISABLE_POWER_MODE, CONTROL_POWER_SEQ_04);
+			if (cxl_update_stat == POWER_OFF) {
+				control_power_stage(DISABLE_POWER_MODE, CONTROL_POWER_SEQ_04);
+				break;
+			}
 			break;
 		case ASIC_POWER_OFF_STAGE2:
-			control_power_stage(DISABLE_POWER_MODE, CONTROL_POWER_SEQ_01);
-			control_power_stage(DISABLE_POWER_MODE, CONTROL_POWER_SEQ_02);
-			control_power_stage(DISABLE_POWER_MODE, CONTROL_POWER_SEQ_03);
+			if (cxl_update_stat == POWER_OFF) {
+				control_power_stage(DISABLE_POWER_MODE, CONTROL_POWER_SEQ_01);
+				control_power_stage(DISABLE_POWER_MODE, CONTROL_POWER_SEQ_02);
+				control_power_stage(DISABLE_POWER_MODE, CONTROL_POWER_SEQ_03);
+				break;
+			}
 			break;
 		case BOARD_POWER_OFF_STAGE:
 			control_power_stage(DISABLE_POWER_MODE, CLK_100M_OSC_EN);
@@ -358,7 +366,8 @@ bool power_off_handler(uint8_t initial_stage)
 			control_stage = ASIC_POWER_OFF_STAGE1;
 			break;
 		case ASIC_POWER_OFF_STAGE1:
-			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_04) != 0) {
+			if (cxl_update_stat == POWER_OFF &&
+			    check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_04) != 0) {
 				check_power_ret = -1;
 				break;
 			}
@@ -366,15 +375,18 @@ bool power_off_handler(uint8_t initial_stage)
 			control_stage = ASIC_POWER_OFF_STAGE2;
 			break;
 		case ASIC_POWER_OFF_STAGE2:
-			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_03) != 0) {
+			if (cxl_update_stat == POWER_OFF &&
+			    check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_03) != 0) {
 				check_power_ret = -1;
 				break;
 			}
-			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_02) != 0) {
+			if (cxl_update_stat == POWER_OFF &&
+			    check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_02) != 0) {
 				check_power_ret = -1;
 				break;
 			}
-			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_01) != 0) {
+			if (cxl_update_stat == POWER_OFF &&
+			    check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_01) != 0) {
 				check_power_ret = -1;
 				break;
 			}
