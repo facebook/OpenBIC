@@ -482,13 +482,6 @@ void pal_extend_sensor_config()
 		break;
 	}
 
-	/* Check outlet temperature sensor type */
-	for (uint8_t index = 0; index < sensor_config_count; index++) {
-		if (sensor_config[index].type == sensor_dev_tmp431) {
-			check_outlet_temp_type(index);
-		}
-	}
-
 	switch (hsc_module) {
 	case HSC_MODULE_MP5990:
 		sensor_count = ARRAY_SIZE(mp5990_sensor_config_table);
@@ -505,6 +498,13 @@ void pal_extend_sensor_config()
 	default:
 		LOG_ERR("unsupported HSC module, HSC module: 0x%x", hsc_module);
 		break;
+	}
+
+	/* Check outlet temperature sensor type */
+	for (uint8_t index = 0; index < sensor_config_count; index++) {
+		if (sensor_config[index].type == sensor_dev_tmp431) {
+			check_outlet_temp_type(index);
+		}
 	}
 
 	return;
