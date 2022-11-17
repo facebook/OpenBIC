@@ -47,7 +47,7 @@ void BICup1secTickHandler(struct k_work *work)
 		return;
 	}
 
-	if(!init_dev_prsnt_status()) {
+	if (!init_dev_prsnt_status()) {
 		k_work_schedule((struct k_work_delayable *)work, K_SECONDS(1));
 	}
 }

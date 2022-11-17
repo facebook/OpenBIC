@@ -20,6 +20,7 @@
 #include "ipmi.h"
 #include "ipmb.h"
 #include "hal_gpio.h"
+#include "power_status.h"
 #include "plat_m2.h"
 #include "plat_class.h"
 #include "plat_util.h"
@@ -306,6 +307,12 @@ void pwrgd_p12v_aux_100ms_set(uint32_t val, uint32_t unused1)
 uint8_t pwrgd_p12v_aux_100ms_get(void)
 {
 	return is_pwrgd_p12v_aux_100ms;
+}
+
+void plat_set_dc_status(uint32_t dc_pin, uint32_t unused) // unused para for delay function
+{
+	set_DC_status(dc_pin);
+	set_DC_on_delayed_status();
 }
 
 #define DEV_PWRGD_HANDLER(idx)                                                                     \
