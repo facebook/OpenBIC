@@ -298,7 +298,7 @@ bool post_ddr5_temp_read(uint8_t sensor_num, void *args, int *reading)
 	apml_read(&mailbox_msg);
 
 	/* TS1 */
-	memset(&wrdata, 0, sizeof(mailbox_WrData));
+	memset(wrdata, 0, sizeof(mailbox_WrData));
 	temp = (uint16_t)(init_arg->ts1_temp * 4);
 
 	wrdata->command = SBRMI_MAILBOX_REPORT_DIMM_TEMP;
