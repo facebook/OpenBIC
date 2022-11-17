@@ -3260,7 +3260,7 @@ SDR_Full_sensor hotswap_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"HSC_OUTPUT_CURR_A",
+		"MB_HSC_OUTPUT_CURR_A",
 	},
 	{
 		// HSCIN power
