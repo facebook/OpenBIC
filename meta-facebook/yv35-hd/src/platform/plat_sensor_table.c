@@ -479,14 +479,15 @@ void pal_extend_sensor_config()
 	}
 
 	uint8_t board_revision = get_board_revision();
-	switch (board_revision) {
-	case SYS_BOARD_EVT_BOM2:
+	uint8_t vr_vender = (board_revision & 0x30) >> 4;
+	switch (vr_vender) {
+	case VR_VENDER_INFINEON:
 		sensor_count = ARRAY_SIZE(EVT_BOM2_sensor_config_table);
 		for (int index = 0; index < sensor_count; index++) {
 			add_sensor_config(EVT_BOM2_sensor_config_table[index]);
 		}
 		break;
-	case SYS_BOARD_EVT_BOM3:
+	case VR_VENDER_MPS:
 		sensor_count = ARRAY_SIZE(EVT_BOM3_sensor_config_table);
 		for (int index = 0; index < sensor_count; index++) {
 			add_sensor_config(EVT_BOM3_sensor_config_table[index]);

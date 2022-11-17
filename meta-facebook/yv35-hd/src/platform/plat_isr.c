@@ -378,10 +378,11 @@ void ISR_PVDDCR_CPU0_PMALERT()
 {
 	if (get_DC_status() == true) {
 		uint8_t board_rev = get_board_revision();
-		if (board_rev == SYS_BOARD_EVT_BOM2) {
+		uint8_t vr_vender = (board_rev & 0x30) >> 4;
+		if (vr_vender == VR_VENDER_INFINEON) {
 			add_vr_pmalert_sel(PVDDCR_CPU0_PMALERT_N, XDPE19283B_PVDDCR_CPU0_ADDR, 0,
 					   2);
-		} else if (board_rev == SYS_BOARD_EVT_BOM3) {
+		} else if (vr_vender == VR_VENDER_MPS) {
 			add_vr_pmalert_sel(PVDDCR_CPU0_PMALERT_N, MP2856GUT_PVDDCR_CPU0_ADDR, 0, 2);
 		} else {
 			add_vr_pmalert_sel(PVDDCR_CPU0_PMALERT_N, RAA229621_PVDDCR_CPU0_ADDR, 0, 2);
@@ -393,10 +394,11 @@ void ISR_PVDDCR_CPU1_PMALERT()
 {
 	if (get_DC_status() == true) {
 		uint8_t board_rev = get_board_revision();
-		if (board_rev == SYS_BOARD_EVT_BOM2) {
+		uint8_t vr_vender = (board_rev & 0x30) >> 4;
+		if (vr_vender == VR_VENDER_INFINEON) {
 			add_vr_pmalert_sel(PVDDCR_CPU1_PMALERT_N, XDPE19283B_PVDDCR_CPU1_ADDR, 1,
 					   2);
-		} else if (board_rev == SYS_BOARD_EVT_BOM3) {
+		} else if (vr_vender == VR_VENDER_MPS) {
 			add_vr_pmalert_sel(PVDDCR_CPU1_PMALERT_N, MP2856GUT_PVDDCR_CPU1_ADDR, 1, 2);
 		} else {
 			add_vr_pmalert_sel(PVDDCR_CPU1_PMALERT_N, RAA229621_PVDDCR_CPU1_ADDR, 1, 2);
@@ -408,9 +410,10 @@ void ISR_PVDD11_S3_PMALERT()
 {
 	if (get_DC_status() == true) {
 		uint8_t board_rev = get_board_revision();
-		if (board_rev == SYS_BOARD_EVT_BOM2) {
+		uint8_t vr_vender = (board_rev & 0x30) >> 4;
+		if (vr_vender == VR_VENDER_INFINEON) {
 			add_vr_pmalert_sel(PVDD11_S3_PMALERT_N, XDPE19283B_PVDD11_S3_ADDR, 2, 1);
-		} else if (board_rev == SYS_BOARD_EVT_BOM3) {
+		} else if (vr_vender == VR_VENDER_MPS) {
 			add_vr_pmalert_sel(PVDD11_S3_PMALERT_N, MP2856GUT_PVDD11_S3_ADDR, 2, 1);
 		} else {
 			add_vr_pmalert_sel(PVDD11_S3_PMALERT_N, RAA229621_PVDD11_S3_ADDR, 2, 1);
