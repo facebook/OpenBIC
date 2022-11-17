@@ -54,7 +54,7 @@ int pal_record_bios_fw_version(uint8_t *buf, uint8_t size)
 
 	// Check the written BIOS version is the same with the stored
 	ret = memcmp(&get_bios_ver.data[0], &set_bios_ver.data[0],
-		     BIOS_FW_VERSION_MAX_SIZE * sizeof(uint8_t));
+		     BIOS_FW_VERSION_BLOCK_MAX_SIZE * sizeof(uint8_t));
 	if (ret == 0) {
 		LOG_DBG("The Written bios version is the same with the stored bios version in EEPROM");
 	} else {

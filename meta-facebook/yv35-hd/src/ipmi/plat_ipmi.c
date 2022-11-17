@@ -16,16 +16,18 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <logging/log.h>
 #include "ipmi.h"
 #include "plat_ipmi.h"
 #include "plat_class.h"
+#include "libutil.h"
+#include "plat_fru.h"
+
+LOG_MODULE_REGISTER(plat_ipmi);
 
 void OEM_1S_GET_CARD_TYPE(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		printf("[%s] Failed due to parameter *msg is NULL\n", __func__);
-		return;
-	}
+	CHECK_NULL_ARG(msg)
 
 	if (msg->data_len != 1) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -61,5 +63,74 @@ void OEM_1S_GET_CARD_TYPE(ipmi_msg *msg)
 		break;
 	}
 
+	return;
+}
+
+int pal_record_bios_fw_version(uint8_t *buf, uint8_t size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(buf, -1);
+
+	int ret = -1;
+	EEPROM_ENTRY set_bios_ver = { 0 };
+	EEPROM_ENTRY get_bios_ver = { 0 };
+
+	const uint8_t block_index = buf[3];
+	if (block_index >= BIOS_FW_VERSION_BLOCK_NUM) {
+		LOG_ERR("bios version block index is out of range");
+		return -1;
+	}
+
+	ret = get_bios_version(&get_bios_ver, block_index);
+	if (ret == -1) {
+		LOG_ERR("Get version fail");
+		return -1;
+	}
+
+	set_bios_ver.data_len = size - 3; // skip netfn, cmd and command code
+	memcpy(&set_bios_ver.data[0], &buf[3], set_bios_ver.data_len);
+
+	// Check the written BIOS version is the same with the stored
+	ret = memcmp(&get_bios_ver.data[0], &set_bios_ver.data[0],
+		     BIOS_FW_VERSION_BLOCK_MAX_SIZE * sizeof(uint8_t));
+	if (ret == 0) {
+		LOG_DBG("The Written bios version is the same with the stored bios version in EEPROM");
+	} else {
+		LOG_DBG("Set bios version");
+
+		ret = set_bios_version(&set_bios_ver, block_index);
+		if (ret == -1) {
+			LOG_ERR("Set version fail");
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+void OEM_1S_GET_BIOS_VERSION(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 0) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	msg->data_len = 0;
+
+	for (uint8_t block_index = 0; block_index < BIOS_FW_VERSION_BLOCK_NUM; block_index++) {
+		EEPROM_ENTRY get_bios_ver = { 0 };
+		int ret = get_bios_version(&get_bios_ver, block_index);
+		if (ret == -1) {
+			LOG_ERR("Get version fail");
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+
+		memcpy(msg->data + msg->data_len, get_bios_ver.data, get_bios_ver.data_len);
+		msg->data_len += get_bios_ver.data_len;
+	}
+
+	msg->completion_code = CC_SUCCESS;
 	return;
 }
