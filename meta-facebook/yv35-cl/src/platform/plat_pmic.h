@@ -53,7 +53,8 @@ enum READ_PMIC_ERROR_PATH {
 
 void start_monitor_pmic_error_thread();
 void monitor_pmic_error_handler();
-int compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data, uint8_t read_path);
+int compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data, uint8_t pmic_err_data_len,
+		       uint8_t read_path);
 int get_dimm_info(uint8_t dimm_id, uint8_t *bus, uint8_t *addr);
 void add_pmic_error_sel(uint8_t dimm_id, uint8_t error_type);
 int switch_i3c_dimm_mux(uint8_t i3c_mux_position, uint8_t dimm_mux_position);
