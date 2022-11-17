@@ -37,7 +37,13 @@ int pal_record_bios_fw_version(uint8_t *buf, uint8_t size)
 	EEPROM_ENTRY set_bios_ver = { 0 };
 	EEPROM_ENTRY get_bios_ver = { 0 };
 
-	ret = get_bios_version(&get_bios_ver);
+	const uint8_t block_index = buf[3];
+	if (block_index >= BIOS_FW_VERSION_BLOCK_NUM) {
+		LOG_ERR("bios version block index is out of range");
+		return -1;
+	}
+
+	ret = get_bios_version(&get_bios_ver, block_index);
 	if (ret == -1) {
 		LOG_ERR("Get version fail");
 		return -1;
@@ -54,7 +60,7 @@ int pal_record_bios_fw_version(uint8_t *buf, uint8_t size)
 	} else {
 		LOG_DBG("Set bios version");
 
-		ret = set_bios_version(&set_bios_ver);
+		ret = set_bios_version(&set_bios_ver, block_index);
 		if (ret == -1) {
 			LOG_ERR("Set version fail");
 			return -1;
@@ -73,18 +79,21 @@ void OEM_1S_GET_BIOS_VERSION(ipmi_msg *msg)
 		return;
 	}
 
-	int ret = -1;
-	EEPROM_ENTRY get_bios_ver = { 0 };
+	msg->data_len = 0;
 
-	ret = get_bios_version(&get_bios_ver);
-	if (ret == -1) {
-		LOG_ERR("Get version fail");
-		msg->completion_code = CC_UNSPECIFIED_ERROR;
-		return;
+	for (uint8_t block_index = 0; block_index < BIOS_FW_VERSION_BLOCK_NUM; block_index++) {
+		EEPROM_ENTRY get_bios_ver = { 0 };
+		int ret = get_bios_version(&get_bios_ver, block_index);
+		if (ret == -1) {
+			LOG_ERR("Get version fail");
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+
+		memcpy(msg->data + msg->data_len, get_bios_ver.data, get_bios_ver.data_len);
+		msg->data_len += get_bios_ver.data_len;
 	}
 
-	memcpy(&msg->data[0], &get_bios_ver.data[0], get_bios_ver.data_len);
-	msg->data_len = get_bios_ver.data_len;
 	msg->completion_code = CC_SUCCESS;
 	return;
 }
