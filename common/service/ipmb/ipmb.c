@@ -286,6 +286,33 @@ bool find_req_ipmi_msg(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
 	return true;
 }
 
+void clean_req_ipmi_msg(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
+{
+	CHECK_NULL_ARG(pnode);
+	CHECK_NULL_ARG(msg);
+
+	int ret = 0;
+
+	// Mutex for request sequence linked list change
+	ret = k_mutex_lock(&mutex_id[index], K_MSEC(1000));
+	if (ret) {
+		LOG_ERR("Failed to lock the mutex id%d, ret%d", index, ret);
+		return;
+	}
+
+	ipmi_msg_cfg *temp;
+
+	temp = pnode->next;
+	pnode->next = temp->next;
+	unregister_seq(index, temp->buffer.seq_target);
+	SAFE_FREE(temp);
+	seq_current_count[index]--;
+	pnode = pnode->next;
+
+	k_mutex_unlock(&mutex_id[index]);
+	return;
+}
+
 void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 {
 	CHECK_NULL_ARG(pvParameters);
@@ -936,7 +963,7 @@ ipmb_error ipmb_read(ipmi_msg *msg, uint8_t index)
 	// Set mutex timeout 10ms more than messageQueue timeout, prevent mutex
 	// timeout before messageQueue
 	if (k_mutex_lock(&mutex_read, K_MSEC(IPMB_SEQ_TIMEOUT_MS + 10))) {
-		LOG_ERR("[%s] Failed to lock mutex in time", __func__);
+		LOG_ERR("Failed to lock mutex in time, netfn0x%02x cmd0x%02x", msg->netfn, msg->cmd);
 		return IPMB_ERROR_MUTEX_LOCK;
 	}
 
@@ -945,20 +972,21 @@ ipmb_error ipmb_read(ipmi_msg *msg, uint8_t index)
 
 	ipmb_error ret = IPMB_ERROR_SUCCESS;
 	if (ipmb_send_request(msg, index) != IPMB_ERROR_SUCCESS) {
-		LOG_ERR("[%s] Failed to send IPMB request message", __func__);
+		LOG_ERR("Failed to send IPMB request message, netfn0x%02x cmd0x%02x", msg->netfn, msg->cmd);
 		ret = IPMB_ERROR_FAILURE;
 		goto exit;
 	}
 
 	if (k_msgq_get(&ipmb_rxqueue[index], (ipmi_msg *)msg, K_MSEC(IPMB_SEQ_TIMEOUT_MS))) {
-		LOG_ERR("[%s] Failed to get IPMB message from RX queue", __func__);
+		LOG_ERR("Failed to get IPMB message from RX queue, netfn0x%02x cmd0x%02x seq%d", msg->netfn, msg->cmd, msg->seq);
+		clean_req_ipmi_msg(P_start[index], (ipmi_msg *)msg, index);
 		ret = IPMB_ERROR_GET_MESSAGE_QUEUE;
 		goto exit;
 	}
 
 exit:
 	k_mutex_unlock(&mutex_read);
-	return IPMB_ERROR_SUCCESS;
+	return ret;
 }
 
 // Send message to IPMI message queue
