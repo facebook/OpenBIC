@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <drivers/spi_nor.h>
 #include <drivers/flash.h>
+#include <logging/log.h>
 
 #include "libutil.h"
 #include "ipmi.h"
@@ -42,6 +43,8 @@
 #include "plat_mctp.h"
 #include "pex89000.h"
 #include "power_status.h"
+
+LOG_MODULE_REGISTER(plat_ipmi);
 
 struct bridge_compnt_info_s {
 	uint8_t compnt_id;
@@ -74,9 +77,7 @@ struct bridge_compnt_info_s bridge_compnt_info[] = {
 
 void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	/*********************************
 	* Request Data
@@ -167,7 +168,7 @@ void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 		break;
 	}
 	if (status != FWUPDATE_SUCCESS) {
-		printf("firmware (0x%02X) update failed cc: %x\n", target, msg->completion_code);
+		LOG_ERR("firmware (0x%02X) update failed cc: %x", target, msg->completion_code);
 	}
 
 	return;
@@ -175,10 +176,7 @@ void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 
 void OEM_1S_PEX_FLASH_READ(ipmi_msg *msg)
 {
-	if (!msg) {
-		printf("<error> OEM_1S_PEX_FLASH_READ: parameter msg is NULL\n");
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 4) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -237,10 +235,7 @@ exit:
 
 void OEM_1S_GET_FPGA_USER_CODE(ipmi_msg *msg)
 {
-	if (!msg) {
-		printf("<error> OEM_1S_GET_FPGA_USER_CODE: parameter msg is NULL\n");
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -255,7 +250,7 @@ void OEM_1S_GET_FPGA_USER_CODE(ipmi_msg *msg)
 	jtag_dev = device_get_binding("JTAG0");
 
 	if (!jtag_dev) {
-		printf("JTAG device not found\n");
+		LOG_ERR("JTAG device not found");
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
 		return;
 	}
@@ -288,9 +283,7 @@ void OEM_1S_GET_FPGA_USER_CODE(ipmi_msg *msg)
 
 void APP_GET_SELFTEST_RESULTS(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -339,9 +332,7 @@ void APP_GET_SELFTEST_RESULTS(ipmi_msg *msg)
 
 void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 1) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -382,7 +373,7 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 	case GT_COMPNT_PEX3: {
 		/* Only can be read when DC is on */
 		if (is_mb_dc_on() == false) {
-			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			msg->completion_code = CC_PEX_NOT_POWER_ON;
 			return;
 		}
 		uint8_t pex_sensor_num_table[PEX_MAX_NUMBER] = { SENSOR_NUM_BB_TEMP_PEX_0,
@@ -398,9 +389,8 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		if (cfg->pre_sensor_read_hook) {
 			if (cfg->pre_sensor_read_hook(cfg->num, cfg->pre_sensor_read_args) ==
 			    false) {
-				printf("[%s] pex%d pre-read failed!\n", __func__,
-				       component - GT_COMPNT_PEX0);
-				msg->completion_code = CC_UNSPECIFIED_ERROR;
+				LOG_ERR("PEX%d pre-read failed!", component - GT_COMPNT_PEX0);
+				msg->completion_code = CC_PEX_PRE_READING_FAIL;
 				return;
 			}
 		}
@@ -408,16 +398,15 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		if (pex_access_engine(cfg->port, cfg->target_addr, p->idx, pex_access_sbr_ver,
 				      &reading)) {
 			if (k_mutex_unlock(&i2c_bus10_mutex))
-				printf("[%s]mutex unlock fail on PEX bus\n", __func__);
-			msg->completion_code = CC_UNSPECIFIED_ERROR;
+				LOG_ERR("Mutex unlock fail on PEX bus");
+			msg->completion_code = CC_PEX_ACCESS_FAIL;
 			return;
 		}
 
 		if (cfg->post_sensor_read_hook) {
 			if (cfg->post_sensor_read_hook(cfg->num, cfg->post_sensor_read_args,
 						       NULL) == false) {
-				printf("[%s] pex%d post-read failed!\n", __func__,
-				       component - GT_COMPNT_PEX0);
+				LOG_ERR("PEX%d post-read failed!", component - GT_COMPNT_PEX0);
 			}
 		}
 
@@ -445,7 +434,7 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		uint8_t buf[5] = { 0 };
 		/* Assign VR 0/1 related sensor number to get information for accessing VR */
 		uint8_t sensor_num = (component == GT_COMPNT_VR0) ? SENSOR_NUM_TEMP_PEX_1 :
-									  SENSOR_NUM_TEMP_PEX_3;
+								    SENSOR_NUM_TEMP_PEX_3;
 		if (!tca9548_select_chan(sensor_num, &mux_conf_addr_0xe0[6])) {
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			return;
@@ -541,8 +530,7 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 
 void OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT(ipmi_msg *msg)
 {
-	if (!msg)
-		return;
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len < 2) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -570,7 +558,7 @@ void OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT(ipmi_msg *msg)
 
 	if (p->bus_mutex) {
 		if (k_mutex_lock(p->bus_mutex, K_MSEC(100))) {
-			printf("[%s]mutex lock fail on bus %d\n", __func__, p->i2c_bus);
+			LOG_ERR("Mutex lock fail on bus %d", p->i2c_bus);
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			return;
 		}
@@ -601,7 +589,7 @@ void OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT(ipmi_msg *msg)
 
 	if (p->bus_mutex) {
 		if (k_mutex_unlock(p->bus_mutex))
-			printf("[%s]mutex unlock fail on bus %d\n", __func__, p->i2c_bus);
+			LOG_ERR("Mutex unlock fail on bus %d", p->i2c_bus);
 	}
 	return;
 }
