@@ -42,9 +42,7 @@ LOG_MODULE_DECLARE(ipmi);
 #define FEXP_BIC_I2C_UPDATE_IF  0x22
 #define FEXP_BIC_IPMI_I2C_SW_IF 0x23
 
-enum {
-	BIC_COMMAND_STATUS = 0x23
-};
+#define BIC_COMMAND_STATUS 0x23
 
 #define SNOWFLAKE_BIC_CMD_STATUS_SIZE 3
 #define SNOWFLAKE_BIC_BOOTLOADER_RESPONSE_SIZE 5 // ack 2 + response 3
@@ -96,7 +94,7 @@ static void fexp_bic_update(ipmi_msg *msg)
 	// step 1. send "get status" command
 	i2c_msg.tx_len = SNOWFLAKE_BIC_CMD_STATUS_SIZE;
 	i2c_msg.data[0] = SNOWFLAKE_BIC_CMD_STATUS_SIZE;
-	i2c_msg.data[1] = BIC_COMMAND_STATUS;
+	i2c_msg.data[1] = BIC_COMMAND_STATUS;  //checksum same as data
 	i2c_msg.data[2] = BIC_COMMAND_STATUS;
 	if (i2c_master_write(&i2c_msg, I2C_MAX_RETRY)) {
 		LOG_ERR("write command to snowflake bootloader failed");
@@ -123,7 +121,6 @@ static void fexp_bic_update(ipmi_msg *msg)
 	}
 
 	// step 4. brdige message to bootloader
-	// LOG_HEXDUMP_INF(msg->data, msg->data_len, "bridge message to bootloader");
 	i2c_msg.tx_len = msg->data_len;
 	memcpy(i2c_msg.data, msg->data, msg->data_len);
 	if (i2c_master_write(&i2c_msg, I2C_MAX_RETRY)) {
@@ -146,11 +143,9 @@ static void fexp_bic_update(ipmi_msg *msg)
 int pal_extend_msg_out_interface_handler(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg, 0);
-	// LOG_HEXDUMP_INF(msg, 32, "req msg");
 
 	static uint8_t fexp_i2c_freq = I2C_SPEED_FAST_PLUS;
 	const uint8_t target_IF = msg->data[0];
-	// LOG_ERR("target_IF = %x", target_IF);
 
 	// remove target_IF
 	memmove(msg->data, msg->data + 1, msg->data_len - 1);
@@ -173,13 +168,15 @@ int pal_extend_msg_out_interface_handler(ipmi_msg *msg)
 		msg->data[EXTEND_MSG_OUT_CC_OFFSET] = 1;
 
 		if ((msg->data[0] == 0) && (fexp_i2c_freq == I2C_SPEED_FAST_PLUS)) {
-			// switch to 100K
+			// start to update 1ou expander board TI BIC,
+			// switch frequency to 100KHz and disable ipmb tx function
 			fexp_i2c_freq = I2C_SPEED_STANDARD;
-			ipmb_suspend(2);
+			ipmb_tx_suspend(IPMB_inf_index_map[EXP1_IPMB]);
 		} else if ((msg->data[0] == 1) && (fexp_i2c_freq == I2C_SPEED_STANDARD)) {
-			// switch to 1M
+			// 1ou expander board TI BIC update is completed,
+			// switch frequency to 1MHz and enable ipmb tx function
 			fexp_i2c_freq = I2C_SPEED_FAST_PLUS;
-			ipmb_resume(2);
+			ipmb_tx_resume(IPMB_inf_index_map[EXP1_IPMB]);
 		} else {
 			msg->data[EXTEND_MSG_OUT_CC_OFFSET] = 0;
 		}
@@ -199,7 +196,6 @@ int pal_extend_msg_out_interface_handler(ipmi_msg *msg)
 	msg->data[1] = (IANA_ID >> 8) & 0xFF;
 	msg->data[2] = (IANA_ID >> 16) & 0xFF;
 	msg->data[3] = target_IF;
-	// LOG_HEXDUMP_INF(msg, 32, "resp msg");
 
 	ipmb_error status = ipmb_send_response(msg, IPMB_inf_index_map[msg->InF_source]);
 	if (status != IPMB_ERROR_SUCCESS)

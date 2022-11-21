@@ -182,7 +182,7 @@ void ipmb_init(void);
 ipmb_error ipmb_send_request(ipmi_msg *req, uint8_t index);
 ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index);
 ipmb_error ipmb_read(ipmi_msg *msg, uint8_t bus);
-void ipmb_suspend(uint8_t index);
-void ipmb_resume(uint8_t index);
+void ipmb_tx_suspend(uint8_t index);
+void ipmb_tx_resume(uint8_t index);
 
 #endif

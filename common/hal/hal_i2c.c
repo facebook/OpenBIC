@@ -52,10 +52,7 @@ int i2c_freq_set(uint8_t i2c_bus, uint8_t i2c_speed_mode, uint8_t en_slave)
 
 	if (en_slave) {
 		uint32_t *addr = (uint32_t *)(AST_1030_I2C_BASE + (i2c_bus * AST_1030_I2C_REG_LEN));
-		printf("0 %x value %x\n", (uint32_t)addr, *addr);
-
 		*addr |= AST_1030_SLAVE_EN;
-		printf("1 %x value %x\n", (uint32_t)addr, *addr);
 	}
 
 	return 0;
