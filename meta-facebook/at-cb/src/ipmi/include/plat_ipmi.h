@@ -17,7 +17,17 @@
 #ifndef PLAT_IPMI_H
 #define PLAT_IPMI_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#define BIC_FW_DATA_LENGTH 7
+
+/** enum number follow GT for now since bmc hasn't ready **/
+enum CB_FIRMWARE_COMPONENT {
+	CB_COMPNT_VR0,
+	CB_COMPNT_VR1,
+	CB_COMPNT_BIC,
+	CB_COMPNT_PCIE_SWITCH0,
+	CB_COMPNT_PCIE_SWITCH1,
+	CB_COMPNT_CPLD = 7,
+	CB_COMPNT_MAX,
+};
 
 #endif

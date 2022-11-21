@@ -14,6 +14,14 @@
 		&pinctrl_adc14_default &pinctrl_adc15_default>;
 };
 
+&jtag0{
+	status = "okay";
+};
+
+&jtag1{
+	status = "okay";
+};
+
 &i2c0 {
 	pinctrl-0 = <&pinctrl_i2c0_default>;
 	status = "okay";
@@ -56,18 +64,7 @@
 
 &i2c8 {
 	pinctrl-0 = <&pinctrl_i2c8_default>;
-	clock-frequency = <I2C_BITRATE_FAST_PLUS>;
 	status = "okay";
-
-	ipmb8: ipmb@20 {
-		compatible = "aspeed,ipmb";
-		reg = <0x20>;
-		label = "IPMB_8";
-		size = <10>;
-#ifdef CONFIG_I2C_IPMB_SLAVE
-		status = "okay";
-#endif
-	};
 };
 
 &i2c9 {
@@ -75,31 +72,14 @@
 	status = "okay";
 };
 
-&i2c12 {
-	pinctrl-0 = <&pinctrl_i2c12_default>;
+&i2c10 {
+	pinctrl-0 = <&pinctrl_i2c10_default>;
 	status = "okay";
 };
 
-&i2c13 {
-	pinctrl-0 = <&pinctrl_i2c13_default>;
+&i2c11 {
+	pinctrl-0 = <&pinctrl_i2c11_default>;
 	status = "okay";
-};
-
-&i3c_gr {
-	status = "okay";
-	pull-up-resistor-ohm = <2000>, <2000>, <2000>, <2000>, <2000>, <2000>;
-};
-
-&i3c0 {
-	status = "okay";
-	pinctrl-0 = <&pinctrl_i3c0_default>;
-	assigned-address = <0x30>;
-};
-
-&i3c1 {
-	status = "okay";
-	pinctrl-0 = <&pinctrl_i3c1_default>;
-	assigned-address = <0x30>;
 };
 
 &udc {
@@ -154,11 +134,11 @@
 };
 
 &spi1 {
-	status = "disabled";
+	status = "okay";
 };
 
 &spi1_cs0 {
-	status = "disabled";
+	status = "okay";
 };
 
 &spi1_cs1 {
@@ -166,11 +146,11 @@
 };
 
 &spi2 {
-	status = "disabled";
+	status = "okay";
 };
 
 &spi2_cs0 {
-	status = "disabled";
+	status = "okay";
 };
 
 &spi2_cs1 {
