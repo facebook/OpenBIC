@@ -17,25 +17,43 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <logging/log.h>
 #include "sensor.h"
 #include "pmbus.h"
 #include "hal_i2c.h"
 
+LOG_MODULE_REGISTER(dev_ina233);
+
+#define INA233_CALIBRATION_OFFSET 0xD4
+
 uint8_t ina233_read(uint8_t sensor_num, int *reading)
 {
 	if (reading == NULL) {
-		printf("[%s] input parameter reading is NULL\n", __func__);
+		LOG_ERR("input parameter reading is NULL");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	if (sensor_num > SENSOR_NUM_MAX) {
-		printf("[%s] sensor 0x%x input parameter is invalid\n", __func__, sensor_num);
+		LOG_ERR("sensor 0x%x input parameter is invalid", sensor_num);
+		return SENSOR_UNSPECIFIED_ERROR;
+	}
+
+	ina233_init_arg *init_arg =
+		(ina233_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	if (init_arg == NULL) {
+		LOG_ERR("input initial pointer is NULL");
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+
+	if (init_arg->is_init != true) {
+		LOG_ERR("device isn't initialized");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	uint8_t retry = 5;
 	int ret = 0;
-	float val = 0;
+	int16_t val = 0;
+	float parameter = 0;
 	I2C_MSG msg;
 	memset(&msg, 0, sizeof(I2C_MSG));
 	*reading = 0;
@@ -48,45 +66,75 @@ uint8_t ina233_read(uint8_t sensor_num, int *reading)
 
 	ret = i2c_master_read(&msg, retry);
 	if (ret != 0) {
-		printf("[%s] i2c read fail  ret: %d\n", __func__, ret);
+		LOG_ERR("i2c read fail ret: %d", ret);
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
 	uint8_t offset = sensor_config[sensor_config_index_map[sensor_num]].offset;
-	val = (float)((msg.data[1] << 8) | msg.data[0]);
+	val = (msg.data[1] << 8) | msg.data[0];
 	sensor_val *sval = (sensor_val *)reading;
 	switch (offset) {
 	case PMBUS_READ_VOUT:
 		// 1 mV/LSB, unsigned integer
 		// m = 8 , b = 0 , r = 2
-		val = val / 800;
+		// voltage convert formula = ((val / 100) - 0) / 8
+		parameter = 800;
 		break;
 	case PMBUS_READ_IOUT:
 		// 1 mA/LSB, 2's complement
-		// current_lsb = 0.001 , current convert formula = val / (1 / 0.001) = val / 1000
-		val = val / 1000;
+		// current convert formula = val / (1 / current_lsb)
+		parameter = (1 / init_arg->current_lsb);
 		break;
 	case PMBUS_READ_POUT:
 		// 1 Watt/LSB, 2's complement
-		// current_lsb = 0.001 , power convert formula = val / (1 / (0.001 * 25)) = val / 40
-		val = val / 40;
+		// power convert formula = val / (1 / (current_lsb * 25))
+		parameter = (1 / (init_arg->current_lsb * 25));
 		break;
 	default:
-		printf("[%s] not support offset 0x%x\n", __func__, offset);
+		LOG_ERR("Offset not supported: 0x%x", offset);
 		return SENSOR_FAIL_TO_ACCESS;
 		break;
 	}
 
-	sval->integer = (int)val & 0xFFFF;
-	sval->fraction = (val - sval->integer) * 1000;
+	sval->integer = val / parameter;
+	sval->fraction = ((val / parameter) - sval->integer) * 1000;
 	return SENSOR_READ_SUCCESS;
 }
 
 uint8_t ina233_init(uint8_t sensor_num)
 {
 	if (sensor_num > SENSOR_NUM_MAX) {
-		printf("[%s] input sensor number is invalid\n", __func__);
+		LOG_ERR("input sensor number is invalid");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+
+	ina233_init_arg *init_arg =
+		(ina233_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	if (init_arg == NULL) {
+		LOG_ERR("input initial pointer is NULL");
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+
+	if (init_arg->is_init != true) {
+		int ret = 0, retry = 5;
+		uint16_t calibration = 0;
+		I2C_MSG msg = { 0 };
+
+		msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
+		msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+		msg.tx_len = 3;
+		msg.data[0] = INA233_CALIBRATION_OFFSET;
+
+		// Calibration formula = (0.00512 / (current_lsb * r_shunt))
+		calibration = (uint16_t)(0.00512 / (init_arg->current_lsb * init_arg->r_shunt));
+		memcpy(&msg.data[1], &calibration, sizeof(uint16_t));
+
+		ret = i2c_master_write(&msg, retry);
+		if (ret != 0) {
+			LOG_ERR("i2c write fail ret: %d", ret);
+			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		}
+		init_arg->is_init = true;
 	}
 
 	sensor_config[sensor_config_index_map[sensor_num]].read = ina233_read;

@@ -29,6 +29,7 @@
 #include "plat_gpio.h"
 #include "xdpe12284c.h"
 #include "plat_sensor_table.h"
+#include "util_worker.h"
 
 /* BMC reset */
 void BMC_reset_handler()
@@ -41,7 +42,7 @@ void BMC_reset_handler()
 K_WORK_DELAYABLE_DEFINE(BMC_reset_work, BMC_reset_handler);
 int pal_submit_bmc_cold_reset()
 {
-	k_work_schedule(&BMC_reset_work, K_MSEC(1000));
+	k_work_schedule_for_queue(&plat_work_q, &BMC_reset_work, K_MSEC(1000));
 	return 0;
 }
 /* BMC reset */
@@ -56,7 +57,7 @@ void clear_cmos_handler()
 K_WORK_DEFINE(clear_cmos_work, clear_cmos_handler);
 int pal_clear_cmos()
 {
-	k_work_submit(&clear_cmos_work);
+	k_work_submit_to_queue(&plat_work_q, &clear_cmos_work);
 	return 0;
 }
 

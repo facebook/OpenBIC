@@ -14,29 +14,19 @@
  * limitations under the License.
  */
 
-#include "eeprom.h"
+#ifndef PLAT_I3C_H
+#define PLAT_I3C_H
 
-#ifndef PLAT_FRU_H
-#define PLAT_FRU_H
+#include "hal_i3c.h"
 
-#define MB_FRU_PORT 0x01
-#define MB_FRU_ADDR 0x50
 
-#define IOM_FRU_PORT 0x07
-#define IOM_FRU_ADDR 0x50
+#define I3C_BUS3 3
 
-#define BIOS_FW_VERSION_START 0x0A00
-#define BIOS_FW_VERSION_MAX_SIZE 34
-
-enum {
-	MB_FRU_ID,
-	IOM_FRU_ID,
-	// OTHER_FRU_ID,
-	MAX_FRU_ID,
+enum I3C_PMIC_ADDR
+{
+	PMIC_A0_A4_ADDR = 0x48,
+	PMIC_A2_A6_ADDR = 0x4c,
+	PMIC_A3_A7_ADDR = 0x4e,
 };
-
-bool get_bios_version_area_config(EEPROM_CFG *config);
-int set_bios_version(EEPROM_ENTRY *entry);
-int get_bios_version(EEPROM_ENTRY *entry);
 
 #endif

@@ -28,18 +28,17 @@
 #include "pcc.h"
 #include "libutil.h"
 #include "logging/log.h"
-#include "apml.h"
 #include "plat_def.h"
 #include "plat_pmic.h"
+#include "plat_apml.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
 void ISR_POST_COMPLETE()
 {
 	set_post_status(FM_BIOS_POST_CMPLT_BIC_N);
-	if (apml_write_byte(I2C_BUS14, SB_TSI_ADDR, SBTSI_HIGH_TEMP_INTEGER_THRESHOLD,
-			    TSI_HIGH_TEMP_THRESHOLD)) {
-		LOG_ERR("Failed to set TSI high temperature threshold.");
+	if (get_post_status()) {
+		set_tsi_threshold();
 	}
 }
 
@@ -379,10 +378,11 @@ void ISR_PVDDCR_CPU0_PMALERT()
 {
 	if (get_DC_status() == true) {
 		uint8_t board_rev = get_board_revision();
-		if (board_rev == SYS_BOARD_EVT_BOM2) {
+		uint8_t vr_vender = (board_rev & 0x30) >> 4;
+		if (vr_vender == VR_VENDER_INFINEON) {
 			add_vr_pmalert_sel(PVDDCR_CPU0_PMALERT_N, XDPE19283B_PVDDCR_CPU0_ADDR, 0,
 					   2);
-		} else if (board_rev == SYS_BOARD_EVT_BOM3) {
+		} else if (vr_vender == VR_VENDER_MPS) {
 			add_vr_pmalert_sel(PVDDCR_CPU0_PMALERT_N, MP2856GUT_PVDDCR_CPU0_ADDR, 0, 2);
 		} else {
 			add_vr_pmalert_sel(PVDDCR_CPU0_PMALERT_N, RAA229621_PVDDCR_CPU0_ADDR, 0, 2);
@@ -394,10 +394,11 @@ void ISR_PVDDCR_CPU1_PMALERT()
 {
 	if (get_DC_status() == true) {
 		uint8_t board_rev = get_board_revision();
-		if (board_rev == SYS_BOARD_EVT_BOM2) {
+		uint8_t vr_vender = (board_rev & 0x30) >> 4;
+		if (vr_vender == VR_VENDER_INFINEON) {
 			add_vr_pmalert_sel(PVDDCR_CPU1_PMALERT_N, XDPE19283B_PVDDCR_CPU1_ADDR, 1,
 					   2);
-		} else if (board_rev == SYS_BOARD_EVT_BOM3) {
+		} else if (vr_vender == VR_VENDER_MPS) {
 			add_vr_pmalert_sel(PVDDCR_CPU1_PMALERT_N, MP2856GUT_PVDDCR_CPU1_ADDR, 1, 2);
 		} else {
 			add_vr_pmalert_sel(PVDDCR_CPU1_PMALERT_N, RAA229621_PVDDCR_CPU1_ADDR, 1, 2);
@@ -409,9 +410,10 @@ void ISR_PVDD11_S3_PMALERT()
 {
 	if (get_DC_status() == true) {
 		uint8_t board_rev = get_board_revision();
-		if (board_rev == SYS_BOARD_EVT_BOM2) {
+		uint8_t vr_vender = (board_rev & 0x30) >> 4;
+		if (vr_vender == VR_VENDER_INFINEON) {
 			add_vr_pmalert_sel(PVDD11_S3_PMALERT_N, XDPE19283B_PVDD11_S3_ADDR, 2, 1);
-		} else if (board_rev == SYS_BOARD_EVT_BOM3) {
+		} else if (vr_vender == VR_VENDER_MPS) {
 			add_vr_pmalert_sel(PVDD11_S3_PMALERT_N, MP2856GUT_PVDD11_S3_ADDR, 2, 1);
 		} else {
 			add_vr_pmalert_sel(PVDD11_S3_PMALERT_N, RAA229621_PVDD11_S3_ADDR, 2, 1);
@@ -438,4 +440,9 @@ void ISR_UV_DETECT()
 			LOG_ERR("Failed to add under voltage sel.");
 		}
 	}
+}
+
+void IST_PLTRST()
+{
+	reset_tsi_status();
 }

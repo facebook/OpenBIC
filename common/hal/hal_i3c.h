@@ -91,9 +91,16 @@
 #define I3C_MAX_DATA_SIZE 256
 #define I3C_DEBUG 0
 #define I3C_SMQ_SUCCESS 0
+#define I3C_MAX_BUFFER_COUNT 2
+
+enum I3C_WRITE_READ_CMD {
+	I3C_WRITE_CMD = 0,
+	I3C_READ_CMD,
+};
 
 typedef struct _I3C_MSG_ {
 	uint8_t bus;
+	uint8_t target_addr;
 	uint8_t tx_len;
 	uint8_t rx_len;
 	uint8_t data[I3C_MAX_DATA_SIZE];
@@ -102,5 +109,8 @@ typedef struct _I3C_MSG_ {
 void util_init_i3c(void);
 int i3c_smq_read(I3C_MSG *msg);
 int i3c_smq_write(I3C_MSG *msg);
+int i3c_attach(I3C_MSG *msg);
+int i3c_transfer(I3C_MSG *msg);
+int i3c_brocast_ccc(I3C_MSG *msg, uint8_t ccc_id, uint8_t ccc_addr);
 
 #endif

@@ -71,8 +71,10 @@ static inline void pack_ipmi_resp(struct ipmi_response *resp, ipmi_msg *ipmi_res
 
 // If command is from KCS, we need to check whether BIC support this command.
 bool pal_request_msg_to_BIC_from_KCS(uint8_t netfn, uint8_t cmd);
-// If command is from KCS, we need to check whether BIC BIC responds immediately.
+// If command is from KCS, we need to check whether BIC responds immediately.
 bool pal_immediate_respond_from_KCS(uint8_t netfn, uint8_t cmd);
+// If command is from KCS, we need to check whether system information is set via BIC.
+int pal_record_bios_fw_version(uint8_t *buf, uint8_t size);
 // If command is from ME, we need to check whether BIC support this command.
 bool pal_request_msg_to_BIC_from_ME(uint8_t netfn, uint8_t cmd);
 // For the command that BIC only bridges it, BIC doesn't return the command directly
@@ -153,6 +155,7 @@ enum {
 	CMD_APP_GET_SELFTEST_RESULTS = 0x04,
 	CMD_APP_GET_SYSTEM_GUID = 0x37,
 	CMD_APP_MASTER_WRITE_READ = 0x52,
+	CMD_APP_SET_SYS_INFO_PARAMS = 0x58,
 };
 
 // Chassis Command Codes (0x00)
@@ -186,6 +189,7 @@ enum {
 
 // OEM Command Codes (0x30)
 enum {
+	CMD_OEM_GET_BOARD_ID = 0x37,
 	CMD_OEM_CABLE_DETECTION = 0xCB,
 	CMD_OEM_NM_SENSOR_READ = 0xE2,
 	CMD_OEM_SET_SYSTEM_GUID = 0xEF,
@@ -255,6 +259,7 @@ enum {
 	CMD_OEM_1S_MULTI_ACCURACY_SENSOR_READING = 0x88,
 	CMD_OEM_1S_GET_BOARD_ID = 0xA0,
 	CMD_OEM_1S_GET_CARD_TYPE = 0xA1,
+	CMD_OEM_1S_GET_BIOS_VERSION = 0xA2,
 	CMD_OEM_1S_NOTIFY_PMIC_ERROR = 0xB0,
 	CMD_OEM_1S_GET_SDR = 0xC0,
 };

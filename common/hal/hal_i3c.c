@@ -27,9 +27,28 @@ LOG_MODULE_REGISTER(hal_i3c);
 
 static const struct device *dev_i3c[I3C_MAX_NUM];
 static const struct device *dev_i3c_smq[I3C_MAX_NUM];
+static struct i3c_dev_desc i3c_desc_table[I3C_MAX_NUM];
+static int i3c_desc_count = 0;
 
 int i3c_slave_mqueue_read(const struct device *dev, uint8_t *dest, int budget);
 int i3c_slave_mqueue_write(const struct device *dev, uint8_t *src, int size);
+
+static struct i3c_dev_desc *find_matching_desc(const struct device *dev, uint8_t desc_addr)
+{
+	CHECK_NULL_ARG_WITH_RETURN(dev, NULL);
+
+	struct i3c_dev_desc *desc = NULL;
+	int i = 0;
+
+	for (i = 0; i < I3C_MAX_NUM; i++) {
+		desc = &i3c_desc_table[i];
+		if ((desc->master_dev == dev) && (desc->info.dynamic_addr == desc_addr)) {
+			return desc;
+		}
+	}
+
+	return NULL;
+}
 
 /**
  * @brief api to read i3c message from target message queue
@@ -74,6 +93,100 @@ int i3c_smq_write(I3C_MSG *msg)
 
 	ret = i3c_slave_mqueue_write(dev_i3c[msg->bus], &msg->data[0], msg->tx_len);
 	return ret;
+}
+
+int i3c_attach(I3C_MSG *msg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, -EINVAL);
+
+	int ret = 0;
+	struct i3c_dev_desc *desc;
+
+	if (!dev_i3c[msg->bus]) {
+		LOG_ERR("Failed to attach address 0x%x due to undefined bus%u", msg->target_addr,
+			msg->bus);
+		return -ENODEV;
+	}
+
+	desc = &i3c_desc_table[i3c_desc_count];
+	desc->info.assigned_dynamic_addr = msg->target_addr;
+	desc->info.static_addr = desc->info.assigned_dynamic_addr;
+	desc->info.i2c_mode = 0;
+
+	ret = i3c_master_attach_device(dev_i3c[msg->bus], desc);
+	if (ret == 0) {
+		i3c_desc_count++;
+	} else {
+		LOG_ERR("Failed to attach address 0x%x, ret: %d", msg->target_addr, ret);
+	}
+
+	return -ret;
+}
+
+int i3c_brocast_ccc(I3C_MSG *msg, uint8_t ccc_id, uint8_t ccc_addr)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, -EINVAL);
+
+	if (!dev_i3c[msg->bus]) {
+		LOG_ERR("Failed to broadcast ccc 0x%x to addresses 0x%x due to undefined bus%u",
+			ccc_id, ccc_addr, msg->bus);
+		return -ENODEV;
+	}
+
+	int ret = 0;
+	struct i3c_ccc_cmd ccc;
+
+	memset(&ccc, 0, sizeof(struct i3c_ccc_cmd));
+	ccc.addr = ccc_addr;
+	ccc.id = ccc_id;
+	ccc.rnw = I3C_WRITE_CMD;
+	ccc.payload.data = &msg->data;
+	ccc.payload.length = 0;
+
+	ret = i3c_master_send_ccc(dev_i3c[msg->bus], &ccc);
+	if (ret != 0) {
+		LOG_ERR("Failed to broadcast ccc 0x%x to addresses 0x%x due to undefined bus%u",
+			ccc_id, ccc_addr, ret);
+	}
+
+	return -ret;
+}
+
+int i3c_transfer(I3C_MSG *msg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, -EINVAL);
+
+	if (!dev_i3c[msg->bus]) {
+		LOG_ERR("Failed to transfer messages to address 0x%x due to undefined bus%u",
+			msg->target_addr, msg->bus);
+		return -ENODEV;
+	}
+
+	int ret = 0;
+	struct i3c_dev_desc *desc;
+	struct i3c_priv_xfer xfer_data[I3C_MAX_BUFFER_COUNT];
+
+	desc = find_matching_desc(dev_i3c[msg->bus], msg->target_addr);
+	if (desc == NULL) {
+		LOG_ERR("Failed to transfer messages to address 0x%x due to unknown address",
+			msg->target_addr);
+		return -ENODEV;
+	}
+
+	xfer_data[0].rnw = I3C_WRITE_CMD;
+	xfer_data[0].len = msg->tx_len;
+	xfer_data[0].data.out = &msg->data;
+
+	xfer_data[1].rnw = I3C_READ_CMD;
+	xfer_data[1].len = msg->rx_len;
+	xfer_data[1].data.in = &msg->data;
+
+	ret = i3c_master_priv_xfer(desc, xfer_data, 2);
+	if (ret != 0) {
+		LOG_ERR("Failed to transfer messages to addr 0x%x, ret: %d", msg->target_addr, ret);
+	}
+
+	return -ret;
 }
 
 void util_init_i3c(void)

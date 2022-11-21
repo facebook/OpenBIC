@@ -26,6 +26,7 @@
 #include "plat_ipmi.h"
 #include "plat_sensor_table.h"
 #include "plat_i2c.h"
+#include "plat_pmic.h"
 #include "oem_1s_handler.h"
 #include "hal_gpio.h"
 #include "hal_i2c.h"
@@ -112,8 +113,11 @@ void ISR_POST_COMPLETE()
 
 K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_delayed_status);
 K_WORK_DELAYABLE_DEFINE(set_DC_off_10s_work, set_DC_off_delayed_status);
+K_WORK_DELAYABLE_DEFINE(read_pmic_critical_work, read_pmic_error_via_i3c);
 #define DC_ON_5_SECOND 5
 #define DC_OFF_10_SECOND 10
+// The PMIC needs a total of 100ms from CAMP signal assertion to complete the write operation
+#define READ_PMIC_CRITICAL_ERROR_MS 100
 void ISR_DC_ON()
 {
 	set_DC_status(PWRGD_SYS_PWROK);
@@ -128,6 +132,9 @@ void ISR_DC_ON()
 	} else {
 		set_DC_on_delayed_status();
 		k_work_schedule(&set_DC_off_10s_work, K_SECONDS(DC_OFF_10_SECOND));
+
+		// Read PMIC error when DC off
+		k_work_schedule(&read_pmic_critical_work, K_MSEC(READ_PMIC_CRITICAL_ERROR_MS));
 
 		if ((gpio_get(FM_SLPS3_PLD_N) == GPIO_HIGH) &&
 		    (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH)) {
@@ -299,14 +306,20 @@ void ISR_HSC_THROTTLE()
 	}
 }
 
-void ISR_MB_THROTTLE()
+static void mb_throttle_handler(struct k_work *work)
 {
+	static bool is_mb_throttle_assert = false;
 	common_addsel_msg_t sel_msg;
-	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
-		if (gpio_get(FAST_PROCHOT_N) == GPIO_HIGH) {
+
+	if (((gpio_get(FAST_PROCHOT_N) == LOW_ACTIVE) && (is_mb_throttle_assert == false)) ||
+	    ((gpio_get(FAST_PROCHOT_N) == LOW_INACTIVE) && (is_mb_throttle_assert == true))) {
+		memset(&sel_msg, 0, sizeof(common_addsel_msg_t));
+		if (gpio_get(FAST_PROCHOT_N) == LOW_INACTIVE) {
 			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
+			is_mb_throttle_assert = false;
 		} else {
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+			is_mb_throttle_assert = true;
 		}
 
 		sel_msg.InF_target = BMC_IPMB;
@@ -316,8 +329,22 @@ void ISR_MB_THROTTLE()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("MB Throttle addsel fail\n");
+			LOG_ERR("MB Throttle addsel fail");
 		}
+	}
+}
+
+K_WORK_DELAYABLE_DEFINE(mb_throttle_work, mb_throttle_handler);
+#define MB_THROTTLE_DELAY_US 4
+
+void ISR_MB_THROTTLE()
+{
+	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
+		if (k_work_cancel_delayable(&mb_throttle_work) != 0) {
+			LOG_ERR("Cancel caterr delay work fail");
+		}
+		/* start thread mb_throttle_handler after 4us */
+		k_work_schedule(&mb_throttle_work, K_USEC(MB_THROTTLE_DELAY_US));
 	}
 }
 
@@ -576,7 +603,8 @@ void ISR_CPU_VPP_INT()
 			if ((msg.data[3] != set_power_status) || (ret < 0)) {
 				// Notify 1OU BIC to turn on/off E1.S power
 				for (i = 0; i < retry; i++) {
-					ret = get_set_1ou_m2_power(&msg, device_id, set_power_status);
+					ret = get_set_1ou_m2_power(&msg, device_id,
+								   set_power_status);
 					if (ret == 0) {
 						break;
 					}

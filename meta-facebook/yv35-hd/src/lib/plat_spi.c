@@ -29,6 +29,11 @@ int pal_get_bios_flash_position()
 	return DEVSPI_SPI1_CS0;
 }
 
+int pal_get_prot_flash_position()
+{
+	return DEVSPI_SPI2_CS0;
+}
+
 bool pal_switch_bios_spi_mux(int gpio_status)
 {
 	uint8_t retry = 5;

@@ -29,18 +29,27 @@
 
 #include "plat_hwmon.h"
 
-static void init_dev_prsnt_status(void)
+static bool init_dev_prsnt_status(void)
 {
 	uint8_t i;
 	for (i = M2_IDX_E_A; i < M2_IDX_E_MAX; i++) {
 		if (!mb_cpld_dev_prsnt_set(i, m2_prsnt(i)))
-			return;
+			return false;
 	}
+
+	return true;
 }
 
-void BICup1secTickHandler()
+void BICup1secTickHandler(struct k_work *work)
 {
-	init_dev_prsnt_status();
+	if (!work) {
+		printf("BICup1secTickHandler get null work handler!\n");
+		return;
+	}
+
+	if (!init_dev_prsnt_status()) {
+		k_work_schedule((struct k_work_delayable *)work, K_SECONDS(1));
+	}
 }
 
 int8_t mb_cpld_dev_prsnt_set(uint32_t idx, uint32_t val)

@@ -51,7 +51,9 @@ static uint8_t set_thread_name(mctp *mctp_inst)
 	    mctp_inst->medium_type >= MCTP_MEDIUM_TYPE_MAX)
 		return MCTP_ERROR;
 
-	if (mctp_inst->medium_type == MCTP_MEDIUM_TYPE_SMBUS) {
+	switch (mctp_inst->medium_type) {
+	case MCTP_MEDIUM_TYPE_SMBUS:
+		LOG_INF("medium_type: smbus");
 		mctp_smbus_conf *smbus_conf = (mctp_smbus_conf *)&mctp_inst->medium_conf;
 		snprintf(mctp_inst->mctp_rx_task_name, sizeof(mctp_inst->mctp_rx_task_name),
 			 "mctprx_%02x_%02x_%02x", mctp_inst->medium_type, smbus_conf->bus,
@@ -59,6 +61,20 @@ static uint8_t set_thread_name(mctp *mctp_inst)
 		snprintf(mctp_inst->mctp_tx_task_name, sizeof(mctp_inst->mctp_tx_task_name),
 			 "mctptx_%02x_%02x_%02x", mctp_inst->medium_type, smbus_conf->bus,
 			 smbus_conf->addr);
+		break;
+	case MCTP_MEDIUM_TYPE_I3C:
+		LOG_INF("medium_type: i3c");
+		mctp_i3c_conf *i3c_conf = (mctp_i3c_conf *)&mctp_inst->medium_conf;
+		snprintf(mctp_inst->mctp_rx_task_name, sizeof(mctp_inst->mctp_rx_task_name),
+			 "mctprx_%02x_%02x_%02x", mctp_inst->medium_type, i3c_conf->bus,
+			 i3c_conf->addr);
+		snprintf(mctp_inst->mctp_tx_task_name, sizeof(mctp_inst->mctp_tx_task_name),
+			 "mctptx_%02x_%02x_%02x", mctp_inst->medium_type, i3c_conf->bus,
+			 i3c_conf->addr);
+		break;
+	default:
+		return MCTP_ERROR;
+		break;
 	}
 
 	return MCTP_SUCCESS;
@@ -75,6 +91,9 @@ static uint8_t mctp_medium_init(mctp *mctp_inst, mctp_medium_conf medium_conf)
 	case MCTP_MEDIUM_TYPE_SMBUS:
 		ret = mctp_smbus_init(mctp_inst, medium_conf);
 		break;
+	case MCTP_MEDIUM_TYPE_I3C:
+		ret = mctp_i3c_init(mctp_inst, medium_conf);
+		break;
 	default:
 		break;
 	}
@@ -90,6 +109,9 @@ static uint8_t mctp_medium_deinit(mctp *mctp_inst)
 	switch (mctp_inst->medium_type) {
 	case MCTP_MEDIUM_TYPE_SMBUS:
 		mctp_smbus_deinit(mctp_inst);
+		break;
+	case MCTP_MEDIUM_TYPE_I3C:
+		mctp_i3c_deinit(mctp_inst);
 		break;
 	default:
 		break;

@@ -86,7 +86,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S Outlet Temp",
+		"VF_E1S_OUTLET_TEMP_C",
 	},
 #if HSC_SENSOR
 	{
@@ -214,7 +214,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S P12V_AUX",
+		"VF_E1S_P12V_AUX_VOLT_V",
 	},
 	{
 		/***********************************/
@@ -278,7 +278,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S P12V_EDGE",
+		"VF_E1S_P12V_EDGE_VOLT_V",
 	},
 	{
 		/***********************************/
@@ -342,7 +342,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S P3V3_AUX",
+		"VF_E1S_P3V3_AUX_VOLT_V",
 	},
 	{
 		/***********************************/
@@ -536,7 +536,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S 12V_ADC_DEV0",
+		"VF_E1S_SSD0_12V_ADC_VOLT_V",
 	},
 	{
 		/***********************************/
@@ -600,7 +600,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S 12V_ADC_DEV1",
+		"VF_E1S_SSD1_12V_ADC_VOLT_V",
 	},
 	{
 		/***********************************/
@@ -664,7 +664,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S 12V_ADC_DEV2",
+		"VF_E1S_SSD2_12V_ADC_VOLT_V",
 	},
 	{
 		/***********************************/
@@ -728,7 +728,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S 12V_ADC_DEV3",
+		"VF_E1S_SSD3_12V_ADC_VOLT_V",
 	},
 	{
 		/***********************************/
@@ -792,7 +792,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S 3V3_ADC_DEV0",
+		"VF_E1S_SSD0_3V3_ADC_VOLT_V",
 	},
 	{
 		/***********************************/
@@ -856,7 +856,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S 3V3_ADC_DEV1",
+		"VF_E1S_SSD1_3V3_ADC_VOLT_V",
 	},
 	{
 		/***********************************/
@@ -920,7 +920,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S 3V3_ADC_DEV2",
+		"VF_E1S_SSD2_3V3_ADC_VOLT_V",
 	},
 	{
 		/***********************************/
@@ -984,7 +984,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S 3V3_ADC_DEV3",
+		"VF_E1S_SSD3_3V3_ADC_VOLT_V",
 	},
 #if HSC_SENSOR
 	{
@@ -1172,7 +1172,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S DEV0 Power",
+		"VF_E1S_SSD0_PWR_WATT_W",
 	},
 	{
 		/*********************/
@@ -1234,7 +1234,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S DEV1 Power",
+		"VF_E1S_SSD1_PWR_WATT_W",
 	},
 	{
 		/*********************/
@@ -1296,7 +1296,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S DEV2 Power",
+		"VF_E1S_SSD2_PWR_WATT_W",
 	},
 	{
 		/*********************/
@@ -1358,7 +1358,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S DEV3 Power",
+		"VF_E1S_SSD3_PWR_WATT_W",
 	},
 	{
 		/***********************************/
@@ -1422,7 +1422,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S DEV0 Voltage",
+		"VF_E1S_SSD0_VOLT_V",
 	},
 	{
 		/***********************************/
@@ -1486,7 +1486,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S DEV1 Voltage",
+		"VF_E1S_SSD1_VOLT_V",
 	},
 	{
 		/***********************************/
@@ -1550,7 +1550,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S DEV2 Voltage",
+		"VF_E1S_SSD2_VOLT_V",
 	},
 	{
 		/***********************************/
@@ -1614,7 +1614,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S DEV3 Voltage",
+		"VF_E1S_SSD3_VOLT_V",
 	},
 	{
 		/***********************************/
@@ -1676,7 +1676,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S DEV0 Temp",
+		"VF_E1S_SSD0_TEMP_C",
 	},
 	{
 		/***********************************/
@@ -1738,7 +1738,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S DEV1 Temp",
+		"VF_E1S_SSD1_TEMP_C",
 	},
 	{
 		/***********************************/
@@ -1800,7 +1800,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S DEV2 Temp",
+		"VF_E1S_SSD2_TEMP_C",
 	},
 	{
 		/***********************************/
@@ -1862,7 +1862,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S DEV3 Temp",
+		"VF_E1S_SSD3_TEMP_C",
 	},
 };
 

@@ -17,10 +17,49 @@
 #include <logging/log.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "sensor.h"
 #include "pldm.h"
+#include "hal_gpio.h"
 
 LOG_MODULE_DECLARE(pldm);
+
+K_FIFO_DEFINE(send_event_pkt_fifo);
+
+struct pldm_event_pkt {
+	void *fifo_reserved; /* 1st word reserved for use by fifo */
+	uint8_t event_class;
+	uint16_t id;
+	uint8_t ext_class;
+	uint8_t event_data[PLDM_MONITOR_EVENT_DATA_SIZE_MAX];
+	uint8_t event_data_length;
+};
+
+static struct pldm_event_receiver_info {
+	mctp *mctp_inst_p;
+	mctp_ext_params ext_params;
+} event_receiver_info = {
+	.mctp_inst_p = NULL,
+	.ext_params = { 0 },
+};
+
+static uint8_t get_sensor_data_size(pldm_sensor_readings_data_type_t data_type)
+{
+	switch (data_type) {
+	case PLDM_SENSOR_DATA_SIZE_UINT8:
+	case PLDM_SENSOR_DATA_SIZE_SINT8:
+		return PLDM_MONITOR_SENSOR_DATA_SIZE_INT8;
+	case PLDM_SENSOR_DATA_SIZE_UINT16:
+	case PLDM_SENSOR_DATA_SIZE_SINT16:
+		return PLDM_MONITOR_SENSOR_DATA_SIZE_INT16;
+	case PLDM_SENSOR_DATA_SIZE_UINT32:
+	case PLDM_SENSOR_DATA_SIZE_SINT32:
+		return PLDM_MONITOR_SENSOR_DATA_SIZE_INT32;
+	default:
+		LOG_ERR("Unsupported data type, (%d)", data_type);
+		return 0;
+	}
+}
 
 uint8_t pldm_get_sensor_reading(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
 				uint16_t *resp_len, void *ext_params)
@@ -80,7 +119,7 @@ uint8_t pldm_get_sensor_reading(void *mctp_inst, uint8_t *buf, uint16_t len, uin
 
 ret:
 	/* Only support 4-bytes unsinged sensor data */
-	res_p->sensor_data_size = PLDM_SENSOR_DATA_SIZE_UINT32;
+	res_p->sensor_data_size = get_sensor_data_size(PLDM_SENSOR_DATA_SIZE_UINT32);
 	res_p->sensor_event_message_enable = PLDM_EVENTS_DISABLED;
 	res_p->previous_state =
 		(res_p->completion_code == PLDM_SUCCESS) ? PLDM_SENSOR_NORMAL : PLDM_SENSOR_UNKNOWN;
@@ -155,9 +194,11 @@ static uint8_t pldm_encode_sensor_event_data(struct pldm_sensor_event_data *sens
 	return PLDM_SUCCESS;
 }
 
-uint8_t pldm_send_sensor_event(void *mctp_inst, mctp_ext_params ext_params, uint16_t sensor_id,
-			       pldm_sensor_event_class_t sensor_event_class,
-			       const uint8_t *sensor_event_data, uint8_t event_data_length)
+static uint8_t pldm_send_sensor_event_message(void *mctp_inst, mctp_ext_params ext_params,
+					      uint16_t sensor_id,
+					      pldm_sensor_event_class_t sensor_event_class,
+					      const uint8_t *sensor_event_data,
+					      uint8_t event_data_length)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(sensor_event_data, PLDM_ERROR_INVALID_DATA);
@@ -170,29 +211,43 @@ uint8_t pldm_send_sensor_event(void *mctp_inst, mctp_ext_params ext_params, uint
 		return PLDM_ERROR;
 	}
 
-	return pldm_platform_event_request(
+	return pldm_platform_event_message_req(
 		mctp_inst, ext_params, PLDM_SENSOR_EVENT, (uint8_t *)&sensor_event,
 		sizeof(struct pldm_sensor_event_data) + event_data_length - 1);
 }
 
-uint8_t pldm_send_effecter_event(void *mctp_inst, mctp_ext_params ext_params,
-				 struct pldm_effecter_event_data event_data)
+static uint8_t pldm_send_effecter_event_message(void *mctp_inst, mctp_ext_params ext_params,
+						uint16_t effecter_id,
+						pldm_effecter_event_class_t effecter_event_class,
+						const uint8_t *effecter_event_data,
+						uint8_t event_data_length)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(effecter_event_data, PLDM_ERROR_INVALID_DATA);
 
-	if (event_data.effecter_event_class != PLDM_EFFECTER_OP_STATE) {
-		LOG_ERR("Unsupport effecter event class, (%d)", event_data.effecter_event_class);
+	if (effecter_event_class != PLDM_EFFECTER_OP_STATE) {
+		LOG_ERR("Unsupport effecter event class, (%d)", effecter_event_class);
 		return PLDM_ERROR;
 	}
 
-	return pldm_platform_event_request(mctp_inst, ext_params, PLDM_EFFECTER_EVENT,
-					   (uint8_t *)&event_data,
-					   sizeof(struct pldm_effecter_event_data));
+	if (event_data_length != sizeof(struct pldm_effeter_event_op_state)) {
+		LOG_ERR("Invalid event data length, (%d)", event_data_length);
+		return PLDM_ERROR_INVALID_LENGTH;
+	}
+
+	struct pldm_effecter_event_data effecter_event = { 0 };
+	effecter_event.effecter_id = effecter_id;
+	effecter_event.effecter_event_class = effecter_event_class;
+	memcpy(effecter_event.event_class_data, effecter_event_data, event_data_length);
+
+	return pldm_platform_event_message_req(
+		mctp_inst, ext_params, PLDM_EFFECTER_EVENT, (uint8_t *)&effecter_event,
+		sizeof(struct pldm_effecter_event_data) + event_data_length - 1);
 }
 
-uint8_t pldm_platform_event_request(void *mctp_inst, mctp_ext_params ext_params,
-				    uint8_t event_class, const uint8_t *event_data,
-				    uint8_t event_data_length)
+uint8_t pldm_platform_event_message_req(void *mctp_inst, mctp_ext_params ext_params,
+					uint8_t event_class, const uint8_t *event_data,
+					uint8_t event_data_length)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(event_data, PLDM_ERROR_INVALID_DATA);
@@ -229,8 +284,342 @@ uint8_t pldm_platform_event_request(void *mctp_inst, mctp_ext_params ext_params,
 	return PLDM_SUCCESS;
 }
 
+static void process_event_message_queue()
+{
+	struct pldm_event_pkt *pkt;
+
+	while ((pkt = k_fifo_get(&send_event_pkt_fifo, K_NO_WAIT)) != NULL) {
+		if (pldm_send_platform_event(pkt->event_class, pkt->id, pkt->ext_class,
+					     pkt->event_data,
+					     pkt->event_data_length) != PLDM_SUCCESS) {
+			LOG_ERR("Send event failed, event_class (0x%x) id (0x%x) ext_class (%x)",
+				pkt->event_class, pkt->id, pkt->ext_class);
+			LOG_HEXDUMP_ERR(pkt->event_data, pkt->event_data_length, "Event data:");
+		} else {
+			LOG_DBG("Send event succeeded, event_class (0x%x) id (0x%x) ext_class (%x)",
+				pkt->event_class, pkt->id, pkt->ext_class);
+			LOG_HEXDUMP_DBG(pkt->event_data, pkt->event_data_length, "Event data:");
+		}
+
+		SAFE_FREE(pkt);
+		k_sleep(K_MSEC(1000));
+	}
+}
+
+K_WORK_DELAYABLE_DEFINE(send_event_pkt_work, process_event_message_queue);
+
+static uint8_t send_event_to_queue(uint8_t event_class, uint16_t id, uint8_t ext_class,
+				   const uint8_t *event_data, uint8_t event_data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(event_data, PLDM_ERROR);
+
+	static uint8_t count = 0;
+	struct pldm_event_pkt *pkt;
+
+	if (event_data_length > PLDM_MONITOR_EVENT_DATA_SIZE_MAX) {
+		LOG_ERR("Invalid event data length, (%d)", event_data_length);
+		return PLDM_ERROR_INVALID_LENGTH;
+	}
+
+	if (count > PLDM_MONITOR_EVENT_QUEUE_MSG_NUM_MAX - 1) {
+		LOG_ERR("Number of messages in the queue has reached maximum");
+		return PLDM_ERROR;
+	}
+
+	pkt = (struct pldm_event_pkt *)malloc(sizeof(struct pldm_event_pkt));
+
+	if (!pkt) {
+		LOG_ERR("Event packet memory allocate failed");
+		return PLDM_ERROR;
+	}
+
+	pkt->event_class = event_class;
+	pkt->id = id;
+	pkt->ext_class = ext_class;
+	pkt->event_data_length = event_data_length;
+
+	memcpy(pkt->event_data, event_data, event_data_length);
+
+	k_fifo_put(&send_event_pkt_fifo, pkt);
+	count++;
+
+	return PLDM_SUCCESS;
+}
+
+uint8_t pldm_send_platform_event(uint8_t event_class, uint16_t id, uint8_t ext_class,
+				 const uint8_t *event_data, uint8_t event_data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(event_data, PLDM_ERROR);
+
+	struct pldm_event_receiver_info *event_receiver_info_p = &event_receiver_info;
+
+	if (!event_receiver_info_p->mctp_inst_p) {
+		return send_event_to_queue(event_class, id, ext_class, event_data,
+					   event_data_length);
+	}
+
+	switch (event_class) {
+	case PLDM_SENSOR_EVENT:
+		return pldm_send_sensor_event_message(event_receiver_info_p->mctp_inst_p,
+						      event_receiver_info_p->ext_params, id,
+						      ext_class, event_data, event_data_length);
+	case PLDM_EFFECTER_EVENT:
+		return pldm_send_effecter_event_message(event_receiver_info_p->mctp_inst_p,
+							event_receiver_info_p->ext_params, id,
+							ext_class, event_data, event_data_length);
+	default:
+		LOG_ERR("Unsupported event class, (%d)", event_class);
+		return PLDM_ERROR;
+	}
+}
+
+uint8_t pldm_set_event_receiver(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
+				uint16_t *resp_len, void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
+
+	struct pldm_set_event_receiver_req *req_p = (struct pldm_set_event_receiver_req *)buf;
+	uint8_t *completion_code_p = resp;
+	mctp_ext_params *ext_params_p = (mctp_ext_params *)ext_params;
+	*resp_len = 1;
+
+	if (len != sizeof(struct pldm_set_event_receiver_req)) {
+		*completion_code_p = PLDM_ERROR_INVALID_LENGTH;
+		return PLDM_SUCCESS;
+	}
+
+	if (req_p->event_message_global_enable >
+	    PLDM_EVENT_MESSAGE_GLOBAL_ENABLE_ASYNC_KEEP_ALIVE) {
+		LOG_ERR("Unsupport event message global enable, (%d)",
+			req_p->event_message_global_enable);
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+		return PLDM_SUCCESS;
+	}
+
+	/* Only support MCTP protocol type currently */
+	if (req_p->transport_protocol_type != PLDM_TRANSPORT_PROTOCOL_TYPE_MCTP) {
+		LOG_ERR("Unsupport transport protocol type, (%d)", req_p->transport_protocol_type);
+		*completion_code_p = PLDM_PLATFORM_INVALID_PROTOCOL_TYPE;
+		return PLDM_SUCCESS;
+	}
+
+	if (req_p->event_receiver_address_info != ext_params_p->ep) {
+		LOG_ERR("Require set event receiver EID (0x%x) not match command sender (0x%x)",
+			req_p->event_receiver_address_info, ext_params_p->ep);
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+		return PLDM_SUCCESS;
+	}
+
+	event_receiver_info.mctp_inst_p = (mctp *)mctp_inst;
+	memcpy(&event_receiver_info.ext_params, ext_params_p, sizeof(*ext_params_p));
+
+	*completion_code_p = PLDM_SUCCESS;
+
+	k_work_schedule(&send_event_pkt_work, K_MSEC(1000));
+
+	return PLDM_SUCCESS;
+}
+
+static void oem_set_effecter_type_gpio_handler(uint8_t *buf, uint16_t len, uint8_t *resp,
+					       uint16_t *resp_len)
+{
+	CHECK_NULL_ARG(buf);
+	CHECK_NULL_ARG(resp);
+	CHECK_NULL_ARG(resp_len);
+
+	struct pldm_set_state_effecter_states_req *req_p =
+		(struct pldm_set_state_effecter_states_req *)buf;
+	uint8_t *completion_code_p = resp;
+	*resp_len = 1;
+
+	uint8_t gpio_pin = req_p->effecter_id & BIT_MASK(8);
+
+	/* Check whether the range of AST1030 gpio pins is correct */
+	if (gpio_pin > PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX) {
+		LOG_ERR("Unsupport GPIO pin number, (%d)", gpio_pin);
+		*completion_code_p = PLDM_OEM_GPIO_UNSUPPORT_RANGE;
+		return;
+	}
+
+	if (req_p->composite_effecter_count != PLDM_PLATFORM_OEM_GPIO_EFFECTER_STATE_FIELD_COUNT) {
+		LOG_ERR("Unsupport GPIO effecter count, (%d)", req_p->composite_effecter_count);
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+		return;
+	}
+
+	set_effecter_state_field_t *gpio_dir_state = &req_p->field[0];
+	set_effecter_state_field_t *gpio_val_state = &req_p->field[1];
+
+	/* Not support change GPIO direction and GPIO direciton value doesn't mater */
+	if ((gpio_dir_state->set_request != PLDM_NO_CHANGE) ||
+	    (gpio_val_state->set_request >= PLDM_SET_REQUEST_MAX)) {
+		LOG_ERR("Unsupport GPIO effecter set request, direction (%d) value (%d)",
+			gpio_dir_state->set_request, gpio_val_state->set_request);
+		*completion_code_p = PLDM_PLATFORM_UNSUPPORTED_EFFECTERSTATE;
+		return;
+	}
+
+	if ((gpio_dir_state->effecter_state >= EFFECTER_STATE_GPIO_DIRECTION_MAX) ||
+	    (gpio_val_state->effecter_state >= EFFECTER_STATE_GPIO_VALUE_MAX)) {
+		LOG_ERR("Unsupport GPIO effecter state, direction (%d) value (%d)",
+			gpio_dir_state->effecter_state, gpio_val_state->effecter_state);
+		*completion_code_p = PLDM_PLATFORM_INVALID_STATE_VALUE;
+		return;
+	}
+
+	/* Set output pin value only */
+	if (!gpio_get_direction(gpio_pin)) {
+		LOG_ERR("Can't set input pin (%d) value", gpio_pin);
+		*completion_code_p = PLDM_OEM_GPIO_EFFECTER_VALUE_UNKNOWN;
+		return;
+	} else {
+		if (gpio_val_state->effecter_state == EFFECTER_STATE_GPIO_VALUE_UNKNOWN) {
+			*completion_code_p = PLDM_OEM_GPIO_EFFECTER_VALUE_UNKNOWN;
+			return;
+		} else {
+			uint8_t gpio_val =
+				((gpio_val_state->effecter_state == EFFECTER_STATE_GPIO_VALUE_LOW) ?
+					 GPIO_LOW :
+					 GPIO_HIGH);
+			gpio_set(gpio_pin, gpio_val);
+			*completion_code_p = PLDM_SUCCESS;
+			return;
+		}
+	}
+}
+
+uint8_t pldm_set_state_effecter_states(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
+				       uint16_t *resp_len, void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
+
+	struct pldm_set_state_effecter_states_req *req_p =
+		(struct pldm_set_state_effecter_states_req *)buf;
+	uint8_t *completion_code_p = resp;
+	*resp_len = 1;
+
+	if (req_p->composite_effecter_count < 0x01 || req_p->composite_effecter_count > 0x08) {
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+		return PLDM_SUCCESS;
+	}
+
+	if (len != (PLDM_SET_STATE_EFFECTER_REQ_NO_STATE_FIELD_BYTES +
+		    sizeof(set_effecter_state_field_t) * req_p->composite_effecter_count)) {
+		*completion_code_p = PLDM_ERROR_INVALID_LENGTH;
+		return PLDM_SUCCESS;
+	}
+
+	uint8_t oem_effecter_type = req_p->effecter_id >> 8;
+
+	switch (oem_effecter_type) {
+	case OEM_EFFECTER_TYPE_GPIO:
+		oem_set_effecter_type_gpio_handler(buf, len, resp, resp_len);
+		break;
+	default:
+		LOG_ERR("Unsupport effecter type, (%d)", oem_effecter_type);
+		*completion_code_p = PLDM_PLATFORM_INVALID_EFFECTER_ID;
+		break;
+	}
+
+	return PLDM_SUCCESS;
+}
+
+static void oem_get_effecter_type_gpio_handler(uint8_t *buf, uint16_t len, uint8_t *resp,
+					       uint16_t *resp_len)
+{
+	CHECK_NULL_ARG(buf);
+	CHECK_NULL_ARG(resp);
+	CHECK_NULL_ARG(resp_len);
+
+	struct pldm_get_state_effecter_states_req *req_p =
+		(struct pldm_get_state_effecter_states_req *)buf;
+	struct pldm_get_state_effecter_states_resp *res_p =
+		(struct pldm_get_state_effecter_states_resp *)resp;
+
+	uint8_t gpio_pin = req_p->effecter_id & BIT_MASK(8);
+
+	if (gpio_pin > PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX) {
+		LOG_ERR("Unsupport GPIO pin number, (%d)", gpio_pin);
+		res_p->completion_code = PLDM_OEM_GPIO_UNSUPPORT_RANGE;
+		return;
+	}
+
+	get_effecter_state_field_t *gpio_dir_state = &res_p->field[0];
+	get_effecter_state_field_t *gpio_val_state = &res_p->field[1];
+
+	if (!gpio_cfg[gpio_pin].is_init) {
+		LOG_WRN("Pin %d is not configured as GPIO", gpio_pin);
+		gpio_dir_state->effecter_op_state = gpio_val_state->effecter_op_state =
+			PLDM_EFFECTER_DISABLED;
+		gpio_dir_state->previous_state = gpio_dir_state->pending_state =
+			EFFECTER_STATE_GPIO_DIRECTION_UNKNOWN;
+		gpio_val_state->previous_state = gpio_val_state->pending_state =
+			EFFECTER_STATE_GPIO_VALUE_UNKNOWN;
+	} else {
+		gpio_dir_state->effecter_op_state = gpio_val_state->effecter_op_state =
+			PLDM_EFFECTER_ENABLED_NOUPDATEPENDING;
+		gpio_dir_state->previous_state = gpio_dir_state->pending_state =
+			(!gpio_get_direction(gpio_pin) ? EFFECTER_STATE_GPIO_DIRECTION_INPUT :
+							 EFFECTER_STATE_GPIO_DIRECTION_OUTPUT);
+		gpio_val_state->previous_state = gpio_val_state->pending_state =
+			(!gpio_get(gpio_pin) ? EFFECTER_STATE_GPIO_VALUE_LOW :
+					       EFFECTER_STATE_GPIO_VALUE_HIGH);
+	}
+
+	*resp_len = PLDM_GET_STATE_EFFECTER_RESP_NO_STATE_FIELD_BYTES +
+		    (sizeof(get_effecter_state_field_t) *
+		     PLDM_PLATFORM_OEM_GPIO_EFFECTER_STATE_FIELD_COUNT);
+	res_p->composite_effecter_count = PLDM_PLATFORM_OEM_GPIO_EFFECTER_STATE_FIELD_COUNT;
+	res_p->completion_code = PLDM_SUCCESS;
+}
+
+uint8_t pldm_get_state_effecter_states(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
+				       uint16_t *resp_len, void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
+
+	struct pldm_get_state_effecter_states_req *req_p =
+		(struct pldm_get_state_effecter_states_req *)buf;
+	struct pldm_get_state_effecter_states_resp *res_p =
+		(struct pldm_get_state_effecter_states_resp *)resp;
+	*resp_len = 1;
+
+	if (len != sizeof(struct pldm_get_state_effecter_states_req)) {
+		res_p->completion_code = PLDM_ERROR_INVALID_LENGTH;
+		return PLDM_SUCCESS;
+	}
+
+	uint8_t oem_effecter_type = req_p->effecter_id >> 8;
+
+	switch (oem_effecter_type) {
+	case OEM_EFFECTER_TYPE_GPIO:
+		oem_get_effecter_type_gpio_handler(buf, len, resp, resp_len);
+		break;
+	default:
+		res_p->completion_code = PLDM_PLATFORM_INVALID_EFFECTER_ID;
+		break;
+	}
+
+	return PLDM_SUCCESS;
+}
+
 static pldm_cmd_handler pldm_monitor_cmd_tbl[] = {
 	{ PLDM_MONITOR_CMD_CODE_GET_SENSOR_READING, pldm_get_sensor_reading },
+	{ PLDM_MONITOR_CMD_CODE_SET_EVENT_RECEIVER, pldm_set_event_receiver },
+	{ PLDM_MONITOR_CMD_CODE_SET_STATE_EFFECTER_STATES, pldm_set_state_effecter_states },
+	{ PLDM_MONITOR_CMD_CODE_GET_STATE_EFFECTER_STATES, pldm_get_state_effecter_states },
 };
 
 uint8_t pldm_monitor_handler_query(uint8_t code, void **ret_fn)

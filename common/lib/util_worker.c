@@ -29,6 +29,8 @@
 #define WARN_WORK_PROC_TIME_MS 1000
 
 K_THREAD_STACK_DEFINE(worker_stack_area, WORKER_STACK_SIZE);
+K_THREAD_STACK_DEFINE(plat_worker_stack_area, WORKER_STACK_SIZE);
+struct k_work_q plat_work_q;
 static struct k_work_q worker_work_q;
 static struct k_mutex mutex_use_count;
 static uint8_t work_count;
@@ -158,4 +160,16 @@ void init_worker()
 			   K_THREAD_STACK_SIZEOF(worker_stack_area), WORKER_PRIORITY, NULL);
 	k_thread_name_set(&worker_work_q.thread, "util_worker");
 	k_mutex_init(&mutex_use_count);
+}
+
+/* Initialize platform work queue
+ *
+ * Should call this function to initialize worker before use other APIs.
+ * It export the work queue for queue operation
+ */
+void init_plat_worker(int priority)
+{
+	k_work_queue_start(&plat_work_q, plat_worker_stack_area,
+			   K_THREAD_STACK_SIZEOF(plat_worker_stack_area), priority, NULL);
+	k_thread_name_set(&plat_work_q.thread, "plat_worker");
 }

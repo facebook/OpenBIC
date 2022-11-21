@@ -43,7 +43,7 @@
 #include "util_sys.h"
 #include <logging/log.h>
 #ifdef ENABLE_APML
-#include "apml.h"
+#include "plat_apml.h"
 #endif
 #include "pcc.h"
 #include "hal_wdt.h"
@@ -263,6 +263,22 @@ __weak void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 	} else if (target == CXL_UPDATE || (target == (CXL_UPDATE | IS_SECTOR_END_MASK))) {
 		status =
 			fw_update_cxl(offset, length, &msg->data[7], (target & IS_SECTOR_END_MASK));
+
+	} else if (target == PRoT_FLASH_UPDATE ||
+		   (target == (PRoT_FLASH_UPDATE | IS_SECTOR_END_MASK))) {
+		if (offset > BIOS_UPDATE_MAX_OFFSET) {
+			msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+			return;
+		}
+
+		int pos = pal_get_prot_flash_position();
+		if (pos == -1) {
+			msg->completion_code = CC_INVALID_PARAM;
+			return;
+		}
+
+		status = fw_update(offset, length, &msg->data[7], (target & IS_SECTOR_END_MASK),
+				   pos);
 
 	} else {
 		msg->completion_code = CC_INVALID_DATA_FIELD;
@@ -606,6 +622,19 @@ __weak void OEM_1S_READ_FW_IMAGE(ipmi_msg *msg)
 		if (!pal_switch_bios_spi_mux(GPIO_LOW)) {
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			return;
+		}
+	} else if (target == PRoT_FLASH_UPDATE) {
+		int pos = pal_get_prot_flash_position();
+
+		if (pos == -1) {
+			msg->completion_code = CC_INVALID_PARAM;
+		} else {
+			if (read_fw_image(offset, length, msg->data, pos)) {
+				msg->completion_code = CC_UNSPECIFIED_ERROR;
+			} else {
+				msg->data_len = length;
+				msg->completion_code = CC_SUCCESS;
+			}
 		}
 	} else {
 		msg->completion_code = CC_INVALID_DATA_FIELD;
@@ -1944,7 +1973,14 @@ __weak void OEM_1S_BMC_IPMB_ACCESS(ipmi_msg *msg)
 	msg->completion_code = CC_UNSPECIFIED_ERROR;
 
 #endif
+}
 
+__weak void OEM_1S_GET_BIOS_VERSION(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
 	return;
 }
 
@@ -2166,6 +2202,10 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_BMC_IPMB_ACCESS:
 		LOG_DBG("Received 1S BMC IPMB Access command");
 		OEM_1S_BMC_IPMB_ACCESS(msg);
+		break;
+	case CMD_OEM_1S_GET_BIOS_VERSION:
+		LOG_DBG("Received 1S Get BIOS version command");
+		OEM_1S_GET_BIOS_VERSION(msg);
 		break;
 	default:
 		LOG_ERR("Invalid OEM message, netfn(0x%x) cmd(0x%x)", msg->netfn, msg->cmd);

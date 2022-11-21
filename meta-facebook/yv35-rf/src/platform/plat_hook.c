@@ -28,8 +28,8 @@
 adc_asd_init_arg adc_asd_init_args[] = { [0] = { .is_init = false } };
 
 ina233_init_arg ina233_init_args[] = {
-	[0] = { .is_init = false },
-	[1] = { .is_init = false },
+	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
+	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
 };
 
 /**************************************************************************************************
@@ -120,40 +120,6 @@ bool pre_vr_read(uint8_t sensor_num, void *args)
 		return false;
 	}
 
-	return true;
-}
-
-bool pre_ina233_read(uint8_t sensor_num, void *args)
-{
-	ARG_UNUSED(args);
-	ina233_init_arg *init_arg =
-		(ina233_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
-	if (init_arg == NULL) {
-		printf("[%s] input initial pointer is NULL\n", __func__);
-		return false;
-	}
-
-	if (init_arg->is_init != true) {
-		int ret = 0, retry = 5;
-		I2C_MSG msg;
-		memset(&msg, 0, sizeof(I2C_MSG));
-
-		msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-		msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
-		msg.tx_len = 3;
-		// Current_lsb = 0.001 , r_shunt = 0.005
-		// Calibration formula = (0.00512 / (current_lsb * r_shunt)) = 1024(dec) = 0x400(hex)
-		msg.data[0] = INA233_CALIBRATION_OFFSET;
-		msg.data[1] = 0x00; // Calibration value
-		msg.data[2] = 0x04; // Calibration value
-
-		ret = i2c_master_write(&msg, retry);
-		if (ret != 0) {
-			printf("[%s] i2c write fail  ret: %d\n", __func__, ret);
-			return false;
-		}
-		init_arg->is_init = true;
-	}
 	return true;
 }
 

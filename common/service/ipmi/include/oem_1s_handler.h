@@ -51,6 +51,7 @@ enum FIRWARE_UPDATE_TARGET {
 	CPLD_UPDATE,
 	BIC_UPDATE,
 	CXL_UPDATE,
+	PRoT_FLASH_UPDATE,
 };
 
 #define GLOBAL_GPIO_IDX_KEY 0xFF
@@ -100,6 +101,7 @@ void OEM_1S_CLEAR_CMOS(ipmi_msg *msg);
 void OEM_1S_NOTIFY_PMIC_ERROR(ipmi_msg *msg);
 void OEM_1S_GET_SDR(ipmi_msg *msg);
 void OEM_1S_BMC_IPMB_ACCESS(ipmi_msg *msg);
+void OEM_1S_GET_BIOS_VERSION(ipmi_msg *msg);
 
 #ifdef CONFIG_SNOOP_ASPEED
 void OEM_1S_GET_POST_CODE(ipmi_msg *msg);

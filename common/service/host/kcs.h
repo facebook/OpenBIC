@@ -26,7 +26,7 @@
 #define KCS_POLLING_INTERVAL 100
 #define KCS_BUFF_SIZE 256
 
-#define DEBUG_KCS 0
+#define CMD_SYS_INFO_FW_VERSION 0x01
 
 struct kcs_request {
 	uint8_t netfn;

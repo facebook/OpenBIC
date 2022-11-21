@@ -204,6 +204,8 @@ uint8_t mctp_bridge_msg(mctp *mctp_inst, uint8_t *buf, uint16_t len, mctp_ext_pa
 /* medium init/deinit */
 uint8_t mctp_smbus_init(mctp *mctp_inst, mctp_medium_conf medium_conf);
 uint8_t mctp_smbus_deinit(mctp *mctp_inst);
+uint8_t mctp_i3c_init(mctp *mctp_instance, mctp_medium_conf medium_conf);
+uint8_t mctp_i3c_deinit(mctp *mctp_instance);
 
 /* register endpoint resolve function */
 uint8_t mctp_reg_endpoint_resolve_func(mctp *mctp_inst, endpoint_resolve resolve_fn);

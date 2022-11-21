@@ -32,6 +32,12 @@ enum BIC_BOARD_REVISION {
 	SYS_BOARD_PVT = 0x80,
 };
 
+enum VR_VENDER_TYPE {
+	VR_VENDER_RENESAS = 0x0,
+	VR_VENDER_INFINEON = 0x1,
+	VR_VENDER_MPS = 0x2,
+};
+
 typedef struct _CARD_STATUS_ {
 	bool present;
 	uint8_t card_type;
