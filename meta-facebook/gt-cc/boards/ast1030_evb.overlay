@@ -149,7 +149,7 @@
 &spi1_cs0 {
 	status = "okay";
 	spi-max-buswidth = <1>;
-	spi-max-frequency = <50000000>;
+	spi-max-frequency = <33000000>;
 	re-init-support;
 };
 
