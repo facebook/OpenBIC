@@ -47,5 +47,6 @@ uint8_t FRU_read(EEPROM_ENTRY *entry);
 uint8_t FRU_write(EEPROM_ENTRY *entry);
 void pal_load_fru_config(void);
 void FRU_init(void);
+bool write_psb_inform(EEPROM_ENTRY *entry);
 
 #endif

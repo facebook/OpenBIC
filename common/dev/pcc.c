@@ -27,6 +27,7 @@
 #include <logging/log.h>
 #include "libipmi.h"
 #include "plat_sensor_table.h"
+#include "plat_fru.h"
 
 #define PSB_POSTCODE_PREFIX 0xEE
 #define ABL_POSTCODE_PREFIX 0xEA
@@ -104,6 +105,8 @@ void check_PSB_error(uint32_t postcode)
 		return;
 	}
 
+	/* Match PSB error */
+	/* Add SEL */
 	common_addsel_msg_t sel_msg;
 	sel_msg.InF_target = BMC_IPMB;
 	sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_PSB_ERROR;
@@ -114,6 +117,21 @@ void check_PSB_error(uint32_t postcode)
 	sel_msg.event_data3 = 0xFF;
 	if (!common_add_sel_evt_record(&sel_msg)) {
 		LOG_ERR("Failed to assert PSB event log, post code 0x%08x.", postcode);
+	}
+
+	/* write PSB error code to CPU EEPROM */
+	EEPROM_ENTRY psb_inform = { 0 };
+	psb_inform.data_len = PSB_ERROR_MAX_SIZE;
+	memset(&psb_inform.data, 0xFF, EEPROM_WRITE_SIZE);
+	psb_inform.data[4] = error_code;
+	uint8_t checksum = 0;
+	for (int i = 0; i < (PSB_ERROR_MAX_SIZE - 1); i++) {
+		checksum -= psb_inform.data[i];
+	}
+	psb_inform.data[PSB_ERROR_MAX_SIZE - 1] = checksum;
+
+	if (!write_psb_inform(&psb_inform)) {
+		LOG_ERR("Failed to write PSB to EEPROM, post code 0x%08x.", postcode);
 	}
 }
 

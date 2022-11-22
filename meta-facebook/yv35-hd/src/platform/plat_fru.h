@@ -17,10 +17,11 @@
 #ifndef PLAT_FRU_H
 #define PLAT_FRU_H
 
-#include "eeprom.h"
+#include "fru.h"
 
 #define MB_FRU_PORT 0x01
 #define MB_FRU_ADDR 0x54
+#define MB_CPU_EEPROM_ADDR 0x50
 
 #define DPV2_FRU_PORT 0x08
 #define DPV2_FRU_ADDR 0x51
@@ -30,6 +31,9 @@
 #define BIOS_FW_VERSION_BLOCK_NUM 2
 #define BIOS_FW_VERSION_SECOND_BLOCK_OFFSET 17
 #define BIOS_FW_VERSION_BLOCK_MAX_SIZE 17
+
+#define PSB_ERROR_START 0x0002
+#define PSB_ERROR_MAX_SIZE 9
 
 enum {
 	MB_FRU_ID,
