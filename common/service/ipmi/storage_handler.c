@@ -181,6 +181,12 @@ __weak void STORAGE_RSV_SDR(ipmi_msg *msg)
 	return;
 }
 
+__weak void pal_set_SDR(uint8_t *table_ptr)
+{
+	// set SDR before copy to msg->data
+	return;
+}
+
 __weak void STORAGE_GET_SDR(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -233,6 +239,7 @@ __weak void STORAGE_GET_SDR(ipmi_msg *msg)
 	msg->data[1] = (next_record_ID >> 8) & 0xFF;
 
 	table_ptr = (uint8_t *)&full_sdr_table[record_ID];
+	pal_set_SDR(table_ptr);
 	memcpy(&msg->data[2], (table_ptr + offset), req_len);
 
 	msg->data_len = req_len + 2; // return next record ID + sdr data
