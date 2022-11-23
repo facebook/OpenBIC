@@ -19,7 +19,7 @@
 
 #include "version.h"
 
-#define PLATFORM_NAME "Yosemite 3"
+#define PLATFORM_NAME "Yosemite V3"
 #define PROJECT_NAME "Delta Lake"
 #define PROJECT_STAGE MP
 
