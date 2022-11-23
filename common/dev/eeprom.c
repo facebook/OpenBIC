@@ -51,6 +51,13 @@ bool eeprom_write(EEPROM_ENTRY *entry)
 	uint8_t retry = 5;
 	uint8_t i;
 
+	if (entry->config.bus_mutex) {
+		if (k_mutex_lock(entry->config.bus_mutex, K_MSEC(1000))) {
+			LOG_ERR("Failed to lock mutex on bus %d", entry->config.port);
+			return false;
+		}
+	}
+
 	for (i = 0; i < retry; i++) {
 		/* Check if there have a MUX before EEPROM and access it to change channel first */
 		if (eeprom_mux_check(entry) == false)
@@ -68,6 +75,11 @@ bool eeprom_write(EEPROM_ENTRY *entry)
 			break;
 	}
 
+	if (entry->config.bus_mutex) {
+		if (k_mutex_unlock(entry->config.bus_mutex))
+			LOG_ERR("Failed to unlock mutex on bus %d", entry->config.port);
+	}
+
 	return ((i == retry) ? false : true);
 }
 
@@ -81,6 +93,13 @@ bool eeprom_read(EEPROM_ENTRY *entry)
 	I2C_MSG msg;
 	uint8_t retry = 5;
 	uint8_t i;
+
+	if (entry->config.bus_mutex) {
+		if (k_mutex_lock(entry->config.bus_mutex, K_MSEC(1000))) {
+			LOG_ERR("Failed to lock mutex on bus %d", entry->config.port);
+			return false;
+		}
+	}
 
 	for (i = 0; i < retry; i++) {
 		/* Check if there have a MUX before EEPROM and access it to change channel first */
@@ -100,6 +119,11 @@ bool eeprom_read(EEPROM_ENTRY *entry)
 			memcpy(&entry->data, &msg.data, msg.rx_len);
 			break;
 		}
+	}
+
+	if (entry->config.bus_mutex) {
+		if (k_mutex_unlock(entry->config.bus_mutex))
+			LOG_ERR("Failed to unlock mutex on bus %d", entry->config.port);
 	}
 
 	return ((i == retry) ? false : true);
