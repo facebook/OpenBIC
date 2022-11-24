@@ -20,18 +20,9 @@
 #include "ipmb.h"
 #include "plat_i2c.h"
 
-#define IPMB_MB_BMC_BUS I2C_BUS9
-#define IPMB_MC_BIC_BUS I2C_BUS6
-
 #define SELF_I2C_ADDRESS 0x20
-#define MB_BMC_I2C_ADDRESS 0x10
-#define MC_BIC_I2C_ADDRESS 0x20
-#define MAX_IPMB_IDX 2
-
-enum CONTROLLER_INDEX_NUMBER {
-	MB_BMC_IPMB_IDX,
-	MC_BIC_IPMB_IDX,
-};
+#define MAX_IPMB_IDX 0
 
 extern IPMB_config pal_IPMB_config_table[];
+
 #endif

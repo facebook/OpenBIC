@@ -14,30 +14,21 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_I2C_H
-#define PLAT_I2C_H
+/*
+ * Copyright (c) 2012-2014 Wind River Systems, Inc.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-#include "hal_i2c.h"
+#ifndef _PLAT_MCTP_H
+#define _PLAT_MCTP_H
 
-// map i2c bus to peripherial bus
-// i2c peripheral 1 based, as used i2c index 0 in firmware.
-#define I2C_BUS1 0
-#define I2C_BUS2 1
-#define I2C_BUS3 2
-#define I2C_BUS4 3
-#define I2C_BUS5 4
-#define I2C_BUS6 5
-#define I2C_BUS7 6
-#define I2C_BUS8 7
-#define I2C_BUS9 8
-#define I2C_BUS10 9
+#include "plat_i2c.h"
 
-/** i3c register as i2c **/
-#define I2C_BUS11 10
-#define I2C_BUS12 11
-#define I3C_BUS1 I2C_BUS11
-#define I3C_BUS2 I2C_BUS12
+#define I2C_BUS_BMC I2C_BUS9
+#define I3C_BUS_BMC I3C_BUS1
+#define I2C_ADDR_BIC 0x40
 
-#define I2C_BUS_MAX_NUM 14
+void plat_mctp_init(void);
 
 #endif

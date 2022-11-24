@@ -18,8 +18,9 @@
 #include "hal_peci.h"
 #include "power_status.h"
 #include "util_sys.h"
-#include "plat_def.h"
 #include "plat_gpio.h"
+#include "plat_mctp.h"
+#include "plat_i2c_target.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -27,7 +28,18 @@ SCU_CFG scu_cfg[] = {
 
 void pal_pre_init()
 {
-	return;
+	/* init i2c target */
+	for (int index = 0; index < MAX_TARGET_NUM; index++) {
+		if (I2C_TARGET_ENABLE_TABLE[index])
+			i2c_target_control(
+				index, (struct _i2c_target_config *)&I2C_TARGET_CONFIG_TABLE[index],
+				1);
+	}
+}
+
+void pal_post_init()
+{
+	plat_mctp_init();
 }
 
 void pal_device_init()

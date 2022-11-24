@@ -16,25 +16,7 @@
 
 #include "plat_ipmb.h"
 
-#include <stdio.h>
-#include <string.h>
-#include "cmsis_os2.h"
-#include "plat_i2c.h"
-#include "plat_ipmi.h"
-
 IPMB_config pal_IPMB_config_table[] = {
 	// index, interface, channel, bus, channel_target_address, enable_status, self_address,
 	// rx_thread_name, tx_thread_name
-	{ MB_BMC_IPMB_IDX, I2C_IF, BMC_IPMB, IPMB_MB_BMC_BUS, MB_BMC_I2C_ADDRESS, ENABLE,
-	  SELF_I2C_ADDRESS, "RX_MB_BMC_IPMB_TASK", "TX_MB_BMC_IPMB_TASK" },
-	{ MC_BIC_IPMB_IDX, I2C_IF, EXP1_IPMB, IPMB_MC_BIC_BUS, MC_BIC_I2C_ADDRESS, ENABLE,
-	  SELF_I2C_ADDRESS, "RX_MC_BIC_IPMB_TASK", "TX_MC_BIC_IPMB_TASK" },
-	{ RESERVED_IDX, RESERVED_IF, RESERVED, RESERVED_BUS, RESERVED_ADDRESS, DISABLE,
-	  RESERVED_ADDRESS, "RESERVED_ATTR", "RESERVED_ATTR" },
-};
-
-bool pal_load_ipmb_config(void)
-{
-	memcpy(&IPMB_config_table[0], &pal_IPMB_config_table[0], sizeof(pal_IPMB_config_table));
-	return true;
 };
