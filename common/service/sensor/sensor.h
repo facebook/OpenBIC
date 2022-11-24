@@ -120,6 +120,7 @@ enum SENSOR_DEV {
 	sensor_dev_ddr5_temp = 0x1E,
 	sensor_dev_adm1272 = 0x1F,
 	sensor_dev_q50sn120a1 = 0x20,
+	sensor_dev_mp2971 = 0x21,
 	sensor_dev_max
 };
 
