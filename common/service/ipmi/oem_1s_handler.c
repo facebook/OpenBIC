@@ -207,7 +207,7 @@ __weak void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 		return;
 	}
 
-	if (target == BIOS_UPDATE) {
+	if (target == BIOS_UPDATE || (target == (BIOS_UPDATE | IS_SECTOR_END_MASK))) {
 		// BIOS size maximum 64M bytes
 		if (offset > BIOS_UPDATE_MAX_OFFSET) {
 			msg->completion_code = CC_PARAM_OUT_OF_RANGE;
