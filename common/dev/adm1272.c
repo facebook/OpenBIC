@@ -35,6 +35,7 @@ int adm1272_convert_real_value(uint8_t vrange, uint8_t irange, uint8_t offset, f
 	int convert_coefficient_R = 0;
 
 	switch (offset) {
+	case PMBUS_READ_VIN:
 	case PMBUS_READ_VOUT:
 		switch (vrange) {
 		case VRANGE_0V_TO_60V:
@@ -191,6 +192,67 @@ int adm1272_read_pout(uint8_t sensor_num, float *val)
 	return 0;
 }
 
+int adm1272_read_iin(uint8_t sensor_num, float *val)
+{
+	CHECK_NULL_ARG_WITH_RETURN(val, -1);
+
+	sensor_cfg cfg = sensor_config[sensor_config_index_map[sensor_num]];
+	adm1272_init_arg *init_arg =
+		(adm1272_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+
+	uint8_t retry = 5;
+	int ret = 0;
+	float vin = 0;
+	float pin = 0;
+	I2C_MSG msg = { 0 };
+
+	/* Read voltage in */
+	msg.bus = cfg.port;
+	msg.target_addr = cfg.target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 2;
+	msg.data[0] = PMBUS_READ_VIN;
+
+	ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Read vin fail, ret: %d", ret);
+		return -1;
+	}
+	vin = (msg.data[1] << 8) | msg.data[0];
+	ret = adm1272_convert_real_value(init_arg->pwr_monitor_cfg.fields.VRANGE,
+					 init_arg->pwr_monitor_cfg.fields.IRANGE, PMBUS_READ_VIN,
+					 &vin);
+	if ((ret != 0) || (vin == 0)) {
+		LOG_ERR("Convert vin value fail");
+		return -1;
+	}
+
+	/* Read power in */
+	memset(&msg, 0, sizeof(msg));
+	msg.bus = cfg.port;
+	msg.target_addr = cfg.target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 2;
+	msg.data[0] = PMBUS_READ_PIN;
+
+	ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Read pin fail, ret: %d", ret);
+		return -1;
+	}
+	pin = (msg.data[1] << 8) | msg.data[0];
+	ret = adm1272_convert_real_value(init_arg->pwr_monitor_cfg.fields.VRANGE,
+					 init_arg->pwr_monitor_cfg.fields.IRANGE, PMBUS_READ_PIN,
+					 &pin);
+	if (ret != 0) {
+		LOG_ERR("Convert pin value fail");
+		return -1;
+	}
+
+	*val = pin / vin;
+	return 0;
+}
+
 uint8_t adm1272_read(uint8_t sensor_num, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
@@ -218,7 +280,7 @@ uint8_t adm1272_read(uint8_t sensor_num, int *reading)
 	int ret = 0;
 	uint8_t offset = sensor_config[sensor_config_index_map[sensor_num]].offset;
 
-	if (offset != PMBUS_READ_POUT) {
+	if ((offset != PMBUS_READ_POUT) && (offset != PMBUS_READ_IIN)) {
 		msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
 		msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
 		msg.tx_len = 1;
@@ -233,6 +295,7 @@ uint8_t adm1272_read(uint8_t sensor_num, int *reading)
 	}
 
 	switch (offset) {
+	case PMBUS_READ_VIN:
 	case PMBUS_READ_VOUT:
 	case PMBUS_READ_IOUT:
 	case PMBUS_READ_TEMPERATURE_1:
@@ -241,6 +304,9 @@ uint8_t adm1272_read(uint8_t sensor_num, int *reading)
 		ret = adm1272_convert_real_value(init_arg->pwr_monitor_cfg.fields.VRANGE,
 						 init_arg->pwr_monitor_cfg.fields.IRANGE, offset,
 						 &val);
+		break;
+	case PMBUS_READ_IIN:
+		ret = adm1272_read_iin(sensor_num, &val);
 		break;
 	case PMBUS_READ_POUT:
 		ret = adm1272_read_pout(sensor_num, &val);

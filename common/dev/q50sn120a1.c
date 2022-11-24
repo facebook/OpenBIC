@@ -20,51 +20,39 @@
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "pmbus.h"
+#include "util_pmbus.h"
 
 LOG_MODULE_REGISTER(dev_q50sn120a1);
-
-/** Q50SN120A1 VOUT scale is exponent -12 base 2 **/
-#define Q50SN120A1_VOUT_SCALE 0.000244140625
-
-/** Q50SN120A1 IOUT/Temperature scale is exponent -2 base 2 **/
-#define Q50SN120A1_IOUT_SCALE 0.25
-#define Q50SN120A1_TEMPERATURE_SCALE 0.25
 
 int q50sn120a1_read_pout(uint8_t sensor_num, float *pout_value)
 {
 	CHECK_NULL_ARG_WITH_RETURN(pout_value, -1)
 
-	uint8_t retry = 5;
-	float vout = 0, iout = 0;
 	int ret = 0;
-	I2C_MSG msg = { 0 };
+	float vout = 0;
+	float iout = 0;
+	float exponent = 1;
+	uint8_t read_len = 2;
+	uint16_t tmp = 0;
 
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
-	msg.tx_len = 1;
-	msg.rx_len = 2;
-	msg.data[0] = PMBUS_READ_VOUT;
-
-	ret = i2c_master_read(&msg, retry);
-	if (ret != 0) {
-		LOG_ERR("I2c read vout fail, ret: %d", ret);
+	/* Read Vout */
+	if (get_exponent_from_vout_mode(sensor_num, &exponent) == false) {
+		LOG_ERR("Fail to get exponent from VOUT mode command");
 		return -1;
 	}
-	vout = ((msg.data[1] << 8) | msg.data[0]) * Q50SN120A1_VOUT_SCALE;
 
-	memset(&msg, 0, sizeof(msg));
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
-	msg.tx_len = 1;
-	msg.rx_len = 2;
-	msg.data[0] = PMBUS_READ_IOUT;
-
-	ret = i2c_master_read(&msg, retry);
+	ret = pmbus_read_command(sensor_num, PMBUS_READ_VOUT, (uint8_t *)&tmp, read_len);
 	if (ret != 0) {
-		LOG_ERR("I2c read iout fail, ret: %d", ret);
 		return -1;
 	}
-	iout = ((msg.data[1] << 8) | msg.data[0]) * Q50SN120A1_IOUT_SCALE;
+	vout = (float)tmp * exponent;
+
+	/* Read Iout */
+	ret = pmbus_read_command(sensor_num, PMBUS_READ_IOUT, (uint8_t *)&tmp, read_len);
+	if (ret != 0) {
+		return -1;
+	}
+	iout = slinear11_to_float(tmp);
 
 	*pout_value = vout * iout;
 	return 0;
@@ -79,37 +67,33 @@ uint8_t q50sn120a1_read(uint8_t sensor_num, int *reading)
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	uint8_t retry = 5;
-	uint8_t offset = sensor_config[sensor_config_index_map[sensor_num]].offset;
-	float val = 0;
 	int ret = 0;
-	I2C_MSG msg = { 0 };
+	float val = 0;
+	float exponent = 1;
+	uint16_t tmp = 0;
+	uint8_t read_len = 2;
+	uint8_t offset = sensor_config[sensor_config_index_map[sensor_num]].offset;
 
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
-	msg.tx_len = 1;
-	msg.rx_len = 2;
-	msg.data[0] = offset;
-
-	if (offset != PMBUS_READ_POUT) {
-		ret = i2c_master_read(&msg, retry);
-		if (ret != 0) {
-			LOG_ERR("I2c read fail  ret: %d", ret);
-			return SENSOR_FAIL_TO_ACCESS;
-		}
-		val = (msg.data[1] << 8) | msg.data[0];
-	}
-
-	sensor_val *sval = (sensor_val *)reading;
 	switch (offset) {
 	case PMBUS_READ_VOUT:
-		val = val * Q50SN120A1_VOUT_SCALE;
+		if (get_exponent_from_vout_mode(sensor_num, &exponent) == false) {
+			LOG_ERR("Fail to get exponent from VOUT mode command");
+			return SENSOR_UNSPECIFIED_ERROR;
+		}
+
+		ret = pmbus_read_command(sensor_num, offset, (uint8_t *)&tmp, read_len);
+		if (ret != 0) {
+			return SENSOR_UNSPECIFIED_ERROR;
+		}
+		val = (float)tmp * exponent;
 		break;
 	case PMBUS_READ_IOUT:
-		val = val * Q50SN120A1_IOUT_SCALE;
-		break;
 	case PMBUS_READ_TEMPERATURE_1:
-		val = val * Q50SN120A1_TEMPERATURE_SCALE;
+		ret = pmbus_read_command(sensor_num, offset, (uint8_t *)&tmp, read_len);
+		if (ret != 0) {
+			return SENSOR_UNSPECIFIED_ERROR;
+		}
+		val = slinear11_to_float(tmp);
 		break;
 	case PMBUS_READ_POUT:
 		ret = q50sn120a1_read_pout(sensor_num, &val);
@@ -123,6 +107,7 @@ uint8_t q50sn120a1_read(uint8_t sensor_num, int *reading)
 		break;
 	}
 
+	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = (int)val & 0xFFFF;
 	sval->fraction = (val - sval->integer) * 1000;
 	return SENSOR_READ_SUCCESS;

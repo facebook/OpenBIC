@@ -26,15 +26,16 @@
 #define TMP75_TEMP_OFFSET 0x00
 #define XDPE15284D_ADDR 0x64
 #define ADM1272_1_ADDR 0x10
-#define ADM1272_2_ADDR 0x11
-#define Q50SN120A1_1_ADDR (0x60 >> 1)
-#define Q50SN120A1_2_ADDR (0x61 >> 1)
+#define ADM1272_2_ADDR 0x13
+#define Q50SN120A1_1_ADDR 0x60
+#define Q50SN120A1_2_ADDR 0x61
 #define INA233_12V_1_7_ADDR 0x40
 #define INA233_12V_2_8_ADDR 0x41
 #define INA233_12V_3_9_ADDR 0x42
 #define INA233_12V_4_10_ADDR 0x43
 #define INA233_12V_5_11_ADDR 0x44
-#define INA233_12V_6_12_ADDR 0x45
+#define INA233_12V_6_ADDR 0x46
+#define INA233_12V_12_ADDR 0x46
 #define PEX89144_I2C0_ADDR 0x61
 #define PEX89144_I2CS_ADDR 0x59
 #define P1V8_PEX_ADC_CHANNEL 4
@@ -54,6 +55,8 @@
 /* Voltage sensor number */
 #define SENSOR_NUM_VOL_P51V_AUX_L 0x0B
 #define SENSOR_NUM_VOL_P51V_AUX_R 0x0C
+#define SENSOR_NUM_VOL_P51V_STBY_L 0x53
+#define SENSOR_NUM_VOL_P51V_STBY_R 0x54
 #define SENSOR_NUM_VOL_P12V_AUX_1 0x0D
 #define SENSOR_NUM_VOL_P12V_AUX_2 0x0E
 #define SENSOR_NUM_VOL_P5V_AUX 0x10
@@ -64,6 +67,8 @@
 #define SENSOR_NUM_VOL_P1V8_VDD_2 0x1F
 #define SENSOR_NUM_VOL_P1V25_VDD_1 0x20
 #define SENSOR_NUM_VOL_P1V25_VDD_2 0x21
+#define SENSOR_NUM_VOL_P0V8_VDD_1 0x57
+#define SENSOR_NUM_VOL_P0V8_VDD_2 0x58
 
 #define SENSOR_NUM_VOL_P12V_ACCL_1 0x23
 #define SENSOR_NUM_VOL_P12V_ACCL_2 0x24
@@ -81,8 +86,12 @@
 /* Current sensor number */
 #define SENSOR_NUM_CUR_P51V_AUX_L 0x30
 #define SENSOR_NUM_CUR_P51V_AUX_R 0x31
+#define SENSOR_NUM_CUR_P51V_STBY_L 0x5D
+#define SENSOR_NUM_CUR_P51V_STBY_R 0x5E
 #define SENSOR_NUM_CUR_P12V_AUX_1 0x32
 #define SENSOR_NUM_CUR_P12V_AUX_2 0x33
+#define SENSOR_NUM_CUR_P0V8_VDD_1 0x59
+#define SENSOR_NUM_CUR_P0V8_VDD_2 0x5A
 
 #define SENSOR_NUM_CUR_P12V_ACCL_1 0x34
 #define SENSOR_NUM_CUR_P12V_ACCL_2 0x35
@@ -100,8 +109,12 @@
 /* Power sensor number */
 #define SENSOR_NUM_PWR_P51V_AUX_L 0x41
 #define SENSOR_NUM_PWR_P51V_AUX_R 0x42
+#define SENSOR_NUM_PWR_P51V_STBY_L 0x55
+#define SENSOR_NUM_PWR_P51V_STBY_R 0x56
 #define SENSOR_NUM_PWR_P12V_AUX_1 0x43
 #define SENSOR_NUM_PWR_P12V_AUX_2 0x44
+#define SENSOR_NUM_PWR_P0V8_VDD_1 0x5B
+#define SENSOR_NUM_PWR_P0V8_VDD_2 0x5C
 
 #define SENSOR_NUM_PWR_P12V_ACCL_1 0x45
 #define SENSOR_NUM_PWR_P12V_ACCL_2 0x46
@@ -117,8 +130,8 @@
 #define SENSOR_NUM_PWR_P12V_ACCL_12 0x52
 
 void load_sensor_config(void);
-struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus);
 bool is_mb_dc_on();
 bool is_dc_access(uint8_t sensor_num);
+struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus);
 
 #endif

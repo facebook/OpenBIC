@@ -17,6 +17,11 @@
 #ifndef PMBUS_H
 #define PMBUS_H
 
+enum PMBUS_PAGE_NUM {
+	PMBUS_PAGE_0,
+	PMBUS_PAGE_1,
+};
+
 enum pmbus_regs {
 	PMBUS_PAGE = 0x00,
 	PMBUS_OPERATION = 0x01,

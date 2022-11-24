@@ -111,8 +111,10 @@ enum SENSOR_DEV {
 	sensor_dev_raa229621 = 0x15,
 	sensor_dev_nct7718w = 0x16,
 	sensor_dev_ltc4286 = 0x17,
+#ifdef ENABLE_APML
 	sensor_dev_amd_tsi = 0x18,
 	sensor_dev_apml_mailbox = 0x19,
+#endif
 	sensor_dev_xdpe19283b = 0x1A,
 	sensor_dev_g788p81u = 0x1B,
 	sensor_dev_mp2856gut = 0x1C,
@@ -212,6 +214,10 @@ typedef struct _sensor_poll_time_cfg {
 	uint8_t sensor_num;
 	int64_t last_access_time;
 } sensor_poll_time_cfg;
+
+typedef struct _vr_page_cfg {
+	uint8_t vr_page;
+} vr_page_cfg;
 
 /* INIT arg */
 typedef struct _isl28022_init_arg {
