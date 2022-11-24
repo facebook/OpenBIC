@@ -28,8 +28,10 @@
 
 #define ADJUST_MP5990_POWER(x) ((x * 1.0004) + 6.5116)
 #define ADJUST_MP5990_CURRENT(x) ((x * 0.9993) + 0.6114)
-#define ADJUST_LTC4282_POWER(x) ((x * 0.9642) - 19.71)
-#define ADJUST_LTC4282_CURRENT(x) ((x * 0.959) - 1.3779)
+#define ADJUST_LTC4282_POWER(x) ((x * 0.9722) - 16.315)
+#define ADJUST_LTC4282_CURRENT(x) ((x * 0.9634) - 1.0236)
+#define ADJUST_LTC4286_POWER(x) ((x * 0.9699) - 29.589)
+#define ADJUST_LTC4286_CURRENT(x) ((x * 0.9659) - 2.3261)
 
 K_MUTEX_DEFINE(i2c_bus6_mutex);
 K_MUTEX_DEFINE(i2c_bus9_mutex);
@@ -979,6 +981,42 @@ bool post_ltc4282_read(uint8_t sensor_num, void *args, int *reading)
 		break;
 	case LTC4282_POWER_OFFSET:
 		val = ADJUST_LTC4282_POWER(val);
+		break;
+	default:
+		return false;
+	}
+
+	sval->integer = (int16_t)val;
+	sval->fraction = (val - sval->integer) * 1000;
+
+	return true;
+}
+
+bool post_ltc4286_read(uint8_t sensor_num, void *args, int *reading)
+{
+	if (!reading) {
+		post_i2c_bus_read(sensor_num, args, reading);
+		return false;
+	}
+	ARG_UNUSED(args);
+
+	if (!post_i2c_bus_read(sensor_num, args, reading))
+		return false;
+
+	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+
+	sensor_val *sval = (sensor_val *)reading;
+	float val = sval->integer + (sval->fraction * 0.001);
+
+	/* Adjust the power value for accuracy by power team requirement */
+	switch (cfg->offset) {
+	case PMBUS_READ_VOUT:
+		return true;
+	case PMBUS_READ_IOUT:
+		val = ADJUST_LTC4286_CURRENT(val);
+		break;
+	case PMBUS_READ_PIN:
+		val = ADJUST_LTC4286_POWER(val);
 		break;
 	default:
 		return false;

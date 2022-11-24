@@ -296,15 +296,15 @@ sensor_cfg ltc4286_hsc_sensor_config_table[] = {
 	  post_i2c_bus_read, NULL, NULL },
 	{ SENSOR_NUM_VOUT_PDB_HSC, sensor_dev_ltc4286, I2C_BUS6, HSC_LTC4286_ADDR, PMBUS_READ_VOUT,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6], post_i2c_bus_read, NULL,
+	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6], post_ltc4286_read, NULL,
 	  &ltc4286_hsc_init_args[0] },
 	{ SENSOR_NUM_IOUT_PDB_HSC, sensor_dev_ltc4286, I2C_BUS6, HSC_LTC4286_ADDR, PMBUS_READ_IOUT,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6], post_i2c_bus_read, NULL,
+	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6], post_ltc4286_read, NULL,
 	  &ltc4286_hsc_init_args[0] },
 	{ SENSOR_NUM_POUT_PDB_HSC, sensor_dev_ltc4286, I2C_BUS6, HSC_LTC4286_ADDR, PMBUS_READ_PIN,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6], post_i2c_bus_read, NULL,
+	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6], post_ltc4286_read, NULL,
 	  &ltc4286_hsc_init_args[0] },
 };
 
@@ -1466,9 +1466,9 @@ static void load_power_ic_sensor_table()
 	if (voltage_power_ic_type_adc < 0.15) {
 		LOG_INF("The power monitor IC is RENESAS ISL28022, (%d.%d V)",
 			(uint16_t)voltage_power_ic_type_adc,
-			(uint16_t)((voltage_power_ic_type_adc -
-				    (uint16_t)voltage_power_ic_type_adc) *
-				   100));
+			(uint16_t)(
+				(voltage_power_ic_type_adc - (uint16_t)voltage_power_ic_type_adc) *
+				100));
 		memcpy(&sensor_config[sensor_config_count],
 		       isl28022_power_monitor_sensor_config_table,
 		       ARRAY_SIZE(isl28022_power_monitor_sensor_config_table) * sizeof(sensor_cfg));
@@ -1477,9 +1477,9 @@ static void load_power_ic_sensor_table()
 		   (voltage_power_ic_type_adc < 0.5 + (0.5 * 0.15))) {
 		LOG_INF("The power monitor IC is TI INA230, (%d.%d V)",
 			(uint16_t)voltage_power_ic_type_adc,
-			(uint16_t)((voltage_power_ic_type_adc -
-				    (uint16_t)voltage_power_ic_type_adc) *
-				   100));
+			(uint16_t)(
+				(voltage_power_ic_type_adc - (uint16_t)voltage_power_ic_type_adc) *
+				100));
 		memcpy(&sensor_config[sensor_config_count],
 		       ina230_power_monitor_sensor_config_table,
 		       ARRAY_SIZE(ina230_power_monitor_sensor_config_table) * sizeof(sensor_cfg));
@@ -1487,9 +1487,9 @@ static void load_power_ic_sensor_table()
 	} else {
 		LOG_ERR("Unknown power monitor IC type, (%d.%d V)",
 			(uint16_t)voltage_power_ic_type_adc,
-			(uint16_t)((voltage_power_ic_type_adc -
-				    (uint16_t)voltage_power_ic_type_adc) *
-				   100));
+			(uint16_t)(
+				(voltage_power_ic_type_adc - (uint16_t)voltage_power_ic_type_adc) *
+				100));
 	}
 
 	return;
