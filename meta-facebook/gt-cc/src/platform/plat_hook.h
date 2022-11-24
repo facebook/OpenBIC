@@ -61,6 +61,7 @@ bool pre_i2c_bus_read(uint8_t sensor_num, void *args);
 bool post_i2c_bus_read(uint8_t sensor_num, void *args, int *reading);
 bool post_mp5990_read(uint8_t sensor_num, void *args, int *reading);
 bool post_ltc4282_read(uint8_t sensor_num, void *args, int *reading);
+bool post_ltc4286_read(uint8_t sensor_num, void *args, int *reading);
 
 struct k_mutex *find_bus_mutex(uint8_t sensor_num);
 bool is_mb_dc_on();
