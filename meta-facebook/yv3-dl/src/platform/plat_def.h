@@ -17,6 +17,7 @@
 #ifndef PLAT_DEF_H
 #define PLAT_DEF_H
 
+#define ENABLE_ASD
 #define ENABLE_OEM_BRIDGE_NETFN_SHIFT
 
 #define HOST_KCS_PORT kcs4
