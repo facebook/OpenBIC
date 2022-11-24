@@ -216,6 +216,9 @@ bool pre_intel_peci_dimm_read(uint8_t sensor_num, void *args)
 	case PECI_TEMP_CHANNEL0_DIMM0:
 		ret = check_dimm_present(DIMM_CHANNEL_NUM_0, DIMM_NUMBER_0, &dimm_present_result);
 		break;
+	case PECI_TEMP_CHANNEL1_DIMM0:
+		ret = check_dimm_present(DIMM_CHANNEL_NUM_1, DIMM_NUMBER_0, &dimm_present_result);
+		break;
 	case PECI_TEMP_CHANNEL2_DIMM0:
 		ret = check_dimm_present(DIMM_CHANNEL_NUM_2, DIMM_NUMBER_0, &dimm_present_result);
 		break;
@@ -225,11 +228,8 @@ bool pre_intel_peci_dimm_read(uint8_t sensor_num, void *args)
 	case PECI_TEMP_CHANNEL4_DIMM0:
 		ret = check_dimm_present(DIMM_CHANNEL_NUM_4, DIMM_NUMBER_0, &dimm_present_result);
 		break;
-	case PECI_TEMP_CHANNEL6_DIMM0:
-		ret = check_dimm_present(DIMM_CHANNEL_NUM_6, DIMM_NUMBER_0, &dimm_present_result);
-		break;
-	case PECI_TEMP_CHANNEL7_DIMM0:
-		ret = check_dimm_present(DIMM_CHANNEL_NUM_7, DIMM_NUMBER_0, &dimm_present_result);
+	case PECI_TEMP_CHANNEL5_DIMM0:
+		ret = check_dimm_present(DIMM_CHANNEL_NUM_5, DIMM_NUMBER_0, &dimm_present_result);
 		break;
 	default:
 		printf("[%s] input sensor 0x%x offset is invalid, offset: 0x%x\n", __func__,
