@@ -53,7 +53,7 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_VOL_P3V3_AUX, sensor_dev_ast_adc, ADC_PORT3, NONE, NONE, stby_access, 2, 1,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
-	{ SENSOR_NUM_VOL_P1V8_PEX, sensor_dev_ast_adc, ADC_PORT4, NONE, NONE, stby_access, 1, 1,
+	{ SENSOR_NUM_VOL_P1V8_PEX, sensor_dev_ast_adc, ADC_PORT4, NONE, NONE, is_dc_access, 1, 1,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
 	{ SENSOR_NUM_VOL_P1V2_AUX, sensor_dev_ast_adc, ADC_PORT5, NONE, NONE, stby_access, 1, 1,
@@ -62,17 +62,17 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_VOL_P5V_AUX, sensor_dev_ast_adc, ADC_PORT7, NONE, NONE, stby_access, 711, 200,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
-	{ SENSOR_NUM_VOL_P1V8_VDD_1, sensor_dev_ast_adc, ADC_PORT10, NONE, NONE, stby_access, 1, 1,
+	{ SENSOR_NUM_VOL_P1V8_VDD_1, sensor_dev_ast_adc, ADC_PORT10, NONE, NONE, is_dc_access, 1, 1,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
-	{ SENSOR_NUM_VOL_P1V8_VDD_2, sensor_dev_ast_adc, ADC_PORT11, NONE, NONE, stby_access, 1, 1,
+	{ SENSOR_NUM_VOL_P1V8_VDD_2, sensor_dev_ast_adc, ADC_PORT11, NONE, NONE, is_dc_access, 1, 1,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
-	{ SENSOR_NUM_VOL_P1V25_VDD_1, sensor_dev_ast_adc, ADC_PORT12, NONE, NONE, stby_access, 1, 1,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	{ SENSOR_NUM_VOL_P1V25_VDD_1, sensor_dev_ast_adc, ADC_PORT12, NONE, NONE, is_dc_access, 1,
+	  1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
-	{ SENSOR_NUM_VOL_P1V25_VDD_2, sensor_dev_ast_adc, ADC_PORT13, NONE, NONE, stby_access, 1, 1,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	{ SENSOR_NUM_VOL_P1V25_VDD_2, sensor_dev_ast_adc, ADC_PORT13, NONE, NONE, is_dc_access, 1,
+	  1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
 
 	/** HSC 1 **/
@@ -80,10 +80,19 @@ sensor_cfg plat_sensor_config[] = {
 	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &adm1272_init_args[0] },
+	{ SENSOR_NUM_VOL_P51V_STBY_L, sensor_dev_adm1272, I2C_BUS1, ADM1272_1_ADDR, PMBUS_READ_VIN,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1272_init_args[0] },
 	{ SENSOR_NUM_VOL_P51V_AUX_L, sensor_dev_adm1272, I2C_BUS1, ADM1272_1_ADDR, PMBUS_READ_VOUT,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1272_init_args[0] },
+	{ SENSOR_NUM_CUR_P51V_STBY_L, sensor_dev_adm1272, I2C_BUS1, ADM1272_1_ADDR, PMBUS_READ_IIN,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1272_init_args[0] },
 	{ SENSOR_NUM_CUR_P51V_AUX_L, sensor_dev_adm1272, I2C_BUS1, ADM1272_1_ADDR, PMBUS_READ_IOUT,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1272_init_args[0] },
+	{ SENSOR_NUM_PWR_P51V_STBY_L, sensor_dev_adm1272, I2C_BUS1, ADM1272_1_ADDR, PMBUS_READ_PIN,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1272_init_args[0] },
 	{ SENSOR_NUM_PWR_P51V_AUX_L, sensor_dev_adm1272, I2C_BUS1, ADM1272_1_ADDR, PMBUS_READ_POUT,
@@ -95,10 +104,19 @@ sensor_cfg plat_sensor_config[] = {
 	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &adm1272_init_args[1] },
+	{ SENSOR_NUM_VOL_P51V_STBY_R, sensor_dev_adm1272, I2C_BUS1, ADM1272_2_ADDR, PMBUS_READ_VIN,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1272_init_args[1] },
 	{ SENSOR_NUM_VOL_P51V_AUX_R, sensor_dev_adm1272, I2C_BUS1, ADM1272_2_ADDR, PMBUS_READ_VOUT,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1272_init_args[1] },
+	{ SENSOR_NUM_CUR_P51V_STBY_R, sensor_dev_adm1272, I2C_BUS1, ADM1272_2_ADDR, PMBUS_READ_IIN,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1272_init_args[1] },
 	{ SENSOR_NUM_CUR_P51V_AUX_R, sensor_dev_adm1272, I2C_BUS1, ADM1272_2_ADDR, PMBUS_READ_IOUT,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1272_init_args[1] },
+	{ SENSOR_NUM_PWR_P51V_STBY_R, sensor_dev_adm1272, I2C_BUS1, ADM1272_2_ADDR, PMBUS_READ_PIN,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adm1272_init_args[1] },
 	{ SENSOR_NUM_PWR_P51V_AUX_R, sensor_dev_adm1272, I2C_BUS1, ADM1272_2_ADDR, PMBUS_READ_POUT,
@@ -118,7 +136,8 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_PWR_P12V_AUX_1, sensor_dev_q50sn120a1, I2C_BUS1, Q50SN120A1_1_ADDR,
 	  PMBUS_READ_POUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_TEMP_P12V_AUX_2, sensor_dev_q50sn120a1, I2C_BUS1, Q50SN120A1_1_ADDR,
+
+	{ SENSOR_NUM_TEMP_P12V_AUX_2, sensor_dev_q50sn120a1, I2C_BUS1, Q50SN120A1_2_ADDR,
 	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 	{ SENSOR_NUM_VOL_P12V_AUX_2, sensor_dev_q50sn120a1, I2C_BUS1, Q50SN120A1_2_ADDR,
@@ -130,6 +149,32 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_PWR_P12V_AUX_2, sensor_dev_q50sn120a1, I2C_BUS1, Q50SN120A1_2_ADDR,
 	  PMBUS_READ_POUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+
+	/** VR **/
+	{ SENSOR_NUM_VOL_P0V8_VDD_1, sensor_dev_xdpe15284, I2C_BUS1, XDPE15284D_ADDR,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_xdpe15284_read, &xdpe15284_page[0],
+	  post_xdpe15284_read, NULL, NULL },
+	{ SENSOR_NUM_CUR_P0V8_VDD_1, sensor_dev_xdpe15284, I2C_BUS1, XDPE15284D_ADDR,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_xdpe15284_read, &xdpe15284_page[0],
+	  post_xdpe15284_read, NULL, NULL },
+	{ SENSOR_NUM_PWR_P0V8_VDD_1, sensor_dev_xdpe15284, I2C_BUS1, XDPE15284D_ADDR,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_xdpe15284_read, &xdpe15284_page[0],
+	  post_xdpe15284_read, NULL, NULL },
+	{ SENSOR_NUM_VOL_P0V8_VDD_2, sensor_dev_xdpe15284, I2C_BUS1, XDPE15284D_ADDR,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_xdpe15284_read, &xdpe15284_page[1],
+	  post_xdpe15284_read, NULL, NULL },
+	{ SENSOR_NUM_CUR_P0V8_VDD_2, sensor_dev_xdpe15284, I2C_BUS1, XDPE15284D_ADDR,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_xdpe15284_read, &xdpe15284_page[1],
+	  post_xdpe15284_read, NULL, NULL },
+	{ SENSOR_NUM_PWR_P0V8_VDD_2, sensor_dev_xdpe15284, I2C_BUS1, XDPE15284D_ADDR,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_xdpe15284_read, &xdpe15284_page[1],
+	  post_xdpe15284_read, NULL, NULL },
 
 	/** PEX temp **/
 	{ SENSOR_NUM_TEMP_PEX_0, sensor_dev_pex89000, I2C_BUS2, PEX89144_I2CS_ADDR, PEX_TEMP,
@@ -143,171 +188,171 @@ sensor_cfg plat_sensor_config[] = {
 
 	/** INA233 12V 1 **/
 	{ SENSOR_NUM_VOL_P12V_ACCL_1, sensor_dev_ina233, I2C_BUS4, INA233_12V_1_7_ADDR,
-	  PMBUS_READ_VOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
 	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[0] },
 	{ SENSOR_NUM_CUR_P12V_ACCL_1, sensor_dev_ina233, I2C_BUS4, INA233_12V_1_7_ADDR,
-	  PMBUS_READ_IOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
 	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[0] },
 	{ SENSOR_NUM_PWR_P12V_ACCL_1, sensor_dev_ina233, I2C_BUS4, INA233_12V_1_7_ADDR,
-	  PMBUS_READ_POUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
 	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[0] },
 
 	/** INA233 12V 2 **/
 	{ SENSOR_NUM_VOL_P12V_ACCL_2, sensor_dev_ina233, I2C_BUS4, INA233_12V_2_8_ADDR,
-	  PMBUS_READ_VOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
 	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[1] },
 	{ SENSOR_NUM_CUR_P12V_ACCL_2, sensor_dev_ina233, I2C_BUS4, INA233_12V_2_8_ADDR,
-	  PMBUS_READ_IOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
 	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[1] },
 	{ SENSOR_NUM_PWR_P12V_ACCL_2, sensor_dev_ina233, I2C_BUS4, INA233_12V_2_8_ADDR,
-	  PMBUS_READ_POUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
 	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[1] },
 
 	/** INA233 12V 3 **/
 	{ SENSOR_NUM_VOL_P12V_ACCL_3, sensor_dev_ina233, I2C_BUS4, INA233_12V_3_9_ADDR,
-	  PMBUS_READ_VOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
 	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[2] },
 	{ SENSOR_NUM_CUR_P12V_ACCL_3, sensor_dev_ina233, I2C_BUS4, INA233_12V_3_9_ADDR,
-	  PMBUS_READ_IOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
 	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[2] },
 	{ SENSOR_NUM_PWR_P12V_ACCL_3, sensor_dev_ina233, I2C_BUS4, INA233_12V_3_9_ADDR,
-	  PMBUS_READ_POUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
 	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[2] },
 
 	/** INA233 12V 4 **/
 	{ SENSOR_NUM_VOL_P12V_ACCL_4, sensor_dev_ina233, I2C_BUS4, INA233_12V_4_10_ADDR,
-	  PMBUS_READ_VOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
 	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[3] },
 	{ SENSOR_NUM_CUR_P12V_ACCL_4, sensor_dev_ina233, I2C_BUS4, INA233_12V_4_10_ADDR,
-	  PMBUS_READ_IOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
 	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[3] },
 	{ SENSOR_NUM_PWR_P12V_ACCL_4, sensor_dev_ina233, I2C_BUS4, INA233_12V_4_10_ADDR,
-	  PMBUS_READ_POUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
 	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[3] },
 
 	/** INA233 12V 5 **/
 	{ SENSOR_NUM_VOL_P12V_ACCL_5, sensor_dev_ina233, I2C_BUS4, INA233_12V_5_11_ADDR,
-	  PMBUS_READ_VOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
 	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[4] },
 	{ SENSOR_NUM_CUR_P12V_ACCL_5, sensor_dev_ina233, I2C_BUS4, INA233_12V_5_11_ADDR,
-	  PMBUS_READ_IOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
 	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[4] },
 	{ SENSOR_NUM_PWR_P12V_ACCL_5, sensor_dev_ina233, I2C_BUS4, INA233_12V_5_11_ADDR,
-	  PMBUS_READ_POUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
 	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[4] },
 
 	/** INA233 12V 6 **/
-	{ SENSOR_NUM_VOL_P12V_ACCL_6, sensor_dev_ina233, I2C_BUS4, INA233_12V_6_12_ADDR,
-	  PMBUS_READ_VOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_P12V_ACCL_6, sensor_dev_ina233, I2C_BUS4, INA233_12V_6_ADDR,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
 	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[5] },
-	{ SENSOR_NUM_CUR_P12V_ACCL_6, sensor_dev_ina233, I2C_BUS4, INA233_12V_6_12_ADDR,
-	  PMBUS_READ_IOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_CUR_P12V_ACCL_6, sensor_dev_ina233, I2C_BUS4, INA233_12V_6_ADDR,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
 	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[5] },
-	{ SENSOR_NUM_PWR_P12V_ACCL_6, sensor_dev_ina233, I2C_BUS4, INA233_12V_6_12_ADDR,
-	  PMBUS_READ_POUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_PWR_P12V_ACCL_6, sensor_dev_ina233, I2C_BUS4, INA233_12V_6_ADDR,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
 	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[5] },
 
 	/** INA233 12V 7 **/
 	{ SENSOR_NUM_VOL_P12V_ACCL_7, sensor_dev_ina233, I2C_BUS4, INA233_12V_1_7_ADDR,
-	  PMBUS_READ_VOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
 	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[6] },
 	{ SENSOR_NUM_CUR_P12V_ACCL_7, sensor_dev_ina233, I2C_BUS4, INA233_12V_1_7_ADDR,
-	  PMBUS_READ_IOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
 	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[6] },
 	{ SENSOR_NUM_PWR_P12V_ACCL_7, sensor_dev_ina233, I2C_BUS4, INA233_12V_1_7_ADDR,
-	  PMBUS_READ_POUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
-	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[6] },
+	  post_ina233_read, &pi4msd5v9542_configs[1], &ina233_init_args[6] },
 
 	/** INA233 12V 8 **/
 	{ SENSOR_NUM_VOL_P12V_ACCL_8, sensor_dev_ina233, I2C_BUS4, INA233_12V_2_8_ADDR,
-	  PMBUS_READ_VOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
-	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[7] },
+	  post_ina233_read, &pi4msd5v9542_configs[1], &ina233_init_args[7] },
 	{ SENSOR_NUM_CUR_P12V_ACCL_8, sensor_dev_ina233, I2C_BUS4, INA233_12V_2_8_ADDR,
-	  PMBUS_READ_IOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
-	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[7] },
+	  post_ina233_read, &pi4msd5v9542_configs[1], &ina233_init_args[7] },
 	{ SENSOR_NUM_PWR_P12V_ACCL_8, sensor_dev_ina233, I2C_BUS4, INA233_12V_2_8_ADDR,
-	  PMBUS_READ_POUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
-	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[7] },
+	  post_ina233_read, &pi4msd5v9542_configs[1], &ina233_init_args[7] },
 
 	/** INA233 12V 9 **/
 	{ SENSOR_NUM_VOL_P12V_ACCL_9, sensor_dev_ina233, I2C_BUS4, INA233_12V_3_9_ADDR,
-	  PMBUS_READ_VOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
-	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[8] },
+	  post_ina233_read, &pi4msd5v9542_configs[1], &ina233_init_args[8] },
 	{ SENSOR_NUM_CUR_P12V_ACCL_9, sensor_dev_ina233, I2C_BUS4, INA233_12V_3_9_ADDR,
-	  PMBUS_READ_IOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
-	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[8] },
+	  post_ina233_read, &pi4msd5v9542_configs[1], &ina233_init_args[8] },
 	{ SENSOR_NUM_PWR_P12V_ACCL_9, sensor_dev_ina233, I2C_BUS4, INA233_12V_3_9_ADDR,
-	  PMBUS_READ_POUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
-	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[8] },
+	  post_ina233_read, &pi4msd5v9542_configs[1], &ina233_init_args[8] },
 
 	/** INA233 12V 10 **/
 	{ SENSOR_NUM_VOL_P12V_ACCL_10, sensor_dev_ina233, I2C_BUS4, INA233_12V_4_10_ADDR,
-	  PMBUS_READ_VOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
-	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[9] },
+	  post_ina233_read, &pi4msd5v9542_configs[1], &ina233_init_args[9] },
 	{ SENSOR_NUM_CUR_P12V_ACCL_10, sensor_dev_ina233, I2C_BUS4, INA233_12V_4_10_ADDR,
-	  PMBUS_READ_IOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
-	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[9] },
+	  post_ina233_read, &pi4msd5v9542_configs[1], &ina233_init_args[9] },
 	{ SENSOR_NUM_PWR_P12V_ACCL_10, sensor_dev_ina233, I2C_BUS4, INA233_12V_4_10_ADDR,
-	  PMBUS_READ_POUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
-	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[9] },
+	  post_ina233_read, &pi4msd5v9542_configs[1], &ina233_init_args[9] },
 
 	/** INA233 12V 11 **/
 	{ SENSOR_NUM_VOL_P12V_ACCL_11, sensor_dev_ina233, I2C_BUS4, INA233_12V_5_11_ADDR,
-	  PMBUS_READ_VOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
-	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[10] },
+	  post_ina233_read, &pi4msd5v9542_configs[1], &ina233_init_args[10] },
 	{ SENSOR_NUM_CUR_P12V_ACCL_11, sensor_dev_ina233, I2C_BUS4, INA233_12V_5_11_ADDR,
-	  PMBUS_READ_IOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
-	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[10] },
+	  post_ina233_read, &pi4msd5v9542_configs[1], &ina233_init_args[10] },
 	{ SENSOR_NUM_PWR_P12V_ACCL_11, sensor_dev_ina233, I2C_BUS4, INA233_12V_5_11_ADDR,
-	  PMBUS_READ_POUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
-	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[10] },
+	  post_ina233_read, &pi4msd5v9542_configs[1], &ina233_init_args[10] },
 
 	/** INA233 12V 12 **/
-	{ SENSOR_NUM_VOL_P12V_ACCL_12, sensor_dev_ina233, I2C_BUS4, INA233_12V_6_12_ADDR,
-	  PMBUS_READ_VOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_P12V_ACCL_12, sensor_dev_ina233, I2C_BUS4, INA233_12V_12_ADDR,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
-	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[11] },
-	{ SENSOR_NUM_CUR_P12V_ACCL_12, sensor_dev_ina233, I2C_BUS4, INA233_12V_6_12_ADDR,
-	  PMBUS_READ_IOUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  post_ina233_read, &pi4msd5v9542_configs[1], &ina233_init_args[11] },
+	{ SENSOR_NUM_CUR_P12V_ACCL_12, sensor_dev_ina233, I2C_BUS4, INA233_12V_12_ADDR,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
-	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[11] },
-	{ SENSOR_NUM_PWR_P12V_ACCL_12, sensor_dev_ina233, I2C_BUS4, INA233_12V_6_12_ADDR,
-	  PMBUS_READ_POUT, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  post_ina233_read, &pi4msd5v9542_configs[1], &ina233_init_args[11] },
+	{ SENSOR_NUM_PWR_P12V_ACCL_12, sensor_dev_ina233, I2C_BUS4, INA233_12V_12_ADDR,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &pi4msd5v9542_configs[0],
-	  post_ina233_read, &pi4msd5v9542_configs[0], &ina233_init_args[11] },
+	  post_ina233_read, &pi4msd5v9542_configs[1], &ina233_init_args[11] },
 };
 
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
@@ -319,28 +364,6 @@ void load_sensor_config(void)
 
 	// Fix config table in different system/config
 	pal_extend_sensor_config();
-}
-
-struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus)
-{
-	struct k_mutex *mutex = NULL;
-
-	switch (i2c_bus) {
-	case I2C_BUS2:
-		mutex = &i2c_2_tca9543_mutex;
-		break;
-	case I2C_BUS3:
-		mutex = &i2c_3_tca9543_mutex;
-		break;
-	case I2C_BUS4:
-		mutex = &i2c_4_pi4msd5v9542_mutex;
-		break;
-	default:
-		LOG_ERR("No support for i2c bus %d mutex", i2c_bus);
-		break;
-	}
-
-	return mutex;
 }
 
 bool is_mb_dc_on()
@@ -367,4 +390,26 @@ bool is_mb_dc_on()
 bool is_dc_access(uint8_t sensor_num)
 {
 	return is_mb_dc_on();
+}
+
+struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus)
+{
+	struct k_mutex *mutex = NULL;
+
+	switch (i2c_bus) {
+	case I2C_BUS2:
+		mutex = &i2c_2_tca9543_mutex;
+		break;
+	case I2C_BUS3:
+		mutex = &i2c_3_tca9543_mutex;
+		break;
+	case I2C_BUS4:
+		mutex = &i2c_4_pi4msd5v9542_mutex;
+		break;
+	default:
+		LOG_ERR("No support for i2c bus %d mutex", i2c_bus);
+		break;
+	}
+
+	return mutex;
 }

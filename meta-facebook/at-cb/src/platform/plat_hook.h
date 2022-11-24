@@ -17,6 +17,7 @@
 #ifndef PLAT_HOOK_H
 #define PLAT_HOOK_H
 
+#include "pmbus.h"
 #include "sensor.h"
 #include "common_i2c_mux.h"
 
@@ -33,6 +34,7 @@ extern pex89000_init_arg pex_sensor_init_args[];
  **************************************************************************************************/
 extern mux_config tca9543_configs[];
 extern mux_config pi4msd5v9542_configs[];
+extern vr_page_cfg xdpe15284_page[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
@@ -41,5 +43,7 @@ bool pre_ina233_read(uint8_t sensor_num, void *args);
 bool post_ina233_read(uint8_t sensor_num, void *args, int *reading);
 bool pre_pex89000_read(uint8_t sensor_num, void *args);
 bool post_pex89000_read(uint8_t sensor_num, void *args, int *reading);
+bool pre_xdpe15284_read(uint8_t sensor_num, void *args);
+bool post_xdpe15284_read(uint8_t sensor_num, void *args, int *reading);
 
 #endif

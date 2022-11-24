@@ -15,9 +15,12 @@
  */
 
 #include <stdint.h>
+#include <logging/log.h>
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "pmbus.h"
+
+LOG_MODULE_REGISTER(util_pmbus);
 
 const float slinear11_exponents[32] = { 1.0,
 					2.0,
@@ -72,9 +75,8 @@ float slinear11_to_float(uint16_t read_value)
 
 bool get_exponent_from_vout_mode(uint8_t sensor_num, float *exponent)
 {
-	if (!exponent) {
-		return false;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(exponent, false);
+
 	uint8_t retry = 5;
 	I2C_MSG msg;
 
@@ -90,4 +92,28 @@ bool get_exponent_from_vout_mode(uint8_t sensor_num, float *exponent)
 
 	*exponent = slinear11_exponents[msg.data[0] & 0x1f];
 	return true;
+}
+
+int pmbus_read_command(uint8_t sensor_num, uint8_t command, uint16_t *result)
+{
+	CHECK_NULL_ARG_WITH_RETURN(result, -1);
+
+	int ret = 0;
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+
+	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
+	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 2;
+	msg.data[0] = command;
+
+	ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("I2C read command: 0x%x fail, ret: %d", command, ret);
+		return -1;
+	}
+
+	*result = ((msg.data[1] << 8) | msg.data[0]);
+	return 0;
 }
