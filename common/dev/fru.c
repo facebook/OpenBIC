@@ -86,8 +86,13 @@ uint8_t FRU_read(EEPROM_ENTRY *entry)
 		return FRU_OUT_OF_RANGE;
 	}
 
-	memcpy(&entry->config, &fru_config[entry->config.dev_id],
-	       sizeof(fru_config[entry->config.dev_id]));
+	uint8_t fru_index = find_FRU_ID(entry->config.dev_id);
+	if (fru_index == MAX_FRU_ID) {
+		LOG_ERR("find fru read config fail via fru id: 0x%x", entry->config.dev_id);
+		return FRU_INVALID_ID;
+	}
+
+	memcpy(&entry->config, &fru_config[fru_index], sizeof(fru_config[fru_index]));
 
 	if (!eeprom_read(entry)) {
 		return FRU_FAIL_TO_ACCESS;
@@ -114,8 +119,13 @@ uint8_t FRU_write(EEPROM_ENTRY *entry)
 		return FRU_OUT_OF_RANGE;
 	}
 
-	memcpy(&entry->config, &fru_config[entry->config.dev_id],
-	       sizeof(fru_config[entry->config.dev_id]));
+	uint8_t fru_index = find_FRU_ID(entry->config.dev_id);
+	if (fru_index == MAX_FRU_ID) {
+		LOG_ERR("find fru write config fail via fru id: 0x%x", entry->config.dev_id);
+		return FRU_INVALID_ID;
+	}
+
+	memcpy(&entry->config, &fru_config[fru_index], sizeof(fru_config[fru_index]));
 
 	if (!eeprom_write(entry)) {
 		return FRU_FAIL_TO_ACCESS;

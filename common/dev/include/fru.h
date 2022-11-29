@@ -18,12 +18,14 @@
 #define FRU_H
 
 #include "eeprom.h"
-#define FRU_CFG_NUM 5
 
-enum {
+enum FRU_DEV_TYPE {
 	NV_ATMEL_24C02,
 	NV_ATMEL_24C64,
 	NV_ATMEL_24C128,
+	PUYA_P24C128F,
+	ST_M24C64_W,
+	ST_M24128_BW,
 };
 
 enum {
