@@ -107,6 +107,15 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_BB_P1V8_PEX3, sensor_dev_ast_adc, ADC_PORT14, NONE, NONE, stby_access, 4, 3,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	{ SENSOR_NUM_HSC_TYPE, sensor_dev_ast_adc, ADC_PORT11, NONE, NONE, stby_access, 1, 1,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	{ SENSOR_NUM_VR_TYPE, sensor_dev_ast_adc, ADC_PORT12, NONE, NONE, stby_access, 1, 1,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	{ SENSOR_NUM_ADC_TYPE, sensor_dev_ast_adc, ADC_PORT13, NONE, NONE, stby_access, 1, 1,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
 
 	/* SYSTEM INLET TEMP */
 	{ SENSOR_NUM_SYSTEM_INLET_TEMP, sensor_dev_tmp75, I2C_BUS5, SYSTEM_INLET_TEMP_ADDR,
@@ -1387,28 +1396,24 @@ static void load_hsc_sensor_table()
 	}
 
 	if (voltage_hsc_type_adc < 0.15) {
-		LOG_INF("The HSC is MP5990, (%d.%d V)", (uint16_t)voltage_hsc_type_adc,
-			(uint16_t)((voltage_hsc_type_adc - (uint16_t)voltage_hsc_type_adc) * 100));
+		LOG_INF("The HSC is MP5990, (%.3f V)", voltage_hsc_type_adc);
 		memcpy(&sensor_config[sensor_config_count], mp5990_hsc_sensor_config_table,
 		       ARRAY_SIZE(mp5990_hsc_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(mp5990_hsc_sensor_config_table);
 	} else if ((voltage_hsc_type_adc > 1.0 - (1.0 * 0.15)) &&
 		   (voltage_hsc_type_adc < 1.0 + (1.0 * 0.15))) {
-		LOG_INF("The HSC is LTC4282, (%d.%d V)", (uint16_t)voltage_hsc_type_adc,
-			(uint16_t)((voltage_hsc_type_adc - (uint16_t)voltage_hsc_type_adc) * 100));
+		LOG_INF("The HSC is LTC4282, (%.3f V)", voltage_hsc_type_adc);
 		memcpy(&sensor_config[sensor_config_count], ltc4282_hsc_sensor_config_table,
 		       ARRAY_SIZE(ltc4282_hsc_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(ltc4282_hsc_sensor_config_table);
 	} else if ((voltage_hsc_type_adc > 1.5 - (1.5 * 0.15)) &&
 		   (voltage_hsc_type_adc < 1.5 + (1.5 * 0.15))) {
-		LOG_INF("The HSC is LTC4286, (%d.%d V)", (uint16_t)voltage_hsc_type_adc,
-			(uint16_t)((voltage_hsc_type_adc - (uint16_t)voltage_hsc_type_adc) * 100));
+		LOG_INF("The HSC is LTC4286, (%.3f V)", voltage_hsc_type_adc);
 		memcpy(&sensor_config[sensor_config_count], ltc4286_hsc_sensor_config_table,
 		       ARRAY_SIZE(ltc4286_hsc_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(ltc4286_hsc_sensor_config_table);
 	} else {
-		LOG_ERR("Unknown hotswap model type, (%d.%d V)", (uint16_t)voltage_hsc_type_adc,
-			(uint16_t)((voltage_hsc_type_adc - (uint16_t)voltage_hsc_type_adc) * 100));
+		LOG_ERR("Unknown hotswap model type, (%.3f V)", voltage_hsc_type_adc);
 	}
 
 	return;
@@ -1428,21 +1433,18 @@ static void load_vr_sensor_table()
 	}
 
 	if (voltage_vr_type_adc < 0.15) {
-		LOG_INF("The VR is RENESAS ISL69259, (%d.%d V)", (uint16_t)voltage_vr_type_adc,
-			(uint16_t)((voltage_vr_type_adc - (uint16_t)voltage_vr_type_adc) * 100));
+		LOG_INF("The VR is RENESAS ISL69259, (%.3f V)", voltage_vr_type_adc);
 		memcpy(&sensor_config[sensor_config_count], isl69259_vr_sensor_config_table,
 		       ARRAY_SIZE(isl69259_vr_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(isl69259_vr_sensor_config_table);
 	} else if ((voltage_vr_type_adc > 0.5 - (0.5 * 0.15)) &&
 		   (voltage_vr_type_adc < 0.5 + (0.5 * 0.15))) {
-		LOG_INF("The VR is INFINEON XDPE12284, (%d.%d V)", (uint16_t)voltage_vr_type_adc,
-			(uint16_t)((voltage_vr_type_adc - (uint16_t)voltage_vr_type_adc) * 100));
+		LOG_INF("The VR is INFINEON XDPE12284, (%.3f V)", voltage_vr_type_adc);
 		memcpy(&sensor_config[sensor_config_count], xdpe12284_vr_sensor_config_table,
 		       ARRAY_SIZE(xdpe12284_vr_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(xdpe12284_vr_sensor_config_table);
 	} else {
-		LOG_ERR("Unknown VR type, (%d.%d V)", (uint16_t)voltage_vr_type_adc,
-			(uint16_t)((voltage_vr_type_adc - (uint16_t)voltage_vr_type_adc) * 100));
+		LOG_ERR("Unknown VR type, (%.3f V)", voltage_vr_type_adc);
 	}
 
 	return;
@@ -1464,32 +1466,21 @@ static void load_power_ic_sensor_table()
 	}
 
 	if (voltage_power_ic_type_adc < 0.15) {
-		LOG_INF("The power monitor IC is RENESAS ISL28022, (%d.%d V)",
-			(uint16_t)voltage_power_ic_type_adc,
-			(uint16_t)((voltage_power_ic_type_adc -
-				    (uint16_t)voltage_power_ic_type_adc) *
-				   100));
+		LOG_INF("The power monitor IC is RENESAS ISL28022, (%.3f V)",
+			voltage_power_ic_type_adc);
 		memcpy(&sensor_config[sensor_config_count],
 		       isl28022_power_monitor_sensor_config_table,
 		       ARRAY_SIZE(isl28022_power_monitor_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(isl28022_power_monitor_sensor_config_table);
 	} else if ((voltage_power_ic_type_adc > 0.5 - (0.5 * 0.15)) &&
 		   (voltage_power_ic_type_adc < 0.5 + (0.5 * 0.15))) {
-		LOG_INF("The power monitor IC is TI INA230, (%d.%d V)",
-			(uint16_t)voltage_power_ic_type_adc,
-			(uint16_t)((voltage_power_ic_type_adc -
-				    (uint16_t)voltage_power_ic_type_adc) *
-				   100));
+		LOG_INF("The power monitor IC is TI INA230, (%.3f V)", voltage_power_ic_type_adc);
 		memcpy(&sensor_config[sensor_config_count],
 		       ina230_power_monitor_sensor_config_table,
 		       ARRAY_SIZE(ina230_power_monitor_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(ina230_power_monitor_sensor_config_table);
 	} else {
-		LOG_ERR("Unknown power monitor IC type, (%d.%d V)",
-			(uint16_t)voltage_power_ic_type_adc,
-			(uint16_t)((voltage_power_ic_type_adc -
-				    (uint16_t)voltage_power_ic_type_adc) *
-				   100));
+		LOG_ERR("Unknown power monitor IC type, (%.3f V)", voltage_power_ic_type_adc);
 	}
 
 	return;

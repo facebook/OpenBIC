@@ -263,6 +263,11 @@
 #define SENSOR_NUM_CURR_E1S_15 0xBE
 #define SENSOR_NUM_POUT_E1S_15 0xBF
 
+/* The sensors of different source components by ADC */
+#define SENSOR_NUM_HSC_TYPE 0xF0
+#define SENSOR_NUM_VR_TYPE 0xF1
+#define SENSOR_NUM_ADC_TYPE 0xF2
+
 typedef enum {
 	VR_RNS_ISL69259,
 	VR_INF_XDPE12284,
