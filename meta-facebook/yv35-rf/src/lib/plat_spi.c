@@ -66,7 +66,6 @@ static bool control_flash_power(int power_state)
 		if (!retry) {
 			break;
 		}
-
 		control_power_stage(control_mode, P1V8_ASIC_EN_R);
 		k_msleep(CHKPWR_DELAY_MSEC);
 	}
@@ -79,6 +78,7 @@ static bool control_flash_power(int power_state)
 uint8_t fw_update_cxl(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sector_end)
 {
 	uint8_t ret = FWUPDATE_UPDATE_FAIL;
+	set_CXL_update_status(POWER_ON);
 
 	if (offset > CXL_UPDATE_MAX_OFFSET) {
 		return FWUPDATE_OVER_LENGTH;
@@ -100,6 +100,7 @@ uint8_t fw_update_cxl(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool 
 	if (sector_end || ret != FWUPDATE_SUCCESS) {
 		control_flash_power(POWER_OFF);
 		switch_cxl_spi_mux(CXL_FLASH_TO_CXL);
+		set_CXL_update_status(POWER_OFF);
 	}
 
 	return ret;
