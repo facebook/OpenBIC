@@ -22,4 +22,6 @@ enum FRU_ID {
 	MAX_FRU_ID,
 };
 
+#define FRU_CFG_NUM MAX_FRU_ID
+
 #endif

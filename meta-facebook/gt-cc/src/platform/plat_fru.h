@@ -17,6 +17,16 @@
 #ifndef PLAT_FRU_H
 #define PLAT_FRU_H
 
+enum {
+	SWB_FRU_ID,
+	FIO_FRU_ID,
+	HSC_MODULE_FRU_ID,
+	// OTHER_FRU_ID,
+	MAX_FRU_ID,
+};
+
+#define FRU_CFG_NUM MAX_FRU_ID
+
 #define SWB_FRU_PORT 0x05
 #define SWB_FRU_ADDR (0xA8 >> 1)
 #define SWB_FRU_MUX_ADDR (0xE0 >> 1)
@@ -27,13 +37,5 @@
 #define HSC_MODULE_FRU_ADDR (0xA2 >> 1)
 #define HSC_MODULE_FRU_MUX_ADDR (0xE0 >> 1)
 #define HSC_MODULE_FRU_MUX_CHAN 6
-
-enum {
-	SWB_FRU_ID,
-	FIO_FRU_ID,
-	HSC_MODULE_FRU_ID,
-	// OTHER_FRU_ID,
-	MAX_FRU_ID,
-};
 
 #endif

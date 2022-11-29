@@ -22,6 +22,10 @@
 #include "libutil.h"
 #include "ipmi.h"
 #include "util_spi.h"
+#include "hal_gpio.h"
+#include "plat_fru.h"
+#include "plat_gpio.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
@@ -65,5 +69,50 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
 		break;
 	}
+	return;
+}
+
+void OEM_1S_GET_ASIC_CARD_STATUS(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t asic_card_id = msg->data[0];
+	uint8_t offset = 0;
+
+	switch (asic_card_id) {
+	case FIO_FRU_ID:
+		if (gpio_get(PRSNT_FIO_N) == LOW_ACTIVE) {
+			msg->data[0] = FIO_PRESENT;
+		} else {
+			msg->data[0] = FIO_NOT_PRESENT;
+		}
+		msg->completion_code = CC_SUCCESS;
+		break;
+	case ACCL_1_FRU_ID:
+	case ACCL_2_FRU_ID:
+	case ACCL_3_FRU_ID:
+	case ACCL_4_FRU_ID:
+	case ACCL_5_FRU_ID:
+	case ACCL_6_FRU_ID:
+	case ACCL_7_FRU_ID:
+	case ACCL_8_FRU_ID:
+	case ACCL_9_FRU_ID:
+	case ACCL_10_FRU_ID:
+	case ACCL_11_FRU_ID:
+	case ACCL_12_FRU_ID:
+		offset = asic_card_id - ACCL_1_FRU_ID;
+		msg->data[0] = asic_card_info[offset].card_presence_status;
+		msg->completion_code = CC_SUCCESS;
+		break;
+	default:
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		break;
+	}
+
 	return;
 }

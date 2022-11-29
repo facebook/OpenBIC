@@ -51,4 +51,6 @@ enum {
 	CXL_FRU_MUX0_CHANNEL7,
 };
 
+#define FRU_CFG_NUM MAX_FRU_ID
+
 #endif
