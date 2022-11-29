@@ -95,7 +95,7 @@ static uint8_t mctp_medium_init(mctp *mctp_inst, mctp_medium_conf medium_conf)
 		ret = mctp_i3c_init(mctp_inst, medium_conf);
 		break;
 	default:
-		break;
+		return MCTP_ERROR;
 	}
 
 	return ret;
@@ -114,7 +114,7 @@ static uint8_t mctp_medium_deinit(mctp *mctp_inst)
 		mctp_i3c_deinit(mctp_inst);
 		break;
 	default:
-		break;
+		return MCTP_ERROR;
 	}
 
 	return MCTP_SUCCESS;
@@ -196,6 +196,7 @@ static void mctp_rx_task(void *arg, void *dummy0, void *dummy1)
 	LOG_INF("mctp_rx_task start %p", mctp_inst);
 
 	while (1) {
+		k_msleep(MCTP_POLL_TIME_MS);
 		uint8_t read_buf[256] = { 0 };
 		mctp_ext_params ext_params;
 		uint8_t ret = MCTP_ERROR;
