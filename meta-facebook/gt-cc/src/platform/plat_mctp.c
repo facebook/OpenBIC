@@ -32,6 +32,7 @@
 #include "sensor.h"
 #include "plat_hook.h"
 #include "plat_mctp.h"
+#include "plat_gpio.h"
 
 LOG_MODULE_REGISTER(plat_mctp);
 
@@ -80,6 +81,7 @@ typedef struct _mctp_route_entry {
 	uint8_t endpoint;
 	uint8_t bus; /* TODO: only consider smbus/i3c */
 	uint8_t addr; /* TODO: only consider smbus/i3c */
+	uint8_t dev_present_pin;
 } mctp_route_entry;
 
 typedef struct _mctp_msg_handler {
@@ -101,14 +103,14 @@ static mctp_smbus_port smbus_port[] = {
 
 mctp_route_entry mctp_route_tbl[] = {
 	{ MCTP_EID_BMC, I2C_BUS_BMC, I2C_ADDR_BMC },
-	{ MCTP_EID_NIC_0, I2C_BUS_NIC_0, I2C_ADDR_NIC },
-	{ MCTP_EID_NIC_1, I2C_BUS_NIC_1, I2C_ADDR_NIC },
-	{ MCTP_EID_NIC_2, I2C_BUS_NIC_2, I2C_ADDR_NIC },
-	{ MCTP_EID_NIC_3, I2C_BUS_NIC_3, I2C_ADDR_NIC },
-	{ MCTP_EID_NIC_4, I2C_BUS_NIC_4, I2C_ADDR_NIC },
-	{ MCTP_EID_NIC_5, I2C_BUS_NIC_5, I2C_ADDR_NIC },
-	{ MCTP_EID_NIC_6, I2C_BUS_NIC_6, I2C_ADDR_NIC },
-	{ MCTP_EID_NIC_7, I2C_BUS_NIC_7, I2C_ADDR_NIC },
+	{ MCTP_EID_NIC_0, I2C_BUS_NIC_0, I2C_ADDR_NIC, PRSNT_NIC0_R_N },
+	{ MCTP_EID_NIC_1, I2C_BUS_NIC_1, I2C_ADDR_NIC, PRSNT_NIC1_R_N },
+	{ MCTP_EID_NIC_2, I2C_BUS_NIC_2, I2C_ADDR_NIC, PRSNT_NIC2_R_N },
+	{ MCTP_EID_NIC_3, I2C_BUS_NIC_3, I2C_ADDR_NIC, PRSNT_NIC3_R_N },
+	{ MCTP_EID_NIC_4, I2C_BUS_NIC_4, I2C_ADDR_NIC, PRSNT_NIC4_R_N },
+	{ MCTP_EID_NIC_5, I2C_BUS_NIC_5, I2C_ADDR_NIC, PRSNT_NIC5_R_N },
+	{ MCTP_EID_NIC_6, I2C_BUS_NIC_6, I2C_ADDR_NIC, PRSNT_NIC6_R_N },
+	{ MCTP_EID_NIC_7, I2C_BUS_NIC_7, I2C_ADDR_NIC, PRSNT_NIC7_R_N },
 };
 
 static mctp *find_mctp_by_smbus(uint8_t bus)
@@ -145,6 +147,9 @@ static void set_dev_endpoint(void)
 
 		/* skip BMC */
 		if (p->bus == I2C_BUS_BMC && p->addr == I2C_ADDR_BMC)
+			continue;
+
+		if (gpio_get(p->dev_present_pin))
 			continue;
 
 		for (uint8_t j = 0; j < ARRAY_SIZE(smbus_port); j++) {
@@ -208,6 +213,9 @@ static void get_dev_firmware_parameters(void)
 		mctp_route_entry *p = mctp_route_tbl + i;
 
 		if (p->addr != I2C_ADDR_NIC)
+			continue;
+
+		if (gpio_get(p->dev_present_pin))
 			continue;
 
 		for (uint8_t j = 0; j < ARRAY_SIZE(smbus_port); j++) {
@@ -325,6 +333,8 @@ static uint8_t get_mctp_route_info(uint8_t dest_endpoint, void **mctp_inst,
 	for (i = 0; i < ARRAY_SIZE(mctp_route_tbl); i++) {
 		mctp_route_entry *p = mctp_route_tbl + i;
 		if (p->endpoint == dest_endpoint) {
+			if (gpio_get(p->dev_present_pin))
+				return MCTP_ERROR;
 			*mctp_inst = find_mctp_by_smbus(p->bus);
 			ext_params->type = MCTP_MEDIUM_TYPE_SMBUS;
 			ext_params->smbus_ext_params.addr = p->addr;
