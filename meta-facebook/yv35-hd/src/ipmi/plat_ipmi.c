@@ -81,7 +81,7 @@ int pal_record_bios_fw_version(uint8_t *buf, uint8_t size)
 	}
 
 	ret = get_bios_version(&get_bios_ver, block_index);
-	if (ret == -1) {
+	if (ret < 0) {
 		LOG_ERR("Get version fail");
 		return -1;
 	}
@@ -116,12 +116,10 @@ void OEM_1S_GET_BIOS_VERSION(ipmi_msg *msg)
 		return;
 	}
 
-	msg->data_len = 0;
-
 	for (uint8_t block_index = 0; block_index < BIOS_FW_VERSION_BLOCK_NUM; block_index++) {
 		EEPROM_ENTRY get_bios_ver = { 0 };
 		int ret = get_bios_version(&get_bios_ver, block_index);
-		if (ret == -1) {
+		if (ret < 0) {
 			LOG_ERR("Get version fail");
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			return;
