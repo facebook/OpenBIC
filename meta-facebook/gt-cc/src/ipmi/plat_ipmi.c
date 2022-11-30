@@ -558,7 +558,7 @@ void OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT(ipmi_msg *msg)
 
 	if (p->bus_mutex) {
 		if (k_mutex_lock(p->bus_mutex, K_MSEC(100))) {
-			LOG_ERR("Mutex lock fail on bus %d", p->i2c_bus);
+			LOG_ERR("The mutex lock failed on the bus(%d)", p->i2c_bus);
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			return;
 		}
@@ -572,9 +572,11 @@ void OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT(ipmi_msg *msg)
 
 		if (i2c_master_write(&i2c_msg, retry)) {
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
-			return;
+			LOG_ERR("Access to the I2C MUX failed on the bus(%d)", p->i2c_bus);
+			goto unlock_exit;
 		}
 	}
+
 	bridge_msg.data[0] = (p->i2c_bus << 1);
 	bridge_msg.data[1] = (p->i2c_addr << 1);
 	bridge_msg.data[2] = msg->data[1];
@@ -587,9 +589,10 @@ void OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT(ipmi_msg *msg)
 	msg->data_len = bridge_msg.data_len;
 	memcpy(&msg->data[0], &bridge_msg.data[0], bridge_msg.data_len);
 
+unlock_exit:
 	if (p->bus_mutex) {
 		if (k_mutex_unlock(p->bus_mutex))
-			LOG_ERR("Mutex unlock fail on bus %d", p->i2c_bus);
+			LOG_ERR("The mutex unlock failed on the bus(%d)", p->i2c_bus);
 	}
 	return;
 }
