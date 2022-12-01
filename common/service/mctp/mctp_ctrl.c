@@ -276,4 +276,4 @@ uint8_t mctp_ctrl_send_msg(void *mctp_p, mctp_ctrl_msg *msg)
 	return MCTP_SUCCESS;
 }
 
-K_THREAD_DEFINE(monitor_tid, 1024, mctp_ctrl_msg_timeout_monitor, NULL, NULL, NULL, 7, 0, 0);
+K_THREAD_DEFINE(monitor_tid, 1024, mctp_ctrl_msg_timeout_monitor, NULL, NULL, NULL, 0, 0, 0);
