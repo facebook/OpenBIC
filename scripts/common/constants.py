@@ -24,6 +24,7 @@ PLATFORM_NAME_MAP = {
     "oby3-vf": "Yosemite v3 : Vernal Falls",
     "oby35-bb": "Yosemite v3.5 : BaseBoard",
     "oby35-cl": "Yosemite v3.5 : Crater Lake",
+    "oby35-gl": "Yosemite v3.5 : Great Lakes",
     "oby35-hd": "Yosemite v3.5 : Half Dome",
     "oby35-rf": "Yosemite v3.5 : Rainbow Falls",
 }
@@ -39,6 +40,7 @@ SUPPORTED_PLATFORMS = {
     "oby3-vf",
     "oby35-bb",
     "oby35-cl",
+    "oby35-gl",
     "oby35-hd",
     "oby35-rf",
 }
@@ -51,6 +53,7 @@ PLATFORM_RELEASE_MAPPINGS = {
     "yv3-vf": "oby3-vf",
     "yv35-bb": "oby35-bb",
     "yv35-cl": "oby35-cl",
+    "yv35-gl": "oby35-gl",
     "yv35-hd": "oby35-hd",
     "yv35-rf": "oby35-rf",
 }
@@ -63,6 +66,7 @@ PLATFORM_DIRECTORIES = {
     "yv3-vf",
     "yv35-bb",
     "yv35-cl",
+    "yv35-gl",
     "yv35-hd",
     "yv35-rf",
 }
@@ -85,6 +89,7 @@ TITLE_TAGS = {
     "fby3.5:",
     "fby35:",
     "fby3:",
+    "gl:",
     "gt:",
     "hd:",
     "mb:",

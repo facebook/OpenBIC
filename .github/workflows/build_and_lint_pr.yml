@@ -27,6 +27,7 @@ jobs:
           yv3-vf,
           yv35-bb, 
           yv35-cl, 
+          yv35-gl, 
           yv35-hd,
           yv35-rf,
         ]
