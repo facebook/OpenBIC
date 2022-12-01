@@ -130,6 +130,18 @@ int gpio_interrupt_conf(uint8_t gpio_num, gpio_flags_t flags)
 					    (gpio_num % GPIO_GROUP_SIZE), flags);
 }
 
+uint8_t gpio_get_reg_value(uint8_t gpio_num, uint8_t reg_offset)
+{
+	uint8_t gpio_group = gpio_num / GPIO_GROUP_SIZE;
+	uint8_t gpio_group_index = gpio_num % GPIO_GROUP_SIZE;
+	uint8_t res = (sys_read32(GPIO_GROUP_REG_ACCESS[gpio_group] + reg_offset) &
+		       BIT(gpio_group_index)) ?
+			      1 :
+			      0;
+
+	return res;
+}
+
 void gpio_cb_irq_init(uint8_t gpio_num, gpio_flags_t flags)
 {
 	gpio_init_cb(gpio_num);

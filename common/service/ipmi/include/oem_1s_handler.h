@@ -76,6 +76,8 @@ uint8_t gpio_idx_exchange(ipmi_msg *msg);
 
 void OEM_1S_MSG_OUT(ipmi_msg *msg);
 void OEM_1S_GET_GPIO(ipmi_msg *msg);
+void OEM_1S_GET_GPIO_CONFIG(ipmi_msg *msg);
+void OEM_1S_SET_GPIO_CONFIG(ipmi_msg *msg);
 void OEM_1S_FW_UPDATE(ipmi_msg *msg);
 void OEM_1S_GET_BIC_FW_INFO(ipmi_msg *msg);
 void OEM_1S_GET_FW_VERSION(ipmi_msg *msg);

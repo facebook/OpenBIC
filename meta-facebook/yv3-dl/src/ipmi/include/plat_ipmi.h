@@ -39,4 +39,12 @@ enum DL_FIRMWARE_COMPONENT {
 	DL_COMPNT_PVDDR_DEF
 };
 
+enum GPIO_CONFIG_SETTING_BIT {
+	GPIO_CONF_SET_DIR = 0, // 0: input, 1: output
+	GPIO_CONF_SET_INT, // 0: disable, 1 : enable
+	GPIO_CONF_SET_TRG_TYPE, // 0: edge, 1: level
+	GPIO_CONF_SET_TRG_EDGE, // 0: fall, 1: rise
+	GPIO_CONF_SET_TRG_BOTH // 1: both edge
+};
+
 #endif
