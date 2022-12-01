@@ -61,14 +61,12 @@ int i3c_smq_read(I3C_MSG *msg)
 	CHECK_NULL_ARG_WITH_RETURN(msg, -EINVAL);
 
 	if (!dev_i3c[msg->bus]) {
-		LOG_ERR("[%s] bus%u did not define\n", __func__, msg->bus);
 		return -ENODEV;
 	}
 
 	msg->rx_len =
 		i3c_slave_mqueue_read(dev_i3c_smq[msg->bus], &msg->data[0], I3C_MAX_DATA_SIZE);
 	if (msg->rx_len == 0) {
-		LOG_ERR("[%s] bus%u message queue was empty\n", __func__, msg->bus);
 		return -ENODATA;
 	}
 
@@ -91,7 +89,7 @@ int i3c_smq_write(I3C_MSG *msg)
 		return -ENODEV;
 	}
 
-	ret = i3c_slave_mqueue_write(dev_i3c[msg->bus], &msg->data[0], msg->tx_len);
+	ret = i3c_slave_mqueue_write(dev_i3c_smq[msg->bus], &msg->data[0], msg->tx_len);
 	return ret;
 }
 

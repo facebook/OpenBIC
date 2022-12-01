@@ -23,6 +23,12 @@
 #include "plat_kcs.h"
 #include "plat_pmic.h"
 #include "util_worker.h"
+#include "plat_mctp.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include "hal_i3c.h"
+#include "libutil.h"
+#include "mctp_ctrl.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -42,6 +48,7 @@ void pal_pre_init()
 
 void pal_post_init()
 {
+	plat_mctp_init();
 	kcs_init();
 }
 
