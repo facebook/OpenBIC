@@ -133,3 +133,8 @@ void FRU_init(void)
 {
 	pal_load_fru_config();
 }
+
+__weak bool write_psb_inform(EEPROM_ENTRY *entry)
+{
+	return false;
+}
