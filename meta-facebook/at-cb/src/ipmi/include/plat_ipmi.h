@@ -19,6 +19,10 @@
 
 #define BIC_FW_DATA_LENGTH 7
 
+#define CC_PEX_NOT_POWER_ON 0xB0
+#define CC_PEX_PRE_READING_FAIL 0xB1
+#define CC_PEX_ACCESS_FAIL 0xB2
+
 /** enum number follow GT for now since bmc hasn't ready **/
 enum CB_FIRMWARE_COMPONENT {
 	CB_COMPNT_VR0,
