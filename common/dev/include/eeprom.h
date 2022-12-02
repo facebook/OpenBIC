@@ -47,6 +47,7 @@ typedef struct _EEPROM_CFG_ {
 	bool mux_present;
 	uint8_t mux_addr;
 	uint8_t mux_channel;
+	struct k_mutex *bus_mutex;
 } EEPROM_CFG;
 
 typedef struct _EEPROM_ENTRY_ {
