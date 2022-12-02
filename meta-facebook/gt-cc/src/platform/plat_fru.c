@@ -18,6 +18,8 @@
 #include "plat_fru.h"
 #include <string.h>
 
+extern struct k_mutex i2c_bus6_mutex;
+
 const EEPROM_CFG plat_fru_config[] = {
 	{
 		NV_ATMEL_24C64,
@@ -31,6 +33,7 @@ const EEPROM_CFG plat_fru_config[] = {
 		true,
 		SWB_FRU_MUX_ADDR,
 		SWB_FRU_MUX_CHAN,
+		&i2c_bus6_mutex,
 	},
 	{
 		NV_ATMEL_24C64,
@@ -53,6 +56,7 @@ const EEPROM_CFG plat_fru_config[] = {
 		true,
 		HSC_MODULE_FRU_MUX_ADDR,
 		HSC_MODULE_FRU_MUX_CHAN,
+		&i2c_bus6_mutex,
 	},
 };
 
