@@ -26,6 +26,8 @@
 #include "plat_fru.h"
 #include "plat_gpio.h"
 #include "plat_class.h"
+#include "plat_sensor_table.h"
+#include "pex89000.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
@@ -63,6 +65,57 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		msg->data[7] = BIC_FW_platform_1;
 		msg->data[8] = BIC_FW_platform_2;
 		msg->data_len = 9;
+		msg->completion_code = CC_SUCCESS;
+		break;
+	case CB_COMPNT_PCIE_SWITCH0:
+	case CB_COMPNT_PCIE_SWITCH1:
+		/* Only can be read when DC is on */
+		if (is_mb_dc_on() == false) {
+			msg->completion_code = CC_PEX_NOT_POWER_ON;
+			return;
+		}
+		uint8_t pex_sensor_num_table[PEX_MAX_NUMBER] = { SENSOR_NUM_TEMP_PEX_0,
+								 SENSOR_NUM_TEMP_PEX_1 };
+		int reading;
+
+		uint8_t pex_sensor_num = pex_sensor_num_table[component - CB_COMPNT_PCIE_SWITCH0];
+		sensor_cfg *cfg = &sensor_config[sensor_config_index_map[pex_sensor_num]];
+		pex89000_unit *p = (pex89000_unit *)cfg->priv_data;
+
+		if (cfg->pre_sensor_read_hook) {
+			if (cfg->pre_sensor_read_hook(cfg->num, cfg->pre_sensor_read_args) ==
+			    false) {
+				LOG_ERR("PEX%d pre-read failed!",
+					component - CB_COMPNT_PCIE_SWITCH0);
+				msg->completion_code = CC_PEX_PRE_READING_FAIL;
+				return;
+			}
+		}
+
+		if (pex_access_engine(cfg->port, cfg->target_addr, p->idx, pex_access_sbr_ver,
+				      &reading)) {
+			if (cfg->post_sensor_read_hook(cfg->num, cfg->post_sensor_read_args,
+						       NULL) == false) {
+				LOG_ERR("PEX%d post-read failed!",
+					component - CB_COMPNT_PCIE_SWITCH0);
+			}
+			msg->completion_code = CC_PEX_ACCESS_FAIL;
+			return;
+		}
+
+		if (cfg->post_sensor_read_hook) {
+			if (cfg->post_sensor_read_hook(cfg->num, cfg->post_sensor_read_args,
+						       NULL) == false) {
+				LOG_ERR("PEX%d post-read failed!",
+					component - CB_COMPNT_PCIE_SWITCH0);
+			}
+		}
+
+		memcpy(&msg->data[2], &reading, sizeof(reading));
+
+		msg->data[0] = component;
+		msg->data[1] = sizeof(reading);
+		msg->data_len = sizeof(reading) + 2;
 		msg->completion_code = CC_SUCCESS;
 		break;
 	default:
