@@ -382,12 +382,12 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_VOL, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		ADC_12V_SEN_FACTOR_M, // [7:0] M bits
+		0x01, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
 		0x00, // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
-		ADC_12V_SEN_FACTOR_RB, // Rexp, Bexp
+		0xE0, // Rexp, Bexp
 		0x00, // analog characteristic
 		0xBB, // nominal reading
 		0xCA, // normal maximum
@@ -395,10 +395,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0xFF, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		ADC_12V_UCT, // UCT
+		0x7E, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
-		ADC_12V_LCT, // LCT
+		0x72, // LCT
 		0x00, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold

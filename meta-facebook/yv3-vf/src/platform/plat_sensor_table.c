@@ -54,7 +54,7 @@ sensor_cfg plat_sensor_config[] = {
 	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
 	{ SENSOR_NUM_V_1_2_STBY, sensor_dev_ast_adc, ADC_PORT15, NONE, NONE, stby_access, 1, 1,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	  NULL, NULL, NULL, NULL, &adc_asd_init_args[1] },
 	{ SENSOR_NUM_ADC_12V_VOL_M2A, sensor_dev_ast_adc, ADC_PORT8, NONE, NONE, is_m2_sen_readable,
 	  704, 100, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[1] },
