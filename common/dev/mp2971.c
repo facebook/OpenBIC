@@ -202,6 +202,7 @@ uint8_t mp2971_read(uint8_t sensor_num, int *reading)
 
 	switch (offset) {
 	case PMBUS_READ_VOUT:
+		/* 1 mV/LSB, unsigned integer */
 		val = val & BIT_MASK(12);
 		break;
 	case PMBUS_READ_IOUT:
