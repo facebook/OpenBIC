@@ -58,6 +58,11 @@
 
 LOG_MODULE_DECLARE(ipmi);
 
+__weak int pal_extend_msg_out_interface_handler(ipmi_msg *msg)
+{
+	return -1;
+}
+
 __weak void OEM_1S_MSG_OUT(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -97,6 +102,13 @@ __weak void OEM_1S_MSG_OUT(ipmi_msg *msg)
 	if ((IPMB_inf_index_map[target_IF] == RESERVED) ||
 	    (IPMB_config_table[IPMB_inf_index_map[target_IF]].interface == RESERVED_IF) ||
 	    (IPMB_config_table[IPMB_inf_index_map[target_IF]].enable_status == DISABLE)) {
+		
+		// check the platform extend message out handler
+		if (!pal_extend_msg_out_interface_handler(msg)) {
+			// the platform has the extended handler
+			// the ipmb response should be handled by itself
+			return;
+		}
 		LOG_ERR("OEM_MSG_OUT: Invalid bridge interface: %x", target_IF);
 		msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
 	}

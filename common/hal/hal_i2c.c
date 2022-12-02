@@ -27,11 +27,15 @@
 
 LOG_MODULE_REGISTER(hal_i2c);
 
+#define AST_1030_I2C_BASE 0x7e7b0080
+#define AST_1030_I2C_REG_LEN 0x80
+#define AST_1030_SLAVE_EN BIT(1)
+
 static const struct device *dev_i2c[I2C_BUS_MAX_NUM];
 
 struct k_mutex i2c_mutex[I2C_BUS_MAX_NUM];
 
-int i2c_freq_set(uint8_t i2c_bus, uint8_t i2c_speed_mode)
+int i2c_freq_set(uint8_t i2c_bus, uint8_t i2c_speed_mode, uint8_t en_slave)
 {
 	if (check_i2c_bus_valid(i2c_bus) < 0) {
 		LOG_ERR("i2c bus %d is invalid", i2c_bus);
@@ -41,7 +45,17 @@ int i2c_freq_set(uint8_t i2c_bus, uint8_t i2c_speed_mode)
 	uint32_t dev_config_raw;
 	dev_config_raw = I2C_MODE_MASTER | I2C_SPEED_SET(i2c_speed_mode);
 
-	return i2c_configure(dev_i2c[i2c_bus], dev_config_raw);
+	if (i2c_configure(dev_i2c[i2c_bus], dev_config_raw)) {
+		LOG_ERR("i2c freq set failed");
+		return -1;
+	}
+
+	if (en_slave) {
+		uint32_t *addr = (uint32_t *)(AST_1030_I2C_BASE + (i2c_bus * AST_1030_I2C_REG_LEN));
+		*addr |= AST_1030_SLAVE_EN;
+	}
+
+	return 0;
 }
 
 int i2c_master_read(I2C_MSG *msg, uint8_t retry)
@@ -90,8 +104,12 @@ int i2c_master_read(I2C_MSG *msg, uint8_t retry)
 
 	uint8_t i;
 	for (i = 0; i <= retry; i++) {
-		ret = i2c_write_read(dev_i2c[msg->bus], msg->target_addr, txbuf, msg->tx_len, rxbuf,
+		if (msg->tx_len > 0) {
+			ret = i2c_write_read(dev_i2c[msg->bus], msg->target_addr, txbuf, msg->tx_len, rxbuf,
 				     msg->rx_len);
+		} else  {
+			ret = i2c_read(dev_i2c[msg->bus], rxbuf, msg->rx_len, msg->target_addr);
+		}
 		if (ret == 0) { // i2c write read success
 			memcpy(&msg->data[0], rxbuf, msg->rx_len);
 			LOG_HEXDUMP_DBG(msg->data, msg->rx_len, "rxbuf");

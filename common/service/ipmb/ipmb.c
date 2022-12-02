@@ -59,6 +59,7 @@ static struct k_thread IPMB_TX[MAX_IPMB_IDX];
 static struct k_thread IPMB_RX[MAX_IPMB_IDX];
 static k_tid_t IPMB_RX_ID[MAX_IPMB_IDX];
 static k_tid_t IPMB_TX_ID[MAX_IPMB_IDX];
+static bool ipmb_tx_disable[MAX_IPMB_IDX];
 
 IPMB_config *IPMB_config_table;
 ipmi_msg_cfg *P_start[MAX_IPMB_IDX],
@@ -334,6 +335,10 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 
 		k_msgq_get(&ipmb_txqueue[ipmb_cfg.index], (ipmi_msg_cfg *)current_msg_tx,
 			   K_FOREVER); // Wait for OS queue send interrupt
+
+		// drop the messsage when the disable is set
+		if (ipmb_tx_disable[ipmb_cfg.index])
+			goto cleanup;
 
 		if (IS_RESPONSE(current_msg_tx->buffer)) { // Send a response message
 			if (current_msg_tx->retries > IPMB_TX_RETRY_TIME) {
@@ -1215,6 +1220,26 @@ void create_ipmb_threads(uint8_t index)
 __weak bool pal_load_ipmb_config(void)
 {
 	return true;
+}
+
+void ipmb_tx_suspend(uint8_t index)
+{
+	if (index >= MAX_IPMB_IDX) {
+		LOG_ERR("index is over MAX_IPMB_IDX");
+		return;
+	}
+
+	ipmb_tx_disable[index] = 1;
+}
+
+void ipmb_tx_resume(uint8_t index)
+{
+	if (index >= MAX_IPMB_IDX) {
+		LOG_ERR("index is over MAX_IPMB_IDX");
+		return;
+	}
+
+	ipmb_tx_disable[index] = 0;
 }
 
 void ipmb_init(void)
