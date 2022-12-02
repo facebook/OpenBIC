@@ -20,8 +20,12 @@
 #include <string.h>
 
 #include "sdr.h"
+#include "libutil.h"
+#include <logging/log.h>
 #include "plat_ipmb.h"
 #include "plat_sensor_table.h"
+
+LOG_MODULE_REGISTER(plat_sdr_table);
 
 #define HSC_SENSOR 0
 
@@ -1865,5 +1869,52 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"VF_E1S_SSD3_TEMP_C",
 	},
 };
+
+typedef struct {
+	uint8_t sensor_num;
+	uint8_t ID_str[MAX_SDR_SENSOR_NAME_LEN];
+} yv3_change_sdr;
+
+// yv3 platform re-set sensor name in standard get sensor reading
+yv3_change_sdr sdr_table_in_yv3[] = {
+	{ SENSOR_NUM_T_MB_OUTLET_TEMP_T, "E1S Outlet Temp" },
+	{ SENSOR_NUM_V_12_AUX, "E1S P12V_AUX" },
+	{ SENSOR_NUM_V_12_EDGE, "E1S P12V_EDGE" },
+	{ SENSOR_NUM_V_3_3_AUX, "E1S P3V3_AUX" },
+	{ SENSOR_NUM_ADC_12V_VOL_M2A, "E1S 12V_ADC_DEV0" },
+	{ SENSOR_NUM_ADC_12V_VOL_M2B, "E1S 12V_ADC_DEV1" },
+	{ SENSOR_NUM_ADC_12V_VOL_M2C, "E1S 12V_ADC_DEV2" },
+	{ SENSOR_NUM_ADC_12V_VOL_M2D, "E1S 12V_ADC_DEV3" },
+	{ SENSOR_NUM_ADC_3V3_VOL_M2A, "E1S 3V3_ADC_DEV0" },
+	{ SENSOR_NUM_ADC_3V3_VOL_M2B, "E1S 3V3_ADC_DEV1" },
+	{ SENSOR_NUM_ADC_3V3_VOL_M2C, "E1S 3V3_ADC_DEV2" },
+	{ SENSOR_NUM_ADC_3V3_VOL_M2D, "E1S 3V3_ADC_DEV3" },
+	{ SENSOR_NUM_INA231_PWR_M2A, "E1S DEV0 Power" },
+	{ SENSOR_NUM_INA231_PWR_M2B, "E1S DEV1 Power" },
+	{ SENSOR_NUM_INA231_PWR_M2C, "E1S DEV2 Power" },
+	{ SENSOR_NUM_INA231_PWR_M2D, "E1S DEV3 Power" },
+	{ SENSOR_NUM_INA231_VOL_M2A, "E1S DEV0 Voltage" },
+	{ SENSOR_NUM_INA231_VOL_M2B, "E1S DEV1 Voltage" },
+	{ SENSOR_NUM_INA231_VOL_M2C, "E1S DEV2 Voltage" },
+	{ SENSOR_NUM_INA231_VOL_M2D, "E1S DEV3 Voltage" },
+	{ SENSOR_NUM_NVME_TEMP_M2A, "E1S DEV0 Temp" },
+	{ SENSOR_NUM_NVME_TEMP_M2B, "E1S DEV1 Temp" },
+	{ SENSOR_NUM_NVME_TEMP_M2C, "E1S DEV2 Temp" },
+	{ SENSOR_NUM_NVME_TEMP_M2D, "E1S DEV3 Temp" },
+};
+
+void pal_set_SDR(uint8_t *table_ptr)
+{
+	CHECK_NULL_ARG(table_ptr);
+	SDR_Full_sensor *sdr_ptr = (SDR_Full_sensor *)table_ptr;
+	yv3_change_sdr *change_sdr_ptr = sdr_table_in_yv3;
+
+	uint8_t i;
+	for (i = 0; i < ARRAY_SIZE(sdr_table_in_yv3); i++) {
+		if (sdr_ptr->sensor_num == (change_sdr_ptr + i)->sensor_num)
+			snprintf(sdr_ptr->ID_str, sizeof(sdr_ptr->ID_str), "%s",
+				 (change_sdr_ptr + i)->ID_str);
+	}
+}
 
 const int SDR_TABLE_SIZE = ARRAY_SIZE(plat_sdr_table);
