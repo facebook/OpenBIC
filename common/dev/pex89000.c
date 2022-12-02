@@ -353,9 +353,8 @@ static uint8_t pex89000_temp(uint8_t bus, uint8_t addr, pex_dev_t dev, uint32_t 
 		return rc;
 	}
 
-	float pre_highest_temp = 0;
+	float highest_temp = 0;
 	float temp = 0;
-	float temp_arr[12];
 	uint32_t CmdAddr;
 	uint32_t resp = 0;
 
@@ -406,22 +405,25 @@ static uint8_t pex89000_temp(uint8_t bus, uint8_t addr, pex_dev_t dev, uint32_t 
 				goto exit;
 			}
 
-			temp = (float)(366.812 - 0.23751 * (float)(resp & 0x7FF));
-			temp_arr[i] = temp;
+			if (resp == 0)
+				continue;
 
-			if (temp > pre_highest_temp)
-				pre_highest_temp = temp;
+			temp = (float)(366.812 - 0.23751 * (float)(resp & 0x7FF));
+
+			if (temp > highest_temp)
+				highest_temp = temp;
 		}
 
-		temp = pre_highest_temp;
+		if (highest_temp == 0)
+			goto exit;
 	} else {
 		printf("%s: device type %d not support!\n", __func__, dev);
 		goto exit;
 	}
 
 	sensor_val *sval = (sensor_val *)val;
-	sval->integer = (int16_t)temp;
-	sval->fraction = (temp - sval->integer) * 1000;
+	sval->integer = (int16_t)highest_temp;
+	sval->fraction = (highest_temp - sval->integer) * 1000;
 
 	rc = pex_api_success;
 exit:
