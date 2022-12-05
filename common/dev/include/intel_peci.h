@@ -20,6 +20,12 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define RDPKG_IDX_PKG_TEMP 0x02
+#define RDPKG_IDX_DIMM_TEMP 0x0E
+#define WRPKG_IDX_DIMM_TEMP 0x0E
+#define RDPKG_IDX_TJMAX_TEMP 0x10
+#define RDPKG_IDX_PWR_SKU_UNIT_READ 0x1E
+
 enum {
 	PECI_UNKNOWN = 0x00,
 	PECI_TEMP_CPU_MARGIN,

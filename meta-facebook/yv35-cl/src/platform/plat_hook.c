@@ -16,9 +16,12 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <drivers/peci.h>
+#include <logging/log.h>
 #include "pmic.h"
 #include "ipmi.h"
 #include "sensor.h"
+#include "libutil.h"
 #include "plat_i2c.h"
 #include "plat_gpio.h"
 #include "plat_hook.h"
@@ -27,9 +30,12 @@
 #include "pmbus.h"
 #include "intel_peci.h"
 #include "intel_dimm.h"
+#include "hal_peci.h"
 #include "power_status.h"
 
 #include "i2c-mux-tca9548.h"
+
+LOG_MODULE_REGISTER(plat_hook);
 
 #define ADJUST_ADM1278_POWER(x) (x * 0.98)
 #define ADJUST_ADM1278_CURRENT(x) ((x * 0.98) + 0.1)
@@ -98,6 +104,15 @@ dimm_pre_proc_arg dimm_pre_proc_args[] = {
 	[0] = { .is_present_checked = false }, [1] = { .is_present_checked = false },
 	[2] = { .is_present_checked = false }, [3] = { .is_present_checked = false },
 	[4] = { .is_present_checked = false }, [5] = { .is_present_checked = false }
+};
+
+dimm_post_proc_arg dimm_post_proc_args[] = {
+	[0] = { .dimm_channel = DIMM_CHANNEL_NUM_0, .dimm_number = DIMM_NUMBER_0 },
+	[1] = { .dimm_channel = DIMM_CHANNEL_NUM_2, .dimm_number = DIMM_NUMBER_0 },
+	[2] = { .dimm_channel = DIMM_CHANNEL_NUM_3, .dimm_number = DIMM_NUMBER_0 },
+	[3] = { .dimm_channel = DIMM_CHANNEL_NUM_4, .dimm_number = DIMM_NUMBER_0 },
+	[4] = { .dimm_channel = DIMM_CHANNEL_NUM_6, .dimm_number = DIMM_NUMBER_0 },
+	[5] = { .dimm_channel = DIMM_CHANNEL_NUM_7, .dimm_number = DIMM_NUMBER_0 },
 };
 
 /**************************************************************************************************
@@ -442,3 +457,39 @@ bool pre_intel_dimm_i3c_read(uint8_t sensor_num, void *args)
 	pre_proc_args->is_present_checked = true;
 	return ret;
 }
+
+bool post_intel_dimm_i3c_read(uint8_t sensor_num, void *args, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
+	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+
+	if (get_post_status() == false) {
+		return true;
+	}
+
+	dimm_post_proc_arg *post_proc_args = (dimm_post_proc_arg *)args;
+	sensor_val *sval = (sensor_val *)reading;
+
+	uint8_t addr = 0, write_len = 0, read_len = 0, cmd = 0, read_buf = 0;
+	uint8_t write_buf[PECI_WR_PKG_LEN_DWORD] = { 0 };
+	int ret = 0;
+
+	// Using PECI WrPkgConfig command to feedback DIMM temperature to CPU
+	addr = CPU_PECI_ADDR;
+	write_len = PECI_WR_PKG_LEN_DWORD;
+	read_len = PECI_WR_PKG_RD_LEN;
+	cmd = PECI_CMD_WR_PKG_CFG0;
+	write_buf[0] = 0x00;
+	write_buf[1] = WRPKG_IDX_DIMM_TEMP;
+	write_buf[2] = post_proc_args->dimm_channel;
+	write_buf[3] = post_proc_args->dimm_number;
+	write_buf[4] = sval->integer;
+
+	ret = peci_write(cmd, addr, read_len, &read_buf, write_len, write_buf);
+	if (ret != 0) {
+		return false;
+	}
+
+	return true;
+}
+
