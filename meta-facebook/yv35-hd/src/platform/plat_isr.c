@@ -197,12 +197,22 @@ void ISR_HSC_THROTTLE()
 
 void ISR_MB_THROTTLE()
 {
+	/* FAST_PROCHOT_N glitch workaround
+	 * FAST_PROCHOT_N has a glitch and causes BIC to record MB_throttle deassertion SEL.
+	 * Ignore this by checking whether MB_throttle is asserted before recording the deassertion.
+	 */
+	static bool is_mb_throttle_assert = false;
 	common_addsel_msg_t sel_msg;
 	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH && get_DC_status()) {
-		if (gpio_get(FAST_PROCHOT_N) == GPIO_HIGH) {
+		if ((gpio_get(FAST_PROCHOT_N) == GPIO_HIGH) && (is_mb_throttle_assert == true)) {
 			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
-		} else {
+			is_mb_throttle_assert = false;
+		} else if ((gpio_get(FAST_PROCHOT_N) == GPIO_LOW) &&
+			   (is_mb_throttle_assert == false)) {
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+			is_mb_throttle_assert = true;
+		} else {
+			return;
 		}
 		sel_msg.InF_target = BMC_IPMB;
 		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
