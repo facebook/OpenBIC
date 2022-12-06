@@ -21,6 +21,7 @@
 #include <sys/slist.h>
 #include <sys/util.h>
 #include <zephyr.h>
+#include "libutil.h"
 
 LOG_MODULE_DECLARE(pldm);
 
@@ -52,8 +53,74 @@ uint8_t get_tid(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp, uint
 	return PLDM_SUCCESS;
 }
 
-static pldm_cmd_handler pldm_base_cmd_tbl[] = { { PLDM_BASE_CMD_CODE_SETTID, set_tid },
-						{ PLDM_BASE_CMD_CODE_GETTID, get_tid } };
+uint8_t get_pldm_types(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
+		       uint16_t *resp_len, void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+
+	struct _get_pldm_types_resp *p = (struct _get_pldm_types_resp *)resp;
+
+	if (len > 0) {
+		p->completion_code = PLDM_ERROR_INVALID_LENGTH;
+		*resp_len = 1;
+		return PLDM_SUCCESS;
+	}
+
+	uint8_t rc = get_supported_pldm_type(p->pldm_types, sizeof(p->pldm_types));
+
+	*resp_len = (rc == PLDM_SUCCESS) ? sizeof(*p) : 1;
+	p->completion_code = rc;
+	return PLDM_SUCCESS;
+}
+
+uint8_t get_pldm_commands(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
+			  uint16_t *resp_len, void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+
+	struct _get_pldm_commands_req *req_p = (struct _get_pldm_commands_req *)buf;
+	struct _get_pldm_commands_resp *resp_p = (struct _get_pldm_commands_resp *)resp;
+
+	if (len != sizeof(struct _get_pldm_commands_req)) {
+		resp_p->completion_code = PLDM_ERROR_INVALID_LENGTH;
+		*resp_len = 1;
+		return PLDM_SUCCESS;
+	}
+
+	uint8_t rc = get_supported_pldm_commands(req_p->type, resp_p->pldm_commands,
+						 sizeof(resp_p->pldm_commands));
+
+	switch (rc) {
+	case PLDM_ERROR_INVALID_PLDM_TYPE:
+		resp_p->completion_code = INVALID_PLDM_TYPE_IN_REQUEST_DATA;
+		break;
+
+	case PLDM_ERROR:
+	case PLDM_ERROR_INVALID_LENGTH:
+		resp_p->completion_code = PLDM_ERROR;
+		break;
+
+	default:
+		resp_p->completion_code = PLDM_SUCCESS;
+		break;
+	}
+
+	*resp_len = sizeof(*resp_p);
+	return PLDM_SUCCESS;
+}
+
+static pldm_cmd_handler pldm_base_cmd_tbl[] = {
+	{ PLDM_BASE_CMD_CODE_SETTID, set_tid },
+	{ PLDM_BASE_CMD_CODE_GETTID, get_tid },
+	{ PLDM_BASE_CMD_CODE_GET_PLDM_TYPE, get_pldm_types },
+	{ PLDM_BASE_CMD_CODE_GET_PLDM_CMDS, get_pldm_commands },
+};
 
 uint8_t pldm_base_handler_query(uint8_t code, void **ret_fn)
 {
