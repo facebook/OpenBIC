@@ -44,13 +44,13 @@ uint8_t ina230_reset_alt(uint8_t sensor_num)
 	ina230_init_arg *init_args;
 
 	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_ERR("invalid sensor_num\n");
+		LOG_ERR("Invalid sensor number");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	init_args = (ina230_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
 	if (init_args->is_init == false) {
-		LOG_ERR("[%s], device isn't initialized\n", __func__);
+		LOG_ERR("Device isn't initialized");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -63,7 +63,7 @@ uint8_t ina230_reset_alt(uint8_t sensor_num)
 	msg.data[0] = INA230_MSK_OFFSET;
 
 	if (i2c_master_read(&msg, I2C_RETRY)) {
-		LOG_ERR("fail to access sensor\n");
+		LOG_ERR("Failed to access sensor");
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
@@ -72,6 +72,8 @@ uint8_t ina230_reset_alt(uint8_t sensor_num)
 
 uint8_t ina230_read(uint8_t sensor_num, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+
 	double val = 0.0;
 	int16_t signed_reg_val = 0;
 	uint16_t reg_val = 0;
@@ -80,19 +82,14 @@ uint8_t ina230_read(uint8_t sensor_num, int *reading)
 	sensor_cfg *cfg;
 	ina230_init_arg *init_args;
 
-	if (!reading || (sensor_num > SENSOR_NUM_MAX)) {
-		if (sensor_num > SENSOR_NUM_MAX){
-			LOG_ERR("invalid sensor_num\n");
-		}
-		else {
-			LOG_ERR("reading pointer is NULL\n");
-		}
+	if (sensor_num > SENSOR_NUM_MAX) {
+		LOG_ERR("Invalid sensor number");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	init_args = (ina230_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
 	if (init_args->is_init == false) {
-		LOG_ERR("[%s], device isn't initialized\n", __func__);
+		LOG_ERR("Device isn't initialized");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -104,9 +101,10 @@ uint8_t ina230_read(uint8_t sensor_num, int *reading)
 	msg.rx_len = 2;
 	msg.data[0] = cfg->offset;
 
-	if (i2c_master_read(&msg, I2C_RETRY))
-		LOG_ERR("fail to access sensor\n");
+	if (i2c_master_read(&msg, I2C_RETRY)) {
+		LOG_ERR("Failed to access sensor");
 		return SENSOR_FAIL_TO_ACCESS;
+	}
 
 	reg_val = (msg.data[0] << 8) | msg.data[1];
 
@@ -140,14 +138,14 @@ uint8_t ina230_init(uint8_t sensor_num)
 	ina230_init_arg *init_args;
 
 	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_ERR("invalid sensor_num\n");
+		LOG_ERR("Invalid sensor number");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
 	init_args = (ina230_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
 
 	if (init_args->r_shunt <= 0.0 || init_args->i_max <= 0.0) {
-		LOG_ERR("<error> INA230 has invalid initail arguments\n");
+		LOG_ERR("INA230 has invalid initial arguments");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
@@ -175,16 +173,15 @@ uint8_t ina230_init(uint8_t sensor_num)
 	msg.data[2] = init_args->config.value & 0xFF;
 
 	if (i2c_master_write(&msg, I2C_RETRY)) {
-		LOG_ERR("Failed to set INA230(%.2d-%.2x) configuration.\n", msg.bus,
-		       msg.target_addr);
+		LOG_ERR("Failed to set INA230(%.2d-%.2x) configuration.", msg.bus, msg.target_addr);
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
 	// The size of calibration is 15 bits, and the MSB is unused.
 	if (calibration & 0x8000) {
 		LOG_ERR("Failed to set INA230(%.2d-%.2x) calibration due to"
-		       " the data overflowed (CAL: 0x%.2X)\n",
-		       msg.bus, msg.target_addr, calibration);
+			" the data overflowed (CAL: 0x%.2X)",
+			msg.bus, msg.target_addr, calibration);
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
@@ -194,7 +191,7 @@ uint8_t ina230_init(uint8_t sensor_num)
 	msg.data[2] = calibration & 0xFF;
 
 	if (i2c_master_write(&msg, I2C_RETRY)) {
-		LOG_ERR("Failed to set INA230(%.2d-%.2x) calibration.\n", msg.bus, msg.target_addr);
+		LOG_ERR("Failed to set INA230(%.2d-%.2x) calibration.", msg.bus, msg.target_addr);
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
@@ -202,8 +199,8 @@ uint8_t ina230_init(uint8_t sensor_num)
 		if (init_args->alert_value == 0.0 ||
 		    ((init_args->alt_cfg.BOL || init_args->alt_cfg.BUL || init_args->alt_cfg.POL) &&
 		     init_args->alert_value < 0.0)) {
-			LOG_ERR("INA230(%.2d-%.2x) has invalid alert function config.\n", msg.bus,
-			       msg.target_addr);
+			LOG_ERR("INA230(%.2d-%.2x) has invalid alert function config.", msg.bus,
+				msg.target_addr);
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
 		}
 
@@ -220,8 +217,8 @@ uint8_t ina230_init(uint8_t sensor_num)
 			alt_reg = (uint16_t)(init_args->alert_value / init_args->pwr_lsb);
 			break;
 		default:
-			LOG_ERR("INA230(%.2d-%.2x) has invalid alert function config.\n", msg.bus,
-			       msg.target_addr);
+			LOG_ERR("INA230(%.2d-%.2x) has invalid alert function config.", msg.bus,
+				msg.target_addr);
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
 		}
 
@@ -231,8 +228,8 @@ uint8_t ina230_init(uint8_t sensor_num)
 		msg.data[2] = alt_reg & 0xFF;
 
 		if (i2c_master_write(&msg, I2C_RETRY)) {
-			LOG_ERR("Failed to set INA230(%.2d-%.2x) alert value.\n", msg.bus,
-			       msg.target_addr);
+			LOG_ERR("Failed to set INA230(%.2d-%.2x) alert value.", msg.bus,
+				msg.target_addr);
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
 		}
 
@@ -242,8 +239,8 @@ uint8_t ina230_init(uint8_t sensor_num)
 		msg.data[2] = init_args->alt_cfg.value & 0xFF;
 
 		if (i2c_master_write(&msg, I2C_RETRY)) {
-			LOG_ERR("Failed to set INA230(%.2d-%.2x) mask/enable.\n", msg.bus,
-			       msg.target_addr);
+			LOG_ERR("Failed to set INA230(%.2d-%.2x) mask/enable.", msg.bus,
+				msg.target_addr);
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
 		}
 	}
