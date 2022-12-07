@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -19,6 +19,9 @@
 #include <string.h>
 #include <zephyr.h>
 #include "guid.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(dev_guid);
 
 // size of 1 to satisfy compiler warning
 __weak const EEPROM_CFG guid_config[1] = {};
@@ -26,17 +29,18 @@ __weak const EEPROM_CFG guid_config[1] = {};
 uint8_t GUID_read(EEPROM_ENTRY *entry)
 {
 	if (entry == NULL) {
+		LOG_ERR("entry pointer is NULL\n");
 		return GUID_FAIL_TO_ACCESS;
 	}
 
 	if (entry->config.dev_id >= ARRAY_SIZE(guid_config)) {
-		printf("GUID read device ID %x not exist\n", entry->config.dev_id);
+		LOG_ERR("GUID read device ID %x not exist\n", entry->config.dev_id);
 		return GUID_INVALID_ID;
 	}
 
 	if ((entry->offset + entry->data_len) >=
 	    (GUID_START + GUID_SIZE)) { // Check data write out of range
-		printf("GUID read out of range, type: %x, ID: %x\n", entry->config.dev_type,
+		LOG_ERR("GUID read out of range, type: %x, ID: %x\n", entry->config.dev_type,
 		       entry->config.dev_id);
 		return GUID_OUT_OF_RANGE;
 	}
@@ -44,6 +48,7 @@ uint8_t GUID_read(EEPROM_ENTRY *entry)
 	memcpy(&entry->config, &guid_config[entry->config.dev_id], sizeof(EEPROM_CFG));
 
 	if (!eeprom_read(entry)) {
+		LOG_ERR("fail to read eeprom\n");
 		return GUID_FAIL_TO_ACCESS;
 	}
 
@@ -53,17 +58,18 @@ uint8_t GUID_read(EEPROM_ENTRY *entry)
 uint8_t GUID_write(EEPROM_ENTRY *entry)
 {
 	if (entry == NULL) {
+		LOG_ERR("entry pointer is NULL\n");
 		return GUID_FAIL_TO_ACCESS;
 	}
 
 	if (entry->config.dev_id >= ARRAY_SIZE(guid_config)) {
-		printf("GUID write device ID %x not exist\n", entry->config.dev_id);
+		LOG_ERR("GUID write device ID %x not exist\n", entry->config.dev_id);
 		return GUID_INVALID_ID;
 	}
 
 	if ((entry->offset + entry->data_len) >=
 	    (GUID_START + GUID_SIZE)) { // Check data write out of range
-		printf("GUID write out of range, type: %x, ID: %x\n", entry->config.dev_type,
+		LOG_ERR("GUID write out of range, type: %x, ID: %x\n", entry->config.dev_type,
 		       entry->config.dev_id);
 		return GUID_OUT_OF_RANGE;
 	}
@@ -71,6 +77,7 @@ uint8_t GUID_write(EEPROM_ENTRY *entry)
 	memcpy(&entry->config, &guid_config[entry->config.dev_id], sizeof(EEPROM_CFG));
 
 	if (!eeprom_write(entry)) {
+		LOG_ERR("fail to write eeprom\n");
 		return GUID_FAIL_TO_ACCESS;
 	}
 
