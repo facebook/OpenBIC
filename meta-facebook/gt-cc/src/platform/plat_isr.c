@@ -34,8 +34,18 @@
 
 LOG_MODULE_REGISTER(plat_isr);
 
-void dc_on_init_component()
+void dc_on_init_pex();
+void dc_on_send_cmd_to_dev();
+
+K_WORK_DELAYABLE_DEFINE(dc_on_init_pex_work, dc_on_init_pex);
+K_WORK_DELAYABLE_DEFINE(dc_on_send_cmd_to_dev_work, dc_on_send_cmd_to_dev);
+
+#define DC_ON_5_SECOND 5
+#define DC_ON_PEX_INIT_RETRY 5
+
+void dc_on_init_pex()
 {
+	static uint8_t retry[PEX_MAX_NUMBER] = { 0 };
 	uint8_t pex_sensor_num_table[PEX_MAX_NUMBER] = { SENSOR_NUM_BB_TEMP_PEX_0,
 							 SENSOR_NUM_BB_TEMP_PEX_1,
 							 SENSOR_NUM_BB_TEMP_PEX_2,
@@ -47,7 +57,7 @@ void dc_on_init_component()
 		pex89000_init_arg *init_arg = (pex89000_init_arg *)cfg->init_args;
 
 		/* Only need initial when not initial yet */
-		if (!init_arg->is_init) {
+		if (init_arg && !init_arg->is_init) {
 			if (cfg->pre_sensor_read_hook) {
 				if (!cfg->pre_sensor_read_hook(cfg->num,
 							       cfg->pre_sensor_read_args)) {
@@ -56,7 +66,16 @@ void dc_on_init_component()
 				}
 			}
 			if (pex89000_init(sensor_num) != SENSOR_INIT_SUCCESS) {
-				LOG_ERR("sensor 0x%x init failed", cfg->num);
+				LOG_ERR("PEX%d initial retry, (%d)", init_arg->idx, retry[i]);
+				if (retry[i]++ < DC_ON_PEX_INIT_RETRY) {
+					k_work_schedule(&dc_on_init_pex_work,
+							K_SECONDS(DC_ON_5_SECOND));
+				} else {
+					LOG_ERR("PEX%d initial failed", init_arg->idx);
+				}
+			} else {
+				LOG_INF("PEX%d initial success", init_arg->idx);
+				retry[i] = 0;
 			}
 			if (cfg->post_sensor_read_hook) {
 				if (!cfg->post_sensor_read_hook(sensor_num,
@@ -66,6 +85,10 @@ void dc_on_init_component()
 			}
 		}
 	}
+}
+
+void dc_on_send_cmd_to_dev()
+{
 	/**
    * Call function to set endpoint and get parameters for the device, the
    * function description is as defined by zephyr but argument is not used in
@@ -74,12 +97,12 @@ void dc_on_init_component()
 	send_cmd_to_dev(NULL);
 }
 
-K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, dc_on_init_component);
-#define DC_ON_5_SECOND 5
-
 void ISR_DC_ON()
 {
+	LOG_INF("System is DC %s", is_mb_dc_on() ? "on" : "off");
 	/* Check whether DC on to send work to initial PEX */
-	if (is_mb_dc_on())
-		k_work_schedule(&set_DC_on_5s_work, K_SECONDS(DC_ON_5_SECOND));
+	if (is_mb_dc_on()) {
+		k_work_schedule(&dc_on_send_cmd_to_dev_work, K_SECONDS(DC_ON_5_SECOND));
+		k_work_schedule(&dc_on_init_pex_work, K_SECONDS(DC_ON_5_SECOND));
+	}
 }
