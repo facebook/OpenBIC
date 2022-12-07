@@ -19,13 +19,20 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <logging/log.h>
 #include "ast_adc.h"
 #include "sensor.h"
 #include "hal_gpio.h"
 #include "plat_i2c.h"
 #include "plat_gpio.h"
 #include "plat_hook.h"
+
+LOG_MODULE_REGISTER(plat_sensor_table);
+
+struct k_mutex i2c_2_pca9548a_mutex;
+struct k_mutex i2c_3_pca9546a_mutex;
+struct k_mutex i2c_4_pca9546a_mutex;
+struct k_mutex i2c_8_pca9548a_mutex;
 
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
@@ -53,4 +60,29 @@ void load_sensor_config(void)
 
 	// Fix config table in different system/config
 	pal_extend_sensor_config();
+}
+
+struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus)
+{
+	struct k_mutex *mutex = NULL;
+
+	switch (i2c_bus) {
+	case I2C_BUS2:
+		mutex = &i2c_2_pca9548a_mutex;
+		break;
+	case I2C_BUS3:
+		mutex = &i2c_3_pca9546a_mutex;
+		break;
+	case I2C_BUS4:
+		mutex = &i2c_4_pca9546a_mutex;
+		break;
+	case I2C_BUS8:
+		mutex = &i2c_8_pca9548a_mutex;
+		break;
+	default:
+		LOG_ERR("No support for i2c bus %d mutex", i2c_bus);
+		break;
+	}
+
+	return mutex;
 }

@@ -20,10 +20,13 @@
 #include <stdint.h>
 #include "sensor.h"
 
+#define MUTEX_LOCK_INTERVAL_MS 1000
+
 /*  define config for sensors  */
 
 /*  threshold sensor number, 1 based  */
 
 void load_sensor_config(void);
+struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus);
 
 #endif
