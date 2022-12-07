@@ -92,6 +92,26 @@ static uint8_t make_send_buf(mctp *mctp_inst, uint8_t *send_buf, uint32_t send_l
 	return MCTP_SUCCESS;
 }
 
+static void mctp_smbus_read_hook(uint8_t *data, uint16_t *len)
+{
+	smbus_hdr *hdr = (smbus_hdr *)data;
+
+	if (hdr->byte_count != *len - sizeof(smbus_hdr)) {
+		LOG_HEXDUMP_DBG(data, *len, "Data before move:");
+		if (hdr->byte_count == 0x0F) {
+			LOG_INF("Data length (%d) move 1 byte.....", *len);
+			*len -= 1;
+			memcpy(data, data + 1, *len);
+		} else {
+			LOG_INF("Data length (%d) move 2 bytes.....", *len);
+			*len -= 2;
+			memcpy(data, data + 2, *len);
+		}
+		LOG_HEXDUMP_DBG(data, *len, "Data after move:");
+	}
+	return;
+}
+
 static uint16_t mctp_smbus_read(void *mctp_p, uint8_t *buf, uint32_t len,
 				mctp_ext_params *extra_data)
 {
@@ -103,7 +123,6 @@ static uint16_t mctp_smbus_read(void *mctp_p, uint8_t *buf, uint32_t len,
 	uint8_t rdata[256] = { 0 };
 	uint16_t rlen = 0;
 
-	/* TODO: read data from smbus */
 	uint8_t ret = 0;
 	ret = i2c_target_read(mctp_inst->medium_conf.smbus_conf.bus, rdata, 256, &rlen);
 	if (ret) {
@@ -111,14 +130,20 @@ static uint16_t mctp_smbus_read(void *mctp_p, uint8_t *buf, uint32_t len,
 		return 0;
 	}
 
+	/**
+   * Since the i2c driver provided by ASPEED may read redundant duplicates data,
+   * use this temporary function to workaround and wait for the ASPEED to solve
+   * this issue then remove it.
+   */
+	mctp_smbus_read_hook(rdata, &rlen);
+
 	smbus_hdr *hdr = (smbus_hdr *)rdata;
 
-	/*
-*Does read data include pec?
-*rlen = 1(mctp cmd code 0x0F) +
-*       1(byte count) + N(byte count) + 1(*pec, if exist)
-*so if rlen is equal N + 3, the pec is existing
-*/
+	/**
+   * Does read data include pec?
+   * rlen = 1(mctp cmd code 0x0F) + 1(byte count) + N(byte count) + 1(*pec, if exist)
+   * so if rlen is equal N + 3, the pec is existing.
+	 */
 	const uint8_t is_pec_exist = ((hdr->byte_count + 3) == rlen) ? 1 : 0;
 
 	if (is_pec_exist) {
