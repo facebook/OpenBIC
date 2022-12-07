@@ -18,6 +18,7 @@
 #define PLAT_FRU_H
 
 #include "plat_i2c.h"
+#include "i2c-mux-pca984x.h"
 
 #define MC_FRU_PORT I2C_BUS1
 #define MC_FRU_ADDR (0xA0 >> 1)
@@ -25,14 +26,15 @@
 #define CXL_FRU_ADDR (0xA8 >> 1)
 #define CXL_FRU_MUX0_ADDR (0xE0 >> 1)
 #define CXL_FRU_MUX1_ADDR (0xE2 >> 1)
+#define CXL_FRU_MUX1_CHANNEL 2
 
-enum {
-	MC_FRU_ID,
-	CXL_FRU_ID1,
+enum FRU_ID {
+	MC_FRU_ID = 0x11,
+	CXL_FRU_ID1 = 0x1E,
 	CXL_FRU_ID2,
 	CXL_FRU_ID3,
 	CXL_FRU_ID4,
-	CXL_FRU_ID5,
+	CXL_FRU_ID5 = 0x26,
 	CXL_FRU_ID6,
 	CXL_FRU_ID7,
 	CXL_FRU_ID8,
@@ -51,6 +53,9 @@ enum {
 	CXL_FRU_MUX0_CHANNEL7,
 };
 
-#define FRU_CFG_NUM MAX_FRU_ID
+/* Skip fru id 0~16, 18~29 */
+#define FRU_CFG_NUM 9
+
+int pal_cxl_map_mux0_channel(uint8_t cxl_id);
 
 #endif
