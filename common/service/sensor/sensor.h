@@ -324,6 +324,8 @@ typedef struct _mp5990_init_arg {
 	uint16_t iout_cal_gain;
 	/* value to sets the IMON based total over current fault limit */
 	uint16_t iout_oc_fault_limit;
+	/* value to sets the SCREF and OCWREF voltage level. */
+	uint16_t ocw_sc_ref;
 
 	/* Initialize function will set following arguments, no need to give value */
 	bool is_init;

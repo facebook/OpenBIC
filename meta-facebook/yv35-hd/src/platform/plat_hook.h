@@ -42,6 +42,7 @@ extern adc_asd_init_arg ast_adc_init_args[];
 extern adm1278_init_arg adm1278_init_args[];
 extern apml_mailbox_init_arg apml_mailbox_init_args[];
 extern ltc4282_init_arg ltc4282_init_args[];
+extern mp5990_init_arg mp5990_init_args[];
 extern ddr5_init_temp_arg ddr5_init_temp_args[];
 extern ddr5_init_power_arg ddr5_init_power_args[];
 

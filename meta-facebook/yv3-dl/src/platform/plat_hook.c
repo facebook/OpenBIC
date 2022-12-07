@@ -41,9 +41,10 @@ adc_asd_init_arg adc_asd_init_args[] = { [0] = { .is_init = false } };
 
 ltc4282_init_arg ltc4282_init_args[] = { [0] = { .is_init = false, .r_sense_mohm = 0.25 } };
 
-mp5990_init_arg mp5990_init_args[] = {
-	[0] = { .is_init = false, .iout_cal_gain = 0x0202, .iout_oc_fault_limit = 0x0028 }
-};
+mp5990_init_arg mp5990_init_args[] = { [0] = { .is_init = false,
+					       .iout_cal_gain = 0x0202,
+					       .iout_oc_fault_limit = 0x0028,
+					       .ocw_sc_ref = 0xFFFF } };
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
