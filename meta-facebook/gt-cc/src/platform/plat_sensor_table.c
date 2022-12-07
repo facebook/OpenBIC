@@ -305,15 +305,15 @@ sensor_cfg ltc4286_hsc_sensor_config_table[] = {
 	  post_i2c_bus_read, NULL, NULL },
 	{ SENSOR_NUM_VOUT_PDB_HSC, sensor_dev_ltc4286, I2C_BUS6, HSC_LTC4286_ADDR, PMBUS_READ_VOUT,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6], post_i2c_bus_read, NULL,
+	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6], post_ltc4286_read, NULL,
 	  &ltc4286_hsc_init_args[0] },
 	{ SENSOR_NUM_IOUT_PDB_HSC, sensor_dev_ltc4286, I2C_BUS6, HSC_LTC4286_ADDR, PMBUS_READ_IOUT,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6], post_i2c_bus_read, NULL,
+	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6], post_ltc4286_read, NULL,
 	  &ltc4286_hsc_init_args[0] },
 	{ SENSOR_NUM_POUT_PDB_HSC, sensor_dev_ltc4286, I2C_BUS6, HSC_LTC4286_ADDR, PMBUS_READ_PIN,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6], post_i2c_bus_read, NULL,
+	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &mux_conf_addr_0xe0[6], post_ltc4286_read, NULL,
 	  &ltc4286_hsc_init_args[0] },
 };
 
