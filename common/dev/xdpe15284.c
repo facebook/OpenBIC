@@ -16,10 +16,76 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <logging/log.h>
 #include "sensor.h"
+#include "libutil.h"
 #include "hal_i2c.h"
 #include "util_pmbus.h"
 #include "pmbus.h"
+
+LOG_MODULE_REGISTER(xdpe15284);
+
+#define XDPE15284_MFR_FW_CMD_REG 0xFE
+#define XDPE15284_MFR_FW_CMD_DATA_REG 0xFD
+#define XDPE15284_MFR_FW_CMD_DATA_LEN 5
+#define XDPE15284_NOP_CMD 0x00
+#define XDPE15284_CALCULATE_CRC_CMD 0x2D
+#define XDPE15284_CALCULATE_CRC_DELAY_MS 10
+
+bool xdpe15284_get_checksum(uint8_t bus, uint8_t addr, uint8_t *checksum)
+{
+	CHECK_NULL_ARG_WITH_RETURN(checksum, false);
+
+	uint8_t retry = 3;
+	I2C_MSG i2c_msg = { 0 };
+
+	/* Reset the MFR data register to default value */
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+	i2c_msg.tx_len = 2;
+	i2c_msg.data[0] = XDPE15284_MFR_FW_CMD_REG;
+	i2c_msg.data[1] = XDPE15284_NOP_CMD;
+
+	if (i2c_master_write(&i2c_msg, retry)) {
+		LOG_ERR("Reset data register fail");
+		return false;
+	}
+
+	/* Send the command to get firmware crc checksum */
+	memset(&i2c_msg, 0, sizeof(I2C_MSG));
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+	i2c_msg.tx_len = 2;
+	i2c_msg.data[0] = XDPE15284_MFR_FW_CMD_REG;
+	i2c_msg.data[1] = XDPE15284_CALCULATE_CRC_CMD;
+
+	if (i2c_master_write(&i2c_msg, retry)) {
+		LOG_ERR("Write calculate crc command to register fail");
+		return false;
+	}
+
+	k_msleep(XDPE15284_CALCULATE_CRC_DELAY_MS);
+
+	/* Read the firmware checksum in MFR firmware command data register */
+	memset(&i2c_msg, 0, sizeof(I2C_MSG));
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = XDPE15284_MFR_FW_CMD_DATA_LEN;
+	i2c_msg.data[0] = XDPE15284_MFR_FW_CMD_DATA_REG;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("Read version from register fail");
+		return false;
+	}
+
+	checksum[0] = i2c_msg.data[4];
+	checksum[1] = i2c_msg.data[3];
+	checksum[2] = i2c_msg.data[2];
+	checksum[3] = i2c_msg.data[1];
+
+	return true;
+}
 
 uint8_t xdpe15284_read(uint8_t sensor_num, int *reading)
 {
