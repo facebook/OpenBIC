@@ -24,7 +24,6 @@
 #include "plat_gpio.h"
 #include "plat_hook.h"
 #include "plat_sensor_table.h"
-#include "i2c-mux-tca9548.h"
 #include "pmbus.h"
 #include "libipmi.h"
 #include "plat_sys.h"
@@ -48,13 +47,6 @@ mp5990_init_arg mp5990_init_args[] = {
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
  **************************************************************************************************/
-struct tca9548 mux_conf_addr_0xe2[8] = {
-	[0] = { .addr = 0xe2, .chan = 0 }, [1] = { .addr = 0xe2, .chan = 1 },
-	[2] = { .addr = 0xe2, .chan = 2 }, [3] = { .addr = 0xe2, .chan = 3 },
-	[4] = { .addr = 0xe2, .chan = 4 }, [5] = { .addr = 0xe2, .chan = 5 },
-	[6] = { .addr = 0xe2, .chan = 6 }, [7] = { .addr = 0xe2, .chan = 7 },
-};
-
 vr_pre_proc_arg vr_page_select[] = {
 	[0] = { 0x0 },
 	[1] = { 0x1 },
@@ -64,6 +56,17 @@ dimm_pre_proc_arg dimm_pre_proc_args[] = {
 	[0] = { .is_present_checked = false }, [1] = { .is_present_checked = false },
 	[2] = { .is_present_checked = false }, [3] = { .is_present_checked = false },
 	[4] = { .is_present_checked = false }, [5] = { .is_present_checked = false }
+};
+
+nvme_pre_proc_arg nvme_pre_proc_args[] = {
+	[0] = { { .addr = 0xe2, .chan = 0 }, .is_present_checked = false },
+	[1] = { { .addr = 0xe2, .chan = 1 }, .is_present_checked = false },
+	[2] = { { .addr = 0xe2, .chan = 2 }, .is_present_checked = false },
+	[3] = { { .addr = 0xe2, .chan = 3 }, .is_present_checked = false },
+	[4] = { { .addr = 0xe2, .chan = 4 }, .is_present_checked = false },
+	[5] = { { .addr = 0xe2, .chan = 5 }, .is_present_checked = false },
+	[6] = { { .addr = 0xe2, .chan = 6 }, .is_present_checked = false },
+	[7] = { { .addr = 0xe2, .chan = 7 }, .is_present_checked = false },
 };
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
@@ -85,8 +88,33 @@ bool pre_nvme_read(uint8_t sensor_num, void *args)
 		return false;
 	}
 
-	if (!tca9548_select_chan(sensor_num, (struct tca9548 *)args)) {
+	nvme_pre_proc_arg *pre_proc_args = (nvme_pre_proc_arg *)args;
+
+	if (!tca9548_select_chan(sensor_num, &(pre_proc_args->mux_conf))) {
 		return false;
+	}
+
+	if (pre_proc_args->is_present_checked == false) {
+		uint8_t i2c_dev[I2C_BUFF_SIZE] = { 0 };
+		uint8_t device_index, dev_count = 0;
+		uint8_t bus = sensor_config[sensor_config_index_map[sensor_num]].port;
+		bool nvme_present_result = false;
+
+		i2c_scan(bus, i2c_dev, &dev_count);
+
+		for (device_index = 0; device_index < dev_count; ++device_index) {
+			if (i2c_dev[device_index] == (SSD0_ADDR << 1)) {
+				nvme_present_result = true;
+				break;
+			}
+		}
+
+		if (nvme_present_result == false) {
+			control_sensor_polling(sensor_num, DISABLE_SENSOR_POLLING,
+					       SENSOR_NOT_PRESENT);
+		}
+
+		pre_proc_args->is_present_checked = true;
 	}
 
 	return true;
