@@ -437,6 +437,138 @@ void OEM_1S_GET_GPIO(ipmi_msg *msg)
 	return;
 }
 
+void OEM_1S_GET_GPIO_CONFIG(ipmi_msg *msg)
+{
+	if (msg == NULL) {
+		return;
+	}
+
+	if (msg->data_len == 0) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t idx = 0;
+	uint8_t *gpio_mask = (uint8_t *)malloc(msg->data_len * sizeof(uint8_t));
+	if (gpio_mask == NULL) {
+		return;
+	}
+	memcpy(gpio_mask, &msg->data[0], msg->data_len);
+	for (uint8_t i = 0; i < gpio_align_table_length; i++) {
+		//check enough data
+		if (i / 8 == msg->data_len) {
+			break;
+		}
+
+		if (gpio_mask[i / 8] & (1 << (i % 8))) {
+			if ((gpio_align_t[i] == PVCCIO_CPU) ||
+			    (gpio_align_t[i] == BMC_HEARTBEAT_LED_R) ||
+			    (gpio_align_t[i] == FM_FORCE_ADR_N_R) ||
+			    (gpio_align_t[i] == JTAG_BMC_NTRST_R_N)) {
+				//pass dummy data to bmc, because AST bic do not have this gpio
+				msg->data[idx] = 0;
+			} else {
+				msg->data[idx] = gpio_get_direction(gpio_align_t[i]);
+				msg->data[idx] |= gpio_get_reg_value(gpio_align_t[i],
+								     REG_INTERRUPT_ENABLE_OFFSET)
+						  << GPIO_CONF_SET_INT;
+				msg->data[idx] |= gpio_get_reg_value(gpio_align_t[i],
+								     REG_INTERRUPT_TYPE1_OFFSET)
+						  << GPIO_CONF_SET_TRG_TYPE;
+				if (gpio_get_reg_value(gpio_align_t[i],
+						       REG_INTERRUPT_TYPE2_OFFSET)) {
+					msg->data[idx] |= 1 << GPIO_CONF_SET_TRG_BOTH;
+				} else {
+					msg->data[idx] |=
+						gpio_get_reg_value(gpio_align_t[i],
+								   REG_INTERRUPT_TYPE0_OFFSET)
+						<< GPIO_CONF_SET_TRG_EDGE;
+				}
+			}
+			idx++;
+		}
+	}
+	free(gpio_mask);
+	msg->data_len = idx;
+	msg->completion_code = CC_SUCCESS;
+
+	return;
+}
+
+#ifdef ENABLE_GPIO_SET_CONFG
+void OEM_1S_SET_GPIO_CONFIG(ipmi_msg *msg)
+{
+	if (msg == NULL) {
+		return;
+	}
+
+	uint8_t gpio_bytes_len = (gpio_align_table_length + 7) / 8;
+
+	if (msg->data_len < gpio_bytes_len + 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t idx = gpio_bytes_len;
+	for (uint8_t i = 0; i < gpio_align_table_length; i++) {
+		//check mask
+		if (msg->data[i / 8] & (1 << (i % 8))) {
+			if ((gpio_align_t[i] == PVCCIO_CPU) ||
+			    (gpio_align_t[i] == BMC_HEARTBEAT_LED_R) ||
+			    (gpio_align_t[i] == FM_FORCE_ADR_N_R) ||
+			    (gpio_align_t[i] == JTAG_BMC_NTRST_R_N)) {
+				//AST bic do not have this gpio
+			} else {
+				//setting direction
+				if (msg->data[idx] & BIT(GPIO_CONF_SET_DIR)) {
+					gpio_conf(gpio_align_t[i], GPIO_OUTPUT);
+				} else {
+					gpio_conf(gpio_align_t[i], GPIO_INPUT);
+				}
+				//setting interrupt
+				if (msg->data[idx] & BIT(GPIO_CONF_SET_INT)) {
+					if (msg->data[idx] & BIT(GPIO_CONF_SET_TRG_BOTH)) {
+						gpio_interrupt_conf(gpio_align_t[i],
+								    GPIO_INT_EDGE_BOTH);
+					} else {
+						if (msg->data[idx] & BIT(GPIO_CONF_SET_TRG_TYPE)) {
+							if (msg->data[idx] &
+							    BIT(GPIO_CONF_SET_TRG_EDGE)) {
+								gpio_interrupt_conf(
+									gpio_align_t[i],
+									GPIO_INT_LEVEL_HIGH);
+							} else {
+								gpio_interrupt_conf(
+									gpio_align_t[i],
+									GPIO_INT_LEVEL_LOW);
+							}
+						} else {
+							if (msg->data[idx] &
+							    BIT(GPIO_CONF_SET_TRG_EDGE)) {
+								gpio_interrupt_conf(
+									gpio_align_t[i],
+									GPIO_INT_EDGE_RISING);
+							} else {
+								gpio_interrupt_conf(
+									gpio_align_t[i],
+									GPIO_INT_EDGE_FALLING);
+							}
+						}
+					}
+				} else {
+					gpio_interrupt_conf(gpio_align_t[i], GPIO_INT_DISABLE);
+				}
+			}
+			idx++;
+		}
+	}
+	msg->data_len = idx;
+	msg->completion_code = CC_SUCCESS;
+
+	return;
+}
+#endif
+
 uint8_t gpio_idx_exchange(ipmi_msg *msg)
 {
 	if (msg == NULL)

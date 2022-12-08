@@ -61,6 +61,10 @@
 #define REG_GPIO_BASE 0x7e780000
 #define REG_SCU 0x7E6E2000
 #define REG_DIRECTION_OFFSET 4
+#define REG_INTERRUPT_ENABLE_OFFSET 8
+#define REG_INTERRUPT_TYPE0_OFFSET 0x0C
+#define REG_INTERRUPT_TYPE1_OFFSET 0x10
+#define REG_INTERRUPT_TYPE2_OFFSET 0x14
 
 extern uint32_t GPIO_GROUP_REG_ACCESS[];
 extern uint32_t GPIO_MULTI_FUNC_PIN_CTL_REG_ACCESS[];
@@ -129,6 +133,7 @@ int gpio_set(uint8_t, uint8_t);
 bool pal_load_gpio_config(void);
 int gpio_init(const struct device *args);
 int gpio_interrupt_conf(uint8_t, gpio_flags_t);
+uint8_t gpio_get_reg_value(uint8_t gpio_num, uint8_t reg_offset);
 uint8_t gpio_conf(uint8_t gpio_num, int dir);
 int gpio_get_direction(uint8_t gpio_num);
 void scu_init(SCU_CFG cfg[], size_t size);
