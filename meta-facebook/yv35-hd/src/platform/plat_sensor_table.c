@@ -592,7 +592,7 @@ void pal_extend_sensor_config()
 
 	uint8_t board_revision = get_board_revision();
 	uint8_t vr_vender = (board_revision & 0x30) >> 4;
-	uint8_t board_stage = (board_revision & 0x8);
+	uint8_t board_stage = (board_revision & 0x0F);
 
 	/* Determine which VR is used */
 	switch (vr_vender) {
