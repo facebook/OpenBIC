@@ -336,8 +336,8 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor minimum reading
 		0x00, // UNRT
 		ADC_3V3_UCT, // UCT
-		0xD1, // UNCT
-		0xA0, // LNRT
+		0x00, // UNCT
+		0x00, // LNRT
 		ADC_3V3_LCT, // LCT
 		0x00, // LNCT
 		0x00, // positive-going threshold
@@ -410,7 +410,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"E1S P1V2_STBY",
+		"VF_E1S_P1V2_STBY_VOLT_V ",
 	},
 #if HSC_SENSOR
 	{
