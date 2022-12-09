@@ -245,12 +245,22 @@ void ISR_SOC_THMALTRIP()
 
 void ISR_SYS_THROTTLE()
 {
+	/* Same as MB_THROTTLE, glitch of FAST_PROCHOT_N will affect FM_CPU_BIC_PROCHOT_LVT3_N.
+	 * Ignore the fake event by checking whether SYS_throttle is asserted before recording the deassertion.
+	 */
+	static bool is_sys_throttle_assert = false;
 	common_addsel_msg_t sel_msg;
 	if ((gpio_get(RST_PLTRST_BIC_N) == GPIO_HIGH) && (gpio_get(PWRGD_CPU_LVC3) == GPIO_HIGH)) {
-		if (gpio_get(FM_CPU_BIC_PROCHOT_LVT3_N) == GPIO_HIGH) {
+		if ((gpio_get(FM_CPU_BIC_PROCHOT_LVT3_N) == GPIO_HIGH) &&
+		    (is_sys_throttle_assert == true)) {
 			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
-		} else {
+			is_sys_throttle_assert = false;
+		} else if ((gpio_get(FM_CPU_BIC_PROCHOT_LVT3_N) == GPIO_LOW) &&
+			   (is_sys_throttle_assert == false)) {
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+			is_sys_throttle_assert = true;
+		} else {
+			return;
 		}
 		sel_msg.InF_target = BMC_IPMB;
 		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
