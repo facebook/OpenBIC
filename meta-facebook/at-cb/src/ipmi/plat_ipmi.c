@@ -29,8 +29,21 @@
 #include "plat_sensor_table.h"
 #include "pex89000.h"
 #include "xdpe15284.h"
+#include "hal_gpio.h"
+#include "plat_gpio.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
+
+struct SWITCH_MUX_INFO pcie_switch_mux_info[PEX_MAX_NUMBER] = {
+	[0] = { .device = DEVSPI_SPI1_CS0,
+		.control_gpio = SPI_ROM0_SEL,
+		.sw_to_flash_value = GPIO_HIGH,
+		.bic_to_flash_value = GPIO_LOW },
+	[1] = { .device = DEVSPI_SPI2_CS0,
+		.control_gpio = SPI_ROM1_SEL,
+		.sw_to_flash_value = GPIO_HIGH,
+		.bic_to_flash_value = GPIO_LOW },
+};
 
 void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 {
@@ -177,6 +190,103 @@ void OEM_1S_GET_ASIC_CARD_STATUS(ipmi_msg *msg)
 	default:
 		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
 		break;
+	}
+
+	return;
+}
+
+void OEM_1S_FW_UPDATE(ipmi_msg *msg)
+{
+	/*
+  * Request:
+  * byte 0:   component, bit7 is the indicator sector end
+  * byte 1-4: offset, lsb first
+  * byte 5-6: length, lsb first
+  * byte 7-N: data
+  */
+
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len < 8) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t target = msg->data[0];
+	uint8_t status = -1;
+	uint8_t pcie_switch_id = 0;
+	uint32_t offset =
+		((msg->data[4] << 24) | (msg->data[3] << 16) | (msg->data[2] << 8) | msg->data[1]);
+	uint16_t length = ((msg->data[6] << 8) | msg->data[5]);
+
+	if ((length == 0) || (length != msg->data_len - 7)) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	switch (target) {
+	case CB_COMPNT_BIC:
+	case (CB_COMPNT_BIC | IS_SECTOR_END_MASK):
+		// Expect BIC firmware size not bigger than 320k
+		if (offset > BIC_UPDATE_MAX_OFFSET) {
+			msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+			return;
+		}
+		status = fw_update(offset, length, &msg->data[7], (target & IS_SECTOR_END_MASK),
+				   DEVSPI_FMC_CS0);
+		break;
+	case CB_COMPNT_PCIE_SWITCH0:
+	case CB_COMPNT_PCIE_SWITCH1:
+	case (CB_COMPNT_PCIE_SWITCH0 | IS_SECTOR_END_MASK):
+	case (CB_COMPNT_PCIE_SWITCH1 | IS_SECTOR_END_MASK):
+		/* Only can be update when DC is on */
+		if (is_mb_dc_on() == false) {
+			msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+			return;
+		}
+
+		pcie_switch_id = (target & WITHOUT_SECTOR_END_MASK) - CB_COMPNT_PCIE_SWITCH0;
+		gpio_set(pcie_switch_mux_info[pcie_switch_id].control_gpio,
+			 pcie_switch_mux_info[pcie_switch_id].bic_to_flash_value);
+
+		status = fw_update(offset, length, &msg->data[7], (target & IS_SECTOR_END_MASK),
+				   pcie_switch_mux_info[pcie_switch_id].device);
+
+		gpio_set(pcie_switch_mux_info[pcie_switch_id].control_gpio,
+			 pcie_switch_mux_info[pcie_switch_id].sw_to_flash_value);
+		break;
+	default:
+		LOG_ERR("target: 0x%x is invalid", target);
+		msg->completion_code = CC_INVALID_PARAM;
+		return;
+	}
+
+	msg->data_len = 0;
+	switch (status) {
+	case FWUPDATE_SUCCESS:
+		msg->completion_code = CC_SUCCESS;
+		break;
+	case FWUPDATE_OUT_OF_HEAP:
+		msg->completion_code = CC_LENGTH_EXCEEDED;
+		break;
+	case FWUPDATE_OVER_LENGTH:
+		msg->completion_code = CC_OUT_OF_SPACE;
+		break;
+	case FWUPDATE_REPEATED_UPDATED:
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		break;
+	case FWUPDATE_UPDATE_FAIL:
+		msg->completion_code = CC_TIMEOUT;
+		break;
+	case FWUPDATE_ERROR_OFFSET:
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		break;
+	default:
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		break;
+	}
+	if (status != FWUPDATE_SUCCESS) {
+		LOG_ERR("firmware (0x%02X) update failed cc: %x", target, msg->completion_code);
 	}
 
 	return;

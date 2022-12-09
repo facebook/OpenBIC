@@ -139,6 +139,10 @@
 
 &spi1_cs0 {
 	status = "okay";
+
+	spi-max-buswidth = <1>;
+	spi-max-frequency = <33000000>;
+	re-init-support;
 };
 
 &spi1_cs1 {
@@ -151,6 +155,10 @@
 
 &spi2_cs0 {
 	status = "okay";
+
+	spi-max-buswidth = <1>;
+	spi-max-frequency = <33000000>;
+	re-init-support;
 };
 
 &spi2_cs1 {
