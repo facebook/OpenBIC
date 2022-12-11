@@ -194,7 +194,7 @@ sensor_cfg VR_RNS_sensor_config_table[] = {
 	  SMBUS_PWR_CMD, vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_isl69254iraz_t_read,
 	  &isl69254iraz_t_pre_read_args[1], NULL, NULL, NULL },
-	{ SENSOR_NUM_PWR_VRVDDQCD, sensor_dev_isl69254iraz_t, I2C_BUS10, VR_VDDQAB_ADDR,
+	{ SENSOR_NUM_PWR_VRVDDQCD, sensor_dev_isl69254iraz_t, I2C_BUS10, VR_VDDQCD_ADDR,
 	  SMBUS_PWR_CMD, vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_isl69254iraz_t_read,
 	  &isl69254iraz_t_pre_read_args[0], NULL, NULL, NULL },
@@ -267,7 +267,7 @@ sensor_cfg VR_INF_sensor_config_table[] = {
 	{ SENSOR_NUM_PWR_VRVDDQAB, sensor_dev_xdpe12284c, I2C_BUS10, VR_VDDQAB_ADDR, SMBUS_PWR_CMD,
 	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, pre_vr_read, &vr_page_select[1], NULL, NULL, NULL },
-	{ SENSOR_NUM_PWR_VRVDDQCD, sensor_dev_xdpe12284c, I2C_BUS10, VR_VDDQAB_ADDR, SMBUS_PWR_CMD,
+	{ SENSOR_NUM_PWR_VRVDDQCD, sensor_dev_xdpe12284c, I2C_BUS10, VR_VDDQCD_ADDR, SMBUS_PWR_CMD,
 	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, pre_vr_read, &vr_page_select[0], NULL, NULL, NULL },
 };
