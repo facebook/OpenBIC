@@ -34,6 +34,7 @@ enum VR_VENDER_TYPE {
 	VR_VENDER_RENESAS = 0x0,
 	VR_VENDER_INFINEON = 0x1,
 	VR_VENDER_MPS = 0x2,
+	VR_VENDER_TI = 0x3,
 };
 
 typedef struct _CARD_STATUS_ {
