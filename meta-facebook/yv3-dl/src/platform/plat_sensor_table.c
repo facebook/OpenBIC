@@ -53,7 +53,7 @@ sensor_cfg plat_sensor_config[] = {
 	// NVME
 	{ SENSOR_NUM_T_NVME1, sensor_dev_nvme, I2C_BUS5, SSD0_ADDR, SSD0_OFFSET, post_access, 0, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_nvme_read, &mux_conf_addr_0xe2[1], NULL, NULL, NULL },
+	  pre_nvme_read, &nvme_pre_proc_args[1], NULL, NULL, NULL },
 
 	// VR voltage
 	{ SENSOR_NUM_VOL_PVCCIO_VR, sensor_dev_xdpe12284c, I2C_BUS8, VCCIO_P3V3_STBY_ADDR,

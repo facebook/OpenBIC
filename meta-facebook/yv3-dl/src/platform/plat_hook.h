@@ -17,6 +17,8 @@
 #ifndef PLAT_HOOK_H
 #define PLAT_HOOK_H
 
+#include "i2c-mux-tca9548.h"
+
 typedef struct _vr_pre_proc_arg {
 	/* vr page to set */
 	uint8_t vr_page;
@@ -25,6 +27,11 @@ typedef struct _vr_pre_proc_arg {
 typedef struct _dimm_pre_proc_arg {
 	bool is_present_checked;
 } dimm_pre_proc_arg;
+
+typedef struct _nvme_pre_proc_arg {
+	struct tca9548 mux_conf;
+	bool is_present_checked;
+} nvme_pre_proc_arg;
 /**************************************************************************************************
  * INIT ARGS
 **************************************************************************************************/
@@ -40,6 +47,7 @@ extern mp5990_init_arg mp5990_init_args[];
 extern struct tca9548 mux_conf_addr_0xe2[];
 extern vr_pre_proc_arg vr_page_select[];
 extern dimm_pre_proc_arg dimm_pre_proc_args[];
+extern nvme_pre_proc_arg nvme_pre_proc_args[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
