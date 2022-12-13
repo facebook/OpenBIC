@@ -287,7 +287,7 @@ bool find_req_ipmi_msg(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
 	return true;
 }
 
-void clean_req_ipmi_msg(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
+void clear_req_ipmi_msg(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
 {
 	CHECK_NULL_ARG(pnode);
 	CHECK_NULL_ARG(msg);
@@ -301,14 +301,20 @@ void clean_req_ipmi_msg(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
 		return;
 	}
 
-	ipmi_msg_cfg *temp;
+	ipmi_msg_cfg *temp = NULL;
+	while (pnode->next != P_start[index]) {
+		temp = pnode->next;
+		if ((temp->buffer.netfn == msg->netfn) && (temp->buffer.cmd == msg->cmd) &&
+		    (temp->buffer.seq == msg->seq)) {
+			pnode->next = temp->next;
+			unregister_seq(index, temp->buffer.seq_target);
+			SAFE_FREE(temp);
+			seq_current_count[index]--;
+			break;
+		}
 
-	temp = pnode->next;
-	pnode->next = temp->next;
-	unregister_seq(index, temp->buffer.seq_target);
-	SAFE_FREE(temp);
-	seq_current_count[index]--;
-	pnode = pnode->next;
+		pnode = pnode->next;
+	}
 
 	k_mutex_unlock(&mutex_id[index]);
 	return;
@@ -750,8 +756,8 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 								.channel; // return response source as request target
 #ifdef ENABLE_OEM_BRIDGE_NETFN_SHIFT
 						bridge_msg->data[4] =
-							current_msg_rx->buffer
-								.netfn << 2; // Shift response NetFn to bridge response
+							current_msg_rx->buffer.netfn
+							<< 2; // Shift response NetFn to bridge response
 #else
 						bridge_msg->data[4] =
 							current_msg_rx->buffer
@@ -895,6 +901,8 @@ ipmb_error ipmb_send_request(ipmi_msg *req, uint8_t index)
 	req_cfg.buffer.dest_LUN = 0;
 	req_cfg.buffer.src_addr = IPMB_config_table[index].self_address << 1;
 	req_cfg.buffer.seq = get_free_seq(index);
+	req->seq = req_cfg.buffer.seq;
+
 	req_cfg.buffer.seq_source = req->seq_source;
 	req_cfg.buffer.src_LUN = 0;
 	req_cfg.retries = 0;
@@ -968,7 +976,8 @@ ipmb_error ipmb_read(ipmi_msg *msg, uint8_t index)
 	// Set mutex timeout 10ms more than messageQueue timeout, prevent mutex
 	// timeout before messageQueue
 	if (k_mutex_lock(&mutex_read, K_MSEC(IPMB_SEQ_TIMEOUT_MS + 10))) {
-		LOG_ERR("Failed to lock mutex in time, netfn0x%02x cmd0x%02x", msg->netfn, msg->cmd);
+		LOG_ERR("Failed to lock mutex in time, netfn0x%02x cmd0x%02x", msg->netfn,
+			msg->cmd);
 		return IPMB_ERROR_MUTEX_LOCK;
 	}
 
@@ -977,14 +986,16 @@ ipmb_error ipmb_read(ipmi_msg *msg, uint8_t index)
 
 	ipmb_error ret = IPMB_ERROR_SUCCESS;
 	if (ipmb_send_request(msg, index) != IPMB_ERROR_SUCCESS) {
-		LOG_ERR("Failed to send IPMB request message, netfn0x%02x cmd0x%02x", msg->netfn, msg->cmd);
+		LOG_ERR("Failed to send IPMB request message, netfn0x%02x cmd0x%02x", msg->netfn,
+			msg->cmd);
 		ret = IPMB_ERROR_FAILURE;
 		goto exit;
 	}
 
 	if (k_msgq_get(&ipmb_rxqueue[index], (ipmi_msg *)msg, K_MSEC(IPMB_SEQ_TIMEOUT_MS))) {
-		LOG_ERR("Failed to get IPMB message from RX queue, netfn0x%02x cmd0x%02x seq%d", msg->netfn, msg->cmd, msg->seq);
-		clean_req_ipmi_msg(P_start[index], (ipmi_msg *)msg, index);
+		LOG_ERR("Failed to get IPMB message from RX queue, netfn0x%02x cmd0x%02x seq%d",
+			msg->netfn, msg->cmd, msg->seq);
+		clear_req_ipmi_msg(P_start[index], (ipmi_msg *)msg, index);
 		ret = IPMB_ERROR_GET_MESSAGE_QUEUE;
 		goto exit;
 	}
