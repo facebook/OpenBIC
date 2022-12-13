@@ -14,42 +14,30 @@
  * limitations under the License.
  */
 
-#ifndef FRU_H
-#define FRU_H
+#ifndef PLAT_I2C_h
+#define PLAT_I2C_h
 
-#include "eeprom.h"
-#define FRU_CFG_NUM 5
+#include "hal_i2c.h"
 
-enum {
-	NV_ATMEL_24C02,
-	NV_ATMEL_24C64,
-	NV_ATMEL_24C128,
-	PUYA_P24C128F,
-	ST_M24C64_W,
-	ST_M24128_BW,
-};
+// map i2c bus to peripherial bus
+// i2c peripheral 1 based, as used i2c index 0 in firmware.
+#define I2C_BUS1 0
+#define I2C_BUS2 1
+#define I2C_BUS3 2
+#define I2C_BUS4 3
+#define I2C_BUS5 4
+#define I2C_BUS6 5
+#define I2C_BUS7 6
+#define I2C_BUS8 7
+#define I2C_BUS9 8
+#define I2C_BUS10 9
 
-enum {
-	FRU_WRITE_SUCCESS,
-	FRU_READ_SUCCESS,
-	FRU_INVALID_ID,
-	FRU_OUT_OF_RANGE,
-	FRU_FAIL_TO_ACCESS,
-};
+/** i3c register as i2c **/
+#define I3C_BUS2 11
+#define I3C_BUS3 12
+#define I2C_BUS12 I3C_BUS2
+#define I2C_BUS13 I3C_BUS3
 
-enum {
-	FRU_DEV_ACCESS_BYTE,
-	FRU_DEV_ACCESS_WORD,
-};
-
-extern EEPROM_CFG fru_config[];
-
-uint8_t get_FRU_access(uint8_t FRUID);
-uint16_t find_FRU_size(uint8_t FRUID);
-uint8_t FRU_read(EEPROM_ENTRY *entry);
-uint8_t FRU_write(EEPROM_ENTRY *entry);
-void pal_load_fru_config(void);
-void FRU_init(void);
-bool write_psb_inform(EEPROM_ENTRY *entry);
+#define I2C_BUS_MAX_NUM 14
 
 #endif
