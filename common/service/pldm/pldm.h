@@ -138,6 +138,10 @@ uint16_t mctp_pldm_read(void *mctp_p, pldm_msg *msg, uint8_t *rbuf, uint16_t rbu
 
 pldm_t *pldm_init(void *interface, uint8_t user_idx);
 
+uint8_t get_supported_pldm_type(uint8_t *buf, uint8_t buf_size);
+
+uint8_t get_supported_pldm_commands(PLDM_TYPE type, uint8_t *buf, uint8_t buf_size);
+
 #ifdef __cplusplus
 }
 #endif

@@ -33,6 +33,12 @@ extern "C" {
 
 #define DEFAULT_TID 0x86
 
+#define GET_PLDM_TYPE_BUF_SIZE 8
+#define GET_PLDM_COMMAND_BUF_SIZE 32
+
+#define INVALID_PLDM_TYPE_IN_REQUEST_DATA 0x83
+#define INVALID_PLDM_VERSION_IN_REQUEST_DATA 0x84
+
 enum pldm_completion_codes {
 	PLDM_SUCCESS = 0x00,
 	PLDM_ERROR = 0x01,
@@ -63,6 +69,21 @@ struct _set_tid_resp {
 struct _get_tid_resp {
 	uint8_t completion_code;
 	uint8_t tid;
+} __attribute__((packed));
+
+struct _get_pldm_types_resp {
+	uint8_t completion_code;
+	uint8_t pldm_types[GET_PLDM_TYPE_BUF_SIZE];
+} __attribute__((packed));
+
+struct _get_pldm_commands_req {
+	uint8_t type;
+	uint32_t version;
+} __attribute__((packed));
+
+struct _get_pldm_commands_resp {
+	uint8_t completion_code;
+	uint8_t pldm_commands[GET_PLDM_COMMAND_BUF_SIZE];
 } __attribute__((packed));
 
 uint8_t pldm_base_handler_query(uint8_t code, void **ret_fn);

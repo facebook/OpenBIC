@@ -23,6 +23,7 @@
 #include <sys/printk.h>
 #include <sys/slist.h>
 #include <zephyr.h>
+#include "libutil.h"
 
 LOG_MODULE_REGISTER(pldm);
 
@@ -354,6 +355,72 @@ uint8_t mctp_pldm_send_msg(void *mctp_p, pldm_msg *msg)
 		k_mutex_lock(&wait_recv_resp_mutex, K_FOREVER);
 		sys_slist_append(&wait_recv_resp_list, &p->node);
 		k_mutex_unlock(&wait_recv_resp_mutex);
+	}
+
+	return PLDM_SUCCESS;
+}
+
+/**
+ * @brief Get the supported PLDM types.
+ *
+ * @param buf Pointer to the buffer, which should have 8 bytes
+ * @param buf_size Number of buf's bytes
+ *
+ * @retval 0 if successful
+ */
+uint8_t get_supported_pldm_type(uint8_t *buf, uint8_t buf_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+
+	if (buf_size != GET_PLDM_TYPE_BUF_SIZE)
+		return PLDM_ERROR_INVALID_LENGTH;
+
+	memset(buf, 0, buf_size);
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(query_tbl); i++) {
+		const uint8_t buf_index = query_tbl[i].type / 8;
+		const uint8_t bit_index = query_tbl[i].type % 8;
+
+		if (buf_index >= buf_size) {
+			LOG_WRN("The PLDM type(0x%x) is out of range!", query_tbl[i].type);
+			continue;
+		}
+
+		buf[buf_index] |= BIT(bit_index);
+	}
+
+	return PLDM_SUCCESS;
+}
+
+uint8_t get_supported_pldm_commands(PLDM_TYPE type, uint8_t *buf, uint8_t buf_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+
+	if (buf_size != GET_PLDM_COMMAND_BUF_SIZE)
+		return PLDM_ERROR_INVALID_LENGTH;
+
+	memset(buf, 0, buf_size);
+
+	uint8_t (*handler_query)(uint8_t, void **) = NULL;
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(query_tbl); i++) {
+		if (type == query_tbl[i].type) {
+			handler_query = query_tbl[i].handler_query;
+			break;
+		}
+	}
+
+	if (!handler_query) {
+		LOG_WRN("Invalid PLDM type, (0x%x)", type);
+		return PLDM_ERROR_INVALID_PLDM_TYPE;
+	}
+
+	for (uint16_t cmd = 0; cmd < (GET_PLDM_COMMAND_BUF_SIZE * 8); cmd++) {
+		pldm_cmd_proc_fn handler = NULL;
+
+		uint8_t rc = handler_query(cmd, (void **)&handler);
+		if ((rc == PLDM_SUCCESS) && handler)
+			buf[cmd / 8] |= BIT(cmd % 8);
 	}
 
 	return PLDM_SUCCESS;
