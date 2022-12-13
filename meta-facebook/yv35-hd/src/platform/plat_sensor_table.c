@@ -16,7 +16,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
+#include <logging/log.h>
 #include "plat_sensor_table.h"
 #include "sensor.h"
 #include "ast_adc.h"
@@ -25,6 +25,8 @@
 #include "plat_i2c.h"
 #include "apml.h"
 #include "plat_class.h"
+
+LOG_MODULE_REGISTER(plat_sensor_table);
 
 sensor_poll_time_cfg diff_poll_time_sensor_table[] = {
 	// sensor_number, last_access_time
@@ -264,12 +266,7 @@ sensor_cfg ltc4282_sensor_config_table[] = {
 	  SENSOR_INIT_STATUS, NULL, NULL, post_ltc4282_pwr_read, NULL, &ltc4282_init_args[0] },
 };
 
-sensor_cfg EVT_BOM2_sensor_config_table[] = {
-	/* HSC temperature sensor */
-	{ SENSOR_NUM_TEMP_HSC, sensor_dev_g788p81u, I2C_BUS5, TEMP_HSC_ADDR,
-	  G788P81U_REMOTE_TEMP_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-
+sensor_cfg xdpe19283b_sensor_config_table[] = {
 	/* VR voltage */
 	{ SENSOR_NUM_VOL_PVDDCR_CPU0_VR, sensor_dev_xdpe19283b, I2C_BUS5,
 	  XDPE19283B_PVDDCR_CPU0_ADDR, PMBUS_READ_VOUT, vr_access, 0, 0, SAMPLE_COUNT_DEFAULT,
@@ -359,12 +356,7 @@ sensor_cfg EVT_BOM2_sensor_config_table[] = {
 	  NULL, NULL },
 };
 
-sensor_cfg EVT_BOM3_sensor_config_table[] = {
-	/* HSC temperature sensor */
-	{ SENSOR_NUM_TEMP_HSC, sensor_dev_g788p81u, I2C_BUS5, TEMP_HSC_ADDR,
-	  G788P81U_REMOTE_TEMP_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-
+sensor_cfg mp2856gut_sensor_config_table[] = {
 	/* VR voltage */
 	{ SENSOR_NUM_VOL_PVDDCR_CPU0_VR, sensor_dev_mp2856gut, I2C_BUS5, MP2856GUT_PVDDCR_CPU0_ADDR,
 	  PMBUS_READ_VOUT, vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
@@ -454,10 +446,18 @@ sensor_cfg EVT_BOM3_sensor_config_table[] = {
 	  NULL, NULL },
 };
 
+sensor_cfg g788p81u_sensor_config_table[] = {
+	{ SENSOR_NUM_TEMP_HSC, sensor_dev_g788p81u, I2C_BUS5, TEMP_HSC_ADDR,
+	  G788P81U_REMOTE_TEMP_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+};
+
 void pal_extend_sensor_config()
 {
 	uint8_t sensor_count = 0;
 	uint8_t hsc_module = get_hsc_module();
+
+	/* Determine which HSC module is used */
 	switch (hsc_module) {
 	case HSC_MODULE_ADM1278:
 		sensor_count = ARRAY_SIZE(adm1278_sensor_config_table);
@@ -470,36 +470,46 @@ void pal_extend_sensor_config()
 		for (int index = 0; index < sensor_count; index++) {
 			add_sensor_config(ltc4282_sensor_config_table[index]);
 		}
-
 		break;
 	case HSC_MODULE_MP5990:
 	default:
-		printf("[%s] unsupported HSC module, HSC module: 0x%x\n", __func__, hsc_module);
+		LOG_ERR("Unsupported HSC module, HSC module: 0x%x\n", hsc_module);
 		break;
 	}
 
 	uint8_t board_revision = get_board_revision();
 	uint8_t vr_vender = (board_revision & 0x30) >> 4;
+	uint8_t board_stage = (board_revision & 0x8);
+
+	/* Determine which VR is used */
 	switch (vr_vender) {
 	case VR_VENDER_INFINEON:
-		sensor_count = ARRAY_SIZE(EVT_BOM2_sensor_config_table);
+		sensor_count = ARRAY_SIZE(xdpe19283b_sensor_config_table);
 		for (int index = 0; index < sensor_count; index++) {
-			add_sensor_config(EVT_BOM2_sensor_config_table[index]);
+			add_sensor_config(xdpe19283b_sensor_config_table[index]);
 		}
 		break;
 	case VR_VENDER_MPS:
-		sensor_count = ARRAY_SIZE(EVT_BOM3_sensor_config_table);
+		sensor_count = ARRAY_SIZE(mp2856gut_sensor_config_table);
 		for (int index = 0; index < sensor_count; index++) {
-			add_sensor_config(EVT_BOM3_sensor_config_table[index]);
+			add_sensor_config(mp2856gut_sensor_config_table[index]);
 		}
 		break;
 	default:
+		LOG_DBG("Main VR source(RAA229621)");
 		break;
 	}
 
+	/* Determine which temperature sensor is used to monitor HSC temperature */
+	if (((board_stage == SYS_BOARD_EVT) || (vr_vender == VR_VENDER_INFINEON)) ||
+	    ((board_stage == SYS_BOARD_EVT) || (vr_vender == VR_VENDER_MPS)) ||
+	    ((board_stage == SYS_BOARD_DVT) || (vr_vender == VR_VENDER_MPS))) {
+		add_sensor_config(g788p81u_sensor_config_table[0]);
+	}
+
 	if (sensor_config_count != sdr_count) {
-		printf("[%s] extend sensor SDR and config table not match, sdr size: 0x%x, sensor config size: 0x%x\n",
-		       __func__, sdr_count, sensor_config_count);
+		LOG_ERR("Extend sensor SDR and config table not match, sdr size: 0x%x, sensor config size: 0x%x\n",
+			sdr_count, sensor_config_count);
 	}
 }
 
@@ -516,7 +526,7 @@ uint8_t pal_get_extend_sensor_config()
 		break;
 	case HSC_MODULE_MP5990:
 	default:
-		printf("[%s] unsupported HSC module, HSC module: 0x%x\n", __func__, hsc_module);
+		LOG_ERR("Unsupported HSC module, HSC module: 0x%x\n", hsc_module);
 		break;
 	}
 
@@ -543,7 +553,7 @@ bool pal_is_time_to_poll(uint8_t sensor_num, int poll_time)
 		}
 	}
 
-	printf("[%s] can't find sensor 0x%x last access time\n", __func__, sensor_num);
+	LOG_ERR("Can't find sensor 0x%x last access time\n", sensor_num);
 	return true;
 }
 
