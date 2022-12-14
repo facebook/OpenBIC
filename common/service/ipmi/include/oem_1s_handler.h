@@ -104,7 +104,7 @@ void OEM_1S_NOTIFY_PMIC_ERROR(ipmi_msg *msg);
 void OEM_1S_GET_SDR(ipmi_msg *msg);
 void OEM_1S_BMC_IPMB_ACCESS(ipmi_msg *msg);
 void OEM_1S_GET_BIOS_VERSION(ipmi_msg *msg);
-void OEM_1S_GET_ASIC_CARD_STATUS(ipmi_msg *msg);
+void OEM_1S_GET_PCIE_CARD_STATUS(ipmi_msg *msg);
 
 #ifdef CONFIG_SNOOP_ASPEED
 void OEM_1S_GET_POST_CODE(ipmi_msg *msg);
