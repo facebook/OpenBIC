@@ -2001,7 +2001,7 @@ __weak void OEM_1S_GET_BIOS_VERSION(ipmi_msg *msg)
 	return;
 }
 
-__weak void OEM_1S_GET_ASIC_CARD_STATUS(ipmi_msg *msg)
+__weak void OEM_1S_GET_PCIE_CARD_STATUS(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
 
@@ -2241,9 +2241,9 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 		LOG_DBG("Received 1S Get BIOS version command");
 		OEM_1S_GET_BIOS_VERSION(msg);
 		break;
-	case CMD_OEM_1S_GET_ASIC_CARD_STATUS:
-		LOG_DBG("Received 1S Get ASIC card status command");
-		OEM_1S_GET_ASIC_CARD_STATUS(msg);
+	case CMD_OEM_1S_GET_PCIE_CARD_STATUS:
+		LOG_DBG("Received 1S Get PCIE card status command");
+		OEM_1S_GET_PCIE_CARD_STATUS(msg);
 		break;
 	default:
 		LOG_ERR("Invalid OEM message, netfn(0x%x) cmd(0x%x)", msg->netfn, msg->cmd);
