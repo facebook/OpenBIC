@@ -158,16 +158,23 @@ static uint8_t mctp_pkt_assembling(mctp *mctp_inst, uint8_t *buf, uint16_t len)
 		return MCTP_SUCCESS;
 	/* first packet, allocate memory to hold data */
 	if (hdr->som && !hdr->eom) {
-		if (*buf_p)
+		if (*buf_p) {
+			LOG_WRN("Unexpected SOM received?");
 			free(*buf_p);
+		}
 		*offset_p = 0;
 
 		*buf_p = (uint8_t *)malloc(MSG_ASSEMBLY_BUF_SIZE);
 		if (!*buf_p) {
-			LOG_WRN("cannot create memory...\n");
+			LOG_WRN("cannot create memory...");
 			return MCTP_ERROR;
 		}
 		memset(*buf_p, 0, MSG_ASSEMBLY_BUF_SIZE);
+	}
+
+	if (!(*buf_p)) {
+		LOG_HEXDUMP_WRN(buf, len, "There was no SOM package before?");
+		return MCTP_ERROR;
 	}
 
 	/* Appending other packet after the first packet */
@@ -211,7 +218,7 @@ static void mctp_rx_task(void *arg, void *dummy0, void *dummy1)
 		LOG_HEXDUMP_DBG(read_buf, read_len, "mctp receive data");
 
 		mctp_hdr *hdr = (mctp_hdr *)read_buf;
-		LOG_DBG("dest_ep = %x, src_ep = %x, flags = %x\n", hdr->dest_ep, hdr->src_ep,
+		LOG_DBG("dest_ep(0x%x), src_ep(0x%x), flags(0x%x)", hdr->dest_ep, hdr->src_ep,
 			hdr->flags_seq_to_tag);
 
 		/* Set the tranport layer extra parameters */
@@ -347,7 +354,7 @@ static void mctp_tx_task(void *arg, void *dummy0, void *dummy1)
        * If the message is response, keep the original msg_tag of ext_params
 */
 			hdr->msg_tag = (hdr->to) ? (msg_tag & MCTP_HDR_TAG_MASK) :
-							 mctp_msg.ext_params.msg_tag;
+						   mctp_msg.ext_params.msg_tag;
 
 			hdr->dest_ep = mctp_msg.ext_params.ep;
 			hdr->src_ep = mctp_inst->endpoint;
