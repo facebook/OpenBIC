@@ -58,6 +58,13 @@ enum pldm_transport_protocol_type {
 	PLDM_TRANSPORT_PROTOCOL_TYPE_OEM = 0xFF,
 };
 
+enum pldm_transfer_flag {
+	PLDM_START = 0x01,
+	PLDM_MIDDLE = 0x02,
+	PLDM_END = 0x04,
+	PLDM_START_AND_END = 0x05,
+};
+
 struct _set_tid_req {
 	uint8_t tid;
 } __attribute__((packed));
