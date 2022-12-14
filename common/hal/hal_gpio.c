@@ -35,7 +35,7 @@ struct k_work gpio_work[TOTAL_GPIO_NUM];
 uint8_t gpio_ind_to_num_table[TOTAL_GPIO_NUM];
 uint8_t gpio_ind_to_num_table_cnt;
 
-__weak const char *const gpio_name[] = {};
+__weak char *gpio_name[] = {};
 GPIO_CFG gpio_cfg[GPIO_CFG_SIZE] = {
 	//  chip,      number,   is_init, direction,    status,     property,    int_type,           int_cb
 	//  Defalut              DISABLE  GPIO_INPUT    LOW         PUSH_PULL    GPIO_INT_DISABLE    NULL
