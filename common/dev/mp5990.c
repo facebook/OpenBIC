@@ -25,6 +25,8 @@
 
 #define I2C_DATA_SIZE 5
 
+#define MP5990_OCW_SC_REF_OFFSET 0xC5
+
 #define MP5990_EIN_ROLLOVER_CNT_MAX 0x100
 #define MP5990_EIN_SAMPLE_CNT_MAX 0x1000000
 #define MP5990_EIN_ENERGY_CNT_MAX 0x8000
@@ -221,6 +223,19 @@ uint8_t mp5990_init(uint8_t sensor_num)
 		}
 	}
 
+	/* Skip setting ocw_sc_ref if given 0xFFFF */
+	if ((init_args->ocw_sc_ref & 0xFFFF) != 0xFFFF) {
+		tx_len = 3;
+		rx_len = 0;
+		data[0] = MP5990_OCW_SC_REF_OFFSET;
+		data[1] = init_args->ocw_sc_ref & 0xFF;
+		data[2] = (init_args->ocw_sc_ref >> 8) & 0xFF;
+		msg = construct_i2c_message(bus, target_addr, tx_len, data, rx_len);
+		if (i2c_master_write(&msg, retry) != 0) {
+			printf("Failed to write MP5990 register(0x%x)\n", data[0]);
+			goto cleanup;
+		}
+	}
 	init_args->is_init = true;
 
 cleanup:

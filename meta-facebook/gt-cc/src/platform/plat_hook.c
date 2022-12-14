@@ -222,7 +222,10 @@ ina230_init_arg ina230_nic_sensor_init_args[] = {
 
 mp5990_init_arg mp5990_hsc_init_args[] = {
 	/* MP5990 register value is written by OTP, so set to 0xFFFF to skip setting */
-	[0] = { .is_init = false, .iout_cal_gain = 0xFFFF, .iout_oc_fault_limit = 0xFFFF },
+	[0] = { .is_init = false,
+		.iout_cal_gain = 0xFFFF,
+		.iout_oc_fault_limit = 0xFFFF,
+		.ocw_sc_ref = 0xFFFF },
 };
 
 ltc4282_init_arg ltc4282_hsc_init_args[] = {

@@ -54,6 +54,7 @@
 #define ADM1278_ADDR (0x80 >> 1)
 #define LTC4282_ADDR (0x82 >> 1)
 #define TEMP_HSC_ADDR (0x98 >> 1)
+#define MP5990_ADDR 0x20
 
 /* define sensors offset */
 #define TMP75_TEMP_OFFSET 0x00

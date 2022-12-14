@@ -161,6 +161,9 @@ void init_platform_config()
 
 	hsc_module = ((gpio_get(HSC_TYPE_1) << 1) & 0x02) | (gpio_get(HSC_TYPE_0) & 0x01);
 
+	if (hsc_module == HSC_MODULE_MP5990) {
+		gpio_set(HSC_OCP_GPIO3_R, GPIO_HIGH);
+	}
 	/* According hardware design, BIC can check the class type through GPIOs.
 	 * The board ID is "0000" if the class type is class1.
 	 * The board ID is "0001" if the class type is calss2.

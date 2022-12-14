@@ -266,6 +266,18 @@ sensor_cfg ltc4282_sensor_config_table[] = {
 	  SENSOR_INIT_STATUS, NULL, NULL, post_ltc4282_pwr_read, NULL, &ltc4282_init_args[0] },
 };
 
+sensor_cfg mp5990_sensor_config_table[] = {
+	{ SENSOR_NUM_VOL_HSCIN, sensor_dev_mp5990, I2C_BUS5, MP5990_ADDR, PMBUS_READ_VIN,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
+	{ SENSOR_NUM_CUR_HSCOUT, sensor_dev_mp5990, I2C_BUS5, MP5990_ADDR, PMBUS_READ_IOUT,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
+	{ SENSOR_NUM_PWR_HSCIN, sensor_dev_mp5990, I2C_BUS5, MP5990_ADDR, PMBUS_READ_PIN,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
+};
+
 sensor_cfg xdpe19283b_sensor_config_table[] = {
 	/* VR voltage */
 	{ SENSOR_NUM_VOL_PVDDCR_CPU0_VR, sensor_dev_xdpe19283b, I2C_BUS5,
@@ -542,6 +554,12 @@ sensor_cfg g788p81u_sensor_config_table[] = {
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 };
 
+sensor_cfg mp5990_temp_sensor_config_table[] = {
+	{ SENSOR_NUM_TEMP_HSC, sensor_dev_mp5990, I2C_BUS5, MP5990_ADDR, PMBUS_READ_TEMPERATURE_1,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+};
+
 void pal_extend_sensor_config()
 {
 	uint8_t sensor_count = 0;
@@ -562,6 +580,11 @@ void pal_extend_sensor_config()
 		}
 		break;
 	case HSC_MODULE_MP5990:
+		sensor_count = ARRAY_SIZE(mp5990_sensor_config_table);
+		for (int index = 0; index < sensor_count; index++) {
+			add_sensor_config(mp5990_sensor_config_table[index]);
+		}
+		break;
 	default:
 		LOG_ERR("Unsupported HSC module, HSC module: 0x%x\n", hsc_module);
 		break;
@@ -569,7 +592,7 @@ void pal_extend_sensor_config()
 
 	uint8_t board_revision = get_board_revision();
 	uint8_t vr_vender = (board_revision & 0x30) >> 4;
-	uint8_t board_stage = (board_revision & 0x8);
+	uint8_t board_stage = (board_revision & 0x0F);
 
 	/* Determine which VR is used */
 	switch (vr_vender) {
@@ -601,6 +624,10 @@ void pal_extend_sensor_config()
 	    ((board_stage == SYS_BOARD_EVT) || (vr_vender == VR_VENDER_MPS)) ||
 	    ((board_stage == SYS_BOARD_DVT) || (vr_vender == VR_VENDER_MPS))) {
 		add_sensor_config(g788p81u_sensor_config_table[0]);
+	} else if (hsc_module == HSC_MODULE_MP5990) {
+		add_sensor_config(mp5990_temp_sensor_config_table[0]);
+	} else {
+		LOG_DBG("Main HSC temperature sensor(NCT7718W)");
 	}
 
 	if (sensor_config_count != sdr_count) {
@@ -621,6 +648,8 @@ uint8_t pal_get_extend_sensor_config()
 		extend_sensor_config_size += ARRAY_SIZE(ltc4282_sensor_config_table);
 		break;
 	case HSC_MODULE_MP5990:
+		extend_sensor_config_size += ARRAY_SIZE(mp5990_sensor_config_table);
+		break;
 	default:
 		LOG_ERR("Unsupported HSC module, HSC module: 0x%x\n", hsc_module);
 		break;
