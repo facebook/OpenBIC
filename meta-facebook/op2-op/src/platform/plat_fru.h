@@ -17,6 +17,12 @@
 #ifndef PLAT_FRU_H
 #define PLAT_FRU_H
 
+#define OP_FRU_PORT 0x03
+#define OPA_FRU_ADDR (0xA8 >> 1)
+#define OPB_FRU_ADDR (0xAA >> 1)
+
+#define FRU_CFG_NUM MAX_FRU_ID
+
 enum {
 	OP_FRU_ID,
 	MAX_FRU_ID,
