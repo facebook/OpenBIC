@@ -636,3 +636,21 @@ void ISR_CPU_VPP_INT()
 		last_vpp_pwr_status = i2c_msg.data[0];
 	}
 }
+
+void ISR_NMI()
+{
+	if ((gpio_get(RST_PLTRST_PLD_N) == GPIO_HIGH) && (gpio_get(PWRGD_SYS_PWROK) == GPIO_HIGH)) {
+		common_addsel_msg_t sel_msg;
+		memset(&sel_msg, 0, sizeof(common_addsel_msg_t));
+		sel_msg.InF_target = BMC_IPMB;
+		sel_msg.sensor_type = IPMI_SENSOR_TYPE_CRITICAL_INT;
+		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+		sel_msg.sensor_number = SENSOR_NUM_NMI;
+		sel_msg.event_data1 = IPMI_EVENT_CRITICAL_INT_FP_NMI;
+		sel_msg.event_data2 = 0xFF;
+		sel_msg.event_data3 = 0xFF;
+		if (!common_add_sel_evt_record(&sel_msg)) {
+			LOG_ERR("%s addsel fail", __func__);
+		}
+	}
+}
