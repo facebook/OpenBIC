@@ -50,7 +50,7 @@
 
 &i2c3 {
 	pinctrl-0 = <&pinctrl_i2c3_default>;
-	status = "disabled";
+	status = "okay";
 	clock-frequency = <I2C_BITRATE_STANDARD>;
 };
 
