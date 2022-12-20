@@ -13,15 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <sys/util.h>
+#include <string.h>
+#include <stdio.h>
 
-#ifndef PLAT_FRU_H
-#define PLAT_FRU_H
+#include "fru.h"
+#include "plat_fru.h"
 
-#define MB_FRU_PORT 0x01
-#define MB_FRU_ADDR (0xA8 >> 1)
-
-enum { MB_FRU_ID,
-       MAX_FRU_ID,
+const EEPROM_CFG plat_fru_config[] = {
+	{
+		NV_ATMEL_24C128,
+		MB_FRU_ID,
+		MB_FRU_PORT,
+		MB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		FRU_START,
+		FRU_SIZE,
+	},
 };
 
-#endif
+void pal_load_fru_config(void)
+{
+	if (ARRAY_SIZE(plat_fru_config) > FRU_CFG_NUM) {
+		printf("Failed to load fru configuration: index is over than max value\n");
+		goto out;
+	}
+
+	memcpy(&fru_config, &plat_fru_config, sizeof(plat_fru_config));
+out:
+	return;
+}
