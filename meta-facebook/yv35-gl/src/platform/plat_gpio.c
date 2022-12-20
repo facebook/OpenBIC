@@ -22,7 +22,7 @@
 #include "plat_gpio.h"
 
 #define gpio_name_to_num(x) #x,
-const char *const gpio_name[] = {
+char *gpio_name[] = {
     name_gpioA
     name_gpioB
     name_gpioC

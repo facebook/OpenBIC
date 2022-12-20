@@ -258,7 +258,7 @@ extern enum _GPIO_NUMS_ GPIO_NUMS;
 #define FM_FORCE_ADR_N_R 0xFF
 #define JTAG_BMC_NTRST_R_N 0xff
 
-extern const char *const gpio_name[];
+extern char *gpio_name[];
 //  GPIO Table SET/GET GPIO Configuration align to Ti BIC
 extern uint8_t gpio_align_t[];
 extern int gpio_align_table_length;

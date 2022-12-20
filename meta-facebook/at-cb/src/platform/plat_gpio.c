@@ -23,7 +23,7 @@
 #include "plat_isr.h"
 
 #define gpio_name_to_num(x) #x,
-const char *const gpio_name[] = {
+char *gpio_name[] = {
 	name_gpioA name_gpioB name_gpioC name_gpioD name_gpioE name_gpioF name_gpioG name_gpioH
 		name_gpioI name_gpioJ name_gpioK name_gpioL name_gpioM name_gpioN name_gpioO
 			name_gpioP name_gpioQ name_gpioR name_gpioS name_gpioT name_gpioU
