@@ -23,6 +23,7 @@
 #include "pcc.h"
 #include "plat_pmic.h"
 #include "plat_apml.h"
+#include "util_worker.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -43,13 +44,13 @@ void pal_pre_init()
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
 	pcc_init();
 	apml_init();
+	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY + 1); // work queue for low priority jobs
 }
 
 void pal_set_sys_status()
 {
 	set_DC_status(PWRGD_CPU_LVC3);
 	set_DC_on_delayed_status();
-	set_DC_off_delayed_status();
 	set_post_status(FM_BIOS_POST_CMPLT_BIC_N);
 	if (get_post_status()) {
 		set_tsi_threshold();
