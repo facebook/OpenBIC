@@ -122,7 +122,11 @@ void ISR_DC_ON()
 {
 	set_DC_status(PWRGD_SYS_PWROK);
 
-	if (get_DC_status() == true) {
+	ipmb_error status;
+	ipmi_msg msg;
+	bool dc_status = get_DC_status();
+
+	if (dc_status) {
 		k_work_schedule(&set_DC_on_5s_work, K_SECONDS(DC_ON_5_SECOND));
 
 		if (k_work_cancel_delayable(&set_DC_off_10s_work) != 0) {
@@ -150,6 +154,23 @@ void ISR_DC_ON()
 				printf("System PWROK failure addsel fail\n");
 			}
 		}
+	}
+
+	msg.data_len = 4;
+	msg.InF_source = SELF;
+	msg.InF_target = BMC_IPMB;
+	msg.netfn = NETFN_OEM_1S_REQ;
+	msg.cmd = CMD_OEM_1S_SEND_HOST_POWER_STATE_TO_BMC;
+
+	msg.data[0] = IANA_ID & 0xFF;
+	msg.data[1] = (IANA_ID >> 8) & 0xFF;
+	msg.data[2] = (IANA_ID >> 16) & 0xFF;
+	msg.data[3] = dc_status ? GPIO_HIGH : GPIO_LOW;
+
+	status = ipmb_read(&msg, IPMB_inf_index_map[msg.InF_target]);
+	if (status != IPMB_ERROR_SUCCESS) {
+		LOG_ERR("Failed to send host power state to BMC, gpio number %d status %d",
+			PWRGD_SYS_PWROK, status);
 	}
 }
 
