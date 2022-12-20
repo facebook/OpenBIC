@@ -261,7 +261,7 @@ end:
 }
 #endif
 
-uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sector_end,
+uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, uint8_t flag,
 		  uint8_t flash_position)
 {
 	static bool is_init = 0;
@@ -305,16 +305,15 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 		return FWUPDATE_REPEATED_UPDATED;
 	}
 
-	LOG_DBG("SPI index %d, update offset 0x%x 0x%x, msg_len %d, sector_end %d,"
-		" msg_buf: 0x%2x 0x%2x 0x%2x 0x%2x\n",
-		flash_position, offset, buf_offset, msg_len, sector_end, msg_buf[0], msg_buf[1],
+	LOG_DBG("spi bus%x update offset %x %x, msg_len %d, flag 0x%x, msg_buf: %2x %2x %2x %2x",
+		flash_position, offset, buf_offset, msg_len, flag, msg_buf[0], msg_buf[1],
 		msg_buf[2], msg_buf[3]);
 
 	memcpy(&txbuf[buf_offset], msg_buf, msg_len);
 	buf_offset += msg_len;
 
 	// Update fmc while collect 64k bytes data or BMC signal last image package with target | 0x80
-	if ((buf_offset == SECTOR_SZ_64K) || sector_end) {
+	if ((buf_offset == SECTOR_SZ_64K) || (flag & SECTOR_END_FLAG)) {
 		flash_dev = device_get_binding(flash_device_list[flash_position].name);
 		if (!flash_device_list[flash_position].isinit) {
 			uint8_t rc = 0;
@@ -348,9 +347,12 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sect
 		LOG_DBG("Update 0x%x, offset 0x%x, SECTOR_SZ_16K 0x%x\n",
 			(offset / SECTOR_SZ_16K) * SECTOR_SZ_16K, offset, SECTOR_SZ_16K);
 
-		if (sector_end &&
-		    (flash_position == DEVSPI_FMC_CS0)) { // reboot bic itself after fw update
-			submit_bic_warm_reset();
+		if ((flag & SECTOR_END_FLAG) && (flash_position == DEVSPI_FMC_CS0)) {
+			if (flag & NO_RESET_FLAG) {
+				return ret;
+			} else {
+				submit_bic_warm_reset();
+			}
 		}
 
 		return ret;

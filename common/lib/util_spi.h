@@ -30,6 +30,9 @@
 
 #define SHA256_DIGEST_SIZE 32
 
+#define SECTOR_END_FLAG BIT(7)
+#define NO_RESET_FLAG BIT(0)
+
 enum DEVICE_POSITIONS {
 	DEVSPI_FMC_CS0,
 	DEVSPI_FMC_CS1,
@@ -39,7 +42,7 @@ enum DEVICE_POSITIONS {
 	DEVSPI_SPI2_CS1,
 };
 
-uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sector_end,
+uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, uint8_t flag,
 		  uint8_t flash_position);
 int read_fw_image(uint32_t offset, uint8_t msg_len, uint8_t *msg_buf, uint8_t flash_position);
 uint8_t fw_update_cxl(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sector_end);
