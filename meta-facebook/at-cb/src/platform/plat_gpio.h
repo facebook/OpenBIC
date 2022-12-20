@@ -26,22 +26,22 @@
 // clang-format off
 
 #define name_gpioA \
-	gpio_name_to_num(INT_I2C_12V_ACCL_N) \
+	gpio_name_to_num(Reserve_GPIOA0) \
 	gpio_name_to_num(INT_SMB_BIC_PEX0_N_R) \
 	gpio_name_to_num(INT_SMB_BIC_PEX1_N_R) \
-	gpio_name_to_num(Reserve_GPIOA3) \
+	gpio_name_to_num(SMB_P1V25_ALRT_N_R) \
 	gpio_name_to_num(Reserve_GPIOA4) \
 	gpio_name_to_num(SMB_INA233_ACCL1_6_12V_ALRT_N) \
 	gpio_name_to_num(SMB_INA233_ACCL7_12_12V_ALRT_N) \
 	gpio_name_to_num(FIO_PWRBTN_N_R)
 
 #define name_gpioB \
-	gpio_name_to_num(Reserve_GPIOB0) \
-	gpio_name_to_num(Reserve_GPIOB1) \
+	gpio_name_to_num(ASD_MUX2_SEL) \
+	gpio_name_to_num(ASD_MUX2_EN_R4_N) \
 	gpio_name_to_num(Reserve_GPIOB2) \
 	gpio_name_to_num(Reserve_GPIOB3) \
-	gpio_name_to_num(TYPE_C_PLUG_DETECT1_R) \
-	gpio_name_to_num(TYPE_C_PLUG_DETECT2_R) \
+	gpio_name_to_num(Reserve_GPIOB4) \
+	gpio_name_to_num(TYPE_C_PLUG_DETECT_R) \
 	gpio_name_to_num(MEB_STRAP0_N_R) \
 	gpio_name_to_num(MEB_STRAP1_N_R)
 
@@ -61,7 +61,7 @@
 	gpio_name_to_num(RST_USB_HUB2_N) \
 	gpio_name_to_num(RST_USB_HUB3_N) \
 	gpio_name_to_num(RST_USB_HUB4_N) \
-	gpio_name_to_num(Reserve_GPIOD5) \
+	gpio_name_to_num(RST_USB_HUB5_N) \
 	gpio_name_to_num(Reserve_GPIOD6) \
 	gpio_name_to_num(Reserve_GPIOD7)
 
@@ -86,14 +86,14 @@
 	gpio_name_to_num(JTAG_MUX_SEL)
 
 #define name_gpioG \
-	gpio_name_to_num(Reserve_GPIOG0) \
-	gpio_name_to_num(Reserve_GPIOG1) \
+	gpio_name_to_num(INT_SMB_MEB_0_N) \
+	gpio_name_to_num(INT_SMB_MEB_1_N) \
 	gpio_name_to_num(Reserve_GPIOG2) \
 	gpio_name_to_num(Reserve_GPIOG3) \
 	gpio_name_to_num(Reserve_GPIOG4) \
 	gpio_name_to_num(Reserve_GPIOG5) \
 	gpio_name_to_num(Reserve_GPIOG6) \
-	gpio_name_to_num(Reserve_GPIOG7)
+	gpio_name_to_num(EN_5V_EFUSE)
 
 #define name_gpioH \
 	gpio_name_to_num(Reserve_GPIOH0) \
