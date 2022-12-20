@@ -472,7 +472,7 @@ static void oem_set_effecter_type_gpio_handler(uint8_t *buf, uint16_t len, uint8
 	}
 
 	/* Set output pin value only */
-	if (!gpio_get_direction(gpio_pin)) {
+	if (gpio_cfg[gpio_pin].direction == GPIO_INPUT) {
 		LOG_ERR("Can't set input pin (%d) value", gpio_pin);
 		*completion_code_p = PLDM_OEM_GPIO_EFFECTER_VALUE_UNKNOWN;
 		return;
@@ -567,8 +567,9 @@ static void oem_get_effecter_type_gpio_handler(uint8_t *buf, uint16_t len, uint8
 		gpio_dir_state->effecter_op_state = gpio_val_state->effecter_op_state =
 			PLDM_EFFECTER_ENABLED_NOUPDATEPENDING;
 		gpio_dir_state->previous_state = gpio_dir_state->pending_state =
-			(!gpio_get_direction(gpio_pin) ? EFFECTER_STATE_GPIO_DIRECTION_INPUT :
-							 EFFECTER_STATE_GPIO_DIRECTION_OUTPUT);
+			((gpio_cfg[gpio_pin].direction == GPIO_INPUT) ?
+				 EFFECTER_STATE_GPIO_DIRECTION_INPUT :
+				 EFFECTER_STATE_GPIO_DIRECTION_OUTPUT);
 		gpio_val_state->previous_state = gpio_val_state->pending_state =
 			(!gpio_get(gpio_pin) ? EFFECTER_STATE_GPIO_VALUE_LOW :
 					       EFFECTER_STATE_GPIO_VALUE_HIGH);
