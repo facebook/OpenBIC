@@ -18,14 +18,44 @@
 #define PLAT_FRU_H
 
 #include "plat_i2c.h"
+#include "i2c-mux-pca954x.h"
 
-#define CB_FRU_PORT I2C_BUS2
-#define CB_FRU_ADDR (0xAC >> 1)
-
-enum {
-	CB_FRU_ID,
+enum FRU_ID {
+	FIO_FRU_ID = 0x01,
+	CB_FRU_ID = 0x03,
+	ACCL_1_FRU_ID,
+	ACCL_2_FRU_ID,
+	ACCL_3_FRU_ID,
+	ACCL_4_FRU_ID,
+	ACCL_5_FRU_ID,
+	ACCL_6_FRU_ID,
+	ACCL_7_FRU_ID,
+	ACCL_8_FRU_ID,
+	ACCL_9_FRU_ID,
+	ACCL_10_FRU_ID,
+	ACCL_11_FRU_ID,
+	ACCL_12_FRU_ID,
 	// OTHER_FRU_ID,
 	MAX_FRU_ID,
 };
+
+/* Skip fru id 0 and 2 */
+#define FRU_CFG_NUM (MAX_FRU_ID - 2)
+
+#define CB_FRU_PORT I2C_BUS2
+#define CB_FRU_ADDR (0xAC >> 1)
+#define FIO_FRU_PORT I2C_BUS10
+#define FIO_FRU_ADDR (0xA2 >> 1)
+#define ACCL_1_6_FRU_PORT I2C_BUS7
+#define ACCL_7_12_FRU_PORT I2C_BUS8
+#define ACCL_FRU_ADDR (0xA6 >> 1)
+#define ACCL_1_6_FRU_MUX_ADDR (0xE0 >> 1)
+#define ACCL_7_12_FRU_MUX_ADDR (0xE8 >> 1)
+#define ACCL_1_7_FRU_MUX_CHAN 0
+#define ACCL_2_8_FRU_MUX_CHAN 1
+#define ACCL_3_9_FRU_MUX_CHAN 2
+#define ACCL_4_10_FRU_MUX_CHAN 3
+#define ACCL_5_11_FRU_MUX_CHAN 4
+#define ACCL_6_12_FRU_MUX_CHAN 5
 
 #endif

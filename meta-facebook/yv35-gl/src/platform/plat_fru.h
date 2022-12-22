@@ -19,9 +19,11 @@
 
 #define MB_FRU_PORT 0x01
 #define MB_FRU_ADDR (0xA8 >> 1)
+#define FRU_CFG_NUM MAX_FRU_ID
 
-enum { MB_FRU_ID,
-       MAX_FRU_ID,
+enum {
+	MB_FRU_ID,
+	MAX_FRU_ID,
 };
 
 #endif

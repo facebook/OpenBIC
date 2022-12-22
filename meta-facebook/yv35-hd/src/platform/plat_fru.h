@@ -20,6 +20,15 @@
 #include "eeprom.h"
 #include "fru.h"
 
+enum {
+	MB_FRU_ID,
+	DPV2_FRU_ID,
+	// OTHER_FRU_ID,
+	MAX_FRU_ID,
+};
+
+#define FRU_CFG_NUM MAX_FRU_ID
+
 #define MB_FRU_PORT 0x01
 #define MB_FRU_ADDR 0x54
 #define MB_CPU_EEPROM_ADDR 0x50
@@ -35,13 +44,6 @@
 
 #define PSB_ERROR_START 0x0002
 #define PSB_ERROR_MAX_SIZE 9
-
-enum {
-	MB_FRU_ID,
-	DPV2_FRU_ID,
-	// OTHER_FRU_ID,
-	MAX_FRU_ID,
-};
 
 bool get_bios_version_area_config(EEPROM_CFG *config);
 int set_bios_version(EEPROM_ENTRY *entry, uint8_t block_index);

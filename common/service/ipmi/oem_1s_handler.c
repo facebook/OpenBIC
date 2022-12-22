@@ -102,7 +102,6 @@ __weak void OEM_1S_MSG_OUT(ipmi_msg *msg)
 	if ((IPMB_inf_index_map[target_IF] == RESERVED) ||
 	    (IPMB_config_table[IPMB_inf_index_map[target_IF]].interface == RESERVED_IF) ||
 	    (IPMB_config_table[IPMB_inf_index_map[target_IF]].enable_status == DISABLE)) {
-		
 		// check the platform extend message out handler
 		if (!pal_extend_msg_out_interface_handler(msg)) {
 			// the platform has the extended handler
@@ -2002,6 +2001,15 @@ __weak void OEM_1S_GET_BIOS_VERSION(ipmi_msg *msg)
 	return;
 }
 
+__weak void OEM_1S_GET_ASIC_CARD_STATUS(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+	return;
+}
+
 void IPMI_OEM_1S_handler(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -2232,6 +2240,10 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_GET_BIOS_VERSION:
 		LOG_DBG("Received 1S Get BIOS version command");
 		OEM_1S_GET_BIOS_VERSION(msg);
+		break;
+	case CMD_OEM_1S_GET_ASIC_CARD_STATUS:
+		LOG_DBG("Received 1S Get ASIC card status command");
+		OEM_1S_GET_ASIC_CARD_STATUS(msg);
 		break;
 	default:
 		LOG_ERR("Invalid OEM message, netfn(0x%x) cmd(0x%x)", msg->netfn, msg->cmd);

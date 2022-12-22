@@ -20,36 +20,40 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "libutil.h"
 
 LOG_MODULE_REGISTER(dev_fru);
 
 EEPROM_CFG fru_config[FRU_CFG_NUM];
 
-static uint8_t find_FRU_ID(uint8_t FRUID)
+static bool find_FRU_ID(uint8_t FRUID, uint8_t *fru_id)
 {
-	uint8_t ret;
+	CHECK_NULL_ARG_WITH_RETURN(fru_id, false);
 
-	for (ret = 0; ret < MAX_FRU_ID; ret++) {
-		if (FRUID == fru_config[ret].dev_id) {
+	uint8_t index = 0;
+	for (index = 0; index < FRU_CFG_NUM; index++) {
+		if (FRUID == fru_config[index].dev_id) {
+			*fru_id = index;
 			break;
 		}
 	}
 
-	if (ret == MAX_FRU_ID) { // FRU ID not found
-		return MAX_FRU_ID;
+	if (index == FRU_CFG_NUM) { // FRU ID not found
+		return false;
 	}
 
-	return ret;
+	return true;
 }
 
 uint8_t get_FRU_access(uint8_t FRUID)
 {
-	uint8_t ID_No;
+	bool ret = false;
+	uint8_t ID_No = 0;
 
-	ID_No = find_FRU_ID(FRUID);
+	ret = find_FRU_ID(FRUID, &ID_No);
 
-	if (ID_No == MAX_FRU_ID) { // FRU ID not found
-		return 0xFF;
+	if (ret == false) { // FRU ID not found
+		return FRU_ID_NOT_FOUND;
 	}
 
 	return fru_config[ID_No].access;
@@ -57,11 +61,12 @@ uint8_t get_FRU_access(uint8_t FRUID)
 
 uint16_t find_FRU_size(uint8_t FRUID)
 {
-	uint8_t ID_No;
+	bool ret = false;
+	uint8_t ID_No = 0;
 
-	ID_No = find_FRU_ID(FRUID);
+	ret = find_FRU_ID(FRUID, &ID_No);
 
-	if (ID_No == MAX_FRU_ID) { // FRU ID not found
+	if (ret == false) { // FRU ID not found
 		return 0xFFFF;
 	}
 
@@ -86,8 +91,14 @@ uint8_t FRU_read(EEPROM_ENTRY *entry)
 		return FRU_OUT_OF_RANGE;
 	}
 
-	memcpy(&entry->config, &fru_config[entry->config.dev_id],
-	       sizeof(fru_config[entry->config.dev_id]));
+	uint8_t fru_index = 0;
+	bool ret = find_FRU_ID(entry->config.dev_id, &fru_index);
+	if (ret == false) {
+		LOG_ERR("find fru read config fail via fru id: 0x%x", entry->config.dev_id);
+		return FRU_INVALID_ID;
+	}
+
+	memcpy(&entry->config, &fru_config[fru_index], sizeof(fru_config[fru_index]));
 
 	if (!eeprom_read(entry)) {
 		return FRU_FAIL_TO_ACCESS;
@@ -114,8 +125,14 @@ uint8_t FRU_write(EEPROM_ENTRY *entry)
 		return FRU_OUT_OF_RANGE;
 	}
 
-	memcpy(&entry->config, &fru_config[entry->config.dev_id],
-	       sizeof(fru_config[entry->config.dev_id]));
+	uint8_t fru_index = 0;
+	bool ret = find_FRU_ID(entry->config.dev_id, &fru_index);
+	if (ret == false) {
+		LOG_ERR("find fru write config fail via fru id: 0x%x", entry->config.dev_id);
+		return FRU_INVALID_ID;
+	}
+
+	memcpy(&entry->config, &fru_config[fru_index], sizeof(fru_config[fru_index]));
 
 	if (!eeprom_write(entry)) {
 		return FRU_FAIL_TO_ACCESS;
