@@ -28,6 +28,7 @@ typedef enum pex_access {
 	pex_access_rev_id,
 	pex_access_sbr_ver,
 	pex_access_flash_ver,
+	pex_access_register,
 	pex_access_unknown
 } pex_access_t;
 
