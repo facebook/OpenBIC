@@ -376,11 +376,12 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 			msg->completion_code = CC_PEX_NOT_POWER_ON;
 			return;
 		}
-		uint8_t pex_sensor_num_table[PEX_MAX_NUMBER] = { SENSOR_NUM_BB_TEMP_PEX_0,
-								 SENSOR_NUM_BB_TEMP_PEX_1,
-								 SENSOR_NUM_BB_TEMP_PEX_2,
-								 SENSOR_NUM_BB_TEMP_PEX_3 };
-		int reading;
+		const uint8_t pex_sensor_num_table[PEX_MAX_NUMBER] = { SENSOR_NUM_BB_TEMP_PEX_0,
+								       SENSOR_NUM_BB_TEMP_PEX_1,
+								       SENSOR_NUM_BB_TEMP_PEX_2,
+								       SENSOR_NUM_BB_TEMP_PEX_3 };
+		/* Physical Layer User Test Patterns, Byte 0 Register */
+		int reading = 0x6080020c;
 
 		uint8_t pex_sensor_num = pex_sensor_num_table[component - GT_COMPNT_PEX0];
 		sensor_cfg *cfg = &sensor_config[sensor_config_index_map[pex_sensor_num]];
@@ -395,12 +396,25 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 			}
 		}
 
-		if (pex_access_engine(cfg->port, cfg->target_addr, p->idx, pex_access_sbr_ver,
+		if (pex_access_engine(cfg->port, cfg->target_addr, p->idx, pex_access_register,
 				      &reading)) {
 			if (k_mutex_unlock(&i2c_bus10_mutex))
-				LOG_ERR("Mutex unlock fail on PEX bus");
+				LOG_ERR("pex%d mutex unlock failed on bus(%d)", p->idx, cfg->port);
 			msg->completion_code = CC_PEX_ACCESS_FAIL;
 			return;
+		}
+
+		/* Change version register to SBR because the old PEX firmware did not fill in version information at register 0x6080020c yet */
+		if (((reading & 0xFF) == (component - GT_COMPNT_PEX0)) &&
+		    ((reading >> 8) & 0xFF) == 0xCC) {
+			if (pex_access_engine(cfg->port, cfg->target_addr, p->idx,
+					      pex_access_sbr_ver, &reading)) {
+				if (k_mutex_unlock(&i2c_bus10_mutex))
+					LOG_ERR("pex%d mutex unlock failed on bus(%d)", p->idx,
+						cfg->port);
+				msg->completion_code = CC_PEX_ACCESS_FAIL;
+				return;
+			}
 		}
 
 		if (cfg->post_sensor_read_hook) {
