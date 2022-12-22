@@ -21,8 +21,10 @@
 #include "plat_class.h"
 #include "snoop.h"
 #include "pcc.h"
+#include "plat_i2c.h"
 #include "plat_pmic.h"
 #include "plat_apml.h"
+#include "rg3mxxb12.h"
 #include "util_worker.h"
 
 SCU_CFG scu_cfg[] = {
@@ -41,6 +43,13 @@ void pal_device_init()
 void pal_pre_init()
 {
 	init_platform_config();
+	CARD_STATUS _1ou_status = get_1ou_status();
+	if (_1ou_status.present && (_1ou_status.card_type == TYPE_1OU_EXP_WITH_E1S)) {
+		// Initialize I3C HUB (HD BIC connects to Olympic2 expension-A and B)
+		if (!rg3mxxb12_i2c_mode_only_init(I2C_BUS8, BIT(2))) {
+			printk("failed to initialize rg3mxxb12\n");
+		}
+	}
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
 	pcc_init();
 	apml_init();
