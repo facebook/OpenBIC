@@ -1,0 +1,35 @@
+From d783c76a6e0231b9c8d661ecd550070787604462 Mon Sep 17 00:00:00 2001
+From: Tommy Haung <tommy_huang@aspeedtech.com>
+Date: Fri, 16 Dec 2022 16:26:04 +0800
+Subject: [PATCH] drivers: i2c: Clear any other irq status when the bus
+ recovery fail
+
+Change the irq clear region into every status when the bus recovery fail.
+In this condition, current and past transferred data should be invliad.
+To avoid interrupt storm , we need to clear every irq flags when
+the bus recovery fail is occurred.
+
+Signed-off-by: Tommy Haung <tommy_huang@aspeedtech.com>
+Change-Id: Ib710341ef3b791aa377068d66d3a67bbf706af5f
+---
+ drivers/i2c/i2c_aspeed.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/i2c/i2c_aspeed.c b/drivers/i2c/i2c_aspeed.c
+index f9ff731ff0..e431698bea 100644
+--- a/drivers/i2c/i2c_aspeed.c
++++ b/drivers/i2c/i2c_aspeed.c
+@@ -1154,7 +1154,9 @@ int aspeed_i2c_master_irq(const struct device *dev)
+ 	if (AST_I2CM_BUS_RECOVER_FAIL & sts) {
+ 		LOG_DBG("AST_I2CM_BUS_RECOVER_FAIL\n");
+ 		LOG_DBG("M clear isr: AST_I2CM_BUS_RECOVER_FAIL= %x\n", sts);
+-		sys_write32(AST_I2CM_BUS_RECOVER_FAIL, i2c_base + AST_I2CM_ISR);
++		/*clear other status to avoid endless irq in recovery fail condition*/
++		/*if any other irq is existed, it should be clear here*/
++		sys_write32(sts, i2c_base + AST_I2CM_ISR);
+ 		if (data->bus_recover) {
+ 			data->cmd_err = -EPROTO;
+ 			data->bus_recover = 0;
+-- 
+2.17.1
+
