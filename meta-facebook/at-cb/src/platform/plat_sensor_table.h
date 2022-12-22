@@ -20,6 +20,8 @@
 #include <stdint.h>
 #include "sensor.h"
 
+#define PEX_MAX_NUMBER 2
+
 /*  define config for sensors  */
 #define TMP75_IN_ADDR 0x48
 #define TMP75_OUT_ADDR 0x4A
