@@ -22,12 +22,13 @@
 #include "libutil.h"
 #include "ipmi.h"
 #include "util_spi.h"
-#include "plat_sensor_table.h"
-#include "pex89000.h"
 #include "hal_gpio.h"
 #include "plat_fru.h"
 #include "plat_gpio.h"
 #include "plat_class.h"
+#include "plat_sensor_table.h"
+#include "pex89000.h"
+#include "xdpe15284.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
@@ -116,6 +117,17 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		msg->data[0] = component;
 		msg->data[1] = sizeof(reading);
 		msg->data_len = sizeof(reading) + 2;
+		msg->completion_code = CC_SUCCESS;
+		break;
+	case CB_COMPNT_VR_XDPE15284:
+		if (xdpe15284_get_checksum(I2C_BUS1, XDPE15284D_ADDR, &msg->data[2]) == false) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+
+		msg->data[0] = component;
+		msg->data[1] = VR_FW_VERSION_LEN;
+		msg->data_len = VR_FW_VERSION_LEN + 2;
 		msg->completion_code = CC_SUCCESS;
 		break;
 	default:
