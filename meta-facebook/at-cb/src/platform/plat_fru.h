@@ -39,8 +39,7 @@ enum FRU_ID {
 	MAX_FRU_ID,
 };
 
-/* Skip fru id 0 and 2 */
-#define FRU_CFG_NUM (MAX_FRU_ID - 2)
+#define FRU_CFG_NUM MAX_FRU_ID
 
 #define CB_FRU_PORT I2C_BUS2
 #define CB_FRU_ADDR (0xAC >> 1)
@@ -48,7 +47,7 @@ enum FRU_ID {
 #define FIO_FRU_ADDR (0xA2 >> 1)
 #define ACCL_1_6_FRU_PORT I2C_BUS7
 #define ACCL_7_12_FRU_PORT I2C_BUS8
-#define ACCL_FRU_ADDR (0xA6 >> 1)
+#define ACCL_FRU_ADDR (0xAC >> 1)
 #define ACCL_1_6_FRU_MUX_ADDR (0xE0 >> 1)
 #define ACCL_7_12_FRU_MUX_ADDR (0xE8 >> 1)
 #define ACCL_1_7_FRU_MUX_CHAN 0

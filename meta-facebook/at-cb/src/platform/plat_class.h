@@ -50,16 +50,16 @@ struct ASIC_CARD_INFO {
 	uint8_t mux_addr;
 	uint8_t mux_channel;
 
-	bool card_presence_status;
+	bool card_status;
 	uint8_t device_mux_addr;
 	uint8_t device_channel;
-	bool asic_1_presence_status;
-	bool asic_2_presence_status;
+	bool asic_1_status;
+	bool asic_2_status;
 };
 
 extern struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT];
 
-void check_asic_card_presence_status();
+void check_asic_card_status();
 bool get_adc_voltage(int channel, float *voltage);
 
 #endif

@@ -26,51 +26,40 @@ LOG_MODULE_REGISTER(dev_fru);
 
 EEPROM_CFG fru_config[FRU_CFG_NUM];
 
-static bool find_FRU_ID(uint8_t FRUID, uint8_t *fru_id)
+static uint8_t find_FRU_ID(uint8_t FRUID)
 {
-	CHECK_NULL_ARG_WITH_RETURN(fru_id, false);
+	uint8_t ret;
 
-	uint8_t index = 0;
-	for (index = 0; index < FRU_CFG_NUM; index++) {
-		if (FRUID == fru_config[index].dev_id) {
-			*fru_id = index;
+	for (ret = 0; ret < MAX_FRU_ID; ret++) {
+		if (FRUID == fru_config[ret].dev_id) {
 			break;
 		}
 	}
 
-	if (index == FRU_CFG_NUM) { // FRU ID not found
-		return false;
+	if (ret == MAX_FRU_ID) { // FRU ID not found
+		return MAX_FRU_ID;
 	}
 
-	return true;
+	return ret;
 }
 
 uint8_t get_FRU_access(uint8_t FRUID)
 {
-	bool ret = false;
-	uint8_t ID_No = 0;
-
-	ret = find_FRU_ID(FRUID, &ID_No);
-
-	if (ret == false) { // FRU ID not found
+	uint8_t fru_index = find_FRU_ID(FRUID);
+	if (fru_index == MAX_FRU_ID) {
 		return FRU_ID_NOT_FOUND;
 	}
 
-	return fru_config[ID_No].access;
+	return fru_config[fru_index].access;
 }
 
 uint16_t find_FRU_size(uint8_t FRUID)
 {
-	bool ret = false;
-	uint8_t ID_No = 0;
-
-	ret = find_FRU_ID(FRUID, &ID_No);
-
-	if (ret == false) { // FRU ID not found
+	uint8_t fru_index = find_FRU_ID(FRUID);
+	if (fru_index == MAX_FRU_ID) {
 		return 0xFFFF;
 	}
-
-	return fru_config[ID_No].max_size;
+	return fru_config[fru_index].max_size;
 }
 
 uint8_t FRU_read(EEPROM_ENTRY *entry)
@@ -91,9 +80,8 @@ uint8_t FRU_read(EEPROM_ENTRY *entry)
 		return FRU_OUT_OF_RANGE;
 	}
 
-	uint8_t fru_index = 0;
-	bool ret = find_FRU_ID(entry->config.dev_id, &fru_index);
-	if (ret == false) {
+	uint8_t fru_index = find_FRU_ID(entry->config.dev_id);
+	if (fru_index == MAX_FRU_ID) {
 		LOG_ERR("find fru read config fail via fru id: 0x%x", entry->config.dev_id);
 		return FRU_INVALID_ID;
 	}
@@ -125,9 +113,8 @@ uint8_t FRU_write(EEPROM_ENTRY *entry)
 		return FRU_OUT_OF_RANGE;
 	}
 
-	uint8_t fru_index = 0;
-	bool ret = find_FRU_ID(entry->config.dev_id, &fru_index);
-	if (ret == false) {
+	uint8_t fru_index = find_FRU_ID(entry->config.dev_id);
+	if (fru_index == MAX_FRU_ID) {
 		LOG_ERR("find fru write config fail via fru id: 0x%x", entry->config.dev_id);
 		return FRU_INVALID_ID;
 	}

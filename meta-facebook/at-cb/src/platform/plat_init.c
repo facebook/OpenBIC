@@ -37,7 +37,7 @@ void pal_pre_init()
 				1);
 	}
 
-	check_asic_card_presence_status();
+	check_asic_card_status();
 }
 
 void pal_post_init()
