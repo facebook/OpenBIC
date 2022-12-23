@@ -23,6 +23,7 @@
 #include "ipmi.h"
 #include "pldm.h"
 #include "plat_mctp.h"
+#include "plat_class.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -39,16 +40,18 @@ void pal_pre_init()
 				1);
 	}
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
+
+	init_platform_config();
 }
 
 void pal_post_init()
 {
 	plat_mctp_init();
+	gpio_set(BIC_SYS_READY_N, GPIO_LOW);
 }
 
 void pal_set_sys_status()
 {
-	gpio_set(BIC_SYS_READY_N, GPIO_LOW);
 	set_DC_status(SYS_PWR_READY_N);
 	set_DC_on_delayed_status();
 }

@@ -290,6 +290,7 @@ uint8_t pldm_platform_event_message_req(void *mctp_inst, mctp_ext_params ext_par
 
 static void process_event_message_queue(struct k_work *work)
 {
+	CHECK_NULL_ARG(work);
 	struct pldm_event_pkt *pkt;
 
 	if ((pkt = k_fifo_get(&send_event_pkt_fifo, K_NO_WAIT)) != NULL) {

@@ -18,5 +18,12 @@
 #define PLAT_FUNC_H
 
 void ISR_DC_ON();
+void ISR_NIC_ADC_ALERT();
+void ISR_SSD_0_7_ADC_ALERT();
+void ISR_SSD_8_15_ADC_ALERT();
+void ISR_PEX_ADC_ALERT();
+void ISR_SMB_FPGA_ALERT();
+void ISR_VR_PMBUS_ALERT();
+void ISR_HSC_SMB_ALERT();
 
 #endif
