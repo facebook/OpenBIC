@@ -126,6 +126,8 @@ enum SENSOR_DEV {
 #ifdef ENABLE_PM8702
 	sensor_dev_pm8702 = 0x22,
 #endif
+	sensor_dev_ltc2991 = 0x22,
+	sensor_dev_sq52205 = 0x23,
 	sensor_dev_max
 };
 
@@ -183,7 +185,8 @@ enum {
 	SENSOR_READ_API_UNREGISTER,
 	SENSOR_READ_4BYTE_ACUR_SUCCESS,
 	SENSOR_NOT_PRESENT,
-	SENSOR_PEC_ERROR
+	SENSOR_PEC_ERROR,
+	SENSOR_PARAMETER_NOT_VALID,
 };
 
 enum { SENSOR_INIT_SUCCESS, SENSOR_INIT_UNSPECIFIED_ERROR };
@@ -479,6 +482,42 @@ typedef struct _adm1272_init_arg {
 	bool is_need_set_pwr_cfg;
 
 } adm1272_init_arg;
+
+typedef struct _sq52205_init_arg_ {
+	bool is_init;
+	float current_lsb;
+	float r_shunt;
+} sq52205_init_arg;
+
+typedef struct _ltc2991_init_arg_ {
+	bool is_init;
+	union {
+		int value;
+		struct {
+			uint8_t V1_V2_DIFFERENTIAL : 1;
+			uint8_t V1_V2_TEMPERATURE : 1;
+			uint8_t T1_KELVIN : 1;
+			uint8_t V1_V2_FILT : 1;
+			uint8_t V3_V4_DIFFERENTIAL : 1;
+			uint8_t V3_V4_TEMPERATURE : 1;
+			uint8_t T2_KELVIN : 1;
+			uint8_t V3_V4_FILT : 1;
+		} fields;
+	} v1_v4_control_operation;
+	union {
+		int value;
+		struct {
+			uint8_t V5_V6_DIFFERENTIAL : 1;
+			uint8_t V5_V6_TEMPERATURE : 1;
+			uint8_t T3_KELVIN : 1;
+			uint8_t V5_V6_FILT : 1;
+			uint8_t V7_V8_DIFFERENTIAL : 1;
+			uint8_t V7_V8_TEMPERATURE : 1;
+			uint8_t T4_KELVIN : 1;
+			uint8_t V7_V8_FILT : 1;
+		} fields;
+	} v5_v8_control_operation;
+} ltc2991_init_arg;
 
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;
