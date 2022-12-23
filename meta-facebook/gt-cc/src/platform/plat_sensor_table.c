@@ -37,6 +37,7 @@
 #include "pex89000.h"
 #include "util_sys.h"
 #include "plat_class.h"
+#include "plat_pldm_monitor.h"
 
 LOG_MODULE_REGISTER(plat_sensor_table);
 
@@ -1343,7 +1344,7 @@ void pal_extend_sensor_config()
 {
 	uint8_t stage = get_stage_by_rev_id();
 
-	if (stage == EVT) {
+	if (stage == GT_STAGE_EVT) {
 		LOG_INF("The board is in EVT stage");
 		memcpy(&sensor_config[sensor_config_count], evt_pex_sensor_config_table,
 		       ARRAY_SIZE(evt_pex_sensor_config_table) * sizeof(sensor_cfg));
@@ -1390,7 +1391,7 @@ void pal_extend_sensor_config()
 			LOG_ERR("Unsupported VR type");
 			break;
 		}
-	} else if (stage == DVT) {
+	} else if (stage == GT_STAGE_DVT) {
 		LOG_INF("The board is in DVT stage");
 		memcpy(&sensor_config[sensor_config_count], dvt_pex_sensor_config_table,
 		       ARRAY_SIZE(dvt_pex_sensor_config_table) * sizeof(sensor_cfg));
@@ -1409,7 +1410,7 @@ uint8_t pal_get_extend_sensor_config()
 	uint8_t extend_sensor_config_size = 0;
 	uint8_t stage = get_stage_by_rev_id();
 
-	if (stage == EVT) {
+	if (stage == GT_STAGE_EVT) {
 		extend_sensor_config_size += ARRAY_SIZE(evt_pex_sensor_config_table);
 		switch (check_vr_type()) {
 		case VR_RNS_ISL69259:
@@ -1428,7 +1429,7 @@ uint8_t pal_get_extend_sensor_config()
 			LOG_ERR("Unsupported VR type");
 			break;
 		}
-	} else if (stage == DVT) {
+	} else if (stage == GT_STAGE_DVT) {
 		extend_sensor_config_size += ARRAY_SIZE(dvt_pex_sensor_config_table);
 		extend_sensor_config_size += ARRAY_SIZE(mp5990_hsc_sensor_config_table);
 		extend_sensor_config_size += ARRAY_SIZE(isl69259_vr_sensor_config_table);
@@ -1454,113 +1455,86 @@ void change_p1v8_sensor_i2c_addr()
 		}
 	}
 }
-/**
- * Follow the schematic diagram, the HSC device can be distinguished by ADC11 (HSC_TYPE_ADC_R).
- * 0.0V(+/- 15%), the hotswap model is MP5990.
- * 1.0V(+/- 15%), the hotswap model is LTC4282.
- * 1.5V(+/- 15%), the hotswap model is LTC4286.
- */
+
 static void load_hsc_sensor_table()
 {
-	float voltage_hsc_type_adc = 0;
+	uint8_t type = get_hsc_type();
 
-	if (!get_adc_voltage(HSC_TYPE_ADC_CHANNEL, &voltage_hsc_type_adc)) {
-		LOG_ERR("Failed to get hsc type by ADC");
-		return;
-	}
-
-	if (voltage_hsc_type_adc < 0.15) {
-		LOG_INF("The HSC is MP5990, (%.3f V)", voltage_hsc_type_adc);
+	switch (type) {
+	case HSC_MP5990:
 		memcpy(&sensor_config[sensor_config_count], mp5990_hsc_sensor_config_table,
 		       ARRAY_SIZE(mp5990_hsc_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(mp5990_hsc_sensor_config_table);
-	} else if ((voltage_hsc_type_adc > 1.0 - (1.0 * 0.15)) &&
-		   (voltage_hsc_type_adc < 1.0 + (1.0 * 0.15))) {
-		LOG_INF("The HSC is LTC4282, (%.3f V)", voltage_hsc_type_adc);
+		break;
+	case HSC_LTC4282:
 		memcpy(&sensor_config[sensor_config_count], ltc4282_hsc_sensor_config_table,
 		       ARRAY_SIZE(ltc4282_hsc_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(ltc4282_hsc_sensor_config_table);
-	} else if ((voltage_hsc_type_adc > 1.5 - (1.5 * 0.15)) &&
-		   (voltage_hsc_type_adc < 1.5 + (1.5 * 0.15))) {
-		LOG_INF("The HSC is LTC4286, (%.3f V)", voltage_hsc_type_adc);
+		break;
+	case HSC_LTC4286:
 		memcpy(&sensor_config[sensor_config_count], ltc4286_hsc_sensor_config_table,
 		       ARRAY_SIZE(ltc4286_hsc_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(ltc4286_hsc_sensor_config_table);
-	} else {
-		LOG_ERR("Unknown hotswap model type, (%.3f V)", voltage_hsc_type_adc);
+		break;
+	case HSC_UNKNOWN:
+	default:
+		LOG_ERR("Unknown HSC type(%d), load HSC sensor table failed", type);
+		break;
 	}
 
 	return;
 }
-/**
- * Follow the schematic diagram, the VR chip can be distinguished by ADC12 (VR_TYPE_ADC_R).
- * 0.0V(+/- 15%), the VR chip is ISL69259.
- * 0.5V(+/- 15%), the VR chip is XDPE12284.
- */
+
 static void load_vr_sensor_table()
 {
-	float voltage_vr_type_adc = 0;
+	uint8_t type = get_vr_type();
 
-	if (!get_adc_voltage(VR_TYPE_ADC_CHANNEL, &voltage_vr_type_adc)) {
-		LOG_ERR("Failed to get VR type by ADC");
-		return;
-	}
-
-	if (voltage_vr_type_adc < 0.15) {
-		LOG_INF("The VR is RENESAS ISL69259, (%.3f V)", voltage_vr_type_adc);
+	switch (type) {
+	case VR_RNS_ISL69259:
 		memcpy(&sensor_config[sensor_config_count], isl69259_vr_sensor_config_table,
 		       ARRAY_SIZE(isl69259_vr_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(isl69259_vr_sensor_config_table);
-	} else if ((voltage_vr_type_adc > 0.5 - (0.5 * 0.15)) &&
-		   (voltage_vr_type_adc < 0.5 + (0.5 * 0.15))) {
-		LOG_INF("The VR is INFINEON XDPE12284, (%.3f V)", voltage_vr_type_adc);
+		break;
+	case VR_INF_XDPE12284:
 		memcpy(&sensor_config[sensor_config_count], xdpe12284_vr_sensor_config_table,
 		       ARRAY_SIZE(xdpe12284_vr_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(xdpe12284_vr_sensor_config_table);
-	} else if ((voltage_vr_type_adc > 1 - (1 * 0.15)) &&
-		   (voltage_vr_type_adc < 1 + (1 * 0.15))) {
-		LOG_ERR("The VR is MPS MP2971, (%.3f V)", voltage_vr_type_adc);
+		break;
+	case VR_MPS_MPS2971:
 		memcpy(&sensor_config[sensor_config_count], mp2971_vr_sensor_config_table,
 		       ARRAY_SIZE(mp2971_vr_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(mp2971_vr_sensor_config_table);
-	} else {
-		LOG_ERR("Unknown VR type, (%.3f V)", voltage_vr_type_adc);
+		break;
+	case VR_UNKNOWN:
+	default:
+		LOG_ERR("Unknown VR type(%d), load VR sensor table failed", type);
+		break;
 	}
 
 	return;
 }
 
-/**
- * Follow the schematic diagram, the power monitor ic can be distinguished by ADC13 (ADC_TYPE_ADC_R).
- * 0.0V(+/- 15%), the power monitor ic is ISL28022.
- * 0.5V(+/- 15%), the power monitor ic is INA230.
- */
-
 static void load_power_ic_sensor_table()
 {
-	float voltage_power_ic_type_adc = 0;
+	uint8_t type = get_power_moniter_ic_type();
 
-	if (!get_adc_voltage(POWER_IC_TYPE_ADC_CHANNEL, &voltage_power_ic_type_adc)) {
-		LOG_ERR("Failed to get power monitor IC type by ADC");
-		return;
-	}
-
-	if (voltage_power_ic_type_adc < 0.15) {
-		LOG_INF("The power monitor IC is RENESAS ISL28022, (%.3f V)",
-			voltage_power_ic_type_adc);
+	switch (type) {
+	case POWER_IC_ISL28022:
 		memcpy(&sensor_config[sensor_config_count],
 		       isl28022_power_monitor_sensor_config_table,
 		       ARRAY_SIZE(isl28022_power_monitor_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(isl28022_power_monitor_sensor_config_table);
-	} else if ((voltage_power_ic_type_adc > 0.5 - (0.5 * 0.15)) &&
-		   (voltage_power_ic_type_adc < 0.5 + (0.5 * 0.15))) {
-		LOG_INF("The power monitor IC is TI INA230, (%.3f V)", voltage_power_ic_type_adc);
+		break;
+	case POWER_IC_INA230:
 		memcpy(&sensor_config[sensor_config_count],
 		       ina230_power_monitor_sensor_config_table,
 		       ARRAY_SIZE(ina230_power_monitor_sensor_config_table) * sizeof(sensor_cfg));
 		sensor_config_count += ARRAY_SIZE(ina230_power_monitor_sensor_config_table);
-	} else {
-		LOG_ERR("Unknown power monitor IC type, (%.3f V)", voltage_power_ic_type_adc);
+		break;
+	case POWER_IC_UNKNOWN:
+	default:
+		LOG_ERR("Unknown power IC type(%d), load power IC sensor table failed", type);
+		break;
 	}
 
 	return;
@@ -1604,12 +1578,6 @@ static int check_vr_type(void)
 
 bool e1s_access(uint8_t sensor_num)
 {
-	uint8_t e1s_prsnt_pin[4][4] = {
-		{ PRSNT_SSD0_R_N, PRSNT_SSD1_R_N, PRSNT_SSD2_R_N, PRSNT_SSD3_R_N },
-		{ PRSNT_SSD4_R_N, PRSNT_SSD5_R_N, PRSNT_SSD6_R_N, PRSNT_SSD7_R_N },
-		{ PRSNT_SSD8_R_N, PRSNT_SSD9_R_N, PRSNT_SSD10_R_N, PRSNT_SSD11_R_N },
-		{ PRSNT_SSD12_R_N, PRSNT_SSD13_R_N, PRSNT_SSD14_R_N, PRSNT_SSD15_R_N },
-	};
 	uint8_t group = (sensor_num >> 4) % 8;
 	uint8_t index = ((sensor_num & BIT_MASK(4)) / 4);
 
@@ -1618,11 +1586,6 @@ bool e1s_access(uint8_t sensor_num)
 
 bool nic_access(uint8_t sensor_num)
 {
-	uint8_t nic_prsnt_pin[8] = {
-		PRSNT_NIC0_R_N, PRSNT_NIC1_R_N, PRSNT_NIC2_R_N, PRSNT_NIC3_R_N,
-		PRSNT_NIC4_R_N, PRSNT_NIC5_R_N, PRSNT_NIC6_R_N, PRSNT_NIC7_R_N,
-	};
-
 	uint8_t pin_index = ((sensor_num >> 4) * 3) + ((sensor_num & BIT_MASK(4)) / 5);
 
 	return !gpio_get(nic_prsnt_pin[pin_index]) ? true : false;

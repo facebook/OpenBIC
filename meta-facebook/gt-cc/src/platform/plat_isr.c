@@ -31,6 +31,7 @@
 #include "pldm.h"
 #include "plat_mctp.h"
 #include "plat_hook.h"
+#include "plat_pldm_monitor.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -46,10 +47,6 @@ K_WORK_DELAYABLE_DEFINE(dc_on_send_cmd_to_dev_work, dc_on_send_cmd_to_dev);
 void dc_on_init_pex()
 {
 	static uint8_t retry[PEX_MAX_NUMBER] = { 0 };
-	uint8_t pex_sensor_num_table[PEX_MAX_NUMBER] = { SENSOR_NUM_BB_TEMP_PEX_0,
-							 SENSOR_NUM_BB_TEMP_PEX_1,
-							 SENSOR_NUM_BB_TEMP_PEX_2,
-							 SENSOR_NUM_BB_TEMP_PEX_3 };
 
 	for (int i = 0; i < PEX_MAX_NUMBER; i++) {
 		uint8_t sensor_num = pex_sensor_num_table[i];
@@ -104,5 +101,120 @@ void ISR_DC_ON()
 	if (is_mb_dc_on()) {
 		k_work_schedule(&dc_on_send_cmd_to_dev_work, K_SECONDS(DC_ON_5_SECOND));
 		k_work_schedule(&dc_on_init_pex_work, K_SECONDS(DC_ON_5_SECOND));
+	}
+}
+
+void ISR_NIC_ADC_ALERT()
+{
+	struct pldm_sensor_event_state_sensor_state event;
+
+	bool is_alert = !gpio_get(NIC_ADC_ALERT_N);
+
+	event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_STATUS;
+	event.event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT :
+				       PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL;
+	event.previous_event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL :
+						PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT;
+
+	LOG_WRN("NIC ADC is %s", is_alert ? "alert" : "non-alert");
+
+	if (pldm_send_platform_event(PLDM_SENSOR_EVENT, PLDM_EVENT_SENSOR_NIC_0_7,
+				     PLDM_STATE_SENSOR_STATE, (uint8_t *)&event,
+				     sizeof(struct pldm_sensor_event_state_sensor_state))) {
+		LOG_ERR("Send NIC ADC alert event log failed");
+	}
+}
+
+void ISR_SSD_0_7_ADC_ALERT()
+{
+	ssd_alert_check(0);
+}
+
+void ISR_SSD_8_15_ADC_ALERT()
+{
+	ssd_alert_check(1);
+}
+
+void ISR_PEX_ADC_ALERT()
+{
+	struct pldm_sensor_event_state_sensor_state event;
+
+	bool is_alert = !gpio_get(PEX_ADC_ALERT_N);
+
+	event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_STATUS;
+	event.event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT :
+				       PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL;
+	event.previous_event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL :
+						PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT;
+
+	LOG_WRN("PEX ADC is %s", is_alert ? "alert" : "non-alert");
+
+	if (pldm_send_platform_event(PLDM_SENSOR_EVENT, PLDM_EVENT_SENSOR_PEX,
+				     PLDM_STATE_SENSOR_STATE, (uint8_t *)&event,
+				     sizeof(struct pldm_sensor_event_state_sensor_state))) {
+		LOG_ERR("Send PEX ADC alert event log failed");
+	}
+}
+
+void ISR_SMB_FPGA_ALERT()
+{
+	struct pldm_sensor_event_state_sensor_state event;
+
+	bool is_alert = !gpio_get(SMB_FPGA_ALERT_R_N);
+
+	event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_STATUS;
+	event.event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT :
+				       PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL;
+	event.previous_event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL :
+						PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT;
+
+	LOG_WRN("FPGA SMB is %s", is_alert ? "alert" : "non-alert");
+
+	if (pldm_send_platform_event(PLDM_SENSOR_EVENT, PLDM_EVENT_SENSOR_CPLD,
+				     PLDM_STATE_SENSOR_STATE, (uint8_t *)&event,
+				     sizeof(struct pldm_sensor_event_state_sensor_state))) {
+		LOG_ERR("Send FPGA SMB alert event log failed");
+	}
+}
+
+void ISR_VR_PMBUS_ALERT()
+{
+	struct pldm_sensor_event_state_sensor_state event;
+
+	bool is_alert = !gpio_get(SMB_ALERT_PMBUS_R_N);
+
+	event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_STATUS;
+	event.event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT :
+				       PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL;
+	event.previous_event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL :
+						PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT;
+
+	LOG_WRN("VR PMBUS is %s", is_alert ? "alert" : "non-alert");
+
+	if (pldm_send_platform_event(PLDM_SENSOR_EVENT, PLDM_EVENT_SENSOR_VR,
+				     PLDM_STATE_SENSOR_STATE, (uint8_t *)&event,
+				     sizeof(struct pldm_sensor_event_state_sensor_state))) {
+		LOG_ERR("Send VR PMBUS alert event log failed");
+	}
+}
+
+void ISR_HSC_SMB_ALERT()
+{
+	struct pldm_sensor_event_state_sensor_state event;
+
+	bool is_alert = !gpio_get(SMB_ALERT_HSC_R_N);
+
+	event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_STATUS;
+	event.event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT :
+				       PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL;
+	event.previous_event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL :
+						PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT;
+
+	LOG_WRN("HSC SMB is %s", is_alert ? "alert" : "non-alert");
+
+	if (pldm_send_platform_event(PLDM_SENSOR_EVENT, PLDM_EVENT_SENSOR_HSC,
+				     PLDM_STATE_SENSOR_STATE, (uint8_t *)&event,
+				     sizeof(struct pldm_sensor_event_state_sensor_state))) {
+		LOG_ERR("Send HSC SMB alert event log failed");
 	}
 }

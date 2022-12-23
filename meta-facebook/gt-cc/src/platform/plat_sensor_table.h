@@ -268,11 +268,6 @@
 #define SENSOR_NUM_VR_TYPE 0xF1
 #define SENSOR_NUM_ADC_TYPE 0xF2
 
-typedef enum {
-	VR_RNS_ISL69259,
-	VR_INF_XDPE12284,
-} gt_vr_type_t;
-
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
 
