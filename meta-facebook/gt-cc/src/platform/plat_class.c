@@ -31,6 +31,10 @@ LOG_MODULE_REGISTER(plat_class);
 #define NUMBER_OF_ADC_CHANNEL 16
 #define AST1030_ADC_BASE_ADDR 0x7e6e9000
 
+static uint8_t vr_type = VR_UNKNOWN;
+static uint8_t power_monitor_ic_type = POWER_IC_UNKNOWN;
+static uint8_t hsc_type = HSC_UNKNOWN;
+
 /* ADC information for each channel
  * offset: register offset
  * shift: data of channel
@@ -95,4 +99,114 @@ bool get_adc_voltage(int channel, float *voltage)
 GT_STAGE_REVISION_ID get_stage_by_rev_id()
 {
 	return (gpio_get(REV_ID0) | (gpio_get(REV_ID1) << 1) | (gpio_get(REV_ID2) << 2));
+}
+
+uint8_t get_hsc_type()
+{
+	return hsc_type;
+}
+
+uint8_t get_vr_type()
+{
+	return vr_type;
+}
+
+uint8_t get_power_moniter_ic_type()
+{
+	return power_monitor_ic_type;
+}
+
+/**
+ * Follow the schematic diagram, the HSC device can be distinguished by ADC11 (HSC_TYPE_ADC_R).
+ * 0.0V(+/- 15%), the hotswap model is MP5990.
+ * 1.0V(+/- 15%), the hotswap model is LTC4282.
+ * 1.5V(+/- 15%), the hotswap model is LTC4286.
+ */
+void init_platform_hsc_config()
+{
+	float voltage_hsc_type_adc = 0;
+
+	if (!get_adc_voltage(HSC_TYPE_ADC_CHANNEL, &voltage_hsc_type_adc)) {
+		LOG_ERR("Failed to get hsc type by ADC");
+		return;
+	}
+
+	if (voltage_hsc_type_adc < 0.15) {
+		LOG_INF("The HSC is MP5990, (%.3f V)", voltage_hsc_type_adc);
+		hsc_type = HSC_MP5990;
+	} else if ((voltage_hsc_type_adc > 1.0 - (1.0 * 0.15)) &&
+		   (voltage_hsc_type_adc < 1.0 + (1.0 * 0.15))) {
+		LOG_INF("The HSC is LTC4282, (%.3f V)", voltage_hsc_type_adc);
+		hsc_type = HSC_LTC4282;
+	} else if ((voltage_hsc_type_adc > 1.5 - (1.5 * 0.15)) &&
+		   (voltage_hsc_type_adc < 1.5 + (1.5 * 0.15))) {
+		LOG_INF("The HSC is LTC4286, (%.3f V)", voltage_hsc_type_adc);
+		hsc_type = HSC_LTC4286;
+	} else {
+		LOG_ERR("Unknown hotswap model type, (%.3f V)", voltage_hsc_type_adc);
+	}
+}
+
+/**
+ * Follow the schematic diagram, the VR chip can be distinguished by ADC12 (VR_TYPE_ADC_R).
+ * 0.0V(+/- 15%), the VR chip is ISL69259.
+ * 0.5V(+/- 15%), the VR chip is XDPE12284.
+ */
+void init_platform_vr_config()
+{
+	float voltage_vr_type_adc = 0;
+
+	if (!get_adc_voltage(VR_TYPE_ADC_CHANNEL, &voltage_vr_type_adc)) {
+		LOG_ERR("Failed to get VR type by ADC");
+		return;
+	}
+
+	if (voltage_vr_type_adc < 0.15) {
+		LOG_INF("The VR is RENESAS ISL69259, (%.3f V)", voltage_vr_type_adc);
+		vr_type = VR_RNS_ISL69259;
+	} else if ((voltage_vr_type_adc > 0.5 - (0.5 * 0.15)) &&
+		   (voltage_vr_type_adc < 0.5 + (0.5 * 0.15))) {
+		LOG_INF("The VR is INFINEON XDPE12284, (%.3f V)", voltage_vr_type_adc);
+		vr_type = VR_INF_XDPE12284;
+	} else if ((voltage_vr_type_adc > 1 - (1 * 0.15)) &&
+		   (voltage_vr_type_adc < 1 + (1 * 0.15))) {
+		LOG_INF("The VR is MPS MP2971, (%.3f V)", voltage_vr_type_adc);
+		vr_type = VR_MPS_MPS2971;
+	} else {
+		LOG_ERR("Unknown VR type, (%.3f V)", voltage_vr_type_adc);
+	}
+}
+
+/**
+ * Follow the schematic diagram, the power monitor ic can be distinguished by ADC13 (ADC_TYPE_ADC_R).
+ * 0.0V(+/- 15%), the power monitor ic is ISL28022.
+ * 0.5V(+/- 15%), the power monitor ic is INA230.
+ */
+void init_platform_power_ic_config()
+{
+	float voltage_power_ic_type_adc = 0;
+
+	if (!get_adc_voltage(POWER_IC_TYPE_ADC_CHANNEL, &voltage_power_ic_type_adc)) {
+		LOG_ERR("Failed to get power monitor IC type by ADC");
+		return;
+	}
+
+	if (voltage_power_ic_type_adc < 0.15) {
+		LOG_INF("The power monitor IC is RENESAS ISL28022, (%.3f V)",
+			voltage_power_ic_type_adc);
+		power_monitor_ic_type = POWER_IC_ISL28022;
+	} else if ((voltage_power_ic_type_adc > 0.5 - (0.5 * 0.15)) &&
+		   (voltage_power_ic_type_adc < 0.5 + (0.5 * 0.15))) {
+		LOG_INF("The power monitor IC is TI INA230, (%.3f V)", voltage_power_ic_type_adc);
+		power_monitor_ic_type = POWER_IC_INA230;
+	} else {
+		LOG_ERR("Unknown power monitor IC type, (%.3f V)", voltage_power_ic_type_adc);
+	}
+}
+
+void init_platform_config()
+{
+	init_platform_hsc_config();
+	init_platform_vr_config();
+	init_platform_power_ic_config();
 }

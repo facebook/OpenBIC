@@ -25,7 +25,7 @@
 
 LOG_MODULE_DECLARE(pldm, LOG_LEVEL_DBG);
 
-uint8_t check_iana(uint8_t *iana)
+uint8_t check_iana(const uint8_t *iana)
 {
 	if (!iana)
 		return PLDM_ERROR;
@@ -49,8 +49,8 @@ uint8_t set_iana(uint8_t *buf, uint8_t buf_len)
 	return PLDM_SUCCESS;
 }
 
-static uint8_t cmd_echo(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
-			uint16_t *resp_len, void *ext_params)
+static uint8_t cmd_echo(const void *mctp_inst, const uint8_t *buf, uint16_t len, uint8_t *resp,
+			uint16_t *resp_len, const void *ext_params)
 {
 	if (!mctp_inst || !buf || !resp || !resp_len)
 		return PLDM_ERROR;
@@ -70,8 +70,8 @@ static uint8_t cmd_echo(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *re
 	return PLDM_SUCCESS;
 }
 
-static uint8_t ipmi_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
-			uint16_t *resp_len, void *ext_params)
+static uint8_t ipmi_cmd(const void *mctp_inst, const uint8_t *buf, uint16_t len, uint8_t *resp,
+			uint16_t *resp_len, const void *ext_params)
 {
 	if (!mctp_inst || !buf || !resp || !resp_len || !ext_params)
 		return PLDM_ERROR;

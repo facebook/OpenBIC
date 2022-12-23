@@ -57,7 +57,7 @@ struct _ipmi_cmd_resp {
 	uint8_t first_data;
 } __attribute__((packed));
 
-uint8_t check_iana(uint8_t *iana);
+uint8_t check_iana(const uint8_t *iana);
 uint8_t set_iana(uint8_t *buf, uint8_t buf_len);
 
 uint8_t pldm_oem_handler_query(uint8_t code, void **ret_fn);

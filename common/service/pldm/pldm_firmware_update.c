@@ -473,8 +473,8 @@ exit:
 	return;
 }
 
-static uint8_t request_update(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
-			      uint16_t *resp_len, void *ext_params)
+static uint8_t request_update(const void *mctp_inst, const uint8_t *buf, uint16_t len,
+			      uint8_t *resp, uint16_t *resp_len, const void *ext_params)
 {
 	if (!mctp_inst || !buf || !resp || !resp_len || !ext_params) {
 		LOG_ERR("Pass argument is NULL");
@@ -528,8 +528,8 @@ exit:
 	return PLDM_SUCCESS;
 }
 
-static uint8_t pass_component_table(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
-				    uint16_t *resp_len, void *ext_params)
+static uint8_t pass_component_table(const void *mctp_inst, const uint8_t *buf, uint16_t len,
+				    uint8_t *resp, uint16_t *resp_len, const void *ext_params)
 {
 	if (!mctp_inst || !buf || !resp || !resp_len || !ext_params) {
 		LOG_ERR("Pass argument is NULL");
@@ -603,8 +603,8 @@ exit:
 	return PLDM_SUCCESS;
 }
 
-static uint8_t update_component(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
-				uint16_t *resp_len, void *ext_params)
+static uint8_t update_component(const void *mctp_inst, const uint8_t *buf, uint16_t len,
+				uint8_t *resp, uint16_t *resp_len, const void *ext_params)
 {
 	if (!mctp_inst || !buf || !resp || !resp_len || !ext_params) {
 		LOG_ERR("Pass argument is NULL");
@@ -694,7 +694,7 @@ static uint8_t update_component(void *mctp_inst, uint8_t *buf, uint16_t len, uin
 	fw_update_tid =
 		k_thread_create(&pldm_fw_update_thread, pldm_fw_update_stack,
 				K_THREAD_STACK_SIZEOF(pldm_fw_update_stack), req_fw_update_handler,
-				mctp_inst, extra_data, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0,
+				(void *)mctp_inst, extra_data, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0,
 				K_SECONDS(UPDATE_THREAD_DELAY_SECOND));
 	k_thread_name_set(&pldm_fw_update_thread, "pldm_fw_update_thread");
 
@@ -704,8 +704,8 @@ exit:
 	return PLDM_SUCCESS;
 }
 
-static uint8_t activate_firmware(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
-				 uint16_t *resp_len, void *ext_params)
+static uint8_t activate_firmware(const void *mctp_inst, const uint8_t *buf, uint16_t len,
+				 uint8_t *resp, uint16_t *resp_len, const void *ext_params)
 {
 	if (!mctp_inst || !buf || !resp || !resp_len || !ext_params) {
 		LOG_ERR("Pass argument is NULL");
