@@ -128,6 +128,7 @@ enum SENSOR_DEV {
 #endif
 	sensor_dev_ltc2991 = 0x22,
 	sensor_dev_sq52205 = 0x23,
+	sensor_dev_emc1412 = 0x24,
 	sensor_dev_max
 };
 
