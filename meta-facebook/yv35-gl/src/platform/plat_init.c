@@ -18,6 +18,7 @@
 #include "power_status.h"
 #include "util_sys.h"
 #include "plat_gpio.h"
+#include "plat_kcs.h"
 
 /*
  * The operating voltage of GPIO input pins are lower than actual voltage because the chip 
@@ -46,6 +47,11 @@ SCU_CFG scu_cfg[] = {
 void pal_pre_init()
 {
 	scu_init(scu_cfg, ARRAY_SIZE(scu_cfg));
+}
+
+void pal_post_init()
+{
+	kcs_init();
 }
 
 void pal_set_sys_status()

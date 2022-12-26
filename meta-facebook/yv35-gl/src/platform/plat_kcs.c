@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_DEF_H
-#define PLAT_DEF_H
+#include "plat_kcs.h"
+#include "kcs.h"
 
-#include "plat_i2c.h"
-
-#define BMC_USB_PORT "CDC_ACM_0"
-
-#define ENABLE_APML
-
-#endif
+void kcs_init(void)
+{
+	char *kcs_config[] = { "KCS3", "KCS4" };
+	kcs_device_init(kcs_config, ARRAY_SIZE(kcs_config));
+}

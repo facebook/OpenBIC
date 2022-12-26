@@ -20,6 +20,7 @@
 #include "util_sys.h"
 #include "plat_class.h"
 #include "plat_gpio.h"
+#include "plat_kcs.h"
 #include "plat_pmic.h"
 #include "util_worker.h"
 
@@ -37,6 +38,11 @@ void pal_pre_init()
 	disable_PRDY_interrupt();
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
 	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY + 1); // work queue for low priority jobs
+}
+
+void pal_post_init()
+{
+	kcs_init();
 }
 
 void pal_device_init()
