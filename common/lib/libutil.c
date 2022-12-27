@@ -80,3 +80,13 @@ void reverse_array(uint8_t arr[], uint8_t size)
 		arr[size - 1 - i] = temp;
 	}
 }
+
+int ascii_to_val(uint8_t ascii_byte)
+{
+	if (ascii_byte >= 0x30 && ascii_byte < 0x3A)
+		return ascii_byte - 0x30;
+	else if (ascii_byte >= 0x41 && ascii_byte < 0x47)
+		return ascii_byte - 0x41 + 10;
+	else
+		return -1;
+}

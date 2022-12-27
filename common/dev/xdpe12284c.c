@@ -16,69 +16,107 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <logging/log.h>
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "pmbus.h"
 #include "util_pmbus.h"
+#include "libutil.h"
+#include "xdpe12284c.h"
+#include "pldm_firmware_update.h"
 
-enum {
-	VR12 = 1,
-	VR13,
-	IMVP9,
+LOG_MODULE_REGISTER(xdpe12284c);
+
+// XDPE12284C
+#define VR_XDPE_PAGE_20 0x20
+#define VR_XDPE_PAGE_32 0x32
+#define VR_XDPE_PAGE_50 0x50
+#define VR_XDPE_PAGE_60 0x60
+#define VR_XDPE_PAGE_62 0x62
+
+#define VR_XDPE_REG_REMAIN_WR 0x82 // page 0x50
+#define VR_XDPE_REG_CRC_L 0x42 // page 0x62
+#define VR_XDPE_REG_CRC_H 0x43 // page 0x62
+#define VR_XDPE_REG_NEXT_MEM 0x65 // page 0x62
+
+#define VR_XDPE_TOTAL_RW_SIZE 1080
+
+#define VR_XDPE_REG_LOCK 0x1A
+
+#define VR_WARN_REMAIN_WR 3
+
+#define MAX_CMD_LINE 1080
+
+enum { VR12 = 1,
+       VR13,
+       IMVP9,
 };
 
-enum {
-	VID_IDENTIFIER = 1,
+enum { VID_IDENTIFIER = 1,
 };
+
+struct xdpe_config {
+	uint8_t addr;
+	uint16_t memptr;
+	uint32_t crc_exp;
+	uint8_t *data;
+};
+
+static bool set_page(uint8_t bus, uint8_t addr, uint8_t page)
+{
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 3;
+
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+
+	i2c_msg.tx_len = 2;
+	i2c_msg.data[0] = PMBUS_PAGE;
+	i2c_msg.data[1] = page;
+
+	if (i2c_master_write(&i2c_msg, retry)) {
+		LOG_ERR("Failed to set page to 0x%02X", page);
+		return false;
+	}
+
+	return true;
+}
 
 bool xdpe12284c_get_checksum(uint8_t bus, uint8_t target_addr, uint8_t *checksum)
 {
-	if (checksum == NULL) {
-		printf("<error> XDPE12284C checksum is NULL\n");
+	CHECK_NULL_ARG_WITH_RETURN(checksum, false);
+
+	if (set_page(bus, target_addr, VR_XDPE_PAGE_62) == false)
 		return false;
-	}
 
 	I2C_MSG i2c_msg;
 	uint8_t retry = 3;
 
 	i2c_msg.bus = bus;
 	i2c_msg.target_addr = target_addr;
-	i2c_msg.tx_len = 2;
-	i2c_msg.data[0] = 0x00;
-	i2c_msg.data[1] = 0x62; //set page to 0x62
-
-	if (i2c_master_write(&i2c_msg, retry)) {
-		printf("<error> XDPE12284C get checksum while set page\n");
-		return false;
-	}
 
 	//Read lower word for the 32bit checksum value
 	i2c_msg.tx_len = 1;
 	i2c_msg.rx_len = 2;
-	i2c_msg.data[0] = 0x43;
+	i2c_msg.data[0] = VR_XDPE_REG_CRC_H;
 	if (i2c_master_read(&i2c_msg, retry)) {
-		printf("<error> XDPE12284C get checksum while i2c reading\n");
+		LOG_ERR("Failed to read register 0x%02X", VR_XDPE_REG_CRC_H);
 		return false;
 	}
 
 	checksum[0] = i2c_msg.data[1];
 	checksum[1] = i2c_msg.data[0];
 
-	i2c_msg.tx_len = 2;
-	i2c_msg.data[0] = 0x00;
-	i2c_msg.data[1] = 0x62; //set page to 0x62
-
-	if (i2c_master_write(&i2c_msg, retry)) {
-		printf("<error> XDPE12284C get checksum while set page\n");
+	if (set_page(bus, target_addr, VR_XDPE_PAGE_62) == false)
 		return false;
-	}
 
 	//Read higher word for the 32bit checksum value
 	i2c_msg.tx_len = 1;
 	i2c_msg.rx_len = 2;
-	i2c_msg.data[0] = 0x42;
+	i2c_msg.data[0] = VR_XDPE_REG_CRC_L;
 	if (i2c_master_read(&i2c_msg, retry)) {
-		printf("<error> XDPE12284C get checksum while i2c reading\n");
+		LOG_ERR("Failed to read register 0x%02X", VR_XDPE_REG_CRC_L);
 		return false;
 	}
 
@@ -90,24 +128,21 @@ bool xdpe12284c_get_checksum(uint8_t bus, uint8_t target_addr, uint8_t *checksum
 
 bool xdpe12284c_get_remaining_write(uint8_t bus, uint8_t target_addr, uint8_t *remain_write)
 {
+	CHECK_NULL_ARG_WITH_RETURN(remain_write, false);
+
+	if (set_page(bus, target_addr, VR_XDPE_PAGE_50) == false)
+		return false;
+
 	I2C_MSG i2c_msg;
 	uint8_t retry = 3;
 
 	i2c_msg.bus = bus;
 	i2c_msg.target_addr = target_addr;
-	i2c_msg.tx_len = 2;
-	i2c_msg.data[0] = 0x00;
-	i2c_msg.data[1] = 0x50; //set page to 0x50
-
-	if (i2c_master_write(&i2c_msg, retry)) {
-		printf("<error> XDPE12284C get remaining write while i2c writing\n");
-		return false;
-	}
 
 	//Read the remaining writes from register address 0x82
 	i2c_msg.tx_len = 1;
 	i2c_msg.rx_len = 2;
-	i2c_msg.data[0] = 0x82;
+	i2c_msg.data[0] = VR_XDPE_REG_REMAIN_WR;
 	if (i2c_master_read(&i2c_msg, retry)) {
 		printf("<error> XDPE12284C get remaining write while i2c reading\n");
 		return false;
@@ -156,6 +191,398 @@ static float vid_to_float(int val, uint8_t vout_mode)
 	}
 
 	return 0;
+}
+
+static bool loading_image(struct xdpe_config *dev_cfg, void *mctp_p, void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(dev_cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(mctp_p, false);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, false);
+
+	bool ret = false;
+	uint8_t *hex_buff = malloc(fw_update_cfg.image_size);
+	if (!hex_buff) {
+		LOG_ERR("malloc hex_buff failed!");
+		return 0;
+	}
+
+	/* Collect image */
+	if (pal_request_complete_fw_data(hex_buff, fw_update_cfg.image_size, mctp_p, ext_params)) {
+		goto exit;
+	}
+
+	/* Parsing image */
+	int max_data_size = MAX_CMD_LINE;
+	dev_cfg->data = (uint8_t *)malloc(max_data_size);
+	if (!dev_cfg->data) {
+		LOG_ERR("Failed to malloc data!");
+		goto exit;
+	}
+
+	dev_cfg->crc_exp = 0;
+
+	bool rec_flag = false;
+	bool new_line = true;
+	bool got_end_flag = false;
+	uint16_t ofst = 0;
+	uint16_t value = 0;
+	int data_idx = 0, val;
+	for (int i = 0; i < fw_update_cfg.image_size; i++) {
+		/* collect data */
+		if (rec_flag == true) {
+			// grep offset and exit keyword
+			if (new_line == true) {
+				val = ascii_to_val(hex_buff[i]);
+				if (val == -1) {
+					LOG_ERR("Image got format error in line %d", __LINE__);
+					goto exit;
+				}
+				if (val != 2) {
+					if (i + 3 < fw_update_cfg.image_size) {
+						if (!strncmp(&hex_buff[i], "[End", 4)) {
+							got_end_flag = true;
+							break;
+						}
+					}
+					/* Assume there's no other key to access */
+					got_end_flag = true;
+					break;
+				} else {
+					if (i + 3 < fw_update_cfg.image_size) {
+						ofst = 0;
+						for (int j = i; j < (i + 4); j++) {
+							val = ascii_to_val(hex_buff[j]);
+							if (val == -1) {
+								LOG_ERR("Image got format error in line %d",
+									__LINE__);
+								goto exit;
+							}
+							ofst = (ofst << 4) | val;
+						}
+						i += 3; //pass next 4 bytes offset
+					}
+				}
+				new_line = false;
+			} else {
+				if (hex_buff[i] == ' ') {
+					if (i + 4 >= fw_update_cfg.image_size) {
+						LOG_ERR("Image got format error in line %d",
+							__LINE__);
+						goto exit;
+					}
+
+					// skip collect empty data '----'
+					if (hex_buff[i + 1] == '-') {
+						ofst++;
+						i += 4; //pass '----'
+						continue;
+					}
+
+					value = 0;
+					for (int j = i + 1; j < (i + 5); j++) {
+						val = ascii_to_val(hex_buff[j]);
+						if (val == -1) {
+							LOG_ERR("Image got format error in line %d",
+								__LINE__);
+							goto exit;
+						}
+						value = (value << 4) | val;
+					}
+
+					if (data_idx + 3 >= MAX_CMD_LINE) {
+						LOG_ERR("Data collect over limit size %d",
+							max_data_size);
+						goto exit;
+					}
+					LOG_DBG("collect new data ofst: 0x%x val: 0x%x", ofst,
+						value);
+					memcpy(&dev_cfg->data[data_idx], &ofst, 2);
+					memcpy(&dev_cfg->data[data_idx + 2], &value, 2);
+					data_idx += 4;
+					ofst++;
+					i += 4; //pass 4 bytes data
+				} else if (hex_buff[i] == 0x0d) {
+					// '\n'
+					i++;
+					new_line = true;
+				} else {
+					LOG_ERR("Image got format error in line %d", __LINE__);
+					goto exit;
+				}
+			}
+		}
+
+		/* parsing address and crc */
+		if (i + 9 < fw_update_cfg.image_size) {
+			if (!strncmp(&hex_buff[i], "XDPE12284C", 10)) {
+				i += 10; //pass 'XDPE12284C'
+				if (i + 6 < fw_update_cfg.image_size) {
+					if (!strncmp(&hex_buff[i], " - ", 3)) {
+						dev_cfg->addr = ascii_to_val(hex_buff[i + 5]) * 16 +
+								ascii_to_val(hex_buff[i + 6]);
+						LOG_INF("addr get = %x", dev_cfg->addr);
+						i += 7; //pass ' - 0x??'
+						if (i + 2 < fw_update_cfg.image_size) {
+							if (hex_buff[i] == ' ' &&
+							    hex_buff[i + 1] == '-' &&
+							    hex_buff[i + 2] == ' ') {
+								i += 3; //pass ' - '
+								if (i + 2 >=
+								    fw_update_cfg.image_size) {
+									LOG_ERR("Image got format error in line %d",
+										__LINE__);
+									goto exit;
+								}
+								i += 2; //pass '0x'
+								while (hex_buff[i] != 0x0d) {
+									val = ascii_to_val(
+										hex_buff[i]);
+									if (val == -1) {
+										LOG_ERR("Image got format error in line %d",
+											__LINE__);
+										goto exit;
+									}
+									dev_cfg->crc_exp =
+										(dev_cfg->crc_exp
+										 << 4) |
+										val;
+									i++; //pass the crc area
+									if (i ==
+									    fw_update_cfg
+										    .image_size) {
+										LOG_ERR("Image got format error in line %d",
+											__LINE__);
+										goto exit;
+									}
+								}
+								i++; //pass '0x0a'
+								continue;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		/* parsing main data */
+		if (i + 13 < fw_update_cfg.image_size) {
+			if (!strncmp(&hex_buff[i], "[Config Data]", 13)) {
+				while (hex_buff[i] != 0x0a) {
+					i++; //pass the rest of byte in current line
+					if (i == fw_update_cfg.image_size) {
+						LOG_ERR("Image got format error8");
+						goto exit;
+					}
+				}
+				rec_flag = true;
+				continue;
+			}
+		}
+	}
+
+	ret = got_end_flag;
+
+exit:
+	SAFE_FREE(hex_buff);
+	if (ret == false)
+		SAFE_FREE(dev_cfg->data);
+
+	return ret;
+}
+
+bool xdpe12284c_pldm_fwupdate(uint8_t sensor_num, void *mctp_p, void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_p, false);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, false);
+
+	bool ret = false;
+	/* Get bus and target address by sensor number in sensor configuration */
+	uint8_t dev_i2c_bus = sensor_config[sensor_config_index_map[sensor_num]].port;
+	uint8_t dev_i2c_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+
+	struct xdpe_config dev_cfg = { 0 };
+
+	/* Load image */
+	if (loading_image(&dev_cfg, mctp_p, ext_params) == false) {
+		LOG_ERR("Failed to load image!");
+		goto exit;
+	}
+
+	/* Update image */
+	bool rc = false;
+	uint8_t crc[4];
+	uint8_t remain = 0;
+	uint8_t page = 0;
+	float dsize = 0, next_prog = 0;
+
+	if (xdpe12284c_get_checksum(dev_i2c_bus, dev_i2c_addr, crc) == false) {
+		goto exit;
+	}
+
+	if (xdpe12284c_get_remaining_write(dev_i2c_bus, dev_i2c_addr, &remain) == false) {
+		goto exit;
+	}
+
+	if (!remain) {
+		LOG_ERR("No remaining writes");
+		goto exit;
+	} else if (remain <= VR_WARN_REMAIN_WR) {
+		LOG_WRN("The remaining writes %d is below the threshold value %d!\n", remain,
+			VR_WARN_REMAIN_WR);
+		goto exit;
+	}
+
+	LOG_INF("XDPE12284c device(bus: %d addr: 0x%x) info:", dev_i2c_bus, dev_i2c_addr);
+	LOG_INF("* crc:              0x%02x%02x%02x%02x", crc[0], crc[1], crc[2], crc[3]);
+	LOG_INF("* image crc:        0x%x", dev_cfg.crc_exp);
+	LOG_INF("* remaining writes: %d", remain);
+
+	I2C_MSG i2c_msg;
+	uint8_t retry = 3;
+	i2c_msg.bus = dev_i2c_bus;
+	i2c_msg.target_addr = dev_i2c_addr;
+
+	do {
+		// read next memory location
+		if (set_page(dev_i2c_bus, dev_i2c_addr, VR_XDPE_PAGE_62) == false) {
+			break;
+		}
+
+		i2c_msg.tx_len = 1;
+		i2c_msg.rx_len = 2;
+		i2c_msg.data[0] = VR_XDPE_REG_NEXT_MEM;
+		if (i2c_master_read(&i2c_msg, retry)) {
+			LOG_ERR("Failed to read register 0x%02X", VR_XDPE_REG_NEXT_MEM);
+			break;
+		}
+
+		dev_cfg.memptr = ((i2c_msg.data[1] << 8) | i2c_msg.data[0]) & 0x3FF;
+		LOG_INF("Memory pointer: 0x%X", dev_cfg.memptr);
+
+		// write configuration data
+		uint8_t *data = dev_cfg.data;
+		dsize = (float)VR_XDPE_TOTAL_RW_SIZE / 100;
+		next_prog = dsize;
+		for (int i = 0; i < VR_XDPE_TOTAL_RW_SIZE; i += 4) {
+			if (page != data[i + 1]) {
+				page = data[i + 1];
+				if ((rc = set_page(dev_i2c_bus, dev_i2c_addr, page)) == false) {
+					break;
+				}
+			}
+
+			i2c_msg.tx_len = 3;
+			i2c_msg.data[0] = data[i]; //offset
+			i2c_msg.data[1] = data[i + 2];
+			i2c_msg.data[2] = data[i + 3];
+			if (i2c_master_write(&i2c_msg, retry)) {
+				LOG_ERR("wr failed: page=%02X offset=%02X data=%02X%02X", page,
+					data[i], data[i + 3], data[i + 2]);
+				break;
+			}
+
+			// read back to compare
+			i2c_msg.tx_len = 1;
+			i2c_msg.rx_len = 2;
+			i2c_msg.data[0] = data[i]; //offset
+			if (i2c_master_read(&i2c_msg, retry)) {
+				LOG_ERR("rd failed: page=%02X offset=%02X", page, data[i]);
+				break;
+			}
+
+			if (memcmp(&data[i + 2], i2c_msg.data, 2)) {
+				LOG_ERR("data %02X%02X mismatch, expect %02X%02X", data[i + 3],
+					data[i + 2], i2c_msg.data[1], i2c_msg.data[0]);
+				rc = false;
+				break;
+			}
+
+			if ((i + 4) >= (int)next_prog) {
+				LOG_INF("updated: %d%%", (int)((next_prog + dsize / 2) / dsize));
+				next_prog += dsize;
+			}
+		}
+
+		if (rc == false)
+			break;
+
+		// save configuration to EMTP
+		if (set_page(dev_i2c_bus, dev_i2c_addr, VR_XDPE_PAGE_32) == false) {
+			break;
+		}
+
+		i2c_msg.tx_len = 3;
+		i2c_msg.data[0] = VR_XDPE_REG_LOCK;
+		i2c_msg.data[1] = 0xA1;
+		i2c_msg.data[2] = 0x08;
+		if (i2c_master_write(&i2c_msg, retry)) {
+			LOG_ERR("Failed to unlock register 0x%02X", VR_XDPE_REG_LOCK);
+			break;
+		}
+
+		i2c_msg.tx_len = 1;
+		i2c_msg.data[0] = 0x1D; //clear fault
+		if (i2c_master_write(&i2c_msg, retry)) {
+			LOG_ERR("Failed to write register 0x%02X", 0x1D);
+			break;
+		}
+
+		i2c_msg.tx_len = 1;
+		i2c_msg.data[0] = 0x26; //upload from the registers to EMTP
+		if (i2c_master_write(&i2c_msg, retry)) {
+			LOG_ERR("Failed to write register 0x%02X", 0x26);
+			break;
+		}
+
+		k_msleep(500);
+
+		if (set_page(dev_i2c_bus, dev_i2c_addr, VR_XDPE_PAGE_60) == false) {
+			break;
+		}
+
+		i2c_msg.tx_len = 1;
+		i2c_msg.rx_len = 2;
+		i2c_msg.data[0] = 0x01;
+		if (i2c_master_read(&i2c_msg, retry)) {
+			LOG_ERR("Failed to read register 0x%02X", 0x01);
+			break;
+		}
+		if ((i2c_msg.data[0] & 0x01)) {
+			LOG_ERR("Unexpected status, reg[%02X]=%02X", 0x01, i2c_msg.data[0]);
+			break;
+		}
+
+		i2c_msg.tx_len = 1;
+		i2c_msg.rx_len = 2;
+		i2c_msg.data[0] = 0x02;
+		if (i2c_master_read(&i2c_msg, retry)) {
+			LOG_ERR("Failed to read register 0x%02X", 0x02);
+			break;
+		}
+		if ((i2c_msg.data[0] & 0x0A)) {
+			LOG_ERR("Unexpected status, reg[%02X]=%02X", 0x02, i2c_msg.data[0]);
+			break;
+		}
+
+		if (set_page(dev_i2c_bus, dev_i2c_addr, VR_XDPE_PAGE_32) == false) {
+			break;
+		}
+
+		i2c_msg.tx_len = 3;
+		i2c_msg.data[0] = VR_XDPE_REG_LOCK;
+		i2c_msg.data[1] = 0x00;
+		i2c_msg.data[2] = 0x00;
+		if (i2c_master_write(&i2c_msg, retry)) {
+			LOG_ERR("Failed to lock register 0x%02X", VR_XDPE_REG_LOCK);
+			break;
+		}
+
+		ret = true;
+	} while (0);
+
+exit:
+	SAFE_FREE(dev_cfg.data);
+	return ret;
 }
 
 uint8_t xdpe12284c_read(uint8_t sensor_num, int *reading)

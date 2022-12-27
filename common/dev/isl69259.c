@@ -16,17 +16,517 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <logging/log.h>
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "pmbus.h"
 #include "isl69259.h"
+#include "pldm_firmware_update.h"
+#include "libutil.h"
+
+LOG_MODULE_REGISTER(isl69259);
+
+#define VR_IMG_HDR_SYMBOL 0x49
+#define VR_IMG_BODY_SYMBOL 0x00
+#define VR_WARN_REMAIN_WR 3
+
+#define VR_RAA_REG_REMAIN_WR 0x35
+#define VR_RAA_REG_DMA_ADDR 0xC7
+#define VR_RAA_REG_DMA_DATA 0xC5
+
+#define VR_RAA_REG_HEX_MODE_CFG0 0x87
+#define VR_RAA_REG_HEX_MODE_CFG1 0xBD
+
+#define VR_RAA_REG_CRC 0x94
+#define VR_RAA_REG_PROG_STATUS 0x7E
+
+//RAA GEN3
+#define VR_RAA_GEN3_SW_REV_MIN 0x06
+#define VR_RAA_GEN3_HW_REV_MIN 0x00
+
+//RAA GEN2
+#define VR_RAA_REG_GEN2_CRC 0x3F
+#define VR_RAA_GEN2_SW_REV_MIN 0x02
+#define VR_RAA_GEN2_HW_REV_MIN 0x03
+#define VR_RAA_REG_GEN2_REMAIN_WR 0xC2
+#define VR_RAA_REG_GEN2_PROG_STATUS 0x07
+
+enum { RAA_GEN2,
+       RAA_GEN3_LEGACY,
+       RAA_GEN3_PRODUCTION,
+};
+
+typedef struct raa_config {
+	uint8_t mode;
+	uint8_t remain;
+	uint32_t devid;
+	uint32_t rev;
+	uint32_t crc;
+} raa_config_t;
+
+struct raa_data {
+	uint8_t hdr;
+	uint8_t len; // [addr] ~ pec
+	union {
+		uint8_t raw[32];
+		struct {
+			uint8_t addr;
+			uint8_t cmd;
+			uint8_t data[];
+		} __attribute__((packed));
+	};
+	uint8_t pec;
+};
+
+static bool raa_dma_rd(uint8_t bus, uint8_t addr, uint16_t reg, uint32_t *resp)
+{
+	CHECK_NULL_ARG_WITH_RETURN(resp, false);
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 3;
+
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+
+	i2c_msg.tx_len = 3;
+	i2c_msg.data[0] = VR_RAA_REG_DMA_ADDR;
+	i2c_msg.data[1] = reg & 0xFF;
+	i2c_msg.data[2] = (reg >> 8) & 0xFF;
+	if (i2c_master_write(&i2c_msg, retry)) {
+		LOG_ERR("raa dma write register 0x%x failed", reg);
+		return false;
+	}
+
+	i2c_msg.tx_len = 2;
+	i2c_msg.rx_len = 4;
+	i2c_msg.data[0] = VR_RAA_REG_DMA_DATA;
+	i2c_msg.data[1] = (addr << 8) | 0x01; // address with read bit enabled
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("raa dma read register 0x%x failed", reg);
+		return false;
+	}
+
+	memcpy(resp, i2c_msg.data, 4);
+
+	return true;
+}
+
+static bool get_raa_polling_status(uint8_t bus, uint8_t addr, uint8_t mode)
+{
+	uint16_t reg_buff = 0;
+	uint32_t ret_buff;
+	int retry = 3;
+
+	do {
+		if (mode == RAA_GEN2) {
+			reg_buff = VR_RAA_REG_GEN2_PROG_STATUS | (VR_RAA_REG_GEN2_PROG_STATUS << 8);
+		} else {
+			reg_buff = VR_RAA_REG_PROG_STATUS;
+		}
+		if (raa_dma_rd(bus, addr, reg_buff, &ret_buff) == false) {
+			LOG_ERR("Failed to read polling status");
+			return false;
+		}
+
+		LOG_INF("--> polling status = 0x%x", ret_buff);
+		// bit1 is held to 1, it means the action is successful
+		if ((ret_buff & 0xFF) & 0x01) {
+			break;
+		}
+
+		if ((--retry) <= 0) {
+			LOG_ERR("Failed to program the device");
+			return false;
+		}
+		k_msleep(1000);
+	} while (retry > 0);
+
+	return true;
+}
+
+static bool get_raa_remaining_wr(uint8_t bus, uint8_t addr, uint8_t mode, uint8_t *remain)
+{
+	CHECK_NULL_ARG_WITH_RETURN(remain, false);
+
+	uint16_t reg_buff = 0;
+	uint32_t ret_buff;
+	if (mode == RAA_GEN2)
+		reg_buff |= VR_RAA_REG_GEN2_REMAIN_WR;
+	else
+		reg_buff |= VR_RAA_REG_REMAIN_WR;
+
+	if (raa_dma_rd(bus, addr, reg_buff, &ret_buff) == false) {
+		LOG_ERR("Falied to read NVM counter");
+		return false;
+	}
+
+	*remain = ret_buff & 0xFF;
+
+	return true;
+}
+
+static bool get_raa_crc(uint8_t bus, uint8_t addr, uint8_t mode, uint32_t *crc)
+{
+	CHECK_NULL_ARG_WITH_RETURN(crc, false);
+
+	uint16_t reg_buff = 0;
+	uint32_t ret_buff;
+
+	if (mode == RAA_GEN2)
+		reg_buff |= VR_RAA_REG_GEN2_CRC;
+	else
+		reg_buff |= VR_RAA_REG_CRC;
+
+	if (raa_dma_rd(bus, addr, reg_buff, &ret_buff) == false) {
+		LOG_ERR("Falied to read CRC");
+		return false;
+	}
+
+	memcpy(crc, &ret_buff, sizeof(uint32_t));
+
+	return true;
+}
+
+static bool get_raa_devid(uint8_t bus, uint8_t addr, uint32_t *devid)
+{
+	CHECK_NULL_ARG_WITH_RETURN(devid, false);
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 3;
+
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 4 + 1;
+	i2c_msg.data[0] = PMBUS_IC_DEVICE_ID;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("Failed to read vr id");
+		return false;
+	}
+
+	memcpy(devid, &i2c_msg.data[1], sizeof(uint32_t));
+
+	return true;
+}
+
+static bool get_raa_dev_rev(uint8_t bus, uint8_t addr, uint32_t *rev, uint8_t mode)
+{
+	CHECK_NULL_ARG_WITH_RETURN(rev, false);
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 3;
+
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 4 + 1;
+	i2c_msg.data[0] = PMBUS_IC_DEVICE_REV;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("Failed to read IC_DEVICE_REV");
+		return false;
+	}
+
+	if (mode == RAA_GEN3_LEGACY) {
+		memcpy(rev, &i2c_msg.data[1], 4);
+	} else {
+		for (int i = 0; i < 4; i++) {
+			((uint8_t *)rev)[i] = i2c_msg.data[4 - i];
+		}
+	}
+
+	return true;
+}
+
+static bool get_raa_hex_mode(uint8_t bus, uint8_t addr, uint8_t *mode)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mode, false);
+
+	uint32_t device_id;
+	if (get_raa_devid(bus, addr, &device_id) == false)
+		return false;
+
+	if (((device_id >> 8) & 0xFF) < 0x70)
+		*mode = RAA_GEN2;
+	else {
+		uint16_t reg_buff = VR_RAA_REG_HEX_MODE_CFG1 << 8 | VR_RAA_REG_HEX_MODE_CFG0;
+		uint32_t ret_buff;
+		if (raa_dma_rd(bus, addr, reg_buff, &ret_buff) == false) {
+			LOG_ERR("Failed to read HEX mode");
+			return false;
+		}
+		*mode = ((ret_buff & 0xFF) == 0) ? RAA_GEN3_LEGACY : RAA_GEN3_PRODUCTION;
+	}
+
+	return true;
+}
+
+static bool check_dev_rev(uint32_t rev, uint8_t mode)
+{
+	uint8_t sw_rev = rev & 0xFF;
+	uint8_t hw_rev = (rev >> 24) & 0xFF;
+
+	switch (mode) {
+	case RAA_GEN2:
+		if (sw_rev < VR_RAA_GEN2_SW_REV_MIN || hw_rev < VR_RAA_GEN2_HW_REV_MIN) {
+			LOG_ERR("GEN2 unexpected IC_DEVICE_REV %08X", rev);
+			return false;
+		}
+		break;
+	case RAA_GEN3_LEGACY:
+	case RAA_GEN3_PRODUCTION:
+		// Confirmed with Renesas FAE,
+		// We can ignore the IC_DEVICE_REV check.
+		// But we need to make sure that legacy IC use legacy HEX and production IC use production HEX.
+		// if ( sw_rev < VR_RAA_GEN3_SW_REV_MIN ) {
+		//   syslog(LOG_WARNING, "%s: GEN3 unexpected IC_DEVICE_REV %08X", __func__, rev);
+		//   return flase;
+		// }
+		break;
+	default:
+		LOG_WRN("RAA Mode not support");
+		return false;
+	}
+
+	return true;
+}
+
+static uint32_t loading_image(uint8_t *buff, uint32_t buff_len, void *mctp_p, void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(buff, false);
+	CHECK_NULL_ARG_WITH_RETURN(mctp_p, false);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, false);
+
+	uint32_t img_len = 0;
+	uint8_t *hex_buff = malloc(fw_update_cfg.image_size);
+	if (!hex_buff) {
+		LOG_ERR("malloc hex_buff failed!");
+		return 0;
+	}
+
+	/* Collect image */
+	if (pal_request_complete_fw_data(hex_buff, fw_update_cfg.image_size, mctp_p, ext_params)) {
+		goto exit;
+	}
+
+	/* Parsing image */
+	uint32_t buf_idx = 0;
+	uint32_t data_len = fw_update_cfg.image_size / 2;
+	for (int i = 0; i < fw_update_cfg.image_size; i += 2) {
+		int hi_val = ascii_to_val(hex_buff[i]);
+		int lo_val = ascii_to_val(hex_buff[i + 1]);
+		if (hi_val == -1 || lo_val == -1) {
+			data_len--;
+			continue;
+		}
+		buff[buf_idx] = hi_val * 16 + lo_val;
+		buf_idx++;
+	}
+
+	if (buf_idx != data_len) {
+		LOG_ERR("Data transfer from hex to bin got error!");
+		goto exit;
+	}
+
+	img_len = buf_idx;
+
+exit:
+	SAFE_FREE(hex_buff);
+	return img_len;
+}
+
+static bool check_dev_support(uint8_t bus, uint8_t addr, raa_config_t *raa_info)
+{
+	CHECK_NULL_ARG_WITH_RETURN(raa_info, false);
+
+	// check mode
+	if (get_raa_hex_mode(bus, addr, &raa_info->mode) == false) {
+		return false;
+	}
+
+	// check remaining writes
+	if (get_raa_remaining_wr(bus, addr, raa_info->mode, &raa_info->remain) == false) {
+		return false;
+	}
+
+	if (!raa_info->remain) {
+		LOG_WRN("No remaining writes for component");
+		return false;
+	} else if (raa_info->remain <= VR_WARN_REMAIN_WR) {
+		LOG_WRN("The remaining writes is below the threshold value %d!", VR_WARN_REMAIN_WR);
+	}
+
+	// get device crc
+	if (get_raa_crc(bus, addr, raa_info->mode, &raa_info->crc) == false) {
+		return false;
+	}
+
+	// get device id
+	if (get_raa_devid(bus, addr, &raa_info->devid) == false) {
+		return false;
+	}
+
+	// check device revision
+	if (get_raa_dev_rev(bus, addr, &raa_info->rev, raa_info->mode) == false) {
+		return false;
+	}
+
+	if (check_dev_rev(raa_info->rev, raa_info->mode) == false) {
+		return false;
+	}
+
+	LOG_INF("RAA device(bus: %d addr: 0x%x) info:", bus, addr);
+	LOG_INF("* Mode:             %s", raa_info->mode == RAA_GEN2 ?
+						  "raa gen2" :
+						  raa_info->mode == RAA_GEN3_LEGACY ?
+						  "raa gen3-lagacy" :
+						  "raa gen3-production");
+	LOG_INF("* ID:               0x%x", raa_info->devid);
+	LOG_INF("* Revision:         0x%x", raa_info->rev);
+	LOG_INF("* CRC:              0x%x", raa_info->crc);
+	LOG_INF("* Remaining writes: %d", raa_info->remain);
+
+	return true;
+}
+
+bool isl69259_pldm_fwupdate(uint8_t sensor_num, void *mctp_p, void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_p, false);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, false);
+
+	bool ret = false;
+	/* Get bus and target address by sensor number in sensor configuration */
+	uint8_t dev_i2c_bus = sensor_config[sensor_config_index_map[sensor_num]].port;
+	uint8_t dev_i2c_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+
+	raa_config_t dev_info;
+	if (check_dev_support(dev_i2c_bus, dev_i2c_addr, &dev_info) == false) {
+		return false;
+	}
+
+	uint8_t *img_buff = malloc(fw_update_cfg.image_size / 2);
+	if (!img_buff) {
+		LOG_ERR("img_buff malloc failed!");
+		return false;
+	}
+
+	uint32_t imb_bin_len =
+		loading_image(img_buff, fw_update_cfg.image_size / 2, mctp_p, ext_params);
+	if (!imb_bin_len) {
+		LOG_ERR("Failed to load image!");
+		goto exit;
+	}
+
+	/* Parsing received message */
+	uint8_t img_mode = 0;
+	uint8_t mode_check_flag = 0;
+	struct raa_data cmd_line;
+	uint8_t *cur_data = img_buff;
+	uint32_t remain_buf_len = imb_bin_len;
+
+	while (1) {
+		if (remain_buf_len == 0)
+			break;
+
+		/* check remain length should over base length */
+		if (remain_buf_len < 2) {
+			LOG_ERR("Unexpected data length error!");
+			break;
+		}
+		cmd_line.hdr = *cur_data;
+		cmd_line.len = *(cur_data + 1);
+		/* check remain length should over base length + data length */
+		if (remain_buf_len < (2 + cmd_line.len)) {
+			LOG_ERR("Data length not follow spec!");
+			break;
+		}
+		cmd_line.addr = *(cur_data + 2);
+		cmd_line.cmd = *(cur_data + 3);
+		memcpy(&cmd_line.raw[2], cur_data + 4, cmd_line.len - 3);
+		cmd_line.pec = *(cur_data + 1 + cmd_line.len);
+
+		LOG_DBG("process: hdr[0x%x] len[0x%x] addr[0x%x] cmd[0x%x] pec[0x%x]", cmd_line.hdr,
+			cmd_line.len, cmd_line.addr, cmd_line.cmd, cmd_line.pec);
+
+		/* collect vr header data */
+		if (cmd_line.hdr == VR_IMG_HDR_SYMBOL) {
+			if (cmd_line.cmd == PMBUS_IC_DEVICE_ID) {
+				if (cmd_line.data[3] != (dev_info.devid & 0xFF) &&
+				    cmd_line.data[2] != ((dev_info.devid >> 8) & 0xFF) &&
+				    cmd_line.data[1] != ((dev_info.devid >> 16) & 0xFF) &&
+				    cmd_line.data[0] != ((dev_info.devid >> 24) & 0xFF)) {
+					LOG_ERR("Invalid vr device ID received, component(#%xh) update abort!",
+						sensor_num);
+					goto exit;
+				}
+			} else if (cmd_line.cmd == PMBUS_IC_DEVICE_REV) {
+				if ((cmd_line.data[0] & 0xFF) < VR_RAA_GEN3_SW_REV_MIN)
+					img_mode = RAA_GEN3_LEGACY;
+				else
+					img_mode = RAA_GEN3_PRODUCTION;
+			} else if (cmd_line.cmd == 0x00)
+				img_mode = RAA_GEN2;
+		} else if (cmd_line.hdr == VR_IMG_BODY_SYMBOL) {
+			/* collect vr data array */
+			if (!mode_check_flag) {
+				if (img_mode != dev_info.mode) {
+					LOG_ERR("Invalid vr device MODE(%d) received, component(#%xh) update abort!",
+						img_mode, sensor_num);
+					goto exit;
+				}
+				mode_check_flag = 1;
+			}
+
+			I2C_MSG i2c_msg = { 0 };
+			i2c_msg.bus = dev_i2c_bus;
+			i2c_msg.target_addr = dev_i2c_addr;
+
+			i2c_msg.tx_len = cmd_line.len - 2; // avoid address and pec bytes
+			i2c_msg.data[0] = cmd_line.cmd;
+			memcpy(&i2c_msg.data[1], cmd_line.data, i2c_msg.tx_len - 1);
+
+			uint8_t retry = 3;
+			if (i2c_master_write(&i2c_msg, retry)) {
+				LOG_ERR("Failed to write image, component(#%xh) update abort!",
+					sensor_num);
+				goto exit;
+			}
+		} else {
+			LOG_ERR("Invalid VR image symbol 0x%x received, component(#%xh) update abort!",
+				cmd_line.hdr, sensor_num);
+			goto exit;
+		}
+
+		cur_data += (2 + cmd_line.len);
+		remain_buf_len -= (2 + cmd_line.len);
+
+		uint8_t percent = ((imb_bin_len - remain_buf_len) * 100) / imb_bin_len;
+		if (percent % 10 == 0)
+			LOG_INF("component(#%xh) bytes(%d/%d) updated: %d%%", sensor_num,
+				imb_bin_len - remain_buf_len, imb_bin_len, percent);
+	}
+
+	if (get_raa_polling_status(dev_i2c_bus, dev_i2c_addr, img_mode) == false) {
+		LOG_ERR("VR polling status check failed, component(#%xh) update abort!",
+			sensor_num);
+		goto exit;
+	}
+
+	ret = true;
+
+exit:
+	SAFE_FREE(img_buff);
+	return ret;
+}
 
 bool adjust_of_twos_complement(uint8_t offset, int *val)
 {
-	if (val == NULL) {
-		printf("[%s] input value is NULL\n", __func__);
-		return false;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(val, false);
+
 	int adjust_val = *val;
 	bool is_negative_val = ((adjust_val & TWO_COMPLEMENT_NEGATIVE_BIT) == 0 ? false : true);
 	bool ret = true;
@@ -60,7 +560,9 @@ bool adjust_of_twos_complement(uint8_t offset, int *val)
 
 uint8_t isl69259_read(uint8_t sensor_num, int *reading)
 {
-	if (reading == NULL || (sensor_num > SENSOR_NUM_MAX)) {
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+
+	if (sensor_num > SENSOR_NUM_MAX) {
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
