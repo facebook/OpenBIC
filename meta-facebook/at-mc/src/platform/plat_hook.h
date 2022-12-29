@@ -17,16 +17,27 @@
 #ifndef PLAT_HOOK_H
 #define PLAT_HOOK_H
 
+#include "common_i2c_mux.h"
+
 /**************************************************************************************************
  * INIT ARGS
 **************************************************************************************************/
+extern mp5990_init_arg mp5990_init_args[];
+extern adc_asd_init_arg adc_asd_init_args[];
+extern sq52205_init_arg sq52205_init_args[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
  **************************************************************************************************/
+extern mux_config bus_3_pca9546_configs[];
+extern mux_config bus_4_pca9548_configs[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
  **************************************************************************************************/
+bool pre_nvme_read(uint8_t sensor_num, void *args);
+bool post_nvme_read(uint8_t sensor_num, void *args, int *reading);
+bool pre_sq52205_read(uint8_t sensor_num, void *args);
+bool post_sq52205_read(uint8_t sensor_num, void *args, int *reading);
 
 #endif
