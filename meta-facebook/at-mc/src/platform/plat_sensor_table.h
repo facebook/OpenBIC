@@ -19,8 +19,10 @@
 
 #include <stdint.h>
 #include "sensor.h"
+#include "common_i2c_mux.h"
 
 #define MUTEX_LOCK_INTERVAL_MS 1000
+#define MEB_CXL_BUS I2C_BUS2
 
 /*  define config for sensors  */
 #define TMP75_IN_ADDR (0x90 >> 1)
@@ -94,9 +96,73 @@
 #define SENSOR_NUM_PWR_P12V_AUX_CARD13 0x32
 #define SENSOR_NUM_PWR_P12V_AUX_CARD14 0x33
 
+/** PCIE card sensor config **/
+#define CXL_TMP75_IN_ADDR (0x92 >> 1)
+#define CXL_CTRL_ADDR (0x98 >> 1)
+#define CXL_U6_INA233_ADDR (0x8A >> 1)
+#define CXL_U7_INA233_ADDR (0x80 >> 1)
+#define CXL_VR_A0V8_ADDR (0xC8 >> 1)
+#define CXL_VR_A0V9_ADDR (0xC8 >> 1)
+#define CXL_VR_D0V8_ADDR (0xB0 >> 1)
+#define CXL_VR_VDDQAB_ADDR (0xB0 >> 1)
+#define CXL_VR_VDDQCD_ADDR (0xB4 >> 1)
+#define CXL_U8_LTC2991_ADDR (0x90 >> 1)
+#define CXL_U9_LTC2991_ADDR (0x98 >> 1)
+
+/** PCIE card sensor number **/
+/* E1.S */
+#define SENSOR_NUM_TEMP_JCN_E1S_0 0x01
+#define SENSOR_NUM_TEMP_JCN_E1S_1 0x02
+
+/* CXL */
+#define SENSOR_NUM_TEMP_CXL_TMP75_IN 0x01
+#define SENSOR_NUM_TEMP_CXL_CTRL 0x02
+
+#define SENSOR_NUM_VOL_P12V_STBY_4CP 0x03
+#define SENSOR_NUM_VOL_P3V3_STBY_4CP 0x04
+#define SENSOR_NUM_VOL_P5V_STBY 0x05
+#define SENSOR_NUM_VOL_P1V8_ASIC 0x06
+#define SENSOR_NUM_VOL_P12V_STBY 0x07
+#define SENSOR_NUM_VOL_P3V3_STBY 0x08
+#define SENSOR_NUM_VOL_PVPP_AB 0x09
+#define SENSOR_NUM_VOL_PVTT_AB 0x0A
+#define SENSOR_NUM_VOL_PVPP_CD 0x0B
+#define SENSOR_NUM_VOL_PVTT_CD 0x0C
+#define SENSOR_NUM_VOL_P0V8_ASICA 0x0D
+#define SENSOR_NUM_VOL_P0V9_ASICA 0x0E
+#define SENSOR_NUM_VOL_P0V8_ASICD 0x0F
+#define SENSOR_NUM_VOL_PVDDQ_AB 0x10
+#define SENSOR_NUM_VOL_PVDDQ_CD 0x11
+
+#define SENSOR_NUM_CUR_P12V_STBY_4CP 0x12
+#define SENSOR_NUM_CUR_P3V3_STBY_4CP 0x13
+#define SENSOR_NUM_CUR_P0V8_ASICA 0x14
+#define SENSOR_NUM_CUR_P0V9_ASICA 0x15
+#define SENSOR_NUM_CUR_P0V8_ASICD 0x16
+#define SENSOR_NUM_CUR_PVDDQ_AB 0x17
+#define SENSOR_NUM_CUR_PVDDQ_CD 0x18
+
+#define SENSOR_NUM_PWR_P12V_STBY_4CP 0x19
+#define SENSOR_NUM_PWR_P3V3_STBY_4CP 0x1A
+#define SENSOR_NUM_PWR_P0V8_ASICA 0x1B
+#define SENSOR_NUM_PWR_P0V9_ASICA 0x1C
+#define SENSOR_NUM_PWR_P0V8_ASICD 0x1D
+#define SENSOR_NUM_PWR_PVDDQ_AB 0x1E
+#define SENSOR_NUM_PWR_PVDDQ_CD 0x1F
+
+extern sensor_cfg plat_e1s_1_12_sensor_config[];
+extern sensor_cfg plat_e1s_13_14_sensor_config[];
+extern sensor_cfg plat_cxl_sensor_config[];
+extern const int E1S_SENSOR_CONFIG_SIZE;
+extern const int CXL_SENSOR_CONFIG_SIZE;
+
 void load_sensor_config(void);
 bool is_dc_access(uint8_t sensor_num);
 bool is_e1s_access(uint8_t sensor_num);
 struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus);
+bool get_cxl_sensor_config_index(uint8_t sensor_num, uint8_t *index);
+bool get_pcie_card_mux_config(uint8_t dev_type, uint8_t card_id, uint8_t sensor_num,
+			      mux_config *card_mux_cfg, mux_config *cxl_mux_cfg);
+void pal_init_drive(sensor_cfg *cfg_table, uint8_t cfg_size, uint8_t device_type, uint8_t card_id);
 
 #endif
