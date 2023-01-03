@@ -166,6 +166,7 @@ typedef struct ipmi_msg {
 	uint8_t seq_source; /**< Source sequence Number */
 	uint8_t seq_target; /**< Target sequence Number */
 	uint8_t seq; /**< Sequence Number */
+	uint8_t pldm_inst_id; /**< Sequence Number */
 	uint8_t InF_source; /**< Source bridge interface */
 	uint8_t InF_target; /**< Target bridge interface */
 	uint8_t src_LUN; /**< Source LUN (Logical Unit Number) */
@@ -187,6 +188,7 @@ typedef struct ipmi_msg_cfg {
 } __attribute__((packed, aligned(4))) ipmi_msg_cfg;
 
 bool pal_load_ipmb_config(void);
+bool pal_is_interface_use_ipmb(uint8_t interface_index);
 void ipmb_init(void);
 ipmb_error ipmb_send_request(ipmi_msg *req, uint8_t index);
 ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index);

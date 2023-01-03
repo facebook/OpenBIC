@@ -49,8 +49,8 @@ uint8_t set_iana(uint8_t *buf, uint8_t buf_len)
 	return PLDM_SUCCESS;
 }
 
-static uint8_t cmd_echo(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
-			uint16_t *resp_len, void *ext_params)
+static uint8_t cmd_echo(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id,
+			uint8_t *resp, uint16_t *resp_len, void *ext_params)
 {
 	if (!mctp_inst || !buf || !resp || !resp_len)
 		return PLDM_ERROR;
@@ -70,8 +70,8 @@ static uint8_t cmd_echo(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *re
 	return PLDM_SUCCESS;
 }
 
-static uint8_t ipmi_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
-			uint16_t *resp_len, void *ext_params)
+static uint8_t ipmi_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id,
+			uint8_t *resp, uint16_t *resp_len, void *ext_params)
 {
 	if (!mctp_inst || !buf || !resp || !resp_len || !ext_params)
 		return PLDM_ERROR;
@@ -107,6 +107,7 @@ static uint8_t ipmi_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *re
 	msg.buffer.netfn = req_p->netfn_lun >> 2;
 	msg.buffer.cmd = req_p->cmd;
 	msg.buffer.data_len = len - sizeof(*req_p) + 1;
+	msg.buffer.pldm_inst_id = instance_id;
 	memcpy(msg.buffer.data, &req_p->first_data, msg.buffer.data_len);
 
 	/* For ipmi/ipmb service to know the source is pldm */

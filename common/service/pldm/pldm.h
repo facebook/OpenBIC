@@ -26,12 +26,14 @@ extern "C" {
 #include "pldm_oem.h"
 #include "pldm_monitor.h"
 #include "pldm_firmware_update.h"
+#include "ipmb.h"
 
 #define MONITOR_THREAD_STACK_SIZE 1024
 
 #define PLDM_MAX_DATA_SIZE 256
 
-typedef uint8_t (*pldm_cmd_proc_fn)(void *, uint8_t *, uint16_t, uint8_t *, uint16_t *, void *);
+typedef uint8_t (*pldm_cmd_proc_fn)(void *, uint8_t *, uint16_t, uint8_t, uint8_t *, uint16_t *,
+				    void *);
 
 typedef enum {
 	PLDM_TYPE_BASE = 0x00,
@@ -41,6 +43,11 @@ typedef enum {
 	PLDM_TYPE_FW_UPDATE = 0x05,
 	PLDM_TYPE_OEM = 0x3F
 } PLDM_TYPE;
+
+enum PLDM_MESSAGE_TYPE {
+	PLDM_RESPONSE,
+	PLDM_REQUEST,
+};
 
 typedef struct _pldm_cmd_handler {
 	uint8_t cmd_code;
@@ -129,11 +136,21 @@ struct pldm_get_firmware_parameters_resp {
 	uint8_t pending_comp_image_set_ver_str_len;
 } __attribute__((packed));
 
+struct _pldm_ipmi_cmd_resp {
+	uint8_t completion_code;
+	uint8_t netfn_lun;
+	uint8_t cmd;
+	uint8_t ipmi_comp_code;
+	uint8_t first_data;
+} __attribute__((packed));
+
 /* the pldm command handler */
 uint8_t mctp_pldm_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_params ext_params);
 
 /* send the pldm command message through mctp */
 uint8_t mctp_pldm_send_msg(void *mctp_p, pldm_msg *msg);
+int pldm_send_ipmi_response(uint8_t interface, ipmi_msg *msg);
+int pldm_send_ipmi_request(ipmi_msg *msg);
 
 uint16_t mctp_pldm_read(void *mctp_p, pldm_msg *msg, uint8_t *rbuf, uint16_t rbuf_len);
 

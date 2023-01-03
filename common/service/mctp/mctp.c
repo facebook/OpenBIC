@@ -596,3 +596,18 @@ uint8_t mctp_reg_msg_rx_func(mctp *mctp_inst, mctp_fn_cb rx_cb)
 	mctp_inst->rx_cb = rx_cb;
 	return MCTP_SUCCESS;
 }
+
+__weak mctp *pal_get_mctp(uint8_t mctp_medium_type, uint8_t bus)
+{
+	return NULL;
+}
+
+__weak int pal_get_target(uint8_t interface)
+{
+	return -1;
+}
+
+__weak int pal_get_medium_type(uint8_t interface)
+{
+	return -1;
+}

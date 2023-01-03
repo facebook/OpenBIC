@@ -17,6 +17,7 @@
 #include "ipmi.h"
 #include "sensor.h"
 #include "plat_hook.h"
+#include "plat_ipmb.h"
 
 #include "hal_i3c.h"
 
@@ -246,11 +247,58 @@ bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg)
 
 	if ((resp->header.completion_code != MCTP_SUCCESS) ||
 	    (resp->header.ipmi_comp_code != CC_SUCCESS)) {
-		LOG_ERR("[%s] Check reponse completion code fail", __func__);
+		LOG_ERR("[%s] Check reponse completion code fail %x %x", __func__, resp->header.completion_code, resp->header.ipmi_comp_code);
 		return false;
 	}
 
 	return true;
+}
+
+int pal_get_medium_type(uint8_t interface)
+{
+	int medium_type = -1;
+
+	switch(interface) {
+		case BMC_IPMB:
+		case MCTP:
+		case PLDM:
+		medium_type = MCTP_MEDIUM_TYPE_I3C;
+		break;
+		default:
+		medium_type = -1;
+		break;
+	}
+
+	return medium_type;
+}
+
+
+int pal_get_target(uint8_t interface)
+{
+	int target = -1;
+
+	switch(interface) {
+		case BMC_IPMB:
+		case MCTP:
+		case PLDM:
+		target = I3C_BUS_BMC;
+		break;
+		default:
+		target = -1;
+		break;
+	}
+
+	return target;
+}
+
+mctp *pal_get_mctp(uint8_t mctp_medium_type, uint8_t bus)
+{
+	switch (mctp_medium_type) {
+		case MCTP_MEDIUM_TYPE_I3C:
+		return find_mctp_by_i3c(bus);
+		default:
+		return NULL;
+	}
 }
 
 void plat_mctp_init(void)

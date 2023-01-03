@@ -46,16 +46,15 @@ uint8_t _1ou_m2_name_mapping_table[4] = {
 
 void send_gpio_interrupt(uint8_t gpio_num)
 {
-	ipmb_error status;
-	ipmi_msg msg;
-	uint8_t gpio_val;
+	ipmi_msg msg = { 0 };
+	uint8_t gpio_val = gpio_get(gpio_num);
+	int ret = 0;
 
-	gpio_val = gpio_get(gpio_num);
-	printf("Send gpio interrupt to BMC, gpio number(%d) status(%d)\n", gpio_num, gpio_val);
+	LOG_INF("Send gpio interrupt to BMC, gpio number(%d) status(%d)", gpio_num, gpio_val);
 
 	msg.data_len = 5;
 	msg.InF_source = SELF;
-	msg.InF_target = BMC_IPMB;
+	msg.InF_target = MCTP;
 	msg.netfn = NETFN_OEM_1S_REQ;
 	msg.cmd = CMD_OEM_1S_SEND_INTERRUPT_TO_BMC;
 
@@ -65,10 +64,10 @@ void send_gpio_interrupt(uint8_t gpio_num)
 	msg.data[3] = gpio_num;
 	msg.data[4] = gpio_val;
 
-	status = ipmb_read(&msg, IPMB_inf_index_map[msg.InF_target]);
-	if (status != IPMB_ERROR_SUCCESS) {
-		printf("Failed to send GPIO interrupt event to BMC, gpio number(%d) status(%d)\n",
-		       gpio_num, status);
+	ret = pldm_send_ipmi_request(&msg);
+	if (ret < 0) {
+		LOG_ERR("Failed to send GPIO interrupt event to BMC, gpio number(%d) ret(%d)",
+			gpio_num, ret);
 	}
 }
 
