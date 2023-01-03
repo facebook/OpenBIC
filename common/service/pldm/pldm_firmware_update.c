@@ -509,8 +509,8 @@ exit:
 	return;
 }
 
-static uint8_t request_update(const void *mctp_inst, const uint8_t *buf, uint16_t len,
-			      uint8_t *resp, uint16_t *resp_len, const void *ext_params)
+static uint8_t request_update(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id,
+			      uint8_t *resp, uint16_t *resp_len, void *ext_params)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
@@ -569,8 +569,9 @@ exit:
 	return PLDM_SUCCESS;
 }
 
-static uint8_t pass_component_table(const void *mctp_inst, const uint8_t *buf, uint16_t len,
-				    uint8_t *resp, uint16_t *resp_len, const void *ext_params)
+static uint8_t pass_component_table(void *mctp_inst, uint8_t *buf, uint16_t len,
+				    uint8_t instance_id, uint8_t *resp, uint16_t *resp_len,
+				    void *ext_params)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
@@ -652,8 +653,8 @@ exit:
 	return PLDM_SUCCESS;
 }
 
-static uint8_t update_component(const void *mctp_inst, const uint8_t *buf, uint16_t len,
-				uint8_t *resp, uint16_t *resp_len, const void *ext_params)
+static uint8_t update_component(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id,
+				uint8_t *resp, uint16_t *resp_len, void *ext_params)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
@@ -755,8 +756,8 @@ exit:
 	return PLDM_SUCCESS;
 }
 
-static uint8_t activate_firmware(const void *mctp_inst, const uint8_t *buf, uint16_t len,
-				 uint8_t *resp, uint16_t *resp_len, const void *ext_params)
+static uint8_t activate_firmware(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id,
+				 uint8_t *resp, uint16_t *resp_len, void *ext_params)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
@@ -807,8 +808,8 @@ exit:
 	return PLDM_SUCCESS;
 }
 
-static uint8_t get_status(const void *mctp_inst, const uint8_t *buf, uint16_t len, uint8_t *resp,
-			  uint16_t *resp_len, const void *ext_params)
+static uint8_t get_status(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id,
+			  uint8_t *resp, uint16_t *resp_len, void *ext_params)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
@@ -843,8 +844,8 @@ exit:
 	return PLDM_SUCCESS;
 }
 
-static uint8_t cancel_update(const void *mctp_inst, const uint8_t *buf, uint16_t len, uint8_t *resp,
-			     uint16_t *resp_len, const void *ext_params)
+static uint8_t cancel_update(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id,
+			     uint8_t *resp, uint16_t *resp_len, void *ext_params)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);

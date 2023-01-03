@@ -295,8 +295,8 @@ uint8_t mctp_pldm_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext
 		goto send_msg;
 	}
 
-	rc = handler(mctp_inst, buf + sizeof(*hdr), len - sizeof(*hdr), resp_buf + sizeof(*hdr),
-		     &resp_len, &ext_params);
+	rc = handler(mctp_inst, buf + sizeof(*hdr), len - sizeof(*hdr), (hdr->req_d_id) & 0x1F,
+		     resp_buf + sizeof(*hdr), &resp_len, &ext_params);
 	if (rc == PLDM_LATER_RESP)
 		return PLDM_SUCCESS;
 
