@@ -25,24 +25,24 @@
 #include "sensor.h"
 #include "plat_sensor_table.h"
 #include "plat_hook.h"
+#include "i2c-mux-tca9548.h"
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
-static uint8_t pldm_vr_update(uint16_t comp_id, void *mctp_p, void *ext_params);
-static uint8_t pldm_pex_update(uint16_t comp_id, void *mctp_p, void *ext_params);
-static uint8_t pldm_cpld_update(uint16_t comp_id, void *mctp_p, void *ext_params);
+static uint8_t pldm_pre_vr_update(void *fw_update_param);
+static uint8_t pldm_post_vr_update(void *fw_update_param);
 
 /* PLDM FW update table */
 // clang-format off
 pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
-	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_BIC, 0x00, pldm_bic_update, COMP_ACT_SELF, pldm_bic_activate },
-	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_VR0, 0x00, pldm_vr_update, COMP_ACT_AC_PWR_CYCLE, NULL },
-	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_VR1, 0x00, pldm_vr_update, COMP_ACT_AC_PWR_CYCLE, NULL },
-	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX0, 0x00, pldm_pex_update, COMP_ACT_AC_PWR_CYCLE, NULL },
-	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX1, 0x00, pldm_pex_update, COMP_ACT_AC_PWR_CYCLE, NULL },
-	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX2, 0x00, pldm_pex_update, COMP_ACT_AC_PWR_CYCLE, NULL },
-	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX3, 0x00, pldm_pex_update, COMP_ACT_AC_PWR_CYCLE, NULL },
-	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_CPLD, 0x00, pldm_cpld_update, COMP_ACT_AC_PWR_CYCLE, NULL },
+	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_BIC, 0x00, NULL, pldm_bic_update, NULL, COMP_ACT_SELF, pldm_bic_activate },
+	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_VR0, 0x00, pldm_pre_vr_update, pldm_vr_update, pldm_post_vr_update, COMP_ACT_AC_PWR_CYCLE, NULL },
+	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_VR1, 0x00, pldm_pre_vr_update, pldm_vr_update, pldm_post_vr_update, COMP_ACT_AC_PWR_CYCLE, NULL },
+	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX0, 0x00, NULL, NULL, NULL, COMP_ACT_AC_PWR_CYCLE, NULL },
+	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX1, 0x00, NULL, NULL, NULL, COMP_ACT_AC_PWR_CYCLE, NULL },
+	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX2, 0x00, NULL, NULL, NULL, COMP_ACT_AC_PWR_CYCLE, NULL },
+	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX3, 0x00, NULL, NULL, NULL, COMP_ACT_AC_PWR_CYCLE, NULL },
+	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_CPLD, 0x00, NULL, NULL, NULL, COMP_ACT_AC_PWR_CYCLE, NULL },
 };
 // clang-format on
 
@@ -63,32 +63,37 @@ void load_pldmupdate_comp_config(void)
 	memcpy(comp_config, PLDMUPDATE_FW_CONFIG_TABLE, sizeof(PLDMUPDATE_FW_CONFIG_TABLE));
 }
 
-static uint8_t pldm_vr_update(uint16_t comp_id, void *mctp_p, void *ext_params)
+/* pldm pre-update func */
+static uint8_t pldm_pre_vr_update(void *fw_update_param)
 {
-	CHECK_NULL_ARG_WITH_RETURN(mctp_p, 1);
-	CHECK_NULL_ARG_WITH_RETURN(ext_params, 1);
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
 
-	LOG_WRN("Not support vr pldm update yet!");
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+
+	/* Stop sensor polling */
+	disable_sensor_poll();
+
+	/* Assign VR 0/1 related sensor number to get information for accessing VR */
+	uint8_t sensor_num =
+		(p->comp_id == COMP_ID_VR0) ? SENSOR_NUM_TEMP_PEX_1 : SENSOR_NUM_TEMP_PEX_3;
+
+	if (!tca9548_select_chan(sensor_num, &mux_conf_addr_0xe0[6])) {
+		LOG_ERR("Component %d: mux switched failed!", p->comp_id);
+		return 1;
+	}
+
+	/* Get bus and target address by sensor number in sensor configuration */
+	p->bus = sensor_config[sensor_config_index_map[sensor_num]].port;
+	p->addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
 
 	return 0;
 }
 
-static uint8_t pldm_cpld_update(uint16_t comp_id, void *mctp_p, void *ext_params)
+/* pldm post-update func */
+static uint8_t pldm_post_vr_update(void *fw_update_param)
 {
-	CHECK_NULL_ARG_WITH_RETURN(mctp_p, 1);
-	CHECK_NULL_ARG_WITH_RETURN(ext_params, 1);
-
-	LOG_WRN("Not support pex pldm update yet!");
-
-	return 0;
-}
-
-static uint8_t pldm_pex_update(uint16_t comp_id, void *mctp_p, void *ext_params)
-{
-	CHECK_NULL_ARG_WITH_RETURN(mctp_p, 1);
-	CHECK_NULL_ARG_WITH_RETURN(ext_params, 1);
-
-	LOG_WRN("Not support pex pldm update yet!");
+	/* Stop sensor polling */
+	enable_sensor_poll();
 
 	return 0;
 }

@@ -17,11 +17,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <logging/log.h>
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "pmbus.h"
 #include "pldm_firmware_update.h"
-#include <logging/log.h>
+#include "mp2971.h"
 
 LOG_MODULE_REGISTER(mp2971);
 
@@ -248,23 +249,12 @@ static bool mp2856_unlock_write_protect_mode(uint8_t bus, uint8_t addr)
 	return true;
 }
 
-static bool loading_image(struct mp2856_config *dev_cfg, void *mctp_p, void *ext_params)
+static bool parsing_image(uint8_t *hex_buff, struct mp2856_config *dev_cfg)
 {
+	CHECK_NULL_ARG_WITH_RETURN(hex_buff, false);
 	CHECK_NULL_ARG_WITH_RETURN(dev_cfg, false);
-	CHECK_NULL_ARG_WITH_RETURN(mctp_p, false);
-	CHECK_NULL_ARG_WITH_RETURN(ext_params, false);
 
 	bool ret = false;
-	uint8_t *hex_buff = malloc(fw_update_cfg.image_size);
-	if (!hex_buff) {
-		LOG_ERR("malloc hex_buff failed!");
-		return false;
-	}
-
-	/* Collect image */
-	if (pal_request_complete_fw_data(hex_buff, fw_update_cfg.image_size, mctp_p, ext_params)) {
-		goto exit;
-	}
 
 	/* Parsing image */
 	int max_line = MAX_CMD_LINE;
@@ -280,6 +270,12 @@ static bool loading_image(struct mp2856_config *dev_cfg, void *mctp_p, void *ext
 	uint8_t data_idx = 0;
 	dev_cfg->wr_cnt = 0;
 	for (int i = 0; i < fw_update_cfg.image_size; i++) {
+		/* check valid */
+		if (!hex_buff[i]) {
+			LOG_ERR("Get invalid buffer data at index %d", i);
+			goto exit;
+		}
+
 		if (cur_ele_idx == ATE_CONF_ID && i + 2 < fw_update_cfg.image_size) {
 			if (!strncmp(&hex_buff[i], "END", 3)) {
 				break;
@@ -352,49 +348,45 @@ static bool loading_image(struct mp2856_config *dev_cfg, void *mctp_p, void *ext
 	ret = true;
 
 exit:
-	SAFE_FREE(hex_buff);
 	if (ret == false)
 		SAFE_FREE(dev_cfg->pdata);
 
 	return ret;
 }
 
-bool mp2971_pldm_fwupdate(uint8_t sensor_num, void *mctp_p, void *ext_params)
+bool mp2971_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff)
 {
-	CHECK_NULL_ARG_WITH_RETURN(mctp_p, false);
-	CHECK_NULL_ARG_WITH_RETURN(ext_params, false);
+	CHECK_NULL_ARG_WITH_RETURN(hex_buff, false);
 
-	int page2_start = 0;
+	uint8_t ret = false;
 
-	bool ret = false;
-	/* Get bus and target address by sensor number in sensor configuration */
-	uint8_t dev_i2c_bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	uint8_t dev_i2c_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	/* Step1. Before update */
+	// none
 
+	/* Step2. Image parsing */
 	struct mp2856_config dev_cfg = { 0 };
-
-	/* Load image */
-	if (loading_image(&dev_cfg, mctp_p, ext_params) == false) {
-		LOG_ERR("Failed to load image!");
+	if (parsing_image(hex_buff, &dev_cfg) == false) {
+		LOG_ERR("Failed to parsing image!");
 		goto exit;
 	}
 
-	/* Update image */
-	if (mp2856_is_pwd_unlock(dev_i2c_bus, dev_i2c_addr) == false) {
+	/* Step3. FW Update */
+	if (mp2856_is_pwd_unlock(bus, addr) == false) {
 		LOG_ERR("Failed to PWD UNLOCK");
 		goto exit;
 	}
 
-	if (mp2856_unlock_write_protect_mode(dev_i2c_bus, dev_i2c_addr) == false) {
+	if (mp2856_unlock_write_protect_mode(bus, addr) == false) {
 		LOG_ERR("Failed to unlock MTP Write protection");
 		goto exit;
 	}
 
-	if (mp2856_set_page(dev_i2c_bus, dev_i2c_addr, VR_MPS_PAGE_0) == false) {
+	if (mp2856_set_page(bus, addr, VR_MPS_PAGE_0) == false) {
 		goto exit;
 	}
 
 	uint8_t page = 0;
+	int page2_start = 0;
 	struct mp2856_data *cur_data;
 	uint16_t line_idx = 0;
 
@@ -406,29 +398,29 @@ bool mp2971_pldm_fwupdate(uint8_t sensor_num, void *mctp_p, void *ext_params)
 			break;
 		}
 		if (page != cur_data->page) {
-			if (mp2856_set_page(dev_i2c_bus, dev_i2c_addr, cur_data->page) == false) {
+			if (mp2856_set_page(bus, addr, cur_data->page) == false) {
 				goto exit;
 			}
 			page = cur_data->page;
 		}
-		mp2856_write_data(dev_i2c_bus, dev_i2c_addr, cur_data);
+		mp2856_write_data(bus, addr, cur_data);
 
 		uint8_t percent = ((line_idx + 1) * 100) / dev_cfg.wr_cnt;
 		if (percent % 10 == 0)
-			LOG_INF("component(#%xh) line(%d/%d) page%d updated: %d%%", sensor_num,
-				line_idx + 1, dev_cfg.wr_cnt, cur_data->page, percent);
+			LOG_INF("updated: %d%% (line: %d/%d page: %d)", percent, line_idx + 1,
+				dev_cfg.wr_cnt, cur_data->page);
 	}
 
 	//Store Page0/1 reggisters to MTP
-	if (mp2856_set_page(dev_i2c_bus, dev_i2c_addr, VR_MPS_PAGE_0) == false) {
+	if (mp2856_set_page(bus, addr, VR_MPS_PAGE_0) == false) {
 		goto exit;
 	}
 
 	I2C_MSG i2c_msg = { 0 };
 	uint8_t retry = 3;
 
-	i2c_msg.bus = dev_i2c_bus;
-	i2c_msg.target_addr = dev_i2c_addr;
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
 
 	i2c_msg.tx_len = 1;
 	i2c_msg.data[0] = VR_MPS_CMD_STORE_NORMAL_CODE;
@@ -439,13 +431,13 @@ bool mp2971_pldm_fwupdate(uint8_t sensor_num, void *mctp_p, void *ext_params)
 	}
 	k_msleep(500); //wait command finish
 
-	if (mp2856_enable_mtp_page_rw(dev_i2c_bus, dev_i2c_addr) == false) {
+	if (mp2856_enable_mtp_page_rw(bus, addr) == false) {
 		printf("ERROR: Enable MTP PAGE RW FAILED!\n");
 		goto exit;
 	}
 
 	//Enable STORE_MULTI_CODE
-	if (mp2856_set_page(dev_i2c_bus, dev_i2c_addr, VR_MPS_PAGE_2) == false) {
+	if (mp2856_set_page(bus, addr, VR_MPS_PAGE_2) == false) {
 		goto exit;
 	}
 
@@ -456,7 +448,7 @@ bool mp2971_pldm_fwupdate(uint8_t sensor_num, void *mctp_p, void *ext_params)
 		goto exit;
 	}
 
-	if (mp2856_set_page(dev_i2c_bus, dev_i2c_addr, VR_MPS_PAGE_2A) == false) {
+	if (mp2856_set_page(bus, addr, VR_MPS_PAGE_2A) == false) {
 		goto exit;
 	}
 	k_msleep(2); //wait command finish
@@ -467,21 +459,23 @@ bool mp2971_pldm_fwupdate(uint8_t sensor_num, void *mctp_p, void *ext_params)
 		if (cur_data->page != 2) {
 			break;
 		}
-		mp2856_write_data(dev_i2c_bus, dev_i2c_addr, cur_data);
+		mp2856_write_data(bus, addr, cur_data);
 		k_msleep(2);
 
 		uint8_t percent = ((line_idx + 1) * 100) / dev_cfg.wr_cnt;
 		if (percent % 10 == 0)
-			LOG_INF("component(#%xh) line(%d/%d) page%d updated: %d%%", sensor_num,
-				line_idx + 1, dev_cfg.wr_cnt, cur_data->page, percent);
+			LOG_INF("updated: %d%% (line: %d/%d page: %d)", percent, line_idx + 1,
+				dev_cfg.wr_cnt, cur_data->page);
 	}
 
-	if (mp2856_set_page(dev_i2c_bus, dev_i2c_addr, VR_MPS_PAGE_1) == false) {
+	if (mp2856_set_page(bus, addr, VR_MPS_PAGE_1) == false) {
 		goto exit;
 	}
 
-	ret = true;
+	/* Step4. FW verify */
+	// TODO
 
+	ret = true;
 exit:
 	SAFE_FREE(dev_cfg.pdata);
 	return ret;

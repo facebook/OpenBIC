@@ -295,33 +295,28 @@ static bool check_dev_rev(uint32_t rev, uint8_t mode)
 	return true;
 }
 
-static uint32_t loading_image(uint8_t *buff, uint32_t buff_len, void *mctp_p, void *ext_params)
+static bool parsing_image(uint8_t *hex_buff, uint8_t *buff)
 {
+	CHECK_NULL_ARG_WITH_RETURN(hex_buff, false);
 	CHECK_NULL_ARG_WITH_RETURN(buff, false);
-	CHECK_NULL_ARG_WITH_RETURN(mctp_p, false);
-	CHECK_NULL_ARG_WITH_RETURN(ext_params, false);
 
-	uint32_t img_len = 0;
-	uint8_t *hex_buff = malloc(fw_update_cfg.image_size);
-	if (!hex_buff) {
-		LOG_ERR("malloc hex_buff failed!");
-		return 0;
-	}
-
-	/* Collect image */
-	if (pal_request_complete_fw_data(hex_buff, fw_update_cfg.image_size, mctp_p, ext_params)) {
-		goto exit;
-	}
-
-	/* Parsing image */
 	uint32_t buf_idx = 0;
 	uint32_t data_len = fw_update_cfg.image_size / 2;
 	for (int i = 0; i < fw_update_cfg.image_size; i += 2) {
+		/* check valid */
+		if (!hex_buff[i] || hex_buff[i + 1]) {
+			LOG_ERR("Get invalid buffer data at index %d or %d", i, i + 1);
+			return 1;
+		}
+
 		int hi_val = ascii_to_val(hex_buff[i]);
 		int lo_val = ascii_to_val(hex_buff[i + 1]);
 		if (hi_val == -1 || lo_val == -1) {
 			data_len--;
 			continue;
+		}
+		if (!buff[buf_idx]) {
+			LOG_ERR("Get invalid buffer data at index %d or %d", i, i + 1);
 		}
 		buff[buf_idx] = hi_val * 16 + lo_val;
 		buf_idx++;
@@ -329,14 +324,10 @@ static uint32_t loading_image(uint8_t *buff, uint32_t buff_len, void *mctp_p, vo
 
 	if (buf_idx != data_len) {
 		LOG_ERR("Data transfer from hex to bin got error!");
-		goto exit;
+		return 1;
 	}
 
-	img_len = buf_idx;
-
-exit:
-	SAFE_FREE(hex_buff);
-	return img_len;
+	return 0;
 }
 
 static bool check_dev_support(uint8_t bus, uint8_t addr, raa_config_t *raa_info)
@@ -393,40 +384,38 @@ static bool check_dev_support(uint8_t bus, uint8_t addr, raa_config_t *raa_info)
 	return true;
 }
 
-bool isl69259_pldm_fwupdate(uint8_t sensor_num, void *mctp_p, void *ext_params)
+bool isl69259_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff)
 {
-	CHECK_NULL_ARG_WITH_RETURN(mctp_p, false);
-	CHECK_NULL_ARG_WITH_RETURN(ext_params, false);
+	CHECK_NULL_ARG_WITH_RETURN(hex_buff, 1);
 
-	bool ret = false;
-	/* Get bus and target address by sensor number in sensor configuration */
-	uint8_t dev_i2c_bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	uint8_t dev_i2c_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	uint8_t ret = false;
 
-	raa_config_t dev_info;
-	if (check_dev_support(dev_i2c_bus, dev_i2c_addr, &dev_info) == false) {
+	/* Step1. Before update */
+	static raa_config_t dev_info;
+	memset(&dev_info, 0, sizeof(raa_config_t));
+	if (check_dev_support(bus, addr, &dev_info) == false) {
 		return false;
 	}
 
+	/* Step2. Image parsing */
 	uint8_t *img_buff = malloc(fw_update_cfg.image_size / 2);
 	if (!img_buff) {
-		LOG_ERR("img_buff malloc failed!");
+		LOG_ERR("Failed to malloc img_buff");
 		return false;
 	}
 
-	uint32_t imb_bin_len =
-		loading_image(img_buff, fw_update_cfg.image_size / 2, mctp_p, ext_params);
-	if (!imb_bin_len) {
-		LOG_ERR("Failed to load image!");
+	if (parsing_image(hex_buff, img_buff) == false) {
+		LOG_ERR("Failed to parsing image!");
 		goto exit;
 	}
 
-	/* Parsing received message */
+	/* Step3. FW Update */
 	uint8_t img_mode = 0;
 	uint8_t mode_check_flag = 0;
 	struct raa_data cmd_line;
 	uint8_t *cur_data = img_buff;
-	uint32_t remain_buf_len = imb_bin_len;
+	uint32_t img_bin_len = fw_update_cfg.image_size / 2;
+	uint32_t remain_buf_len = img_bin_len;
 
 	while (1) {
 		if (remain_buf_len == 0)
@@ -459,8 +448,7 @@ bool isl69259_pldm_fwupdate(uint8_t sensor_num, void *mctp_p, void *ext_params)
 				    cmd_line.data[2] != ((dev_info.devid >> 8) & 0xFF) &&
 				    cmd_line.data[1] != ((dev_info.devid >> 16) & 0xFF) &&
 				    cmd_line.data[0] != ((dev_info.devid >> 24) & 0xFF)) {
-					LOG_ERR("Invalid vr device ID received, component(#%xh) update abort!",
-						sensor_num);
+					LOG_ERR("Invalid vr device ID received, update abort!");
 					goto exit;
 				}
 			} else if (cmd_line.cmd == PMBUS_IC_DEVICE_REV) {
@@ -474,16 +462,16 @@ bool isl69259_pldm_fwupdate(uint8_t sensor_num, void *mctp_p, void *ext_params)
 			/* collect vr data array */
 			if (!mode_check_flag) {
 				if (img_mode != dev_info.mode) {
-					LOG_ERR("Invalid vr device MODE(%d) received, component(#%xh) update abort!",
-						img_mode, sensor_num);
+					LOG_ERR("Invalid vr device MODE(%d) received, update abort!",
+						img_mode);
 					goto exit;
 				}
 				mode_check_flag = 1;
 			}
 
 			I2C_MSG i2c_msg = { 0 };
-			i2c_msg.bus = dev_i2c_bus;
-			i2c_msg.target_addr = dev_i2c_addr;
+			i2c_msg.bus = bus;
+			i2c_msg.target_addr = addr;
 
 			i2c_msg.tx_len = cmd_line.len - 2; // avoid address and pec bytes
 			i2c_msg.data[0] = cmd_line.cmd;
@@ -491,33 +479,33 @@ bool isl69259_pldm_fwupdate(uint8_t sensor_num, void *mctp_p, void *ext_params)
 
 			uint8_t retry = 3;
 			if (i2c_master_write(&i2c_msg, retry)) {
-				LOG_ERR("Failed to write image, component(#%xh) update abort!",
-					sensor_num);
+				LOG_ERR("Failed to write image, update abort!");
 				goto exit;
 			}
 		} else {
-			LOG_ERR("Invalid VR image symbol 0x%x received, component(#%xh) update abort!",
-				cmd_line.hdr, sensor_num);
+			LOG_ERR("Invalid VR image symbol 0x%x received, update abort!",
+				cmd_line.hdr);
 			goto exit;
 		}
 
 		cur_data += (2 + cmd_line.len);
 		remain_buf_len -= (2 + cmd_line.len);
 
-		uint8_t percent = ((imb_bin_len - remain_buf_len) * 100) / imb_bin_len;
+		uint8_t percent = ((img_bin_len - remain_buf_len) * 100) / img_bin_len;
 		if (percent % 10 == 0)
-			LOG_INF("component(#%xh) bytes(%d/%d) updated: %d%%", sensor_num,
-				imb_bin_len - remain_buf_len, imb_bin_len, percent);
+			LOG_INF("updated: %d%% (bytes: %d/%d)", percent,
+				img_bin_len - remain_buf_len, img_bin_len);
 	}
 
-	if (get_raa_polling_status(dev_i2c_bus, dev_i2c_addr, img_mode) == false) {
-		LOG_ERR("VR polling status check failed, component(#%xh) update abort!",
-			sensor_num);
+	if (get_raa_polling_status(bus, addr, img_mode) == false) {
+		LOG_ERR("VR polling status check failed, update abort!");
 		goto exit;
 	}
 
-	ret = true;
+	/* Step4. FW verify */
+	// TODO
 
+	ret = true;
 exit:
 	SAFE_FREE(img_buff);
 	return ret;
