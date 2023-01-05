@@ -59,7 +59,7 @@ enum { RAA_GEN2,
 
 typedef struct raa_config {
 	uint8_t mode;
-	uint8_t remain;
+	uint16_t remain;
 	uint32_t devid;
 	uint32_t rev;
 	uint32_t crc;
@@ -118,34 +118,31 @@ static bool get_raa_polling_status(uint8_t bus, uint8_t addr, uint8_t mode)
 	uint32_t ret_buff;
 	int retry = 3;
 
-	do {
+	for (int i = 0; i < retry; i++) {
 		if (mode == RAA_GEN2) {
 			reg_buff = VR_RAA_REG_GEN2_PROG_STATUS | (VR_RAA_REG_GEN2_PROG_STATUS << 8);
 		} else {
 			reg_buff = VR_RAA_REG_PROG_STATUS;
 		}
+
 		if (raa_dma_rd(bus, addr, reg_buff, &ret_buff) == false) {
 			LOG_ERR("Failed to read polling status");
 			return false;
 		}
 
-		LOG_INF("--> polling status = 0x%x", ret_buff);
 		// bit1 is held to 1, it means the action is successful
 		if ((ret_buff & 0xFF) & 0x01) {
-			break;
+			return true;
 		}
 
-		if ((--retry) <= 0) {
-			LOG_ERR("Failed to program the device");
-			return false;
-		}
 		k_msleep(1000);
-	} while (retry > 0);
+	}
 
-	return true;
+	LOG_ERR("Failed to program the device");
+	return false;
 }
 
-static bool get_raa_remaining_wr(uint8_t bus, uint8_t addr, uint8_t mode, uint8_t *remain)
+static bool get_raa_remaining_wr(uint8_t bus, uint8_t addr, uint8_t mode, uint16_t *remain)
 {
 	CHECK_NULL_ARG_WITH_RETURN(remain, false);
 
@@ -279,13 +276,6 @@ static bool check_dev_rev(uint32_t rev, uint8_t mode)
 		break;
 	case RAA_GEN3_LEGACY:
 	case RAA_GEN3_PRODUCTION:
-		// Confirmed with Renesas FAE,
-		// We can ignore the IC_DEVICE_REV check.
-		// But we need to make sure that legacy IC use legacy HEX and production IC use production HEX.
-		// if ( sw_rev < VR_RAA_GEN3_SW_REV_MIN ) {
-		//   syslog(LOG_WARNING, "%s: GEN3 unexpected IC_DEVICE_REV %08X", __func__, rev);
-		//   return flase;
-		// }
 		break;
 	default:
 		LOG_WRN("RAA Mode not support");
@@ -347,7 +337,8 @@ static bool check_dev_support(uint8_t bus, uint8_t addr, raa_config_t *raa_info)
 	if (!raa_info->remain) {
 		LOG_WRN("No remaining writes for component");
 		return false;
-	} else if (raa_info->remain <= VR_WARN_REMAIN_WR) {
+	}
+	if (raa_info->remain <= VR_WARN_REMAIN_WR) {
 		LOG_WRN("The remaining writes is below the threshold value %d!", VR_WARN_REMAIN_WR);
 	}
 
@@ -501,9 +492,6 @@ bool isl69259_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff)
 		LOG_ERR("VR polling status check failed, update abort!");
 		goto exit;
 	}
-
-	/* Step4. FW verify */
-	// TODO
 
 	ret = true;
 exit:

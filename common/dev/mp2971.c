@@ -472,9 +472,6 @@ bool mp2971_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff)
 		goto exit;
 	}
 
-	/* Step4. FW verify */
-	// TODO
-
 	ret = true;
 exit:
 	SAFE_FREE(dev_cfg.pdata);

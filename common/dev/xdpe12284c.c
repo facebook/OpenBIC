@@ -126,7 +126,7 @@ bool xdpe12284c_get_checksum(uint8_t bus, uint8_t target_addr, uint8_t *checksum
 	return true;
 }
 
-bool xdpe12284c_get_remaining_write(uint8_t bus, uint8_t target_addr, uint8_t *remain_write)
+bool xdpe12284c_get_remaining_write(uint8_t bus, uint8_t target_addr, uint16_t *remain_write)
 {
 	CHECK_NULL_ARG_WITH_RETURN(remain_write, false);
 
@@ -392,7 +392,7 @@ bool xdpe12284c_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff)
 	uint8_t dev_i2c_addr = addr;
 
 	uint8_t crc[4] = { 0 };
-	uint8_t remain = 0;
+	uint16_t remain = 0;
 
 	/* Step1. Before update */
 	if (xdpe12284c_get_checksum(dev_i2c_bus, dev_i2c_addr, crc) == false) {
@@ -406,7 +406,8 @@ bool xdpe12284c_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff)
 	if (!remain) {
 		LOG_ERR("No remaining writes");
 		return false;
-	} else if (remain <= VR_WARN_REMAIN_WR) {
+	}
+	if (remain <= VR_WARN_REMAIN_WR) {
 		LOG_WRN("The remaining writes %d is below the threshold value %d!\n", remain,
 			VR_WARN_REMAIN_WR);
 	}
@@ -433,144 +434,135 @@ bool xdpe12284c_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff)
 	i2c_msg.bus = dev_i2c_bus;
 	i2c_msg.target_addr = dev_i2c_addr;
 
-	do {
-		// read next memory location
-		if (set_page(dev_i2c_bus, dev_i2c_addr, VR_XDPE_PAGE_62) == false) {
-			break;
-		}
+	// read next memory location
+	if (set_page(dev_i2c_bus, dev_i2c_addr, VR_XDPE_PAGE_62) == false) {
+		goto exit;
+	}
 
-		i2c_msg.tx_len = 1;
-		i2c_msg.rx_len = 2;
-		i2c_msg.data[0] = VR_XDPE_REG_NEXT_MEM;
-		if (i2c_master_read(&i2c_msg, retry)) {
-			LOG_ERR("Failed to read register 0x%02X", VR_XDPE_REG_NEXT_MEM);
-			break;
-		}
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 2;
+	i2c_msg.data[0] = VR_XDPE_REG_NEXT_MEM;
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("Failed to read register 0x%02X", VR_XDPE_REG_NEXT_MEM);
+		goto exit;
+	}
 
-		dev_cfg.memptr = ((i2c_msg.data[1] << 8) | i2c_msg.data[0]) & 0x3FF;
-		LOG_INF("Memory pointer: 0x%X", dev_cfg.memptr);
+	dev_cfg.memptr = ((i2c_msg.data[1] << 8) | i2c_msg.data[0]) & 0x3FF;
+	LOG_INF("Memory pointer: 0x%X", dev_cfg.memptr);
 
-		// write configuration data
-		uint8_t *data = dev_cfg.data;
-		dsize = (float)VR_XDPE_TOTAL_RW_SIZE / 100;
-		next_prog = dsize;
-		for (int i = 0; i < VR_XDPE_TOTAL_RW_SIZE; i += 4) {
-			if (page != data[i + 1]) {
-				page = data[i + 1];
-				if ((rc = set_page(dev_i2c_bus, dev_i2c_addr, page)) == false) {
-					break;
-				}
+	// write configuration data
+	uint8_t *data = dev_cfg.data;
+	dsize = (float)VR_XDPE_TOTAL_RW_SIZE / 100;
+	next_prog = dsize;
+	for (int i = 0; i < VR_XDPE_TOTAL_RW_SIZE; i += 4) {
+		if (page != data[i + 1]) {
+			page = data[i + 1];
+			if ((rc = set_page(dev_i2c_bus, dev_i2c_addr, page)) == false) {
+				goto exit;
 			}
-
-			i2c_msg.tx_len = 3;
-			i2c_msg.data[0] = data[i]; //offset
-			i2c_msg.data[1] = data[i + 2];
-			i2c_msg.data[2] = data[i + 3];
-			if (i2c_master_write(&i2c_msg, retry)) {
-				LOG_ERR("wr failed: page=%02X offset=%02X data=%02X%02X", page,
-					data[i], data[i + 3], data[i + 2]);
-				break;
-			}
-
-			// read back to compare
-			i2c_msg.tx_len = 1;
-			i2c_msg.rx_len = 2;
-			i2c_msg.data[0] = data[i]; //offset
-			if (i2c_master_read(&i2c_msg, retry)) {
-				LOG_ERR("rd failed: page=%02X offset=%02X", page, data[i]);
-				break;
-			}
-
-			if (memcmp(&data[i + 2], i2c_msg.data, 2)) {
-				LOG_ERR("data %02X%02X mismatch, expect %02X%02X", data[i + 3],
-					data[i + 2], i2c_msg.data[1], i2c_msg.data[0]);
-				rc = false;
-				break;
-			}
-
-			if ((i + 4) >= (int)next_prog) {
-				LOG_INF("updated: %d%%", (int)((next_prog + dsize / 2) / dsize));
-				next_prog += dsize;
-			}
-		}
-
-		if (rc == false)
-			break;
-
-		// save configuration to EMTP
-		if (set_page(dev_i2c_bus, dev_i2c_addr, VR_XDPE_PAGE_32) == false) {
-			break;
 		}
 
 		i2c_msg.tx_len = 3;
-		i2c_msg.data[0] = VR_XDPE_REG_LOCK;
-		i2c_msg.data[1] = 0xA1;
-		i2c_msg.data[2] = 0x08;
+		i2c_msg.data[0] = data[i]; //offset
+		i2c_msg.data[1] = data[i + 2];
+		i2c_msg.data[2] = data[i + 3];
 		if (i2c_master_write(&i2c_msg, retry)) {
-			LOG_ERR("Failed to unlock register 0x%02X", VR_XDPE_REG_LOCK);
-			break;
+			LOG_ERR("wr failed: page=%02X offset=%02X data=%02X%02X", page, data[i],
+				data[i + 3], data[i + 2]);
+			goto exit;
 		}
 
-		i2c_msg.tx_len = 1;
-		i2c_msg.data[0] = 0x1D; //clear fault
-		if (i2c_master_write(&i2c_msg, retry)) {
-			LOG_ERR("Failed to write register 0x%02X", 0x1D);
-			break;
-		}
-
-		i2c_msg.tx_len = 1;
-		i2c_msg.data[0] = 0x26; //upload from the registers to EMTP
-		if (i2c_master_write(&i2c_msg, retry)) {
-			LOG_ERR("Failed to write register 0x%02X", 0x26);
-			break;
-		}
-
-		k_msleep(500);
-
-		if (set_page(dev_i2c_bus, dev_i2c_addr, VR_XDPE_PAGE_60) == false) {
-			break;
-		}
-
+		// read back to compare
 		i2c_msg.tx_len = 1;
 		i2c_msg.rx_len = 2;
-		i2c_msg.data[0] = 0x01;
+		i2c_msg.data[0] = data[i]; //offset
 		if (i2c_master_read(&i2c_msg, retry)) {
-			LOG_ERR("Failed to read register 0x%02X", 0x01);
-			break;
-		}
-		if ((i2c_msg.data[0] & 0x01)) {
-			LOG_ERR("Unexpected status, reg[%02X]=%02X", 0x01, i2c_msg.data[0]);
-			break;
+			LOG_ERR("rd failed: page=%02X offset=%02X", page, data[i]);
+			goto exit;
 		}
 
-		i2c_msg.tx_len = 1;
-		i2c_msg.rx_len = 2;
-		i2c_msg.data[0] = 0x02;
-		if (i2c_master_read(&i2c_msg, retry)) {
-			LOG_ERR("Failed to read register 0x%02X", 0x02);
-			break;
-		}
-		if ((i2c_msg.data[0] & 0x0A)) {
-			LOG_ERR("Unexpected status, reg[%02X]=%02X", 0x02, i2c_msg.data[0]);
-			break;
+		if (memcmp(&data[i + 2], i2c_msg.data, 2)) {
+			LOG_ERR("data %02X%02X mismatch, expect %02X%02X", data[i + 3], data[i + 2],
+				i2c_msg.data[1], i2c_msg.data[0]);
+			goto exit;
 		}
 
-		if (set_page(dev_i2c_bus, dev_i2c_addr, VR_XDPE_PAGE_32) == false) {
-			break;
+		if ((i + 4) >= (int)next_prog) {
+			LOG_INF("updated: %d%%", (int)((next_prog + dsize / 2) / dsize));
+			next_prog += dsize;
 		}
+	}
 
-		i2c_msg.tx_len = 3;
-		i2c_msg.data[0] = VR_XDPE_REG_LOCK;
-		i2c_msg.data[1] = 0x00;
-		i2c_msg.data[2] = 0x00;
-		if (i2c_master_write(&i2c_msg, retry)) {
-			LOG_ERR("Failed to lock register 0x%02X", VR_XDPE_REG_LOCK);
-			break;
-		}
-	} while (0);
+	// save configuration to EMTP
+	if (set_page(dev_i2c_bus, dev_i2c_addr, VR_XDPE_PAGE_32) == false) {
+		goto exit;
+	}
 
-	/* Step4. FW verify */
-	// TODO
+	i2c_msg.tx_len = 3;
+	i2c_msg.data[0] = VR_XDPE_REG_LOCK;
+	i2c_msg.data[1] = 0xA1;
+	i2c_msg.data[2] = 0x08;
+	if (i2c_master_write(&i2c_msg, retry)) {
+		LOG_ERR("Failed to unlock register 0x%02X", VR_XDPE_REG_LOCK);
+		goto exit;
+	}
+
+	i2c_msg.tx_len = 1;
+	i2c_msg.data[0] = 0x1D; //clear fault
+	if (i2c_master_write(&i2c_msg, retry)) {
+		LOG_ERR("Failed to write register 0x%02X", 0x1D);
+		goto exit;
+	}
+
+	i2c_msg.tx_len = 1;
+	i2c_msg.data[0] = 0x26; //upload from the registers to EMTP
+	if (i2c_master_write(&i2c_msg, retry)) {
+		LOG_ERR("Failed to write register 0x%02X", 0x26);
+		goto exit;
+	}
+
+	k_msleep(500);
+
+	if (set_page(dev_i2c_bus, dev_i2c_addr, VR_XDPE_PAGE_60) == false) {
+		goto exit;
+	}
+
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 2;
+	i2c_msg.data[0] = 0x01;
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("Failed to read register 0x%02X", 0x01);
+		goto exit;
+	}
+	if ((i2c_msg.data[0] & 0x01)) {
+		LOG_ERR("Unexpected status, reg[%02X]=%02X", 0x01, i2c_msg.data[0]);
+		goto exit;
+	}
+
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 2;
+	i2c_msg.data[0] = 0x02;
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("Failed to read register 0x%02X", 0x02);
+		goto exit;
+	}
+	if ((i2c_msg.data[0] & 0x0A)) {
+		LOG_ERR("Unexpected status, reg[%02X]=%02X", 0x02, i2c_msg.data[0]);
+		goto exit;
+	}
+
+	if (set_page(dev_i2c_bus, dev_i2c_addr, VR_XDPE_PAGE_32) == false) {
+		goto exit;
+	}
+
+	i2c_msg.tx_len = 3;
+	i2c_msg.data[0] = VR_XDPE_REG_LOCK;
+	i2c_msg.data[1] = 0x00;
+	i2c_msg.data[2] = 0x00;
+	if (i2c_master_write(&i2c_msg, retry)) {
+		LOG_ERR("Failed to lock register 0x%02X", VR_XDPE_REG_LOCK);
+		goto exit;
+	}
 
 	ret = true;
 exit:

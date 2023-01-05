@@ -98,6 +98,8 @@ uint8_t pldm_vr_update(void *fw_update_param)
 
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 
+	CHECK_NULL_ARG_WITH_RETURN(p->data, 1);
+
 	uint8_t ret = 1;
 
 	static uint8_t *hex_buff = NULL;
@@ -333,8 +335,8 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 	update_param.comp_version_str = cur_update_comp_str;
 
 	/* do pre-update */
-	if (fw_info->pre_unpdate_func) {
-		if (fw_info->pre_unpdate_func(&update_param)) {
+	if (fw_info->pre_update_func) {
+		if (fw_info->pre_update_func(&update_param)) {
 			LOG_ERR("pre-update failed!");
 			goto exit;
 		}
@@ -408,8 +410,8 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 
 exit:
 	/* do post-update */
-	if (fw_info->pos_unpdate_func) {
-		if (fw_info->pos_unpdate_func(&update_param)) {
+	if (fw_info->pos_update_func) {
+		if (fw_info->pos_update_func(&update_param)) {
 			LOG_ERR("post-update failed!");
 		}
 	}

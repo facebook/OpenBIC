@@ -18,7 +18,7 @@
 #define XDPE12284C_H
 
 bool xdpe12284c_get_checksum(uint8_t bus, uint8_t target_addr, uint8_t *checksum);
-bool xdpe12284c_get_remaining_write(uint8_t bus, uint8_t target_addr, uint8_t *remain_write);
+bool xdpe12284c_get_remaining_write(uint8_t bus, uint8_t target_addr, uint16_t *remain_write);
 bool xdpe12284c_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff);
 
 enum INFINEON_PAGE {

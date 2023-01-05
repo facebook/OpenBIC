@@ -218,9 +218,9 @@ typedef struct pldm_fw_update_info {
 	uint16_t comp_classification;
 	uint16_t comp_identifier;
 	uint8_t comp_classification_index;
-	pldm_fwupdate_func pre_unpdate_func;
+	pldm_fwupdate_func pre_update_func;
 	pldm_fwupdate_func update_func;
-	pldm_fwupdate_func pos_unpdate_func;
+	pldm_fwupdate_func pos_update_func;
 	uint16_t activate_method;
 	pldm_act_func self_act_func;
 } pldm_fw_update_info_t;
