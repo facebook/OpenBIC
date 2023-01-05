@@ -117,5 +117,12 @@ enum SENSOR_NUM {
 	SENSOR_NUM_DIMM_H_PMIC_PWR, // 0x3F
 
 };
+/*event log sensor number*/
+#define SENSOR_NUM_SYSTEM_STATUS 0x10
+#define SENSOR_NUM_POWER_ERROR 0x56
+#define SENSOR_NUM_PROC_FAIL 0x65
+#define SENSOR_NUM_VR_HOT 0xB2
+#define SENSOR_NUM_CPUDIMM_HOT 0xB3
+#define SENSOR_NUM_CATERR 0xEB
 
 #endif
