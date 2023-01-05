@@ -189,7 +189,7 @@ int i3c_transfer(I3C_MSG *msg)
 	return -ret;
 }
 
-int i3c_spd_reg_read(I3C_MSG *msg)
+int i3c_spd_reg_read(I3C_MSG *msg, bool is_nvm)
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg, -EINVAL);
 
@@ -201,7 +201,16 @@ int i3c_spd_reg_read(I3C_MSG *msg)
 
 	int ret = 0;
 	struct i3c_dev_desc *desc;
-	uint8_t offset[2] = { msg->data[0] & GENMASK(5, 0), 0 };
+	uint8_t addr = (msg->data[1] << 8 | msg->data[0]) % 64;
+	uint8_t block_addr = (msg->data[1] << 8 | msg->data[0]) / 64;
+	uint8_t offset0 = GETBIT(block_addr, 0) << 6 | (addr & GENMASK(5, 0));
+	uint8_t offset1 = (block_addr >> 1) & 0xF;
+	if (is_nvm) {
+		offset0 = SETBIT(offset0, 7);
+	} else {
+		offset0 = CLEARBIT(offset0, 7);
+	}
+	uint8_t offset[2] = { offset0, offset1 };
 
 	desc = find_matching_desc(dev_i3c[msg->bus], msg->target_addr);
 	if (desc == NULL) {
@@ -212,8 +221,8 @@ int i3c_spd_reg_read(I3C_MSG *msg)
 
 	ret = i3c_jesd403_read(desc, offset, sizeof(offset), msg->data, msg->rx_len);
 	if (ret != 0) {
-		LOG_ERR("Failed to read SPD bus0x%x addr0x%x offset0x%x, ret: %d", msg->bus,
-			msg->target_addr, offset[0], ret);
+		LOG_ERR("Failed to read SPD bus0x%x addr0x%x offset0x%x %x, ret: %d", msg->bus,
+			msg->target_addr, offset[1], offset[0], ret);
 	}
 
 	return ret;

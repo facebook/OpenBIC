@@ -176,7 +176,7 @@ void get_dimm_info_handler()
 			i3c_msg.rx_len = MAX_LEN_I3C_GET_SPD_TEMP;
 			i3c_msg.data[0] = DIMM_SPD_TEMP;
 
-			ret = i3c_spd_reg_read(&i3c_msg);
+			ret = i3c_spd_reg_read(&i3c_msg, false);
 			if (ret != 0) {
 				clear_unaccessible_dimm_data(dimm_id);
 				LOG_ERR("Failed to read DIMM %d SPD temperature via I3C, ret%d",
