@@ -1,0 +1,45 @@
+From 71faf18b1936d51be543f8d11bb46dba720f16b8 Mon Sep 17 00:00:00 2001
+From: Tommy Haung <tommy_huang@aspeedtech.com>
+Date: Thu, 22 Dec 2022 15:04:47 +0800
+Subject: [PATCH] drivers: i2c: Add read after write and change slave handle
+ condition
+
+Add read after write behavior to make sure the isr is clear.
+Modify the slave match / rx_done / wait_rx_dma behavior.
+
+Signed-off-by: Tommy Haung <tommy_huang@aspeedtech.com>
+Change-Id: I891acf622d8e9297cb1bd088a660a4ce981e18f1
+---
+ drivers/i2c/i2c_aspeed.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/i2c/i2c_aspeed.c b/drivers/i2c/i2c_aspeed.c
+index beb56b72fd..aaf9fe8c43 100644
+--- a/drivers/i2c/i2c_aspeed.c
++++ b/drivers/i2c/i2c_aspeed.c
+@@ -1304,12 +1304,14 @@ void aspeed_i2c_slave_packet_irq(const struct device *dev, uint32_t i2c_base, ui
+ 
+ 	/* clear irq first */
+ 	sys_write32(AST_I2CS_PKT_DONE, i2c_base + AST_I2CS_ISR);
++	sys_read32(i2c_base + AST_I2CS_ISR);
+ 
+ 	sts &= ~(AST_I2CS_PKT_DONE | AST_I2CS_PKT_ERROR);
+ 
+ 	switch (sts) {
+ 	case AST_I2CS_SLAVE_MATCH:
+ 	case AST_I2CS_SLAVE_MATCH | AST_I2CS_Wait_RX_DMA:
++	case AST_I2CS_SLAVE_MATCH | AST_I2CS_RX_DONE | AST_I2CS_Wait_RX_DMA: /* re-trigger? */
+ 		if (sys_read32(i2c_base + AST_I2CM_ISR)) {
+ 			LOG_DBG("S : Sw|D - Wait normal\n");
+ 		} else {
+@@ -1332,7 +1334,6 @@ void aspeed_i2c_slave_packet_irq(const struct device *dev, uint32_t i2c_base, ui
+ 	case AST_I2CS_RX_DONE | AST_I2CS_Wait_RX_DMA | AST_I2CS_STOP:
+ 	case AST_I2CS_RX_DONE_NAK | AST_I2CS_RX_DONE | AST_I2CS_STOP:
+ 	case AST_I2CS_SLAVE_MATCH | AST_I2CS_RX_DONE | AST_I2CS_STOP:
+-	case AST_I2CS_SLAVE_MATCH | AST_I2CS_RX_DONE | AST_I2CS_Wait_RX_DMA: /* re-trigger? */
+ 	case AST_I2CS_SLAVE_MATCH | AST_I2CS_RX_DONE | AST_I2CS_Wait_RX_DMA | AST_I2CS_STOP:
+ 	case AST_I2CS_SLAVE_MATCH | AST_I2CS_RX_DONE_NAK | AST_I2CS_RX_DONE | AST_I2CS_STOP:
+ 		if (sts & AST_I2CS_STOP) {
+-- 
+2.17.1
+
