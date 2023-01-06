@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef PLDM_FIRMWARE_UPDATE_H
 #define PLDM_FIRMWARE_UPDATE_H
 
@@ -6,6 +22,10 @@ extern "C" {
 #endif
 
 #include "pldm.h"
+
+#define GLOBAL_COMP_ID_BIC 0x0000
+#define MAX_FWUPDATE_RSP_BUF_SIZE 256
+#define MAX_IMAGE_MALLOC_SIZE (1024 * 64)
 
 /** 
  * PLDM Firmware update commands
@@ -68,10 +88,32 @@ enum pldm_firmware_update_state {
 	STATE_ACTIVATE,
 };
 
+/**
+ * PLDM component classification
+ */
+enum { COMP_CLASS_TYPE_UNKNOWN = 0x0000,
+       COMP_CLASS_TYPE_OTHER,
+       COMP_CLASS_TYPE_DRIVER,
+       COMP_CLASS_TYPE_CFG_SW,
+       COMP_CLASS_TYPE_APP_SW,
+       COMP_CLASS_TYPE_INSTR,
+       COMP_CLASS_TYPE_FW_BIOS,
+       COMP_CLASS_TYPE_DIAG_SW,
+       COMP_CLASS_TYPE_OS,
+       COMP_CLASS_TYPE_MW,
+       COMP_CLASS_TYPE_FW,
+       COMP_CLASS_TYPE_BIOS_FC,
+       COMP_CLASS_TYPE_SP_SV_P,
+       COMP_CLASS_TYPE_SW_BUNDLE,
+       COMP_CLASS_TYPE_DOWNSTREAM = 0xFFFF,
+       COMP_CLASS_TYPE_MAX = 0x10000,
+};
+
 /** 
  * Common error codes in TransferComplete, VerifyComplete and ApplyComplete request
  */
 enum pldm_firmware_update_common_error_codes {
+	PLDM_FW_UPDATE_FD_ABORT = 0x03,
 	PLDM_FW_UPDATE_TIME_OUT = 0x09,
 	PLDM_FW_UPDATE_GENERIC_ERROR = 0x0A
 };
@@ -124,6 +166,53 @@ enum pldm_component_classification_values {
 	PLDM_COMP_SOFTWARE_BUNDLE = 0x000D,
 	PLDM_COMP_DOWNSTREAM_DEVICE = 0xFFFF
 };
+
+/**
+ * Component response for PassComponentTable and UpdateComponent commands
+ */
+enum comp_rsp_code {
+	/* Common defined (0x00 ~ 0x0B) */
+	COMP_RSP_CAN_UPDATE = 0x00,
+	COMP_RSP_FD_NOT_SUPPORT = 0x06,
+
+	/* Vendor defined (0xD0 ~ 0xEF) */
+	COMP_RSP_UNKNOWN_ERR = 0xD0,
+};
+
+/**
+ * Component response for PassComponentTable and UpdateComponent commands
+ */
+enum comp_act_mdthod {
+	COMP_ACT_AUTO = 0x0001,
+	COMP_ACT_SELF = 0x0002,
+	COMP_ACT_MED_RESET = 0x0004,
+	COMP_ACT_SYS_REBOOT = 0x0008,
+	COMP_ACT_DC_PWR_CYCLE = 0x0010,
+	COMP_ACT_AC_PWR_CYCLE = 0x0020,
+	COMP_ACT_SUPP_PEND_IMAGE = 0x0040,
+	COMP_ACT_SUPP_PEND_COMP_IMG_SET = 0x0080,
+};
+
+typedef uint8_t (*pldm_fwupdate_func)(uint16_t comp_id, void *mctp_p, void *ext_params);
+typedef uint8_t (*pldm_act_func)(void *arg);
+
+typedef struct pldm_fw_update_info {
+	bool enable;
+	uint16_t comp_classification;
+	uint16_t comp_identifier;
+	uint8_t comp_classification_index;
+	pldm_fwupdate_func update_func;
+	uint16_t activate_method;
+	pldm_act_func self_act_func;
+} pldm_fw_update_info_t;
+extern pldm_fw_update_info_t *comp_config;
+extern uint8_t comp_config_count;
+
+struct pldm_fw_update_cfg {
+	uint32_t image_size;
+	uint16_t max_buff_size;
+};
+extern struct pldm_fw_update_cfg fw_update_cfg;
 
 /** 
  * Structure representing fixed part of Request Update request
@@ -243,6 +332,10 @@ struct pldm_apply_complete_req {
 uint8_t pldm_fw_update_handler_query(uint8_t code, void **ret_fn);
 uint16_t pldm_fw_update_read(void *mctp_p, enum pldm_firmware_update_commands cmd, uint8_t *req,
 			     uint16_t req_len, uint8_t *rbuf, uint16_t rbuf_len, void *ext_params);
+uint8_t pal_request_complete_fw_data(uint8_t *buff, uint32_t buff_len, void *mctp_p,
+				     void *ext_params);
+uint8_t pldm_bic_update(uint16_t comp_class, void *mctp_p, void *ext_params);
+uint8_t pldm_bic_activate(void *arg);
 
 #ifdef __cplusplus
 }
