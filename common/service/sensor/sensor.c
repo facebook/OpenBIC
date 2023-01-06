@@ -372,6 +372,11 @@ void enable_sensor_poll()
 	sensor_poll_enable_flag = true;
 }
 
+bool get_sensor_poll_enable_flag()
+{
+	return sensor_poll_enable_flag;
+}
+
 void sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 {
 	uint8_t index = 0, sensor_num = 0;
