@@ -261,8 +261,8 @@ int gpio_init(const struct device *args)
 	pal_load_gpio_config();
 	init_gpio_dev();
 	gpio_index_to_num();
+	check_ac_lost();
 
-	bool ac_lost = is_ac_lost();
 	uint8_t gpio_group = 0;
 	uint8_t gpio_group_index = 0;
 
@@ -272,7 +272,7 @@ int gpio_init(const struct device *args)
 
 	for (i = 0; i < TOTAL_GPIO_NUM; i++) {
 		if (gpio_cfg[i].is_init == ENABLE) {
-			if ((gpio_cfg[i].is_latch == ENABLE) && (ac_lost == false)) {
+			if ((gpio_cfg[i].is_latch == ENABLE) && !is_ac_lost()) {
 				continue;
 			}
 			if (gpio_cfg[i].chip == CHIP_GPIO) {

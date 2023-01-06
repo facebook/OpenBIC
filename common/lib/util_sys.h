@@ -69,6 +69,7 @@ void submit_bic_cold_reset();
 void bic_cold_reset();
 void submit_bic_warm_reset();
 void bic_warm_reset();
+void check_ac_lost();
 bool is_ac_lost();
 void pal_warm_reset_prepare();
 void pal_cold_reset_prepare();

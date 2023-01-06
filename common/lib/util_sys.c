@@ -15,6 +15,7 @@
  */
 
 #include <zephyr.h>
+#include <logging/log.h>
 #include <sys/reboot.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,6 +25,8 @@
 #include "ipmi.h"
 #include "libutil.h"
 #include "sensor.h"
+
+LOG_MODULE_REGISTER(util_sys);
 
 #define SYS_RST_EVT_LOG_REG 0x7e6e2074
 
@@ -36,17 +39,26 @@ uint8_t ISL69254_DEVICE_ID[5] = { 0x04, 0x00, 0x67, 0xD2, 0x49 };
 uint8_t XDPE12284C_DEVICE_ID[3] = { 0x02, 0x79, 0x02 };
 uint8_t ISL69259_DEVICE_ID[5] = { 0x04, 0x00, 0x46, 0xD2, 0x49 };
 
+static bool ac_lost = false;
 /* Check AC lost */
+void check_ac_lost()
+{
+	static bool is_read = false;
+	if (!is_read) {
+		if (sys_read32(SYS_RST_EVT_LOG_REG) & BIT(0)) {
+			sys_write32(BIT(0), SYS_RST_EVT_LOG_REG);
+			ac_lost = true;
+		}
+		is_read = true;
+	} else {
+		LOG_WRN("The system reset event log register is already read");
+	}
+	return;
+}
+
 bool is_ac_lost()
 {
-	uint32_t value = sys_read32(SYS_RST_EVT_LOG_REG);
-	value &= BIT(0);
-	if (value == BIT(0)) {
-		sys_write32(value, SYS_RST_EVT_LOG_REG);
-	} else {
-		return false;
-	}
-	return true;
+	return ac_lost;
 }
 
 /* bic warm reset work */
@@ -143,7 +155,7 @@ enum RECOVERY_MODE_CAUSE {
 int set_me_firmware_mode(uint8_t me_fw_mode)
 {
 	if ((me_fw_mode != ME_FW_RECOVERY) && (me_fw_mode != ME_FW_RESTORE)) {
-		printf("Unsupported ME firmware mode 0x%x setting", me_fw_mode);
+		LOG_ERR("Unsupported ME firmware mode 0x%x setting", me_fw_mode);
 		return -1;
 	}
 
@@ -151,7 +163,7 @@ int set_me_firmware_mode(uint8_t me_fw_mode)
 	ipmi_msg *me_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
 	uint8_t *data = (uint8_t *)malloc(5 * sizeof(uint8_t));
 	if ((me_msg == NULL) || (data == NULL)) {
-		printf("[%s] Failed to allocate memory\n", __func__);
+		LOG_ERR("Failed to allocate memory");
 		result = -1;
 		goto cleanup;
 	}
@@ -173,8 +185,8 @@ int set_me_firmware_mode(uint8_t me_fw_mode)
 						 data_len, data);
 		ret = ipmb_read(me_msg, IPMB_inf_index_map[me_msg->InF_target]);
 		if (ret != IPMB_ERROR_SUCCESS) {
-			printf("Failed to set ME firmware mode to 0x%x, ret: 0x%x\n", me_fw_mode,
-			       ret);
+			LOG_ERR("Failed to set ME firmware mode to 0x%x, ret: 0x%x", me_fw_mode,
+				ret);
 			continue;
 		}
 
@@ -219,11 +231,11 @@ int set_me_firmware_mode(uint8_t me_fw_mode)
 				break;
 			}
 		} else {
-			printf("Failed to get ME self test result after setting 0x%x mode, ret: 0x%x\n",
-			       me_fw_mode, ret);
+			LOG_ERR("Failed to get ME self test result after setting 0x%x mode, ret: 0x%x",
+				me_fw_mode, ret);
 		}
 	}
-	printf("Failed to set ME firmware mode to 0x%x, retry time: %d\n", me_fw_mode, retry);
+	LOG_ERR("Failed to set ME firmware mode to 0x%x, retry time: %d", me_fw_mode, retry);
 	result = -1;
 
 cleanup:
@@ -259,7 +271,7 @@ void init_me_firmware()
 			ME_mode = ME_INIT_MODE;
 		}
 	} else {
-		printf("Failed to get ME self test result, ret: 0x%x\n", ret);
+		LOG_ERR("Failed to get ME self test result, ret: 0x%x", ret);
 	}
 
 	return;
@@ -289,5 +301,5 @@ void set_sys_ready_pin(uint8_t ready_gpio_name)
 	}
 
 	gpio_set(ready_gpio_name, GPIO_HIGH);
-	printf("BIC Ready\n");
+	LOG_INF("BIC Ready");
 }
