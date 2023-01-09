@@ -467,8 +467,11 @@ enum _OPB_GPIO_NUMS_ {
 					OPB_name_gpioU
 };
 
+// define  opa opb same pin
 #define BIC_EXP_ID OPA_BIC_EXP_ID
 #define BIC_BOARD_ID OPA_BIC_BOARD_ID
+#define FM_EXP_MAIN_PWR_EN OPA_FM_EXP_MAIN_PWR_EN
+#define PWRGD_P12V_MAIN OPA_PWRGD_P12V_MAIN
 
 extern enum _OPA_GPIO_NUMS_ OPA_GPIO_NUMS;
 extern enum _OPB_GPIO_NUMS_ OPB_GPIO_NUMS;
