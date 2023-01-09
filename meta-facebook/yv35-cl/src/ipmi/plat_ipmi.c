@@ -26,6 +26,7 @@
 #include "plat_fru.h"
 #include "plat_class.h"
 #include "plat_ipmb.h"
+#include "plat_dimm.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
@@ -136,5 +137,38 @@ void OEM_1S_GET_CARD_TYPE(ipmi_msg *msg)
 		break;
 	}
 
+	return;
+}
+
+void OEM_1S_GET_DIMM_I3C_MUX_SELECTION(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	I2C_MSG i2c_msg = { 0 };
+	int ret = 0, retry = 3;
+
+	i2c_msg.bus = I2C_BUS1;
+	i2c_msg.target_addr = CPLD_ADDR;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = DIMM_I3C_MUX_CONTROL_OFFSET;
+
+	ret = i2c_master_read(&i2c_msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Failed to read I3C MUX status, ret=%d", ret);
+		return;
+	}
+
+	if (GETBIT(i2c_msg.data[0], 0) == I3C_MUX_TO_CPU) {
+		msg->data[0] = I3C_MUX_TO_CPU;
+	} else if (GETBIT(i2c_msg.data[0], 0) == I3C_MUX_TO_BIC) {
+		msg->data[0] = I3C_MUX_TO_BIC;
+	} else {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	msg->completion_code = CC_SUCCESS;
+	msg->data_len = 1;
 	return;
 }
