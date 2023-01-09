@@ -218,3 +218,42 @@ void ISR_HSC_SMB_ALERT()
 		LOG_ERR("Send HSC SMB alert event log failed");
 	}
 }
+
+#define ISR_SSD_PRESENT_HANDLER(idx)                                                               \
+	void ISR_SSD##idx##_PRESENT()                                                              \
+	{                                                                                          \
+		bool is_present = !gpio_get(e1s_prsnt_pin[idx / 4][idx % 4]);                      \
+		struct pldm_sensor_event_state_sensor_state event;                                 \
+                                                                                                   \
+		event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_PRESENCE;                       \
+		event.event_state =                                                                \
+			is_present ? PLDM_STATE_SET_PRESENT : PLDM_STATE_SET_NOT_PRESENT;          \
+		event.previous_event_state =                                                       \
+			is_present ? PLDM_STATE_SET_NOT_PRESENT : PLDM_STATE_SET_PRESENT;          \
+                                                                                                   \
+		if (pldm_send_platform_event(                                                      \
+			    PLDM_SENSOR_EVENT, PLDM_EVENT_SENSOR_E1S_##idx,                        \
+			    PLDM_STATE_SENSOR_STATE, (uint8_t *)&event,                            \
+			    sizeof(struct pldm_sensor_event_state_sensor_state))) {                \
+			LOG_ERR("Send SSD%d presence event log failed", idx);                      \
+		}                                                                                  \
+	}
+
+ISR_SSD_PRESENT_HANDLER(0);
+ISR_SSD_PRESENT_HANDLER(1);
+ISR_SSD_PRESENT_HANDLER(2);
+ISR_SSD_PRESENT_HANDLER(3);
+ISR_SSD_PRESENT_HANDLER(4);
+ISR_SSD_PRESENT_HANDLER(5);
+ISR_SSD_PRESENT_HANDLER(6);
+ISR_SSD_PRESENT_HANDLER(7);
+ISR_SSD_PRESENT_HANDLER(8);
+ISR_SSD_PRESENT_HANDLER(9);
+ISR_SSD_PRESENT_HANDLER(10);
+ISR_SSD_PRESENT_HANDLER(11);
+ISR_SSD_PRESENT_HANDLER(12);
+ISR_SSD_PRESENT_HANDLER(13);
+ISR_SSD_PRESENT_HANDLER(14);
+ISR_SSD_PRESENT_HANDLER(15);
+
+#undef ISR_SSD_PRESENT_HANDLER

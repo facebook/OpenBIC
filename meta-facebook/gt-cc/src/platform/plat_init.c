@@ -24,6 +24,7 @@
 #include "pldm.h"
 #include "plat_mctp.h"
 #include "plat_class.h"
+#include "plat_pldm_monitor.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -47,6 +48,11 @@ void pal_pre_init()
 void pal_post_init()
 {
 	plat_mctp_init();
+	/* Send device presence log when the BIC is AC on */
+	if (is_ac_lost()) {
+		ssd_present_check();
+		nic_present_check();
+	}
 	gpio_set(BIC_SYS_READY_N, GPIO_LOW);
 }
 

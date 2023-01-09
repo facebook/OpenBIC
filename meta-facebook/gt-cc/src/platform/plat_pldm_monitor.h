@@ -84,5 +84,7 @@ enum plat_pldm_state_set_device_presense {
 };
 
 void ssd_alert_check(uint8_t group);
+void ssd_present_check();
+void nic_present_check();
 
 #endif

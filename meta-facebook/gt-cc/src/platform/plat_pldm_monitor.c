@@ -280,3 +280,41 @@ void ssd_alert_check(uint8_t group)
 
 	k_work_schedule(&data->work, K_SECONDS(1));
 }
+
+void ssd_present_check()
+{
+	for (uint8_t i = 0; i < 16; i++) {
+		bool is_present = !gpio_get(e1s_prsnt_pin[i / 4][i % 4]);
+		struct pldm_sensor_event_state_sensor_state event;
+
+		event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_PRESENCE;
+		event.event_state =
+			is_present ? PLDM_STATE_SET_PRESENT : PLDM_STATE_SET_NOT_PRESENT;
+		event.previous_event_state = PLDM_STATE_SET_NOT_PRESENT;
+
+		if (pldm_send_platform_event(PLDM_SENSOR_EVENT, PLDM_EVENT_SENSOR_E1S_0 + i,
+					     PLDM_STATE_SENSOR_STATE, (uint8_t *)&event,
+					     sizeof(struct pldm_sensor_event_state_sensor_state))) {
+			LOG_ERR("Send SSD%d presence event log failed", i);
+		}
+	}
+}
+
+void nic_present_check()
+{
+	for (uint8_t i = 0; i < 8; i++) {
+		bool is_present = !gpio_get(nic_prsnt_pin[i]);
+		struct pldm_sensor_event_state_sensor_state event;
+
+		event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_PRESENCE;
+		event.event_state =
+			is_present ? PLDM_STATE_SET_PRESENT : PLDM_STATE_SET_NOT_PRESENT;
+		event.previous_event_state = PLDM_STATE_SET_NOT_PRESENT;
+
+		if (pldm_send_platform_event(PLDM_SENSOR_EVENT, PLDM_EVENT_SENSOR_NIC_0 + i,
+					     PLDM_STATE_SENSOR_STATE, (uint8_t *)&event,
+					     sizeof(struct pldm_sensor_event_state_sensor_state))) {
+			LOG_ERR("Send NIC%d presence event log failed", i);
+		}
+	}
+}
