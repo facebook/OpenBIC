@@ -22,6 +22,10 @@
 #include "pldm.h"
 #include "hal_gpio.h"
 
+#ifndef PLDM_MONITOR_EVENT_QUEUE_MSG_NUM_MAX
+#define PLDM_MONITOR_EVENT_QUEUE_MSG_NUM_MAX PLDM_MONITOR_EVENT_QUEUE_MSG_NUM_MAX_DEFAULT
+#endif
+
 LOG_MODULE_DECLARE(pldm);
 
 K_FIFO_DEFINE(send_event_pkt_fifo);
@@ -83,7 +87,7 @@ uint8_t pldm_get_sensor_reading(void *mctp_inst, uint8_t *buf, uint16_t len, uin
 	}
 
 	uint8_t sensor_number = (uint8_t)req_p->sensor_id;
-	uint8_t status = -1;
+	uint8_t status;
 	int reading = 0;
 
 	status = get_sensor_reading(sensor_number, &reading, GET_FROM_CACHE);
@@ -284,11 +288,11 @@ uint8_t pldm_platform_event_message_req(void *mctp_inst, mctp_ext_params ext_par
 	return PLDM_SUCCESS;
 }
 
-static void process_event_message_queue()
+static void process_event_message_queue(struct k_work *work)
 {
 	struct pldm_event_pkt *pkt;
 
-	while ((pkt = k_fifo_get(&send_event_pkt_fifo, K_NO_WAIT)) != NULL) {
+	if ((pkt = k_fifo_get(&send_event_pkt_fifo, K_NO_WAIT)) != NULL) {
 		if (pldm_send_platform_event(pkt->event_class, pkt->id, pkt->ext_class,
 					     pkt->event_data,
 					     pkt->event_data_length) != PLDM_SUCCESS) {
@@ -302,7 +306,9 @@ static void process_event_message_queue()
 		}
 
 		SAFE_FREE(pkt);
-		k_sleep(K_MSEC(1000));
+		k_work_schedule((struct k_work_delayable *)work, K_SECONDS(1));
+	} else {
+		LOG_INF("The event packet queue is empty, send the event work complete.");
 	}
 }
 

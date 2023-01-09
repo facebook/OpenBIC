@@ -26,6 +26,7 @@ extern "C" {
 #include "pldm_oem.h"
 #include "pldm_monitor.h"
 #include "pldm_firmware_update.h"
+#include "pldm_state_set.h"
 
 #define MONITOR_THREAD_STACK_SIZE 1024
 
