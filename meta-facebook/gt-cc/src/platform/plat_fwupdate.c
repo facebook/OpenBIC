@@ -31,18 +31,19 @@ LOG_MODULE_REGISTER(plat_fwupdate);
 
 static uint8_t pldm_pre_vr_update(void *fw_update_param);
 static uint8_t pldm_post_vr_update(void *fw_update_param);
+static uint8_t pldm_pre_cpld_update(void *fw_update_param);
 
 /* PLDM FW update table */
 // clang-format off
 pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
-	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_BIC, 0x00, NULL, pldm_bic_update, NULL, COMP_ACT_SELF, pldm_bic_activate },
-	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_VR0, 0x00, pldm_pre_vr_update, pldm_vr_update, pldm_post_vr_update, COMP_ACT_AC_PWR_CYCLE, NULL },
-	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_VR1, 0x00, pldm_pre_vr_update, pldm_vr_update, pldm_post_vr_update, COMP_ACT_AC_PWR_CYCLE, NULL },
-	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX0, 0x00, NULL, NULL, NULL, COMP_ACT_AC_PWR_CYCLE, NULL },
-	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX1, 0x00, NULL, NULL, NULL, COMP_ACT_AC_PWR_CYCLE, NULL },
-	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX2, 0x00, NULL, NULL, NULL, COMP_ACT_AC_PWR_CYCLE, NULL },
-	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX3, 0x00, NULL, NULL, NULL, COMP_ACT_AC_PWR_CYCLE, NULL },
-	{ ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_CPLD, 0x00, NULL, NULL, NULL, COMP_ACT_AC_PWR_CYCLE, NULL },
+	[COMP_ID_BIC] =  { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_BIC, 0x00, NULL, pldm_bic_update, NULL, COMP_UPDATE_VIA_SPI, COMP_ACT_SELF, pldm_bic_activate },
+	[COMP_ID_VR0] =  { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_VR0, 0x00, pldm_pre_vr_update, pldm_vr_update, pldm_post_vr_update, COMP_UPDATE_VIA_I2C, COMP_ACT_AC_PWR_CYCLE, NULL },
+	[COMP_ID_VR1] =  { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_VR1, 0x00, pldm_pre_vr_update, pldm_vr_update, pldm_post_vr_update, COMP_UPDATE_VIA_I2C, COMP_ACT_AC_PWR_CYCLE, NULL },
+	[COMP_ID_PEX0] = { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX0, 0x00, NULL, NULL, NULL, COMP_UPDATE_VIA_SPI, COMP_ACT_AC_PWR_CYCLE, NULL },
+	[COMP_ID_PEX1] = { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX1, 0x00, NULL, NULL, NULL, COMP_UPDATE_VIA_SPI, COMP_ACT_AC_PWR_CYCLE, NULL },
+	[COMP_ID_PEX2] = { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX2, 0x00, NULL, NULL, NULL, COMP_UPDATE_VIA_SPI, COMP_ACT_AC_PWR_CYCLE, NULL },
+	[COMP_ID_PEX3] = { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX3, 0x00, NULL, NULL, NULL, COMP_UPDATE_VIA_SPI, COMP_ACT_AC_PWR_CYCLE, NULL },
+	[COMP_ID_CPLD] = { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_CPLD, 0x00, pldm_pre_cpld_update, pldm_cpld_update, NULL, COMP_UPDATE_VIA_I2C, COMP_ACT_AC_PWR_CYCLE, NULL },
 };
 // clang-format on
 
@@ -85,6 +86,20 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param)
 	/* Get bus and target address by sensor number in sensor configuration */
 	p->bus = sensor_config[sensor_config_index_map[sensor_num]].port;
 	p->addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+
+	return 0;
+}
+
+static uint8_t pldm_pre_cpld_update(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+
+	if (p->inf == COMP_UPDATE_VIA_I2C) {
+		p->bus = 0x07;
+		p->addr = 0x40;
+	}
 
 	return 0;
 }
