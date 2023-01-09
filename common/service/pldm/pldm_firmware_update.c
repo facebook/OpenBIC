@@ -242,28 +242,15 @@ void pldm_status_reset()
 	memcpy(cur_update_comp_str, "unknown", 8);
 }
 
-uint16_t pldm_fw_update_read(void *mctp_p, enum pldm_firmware_update_commands cmd, uint8_t *req,
-			     uint16_t req_len, uint8_t *rbuf, uint16_t rbuf_len, void *ext_params)
+struct pldm_fw_update_cfg fw_update_cfg = { .image_size = 0,
+					    .max_buff_size = MIN_FW_UPDATE_BASELINE_TRANS_SIZE };
+
+/* current updated component id catch from UpdateComponent command */
+uint16_t cur_update_comp = -1;
+
+__weak void load_pldmupdate_comp_config(void)
 {
-	/* Return read length zero means read fail */
-	CHECK_NULL_ARG_WITH_RETURN(mctp_p, 0);
-	CHECK_NULL_ARG_WITH_RETURN(req, 0);
-	CHECK_NULL_ARG_WITH_RETURN(rbuf, 0);
-	CHECK_NULL_ARG_WITH_RETURN(ext_params, 0);
-
-	pldm_msg msg = { 0 };
-	mctp_ext_params *extra_data = (mctp_ext_params *)ext_params;
-
-	msg.ext_params = *extra_data;
-
-	msg.hdr.pldm_type = PLDM_TYPE_FW_UPDATE;
-	msg.hdr.cmd = cmd;
-	msg.hdr.rq = 1;
-
-	msg.buf = req;
-	msg.len = req_len;
-
-	return mctp_pldm_read(mctp_p, &msg, rbuf, rbuf_len);
+	LOG_ERR("Failed to load pldm update table config");
 }
 
 static uint8_t report_tranfer(void *mctp_p, void *ext_params, uint8_t result_code)
@@ -465,6 +452,9 @@ exit:
 			LOG_ERR("post-update failed!");
 		}
 	}
+	case STATE_VERIFY: {
+		struct pldm_verify_complete_req verify_comp_req = { 0 };
+		verify_comp_req.verifyResult = result_code;
 
 	fw_update_cfg.image_size = 0;
 
@@ -694,11 +684,11 @@ static uint8_t update_component(void *mctp_inst, uint8_t *buf, uint16_t len, uin
 
 	memcpy(extra_data, ext_params, sizeof(mctp_ext_params));
 
-	fw_update_tid =
-		k_thread_create(&pldm_fw_update_thread, pldm_fw_update_stack,
-				K_THREAD_STACK_SIZEOF(pldm_fw_update_stack), req_fw_update_handler,
-				mctp_inst, extra_data, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0,
-				K_SECONDS(UPDATE_THREAD_DELAY_SECOND));
+	fw_update_tid = k_thread_create(&pldm_fw_update_thread, pldm_fw_update_stack,
+					K_THREAD_STACK_SIZEOF(pldm_fw_update_stack),
+					req_fw_update_handler, mctp_inst, extra_data,
+					(void *)&cur_update_comp, CONFIG_MAIN_THREAD_PRIORITY, 0,
+					K_SECONDS(UPDATE_THREAD_DELAY_SECOND));
 	k_thread_name_set(&pldm_fw_update_thread, "pldm_fw_update_thread");
 
 	current_state = STATE_DOWNLOAD;

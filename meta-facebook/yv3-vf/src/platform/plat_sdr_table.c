@@ -410,7 +410,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"VF_E1S_P1V2_STBY_VOLT_V ",
+		"VF_E1S_P1V2_STBY_VOLT_V",
 	},
 #if HSC_SENSOR
 	{

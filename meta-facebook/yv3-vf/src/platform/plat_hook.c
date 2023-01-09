@@ -44,7 +44,7 @@ ina230_init_arg ina231_init_args[] = {
 		.POL = 1,			// Enable the Over-Limit Power alert function.
 	},
 	.r_shunt = 0.01,
-	.alert_value = 16.0,	// Unit: Watt
+	.alert_value = 25.0,	// Unit: Watt
 	.i_max = 32.768
 	},
 	[1] = {
@@ -60,7 +60,7 @@ ina230_init_arg ina231_init_args[] = {
 		.POL = 1,			// Enable the Over-Limit Power alert function.
 	},
 	.r_shunt = 0.01,
-	.alert_value = 16.0,	// Unit: Watt
+	.alert_value = 25.0,	// Unit: Watt
 	.i_max = 32.768
 	},
 	[2] = {
@@ -76,7 +76,7 @@ ina230_init_arg ina231_init_args[] = {
 		.POL = 1,			// Enable the Over-Limit Power alert function.
 	},
 	.r_shunt = 0.01,
-	.alert_value = 16.0,	// Unit: Watt
+	.alert_value = 25.0,	// Unit: Watt
 	.i_max = 32.768
 	},
 	[3] = {
@@ -92,7 +92,7 @@ ina230_init_arg ina231_init_args[] = {
 		.POL = 1,			// Enable the Over-Limit Power alert function.
 	},
 	.r_shunt = 0.01,
-	.alert_value = 16.0,	// Unit: Watt
+	.alert_value = 25.0,	// Unit: Watt
 	.i_max = 32.768
 	},
 };

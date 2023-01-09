@@ -19,6 +19,9 @@
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "isl28022.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(dev_isl28022);
 
 uint8_t isl28022_read(uint8_t sensor_num, int *reading)
 {
@@ -29,8 +32,8 @@ uint8_t isl28022_read(uint8_t sensor_num, int *reading)
 
 	isl28022_init_arg *init_arg =
 		(isl28022_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
-	if (init_arg->is_init == false) {
-		printf("isl28022_read, device isn't initialized\n");
+	if (!init_arg->is_init) {
+		LOG_ERR("Device isn't initialized");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -93,8 +96,8 @@ uint8_t isl28022_init(uint8_t sensor_num)
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	if (sensor_config[sensor_config_index_map[sensor_num]].init_args == NULL) {
-		printf("isl28022_init: init_arg is NULL sensor_num = 0x%x\n", sensor_num);
+	if (!sensor_config[sensor_config_index_map[sensor_num]].init_args) {
+		LOG_ERR("Initial argument is NULL at sensor number (0x%x)", sensor_num);
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
@@ -108,15 +111,17 @@ uint8_t isl28022_init(uint8_t sensor_num)
 	I2C_MSG msg;
 	uint8_t retry = 5;
 
-	/* set configuration register */
 	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
 	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+
+	/* set configuration register */
 	msg.tx_len = 3;
 	msg.data[0] = ISL28022_CONFIG_REG;
 	msg.data[1] = (init_arg->config.value >> 8) & 0xFF;
 	msg.data[2] = init_arg->config.value & 0xFF;
+
 	if (i2c_master_write(&msg, retry)) {
-		printf("isl28022_init, set configuration register fail\n");
+		LOG_ERR("Set configuration register failed");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
@@ -134,15 +139,40 @@ uint8_t isl28022_init(uint8_t sensor_num)
 	calibration = (40.96 / (init_arg->current_LSB * init_arg->r_shunt));
 	calibration = calibration & 0xFFFE; /* 16 bits, bit[0] is fix to 0 */
 
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
 	msg.tx_len = 3;
 	msg.data[0] = ISL28022_CALIBRATION_REG;
 	msg.data[1] = (calibration >> 8) & 0xFF;
 	msg.data[2] = calibration & 0xFF;
+
 	if (i2c_master_write(&msg, retry)) {
-		printf("isl28022_init, set calibration register fail\n");
+		LOG_ERR("Set calibration register failed");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+
+	if (init_arg->bus_volt_threshold_config.do_config) {
+		msg.tx_len = 3;
+		msg.data[0] = ISL28022_BUS_VOLTAGE_THRESHOLD_REG;
+		msg.data[1] = ((init_arg->bus_volt_threshold_config.max_threshold_limit * 1000) /
+			       ISL28022_BUS_VOLTAGE_THRESHOLD_LSB);
+		msg.data[2] = ((init_arg->bus_volt_threshold_config.min_threshold_limit * 1000) /
+			       ISL28022_BUS_VOLTAGE_THRESHOLD_LSB);
+
+		if (i2c_master_write(&msg, retry)) {
+			LOG_ERR("Set bus valtage threshold register failed");
+			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		}
+	}
+
+	if (init_arg->aux_control_config.do_config) {
+		msg.tx_len = 3;
+		msg.data[0] = ISL28022_AUX_CONTROL_REG;
+		msg.data[1] = (init_arg->aux_control_config.config.value >> 8) & 0xFF;
+		msg.data[2] = init_arg->aux_control_config.config.value & 0xFF;
+
+		if (i2c_master_write(&msg, retry)) {
+			LOG_ERR("Set AUX control register failed");
+			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		}
 	}
 
 	init_arg->is_init = true;
