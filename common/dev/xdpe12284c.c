@@ -193,6 +193,53 @@ static float vid_to_float(int val, uint8_t vout_mode)
 	return 0;
 }
 
+static bool find_addr_and_crc(uint8_t *buff, struct xdpe_config *dev_cfg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(buff, false);
+	CHECK_NULL_ARG_WITH_RETURN(dev_cfg, false);
+
+	if (strncmp(buff, "XDPE12284C", 10))
+		return false;
+
+	uint8_t collect_level = 0;
+
+	int idx = 0, val = 0;
+	while (buff[idx] != 0x0d) {
+		if (!strncmp(&buff[idx], " - 0x", 5)) {
+			collect_level++;
+			idx += 5;
+		}
+
+		// collect address
+		if (collect_level == 1) {
+			dev_cfg->addr = ascii_to_val(buff[idx]) * 16 + ascii_to_val(buff[idx + 1]);
+			LOG_DBG("addr get = %x", dev_cfg->addr);
+			idx += 2;
+		} else if (collect_level == 2) {
+			dev_cfg->crc_exp = 0;
+			while (buff[idx] != 0x0d) {
+				val = ascii_to_val(buff[idx]);
+				if (val == -1) {
+					LOG_ERR("Image got format error in line %d", __LINE__);
+					return false;
+				}
+				dev_cfg->crc_exp = (dev_cfg->crc_exp << 4) | val;
+				if (idx == fw_update_cfg.image_size) {
+					LOG_ERR("Image got format error in line %d", __LINE__);
+					return false;
+				}
+				idx++;
+			}
+			LOG_DBG("crc get = %x", dev_cfg->crc_exp);
+			return true;
+		} else {
+			idx++;
+		}
+	}
+
+	return true;
+}
+
 static bool parsing_image(uint8_t *hex_buff, struct xdpe_config *dev_cfg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(hex_buff, false);
@@ -215,12 +262,6 @@ static bool parsing_image(uint8_t *hex_buff, struct xdpe_config *dev_cfg)
 	uint16_t value = 0;
 	int data_idx = 0, val;
 	for (int i = 0; i < fw_update_cfg.image_size; i++) {
-		/* check valid */
-		if (!hex_buff[i]) {
-			LOG_ERR("Get invalid buffer data at index %d", i);
-			goto exit;
-		}
-
 		/* collect data */
 		if (rec_flag == true) {
 			// grep offset and exit keyword
@@ -308,51 +349,8 @@ static bool parsing_image(uint8_t *hex_buff, struct xdpe_config *dev_cfg)
 		/* parsing address and crc */
 		if (i + 9 < fw_update_cfg.image_size) {
 			if (!strncmp(&hex_buff[i], "XDPE12284C", 10)) {
-				i += 10; //pass 'XDPE12284C'
-				if (i + 6 < fw_update_cfg.image_size) {
-					if (!strncmp(&hex_buff[i], " - ", 3)) {
-						dev_cfg->addr = ascii_to_val(hex_buff[i + 5]) * 16 +
-								ascii_to_val(hex_buff[i + 6]);
-						LOG_INF("addr get = %x", dev_cfg->addr);
-						i += 7; //pass ' - 0x??'
-						if (i + 2 < fw_update_cfg.image_size) {
-							if (hex_buff[i] == ' ' &&
-							    hex_buff[i + 1] == '-' &&
-							    hex_buff[i + 2] == ' ') {
-								i += 3; //pass ' - '
-								if (i + 2 >=
-								    fw_update_cfg.image_size) {
-									LOG_ERR("Image got format error in line %d",
-										__LINE__);
-									goto exit;
-								}
-								i += 2; //pass '0x'
-								while (hex_buff[i] != 0x0d) {
-									val = ascii_to_val(
-										hex_buff[i]);
-									if (val == -1) {
-										LOG_ERR("Image got format error in line %d",
-											__LINE__);
-										goto exit;
-									}
-									dev_cfg->crc_exp =
-										(dev_cfg->crc_exp
-										 << 4) |
-										val;
-									i++; //pass the crc area
-									if (i ==
-									    fw_update_cfg
-										    .image_size) {
-										LOG_ERR("Image got format error in line %d",
-											__LINE__);
-										goto exit;
-									}
-								}
-								i++; //pass '0x0a'
-								continue;
-							}
-						}
-					}
+				if (find_addr_and_crc(&hex_buff[i], dev_cfg) == false) {
+					goto exit;
 				}
 			}
 		}
@@ -422,6 +420,7 @@ bool xdpe12284c_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff)
 	LOG_INF("XDPE12284c device(bus: %d addr: 0x%x) info:", dev_i2c_bus, dev_i2c_addr);
 	LOG_INF("* crc:              0x%02x%02x%02x%02x", crc[0], crc[1], crc[2], crc[3]);
 	LOG_INF("* image crc:        0x%x", dev_cfg.crc_exp);
+	LOG_INF("* image addr:       0x%x", dev_cfg.addr >> 1);
 	LOG_INF("* remaining writes: %d", remain);
 
 	/* Step3. FW Update */

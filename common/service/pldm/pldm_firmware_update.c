@@ -115,7 +115,7 @@ uint8_t pldm_vr_update(void *fw_update_param)
 		}
 	}
 
-	memcpy(hex_buff + (int)p->data_ofs, p->data, p->data_len);
+	memcpy(hex_buff + p->data_ofs, p->data, p->data_len);
 
 	p->next_ofs = p->data_ofs + p->data_len;
 	p->next_len = fw_update_cfg.max_buff_size;
