@@ -66,7 +66,8 @@ static bool rg3mxxb12_register_write(uint8_t bus, uint8_t offset, uint8_t value)
 	ret = i2c_master_read(&msg, RETRY);
 	if ((ret != 0) || (msg.data[0] != value)) {
 		LOG_ERR("failed to read rg3mxxb12 register 0x%x after setting,"
-			"bus-%d\n", offset, bus);
+			"bus-%d\n",
+			offset, bus);
 		return false;
 	}
 
@@ -77,6 +78,15 @@ static bool rg3mxxb12_protected_register(uint8_t bus, bool lock)
 {
 	uint8_t val = lock ? PROTECTION_LOCK : PROTECTION_UNLOCK;
 	if (!rg3mxxb12_register_write(bus, RG3MXXB12_PROTECTION_REG, val)) {
+		return false;
+	}
+	return true;
+}
+
+bool rg3mxxb12_select_slave_port_connect(uint8_t bus, uint8_t slave_port)
+{
+	// Connect selected slave port to HUB network
+	if (!rg3mxxb12_register_write(bus, RG3MXXB12_SSPORTS_HUB_NETWORK_CONNECTION, slave_port)) {
 		return false;
 	}
 	return true;

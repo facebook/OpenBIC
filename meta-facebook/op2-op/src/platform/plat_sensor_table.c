@@ -108,8 +108,25 @@ sensor_cfg plat_sensor_config[] = {
 	  INA233_PWR_OFFSET, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &ina233_init_args[0] },
+
+	//E1S Temp
+	{ SENSOR_NUM_1OU_E1S_SSD0_TEMP_C, sensor_dev_nvme, I2C_BUS2, NVME_ADDR, NVME_TEMP_OFFSET,
+	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &i2c_proc_args[0], post_i2c_bus_read,
+	  &i2c_proc_args[0], NULL },
+
+	{ SENSOR_NUM_1OU_E1S_SSD1_TEMP_C, sensor_dev_nvme, I2C_BUS2, NVME_ADDR, NVME_TEMP_OFFSET,
+	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &i2c_proc_args[1], post_i2c_bus_read,
+	  &i2c_proc_args[1], NULL },
 };
 sensor_cfg plat_expansion_A_sensor_config[] = {
+
+	//E1S Temp
+	{ SENSOR_NUM_1OU_E1S_SSD2_TEMP_C, sensor_dev_nvme, I2C_BUS2, NVME_ADDR, NVME_TEMP_OFFSET,
+	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &i2c_proc_args[5], post_i2c_bus_read,
+	  &i2c_proc_args[5], NULL },
 
 	//Temp
 	{ SENSOR_NUM_1OU_TEMP, sensor_dev_tmp75, I2C_BUS4, TMP75_EXPA_TEMP_ADDR, TMP75_TEMP_OFFSET,
@@ -147,6 +164,22 @@ sensor_cfg plat_expansion_A_sensor_config[] = {
 };
 
 sensor_cfg plat_expansion_B_sensor_config[] = {
+
+	//E1S Temp
+	{ SENSOR_NUM_2OU_E1S_SSD2_TEMP_C, sensor_dev_nvme, I2C_BUS2, NVME_ADDR, NVME_TEMP_OFFSET,
+	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &i2c_proc_args[2], post_i2c_bus_read,
+	  &i2c_proc_args[2], NULL },
+
+	{ SENSOR_NUM_2OU_E1S_SSD3_TEMP_C, sensor_dev_nvme, I2C_BUS2, NVME_ADDR, NVME_TEMP_OFFSET,
+	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &i2c_proc_args[3], post_i2c_bus_read,
+	  &i2c_proc_args[3], NULL },
+
+	{ SENSOR_NUM_2OU_E1S_SSD4_TEMP_C, sensor_dev_nvme, I2C_BUS2, NVME_ADDR, NVME_TEMP_OFFSET,
+	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &i2c_proc_args[4], post_i2c_bus_read,
+	  &i2c_proc_args[4], NULL },
 
 	//Temp
 	{ SENSOR_NUM_2OU_TEMP, sensor_dev_tmp75, I2C_BUS4, TMP75_EXPB_TEMP_ADDR, TMP75_TEMP_OFFSET,

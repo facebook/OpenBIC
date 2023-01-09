@@ -17,10 +17,22 @@
 #ifndef PLAT_HOOK_H
 #define PLAT_HOOK_H
 
+typedef struct _i2c_proc_arg {
+	uint8_t bus;
+	uint8_t channel;
+} i2c_proc_arg;
+
 /**************************************************************************************************
  * INIT ARGS
 **************************************************************************************************/
 extern adc_asd_init_arg adc_asd_init_args[];
 extern ina233_init_arg ina233_init_args[];
+extern i2c_proc_arg i2c_proc_args[];
+extern struct k_mutex i2c_hub_mutex;
+
+#define I2C_HUB_MUTEX_TIMEOUT_MS 300
+
+bool pre_i2c_bus_read(uint8_t sensor_num, void *args);
+bool post_i2c_bus_read(uint8_t sensor_num, void *args, int *reading);
 
 #endif
