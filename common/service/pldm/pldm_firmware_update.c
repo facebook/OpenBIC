@@ -115,6 +115,11 @@ uint8_t pldm_vr_update(void *fw_update_param)
 		}
 	}
 
+	if (!hex_buff) {
+		LOG_ERR("First package(offset=0) has missed, so hex_buff get NULL");
+		return 1;
+	}
+
 	memcpy(hex_buff + p->data_ofs, p->data, p->data_len);
 
 	p->next_ofs = p->data_ofs + p->data_len;
