@@ -197,7 +197,6 @@ enum comp_act_mdthod {
 	COMP_ACT_SUPP_PEND_COMP_IMG_SET = 0x0080,
 };
 
-// typedef uint8_t (*pldm_fwupdate_func)(uint16_t comp_id, void *mctp_p, void *ext_params);
 typedef uint8_t (*pldm_fwupdate_func)(void *fw_update_param);
 typedef uint8_t (*pldm_act_func)(void *arg);
 

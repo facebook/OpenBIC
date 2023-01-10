@@ -24,6 +24,7 @@
 #include "ipmi.h"
 #include "intel_dimm.h"
 #include "pmic.h"
+#include "sensor.h"
 #include "libipmi.h"
 #include "power_status.h"
 #include "oem_1s_handler.h"
@@ -93,6 +94,12 @@ void monitor_pmic_error_handler()
 	memset(is_pmic_error_flag, false, sizeof(is_pmic_error_flag));
 
 	while (1) {
+		// Check sensor poll enable
+		if (get_sensor_poll_enable_flag() == false) {
+			k_msleep(MONITOR_PMIC_ERROR_TIME_MS);
+			continue;
+		}
+
 		// If post isn't complete, BIC doesn't monitor PMIC error
 		if (get_post_status() == false) {
 			k_msleep(MONITOR_PMIC_ERROR_TIME_MS);

@@ -85,6 +85,12 @@ int pmic_ipmb_transfer(int *total_pmic_power, uint8_t seq_source, uint8_t netFn,
 		return -1;
 	}
 
+	if (pmic_msg->data_len < 4) {
+		printf("pmic res data_len: 0x%x\n", pmic_msg->data_len);
+		SAFE_FREE(pmic_msg);
+		return -1;
+	}
+
 	if (total_pmic_power != NULL) {
 		*total_pmic_power = pmic_msg->data[3] * PMIC_TOTAL_POWER_MW;
 	}

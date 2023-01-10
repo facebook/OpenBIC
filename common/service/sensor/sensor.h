@@ -166,21 +166,19 @@ static inline float convert_MBR_to_reading(uint8_t sensor_num, uint8_t val)
 	return (val - round_add(sensor_num, val)) * SDR_M(sensor_num) / SDR_Rexp(sensor_num);
 }
 
-enum {
-	SENSOR_READ_SUCCESS,
-	SENSOR_READ_ACUR_SUCCESS,
-	SENSOR_NOT_FOUND,
-	SENSOR_NOT_ACCESSIBLE, // Only use to check sensor access fail
-	SENSOR_FAIL_TO_ACCESS,
-	SENSOR_INIT_STATUS,
-	SENSOR_UNSPECIFIED_ERROR,
-	SENSOR_POLLING_DISABLE,
-	SENSOR_PRE_READ_ERROR,
-	SENSOR_POST_READ_ERROR,
-	SENSOR_READ_API_UNREGISTER,
-	SENSOR_READ_4BYTE_ACUR_SUCCESS,
-	SENSOR_NOT_PRESENT
-};
+enum { SENSOR_READ_SUCCESS,
+       SENSOR_READ_ACUR_SUCCESS,
+       SENSOR_NOT_FOUND,
+       SENSOR_NOT_ACCESSIBLE, // Only use to check sensor access fail
+       SENSOR_FAIL_TO_ACCESS,
+       SENSOR_INIT_STATUS,
+       SENSOR_UNSPECIFIED_ERROR,
+       SENSOR_POLLING_DISABLE,
+       SENSOR_PRE_READ_ERROR,
+       SENSOR_POST_READ_ERROR,
+       SENSOR_READ_API_UNREGISTER,
+       SENSOR_READ_4BYTE_ACUR_SUCCESS,
+       SENSOR_NOT_PRESENT };
 
 enum { SENSOR_INIT_SUCCESS, SENSOR_INIT_UNSPECIFIED_ERROR };
 
@@ -234,13 +232,39 @@ typedef struct _isl28022_init_arg {
 			uint16_t RST : 1;
 		} fields;
 	} config;
+
+	struct bus_volt_threshold_config {
+		bool do_config;
+		/* The threshold of Volts */
+		float min_threshold_limit;
+		float max_threshold_limit;
+	} bus_volt_threshold_config;
+
+	struct aux_control_config {
+		bool do_config;
+		union {
+			uint16_t value;
+			struct {
+				/* External Clock Divider bits*/
+				uint16_t ExtCLKDiv : 6;
+				/* External Clock Enable bit */
+				uint16_t ExtClkEn : 1;
+				/* Interrupt Enable bit*/
+				uint16_t INTREN : 1;
+				/* Force Interrupt bit */
+				uint16_t FORCEINTR : 1;
+				uint16_t resv : 7;
+			} fields;
+		} config;
+	} aux_control_config;
+
 	/* R_shunt valus, unit: milliohm */
 	uint32_t r_shunt;
-
-	/* Initialize function will set following arguments, no need to give value */
-	bool is_init;
 	/* used when read current/power */
 	float current_LSB;
+	/* Initialize function will set following arguments, no need to give value */
+	bool is_init;
+
 } isl28022_init_arg;
 
 typedef struct _adc_asd_init_arg {
@@ -469,6 +493,7 @@ bool vr_stby_access(uint8_t sensor_num);
 bool sensor_init(void);
 void disable_sensor_poll();
 void enable_sensor_poll();
+bool get_sensor_poll_enable_flag();
 void pal_extend_sensor_config(void);
 bool check_sensor_num_exist(uint8_t sensor_num);
 void add_sensor_config(sensor_cfg config);
