@@ -18,7 +18,7 @@
 #define PLAT_SENSOR_TABLE_H
 
 #include <stdint.h>
-/* define configuration for sensors */
+/* Define configuration for sensors */
 #define NIC_TEMP_OFFSET 0x01
 #define TMP75_TEMP_OFFSET 0x00
 #define NIC_ADDR (0x3E >> 1)
@@ -53,8 +53,6 @@
 #define DVT_PEX_SWITCH_2_I2C_ADDR (0xC4 >> 1)
 #define DVT_PEX_SWITCH_3_I2C_ADDR (0xC6 >> 1)
 
-#define PEX_MAX_NUMBER 4
-
 #define SYSTEM_INLET_TEMP_ADDR (0x90 >> 1)
 #define SYSTEM_OUTLET_TEMP_L1_ADDR (0x90 >> 1)
 #define SYSTEM_OUTLET_TEMP_L2_ADDR (0x94 >> 1)
@@ -80,7 +78,12 @@
 #define SSD_14_POWER_MONITOR_ADDR (0x9C >> 1)
 #define SSD_15_POWER_MONITOR_ADDR (0x9E >> 1)
 
-/*  threshold sensor number, 1 based  */
+/* Define the device maximum number in this platform */
+#define PEX_MAX_NUMBER 4
+#define NIC_MAX_NUMBER 8
+#define SSD_MAX_NUMBER 16
+
+/* Define the sensor numbers used in this platform */
 #define SENSOR_NUM_TEMP_NIC_0 0x01
 #define SENSOR_NUM_VOLT_NIC_0 0x02
 #define SENSOR_NUM_IOUT_NIC_0 0x03

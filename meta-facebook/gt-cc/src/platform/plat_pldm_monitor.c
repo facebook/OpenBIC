@@ -72,15 +72,23 @@ static struct ssd_event_check {
 	bool init;
 	uint8_t group;
 	uint8_t flag;
-} ssd_event_check[2];
+	uint8_t alert_pin;
+} ssd_event_check[2] = {
+	[0] = { .alert_pin = SSD_0_7_ADC_ALERT_N },
+	[1] = { .alert_pin = SSD_8_15_ADC_ALERT_N },
+};
 
 void ssd_alert_check_ina230(uint8_t idx, uint8_t *flag)
 {
+	CHECK_NULL_ARG(flag);
+
 	uint8_t sensor_num = ssd_power_ic_sensor_table[idx];
 	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 
-	uint8_t retry = 5;
-	I2C_MSG msg;
+	if (!cfg) {
+		LOG_ERR("The pointer of the sensor config is NULL");
+		return;
+	}
 
 	if (cfg->pre_sensor_read_hook) {
 		if (!cfg->pre_sensor_read_hook(cfg->num, cfg->pre_sensor_read_args)) {
@@ -89,6 +97,8 @@ void ssd_alert_check_ina230(uint8_t idx, uint8_t *flag)
 		}
 	}
 
+	uint8_t retry = 5;
+	I2C_MSG msg;
 	/* If the alert latch enable bit is set to Latch mode, the ALERT pin and flag bits remain 
 		active following a fault until the Mask/Enable register has been read. So if the alert is clear, 
 		the non-alert log will be sent in the next worker execute */
@@ -149,11 +159,15 @@ exec_post_exit:
 
 void ssd_alert_check_isl28022(uint8_t idx, uint8_t *flag)
 {
+	CHECK_NULL_ARG(flag);
+
 	uint8_t sensor_num = ssd_power_ic_sensor_table[idx];
 	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 
-	uint8_t retry = 5;
-	I2C_MSG msg;
+	if (!cfg) {
+		LOG_ERR("The pointer of the sensor config is NULL");
+		return;
+	}
 
 	if (cfg->pre_sensor_read_hook) {
 		if (!cfg->pre_sensor_read_hook(cfg->num, cfg->pre_sensor_read_args)) {
@@ -162,6 +176,8 @@ void ssd_alert_check_isl28022(uint8_t idx, uint8_t *flag)
 		}
 	}
 
+	uint8_t retry = 5;
+	I2C_MSG msg;
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
@@ -233,7 +249,14 @@ exec_post_exit:
 
 void ssd_alert_check_handler(struct k_work *work)
 {
+	CHECK_NULL_ARG(work);
+
 	struct ssd_event_check *data = CONTAINER_OF(work, struct ssd_event_check, work);
+
+	if (!data) {
+		LOG_ERR("The pointer of the SSD event check is NULL");
+		return;
+	}
 
 	gt_power_monitor_ic_type_t type = get_power_moniter_ic_type();
 	uint8_t start_idx = (data->group == 0 ? 0 : 8);
@@ -254,8 +277,12 @@ void ssd_alert_check_handler(struct k_work *work)
 		}
 	}
 
-	if (data->flag)
+	if (data->flag) {
+		gpio_interrupt_conf(data->alert_pin, GPIO_INT_DISABLE);
 		k_work_schedule((struct k_work_delayable *)work, K_SECONDS(5));
+	} else {
+		gpio_interrupt_conf(data->alert_pin, GPIO_INT_EDGE_BOTH);
+	}
 }
 
 void ssd_alert_check(uint8_t group)
@@ -266,6 +293,11 @@ void ssd_alert_check(uint8_t group)
 	}
 
 	struct ssd_event_check *data = ((group == 0) ? &ssd_event_check[0] : &ssd_event_check[1]);
+
+	if (!data) {
+		LOG_ERR("The pointer of the SSD event check is NULL");
+		return;
+	}
 
 	if (!data->init) {
 		k_work_init_delayable(&data->work, ssd_alert_check_handler);
@@ -283,7 +315,7 @@ void ssd_alert_check(uint8_t group)
 
 void ssd_present_check()
 {
-	for (uint8_t i = 0; i < 16; i++) {
+	for (uint8_t i = 0; i < SSD_MAX_NUMBER; i++) {
 		bool is_present = !gpio_get(e1s_prsnt_pin[i / 4][i % 4]);
 		struct pldm_sensor_event_state_sensor_state event;
 
@@ -302,7 +334,7 @@ void ssd_present_check()
 
 void nic_present_check()
 {
-	for (uint8_t i = 0; i < 8; i++) {
+	for (uint8_t i = 0; i < NIC_MAX_NUMBER; i++) {
 		bool is_present = !gpio_get(nic_prsnt_pin[i]);
 		struct pldm_sensor_event_state_sensor_state event;
 
