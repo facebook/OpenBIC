@@ -367,7 +367,7 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 			}
 
 			if (xdpe12284c_get_remaining_write(i2c_msg.bus, i2c_msg.target_addr,
-							   &(msg->data[4])) == false) {
+							   (uint16_t *)&(msg->data[4])) == false) {
 				msg->completion_code = CC_UNSPECIFIED_ERROR;
 				goto unlock_exit;
 			}

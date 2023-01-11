@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef isl69259_H
-#define isl69259_H
+#ifndef mp2971_H
+#define mp2971_H
 
 #include "stdint.h"
 
-#define TWO_COMPLEMENT_NEGATIVE_BIT BIT(15)
-#define ADJUST_IOUT_RANGE 2
-
-bool isl69259_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff);
+bool mp2971_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff);
 
 #endif
