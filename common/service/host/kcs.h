@@ -21,12 +21,24 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <zephyr.h>
 
 #define KCS_POLL_STACK_SIZE 2560
 #define KCS_POLLING_INTERVAL 100
 #define KCS_BUFF_SIZE 256
+#define KCS_MAX_CHANNEL_NUM 0x0F
 
 #define CMD_SYS_INFO_FW_VERSION 0x01
+#define KCS_TASK_NAME_LEN 32
+
+typedef struct _kcs_dev {
+	const struct device *dev;
+	uint8_t index;
+	k_tid_t task_tid;
+	K_KERNEL_STACK_MEMBER(task_stack, KCS_POLL_STACK_SIZE);
+	uint8_t task_name[KCS_TASK_NAME_LEN];
+	struct k_thread task_thread;
+} kcs_dev;
 
 struct kcs_request {
 	uint8_t netfn;
@@ -41,8 +53,8 @@ struct kcs_response {
 	uint8_t data[0];
 };
 
-void kcs_write(uint8_t *buf, uint32_t buf_sz);
-void kcs_init(void);
+void kcs_device_init(char **config, uint8_t size);
+void kcs_write(uint8_t index, uint8_t *buf, uint32_t buf_sz);
 bool get_kcs_ok();
 void reset_kcs_ok();
 

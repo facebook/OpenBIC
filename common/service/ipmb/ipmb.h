@@ -98,7 +98,6 @@ enum Channel_Target {
 	SELF = 0x0,
 	ME_IPMB = 0x01,
 	BMC_IPMB = 0x02,
-	HOST_KCS = 0x03,
 	SERVER_IPMB = 0x04,
 	EXP1_IPMB = 0x05,
 	SLOT1_BIC = 0x07,
@@ -115,6 +114,12 @@ enum Channel_Target {
 	BMC_USB = 0x20,
 	/* 21h-39h reserved. */
 	PLDM = 0x40,
+	/* 41h-4Fh reserved. */
+	HOST_KCS_1 = 0x50,
+	HOST_KCS_2 = 0x51,
+	HOST_KCS_3 = 0x52,
+	HOST_KCS_4 = 0x53,
+	/* 54h-5Fh are reserved for KCS */
 	RESERVED,
 };
 
@@ -172,13 +177,13 @@ typedef struct ipmi_msg {
                                          */
 	uint32_t timestamp; /**< Tick count at the beginning of the process */
 	uint8_t msg_chksum; /**< Message checksum */
-} __packed __aligned(4) ipmi_msg;
+} __attribute__((packed, aligned(4))) ipmi_msg;
 
 typedef struct ipmi_msg_cfg {
 	ipmi_msg buffer; /**< IPMI Message */
 	uint8_t retries; /**< Current retry counter */
 	struct ipmi_msg_cfg *next;
-} __packed __aligned(4) ipmi_msg_cfg;
+} __attribute__((packed, aligned(4))) ipmi_msg_cfg;
 
 bool pal_load_ipmb_config(void);
 void ipmb_init(void);

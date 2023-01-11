@@ -97,6 +97,11 @@
 	addr = <0xca2>;
 };
 
+&kcs4 {
+	status = "okay";
+	addr = <0xca4>;
+};
+
 &uart5 {
 	current-speed = <57600>;
 };
@@ -194,4 +199,8 @@
 
 &peci {
 	status = "okay";
+};
+
+&sram0 {
+	reg = <0 DT_SIZE_K(512)>, <0x80000 DT_SIZE_K(256)>;
 };
