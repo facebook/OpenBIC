@@ -19,6 +19,7 @@
 #include <logging/log.h>
 #include "ipmi.h"
 #include "plat_ipmi.h"
+#include "plat_ipmb.h"
 #include "plat_class.h"
 #include "libutil.h"
 #include "plat_fru.h"
@@ -134,3 +135,132 @@ void OEM_1S_GET_BIOS_VERSION(ipmi_msg *msg)
 	msg->completion_code = CC_SUCCESS;
 	return;
 }
+
+#ifdef CONFIG_I2C_IPMB_SLAVE
+void OEM_1S_MSG_OUT(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+#if MAX_IPMB_IDX
+	uint8_t target_IF;
+	ipmb_error status;
+	ipmi_msg *bridge_msg = NULL;
+
+	// If command is valid the default cc is CC_INVALID_CMD, set cc to CC_SUCCESS before we execute the command.
+	// If the default cc is CC_INVALID_IANA, call ipmb_send_response for this invalid command.
+	if (msg->completion_code != CC_INVALID_IANA) {
+		msg->completion_code = CC_SUCCESS;
+	}
+
+	// Should input target, netfn, cmd
+	if (msg->data_len <= 2) {
+		msg->completion_code = CC_INVALID_LENGTH;
+	}
+
+	CARD_STATUS _1ou_status = get_1ou_status();
+	target_IF = msg->data[0];
+
+	switch (target_IF) {
+	case PEER_BMC_IPMB:
+		switch (msg->InF_source) {
+		case SLOT1_BIC:
+			target_IF = msg->data[0] = SLOT3_BIC;
+			break;
+		case SLOT3_BIC:
+			target_IF = msg->data[0] = SLOT1_BIC;
+			break;
+		default:
+			msg->completion_code = CC_INVALID_DATA_FIELD;
+			break;
+		}
+
+		if (msg->data[1] == NETFN_STORAGE_REQ) {
+			msg->data[1] = msg->data[1] << 2;
+		}
+		break;
+	case EXP2_IPMB:
+		if (_1ou_status.card_type == TYPE_1OU_EXP_WITH_E1S) {
+			target_IF = EXP1_IPMB;
+		}
+		break;
+	case EXP4_IPMB:
+		target_IF = EXP3_IPMB;
+		break;
+	default:
+		break;
+	}
+
+	// Bridge to invalid or disabled interface
+	if ((IPMB_inf_index_map[target_IF] == RESERVED) ||
+	    (IPMB_config_table[IPMB_inf_index_map[target_IF]].interface == RESERVED_IF) ||
+	    (IPMB_config_table[IPMB_inf_index_map[target_IF]].enable_status == DISABLE)) {
+		LOG_ERR("OEM_MSG_OUT: Invalid bridge interface: %x", target_IF);
+		msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+	}
+
+	// only send to target while msg is valid
+	if (msg->completion_code == CC_SUCCESS) {
+		bridge_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
+		if (bridge_msg == NULL) {
+			msg->completion_code = CC_OUT_OF_SPACE;
+			return;
+		} else {
+			memset(bridge_msg, 0, sizeof(ipmi_msg));
+
+			LOG_DBG("bridge targetIf %x, len %d, netfn %x, cmd %x", target_IF,
+				msg->data_len, msg->data[1] >> 2, msg->data[2]);
+
+			if ((_1ou_status.card_type == TYPE_1OU_EXP_WITH_E1S) &&
+			    ((msg->data[0] == EXP2_IPMB) || (msg->data[0] == EXP4_IPMB))) {
+				bridge_msg->seq_source = msg->seq_source;
+				bridge_msg->InF_target = msg->data[0];
+				bridge_msg->InF_source = msg->InF_source;
+				bridge_msg->netfn = NETFN_OEM_1S_REQ;
+				bridge_msg->cmd = CMD_OEM_1S_MSG_OUT;
+				bridge_msg->data[0] = IANA_ID & 0xFF;
+				bridge_msg->data[1] = (IANA_ID >> 8) & 0xFF;
+				bridge_msg->data[2] = (IANA_ID >> 16) & 0xFF;
+
+				if (msg->data_len != 0) {
+					memcpy(&bridge_msg->data[3], &msg->data[0],
+					       msg->data_len * sizeof(msg->data[0]));
+				}
+
+				bridge_msg->data_len = msg->data_len + 3;
+			} else {
+				bridge_msg->data_len = msg->data_len - 3;
+				bridge_msg->seq_source = msg->seq_source;
+				bridge_msg->InF_target = msg->data[0];
+				bridge_msg->InF_source = msg->InF_source;
+				bridge_msg->netfn = msg->data[1] >> 2;
+				bridge_msg->cmd = msg->data[2];
+
+				if (bridge_msg->data_len != 0) {
+					memcpy(&bridge_msg->data[0], &msg->data[3],
+					       bridge_msg->data_len * sizeof(msg->data[0]));
+				}
+			}
+
+			status = ipmb_send_request(bridge_msg, IPMB_inf_index_map[target_IF]);
+
+			if (status != IPMB_ERROR_SUCCESS) {
+				LOG_ERR("OEM_MSG_OUT send IPMB req fail status: %x", status);
+				msg->completion_code = CC_BRIDGE_MSG_ERR;
+			}
+			SAFE_FREE(bridge_msg);
+		}
+	}
+
+	// Return to source while data is invalid or sending req to Tx task fail
+	if (msg->completion_code != CC_SUCCESS) {
+		msg->data_len = 0;
+		status = ipmb_send_response(msg, IPMB_inf_index_map[msg->InF_source]);
+		if (status != IPMB_ERROR_SUCCESS) {
+			LOG_ERR("OEM_MSG_OUT send IPMB resp fail status: %x", status);
+		}
+	}
+#else
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+#endif
+	return;
+}
+#endif

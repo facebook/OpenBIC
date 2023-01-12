@@ -107,8 +107,8 @@ enum Channel_Target {
 	CL_BIC_IPMB = 0x16, // Rainbow falls IPMB channel
 	HD_BIC_IPMB = 0x17,
 	/* 18h-19h reserved. */
-	OPA_BIC_IPMB = 0x25,
-	OPB_BIC_IPMB = 0x30,
+	EXP3_IPMB = 0x25,
+	EXP4_IPMB = 0x30,
 	PEER_BMC_IPMB = 0x1A,
 	/* 1Bh-1Fh reserved. */
 	BMC_USB = 0x20,
@@ -192,5 +192,8 @@ ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index);
 ipmb_error ipmb_read(ipmi_msg *msg, uint8_t bus);
 void ipmb_tx_suspend(uint8_t index);
 void ipmb_tx_resume(uint8_t index);
+
+void pal_encode_response_bridge_cmd(ipmi_msg *bridge_msg, ipmi_msg_cfg *current_msg_rx,
+				    IPMB_config *ipmb_cfg, IPMB_config *IPMB_config_tables);
 
 #endif

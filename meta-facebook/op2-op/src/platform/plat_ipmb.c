@@ -27,9 +27,9 @@ IPMB_config pal_IPMB_config_table[] = {
 	// rx_thread_name, tx_thread_name
 	{ HD_BIC_IPMB_IDX, I2C_IF, HD_BIC_IPMB, IPMB_HD_BIC_BUS, HD_BIC_I2C_ADDRESS, DISABLE,
 	  SELF_I2C_ADDRESS, "RX_HD_BIC_IPMB_TASK", "TX_HD_BIC_IPMB_TASK" },
-	{ OPA_BIC_IPMB_IDX, I2C_IF, OPA_BIC_IPMB, IPMB_OPA_BIC_BUS, OPA_BIC_I2C_ADDRESS, DISABLE,
+	{ OPA_BIC_IPMB_IDX, I2C_IF, EXP3_IPMB, IPMB_OPA_BIC_BUS, OPA_BIC_I2C_ADDRESS, DISABLE,
 	  SELF_I2C_ADDRESS, "RX_OPA_BIC_IPMB_TASK", "TX_OPA_BIC_IPMB_TASK" },
-	{ OPB_BIC_IPMB_IDX, I2C_IF, OPB_BIC_IPMB, IPMB_OPB_BIC_BUS, OPB_BIC_I2C_ADDRESS, DISABLE,
+	{ OPB_BIC_IPMB_IDX, I2C_IF, EXP4_IPMB, IPMB_OPB_BIC_BUS, OPB_BIC_I2C_ADDRESS, DISABLE,
 	  SELF_I2C_ADDRESS, "RX_OPB_BIC_IPMB_TASK", "TX_OPB_BIC_IPMB_TASK" },
 	{ RESERVED_IDX, RESERVED_IF, RESERVED, RESERVED_BUS, RESERVED_ADDRESS, DISABLE,
 	  RESERVED_ADDRESS, "RESERVED_ATTR", "RESERVED_ATTR" },
@@ -42,10 +42,16 @@ bool pal_load_ipmb_config(void)
 	case CARD_TYPE_OPA:
 		pal_IPMB_config_table[HD_BIC_IPMB_IDX].enable_status = ENABLE;
 		pal_IPMB_config_table[OPB_BIC_IPMB_IDX].enable_status = ENABLE;
+		if (get_card_position() == CARD_POSITION_1OU) {
+			pal_IPMB_config_table[OPB_BIC_IPMB_IDX].channel = EXP2_IPMB;
+		}
 		break;
 	// OPB BIC need communicate with OPA BIC
 	case CARD_TYPE_OPB:
 		pal_IPMB_config_table[OPA_BIC_IPMB_IDX].enable_status = ENABLE;
+		if (get_card_position() == CARD_POSITION_2OU) {
+			pal_IPMB_config_table[OPA_BIC_IPMB_IDX].channel = EXP1_IPMB;
+		}
 		break;
 	default:
 		break;

@@ -77,12 +77,9 @@ enum CONDITION {
 };
 
 struct _1OU_CARD_MAPPING_TABLE _1ou_card_mapping_table[] = {
-	{ 0.3, LOWER, TYPE_1OU_SI_TEST_CARD },
-	{ 0.5, RANGE, TYPE_1OU_EXP_WITH_6_M2 },
-	{ 0.75, RANGE, TYPE_1OU_RAINBOW_FALLS },
-	{ 1.0, RANGE, TYPE_1OU_VERNAL_FALLS_WITH_TI },
-	{ 1.26, RANGE, TYPE_1OU_WAIMANO_FALLS },
-	{ 1.5, RANGE, TYPE_1OU_EXP_WITH_NIC },
+	{ 0.3, LOWER, TYPE_1OU_SI_TEST_CARD },	 { 0.5, RANGE, TYPE_1OU_EXP_WITH_6_M2 },
+	{ 0.75, RANGE, TYPE_1OU_RAINBOW_FALLS }, { 1.0, RANGE, TYPE_1OU_VERNAL_FALLS_WITH_TI },
+	{ 1.26, RANGE, TYPE_1OU_WAIMANO_FALLS }, { 1.5, RANGE, TYPE_1OU_EXP_WITH_NIC },
 	{ 2.0, RANGE, TYPE_1OU_EXP_WITH_E1S },
 };
 
@@ -301,23 +298,27 @@ void init_platform_config()
 	}
 
 	if (_2ou_status.present) {
-		tx_len = 1;
-		rx_len = 1;
-		memset(data, 0, I2C_DATA_SIZE);
-		data[0] = CPLD_2OU_EXPANSION_CARD_REG;
-		i2c_msg = construct_i2c_message(I2C_BUS1, CPLD_ADDR, tx_len, data, rx_len);
-		if (!i2c_master_read(&i2c_msg, retry)) {
-			switch (i2c_msg.data[0]) {
-			case TYPE_2OU_DPV2_8:
-			case TYPE_2OU_DPV2_16:
-			case (TYPE_2OU_DPV2_8 | TYPE_2OU_DPV2_16):
-				_2ou_status.card_type = i2c_msg.data[0];
-				break;
-			default:
-				_2ou_status.card_type = TYPE_2OU_UNKNOWN;
-				printf("Unknown the 2OU card type, the card type read from CPLD is 0x%x\n",
-				       i2c_msg.data[0]);
-				break;
+		if (_1ou_status.card_type == TYPE_1OU_EXP_WITH_E1S) {
+			_2ou_status.card_type = TYPE_1OU_EXP_WITH_E1S;
+		} else {
+			tx_len = 1;
+			rx_len = 1;
+			memset(data, 0, I2C_DATA_SIZE);
+			data[0] = CPLD_2OU_EXPANSION_CARD_REG;
+			i2c_msg = construct_i2c_message(I2C_BUS1, CPLD_ADDR, tx_len, data, rx_len);
+			if (!i2c_master_read(&i2c_msg, retry)) {
+				switch (i2c_msg.data[0]) {
+				case TYPE_2OU_DPV2_8:
+				case TYPE_2OU_DPV2_16:
+				case (TYPE_2OU_DPV2_8 | TYPE_2OU_DPV2_16):
+					_2ou_status.card_type = i2c_msg.data[0];
+					break;
+				default:
+					_2ou_status.card_type = TYPE_2OU_UNKNOWN;
+					printf("Unknown the 2OU card type, the card type read from CPLD is 0x%x\n",
+					       i2c_msg.data[0]);
+					break;
+				}
 			}
 		}
 	}

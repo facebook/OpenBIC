@@ -324,6 +324,39 @@ void clear_req_ipmi_msg(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
 	return;
 }
 
+__weak void pal_encode_response_bridge_cmd(ipmi_msg *bridge_msg, ipmi_msg_cfg *current_msg_rx,
+					   IPMB_config *ipmb_cfg, IPMB_config *IPMB_config_tables)
+{
+	CHECK_NULL_ARG(bridge_msg);
+	CHECK_NULL_ARG(current_msg_rx);
+	CHECK_NULL_ARG(ipmb_cfg);
+	CHECK_NULL_ARG(IPMB_config_tables);
+
+	bridge_msg->data[0] = IANA_ID & 0xFF; // Move target response to bridge response data
+	bridge_msg->data[1] = (IANA_ID >> 8) & 0xFF;
+	bridge_msg->data[2] = (IANA_ID >> 16) & 0xFF;
+	bridge_msg->data[3] = IPMB_config_tables[ipmb_cfg->index]
+				      .channel; // return response source as request target
+#ifdef ENABLE_OEM_BRIDGE_NETFN_SHIFT
+	bridge_msg->data[4] = current_msg_rx->buffer.netfn
+			      << 2; // Shift response NetFn to bridge response
+#else
+	bridge_msg->data[4] =
+		current_msg_rx->buffer.netfn; // Move target response to bridge response data
+#endif
+	bridge_msg->data[5] = current_msg_rx->buffer.cmd;
+	bridge_msg->data[6] = current_msg_rx->buffer.completion_code;
+	bridge_msg->data_len =
+		current_msg_rx->buffer.data_len + 7; // add 7 byte len for bridge header
+	memcpy(&bridge_msg->data[7], &current_msg_rx->buffer.data[0],
+	       current_msg_rx->buffer.data_len);
+	bridge_msg->netfn = NETFN_OEM_1S_REQ; // Add bridge response header
+	bridge_msg->cmd = CMD_OEM_1S_MSG_OUT;
+	bridge_msg->completion_code = CC_SUCCESS;
+	bridge_msg->seq = current_msg_rx->buffer.seq_source;
+	return;
+}
+
 void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 {
 	CHECK_NULL_ARG(pvParameters);
@@ -758,37 +791,10 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 							(ipmi_msg *)malloc(sizeof(ipmi_msg));
 						memset(bridge_msg, 0, sizeof(ipmi_msg));
 
-						bridge_msg->data[0] =
-							IANA_ID &
-							0xFF; // Move target response to bridge response data
-						bridge_msg->data[1] = (IANA_ID >> 8) & 0xFF;
-						bridge_msg->data[2] = (IANA_ID >> 16) & 0xFF;
-						bridge_msg->data[3] =
-							IPMB_config_table[ipmb_cfg.index]
-								.channel; // return response source as request target
-#ifdef ENABLE_OEM_BRIDGE_NETFN_SHIFT
-						bridge_msg->data[4] =
-							current_msg_rx->buffer.netfn
-							<< 2; // Shift response NetFn to bridge response
-#else
-						bridge_msg->data[4] =
-							current_msg_rx->buffer
-								.netfn; // Move target response to bridge response data
-#endif
-						bridge_msg->data[5] = current_msg_rx->buffer.cmd;
-						bridge_msg->data[6] =
-							current_msg_rx->buffer.completion_code;
-						bridge_msg->data_len =
-							current_msg_rx->buffer.data_len +
-							7; // add 7 byte len for bridge header
-						memcpy(&bridge_msg->data[7],
-						       &current_msg_rx->buffer.data[0],
-						       current_msg_rx->buffer.data_len);
-						bridge_msg->netfn =
-							NETFN_OEM_1S_REQ; // Add bridge response header
-						bridge_msg->cmd = CMD_OEM_1S_MSG_OUT;
-						bridge_msg->completion_code = CC_SUCCESS;
-						bridge_msg->seq = current_msg_rx->buffer.seq_source;
+						pal_encode_response_bridge_cmd(bridge_msg,
+									       current_msg_rx,
+									       &ipmb_cfg,
+									       IPMB_config_table);
 
 						if (DEBUG_IPMB) {
 							printf("Send the response message to the source(%d), "
