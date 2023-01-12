@@ -23,7 +23,7 @@
 #include <stdint.h>
 #include <zephyr.h>
 
-#define KCS_POLL_STACK_SIZE 2560
+#define KCS_POLL_STACK_SIZE 2816
 #define KCS_POLLING_INTERVAL 100
 #define KCS_BUFF_SIZE 256
 #define KCS_MAX_CHANNEL_NUM 0x0F
