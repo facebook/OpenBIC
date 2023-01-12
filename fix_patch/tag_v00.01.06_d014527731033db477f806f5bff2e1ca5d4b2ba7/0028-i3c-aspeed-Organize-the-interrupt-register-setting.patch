@@ -1,0 +1,79 @@
+From ba7529085c770d6d00331688f68697a742fa02d0 Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Mon, 19 Dec 2022 17:53:06 +0800
+Subject: [PATCH 28/30] i3c: aspeed: Organize the interrupt register setting.
+
+The interrupt register setting of the master and slave are different.
+This patch organize the usage of them.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I62b79ff1409528fd80659a5befffaa35026deff4
+---
+ drivers/i3c/i3c_aspeed.c | 32 +++++++++++++++++++++-----------
+ 1 file changed, 21 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index 7d633b561d..392fb1279a 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -841,6 +841,9 @@ static void i3c_aspeed_isr(const struct device *dev)
+ 
+ 	status.value = i3c_register->intr_status.value;
+ 	if (config->secondary) {
++		if (status.fields.read_q_recv)
++			LOG_WRN("Master read when CMDQ is empty\n");
++
+ 		if (status.fields.resp_q_ready) {
+ 			i3c_aspeed_slave_rx_data(obj);
+ 		}
+@@ -1663,21 +1666,23 @@ static int i3c_aspeed_init(const struct device *dev)
+ 	intr_reg.fields.xfr_error = 1;
+ 	intr_reg.fields.resp_q_ready = 1;
+ 
+-	/* for slave mode */
+-	intr_reg.fields.ibi_update = 1;
+-	intr_reg.fields.ccc_update = 1;
+-	intr_reg.fields.dyn_addr_assign = 1;
+-	i3c_register->intr_status_en.value = intr_reg.value;
+-	i3c_register->intr_signal_en.value = intr_reg.value;
+-
+-	i3c_aspeed_init_hw_feature(obj);
+-	i3c_aspeed_set_role(obj, config->secondary);
+-	i3c_aspeed_init_clock(obj);
+-
+ 	if (config->secondary) {
+ 		/* setup static address so that we can support SETAASA and SETDASA */
+ 		i3c_register->device_addr.fields.static_addr = config->assigned_addr;
+ 		i3c_register->device_addr.fields.static_addr_valid = 1;
++
++		/* for slave mode */
++		intr_reg.fields.ccc_update = 1;
++		intr_reg.fields.dyn_addr_assign = 1;
++		intr_reg.fields.read_q_recv = 1;
++		i3c_register->intr_signal_en.value = intr_reg.value;
++		/*
++		 * No need for INTR_IBI_UPDATED_STAT signal, check this bit
++		 * when INTR_RESP_READY_STAT signal is up.  This can guarantee
++		 * the SIR payload is ACKed by the master.
++		 */
++		intr_reg.fields.ibi_update = 1;
++		i3c_register->intr_status_en.value = intr_reg.value;
+ 	} else {
+ 		union i3c_device_addr_s reg;
+ 
+@@ -1685,7 +1690,12 @@ static int i3c_aspeed_init(const struct device *dev)
+ 		reg.fields.dynamic_addr = config->assigned_addr;
+ 		reg.fields.dynamic_addr_valid = 1;
+ 		i3c_register->device_addr.value = reg.value;
++		i3c_register->intr_signal_en.value = intr_reg.value;
++		i3c_register->intr_status_en.value = intr_reg.value;
+ 	}
++	i3c_aspeed_init_hw_feature(obj);
++	i3c_aspeed_set_role(obj, config->secondary);
++	i3c_aspeed_init_clock(obj);
+ 
+ 	i3c_aspeed_init_queues(obj);
+ 	i3c_aspeed_init_pid(obj);
+-- 
+2.24.1
+

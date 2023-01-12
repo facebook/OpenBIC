@@ -1,0 +1,113 @@
+From 6303295c287ec48e3423034f9e11337a72006ad5 Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Tue, 13 Sep 2022 18:32:15 +0800
+Subject: [PATCH 18/30] i3c: aspeed: Change the meaning of the PID[11:0]
+
+This patch change the meaning of the PID[11:0] to extra information
+which can be used to identify the different BIC instead of the dcr.
+The user can use the API i3c_set_pid_extra_info to change this fields in
+application layer.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I6bacea87cacd343295d4193dab0681c5c45505bf
+---
+ drivers/i3c/i3c_aspeed.c         | 16 +++++++++++++++-
+ dts/bindings/i3c/aspeed,i3c.yaml |  7 ++++++-
+ include/drivers/i3c/i3c.h        |  1 +
+ 3 files changed, 22 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index 51decfb743..303e1f8940 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -305,7 +305,7 @@ union i3c_slave_pid_hi_s {
+ union i3c_slave_pid_lo_s {
+ 	volatile uint32_t value;
+ 	struct {
+-		volatile uint32_t dcr : 12;			/* bit[11:0] */
++		volatile uint32_t extra_info : 12;		/* bit[11:0] */
+ 		volatile uint32_t inst_id : 4;			/* bit[15:12] */
+ 		volatile uint32_t part_id : 16;			/* bit[31:16] */
+ 	} fields;
+@@ -479,6 +479,7 @@ struct i3c_aspeed_config {
+ 	const clock_control_subsys_t clock_id;
+ 	uint32_t i3c_scl_hz;
+ 	uint32_t i2c_scl_hz;
++	uint16_t pid_extra_info;
+ 	int secondary;
+ 	int assigned_addr;
+ 	int inst_id;
+@@ -1014,6 +1015,7 @@ static void i3c_aspeed_init_pid(struct i3c_aspeed_obj *obj)
+ 	i3c_register->slave_pid_hi.value = slave_pid_hi.value;
+ 
+ 	slave_pid_lo.value = 0;
++	slave_pid_lo.fields.extra_info = config->pid_extra_info;
+ 	slave_pid_lo.fields.part_id = rev_id;
+ 	slave_pid_lo.fields.inst_id = config->inst_id;
+ 	i3c_register->slave_pid_lo.value = slave_pid_lo.value;
+@@ -1505,6 +1507,17 @@ int i3c_aspeed_slave_set_static_addr(const struct device *dev, uint8_t static_ad
+ 	return 0;
+ }
+ 
++void i3c_aspeed_set_pid_extra_info(const struct device *dev, uint16_t extra_info)
++{
++	struct i3c_aspeed_config *config = DEV_CFG(dev);
++	struct i3c_register_s *i3c_register = config->base;
++	union i3c_slave_pid_lo_s slave_pid_lo;
++
++	slave_pid_lo.value = i3c_register->slave_pid_lo.value;
++	slave_pid_lo.fields.extra_info = extra_info;
++	i3c_register->slave_pid_lo.value = slave_pid_lo.value;
++}
++
+ int i3c_aspeed_slave_get_dynamic_addr(const struct device *dev, uint8_t *dynamic_addr)
+ {
+ 	struct i3c_aspeed_config *config = DEV_CFG(dev);
+@@ -1701,6 +1714,7 @@ static int i3c_aspeed_init(const struct device *dev)
+ 		.ibi_append_pec = DT_INST_PROP_OR(n, ibi_append_pec, 0),                           \
+ 		.priv_xfer_pec = DT_INST_PROP_OR(n, priv_xfer_pec, 0),                             \
+ 		.sda_tx_hold_ns = DT_INST_PROP_OR(n, sda_tx_hold_ns, 0),                           \
++		.pid_extra_info = DT_INST_PROP_OR(n, pid_extra_info, 0),                           \
+ 		.i3c_pp_scl_hi_period_ns = DT_INST_PROP_OR(n, i3c_pp_scl_hi_period_ns, 0),         \
+ 		.i3c_pp_scl_lo_period_ns = DT_INST_PROP_OR(n, i3c_pp_scl_lo_period_ns, 0),         \
+ 		.i3c_od_scl_hi_period_ns = DT_INST_PROP_OR(n, i3c_od_scl_hi_period_ns, 0),         \
+diff --git a/dts/bindings/i3c/aspeed,i3c.yaml b/dts/bindings/i3c/aspeed,i3c.yaml
+index 9a993b2d24..de9054e88b 100644
+--- a/dts/bindings/i3c/aspeed,i3c.yaml
++++ b/dts/bindings/i3c/aspeed,i3c.yaml
+@@ -16,7 +16,7 @@ properties:
+   assigned-address:
+     required: true
+     type: int
+-    description: Dynamic address when playing the role as the main master
++    description: Dynamic address when playing the role as the main master. Static address when playing the role as the slave.
+ 
+   instance-id:
+     required: true
+@@ -36,6 +36,11 @@ properties:
+       The PEC will auto append to the tail of the data when doing private transfer and verify
+       the PEC when receiving the data from master.
+ 
++  pid-extra-info:
++    required: false
++    type: int
++    description: Extra information of the PID Bits[11:0]. Use to identify the different BIC.
++
+   i3c-pp-scl-hi-period-ns:
+     required: false
+     type: int
+diff --git a/include/drivers/i3c/i3c.h b/include/drivers/i3c/i3c.h
+index d258439b5b..c7409b864c 100644
+--- a/include/drivers/i3c/i3c.h
++++ b/include/drivers/i3c/i3c.h
+@@ -249,6 +249,7 @@ int i3c_master_send_getbcr(const struct device *master, uint8_t addr, uint8_t *b
+ #define i3c_slave_wait_data_consume	i3c_aspeed_slave_wait_data_consume
+ #define i3c_slave_get_dynamic_addr	i3c_aspeed_slave_get_dynamic_addr
+ #define i3c_slave_get_event_enabling	i3c_aspeed_slave_get_event_enabling
++#define i3c_set_pid_extra_info		i3c_aspeed_set_pid_extra_info
+ 
+ int i3c_jesd403_read(struct i3c_dev_desc *slave, uint8_t *addr, int addr_size, uint8_t *data,
+ 		     int data_size);
+-- 
+2.24.1
+

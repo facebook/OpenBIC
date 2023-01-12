@@ -1,0 +1,32 @@
+From 60655af25091ccb3d6fd1082516e1c935e673a4d Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Thu, 10 Nov 2022 14:33:37 +0800
+Subject: [PATCH 25/30] drivers: i3c: shell: Fix the flow of desc find.
+
+Return NULL when desc table doesn't find the same address on the bus.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I25dd8b71efbf8ec35c9b97d52a3aa9a4aed44f84
+---
+ drivers/i3c/i3c_shell.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/i3c/i3c_shell.c b/drivers/i3c/i3c_shell.c
+index d689af0d3d..b38d7a0f2c 100644
+--- a/drivers/i3c/i3c_shell.c
++++ b/drivers/i3c/i3c_shell.c
+@@ -35,8 +35,9 @@ static struct i3c_dev_desc *find_matching_desc(const struct device *dev, uint8_t
+ 	int i;
+ 
+ 	for (i = 0; i < I3C_SHELL_MAX_DESC_NUM; i++) {
+-		desc = &i3c_shell_desc_tbl[i];
+-		if (desc->master_dev == dev && desc->info.dynamic_addr == desc_addr) {
++		if (i3c_shell_desc_tbl[i].master_dev == dev &&
++		    i3c_shell_desc_tbl[i].info.dynamic_addr == desc_addr) {
++			desc = &i3c_shell_desc_tbl[i];
+ 			break;
+ 		}
+ 	}
+-- 
+2.24.1
+

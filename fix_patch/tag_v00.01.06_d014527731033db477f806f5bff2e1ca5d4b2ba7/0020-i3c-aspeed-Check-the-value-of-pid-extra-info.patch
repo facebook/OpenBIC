@@ -1,0 +1,60 @@
+From 148dc5d7d2ebed5caad3d993e915c5f9009c5f67 Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Fri, 16 Sep 2022 11:31:36 +0800
+Subject: [PATCH 20/30] i3c: aspeed: Check the value of pid extra info.
+
+This patch add the condition to check the value of extra info to ensure
+that the value will be contained in bits[11:0].
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I56d667e2a830678a2ad963101deb93b5a16efe16
+---
+ drivers/i3c/i3c_aspeed.c  | 7 ++++++-
+ include/drivers/i3c/i3c.h | 4 ++--
+ 2 files changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index 303e1f8940..5e8c621c46 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -1507,15 +1507,20 @@ int i3c_aspeed_slave_set_static_addr(const struct device *dev, uint8_t static_ad
+ 	return 0;
+ }
+ 
+-void i3c_aspeed_set_pid_extra_info(const struct device *dev, uint16_t extra_info)
++int i3c_aspeed_set_pid_extra_info(const struct device *dev, uint16_t extra_info)
+ {
+ 	struct i3c_aspeed_config *config = DEV_CFG(dev);
+ 	struct i3c_register_s *i3c_register = config->base;
+ 	union i3c_slave_pid_lo_s slave_pid_lo;
+ 
++	if (extra_info > GENMASK(11, 0))
++		return -EINVAL;
++
+ 	slave_pid_lo.value = i3c_register->slave_pid_lo.value;
+ 	slave_pid_lo.fields.extra_info = extra_info;
+ 	i3c_register->slave_pid_lo.value = slave_pid_lo.value;
++
++	return 0;
+ }
+ 
+ int i3c_aspeed_slave_get_dynamic_addr(const struct device *dev, uint8_t *dynamic_addr)
+diff --git a/include/drivers/i3c/i3c.h b/include/drivers/i3c/i3c.h
+index d3970a3c18..094492d5c3 100644
+--- a/include/drivers/i3c/i3c.h
++++ b/include/drivers/i3c/i3c.h
+@@ -229,9 +229,9 @@ int i3c_aspeed_slave_wait_data_consume(const struct device *dev);
+  * @brief set the pid extra info of the i3c controller
+  * @param dev the I3C controller
+  * @param extra_info the extra info of the pid bits[11:0]
+- * @return
++ * @return int 0 = success
+  */
+-void i3c_aspeed_set_pid_extra_info(const struct device *dev, uint16_t extra_info);
++int i3c_aspeed_set_pid_extra_info(const struct device *dev, uint16_t extra_info);
+ 
+ /* common API */
+ int i3c_master_send_enec(const struct device *master, uint8_t addr, uint8_t evt);
+-- 
+2.24.1
+

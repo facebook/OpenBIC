@@ -1,0 +1,201 @@
+From acc858c21476300d9f678fef56786bd6244032c9 Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Tue, 10 Jan 2023 13:41:32 +0800
+Subject: [PATCH 1/3] i3c: aspeed: Reset the i3c when ibi/wait data consume
+ timeout.
+
+I3C controller will retry the IBI infinitely. So, this patch adds the
+timeout:1s to avoid the IBI storm from destroying the master. In addition,
+if the data for the pending read doesn't consume by the master the i3c
+controller will stuck at read data prefetch state, this patch will also
+add timeout:3s to solve it.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I0ee5a2ac568ed1dc77aaa0543228d206e99d6065
+---
+ drivers/i3c/i3c_aspeed.c | 61 +++++++++++++++++++++++++++++++---------
+ 1 file changed, 47 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index 13f38c007a..c83742fe7b 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -130,7 +130,8 @@ union i3c_device_cmd_queue_port_s {
+ 
+ 	struct {
+ 		volatile uint32_t cmd_attr : 3;			/* bit[2:0] */
+-		volatile uint32_t reserved0 : 13;		/* bit[15:3] */
++		volatile uint32_t tid : 3;			/* bit[5:3] */
++		volatile uint32_t reserved0 : 10;		/* bit[15:5] */
+ 		volatile uint32_t dl : 16;			/* bit[31:16] */
+ 	} slave_data_cmd;
+ }; /* offset 0x0c */
+@@ -144,6 +145,8 @@ union i3c_device_resp_queue_port_s {
+ 		volatile uint32_t err_status : 4;		/* bit[31:28] */
+ 	} fields;
+ }; /* offset 0x10 */
++#define SLAVE_TID_IBI_DONE 0x1
++#define SLAVE_TID_MASTER_READ_DATA 0x2
+ #define SLAVE_TID_MASTER_WRITE_DATA 0x8
+ #define SLAVE_TID_DEFSLV_WRITE_DATA 0xF
+ 
+@@ -546,6 +549,7 @@ struct i3c_aspeed_obj {
+ #define DEV_CFG(dev)			((struct i3c_aspeed_config *)(dev)->config)
+ #define DEV_DATA(dev)			((struct i3c_aspeed_obj *)(dev)->data)
+ #define DESC_PRIV(desc)			((struct i3c_aspeed_dev_priv *)(desc)->priv_data)
++static int i3c_aspeed_init(const struct device *dev);
+ 
+ static uint8_t *pec_append(const struct device *dev, uint8_t *ptr, uint8_t len)
+ {
+@@ -706,10 +710,11 @@ static void i3c_aspeed_slave_resp_handler(struct i3c_aspeed_obj *obj, union i3c_
+ 				cb->write_done(obj->slave_data.dev);
+ 			}
+ 		} else {
+-			if (status.fields.ibi_update)
++			if (status.fields.ibi_update && resp.fields.tid == SLAVE_TID_IBI_DONE) {
+ 				osEventFlagsSet(obj->ibi_event, status.value);
+-			else
++			} else if (resp.fields.tid == SLAVE_TID_MASTER_READ_DATA) {
+ 				osEventFlagsSet(obj->data_event, status.value);
++			}
+ 		}
+ 	}
+ }
+@@ -1380,7 +1385,7 @@ int i3c_aspeed_slave_register(const struct device *dev, struct i3c_slave_setup *
+ 	return 0;
+ }
+ 
+-static int i3c_aspeed_slave_wait_data_consume(const struct device *dev)
++static uint32_t i3c_aspeed_slave_wait_data_consume(const struct device *dev)
+ {
+ 	struct i3c_aspeed_obj *obj = DEV_DATA(dev);
+ 	union i3c_intr_s events;
+@@ -1388,9 +1393,8 @@ static int i3c_aspeed_slave_wait_data_consume(const struct device *dev)
+ 	osEventFlagsClear(obj->data_event, ~osFlagsError);
+ 	events.value = 0;
+ 	events.fields.resp_q_ready = 1;
+-	osEventFlagsWait(obj->data_event, events.value, osFlagsWaitAny, osWaitForever);
+ 
+-	return 0;
++	return osEventFlagsWait(obj->data_event, events.value, osFlagsWaitAny, K_SECONDS(3).ticks);
+ }
+ 
+ int i3c_aspeed_slave_put_read_data(const struct device *dev, struct i3c_slave_payload *data,
+@@ -1402,6 +1406,8 @@ int i3c_aspeed_slave_put_read_data(const struct device *dev, struct i3c_slave_pa
+ 	union i3c_intr_s events;
+ 	union i3c_device_cmd_queue_port_s cmd;
+ 	uint8_t *xfer_buf;
++	uint32_t flag_ret;
++	int ret = 0;
+ 
+ 	__ASSERT_NO_MSG(data);
+ 	__ASSERT_NO_MSG(data->buf);
+@@ -1429,6 +1435,7 @@ int i3c_aspeed_slave_put_read_data(const struct device *dev, struct i3c_slave_pa
+ 			i3c_aspeed_wr_tx_fifo(obj, ibi_notify->buf, ibi_notify->size);
+ 			cmd.slave_data_cmd.dl = ibi_notify->size;
+ 		}
++		cmd.slave_data_cmd.tid = SLAVE_TID_IBI_DONE;
+ 		cmd.slave_data_cmd.cmd_attr = COMMAND_PORT_SLAVE_DATA_CMD;
+ 		i3c_register->cmd_queue_port.value = cmd.value;
+ 	}
+@@ -1442,17 +1449,28 @@ int i3c_aspeed_slave_put_read_data(const struct device *dev, struct i3c_slave_pa
+ 		i3c_aspeed_wr_tx_fifo(obj, data->buf, data->size);
+ 		cmd.slave_data_cmd.dl = data->size;
+ 	}
++	cmd.slave_data_cmd.tid = SLAVE_TID_MASTER_READ_DATA;
+ 	cmd.slave_data_cmd.cmd_attr = COMMAND_PORT_SLAVE_DATA_CMD;
+ 	i3c_register->cmd_queue_port.value = cmd.value;
+ 
+ 	if (ibi_notify) {
+ 		i3c_register->i3c_slave_intr_req.fields.sir = 1;
+-		osEventFlagsWait(obj->ibi_event, events.value, osFlagsWaitAll, osWaitForever);
++		flag_ret = osEventFlagsWait(obj->ibi_event, events.value, osFlagsWaitAll,
++					    K_SECONDS(1).ticks);
++		if (flag_ret & osFlagsError) {
++			i3c_aspeed_init(dev);
++			ret = -EIO;
++			goto ibi_err;
++		}
+ 	}
+ 
+-	i3c_aspeed_slave_wait_data_consume(dev);
+-
+-	return 0;
++	flag_ret = i3c_aspeed_slave_wait_data_consume(dev);
++	if (flag_ret & osFlagsError) {
++		i3c_aspeed_init(dev);
++		ret = -EIO;
++	}
++ibi_err:
++	return ret;
+ }
+ 
+ int i3c_aspeed_slave_send_sir(const struct device *dev, struct i3c_ibi_payload *payload)
+@@ -1463,6 +1481,7 @@ int i3c_aspeed_slave_send_sir(const struct device *dev, struct i3c_ibi_payload *
+ 	union i3c_intr_s events;
+ 	union i3c_device_cmd_queue_port_s cmd;
+ 	uint8_t *xfer_buf;
++	uint32_t flag_ret;
+ 
+ 	__ASSERT_NO_MSG(payload);
+ 	__ASSERT_NO_MSG(payload->buf);
+@@ -1495,7 +1514,12 @@ int i3c_aspeed_slave_send_sir(const struct device *dev, struct i3c_ibi_payload *
+ 
+ 	/* trigger the hw and wait done */
+ 	i3c_register->i3c_slave_intr_req.fields.sir = 1;
+-	osEventFlagsWait(obj->ibi_event, events.value, osFlagsWaitAll, osWaitForever);
++	flag_ret =
++		osEventFlagsWait(obj->ibi_event, events.value, osFlagsWaitAll, K_SECONDS(1).ticks);
++	if (flag_ret & osFlagsError) {
++		i3c_aspeed_init(dev);
++		return -EIO;
++	}
+ 
+ 	return 0;
+ }
+@@ -1648,6 +1672,7 @@ static int i3c_aspeed_init(const struct device *dev)
+ 
+ 	obj->dev = dev;
+ 	obj->config = config;
++	reset_control_assert(reset_dev, config->reset_id);
+ 	clock_control_on(config->clock_dev, config->clock_id);
+ 	reset_control_deassert(reset_dev, config->reset_id);
+ 
+@@ -1667,6 +1692,7 @@ static int i3c_aspeed_init(const struct device *dev)
+ 
+ 	i3c_register->intr_status.value = GENMASK(31, 0);
+ 	intr_reg.value = 0;
++	intr_reg.fields.xfr_abort = 1;
+ 	intr_reg.fields.xfr_error = 1;
+ 	intr_reg.fields.resp_q_ready = 1;
+ 
+@@ -1687,6 +1713,16 @@ static int i3c_aspeed_init(const struct device *dev)
+ 		 */
+ 		intr_reg.fields.ibi_update = 1;
+ 		i3c_register->intr_status_en.value = intr_reg.value;
++		if (obj->ibi_event == NULL) {
++			obj->ibi_event = osEventFlagsNew(NULL);
++			if (obj->ibi_event == NULL)
++				LOG_ERR("Creat ibi event flags failed");
++		}
++		if (obj->data_event == NULL) {
++			obj->data_event = osEventFlagsNew(NULL);
++			if (obj->data_event == NULL)
++				LOG_ERR("Creat data event flags failed");
++		}
+ 	} else {
+ 		union i3c_device_addr_s reg;
+ 
+@@ -1714,9 +1750,6 @@ static int i3c_aspeed_init(const struct device *dev)
+ 
+ 	i3c_aspeed_enable(obj);
+ 
+-	obj->ibi_event = osEventFlagsNew(NULL);
+-	obj->data_event = osEventFlagsNew(NULL);
+-
+ 	return 0;
+ }
+ 
+-- 
+2.25.1
+

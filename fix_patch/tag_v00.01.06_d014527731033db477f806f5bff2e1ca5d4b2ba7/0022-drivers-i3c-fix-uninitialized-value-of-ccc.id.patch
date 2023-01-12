@@ -1,0 +1,41 @@
+From f528f23d9fe6e010059e2ce6543ca64cd5f3644f Mon Sep 17 00:00:00 2001
+From: Dylan Hung <dylan_hung@aspeedtech.com>
+Date: Fri, 23 Sep 2022 17:18:44 +0800
+Subject: [PATCH 22/30] drivers: i3c: fix uninitialized value of ccc.id
+
+The ccc.id was uninitialized and be used.  Assign an initial value for
+it and check if it has been assigne a value in cmd_send_ccc.
+
+Signed-off-by: Dylan Hung <dylan_hung@aspeedtech.com>
+Change-Id: I05e1ba2ff155b6d871b987308aca7b4631699294
+---
+ drivers/i3c/i3c_shell.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/i3c/i3c_shell.c b/drivers/i3c/i3c_shell.c
+index 396963e86f..d689af0d3d 100644
+--- a/drivers/i3c/i3c_shell.c
++++ b/drivers/i3c/i3c_shell.c
+@@ -158,6 +158,7 @@ static int cmd_send_ccc(const struct shell *shell, size_t argc, char **argv)
+ 	}
+ 
+ 	ccc.rnw = 0;
++	ccc.id = 0;
+ 
+ 	while ((c = shell_getopt(shell, argc - 1, &argv[1], "ha:i:w:r:")) != -1) {
+ 		state = shell_getopt_state_get(shell);
+@@ -198,6 +199,11 @@ static int cmd_send_ccc(const struct shell *shell, size_t argc, char **argv)
+ 		}
+ 	}
+ 
++	if (ccc.id == 0) {
++		shell_print(shell, "CCC ID not assigned\n");
++		return SHELL_CMD_HELP_PRINTED;
++	}
++
+ 	ccc.ret = 0;
+ 	if (ccc.addr != I3C_BROADCAST_ADDR) {
+ 		ccc.id |= I3C_CCC_DIRECT;
+-- 
+2.24.1
+

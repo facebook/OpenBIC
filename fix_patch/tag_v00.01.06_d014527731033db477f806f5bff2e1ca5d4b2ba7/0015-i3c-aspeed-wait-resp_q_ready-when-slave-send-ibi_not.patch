@@ -1,0 +1,30 @@
+From b9a92ed4f96592d5f96c1de4c6672a4a1fec7b54 Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Tue, 30 Aug 2022 16:26:44 +0800
+Subject: [PATCH 15/30] i3c: aspeed: wait resp_q_ready when slave send
+ ibi_notify.
+
+same as the patch:
+commit 2e799a0fc952 ("i3c: aspeed: wait resp_q_ready when slave send sir.")
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: Ifff8166b9977c419f12277126b57d737cb44eea1
+---
+ drivers/i3c/i3c_aspeed.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index 4a33228aeb..d6f20ab4be 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -1342,6 +1342,7 @@ int i3c_aspeed_slave_put_read_data(const struct device *dev, struct i3c_slave_pa
+ 		osEventFlagsClear(obj->event_id, ~osFlagsError);
+ 		events.value = 0;
+ 		events.fields.ibi_update = 1;
++		events.fields.resp_q_ready = 1;
+ 
+ 		i3c_register->queue_thld_ctrl.fields.resp_q_thld = 1 - 1;
+ 		i3c_register->device_ctrl.fields.slave_mdb = ibi_notify->buf[0];
+-- 
+2.24.1
+

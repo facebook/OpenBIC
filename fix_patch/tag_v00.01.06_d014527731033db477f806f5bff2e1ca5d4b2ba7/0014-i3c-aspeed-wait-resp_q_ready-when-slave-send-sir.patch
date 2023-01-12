@@ -1,0 +1,33 @@
+From 878c53c0aaa748a7fd9295059677fb9fbe9dc9eb Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Wed, 24 Aug 2022 13:23:50 +0800
+Subject: [PATCH 14/30] i3c: aspeed: wait resp_q_ready when slave send sir.
+
+When i3c send the sir request, the controller will have the two interrupt
+to indicate the procedure of the transfer:
+1. ibi_update: Master ack the sir request.
+2. resp_q_ready: IBI data is sent. (limited: resp_q_thld == 0)
+This patch adds the event flag to wait for resp_q_ready to ensure that the
+ibi data is sent before clearing the pec enabe bit.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I29ce7706ff6c7cdd197407747584a5e56eb77631
+---
+ drivers/i3c/i3c_aspeed.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index b3bb9fc9e6..4a33228aeb 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -1393,6 +1393,7 @@ int i3c_aspeed_slave_send_sir(const struct device *dev, struct i3c_ibi_payload *
+ 	osEventFlagsClear(obj->event_id, ~osFlagsError);
+ 	events.value = 0;
+ 	events.fields.ibi_update = 1;
++	events.fields.resp_q_ready = 1;
+ 
+ 	i3c_register->queue_thld_ctrl.fields.resp_q_thld = 1 - 1;
+ 	i3c_register->device_ctrl.fields.slave_mdb = payload->buf[0];
+-- 
+2.24.1
+
