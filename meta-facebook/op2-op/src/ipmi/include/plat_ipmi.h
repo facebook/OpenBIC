@@ -20,4 +20,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+enum E1S_CONTROL {
+	DEVICE_POWER_OFF = 0x0,
+	DEVICE_POWER_ON,
+	DEVICE_PRESENT,
+	DEVICE_POWER_GOOD,
+};
+
 #endif
