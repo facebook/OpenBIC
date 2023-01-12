@@ -43,8 +43,8 @@ int init_platform_config()
 	gpio_dev = device_get_binding("GPIO0_M_P");
 
 	char *card_type_name[] = { "A", "B", "UNKNOWN" };
-	uint8_t board_id = gpio_pin_get(gpio_dev, (BIC_EXP_ID % GPIO_GROUP_SIZE));
-	uint8_t exp_id = gpio_pin_get(gpio_dev, (BIC_BOARD_ID % GPIO_GROUP_SIZE));
+	uint8_t board_id = gpio_pin_get(gpio_dev, (BIC_BOARD_ID % GPIO_GROUP_SIZE));
+	uint8_t exp_id = gpio_pin_get(gpio_dev, (BIC_EXP_ID % GPIO_GROUP_SIZE));
 
 	/* BOARD ID high, EXP ID low:  1OU
 	 * BOARD ID high, EXP ID high: 3OU

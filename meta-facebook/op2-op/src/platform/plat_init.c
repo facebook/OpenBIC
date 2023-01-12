@@ -26,8 +26,19 @@
 #define DEF_PLAT_CONFIG_PRIORITY 77
 #define DEF_PROJ_GPIO_PRIORITY 78
 
+SCU_CFG scu_cfg[] = {
+	//register    value
+	{ 0x7e6e2610, 0xffffffff }, //disable GPIO internal pull down #0
+	{ 0x7e6e2614, 0xffffffff }, //disable GPIO internal pull down #1
+	{ 0x7e6e2618, 0xffffffff }, //disable GPIO internal pull down #2
+	{ 0x7e6e261c, 0xffffffff }, //disable GPIO internal pull down #3
+};
+
 void pal_pre_init()
 {
+	//Disable GPIO internal pull down
+	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
+
 	/* Initialize I3C HUB (connects to E1.s)
 	 * For OPA expansion,
 	 * the I3C HUB slave port-0/1/5 should be enabled.
@@ -45,7 +56,7 @@ void pal_pre_init()
 		return;
 	}
 
-	if (!rg3mxxb12_i2c_mode_only_init(I2C_BUS1, slave_port)) {
+	if (!rg3mxxb12_i2c_mode_only_init(I2C_BUS2, slave_port)) {
 		printk("failed to initialize rg3mxxb12\n");
 	}
 }

@@ -12,12 +12,12 @@
 };
 
 &i2c0 {
-	pinctrl-0 = <&pinctrl_i2c2_default>;
+	pinctrl-0 = <&pinctrl_i2c0_default>;
 	status = "okay";
 };
 
 &i2c1 {
-	pinctrl-0 = <&pinctrl_i2c2_default>;
+	pinctrl-0 = <&pinctrl_i2c1_default>;
 	status = "okay";
 	clock-frequency = <I2C_BITRATE_FAST>;
 };

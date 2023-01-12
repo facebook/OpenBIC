@@ -83,9 +83,9 @@ typedef struct _e1s_power_control_gpio {
 extern e1s_power_control_gpio opa_e1s_power_control_gpio[];
 extern e1s_power_control_gpio opb_e1s_power_control_gpio[];
 
-bool get_e1s_present(uint8_t device_index);
-bool get_e1s_power_good(uint8_t device_index);
-uint8_t get_e1s_pcie_reset_status(uint8_t device_index);
+bool get_e1s_present(uint8_t index);
+bool get_e1s_power_good(uint8_t index);
+uint8_t get_e1s_pcie_reset_status(uint8_t index);
 void init_sequence_status();
 void set_sequence_status(uint8_t index, bool status);
 bool check_all_e1s_sequence_status(uint8_t status);
