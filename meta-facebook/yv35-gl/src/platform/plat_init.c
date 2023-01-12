@@ -15,6 +15,7 @@
  */
 
 #include "hal_gpio.h"
+#include "plat_vw_gpio.h"
 #include "power_status.h"
 #include "util_sys.h"
 #include "plat_gpio.h"
@@ -47,6 +48,9 @@ SCU_CFG scu_cfg[] = {
 void pal_pre_init()
 {
 	scu_init(scu_cfg, ARRAY_SIZE(scu_cfg));
+	if (!pal_load_vw_gpio_config()) {
+		printk("failed to initialize vw gpio\n");
+	}
 }
 
 void pal_post_init()
