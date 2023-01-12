@@ -488,7 +488,9 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 						       __func__);
 					} else if (current_msg_tx->buffer.InF_source == SELF) {
 						printf("[%s] Failed to send command\n", __func__);
-					} else if (current_msg_tx->buffer.InF_source == HOST_KCS) {
+					} else if ((current_msg_tx->buffer.InF_source & 0xF0) ==
+						   HOST_KCS_1) {
+						// the source is KCS if the bit[7:4] are 0101b.
 #ifdef CONFIG_IPMI_KCS_ASPEED
 						uint8_t *kcs_buff;
 						kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
@@ -515,9 +517,11 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 							       current_msg_tx->buffer.data_len);
 						}
 
-						kcs_write(kcs_buff,
-							  current_msg_tx->buffer.data_len +
-								  3); // data len + netfn + cmd + cc
+						// KCS response length = data length + NetFn + Cmd + CC
+						kcs_write(current_msg_tx->buffer.InF_source -
+								  HOST_KCS_1,
+							  kcs_buff,
+							  current_msg_tx->buffer.data_len + 3);
 						SAFE_FREE(kcs_buff);
 #endif
 					} else {
@@ -664,7 +668,9 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 									      [current_msg_rx->buffer
 										       .InF_target]],
 							&current_msg, K_NO_WAIT);
-					} else if (current_msg_rx->buffer.InF_source == HOST_KCS) {
+					} else if ((current_msg_rx->buffer.InF_source & 0xF0) ==
+						   HOST_KCS_1) {
+						// the source is KCS if the bit[7:4] are 0101b.
 #ifdef CONFIG_IPMI_KCS_ASPEED
 						if (pal_immediate_respond_from_KCS(
 							    current_msg_rx->buffer.netfn & ~BIT(0),
@@ -698,9 +704,11 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 							       current_msg_rx->buffer.data_len);
 						}
 
-						kcs_write(kcs_buff,
-							  current_msg_rx->buffer.data_len +
-								  3); // data len + netfn + cmd + cc
+						// KCS response length = data length + NetFn + Cmd + CC
+						kcs_write(current_msg_rx->buffer.InF_source -
+								  HOST_KCS_1,
+							  kcs_buff,
+							  current_msg_rx->buffer.data_len + 3);
 						SAFE_FREE(kcs_buff);
 #endif
 					} else if (current_msg_rx->buffer.InF_source == ME_IPMB) {

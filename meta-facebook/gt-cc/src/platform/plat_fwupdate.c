@@ -22,6 +22,7 @@
 #include "libutil.h"
 #include "plat_fwupdate.h"
 #include "plat_gpio.h"
+#include "plat_i2c.h"
 #include "pldm_firmware_update.h"
 #include "sensor.h"
 #include "plat_sensor_table.h"
@@ -102,7 +103,7 @@ static uint8_t pldm_pre_cpld_update(void *fw_update_param)
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 
 	if (p->inf == COMP_UPDATE_VIA_I2C) {
-		p->bus = 0x07;
+		p->bus = I2C_BUS8;
 		p->addr = 0x40;
 	}
 

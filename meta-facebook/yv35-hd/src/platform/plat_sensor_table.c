@@ -557,7 +557,7 @@ sensor_cfg g788p81u_sensor_config_table[] = {
 sensor_cfg mp5990_temp_sensor_config_table[] = {
 	{ SENSOR_NUM_TEMP_HSC, sensor_dev_mp5990, I2C_BUS5, MP5990_ADDR, PMBUS_READ_TEMPERATURE_1,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
 };
 
 void pal_extend_sensor_config()
@@ -620,9 +620,9 @@ void pal_extend_sensor_config()
 	}
 
 	/* Determine which temperature sensor is used to monitor HSC temperature */
-	if (((board_stage == SYS_BOARD_EVT) || (vr_vender == VR_VENDER_INFINEON)) ||
-	    ((board_stage == SYS_BOARD_EVT) || (vr_vender == VR_VENDER_MPS)) ||
-	    ((board_stage == SYS_BOARD_DVT) || (vr_vender == VR_VENDER_MPS))) {
+	if (((board_stage == SYS_BOARD_EVT) && (vr_vender == VR_VENDER_INFINEON)) ||
+	    ((board_stage == SYS_BOARD_EVT) && (vr_vender == VR_VENDER_MPS)) ||
+	    ((board_stage == SYS_BOARD_DVT) && (vr_vender == VR_VENDER_MPS))) {
 		add_sensor_config(g788p81u_sensor_config_table[0]);
 	} else if (hsc_module == HSC_MODULE_MP5990) {
 		add_sensor_config(mp5990_temp_sensor_config_table[0]);

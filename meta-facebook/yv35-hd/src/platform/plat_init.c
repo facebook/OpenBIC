@@ -24,13 +24,13 @@
 #include "plat_i2c.h"
 #include "plat_pmic.h"
 #include "plat_apml.h"
+#include "plat_kcs.h"
 #include "rg3mxxb12.h"
 #include "util_worker.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
 	{ 0x7e6e2610, 0xffffffff },
-	{ 0x7e6e2614, 0xffffffff },
 	{ 0x7e6e2618, 0xdc000000 },
 	{ 0x7e6e261c, 0x00000F32 },
 };
@@ -54,6 +54,11 @@ void pal_pre_init()
 	pcc_init();
 	apml_init();
 	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY + 1); // work queue for low priority jobs
+}
+
+void pal_post_init()
+{
+	kcs_init();
 }
 
 void pal_set_sys_status()

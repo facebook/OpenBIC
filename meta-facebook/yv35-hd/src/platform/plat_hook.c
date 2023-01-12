@@ -48,7 +48,7 @@ ltc4282_init_arg ltc4282_init_args[] = { [0] = { .r_sense_mohm = 0.5 } };
 
 mp5990_init_arg mp5990_init_args[] = {
 	[0] = { .is_init = false,
-		.iout_cal_gain = 0x0104,
+		.iout_cal_gain = 0x0140,
 		.iout_oc_fault_limit = 0x0032,
 		.ocw_sc_ref = 0x0FD8 },
 };

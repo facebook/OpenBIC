@@ -62,9 +62,6 @@ void main(void)
 	sensor_init();
 	FRU_init();
 	ipmi_init();
-#ifdef CONFIG_IPMI_KCS_ASPEED
-	kcs_init();
-#endif
 #ifdef CONFIG_USB
 	usb_dev_init();
 #endif
