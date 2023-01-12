@@ -25,6 +25,7 @@
 #include "xdpe12284c.h"
 #include "isl69259.h"
 #include "mp2971.h"
+#include "lattice.h"
 
 LOG_MODULE_DECLARE(pldm);
 
@@ -40,13 +41,12 @@ k_tid_t fw_update_tid;
 struct k_thread pldm_fw_update_thread;
 K_KERNEL_STACK_MEMBER(pldm_fw_update_stack, PLDM_FW_UPDATE_STACK_SIZE);
 
-static enum pldm_firmware_update_state current_state = STATE_IDLE;
-
 struct pldm_fw_update_cfg fw_update_cfg = { .image_size = 0,
 					    .max_buff_size = MIN_FW_UPDATE_BASELINE_TRANS_SIZE };
 
+static enum pldm_firmware_update_state current_state = STATE_IDLE;
 static uint16_t cur_update_comp_id = -1;
-static char *cur_update_comp_str = NULL;
+static char cur_update_comp_str[100] = "unknown";
 
 __weak void load_pldmupdate_comp_config(void)
 {
@@ -151,6 +151,39 @@ exit:
 	return ret;
 }
 
+uint8_t pldm_cpld_update(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+
+	CHECK_NULL_ARG_WITH_RETURN(p->data, 1);
+
+	if (!strncmp(p->comp_version_str, KEYWORD_CPLD_LATTICE, strlen(KEYWORD_CPLD_LATTICE))) {
+		lattice_update_config_t cpld_update_cfg;
+		cpld_update_cfg.interface = p->inf;
+		cpld_update_cfg.type = find_type_by_str(p->comp_version_str);
+		cpld_update_cfg.bus = p->bus;
+		cpld_update_cfg.addr = p->addr;
+		cpld_update_cfg.data = p->data;
+		cpld_update_cfg.data_len = p->data_len;
+		cpld_update_cfg.data_ofs = p->data_ofs;
+
+		if (lattice_fwupdate(&cpld_update_cfg) == false) {
+			return 1;
+		}
+
+		p->next_len = cpld_update_cfg.next_len;
+		p->next_ofs = cpld_update_cfg.next_ofs;
+	} else {
+		LOG_ERR("Component version string %s not contains support device's keyword",
+			p->comp_version_str);
+		return 1;
+	}
+
+	return 0;
+}
+
 K_WORK_DELAYABLE_DEFINE(submit_warm_reset_work, submit_bic_warm_reset);
 uint8_t pldm_bic_activate(void *arg)
 {
@@ -200,6 +233,13 @@ static uint8_t do_self_activate(uint16_t comp_id)
 	}
 
 	return 0;
+}
+
+static void pldm_status_reset()
+{
+	current_state = STATE_IDLE;
+	cur_update_comp_id = -1;
+	memcpy(cur_update_comp_str, "unknown", 8);
 }
 
 uint16_t pldm_fw_update_read(void *mctp_p, enum pldm_firmware_update_commands cmd, uint8_t *req,
@@ -333,6 +373,12 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 	pldm_fw_update_param_t update_param = { 0 };
 	update_param.comp_id = cur_update_comp_id;
 	update_param.comp_version_str = cur_update_comp_str;
+	if (cur_update_comp_id < comp_config_count)
+		update_param.inf = comp_config[cur_update_comp_id].inf;
+	else {
+		LOG_ERR("Given component id %d doesn't exist in config table", cur_update_comp_id);
+		return;
+	}
 
 	/* do pre-update */
 	if (fw_info->pre_update_func) {
@@ -369,7 +415,11 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 
 		uint8_t percent = ((update_param.data_ofs + update_param.data_len) * 100) /
 				  fw_update_cfg.image_size;
-		LOG_INF("package loaded: %d%%", percent);
+
+		static uint8_t previous_percent = 0;
+		if (previous_percent != percent)
+			LOG_INF("package loaded: %d%%", percent);
+		previous_percent = percent;
 
 		if (fw_info->update_func(&update_param)) {
 			LOG_ERR("Component %d update failed!", cur_update_comp_id);
@@ -415,13 +465,10 @@ exit:
 			LOG_ERR("post-update failed!");
 		}
 	}
-
 	fw_update_cfg.image_size = 0;
-
 	if (fw_update_tid) {
 		fw_update_tid = NULL;
 	}
-
 	SAFE_FREE(ext_params);
 	return;
 }
@@ -644,11 +691,11 @@ static uint8_t update_component(void *mctp_inst, uint8_t *buf, uint16_t len, uin
 
 	memcpy(extra_data, ext_params, sizeof(mctp_ext_params));
 
-	fw_update_tid = k_thread_create(&pldm_fw_update_thread, pldm_fw_update_stack,
-					K_THREAD_STACK_SIZEOF(pldm_fw_update_stack),
-					req_fw_update_handler, mctp_inst, extra_data,
-					NULL, CONFIG_MAIN_THREAD_PRIORITY, 0,
-					K_SECONDS(UPDATE_THREAD_DELAY_SECOND));
+	fw_update_tid =
+		k_thread_create(&pldm_fw_update_thread, pldm_fw_update_stack,
+				K_THREAD_STACK_SIZEOF(pldm_fw_update_stack), req_fw_update_handler,
+				mctp_inst, extra_data, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0,
+				K_SECONDS(UPDATE_THREAD_DELAY_SECOND));
 	k_thread_name_set(&pldm_fw_update_thread, "pldm_fw_update_thread");
 
 	current_state = STATE_DOWNLOAD;
@@ -704,8 +751,7 @@ static uint8_t activate_firmware(void *mctp_inst, uint8_t *buf, uint16_t len, ui
 	*resp_len = sizeof(struct pldm_activate_firmware_resp);
 
 	current_state = STATE_ACTIVATE;
-	cur_update_comp_id = -1;
-	cur_update_comp_str = NULL;
+	pldm_status_reset();
 
 exit:
 	return PLDM_SUCCESS;
