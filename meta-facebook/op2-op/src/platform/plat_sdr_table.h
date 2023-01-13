@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_SENSOR_TABLE_H
-#define PLAT_SENSOR_TABLE_H
+#ifndef PLAT_SDR_TABLE_H
+#define PLAT_SDR_TABLE_H
 
 #include <stdint.h>
 
+#include "plat_sensor_table.h"
+
+void pal_change_sdr_config_number_and_name(void);
+void pal_extend_full_sdr_table(void);
 void load_sdr_table(void);
 
 #endif
