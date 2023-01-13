@@ -32,6 +32,8 @@
 #define ADJUST_ADM1278_POWER(x) (x * 0.95)
 #define ADJUST_LTC4282_CURRENT(x) ((x * 0.96) - 0.04)
 #define ADJUST_LTC4282_POWER(x) ((x * 0.96) - 0.6)
+#define ADJUST_MP5990_CURRENT(x) ((x * 1.0029) + 0.0542)
+#define ADJUST_MP5990_POWER(x) ((x * 1.0081) + 1.8285)
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -191,6 +193,34 @@ bool post_ltc4282_pwr_read(uint8_t sensor_num, void *args, int *reading)
 	sensor_val *sval = (sensor_val *)reading;
 	float val = sval->integer + (sval->fraction * 0.001);
 	val = ADJUST_LTC4282_POWER(val);
+	sval->integer = (int16_t)val;
+	sval->fraction = (val - sval->integer) * 1000;
+
+	return true;
+}
+
+bool post_mp5990_cur_read(uint8_t sensor_num, void *args, int *reading)
+{
+	ARG_UNUSED(args);
+	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+
+	sensor_val *sval = (sensor_val *)reading;
+	float val = sval->integer + (sval->fraction * 0.001);
+	val = ADJUST_MP5990_CURRENT(val);
+	sval->integer = (int16_t)val;
+	sval->fraction = (val - sval->integer) * 1000;
+
+	return true;
+}
+
+bool post_mp5990_pwr_read(uint8_t sensor_num, void *args, int *reading)
+{
+	ARG_UNUSED(args);
+	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+
+	sensor_val *sval = (sensor_val *)reading;
+	float val = sval->integer + (sval->fraction * 0.001);
+	val = ADJUST_MP5990_POWER(val);
 	sval->integer = (int16_t)val;
 	sval->fraction = (val - sval->integer) * 1000;
 
