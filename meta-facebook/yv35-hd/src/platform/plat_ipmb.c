@@ -76,7 +76,8 @@ void pal_encode_response_bridge_cmd(ipmi_msg *bridge_msg, ipmi_msg_cfg *current_
 	CHECK_NULL_ARG(IPMB_config_tables);
 
 	// handle the bridge commend from other fru
-	if (current_msg_rx->buffer.netfn == NETFN_OEM_1S_RES) {
+	if ((current_msg_rx->buffer.netfn == NETFN_OEM_1S_RES) &&
+	    (current_msg_rx->buffer.cmd == CMD_OEM_1S_MSG_OUT)) {
 		if (current_msg_rx->buffer.completion_code != CC_SUCCESS) {
 			bridge_msg->data[0] = IANA_ID & 0xFF;
 			bridge_msg->data[1] = (IANA_ID >> 8) & 0xFF;

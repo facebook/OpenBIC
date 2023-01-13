@@ -99,17 +99,21 @@ e1s_power_control_gpio opb_e1s_power_control_gpio[] = {
 		.pcie_reset = OPB_RST_E1S_4_PERST },
 };
 
-bool get_e1s_present(uint8_t device_index)
+bool get_e1s_present(uint8_t index)
 {
 	uint8_t card_type = get_card_type();
 	bool present = false;
 
 	switch (card_type) {
 	case CARD_TYPE_OPA:
-		present = gpio_get(opa_e1s_power_control_gpio[device_index].present);
+		if (gpio_get(opa_e1s_power_control_gpio[index].present) == GPIO_LOW) {
+			present = true;
+		}
 		break;
 	case CARD_TYPE_OPB:
-		present = gpio_get(opb_e1s_power_control_gpio[device_index].present);
+		if (gpio_get(opb_e1s_power_control_gpio[index].present) == GPIO_LOW) {
+			present = true;
+		}
 		break;
 	default:
 		LOG_ERR("UNKNOWN CARD TYPE");
@@ -118,21 +122,19 @@ bool get_e1s_present(uint8_t device_index)
 	return present;
 }
 
-bool get_e1s_power_good(uint8_t device_index)
+bool get_e1s_power_good(uint8_t index)
 {
 	uint8_t card_type = get_card_type();
 	bool power_good = false;
 
 	switch (card_type) {
 	case CARD_TYPE_OPA:
-		power_good =
-			(gpio_get(opa_e1s_power_control_gpio[device_index].p12v_efuse_power_good) &
-			 gpio_get(opa_e1s_power_control_gpio[device_index].p3v3_efuse_power_good));
+		power_good = (gpio_get(opa_e1s_power_control_gpio[index].p12v_efuse_power_good) &
+			      gpio_get(opa_e1s_power_control_gpio[index].p3v3_efuse_power_good));
 		break;
 	case CARD_TYPE_OPB:
-		power_good =
-			(gpio_get(opb_e1s_power_control_gpio[device_index].p12v_efuse_power_good) &
-			 gpio_get(opb_e1s_power_control_gpio[device_index].p3v3_efuse_power_good));
+		power_good = (gpio_get(opb_e1s_power_control_gpio[index].p12v_efuse_power_good) &
+			      gpio_get(opb_e1s_power_control_gpio[index].p3v3_efuse_power_good));
 		break;
 	default:
 		LOG_ERR("UNKNOWN CARD TYPE");
@@ -141,17 +143,17 @@ bool get_e1s_power_good(uint8_t device_index)
 	return power_good;
 }
 
-uint8_t get_e1s_pcie_reset_status(uint8_t device_index)
+uint8_t get_e1s_pcie_reset_status(uint8_t index)
 {
 	uint8_t card_type = get_card_type();
 	uint8_t pcie_reset = 0;
 
 	switch (card_type) {
 	case CARD_TYPE_OPA:
-		pcie_reset = gpio_get(opa_e1s_power_control_gpio[device_index].pcie_reset);
+		pcie_reset = gpio_get(opa_e1s_power_control_gpio[index].pcie_reset);
 		break;
 	case CARD_TYPE_OPB:
-		pcie_reset = gpio_get(opb_e1s_power_control_gpio[device_index].pcie_reset);
+		pcie_reset = gpio_get(opb_e1s_power_control_gpio[index].pcie_reset);
 		break;
 	default:
 		LOG_ERR("UNKNOWN CARD TYPE");
@@ -198,7 +200,7 @@ bool check_all_e1s_sequence_status(uint8_t status)
 	bool all_seq = true;
 	uint8_t card_type = get_card_type();
 	uint8_t index = 0;
-	for (index = 0; index < ((card_type == CARD_TYPE_OPA) ? CARD_TYPE_OPA : CARD_TYPE_OPB);
+	for (index = 0; index < ((card_type == CARD_TYPE_OPA) ? OPA_MAX_E1S_IDX : MAX_E1S_IDX);
 	     ++index) {
 		switch (status) {
 		case POWER_ON:
@@ -462,28 +464,28 @@ void control_e1s_power_on_sequence(void *pvParameters, void *arvg0, void *arvg1)
 {
 	CHECK_NULL_ARG(pvParameters);
 
-	uint8_t *dev_index = ((uint8_t *)pvParameters);
+	int dev_index = ((int)pvParameters) - 1;
 	bool is_power_on = false;
 	uint8_t card_type = get_card_type();
 
 	switch (card_type) {
 	case CARD_TYPE_OPA:
 		is_power_on = e1s_power_on_handler(
-			E1S_POWER_ON_STAGE0, &opa_e1s_power_control_gpio[*dev_index], *dev_index);
+			E1S_POWER_ON_STAGE0, &opa_e1s_power_control_gpio[dev_index], dev_index);
 		break;
 	case CARD_TYPE_OPB:
 		is_power_on = e1s_power_on_handler(
-			E1S_POWER_ON_STAGE0, &opb_e1s_power_control_gpio[*dev_index], *dev_index);
+			E1S_POWER_ON_STAGE0, &opb_e1s_power_control_gpio[dev_index], dev_index);
 		break;
 	default:
-		LOG_ERR("UNKNOWN card type power on e1s %d failed.", *dev_index);
+		LOG_ERR("UNKNOWN card type power on e1s %d failed.", dev_index);
 		break;
 	}
 
 	if (is_power_on == true) {
-		LOG_INF("E1S %d Power on success", *dev_index);
+		LOG_INF("E1S %d Power on success", dev_index);
 	} else {
-		LOG_ERR("E1S %d Power on fail", *dev_index);
+		LOG_ERR("E1S %d Power on fail", dev_index);
 	}
 }
 
@@ -491,28 +493,28 @@ void control_e1s_power_off_sequence(void *pvParameters, void *arvg0, void *arvg1
 {
 	CHECK_NULL_ARG(pvParameters);
 
-	uint8_t *dev_index = ((uint8_t *)pvParameters);
+	int dev_index = ((int)pvParameters) - 1;
 	bool is_power_off = false;
 	uint8_t card_type = get_card_type();
 
 	switch (card_type) {
 	case CARD_TYPE_OPA:
 		is_power_off = e1s_power_off_handler(
-			E1S_POWER_OFF_STAGE0, &opa_e1s_power_control_gpio[*dev_index], *dev_index);
+			E1S_POWER_OFF_STAGE0, &opa_e1s_power_control_gpio[dev_index], dev_index);
 		break;
 	case CARD_TYPE_OPB:
 		is_power_off = e1s_power_off_handler(
-			E1S_POWER_OFF_STAGE0, &opb_e1s_power_control_gpio[*dev_index], *dev_index);
+			E1S_POWER_OFF_STAGE0, &opb_e1s_power_control_gpio[dev_index], dev_index);
 		break;
 	default:
-		LOG_ERR("UNKNOWN card type power off e1s %d failed.", *dev_index);
+		LOG_ERR("UNKNOWN card type power off e1s %d failed.", dev_index);
 		break;
 	}
 
 	if (is_power_off == true) {
-		LOG_INF("E1S %d Power off success", *dev_index);
+		LOG_INF("E1S %d Power off success", dev_index);
 	} else {
-		LOG_ERR("E1S %d Power off fail", *dev_index);
+		LOG_ERR("E1S %d Power off fail", dev_index);
 	}
 }
 
@@ -532,15 +534,15 @@ void e1s_power_on_thread(uint8_t index)
 		return;
 	}
 
-	uint8_t dev_index = index;
-
+	// index add 1 to prevent become null pointer
+	int dev_index = index + 1;
 	e1s_power_tid[index] =
 		k_thread_create(&e1s_power_thread_handler[index], e1s_power_threads[index],
 				K_THREAD_STACK_SIZEOF(e1s_power_threads[index]),
-				control_e1s_power_on_sequence, (void *)&dev_index, NULL, NULL,
+				control_e1s_power_on_sequence, (void *)dev_index, NULL, NULL,
 				CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
 	char thread_name[MAX_WORK_NAME_LEN];
-	sprintf(thread_name, "e1s%d_power_off_sequence_thread", index);
+	sprintf(thread_name, "e1s%d_power_on_sequence_thread", index);
 	k_thread_name_set(&e1s_power_thread_handler[index], thread_name);
 }
 
@@ -552,12 +554,12 @@ void e1s_power_off_thread(uint8_t index)
 		return;
 	}
 
-	uint8_t dev_index = index;
-
+	// index add 1 to prevent become null pointer
+	int dev_index = index + 1;
 	e1s_power_tid[index] =
 		k_thread_create(&e1s_power_thread_handler[index], e1s_power_threads[index],
 				K_THREAD_STACK_SIZEOF(e1s_power_threads[index]),
-				control_e1s_power_off_sequence, (void *)&dev_index, NULL, NULL,
+				control_e1s_power_off_sequence, (void *)dev_index, NULL, NULL,
 				CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
 	char thread_name[MAX_WORK_NAME_LEN];
 	sprintf(thread_name, "e1s%d_power_off_sequence_thread", index);
@@ -711,6 +713,7 @@ bool power_off_handler(uint8_t initial_stage)
 	bool enable_power_off_handler = true;
 	bool e1s_is_power_off[MAX_E1S_IDX] = { false, false, false, false, false };
 	int check_power_ret = -1;
+	int all_e1s_power_check = 0;
 	uint8_t control_stage = initial_stage;
 	uint8_t index = 0;
 	uint8_t card_type = get_card_type();
@@ -760,26 +763,25 @@ bool power_off_handler(uint8_t initial_stage)
 
 		switch (control_stage) {
 		case E1S_POWER_OFF_STAGE0:
-			if (card_type == CARD_TYPE_OPA) {
-				for (index = 0; index < OPA_MAX_E1S_IDX; ++index) {
-					if (e1s_is_power_off[index] == false) {
-						check_power_ret = -1;
-					}
+			for (index = 0;
+			     index < ((card_type == CARD_TYPE_OPA) ? OPA_MAX_E1S_IDX : MAX_E1S_IDX);
+			     ++index) {
+				if (e1s_is_power_off[index] == false) {
+					LOG_ERR("e1s %d power off fall!", index);
+					all_e1s_power_check = -1;
+					break;
 				}
-				break;
-			} else {
-				for (index = 0; index < MAX_E1S_IDX; ++index) {
-					if (e1s_is_power_off[index] == false) {
-						check_power_ret = -1;
-					}
-				}
-				break;
 			}
-			check_power_ret = 0;
-			if (card_type == CARD_TYPE_OPA) {
-				control_stage = RETIMER_POWER_OFF_STAGE0;
+
+			if (all_e1s_power_check != 0) {
+				check_power_ret = -1;
 			} else {
-				enable_power_off_handler = false;
+				check_power_ret = 0;
+				if (card_type == CARD_TYPE_OPA) {
+					control_stage = RETIMER_POWER_OFF_STAGE0;
+				} else {
+					enable_power_off_handler = false;
+				}
 			}
 			break;
 		case RETIMER_POWER_OFF_STAGE0:
