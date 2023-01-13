@@ -28,8 +28,10 @@
 #define I2C_BUS5 4
 #define I2C_BUS6 5
 #define I2C_BUS7 6
+#define I2C_BUS8 7
+#define I2C_BUS9 8
 
 #define IPMB_I2C_BMC I2C_BUS7
-#define I2C_BUS_MAX_NUM 7
+#define I2C_BUS_MAX_NUM 9
 
 #endif
