@@ -35,6 +35,11 @@ adc_asd_init_arg adc_asd_init_args[] = { [0] = { .is_init = false } };
 
 ina233_init_arg ina233_init_args[] = {
 	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
+	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
+	[2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
+	[3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
+	[4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
+	[5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
 };
 
 i2c_proc_arg i2c_proc_args[] = {

@@ -8,6 +8,15 @@
 		&pinctrl_adc3_default
 		&pinctrl_adc4_default
 		&pinctrl_adc5_default
+		&pinctrl_adc6_default
+		&pinctrl_adc7_default>;
+};
+
+&adc1 {
+	status = "okay";
+	pinctrl-0 = <
+		&pinctrl_adc0_default
+		&pinctrl_adc3_default
 		&pinctrl_adc6_default>;
 };
 
