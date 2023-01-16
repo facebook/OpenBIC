@@ -44,7 +44,11 @@ K_KERNEL_STACK_MEMBER(pldm_fw_update_stack, PLDM_FW_UPDATE_STACK_SIZE);
 struct pldm_fw_update_cfg fw_update_cfg = { .image_size = 0,
 					    .max_buff_size = MIN_FW_UPDATE_BASELINE_TRANS_SIZE };
 
+static enum pldm_firmware_update_aux_state cur_aux_state = STATE_AUX_NOT_IN_UPDATE;
 static enum pldm_firmware_update_state current_state = STATE_IDLE;
+static enum pldm_firmware_update_state previous_state = STATE_IDLE;
+static uint16_t cur_update_comp_cnt = 0;
+static uint16_t rcv_comp_cnt = 0;
 static uint16_t cur_update_comp_id = -1;
 static char cur_update_comp_str[100] = "unknown";
 
@@ -113,6 +117,11 @@ uint8_t pldm_vr_update(void *fw_update_param)
 			LOG_ERR("Failed to malloc hex_buff");
 			return 1;
 		}
+	}
+
+	if (!hex_buff) {
+		LOG_ERR("First package(offset=0) has missed, so hex_buff get NULL");
+		return 1;
 	}
 
 	memcpy(hex_buff + p->data_ofs, p->data, p->data_len);
@@ -235,10 +244,22 @@ static uint8_t do_self_activate(uint16_t comp_id)
 	return 0;
 }
 
+static void state_update(uint8_t state)
+{
+	if (state == 0xff)
+		return;
+
+	previous_state = current_state;
+	current_state = state;
+}
+
 static void pldm_status_reset()
 {
-	current_state = STATE_IDLE;
+	state_update(STATE_IDLE);
+	cur_aux_state = STATE_AUX_NOT_IN_UPDATE;
 	cur_update_comp_id = -1;
+	cur_update_comp_cnt = 0;
+	rcv_comp_cnt = 0;
 	memcpy(cur_update_comp_str, "unknown", 8);
 }
 
@@ -270,7 +291,7 @@ static uint8_t report_tranfer(void *mctp_p, void *ext_params, uint8_t result_cod
 {
 	if (!mctp_p || !ext_params) {
 		LOG_ERR("Pass argument is NULL");
-		current_state = STATE_IDLE;
+		pldm_status_reset();
 		return 1;
 	}
 
@@ -355,7 +376,7 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 	ARG_UNUSED(arg);
 	if (!mctp_p || !ext_params) {
 		LOG_ERR("Pass argument is NULL");
-		current_state = STATE_IDLE;
+		pldm_status_reset();
 		SAFE_FREE(ext_params);
 		return;
 	}
@@ -365,7 +386,7 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 	pldm_fw_update_info_t *fw_info = found_fw_update_func(cur_update_comp_id);
 	if (!fw_info->update_func) {
 		LOG_WRN("Cannot find comp %x update function", cur_update_comp_id);
-		current_state = STATE_IDLE;
+		pldm_status_reset();
 		SAFE_FREE(ext_params);
 		return;
 	}
@@ -392,6 +413,8 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 	struct pldm_request_firmware_data_req req = { .offset = 0,
 						      .length = fw_update_cfg.max_buff_size };
 
+	cur_aux_state = STATE_AUX_INPROGRESS;
+
 	do {
 		uint8_t resp_buf[req.length + 1];
 		memset(resp_buf, 0, req.length + 1);
@@ -406,6 +429,7 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 		if (read_len != req.length + 1) {
 			LOG_ERR("Request firmware update failed, offset(0x%x), length(0x%x), read length(%d)",
 				req.offset, req.length, read_len);
+			cur_aux_state = STATE_AUX_FAILED;
 			goto exit;
 		}
 
@@ -424,6 +448,7 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 		if (fw_info->update_func(&update_param)) {
 			LOG_ERR("Component %d update failed!", cur_update_comp_id);
 			report_tranfer(mctp_p, ext_params, PLDM_FW_UPDATE_GENERIC_ERROR);
+			cur_aux_state = STATE_AUX_FAILED;
 			goto exit;
 		}
 
@@ -436,27 +461,33 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 	} while (1);
 
 	LOG_INF("Component %d update success!", cur_update_comp_id);
+	cur_aux_state = STATE_AUX_SUCCESS;
 
 	LOG_INF("Transfer complete");
 	if (report_tranfer(mctp_p, ext_params, PLDM_FW_UPDATE_TRANSFER_SUCCESS)) {
 		report_tranfer(mctp_p, ext_params, PLDM_FW_UPDATE_GENERIC_ERROR);
+		cur_aux_state = STATE_AUX_FAILED;
 		goto exit;
 	}
-	current_state = STATE_VERIFY;
+	state_update(STATE_VERIFY);
 
 	LOG_INF("Verify complete");
 	if (report_tranfer(mctp_p, ext_params, PLDM_FW_UPDATE_VERIFY_SUCCESS)) {
 		report_tranfer(mctp_p, ext_params, PLDM_FW_UPDATE_GENERIC_ERROR);
+		cur_aux_state = STATE_AUX_FAILED;
 		goto exit;
 	}
-	current_state = STATE_APPLY;
+	state_update(STATE_APPLY);
 
 	LOG_INF("Apply complete");
 	if (report_tranfer(mctp_p, ext_params, PLDM_FW_UPDATE_APPLY_SUCCESS)) {
 		report_tranfer(mctp_p, ext_params, PLDM_FW_UPDATE_GENERIC_ERROR);
+		cur_aux_state = STATE_AUX_FAILED;
 		goto exit;
 	}
-	current_state = STATE_RDY_XFER;
+	state_update(STATE_RDY_XFER);
+
+	cur_aux_state = STATE_AUX_SUCCESS;
 
 exit:
 	/* do post-update */
@@ -478,7 +509,7 @@ static uint8_t request_update(void *mctp_inst, uint8_t *buf, uint16_t len, uint8
 {
 	if (!mctp_inst || !buf || !resp || !resp_len || !ext_params) {
 		LOG_ERR("Pass argument is NULL");
-		current_state = STATE_IDLE;
+		pldm_status_reset();
 		return PLDM_ERROR;
 	}
 
@@ -493,6 +524,7 @@ static uint8_t request_update(void *mctp_inst, uint8_t *buf, uint16_t len, uint8
 	}
 
 	if (current_state != STATE_IDLE) {
+		LOG_ERR("Current mode %d doesn't meet request state %d", current_state, STATE_IDLE);
 		resp_p->completion_code = PLDM_FW_UPDATE_CC_ALREADY_IN_UPDATE_MODE;
 		goto exit;
 	}
@@ -512,6 +544,8 @@ static uint8_t request_update(void *mctp_inst, uint8_t *buf, uint16_t len, uint8
 		resp_p->fd_will_send_pkg_data = 0x00;
 	}
 
+	cur_update_comp_cnt = req_p->num_of_comp;
+
 	LOG_INF("max transfer size(%u), number of component(%d), max_outstanding_transfer_req(%d)",
 		req_p->max_transfer_size, req_p->num_of_comp, req_p->max_outstanding_transfer_req);
 	LOG_INF("packet data length(%d), component sting type(%d) length(%d)", req_p->pkg_data_len,
@@ -522,7 +556,7 @@ static uint8_t request_update(void *mctp_inst, uint8_t *buf, uint16_t len, uint8
 	*resp_len = sizeof(struct pldm_request_update_resp);
 	resp_p->completion_code = PLDM_SUCCESS;
 
-	current_state = STATE_LEARN_COMP;
+	state_update(STATE_LEARN_COMP);
 
 exit:
 	return PLDM_SUCCESS;
@@ -533,7 +567,7 @@ static uint8_t pass_component_table(void *mctp_inst, uint8_t *buf, uint16_t len,
 {
 	if (!mctp_inst || !buf || !resp || !resp_len || !ext_params) {
 		LOG_ERR("Pass argument is NULL");
-		current_state = STATE_IDLE;
+		pldm_status_reset();
 		return PLDM_ERROR;
 	}
 
@@ -548,8 +582,15 @@ static uint8_t pass_component_table(void *mctp_inst, uint8_t *buf, uint16_t len,
 		goto exit;
 	}
 
-	if (current_state == STATE_IDLE) {
-		resp_p->completion_code = PLDM_FW_UPDATE_CC_NOT_IN_UPDATE_MODE;
+	LOG_INF("Received component class: %xh id: %d with version:", req_p->comp_classification,
+		req_p->comp_identifier);
+	LOG_HEXDUMP_INF(buf + sizeof(struct pldm_pass_component_table_req), req_p->comp_ver_str_len,
+			"");
+
+	if (current_state != STATE_LEARN_COMP) {
+		LOG_ERR("Current mode %d doesn't meet request state %d", current_state,
+			STATE_LEARN_COMP);
+		resp_p->completion_code = PLDM_FW_UPDATE_CC_INVALID_STATE_FOR_COMMAND;
 		goto exit;
 	}
 
@@ -589,15 +630,16 @@ static uint8_t pass_component_table(void *mctp_inst, uint8_t *buf, uint16_t len,
 	if (resp_p->comp_resp_code)
 		resp_p->comp_resp = 0x01;
 
-	LOG_HEXDUMP_INF(buf + sizeof(struct pldm_pass_component_table_req), req_p->comp_ver_str_len,
-			"Component version: ");
-
 	/* Currently not support error condition, so only response zero */
 	resp_p->completion_code = PLDM_SUCCESS;
 
 	*resp_len = sizeof(struct pldm_pass_component_table_resp);
 
-	current_state = STATE_RDY_XFER;
+	rcv_comp_cnt++;
+	if (rcv_comp_cnt == cur_update_comp_cnt) {
+		state_update(STATE_RDY_XFER);
+		rcv_comp_cnt = 0;
+	}
 
 exit:
 	return PLDM_SUCCESS;
@@ -608,7 +650,7 @@ static uint8_t update_component(void *mctp_inst, uint8_t *buf, uint16_t len, uin
 {
 	if (!mctp_inst || !buf || !resp || !resp_len || !ext_params) {
 		LOG_ERR("Pass argument is NULL");
-		current_state = STATE_IDLE;
+		pldm_status_reset();
 		return PLDM_ERROR;
 	}
 
@@ -622,7 +664,9 @@ static uint8_t update_component(void *mctp_inst, uint8_t *buf, uint16_t len, uin
 		goto exit;
 	}
 
-	if (current_state == STATE_IDLE) {
+	if (current_state != STATE_RDY_XFER) {
+		LOG_ERR("Current mode %d doesn't meet request state %d", current_state,
+			STATE_RDY_XFER);
 		resp_p->completion_code = PLDM_FW_UPDATE_CC_NOT_IN_UPDATE_MODE;
 		goto exit;
 	}
@@ -660,10 +704,10 @@ static uint8_t update_component(void *mctp_inst, uint8_t *buf, uint16_t len, uin
 
 	fw_update_cfg.image_size = req_p->comp_image_size;
 
-	LOG_INF("Update component %d with image size(0x%x)", req_p->comp_identifier,
-		fw_update_cfg.image_size);
+	LOG_INF("Update component class 0x%x id: %d image_size: 0x%x version: ",
+		req_p->comp_classification, req_p->comp_identifier, fw_update_cfg.image_size);
 	LOG_HEXDUMP_INF(buf + sizeof(struct pldm_update_component_req), req_p->comp_ver_str_len,
-			"Component version: ");
+			"");
 
 	resp_p->completion_code = PLDM_SUCCESS;
 
@@ -698,7 +742,7 @@ static uint8_t update_component(void *mctp_inst, uint8_t *buf, uint16_t len, uin
 				K_SECONDS(UPDATE_THREAD_DELAY_SECOND));
 	k_thread_name_set(&pldm_fw_update_thread, "pldm_fw_update_thread");
 
-	current_state = STATE_DOWNLOAD;
+	state_update(STATE_DOWNLOAD);
 
 exit:
 	return PLDM_SUCCESS;
@@ -709,7 +753,7 @@ static uint8_t activate_firmware(void *mctp_inst, uint8_t *buf, uint16_t len, ui
 {
 	if (!mctp_inst || !buf || !resp || !resp_len || !ext_params) {
 		LOG_ERR("Pass argument is NULL");
-		current_state = STATE_IDLE;
+		pldm_status_reset();
 		return PLDM_ERROR;
 	}
 
@@ -723,14 +767,10 @@ static uint8_t activate_firmware(void *mctp_inst, uint8_t *buf, uint16_t len, ui
 		goto exit;
 	}
 
-	/* Not in the update mode */
-	if (current_state == STATE_IDLE) {
-		resp_p->completion_code = PLDM_FW_UPDATE_CC_NOT_IN_UPDATE_MODE;
-		goto exit;
-	}
-
 	/* Only expect this command in READY XFER state */
 	if (current_state != STATE_RDY_XFER) {
+		LOG_ERR("Current mode %d doesn't meet request state %d", current_state,
+			STATE_RDY_XFER);
 		resp_p->completion_code = PLDM_FW_UPDATE_CC_INVALID_STATE_FOR_COMMAND;
 		goto exit;
 	}
@@ -740,18 +780,94 @@ static uint8_t activate_firmware(void *mctp_inst, uint8_t *buf, uint16_t len, ui
 		goto exit;
 	}
 
+	state_update(STATE_ACTIVATE);
+
 	if (do_self_activate(cur_update_comp_id)) {
 		resp_p->completion_code = PLDM_FW_UPDATE_CC_SELF_CONTAINED_ACTIVATION_NOT_PERMITTED;
+		cur_aux_state = STATE_AUX_FAILED;
 		goto exit;
 	}
+
+	cur_aux_state = STATE_AUX_SUCCESS;
 
 	LOG_INF("Activate firmware");
 	resp_p->completion_code = PLDM_SUCCESS;
 	resp_p->estimated = 0;
 	*resp_len = sizeof(struct pldm_activate_firmware_resp);
 
-	current_state = STATE_ACTIVATE;
 	pldm_status_reset();
+
+exit:
+	return PLDM_SUCCESS;
+}
+
+static uint8_t get_status(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
+			  uint16_t *resp_len, void *ext_params)
+{
+	if (!mctp_inst || !buf || !resp || !resp_len || !ext_params) {
+		LOG_ERR("Pass argument is NULL");
+		pldm_status_reset();
+		return PLDM_ERROR;
+	}
+
+	struct pldm_get_status_resp *resp_p = (struct pldm_get_status_resp *)resp;
+
+	*resp_len = 1;
+
+	if (len != 0) {
+		resp_p->completion_code = PLDM_ERROR_INVALID_LENGTH;
+		goto exit;
+	}
+
+	LOG_INF("Get status");
+	resp_p->completion_code = PLDM_SUCCESS;
+	resp_p->cur_state = current_state;
+	resp_p->pre_state = previous_state;
+	resp_p->aux_state = cur_aux_state;
+	if (cur_aux_state == STATE_AUX_FAILED)
+		resp_p->aux_state_status = 0x0A; //generic error
+	else
+		resp_p->aux_state_status = 0;
+	resp_p->reason_code = 0; //not support
+	resp_p->prog_percent = 0x65; //not support
+	resp_p->update_op_flag_en = 0;
+	*resp_len = sizeof(struct pldm_get_status_resp);
+
+exit:
+	return PLDM_SUCCESS;
+}
+
+static uint8_t cancel_update(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
+			     uint16_t *resp_len, void *ext_params)
+{
+	if (!mctp_inst || !buf || !resp || !resp_len || !ext_params) {
+		LOG_ERR("Pass argument is NULL");
+		pldm_status_reset();
+		return PLDM_ERROR;
+	}
+
+	struct pldm_cancel_update_resp *resp_p = (struct pldm_cancel_update_resp *)resp;
+
+	*resp_len = 1;
+
+	if (len != 0) {
+		resp_p->completion_code = PLDM_ERROR_INVALID_LENGTH;
+		goto exit;
+	}
+
+	if (current_state != STATE_IDLE) {
+		LOG_ERR("Current mode %d doesn't meet request state %d", current_state, STATE_IDLE);
+		resp_p->completion_code = PLDM_FW_UPDATE_CC_NOT_IN_UPDATE_MODE;
+		goto exit;
+	}
+
+	pldm_status_reset();
+
+	LOG_INF("Cancel update");
+	resp_p->completion_code = PLDM_SUCCESS;
+	resp_p->non_func_comp_ind = 0;
+	resp_p->non_func_comp_bitmap = 0;
+	*resp_len = sizeof(struct pldm_cancel_update_resp);
 
 exit:
 	return PLDM_SUCCESS;
@@ -762,6 +878,8 @@ static pldm_cmd_handler pldm_fw_update_cmd_tbl[] = {
 	{ PLDM_FW_UPDATE_CMD_CODE_PASS_COMPONENT_TABLE, pass_component_table },
 	{ PLDM_FW_UPDATE_CMD_CODE_UPDATE_COMPONENT, update_component },
 	{ PLDM_FW_UPDATE_CMD_CODE_ACTIVE_FIRMWARE, activate_firmware },
+	{ PLDM_FW_UPDATE_CMD_CODE_GET_STATUS, get_status },
+	{ PLDM_FW_UPDATE_CMD_CODE_CANCEL_UPDATE, cancel_update },
 };
 
 uint8_t pldm_fw_update_handler_query(uint8_t code, void **ret_fn)

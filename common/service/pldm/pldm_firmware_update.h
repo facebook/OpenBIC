@@ -95,6 +95,16 @@ enum pldm_firmware_update_state {
 };
 
 /**
+ * PLDM Frimware update aux state 
+ */
+enum pldm_firmware_update_aux_state {
+	STATE_AUX_INPROGRESS,
+	STATE_AUX_SUCCESS,
+	STATE_AUX_FAILED,
+	STATE_AUX_NOT_IN_UPDATE, //fd is in IDLE/LC/RX state
+};
+
+/**
  * PLDM component classification
  */
 enum { COMP_CLASS_TYPE_UNKNOWN = 0x0000,
@@ -333,6 +343,29 @@ struct pldm_activate_firmware_req {
 struct pldm_activate_firmware_resp {
 	uint8_t completion_code;
 	uint16_t estimated;
+} __attribute__((packed));
+
+/**
+ * Structure representing GetStatus response
+ */
+struct pldm_get_status_resp {
+	uint8_t completion_code;
+	uint8_t cur_state;
+	uint8_t pre_state;
+	uint8_t aux_state;
+	uint8_t aux_state_status;
+	uint8_t prog_percent;
+	uint8_t reason_code;
+	uint32_t update_op_flag_en;
+} __attribute__((packed));
+
+/**
+ * Structure representing CancelUpdate response
+ */
+struct pldm_cancel_update_resp {
+	uint8_t completion_code;
+	uint8_t non_func_comp_ind;
+	uint64_t non_func_comp_bitmap;
 } __attribute__((packed));
 
 /**
