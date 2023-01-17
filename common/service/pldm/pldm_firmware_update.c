@@ -52,6 +52,8 @@ static uint16_t rcv_comp_cnt = 0;
 static uint16_t cur_update_comp_id = -1;
 static char cur_update_comp_str[100] = "unknown";
 
+static bool keep_update_flag = false;
+
 __weak void load_pldmupdate_comp_config(void)
 {
 	LOG_ERR("Failed to load pldm update table config");
@@ -261,6 +263,7 @@ static void pldm_status_reset()
 	cur_update_comp_cnt = 0;
 	rcv_comp_cnt = 0;
 	memcpy(cur_update_comp_str, "unknown", 8);
+	keep_update_flag = false;
 }
 
 uint16_t pldm_fw_update_read(void *mctp_p, enum pldm_firmware_update_commands cmd, uint8_t *req,
@@ -416,6 +419,12 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 	cur_aux_state = STATE_AUX_INPROGRESS;
 
 	do {
+		if (keep_update_flag == false) {
+			LOG_WRN("Update has been canceled by UA");
+			cur_aux_state = STATE_AUX_FAILED;
+			goto exit;
+		}
+
 		uint8_t resp_buf[req.length + 1];
 		memset(resp_buf, 0, req.length + 1);
 
@@ -557,6 +566,7 @@ static uint8_t request_update(void *mctp_inst, uint8_t *buf, uint16_t len, uint8
 	resp_p->completion_code = PLDM_SUCCESS;
 
 	state_update(STATE_LEARN_COMP);
+	keep_update_flag = true;
 
 exit:
 	return PLDM_SUCCESS;
@@ -855,8 +865,8 @@ static uint8_t cancel_update(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_
 		goto exit;
 	}
 
-	if (current_state != STATE_IDLE) {
-		LOG_ERR("Current mode %d doesn't meet request state %d", current_state, STATE_IDLE);
+	if (current_state == STATE_IDLE) {
+		LOG_ERR("Current mode already in IDLE state");
 		resp_p->completion_code = PLDM_FW_UPDATE_CC_NOT_IN_UPDATE_MODE;
 		goto exit;
 	}
