@@ -88,11 +88,13 @@
 
 extern uint8_t plat_get_config_size();
 extern void load_sensor_config(void);
+int check_vr_type(void);
 
-enum { VR_INF = 0,
-       VR_RNS,
-       PWR_INA233,
-       PWR_SGY,
+enum {
+	VR_INF = 0,
+	VR_RNS,
+	PWR_INA233,
+	PWR_SGY,
 };
 
 #endif
