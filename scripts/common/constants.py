@@ -26,6 +26,7 @@ PLATFORM_NAME_MAP = {
     "oby35-cl": "Yosemite v3.5 : Crater Lake",
     "oby35-gl": "Yosemite v3.5 : Great Lakes",
     "oby35-hd": "Yosemite v3.5 : Half Dome",
+    "oby35-op": "Yosemite v3.5 : Olmstead Point",
     "oby35-rf": "Yosemite v3.5 : Rainbow Falls",
 }
 
@@ -42,12 +43,14 @@ SUPPORTED_PLATFORMS = {
     "oby35-cl",
     "oby35-gl",
     "oby35-hd",
+    "oby35-op",
     "oby35-rf",
 }
 
 PLATFORM_RELEASE_MAPPINGS = {
     "at-cb": "obat-cb",
     "gt-cc": "obgt-cc",
+    "op2-op" : "oby35-op",
     "wc-mb": "obwc-mb",
     "yv3-dl": "oby3-dl",
     "yv3-vf": "oby3-vf",
@@ -61,6 +64,7 @@ PLATFORM_RELEASE_MAPPINGS = {
 PLATFORM_DIRECTORIES = {
     "at-cb",
     "gt-cc",
+    "op2-op",
     "wc-mb",
     "yv3-dl",
     "yv3-vf",
@@ -93,6 +97,7 @@ TITLE_TAGS = {
     "gt:",
     "hd:",
     "mb:",
+    "op2-op",
     "rf:",
     "vf:",
     "wc:",
