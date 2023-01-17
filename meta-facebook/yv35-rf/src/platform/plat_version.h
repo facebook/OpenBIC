@@ -21,7 +21,7 @@
 
 #define PLATFORM_NAME "Yosemite 3.5"
 #define PROJECT_NAME "Rainbow Falls"
-#define PROJECT_STAGE EVT
+#define PROJECT_STAGE DVT
 
 /*
  * 0x01 Motherboard
@@ -41,8 +41,8 @@
 #define AUXILIARY_FW_REVISION 0x00000000
 
 #define BIC_FW_YEAR_MSB 0x20
-#define BIC_FW_YEAR_LSB 0x22
-#define BIC_FW_WEEK 0x46
+#define BIC_FW_YEAR_LSB 0x23
+#define BIC_FW_WEEK 0x03
 #define BIC_FW_VER 0x01
 #define BIC_FW_platform_0 0x72 // char: r
 #define BIC_FW_platform_1 0x66 // char: f
