@@ -25,6 +25,7 @@
 LOG_MODULE_REGISTER(dev_ina233);
 
 #define INA233_CALIBRATION_OFFSET 0xD4
+#define INA233_MFR_ADC_CONFIG 0xD0
 
 uint8_t ina233_read(uint8_t sensor_num, int *reading)
 {
@@ -113,6 +114,24 @@ uint8_t ina233_init(uint8_t sensor_num)
 	if (init_arg == NULL) {
 		LOG_ERR("input initial pointer is NULL");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+
+	if (init_arg->mfr_config_init == true) {
+		int ret = 0, retry = 5;
+		I2C_MSG msg = { 0 };
+
+		msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
+		msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+		msg.tx_len = 3;
+		msg.data[0] = INA233_MFR_ADC_CONFIG;
+		msg.data[1] = init_arg->mfr_config.value & 0xFF;
+		msg.data[2] = init_arg->mfr_config.value >> 8;
+		ret = i2c_master_write(&msg, retry);
+		if (ret != 0) {
+			LOG_ERR("i2c write fail ret: %d", ret);
+			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		}
+		init_arg->mfr_config_init = false;
 	}
 
 	if (init_arg->is_init != true) {
