@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+#SPDX - License - Identifier : Apache - 2.0
 
 cmake_minimum_required(VERSION 3.13.1)
 
@@ -36,6 +36,7 @@ target_include_directories(app PRIVATE ${common_path}/service/ipmi/include)
 target_include_directories(app PRIVATE ${common_path}/service/logging) 
 target_include_directories(app PRIVATE ${common_path}/service/mctp)
 target_include_directories(app PRIVATE ${common_path}/service/pldm)
+target_include_directories(app PRIVATE ${common_path}/service/cci)
 target_include_directories(app PRIVATE ${common_path}/service/sensor)
 target_include_directories(app PRIVATE ${common_path}/service/usb)
 target_include_directories(app PRIVATE ${common_path}/shell/commands)
