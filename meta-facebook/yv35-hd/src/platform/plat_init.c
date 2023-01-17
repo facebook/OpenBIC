@@ -44,10 +44,17 @@ void pal_pre_init()
 {
 	init_platform_config();
 	CARD_STATUS _1ou_status = get_1ou_status();
+	CARD_STATUS _2ou_status = get_2ou_status();
 	if (_1ou_status.present && (_1ou_status.card_type == TYPE_1OU_EXP_WITH_E1S)) {
-		// Initialize I3C HUB (HD BIC connects to Olympic2 expension-A and B)
-		if (!rg3mxxb12_i2c_mode_only_init(I2C_BUS8, BIT(2))) {
-			printk("failed to initialize rg3mxxb12\n");
+		// Initialize I3C HUB (HD BIC connects to Olympic2 1ou expension-A and B)
+		if (!rg3mxxb12_i2c_mode_only_init(I2C_BUS8, BIT(2), ldo_1_8_volt, pullup_1k_ohm)) {
+			printk("failed to initialize 1ou rg3mxxb12\n");
+		}
+	}
+	if (_2ou_status.present && (_1ou_status.card_type == TYPE_1OU_EXP_WITH_E1S)) {
+		// Initialize I3C HUB (HD BIC connects to Olympic2 3ou expension-A and B)
+		if (!rg3mxxb12_i2c_mode_only_init(I2C_BUS9, BIT(2), ldo_1_8_volt, pullup_1k_ohm)) {
+			printk("failed to initialize 3ou rg3mxxb12\n");
 		}
 	}
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));

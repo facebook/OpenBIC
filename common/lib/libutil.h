@@ -28,6 +28,7 @@
 	}
 
 #define SETBIT(x, y) (x | (1ULL << y))
+#define SETBITS(x, y, z) (x | (y << z))
 #define GETBIT(x, y) ((x & (1ULL << y)) > y)
 #define CLEARBIT(x, y) (x & (~(1ULL << y)))
 
