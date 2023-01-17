@@ -30,6 +30,8 @@
 
 LOG_MODULE_REGISTER(plat_hook);
 
+#define PEX_SWITCH_INIT_RETRY_COUNT 3
+
 struct k_mutex xdpe15284_mutex;
 
 /**************************************************************************************************
@@ -103,6 +105,11 @@ bool pre_ina233_read(uint8_t sensor_num, void *args)
 	}
 
 	ret = set_mux_channel(*pre_args);
+	if (ret == false) {
+		LOG_ERR("ina233 switch mux fail");
+		k_mutex_unlock(mutex);
+	}
+
 	return ret;
 }
 
@@ -181,10 +188,14 @@ bool pre_pex89000_read(uint8_t sensor_num, void *args)
 		return false;
 	}
 
+	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+	pex89000_init_arg *pex_init_arg = (pex89000_init_arg *)cfg->init_args;
+
 	bool ret = true;
 	int mutex_status = 0;
+	static uint8_t check_init_count = 0;
 	mux_config *pre_args = (mux_config *)args;
-	pre_args->bus = sensor_config[sensor_config_index_map[sensor_num]].port;
+	pre_args->bus = cfg->port;
 
 	struct k_mutex *mutex = get_i2c_mux_mutex(pre_args->bus);
 	mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
@@ -194,6 +205,27 @@ bool pre_pex89000_read(uint8_t sensor_num, void *args)
 	}
 
 	ret = set_mux_channel(*pre_args);
+	if (ret == false) {
+		LOG_ERR("pex switch mux fail");
+		k_mutex_unlock(mutex);
+		return false;
+	}
+
+	if (pex_init_arg->is_init == false) {
+		if (check_init_count >= PEX_SWITCH_INIT_RETRY_COUNT) {
+			post_pex89000_read(sensor_num, cfg->post_sensor_read_args, NULL);
+			return false;
+		}
+
+		check_init_count += 1;
+		ret = init_drive_type_delayed(cfg);
+		if (ret == false) {
+			LOG_ERR("pex initial fail");
+			post_pex89000_read(sensor_num, cfg->post_sensor_read_args, NULL);
+			return ret;
+		}
+	}
+
 	return ret;
 }
 
