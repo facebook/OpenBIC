@@ -29,6 +29,22 @@
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
+bool pal_request_msg_to_BIC_from_KCS(uint8_t netfn, uint8_t cmd)
+{
+	if (netfn == NETFN_OEM_1S_REQ) {
+		if ((cmd == CMD_OEM_1S_FW_UPDATE) || (cmd == CMD_OEM_1S_RESET_BMC) ||
+		    (cmd == CMD_OEM_1S_GET_BIC_STATUS) || (cmd == CMD_OEM_1S_RESET_BIC) ||
+		    (cmd == CMD_OEM_1S_GET_BIC_FW_INFO))
+			return true;
+	} else if (netfn == NETFN_APP_REQ) {
+		if (cmd == CMD_APP_GET_SYSTEM_GUID) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 int pal_record_bios_fw_version(uint8_t *buf, uint8_t size)
 {
 	CHECK_NULL_ARG_WITH_RETURN(buf, -1);
