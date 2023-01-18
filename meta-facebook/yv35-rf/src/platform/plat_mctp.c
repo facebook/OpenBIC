@@ -25,6 +25,7 @@
 #include <logging/log.h>
 #include <logging/log_ctrl.h>
 #include <stdlib.h>
+#include "libutil.h"
 #include "mctp.h"
 #include "mctp_ctrl.h"
 #include "pldm.h"
@@ -53,6 +54,9 @@ mctp *find_mctp_by_smbus(uint8_t bus)
 	uint8_t i;
 	for (i = 0; i < ARRAY_SIZE(smbus_port); i++) {
 		mctp_smbus_port *p = smbus_port + i;
+		if (!p) {
+			return NULL;
+		}
 		if (bus == p->conf.smbus_conf.bus) {
 			return p->mctp_inst;
 		}
@@ -62,13 +66,14 @@ mctp *find_mctp_by_smbus(uint8_t bus)
 
 static void set_endpoint_resp_handler(void *args, uint8_t *buf, uint16_t len)
 {
-	if (!buf || !len)
-		return;
+	CHECK_NULL_ARG(args);
+	CHECK_NULL_ARG(buf);
 	LOG_HEXDUMP_INF(buf, len, __func__);
 }
 
 static void set_endpoint_resp_timeout(void *args)
 {
+	CHECK_NULL_ARG(args);
 	mctp_route_entry *p = (mctp_route_entry *)args;
 	printk("[%s] Endpoint 0x%x set endpoint failed on bus %d \n", __func__, p->endpoint,
 	       p->bus);
@@ -79,6 +84,9 @@ static void set_dev_endpoint(void)
 	for (uint8_t i = 0; i < ARRAY_SIZE(mctp_route_tbl); i++) {
 		mctp_route_entry *p = mctp_route_tbl + i;
 		for (uint8_t j = 0; j < ARRAY_SIZE(smbus_port); j++) {
+			if (!p) {
+				return;
+			}
 			if (p->bus != smbus_port[j].conf.smbus_conf.bus) {
 				continue;
 			}
@@ -109,8 +117,8 @@ static void set_dev_endpoint(void)
 
 static uint8_t mctp_msg_recv(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_params ext_params)
 {
-	if (!mctp_p || !buf || !len)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_p, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, MCTP_ERROR);
 
 	/* first byte is message type and ic */
 	uint8_t msg_type = (buf[0] & MCTP_MSG_TYPE_MASK) >> MCTP_MSG_TYPE_SHIFT;
@@ -134,14 +142,17 @@ static uint8_t mctp_msg_recv(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_
 
 uint8_t get_mctp_route_info(uint8_t dest_endpoint, void **mctp_inst, mctp_ext_params *ext_params)
 {
-	if (!mctp_inst || !ext_params)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, MCTP_ERROR);
 
 	uint8_t rc = MCTP_ERROR;
 	uint32_t i;
 
 	for (i = 0; i < ARRAY_SIZE(mctp_route_tbl); i++) {
 		mctp_route_entry *p = mctp_route_tbl + i;
+		if (!p) {
+			return MCTP_ERROR;
+		}
 		if (p->endpoint == dest_endpoint) {
 			*mctp_inst = find_mctp_by_smbus(p->bus);
 			ext_params->type = MCTP_MEDIUM_TYPE_SMBUS;
@@ -155,14 +166,17 @@ uint8_t get_mctp_route_info(uint8_t dest_endpoint, void **mctp_inst, mctp_ext_pa
 
 uint8_t get_mctp_info(uint8_t dest_endpoint, mctp **mctp_inst, mctp_ext_params *ext_params)
 {
-	if (!mctp_inst || !ext_params) {
-		return MCTP_ERROR;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, MCTP_ERROR);
+
 	uint8_t rc = MCTP_ERROR;
 	uint32_t i;
 
 	for (i = 0; i < ARRAY_SIZE(mctp_route_tbl); i++) {
 		mctp_route_entry *p = mctp_route_tbl + i;
+		if (!p) {
+			return MCTP_ERROR;
+		}
 		if (p->endpoint == dest_endpoint) {
 			*mctp_inst = find_mctp_by_smbus(p->bus);
 			ext_params->type = MCTP_MEDIUM_TYPE_SMBUS;
@@ -189,8 +203,10 @@ void plat_mctp_init()
 	LOG_INF("plat_mctp_init");
 	for (uint8_t i = 0; i < ARRAY_SIZE(smbus_port); i++) {
 		mctp_smbus_port *p = smbus_port + i;
+		if (!p) {
+			return;
+		}
 		/* init the mctp/cci instance */
-		// mctp_smbus_port *p = smbus_port;
 		LOG_DBG("bus = %x, addr = %x", p->conf.smbus_conf.bus, p->conf.smbus_conf.addr);
 
 		p->mctp_inst = mctp_init();
