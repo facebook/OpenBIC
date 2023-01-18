@@ -206,19 +206,30 @@ uint16_t mctp_cci_read(void *mctp_p, mctp_cci_msg *msg, uint8_t *rbuf, uint16_t 
 	CHECK_NULL_ARG_WITH_RETURN(rbuf, 0);
 
 	uint8_t event_msgq_buffer[1];
-	struct k_msgq event_msgq;
+	struct k_msgq *event_msgq_p = (struct k_msgq *)malloc(sizeof(struct k_msgq));
+	if (!event_msgq_p) {
+		LOG_WRN("event_msgq_p alloc failed!");
+		return CCI_ERROR;
+	}
+	uint16_t ret_len = 0;
 
-	k_msgq_init(&event_msgq, event_msgq_buffer, sizeof(uint8_t), 1);
+	k_msgq_init(event_msgq_p, event_msgq_buffer, sizeof(uint8_t), 1);
 
-	cci_recv_resp_arg recv_arg;
-	recv_arg.msgq = &event_msgq;
-	recv_arg.rbuf = rbuf;
-	recv_arg.rbuf_len = rbuf_len;
+	cci_recv_resp_arg *recv_arg_p = (cci_recv_resp_arg *)malloc(sizeof(cci_recv_resp_arg));
+	if (!recv_arg_p) {
+		SAFE_FREE(event_msgq_p);
+		LOG_WRN("recv_arg_p alloc failed!");
+		return CCI_ERROR;
+	}
+	recv_arg_p->msgq = event_msgq_p;
+	recv_arg_p->rbuf = rbuf;
+	recv_arg_p->rbuf_len = rbuf_len;
+	recv_arg_p->return_len = 0;
 
 	msg->recv_resp_cb_fn = cci_read_resp_handler;
-	msg->recv_resp_cb_args = (void *)&recv_arg;
+	msg->recv_resp_cb_args = (void *)recv_arg_p;
 	msg->timeout_cb_fn = cci_read_timeout_handler;
-	msg->timeout_cb_fn_args = (void *)&event_msgq;
+	msg->timeout_cb_fn_args = (void *)event_msgq_p;
 	msg->timeout_ms = CCI_MSG_TIMEOUT_MS;
 
 	for (uint8_t retry_count = 0; retry_count < CCI_MSG_MAX_RETRY; retry_count++) {
@@ -227,14 +238,19 @@ uint16_t mctp_cci_read(void *mctp_p, mctp_cci_msg *msg, uint8_t *rbuf, uint16_t 
 			LOG_WRN("[%s] send msg failed!", __func__);
 			continue;
 		}
-		if (k_msgq_get(&event_msgq, &event, K_MSEC(CCI_MSG_TIMEOUT_MS + 1000))) {
+		if (k_msgq_get(event_msgq_p, &event, K_MSEC(CCI_MSG_TIMEOUT_MS + 1000))) {
 			LOG_WRN("[%s] Failed to get status from msgq!", __func__);
 			continue;
 		}
 		if (event == CCI_READ_EVENT_SUCCESS) {
-			return recv_arg.return_len;
+			ret_len = recv_arg_p->return_len;
+			SAFE_FREE(recv_arg_p);
+			SAFE_FREE(event_msgq_p);
+			return ret_len;
 		}
 	}
+	SAFE_FREE(recv_arg_p);
+	SAFE_FREE(event_msgq_p);
 	LOG_WRN("[%s] retry reach max!", __func__);
 	return 0;
 }
