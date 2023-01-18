@@ -32,7 +32,6 @@ LOG_MODULE_DECLARE(pldm);
 #define PLDM_FW_UPDATE_STACK_SIZE 4096
 #define UPDATE_THREAD_DELAY_SECOND 1
 #define MIN_FW_UPDATE_BASELINE_TRANS_SIZE 32
-#define MAX_BIC_UPDATE_SIZE 224
 
 pldm_fw_update_info_t *comp_config = NULL;
 uint8_t comp_config_count = 0;
@@ -122,7 +121,7 @@ uint8_t pldm_vr_update(void *fw_update_param)
 	}
 
 	if (!hex_buff) {
-		LOG_ERR("First package(offset=0) has missed, so hex_buff get NULL");
+		LOG_ERR("First package(offset=0) has missed");
 		return 1;
 	}
 
@@ -292,11 +291,8 @@ uint16_t pldm_fw_update_read(void *mctp_p, enum pldm_firmware_update_commands cm
 
 static uint8_t report_tranfer(void *mctp_p, void *ext_params, uint8_t result_code)
 {
-	if (!mctp_p || !ext_params) {
-		LOG_ERR("Pass argument is NULL");
-		pldm_status_reset();
-		return 1;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(mctp_p, 1);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, 1);
 
 	uint16_t read_len = 0;
 	uint8_t rbuf[10] = { 0 };
@@ -420,7 +416,7 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 
 	do {
 		if (keep_update_flag == false) {
-			LOG_WRN("Update has been canceled by UA");
+			LOG_WRN("Update has been canceled by UA(Update Agent)");
 			cur_aux_state = STATE_AUX_FAILED;
 			goto exit;
 		}
@@ -516,11 +512,11 @@ exit:
 static uint8_t request_update(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
 			      uint16_t *resp_len, void *ext_params)
 {
-	if (!mctp_inst || !buf || !resp || !resp_len || !ext_params) {
-		LOG_ERR("Pass argument is NULL");
-		pldm_status_reset();
-		return PLDM_ERROR;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
 
 	struct pldm_request_update_req *req_p = (struct pldm_request_update_req *)buf;
 	struct pldm_request_update_resp *resp_p = (struct pldm_request_update_resp *)resp;
@@ -533,7 +529,8 @@ static uint8_t request_update(void *mctp_inst, uint8_t *buf, uint16_t len, uint8
 	}
 
 	if (current_state != STATE_IDLE) {
-		LOG_ERR("Current mode %d doesn't meet request state %d", current_state, STATE_IDLE);
+		LOG_ERR("Firmware update failed because current state %d is not %d", current_state,
+			STATE_IDLE);
 		resp_p->completion_code = PLDM_FW_UPDATE_CC_ALREADY_IN_UPDATE_MODE;
 		goto exit;
 	}
@@ -575,11 +572,11 @@ exit:
 static uint8_t pass_component_table(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
 				    uint16_t *resp_len, void *ext_params)
 {
-	if (!mctp_inst || !buf || !resp || !resp_len || !ext_params) {
-		LOG_ERR("Pass argument is NULL");
-		pldm_status_reset();
-		return PLDM_ERROR;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
 
 	struct pldm_pass_component_table_req *req_p = (struct pldm_pass_component_table_req *)buf;
 	struct pldm_pass_component_table_resp *resp_p =
@@ -598,7 +595,7 @@ static uint8_t pass_component_table(void *mctp_inst, uint8_t *buf, uint16_t len,
 			"");
 
 	if (current_state != STATE_LEARN_COMP) {
-		LOG_ERR("Current mode %d doesn't meet request state %d", current_state,
+		LOG_ERR("Firmware update failed because current state %d is not %d", current_state,
 			STATE_LEARN_COMP);
 		resp_p->completion_code = PLDM_FW_UPDATE_CC_INVALID_STATE_FOR_COMMAND;
 		goto exit;
@@ -658,11 +655,11 @@ exit:
 static uint8_t update_component(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
 				uint16_t *resp_len, void *ext_params)
 {
-	if (!mctp_inst || !buf || !resp || !resp_len || !ext_params) {
-		LOG_ERR("Pass argument is NULL");
-		pldm_status_reset();
-		return PLDM_ERROR;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
 
 	struct pldm_update_component_req *req_p = (struct pldm_update_component_req *)buf;
 	struct pldm_update_component_resp *resp_p = (struct pldm_update_component_resp *)resp;
@@ -675,7 +672,7 @@ static uint8_t update_component(void *mctp_inst, uint8_t *buf, uint16_t len, uin
 	}
 
 	if (current_state != STATE_RDY_XFER) {
-		LOG_ERR("Current mode %d doesn't meet request state %d", current_state,
+		LOG_ERR("Firmware update failed because current state %d is not %d", current_state,
 			STATE_RDY_XFER);
 		resp_p->completion_code = PLDM_FW_UPDATE_CC_NOT_IN_UPDATE_MODE;
 		goto exit;
@@ -761,11 +758,11 @@ exit:
 static uint8_t activate_firmware(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
 				 uint16_t *resp_len, void *ext_params)
 {
-	if (!mctp_inst || !buf || !resp || !resp_len || !ext_params) {
-		LOG_ERR("Pass argument is NULL");
-		pldm_status_reset();
-		return PLDM_ERROR;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
 
 	struct pldm_activate_firmware_req *req_p = (struct pldm_activate_firmware_req *)buf;
 	struct pldm_activate_firmware_resp *resp_p = (struct pldm_activate_firmware_resp *)resp;
@@ -777,9 +774,8 @@ static uint8_t activate_firmware(void *mctp_inst, uint8_t *buf, uint16_t len, ui
 		goto exit;
 	}
 
-	/* Only expect this command in READY XFER state */
 	if (current_state != STATE_RDY_XFER) {
-		LOG_ERR("Current mode %d doesn't meet request state %d", current_state,
+		LOG_ERR("Firmware update failed because current state %d is not %d", current_state,
 			STATE_RDY_XFER);
 		resp_p->completion_code = PLDM_FW_UPDATE_CC_INVALID_STATE_FOR_COMMAND;
 		goto exit;
@@ -814,11 +810,11 @@ exit:
 static uint8_t get_status(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
 			  uint16_t *resp_len, void *ext_params)
 {
-	if (!mctp_inst || !buf || !resp || !resp_len || !ext_params) {
-		LOG_ERR("Pass argument is NULL");
-		pldm_status_reset();
-		return PLDM_ERROR;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
 
 	struct pldm_get_status_resp *resp_p = (struct pldm_get_status_resp *)resp;
 
@@ -850,11 +846,11 @@ exit:
 static uint8_t cancel_update(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
 			     uint16_t *resp_len, void *ext_params)
 {
-	if (!mctp_inst || !buf || !resp || !resp_len || !ext_params) {
-		LOG_ERR("Pass argument is NULL");
-		pldm_status_reset();
-		return PLDM_ERROR;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
 
 	struct pldm_cancel_update_resp *resp_p = (struct pldm_cancel_update_resp *)resp;
 
@@ -866,14 +862,14 @@ static uint8_t cancel_update(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_
 	}
 
 	if (current_state == STATE_IDLE) {
-		LOG_ERR("Current mode already in IDLE state");
+		LOG_WRN("Failed to cancel update cause ofr current state not in update mode");
 		resp_p->completion_code = PLDM_FW_UPDATE_CC_NOT_IN_UPDATE_MODE;
 		goto exit;
 	}
 
 	pldm_status_reset();
 
-	LOG_INF("Cancel update");
+	LOG_INF("Update canceled");
 	resp_p->completion_code = PLDM_SUCCESS;
 	resp_p->non_func_comp_ind = 0;
 	resp_p->non_func_comp_bitmap = 0;
