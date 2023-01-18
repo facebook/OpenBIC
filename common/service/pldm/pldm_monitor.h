@@ -41,8 +41,8 @@ typedef enum pldm_platform_monitor_commands {
 
 /* The maximum event data size of event type currently support */
 #define PLDM_MONITOR_EVENT_DATA_SIZE_MAX 7
-/* The maximum event message number in the queue */
-#define PLDM_MONITOR_EVENT_QUEUE_MSG_NUM_MAX 15
+/* The default maximum event message number in the queue */
+#define PLDM_MONITOR_EVENT_QUEUE_MSG_NUM_MAX_DEFAULT 10
 #define PLDM_MONITOR_SENSOR_SUPPORT_MAX 0xFF
 #define PLDM_MONITOR_SENSOR_EVENT_SENSOR_OP_STATE_DATA_LENGTH 2
 #define PLDM_MONITOR_SENSOR_EVENT_STATE_SENSOR_STATE_DATA_LENGTH 3
