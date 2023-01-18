@@ -123,6 +123,9 @@ enum SENSOR_DEV {
 	sensor_dev_adm1272 = 0x1F,
 	sensor_dev_q50sn120a1 = 0x20,
 	sensor_dev_mp2971 = 0x21,
+#ifdef ENABLE_PM8702
+	sensor_dev_pm8702 = 0x22,
+#endif
 	sensor_dev_max
 };
 
