@@ -27,7 +27,7 @@ extern "C" {
 #define MAX_FWUPDATE_RSP_BUF_SIZE 256
 #define MAX_IMAGE_MALLOC_SIZE (1024 * 64)
 
-#define KEYWORD_VR_ISL69259 "reneses_isl69259"
+#define KEYWORD_VR_ISL69259 "renesas_isl69259"
 #define KEYWORD_VR_XDPE12284C "infineon_xdpe12284c"
 #define KEYWORD_VR_MP2971 "mps_mp2971"
 
