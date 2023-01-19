@@ -131,7 +131,6 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 					SAFE_FREE(kcs_buff);
 				} while (0);
 			}
-
 			if ((req->netfn == NETFN_APP_REQ) &&
 			    (req->cmd == CMD_APP_SET_SYS_INFO_PARAMS) &&
 			    (req->data[0] == CMD_SYS_INFO_FW_VERSION)) {
@@ -174,7 +173,10 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 				kcs_buff[1] = bridge_msg.cmd;
 				kcs_buff[2] = bridge_msg.completion_code;
 				memcpy(&kcs_buff[3], &bridge_msg.data, bridge_msg.data_len);
-				kcs_write(kcs_inst->index, kcs_buff, 3 + bridge_msg.data_len);
+
+				if(!pal_immediate_respond_from_KCS(req->netfn, req->cmd)) {
+					kcs_write(kcs_inst->index, kcs_buff, 3 + bridge_msg.data_len);
+				}
 
 				SAFE_FREE(kcs_buff);
 			} else {
