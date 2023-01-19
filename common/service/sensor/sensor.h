@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -128,6 +128,7 @@ enum SENSOR_DEV {
 #endif
 	sensor_dev_ltc2991 = 0x22,
 	sensor_dev_sq52205 = 0x23,
+	sensor_dev_emc1412 = 0x24,
 	sensor_dev_max
 };
 
