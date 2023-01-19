@@ -520,17 +520,17 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 	case GT_COMPNT_NIC5:
 	case GT_COMPNT_NIC6:
 	case GT_COMPNT_NIC7: {
-		/* Only can be read when DC is on */
-		if (is_mb_dc_on() == false) {
+		uint8_t idx = component - GT_COMPNT_NIC0;
+
+		if (!nic_vesion[idx].ptr) {
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			return;
 		}
-		uint8_t idx = component - GT_COMPNT_NIC0;
+
+		memcpy(&msg->data[2], nic_vesion[idx].ptr, nic_vesion[idx].length);
 
 		msg->data[0] = component;
 		msg->data[1] = nic_vesion[idx].length;
-
-		memcpy(&msg->data[2], nic_vesion[idx].ptr, nic_vesion[idx].length);
 		msg->data_len = nic_vesion[idx].length + 2;
 		msg->completion_code = CC_SUCCESS;
 		break;
