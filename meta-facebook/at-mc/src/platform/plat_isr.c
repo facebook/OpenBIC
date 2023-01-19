@@ -15,3 +15,10 @@
  */
 
 #include "plat_isr.h"
+#include "plat_gpio.h"
+#include "power_status.h"
+
+void ISR_NORMAL_PWRGD()
+{
+	set_DC_status(MEB_NORMAL_PWRGD_BIC);
+}

@@ -19,4 +19,6 @@
 
 #include <stdint.h>
 
+void ISR_NORMAL_PWRGD();
+
 #endif
