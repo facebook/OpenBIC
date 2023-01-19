@@ -27,8 +27,7 @@ LOG_MODULE_DECLARE(pldm, LOG_LEVEL_DBG);
 
 uint8_t check_iana(const uint8_t *iana)
 {
-	if (!iana)
-		return PLDM_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(iana, PLDM_ERROR):
 
 	for (uint8_t i = 0; i < IANA_LEN; i++) {
 		if (iana[i] != ((IANA_ID >> (i * 8)) & 0xFF))
@@ -40,8 +39,8 @@ uint8_t check_iana(const uint8_t *iana)
 
 uint8_t set_iana(uint8_t *buf, uint8_t buf_len)
 {
-	if (!buf || buf_len != IANA_LEN)
-		return PLDM_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf_len, PLDM_ERROR);
 
 	for (uint8_t i = 0; i < IANA_LEN; i++)
 		buf[i] = (IANA_ID >> (i * 8)) & 0xFF;
@@ -52,8 +51,10 @@ uint8_t set_iana(uint8_t *buf, uint8_t buf_len)
 static uint8_t cmd_echo(const void *mctp_inst, const uint8_t *buf, uint16_t len, uint8_t *resp,
 			uint16_t *resp_len, const void *ext_params)
 {
-	if (!mctp_inst || !buf || !resp || !resp_len)
-		return PLDM_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
 
 	struct _cmd_echo_req *req_p = (struct _cmd_echo_req *)buf;
 	struct _cmd_echo_resp *resp_p = (struct _cmd_echo_resp *)resp;
@@ -73,8 +74,11 @@ static uint8_t cmd_echo(const void *mctp_inst, const uint8_t *buf, uint16_t len,
 static uint8_t ipmi_cmd(const void *mctp_inst, const uint8_t *buf, uint16_t len, uint8_t *resp,
 			uint16_t *resp_len, const void *ext_params)
 {
-	if (!mctp_inst || !buf || !resp || !resp_len || !ext_params)
-		return PLDM_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
 
 	struct _ipmi_cmd_req *req_p = (struct _ipmi_cmd_req *)buf;
 
