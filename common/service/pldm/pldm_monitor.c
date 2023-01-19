@@ -68,8 +68,11 @@ static uint8_t get_sensor_data_size(pldm_sensor_readings_data_type_t data_type)
 uint8_t pldm_get_sensor_reading(const void *mctp_inst, const uint8_t *buf, const uint16_t len,
 				uint8_t *resp, uint16_t *resp_len, const void *ext_params)
 {
-	if (!mctp_inst || !buf || !resp || !resp_len)
-		return PLDM_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
 
 	struct pldm_get_sensor_reading_req *req_p = (struct pldm_get_sensor_reading_req *)buf;
 	struct pldm_get_sensor_reading_resp *res_p = (struct pldm_get_sensor_reading_resp *)resp;
