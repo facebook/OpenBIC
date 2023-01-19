@@ -29,6 +29,9 @@
 #define CC_PEX_PRE_READING_FAIL 0xB1
 #define CC_PEX_ACCESS_FAIL 0xB2
 
+#define PCIE_CARD_ID_OFFSET 18
+#define RESERVE_DEFAULT_VALUE 0
+
 /* switch mux selection */
 struct SWITCH_MUX_INFO {
 	uint8_t device;

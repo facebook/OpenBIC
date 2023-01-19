@@ -20,6 +20,7 @@
 #include "util_sys.h"
 #include "plat_gpio.h"
 #include "plat_mctp.h"
+#include "plat_class.h"
 #include "plat_i2c_target.h"
 
 SCU_CFG scu_cfg[] = {
@@ -35,6 +36,8 @@ void pal_pre_init()
 				index, (struct _i2c_target_config *)&I2C_TARGET_CONFIG_TABLE[index],
 				1);
 	}
+
+	check_pcie_card_type();
 }
 
 void pal_post_init()

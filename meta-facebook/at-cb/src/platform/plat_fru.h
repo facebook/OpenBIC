@@ -21,9 +21,9 @@
 #include "i2c-mux-pca954x.h"
 
 enum FRU_ID {
-	FIO_FRU_ID = 0x01,
-	CB_FRU_ID = 0x03,
-	ACCL_1_FRU_ID,
+	FIO_FRU_ID = 0x0D,
+	CB_FRU_ID = 0x10,
+	ACCL_1_FRU_ID = 0x12,
 	ACCL_2_FRU_ID,
 	ACCL_3_FRU_ID,
 	ACCL_4_FRU_ID,
@@ -39,7 +39,8 @@ enum FRU_ID {
 	MAX_FRU_ID,
 };
 
-#define FRU_CFG_NUM MAX_FRU_ID
+/* Skip fru id 0~12, 14~15, 17 */
+#define FRU_CFG_NUM 14
 
 #define CB_FRU_PORT I2C_BUS2
 #define CB_FRU_ADDR (0xAC >> 1)

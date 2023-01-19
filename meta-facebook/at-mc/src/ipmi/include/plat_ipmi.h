@@ -21,6 +21,9 @@
 #include <stdbool.h>
 
 #define BIC_FW_DATA_LENGTH 7
+#define PCIE_CARD_NOT_PRESENT 0
+#define PCIE_CARD_PRESENT 1
+#define PCIE_CARD_ID_OFFSET 30
 
 /** enum number follow GT for now since bmc hasn't ready **/
 enum MC_FIRMWARE_COMPONENT {

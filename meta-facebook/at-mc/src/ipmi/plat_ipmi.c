@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -28,6 +28,7 @@
 #include "plat_sensor_table.h"
 #include "common_i2c_mux.h"
 #include "plat_sensor_table.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
@@ -106,8 +107,8 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
 		return;
 	}
-	/* 
-	* Return data format: 
+	/*
+	* Return data format:
 	* data[0] = component id
 	* data[1] = data length
 	* data[2] - data[data length + 1] = firmware version
@@ -250,5 +251,48 @@ exit:
 		break;
 	}
 
+	return;
+}
+
+void OEM_1S_GET_PCIE_CARD_STATUS(ipmi_msg *msg)
+{
+	/* IPMI command format
+	*  Request:
+	*    Byte 0: FRU id
+	*    Byte 1: PCIE device id
+	*  Response:
+	*    Byte 0: PCIE card presence status (0: not present, 1: present)
+	*    Byte 1: PCIE card type (Return unknown type if device not present) */
+
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 2) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	/* BMC would check pcie card type via fru id and device id */
+	int ret = -1;
+	uint8_t fru_id = msg->data[0];
+	uint8_t pcie_card_id = fru_id - PCIE_CARD_ID_OFFSET;
+	uint8_t pcie_device_id = msg->data[1];
+	uint8_t card_type = 0;
+	uint8_t presence_status = PCIE_CARD_PRESENT;
+
+	ret = get_pcie_device_type(pcie_card_id, pcie_device_id, &card_type);
+	if (ret < 0) {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	if (card_type == CARD_NOT_PRESENT) {
+		presence_status = PCIE_CARD_NOT_PRESENT;
+		card_type = UNKNOWN_CARD;
+	}
+
+	msg->data[0] = presence_status;
+	msg->data[1] = card_type;
+	msg->data_len = 2;
+	msg->completion_code = CC_SUCCESS;
 	return;
 }

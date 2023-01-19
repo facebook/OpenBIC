@@ -150,26 +150,45 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 	return;
 }
 
-void OEM_1S_GET_ASIC_CARD_STATUS(ipmi_msg *msg)
+void OEM_1S_GET_PCIE_CARD_STATUS(ipmi_msg *msg)
 {
+	/* IPMI command format
+	*  Request:
+	*    Byte 0: FRU id
+	*    Byte 1: PCIE device id
+	*  Response:
+	*    Byte 0: PCIE card presence status (0: not present, 1: present)
+	*    Byte 1: Reserve (Default value is 0) */
+
 	CHECK_NULL_ARG(msg);
 
-	if (msg->data_len != 1) {
+	if (msg->data_len != 2) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
 	}
 
-	uint8_t asic_card_id = msg->data[0];
-	uint8_t offset = 0;
+	/* BMC would check pcie card type via fru id and device id */
 
-	switch (asic_card_id) {
+	uint8_t fru_id = msg->data[0];
+	uint8_t pcie_card_id = fru_id - PCIE_CARD_ID_OFFSET;
+	uint8_t pcie_device_id = msg->data[1];
+
+	switch (fru_id) {
 	case FIO_FRU_ID:
-		if (gpio_get(PRSNT_FIO_N) == LOW_ACTIVE) {
-			msg->data[0] = FIO_PRESENT;
-		} else {
-			msg->data[0] = FIO_NOT_PRESENT;
+		switch (pcie_device_id) {
+		case PCIE_DEVICE_ID1:
+			if (gpio_get(PRSNT_FIO_N) == LOW_ACTIVE) {
+				msg->data[0] = FIO_PRESENT;
+			} else {
+				msg->data[0] = FIO_NOT_PRESENT;
+			}
+			msg->data[1] = RESERVE_DEFAULT_VALUE;
+			msg->completion_code = CC_SUCCESS;
+			break;
+		default:
+			msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+			return;
 		}
-		msg->completion_code = CC_SUCCESS;
 		break;
 	case ACCL_1_FRU_ID:
 	case ACCL_2_FRU_ID:
@@ -183,8 +202,21 @@ void OEM_1S_GET_ASIC_CARD_STATUS(ipmi_msg *msg)
 	case ACCL_10_FRU_ID:
 	case ACCL_11_FRU_ID:
 	case ACCL_12_FRU_ID:
-		offset = asic_card_id - ACCL_1_FRU_ID;
-		msg->data[0] = asic_card_info[offset].card_status;
+		switch (pcie_device_id) {
+		case PCIE_DEVICE_ID1:
+			msg->data[0] = asic_card_info[pcie_card_id].card_status;
+			break;
+		case PCIE_DEVICE_ID2:
+			msg->data[0] = asic_card_info[pcie_card_id].asic_1_status;
+			break;
+		case PCIE_DEVICE_ID3:
+			msg->data[0] = asic_card_info[pcie_card_id].asic_2_status;
+			break;
+		default:
+			msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+			return;
+		}
+		msg->data[1] = RESERVE_DEFAULT_VALUE;
 		msg->completion_code = CC_SUCCESS;
 		break;
 	default:
