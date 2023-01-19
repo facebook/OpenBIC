@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "fru.h"
+#include "i2c-mux-pca954x.h"
 
 const EEPROM_CFG plat_fru_config[] = {
 	{
@@ -39,8 +40,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		FRU_START,
 		FRU_SIZE,
 		true,
-		CXL_FRU_MUX0_ADDR,
-		CXL_FRU_MUX0_CHANNEL0,
+		CXL_FRU_MUX1_ADDR,
+		CXL_FRU_MUX1_CHANNEL,
 	},
 	{
 		ST_M24128_BW,
@@ -51,8 +52,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		FRU_START,
 		FRU_SIZE,
 		true,
-		CXL_FRU_MUX0_ADDR,
-		CXL_FRU_MUX0_CHANNEL1,
+		CXL_FRU_MUX1_ADDR,
+		CXL_FRU_MUX1_CHANNEL,
 	},
 	{
 		ST_M24128_BW,
@@ -63,8 +64,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		FRU_START,
 		FRU_SIZE,
 		true,
-		CXL_FRU_MUX0_ADDR,
-		CXL_FRU_MUX0_CHANNEL2,
+		CXL_FRU_MUX1_ADDR,
+		CXL_FRU_MUX1_CHANNEL,
 	},
 	{
 		ST_M24128_BW,
@@ -75,8 +76,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		FRU_START,
 		FRU_SIZE,
 		true,
-		CXL_FRU_MUX0_ADDR,
-		CXL_FRU_MUX0_CHANNEL3,
+		CXL_FRU_MUX1_ADDR,
+		CXL_FRU_MUX1_CHANNEL,
 	},
 	{
 		ST_M24128_BW,
@@ -87,8 +88,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		FRU_START,
 		FRU_SIZE,
 		true,
-		CXL_FRU_MUX0_ADDR,
-		CXL_FRU_MUX0_CHANNEL4,
+		CXL_FRU_MUX1_ADDR,
+		CXL_FRU_MUX1_CHANNEL,
 	},
 	{
 		ST_M24128_BW,
@@ -99,8 +100,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		FRU_START,
 		FRU_SIZE,
 		true,
-		CXL_FRU_MUX0_ADDR,
-		CXL_FRU_MUX0_CHANNEL5,
+		CXL_FRU_MUX1_ADDR,
+		CXL_FRU_MUX1_CHANNEL,
 	},
 	{
 		ST_M24128_BW,
@@ -111,8 +112,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		FRU_START,
 		FRU_SIZE,
 		true,
-		CXL_FRU_MUX0_ADDR,
-		CXL_FRU_MUX0_CHANNEL6,
+		CXL_FRU_MUX1_ADDR,
+		CXL_FRU_MUX1_CHANNEL,
 	},
 	{
 		ST_M24128_BW,
@@ -123,12 +124,49 @@ const EEPROM_CFG plat_fru_config[] = {
 		FRU_START,
 		FRU_SIZE,
 		true,
-		CXL_FRU_MUX0_ADDR,
-		CXL_FRU_MUX0_CHANNEL7,
+		CXL_FRU_MUX1_ADDR,
+		CXL_FRU_MUX1_CHANNEL,
 	},
 };
 
 void pal_load_fru_config(void)
 {
 	memcpy(&fru_config, &plat_fru_config, sizeof(plat_fru_config));
+}
+
+int pal_cxl_map_mux0_channel(uint8_t cxl_id)
+{
+	int channel = -1;
+
+	switch (cxl_id) {
+	case CXL_FRU_ID1:
+		channel = PCA9548A_CHANNEL_0;
+		break;
+	case CXL_FRU_ID2:
+		channel = PCA9548A_CHANNEL_1;
+		break;
+	case CXL_FRU_ID3:
+		channel = PCA9548A_CHANNEL_2;
+		break;
+	case CXL_FRU_ID4:
+		channel = PCA9548A_CHANNEL_3;
+		break;
+	case CXL_FRU_ID5:
+		channel = PCA9548A_CHANNEL_4;
+		break;
+	case CXL_FRU_ID6:
+		channel = PCA9548A_CHANNEL_5;
+		break;
+	case CXL_FRU_ID7:
+		channel = PCA9548A_CHANNEL_6;
+		break;
+	case CXL_FRU_ID8:
+		channel = PCA9548A_CHANNEL_7;
+		break;
+	default:
+		channel = -1;
+		break;
+	}
+
+	return channel;
 }

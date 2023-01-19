@@ -36,6 +36,7 @@
 
 &i2c4 {
 	pinctrl-0 = <&pinctrl_i2c4_default>;
+	clock-frequency = <I2C_BITRATE_FAST>;
 	status = "okay";
 };
 
@@ -55,7 +56,7 @@
 };
 
 &i2c8 {
-	pinctrl-0 = <&pinctrl_i2c7_default>;
+	pinctrl-0 = <&pinctrl_i2c8_default>;
 	status = "okay";
 };
 
@@ -64,12 +65,22 @@
 	status = "okay";
 };
 
+&i2c10 {
+	pinctrl-0 = <&pinctrl_i2c10_default>;
+	status = "okay";
+};
+
 &i2c11 {
-	pinctrl-0 = <&pinctrl_i2c12_default>;
+	pinctrl-0 = <&pinctrl_i2c11_default>;
 	status = "okay";
 };
 
 &i2c12 {
+	pinctrl-0 = <&pinctrl_i2c12_default>;
+	status = "okay";
+};
+
+&i2c13 {
 	pinctrl-0 = <&pinctrl_i2c13_default>;
 	status = "okay";
 };

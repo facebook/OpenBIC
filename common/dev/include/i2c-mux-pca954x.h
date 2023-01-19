@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef I2C_MUX_PCA9548A_H
-#define I2C_MUX_PCA9548A_H
+#ifndef I2C_MUX_PCA954X_H
+#define I2C_MUX_PCA954X_H
 
 enum PCA9548A_CHANNEL {
 	PCA9548A_CHANNEL_0 = BIT(0),

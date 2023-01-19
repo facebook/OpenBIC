@@ -24,8 +24,8 @@
 
 /** enum number follow GT for now since bmc hasn't ready **/
 enum MC_FIRMWARE_COMPONENT {
-	MC_COMPNT_BIC,
-	MC_COMPNT_CPLD,
+	MC_COMPNT_BIC = 2,
+	MC_COMPNT_CPLD = 7,
 	MC_COMPNT_CXL1,
 	MC_COMPNT_CXL2,
 	MC_COMPNT_CXL3,
@@ -35,6 +35,11 @@ enum MC_FIRMWARE_COMPONENT {
 	MC_COMPNT_CXL7,
 	MC_COMPNT_CXL8,
 	MC_COMPNT_MAX,
+};
+
+enum CXL_FRU_OPTIONAL {
+	CXL_FRU_WRITE,
+	CXL_FRU_READ,
 };
 
 #endif
