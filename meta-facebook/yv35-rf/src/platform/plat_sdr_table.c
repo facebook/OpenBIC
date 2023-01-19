@@ -81,7 +81,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"RF CXL Temp",
+		"RF_CXL_TEMP_C",
 	},
 	{
 		// RF DIMMA temperature
@@ -142,7 +142,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"RF DIMM_A Temp",
+		"RF_DIMM_A_TEMP_C",
 	},
 	{
 		// RF DIMMB temperature
@@ -203,7 +203,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"RF DIMM_B Temp",
+		"RF_DIMM_B_TEMP_C",
 	},
 	{
 		// RF DIMMC temperature
@@ -264,7 +264,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"RF DIMM_C Temp",
+		"RF_DIMM_C_TEMP_C",
 	},
 	{
 		// RF DIMMD temperature
@@ -325,7 +325,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"RF DIMM_D Temp",
+		"RF_DIMM_D_TEMP_C",
 	},
 	{
 		// TMP75 on board temperature
