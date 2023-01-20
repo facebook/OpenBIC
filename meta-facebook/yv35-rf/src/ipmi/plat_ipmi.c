@@ -21,11 +21,14 @@
 #include "plat_ipmi.h"
 #include "plat_ipmb.h"
 #include "expansion_board.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(dev_plat_ipmi);
 
 void OEM_1S_GET_BOARD_ID(ipmi_msg *msg)
 {
 	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		LOG_ERR(" failed due to parameter *msg is NULL");
 		return;
 	}
 

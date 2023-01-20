@@ -20,10 +20,14 @@
 #include "hal_i2c.h"
 #include "pmbus.h"
 
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(raa229621);
+
 static bool adjust_of_twos_complement(uint8_t offset, int *val)
 {
 	if (val == NULL) {
-		printf("[%s] input value is NULL\n", __func__);
+		LOG_ERR("Input value is NULL");
 		return false;
 	}
 
@@ -75,8 +79,7 @@ uint8_t raa229621_read(uint8_t sensor_num, int *reading)
 		/* 0.1 A/LSB, 2's complement */
 		ret = adjust_of_twos_complement(offset, &val);
 		if (ret == false) {
-			printf("[%s] adjust reading IOUT value failed - sensor number: 0x%x\n",
-			       __func__, sensor_num);
+			LOG_ERR("Adjust reading IOUT value failed - sensor number: 0x%x", sensor_num);
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 		sval->integer = (int16_t)val / 10;
@@ -91,15 +94,14 @@ uint8_t raa229621_read(uint8_t sensor_num, int *reading)
 		/* 1 Watt/LSB, 2's complement */
 		ret = adjust_of_twos_complement(offset, &val);
 		if (ret == false) {
-			printf("[%s] adjust reading POUT value failed - sensor number: 0x%x\n",
-			       __func__, sensor_num);
+			LOG_ERR("Adjust reading POUT value failed - sensor number: 0x%x", sensor_num);
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 		sval->integer = val;
 		sval->fraction = 0;
 		break;
 	default:
-		printf("[%s] not support offset: 0x%x\n", __func__, offset);
+		LOG_ERR("Not support offset: 0x%x", offset);
 		return SENSOR_FAIL_TO_ACCESS;
 		break;
 	}

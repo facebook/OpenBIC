@@ -46,92 +46,92 @@ LOG_MODULE_REGISTER(plat_dev);
 #define XDPE12284_VID_IDENTIFIER 1
 
 enum XDPE12284_VID {
-	XDPE12284_VR12 = 1,
-	XDPE12284_VR13,
-	XDPE12284_IMVP9,
+    XDPE12284_VR12 = 1,
+    XDPE12284_VR13,
+    XDPE12284_IMVP9,
 };
 
 bool pal_sensor_drive_init(sensor_cfg *cfg, uint8_t *init_status)
 {
-	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
-	CHECK_NULL_ARG_WITH_RETURN(init_status, false);
+    CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+    CHECK_NULL_ARG_WITH_RETURN(init_status, false);
 
-	switch (cfg->type) {
-	case sensor_dev_tmp75:
-		*init_status = pal_tmp75_init(cfg);
-		break;
-	case sensor_dev_emc1412:
-		*init_status = pal_emc1412_init(cfg);
-		break;
-	case sensor_dev_nvme:
-		*init_status = pal_nvme_init(cfg);
-		break;
-	case sensor_dev_ina233:
-		*init_status = pal_ina233_init(cfg);
-		break;
-	case sensor_dev_ltc2991:
-		*init_status = pal_ltc2991_init(cfg);
-		break;
-	case sensor_dev_xdpe12284c:
-		*init_status = pal_xdpe12284c_init(cfg);
-		break;
-	default:
-		LOG_ERR("Invalid initial drive type: 0x%x", cfg->type);
-		return false;
-	}
+    switch (cfg->type) {
+    case sensor_dev_tmp75:
+	    *init_status = pal_tmp75_init(cfg);
+	    break;
+    case sensor_dev_emc1412:
+	    *init_status = pal_emc1412_init(cfg);
+	    break;
+    case sensor_dev_nvme:
+	    *init_status = pal_nvme_init(cfg);
+	    break;
+    case sensor_dev_ina233:
+	    *init_status = pal_ina233_init(cfg);
+	    break;
+    case sensor_dev_ltc2991:
+	    *init_status = pal_ltc2991_init(cfg);
+	    break;
+    case sensor_dev_xdpe12284c:
+	    *init_status = pal_xdpe12284c_init(cfg);
+	    break;
+    default:
+	    LOG_ERR("Invalid initial drive type: 0x%x", cfg->type);
+	    return false;
+    }
 
-	return true;
+    return true;
 }
 
 bool pal_sensor_drive_read(sensor_cfg *cfg, int *reading, uint8_t *sensor_status)
 {
-	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
-	CHECK_NULL_ARG_WITH_RETURN(reading, false)
-	CHECK_NULL_ARG_WITH_RETURN(sensor_status, false);
+    CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+    CHECK_NULL_ARG_WITH_RETURN(reading, false)
+    CHECK_NULL_ARG_WITH_RETURN(sensor_status, false);
 
-	switch (cfg->type) {
-	case sensor_dev_tmp75:
-		*sensor_status = pal_tmp75_read(cfg, reading);
-		break;
-	case sensor_dev_emc1412:
-		*sensor_status = pal_emc1412_read(cfg, reading);
-		break;
-	case sensor_dev_nvme:
-		*sensor_status = pal_nvme_read(cfg, reading);
-		break;
-	case sensor_dev_ina233:
-		*sensor_status = pal_ina233_read(cfg, reading);
-		break;
-	case sensor_dev_ltc2991:
-		*sensor_status = pal_ltc2991_read(cfg, reading);
-		break;
-	case sensor_dev_xdpe12284c:
-		*sensor_status = pal_xdpe12284c_read(cfg, reading);
-		break;
-	default:
-		LOG_ERR("Invalid reading drive type: 0x%x", cfg->type);
-		return false;
-	}
+    switch (cfg->type) {
+    case sensor_dev_tmp75:
+	    *sensor_status = pal_tmp75_read(cfg, reading);
+	    break;
+    case sensor_dev_emc1412:
+	    *sensor_status = pal_emc1412_read(cfg, reading);
+	    break;
+    case sensor_dev_nvme:
+	    *sensor_status = pal_nvme_read(cfg, reading);
+	    break;
+    case sensor_dev_ina233:
+	    *sensor_status = pal_ina233_read(cfg, reading);
+	    break;
+    case sensor_dev_ltc2991:
+	    *sensor_status = pal_ltc2991_read(cfg, reading);
+	    break;
+    case sensor_dev_xdpe12284c:
+	    *sensor_status = pal_xdpe12284c_read(cfg, reading);
+	    break;
+    default:
+	    LOG_ERR("Invalid reading drive type: 0x%x", cfg->type);
+	    return false;
+    }
 
-	return true;
+    return true;
 }
 
 /*  Reference: Infineon spec section 8.24: VID table
- *  PMBUS spec section 8.2: VOUT mode
- */
+*  PMBUS spec section 8.2: VOUT mode
+*/
 float pal_vid_to_float(int val, uint8_t vout_mode)
 {
-	uint8_t mode = 0;
+    uint8_t mode = 0;
 
-	//VID 0 is always 0 V
-	if (val == 0) {
-		return 0;
-	}
+    //VID 0 is always 0 V
+    if (val == 0) {
+	    return 0;
+    }
 
-	mode = (vout_mode >> 5);
+    mode = (vout_mode >> 5);
 
-	if (mode != XDPE12284_VID_IDENTIFIER) {
-		printf("%s Infineon VR reading with invalid VID IDENTIFIER: %x", __func__, mode);
+    if (mode != XDPE12284_VID_IDENTIFIER) {
+	    LOG_ERR("Infineon VR reading with invalid VID IDENTIFIER: %x", mode);
 		return -1;
 	}
 
@@ -149,7 +149,7 @@ float pal_vid_to_float(int val, uint8_t vout_mode)
 			return ((val - 1) * 10 + 200);
 		}
 	default:
-		printf("%s Infineon VR reading with invalid vout mode: %x", __func__, vout_mode);
+		LOG_ERR("Infineon VR reading with invalid vout mode: %x", vout_mode);
 		return -1;
 	}
 

@@ -24,7 +24,10 @@
 #include "plat_m2.h"
 #include "plat_led.h"
 #include "plat_power_seq.h"
+
 #include <logging/log.h>
+
+LOG_MODULE_REGISTER(dev_plat_ipmi);
 
 // for GET_SET_M2
 #define DRIVE_PWR_OFF 0 /* normal device power off/on */
@@ -37,7 +40,6 @@
 #define DRIVE_PWR_OFF_BY_12V_3V3 8 /* power off/on device by 12V/3V3 */
 #define DRIVE_PWR_ON_BY_12V_3V3 9
 
-LOG_MODULE_DECLARE(ipmi);
 
 static uint32_t iana_list[] = {
 	IANA_ID,
@@ -64,7 +66,7 @@ uint32_t get_iana(uint8_t *iana_buf)
 void OEM_1S_GET_BOARD_ID(ipmi_msg *msg)
 {
 	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		LOG_ERR("Failed due to parameter *msg is NULL");
 		return;
 	}
 
@@ -83,7 +85,7 @@ void OEM_1S_GET_BOARD_ID(ipmi_msg *msg)
 void OEM_1S_SET_SSD_LED(ipmi_msg *msg)
 {
 	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		LOG_ERR("Failed due to parameter *msg is NULL");
 		return;
 	}
 
@@ -114,7 +116,7 @@ void OEM_1S_SET_SSD_LED(ipmi_msg *msg)
 void OEM_1S_GET_SSD_STATUS(ipmi_msg *msg)
 {
 	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		LOG_ERR("Failed due to parameter *msg is NULL");
 		return;
 	}
 
@@ -139,7 +141,7 @@ void OEM_1S_GET_SSD_STATUS(ipmi_msg *msg)
 void OEM_1S_GET_SET_M2(ipmi_msg *msg)
 {
 	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		LOG_ERR("Failed due to parameter *msg is NULL");
 		return;
 	}
 

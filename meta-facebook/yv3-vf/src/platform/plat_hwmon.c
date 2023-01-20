@@ -26,8 +26,10 @@
 #include "plat_util.h"
 #include "plat_i2c.h"
 #include "plat_sensor_table.h"
-
 #include "plat_hwmon.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(dev_plat_hwmon);
 
 static bool init_dev_prsnt_status(void)
 {
@@ -43,7 +45,7 @@ static bool init_dev_prsnt_status(void)
 void BICup1secTickHandler(struct k_work *work)
 {
 	if (!work) {
-		printf("BICup1secTickHandler get null work handler!\n");
+		LOG_ERR("BICup1secTickHandler get NULL work handler!");
 		return;
 	}
 
@@ -77,7 +79,7 @@ int8_t mb_cpld_dev_prsnt_set(uint32_t idx, uint32_t val)
 	memcpy(&msg.data[0], &reg, sizeof(reg));
 
 	if (i2c_master_read(&msg, retry)) {
-		printf("MB CPLD read failed!\n");
+		LOG_ERR("MB CPLD read failed!");
 		return false;
 	}
 

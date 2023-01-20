@@ -68,7 +68,7 @@ int i3c_smq_read(I3C_MSG *msg)
 
 	int ret = k_mutex_lock(&mutex_read[msg->bus], K_FOREVER);
 	if (ret) {
-		printf("[%s] Failed to lock the mutex(%d)\n", __func__, ret);
+		LOG_ERR("Failed to lock the mutex(%d)", ret);
 		return -1;
 	}
 
@@ -96,19 +96,19 @@ int i3c_smq_write(I3C_MSG *msg)
 	int ret;
 	ret = k_mutex_lock(&mutex_write[msg->bus], K_FOREVER);
 	if (ret) {
-		printf("[%s] Failed to lock the mutex(%d)\n", __func__, ret);
+		LOG_ERR("Failed to lock the mutex(%d)", ret);
 		return -1;
 	}
 
 	if (!dev_i3c[msg->bus]) {
-		LOG_ERR("[%s] bus%u did not define\n", __func__, msg->bus);
+		LOG_ERR("Bus%u did not define", msg->bus);
 		k_mutex_unlock(&mutex_write[msg->bus]);
 		return -ENODEV;
 	}
 
 	ret = i3c_slave_mqueue_write(dev_i3c_smq[msg->bus], &msg->data[0], msg->tx_len);
 	if (ret < 0) {
-		LOG_ERR("[%s] i3c wrtie failed, ret = %d",__func__, ret);
+		LOG_ERR("i3c wrtie failed, ret = %d", ret);
 	}
 	k_mutex_unlock(&mutex_write[msg->bus]);
 

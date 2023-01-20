@@ -19,6 +19,10 @@
 
 #include "fru.h"
 #include "plat_fru.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(plat_fru);
+
 
 const EEPROM_CFG plat_fru_config[] = {
 	{
@@ -35,7 +39,7 @@ const EEPROM_CFG plat_fru_config[] = {
 void pal_load_fru_config(void)
 {
 	if (ARRAY_SIZE(plat_fru_config) > FRU_CFG_NUM) {
-		printf("Failed to load fru configuration: index is over than max value\n");
+		LOG_ERR("Failed to load fru configuration: index is over than max value");
 		goto out;
 	}
 

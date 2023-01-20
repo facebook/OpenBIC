@@ -35,6 +35,10 @@
 #include "tmp431.h"
 #include "libutil.h"
 
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(plat_sensor_table);
+
 SET_GPIO_VALUE_CFG pre_bat_3v = { A_P3V_BAT_SCALED_EN_R, GPIO_HIGH };
 SET_GPIO_VALUE_CFG post_bat_3v = { A_P3V_BAT_SCALED_EN_R, GPIO_LOW };
 
@@ -379,7 +383,7 @@ uint8_t pal_get_extend_sensor_config()
 		extend_sensor_config_size += ARRAY_SIZE(ltc4282_sensor_config_table);
 		break;
 	default:
-		printf("[%s] unsupported HSC module, HSC module: 0x%x\n", __func__, hsc_module);
+		LOG_ERR("Unsupported HSC module, HSC module: 0x%x", hsc_module);
 		break;
 	}
 
@@ -407,7 +411,7 @@ void check_vr_type(uint8_t index)
 	msg.data[0] = 0x00;
 	msg.data[1] = args->vr_page;
 	if (i2c_master_write(&msg, retry)) {
-		printf("Failed to switch to VR page %d\n", args->vr_page);
+		LOG_ERR("Failed to switch to VR page %d", args->vr_page);
 		return;
 	}
 
@@ -431,7 +435,7 @@ void check_vr_type(uint8_t index)
 	msg.data[0] = PMBUS_IC_DEVICE_ID;
 
 	if (i2c_master_read(&msg, retry)) {
-		printf("Failed to read VR IC_DEVICE_ID: register(0x%x)\n", PMBUS_IC_DEVICE_ID);
+		LOG_ERR("Failed to read VR IC_DEVICE_ID: register(0x%x)", PMBUS_IC_DEVICE_ID);
 		return;
 	}
 
@@ -444,14 +448,14 @@ void check_vr_type(uint8_t index)
 	} else if ((msg.data[0] == 0x04) && (msg.data[1] == 0x00) && (msg.data[2] == 0x81) &&
 		   (msg.data[3] == 0xD2) && (msg.data[4] == 0x49)) {
 	} else {
-		printf("Unknown VR type\n");
+		LOG_ERR("Unknown VR type");
 	}
 }
 
 void check_outlet_temp_type(uint8_t index)
 {
 	if (index >= sensor_config_count) {
-		printf("Out of sensor_config_count\n");
+		LOG_ERR("Out of sensor_config_count");
 		return;
 	}
 
@@ -474,7 +478,7 @@ void check_outlet_temp_type(uint8_t index)
 	msg.data[0] = NCT7718W_CHIP_ID_OFFSET;
 
 	if (i2c_master_read(&msg, retry)) {
-		printf("Failed to read Outlet_Temp chip ID: register(0x%x)\n",
+		LOG_ERR("Failed to read Outlet_Temp chip ID: register(0x%x)",
 		       NCT7718W_CHIP_ID_OFFSET);
 		return;
 	}
@@ -488,8 +492,7 @@ void check_outlet_temp_type(uint8_t index)
 	msg.data[0] = NCT7718W_VENDOR_ID_OFFSET;
 
 	if (i2c_master_read(&msg, retry)) {
-		printf("Failed to read Outlet_Temp vendor ID: register(0x%x)\n",
-		       NCT7718W_VENDOR_ID_OFFSET);
+		LOG_ERR("Failed to read Outlet_Temp vendor ID: register(0x%x)", NCT7718W_VENDOR_ID_OFFSET);
 		return;
 	}
 	VID = msg.data[0];
@@ -501,7 +504,7 @@ void check_outlet_temp_type(uint8_t index)
 	} else if ((CID == 0x50) && (VID == 0x47)) {
 		sensor_config[index].type = sensor_dev_g788p81u;
 	} else {
-		printf("Unknown Outlet_Temp type\n");
+		LOG_ERR("Unknown Outlet_Temp type");
 	}
 }
 
@@ -560,7 +563,7 @@ void pal_extend_sensor_config()
 		}
 		break;
 	default:
-		printf("[%s] unsupported HSC module, HSC module: 0x%x\n", __func__, hsc_module);
+		LOG_ERR("Unsupported HSC module, HSC module: 0x%x", hsc_module);
 		break;
 	}
 
@@ -600,8 +603,7 @@ void pal_extend_sensor_config()
 	}
 
 	if (sensor_config_count != sdr_count) {
-		printf("[%s] extend sensor SDR and config table not match, sdr size: 0x%x, sensor config size: 0x%x\n",
-		       __func__, sdr_count, sensor_config_count);
+		LOG_ERR("Extend sensor SDR and config table not match, sdr size: 0x%x, sensor config size: 0x%x", sdr_count, sensor_config_count);
 	}
 }
 
@@ -625,7 +627,7 @@ bool pal_is_time_to_poll(uint8_t sensor_num, int poll_time)
 		}
 	}
 
-	printf("[%s] can't find sensor 0x%x last accest time\n", __func__, sensor_num);
+	LOG_ERR("can't find sensor 0x%x last accest time", sensor_num);
 	return true;
 }
 
@@ -648,7 +650,6 @@ bool disable_dimm_pmic_sensor(uint8_t sensor_num)
 		}
 	}
 
-	printf("[%s] input sensor 0x%x can't find in dimm pmic mapping table\n", __func__,
-	       sensor_num);
+	LOG_ERR("Input sensor 0x%x can't find in dimm pmic mapping table", sensor_num);
 	return false;
 }

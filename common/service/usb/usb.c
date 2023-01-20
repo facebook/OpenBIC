@@ -23,6 +23,10 @@
 #include "usb.h"
 #include "plat_def.h"
 
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(usb);
+
 #ifdef CONFIG_USB
 
 RING_BUF_DECLARE(ringbuf, RING_BUF_SIZE);
@@ -42,7 +46,7 @@ static inline void try_ipmi_message(ipmi_msg_cfg *current_msg, int retry)
 	for (/*retry*/; k_msgq_put(&ipmi_msgq, current_msg, K_NO_WAIT) != 0 && retry >= 0;
 	     retry--) {
 		k_msgq_purge(&ipmi_msgq);
-		printf("USB retrying put ipmi msgq\n");
+		LOG_ERR("USB retrying put ipmi msgq");
 	}
 }
 
@@ -59,10 +63,11 @@ void handle_usb_data(uint8_t *rx_buff, int rx_len)
 	static uint16_t fwupdate_data_len = 0;
 
 	if (DEBUG_USB) {
-		printf("USB: len %d, req: %x %x ID: %x %x %x target: %x offset: %x %x %x %x len: %x %x\n",
-		       rx_len, rx_buff[0], rx_buff[1], rx_buff[2], rx_buff[3], rx_buff[4],
-		       rx_buff[5], rx_buff[6], rx_buff[7], rx_buff[8], rx_buff[9], rx_buff[10],
-		       rx_buff[11]);
+		LOG_DBG("USB: len %d, req: %x %x ID: %x %x %x target: %x offset: %x %x %x %x len: %x %x",
+		       rx_len,
+		       rx_buff[0], rx_buff[1], rx_buff[2], rx_buff[3],
+		       rx_buff[4], rx_buff[5], rx_buff[6], rx_buff[7],
+		       rx_buff[8], rx_buff[9], rx_buff[10], rx_buff[11]);
 	}
 
 	// USB driver must receive 64 byte package from bmc
@@ -74,7 +79,7 @@ void handle_usb_data(uint8_t *rx_buff, int rx_len)
 
 	if (fwupdate_keep_data) {
 		if ((keep_data_len + rx_len) > IPMI_DATA_MAX_LENGTH) {
-			printf("usb fw update recv data over ipmi buff size %d, keep %d, recv %d\n",
+			LOG_ERR("usb fw update recv data over ipmi buff size %d, keep %d, recv %d",
 			       IPMI_DATA_MAX_LENGTH, keep_data_len, rx_len);
 			keep_data_len = 0;
 			fwupdate_keep_data = false;
@@ -125,10 +130,10 @@ void usb_write_by_ipmi(ipmi_msg *ipmi_resp)
 
 	if (DEBUG_USB) {
 		int i;
-		printf("usb resp: %x %x %x, ", resp->netfn, resp->cmd, resp->cmplt_code);
+		LOG_DBG("usb resp: %x %x %x, ", resp->netfn, resp->cmd, resp->cmplt_code);
 		for (i = 0; i < ipmi_resp->data_len; i++)
-			printf("0x%x ", resp->data[i]);
-		printf("\n");
+			LOG_DBG("0x%x ", resp->data[i]);
+		LOG_DBG("\n");
 	}
 	uart_fifo_fill(dev, tx_buf,
 		       ipmi_resp->data_len + 3); // return netfn + cmd + comltcode + data
@@ -153,10 +158,10 @@ static void usb_handler(void *arug0, void *arug1, void *arug2)
 		}
 
 		if (DEBUG_USB) {
-			printf("Print Data: ");
+			LOG_DBG("Print Data: ");
 			for (i = 0; i < rx_len; i++)
-				printf("0x%x ", rx_buff[i]);
-			printf("\n");
+				LOG_DBG("0x%x ", rx_buff[i]);
+			LOG_DBG("\n");
 		}
 		handle_usb_data(rx_buff, rx_len);
 	}
@@ -175,7 +180,7 @@ static void interrupt_handler(const struct device *dev, void *user_data)
 		if (recv_len) {
 			rx_len = ring_buf_put(&ringbuf, rx_buff, recv_len);
 			if (rx_len < recv_len) {
-				printf("Drop %u bytes\n", recv_len - rx_len);
+				LOG_ERR("Drop %u bytes", recv_len - rx_len);
 			} else {
 				k_sem_give(&usbhandle_sem);
 			}
@@ -189,13 +194,13 @@ void usb_dev_init(void)
 
 	ret = usb_enable(NULL);
 	if (ret) {
-		printf("Failed to enable USB");
+		LOG_ERR("Failed to enable USB");
 		return;
 	}
 
 	dev = device_get_binding(BMC_USB_PORT);
 	if (!dev) {
-		printf("CDC ACM device not found");
+		LOG_ERR("CDC ACM device not found");
 		return;
 	}
 

@@ -49,7 +49,7 @@ bool pre_xdpe15284_read(uint8_t sensor_num, void *args)
 	msg.data[0] = 0x00;
 	msg.data[1] = pre_read_args->vr_page;
 	if (i2c_master_write(&msg, retry)) {
-		printf("[%s] Failed to set page\n", __func__);
+		LOG_ERR("Failed to set page");
 		return false;
 	}
 	return true;

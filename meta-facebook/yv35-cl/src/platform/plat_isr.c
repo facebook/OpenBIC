@@ -84,7 +84,7 @@ static void SLP3_handler()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-			printf("VR watchdog timeout addsel fail\n");
+			LOG_ERR("VR watchdog timeout addsel fail");
 		}
 	}
 }
@@ -94,13 +94,13 @@ K_WORK_DELAYABLE_DEFINE(SLP3_work, SLP3_handler);
 void ISR_SLP3()
 {
 	if (gpio_get(FM_SLPS3_PLD_N) == GPIO_HIGH) {
-		printf("slp3\n");
+		LOG_ERR("slp3");
 		k_work_schedule_for_queue(&plat_work_q, &SLP3_work,
 					  K_SECONDS(DETECT_VR_WDT_DELAY_S));
 		return;
 	}
 	if (k_work_cancel_delayable(&SLP3_work) != 0) {
-		printf("[%s] Failed to cancel delayable work\n", __func__);
+		LOG_ERR("Failed to cancel delayable work");
 	}
 }
 
@@ -159,7 +159,7 @@ void ISR_DC_ON()
 			sel_msg.event_data2 = 0xFF;
 			sel_msg.event_data3 = 0xFF;
 			if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-				printf("System PWROK failure addsel fail\n");
+				LOG_ERR("System PWROK failure addsel fail");
 			}
 		}
 	}
@@ -204,7 +204,7 @@ static void PROC_FAIL_handler(struct k_work *work)
 		sel_msg.event_data3 = 0xFF;
 		ret = mctp_add_sel_to_ipmi(&sel_msg);
 		if (!ret) {
-			printf("Fail to assert FRE3 event log.\n");
+			LOG_ERR("Fail to assert FRE3 event log.");
 		}
 	}
 }
@@ -224,7 +224,7 @@ void ISR_PWRGD_CPU()
 		abort_snoop_thread();
 
 		if (k_work_cancel_delayable(&PROC_FAIL_work) != 0) {
-			printf("Cancel proc_fail delay work fail\n");
+			LOG_ERR("Cancel proc_fail delay work fail");
 		}
 		reset_kcs_ok();
 		reset_postcode_ok();
@@ -253,7 +253,7 @@ static void CAT_ERR_handler(struct k_work *work)
 		sel_msg.event_data3 = 0xFF;
 		ret = mctp_add_sel_to_ipmi(&sel_msg);
 		if (!ret) {
-			printf("Fail to assert CatErr event log.\n");
+			LOG_ERR("Fail to assert CatErr event log.");
 		}
 	}
 }
@@ -264,7 +264,7 @@ void ISR_CATERR()
 {
 	if ((gpio_get(RST_PLTRST_BUF_N) == GPIO_HIGH)) {
 		if (k_work_cancel_delayable(&CAT_ERR_work) != 0) {
-			printf("Cancel caterr delay work fail\n");
+			LOG_ERR("Cancel caterr delay work fail");
 		}
 		/* start thread CatErr_handler after 2 seconds */
 		k_work_schedule_for_queue(&plat_work_q, &CAT_ERR_work,
@@ -299,7 +299,7 @@ void ISR_FM_THROTTLE()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-			printf("FM Throttle addsel fail\n");
+			LOG_ERR("FM Throttle addsel fail");
 		}
 	}
 }
@@ -331,7 +331,7 @@ void ISR_HSC_THROTTLE()
 			sel_msg.event_data2 = 0xFF;
 			sel_msg.event_data3 = 0xFF;
 			if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-				printf("HSC Throttle addsel fail\n");
+				LOG_ERR("HSC Throttle addsel fail");
 			}
 		}
 	}
@@ -399,9 +399,9 @@ void ISR_SOC_THMALTRIP()
 		sel_msg.event_data3 = 0xFF;
 		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
 			if (sel_msg.event_data1 == IPMI_OEM_EVENT_OFFSET_SYS_THERMAL_TRIP) {
-				printf("SOC Thermal trip addsel fail\n");
+				LOG_ERR("SOC Thermal trip addsel fail");
 			} else {
-				printf("Memory Thermal trip addsel fail\n");
+				LOG_ERR("Memory Thermal trip addsel fail");
 			}
 		}
 	}
@@ -424,7 +424,7 @@ void ISR_SYS_THROTTLE()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-			printf("System Throttle addsel fail\n");
+			LOG_ERR("System Throttle addsel fail");
 		}
 	}
 }
@@ -453,7 +453,7 @@ void ISR_PCH_THMALTRIP()
 	sel_msg.event_data2 = 0xFF;
 	sel_msg.event_data3 = 0xFF;
 	if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-		printf("PCH Thermal trip addsel fail\n");
+		LOG_ERR("PCH Thermal trip addsel fail");
 	}
 }
 
@@ -474,7 +474,7 @@ void ISR_HSC_OC()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-			printf("HSC OC addsel fail\n");
+			LOG_ERR("HSC OC addsel fail");
 		}
 	}
 }
@@ -496,7 +496,7 @@ void ISR_CPU_MEMHOT()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-			printf("CPU MEM HOT addsel fail\n");
+			LOG_ERR("CPU MEM HOT addsel fail");
 		}
 	}
 }
@@ -518,7 +518,7 @@ void ISR_CPUVR_HOT()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-			printf("CPU VR HOT addsel fail\n");
+			LOG_ERR("CPU VR HOT addsel fail");
 		}
 	}
 }
@@ -535,7 +535,7 @@ void ISR_PCH_PWRGD()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-			printf("PCH PWROK failure addsel fail\n");
+			LOG_ERR("PCH PWROK failure addsel fail");
 		}
 	}
 }
@@ -552,7 +552,7 @@ void ISR_RMCA()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-			printf("RMCA addsel fail\n");
+			LOG_ERR("RMCA addsel fail");
 		}
 	}
 }

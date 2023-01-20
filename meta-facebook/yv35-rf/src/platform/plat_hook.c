@@ -21,6 +21,9 @@
 #include "hal_i2c.h"
 #include "plat_sensor_table.h"
 #include "plat_hook.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(dev_plat_hook);
 
 /**************************************************************************************************
  * INIT ARGS
@@ -140,7 +143,7 @@ bool pre_vr_read(uint8_t sensor_num, void *args)
 
 	ret = i2c_master_write(&msg, retry);
 	if (ret != 0) {
-		printf("[%s] i2c write fail  ret: %d\n", __func__, ret);
+		LOG_ERR("i2c write fail  ret: %d", ret);
 		return false;
 	}
 
@@ -150,7 +153,7 @@ bool pre_vr_read(uint8_t sensor_num, void *args)
 bool pre_isl69254iraz_t_read(uint8_t sensor_num, void *args)
 {
 	if (args == NULL) {
-		printf("[%s] input args is NULL\n", __func__);
+		LOG_ERR("Input args is NULL");
 		return false;
 	}
 
@@ -169,7 +172,7 @@ bool pre_isl69254iraz_t_read(uint8_t sensor_num, void *args)
 
 	ret = i2c_master_write(&msg, retry);
 	if (ret != 0) {
-		printf("[%s] i2c write fail  ret: %d\n", __func__, ret);
+		LOG_ERR("i2c write fail  ret: %d", ret);
 		return false;
 	}
 	return true;

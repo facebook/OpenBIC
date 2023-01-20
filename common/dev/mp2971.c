@@ -432,7 +432,7 @@ bool mp2971_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff)
 	k_msleep(500); //wait command finish
 
 	if (mp2856_enable_mtp_page_rw(bus, addr) == false) {
-		printf("ERROR: Enable MTP PAGE RW FAILED!\n");
+		LOG_ERR("ERROR: Enable MTP PAGE RW FAILED!");
 		goto exit;
 	}
 

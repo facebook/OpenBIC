@@ -25,6 +25,9 @@
 #include "plat_hook.h"
 #include "plat_power_seq.h"
 #include "plat_m2.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(dev_plat_sensor_table);
 
 #define CONFIG_ISL69260 false
 
@@ -191,7 +194,7 @@ void pal_fix_sensor_config() //e1s_reassemble_adc_sensor_table
 	uint32_t i, j;
 
 	if (get_e1s_adc_config() == CONFIG_ADC_ISL28022) {
-		printf("[%s] reassemble adc sensor table to ISL28022\n", __func__);
+		LOG_ERR("Reassemble adc sensor table to ISL28022");
 		for (i = 0; i < ARRAY_SIZE(e1s_adc_sensor); i++) {
 			for (j = 0; j < ARRAY_SIZE(plat_sensor_config); j++) {
 				if (e1s_adc_sensor[i].num == plat_sensor_config[j].num) {

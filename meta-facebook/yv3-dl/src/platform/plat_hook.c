@@ -261,8 +261,7 @@ bool pre_intel_peci_dimm_read(uint8_t sensor_num, void *args)
 		ret = check_dimm_present(DIMM_CHANNEL_NUM_5, DIMM_NUMBER_0, &dimm_present_result);
 		break;
 	default:
-		printf("[%s] input sensor 0x%x offset is invalid, offset: 0x%x\n", __func__,
-		       sensor_num, cfg.offset);
+		LOG_ERR("Input sensor 0x%x offset is invalid, offset: 0x%x", sensor_num, cfg.offset);
 		return ret;
 	}
 

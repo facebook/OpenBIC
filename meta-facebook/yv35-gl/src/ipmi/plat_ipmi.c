@@ -23,11 +23,14 @@
 #include "ipmi.h"
 #include "plat_class.h"
 #include "plat_ipmb.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(dev_plat_ipmi);
 
 void OEM_1S_GET_CARD_TYPE(ipmi_msg *msg)
 {
 	if (msg == NULL) {
-		printf("[%s] Failed due to parameter *msg is NULL\n", __func__);
+		LOG_ERR("Failed due to parameter *msg is NULL");
 		return;
 	}
 

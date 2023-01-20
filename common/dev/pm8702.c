@@ -117,7 +117,7 @@ uint8_t pm8702_read(uint8_t sensor_num, int *reading)
 		}
 		break;
 	default:
-		printf("%s: Invalid access offset %d\n", __func__, pm8702_access);
+		LOG_ERR("Invalid access offset %d", pm8702_access);
 		break;
 	}
 

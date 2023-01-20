@@ -21,6 +21,9 @@
 #include "util_spi.h"
 #include "util_sys.h"
 #include "plat_gpio.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(dev_plat_spi);
 
 #define CXL_FLASH_TO_BIC 1
 #define CXL_FLASH_TO_CXL 0
@@ -30,12 +33,12 @@
 static bool switch_cxl_spi_mux(int gpio_status)
 {
 	if (gpio_status != CXL_FLASH_TO_BIC && gpio_status != CXL_FLASH_TO_CXL) {
-		printf("[%s] Invalid argument\n", __func__);
+		LOG_ERR("Invalid argument");
 		return false;
 	}
 
 	if (gpio_set(SPI_MASTER_SEL, gpio_status)) {
-		printf("Fail to switch the flash to %s\n",
+		LOG_ERR("Fail to switch the flash to %s",
 		       (gpio_status == CXL_FLASH_TO_BIC) ? "BIC" : "PIONEER");
 		return false;
 	}
@@ -70,7 +73,7 @@ static bool control_flash_power(int power_state)
 		k_msleep(CHKPWR_DELAY_MSEC);
 	}
 
-	printf("Fail to %s the ASIC_1V8\n", (power_state == POWER_OFF) ? "disable" : "enable");
+	LOG_ERR("Fail to %s the ASIC_1V8", (power_state == POWER_OFF) ? "disable" : "enable");
 
 	return false;
 }
@@ -91,7 +94,7 @@ uint8_t fw_update_cxl(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool 
 
 	// Set high to choose the BIC as the host
 	if (switch_cxl_spi_mux(CXL_FLASH_TO_BIC) == false) {
-		printf("Fail to switch PIONEER flash to BIC\n");
+		LOG_ERR("Fail to switch PIONEER flash to BIC");
 		return FWUPDATE_UPDATE_FAIL;
 	}
 

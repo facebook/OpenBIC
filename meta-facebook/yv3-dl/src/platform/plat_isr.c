@@ -62,8 +62,7 @@ void send_gpio_interrupt(uint8_t gpio_num)
 
 	status = ipmb_read(&msg, IPMB_inf_index_map[msg.InF_target]);
 	if (status != IPMB_ERROR_SUCCESS) {
-		printf("Failed to send GPIO interrupt event to BMC, gpio number(%d) status(%d)\n",
-		       gpio_num, status);
+		LOG_ERR("Failed to send GPIO interrupt event to BMC, gpio number(%d) status(%d)", gpio_num, status);
 	}
 }
 
@@ -79,7 +78,7 @@ static void SLP3_handler()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("VR watchdog timeout addsel fail\n");
+			LOG_ERR("VR watchdog timeout addsel fail");
 		}
 	}
 }
@@ -92,7 +91,7 @@ void ISR_SLP3()
 		return;
 	}
 	if (k_work_cancel_delayable(&SLP3_work) != 0) {
-		printf("[%s] Failed to cancel delayable work\n", __func__);
+		LOG_ERR("Failed to cancel delayable work");
 	}
 }
 
@@ -126,7 +125,7 @@ void ISR_DC_ON()
 					  K_SECONDS(DC_ON_15_SECOND));
 
 		if (k_work_cancel_delayable(&set_DC_off_10s_work) != 0) {
-			printf("Cancel set dc off delay work fail\n");
+			LOG_ERR("Cancel set dc off delay work fail");
 		}
 		set_DC_off_delayed_status();
 	} else {
@@ -145,7 +144,7 @@ void ISR_DC_ON()
 			sel_msg.event_data2 = 0xFF;
 			sel_msg.event_data3 = 0xFF;
 			if (!common_add_sel_evt_record(&sel_msg)) {
-				printf("System PWROK failure addsel fail\n");
+				LOG_ERR("System PWROK failure addsel fail");
 			}
 		}
 	}
@@ -174,7 +173,7 @@ static void PROC_FAIL_handler(struct k_work *work)
 		sel_msg.event_data3 = 0xFF;
 		ret = common_add_sel_evt_record(&sel_msg);
 		if (!ret) {
-			printf("Fail to assert FRE3 event log.\n");
+			LOG_ERR("Fail to assert FRE3 event log.");
 		}
 	}
 }
@@ -196,7 +195,7 @@ void ISR_PWRGD_CPU()
 		abort_snoop_thread();
 
 		if (k_work_cancel_delayable(&PROC_FAIL_work) != 0) {
-			printf("Cancel proc_fail delay work fail\n");
+			LOG_ERR("Cancel proc_fail delay work fail");
 		}
 		reset_kcs_ok();
 		reset_postcode_ok();
@@ -229,7 +228,7 @@ static void CAT_ERR_handler(struct k_work *work)
 		sel_msg.event_data3 = 0xFF;
 		ret = common_add_sel_evt_record(&sel_msg);
 		if (!ret) {
-			printf("Fail to assert CatErr event log.\n");
+			LOG_ERR("Fail to assert CatErr event log.");
 		}
 	}
 }
@@ -240,7 +239,7 @@ void ISR_CATERR()
 {
 	if ((gpio_get(RST_PLTRST_BMC_N) == GPIO_HIGH)) {
 		if (k_work_cancel_delayable(&CAT_ERR_work) != 0) {
-			printf("Cancel caterr delay work fail\n");
+			LOG_ERR("Cancel caterr delay work fail");
 		}
 		/* start thread CatErr_handler after 2 seconds */
 		k_work_schedule_for_queue(&plat_work_q, &CAT_ERR_work,
@@ -276,7 +275,7 @@ void ISR_HSC_THROTTLE()
 				sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 				is_hsc_throttle_assert = true;
 			} else { // Fake alert
-				printf("HSC_THROTTLE ignoring flaky signal\n");
+				LOG_ERR("HSC_THROTTLE ignoring flaky signal");
 				return;
 			}
 			sel_msg.InF_target = BMC_IPMB;
@@ -286,7 +285,7 @@ void ISR_HSC_THROTTLE()
 			sel_msg.event_data2 = 0xFF;
 			sel_msg.event_data3 = 0xFF;
 			if (!common_add_sel_evt_record(&sel_msg)) {
-				printf("HSC Throttle addsel fail\n");
+				LOG_ERR("HSC Throttle addsel fail");
 			}
 		}
 	}
@@ -308,7 +307,7 @@ void ISR_SYS_THROTTLE()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("System Throttle addsel fail\n");
+			LOG_ERR("System Throttle addsel fail");
 		}
 	}
 }
@@ -325,7 +324,7 @@ void ISR_SOC_THMALTRIP()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("SOC Thermal trip addsel fail\n");
+			LOG_ERR("SOC Thermal trip addsel fail");
 		}
 	}
 }
@@ -343,7 +342,7 @@ void ISR_PCH_THMALTRIP()
 		sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		is_pch_assert = false;
 	} else {
-		printf("Ignoring PCH thermal trip interrupt.\n");
+		LOG_ERR("Ignoring PCH thermal trip interrupt.");
 		return;
 	}
 
@@ -354,7 +353,7 @@ void ISR_PCH_THMALTRIP()
 	sel_msg.event_data2 = 0xFF;
 	sel_msg.event_data3 = 0xFF;
 	if (!common_add_sel_evt_record(&sel_msg)) {
-		printf("PCH Thermal trip addsel fail\n");
+		LOG_ERR("PCH Thermal trip addsel fail");
 	}
 }
 
@@ -375,7 +374,7 @@ void ISR_HSC_OC()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("HSC OC addsel fail\n");
+			LOG_ERR("HSC OC addsel fail");
 		}
 	}
 }
@@ -392,7 +391,7 @@ void ISR_CPU_MEMHOT()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("CPU MEM HOT addsel fail\n");
+			LOG_ERR("CPU MEM HOT addsel fail");
 		}
 	}
 }
@@ -414,7 +413,7 @@ void ISR_CPUVR_HOT()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("CPU VR HOT addsel fail\n");
+			LOG_ERR("CPU VR HOT addsel fail");
 		}
 	}
 }
@@ -436,7 +435,7 @@ void ISR_PVCCIO_VR_HOT()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("PVCCIO VR HOT addsel fail\n");
+			LOG_ERR("PVCCIO VR HOT addsel fail");
 		}
 	}
 }
@@ -458,7 +457,7 @@ void ISR_DIMM_ABC_VR_HOT()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("DIMM ABC VR HOT addsel fail\n");
+			LOG_ERR("DIMM ABC VR HOT addsel fail");
 		}
 	}
 }
@@ -480,7 +479,7 @@ void ISR_DIMM_DEF_VR_HOT()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("DIMM DEF VR HOT addsel fail\n");
+			LOG_ERR("DIMM DEF VR HOT addsel fail");
 		}
 	}
 }
@@ -496,7 +495,7 @@ void ISR_NMI()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("NMI addsel fail\n");
+			LOG_ERR("NMI addsel fail");
 		}
 	}
 }
@@ -518,7 +517,7 @@ void ISR_FIVR()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("FIVRA addsel fail\n");
+			LOG_ERR("FIVRA addsel fail");
 		}
 	}
 }
@@ -540,7 +539,7 @@ void ISR_UV_DETECT()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("under voltage addsel fail\n");
+			LOG_ERR("under voltage addsel fail");
 		}
 	}
 }
@@ -560,7 +559,7 @@ static void SMI_handler(struct k_work *work)
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("SMI addsel fail\n");
+			LOG_ERR("SMI addsel fail");
 		}
 
 		gpio_interrupt_conf(IRQ_SMI_ACTIVE_BMC_N, GPIO_INT_EDGE_RISING);
@@ -590,7 +589,7 @@ void ISR_SMI()
 				sel_msg.event_data2 = 0xFF;
 				sel_msg.event_data3 = 0xFF;
 				if (!common_add_sel_evt_record(&sel_msg)) {
-					printf("SMI addsel fail\n");
+					LOG_ERR("SMI addsel fail");
 				}
 
 				gpio_interrupt_conf(IRQ_SMI_ACTIVE_BMC_N, GPIO_INT_EDGE_FALLING);
