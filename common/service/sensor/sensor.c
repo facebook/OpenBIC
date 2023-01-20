@@ -708,3 +708,25 @@ bool check_reading_pointer_null_is_allowed(uint8_t sensor_num)
 		return true;
 	}
 }
+
+bool init_drive_type_delayed(sensor_cfg *cfg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+
+	int ret = -1;
+	uint8_t index = 0;
+	const uint16_t max_drive_num = ARRAY_SIZE(sensor_drive_tbl);
+
+	for (index = 0; index < max_drive_num; index++) {
+		if (cfg->type == sensor_drive_tbl[index].dev) {
+			ret = sensor_drive_tbl[index].init(cfg->num);
+			if (ret != SENSOR_INIT_SUCCESS) {
+				return false;
+			}
+
+			return true;
+		}
+	}
+
+	return false;
+}
