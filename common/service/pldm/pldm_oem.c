@@ -16,6 +16,7 @@
 
 #include "pldm.h"
 #include "ipmi.h"
+#include "libutil.h"
 #include <logging/log.h>
 #include <string.h>
 #include <sys/printk.h>
@@ -27,7 +28,7 @@ LOG_MODULE_DECLARE(pldm, LOG_LEVEL_DBG);
 
 uint8_t check_iana(const uint8_t *iana)
 {
-	CHECK_NULL_ARG_WITH_RETURN(iana, PLDM_ERROR):
+	CHECK_NULL_ARG_WITH_RETURN(iana, PLDM_ERROR);
 
 	for (uint8_t i = 0; i < IANA_LEN; i++) {
 		if (iana[i] != ((IANA_ID >> (i * 8)) & 0xFF))
@@ -40,7 +41,7 @@ uint8_t check_iana(const uint8_t *iana)
 uint8_t set_iana(uint8_t *buf, uint8_t buf_len)
 {
 	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
-	CHECK_NULL_ARG_WITH_RETURN(buf_len, PLDM_ERROR);
+	CHECK_ARG_WITH_RETURN(buf_len < IANA_LEN, PLDM_ERROR);
 
 	for (uint8_t i = 0; i < IANA_LEN; i++)
 		buf[i] = (IANA_ID >> (i * 8)) & 0xFF;
