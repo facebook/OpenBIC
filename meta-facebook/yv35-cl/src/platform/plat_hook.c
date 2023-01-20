@@ -35,6 +35,8 @@
 
 #include "i2c-mux-tca9548.h"
 
+#include <logging/log.h>
+
 LOG_MODULE_REGISTER(plat_hook);
 
 #define ADJUST_ADM1278_POWER(x) (x * 0.98)
@@ -145,7 +147,7 @@ bool pre_isl69259_read(uint8_t sensor_num, void *args)
 	msg.data[0] = 0x00;
 	msg.data[1] = pre_proc_args->vr_page;
 	if (i2c_master_write(&msg, retry)) {
-		printf("pre_isl69259_read, set page fail\n");
+		LOG_ERR("pre_isl69259_read, set page fail");
 		return false;
 	}
 	return true;
@@ -228,8 +230,8 @@ bool pre_intel_peci_dimm_read(uint8_t sensor_num, void *args)
 		ret = check_dimm_present(DIMM_CHANNEL_NUM_7, DIMM_NUMBER_0, &dimm_present_result);
 		break;
 	default:
-		printf("[%s] input sensor 0x%x offset is invalid, offset: 0x%x\n", __func__,
-		       sensor_num, cfg.offset);
+		LOG_ERR("Input sensor 0x%x offset is invalid, offset: 0x%x",
+		        sensor_num, cfg.offset);
 		return ret;
 	}
 
@@ -373,7 +375,7 @@ bool post_ltc4286_read(uint8_t sensor_num, void *args, int *reading)
 		val = ADJUST_LTC4286_POWER(val);
 		break;
 	default:
-		printf("[%s] Unknown register(0x%x)\n", __func__, cfg->offset);
+		LOG_ERR("Unknown register(0x%x)", cfg->offset);
 		return false;
 	}
 

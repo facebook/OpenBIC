@@ -26,6 +26,8 @@
 #include "libutil.h"
 #include "sensor.h"
 
+#include <logging/log.h>
+
 LOG_MODULE_REGISTER(util_sys);
 
 #define SYS_RST_EVT_LOG_REG 0x7e6e2074

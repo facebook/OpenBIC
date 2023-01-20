@@ -28,6 +28,7 @@
 #include "timer.h"
 #include "usb.h"
 #include <logging/log.h>
+#include <logging/log_ctrl.h>
 
 __weak void pal_pre_init()
 {

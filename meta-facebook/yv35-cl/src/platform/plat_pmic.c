@@ -70,7 +70,7 @@ static uint8_t pmic_i3c_err_data_index[MAX_LEN_I3C_GET_PMIC_ERR] = { 0, 1, 3, 4,
 
 void start_monitor_pmic_error_thread()
 {
-	LOG_INF("Start thread to monitor PMIC error");
+	LOG_ERR("Start thread to monitor PMIC error");
 
 	monitor_pmic_error_tid =
 		k_thread_create(&monitor_pmic_error_thread, monitor_pmic_error_stack,

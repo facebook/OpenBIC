@@ -20,6 +20,10 @@
 #include <drivers/watchdog.h>
 #include "hal_wdt.h"
 
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(hal_wdt);
+
 struct k_thread wdt_thread;
 K_KERNEL_STACK_MEMBER(wdt_thread_stack, WDT_THREAD_STACK_SIZE);
 
@@ -48,7 +52,7 @@ void wdt_init()
 
 	wdt_dev = device_get_binding(WDT_DEVICE_NAME);
 	if (!wdt_dev) {
-		printf("%s: cannot find %s device.\n", __func__, WDT_DEVICE_NAME);
+		LOG_ERR("Cannot find %s device.", WDT_DEVICE_NAME);
 		return;
 	}
 
@@ -59,14 +63,14 @@ void wdt_init()
 	// Install new timeout: This function must be used before wdt_setup().
 	ret = wdt_install_timeout(wdt_dev, &wdt_config);
 	if (ret != 0) {
-		printf("%s: fail to install %s timeout\n", __func__, WDT_DEVICE_NAME);
+		LOG_ERR("fail to install %s timeout", WDT_DEVICE_NAME);
 		return;
 	}
 
 	//This function is used for configuring global watchdog settings that affect all timeouts.
 	ret = wdt_setup(wdt_dev, WDT_FLAG_RESET_CPU_CORE);
 	if (ret != 0) {
-		printf("%s: fail to setup %s\n", __func__, WDT_DEVICE_NAME);
+		LOG_ERR("fail to setup %s", WDT_DEVICE_NAME);
 		return;
 	}
 

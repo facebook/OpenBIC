@@ -25,6 +25,9 @@
 #include "util_sys.h"
 #include "cci.h"
 #include "plat_mctp.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(dev_plat_sensor_table);
 
 static uint8_t INA233_DEVICE_ID[4] = { 0x02, 0x54, 0x49, 0xe2 };
 
@@ -301,16 +304,15 @@ int check_pwr_monitor_type(void)
 	msg.data[0] = PMBUS_MFR_ID;
 
 	if (i2c_master_read(&msg, retry)) {
-		printf("Failed to read Power moniter IC_DEVICE_ID: register(0x%x)\n",
-		       PMBUS_IC_DEVICE_ID);
+		LOG_ERR("Failed to read Power moniter IC_DEVICE_ID: register(0x%x)", PMBUS_IC_DEVICE_ID);
 		return -1;
 	}
 
 	if (memcmp(msg.data, INA233_DEVICE_ID, sizeof(INA233_DEVICE_ID)) == 0) {
-		printf("Power Monitor type: INA233\n");
+		LOG_ERR("Power Monitor type: INA233");
 		ret = PWR_INA233;
 	} else {
-		printf("Power Monitor type: SGY\n");
+		LOG_ERR("Power Monitor type: SGY");
 		ret = PWR_SGY;
 	}
 
@@ -329,18 +331,18 @@ int check_vr_type(void)
 	msg.data[0] = PMBUS_IC_DEVICE_ID;
 
 	if (i2c_master_read(&msg, retry)) {
-		printf("Failed to read VR IC_DEVICE_ID: register(0x%x)\n", PMBUS_IC_DEVICE_ID);
+		LOG_ERR("Failed to read VR IC_DEVICE_ID: register(0x%x)", PMBUS_IC_DEVICE_ID);
 		return -1;
 	}
 
 	if (memcmp(msg.data, ISL69254_DEVICE_ID, sizeof(ISL69254_DEVICE_ID)) == 0) {
-		printf("VR type: RNS\n");
+		LOG_ERR("VR type: RNS");
 		ret = VR_RNS;
 	} else if (memcmp(msg.data, XDPE12284C_DEVICE_ID, sizeof(XDPE12284C_DEVICE_ID)) == 0) {
-		printf("VR type: INF\n");
+		LOG_ERR("VR type: INF");
 		ret = VR_INF;
 	} else {
-		printf("Unknown VR type\n");
+		LOG_ERR("Unknown VR type");
 		ret = -1;
 	}
 
@@ -382,8 +384,8 @@ void pal_extend_sensor_config()
 	}
 
 	if (sensor_config_count != sdr_count) {
-		printf("[%s] extend sensor SDR and config table not match, sdr size: 0x%x, sensor config size: 0x%x\n",
-		       __func__, sdr_count, sensor_config_count);
+		LOG_ERR("Extend sensor SDR and config table not match, sdr size: 0x%x, sensor config size: 0x%x",
+		        sdr_count, sensor_config_count);
 	}
 }
 

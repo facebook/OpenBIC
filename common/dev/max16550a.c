@@ -20,16 +20,20 @@
 #include "hal_i2c.h"
 #include "pmbus.h"
 
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(max16550a);
+
 uint8_t max16550a_read(uint8_t sensor_num, int *reading)
 {
 	if (reading == NULL) {
-		printf("[%s] input parameter reading is NULL\n", __func__);
+		LOG_ERR("Input parameter reading is NULL");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	if ((sensor_num > SENSOR_NUM_MAX) ||
 	    (sensor_config[sensor_config_index_map[sensor_num]].init_args == NULL)) {
-		printf("[%s] sensor 0x%x input parameter is invalid\n", __func__, sensor_num);
+		LOG_ERR("Sensor 0x%x input parameter is invalid", sensor_num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -54,8 +58,7 @@ uint8_t max16550a_read(uint8_t sensor_num, int *reading)
 
 	ret = i2c_master_read(&msg, retry);
 	if (ret != 0) {
-		printf("[%s] i2c read fail  sensor number 0x%x  ret: %d\n", __func__, sensor_num,
-		       ret);
+		LOG_ERR("i2c read fail  sensor number 0x%x  ret: %d", sensor_num, ret);
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
@@ -81,7 +84,7 @@ uint8_t max16550a_read(uint8_t sensor_num, int *reading)
 		val = (float)(((msg.data[1] << 8) | msg.data[0]) * 100 + 9100) / (0.895 * r_load);
 		break;
 	default:
-		printf("[%s] not support sensor number 0x%x  offset: 0x%x\n", __func__, sensor_num,
+		LOG_ERR("Not support sensor number 0x%x  offset: 0x%x", sensor_num,
 		       offset);
 		return SENSOR_NOT_FOUND;
 	}
@@ -96,7 +99,7 @@ uint8_t max16550a_read(uint8_t sensor_num, int *reading)
 uint8_t max16550a_init(uint8_t sensor_num)
 {
 	if (sensor_num > SENSOR_NUM_MAX) {
-		printf("[%s] input sensor number 0x%x is invalid\n", __func__, sensor_num);
+		LOG_ERR("Input sensor number 0x%x is invalid", sensor_num);
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 

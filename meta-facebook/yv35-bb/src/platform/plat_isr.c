@@ -32,6 +32,9 @@
 #include "plat_sensor_table.h"
 #include "plat_i2c.h"
 #include "plat_sys.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(dev_plat_isr);
 
 void sled_cycle_work_handler(struct k_work *item);
 void re_enable_usb_power_handler(struct k_work *item);
@@ -79,7 +82,7 @@ void ISR_SLED_CYCLE()
 			k_work_schedule(&sled_cycle_work, K_MSEC(ADD_BUTTON_SEL_DELAY_MS));
 		}
 	} else {
-		printf("BB button status unknown.\n");
+		LOG_ERR("BB button status unknown.");
 	}
 }
 
@@ -96,7 +99,7 @@ void ISR_SLOT1_PRESENT()
 	i2c_msg_bb_cpld.data[0] = CPLD_IO_REG_CABLE_PRESENT;
 
 	if (i2c_master_read(&i2c_msg_bb_cpld, retry)) {
-		printf("%s Request i2c BB CPLD register failed\n", __func__);
+		LOG_ERR("Request i2c BB CPLD register failed");
 		return;
 	}
 
@@ -105,7 +108,7 @@ void ISR_SLOT1_PRESENT()
 
 	common_addsel_msg_t *sel_msg = (common_addsel_msg_t *)malloc(sizeof(common_addsel_msg_t));
 	if (sel_msg == NULL) {
-		printf("%s Memory allocation failed!\n", __func__);
+		LOG_ERR("Memory allocation failed!");
 		return;
 	}
 
@@ -142,7 +145,7 @@ void ISR_SLOT3_PRESENT()
 	i2c_msg_bb_cpld.data[0] = CPLD_IO_REG_CABLE_PRESENT;
 
 	if (i2c_master_read(&i2c_msg_bb_cpld, retry)) {
-		printf("%s Request i2c BB CPLD register failed\n", __func__);
+		LOG_ERR("Request i2c BB CPLD register failed");
 		return;
 	}
 
@@ -151,7 +154,7 @@ void ISR_SLOT3_PRESENT()
 
 	common_addsel_msg_t *sel_msg = (common_addsel_msg_t *)malloc(sizeof(common_addsel_msg_t));
 	if (sel_msg == NULL) {
-		printf("%s Memory allocation failed!\n", __func__);
+		LOG_ERR("Memory allocation failed!");
 		return;
 	}
 
@@ -205,7 +208,7 @@ void ISR_SLOT1_BUTTON()
 			k_work_schedule(&slot1_cycle_work, K_MSEC(ADD_BUTTON_SEL_DELAY_MS));
 		}
 	} else {
-		printf("Slot1 button status unknown.\n");
+		LOG_ERR("Slot1 button status unknown.");
 	}
 }
 
@@ -230,7 +233,7 @@ void ISR_SLOT3_BUTTON()
 			k_work_schedule(&slot3_cycle_work, K_MSEC(ADD_BUTTON_SEL_DELAY_MS));
 		}
 	} else {
-		printf("Slot3 button status unknown.\n");
+		LOG_ERR("Slot3 button status unknown.");
 	}
 }
 
@@ -248,8 +251,7 @@ void set_BIC_slot_isolator(uint8_t pwr_state_gpio_num, uint8_t isolator_gpio_num
 	}
 
 	if (ret < 0) {
-		printf("failed to set slot isolator due to set gpio %d is failed\n",
-		       isolator_gpio_num);
+		LOG_ERR("failed to set slot isolator due to set gpio %d is failed", isolator_gpio_num);
 	}
 }
 
@@ -275,7 +277,7 @@ void set_sled_cycle()
 	msg.data[1] = 0x01; // value
 
 	if (i2c_master_write(&msg, retry) < 0) {
-		printf("sled cycle fail\n");
+		LOG_ERR("sled cycle fail");
 	}
 }
 

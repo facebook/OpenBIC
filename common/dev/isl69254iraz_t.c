@@ -22,10 +22,14 @@
 #include "pmbus.h"
 #include "isl69254iraz_t.h"
 
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(isl69254iraz_t);
+
 bool isl69254iraz_t_get_checksum(uint8_t bus, uint8_t target_addr, uint8_t *checksum)
 {
 	if (checksum == NULL) {
-		printf("<error> isl69254iraz_t checksum is NULL\n");
+		LOG_ERR("<error> isl69254iraz_t checksum is NULL");
 		return false;
 	}
 
@@ -40,7 +44,7 @@ bool isl69254iraz_t_get_checksum(uint8_t bus, uint8_t target_addr, uint8_t *chec
 	i2c_msg.data[2] = 0x00; //dummy data
 
 	if (i2c_master_write(&i2c_msg, retry)) {
-		printf("<error> isl69254iraz_t get checksum while i2c writing\n");
+		LOG_ERR("<error> isl69254iraz_t get checksum while i2c writing");
 		return false;
 	}
 
@@ -49,7 +53,7 @@ bool isl69254iraz_t_get_checksum(uint8_t bus, uint8_t target_addr, uint8_t *chec
 	i2c_msg.data[0] = 0xC5; //DMAFIX command code
 
 	if (i2c_master_read(&i2c_msg, retry)) {
-		printf("<error> isl69254iraz_t get checksum while i2c reading\n");
+		LOG_ERR("<error> isl69254iraz_t get checksum while i2c reading");
 		return false;
 	}
 
@@ -72,7 +76,7 @@ bool isl69254iraz_t_get_remaining_write(uint8_t bus, uint8_t target_addr, uint8_
 	i2c_msg.data[2] = 0x00; //dummy data
 
 	if (i2c_master_write(&i2c_msg, retry)) {
-		printf("<error> isl69254iraz_t get remaining write while i2c writing\n");
+		LOG_ERR("<error> isl69254iraz_t get remaining write while i2c writing");
 		return false;
 	}
 
@@ -81,7 +85,7 @@ bool isl69254iraz_t_get_remaining_write(uint8_t bus, uint8_t target_addr, uint8_
 	i2c_msg.data[0] = 0xC5; //DMAFIX command code
 
 	if (i2c_master_read(&i2c_msg, retry)) {
-		printf("<error> isl69254iraz_t get remaining write while i2c reading\n");
+		LOG_ERR("<error> isl69254iraz_t get remaining write while i2c reading");
 		return false;
 	}
 
@@ -92,12 +96,12 @@ bool isl69254iraz_t_get_remaining_write(uint8_t bus, uint8_t target_addr, uint8_
 uint8_t isl69254iraz_t_read(uint8_t sensor_num, int *reading)
 {
 	if (reading == NULL) {
-		printf("[%s] input parameter reading is NULL\n", __func__);
+		LOG_ERR("Input parameter reading is NULL");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	if (sensor_num > SENSOR_NUM_MAX) {
-		printf("[%s] sensor 0x%x input parameter is invalid\n", __func__, sensor_num);
+		LOG_ERR("Sensor 0x%x input parameter is invalid", sensor_num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -115,7 +119,7 @@ uint8_t isl69254iraz_t_read(uint8_t sensor_num, int *reading)
 
 	ret = i2c_master_read(&msg, retry);
 	if (ret != 0) {
-		printf("[%s] i2c read fail  ret: %d\n", __func__, ret);
+		LOG_ERR("i2c read fail  ret: %d", ret);
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
@@ -142,7 +146,7 @@ uint8_t isl69254iraz_t_read(uint8_t sensor_num, int *reading)
 		sval->integer = val;
 		break;
 	default:
-		printf("[%s] not support offset 0x%x\n", __func__, offset);
+		LOG_ERR("Not support offset 0x%x", offset);
 		return SENSOR_FAIL_TO_ACCESS;
 		break;
 	}
@@ -153,7 +157,7 @@ uint8_t isl69254iraz_t_read(uint8_t sensor_num, int *reading)
 uint8_t isl69254iraz_t_init(uint8_t sensor_num)
 {
 	if (sensor_num > SENSOR_NUM_MAX) {
-		printf("[%s] input sensor number is invalid\n", __func__);
+		LOG_ERR("Input sensor number is invalid");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 

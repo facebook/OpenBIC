@@ -21,6 +21,10 @@
 #include "hal_peci.h"
 #include "libutil.h"
 
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(hal_peci);
+
 const struct device *dev;
 
 struct k_mutex peci_lock;
@@ -32,17 +36,17 @@ int peci_init()
 	int ret;
 	uint32_t bitrate = 1000;
 	if (!dev) {
-		printf("peci device not found");
+		LOG_ERR("peci device not found");
 		return 0;
 	}
 	ret = peci_config(dev, bitrate);
 	if (ret) {
-		printf("set bitrate %dKbps failed %d\n", bitrate, ret);
+		LOG_ERR("set bitrate %dKbps failed %d", bitrate, ret);
 		return ret;
 	}
 	ret = peci_enable(dev);
 	if (ret) {
-		printf("peci enable failed %d\n", ret);
+		LOG_ERR("peci enable failed %d", ret);
 		return ret;
 	}
 	k_mutex_init(&peci_lock);
@@ -62,7 +66,7 @@ int peci_ping(uint8_t address)
 
 	ret = peci_transfer(dev, &pkgcfg);
 	if (ret) {
-		printf("[%s] Failed to send the PECI PING command(0x%x), status: %d\n", __func__,
+		LOG_ERR("Failed to send the PECI PING command(0x%x), status: %d",
 		       pkgcfg.cmd_code, ret);
 	}
 
@@ -84,7 +88,7 @@ int peci_xfer_with_retries(struct peci_msg *msg)
 	int ret = 0;
 
 	if (msg == NULL) {
-		printf("%s(): NULL PECI command\n", __func__);
+		LOG_ERR("NULL PECI command");
 		return -1;
 	}
 
@@ -103,7 +107,7 @@ int peci_xfer_with_retries(struct peci_msg *msg)
 
 		/* Retry it for 'timeout' before returning an error. */
 		if (k_timer_status_get(&retry_timer) > 0) {
-			printf("%s(): Timeout retrying transfer!\n", __func__);
+			LOG_ERR("Timeout retrying transfer!");
 			break;
 		}
 
@@ -122,11 +126,11 @@ int peci_cmd_xfer(struct peci_msg *msg)
 	int ret = 0;
 
 	if (msg == NULL) {
-		printf("%s(): NULL PECI command\n", __func__);
+		LOG_ERR("NULL PECI command");
 		return -1;
 	}
 	if (k_mutex_lock(&peci_lock, K_MSEC(1000)) != 0) {
-		printf("%s(): Can not get lock\n", __func__);
+		LOG_ERR("Can not get lock");
 		return -1;
 	}
 	switch (msg->cmd_code) {
@@ -149,7 +153,7 @@ int peci_read(uint8_t cmd, uint8_t address, uint8_t u8Index, uint16_t u16Param, 
 	int ret;
 
 	if (readBuf == NULL) {
-		printf("PECI read buffer was passed in as null\n");
+		LOG_ERR("PECI read buffer was passed in as null");
 		return -1;
 	}
 	rdpkgcfg.cmd_code = cmd;
@@ -158,7 +162,7 @@ int peci_read(uint8_t cmd, uint8_t address, uint8_t u8Index, uint16_t u16Param, 
 	rdpkgcfg.rx_buffer.len = u8ReadLen;
 	rdpkgcfg.tx_buffer.buf = (uint8_t *)malloc(rdpkgcfg.tx_buffer.len * sizeof(uint8_t));
 	if (rdpkgcfg.tx_buffer.buf == NULL) {
-		printf("Could not initialize memory for tx_buffer\n");
+		LOG_ERR("Could not initialize memory for tx_buffer");
 		return -1;
 	}
 	rdpkgcfg.rx_buffer.buf = readBuf;
@@ -171,12 +175,12 @@ int peci_read(uint8_t cmd, uint8_t address, uint8_t u8Index, uint16_t u16Param, 
 	if (DEBUG_PECI) {
 		uint8_t index;
 		for (index = 0; index < 5; index++)
-			printf("%02x ", readBuf[index]);
-		printf("\n");
+			LOG_DBG("%02x ", readBuf[index]);
+		LOG_DBG("\n");
 	}
 
 	if (ret) {
-		printf("[%s] Failed to send PECI Command(0x%x), status: %d\n", __func__,
+		LOG_ERR("Failed to send PECI Command(0x%x), status: %d",
 		       rdpkgcfg.cmd_code, ret);
 	}
 
@@ -203,7 +207,7 @@ int peci_write(uint8_t cmd, uint8_t address, uint8_t u8ReadLen, uint8_t *readBuf
 
 	ret = peci_cmd_xfer(&wrpkgcfg);
 	if (ret) {
-		printf("peci write failed %d\n", ret);
+		LOG_ERR("peci write failed %d", ret);
 		return ret;
 	}
 

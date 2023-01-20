@@ -144,7 +144,7 @@ bool xdpe12284c_get_remaining_write(uint8_t bus, uint8_t target_addr, uint16_t *
 	i2c_msg.rx_len = 2;
 	i2c_msg.data[0] = VR_XDPE_REG_REMAIN_WR;
 	if (i2c_master_read(&i2c_msg, retry)) {
-		printf("<error> XDPE12284C get remaining write while i2c reading\n");
+		LOG_ERR("<error> XDPE12284C get remaining write while i2c reading");
 		return false;
 	}
 
@@ -168,7 +168,7 @@ static float vid_to_float(int val, uint8_t vout_mode)
 	mode = (vout_mode >> 5);
 
 	if (mode != VID_IDENTIFIER) {
-		printf("%s Infineon VR reading with invalid VID IDENTIFIER: %x", __func__, mode);
+		LOG_ERR("Infineon VR reading with invalid VID IDENTIFIER: %x", mode);
 		return -1;
 	}
 
@@ -186,7 +186,7 @@ static float vid_to_float(int val, uint8_t vout_mode)
 			return ((val - 1) * 10 + 200);
 		}
 	default:
-		printf("%s Infineon VR reading with invalid vout mode: %x", __func__, vout_mode);
+		LOG_ERR("Infineon VR reading with invalid vout mode: %x", vout_mode);
 		return -1;
 	}
 

@@ -25,11 +25,14 @@
 #include "plat_gpio.h"
 #include "plat_isr.h"
 #include "plat_sensor_table.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(dev_plat_ipmi);
 
 void OEM_CABLE_DETECTION(ipmi_msg *msg)
 {
 	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		LOG_ERR("Failed due to parameter *msg is NULL");
 		return;
 	}
 
@@ -42,7 +45,7 @@ void OEM_CABLE_DETECTION(ipmi_msg *msg)
 
 	common_addsel_msg_t *sel_msg = (common_addsel_msg_t *)malloc(sizeof(common_addsel_msg_t));
 	if (sel_msg == NULL) {
-		printf("%s Memory allocation failed!\n", __func__);
+		LOG_ERR("Memory allocation failed!");
 		return;
 	}
 
@@ -69,7 +72,7 @@ void OEM_CABLE_DETECTION(ipmi_msg *msg)
 			common_add_sel_evt_record(sel_msg);
 		}
 	} else {
-		printf("%s Unknown request", __func__);
+		LOG_ERR("Unknown request");
 	}
 
 	SAFE_FREE(sel_msg);
@@ -79,7 +82,7 @@ void OEM_CABLE_DETECTION(ipmi_msg *msg)
 void OEM_1S_INFORM_PEER_SLED_CYCLE(ipmi_msg *msg)
 {
 	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		LOG_ERR("failed due to parameter *msg is NULL");
 		return;
 	}
 
@@ -103,7 +106,7 @@ void OEM_1S_INFORM_PEER_SLED_CYCLE(ipmi_msg *msg)
 
 	sel_msg = (common_addsel_msg_t *)malloc(sizeof(common_addsel_msg_t));
 	if (sel_msg == NULL) {
-		printf("%s: failed to malloc sel_msg\n", __func__);
+		LOG_ERR("Failed to malloc sel_msg");
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
 		return;
 	}
@@ -118,7 +121,7 @@ void OEM_1S_INFORM_PEER_SLED_CYCLE(ipmi_msg *msg)
 
 	ret = common_add_sel_evt_record(sel_msg);
 	if (ret == false) {
-		printf("%s failed to add SEL to interface: 0x%x\n", __func__, sel_msg->InF_target);
+		LOG_ERR("Failed to add SEL to interface: 0x%x", sel_msg->InF_target);
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
 	} else {
 		msg->completion_code = CC_SUCCESS;

@@ -19,6 +19,10 @@
 #include <device.h>
 #include <stdio.h>
 #include "libutil.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(flash_shell);
+
 
 /* 
     Command FLASH
@@ -90,14 +94,14 @@ void cmd_flash_sfdp_read(const struct shell *shell, size_t argc, char **argv)
 
 	printf("sfdp raw read from ofst %xh with %d bytes:", offset, read_bytes);
 	if ((offset % 4)) {
-		printf("\n[%-3x] ", 0);
+		printf("[%-3x] ", 0);
 		for (int i = 0; i < (offset % 4); i++) {
 			printf("   ");
 		}
 	}
 	for (int i = 0; i < read_bytes; i++) {
 		if (!((offset + i) % 4)) {
-			printf("\n[%-3x] ", (offset + i));
+			printf("[%-3x] ", (offset + i));
 		}
 		printf("%.2x ", raw[i]);
 	}
@@ -114,7 +118,7 @@ void device_spi_name_get(size_t idx, struct shell_static_entry *entry)
 	const struct device *dev = shell_device_lookup(idx, SPI_DEVICE_PREFIX);
 
 	if (entry == NULL) {
-		printf("%s passed null entry\n", __func__);
+		LOG_ERR("%s passed null entry\n", __func__);
 		return;
 	}
 

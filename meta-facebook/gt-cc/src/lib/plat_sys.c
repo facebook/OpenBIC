@@ -20,11 +20,14 @@
 #include "hal_gpio.h"
 #include "plat_gpio.h"
 #include <stdio.h>
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(plat_sys);
 
 /* BMC reset */
 void BMC_reset_handler()
 {
-	printf("[%s] BMC reset not supported\n", __func__);
+	LOG_ERR("BMC reset not supported");
 }
 
 K_WORK_DELAYABLE_DEFINE(BMC_reset_work, BMC_reset_handler);

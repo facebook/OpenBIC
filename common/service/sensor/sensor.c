@@ -31,6 +31,8 @@
 #include "plat_def.h"
 #include "libutil.h"
 
+#include <logging/log.h>
+
 LOG_MODULE_REGISTER(sensor);
 
 #define SENSOR_DRIVE_INIT_DECLARE(name) uint8_t name##_init(uint8_t sensor_num)
@@ -256,15 +258,14 @@ void clear_unaccessible_sensor_cache(uint8_t sensor_num)
 uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 {
 	if (reading == NULL) {
-		printf("[%s] input pointer reading is NULL\n", __func__);
+		LOG_ERR("Input pointer reading is NULL");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	// Check sensor information in sensor config table
 	// Block BMC send invalid sensor number by OEM accurate read command
 	if (sensor_config_index_map[sensor_num] == SENSOR_FAIL) {
-		printf("[%s] fail to find sensor info in config table, sensor_num: 0x%x\n",
-		       __func__, sensor_num);
+		LOG_ERR("Fail to find sensor info in config table, sensor_num: 0x%x", sensor_num);
 		return SENSOR_NOT_FOUND;
 	}
 
@@ -284,8 +285,7 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 		if (cfg->pre_sensor_read_hook) {
 			if (cfg->pre_sensor_read_hook(sensor_num, cfg->pre_sensor_read_args) ==
 			    false) {
-				printf("Failed to do pre sensor read function, sensor number: 0x%x\n",
-				       sensor_num);
+				LOG_ERR("Failed to do pre sensor read function, sensor number: 0x%x", sensor_num);
 				cfg->cache_status = SENSOR_PRE_READ_ERROR;
 				return cfg->cache_status;
 			}
@@ -314,8 +314,7 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 			}
 
 			if (cfg->post_sensor_read_hook && post_ret == false) {
-				printf("Failed to do post sensor read function, sensor number: 0x%x\n",
-				       sensor_num);
+				LOG_ERR("Failed to do post sensor read function, sensor number: 0x%x", sensor_num);
 				cfg->cache_status = SENSOR_POST_READ_ERROR;
 				return cfg->cache_status;
 			}
@@ -339,8 +338,7 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 				if (cfg->post_sensor_read_hook(sensor_num,
 							       cfg->post_sensor_read_args,
 							       NULL) == false) {
-					printf("[%s]sensor number 0x%x reading and post_read fail\n",
-					       __func__, sensor_num);
+					LOG_ERR("Sensor number 0x%x reading and post_read fail", sensor_num);
 				}
 			}
 
@@ -367,13 +365,13 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 			return cfg->cache_status;
 		default:
 			cfg->cache = SENSOR_FAIL;
-			printf("Failed to read sensor value from cache, sensor number: 0x%x, cache status: 0x%x\n",
+			LOG_ERR("Failed to read sensor value from cache, sensor number: 0x%x, cache status: 0x%x",
 			       sensor_num, cfg->cache_status);
 			return cfg->cache_status;
 		}
 		break;
 	default:
-		printf("Invalid mbr type during changing sensor mbr\n");
+		LOG_ERR("Invalid mbr type during changing sensor mbr");
 		break;
 	}
 
@@ -427,8 +425,7 @@ void sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 			}
 
 			if (sdr_index_map[sensor_num] == SENSOR_NULL) { // Check sensor info
-				printf("[%s] fail to find sensor SDR info, sensor number: 0x%x\n",
-				       __func__, sensor_num);
+				LOG_ERR("Fail to find sensor SDR info, sensor number: 0x%x", sensor_num);
 				continue;
 			}
 
@@ -488,9 +485,8 @@ void check_init_sensor_size()
 
 	if (init_sdr_size != init_sensor_config_size) {
 		enable_sensor_poll_thread = false;
-		printf("[%s] init sdr size is not equal to config size, sdr size: 0x%x, config size: 0x%x\n",
-		       __func__, init_sdr_size, init_sensor_config_size);
-		printf("BIC should not monitor sensors if SDR size and sensor config size is not match, BIC would not start sensor thread\n");
+		LOG_ERR("Init sdr size is not equal to config size, sdr size: 0x%x, config size: 0x%x", init_sdr_size, init_sensor_config_size);
+		LOG_ERR("BIC should not monitor sensors if SDR size and sensor config size is not match, BIC would not start sensor thread");
 		return;
 	}
 	sensor_config_size = init_sdr_size;
@@ -558,14 +554,14 @@ void add_sensor_config(sensor_cfg config)
 	uint8_t index = get_sensor_config_index(config.num);
 	if (index != SENSOR_NUM_MAX) {
 		memcpy(&sensor_config[index], &config, sizeof(sensor_cfg));
-		printf("[%s] replace the sensor[0x%02x] configuration\n", __func__, config.num);
+		LOG_ERR("Replace the sensor[0x%02x] configuration", config.num);
 		return;
 	}
 	// Check config table size before adding sensor config
 	if (sensor_config_count + 1 <= sdr_count) {
 		sensor_config[sensor_config_count++] = config;
 	} else {
-		printf("[%s] add config would over config max size\n", __func__);
+		LOG_ERR("Add config would over config max size");
 	}
 }
 
@@ -578,19 +574,19 @@ static inline bool init_drive_type(sensor_cfg *p, uint16_t current_drive)
 
 	if (p->pre_sensor_read_hook) {
 		if (p->pre_sensor_read_hook(p->num, p->pre_sensor_read_args) == false) {
-			printf("[%s] sensor 0x%x pre sensor read failed!\n", __func__, p->num);
+			LOG_ERR("Sensor 0x%x pre sensor read failed!", p->num);
 			return false;
 		}
 	}
 
 	ret = sensor_drive_tbl[current_drive].init(p->num);
 	if (ret != SENSOR_INIT_SUCCESS) {
-		printf("sensor num %d initial fail, ret %d\n", p->num, ret);
+		LOG_ERR("sensor num %d initial fail, ret %d", p->num, ret);
 	}
 
 	if (p->post_sensor_read_hook) {
 		if (p->post_sensor_read_hook(p->num, p->post_sensor_read_args, NULL) == false) {
-			printf("[%s] sensor 0x%x post sensor read failed!\n", __func__, p->num);
+			LOG_ERR(" sensor 0x%x post sensor read failed!", p->num);
 		}
 	}
 
@@ -611,7 +607,7 @@ static void drive_init(void)
 		}
 
 		if (current_drive == max_drive_num) {
-			printf("sensor %d, type = %d is not supported!\n", i, p->type);
+			LOG_ERR("sensor %d, type = %d is not supported!", i, p->type);
 			p->read = NULL;
 		}
 	}
@@ -628,11 +624,11 @@ bool sensor_init(void)
 		if (full_sdr_table != NULL) {
 			sdr_init();
 		} else {
-			printf("[%s] fail to allocate memory to SDR table\n", __func__);
+			LOG_ERR("Fail to allocate memory to SDR table");
 			return false;
 		}
 	} else {
-		printf("[%s] init sensor size is zero\n", __func__);
+		LOG_ERR("Init sensor size is zero");
 		return false;
 	}
 
@@ -642,11 +638,11 @@ bool sensor_init(void)
 			load_sensor_config();
 		} else {
 			SAFE_FREE(full_sdr_table);
-			printf("[%s] fail to allocate memory to config table\n", __func__);
+			LOG_ERR("Fail to allocate memory to config table");
 			return false;
 		}
 	} else {
-		printf("[%s] SDR number is zero\n", __func__);
+		LOG_ERR("SDR number is zero");
 		return false;
 	}
 
@@ -656,7 +652,7 @@ bool sensor_init(void)
 	drive_init();
 
 	if (DEBUG_SENSOR) {
-		printf("[%s] sensor name: %s\n", __func__, full_sdr_table[sdr_index_map[1]].ID_str);
+		LOG_ERR("Sensor name: %s", full_sdr_table[sdr_index_map[1]].ID_str);
 	}
 
 	if (enable_sensor_poll_thread) {
@@ -691,7 +687,7 @@ void control_sensor_polling(uint8_t sensor_num, uint8_t optional, uint8_t cache_
 	}
 
 	if ((optional != DISABLE_SENSOR_POLLING) && (optional != ENABLE_SENSOR_POLLING)) {
-		printf("[%s] input optional is not support, optional: %d\n", __func__, optional);
+		LOG_ERR("Input optional is not support, optional: %d", optional);
 		return;
 	}
 

@@ -16,11 +16,11 @@
 
 #include "fru.h"
 #include "plat_fru.h"
-#include <logging/log.h>
+#include "libutil.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "libutil.h"
+#include <logging/log.h>
 
 LOG_MODULE_REGISTER(dev_fru);
 

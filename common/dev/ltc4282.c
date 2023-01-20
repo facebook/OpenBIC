@@ -19,6 +19,9 @@
 #include <string.h>
 #include "sensor.h"
 #include "hal_i2c.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(dev_ltc4282);
 
 enum {
 	SET_BIT = 0,
@@ -41,7 +44,7 @@ struct VOLTAGE_FULL_SCALE_RANGE_INFO FOLDBACK_MODE_TABLE[4] = { { 0x0, 5.547 },
 static int set_clear_bit(I2C_MSG *msg, uint8_t reg, uint8_t bit, uint8_t op, uint8_t retry)
 {
 	if (msg == NULL) {
-		printf("%s null parameter\n", __func__);
+		LOG_ERR("NULL parameter");
 		return -1;
 	}
 
@@ -81,14 +84,14 @@ static int ltc4282_read_ein(I2C_MSG *msg, double *val, uint8_t retry)
 	bool meter_overflow = false;
 
 	if (msg == NULL || val == NULL) {
-		printf("%s null parameter\n", __func__);
+		LOG_ERR("NULL parameter");
 		return -1;
 	}
 
 	// halt meter and tick counter
 	if (set_clear_bit(msg, LTC4282_ADC_CONTROL_OFFSET, LTC4282_METER_HALT_BIT, SET_BIT, retry) <
 	    0) {
-		printf("%s Failed to halt\n", __func__);
+		LOG_ERR("Failed to halt");
 		return -1;
 	}
 
@@ -105,14 +108,14 @@ static int ltc4282_read_ein(I2C_MSG *msg, double *val, uint8_t retry)
 
 	// tick counter or meter accumulator has overflowed, reset energy meter and counter
 	if (meter_overflow || ticker_overflow) {
-		printf("%s Reset meter counter and status register\n", __func__);
+		LOG_ERR("Reset meter counter and status register");
 		if (set_clear_bit(msg, LTC4282_ADC_CONTROL_OFFSET, LTC4282_METER_RESET_BIT, SET_BIT,
 				  retry) < 0) {
-			printf("%s Failed to reset meter counter and status register\n", __func__);
+			LOG_ERR("Failed to reset meter counter and status register");
 		}
 		if (set_clear_bit(msg, LTC4282_ADC_CONTROL_OFFSET, LTC4282_METER_RESET_BIT,
 				  CLEAR_BIT, retry) < 0) {
-			printf("%s Failed to reset meter counter and status register\n", __func__);
+			LOG_ERR("Failed to reset meter counter and status register");
 		}
 		goto exit;
 	}
@@ -135,7 +138,7 @@ static int ltc4282_read_ein(I2C_MSG *msg, double *val, uint8_t retry)
 		  ((uint32_t)msg->data[8] << (uint32_t)8) | ((uint32_t)msg->data[9]);
 
 	if (counter == 0) {
-		printf("%s No available data\n", __func__);
+		LOG_ERR("No available data");
 		goto exit;
 	}
 
@@ -145,7 +148,7 @@ exit:
 	// continue meter and tick counter
 	if (set_clear_bit(msg, LTC4282_ADC_CONTROL_OFFSET, LTC4282_METER_HALT_BIT, CLEAR_BIT,
 			  retry) < 0) {
-		printf("%s Failed to continue\n", __func__);
+		LOG_ERR("Failed to continue");
 		return -1;
 	}
 
@@ -163,12 +166,12 @@ uint8_t ltc4282_read(uint8_t sensor_num, int *reading)
 		(ltc4282_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
 
 	if (!init_arg->is_init) {
-		printf("[%s], device isn't initialized\n", __func__);
+		LOG_ERR("Device isn't initialized");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	if (!init_arg->r_sense_mohm) {
-		printf("%s, Rsense hasn't given\n", __func__);
+		LOG_ERR("Rsense hasn't given");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -182,7 +185,7 @@ uint8_t ltc4282_read(uint8_t sensor_num, int *reading)
 			break;
 		}
 		if (cnt == ARRAY_SIZE(FOLDBACK_MODE_TABLE)) {
-			printf("[%s] Unknown voltage range, the foldback mode 0x%x\n", __func__,
+			LOG_ERR("unknown voltage range, the foldback mode 0x%x",
 			       init_arg->ilim_adjust.fields.foldback_mode);
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
@@ -223,7 +226,7 @@ uint8_t ltc4282_read(uint8_t sensor_num, int *reading)
 		val = (val * 16.64 * 0.04 * 256 / 65535 / 65535 / rsense_mohm);
 		break;
 	default:
-		printf("Invalid sensor 0x%x offset 0x%x\n", sensor_num, cfg->offset);
+		LOG_ERR("Invalid sensor 0x%x offset 0x%x", sensor_num, cfg->offset);
 		return SENSOR_NOT_FOUND;
 	}
 
@@ -268,7 +271,7 @@ uint8_t ltc4282_init(uint8_t sensor_num)
 			msg.data[0] = LTC4282_ILIM_ADJUST_OFFSET;
 			msg.data[1] = init_args->ilim_adjust.value;
 			if (i2c_master_write(&msg, retry) != 0) {
-				printf("Failed to set LTC4282 register(0x%x)\n", msg.data[0]);
+				LOG_ERR("Failed to set LTC4282 register(0x%x)", msg.data[0]);
 				goto error;
 			}
 			break;
@@ -283,7 +286,7 @@ init_param:
 	msg.rx_len = 1;
 	msg.data[0] = LTC4282_ILIM_ADJUST_OFFSET;
 	if (i2c_master_read(&msg, retry) != 0) {
-		printf("Failed to read LTC4282 register(0x%x)\n", msg.data[0]);
+		LOG_ERR("Failed to read LTC4282 register(0x%x)", msg.data[0]);
 		init_args->is_init = false;
 		goto error;
 	}

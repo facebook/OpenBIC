@@ -22,6 +22,10 @@
 #include "cmsis_os2.h"
 #include "libutil.h"
 
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(util_worker);
+
 #define WORKER_STACK_SIZE 10000
 #define WORKER_PRIORITY CONFIG_MAIN_THREAD_PRIORITY
 
@@ -52,7 +56,7 @@ static void work_handler(struct k_work *item)
 	uint64_t fn_start_time, fn_finish_time;
 
 	if (work_job->fn == NULL) {
-		printf("work_handler function is null\n");
+		LOG_ERR("work_handler function is null");
 	} else {
 		fn_start_time = k_uptime_get();
 		work_job->fn(work_job->ptr_arg, work_job->ui32_arg);
@@ -60,12 +64,13 @@ static void work_handler(struct k_work *item)
 
 		/* Processing time too long, print warning message */
 		if ((fn_finish_time - fn_start_time) > WARN_WORK_PROC_TIME_MS) {
-			printf("WARN: work %s Processing time too long, %llu ms\n", work_job->name,
+			LOG_ERR("WARN: work %s Processing time too long, %llu ms",
+			       work_job->name,
 			       (fn_finish_time - fn_start_time));
 		}
 	}
 	if (k_mutex_lock(&mutex_use_count, K_MSEC(1000))) {
-		printf("work_handler mutex lock fail\n");
+		LOG_ERR("work_handler mutex lock fail");
 		SAFE_FREE(work_job);
 		return;
 	}
@@ -96,7 +101,7 @@ uint8_t get_work_count()
 int add_work(worker_job *job)
 {
 	if (work_count >= MAX_WORK_COUNT) {
-		printf("add_work work queue full\n");
+		LOG_ERR("add_work work queue full");
 		return -1;
 	}
 
@@ -104,7 +109,7 @@ int add_work(worker_job *job)
 	work_info *new_job;
 	new_job = malloc(sizeof(work_info));
 	if (new_job == NULL) {
-		printf("add_work malloc fail\n");
+		LOG_ERR("add_work malloc fail");
 		return -2;
 	}
 	memset(new_job, 0, sizeof(work_info));
@@ -117,7 +122,7 @@ int add_work(worker_job *job)
 	}
 
 	if (k_mutex_lock(&mutex_use_count, K_MSEC(1000))) {
-		printf("add_work mutex lock fail\n");
+		LOG_ERR("add_work mutex lock fail");
 		SAFE_FREE(new_job);
 		return -3;
 	}
@@ -126,7 +131,7 @@ int add_work(worker_job *job)
 		k_work_init(&(new_job->work.normal_work), work_handler);
 		ret = k_work_submit_to_queue(&worker_work_q, &(new_job->work.normal_work));
 		if (ret != 1) { /* queued fail */
-			printf("add_work add work to queue fail\n");
+			LOG_ERR("add_work add work to queue fail");
 			goto error;
 		}
 	} else { /* need to be delayed */
@@ -134,7 +139,7 @@ int add_work(worker_job *job)
 		ret = k_work_schedule_for_queue(&worker_work_q, &(new_job->work.delay_work),
 						K_MSEC(job->delay_ms));
 		if (ret != 1) { /* queued fail */
-			printf("add_work add work to queue fail\n");
+			LOG_ERR("add_work add work to queue fail");
 			goto error;
 		}
 	}
