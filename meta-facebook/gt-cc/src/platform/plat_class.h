@@ -28,13 +28,37 @@ enum GT_COMPONENT_TYPE_ADC_CHANNEL {
 };
 
 typedef enum {
-	EVT = 1,
-	EVT2 = 2,
-	DVT = 3,
-	DVT2 = 4,
+	GT_STAGE_EVT = 1,
+	GT_STAGE_EVT2 = 2,
+	GT_STAGE_DVT = 3,
+	GT_STAGE_DVT2 = 4,
 } GT_STAGE_REVISION_ID;
+
+typedef enum {
+	VR_UNKNOWN,
+	VR_RNS_ISL69259,
+	VR_INF_XDPE12284,
+	VR_MPS_MPS2971,
+} gt_vr_type_t;
+
+typedef enum {
+	POWER_IC_UNKNOWN,
+	POWER_IC_ISL28022,
+	POWER_IC_INA230,
+} gt_power_monitor_ic_type_t;
+
+typedef enum {
+	HSC_UNKNOWN,
+	HSC_MP5990,
+	HSC_LTC4282,
+	HSC_LTC4286,
+} gt_hsc_type_t;
 
 bool get_adc_voltage(int channel, float *voltage);
 GT_STAGE_REVISION_ID get_stage_by_rev_id();
+uint8_t get_hsc_type();
+uint8_t get_vr_type();
+uint8_t get_power_moniter_ic_type();
+void init_platform_config();
 
 #endif

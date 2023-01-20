@@ -25,8 +25,8 @@
 
 LOG_MODULE_DECLARE(pldm);
 
-uint8_t set_tid(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp, uint16_t *resp_len,
-		void *ext_params)
+uint8_t set_tid(const void *mctp_inst, const uint8_t *buf, uint16_t len, uint8_t *resp,
+		uint16_t *resp_len, const void *ext_params)
 {
 	if (!mctp_inst || !buf || !resp || !resp_len)
 		return PLDM_ERROR;
@@ -40,8 +40,8 @@ uint8_t set_tid(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp, uint
 	return PLDM_SUCCESS;
 }
 
-uint8_t get_tid(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp, uint16_t *resp_len,
-		void *ext_params)
+uint8_t get_tid(const void *mctp_inst, const uint8_t *buf, uint16_t len, uint8_t *resp,
+		uint16_t *resp_len, const void *ext_params)
 {
 	if (!mctp_inst || !buf || !resp || !resp_len)
 		return PLDM_ERROR;
@@ -53,8 +53,8 @@ uint8_t get_tid(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp, uint
 	return PLDM_SUCCESS;
 }
 
-uint8_t get_pldm_types(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
-		       uint16_t *resp_len, void *ext_params)
+uint8_t get_pldm_types(const void *mctp_inst, const uint8_t *buf, uint16_t len, uint8_t *resp,
+		       uint16_t *resp_len, const void *ext_params)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
@@ -77,8 +77,8 @@ uint8_t get_pldm_types(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *res
 	return PLDM_SUCCESS;
 }
 
-uint8_t get_pldm_commands(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
-			  uint16_t *resp_len, void *ext_params)
+uint8_t get_pldm_commands(const void *mctp_inst, const uint8_t *buf, uint16_t len, uint8_t *resp,
+			  uint16_t *resp_len, const void *ext_params)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
