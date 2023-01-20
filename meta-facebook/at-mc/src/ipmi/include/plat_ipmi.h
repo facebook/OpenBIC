@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -25,6 +25,10 @@
 #define PCIE_CARD_PRESENT 1
 #define PCIE_CARD_ID_OFFSET 30
 
+#define PCIE_CARD_NOT_PRESENT_BIT BIT(0)
+#define PCIE_CARD_NOT_ACCESSIABLE_BIT BIT(1)
+#define PCIE_CARD_DEVICE_NOT_READY_BIT BIT(2)
+
 /** enum number follow GT for now since bmc hasn't ready **/
 enum MC_FIRMWARE_COMPONENT {
 	MC_COMPNT_BIC = 2,
@@ -43,6 +47,11 @@ enum MC_FIRMWARE_COMPONENT {
 enum CXL_FRU_OPTIONAL {
 	CXL_FRU_WRITE,
 	CXL_FRU_READ,
+};
+
+enum PCIE_CARD_SENSOR_READING_TYPE {
+	PCIE_CARD_E1S,
+	PCIE_CARD_CXL,
 };
 
 #endif

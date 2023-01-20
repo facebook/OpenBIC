@@ -29,6 +29,8 @@
 #include "common_i2c_mux.h"
 #include "plat_sensor_table.h"
 #include "plat_class.h"
+#include "plat_hook.h"
+#include "plat_dev.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
@@ -86,6 +88,118 @@ int pal_write_read_cxl_fru(uint8_t optional, uint8_t fru_id, EEPROM_ENTRY *fru_e
 	mutex_status = k_mutex_unlock(mutex);
 	if (mutex_status != 0) {
 		LOG_ERR("Mutex unlock fail, status: %d", mutex_status);
+	}
+
+	return 0;
+}
+
+int pal_get_pcie_card_sensor_reading(uint8_t read_type, uint8_t sensor_num, uint8_t pcie_card_id,
+				     uint8_t *card_status, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(card_status, -1);
+	CHECK_NULL_ARG_WITH_RETURN(reading, -1);
+
+	bool ret = 0;
+	int retry = 0;
+	uint8_t index = 0;
+	uint8_t sensor_status = 0;
+	bool (*pre_switch_mux_func)(uint8_t, uint8_t) = NULL;
+	bool (*post_switch_mux_func)(uint8_t, uint8_t) = NULL;
+	sensor_cfg *cfg = NULL;
+
+	switch (read_type) {
+	case PCIE_CARD_E1S:
+		pre_switch_mux_func = pre_e1s_switch_mux;
+		post_switch_mux_func = post_e1s_switch_mux;
+		if (sensor_num <= SENSOR_NUM_TEMP_JCN_E1S_1) {
+			index = sensor_num - 1;
+			if (pcie_card_id <= CARD_12_INDEX) {
+				cfg = &plat_e1s_1_12_sensor_config[index];
+			} else {
+				cfg = &plat_e1s_13_14_sensor_config[index];
+			}
+		} else {
+			LOG_ERR("Invalid e1s sensor num: 0x%x", sensor_num);
+			return -1;
+		}
+		break;
+	case PCIE_CARD_CXL:
+		pre_switch_mux_func = pre_cxl_switch_mux;
+		post_switch_mux_func = post_cxl_switch_mux;
+
+		ret = get_cxl_sensor_config_index(sensor_num, &index);
+		if (ret != true) {
+			LOG_ERR("Invalid cxl sensor num: 0x%x", sensor_num);
+			return -1;
+		}
+		cfg = &plat_cxl_sensor_config[index];
+		break;
+	default:
+		LOG_ERR("Invalid read_type: %d", read_type);
+		return -1;
+	}
+
+	for (retry = 0; retry < 3; ++retry) {
+		*reading = 0;
+
+		if (cfg->access_checker(sensor_num) != true) {
+			*card_status |= PCIE_CARD_NOT_ACCESSIABLE_BIT;
+			return 0;
+		}
+
+		ret = pre_switch_mux_func(sensor_num, pcie_card_id);
+		if (ret != true) {
+			LOG_ERR("Pre switch mux fail, sensor num: 0x%x, card id: 0x%x", sensor_num,
+				pcie_card_id);
+			return -1;
+		}
+
+		if (cfg->pre_sensor_read_hook) {
+			if (cfg->pre_sensor_read_hook(sensor_num, cfg->pre_sensor_read_args) ==
+			    false) {
+				LOG_ERR("Pre sensor read function, sensor number: 0x%x",
+					sensor_num);
+				return -1;
+			}
+		}
+
+		ret = pal_sensor_drive_read(cfg, reading, &sensor_status);
+		if (ret != true) {
+			LOG_ERR("sensor: 0x%x read fail", sensor_num);
+		}
+
+		if (cfg->post_sensor_read_hook) {
+			if (cfg->post_sensor_read_hook(sensor_num, cfg->post_sensor_read_args,
+						       reading) == false) {
+				LOG_ERR("Post sensor read function, sensor number: 0x%x",
+					sensor_num);
+			}
+		}
+
+		ret = post_switch_mux_func(sensor_num, pcie_card_id);
+		if (ret != true) {
+			LOG_ERR("Post switch mux fail, sensor num: 0x%x, card id: 0x%x", sensor_num,
+				pcie_card_id);
+		}
+
+		if ((sensor_status == SENSOR_READ_SUCCESS) ||
+		    (sensor_status == SENSOR_READ_ACUR_SUCCESS)) {
+			break;
+		}
+	}
+
+	switch (sensor_status) {
+	case SENSOR_READ_SUCCESS:
+	case SENSOR_READ_ACUR_SUCCESS:
+		break;
+	case SENSOR_INIT_STATUS:
+	case SENSOR_NOT_ACCESSIBLE:
+		*card_status |= PCIE_CARD_DEVICE_NOT_READY_BIT;
+		*reading = 0;
+		break;
+	default:
+		*reading = 0;
+		return -1;
 	}
 
 	return 0;
@@ -293,6 +407,76 @@ void OEM_1S_GET_PCIE_CARD_STATUS(ipmi_msg *msg)
 	msg->data[0] = presence_status;
 	msg->data[1] = card_type;
 	msg->data_len = 2;
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
+void OEM_1S_GET_PCIE_CARD_SENSOR_READING(ipmi_msg *msg)
+{
+	/* IPMI command format
+  *  Request:
+  *    Byte 0: FRU id
+  *    Byte 1: Sensor number
+  *  Response:
+  *    Byte 0:   Device status (bit 0: presence status, bit 1: power status, bit 2: device status)
+  *    Byte 1~2: Integer bytes
+  *    Byte 3~4: Fraction bytes */
+
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 2) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	int ret = -1;
+	int reading = 0;
+	uint8_t card_type = 0;
+	uint8_t device_status = 0;
+	uint8_t fru_id = msg->data[0];
+	uint8_t sensor_num = msg->data[1];
+	uint8_t pcie_card_id = fru_id - PCIE_CARD_ID_OFFSET;
+
+	ret = get_pcie_card_type(pcie_card_id, &card_type);
+	if (ret < 0) {
+		msg->completion_code = CC_INVALID_PARAM;
+		return;
+	}
+
+	switch (card_type) {
+	case E1S_0_CARD:
+	case E1S_1_CARD:
+	case E1S_0_1_CARD:
+
+		ret = pal_get_pcie_card_sensor_reading(PCIE_CARD_E1S, sensor_num, pcie_card_id,
+						       &device_status, &reading);
+
+		if (ret < 0) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+		break;
+	case CXL_CARD:
+
+		ret = pal_get_pcie_card_sensor_reading(PCIE_CARD_CXL, sensor_num, pcie_card_id,
+						       &device_status, &reading);
+
+		if (ret < 0) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+		break;
+	case CARD_NOT_PRESENT:
+		device_status |= PCIE_CARD_NOT_PRESENT_BIT;
+		break;
+	default:
+		msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+		return;
+	}
+
+	msg->data_len = 5;
+	msg->data[0] = device_status;
+	memcpy(&msg->data[1], &reading, sizeof(reading));
 	msg->completion_code = CC_SUCCESS;
 	return;
 }

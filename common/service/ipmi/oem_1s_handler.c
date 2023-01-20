@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -2010,6 +2010,15 @@ __weak void OEM_1S_GET_PCIE_CARD_STATUS(ipmi_msg *msg)
 	return;
 }
 
+__weak void OEM_1S_GET_PCIE_CARD_SENSOR_READING(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+	return;
+}
+
 void IPMI_OEM_1S_handler(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -2244,6 +2253,10 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_GET_PCIE_CARD_STATUS:
 		LOG_DBG("Received 1S Get PCIE card status command");
 		OEM_1S_GET_PCIE_CARD_STATUS(msg);
+		break;
+	case CMD_OEM_1S_GET_PCIE_CARD_SENSOR_READING:
+		LOG_DBG("Received 1S Get PCIE card sensor reading command");
+		OEM_1S_GET_PCIE_CARD_SENSOR_READING(msg);
 		break;
 	default:
 		LOG_ERR("Invalid OEM message, netfn(0x%x) cmd(0x%x)", msg->netfn, msg->cmd);

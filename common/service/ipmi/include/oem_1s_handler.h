@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -105,6 +105,7 @@ void OEM_1S_GET_SDR(ipmi_msg *msg);
 void OEM_1S_BMC_IPMB_ACCESS(ipmi_msg *msg);
 void OEM_1S_GET_BIOS_VERSION(ipmi_msg *msg);
 void OEM_1S_GET_PCIE_CARD_STATUS(ipmi_msg *msg);
+void OEM_1S_GET_PCIE_CARD_SENSOR_READING(ipmi_msg *msg);
 
 #ifdef CONFIG_SNOOP_ASPEED
 void OEM_1S_GET_POST_CODE(ipmi_msg *msg);

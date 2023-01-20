@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -257,6 +257,7 @@ enum {
 	CMD_OEM_1S_GET_FPGA_USER_CODE = 0x73,
 	CMD_OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT = 0x74,
 	CMD_OEM_1S_GET_PCIE_CARD_STATUS = 0x76,
+	CMD_OEM_1S_GET_PCIE_CARD_SENSOR_READING = 0x77,
 
 	CMD_OEM_1S_MULTI_ACCURACY_SENSOR_READING = 0x88,
 	CMD_OEM_1S_GET_BOARD_ID = 0xA0,
