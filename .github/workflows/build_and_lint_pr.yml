@@ -21,6 +21,7 @@ jobs:
         # Add platforms in alphabetical order.
         platform: [
           at-cb,
+          at-mc,
           gt-cc,
           wc-mb,
           yv3-dl,
