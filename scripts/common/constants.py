@@ -18,6 +18,7 @@
 # alphabetical order.
 PLATFORM_NAME_MAP = {
     "obat-cb": "Artemis : Colter Bay",
+    "obat-mc": "Artemis : Moose Creek",
     "obgt-cc": "Grand Teton : Cascade Creek",
     "obwc-mb": "Waimea Canyon : MainBoard",
     "oby3-dl": "Yosemite v3 : Delta Lake",
@@ -35,6 +36,7 @@ PLATFORM_NAME_MAP = {
 # alphabetical order.
 SUPPORTED_PLATFORMS = {
     "obat-cb",
+    "obat-mc",
     "obgt-cc",
     "obwc-mb",
     "oby3-dl",
@@ -49,6 +51,7 @@ SUPPORTED_PLATFORMS = {
 
 PLATFORM_RELEASE_MAPPINGS = {
     "at-cb": "obat-cb",
+    "at-mc": "obat-mc",
     "gt-cc": "obgt-cc",
     "op2-op" : "oby35-op",
     "wc-mb": "obwc-mb",
@@ -63,6 +66,7 @@ PLATFORM_RELEASE_MAPPINGS = {
 
 PLATFORM_DIRECTORIES = {
     "at-cb",
+    "at-mc",
     "gt-cc",
     "op2-op",
     "wc-mb",
@@ -97,6 +101,7 @@ TITLE_TAGS = {
     "gt:",
     "hd:",
     "mb:",
+    "mc",
     "op2-op",
     "rf:",
     "vf:",
