@@ -24,8 +24,6 @@
 #define MUTEX_LOCK_INTERVAL_MS 1000
 #define MEB_CXL_BUS I2C_BUS2
 
-#define MUTEX_LOCK_INTERVAL_MS 1000
-
 /*  define config for sensors  */
 #define TMP75_IN_ADDR (0x90 >> 1)
 #define TMP75_OUT_ADDR (0x92 >> 1)

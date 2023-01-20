@@ -18,6 +18,7 @@
 #define PLAT_DEV
 
 #include <stdint.h>
+#include "sensor.h"
 
 bool pal_sensor_drive_init(sensor_cfg *cfg, uint8_t *init_status);
 bool pal_sensor_drive_read(sensor_cfg *cfg, int *reading, uint8_t *sensor_status);
@@ -33,5 +34,7 @@ uint8_t pal_ltc2991_init(sensor_cfg *cfg);
 uint8_t pal_ltc2991_read(sensor_cfg *cfg, int *reading);
 uint8_t pal_xdpe12284c_init(sensor_cfg *cfg);
 uint8_t pal_xdpe12284c_read(sensor_cfg *cfg, int *reading);
+bool cxl_single_ioexp_init(uint8_t ioexp_name);
+int cxl_ioexp_init(uint8_t cxl_channel);
 
 #endif

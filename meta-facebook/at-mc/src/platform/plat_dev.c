@@ -24,6 +24,11 @@
 #include "emc1412.h"
 #include "plat_dev.h"
 #include "util_pmbus.h"
+#include "plat_isr.h"
+#include "plat_fru.h"
+#include "ioexp_tca9555.h"
+#include "common_i2c_mux.h"
+#include "plat_sensor_table.h"
 
 LOG_MODULE_REGISTER(plat_dev);
 
@@ -696,4 +701,107 @@ uint8_t pal_xdpe12284c_init(sensor_cfg *cfg)
 	}
 
 	return SENSOR_INIT_SUCCESS;
+}
+
+bool cxl_single_ioexp_init(uint8_t ioexp_name)
+{
+	int ret = 0;
+	uint8_t retry = 5;
+	uint8_t ioexp_addr = 0;
+	I2C_MSG msg = { 0 };
+
+	switch (ioexp_name) {
+	case IOEXP_U14:
+		ioexp_addr = CXL_IOEXP_U14_ADDR;
+		break;
+	case IOEXP_U15:
+		ioexp_addr = CXL_IOEXP_U15_ADDR;
+		break;
+	case IOEXP_U16:
+		ioexp_addr = CXL_IOEXP_U16_ADDR;
+		break;
+	case IOEXP_U17:
+		ioexp_addr = CXL_IOEXP_U17_ADDR;
+		break;
+	default:
+		LOG_ERR("CXL ioexp name: 0x%x is invalid", ioexp_name);
+		return false;
+	}
+
+	/** Read cxl ioexp input port 0 status **/
+	msg.bus = MEB_CXL_BUS;
+	msg.target_addr = ioexp_addr;
+	msg.rx_len = 1;
+	msg.tx_len = 1;
+	msg.data[0] = TCA9555_INPUT_PORT_REG_0;
+
+	ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Unable to read ioexp bus: %u addr: 0x%02x", msg.bus, msg.target_addr);
+		return false;
+	}
+
+	/** Read cxl ioexp input port 1 status **/
+	memset(&msg, 0, sizeof(I2C_MSG));
+	msg.bus = MEB_CXL_BUS;
+	msg.target_addr = ioexp_addr;
+	msg.rx_len = 1;
+	msg.tx_len = 1;
+	msg.data[0] = TCA9555_INPUT_PORT_REG_1;
+
+	ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Unable to read ioexp bus: %u addr: 0x%02x", msg.bus, msg.target_addr);
+		return false;
+	}
+
+	return true;
+}
+
+int cxl_ioexp_init(uint8_t cxl_channel)
+{
+	bool ret = false;
+	mux_config meb_mux = { 0 };
+	mux_config cxl_mux = { 0 };
+
+	/** MEB mux for cxl channels **/
+	meb_mux.bus = MEB_CXL_BUS;
+	meb_mux.target_addr = CXL_FRU_MUX0_ADDR;
+	meb_mux.channel = cxl_channel;
+
+	/** CXL mux for sensor channels **/
+	cxl_mux.bus = MEB_CXL_BUS;
+	cxl_mux.target_addr = CXL_FRU_MUX1_ADDR;
+	cxl_mux.channel = CXL_IOEXP_MUX_CHANNEL;
+
+	/** Mutex lock bus **/
+	struct k_mutex *meb_mutex = get_i2c_mux_mutex(meb_mux.bus);
+	if (k_mutex_lock(meb_mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS))) {
+		LOG_ERR("mutex locked failed bus%u", meb_mux.bus);
+		return -1;
+	}
+
+	/** Enable mux channel **/
+	ret = set_mux_channel(meb_mux);
+	if (ret == false) {
+		k_mutex_unlock(meb_mutex);
+		return -1;
+	}
+
+	ret = set_mux_channel(cxl_mux);
+	if (ret == false) {
+		k_mutex_unlock(meb_mutex);
+		return -1;
+	}
+
+	/** ALL ioexp initial **/
+	cxl_single_ioexp_init(IOEXP_U14);
+	cxl_single_ioexp_init(IOEXP_U15);
+	cxl_single_ioexp_init(IOEXP_U16);
+	cxl_single_ioexp_init(IOEXP_U17);
+
+	/** mutex unlock bus **/
+	k_mutex_unlock(meb_mutex);
+
+	return 0;
 }
