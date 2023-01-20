@@ -38,13 +38,6 @@ struct k_mutex i2c_3_pca9546a_mutex;
 struct k_mutex i2c_4_pca9548a_mutex;
 struct k_mutex i2c_8_pca9548a_mutex;
 
-LOG_MODULE_REGISTER(plat_sensor_table);
-
-struct k_mutex i2c_2_pca9548a_mutex;
-struct k_mutex i2c_3_pca9546a_mutex;
-struct k_mutex i2c_4_pca9546a_mutex;
-struct k_mutex i2c_8_pca9548a_mutex;
-
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
 	   access check arg0, arg1, sample_count, cache, cache_status, mux_ADDRess, mux_offset,
