@@ -55,6 +55,12 @@
 		return ret_val;                                                                    \
 	}
 
+#define CHECK_ARG_WITH_RETURN(cmp, ret_val)                                                        \
+	if (cmp) {                                                                                 \
+		LOG_DBG("Parameter \"" #cmp "\" true");                                            \
+		return ret_val;                                                                    \
+	}
+
 #define CHECK_MSGQ_INIT(msgq) CHECK_NULL_ARG((msgq)->buffer_start);
 
 #define CHECK_MSGQ_INIT_WITH_RETURN(msgq, ret_val)                                                 \
