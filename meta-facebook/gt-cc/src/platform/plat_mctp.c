@@ -191,7 +191,10 @@ struct pldm_variable_field nic_vesion[8];
 
 static void get_dev_firmware_resp_handler(void *args, uint8_t *buf, uint16_t len)
 {
-	if (!buf || !len)
+	CHECK_NULL_ARG(args);
+	CHECK_NULL_ARG(buf);
+
+	if (!len)
 		return;
 
 	mctp_route_entry *p = (mctp_route_entry *)args;
@@ -200,8 +203,15 @@ static void get_dev_firmware_resp_handler(void *args, uint8_t *buf, uint16_t len
 
 	uint8_t nic_index = p->endpoint - MCTP_EID_NIC_0;
 
+	SAFE_FREE(nic_vesion[nic_index].ptr);
 	nic_vesion[nic_index].ptr =
 		(uint8_t *)malloc(sizeof(uint8_t) * response->active_comp_image_set_ver_str_len);
+
+	if (!nic_vesion[nic_index].ptr) {
+		LOG_ERR("The buffer of NIC%d version memory allocate failed", nic_index);
+		return;
+	}
+
 	nic_vesion[nic_index].length = response->active_comp_image_set_ver_str_len;
 	memcpy(nic_vesion[nic_index].ptr, buf + sizeof(struct pldm_get_firmware_parameters_resp),
 	       nic_vesion[nic_index].length);
