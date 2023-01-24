@@ -1,0 +1,64 @@
+From 762ac6310095f8dbccf09000abbed2fe540796d4 Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Thu, 12 Jan 2023 18:44:11 +0800
+Subject: [PATCH 2/3] i3c: aspeed: Return error when event flag is exhausted.
+
+Return error -ENOSPC to avoid the device being used without an event flag
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I654fbddbe47951354dd853d2f4e619407a87fea0
+---
+ drivers/i3c/i3c_aspeed.c | 19 +++++++++++++------
+ 1 file changed, 13 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index c83742fe7b..d91490514c 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -1715,13 +1715,17 @@ static int i3c_aspeed_init(const struct device *dev)
+ 		i3c_register->intr_status_en.value = intr_reg.value;
+ 		if (obj->ibi_event == NULL) {
+ 			obj->ibi_event = osEventFlagsNew(NULL);
+-			if (obj->ibi_event == NULL)
++			if (obj->ibi_event == NULL) {
+ 				LOG_ERR("Creat ibi event flags failed");
++				return -ENOSPC;
++			}
+ 		}
+ 		if (obj->data_event == NULL) {
+ 			obj->data_event = osEventFlagsNew(NULL);
+-			if (obj->data_event == NULL)
++			if (obj->data_event == NULL) {
+ 				LOG_ERR("Creat data event flags failed");
++				return -ENOSPC;
++			}
+ 		}
+ 	} else {
+ 		union i3c_device_addr_s reg;
+@@ -1774,16 +1778,19 @@ static int i3c_aspeed_init(const struct device *dev)
+ 		.i3c_od_scl_hi_period_ns = DT_INST_PROP_OR(n, i3c_od_scl_hi_period_ns, 0),         \
+ 		.i3c_od_scl_lo_period_ns = DT_INST_PROP_OR(n, i3c_od_scl_lo_period_ns, 0),         \
+ 	};                                                                                         \
+-												   \
++                                                                                                   \
+ 	static struct i3c_aspeed_obj i3c_aspeed_obj##n;                                            \
+-												   \
++                                                                                                   \
+ 	DEVICE_DT_INST_DEFINE(n, &i3c_aspeed_config_func_##n, NULL, &i3c_aspeed_obj##n,            \
+ 			      &i3c_aspeed_config_##n, POST_KERNEL,                                 \
+ 			      CONFIG_KERNEL_INIT_PRIORITY_DEVICE, NULL);                           \
+-												   \
++                                                                                                   \
+ 	static int i3c_aspeed_config_func_##n(const struct device *dev)                            \
+ 	{                                                                                          \
+-		i3c_aspeed_init(dev);                                                              \
++		int ret;                                                                           \
++		ret = i3c_aspeed_init(dev);                                                        \
++		if (ret < 0)                                                                       \
++			return ret;                                                                \
+ 		IRQ_CONNECT(DT_INST_IRQN(n), DT_INST_IRQ(n, priority), i3c_aspeed_isr,             \
+ 			    DEVICE_DT_INST_GET(n), 0);                                             \
+ 		irq_enable(DT_INST_IRQN(n));                                                       \
+-- 
+2.25.1
+

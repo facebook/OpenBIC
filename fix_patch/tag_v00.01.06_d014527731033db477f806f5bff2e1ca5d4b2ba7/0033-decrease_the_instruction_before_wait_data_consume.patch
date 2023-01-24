@@ -1,0 +1,48 @@
+From 2627b3de8082e04d6e283e2b5a194541e1b3df90 Mon Sep 17 00:00:00 2001
+From: Andy Chung <Andy_Chung@wiwynn.com>
+Date: Fri, 13 Jan 2023 00:51:06 +0800
+Subject: [PATCH] i3c: aspeed: Decrease the intrusion before wait data consumed
+
+Summary:
+Decrease the intrusion before wait data consumed.
+---
+ drivers/i3c/i3c_aspeed.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index d91490514c..40446314a0 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -1403,7 +1403,7 @@ int i3c_aspeed_slave_put_read_data(const struct device *dev, struct i3c_slave_pa
+ 	struct i3c_aspeed_config *config = DEV_CFG(dev);
+ 	struct i3c_aspeed_obj *obj = DEV_DATA(dev);
+ 	struct i3c_register_s *i3c_register = config->base;
+-	union i3c_intr_s events;
++	union i3c_intr_s events, data_events;
+ 	union i3c_device_cmd_queue_port_s cmd;
+ 	uint8_t *xfer_buf;
+ 	uint32_t flag_ret;
+@@ -1440,6 +1440,10 @@ int i3c_aspeed_slave_put_read_data(const struct device *dev, struct i3c_slave_pa
+ 		i3c_register->cmd_queue_port.value = cmd.value;
+ 	}
+ 
++	osEventFlagsClear(obj->data_event, ~osFlagsError);
++	data_events.value = 0;
++	data_events.fields.resp_q_ready = 1;
++
+ 	if (config->priv_xfer_pec) {
+ 		xfer_buf = pec_append(dev, data->buf, data->size);
+ 		i3c_aspeed_wr_tx_fifo(obj, xfer_buf, data->size + 1);
+@@ -1464,7 +1468,8 @@ int i3c_aspeed_slave_put_read_data(const struct device *dev, struct i3c_slave_pa
+ 		}
+ 	}
+ 
+-	flag_ret = i3c_aspeed_slave_wait_data_consume(dev);
++	flag_ret = osEventFlagsWait(obj->data_event, data_events.value, osFlagsWaitAny,
++				    K_SECONDS(3).ticks);
+ 	if (flag_ret & osFlagsError) {
+ 		i3c_aspeed_init(dev);
+ 		ret = -EIO;
+-- 
+2.24.1
+

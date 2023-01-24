@@ -1,0 +1,37 @@
+From d540156ec085e82cfaecd6279795ddc338d4c176 Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Fri, 16 Sep 2022 10:41:58 +0800
+Subject: [PATCH 19/30] i3c: aspeed: Declare i3c_aspeed_set_pid_extra_info in
+ i3c.h
+
+This patch add the declartion of the i3c_aspeed_set_pid_extra_info to
+avoid the compiler warning of the implicit-function-declaration.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I7b218ead583b88fb4ce76d178a2a1ab04fb4ac57
+---
+ include/drivers/i3c/i3c.h | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/include/drivers/i3c/i3c.h b/include/drivers/i3c/i3c.h
+index c7409b864c..d3970a3c18 100644
+--- a/include/drivers/i3c/i3c.h
++++ b/include/drivers/i3c/i3c.h
+@@ -225,6 +225,14 @@ int i3c_aspeed_slave_put_read_data(const struct device *dev, struct i3c_slave_pa
+  */
+ int i3c_aspeed_slave_wait_data_consume(const struct device *dev);
+ 
++/**
++ * @brief set the pid extra info of the i3c controller
++ * @param dev the I3C controller
++ * @param extra_info the extra info of the pid bits[11:0]
++ * @return
++ */
++void i3c_aspeed_set_pid_extra_info(const struct device *dev, uint16_t extra_info);
++
+ /* common API */
+ int i3c_master_send_enec(const struct device *master, uint8_t addr, uint8_t evt);
+ int i3c_master_send_disec(const struct device *master, uint8_t addr, uint8_t evt);
+-- 
+2.24.1
+

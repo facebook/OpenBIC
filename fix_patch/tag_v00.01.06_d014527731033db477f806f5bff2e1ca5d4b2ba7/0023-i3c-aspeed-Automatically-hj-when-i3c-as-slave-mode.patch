@@ -1,0 +1,35 @@
+From 004bc05c4d90781e07066d19af7a325611fa52ea Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Wed, 28 Sep 2022 10:35:17 +0800
+Subject: [PATCH 23/30] i3c: aspeed: Automatically hj when i3c as slave mode.
+
+With this patch, i3c slave will automatically send the hot-join request
+when the slave is activated by the i3c master.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: Ie77c2ae727f0ce7fd43528d5579f05ae64e54f1d
+---
+ drivers/i3c/i3c_aspeed.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index 5d767442d6..dbba405792 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -1079,12 +1079,7 @@ static void i3c_aspeed_enable(struct i3c_aspeed_obj *obj)
+ 	reg.fields.enable = 1;
+ 	reg.fields.slave_ibi_payload_en = 1;
+ 	if (config->secondary) {
+-		/*
+-		 * We don't support hot-join on master mode, so disable auto-mode-adaption for
+-		 * slave mode accordingly.  Since the only master device we may connect with is
+-		 * our ourself.
+-		 */
+-		reg.fields.slave_auto_mode_adapt = 1;
++		reg.fields.slave_auto_mode_adapt = 0;
+ 	}
+ 	i3c_register->device_ctrl.value = reg.value;
+ }
+-- 
+2.24.1
+

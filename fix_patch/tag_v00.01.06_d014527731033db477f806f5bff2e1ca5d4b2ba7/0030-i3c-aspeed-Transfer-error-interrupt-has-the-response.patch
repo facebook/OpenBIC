@@ -1,0 +1,31 @@
+From 8a4791483fd9a02ae7749077cecded692d5b2896 Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Wed, 4 Jan 2023 14:52:05 +0800
+Subject: [PATCH 30/30] i3c: aspeed: Transfer error interrupt has the response
+ data.
+
+Transfer error interrupt will generate one response data, so append this
+condition to handle the response data for the xfer error.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I29e4a3d66fc086a221694e77d953a936ac71f842
+---
+ drivers/i3c/i3c_aspeed.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index c704e36fde..13f38c007a 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -857,7 +857,7 @@ static void i3c_aspeed_isr(const struct device *dev)
+ 
+ 		i3c_aspeed_slave_event(dev, status);
+ 	} else {
+-		if (status.fields.resp_q_ready) {
++		if (status.fields.resp_q_ready || status.fields.xfr_error) {
+ 			i3c_aspeed_end_xfer(obj);
+ 		}
+ 
+-- 
+2.24.1
+
