@@ -25,7 +25,7 @@
 #include <libutil.h>
 
 #include <hal_i2c.h>
-
+#include <logging/log.h>
 #include "plat_power_seq.h"
 #include "power_status.h"
 #include "plat_gpio.h"
@@ -36,11 +36,14 @@
 #define POWER_SEQ_CTRL_STACK_SIZE 1000
 #define DC_ON_5_SECOND 5
 #define I2C_RETRY 5
-
 #define P0V8_P0V9_VR 3
 #define PVDDQ_AB_P0V8_VR 4
 #define PVDDQ_CD_VR 5
+#define NON_ABOVE_ERROR 0b00000001 /*None of the Above error occurred*/
+#define MFR_SPECIFIC_ERROR 0b00010000 /*MFR_SPECIFIC error occurred*/
+#define ADCUNLOCK_BBEVENT_ERROR 0b10001000 /*ADCUNLOCK and BBEVENT occurred*/
 
+LOG_MODULE_REGISTER(plat_isr);
 K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_delayed_status);
 
 K_THREAD_STACK_DEFINE(power_thread, POWER_SEQ_CTRL_STACK_SIZE);
@@ -209,31 +212,54 @@ static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num
 	msg.target_addr = vr_addr;
 
 	for (int page = 0; page < 2; page++) {
-		msg.tx_len = 2;
-		msg.rx_len = 0;
+		msg.tx_len = 4;
+		msg.rx_len = 2;
 
-		memset(&msg.data, 0, sizeof(I2C_BUFF_SIZE));
-		msg.data[0] = PMBUS_PAGE;
-		msg.data[1] = page;
+		memset(&msg.data, 0, I2C_BUFF_SIZE);
+		msg.data[0] = PMBUS_PAGE_PLUS_READ;
+		msg.data[1] = 0x02;
+		msg.data[2] = page;
+		msg.data[3] = PMBUS_STATUS_WORD;
 
-		if (i2c_master_write(&msg, I2C_RETRY)) {
-			printf("[%s] Failed to write page.\n", __func__);
+		if (i2c_master_read(&msg, I2C_RETRY)) {
+			LOG_ERR("[%s] Failed to read PMBUS_STATUS_WORD.\n", __func__);
 			continue;
 		}
 
-		msg.tx_len = 1;
-		msg.rx_len = 2;
-
-		memset(&msg.data, 0, sizeof(I2C_BUFF_SIZE));
-		msg.data[0] = PMBUS_STATUS_WORD;
-
-		if (i2c_master_read(&msg, I2C_RETRY)) {
-			printf("[%s] Failed to read PMBUS_STATUS_WORD.\n", __func__);
-			continue;
+		if (check_vr_type() == VR_RNS) {
+			if (msg.data[1] == NON_ABOVE_ERROR &&
+			    msg.data[2] ==
+				    MFR_SPECIFIC_ERROR) { /*exceptional case: MFR_SPECIFIC occurred*/
+				msg.tx_len = 4;
+				msg.rx_len = 1;
+				memset(&msg.data, 0, I2C_BUFF_SIZE);
+				msg.data[0] = PMBUS_PAGE_PLUS_READ;
+				msg.data[1] = 0x02;
+				msg.data[2] = page;
+				msg.data[3] = PMBUS_STATUS_MFR_SPECIFIC;
+				if (i2c_master_read(&msg, I2C_RETRY)) {
+					LOG_ERR("[%s] Failed to read PMBUS_STATUS_WORD.\n",
+						__func__);
+					continue;
+				}
+				if (msg.data[1] ==
+				    ADCUNLOCK_BBEVENT_ERROR) { /*exceptional case: ADCUNLOCK and BBEVENT occurred*/
+					msg.tx_len = 4;
+					memset(&msg.data, 0, I2C_BUFF_SIZE);
+					msg.data[0] = PMBUS_PAGE_PLUS_WRITE;
+					msg.data[1] = 0x02;
+					msg.data[2] = page;
+					msg.data[3] = PMBUS_CLEAR_FAULTS;
+					if (i2c_master_write(&msg, I2C_RETRY)) {
+						LOG_ERR("[%s] Failed to read PMBUS_STATUS_WORD.\n",
+							__func__);
+					}
+					continue;
+				}
+			}
 		}
 
 		common_addsel_msg_t sel_msg = { 0 };
-
 		if (gpio_get(gpio_num) == GPIO_HIGH) {
 			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		} else {
@@ -244,11 +270,11 @@ static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num
 		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_VR;
 		sel_msg.sensor_number = SENSOR_NUM_VR_ALERT;
 		sel_msg.event_data1 = (vr_num << 1) | page;
-		sel_msg.event_data2 = msg.data[0];
-		sel_msg.event_data3 = msg.data[1];
+		sel_msg.event_data2 = msg.data[1];
+		sel_msg.event_data3 = msg.data[2];
 
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("[%s] Failed to add VR PMALERT sel.\n", __func__);
+			LOG_ERR("[%s] Failed to add VR PMALERT sel.\n", __func__);
 		}
 	}
 }
