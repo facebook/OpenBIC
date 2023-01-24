@@ -382,6 +382,18 @@ typedef struct _ina233_init_arg_ {
 	bool is_init;
 	float current_lsb;
 	float r_shunt;
+	bool mfr_config_init;
+	/* value to get/set MFR CONFIG register */
+	union {
+		uint16_t value;
+		struct {
+			uint16_t operating_mode : 3;
+			uint16_t shunt_volt_time : 3;
+			uint16_t bus_volt_time : 3;
+			uint16_t aver_mode : 3;
+			uint16_t rsvd : 4; // bit[15:12] are reserved.
+		};
+	} mfr_config;
 } ina233_init_arg;
 
 typedef struct _max16550a_init_arg_ {

@@ -28,8 +28,32 @@
 adc_asd_init_arg adc_asd_init_args[] = { [0] = { .is_init = false } };
 
 ina233_init_arg ina233_init_args[] = {
-	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
-	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
+	[0] = { 
+	.is_init = false, 
+	.current_lsb = 0.001, 
+	.r_shunt = 0.005, 
+	.mfr_config_init = true,
+	.mfr_config = {
+		.operating_mode =0b111,	
+		.shunt_volt_time = 0b100,	
+		.bus_volt_time = 0b100,	
+		.aver_mode = 0b011,	//set 64 average times
+		.rsvd = 0b0100,		
+	},
+	},
+	[1] = { 
+	.is_init = false, 
+	.current_lsb = 0.001, 
+	.r_shunt = 0.005, 
+	.mfr_config_init = true,
+	.mfr_config = {
+		.operating_mode =0b111,	
+		.shunt_volt_time = 0b100,	
+		.bus_volt_time = 0b100,	
+		.aver_mode = 0b011,	
+		.rsvd = 0b0100,	
+	},
+	},
 };
 
 /**************************************************************************************************
