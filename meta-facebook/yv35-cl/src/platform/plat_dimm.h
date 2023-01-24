@@ -45,7 +45,7 @@ enum DIMM_ID {
 	DIMM_ID_A4,
 	DIMM_ID_A6,
 	DIMM_ID_A7,
-	DIMM_ID_UNKNOWN,
+	DIMM_ID_UNKNOWN = 0xff,
 };
 
 enum I3C_PMIC_ADDR {

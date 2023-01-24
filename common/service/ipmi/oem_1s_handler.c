@@ -2029,10 +2029,18 @@ __weak void OEM_1S_WRITE_READ_DIMM(ipmi_msg *msg)
 }
 #endif
 
-void IPMI_OEM_1S_handler(ipmi_msg *msg)
+__weak void OEM_1S_GET_DIMM_I3C_MUX_SELECTION(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
 
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+	return;
+}
+
+void IPMI_OEM_1S_handler(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
 	switch (msg->cmd) {
 	case CMD_OEM_1S_MSG_IN:
 		LOG_DBG("Received 1S Message In command");
@@ -2274,6 +2282,10 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 		OEM_1S_WRITE_READ_DIMM(msg);
 		break;
 #endif
+	case CMD_OEM_1S_GET_DIMM_I3C_MUX_SELECTION:
+		LOG_DBG("Received 1S Get DIMM I3C MUX selection command");
+		OEM_1S_GET_DIMM_I3C_MUX_SELECTION(msg);
+		break;
 	default:
 		LOG_ERR("Invalid OEM message, netfn(0x%x) cmd(0x%x)", msg->netfn, msg->cmd);
 		msg->data_len = 0;

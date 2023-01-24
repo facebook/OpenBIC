@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -281,6 +281,37 @@ exit:
 	if (k_mutex_unlock(&i3c_dimm_mux_mutex)) {
 		LOG_ERR("Failed to lock I3C dimm MUX");
 	}
+}
 
+void OEM_1S_GET_DIMM_I3C_MUX_SELECTION(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	I2C_MSG i2c_msg = { 0 };
+	int ret = 0, retry = 3;
+
+	i2c_msg.bus = I2C_BUS1;
+	i2c_msg.target_addr = CPLD_ADDR;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = DIMM_I3C_MUX_CONTROL_OFFSET;
+
+	ret = i2c_master_read(&i2c_msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Failed to read I3C MUX status, ret=%d", ret);
+		return;
+	}
+
+	if (GETBIT(i2c_msg.data[0], 0) == I3C_MUX_TO_CPU) {
+		msg->data[0] = I3C_MUX_TO_CPU;
+	} else if (GETBIT(i2c_msg.data[0], 0) == I3C_MUX_TO_BIC) {
+		msg->data[0] = I3C_MUX_TO_BIC;
+	} else {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	msg->completion_code = CC_SUCCESS;
+	msg->data_len = 1;
 	return;
 }
