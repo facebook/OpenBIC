@@ -1,0 +1,16 @@
+{
+    "_README_WHAT_IS_THIS_DIFF_": "This diff is temporary, and will be replaced once the \"convert-pull-request-to-internal-diff\" sandcastle job finishes. For more details, see https:\/\/fburl.com\/pr-import-on-sandcastle",
+    "@nocommit": "This temporary diff should not be landed.",
+    "repository": {
+        "fbid": 702211293810582,
+        "name": "facebook\/OpenBIC"
+    },
+    "pull_request": {
+        "fbid": 848864859699872,
+        "number": 802,
+        "name": "fby35: cl: IPMI command to access DIMM device memory",
+        "author": "DelphineChiu",
+        "initiator": "garnermic"
+    },
+    "head_sha": "64be8c4277f114e7f14b082931755e678007caa0"
+}
