@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+#SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.13.1)
 
@@ -33,9 +33,10 @@ target_include_directories(app PRIVATE ${common_path}/lib)
 target_include_directories(app PRIVATE ${common_path}/service/host)
 target_include_directories(app PRIVATE ${common_path}/service/ipmb)
 target_include_directories(app PRIVATE ${common_path}/service/ipmi/include)
-target_include_directories(app PRIVATE ${common_path}/service/logging) 
+target_include_directories(app PRIVATE ${common_path}/service/logging)
 target_include_directories(app PRIVATE ${common_path}/service/mctp)
 target_include_directories(app PRIVATE ${common_path}/service/pldm)
+target_include_directories(app PRIVATE ${common_path}/service/cci)
 target_include_directories(app PRIVATE ${common_path}/service/sensor)
 target_include_directories(app PRIVATE ${common_path}/service/usb)
 target_include_directories(app PRIVATE ${common_path}/shell/commands)
@@ -46,6 +47,6 @@ target_include_directories(app PRIVATE src/ipmi/include)
 target_include_directories(app PRIVATE src/lib)
 target_include_directories(app PRIVATE src/platform)
 
-# Fail build if there are any warnings 
+# Fail build if there are any warnings
 target_compile_options(app PRIVATE -Werror)
 

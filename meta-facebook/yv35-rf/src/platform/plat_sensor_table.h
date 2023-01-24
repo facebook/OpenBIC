@@ -39,8 +39,17 @@
 #define SMBUS_TEMP_CMD 0x8D
 #define SMBUS_PWR_CMD 0x96
 
+#define CHIP_TEMP_OFFSET 0x00
+#define DIMM_TEMP_OFFSET 0x01
+
+#define DIMMA_TEMP_ADDR 0x18
+#define DIMMB_TEMP_ADDR 0x19
+#define DIMMC_TEMP_ADDR 0x1A
+#define DIMMD_TEMP_ADDR 0x1B
+
 /*  threshold sensor number, 1 based  */
 #define SENSOR_NUM_TEMP_TMP75 0x50
+#define SENSOR_NUM_TEMP_CXL 0x51
 #define SENSOR_NUM_TEMP_CXL_CNTR 0x52
 #define SENSOR_NUM_TEMP_DIMMA 0x53
 #define SENSOR_NUM_TEMP_DIMMB 0x54
@@ -89,10 +98,11 @@
 extern uint8_t plat_get_config_size();
 extern void load_sensor_config(void);
 
-enum { VR_INF = 0,
-       VR_RNS,
-       PWR_INA233,
-       PWR_SGY,
+enum {
+	VR_INF = 0,
+	VR_RNS,
+	PWR_INA233,
+	PWR_SGY,
 };
 
 #endif
