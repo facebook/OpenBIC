@@ -2019,6 +2019,16 @@ __weak void OEM_1S_GET_PCIE_CARD_SENSOR_READING(ipmi_msg *msg)
 	return;
 }
 
+#ifdef CONFIG_I3C_ASPEED
+__weak void OEM_1S_WRITE_READ_DIMM(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+}
+#endif
+
 void IPMI_OEM_1S_handler(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -2258,6 +2268,12 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 		LOG_DBG("Received 1S Get PCIE card sensor reading command");
 		OEM_1S_GET_PCIE_CARD_SENSOR_READING(msg);
 		break;
+#ifdef CONFIG_I3C_ASPEED
+	case CMD_OEM_1S_WRITE_READ_DIMM:
+		LOG_DBG("Received 1S write read dimm information command");
+		OEM_1S_WRITE_READ_DIMM(msg);
+		break;
+#endif
 	default:
 		LOG_ERR("Invalid OEM message, netfn(0x%x) cmd(0x%x)", msg->netfn, msg->cmd);
 		msg->data_len = 0;

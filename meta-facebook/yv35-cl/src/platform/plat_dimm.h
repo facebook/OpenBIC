@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -58,6 +58,12 @@ enum I3C_DIMM_SPD_ADDR {
 	DIMM_SPD_A0_A4_ADDR = 0x50,
 	DIMM_SPD_A2_A6_ADDR = 0x54,
 	DIMM_SPD_A3_A7_ADDR = 0x56,
+};
+
+enum DIMM_DEVICE_TYPE {
+	DIMM_SPD = 0x00,
+	DIMM_SPD_NVM = 0x01,
+	DIMM_PMIC = 0x02,
 };
 
 typedef struct dimm_info {

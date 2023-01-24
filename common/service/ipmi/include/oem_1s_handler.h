@@ -141,6 +141,10 @@ void OEM_1S_GET_FAN_DUTY(ipmi_msg *msg);
 void OEM_1S_GET_FAN_RPM(ipmi_msg *msg);
 #endif
 
+#ifdef CONFIG_I3C_ASPEED
+void OEM_1S_WRITE_READ_DIMM(ipmi_msg *msg);
+#endif
+
 void IPMI_OEM_1S_handler(ipmi_msg *msg);
 
 #endif
