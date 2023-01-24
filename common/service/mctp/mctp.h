@@ -61,6 +61,7 @@ typedef enum {
 	MCTP_MSG_TYPE_NCSI,
 	MCTP_MSG_TYPE_ETH,
 	MCTP_MSG_TYPE_NVME,
+	MCTP_MSG_TYPE_CCI = 0x08,
 	MCTP_MSG_TYPE_VEN_DEF_PCI = 0x7E,
 	MCTP_MSG_TYPE_VEN_DEF_IANA = 0x7F
 } MCTP_MSG_TYPE;
@@ -177,6 +178,8 @@ typedef struct _mctp {
 
 	/* for pldm instance id */
 	uint8_t pldm_inst_id;
+	/* for cci_msg_tag */
+	uint8_t cci_msg_tag;
 } mctp;
 
 /* public function */
@@ -211,6 +214,9 @@ uint8_t mctp_i3c_deinit(mctp *mctp_instance);
 
 /* register endpoint resolve function */
 uint8_t mctp_reg_endpoint_resolve_func(mctp *mctp_inst, endpoint_resolve resolve_fn);
+
+bool get_mctp_info_by_eid(uint8_t port, mctp **mctp_inst, mctp_ext_params *ext_params);
+uint8_t get_mctp_info(uint8_t dest_endpoint, mctp **mctp_inst, mctp_ext_params *ext_params);
 
 /* register callback function when the mctp message is received */
 uint8_t mctp_reg_msg_rx_func(mctp *mctp_inst, mctp_fn_cb rx_cb);

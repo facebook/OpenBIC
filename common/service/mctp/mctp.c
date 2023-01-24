@@ -596,3 +596,16 @@ uint8_t mctp_reg_msg_rx_func(mctp *mctp_inst, mctp_fn_cb rx_cb)
 	mctp_inst->rx_cb = rx_cb;
 	return MCTP_SUCCESS;
 }
+
+__weak uint8_t get_mctp_info(uint8_t dest_endpoint, mctp **mctp_inst, mctp_ext_params *ext_params)
+{
+	return MCTP_ERROR;
+}
+
+bool get_mctp_info_by_eid(uint8_t port, mctp **mctp_inst, mctp_ext_params *ext_params)
+{
+	if (!mctp_inst || !ext_params) {
+		return false;
+	}
+	return (get_mctp_info(port, mctp_inst, ext_params) == MCTP_SUCCESS) ? true : false;
+}
