@@ -27,6 +27,7 @@
 #include "plat_sensor_table.h"
 #include "plat_i2c.h"
 #include "plat_pmic.h"
+#include "plat_dimm.h"
 #include "oem_1s_handler.h"
 #include "hal_gpio.h"
 #include "hal_i2c.h"
@@ -109,13 +110,24 @@ void ISR_POST_COMPLETE()
 		if (get_me_mode() == ME_INIT_MODE) {
 			init_me_firmware();
 		}
+
+		// Switch I3C mux to bic after post complete
+		if (k_mutex_lock(&i3c_dimm_mux_mutex, K_MSEC(I3C_DIMM_MUX_MUTEX_TIMEOUT_MS))) {
+			LOG_ERR("Failed to lock I3C dimm MUX");
+		}
+
+		switch_i3c_dimm_mux(I3C_MUX_TO_BIC, DIMM_MUX_TO_DIMM_A0A1A3);
+
+		if (k_mutex_unlock(&i3c_dimm_mux_mutex)) {
+			LOG_ERR("Failed to unlock I3C dimm MUX");
+		}
 	}
 
 	set_post_status(FM_BIOS_POST_CMPLT_BMC_N);
 }
 
 K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_delayed_status);
-K_WORK_DELAYABLE_DEFINE(read_pmic_critical_work, read_pmic_error_via_i3c);
+K_WORK_DELAYABLE_DEFINE(read_pmic_critical_work, read_pmic_error_when_dc_off);
 #define DC_ON_5_SECOND 5
 // The PMIC needs a total of 100ms from CAMP signal assertion to complete the write operation
 #define READ_PMIC_CRITICAL_ERROR_MS 100
@@ -672,5 +684,19 @@ void ISR_NMI()
 		if (!common_add_sel_evt_record(&sel_msg)) {
 			LOG_ERR("%s addsel fail", __func__);
 		}
+	}
+}
+
+void ISR_RST_PLTRST_PLD()
+{
+	// Switch I3C mux to cpu when host reset or host DC on
+	if (k_mutex_lock(&i3c_dimm_mux_mutex, K_MSEC(I3C_DIMM_MUX_MUTEX_TIMEOUT_MS))) {
+		LOG_ERR("Failed to lock I3C dimm MUX");
+	}
+
+	switch_i3c_dimm_mux(I3C_MUX_TO_CPU, DIMM_MUX_TO_DIMM_A0A1A3);
+
+	if (k_mutex_unlock(&i3c_dimm_mux_mutex)) {
+		LOG_ERR("Failed to unlock I3C dimm MUX");
 	}
 }

@@ -19,14 +19,6 @@
 
 #include "hal_i3c.h"
 
-
-#define I3C_BUS3 3
-
-enum I3C_PMIC_ADDR
-{
-	PMIC_A0_A4_ADDR = 0x48,
-	PMIC_A2_A6_ADDR = 0x4c,
-	PMIC_A3_A7_ADDR = 0x4e,
-};
+#define I3C_BUS4 3
 
 #endif

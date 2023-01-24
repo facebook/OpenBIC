@@ -86,6 +86,11 @@ enum G788P81U_OFFSET {
 	G788P81U_REMOTE_TEMP_EXT_OFFSET = 0x10,
 };
 
+enum DIMM_RELATED_OFFSET {
+	DIMM_PMIC_SWA_PWR = 0x0C,
+	DIMM_SPD_TEMP = 0x31,
+};
+
 enum SENSOR_DEV {
 	sensor_dev_tmp75 = 0,
 	sensor_dev_ast_adc = 0x01,
@@ -129,6 +134,7 @@ enum SENSOR_DEV {
 	sensor_dev_ltc2991 = 0x22,
 	sensor_dev_sq52205 = 0x23,
 	sensor_dev_emc1412 = 0x24,
+	sensor_dev_i3c_dimm = 0x22,
 	sensor_dev_max
 };
 

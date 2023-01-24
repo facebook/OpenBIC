@@ -98,4 +98,7 @@ enum BUS_ID {
 	BUS_ID_DIMM_CHANNEL_4_TO_7, // bus id for channel 4~7
 };
 
+int pal_get_pmic_pwr(uint8_t sensor_num, uint8_t *data);
+int pal_get_spd_temp(uint8_t sensor_num, uint8_t *data);
+
 #endif

@@ -23,6 +23,7 @@
 #include "plat_gpio.h"
 #include "plat_hook.h"
 #include "plat_sensor_table.h"
+#include "plat_dimm.h"
 #include "pmbus.h"
 #include "intel_peci.h"
 #include "intel_dimm.h"
@@ -404,4 +405,40 @@ bool post_ltc4282_read(uint8_t sensor_num, void *args, int *reading)
 	sval->integer = (int)val & 0xFFFF;
 	sval->fraction = (val - sval->integer) * 1000;
 	return true;
+}
+
+bool pre_intel_dimm_i3c_read(uint8_t sensor_num, void *args)
+{
+	ARG_UNUSED(args);
+
+	if (get_post_status() == false) {
+		// BIC can't check DIMM present status, return true to keep do sensor initial
+		return true;
+	}
+
+	dimm_pre_proc_arg *pre_proc_args = (dimm_pre_proc_arg *)args;
+	if (pre_proc_args->is_present_checked == true) {
+		return true;
+	}
+
+	uint8_t dimm_id = DIMM_ID_UNKNOWN;
+	bool ret = false;
+
+	dimm_id = sensor_num_map_dimm_id(sensor_num);
+	if (dimm_id == DIMM_ID_UNKNOWN) {
+		return ret;
+	}
+
+	if (!is_dimm_init()) {
+		return ret;
+	}
+
+	if (!is_dimm_present(dimm_id)) {
+		ret = disable_dimm_pmic_sensor(sensor_num);
+	} else {
+		ret = true;
+	}
+
+	pre_proc_args->is_present_checked = true;
+	return ret;
 }

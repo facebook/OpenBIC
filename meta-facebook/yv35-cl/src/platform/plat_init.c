@@ -22,6 +22,7 @@
 #include "plat_gpio.h"
 #include "plat_kcs.h"
 #include "plat_pmic.h"
+#include "plat_dimm.h"
 #include "util_worker.h"
 
 SCU_CFG scu_cfg[] = {
@@ -49,6 +50,7 @@ void pal_device_init()
 {
 	init_me_firmware();
 
+	start_get_dimm_info_thread();
 	start_monitor_pmic_error_thread();
 }
 
@@ -57,6 +59,7 @@ void pal_set_sys_status()
 	set_DC_status(PWRGD_SYS_PWROK);
 	set_DC_on_delayed_status();
 	set_post_status(FM_BIOS_POST_CMPLT_BMC_N);
+
 	set_CPU_power_status(PWRGD_CPU_LVC3);
 	set_post_thread();
 	set_sys_ready_pin(BIC_READY);

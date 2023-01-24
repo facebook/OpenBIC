@@ -28,6 +28,7 @@ typedef struct _pmic_pre_proc_arg {
 
 typedef struct _dimm_pre_proc_arg {
 	bool is_present_checked;
+	uint8_t dimm_mux_position;
 } dimm_pre_proc_arg;
 
 /**************************************************************************************************
@@ -63,5 +64,6 @@ bool post_adm1278_power_read(uint8_t sensor_num, void *args, int *reading);
 bool post_adm1278_current_read(uint8_t sensor_num, void *args, int *reading);
 bool post_ltc4286_read(uint8_t sensor_num, void *args, int *reading);
 bool post_ltc4282_read(uint8_t sensor_num, void *args, int *reading);
+bool pre_intel_dimm_i3c_read(uint8_t sensor_num, void *args);
 
 #endif
