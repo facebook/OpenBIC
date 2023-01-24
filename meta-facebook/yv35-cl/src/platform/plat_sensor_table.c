@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -114,6 +114,32 @@ sensor_cfg plat_sensor_config[] = {
 	  DIMM_SPD_TEMP, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_intel_dimm_i3c_read,
 	  &dimm_pre_proc_args[5], NULL, NULL, NULL },
+
+	// DIMM temp
+	{ SENSOR_NUM_TEMP_DIMM_A0, sensor_dev_i3c_dimm, I3C_BUS4, DIMM_SPD_A0_A4_ADDR,
+	  DIMM_SPD_TEMP, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_intel_dimm_i3c_read,
+	  &dimm_pre_proc_args[0], post_intel_dimm_i3c_read, &dimm_post_proc_args[0], NULL },
+	{ SENSOR_NUM_TEMP_DIMM_A2, sensor_dev_i3c_dimm, I3C_BUS4, DIMM_SPD_A2_A6_ADDR,
+	  DIMM_SPD_TEMP, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_intel_dimm_i3c_read,
+	  &dimm_pre_proc_args[1], post_intel_dimm_i3c_read, &dimm_post_proc_args[1], NULL },
+	{ SENSOR_NUM_TEMP_DIMM_A3, sensor_dev_i3c_dimm, I3C_BUS4, DIMM_SPD_A3_A7_ADDR,
+	  DIMM_SPD_TEMP, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_intel_dimm_i3c_read,
+	  &dimm_pre_proc_args[2], post_intel_dimm_i3c_read, &dimm_post_proc_args[2], NULL },
+	{ SENSOR_NUM_TEMP_DIMM_A4, sensor_dev_i3c_dimm, I3C_BUS4, DIMM_SPD_A0_A4_ADDR,
+	  DIMM_SPD_TEMP, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_intel_dimm_i3c_read,
+	  &dimm_pre_proc_args[3], post_intel_dimm_i3c_read, &dimm_post_proc_args[3], NULL },
+	{ SENSOR_NUM_TEMP_DIMM_A6, sensor_dev_i3c_dimm, I3C_BUS4, DIMM_SPD_A2_A6_ADDR,
+	  DIMM_SPD_TEMP, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_intel_dimm_i3c_read,
+	  &dimm_pre_proc_args[4], post_intel_dimm_i3c_read, &dimm_post_proc_args[4], NULL },
+	{ SENSOR_NUM_TEMP_DIMM_A7, sensor_dev_i3c_dimm, I3C_BUS4, DIMM_SPD_A3_A7_ADDR,
+	  DIMM_SPD_TEMP, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_intel_dimm_i3c_read,
+	  &dimm_pre_proc_args[5], post_intel_dimm_i3c_read, &dimm_post_proc_args[5], NULL },
 
 	// adc voltage
 	{ SENSOR_NUM_VOL_STBY12V, sensor_dev_ast_adc, ADC_PORT0, NONE, NONE, stby_access, 667, 100,
@@ -412,7 +438,7 @@ void check_vr_type(uint8_t index)
 
 	/* Get IC Device ID from VR chip
 	 * - Command code: 0xAD
-	 * - The response data 
+	 * - The response data
 	 *   byte-1: Block read count
 	 *   byte-2: Device ID
 	 * For the ISL69259 chip,

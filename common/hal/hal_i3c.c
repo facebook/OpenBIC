@@ -211,6 +211,7 @@ int i3c_spd_reg_read(I3C_MSG *msg, bool is_nvm)
 		offset0 = CLEARBIT(offset0, 7);
 	}
 	uint8_t offset[2] = { offset0, offset1 };
+//	uint8_t offset[2] = { msg->data[0] & GENMASK(5, 0), 0 };
 
 	desc = find_matching_desc(dev_i3c[msg->bus], msg->target_addr);
 	if (desc == NULL) {
@@ -223,6 +224,8 @@ int i3c_spd_reg_read(I3C_MSG *msg, bool is_nvm)
 	if (ret != 0) {
 		LOG_ERR("Failed to read SPD bus0x%x addr0x%x offset0x%x %x, ret: %d", msg->bus,
 			msg->target_addr, offset[1], offset[0], ret);
+//		LOG_ERR("Failed to read SPD bus0x%x addr0x%x offset0x%x, ret: %d", msg->bus,
+//			msg->target_addr, offset[0], ret);
 	}
 
 	return ret;

@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -31,6 +31,11 @@ typedef struct _dimm_pre_proc_arg {
 	uint8_t dimm_mux_position;
 } dimm_pre_proc_arg;
 
+typedef struct _dimm_post_proc_arg {
+	uint8_t dimm_channel;
+	uint8_t dimm_number;
+} dimm_post_proc_arg;
+
 /**************************************************************************************************
  * INIT ARGS
 **************************************************************************************************/
@@ -49,6 +54,7 @@ extern struct tca9548 mux_conf_addr_0xe2[];
 extern isl69259_pre_proc_arg isl69259_pre_read_args[];
 extern pmic_pre_proc_arg pmic_pre_read_args[];
 extern dimm_pre_proc_arg dimm_pre_proc_args[];
+extern dimm_post_proc_arg dimm_post_proc_args[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
@@ -65,5 +71,6 @@ bool post_adm1278_current_read(uint8_t sensor_num, void *args, int *reading);
 bool post_ltc4286_read(uint8_t sensor_num, void *args, int *reading);
 bool post_ltc4282_read(uint8_t sensor_num, void *args, int *reading);
 bool pre_intel_dimm_i3c_read(uint8_t sensor_num, void *args);
+bool post_intel_dimm_i3c_read(uint8_t sensor_num, void *args, int *reading);
 
 #endif
