@@ -135,8 +135,8 @@ void ISR_DC_ON()
 {
 	set_DC_status(PWRGD_SYS_PWROK);
 
-	ipmb_error status;
-	ipmi_msg msg;
+	ipmi_msg msg = { 0 };
+	int ret = 0;
 	bool dc_status = get_DC_status();
 
 	if (dc_status) {
@@ -166,7 +166,7 @@ void ISR_DC_ON()
 
 	msg.data_len = 4;
 	msg.InF_source = SELF;
-	msg.InF_target = BMC_IPMB;
+	msg.InF_target = MCTP;
 	msg.netfn = NETFN_OEM_1S_REQ;
 	msg.cmd = CMD_OEM_1S_SEND_HOST_POWER_STATE_TO_BMC;
 
@@ -175,10 +175,10 @@ void ISR_DC_ON()
 	msg.data[2] = (IANA_ID >> 16) & 0xFF;
 	msg.data[3] = dc_status ? GPIO_HIGH : GPIO_LOW;
 
-	status = ipmb_read(&msg, IPMB_inf_index_map[msg.InF_target]);
-	if (status != IPMB_ERROR_SUCCESS) {
-		LOG_ERR("Failed to send host power state to BMC, gpio number %d status %d",
-			PWRGD_SYS_PWROK, status);
+	ret = pldm_send_ipmi_request(&msg);
+	if (ret < 0) {
+		LOG_ERR("Failed to send host power state to BMC, gpio number %d ret %d",
+			PWRGD_SYS_PWROK, ret);
 	}
 }
 
