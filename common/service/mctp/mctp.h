@@ -112,7 +112,7 @@ typedef uint16_t (*medium_rx)(void *mctp_p, uint8_t *buf, uint32_t len,
 typedef uint8_t (*endpoint_resolve)(uint8_t dest_endpoint, void **mctp_inst,
 				    mctp_ext_params *ext_params);
 
-/* smbus config for mctp medium_conf */
+/* i3c config for mctp medium_conf */
 typedef struct _mctp_i3c_conf {
 	uint8_t bus;
 	uint8_t addr;

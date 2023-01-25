@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -34,6 +34,7 @@
 #include "plat_class.h"
 #include "plat_i2c.h"
 #include "plat_dimm.h"
+#include "plat_mctp.h"
 
 LOG_MODULE_REGISTER(plat_pmic);
 
@@ -190,14 +191,14 @@ void add_pmic_error_sel(uint8_t dimm_id, uint8_t error_type)
 	common_addsel_msg_t sel_msg;
 
 	memset(&sel_msg, 0, sizeof(common_addsel_msg_t));
-	sel_msg.InF_target = BMC_IPMB;
+	sel_msg.InF_target = MCTP;
 	sel_msg.sensor_type = IPMI_SENSOR_TYPE_PROCESSOR;
 	sel_msg.sensor_number = SENSOR_NUM_PMIC_ERROR;
 	sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 	sel_msg.event_data1 = dimm_id;
 	sel_msg.event_data2 = error_type;
 	sel_msg.event_data3 = 0x00;
-	if (!common_add_sel_evt_record(&sel_msg)) {
+	if (!mctp_add_sel_to_ipmi(&sel_msg)) {
 		LOG_ERR("Fail to add PMIC error event log: dimm%d error 0x%x", dimm_id, error_type);
 	}
 }
