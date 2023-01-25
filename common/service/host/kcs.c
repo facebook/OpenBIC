@@ -25,6 +25,7 @@
 #include <logging/log.h>
 #include "ipmi.h"
 #include "kcs.h"
+#include "pldm.h"
 #include "plat_def.h"
 #include "libutil.h"
 
@@ -150,9 +151,39 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 				memcpy(&bridge_msg.data[0], &ibuf[2], bridge_msg.data_len);
 			}
 
-			status = ipmb_send_request(&bridge_msg, IPMB_inf_index_map[BMC_IPMB]);
-			if (status != IPMB_ERROR_SUCCESS) {
-				LOG_ERR("kcs_read_task send to BMC fail status: 0x%x", status);
+
+			// Check BMC communication interface if use IPMB or not
+			if (!pal_is_interface_use_ipmb(IPMB_inf_index_map[BMC_IPMB])) {
+				int ret = 0;
+
+				// Send request to MCTP/PLDM thread to ask BMC
+				ret = pldm_send_ipmi_request(&bridge_msg);
+				if (ret < 0) {
+					LOG_ERR("kcs_read_task send to BMC fail");
+				}
+
+				uint8_t *kcs_buff;
+				kcs_buff = malloc(3 + bridge_msg.data_len);
+				if (kcs_buff == NULL) {
+					LOG_ERR("Memory allocation failed");
+					continue;
+				}
+
+				// Write MCTP/PLDM response to KCS
+				kcs_buff[0] = (bridge_msg.netfn | BIT(0)) << 2;
+				kcs_buff[1] = bridge_msg.cmd;
+				kcs_buff[2] = bridge_msg.completion_code;
+				memcpy(&kcs_buff[3], &bridge_msg.data, bridge_msg.data_len);
+				kcs_write(kcs_inst->index, kcs_buff, 3 + bridge_msg.data_len);
+
+				SAFE_FREE(kcs_buff);
+			} else {
+				status = ipmb_send_request(&bridge_msg,
+							   IPMB_inf_index_map[BMC_IPMB]);
+				if (status != IPMB_ERROR_SUCCESS) {
+					LOG_ERR("kcs_read_task send to BMC fail status: 0x%x",
+						status);
+				}
 			}
 		}
 	}

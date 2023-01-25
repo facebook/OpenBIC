@@ -129,6 +129,7 @@ __weak void OEM_1S_MSG_OUT(ipmi_msg *msg)
 			bridge_msg->InF_source = msg->InF_source;
 			bridge_msg->netfn = msg->data[1] >> 2;
 			bridge_msg->cmd = msg->data[2];
+			bridge_msg->pldm_inst_id = msg->pldm_inst_id;
 
 			if (bridge_msg->data_len != 0) {
 				memcpy(&bridge_msg->data[0], &msg->data[3],

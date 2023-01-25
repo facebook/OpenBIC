@@ -221,6 +221,10 @@ uint8_t get_mctp_info(uint8_t dest_endpoint, mctp **mctp_inst, mctp_ext_params *
 /* register callback function when the mctp message is received */
 uint8_t mctp_reg_msg_rx_func(mctp *mctp_inst, mctp_fn_cb rx_cb);
 
+mctp *pal_get_mctp(uint8_t mctp_medium_type, uint8_t bus);
+int pal_get_target(uint8_t interface);
+int pal_get_medium_type(uint8_t interface);
+
 #ifdef __cplusplus
 }
 #endif

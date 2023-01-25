@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -608,4 +608,20 @@ bool get_mctp_info_by_eid(uint8_t port, mctp **mctp_inst, mctp_ext_params *ext_p
 		return false;
 	}
 	return (get_mctp_info(port, mctp_inst, ext_params) == MCTP_SUCCESS) ? true : false;
+
+}
+
+__weak mctp *pal_get_mctp(uint8_t mctp_medium_type, uint8_t bus)
+{
+	return NULL;
+}
+
+__weak int pal_get_target(uint8_t interface)
+{
+	return -1;
+}
+
+__weak int pal_get_medium_type(uint8_t interface)
+{
+	return -1;
 }

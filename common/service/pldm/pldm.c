@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -24,6 +24,7 @@
 #include <sys/slist.h>
 #include <zephyr.h>
 #include "libutil.h"
+#include "ipmi.h"
 
 LOG_MODULE_REGISTER(pldm);
 
@@ -249,6 +250,7 @@ uint8_t mctp_pldm_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext
 * The message is a response, check if any callback function should be
 * invoked
 */
+
 	if (!hdr->rq)
 		return pldm_resp_msg_process(mctp_inst, buf, len, ext_params);
 
@@ -293,7 +295,6 @@ uint8_t mctp_pldm_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext
 		goto send_msg;
 	}
 
-	/* invoke the cmd handler to process */
 	rc = handler(mctp_inst, buf + sizeof(*hdr), len - sizeof(*hdr), resp_buf + sizeof(*hdr),
 		     &resp_len, &ext_params);
 	if (rc == PLDM_LATER_RESP)
@@ -328,10 +329,10 @@ uint8_t mctp_pldm_send_msg(void *mctp_p, pldm_msg *msg)
 	uint16_t len = sizeof(msg->hdr) + msg->len;
 	uint8_t buf[len];
 
+	LOG_HEXDUMP_DBG(buf, len, __func__);
+
 	memcpy(buf, &msg->hdr, sizeof(msg->hdr));
 	memcpy(buf + sizeof(msg->hdr), msg->buf, msg->len);
-
-	LOG_HEXDUMP_DBG(buf, len, __func__);
 
 	uint8_t rc = mctp_send_msg(mctp_inst, buf, len, msg->ext_params);
 
@@ -427,4 +428,126 @@ uint8_t get_supported_pldm_commands(PLDM_TYPE type, uint8_t *buf, uint8_t buf_si
 	return PLDM_SUCCESS;
 }
 
-K_THREAD_DEFINE(pldm_wait_resp_to, 1024, pldm_msg_timeout_monitor, NULL, NULL, NULL, 0, 0, 0);
+// Send IPMI response to MCTP/PLDM thread
+int pldm_send_ipmi_response(uint8_t interface, ipmi_msg *msg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, -1);
+
+	pldm_msg pmsg = { 0 };
+	uint8_t resp_buf[PLDM_MAX_DATA_SIZE] = { 0 };
+	memset(&pmsg, 0, sizeof(pmsg));
+	memset(&resp_buf, 0, sizeof(resp_buf));
+
+	int medium_type = pal_get_medium_type(interface);
+	if (medium_type < 0) {
+		return -1;
+	}
+	int target = pal_get_target(interface);
+	if (target < 0) {
+		return -1;
+	}
+
+	// Set PLDM header
+	pmsg.ext_params.type = medium_type;
+	pmsg.ext_params.i3c_ext_params.addr = target;
+
+	pmsg.hdr.msg_type = MCTP_MSG_TYPE_PLDM;
+	pmsg.hdr.pldm_type = PLDM_TYPE_OEM;
+	pmsg.hdr.cmd = PLDM_OEM_IPMI_BRIDGE;
+	pmsg.hdr.rq = PLDM_RESPONSE;
+	pmsg.hdr.inst_id = msg->pldm_inst_id;
+
+	pmsg.buf = resp_buf;
+
+	struct _ipmi_cmd_resp *cmd_resp = (struct _ipmi_cmd_resp *)pmsg.buf;
+	set_iana(cmd_resp->iana, sizeof(cmd_resp->iana));
+	cmd_resp->completion_code = PLDM_SUCCESS;
+	cmd_resp->netfn_lun = (msg->netfn | 0x01) << 2;
+	cmd_resp->cmd = msg->cmd;
+	cmd_resp->ipmi_comp_code = msg->completion_code;
+	memcpy(&cmd_resp->first_data, msg->data, msg->data_len);
+
+	// Total data len = IANA + PLDM CC + ipmi CC + ipmi netfn + ipmi cmd + ipmi response data len
+	pmsg.len = sizeof(struct _ipmi_cmd_resp) - 1 + msg->data_len;
+
+	LOG_HEXDUMP_DBG(pmsg.buf, pmsg.len, "pmsg.buf");
+
+	mctp *mctp_inst = pal_get_mctp(medium_type, target);
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, -1);
+
+	// Send response to PLDM/MCTP thread
+	mctp_pldm_send_msg(mctp_inst, &pmsg);
+	return 0;
+}
+
+// Send IPMI request to MCTP/PLDM thread and get response
+int pldm_send_ipmi_request(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, -1);
+
+	pldm_msg pmsg = { 0 };
+	uint8_t req_buf[PLDM_MAX_DATA_SIZE] = { 0 };
+	memset(&pmsg, 0, sizeof(pmsg));
+	memset(req_buf, 0, sizeof(req_buf));
+
+	uint8_t target_interface = msg->InF_target;
+	int medium_type = pal_get_medium_type(target_interface);
+	if (medium_type < 0) {
+		return -1;
+	}
+	int target = pal_get_target(target_interface);
+	if (target < 0) {
+		return -1;
+	}
+
+	// Set PLDM header
+	pmsg.ext_params.type = medium_type;
+	pmsg.ext_params.i3c_ext_params.addr = target;
+
+	pmsg.hdr.msg_type = MCTP_MSG_TYPE_PLDM;
+	pmsg.hdr.pldm_type = PLDM_TYPE_OEM;
+	pmsg.hdr.cmd = PLDM_OEM_IPMI_BRIDGE;
+	pmsg.hdr.rq = PLDM_REQUEST;
+
+	pmsg.buf = req_buf;
+
+	struct _ipmi_cmd_req *cmd_req = (struct _ipmi_cmd_req *)pmsg.buf;
+	set_iana(cmd_req->iana, sizeof(cmd_req->iana));
+	cmd_req->netfn_lun = msg->netfn << 2;
+	cmd_req->cmd = msg->cmd;
+	memcpy(&cmd_req->first_data, msg->data, msg->data_len);
+
+	// Total data len = IANA + ipmi netfn + ipmi cmd + ipmi request data len
+	pmsg.len = sizeof(struct _ipmi_cmd_req) - 1 + msg->data_len;
+
+	uint8_t rbuf[PLDM_MAX_DATA_SIZE];
+	// Send request to PLDM/MCTP thread and get response
+	uint8_t res_len =
+		mctp_pldm_read(pal_get_mctp(medium_type, target), &pmsg, rbuf, sizeof(rbuf));
+
+	if (!res_len) {
+		LOG_ERR("[%s] mctp_pldm_read fail", __func__);
+		return false;
+	}
+
+	struct _pldm_ipmi_cmd_resp *resp = (struct _pldm_ipmi_cmd_resp *)rbuf;
+
+	if ((resp->completion_code != MCTP_SUCCESS)) {
+		resp->ipmi_comp_code = CC_UNSPECIFIED_ERROR;
+	}
+
+	msg->completion_code = resp->ipmi_comp_code;
+	msg->netfn = resp->netfn_lun >> 2;
+	msg->cmd = resp->cmd;
+	// MCTP CC, Netfn, cmd, ipmi CC
+	if (res_len > 4) {
+		msg->data_len = res_len - 4;
+		memcpy(msg->data, &rbuf[4], msg->data_len);
+	} else {
+		msg->data_len = 0;
+	}
+
+	return 0;
+}
+
+K_THREAD_DEFINE(pldm_wait_resp_to, 1024, pldm_msg_timeout_monitor, NULL, NULL, NULL, 7, 0, 0);

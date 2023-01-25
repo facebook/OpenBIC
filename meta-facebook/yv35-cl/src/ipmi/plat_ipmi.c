@@ -28,6 +28,9 @@
 #include "plat_ipmb.h"
 #include "plat_dimm.h"
 
+#include "pldm.h"
+#include "plat_mctp.h"
+
 LOG_MODULE_REGISTER(plat_ipmi);
 
 bool pal_request_msg_to_BIC_from_KCS(uint8_t netfn, uint8_t cmd)
@@ -112,6 +115,7 @@ void OEM_1S_GET_BIOS_VERSION(ipmi_msg *msg)
 	}
 
 	msg->completion_code = CC_SUCCESS;
+
 	return;
 }
 

@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -25,6 +25,8 @@
 IPMB_config pal_IPMB_config_table[] = {
 	// index, interface, channel, bus, channel_target_address, enable_status, self_address,
 	// rx_thread_name, tx_thread_name
+	{ BMC_IPMB_IDX, I2C_IF, BMC_IPMB, IPMB_I2C_BMC, BMC_I2C_ADDRESS, DISABLE, SELF_I2C_ADDRESS,
+	  "RX_BMC_IPMB_TASK", "TX_BMC_IPMB_TASK" },
 	{ ME_IPMB_IDX, I2C_IF, ME_IPMB, IPMB_ME_BUS, ME_I2C_ADDRESS, ENABLE, SELF_I2C_ADDRESS,
 	  "RX_ME_IPMB_TASK", "TX_ME_IPMB_TASK" },
 	{ EXP1_IPMB_IDX, I2C_IF, EXP1_IPMB, IPMB_EXP1_BUS, BIC1_I2C_ADDRESS, DISABLE,
@@ -76,4 +78,13 @@ bool pal_load_ipmb_config(void)
 
 	memcpy(&IPMB_config_table[0], &pal_IPMB_config_table[0], sizeof(pal_IPMB_config_table));
 	return true;
-};
+}
+
+bool pal_is_interface_use_ipmb(uint8_t interface_index)
+{
+	switch (interface_index) {
+	case BMC_IPMB_IDX:
+		return false;
+	}
+	return true;
+}

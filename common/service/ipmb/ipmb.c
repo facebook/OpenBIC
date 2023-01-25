@@ -35,6 +35,8 @@
 #include <logging/log.h>
 #include "plat_ipmb.h"
 
+#include "pldm.h"
+
 LOG_MODULE_REGISTER(ipmb);
 
 /*
@@ -275,6 +277,7 @@ bool find_req_ipmi_msg(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
 	msg->seq_source = temp->buffer.seq_source;
 	unregister_seq(index, temp->buffer.seq_target);
 
+	msg->pldm_inst_id = temp->buffer.pldm_inst_id;
 	msg->InF_source = temp->buffer.InF_source;
 	msg->InF_target = temp->buffer.InF_target;
 	/*temp points to the node which has to be removed*/
@@ -397,7 +400,6 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 			ipmb_encode(&ipmb_buffer_tx[0], &current_msg_tx->buffer);
 			uint8_t resp_tx_size =
 				current_msg_tx->buffer.data_len + IPMB_RESP_HEADER_LENGTH;
-
 			if (ipmb_cfg.interface == I2C_IF) {
 				int retry = 0;
 				do {
@@ -419,6 +421,7 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 				i2c_msg->target_addr = ipmb_cfg.channel_target_address;
 				i2c_msg->tx_len = resp_tx_size;
 				memcpy(&i2c_msg->data[0], &ipmb_buffer_tx[1], resp_tx_size);
+
 				ret = i2c_master_write(i2c_msg, I2C_RETRY_TIME);
 				SAFE_FREE(i2c_msg);
 			} else {
@@ -787,6 +790,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 
 						SAFE_FREE(bridge_msg);
 					} else { // Bridge response to other fru
+
 						ipmi_msg *bridge_msg =
 							(ipmi_msg *)malloc(sizeof(ipmi_msg));
 						memset(bridge_msg, 0, sizeof(ipmi_msg));
@@ -810,13 +814,26 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 							printf(")\n");
 						}
 
-						if (ipmb_send_response(
-							    bridge_msg,
-							    IPMB_inf_index_map[current_msg_rx->buffer
-										       .InF_source]) !=
-						    IPMB_ERROR_SUCCESS) {
-							printf("[%s][%d] Failed to send IPMB response message",
-							       __func__, __LINE__);
+						// Bridge command need to check interface and decide transfer MCTP/PLDM or IPMB
+						if ((current_msg_rx->buffer.InF_source == PLDM) ||
+						    (current_msg_rx->buffer.InF_source == MCTP)) {
+							bridge_msg->pldm_inst_id =
+								current_msg_rx->buffer.pldm_inst_id;
+							// Send bridge command response to MCTP/PLDM thread to response BMC
+							pldm_send_ipmi_response(
+								current_msg_rx->buffer.InF_source,
+								bridge_msg);
+
+						} else {
+							if (ipmb_send_response(
+								    bridge_msg,
+								    IPMB_inf_index_map
+									    [current_msg_rx->buffer
+										     .InF_source]) !=
+							    IPMB_ERROR_SUCCESS) {
+								LOG_ERR("[%s][%d] Failed to send IPMB response message",
+									__func__, __LINE__);
+							}
 						}
 
 						SAFE_FREE(bridge_msg);
@@ -847,21 +864,41 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 						       current_msg_rx->buffer.data_len);
 					}
 
-					if (ipmb_send_request(bridge_msg,
-							      IPMB_inf_index_map[BMC_IPMB]) !=
-					    IPMB_ERROR_SUCCESS) {
-						printf("[%s] Failed to send the request message to BMC from ME",
-						       __func__);
-						bridge_msg->completion_code = CC_TIMEOUT;
+
+					// Check BMC communication interface if use IPMB or not
+					if (!pal_is_interface_use_ipmb(
+						    IPMB_inf_index_map[BMC_IPMB])) {
+						// Send ME request to MCTP/PLDM thread to BMC and get response
+						pldm_send_ipmi_request(bridge_msg);
+						bridge_msg->netfn = current_msg_rx->buffer.netfn;
+						bridge_msg->seq = current_msg_rx->buffer.seq;
+						// Response to ME
 						if (ipmb_send_response(
 							    bridge_msg,
-							    IPMB_inf_index_map
-								    [bridge_msg->InF_source]) !=
+							    IPMB_inf_index_map[ME_IPMB]) !=
 						    IPMB_ERROR_SUCCESS) {
-							printf("[%s][%d] Failed to send IPMB response message",
-							       __func__, __LINE__);
+							LOG_ERR("[%d] Failed to send IPMB response message",
+								__LINE__);
+						}
+
+					} else {
+						if (ipmb_send_request(
+							    bridge_msg,
+							    IPMB_inf_index_map[BMC_IPMB]) !=
+						    IPMB_ERROR_SUCCESS) {
+							LOG_ERR("Failed to send the request message to BMC from ME");
+							bridge_msg->completion_code = CC_TIMEOUT;
+							if (ipmb_send_response(
+								    bridge_msg,
+								    IPMB_inf_index_map
+									    [bridge_msg->InF_source]) !=
+							    IPMB_ERROR_SUCCESS) {
+								LOG_ERR("[%d] Failed to send IPMB response message",
+									__LINE__);
+							}
 						}
 					}
+
 					SAFE_FREE(bridge_msg);
 				} else {
 					/* The received message is a request
@@ -923,6 +960,7 @@ ipmb_error ipmb_send_request(ipmi_msg *req, uint8_t index)
 
 	req_cfg.buffer.seq_source = req->seq_source;
 	req_cfg.buffer.src_LUN = 0;
+	req_cfg.buffer.pldm_inst_id = req->pldm_inst_id;
 	req_cfg.retries = 0;
 
 	LOG_DBG("Send req message, index(%d) cc(0x%x) data[%d]:", index,
@@ -1247,6 +1285,11 @@ void create_ipmb_threads(uint8_t index)
 }
 
 __weak bool pal_load_ipmb_config(void)
+{
+	return true;
+}
+
+__weak bool pal_is_interface_use_ipmb(uint8_t interface_index)
 {
 	return true;
 }
