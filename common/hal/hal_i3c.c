@@ -29,6 +29,8 @@ static const struct device *dev_i3c[I3C_MAX_NUM];
 static const struct device *dev_i3c_smq[I3C_MAX_NUM];
 static struct i3c_dev_desc i3c_desc_table[I3C_MAX_NUM];
 static int i3c_desc_count = 0;
+static struct k_mutex mutex_write[I3C_MAX_NUM];
+static struct k_mutex mutex_read[I3C_MAX_NUM];
 
 int i3c_slave_mqueue_read(const struct device *dev, uint8_t *dest, int budget);
 int i3c_slave_mqueue_write(const struct device *dev, uint8_t *src, int size);
@@ -61,17 +63,23 @@ int i3c_smq_read(I3C_MSG *msg)
 	CHECK_NULL_ARG_WITH_RETURN(msg, -EINVAL);
 
 	if (!dev_i3c[msg->bus]) {
-		LOG_ERR("[%s] bus%u did not define\n", __func__, msg->bus);
 		return -ENODEV;
+	}
+
+	int ret = k_mutex_lock(&mutex_read[msg->bus], K_FOREVER);
+	if (ret) {
+		printf("[%s] Failed to lock the mutex(%d)\n", __func__, ret);
+		return -1;
 	}
 
 	msg->rx_len =
 		i3c_slave_mqueue_read(dev_i3c_smq[msg->bus], &msg->data[0], I3C_MAX_DATA_SIZE);
 	if (msg->rx_len == 0) {
-		LOG_ERR("[%s] bus%u message queue was empty\n", __func__, msg->bus);
+		k_mutex_unlock(&mutex_read[msg->bus]);
 		return -ENODATA;
 	}
 
+	k_mutex_unlock(&mutex_read[msg->bus]);
 	return msg->rx_len;
 }
 
@@ -86,12 +94,24 @@ int i3c_smq_write(I3C_MSG *msg)
 	CHECK_NULL_ARG_WITH_RETURN(msg, -EINVAL);
 
 	int ret;
+	ret = k_mutex_lock(&mutex_write[msg->bus], K_FOREVER);
+	if (ret) {
+		printf("[%s] Failed to lock the mutex(%d)\n", __func__, ret);
+		return -1;
+	}
+
 	if (!dev_i3c[msg->bus]) {
 		LOG_ERR("[%s] bus%u did not define\n", __func__, msg->bus);
+		k_mutex_unlock(&mutex_write[msg->bus]);
 		return -ENODEV;
 	}
 
-	ret = i3c_slave_mqueue_write(dev_i3c[msg->bus], &msg->data[0], msg->tx_len);
+	ret = i3c_slave_mqueue_write(dev_i3c_smq[msg->bus], &msg->data[0], msg->tx_len);
+	if (ret < 0) {
+		LOG_ERR("[%s] i3c wrtie failed, ret = %d",__func__, ret);
+	}
+	k_mutex_unlock(&mutex_write[msg->bus]);
+
 	return ret;
 }
 
@@ -279,4 +299,12 @@ void util_init_i3c(void)
 #ifdef DEV_I3CSMQ_7
 	dev_i3c_smq[7] = device_get_binding("I3C_SMQ_7");
 #endif
+	for (int i = 0; i <= I3C_MAX_NUM; ++i) {
+		if (k_mutex_init(&mutex_read[i])) {
+			LOG_ERR("Mutex %d init error.",i);
+		}
+		if (k_mutex_init(&mutex_write[i])) {
+			LOG_ERR("Mutex %d init error.",i);
+		}
+	}
 }

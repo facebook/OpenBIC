@@ -25,8 +25,6 @@
 IPMB_config pal_IPMB_config_table[] = {
 	// index, interface, channel, bus, channel_target_address, enable_status, self_address,
 	// rx_thread_name, tx_thread_name
-	{ BMC_IPMB_IDX, I2C_IF, BMC_IPMB, IPMB_I2C_BMC, BMC_I2C_ADDRESS, ENABLE, SELF_I2C_ADDRESS,
-	  "RX_BMC_IPMB_TASK", "TX_BMC_IPMB_TASK" },
 	{ ME_IPMB_IDX, I2C_IF, ME_IPMB, IPMB_ME_BUS, ME_I2C_ADDRESS, ENABLE, SELF_I2C_ADDRESS,
 	  "RX_ME_IPMB_TASK", "TX_ME_IPMB_TASK" },
 	{ EXP1_IPMB_IDX, I2C_IF, EXP1_IPMB, IPMB_EXP1_BUS, BIC1_I2C_ADDRESS, DISABLE,
