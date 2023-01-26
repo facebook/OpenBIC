@@ -80,6 +80,20 @@
 	clock-frequency = <I2C_BITRATE_FAST>;
 };
 
+&i2c6 {
+  pinctrl-0 = <&pinctrl_i2c6_default>;
+  clock-frequency = <I2C_BITRATE_FAST>;
+  status = "okay";
+
+  ipmb6: ipmb@20 {
+    compatible = "aspeed,ipmb";
+    reg = <0x20>;
+    label = "IPMB_6";
+    size = <10>;
+    status = "okay";
+  };
+};
+
 &i2c7 {
 	pinctrl-0 = <&pinctrl_i2c7_default>;
 	clock-frequency = <I2C_BITRATE_FAST_PLUS>;
