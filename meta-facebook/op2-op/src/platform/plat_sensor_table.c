@@ -18,13 +18,17 @@
 
 #include "ast_adc.h"
 #include "sensor.h"
+#include "power_status.h"
 
 #include "plat_i2c.h"
 #include "plat_sensor_table.h"
 #include "plat_hook.h"
 #include "plat_class.h"
+#include "plat_power_seq.h"
 
 LOG_MODULE_REGISTER(plat_sensor);
+
+bool e1s_access(uint8_t sensor_num);
 
 sensor_cfg plat_sensor_config[] = {
 	/*  number,
@@ -48,17 +52,17 @@ sensor_cfg plat_sensor_config[] = {
 
 	//INA233 VOL
 	{ SENSOR_NUM_1OU_E1S_SSD0_P12V_VOLT, sensor_dev_ina233, I2C_BUS3, INA233_EXPA_E1S_0_ADDR,
-	  INA233_VOLT_OFFSET, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  INA233_VOLT_OFFSET, e1s_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &ina233_init_args[0] },
 
 	{ SENSOR_NUM_1OU_E1S_SSD1_P12V_VOLT, sensor_dev_ina233, I2C_BUS3, INA233_EXPA_E1S_1_ADDR,
-	  INA233_VOLT_OFFSET, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  INA233_VOLT_OFFSET, e1s_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &ina233_init_args[1] },
 
 	{ SENSOR_NUM_1OU_E1S_SSD2_P12V_VOLT, sensor_dev_ina233, I2C_BUS3, INA233_EXPA_E1S_2_ADDR,
-	  INA233_VOLT_OFFSET, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  INA233_VOLT_OFFSET, e1s_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &ina233_init_args[2] },
 
@@ -69,17 +73,17 @@ sensor_cfg plat_sensor_config[] = {
 
 	//INA233 CURR
 	{ SENSOR_NUM_1OU_E1S_SSD0_P12V_CURR, sensor_dev_ina233, I2C_BUS3, INA233_EXPA_E1S_0_ADDR,
-	  INA233_CURR_OFFSET, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  INA233_CURR_OFFSET, e1s_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &ina233_init_args[0] },
 
 	{ SENSOR_NUM_1OU_E1S_SSD1_P12V_CURR, sensor_dev_ina233, I2C_BUS3, INA233_EXPA_E1S_1_ADDR,
-	  INA233_CURR_OFFSET, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  INA233_CURR_OFFSET, e1s_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &ina233_init_args[1] },
 
 	{ SENSOR_NUM_1OU_E1S_SSD2_P12V_CURR, sensor_dev_ina233, I2C_BUS3, INA233_EXPA_E1S_2_ADDR,
-	  INA233_CURR_OFFSET, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  INA233_CURR_OFFSET, e1s_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &ina233_init_args[2] },
 
@@ -90,17 +94,17 @@ sensor_cfg plat_sensor_config[] = {
 
 	//INA233 PWR
 	{ SENSOR_NUM_1OU_E1S_SSD0_P12V_PWR, sensor_dev_ina233, I2C_BUS3, INA233_EXPA_E1S_0_ADDR,
-	  INA233_PWR_OFFSET, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  INA233_PWR_OFFSET, e1s_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &ina233_init_args[0] },
 
 	{ SENSOR_NUM_1OU_E1S_SSD1_P12V_PWR, sensor_dev_ina233, I2C_BUS3, INA233_EXPA_E1S_1_ADDR,
-	  INA233_PWR_OFFSET, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  INA233_PWR_OFFSET, e1s_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &ina233_init_args[1] },
 
 	{ SENSOR_NUM_1OU_E1S_SSD2_P12V_PWR, sensor_dev_ina233, I2C_BUS3, INA233_EXPA_E1S_2_ADDR,
-	  INA233_PWR_OFFSET, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  INA233_PWR_OFFSET, e1s_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &ina233_init_args[2] },
 
@@ -111,12 +115,12 @@ sensor_cfg plat_sensor_config[] = {
 
 	//E1S Temp
 	{ SENSOR_NUM_1OU_E1S_SSD0_TEMP_C, sensor_dev_nvme, I2C_BUS2, NVME_ADDR, NVME_TEMP_OFFSET,
-	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  e1s_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &i2c_proc_args[0], post_i2c_bus_read,
 	  &i2c_proc_args[0], NULL },
 
 	{ SENSOR_NUM_1OU_E1S_SSD1_TEMP_C, sensor_dev_nvme, I2C_BUS2, NVME_ADDR, NVME_TEMP_OFFSET,
-	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  e1s_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &i2c_proc_args[1], post_i2c_bus_read,
 	  &i2c_proc_args[1], NULL },
 };
@@ -124,7 +128,7 @@ sensor_cfg plat_expansion_A_sensor_config[] = {
 
 	//E1S Temp
 	{ SENSOR_NUM_1OU_E1S_SSD2_TEMP_C, sensor_dev_nvme, I2C_BUS2, NVME_ADDR, NVME_TEMP_OFFSET,
-	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  e1s_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &i2c_proc_args[5], post_i2c_bus_read,
 	  &i2c_proc_args[5], NULL },
 
@@ -139,15 +143,15 @@ sensor_cfg plat_expansion_A_sensor_config[] = {
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
 
 	{ SENSOR_NUM_1OU_E1S_SSD0_P3V3_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT0, NONE, NONE,
-	  dc_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  e1s_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
 
 	{ SENSOR_NUM_1OU_E1S_SSD1_P3V3_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT1, NONE, NONE,
-	  dc_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  e1s_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
 
 	{ SENSOR_NUM_1OU_E1S_SSD2_P3V3_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT2, NONE, NONE,
-	  dc_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  e1s_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
 
 	{ SENSOR_NUM_1OU_P1V8_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT6, NONE, NONE, dc_access, 1, 1,
@@ -167,17 +171,17 @@ sensor_cfg plat_expansion_B_sensor_config[] = {
 
 	//E1S Temp
 	{ SENSOR_NUM_2OU_E1S_SSD2_TEMP_C, sensor_dev_nvme, I2C_BUS2, NVME_ADDR, NVME_TEMP_OFFSET,
-	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  e1s_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &i2c_proc_args[2], post_i2c_bus_read,
 	  &i2c_proc_args[2], NULL },
 
 	{ SENSOR_NUM_2OU_E1S_SSD3_TEMP_C, sensor_dev_nvme, I2C_BUS2, NVME_ADDR, NVME_TEMP_OFFSET,
-	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  e1s_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &i2c_proc_args[3], post_i2c_bus_read,
 	  &i2c_proc_args[3], NULL },
 
 	{ SENSOR_NUM_2OU_E1S_SSD4_TEMP_C, sensor_dev_nvme, I2C_BUS2, NVME_ADDR, NVME_TEMP_OFFSET,
-	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  e1s_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, pre_i2c_bus_read, &i2c_proc_args[4], post_i2c_bus_read,
 	  &i2c_proc_args[4], NULL },
 
@@ -188,23 +192,23 @@ sensor_cfg plat_expansion_B_sensor_config[] = {
 
 	//adc
 	{ SENSOR_NUM_2OU_E1S_SSD0_P3V3_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT0, NONE, NONE,
-	  dc_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  e1s_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
 
 	{ SENSOR_NUM_2OU_E1S_SSD1_P3V3_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT1, NONE, NONE,
-	  dc_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  e1s_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
 
 	{ SENSOR_NUM_2OU_E1S_SSD2_P3V3_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT2, NONE, NONE,
-	  dc_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  e1s_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
 
 	{ SENSOR_NUM_2OU_E1S_SSD3_P3V3_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT3, NONE, NONE,
-	  dc_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  e1s_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
 
 	{ SENSOR_NUM_2OU_E1S_SSD4_P3V3_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT4, NONE, NONE,
-	  dc_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  e1s_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
 
 	{ SENSOR_NUM_2OU_P3V3_STBY_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT5, NONE, NONE, stby_access,
@@ -221,34 +225,34 @@ sensor_cfg plat_expansion_B_sensor_config[] = {
 
 	//INA233 VOL
 	{ SENSOR_NUM_2OU_E1S_SSD3_P12V_VOLT, sensor_dev_ina233, I2C_BUS3, INA233_EXPB_E1S_3_ADDR,
-	  INA233_VOLT_OFFSET, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  INA233_VOLT_OFFSET, e1s_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &ina233_init_args[3] },
 
 	{ SENSOR_NUM_2OU_E1S_SSD4_P12V_VOLT, sensor_dev_ina233, I2C_BUS3, INA233_EXPB_E1S_4_ADDR,
-	  INA233_VOLT_OFFSET, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  INA233_VOLT_OFFSET, e1s_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &ina233_init_args[4] },
 
 	//INA233 CURR
 	{ SENSOR_NUM_2OU_E1S_SSD3_P12V_CURR, sensor_dev_ina233, I2C_BUS3, INA233_EXPB_E1S_3_ADDR,
-	  INA233_CURR_OFFSET, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  INA233_CURR_OFFSET, e1s_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &ina233_init_args[3] },
 
 	{ SENSOR_NUM_2OU_E1S_SSD4_P12V_CURR, sensor_dev_ina233, I2C_BUS3, INA233_EXPB_E1S_4_ADDR,
-	  INA233_CURR_OFFSET, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  INA233_CURR_OFFSET, e1s_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &ina233_init_args[4] },
 
 	//INA233 PWR
 	{ SENSOR_NUM_2OU_E1S_SSD3_P12V_PWR, sensor_dev_ina233, I2C_BUS3, INA233_EXPB_E1S_3_ADDR,
-	  INA233_PWR_OFFSET, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  INA233_PWR_OFFSET, e1s_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &ina233_init_args[3] },
 
 	{ SENSOR_NUM_2OU_E1S_SSD4_P12V_PWR, sensor_dev_ina233, I2C_BUS3, INA233_EXPB_E1S_4_ADDR,
-	  INA233_PWR_OFFSET, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  INA233_PWR_OFFSET, e1s_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &ina233_init_args[4] },
 };
@@ -385,4 +389,87 @@ void pal_extend_sensor_config()
 		LOG_ERR("Unsupported card type, Card type: 0x%x", card_type);
 		break;
 	}
+}
+
+bool e1s_access(uint8_t sensor_num)
+{
+	sensor_cfg *sensor_cfgs = &sensor_config[sensor_config_index_map[sensor_num]];
+	uint8_t e1s_index = 0xff;
+	uint8_t card_type = get_card_type();
+	i2c_proc_arg *nvme_i2c_mux = NULL;
+
+	switch (sensor_cfgs->type) {
+	case sensor_dev_ina233:
+		switch (sensor_cfgs->target_addr) {
+		case INA233_EXPA_E1S_0_ADDR:
+		case INA233_EXPB_E1S_0_ADDR:
+			e1s_index = 0;
+			break;
+		case INA233_EXPA_E1S_1_ADDR:
+			//check the card type because address is the same as INA233_EXPB_E1S_2_ADDR
+			if (card_type == CARD_TYPE_OPA) {
+				e1s_index = 1;
+			} else {
+				e1s_index = 2;
+			}
+			break;
+		case INA233_EXPA_E1S_2_ADDR:
+			//check the card type because address is the same as INA233_EXPB_E1S_4_ADDR
+			if (card_type == CARD_TYPE_OPA) {
+				e1s_index = 2;
+			} else {
+				e1s_index = 4;
+			}
+			break;
+		case INA233_EXPB_E1S_1_ADDR:
+			e1s_index = 1;
+			break;
+		case INA233_EXPB_E1S_3_ADDR:
+			e1s_index = 3;
+			break;
+		default:
+			break;
+		}
+		break;
+	case sensor_dev_nvme:
+		nvme_i2c_mux = (i2c_proc_arg *)(sensor_cfgs->pre_sensor_read_args);
+		/* For OPA expansion, the I3C HUB connect slave port-0/1/5.
+		 * For OPB expansion, the I3C HUB connect slave port-0/1/2/3/4.
+		 */
+		switch (nvme_i2c_mux->channel) {
+		case I2C_HUB_CHANNEL_0:
+			// i2c hub channel 0 connect to E1S 0
+			e1s_index = 0;
+			break;
+		case I2C_HUB_CHANNEL_1:
+			// i2c hub channel 1 connect to E1S 1
+			e1s_index = 1;
+			break;
+		case I2C_HUB_CHANNEL_2:
+		case I2C_HUB_CHANNEL_5:
+			// i2c hub channel 5 connect to E1S 2 on opa
+			// i2c hub channel 2 connect to E1S 2 on opb
+			e1s_index = 2;
+			break;
+		case I2C_HUB_CHANNEL_3:
+			// i2c hub channel 3 connect to E1S 3
+			e1s_index = 3;
+			break;
+		case I2C_HUB_CHANNEL_4:
+			// i2c hub channel 4 connect to E1S 4
+			e1s_index = 4;
+			break;
+		default:
+			break;
+		}
+		break;
+	case sensor_dev_ast_adc:
+		e1s_index = sensor_cfgs->port;
+		break;
+	default:
+		LOG_ERR("Unsupported sensor device for e1s checking.");
+		break;
+	}
+
+	return get_e1s_present(e1s_index) && get_DC_on_delayed_status();
 }

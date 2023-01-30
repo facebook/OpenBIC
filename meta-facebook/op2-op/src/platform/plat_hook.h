@@ -31,6 +31,12 @@ extern i2c_proc_arg i2c_proc_args[];
 extern struct k_mutex i2c_hub_mutex;
 
 #define I2C_HUB_MUTEX_TIMEOUT_MS 300
+#define I2C_HUB_CHANNEL_0 0x01
+#define I2C_HUB_CHANNEL_1 0x02
+#define I2C_HUB_CHANNEL_2 0x04
+#define I2C_HUB_CHANNEL_3 0x08
+#define I2C_HUB_CHANNEL_4 0x10
+#define I2C_HUB_CHANNEL_5 0x20
 
 bool pre_i2c_bus_read(uint8_t sensor_num, void *args);
 bool post_i2c_bus_read(uint8_t sensor_num, void *args, int *reading);
