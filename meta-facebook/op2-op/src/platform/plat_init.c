@@ -26,18 +26,32 @@
 #define DEF_PLAT_CONFIG_PRIORITY 77
 #define DEF_PROJ_GPIO_PRIORITY 78
 
-SCU_CFG scu_cfg[] = {
+SCU_CFG opa_scu_cfg[] = {
 	//register    value
 	{ 0x7e6e2610, 0xffffffff }, //disable GPIO internal pull down #0
 	{ 0x7e6e2614, 0xffffffff }, //disable GPIO internal pull down #1
 	{ 0x7e6e2618, 0xffffffff }, //disable GPIO internal pull down #2
 	{ 0x7e6e261c, 0xffffffff }, //disable GPIO internal pull down #3
+	{ 0x7e78001c, 0x5000010f }, //enable GPIO A/B/C/D reset tolerant
+	{ 0x7e78003c, 0x0000007f }, //enable GPIO E/F/G/H reset tolerant
+	{ 0x7e7800ac, 0x1c000000 }, //enable GPIO I/J/K/L reset tolerant
+};
+
+SCU_CFG opb_scu_cfg[] = {
+	//register    value
+	{ 0x7e6e2610, 0xffffffff }, //disable GPIO internal pull down #0
+	{ 0x7e6e2614, 0xffffffff }, //disable GPIO internal pull down #1
+	{ 0x7e6e2618, 0xffffffff }, //disable GPIO internal pull down #2
+	{ 0x7e6e261c, 0xffffffff }, //disable GPIO internal pull down #3
+	{ 0x7e78001c, 0xc000001f }, //enable GPIO A/B/C/D reset tolerant
+	{ 0x7e78003c, 0x000000ff }, //enable GPIO E/F/G/H reset tolerant
+	{ 0x7e7800ac, 0x7c000000 }, //enable GPIO I/J/K/L reset tolerant
 };
 
 void pal_pre_init()
 {
-	//Disable GPIO internal pull down
-	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
+	uint8_t type = get_card_type();
+	uint8_t slave_port = 0x0;
 
 	/* Initialize I3C HUB (connects to E1.s)
 	 * For OPA expansion,
@@ -45,14 +59,22 @@ void pal_pre_init()
 	 * For OPB expansion,
 	 * the I3C HUB slave port-0/1/2/3/4 should be enabled.
 	 */
-	uint8_t type = get_card_type();
-	uint8_t slave_port = 0x0;
-	if (type == CARD_TYPE_OPA) {
+
+	switch (type) {
+	case CARD_TYPE_OPA:
+		//Disable GPIO internal pull down and enable GPIO tolerance
+		scu_init(opa_scu_cfg, sizeof(opa_scu_cfg) / sizeof(SCU_CFG));
+
 		slave_port = BIT(0) | BIT(1) | BIT(5);
-	} else if (type == CARD_TYPE_OPB) {
+		break;
+	case CARD_TYPE_OPB:
+		//Disable GPIO internal pull down and enable GPIO tolerance
+		scu_init(opb_scu_cfg, sizeof(opb_scu_cfg) / sizeof(SCU_CFG));
+
 		slave_port = BIT(0) | BIT(1) | BIT(2) | BIT(3) | BIT(4);
-	} else {
-		printk("No need to initialize rg3mxxb12\n");
+		break;
+	default:
+		printk("No need to initialize I3C hub rg3mxxb12\n");
 		return;
 	}
 
