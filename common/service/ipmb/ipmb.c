@@ -525,8 +525,7 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 #ifdef CONFIG_IPMI_KCS_ASPEED
 						uint8_t *kcs_buff;
 						kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
-						if (kcs_buff ==
-						    NULL) { // allocate fail, retry allocate
+						if (kcs_buff == NULL) { // allocate fail, retry allocate
 							k_msleep(10);
 							kcs_buff = malloc(KCS_BUFF_SIZE *
 									  sizeof(uint8_t));
@@ -742,91 +741,110 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 					} else if (current_msg_rx->buffer.InF_source == ME_IPMB) {
 						ipmi_msg *bridge_msg =
 							(ipmi_msg *)malloc(sizeof(ipmi_msg));
-						memset(bridge_msg, 0, sizeof(ipmi_msg));
+						if(bridge_msg == NULL) {
 
-						bridge_msg->netfn =
-							current_msg_rx->buffer.netfn -
-							1; // fix response netfn and would be shift
-						// later in ipmb_send_response
-						bridge_msg->cmd = current_msg_rx->buffer.cmd;
-						bridge_msg->completion_code =
-							current_msg_rx->buffer.completion_code;
-						bridge_msg->seq = current_msg_rx->buffer.seq_source;
-						bridge_msg->data_len =
-							current_msg_rx->buffer.data_len;
-						memcpy(&bridge_msg->data[0],
-						       &current_msg_rx->buffer.data[0],
-						       current_msg_rx->buffer.data_len);
+						    LOG_ERR("Bridge message allocation failed!");
+						    return;
 
-						if (DEBUG_IPMB) {
-							LOG_DBG("Send the response message to ME, source_seq_num(%d), target_seq_num(%d)",
-							       current_msg_rx->buffer.seq_source,
-							       current_msg_rx->buffer.seq_target);
-							LOG_DBG("response data[%d](",
-							       bridge_msg->data_len);
-							for (i = 0; i < bridge_msg->data_len; i++) {
-								LOG_DBG("%x ", bridge_msg->data[i]);
-							}
-							LOG_DBG(")");
+						} else {
+
+						    memset(bridge_msg, 0, sizeof(ipmi_msg));
+
+						    bridge_msg->netfn =
+							    current_msg_rx->buffer.netfn -
+							    1; // fix response netfn and would be shift
+						    // later in ipmb_send_response
+						    bridge_msg->cmd = current_msg_rx->buffer.cmd;
+						    bridge_msg->completion_code =
+							    current_msg_rx->buffer.completion_code;
+						    bridge_msg->seq = current_msg_rx->buffer.seq_source;
+						    bridge_msg->data_len =
+							    current_msg_rx->buffer.data_len;
+						    memcpy(&bridge_msg->data[0],
+							   &current_msg_rx->buffer.data[0],
+							   current_msg_rx->buffer.data_len);
+
+						    if (DEBUG_IPMB) {
+							    LOG_DBG("Send the response message to ME, source_seq_num(%d), target_seq_num(%d)",
+								   current_msg_rx->buffer.seq_source,
+								   current_msg_rx->buffer.seq_target);
+							    LOG_DBG("response data[%d](",
+								   bridge_msg->data_len);
+							    for (i = 0; i < bridge_msg->data_len; i++) {
+								    LOG_DBG("%x ", bridge_msg->data[i]);
+							    }
+							    LOG_DBG(")");
+						    }
+
+						    if (ipmb_send_response(
+								bridge_msg,
+								IPMB_inf_index_map[current_msg_rx->buffer
+											   .InF_source]) !=
+							IPMB_ERROR_SUCCESS) {
+							    LOG_ERR("failed to send IPMB response message");
+						    }
+
+						    SAFE_FREE(bridge_msg);
+
 						}
 
-						if (ipmb_send_response(
-							    bridge_msg,
-							    IPMB_inf_index_map[current_msg_rx->buffer
-										       .InF_source]) !=
-						    IPMB_ERROR_SUCCESS) {
-							LOG_ERR("failed to send IPMB response message");
-						}
-
-						SAFE_FREE(bridge_msg);
 					} else { // Bridge response to other fru
 
 						ipmi_msg *bridge_msg =
 							(ipmi_msg *)malloc(sizeof(ipmi_msg));
-						memset(bridge_msg, 0, sizeof(ipmi_msg));
+						if(bridge_msg == NULL) {
 
-						pal_encode_response_bridge_cmd(bridge_msg,
-									       current_msg_rx,
-									       &ipmb_cfg,
-									       IPMB_config_table);
-
-						if (DEBUG_IPMB) {
-							LOG_DBG("Send the response message to the source(%d), source_seq_num(%d), target_seq_num(%d)",
-							       current_msg_rx->buffer.InF_source,
-							       current_msg_rx->buffer.seq_source,
-							       current_msg_rx->buffer.seq_target);
-							LOG_DBG("response data[%d](",
-							       bridge_msg->data_len);
-							for (i = 0; i < bridge_msg->data_len; i++) {
-								LOG_DBG("%x ", bridge_msg->data[i]);
-							}
-							LOG_DBG(")");
-						}
-
-						// Bridge command need to check interface and decide transfer MCTP/PLDM or IPMB
-						if ((current_msg_rx->buffer.InF_source == PLDM) ||
-						    (current_msg_rx->buffer.InF_source == MCTP)) {
-							bridge_msg->pldm_inst_id =
-								current_msg_rx->buffer.pldm_inst_id;
-							// Send bridge command response to MCTP/PLDM thread to response BMC
-							pldm_send_ipmi_response(
-								current_msg_rx->buffer.InF_source,
-								bridge_msg);
+						    LOG_ERR("Bridge message allocation failed!");
+						    return;
 
 						} else {
-							if (ipmb_send_response(
-								    bridge_msg,
-								    IPMB_inf_index_map
-									    [current_msg_rx->buffer
-										     .InF_source]) !=
-							    IPMB_ERROR_SUCCESS) {
-								LOG_ERR("Failed to send IPMB response message");
-							}
-						}
 
-						SAFE_FREE(bridge_msg);
+						    memset(bridge_msg, 0, sizeof(ipmi_msg));
+
+						    pal_encode_response_bridge_cmd(bridge_msg,
+										   current_msg_rx,
+										   &ipmb_cfg,
+										   IPMB_config_table);
+
+						    if (DEBUG_IPMB) {
+							    LOG_DBG("Send the response message to the source(%d), source_seq_num(%d), target_seq_num(%d)",
+								   current_msg_rx->buffer.InF_source,
+								   current_msg_rx->buffer.seq_source,
+								   current_msg_rx->buffer.seq_target);
+							    LOG_DBG("response data[%d](",
+								   bridge_msg->data_len);
+							    for (i = 0; i < bridge_msg->data_len; i++) {
+								    LOG_DBG("%x ", bridge_msg->data[i]);
+							    }
+							    LOG_DBG(")");
+						    }
+
+						    // Bridge command need to check interface and decide transfer MCTP/PLDM or IPMB
+						    if ((current_msg_rx->buffer.InF_source == PLDM) ||
+							(current_msg_rx->buffer.InF_source == MCTP)) {
+							    bridge_msg->pldm_inst_id =
+								    current_msg_rx->buffer.pldm_inst_id;
+							    // Send bridge command response to MCTP/PLDM thread to response BMC
+							    pldm_send_ipmi_response(
+								    current_msg_rx->buffer.InF_source,
+								    bridge_msg);
+
+						    } else {
+							    if (ipmb_send_response(
+									bridge_msg,
+									IPMB_inf_index_map
+										[current_msg_rx->buffer
+											 .InF_source]) !=
+								IPMB_ERROR_SUCCESS) {
+								    LOG_ERR("Failed to send IPMB response message");
+							    }
+						    }
+
+						    SAFE_FREE(bridge_msg);
+					    }
 					}
-				}
+
+				} 
 
 			} else { // Request message
 				if (IPMB_config_table[ipmb_cfg.index].channel == ME_IPMB &&
@@ -838,54 +856,64 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
                  */
 								     current_msg_rx->buffer.cmd))) {
 					ipmi_msg *bridge_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
-					memset(bridge_msg, 0, sizeof(ipmi_msg));
+					if(bridge_msg == NULL) {
 
-					bridge_msg->data_len = current_msg_rx->buffer.data_len;
-					bridge_msg->seq_source = current_msg_rx->buffer.seq;
-					bridge_msg->InF_target = BMC_IPMB;
-					bridge_msg->InF_source = ME_IPMB;
-					bridge_msg->netfn = current_msg_rx->buffer.netfn;
-					bridge_msg->cmd = current_msg_rx->buffer.cmd;
-					if (bridge_msg->data_len != 0) {
-						memcpy(&bridge_msg->data[0],
-						       &current_msg_rx->buffer.data[0],
-						       current_msg_rx->buffer.data_len);
-					}
-
-
-					// Check BMC communication interface if use IPMB or not
-					if (!pal_is_interface_use_ipmb(
-						    IPMB_inf_index_map[BMC_IPMB])) {
-						// Send ME request to MCTP/PLDM thread to BMC and get response
-						pldm_send_ipmi_request(bridge_msg);
-						bridge_msg->netfn = current_msg_rx->buffer.netfn;
-						bridge_msg->seq = current_msg_rx->buffer.seq;
-						// Response to ME
-						if (ipmb_send_response(
-							    bridge_msg,
-							    IPMB_inf_index_map[ME_IPMB]) !=
-						    IPMB_ERROR_SUCCESS) {
-							LOG_ERR("Failed to send IPMB response message");
-						}
+					    LOG_ERR("Bridge message allocation failed!");
+					    return;
 
 					} else {
-						if (ipmb_send_request(
-							    bridge_msg,
-							    IPMB_inf_index_map[BMC_IPMB]) !=
-						    IPMB_ERROR_SUCCESS) {
-							LOG_ERR("Failed to send the request message to BMC from ME");
-							bridge_msg->completion_code = CC_TIMEOUT;
-							if (ipmb_send_response(
-								    bridge_msg,
-								    IPMB_inf_index_map
-									    [bridge_msg->InF_source]) !=
-							    IPMB_ERROR_SUCCESS) {
-								LOG_ERR("Failed to send IPMB response message");
-							}
-						}
+
+					    memset(bridge_msg, 0, sizeof(ipmi_msg));
+
+					    bridge_msg->data_len = current_msg_rx->buffer.data_len;
+					    bridge_msg->seq_source = current_msg_rx->buffer.seq;
+					    bridge_msg->InF_target = BMC_IPMB;
+					    bridge_msg->InF_source = ME_IPMB;
+					    bridge_msg->netfn = current_msg_rx->buffer.netfn;
+					    bridge_msg->cmd = current_msg_rx->buffer.cmd;
+					    if (bridge_msg->data_len != 0) {
+						    memcpy(&bridge_msg->data[0],
+							   &current_msg_rx->buffer.data[0],
+							   current_msg_rx->buffer.data_len);
+					    }
+
+
+					    // Check BMC communication interface if use IPMB or not
+					    if (!pal_is_interface_use_ipmb(
+							IPMB_inf_index_map[BMC_IPMB])) {
+						    // Send ME request to MCTP/PLDM thread to BMC and get response
+						    pldm_send_ipmi_request(bridge_msg);
+						    bridge_msg->netfn = current_msg_rx->buffer.netfn;
+						    bridge_msg->seq = current_msg_rx->buffer.seq;
+						    // Response to ME
+						    if (ipmb_send_response(
+								bridge_msg,
+								IPMB_inf_index_map[ME_IPMB]) !=
+							IPMB_ERROR_SUCCESS) {
+							    LOG_ERR("Failed to send IPMB response message");
+						    }
+
+					    } else {
+						    if (ipmb_send_request(
+								bridge_msg,
+								IPMB_inf_index_map[BMC_IPMB]) !=
+							IPMB_ERROR_SUCCESS) {
+							    LOG_ERR("Failed to send the request message to BMC from ME");
+							    bridge_msg->completion_code = CC_TIMEOUT;
+							    if (ipmb_send_response(
+									bridge_msg,
+									IPMB_inf_index_map
+										[bridge_msg->InF_source]) !=
+								IPMB_ERROR_SUCCESS) {
+								    LOG_ERR("Failed to send IPMB response message");
+							    }
+						    }
+					    }
+
+					    SAFE_FREE(bridge_msg);
+
 					}
 
-					SAFE_FREE(bridge_msg);
 				} else {
 					/* The received message is a request
            * Record sequence number for later response
@@ -921,7 +949,7 @@ ipmb_error ipmb_send_request(ipmi_msg *req, uint8_t index)
 	int ret;
 	ret = k_mutex_lock(&mutex_send_req, K_MSEC(1000));
 	if (ret) {
-		LOG_ERR("[%s] Failed to lock the mutex", __func__);
+		LOG_ERR("Failed to lock the mutex");
 		return IPMB_ERROR_MUTEX_LOCK;
 	}
 
@@ -968,7 +996,7 @@ ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index)
 	int ret;
 	ret = k_mutex_lock(&mutex_send_res, K_MSEC(1000));
 	if (ret) {
-		LOG_ERR("[%s] Failed to lock the mutex", __func__);
+		LOG_ERR("Failed to lock the mutex");
 		return IPMB_ERROR_MUTEX_LOCK;
 	}
 
@@ -1226,7 +1254,7 @@ void create_ipmb_threads(uint8_t index)
 
 	P_start[index] = (void *)malloc(sizeof(struct ipmi_msg_cfg));
 	if (P_start[index] == NULL) {
-		LOG_ERR("[%s], Memory allocation failed!", __func__);
+		LOG_ERR("Memory allocation failed!");
 		return;
 	}
 
@@ -1240,7 +1268,7 @@ void create_ipmb_threads(uint8_t index)
 		}
 	}
 	if (i > retry) {
-		LOG_ERR("[%s] Failed to create threads,Tx(%s) Rx(%s) retry time(%d)", __func__,
+		LOG_ERR("Failed to create threads,Tx(%s) Rx(%s) retry time(%d)",
 			IPMB_config_table[index].tx_thread_name,
 			IPMB_config_table[index].rx_thread_name, retry);
 		return;
@@ -1305,13 +1333,13 @@ void ipmb_init(void)
 
 	IPMB_config_table = malloc(MAX_IPMB_IDX * sizeof(IPMB_config));
 	if (IPMB_config_table == NULL) {
-		LOG_ERR("[%s] Failed to allocate memory", __func__);
+		LOG_ERR("Failed to allocate memory");
 		return;
 	}
 
 	bool ret = pal_load_ipmb_config();
 	if (!ret) {
-		LOG_ERR("[%s] Failed to load IPMB configuration", __func__);
+		LOG_ERR("Failed to load IPMB configuration");
 		return;
 	}
 
@@ -1325,13 +1353,13 @@ void ipmb_init(void)
 
 	// Initial mutex
 	if (k_mutex_init(&mutex_send_req)) {
-		LOG_ERR("[%s] Failed to initialize IPMB send request mutex", __func__);
+		LOG_ERR("Failed to initialize IPMB send request mutex");
 	}
 	if (k_mutex_init(&mutex_send_res)) {
-		LOG_ERR("[%s] Failed to initialize IPMB send response mutex", __func__);
+		LOG_ERR("Failed to initialize IPMB send response mutex");
 	}
 	if (k_mutex_init(&mutex_read)) {
-		LOG_ERR("[%s] Failed to initialize IPMB read mutex", __func__);
+		LOG_ERR("Failed to initialize IPMB read mutex");
 	}
 
 	// Create IPMB threads for each index
