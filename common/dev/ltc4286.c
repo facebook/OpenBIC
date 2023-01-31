@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -141,6 +141,11 @@ uint8_t ltc4286_read(uint8_t sensor_num, int *reading)
 			LOG_ERR("Undifined the type(0x%x) in LTC4286 MBR table", type);
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
+	}
+
+	if (index == 0xff) {
+		LOG_ERR("Index in ltc4286_mbr_table is %hhu, out of range", index);
+		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	// Multiplied by r_sense value if it needs
