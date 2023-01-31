@@ -24,6 +24,7 @@
 #include "plat_fru.h"
 #include "plat_class.h"
 #include "common_i2c_mux.h"
+#include "pex89000.h"
 
 LOG_MODULE_REGISTER(plat_class);
 
@@ -57,6 +58,7 @@ struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT] = {
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
     .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
     .device_channel = PCA9546A_CHANNEL_0,
+    .device_reg_offset = 0x1D,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
   [1] = { .bus = I2C_BUS7,
@@ -65,6 +67,7 @@ struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT] = {
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
     .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
     .device_channel = PCA9546A_CHANNEL_0,
+    .device_reg_offset = 0x1A,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
   [2] = { .bus = I2C_BUS7,
@@ -73,6 +76,7 @@ struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT] = {
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
     .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
     .device_channel = PCA9546A_CHANNEL_0,
+    .device_reg_offset = 0x17,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
   [3] = { .bus = I2C_BUS7,
@@ -81,6 +85,7 @@ struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT] = {
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
     .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
     .device_channel = PCA9546A_CHANNEL_0,
+    .device_reg_offset = 0x14,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
   [4] = { .bus = I2C_BUS7,
@@ -89,6 +94,7 @@ struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT] = {
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
     .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
     .device_channel = PCA9546A_CHANNEL_0,
+    .device_reg_offset = 0x11,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
   [5] = { .bus = I2C_BUS7,
@@ -97,6 +103,7 @@ struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT] = {
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
     .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
     .device_channel = PCA9546A_CHANNEL_0,
+    .device_reg_offset = 0x0E,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
   [6] = { .bus = I2C_BUS8,
@@ -105,6 +112,7 @@ struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT] = {
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
     .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
     .device_channel = PCA9546A_CHANNEL_0,
+    .device_reg_offset = 0x1D,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
   [7] = { .bus = I2C_BUS8,
@@ -113,6 +121,7 @@ struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT] = {
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
     .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
     .device_channel = PCA9546A_CHANNEL_0,
+    .device_reg_offset = 0x1A,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
   [8] = { .bus = I2C_BUS8,
@@ -121,6 +130,7 @@ struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT] = {
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
     .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
     .device_channel = PCA9546A_CHANNEL_0,
+    .device_reg_offset = 0x17,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
   [9] = { .bus = I2C_BUS8,
@@ -129,6 +139,7 @@ struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT] = {
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
     .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
     .device_channel = PCA9546A_CHANNEL_0,
+    .device_reg_offset = 0x14,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
   [10] = { .bus = I2C_BUS8,
@@ -137,6 +148,7 @@ struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT] = {
      .card_status = ASIC_CARD_UNKNOWN_STATUS,
      .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
      .device_channel = PCA9546A_CHANNEL_0,
+     .device_reg_offset = 0x11,
      .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
      .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
   [11] = { .bus = I2C_BUS8,
@@ -145,6 +157,7 @@ struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT] = {
      .card_status = ASIC_CARD_UNKNOWN_STATUS,
      .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
      .device_channel = PCA9546A_CHANNEL_0,
+     .device_reg_offset = 0x0E,
      .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
      .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
 };
@@ -189,6 +202,67 @@ bool get_adc_voltage(int channel, float *voltage)
 	*voltage = (raw_value * reference_voltage) / 1024;
 
 	return true;
+}
+
+void check_accl_device_presence_status(uint8_t pex_id)
+{
+	uint8_t ret = 0;
+	uint8_t val = 0;
+	uint8_t index = 0;
+	uint8_t offset = 0;
+	uint8_t start_card_id = 0;
+	uint32_t reg = PEX_ACCL_DEV_PRESENT_REG;
+
+	switch (pex_id) {
+	case PEX_0_INDEX:
+		start_card_id = PEX_0_START_ACCL_ID;
+		ret = pex_access_engine(PEX_0_BUS, PEX_ADDR, pex_id, pex_access_register, &reg);
+		break;
+	case PEX_1_INDEX:
+		start_card_id = PEX_1_START_ACCL_ID;
+		ret = pex_access_engine(PEX_1_BUS, PEX_ADDR, pex_id, pex_access_register, &reg);
+		break;
+	default:
+		LOG_ERR("PEX id: %d is invalid", pex_id);
+		return;
+	}
+
+	if (ret != pex_api_success) {
+		LOG_ERR("Access ACCL register fail");
+		return;
+	}
+
+	for (offset = 0; offset < PEX_ACCL_DEV_PRESENT_REG_COUNT; ++offset) {
+		index = start_card_id + offset;
+		if (index >= ASIC_CARD_COUNT) {
+			LOG_ERR("ACCL card id: %d is invalid", index);
+			break;
+		}
+
+		val = (reg >> asic_card_info[index].device_reg_offset) & PEX_ACCL_PRESENT_MAP_VAL;
+		switch (val) {
+		case ASIC_CARD_NOT_PRESENT_VAL:
+		case ASIC_DEV_NOT_PRESENT_VAL:
+			asic_card_info[index].asic_1_status = ASIC_CARD_DEVICE_NOT_PRESENT;
+			asic_card_info[index].asic_2_status = ASIC_CARD_DEVICE_NOT_PRESENT;
+			break;
+		case ASIC_DEV_1_PRESENT_VAL:
+			asic_card_info[index].asic_1_status = ASIC_CARD_DEVICE_PRESENT;
+			asic_card_info[index].asic_2_status = ASIC_CARD_DEVICE_NOT_PRESENT;
+			break;
+		case ASIC_DEV_2_PRESENT_VAL:
+			asic_card_info[index].asic_1_status = ASIC_CARD_DEVICE_NOT_PRESENT;
+			asic_card_info[index].asic_2_status = ASIC_CARD_DEVICE_PRESENT;
+			break;
+		case ASIC_DEV_1_2_PRESENT_VAL:
+			asic_card_info[index].asic_1_status = ASIC_CARD_DEVICE_PRESENT;
+			asic_card_info[index].asic_2_status = ASIC_CARD_DEVICE_PRESENT;
+			break;
+		default:
+			LOG_ERR("Invalid register val: 0x%x", val);
+			break;
+		}
+	}
 }
 
 void check_asic_card_status()

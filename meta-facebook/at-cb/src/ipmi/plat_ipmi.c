@@ -168,10 +168,18 @@ void OEM_1S_GET_PCIE_CARD_STATUS(ipmi_msg *msg)
 	}
 
 	/* BMC would check pcie card type via fru id and device id */
-
 	uint8_t fru_id = msg->data[0];
 	uint8_t pcie_card_id = fru_id - PCIE_CARD_ID_OFFSET;
 	uint8_t pcie_device_id = msg->data[1];
+	static bool is_check_accl_device_status = false;
+
+	if (pcie_device_id == PCIE_DEVICE_ID1 || pcie_device_id == PCIE_DEVICE_ID2) {
+		if (is_check_accl_device_status != true && is_mb_dc_on() == true) {
+			check_accl_device_presence_status(PEX_0_INDEX);
+			check_accl_device_presence_status(PEX_1_INDEX);
+			is_check_accl_device_status = true;
+		}
+	}
 
 	switch (fru_id) {
 	case FIO_FRU_ID:
