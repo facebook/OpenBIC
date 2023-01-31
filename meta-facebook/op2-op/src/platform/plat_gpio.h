@@ -188,7 +188,7 @@
 
 #define OPA_name_gpioQ \
 	gpio_name_to_num(OPA_FM_EXP_MAIN_PWR_EN) \
-	gpio_name_to_num(OPA_RESERVE_GPIOQ1) \
+	gpio_name_to_num(OPA_PRSNT0_EXPB) \
 	gpio_name_to_num(OPA_RESERVE_GPIOQ2) \
 	gpio_name_to_num(OPA_RESERVE_GPIOQ3) \
 	gpio_name_to_num(OPA_RESERVE_GPIOQ4) \
