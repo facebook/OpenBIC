@@ -24,12 +24,16 @@
 
 #define TMP75_EXPA_TEMP_ADDR (0x94 >> 1)
 #define TMP75_EXPB_TEMP_ADDR (0x9A >> 1)
-#define INA233_E1S_0_ADDR (0x8A >> 1)
-#define INA233_E1S_1_ADDR (0x82 >> 1)
-#define INA233_E1S_2_ADDR (0x88 >> 1)
-#define INA233_E1S_3_ADDR (0x92 >> 1)
-#define INA233_E1S_4_ADDR (0x98 >> 1)
-#define INA233_MAIN_ADDR (0x90 >> 1)
+#define INA233_EXPA_E1S_0_ADDR (0x8C >> 1)
+#define INA233_EXPA_E1S_1_ADDR (0x88 >> 1)
+#define INA233_EXPA_E1S_2_ADDR (0x98 >> 1)
+#define INA233_EXPA_MAIN_ADDR (0x9A >> 1)
+#define INA233_EXPB_E1S_0_ADDR (0x8A >> 1)
+#define INA233_EXPB_E1S_1_ADDR (0x82 >> 1)
+#define INA233_EXPB_E1S_2_ADDR (0x88 >> 1)
+#define INA233_EXPB_E1S_3_ADDR (0x92 >> 1)
+#define INA233_EXPB_E1S_4_ADDR (0x98 >> 1)
+#define INA233_EXPB_MAIN_ADDR (0x90 >> 1)
 #define NVME_ADDR (0xD4 >> 1)
 
 #define TMP75_TEMP_OFFSET 0x00
@@ -194,5 +198,6 @@ void pal_change_sensor_config_number(void);
 void pal_extend_sensor_config(void);
 void load_sensor_config(void);
 uint8_t pal_get_extend_sensor_config(void);
+void change_ina233_sensor_addr(void);
 
 #endif
