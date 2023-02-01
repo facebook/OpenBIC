@@ -110,17 +110,6 @@ void ISR_POST_COMPLETE()
 		if (get_me_mode() == ME_INIT_MODE) {
 			init_me_firmware();
 		}
-
-		// Switch I3C mux to bic after post complete
-		if (k_mutex_lock(&i3c_dimm_mux_mutex, K_MSEC(I3C_DIMM_MUX_MUTEX_TIMEOUT_MS))) {
-			LOG_ERR("Failed to lock I3C dimm MUX");
-		}
-
-		switch_i3c_dimm_mux(I3C_MUX_TO_BIC, DIMM_MUX_TO_DIMM_A0A1A3);
-
-		if (k_mutex_unlock(&i3c_dimm_mux_mutex)) {
-			LOG_ERR("Failed to unlock I3C dimm MUX");
-		}
 	}
 
 	set_post_status(FM_BIOS_POST_CMPLT_BMC_N);

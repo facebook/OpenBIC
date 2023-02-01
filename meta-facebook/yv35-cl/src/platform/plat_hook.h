@@ -28,7 +28,6 @@ typedef struct _pmic_pre_proc_arg {
 
 typedef struct _dimm_pre_proc_arg {
 	bool is_present_checked;
-	uint8_t dimm_mux_position;
 } dimm_pre_proc_arg;
 
 typedef struct _dimm_post_proc_arg {

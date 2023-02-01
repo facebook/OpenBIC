@@ -57,7 +57,7 @@ void pal_device_init()
 {
 	init_me_firmware();
 
-	start_get_dimm_info_thread();
+	init_i3c_dimm();
 	start_monitor_pmic_error_thread();
 }
 

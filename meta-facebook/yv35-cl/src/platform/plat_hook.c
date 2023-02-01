@@ -492,4 +492,3 @@ bool post_intel_dimm_i3c_read(uint8_t sensor_num, void *args, int *reading)
 
 	return true;
 }
-

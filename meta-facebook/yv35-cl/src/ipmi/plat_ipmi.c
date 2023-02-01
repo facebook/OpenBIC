@@ -23,6 +23,7 @@
 #include "ipmi.h"
 #include "fru.h"
 #include "eeprom.h"
+#include "power_status.h"
 #include "plat_fru.h"
 #include "plat_class.h"
 #include "plat_ipmb.h"
@@ -190,9 +191,10 @@ void OEM_1S_WRITE_READ_DIMM(ipmi_msg *msg)
 	uint8_t dimm_id = msg->data[0];
 	uint8_t device_type = msg->data[1];
 
-	// If mux switch to CPU or dimm not present, can't read DIMM information via I3C
-	if ((!is_i3c_mux_to_bic()) || (!is_dimm_present(dimm_id))) {
-		msg->completion_code = CC_UNSPECIFIED_ERROR;
+	// If host is DC on, BIC can't read DIMM information via I3C
+	// Return failed and BMC asks ME
+	if (get_DC_status()) {
+		msg->completion_code = CC_INVALID_CMD;
 		return;
 	}
 
@@ -282,6 +284,9 @@ void OEM_1S_WRITE_READ_DIMM(ipmi_msg *msg)
 	}
 
 exit:
+	// Switch I3C MUX to CPU after read finish
+	switch_i3c_dimm_mux(I3C_MUX_TO_CPU, DIMM_MUX_TO_DIMM_A0A1A3);
+
 	if (k_mutex_unlock(&i3c_dimm_mux_mutex)) {
 		LOG_ERR("Failed to lock I3C dimm MUX");
 	}
