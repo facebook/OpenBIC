@@ -23,6 +23,7 @@
 #include <sys/crc.h>
 #include <sys/printk.h>
 #include <zephyr.h>
+#include "libutil.h"
 
 LOG_MODULE_DECLARE(mctp, LOG_LEVEL_DBG);
 
@@ -38,8 +39,9 @@ typedef struct __attribute__((packed)) {
 
 static uint8_t cal_pec(uint8_t dest_addr, uint8_t *buf, uint32_t len, uint8_t *pec)
 {
-	if (!buf || !len || !pec)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(buf, MCTP_ERROR);
+	CHECK_ARG_WITH_RETURN(!len, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(pec, MCTP_ERROR);
 
 	uint8_t pec_buf[len];
 	pec_buf[0] = dest_addr;
@@ -53,8 +55,8 @@ static uint8_t cal_pec(uint8_t dest_addr, uint8_t *buf, uint32_t len, uint8_t *p
 
 static bool is_pec_vaild(uint8_t dest_addr, uint8_t *buf, uint32_t len)
 {
-	if (!buf || !len)
-		return false;
+	CHECK_NULL_ARG_WITH_RETURN(buf, false);
+	CHECK_ARG_WITH_RETURN(!len, false);
 
 	uint8_t pec = 0;
 	if (cal_pec(dest_addr, buf, len, &pec) == MCTP_ERROR)
@@ -73,8 +75,11 @@ static bool is_pec_vaild(uint8_t dest_addr, uint8_t *buf, uint32_t len)
 static uint8_t make_send_buf(mctp *mctp_inst, uint8_t *send_buf, uint32_t send_len,
 			     uint8_t *mctp_data, uint32_t mctp_data_len, mctp_ext_params extra_data)
 {
-	if (!mctp_inst || !send_buf || !send_len || !mctp_data || !mctp_data_len)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(send_buf, MCTP_ERROR);
+	CHECK_ARG_WITH_RETURN(!send_len, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(mctp_data, MCTP_ERROR);
+	CHECK_ARG_WITH_RETURN(!mctp_data_len, MCTP_ERROR);
 
 	smbus_hdr *hdr = (smbus_hdr *)send_buf;
 	hdr->cmd_code = MCTP_SMBUS_CMD_CODE;
@@ -94,6 +99,9 @@ static uint8_t make_send_buf(mctp *mctp_inst, uint8_t *send_buf, uint32_t send_l
 
 static void mctp_smbus_read_hook(uint8_t *data, uint16_t *len)
 {
+	CHECK_NULL_ARG(data);
+	CHECK_NULL_ARG(len);
+
 	smbus_hdr *hdr = (smbus_hdr *)data;
 
 	if (hdr->byte_count != *len - sizeof(smbus_hdr)) {
@@ -115,8 +123,10 @@ static void mctp_smbus_read_hook(uint8_t *data, uint16_t *len)
 static uint16_t mctp_smbus_read(void *mctp_p, uint8_t *buf, uint32_t len,
 				mctp_ext_params *extra_data)
 {
-	if (!mctp_p || !buf || !len || !extra_data)
-		return 0;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_p, 0);
+	CHECK_NULL_ARG_WITH_RETURN(buf, 0);
+	CHECK_ARG_WITH_RETURN(!len, 0);
+	CHECK_NULL_ARG_WITH_RETURN(extra_data, 0);
 
 	mctp *mctp_inst = (mctp *)mctp_p;
 
@@ -166,13 +176,14 @@ static uint16_t mctp_smbus_read(void *mctp_p, uint8_t *buf, uint32_t len,
 static uint16_t mctp_smbus_write(void *mctp_p, uint8_t *buf, uint32_t len,
 				 mctp_ext_params extra_data)
 {
-	if (!mctp_p || !buf || !len)
-		return 0;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_p, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, MCTP_ERROR);
+	CHECK_ARG_WITH_RETURN(!len, MCTP_ERROR);
 
 	mctp *mctp_inst = (mctp *)mctp_p;
 
 	if (extra_data.type != MCTP_MEDIUM_TYPE_SMBUS)
-		return 0;
+		return MCTP_ERROR;
 
 	LOG_HEXDUMP_DBG(buf, len, "mctp_smbus_write receive data");
 
@@ -183,13 +194,12 @@ static uint16_t mctp_smbus_write(void *mctp_p, uint8_t *buf, uint32_t len,
 	uint8_t rc = make_send_buf(mctp_inst, send_buf, send_len, buf, len, extra_data);
 	if (rc == MCTP_ERROR) {
 		LOG_WRN("make send buf failed!!");
-		return 0;
+		return MCTP_ERROR;
 	}
 
 	LOG_DBG("smbus_ext_params addr = %x", extra_data.smbus_ext_params.addr);
 	LOG_HEXDUMP_DBG(send_buf, send_len, "mctp_smbus_write make header");
 
-	/* TODO: write data to smbus */
 	int status;
 	I2C_MSG i2c_msg;
 	i2c_msg.bus = mctp_inst->medium_conf.smbus_conf.bus;
@@ -200,14 +210,12 @@ static uint16_t mctp_smbus_write(void *mctp_p, uint8_t *buf, uint32_t len,
 	if (status)
 		LOG_ERR("i2c_master_write failt, ret %d", status);
 
-	/* TODO: return the actually write data len */
-	return 1;
+	return MCTP_SUCCESS;
 }
 
 uint8_t mctp_smbus_init(mctp *mctp_inst, mctp_medium_conf medium_conf)
 {
-	if (!mctp_inst)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
 
 	mctp_inst->medium_conf = medium_conf;
 	mctp_inst->read_data = mctp_smbus_read;
@@ -218,8 +226,7 @@ uint8_t mctp_smbus_init(mctp *mctp_inst, mctp_medium_conf medium_conf)
 
 uint8_t mctp_smbus_deinit(mctp *mctp_inst)
 {
-	if (!mctp_inst)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
 
 	mctp_inst->read_data = NULL;
 	mctp_inst->write_data = NULL;

@@ -137,6 +137,7 @@ typedef struct __attribute__((aligned(4))) {
 	uint8_t *buf;
 	uint16_t len;
 	mctp_ext_params ext_params;
+	struct k_msgq *evt_msgq;
 } mctp_tx_msg;
 
 /* mctp main struct */

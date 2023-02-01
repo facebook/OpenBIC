@@ -22,6 +22,7 @@
 #include <string.h>
 #include <sys/printk.h>
 #include <zephyr.h>
+#include "libutil.h"
 
 LOG_MODULE_REGISTER(mctp);
 
@@ -44,8 +45,7 @@ typedef struct __attribute__((packed)) {
 /* set thread name */
 static uint8_t set_thread_name(mctp *mctp_inst)
 {
-	if (!mctp_inst)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
 
 	if (mctp_inst->medium_type <= MCTP_MEDIUM_TYPE_UNKNOWN ||
 	    mctp_inst->medium_type >= MCTP_MEDIUM_TYPE_MAX)
@@ -83,8 +83,7 @@ static uint8_t set_thread_name(mctp *mctp_inst)
 /* init the medium related resources */
 static uint8_t mctp_medium_init(mctp *mctp_inst, mctp_medium_conf medium_conf)
 {
-	if (!mctp_inst)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
 
 	uint8_t ret = MCTP_ERROR;
 	switch (mctp_inst->medium_type) {
@@ -103,8 +102,7 @@ static uint8_t mctp_medium_init(mctp *mctp_inst, mctp_medium_conf medium_conf)
 
 static uint8_t mctp_medium_deinit(mctp *mctp_inst)
 {
-	if (!mctp_inst)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
 
 	switch (mctp_inst->medium_type) {
 	case MCTP_MEDIUM_TYPE_SMBUS:
@@ -122,8 +120,9 @@ static uint8_t mctp_medium_deinit(mctp *mctp_inst)
 
 static uint8_t bridge_msg(mctp *mctp_inst, uint8_t *buf, uint16_t len)
 {
-	if (!mctp_inst || !buf || !len)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, MCTP_ERROR);
+	CHECK_ARG_WITH_RETURN(!len, MCTP_ERROR);
 
 	if (!mctp_inst->ep_resolve)
 		return MCTP_ERROR;
@@ -146,8 +145,9 @@ static uint8_t bridge_msg(mctp *mctp_inst, uint8_t *buf, uint16_t len)
 
 static uint8_t mctp_pkt_assembling(mctp *mctp_inst, uint8_t *buf, uint16_t len)
 {
-	if (!mctp_inst || !buf || !len)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, MCTP_ERROR);
+	CHECK_ARG_WITH_RETURN(!len, MCTP_ERROR);
 
 	mctp_hdr *hdr = (mctp_hdr *)buf;
 	uint8_t **buf_p = &mctp_inst->temp_msg_buf[hdr->msg_tag].buf;
@@ -187,12 +187,9 @@ static uint8_t mctp_pkt_assembling(mctp *mctp_inst, uint8_t *buf, uint16_t len)
 /* mctp rx task */
 static void mctp_rx_task(void *arg, void *dummy0, void *dummy1)
 {
+	CHECK_NULL_ARG(arg);
 	ARG_UNUSED(dummy0);
 	ARG_UNUSED(dummy1);
-	if (!arg) {
-		LOG_WRN("mctp_rx_task without mctp_inst!");
-		return;
-	}
 
 	mctp *mctp_inst = (mctp *)arg;
 	if (!mctp_inst->read_data) {
@@ -272,15 +269,20 @@ static void mctp_rx_task(void *arg, void *dummy0, void *dummy1)
 	}
 }
 
+static void mctp_tx_task_response(struct k_msgq *msgq, uint8_t resp_code)
+{
+	CHECK_NULL_ARG(msgq);
+
+	if (k_msgq_put(msgq, &resp_code, K_NO_WAIT))
+		LOG_WRN("mctp tx task response failed");
+}
+
 /* mctp tx task */
 static void mctp_tx_task(void *arg, void *dummy0, void *dummy1)
 {
+	CHECK_NULL_ARG(arg);
 	ARG_UNUSED(dummy0);
 	ARG_UNUSED(dummy1);
-	if (!arg) {
-		LOG_WRN("mctp_tx_task without mctp_inst!");
-		return;
-	}
 
 	mctp *mctp_inst = (mctp *)arg;
 
@@ -297,11 +299,14 @@ static void mctp_tx_task(void *arg, void *dummy0, void *dummy1)
 		if (ret)
 			continue;
 
-		if (!mctp_msg.buf)
+		if (!mctp_msg.buf) {
+			mctp_tx_task_response(mctp_msg.evt_msgq, MCTP_ERROR);
 			continue;
+		}
 
 		if (!mctp_msg.len) {
 			free(mctp_msg.buf);
+			mctp_tx_task_response(mctp_msg.evt_msgq, MCTP_ERROR);
 			continue;
 		}
 
@@ -313,9 +318,10 @@ static void mctp_tx_task(void *arg, void *dummy0, void *dummy1)
      * message also doesn't need to split packet.
 */
 		if (mctp_msg.is_bridge_packet) {
-			mctp_inst->write_data(mctp_inst, mctp_msg.buf, mctp_msg.len,
-					      mctp_msg.ext_params);
+			ret = mctp_inst->write_data(mctp_inst, mctp_msg.buf, mctp_msg.len,
+						    mctp_msg.ext_params);
 			free(mctp_msg.buf);
+			mctp_tx_task_response(mctp_msg.evt_msgq, ret);
 			continue;
 		}
 
@@ -364,12 +370,19 @@ static void mctp_tx_task(void *arg, void *dummy0, void *dummy1)
 			LOG_DBG("hdr->flags_seq_to_tag = %x", hdr->flags_seq_to_tag);
 			memcpy(buf + MCTP_TRANSPORT_HEADER_SIZE, mctp_msg.buf + i * max_msg_size,
 			       cp_msg_size);
-			mctp_inst->write_data(mctp_inst, buf,
-					      cp_msg_size + MCTP_TRANSPORT_HEADER_SIZE,
-					      mctp_msg.ext_params);
+			ret = mctp_inst->write_data(mctp_inst, buf,
+						    cp_msg_size + MCTP_TRANSPORT_HEADER_SIZE,
+						    mctp_msg.ext_params);
+
+			if (ret != MCTP_SUCCESS) {
+				LOG_WRN("mctp write data failed");
+				break;
+			}
 		}
 
 		free(mctp_msg.buf);
+		mctp_tx_task_response(mctp_msg.evt_msgq,
+				      (i == split_pkt_num) ? MCTP_SUCCESS : MCTP_ERROR);
 
 		/* Only request mctp message needs to increase msg_tag */
 		if (mctp_msg.ext_params.tag_owner)
@@ -397,8 +410,7 @@ mctp *mctp_init(void)
 /* mctp handle deinitial */
 uint8_t mctp_deinit(mctp *mctp_inst)
 {
-	if (!mctp_inst)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
 
 	LOG_DBG("mctp_inst = %p", mctp_inst);
 
@@ -414,8 +426,7 @@ uint8_t mctp_deinit(mctp *mctp_inst)
 uint8_t mctp_set_medium_configure(mctp *mctp_inst, MCTP_MEDIUM_TYPE medium_type,
 				  mctp_medium_conf medium_conf)
 {
-	if (!mctp_inst)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
 
 	if (medium_type <= MCTP_MEDIUM_TYPE_UNKNOWN || medium_type >= MCTP_MEDIUM_TYPE_MAX)
 		return MCTP_ERROR;
@@ -435,8 +446,9 @@ error:
 uint8_t mctp_get_medium_configure(mctp *mctp_inst, MCTP_MEDIUM_TYPE *medium_type,
 				  mctp_medium_conf *medium_conf)
 {
-	if (!mctp_inst || !medium_type || !medium_conf)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(medium_type, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(medium_conf, MCTP_ERROR);
 
 	*medium_type = mctp_inst->medium_type;
 	*medium_conf = mctp_inst->medium_conf;
@@ -445,8 +457,7 @@ uint8_t mctp_get_medium_configure(mctp *mctp_inst, MCTP_MEDIUM_TYPE *medium_type
 
 uint8_t mctp_stop(mctp *mctp_inst)
 {
-	if (!mctp_inst)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
 
 	if (mctp_inst->mctp_rx_task_tid) {
 		k_thread_abort(mctp_inst->mctp_rx_task_tid);
@@ -469,8 +480,7 @@ uint8_t mctp_stop(mctp *mctp_inst)
 
 uint8_t mctp_start(mctp *mctp_inst)
 {
-	if (!mctp_inst)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
 
 	if (mctp_inst->is_servcie_start) {
 		LOG_WRN("The mctp_inst is already start!");
@@ -516,10 +526,12 @@ error:
 	return MCTP_ERROR;
 }
 
-uint8_t mctp_bridge_msg(mctp *mctp_inst, uint8_t *buf, uint16_t len, mctp_ext_params ext_params)
+static uint8_t mctp_pass_tx_task(mctp *mctp_inst, uint8_t *buf, uint16_t len,
+				 mctp_ext_params ext_params, uint8_t is_bridge)
 {
-	if (!mctp_inst || !buf || !len)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, MCTP_ERROR);
+	CHECK_ARG_WITH_RETURN(!len, MCTP_ERROR);
 
 	if (!mctp_inst->is_servcie_start) {
 		LOG_WRN("The mctp_inst isn't start service!");
@@ -527,7 +539,7 @@ uint8_t mctp_bridge_msg(mctp *mctp_inst, uint8_t *buf, uint16_t len, mctp_ext_pa
 	}
 
 	mctp_tx_msg mctp_msg = { 0 };
-	mctp_msg.is_bridge_packet = 1;
+	mctp_msg.is_bridge_packet = is_bridge;
 	mctp_msg.len = len;
 	mctp_msg.buf = (uint8_t *)malloc(len);
 	if (!mctp_msg.buf)
@@ -536,53 +548,51 @@ uint8_t mctp_bridge_msg(mctp *mctp_inst, uint8_t *buf, uint16_t len, mctp_ext_pa
 
 	mctp_msg.ext_params = ext_params;
 
+	/* create msg queue for catching the return code from mctp_tx_task */
+	uint8_t evt_msgq_buf = 0;
+	struct k_msgq evt_msgq;
+
+	k_msgq_init(&evt_msgq, &evt_msgq_buf, sizeof(uint8_t), 1);
+	mctp_msg.evt_msgq = &evt_msgq;
+
 	int ret = k_msgq_put(&mctp_inst->mctp_tx_queue, &mctp_msg, K_NO_WAIT);
-	if (!ret)
-		return MCTP_SUCCESS;
+	if (!ret) {
+		uint8_t evt = MCTP_ERROR;
+		if (k_msgq_get(&evt_msgq, &evt, K_FOREVER))
+			LOG_WRN("failed to get status from msgq!");
+
+		return evt;
+	}
 
 error:
 	if (mctp_msg.buf)
 		free(mctp_msg.buf);
 
 	return MCTP_ERROR;
+}
+
+uint8_t mctp_bridge_msg(mctp *mctp_inst, uint8_t *buf, uint16_t len, mctp_ext_params ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, MCTP_ERROR);
+	CHECK_ARG_WITH_RETURN(!len, MCTP_ERROR);
+
+	return mctp_pass_tx_task(mctp_inst, buf, len, ext_params, 1);
 }
 
 uint8_t mctp_send_msg(mctp *mctp_inst, uint8_t *buf, uint16_t len, mctp_ext_params ext_params)
 {
-	if (!mctp_inst || !buf || !len)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, MCTP_ERROR);
+	CHECK_ARG_WITH_RETURN(!len, MCTP_ERROR);
 
-	if (!mctp_inst->is_servcie_start) {
-		LOG_WRN("The mctp_inst isn't start service!");
-		return MCTP_ERROR;
-	}
-
-	mctp_tx_msg mctp_msg = { 0 };
-	mctp_msg.len = len;
-	mctp_msg.buf = (uint8_t *)malloc(len);
-	if (!mctp_msg.buf) {
-		LOG_WRN("can't alloc buf!!");
-		goto error;
-	}
-
-	memcpy(mctp_msg.buf, buf, len);
-	mctp_msg.ext_params = ext_params;
-
-	int ret = k_msgq_put(&mctp_inst->mctp_tx_queue, &mctp_msg, K_NO_WAIT);
-	if (!ret)
-		return MCTP_SUCCESS;
-
-error:
-	if (mctp_msg.buf)
-		free(mctp_msg.buf);
-
-	return MCTP_ERROR;
+	return mctp_pass_tx_task(mctp_inst, buf, len, ext_params, 0);
 }
 
 uint8_t mctp_reg_endpoint_resolve_func(mctp *mctp_inst, endpoint_resolve resolve_fn)
 {
-	if (!mctp_inst || !resolve_fn)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resolve_fn, MCTP_ERROR);
 
 	mctp_inst->ep_resolve = resolve_fn;
 	return MCTP_SUCCESS;
@@ -590,8 +600,8 @@ uint8_t mctp_reg_endpoint_resolve_func(mctp *mctp_inst, endpoint_resolve resolve
 
 uint8_t mctp_reg_msg_rx_func(mctp *mctp_inst, mctp_fn_cb rx_cb)
 {
-	if (!mctp_inst || !rx_cb)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(rx_cb, MCTP_ERROR);
 
 	mctp_inst->rx_cb = rx_cb;
 	return MCTP_SUCCESS;
@@ -604,11 +614,10 @@ __weak uint8_t get_mctp_info(uint8_t dest_endpoint, mctp **mctp_inst, mctp_ext_p
 
 bool get_mctp_info_by_eid(uint8_t port, mctp **mctp_inst, mctp_ext_params *ext_params)
 {
-	if (!mctp_inst || !ext_params) {
-		return false;
-	}
-	return (get_mctp_info(port, mctp_inst, ext_params) == MCTP_SUCCESS) ? true : false;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, false);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, false);
 
+	return (get_mctp_info(port, mctp_inst, ext_params) == MCTP_SUCCESS) ? true : false;
 }
 
 __weak mctp *pal_get_mctp(uint8_t mctp_medium_type, uint8_t bus)
