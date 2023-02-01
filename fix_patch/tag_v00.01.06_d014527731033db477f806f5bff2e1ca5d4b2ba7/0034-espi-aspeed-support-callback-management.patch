@@ -1,0 +1,74 @@
+From 6f8ec5ae06a093b1fa254b87f6777c3d552ca5b1 Mon Sep 17 00:00:00 2001
+From: RenChen-wiwynn <ren_chen@wiwynn.com>
+Date: Thu, 29 Dec 2022 14:37:51 +0800
+Subject: [PATCH] espi: aspeed: support callback management
+
+The eSPI driver fires callback if there is virtual wire interrupt.
+
+Signed-off-by: RenChen-wiwynn <ren_chen@wiwynn.com>
+---
+ drivers/espi/espi_aspeed.c | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/espi/espi_aspeed.c b/drivers/espi/espi_aspeed.c
+index 270e955ac8..ddddbb90bf 100644
+--- a/drivers/espi/espi_aspeed.c
++++ b/drivers/espi/espi_aspeed.c
+@@ -14,6 +14,7 @@
+ #include <drivers/espi.h>
+ #include <drivers/espi_aspeed.h>
+ #include <logging/log.h>
++#include "espi_utils.h"
+ LOG_MODULE_REGISTER(espi, CONFIG_ESPI_LOG_LEVEL);
+ 
+ /* SCU register offset */
+@@ -611,6 +612,7 @@ struct espi_aspeed_data {
+ 	struct espi_aspeed_vw vw;
+ 	struct espi_aspeed_oob oob;
+ 	struct espi_aspeed_flash flash;
++	sys_slist_t callbacks;
+ };
+ 
+ static struct espi_aspeed_data espi_aspeed_data;
+@@ -672,8 +674,13 @@ static void espi_aspeed_isr(const struct device *dev)
+ 	if (sts & ESPI_INT_STS_PERIF_BITS)
+ 		espi_aspeed_perif_isr(sts, &data->perif);
+ 
+-	if (sts & ESPI_INT_STS_VW_BITS)
++	if (sts & ESPI_INT_STS_VW_BITS) {
++		struct espi_event evt = {
++			ESPI_BUS_EVENT_VWIRE_RECEIVED,
++			ESPI_CHANNEL_VWIRE, sts };
++		espi_send_callbacks(&data->callbacks, dev, evt);
+ 		espi_aspeed_vw_isr(sts, &data->vw);
++	}
+ 
+ 	if (sts & (ESPI_INT_STS_OOB_BITS | ESPI_INT_STS_HW_RST_DEASSERT))
+ 		espi_aspeed_oob_isr(sts, &data->oob);
+@@ -1388,6 +1395,15 @@ static int espi_aspeed_flash_erase(const struct device *dev, struct espi_flash_p
+ 	return espi_aspeed_flash_rwe(dev, pckt, FLASH_ERASE);
+ }
+ 
++static int espi_aspeed_manage_callback(const struct device *dev,
++					struct espi_callback *callback,
++					bool set)
++{
++	struct espi_aspeed_data *data = (struct espi_aspeed_data *)dev->data;
++
++	return espi_manage_callback(&data->callbacks, callback, set);
++}
++
+ static const struct espi_driver_api espi_aspeed_driver_api = {
+ 	.get_channel_status = espi_aspeed_channel_ready,
+ 	.send_oob = espi_aspeed_send_oob,
+@@ -1395,6 +1411,7 @@ static const struct espi_driver_api espi_aspeed_driver_api = {
+ 	.flash_read = espi_aspeed_flash_read,
+ 	.flash_write = espi_aspeed_flash_write,
+ 	.flash_erase = espi_aspeed_flash_erase,
++	.manage_callback = espi_aspeed_manage_callback,
+ };
+ 
+ DEVICE_DT_INST_DEFINE(0, &espi_aspeed_init, NULL,
+-- 
+2.38.1.windows.1
+

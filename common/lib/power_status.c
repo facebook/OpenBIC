@@ -68,6 +68,12 @@ void set_post_status(uint8_t gpio_num)
 	LOG_WRN("POST_COMPLETE: %s", (is_post_complete) ? "yes" : "no");
 }
 
+void set_post_complete(bool status)
+{
+	is_post_complete = status;
+	LOG_WRN("POST_COMPLETE: %s", (status) ? "yes" : "no");
+}
+
 bool get_post_status()
 {
 	return is_post_complete;
