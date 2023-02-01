@@ -43,9 +43,12 @@ ina233_init_arg ina233_init_args[] = {
 };
 
 i2c_proc_arg i2c_proc_args[] = {
-	[0] = { .bus = I2C_BUS2, .channel = 0x01 }, [1] = { .bus = I2C_BUS2, .channel = 0x02 },
-	[2] = { .bus = I2C_BUS2, .channel = 0x04 }, [3] = { .bus = I2C_BUS2, .channel = 0x08 },
-	[4] = { .bus = I2C_BUS2, .channel = 0x10 }, [5] = { .bus = I2C_BUS2, .channel = 0x20 },
+	[0] = { .bus = I2C_BUS2, .channel = I2C_HUB_CHANNEL_0 },
+	[1] = { .bus = I2C_BUS2, .channel = I2C_HUB_CHANNEL_1 },
+	[2] = { .bus = I2C_BUS2, .channel = I2C_HUB_CHANNEL_2 },
+	[3] = { .bus = I2C_BUS2, .channel = I2C_HUB_CHANNEL_3 },
+	[4] = { .bus = I2C_BUS2, .channel = I2C_HUB_CHANNEL_4 },
+	[5] = { .bus = I2C_BUS2, .channel = I2C_HUB_CHANNEL_5 },
 };
 
 /**************************************************************************************************
