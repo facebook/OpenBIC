@@ -137,7 +137,7 @@ uint8_t gpio_get_reg_value(uint8_t gpio_num, uint8_t reg_offset)
 	uint8_t res = (sys_read32(GPIO_GROUP_REG_ACCESS[gpio_group] + reg_offset) &
 		       BIT(gpio_group_index)) ?
 			      1 :
-			      0;
+				    0;
 
 	return res;
 }
@@ -244,8 +244,12 @@ void init_gpio_dev(void)
 
 void scu_init(SCU_CFG cfg[], size_t size)
 {
+	uint32_t value = 0;
 	for (int i = 0; i < size; ++i) {
-		sys_write32(cfg[i].value, cfg[i].reg);
+		value = sys_read32(cfg[i].reg);
+		if (value != cfg[i].value) {
+			sys_write32(cfg[i].value, cfg[i].reg);
+		}
 	}
 }
 
