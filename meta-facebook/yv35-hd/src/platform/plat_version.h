@@ -19,7 +19,7 @@
 
 #include "version.h"
 
-#define PLATFORM_NAME "Yosemite 3.5"
+#define PLATFORM_NAME "Yosemite V3.5"
 #define PROJECT_NAME "Half Dome"
 #define PROJECT_STAGE DVT
 
