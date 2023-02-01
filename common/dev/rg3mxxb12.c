@@ -92,7 +92,8 @@ bool rg3mxxb12_select_slave_port_connect(uint8_t bus, uint8_t slave_port)
 	return true;
 }
 
-bool rg3mxxb12_i2c_mode_only_init(uint8_t bus, uint8_t slave_port)
+bool rg3mxxb12_i2c_mode_only_init(uint8_t bus, uint8_t slave_port, uint8_t ldo_volt,
+				  uint8_t pullup_resistor)
 {
 	bool ret = false;
 	uint8_t value;
@@ -101,9 +102,9 @@ bool rg3mxxb12_i2c_mode_only_init(uint8_t bus, uint8_t slave_port)
 		return false;
 	}
 
-	// Set Low-Dropout Regulators(LDO) voltage to 1.8V including VIOM and VIOS
-	value = (ldo_1_8_volt << VIOM0_OFFSET) | (ldo_1_8_volt << VIOM1_OFFSET) |
-		(ldo_1_8_volt << VIOS0_OFFSET) | (ldo_1_8_volt << VIOS1_OFFSET);
+	// Set Low-Dropout Regulators(LDO) voltage to VIOM and VIOS
+	value = (ldo_volt << VIOM0_OFFSET) | (ldo_volt << VIOM1_OFFSET) |
+		(ldo_volt << VIOS0_OFFSET) | (ldo_volt << VIOS1_OFFSET);
 	if (!rg3mxxb12_register_write(bus, RG3MXXB12_VOLT_LDO_SETTING, value)) {
 		goto out;
 	}
@@ -127,7 +128,7 @@ bool rg3mxxb12_i2c_mode_only_init(uint8_t bus, uint8_t slave_port)
 	if (!rg3mxxb12_register_read(bus, RG3MXXB12_MASTER_PORT_CONFIG, &value)) {
 		goto out;
 	}
-	value |= MPORT_OD_ONLY;
+	value = SETBIT(value, MPORT_OD_ONLY);
 	if (!rg3mxxb12_register_write(bus, RG3MXXB12_MASTER_PORT_CONFIG, value)) {
 		goto out;
 	}
@@ -136,8 +137,18 @@ bool rg3mxxb12_i2c_mode_only_init(uint8_t bus, uint8_t slave_port)
 	if (!rg3mxxb12_register_read(bus, RG3MXXB12_HUB_NETWORK_OPERATION_MODE, &value)) {
 		goto out;
 	}
-	value &= ~HUB_NETWORK_ALWAYS_I3C;
+	value = CLEARBIT(value, HUB_NETWORK_ALWAYS_I3C);
 	if (!rg3mxxb12_register_write(bus, RG3MXXB12_HUB_NETWORK_OPERATION_MODE, value)) {
+		goto out;
+	}
+
+	// Setting pull up resistor for slave ports
+	if (!rg3mxxb12_register_read(bus, RG3MXXB12_SSPORTS_PULLUP_SETTING, &value)) {
+		goto out;
+	}
+	value = SETBITS(value, pullup_resistor, SSPORTS_RESISTOR0_OFFSET);
+	value = SETBITS(value, pullup_resistor, SSPORTS_RESISTOR1_OFFSET);
+	if (!rg3mxxb12_register_write(bus, RG3MXXB12_SSPORTS_PULLUP_SETTING, value)) {
 		goto out;
 	}
 

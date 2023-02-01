@@ -56,7 +56,7 @@ void pal_pre_init()
 		return;
 	}
 
-	if (!rg3mxxb12_i2c_mode_only_init(I2C_BUS2, slave_port)) {
+	if (!rg3mxxb12_i2c_mode_only_init(I2C_BUS2, slave_port, ldo_1_2_volt, pullup_1k_ohm)) {
 		printk("failed to initialize rg3mxxb12\n");
 	}
 }

@@ -26,6 +26,7 @@
 #define RG3MXXB12_VOLT_LDO_SETTING 0x16
 #define RG3MXXB12_SSPORTS_OD_ONLY 0x17
 #define RG3MXXB12_SSPORTS_AGENT_ENABLE 0x18
+#define RG3MXXB12_SSPORTS_PULLUP_SETTING 0x19
 #define RG3MXXB12_SSPORTS_GPIO_ENABLE 0x1E
 #define RG3MXXB12_SSPORTS_HUB_NETWORK_CONNECTION 0x51
 #define RG3MXXB12_SSPORTS_PULLUP_ENABLE 0x53
@@ -35,7 +36,7 @@
 #define PROTECTION_UNLOCK 0x69
 
 /* 0x15 : Master Side Port Configuration */
-#define HUB_NETWORK_ALWAYS_I3C BIT(5)
+#define HUB_NETWORK_ALWAYS_I3C 5
 
 /* 0x16 : Interface Voltage LDO Setting */
 #define VIOS1_OFFSET 6
@@ -44,7 +45,11 @@
 #define VIOM0_OFFSET 0
 
 /* 0x17 : Master Side Port Configuration */
-#define MPORT_OD_ONLY BIT(4)
+#define MPORT_OD_ONLY 4
+
+/* 0x19 : Pull-up Resistor Value */
+#define SSPORTS_RESISTOR0_OFFSET 6
+#define SSPORTS_RESISTOR1_OFFSET 4
 
 #define RG3MXXB12_SSPORTS_ALL_DISCONNECT 0x00
 
@@ -55,7 +60,15 @@ enum ldo_volt {
 	ldo_1_8_volt,
 };
 
-bool rg3mxxb12_i2c_mode_only_init(uint8_t bus, uint8_t slave_port);
+enum pull_up_resistor {
+	pullup_250_ohm = 0,
+	pullup_500_ohm,
+	pullup_1k_ohm,
+	pullup_2k_ohm,
+};
+
+bool rg3mxxb12_i2c_mode_only_init(uint8_t bus, uint8_t slave_port, uint8_t ldo_volt,
+				  uint8_t pullup_resistor);
 bool rg3mxxb12_select_slave_port_connect(uint8_t bus, uint8_t slave_port);
 
 #endif
