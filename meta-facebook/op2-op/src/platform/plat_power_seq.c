@@ -587,18 +587,21 @@ bool power_on_handler(uint8_t initial_stage)
 			control_power_stage(ENABLE_POWER_MODE, OPA_EN_P0V9_VR);
 			break;
 		case BOARD_POWER_ON_STAGE2:
-			control_power_stage(ENABLE_POWER_MODE, OPA_RESET_BIC_RTM_N);
-			break;
-		case BOARD_POWER_ON_STAGE3:
 			control_power_stage(ENABLE_POWER_MODE, OPA_PWRGD_EXP_PWR);
 			break;
 		case RETIMER_POWER_ON_STAGE0:
 			control_power_stage(LOW_ENABLE_POWER_MODE, OPA_CLKBUF_RTM_OE_N);
 			break;
 		case RETIMER_POWER_ON_STAGE1:
+			control_power_stage(ENABLE_POWER_MODE, OPA_RESET_BIC_RTM_N);
+			break;
+		case RETIMER_POWER_ON_STAGE2:
 			control_power_stage(ENABLE_POWER_MODE, OPA_PERST_BIC_RTM_N);
 			break;
 		case E1S_POWER_ON_STAGE0:
+			//Wait for retimer boot up
+			k_msleep(RETIMER_DELAY_MSEC);
+
 			for (index = 0;
 			     index < ((card_type == CARD_TYPE_OPA) ? OPA_MAX_E1S_IDX : MAX_E1S_IDX);
 			     ++index) {
@@ -651,15 +654,6 @@ bool power_on_handler(uint8_t initial_stage)
 			control_stage = BOARD_POWER_ON_STAGE2;
 			break;
 		case BOARD_POWER_ON_STAGE2:
-			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_06) != 0) {
-				LOG_ERR("OPA_RESET_BIC_RTM_N is not enabled!");
-				check_power_ret = -1;
-				break;
-			}
-			check_power_ret = 0;
-			control_stage = BOARD_POWER_ON_STAGE3;
-			break;
-		case BOARD_POWER_ON_STAGE3:
 			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_05) != 0) {
 				LOG_ERR("OPA_PWRGD_EXP_PWR is not enabled!");
 				check_power_ret = -1;
@@ -669,7 +663,7 @@ bool power_on_handler(uint8_t initial_stage)
 			control_stage = RETIMER_POWER_ON_STAGE0;
 			break;
 		case RETIMER_POWER_ON_STAGE0:
-			if (check_power_stage(LOW_ENABLE_POWER_MODE, CHECK_POWER_SEQ_07) != 0) {
+			if (check_power_stage(LOW_ENABLE_POWER_MODE, CHECK_POWER_SEQ_06) != 0) {
 				LOG_ERR("OPA_CLKBUF_RTM_OE_N is not enabled!");
 				check_power_ret = -1;
 				break;
@@ -678,6 +672,15 @@ bool power_on_handler(uint8_t initial_stage)
 			control_stage = RETIMER_POWER_ON_STAGE1;
 			break;
 		case RETIMER_POWER_ON_STAGE1:
+			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_07) != 0) {
+				LOG_ERR("OPA_RESET_BIC_RTM_N is not enabled!");
+				check_power_ret = -1;
+				break;
+			}
+			check_power_ret = 0;
+			control_stage = RETIMER_POWER_ON_STAGE2;
+			break;
+		case RETIMER_POWER_ON_STAGE2:
 			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_08) != 0) {
 				LOG_ERR("OPA_PERST_BIC_RTM_N is not enabled!");
 				check_power_ret = -1;
