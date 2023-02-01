@@ -19,7 +19,7 @@
 #include "ast_adc.h"
 #include "sensor.h"
 #include "power_status.h"
-
+#include "pt5161l.h"
 #include "plat_i2c.h"
 #include "plat_sensor_table.h"
 #include "plat_hook.h"
@@ -136,6 +136,11 @@ sensor_cfg plat_expansion_A_sensor_config[] = {
 	{ SENSOR_NUM_1OU_TEMP, sensor_dev_tmp75, I2C_BUS4, TMP75_EXPA_TEMP_ADDR, TMP75_TEMP_OFFSET,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+
+	{ SENSOR_NUM_1OU_RE_TIMER_TEMP_C, sensor_dev_pt5161l, I2C_BUS4, EXPA_RETIMER_ADDR,
+	  PT5161L_TEMP_OFFSET, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &pt5161l_init_args[0] },
 
 	//adc
 	{ SENSOR_NUM_1OU_P3V3_STBY_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT5, NONE, NONE, stby_access,

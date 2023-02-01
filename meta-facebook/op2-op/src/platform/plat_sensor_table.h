@@ -22,6 +22,7 @@
 
 #define SENSOR_NUM_POWER_ERROR 0x56
 
+#define EXPA_RETIMER_ADDR (0x46 >> 1)
 #define TMP75_EXPA_TEMP_ADDR (0x94 >> 1)
 #define TMP75_EXPB_TEMP_ADDR (0x9A >> 1)
 #define INA233_EXPA_E1S_0_ADDR (0x8C >> 1)

@@ -135,6 +135,7 @@ enum SENSOR_DEV {
 	sensor_dev_sq52205 = 0x23,
 	sensor_dev_emc1412 = 0x24,
 	sensor_dev_i3c_dimm = 0x26,
+	sensor_dev_pt5161l = 0x27,
 	sensor_dev_max
 };
 
@@ -537,6 +538,13 @@ typedef struct _ltc2991_init_arg_ {
 		} fields;
 	} v5_v8_control_operation;
 } ltc2991_init_arg;
+
+typedef struct _pt5161l_init_arg_ {
+	uint8_t temp_cal_code_pma_a[4]; // temp calibration codes for PMA A
+	uint8_t temp_cal_code_pma_b[4]; // temp calibration codes for PMA B
+	uint8_t temp_cal_code_avg; // average temp calibration code
+	bool is_init;
+} pt5161l_init_arg;
 
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;
