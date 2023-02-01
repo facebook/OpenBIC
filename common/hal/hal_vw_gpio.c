@@ -41,8 +41,7 @@ bool vw_gpio_set(int number, uint8_t value)
 
 	uint8_t i;
 	for (i = 0; i < vw_gpio_size; i++) {
-		if ((vw_gpio_cfg[i].number == number) &&
-		    (vw_gpio_cfg[i].is_enabled) &&
+		if ((vw_gpio_cfg[i].number == number) && (vw_gpio_cfg[i].is_enabled) &&
 		    (vw_gpio_cfg[i].direction == VW_GPIO_OUTPUT)) {
 			reg_value = sys_read32(AST_ESPI_BASE + AST_ESPI_GPIO_VAL);
 			if (value == VW_GPIO_HIGH)
@@ -79,7 +78,9 @@ static void ast_vw_gpio_scan(void)
 			 * ESPI09C: GPIO through virtual wire channel
 			 */
 			reg_value = sys_read32(AST_ESPI_BASE + AST_ESPI_GPIO_VAL);
-			uint8_t gpio_value = GETBIT(reg_value, vw_gpio_cfg[i].number)? VW_GPIO_HIGH: VW_GPIO_LOW;
+			uint8_t gpio_value = GETBIT(reg_value, vw_gpio_cfg[i].number) ?
+							   VW_GPIO_HIGH :
+							   VW_GPIO_LOW;
 			if (gpio_value != vw_gpio_cfg[i].value) {
 				vw_gpio_cfg[i].value = gpio_value;
 				if (vw_gpio_cfg[i].int_cb)
@@ -91,8 +92,7 @@ static void ast_vw_gpio_scan(void)
 #endif
 
 /* Handler for virtual GPIO from eSPI virtual wire channel */
-static void vw_handler(const struct device *dev, struct espi_callback *cb,
-			    struct espi_event event)
+static void vw_handler(const struct device *dev, struct espi_callback *cb, struct espi_event event)
 {
 	ARG_UNUSED(dev);
 	ARG_UNUSED(cb);
@@ -121,6 +121,7 @@ bool vw_gpio_init(vw_gpio *config, uint8_t size)
 		return false;
 	}
 
+	CHECK_ARG_WITH_RETURN(vw_gpio_cfg != NULL, false);
 	vw_gpio_cfg = (vw_gpio *)malloc(size * sizeof(vw_gpio));
 	if (!vw_gpio_cfg) {
 		LOG_ERR("failed to allocate memory");
@@ -129,8 +130,7 @@ bool vw_gpio_init(vw_gpio *config, uint8_t size)
 	memcpy(vw_gpio_cfg, config, size * sizeof(vw_gpio));
 	vw_gpio_size = size;
 
-	espi_init_callback(&vw_cb, vw_handler,
-			   ESPI_BUS_EVENT_VWIRE_RECEIVED);
+	espi_init_callback(&vw_cb, vw_handler, ESPI_BUS_EVENT_VWIRE_RECEIVED);
 	if (espi_add_callback(espi_dev, &vw_cb) < 0) {
 		LOG_ERR("failed to add espi callback function");
 		SAFE_FREE(vw_gpio_cfg);
