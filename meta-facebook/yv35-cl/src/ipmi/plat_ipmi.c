@@ -32,6 +32,9 @@
 #include "pldm.h"
 #include "plat_mctp.h"
 
+#include "pldm.h"
+#include "plat_mctp.h"
+
 LOG_MODULE_REGISTER(plat_ipmi);
 
 bool pal_request_msg_to_BIC_from_KCS(uint8_t netfn, uint8_t cmd)

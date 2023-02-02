@@ -65,8 +65,8 @@ static uint8_t get_sensor_data_size(pldm_sensor_readings_data_type_t data_type)
 	}
 }
 
-uint8_t pldm_get_sensor_reading(const void *mctp_inst, const uint8_t *buf, const uint16_t len,
-				uint8_t *resp, uint16_t *resp_len, const void *ext_params)
+uint8_t pldm_get_sensor_reading(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id,
+				uint8_t *resp, uint16_t *resp_len, void *ext_params)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
@@ -384,8 +384,8 @@ uint8_t pldm_send_platform_event(uint8_t event_class, uint16_t id, uint8_t ext_c
 	}
 }
 
-uint8_t pldm_set_event_receiver(const void *mctp_inst, const uint8_t *buf, uint16_t len,
-				uint8_t *resp, uint16_t *resp_len, const void *ext_params)
+uint8_t pldm_set_event_receiver(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id,
+				uint8_t *resp, uint16_t *resp_len, void *ext_params)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
@@ -503,8 +503,9 @@ static void oem_set_effecter_type_gpio_handler(const uint8_t *buf, uint16_t len,
 	}
 }
 
-uint8_t pldm_set_state_effecter_states(const void *mctp_inst, const uint8_t *buf, uint16_t len,
-				       uint8_t *resp, uint16_t *resp_len, const void *ext_params)
+uint8_t pldm_set_state_effecter_states(void *mctp_inst, uint8_t *buf, uint16_t len,
+				       uint8_t instance_id, uint8_t *resp, uint16_t *resp_len,
+				       void *ext_params)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
@@ -593,8 +594,9 @@ static void oem_get_effecter_type_gpio_handler(const uint8_t *buf, uint16_t len,
 	res_p->completion_code = PLDM_SUCCESS;
 }
 
-uint8_t pldm_get_state_effecter_states(const void *mctp_inst, const uint8_t *buf, uint16_t len,
-				       uint8_t *resp, uint16_t *resp_len, const void *ext_params)
+uint8_t pldm_get_state_effecter_states(void *mctp_inst, uint8_t *buf, uint16_t len,
+				       uint8_t instance_id, uint8_t *resp, uint16_t *resp_len,
+				       void *ext_params)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
