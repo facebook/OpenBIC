@@ -20,6 +20,7 @@
 #include <zephyr.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <drivers/spi_nor.h>
 
 #define NUM_SPI_DEV 3
 #define SECTOR_SZ_64K 0x10000
@@ -53,6 +54,7 @@ int pal_get_bios_flash_position();
 int pal_get_prot_flash_position();
 bool pal_switch_bios_spi_mux(int gpio_status);
 int pal_get_cxl_flash_position();
+int do_update(const struct device *flash_device, off_t offset, uint8_t *buf, size_t len);
 
 enum FIRMWARE_UPDATE_RETURN_CODE {
 	FWUPDATE_SUCCESS,
