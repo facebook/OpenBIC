@@ -122,6 +122,7 @@ void monitor_pmic_error_via_me_handler()
 	ipmb_error status = 0;
 	int ret = 0, dimm_id = 0;
 	uint8_t seq_source = 0xFF;
+	uint8_t dimm_status = SENSOR_INIT_STATUS;
 	memory_write_read_req pmic_req;
 	ipmi_msg pmic_msg;
 
@@ -143,7 +144,9 @@ void monitor_pmic_error_via_me_handler()
 
 		for (dimm_id = 0; dimm_id < MAX_COUNT_DIMM; dimm_id++) {
 			// If dimm isn't present, skip monitor
-			if (get_dimm_status(dimm_id) == SENSOR_NOT_PRESENT) {
+			dimm_status = get_dimm_status(dimm_id);
+			if ((dimm_status != SENSOR_NOT_SUPPORT) &&
+			    (dimm_status == SENSOR_NOT_PRESENT)) {
 				continue;
 			}
 
@@ -178,9 +181,9 @@ void monitor_pmic_error_via_me_handler()
 				}
 
 			} else {
-				LOG_ERR("Failed to get PMIC error, dimm id%d bus %d addr 0x%x status 0x%x",
+				LOG_ERR("Failed to get PMIC error, dimm id%d bus %d addr 0x%x status 0x%x CC 0x%x",
 					dimm_id, pmic_req.smbus_identifier, pmic_req.smbus_address,
-					status);
+					status, pmic_msg.completion_code);
 				continue;
 			}
 		}
