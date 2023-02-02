@@ -91,13 +91,12 @@ void init_i3c_dimm_data()
 	is_dimm_data_init = true;
 }
 
-void get_dimm_info_handler()
+void init_i3c_dimm()
 {
 	I3C_MSG i3c_msg = { 0 };
 	int i = 0;
 
 	i3c_msg.bus = I3C_BUS4;
-
 	// Attach DIMM SPD addr and PMIC addr
 	for (i = 0; i < (MAX_COUNT_DIMM / 2); i++) {
 		i3c_msg.target_addr = pmic_i3c_addr_list[i];
@@ -110,6 +109,13 @@ void get_dimm_info_handler()
 	if (k_mutex_init(&i3c_dimm_mux_mutex)) {
 		LOG_ERR("i3c_dimm_mux_mutex mutex init fail");
 	}
+}
+
+void get_dimm_info_handler()
+{
+	I3C_MSG i3c_msg = { 0 };
+
+	init_i3c_dimm();
 
 	// Switch I3C mux to BIC when host post complete but BIC reset
 	if (get_post_status()) {

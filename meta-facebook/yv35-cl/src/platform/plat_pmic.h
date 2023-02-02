@@ -19,10 +19,14 @@
 
 #include <stdint.h>
 
-#define MONITOR_PMIC_ERROR_STACK_SIZE 1024
+#define MONITOR_PMIC_ERROR_STACK_SIZE 4096
 #define MONITOR_PMIC_ERROR_TIME_MS (3 * 1000) // 3s
 
+#define MAX_COUNT_PMIC_ERROR_OFFSET 6
 #define MAX_COUNT_PMIC_ERROR_TYPE 17
+
+#define CL_CPLD_BMC_CHANNEL_ADDR 0x1E // 8 bits
+#define PMIC_FAULT_STATUS_OFFSET 0x0B
 
 enum READ_PMIC_ERROR_PATH {
 	READ_PMIC_ERROR_VIA_ME,
@@ -30,10 +34,13 @@ enum READ_PMIC_ERROR_PATH {
 };
 
 void start_monitor_pmic_error_thread();
-void monitor_pmic_error_handler();
+void monitor_pmic_error_via_i3c_handler();
+void monitor_pmic_error_via_me_handler();
+int get_dimm_info(uint8_t dimm_id, uint8_t *bus, uint8_t *addr);
 int compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data, uint8_t pmic_err_data_len,
 		       uint8_t read_path);
 void add_pmic_error_sel(uint8_t dimm_id, uint8_t error_type);
+int get_pmic_fault_status();
 void read_pmic_error_when_dc_off();
 
 #endif

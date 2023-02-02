@@ -354,7 +354,7 @@ static void mctp_tx_task(void *arg, void *dummy0, void *dummy1)
        * If the message is response, keep the original msg_tag of ext_params
 */
 			hdr->msg_tag = (hdr->to) ? (msg_tag & MCTP_HDR_TAG_MASK) :
-						   mctp_msg.ext_params.msg_tag;
+							 mctp_msg.ext_params.msg_tag;
 
 			hdr->dest_ep = mctp_msg.ext_params.ep;
 			hdr->src_ep = mctp_inst->endpoint;
@@ -607,8 +607,7 @@ bool get_mctp_info_by_eid(uint8_t port, mctp **mctp_inst, mctp_ext_params *ext_p
 	if (!mctp_inst || !ext_params) {
 		return false;
 	}
-	return (get_mctp_info(port, mctp_inst, ext_params) == MCTP_SUCCESS) ? true : false;
-
+	return (get_mctp_info(port, mctp_inst, ext_params) == MCTP_SUCCESS);
 }
 
 __weak mctp *pal_get_mctp(uint8_t mctp_medium_type, uint8_t bus)

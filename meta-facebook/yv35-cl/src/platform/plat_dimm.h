@@ -32,6 +32,8 @@
 #define GET_DIMM_INFO_TIME_MS 1000
 #define GET_DIMM_INFO_STACK_SIZE 2304
 
+#define MAX_LEN_ME_GET_PMIC_ERR 6
+
 #define MAX_LEN_I3C_GET_PMIC_ERR 7
 #define MAX_LEN_I3C_GET_PMIC_PWR 1
 #define MAX_LEN_I3C_GET_SPD_TEMP 2
@@ -81,6 +83,7 @@ extern dimm_info dimm_data[MAX_COUNT_DIMM];
 
 void start_get_dimm_info_thread();
 void get_dimm_info_handler();
+void init_i3c_dimm();
 void init_i3c_dimm_data();
 void clear_unaccessible_dimm_data(uint8_t dimm_id);
 int switch_i3c_dimm_mux(uint8_t i3c_mux_position, uint8_t dimm_mux_position);
