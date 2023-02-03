@@ -165,7 +165,7 @@
 };
 
 &spi1_cs1 {
-	status = "okay";
+	status = "disabled";
 	spi-max-buswidth = <4>;
 	spi-max-frequency = <50000000>;
 	re-init-support;
@@ -183,7 +183,7 @@
 };
 
 &spi2_cs1 {
-	status = "okay";
+	status = "disabled";
 	spi-max-buswidth = <4>;
 	spi-max-frequency = <50000000>;
 	re-init-support;
