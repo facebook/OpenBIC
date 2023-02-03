@@ -23,6 +23,7 @@
 #include "power_status.h"
 #include "kcs.h"
 
+#include "plat_i2c.h"
 #include "plat_isr.h"
 #include "plat_gpio.h"
 #include "plat_ipmb.h"
@@ -445,4 +446,34 @@ void ISR_POST_COMPLETE(uint8_t gpio_value)
 {
 	bool is_post_completed = (gpio_value == VW_GPIO_HIGH) ? true : false;
 	set_post_complete(is_post_completed);
+}
+
+void ISR_FM_ADR_MODE0(uint8_t gpio_value)
+{
+	/* Set ADR mode into GL CPLD register
+	 * Offset: 16h ADR mode 0 GPIO control
+	 * Bit[0]: FM_ADR_MODE0, 0'b: (default) disable ADR
+	 */
+	int status;
+	uint8_t value;
+	I2C_MSG msg;
+	msg.bus = SB_CPLD_BUS;
+	msg.target_addr = SB_CPLD_ADDR;
+	msg.tx_len = 1;
+	msg.rx_len = 1;
+	msg.data[0] = SB_CPLD_REG_ADR_MODE0_GPIO_CTRL;
+	status = i2c_master_read(&msg, 5);
+	if (status) {
+		LOG_ERR("failed to get cpld register, ret %d", status);
+		return;
+	}
+	value = msg.data[0];
+	value = (gpio_value == VW_GPIO_HIGH) ? SETBIT(value, 0) : CLEARBIT(value, 0);
+
+	msg.tx_len = 2;
+	msg.data[0] = SB_CPLD_REG_ADR_MODE0_GPIO_CTRL;
+	msg.data[1] = value;
+	status = i2c_master_write(&msg, 5);
+	if (status)
+		LOG_ERR("failed to set cpld register, ret %d", status);
 }
