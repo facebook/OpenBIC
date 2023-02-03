@@ -24,7 +24,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <sys/util.h>
-#include <drivers/spi_nor.h>
 #include "cmsis_os2.h"
 #include "util_spi.h"
 #include "util_sys.h"
@@ -78,7 +77,7 @@ end:
 	return ret;
 }
 
-static int do_update(const struct device *flash_device, off_t offset, uint8_t *buf, size_t len)
+int do_update(const struct device *flash_device, off_t offset, uint8_t *buf, size_t len)
 {
 	int ret = 0;
 	uint32_t flash_sz = flash_get_flash_size(flash_device);

@@ -1567,6 +1567,24 @@ __weak void OEM_1S_GET_FAN_RPM(ipmi_msg *msg)
 }
 #endif
 
+__weak void OEM_1S_COPY_FLASH_IMAGE(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	msg->data_len = 0;
+	msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+	return;
+}
+
+__weak void GET_COPY_FLASH_STATUS(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	msg->data_len = 0;
+	msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+	return;
+}
+
 __weak void OEM_1S_INFORM_PEER_SLED_CYCLE(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -2225,6 +2243,14 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 		OEM_1S_GET_FAN_RPM(msg);
 		break;
 #endif
+	case CMD_OEM_1S_COPY_FLASH_IMAGE:
+		LOG_DBG("Received 1S Copy Flash Image command");
+		OEM_1S_COPY_FLASH_IMAGE(msg);
+		break;
+	case CMD_GET_COPY_FLASH_STATUS:
+		LOG_DBG("Received 1S Get Copy Flash Status command");
+		GET_COPY_FLASH_STATUS(msg);
+		break;
 	case CMD_OEM_1S_INFORM_PEER_SLED_CYCLE:
 		LOG_DBG("Received 1S Inform Peer Sled-cycle command");
 		OEM_1S_INFORM_PEER_SLED_CYCLE(msg);

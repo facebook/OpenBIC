@@ -23,6 +23,8 @@
 #include "plat_class.h"
 #include "libutil.h"
 #include "plat_fru.h"
+#include "util_spi.h"
+#include "plat_spi.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
@@ -264,3 +266,56 @@ void OEM_1S_MSG_OUT(ipmi_msg *msg)
 	return;
 }
 #endif
+
+void OEM_1S_COPY_FLASH_IMAGE(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 13) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t copy_type = msg->data[0];
+	uint32_t src_offset =
+		msg->data[1] | (msg->data[2] << 8) | (msg->data[3] << 16) | (msg->data[4] << 24);
+	uint32_t dest_offset =
+		msg->data[5] | (msg->data[6] << 8) | (msg->data[7] << 16) | (msg->data[8] << 24);
+	uint32_t length =
+		msg->data[9] | (msg->data[10] << 8) | (msg->data[11] << 16) | (msg->data[12] << 24);
+
+	if (((src_offset % SECTOR_SZ_4K) != 0) || ((dest_offset % SECTOR_SZ_4K) != 0) ||
+	    ((length % SECTOR_SZ_4K) != 0)) {
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		return;
+	}
+
+	if (start_flash_copy(copy_type, src_offset, dest_offset, length)) {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	msg->data_len = 0;
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
+void GET_COPY_FLASH_STATUS(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	FLASH_COPY_INFO current_info = { 0 };
+
+	get_flash_copy_info(&current_info);
+
+	msg->data[0] = current_info.status;
+	msg->data[1] = current_info.completion_code;
+	if ((current_info.total_length == 0)) {
+		msg->data[2] = 0;
+	} else {
+		msg->data[2] = 100 * current_info.current_len / current_info.total_length;
+	}
+	msg->data_len = 3;
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
