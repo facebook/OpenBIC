@@ -38,6 +38,7 @@
 #include "util_sys.h"
 #include "plat_class.h"
 #include "plat_pldm_monitor.h"
+#include "plat_sensor_table.h"
 
 LOG_MODULE_REGISTER(plat_sensor_table);
 
@@ -46,8 +47,6 @@ static void load_hsc_sensor_table(void);
 static void load_vr_sensor_table(void);
 static void load_power_ic_sensor_table(void);
 static void change_p1v8_sensor_i2c_addr(void);
-bool e1s_access(uint8_t sensor_num);
-bool nic_access(uint8_t sensor_num);
 
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,

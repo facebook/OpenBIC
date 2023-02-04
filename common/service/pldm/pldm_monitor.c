@@ -503,6 +503,34 @@ static void oem_set_effecter_type_gpio_handler(const uint8_t *buf, uint16_t len,
 	}
 }
 
+__weak void plat_oem_set_effecter_type_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
+					       uint16_t *resp_len)
+{
+	CHECK_NULL_ARG(buf);
+	CHECK_NULL_ARG(resp);
+	CHECK_NULL_ARG(resp_len);
+
+	uint8_t *completion_code_p = resp;
+	LOG_WRN("Not implemented in platform code");
+
+	*completion_code_p = PLDM_ERROR_INVALID_DATA;
+	return;
+}
+
+__weak void plat_oem_get_effecter_type_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
+					       uint16_t *resp_len)
+{
+	CHECK_NULL_ARG(buf);
+	CHECK_NULL_ARG(resp);
+	CHECK_NULL_ARG(resp_len);
+
+	uint8_t *completion_code_p = resp;
+	LOG_WRN("Not implemented in platform code");
+
+	*completion_code_p = PLDM_ERROR_INVALID_DATA;
+	return;
+}
+
 uint8_t pldm_set_state_effecter_states(void *mctp_inst, uint8_t *buf, uint16_t len,
 				       uint8_t instance_id, uint8_t *resp, uint16_t *resp_len,
 				       void *ext_params)
@@ -534,6 +562,9 @@ uint8_t pldm_set_state_effecter_states(void *mctp_inst, uint8_t *buf, uint16_t l
 	switch (oem_effecter_type) {
 	case OEM_EFFECTER_TYPE_GPIO:
 		oem_set_effecter_type_gpio_handler(buf, len, resp, resp_len);
+		break;
+	case OEM_EFFECTER_TYPE_PLATFORM:
+		plat_oem_set_effecter_type_handler(buf, len, resp, resp_len);
 		break;
 	default:
 		LOG_ERR("Unsupport effecter type, (%d)", oem_effecter_type);
@@ -571,18 +602,18 @@ static void oem_get_effecter_type_gpio_handler(const uint8_t *buf, uint16_t len,
 		LOG_WRN("Pin %d is not configured as GPIO", gpio_pin);
 		gpio_dir_state->effecter_op_state = gpio_val_state->effecter_op_state =
 			PLDM_EFFECTER_DISABLED;
-		gpio_dir_state->previous_state = gpio_dir_state->pending_state =
+		gpio_dir_state->present_state = gpio_dir_state->pending_state =
 			EFFECTER_STATE_GPIO_DIRECTION_UNKNOWN;
-		gpio_val_state->previous_state = gpio_val_state->pending_state =
+		gpio_val_state->present_state = gpio_val_state->pending_state =
 			EFFECTER_STATE_GPIO_VALUE_UNKNOWN;
 	} else {
 		gpio_dir_state->effecter_op_state = gpio_val_state->effecter_op_state =
 			PLDM_EFFECTER_ENABLED_NOUPDATEPENDING;
-		gpio_dir_state->previous_state = gpio_dir_state->pending_state =
+		gpio_dir_state->present_state = gpio_dir_state->pending_state =
 			((gpio_cfg[gpio_pin].direction == GPIO_INPUT) ?
 				 EFFECTER_STATE_GPIO_DIRECTION_INPUT :
 				 EFFECTER_STATE_GPIO_DIRECTION_OUTPUT);
-		gpio_val_state->previous_state = gpio_val_state->pending_state =
+		gpio_val_state->present_state = gpio_val_state->pending_state =
 			(!gpio_get(gpio_pin) ? EFFECTER_STATE_GPIO_VALUE_LOW :
 					       EFFECTER_STATE_GPIO_VALUE_HIGH);
 	}
@@ -620,6 +651,9 @@ uint8_t pldm_get_state_effecter_states(void *mctp_inst, uint8_t *buf, uint16_t l
 	switch (oem_effecter_type) {
 	case OEM_EFFECTER_TYPE_GPIO:
 		oem_get_effecter_type_gpio_handler(buf, len, resp, resp_len);
+		break;
+	case OEM_EFFECTER_TYPE_PLATFORM:
+		plat_oem_get_effecter_type_handler(buf, len, resp, resp_len);
 		break;
 	default:
 		res_p->completion_code = PLDM_PLATFORM_INVALID_EFFECTER_ID;

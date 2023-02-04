@@ -25,6 +25,7 @@
 #include "plat_mctp.h"
 #include "plat_class.h"
 #include "plat_pldm_monitor.h"
+#include "plat_led.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -53,7 +54,10 @@ void pal_post_init()
 		ssd_present_check();
 		nic_present_check();
 	}
+
 	gpio_set(BIC_SYS_READY_N, GPIO_LOW);
+
+	sys_led_init_and_check();
 }
 
 void pal_set_sys_status()
