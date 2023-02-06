@@ -59,7 +59,7 @@ bool pre_vol_bat3v_read(uint8_t sensor_num, void *args)
 {
 	ARG_UNUSED(args);
 
-	if (sensor_num == SENSOR_NUM_P3V_BAT_VOL) {
+	if (sensor_num == SENSOR_NUM_MB_ADC_P3V_BAT_VOLT_V) {
 		gpio_set(A_P3V_BAT_SCALED_EN_R, GPIO_HIGH);
 		k_msleep(1);
 	}
@@ -72,7 +72,7 @@ bool post_vol_bat3v_read(uint8_t sensor_num, void *args, int *reading)
 	ARG_UNUSED(args);
 	ARG_UNUSED(reading);
 
-	if (sensor_num == SENSOR_NUM_P3V_BAT_VOL)
+	if (sensor_num == SENSOR_NUM_MB_ADC_P3V_BAT_VOLT_V)
 		gpio_set(A_P3V_BAT_SCALED_EN_R, GPIO_LOW);
 
 	return true;

@@ -18,6 +18,7 @@
 #include "plat_vw_gpio.h"
 #include "power_status.h"
 #include "util_sys.h"
+#include "plat_class.h"
 #include "plat_gpio.h"
 #include "plat_kcs.h"
 
@@ -47,6 +48,7 @@ SCU_CFG scu_cfg[] = {
 
 void pal_pre_init()
 {
+	init_platform_config();
 	scu_init(scu_cfg, ARRAY_SIZE(scu_cfg));
 	if (!pal_load_vw_gpio_config()) {
 		printk("failed to initialize vw gpio\n");
@@ -60,12 +62,8 @@ void pal_post_init()
 
 void pal_set_sys_status()
 {
-/*
- *   TODO :
- *   1. Set DC status by GPIO
- *   2. Set Post complete by GPIO
- */
-
+	set_DC_status(PWRGD_CPU_LVC3);
+	set_DC_on_delayed_status();
 	set_CPU_power_status(PWRGD_CPU_LVC3);
 	set_post_thread();
 	set_sys_ready_pin(BIC_READY);
