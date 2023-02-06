@@ -90,6 +90,7 @@ enum pldm_effecter_operational_state {
 
 enum pldm_oem_effecter_type {
 	OEM_EFFECTER_TYPE_GPIO = 0xFF,
+	OEM_EFFECTER_TYPE_PLATFORM = 0xE0,
 };
 
 enum set_request {
@@ -270,7 +271,7 @@ typedef struct state_field_state_effecter_set {
 typedef struct state_field_state_effecter_get {
 	uint8_t effecter_op_state;
 	uint8_t pending_state;
-	uint8_t previous_state;
+	uint8_t present_state;
 } __attribute__((packed)) get_effecter_state_field_t;
 
 struct pldm_set_state_effecter_states_req {
@@ -301,6 +302,12 @@ uint16_t pldm_platform_monitor_read(void *mctp_inst, mctp_ext_params ext_params,
 
 uint8_t pldm_send_platform_event(uint8_t event_class, uint16_t id, uint8_t ext_class,
 				 const uint8_t *event_data, uint8_t event_data_length);
+
+void plat_oem_set_effecter_type_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
+					uint16_t *resp_len);
+
+void plat_oem_get_effecter_type_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
+					uint16_t *resp_len);
 
 #ifdef __cplusplus
 }

@@ -18,6 +18,8 @@
 #define PLAT_SENSOR_TABLE_H
 
 #include <stdint.h>
+#include "stdbool.h"
+
 /* Define configuration for sensors */
 #define NIC_TEMP_OFFSET 0x01
 #define TMP75_TEMP_OFFSET 0x00
@@ -273,5 +275,7 @@
 
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
+bool e1s_access(uint8_t sensor_num);
+bool nic_access(uint8_t sensor_num);
 
 #endif
