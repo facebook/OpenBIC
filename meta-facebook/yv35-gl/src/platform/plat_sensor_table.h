@@ -125,4 +125,6 @@ enum SENSOR_NUM {
 #define SENSOR_NUM_CPUDIMM_HOT 0xB3
 #define SENSOR_NUM_CATERR 0xEB
 
+#define SENSOR_NUM_END_OF_POST 0x11
+
 #endif

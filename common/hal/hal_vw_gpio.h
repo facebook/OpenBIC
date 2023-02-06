@@ -37,5 +37,6 @@ typedef struct _vw_gpio_ {
 	void (*int_cb)(uint8_t value);
 } vw_gpio;
 
+bool vw_gpio_get(int number, uint8_t *value);
 bool vw_gpio_set(int number, uint8_t value);
 bool vw_gpio_init(vw_gpio *config, uint8_t size);
