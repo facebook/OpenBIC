@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -272,7 +272,7 @@ bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg)
 	msg.len = sizeof(struct mctp_to_ipmi_sel_req);
 
 	if (set_iana(req.header.iana, sizeof(req.header.iana))) {
-		LOG_ERR("[%s] Set IANA fail", __func__);
+		LOG_ERR("Set IANA fail");
 		return false;
 	}
 
@@ -289,7 +289,7 @@ bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg)
 	uint8_t rbuf[resp_len];
 
 	if (!mctp_pldm_read(find_mctp_by_smbus(I2C_BUS_BMC), &msg, rbuf, resp_len)) {
-		LOG_ERR("[%s] mctp_pldm_read fail", __func__);
+		LOG_ERR("mctp_pldm_read fail");
 		return false;
 	}
 
@@ -297,7 +297,7 @@ bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg)
 
 	if ((resp->header.completion_code != MCTP_SUCCESS) ||
 	    (resp->header.ipmi_comp_code != CC_SUCCESS)) {
-		LOG_ERR("[%s] Check reponse completion code fail", __func__);
+		LOG_ERR("Check reponse completion code fail");
 		return false;
 	}
 

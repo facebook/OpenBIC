@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -18,6 +18,10 @@
 #include "hal_gpio.h"
 #include "expansion_board.h"
 
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(expansion_board);
+
 static uint8_t system_board_id = 0;
 
 void init_sys_board_id(uint8_t board_id)
@@ -30,7 +34,7 @@ void init_sys_board_id(uint8_t board_id)
 		system_board_id = VERNAL_FALLS_BOARD_TYPE;
 		break;
 	default:
-		printf("[%s] input board id not support: 0x%x\n", __func__, board_id);
+		LOG_ERR("Input board id not support: 0x%x", board_id);
 		system_board_id = UNKNOWN_BOARD;
 		break;
 	}
@@ -46,7 +50,7 @@ void init_platform_config()
 	board_id |= (gpio_get(BOARD_ID0) << 0);
 
 	init_sys_board_id(board_id);
-	printf("[%s] board id 0x%x\n", __func__, system_board_id);
+	LOG_DBG("Board id 0x%x", system_board_id);
 	return;
 }
 

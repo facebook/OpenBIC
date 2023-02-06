@@ -21,6 +21,10 @@
 #include "plat_ipmb.h"
 #include "plat_ipmi.h"
 #include "plat_class.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(plat_ipmb);
+
 
 IPMB_config pal_IPMB_config_table[] = {
 	// index, interface, channel, bus, channel_target_address, enable_status, self_address,
@@ -59,7 +63,7 @@ bool pal_load_ipmb_config(void)
 			pal_IPMB_config_table[BB_IPMB_IDX].enable_status = ENABLE;
 			break;
 		default:
-			printf("[%s] Unknown system class(0x%x)\n", __func__, bic_class);
+			LOG_ERR("Unknown system class(0x%x)", bic_class);
 			break;
 		}
 	}

@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -17,6 +17,9 @@
 #include <stdio.h>
 #include <string.h>
 #include "hal_jtag.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(hal_jtag);
 
 static char *jtag_device = "JTAG1";
 
@@ -25,7 +28,7 @@ void jtag_set_tap(uint8_t data, uint8_t bitlength)
 	const struct device *dev;
 	dev = device_get_binding(jtag_device);
 	if (!dev) {
-		printf("JTAG device not found\n");
+		LOG_ERR("JTAG device not found");
 		return;
 	}
 	uint8_t value, index;
@@ -49,7 +52,7 @@ void jtag_shift_data(uint16_t Wbit, uint8_t *Wdate, uint16_t Rbit, uint8_t *Rdat
 	const struct device *dev;
 	dev = device_get_binding(jtag_device);
 	if (!dev) {
-		printf("JTAG device not found\n");
+		LOG_ERR("JTAG device not found");
 		return;
 	}
 

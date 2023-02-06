@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -16,11 +16,11 @@
 
 #include "fru.h"
 #include "plat_fru.h"
-#include <logging/log.h>
+#include "libutil.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "libutil.h"
+#include <logging/log.h>
 
 LOG_MODULE_REGISTER(dev_fru);
 
@@ -80,13 +80,13 @@ uint8_t FRU_read(EEPROM_ENTRY *entry)
 	}
 
 	if (entry->config.dev_id >= MAX_FRU_ID) { // check if FRU is defined
-		LOG_ERR("fru read device ID %x doesn't exist\n", entry->config.dev_id);
+		LOG_ERR("FRU read device ID %x doesn't exist", entry->config.dev_id);
 		return FRU_INVALID_ID;
 	}
 
 	if ((entry->offset + entry->data_len) >=
 	    (FRU_START + FRU_SIZE)) { // Check data write out of range
-		LOG_ERR("fru read out of range, type: %x, ID: %x\n", entry->config.dev_type,
+		LOG_ERR("FRU read out of range, type: %x, ID: %x", entry->config.dev_type,
 			entry->config.dev_id);
 		return FRU_OUT_OF_RANGE;
 	}
@@ -94,7 +94,7 @@ uint8_t FRU_read(EEPROM_ENTRY *entry)
 	uint8_t fru_index = 0;
 	bool ret = find_FRU_ID(entry->config.dev_id, &fru_index);
 	if (ret == false) {
-		LOG_ERR("find fru read config fail via fru id: 0x%x", entry->config.dev_id);
+		LOG_ERR("find FRU read config fail via FRU id: 0x%x", entry->config.dev_id);
 		return FRU_INVALID_ID;
 	}
 
@@ -114,13 +114,13 @@ uint8_t FRU_write(EEPROM_ENTRY *entry)
 	}
 
 	if (entry->config.dev_id >= MAX_FRU_ID) { // check if FRU is defined
-		LOG_ERR("fru write device ID %x doesn't exist\n", entry->config.dev_id);
+		LOG_ERR("FRU write device ID %x doesn't exist", entry->config.dev_id);
 		return FRU_INVALID_ID;
 	}
 
 	if ((entry->offset + entry->data_len) >=
 	    (FRU_START + FRU_SIZE)) { // Check data write out of range
-		LOG_ERR("fru write out of range, type: %x, ID: %x\n", entry->config.dev_type,
+		LOG_ERR("FRU write out of range, type: %x, ID: %x", entry->config.dev_type,
 			entry->config.dev_id);
 		return FRU_OUT_OF_RANGE;
 	}

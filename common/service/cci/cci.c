@@ -184,7 +184,7 @@ void cci_read_resp_handler(void *args, uint8_t *rbuf, uint16_t rlen, uint16_t re
 	cci_recv_resp_arg *recv_arg = (cci_recv_resp_arg *)args;
 
 	if (rlen > recv_arg->rbuf_len) {
-		LOG_WRN("[%s] response length(%d) is greater than buffer length(%d)!", __func__,
+		LOG_WRN("Response length(%d) is greater than buffer length(%d)!",
 			rlen, recv_arg->rbuf_len);
 		recv_arg->return_len = recv_arg->rbuf_len;
 	} else {
@@ -194,7 +194,7 @@ void cci_read_resp_handler(void *args, uint8_t *rbuf, uint16_t rlen, uint16_t re
 	if (ret_code == CCI_CC_SUCCESS) {
 		status = CCI_READ_EVENT_SUCCESS;
 	} else {
-		LOG_ERR("[%s] Return code status(0x%04x)!\n", __func__, ret_code);
+		LOG_ERR("Return code status(0x%04x)!", ret_code);
 	}
 	k_msgq_put(recv_arg->msgq, &status, K_NO_WAIT);
 }
@@ -235,11 +235,11 @@ uint16_t mctp_cci_read(void *mctp_p, mctp_cci_msg *msg, uint8_t *rbuf, uint16_t 
 	for (uint8_t retry_count = 0; retry_count < CCI_MSG_MAX_RETRY; retry_count++) {
 		uint8_t event = 0;
 		if (mctp_cci_send_msg(mctp_p, msg) == CCI_ERROR) {
-			LOG_WRN("[%s] send msg failed!", __func__);
+			LOG_WRN("send msg failed!");
 			continue;
 		}
 		if (k_msgq_get(event_msgq_p, &event, K_MSEC(CCI_MSG_TIMEOUT_MS + 1000))) {
-			LOG_WRN("[%s] Failed to get status from msgq!", __func__);
+			LOG_WRN("Failed to get status from msgq!");
 			continue;
 		}
 		if (event == CCI_READ_EVENT_SUCCESS) {
@@ -251,7 +251,7 @@ uint16_t mctp_cci_read(void *mctp_p, mctp_cci_msg *msg, uint8_t *rbuf, uint16_t 
 	}
 	SAFE_FREE(recv_arg_p);
 	SAFE_FREE(event_msgq_p);
-	LOG_WRN("[%s] retry reach max!", __func__);
+	LOG_WRN("Retry reach max!");
 	return 0;
 }
 
@@ -295,7 +295,7 @@ bool cci_get_chip_temp(void *mctp_p, mctp_ext_params ext_params, int16_t *chip_t
 	uint8_t rbuf[resp_len];
 
 	if (mctp_cci_read(mctp_p, &msg, rbuf, resp_len) != resp_len) {
-		LOG_ERR("[%s] mctp_cci_read fail", __func__);
+		LOG_ERR("mctp_cci_read fail");
 		return false;
 	}
 

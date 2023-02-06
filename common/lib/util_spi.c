@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -295,7 +295,7 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, uint8_t f
 	}
 
 	if ((offset % SECTOR_SZ_64K) != buf_offset) {
-		LOG_ERR("SPI index %d, recorded offset 0x%x but updating 0x%x\n", flash_position,
+		LOG_ERR("SPI index %d, recorded offset 0x%x but updating 0x%x", flash_position,
 			buf_offset, offset % SECTOR_SZ_64K);
 		SAFE_FREE(txbuf);
 		txbuf = NULL;
@@ -343,7 +343,7 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, uint8_t f
 		k_msleep(10);
 		is_init = 0;
 
-		LOG_DBG("Update 0x%x, offset 0x%x, SECTOR_SZ_16K 0x%x\n",
+		LOG_DBG("Update 0x%x, offset 0x%x, SECTOR_SZ_16K 0x%x",
 			(offset / SECTOR_SZ_16K) * SECTOR_SZ_16K, offset, SECTOR_SZ_16K);
 
 		if ((flag & SECTOR_END_FLAG) && (flash_position == DEVSPI_FMC_CS0)) {

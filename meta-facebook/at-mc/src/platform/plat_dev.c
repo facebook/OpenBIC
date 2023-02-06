@@ -15,7 +15,6 @@
  */
 
 #include <stdio.h>
-#include <logging/log.h>
 #include "sensor.h"
 #include "pmbus.h"
 #include "libutil.h"
@@ -29,6 +28,7 @@
 #include "ioexp_tca9555.h"
 #include "common_i2c_mux.h"
 #include "plat_sensor_table.h"
+#include <logging/log.h>
 
 LOG_MODULE_REGISTER(plat_dev);
 
@@ -131,7 +131,7 @@ float pal_vid_to_float(int val, uint8_t vout_mode)
 	mode = (vout_mode >> 5);
 
 	if (mode != XDPE12284_VID_IDENTIFIER) {
-		printf("%s Infineon VR reading with invalid VID IDENTIFIER: %x", __func__, mode);
+		LOG_ERR("Infineon VR reading with invalid VID IDENTIFIER: %x", mode);
 		return -1;
 	}
 
@@ -149,7 +149,7 @@ float pal_vid_to_float(int val, uint8_t vout_mode)
 			return ((val - 1) * 10 + 200);
 		}
 	default:
-		printf("%s Infineon VR reading with invalid vout mode: %x", __func__, vout_mode);
+		LOG_ERR("Infineon VR reading with invalid vout mode: %x", vout_mode);
 		return -1;
 	}
 

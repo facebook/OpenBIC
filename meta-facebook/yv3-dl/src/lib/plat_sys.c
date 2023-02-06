@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -30,6 +30,10 @@
 #include "xdpe12284c.h"
 #include "plat_sensor_table.h"
 #include "util_worker.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(plat_sys);
+
 
 /* BMC reset */
 void BMC_reset_handler()
@@ -75,7 +79,7 @@ void check_Infineon_VR_VCCIO_UV_fault(uint8_t sensor_num)
 	msg.data[1] = INFINEON_STATUS_PAGE;
 
 	if (i2c_master_write(&msg, retry)) {
-		printf("[%s] Inf status page setting i2c writing failed\n", __func__);
+		LOG_ERR("Inf status page setting i2c writing failed");
 		return;
 	}
 
@@ -86,7 +90,7 @@ void check_Infineon_VR_VCCIO_UV_fault(uint8_t sensor_num)
 	msg.data[0] = 0x06;
 
 	if (i2c_master_read(&msg, retry)) {
-		printf("[%s] i2c read vout status failed\n", __func__);
+		LOG_ERR("I2C read vout status failed");
 		return;
 	}
 
@@ -113,7 +117,7 @@ void check_Renesas_VR_VCCIO_UV_fault(uint8_t sensor_num)
 	msg.data[0] = PMBUS_STATUS_VOUT;
 
 	if (i2c_master_read(&msg, retry)) {
-		printf("[%s] i2c read vout status fail\n", __func__);
+		LOG_ERR("I2C read vout status fail");
 		return;
 	}
 
@@ -130,7 +134,7 @@ bool VCCIO_VR_UV_fault_add_sel()
 {
 	common_addsel_msg_t *sel_msg = (common_addsel_msg_t *)malloc(sizeof(common_addsel_msg_t));
 	if (sel_msg == NULL) {
-		printf("[%s] Memory allocation failed!\n", __func__);
+		LOG_ERR("Memory allocation failed!");
 		return false;
 	}
 
@@ -143,7 +147,7 @@ bool VCCIO_VR_UV_fault_add_sel()
 	sel_msg->event_data3 = 0xFF;
 
 	if (!common_add_sel_evt_record(sel_msg)) {
-		printf("[%s] VCCIO UV fault add sel failed", __func__);
+		LOG_ERR("VCCIO UV fault add sel failed");
 		SAFE_FREE(sel_msg);
 		return false;
 	}

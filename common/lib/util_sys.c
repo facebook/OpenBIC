@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -25,6 +25,8 @@
 #include "ipmi.h"
 #include "libutil.h"
 #include "sensor.h"
+
+#include <logging/log.h>
 
 LOG_MODULE_REGISTER(util_sys);
 
@@ -185,8 +187,9 @@ int set_me_firmware_mode(uint8_t me_fw_mode)
 						 data_len, data);
 		ret = ipmb_read(me_msg, IPMB_inf_index_map[me_msg->InF_target]);
 		if (ret != IPMB_ERROR_SUCCESS) {
-			LOG_ERR("Failed to set ME firmware mode to 0x%x, ret: 0x%x", me_fw_mode,
-				ret);
+			LOG_ERR("Failed to set ME firmware mode to 0x%x, ret: 0x%x",
+			       me_fw_mode,
+			       ret);
 			continue;
 		}
 

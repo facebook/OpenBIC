@@ -26,10 +26,10 @@ bool tca9548_select_chan(uint8_t sensor_num, void *args)
 {
 	if (!args || (sensor_num > SENSOR_NUM_MAX)) {
 		if (sensor_num > SENSOR_NUM_MAX) {
-			LOG_ERR("invalid channel num\n");
+			LOG_ERR("Invalid channel num");
 		}
 		else {
-			LOG_ERR("arg pointer is NULL\n");
+			LOG_ERR("args pointer is NULL");
 		}
 		return false;
 	}
@@ -47,7 +47,7 @@ bool tca9548_select_chan(uint8_t sensor_num, void *args)
 	msg.data[0] = (1 << (p->chan));
 
 	if (i2c_master_write(&msg, retry)) {
-		LOG_ERR("I2C master write failed\n");
+		LOG_ERR("I2C master write failed");
 		return false;
 	}
 

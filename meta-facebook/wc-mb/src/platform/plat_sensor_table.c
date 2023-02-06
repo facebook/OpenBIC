@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -350,8 +350,8 @@ void pal_extend_sensor_config()
 	}
 
 	if (sensor_config_count != sdr_count) {
-		LOG_WRN("[%s] extend sensor SDR and config table not match, sdr size: 0x%x, sensor config size: 0x%x",
-			__func__, sdr_count, sensor_config_count);
+		LOG_WRN("extend sensor SDR and config table not match, sdr size: 0x%x, sensor config size: 0x%x",
+			sdr_count, sensor_config_count);
 	}
 }
 
@@ -375,7 +375,7 @@ bool pal_is_time_to_poll(uint8_t sensor_num, int poll_time)
 		}
 	}
 
-	LOG_WRN("[%s] can't find sensor 0x%x last access time", __func__, sensor_num);
+	LOG_WRN("Can't find sensor 0x%x last access time", sensor_num);
 	return true;
 }
 
@@ -399,7 +399,7 @@ bool disable_dimm_pmic_sensor(uint8_t sensor_num)
 		}
 	}
 
-	LOG_WRN("[%s] input sensor 0x%x can't find in dimm pmic mapping table", __func__,
+	LOG_WRN("Input sensor 0x%x can't find in dimm pmic mapping table",
 		sensor_num);
 	return false;
 }

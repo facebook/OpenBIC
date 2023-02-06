@@ -527,7 +527,7 @@ bool adjust_of_twos_complement(uint8_t offset, int *val)
 		}
 		break;
 	default:
-		printf("[%s] not support offset: 0x%x\n", __func__, offset);
+		LOG_ERR("Not support offset: 0x%x", offset);
 		ret = false;
 		break;
 	}
@@ -573,8 +573,7 @@ uint8_t isl69259_read(uint8_t sensor_num, int *reading)
 		/* 0.1 A/LSB, 2's complement */
 		ret = adjust_of_twos_complement(offset, &val);
 		if (ret == false) {
-			printf("[%s] adjust reading IOUT value failed - sensor number: 0x%x\n",
-			       __func__, sensor_num);
+			LOG_ERR("Adjust reading IOUT value failed - sensor number: 0x%x", sensor_num);
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 
@@ -594,15 +593,14 @@ uint8_t isl69259_read(uint8_t sensor_num, int *reading)
 		/* 1 Watt/LSB, 2's complement */
 		ret = adjust_of_twos_complement(offset, &val);
 		if (ret == false) {
-			printf("[%s] adjust reading POUT value failed - sensor number: 0x%x\n",
-			       __func__, sensor_num);
+			LOG_ERR("Adjust reading POUT value failed - sensor number: 0x%x", sensor_num);
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 
 		sval->integer = val;
 		break;
 	default:
-		printf("[%s] not support offset: 0x%x\n", __func__, offset);
+		LOG_ERR("Not support offset: 0x%x", offset);
 		return SENSOR_FAIL_TO_ACCESS;
 		break;
 	}

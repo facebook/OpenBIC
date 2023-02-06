@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -225,8 +225,7 @@ static void process_postcode(void *arvg0, void *arvg1, void *arvg2)
 			msg->data[7] = (pcc_read_buffer[send_index] >> 24) & 0xFF;
 			ipmb_error status = ipmb_read(msg, IPMB_inf_index_map[msg->InF_target]);
 			if (status != IPMB_ERROR_SUCCESS) {
-				LOG_ERR("Failed to send 4-byte post code to BMC, status %d.\n",
-					status);
+				LOG_ERR("Failed to send 4-byte post code to BMC, status %d.", status);
 			}
 			k_yield();
 		}

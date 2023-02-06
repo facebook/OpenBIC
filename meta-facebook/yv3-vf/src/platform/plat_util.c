@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -29,6 +29,9 @@
 
 #include "ipmi.h"
 #include "plat_util.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(plat_util);
 
 typedef struct {
 	uint32_t arg1;
@@ -89,7 +92,7 @@ void delay_function(uint32_t delay_time, void *func, uint32_t arg1, uint32_t arg
 	job.delay_ms = delay_time;
 
 	if (add_work(&job) != 1)
-		printf("%s() add_work fail!\n", __func__);
+		LOG_ERR("add_work fail!");
 }
 
 void free_timer(struct k_work *work)
@@ -107,7 +110,7 @@ void clock_ex_fn_tmp(struct k_timer *my_timer)
 	clock_t *p = CONTAINER_OF(my_timer, clock_t, timer);
 
 	if (!p->ex_fn) {
-		printf("%s() need a function", __func__);
+		LOG_ERR("Need a function");
 		return;
 	}
 
@@ -134,7 +137,7 @@ void add_clock(uint32_t arg1, uint32_t arg2, void *ex_fn, void *stop_fn, uint32_
 {
 	clock_t *clock_tmp = malloc(sizeof(clock_t));
 	if (!clock_tmp) {
-		printf("%s() malloc fail!\n", __func__);
+		LOG_ERR("malloc fail!");
 		return;
 	}
 	clock_tmp->arg1 = arg1;
@@ -218,7 +221,7 @@ static void deassert_chk(void *unused, uint32_t assert_type)
 
 	assert_func_t *p = assert_type_to_deassert_list(assert_type);
 	if (!p) {
-		printf("%s() can't find deassert list!\n", __func__);
+		LOG_ERR("Can't find deassert list!");
 		return;
 	}
 
@@ -248,7 +251,7 @@ uint8_t assert_func(DEASSERT_CHK_TYPE_E assert_type) // 0:success
 
 	assert_func_t *p = assert_type_to_deassert_list(assert_type);
 	if (!p) {
-		printf("%s() can't find deassert list!\n", __func__);
+		LOG_ERR("Can't find deassert list!");
 		return 1;
 	}
 

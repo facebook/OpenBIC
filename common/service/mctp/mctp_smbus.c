@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -136,7 +136,7 @@ static uint16_t mctp_smbus_read(void *mctp_p, uint8_t *buf, uint32_t len,
 	uint8_t ret = 0;
 	ret = i2c_target_read(mctp_inst->medium_conf.smbus_conf.bus, rdata, 256, &rlen);
 	if (ret) {
-		LOG_ERR("i2c_target_read fail, ret %d\n", ret);
+		LOG_ERR("i2c_target_read fail, ret %d", ret);
 		return 0;
 	}
 

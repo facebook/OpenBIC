@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -21,6 +21,10 @@
 #include "plat_sdr_table.h"
 #include "plat_sensor_table.h"
 #include "plat_ipmb.h"
+
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(sdr);
 
 SDR_INFO sdr_info;
 static uint16_t RSV_ID[2] = { 0 };
@@ -73,7 +77,7 @@ bool SDR_RSV_ID_check(uint16_t ID, uint8_t rsv_table_index)
 __weak void pal_extend_full_sdr_table(void)
 {
 	/* This function is for the BIC which connects to expansion boards and need to add expansion board's sensor to itself.
-   * For the BIC (eg. RF/WF) which doesn't connect expandion boards has no need to implement this function. 
+   * For the BIC (eg. RF/WF) which doesn't connect expandion boards has no need to implement this function.
    */
 	return;
 }
@@ -81,7 +85,7 @@ __weak void pal_extend_full_sdr_table(void)
 int get_sdr_index(uint8_t sensor_num)
 {
 	if (full_sdr_table == NULL) {
-		printf("[%s] full_sdr_table is NULL\n", __func__);
+		LOG_ERR("full_sdr_table is NULL");
 		return -1;
 	}
 
@@ -97,40 +101,39 @@ int get_sdr_index(uint8_t sensor_num)
 void add_full_sdr_table(SDR_Full_sensor add_item)
 {
 	if (full_sdr_table == NULL) {
-		printf("[%s] full_sdr_table is NULL\n", __func__);
+		LOG_ERR("full_sdr_table is NULL");
 		return;
 	}
 
 	int index = get_sdr_index(add_item.sensor_num);
 	if (index == -1) {
-		printf("[%s] fail to get sdr index\n", __func__);
+		LOG_ERR("Fail to get sdr index");
 		return;
 	}
 
 	if (index != SENSOR_NUM_MAX) {
 		memcpy(&full_sdr_table[index], &add_item, sizeof(SDR_Full_sensor));
-		printf("[%s] replace the sensor[0x%02x] SDR\n", __func__, add_item.sensor_num);
+		LOG_ERR("Replace the sensor[0x%02x] SDR", add_item.sensor_num);
 		return;
 	}
 	// Check SDR table size before adding SDR
 	if (sdr_count + 1 <= sensor_config_size) {
 		full_sdr_table[sdr_count++] = add_item;
 	} else {
-		printf("[%s] add SDR would over SDR max size\n", __func__);
+		LOG_ERR("Add SDR would over SDR max size");
 	}
 }
 
 void change_sensor_threshold(uint8_t sensor_num, uint8_t threshold_type, uint8_t change_value)
 {
 	if (full_sdr_table == NULL) {
-		printf("[%s] full_sdr_table is NULL\n", __func__);
+		LOG_ERR("full_sdr_table is NULL");
 		return;
 	}
 
 	int sdr_index = get_sdr_index(sensor_num);
 	if ((sdr_index == SENSOR_NUM_MAX) || (sdr_index == -1)) {
-		printf("[%s] Failed to find sensor index, sensor number(0x%02x), sdr index(%d)\n",
-		       __func__, sensor_num, sdr_index);
+		LOG_ERR("Failed to find sensor index, sensor number(0x%02x), sdr index(%d)", sensor_num, sdr_index);
 		return;
 	}
 	switch (threshold_type) {
@@ -153,7 +156,7 @@ void change_sensor_threshold(uint8_t sensor_num, uint8_t threshold_type, uint8_t
 		full_sdr_table[sdr_index].LNCT = change_value;
 		break;
 	default:
-		printf("Invalid threshold type during changing sensor threshold\n");
+		LOG_ERR("Invalid threshold type during changing sensor threshold");
 		break;
 	}
 }
@@ -161,14 +164,13 @@ void change_sensor_threshold(uint8_t sensor_num, uint8_t threshold_type, uint8_t
 void change_sensor_mbr(uint8_t sensor_num, uint8_t mbr_type, uint16_t change_value)
 {
 	if (full_sdr_table == NULL) {
-		printf("[%s] full_sdr_table is NULL\n", __func__);
+		LOG_ERR("full_sdr_table is NULL");
 		return;
 	}
 
 	int sdr_index = get_sdr_index(sensor_num);
 	if ((sdr_index == SENSOR_NUM_MAX) || (sdr_index == -1)) {
-		printf("[%s] Failed to find sensor index, sensor number(0x%02x), sdr index(%d)\n",
-		       __func__, sensor_num, sdr_index);
+		LOG_ERR("Failed to find sensor index, sensor number(0x%02x), sdr index(%d)", sensor_num, sdr_index);
 		return;
 	}
 	switch (mbr_type) {
@@ -192,7 +194,7 @@ void change_sensor_mbr(uint8_t sensor_num, uint8_t mbr_type, uint16_t change_val
 		full_sdr_table[sdr_index].RexpBexp = change_value & 0xFF;
 		break;
 	default:
-		printf("Invalid MBR type during changing sensor MBR\n");
+		LOG_ERR("Invalid MBR type during changing sensor MBR");
 		break;
 	}
 }
@@ -206,7 +208,7 @@ uint8_t sdr_init(void)
 	sdr_info.current_ID = sdr_info.start_ID;
 
 	if (full_sdr_table == NULL) {
-		printf("[%s] full_sdr_table is NULL\n", __func__);
+		LOG_ERR("full_sdr_table is NULL");
 		return false;
 	}
 
@@ -217,9 +219,12 @@ uint8_t sdr_init(void)
 		full_sdr_table[i].record_len += strlen(full_sdr_table[i].ID_str);
 
 		if (DEBUG_SENSOR) {
-			printf("%s ID: 0x%x%x, size: %d, recordlen: %d\n", full_sdr_table[i].ID_str,
-			       full_sdr_table[i].record_id_h, full_sdr_table[i].record_id_l,
-			       full_sdr_table[i].ID_len, full_sdr_table[i].record_len);
+			LOG_DBG("%s ID: 0x%x%x, size: %d, recordlen: %d",
+                               full_sdr_table[i].ID_str,
+			       full_sdr_table[i].record_id_h,
+			       full_sdr_table[i].record_id_l,
+			       full_sdr_table[i].ID_len,
+			       full_sdr_table[i].record_len);
 		}
 	}
 

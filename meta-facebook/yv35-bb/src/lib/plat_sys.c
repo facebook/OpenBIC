@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -25,6 +25,9 @@
 #include "plat_gpio.h"
 #include "libipmi.h"
 #include "plat_sensor_table.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(plat_sys);
 
 void control_slot_12V_power(uint8_t slot_id, uint8_t control_mode)
 {
@@ -47,7 +50,7 @@ void control_slot_12V_power(uint8_t slot_id, uint8_t control_mode)
 		msg.data[0] = CPLD_IO_REG_OFS_HSC_EN_SLOT3;
 		break;
 	default:
-		printf("[%s] input slot id is invalid, slot id: %d\n", __func__, slot_id);
+		LOG_ERR("Input slot id is invalid, slot id: %d", slot_id);
 		return;
 	}
 
@@ -59,8 +62,7 @@ void control_slot_12V_power(uint8_t slot_id, uint8_t control_mode)
 		msg.data[1] = SLOT_12V_OFF;
 		break;
 	default:
-		printf("[%s] input control mode is invalid, control mode: %d\n", __func__,
-		       control_mode);
+		LOG_ERR("Input control mode is invalid, control mode: %d", control_mode);
 		return;
 	}
 
@@ -71,7 +73,7 @@ void control_slot_12V_power(uint8_t slot_id, uint8_t control_mode)
 
 	ret = i2c_master_write(&msg, retry);
 	if (ret < 0) {
-		printf("[%s] i2c write failed, ret: %d\n", __func__, ret);
+		LOG_ERR("I2C write failed, ret: %d", ret);
 		return;
 	}
 
@@ -93,8 +95,7 @@ void submit_button_event(uint8_t button_id, uint8_t target_slot, uint8_t event_t
 	sel_msg.event_data3 = 0xFF;
 
 	if ((target_slot != SLOT1_BIC) && (target_slot != SLOT3_BIC)) {
-		printf("[%s] input target slot is invalid, button id: %d, target slot: %d\n",
-		       __func__, button_id, target_slot);
+		LOG_ERR("Input target slot is invalid, button id: %d, target slot: %d", button_id, target_slot);
 		return;
 	}
 	sel_msg.InF_target = target_slot;
@@ -110,7 +111,7 @@ void submit_button_event(uint8_t button_id, uint8_t target_slot, uint8_t event_t
 		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_PRESS_SLED_BUTTON;
 		break;
 	default:
-		printf("[%s] input button id is invalid, button id: %d\n", __func__, button_id);
+		LOG_ERR("Input button id is invalid, button id: %d", button_id);
 		return;
 	}
 

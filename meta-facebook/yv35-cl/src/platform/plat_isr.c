@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -84,7 +84,7 @@ static void SLP3_handler()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-			printf("VR watchdog timeout addsel fail\n");
+			LOG_ERR("VR watchdog timeout addsel fail");
 		}
 	}
 }
@@ -94,13 +94,13 @@ K_WORK_DELAYABLE_DEFINE(SLP3_work, SLP3_handler);
 void ISR_SLP3()
 {
 	if (gpio_get(FM_SLPS3_PLD_N) == GPIO_HIGH) {
-		printf("slp3\n");
+		LOG_DBG("slp3");
 		k_work_schedule_for_queue(&plat_work_q, &SLP3_work,
 					  K_SECONDS(DETECT_VR_WDT_DELAY_S));
 		return;
 	}
 	if (k_work_cancel_delayable(&SLP3_work) != 0) {
-		printf("[%s] Failed to cancel delayable work\n", __func__);
+		LOG_ERR("Failed to cancel delayable work");
 	}
 }
 
@@ -148,7 +148,7 @@ void ISR_DC_ON()
 			sel_msg.event_data2 = 0xFF;
 			sel_msg.event_data3 = 0xFF;
 			if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-				printf("System PWROK failure addsel fail\n");
+				LOG_ERR("System PWROK failure addsel fail");
 			}
 		}
 	}
@@ -193,7 +193,7 @@ static void PROC_FAIL_handler(struct k_work *work)
 		sel_msg.event_data3 = 0xFF;
 		ret = mctp_add_sel_to_ipmi(&sel_msg);
 		if (!ret) {
-			printf("Fail to assert FRE3 event log.\n");
+			LOG_ERR("Fail to assert FRE3 event log.");
 		}
 	}
 }
@@ -213,7 +213,7 @@ void ISR_PWRGD_CPU()
 		abort_snoop_thread();
 
 		if (k_work_cancel_delayable(&PROC_FAIL_work) != 0) {
-			printf("Cancel proc_fail delay work fail\n");
+			LOG_ERR("Cancel proc_fail delay work fail");
 		}
 		reset_kcs_ok();
 		reset_postcode_ok();
@@ -242,7 +242,7 @@ static void CAT_ERR_handler(struct k_work *work)
 		sel_msg.event_data3 = 0xFF;
 		ret = mctp_add_sel_to_ipmi(&sel_msg);
 		if (!ret) {
-			printf("Fail to assert CatErr event log.\n");
+			LOG_ERR("Fail to assert CatErr event log.");
 		}
 	}
 }
@@ -253,7 +253,7 @@ void ISR_CATERR()
 {
 	if ((gpio_get(RST_PLTRST_BUF_N) == GPIO_HIGH)) {
 		if (k_work_cancel_delayable(&CAT_ERR_work) != 0) {
-			printf("Cancel caterr delay work fail\n");
+			LOG_ERR("Cancel caterr delay work fail");
 		}
 		/* start thread CatErr_handler after 2 seconds */
 		k_work_schedule_for_queue(&plat_work_q, &CAT_ERR_work,
@@ -288,7 +288,7 @@ void ISR_FM_THROTTLE()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-			printf("FM Throttle addsel fail\n");
+			LOG_ERR("FM Throttle addsel fail");
 		}
 	}
 }
@@ -320,7 +320,7 @@ void ISR_HSC_THROTTLE()
 			sel_msg.event_data2 = 0xFF;
 			sel_msg.event_data3 = 0xFF;
 			if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-				printf("HSC Throttle addsel fail\n");
+				LOG_ERR("HSC Throttle addsel fail");
 			}
 		}
 	}
@@ -388,9 +388,9 @@ void ISR_SOC_THMALTRIP()
 		sel_msg.event_data3 = 0xFF;
 		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
 			if (sel_msg.event_data1 == IPMI_OEM_EVENT_OFFSET_SYS_THERMAL_TRIP) {
-				printf("SOC Thermal trip addsel fail\n");
+				LOG_ERR("SOC Thermal trip addsel fail");
 			} else {
-				printf("Memory Thermal trip addsel fail\n");
+				LOG_ERR("Memory Thermal trip addsel fail");
 			}
 		}
 	}
@@ -413,7 +413,7 @@ void ISR_SYS_THROTTLE()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-			printf("System Throttle addsel fail\n");
+			LOG_ERR("System Throttle addsel fail");
 		}
 	}
 }
@@ -442,7 +442,7 @@ void ISR_PCH_THMALTRIP()
 	sel_msg.event_data2 = 0xFF;
 	sel_msg.event_data3 = 0xFF;
 	if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-		printf("PCH Thermal trip addsel fail\n");
+		LOG_ERR("PCH Thermal trip addsel fail");
 	}
 }
 
@@ -463,7 +463,7 @@ void ISR_HSC_OC()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-			printf("HSC OC addsel fail\n");
+			LOG_ERR("HSC OC addsel fail");
 		}
 	}
 }
@@ -485,7 +485,7 @@ void ISR_CPU_MEMHOT()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-			printf("CPU MEM HOT addsel fail\n");
+			LOG_ERR("CPU MEM HOT addsel fail");
 		}
 	}
 }
@@ -507,7 +507,7 @@ void ISR_CPUVR_HOT()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-			printf("CPU VR HOT addsel fail\n");
+			LOG_ERR("CPU VR HOT addsel fail");
 		}
 	}
 }
@@ -524,7 +524,7 @@ void ISR_PCH_PWRGD()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-			printf("PCH PWROK failure addsel fail\n");
+			LOG_ERR("PCH PWROK failure addsel fail");
 		}
 	}
 }
@@ -541,7 +541,7 @@ void ISR_RMCA()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-			printf("RMCA addsel fail\n");
+			LOG_ERR("RMCA addsel fail");
 		}
 	}
 }
@@ -593,8 +593,8 @@ void ISR_CPU_VPP_INT()
 		i2c_msg.tx_len = 1;
 		i2c_msg.rx_len = 1;
 		if (i2c_master_read(&i2c_msg, retry)) {
-			LOG_ERR("%s: Failed to read CPU VPP status, bus0x%x addr0x%x offset0x%x\n",
-				__func__, i2c_msg.bus, i2c_msg.target_addr, i2c_msg.data[0]);
+			LOG_ERR("Failed to read CPU VPP status, bus0x%x addr0x%x offset0x%x",
+				i2c_msg.bus, i2c_msg.target_addr, i2c_msg.data[0]);
 			return;
 		}
 
@@ -632,7 +632,7 @@ void ISR_CPU_VPP_INT()
 				}
 
 				if (i == retry) {
-					LOG_ERR("Failed to send OEM_1S_GET_SET_M2 command 0x%x to 0x%x device%x\n",
+					LOG_ERR("Failed to send OEM_1S_GET_SET_M2 command 0x%x to 0x%x device%x",
 						CMD_OEM_1S_GET_SET_M2, EXP1_IPMB,
 						_1ou_m2_name_mapping_table[device_id]);
 					continue;
@@ -650,7 +650,7 @@ void ISR_CPU_VPP_INT()
 				sel_msg.event_data2 = IPMI_OEM_EVENT_OFFSET_1OU;
 				sel_msg.event_data3 = _1ou_m2_name_mapping_table[device_id];
 				if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-					LOG_ERR("%s addsel fail\n", __func__);
+					LOG_ERR("addsel fail");
 				}
 			}
 		}
@@ -671,7 +671,7 @@ void ISR_NMI()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			LOG_ERR("%s addsel fail", __func__);
+			LOG_ERR("addsel fail");
 		}
 	}
 }

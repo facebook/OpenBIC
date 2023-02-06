@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -55,7 +55,7 @@ GPIO_CFG plat_gpio_cfg[] = {
 	{ CHIP_GPIO, 5, ENABLE, DISABLE, GPIO_OUTPUT, GPIO_HIGH, OPEN_DRAIN, GPIO_INT_DISABLE, NULL },
 	{ CHIP_GPIO, 6, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, OPEN_DRAIN, GPIO_INT_EDGE_FALLING, ISR_SMI },
 	{ CHIP_GPIO, 7, ENABLE, DISABLE, GPIO_OUTPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
-	
+
 	/** Group B: 08-15 **/
 	{ CHIP_GPIO, 8, ENABLE, DISABLE, GPIO_OUTPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
 	{ CHIP_GPIO, 9, ENABLE, DISABLE, GPIO_OUTPUT, GPIO_LOW, OPEN_DRAIN, GPIO_INT_DISABLE, NULL },
@@ -391,6 +391,6 @@ uint8_t get_exported_gpio_num(uint8_t internal_gpio_num)
 		}
 	}
 
-	LOG_ERR("Fail to convert GPIO num: %u\n", internal_gpio_num);
+	LOG_ERR("Fail to convert GPIO num: %u", internal_gpio_num);
 	return ret;
 }

@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -20,12 +20,12 @@
   DESCRIPTION: There is 1 callback function "i2c_target_cb" for I2C target ISR handle and user APIs for user access.
   AUTHOR: MouchenHung
   DATE/VERSION: 2021.12.09 - v1.4.2
-  Note: 
+  Note:
     (1) Shall not modify code in this file!!!
 
     (2) "hal_i2c_target.h" must be included!
 
-    (3) User APIs follow check-rule before doing task 
+    (3) User APIs follow check-rule before doing task
           [api]                               [.is_init] [.is_register]
         * i2c_target_control                   X          X
         * i2c_target_read                      O          X
@@ -150,7 +150,7 @@ static const struct i2c_slave_callbacks i2c_target_cb = {
   - Description: Get current status of i2c target.
   - Input:
       * bus_num: Bus number with zero base
-  - Return: 
+  - Return:
       * 0, if no error
       * others, get error(check "i2c_target_error_status")
 */
@@ -195,7 +195,7 @@ out:
   - Input:
       * bus_num: Bus number with zero base
       * cfg: cfg structure(controller name is not support!)
-  - Return: 
+  - Return:
       * 0, if no error
       * others, get error(check "i2c_target_api_error_status")
 */
@@ -226,7 +226,7 @@ uint8_t i2c_target_cfg_get(uint8_t bus_num, struct _i2c_target_config *cfg)
   - Description: Get current status of i2c target queue.
   - Input:
       * bus_num: Bus number with zero base
-  - Return: 
+  - Return:
       * 0, if no error
       * others, get error(check "i2c_target_api_error_status")
 */
@@ -263,7 +263,7 @@ uint8_t i2c_target_status_print(uint8_t bus_num)
       * *buff: Message that readed back from queue
       * buff_len: Length of buffer
       * *msg_len: Read-back message's length
-  - Return: 
+  - Return:
       * 0, if no error
       * others, get error(check "i2c_target_api_error_status")
 */
@@ -320,7 +320,7 @@ uint8_t i2c_target_read(uint8_t bus_num, uint8_t *buff, uint16_t buff_len, uint1
       * bus_num: Bus number with zero base
       * *cfg: Config settings structure
       * mode: check "i2c_target_api_control_mode"
-  - Return: 
+  - Return:
       * 0, if no error
       * others, get error(check "i2c_target_api_error_status")
 */
@@ -383,7 +383,7 @@ int i2c_target_control(uint8_t bus_num, struct _i2c_target_config *cfg,
       * *bus_name: Bus controler name with string(it's used to get binding from certain zephyr device tree driver)
       * target_address: Given a target adress for BIC itself
       * _max_msg_count: Maximum count of messages in message queue
-  - Return: 
+  - Return:
       * 0, if no error
       * others, get error(check "i2c_target_api_error_status")
 */
@@ -496,7 +496,7 @@ unlock:
   - Description: Set config to register for enable i2c target.
   - Input:
       * bus_num: Bus number with zero base
-  - Return: 
+  - Return:
       * 0, if no error
       * others, get error(check "i2c_target_api_error_status")
 */
@@ -543,7 +543,7 @@ static int do_i2c_target_register(uint8_t bus_num)
   - Input:
       * bus_num: Bus number with zero base
       * mutex_flag: skip check if 1, otherwise 0
-  - Return: 
+  - Return:
       * 0, if no error
       * others, get error(check "i2c_target_api_error_status")
 */

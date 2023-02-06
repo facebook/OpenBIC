@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -25,6 +25,10 @@
 #include "libutil.h"
 #include "plat_gpio.h"
 #include "plat_i2c.h"
+
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(plat_class);
 
 static uint8_t system_class = SYS_CLASS_1;
 static uint8_t board_revision = 0x0F;
@@ -112,7 +116,7 @@ bool get_adc_voltage(int channel, float *voltage)
 	}
 
 	if (channel >= NUMBER_OF_ADC_CHANNEL) {
-		printf("Invalid ADC channel-%d\n", channel);
+		LOG_ERR("Invalid ADC channel-%d", channel);
 		return false;
 	}
 
@@ -134,7 +138,7 @@ bool get_adc_voltage(int channel, float *voltage)
 		reference_voltage = 1.2;
 		break;
 	default:
-		printf("Unsupported the external reference voltage\n");
+		LOG_ERR("Unsupported the external reference voltage");
 		return false;
 	}
 
@@ -178,7 +182,7 @@ void init_hsc_module(uint8_t board_revision)
       */
 			ret = get_adc_voltage(CHANNEL_7, &voltage_hsc_type_adc);
 			if (ret == false) {
-				printf("[%s] fail to get hsc type by adc\n", __func__);
+				LOG_ERR("Fail to get hsc type by adc");
 				break;
 			}
 			if ((voltage_hsc_type_adc > 0.5 - (0.5 * 0.15)) &&
@@ -194,12 +198,11 @@ void init_hsc_module(uint8_t board_revision)
 				hsc_module = HSC_MODULE_LTC4286;
 				break;
 			} else {
-				printf("[%s] unknown hotswap model type, HSC_TYPE_ADC voltage: %fV\n",
-				       __func__, voltage_hsc_type_adc);
+				LOG_ERR("Unknown hotswap model type, HSC_TYPE_ADC voltage: %fV", voltage_hsc_type_adc);
 				break;
 			}
 		default:
-			printf("[%s] unknown board revision: 0x%x\n", __func__, board_revision);
+			LOG_ERR("Unknown board revision: 0x%x", board_revision);
 			break;
 		}
 	} else {
@@ -243,7 +246,7 @@ void init_platform_config()
 		_1ou_status.present = ((class_type & BIT(2)) ? false : true);
 		_2ou_status.present = ((class_type & BIT(3)) ? false : true);
 	} else {
-		printf("Failed to read expansion present from CPLD\n");
+		LOG_ERR("Failed to read expansion present from CPLD");
 	}
 	/* Set the class type to CPLD's class type register(the bit[4] of offset 05h) */
 	tx_len = 2;
@@ -253,7 +256,7 @@ void init_platform_config()
 	data[1] = (((system_class - 1) << 4) & 0x10) | class_type;
 	i2c_msg = construct_i2c_message(I2C_BUS1, CPLD_ADDR, tx_len, data, rx_len);
 	if (i2c_master_write(&i2c_msg, retry)) {
-		printf("Failed to set class type to CPLD)\n");
+		LOG_ERR("Failed to set class type to CPLD)");
 	}
 
 	/* Get the board revision to CPLD's board rev id reg(the bit[3:0] of offset 08h)
@@ -271,7 +274,7 @@ void init_platform_config()
 		board_revision = i2c_msg.data[0] & 0xF;
 		init_hsc_module(board_revision);
 	} else {
-		printf("Failed to read board ID from CPLD\n");
+		LOG_ERR("Failed to read board ID from CPLD");
 	}
 	printk("BIC class type(class-%d), 1ou present status(%d), 2ou present status(%d), board revision(0x%x)\n",
 	       system_class, (int)_1ou_status.present, (int)_2ou_status.present, board_revision);
@@ -324,8 +327,8 @@ void init_platform_config()
 					}
 					break;
 				default:
-					printf("[%s] Unknown condition 0x%x", __func__,
-					       _1ou_card_mapping_table[cnt].condition);
+					LOG_ERR("Unknown condition 0x%x",
+					        _1ou_card_mapping_table[cnt].condition);
 					break;
 				}
 
@@ -338,14 +341,13 @@ void init_platform_config()
 					i2c_msg = construct_i2c_message(I2C_BUS1, CPLD_ADDR, tx_len,
 									data, rx_len);
 					if (i2c_master_write(&i2c_msg, retry)) {
-						printf("Failed to set 1OU card detection to CPLD register(0x%x)\n",
-						       data[0]);
+						LOG_ERR("Failed to set 1OU card detection to CPLD register(0x%x)", data[0]);
 					}
 					break;
 				}
 				if ((cnt == ARRAY_SIZE(_1ou_card_mapping_table)) &&
 				    (_1ou_status.card_type == TYPE_1OU_UNKNOWN)) {
-					printf("Unknown the 1OU card type, the voltage of ADC channel-6 is %fV\n",
+					LOG_ERR("Unknown the 1OU card type, the voltage of ADC channel-6 is %fV",
 					       voltage);
 				}
 			}
@@ -367,7 +369,7 @@ void init_platform_config()
 				break;
 			default:
 				_2ou_status.card_type = TYPE_2OU_UNKNOWN;
-				printf("Unknown the 2OU card type, the card type read from CPLD is 0x%x\n",
+				LOG_ERR("Unknown the 2OU card type, the card type read from CPLD is 0x%x",
 				       i2c_msg.data[0]);
 				break;
 			}
@@ -375,3 +377,4 @@ void init_platform_config()
 	}
 	SAFE_FREE(data);
 }
+

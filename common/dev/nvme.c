@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -68,11 +68,11 @@ uint8_t nvme_read(uint8_t sensor_num, int *reading)
 		if (nvme_cal_pec(sensor_config[sensor_config_index_map[sensor_num]].target_addr,
 				 sensor_config[sensor_config_index_map[sensor_num]].offset,
 				 msg.data, NVMe_READ_LEN - 1, &pec)) {
-			LOG_ERR("sensor_num 0x%02x cal nvme pec fail!\n", sensor_num);
+			LOG_ERR("sensor_num 0x%02x cal nvme pec fail!", sensor_num);
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 		if (msg.data[7] != pec) {
-			LOG_ERR("sensor_num 0x%02x check nvme pec error! (%02x/%02x)\n", sensor_num,
+			LOG_ERR("sensor_num 0x%02x check nvme pec error! (%02x/%02x)", sensor_num,
 				msg.data[7], pec);
 			return SENSOR_PEC_ERROR;
 		}

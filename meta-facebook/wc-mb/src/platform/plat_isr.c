@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -16,7 +16,6 @@
 
 #include "plat_isr.h"
 
-#include <logging/log.h>
 #include "libipmi.h"
 #include "kcs.h"
 #include "power_status.h"
@@ -28,6 +27,7 @@
 #include "oem_1s_handler.h"
 #include "hal_gpio.h"
 #include "util_sys.h"
+#include <logging/log.h>
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -95,7 +95,7 @@ static void SLP3_handler()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			LOG_ERR("VR watchdog timeout addsel fail\n");
+			LOG_ERR("VR watchdog timeout addsel fail");
 		}
 	}
 }
@@ -111,7 +111,7 @@ void ISR_SLP3()
 		return;
 	}
 	if (k_work_cancel_delayable(&SLP3_work) != 0) {
-		LOG_ERR("[%s] Failed to cancel delayable work", __func__);
+		LOG_ERR("Failed to cancel delayable work");
 	}
 }
 
@@ -536,7 +536,7 @@ static void SMI_handler(struct k_work *work)
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			printf("SMI addsel fail\n");
+			LOG_ERR("SMI addsel fail");
 		}
 
 		gpio_interrupt_conf(IRQ_SMI_ACTIVE_BIC_N, GPIO_INT_EDGE_RISING);
@@ -567,7 +567,7 @@ void ISR_SMI()
 				sel_msg.event_data2 = 0xFF;
 				sel_msg.event_data3 = 0xFF;
 				if (!common_add_sel_evt_record(&sel_msg)) {
-					printf("SMI addsel fail\n");
+					LOG_ERR("SMI addsel fail");
 				}
 
 				gpio_interrupt_conf(IRQ_SMI_ACTIVE_BIC_N, GPIO_INT_EDGE_FALLING);

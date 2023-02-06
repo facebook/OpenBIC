@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -63,7 +63,7 @@ bool pm8702_get_dimm_temp(void *mctp_p, mctp_ext_params ext_params, uint16_t add
 	uint8_t rbuf[DIMM_TEMP_READ_RESP_PL_LEN] = { 0 };
 	if (mctp_cci_read(mctp_p, &msg, rbuf, DIMM_TEMP_READ_RESP_PL_LEN) !=
 	    DIMM_TEMP_READ_RESP_PL_LEN) {
-		LOG_ERR("[%s] mctp_cci_read fail", __func__);
+		LOG_ERR("mctp_cci_read fail");
 		SAFE_FREE(msg.pl_data);
 		return false;
 	}
@@ -117,7 +117,7 @@ uint8_t pm8702_read(uint8_t sensor_num, int *reading)
 		}
 		break;
 	default:
-		printf("%s: Invalid access offset %d\n", __func__, pm8702_access);
+		LOG_ERR("Invalid access offset %d", pm8702_access);
 		break;
 	}
 

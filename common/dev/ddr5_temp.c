@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -46,7 +46,7 @@ uint8_t ddr5_temp_read(uint8_t sensor_num, int *reading)
 	msg.data[0] = TS_SENSE_OFFSET;
 
 	if (i2c_master_read(&msg, retry)) {
-		LOG_WRN("i2c read failed.\n");
+		LOG_WRN("I2C read failed.");
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
@@ -66,7 +66,7 @@ uint8_t ddr5_temp_read(uint8_t sensor_num, int *reading)
 	msg.data[0] = TS_SENSE_OFFSET;
 
 	if (i2c_master_read(&msg, retry)) {
-		LOG_WRN("i2c read failed.\n");
+		LOG_WRN("I2C read failed.");
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 

@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -43,7 +43,7 @@ void apml_read_fail_cb(apml_msg *msg)
 	if (init_arg->retry < SENSOR_READ_RETRY_MAX) {
 		init_arg->retry++;
 	} else {
-		LOG_ERR("Access APML mailbox failed, sensor number 0x%x\n", cfg->num);
+		LOG_ERR("Access APML mailbox failed, sensor number 0x%x", cfg->num);
 		cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
 	}
 }
@@ -63,7 +63,7 @@ void cpu_power_write(apml_msg *msg)
 			init_arg->retry++;
 			return;
 		} else {
-			LOG_ERR("Read cpu power failed, sensor number 0x%x, error code %d\n",
+			LOG_ERR("Read cpu power failed, sensor number 0x%x, error code %d",
 				cfg->num, rddata->error_code);
 			cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
 			return;
@@ -94,7 +94,7 @@ void dimm_pwr_write(apml_msg *msg)
 			init_arg->retry++;
 			return;
 		} else {
-			LOG_ERR("Read dimm power failed, sensor number 0x%x, error code %d\n",
+			LOG_ERR("Read dimm power failed, sensor number 0x%x, error code %d",
 				cfg->num, rddata->error_code);
 			cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
 			return;
@@ -124,7 +124,7 @@ void dimm_temp_write(apml_msg *msg)
 			init_arg->retry++;
 			return;
 		} else {
-			LOG_ERR("Read dimm temperature failed, sensor number 0x%x, error code %d\n",
+			LOG_ERR("Read dimm temperature failed, sensor number 0x%x, error code %d",
 				cfg->num, rddata->error_code);
 			cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
 			return;
@@ -137,7 +137,7 @@ void dimm_temp_write(apml_msg *msg)
 	if (is_ts1) {
 		float *TS0_temp = &(((dimm_temp_priv_data *)(cfg->priv_data))->ts0_temp);
 		if (TS0_temp == NULL) {
-			LOG_DBG("TS0_temp is NULL!\n");
+			LOG_DBG("TS0_temp is NULL!");
 			cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
 			return;
 		}
@@ -155,13 +155,13 @@ void dimm_temp_write(apml_msg *msg)
 		if (cfg->priv_data) {
 			float *TS0_temp = &(((dimm_temp_priv_data *)(cfg->priv_data))->ts0_temp);
 			if (TS0_temp == NULL) {
-				LOG_DBG("TS0_temp is NULL!\n");
+				LOG_DBG("TS0_temp is NULL!");
 				cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
 				return;
 			}
 			*TS0_temp = temp;
 		} else {
-			LOG_ERR("Private data is NULL!\n");
+			LOG_ERR("Private data is NULL!");
 		}
 	}
 }
@@ -227,7 +227,7 @@ uint8_t apml_mailbox_init(uint8_t sensor_num)
 	if (cfg->offset == SBRMI_MAILBOX_GET_DIMM_TEMP) {
 		cfg->priv_data = malloc(sizeof(dimm_temp_priv_data));
 		if (cfg->priv_data == NULL) {
-			LOG_DBG("Allocate private data failed.\n");
+			LOG_DBG("Allocate private data failed.");
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
 		}
 	}

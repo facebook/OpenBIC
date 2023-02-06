@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <logging/log.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -22,6 +21,9 @@
 #include "hal_i2c.h"
 #include "libutil.h"
 #include "pmbus.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(mp5990);
 
 #define I2C_DATA_SIZE 5
 
@@ -31,7 +33,6 @@
 #define MP5990_EIN_SAMPLE_CNT_MAX 0x1000000
 #define MP5990_EIN_ENERGY_CNT_MAX 0x8000
 
-LOG_MODULE_REGISTER(dev_mp5990);
 
 int mp5990_read_ein(double *val, uint8_t sensor_num)
 {
@@ -110,7 +111,7 @@ uint8_t mp5990_read(uint8_t sensor_num, int *reading)
 	mp5990_init_arg *init_arg =
 		(mp5990_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
 	if (init_arg->is_init == false) {
-		printf("[%s], device isn't initialized\n", __func__);
+		LOG_ERR("Device isn't initialized");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -175,7 +176,7 @@ uint8_t mp5990_init(uint8_t sensor_num)
 	}
 
 	if (!sensor_config[sensor_config_index_map[sensor_num]].init_args) {
-		printf("<error> MP5990 init args are not provided!\n");
+		LOG_ERR("<error> MP5990 init args are not provided!");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
@@ -188,7 +189,7 @@ uint8_t mp5990_init(uint8_t sensor_num)
 	I2C_MSG msg;
 	char *data = (uint8_t *)malloc(I2C_DATA_SIZE * sizeof(uint8_t));
 	if (data == NULL) {
-		printf("[%s], Memory allocation failed!\n", __func__);
+		LOG_ERR("memory allocation failed!");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 	uint8_t bus = sensor_config[sensor_config_index_map[sensor_num]].port;
@@ -204,7 +205,7 @@ uint8_t mp5990_init(uint8_t sensor_num)
 		data[2] = (init_args->iout_cal_gain >> 8) & 0xFF;
 		msg = construct_i2c_message(bus, target_addr, tx_len, data, rx_len);
 		if (i2c_master_write(&msg, retry) != 0) {
-			printf("Failed to write MP5990 register(0x%x)\n", data[0]);
+			LOG_ERR("Failed to write MP5990 register(0x%x)", data[0]);
 			goto cleanup;
 		}
 	}
@@ -218,7 +219,7 @@ uint8_t mp5990_init(uint8_t sensor_num)
 		data[2] = (init_args->iout_oc_fault_limit >> 8) & 0xFF;
 		msg = construct_i2c_message(bus, target_addr, tx_len, data, rx_len);
 		if (i2c_master_write(&msg, retry) != 0) {
-			printf("Failed to write MP5990 register(0x%x)\n", data[0]);
+			LOG_ERR("Failed to write MP5990 register(0x%x)", data[0]);
 			goto cleanup;
 		}
 	}
@@ -232,7 +233,7 @@ uint8_t mp5990_init(uint8_t sensor_num)
 		data[2] = (init_args->ocw_sc_ref >> 8) & 0xFF;
 		msg = construct_i2c_message(bus, target_addr, tx_len, data, rx_len);
 		if (i2c_master_write(&msg, retry) != 0) {
-			printf("Failed to write MP5990 register(0x%x)\n", data[0]);
+			LOG_ERR("Failed to write MP5990 register(0x%x)", data[0]);
 			goto cleanup;
 		}
 	}

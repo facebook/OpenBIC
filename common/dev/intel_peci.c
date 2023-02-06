@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <logging/log.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,6 +25,7 @@
 #include "ipmi.h"
 #include "util_sys.h"
 #include "intel_dimm.h"
+#include <logging/log.h>
 
 LOG_MODULE_REGISTER(dev_intel_peci);
 
@@ -47,21 +47,20 @@ static bool get_power_sku_unit(uint8_t addr)
 	int ret = 0;
 	uint8_t *readbuf = (uint8_t *)malloc(readlen * sizeof(uint8_t));
 	if (!readbuf) {
-		LOG_ERR("[%s] fail to allocate readbuf memory\n", __func__);
+		LOG_ERR("Fail to allocate readbuf memory");
 		return false;
 	}
 	ret = peci_read(command, addr, RDPKG_IDX_PWR_SKU_UNIT_READ, 0, readlen, readbuf);
 	if (ret) {
-		LOG_DBG("[%s] peci read error\n", __func__);
+		LOG_ERR("PECI read error");
 		goto cleanup;
 	}
 
 	if (readbuf[0] != PECI_CC_RSP_SUCCESS) {
 		if (readbuf[0] == PECI_CC_ILLEGAL_REQUEST) {
-			LOG_ERR("[%s] Unknown request\n", __func__);
+			LOG_ERR("Unknown request");
 		} else {
-			LOG_ERR("[%s] PECI control hardware, firmware or associated logic error\n",
-			       __func__);
+			LOG_ERR("PECI control hardware, firmware or associated logic error");
 		}
 		goto cleanup;
 	}
@@ -86,13 +85,13 @@ bool check_dimm_present(uint8_t dimm_channel, uint8_t dimm_num, uint8_t *present
 {
 	// BIC can check DIMM present or not by NM IPMI get CPU and memory temperature commnad
 	if (present_result == NULL) {
-		LOG_ERR("[%s] input present result pointer is NULL\n", __func__);
+		LOG_ERR("Input present result pointer is NULL");
 		return false;
 	}
 
 	ipmi_msg *dimm_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
 	if (dimm_msg == NULL) {
-		LOG_ERR("[%s] fail to allocate dimm message memory\n", __func__);
+		LOG_ERR("Fail to allocate DIMM message memory");
 		return false;
 	}
 	memset(dimm_msg, 0, sizeof(ipmi_msg));
@@ -100,7 +99,7 @@ bool check_dimm_present(uint8_t dimm_channel, uint8_t dimm_num, uint8_t *present
 	get_cpu_memory_temp_req *get_dimm_temp_req =
 		(get_cpu_memory_temp_req *)malloc(sizeof(get_cpu_memory_temp_req));
 	if (get_dimm_temp_req == NULL) {
-		LOG_ERR("[%s] fail to allocate request array memory\n", __func__);
+		LOG_ERR("Fail to allocate request array memory");
 		SAFE_FREE(dimm_msg);
 		return false;
 	}
@@ -186,7 +185,7 @@ bool check_dimm_present(uint8_t dimm_channel, uint8_t dimm_num, uint8_t *present
 		}
 		break;
 	default:
-		LOG_ERR("[%s] dimm channel is invalid, dimm channel: %d\n", __func__, dimm_channel);
+		LOG_ERR("DIMM channel is invalid, DIMM channel: %d", dimm_channel);
 		goto safe_free;
 		break;
 	}
@@ -197,8 +196,7 @@ bool check_dimm_present(uint8_t dimm_channel, uint8_t dimm_num, uint8_t *present
 					   (uint8_t *)get_dimm_temp_req);
 	ipmb_error ipmb_ret = ipmb_read(dimm_msg, IPMB_inf_index_map[dimm_msg->InF_target]);
 	if ((ipmb_ret != IPMB_ERROR_SUCCESS) || (dimm_msg->completion_code != CC_SUCCESS)) {
-		LOG_ERR("[%s] fail to send get dimm temperature command ret: 0x%x CC: 0x%x\n",
-		       __func__, ipmb_ret, dimm_msg->completion_code);
+		LOG_ERR("Fail to send get DIMM temperature command ret: 0x%x CC: 0x%x", ipmb_ret, dimm_msg->completion_code);
 		goto safe_free;
 	}
 
@@ -214,7 +212,7 @@ safe_free:
 static bool read_cpu_power(uint8_t addr, int *reading)
 {
 	if (reading == NULL) {
-		LOG_DBG("[%s] invalid argument\n", __func__);
+		LOG_ERR("Invalid argument");
 		return false;
 	}
 
@@ -228,33 +226,32 @@ static bool read_cpu_power(uint8_t addr, int *reading)
 
 	uint8_t *readbuf = (uint8_t *)malloc(2 * readlen * sizeof(uint8_t));
 	if (!readbuf) {
-		LOG_ERR("[%s] fail to allocate readbuf memory\n", __func__);
+		LOG_ERR("Fail to allocate readbuf memory");
 		return false;
 	}
 
 	ret = peci_read(command, addr, u8index[0], u16Param[0], readlen, readbuf);
 	if (ret) {
-		LOG_DBG("[%s] peci read error\n", __func__);
+		LOG_ERR("PECI read error");
 		goto cleanup;
 	}
 	ret = peci_read(command, addr, u8index[1], u16Param[1], readlen, &readbuf[5]);
 	if (ret) {
-		LOG_DBG("[%s] peci read error\n", __func__);
+		LOG_ERR("PECI read error");
 		goto cleanup;
 	}
 	if (readbuf[0] != PECI_CC_RSP_SUCCESS || readbuf[5] != PECI_CC_RSP_SUCCESS) {
 		if (readbuf[0] == PECI_CC_ILLEGAL_REQUEST ||
 		    readbuf[5] == PECI_CC_ILLEGAL_REQUEST) {
-			LOG_ERR("[%s] Unknown request\n", __func__);
+			LOG_ERR("Unknown request");
 		} else {
-			LOG_ERR("[%s] PECI control hardware, firmware or associated logic error\n",
-			       __func__);
+			LOG_ERR("PECI control hardware, firmware or associated logic error");
 		}
 		goto cleanup;
 	}
 
 	if (!get_power_sku_unit(addr)) {
-		LOG_ERR("[%s] PECI get power sku unit failed!\n", __func__);
+		LOG_ERR("PECI get power sku unit failed!");
 		goto cleanup;
 	}
 
@@ -272,7 +269,7 @@ static bool read_cpu_power(uint8_t addr, int *reading)
 	    last_run_time == 0) { // first read, need second data to calculate
 		last_pkg_energy = pkg_energy;
 		last_run_time = run_time;
-		LOG_DBG("[%s] cpu power first read\n", __func__);
+		LOG_DBG("CPU power first read");
 		goto cleanup;
 	}
 
@@ -291,7 +288,7 @@ static bool read_cpu_power(uint8_t addr, int *reading)
 	last_run_time = run_time;
 
 	if (diff_time == 0) {
-		LOG_DBG("[%s] cpu power time elapsed is zero\n", __func__);
+		LOG_DBG("CPU power time elapsed is zero");
 		goto cleanup;
 	}
 
@@ -315,7 +312,7 @@ cleanup:
 static bool get_cpu_tjmax(uint8_t addr, int *reading)
 {
 	if (!reading) {
-		LOG_DBG("[%s] invalid argument\n", __func__);
+		LOG_DBG("Invalid argument");
 		return false;
 	}
 
@@ -326,7 +323,7 @@ static bool get_cpu_tjmax(uint8_t addr, int *reading)
 
 	int ret = peci_read(PECI_CMD_RD_PKG_CFG0, addr, RDPKG_IDX_TJMAX_TEMP, param, rlen, rbuf);
 	if (ret != 0) {
-		LOG_DBG("[%s] peci read error\n", __func__);
+		LOG_DBG("PECI read error");
 		return false;
 	}
 
@@ -338,7 +335,7 @@ static bool get_cpu_tjmax(uint8_t addr, int *reading)
 static bool get_cpu_margin(uint8_t addr, int *reading)
 {
 	if (!reading) {
-		LOG_DBG("[%s] invalid argument\n", __func__);
+		LOG_ERR("Invalid argument");
 		return false;
 	}
 
@@ -349,7 +346,7 @@ static bool get_cpu_margin(uint8_t addr, int *reading)
 
 	int ret = peci_read(PECI_CMD_RD_PKG_CFG0, addr, RDPKG_IDX_PKG_TEMP, param, rlen, rbuf);
 	if (ret != 0) {
-		LOG_DBG("[%s] peci read error\n", __func__);
+		LOG_ERR("PECI read error");
 		return false;
 	}
 
@@ -361,13 +358,13 @@ static bool get_cpu_margin(uint8_t addr, int *reading)
 static bool get_cpu_pwr(uint8_t addr, int *reading)
 {
 	if (!reading) {
-		LOG_DBG("[%s] invalid argument\n", __func__);
+		LOG_ERR("Invalid argument");
 		return false;
 	}
 
 	int pwr = 0;
 	if (read_cpu_power(addr, &pwr) == false) {
-		LOG_DBG("[%s] read cpu power error\n", __func__);
+		LOG_ERR("Read CPU power error");
 		return false;
 	}
 
@@ -379,19 +376,19 @@ static bool get_cpu_pwr(uint8_t addr, int *reading)
 static bool get_cpu_temp(uint8_t addr, int *reading)
 {
 	if (!reading) {
-		LOG_DBG("[%s] invalid argument\n", __func__);
+		LOG_ERR("Invalid argument");
 		return false;
 	}
 
 	sensor_val tjmax = { 0 };
 	if (get_cpu_tjmax(addr, (int *)&tjmax) == false) {
-		LOG_DBG("[%s] get cpu tjmax error\n", __func__);
+		LOG_ERR("Get CPU tjmax error");
 		return false;
 	}
 
 	sensor_val margin = { 0 };
 	if (get_cpu_margin(addr, (int *)&margin) == false){
-		LOG_DBG("[%s] get cpu margin error\n", __func__);
+		LOG_ERR("Get CPU margin error");
 		return false;
 	}
 
@@ -478,7 +475,7 @@ static bool get_dimm_temp(uint8_t addr, uint8_t type, int *reading)
 	}
 
 	if (param == 0xFF || temp_ofs == 0xFF) {
-		LOG_DBG("[%s] Unsupported peci temp channel %d\n", __func__, type);
+		LOG_ERR("Unsupported PECI temp channel %d", type);
 		return false;
 	}
 
@@ -487,7 +484,7 @@ static bool get_dimm_temp(uint8_t addr, uint8_t type, int *reading)
 	memset(rbuf, 0, sizeof(rbuf));
 
 	if (peci_read(PECI_CMD_RD_PKG_CFG0, addr, RDPKG_IDX_DIMM_TEMP, param, rlen, rbuf) != 0) {
-		LOG_DBG("[%s] peci read error\n", __func__);
+		LOG_ERR("PECI read error");
 		return false;
 	}
 	sensor_val *sval = (sensor_val *)reading;
@@ -498,7 +495,7 @@ static bool get_dimm_temp(uint8_t addr, uint8_t type, int *reading)
 uint8_t intel_peci_read(uint8_t sensor_num, int *reading)
 {
 	if (!reading || (sensor_num > SENSOR_NUM_MAX)) {
-		LOG_DBG("[%s] Invalid argument\n", __func__);
+		LOG_ERR("Invalid argument");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -506,7 +503,7 @@ uint8_t intel_peci_read(uint8_t sensor_num, int *reading)
 	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 	const uint8_t read_type = cfg->offset;
 	if (read_type <= PECI_UNKNOWN || read_type >= PECI_MAX) {
-		LOG_DBG("[%s] Sensor not found\n", __func__);
+		LOG_ERR("Sensor not found");
 		return SENSOR_NOT_FOUND;
 	}
 
@@ -546,7 +543,7 @@ uint8_t intel_peci_read(uint8_t sensor_num, int *reading)
 	}
 
 	if (!ret_val) {
-		LOG_DBG("[%s] Sensor access error\n", __func__);
+		LOG_ERR("Sensor access error");
 	}
 
 	return ret_val ? SENSOR_READ_SUCCESS : SENSOR_FAIL_TO_ACCESS;
@@ -555,7 +552,7 @@ uint8_t intel_peci_read(uint8_t sensor_num, int *reading)
 uint8_t intel_peci_init(uint8_t sensor_num)
 {
 	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_DBG("[%s] PECI init failed, sensor_num exceeds SENSOR_NUM_MAX\n", __func__);
+		LOG_ERR("PECI init failed, sensor_num exceeds SENSOR_NUM_MAX");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
@@ -565,7 +562,7 @@ uint8_t intel_peci_init(uint8_t sensor_num)
 		int ret;
 		ret = peci_init();
 		if (ret) {
-			LOG_DBG("[%s] PECI init error\n", __func__);
+			LOG_ERR("PECI init error");
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
 		}
 		is_init = true;

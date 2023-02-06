@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -26,6 +26,9 @@
 #include "libutil.h"
 #include "ipmi.h"
 #include "power_status.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(dev_snoop);
 
 const struct device *snoop_dev;
 uint8_t *snoop_data;
@@ -48,7 +51,7 @@ void snoop_init()
 {
 	snoop_dev = device_get_binding(DT_LABEL(DT_NODELABEL(snoop)));
 	if (!snoop_dev) {
-		printf("No snoop device found\n");
+		LOG_ERR("No snoop device found");
 		return;
 	}
 	return;
@@ -61,7 +64,7 @@ void copy_snoop_read_buffer(uint8_t offset, int size_num, uint8_t *buffer, uint8
 	}
 
 	if (size_num > SNOOP_MAX_LEN) {
-		printf("copy snoop buffer size exceeded\n");
+		LOG_ERR("copy snoop buffer size exceeded");
 		return;
 	}
 	if (!k_mutex_lock(&snoop_mutex, K_MSEC(1000))) {
@@ -79,10 +82,10 @@ void copy_snoop_read_buffer(uint8_t offset, int size_num, uint8_t *buffer, uint8
 			}
 		}
 	} else {
-		printf("copy snoop buffer lock fail\n");
+		LOG_ERR("copy snoop buffer lock fail");
 	}
 	if (k_mutex_unlock(&snoop_mutex)) {
-		printf("copy snoop buffer unlock fail\n");
+		LOG_ERR("copy snoop buffer unlock fail");
 	}
 }
 
@@ -103,7 +106,7 @@ void snoop_read()
 		snoop_read_buffer = malloc(sizeof(uint8_t) * SNOOP_MAX_LEN);
 	}
 	if (snoop_read_buffer == NULL) {
-		printf("snoop read buffer alloc fail\n");
+		LOG_ERR("snoop read buffer alloc fail");
 		return;
 	}
 
@@ -115,10 +118,10 @@ void snoop_read()
 				snoop_read_buffer[snoop_read_num % SNOOP_MAX_LEN] = *snoop_data;
 				snoop_read_num++;
 			} else {
-				printf("snoop read lock fail\n");
+				LOG_ERR("snoop read lock fail");
 			}
 			if (k_mutex_unlock(&snoop_mutex)) {
-				printf("snoop read unlock fail\n");
+				LOG_ERR("snoop read unlock fail");
 			}
 		}
 	}
@@ -163,13 +166,13 @@ void send_post_code_to_BMC()
 				if (get_post_status()) {
 					alloc_sendmsg_retry += 1;
 					if (alloc_sendmsg_retry > 3) {
-						printf("post complete and send post code thread alloc fail three times continuously\n");
+						LOG_ERR("post complete and send post code thread alloc fail three times continuously");
 						return;
 					} else {
 						continue;
 					}
 				} else {
-					printf("send post code thread alloc fail\n");
+					LOG_ERR("send post code thread alloc fail");
 					continue;
 				}
 			}
@@ -201,11 +204,11 @@ void send_post_code_to_BMC()
 					   IPMB_inf_index_map[send_postcode_msg->InF_target]);
 			SAFE_FREE(send_postcode_msg);
 			if (status == IPMB_ERROR_FAILURE) {
-				printf("Fail to post msg to txqueue for send post code from %d to %d\n",
+				LOG_ERR("Fail to post msg to txqueue for send post code from %d to %d",
 				       send_postcode_start_position, send_postcode_end_position);
 				continue;
 			} else if (status == IPMB_ERROR_GET_MESSAGE_QUEUE) {
-				printf("No response from bmc for send post code\n");
+				LOG_ERR("No response from bmc for send post code");
 				continue;
 			}
 			send_postcode_start_position = send_postcode_end_position;

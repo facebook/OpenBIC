@@ -102,8 +102,7 @@ static void set_endpoint_resp_timeout(void *args)
 	CHECK_NULL_ARG(args);
 
 	mctp_route_entry *p = (mctp_route_entry *)args;
-	LOG_DBG("[%s] Endpoint 0x%x set endpoint failed on bus %d", __func__, p->endpoint,
-	       p->bus);
+	LOG_DBG("Endpoint 0x%x set endpoint failed on bus %d", p->endpoint, p->bus);
 }
 
 static void set_dev_endpoint(void)
@@ -223,7 +222,7 @@ bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg)
 	msg.len = sizeof(struct mctp_to_ipmi_sel_req);
 
 	if (set_iana(req.header.iana, sizeof(req.header.iana))) {
-		LOG_ERR("[%s] Set IANA fail", __func__);
+		LOG_ERR("Set IANA fail");
 		return false;
 	}
 
@@ -240,7 +239,7 @@ bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg)
 	uint8_t rbuf[resp_len];
 
 	if (!mctp_pldm_read(find_mctp_by_i3c(I3C_BUS_BMC), &msg, rbuf, resp_len)) {
-		LOG_ERR("[%s] mctp_pldm_read fail", __func__);
+		LOG_ERR("mctp_pldm_read fail");
 		return false;
 	}
 
@@ -248,7 +247,7 @@ bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg)
 
 	if ((resp->header.completion_code != MCTP_SUCCESS) ||
 	    (resp->header.ipmi_comp_code != CC_SUCCESS)) {
-		LOG_ERR("[%s] Check reponse completion code fail %x %x", __func__, resp->header.completion_code, resp->header.ipmi_comp_code);
+		LOG_ERR("Check reponse completion code fail %x %x", resp->header.completion_code, resp->header.ipmi_comp_code);
 		return false;
 	}
 
@@ -318,7 +317,7 @@ void plat_mctp_init(void)
 
 		uint8_t rc = mctp_set_medium_configure(p->mctp_inst, MCTP_MEDIUM_TYPE_I3C, p->conf);
 		if (rc != MCTP_SUCCESS) {
-			LOG_INF("[%s] mctp set medium configure failed", __func__);
+			LOG_INF("mctp set medium configure failed");
 		}
 
 		mctp_reg_endpoint_resolve_func(p->mctp_inst, get_mctp_route_info);

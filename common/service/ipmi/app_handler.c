@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -181,7 +181,7 @@ __weak void APP_MASTER_WRITE_READ(ipmi_msg *msg)
 	// should ignore bit0, all bus public
 	bus_7bit = msg->data[0] >> 1;
 	if (bus_7bit >= I2C_BUS_MAX_NUM) {
-		LOG_ERR("Accessing invalid bus with IPMI master write read\n");
+		LOG_ERR("Accessing invalid bus with IPMI master write read");
 		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
 		return;
 	}
@@ -244,7 +244,7 @@ void IPMI_APP_handler(ipmi_msg *msg)
 		break;
 #endif
 	default:
-		LOG_ERR("invalid APP msg netfn: %x, cmd: %x\n", msg->netfn, msg->cmd);
+		LOG_ERR("Invalid APP msg netfn: %x, cmd: %x", msg->netfn, msg->cmd);
 		msg->data_len = 0;
 		msg->completion_code = CC_INVALID_CMD;
 		break;

@@ -76,8 +76,7 @@ void pldm_read_resp_handler(void *args, uint8_t *rbuf, uint16_t rlen)
 	pldm_recv_resp_arg *recv_arg = (pldm_recv_resp_arg *)args;
 
 	if (rlen > recv_arg->rbuf_len) {
-		LOG_WRN("[%s] response length(%d) is greater than buffer length(%d)!", __func__,
-			rlen, recv_arg->rbuf_len);
+		LOG_WRN("Response length(%d) is greater than buffer length(%d)!", rlen, recv_arg->rbuf_len);
 		recv_arg->return_len = recv_arg->rbuf_len;
 	} else {
 		recv_arg->return_len = rlen;
@@ -124,18 +123,18 @@ uint16_t mctp_pldm_read(void *mctp_p, pldm_msg *msg, uint8_t *rbuf, uint16_t rbu
 	for (uint8_t retry_count = 0; retry_count < PLDM_MSG_MAX_RETRY; retry_count++) {
 		uint8_t event = 0;
 		if (mctp_pldm_send_msg(mctp_p, msg) == PLDM_ERROR) {
-			LOG_WRN("[%s] send msg failed!", __func__);
+			LOG_WRN("Send msg failed!");
 			continue;
 		}
 		if (k_msgq_get(&event_msgq, &event, K_MSEC(PLDM_MSG_TIMEOUT_MS + 1000))) {
-			LOG_WRN("[%s] Failed to get status from msgq!", __func__);
+			LOG_WRN("Failed to get status from msgq!");
 			continue;
 		}
 		if (event == PLDM_READ_EVENT_SUCCESS) {
 			return recv_arg.return_len;
 		}
 	}
-	LOG_WRN("[%s] retry reach max!", __func__);
+	LOG_WRN("Retry reach max!");
 	return 0;
 }
 
@@ -526,7 +525,7 @@ int pldm_send_ipmi_request(ipmi_msg *msg)
 		mctp_pldm_read(pal_get_mctp(medium_type, target), &pmsg, rbuf, sizeof(rbuf));
 
 	if (!res_len) {
-		LOG_ERR("[%s] mctp_pldm_read fail", __func__);
+		LOG_ERR("mctp_pldm_read fail");
 		return false;
 	}
 

@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -19,8 +19,12 @@
 #include <device.h>
 #include <stdio.h>
 #include "libutil.h"
+#include <logging/log.h>
 
-/* 
+LOG_MODULE_REGISTER(flash_shell);
+
+
+/*
     Command FLASH
 */
 void cmd_flash_re_init(const struct shell *shell, size_t argc, char **argv)
@@ -114,7 +118,7 @@ void device_spi_name_get(size_t idx, struct shell_static_entry *entry)
 	const struct device *dev = shell_device_lookup(idx, SPI_DEVICE_PREFIX);
 
 	if (entry == NULL) {
-		printf("%s passed null entry\n", __func__);
+		LOG_ERR("entry is NULL");
 		return;
 	}
 

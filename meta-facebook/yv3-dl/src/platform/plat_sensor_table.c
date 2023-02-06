@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -355,7 +355,7 @@ const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
 void load_sensor_config(void)
 {
 	if (k_mutex_init(&vr_page_mutex)) {
-		printf("vr_page_mutex mutex init fail\n");
+		LOG_ERR("vr_page_mutex mutex init fail");
 	}
 
 	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
@@ -397,26 +397,26 @@ static int check_vr_type(void)
 	msg.data[0] = PMBUS_IC_DEVICE_ID;
 
 	if (i2c_master_read(&msg, retry)) {
-		printf("Failed to read VR IC_DEVICE_ID: register(0x%x)\n", PMBUS_IC_DEVICE_ID);
+		LOG_ERR("Failed to read VR IC_DEVICE_ID: register(0x%x)", PMBUS_IC_DEVICE_ID);
 		return -1;
 	}
 
 	if (memcmp(msg.data, ISL69254_DEVICE_ID, sizeof(ISL69254_DEVICE_ID)) == 0) {
-		printf("VR type: RNS\n");
+		LOG_DBG("VR type: RNS");
 		return VR_RNS;
 	} else if (memcmp(msg.data, XDPE12284C_DEVICE_ID, sizeof(XDPE12284C_DEVICE_ID)) == 0) {
-		printf("VR type: INF\n");
+		LOG_DBG("VR type: INF");
 		return VR_INF;
 	}
 
-	printf("Unknown VR type\n");
+	LOG_ERR("Unknown VR type");
 	return -1;
 }
 
 void check_outlet_temp_type(uint8_t index)
 {
 	if (index >= sensor_config_count) {
-		printf("Out of sensor_config_count\n");
+		LOG_ERR("Out of sensor_config_count");
 		return;
 	}
 
@@ -439,7 +439,7 @@ void check_outlet_temp_type(uint8_t index)
 	msg.data[0] = NCT7718W_CHIP_ID_OFFSET;
 
 	if (i2c_master_read(&msg, retry)) {
-		printf("Failed to read Outlet_Temp chip ID: register(0x%x)\n",
+		LOG_ERR("Failed to read Outlet_Temp chip ID: register(0x%x)",
 		       NCT7718W_CHIP_ID_OFFSET);
 		return;
 	}
@@ -453,7 +453,7 @@ void check_outlet_temp_type(uint8_t index)
 	msg.data[0] = NCT7718W_VENDOR_ID_OFFSET;
 
 	if (i2c_master_read(&msg, retry)) {
-		printf("Failed to read Outlet_Temp vendor ID: register(0x%x)\n",
+		LOG_ERR("Failed to read Outlet_Temp vendor ID: register(0x%x)",
 		       NCT7718W_VENDOR_ID_OFFSET);
 		return;
 	}
@@ -466,7 +466,7 @@ void check_outlet_temp_type(uint8_t index)
 	} else if ((CID == 0x50) && (VID == 0x47)) {
 		sensor_config[index].type = sensor_dev_g788p81u;
 	} else {
-		printf("Unknown Outlet_Temp type\n");
+		LOG_ERR("Unknown Outlet_Temp type");
 	}
 }
 
@@ -484,7 +484,7 @@ void pal_extend_sensor_config()
 		break;
 	case VR_INF:
 	default:
-		printf("Using default VR(INF) sensor table\n");
+		LOG_ERR("Using default VR(INF) sensor table");
 		break;
 	}
 

@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -36,7 +36,7 @@ static bool rg3mxxb12_register_read(uint8_t bus, uint8_t offset, uint8_t *value)
 	msg.rx_len = 1;
 	ret = i2c_master_read(&msg, RETRY);
 	if (ret != 0) {
-		LOG_ERR("failed to read rg3mxxb12 register 0x%x, bus-%d\n", offset, bus);
+		LOG_ERR("Failed to read rg3mxxb12 register 0x%x, bus-%d", offset, bus);
 		return false;
 	}
 	*value = msg.data[0];
@@ -56,7 +56,7 @@ static bool rg3mxxb12_register_write(uint8_t bus, uint8_t offset, uint8_t value)
 	msg.data[1] = value;
 	ret = i2c_master_write(&msg, RETRY);
 	if (ret != 0) {
-		LOG_ERR("failed to write rg3mxxb12 register 0x%x, bus-%d\n", offset, bus);
+		LOG_ERR("Failed to write rg3mxxb12 register 0x%x, bus-%d", offset, bus);
 		return false;
 	}
 
@@ -65,8 +65,8 @@ static bool rg3mxxb12_register_write(uint8_t bus, uint8_t offset, uint8_t value)
 	msg.rx_len = 1;
 	ret = i2c_master_read(&msg, RETRY);
 	if ((ret != 0) || (msg.data[0] != value)) {
-		LOG_ERR("failed to read rg3mxxb12 register 0x%x after setting,"
-			"bus-%d\n",
+		LOG_ERR("Failed to read rg3mxxb12 register 0x%x after setting,"
+			"bus-%d",
 			offset, bus);
 		return false;
 	}

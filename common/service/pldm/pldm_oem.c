@@ -96,14 +96,14 @@ static uint8_t ipmi_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t ins
 	}
 
 	if (check_iana(req_p->iana) == PLDM_ERROR) {
-		LOG_WRN("iana %08x is uncorret", (uint32_t)req_p->iana);
+		LOG_WRN("IANA %08x incorrect", (uint32_t)req_p->iana);
 		struct _ipmi_cmd_resp *resp_p = (struct _ipmi_cmd_resp *)resp;
 		resp_p->completion_code = PLDM_ERROR_INVALID_DATA;
 		set_iana(resp_p->iana, sizeof(resp_p->iana));
 		return PLDM_SUCCESS;
 	}
 
-	LOG_DBG("ipmi over pldm, len = %d\n", len);
+	LOG_DBG("ipmi over pldm, len = %d", len);
 	LOG_DBG("netfn %x, cmd %x", req_p->netfn_lun, req_p->cmd);
 	LOG_HEXDUMP_DBG(buf, len, "ipmi cmd data");
 
@@ -138,7 +138,7 @@ static uint8_t ipmi_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t ins
 
 	while (k_msgq_put(&ipmi_msgq, &msg, K_NO_WAIT) != 0) {
 		k_msgq_purge(&ipmi_msgq);
-		LOG_WRN("Retrying put ipmi msgq\n");
+		LOG_WRN("Retrying put ipmi msgq");
 	}
 
 	return PLDM_LATER_RESP;

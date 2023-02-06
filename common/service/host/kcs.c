@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -68,7 +68,7 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 	ARG_UNUSED(arvg2);
 	kcs_dev *kcs_inst = (kcs_dev *)arvg0;
 	if (!kcs_inst) {
-		LOG_ERR("failed to get the kcs instance\n");
+		LOG_ERR("Failed to get the kcs instance");
 		return;
 	}
 
@@ -203,7 +203,7 @@ void kcs_device_init(char **config, uint8_t size)
 	 * The max channel number KCS_MAX_CHANNEL_NUM is 0xF.
 	 */
 	if (size > KCS_MAX_CHANNEL_NUM) {
-		LOG_ERR("the kcs config size is too large.\n");
+		LOG_ERR("KCS config size is too large.");
 		SAFE_FREE(kcs);
 		return;
 	}
@@ -211,7 +211,7 @@ void kcs_device_init(char **config, uint8_t size)
 	for (i = 0; i < size; i++) {
 		kcs[i].dev = device_get_binding(config[i]);
 		if (!kcs[i].dev) {
-			LOG_ERR("failed to find kcs device\n");
+			LOG_ERR("Failed to find kcs device");
 			continue;
 		}
 		snprintf(kcs[i].task_name, sizeof(kcs[i].task_name), "%s_polling", config[i]);

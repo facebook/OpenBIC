@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -42,14 +42,14 @@ bool set_pca9846_channel_and_transfer(uint8_t bus, uint8_t mux_addr, uint8_t mux
 	/* Mutex lock */
 	status = k_mutex_lock(&msg->lock, K_MSEC(PCA9846_MUTEX_LOCK_MS));
 	if (status != 0) {
-		LOG_ERR("mutex lock fail, status: %d, bus: %d, mux addr: 0x%x\n", status, bus,
+		LOG_ERR("Mutex lock fail, status: %d, bus: %d, mux addr: 0x%x", status, bus,
 			mux_addr);
 		return false;
 	}
 
 	status = i2c_master_write(&mux_msg, retry);
 	if (status != 0) {
-		LOG_ERR("set channel fail, status: %d\n", status);
+		LOG_ERR("Set channel fail, status: %d", status);
 		ret = false;
 		goto mutex_unlock;
 	}
@@ -63,13 +63,13 @@ bool set_pca9846_channel_and_transfer(uint8_t bus, uint8_t mux_addr, uint8_t mux
 		status = i2c_master_write(msg, retry);
 		break;
 	default:
-		LOG_ERR("transfer type is invalid, transfer type: %d\n", tran_type);
+		LOG_ERR("Transfer type is invalid, transfer type: %d", tran_type);
 		ret = false;
 		goto mutex_unlock;
 	}
 
 	if (status != 0) {
-		LOG_ERR("transfer msg fail, status: %d\n", status);
+		LOG_ERR("Transfer msg fail, status: %d", status);
 		ret = false;
 		goto mutex_unlock;
 	}
@@ -82,14 +82,14 @@ bool set_pca9846_channel_and_transfer(uint8_t bus, uint8_t mux_addr, uint8_t mux
 
 	status = i2c_master_write(&mux_msg, retry);
 	if (status != 0) {
-		LOG_ERR("disable all channels fail, status: %d\n", status);
+		LOG_ERR("Disable all channels fail, status: %d", status);
 		ret = false;
 	}
 
 mutex_unlock:
 	status = k_mutex_unlock(&msg->lock);
 	if (status != 0) {
-		LOG_ERR("mutex unlock fail, status: %d\n", status);
+		LOG_ERR("Mutex unlock fail, status: %d", status);
 		ret = false;
 	}
 

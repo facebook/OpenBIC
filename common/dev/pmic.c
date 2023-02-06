@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -22,11 +22,15 @@
 #include "sensor.h"
 #include "libutil.h"
 #include "plat_ipmb.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(pmic);
+
 uint8_t *compose_memory_write_read_req(uint8_t smbus_identifier, uint8_t smbus_address,
 				       uint32_t addr_value, uint8_t *write_data, uint8_t write_len)
 {
 	if ((write_len != 0) && (write_data == NULL)) {
-		printf("[%s] input parameter write_data is NULL\n", __func__);
+		LOG_ERR("Input parameter write_data is NULL");
 		return NULL;
 	}
 
@@ -49,27 +53,27 @@ int pmic_ipmb_transfer(int *total_pmic_power, uint8_t seq_source, uint8_t netFn,
 {
 	// Need input pointer to record total pmic power if command is memory read command
 	if ((command == CMD_SMBUS_READ_MEMORY) && (total_pmic_power == NULL)) {
-		printf("[%s] input total pmic power is NULL  cmd: 0x%x\n", __func__, command);
+		LOG_ERR("Input total pmic power is NULL  cmd: 0x%x", command);
 		return -1;
 	}
 
 	// No need input pointer to record total pmic power if command is memory write/cold reset command
 	if ((command == CMD_SMBUS_WRITE_MEMORY || command == CMD_APP_COLD_RESET) &&
 	    (total_pmic_power != NULL)) {
-		printf("[%s] input total pmic power is not NULL  cmd: 0x%x\n", __func__, command);
+		LOG_ERR("Input total pmic power is not NULL  cmd: 0x%x", command);
 		return -1;
 	}
 
 	// Input data pointer not match with data length
 	if ((data_len != 0) && (data == NULL)) {
-		printf("[%s] input data pointer/length in invaild  data_len: %d\n", __func__,
+		LOG_ERR("Input data pointer/length in invaild  data_len: %d",
 		       data_len);
 		return -1;
 	}
 
 	ipmi_msg *pmic_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
 	if (pmic_msg == NULL) {
-		printf("[%s] Failed to allocate memory\n", __func__);
+		LOG_ERR("Failed to allocate memory");
 		return -1;
 	}
 
@@ -79,14 +83,14 @@ int pmic_ipmb_transfer(int *total_pmic_power, uint8_t seq_source, uint8_t netFn,
 	ipmb_error ret = ipmb_read(pmic_msg, IPMB_inf_index_map[pmic_msg->InF_target]);
 
 	if ((ret != IPMB_ERROR_SUCCESS) || (pmic_msg->completion_code != CC_SUCCESS)) {
-		printf("[%s] Failed to send pmic_command ret: 0x%x CC: 0x%x\n", __func__, ret,
+		LOG_ERR("Failed to send pmic_command ret: 0x%x CC: 0x%x", ret,
 		       pmic_msg->completion_code);
 		SAFE_FREE(pmic_msg);
 		return -1;
 	}
 
 	if (pmic_msg->data_len < 4) {
-		printf("pmic res data_len: 0x%x\n", pmic_msg->data_len);
+		LOG_DBG("pmic res data_len: 0x%x", pmic_msg->data_len);
 		SAFE_FREE(pmic_msg);
 		return -1;
 	}
@@ -102,19 +106,19 @@ int pmic_ipmb_transfer(int *total_pmic_power, uint8_t seq_source, uint8_t netFn,
 uint8_t pmic_read(uint8_t sensor_num, int *reading)
 {
 	if (reading == NULL) {
-		printf("[%s] input parameter reading is NULL\n", __func__);
+		LOG_ERR("Input parameter reading is NULL");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	if ((sensor_num > SENSOR_NUM_MAX) ||
 	    (sensor_config[sensor_config_index_map[sensor_num]].init_args == NULL)) {
-		printf("[%s] sensor 0x%x input parameter is invaild\n", __func__, sensor_num);
+		LOG_ERR("Sensor 0x%x input parameter is invaild", sensor_num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	pmic_init_arg *pmic_arg = sensor_config[sensor_config_index_map[sensor_num]].init_args;
 	if (pmic_arg->is_init == false) {
-		printf("[%s] device isn't initialized\n", __func__);
+		LOG_ERR("Device isn't initialized");
 		return SENSOR_NOT_FOUND;
 	}
 #if MAX_IPMB_IDX
@@ -123,14 +127,14 @@ uint8_t pmic_read(uint8_t sensor_num, int *reading)
 	uint8_t *compose_memory_write_read_msg = compose_memory_write_read_req(
 		pmic_arg->smbus_bus_identifier, pmic_arg->smbus_addr, PMIC_SWA_ADDR_VAL, NULL, 0);
 	if (compose_memory_write_read_msg == NULL) {
-		printf("[%s] compose memory write read msg is NULL\n", __func__);
+		LOG_ERR("Compose memory write read msg is NULL");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	ret = pmic_ipmb_transfer(&total_pmic_power, seq_source, NETFN_NM_REQ, CMD_SMBUS_READ_MEMORY,
 				 SELF, ME_IPMB, PMIC_READ_DATA_LEN, compose_memory_write_read_msg);
 	if (ret != 0) {
-		printf("[%s] PMIC ipmb transfer error\n", __func__);
+		LOG_ERR("PMIC ipmb transfer error");
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
@@ -148,7 +152,7 @@ uint8_t pmic_read(uint8_t sensor_num, int *reading)
 uint8_t pmic_init(uint8_t sensor_num)
 {
 	if (sensor_num > SENSOR_NUM_MAX) {
-		printf("[%s] input sensor number 0x%x is invaild\n", __func__, sensor_num);
+		LOG_ERR("Input sensor number 0x%x is invaild", sensor_num);
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 	sensor_config[sensor_config_index_map[sensor_num]].read = pmic_read;

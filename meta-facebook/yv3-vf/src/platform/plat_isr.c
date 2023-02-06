@@ -175,7 +175,7 @@ void irq_fault_sel(uint8_t idx, uint8_t type, uint8_t is_check)
 		en_pin = FM_P12V_EDGE_EN;
 		break;
 	default:
-		LOG_DBG("invaild irq fault type: %d!\n", type);
+		LOG_DBG("invaild irq fault type: %d!", type);
 		return;
 	}
 
@@ -190,7 +190,7 @@ void irq_fault_sel(uint8_t idx, uint8_t type, uint8_t is_check)
 
 	// check enable pin
 	if (!gpio_get(en_pin)) {
-		LOG_DBG("enable pin %d does not set high!\n", en_pin);
+		LOG_DBG("enable pin %d does not set high!", en_pin);
 		return;
 	}
 

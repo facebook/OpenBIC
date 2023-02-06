@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -47,5 +47,5 @@ void init_platform_config()
 		return;
 	}
 
-	LOG_WRN("SYS_SKU: %s Compute System\n", system_class == SYS_DUAL ? "Dual" : "Single");
+	LOG_WRN("SYS_SKU: %s Compute System", system_class == SYS_DUAL ? "Dual" : "Single");
 }

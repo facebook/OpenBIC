@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -34,7 +34,7 @@ sensor_poll_time_cfg diff_poll_time_sensor_table[] = {
 };
 
 sensor_cfg plat_sensor_config[] = {
-	/* number, type, port, address, offset, access check, arg0, arg1, cache, cache_status, 
+	/* number, type, port, address, offset, access check, arg0, arg1, cache, cache_status,
 	   pre_sensor_read_fn, pre_sensor_read_args, post_sensor_read_fn, post_sensor_read_fn,
 	   init_arg */
 
@@ -586,7 +586,7 @@ void pal_extend_sensor_config()
 		}
 		break;
 	default:
-		LOG_ERR("Unsupported HSC module, HSC module: 0x%x\n", hsc_module);
+		LOG_ERR("Unsupported HSC module, HSC module: 0x%x", hsc_module);
 		break;
 	}
 
@@ -631,7 +631,7 @@ void pal_extend_sensor_config()
 	}
 
 	if (sensor_config_count != sdr_count) {
-		LOG_ERR("Extend sensor SDR and config table not match, sdr size: 0x%x, sensor config size: 0x%x\n",
+		LOG_ERR("Extend sensor SDR and config table not match, sdr size: 0x%x, sensor config size: 0x%x",
 			sdr_count, sensor_config_count);
 	}
 }
@@ -651,7 +651,7 @@ uint8_t pal_get_extend_sensor_config()
 		extend_sensor_config_size += ARRAY_SIZE(mp5990_sensor_config_table);
 		break;
 	default:
-		LOG_ERR("Unsupported HSC module, HSC module: 0x%x\n", hsc_module);
+		LOG_ERR("Unsupported HSC module, HSC module: 0x%x", hsc_module);
 		break;
 	}
 
@@ -678,7 +678,7 @@ bool pal_is_time_to_poll(uint8_t sensor_num, int poll_time)
 		}
 	}
 
-	LOG_ERR("Can't find sensor 0x%x last access time\n", sensor_num);
+	LOG_ERR("Can't find sensor 0x%x last access time", sensor_num);
 	return true;
 }
 

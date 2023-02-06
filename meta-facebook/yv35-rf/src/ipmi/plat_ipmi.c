@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -21,11 +21,14 @@
 #include "plat_ipmi.h"
 #include "plat_ipmb.h"
 #include "expansion_board.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(plat_ipmi);
 
 void OEM_1S_GET_BOARD_ID(ipmi_msg *msg)
 {
 	if (msg == NULL) {
-		printf("%s failed due to parameter *msg is NULL\n", __func__);
+		LOG_ERR("Failed due to parameter *msg is NULL");
 		return;
 	}
 

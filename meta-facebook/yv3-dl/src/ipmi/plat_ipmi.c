@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -206,7 +206,7 @@ int pal_extend_msg_out_interface_handler(ipmi_msg *msg)
 void OEM_1S_GET_CARD_TYPE(ipmi_msg *msg)
 {
 	if (msg == NULL) {
-		printf("[%s] Failed due to parameter *msg is NULL\n", __func__);
+		LOG_ERR("Failed due to parameter *msg is NULL");
 		return;
 	}
 
@@ -287,7 +287,7 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 
 		status = ipmb_read(bridge_msg, IPMB_inf_index_map[bridge_msg->InF_target]);
 		if (status != IPMB_ERROR_SUCCESS) {
-			printf("ipmb read fail status: %x", status);
+			LOG_ERR("IPMB read fail status: %x", status);
 			SAFE_FREE(bridge_msg);
 			msg->completion_code = CC_BRIDGE_MSG_ERR;
 			return;
@@ -355,7 +355,7 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 			/* Infineon xdpe12284c */
 
 			if (k_mutex_lock(&vr_page_mutex, K_MSEC(VR_PAGE_MUTEX_TIMEOUT_MS))) {
-				printf("[%s] Failed to lock vr page\n", __func__);
+				LOG_ERR("Failed to lock vr page");
 				msg->completion_code = CC_UNSPECIFIED_ERROR;
 				return;
 			}
@@ -390,7 +390,7 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 
 unlock_exit:
 	if (k_mutex_unlock(&vr_page_mutex)) {
-		printf("[%s] Failed to unlock vr page\n", __func__);
+		LOG_ERR("Failed to unlock vr page");
 	}
 
 	return;
@@ -677,7 +677,7 @@ void OEM_1S_GET_SET_GPIO(ipmi_msg *msg)
 		}
 		break;
 	default:
-		printf("[%s] Unknown options(0x%x)", __func__, msg->data[0]);
+		LOG_ERR("Unknown options(0x%x)", msg->data[0]);
 		return;
 	}
 

@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -18,6 +18,9 @@
 #include "hal_gpio.h"
 #include "plat_class.h"
 #include "expansion_board.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(plat_class);
 
 static uint8_t e1s_hsc_config = 0;
 static uint8_t e1s_adc_config = 0;
@@ -32,8 +35,8 @@ void init_e1s_config()
 
 	e1s_hsc_config = config & 0x03;
 	e1s_adc_config = config >> 2;
-	printf("[%s] hsc config 0x%x\n", __func__, e1s_hsc_config);
-	printf("[%s] adc config 0x%x\n", __func__, e1s_adc_config);
+	LOG_INF("hsc config 0x%x", e1s_hsc_config);
+	LOG_INF("adc config 0x%x", e1s_adc_config);
 }
 
 uint8_t get_e1s_hsc_config()

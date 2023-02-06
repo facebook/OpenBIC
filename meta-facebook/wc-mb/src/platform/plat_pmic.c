@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -134,8 +134,8 @@ void monitor_pmic_error_handler()
 				if (compare_pmic_error(dimm_id, pmic_msg.data))
 					continue;
 			} else {
-				LOG_ERR("%s: Failed to get PMIC error, dimm %s bus %d addr 0x%x status 0x%x",
-					__func__, dimm_lable[dimm_id], pmic_req.smbus_identifier,
+				LOG_ERR("Failed to get PMIC error, dimm %s bus %d addr 0x%x status 0x%x",
+					dimm_lable[dimm_id], pmic_req.smbus_identifier,
 					pmic_req.smbus_address, status);
 				continue;
 			}
@@ -151,7 +151,7 @@ int get_dimm_info(uint8_t dimm_id, uint8_t *bus, uint8_t *addr)
 	CHECK_NULL_ARG_WITH_RETURN(addr, 1);
 
 	if (dimm_id >= MAX_COUNT_DIMM) {
-		LOG_ERR("%s: wrong dimm index 0x%x", __func__, dimm_id);
+		LOG_ERR("Wrong dimm index 0x%x", dimm_id);
 		return 1;
 	}
 
@@ -171,7 +171,7 @@ int get_dimm_info(uint8_t dimm_id, uint8_t *bus, uint8_t *addr)
 		*addr = ADDR_DIMM_CHANNEL_3_7;
 		break;
 	default:
-		LOG_ERR("%s: wrong dimm index 0x%x", __func__, dimm_id);
+		LOG_ERR("Wrong dimm index 0x%x", dimm_id);
 		return 1;
 	}
 
@@ -181,12 +181,12 @@ int get_dimm_info(uint8_t dimm_id, uint8_t *bus, uint8_t *addr)
 int pal_set_pmic_error_flag(uint8_t dimm_id, uint8_t error_type)
 {
 	if (dimm_id >= MAX_COUNT_DIMM) {
-		LOG_ERR("%s: Invalid dimm id %d", __func__, dimm_id);
+		LOG_ERR("Invalid dimm id %d", dimm_id);
 		return INVALID_DIMM_ID;
 	}
 
 	if (error_type >= MAX_COUNT_PMIC_ERROR_TYPE) {
-		LOG_ERR("%s: Invalid pmic error type 0x%x", __func__, error_type);
+		LOG_ERR("Invalid pmic error type 0x%x", error_type);
 		return INVALID_ERROR_TYPE;
 	}
 
@@ -200,7 +200,7 @@ int compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data)
 	CHECK_NULL_ARG_WITH_RETURN(pmic_err_data, 1);
 
 	if (dimm_id >= MAX_COUNT_DIMM) {
-		LOG_ERR("%s: Invalid dimm id %d", __func__, dimm_id);
+		LOG_ERR("Invalid dimm id %d", dimm_id);
 		return 1;
 	}
 
@@ -237,12 +237,12 @@ int compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data)
 void add_pmic_error_sel(uint8_t dimm_id, uint8_t error_type)
 {
 	if (dimm_id >= MAX_COUNT_DIMM) {
-		LOG_ERR("%s: Invalid dimm id %d", __func__, dimm_id);
+		LOG_ERR("Invalid dimm id %d", dimm_id);
 		return;
 	}
 
 	if (error_type >= MAX_COUNT_PMIC_ERROR_TYPE) {
-		LOG_ERR("%s: Invalid error type %d", __func__, error_type);
+		LOG_ERR("Invalid error type %d", error_type);
 		return;
 	}
 
@@ -256,7 +256,6 @@ void add_pmic_error_sel(uint8_t dimm_id, uint8_t error_type)
 	sel_msg.event_data2 = error_type;
 	sel_msg.event_data3 = 0xFF;
 	if (!common_add_sel_evt_record(&sel_msg)) {
-		LOG_ERR("%s: Fail to add PMIC error event log: dimm%d error 0x%x", __func__,
-			dimm_id, error_type);
+		LOG_ERR("Failed to add PMIC error event log: dimm%d error 0x%x", dimm_id, error_type);
 	}
 }

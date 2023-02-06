@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -28,7 +28,7 @@ LOG_MODULE_REGISTER(plat_sys);
 /* BMC reset */
 void BMC_reset_handler()
 {
-	LOG_WRN("[%s] BMC reset not supported from here\n", __func__);
+	LOG_WRN("BMC reset not supported from here");
 }
 
 K_WORK_DELAYABLE_DEFINE(BMC_reset_work, BMC_reset_handler);

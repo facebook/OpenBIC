@@ -26,6 +26,10 @@
 #include "pex89000.h"
 #include "pmbus.h"
 
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(plat_hook);
+
 #define ADJUST_MP5990_POWER(x) ((x * 1.0004) + 6.5116)
 #define ADJUST_MP5990_CURRENT(x) ((x * 0.9993) + 0.6114)
 #define ADJUST_LTC4282_POWER(x) ((x * 0.9722) - 16.315)
@@ -878,7 +882,7 @@ bool pre_vr_read(uint8_t sensor_num, void *args)
 	I2C_MSG msg = { 0 };
 
 	if (!pre_i2c_bus_read(sensor_num, pre_proc_args->mux_info_p)) {
-		printf("[%s] pre_i2c_bus_read fail \n", __func__);
+		LOG_ERR("pre_i2c_bus_read fail");
 		return false;
 	}
 
@@ -889,7 +893,7 @@ bool pre_vr_read(uint8_t sensor_num, void *args)
 	msg.data[0] = 0x00;
 	msg.data[1] = pre_proc_args->vr_page;
 	if (i2c_master_write(&msg, retry)) {
-		printf("[%s] set page fail\n", __func__);
+		LOG_ERR("Set page fail");
 		k_mutex_unlock(&i2c_bus6_mutex);
 		return false;
 	}
@@ -908,7 +912,7 @@ bool pre_pex89000_read(uint8_t sensor_num, void *args)
 		return false;
 
 	if (!pre_i2c_bus_read(sensor_num, pre_read_args->mux_info_p)) {
-		printf("[%s] pre_i2c_bus_read fail \n", __func__);
+		LOG_ERR("Pre_i2c_bus_read fail.");
 		return false;
 	}
 	return true;
@@ -925,7 +929,7 @@ bool pre_i2c_bus_read(uint8_t sensor_num, void *args)
 		return false;
 
 	if (k_mutex_lock(mutex, K_MSEC(300))) {
-		printf("[%s] sensor number 0x%x mutex lock fail\n", __func__, sensor_num);
+		LOG_ERR("Sensor number 0x%x mutex lock fail", sensor_num);
 		return false;
 	}
 
@@ -967,13 +971,13 @@ bool post_i2c_bus_read(uint8_t sensor_num, void *args, int *reading)
 
 			if (i2c_master_write(&msg, retry)) {
 				k_mutex_unlock(mutex);
-				printf("Close mux address 0x%x channel failed!\n", p->addr);
+				LOG_ERR("Close mux address 0x%x channel failed!", p->addr);
 				return false;
 			}
 		}
 	}
 	if (k_mutex_unlock(mutex)) {
-		printf("[%s] sensor num 0x%x mutex unlock failed!\n", __func__, sensor_num);
+		LOG_ERR("Sensor num 0x%x mutex unlock failed!", sensor_num);
 		return false;
 	}
 	return true;

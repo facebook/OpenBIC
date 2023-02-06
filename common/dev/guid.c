@@ -29,18 +29,18 @@ __weak const EEPROM_CFG guid_config[1] = {};
 uint8_t GUID_read(EEPROM_ENTRY *entry)
 {
 	if (entry == NULL) {
-		LOG_ERR("entry pointer is NULL\n");
+		LOG_ERR("entry pointer is NULL");
 		return GUID_FAIL_TO_ACCESS;
 	}
 
 	if (entry->config.dev_id >= ARRAY_SIZE(guid_config)) {
-		LOG_ERR("GUID read device ID %x not exist\n", entry->config.dev_id);
+		LOG_ERR("GUID read device ID %x not exist", entry->config.dev_id);
 		return GUID_INVALID_ID;
 	}
 
 	if ((entry->offset + entry->data_len) >=
 	    (GUID_START + GUID_SIZE)) { // Check data write out of range
-		LOG_ERR("GUID read out of range, type: %x, ID: %x\n", entry->config.dev_type,
+		LOG_ERR("GUID read out of range, type: %x, ID: %x", entry->config.dev_type,
 		       entry->config.dev_id);
 		return GUID_OUT_OF_RANGE;
 	}
@@ -48,7 +48,7 @@ uint8_t GUID_read(EEPROM_ENTRY *entry)
 	memcpy(&entry->config, &guid_config[entry->config.dev_id], sizeof(EEPROM_CFG));
 
 	if (!eeprom_read(entry)) {
-		LOG_ERR("fail to read eeprom\n");
+		LOG_ERR("Failed to read eeprom");
 		return GUID_FAIL_TO_ACCESS;
 	}
 
@@ -58,18 +58,18 @@ uint8_t GUID_read(EEPROM_ENTRY *entry)
 uint8_t GUID_write(EEPROM_ENTRY *entry)
 {
 	if (entry == NULL) {
-		LOG_ERR("entry pointer is NULL\n");
+		LOG_ERR("entry pointer is NULL");
 		return GUID_FAIL_TO_ACCESS;
 	}
 
 	if (entry->config.dev_id >= ARRAY_SIZE(guid_config)) {
-		LOG_ERR("GUID write device ID %x not exist\n", entry->config.dev_id);
+		LOG_ERR("GUID write device ID %x not exist", entry->config.dev_id);
 		return GUID_INVALID_ID;
 	}
 
 	if ((entry->offset + entry->data_len) >=
 	    (GUID_START + GUID_SIZE)) { // Check data write out of range
-		LOG_ERR("GUID write out of range, type: %x, ID: %x\n", entry->config.dev_type,
+		LOG_ERR("GUID write out of range, type: %x, ID: %x", entry->config.dev_type,
 		       entry->config.dev_id);
 		return GUID_OUT_OF_RANGE;
 	}
@@ -77,7 +77,7 @@ uint8_t GUID_write(EEPROM_ENTRY *entry)
 	memcpy(&entry->config, &guid_config[entry->config.dev_id], sizeof(EEPROM_CFG));
 
 	if (!eeprom_write(entry)) {
-		LOG_ERR("fail to write eeprom\n");
+		LOG_ERR("Failed to write eeprom");
 		return GUID_FAIL_TO_ACCESS;
 	}
 

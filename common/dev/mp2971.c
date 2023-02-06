@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -187,7 +187,7 @@ static bool mp2856_is_pwd_unlock(uint8_t bus, uint8_t addr)
 	}
 
 	if ((i2c_msg.data[0] & MASK_PWD_MATCH) == 0x00) {
-		LOG_ERR("PWD_MATCH not set!\n");
+		LOG_ERR("PWD_MATCH not set!");
 		return false;
 	}
 
@@ -332,7 +332,7 @@ static bool parsing_image(uint8_t *hex_buff, struct mp2856_config *dev_cfg)
 		if (hex_buff[i] == 0x09) {
 			cur_ele_idx++;
 		} else if (hex_buff[i] == 0x0d) {
-			LOG_DBG("vr[%d] page: %d addr:%x data:%x\n", dev_cfg->wr_cnt,
+			LOG_DBG("vr[%d] page: %d addr:%x data:%x", dev_cfg->wr_cnt,
 				cur_line->page, cur_line->reg_addr, cur_line->reg_data);
 			cur_ele_idx = 0;
 			dev_cfg->wr_cnt++;
@@ -432,7 +432,7 @@ bool mp2971_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff)
 	k_msleep(500); //wait command finish
 
 	if (mp2856_enable_mtp_page_rw(bus, addr) == false) {
-		printf("ERROR: Enable MTP PAGE RW FAILED!\n");
+		LOG_ERR("ERROR: Enable MTP PAGE RW FAILED!");
 		goto exit;
 	}
 
@@ -496,7 +496,7 @@ float get_resolution(uint8_t sensor_num)
 	msg.data[0] = PMBUS_PAGE;
 
 	if (i2c_master_read(&msg, i2c_max_retry)) {
-		LOG_WRN("i2c read failed.\n");
+		LOG_WRN("I2C read failed");
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
@@ -507,7 +507,7 @@ float get_resolution(uint8_t sensor_num)
 	msg.data[0] = MFR_RESO_SET;
 
 	if (i2c_master_read(&msg, i2c_max_retry)) {
-		LOG_WRN("i2c read failed.\n");
+		LOG_WRN("I2C read failed");
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
@@ -534,7 +534,7 @@ float get_resolution(uint8_t sensor_num)
 		if (vout_reso_set & BIT(1)) {
 			vout_reso = 0.001;
 		} else {
-			LOG_WRN("vout_reso_set not supported: 0x%x\n", vout_reso_set);
+			LOG_WRN("vout_reso_set not supported: 0x%x", vout_reso_set);
 		}
 
 		if (iout_reso_set == 0) {
@@ -544,7 +544,7 @@ float get_resolution(uint8_t sensor_num)
 		} else if (iout_reso_set == 2) {
 			iout_reso = 0.5;
 		} else {
-			LOG_WRN("iout_reso_set not supported: 0x%x\n", iout_reso_set);
+			LOG_WRN("iout_reso_set not supported: 0x%x", iout_reso_set);
 		}
 
 		if (iin_reso_set == 0) {
@@ -554,7 +554,7 @@ float get_resolution(uint8_t sensor_num)
 		} else if (iin_reso_set == 2) {
 			iin_reso = 0.125;
 		} else {
-			LOG_WRN("iin_reso_set not supported: 0x%x\n", iin_reso_set);
+			LOG_WRN("iin_reso_set not supported: 0x%x", iin_reso_set);
 		}
 
 		if (pout_reso_set == 0) {
@@ -564,7 +564,7 @@ float get_resolution(uint8_t sensor_num)
 		} else if (pout_reso_set == 2) {
 			pout_reso = 0.5;
 		} else {
-			LOG_WRN("pout_reso_set not supported: 0x%x\n", pout_reso_set);
+			LOG_WRN("pout_reso_set not supported: 0x%x", pout_reso_set);
 		}
 
 	} else if (page == 1) {
@@ -575,7 +575,7 @@ float get_resolution(uint8_t sensor_num)
 		if (vout_reso_set & BIT(1)) {
 			vout_reso = 0.001;
 		} else {
-			LOG_WRN("vout_reso_set not supported: 0x%x\n", vout_reso_set);
+			LOG_WRN("vout_reso_set not supported: 0x%x", vout_reso_set);
 		}
 
 		if (iout_reso_set == 0) {
@@ -583,7 +583,7 @@ float get_resolution(uint8_t sensor_num)
 		} else if (iout_reso_set == 1) {
 			iout_reso = 0.5;
 		} else {
-			LOG_WRN("iout_reso_set not supported: 0x%x\n", iout_reso_set);
+			LOG_WRN("iout_reso_set not supported: 0x%x", iout_reso_set);
 		}
 
 		iin_reso = 0.125;
@@ -593,10 +593,10 @@ float get_resolution(uint8_t sensor_num)
 		} else if (pout_reso_set == 1) {
 			pout_reso = 0.5;
 		} else {
-			LOG_WRN("pout_reso_set not supported: 0x%x\n", pout_reso_set);
+			LOG_WRN("pout_reso_set not supported: 0x%x", pout_reso_set);
 		}
 	} else {
-		LOG_WRN("Page not supported: 0x%d\n", page);
+		LOG_WRN("Page not supported: 0x%d", page);
 	}
 
 	uint8_t offset = cfg->offset;
@@ -618,7 +618,7 @@ float get_resolution(uint8_t sensor_num)
 		return pout_reso;
 		break;
 	default:
-		LOG_WRN("offset not supported: 0x%x\n", offset);
+		LOG_WRN("offset not supported: 0x%x", offset);
 		break;
 	}
 	return 0;
@@ -671,7 +671,7 @@ uint8_t mp2971_read(uint8_t sensor_num, int *reading)
 		val = val & BIT_MASK(11);
 		break;
 	default:
-		LOG_WRN("offset not supported: 0x%x\n", offset);
+		LOG_WRN("offset not supported: 0x%x", offset);
 		return SENSOR_FAIL_TO_ACCESS;
 		break;
 	}

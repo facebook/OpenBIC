@@ -26,10 +26,10 @@ uint8_t g788p81u_read(uint8_t sensor_num, int *reading)
 {
 	if (!reading || (sensor_num > SENSOR_NUM_MAX)) {
 		if (sensor_num > SENSOR_NUM_MAX){
-			LOG_ERR("invalid sensor num\n");
+			LOG_ERR("Invalid sensor num");
 		}
 		else {
-			LOG_ERR("reading pointer is NULL\n");
+			LOG_ERR("reading pointer is NULL");
 		}
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
@@ -45,7 +45,7 @@ uint8_t g788p81u_read(uint8_t sensor_num, int *reading)
 	msg.data[0] = cfg->offset;
 
 	if (i2c_master_read(&msg, retry)) {
-		LOG_ERR("fail to access sensor\n");
+		LOG_ERR("Failed to access sensor");
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
@@ -64,7 +64,7 @@ uint8_t g788p81u_read(uint8_t sensor_num, int *reading)
 		msg.rx_len = 1;
 		msg.data[0] = G788P81U_REMOTE_TEMP_EXT_OFFSET;
 		if (i2c_master_read(&msg, retry)) {
-			LOG_ERR("fail to access sensor\n");
+			LOG_ERR("Failed to access sensor");
 			return SENSOR_FAIL_TO_ACCESS;
 		}
 		val += 0.125 * (msg.data[0] >> 5);
@@ -84,7 +84,7 @@ uint8_t g788p81u_read(uint8_t sensor_num, int *reading)
 uint8_t g788p81u_init(uint8_t sensor_num)
 {
 	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_ERR("invalid sensor num\n");
+		LOG_ERR("Invalid sensor num: %d", sensor_num);
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 

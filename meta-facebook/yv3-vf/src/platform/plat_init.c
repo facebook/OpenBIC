@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -31,6 +31,9 @@
 #include "plat_led.h"
 #include "plat_gpio.h"
 #include "plat_util.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(plat_init);
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -55,12 +58,12 @@ void pal_pre_init()
 static void BICup5secTickHandler(struct k_work *work)
 {
 	if (!work) {
-		printf("BICup5secTickHandler get null work handler!\n");
+		LOG_ERR("BICup5secTickHandler get NULL work handler!");
 		return;
 	}
 
 	if (!sensor_config) {
-		printf("sensor_config is null!\n");
+		LOG_ERR("sensor_config is NULL!");
 		return;
 	}
 
@@ -72,7 +75,7 @@ static void BICup5secTickHandler(struct k_work *work)
 				continue;
 
 			if (ina230_init(sensor_config[i].num) != SENSOR_INIT_SUCCESS) {
-				printf("sensor_config[%02x].num = %02x re-init ina230 failed!, retry it after 5 seconds\n",
+				LOG_ERR("sensor_config[%02x].num = %02x re-init ina230 failed!, retry it after 5 seconds",
 				       i, sensor_config[i].num);
 				k_work_schedule((struct k_work_delayable *)work, K_SECONDS(5));
 				return;

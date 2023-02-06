@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -53,7 +53,7 @@ static void init_adc_dev()
 #ifdef DEV_ADC0
 	dev_adc[adc0] = device_get_binding("ADC0");
 	if (!(device_is_ready(dev_adc[adc0])))
-		LOG_WRN("ADC[%d] device not ready!\n", adc0);
+		LOG_WRN("ADC[%d] device not ready!", adc0);
 	else
 		is_ready[adc0] = 1;
 #endif
@@ -61,7 +61,7 @@ static void init_adc_dev()
 #ifdef DEV_ADC1
 	dev_adc[adc1] = device_get_binding("ADC1");
 	if (!(device_is_ready(dev_adc[adc1])))
-		LOG_WRN("ADC[%d] device not ready!\n", adc1);
+		LOG_WRN("ADC[%d] device not ready!", adc1);
 	else
 		is_ready[adc1] = 1;
 #endif
@@ -80,12 +80,12 @@ static bool adc_read_mv(uint8_t sensor_num, uint32_t index, uint32_t channel, in
 	}
 
 	if (index >= ADC_NUM) {
-		LOG_ERR("ADC[%d] is invalid device!\n", index);
+		LOG_ERR("ADC[%d] is invalid device!", index);
 		return false;
 	}
 
 	if (!is_ready[index]) {
-		LOG_ERR("ADC[%d] is not ready to read!\n", index);
+		LOG_ERR("ADC[%d] is not ready to read!", index);
 		return false;
 	}
 
@@ -108,13 +108,13 @@ static bool adc_read_mv(uint8_t sensor_num, uint32_t index, uint32_t channel, in
 	retval = adc_channel_setup(dev_adc[index], &channel_cfg);
 
 	if (retval) {
-		LOG_ERR("ADC[%d] with sensor[0x%x] channel set fail\n", index, sensor_num);
+		LOG_ERR("ADC[%d] with sensor[0x%x] channel set fail", index, sensor_num);
 		return false;
 	}
 
 	retval = adc_read(dev_adc[index], &sequence);
 	if (retval != 0) {
-		LOG_ERR("ADC[%d] with sensor[0x%x] reading fail with error %d\n", index, sensor_num,
+		LOG_ERR("ADC[%d] with sensor[0x%x] reading fail with error %d", index, sensor_num,
 			retval);
 		return false;
 	}
@@ -122,7 +122,7 @@ static bool adc_read_mv(uint8_t sensor_num, uint32_t index, uint32_t channel, in
 	int32_t raw_value = sample_buffer[0];
 	int32_t ref_mv = adc_get_ref(dev_adc[index]);
 	if (ref_mv <= 0) {
-		LOG_ERR("ADC[%d] with sensor[0x%x] ref-mv get fail\n", index, sensor_num);
+		LOG_ERR("ADC[%d] with sensor[0x%x] ref-mv get fail", index, sensor_num);
 		return false;
 	}
 
@@ -179,7 +179,7 @@ uint8_t ast_adc_init(uint8_t sensor_num)
 	}
 
 	if (!sensor_config[sensor_config_index_map[sensor_num]].init_args) {
-		LOG_ERR("ADC init args not provide!\n");
+		LOG_ERR("ADC init args not provide!");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
@@ -191,7 +191,7 @@ uint8_t ast_adc_init(uint8_t sensor_num)
 	init_adc_dev();
 
 	if (!is_ready[0] && !is_ready[1]) {
-		LOG_ERR("Both of ADC0 and ADC1 are not ready to use!\n");
+		LOG_ERR("Both of ADC0 and ADC1 are not ready to use!");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 

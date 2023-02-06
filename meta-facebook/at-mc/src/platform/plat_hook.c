@@ -338,7 +338,7 @@ bool pre_cxl_vr_read(uint8_t sensor_num, void *args)
 	msg.data[1] = vr_page_sel->vr_page;
 
 	if (i2c_master_write(&msg, retry)) {
-		LOG_ERR("%s, set page fail\n", __func__);
+		LOG_ERR("Set page fail");
 		return false;
 	}
 	return true;
@@ -362,7 +362,7 @@ bool post_cxl_xdpe12284c_read(uint8_t sensor_num, void *args, int *reading)
 	switch (plat_cxl_sensor_config[index].offset) {
 	case PMBUS_READ_IOUT:
 		if (val < (-2)) {
-			LOG_ERR("Sensor %x unexpected current reading\n", sensor_num);
+			LOG_ERR("Sensor %x unexpected current reading", sensor_num);
 			return false;
 		}
 
@@ -374,7 +374,7 @@ bool post_cxl_xdpe12284c_read(uint8_t sensor_num, void *args, int *reading)
 		break;
 	case PMBUS_READ_POUT:
 		if (val < (-4)) {
-			LOG_ERR("Sensor %x unexpected power reading\n", sensor_num);
+			LOG_ERR("Sensor %x unexpected power reading", sensor_num);
 			return false;
 		}
 

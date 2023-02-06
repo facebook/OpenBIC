@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -24,6 +24,9 @@
 #include "plat_class.h"
 #include "plat_ipmb.h"
 #include "plat_sensor_table.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(plat_sdr_table);
 
 SDR_Full_sensor plat_sdr_table[] = {
 	{
@@ -3671,7 +3674,7 @@ uint8_t pal_get_extend_sdr()
 		extend_sdr_size += ARRAY_SIZE(hotswap_sdr_table);
 		break;
 	default:
-		printf("[%s] unsupported HSC module, HSC module: 0x%x\n", __func__, hsc_module);
+		LOG_ERR("Unsupported HSC module, HSC module: 0x%x", hsc_module);
 		break;
 	}
 
@@ -3702,7 +3705,7 @@ void pal_extend_full_sdr_table()
 		}
 		break;
 	default:
-		printf("[%s] unsupported HSC module, HSC module: 0x%x\n", __func__, hsc_module);
+		LOG_ERR("Unsupported HSC module, HSC module: 0x%x", hsc_module);
 		break;
 	}
 

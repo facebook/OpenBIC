@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -109,7 +109,7 @@ void pmic_error_check()
 	uint8_t dimm_id, retry = 5;
 	I2C_MSG *msg = (I2C_MSG *)malloc(sizeof(I2C_MSG));
 	if (msg == NULL) {
-		LOG_ERR("Failed to allocate memory\n");
+		LOG_ERR("Failed to allocate memory");
 		return;
 	}
 

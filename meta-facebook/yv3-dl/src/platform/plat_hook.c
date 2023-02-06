@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -205,7 +205,7 @@ bool pre_vr_read(uint8_t sensor_num, void *args)
 	I2C_MSG msg;
 
 	if (k_mutex_lock(&vr_page_mutex, K_MSEC(VR_PAGE_MUTEX_TIMEOUT_MS))) {
-		LOG_ERR("[%s] Failed to lock vr page\n", __func__);
+		LOG_ERR("Failed to lock vr page");
 		return false;
 	}
 
@@ -217,9 +217,9 @@ bool pre_vr_read(uint8_t sensor_num, void *args)
 	msg.data[1] = vr_page_sel->vr_page;
 
 	if (i2c_master_write(&msg, retry)) {
-		LOG_ERR("%s, set page fail\n", __func__);
+		LOG_ERR("Set page fail");
 		if (k_mutex_unlock(&vr_page_mutex)) {
-			LOG_ERR("[%s] Failed to unlock vr page\n", __func__);
+			LOG_ERR("Failed to unlock vr page");
 		}
 		return false;
 	}
@@ -261,8 +261,7 @@ bool pre_intel_peci_dimm_read(uint8_t sensor_num, void *args)
 		ret = check_dimm_present(DIMM_CHANNEL_NUM_5, DIMM_NUMBER_0, &dimm_present_result);
 		break;
 	default:
-		printf("[%s] input sensor 0x%x offset is invalid, offset: 0x%x\n", __func__,
-		       sensor_num, cfg.offset);
+		LOG_ERR("Input sensor 0x%x offset is invalid, offset: 0x%x", sensor_num, cfg.offset);
 		return ret;
 	}
 
@@ -309,7 +308,7 @@ bool post_xdpe12284c_read(uint8_t sensor_num, void *args, int *reading)
 	case SENSOR_NUM_CURR_DIMM_ABC_VR:
 	case SENSOR_NUM_CURR_DIMM_DEF_VR:
 		if (val < (-2)) {
-			LOG_ERR("Sensor %x unexpected current reading\n", sensor_num);
+			LOG_ERR("Sensor %x unexpected current reading", sensor_num);
 			ret = false;
 			goto error_exit;
 		}
@@ -327,7 +326,7 @@ bool post_xdpe12284c_read(uint8_t sensor_num, void *args, int *reading)
 	case SENSOR_NUM_PWR_DIMM_ABC_VR:
 	case SENSOR_NUM_PWR_DIMM_DEF_VR:
 		if (val < (-4)) {
-			LOG_ERR("Sensor %x unexpected power reading\n", sensor_num);
+			LOG_ERR("Sensor %x unexpected power reading", sensor_num);
 			ret = false;
 			goto error_exit;
 		}
@@ -353,7 +352,7 @@ bool post_xdpe12284c_read(uint8_t sensor_num, void *args, int *reading)
 
 error_exit:
 	if (k_mutex_unlock(&vr_page_mutex)) {
-		LOG_ERR("[%s] Failed to unlock vr page\n", __func__);
+		LOG_ERR("Failed to unlock vr page");
 	}
 
 	return ret;
@@ -371,7 +370,7 @@ error_exit:
 bool post_isl69254_read(uint8_t sensor_num, void *args, int *reading)
 {
 	if (k_mutex_unlock(&vr_page_mutex)) {
-		LOG_ERR("[%s] Failed to unlock vr page\n", __func__);
+		LOG_ERR("Failed to unlock vr page");
 	}
 
 	if (reading == NULL) {
@@ -390,7 +389,7 @@ bool post_isl69254_read(uint8_t sensor_num, void *args, int *reading)
 	case SENSOR_NUM_CURR_DIMM_ABC_VR:
 	case SENSOR_NUM_CURR_DIMM_DEF_VR:
 		if (val < (-2)) {
-			LOG_ERR("Sensor %x unexpected current reading\n", sensor_num);
+			LOG_ERR("Sensor %x unexpected current reading", sensor_num);
 			return false;
 		}
 
@@ -407,7 +406,7 @@ bool post_isl69254_read(uint8_t sensor_num, void *args, int *reading)
 	case SENSOR_NUM_PWR_DIMM_ABC_VR:
 	case SENSOR_NUM_PWR_DIMM_DEF_VR:
 		if (val < (-4)) {
-			LOG_ERR("Sensor %x unexpected power reading\n", sensor_num);
+			LOG_ERR("Sensor %x unexpected power reading", sensor_num);
 			return false;
 		}
 

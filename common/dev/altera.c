@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -49,7 +49,7 @@ __weak int pal_load_altera_max10_attr(altera_max10_attr *altera_max10_config)
 int change_word_to_byte(uint8_t *output, int intput)
 {
 	if (output == NULL) {
-		LOG_WRN("Output passed in as NULL.\n");
+		LOG_WRN("Output passed in as NULL.");
 		return -1;
 	}
 
@@ -64,7 +64,7 @@ int change_word_to_byte(uint8_t *output, int intput)
 int get_register_via_i2c(int reg, int *val)
 {
 	if (val == NULL) {
-		LOG_WRN("val passed in as NULL.\n");
+		LOG_WRN("val passed in as NULL.");
 		return -1;
 	}
 
@@ -86,7 +86,7 @@ int get_register_via_i2c(int reg, int *val)
 
 	ret = i2c_master_read(&i2c_msg, MAX_RETRY);
 	if (ret != 0) {
-		LOG_ERR("Read register fails after retry %d times. ret=%d \n", MAX_RETRY, ret);
+		LOG_ERR("Read register fails after retry %d times. ret=%d", MAX_RETRY, ret);
 		return ret;
 	}
 
@@ -101,7 +101,7 @@ int max10_reg_read(int address)
 
 	ret = get_register_via_i2c(address, &data);
 	if (ret != 0) {
-		LOG_ERR("%s() Cannot read 0x%x data %d\n", __func__, address, data);
+		LOG_ERR("Cannot read 0x%x data %d", address, data);
 	}
 
 	return data;
@@ -137,7 +137,7 @@ int set_register_via_i2c(int reg, int val)
 
 	ret = i2c_master_write(&i2c_msg, MAX_RETRY);
 	if (ret != 0) {
-		LOG_ERR("write register fails after retry %d times. ret=%d \n", MAX_RETRY, ret);
+		LOG_ERR("Write register fails after retry %d times. ret=%d", MAX_RETRY, ret);
 	}
 	return ret;
 }
@@ -167,7 +167,7 @@ int cpld_altera_max10_fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg)
 	bool is_done = false;
 
 	if (msg == NULL) {
-		LOG_WRN("msg passed in as NULL.\n");
+		LOG_WRN("msg passed in as NULL.");
 		return FWUPDATE_UPDATE_FAIL;
 	}
 
@@ -198,7 +198,7 @@ int cpld_altera_max10_fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg)
 		       (receive_buffer[1] << 8) | (receive_buffer[0]);
 		ret = max10_write_flash_data(addr, data);
 		if (ret != 0) {
-			LOG_ERR("[CPLD] write flash data failed\n");
+			LOG_ERR("[CPLD] write flash data failed");
 			return FWUPDATE_UPDATE_FAIL;
 		}
 
@@ -213,7 +213,7 @@ int cpld_altera_max10_fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg)
 				is_done = true;
 
 			} else {
-				LOG_DBG("status: %x retry...\n", status);
+				LOG_DBG("Status: %x retry...", status);
 				k_usleep(CHECK_ALTERA_STATUS_DELAY_US);
 				retry--;
 			}
@@ -221,7 +221,7 @@ int cpld_altera_max10_fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg)
 		} while ((is_done == false) && (retry > 0));
 
 		if (retry == 0) {
-			LOG_ERR("Attempted %d retries, giving up!\n", MAX_RETRY);
+			LOG_ERR("Attempted %d retries, giving up!", MAX_RETRY);
 			return FWUPDATE_UPDATE_FAIL;
 		}
 

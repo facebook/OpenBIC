@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -22,6 +22,9 @@
 #include "plat_m2.h"
 
 #include "plat_led.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(plat_led);
 
 static uint8_t pre_state[M2_IDX_E_MAX];
 static uint8_t AmberLEDStatus[M2_IDX_E_MAX];
@@ -76,8 +79,8 @@ void SSDLEDSet(uint8_t idx, uint8_t behaviour)
 		gpio_set(pin, !gpio_get(pin));
 		break;
 	default:
-		printf("%s() [%d] error LED  %d behaviour %d!\n", __func__, __LINE__, idx,
-		       behaviour);
+		LOG_ERR("Error LED  %d behaviour %d!",
+		        idx, behaviour);
 		break;
 	}
 }
@@ -93,7 +96,7 @@ uint8_t SSDLEDCtrl(uint8_t idx, uint8_t ctrl)
 	if (idx >= M2_IDX_E_MAX)
 		return 1;
 	if (ctrl > 0x03) {
-		printf("%s() [%d] error LED  %d control %d!\n", __func__, __LINE__, idx, ctrl);
+		LOG_ERR("Error LED  %d control %d!", idx, ctrl);
 		return 1;
 	}
 
@@ -115,7 +118,7 @@ uint8_t SSDLEDCtrl(uint8_t idx, uint8_t ctrl)
 		stop_blink_timer(idx);
 		break;
 	default:
-		printf("error control for SSD %d!\n", idx);
+		LOG_ERR("Error control for SSD %d!", idx);
 	}
 
 	return 0;

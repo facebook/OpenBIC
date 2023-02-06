@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -216,7 +216,7 @@ void ISR_MB_THROTTLE()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			LOG_ERR("Failed to add MB Throttle sel.\n");
+			LOG_ERR("Failed to add MB Throttle sel.");
 		}
 	}
 }

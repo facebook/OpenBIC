@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -19,6 +19,10 @@
 #include "hal_i2c.h"
 #include "apml.h"
 #include "power_status.h"
+
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(apml);
 
 #define RETRY_MAX 3
 #define MAILBOX_COMPLETE_RETRY_MAX 200
@@ -137,21 +141,21 @@ static uint8_t access_MCA(apml_msg *msg)
 		return APML_ERROR;
 	}
 	if (write_MCA_request(msg)) {
-		printf("[%s] write MCA request failed.\n", __func__);
+		LOG_ERR("Write MCA request failed.");
 		return APML_ERROR;
 	}
 
 	if (!wait_HwAlert_set(msg, RETRY_MAX)) {
-		printf("[%s] HwAlert not be set, retry %d times.\n", __func__, RETRY_MAX);
+		LOG_ERR("HwAlert not be set, retry %d times.", RETRY_MAX);
 	}
 
 	if (read_MCA_response(msg)) {
-		printf("[%s] read response failed.\n", __func__);
+		LOG_ERR("Read response failed.");
 		return APML_ERROR;
 	}
 
 	if (apml_write_byte(msg->bus, msg->target_addr, SBRMI_STATUS, 0x80)) {
-		printf("[%s] clear HwAlert failed.\n", __func__);
+		LOG_ERR("Clear HwAlert failed.");
 		return APML_ERROR;
 	}
 	return APML_SUCCESS;
@@ -207,21 +211,21 @@ static uint8_t access_CPUID(apml_msg *msg)
 		return APML_ERROR;
 	}
 	if (write_CPUID_request(msg)) {
-		printf("[%s] write CPUID request failed.\n", __func__);
+		LOG_ERR("Write CPUID request failed.");
 		return APML_ERROR;
 	}
 
 	if (!wait_HwAlert_set(msg, RETRY_MAX)) {
-		printf("[%s] HwAlert not be set, retry %d times.\n", __func__, RETRY_MAX);
+		LOG_ERR("HwAlert not be set, retry %d times.", RETRY_MAX);
 	}
 
 	if (read_CPUID_response(msg)) {
-		printf("[%s] read CPUID response failed.\n", __func__);
+		LOG_ERR("Read CPUID response failed.");
 		return APML_ERROR;
 	}
 
 	if (apml_write_byte(msg->bus, msg->target_addr, SBRMI_STATUS, 0x80)) {
-		printf("[%s] clear HwAlert failed.\n", __func__);
+		LOG_ERR("Clear HwAlert failed.");
 		return APML_ERROR;
 	}
 	return APML_SUCCESS;
@@ -313,12 +317,12 @@ static uint8_t access_RMI_mailbox(apml_msg *msg)
 	int i = 0;
 
 	if (!check_mailbox_command_complete(msg, RETRY_MAX)) {
-		printf("[%s] previous command not complete.\n", __func__);
+		LOG_ERR("Previous command not complete.");
 		return APML_ERROR;
 	}
 
 	if (write_mailbox_request(msg)) {
-		printf("[%s] write request failed.\n", __func__);
+		LOG_ERR("Write request failed.");
 		return APML_ERROR;
 	}
 
@@ -326,7 +330,7 @@ static uint8_t access_RMI_mailbox(apml_msg *msg)
 	uint8_t status;
 	for (i = 0; i < MAILBOX_COMPLETE_RETRY_MAX; i++) {
 		if (apml_read_byte(msg->bus, msg->target_addr, SBRMI_STATUS, &status)) {
-			printf("[%s] read SwAlertSts failed.\n", __func__);
+			LOG_ERR("Read SwAlertSts failed.");
 			return APML_ERROR;
 		}
 		if (status & 0x02) {
@@ -338,19 +342,19 @@ static uint8_t access_RMI_mailbox(apml_msg *msg)
 		}
 	}
 	if (i == MAILBOX_COMPLETE_RETRY_MAX) {
-		printf("[%s] SwAlertSts not be set, retry %d times.\n", __func__,
+		LOG_DBG("SwAlertSts not be set, retry %d times.",
 		       MAILBOX_COMPLETE_RETRY_MAX);
 		return APML_ERROR;
 	}
 
 	if (read_mailbox_response(msg)) {
-		printf("[%s] read mailbox response failed.\n", __func__);
+		LOG_ERR("Read mailbox response failed.");
 		return APML_ERROR;
 	}
 
 	/* clear SwAlertSts */
 	if (apml_write_byte(msg->bus, msg->target_addr, SBRMI_STATUS, 0x02)) {
-		printf("[%s] clear SwAlertSts failed.\n", __func__);
+		LOG_ERR("Clear SwAlertSts failed.");
 		return APML_ERROR;
 	}
 	return APML_SUCCESS;
@@ -384,12 +388,12 @@ uint8_t get_apml_response_by_index(apml_msg *msg, uint8_t index)
 uint8_t apml_read(apml_msg *msg)
 {
 	if (msg == NULL) {
-		printf("[%s] msg is NULL.\n", __func__);
+		LOG_ERR("Msg is NULL.");
 		return APML_ERROR;
 	}
 
 	if (k_msgq_put(&apml_msgq, msg, K_NO_WAIT)) {
-		printf("[%s] put msg to apml_msgq failed.\n", __func__);
+		LOG_ERR("Put msg to apml_msgq failed.");
 		return APML_ERROR;
 	}
 	return APML_SUCCESS;
@@ -427,7 +431,7 @@ static void apml_handler(void *arvg0, void *arvg1, void *arvg2)
 		}
 
 		if (ret) {
-			printf("[%s] APML access failed, msg type %d.\n", __func__,
+			LOG_ERR("APML access failed, msg type %d.",
 			       msg_data.msg_type);
 			if (msg_data.error_cb_fn) {
 				msg_data.error_cb_fn(&msg_data);
@@ -443,7 +447,7 @@ static void apml_handler(void *arvg0, void *arvg1, void *arvg2)
 
 void apml_init()
 {
-	printf("apml_init\n");
+	LOG_DBG("apml_init");
 	k_msgq_init(&apml_msgq, apml_msgq_buffer, sizeof(apml_msg), APML_MSGQ_LEN);
 
 	k_thread_create(&apml_thread, apml_handler_stack, K_THREAD_STACK_SIZEOF(apml_handler_stack),

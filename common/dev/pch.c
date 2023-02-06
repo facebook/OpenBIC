@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -20,8 +20,11 @@
 #include "libutil.h"
 #include "ipmi.h"
 #include "plat_ipmb.h"
+#include <logging/log.h>
 
 #define VALID_READING 0x40
+
+LOG_MODULE_REGISTER(dev_pch);
 
 uint8_t pch_read(uint8_t sensor_num, int *reading)
 {
@@ -33,7 +36,7 @@ uint8_t pch_read(uint8_t sensor_num, int *reading)
 	ipmi_msg *bridge_msg;
 	bridge_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
 	if (bridge_msg == NULL) {
-		printf("pch_read bridge message alloc fail\n");
+		LOG_ERR("pch_read bridge message alloc fail");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -51,7 +54,7 @@ uint8_t pch_read(uint8_t sensor_num, int *reading)
 	for (pch_retry_num = 0; pch_retry_num < 4; pch_retry_num++) {
 		status = ipmb_read(bridge_msg, IPMB_inf_index_map[bridge_msg->InF_target]);
 		if (status != IPMB_ERROR_SUCCESS) {
-			printf("pch_read ipmb read fail, ret %d\n", status);
+			LOG_ERR("pch_read ipmb read fail, ret %d", status);
 			SAFE_FREE(bridge_msg);
 			return SENSOR_FAIL_TO_ACCESS;
 		}
@@ -80,7 +83,7 @@ uint8_t pch_read(uint8_t sensor_num, int *reading)
 		}
 	}
 
-	printf("pch_read retry read fail\n");
+	LOG_ERR("pch_read retry read fail");
 	SAFE_FREE(bridge_msg);
 #endif
 	return SENSOR_UNSPECIFIED_ERROR;

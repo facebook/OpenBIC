@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -19,6 +19,9 @@
 #include <sensor.h>
 #include "plat_hook.h"
 #include "plat_i2c.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(plat_hook);
 
 #define VOLTAGE_SELECT_BIT (1 << 2)
 #define ADC_16BIT_MODE_BIT (1 << 0)
@@ -76,7 +79,7 @@ bool pre_ltc4282_read(uint8_t sensor_num, void *args)
 	msg.data[0] = LTC4282_ILIM_ADJUST_OFFSET;
 	msg.rx_len = 1;
 	if (i2c_master_read(&msg, retry) != 0) {
-		printf("%s, get voltage adjust register fail\n", __func__);
+		LOG_ERR("Get voltage adjust register fail");
 		return false;
 	}
 
@@ -87,7 +90,7 @@ bool pre_ltc4282_read(uint8_t sensor_num, void *args)
 		val = msg.data[0] & (~VOLTAGE_SELECT_BIT);
 
 	} else {
-		printf("%s, unexpected vsource %s\n", __func__, pre_proc_args->vsource_status);
+		LOG_ERR("Unexpected vsource %s", pre_proc_args->vsource_status);
 		return false;
 	}
 
@@ -96,7 +99,7 @@ bool pre_ltc4282_read(uint8_t sensor_num, void *args)
 	msg.data[1] = val;
 
 	if (i2c_master_write(&msg, retry) != 0) {
-		printf("%s, set vsource fail\n", __func__);
+		LOG_ERR("Set vsource fail");
 		return false;
 	}
 

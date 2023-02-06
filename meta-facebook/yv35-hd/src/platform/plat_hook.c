@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -112,7 +112,7 @@ bool pre_vr_read(uint8_t sensor_num, void *args)
 	msg.data[0] = 0x00;
 	msg.data[1] = pre_proc_args->vr_page;
 	if (i2c_master_write(&msg, retry)) {
-		LOG_ERR("Failed to set VR page, sensor_num 0x%x \n", sensor_num);
+		LOG_ERR("Failed to set VR page, sensor_num 0x%x", sensor_num);
 		return false;
 	}
 	return true;
@@ -393,7 +393,7 @@ bool post_amd_tsi_read(uint8_t sensor_num, void *args, int *reading)
 	sel_msg.event_data2 = 0xFF;
 	sel_msg.event_data3 = 0xFF;
 	if (!common_add_sel_evt_record(&sel_msg)) {
-		LOG_ERR("[%s] Failed to add FM Throttle sel.\n", __func__);
+		LOG_ERR("Failed to add FM Throttle sel.");
 	}
 	return true;
 }

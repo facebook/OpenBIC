@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -137,7 +137,7 @@ void ISR_DC_STATE()
 	} else {
 		gpio_set(LED_CXL_POWER, GPIO_LOW);
 		if (k_work_cancel_delayable(&set_DC_on_5s_work) != 0) {
-			printf("Cancel set dc off delay work fail\n");
+			LOG_ERR("Cancel set dc off delay work fail");
 		}
 		set_DC_on_delayed_status();
 	}
@@ -222,7 +222,7 @@ static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num
 		msg.data[3] = PMBUS_STATUS_WORD;
 
 		if (i2c_master_read(&msg, I2C_RETRY)) {
-			LOG_ERR("[%s] Failed to read PMBUS_STATUS_WORD.\n", __func__);
+			LOG_ERR("Failed to read PMBUS_STATUS_WORD.");
 			continue;
 		}
 
@@ -238,8 +238,7 @@ static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num
 				msg.data[2] = page;
 				msg.data[3] = PMBUS_STATUS_MFR_SPECIFIC;
 				if (i2c_master_read(&msg, I2C_RETRY)) {
-					LOG_ERR("[%s] Failed to read PMBUS_STATUS_WORD.\n",
-						__func__);
+					LOG_ERR("Failed to read PMBUS_STATUS_WORD.");
 					continue;
 				}
 				if (msg.data[1] ==
@@ -251,8 +250,7 @@ static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num
 					msg.data[2] = page;
 					msg.data[3] = PMBUS_CLEAR_FAULTS;
 					if (i2c_master_write(&msg, I2C_RETRY)) {
-						LOG_ERR("[%s] Failed to read PMBUS_STATUS_WORD.\n",
-							__func__);
+						LOG_ERR("Failed to read PMBUS_STATUS_WORD.");
 					}
 					continue;
 				}
@@ -274,7 +272,7 @@ static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num
 		sel_msg.event_data3 = msg.data[2];
 
 		if (!common_add_sel_evt_record(&sel_msg)) {
-			LOG_ERR("[%s] Failed to add VR PMALERT sel.\n", __func__);
+			LOG_ERR("Failed to add VR PMALERT sel.");
 		}
 	}
 }

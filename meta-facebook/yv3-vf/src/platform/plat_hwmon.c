@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -28,6 +28,9 @@
 #include "plat_sensor_table.h"
 
 #include "plat_hwmon.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(plat_hwmon);
 
 static bool init_dev_prsnt_status(void)
 {
@@ -43,7 +46,7 @@ static bool init_dev_prsnt_status(void)
 void BICup1secTickHandler(struct k_work *work)
 {
 	if (!work) {
-		printf("BICup1secTickHandler get null work handler!\n");
+		LOG_ERR("BICup1secTickHandler get NULL work handler!");
 		return;
 	}
 
@@ -77,7 +80,7 @@ int8_t mb_cpld_dev_prsnt_set(uint32_t idx, uint32_t val)
 	memcpy(&msg.data[0], &reg, sizeof(reg));
 
 	if (i2c_master_read(&msg, retry)) {
-		printf("MB CPLD read failed!\n");
+		LOG_ERR("MB CPLD read failed!");
 		return false;
 	}
 

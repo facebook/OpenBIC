@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -144,7 +144,7 @@ bool xdpe12284c_get_remaining_write(uint8_t bus, uint8_t target_addr, uint16_t *
 	i2c_msg.rx_len = 2;
 	i2c_msg.data[0] = VR_XDPE_REG_REMAIN_WR;
 	if (i2c_master_read(&i2c_msg, retry)) {
-		printf("<error> XDPE12284C get remaining write while i2c reading\n");
+		LOG_ERR("<error> XDPE12284C get remaining write while i2c reading");
 		return false;
 	}
 
@@ -168,7 +168,7 @@ static float vid_to_float(int val, uint8_t vout_mode)
 	mode = (vout_mode >> 5);
 
 	if (mode != VID_IDENTIFIER) {
-		printf("%s Infineon VR reading with invalid VID IDENTIFIER: %x", __func__, mode);
+		LOG_ERR("Infineon VR reading with invalid VID IDENTIFIER: %x", mode);
 		return -1;
 	}
 
@@ -186,7 +186,7 @@ static float vid_to_float(int val, uint8_t vout_mode)
 			return ((val - 1) * 10 + 200);
 		}
 	default:
-		printf("%s Infineon VR reading with invalid vout mode: %x", __func__, vout_mode);
+		LOG_ERR("Infineon VR reading with invalid vout mode: %x", vout_mode);
 		return -1;
 	}
 
@@ -336,7 +336,6 @@ static bool parsing_image(uint8_t *hex_buff, struct xdpe_config *dev_cfg)
 					ofst++;
 					i += 4; //pass 4 bytes data
 				} else if (hex_buff[i] == 0x0d) {
-					// '\n'
 					i++;
 					new_line = true;
 				} else {
@@ -406,7 +405,7 @@ bool xdpe12284c_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff)
 		return false;
 	}
 	if (remain <= VR_WARN_REMAIN_WR) {
-		LOG_WRN("The remaining writes %d is below the threshold value %d!\n", remain,
+		LOG_WRN("The remaining writes %d is below the threshold value %d!", remain,
 			VR_WARN_REMAIN_WR);
 	}
 

@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -21,6 +21,9 @@
 #include "hal_i2c.h"
 #include "plat_sensor_table.h"
 #include "plat_hook.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(plat_hook);
 
 /**************************************************************************************************
  * INIT ARGS
@@ -149,7 +152,7 @@ bool pre_ina233_read(uint8_t sensor_num, void *args)
 	ina233_init_arg *init_arg =
 		(ina233_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
 	if (init_arg == NULL) {
-		printf("[%s] input initial pointer is NULL\n", __func__);
+		LOG_ERR("Input initial pointer is NULL");
 		return false;
 	}
 
@@ -169,7 +172,7 @@ bool pre_ina233_read(uint8_t sensor_num, void *args)
 
 		ret = i2c_master_write(&msg, retry);
 		if (ret != 0) {
-			printf("[%s] i2c write fail  ret: %d\n", __func__, ret);
+			LOG_ERR("i2c write fail  ret: %d", ret);
 			return false;
 		}
 		init_arg->is_init = true;
@@ -180,7 +183,7 @@ bool pre_ina233_read(uint8_t sensor_num, void *args)
 bool pre_isl69254iraz_t_read(uint8_t sensor_num, void *args)
 {
 	if (args == NULL) {
-		printf("[%s] input args is NULL\n", __func__);
+		LOG_ERR("Input args are NULL");
 		return false;
 	}
 
@@ -199,7 +202,7 @@ bool pre_isl69254iraz_t_read(uint8_t sensor_num, void *args)
 
 	ret = i2c_master_write(&msg, retry);
 	if (ret != 0) {
-		printf("[%s] i2c write fail  ret: %d\n", __func__, ret);
+		LOG_ERR("I2C write fail  ret: %d", ret);
 		return false;
 	}
 	return true;

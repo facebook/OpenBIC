@@ -252,7 +252,7 @@ int get_pcie_device_type(uint8_t card_id, uint8_t device_id, uint8_t *device_typ
 			}
 			break;
 		default:
-			LOG_ERR("Invalid pcie device id: 0x%x\n", device_id);
+			LOG_ERR("Invalid pcie device id: 0x%x", device_id);
 			return -1;
 		}
 		break;
@@ -271,7 +271,7 @@ int get_pcie_device_type(uint8_t card_id, uint8_t device_id, uint8_t *device_typ
 		}
 		break;
 	default:
-		LOG_ERR("Invalid pcie card id: 0x%x\n", card_id);
+		LOG_ERR("Invalid pcie card id: 0x%x", card_id);
 		return -1;
 	}
 

@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -56,7 +56,7 @@ void IPMI_CHASSIS_handler(ipmi_msg *msg)
 		break;
 #endif
 	default:
-		LOG_ERR("invalid chassis msg netfn: %x, cmd: %x\n", msg->netfn, msg->cmd);
+		LOG_ERR("Invalid chassis msg netfn: %x, cmd: %x", msg->netfn, msg->cmd);
 		msg->data_len = 0;
 		msg->completion_code = CC_INVALID_CMD;
 		break;

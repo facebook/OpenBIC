@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -89,7 +89,7 @@ void irq_callback(const struct device *dev, struct gpio_callback *cb, uint32_t p
 	} else if (dev == dev_gpio[GPIO_U_V]) {
 		group = GPIO_U_V;
 	} else {
-		LOG_ERR("invalid dev group for isr cb\n");
+		LOG_ERR("Invalid dev group for isr cb");
 		return;
 	}
 
@@ -100,13 +100,13 @@ void irq_callback(const struct device *dev, struct gpio_callback *cb, uint32_t p
 		}
 	}
 	if (index == GPIO_GROUP_SIZE) {
-		LOG_ERR("irq_callback: pin %x not found\n", pins);
+		LOG_ERR("irq_callback: pin %x not found", pins);
 		return;
 	}
 	gpio_num = (group * GPIO_GROUP_SIZE) + pins;
 
 	if (gpio_cfg[gpio_num].int_cb == NULL) {
-		LOG_ERR("Callback function pointer NULL for gpio num %d\n", gpio_num);
+		LOG_ERR("Callback function pointer NULL for gpio num %d", gpio_num);
 		return;
 	}
 
@@ -318,7 +318,7 @@ int gpio_init(const struct device *args)
 					break;
 				}
 			} else {
-				LOG_DBG("TODO: add sgpio handler\n");
+				LOG_DBG("TODO: add sgpio handler");
 			}
 		}
 	}

@@ -22,6 +22,10 @@
 #include "libutil.h"
 #include "pmbus.h"
 
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(ltc4286);
+
 #define LTC4286_MFR_CONFIG1 0xF2
 #define I2C_DATA_SIZE 5
 
@@ -78,7 +82,7 @@ uint8_t ltc4286_read(uint8_t sensor_num, int *reading)
 	ltc4286_init_arg *init_arg =
 		(ltc4286_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
 	if (init_arg->is_init == false) {
-		printf("[%s], device isn't initialized\n", __func__);
+		LOG_ERR("Device isn't initialized");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -134,8 +138,7 @@ uint8_t ltc4286_read(uint8_t sensor_num, int *reading)
 			}
 		}
 		if (cnt == ARRAY_SIZE(ltc4286_mbr_table)) {
-			printf("[%s] Undifined the type(0x%x) in LTC4286 MBR table\n", __func__,
-			       type);
+			LOG_ERR("Undifined the type(0x%x) in LTC4286 MBR table", type);
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 	}
@@ -162,7 +165,7 @@ uint8_t ltc4286_read(uint8_t sensor_num, int *reading)
 uint8_t ltc4286_init(uint8_t sensor_num)
 {
 	if (!sensor_config[sensor_config_index_map[sensor_num]].init_args) {
-		printf("<error> LTC4286 init args are not provided!\n");
+		LOG_ERR("<error> LTC4286 init args are not provided!");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
@@ -185,7 +188,7 @@ uint8_t ltc4286_init(uint8_t sensor_num)
 	msg.data[1] = init_args->mfr_config_1.value & 0xFF;
 	msg.data[2] = (init_args->mfr_config_1.value >> 8) & 0xFF;
 	if (i2c_master_write(&msg, retry) != 0) {
-		printf("Failed to set LTC4286 register(0x%x)\n", msg.data[0]);
+		LOG_ERR("Failed to set LTC4286 register(0x%x)", msg.data[0]);
 		goto cleanup;
 	}
 
@@ -195,7 +198,7 @@ init_param:
 	msg.rx_len = 3;
 	msg.data[0] = LTC4286_MFR_CONFIG1;
 	if (i2c_master_read(&msg, retry) != 0) {
-		printf("Failed to read LTC4286 register(0x%x)\n", msg.data[0]);
+		LOG_ERR("Failed to read LTC4286 register(0x%x)", msg.data[0]);
 		init_args->is_init = false;
 		goto cleanup;
 	}

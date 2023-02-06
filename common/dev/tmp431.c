@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -22,6 +22,9 @@
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "libutil.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(dev_tmp431);
 
 #define I2C_DATA_SIZE 5
 #define RANGE_0_127 0
@@ -67,7 +70,7 @@ uint8_t tmp431_read(uint8_t sensor_num, int *reading)
 		}
 		temperature_low_byte = msg.data[0];
 	} else {
-		printf("[%s] Unknown offset(%d)\n", __func__, offset);
+		LOG_ERR("Unknown offset(%d)", offset);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -77,7 +80,7 @@ uint8_t tmp431_read(uint8_t sensor_num, int *reading)
 	} else if (temperature_range == RANGE_m55_150) {
 		val = (temperature_high_byte - 64) + ((temperature_low_byte >> 4) * 0.0625);
 	} else {
-		printf("[%s] Unknown temperature range(%d)\n", __func__, temperature_range);
+		LOG_ERR("Unknown temperature range(%d)", temperature_range);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -98,7 +101,7 @@ uint8_t tmp431_init(uint8_t sensor_num)
 
 	char *data = (uint8_t *)malloc(I2C_DATA_SIZE * sizeof(uint8_t));
 	if (data == NULL) {
-		printf("[%s], Memory allocation failed!\n", __func__);
+		LOG_ERR("Memory allocation failed!");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
@@ -111,7 +114,7 @@ uint8_t tmp431_init(uint8_t sensor_num)
 	data[0] = CONFIGURATION_REGISTER_1;
 	msg = construct_i2c_message(bus, target_addr, tx_len, data, rx_len);
 	if (i2c_master_read(&msg, retry) != 0) {
-		printf("Failed to read TMP431 register(0x%x)\n", data[0]);
+		LOG_ERR("Failed to read TMP431 register(0x%x)", data[0]);
 		goto cleanup;
 	}
 	temperature_range = (msg.data[0] & BIT(2)) == BIT(2) ? RANGE_m55_150 : RANGE_0_127;
