@@ -97,7 +97,7 @@ __weak void APP_GET_SELFTEST_RESULTS(ipmi_msg *msg)
 	}
 
 	EEPROM_ENTRY fru_entry;
-	fru_entry.config.dev_id = 0;
+	fru_entry.config.dev_id = BIC_FRU_DEV_ID;
 	fru_entry.offset = 0;
 	fru_entry.data_len = 8;
 	FRU_read(&fru_entry);

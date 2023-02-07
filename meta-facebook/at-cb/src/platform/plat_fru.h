@@ -41,6 +41,7 @@ enum FRU_ID {
 
 /* Skip fru id 0~12, 14~15, 17 */
 #define FRU_CFG_NUM 14
+#define BIC_FRU_DEV_ID CB_FRU_ID
 
 #define CB_FRU_PORT I2C_BUS2
 #define CB_FRU_ADDR (0xAC >> 1)

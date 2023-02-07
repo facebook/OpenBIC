@@ -18,6 +18,11 @@
 #define APP_HANDLER_H
 
 #include "ipmi.h"
+#include "plat_fru.h"
+
+#ifndef BIC_FRU_DEV_ID
+#define BIC_FRU_DEV_ID 0
+#endif
 
 #define GET_TEST_RESULT 0
 
