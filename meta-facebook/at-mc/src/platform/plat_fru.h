@@ -55,6 +55,7 @@ enum {
 
 /* Skip fru id 0~16, 18~29 */
 #define FRU_CFG_NUM 9
+#define BIC_FRU_DEV_ID MC_FRU_ID
 
 int pal_cxl_map_mux0_channel(uint8_t cxl_id);
 
