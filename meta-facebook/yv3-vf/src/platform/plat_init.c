@@ -74,15 +74,20 @@ static void BICup5secTickHandler(struct k_work *work)
 			if (sensor_config[i].type != sensor_dev_ina230)
 				continue;
 
+			if (!m2_prsnt(m2_sensornum2idx(sensor_config[i].num)))
+				continue;
+
 			if (ina230_init(sensor_config[i].num) != SENSOR_INIT_SUCCESS) {
 				LOG_ERR("sensor_config[%02x].num = %02x re-init ina230 failed!, retry it after 5 seconds",
-				       i, sensor_config[i].num);
+					i, sensor_config[i].num);
 				k_work_schedule((struct k_work_delayable *)work, K_SECONDS(5));
 				return;
 			}
 		}
 	} else if (get_e1s_adc_config() == CONFIG_ADC_ISL28022) {
-		// e1s_isl28022_init();
+		// Nothing to do here now
+	} else {
+		// Nothing to do here now
 	}
 }
 
