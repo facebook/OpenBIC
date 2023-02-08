@@ -126,7 +126,7 @@ uint8_t ltc4286_read(uint8_t sensor_num, int *reading)
 	/* Iterate the LTC4286 MBR table to
 	 * find the corresponding MBR values by the sensor type and voltage range selection
 	 */
-	uint8_t index = 0xFF;
+	uint8_t index = 0;
 	for (int cnt = 0; cnt < ARRAY_SIZE(ltc4286_mbr_table); cnt++) {
 		if (type == ltc4286_mbr_table[cnt].type) {
 			if ((ltc4286_mbr_table[cnt].voltage_range == BOTH) ||
@@ -181,15 +181,18 @@ uint8_t ltc4286_init(uint8_t sensor_num)
 		goto init_param;
 	}
 
-	// Set MFR_CONFIG_1 register value
-	msg.tx_len = 3;
-	msg.rx_len = 0;
-	msg.data[0] = LTC4286_MFR_CONFIG1;
-	msg.data[1] = init_args->mfr_config_1.value & 0xFF;
-	msg.data[2] = (init_args->mfr_config_1.value >> 8) & 0xFF;
-	if (i2c_master_write(&msg, retry) != 0) {
-		LOG_ERR("Failed to set LTC4286 register(0x%x)", msg.data[0]);
-		goto cleanup;
+	/* if the value is equal to 0xFFFF, use the default value on the chip */
+	if (init_args->mfr_config_1.value != 0xFFFF) {
+		// Set MFR_CONFIG_1 register value
+		msg.tx_len = 3;
+		msg.rx_len = 0;
+		msg.data[0] = LTC4286_MFR_CONFIG1;
+		msg.data[1] = init_args->mfr_config_1.value & 0xFF;
+		msg.data[2] = (init_args->mfr_config_1.value >> 8) & 0xFF;
+		if (i2c_master_write(&msg, retry) != 0) {
+			LOG_ERR("Failed to set LTC4286 register(0x%x)", msg.data[0]);
+			goto cleanup;
+		}
 	}
 
 init_param:
