@@ -74,6 +74,9 @@ static void BICup5secTickHandler(struct k_work *work)
 			if (sensor_config[i].type != sensor_dev_ina230)
 				continue;
 
+			if (!m2_prsnt(m2_sensornum2idx(sensor_config[i].num)))
+				continue;
+
 			if (ina230_init(sensor_config[i].num) != SENSOR_INIT_SUCCESS) {
 				LOG_ERR("sensor_config[%02x].num = %02x re-init ina230 failed!, retry it after 5 seconds",
 				       i, sensor_config[i].num);

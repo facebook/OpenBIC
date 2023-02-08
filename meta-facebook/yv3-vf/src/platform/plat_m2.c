@@ -21,6 +21,7 @@
 #include "plat_m2.h"
 #include "plat_power_seq.h"
 #include "plat_i2c.h"
+#include "plat_sensor_table.h"
 
 uint8_t m2_bus2idx(uint8_t bus)
 {
@@ -47,6 +48,28 @@ uint8_t m2_idx2bus(uint8_t idx)
 	       (idx == M2_IDX_E_C) ? I2C_BUS_M2C :
 	       (idx == M2_IDX_E_D) ? I2C_BUS_M2D :
 					   0xFF;
+}
+
+uint8_t m2_idx2sensornum(uint8_t idx) // index to m.2 power sensor number
+{
+	return (idx == M2_IDX_E_A) ? SENSOR_NUM_INA231_PWR_M2A :
+	       (idx == M2_IDX_E_B) ? SENSOR_NUM_INA231_PWR_M2B :
+	       (idx == M2_IDX_E_C) ? SENSOR_NUM_INA231_PWR_M2C :
+	       (idx == M2_IDX_E_D) ? SENSOR_NUM_INA231_PWR_M2D :
+					   0xFF;
+}
+
+uint8_t m2_sensornum2idx(uint8_t sensor_num) //  m.2 power/voltage sensor num to index
+{
+	return (sensor_num == SENSOR_NUM_INA231_PWR_M2A) ? M2_IDX_E_A :
+	       (sensor_num == SENSOR_NUM_INA231_PWR_M2B) ? M2_IDX_E_B :
+	       (sensor_num == SENSOR_NUM_INA231_PWR_M2C) ? M2_IDX_E_C :
+	       (sensor_num == SENSOR_NUM_INA231_PWR_M2D) ? M2_IDX_E_D :
+	       (sensor_num == SENSOR_NUM_INA231_VOL_M2A) ? M2_IDX_E_A :
+	       (sensor_num == SENSOR_NUM_INA231_VOL_M2B) ? M2_IDX_E_B :
+	       (sensor_num == SENSOR_NUM_INA231_VOL_M2C) ? M2_IDX_E_C :
+	       (sensor_num == SENSOR_NUM_INA231_VOL_M2D) ? M2_IDX_E_D :
+								 M2_IDX_E_MAX;
 }
 
 uint8_t m2_pwrgd(uint8_t idx)

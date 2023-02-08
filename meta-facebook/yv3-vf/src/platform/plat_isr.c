@@ -4,6 +4,7 @@
 
 #include "libipmi.h"
 #include "power_status.h"
+#include "sensor.h"
 
 #include "plat_m2.h"
 #include "plat_gpio.h"
@@ -12,6 +13,8 @@
 #include "plat_power_seq.h"
 #include "plat_util.h"
 #include "plat_isr.h"
+
+extern uint8_t ina230_init(uint8_t sensor_num);
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -92,6 +95,8 @@ uint8_t check_12v_dev_pwrgd(void)
 	uint8_t i = 0;
 	if (get_e1s_pwrgd()) {
 		for (i = 0; i < M2_IDX_E_MAX; i++) {
+			if (!m2_prsnt(i))
+				continue;
 			if (get_p12v_flt_status(i))
 				break;
 		}
@@ -127,6 +132,15 @@ static void m2_presen_evt(uint32_t dev, uint32_t status)
 void prsnt_int_handler(uint32_t idx, uint32_t arg1)
 {
 	const uint8_t is_prsnt = m2_prsnt(idx);
+	uint8_t retry = 3;
+
+	while (retry--) {
+		if (!is_prsnt)
+			break;
+		if (ina230_init(m2_idx2sensornum(idx)) == SENSOR_INIT_SUCCESS)
+			break;
+		k_msleep(10); // retry delay time 10ms
+	}
 
 	m2_presen_evt(idx, is_prsnt);
 
@@ -144,6 +158,8 @@ void irq_fault_sel(uint8_t idx, uint8_t type, uint8_t is_check)
 
 	switch (type) {
 	case P12V_E1S:
+		if (!m2_prsnt(idx))
+			return;
 		event_data1 = IPMI_EVENT_OFFSET_SYS_IRQ_P12V_E1S_FLT;
 		pin = (idx == 0) ? IRQ_P12V_E1S_0_FLT_N :
 		      (idx == 1) ? IRQ_P12V_E1S_1_FLT_N :
@@ -157,6 +173,8 @@ void irq_fault_sel(uint8_t idx, uint8_t type, uint8_t is_check)
 					    0xFF;
 		break;
 	case P3V3_E1S:
+		if (!m2_prsnt(idx))
+			return;
 		event_data1 = IPMI_EVENT_OFFSET_SYS_IRQ_P3V3_E1S_FLT;
 		pin = (idx == 0) ? IRQ_P3V3_E1S_0_FLT_N :
 		      (idx == 1) ? IRQ_P3V3_E1S_1_FLT_N :
