@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -37,9 +37,12 @@
 // Server board CPLD difinition
 #define SB_CPLD_BUS I2C_BUS1
 #define SB_CPLD_ADDR 0x21
-#define SB_CPLD_REG_SPI_OOB_CONTROL 0x0C
 #define SB_CPLD_SPI_OOB_FROM_CPU 0x02
+#define SB_CPLD_REG_BOARD_CLASS_TYPE 0x05
+#define SB_CPLD_REG_BOARD_REVISION_ID 0x08
+#define SB_CPLD_REG_1OU_CARD_DETECTION 0x09
 #define SB_CPLD_SPI_OOB_FROM_BIC 0x0B
+#define SB_CPLD_REG_SPI_OOB_CONTROL 0x0C
 #define SB_CPLD_REG_ADR_MODE0_GPIO_CTRL 0x16
 
 #endif

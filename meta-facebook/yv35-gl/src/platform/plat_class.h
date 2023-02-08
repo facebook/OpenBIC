@@ -22,9 +22,17 @@
 
 #define SYS_CLASS_1 1
 #define SYS_CLASS_2 2
+#define NUMBER_OF_ADC_CHANNEL 16
+#define AST1030_ADC_BASE_ADDR 0x7e6e9000
 
 enum BIC_BOARD_REVISION {
 	SYS_BOARD_POC = 0x0,
+	SYS_BOARD_EVT,
+	// ID 02h is reserved
+	SYS_BOARD_DVT = 0x03,
+	// ID 04h is reserved
+	SYS_BOARD_PVT = 0x05,
+	SYS_BOARD_MP,
 };
 
 typedef struct _CARD_STATUS_ {
@@ -33,12 +41,43 @@ typedef struct _CARD_STATUS_ {
 } CARD_STATUS;
 
 enum _1OU_CARD_TYPE_ {
+	TYPE_1OU_SI_TEST_CARD = 0x0,
+	TYPE_1OU_EXP_WITH_6_M2,
+	TYPE_1OU_RAINBOW_FALLS,
+	TYPE_1OU_VERNAL_FALLS_WITH_TI, // TI BIC
+	TYPE_1OU_VERNAL_FALLS_WITH_AST, // AST1030 BIC
+	TYPE_1OU_KAHUNA_FALLS,
+	TYPE_1OU_WAIMANO_FALLS,
+	TYPE_1OU_EXP_WITH_NIC,
 	TYPE_1OU_ABSENT = 0xFE,
 	TYPE_1OU_UNKNOWN = 0xFF,
 };
 
+enum _2OU_CARD_TYPE_ {
+	TYPE_2OU_DPV2_8 = 0x07, // DPV2x8
+	TYPE_2OU_DPV2_16 = 0x70, // DPV2x16
+	TYPE_2OU_ABSENT = 0xFE,
+	TYPE_2OU_UNKNOWN = 0xFF,
+};
+
+enum HSC_MODULE {
+	HSC_MODULE_ADM1278 = 0b00,
+	HSC_MODULE_MP5990 = 0b01,
+	HSC_MODULE_UNKNOWN,
+};
+
+/* ADC channel number */
+enum ADC_CHANNEL {
+	CHANNEL_6 = 6,
+	CHANNEL_7 = 7,
+};
+
 uint8_t get_system_class();
 CARD_STATUS get_1ou_status();
+CARD_STATUS get_2ou_status();
+uint8_t get_hsc_module();
+bool get_adc_voltage(int channel, float *voltage);
 uint8_t get_board_revision();
+void init_platform_config();
 
 #endif
