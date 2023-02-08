@@ -376,10 +376,10 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 			msg->completion_code = CC_PEX_NOT_POWER_ON;
 			return;
 		}
-		const uint8_t pex_sensor_num_table[PEX_MAX_NUMBER] = { SENSOR_NUM_BB_TEMP_PEX_0,
-								       SENSOR_NUM_BB_TEMP_PEX_1,
-								       SENSOR_NUM_BB_TEMP_PEX_2,
-								       SENSOR_NUM_BB_TEMP_PEX_3 };
+		const uint8_t pex_sensor_num_table[PEX_MAX_NUMBER] = { SENSOR_NUM_TEMP_PEX_0,
+								       SENSOR_NUM_TEMP_PEX_1,
+								       SENSOR_NUM_TEMP_PEX_2,
+								       SENSOR_NUM_TEMP_PEX_3 };
 		/* Physical Layer User Test Patterns, Byte 0 Register */
 		int reading = 0x6080020c;
 
@@ -447,8 +447,8 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		uint8_t retry = 3;
 		uint8_t buf[5] = { 0 };
 		/* Assign VR 0/1 related sensor number to get information for accessing VR */
-		uint8_t sensor_num = (component == GT_COMPNT_VR0) ? SENSOR_NUM_TEMP_PEX_1 :
-								    SENSOR_NUM_TEMP_PEX_3;
+		uint8_t sensor_num = (component == GT_COMPNT_VR0) ? SENSOR_NUM_PEX_0_VR_TEMP :
+								    SENSOR_NUM_PEX_2_VR_TEMP;
 		if (!tca9548_select_chan(sensor_num, &mux_conf_addr_0xe0[6])) {
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			return;

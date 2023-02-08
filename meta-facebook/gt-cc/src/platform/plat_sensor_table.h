@@ -141,7 +141,7 @@
 #define SENSOR_NUM_BB_P1V8_PEX2 0x37
 #define SENSOR_NUM_BB_P1V8_PEX3 0x38
 
-#define SENSOR_NUM_TEMP_PEX_0 0x40
+#define SENSOR_NUM_PEX_0_VR_TEMP 0x40
 #define SENSOR_NUM_P0V8_VOLT_PEX_0 0x41
 #define SENSOR_NUM_P0V8_IOUT_PEX_0 0x42
 #define SENSOR_NUM_P0V8_POUT_PEX_0 0x43
@@ -149,7 +149,7 @@
 #define SENSOR_NUM_P1V25_IOUT_PEX_0 0x45
 #define SENSOR_NUM_P1V25_POUT_PEX_0 0x46
 
-#define SENSOR_NUM_TEMP_PEX_1 0x47
+#define SENSOR_NUM_PEX_1_VR_TEMP 0x47
 #define SENSOR_NUM_P0V8_VOLT_PEX_1 0x48
 #define SENSOR_NUM_P0V8_IOUT_PEX_1 0x49
 #define SENSOR_NUM_P0V8_POUT_PEX_1 0x4A
@@ -157,7 +157,7 @@
 #define SENSOR_NUM_P1V25_IOUT_PEX_1 0x4C
 #define SENSOR_NUM_P1V25_POUT_PEX_1 0x4D
 
-#define SENSOR_NUM_TEMP_PEX_2 0x50
+#define SENSOR_NUM_PEX_2_VR_TEMP 0x50
 #define SENSOR_NUM_P0V8_VOLT_PEX_2 0x51
 #define SENSOR_NUM_P0V8_IOUT_PEX_2 0x52
 #define SENSOR_NUM_P0V8_POUT_PEX_2 0x53
@@ -165,7 +165,7 @@
 #define SENSOR_NUM_P1V25_IOUT_PEX_2 0x55
 #define SENSOR_NUM_P1V25_POUT_PEX_2 0x56
 
-#define SENSOR_NUM_TEMP_PEX_3 0x57
+#define SENSOR_NUM_PEX_3_VR_TEMP 0x57
 #define SENSOR_NUM_P0V8_VOLT_PEX_3 0x58
 #define SENSOR_NUM_P0V8_IOUT_PEX_3 0x59
 #define SENSOR_NUM_P0V8_POUT_PEX_3 0x5A
@@ -177,10 +177,10 @@
 #define SENSOR_NUM_P1V8_IOUT_PEX 0x61
 #define SENSOR_NUM_P1V8_POUT_PEX 0x62
 
-#define SENSOR_NUM_BB_TEMP_PEX_0 0x6A
-#define SENSOR_NUM_BB_TEMP_PEX_1 0x6B
-#define SENSOR_NUM_BB_TEMP_PEX_2 0x6C
-#define SENSOR_NUM_BB_TEMP_PEX_3 0x6D
+#define SENSOR_NUM_TEMP_PEX_0 0x6A
+#define SENSOR_NUM_TEMP_PEX_1 0x6B
+#define SENSOR_NUM_TEMP_PEX_2 0x6C
+#define SENSOR_NUM_TEMP_PEX_3 0x6D
 
 #define SENSOR_NUM_SYSTEM_INLET_TEMP 0x70
 #define SENSOR_NUM_OUTLET_TEMP_L1 0x71
@@ -275,7 +275,8 @@
 
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
-bool e1s_access(uint8_t sensor_num);
-bool nic_access(uint8_t sensor_num);
+bool is_e1s_access(uint8_t sensor_num);
+bool is_nic_access(uint8_t sensor_num);
+bool is_dc_access(uint8_t sensor_num);
 
 #endif

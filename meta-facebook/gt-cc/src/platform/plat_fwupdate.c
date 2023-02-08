@@ -82,7 +82,7 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param)
 
 	/* Assign VR 0/1 related sensor number to get information for accessing VR */
 	uint8_t sensor_num =
-		(p->comp_id == COMP_ID_VR0) ? SENSOR_NUM_TEMP_PEX_1 : SENSOR_NUM_TEMP_PEX_3;
+		(p->comp_id == COMP_ID_VR0) ? SENSOR_NUM_PEX_0_VR_TEMP : SENSOR_NUM_PEX_2_VR_TEMP;
 
 	if (!tca9548_select_chan(sensor_num, &mux_conf_addr_0xe0[6])) {
 		LOG_ERR("Component %d: mux switched failed!", p->comp_id);
