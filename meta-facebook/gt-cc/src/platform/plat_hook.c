@@ -1118,8 +1118,3 @@ bool is_mb_dc_on()
    */
 	return !gpio_get(SYS_PWR_READY_N);
 }
-
-bool is_dc_access(uint8_t sensor_num)
-{
-	return is_mb_dc_on();
-}
