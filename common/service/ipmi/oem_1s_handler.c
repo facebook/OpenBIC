@@ -23,6 +23,7 @@
 #include "snoop.h"
 #include "pmic.h"
 #include "hal_gpio.h"
+#include "hal_vw_gpio.h"
 #include "hal_i2c.h"
 #include "hal_jtag.h"
 #include "hal_peci.h"
@@ -1105,6 +1106,50 @@ __weak void OEM_1S_GET_SET_GPIO(ipmi_msg *msg)
 	return;
 }
 
+__weak void OEM_1S_GET_SET_BIC_VGPIO(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	switch (msg->data[0]) {
+	case GET_VGPIO_DIRECTION_AND_STATUS:
+		if (msg->data_len != 2) {
+			msg->completion_code = CC_INVALID_LENGTH;
+			msg->data_len = 0;
+			return;
+		}
+
+		if (vw_gpio_get(msg->data[1], &msg->data[1])) {
+			msg->completion_code = CC_SUCCESS;
+			msg->data_len = 3;
+		} else {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			msg->data_len = 0;
+			return;
+		}
+		break;
+	case SET_VGPIO_STATUS:
+		if (msg->data_len != 3) {
+			msg->completion_code = CC_INVALID_LENGTH;
+			msg->data_len = 0;
+			return;
+		}
+
+		if (vw_gpio_set(msg->data[1], msg->data[2])) {
+			msg->completion_code = CC_SUCCESS;
+			msg->data_len = 1;
+		} else {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			msg->data_len = 0;
+			return;
+		}
+		break;
+	default:
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		msg->data_len = 0;
+	}
+
+	return;
+}
 __weak void OEM_1S_CONTROL_SENSOR_POLLING(ipmi_msg *msg)
 {
 	/***************************************************
@@ -2118,6 +2163,10 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_GET_SET_GPIO:
 		LOG_DBG("Received 1S Get/Set GPIO command");
 		OEM_1S_GET_SET_GPIO(msg);
+		break;
+	case CMD_OEM_1S_GET_SET_BIC_VGPIO:
+		LOG_DBG("Received 1S Get/Set BIC vGPIO command");
+		OEM_1S_GET_SET_BIC_VGPIO(msg);
 		break;
 	case CMD_OEM_1S_CONTROL_SENSOR_POLLING:
 		LOG_DBG("Received 1S Sensor Polling Control command");

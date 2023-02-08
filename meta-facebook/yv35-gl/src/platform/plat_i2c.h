@@ -34,4 +34,12 @@
 #define IPMB_I2C_BMC I2C_BUS7
 #define I2C_BUS_MAX_NUM 9
 
+// Server board CPLD difinition
+#define SB_CPLD_BUS I2C_BUS1
+#define SB_CPLD_ADDR 0x21
+#define SB_CPLD_REG_SPI_OOB_CONTROL 0x0C
+#define SB_CPLD_SPI_OOB_FROM_CPU 0x02
+#define SB_CPLD_SPI_OOB_FROM_BIC 0x0B
+#define SB_CPLD_REG_ADR_MODE0_GPIO_CTRL 0x16
+
 #endif

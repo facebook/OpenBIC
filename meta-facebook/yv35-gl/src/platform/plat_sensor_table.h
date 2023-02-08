@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -119,6 +119,7 @@ enum SENSOR_NUM {
 };
 /*event log sensor number*/
 #define SENSOR_NUM_SYSTEM_STATUS 0x10
+#define SENSOR_NUM_END_OF_POST 0x11
 #define SENSOR_NUM_POWER_ERROR 0x56
 #define SENSOR_NUM_PROC_FAIL 0x65
 #define SENSOR_NUM_VR_HOT 0xB2

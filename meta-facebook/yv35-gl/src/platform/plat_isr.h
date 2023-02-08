@@ -52,5 +52,6 @@ void ISR_CPU_MEMHOT();
 void ISR_CPUVR_HOT();
 void ISR_RMCA();
 void ISR_POST_COMPLETE(uint8_t gpio_value);
+void ISR_FM_ADR_MODE0(uint8_t gpio_value);
 
 #endif

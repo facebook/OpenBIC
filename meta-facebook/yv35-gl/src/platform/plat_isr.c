@@ -18,11 +18,14 @@
 #include "hal_gpio.h"
 #include "hal_vw_gpio.h"
 #include "libipmi.h"
+#include "libutil.h"
 #include "snoop.h"
+#include "ipmb.h"
 #include "ipmi.h"
 #include "power_status.h"
 #include "kcs.h"
 
+#include "plat_i2c.h"
 #include "plat_isr.h"
 #include "plat_gpio.h"
 #include "plat_ipmb.h"
@@ -157,6 +160,7 @@ void Initialize_CPU()
 		/* start thread proc_fail_handler after 10 seconds */
 		k_work_schedule(&PROC_FAIL_work, K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
 	} else {
+		ISR_POST_COMPLETE(VW_GPIO_LOW);
 		abort_snoop_thread();
 
 		if (k_work_cancel_delayable(&PROC_FAIL_work) != 0) {
@@ -445,4 +449,48 @@ void ISR_POST_COMPLETE(uint8_t gpio_value)
 {
 	bool is_post_completed = (gpio_value == VW_GPIO_HIGH) ? true : false;
 	set_post_complete(is_post_completed);
+
+	// Add "END_OF_POST" event log to BMC
+	common_addsel_msg_t sel_msg;
+	sel_msg.InF_target = BMC_IPMB;
+	sel_msg.sensor_type = IPMI_SENSOR_TYPE_SYS_EVENT;
+	sel_msg.event_type =
+		is_post_completed ? IPMI_EVENT_TYPE_SENSOR_SPECIFIC : IPMI_OEM_EVENT_TYPE_DEASSERT;
+	sel_msg.sensor_number = SENSOR_NUM_END_OF_POST;
+	sel_msg.event_data1 = IPMI_EVENT_OEM_SYSTEM_BOOT_EVENT;
+	sel_msg.event_data2 = 0xFF;
+	sel_msg.event_data3 = 0xFF;
+	if (!common_add_sel_evt_record(&sel_msg)) {
+		LOG_ERR("failed to add end_of_post sel");
+	}
+}
+
+void ISR_FM_ADR_MODE0(uint8_t gpio_value)
+{
+	/* Set ADR mode into GL CPLD register
+	 * Offset: 16h ADR mode 0 GPIO control
+	 * Bit[0]: FM_ADR_MODE0, 0'b: (default) disable ADR
+	 */
+	int status;
+	uint8_t value;
+	I2C_MSG msg;
+	msg.bus = SB_CPLD_BUS;
+	msg.target_addr = SB_CPLD_ADDR;
+	msg.tx_len = 1;
+	msg.rx_len = 1;
+	msg.data[0] = SB_CPLD_REG_ADR_MODE0_GPIO_CTRL;
+	status = i2c_master_read(&msg, 5);
+	if (status) {
+		LOG_ERR("failed to get cpld register, ret %d", status);
+		return;
+	}
+	value = msg.data[0];
+	value = (gpio_value == VW_GPIO_HIGH) ? SETBIT(value, 0) : CLEARBIT(value, 0);
+
+	msg.tx_len = 2;
+	msg.data[0] = SB_CPLD_REG_ADR_MODE0_GPIO_CTRL;
+	msg.data[1] = value;
+	status = i2c_master_write(&msg, 5);
+	if (status)
+		LOG_ERR("failed to set cpld register, ret %d", status);
 }
