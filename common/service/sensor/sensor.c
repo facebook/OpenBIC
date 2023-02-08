@@ -277,6 +277,10 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 	bool post_ret = false;
 
+	if (cfg->cache_status == SENSOR_NOT_PRESENT) {
+		return cfg->cache_status;
+	}
+
 	if (!access_check(sensor_num)) { // sensor not accessable
 		clear_unaccessible_sensor_cache(sensor_num);
 		cfg->cache_status = SENSOR_NOT_ACCESSIBLE;
@@ -288,7 +292,8 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 		if (cfg->pre_sensor_read_hook) {
 			if (cfg->pre_sensor_read_hook(sensor_num, cfg->pre_sensor_read_args) ==
 			    false) {
-				LOG_ERR("Failed to do pre sensor read function, sensor number: 0x%x", sensor_num);
+				LOG_ERR("Failed to do pre sensor read function, sensor number: 0x%x",
+					sensor_num);
 				cfg->cache_status = SENSOR_PRE_READ_ERROR;
 				return cfg->cache_status;
 			}
@@ -317,7 +322,8 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 			}
 
 			if (cfg->post_sensor_read_hook && post_ret == false) {
-				LOG_ERR("Failed to do post sensor read function, sensor number: 0x%x", sensor_num);
+				LOG_ERR("Failed to do post sensor read function, sensor number: 0x%x",
+					sensor_num);
 				cfg->cache_status = SENSOR_POST_READ_ERROR;
 				return cfg->cache_status;
 			}
@@ -341,7 +347,8 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 				if (cfg->post_sensor_read_hook(sensor_num,
 							       cfg->post_sensor_read_args,
 							       NULL) == false) {
-					LOG_ERR("Sensor number 0x%x reading and post_read fail", sensor_num);
+					LOG_ERR("Sensor number 0x%x reading and post_read fail",
+						sensor_num);
 				}
 			}
 
@@ -369,7 +376,7 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 		default:
 			cfg->cache = SENSOR_FAIL;
 			LOG_ERR("Failed to read sensor value from cache, sensor number: 0x%x, cache status: 0x%x",
-			       sensor_num, cfg->cache_status);
+				sensor_num, cfg->cache_status);
 			return cfg->cache_status;
 		}
 		break;
@@ -428,7 +435,8 @@ void sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 			}
 
 			if (sdr_index_map[sensor_num] == SENSOR_NULL) { // Check sensor info
-				LOG_ERR("Fail to find sensor SDR info, sensor number: 0x%x", sensor_num);
+				LOG_ERR("Fail to find sensor SDR info, sensor number: 0x%x",
+					sensor_num);
 				continue;
 			}
 
@@ -488,7 +496,8 @@ void check_init_sensor_size()
 
 	if (init_sdr_size != init_sensor_config_size) {
 		enable_sensor_poll_thread = false;
-		LOG_ERR("Init sdr size is not equal to config size, sdr size: 0x%x, config size: 0x%x", init_sdr_size, init_sensor_config_size);
+		LOG_ERR("Init sdr size is not equal to config size, sdr size: 0x%x, config size: 0x%x",
+			init_sdr_size, init_sensor_config_size);
 		LOG_ERR("BIC should not monitor sensors if SDR size and sensor config size is not match, BIC would not start sensor thread");
 		return;
 	}
