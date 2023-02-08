@@ -26,6 +26,7 @@
 
 #include "plat_gpio.h"
 #include "plat_m2.h"
+#include "plat_class.h"
 
 #include "ipmi.h"
 #include "plat_util.h"
@@ -246,7 +247,7 @@ uint8_t assert_func(DEASSERT_CHK_TYPE_E assert_type) // 0:success
 	if (assert_type >= DEASSERT_CHK_TYPE_E_MAX)
 		return 1;
 
-	if (!gpio_get(FM_P12V_EDGE_EN))
+	if (!get_e1s_pwrgd())
 		return 1;
 
 	assert_func_t *p = assert_type_to_deassert_list(assert_type);
