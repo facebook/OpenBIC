@@ -139,7 +139,7 @@ sensor_cfg plat_expansion_A_sensor_config[] = {
 
 	{ SENSOR_NUM_1OU_RE_TIMER_TEMP_C, sensor_dev_pt5161l, I2C_BUS4, EXPA_RETIMER_ADDR,
 	  PT5161L_TEMP_OFFSET, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_retimer_read, NULL, NULL, NULL,
 	  &pt5161l_init_args[0] },
 
 	//adc
