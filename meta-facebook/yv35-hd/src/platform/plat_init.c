@@ -75,6 +75,7 @@ void pal_set_sys_status()
 	set_post_status(FM_BIOS_POST_CMPLT_BIC_N);
 	if (get_post_status()) {
 		set_tsi_threshold();
+		read_cpuid();
 	}
 	gpio_set(BIC_JTAG_SEL_R, gpio_get(FM_DBP_PRESENT_N));
 	set_sys_ready_pin(BIC_READY);

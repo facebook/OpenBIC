@@ -34,5 +34,6 @@ void ISR_PVDDCR_CPU0_PMALERT();
 void ISR_PVDD11_S3_PMALERT();
 void ISR_UV_DETECT();
 void IST_PLTRST();
+void ISR_APML_ALERT();
 
 #endif

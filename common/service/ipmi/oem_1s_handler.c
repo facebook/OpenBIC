@@ -1201,7 +1201,7 @@ __weak void OEM_1S_CONTROL_SENSOR_POLLING(ipmi_msg *msg)
 			// Enable or Disable sensor polling
 			sensor_config[control_sensor_index].is_enable_polling =
 				((operation == DISABLE_SENSOR_POLLING) ? DISABLE_SENSOR_POLLING :
-									       ENABLE_SENSOR_POLLING);
+									 ENABLE_SENSOR_POLLING);
 			msg->data[return_data_index + 1] =
 				sensor_config[control_sensor_index].is_enable_polling;
 		} else {
@@ -1834,7 +1834,7 @@ __weak void OEM_1S_SEND_APML_REQUEST(ipmi_msg *msg)
 	}
 
 	static uint8_t index = 0;
-	apml_msg apml_data;
+	apml_msg apml_data = { 0 };
 
 	switch (msg->data[0]) {
 	case APML_MSG_TYPE_MAILBOX: /* Mailbox */

@@ -127,5 +127,6 @@ void apml_request_callback(apml_msg *msg);
 uint8_t get_apml_response_by_index(apml_msg *msg, uint8_t index);
 uint8_t apml_read(apml_msg *msg);
 void apml_init();
+void fatal_error_happened();
 
 #endif

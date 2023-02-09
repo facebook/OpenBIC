@@ -40,6 +40,7 @@ void ISR_POST_COMPLETE()
 	set_post_status(FM_BIOS_POST_CMPLT_BIC_N);
 	if (get_post_status()) {
 		set_tsi_threshold();
+		read_cpuid();
 	}
 }
 
@@ -460,4 +461,31 @@ void ISR_UV_DETECT()
 void IST_PLTRST()
 {
 	reset_tsi_status();
+}
+
+void ISR_APML_ALERT()
+{
+	uint8_t ras_status;
+	if (apml_read_byte(APML_BUS, SB_RMI_ADDR, SBRMI_RAS_STATUS, &ras_status)) {
+		LOG_ERR("Failed to read RAS status.");
+		return;
+	}
+
+	if (ras_status & 0x0F) {
+		LOG_INF("Fatal error happened, ras_status 0x%x.", ras_status);
+		fatal_error_happened();
+
+		if ((ras_status & 0x01) &&
+		    (apml_write_byte(APML_BUS, SB_RMI_ADDR, SBRMI_RAS_STATUS, 0x01)))
+			LOG_ERR("Failed to clear fatal error.");
+
+		uint8_t status;
+		if (apml_read_byte(APML_BUS, SB_RMI_ADDR, SBRMI_STATUS, &status))
+			LOG_ERR("Failed to read RMI status.");
+
+		if ((status & 0x02) && (apml_write_byte(APML_BUS, SB_RMI_ADDR, SBRMI_STATUS, 0x02)))
+			LOG_ERR("Failed to clear SwAlertSts.");
+
+		send_apml_alert_to_bmc(ras_status);
+	}
 }
