@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -148,9 +148,9 @@ static void m2_presen_evt(uint32_t dev, uint32_t status)
 void prsnt_int_handler(uint32_t idx, uint32_t arg1)
 {
 	const uint8_t is_prsnt = m2_prsnt(idx);
-	uint8_t retry = 3;
+	uint8_t i, retry = 3;
 
-	while (retry--) {
+	for (i = 0; i < retry; i++) {
 		if (!is_prsnt)
 			break;
 		if (ina230_init(m2_idx2sensornum(idx)) == SENSOR_INIT_SUCCESS)
