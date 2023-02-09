@@ -26,8 +26,18 @@
 #define TSI_HIGH_TEMP_THRESHOLD 0x5F
 #define TSI_TEMP_ALERT_UPDATE_RATE 0x0A
 
+typedef struct _addc_trigger_info {
+	uint8_t event_version;
+	uint8_t RAS_status;
+	uint8_t total_socket;
+	uint8_t apml_index;
+	uint8_t cpuid[16];
+} __attribute__((__packed__)) addc_trigger_info;
+
 bool get_tsi_status();
 void reset_tsi_status();
 void set_tsi_threshold();
+void read_cpuid();
+void send_apml_alert_to_bmc(uint8_t ras_status);
 
 #endif

@@ -19,12 +19,14 @@
 #include "hal_i2c.h"
 #include "apml.h"
 #include "power_status.h"
-
 #include <logging/log.h>
+#include "libutil.h"
 
 LOG_MODULE_REGISTER(apml);
 
 #define RETRY_MAX 3
+#define CMD_BMC_RAS_MCA_VALIDITY_CHECK 0x43
+#define MCA_VALIDITY_CHECK_RETRY_MAX 500
 #define MAILBOX_COMPLETE_RETRY_MAX 200
 #define APML_RESP_BUFFER_SIZE 10
 #define APML_HANDLER_STACK_SIZE 1024
@@ -36,12 +38,11 @@ struct k_thread apml_thread;
 char __aligned(4) apml_msgq_buffer[APML_MSGQ_LEN * sizeof(apml_msg)];
 K_THREAD_STACK_DEFINE(apml_handler_stack, APML_HANDLER_STACK_SIZE);
 apml_buffer apml_resp_buffer[APML_RESP_BUFFER_SIZE];
+static bool is_fatal_error_happened;
 
 uint8_t apml_read_byte(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t *read_data)
 {
-	if (read_data == NULL) {
-		return APML_ERROR;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(read_data, APML_ERROR);
 	uint8_t retry = 5;
 	I2C_MSG msg;
 	msg.bus = bus;
@@ -77,9 +78,7 @@ uint8_t apml_write_byte(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t write
 
 static bool wait_HwAlert_set(apml_msg *msg, uint8_t retry)
 {
-	if (msg == NULL) {
-		return false;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(msg, false);
 	uint8_t read_data = 0;
 	for (uint8_t i = 0; i < retry; i++) {
 		if (!apml_read_byte(msg->bus, msg->target_addr, SBRMI_STATUS, &read_data)) {
@@ -95,9 +94,7 @@ static bool wait_HwAlert_set(apml_msg *msg, uint8_t retry)
 
 static uint8_t write_MCA_request(apml_msg *msg)
 {
-	if (msg == NULL) {
-		return APML_ERROR;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(msg, APML_ERROR);
 	uint8_t retry = 5;
 	I2C_MSG i2c_msg;
 	i2c_msg.bus = msg->bus;
@@ -117,9 +114,7 @@ static uint8_t write_MCA_request(apml_msg *msg)
 
 static uint8_t read_MCA_response(apml_msg *msg)
 {
-	if (msg == NULL) {
-		return APML_ERROR;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(msg, APML_ERROR);
 	uint8_t retry = 5;
 	I2C_MSG i2c_msg;
 	i2c_msg.bus = msg->bus;
@@ -137,9 +132,7 @@ static uint8_t read_MCA_response(apml_msg *msg)
 
 static uint8_t access_MCA(apml_msg *msg)
 {
-	if (msg == NULL) {
-		return APML_ERROR;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(msg, APML_ERROR);
 	if (write_MCA_request(msg)) {
 		LOG_ERR("Write MCA request failed.");
 		return APML_ERROR;
@@ -165,9 +158,7 @@ static uint8_t access_MCA(apml_msg *msg)
 
 static uint8_t write_CPUID_request(apml_msg *msg)
 {
-	if (msg == NULL) {
-		return APML_ERROR;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(msg, APML_ERROR);
 	uint8_t retry = 5;
 	I2C_MSG i2c_msg;
 	i2c_msg.bus = msg->bus;
@@ -187,9 +178,7 @@ static uint8_t write_CPUID_request(apml_msg *msg)
 
 static uint8_t read_CPUID_response(apml_msg *msg)
 {
-	if (msg == NULL) {
-		return APML_ERROR;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(msg, APML_ERROR);
 	uint8_t retry = 5;
 	I2C_MSG i2c_msg;
 	i2c_msg.bus = msg->bus;
@@ -207,9 +196,7 @@ static uint8_t read_CPUID_response(apml_msg *msg)
 
 static uint8_t access_CPUID(apml_msg *msg)
 {
-	if (msg == NULL) {
-		return APML_ERROR;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(msg, APML_ERROR);
 	if (write_CPUID_request(msg)) {
 		LOG_ERR("Write CPUID request failed.");
 		return APML_ERROR;
@@ -235,9 +222,7 @@ static uint8_t access_CPUID(apml_msg *msg)
 
 static bool check_mailbox_command_complete(apml_msg *msg, uint8_t retry)
 {
-	if (msg == NULL) {
-		return false;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(msg, false);
 	uint8_t read_data = 0;
 	for (uint8_t i = 0; i < retry; i++) {
 		if (!apml_read_byte(msg->bus, msg->target_addr, SBRMI_SOFTWARE_INTERRUPT,
@@ -253,9 +238,7 @@ static bool check_mailbox_command_complete(apml_msg *msg, uint8_t retry)
 
 static uint8_t write_mailbox_request(apml_msg *msg)
 {
-	if (msg == NULL) {
-		return APML_ERROR;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(msg, APML_ERROR);
 	/* indicates command be serviced by firmware */
 	uint8_t read_data;
 	if (apml_read_byte(msg->bus, msg->target_addr, SBRMI_INBANDMSG_INST7, &read_data)) {
@@ -289,9 +272,7 @@ static uint8_t write_mailbox_request(apml_msg *msg)
 
 static uint8_t read_mailbox_response(apml_msg *msg)
 {
-	if (msg == NULL) {
-		return APML_ERROR;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(msg, APML_ERROR);
 	mailbox_RdData *rd_data = (mailbox_RdData *)msg->RdData;
 	if (apml_read_byte(msg->bus, msg->target_addr, SBRMI_OUTBANDMSG_INST0, &rd_data->command)) {
 		return APML_ERROR;
@@ -311,9 +292,7 @@ static uint8_t read_mailbox_response(apml_msg *msg)
 
 static uint8_t access_RMI_mailbox(apml_msg *msg)
 {
-	if (msg == NULL) {
-		return APML_ERROR;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(msg, APML_ERROR);
 	int i = 0;
 
 	if (!check_mailbox_command_complete(msg, RETRY_MAX)) {
@@ -326,9 +305,22 @@ static uint8_t access_RMI_mailbox(apml_msg *msg)
 		return APML_ERROR;
 	}
 
+	is_fatal_error_happened = false;
+	int retry;
+	mailbox_WrData *wr_data = (mailbox_WrData *)msg->WrData;
+
+	/* Workaround: Set the timeout of MCA_VALIDITY_CHECK command to 5
+	 * seconds as it takes almost 4 seconds to wait on Bergamo PR CPU
+	 */
+	if (wr_data->command == CMD_BMC_RAS_MCA_VALIDITY_CHECK) {
+		retry = MCA_VALIDITY_CHECK_RETRY_MAX;
+	} else {
+		retry = MAILBOX_COMPLETE_RETRY_MAX;
+	}
+
 	/* wait for SwAlertSts to be set */
 	uint8_t status;
-	for (i = 0; i < MAILBOX_COMPLETE_RETRY_MAX; i++) {
+	for (i = 0; i < retry; i++) {
 		if (apml_read_byte(msg->bus, msg->target_addr, SBRMI_STATUS, &status)) {
 			LOG_ERR("Read SwAlertSts failed.");
 			return APML_ERROR;
@@ -341,9 +333,13 @@ static uint8_t access_RMI_mailbox(apml_msg *msg)
 			return APML_ERROR;
 		}
 	}
-	if (i == MAILBOX_COMPLETE_RETRY_MAX) {
-		LOG_DBG("SwAlertSts not be set, retry %d times.",
-		       MAILBOX_COMPLETE_RETRY_MAX);
+	if (i == retry) {
+		LOG_ERR("SwAlertSts not be set, retry %d times.", retry);
+		return APML_ERROR;
+	}
+
+	if (is_fatal_error_happened) {
+		LOG_ERR("Fatal error happened during mailbox waiting.");
 		return APML_ERROR;
 	}
 
@@ -373,9 +369,7 @@ void apml_request_callback(apml_msg *msg)
 
 uint8_t get_apml_response_by_index(apml_msg *msg, uint8_t index)
 {
-	if (msg == NULL) {
-		return APML_ERROR;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(msg, APML_ERROR);
 	for (int i = 0; i < APML_RESP_BUFFER_SIZE; i++) {
 		if (apml_resp_buffer[i].index == index) {
 			memcpy(msg, &apml_resp_buffer[i].msg, sizeof(apml_msg));
@@ -387,11 +381,7 @@ uint8_t get_apml_response_by_index(apml_msg *msg, uint8_t index)
 
 uint8_t apml_read(apml_msg *msg)
 {
-	if (msg == NULL) {
-		LOG_ERR("Msg is NULL.");
-		return APML_ERROR;
-	}
-
+	CHECK_NULL_ARG_WITH_RETURN(msg, APML_ERROR);
 	if (k_msgq_put(&apml_msgq, msg, K_NO_WAIT)) {
 		LOG_ERR("Put msg to apml_msgq failed.");
 		return APML_ERROR;
@@ -431,8 +421,7 @@ static void apml_handler(void *arvg0, void *arvg1, void *arvg2)
 		}
 
 		if (ret) {
-			LOG_ERR("APML access failed, msg type %d.",
-			       msg_data.msg_type);
+			LOG_ERR("APML access failed, msg type %d.", msg_data.msg_type);
 			if (msg_data.error_cb_fn) {
 				msg_data.error_cb_fn(&msg_data);
 			}
@@ -449,8 +438,14 @@ void apml_init()
 {
 	LOG_DBG("apml_init");
 	k_msgq_init(&apml_msgq, apml_msgq_buffer, sizeof(apml_msg), APML_MSGQ_LEN);
+	memset(apml_resp_buffer, 0xFF, sizeof(apml_resp_buffer));
 
 	k_thread_create(&apml_thread, apml_handler_stack, K_THREAD_STACK_SIZEOF(apml_handler_stack),
 			apml_handler, NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
 	k_thread_name_set(&apml_thread, "APML_handler");
+}
+
+void fatal_error_happened()
+{
+	is_fatal_error_happened = true;
 }
