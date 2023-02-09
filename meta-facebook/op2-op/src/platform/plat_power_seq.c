@@ -35,7 +35,8 @@ K_THREAD_STACK_ARRAY_DEFINE(e1s_power_threads, MAX_E1S_IDX, POWER_SEQ_CTRL_STACK
 struct k_thread e1s_power_thread_handler[MAX_E1S_IDX];
 k_tid_t e1s_power_tid[MAX_E1S_IDX];
 
-static bool is_sequence_done[MAX_E1S_IDX] = { false, false, false, false, false };
+static bool is_e1s_sequence_done[MAX_E1S_IDX] = { false, false, false, false, false };
+static bool is_retimer_sequence_done = false;
 
 e1s_power_control_gpio opa_e1s_power_control_gpio[] = {
 	[0] = { .present = OPA_E1S_0_PRSNT_N,
@@ -169,10 +170,14 @@ void init_sequence_status()
 
 	switch (card_type) {
 	case CARD_TYPE_OPA:
+		if (gpio_get(OPA_PERST_BIC_RTM_N) == GPIO_HIGH) {
+			is_retimer_sequence_done = true;
+		}
+
 		for (index = 0; index < OPA_MAX_E1S_IDX; ++index) {
 			if ((get_e1s_present(index) == true) &&
 			    (get_e1s_pcie_reset_status(index) == GPIO_HIGH)) {
-				is_sequence_done[index] = true;
+				is_e1s_sequence_done[index] = true;
 			}
 		}
 		break;
@@ -180,7 +185,7 @@ void init_sequence_status()
 		for (index = 0; index < MAX_E1S_IDX; ++index) {
 			if ((get_e1s_present(index) == true) &&
 			    (get_e1s_pcie_reset_status(index) == GPIO_HIGH)) {
-				is_sequence_done[index] = true;
+				is_e1s_sequence_done[index] = true;
 			}
 		}
 		break;
@@ -190,34 +195,47 @@ void init_sequence_status()
 	}
 }
 
-void set_sequence_status(uint8_t index, bool status)
+bool is_all_sequence_done(uint8_t status)
 {
-	is_sequence_done[index] = status;
-}
-
-bool check_all_e1s_sequence_status(uint8_t status)
-{
-	bool all_seq = true;
+	bool all_sequence_done = true;
 	uint8_t card_type = get_card_type();
 	uint8_t index = 0;
-	for (index = 0; index < ((card_type == CARD_TYPE_OPA) ? OPA_MAX_E1S_IDX : MAX_E1S_IDX);
-	     ++index) {
-		switch (status) {
-		case POWER_ON:
-			// return false if one of e1s do not power on;
-			all_seq &= is_sequence_done[index];
-			break;
-		case POWER_OFF:
-			// return false if one of e1s do not power off;
-			all_seq &= (!is_sequence_done[index]);
-			break;
-		default:
-			LOG_ERR("unknown option!");
-			break;
+
+	switch (status) {
+	case POWER_ON:
+		if (card_type == CARD_TYPE_OPA) {
+			all_sequence_done &= is_retimer_sequence_done;
+			for (index = 0; index < OPA_MAX_E1S_IDX; ++index) {
+				// return false if one of e1s do not power on;
+				all_sequence_done &= is_e1s_sequence_done[index];
+			}
+		} else {
+			for (index = 0; index < MAX_E1S_IDX; ++index) {
+				// return false if one of e1s do not power on;
+				all_sequence_done &= is_e1s_sequence_done[index];
+			}
 		}
+		break;
+	case POWER_OFF:
+		if (card_type == CARD_TYPE_OPA) {
+			all_sequence_done &= (!is_retimer_sequence_done);
+			for (index = 0; index < OPA_MAX_E1S_IDX; ++index) {
+				// return false if one of e1s do not power off;
+				all_sequence_done &= (!is_e1s_sequence_done[index]);
+			}
+		} else {
+			for (index = 0; index < MAX_E1S_IDX; ++index) {
+				// return false if one of e1s do not power off;
+				all_sequence_done &= (!is_e1s_sequence_done[index]);
+			}
+		}
+		break;
+	default:
+		LOG_ERR("Invalid power option!");
+		break;
 	}
 
-	return all_seq;
+	return all_sequence_done;
 }
 
 void control_power_stage(uint8_t control_mode, uint8_t control_seq)
@@ -352,7 +370,6 @@ bool e1s_power_on_handler(uint8_t initial_stage, e1s_power_control_gpio *e1s_gpi
 				break;
 			}
 			check_power_ret = 0;
-			set_sequence_status(device_index, true);
 			enable_power_on_handler = false;
 			break;
 		default:
@@ -367,8 +384,10 @@ bool e1s_power_on_handler(uint8_t initial_stage, e1s_power_control_gpio *e1s_gpi
 		}
 	}
 	if (check_power_ret == 0) {
+		is_e1s_sequence_done[device_index] = true;
 		return true;
 	} else {
+		is_e1s_sequence_done[device_index] = false;
 		return false;
 	}
 }
@@ -388,10 +407,11 @@ bool e1s_power_off_handler(uint8_t initial_stage, e1s_power_control_gpio *e1s_gp
 		return false;
 	}
 
+	is_e1s_sequence_done[device_index] = false;
+
 	while (enable_power_off_handler == true) {
 		switch (control_stage) { // Disable VR power machine
 		case E1S_POWER_OFF_STAGE0:
-			set_sequence_status(device_index, false);
 			control_power_stage(DISABLE_POWER_MODE, e1s_gpio->pcie_reset);
 			break;
 		case E1S_POWER_OFF_STAGE1:
@@ -601,6 +621,7 @@ bool power_on_handler(uint8_t initial_stage)
 		case E1S_POWER_ON_STAGE0:
 			//Wait for retimer boot up
 			k_msleep(RETIMER_DELAY_MSEC);
+			set_DC_on_delayed_status();
 
 			for (index = 0;
 			     index < ((card_type == CARD_TYPE_OPA) ? OPA_MAX_E1S_IDX : MAX_E1S_IDX);
@@ -686,6 +707,7 @@ bool power_on_handler(uint8_t initial_stage)
 				check_power_ret = -1;
 				break;
 			}
+			is_retimer_sequence_done = true;
 			check_power_ret = 0;
 			control_stage = E1S_POWER_ON_STAGE0;
 			break;
@@ -743,13 +765,14 @@ bool power_off_handler(uint8_t initial_stage)
 			}
 			break;
 		case RETIMER_POWER_OFF_STAGE0:
+			is_retimer_sequence_done = false;
 			control_power_stage(DISABLE_POWER_MODE, OPA_PERST_BIC_RTM_N);
 			break;
 		case RETIMER_POWER_OFF_STAGE1:
-			control_power_stage(HIGH_DISABLE_POWER_MODE, OPA_CLKBUF_RTM_OE_N);
+			control_power_stage(DISABLE_POWER_MODE, OPA_RESET_BIC_RTM_N);
 			break;
 		case RETIMER_POWER_OFF_STAGE2:
-			control_power_stage(DISABLE_POWER_MODE, OPA_RESET_BIC_RTM_N);
+			control_power_stage(HIGH_DISABLE_POWER_MODE, OPA_CLKBUF_RTM_OE_N);
 			break;
 		case BOARD_POWER_OFF_STAGE0:
 			control_power_stage(DISABLE_POWER_MODE, OPA_PWRGD_EXP_PWR);
@@ -797,8 +820,8 @@ bool power_off_handler(uint8_t initial_stage)
 			control_stage = RETIMER_POWER_OFF_STAGE1;
 			break;
 		case RETIMER_POWER_OFF_STAGE1:
-			if (check_power_stage(HIGH_DISABLE_POWER_MODE, CHECK_POWER_SEQ_07) != 0) {
-				LOG_ERR("OPA_CLKBUF_RTM_OE_N is not disabled!");
+			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_07) != 0) {
+				LOG_ERR("OPA_RESET_BIC_RTM_N is not disabled!");
 				check_power_ret = -1;
 				break;
 			}
@@ -806,8 +829,8 @@ bool power_off_handler(uint8_t initial_stage)
 			control_stage = RETIMER_POWER_OFF_STAGE2;
 			break;
 		case RETIMER_POWER_OFF_STAGE2:
-			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_06) != 0) {
-				LOG_ERR("OPA_RESET_BIC_RTM_N is not disabled!");
+			if (check_power_stage(HIGH_DISABLE_POWER_MODE, CHECK_POWER_SEQ_06) != 0) {
+				LOG_ERR("OPA_CLKBUF_RTM_OE_N is not disabled!");
 				check_power_ret = -1;
 				break;
 			}
@@ -816,7 +839,7 @@ bool power_off_handler(uint8_t initial_stage)
 			break;
 		case BOARD_POWER_OFF_STAGE0:
 			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_05) != 0) {
-				LOG_ERR("OPA_RESET_BIC_RTM_N is not disabled!");
+				LOG_ERR("OPA_PWRGD_EXP_PWR is not disabled!");
 				check_power_ret = -1;
 				break;
 			}
@@ -825,7 +848,7 @@ bool power_off_handler(uint8_t initial_stage)
 			break;
 		case BOARD_POWER_OFF_STAGE1:
 			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_04) != 0) {
-				LOG_ERR("CHECK_POWER_SEQ_04 is not disabled!");
+				LOG_ERR("OPA_PWRGD_P0V9_VR is not disabled!");
 				check_power_ret = -1;
 				break;
 			}
@@ -854,7 +877,6 @@ void control_power_on_sequence()
 	is_power_on = power_on_handler(BOARD_POWER_ON_STAGE0);
 
 	if (is_power_on == true) {
-		set_DC_on_delayed_status();
 		LOG_INF("Power on success");
 	} else {
 		LOG_ERR("Power on fail");
@@ -865,10 +887,10 @@ void control_power_off_sequence()
 {
 	bool is_power_off = false;
 
+	set_DC_on_delayed_status();
 	is_power_off = power_off_handler(E1S_POWER_OFF_STAGE0);
 
 	if (is_power_off == true) {
-		set_DC_off_delayed_status();
 		LOG_INF("Power off success");
 	} else {
 		LOG_ERR("Power off fail");

@@ -89,7 +89,7 @@ bool get_e1s_power_good(uint8_t index);
 uint8_t get_e1s_pcie_reset_status(uint8_t index);
 void init_sequence_status();
 void set_sequence_status(uint8_t index, bool status);
-bool check_all_e1s_sequence_status(uint8_t status);
+bool is_all_sequence_done(uint8_t status);
 void abort_e1s_power_thread(uint8_t index);
 void e1s_power_on_thread(uint8_t index);
 void e1s_power_off_thread(uint8_t index);

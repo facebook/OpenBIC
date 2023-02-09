@@ -41,12 +41,12 @@ k_tid_t power_tid;
 void control_power_sequence()
 {
 	if (gpio_get(FM_EXP_MAIN_PWR_EN) == POWER_ON) { // op power on
-		if (check_all_e1s_sequence_status(POWER_ON) == false) {
+		if (!is_all_sequence_done(POWER_ON)) {
 			abort_power_thread();
 			init_power_on_thread();
 		}
 	} else { // op power off
-		if (check_all_e1s_sequence_status(POWER_OFF) == false) {
+		if (!is_all_sequence_done(POWER_OFF)) {
 			abort_power_thread();
 			init_power_off_thread();
 		}
