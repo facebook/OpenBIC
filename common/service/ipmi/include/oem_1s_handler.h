@@ -61,6 +61,12 @@ enum GET_SET_GPIO_OPTIONS {
 	GET_GPIO_DIRECTION_STATUS,
 	SET_GPIO_DIRECTION_STATUS,
 };
+
+enum GET_SET_VGPIO_OPTIONS {
+	GET_VGPIO_DIRECTION_AND_STATUS = 0,
+	SET_VGPIO_STATUS,
+};
+
 typedef struct _ACCURACY_SENSOR_READING_REQ {
 	uint8_t sensor_num;
 	uint8_t read_option;
@@ -88,6 +94,7 @@ void OEM_1S_READ_FW_IMAGE(ipmi_msg *msg);
 void OEM_1S_SENSOR_POLL_EN(ipmi_msg *msg);
 void OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg);
 void OEM_1S_GET_SET_GPIO(ipmi_msg *msg);
+void OEM_1S_GET_SET_BIC_VGPIO(ipmi_msg *msg);
 void OEM_1S_GET_FW_SHA256(ipmi_msg *msg);
 void OEM_1S_I2C_DEV_SCAN(ipmi_msg *msg);
 void OEM_1S_GET_BIC_STATUS(ipmi_msg *msg);

@@ -31,6 +31,21 @@ static struct espi_callback vw_cb;
 static vw_gpio *vw_gpio_cfg;
 static uint8_t vw_gpio_size = 0;
 
+bool vw_gpio_get(int number, uint8_t *value)
+{
+	CHECK_NULL_ARG_WITH_RETURN(value, false);
+
+#ifdef CONFIG_ESPI_ASPEED
+	uint32_t reg_value = sys_read32(AST_ESPI_BASE + AST_ESPI_GPIO_DIR);
+	value[0] = GETBIT(reg_value, number) ? VW_GPIO_OUTPUT : VW_GPIO_INPUT;
+	reg_value = sys_read32(AST_ESPI_BASE + AST_ESPI_GPIO_VAL);
+	value[1] = GETBIT(reg_value, number) ? VW_GPIO_HIGH : VW_GPIO_LOW;
+	return true;
+#else
+	return false;
+#endif
+}
+
 bool vw_gpio_set(int number, uint8_t value)
 {
 #ifdef CONFIG_ESPI_ASPEED

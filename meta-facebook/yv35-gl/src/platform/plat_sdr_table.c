@@ -17,6 +17,7 @@
 
 #include "sdr.h"
 
+#include "plat_class.h"
 #include "plat_sdr_table.h"
 #include "plat_sensor_table.h"
 #include "plat_ipmb.h"
@@ -31,7 +32,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_MB_INLET_TEMP, // sensor number
+		SENSOR_NUM_MB_INLET_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -91,7 +92,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_MB_OUTLET_TEMP, // sensor number
+		SENSOR_NUM_MB_OUTLET_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -151,7 +152,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FIO_TEMP, // sensor number
+		SENSOR_NUM_FIO_FRONT_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -211,7 +212,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_CPU_TEMP, // sensor number
+		SENSOR_NUM_MB_SOC_CPU_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -271,7 +272,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_DIMM_A_TEMP, // sensor number
+		SENSOR_NUM_MB_DIMMA_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -331,7 +332,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_DIMM_B_TEMP, // sensor number
+		SENSOR_NUM_MB_DIMMB_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -391,7 +392,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_DIMM_C_TEMP, // sensor number
+		SENSOR_NUM_MB_DIMMC_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -451,7 +452,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_DIMM_D_TEMP, // sensor number
+		SENSOR_NUM_MB_DIMMD_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -511,7 +512,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_DIMM_E_TEMP, // sensor number
+		SENSOR_NUM_MB_DIMME_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -571,7 +572,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_DIMM_F_TEMP, // sensor number
+		SENSOR_NUM_MB_DIMMF_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -631,7 +632,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_DIMM_G_TEMP, // sensor number
+		SENSOR_NUM_MB_DIMMG_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -691,7 +692,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_DIMM_H_TEMP, // sensor number
+		SENSOR_NUM_MB_DIMMH_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -751,7 +752,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_SSD0_TEMP, // sensor number
+		SENSOR_NUM_MB_SSD0_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -811,7 +812,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_HSC_TEMP, // sensor number
+		SENSOR_NUM_MB_HSC_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -871,7 +872,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_VCCIN_SPS_TEMP, // sensor number
+		SENSOR_NUM_MB_VR_VCCIN_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -931,7 +932,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_EHV_SPS_TEMP, // sensor number
+		SENSOR_NUM_MB_VR_EHV_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -991,7 +992,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FIVRA_SPS_TEMP, // sensor number
+		SENSOR_NUM_MB_VR_FIVRA_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1051,7 +1052,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_VCCINF_SPS_TEMP, // sensor number
+		SENSOR_NUM_MB_VR_VCCINF_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1111,7 +1112,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_VCCD0_SPS_TEMP, // sensor number
+		SENSOR_NUM_MB_VR_VCCD0_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1171,7 +1172,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_VCCD1_SPS_TEMP, // sensor number
+		SENSOR_NUM_MB_VR_VCCD1_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1231,7 +1232,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_SOC_THERM_MARGIN_TEMP, // sensor number
+		SENSOR_NUM_MB_SOC_THERMAL_MARGIN_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1291,7 +1292,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_CPU_TJMAX_TEMP, // sensor number
+		SENSOR_NUM_MB_SOC_TJMAX_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1353,7 +1354,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_P12V_STBY_VOL, // sensor number
+		SENSOR_NUM_MB_ADC_P12V_STBY_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1394,7 +1395,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0xE2, // UCT
 		0xE0, // UNCT
 		0xAB, // LNRT
-		0xB6, // LCT
+		0xB5, // LCT
 		0xB7, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
@@ -1413,7 +1414,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_P3V_BAT_VOL, // sensor number
+		SENSOR_NUM_MB_ADC_P3V_BAT_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1473,7 +1474,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_P3V3_STBY_VOL, // sensor number
+		SENSOR_NUM_MB_ADC_P3V3_STBY_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1510,10 +1511,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xFA, // UNRT
+		0x00, // UNRT
 		0xDF, // UCT
 		0xDD, // UNCT
-		0x90, // LNRT
+		0x00, // LNRT
 		0xBE, // LCT
 		0xC0, // LNCT
 		0x00, // positive-going threshold
@@ -1533,7 +1534,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_P1V8_STBY_VOL, // sensor number
+		SENSOR_NUM_MB_ADC_P1V8_STBY_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1570,10 +1571,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xF3, // UNRT
+		0x00, // UNRT
 		0xE2, // UCT
 		0xE0, // UNCT
-		0xA7, // LNRT
+		0x00, // LNRT
 		0xC1, // LCT
 		0xC3, // LNCT
 		0x00, // positive-going threshold
@@ -1593,7 +1594,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_P1V05_VOL, // sensor number
+		SENSOR_NUM_MB_ADC_P1V05_PCH_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1630,10 +1631,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xEF, // UNRT
+		0x00, // UNRT
 		0xDF, // UCT
 		0xDD, // UNCT
-		0xA5, // LNRT
+		0x00, // LNRT
 		0xBE, // LCT
 		0xC0, // LNCT
 		0x00, // positive-going threshold
@@ -1653,7 +1654,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_HSC_INPUT_VOL, // sensor number
+		SENSOR_NUM_MB_HSC_INPUT_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1694,7 +1695,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0xE2, // UCT
 		0xE0, // UNCT
 		0xAB, // LNRT
-		0xB6, // LCT
+		0xB5, // LCT
 		0xB7, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
@@ -1713,7 +1714,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_VCCIN_VR_VOL, // sensor number
+		SENSOR_NUM_MB_VR_VCCIN_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1750,12 +1751,12 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xE0, // UNRT
+		0x00, // UNRT
 		0xC5, // UCT
 		0xC3, // UNCT
-		0x29, // LNRT
-		0x95, // LCT
-		0x97, // LNCT
+		0x00, // LNRT
+		0x00, // LCT
+		0x00, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
 		0x00, // reserved
@@ -1773,7 +1774,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_VCCINF_VR_VOL, // sensor number
+		SENSOR_NUM_MB_VR_VCCINF_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1810,10 +1811,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xE0, // UNRT
+		0x00, // UNRT
 		0x5E, // UCT
 		0x5D, // UNCT
-		0x29, // LNRT
+		0x00, // LNRT
 		0x4F, // LCT
 		0x50, // LNCT
 		0x00, // positive-going threshold
@@ -1833,7 +1834,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FIVRA_VR_VOL, // sensor number
+		SENSOR_NUM_MB_VR_FIVRA_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1870,10 +1871,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xE0, // UNRT
+		0x00, // UNRT
 		0xC7, // UCT
 		0xC5, // UNCT
-		0x29, // LNRT
+		0x00, // LNRT
 		0xAA, // LCT
 		0xAC, // LNCT
 		0x00, // positive-going threshold
@@ -1893,7 +1894,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_VCCDO_VR_VOL, // sensor number
+		SENSOR_NUM_MB_VR_VCCD0_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1930,10 +1931,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xD3, // UNRT
+		0x00, // UNRT
 		0xA7, // UCT
 		0xA6, // UNCT
-		0x38, // LNRT
+		0x00, // LNRT
 		0x89, // LCT
 		0x8B, // LNCT
 		0x00, // positive-going threshold
@@ -1953,7 +1954,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_VCCD1_VR_VOL, // sensor number
+		SENSOR_NUM_MB_VR_VCCD1_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1990,10 +1991,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xD3, // UNRT
+		0x00, // UNRT
 		0xA7, // UCT
 		0xA6, // UNCT
-		0x38, // LNRT
+		0x00, // LNRT
 		0x89, // LCT
 		0x8B, // LNCT
 		0x00, // positive-going threshold
@@ -2013,7 +2014,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_EHV_VR_VOL, // sensor number
+		SENSOR_NUM_MB_VR_EHV_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2050,10 +2051,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xE0, // UNRT
+		0x00, // UNRT
 		0xC2, // UCT
 		0xC1, // UNCT
-		0x29, // LNRT
+		0x00, // LNRT
 		0xAE, // LCT
 		0xAF, // LNCT
 		0x00, // positive-going threshold
@@ -2073,7 +2074,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_PVNN_MAIN_VOL, // sensor number
+		SENSOR_NUM_MB_ADC_VNN_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2098,24 +2099,24 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_VOL, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x00, // [7:0] M bits
+		0x4E, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
 		0x00, // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
-		0x00, // Rexp, Bexp
+		0xC0, // Rexp, Bexp
 		0x00, // analog characteristic
 		0x00, // nominal reading
 		0x00, // normal maximum
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0x00, // UNRT
-		0x00, // UCT
-		0x00, // UNCT
-		0x00, // LNRT
-		0x00, // LCT
-		0x00, // LNCT
+		0xBC, // UNRT
+		0x8B, // UCT
+		0x8A, // UNCT
+		0x33, // LNRT
+		0x72, // LCT
+		0x73, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
 		0x00, // reserved
@@ -2133,7 +2134,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_P5V_STBY_VOL, // sensor number
+		SENSOR_NUM_MB_ADC_P5V_STBY_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2170,10 +2171,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xF2, // UNRT
+		0x00, // UNRT
 		0xEC, // UCT
 		0xEA, // UNCT
-		0xA7, // LNRT
+		0x00, // LNRT
 		0xC0, // LCT
 		0xC2, // LNCT
 		0x00, // positive-going threshold
@@ -2193,7 +2194,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_P12V_DIMM_VOL, // sensor number
+		SENSOR_NUM_MB_ADC_P12V_DIMM_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2253,7 +2254,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_P1V2_STBY_VOL, // sensor number
+		SENSOR_NUM_MB_ADC_P1V2_STBY_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2290,10 +2291,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xEC, // UNRT
+		0x00, // UNRT
 		0xDC, // UCT
 		0xDA, // UNCT
-		0xA3, // LNRT
+		0x00, // LNRT
 		0xBB, // LCT
 		0xBD, // LNCT
 		0x00, // positive-going threshold
@@ -2313,7 +2314,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_P3V3_M2_VOL, // sensor number
+		SENSOR_NUM_MB_ADC_P3V3_M2_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2375,7 +2376,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_1OU_HSC_OUTPUT_CUR, // sensor number
+		SENSOR_NUM_MB_HSC_OUTPUT_CURR_A, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2424,7 +2425,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"1OU_HSC_OUTPUT_CURR_A",
+		"MB_HSC_OUTPUT_CURR_A",
 	},
 	{
 		0x00,
@@ -2435,7 +2436,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_VCCIN_VR_CUR, // sensor number
+		SENSOR_NUM_MB_VR_VCCIN_CURR_A, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2495,7 +2496,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_EHV_VR_CUR, // sensor number
+		SENSOR_NUM_MB_VR_EHV_CURR_A, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2555,7 +2556,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FIVRA_VR_CUR, // sensor number
+		SENSOR_NUM_MB_VR_FIVRA_CURR_A, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2615,7 +2616,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_VCCINF_VR_CUR, // sensor number
+		SENSOR_NUM_MB_VR_VCCINF_CURR_A, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2675,7 +2676,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_VCCD0_VR_CUR, // sensor number
+		SENSOR_NUM_MB_VR_VCCD0_CURR_A, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2735,7 +2736,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_VCCD1_VR_CUR, // sensor number
+		SENSOR_NUM_MB_VR_VCCD1_CURR_A, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2797,7 +2798,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_1OU_HSC_INPUT_PWR, // sensor number
+		SENSOR_NUM_MB_HSC_INPUT_PWR_W, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2836,7 +2837,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor minimum reading
 		0xF3, // UNRT
 		0xC6, // UCT
-		0x01, // UNCT
+		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -2846,7 +2847,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"1OU_HSC_INPUT_PWR_W",
+		"MB_HSC_INPUT_PWR_W",
 	},
 	{
 		0x00,
@@ -2857,7 +2858,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_VCCIN_VR_PWR, // sensor number
+		SENSOR_NUM_MB_VR_VCCIN_PWR_W, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2896,7 +2897,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor minimum reading
 		0xFC, // UNRT
 		0xE3, // UCT
-		0x01, // UNCT
+		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -2917,7 +2918,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_EHV_VR_PWR, // sensor number
+		SENSOR_NUM_MB_VR_EHV_PWR_W, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2956,7 +2957,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor minimum reading
 		0xFB, // UNRT
 		0xC5, // UCT
-		0x01, // UNCT
+		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -2977,7 +2978,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FIVRA_VR_PWR, // sensor number
+		SENSOR_NUM_MB_VR_FIVRA_PWR_W, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -3016,7 +3017,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor minimum reading
 		0xF5, // UNRT
 		0xCB, // UCT
-		0x01, // UNCT
+		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -3037,7 +3038,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_VCCINF_VR_PWR, // sensor number
+		SENSOR_NUM_MB_VR_VCCINF_PWR_W, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -3076,7 +3077,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor minimum reading
 		0xDF, // UNRT
 		0xB8, // UCT
-		0x01, // UNCT
+		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -3097,7 +3098,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_VCCD0_VR_PWR, // sensor number
+		SENSOR_NUM_MB_VR_VCCD0_PWR_W, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -3136,7 +3137,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor minimum reading
 		0xE3, // UNRT
 		0xBD, // UCT
-		0x01, // UNCT
+		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -3157,7 +3158,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_VCCD1_VR_PWR, // sensor number
+		SENSOR_NUM_MB_VR_VCCD1_PWR_W, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -3196,7 +3197,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor minimum reading
 		0xE3, // UNRT
 		0xBD, // UCT
-		0x01, // UNCT
+		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -3214,4 +3215,42 @@ SDR_Full_sensor plat_sdr_table[] = {
 	 */
 };
 
+uint8_t fix_2ou_sdr_table[][10] = {
+	// sensor_num , UNR , UCR , UNC , LNR , LCR , LNC , ( M_tolerance >> 6 ) || M , ( B_accuracy >> 6 ) || B , R
+	{ SENSOR_NUM_MB_HSC_OUTPUT_CURR_A, 0xB2, 0x91, 0x00, 0x00, 0x00, 0x00, 0x3B, 0x00, 0xF0 },
+	{ SENSOR_NUM_MB_HSC_INPUT_PWR_W, 0xE1, 0xB7, 0x00, 0x00, 0x00, 0x00, 0x25, 0x00, 0xE0 },
+};
+
 const int SDR_TABLE_SIZE = ARRAY_SIZE(plat_sdr_table);
+
+void load_sdr_table(void)
+{
+	memcpy(full_sdr_table, plat_sdr_table, sizeof(plat_sdr_table));
+	sdr_count = ARRAY_SIZE(plat_sdr_table);
+
+	// Fix SDR table in different system/config
+	pal_extend_full_sdr_table();
+}
+
+void pal_extend_full_sdr_table()
+{
+	uint8_t extend_array_num = 0;
+
+	// Fix sdr table if 2ou card is present
+	CARD_STATUS _2ou_status = get_2ou_status();
+	if (_2ou_status.present) {
+		// Change HSC threshold to meet the 2ou setting
+		extend_array_num = ARRAY_SIZE(fix_2ou_sdr_table);
+		for (int index = 0; index < extend_array_num; index++) {
+			for (int i = MBR_R; i >= THRESHOLD_UNR; --i) {
+				if (i < MBR_M) {
+					change_sensor_threshold(fix_2ou_sdr_table[index][0], i,
+								fix_2ou_sdr_table[index][i + 1]);
+				} else {
+					change_sensor_mbr(fix_2ou_sdr_table[index][0], i,
+							  fix_2ou_sdr_table[index][i + 1]);
+				}
+			}
+		}
+	}
+};

@@ -41,10 +41,10 @@ uint8_t nic_prsnt_pin[] = {
 };
 
 uint8_t pex_sensor_num_table[] = {
-	SENSOR_NUM_BB_TEMP_PEX_0,
-	SENSOR_NUM_BB_TEMP_PEX_1,
-	SENSOR_NUM_BB_TEMP_PEX_2,
-	SENSOR_NUM_BB_TEMP_PEX_3,
+	SENSOR_NUM_TEMP_PEX_0,
+	SENSOR_NUM_TEMP_PEX_1,
+	SENSOR_NUM_TEMP_PEX_2,
+	SENSOR_NUM_TEMP_PEX_3,
 };
 
 uint8_t nic_power_ic_sensor_table[] = {
@@ -450,7 +450,7 @@ static void plat_set_effecter_ssd_led_handler(const uint8_t *buf, uint16_t len, 
 		return;
 	}
 
-	if (!e1s_access(e1s_sensor_table[effector_id - PLAT_EFFECTER_ID_LED_E1S_0])) {
+	if (!is_e1s_access(e1s_sensor_table[effector_id - PLAT_EFFECTER_ID_LED_E1S_0])) {
 		*completion_code_p = PLDM_ERROR_NOT_READY;
 		return;
 	}
@@ -564,7 +564,7 @@ static void plat_get_effecter_ssd_led_handler(const uint8_t *buf, uint16_t len, 
 
 	uint8_t effector_id = req_p->effecter_id & BIT_MASK(8);
 	get_effecter_state_field_t *state = &res_p->field[0];
-	bool is_access = e1s_access(e1s_sensor_table[effector_id - PLAT_EFFECTER_ID_LED_E1S_0]);
+	bool is_access = is_e1s_access(e1s_sensor_table[effector_id - PLAT_EFFECTER_ID_LED_E1S_0]);
 	uint8_t status = get_ssd_led_status(effector_id);
 
 	if (is_access && (status < LED_CTRL_MAX)) {

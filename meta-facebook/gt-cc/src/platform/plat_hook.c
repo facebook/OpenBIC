@@ -245,20 +245,19 @@ mp5990_init_arg mp5990_hsc_init_args[] = {
 	[0] = { .is_init = false,
 		.iout_cal_gain = 0xFFFF,
 		.iout_oc_fault_limit = 0xFFFF,
-		.ocw_sc_ref = 0xFFFF },
+		.ocw_sc_ref = 0xFFFF, 
+		},
 };
 
 ltc4282_init_arg ltc4282_hsc_init_args[] = {
-	[0] = {
-    .is_init = false,
+	[0] = { .is_init = false,
 		.r_sense_mohm = 0.142,
-		.is_register_setting_needed = 0x01,
-		.ilim_adjust = { 0x76 },
-  },
+		.is_register_setting_needed = 0x00,
+		},
 };
 
 ltc4286_init_arg ltc4286_hsc_init_args[] = {
-	[0] = { .is_init = false, .r_sense_mohm = 0.142, .mfr_config_1 = { 0x3C72 } },
+	[0] = { .is_init = false, .r_sense_mohm = 0.142, .mfr_config_1 = { 0xFFFF } },
 };
 
 adc_asd_init_arg adc_asd_init_args[] = { [0] = { .is_init = false } };
@@ -1117,9 +1116,4 @@ bool is_mb_dc_on()
    * 1 -> power off
    */
 	return !gpio_get(SYS_PWR_READY_N);
-}
-
-bool is_dc_access(uint8_t sensor_num)
-{
-	return is_mb_dc_on();
 }

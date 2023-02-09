@@ -65,5 +65,5 @@ bool post_ltc4286_read(uint8_t sensor_num, void *args, int *reading);
 
 struct k_mutex *find_bus_mutex(uint8_t sensor_num);
 bool is_mb_dc_on();
-bool is_dc_access(uint8_t sensor_num);
+
 #endif

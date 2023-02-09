@@ -134,7 +134,7 @@
 #define name_gpioL \
     gpio_name_to_num(Reserve_GPIOL0) \
     gpio_name_to_num(Reserve_GPIOL1) \
-    gpio_name_to_num(Reserve_GPIOL2) \
+    gpio_name_to_num(AUTH_COMPLETE) \
     gpio_name_to_num(BOARD_ID2) \
     gpio_name_to_num(IRQ_PVCCIN_CPU0_VRHOT_N) \
     gpio_name_to_num(IRQ_PVCCINF_CPU0_VRHOT_N) \
@@ -145,9 +145,9 @@
     gpio_name_to_num(Reserve_GPIOM0) \
     gpio_name_to_num(BOARD_ID3) \
     gpio_name_to_num(Reserve_GPIOM2) \
-    gpio_name_to_num(Reserve_GPIOM3) \
-    gpio_name_to_num(AUTH_COMPLETE) \
     gpio_name_to_num(AUTH_PRSNT_N) \
+    gpio_name_to_num(UART_RSVD_RXD) \
+    gpio_name_to_num(UART_RSVD_R_TXD) \
     gpio_name_to_num(Reserve_GPIOM6) \
     gpio_name_to_num(Reserve_GPIOM7)
 
@@ -264,4 +264,3 @@ extern enum _GPIO_NUMS_ GPIO_NUMS;
 extern char *gpio_name[];
 
 #endif
-

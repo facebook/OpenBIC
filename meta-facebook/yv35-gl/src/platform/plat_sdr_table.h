@@ -19,4 +19,6 @@
 
 #include <stdint.h>
 
+void pal_extend_full_sdr_table();
+
 #endif
