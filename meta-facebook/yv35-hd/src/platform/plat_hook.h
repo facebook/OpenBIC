@@ -45,6 +45,8 @@ extern ltc4282_init_arg ltc4282_init_args[];
 extern mp5990_init_arg mp5990_init_args[];
 extern ddr5_init_temp_arg ddr5_init_temp_args[];
 extern ddr5_init_power_arg ddr5_init_power_args[];
+extern nct7718w_init_arg nct7718w_init_args[];
+extern g788p81u_init_arg g788p81u_init_args[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
