@@ -16,8 +16,11 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <logging/log.h>
 #include "sensor.h"
 #include "hal_i2c.h"
+
+LOG_MODULE_REGISTER(dev_nct7718w);
 
 uint8_t nct7718w_read(uint8_t sensor_num, int *reading)
 {
@@ -78,7 +81,47 @@ uint8_t nct7718w_init(uint8_t sensor_num)
 	if (sensor_num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
+	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+	nct7718w_init_arg *init_arg = (nct7718w_init_arg *)cfg->init_args;
+	if (init_arg == NULL) {
+		LOG_DBG("Input initial pointer is NULL, skip initialization.");
+		goto skip_init;
+	}
 
-	sensor_config[sensor_config_index_map[sensor_num]].read = nct7718w_read;
+	if (init_arg->is_init == true) {
+		LOG_DBG("Already initialized.");
+		goto skip_init;
+	}
+
+	int ret = 0;
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	msg.data[0] = NCT7718W_RT1_HIGH_ALERT_TEMP_OFFSET;
+	msg.data[1] = init_arg->rt1_high_alert_temp & 0xFF;
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Failed to set RT1 High Alert temperature, ret: %d", ret);
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+
+	memset(&msg, 0, sizeof(msg));
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	msg.data[0] = NCT7718W_RT_FILTER_ALERT_MODE_OFFSET;
+	msg.data[1] = init_arg->rt_filter_alert_mode & 0xFF;
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Failed to set RT filter and Alert mode, ret: %d", ret);
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+	init_arg->is_init = true;
+
+skip_init:
+	cfg->read = nct7718w_read;
 	return SENSOR_INIT_SUCCESS;
 }

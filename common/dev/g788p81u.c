@@ -25,10 +25,9 @@ LOG_MODULE_REGISTER(dev_g788p81u);
 uint8_t g788p81u_read(uint8_t sensor_num, int *reading)
 {
 	if (!reading || (sensor_num > SENSOR_NUM_MAX)) {
-		if (sensor_num > SENSOR_NUM_MAX){
+		if (sensor_num > SENSOR_NUM_MAX) {
 			LOG_ERR("Invalid sensor num");
-		}
-		else {
+		} else {
 			LOG_ERR("reading pointer is NULL");
 		}
 		return SENSOR_UNSPECIFIED_ERROR;
@@ -87,7 +86,47 @@ uint8_t g788p81u_init(uint8_t sensor_num)
 		LOG_ERR("Invalid sensor num: %d", sensor_num);
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
+	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+	g788p81u_init_arg *init_arg = (g788p81u_init_arg *)cfg->init_args;
+	if (init_arg == NULL) {
+		LOG_DBG("Input initial pointer is NULL, skip initialization.");
+		goto skip_init;
+	}
 
-	sensor_config[sensor_config_index_map[sensor_num]].read = g788p81u_read;
+	if (init_arg->is_init == true) {
+		LOG_DBG("Already initialized.");
+		goto skip_init;
+	}
+
+	int ret = 0;
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	msg.data[0] = G788P81U_REMOTE_THIGH_LIMIT_OFFSET;
+	msg.data[1] = init_arg->remote_T_high_limit & 0xFF;
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Failed to set Remote T_high limit, ret: %d", ret);
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+
+	memset(&msg, 0, sizeof(msg));
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	msg.data[0] = G788P81U_ALERT_MODE_OFFSET;
+	msg.data[1] = init_arg->alert_mode & 0xFF;
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Failed to set alert mode, ret: %d", ret);
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+	init_arg->is_init = true;
+
+skip_init:
+	cfg->read = g788p81u_read;
 	return SENSOR_INIT_SUCCESS;
 }
