@@ -82,6 +82,10 @@ uint8_t ina233_read(uint8_t sensor_num, int *reading)
 		parameter = 800;
 		break;
 	case PMBUS_READ_IOUT:
+		if (GETBIT(msg.data[1], 7)) {
+			// If raw value is negative, set it zero.
+			val = 0;
+		}
 		// 1 mA/LSB, 2's complement
 		// current convert formula = val / (1 / current_lsb)
 		parameter = (1 / init_arg->current_lsb);
