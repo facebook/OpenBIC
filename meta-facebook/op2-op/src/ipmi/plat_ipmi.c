@@ -24,14 +24,16 @@
 #include "plat_power_seq.h"
 #include <logging/log.h>
 
-LOG_MODULE_DECLARE(ipmi);
+LOG_MODULE_DECLARE(plat_ipmi);
+
+uint8_t get_add_sel_target_interface()
+{
+	return HD_BIC_IPMB;
+}
 
 void OEM_1S_GET_SET_M2(ipmi_msg *msg)
 {
-	if (msg == NULL) {
-		LOG_ERR("Msg pass in is NULL");
-		return;
-	}
+	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 2) {
 		msg->data_len = 0;
