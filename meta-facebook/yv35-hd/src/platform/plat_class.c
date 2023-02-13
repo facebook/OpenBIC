@@ -176,6 +176,11 @@ void init_platform_config()
 	uint8_t tx_len, rx_len;
 	uint8_t class_type = 0x0;
 	char *data = (uint8_t *)malloc(I2C_DATA_SIZE * sizeof(uint8_t));
+	if (data == NULL) {
+		LOG_ERR("data allocation failed.");
+		return;
+	}
+
 	/* Read the expansion present from CPLD's class type register
 	 * CPLD Class Type Register(05h)
 	 * Bit[7:4] - Board ID(0000b: Class-1, 0001b: Class-2)
@@ -274,7 +279,7 @@ void init_platform_config()
 					break;
 				default:
 					LOG_ERR("Unknown condition 0x%x",
-					       _1ou_card_mapping_table[cnt].condition);
+						_1ou_card_mapping_table[cnt].condition);
 					break;
 				}
 
@@ -288,14 +293,14 @@ void init_platform_config()
 									data, rx_len);
 					if (i2c_master_write(&i2c_msg, retry)) {
 						LOG_ERR("Failed to set 1OU card detection to CPLD register(0x%x)",
-						       data[0]);
+							data[0]);
 					}
 					break;
 				}
 			}
 			if (cnt == ARRAY_SIZE(_1ou_card_mapping_table)) {
 				LOG_ERR("Unknown the 1OU card type, the voltage of ADC channel-6 is %fV",
-				       voltage);
+					voltage);
 			}
 		}
 	}
@@ -319,7 +324,7 @@ void init_platform_config()
 				default:
 					_2ou_status.card_type = TYPE_2OU_UNKNOWN;
 					LOG_ERR("Unknown the 2OU card type, the card type read from CPLD is 0x%x",
-					       i2c_msg.data[0]);
+						i2c_msg.data[0]);
 					break;
 				}
 			}

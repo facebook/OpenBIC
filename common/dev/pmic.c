@@ -29,7 +29,7 @@ LOG_MODULE_REGISTER(pmic);
 uint8_t *compose_memory_write_read_req(uint8_t smbus_identifier, uint8_t smbus_address,
 				       uint32_t addr_value, uint8_t *write_data, uint8_t write_len)
 {
-	if ((write_len != 0) && (write_data == NULL)) {
+	if ((write_data == NULL) && (write_len != 0)) {
 		LOG_ERR("Input parameter write_data is NULL");
 		return NULL;
 	}
@@ -43,7 +43,10 @@ uint8_t *compose_memory_write_read_req(uint8_t smbus_identifier, uint8_t smbus_a
 	pmic_req.data_len = PMIC_DATA_LEN;
 
 	memset(pmic_req.write_data, 0, MAX_MEMORY_DATA * sizeof(uint8_t));
-	memcpy(pmic_req.write_data, write_data, write_len);
+
+	if (write_data != NULL) {
+		memcpy(pmic_req.write_data, write_data, write_len);
+	}
 
 	return (uint8_t *)&pmic_req;
 }
@@ -66,8 +69,7 @@ int pmic_ipmb_transfer(int *total_pmic_power, uint8_t seq_source, uint8_t netFn,
 
 	// Input data pointer not match with data length
 	if ((data_len != 0) && (data == NULL)) {
-		LOG_ERR("Input data pointer/length in invaild  data_len: %d",
-		       data_len);
+		LOG_ERR("Input data pointer/length in invaild  data_len: %d", data_len);
 		return -1;
 	}
 
@@ -84,7 +86,7 @@ int pmic_ipmb_transfer(int *total_pmic_power, uint8_t seq_source, uint8_t netFn,
 
 	if ((ret != IPMB_ERROR_SUCCESS) || (pmic_msg->completion_code != CC_SUCCESS)) {
 		LOG_ERR("Failed to send pmic_command ret: 0x%x CC: 0x%x", ret,
-		       pmic_msg->completion_code);
+			pmic_msg->completion_code);
 		SAFE_FREE(pmic_msg);
 		return -1;
 	}

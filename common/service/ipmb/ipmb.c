@@ -256,9 +256,8 @@ bool find_req_ipmi_msg(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
 	if (pnode->next == ptr_start) {
 		LOG_ERR("no req match recv resp");
 		LOG_ERR("node netfn: %x,cmd: %x, seq_t: %x", (pnode->next)->buffer.netfn,
-		       (pnode->next)->buffer.cmd, (pnode->next)->buffer.seq_target);
-		LOG_ERR("msg netfn: %x,cmd: %x, seq_t: %x", msg->netfn, msg->cmd,
-		       msg->seq_target);
+			(pnode->next)->buffer.cmd, (pnode->next)->buffer.seq_target);
+		LOG_ERR("msg netfn: %x,cmd: %x, seq_t: %x", msg->netfn, msg->cmd, msg->seq_target);
 		k_mutex_unlock(&mutex_id[index]);
 		return false;
 	}
@@ -389,7 +388,7 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 		if (IS_RESPONSE(current_msg_tx->buffer)) { // Send a response message
 			if (current_msg_tx->retries > IPMB_TX_RETRY_TIME) {
 				LOG_ERR("Reach the MAX retry times for sending a response message, source(%d)",
-				       current_msg_tx->buffer.InF_source);
+					current_msg_tx->buffer.InF_source);
 				goto cleanup;
 			}
 
@@ -424,7 +423,7 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 				SAFE_FREE(i2c_msg);
 			} else {
 				LOG_ERR("Unsupported interface(%d) for index(%d)",
-				       ipmb_cfg.interface, ipmb_cfg.index);
+					ipmb_cfg.interface, ipmb_cfg.index);
 				goto cleanup;
 			}
 
@@ -438,13 +437,13 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 			} else {
 				if (DEBUG_IPMB) {
 					LOG_DBG("Send a response message, from(%d) to(%d) netfn(0x%x) cmd(0x%x) CC(0x%x)",
-					       current_msg_tx->buffer.InF_source,
-					       current_msg_tx->buffer.InF_target,
-					       current_msg_tx->buffer.netfn,
-					       current_msg_tx->buffer.cmd,
-					       current_msg_tx->buffer.completion_code);
+						current_msg_tx->buffer.InF_source,
+						current_msg_tx->buffer.InF_target,
+						current_msg_tx->buffer.netfn,
+						current_msg_tx->buffer.cmd,
+						current_msg_tx->buffer.completion_code);
 					LOG_DBG("response data[%d](",
-					       current_msg_tx->buffer.data_len);
+						current_msg_tx->buffer.data_len);
 					for (int i = 0; i < current_msg_tx->buffer.data_len + 1;
 					     i++) {
 						LOG_DBG(" %x", current_msg_tx->buffer.data[i]);
@@ -485,13 +484,13 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 						    &current_msg_tx->buffer, ipmb_cfg.index);
 				if (DEBUG_IPMB) {
 					LOG_DBG("Send a request message, from(%d) to(%d) netfn(0x%x) cmd(0x%x) CC(0x%x)",
-					       current_msg_tx->buffer.InF_source,
-					       current_msg_tx->buffer.InF_target,
-					       current_msg_tx->buffer.netfn,
-					       current_msg_tx->buffer.cmd,
-					       current_msg_tx->buffer.completion_code);
+						current_msg_tx->buffer.InF_source,
+						current_msg_tx->buffer.InF_target,
+						current_msg_tx->buffer.netfn,
+						current_msg_tx->buffer.cmd,
+						current_msg_tx->buffer.completion_code);
 					LOG_DBG("request data[%d](",
-					       current_msg_tx->buffer.data_len);
+						current_msg_tx->buffer.data_len);
 					for (int i = 0; i < current_msg_tx->buffer.data_len + 1;
 					     i++) {
 						LOG_DBG("%x ", current_msg_tx->buffer.data[i]);
@@ -503,7 +502,7 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 				SAFE_FREE(i2c_msg);
 			} else {
 				LOG_ERR("Unsupported interface(%d) for index(%d)",
-				       ipmb_cfg.interface, ipmb_cfg.index);
+					ipmb_cfg.interface, ipmb_cfg.index);
 				goto cleanup;
 			}
 
@@ -572,10 +571,10 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 					}
 
 					LOG_ERR("Failed to send a request message, from(%d) to(%d) netfn(0x%x) cmd(0x%x)",
-					       current_msg_tx->buffer.InF_source,
-					       current_msg_tx->buffer.InF_target,
-					       current_msg_tx->buffer.netfn,
-					       current_msg_tx->buffer.cmd);
+						current_msg_tx->buffer.InF_source,
+						current_msg_tx->buffer.InF_target,
+						current_msg_tx->buffer.netfn,
+						current_msg_tx->buffer.cmd);
 				} else {
 					k_msgq_put(&ipmb_txqueue[ipmb_cfg.index], current_msg_tx,
 						   K_NO_WAIT);
@@ -605,9 +604,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 	memcpy(&ipmb_cfg, (IPMB_config *)pvParameters, sizeof(IPMB_config));
 
 	if (DEBUG_IPMB) {
-		LOG_DBG("IPMB RXTask thread, bus(%d) index(%d)",
-		       ipmb_cfg.bus,
-		       ipmb_cfg.index);
+		LOG_DBG("IPMB RXTask thread, bus(%d) index(%d)", ipmb_cfg.bus, ipmb_cfg.index);
 	}
 
 	while (1) {
@@ -634,14 +631,14 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 				goto cleanup;
 			}
 		} else {
-			LOG_ERR("Unsupported interface(%d) for index(%d)",
-			       ipmb_cfg.interface, ipmb_cfg.index);
+			LOG_ERR("Unsupported interface(%d) for index(%d)", ipmb_cfg.interface,
+				ipmb_cfg.index);
 		}
 
 		if (rx_len > 0) {
 			if (DEBUG_IPMB) {
 				LOG_DBG("Received an IPMB message from bus(%d) data[%d](",
-				       ipmb_cfg.bus, rx_len);
+					ipmb_cfg.bus, rx_len);
 				for (i = 0; i < rx_len; i++) {
 					LOG_DBG("0x%x ", ipmb_buffer_rx[i + 1]);
 				}
@@ -651,8 +648,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 			/* Perform a checksum test on the message, if it doesn't pass, just ignore
        * it */
 			if (validate_checksum(ipmb_buffer_rx, rx_len) != IPMB_ERROR_SUCCESS) {
-				LOG_ERR("Invalid IPMB message checksum, index(%d)",
-				       ipmb_cfg.index);
+				LOG_ERR("Invalid IPMB message checksum, index(%d)", ipmb_cfg.index);
 				goto cleanup;
 			}
 
@@ -666,8 +662,8 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 
 			if (DEBUG_IPMB) {
 				LOG_DBG("Decode the IPMB message, netfn(0x%x) Cmd(0x%x) Data[%d](",
-				       current_msg_rx->buffer.netfn, current_msg_rx->buffer.cmd,
-				       current_msg_rx->buffer.data_len);
+					current_msg_rx->buffer.netfn, current_msg_rx->buffer.cmd,
+					current_msg_rx->buffer.data_len);
 				for (i = 0; i < current_msg_rx->buffer.data_len; i++) {
 					LOG_DBG("0x%x ", current_msg_rx->buffer.data[i]);
 				}
@@ -681,9 +677,9 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 						      &(current_msg_rx->buffer), ipmb_cfg.index)) {
 					if (DEBUG_IPMB) {
 						LOG_DBG("Found the corresponding request message, from(0x%x) to(0x%x) target_seq_num(%d)",
-						       current_msg_rx->buffer.InF_source,
-						       current_msg_rx->buffer.InF_target,
-						       current_msg_rx->buffer.seq_target);
+							current_msg_rx->buffer.InF_source,
+							current_msg_rx->buffer.InF_target,
+							current_msg_rx->buffer.seq_target);
 					}
 
 					if (current_msg_rx->buffer.InF_source ==
@@ -741,6 +737,10 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 					} else if (current_msg_rx->buffer.InF_source == ME_IPMB) {
 						ipmi_msg *bridge_msg =
 							(ipmi_msg *)malloc(sizeof(ipmi_msg));
+						if (bridge_msg == NULL) {
+							LOG_ERR("bridge_msg allocation failed");
+							goto cleanup;
+						}
 						memset(bridge_msg, 0, sizeof(ipmi_msg));
 
 						bridge_msg->netfn =
@@ -759,10 +759,10 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 
 						if (DEBUG_IPMB) {
 							LOG_DBG("Send the response message to ME, source_seq_num(%d), target_seq_num(%d)",
-							       current_msg_rx->buffer.seq_source,
-							       current_msg_rx->buffer.seq_target);
+								current_msg_rx->buffer.seq_source,
+								current_msg_rx->buffer.seq_target);
 							LOG_DBG("response data[%d](",
-							       bridge_msg->data_len);
+								bridge_msg->data_len);
 							for (i = 0; i < bridge_msg->data_len; i++) {
 								LOG_DBG("%x ", bridge_msg->data[i]);
 							}
@@ -782,6 +782,10 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 
 						ipmi_msg *bridge_msg =
 							(ipmi_msg *)malloc(sizeof(ipmi_msg));
+						if (bridge_msg == NULL) {
+							LOG_ERR("bridge_msg allocation failed");
+							goto cleanup;
+						}
 						memset(bridge_msg, 0, sizeof(ipmi_msg));
 
 						pal_encode_response_bridge_cmd(bridge_msg,
@@ -791,11 +795,11 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 
 						if (DEBUG_IPMB) {
 							LOG_DBG("Send the response message to the source(%d), source_seq_num(%d), target_seq_num(%d)",
-							       current_msg_rx->buffer.InF_source,
-							       current_msg_rx->buffer.seq_source,
-							       current_msg_rx->buffer.seq_target);
+								current_msg_rx->buffer.InF_source,
+								current_msg_rx->buffer.seq_source,
+								current_msg_rx->buffer.seq_target);
 							LOG_DBG("response data[%d](",
-							       bridge_msg->data_len);
+								bridge_msg->data_len);
 							for (i = 0; i < bridge_msg->data_len; i++) {
 								LOG_DBG("%x ", bridge_msg->data[i]);
 							}
@@ -819,7 +823,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 									    [current_msg_rx->buffer
 										     .InF_source]) !=
 							    IPMB_ERROR_SUCCESS) {
-							  LOG_ERR("Failed to send IPMB response message");
+								LOG_ERR("Failed to send IPMB response message");
 							}
 						}
 
@@ -837,6 +841,10 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
                  */
 								     current_msg_rx->buffer.cmd))) {
 					ipmi_msg *bridge_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
+					if (bridge_msg == NULL) {
+						LOG_ERR("bridge_msg allocation failed");
+						goto cleanup;
+					}
 					memset(bridge_msg, 0, sizeof(ipmi_msg));
 
 					bridge_msg->data_len = current_msg_rx->buffer.data_len;
@@ -850,7 +858,6 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 						       &current_msg_rx->buffer.data[0],
 						       current_msg_rx->buffer.data_len);
 					}
-
 
 					// Check BMC communication interface if use IPMB or not
 					if (!pal_is_interface_use_ipmb(
@@ -879,7 +886,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 								    IPMB_inf_index_map
 									    [bridge_msg->InF_source]) !=
 							    IPMB_ERROR_SUCCESS) {
-							  LOG_ERR("Failed to send IPMB response message");
+								LOG_ERR("Failed to send IPMB response message");
 							}
 						}
 					}
@@ -896,9 +903,10 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 						IPMB_config_table[ipmb_cfg.index].channel;
 					/* Notify the client about the new request */
 					if (DEBUG_IPMB) {
-						LOG_DBG("Received a request message, netfn(0x%x) InfS(0x%x) seq_s(%d)", current_msg_rx->buffer.netfn,
-						       current_msg_rx->buffer.InF_source,
-						       current_msg_rx->buffer.seq_source);
+						LOG_DBG("Received a request message, netfn(0x%x) InfS(0x%x) seq_s(%d)",
+							current_msg_rx->buffer.netfn,
+							current_msg_rx->buffer.InF_source,
+							current_msg_rx->buffer.seq_source);
 					}
 					ipmb_notify_client(current_msg_rx);
 				}
