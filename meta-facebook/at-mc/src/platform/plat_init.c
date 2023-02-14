@@ -25,6 +25,8 @@
 #include "plat_class.h"
 #include "plat_dev.h"
 #include "plat_i2c_target.h"
+#include "util_worker.h"
+#include "plat_isr.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -34,6 +36,30 @@ LOG_MODULE_REGISTER(plat_init);
 SCU_CFG scu_cfg[] = {
 	//register    value
 };
+
+void check_mb_reset_status()
+{
+	int ret = 0;
+	uint8_t index = 0;
+	uint8_t cxl_id = 0;
+	uint8_t card_type = 0;
+
+	for (index = CARD_1_INDEX; index <= CARD_12_INDEX; ++index) {
+		ret = get_pcie_card_type(index, &card_type);
+		if (ret != 0) {
+			continue;
+		}
+
+		if (card_type == CXL_CARD) {
+			ret = pcie_card_id_to_cxl_e1s_id(index, &cxl_id);
+			if (ret != 0) {
+				continue;
+			}
+
+			cxl_mb_status_init(cxl_id);
+		}
+	}
+}
 
 void check_cxl_ioexp_is_initialized()
 {
@@ -82,21 +108,33 @@ void check_cxl_ioexp_is_initialized()
 
 void pal_pre_init()
 {
+	check_pcie_card_type();
+	check_cxl_ioexp_is_initialized();
+
 	/* init i2c target */
 	for (int index = 0; index < MAX_TARGET_NUM; index++) {
+		if (index == CXL_I2C_TARGET_INDEX) {
+			/* BIC will not register target bus if CXL is not present */
+			if (is_cxl_present() == false) {
+				continue;
+			}
+
+			init_cxl_set_eid_work();
+		}
+
 		if (I2C_TARGET_ENABLE_TABLE[index])
 			i2c_target_control(
 				index, (struct _i2c_target_config *)&I2C_TARGET_CONFIG_TABLE[index],
 				1);
 	}
 
-	check_pcie_card_type();
-	check_cxl_ioexp_is_initialized();
+	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY + 1); // work queue for low priority jobs
 }
 
 void pal_post_init()
 {
 	plat_mctp_init();
+	check_mb_reset_status();
 }
 
 void pal_device_init()
@@ -106,7 +144,7 @@ void pal_device_init()
 
 void pal_set_sys_status()
 {
-	return;
+	set_DC_status(MEB_NORMAL_PWRGD_BIC);
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78

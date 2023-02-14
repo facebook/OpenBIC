@@ -36,6 +36,8 @@
 #include "i2c-mux-pca984x.h"
 #include "plat_ipmi.h"
 #include "plat_dev.h"
+#include "cci.h"
+#include "plat_mctp.h"
 
 LOG_MODULE_REGISTER(plat_sensor_table);
 
@@ -63,17 +65,17 @@ sensor_cfg plat_sensor_config[] = {
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 
 	/** NVME **/
-	{ SENSOR_NUM_TEMP_E1S_0, sensor_dev_nvme, I2C_BUS4, E1S_ADDR, E1S_OFFSET, is_e1s_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	{ SENSOR_NUM_TEMP_E1S_0, sensor_dev_nvme, I2C_BUS4, E1S_ADDR, E1S_OFFSET, is_e1s_access, 0,
+	  0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  pre_nvme_read, &bus_4_pca9548_configs[0], post_nvme_read, NULL, NULL },
-	{ SENSOR_NUM_TEMP_E1S_1, sensor_dev_nvme, I2C_BUS4, E1S_ADDR, E1S_OFFSET, is_e1s_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	{ SENSOR_NUM_TEMP_E1S_1, sensor_dev_nvme, I2C_BUS4, E1S_ADDR, E1S_OFFSET, is_e1s_access, 0,
+	  0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  pre_nvme_read, &bus_4_pca9548_configs[1], post_nvme_read, NULL, NULL },
-	{ SENSOR_NUM_TEMP_E1S_2, sensor_dev_nvme, I2C_BUS4, E1S_ADDR, E1S_OFFSET, is_e1s_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	{ SENSOR_NUM_TEMP_E1S_2, sensor_dev_nvme, I2C_BUS4, E1S_ADDR, E1S_OFFSET, is_e1s_access, 0,
+	  0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  pre_nvme_read, &bus_4_pca9548_configs[2], post_nvme_read, NULL, NULL },
-	{ SENSOR_NUM_TEMP_E1S_3, sensor_dev_nvme, I2C_BUS4, E1S_ADDR, E1S_OFFSET, is_e1s_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	{ SENSOR_NUM_TEMP_E1S_3, sensor_dev_nvme, I2C_BUS4, E1S_ADDR, E1S_OFFSET, is_e1s_access, 0,
+	  0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  pre_nvme_read, &bus_4_pca9548_configs[3], post_nvme_read, NULL, NULL },
 
 	/** HSC **/
@@ -326,6 +328,25 @@ sensor_cfg plat_cxl_sensor_config[] = {
 	{ SENSOR_NUM_TEMP_CXL_CTRL, sensor_dev_emc1412, I2C_BUS2, CXL_CTRL_ADDR, EMC1412_READ_TEMP,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL, &cxl_mux_configs[0] },
+	{ SENSOR_NUM_TEMP_CXL, sensor_dev_pm8702, MCTP_EID_CXL, NONE, CHIP_TEMP_OFFSET,
+	  is_cxl_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL, &cxl_mux_configs[0] },
+	{ SENSOR_NUM_TEMP_CXL_DIMMA, sensor_dev_pm8702, MCTP_EID_CXL, CXL_DIMMA_TEMP_ADDR,
+	  DIMM_TEMP_OFFSET, is_cxl_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL,
+	  &cxl_mux_configs[0] },
+	{ SENSOR_NUM_TEMP_CXL_DIMMB, sensor_dev_pm8702, MCTP_EID_CXL, CXL_DIMMB_TEMP_ADDR,
+	  DIMM_TEMP_OFFSET, is_cxl_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL,
+	  &cxl_mux_configs[0] },
+	{ SENSOR_NUM_TEMP_CXL_DIMMC, sensor_dev_pm8702, MCTP_EID_CXL, CXL_DIMMC_TEMP_ADDR,
+	  DIMM_TEMP_OFFSET, is_cxl_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL,
+	  &cxl_mux_configs[0] },
+	{ SENSOR_NUM_TEMP_CXL_DIMMD, sensor_dev_pm8702, MCTP_EID_CXL, CXL_DIMMD_TEMP_ADDR,
+	  DIMM_TEMP_OFFSET, is_cxl_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL,
+	  &cxl_mux_configs[0] },
 
 	/** INA233 **/
 	{ SENSOR_NUM_VOL_P12V_STBY_4CP, sensor_dev_ina233, I2C_BUS2, CXL_U6_INA233_ADDR,
@@ -505,6 +526,22 @@ bool is_e1s_access(uint8_t sensor_num)
 	}
 
 	return true;
+}
+
+bool is_cxl_access(uint8_t pcie_card_id)
+{
+	int ret = 0;
+	bool is_set_eid = false;
+	uint8_t cxl_card_id = 0;
+
+	ret = pcie_card_id_to_cxl_e1s_id(pcie_card_id, &cxl_card_id);
+	if (ret < 0) {
+		return false;
+	}
+
+	is_set_eid = get_cxl_eid_flag(cxl_card_id);
+
+	return is_set_eid;
 }
 
 struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus)

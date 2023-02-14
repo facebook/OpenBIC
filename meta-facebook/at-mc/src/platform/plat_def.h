@@ -18,5 +18,7 @@
 #define PLAT_DEF_H
 
 #define BMC_USB_PORT "CDC_ACM_0"
+#define ENABLE_CCI
+#define ENABLE_PM8702
 
 #endif

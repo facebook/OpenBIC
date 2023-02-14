@@ -23,4 +23,6 @@
 #define TARGET_ENABLE 1
 #define TARGET_DISABLE 0
 
+#define CXL_I2C_TARGET_INDEX 1
+
 #endif

@@ -26,8 +26,23 @@
 #include "plat_i2c.h"
 
 #define I2C_BUS_BMC I2C_BUS5
+#define I2C_BUS_CXL I2C_BUS2
+/* I2C 8-bit address */
 #define I2C_ADDR_BIC 0x40
+#define I2C_ADDR_BMC 0x20
+#define I2C_ADDR_CXL 0xDE
+
+/* mctp endpoint */
+#define MCTP_EID_DEFAULT 0x00
+#define MCTP_EID_BMC 0x08
+#define MCTP_EID_CXL MCTP_EID_DEFAULT
+
+#define SET_EID_FLAG true
+#define CLEAR_EID_FLAG false
 
 void plat_mctp_init(void);
+void set_cxl_endpoint(uint8_t eid, uint8_t cxl_card_id);
+bool get_cxl_eid_flag(uint8_t cxl_card_id);
+void set_cxl_eid_flag(uint8_t cxl_card_id, bool value);
 
 #endif

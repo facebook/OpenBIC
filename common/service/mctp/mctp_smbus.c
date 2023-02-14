@@ -207,8 +207,10 @@ static uint16_t mctp_smbus_write(void *mctp_p, uint8_t *buf, uint32_t len,
 	i2c_msg.tx_len = send_len;
 	memcpy(&i2c_msg.data[0], send_buf, send_len);
 	status = i2c_master_write(&i2c_msg, 5);
-	if (status)
-		LOG_ERR("i2c_master_write failt, ret %d", status);
+	if (status) {
+		LOG_ERR("i2c_master_write failed, ret %d", status);
+		return MCTP_ERROR;
+	}
 
 	return MCTP_SUCCESS;
 }

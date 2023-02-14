@@ -30,6 +30,9 @@ extern "C" {
 #define MCTP_SUCCESS 0
 #define MCTP_ERROR 1
 
+#define MCTP_RESPONSE 0
+#define MCTP_REQUEST 1
+
 #define MCTP_TX_QUEUE_SIZE 16
 
 #define MSG_ASSEMBLY_BUF_SIZE 1024

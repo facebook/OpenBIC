@@ -102,6 +102,7 @@ int pal_get_pcie_card_sensor_reading(uint8_t read_type, uint8_t sensor_num, uint
 	bool ret = 0;
 	int retry = 0;
 	uint8_t index = 0;
+	uint8_t parameter = 0;
 	uint8_t sensor_status = 0;
 	bool (*pre_switch_mux_func)(uint8_t, uint8_t) = NULL;
 	bool (*post_switch_mux_func)(uint8_t, uint8_t) = NULL;
@@ -109,6 +110,7 @@ int pal_get_pcie_card_sensor_reading(uint8_t read_type, uint8_t sensor_num, uint
 
 	switch (read_type) {
 	case PCIE_CARD_E1S:
+		parameter = sensor_num;
 		pre_switch_mux_func = pre_e1s_switch_mux;
 		post_switch_mux_func = post_e1s_switch_mux;
 		if (sensor_num <= SENSOR_NUM_TEMP_JCN_E1S_1) {
@@ -124,6 +126,7 @@ int pal_get_pcie_card_sensor_reading(uint8_t read_type, uint8_t sensor_num, uint
 		}
 		break;
 	case PCIE_CARD_CXL:
+		parameter = pcie_card_id;
 		pre_switch_mux_func = pre_cxl_switch_mux;
 		post_switch_mux_func = post_cxl_switch_mux;
 
@@ -142,7 +145,7 @@ int pal_get_pcie_card_sensor_reading(uint8_t read_type, uint8_t sensor_num, uint
 	for (retry = 0; retry < 3; ++retry) {
 		*reading = 0;
 
-		if (cfg->access_checker(sensor_num) != true) {
+		if (cfg->access_checker(parameter) != true) {
 			*card_status |= PCIE_CARD_NOT_ACCESSIABLE_BIT;
 			return 0;
 		}
