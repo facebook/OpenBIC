@@ -26,6 +26,7 @@
 #include "isl69259.h"
 #include "mp2971.h"
 #include "lattice.h"
+#include "plat_fwupdate.h"
 
 LOG_MODULE_DECLARE(pldm);
 
@@ -880,7 +881,82 @@ exit:
 	return PLDM_SUCCESS;
 }
 
+static uint8_t get_firmware_parameter(void *mctp_inst, uint8_t *buf, uint16_t len,
+				      uint8_t instance_id, uint8_t *resp, uint16_t *resp_len,
+				      void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
+
+	struct pldm_get_firmware_parameters_resp *resp_p =
+		(struct pldm_get_firmware_parameters_resp *)resp;
+
+	*resp_len = 1;
+
+	if (len != 0) {
+		resp_p->completion_code = PLDM_ERROR_INVALID_LENGTH;
+		return PLDM_SUCCESS;
+	}
+
+	resp_p->capabilities_during_update = 0x00;
+	resp_p->comp_count = comp_config_count;
+	resp_p->active_comp_image_set_ver_str_type = PLDM_COMP_ASCII;
+	resp_p->active_comp_image_set_ver_str_len = 7;
+	resp_p->pending_comp_image_set_ver_str_type = PLDM_COMP_VER_STR_TYPE_UNKNOWN;
+	resp_p->pending_comp_image_set_ver_str_len = 0x00;
+
+	uint16_t cnt_len = 0;
+	uint8_t *op_ptr = (uint8_t *)resp_p + sizeof(struct pldm_get_firmware_parameters_resp);
+
+	if (!get_version_by_comp_id(COMP_ID_BIC, op_ptr,
+				    &resp_p->active_comp_image_set_ver_str_len)) {
+		resp_p->completion_code = PLDM_ERROR;
+		return PLDM_SUCCESS;
+	}
+
+	cnt_len += resp_p->active_comp_image_set_ver_str_len;
+	op_ptr += resp_p->active_comp_image_set_ver_str_len;
+
+	uint32_t error_code = 0xFFFFFFFF;
+	for (uint8_t i = 0; i < comp_config_count; i++) {
+		if (comp_config[i].comp_identifier == COMP_ID_BIC)
+			continue;
+
+		struct component_parameter_table *comp_table_p =
+			(struct component_parameter_table *)op_ptr;
+		op_ptr += sizeof(struct component_parameter_table);
+
+		comp_table_p->comp_identifier = comp_config[i].comp_identifier;
+		comp_table_p->pending_comp_ver_str_type = comp_table_p->active_comp_ver_str_type =
+			PLDM_COMP_ASCII;
+		comp_table_p->pending_comp_ver_str_len = 0x00;
+		comp_table_p->comp_activation_methods = comp_config[i].activate_method;
+
+		if (!get_version_by_comp_id(comp_config[i].comp_identifier, op_ptr,
+					    &comp_table_p->active_comp_ver_str_len)) {
+			comp_table_p->active_comp_ver_str_len = 4;
+			memcpy(op_ptr, &error_code, 4);
+		}
+
+		cnt_len += sizeof(struct component_parameter_table) +
+			   comp_table_p->active_comp_ver_str_len;
+		op_ptr += comp_table_p->active_comp_ver_str_len;
+	}
+
+	resp_p->completion_code = PLDM_SUCCESS;
+
+	*resp_len = sizeof(struct pldm_get_firmware_parameters_resp) + cnt_len;
+
+	LOG_INF("resp_len = %d ", *resp_len);
+
+	return PLDM_SUCCESS;
+}
+
 static pldm_cmd_handler pldm_fw_update_cmd_tbl[] = {
+	{ PLDM_FW_UPDATE_CMD_CODE_GET_FIRMWARE_PARAMETERS, get_firmware_parameter },
 	{ PLDM_FW_UPDATE_CMD_CODE_REQUEST_UPDATE, request_update },
 	{ PLDM_FW_UPDATE_CMD_CODE_PASS_COMPONENT_TABLE, pass_component_table },
 	{ PLDM_FW_UPDATE_CMD_CODE_UPDATE_COMPONENT, update_component },

@@ -22,17 +22,21 @@
 #include "plat_ipmi.h"
 #include "pldm_firmware_update.h"
 
-enum { COMP_ID_BIC = GLOBAL_COMP_ID_BIC,
-       COMP_ID_VR0,
-       COMP_ID_VR1,
-       COMP_ID_PEX0,
-       COMP_ID_PEX1,
-       COMP_ID_PEX2,
-       COMP_ID_PEX3,
-       COMP_ID_CPLD,
-       COMP_ID_MAX,
+enum {
+	COMP_ID_BIC = GLOBAL_COMP_ID_BIC,
+	COMP_ID_VR0,
+	COMP_ID_VR1,
+	COMP_ID_PEX0,
+	COMP_ID_PEX1,
+	COMP_ID_PEX2,
+	COMP_ID_PEX3,
+	COMP_ID_CPLD,
+	COMP_ID_MAX,
 };
 
 void load_pldmupdate_comp_config(void);
+// bool pldm_get_bic_fw_version(uint8_t *buf, uint8_t *len);
+// bool get_fpga_user_code(uint8_t *buf, uint8_t *len);
+bool get_version_by_comp_id(uint8_t comp_id, uint8_t *buf, uint8_t *len);
 
 #endif

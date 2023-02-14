@@ -25,10 +25,14 @@
 #include "plat_i2c.h"
 #include "pldm_firmware_update.h"
 #include "sensor.h"
+#include "pex89000.h"
 #include "plat_sensor_table.h"
 #include "plat_hook.h"
 #include "i2c-mux-tca9548.h"
 #include "util_spi.h"
+#include "hal_jtag.h"
+#include "plat_version.h"
+#include "plat_pldm_monitor.h"
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
@@ -197,4 +201,121 @@ static uint8_t pldm_post_pex_update(void *fw_update_param)
 	}
 
 	return 0;
+}
+
+static bool pldm_get_bic_fw_version(uint8_t *buf, uint8_t *len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(buf, false);
+	CHECK_NULL_ARG_WITH_RETURN(len, false);
+
+	uint8_t local_buf[4];
+
+	local_buf[0] = BIC_FW_YEAR_MSB;
+	local_buf[1] = BIC_FW_YEAR_LSB;
+	local_buf[2] = BIC_FW_WEEK;
+	local_buf[3] = BIC_FW_VER;
+
+	uint8_t idx = bin2hex(local_buf, 4, buf, 8);
+
+	buf[idx++] = BIC_FW_platform_0;
+	buf[idx++] = BIC_FW_platform_1;
+	buf[idx++] = BIC_FW_platform_2;
+
+	*len = idx;
+
+	return true;
+}
+
+static bool get_fpga_user_code(uint8_t *buf, uint8_t *len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(buf, false);
+	CHECK_NULL_ARG_WITH_RETURN(len, false);
+
+	uint8_t local_buf[4] = { 0 };
+	uint8_t ir_value = 0xc0;
+	uint8_t dr_value = 0x00;
+	const struct device *jtag_dev;
+
+	jtag_dev = device_get_binding("JTAG0");
+
+	if (!jtag_dev) {
+		LOG_ERR("JTAG device not found");
+		return false;
+	}
+
+	gpio_set(JTAG_BIC_EN, GPIO_HIGH);
+
+	if (jtag_tap_set(jtag_dev, TAP_RESET))
+		return false;
+
+	k_msleep(10);
+
+	if (jtag_ir_scan(jtag_dev, 8, &ir_value, local_buf, TAP_IDLE) ||
+	    jtag_dr_scan(jtag_dev, 32, &dr_value, local_buf, TAP_IDLE))
+		return false;
+
+	gpio_set(JTAG_BIC_EN, GPIO_LOW);
+
+	*len = bin2hex(local_buf, 4, buf, 8);
+
+	return true;
+}
+
+static bool get_pex_fw_version(uint8_t comp_id, uint8_t *buf, uint8_t *len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(buf, false);
+	CHECK_NULL_ARG_WITH_RETURN(len, false);
+	CHECK_ARG_WITH_RETURN((comp_id < COMP_ID_PEX0) || (comp_id > COMP_ID_PEX3), false);
+
+	/* Only can be read when DC is on */
+	if (!is_mb_dc_on())
+		return false;
+
+	/* Physical Layer User Test Patterns, Byte 0 Register */
+	int reading = 0x6080020c;
+	uint8_t idx = comp_id - COMP_ID_PEX0;
+	uint8_t pex_sensor_num = pex_sensor_num_table[idx];
+	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[pex_sensor_num]];
+	pex89000_unit *p = (pex89000_unit *)cfg->priv_data;
+
+	if (pex_access_engine(cfg->port, cfg->target_addr, p->idx, pex_access_register, &reading)) {
+		return false;
+	}
+
+	/* Change version register to SBR because the old PEX firmware did not fill in version information at register 0x6080020c yet */
+	if (((reading & 0xFF) == idx) && ((reading >> 8) & 0xFF) == 0xCC) {
+		if (pex_access_engine(cfg->port, cfg->target_addr, p->idx, pex_access_sbr_ver,
+				      &reading)) {
+			return false;
+		}
+	}
+
+	uint8_t local_buf[4] = { 0 };
+	memcpy(local_buf, &reading, sizeof(reading));
+	*len = bin2hex(local_buf, 4, buf, 8);
+
+	return true;
+}
+
+bool get_version_by_comp_id(uint8_t comp_id, uint8_t *buf, uint8_t *len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(buf, false);
+	CHECK_NULL_ARG_WITH_RETURN(len, false);
+
+	switch (comp_id) {
+	case COMP_ID_BIC:
+		return pldm_get_bic_fw_version(buf, len);
+	case COMP_ID_CPLD:
+		return get_fpga_user_code(buf, len);
+	case COMP_ID_PEX0:
+	case COMP_ID_PEX1:
+	case COMP_ID_PEX2:
+	case COMP_ID_PEX3:
+		return get_pex_fw_version(comp_id, buf, len);
+	default:
+		LOG_ERR("Unknown component ID(%d)", comp_id);
+		break;
+	}
+
+	return false;
 }
