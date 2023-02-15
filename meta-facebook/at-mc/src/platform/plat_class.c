@@ -120,6 +120,34 @@ int pcie_card_id_to_cxl_e1s_id(uint8_t pcie_card_id, uint8_t *dev_id)
 	return 0;
 }
 
+int cxl_id_to_pcie_card_id(uint8_t cxl_id, uint8_t *pcie_card_id)
+{
+	CHECK_NULL_ARG_WITH_RETURN(pcie_card_id, -1);
+
+	uint8_t offset = 0;
+
+	switch (cxl_id) {
+	case CXL_CARD_1:
+	case CXL_CARD_2:
+	case CXL_CARD_3:
+	case CXL_CARD_4:
+		*pcie_card_id = cxl_id;
+		break;
+	case CXL_CARD_5:
+	case CXL_CARD_6:
+	case CXL_CARD_7:
+	case CXL_CARD_8:
+		offset = cxl_id - CXL_CARD_5;
+		*pcie_card_id = CARD_9_INDEX + offset;
+		break;
+	default:
+		LOG_ERR("Invalid cxl id: %d", cxl_id);
+		return -1;
+	}
+
+	return 0;
+}
+
 void check_pcie_card_type()
 {
 	int index = 0;

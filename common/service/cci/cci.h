@@ -31,6 +31,9 @@ typedef enum {
 #define HEALTH_INFO_RESP_PL_LEN 18 /*Size Bytes*/
 #define GET_FW_INFO_RESP_PL_LEN 80
 
+#define GET_FW_INFO_RESV_LEN 13
+#define GET_FW_INFO_REVISION_LEN 16
+
 struct _cci_handler_query_entry {
 	CCI_CMD type;
 	void (*handler_query)(uint8_t *, uint16_t);
@@ -104,6 +107,8 @@ typedef struct _wait_msg {
 uint8_t mctp_cci_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_params ext_params);
 void cci_read_resp_handler(void *args, uint8_t *rbuf, uint16_t rlen, uint16_t ret_code);
 bool cci_get_chip_temp(void *mctp_p, mctp_ext_params ext_params, int16_t *chip_temp);
+bool cci_get_chip_fw_version(void *mctp_p, mctp_ext_params ext_params, uint8_t *fw_version,
+			     uint8_t *return_len);
 
 /* send CCI command message through mctp */
 uint8_t mctp_cci_send_msg(void *mctp_p, mctp_cci_msg *msg);
@@ -120,5 +125,30 @@ typedef struct __attribute__((__packed__)) {
 	uint32_t volatile_mem_err_cnt;
 	uint32_t persistent_mem_err_cnt;
 } cci_health_info_resp;
+
+typedef struct _cci_fw_info_resp {
+	uint8_t fw_slot_supported;
+	union {
+		uint8_t value;
+		struct {
+			uint8_t ACTIVE_FW_SLOT : 3;
+			uint8_t NEXT_ACTIVE_FW_SLOT : 3;
+			uint8_t RESV : 2;
+		} fields;
+	} fw_slot_info;
+	uint8_t fw_active_capability;
+	uint8_t reserved[GET_FW_INFO_RESV_LEN];
+	uint8_t slot1_fw_revision[GET_FW_INFO_REVISION_LEN];
+	uint8_t slot2_fw_revision[GET_FW_INFO_REVISION_LEN];
+	uint8_t slot3_fw_revision[GET_FW_INFO_REVISION_LEN];
+	uint8_t slot4_fw_revision[GET_FW_INFO_REVISION_LEN];
+} cci_fw_info_resp;
+
+enum ACTIVE_FW_SLOT {
+	SLOT1_FW_ACTIVE = 0x01,
+	SLOT2_FW_ACTIVE,
+	SLOT3_FW_ACTIVE,
+	SLOT4_FW_ACTIVE,
+};
 
 #endif /* _CCI_H */

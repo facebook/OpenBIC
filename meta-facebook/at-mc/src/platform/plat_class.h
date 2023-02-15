@@ -81,6 +81,7 @@ uint8_t prsnt_status_to_card_type(uint8_t presence_status);
 int get_pcie_card_type(uint8_t card_id, uint8_t *card_type);
 int get_pcie_device_type(uint8_t card_id, uint8_t device_id, uint8_t *device_type);
 int pcie_card_id_to_cxl_e1s_id(uint8_t pcie_card_id, uint8_t *dev_id);
+int cxl_id_to_pcie_card_id(uint8_t cxl_id, uint8_t *pcie_card_id);
 bool is_cxl_present();
 
 #endif
