@@ -90,7 +90,7 @@ bool pre_ltc4282_read(uint8_t sensor_num, void *args)
 		val = msg.data[0] & (~VOLTAGE_SELECT_BIT);
 
 	} else {
-		LOG_ERR("Unexpected vsource %s", pre_proc_args->vsource_status);
+		LOG_ERR("Unexpected vsource %s", log_strdup(pre_proc_args->vsource_status));
 		return false;
 	}
 

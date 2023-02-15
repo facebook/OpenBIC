@@ -151,7 +151,8 @@ uint8_t pldm_vr_update(void *fw_update_param)
 		if (mp2971_fwupdate(p->bus, p->addr, hex_buff) == false)
 			goto exit;
 	} else {
-		LOG_ERR("Non-support VR detected with component string %s!", p->comp_version_str);
+		LOG_ERR("Non-support VR detected with component string %s!",
+			log_strdup(p->comp_version_str));
 		goto exit;
 	}
 
@@ -187,7 +188,7 @@ uint8_t pldm_cpld_update(void *fw_update_param)
 		p->next_ofs = cpld_update_cfg.next_ofs;
 	} else {
 		LOG_ERR("Component version string %s not contains support device's keyword",
-			p->comp_version_str);
+			log_strdup(p->comp_version_str));
 		return 1;
 	}
 

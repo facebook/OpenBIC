@@ -65,8 +65,7 @@ static void work_handler(struct k_work *item)
 		/* Processing time too long, print warning message */
 		if ((fn_finish_time - fn_start_time) > WARN_WORK_PROC_TIME_MS) {
 			LOG_ERR("WARN: work %s Processing time too long, %llu ms",
-			       work_job->name,
-			       (fn_finish_time - fn_start_time));
+				log_strdup(work_job->name), (fn_finish_time - fn_start_time));
 		}
 	}
 	if (k_mutex_lock(&mutex_use_count, K_MSEC(1000))) {
