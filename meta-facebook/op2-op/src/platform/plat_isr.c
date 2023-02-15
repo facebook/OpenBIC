@@ -157,3 +157,66 @@ void ISR_E1S_P12V_MAIN_INA233_ALERT()
 {
 	send_fault_event(IPMI_EVENT_OFFSET_SYS_INA233_ALERT, INA233_ALERT_E1S_P12V_MAIN);
 }
+
+void ISR_E1S_0_PRSNT_N()
+{
+	//OPA_E1S_0_PRSNT_N is the same as OPB_E1S_0_PRSNT_N
+	notify_cpld_e1s_present(E1S_0, gpio_get(OPB_E1S_0_PRSNT_N));
+	if (gpio_get(OPB_E1S_0_PRSNT_N) == GPIO_LOW) {
+		abort_e1s_power_thread(E1S_0);
+		e1s_power_on_thread(E1S_0);
+	} else {
+		abort_e1s_power_thread(E1S_0);
+		e1s_power_off_thread(E1S_0);
+	}
+}
+
+void ISR_E1S_1_PRSNT_N()
+{
+	//OPA_E1S_1_PRSNT_N is the same as OPB_E1S_1_PRSNT_N
+	notify_cpld_e1s_present(E1S_1, gpio_get(OPB_E1S_1_PRSNT_N));
+	if (gpio_get(OPB_E1S_1_PRSNT_N) == GPIO_LOW) {
+		abort_e1s_power_thread(E1S_1);
+		e1s_power_on_thread(E1S_1);
+	} else {
+		abort_e1s_power_thread(E1S_1);
+		e1s_power_off_thread(E1S_1);
+	}
+}
+
+void ISR_E1S_2_PRSNT_N()
+{
+	//OPA_E1S_2_PRSNT_N is the same as OPB_E1S_2_PRSNT_N
+	notify_cpld_e1s_present(E1S_2, gpio_get(OPB_E1S_2_PRSNT_N));
+	if (gpio_get(OPB_E1S_2_PRSNT_N) == GPIO_LOW) {
+		abort_e1s_power_thread(E1S_2);
+		e1s_power_on_thread(E1S_2);
+	} else {
+		abort_e1s_power_thread(E1S_2);
+		e1s_power_off_thread(E1S_2);
+	}
+}
+
+void ISR_E1S_3_PRSNT_N()
+{
+	notify_cpld_e1s_present(E1S_3, gpio_get(OPB_E1S_3_PRSNT_N));
+	if (gpio_get(OPB_E1S_3_PRSNT_N) == GPIO_LOW) {
+		abort_e1s_power_thread(E1S_3);
+		e1s_power_on_thread(E1S_3);
+	} else {
+		abort_e1s_power_thread(E1S_3);
+		e1s_power_off_thread(E1S_3);
+	}
+}
+
+void ISR_E1S_4_PRSNT_N()
+{
+	notify_cpld_e1s_present(E1S_4, gpio_get(OPB_E1S_4_PRSNT_N));
+	if (gpio_get(OPB_E1S_4_PRSNT_N) == GPIO_LOW) {
+		abort_e1s_power_thread(E1S_4);
+		e1s_power_on_thread(E1S_4);
+	} else {
+		abort_e1s_power_thread(E1S_4);
+		e1s_power_off_thread(E1S_4);
+	}
+}

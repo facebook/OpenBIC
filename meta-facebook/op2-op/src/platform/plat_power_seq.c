@@ -16,6 +16,7 @@
 
 #include <zephyr.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "ipmi.h"
 #include "ipmb.h"
 #include "libipmi.h"
@@ -32,11 +33,13 @@ LOG_MODULE_REGISTER(power_sequence);
 
 K_THREAD_STACK_EXTERN(e1s_power_thread);
 K_THREAD_STACK_ARRAY_DEFINE(e1s_power_threads, MAX_E1S_IDX, POWER_SEQ_CTRL_STACK_SIZE);
+K_MUTEX_DEFINE(cpld_e1s_prsnt_reg_mutex);
 struct k_thread e1s_power_thread_handler[MAX_E1S_IDX];
 k_tid_t e1s_power_tid[MAX_E1S_IDX];
 
 static bool is_e1s_sequence_done[MAX_E1S_IDX] = { false, false, false, false, false };
 static bool is_retimer_sequence_done = false;
+static uint8_t cpld_e1s_prsnt_reg = 0x1F;
 
 e1s_power_control_gpio opa_e1s_power_control_gpio[] = {
 	[0] = { .present = OPA_E1S_0_PRSNT_N,
@@ -175,17 +178,23 @@ void init_sequence_status()
 		}
 
 		for (index = 0; index < OPA_MAX_E1S_IDX; ++index) {
-			if ((get_e1s_present(index) == true) &&
-			    (get_e1s_pcie_reset_status(index) == GPIO_HIGH)) {
-				is_e1s_sequence_done[index] = true;
+			if (get_e1s_present(index) == true) {
+				//clear bit for low present
+				cpld_e1s_prsnt_reg = CLEARBIT(cpld_e1s_prsnt_reg, index);
+				if (get_e1s_pcie_reset_status(index) == GPIO_HIGH) {
+					is_e1s_sequence_done[index] = true;
+				}
 			}
 		}
 		break;
 	case CARD_TYPE_OPB:
 		for (index = 0; index < MAX_E1S_IDX; ++index) {
-			if ((get_e1s_present(index) == true) &&
-			    (get_e1s_pcie_reset_status(index) == GPIO_HIGH)) {
-				is_e1s_sequence_done[index] = true;
+			if (get_e1s_present(index) == true) {
+				//clear bit for low present
+				cpld_e1s_prsnt_reg = CLEARBIT(cpld_e1s_prsnt_reg, index);
+				if (get_e1s_pcie_reset_status(index) == GPIO_HIGH) {
+					is_e1s_sequence_done[index] = true;
+				}
 			}
 		}
 		break;
@@ -193,6 +202,9 @@ void init_sequence_status()
 		LOG_ERR("UNKNOWN CARD TYPE");
 		break;
 	}
+
+	//init the e1s present status to cpld
+	notify_cpld_e1s_present(MAX_E1S_IDX, GPIO_LOW);
 }
 
 bool is_all_sequence_done(uint8_t status)
@@ -287,6 +299,89 @@ int check_power_stage(uint8_t check_mode, uint8_t check_seq)
 	}
 
 	return ret;
+}
+
+bool notify_cpld_e1s_present(uint8_t index, uint8_t present)
+{
+	uint8_t card_type = get_card_type();
+	uint8_t card_position = get_card_position();
+	ipmb_error status;
+	ipmi_msg *msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
+	if (msg == NULL) {
+		LOG_ERR("Memory allocation failed.");
+		return false;
+	}
+
+	if (k_mutex_lock(&cpld_e1s_prsnt_reg_mutex, K_MSEC(100))) {
+		LOG_ERR("cpld present mutex lock failed");
+		return false;
+	}
+
+	memset(msg, 0, sizeof(ipmi_msg));
+
+	//set single e1s
+	if (index < MAX_E1S_IDX) {
+		if (present == GPIO_LOW) {
+			cpld_e1s_prsnt_reg = CLEARBIT(cpld_e1s_prsnt_reg, index);
+		} else {
+			cpld_e1s_prsnt_reg = SETBIT(cpld_e1s_prsnt_reg, index);
+		}
+	}
+
+	if (card_type == CARD_TYPE_OPA) {
+		// record Unified SEL
+		msg->data_len = 5;
+		msg->InF_source = SELF;
+		msg->InF_target = HD_BIC_IPMB;
+		msg->netfn = NETFN_APP_REQ;
+		msg->cmd = CMD_APP_MASTER_WRITE_READ;
+		msg->data[0] = 0x01; // (bus 0 << 1) + 1
+		msg->data[1] = 0x42; // 8 bits cpld address
+		msg->data[2] = 0x00; // read bytes
+		if (card_position == CARD_POSITION_1OU) {
+			msg->data[3] = 0x80; // cpld offset
+		} else {
+			msg->data[3] = 0x82; // cpld offset
+		}
+		msg->data[4] = cpld_e1s_prsnt_reg;
+	} else {
+		msg->data_len = 11;
+		msg->InF_source = SELF;
+		if (card_position == CARD_POSITION_2OU) {
+			msg->InF_target = EXP1_IPMB;
+			msg->data[9] = 0x81; // cpld offset
+		} else {
+			msg->InF_target = EXP3_IPMB;
+			msg->data[9] = 0x83; // cpld offset
+		}
+		msg->netfn = NETFN_OEM_1S_REQ;
+		msg->cmd = CMD_OEM_1S_MSG_OUT;
+		msg->data[0] = IANA_ID & 0xFF;
+		msg->data[1] = (IANA_ID >> 8) & 0xFF;
+		msg->data[2] = (IANA_ID >> 16) & 0xFF;
+		msg->data[3] = HD_BIC_IPMB;
+		msg->data[4] = NETFN_APP_REQ << 2;
+		msg->data[5] = CMD_APP_MASTER_WRITE_READ;
+		msg->data[6] = 0x01; // (bus 0 << 1) + 1
+		msg->data[7] = 0x42; // 8 bits cpld address
+		msg->data[8] = 0x00; // read bytes
+		msg->data[10] = cpld_e1s_prsnt_reg;
+	}
+
+	status = ipmb_read(msg, IPMB_inf_index_map[msg->InF_target]);
+	if (status != IPMB_ERROR_SUCCESS) {
+		LOG_ERR("Failed to write sb cpld, ret %d", status);
+		SAFE_FREE(msg);
+		return false;
+	}
+
+	SAFE_FREE(msg);
+
+	if (k_mutex_unlock(&cpld_e1s_prsnt_reg_mutex)) {
+		LOG_ERR("unlock cpld e1s prsnt reg mutex fail\n");
+		return false;
+	}
+	return true;
 }
 
 bool e1s_power_on_handler(uint8_t initial_stage, e1s_power_control_gpio *e1s_gpio,
@@ -550,27 +645,37 @@ void e1s_power_on_thread(uint8_t index)
 {
 	// Avoid re-create thread by checking thread status and thread id
 	if (e1s_power_tid[index] != NULL &&
-	    strcmp(k_thread_state_str(e1s_power_tid[index]), "dead") != 0) {
+	    ((strcmp(k_thread_state_str(e1s_power_tid[index]), "dead") != 0) &&
+	     (strcmp(k_thread_state_str(e1s_power_tid[index]), "unknown") != 0))) {
+		LOG_ERR("e1s power on thread exists status %s",
+			k_thread_state_str(e1s_power_tid[index]));
 		return;
 	}
 
-	// index add 1 to prevent become null pointer
-	int dev_index = index + 1;
-	e1s_power_tid[index] =
-		k_thread_create(&e1s_power_thread_handler[index], e1s_power_threads[index],
-				K_THREAD_STACK_SIZEOF(e1s_power_threads[index]),
-				control_e1s_power_on_sequence, (void *)dev_index, NULL, NULL,
-				CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
-	char thread_name[MAX_WORK_NAME_LEN];
-	sprintf(thread_name, "e1s%d_power_on_sequence_thread", index);
-	k_thread_name_set(&e1s_power_thread_handler[index], thread_name);
+	if (get_e1s_present(index) == true) {
+		// index add 1 to prevent become null pointer
+		int dev_index = index + 1;
+		e1s_power_tid[index] =
+			k_thread_create(&e1s_power_thread_handler[index], e1s_power_threads[index],
+					K_THREAD_STACK_SIZEOF(e1s_power_threads[index]),
+					control_e1s_power_on_sequence, (void *)dev_index, NULL,
+					NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+		char thread_name[MAX_WORK_NAME_LEN];
+		sprintf(thread_name, "e1s%d_power_on_sequence_thread", index);
+		k_thread_name_set(&e1s_power_thread_handler[index], thread_name);
+	} else {
+		LOG_INF("E1S %d not present can not power on", index);
+	}
 }
 
 void e1s_power_off_thread(uint8_t index)
 {
 	// Avoid re-create thread by checking thread status and thread id
 	if (e1s_power_tid[index] != NULL &&
-	    strcmp(k_thread_state_str(e1s_power_tid[index]), "dead") != 0) {
+	    ((strcmp(k_thread_state_str(e1s_power_tid[index]), "dead") != 0) &&
+	     (strcmp(k_thread_state_str(e1s_power_tid[index]), "unknown") != 0))) {
+		LOG_ERR("e1s power off thread exists status %s",
+			k_thread_state_str(e1s_power_tid[index]));
 		return;
 	}
 
