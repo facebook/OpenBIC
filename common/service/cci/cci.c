@@ -184,8 +184,8 @@ void cci_read_resp_handler(void *args, uint8_t *rbuf, uint16_t rlen, uint16_t re
 	cci_recv_resp_arg *recv_arg = (cci_recv_resp_arg *)args;
 
 	if (rlen > recv_arg->rbuf_len) {
-		LOG_WRN("Response length(%d) is greater than buffer length(%d)!",
-			rlen, recv_arg->rbuf_len);
+		LOG_WRN("Response length(%d) is greater than buffer length(%d)!", rlen,
+			recv_arg->rbuf_len);
 		recv_arg->return_len = recv_arg->rbuf_len;
 	} else {
 		recv_arg->return_len = rlen;
@@ -301,6 +301,59 @@ bool cci_get_chip_temp(void *mctp_p, mctp_ext_params ext_params, int16_t *chip_t
 
 	cci_health_info_resp *resp_p = (cci_health_info_resp *)rbuf;
 	*chip_temp = resp_p->dev_temp;
+
+	return true;
+}
+
+bool cci_get_chip_fw_version(void *mctp_p, mctp_ext_params ext_params, uint8_t *fw_version,
+			     uint8_t *return_len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_p, false);
+	CHECK_NULL_ARG_WITH_RETURN(fw_version, false);
+	CHECK_NULL_ARG_WITH_RETURN(return_len, false);
+
+	mctp_cci_msg msg = { 0 };
+	memcpy(&msg.ext_params, &ext_params, sizeof(msg.ext_params));
+
+	msg.hdr.op = CCI_GET_FW_INFO;
+	msg.hdr.pl_len = GET_FW_INFO_REQ_PL_LEN;
+
+	int resp_len = sizeof(cci_fw_info_resp);
+	uint8_t active_slot = 0;
+	uint8_t resp_buf[resp_len];
+	uint8_t *fw_version_ptr = NULL;
+
+	memset(resp_buf, 0, sizeof(cci_fw_info_resp));
+
+	if (mctp_cci_read(mctp_p, &msg, resp_buf, resp_len) != resp_len) {
+		LOG_ERR("Get chip fw version fail");
+		return false;
+	}
+
+	cci_fw_info_resp *resp = (cci_fw_info_resp *)resp_buf;
+	active_slot = resp->fw_slot_info.fields.ACTIVE_FW_SLOT;
+
+	switch (active_slot) {
+	case SLOT1_FW_ACTIVE:
+		fw_version_ptr = resp->slot1_fw_revision;
+		break;
+	case SLOT2_FW_ACTIVE:
+		fw_version_ptr = resp->slot2_fw_revision;
+		break;
+	case SLOT3_FW_ACTIVE:
+		fw_version_ptr = resp->slot3_fw_revision;
+		break;
+	case SLOT4_FW_ACTIVE:
+		fw_version_ptr = resp->slot4_fw_revision;
+		break;
+	default:
+		LOG_ERR("Active slot: %d is invalid", active_slot);
+		return false;
+	};
+
+	CHECK_NULL_ARG_WITH_RETURN(fw_version_ptr, false);
+	memcpy(fw_version, fw_version_ptr, sizeof(uint8_t) * GET_FW_INFO_REVISION_LEN);
+	*return_len = GET_FW_INFO_REVISION_LEN;
 
 	return true;
 }
