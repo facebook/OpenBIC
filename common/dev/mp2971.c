@@ -49,6 +49,12 @@ LOG_MODULE_REGISTER(mp2971);
 
 #define MP2856_DISABLE_WRITE_PROTECT 0x63
 
+/*Page29 */
+#define VR_MPS_REG_CRC_USER 0xFF
+
+/*Page2A */
+#define VR_MPS_REG_MULTI_CONFIG 0xBF
+
 /* STATUS_CML bit[3] */
 #define MASK_PWD_MATCH 0x08
 /* MFR_VR_CONFIG2 bit[2] */
@@ -58,15 +64,16 @@ LOG_MODULE_REGISTER(mp2971);
 
 #define MAX_CMD_LINE 720
 
-enum { ATE_CONF_ID = 0,
-       ATE_PAGE_NUM,
-       ATE_REG_ADDR_HEX,
-       ATE_REG_ADDR_DEC,
-       ATE_REG_NAME,
-       ATE_REG_DATA_HEX,
-       ATE_REG_DATA_DEC,
-       ATE_WRITE_TYPE,
-       ATE_COL_MAX,
+enum {
+	ATE_CONF_ID = 0,
+	ATE_PAGE_NUM,
+	ATE_REG_ADDR_HEX,
+	ATE_REG_ADDR_DEC,
+	ATE_REG_NAME,
+	ATE_REG_DATA_HEX,
+	ATE_REG_DATA_DEC,
+	ATE_WRITE_TYPE,
+	ATE_COL_MAX,
 };
 
 struct mp2856_data {
@@ -332,8 +339,8 @@ static bool parsing_image(uint8_t *hex_buff, struct mp2856_config *dev_cfg)
 		if (hex_buff[i] == 0x09) {
 			cur_ele_idx++;
 		} else if (hex_buff[i] == 0x0d) {
-			LOG_DBG("vr[%d] page: %d addr:%x data:%x", dev_cfg->wr_cnt,
-				cur_line->page, cur_line->reg_addr, cur_line->reg_data);
+			LOG_DBG("vr[%d] page: %d addr:%x data:%x", dev_cfg->wr_cnt, cur_line->page,
+				cur_line->reg_addr, cur_line->reg_data);
 			cur_ele_idx = 0;
 			dev_cfg->wr_cnt++;
 			if (dev_cfg->wr_cnt > max_line) {
@@ -476,6 +483,53 @@ bool mp2971_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff)
 exit:
 	SAFE_FREE(dev_cfg.pdata);
 	return ret;
+}
+
+bool mp2971_get_checksum(uint8_t bus, uint8_t addr, uint32_t *checksum)
+{
+	CHECK_NULL_ARG_WITH_RETURN(checksum, false);
+	uint8_t crc_user[2];
+	uint8_t multi_config[2];
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 3;
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+
+	if ((!mp2856_set_page(bus, addr, VR_MPS_PAGE_29)))
+		return false;
+
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 2;
+	i2c_msg.data[0] = VR_MPS_REG_CRC_USER;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("Failed to read register 0x%X", VR_MPS_REG_CRC_USER);
+		return false;
+	}
+
+	memcpy(crc_user, i2c_msg.data, sizeof(crc_user));
+
+	if (!mp2856_set_page(bus, addr, VR_MPS_PAGE_2A))
+		return false;
+
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 2;
+	i2c_msg.data[0] = VR_MPS_REG_MULTI_CONFIG;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("Failed to read register 0x%X", VR_MPS_REG_MULTI_CONFIG);
+		return false;
+	}
+
+	memcpy(multi_config, i2c_msg.data, sizeof(multi_config));
+
+	*checksum = crc_user[1] << 24 | crc_user[0] << 16 | multi_config[1] << 8 | multi_config[0];
+
+	if (!mp2856_set_page(bus, addr, VR_MPS_PAGE_0))
+		return false;
+
+	return true;
 }
 
 float get_resolution(uint8_t sensor_num)

@@ -26,6 +26,7 @@
 #include "isl69259.h"
 #include "mp2971.h"
 #include "lattice.h"
+#include "plat_version.h"
 
 LOG_MODULE_DECLARE(pldm);
 
@@ -880,7 +881,108 @@ exit:
 	return PLDM_SUCCESS;
 }
 
+static bool pldm_get_bic_fw_version(uint8_t *buf, uint8_t *len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(buf, false);
+	CHECK_NULL_ARG_WITH_RETURN(len, false);
+
+	uint8_t tmp_buf[4];
+	uint8_t idx = 0;
+
+	tmp_buf[0] = BIC_FW_YEAR_MSB;
+	tmp_buf[1] = BIC_FW_YEAR_LSB;
+	tmp_buf[2] = BIC_FW_WEEK;
+	tmp_buf[3] = BIC_FW_VER;
+
+	idx += bin2hex(tmp_buf, 2, buf, 4);
+	buf[idx++] = '.';
+
+	idx += bin2hex(&tmp_buf[2], 1, &buf[idx], 2);
+	buf[idx++] = '.';
+
+	idx += bin2hex(&tmp_buf[3], 1, &buf[idx], 2);
+
+	buf[idx++] = BIC_FW_platform_0;
+	buf[idx++] = BIC_FW_platform_1;
+	buf[idx++] = BIC_FW_platform_2;
+
+	*len = idx;
+
+	return true;
+}
+
+static uint8_t get_firmware_parameter(void *mctp_inst, uint8_t *buf, uint16_t len,
+				      uint8_t instance_id, uint8_t *resp, uint16_t *resp_len,
+				      void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
+
+	struct pldm_get_firmware_parameters_resp *resp_p =
+		(struct pldm_get_firmware_parameters_resp *)resp;
+
+	*resp_len = 1;
+
+	if (len != 0) {
+		resp_p->completion_code = PLDM_ERROR_INVALID_LENGTH;
+		return PLDM_SUCCESS;
+	}
+
+	resp_p->active_comp_image_set_ver_str_type = PLDM_COMP_ASCII;
+	resp_p->pending_comp_image_set_ver_str_type = PLDM_COMP_VER_STR_TYPE_UNKNOWN;
+	resp_p->pending_comp_image_set_ver_str_len = 0x00;
+
+	uint16_t cnt_len = 0;
+	uint8_t error_code[] = { 'E', 'R', 'R', 'O', 'R', ':', '0' };
+	uint8_t *ver_str_p = (uint8_t *)resp_p + sizeof(struct pldm_get_firmware_parameters_resp);
+
+	if (!pldm_get_bic_fw_version(ver_str_p, &resp_p->active_comp_image_set_ver_str_len)) {
+		resp_p->completion_code = PLDM_ERROR;
+		return PLDM_SUCCESS;
+	}
+
+	cnt_len += resp_p->active_comp_image_set_ver_str_len;
+	ver_str_p += resp_p->active_comp_image_set_ver_str_len;
+
+	for (uint8_t i = 0; i < comp_config_count; i++) {
+		if (!comp_config[i].get_fw_version_fn)
+			continue;
+
+		struct component_parameter_table *comp_table_p =
+			(struct component_parameter_table *)ver_str_p;
+		ver_str_p += sizeof(struct component_parameter_table);
+
+		comp_table_p->comp_identifier = comp_config[i].comp_identifier;
+		comp_table_p->comp_classification = comp_config[i].comp_classification;
+		comp_table_p->active_comp_ver_str_type = PLDM_COMP_ASCII;
+		comp_table_p->pending_comp_ver_str_type = PLDM_COMP_VER_STR_TYPE_UNKNOWN;
+		comp_table_p->pending_comp_ver_str_len = 0x00;
+		comp_table_p->comp_activation_methods = comp_config[i].activate_method;
+
+		if (!comp_config[i].get_fw_version_fn(&comp_config[i], ver_str_p,
+						      &comp_table_p->active_comp_ver_str_len)) {
+			comp_table_p->active_comp_ver_str_len = sizeof(error_code);
+			memcpy(ver_str_p, &error_code, sizeof(error_code));
+		}
+
+		cnt_len += sizeof(struct component_parameter_table) +
+			   comp_table_p->active_comp_ver_str_len;
+		ver_str_p += comp_table_p->active_comp_ver_str_len;
+		resp_p->comp_count++;
+	}
+
+	resp_p->completion_code = PLDM_SUCCESS;
+
+	*resp_len = sizeof(struct pldm_get_firmware_parameters_resp) + cnt_len;
+
+	return PLDM_SUCCESS;
+}
+
 static pldm_cmd_handler pldm_fw_update_cmd_tbl[] = {
+	{ PLDM_FW_UPDATE_CMD_CODE_GET_FIRMWARE_PARAMETERS, get_firmware_parameter },
 	{ PLDM_FW_UPDATE_CMD_CODE_REQUEST_UPDATE, request_update },
 	{ PLDM_FW_UPDATE_CMD_CODE_PASS_COMPONENT_TABLE, pass_component_table },
 	{ PLDM_FW_UPDATE_CMD_CODE_UPDATE_COMPONENT, update_component },

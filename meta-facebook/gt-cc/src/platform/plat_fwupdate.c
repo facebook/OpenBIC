@@ -20,15 +20,23 @@
 #include <logging/log.h>
 
 #include "libutil.h"
+#include "util_spi.h"
+#include "hal_jtag.h"
+#include "sensor.h"
+#include "i2c-mux-tca9548.h"
+#include "pex89000.h"
+#include "isl69259.h"
+#include "xdpe12284c.h"
+#include "mp2971.h"
+
+#include "pldm_firmware_update.h"
 #include "plat_fwupdate.h"
+#include "plat_pldm_monitor.h"
 #include "plat_gpio.h"
 #include "plat_i2c.h"
-#include "pldm_firmware_update.h"
-#include "sensor.h"
 #include "plat_sensor_table.h"
 #include "plat_hook.h"
-#include "i2c-mux-tca9548.h"
-#include "util_spi.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
@@ -38,18 +46,21 @@ static uint8_t pldm_pre_cpld_update(void *fw_update_param);
 static uint8_t pldm_pre_pex_update(void *fw_update_param);
 static uint8_t pldm_pex_update(void *fw_update_param);
 static uint8_t pldm_post_pex_update(void *fw_update_param);
+static bool get_fpga_user_code(void *info_p, uint8_t *buf, uint8_t *len);
+static bool get_pex_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
+static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 
 /* PLDM FW update table */
 // clang-format off
 pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
-	[COMP_ID_BIC] =  { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_BIC, 0x00, NULL, pldm_bic_update, NULL, COMP_UPDATE_VIA_SPI, COMP_ACT_SELF, pldm_bic_activate },
-	[COMP_ID_VR0] =  { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_VR0, 0x00, pldm_pre_vr_update, pldm_vr_update, pldm_post_vr_update, COMP_UPDATE_VIA_I2C, COMP_ACT_AC_PWR_CYCLE, NULL },
-	[COMP_ID_VR1] =  { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_VR1, 0x00, pldm_pre_vr_update, pldm_vr_update, pldm_post_vr_update, COMP_UPDATE_VIA_I2C, COMP_ACT_AC_PWR_CYCLE, NULL },
-	[COMP_ID_PEX0] = { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX0, 0x00, pldm_pre_pex_update, pldm_pex_update, pldm_post_pex_update, COMP_UPDATE_VIA_SPI, COMP_ACT_AC_PWR_CYCLE, NULL },
-	[COMP_ID_PEX1] = { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX1, 0x00, pldm_pre_pex_update, pldm_pex_update, pldm_post_pex_update, COMP_UPDATE_VIA_SPI, COMP_ACT_AC_PWR_CYCLE, NULL },
-	[COMP_ID_PEX2] = { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX2, 0x00, pldm_pre_pex_update, pldm_pex_update, pldm_post_pex_update, COMP_UPDATE_VIA_SPI, COMP_ACT_AC_PWR_CYCLE, NULL },
-	[COMP_ID_PEX3] = { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX3, 0x00, pldm_pre_pex_update, pldm_pex_update, pldm_post_pex_update, COMP_UPDATE_VIA_SPI, COMP_ACT_AC_PWR_CYCLE, NULL },
-	[COMP_ID_CPLD] = { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_CPLD, 0x00, pldm_pre_cpld_update, pldm_cpld_update, NULL, COMP_UPDATE_VIA_I2C, COMP_ACT_AC_PWR_CYCLE, NULL },
+	[COMP_ID_BIC] =  { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_BIC, 0x00, NULL, pldm_bic_update, NULL, COMP_UPDATE_VIA_SPI, COMP_ACT_SELF, pldm_bic_activate, NULL },
+	[COMP_ID_VR0] =  { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_VR0, 0x00, pldm_pre_vr_update, pldm_vr_update, pldm_post_vr_update, COMP_UPDATE_VIA_I2C, COMP_ACT_AC_PWR_CYCLE, NULL, get_vr_fw_version },
+	[COMP_ID_VR1] =  { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_VR1, 0x00, pldm_pre_vr_update, pldm_vr_update, pldm_post_vr_update, COMP_UPDATE_VIA_I2C, COMP_ACT_AC_PWR_CYCLE, NULL, get_vr_fw_version },
+	[COMP_ID_PEX0] = { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX0, 0x00, pldm_pre_pex_update, pldm_pex_update, pldm_post_pex_update, COMP_UPDATE_VIA_SPI, COMP_ACT_AC_PWR_CYCLE, NULL, get_pex_fw_version },
+	[COMP_ID_PEX1] = { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX1, 0x00, pldm_pre_pex_update, pldm_pex_update, pldm_post_pex_update, COMP_UPDATE_VIA_SPI, COMP_ACT_AC_PWR_CYCLE, NULL, get_pex_fw_version },
+	[COMP_ID_PEX2] = { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX2, 0x00, pldm_pre_pex_update, pldm_pex_update, pldm_post_pex_update, COMP_UPDATE_VIA_SPI, COMP_ACT_AC_PWR_CYCLE, NULL, get_pex_fw_version },
+	[COMP_ID_PEX3] = { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX3, 0x00, pldm_pre_pex_update, pldm_pex_update, pldm_post_pex_update, COMP_UPDATE_VIA_SPI, COMP_ACT_AC_PWR_CYCLE, NULL, get_pex_fw_version },
+	[COMP_ID_CPLD] = { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_CPLD, 0x00, pldm_pre_cpld_update, pldm_cpld_update, NULL, COMP_UPDATE_VIA_I2C, COMP_ACT_AC_PWR_CYCLE, NULL, get_fpga_user_code },
 };
 // clang-format on
 
@@ -197,4 +208,188 @@ static uint8_t pldm_post_pex_update(void *fw_update_param)
 	}
 
 	return 0;
+}
+
+static bool get_fpga_user_code(void *info_p, uint8_t *buf, uint8_t *len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(buf, false);
+	CHECK_NULL_ARG_WITH_RETURN(len, false);
+	ARG_UNUSED(info_p);
+
+	uint8_t tmp_buf[4] = { 0 };
+	uint8_t ir_value = 0xc0;
+	uint8_t dr_value = 0x00;
+	const struct device *jtag_dev;
+
+	jtag_dev = device_get_binding("JTAG0");
+
+	if (!jtag_dev) {
+		LOG_ERR("JTAG device not found");
+		return false;
+	}
+
+	gpio_set(JTAG_BIC_EN, GPIO_HIGH);
+
+	if (jtag_tap_set(jtag_dev, TAP_RESET))
+		return false;
+
+	k_msleep(10);
+
+	if (jtag_ir_scan(jtag_dev, 8, &ir_value, tmp_buf, TAP_IDLE) ||
+	    jtag_dr_scan(jtag_dev, 32, &dr_value, tmp_buf, TAP_IDLE))
+		return false;
+
+	gpio_set(JTAG_BIC_EN, GPIO_LOW);
+
+	*(int *)tmp_buf = sys_cpu_to_be32(*(int *)&tmp_buf);
+	*len = bin2hex(tmp_buf, 4, buf, 8);
+
+	return true;
+}
+
+static bool get_pex_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(buf, false);
+	CHECK_NULL_ARG_WITH_RETURN(len, false);
+	CHECK_NULL_ARG_WITH_RETURN(info_p, false);
+
+	pldm_fw_update_info_t *p = (pldm_fw_update_info_t *)info_p;
+
+	if ((p->comp_identifier < COMP_ID_PEX0) || (p->comp_identifier > COMP_ID_PEX3)) {
+		LOG_ERR("Unsupport PEX component ID(%d)", p->comp_identifier);
+		return false;
+	}
+
+	/* Only can be read when DC is on */
+	if (!is_mb_dc_on()) {
+		uint8_t dc_off_error_code[] = { 'E', 'R', 'R', 'O', 'R', ':', '8' };
+		memcpy(buf, dc_off_error_code, sizeof(dc_off_error_code));
+		*len = sizeof(dc_off_error_code);
+		return true;
+	}
+	/* Physical Layer User Test Patterns, Byte 0 Register */
+	int reading = 0x6080020c;
+	uint8_t sensor_idx = p->comp_identifier - COMP_ID_PEX0;
+	uint8_t pex_sensor_num = pex_sensor_num_table[sensor_idx];
+	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[pex_sensor_num]];
+
+	if (!cfg) {
+		LOG_ERR("The pointer of the sensor configuration is NULL");
+		return false;
+	}
+
+	uint8_t unit_idx = ((pex89000_unit *)(cfg->priv_data))->idx;
+
+	if (pex_access_engine(cfg->port, cfg->target_addr, unit_idx, pex_access_register,
+			      &reading)) {
+		return false;
+	}
+
+	/* Change version register to SBR because the old PEX firmware did not fill in version information at register 0x6080020c yet */
+	if (((reading & 0xFF) == sensor_idx) && ((reading >> 8) & 0xFF) == 0xCC) {
+		if (pex_access_engine(cfg->port, cfg->target_addr, unit_idx, pex_access_sbr_ver,
+				      &reading)) {
+			return false;
+		}
+	}
+
+	uint8_t tmp_buf[4] = { 0 };
+	uint8_t idx = 0;
+	uint8_t i;
+
+	memcpy(tmp_buf, &reading, sizeof(reading));
+	*(int *)tmp_buf = sys_cpu_to_be32(*(int *)&tmp_buf);
+
+	for (i = 0; i < ARRAY_SIZE(tmp_buf) - 1; i++) {
+		idx += bin2hex(&tmp_buf[i], 1, &buf[idx], 2);
+		buf[idx++] = '.';
+	}
+
+	idx += bin2hex(&tmp_buf[i], 1, &buf[idx], 2);
+
+	*len = idx;
+
+	return true;
+}
+
+static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(info_p, false);
+	CHECK_NULL_ARG_WITH_RETURN(buf, false);
+	CHECK_NULL_ARG_WITH_RETURN(len, false);
+
+	pldm_fw_update_info_t *p = (pldm_fw_update_info_t *)info_p;
+
+	if ((p->comp_identifier != COMP_ID_VR0) && (p->comp_identifier != COMP_ID_VR1)) {
+		LOG_ERR("Unsupport VR component ID(%d)", p->comp_identifier);
+		return false;
+	}
+
+	bool ret = false;
+	uint8_t sensor_num = ((p->comp_identifier == COMP_ID_VR0) ? SENSOR_NUM_PEX_0_VR_TEMP :
+								    SENSOR_NUM_PEX_2_VR_TEMP);
+	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+
+	if (!cfg) {
+		LOG_ERR("The pointer of the sensor configuration is NULL");
+		return ret;
+	}
+
+	if (cfg->pre_sensor_read_hook) {
+		if (!cfg->pre_sensor_read_hook(cfg->num, cfg->pre_sensor_read_args)) {
+			LOG_ERR("The VR%d pre-reading hook function failed",
+				(sensor_num == SENSOR_NUM_PEX_0_VR_TEMP) ? 0 : 1);
+			goto post_hook_and_ret;
+		}
+	}
+
+	uint8_t type = get_vr_type();
+	uint32_t version;
+	switch (type) {
+	case VR_RNS_ISL69259: {
+		uint8_t mode;
+
+		if (!isl69259_get_raa_hex_mode(cfg->port, cfg->target_addr, &mode)) {
+			LOG_ERR("Get VR ISL69259 raa hex mode failed");
+			goto post_hook_and_ret;
+		}
+
+		if (!isl69259_get_raa_crc(cfg->port, cfg->target_addr, mode, &version)) {
+			LOG_ERR("The VR ISL69259 version reading failed");
+			goto post_hook_and_ret;
+		}
+		break;
+	}
+	case VR_INF_XDPE12284:
+		if (!xdpe12284c_get_checksum(cfg->port, cfg->target_addr, (uint8_t *)&version)) {
+			LOG_ERR("The VR XDPE12284 version reading failed");
+			goto post_hook_and_ret;
+		}
+		break;
+	case VR_MPS_MPS2971:
+		if (!mp2971_get_checksum(cfg->port, cfg->target_addr, &version)) {
+			LOG_ERR("The VR MPS2971 version reading failed");
+			goto post_hook_and_ret;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport VR type(%d)", type);
+		goto post_hook_and_ret;
+	}
+
+	if (type != VR_INF_XDPE12284)
+		version = sys_cpu_to_be32(version);
+
+	*len = bin2hex((uint8_t *)&version, 4, buf, 8);
+	ret = true;
+
+post_hook_and_ret:
+	if (cfg->post_sensor_read_hook) {
+		if (!cfg->post_sensor_read_hook(sensor_num, cfg->post_sensor_read_args, NULL)) {
+			LOG_ERR("The VR%d post-reading hook function failed",
+				(sensor_num == SENSOR_NUM_PEX_0_VR_TEMP) ? 0 : 1);
+		}
+	}
+
+	return ret;
 }

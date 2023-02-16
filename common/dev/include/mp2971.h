@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#ifndef mp2971_H
-#define mp2971_H
+#ifndef MP2971_H
+#define MP2971_H
 
 #include "stdint.h"
 
 bool mp2971_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff);
+bool mp2971_get_checksum(uint8_t bus, uint8_t addr, uint32_t *checksum);
 
 #endif
