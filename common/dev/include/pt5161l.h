@@ -17,6 +17,19 @@
 #ifndef PT5161L_H
 #define PT5161L_H
 
+#include "hal_i2c.h"
+
+#define PT5161L_MAIN_MICRO_FW_INFO (96 * 1024 - 128)
+#define PT5161L_MM_FW_VERSION_MAJOR 0
+#define PT5161L_MM_FW_VERSION_MINOR 1
+#define PT5161L_MM_FW_VERSION_BUILD 2
+#define PT5161L_MAIN_SRAM_DMEM_OFFSET (64 * 1024)
+#define PT5161L_TG_RD_LOC_IND_SRAM 0x16
 #define PT5161L_TEMP_OFFSET 0x42c
+#define PT5161L_MAIN_MICRO_INDIRECT 0xd99
+
+#define PT5161L_MUTEX_LOCK_MS 1000
+
+bool get_retimer_fw_version(I2C_MSG *msg, uint8_t *version);
 
 #endif
