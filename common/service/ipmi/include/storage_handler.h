@@ -46,6 +46,8 @@ struct ipmi_storage_add_sel_resp {
 	uint8_t record_id[2];
 } __attribute__((__packed__));
 
+uint8_t get_add_sel_target_interface();
+
 void STORAGE_GET_FRUID_INFO(ipmi_msg *msg);
 void STORAGE_READ_FRUID_DATA(ipmi_msg *msg);
 void STORAGE_WRITE_FRUID_DATA(ipmi_msg *msg);

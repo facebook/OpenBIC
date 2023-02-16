@@ -25,6 +25,11 @@
 
 LOG_MODULE_DECLARE(ipmi);
 
+__weak uint8_t get_add_sel_target_interface()
+{
+	return BMC_IPMB;
+}
+
 __weak void STORAGE_GET_FRUID_INFO(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -273,7 +278,7 @@ __weak void STORAGE_ADD_SEL(ipmi_msg *msg)
 
 	memset(add_sel_msg, 0, sizeof(ipmi_msg));
 	add_sel_msg->InF_source = SELF;
-	add_sel_msg->InF_target = BMC_IPMB;
+	add_sel_msg->InF_target = get_add_sel_target_interface();
 	add_sel_msg->netfn = NETFN_STORAGE_REQ;
 	add_sel_msg->cmd = CMD_STORAGE_ADD_SEL;
 	add_sel_msg->data_len = msg->data_len;

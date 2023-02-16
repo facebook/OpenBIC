@@ -21,6 +21,7 @@
 #include "sensor.h"
 
 #define SENSOR_NUM_POWER_ERROR 0x56
+#define SENSOR_NUM_SYS_STATUS 0x46
 
 #define EXPA_RETIMER_ADDR (0x46 >> 1)
 #define TMP75_EXPA_TEMP_ADDR (0x94 >> 1)
