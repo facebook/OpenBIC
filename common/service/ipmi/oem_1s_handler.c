@@ -610,11 +610,6 @@ __weak void OEM_1S_READ_FW_IMAGE(ipmi_msg *msg)
 		return;
 	}
 
-	if (get_DC_status()) {
-		msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
-		return;
-	}
-
 	uint8_t target = msg->data[0];
 	uint32_t offset =
 		((msg->data[4] << 24) | (msg->data[3] << 16) | (msg->data[2] << 8) | msg->data[1]);
