@@ -19,4 +19,13 @@
 
 #include <stdint.h>
 
+#define PRESS_FIO_BUTTON_DELAY_MS 4000
+
+enum BUTTON_OPTIONAL {
+	OPTIONAL_AC_OFF = 0x01,
+};
+
+void ISR_FIO_BUTTON();
+void fio_power_button_work_handler();
+
 #endif

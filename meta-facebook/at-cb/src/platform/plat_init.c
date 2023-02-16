@@ -22,6 +22,7 @@
 #include "plat_mctp.h"
 #include "plat_class.h"
 #include "plat_i2c_target.h"
+#include "util_worker.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -38,6 +39,7 @@ void pal_pre_init()
 	}
 
 	check_asic_card_status();
+	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY + 1); // work queue for low priority jobs
 }
 
 void pal_post_init()
