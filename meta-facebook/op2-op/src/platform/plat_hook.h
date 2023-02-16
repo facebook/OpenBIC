@@ -41,5 +41,6 @@ extern struct k_mutex i2c_hub_mutex;
 
 bool pre_i2c_bus_read(uint8_t sensor_num, void *args);
 bool post_i2c_bus_read(uint8_t sensor_num, void *args, int *reading);
+bool pre_retimer_read(uint8_t sensor_num, void *args);
 
 #endif

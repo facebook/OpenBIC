@@ -25,6 +25,8 @@
 #include "plat_hook.h"
 #include "plat_sensor_table.h"
 
+#define RETIMER_INIT_RETRY_COUNT 3
+
 LOG_MODULE_DECLARE(sensor);
 K_MUTEX_DEFINE(i2c_hub_mutex);
 
@@ -103,4 +105,30 @@ bool post_i2c_bus_read(uint8_t sensor_num, void *args, int *reading)
 	}
 
 	return true;
+}
+
+bool pre_retimer_read(uint8_t sensor_num, void *args)
+{
+	ARG_UNUSED(args);
+
+	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+	pt5161l_init_arg *init_arg = (pt5161l_init_arg *)cfg->init_args;
+	static uint8_t check_init_count = 0;
+	bool ret = true;
+
+	if (init_arg->is_init == false) {
+		if (check_init_count >= RETIMER_INIT_RETRY_COUNT) {
+			LOG_ERR("retimer initial fail reach max retry");
+			return false;
+		}
+
+		check_init_count += 1;
+		ret = init_drive_type_delayed(cfg);
+		if (ret == false) {
+			LOG_ERR("retimer initial fail");
+			return ret;
+		}
+	}
+
+	return ret;
 }
