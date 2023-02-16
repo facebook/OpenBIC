@@ -36,5 +36,8 @@ uint8_t pal_xdpe12284c_init(sensor_cfg *cfg);
 uint8_t pal_xdpe12284c_read(sensor_cfg *cfg, int *reading);
 bool cxl_single_ioexp_init(uint8_t ioexp_name);
 int cxl_ioexp_init(uint8_t cxl_channel);
+uint8_t pal_pm8702_read(sensor_cfg *cfg, int *reading);
+uint8_t pal_pm8702_init(sensor_cfg *cfg);
+void cxl_mb_status_init(uint8_t cxl_id);
 
 #endif

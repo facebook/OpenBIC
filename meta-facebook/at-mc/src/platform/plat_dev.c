@@ -29,6 +29,10 @@
 #include "common_i2c_mux.h"
 #include "plat_sensor_table.h"
 #include <logging/log.h>
+#include "plat_def.h"
+#include "pm8702.h"
+#include "cci.h"
+#include "plat_mctp.h"
 
 LOG_MODULE_REGISTER(plat_dev);
 
@@ -85,6 +89,9 @@ bool pal_sensor_drive_init(sensor_cfg *cfg, uint8_t *init_status)
 	case sensor_dev_xdpe12284c:
 		*init_status = pal_xdpe12284c_init(cfg);
 		break;
+	case sensor_dev_pm8702:
+		*init_status = pal_pm8702_init(cfg);
+		break;
 	default:
 		LOG_ERR("Invalid initial drive type: 0x%x", cfg->type);
 		return false;
@@ -117,6 +124,9 @@ bool pal_sensor_drive_read(sensor_cfg *cfg, int *reading, uint8_t *sensor_status
 		break;
 	case sensor_dev_xdpe12284c:
 		*sensor_status = pal_xdpe12284c_read(cfg, reading);
+		break;
+	case sensor_dev_pm8702:
+		*sensor_status = pal_pm8702_read(cfg, reading);
 		break;
 	default:
 		LOG_ERR("Invalid reading drive type: 0x%x", cfg->type);
@@ -713,6 +723,74 @@ uint8_t pal_xdpe12284c_init(sensor_cfg *cfg)
 	return SENSOR_INIT_SUCCESS;
 }
 
+void cxl_mb_status_init(uint8_t cxl_id)
+{
+	/** Initial mb reset pin status by checking the IO expander on CXL module **/
+	int ret = 0;
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+	mux_config meb_mux = { 0 };
+	mux_config cxl_mux = { 0 };
+
+	/** MEB mux for cxl channels **/
+	meb_mux.bus = MEB_CXL_BUS;
+	meb_mux.target_addr = CXL_FRU_MUX0_ADDR;
+	meb_mux.channel = BIT(cxl_id);
+
+	/** CXL mux for sensor channels **/
+	cxl_mux.bus = MEB_CXL_BUS;
+	cxl_mux.target_addr = CXL_FRU_MUX1_ADDR;
+	cxl_mux.channel = CXL_IOEXP_MUX_CHANNEL;
+
+	/** Mutex lock bus **/
+	struct k_mutex *meb_mutex = get_i2c_mux_mutex(meb_mux.bus);
+	if (k_mutex_lock(meb_mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS))) {
+		LOG_ERR("mutex locked failed bus%u", meb_mux.bus);
+		return;
+	}
+
+	/** Enable mux channel **/
+	if (set_mux_channel(meb_mux) == false) {
+		k_mutex_unlock(meb_mutex);
+		return;
+	}
+
+	if (set_mux_channel(cxl_mux) == false) {
+		k_mutex_unlock(meb_mutex);
+		return;
+	}
+
+	/** Read cxl U15 ioexp input port0 status **/
+	msg.bus = MEB_CXL_BUS;
+	msg.target_addr = CXL_IOEXP_U15_ADDR;
+	msg.rx_len = 1;
+	msg.tx_len = 1;
+	msg.data[0] = TCA9555_INPUT_PORT_REG_0;
+
+	ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Unable to read ioexp bus: %u addr: 0x%02x", msg.bus, msg.target_addr);
+		k_mutex_unlock(meb_mutex);
+		return;
+	}
+
+	if ((msg.data[0] & CXL_IOEXP_MB_RESET_BIT) != 0) {
+		/** CXL mux for cxl channels **/
+		cxl_mux.bus = MEB_CXL_BUS;
+		cxl_mux.target_addr = CXL_FRU_MUX1_ADDR;
+		cxl_mux.channel = CXL_CONTROLLER_MUX_CHANNEL;
+
+		if (set_mux_channel(cxl_mux) == false) {
+			k_mutex_unlock(meb_mutex);
+			return;
+		}
+
+		set_cxl_endpoint(MCTP_EID_CXL, cxl_id);
+	}
+
+	k_mutex_unlock(meb_mutex);
+}
+
 bool cxl_single_ioexp_init(uint8_t ioexp_name)
 {
 	int ret = 0;
@@ -886,4 +964,57 @@ int cxl_ioexp_init(uint8_t cxl_channel)
 	k_mutex_unlock(meb_mutex);
 
 	return 0;
+}
+
+uint8_t pal_pm8702_read(sensor_cfg *cfg, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		return SENSOR_UNSPECIFIED_ERROR;
+	}
+	uint8_t port = cfg->port;
+	uint8_t address = cfg->target_addr;
+	uint8_t pm8702_access = cfg->offset;
+
+	mctp *mctp_inst = NULL;
+	mctp_ext_params ext_params = { 0 };
+	sensor_val *sval = (sensor_val *)reading;
+	if (get_mctp_info_by_eid(port, &mctp_inst, &ext_params) == false) {
+		return SENSOR_UNSPECIFIED_ERROR;
+	}
+
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, SENSOR_UNSPECIFIED_ERROR);
+
+	switch (pm8702_access) {
+	case chip_temp:
+		if (cci_get_chip_temp(mctp_inst, ext_params, &sval->integer) == false) {
+			return SENSOR_NOT_ACCESSIBLE;
+		}
+		sval->fraction = 0;
+		break;
+	case dimm_temp:
+		if (pm8702_get_dimm_temp(mctp_inst, ext_params, address, &sval->integer,
+					 &sval->fraction) == false) {
+			return SENSOR_NOT_ACCESSIBLE;
+		}
+		break;
+	default:
+		LOG_ERR("Invalid access offset %d", pm8702_access);
+		return SENSOR_PARAMETER_NOT_VALID;
+	}
+
+	return SENSOR_READ_SUCCESS;
+}
+
+uint8_t pal_pm8702_init(sensor_cfg *cfg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+
+	return SENSOR_INIT_SUCCESS;
 }

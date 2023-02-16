@@ -108,6 +108,13 @@
 #define CXL_VR_VDDQCD_ADDR (0xB4 >> 1)
 #define CXL_U8_LTC2991_ADDR (0x90 >> 1)
 #define CXL_U9_LTC2991_ADDR (0x98 >> 1)
+#define CXL_DIMMA_TEMP_ADDR 0x50
+#define CXL_DIMMB_TEMP_ADDR 0x51
+#define CXL_DIMMC_TEMP_ADDR 0x52
+#define CXL_DIMMD_TEMP_ADDR 0x53
+
+#define CHIP_TEMP_OFFSET 0x00
+#define DIMM_TEMP_OFFSET 0x01
 
 /** PCIE card sensor number **/
 /* E1.S */
@@ -150,6 +157,12 @@
 #define SENSOR_NUM_PWR_PVDDQ_AB 0x1E
 #define SENSOR_NUM_PWR_PVDDQ_CD 0x1F
 
+#define SENSOR_NUM_TEMP_CXL 0x20
+#define SENSOR_NUM_TEMP_CXL_DIMMA 0x21
+#define SENSOR_NUM_TEMP_CXL_DIMMB 0x22
+#define SENSOR_NUM_TEMP_CXL_DIMMC 0x23
+#define SENSOR_NUM_TEMP_CXL_DIMMD 0x24
+
 extern sensor_cfg plat_e1s_1_12_sensor_config[];
 extern sensor_cfg plat_e1s_13_14_sensor_config[];
 extern sensor_cfg plat_cxl_sensor_config[];
@@ -159,6 +172,7 @@ extern const int CXL_SENSOR_CONFIG_SIZE;
 void load_sensor_config(void);
 bool is_dc_access(uint8_t sensor_num);
 bool is_e1s_access(uint8_t sensor_num);
+bool is_cxl_access(uint8_t pcie_card_id);
 struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus);
 bool get_cxl_sensor_config_index(uint8_t sensor_num, uint8_t *index);
 bool get_pcie_card_mux_config(uint8_t dev_type, uint8_t card_id, uint8_t sensor_num,

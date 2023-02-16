@@ -277,3 +277,23 @@ int get_pcie_device_type(uint8_t card_id, uint8_t device_id, uint8_t *device_typ
 
 	return 0;
 }
+
+bool is_cxl_present()
+{
+	int ret = -1;
+	uint8_t index = 0;
+	uint8_t card_type = 0;
+
+	for (index = 0; index < CARD_12_INDEX; ++index) {
+		ret = get_pcie_card_type(index, &card_type);
+		if (ret < 0) {
+			continue;
+		}
+
+		if (card_type == CXL_CARD) {
+			return true;
+		}
+	}
+
+	return false;
+}

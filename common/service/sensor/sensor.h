@@ -135,9 +135,9 @@ enum SENSOR_DEV {
 #ifdef ENABLE_PM8702
 	sensor_dev_pm8702 = 0x22,
 #endif
-	sensor_dev_ltc2991 = 0x22,
-	sensor_dev_sq52205 = 0x23,
-	sensor_dev_emc1412 = 0x24,
+	sensor_dev_ltc2991 = 0x23,
+	sensor_dev_sq52205 = 0x24,
+	sensor_dev_emc1412 = 0x25,
 	sensor_dev_i3c_dimm = 0x26,
 	sensor_dev_pt5161l = 0x27,
 	sensor_dev_max

@@ -16,6 +16,7 @@
 
 #ifndef PM8702_H
 #define PM8702_H
+#include "mctp.h"
 #include "plat_def.h"
 
 #ifdef ENABLE_PM8702
