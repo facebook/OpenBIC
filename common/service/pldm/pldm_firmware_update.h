@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef PLDM_FIRMWARE_UPDATE_H
-#define PLDM_FIRMWARE_UPDATE_H
+#ifndef _PLDM_FIRMWARE_UPDATE_H_
+#define _PLDM_FIRMWARE_UPDATE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -82,6 +82,18 @@ enum pldm_firmware_update_completion_codes {
 };
 
 /**
+ * PLDM Frimware update string type 
+ */
+enum pldm_firmware_update_string_type {
+	PLDM_COMP_VER_STR_TYPE_UNKNOWN = 0,
+	PLDM_COMP_ASCII = 1,
+	PLDM_COMP_UTF_8 = 2,
+	PLDM_COMP_UTF_16 = 3,
+	PLDM_COMP_UTF_16LE = 4,
+	PLDM_COMP_UTF_16BE = 5,
+};
+
+/**
  * PLDM Frimware update state 
  */
 enum pldm_firmware_update_state {
@@ -107,22 +119,23 @@ enum pldm_firmware_update_aux_state {
 /**
  * PLDM component classification
  */
-enum { COMP_CLASS_TYPE_UNKNOWN = 0x0000,
-       COMP_CLASS_TYPE_OTHER,
-       COMP_CLASS_TYPE_DRIVER,
-       COMP_CLASS_TYPE_CFG_SW,
-       COMP_CLASS_TYPE_APP_SW,
-       COMP_CLASS_TYPE_INSTR,
-       COMP_CLASS_TYPE_FW_BIOS,
-       COMP_CLASS_TYPE_DIAG_SW,
-       COMP_CLASS_TYPE_OS,
-       COMP_CLASS_TYPE_MW,
-       COMP_CLASS_TYPE_FW,
-       COMP_CLASS_TYPE_BIOS_FC,
-       COMP_CLASS_TYPE_SP_SV_P,
-       COMP_CLASS_TYPE_SW_BUNDLE,
-       COMP_CLASS_TYPE_DOWNSTREAM = 0xFFFF,
-       COMP_CLASS_TYPE_MAX = 0x10000,
+enum {
+	COMP_CLASS_TYPE_UNKNOWN = 0x0000,
+	COMP_CLASS_TYPE_OTHER,
+	COMP_CLASS_TYPE_DRIVER,
+	COMP_CLASS_TYPE_CFG_SW,
+	COMP_CLASS_TYPE_APP_SW,
+	COMP_CLASS_TYPE_INSTR,
+	COMP_CLASS_TYPE_FW_BIOS,
+	COMP_CLASS_TYPE_DIAG_SW,
+	COMP_CLASS_TYPE_OS,
+	COMP_CLASS_TYPE_MW,
+	COMP_CLASS_TYPE_FW,
+	COMP_CLASS_TYPE_BIOS_FC,
+	COMP_CLASS_TYPE_SP_SV_P,
+	COMP_CLASS_TYPE_SW_BUNDLE,
+	COMP_CLASS_TYPE_DOWNSTREAM = 0xFFFF,
+	COMP_CLASS_TYPE_MAX = 0x10000,
 };
 
 /** 
@@ -219,7 +232,7 @@ typedef enum fd_update_interface {
 // typedef uint8_t (*pldm_fwupdate_func)(uint16_t comp_id, void *mctp_p, void *ext_params);
 typedef uint8_t (*pldm_fwupdate_func)(void *fw_update_param);
 typedef uint8_t (*pldm_act_func)(void *arg);
-
+typedef bool (*pldm_get_fw_version_fn)(void *info_p, uint8_t *buf, uint8_t *len);
 typedef struct pldm_fw_update_param {
 	uint16_t comp_id;
 	char *comp_version_str;
@@ -244,6 +257,7 @@ typedef struct pldm_fw_update_info {
 	fd_update_interface_t inf;
 	uint16_t activate_method;
 	pldm_act_func self_act_func;
+	pldm_get_fw_version_fn get_fw_version_fn;
 } pldm_fw_update_info_t;
 extern pldm_fw_update_info_t *comp_config;
 extern uint8_t comp_config_count;
@@ -392,6 +406,44 @@ struct pldm_apply_complete_req {
 	uint16_t compActivationMethodsModification;
 } __attribute__((packed));
 
+struct pldm_get_firmware_parameters_resp {
+	uint8_t completion_code;
+	union {
+		struct {
+			uint8_t fail_recovery : 1;
+			uint8_t fail_retry : 1;
+			uint8_t func_during_update : 1;
+			uint8_t partial_update : 1;
+			uint8_t update_mode_restrict : 4;
+			/* Bit [31:8] reserved */
+			uint8_t : 8;
+			uint16_t : 16;
+		};
+		uint32_t capabilities_during_update;
+	};
+	uint16_t comp_count;
+	uint8_t active_comp_image_set_ver_str_type;
+	uint8_t active_comp_image_set_ver_str_len;
+	uint8_t pending_comp_image_set_ver_str_type;
+	uint8_t pending_comp_image_set_ver_str_len;
+} __attribute__((packed));
+
+struct component_parameter_table {
+	uint16_t comp_classification;
+	uint16_t comp_identifier;
+	uint8_t comp_classification_index;
+	uint32_t active_comp_comparison_stamp;
+	uint8_t active_comp_ver_str_type;
+	uint8_t active_comp_ver_str_len;
+	uint8_t active_comp_release_date[8];
+	uint32_t pending_comp_comparison_stamp;
+	uint8_t pending_comp_ver_str_type;
+	uint8_t pending_comp_ver_str_len;
+	uint8_t pending_comp_release_date[8];
+	uint16_t comp_activation_methods;
+	uint32_t capabilities_during_update;
+} __attribute__((packed));
+
 uint8_t pldm_fw_update_handler_query(uint8_t code, void **ret_fn);
 uint16_t pldm_fw_update_read(void *mctp_p, enum pldm_firmware_update_commands cmd, uint8_t *req,
 			     uint16_t req_len, uint8_t *rbuf, uint16_t rbuf_len, void *ext_params);
@@ -404,4 +456,4 @@ uint8_t pldm_bic_activate(void *arg);
 }
 #endif
 
-#endif // End of PLDM_FIRMWARE_UPDATE_H
+#endif /* _PLDM_FIRMWARE_UPDATE_H_ */

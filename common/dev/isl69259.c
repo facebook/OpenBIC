@@ -52,9 +52,10 @@ LOG_MODULE_REGISTER(isl69259);
 #define VR_RAA_REG_GEN2_REMAIN_WR 0xC2
 #define VR_RAA_REG_GEN2_PROG_STATUS 0x07
 
-enum { RAA_GEN2,
-       RAA_GEN3_LEGACY,
-       RAA_GEN3_PRODUCTION,
+enum {
+	RAA_GEN2,
+	RAA_GEN3_LEGACY,
+	RAA_GEN3_PRODUCTION,
 };
 
 typedef struct raa_config {
@@ -163,7 +164,7 @@ static bool get_raa_remaining_wr(uint8_t bus, uint8_t addr, uint8_t mode, uint16
 	return true;
 }
 
-static bool get_raa_crc(uint8_t bus, uint8_t addr, uint8_t mode, uint32_t *crc)
+bool isl69259_get_raa_crc(uint8_t bus, uint8_t addr, uint8_t mode, uint32_t *crc)
 {
 	CHECK_NULL_ARG_WITH_RETURN(crc, false);
 
@@ -239,7 +240,7 @@ static bool get_raa_dev_rev(uint8_t bus, uint8_t addr, uint32_t *rev, uint8_t mo
 	return true;
 }
 
-static bool get_raa_hex_mode(uint8_t bus, uint8_t addr, uint8_t *mode)
+bool isl69259_get_raa_hex_mode(uint8_t bus, uint8_t addr, uint8_t *mode)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mode, false);
 
@@ -325,7 +326,7 @@ static bool check_dev_support(uint8_t bus, uint8_t addr, raa_config_t *raa_info)
 	CHECK_NULL_ARG_WITH_RETURN(raa_info, false);
 
 	// check mode
-	if (get_raa_hex_mode(bus, addr, &raa_info->mode) == false) {
+	if (isl69259_get_raa_hex_mode(bus, addr, &raa_info->mode) == false) {
 		return false;
 	}
 
@@ -343,7 +344,7 @@ static bool check_dev_support(uint8_t bus, uint8_t addr, raa_config_t *raa_info)
 	}
 
 	// get device crc
-	if (get_raa_crc(bus, addr, raa_info->mode, &raa_info->crc) == false) {
+	if (isl69259_get_raa_crc(bus, addr, raa_info->mode, &raa_info->crc) == false) {
 		return false;
 	}
 
@@ -362,11 +363,10 @@ static bool check_dev_support(uint8_t bus, uint8_t addr, raa_config_t *raa_info)
 	}
 
 	LOG_INF("RAA device(bus: %d addr: 0x%x) info:", bus, addr);
-	LOG_INF("* Mode:             %s", raa_info->mode == RAA_GEN2 ?
-						  "raa gen2" :
-						  raa_info->mode == RAA_GEN3_LEGACY ?
-						  "raa gen3-lagacy" :
-						  "raa gen3-production");
+	LOG_INF("* Mode:             %s", raa_info->mode == RAA_GEN2 ? "raa gen2" :
+					  raa_info->mode == RAA_GEN3_LEGACY ?
+								       "raa gen3-lagacy" :
+								       "raa gen3-production");
 	LOG_INF("* ID:               0x%x", raa_info->devid);
 	LOG_INF("* Revision:         0x%x", raa_info->rev);
 	LOG_INF("* CRC:              0x%x", raa_info->crc);
@@ -573,7 +573,8 @@ uint8_t isl69259_read(uint8_t sensor_num, int *reading)
 		/* 0.1 A/LSB, 2's complement */
 		ret = adjust_of_twos_complement(offset, &val);
 		if (ret == false) {
-			LOG_ERR("Adjust reading IOUT value failed - sensor number: 0x%x", sensor_num);
+			LOG_ERR("Adjust reading IOUT value failed - sensor number: 0x%x",
+				sensor_num);
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 
@@ -593,7 +594,8 @@ uint8_t isl69259_read(uint8_t sensor_num, int *reading)
 		/* 1 Watt/LSB, 2's complement */
 		ret = adjust_of_twos_complement(offset, &val);
 		if (ret == false) {
-			LOG_ERR("Adjust reading POUT value failed - sensor number: 0x%x", sensor_num);
+			LOG_ERR("Adjust reading POUT value failed - sensor number: 0x%x",
+				sensor_num);
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 

@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#ifndef isl69259_H
-#define isl69259_H
+#ifndef ISL69259_H
+#define ISL69259_H
 
 #include "stdint.h"
 
@@ -23,5 +22,7 @@
 #define ADJUST_IOUT_RANGE 2
 
 bool isl69259_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff);
+bool isl69259_get_raa_hex_mode(uint8_t bus, uint8_t addr, uint8_t *mode);
+bool isl69259_get_raa_crc(uint8_t bus, uint8_t addr, uint8_t mode, uint32_t *crc);
 
 #endif
