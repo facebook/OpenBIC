@@ -1252,6 +1252,14 @@ __weak void OEM_1S_GET_FW_SHA256(ipmi_msg *msg)
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			return;
 		}
+	} else if (target == PRoT_FLASH_UPDATE) {
+		int pos = pal_get_prot_flash_position();
+
+		if (pos == -1) {
+			msg->completion_code = CC_INVALID_PARAM;
+			return;
+		}
+		status = get_fw_sha256(&msg->data[0], offset, length, pos);
 	} else {
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
 		return;
