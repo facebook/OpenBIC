@@ -34,6 +34,14 @@ enum CARD_TYPE {
 	CARD_TYPE_UNKNOWN,
 };
 
+enum E1S_NUMBER {
+	E1S_0,
+	E1S_1,
+	E1S_2,
+	E1S_3,
+	E1S_4,
+};
+
 int init_platform_config();
 uint8_t get_card_type();
 uint8_t get_card_position();

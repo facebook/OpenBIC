@@ -103,5 +103,6 @@ bool e1s_power_off_handler(uint8_t initial_stage, e1s_power_control_gpio *e1s_gp
 			   uint8_t device_index);
 bool power_on_handler(uint8_t initial_stage);
 bool power_off_handler(uint8_t initial_stage);
+bool notify_cpld_e1s_present(uint8_t index, uint8_t present);
 
 #endif

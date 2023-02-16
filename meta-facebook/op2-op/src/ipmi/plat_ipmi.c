@@ -52,11 +52,13 @@ void OEM_1S_GET_SET_M2(ipmi_msg *msg)
 
 	switch (action) {
 	case DEVICE_POWER_OFF:
+		notify_cpld_e1s_present(device_index, GPIO_HIGH);
 		abort_e1s_power_thread(device_index);
 		e1s_power_off_thread(device_index);
 		msg->completion_code = CC_SUCCESS;
 		break;
 	case DEVICE_POWER_ON:
+		notify_cpld_e1s_present(device_index, GPIO_LOW);
 		abort_e1s_power_thread(device_index);
 		e1s_power_on_thread(device_index);
 		msg->completion_code = CC_SUCCESS;
