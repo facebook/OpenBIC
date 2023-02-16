@@ -45,6 +45,16 @@ LOG_MODULE_REGISTER(plat_dev);
 
 #define XDPE12284_VID_IDENTIFIER 1
 
+#define CXL_IOEXP_CONFIG_REG_DEFAULT_VAL 0xFF
+#define CXL_IOEXP_U14_CONFIG_0_REG_VAL 0xFF
+#define CXL_IOEXP_U14_CONFIG_1_REG_VAL 0xFF
+#define CXL_IOEXP_U15_CONFIG_0_REG_VAL 0x21
+#define CXL_IOEXP_U15_CONFIG_1_REG_VAL 0xFE
+#define CXL_IOEXP_U16_CONFIG_0_REG_VAL 0x84
+#define CXL_IOEXP_U16_CONFIG_1_REG_VAL 0x00
+#define CXL_IOEXP_U17_CONFIG_0_REG_VAL 0xFF
+#define CXL_IOEXP_U17_CONFIG_1_REG_VAL 0xFF
+
 enum XDPE12284_VID {
 	XDPE12284_VR12 = 1,
 	XDPE12284_VR13,
@@ -86,7 +96,7 @@ bool pal_sensor_drive_init(sensor_cfg *cfg, uint8_t *init_status)
 bool pal_sensor_drive_read(sensor_cfg *cfg, int *reading, uint8_t *sensor_status)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
-	CHECK_NULL_ARG_WITH_RETURN(reading, false)
+	CHECK_NULL_ARG_WITH_RETURN(reading, false);
 	CHECK_NULL_ARG_WITH_RETURN(sensor_status, false);
 
 	switch (cfg->type) {
@@ -758,6 +768,72 @@ bool cxl_single_ioexp_init(uint8_t ioexp_name)
 	return true;
 }
 
+bool cxl_single_ioexp_config_init(uint8_t ioexp_name)
+{
+	int ret = 0;
+	uint8_t retry = 5;
+	uint8_t tx_len = 2;
+	uint8_t ioexp_addr = 0;
+	uint8_t config_0_value = 0;
+	uint8_t config_1_value = 0;
+	uint8_t data[tx_len];
+	I2C_MSG msg = { 0 };
+	memset(data, 0, sizeof(uint8_t) * tx_len);
+
+	switch (ioexp_name) {
+	case IOEXP_U14:
+		ioexp_addr = CXL_IOEXP_U14_ADDR;
+		config_0_value = CXL_IOEXP_U14_CONFIG_0_REG_VAL;
+		config_1_value = CXL_IOEXP_U14_CONFIG_1_REG_VAL;
+		break;
+	case IOEXP_U15:
+		ioexp_addr = CXL_IOEXP_U15_ADDR;
+		config_0_value = CXL_IOEXP_U15_CONFIG_0_REG_VAL;
+		config_1_value = CXL_IOEXP_U15_CONFIG_1_REG_VAL;
+		break;
+	case IOEXP_U16:
+		ioexp_addr = CXL_IOEXP_U16_ADDR;
+		config_0_value = CXL_IOEXP_U16_CONFIG_0_REG_VAL;
+		config_1_value = CXL_IOEXP_U16_CONFIG_1_REG_VAL;
+		break;
+	case IOEXP_U17:
+		ioexp_addr = CXL_IOEXP_U17_ADDR;
+		config_0_value = CXL_IOEXP_U17_CONFIG_0_REG_VAL;
+		config_1_value = CXL_IOEXP_U17_CONFIG_1_REG_VAL;
+		break;
+	default:
+		LOG_ERR("CXL ioexp name: 0x%x is invalid", ioexp_name);
+		return false;
+	}
+
+	/** Write cxl ioexp config 0 register **/
+	data[0] = TCA9555_CONFIG_REG_0;
+	data[1] = config_0_value;
+	msg = construct_i2c_message(MEB_CXL_BUS, ioexp_addr, tx_len, data, 0);
+
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Unable to write ioexp config 0 register bus: %u addr: 0x%02x", msg.bus,
+			msg.target_addr);
+		return false;
+	}
+
+	/** Write cxl ioexp config 1 register **/
+	memset(&msg, 0, sizeof(I2C_MSG));
+	data[0] = TCA9555_CONFIG_REG_1;
+	data[1] = config_1_value;
+	msg = construct_i2c_message(MEB_CXL_BUS, ioexp_addr, tx_len, data, 0);
+
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Unable to write ioexp config 0 register bus: %u addr: 0x%02x", msg.bus,
+			msg.target_addr);
+		return false;
+	}
+
+	return true;
+}
+
 int cxl_ioexp_init(uint8_t cxl_channel)
 {
 	bool ret = false;
@@ -799,6 +875,12 @@ int cxl_ioexp_init(uint8_t cxl_channel)
 	cxl_single_ioexp_init(IOEXP_U15);
 	cxl_single_ioexp_init(IOEXP_U16);
 	cxl_single_ioexp_init(IOEXP_U17);
+
+	/** ALL ioexp config register initial **/
+	cxl_single_ioexp_config_init(IOEXP_U14);
+	cxl_single_ioexp_config_init(IOEXP_U15);
+	cxl_single_ioexp_config_init(IOEXP_U16);
+	cxl_single_ioexp_config_init(IOEXP_U17);
 
 	/** mutex unlock bus **/
 	k_mutex_unlock(meb_mutex);

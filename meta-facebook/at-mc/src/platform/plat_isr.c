@@ -178,8 +178,10 @@ int cxl_pe_reset_control()
 void check_ioexp_status()
 {
 	int ret = 0;
+	static bool is_device_reset = false;
 	uint8_t retry = 5;
 	uint8_t u17_input_port0_status = 0;
+	uint8_t u17_input_port1_status = 0;
 	I2C_MSG msg = { 0 };
 
 	/** Read cxl U17 ioexp input port0 status **/
@@ -211,12 +213,19 @@ void check_ioexp_status()
 		return;
 	}
 
+	u17_input_port1_status = msg.data[0];
+
 	/** Check CXL controller power good **/
 	if ((u17_input_port0_status & CXL_IOEXP_CONTROLLER_PWRGD_VAL) ==
-	    CXL_IOEXP_CONTROLLER_PWRGD_VAL) {
-		ret = cxl_device_reset();
-		if (ret != 0) {
-			LOG_ERR("CXL device reset fail");
+		    CXL_IOEXP_CONTROLLER_PWRGD_VAL &&
+	    (u17_input_port1_status & CXL_IOEXP_DIMM_PWRGD_VAL) == CXL_IOEXP_DIMM_PWRGD_VAL) {
+		if (is_device_reset != true) {
+			ret = cxl_device_reset();
+			if (ret != 0) {
+				LOG_ERR("CXL device reset fail");
+			}
+
+			is_device_reset = true;
 		}
 	}
 
