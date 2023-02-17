@@ -54,6 +54,26 @@ typedef enum {
 	HSC_LTC4286,
 } gt_hsc_type_t;
 
+enum GT_FIRMWARE_COMPONENT {
+	GT_COMPNT_VR0,
+	GT_COMPNT_VR1,
+	GT_COMPNT_BIC,
+	GT_COMPNT_PEX0,
+	GT_COMPNT_PEX1,
+	GT_COMPNT_PEX2,
+	GT_COMPNT_PEX3,
+	GT_COMPNT_CPLD,
+	GT_COMPNT_NIC0,
+	GT_COMPNT_NIC1,
+	GT_COMPNT_NIC2,
+	GT_COMPNT_NIC3,
+	GT_COMPNT_NIC4,
+	GT_COMPNT_NIC5,
+	GT_COMPNT_NIC6,
+	GT_COMPNT_NIC7,
+	GT_COMPNT_MAX,
+};
+
 bool get_adc_voltage(int channel, float *voltage);
 GT_STAGE_REVISION_ID get_stage_by_rev_id();
 uint8_t get_hsc_type();

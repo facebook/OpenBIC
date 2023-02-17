@@ -23,7 +23,6 @@ extern "C" {
 
 #include "pldm.h"
 
-#define GLOBAL_COMP_ID_BIC 0x0000
 #define MAX_FWUPDATE_RSP_BUF_SIZE 256
 #define MAX_IMAGE_MALLOC_SIZE (1024 * 64)
 
@@ -33,6 +32,15 @@ extern "C" {
 
 #define KEYWORD_CPLD_LATTICE "lattice"
 
+static const char hex_to_ascii[] = { '0', '1', '2', '3', '4', '5', '6', '7',
+				     '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+
+#define PLDM_COMMON_ERR_STR 'E', 'R', 'R', 'O', 'R', ':'
+#define PLDM_COMMON_ERR_CODE 0
+#define PLDM_CREATE_ERR_STR_ARRAY(code)                                                            \
+	{                                                                                          \
+		PLDM_COMMON_ERR_STR, hex_to_ascii[code]                                            \
+	}
 /** 
  * PLDM Firmware update commands
  */
