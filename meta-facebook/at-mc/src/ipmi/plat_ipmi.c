@@ -31,7 +31,6 @@
 #include "plat_class.h"
 #include "plat_hook.h"
 #include "plat_dev.h"
-#include "plat_mctp.h"
 #include "cci.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
@@ -220,13 +219,8 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 	}
 
 	bool ret = false;
-	uint8_t index = 0;
 	uint8_t cxl_id = 0;
-	uint8_t pcie_card_id = 0;
-	uint8_t sensor_num = 0;
 	uint8_t component = msg->data[0];
-	bool (*pre_switch_mux_func)(uint8_t, uint8_t) = NULL;
-	bool (*post_switch_mux_func)(uint8_t, uint8_t) = NULL;
 
 	if (component >= MC_COMPNT_MAX) {
 		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
@@ -260,65 +254,44 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 	case MC_COMPNT_CXL6:
 	case MC_COMPNT_CXL7:
 	case MC_COMPNT_CXL8:
-		sensor_num = SENSOR_NUM_TEMP_CXL;
 		cxl_id = component - MC_COMPNT_CXL1;
-		pre_switch_mux_func = pre_cxl_switch_mux;
-		post_switch_mux_func = post_cxl_switch_mux;
-
-		if (cxl_id_to_pcie_card_id(cxl_id, &pcie_card_id) != 0) {
-			msg->completion_code = CC_INVALID_PARAM;
-			return;
+		if (pm8702_table[cxl_id].is_init != true) {
+			ret = pal_init_pm8702_info(cxl_id);
+			if (ret == false) {
+				LOG_ERR("Initial cxl id: 0x%x info fail", cxl_id);
+				msg->completion_code = CC_UNSPECIFIED_ERROR;
+				return;
+			}
 		}
 
-		mctp *mctp_inst = NULL;
-		mctp_ext_params ext_params = { 0 };
-		uint8_t read_len = 0;
-		uint8_t resp_buf[GET_FW_INFO_REVISION_LEN] = { 0 };
+		uint8_t *fw_ptr = NULL;
+		uint8_t active_slot =
+			pm8702_table[cxl_id].dev_info.fw_slot_info.fields.ACTIVE_FW_SLOT;
 
-		if (get_mctp_info_by_eid(MCTP_EID_CXL, &mctp_inst, &ext_params) == false) {
+		switch (active_slot) {
+		case SLOT1_FW_ACTIVE:
+			fw_ptr = pm8702_table[cxl_id].dev_info.slot1_fw_revision;
+			break;
+		case SLOT2_FW_ACTIVE:
+			fw_ptr = pm8702_table[cxl_id].dev_info.slot2_fw_revision;
+			break;
+		case SLOT3_FW_ACTIVE:
+			fw_ptr = pm8702_table[cxl_id].dev_info.slot3_fw_revision;
+			break;
+		case SLOT4_FW_ACTIVE:
+			fw_ptr = pm8702_table[cxl_id].dev_info.slot4_fw_revision;
+			break;
+		default:
+			LOG_ERR("Active fw slot: 0x%x is invalid", active_slot);
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			return;
 		}
 
-		CHECK_NULL_ARG(mctp_inst);
-
-		ret = get_cxl_sensor_config_index(sensor_num, &index);
-		if (ret != true) {
-			LOG_ERR("Invalid cxl sensor num: 0x%x", sensor_num);
-			msg->completion_code = CC_UNSPECIFIED_ERROR;
-			return;
-		}
-
-		sensor_cfg *cfg = &plat_cxl_sensor_config[index];
-		if (cfg->access_checker(pcie_card_id) != true) {
-			msg->completion_code = CC_CAN_NOT_RESPOND;
-			return;
-		}
-
-		ret = pre_switch_mux_func(sensor_num, pcie_card_id);
-		if (ret != true) {
-			LOG_ERR("Pre switch mux fail, sensor num: 0x%x, card id: 0x%x", sensor_num,
-				pcie_card_id);
-			msg->completion_code = CC_UNSPECIFIED_ERROR;
-			return;
-		}
-
-		ret = cci_get_chip_fw_version(mctp_inst, ext_params, resp_buf, &read_len);
-		if (ret == false) {
-			LOG_ERR("Invalid cxl sensor num: 0x%x", sensor_num);
-			msg->completion_code = CC_I2C_BUS_ERROR;
-		} else {
-			msg->data[0] = component;
-			memcpy(&msg->data[1], resp_buf, read_len);
-			msg->data_len = read_len + 1;
-			msg->completion_code = CC_SUCCESS;
-		}
-
-		ret = post_switch_mux_func(sensor_num, pcie_card_id);
-		if (ret != true) {
-			LOG_ERR("Post switch mux fail, sensor num: 0x%x, card id: 0x%x", sensor_num,
-				pcie_card_id);
-		}
+		msg->data[0] = component;
+		msg->data[1] = GET_FW_INFO_REVISION_LEN;
+		memcpy(&msg->data[2], fw_ptr, sizeof(uint8_t) * GET_FW_INFO_REVISION_LEN);
+		msg->data_len = GET_FW_INFO_REVISION_LEN + 2;
+		msg->completion_code = CC_SUCCESS;
 		break;
 	default:
 		msg->completion_code = CC_UNSPECIFIED_ERROR;

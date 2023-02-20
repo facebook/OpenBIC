@@ -19,6 +19,14 @@
 
 #include <stdint.h>
 #include "sensor.h"
+#include "cci.h"
+
+typedef struct _pm8702_dev_info {
+	bool is_init;
+	cci_fw_info_resp dev_info;
+} pm8702_dev_info;
+
+extern pm8702_dev_info pm8702_table[];
 
 bool pal_sensor_drive_init(sensor_cfg *cfg, uint8_t *init_status);
 bool pal_sensor_drive_read(sensor_cfg *cfg, int *reading, uint8_t *sensor_status);
@@ -39,5 +47,8 @@ int cxl_ioexp_init(uint8_t cxl_channel);
 uint8_t pal_pm8702_read(sensor_cfg *cfg, int *reading);
 uint8_t pal_pm8702_init(sensor_cfg *cfg);
 void cxl_mb_status_init(uint8_t cxl_id);
+bool pal_init_pm8702_info(uint8_t cxl_id);
+bool pal_pm8702_command_handler(uint8_t pcie_card_id, uint16_t opcode, uint8_t *data_buf,
+				uint8_t data_len, uint8_t *response, uint8_t *response_len);
 
 #endif

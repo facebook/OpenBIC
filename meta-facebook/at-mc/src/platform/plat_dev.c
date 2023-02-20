@@ -15,6 +15,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "sensor.h"
 #include "pmbus.h"
 #include "libutil.h"
@@ -33,6 +34,8 @@
 #include "pm8702.h"
 #include "cci.h"
 #include "plat_mctp.h"
+#include "plat_hook.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_dev);
 
@@ -59,10 +62,17 @@ LOG_MODULE_REGISTER(plat_dev);
 #define CXL_IOEXP_U17_CONFIG_0_REG_VAL 0xFF
 #define CXL_IOEXP_U17_CONFIG_1_REG_VAL 0xFF
 
+#define PM8702_DEFAULT_SENSOR_NUM SENSOR_NUM_TEMP_CXL
+
 enum XDPE12284_VID {
 	XDPE12284_VR12 = 1,
 	XDPE12284_VR13,
 	XDPE12284_IMVP9,
+};
+
+pm8702_dev_info pm8702_table[] = {
+	{ .is_init = false }, { .is_init = false }, { .is_init = false }, { .is_init = false },
+	{ .is_init = false }, { .is_init = false }, { .is_init = false }, { .is_init = false },
 };
 
 bool pal_sensor_drive_init(sensor_cfg *cfg, uint8_t *init_status)
@@ -1017,4 +1027,82 @@ uint8_t pal_pm8702_init(sensor_cfg *cfg)
 	}
 
 	return SENSOR_INIT_SUCCESS;
+}
+
+bool pal_init_pm8702_info(uint8_t cxl_id)
+{
+	bool ret = -1;
+	uint8_t pcie_card_id = 0;
+
+	if (cxl_id_to_pcie_card_id(cxl_id, &pcie_card_id) != 0) {
+		LOG_ERR("Invalid cxl id: 0x%x", cxl_id);
+		return false;
+	}
+
+	uint8_t *req_buf = NULL;
+	uint8_t req_len = GET_FW_INFO_REQ_PL_LEN;
+	uint8_t resp_len = sizeof(cci_fw_info_resp);
+	uint8_t resp_buf[resp_len];
+	memset(resp_buf, 0, sizeof(uint8_t) * resp_len);
+
+	ret = pal_pm8702_command_handler(pcie_card_id, CCI_GET_FW_INFO, req_buf, req_len, resp_buf,
+					 &resp_len);
+	if (ret != true) {
+		LOG_ERR("Fail to get cxl card: 0x%x fw version", cxl_id);
+		return false;
+	}
+
+	memcpy(&pm8702_table[cxl_id].dev_info, resp_buf, resp_len);
+	pm8702_table[cxl_id].is_init = true;
+	return true;
+}
+
+bool pal_pm8702_command_handler(uint8_t pcie_card_id, uint16_t opcode, uint8_t *data_buf,
+				uint8_t data_len, uint8_t *response, uint8_t *response_len)
+{
+	if (data_len != 0) {
+		CHECK_NULL_ARG_WITH_RETURN(data_buf, false);
+	}
+
+	CHECK_NULL_ARG_WITH_RETURN(response, false);
+	CHECK_NULL_ARG_WITH_RETURN(response_len, false);
+
+	bool ret = true;
+	uint8_t sensor_num = PM8702_DEFAULT_SENSOR_NUM;
+	mctp *mctp_inst = NULL;
+	mctp_ext_params ext_params = { 0 };
+
+	if (is_cxl_access(pcie_card_id) != true) {
+		LOG_ERR("Card id: 0x%x PM8702 can't access", pcie_card_id);
+		return false;
+	}
+
+	if (get_mctp_info_by_eid(MCTP_EID_CXL, &mctp_inst, &ext_params) == false) {
+		LOG_ERR("Fail to get mctp info via eid: 0x%x", MCTP_EID_CXL);
+		return false;
+	}
+
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, false);
+
+	ret = pre_cxl_switch_mux(sensor_num, pcie_card_id);
+	if (ret != true) {
+		LOG_ERR("Pre switch mux fail, sensor num: 0x%x, card id: 0x%x", sensor_num,
+			pcie_card_id);
+		return false;
+	}
+
+	ret = pm8702_cmd_handler(mctp_inst, ext_params, opcode, data_buf, data_len, response,
+				 response_len);
+	if (ret != true) {
+		post_cxl_switch_mux(sensor_num, pcie_card_id);
+		return false;
+	}
+
+	ret = post_cxl_switch_mux(sensor_num, pcie_card_id);
+	if (ret != true) {
+		LOG_ERR("Post switch mux fail, sensor num: 0x%x, card id: 0x%x", sensor_num,
+			pcie_card_id);
+	}
+
+	return true;
 }
