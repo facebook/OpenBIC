@@ -441,6 +441,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 	uint8_t type = get_vr_type();
 	uint32_t version;
+	uint16_t remain = 0xFFFF;
 	switch (type) {
 	case VR_RNS_ISL69259: {
 		uint8_t mode;
@@ -454,11 +455,21 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 			LOG_ERR("The VR ISL69259 version reading failed");
 			goto post_hook_and_ret;
 		}
+
+		if (!get_raa_remaining_wr(cfg->port, cfg->target_addr, mode, &remain)) {
+			LOG_ERR("The VR ISL69259 remaining reading failed");
+			goto post_hook_and_ret;
+		}
 		break;
 	}
 	case VR_INF_XDPE12284:
 		if (!xdpe12284c_get_checksum(cfg->port, cfg->target_addr, (uint8_t *)&version)) {
 			LOG_ERR("The VR XDPE12284 version reading failed");
+			goto post_hook_and_ret;
+		}
+
+		if (!xdpe12284c_get_remaining_write(cfg->port, cfg->target_addr, &remain)) {
+			LOG_ERR("The VR XDPE12284 remaining reading failed");
 			goto post_hook_and_ret;
 		}
 		break;
@@ -476,7 +487,36 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	if (type != VR_INF_XDPE12284)
 		version = sys_cpu_to_be32(version);
 
-	*len = bin2hex((uint8_t *)&version, 4, buf, 8);
+	const char *vr_name[] = {
+		[VR_RNS_ISL69259] = "Renesas ",
+		[VR_INF_XDPE12284] = "Infineon ",
+		[VR_MPS_MPS2971] = "MPS ",
+	};
+
+	const char *remain_str_p = ", Remaining Write: ";
+	uint8_t *buf_p = buf;
+	const uint8_t *vr_name_p = vr_name[type];
+	*len = 0;
+
+	if (!vr_name_p) {
+		LOG_ERR("The pointer of VR string name is NULL");
+		goto post_hook_and_ret;
+	}
+
+	memcpy(buf_p, vr_name_p, strlen(vr_name_p));
+	buf_p += strlen(vr_name_p);
+
+	*len += bin2hex((uint8_t *)&version, 4, buf_p, 8) + strlen(vr_name_p);
+	buf_p += 8;
+
+	if (remain != 0xFFFF) {
+		memcpy(buf_p, remain_str_p, strlen(remain_str_p));
+		buf_p += strlen(remain_str_p);
+		remain = (uint8_t)((remain % 10) | (remain / 10 << 4));
+		*len += bin2hex((uint8_t *)&remain, 1, buf_p, 2) + strlen(remain_str_p);
+		buf_p += 2;
+	}
+
 	ret = true;
 
 post_hook_and_ret:
