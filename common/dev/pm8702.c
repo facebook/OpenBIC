@@ -30,6 +30,76 @@
 
 LOG_MODULE_REGISTER(pm8702);
 
+pm8702_command_info pm8702_cmd_table[] = {
+	{ .cmd_opcode = CCI_GET_FW_INFO,
+	  .payload_len = GET_FW_INFO_REQ_PL_LEN,
+	  .response_len = sizeof(cci_fw_info_resp) },
+	{ .cmd_opcode = PM8702_HBO_STATUS,
+	  .payload_len = HBO_STATUS_REQ_PL_LEN,
+	  .response_len = sizeof(pm8702_hbo_status_resp) },
+	{ .cmd_opcode = PM8702_HBO_TRANSFER_FW,
+	  .payload_len = HBO_TRANSFER_FW_REQ_PL_LEN,
+	  .response_len = TRANSFER_FW_RESP_PL_LEN },
+	{ .cmd_opcode = PM8702_HBO_ACTIVATE_FW,
+	  .payload_len = HBO_ACTIVATE_FW_REQ_PL_LEN,
+	  .response_len = ACTIVATE_FW_RESP_PL_LEN },
+};
+
+bool pm8702_cmd_handler(void *mctp_inst, mctp_ext_params ext_params, uint16_t opcode,
+			uint8_t *data_buf, uint8_t data_len, uint8_t *response,
+			uint8_t *response_len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, false);
+	CHECK_NULL_ARG_WITH_RETURN(response, false);
+	CHECK_NULL_ARG_WITH_RETURN(response_len, false);
+
+	if (data_len != 0) {
+		CHECK_NULL_ARG_WITH_RETURN(data_buf, false);
+	}
+
+	mctp_cci_msg msg = { 0 };
+	memcpy(&msg.ext_params, &ext_params, sizeof(mctp_ext_params));
+
+	uint8_t index = 0;
+
+	for (index = 0; index < ARRAY_SIZE(pm8702_cmd_table); ++index) {
+		if (opcode == pm8702_cmd_table[index].cmd_opcode) {
+			msg.hdr.op = opcode;
+			msg.hdr.pl_len = pm8702_cmd_table[index].payload_len;
+			int resp_len = pm8702_cmd_table[index].response_len;
+			uint8_t resp_buf[resp_len];
+			memset(resp_buf, 0, resp_len);
+
+			if (msg.hdr.pl_len != 0) {
+				if (data_len > msg.hdr.pl_len) {
+					LOG_ERR("Transfer data len: 0x%x is over payload len: 0x%x",
+						data_len, msg.hdr.pl_len);
+				}
+
+				msg.pl_data = (uint8_t *)malloc(sizeof(uint8_t) * msg.hdr.pl_len);
+				CHECK_NULL_ARG_WITH_RETURN(msg.pl_data, false);
+
+				memcpy(msg.pl_data, data_buf, sizeof(uint8_t) * msg.hdr.pl_len);
+			}
+
+			if (mctp_cci_read(mctp_inst, &msg, resp_buf, resp_len) != resp_len) {
+				LOG_ERR("MCTP cci command: 0x%x read fail", opcode);
+				SAFE_FREE(msg.pl_data);
+				return false;
+			}
+
+			memcpy(response, resp_buf, sizeof(uint8_t) * resp_len);
+			*response_len = resp_len;
+			SAFE_FREE(msg.pl_data);
+
+			return true;
+		}
+	}
+
+	LOG_ERR("Command opcode: 0x%x is not support", opcode);
+	return false;
+}
+
 bool pm8702_get_dimm_temp(void *mctp_p, mctp_ext_params ext_params, uint16_t address,
 			  int16_t *interger, int16_t *fraction)
 {
