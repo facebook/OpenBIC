@@ -1248,8 +1248,8 @@ void create_ipmb_threads(uint8_t index)
 	}
 	if (i > retry) {
 		LOG_ERR("Failed to create threads,Tx(%s) Rx(%s) retry time(%d)",
-			IPMB_config_table[index].tx_thread_name,
-			IPMB_config_table[index].rx_thread_name, retry);
+			log_strdup(IPMB_config_table[index].tx_thread_name),
+			log_strdup(IPMB_config_table[index].rx_thread_name), retry);
 		return;
 	}
 

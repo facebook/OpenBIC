@@ -133,7 +133,8 @@ void change_sensor_threshold(uint8_t sensor_num, uint8_t threshold_type, uint8_t
 
 	int sdr_index = get_sdr_index(sensor_num);
 	if ((sdr_index == SENSOR_NUM_MAX) || (sdr_index == -1)) {
-		LOG_ERR("Failed to find sensor index, sensor number(0x%02x), sdr index(%d)", sensor_num, sdr_index);
+		LOG_ERR("Failed to find sensor index, sensor number(0x%02x), sdr index(%d)",
+			sensor_num, sdr_index);
 		return;
 	}
 	switch (threshold_type) {
@@ -170,7 +171,8 @@ void change_sensor_mbr(uint8_t sensor_num, uint8_t mbr_type, uint16_t change_val
 
 	int sdr_index = get_sdr_index(sensor_num);
 	if ((sdr_index == SENSOR_NUM_MAX) || (sdr_index == -1)) {
-		LOG_ERR("Failed to find sensor index, sensor number(0x%02x), sdr index(%d)", sensor_num, sdr_index);
+		LOG_ERR("Failed to find sensor index, sensor number(0x%02x), sdr index(%d)",
+			sensor_num, sdr_index);
 		return;
 	}
 	switch (mbr_type) {
@@ -220,11 +222,9 @@ uint8_t sdr_init(void)
 
 		if (DEBUG_SENSOR) {
 			LOG_DBG("%s ID: 0x%x%x, size: %d, recordlen: %d",
-                               full_sdr_table[i].ID_str,
-			       full_sdr_table[i].record_id_h,
-			       full_sdr_table[i].record_id_l,
-			       full_sdr_table[i].ID_len,
-			       full_sdr_table[i].record_len);
+				log_strdup(full_sdr_table[i].ID_str), full_sdr_table[i].record_id_h,
+				full_sdr_table[i].record_id_l, full_sdr_table[i].ID_len,
+				full_sdr_table[i].record_len);
 		}
 	}
 
