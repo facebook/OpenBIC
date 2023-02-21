@@ -115,6 +115,7 @@ void OEM_1S_GET_PCIE_CARD_STATUS(ipmi_msg *msg);
 void OEM_1S_GET_PCIE_CARD_SENSOR_READING(ipmi_msg *msg);
 void OEM_1S_GET_DIMM_I3C_MUX_SELECTION(ipmi_msg *msg);
 void OEM_1S_SAFE_WRITE_READ_M2_DATA(ipmi_msg *msg);
+void OEM_1S_PRE_POWER_OFF_CONTROL(ipmi_msg *msg);
 
 #ifdef CONFIG_SNOOP_ASPEED
 void OEM_1S_GET_POST_CODE(ipmi_msg *msg);

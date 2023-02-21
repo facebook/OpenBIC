@@ -993,7 +993,7 @@ void control_power_off_sequence()
 {
 	bool is_power_off = false;
 
-	set_DC_on_delayed_status();
+	set_DC_on_delayed_status_with_value(false);
 	is_power_off = power_off_handler(E1S_POWER_OFF_STAGE0);
 
 	if (is_power_off == true) {
