@@ -25,8 +25,6 @@
 LOG_MODULE_REGISTER(apml);
 
 #define RETRY_MAX 3
-#define CMD_BMC_RAS_MCA_VALIDITY_CHECK 0x43
-#define MCA_VALIDITY_CHECK_RETRY_MAX 500
 #define MAILBOX_COMPLETE_RETRY_MAX 200
 #define APML_RESP_BUFFER_SIZE 10
 #define APML_HANDLER_STACK_SIZE 1024
@@ -306,21 +304,10 @@ static uint8_t access_RMI_mailbox(apml_msg *msg)
 	}
 
 	is_fatal_error_happened = false;
-	int retry;
-	mailbox_WrData *wr_data = (mailbox_WrData *)msg->WrData;
-
-	/* Workaround: Set the timeout of MCA_VALIDITY_CHECK command to 5
-	 * seconds as it takes almost 4 seconds to wait on Bergamo PR CPU
-	 */
-	if (wr_data->command == CMD_BMC_RAS_MCA_VALIDITY_CHECK) {
-		retry = MCA_VALIDITY_CHECK_RETRY_MAX;
-	} else {
-		retry = MAILBOX_COMPLETE_RETRY_MAX;
-	}
 
 	/* wait for SwAlertSts to be set */
 	uint8_t status;
-	for (i = 0; i < retry; i++) {
+	for (i = 0; i < MAILBOX_COMPLETE_RETRY_MAX; i++) {
 		if (apml_read_byte(msg->bus, msg->target_addr, SBRMI_STATUS, &status)) {
 			LOG_ERR("Read SwAlertSts failed.");
 			return APML_ERROR;
@@ -333,8 +320,8 @@ static uint8_t access_RMI_mailbox(apml_msg *msg)
 			return APML_ERROR;
 		}
 	}
-	if (i == retry) {
-		LOG_ERR("SwAlertSts not be set, retry %d times.", retry);
+	if (i == MAILBOX_COMPLETE_RETRY_MAX) {
+		LOG_ERR("SwAlertSts not be set, retry %d times.", MAILBOX_COMPLETE_RETRY_MAX);
 		return APML_ERROR;
 	}
 
