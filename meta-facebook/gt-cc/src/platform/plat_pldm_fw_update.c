@@ -30,7 +30,7 @@
 #include "mp2971.h"
 
 #include "pldm_firmware_update.h"
-#include "plat_fwupdate.h"
+#include "plat_pldm_fw_update.h"
 #include "plat_pldm_monitor.h"
 #include "plat_gpio.h"
 #include "plat_i2c.h"
@@ -51,18 +51,112 @@ static bool get_pex_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 
 /* PLDM FW update table */
-// clang-format off
 pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
-	[COMP_ID_BIC] =  { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_BIC, 0x00, NULL, pldm_bic_update, NULL, COMP_UPDATE_VIA_SPI, COMP_ACT_SELF, pldm_bic_activate, NULL },
-	[COMP_ID_VR0] =  { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_VR0, 0x00, pldm_pre_vr_update, pldm_vr_update, pldm_post_vr_update, COMP_UPDATE_VIA_I2C, COMP_ACT_AC_PWR_CYCLE, NULL, get_vr_fw_version },
-	[COMP_ID_VR1] =  { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_VR1, 0x00, pldm_pre_vr_update, pldm_vr_update, pldm_post_vr_update, COMP_UPDATE_VIA_I2C, COMP_ACT_AC_PWR_CYCLE, NULL, get_vr_fw_version },
-	[COMP_ID_PEX0] = { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX0, 0x00, pldm_pre_pex_update, pldm_pex_update, pldm_post_pex_update, COMP_UPDATE_VIA_SPI, COMP_ACT_AC_PWR_CYCLE, NULL, get_pex_fw_version },
-	[COMP_ID_PEX1] = { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX1, 0x00, pldm_pre_pex_update, pldm_pex_update, pldm_post_pex_update, COMP_UPDATE_VIA_SPI, COMP_ACT_AC_PWR_CYCLE, NULL, get_pex_fw_version },
-	[COMP_ID_PEX2] = { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX2, 0x00, pldm_pre_pex_update, pldm_pex_update, pldm_post_pex_update, COMP_UPDATE_VIA_SPI, COMP_ACT_AC_PWR_CYCLE, NULL, get_pex_fw_version },
-	[COMP_ID_PEX3] = { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_PEX3, 0x00, pldm_pre_pex_update, pldm_pex_update, pldm_post_pex_update, COMP_UPDATE_VIA_SPI, COMP_ACT_AC_PWR_CYCLE, NULL, get_pex_fw_version },
-	[COMP_ID_CPLD] = { ENABLE, COMP_CLASS_TYPE_DOWNSTREAM, COMP_ID_CPLD, 0x00, pldm_pre_cpld_update, pldm_cpld_update, NULL, COMP_UPDATE_VIA_I2C, COMP_ACT_AC_PWR_CYCLE, NULL, get_fpga_user_code },
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = GT_COMPNT_BIC,
+		.comp_classification_index = 0x00,
+		.pre_update_func = NULL,
+		.update_func = pldm_bic_update,
+		.pos_update_func = NULL,
+		.inf = COMP_UPDATE_VIA_SPI,
+		.activate_method = COMP_ACT_SELF,
+		.self_act_func = pldm_bic_activate,
+		.get_fw_version_fn = NULL,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = GT_COMPNT_VR0,
+		.comp_classification_index = 0x00,
+		.pre_update_func = pldm_pre_vr_update,
+		.update_func = pldm_vr_update,
+		.pos_update_func = pldm_post_vr_update,
+		.inf = COMP_UPDATE_VIA_I2C,
+		.activate_method = COMP_ACT_AC_PWR_CYCLE,
+		.self_act_func = NULL,
+		.get_fw_version_fn = get_vr_fw_version,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = GT_COMPNT_VR1,
+		.comp_classification_index = 0x00,
+		.pre_update_func = pldm_pre_vr_update,
+		.update_func = pldm_vr_update,
+		.pos_update_func = pldm_post_vr_update,
+		.inf = COMP_UPDATE_VIA_I2C,
+		.activate_method = COMP_ACT_AC_PWR_CYCLE,
+		.self_act_func = NULL,
+		.get_fw_version_fn = get_vr_fw_version,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = GT_COMPNT_PEX0,
+		.comp_classification_index = 0x00,
+		.pre_update_func = pldm_pre_pex_update,
+		.update_func = pldm_pex_update,
+		.pos_update_func = pldm_post_pex_update,
+		.inf = COMP_UPDATE_VIA_SPI,
+		.activate_method = COMP_ACT_DC_PWR_CYCLE,
+		.self_act_func = NULL,
+		.get_fw_version_fn = get_pex_fw_version,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = GT_COMPNT_PEX1,
+		.comp_classification_index = 0x00,
+		.pre_update_func = pldm_pre_pex_update,
+		.update_func = pldm_pex_update,
+		.pos_update_func = pldm_post_pex_update,
+		.inf = COMP_UPDATE_VIA_SPI,
+		.activate_method = COMP_ACT_DC_PWR_CYCLE,
+		.self_act_func = NULL,
+		.get_fw_version_fn = get_pex_fw_version,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = GT_COMPNT_PEX2,
+		.comp_classification_index = 0x00,
+		.pre_update_func = pldm_pre_pex_update,
+		.update_func = pldm_pex_update,
+		.pos_update_func = pldm_post_pex_update,
+		.inf = COMP_UPDATE_VIA_SPI,
+		.activate_method = COMP_ACT_DC_PWR_CYCLE,
+		.self_act_func = NULL,
+		.get_fw_version_fn = get_pex_fw_version,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = GT_COMPNT_PEX3,
+		.comp_classification_index = 0x00,
+		.pre_update_func = pldm_pre_pex_update,
+		.update_func = pldm_pex_update,
+		.pos_update_func = pldm_post_pex_update,
+		.inf = COMP_UPDATE_VIA_SPI,
+		.activate_method = COMP_ACT_DC_PWR_CYCLE,
+		.self_act_func = NULL,
+		.get_fw_version_fn = get_pex_fw_version,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = GT_COMPNT_CPLD,
+		.comp_classification_index = 0x00,
+		.pre_update_func = pldm_pre_cpld_update,
+		.update_func = pldm_cpld_update,
+		.pos_update_func = NULL,
+		.inf = COMP_UPDATE_VIA_I2C,
+		.activate_method = COMP_ACT_AC_PWR_CYCLE,
+		.self_act_func = NULL,
+		.get_fw_version_fn = get_fpga_user_code,
+	},
 };
-// clang-format on
 
 void load_pldmupdate_comp_config(void)
 {
@@ -93,7 +187,7 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param)
 
 	/* Assign VR 0/1 related sensor number to get information for accessing VR */
 	uint8_t sensor_num =
-		(p->comp_id == COMP_ID_VR0) ? SENSOR_NUM_PEX_0_VR_TEMP : SENSOR_NUM_PEX_2_VR_TEMP;
+		(p->comp_id == GT_COMPNT_VR0) ? SENSOR_NUM_PEX_0_VR_TEMP : SENSOR_NUM_PEX_2_VR_TEMP;
 
 	if (!tca9548_select_chan(sensor_num, &mux_conf_addr_0xe0[6])) {
 		LOG_ERR("Component %d: mux switched failed!", p->comp_id);
@@ -131,7 +225,7 @@ static uint8_t pldm_pre_pex_update(void *fw_update_param)
 
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 
-	uint8_t flash_sel_base = flash_sel_pin[0] - COMP_ID_PEX0;
+	uint8_t flash_sel_base = flash_sel_pin[0] - GT_COMPNT_PEX0;
 
 	/* change mux to pex flash */
 	for (int i = 0; i < ARRAY_SIZE(flash_sel_pin); i++) {
@@ -247,6 +341,7 @@ static bool get_fpga_user_code(void *info_p, uint8_t *buf, uint8_t *len)
 	return true;
 }
 
+#define PLDM_PLAT_ERR_CODE_NO_POWER_ON 8
 static bool get_pex_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 {
 	CHECK_NULL_ARG_WITH_RETURN(buf, false);
@@ -255,21 +350,22 @@ static bool get_pex_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 	pldm_fw_update_info_t *p = (pldm_fw_update_info_t *)info_p;
 
-	if ((p->comp_identifier < COMP_ID_PEX0) || (p->comp_identifier > COMP_ID_PEX3)) {
+	if ((p->comp_identifier < GT_COMPNT_PEX0) || (p->comp_identifier > GT_COMPNT_PEX3)) {
 		LOG_ERR("Unsupport PEX component ID(%d)", p->comp_identifier);
 		return false;
 	}
 
 	/* Only can be read when DC is on */
 	if (!is_mb_dc_on()) {
-		uint8_t dc_off_error_code[] = { 'E', 'R', 'R', 'O', 'R', ':', '8' };
+		uint8_t dc_off_error_code[] =
+			PLDM_CREATE_ERR_STR_ARRAY(PLDM_PLAT_ERR_CODE_NO_POWER_ON);
 		memcpy(buf, dc_off_error_code, sizeof(dc_off_error_code));
 		*len = sizeof(dc_off_error_code);
 		return true;
 	}
 	/* Physical Layer User Test Patterns, Byte 0 Register */
 	int reading = 0x6080020c;
-	uint8_t sensor_idx = p->comp_identifier - COMP_ID_PEX0;
+	uint8_t sensor_idx = p->comp_identifier - GT_COMPNT_PEX0;
 	uint8_t pex_sensor_num = pex_sensor_num_table[sensor_idx];
 	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[pex_sensor_num]];
 
@@ -320,14 +416,14 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 	pldm_fw_update_info_t *p = (pldm_fw_update_info_t *)info_p;
 
-	if ((p->comp_identifier != COMP_ID_VR0) && (p->comp_identifier != COMP_ID_VR1)) {
+	if ((p->comp_identifier != GT_COMPNT_VR0) && (p->comp_identifier != GT_COMPNT_VR1)) {
 		LOG_ERR("Unsupport VR component ID(%d)", p->comp_identifier);
 		return false;
 	}
 
 	bool ret = false;
-	uint8_t sensor_num = ((p->comp_identifier == COMP_ID_VR0) ? SENSOR_NUM_PEX_0_VR_TEMP :
-								    SENSOR_NUM_PEX_2_VR_TEMP);
+	uint8_t sensor_num = ((p->comp_identifier == GT_COMPNT_VR0) ? SENSOR_NUM_PEX_0_VR_TEMP :
+								      SENSOR_NUM_PEX_2_VR_TEMP);
 	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 
 	if (!cfg) {
@@ -345,6 +441,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 	uint8_t type = get_vr_type();
 	uint32_t version;
+	uint16_t remain = 0xFFFF;
 	switch (type) {
 	case VR_RNS_ISL69259: {
 		uint8_t mode;
@@ -358,11 +455,21 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 			LOG_ERR("The VR ISL69259 version reading failed");
 			goto post_hook_and_ret;
 		}
+
+		if (!get_raa_remaining_wr(cfg->port, cfg->target_addr, mode, &remain)) {
+			LOG_ERR("The VR ISL69259 remaining reading failed");
+			goto post_hook_and_ret;
+		}
 		break;
 	}
 	case VR_INF_XDPE12284:
 		if (!xdpe12284c_get_checksum(cfg->port, cfg->target_addr, (uint8_t *)&version)) {
 			LOG_ERR("The VR XDPE12284 version reading failed");
+			goto post_hook_and_ret;
+		}
+
+		if (!xdpe12284c_get_remaining_write(cfg->port, cfg->target_addr, &remain)) {
+			LOG_ERR("The VR XDPE12284 remaining reading failed");
 			goto post_hook_and_ret;
 		}
 		break;
@@ -380,7 +487,36 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	if (type != VR_INF_XDPE12284)
 		version = sys_cpu_to_be32(version);
 
-	*len = bin2hex((uint8_t *)&version, 4, buf, 8);
+	const char *vr_name[] = {
+		[VR_RNS_ISL69259] = "Renesas ",
+		[VR_INF_XDPE12284] = "Infineon ",
+		[VR_MPS_MPS2971] = "MPS ",
+	};
+
+	const char *remain_str_p = ", Remaining Write: ";
+	uint8_t *buf_p = buf;
+	const uint8_t *vr_name_p = vr_name[type];
+	*len = 0;
+
+	if (!vr_name_p) {
+		LOG_ERR("The pointer of VR string name is NULL");
+		goto post_hook_and_ret;
+	}
+
+	memcpy(buf_p, vr_name_p, strlen(vr_name_p));
+	buf_p += strlen(vr_name_p);
+
+	*len += bin2hex((uint8_t *)&version, 4, buf_p, 8) + strlen(vr_name_p);
+	buf_p += 8;
+
+	if (remain != 0xFFFF) {
+		memcpy(buf_p, remain_str_p, strlen(remain_str_p));
+		buf_p += strlen(remain_str_p);
+		remain = (uint8_t)((remain % 10) | (remain / 10 << 4));
+		*len += bin2hex((uint8_t *)&remain, 1, buf_p, 2) + strlen(remain_str_p);
+		buf_p += 2;
+	}
+
 	ret = true;
 
 post_hook_and_ret:

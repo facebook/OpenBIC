@@ -28,6 +28,7 @@
 #include "plat_ipmb.h"
 #include "plat_gpio.h"
 #include "plat_fru.h"
+#include "plat_class.h"
 #include "hal_jtag.h"
 #include "eeprom.h"
 #include "fru.h"

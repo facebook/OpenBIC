@@ -143,7 +143,7 @@ static bool get_raa_polling_status(uint8_t bus, uint8_t addr, uint8_t mode)
 	return false;
 }
 
-static bool get_raa_remaining_wr(uint8_t bus, uint8_t addr, uint8_t mode, uint16_t *remain)
+bool get_raa_remaining_wr(uint8_t bus, uint8_t addr, uint8_t mode, uint16_t *remain)
 {
 	CHECK_NULL_ARG_WITH_RETURN(remain, false);
 

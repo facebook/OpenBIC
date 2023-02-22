@@ -356,7 +356,7 @@ static uint8_t report_tranfer(void *mctp_p, void *ext_params, uint8_t result_cod
 	return 0;
 }
 
-static pldm_fw_update_info_t *found_fw_update_func(uint16_t comp_id)
+static pldm_fw_update_info_t *find_update_info(uint16_t comp_id)
 {
 	if (!comp_config_count) {
 		LOG_ERR("comp_config not loaded yet");
@@ -384,19 +384,28 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 
 	LOG_INF("Component %d start update process...", cur_update_comp_id);
 
-	pldm_fw_update_info_t *fw_info = found_fw_update_func(cur_update_comp_id);
-	if (!fw_info->update_func) {
-		LOG_WRN("Cannot find comp %x update function", cur_update_comp_id);
+	pldm_fw_update_info_t *fw_info = find_update_info(cur_update_comp_id);
+
+	if (!fw_info) {
+		LOG_ERR("Can't find component id(%d) info", cur_update_comp_id);
 		pldm_status_reset();
 		SAFE_FREE(ext_params);
 		return;
+	} else {
+		if (!fw_info->update_func) {
+			LOG_ERR("The update function of component id(%d) is NULL",
+				cur_update_comp_id);
+			pldm_status_reset();
+			SAFE_FREE(ext_params);
+			return;
+		}
 	}
 
 	pldm_fw_update_param_t update_param = { 0 };
 	update_param.comp_id = cur_update_comp_id;
 	update_param.comp_version_str = cur_update_comp_str;
 	if (cur_update_comp_id < comp_config_count)
-		update_param.inf = comp_config[cur_update_comp_id].inf;
+		update_param.inf = fw_info->inf;
 	else {
 		LOG_ERR("Given component id %d doesn't exist in config table", cur_update_comp_id);
 		return;
@@ -937,7 +946,7 @@ static uint8_t get_firmware_parameter(void *mctp_inst, uint8_t *buf, uint16_t le
 	resp_p->pending_comp_image_set_ver_str_len = 0x00;
 
 	uint16_t cnt_len = 0;
-	uint8_t error_code[] = { 'E', 'R', 'R', 'O', 'R', ':', '0' };
+	uint8_t error_code[] = PLDM_CREATE_ERR_STR_ARRAY(PLDM_COMMON_ERR_CODE);
 	uint8_t *ver_str_p = (uint8_t *)resp_p + sizeof(struct pldm_get_firmware_parameters_resp);
 
 	if (!pldm_get_bic_fw_version(ver_str_p, &resp_p->active_comp_image_set_ver_str_len)) {

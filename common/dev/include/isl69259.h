@@ -24,5 +24,6 @@
 bool isl69259_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff);
 bool isl69259_get_raa_hex_mode(uint8_t bus, uint8_t addr, uint8_t *mode);
 bool isl69259_get_raa_crc(uint8_t bus, uint8_t addr, uint8_t mode, uint32_t *crc);
+bool get_raa_remaining_wr(uint8_t bus, uint8_t addr, uint8_t mode, uint16_t *remain);
 
 #endif
