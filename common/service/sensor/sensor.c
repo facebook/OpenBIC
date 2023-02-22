@@ -277,6 +277,10 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 	bool post_ret = false;
 
+	if (cfg->cache_status == SENSOR_NOT_PRESENT) {
+		return cfg->cache_status;
+	}
+
 	if (!access_check(sensor_num)) { // sensor not accessable
 		clear_unaccessible_sensor_cache(sensor_num);
 		cfg->cache_status = SENSOR_NOT_ACCESSIBLE;
