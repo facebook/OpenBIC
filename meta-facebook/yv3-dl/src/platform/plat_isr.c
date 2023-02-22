@@ -16,7 +16,6 @@
 #include <sys/util.h>
 #include <logging/log.h>
 #include "plat_isr.h"
-
 #include "libipmi.h"
 #include "kcs.h"
 #include "power_status.h"
@@ -40,6 +39,15 @@ enum GET_SET_M2_OPTION {
 	DEVICE_GET_POWER_STATUS = 0x03,
 };
 
+#define SMI_START_DELAY_MSECOND 90000
+
+K_QUEUE_DEFINE(smi_timer_reset_queue);
+K_THREAD_STACK_DEFINE(smi_thread, SMI_STACK_SIZE);
+struct k_thread smi_thread_handler;
+k_tid_t smi_tid;
+static bool is_smi_assert = false;
+static bool is_smi_thread_create = false;
+
 void send_gpio_interrupt(uint8_t gpio_num)
 {
 	ipmb_error status;
@@ -62,7 +70,8 @@ void send_gpio_interrupt(uint8_t gpio_num)
 
 	status = ipmb_read(&msg, IPMB_inf_index_map[msg.InF_target]);
 	if (status != IPMB_ERROR_SUCCESS) {
-		LOG_ERR("Failed to send GPIO interrupt event to BMC, gpio number(%d) status(%d)", gpio_num, status);
+		LOG_ERR("Failed to send GPIO interrupt event to BMC, gpio number(%d) status(%d)",
+			gpio_num, status);
 	}
 }
 
@@ -544,10 +553,15 @@ void ISR_UV_DETECT()
 	}
 }
 
-static bool is_smi_assert = false;
-static void SMI_handler(struct k_work *work)
+void smi_handler()
 {
-	if (gpio_get(IRQ_SMI_ACTIVE_BMC_N) == GPIO_LOW) {
+	int ret = SMI_FALLING_INTERRUPT;
+	while (ret == SMI_FALLING_INTERRUPT) {
+		//return 0 when time out
+		ret = (int)k_queue_get(&smi_timer_reset_queue, K_MSEC(SMI_START_DELAY_MSECOND));
+	}
+
+	if ((ret != SMI_FALLING_INTERRUPT) && (gpio_get(IRQ_SMI_ACTIVE_BMC_N) == GPIO_LOW)) {
 		common_addsel_msg_t sel_msg;
 		memset(&sel_msg, 0, sizeof(common_addsel_msg_t));
 
@@ -561,23 +575,49 @@ static void SMI_handler(struct k_work *work)
 		if (!common_add_sel_evt_record(&sel_msg)) {
 			LOG_ERR("SMI addsel fail");
 		}
-
-		gpio_interrupt_conf(IRQ_SMI_ACTIVE_BMC_N, GPIO_INT_EDGE_RISING);
 		is_smi_assert = true;
+	}
+	is_smi_thread_create = false;
+}
+
+void init_smi_thread()
+{
+	// Avoid re-create thread by checking thread status and thread id
+	if (smi_tid != NULL && ((strcmp(k_thread_state_str(smi_tid), "dead") != 0) &&
+				(strcmp(k_thread_state_str(smi_tid), "unknown") != 0))) {
+		return;
+	}
+
+	smi_tid = k_thread_create(&smi_thread_handler, smi_thread,
+				  K_THREAD_STACK_SIZEOF(smi_thread), smi_handler, NULL, NULL, NULL,
+				  CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+	k_thread_name_set(&smi_thread_handler, "smi_checking_thread");
+	is_smi_thread_create = true;
+}
+
+void abort_smi_thread()
+{
+	if (smi_tid != NULL && strcmp(k_thread_state_str(smi_tid), "dead") != 0) {
+		k_thread_abort(smi_tid);
+		is_smi_thread_create = false;
 	}
 }
 
-K_WORK_DELAYABLE_DEFINE(SMI_work, SMI_handler);
-#define SMI_START_DELAY_SECOND 90
 void ISR_SMI()
 {
 	if (gpio_get(RST_PLTRST_BMC_N) == GPIO_HIGH) {
 		if (gpio_get(IRQ_SMI_ACTIVE_BMC_N) == GPIO_LOW) {
 			/* start thread SMI_handler after 90 seconds */
-			k_work_schedule_for_queue(&plat_work_q, &SMI_work,
-						  K_SECONDS(SMI_START_DELAY_SECOND));
+			if (!is_smi_thread_create) {
+				abort_smi_thread();
+				init_smi_thread();
+			} else {
+				//append the data to notify smi clock handler
+				int ret = SMI_FALLING_INTERRUPT;
+				k_queue_append(&smi_timer_reset_queue, (void *)ret);
+			}
 		} else {
-			if (is_smi_assert == true) {
+			if (is_smi_assert) {
 				common_addsel_msg_t sel_msg;
 				memset(&sel_msg, 0, sizeof(common_addsel_msg_t));
 
@@ -592,7 +632,6 @@ void ISR_SMI()
 					LOG_ERR("SMI addsel fail");
 				}
 
-				gpio_interrupt_conf(IRQ_SMI_ACTIVE_BMC_N, GPIO_INT_EDGE_FALLING);
 				is_smi_assert = false;
 			}
 		}
@@ -605,7 +644,7 @@ static int get_set_1ou_m2_power(ipmi_msg *msg, uint8_t device_id, uint8_t option
 	if (device_id >= MAX_1OU_M2_COUNT)
 		return -1;
 
-	uint8_t _1ou_m2_mapping_table[MAX_1OU_M2_COUNT] = { 4, 3, 2, 1 };
+	const uint8_t _1ou_m2_mapping_table[MAX_1OU_M2_COUNT] = { 4, 3, 2, 1 };
 	uint32_t iana = IANA_ID;
 	ipmb_error status;
 	const uint8_t MAX_RETRY = 3;
@@ -639,7 +678,7 @@ void ISR_CPU_VPP_INT()
 		return;
 
 	static uint8_t last_vpp_pwr_status; // default all devices are on (bit1~4 = 0)
-	uint8_t _1ou_m2_name_mapping_table[MAX_1OU_M2_COUNT] = { 0x3A, 0x3B, 0x3C, 0x3D };
+	const uint8_t _1ou_m2_name_mapping_table[MAX_1OU_M2_COUNT] = { 0x3A, 0x3B, 0x3C, 0x3D };
 
 	// Read VPP power status from SB CPLD
 	I2C_MSG i2c_msg = { 0 };

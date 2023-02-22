@@ -19,6 +19,9 @@
 
 #include <stdint.h>
 
+#define SMI_STACK_SIZE 1000
+#define SMI_FALLING_INTERRUPT 1
+
 void send_gpio_interrupt(uint8_t gpio_num);
 void ISR_PLTRST();
 void ISR_SLP3();
