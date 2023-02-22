@@ -18,6 +18,7 @@
 #include "storage_handler.h"
 #include "plat_fru.h"
 #include "plat_ipmb.h"
+#include "plat_mctp.h"
 #include "fru.h"
 #include "sdr.h"
 #include <logging/log.h>
@@ -262,40 +263,57 @@ __weak void STORAGE_ADD_SEL(ipmi_msg *msg)
 		return;
 	}
 
-	ipmb_error status;
-	ipmi_msg *add_sel_msg;
+	// Check BMC communication interface if use IPMB or not
+	if (pal_is_interface_use_ipmb(IPMB_inf_index_map[get_add_sel_target_interface()])) {
+		ipmb_error status;
+		ipmi_msg *add_sel_msg;
 
-	add_sel_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
-	if (add_sel_msg == NULL) {
-		LOG_ERR("Storge add sel msg malloc fail");
-		msg->completion_code = CC_UNSPECIFIED_ERROR;
-		return;
-	}
+		add_sel_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
+		if (add_sel_msg == NULL) {
+			LOG_ERR("Storge add sel msg malloc fail");
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
 
-	LOG_DBG("Add sel to BMC with gen_id[%xh %xh] sensor[type %xh #%xh] event[type %xh] data[%xh %xh %xh]",
-		msg->data[7], msg->data[8], msg->data[10], msg->data[11], msg->data[12],
-		msg->data[13], msg->data[14], msg->data[15]);
+		LOG_DBG("Add sel to BMC with gen_id[%xh %xh] sensor[type %xh #%xh] event[type %xh] data[%xh %xh %xh]",
+			msg->data[7], msg->data[8], msg->data[10], msg->data[11], msg->data[12],
+			msg->data[13], msg->data[14], msg->data[15]);
 
-	memset(add_sel_msg, 0, sizeof(ipmi_msg));
-	add_sel_msg->InF_source = SELF;
-	add_sel_msg->InF_target = get_add_sel_target_interface();
-	add_sel_msg->netfn = NETFN_STORAGE_REQ;
-	add_sel_msg->cmd = CMD_STORAGE_ADD_SEL;
-	add_sel_msg->data_len = msg->data_len;
-	memcpy(add_sel_msg->data, msg->data, add_sel_msg->data_len);
+		memset(add_sel_msg, 0, sizeof(ipmi_msg));
+		add_sel_msg->InF_source = SELF;
+		add_sel_msg->InF_target = get_add_sel_target_interface();
+		add_sel_msg->netfn = NETFN_STORAGE_REQ;
+		add_sel_msg->cmd = CMD_STORAGE_ADD_SEL;
+		add_sel_msg->data_len = msg->data_len;
+		memcpy(add_sel_msg->data, msg->data, add_sel_msg->data_len);
 
-	status = ipmb_read(add_sel_msg, IPMB_inf_index_map[add_sel_msg->InF_target]);
-	free(add_sel_msg);
+		status = ipmb_read(add_sel_msg, IPMB_inf_index_map[add_sel_msg->InF_target]);
+		free(add_sel_msg);
 
-	msg->data_len = 0;
-	if (status == IPMB_ERROR_FAILURE) {
-		msg->completion_code = CC_UNSPECIFIED_ERROR;
-		LOG_ERR("Fail to post msg to txqueue for addsel");
-		return;
-	} else if (status == IPMB_ERROR_GET_MESSAGE_QUEUE) {
-		msg->completion_code = CC_UNSPECIFIED_ERROR;
-		LOG_ERR("No response from bmc for addsel");
-		return;
+		msg->data_len = 0;
+		if (status == IPMB_ERROR_FAILURE) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			LOG_ERR("Fail to post msg to txqueue for addsel");
+			return;
+		} else if (status == IPMB_ERROR_GET_MESSAGE_QUEUE) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			LOG_ERR("No response from bmc for addsel");
+			return;
+		}
+	} else {
+		common_addsel_msg_t sel_msg;
+		sel_msg.InF_target = MCTP;
+		sel_msg.sensor_type = msg->data[10];
+		sel_msg.sensor_number = msg->data[11];
+		sel_msg.event_type = msg->data[12];
+		sel_msg.event_data1 = msg->data[13];
+		sel_msg.event_data2 = msg->data[14];
+		sel_msg.event_data3 = msg->data[15];
+		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
+			LOG_ERR("Storage add sel addsel fail\n");
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
 	}
 
 	msg->completion_code = CC_SUCCESS;
