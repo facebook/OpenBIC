@@ -156,6 +156,12 @@ void check_pcie_card_type()
 	I2C_MSG i2c_msg = { 0 };
 
 	for (index = 0; index < ARRAY_SIZE(pcie_card_info); ++index) {
+		/* Workaround: Skip to check JCN 13 and 14 card type */
+		if (index == CARD_13_INDEX || index == CARD_14_INDEX) {
+			pcie_card_info[index].card_device_type = CARD_NOT_PRESENT;
+			continue;
+		}
+
 		memset(&i2c_msg, 0, sizeof(I2C_MSG));
 		i2c_msg.bus = CPLD_BUS;
 		i2c_msg.target_addr = CPLD_ADDR;
@@ -170,11 +176,6 @@ void check_pcie_card_type()
 
 		val = ((i2c_msg.data[0]) >> pcie_card_info[index].value_shift_bit) &
 		      pcie_card_info[index].value_bit;
-		if ((index == CARD_13_INDEX) || (index == CARD_14_INDEX)) {
-			/* CPLD register reads back the presence value of PCIE card 13/14 doesn't include present_1 bit */
-			/* Add present_1 bit value to map card type from presence status */
-			val = (val << 1) + 1;
-		}
 
 		pcie_card_info[index].card_device_type = prsnt_status_to_card_type(val);
 
