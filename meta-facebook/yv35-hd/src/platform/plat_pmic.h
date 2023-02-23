@@ -26,8 +26,11 @@
 
 #define MAX_COUNT_DIMM 8
 #define MAX_COUNT_PMIC_ERROR_TYPE 17
+#define SYS_CPLD_BMC_CHANNEL_ADDR 0x1E // 8 bits
+#define PMIC_FAULT_STATUS_OFFSET 0x0B
 
 void start_monitor_pmic_error_thread();
 void pmic_error_check();
+void read_pmic_error_when_dc_off();
 
 #endif
