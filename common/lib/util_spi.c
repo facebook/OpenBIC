@@ -265,7 +265,7 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, uint8_t f
 {
 	static bool is_init = 0;
 	static uint8_t *txbuf = NULL;
-	static uint32_t buf_offset = 0;
+	static uint32_t start_offset = 0, buf_offset = 0;
 	uint32_t ret = 0;
 	const struct device *flash_dev;
 
@@ -281,27 +281,29 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, uint8_t f
 			return FWUPDATE_OUT_OF_HEAP;
 		}
 		is_init = 1;
+		start_offset = offset;
 		buf_offset = 0;
 		k_msleep(10);
 	}
 
-	if ((buf_offset + msg_len) > SECTOR_SZ_64K) {
-		LOG_ERR("SPI index %d, recv data 0x%x over sector size 0x%x", flash_position,
-			buf_offset + msg_len, SECTOR_SZ_64K);
-		SAFE_FREE(txbuf);
-		k_msleep(10);
-		is_init = 0;
-		return FWUPDATE_OVER_LENGTH;
-	}
-
-	if ((offset % SECTOR_SZ_64K) != buf_offset) {
+	if (offset != (start_offset + buf_offset)) {
 		LOG_ERR("SPI index %d, recorded offset 0x%x but updating 0x%x", flash_position,
-			buf_offset, offset % SECTOR_SZ_64K);
+			start_offset + buf_offset, offset);
 		SAFE_FREE(txbuf);
 		txbuf = NULL;
 		k_msleep(10);
 		is_init = 0;
 		return FWUPDATE_REPEATED_UPDATED;
+	}
+
+	if ((buf_offset + msg_len) > SECTOR_SZ_64K) {
+		LOG_ERR("SPI index %d, recv data over buffer length(64KB), buf_offset 0x%x, msg_len 0x%x",
+			flash_position, buf_offset, msg_len);
+		SAFE_FREE(txbuf);
+		txbuf = NULL;
+		k_msleep(10);
+		is_init = 0;
+		return FWUPDATE_OVER_LENGTH;
 	}
 
 	LOG_DBG("spi bus%x update offset %x %x, msg_len %d, flag 0x%x, msg_buf: %2x %2x %2x %2x",
@@ -322,29 +324,18 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, uint8_t f
 			}
 			flash_device_list[flash_position].isinit = true;
 		}
-		uint8_t sector = 16;
-		uint32_t txbuf_offset;
-		uint32_t update_offset;
 
-		for (int i = 0; i < sector; i++) {
-			txbuf_offset = SECTOR_SZ_4K * i;
-			update_offset = (offset / SECTOR_SZ_64K) * SECTOR_SZ_64K + txbuf_offset;
-			ret = do_update(flash_dev, update_offset, &txbuf[txbuf_offset],
-					SECTOR_SZ_4K);
-			if (ret) {
-				LOG_ERR("Failed to update SPI, status %d", ret);
-				break;
-			}
-		}
-		if (!ret) {
+		ret = do_update(flash_dev, start_offset, txbuf, buf_offset);
+		if (ret) {
+			LOG_ERR("Failed to update SPI, status %d", ret);
+		} else {
 			LOG_INF("Update success");
 		}
 		SAFE_FREE(txbuf);
 		k_msleep(10);
 		is_init = 0;
 
-		LOG_DBG("Update 0x%x, offset 0x%x, SECTOR_SZ_16K 0x%x",
-			(offset / SECTOR_SZ_16K) * SECTOR_SZ_16K, offset, SECTOR_SZ_16K);
+		LOG_DBG("Update from offset 0x%x, length 0x%x", start_offset, buf_offset);
 
 		if ((flag & SECTOR_END_FLAG) && (flash_position == DEVSPI_FMC_CS0)) {
 			if (flag & NO_RESET_FLAG) {
