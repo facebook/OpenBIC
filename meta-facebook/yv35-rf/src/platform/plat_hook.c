@@ -176,3 +176,9 @@ bool pre_isl69254iraz_t_read(uint8_t sensor_num, void *args)
 	}
 	return true;
 }
+
+bool pre_pm8702_read(uint8_t sensor_num, void *args)
+{
+	k_msleep(20);
+	return true;
+}
