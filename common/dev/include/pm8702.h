@@ -23,9 +23,15 @@
 
 /*CCI (pm8702 vendor CMD) */
 #define pm8702_I2C_OFFSET_READ 0xc401
+#define PM8702_HBO_STATUS 0xCD00
+#define PM8702_HBO_TRANSFER_FW 0xCD01
+#define PM8702_HBO_ACTIVATE_FW 0xCD02
 
 /*CCI (pm8702 vendor CMD) Request paypload length */
 #define I2C_OFFSET_READ_REQ_PL_LEN 20 /*Size Bytes*/
+#define HBO_STATUS_REQ_PL_LEN 0
+#define HBO_TRANSFER_FW_REQ_PL_LEN 256
+#define HBO_ACTIVATE_FW_REQ_PL_LEN 2
 
 /*CCI (pm8702 vendor CMD) Response paypload length */
 #define DIMM_TEMP_READ_RESP_PL_LEN 2 /*Size Bytes*/
@@ -52,6 +58,21 @@ typedef struct __attribute__((__packed__)) {
 	uint32_t timeout_ms;
 } i2c_offset_read_req;
 
+typedef struct _pm8702_hbo_status_resp {
+	uint16_t cmd_opcode;
+	uint8_t percent_complete : 7;
+	uint8_t bo_run : 1;
+	uint8_t reserved;
+	uint16_t return_code;
+	uint16_t vendor_status;
+} pm8702_hbo_status_resp;
+
+typedef struct _pm8702_command_info {
+	uint16_t cmd_opcode;
+	int payload_len;
+	int response_len;
+} pm8702_command_info;
+
 typedef enum _pm8702_access {
 	chip_temp,
 	dimm_temp,
@@ -59,6 +80,10 @@ typedef enum _pm8702_access {
 
 bool pm8702_get_dimm_temp(void *mctp_p, mctp_ext_params ext_params, uint16_t address,
 			  int16_t *interger, int16_t *fraction);
+bool pm8702_cmd_handler(void *mctp_inst, mctp_ext_params ext_params, uint16_t opcode,
+			uint8_t *data_buf, uint8_t data_len, uint8_t *response,
+			uint8_t *response_len);
+
 #endif
 
 #endif

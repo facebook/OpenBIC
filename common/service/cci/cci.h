@@ -21,18 +21,26 @@
 typedef enum {
 	CCI_GET_HEALTH_INFO = 0x4200,
 	CCI_GET_FW_INFO = 0x0200,
+	CCI_TRANSFER_FW = 0x0201,
+	CCI_ACTIVATE_FW = 0x0202,
 } CCI_CMD;
 
 /*CCI Request paypload length */
 #define HEALTH_INFO_REQ_PL_LEN 0 /*Size Bytes*/
 #define GET_FW_INFO_REQ_PL_LEN 0
+#define TRANSFER_FW_REQ_PL_LEN 256
+#define ACTIVATE_FW_REQ_PL_LEN 2
 
 /*CCI Response paypload length */
 #define HEALTH_INFO_RESP_PL_LEN 18 /*Size Bytes*/
 #define GET_FW_INFO_RESP_PL_LEN 80
+#define TRANSFER_FW_RESP_PL_LEN 0
+#define ACTIVATE_FW_RESP_PL_LEN 0
 
 #define GET_FW_INFO_RESV_LEN 13
 #define GET_FW_INFO_REVISION_LEN 16
+#define TRANSFER_FW_RESV_LEN 120
+#define TRANSFER_FW_DATA_LEN 128
 
 struct _cci_handler_query_entry {
 	CCI_CMD type;
@@ -144,11 +152,38 @@ typedef struct _cci_fw_info_resp {
 	uint8_t slot4_fw_revision[GET_FW_INFO_REVISION_LEN];
 } cci_fw_info_resp;
 
+typedef struct _cci_transfer_fw_req {
+	uint8_t action;
+	uint8_t slot;
+	uint16_t reserved_1;
+	uint32_t offset;
+	uint8_t reserved_2[TRANSFER_FW_RESV_LEN];
+	uint8_t data[TRANSFER_FW_DATA_LEN];
+} cci_transfer_fw_req;
+
+typedef struct _cci_activate_fw_req {
+	uint8_t action;
+	uint8_t slot;
+} cci_activate_fw_req;
+
 enum ACTIVE_FW_SLOT {
 	SLOT1_FW_ACTIVE = 0x01,
 	SLOT2_FW_ACTIVE,
 	SLOT3_FW_ACTIVE,
 	SLOT4_FW_ACTIVE,
+};
+
+enum TRANSFER_FW_OPTION {
+	FULL_FW_TRANSFER,
+	INITIATE_FW_TRANSFER,
+	CONTINUE_FW_TRANSFER,
+	END_TRANSFER,
+	ABORT_TRANSFER,
+};
+
+enum ACTIVATE_FW_OPTION {
+	ONLINE_ACTIVE_FW,
+	NEXT_COLD_RESET_ACTIVE_FW,
 };
 
 #endif /* _CCI_H */
