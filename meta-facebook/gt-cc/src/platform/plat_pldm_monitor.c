@@ -28,6 +28,99 @@
 
 LOG_MODULE_REGISTER(plat_pldm_monitor);
 
+/* Define from Platform Level Data Model (PLDM) State 
+   Set Specification (DSP0249) Table 15 – Entity ID codes*/
+#define PLDM_ENTITY_IO_CONTROLLER 145
+/* Chassis-specific entities 8192 - 16383 */
+#define PLDM_OEM_ENTITY_LED 8192
+#define PLDM_OEM_ENTITY_SSD_LED 8193
+
+enum pldm_plat_effecter_id_high_byte {
+	PLAT_EFFECTER_ID_GPIO_HIGH_BYTE = (0xFF << 8),
+	PLAT_EFFECTER_ID_LED_HIGH_BYTE = (0xE0 << 8),
+};
+
+static struct plat_state_effecter_info {
+	uint16_t entity_type;
+	uint16_t effecter_id;
+} plat_state_effecter_table[] = {
+	[0 ... PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX] = {
+		.entity_type = PLDM_ENTITY_IO_CONTROLLER,
+	},
+	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX + 1] = { 
+		.entity_type = PLDM_OEM_ENTITY_LED, 
+		.effecter_id = PLAT_EFFECTER_ID_LED_HIGH_BYTE,
+	},
+	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX + 2] = { 
+		.entity_type = PLDM_OEM_ENTITY_LED, 
+		.effecter_id = (PLAT_EFFECTER_ID_LED_HIGH_BYTE | PLAT_EFFECTER_ID_FAULT_LED),
+	},
+	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX + 3] = { 
+		.entity_type = PLDM_OEM_ENTITY_SSD_LED, 
+		.effecter_id = PLAT_EFFECTER_ID_LED_HIGH_BYTE | PLAT_EFFECTER_ID_LED_E1S_0,
+	},
+	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX + 4] = { 
+		.entity_type = PLDM_OEM_ENTITY_SSD_LED, 
+		.effecter_id = PLAT_EFFECTER_ID_LED_HIGH_BYTE | PLAT_EFFECTER_ID_LED_E1S_1,
+	},
+	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX + 5] = { 
+		.entity_type = PLDM_OEM_ENTITY_SSD_LED, 
+		.effecter_id = PLAT_EFFECTER_ID_LED_HIGH_BYTE | PLAT_EFFECTER_ID_LED_E1S_2,
+	},
+	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX + 6] = { 
+		.entity_type = PLDM_OEM_ENTITY_SSD_LED, 
+		.effecter_id = PLAT_EFFECTER_ID_LED_HIGH_BYTE | PLAT_EFFECTER_ID_LED_E1S_3,
+	},
+	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX + 7] = { 
+		.entity_type = PLDM_OEM_ENTITY_SSD_LED, 
+		.effecter_id = PLAT_EFFECTER_ID_LED_HIGH_BYTE | PLAT_EFFECTER_ID_LED_E1S_4,
+	},
+	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX + 8] = { 
+		.entity_type = PLDM_OEM_ENTITY_SSD_LED, 
+		.effecter_id = PLAT_EFFECTER_ID_LED_HIGH_BYTE | PLAT_EFFECTER_ID_LED_E1S_5,
+	},
+	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX + 9] = { 
+		.entity_type = PLDM_OEM_ENTITY_SSD_LED, 
+		.effecter_id = PLAT_EFFECTER_ID_LED_HIGH_BYTE | PLAT_EFFECTER_ID_LED_E1S_6,
+	},
+	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX + 10] = { 
+		.entity_type = PLDM_OEM_ENTITY_SSD_LED, 
+		.effecter_id = PLAT_EFFECTER_ID_LED_HIGH_BYTE | PLAT_EFFECTER_ID_LED_E1S_7,
+	},
+	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX + 11] = { 
+		.entity_type = PLDM_OEM_ENTITY_SSD_LED, 
+		.effecter_id = PLAT_EFFECTER_ID_LED_HIGH_BYTE | PLAT_EFFECTER_ID_LED_E1S_8, 
+	},
+	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX + 12] = { 
+		.entity_type = PLDM_OEM_ENTITY_SSD_LED, 
+		.effecter_id = PLAT_EFFECTER_ID_LED_HIGH_BYTE | PLAT_EFFECTER_ID_LED_E1S_9, 
+	},
+	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX + 13] = { 
+		.entity_type = PLDM_OEM_ENTITY_SSD_LED, 
+		.effecter_id = PLAT_EFFECTER_ID_LED_HIGH_BYTE | PLAT_EFFECTER_ID_LED_E1S_10,
+	},
+	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX + 14] = { 
+		.entity_type = PLDM_OEM_ENTITY_SSD_LED, 
+		.effecter_id = PLAT_EFFECTER_ID_LED_HIGH_BYTE | PLAT_EFFECTER_ID_LED_E1S_11, 
+	},
+	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX + 15] = { 
+		.entity_type = PLDM_OEM_ENTITY_SSD_LED, 
+		.effecter_id = PLAT_EFFECTER_ID_LED_HIGH_BYTE | PLAT_EFFECTER_ID_LED_E1S_12, 
+	},
+	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX + 16] = { 
+		.entity_type = PLDM_OEM_ENTITY_SSD_LED, 
+		.effecter_id = PLAT_EFFECTER_ID_LED_HIGH_BYTE | PLAT_EFFECTER_ID_LED_E1S_13, 
+	},
+	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX + 17] = { 
+		.entity_type = PLDM_OEM_ENTITY_SSD_LED, 
+		.effecter_id = PLAT_EFFECTER_ID_LED_HIGH_BYTE | PLAT_EFFECTER_ID_LED_E1S_14, 
+	},
+	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX + 18] = { 
+		.entity_type = PLDM_OEM_ENTITY_SSD_LED, 
+		.effecter_id = PLAT_EFFECTER_ID_LED_HIGH_BYTE | PLAT_EFFECTER_ID_LED_E1S_15, 
+	},
+};
+
 uint8_t e1s_prsnt_pin[4][4] = {
 	{ PRSNT_SSD0_R_N, PRSNT_SSD1_R_N, PRSNT_SSD2_R_N, PRSNT_SSD3_R_N },
 	{ PRSNT_SSD4_R_N, PRSNT_SSD5_R_N, PRSNT_SSD6_R_N, PRSNT_SSD7_R_N },
@@ -376,6 +469,13 @@ static void plat_set_effecter_led_handler(const uint8_t *buf, uint16_t len, uint
 	uint8_t *completion_code_p = resp;
 	*resp_len = 1;
 
+	if ((effector_id != PLAT_EFFECTER_ID_POWER_LED) &&
+	    (effector_id != PLAT_EFFECTER_ID_FAULT_LED)) {
+		LOG_ERR("Unsupport LED effecter ID(%d)", effector_id);
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+		return;
+	}
+
 	if (req_p->composite_effecter_count != PLDM_PLATFORM_OEM_LED_EFFECTER_STATE_FIELD_COUNT) {
 		LOG_ERR("Unsupport LED effecter count(%d)", req_p->composite_effecter_count);
 		*completion_code_p = PLDM_ERROR_INVALID_DATA;
@@ -429,6 +529,13 @@ static void plat_set_effecter_ssd_led_handler(const uint8_t *buf, uint16_t len, 
 	uint8_t *completion_code_p = resp;
 	*resp_len = 1;
 
+	if ((effector_id < PLAT_EFFECTER_ID_LED_E1S_0) ||
+	    (effector_id > PLAT_EFFECTER_ID_LED_E1S_15)) {
+		LOG_ERR("Unsupport SSD LED effecter ID(%d)", effector_id);
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+		return;
+	}
+
 	if (req_p->composite_effecter_count != PLDM_PLATFORM_OEM_LED_EFFECTER_STATE_FIELD_COUNT) {
 		LOG_ERR("Unsupport LED effecter count(%d)", req_p->composite_effecter_count);
 		*completion_code_p = PLDM_ERROR_INVALID_DATA;
@@ -470,50 +577,6 @@ static void plat_set_effecter_ssd_led_handler(const uint8_t *buf, uint16_t len, 
 	return;
 }
 
-void plat_oem_set_effecter_type_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
-					uint16_t *resp_len)
-{
-	CHECK_NULL_ARG(buf);
-	CHECK_NULL_ARG(resp);
-	CHECK_NULL_ARG(resp_len);
-
-	struct pldm_set_state_effecter_states_req *req_p =
-		(struct pldm_set_state_effecter_states_req *)buf;
-	uint8_t *completion_code_p = resp;
-	*resp_len = 1;
-
-	uint8_t plat_effecter_id = req_p->effecter_id & BIT_MASK(8);
-
-	switch (plat_effecter_id) {
-	case PLAT_EFFECTER_ID_POWER_LED:
-	case PLAT_EFFECTER_ID_FAULT_LED:
-		plat_set_effecter_led_handler(buf, len, resp, resp_len);
-		break;
-	case PLAT_EFFECTER_ID_LED_E1S_0:
-	case PLAT_EFFECTER_ID_LED_E1S_1:
-	case PLAT_EFFECTER_ID_LED_E1S_2:
-	case PLAT_EFFECTER_ID_LED_E1S_3:
-	case PLAT_EFFECTER_ID_LED_E1S_4:
-	case PLAT_EFFECTER_ID_LED_E1S_5:
-	case PLAT_EFFECTER_ID_LED_E1S_6:
-	case PLAT_EFFECTER_ID_LED_E1S_7:
-	case PLAT_EFFECTER_ID_LED_E1S_8:
-	case PLAT_EFFECTER_ID_LED_E1S_9:
-	case PLAT_EFFECTER_ID_LED_E1S_10:
-	case PLAT_EFFECTER_ID_LED_E1S_11:
-	case PLAT_EFFECTER_ID_LED_E1S_12:
-	case PLAT_EFFECTER_ID_LED_E1S_13:
-	case PLAT_EFFECTER_ID_LED_E1S_14:
-	case PLAT_EFFECTER_ID_LED_E1S_15:
-		plat_set_effecter_ssd_led_handler(buf, len, resp, resp_len);
-		break;
-	default:
-		LOG_ERR("Unsupport platfrom effecter ID, (%d)", plat_effecter_id);
-		*completion_code_p = PLDM_PLATFORM_INVALID_EFFECTER_ID;
-		break;
-	}
-}
-
 static void plat_get_effecter_led_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
 					  uint16_t *resp_len)
 {
@@ -528,6 +591,14 @@ static void plat_get_effecter_led_handler(const uint8_t *buf, uint16_t len, uint
 
 	uint8_t effector_id = req_p->effecter_id & BIT_MASK(8);
 	get_effecter_state_field_t *state = &res_p->field[0];
+	*resp_len = 1;
+
+	if ((effector_id != PLAT_EFFECTER_ID_POWER_LED) &&
+	    (effector_id != PLAT_EFFECTER_ID_FAULT_LED)) {
+		LOG_ERR("Unsupport LED effecter ID(%d)", effector_id);
+		res_p->completion_code = PLDM_ERROR_INVALID_DATA;
+		return;
+	}
 
 	uint8_t led_type =
 		(effector_id == PLAT_EFFECTER_ID_POWER_LED) ? SYS_POWER_LED : SYS_FAULT_LED;
@@ -563,6 +634,15 @@ static void plat_get_effecter_ssd_led_handler(const uint8_t *buf, uint16_t len, 
 		(struct pldm_get_state_effecter_states_resp *)resp;
 
 	uint8_t effector_id = req_p->effecter_id & BIT_MASK(8);
+	*resp_len = 1;
+
+	if ((effector_id < PLAT_EFFECTER_ID_LED_E1S_0) ||
+	    (effector_id > PLAT_EFFECTER_ID_LED_E1S_15)) {
+		LOG_ERR("Unsupport SSD LED effecter ID(%d)", effector_id);
+		res_p->completion_code = PLDM_ERROR_INVALID_DATA;
+		return;
+	}
+
 	get_effecter_state_field_t *state = &res_p->field[0];
 	bool is_access = is_e1s_access(e1s_sensor_table[effector_id - PLAT_EFFECTER_ID_LED_E1S_0]);
 	uint8_t status = get_ssd_led_status(effector_id);
@@ -585,46 +665,112 @@ static void plat_get_effecter_ssd_led_handler(const uint8_t *buf, uint16_t len, 
 	res_p->completion_code = PLDM_SUCCESS;
 }
 
-void plat_oem_get_effecter_type_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
-					uint16_t *resp_len)
+static struct plat_state_effecter_info *find_state_effecter_info(uint16_t effecter_id)
 {
-	CHECK_NULL_ARG(buf);
-	CHECK_NULL_ARG(resp);
-	CHECK_NULL_ARG(resp_len);
+	for (uint8_t i = 0; i < ARRAY_SIZE(plat_state_effecter_table); i++) {
+		if (plat_state_effecter_table[i].effecter_id == effecter_id)
+			return &plat_state_effecter_table[i];
+	}
+
+	return NULL;
+}
+
+uint8_t plat_pldm_set_state_effecter_state_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
+						   uint16_t *resp_len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_ARG_WITH_RETURN(!len, PLDM_ERROR);
+
+	struct pldm_set_state_effecter_states_req *req_p =
+		(struct pldm_set_state_effecter_states_req *)buf;
+	uint8_t *completion_code_p = resp;
+	*resp_len = 1;
+
+	if (req_p->composite_effecter_count < 0x01 || req_p->composite_effecter_count > 0x08) {
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+		return PLDM_SUCCESS;
+	}
+
+	if (len != (PLDM_SET_STATE_EFFECTER_REQ_NO_STATE_FIELD_BYTES +
+		    sizeof(set_effecter_state_field_t) * req_p->composite_effecter_count)) {
+		*completion_code_p = PLDM_ERROR_INVALID_LENGTH;
+		return PLDM_SUCCESS;
+	}
+
+	struct plat_state_effecter_info *info_p = find_state_effecter_info(req_p->effecter_id);
+
+	if (!info_p) {
+		LOG_ERR("Can't find effecter ID (0x%x) info", req_p->effecter_id);
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+		return PLDM_SUCCESS;
+	}
+
+	switch (info_p->entity_type) {
+	case PLDM_ENTITY_IO_CONTROLLER:
+		set_effecter_state_gpio_handler(buf, len, resp, resp_len,
+						(uint8_t)(info_p->effecter_id & GENMASK(7, 0)));
+		break;
+	case PLDM_OEM_ENTITY_LED:
+		plat_set_effecter_led_handler(buf, len, resp, resp_len);
+		break;
+	case PLDM_OEM_ENTITY_SSD_LED:
+		plat_set_effecter_ssd_led_handler(buf, len, resp, resp_len);
+		break;
+	default:
+		LOG_ERR("Unsupport entity type, (%d)", info_p->entity_type);
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+		break;
+	}
+
+	return PLDM_SUCCESS;
+}
+
+uint8_t plat_pldm_get_state_effecter_state_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
+						   uint16_t *resp_len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_ARG_WITH_RETURN(!len, PLDM_ERROR);
 
 	struct pldm_get_state_effecter_states_req *req_p =
 		(struct pldm_get_state_effecter_states_req *)buf;
 	uint8_t *completion_code_p = resp;
 	*resp_len = 1;
 
-	uint8_t plat_effecter_id = req_p->effecter_id & BIT_MASK(8);
+	struct plat_state_effecter_info *info_p = find_state_effecter_info(req_p->effecter_id);
 
-	switch (plat_effecter_id) {
-	case PLAT_EFFECTER_ID_POWER_LED:
-	case PLAT_EFFECTER_ID_FAULT_LED:
+	if (!info_p) {
+		LOG_ERR("Can't find effecter ID (0x%x) info", req_p->effecter_id);
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+		return PLDM_SUCCESS;
+	}
+
+	switch (info_p->entity_type) {
+	case PLDM_ENTITY_IO_CONTROLLER:
+		get_effecter_state_gpio_handler(buf, len, resp, resp_len,
+						(uint8_t)(info_p->effecter_id & GENMASK(7, 0)));
+		break;
+	case PLDM_OEM_ENTITY_LED:
 		plat_get_effecter_led_handler(buf, len, resp, resp_len);
 		break;
-	case PLAT_EFFECTER_ID_LED_E1S_0:
-	case PLAT_EFFECTER_ID_LED_E1S_1:
-	case PLAT_EFFECTER_ID_LED_E1S_2:
-	case PLAT_EFFECTER_ID_LED_E1S_3:
-	case PLAT_EFFECTER_ID_LED_E1S_4:
-	case PLAT_EFFECTER_ID_LED_E1S_5:
-	case PLAT_EFFECTER_ID_LED_E1S_6:
-	case PLAT_EFFECTER_ID_LED_E1S_7:
-	case PLAT_EFFECTER_ID_LED_E1S_8:
-	case PLAT_EFFECTER_ID_LED_E1S_9:
-	case PLAT_EFFECTER_ID_LED_E1S_10:
-	case PLAT_EFFECTER_ID_LED_E1S_11:
-	case PLAT_EFFECTER_ID_LED_E1S_12:
-	case PLAT_EFFECTER_ID_LED_E1S_13:
-	case PLAT_EFFECTER_ID_LED_E1S_14:
-	case PLAT_EFFECTER_ID_LED_E1S_15:
+	case PLDM_OEM_ENTITY_SSD_LED:
 		plat_get_effecter_ssd_led_handler(buf, len, resp, resp_len);
 		break;
 	default:
-		LOG_ERR("Unsupport platfrom effecter ID, (%d)", plat_effecter_id);
-		*completion_code_p = PLDM_PLATFORM_INVALID_EFFECTER_ID;
+		LOG_ERR("Unsupport entity type, (%d)", info_p->entity_type);
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
 		break;
+	}
+
+	return PLDM_SUCCESS;
+}
+
+void plat_pldm_assign_gpio_effecter_id()
+{
+	for (uint8_t i = 0; i < PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX; i++) {
+		plat_state_effecter_table[i].effecter_id = (PLAT_EFFECTER_ID_GPIO_HIGH_BYTE | i);
 	}
 }

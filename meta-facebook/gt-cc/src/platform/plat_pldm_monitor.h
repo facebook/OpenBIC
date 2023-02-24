@@ -109,5 +109,7 @@ enum plat_pldm_effecter_id {
 void ssd_alert_check(uint8_t group);
 void ssd_present_check();
 void nic_present_check();
+void pal_load_pldm_effcter_table();
+void plat_pldm_assign_gpio_effecter_id();
 
 #endif
