@@ -174,3 +174,44 @@ void start_monitor_pmic_error_thread()
 				CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
 	k_thread_name_set(&monitor_pmic_error_thread, "monitor_pmic_error_thread");
 }
+
+void read_pmic_error_when_dc_off()
+{
+	ipmi_msg msg = { 0 };
+	/* Get slot ID */
+	msg.data_len = 0;
+	msg.InF_source = SELF;
+	msg.InF_target = BMC_IPMB;
+	msg.netfn = NETFN_OEM_REQ;
+	msg.cmd = CMD_OEM_GET_BOARD_ID;
+
+	ipmb_error ret = ipmb_read(&msg, IPMB_inf_index_map[msg.InF_target]);
+	if (ret != IPMB_ERROR_SUCCESS) {
+		LOG_ERR("Failed to get slot ID , ret %d", ret);
+		return;
+	}
+	/* slot1 SB CPLD BUS is 4, slot3 SB CPLD BUS is 6 */
+	uint8_t cpld_bus = msg.data[2] + 3;
+
+	/* Read SB CPLD (BMC channel) to know if PMIC happen critical error */
+	memset(&msg, 0, sizeof(msg));
+	msg.InF_source = SELF;
+	msg.InF_target = BMC_IPMB;
+	msg.netfn = NETFN_APP_REQ;
+	msg.cmd = CMD_APP_MASTER_WRITE_READ;
+	msg.data_len = 4;
+	msg.data[0] = (cpld_bus << 1) + 1;
+	msg.data[1] = SYS_CPLD_BMC_CHANNEL_ADDR;
+	msg.data[2] = 1;
+	msg.data[3] = PMIC_FAULT_STATUS_OFFSET;
+	ret = ipmb_read(&msg, IPMB_inf_index_map[msg.InF_target]);
+	if (ret != IPMB_ERROR_SUCCESS) {
+		LOG_ERR("Failed to read PMIC status, ret %d", ret);
+		return;
+	}
+
+	uint8_t pmic_fault_status = msg.data[0];
+	if ((pmic_fault_status & BIT(5))) {
+		pmic_error_check();
+	}
+}

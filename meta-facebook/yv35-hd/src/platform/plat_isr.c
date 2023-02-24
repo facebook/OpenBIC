@@ -64,8 +64,10 @@ static void PROC_FAIL_handler(struct k_work *work)
 
 K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_delayed_status);
 K_WORK_DELAYABLE_DEFINE(PROC_FAIL_work, PROC_FAIL_handler);
+K_WORK_DELAYABLE_DEFINE(read_pmic_critical_work, read_pmic_error_when_dc_off);
 #define DC_ON_5_SECOND 5
 #define PROC_FAIL_START_DELAY_SECOND 10
+#define READ_PMIC_CRITICAL_ERROR_MS 100
 void ISR_DC_ON()
 {
 	set_DC_status(PWRGD_CPU_LVC3);
@@ -100,7 +102,7 @@ void ISR_DC_ON()
 				LOG_ERR("Failed to add system PWROK failure sel");
 			}
 		}
-		pmic_error_check();
+		k_work_schedule(&read_pmic_critical_work, K_MSEC(READ_PMIC_CRITICAL_ERROR_MS));
 	}
 }
 
