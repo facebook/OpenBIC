@@ -18,6 +18,7 @@
 #include "storage_handler.h"
 #include "plat_fru.h"
 #include "plat_ipmb.h"
+#include "plat_mctp.h"
 #include "fru.h"
 #include "sdr.h"
 #include <logging/log.h>
@@ -284,20 +285,25 @@ __weak void STORAGE_ADD_SEL(ipmi_msg *msg)
 	add_sel_msg->data_len = msg->data_len;
 	memcpy(add_sel_msg->data, msg->data, add_sel_msg->data_len);
 
-	status = ipmb_read(add_sel_msg, IPMB_inf_index_map[add_sel_msg->InF_target]);
-	free(add_sel_msg);
-
-	msg->data_len = 0;
-	if (status == IPMB_ERROR_FAILURE) {
-		msg->completion_code = CC_UNSPECIFIED_ERROR;
-		LOG_ERR("Fail to post msg to txqueue for addsel");
-		return;
-	} else if (status == IPMB_ERROR_GET_MESSAGE_QUEUE) {
-		msg->completion_code = CC_UNSPECIFIED_ERROR;
-		LOG_ERR("No response from bmc for addsel");
-		return;
+	// Check BMC communication interface if use IPMB or not
+	if (pal_is_interface_use_ipmb(IPMB_inf_index_map[get_add_sel_target_interface()])) {
+		status = ipmb_read(add_sel_msg, IPMB_inf_index_map[add_sel_msg->InF_target]);
+		free(add_sel_msg);
+		msg->data_len = 0;
+		if (status == IPMB_ERROR_FAILURE) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			LOG_ERR("Fail to post msg to txqueue for addsel");
+			return;
+		} else if (status == IPMB_ERROR_GET_MESSAGE_QUEUE) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			LOG_ERR("No response from bmc for addsel");
+			return;
+		}
+	} else {
+		status = pldm_send_ipmi_request(add_sel_msg);
+		free(add_sel_msg);
+		msg->data_len = 0;
 	}
-
 	msg->completion_code = CC_SUCCESS;
 #else
 	msg->completion_code = CC_UNSPECIFIED_ERROR;
