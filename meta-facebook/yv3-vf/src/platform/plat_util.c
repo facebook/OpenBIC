@@ -27,6 +27,7 @@
 #include "plat_gpio.h"
 #include "plat_m2.h"
 #include "plat_class.h"
+#include "plat_ipmb.h"
 
 #include "ipmi.h"
 #include "plat_util.h"
@@ -34,6 +35,14 @@
 
 LOG_MODULE_REGISTER(plat_util);
 
+/*
+ * sensor number(sel) for different platforms
+ * Yv3: 0x46
+ * Yv3(aspeed): 0x46
+ * Yv3.5: 0x10
+ */
+uint8_t plat_sel_sensor_num = SENSOR_NUM_SYS_STA;
+static bool plat_sel_sensor_num_ready_flag = false;
 typedef struct {
 	uint32_t arg1;
 	uint32_t arg2;
@@ -164,7 +173,7 @@ struct k_timer *idx_to_noise_timer(NOSIE_E idx)
 	       (idx == NOSIE_E_M2PRSNT_B) ? &ignore_noise_timer_B :
 	       (idx == NOSIE_E_M2PRSNT_C) ? &ignore_noise_timer_C :
 	       (idx == NOSIE_E_M2PRSNT_D) ? &ignore_noise_timer_D :
-						  NULL;
+					    NULL;
 }
 uint8_t ignore_noise(uint8_t idx, uint32_t m_sec) // 1: exec, 0: noise
 {
@@ -196,7 +205,32 @@ void add_sel(uint8_t sensor_type, uint8_t event_type, uint8_t sensor_number, uin
 	sel_msg.event_data2 = event_data2;
 	sel_msg.event_data3 = event_data3;
 
-	common_add_sel_evt_record(&sel_msg);
+	if (plat_sel_sensor_num_ready_flag) {
+		if (sensor_number == SENSOR_NUM_SYS_STA)
+			sel_msg.sensor_number = get_sel_sensor_num();
+		common_add_sel_evt_record(&sel_msg);
+	} else {
+		common_addsel_msg_t *tmp =
+			malloc(sizeof(common_addsel_msg_t)); // free by add_sel_work
+		if (tmp == NULL) {
+			LOG_ERR("add sel malloc fail!\n");
+			return;
+		}
+		memcpy(tmp, &sel_msg, sizeof(common_addsel_msg_t));
+		delay_function(1000, add_sel_work, (uint32_t)tmp, 0); // delay 1s add sel
+	}
+
+	return;
+}
+
+void add_sel_work(uint32_t sel_msg_addr)
+{
+	common_addsel_msg_t *sel_msg = (common_addsel_msg_t *)sel_msg_addr;
+
+	add_sel(sel_msg->sensor_type, sel_msg->event_type, sel_msg->sensor_number,
+		sel_msg->event_data1, sel_msg->event_data2, sel_msg->event_data3);
+
+	SAFE_FREE(sel_msg);
 
 	return;
 }
@@ -268,4 +302,45 @@ uint8_t assert_func(DEASSERT_CHK_TYPE_E assert_type) // 0:success
 	add_work(&job);
 
 	return 0;
+}
+
+/*
+ * use getdeviceid to set different sensor number(sel)
+ * response:
+ *	8 -> yv3 -> 0x46
+ *	0 -> yv3(aspeed) -> 0x46
+ *	0 -> yv3.5 -> 0x10
+ */
+void init_sel_sensor_num(void)
+{
+	ipmb_error status;
+	ipmi_msg *msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
+	if (msg == NULL) {
+		LOG_ERR("Get device id req msg malloc fail");
+		return;
+	}
+	memset(msg, 0, sizeof(ipmi_msg));
+
+	msg->data_len = 0;
+	msg->InF_source = SELF;
+	msg->InF_target = CL_BIC_IPMB;
+
+	msg->netfn = NETFN_APP_REQ;
+	msg->cmd = CMD_APP_GET_DEVICE_ID;
+
+	status = ipmb_read(msg, CL_BIC_IPMB_IDX);
+
+	if (!status) {
+		uint32_t iana = (msg->data[8] << 16 | msg->data[7] << 8 | msg->data[6]);
+		plat_sel_sensor_num =
+			(iana == IANA_ID2) ? SENSOR_NUM_SYSTEM_STATUS : SENSOR_NUM_SYS_STA;
+	}
+
+	SAFE_FREE(msg);
+	plat_sel_sensor_num_ready_flag = true;
+}
+
+uint8_t get_sel_sensor_num(void)
+{
+	return plat_sel_sensor_num;
 }

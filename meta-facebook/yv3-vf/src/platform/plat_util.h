@@ -15,6 +15,7 @@
  */
 
 /* platform Event */
+#define SENSOR_NUM_SYSTEM_STATUS 0x10
 #define SENSOR_NUM_SYS_STA 0x46
 
 #define IPMI_EVENT_OFFSET_SYS_M2PRESENT 0x80
@@ -46,5 +47,8 @@ void delay_function(uint32_t delay_time, void *func, uint32_t arg1, uint32_t arg
 uint8_t ignore_noise(uint8_t idx, uint32_t m_sec);
 void add_sel(uint8_t sensor_type, uint8_t event_type, uint8_t sensor_number, uint8_t event_data1,
 	     uint8_t event_data2, uint8_t event_data3);
+void add_sel_work(uint32_t sel_msg_addr);
 uint8_t assert_func(DEASSERT_CHK_TYPE_E assert_type);
 void deassert_func_handler(DEASSERT_CHK_TYPE_E idx);
+void init_sel_sensor_num(void);
+uint8_t get_sel_sensor_num(void);
