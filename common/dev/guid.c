@@ -41,7 +41,7 @@ uint8_t GUID_read(EEPROM_ENTRY *entry)
 	if ((entry->offset + entry->data_len) >=
 	    (GUID_START + GUID_SIZE)) { // Check data write out of range
 		LOG_ERR("GUID read out of range, type: %x, ID: %x", entry->config.dev_type,
-		       entry->config.dev_id);
+			entry->config.dev_id);
 		return GUID_OUT_OF_RANGE;
 	}
 
@@ -70,7 +70,7 @@ uint8_t GUID_write(EEPROM_ENTRY *entry)
 	if ((entry->offset + entry->data_len) >=
 	    (GUID_START + GUID_SIZE)) { // Check data write out of range
 		LOG_ERR("GUID write out of range, type: %x, ID: %x", entry->config.dev_type,
-		       entry->config.dev_id);
+			entry->config.dev_id);
 		return GUID_OUT_OF_RANGE;
 	}
 
@@ -89,7 +89,7 @@ __weak uint8_t get_system_guid(uint16_t *data_len, uint8_t *data)
 	return GUID_FAIL_TO_ACCESS;
 }
 
-__weak uint8_t set_system_guid(uint16_t *data_len, uint8_t *data)
+__weak uint8_t set_system_guid(const uint16_t *data_len, uint8_t *data)
 {
 	return GUID_FAIL_TO_ACCESS;
 }

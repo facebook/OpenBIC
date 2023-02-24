@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -52,7 +52,7 @@ uint8_t get_system_guid(uint16_t *data_len, uint8_t *data)
 	return status;
 }
 
-uint8_t set_system_guid(uint16_t *data_len, uint8_t *data)
+uint8_t set_system_guid(const uint16_t *data_len, uint8_t *data)
 {
 	EEPROM_ENTRY guid_entry;
 
