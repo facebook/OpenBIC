@@ -18,7 +18,7 @@
 #include "storage_handler.h"
 #include "plat_fru.h"
 #include "plat_ipmb.h"
-#include "plat_mctp.h"
+#include "pldm.h"
 #include "fru.h"
 #include "sdr.h"
 #include <logging/log.h>
