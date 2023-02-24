@@ -1,0 +1,74 @@
+From 38748594ebb1c3a56b27dfaf50dc915b88bf674f Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Mon, 20 Feb 2023 18:08:16 +0800
+Subject: [PATCH 3/4] soc: ast10x0: Add dependency for i3c signal to avoid
+ abnormal behavior
+
+ The I3C controllers have the capability to configure the function to
+ operate at either high or low voltage pins depending on specific
+ scenarios. However, simultaneous activation of both voltage pins should
+ be avoided to prevent undesired behaviors in the I3C.
+ This patch introduces a dependency for the register setting to ensure that
+ such a situation is avoided.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I814c8cf1479ce57ffed405d092d65cd090ff8153
+---
+ soc/arm/aspeed/ast10x0/sig_def_list.h | 32 +++++++++++++--------------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
+
+diff --git a/soc/arm/aspeed/ast10x0/sig_def_list.h b/soc/arm/aspeed/ast10x0/sig_def_list.h
+index bc14972102..954ea8906c 100644
+--- a/soc/arm/aspeed/ast10x0/sig_def_list.h
++++ b/soc/arm/aspeed/ast10x0/sig_def_list.h
+@@ -83,31 +83,31 @@ SIG_DEFINE(MTDO2,   B12,    SIG_DESC_SET(0x41C, 24))
+ #endif
+ 
+ #if DT_NODE_HAS_STATUS(DT_NODELABEL(i3c0), okay)
+-SIG_DEFINE(I3C1SCL, J16, SIG_DESC_SET(0x418, 16))
+-SIG_DEFINE(I3C1SDA, J15, SIG_DESC_SET(0x418, 17))
+-SIG_DEFINE(HVI3C1SCL, M15, SIG_DESC_SET(0x4B8, 8))
+-SIG_DEFINE(HVI3C1SDA, M16, SIG_DESC_SET(0x4B8, 9))
++SIG_DEFINE(I3C1SCL, J16, SIG_DESC_SET(0x418, 16), SIG_DESC_CLEAR(0x4B8, 8))
++SIG_DEFINE(I3C1SDA, J15, SIG_DESC_SET(0x418, 17), SIG_DESC_CLEAR(0x4B8, 9))
++SIG_DEFINE(HVI3C1SCL, M15, SIG_DESC_SET(0x4B8, 8), SIG_DESC_CLEAR(0x418, 16))
++SIG_DEFINE(HVI3C1SDA, M16, SIG_DESC_SET(0x4B8, 9), SIG_DESC_CLEAR(0x418, 17))
+ #endif
+ 
+ #if DT_NODE_HAS_STATUS(DT_NODELABEL(i3c1), okay)
+-SIG_DEFINE(I3C2SCL, J14, SIG_DESC_SET(0x418, 18))
+-SIG_DEFINE(I3C2SDA, H16, SIG_DESC_SET(0x418, 19))
+-SIG_DEFINE(HVI3C2SCL, L14, SIG_DESC_SET(0x4B8, 10))
+-SIG_DEFINE(HVI3C2SDA, K15, SIG_DESC_SET(0x4B8, 11))
++SIG_DEFINE(I3C2SCL, J14, SIG_DESC_SET(0x418, 18), SIG_DESC_CLEAR(0x4B8, 10))
++SIG_DEFINE(I3C2SDA, H16, SIG_DESC_SET(0x418, 19), SIG_DESC_CLEAR(0x4B8, 11))
++SIG_DEFINE(HVI3C2SCL, L14, SIG_DESC_SET(0x4B8, 10), SIG_DESC_CLEAR(0x418, 18))
++SIG_DEFINE(HVI3C2SDA, K15, SIG_DESC_SET(0x4B8, 11), SIG_DESC_CLEAR(0x418, 19))
+ #endif
+ 
+ #if DT_NODE_HAS_STATUS(DT_NODELABEL(i3c2), okay)
+-SIG_DEFINE(I3C3SCL, H15, SIG_DESC_SET(0x418, 20))
+-SIG_DEFINE(I3C3SDA, G15, SIG_DESC_SET(0x418, 21))
+-SIG_DEFINE(HVI3C3SCL, L16, SIG_DESC_SET(0x4B8, 12))
+-SIG_DEFINE(HVI3C3SDA, K16, SIG_DESC_SET(0x4B8, 13))
++SIG_DEFINE(I3C3SCL, H15, SIG_DESC_SET(0x418, 20), SIG_DESC_CLEAR(0x4B8, 12))
++SIG_DEFINE(I3C3SDA, G15, SIG_DESC_SET(0x418, 21), SIG_DESC_CLEAR(0x4B8, 13))
++SIG_DEFINE(HVI3C3SCL, L16, SIG_DESC_SET(0x4B8, 12),  SIG_DESC_CLEAR(0x418, 20))
++SIG_DEFINE(HVI3C3SDA, K16, SIG_DESC_SET(0x4B8, 13),  SIG_DESC_CLEAR(0x418, 21))
+ #endif
+ 
+ #if DT_NODE_HAS_STATUS(DT_NODELABEL(i3c3), okay)
+-SIG_DEFINE(I3C4SCL, J13, SIG_DESC_SET(0x418, 22))
+-SIG_DEFINE(I3C4SDA, G16, SIG_DESC_SET(0x418, 23))
+-SIG_DEFINE(HVI3C4SCL, K14, SIG_DESC_SET(0x4B8, 14))
+-SIG_DEFINE(HVI3C4SDA, K15, SIG_DESC_SET(0x4B8, 15))
++SIG_DEFINE(I3C4SCL, J13, SIG_DESC_SET(0x418, 22), SIG_DESC_CLEAR(0x4B8, 14))
++SIG_DEFINE(I3C4SDA, G16, SIG_DESC_SET(0x418, 23), SIG_DESC_CLEAR(0x4B8, 15))
++SIG_DEFINE(HVI3C4SCL, K14, SIG_DESC_SET(0x4B8, 14),  SIG_DESC_CLEAR(0x418, 22))
++SIG_DEFINE(HVI3C4SDA, K15, SIG_DESC_SET(0x4B8, 15),  SIG_DESC_CLEAR(0x418, 23))
+ #endif
+ 
+ #if DT_NODE_HAS_STATUS(DT_NODELABEL(i2cfilter), okay) && CONFIG_I2C_PFR_FILTER
+-- 
+2.25.1
+

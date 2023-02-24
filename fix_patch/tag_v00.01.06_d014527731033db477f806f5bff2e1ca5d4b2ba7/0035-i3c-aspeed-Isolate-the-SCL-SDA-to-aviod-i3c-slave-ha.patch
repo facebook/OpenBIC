@@ -1,0 +1,152 @@
+From 045492133564ac016cdd41d932ef78be3399a63f Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Mon, 13 Feb 2023 16:41:52 +0800
+Subject: [PATCH 1/4] i3c: aspeed: Isolate the SCL/SDA to aviod i3c slave hang.
+
+The "enable bit" of the I3C slave mode needs to wait for the IBI free time
+before it can be activated by the SCL signal. So, this patch add the API
+to isolate the SCL/SDA to achieve it.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I55d8e451e75648d7ecce9f83183a27c3ec702f04
+---
+ drivers/i3c/i3c_aspeed.c | 61 ++++++++++++++++++++++++++++++++--------
+ 1 file changed, 49 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index 9772c44321..703e6b662d 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -480,6 +480,7 @@ struct i3c_aspeed_config {
+ 	const struct device *clock_dev;
+ 	const reset_control_subsys_t reset_id;
+ 	const clock_control_subsys_t clock_id;
++	uint32_t core_period;
+ 	uint32_t i3c_scl_hz;
+ 	uint32_t i2c_scl_hz;
+ 	uint16_t pid_extra_info;
+@@ -546,6 +547,34 @@ struct i3c_aspeed_obj {
+ 	osEventFlagsId_t data_event;
+ };
+ 
++#define I3CG_REG1(x)			((x * 0x10) + 0x14)
++#define SDA_OUT_SW_MODE_EN		BIT(31)
++#define SCL_OUT_SW_MODE_EN		BIT(30)
++#define SDA_IN_SW_MODE_EN		BIT(29)
++#define SCL_IN_SW_MODE_EN		BIT(28)
++#define SDA_IN_SW_MODE_VAL		BIT(27)
++#define SDA_OUT_SW_MODE_VAL		BIT(25)
++#define SDA_SW_MODE_OE			BIT(24)
++#define SCL_IN_SW_MODE_VAL		BIT(23)
++#define SCL_OUT_SW_MODE_VAL		BIT(21)
++#define SCL_SW_MODE_OE			BIT(20)
++
++void i3c_aspeed_isolate_scl_sda(int inst_id, bool iso)
++{
++	uint32_t i3c_gr = DT_REG_ADDR(DT_NODELABEL(i3c_gr));
++	uint32_t value;
++
++	value = sys_read32(i3c_gr + I3CG_REG1(inst_id));
++	if (iso) {
++		value |= SCL_IN_SW_MODE_VAL | SDA_IN_SW_MODE_VAL;
++		value |= SCL_IN_SW_MODE_EN | SDA_IN_SW_MODE_EN;
++		sys_write32(value, i3c_gr + I3CG_REG1(inst_id));
++	} else {
++		value &= ~(SCL_IN_SW_MODE_EN | SDA_IN_SW_MODE_EN);
++		sys_write32(value, i3c_gr + I3CG_REG1(inst_id));
++	}
++}
++
+ #define DEV_CFG(dev)			((struct i3c_aspeed_config *)(dev)->config)
+ #define DEV_DATA(dev)			((struct i3c_aspeed_obj *)(dev)->data)
+ #define DESC_PRIV(desc)			((struct i3c_aspeed_dev_priv *)(desc)->priv_data)
+@@ -908,13 +937,13 @@ static void i3c_aspeed_init_clock(struct i3c_aspeed_obj *obj)
+ 	union i2c_scl_timing_s i2c_scl;
+ 	union bus_free_timing_s bus_free;
+ 	union sda_hold_switch_dly_timing_s sda_hold;
+-	int core_rate, core_period, hcnt, lcnt, scl_timing;
++	int core_rate, hcnt, lcnt, scl_timing;
+ 	int lo_ns, hi_ns;
+ 
+ 	clock_control_get_rate(config->clock_dev, config->clock_id, &core_rate);
+-	core_period = DIV_ROUND_UP(1000000000, core_rate);
++	config->core_period = DIV_ROUND_UP(1000000000, core_rate);
+ 
+-	LOG_INF("core_rate %d hz (%d ns)\n", core_rate, core_period);
++	LOG_INF("core_rate %d hz (%d ns)\n", core_rate, config->core_period);
+ 	LOG_INF("i2c-scl = %d, i3c-scl = %d\n", config->i2c_scl_hz, config->i3c_scl_hz);
+ 
+ 	if (config->i2c_scl_hz) {
+@@ -922,8 +951,8 @@ static void i3c_aspeed_init_clock(struct i3c_aspeed_obj *obj)
+ 	} else {
+ 		calc_i2c_clk(400000, &hi_ns, &lo_ns);
+ 	}
+-	hcnt = DIV_ROUND_UP(hi_ns, core_period);
+-	lcnt = DIV_ROUND_UP(lo_ns, core_period);
++	hcnt = DIV_ROUND_UP(hi_ns, config->core_period);
++	lcnt = DIV_ROUND_UP(lo_ns, config->core_period);
+ 
+ 	i2c_scl.value = 0;
+ 	i2c_scl.fields.lcnt = lcnt;
+@@ -932,8 +961,8 @@ static void i3c_aspeed_init_clock(struct i3c_aspeed_obj *obj)
+ 
+ 	/* Configure I2C FM+ mode timing parameters */
+ 	calc_i2c_clk(1000000, &hi_ns, &lo_ns);
+-	hcnt = DIV_ROUND_UP(hi_ns, core_period);
+-	lcnt = DIV_ROUND_UP(lo_ns, core_period);
++	hcnt = DIV_ROUND_UP(hi_ns, config->core_period);
++	lcnt = DIV_ROUND_UP(lo_ns, config->core_period);
+ 
+ 	i2c_scl.value = 0;
+ 	i2c_scl.fields.lcnt = lcnt;
+@@ -942,8 +971,8 @@ static void i3c_aspeed_init_clock(struct i3c_aspeed_obj *obj)
+ 
+ 	/* Configure I3C OD mode timing parameters */
+ 	if (config->i3c_od_scl_hi_period_ns && config->i3c_od_scl_lo_period_ns) {
+-		lcnt = DIV_ROUND_UP(config->i3c_od_scl_lo_period_ns, core_period);
+-		hcnt = DIV_ROUND_UP(config->i3c_od_scl_hi_period_ns, core_period);
++		lcnt = DIV_ROUND_UP(config->i3c_od_scl_lo_period_ns, config->core_period);
++		hcnt = DIV_ROUND_UP(config->i3c_od_scl_hi_period_ns, config->core_period);
+ 	} else {
+ 		/* use FMP timing if OD periods are not specified in DT */
+ 		lcnt = lcnt > 0xff ? 0xff : lcnt;
+@@ -956,8 +985,8 @@ static void i3c_aspeed_init_clock(struct i3c_aspeed_obj *obj)
+ 
+ 	/* Configure PP mode timing parameters */
+ 	if (config->i3c_pp_scl_hi_period_ns && config->i3c_pp_scl_lo_period_ns) {
+-		lcnt = DIV_ROUND_UP(config->i3c_pp_scl_lo_period_ns, core_period);
+-		hcnt = DIV_ROUND_UP(config->i3c_pp_scl_hi_period_ns, core_period);
++		lcnt = DIV_ROUND_UP(config->i3c_pp_scl_lo_period_ns, config->core_period);
++		hcnt = DIV_ROUND_UP(config->i3c_pp_scl_hi_period_ns, config->core_period);
+ 	} else {
+ 		scl_timing = DIV_ROUND_UP(core_rate, config->i3c_scl_hz);
+ 		hcnt = scl_timing >> 1;
+@@ -978,7 +1007,8 @@ static void i3c_aspeed_init_clock(struct i3c_aspeed_obj *obj)
+ 
+ 	/* Configure SDA TX hold time */
+ 	if (config->sda_tx_hold_ns) {
+-		sda_hold.fields.sda_tx_hold = DIV_ROUND_UP(config->sda_tx_hold_ns, core_period);
++		sda_hold.fields.sda_tx_hold =
++			DIV_ROUND_UP(config->sda_tx_hold_ns, config->core_period);
+ 	} else {
+ 		sda_hold.fields.sda_tx_hold = 1;
+ 	}
+@@ -1092,8 +1122,15 @@ static void i3c_aspeed_enable(struct i3c_aspeed_obj *obj)
+ 	reg.fields.slave_ibi_payload_en = 1;
+ 	if (config->secondary) {
+ 		reg.fields.slave_auto_mode_adapt = 0;
++		i3c_aspeed_isolate_scl_sda(config->inst_id, true);
+ 	}
+ 	i3c_register->device_ctrl.value = reg.value;
++	if (config->secondary) {
++		k_busy_wait(DIV_ROUND_UP(config->core_period *
++						 i3c_register->bus_free_timing.fields.i3c_ibi_free,
++					 NSEC_PER_USEC));
++		i3c_aspeed_isolate_scl_sda(config->inst_id, false);
++	}
+ }
+ 
+ static void i3c_aspeed_wr_tx_fifo(struct i3c_aspeed_obj *obj, uint8_t *bytes, int nbytes)
+-- 
+2.25.1
+
