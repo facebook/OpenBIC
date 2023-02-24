@@ -154,7 +154,9 @@ bool post_vol_bat3v_read(uint8_t sensor_num, void *args, int *reading)
 bool post_adm1278_cur_read(uint8_t sensor_num, void *args, int *reading)
 {
 	ARG_UNUSED(args);
-	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+	if (!reading) {
+		return check_reading_pointer_null_is_allowed(sensor_num);
+	}
 
 	sensor_val *sval = (sensor_val *)reading;
 	float val = sval->integer + (sval->fraction * 0.001);
@@ -168,7 +170,9 @@ bool post_adm1278_cur_read(uint8_t sensor_num, void *args, int *reading)
 bool post_adm1278_pwr_read(uint8_t sensor_num, void *args, int *reading)
 {
 	ARG_UNUSED(args);
-	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+	if (!reading) {
+		return check_reading_pointer_null_is_allowed(sensor_num);
+	}
 
 	sensor_val *sval = (sensor_val *)reading;
 	float val = sval->integer + (sval->fraction * 0.001);
@@ -182,7 +186,9 @@ bool post_adm1278_pwr_read(uint8_t sensor_num, void *args, int *reading)
 bool post_ltc4282_cur_read(uint8_t sensor_num, void *args, int *reading)
 {
 	ARG_UNUSED(args);
-	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+	if (!reading) {
+		return check_reading_pointer_null_is_allowed(sensor_num);
+	}
 
 	sensor_val *sval = (sensor_val *)reading;
 	float val = sval->integer + (sval->fraction * 0.001);
@@ -196,7 +202,9 @@ bool post_ltc4282_cur_read(uint8_t sensor_num, void *args, int *reading)
 bool post_ltc4282_pwr_read(uint8_t sensor_num, void *args, int *reading)
 {
 	ARG_UNUSED(args);
-	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+	if (!reading) {
+		return check_reading_pointer_null_is_allowed(sensor_num);
+	}
 
 	sensor_val *sval = (sensor_val *)reading;
 	float val = sval->integer + (sval->fraction * 0.001);
@@ -210,7 +218,9 @@ bool post_ltc4282_pwr_read(uint8_t sensor_num, void *args, int *reading)
 bool post_mp5990_cur_read(uint8_t sensor_num, void *args, int *reading)
 {
 	ARG_UNUSED(args);
-	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+	if (!reading) {
+		return check_reading_pointer_null_is_allowed(sensor_num);
+	}
 
 	sensor_val *sval = (sensor_val *)reading;
 	float val = sval->integer + (sval->fraction * 0.001);
@@ -224,7 +234,9 @@ bool post_mp5990_cur_read(uint8_t sensor_num, void *args, int *reading)
 bool post_mp5990_pwr_read(uint8_t sensor_num, void *args, int *reading)
 {
 	ARG_UNUSED(args);
-	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+	if (!reading) {
+		return check_reading_pointer_null_is_allowed(sensor_num);
+	}
 
 	sensor_val *sval = (sensor_val *)reading;
 	float val = sval->integer + (sval->fraction * 0.001);
@@ -261,7 +273,9 @@ void apml_report_result_check(apml_msg *msg)
 bool post_ddr5_pwr_read(uint8_t sensor_num, void *args, int *reading)
 {
 	ARG_UNUSED(args);
-	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+	if (!reading) {
+		return check_reading_pointer_null_is_allowed(sensor_num);
+	}
 
 	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 	ddr5_init_power_arg *init_arg = cfg->init_args;
@@ -304,7 +318,9 @@ bool post_ddr5_pwr_read(uint8_t sensor_num, void *args, int *reading)
 bool post_ddr5_temp_read(uint8_t sensor_num, void *args, int *reading)
 {
 	ARG_UNUSED(args);
-	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+	if (!reading) {
+		return check_reading_pointer_null_is_allowed(sensor_num);
+	}
 
 	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 	ddr5_init_temp_arg *init_arg = cfg->init_args;
@@ -359,7 +375,9 @@ bool post_ddr5_temp_read(uint8_t sensor_num, void *args, int *reading)
 bool post_amd_tsi_read(uint8_t sensor_num, void *args, int *reading)
 {
 	ARG_UNUSED(args);
-	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+	if (!reading) {
+		return check_reading_pointer_null_is_allowed(sensor_num);
+	}
 
 	static bool is_cpu_throttle_assert = false;
 	static uint8_t deassert_count = 0;
