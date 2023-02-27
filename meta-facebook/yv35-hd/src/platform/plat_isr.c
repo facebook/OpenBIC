@@ -295,11 +295,16 @@ void ISR_HSC_OC()
 
 static void add_vr_ocp_sel(uint8_t gpio_num, uint8_t vr_num)
 {
+	static uint8_t is_vr_ocp_assert = 0;
 	common_addsel_msg_t sel_msg;
-	if (gpio_get(gpio_num) == GPIO_HIGH) {
+	if ((gpio_get(gpio_num) == GPIO_HIGH) && (is_vr_ocp_assert & BIT(vr_num))) {
 		sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
-	} else {
+		is_vr_ocp_assert &= ~BIT(vr_num);
+	} else if ((gpio_get(gpio_num) == GPIO_LOW) && !(is_vr_ocp_assert & BIT(vr_num))) {
 		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+		is_vr_ocp_assert |= BIT(vr_num);
+	} else {
+		return;
 	}
 	sel_msg.InF_target = BMC_IPMB;
 	sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_VR;
