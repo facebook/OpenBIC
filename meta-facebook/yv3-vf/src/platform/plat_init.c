@@ -106,6 +106,11 @@ void pal_set_sys_status()
 	k_work_schedule(&up_5sec_handler, K_SECONDS(5));
 }
 
+void pal_post_init()
+{
+	delay_function(300, init_sel_sensor_num, 0, 0);
+}
+
 #define DEF_PROJ_GPIO_PRIORITY 78
 
 DEVICE_DEFINE(PRE_DEF_PROJ_GPIO, "PRE_DEF_PROJ_GPIO_NAME", &gpio_init, NULL, NULL, NULL,
