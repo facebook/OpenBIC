@@ -1,0 +1,84 @@
+From 8186674cbc3788f5c27de63ab5282f417d9287dd Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Wed, 15 Feb 2023 10:37:28 +0800
+Subject: [PATCH 2/4] i3c: aspeed: Active the enable bit by internal operations
+
+The enable bit of the i3c slave mode require the scl and stop sequences
+to active, but we can't control the scl in slave mode. So, this patch add
+support for toggling SCL and generating start/stop sequences for internal
+bus operations which won't affect external signal to active the bit.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I982941118e7dfdff8eb9930896a10050a87cf58b
+---
+ drivers/i3c/i3c_aspeed.c | 47 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index 703e6b662d..fd8e5c23d0 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -575,6 +575,50 @@ void i3c_aspeed_isolate_scl_sda(int inst_id, bool iso)
+ 	}
+ }
+ 
++void i3c_aspeed_toggle_scl_in(int inst_id)
++{
++	uint32_t i3c_gr = DT_REG_ADDR(DT_NODELABEL(i3c_gr));
++	uint32_t value;
++
++	value = sys_read32(i3c_gr + I3CG_REG1(inst_id));
++	value |= SCL_IN_SW_MODE_VAL;
++	sys_write32(value, i3c_gr + I3CG_REG1(inst_id));
++
++	value &= ~SCL_IN_SW_MODE_VAL;
++	sys_write32(value, i3c_gr + I3CG_REG1(inst_id));
++	value |= SCL_IN_SW_MODE_VAL;
++	sys_write32(value, i3c_gr + I3CG_REG1(inst_id));
++}
++
++void i3c_aspeed_gen_start_to_internal(int inst_id)
++{
++	uint32_t i3c_gr = DT_REG_ADDR(DT_NODELABEL(i3c_gr));
++	uint32_t value;
++
++	value = sys_read32(i3c_gr + I3CG_REG1(inst_id));
++	value |= SCL_IN_SW_MODE_VAL | SDA_IN_SW_MODE_VAL;
++	sys_write32(value, i3c_gr + I3CG_REG1(inst_id));
++
++	value &= ~SDA_IN_SW_MODE_VAL;
++	sys_write32(value, i3c_gr + I3CG_REG1(inst_id));
++	value &= ~SCL_IN_SW_MODE_VAL;
++	sys_write32(value, i3c_gr + I3CG_REG1(inst_id));
++}
++
++void i3c_aspeed_gen_stop_to_internal(int inst_id)
++{
++	uint32_t i3c_gr = DT_REG_ADDR(DT_NODELABEL(i3c_gr));
++	uint32_t value;
++
++	value = sys_read32(i3c_gr + I3CG_REG1(inst_id));
++	value |= SCL_IN_SW_MODE_VAL;
++	sys_write32(value, i3c_gr + I3CG_REG1(inst_id));
++	value &= ~SDA_IN_SW_MODE_VAL;
++	sys_write32(value, i3c_gr + I3CG_REG1(inst_id));
++	value |= SDA_IN_SW_MODE_VAL;
++	sys_write32(value, i3c_gr + I3CG_REG1(inst_id));
++}
++
+ #define DEV_CFG(dev)			((struct i3c_aspeed_config *)(dev)->config)
+ #define DEV_DATA(dev)			((struct i3c_aspeed_obj *)(dev)->data)
+ #define DESC_PRIV(desc)			((struct i3c_aspeed_dev_priv *)(desc)->priv_data)
+@@ -1129,6 +1173,9 @@ static void i3c_aspeed_enable(struct i3c_aspeed_obj *obj)
+ 		k_busy_wait(DIV_ROUND_UP(config->core_period *
+ 						 i3c_register->bus_free_timing.fields.i3c_ibi_free,
+ 					 NSEC_PER_USEC));
++		while (!i3c_register->device_ctrl.fields.enable)
++			i3c_aspeed_toggle_scl_in(config->inst_id);
++		i3c_aspeed_gen_stop_to_internal(config->inst_id);
+ 		i3c_aspeed_isolate_scl_sda(config->inst_id, false);
+ 	}
+ }
+-- 
+2.25.1
+
