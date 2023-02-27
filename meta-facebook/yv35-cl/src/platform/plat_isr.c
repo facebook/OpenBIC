@@ -579,8 +579,14 @@ void ISR_CPU_VPP_INT()
 		uint8_t vpp_pwr_status_bit = 0;
 		uint8_t device_id = 0;
 		uint8_t set_power_status = DEVICE_SET_POWER_OFF;
-		static uint8_t last_vpp_pwr_status =
-			0xE1; // default all devices are on (bit1~4 = 0)
+		// CPLD register define VPP PWREN# (1OU Expansion)
+		// Bit 4: M.2 device 3
+		// Bit 3: M.2 device 2
+		// Bit 2: M.2 device 1
+		// Bit 1: M.2 device 0
+		// Bit 0: RSVD
+		// default device0, 1, 3 are ON (bit1, 2, 4 = 0)
+		static uint8_t last_vpp_pwr_status = 0xE9;
 		I2C_MSG i2c_msg;
 		ipmi_msg msg;
 		common_addsel_msg_t sel_msg;
