@@ -88,11 +88,6 @@ enum pldm_effecter_operational_state {
 	PLDM_EFFECTER_INTEST
 };
 
-enum pldm_oem_effecter_type {
-	OEM_EFFECTER_TYPE_GPIO = 0xFF,
-	OEM_EFFECTER_TYPE_PLATFORM = 0xE0,
-};
-
 enum set_request {
 	PLDM_NO_CHANGE = 0x00,
 	PLDM_REQUEST_SET = 0x01,
@@ -303,11 +298,17 @@ uint16_t pldm_platform_monitor_read(void *mctp_inst, mctp_ext_params ext_params,
 uint8_t pldm_send_platform_event(uint8_t event_class, uint16_t id, uint8_t ext_class,
 				 const uint8_t *event_data, uint8_t event_data_length);
 
-void plat_oem_set_effecter_type_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
-					uint16_t *resp_len);
+void set_effecter_state_gpio_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
+				     uint16_t *resp_len, uint8_t gpio_pin);
 
-void plat_oem_get_effecter_type_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
-					uint16_t *resp_len);
+void get_effecter_state_gpio_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
+				     uint16_t *resp_len, uint8_t gpio_pin);
+
+uint8_t plat_pldm_set_state_effecter_state_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
+						   uint16_t *resp_len);
+
+uint8_t plat_pldm_get_state_effecter_state_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
+						   uint16_t *resp_len);
 
 #ifdef __cplusplus
 }
