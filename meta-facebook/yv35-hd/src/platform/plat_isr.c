@@ -227,7 +227,7 @@ void ISR_MB_THROTTLE()
 void ISR_SOC_THMALTRIP()
 {
 	common_addsel_msg_t sel_msg;
-	if (gpio_get(RST_PLTRST_BIC_N) == GPIO_HIGH) {
+	if (gpio_get(RST_CPU_RESET_BIC_N) == GPIO_HIGH) {
 		sel_msg.InF_target = BMC_IPMB;
 		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
@@ -248,7 +248,8 @@ void ISR_SYS_THROTTLE()
 	 */
 	static bool is_sys_throttle_assert = false;
 	common_addsel_msg_t sel_msg;
-	if ((gpio_get(RST_PLTRST_BIC_N) == GPIO_HIGH) && (gpio_get(PWRGD_CPU_LVC3) == GPIO_HIGH)) {
+	if ((gpio_get(RST_CPU_RESET_BIC_N) == GPIO_HIGH) &&
+	    (gpio_get(PWRGD_CPU_LVC3) == GPIO_HIGH)) {
 		if ((gpio_get(FM_CPU_BIC_PROCHOT_LVT3_N) == GPIO_HIGH) &&
 		    (is_sys_throttle_assert == true)) {
 			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
