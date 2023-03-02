@@ -81,10 +81,13 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		}
 		CHECK_NULL_ARG(mctp_inst);
 		ret = cci_get_chip_fw_version(mctp_inst, ext_params, resp_buf, &read_len);
-		msg->data[0] = component;
-		memcpy(&msg->data[0], resp_buf, read_len);
-		msg->data_len = read_len;
-		msg->completion_code = CC_SUCCESS;
+		if (ret == false) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+		} else {
+			memcpy(&msg->data[0], resp_buf, read_len);
+			msg->data_len = read_len;
+			msg->completion_code = CC_SUCCESS;
+		}
 		break;
 	default:
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
