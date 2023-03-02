@@ -81,7 +81,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"RF CXL_Cntr Temp",
+		"RF_CXL_CNTR_TEMP_C",
 	},
 	{
 		// RF DIMMA temperature
