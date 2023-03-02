@@ -48,12 +48,14 @@ LOG_MODULE_REGISTER(xdpe12284c);
 
 #define MAX_CMD_LINE 1080
 
-enum { VR12 = 1,
-       VR13,
-       IMVP9,
+enum {
+	VR12 = 1,
+	VR13,
+	IMVP9,
 };
 
-enum { VID_IDENTIFIER = 1,
+enum {
+	VID_IDENTIFIER = 1,
 };
 
 struct xdpe_config {
