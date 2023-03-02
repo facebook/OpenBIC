@@ -144,7 +144,7 @@ bool xdpe12284c_get_remaining_write(uint8_t bus, uint8_t target_addr, uint16_t *
 	i2c_msg.rx_len = 2;
 	i2c_msg.data[0] = VR_XDPE_REG_REMAIN_WR;
 	if (i2c_master_read(&i2c_msg, retry)) {
-		LOG_ERR("<error> XDPE12284C get remaining write while i2c reading");
+		LOG_ERR("XDPE12284C get remaining write while i2c reading");
 		return false;
 	}
 

@@ -176,7 +176,7 @@ uint8_t mp5990_init(uint8_t sensor_num)
 	}
 
 	if (!sensor_config[sensor_config_index_map[sensor_num]].init_args) {
-		LOG_ERR("<error> MP5990 init args are not provided!");
+		LOG_ERR("MP5990 init args are not provided!");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
