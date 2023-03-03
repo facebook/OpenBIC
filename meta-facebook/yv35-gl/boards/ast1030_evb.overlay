@@ -225,3 +225,18 @@
 &sram0 {
 	reg = <0 DT_SIZE_K(512)>, <0x80000 DT_SIZE_K(256)>;
 };
+
+&i3c_gr {
+	status = "okay";
+	pull-up-resistor-ohm = <2000>, <2000>, <2000>, <2000>, <2000>, <2000>;
+};
+
+&i3c3 {
+	status = "okay";
+	assigned-address = <0x11>;
+	i3c-scl-hz = <5000000>;
+	pinctrl-0 = <&pinctrl_i3c3_default>;
+	i3c-pp-scl-hi-period-ns = <100>;
+	i3c-pp-scl-lo-period-ns = <100>;
+};
+
