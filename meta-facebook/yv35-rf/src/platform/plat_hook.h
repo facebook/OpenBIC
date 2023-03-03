@@ -43,5 +43,6 @@ extern isl69254iraz_t_pre_arg isl69254iraz_t_pre_read_args[];
  **************************************************************************************************/
 bool pre_isl69254iraz_t_read(uint8_t sensor_num, void *args);
 bool pre_vr_read(uint8_t sensor_num, void *args);
+bool pre_pm8702_read(uint8_t sensor_num, void *args);
 
 #endif

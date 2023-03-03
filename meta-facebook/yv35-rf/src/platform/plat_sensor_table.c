@@ -42,19 +42,19 @@ sensor_cfg plat_sensor_config[] = {
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 	{ SENSOR_NUM_TEMP_CXL, sensor_dev_pm8702, CXL_EID, NONE, CHIP_TEMP_OFFSET, dc_access, 0, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  NULL, NULL, NULL, NULL, NULL },
+	  pre_pm8702_read, NULL, NULL, NULL, NULL },
 	{ SENSOR_NUM_TEMP_DIMMA, sensor_dev_pm8702, CXL_EID, DIMMA_TEMP_ADDR, DIMM_TEMP_OFFSET,
 	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	  SENSOR_INIT_STATUS, pre_pm8702_read, NULL, NULL, NULL, NULL },
 	{ SENSOR_NUM_TEMP_DIMMB, sensor_dev_pm8702, CXL_EID, DIMMB_TEMP_ADDR, DIMM_TEMP_OFFSET,
 	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	  SENSOR_INIT_STATUS, pre_pm8702_read, NULL, NULL, NULL, NULL },
 	{ SENSOR_NUM_TEMP_DIMMC, sensor_dev_pm8702, CXL_EID, DIMMC_TEMP_ADDR, DIMM_TEMP_OFFSET,
 	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	  SENSOR_INIT_STATUS, pre_pm8702_read, NULL, NULL, NULL, NULL },
 	{ SENSOR_NUM_TEMP_DIMMD, sensor_dev_pm8702, CXL_EID, DIMMD_TEMP_ADDR, DIMM_TEMP_OFFSET,
 	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	  SENSOR_INIT_STATUS, pre_pm8702_read, NULL, NULL, NULL, NULL },
 	{ SENSOR_NUM_TEMP_CXL_CNTR, sensor_dev_tmp75, I2C_BUS2, TMP75_ASIC_ADDR, TMP75_TEMP_OFFSET,
 	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
@@ -304,7 +304,8 @@ int check_pwr_monitor_type(void)
 	msg.data[0] = PMBUS_MFR_ID;
 
 	if (i2c_master_read(&msg, retry)) {
-		LOG_ERR("Failed to read Power moniter IC_DEVICE_ID: register(0x%x)", PMBUS_IC_DEVICE_ID);
+		LOG_ERR("Failed to read Power moniter IC_DEVICE_ID: register(0x%x)",
+			PMBUS_IC_DEVICE_ID);
 		return -1;
 	}
 
@@ -385,7 +386,7 @@ void pal_extend_sensor_config()
 
 	if (sensor_config_count != sdr_count) {
 		LOG_ERR("Extend sensor SDR and config table not match, sdr size: 0x%x, sensor config size: 0x%x",
-		        sdr_count, sensor_config_count);
+			sdr_count, sensor_config_count);
 	}
 }
 
