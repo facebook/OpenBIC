@@ -17,4 +17,7 @@
 #ifndef PLAT_IPMI_H
 #define PLAT_IPMI_H
 
+#define RF_COMPNT_BIC 2
+#define RF_COMPNT_CXL 10
+
 #endif
