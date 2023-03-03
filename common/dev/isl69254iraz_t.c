@@ -29,7 +29,7 @@ LOG_MODULE_REGISTER(isl69254iraz_t);
 bool isl69254iraz_t_get_checksum(uint8_t bus, uint8_t target_addr, uint8_t *checksum)
 {
 	if (checksum == NULL) {
-		LOG_ERR("<error> isl69254iraz_t checksum is NULL");
+		LOG_ERR("isl69254iraz_t checksum is NULL");
 		return false;
 	}
 
@@ -44,7 +44,7 @@ bool isl69254iraz_t_get_checksum(uint8_t bus, uint8_t target_addr, uint8_t *chec
 	i2c_msg.data[2] = 0x00; //dummy data
 
 	if (i2c_master_write(&i2c_msg, retry)) {
-		LOG_ERR("<error> isl69254iraz_t get checksum while i2c writing");
+		LOG_ERR("isl69254iraz_t get checksum while i2c writing");
 		return false;
 	}
 
@@ -53,7 +53,7 @@ bool isl69254iraz_t_get_checksum(uint8_t bus, uint8_t target_addr, uint8_t *chec
 	i2c_msg.data[0] = 0xC5; //DMAFIX command code
 
 	if (i2c_master_read(&i2c_msg, retry)) {
-		LOG_ERR("<error> isl69254iraz_t get checksum while i2c reading");
+		LOG_ERR("isl69254iraz_t get checksum while i2c reading");
 		return false;
 	}
 
@@ -76,7 +76,7 @@ bool isl69254iraz_t_get_remaining_write(uint8_t bus, uint8_t target_addr, uint8_
 	i2c_msg.data[2] = 0x00; //dummy data
 
 	if (i2c_master_write(&i2c_msg, retry)) {
-		LOG_ERR("<error> isl69254iraz_t get remaining write while i2c writing");
+		LOG_ERR("isl69254iraz_t get remaining write while i2c writing");
 		return false;
 	}
 
@@ -85,7 +85,7 @@ bool isl69254iraz_t_get_remaining_write(uint8_t bus, uint8_t target_addr, uint8_
 	i2c_msg.data[0] = 0xC5; //DMAFIX command code
 
 	if (i2c_master_read(&i2c_msg, retry)) {
-		LOG_ERR("<error> isl69254iraz_t get remaining write while i2c reading");
+		LOG_ERR("isl69254iraz_t get remaining write while i2c reading");
 		return false;
 	}
 

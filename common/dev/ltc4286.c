@@ -170,7 +170,7 @@ uint8_t ltc4286_read(uint8_t sensor_num, int *reading)
 uint8_t ltc4286_init(uint8_t sensor_num)
 {
 	if (!sensor_config[sensor_config_index_map[sensor_num]].init_args) {
-		LOG_ERR("<error> LTC4286 init args are not provided!");
+		LOG_ERR("LTC4286 init args are not provided!");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 

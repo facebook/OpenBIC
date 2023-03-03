@@ -33,7 +33,6 @@ LOG_MODULE_REGISTER(mp5990);
 #define MP5990_EIN_SAMPLE_CNT_MAX 0x1000000
 #define MP5990_EIN_ENERGY_CNT_MAX 0x8000
 
-
 int mp5990_read_ein(double *val, uint8_t sensor_num)
 {
 	if ((val == NULL) || (sensor_num > SENSOR_NUM_MAX)) {
@@ -176,7 +175,7 @@ uint8_t mp5990_init(uint8_t sensor_num)
 	}
 
 	if (!sensor_config[sensor_config_index_map[sensor_num]].init_args) {
-		LOG_ERR("<error> MP5990 init args are not provided!");
+		LOG_ERR("MP5990 init args are not provided!");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
