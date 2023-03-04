@@ -45,11 +45,6 @@ void pal_post_init()
 	kcs_init();
 }
 
-void pal_device_init()
-{
-	init_me_firmware();
-}
-
 void pal_set_sys_status()
 {
 	set_DC_status(PWRGD_SYS_PWROK);
@@ -59,6 +54,7 @@ void pal_set_sys_status()
 	set_CPU_power_status(PWRGD_CPU_LVC3_R);
 	set_post_thread();
 	set_sys_ready_pin(BIC_READY);
+	init_me_firmware();
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78
