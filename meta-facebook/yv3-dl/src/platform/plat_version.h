@@ -32,7 +32,7 @@
 
 // Firmware revision manually set
 #define FIRMWARE_REVISION_1 0x51
-#define FIRMWARE_REVISION_2 0x06
+#define FIRMWARE_REVISION_2 0x07
 
 #define IPMI_VERSION 0x02
 #define ADDITIONAL_DEVICE_SUPPORT 0xBF
@@ -41,8 +41,8 @@
 #define IANA_ID 0x009C9C // same as TI BIC
 
 #define BIC_FW_YEAR_MSB 0x20
-#define BIC_FW_YEAR_LSB 0x22
-#define BIC_FW_WEEK 0x49
+#define BIC_FW_YEAR_LSB 0x23
+#define BIC_FW_WEEK 0x09
 #define BIC_FW_VER 0x01
 #define BIC_FW_platform_0 0x64 // char: d
 #define BIC_FW_platform_1 0x6c // char: l
