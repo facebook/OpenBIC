@@ -325,9 +325,9 @@ void init_platform_config()
 					break;
 				case RANGE:
 					if ((voltage >
-					     typical_voltage - (typical_voltage * 0.05)) &&
+					     typical_voltage - (typical_voltage * 0.07)) &&
 					    (voltage <
-					     typical_voltage + (typical_voltage * 0.05))) {
+					     typical_voltage + (typical_voltage * 0.07))) {
 						_1ou_status.card_type =
 							_1ou_card_mapping_table[cnt].card_type;
 					}
