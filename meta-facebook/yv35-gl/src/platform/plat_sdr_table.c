@@ -2820,7 +2820,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_UCT_SETTABLE | IPMI_SDR_LCT_SETTABLE | IPMI_SDR_UCT_READABLE |
 			IPMI_SDR_LCT_READABLE, // threshold mask/ readable threshold mask
 		0x80, // sensor unit
-		IPMI_SENSOR_UNIT_DEGREE_C, // base unit
+		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
 		0x23, // [7:0] M bits
@@ -2880,7 +2880,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_UCT_SETTABLE | IPMI_SDR_LCT_SETTABLE | IPMI_SDR_UCT_READABLE |
 			IPMI_SDR_LCT_READABLE, // threshold mask/ readable threshold mask
 		0x80, // sensor unit
-		IPMI_SENSOR_UNIT_DEGREE_C, // base unit
+		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
 		0x1D, // [7:0] M bits
@@ -2940,7 +2940,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_UCT_SETTABLE | IPMI_SDR_LCT_SETTABLE | IPMI_SDR_UCT_READABLE |
 			IPMI_SDR_LCT_READABLE, // threshold mask/ readable threshold mask
 		0x80, // sensor unit
-		IPMI_SENSOR_UNIT_DEGREE_C, // base unit
+		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
 		0x2B, // [7:0] M bits
@@ -3000,7 +3000,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_UCT_SETTABLE | IPMI_SDR_LCT_SETTABLE | IPMI_SDR_UCT_READABLE |
 			IPMI_SDR_LCT_READABLE, // threshold mask/ readable threshold mask
 		0x80, // sensor unit
-		IPMI_SENSOR_UNIT_DEGREE_C, // base unit
+		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
 		0x2F, // [7:0] M bits
@@ -3060,7 +3060,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_UCT_SETTABLE | IPMI_SDR_LCT_SETTABLE | IPMI_SDR_UCT_READABLE |
 			IPMI_SDR_LCT_READABLE, // threshold mask/ readable threshold mask
 		0x80, // sensor unit
-		IPMI_SENSOR_UNIT_DEGREE_C, // base unit
+		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
 		0x18, // [7:0] M bits
@@ -3120,7 +3120,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_UCT_SETTABLE | IPMI_SDR_LCT_SETTABLE | IPMI_SDR_UCT_READABLE |
 			IPMI_SDR_LCT_READABLE, // threshold mask/ readable threshold mask
 		0x80, // sensor unit
-		IPMI_SENSOR_UNIT_DEGREE_C, // base unit
+		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
 		0x10, // [7:0] M bits
@@ -3180,7 +3180,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_UCT_SETTABLE | IPMI_SDR_LCT_SETTABLE | IPMI_SDR_UCT_READABLE |
 			IPMI_SDR_LCT_READABLE, // threshold mask/ readable threshold mask
 		0x80, // sensor unit
-		IPMI_SENSOR_UNIT_DEGREE_C, // base unit
+		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
 		0x10, // [7:0] M bits
