@@ -261,3 +261,13 @@ bool pal_load_gpio_config(void)
 	memcpy(&gpio_cfg[0], &plat_gpio_cfg[0], sizeof(plat_gpio_cfg));
 	return true;
 };
+
+void enable_PRDY_interrupt()
+{
+	gpio_interrupt_conf(H_BMC_PRDY_BUF_N, GPIO_INT_EDGE_FALLING);
+}
+
+void disable_PRDY_interrupt()
+{
+	gpio_interrupt_conf(H_BMC_PRDY_BUF_N, GPIO_INT_DISABLE);
+}
