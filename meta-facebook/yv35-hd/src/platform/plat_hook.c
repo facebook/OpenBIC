@@ -56,11 +56,11 @@ mp5990_init_arg mp5990_init_args[] = {
 };
 
 nct7718w_init_arg nct7718w_init_args[] = {
-	[0] = { .is_init = false, .rt1_high_alert_temp = 0x64, .rt_filter_alert_mode = 0x01 },
+	[0] = { .is_init = false, .rt1_high_alert_temp = 0x50, .rt_filter_alert_mode = 0x01 },
 };
 
 g788p81u_init_arg g788p81u_init_args[] = {
-	[0] = { .is_init = false, .remote_T_high_limit = 0x64, .alert_mode = 0x01 }
+	[0] = { .is_init = false, .remote_T_high_limit = 0x50, .alert_mode = 0x01 }
 };
 
 /**************************************************************************************************
