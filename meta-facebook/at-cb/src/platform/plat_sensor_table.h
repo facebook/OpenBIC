@@ -19,6 +19,7 @@
 
 #include <stdint.h>
 #include "sensor.h"
+#include "common_i2c_mux.h"
 
 #define PEX_MAX_NUMBER 2
 
@@ -131,9 +132,48 @@
 #define SENSOR_NUM_PWR_P12V_ACCL_11 0x51
 #define SENSOR_NUM_PWR_P12V_ACCL_12 0x52
 
+/** ACCL sensor config **/
+#define ACCL_FREYA_1_ADDR (0xD6 >> 1)
+#define ACCL_FREYA_2_ADDR (0xD0 >> 1)
+#define ACCL_12V_INA233_ADDR (0x80 >> 1)
+#define ACCL_3V3_1_INA233_ADDR (0x82 >> 1)
+#define ACCL_3V3_2_INA233_ADDR (0x84 >> 1)
+#define ACCL_12V_INA233_INIT_ARG_OFFSET 0
+#define ACCL_3V3_1_INA233_INIT_ARG_OFFSET 1
+#define ACCL_3V3_2_INA233_INIT_ARG_OFFSET 2
+
+/** ACCL sensor number **/
+#define SENSOR_NUM_TEMP_ACCL_FREYA_1 0x01
+#define SENSOR_NUM_TEMP_ACCL_FREYA_2 0x02
+#define SENSOR_NUM_VOL_ACCL_P12V_EFUSE 0x03
+#define SENSOR_NUM_VOL_ACCL_P3V3_1 0x04
+#define SENSOR_NUM_VOL_ACCL_P3V3_2 0x05
+#define SENSOR_NUM_VOL_ACCL_FREYA_1_1 0x06
+#define SENSOR_NUM_VOL_ACCL_FREYA_1_2 0x07
+#define SENSOR_NUM_VOL_ACCL_FREYA_2_1 0x0B
+#define SENSOR_NUM_VOL_ACCL_FREYA_2_2 0x0C
+#define SENSOR_NUM_CUR_ACCL_P12V_EFUSE 0x08
+#define SENSOR_NUM_CUR_ACCL_P3V3_1 0x09
+#define SENSOR_NUM_CUR_ACCL_P3V3_2 0x0A
+#define SENSOR_NUM_PWR_ACCL_P12V_EFUSE 0x0D
+#define SENSOR_NUM_PWR_ACCL_P3V3_1 0x0E
+#define SENSOR_NUM_PWR_ACCL_P3V3_2 0x0F
+#define SENSOR_NUM_PWR_ACCL_FREYA_1 0x10
+#define SENSOR_NUM_PWR_ACCL_FREYA_2 0x11
+
+extern sensor_cfg plat_accl_sensor_config[];
+extern const int ACCL_SENSOR_CONFIG_SIZE;
+
 void load_sensor_config(void);
 bool is_mb_dc_on();
 bool is_dc_access(uint8_t sensor_num);
+bool is_pcie_device_access(uint8_t card_id, uint8_t sensor_num);
 struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus);
+int get_accl_bus(uint8_t card_id, uint8_t sensor_number);
+bool get_accl_sensor_config_index(uint8_t sensor_num, uint8_t *index);
+bool get_accl_mux_config(uint8_t card_id, mux_config *accl_mux);
+bool get_mux_channel_config(uint8_t card_id, uint8_t sensor_number, mux_config *channel_mux);
+ina233_init_arg *get_accl_init_sensor_config(uint8_t card_id, uint8_t sensor_number);
+void pal_init_drive(sensor_cfg *cfg_table, uint8_t cfg_size, uint8_t card_id);
 
 #endif

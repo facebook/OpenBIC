@@ -29,12 +29,15 @@
 #include "plat_gpio.h"
 #include "plat_hook.h"
 #include "plat_class.h"
+#include "plat_dev.h"
 
 LOG_MODULE_REGISTER(plat_sensor_table);
 
 struct k_mutex i2c_2_tca9543_mutex;
 struct k_mutex i2c_3_tca9543_mutex;
 struct k_mutex i2c_4_pi4msd5v9542_mutex;
+struct k_mutex i2c_7_mutex;
+struct k_mutex i2c_8_mutex;
 
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
@@ -355,7 +358,78 @@ sensor_cfg plat_sensor_config[] = {
 	  post_ina233_read, &pi4msd5v9542_configs[1], &ina233_init_args[11] },
 };
 
+sensor_cfg plat_accl_sensor_config[] = {
+	/** Nvme Temperature **/
+	{ SENSOR_NUM_TEMP_ACCL_FREYA_1, sensor_dev_nvme, NONE, ACCL_FREYA_1_ADDR, NVME_TEMP_OFFSET,
+	  NULL, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL, &pca9546_configs[0] },
+	{ SENSOR_NUM_TEMP_ACCL_FREYA_2, sensor_dev_nvme, NONE, ACCL_FREYA_2_ADDR, NVME_TEMP_OFFSET,
+	  NULL, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL, &pca9546_configs[0] },
+
+	/** Nvme Voltage **/
+	{ SENSOR_NUM_VOL_ACCL_FREYA_1_1, sensor_dev_nvme, NONE, ACCL_FREYA_1_ADDR,
+	  NVME_VOLTAGE_RAIL_1_OFFSET, NULL, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL,
+	  &pca9546_configs[0] },
+	{ SENSOR_NUM_VOL_ACCL_FREYA_1_2, sensor_dev_nvme, NONE, ACCL_FREYA_1_ADDR,
+	  NVME_VOLTAGE_RAIL_2_OFFSET, NULL, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL,
+	  &pca9546_configs[0] },
+	{ SENSOR_NUM_VOL_ACCL_FREYA_2_1, sensor_dev_nvme, NONE, ACCL_FREYA_2_ADDR,
+	  NVME_VOLTAGE_RAIL_1_OFFSET, NULL, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL,
+	  &pca9546_configs[0] },
+	{ SENSOR_NUM_VOL_ACCL_FREYA_2_2, sensor_dev_nvme, NONE, ACCL_FREYA_2_ADDR,
+	  NVME_VOLTAGE_RAIL_2_OFFSET, NULL, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL,
+	  &pca9546_configs[0] },
+
+	/** INA233 Voltage **/
+	{ SENSOR_NUM_VOL_ACCL_P12V_EFUSE, sensor_dev_ina233, NONE, ACCL_12V_INA233_ADDR,
+	  PMBUS_READ_VOUT, NULL, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL,
+	  &pca9546_configs[3] },
+	{ SENSOR_NUM_VOL_ACCL_P3V3_1, sensor_dev_ina233, NONE, ACCL_3V3_1_INA233_ADDR,
+	  PMBUS_READ_VOUT, NULL, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL,
+	  &pca9546_configs[3] },
+	{ SENSOR_NUM_VOL_ACCL_P3V3_2, sensor_dev_ina233, NONE, ACCL_3V3_2_INA233_ADDR,
+	  PMBUS_READ_VOUT, NULL, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL,
+	  &pca9546_configs[3] },
+
+	/** INA233 Current **/
+	{ SENSOR_NUM_CUR_ACCL_P12V_EFUSE, sensor_dev_ina233, NONE, ACCL_12V_INA233_ADDR,
+	  PMBUS_READ_IOUT, NULL, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL,
+	  &pca9546_configs[3] },
+	{ SENSOR_NUM_CUR_ACCL_P3V3_1, sensor_dev_ina233, NONE, ACCL_3V3_1_INA233_ADDR,
+	  PMBUS_READ_IOUT, NULL, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL,
+	  &pca9546_configs[3] },
+	{ SENSOR_NUM_CUR_ACCL_P3V3_2, sensor_dev_ina233, NONE, ACCL_3V3_2_INA233_ADDR,
+	  PMBUS_READ_IOUT, NULL, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL,
+	  &pca9546_configs[3] },
+
+	/** INA233 Power **/
+	{ SENSOR_NUM_PWR_ACCL_P12V_EFUSE, sensor_dev_ina233, NONE, ACCL_12V_INA233_ADDR,
+	  PMBUS_READ_POUT, NULL, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL,
+	  &pca9546_configs[3] },
+	{ SENSOR_NUM_PWR_ACCL_P3V3_1, sensor_dev_ina233, NONE, ACCL_3V3_1_INA233_ADDR,
+	  PMBUS_READ_POUT, NULL, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL,
+	  &pca9546_configs[3] },
+	{ SENSOR_NUM_PWR_ACCL_P3V3_2, sensor_dev_ina233, NONE, ACCL_3V3_2_INA233_ADDR,
+	  PMBUS_READ_POUT, NULL, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL,
+	  &pca9546_configs[3] },
+};
+
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
+const int ACCL_SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_accl_sensor_config);
 
 void load_sensor_config(void)
 {
@@ -392,6 +466,51 @@ bool is_dc_access(uint8_t sensor_num)
 	return is_mb_dc_on();
 }
 
+bool is_pcie_device_access(uint8_t card_id, uint8_t sensor_num)
+{
+	if (card_id >= ASIC_CARD_COUNT) {
+		LOG_ERR("Invalid card id: 0x%x", card_id);
+		return false;
+	}
+
+	bool ret = false;
+	uint8_t index = 0;
+	uint8_t device_status = 0;
+
+	ret = get_accl_sensor_config_index(sensor_num, &index);
+	if (ret != true) {
+		return ret;
+	}
+
+	sensor_cfg cfg = plat_accl_sensor_config[index];
+	if (asic_card_info[card_id].card_status == ASIC_CARD_PRESENT) {
+		switch (cfg.target_addr) {
+		case ACCL_FREYA_1_ADDR:
+			device_status = asic_card_info[card_id].asic_1_status;
+			break;
+		case ACCL_FREYA_2_ADDR:
+			device_status = asic_card_info[card_id].asic_2_status;
+			break;
+		case ACCL_12V_INA233_ADDR:
+		case ACCL_3V3_1_INA233_ADDR:
+		case ACCL_3V3_2_INA233_ADDR:
+			device_status = asic_card_info[card_id].card_status;
+			break;
+		default:
+			LOG_ERR("Invalid access address: 0x%x", cfg.target_addr);
+			return false;
+		}
+	} else {
+		return false;
+	}
+
+	if (device_status != ASIC_CARD_DEVICE_PRESENT) {
+		return false;
+	}
+
+	return true;
+}
+
 struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus)
 {
 	struct k_mutex *mutex = NULL;
@@ -406,10 +525,162 @@ struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus)
 	case I2C_BUS4:
 		mutex = &i2c_4_pi4msd5v9542_mutex;
 		break;
+	case I2C_BUS7:
+		mutex = &i2c_7_mutex;
+		break;
+	case I2C_BUS8:
+		mutex = &i2c_8_mutex;
+		break;
 	default:
 		LOG_ERR("No support for i2c bus %d mutex", i2c_bus);
 		break;
 	}
 
 	return mutex;
+}
+
+int get_accl_bus(uint8_t card_id, uint8_t sensor_number)
+{
+	if (card_id >= ASIC_CARD_COUNT) {
+		LOG_ERR("Invalid accl card id: 0x%x", card_id);
+		return -1;
+	}
+
+	return pca9548_configs[card_id].bus;
+}
+
+bool get_accl_sensor_config_index(uint8_t sensor_num, uint8_t *index)
+{
+	CHECK_NULL_ARG_WITH_RETURN(index, false);
+
+	uint8_t i = 0;
+	for (i = 0; i < ACCL_SENSOR_CONFIG_SIZE; ++i) {
+		if (sensor_num == plat_accl_sensor_config[i].num) {
+			*index = i;
+			return true;
+		}
+	}
+
+	LOG_ERR("Fail to find sensor num: 0x%x in ACCL sensor config", sensor_num);
+	return false;
+}
+
+bool get_accl_mux_config(uint8_t card_id, mux_config *accl_mux)
+{
+	CHECK_NULL_ARG_WITH_RETURN(accl_mux, false);
+
+	if (card_id >= ASIC_CARD_COUNT) {
+		LOG_ERR("Invalid accl card id: 0x%x", card_id);
+		return false;
+	}
+
+	*accl_mux = pca9548_configs[card_id];
+	return true;
+}
+
+bool get_mux_channel_config(uint8_t card_id, uint8_t sensor_number, mux_config *channel_mux)
+{
+	CHECK_NULL_ARG_WITH_RETURN(channel_mux, false);
+
+	if (card_id >= ASIC_CARD_COUNT) {
+		LOG_ERR("Invalid accl card id: 0x%x", card_id);
+		return false;
+	}
+
+	bool ret = false;
+	uint8_t index = 0;
+	uint8_t accl_bus = get_accl_bus(card_id, sensor_number);
+	mux_config *mux_cfg = NULL;
+
+	ret = get_accl_sensor_config_index(sensor_number, &index);
+	if (ret != true) {
+		return ret;
+	}
+
+	sensor_cfg cfg = plat_accl_sensor_config[index];
+	CHECK_NULL_ARG_WITH_RETURN(cfg.priv_data, false);
+
+	mux_cfg = cfg.priv_data;
+	mux_cfg->bus = accl_bus;
+	*channel_mux = *mux_cfg;
+	return true;
+}
+
+ina233_init_arg *get_accl_init_sensor_config(uint8_t card_id, uint8_t sensor_number)
+{
+	if (card_id >= ASIC_CARD_COUNT) {
+		LOG_ERR("Invalid accl card id: 0x%x", card_id);
+		return NULL;
+	}
+
+	bool ret = false;
+	uint8_t index = 0;
+	uint8_t offset = 3;
+
+	ret = get_accl_sensor_config_index(sensor_number, &index);
+	if (ret != true) {
+		return NULL;
+	}
+
+	sensor_cfg cfg = plat_accl_sensor_config[index];
+	switch (cfg.target_addr) {
+	case ACCL_12V_INA233_ADDR:
+		offset = (offset * card_id) + ACCL_12V_INA233_INIT_ARG_OFFSET;
+		break;
+	case ACCL_3V3_1_INA233_ADDR:
+		offset = (offset * card_id) + ACCL_3V3_1_INA233_INIT_ARG_OFFSET;
+		break;
+	case ACCL_3V3_2_INA233_ADDR:
+		offset = (offset * card_id) + ACCL_3V3_2_INA233_INIT_ARG_OFFSET;
+		break;
+	default:
+		LOG_ERR("Invalid accl ina233 address: 0x%x", cfg.target_addr);
+		return NULL;
+	}
+
+	return &accl_ina233_init_args[offset];
+}
+
+void pal_init_drive(sensor_cfg *cfg_table, uint8_t cfg_size, uint8_t card_id)
+{
+	CHECK_NULL_ARG(cfg_table);
+
+	bool ret = false;
+	uint8_t index = 0;
+	uint8_t sensor_num = 0;
+	uint8_t init_status = 0;
+	sensor_cfg *cfg = NULL;
+
+	for (index = 0; index < cfg_size; index++) {
+		cfg = &cfg_table[index];
+		sensor_num = cfg->num;
+
+		if (is_pcie_device_access(card_id, sensor_num) != true) {
+			continue;
+		}
+
+		ret = pre_accl_mux_switch(card_id, sensor_num);
+		if (ret != true) {
+			LOG_ERR("Pre switch mux fail, sensor num: 0x%x, card id: 0x%x", sensor_num,
+				card_id);
+			continue;
+		}
+
+		ret = pal_sensor_drive_init(card_id, cfg, &init_status);
+		if (ret == true) {
+			if (init_status != SENSOR_INIT_SUCCESS) {
+				LOG_ERR("Initial sensor drive fail, sensor num: 0x%x, card id: 0x%x",
+					sensor_num, card_id);
+			}
+		} else {
+			LOG_ERR("Map initial sensor function fail, sensor num: 0x%x, card id: 0x%x",
+				sensor_num, card_id);
+		}
+
+		ret = post_accl_mux_switch(card_id, sensor_num);
+		if (ret != true) {
+			LOG_ERR("Post switch mux fail, sensor num: 0x%x, card id: 0x%x", sensor_num,
+				card_id);
+		}
+	}
 }

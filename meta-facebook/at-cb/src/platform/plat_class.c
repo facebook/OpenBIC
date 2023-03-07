@@ -25,6 +25,7 @@
 #include "plat_class.h"
 #include "common_i2c_mux.h"
 #include "pex89000.h"
+#include "plat_sensor_table.h"
 
 LOG_MODULE_REGISTER(plat_class);
 
@@ -262,6 +263,11 @@ void check_accl_device_presence_status(uint8_t pex_id)
 			LOG_ERR("Invalid register val: 0x%x", val);
 			break;
 		}
+
+		if ((asic_card_info[index].asic_1_status == ASIC_CARD_DEVICE_PRESENT) ||
+		    (asic_card_info[index].asic_2_status == ASIC_CARD_DEVICE_PRESENT)) {
+			pal_init_drive(plat_accl_sensor_config, ACCL_SENSOR_CONFIG_SIZE, index);
+		}
 	}
 }
 
@@ -270,6 +276,7 @@ void check_asic_card_status()
 	int ret = 0;
 	int index = 0;
 	int device_index = 0;
+	int mutex_status = 0;
 	mux_config i2c_mux = { 0 };
 	uint8_t i2c_dev[I2C_BUFF_SIZE] = { 0 };
 	uint8_t dev_count = 0;
@@ -282,16 +289,28 @@ void check_asic_card_status()
 		i2c_mux.target_addr = asic_card_info[index].mux_addr;
 		i2c_mux.channel = asic_card_info[index].mux_channel;
 
+		struct k_mutex *mutex = get_i2c_mux_mutex(asic_card_info[index].bus);
+		mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
+		if (mutex_status != 0) {
+			LOG_ERR("Mutex lock fail, index: 0x%x, status: %d", index, mutex_status);
+			continue;
+		}
+
 		ret = set_mux_channel(i2c_mux);
 		if (ret != true) {
 			LOG_ERR("Switch ASIC%d mux fail", index);
+			k_mutex_unlock(mutex);
 			continue;
 		}
 
 		i2c_scan(i2c_mux.bus, i2c_dev, &dev_count);
+		k_mutex_unlock(mutex);
+
 		for (device_index = 0; device_index < dev_count; ++device_index) {
 			if (i2c_dev[device_index] == (ACCL_FRU_ADDR << 1)) {
 				asic_card_info[index].card_status = ASIC_CARD_PRESENT;
+				pal_init_drive(plat_accl_sensor_config, ACCL_SENSOR_CONFIG_SIZE,
+					       index);
 				break;
 			}
 		}
