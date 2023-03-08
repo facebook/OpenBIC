@@ -303,7 +303,7 @@ bool post_ddr5_pwr_read(uint8_t sensor_num, void *args, int *reading)
 
 	mailbox_WrData *wrdata = (mailbox_WrData *)mailbox_msg.WrData;
 	report_dimm_power_data_in *data_in = (report_dimm_power_data_in *)wrdata->data_in;
-	sensor_val *sval = (sensor_val *)&cfg->cache;
+	sensor_val *sval = (sensor_val *)reading;
 	uint16_t pwr_mw = (sval->integer * 1000) + sval->fraction;
 
 	wrdata->command = SBRMI_MAILBOX_REPORT_DIMM_POWER;
@@ -315,7 +315,7 @@ bool post_ddr5_pwr_read(uint8_t sensor_num, void *args, int *reading)
 	return true;
 }
 
-bool post_ddr5_temp_read(uint8_t sensor_num, void *args, int *reading)
+bool post_ddr5_temp_read(uint8_t sensor_num, void *args, int *const reading)
 {
 	ARG_UNUSED(args);
 	if (!reading) {
@@ -372,7 +372,7 @@ bool post_ddr5_temp_read(uint8_t sensor_num, void *args, int *reading)
 	return true;
 }
 
-bool post_amd_tsi_read(uint8_t sensor_num, void *args, int *reading)
+bool post_amd_tsi_read(uint8_t sensor_num, void *args, int *const reading)
 {
 	ARG_UNUSED(args);
 	if (!reading) {
