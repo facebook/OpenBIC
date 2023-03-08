@@ -76,7 +76,8 @@ void pldm_read_resp_handler(void *args, uint8_t *rbuf, uint16_t rlen)
 	pldm_recv_resp_arg *recv_arg = (pldm_recv_resp_arg *)args;
 
 	if (rlen > recv_arg->rbuf_len) {
-		LOG_WRN("Response length(%d) is greater than buffer length(%d)!", rlen, recv_arg->rbuf_len);
+		LOG_WRN("Response length(%d) is greater than buffer length(%d)!", rlen,
+			recv_arg->rbuf_len);
 		recv_arg->return_len = recv_arg->rbuf_len;
 	} else {
 		recv_arg->return_len = rlen;
@@ -126,7 +127,7 @@ uint16_t mctp_pldm_read(void *mctp_p, pldm_msg *msg, uint8_t *rbuf, uint16_t rbu
 			LOG_WRN("Send msg failed!");
 			continue;
 		}
-		if (k_msgq_get(&event_msgq, &event, K_MSEC(PLDM_MSG_TIMEOUT_MS + 1000))) {
+		if (k_msgq_get(&event_msgq, &event, K_FOREVER)) {
 			LOG_WRN("Failed to get status from msgq!");
 			continue;
 		}
