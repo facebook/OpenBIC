@@ -29,6 +29,7 @@
 #include "plat_power_seq.h"
 #include "plat_sensor_table.h"
 #include "plat_hook.h"
+#include "plat_led.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
@@ -262,6 +263,87 @@ void OEM_1S_SAFE_WRITE_READ_M2_DATA(ipmi_msg *msg)
 	if (k_mutex_unlock(&i2c_hub_mutex)) {
 		LOG_ERR("Failed to unlock mutex");
 	}
+
+	return;
+}
+
+/* Control amber LED behavior
+ * Request:
+ * Data 0: Device ID
+ *   00h E1S 0
+ *   01h E1S 1
+ *   02h E1S 2
+ *   03h E1S 3
+ *   04h E1S 4
+ * Data 1: Control option
+ *   00h LED turn off
+ *   01h LED turn on
+ *   02h LED start blink
+ *   03h LED stop blink
+*/
+void OEM_1S_SET_SSD_LED(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 2) {
+		msg->data_len = 0;
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t device = msg->data[0];
+
+	msg->data_len = 0;
+
+	if (!get_e1s_present(device)) {
+		msg->completion_code = CC_SENSOR_NOT_PRESENT;
+		return;
+	}
+
+	if (control_e1s_amber_led(device, msg->data[1]) < 0) {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+	} else {
+		msg->completion_code = CC_SUCCESS;
+	}
+
+	return;
+}
+
+/* Get amber LED status
+ * Request:
+ * Data 0: Device ID
+ *   00h E1S 0
+ *   01h E1S 1
+ *   02h E1S 2
+ *   03h E1S 3
+ *   04h E1S 4
+ * Response
+ * Data 0: Status
+ *   00h LED off
+ *   01h LED on
+ *   02h LED blink
+*/
+void OEM_1S_GET_SSD_STATUS(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 1) {
+		msg->data_len = 0;
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t device = msg->data[0];
+
+	if (!get_e1s_present(device)) {
+		msg->data_len = 0;
+		msg->completion_code = CC_SENSOR_NOT_PRESENT;
+		return;
+	}
+
+	msg->data_len = 1;
+	msg->data[0] = get_e1s_amber_led_status(device);
+	msg->completion_code = CC_SUCCESS;
 
 	return;
 }
