@@ -119,7 +119,7 @@ void pal_pre_init()
 				continue;
 			}
 
-			init_cxl_set_eid_work();
+			init_cxl_work();
 		}
 
 		if (I2C_TARGET_ENABLE_TABLE[index])

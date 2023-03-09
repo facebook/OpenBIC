@@ -455,7 +455,7 @@ sensor_cfg plat_cxl_sensor_config[] = {
 	/** VR Power **/
 	{ SENSOR_NUM_PWR_P0V8_ASICA, sensor_dev_xdpe12284c, I2C_BUS2, CXL_VR_A0V8_ADDR,
 	  PMBUS_READ_POUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_cxl_vr_read, &vr_page_select[0],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_cxl_vr_read, &vr_page_select[1],
 	  post_cxl_xdpe12284c_read, NULL, NULL, &cxl_mux_configs[3] },
 	{ SENSOR_NUM_PWR_P0V9_ASICA, sensor_dev_xdpe12284c, I2C_BUS2, CXL_VR_A0V9_ADDR,
 	  PMBUS_READ_POUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
@@ -467,7 +467,7 @@ sensor_cfg plat_cxl_sensor_config[] = {
 	  post_cxl_xdpe12284c_read, NULL, NULL, &cxl_mux_configs[3] },
 	{ SENSOR_NUM_PWR_PVDDQ_AB, sensor_dev_xdpe12284c, I2C_BUS2, CXL_VR_VDDQAB_ADDR,
 	  PMBUS_READ_POUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_cxl_vr_read, &vr_page_select[0],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_cxl_vr_read, &vr_page_select[1],
 	  post_cxl_xdpe12284c_read, NULL, NULL, &cxl_mux_configs[3] },
 	{ SENSOR_NUM_PWR_PVDDQ_CD, sensor_dev_xdpe12284c, I2C_BUS2, CXL_VR_VDDQCD_ADDR,
 	  PMBUS_READ_POUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
