@@ -2059,6 +2059,15 @@ __weak void OEM_1S_BMC_IPMB_ACCESS(ipmi_msg *msg)
 #endif
 }
 
+__weak void OEM_1S_GET_HSC_STATUS(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	msg->data_len = 0;
+	msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+	return;
+}
+
 __weak void OEM_1S_GET_BIOS_VERSION(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -2360,6 +2369,10 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_BMC_IPMB_ACCESS:
 		LOG_DBG("Received 1S BMC IPMB Access command");
 		OEM_1S_BMC_IPMB_ACCESS(msg);
+		break;
+	case CMD_OEM_1S_GET_HSC_STATUS:
+		LOG_DBG("Received 1S Get HSC Status command");
+		OEM_1S_GET_HSC_STATUS(msg);
 		break;
 	case CMD_OEM_1S_GET_BIOS_VERSION:
 		LOG_DBG("Received 1S Get BIOS version command");

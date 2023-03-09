@@ -96,7 +96,7 @@ static int ltc4282_read_ein(I2C_MSG *msg, double *val, uint8_t retry)
 	}
 
 	// check overflow
-	msg->data[0] = LTC4282_STATUS_OFFSET;
+	msg->data[0] = LTC4282_STATUS_OFFSET_BYTE2;
 	msg->tx_len = 1;
 	msg->rx_len = 1;
 	if (i2c_master_read(msg, retry) != 0) {
@@ -186,7 +186,7 @@ uint8_t ltc4282_read(uint8_t sensor_num, int *reading)
 		}
 		if (cnt == ARRAY_SIZE(FOLDBACK_MODE_TABLE)) {
 			LOG_ERR("unknown voltage range, the foldback mode 0x%x",
-			       init_arg->ilim_adjust.fields.foldback_mode);
+				init_arg->ilim_adjust.fields.foldback_mode);
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 	}
