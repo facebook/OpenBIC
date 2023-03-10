@@ -1,0 +1,88 @@
+From c07066bf3db78ed69a3777af6f163fd4d98e8430 Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Fri, 3 Mar 2023 18:34:51 +0800
+Subject: [PATCH 2/2] i3c: aspeed: Add software flag for allowing SIR.
+
+The hardware flag sir_allowed has a default value of 1, and it cannot be
+cleared by the software, causing the software to lack a suitable flag to
+determine when the master is ready to receive the IBI.
+In order to solve this issue, a new boolean variable sir_allowed_by_sw
+should be introduced in the i3c_aspeed_init() function, with an initial
+value of 0. Furthermore, a new worker function called sir_allowed_worker()
+should also be incorporated into the system. This worker will be submitted
+only after the dynamic address of the slave has been assigned. Its primary
+responsibility is to set the value of the sir_allowed_by_sw variable 1
+after a delay of 1second which is sufficient for the i3c master to
+complete the bus initialization process.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I0668e705bf394882a6e587d8acd7c710e5213989
+---
+ drivers/i3c/i3c_aspeed.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index e6e0c2312c..7a6092b1f4 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -527,6 +527,8 @@ struct i3c_aspeed_obj {
+ 	struct i3c_aspeed_config *config;
+ 	struct k_spinlock lock;
+ 	struct i3c_aspeed_xfer *curr_xfer;
++	struct k_work work;
++	bool sir_allowed_by_sw;
+ 	struct {
+ 		uint32_t ibi_status_correct : 1;
+ 		uint32_t ibi_pec_force_enable : 1;
+@@ -887,11 +889,13 @@ static void i3c_aspeed_master_rx_ibi(struct i3c_aspeed_obj *obj)
+ static void i3c_aspeed_slave_event(const struct device *dev, union i3c_intr_s status)
+ {
+ 	struct i3c_aspeed_config *config = DEV_CFG(dev);
++	struct i3c_aspeed_obj *obj = DEV_DATA(dev);
+ 	struct i3c_register_s *i3c_register = config->base;
+ 	uint32_t cm_tfr_sts = i3c_register->present_state.fields.cm_tfr_sts;
+ 
+ 	if (status.fields.dyn_addr_assign) {
+ 		LOG_DBG("dynamic address assigned\n");
++		k_work_submit(&obj->work);
+ 	}
+ 
+ 	if (status.fields.ccc_update) {
+@@ -1540,6 +1544,11 @@ int i3c_aspeed_slave_put_read_data(const struct device *dev, struct i3c_slave_pa
+ 			return -EACCES;
+ 		}
+ 
++		if (obj->sir_allowed_by_sw == 0) {
++			LOG_ERR("SIR is not allowed by software\n");
++			return -EACCES;
++		}
++
+ 		osEventFlagsClear(obj->ibi_event, ~osFlagsError);
+ 		events.value = 0;
+ 		events.fields.ibi_update = 1;
+@@ -1788,6 +1797,14 @@ int i3c_aspeed_master_send_ccc(const struct device *dev, struct i3c_ccc_cmd *ccc
+ 	return ret;
+ }
+ 
++static void sir_allowed_worker(struct k_work *work)
++{
++	struct i3c_aspeed_obj *obj = CONTAINER_OF(work, struct i3c_aspeed_obj, work);
++
++	k_msleep(1000);
++	obj->sir_allowed_by_sw = 1;
++}
++
+ static int i3c_aspeed_init(const struct device *dev)
+ {
+ 	struct i3c_aspeed_config *config = DEV_CFG(dev);
+@@ -1855,6 +1872,8 @@ static int i3c_aspeed_init(const struct device *dev)
+ 				return -ENOSPC;
+ 			}
+ 		}
++		obj->sir_allowed_by_sw = 0;
++		k_work_init(&obj->work, sir_allowed_worker);
+ 	} else {
+ 		union i3c_device_addr_s reg;
+ 
+-- 
+2.25.1
