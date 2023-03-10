@@ -365,6 +365,22 @@ void IST_PLTRST()
 	reset_tsi_status();
 }
 
+#define FATAL_ERROR_DELAY_MSECOND 500
+typedef struct {
+	struct k_work_delayable work;
+	uint8_t ras_status;
+} fatal_error_work_info;
+
+static void send_apml_alert(struct k_work *work)
+{
+	fatal_error_work_info *work_info = CONTAINER_OF(work, fatal_error_work_info, work);
+	if (get_DC_status()) {
+		LOG_INF("Send apml alert to bmc.");
+		send_apml_alert_to_bmc(work_info->ras_status);
+	}
+	SAFE_FREE(work_info);
+}
+
 void ISR_APML_ALERT()
 {
 	uint8_t ras_status;
@@ -388,6 +404,15 @@ void ISR_APML_ALERT()
 		if ((status & 0x02) && (apml_write_byte(APML_BUS, SB_RMI_ADDR, SBRMI_STATUS, 0x02)))
 			LOG_ERR("Failed to clear SwAlertSts.");
 
-		send_apml_alert_to_bmc(ras_status);
+		fatal_error_work_info *delay_wrok = malloc(sizeof(fatal_error_work_info));
+		if (delay_wrok == NULL) {
+			LOG_ERR("Failed to allocate delay_job.");
+			return;
+		}
+		memset(delay_wrok, 0, sizeof(fatal_error_work_info));
+
+		delay_wrok->ras_status = ras_status;
+		k_work_init_delayable(&(delay_wrok->work), send_apml_alert);
+		k_work_schedule(&(delay_wrok->work), K_MSEC(FATAL_ERROR_DELAY_MSECOND));
 	}
 }
