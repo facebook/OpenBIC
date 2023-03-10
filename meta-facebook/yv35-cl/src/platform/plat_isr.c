@@ -676,7 +676,7 @@ void ISR_NMI()
 		sel_msg.event_data1 = IPMI_EVENT_CRITICAL_INT_FP_NMI;
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
-		if (!common_add_sel_evt_record(&sel_msg)) {
+		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
 			LOG_ERR("addsel fail");
 		}
 	}
