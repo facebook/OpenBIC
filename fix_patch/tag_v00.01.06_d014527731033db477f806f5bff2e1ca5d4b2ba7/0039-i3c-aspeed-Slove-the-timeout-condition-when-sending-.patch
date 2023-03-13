@@ -1,0 +1,95 @@
+From eadf11549deceb2128a63210281c4154d98b8097 Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Wed, 1 Mar 2023 16:43:41 +0800
+Subject: [PATCH 1/2] i3c: aspeed: Slove the timeout condition when sending
+ ibi.
+
+This commit fixes an issue in the i3c_aspeed_slave_put_read_data function
+where timeout errors could occur, leading to communication errors with the
+I3C master. If slave gets timeout at SIR transfer status, the i3c master
+may enter ibi storm when the controller is recovering. Thus, this patch
+will calls i3c_aspeed_init to reinitialize the I3C controller. If the
+timeout of the slave is due to waiting for the master to read the pedning
+data, the slave should reset the FIFO queue.
+
+The i3c_aspeed_slave_reset_queue function isolates the SCL and SDA lines,
+disables the I3C controller, toggles the SCL line eight times, resets the
+I3C queue, enables the I3C controller, and waits for the I3C bus to become
+free. If the I3C controller fails to disable or enable, the function logs
+a warning message and calls i3c_aspeed_init to reinitialize the I3C
+controller.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I035fac3f508bc550cbd29aa121a74b4ccf83a527
+---
+ drivers/i3c/i3c_aspeed.c | 41 +++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 40 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index 27e9768d88..e6e0c2312c 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -1469,6 +1469,43 @@ int i3c_aspeed_slave_register(const struct device *dev, struct i3c_slave_setup *
+ 	return 0;
+ }
+ 
++static void i3c_aspeed_slave_reset_queue(const struct device *dev)
++{
++	struct i3c_aspeed_config *config = DEV_CFG(dev);
++	struct i3c_register_s *i3c_register = config->base;
++	union i3c_reset_ctrl_s reset_ctrl;
++	int i;
++
++	i3c_aspeed_isolate_scl_sda(config->inst_id, true);
++	i3c_register->device_ctrl.fields.enable = 0;
++	for (i = 0; i < 8; i++)
++		i3c_aspeed_toggle_scl_in(config->inst_id);
++	if (i3c_register->device_ctrl.fields.enable) {
++		LOG_ERR("failed to disable controller: reset i3c controller\n");
++		i3c_aspeed_isolate_scl_sda(config->inst_id, false);
++		i3c_aspeed_init(dev);
++		return;
++	}
++	reset_ctrl.value = 0;
++	reset_ctrl.fields.tx_queue_reset = 1;
++	reset_ctrl.fields.rx_queue_reset = 1;
++	reset_ctrl.fields.ibi_queue_reset = 1;
++	reset_ctrl.fields.cmd_queue_reset = 1;
++	reset_ctrl.fields.resp_queue_reset = 1;
++	i3c_register->reset_ctrl.value = reset_ctrl.value;
++	i3c_register->device_ctrl.fields.enable = 1;
++	k_busy_wait(DIV_ROUND_UP(config->core_period *
++					 i3c_register->bus_free_timing.fields.i3c_ibi_free,
++				 NSEC_PER_USEC));
++	for (i = 0; i < 8; i++)
++		i3c_aspeed_toggle_scl_in(config->inst_id);
++	if (!i3c_register->device_ctrl.fields.enable) {
++		LOG_ERR("failed to enable controller: reset i3c controller\n");
++		i3c_aspeed_isolate_scl_sda(config->inst_id, false);
++		i3c_aspeed_init(dev);
++	}
++}
++
+ static uint32_t i3c_aspeed_slave_wait_data_consume(const struct device *dev)
+ {
+ 	struct i3c_aspeed_obj *obj = DEV_DATA(dev);
+@@ -1546,6 +1583,7 @@ int i3c_aspeed_slave_put_read_data(const struct device *dev, struct i3c_slave_pa
+ 		flag_ret = osEventFlagsWait(obj->ibi_event, events.value, osFlagsWaitAll,
+ 					    K_SECONDS(1).ticks);
+ 		if (flag_ret & osFlagsError) {
++			LOG_WRN("SIR timeout: reset i3c controller\n");
+ 			i3c_aspeed_init(dev);
+ 			ret = -EIO;
+ 			goto ibi_err;
+@@ -1555,7 +1593,8 @@ int i3c_aspeed_slave_put_read_data(const struct device *dev, struct i3c_slave_pa
+ 	flag_ret = osEventFlagsWait(obj->data_event, data_events.value, osFlagsWaitAny,
+ 				    K_SECONDS(3).ticks);
+ 	if (flag_ret & osFlagsError) {
+-		i3c_aspeed_init(dev);
++		LOG_WRN("Wait master read timeout: reset queue\n");
++		i3c_aspeed_slave_reset_queue(dev);
+ 		ret = -EIO;
+ 	}
+ ibi_err:
+-- 
+2.25.1
