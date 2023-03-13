@@ -383,7 +383,7 @@ isl28022_init_arg isl28022_pex_p1v8_sensor_init_args[] = {
 	[0] = { .config.fields.MODE = 0b111,
 		.config.fields.SADC = 0b1111,
 		.config.fields.BADC = 0b1111,
-		.config.fields.PG = 0b11,
+		.config.fields.PG = 0b00,
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
