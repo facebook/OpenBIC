@@ -31,6 +31,8 @@
 #include "xdpe15284.h"
 #include "hal_gpio.h"
 #include "plat_gpio.h"
+#include "plat_hook.h"
+#include "plat_dev.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
@@ -88,8 +90,8 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 			msg->completion_code = CC_PEX_NOT_POWER_ON;
 			return;
 		}
-		uint8_t pex_sensor_num_table[PEX_MAX_NUMBER] = { SENSOR_NUM_TEMP_PEX_0,
-								 SENSOR_NUM_TEMP_PEX_1 };
+		const uint8_t pex_sensor_num_table[PEX_MAX_NUMBER] = { SENSOR_NUM_TEMP_PEX_0,
+								       SENSOR_NUM_TEMP_PEX_1 };
 		int reading;
 
 		uint8_t pex_sensor_num = pex_sensor_num_table[component - CB_COMPNT_PCIE_SWITCH0];
@@ -168,10 +170,24 @@ void OEM_1S_GET_PCIE_CARD_STATUS(ipmi_msg *msg)
 	}
 
 	/* BMC would check pcie card type via fru id and device id */
-
 	uint8_t fru_id = msg->data[0];
 	uint8_t pcie_card_id = fru_id - PCIE_CARD_ID_OFFSET;
 	uint8_t pcie_device_id = msg->data[1];
+	static bool is_check_accl_status = false;
+	static bool is_check_accl_device_status = false;
+
+	if (is_check_accl_status != true) {
+		check_asic_card_status();
+		is_check_accl_status = true;
+	}
+
+	if (pcie_device_id == PCIE_DEVICE_ID1 || pcie_device_id == PCIE_DEVICE_ID2) {
+		if (is_check_accl_device_status != true && is_mb_dc_on() == true) {
+			check_accl_device_presence_status(PEX_0_INDEX);
+			check_accl_device_presence_status(PEX_1_INDEX);
+			is_check_accl_device_status = true;
+		}
+	}
 
 	switch (fru_id) {
 	case FIO_FRU_ID:
@@ -321,5 +337,112 @@ void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 		LOG_ERR("firmware (0x%02X) update failed cc: %x", target, msg->completion_code);
 	}
 
+	return;
+}
+
+int pal_get_pcie_card_sensor_reading(uint8_t card_id, uint8_t sensor_num, uint8_t *card_status,
+				     int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(card_status, -1);
+	CHECK_NULL_ARG_WITH_RETURN(reading, -1);
+
+	bool ret = 0;
+	uint8_t index = 0;
+	uint8_t sensor_status = 0;
+
+	sensor_cfg *cfg = { 0 };
+
+	ret = get_accl_sensor_config_index(sensor_num, &index);
+	if (ret != true) {
+		LOG_ERR("Fail to find sensor config via sensor num: 0x%x", sensor_num);
+		return -1;
+	}
+
+	cfg = &plat_accl_sensor_config[index];
+
+	if (is_pcie_device_access(card_id, sensor_num) != true) {
+		*card_status |= PCIE_CARD_NOT_ACCESSIBLE_BIT;
+		*reading = 0;
+		return 0;
+	}
+
+	ret = pre_accl_mux_switch(card_id, sensor_num);
+	if (ret != true) {
+		LOG_ERR("Pre switch mux fail, sensor num: 0x%x, card id: 0x%x", sensor_num,
+			card_id);
+		return -1;
+	}
+
+	ret = pal_sensor_drive_read(card_id, cfg, reading, &sensor_status);
+	if (ret != true) {
+		LOG_ERR("sensor: 0x%x read fail", sensor_num);
+		ret = post_accl_mux_switch(card_id, sensor_num);
+		if (ret != true) {
+			LOG_ERR("Post switch mux fail, sensor num: 0x%x, card id: 0x%x", sensor_num,
+				card_id);
+		}
+		return -1;
+	}
+
+	ret = post_accl_mux_switch(card_id, sensor_num);
+	if (ret != true) {
+		LOG_ERR("Post switch mux fail, sensor num: 0x%x, card id: 0x%x", sensor_num,
+			card_id);
+	}
+
+	switch (sensor_status) {
+	case SENSOR_READ_SUCCESS:
+	case SENSOR_READ_ACUR_SUCCESS:
+		break;
+	case SENSOR_INIT_STATUS:
+	case SENSOR_NOT_ACCESSIBLE:
+		*card_status |= PCIE_CARD_DEVICE_NOT_READY_BIT;
+		*reading = 0;
+		break;
+	default:
+		*reading = 0;
+		return -1;
+	}
+
+	return 0;
+}
+
+void OEM_1S_GET_PCIE_CARD_SENSOR_READING(ipmi_msg *msg)
+{
+	/* IPMI command format
+  *  Request:
+  *    Byte 0: FRU id
+  *    Byte 1: Sensor number
+  *  Response:
+  *    Byte 0:   Device status (bit 0: presence status, bit 1: power status, bit 2: device status)
+  *    Byte 1~2: Integer bytes
+  *    Byte 3~4: Fraction bytes */
+
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 2) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	int ret = -1;
+	int reading = 0;
+	uint8_t device_status = 0;
+	uint8_t fru_id = msg->data[0];
+	uint8_t sensor_num = msg->data[1];
+	uint8_t card_id = fru_id - ACCL_1_FRU_ID;
+
+	ret = pal_get_pcie_card_sensor_reading(card_id, sensor_num, &device_status, &reading);
+	if (ret != 0) {
+		LOG_ERR("Get pcie card sensor reading fail, card id: 0x%x, sensor num: 0x%x",
+			card_id, sensor_num);
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	msg->data_len = 5;
+	msg->data[0] = device_status;
+	memcpy(&msg->data[1], &reading, sizeof(reading));
+	msg->completion_code = CC_SUCCESS;
 	return;
 }

@@ -27,6 +27,7 @@
 #include "i2c-mux-tca9543a.h"
 #include "i2c-mux-pi4msd5v9542.h"
 #include "plat_sensor_table.h"
+#include "i2c-mux-pca954x.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -66,6 +67,57 @@ pex89000_init_arg pex_sensor_init_args[] = {
 	[1] = { .idx = 1, .is_init = false },
 };
 
+ina233_init_arg accl_ina233_init_args[] = {
+	// ACCL 1
+	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	// ACCL 2
+	[3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	// ACCL 3
+	[6] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[7] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	// ACCL 4
+	[9] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[10] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[11] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	// ACCL 5
+	[12] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[13] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[14] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	// ACCL 6
+	[15] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[16] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[17] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	// ACCL 7
+	[18] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[19] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[20] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	// ACCL 8
+	[21] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[22] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[23] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	// ACCL 9
+	[24] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[25] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[26] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	// ACCL 10
+	[27] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[28] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[29] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	// ACCL 11
+	[30] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[31] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[32] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	// ACCL 12
+	[33] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[34] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+	[35] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001 },
+};
+
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
  **************************************************************************************************/
@@ -82,6 +134,28 @@ mux_config pi4msd5v9542_configs[] = {
 vr_page_cfg xdpe15284_page[] = {
 	[0] = { .vr_page = PMBUS_PAGE_0 },
 	[1] = { .vr_page = PMBUS_PAGE_1 },
+};
+
+mux_config pca9548_configs[] = {
+	[0] = { .bus = I2C_BUS7, .target_addr = 0x70, .channel = PCA9548A_CHANNEL_0 },
+	[1] = { .bus = I2C_BUS7, .target_addr = 0x70, .channel = PCA9548A_CHANNEL_1 },
+	[2] = { .bus = I2C_BUS7, .target_addr = 0x70, .channel = PCA9548A_CHANNEL_2 },
+	[3] = { .bus = I2C_BUS7, .target_addr = 0x70, .channel = PCA9548A_CHANNEL_3 },
+	[4] = { .bus = I2C_BUS7, .target_addr = 0x70, .channel = PCA9548A_CHANNEL_4 },
+	[5] = { .bus = I2C_BUS7, .target_addr = 0x70, .channel = PCA9548A_CHANNEL_5 },
+	[6] = { .bus = I2C_BUS8, .target_addr = 0x74, .channel = PCA9548A_CHANNEL_0 },
+	[7] = { .bus = I2C_BUS8, .target_addr = 0x74, .channel = PCA9548A_CHANNEL_1 },
+	[8] = { .bus = I2C_BUS8, .target_addr = 0x74, .channel = PCA9548A_CHANNEL_2 },
+	[9] = { .bus = I2C_BUS8, .target_addr = 0x74, .channel = PCA9548A_CHANNEL_3 },
+	[10] = { .bus = I2C_BUS8, .target_addr = 0x74, .channel = PCA9548A_CHANNEL_4 },
+	[11] = { .bus = I2C_BUS8, .target_addr = 0x74, .channel = PCA9548A_CHANNEL_5 },
+};
+
+mux_config pca9546_configs[] = {
+	[0] = { .target_addr = 0x72, .channel = PCA9546A_CHANNEL_0 },
+	[1] = { .target_addr = 0x72, .channel = PCA9546A_CHANNEL_1 },
+	[2] = { .target_addr = 0x72, .channel = PCA9546A_CHANNEL_2 },
+	[3] = { .target_addr = 0x72, .channel = PCA9546A_CHANNEL_3 },
 };
 
 /**************************************************************************************************
@@ -142,7 +216,7 @@ bool pre_xdpe15284_read(uint8_t sensor_num, void *args)
 	int retry = 3;
 	int mutex_status = 0;
 	I2C_MSG msg = { 0 };
-	vr_page_cfg *xdpe15284_page = (vr_page_cfg *)args;
+	vr_page_cfg *xdpe15284_vr_page = (vr_page_cfg *)args;
 
 	mutex_status = k_mutex_lock(&xdpe15284_mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
 	if (mutex_status != 0) {
@@ -154,7 +228,7 @@ bool pre_xdpe15284_read(uint8_t sensor_num, void *args)
 	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
 	msg.tx_len = 2;
 	msg.data[0] = PMBUS_PAGE;
-	msg.data[1] = xdpe15284_page->vr_page;
+	msg.data[1] = xdpe15284_vr_page->vr_page;
 
 	ret = i2c_master_write(&msg, retry);
 	if (ret != 0) {
@@ -238,6 +312,68 @@ bool post_pex89000_read(uint8_t sensor_num, void *args, int *reading)
 	uint8_t bus = sensor_config[sensor_config_index_map[sensor_num]].port;
 
 	struct k_mutex *mutex = get_i2c_mux_mutex(bus);
+	if (mutex->lock_count != 0) {
+		unlock_status = k_mutex_unlock(mutex);
+	}
+
+	if (unlock_status != 0) {
+		LOG_ERR("Mutex unlock fail, status: %d", unlock_status);
+		return false;
+	}
+
+	return true;
+}
+
+bool pre_accl_mux_switch(uint8_t card_id, uint8_t sensor_num)
+{
+	bool ret = false;
+	mux_config accl_mux = { 0 };
+	mux_config channel_mux = { 0 };
+
+	if (get_accl_mux_config(card_id, &accl_mux) != true) {
+		return false;
+	}
+
+	if (get_mux_channel_config(card_id, sensor_num, &channel_mux) != true) {
+		return false;
+	}
+
+	int mutex_status = 0;
+	struct k_mutex *mutex = get_i2c_mux_mutex(accl_mux.bus);
+
+	mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
+	if (mutex_status != 0) {
+		LOG_ERR("Mutex lock fail, status: %d", mutex_status);
+		return false;
+	}
+
+	ret = set_mux_channel(accl_mux);
+	if (ret == false) {
+		LOG_ERR("ACCL switch mux fail");
+		k_mutex_unlock(mutex);
+		return false;
+	}
+
+	ret = set_mux_channel(channel_mux);
+	if (ret == false) {
+		LOG_ERR("ACCL switch mux fail");
+		k_mutex_unlock(mutex);
+		return false;
+	}
+
+	return true;
+}
+
+bool post_accl_mux_switch(uint8_t card_id, uint8_t sensor_num)
+{
+	mux_config accl_mux = { 0 };
+
+	if (get_accl_mux_config(card_id, &accl_mux) != true) {
+		return false;
+	}
+
+	int unlock_status = 0;
+	struct k_mutex *mutex = get_i2c_mux_mutex(accl_mux.bus);
 	if (mutex->lock_count != 0) {
 		unlock_status = k_mutex_unlock(mutex);
 	}

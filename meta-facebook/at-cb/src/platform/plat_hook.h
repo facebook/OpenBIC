@@ -28,6 +28,7 @@ extern adc_asd_init_arg adc_asd_init_args[];
 extern adm1272_init_arg adm1272_init_args[];
 extern ina233_init_arg ina233_init_args[];
 extern pex89000_init_arg pex_sensor_init_args[];
+extern ina233_init_arg accl_ina233_init_args[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
@@ -35,6 +36,8 @@ extern pex89000_init_arg pex_sensor_init_args[];
 extern mux_config tca9543_configs[];
 extern mux_config pi4msd5v9542_configs[];
 extern vr_page_cfg xdpe15284_page[];
+extern mux_config pca9548_configs[];
+extern mux_config pca9546_configs[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
@@ -45,5 +48,7 @@ bool pre_pex89000_read(uint8_t sensor_num, void *args);
 bool post_pex89000_read(uint8_t sensor_num, void *args, int *reading);
 bool pre_xdpe15284_read(uint8_t sensor_num, void *args);
 bool post_xdpe15284_read(uint8_t sensor_num, void *args, int *reading);
+bool pre_accl_mux_switch(uint8_t card_id, uint8_t sensor_num);
+bool post_accl_mux_switch(uint8_t card_id, uint8_t sensor_num);
 
 #endif

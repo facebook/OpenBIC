@@ -32,6 +32,10 @@
 #define PCIE_CARD_ID_OFFSET 18
 #define RESERVE_DEFAULT_VALUE 0
 
+#define PCIE_CARD_NOT_PRESENT_BIT BIT(0)
+#define PCIE_CARD_NOT_ACCESSIBLE_BIT BIT(1)
+#define PCIE_CARD_DEVICE_NOT_READY_BIT BIT(2)
+
 /* switch mux selection */
 struct SWITCH_MUX_INFO {
 	uint8_t device;
