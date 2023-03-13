@@ -238,7 +238,7 @@ uint16_t mctp_cci_read(void *mctp_p, mctp_cci_msg *msg, uint8_t *rbuf, uint16_t 
 			LOG_WRN("send msg failed!");
 			continue;
 		}
-		if (k_msgq_get(event_msgq_p, &event, K_MSEC(CCI_MSG_TIMEOUT_MS + 1000))) {
+		if (k_msgq_get(event_msgq_p, &event, K_FOREVER)) {
 			LOG_WRN("Failed to get status from msgq!");
 			continue;
 		}
