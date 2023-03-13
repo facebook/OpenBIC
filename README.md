@@ -11,7 +11,7 @@ oby3-dl | ![badge](https://img.shields.io/endpoint?url=https://gist.githubuserco
 oby3-vf | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/yv3-vf.json) | Yosemite v3 Vernal Falls
 oby35-bb | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/yv35-bb.json) | Yosemite v3.5 Baseboard
 oby35-cl | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/yv35-cl.json) | Yosemite v3.5 Crater Lake
-oby35-gl | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/yv35-rf.json) | Yosemite v3.5 Rainbow Falls Board
+oby35-gl | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/yv35-gl.json) | Yosemite v3.5 Great Lakes Board
 oby35-hd | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/yv35-hd.json) | Yosemite v3.5 Half Dome
 oby35-rf | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/yv35-rf.json) | Yosemite v3.5 Rainbow Falls Board
 
