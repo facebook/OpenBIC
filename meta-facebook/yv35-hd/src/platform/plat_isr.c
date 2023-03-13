@@ -88,20 +88,6 @@ void ISR_DC_ON()
 		}
 		set_DC_on_delayed_status();
 
-		if ((gpio_get(FM_CPU_BIC_SLP_S3_N) == GPIO_HIGH) &&
-		    (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH)) {
-			common_addsel_msg_t sel_msg;
-			sel_msg.InF_target = BMC_IPMB;
-			sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_OEM_C3;
-			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
-			sel_msg.sensor_number = SENSOR_NUM_POWER_ERROR;
-			sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_PWROK_FAIL;
-			sel_msg.event_data2 = 0xFF;
-			sel_msg.event_data3 = 0xFF;
-			if (!common_add_sel_evt_record(&sel_msg)) {
-				LOG_ERR("Failed to add system PWROK failure sel");
-			}
-		}
 		k_work_schedule(&read_pmic_critical_work, K_MSEC(READ_PMIC_CRITICAL_ERROR_MS));
 	}
 }
