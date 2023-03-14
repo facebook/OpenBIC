@@ -404,15 +404,15 @@ void ISR_APML_ALERT()
 		if ((status & 0x02) && (apml_write_byte(APML_BUS, SB_RMI_ADDR, SBRMI_STATUS, 0x02)))
 			LOG_ERR("Failed to clear SwAlertSts.");
 
-		fatal_error_work_info *delay_wrok = malloc(sizeof(fatal_error_work_info));
-		if (delay_wrok == NULL) {
+		fatal_error_work_info *delay_work = malloc(sizeof(fatal_error_work_info));
+		if (delay_work == NULL) {
 			LOG_ERR("Failed to allocate delay_job.");
 			return;
 		}
-		memset(delay_wrok, 0, sizeof(fatal_error_work_info));
+		memset(delay_work, 0, sizeof(fatal_error_work_info));
 
-		delay_wrok->ras_status = ras_status;
-		k_work_init_delayable(&(delay_wrok->work), send_apml_alert);
-		k_work_schedule(&(delay_wrok->work), K_MSEC(FATAL_ERROR_DELAY_MSECOND));
+		delay_work->ras_status = ras_status;
+		k_work_init_delayable(&(delay_work->work), send_apml_alert);
+		k_work_schedule(&(delay_work->work), K_MSEC(FATAL_ERROR_DELAY_MSECOND));
 	}
 }
