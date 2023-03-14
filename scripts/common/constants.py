@@ -29,6 +29,7 @@ PLATFORM_NAME_MAP = {
     "oby35-hd": "Yosemite v3.5 : Half Dome",
     "oby35-op": "Yosemite v3.5 : Olmstead Point",
     "oby35-rf": "Yosemite v3.5 : Rainbow Falls",
+    "oby35-nf": "Yosemite v3.5 : Niagara Falls",
 }
 
 # These are the currently supported platforms.
@@ -47,6 +48,7 @@ SUPPORTED_PLATFORMS = {
     "oby35-hd",
     "oby35-op",
     "oby35-rf",
+    "oby35-nf",
 }
 
 PLATFORM_RELEASE_MAPPINGS = {
@@ -62,6 +64,7 @@ PLATFORM_RELEASE_MAPPINGS = {
     "yv35-gl": "oby35-gl",
     "yv35-hd": "oby35-hd",
     "yv35-rf": "oby35-rf",
+    "yv35-nf": "oby35-nf",
 }
 
 PLATFORM_DIRECTORIES = {
@@ -77,6 +80,7 @@ PLATFORM_DIRECTORIES = {
     "yv35-gl",
     "yv35-hd",
     "yv35-rf",
+    "yv35-nf",
 }
 
 # Sometimes titles include tags for the platform,
@@ -106,6 +110,7 @@ TITLE_TAGS = {
     "rf:",
     "vf:",
     "wc:",
+    "nf:",
 }
 
 

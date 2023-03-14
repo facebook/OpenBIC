@@ -106,7 +106,8 @@ enum Channel_Target {
 	EXP2_IPMB = 0x15,
 	CL_BIC_IPMB = 0x16, // Rainbow falls IPMB channel
 	HD_BIC_IPMB = 0x17,
-	/* 18h-19h reserved. */
+	GL_BIC_IPMB = 0x18, // for NF IPMB channel
+	/* 19h reserved. */
 	EXP3_IPMB = 0x25,
 	EXP4_IPMB = 0x30,
 	PEER_BMC_IPMB = 0x1A,
