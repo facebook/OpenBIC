@@ -25,6 +25,7 @@
 #include "snoop.h"
 #include "libutil.h"
 #include "ipmi.h"
+#include "pldm.h"
 #include "power_status.h"
 #include <logging/log.h>
 
@@ -200,16 +201,24 @@ void send_post_code_to_BMC()
 					       send_postcode_msg->data[3],
 					       &send_postcode_msg->data[4], COPY_SPECIFIC_POSTCODE);
 
-			status = ipmb_read(send_postcode_msg,
-					   IPMB_inf_index_map[send_postcode_msg->InF_target]);
-			SAFE_FREE(send_postcode_msg);
-			if (status == IPMB_ERROR_FAILURE) {
-				LOG_ERR("Fail to post msg to txqueue for send post code from %d to %d",
-				       send_postcode_start_position, send_postcode_end_position);
-				continue;
-			} else if (status == IPMB_ERROR_GET_MESSAGE_QUEUE) {
-				LOG_ERR("No response from bmc for send post code");
-				continue;
+			// Check BMC communication interface if use IPMB or not
+			if (pal_is_interface_use_ipmb(IPMB_inf_index_map[BMC_IPMB])) {
+				status = ipmb_read(
+					send_postcode_msg,
+					IPMB_inf_index_map[send_postcode_msg->InF_target]);
+				SAFE_FREE(send_postcode_msg);
+				if (status == IPMB_ERROR_FAILURE) {
+					LOG_ERR("Fail to post msg to txqueue for send post code from %d to %d",
+						send_postcode_start_position,
+						send_postcode_end_position);
+					continue;
+				} else if (status == IPMB_ERROR_GET_MESSAGE_QUEUE) {
+					LOG_ERR("No response from bmc for send post code");
+					continue;
+				}
+			} else {
+				status = pldm_send_ipmi_request(send_postcode_msg);
+				SAFE_FREE(send_postcode_msg);
 			}
 			send_postcode_start_position = send_postcode_end_position;
 		} else {
