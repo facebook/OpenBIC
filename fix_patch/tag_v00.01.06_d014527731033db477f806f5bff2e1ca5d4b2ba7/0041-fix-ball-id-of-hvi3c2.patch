@@ -1,0 +1,25 @@
+From d71ae11ae41090325b23a57702339b51f4e27b1f Mon Sep 17 00:00:00 2001
+From: Eli_Huang <Eli_Huang@wiwynn.com>
+Date: Tue, 14 Mar 2023 16:58:59 +0800
+Subject: [PATCH] fix ball id of hvi3c2
+
+---
+ soc/arm/aspeed/ast10x0/sig_def_list.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/soc/arm/aspeed/ast10x0/sig_def_list.h b/soc/arm/aspeed/ast10x0/sig_def_list.h
+index cd26d22c02..71af47370f 100644
+--- a/soc/arm/aspeed/ast10x0/sig_def_list.h
++++ b/soc/arm/aspeed/ast10x0/sig_def_list.h
+@@ -96,7 +96,7 @@ SIG_DEFINE(I3C2SCL, J14, SIG_DESC_SET(0x418, 18), SIG_DESC_CLEAR(0x4B8, 10))
+ SIG_DEFINE(I3C2SDA, H16, SIG_DESC_SET(0x418, 19), SIG_DESC_CLEAR(0x4B8, 11))
+ SIG_DEFINE(HVI3C2SCL, L14, SIG_DESC_SET(0x4B8, 10), SIG_DESC_CLEAR(0x418, 18),
+ 	   SIG_DESC_CLEAR(0x418, 10))
+-SIG_DEFINE(HVI3C2SDA, K15, SIG_DESC_SET(0x4B8, 11), SIG_DESC_CLEAR(0x418, 19),
++SIG_DEFINE(HVI3C2SDA, L15, SIG_DESC_SET(0x4B8, 11), SIG_DESC_CLEAR(0x418, 19),
+ 	   SIG_DESC_CLEAR(0x418, 11))
+ #endif
+ 
+-- 
+2.25.1
+
