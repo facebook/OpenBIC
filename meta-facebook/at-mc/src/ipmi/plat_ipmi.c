@@ -167,7 +167,7 @@ int pal_get_pcie_card_sensor_reading(uint8_t read_type, uint8_t sensor_num, uint
 			}
 		}
 
-		ret = pal_sensor_drive_read(cfg, reading, &sensor_status);
+		ret = pal_sensor_drive_read(pcie_card_id, cfg, reading, &sensor_status);
 		if (ret != true) {
 			LOG_ERR("sensor: 0x%x read fail", sensor_num);
 		}

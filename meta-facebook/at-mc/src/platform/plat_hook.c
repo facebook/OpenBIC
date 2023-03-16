@@ -61,17 +61,89 @@ sq52205_init_arg sq52205_init_args[] = {
 };
 
 ina233_init_arg ina233_init_args[] = {
+	// JCN1
 	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
 	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
+	// JCN2
+	[2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
+	[3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
+	// JCN3
+	[4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
+	[5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
+	// JCN4
+	[6] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
+	[7] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
+	// JCN9
+	[8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
+	[9] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
+	// JCN10
+	[10] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
+	[11] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
+	// JCN11
+	[12] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
+	[13] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
+	// JCN12
+	[14] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
+	[15] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005 },
 };
 
 ltc2991_init_arg ltc2991_init_args[] = {
+	// JCN1
 	[0] = { .is_init = false,
-		.v1_v4_control_operation.value = LTC2991_KEEP_DEFAULT_SETTING,
-		.v5_v8_control_operation.value = LTC2991_KEEP_DEFAULT_SETTING },
+		.v1_v4_control_operation.value = 0,
+		.v5_v8_control_operation.value = 0 },
 	[1] = { .is_init = false,
-		.v1_v4_control_operation.value = LTC2991_KEEP_DEFAULT_SETTING,
-		.v5_v8_control_operation.value = LTC2991_KEEP_DEFAULT_SETTING },
+		.v1_v4_control_operation.value = 0,
+		.v5_v8_control_operation.value = 0 },
+	// JCN2
+	[2] = { .is_init = false,
+		.v1_v4_control_operation.value = 0,
+		.v5_v8_control_operation.value = 0 },
+	[3] = { .is_init = false,
+		.v1_v4_control_operation.value = 0,
+		.v5_v8_control_operation.value = 0 },
+	// JCN3
+	[4] = { .is_init = false,
+		.v1_v4_control_operation.value = 0,
+		.v5_v8_control_operation.value = 0 },
+	[5] = { .is_init = false,
+		.v1_v4_control_operation.value = 0,
+		.v5_v8_control_operation.value = 0 },
+	// JCN4
+	[6] = { .is_init = false,
+		.v1_v4_control_operation.value = 0,
+		.v5_v8_control_operation.value = 0 },
+	[7] = { .is_init = false,
+		.v1_v4_control_operation.value = 0,
+		.v5_v8_control_operation.value = 0 },
+	// JCN9
+	[8] = { .is_init = false,
+		.v1_v4_control_operation.value = 0,
+		.v5_v8_control_operation.value = 0 },
+	[9] = { .is_init = false,
+		.v1_v4_control_operation.value = 0,
+		.v5_v8_control_operation.value = 0 },
+	// JCN10
+	[10] = { .is_init = false,
+		 .v1_v4_control_operation.value = 0,
+		 .v5_v8_control_operation.value = 0 },
+	[11] = { .is_init = false,
+		 .v1_v4_control_operation.value = 0,
+		 .v5_v8_control_operation.value = 0 },
+	// JCN11
+	[12] = { .is_init = false,
+		 .v1_v4_control_operation.value = 0,
+		 .v5_v8_control_operation.value = 0 },
+	[13] = { .is_init = false,
+		 .v1_v4_control_operation.value = 0,
+		 .v5_v8_control_operation.value = 0 },
+	// JCN12
+	[14] = { .is_init = false,
+		 .v1_v4_control_operation.value = 0,
+		 .v5_v8_control_operation.value = 0 },
+	[15] = { .is_init = false,
+		 .v1_v4_control_operation.value = 0,
+		 .v5_v8_control_operation.value = 0 },
 };
 
 /**************************************************************************************************

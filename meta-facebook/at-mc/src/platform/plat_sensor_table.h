@@ -178,5 +178,6 @@ bool get_cxl_sensor_config_index(uint8_t sensor_num, uint8_t *index);
 bool get_pcie_card_mux_config(uint8_t dev_type, uint8_t card_id, uint8_t sensor_num,
 			      mux_config *card_mux_cfg, mux_config *cxl_mux_cfg);
 void pal_init_drive(sensor_cfg *cfg_table, uint8_t cfg_size, uint8_t device_type, uint8_t card_id);
+void *get_pcie_init_sensor_config(uint8_t card_id, uint8_t sensor_number);
 
 #endif
