@@ -76,7 +76,8 @@ void pldm_read_resp_handler(void *args, uint8_t *rbuf, uint16_t rlen)
 	pldm_recv_resp_arg *recv_arg = (pldm_recv_resp_arg *)args;
 
 	if (rlen > recv_arg->rbuf_len) {
-		LOG_WRN("Response length(%d) is greater than buffer length(%d)!", rlen, recv_arg->rbuf_len);
+		LOG_WRN("Response length(%d) is greater than buffer length(%d)!", rlen,
+			recv_arg->rbuf_len);
 		recv_arg->return_len = recv_arg->rbuf_len;
 	} else {
 		recv_arg->return_len = rlen;
@@ -101,23 +102,38 @@ static void pldm_read_timeout_handler(void *args)
  */
 uint16_t mctp_pldm_read(void *mctp_p, pldm_msg *msg, uint8_t *rbuf, uint16_t rbuf_len)
 {
-	if (!mctp_p || !msg || !rbuf || !rbuf_len)
+	CHECK_NULL_ARG_WITH_RETURN(mctp_p, 0);
+	CHECK_NULL_ARG_WITH_RETURN(msg, 0);
+	CHECK_NULL_ARG_WITH_RETURN(rbuf, 0);
+
+	if (!rbuf_len)
 		return 0;
 
 	uint8_t event_msgq_buffer[1];
-	struct k_msgq event_msgq;
+	struct k_msgq *event_msgq_p = (struct k_msgq *)malloc(sizeof(struct k_msgq));
+	if (!event_msgq_p) {
+		LOG_WRN("Failed to allocate event_msgq_p");
+		return 0;
+	}
+	uint16_t ret_len = 0;
 
-	k_msgq_init(&event_msgq, event_msgq_buffer, sizeof(uint8_t), 1);
+	k_msgq_init(event_msgq_p, event_msgq_buffer, sizeof(uint8_t), 1);
 
-	pldm_recv_resp_arg recv_arg;
-	recv_arg.msgq = &event_msgq;
-	recv_arg.rbuf = rbuf;
-	recv_arg.rbuf_len = rbuf_len;
+	pldm_recv_resp_arg *recv_arg_p = (pldm_recv_resp_arg *)malloc(sizeof(pldm_recv_resp_arg));
+	if (!recv_arg_p) {
+		SAFE_FREE(event_msgq_p);
+		LOG_WRN("Failed to allocate recv_arg_p");
+		return 0;
+	}
+	recv_arg_p->msgq = event_msgq_p;
+	recv_arg_p->rbuf = rbuf;
+	recv_arg_p->rbuf_len = rbuf_len;
+	recv_arg_p->return_len = 0;
 
 	msg->recv_resp_cb_fn = pldm_read_resp_handler;
-	msg->recv_resp_cb_args = (void *)&recv_arg;
+	msg->recv_resp_cb_args = (void *)recv_arg_p;
 	msg->timeout_cb_fn = pldm_read_timeout_handler;
-	msg->timeout_cb_fn_args = (void *)&event_msgq;
+	msg->timeout_cb_fn_args = (void *)event_msgq_p;
 	msg->timeout_ms = PLDM_MSG_TIMEOUT_MS;
 
 	for (uint8_t retry_count = 0; retry_count < PLDM_MSG_MAX_RETRY; retry_count++) {
@@ -126,14 +142,19 @@ uint16_t mctp_pldm_read(void *mctp_p, pldm_msg *msg, uint8_t *rbuf, uint16_t rbu
 			LOG_WRN("Send msg failed!");
 			continue;
 		}
-		if (k_msgq_get(&event_msgq, &event, K_MSEC(PLDM_MSG_TIMEOUT_MS + 1000))) {
+		if (k_msgq_get(event_msgq_p, &event, K_FOREVER)) {
 			LOG_WRN("Failed to get status from msgq!");
 			continue;
 		}
 		if (event == PLDM_READ_EVENT_SUCCESS) {
-			return recv_arg.return_len;
+			ret_len = recv_arg_p->return_len;
+			SAFE_FREE(recv_arg_p);
+			SAFE_FREE(event_msgq_p);
+			return ret_len;
 		}
 	}
+	SAFE_FREE(event_msgq_p);
+	SAFE_FREE(recv_arg_p);
 	LOG_WRN("Retry reach max!");
 	return 0;
 }
@@ -187,7 +208,7 @@ static void pldm_msg_timeout_monitor(void *dummy0, void *dummy1, void *dummy2)
 	}
 }
 
-static uint8_t pldm_resp_msg_process(mctp *mctp_inst, uint8_t *buf, uint32_t len,
+static uint8_t pldm_resp_msg_process(mctp *const mctp_inst, uint8_t *buf, uint32_t len,
 				     mctp_ext_params ext_params)
 {
 	if (!mctp_inst || !buf || !len)
@@ -270,7 +291,7 @@ uint8_t mctp_pldm_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext
 	/* default one byte response data - completion code */
 	uint8_t *comp = resp_buf + sizeof(*hdr);
 
-	pldm_cmd_proc_fn handler = NULL;
+	void *handler = NULL;
 	uint8_t (*handler_query)(uint8_t, void **) = NULL;
 
 	uint8_t i;
@@ -288,14 +309,15 @@ uint8_t mctp_pldm_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext
 
 	uint8_t rc = PLDM_ERROR;
 	/* found the proper cmd handler in the pldm_type_cmd table */
-	rc = handler_query(hdr->cmd, (void **)&handler);
+	rc = handler_query(hdr->cmd, &handler);
 	if (rc == PLDM_ERROR || !handler) {
 		*comp = PLDM_ERROR_UNSUPPORTED_PLDM_CMD;
 		goto send_msg;
 	}
 
-	rc = handler(mctp_inst, buf + sizeof(*hdr), len - sizeof(*hdr), (hdr->req_d_id) & 0x1F,
-		     resp_buf + sizeof(*hdr), &resp_len, &ext_params);
+	rc = ((pldm_cmd_proc_fn)handler)(mctp_inst, buf + sizeof(*hdr), len - sizeof(*hdr),
+					 (hdr->req_d_id) & 0x1F, resp_buf + sizeof(*hdr), &resp_len,
+					 &ext_params);
 	if (rc == PLDM_LATER_RESP)
 		return PLDM_SUCCESS;
 
@@ -417,9 +439,9 @@ uint8_t get_supported_pldm_commands(PLDM_TYPE type, uint8_t *buf, uint8_t buf_si
 	}
 
 	for (uint16_t cmd = 0; cmd < (GET_PLDM_COMMAND_BUF_SIZE * 8); cmd++) {
-		pldm_cmd_proc_fn handler = NULL;
+		void *handler = NULL;
 
-		uint8_t rc = handler_query(cmd, (void **)&handler);
+		uint8_t rc = handler_query(cmd, &handler);
 		if ((rc == PLDM_SUCCESS) && handler)
 			buf[cmd / 8] |= BIT(cmd % 8);
 	}
