@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <stdlib.h>
 #include <logging/log.h>
-
+#include "util_spi.h"
 #include "pt5161l.h"
 #include "hal_i2c.h"
 #include "libutil.h"
@@ -23,6 +24,8 @@
 LOG_MODULE_REGISTER(dev_pt5161l);
 
 K_MUTEX_DEFINE(pt5161l_mutex);
+
+static bool is_update_ongoing = false;
 
 //Write multiple data bytes to retimer over I2C
 bool pt5161l_write_block_data(I2C_MSG *msg, uint32_t address, uint8_t num_bytes, uint8_t *values)
@@ -276,12 +279,626 @@ error_exit:
 	return ret;
 }
 
+bool pt5161l_i2c_master_soft_reset(I2C_MSG *msg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, false);
+	bool ret = false;
+	uint8_t data_byte;
+	uint8_t i2c_init_ctrl;
+
+	// Enable Bit bang mode
+	data_byte = 3;
+	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_BB_OUTPUT_ADDRESS, 1, &data_byte);
+	if (!ret) {
+		LOG_ERR("pt5161l enable Bit bang mode failed");
+		goto exit;
+	}
+
+	ret = pt5161l_read_block_data(msg, PT5161L_I2C_MST_INIT_CTRL_ADDRESS, 1, &i2c_init_ctrl);
+	if (!ret) {
+		LOG_ERR("pt5161l read I2C master init control failed");
+		goto exit;
+	}
+
+	i2c_init_ctrl = PT5161L_I2C_MST_INIT_CTRL_BIT_BANG_MODE_EN_MODIFY(i2c_init_ctrl, 1);
+	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_INIT_CTRL_ADDRESS, 1, &i2c_init_ctrl);
+	if (!ret) {
+		LOG_ERR("pt5161l set I2C master init control failed");
+		goto exit;
+	}
+
+	// Start Sequence
+	// SDA = 1, SCL = 1
+	data_byte = 3;
+	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_BB_OUTPUT_ADDRESS, 1, &data_byte);
+	if (!ret) {
+		LOG_ERR("pt5161l start sequence I2C master SDA = 1, SCL = 1 failed");
+		goto exit;
+	}
+
+	// SDA = 0, SCL = 1
+	data_byte = 1;
+	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_BB_OUTPUT_ADDRESS, 1, &data_byte);
+	if (!ret) {
+		LOG_ERR("pt5161l start sequence I2C master SDA = 0, SCL = 1 failed");
+		goto exit;
+	}
+
+	// SDA = 0, SCL = 0
+	data_byte = 0;
+	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_BB_OUTPUT_ADDRESS, 1, &data_byte);
+	if (!ret) {
+		LOG_ERR("pt5161l start sequence I2C master SDA = 0, SCL = 0 failed");
+		goto exit;
+	}
+
+	// SDA = 1, SCL = 0
+	data_byte = 2;
+	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_BB_OUTPUT_ADDRESS, 1, &data_byte);
+	if (!ret) {
+		LOG_ERR("pt5161l start sequence I2C master SDA = 1, SCL = 0 failed");
+		goto exit;
+	}
+
+	int i = 0;
+	for (i = 0; i < 9; i++) {
+		// SDA = 1, SCL = 1
+		data_byte = 3;
+		ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_BB_OUTPUT_ADDRESS, 1,
+					       &data_byte);
+		if (!ret) {
+			LOG_ERR("pt5161l set clock I2C master SDA = 1, SCL = 0 failed");
+			goto exit;
+		}
+
+		// SDA = 1 SCL = 0
+		data_byte = 2;
+		ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_BB_OUTPUT_ADDRESS, 1,
+					       &data_byte);
+		if (!ret) {
+			LOG_ERR("pt5161l set clock I2C master SDA = 1, SCL = 0 failed");
+			goto exit;
+		}
+	}
+
+	// Stop Sequence
+	// SDA = 0, SCL = 0
+	data_byte = 0;
+	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_BB_OUTPUT_ADDRESS, 1, &data_byte);
+	if (!ret) {
+		LOG_ERR("pt5161l stop sequence set I2C master SDA = 0, SCL = 0 failed");
+		goto exit;
+	}
+
+	// SDA = 0, SCL = 1
+	data_byte = 1;
+	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_BB_OUTPUT_ADDRESS, 1, &data_byte);
+	if (!ret) {
+		LOG_ERR("pt5161l stop sequence set I2C master SDA = 0, SCL = 1 failed");
+		goto exit;
+	}
+	// SDA = 1, SCL = 1
+	data_byte = 3;
+	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_BB_OUTPUT_ADDRESS, 1, &data_byte);
+	if (!ret) {
+		LOG_ERR("pt5161l stop sequence set I2C master SDA = 1, SCL = 1 failed");
+		goto exit;
+	}
+
+	// Disable BB mode
+	i2c_init_ctrl = PT5161L_I2C_MST_INIT_CTRL_BIT_BANG_MODE_EN_MODIFY(i2c_init_ctrl, 0);
+	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_INIT_CTRL_ADDRESS, 1, &i2c_init_ctrl);
+	if (!ret) {
+		LOG_ERR("pt5161l I2C master Disable BB mode failed");
+		goto exit;
+	}
+
+exit:
+	return ret;
+}
+
+bool pt5161l_i2c_master_write_ctrl_reg(I2C_MSG *msg, uint32_t offset, uint8_t length, uint8_t *data)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, false);
+	bool ret = false;
+	uint8_t oft = offset;
+	uint8_t data_bytes[4] = { 0, 0, 0, 0 };
+	uint16_t data_offset[4] = { PT5161L_I2C_MST_DATA0_ADDR, PT5161L_I2C_MST_DATA1_ADDR,
+				    PT5161L_I2C_MST_DATA2_ADDR, PT5161L_I2C_MST_DATA3_ADDR };
+
+	int i = 0;
+
+	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_IC_CMD_ADDR, 1, &oft);
+	if (!ret) {
+		LOG_ERR("PT5161L_I2C_MST_IC_CMD_ADDR write offset %x failed", offset);
+		goto exit;
+	}
+
+	memcpy(data_bytes, data, length);
+
+	for (i = 0; i < 4; i++) {
+		ret = pt5161l_write_block_data(msg, data_offset[i], 1, &(data_bytes[i]));
+		if (!ret) {
+			LOG_ERR("PT5161L write %x data %x failed", data_offset[i], data_bytes[i]);
+			goto exit;
+		}
+	}
+
+	uint8_t cmd = PT5161L_SELF_WR_CSR_CMD;
+	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_CMD_ADDR, 1, &cmd);
+	if (!ret) {
+		LOG_ERR("PT5161L self wr csr cmd failed");
+		goto exit;
+	}
+
+exit:
+	return ret;
+}
+
+// I2C Master init for EEPROM Write-Thru
+bool pt5161l_i2c_master_init(I2C_MSG *msg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, false);
+	uint8_t data[2];
+	bool ret;
+
+	data[0] = 0;
+	ret = pt5161l_i2c_master_write_ctrl_reg(msg, 0x6c, 1, data);
+	if (!ret) {
+		LOG_ERR("pt5161l write 0x0 in to 0x6c failed");
+		goto exit;
+	}
+
+	data[0] = 0xe5;
+	data[1] = 0xf;
+	ret = pt5161l_i2c_master_write_ctrl_reg(msg, 0, 2, data);
+	if (!ret) {
+		LOG_ERR("pt5161l write 0xe5 0x0f in to 0x0 failed");
+		goto exit;
+	}
+
+	data[0] = 0x50;
+	ret = pt5161l_i2c_master_write_ctrl_reg(msg, 0x04, 1, data);
+	if (!ret) {
+		LOG_ERR("pt5161l write 0x50 in to 0x04 failed");
+		goto exit;
+	}
+
+	data[0] = 0;
+	ret = pt5161l_i2c_master_write_ctrl_reg(msg, 0x38, 1, data);
+	if (!ret) {
+		LOG_ERR("pt5161l write 0x0 in to 0x38 failed");
+		goto exit;
+	}
+
+	data[0] = 4;
+	ret = pt5161l_i2c_master_write_ctrl_reg(msg, 0x3c, 1, data);
+	if (!ret) {
+		LOG_ERR("pt5161l write 0x4 in to 0x3c failed");
+		goto exit;
+	}
+
+	data[0] = 1;
+	ret = pt5161l_i2c_master_write_ctrl_reg(msg, 0x6c, 1, data);
+	if (!ret) {
+		LOG_ERR("pt5161l write 0x1 in to 0x6c failed");
+		goto exit;
+	}
+
+exit:
+	return ret;
+}
+
+//Set Page address in I2C Master
+bool pt5161l_i2c_master_set_page(I2C_MSG *msg, int page)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, false);
+	uint8_t target;
+	uint8_t data;
+	bool ret;
+
+	// Power-on default value is 0x50
+	target = 0x50 | (page & 3);
+
+	data = 0;
+	ret = pt5161l_i2c_master_write_ctrl_reg(msg, 0x6c, 1, &data);
+	if (!ret) {
+		LOG_ERR("pt5161l write 0x0 in to 0x6c failed");
+		goto exit;
+	}
+	ret = pt5161l_i2c_master_write_ctrl_reg(msg, 0x04, 1, &target);
+	if (!ret) {
+		LOG_ERR("pt5161l write %x in to 0x04 failed", target);
+		goto exit;
+	}
+	data = 1;
+	ret = pt5161l_i2c_master_write_ctrl_reg(msg, 0x6c, 1, &data);
+	if (!ret) {
+		LOG_ERR("pt5161l write 0x1 in to 0x6c failed");
+		goto exit;
+	}
+
+exit:
+	return ret;
+}
+
+//Write multiple bytes to the I2C Master via Main Micro
+bool pt5161l_i2c_master_multi_block_write(I2C_MSG *msg, uint16_t offset, int num_bytes,
+					  uint8_t *values)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, false);
+	CHECK_NULL_ARG_WITH_RETURN(values, false);
+	// Data is arranged in four-byte chunks
+	uint8_t data_bytes[4];
+	uint8_t upper_oft;
+	uint8_t lower_oft;
+	bool ret;
+
+	// IC Data command
+	data_bytes[0] = 0x10;
+	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_IC_CMD_ADDR, 1, &(data_bytes[0]));
+	if (!ret) {
+		LOG_ERR("pt5161l write IC Data command 0x10 failed");
+		return ret;
+	}
+
+	// Prepare Flag Byte
+	data_bytes[0] = 0;
+	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_DATA1_ADDR, 1, &(data_bytes[0]));
+	if (!ret) {
+		LOG_ERR("pt5161l prepare Flag Byte failed");
+		return ret;
+	}
+
+	// Send offset
+	upper_oft = (offset >> 8) & 0xff;
+	lower_oft = offset & 0xff;
+	data_bytes[0] = upper_oft;
+	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_DATA0_ADDR, 1, &(data_bytes[0]));
+	if (!ret) {
+		LOG_ERR("pt5161l set upper offset %x failed", upper_oft);
+		return ret;
+	}
+
+	data_bytes[0] = 1;
+	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_CMD_ADDR, 1, &(data_bytes[0]));
+	if (!ret) {
+		LOG_ERR("pt5161l trigger upper_oft failed");
+		return ret;
+	}
+
+	data_bytes[0] = lower_oft;
+	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_DATA0_ADDR, 1, &(data_bytes[0]));
+	if (!ret) {
+		LOG_ERR("pt5161l set lower offset %x failed", lower_oft);
+		return ret;
+	}
+
+	data_bytes[0] = 1;
+	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_CMD_ADDR, 1, &(data_bytes[0]));
+	if (!ret) {
+		LOG_ERR("pt5161l trigger lower_oft failed");
+		return ret;
+	}
+
+	int num_iters = num_bytes / PT5161L_EEPROM_BLOCK_WRITE_SIZE;
+	int iter_idx;
+	int num_blocks = PT5161L_EEPROM_BLOCK_WRITE_SIZE / 4; // 4-byte blocks
+	int block_idx;
+	int oft = 0;
+	uint8_t cmd;
+	int try;
+	int max_tries = 30;
+	bool is_busy = false;
+
+	for (iter_idx = 0; iter_idx < num_iters; iter_idx++) {
+		// determine MM-assist command
+		cmd = PT5161L_MM_EEPROM_WRITE_REG_CODE;
+		if (iter_idx == (num_iters - 1)) {
+			cmd = PT5161L_MM_EEPROM_WRITE_END_CODE;
+		}
+		cmd = cmd | PT5161L_EEPROM_BLOCK_CMD_MODIFIER;
+
+		// Write data
+		for (block_idx = 0; block_idx < num_blocks; block_idx++) {
+			memcpy(data_bytes, &(values[(oft + block_idx * 4)]), 4);
+			// write the data to Retimer holding registers
+			ret = pt5161l_write_block_data(
+				msg, PT5161L_EEPROM_BLOCK_BASE_ADDR + 4 * block_idx, 4, data_bytes);
+			if (!ret) {
+				LOG_ERR("pt5161l write the data to Retimer holding registers failed");
+				return ret;
+			}
+		}
+
+		// Write cmd
+		data_bytes[0] = cmd;
+		ret = pt5161l_write_block_data(msg, PT5161L_MM_EEPROM_ASSIST_CMD_ADDR, 1,
+					       &(data_bytes[0]));
+		if (!ret) {
+			LOG_ERR("pt5161l write cmd %x failed", cmd);
+			return ret;
+		}
+
+		// Verify Command returned back to zero
+		is_busy = true;
+		for (try = 0; try < max_tries; try++) {
+			ret = pt5161l_read_block_data(msg, PT5161L_MM_EEPROM_ASSIST_CMD_ADDR, 1,
+						      data_bytes);
+			if (!ret) {
+				LOG_ERR("pt5161l write cmd %x failed", cmd);
+				return ret;
+			}
+
+			if (data_bytes[0] == 0) {
+				is_busy = false;
+				break;
+			}
+			k_msleep(PT5161L_MM_STATUS_TIME_5MS);
+		}
+
+		// If status not reset to 0, return BUSY error
+		if (is_busy) {
+			LOG_ERR("Main Micro busy writing data block to EEPROM. Did not commit write");
+			return false;
+		}
+
+		oft += PT5161L_EEPROM_BLOCK_WRITE_SIZE;
+	}
+
+	return ret;
+}
+
+bool pt5161l_pre_update(I2C_MSG *msg)
+{
+	bool ret;
+
+	// Deassert HW and SW resets
+	uint8_t tmp_data[2];
+	tmp_data[0] = 0;
+	tmp_data[1] = 0;
+	ret = pt5161l_write_block_data(msg, 0x600, 2, tmp_data); // hw_rst
+	if (!ret) {
+		LOG_ERR("set hw_rst failed");
+		return ret;
+	}
+	ret = pt5161l_write_block_data(msg, 0x602, 2, tmp_data); // sw_rst
+	if (!ret) {
+		LOG_ERR("set sw_rst failed");
+		return ret;
+	}
+
+	tmp_data[0] = 0;
+	tmp_data[1] = 2;
+	ret = pt5161l_write_block_data(msg, 0x602, 2, tmp_data); // sw_rst
+	if (!ret) {
+		LOG_ERR("set sw_rst data %x %x failed", tmp_data[0], tmp_data[1]);
+		return ret;
+	}
+
+	tmp_data[0] = 0;
+	tmp_data[1] = 0;
+	ret = pt5161l_write_block_data(msg, 0x602, 2, tmp_data); // sw_rst
+	if (!ret) {
+		LOG_ERR("set sw_rst data %x %x failed", tmp_data[0], tmp_data[1]);
+		return ret;
+	}
+
+	ret = pt5161l_i2c_master_soft_reset(msg);
+	if (!ret) {
+		LOG_ERR("pt5161l i2c master soft reset failed");
+		return ret;
+	}
+	k_msleep(PT5161L_MM_STATUS_TIME_5MS);
+
+	// Init I2C Master
+	ret = pt5161l_i2c_master_init(msg);
+	if (!ret) {
+		LOG_ERR("pt5161l i2c master init failed");
+		return ret;
+	}
+
+	return ret;
+}
+
+bool pt5161l_write_eeprom_image(I2C_MSG *msg, uint32_t offset, uint8_t *txbuf, uint16_t length,
+				bool is_end)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, false);
+	CHECK_NULL_ARG_WITH_RETURN(txbuf, false);
+
+	int amend_len;
+	int oft_msb;
+	int oft_i2c;
+	uint8_t data[PT5161L_EEPROM_PAGE_SIZE];
+	bool ret = false;
+
+	if (length > PT5161L_EEPROM_PAGE_SIZE) {
+		LOG_ERR("pt5161l write eeprom image invalid length %d", length);
+		return ret;
+	}
+
+	// Set MSB and local addresses for this page
+	oft_msb = offset / SECTOR_SZ_64K;
+	oft_i2c = offset % SECTOR_SZ_64K;
+
+	// Set Page address
+	ret = pt5161l_i2c_master_set_page(msg, oft_msb);
+	if (!ret) {
+		LOG_ERR("pt5161l i2c master set page %x failed", oft_msb);
+		return false;
+	}
+
+	memcpy(data, txbuf, length);
+
+	if (is_end && (length % PT5161L_EEPROM_BLOCK_WRITE_SIZE)) {
+		amend_len = PT5161L_EEPROM_BLOCK_WRITE_SIZE -
+			    (length % PT5161L_EEPROM_BLOCK_WRITE_SIZE);
+		memset(&(data[length]), 0, amend_len);
+	} else {
+		amend_len = 0;
+	}
+
+	// Send a block of bytes to the EEPROM starting at address
+	ret = pt5161l_i2c_master_multi_block_write(msg, oft_i2c, length + amend_len, data);
+	if (!ret) {
+		LOG_ERR("pt5161l Send a block of bytes to the EEPROM starting at address %x failed",
+			offset);
+		return ret;
+	}
+
+	k_msleep(PT5161L_MM_STATUS_TIME_10MS);
+
+	return ret;
+}
+
+bool pt5161l_post_update(I2C_MSG *msg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, false);
+	bool ret = false;
+	uint8_t tmp_data[2] = { 0 };
+
+	// Assert HW resets for I2C master interface
+	tmp_data[0] = 0x00;
+	tmp_data[1] = 0x02;
+	ret = pt5161l_write_block_data(msg, 0x600, 2, tmp_data); // hw_rst
+	if (!ret) {
+		LOG_ERR("post update failed to assert hw reset");
+		return ret;
+	}
+
+	ret = pt5161l_write_block_data(msg, 0x602, 2, tmp_data); // sw_rst
+	if (!ret) {
+		LOG_ERR("post update failed to assert sw reset");
+		return ret;
+	}
+
+	k_msleep(PT5161L_MM_STATUS_TIME_5MS);
+	return ret;
+}
+
+uint8_t pt5161l_do_update(I2C_MSG *msg, uint32_t update_offset, uint8_t *txbuf, uint16_t length,
+			  bool is_end)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, FWUPDATE_UPDATE_FAIL);
+	CHECK_NULL_ARG_WITH_RETURN(txbuf, FWUPDATE_UPDATE_FAIL);
+
+	if (update_offset == 0) {
+		// Update device FW update progress state
+		is_update_ongoing = true;
+		if (!pt5161l_pre_update(msg)) {
+			return FWUPDATE_UPDATE_FAIL;
+		}
+	}
+
+	if (!pt5161l_write_eeprom_image(msg, update_offset, txbuf, length, is_end)) {
+		LOG_ERR("Failed to write offset %x into eeprom", update_offset);
+		return FWUPDATE_UPDATE_FAIL;
+	}
+
+	if (is_end) {
+		if (!pt5161l_post_update(msg)) {
+			LOG_ERR("Failed to reset retimer");
+			return FWUPDATE_UPDATE_FAIL;
+		}
+		// Update device FW update progress state
+		is_update_ongoing = false;
+	}
+
+	return FWUPDATE_SUCCESS;
+}
+
+uint8_t pcie_retimer_fw_update(I2C_MSG *msg, uint32_t offset, uint16_t msg_len, uint8_t *msg_buf,
+			       uint8_t flag)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, FWUPDATE_UPDATE_FAIL);
+	CHECK_NULL_ARG_WITH_RETURN(msg_buf, FWUPDATE_UPDATE_FAIL);
+	static bool is_init = false;
+	static uint8_t *txbuf = NULL;
+	static uint32_t start_offset = 0, buf_offset = 0;
+	uint32_t ret = 0;
+	bool is_end = false;
+
+	if (!is_init) {
+		SAFE_FREE(txbuf);
+		txbuf = (uint8_t *)malloc(SECTOR_SZ_256);
+		if (txbuf == NULL) { // Retry alloc
+			k_msleep(100);
+			txbuf = (uint8_t *)malloc(SECTOR_SZ_256);
+		}
+		if (txbuf == NULL) {
+			LOG_ERR("eeprom offset %x, failed to allocate txbuf.", offset);
+			return FWUPDATE_OUT_OF_HEAP;
+		}
+		is_init = true;
+		start_offset = offset;
+		buf_offset = 0;
+		k_msleep(10);
+	}
+
+	if (msg_len > SECTOR_SZ_256) {
+		LOG_ERR("eeprom offset %x, recv data 0x%x over sector size 0x%x", offset,
+			buf_offset + msg_len, SECTOR_SZ_256);
+		SAFE_FREE(txbuf);
+		k_msleep(10);
+		is_init = false;
+		return FWUPDATE_OVER_LENGTH;
+	}
+
+	LOG_DBG("update offset %x , msg_len %d, flag 0x%x, msg_buf: %2x %2x %2x %2x", offset,
+		msg_len, flag, msg_buf[0], msg_buf[1], msg_buf[2], msg_buf[3]);
+
+	memcpy(&txbuf[buf_offset], msg_buf, msg_len);
+	buf_offset += msg_len;
+
+	if ((buf_offset == SECTOR_SZ_256) || (flag & SECTOR_END_FLAG)) {
+		if (flag & SECTOR_END_FLAG) {
+			is_end = true;
+		}
+
+		if (k_mutex_lock(&pt5161l_mutex, K_FOREVER)) {
+			LOG_ERR("pt5161l mutex lock failed");
+			SAFE_FREE(txbuf);
+			k_msleep(10);
+			return FWUPDATE_UPDATE_FAIL;
+		}
+
+		ret = pt5161l_do_update(msg, start_offset, txbuf, buf_offset, is_end);
+
+		if (k_mutex_unlock(&pt5161l_mutex)) {
+			LOG_ERR("pt5161l mutex unlock failed");
+			SAFE_FREE(txbuf);
+			return FWUPDATE_UPDATE_FAIL;
+		}
+
+		SAFE_FREE(txbuf);
+		k_msleep(10);
+
+		if (ret) {
+			LOG_ERR("Failed to update PCIE retimer eeprom, status %d", ret);
+			return FWUPDATE_UPDATE_FAIL;
+		} else {
+			LOG_INF("PCIE retimer %x update success", start_offset);
+		}
+
+		is_init = false;
+
+		return ret;
+	}
+
+	return FWUPDATE_SUCCESS;
+}
+
 bool get_retimer_fw_version(I2C_MSG *msg, uint8_t *version)
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg, false);
 	CHECK_NULL_ARG_WITH_RETURN(version, false);
 
 	bool ret = false;
+
+	if (is_update_ongoing) {
+		return false;
+	}
 
 	ret = pt5161l_read_block_data_to_sram(
 		msg, PT5161L_MAIN_MICRO_INDIRECT,
@@ -556,6 +1173,10 @@ uint8_t pt5161l_read(uint8_t sensor_num, int *reading)
 	if (!init_arg->is_init) {
 		LOG_ERR("device isn't initialized");
 		return SENSOR_UNSPECIFIED_ERROR;
+	}
+
+	if (is_update_ongoing) {
+		return SENSOR_NOT_ACCESSIBLE;
 	}
 
 	double val = 0;

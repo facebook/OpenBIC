@@ -30,8 +30,12 @@
 #include "plat_sensor_table.h"
 #include "plat_hook.h"
 #include "plat_led.h"
+#include "util_spi.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
+
+#define IS_SECTOR_END_MASK 0x80
+#define BIC_UPDATE_MAX_OFFSET 0x50000
 
 uint8_t get_add_sel_target_interface()
 {
@@ -140,6 +144,102 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
 		break;
 	}
+	return;
+}
+
+void OEM_1S_FW_UPDATE(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	/*********************************
+	* Request Data
+	*
+	* Byte   0: [6:0] fw update target, [7] indicate last packet
+	* Byte 1-4: offset, lsb first
+	* Byte 5-6: length, lsb first
+	* Byte 7-N: data
+	***********************************/
+	if (msg->data_len < 8) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t target = msg->data[0];
+	uint8_t status = -1;
+	uint32_t offset =
+		((msg->data[4] << 24) | (msg->data[3] << 16) | (msg->data[2] << 8) | msg->data[1]);
+	uint16_t length = ((msg->data[6] << 8) | msg->data[5]);
+
+	if ((length == 0) || (length != msg->data_len - 7)) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	switch (target) {
+	case OL2_COMPNT_BIC:
+	case (OL2_COMPNT_BIC | IS_SECTOR_END_MASK):
+		// Expect BIC firmware size not bigger than 320k
+		if (offset > BIC_UPDATE_MAX_OFFSET) {
+			msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+			return;
+		}
+		status = fw_update(offset, length, &msg->data[7], (target & IS_SECTOR_END_MASK),
+				   DEVSPI_FMC_CS0);
+		break;
+	case OL2_COMPNT_RETIMER:
+	case (OL2_COMPNT_RETIMER | IS_SECTOR_END_MASK):
+		if (!get_DC_status()) {
+			msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+			return;
+		}
+
+		if (offset > PCIE_RETIMER_UPDATE_MAX_OFFSET) {
+			msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+			return;
+		}
+		I2C_MSG i2c_msg;
+		i2c_msg.bus = I2C_BUS4;
+		i2c_msg.target_addr = EXPA_RETIMER_ADDR;
+		status = pcie_retimer_fw_update(&i2c_msg, offset, length, &msg->data[7],
+						(target & IS_SECTOR_END_MASK));
+		break;
+	default:
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		return;
+	}
+
+	msg->data_len = 0;
+
+	switch (status) {
+	case FWUPDATE_SUCCESS:
+		msg->completion_code = CC_SUCCESS;
+		break;
+	case FWUPDATE_OUT_OF_HEAP:
+		msg->completion_code = CC_LENGTH_EXCEEDED;
+		break;
+	case FWUPDATE_OVER_LENGTH:
+		msg->completion_code = CC_OUT_OF_SPACE;
+		break;
+	case FWUPDATE_REPEATED_UPDATED:
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		break;
+	case FWUPDATE_UPDATE_FAIL:
+		msg->completion_code = CC_TIMEOUT;
+		break;
+	case FWUPDATE_ERROR_OFFSET:
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		break;
+	case FWUPDATE_NOT_SUPPORT:
+		msg->completion_code = CC_INVALID_PARAM;
+		break;
+	default:
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		break;
+	}
+	if (status != FWUPDATE_SUCCESS) {
+		LOG_ERR("firmware (0x%02X) update failed cc: %x", target, msg->completion_code);
+	}
+
 	return;
 }
 
