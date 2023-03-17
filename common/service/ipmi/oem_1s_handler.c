@@ -57,6 +57,12 @@
 #define MAX_CONTROL_SENSOR_POLLING_COUNT 10
 #define FOUR_BYTE_POST_CODE_PAGE_SIZE 60
 
+#ifdef ENABLE_PLDM
+#define POST_CODE_BUF_SIZE 240
+#else
+#define POST_CODE_BUF_SIZE SNOOP_MAX_LEN
+#endif
+
 LOG_MODULE_DECLARE(ipmi);
 
 __weak int pal_extend_msg_out_interface_handler(ipmi_msg *msg)
@@ -690,9 +696,9 @@ __weak void OEM_1S_GET_POST_CODE(ipmi_msg *msg)
 
 	if (postcode_num) {
 		uint8_t offset = 0;
-		if (snoop_read_num > SNOOP_MAX_LEN) {
-			postcode_num = SNOOP_MAX_LEN;
-			offset = snoop_read_num % SNOOP_MAX_LEN;
+		if (snoop_read_num > POST_CODE_BUF_SIZE) {
+			postcode_num = POST_CODE_BUF_SIZE;
+			offset = snoop_read_num % POST_CODE_BUF_SIZE;
 		}
 		copy_snoop_read_buffer(offset, postcode_num, msg->data, COPY_ALL_POSTCODE);
 	}
