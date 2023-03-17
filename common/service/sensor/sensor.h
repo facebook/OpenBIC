@@ -141,6 +141,7 @@ enum SENSOR_DEV {
 	sensor_dev_emc1412 = 0x25,
 	sensor_dev_i3c_dimm = 0x26,
 	sensor_dev_pt5161l = 0x27,
+	sensor_dev_lm75bd118 = 0x28,
 	sensor_dev_max
 };
 
