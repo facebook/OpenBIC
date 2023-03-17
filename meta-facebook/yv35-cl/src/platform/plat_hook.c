@@ -43,8 +43,8 @@ LOG_MODULE_REGISTER(plat_hook);
 #define ADJUST_ADM1278_CURRENT(x) ((x * 0.98) + 0.1)
 #define ADJUST_LTC4286_POWER(x) ((x * 0.97) - 8)
 #define ADJUST_LTC4286_CURRENT(x) ((x * 0.97) - 0.4)
-#define ADJUST_LTC4282_POWER(x) ((x * 0.98) - 0.2)
-#define ADJUST_LTC4282_CURRENT(x) ((x * 0.99) - 0.2)
+#define ADJUST_LTC4282_POWER(x) (x * 0.99)
+#define ADJUST_LTC4282_CURRENT(x) (x * 0.99)
 
 /**************************************************************************************************
  * INIT ARGS
