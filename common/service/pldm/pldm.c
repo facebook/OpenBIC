@@ -29,6 +29,7 @@
 LOG_MODULE_REGISTER(pldm);
 
 #define PLDM_HDR_INST_ID_MASK 0x1F
+#define PLDM_MAX_INSTID_COUNT (PLDM_HDR_INST_ID_MASK + 1)
 #define PLDM_MSG_CHECK_PER_MS 1000
 #define PLDM_MSG_TIMEOUT_MS 5000
 #define PLDM_RESP_MSG_PROC_MUTEX_TIMEOUT_MS 500
@@ -67,6 +68,59 @@ static struct _pldm_handler_query_entry query_tbl[] = {
 static K_MUTEX_DEFINE(wait_recv_resp_mutex);
 
 static sys_slist_t wait_recv_resp_list = SYS_SLIST_STATIC_INIT(&wait_recv_resp_list);
+
+static bool unregister_instid(void *mctp_p, uint8_t inst_num)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_p, false);
+
+	if (inst_num >= PLDM_MAX_INSTID_COUNT) {
+		LOG_ERR("Invalid instant number %d", inst_num);
+		return false;
+	}
+
+	mctp *mctp_inst = (mctp *)mctp_p;
+	if (!mctp_inst->pldm_inst_table) {
+		LOG_ERR("Instant table not init!");
+		return false;
+	}
+	if (!(mctp_inst->pldm_inst_table & BIT(inst_num))) {
+		LOG_ERR("Inatant id %d not register yet!", inst_num);
+		return false;
+	}
+	WRITE_BIT(mctp_inst->pldm_inst_table, inst_num, 0);
+
+	return true;
+}
+
+static bool register_instid(void *mctp_p, uint8_t *inst_num)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_p, false);
+	CHECK_NULL_ARG_WITH_RETURN(inst_num, false);
+
+	mctp *mctp_inst = (mctp *)mctp_p;
+
+	static uint8_t cur_inst_num = 0;
+
+	int retry = 0;
+	for (retry = 0; retry < PLDM_MAX_INSTID_COUNT; retry++) {
+		if (!(mctp_inst->pldm_inst_table & BIT(cur_inst_num))) {
+			break;
+		}
+		cur_inst_num = (cur_inst_num + 1) & PLDM_HDR_INST_ID_MASK;
+	}
+
+	if (retry == PLDM_MAX_INSTID_COUNT) {
+		LOG_DBG("Inatant id %d not available!", cur_inst_num);
+		return false;
+	}
+
+	WRITE_BIT(mctp_inst->pldm_inst_table, cur_inst_num, 1);
+	*inst_num = cur_inst_num;
+
+	cur_inst_num = (cur_inst_num + 1) & PLDM_HDR_INST_ID_MASK;
+
+	return true;
+}
 
 void pldm_read_resp_handler(void *args, uint8_t *rbuf, uint16_t rlen)
 {
@@ -182,6 +236,11 @@ static uint8_t pldm_msg_timeout_check(sys_slist_t *list, struct k_mutex *mutex)
 			printk("cmd %x, inst_id %x\n", p->msg.hdr.cmd, p->msg.hdr.inst_id);
 			sys_slist_remove(list, pre_node, node);
 
+			if (unregister_instid(p->mctp_inst, p->msg.hdr.inst_id) == false) {
+				LOG_ERR("Unregister failed!");
+				return PLDM_ERROR;
+			}
+
 			if (p->msg.timeout_cb_fn)
 				p->msg.timeout_cb_fn(p->msg.timeout_cb_fn_args);
 
@@ -234,6 +293,12 @@ static uint8_t pldm_resp_msg_process(mctp *const mctp_inst, uint8_t *buf, uint32
 		    (p->mctp_inst == mctp_inst)) {
 			found_node = node;
 			sys_slist_remove(&wait_recv_resp_list, pre_node, node);
+
+			if (unregister_instid(mctp_inst, p->msg.hdr.inst_id) == false) {
+				LOG_ERR("Unregister failed!");
+				k_mutex_unlock(&wait_recv_resp_mutex);
+				return PLDM_ERROR;
+			}
 			break;
 		} else {
 			pre_node = node;
@@ -339,8 +404,14 @@ uint8_t mctp_pldm_send_msg(void *mctp_p, pldm_msg *msg)
 * header
 */
 	if (msg->hdr.rq) {
+		uint8_t get_inst_id = 0xff;
+		if (register_instid(mctp_p, &get_inst_id) == false) {
+			LOG_ERR("Register failed!");
+			return PLDM_ERROR;
+		}
+
 		/* set pldm header */
-		msg->hdr.inst_id = (mctp_inst->pldm_inst_id++) & PLDM_HDR_INST_ID_MASK;
+		msg->hdr.inst_id = get_inst_id;
 		msg->hdr.msg_type = MCTP_MSG_TYPE_PLDM;
 
 		/* set mctp extra parameters */
