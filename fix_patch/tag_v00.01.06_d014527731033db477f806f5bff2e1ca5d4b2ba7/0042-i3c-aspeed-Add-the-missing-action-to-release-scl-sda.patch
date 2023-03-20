@@ -1,0 +1,32 @@
+From 83cb11c04e3020deab5a91d67f71896805f730cb Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Fri, 17 Mar 2023 14:04:28 +0800
+Subject: [PATCH] i3c: aspeed: Add the missing action to release scl/sda.
+
+Without this patch, the scl/sda will remain isolated indefinitely until
+the driver resets the controller.
+
+Fixes: 6ea98820f1fc ("i3c: aspeed: Slove the timeout condition when
+sending ibi.")
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I9281f0dabd6d11d2b60214d51f46a7223537bada
+---
+ drivers/i3c/i3c_aspeed.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index 7a6092b1f4..20946b9d14 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -1507,7 +1507,9 @@ static void i3c_aspeed_slave_reset_queue(const struct device *dev)
+ 		LOG_ERR("failed to enable controller: reset i3c controller\n");
+ 		i3c_aspeed_isolate_scl_sda(config->inst_id, false);
+ 		i3c_aspeed_init(dev);
++		return;
+ 	}
++	i3c_aspeed_isolate_scl_sda(config->inst_id, false);
+ }
+ 
+ static uint32_t i3c_aspeed_slave_wait_data_consume(const struct device *dev)
+-- 
+2.25.1
