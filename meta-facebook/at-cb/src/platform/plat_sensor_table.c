@@ -37,8 +37,8 @@ LOG_MODULE_REGISTER(plat_sensor_table);
 struct k_mutex i2c_2_tca9543_mutex;
 struct k_mutex i2c_3_tca9543_mutex;
 struct k_mutex i2c_4_pi4msd5v9542_mutex;
-struct k_mutex i2c_7_mutex;
-struct k_mutex i2c_8_mutex;
+struct k_mutex i2c_7_accl_mutex;
+struct k_mutex i2c_8_accl_mutex;
 
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
@@ -664,10 +664,10 @@ struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus)
 		mutex = &i2c_4_pi4msd5v9542_mutex;
 		break;
 	case I2C_BUS7:
-		mutex = &i2c_7_mutex;
+		mutex = &i2c_7_accl_mutex;
 		break;
 	case I2C_BUS8:
-		mutex = &i2c_8_mutex;
+		mutex = &i2c_8_accl_mutex;
 		break;
 	default:
 		LOG_ERR("No support for i2c bus %d mutex", i2c_bus);
