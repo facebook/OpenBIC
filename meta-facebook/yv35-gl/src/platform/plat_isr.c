@@ -226,6 +226,7 @@ void ISR_CATERR()
 
 void ISR_PLTRST()
 {
+	vw_gpio_reset();
 	send_gpio_interrupt(RST_PLTRST_BUF_N);
 }
 
@@ -445,17 +446,22 @@ void ISR_RMCA()
 	}
 }
 
-void ISR_POST_COMPLETE(uint8_t gpio_value)
-{
-	bool is_post_completed = (gpio_value == VW_GPIO_HIGH) ? true : false;
-	set_post_complete(is_post_completed);
+struct vgpio_info {
+	struct k_work_delayable work;
+	uint8_t gpio_value;
+};
+struct vgpio_info adr_mode0;
+struct vgpio_info post_complete;
 
-	// Add "END_OF_POST" event log to BMC
+static void post_complete_handler(struct k_work *work)
+{
+	/* Add "END_OF_POST" event log to BMC */
+	struct vgpio_info *info = CONTAINER_OF(work, struct vgpio_info, work);
 	common_addsel_msg_t sel_msg;
 	sel_msg.InF_target = BMC_IPMB;
 	sel_msg.sensor_type = IPMI_SENSOR_TYPE_SYS_EVENT;
-	sel_msg.event_type =
-		is_post_completed ? IPMI_EVENT_TYPE_SENSOR_SPECIFIC : IPMI_OEM_EVENT_TYPE_DEASSERT;
+	sel_msg.event_type = (info->gpio_value == VW_GPIO_HIGH) ? IPMI_EVENT_TYPE_SENSOR_SPECIFIC :
+								  IPMI_OEM_EVENT_TYPE_DEASSERT;
 	sel_msg.sensor_number = SENSOR_NUM_END_OF_POST;
 	sel_msg.event_data1 = IPMI_EVENT_OEM_SYSTEM_BOOT_EVENT;
 	sel_msg.event_data2 = 0xFF;
@@ -465,12 +471,23 @@ void ISR_POST_COMPLETE(uint8_t gpio_value)
 	}
 }
 
-void ISR_FM_ADR_MODE0(uint8_t gpio_value)
+void ISR_POST_COMPLETE(uint8_t gpio_value)
+{
+	bool is_post_completed = (gpio_value == VW_GPIO_HIGH) ? true : false;
+	set_post_complete(is_post_completed);
+
+	post_complete.gpio_value = gpio_value;
+	k_work_init_delayable(&post_complete.work, post_complete_handler);
+	k_work_schedule(&post_complete.work, K_MSEC(10));
+}
+
+static void adr_mode0_handler(struct k_work *work)
 {
 	/* Set ADR mode into GL CPLD register
 	 * Offset: 16h ADR mode 0 GPIO control
 	 * Bit[0]: FM_ADR_MODE0, 0'b: (default) disable ADR
 	 */
+	struct vgpio_info *info = CONTAINER_OF(work, struct vgpio_info, work);
 	int status;
 	uint8_t value;
 	I2C_MSG msg;
@@ -485,7 +502,7 @@ void ISR_FM_ADR_MODE0(uint8_t gpio_value)
 		return;
 	}
 	value = msg.data[0];
-	value = (gpio_value == VW_GPIO_HIGH) ? SETBIT(value, 0) : CLEARBIT(value, 0);
+	value = (info->gpio_value == VW_GPIO_HIGH) ? SETBIT(value, 0) : CLEARBIT(value, 0);
 
 	msg.tx_len = 2;
 	msg.data[0] = SB_CPLD_REG_ADR_MODE0_GPIO_CTRL;
@@ -493,4 +510,11 @@ void ISR_FM_ADR_MODE0(uint8_t gpio_value)
 	status = i2c_master_write(&msg, 5);
 	if (status)
 		LOG_ERR("failed to set cpld register, ret %d", status);
+}
+
+void ISR_FM_ADR_MODE0(uint8_t gpio_value)
+{
+	adr_mode0.gpio_value = gpio_value;
+	k_work_init_delayable(&adr_mode0.work, adr_mode0_handler);
+	k_work_schedule(&adr_mode0.work, K_MSEC(10));
 }

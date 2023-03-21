@@ -51,7 +51,7 @@ bool vw_gpio_set(int number, uint8_t value)
 #ifdef CONFIG_ESPI_ASPEED
 	// Check if the vw gpio is master input and bic output pin
 	uint32_t reg_value = sys_read32(AST_ESPI_BASE + AST_ESPI_GPIO_DIR);
-	if (!GETBIT(reg_value, number))
+	if (GETBIT(reg_value, number))
 		return false;
 
 	uint8_t i;
@@ -75,6 +75,8 @@ bool vw_gpio_set(int number, uint8_t value)
 static void ast_vw_gpio_scan(void)
 {
 	uint8_t i;
+	uint32_t reg_dir = sys_read32(AST_ESPI_BASE + AST_ESPI_GPIO_DIR);
+	uint32_t reg_val = sys_read32(AST_ESPI_BASE + AST_ESPI_GPIO_VAL);
 	for (i = 0; i < vw_gpio_size; i++) {
 		if (!vw_gpio_cfg[i].is_enabled)
 			continue;
@@ -83,23 +85,24 @@ static void ast_vw_gpio_scan(void)
 			/* Check if controller direction setting
 			 * ESPI9C: GPIO direction of virtual wire channel
 			 */
-			uint32_t reg_value = sys_read32(AST_ESPI_BASE + AST_ESPI_GPIO_DIR);
-			if (GETBIT(reg_value, vw_gpio_cfg[i].number) != VW_GPIO_INPUT) {
+			uint8_t gpio_value;
+			if (GETBIT(reg_dir, vw_gpio_cfg[i].number) != VW_GPIO_INPUT) {
+				gpio_value = VW_GPIO_UNKNOWN;
 				LOG_ERR("the vgpio setting at controller side is incorrect.");
-				continue;
+				return;
+			} else {
+				gpio_value = GETBIT(reg_val, vw_gpio_cfg[i].number) ? VW_GPIO_HIGH :
+										      VW_GPIO_LOW;
 			}
 
 			/* Get virtual gpio value
 			 * ESPI09C: GPIO through virtual wire channel
 			 */
-			reg_value = sys_read32(AST_ESPI_BASE + AST_ESPI_GPIO_VAL);
-			uint8_t gpio_value = GETBIT(reg_value, vw_gpio_cfg[i].number) ?
-							   VW_GPIO_HIGH :
-							   VW_GPIO_LOW;
 			if (gpio_value != vw_gpio_cfg[i].value) {
 				vw_gpio_cfg[i].value = gpio_value;
-				if (vw_gpio_cfg[i].int_cb)
+				if (vw_gpio_cfg[i].int_cb) {
 					vw_gpio_cfg[i].int_cb(gpio_value);
+				}
 			}
 		}
 	}
@@ -124,6 +127,19 @@ static void vw_handler(const struct device *dev, struct espi_callback *cb, struc
 		ast_vw_gpio_scan();
 	}
 #endif
+}
+
+void vw_gpio_reset()
+{
+	uint8_t i;
+	for (i = 0; i < vw_gpio_size; i++) {
+		if (vw_gpio_cfg[i].value != VW_GPIO_LOW) {
+			vw_gpio_cfg[i].value = VW_GPIO_LOW;
+			if (vw_gpio_cfg[i].int_cb) {
+				vw_gpio_cfg[i].int_cb(VW_GPIO_LOW);
+			}
+		}
+	}
 }
 
 bool vw_gpio_init(vw_gpio *config, uint8_t size)
