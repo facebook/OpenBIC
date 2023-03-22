@@ -35,6 +35,42 @@
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
+int pal_cxl_component_id_map_jcn(uint8_t component_id, uint8_t *card_id)
+{
+	CHECK_NULL_ARG_WITH_RETURN(card_id, -1);
+
+	switch (component_id) {
+	case MC_COMPNT_CXL1:
+		*card_id = CXL_CARD_8;
+		break;
+	case MC_COMPNT_CXL2:
+		*card_id = CXL_CARD_7;
+		break;
+	case MC_COMPNT_CXL3:
+		*card_id = CXL_CARD_6;
+		break;
+	case MC_COMPNT_CXL4:
+		*card_id = CXL_CARD_5;
+		break;
+	case MC_COMPNT_CXL5:
+		*card_id = CXL_CARD_3;
+		break;
+	case MC_COMPNT_CXL6:
+		*card_id = CXL_CARD_4;
+		break;
+	case MC_COMPNT_CXL7:
+		*card_id = CXL_CARD_1;
+		break;
+	case MC_COMPNT_CXL8:
+		*card_id = CXL_CARD_2;
+		break;
+	default:
+		return -1;
+	}
+
+	return 0;
+}
+
 int pal_write_read_cxl_fru(uint8_t optional, uint8_t fru_id, EEPROM_ENTRY *fru_entry,
 			   uint8_t *status)
 {
@@ -254,7 +290,12 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 	case MC_COMPNT_CXL6:
 	case MC_COMPNT_CXL7:
 	case MC_COMPNT_CXL8:
-		cxl_id = component - MC_COMPNT_CXL1;
+		if (pal_cxl_component_id_map_jcn(component, &cxl_id) != 0) {
+			LOG_ERR("Invalid cxl component id: 0x%x", component);
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+
 		if (pm8702_table[cxl_id].is_init != true) {
 			ret = pal_init_pm8702_info(cxl_id);
 			if (ret == false) {
