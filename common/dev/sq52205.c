@@ -25,6 +25,7 @@
 
 LOG_MODULE_REGISTER(dev_sq52205);
 
+#define SQ52205_CONFIG_REG_OFFSET 0x00
 #define SQ52205_CALIBRATION_OFFSET 0x05
 #define SQ52205_SHUNT_LSB 0.0000025
 
@@ -69,9 +70,13 @@ uint8_t sq52205_read(uint8_t sensor_num, int *reading)
 	switch (cfg.offset) {
 	case SQ52205_READ_VOL_OFFSET:
 		// 1.25 mV/LSB
-		val = val * 1.25;
+		val = val * 1.25 / 1000;
 		break;
 	case SQ52205_READ_CUR_OFFSET:
+		if (GETBIT(msg.data[0], 7)) {
+			// If raw value is negative, set it zero.
+			val = 0;
+		}
 		// current_lsb mA/LSB
 		val = val * init_arg->current_lsb;
 		break;
@@ -85,8 +90,8 @@ uint8_t sq52205_read(uint8_t sensor_num, int *reading)
 		break;
 	}
 
-	sval->integer = (int16_t)(val) / 1000;
-	sval->fraction = (int16_t)(val) - (sval->integer * 1000);
+	sval->integer = (int16_t)(val);
+	sval->fraction = (int16_t)((val - sval->integer) * 1000);
 	return SENSOR_READ_SUCCESS;
 }
 
@@ -109,24 +114,40 @@ uint8_t sq52205_init(uint8_t sensor_num)
 
 		sensor_cfg cfg = sensor_config[sensor_config_index_map[sensor_num]];
 
+		msg.bus = cfg.port;
+		msg.target_addr = cfg.target_addr;
+		msg.tx_len = 3;
+		msg.data[0] = SQ52205_CONFIG_REG_OFFSET;
+		msg.data[1] = (init_arg->config.value >> 8) & 0xFF;
+		msg.data[2] = init_arg->config.value & 0xFF;
+
+		ret = i2c_master_write(&msg, retry);
+		if (ret != 0) {
+			LOG_ERR("i2c write config fail ret: %d", ret);
+			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		}
+
 		// Shunt unit = 1 ohm
 		shunt_unit = init_arg->r_shunt * 1000;
+		memset(&msg, 0, sizeof(I2C_MSG));
 		msg.bus = cfg.port;
 		msg.target_addr = cfg.target_addr;
 		msg.tx_len = 3;
 		msg.data[0] = SQ52205_CALIBRATION_OFFSET;
 
 		// Calibration formula = ((2048 * shunt_lsb) / (current_lsb * r_shunt)
-		calibration = (uint16_t)((2048 * (shunt_unit * SQ52205_SHUNT_LSB)) /
-					 (init_arg->current_lsb * init_arg->r_shunt));
+		calibration = (uint16_t)(((2048 * (shunt_unit * SQ52205_SHUNT_LSB)) /
+					  (init_arg->current_lsb * init_arg->r_shunt)) +
+					 0.5);
 		msg.data[1] = (calibration >> 8) & 0xFF;
 		msg.data[2] = calibration & 0xFF;
 
 		ret = i2c_master_write(&msg, retry);
 		if (ret != 0) {
-			LOG_ERR("i2c write fail ret: %d", ret);
+			LOG_ERR("i2c write calibration fail ret: %d", ret);
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
 		}
+
 		init_arg->is_init = true;
 	}
 

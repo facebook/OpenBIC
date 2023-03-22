@@ -28,24 +28,24 @@ typedef struct _pm8702_dev_info {
 
 extern pm8702_dev_info pm8702_table[];
 
-bool pal_sensor_drive_init(sensor_cfg *cfg, uint8_t *init_status);
-bool pal_sensor_drive_read(sensor_cfg *cfg, int *reading, uint8_t *sensor_status);
-uint8_t pal_tmp75_init(sensor_cfg *cfg);
-uint8_t pal_tmp75_read(sensor_cfg *cfg, int *reading);
-uint8_t pal_emc1412_init(sensor_cfg *cfg);
-uint8_t pal_emc1412_read(sensor_cfg *cfg, int *reading);
-uint8_t pal_nvme_init(sensor_cfg *cfg);
-uint8_t pal_nvme_read(sensor_cfg *cfg, int *reading);
-uint8_t pal_ina233_init(sensor_cfg *cfg);
-uint8_t pal_ina233_read(sensor_cfg *cfg, int *reading);
-uint8_t pal_ltc2991_init(sensor_cfg *cfg);
-uint8_t pal_ltc2991_read(sensor_cfg *cfg, int *reading);
-uint8_t pal_xdpe12284c_init(sensor_cfg *cfg);
-uint8_t pal_xdpe12284c_read(sensor_cfg *cfg, int *reading);
+bool pal_sensor_drive_init(uint8_t card_id, sensor_cfg *cfg, uint8_t *init_status);
+bool pal_sensor_drive_read(uint8_t card_id, sensor_cfg *cfg, int *reading, uint8_t *sensor_status);
+uint8_t pal_tmp75_init(uint8_t card_id, sensor_cfg *cfg);
+uint8_t pal_tmp75_read(uint8_t card_id, sensor_cfg *cfg, int *reading);
+uint8_t pal_emc1412_init(uint8_t card_id, sensor_cfg *cfg);
+uint8_t pal_emc1412_read(uint8_t card_id, sensor_cfg *cfg, int *reading);
+uint8_t pal_nvme_init(uint8_t card_id, sensor_cfg *cfg);
+uint8_t pal_nvme_read(uint8_t card_id, sensor_cfg *cfg, int *reading);
+uint8_t pal_ina233_init(uint8_t card_id, sensor_cfg *cfg);
+uint8_t pal_ina233_read(uint8_t card_id, sensor_cfg *cfg, int *reading);
+uint8_t pal_ltc2991_init(uint8_t card_id, sensor_cfg *cfg);
+uint8_t pal_ltc2991_read(uint8_t card_id, sensor_cfg *cfg, int *reading);
+uint8_t pal_xdpe12284c_init(uint8_t card_id, sensor_cfg *cfg);
+uint8_t pal_xdpe12284c_read(uint8_t card_id, sensor_cfg *cfg, int *reading);
 bool cxl_single_ioexp_init(uint8_t ioexp_name);
 int cxl_ioexp_init(uint8_t cxl_channel);
-uint8_t pal_pm8702_read(sensor_cfg *cfg, int *reading);
-uint8_t pal_pm8702_init(sensor_cfg *cfg);
+uint8_t pal_pm8702_read(uint8_t card_id, sensor_cfg *cfg, int *reading);
+uint8_t pal_pm8702_init(uint8_t card_id, sensor_cfg *cfg);
 void cxl_mb_status_init(uint8_t cxl_id);
 bool pal_init_pm8702_info(uint8_t cxl_id);
 bool pal_pm8702_command_handler(uint8_t pcie_card_id, uint16_t opcode, uint8_t *data_buf,

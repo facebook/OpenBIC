@@ -283,7 +283,8 @@ uint8_t pal_ina233_init(uint8_t card_id, sensor_cfg *cfg)
 		msg.data[0] = INA233_CALIBRATION_OFFSET;
 
 		// Calibration formula = (0.00512 / (current_lsb * r_shunt))
-		calibration = (uint16_t)(0.00512 / (init_arg->current_lsb * init_arg->r_shunt));
+		calibration =
+			(uint16_t)((0.00512 / (init_arg->current_lsb * init_arg->r_shunt)) + 0.5);
 		memcpy(&msg.data[1], &calibration, sizeof(uint16_t));
 
 		ret = i2c_master_write(&msg, retry);
