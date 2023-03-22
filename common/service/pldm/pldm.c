@@ -74,13 +74,13 @@ static bool unregister_instid(void *mctp_p, uint8_t inst_num)
 	CHECK_NULL_ARG_WITH_RETURN(mctp_p, false);
 
 	if (inst_num >= PLDM_MAX_INSTID_COUNT) {
-		LOG_ERR("Invalid instant number %d", inst_num);
+		LOG_ERR("Invalid instance number %d", inst_num);
 		return false;
 	}
 
 	mctp *mctp_inst = (mctp *)mctp_p;
 	if (!mctp_inst->pldm_inst_table) {
-		LOG_ERR("Instant table not init!");
+		LOG_ERR("Instance table not init!");
 		return false;
 	}
 	if (!(mctp_inst->pldm_inst_table & BIT(inst_num))) {
