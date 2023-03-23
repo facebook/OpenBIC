@@ -524,6 +524,13 @@ uint8_t pt5161l_read_avg_temp(I2C_MSG *i2c_msg, uint8_t temp_cal_code_avg, doubl
 	adc_code = (data_bytes[3] << 24) + (data_bytes[2] << 16) + (data_bytes[1] << 8) +
 		   data_bytes[0];
 
+	//return 0 means temperature is not ready
+	if (adc_code == 0) {
+		LOG_INF("Avg Temperature is not ready");
+		ret = SENSOR_NOT_ACCESSIBLE;
+		goto unlock_exit;
+	}
+
 	*avg_temperature = 110 - ((adc_code - (temp_cal_code_avg + 250)) * 0.32);
 	ret = SENSOR_READ_SUCCESS;
 
