@@ -28,10 +28,11 @@ enum INA233_ALERT_INDEX {
 };
 
 void control_power_sequence();
-void init_power_on_thread();
+void init_power_on_thread(uint8_t initial_stage);
 void init_power_off_thread();
 void abort_power_thread();
 void ISR_FM_EXP_MAIN_PWR_EN();
+void ISR_CPU_PCIE_PERST();
 void ISR_E1S_0_INA233_ALERT();
 void ISR_E1S_1_INA233_ALERT();
 void ISR_E1S_2_INA233_ALERT();
