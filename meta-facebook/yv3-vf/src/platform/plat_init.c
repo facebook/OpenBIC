@@ -43,9 +43,11 @@ SCU_CFG scu_cfg[] = {
 
 extern uint8_t ina230_init(uint8_t sensor_num);
 static void BICup5secTickHandler(struct k_work *work);
+void adc_bound_init();
 
 K_WORK_DELAYABLE_DEFINE(up_1sec_handler, BICup1secTickHandler);
 K_WORK_DELAYABLE_DEFINE(up_5sec_handler, BICup5secTickHandler);
+K_WORK_DELAYABLE_DEFINE(adc_upper_bound_handler, adc_upper_bound_polling);
 
 void pal_pre_init()
 {
@@ -53,6 +55,7 @@ void pal_pre_init()
 	init_e1s_config();
 	init_worker(); // init util_worker
 	scu_init(scu_cfg, ARRAY_SIZE(scu_cfg));
+	adc_bound_init();
 }
 
 static void BICup5secTickHandler(struct k_work *work)
@@ -104,11 +107,20 @@ void pal_set_sys_status()
 	k_work_schedule(&up_1sec_handler, K_SECONDS(1));
 	// BIC up 5 sec handler
 	k_work_schedule(&up_5sec_handler, K_SECONDS(5));
+	// ADC upper bound polling
+	k_work_schedule(&adc_upper_bound_handler, K_SECONDS(1));
 }
 
 void pal_post_init()
 {
 	delay_function(300, init_sel_sensor_num, 0, 0);
+}
+
+void adc_bound_init()
+{
+	sys_write32(0x02FD0000, ADC1_UPPER_BOUND_REG); //ADC1 upper bound	13.14V
+	sys_write32(0x02FD0000, ADC2_UPPER_BOUND_REG); //ADC2 upper bound	13.14V
+	sys_write32(0x000000FF, ADC_INTERRUPT_STATUS_REG); //clear interrupt status
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78
