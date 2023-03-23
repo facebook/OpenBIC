@@ -41,7 +41,6 @@ enum POWER_ON_STAGE {
 	BOARD_POWER_ON_STAGE2,
 	RETIMER_POWER_ON_STAGE0,
 	RETIMER_POWER_ON_STAGE1,
-	RETIMER_POWER_ON_STAGE2,
 	E1S_POWER_ON_STAGE0,
 	E1S_POWER_ON_STAGE1,
 	E1S_POWER_ON_STAGE2,
@@ -78,7 +77,8 @@ typedef struct _e1s_power_control_gpio {
 	uint8_t p3v3_efuse_enable;
 	uint8_t p3v3_efuse_power_good;
 	uint8_t clkbuf_oe_en;
-	uint8_t pcie_reset;
+	uint8_t cpu_pcie_reset;
+	uint8_t e1s_pcie_reset;
 } e1s_power_control_gpio;
 
 extern e1s_power_control_gpio opa_e1s_power_control_gpio[];
@@ -91,9 +91,9 @@ void init_sequence_status();
 void set_sequence_status(uint8_t index, bool status);
 bool is_all_sequence_done(uint8_t status);
 void abort_e1s_power_thread(uint8_t index);
-void e1s_power_on_thread(uint8_t index);
+void e1s_power_on_thread(uint8_t index, uint8_t initial_stage);
 void e1s_power_off_thread(uint8_t index);
-void control_power_on_sequence();
+void control_power_on_sequence(void *initial_stage, void *arvg0, void *arvg1);
 void control_power_off_sequence();
 void control_power_stage(uint8_t control_mode, uint8_t control_seq);
 int check_power_stage(uint8_t check_mode, uint8_t check_seq);
@@ -104,5 +104,7 @@ bool e1s_power_off_handler(uint8_t initial_stage, e1s_power_control_gpio *e1s_gp
 bool power_on_handler(uint8_t initial_stage);
 bool power_off_handler(uint8_t initial_stage);
 bool notify_cpld_e1s_present(uint8_t index, uint8_t present);
+void abort_cpu_reset_low_thread();
+void cpu_reset_low_thread();
 
 #endif

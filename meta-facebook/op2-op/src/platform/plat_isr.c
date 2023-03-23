@@ -82,7 +82,7 @@ void control_power_sequence()
 	if (gpio_get(FM_EXP_MAIN_PWR_EN) == POWER_ON) { // op power on
 		if (!is_all_sequence_done(POWER_ON)) {
 			abort_power_thread();
-			init_power_on_thread();
+			init_power_on_thread(BOARD_POWER_ON_STAGE0);
 		}
 	} else { // op power off
 		if (!is_all_sequence_done(POWER_OFF)) {
@@ -92,15 +92,18 @@ void control_power_sequence()
 	}
 }
 
-void init_power_on_thread()
+void init_power_on_thread(uint8_t initial_stage)
 {
 	// Avoid re-create thread by checking thread status and thread id
 	if (power_tid != NULL && strcmp(k_thread_state_str(power_tid), "dead") != 0) {
 		return;
 	}
+
+	int stage = initial_stage + 1;
 	power_tid = k_thread_create(&power_thread_handler, power_thread,
 				    K_THREAD_STACK_SIZEOF(power_thread), control_power_on_sequence,
-				    NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+				    (void *)stage, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0,
+				    K_NO_WAIT);
 	k_thread_name_set(&power_thread_handler, "power_on_sequence_thread");
 }
 
@@ -110,6 +113,7 @@ void init_power_off_thread()
 	if (power_tid != NULL && strcmp(k_thread_state_str(power_tid), "dead") != 0) {
 		return;
 	}
+
 	power_tid = k_thread_create(&power_thread_handler, power_thread,
 				    K_THREAD_STACK_SIZEOF(power_thread), control_power_off_sequence,
 				    NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
@@ -127,6 +131,20 @@ void ISR_FM_EXP_MAIN_PWR_EN()
 {
 	set_DC_status(FM_EXP_MAIN_PWR_EN);
 	control_power_sequence();
+}
+
+void ISR_CPU_PCIE_PERST()
+{
+	uint8_t card_type = get_card_type();
+	uint8_t gpio_num =
+		(card_type == CARD_TYPE_OPA) ? OPA_RST_PCIE_EXP_PERST0_N : OPB_RST_CPLD_PERST1_N;
+	if (gpio_get(gpio_num) == GPIO_HIGH) {
+		abort_power_thread();
+		init_power_on_thread(RETIMER_POWER_ON_STAGE1);
+	} else {
+		abort_cpu_perst_low_thread();
+		cpu_perst_low_thread();
+	}
 }
 
 void ISR_E1S_0_INA233_ALERT()
@@ -180,7 +198,7 @@ void ISR_E1S_0_PRSNT_N()
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_0);
 
 		abort_e1s_power_thread(E1S_0);
-		e1s_power_on_thread(E1S_0);
+		e1s_power_on_thread(E1S_0, E1S_POWER_ON_STAGE0);
 	} else {
 		send_system_status_event(IPMI_OEM_EVENT_TYPE_DEASSERT,
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_0);
@@ -199,7 +217,7 @@ void ISR_E1S_1_PRSNT_N()
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_1);
 
 		abort_e1s_power_thread(E1S_1);
-		e1s_power_on_thread(E1S_1);
+		e1s_power_on_thread(E1S_1, E1S_POWER_ON_STAGE0);
 	} else {
 		send_system_status_event(IPMI_OEM_EVENT_TYPE_DEASSERT,
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_1);
@@ -218,7 +236,7 @@ void ISR_E1S_2_PRSNT_N()
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_2);
 
 		abort_e1s_power_thread(E1S_2);
-		e1s_power_on_thread(E1S_2);
+		e1s_power_on_thread(E1S_2, E1S_POWER_ON_STAGE0);
 	} else {
 		send_system_status_event(IPMI_OEM_EVENT_TYPE_DEASSERT,
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_2);
@@ -236,7 +254,7 @@ void ISR_E1S_3_PRSNT_N()
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_3);
 
 		abort_e1s_power_thread(E1S_3);
-		e1s_power_on_thread(E1S_3);
+		e1s_power_on_thread(E1S_3, E1S_POWER_ON_STAGE0);
 	} else {
 		send_system_status_event(IPMI_OEM_EVENT_TYPE_DEASSERT,
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_3);
@@ -254,7 +272,7 @@ void ISR_E1S_4_PRSNT_N()
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_4);
 
 		abort_e1s_power_thread(E1S_4);
-		e1s_power_on_thread(E1S_4);
+		e1s_power_on_thread(E1S_4, E1S_POWER_ON_STAGE0);
 	} else {
 		send_system_status_event(IPMI_OEM_EVENT_TYPE_DEASSERT,
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_4);

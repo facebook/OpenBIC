@@ -33,9 +33,12 @@ LOG_MODULE_REGISTER(power_sequence);
 
 K_THREAD_STACK_EXTERN(e1s_power_thread);
 K_THREAD_STACK_ARRAY_DEFINE(e1s_power_threads, MAX_E1S_IDX, POWER_SEQ_CTRL_STACK_SIZE);
+K_THREAD_STACK_DEFINE(cpu_pcie_reset_thread, POWER_SEQ_CTRL_STACK_SIZE);
 K_MUTEX_DEFINE(cpld_e1s_prsnt_reg_mutex);
 struct k_thread e1s_power_thread_handler[MAX_E1S_IDX];
 k_tid_t e1s_power_tid[MAX_E1S_IDX];
+struct k_thread cpu_pcie_reset_thread_handler;
+k_tid_t cpu_pcie_reset_tid;
 
 static bool is_e1s_sequence_done[MAX_E1S_IDX] = { false, false, false, false, false };
 static bool is_retimer_sequence_done = false;
@@ -48,21 +51,24 @@ e1s_power_control_gpio opa_e1s_power_control_gpio[] = {
 		.p3v3_efuse_enable = OPA_E1S_0_3V3_POWER_EN,
 		.p3v3_efuse_power_good = OPA_PWRGD_P3V3_E1S_0_R,
 		.clkbuf_oe_en = OPA_CLKBUF_E1S_0_OE_N,
-		.pcie_reset = OPA_PERST_E1S_0_N },
+		.cpu_pcie_reset = OPA_RST_PCIE_EXP_PERST0_N,
+		.e1s_pcie_reset = OPA_PERST_E1S_0_N },
 	[1] = { .present = OPA_E1S_1_PRSNT_N,
 		.p12v_efuse_enable = OPA_E1S_1_12V_POWER_EN,
 		.p12v_efuse_power_good = OPA_PWRGD_P12V_E1S_1_R,
 		.p3v3_efuse_enable = OPA_E1S_1_3V3_POWER_EN,
 		.p3v3_efuse_power_good = OPA_PWRGD_P3V3_E1S_1_R,
 		.clkbuf_oe_en = OPA_CLKBUF_E1S_1_OE_N,
-		.pcie_reset = OPA_PERST_E1S_1_N },
+		.cpu_pcie_reset = OPA_RST_PCIE_EXP_PERST0_N,
+		.e1s_pcie_reset = OPA_PERST_E1S_1_N },
 	[2] = { .present = OPA_E1S_2_PRSNT_N,
 		.p12v_efuse_enable = OPA_E1S_2_12V_POWER_EN,
 		.p12v_efuse_power_good = OPA_PWRGD_P12V_E1S_2_R,
 		.p3v3_efuse_enable = OPA_E1S_2_3V3_POWER_EN,
 		.p3v3_efuse_power_good = OPA_PWRGD_P3V3_E1S_2_R,
 		.clkbuf_oe_en = OPA_CLKBUF_E1S_2_OE_N,
-		.pcie_reset = OPA_PERST_E1S_2_N },
+		.cpu_pcie_reset = OPA_RST_PCIE_EXP_PERST0_N,
+		.e1s_pcie_reset = OPA_PERST_E1S_2_N },
 };
 
 e1s_power_control_gpio opb_e1s_power_control_gpio[] = {
@@ -72,35 +78,40 @@ e1s_power_control_gpio opb_e1s_power_control_gpio[] = {
 		.p3v3_efuse_enable = OPB_P3V3_E1S_0_EN_R,
 		.p3v3_efuse_power_good = OPB_PWRGD_P3V3_E1S_0_R,
 		.clkbuf_oe_en = OPB_CLKBUF_E1S_0_OE_N,
-		.pcie_reset = OPB_RST_E1S_0_PERST },
+		.cpu_pcie_reset = OPB_RST_CPLD_PERST1_N,
+		.e1s_pcie_reset = OPB_RST_E1S_0_PERST },
 	[1] = { .present = OPB_E1S_1_PRSNT_N,
 		.p12v_efuse_enable = OPB_P12V_E1S_1_EN_R,
 		.p12v_efuse_power_good = OPB_PWRGD_P12V_E1S_1_R,
 		.p3v3_efuse_enable = OPB_P3V3_E1S_1_EN_R,
 		.p3v3_efuse_power_good = OPB_PWRGD_P3V3_E1S_1_R,
 		.clkbuf_oe_en = OPB_CLKBUF_E1S_1_OE_N,
-		.pcie_reset = OPB_RST_E1S_1_PERST },
+		.cpu_pcie_reset = OPB_RST_CPLD_PERST1_N,
+		.e1s_pcie_reset = OPB_RST_E1S_1_PERST },
 	[2] = { .present = OPB_E1S_2_PRSNT_N,
 		.p12v_efuse_enable = OPB_P12V_E1S_2_EN_R,
 		.p12v_efuse_power_good = OPB_PWRGD_P12V_E1S_2_R,
 		.p3v3_efuse_enable = OPB_P3V3_E1S_2_EN_R,
 		.p3v3_efuse_power_good = OPB_PWRGD_P3V3_E1S_2_R,
 		.clkbuf_oe_en = OPB_CLKBUF_E1S_2_OE_N,
-		.pcie_reset = OPB_RST_E1S_2_PERST },
+		.cpu_pcie_reset = OPB_RST_CPLD_PERST1_N,
+		.e1s_pcie_reset = OPB_RST_E1S_2_PERST },
 	[3] = { .present = OPB_E1S_3_PRSNT_N,
 		.p12v_efuse_enable = OPB_P12V_E1S_3_EN_R,
 		.p12v_efuse_power_good = OPB_PWRGD_P12V_E1S_3_R,
 		.p3v3_efuse_enable = OPB_P3V3_E1S_3_EN_R,
 		.p3v3_efuse_power_good = OPB_PWRGD_P3V3_E1S_3_R,
 		.clkbuf_oe_en = OPB_CLKBUF_E1S_3_OE_N,
-		.pcie_reset = OPB_RST_E1S_3_PERST },
+		.cpu_pcie_reset = OPB_RST_CPLD_PERST1_N,
+		.e1s_pcie_reset = OPB_RST_E1S_3_PERST },
 	[4] = { .present = OPB_E1S_4_PRSNT_N,
 		.p12v_efuse_enable = OPB_P12V_E1S_4_EN_R,
 		.p12v_efuse_power_good = OPB_PWRGD_P12V_E1S_4_R,
 		.p3v3_efuse_enable = OPB_P3V3_E1S_4_EN_R,
 		.p3v3_efuse_power_good = OPB_PWRGD_P3V3_E1S_4_R,
 		.clkbuf_oe_en = OPB_CLKBUF_E1S_4_OE_N,
-		.pcie_reset = OPB_RST_E1S_4_PERST },
+		.cpu_pcie_reset = OPB_RST_CPLD_PERST1_N,
+		.e1s_pcie_reset = OPB_RST_E1S_4_PERST },
 };
 
 bool get_e1s_present(uint8_t index)
@@ -154,10 +165,10 @@ uint8_t get_e1s_pcie_reset_status(uint8_t index)
 
 	switch (card_type) {
 	case CARD_TYPE_OPA:
-		pcie_reset = gpio_get(opa_e1s_power_control_gpio[index].pcie_reset);
+		pcie_reset = gpio_get(opa_e1s_power_control_gpio[index].e1s_pcie_reset);
 		break;
 	case CARD_TYPE_OPB:
-		pcie_reset = gpio_get(opb_e1s_power_control_gpio[index].pcie_reset);
+		pcie_reset = gpio_get(opb_e1s_power_control_gpio[index].e1s_pcie_reset);
 		break;
 	default:
 		LOG_ERR("UNKNOWN CARD TYPE");
@@ -413,7 +424,7 @@ bool e1s_power_on_handler(uint8_t initial_stage, e1s_power_control_gpio *e1s_gpi
 			control_power_stage(LOW_ENABLE_POWER_MODE, e1s_gpio->clkbuf_oe_en);
 			break;
 		case E1S_POWER_ON_STAGE3:
-			control_power_stage(ENABLE_POWER_MODE, e1s_gpio->pcie_reset);
+			control_power_stage(ENABLE_POWER_MODE, e1s_gpio->e1s_pcie_reset);
 			break;
 		default:
 			LOG_ERR("Stage 0x%x not supported", initial_stage);
@@ -456,11 +467,20 @@ bool e1s_power_on_handler(uint8_t initial_stage, e1s_power_control_gpio *e1s_gpi
 				check_power_ret = -1;
 				break;
 			}
-			check_power_ret = 0;
-			control_stage = E1S_POWER_ON_STAGE3;
+
+			if (gpio_get(e1s_gpio->cpu_pcie_reset) != GPIO_HIGH) {
+				LOG_INF("els %d power on stop because CPU PCIE RESET is not enable.",
+					device_index);
+				check_power_ret = 1;
+				enable_power_on_handler = false;
+			} else {
+				check_power_ret = 0;
+				control_stage = E1S_POWER_ON_STAGE3;
+			}
+
 			break;
 		case E1S_POWER_ON_STAGE3:
-			if (check_power_stage(ENABLE_POWER_MODE, e1s_gpio->pcie_reset) != 0) {
+			if (check_power_stage(ENABLE_POWER_MODE, e1s_gpio->e1s_pcie_reset) != 0) {
 				LOG_ERR("els %d pcie_reset is not enabled!", device_index);
 				check_power_ret = -1;
 				break;
@@ -474,15 +494,20 @@ bool e1s_power_on_handler(uint8_t initial_stage, e1s_power_control_gpio *e1s_gpi
 			break;
 		}
 
-		if (check_power_ret != 0) {
+		if (check_power_ret < 0) {
 			enable_power_on_handler = false;
 			e1s_power_off_handler(E1S_POWER_OFF_STAGE0, e1s_gpio, device_index);
 		}
 	}
-	if (check_power_ret == 0) {
+
+	switch (check_power_ret) {
+	case E1S_POWER_SUCCESS:
 		is_e1s_sequence_done[device_index] = true;
 		return true;
-	} else {
+	case E1S_PERST_SUCCESS:
+		is_e1s_sequence_done[device_index] = false;
+		return true;
+	default:
 		is_e1s_sequence_done[device_index] = false;
 		return false;
 	}
@@ -508,7 +533,7 @@ bool e1s_power_off_handler(uint8_t initial_stage, e1s_power_control_gpio *e1s_gp
 	while (enable_power_off_handler == true) {
 		switch (control_stage) { // Disable VR power machine
 		case E1S_POWER_OFF_STAGE0:
-			control_power_stage(DISABLE_POWER_MODE, e1s_gpio->pcie_reset);
+			control_power_stage(DISABLE_POWER_MODE, e1s_gpio->e1s_pcie_reset);
 			break;
 		case E1S_POWER_OFF_STAGE1:
 			control_power_stage(HIGH_DISABLE_POWER_MODE, e1s_gpio->clkbuf_oe_en);
@@ -526,7 +551,7 @@ bool e1s_power_off_handler(uint8_t initial_stage, e1s_power_control_gpio *e1s_gp
 
 		switch (control_stage) { // Check VR power machine
 		case E1S_POWER_OFF_STAGE0:
-			if (check_power_stage(DISABLE_POWER_MODE, e1s_gpio->pcie_reset) != 0) {
+			if (check_power_stage(DISABLE_POWER_MODE, e1s_gpio->e1s_pcie_reset) != 0) {
 				LOG_ERR("E1S %d pcie_reset is not disabled!", device_index);
 				check_power_ret = -1;
 				break;
@@ -576,22 +601,24 @@ bool e1s_power_off_handler(uint8_t initial_stage, e1s_power_control_gpio *e1s_gp
 	}
 }
 
-void control_e1s_power_on_sequence(void *pvParameters, void *arvg0, void *arvg1)
+void control_e1s_power_on_sequence(void *pvParameters, void *initial_stage, void *arvg1)
 {
 	CHECK_NULL_ARG(pvParameters);
+	CHECK_NULL_ARG(initial_stage);
 
 	int dev_index = ((int)pvParameters) - 1;
+	int stage = (int)initial_stage - 1;
 	bool is_power_on = false;
 	uint8_t card_type = get_card_type();
 
 	switch (card_type) {
 	case CARD_TYPE_OPA:
 		is_power_on = e1s_power_on_handler(
-			E1S_POWER_ON_STAGE0, &opa_e1s_power_control_gpio[dev_index], dev_index);
+			(uint8_t)stage, &opa_e1s_power_control_gpio[dev_index], dev_index);
 		break;
 	case CARD_TYPE_OPB:
 		is_power_on = e1s_power_on_handler(
-			E1S_POWER_ON_STAGE0, &opb_e1s_power_control_gpio[dev_index], dev_index);
+			(uint8_t)stage, &opb_e1s_power_control_gpio[dev_index], dev_index);
 		break;
 	default:
 		LOG_ERR("UNKNOWN card type power on e1s %d failed.", dev_index);
@@ -642,7 +669,7 @@ void abort_e1s_power_thread(uint8_t index)
 	}
 }
 
-void e1s_power_on_thread(uint8_t index)
+void e1s_power_on_thread(uint8_t index, uint8_t initial_stage)
 {
 	// Avoid re-create thread by checking thread status and thread id
 	if (e1s_power_tid[index] != NULL &&
@@ -656,11 +683,13 @@ void e1s_power_on_thread(uint8_t index)
 	if (get_e1s_present(index) == true) {
 		// index add 1 to prevent become null pointer
 		int dev_index = index + 1;
+		int stage = initial_stage + 1;
 		e1s_power_tid[index] =
 			k_thread_create(&e1s_power_thread_handler[index], e1s_power_threads[index],
 					K_THREAD_STACK_SIZEOF(e1s_power_threads[index]),
-					control_e1s_power_on_sequence, (void *)dev_index, NULL,
-					NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+					control_e1s_power_on_sequence, (void *)dev_index,
+					(void *)stage, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0,
+					K_NO_WAIT);
 		char thread_name[MAX_WORK_NAME_LEN];
 		sprintf(thread_name, "e1s%d_power_on_sequence_thread", index);
 		k_thread_name_set(&e1s_power_thread_handler[index], thread_name);
@@ -692,6 +721,71 @@ void e1s_power_off_thread(uint8_t index)
 	k_thread_name_set(&e1s_power_thread_handler[index], thread_name);
 }
 
+void control_cpu_perst_low(void *arvg0, void *arvg1, void *arvg2)
+{
+	ARG_UNUSED(arvg0);
+	ARG_UNUSED(arvg1);
+	ARG_UNUSED(arvg2);
+
+	uint8_t card_type = get_card_type();
+	uint8_t index;
+
+	switch (card_type) {
+	case CARD_TYPE_OPA:
+		for (index = 0; index < OPA_MAX_E1S_IDX; ++index) {
+			if (get_e1s_present(index) == true) {
+				is_e1s_sequence_done[index] = false;
+				control_power_stage(
+					DISABLE_POWER_MODE,
+					opa_e1s_power_control_gpio[index].e1s_pcie_reset);
+			}
+		}
+		is_retimer_sequence_done = false;
+		control_power_stage(DISABLE_POWER_MODE, OPA_PERST_BIC_RTM_N);
+		control_power_stage(DISABLE_POWER_MODE, OPA_RESET_BIC_RTM_N);
+		break;
+	case CARD_TYPE_OPB:
+		for (index = 0; index < MAX_E1S_IDX; ++index) {
+			if (get_e1s_present(index) == true) {
+				is_e1s_sequence_done[index] = false;
+				control_power_stage(
+					DISABLE_POWER_MODE,
+					opb_e1s_power_control_gpio[index].e1s_pcie_reset);
+			}
+		}
+		break;
+	default:
+		LOG_ERR("UNKNOWN card type control cpu reset low failed.");
+		break;
+	}
+}
+
+void abort_cpu_perst_low_thread()
+{
+	if (cpu_pcie_reset_tid != NULL &&
+	    strcmp(k_thread_state_str(cpu_pcie_reset_tid), "dead") != 0) {
+		k_thread_abort(cpu_pcie_reset_tid);
+	}
+}
+
+void cpu_perst_low_thread()
+{
+	// Avoid re-create thread by checking thread status and thread id
+	if (cpu_pcie_reset_tid != NULL &&
+	    ((strcmp(k_thread_state_str(cpu_pcie_reset_tid), "dead") != 0) &&
+	     (strcmp(k_thread_state_str(cpu_pcie_reset_tid), "unknown") != 0))) {
+		LOG_ERR("cpu_pcie_reset_tid exists status %s",
+			k_thread_state_str(cpu_pcie_reset_tid));
+		return;
+	}
+
+	cpu_pcie_reset_tid =
+		k_thread_create(&cpu_pcie_reset_thread_handler, cpu_pcie_reset_thread,
+				K_THREAD_STACK_SIZEOF(cpu_pcie_reset_thread), control_cpu_perst_low,
+				NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+	k_thread_name_set(&cpu_pcie_reset_thread_handler, "cpu_pcie_reset_thread");
+}
+
 bool power_on_handler(uint8_t initial_stage)
 {
 	int check_power_ret = -1;
@@ -719,22 +813,26 @@ bool power_on_handler(uint8_t initial_stage)
 			control_power_stage(LOW_ENABLE_POWER_MODE, OPA_CLKBUF_RTM_OE_N);
 			break;
 		case RETIMER_POWER_ON_STAGE1:
-			control_power_stage(ENABLE_POWER_MODE, OPA_RESET_BIC_RTM_N);
-			break;
-		case RETIMER_POWER_ON_STAGE2:
-			control_power_stage(ENABLE_POWER_MODE, OPA_PERST_BIC_RTM_N);
-			break;
-		case E1S_POWER_ON_STAGE0:
+			if (card_type == CARD_TYPE_OPA) {
+				control_power_stage(ENABLE_POWER_MODE, OPA_RESET_BIC_RTM_N);
+				control_power_stage(ENABLE_POWER_MODE, OPA_PERST_BIC_RTM_N);
+			}
+			LOG_INF("wait for retimer boot up");
 			//Wait for retimer boot up
 			k_msleep(RETIMER_DELAY_MSEC);
 			set_DC_on_delayed_status();
-
+			break;
+		case E1S_POWER_ON_STAGE0:
 			for (index = 0;
 			     index < ((card_type == CARD_TYPE_OPA) ? OPA_MAX_E1S_IDX : MAX_E1S_IDX);
 			     ++index) {
 				if (get_e1s_present(index) == true) {
 					abort_e1s_power_thread(index);
-					e1s_power_on_thread(index);
+					if (initial_stage == RETIMER_POWER_ON_STAGE1) {
+						e1s_power_on_thread(index, E1S_POWER_ON_STAGE3);
+					} else {
+						e1s_power_on_thread(index, E1S_POWER_ON_STAGE0);
+					}
 				}
 			}
 			break;
@@ -795,25 +893,31 @@ bool power_on_handler(uint8_t initial_stage)
 				check_power_ret = -1;
 				break;
 			}
-			check_power_ret = 0;
-			control_stage = RETIMER_POWER_ON_STAGE1;
+
+			if (gpio_get(OPA_RST_PCIE_EXP_PERST0_N) != GPIO_HIGH) {
+				check_power_ret = 0;
+				control_stage = E1S_POWER_ON_STAGE0;
+				break;
+			} else {
+				check_power_ret = 0;
+				control_stage = RETIMER_POWER_ON_STAGE1;
+			}
 			break;
 		case RETIMER_POWER_ON_STAGE1:
-			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_07) != 0) {
-				LOG_ERR("OPA_RESET_BIC_RTM_N is not enabled!");
-				check_power_ret = -1;
-				break;
+			if (card_type == CARD_TYPE_OPA) {
+				if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_07) != 0) {
+					LOG_ERR("OPA_RESET_BIC_RTM_N is not enabled!");
+					check_power_ret = -1;
+					break;
+				}
+
+				if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_08) != 0) {
+					LOG_ERR("OPA_PERST_BIC_RTM_N is not enabled!");
+					check_power_ret = -1;
+					break;
+				}
+				is_retimer_sequence_done = true;
 			}
-			check_power_ret = 0;
-			control_stage = RETIMER_POWER_ON_STAGE2;
-			break;
-		case RETIMER_POWER_ON_STAGE2:
-			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_08) != 0) {
-				LOG_ERR("OPA_PERST_BIC_RTM_N is not enabled!");
-				check_power_ret = -1;
-				break;
-			}
-			is_retimer_sequence_done = true;
 			check_power_ret = 0;
 			control_stage = E1S_POWER_ON_STAGE0;
 			break;
@@ -977,10 +1081,12 @@ bool power_off_handler(uint8_t initial_stage)
 	}
 }
 
-void control_power_on_sequence()
+void control_power_on_sequence(void *initial_stage, void *arvg0, void *arvg1)
 {
+	CHECK_NULL_ARG(initial_stage);
 	bool is_power_on = false;
-	is_power_on = power_on_handler(BOARD_POWER_ON_STAGE0);
+	int stage = (int)initial_stage - 1;
+	is_power_on = power_on_handler((uint8_t)stage);
 
 	if (is_power_on == true) {
 		LOG_INF("Power on success");
