@@ -21,7 +21,6 @@
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "pmbus.h"
-#include "pldm_firmware_update.h"
 #include "mp2971.h"
 
 LOG_MODULE_REGISTER(mp2971);
@@ -256,9 +255,9 @@ static bool mp2856_unlock_write_protect_mode(uint8_t bus, uint8_t addr)
 	return true;
 }
 
-static bool parsing_image(uint8_t *hex_buff, struct mp2856_config *dev_cfg)
+static bool parsing_image(uint8_t *img_buff, uint32_t img_size, struct mp2856_config *dev_cfg)
 {
-	CHECK_NULL_ARG_WITH_RETURN(hex_buff, false);
+	CHECK_NULL_ARG_WITH_RETURN(img_buff, false);
 	CHECK_NULL_ARG_WITH_RETURN(dev_cfg, false);
 
 	bool ret = false;
@@ -276,21 +275,21 @@ static bool parsing_image(uint8_t *hex_buff, struct mp2856_config *dev_cfg)
 	uint32_t data_store = 0;
 	uint8_t data_idx = 0;
 	dev_cfg->wr_cnt = 0;
-	for (int i = 0; i < fw_update_cfg.image_size; i++) {
+	for (int i = 0; i < img_size; i++) {
 		/* check valid */
-		if (!hex_buff[i]) {
+		if (!img_buff[i]) {
 			LOG_ERR("Get invalid buffer data at index %d", i);
 			goto exit;
 		}
 
-		if (cur_ele_idx == ATE_CONF_ID && i + 2 < fw_update_cfg.image_size) {
-			if (!strncmp(&hex_buff[i], "END", 3)) {
+		if ((cur_ele_idx == ATE_CONF_ID) && (i + 2 < img_size)) {
+			if (!strncmp(&img_buff[i], "END", 3)) {
 				break;
 			}
 		}
-		if (hex_buff[i] != 0x09 && hex_buff[i] != 0x0d) {
+		if (img_buff[i] != 0x09 && img_buff[i] != 0x0d) {
 			// pass non hex charactor
-			int val = ascii_to_val(hex_buff[i]);
+			int val = ascii_to_val(img_buff[i]);
 			if (val == -1)
 				continue;
 			data_store = (data_store << 4) | val;
@@ -336,9 +335,9 @@ static bool parsing_image(uint8_t *hex_buff, struct mp2856_config *dev_cfg)
 
 		data_idx = 0;
 		data_store = 0;
-		if (hex_buff[i] == 0x09) {
+		if (img_buff[i] == 0x09) {
 			cur_ele_idx++;
-		} else if (hex_buff[i] == 0x0d) {
+		} else if (img_buff[i] == 0x0d) {
 			LOG_DBG("vr[%d] page: %d addr:%x data:%x", dev_cfg->wr_cnt, cur_line->page,
 				cur_line->reg_addr, cur_line->reg_data);
 			cur_ele_idx = 0;
@@ -361,9 +360,9 @@ exit:
 	return ret;
 }
 
-bool mp2971_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff)
+bool mp2971_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_size)
 {
-	CHECK_NULL_ARG_WITH_RETURN(hex_buff, false);
+	CHECK_NULL_ARG_WITH_RETURN(img_buff, false);
 
 	uint8_t ret = false;
 
@@ -372,7 +371,7 @@ bool mp2971_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff)
 
 	/* Step2. Image parsing */
 	struct mp2856_config dev_cfg = { 0 };
-	if (parsing_image(hex_buff, &dev_cfg) == false) {
+	if (parsing_image(img_buff, img_size, &dev_cfg) == false) {
 		LOG_ERR("Failed to parsing image!");
 		goto exit;
 	}

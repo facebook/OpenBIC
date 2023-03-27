@@ -22,7 +22,6 @@
 #include "hal_i2c.h"
 #include "pmbus.h"
 #include "isl69259.h"
-#include "pldm_firmware_update.h"
 #include "libutil.h"
 
 LOG_MODULE_REGISTER(isl69259);
@@ -286,39 +285,25 @@ static bool check_dev_rev(uint32_t rev, uint8_t mode)
 	return true;
 }
 
-static bool parsing_image(uint8_t *hex_buff, uint8_t *buff)
+static bool parsing_image(uint8_t *img_buff, uint32_t img_size, struct isl69259_config *cfg)
 {
-	CHECK_NULL_ARG_WITH_RETURN(hex_buff, false);
-	CHECK_NULL_ARG_WITH_RETURN(buff, false);
+	CHECK_NULL_ARG_WITH_RETURN(img_buff, false);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 
 	uint32_t buf_idx = 0;
-	uint32_t data_len = fw_update_cfg.image_size / 2;
-	for (int i = 0; i < fw_update_cfg.image_size; i += 2) {
-		/* check valid */
-		if (!hex_buff[i] || hex_buff[i + 1]) {
-			LOG_ERR("Get invalid buffer data at index %d or %d", i, i + 1);
-			return 1;
-		}
-
-		int hi_val = ascii_to_val(hex_buff[i]);
-		int lo_val = ascii_to_val(hex_buff[i + 1]);
+	for (int i = 0; i < img_size; i += 2) {
+		int hi_val = ascii_to_val(img_buff[i]);
+		int lo_val = ascii_to_val(img_buff[i + 1]);
 		if (hi_val == -1 || lo_val == -1) {
-			data_len--;
 			continue;
 		}
-		if (!buff[buf_idx]) {
-			LOG_ERR("Get invalid buffer data at index %d or %d", i, i + 1);
-		}
-		buff[buf_idx] = hi_val * 16 + lo_val;
+		cfg->buff[buf_idx] = hi_val * 16 + lo_val;
 		buf_idx++;
 	}
 
-	if (buf_idx != data_len) {
-		LOG_ERR("Data transfer from hex to bin got error!");
-		return 1;
-	}
+	cfg->len = buf_idx;
 
-	return 0;
+	return true;
 }
 
 static bool check_dev_support(uint8_t bus, uint8_t addr, raa_config_t *raa_info)
@@ -375,9 +360,9 @@ static bool check_dev_support(uint8_t bus, uint8_t addr, raa_config_t *raa_info)
 	return true;
 }
 
-bool isl69259_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff)
+bool isl69259_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_size)
 {
-	CHECK_NULL_ARG_WITH_RETURN(hex_buff, 1);
+	CHECK_NULL_ARG_WITH_RETURN(img_buff, 1);
 
 	uint8_t ret = false;
 
@@ -389,13 +374,15 @@ bool isl69259_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff)
 	}
 
 	/* Step2. Image parsing */
-	uint8_t *img_buff = malloc(fw_update_cfg.image_size / 2);
-	if (!img_buff) {
-		LOG_ERR("Failed to malloc img_buff");
+	struct isl69259_config cfg = { 0 };
+
+	cfg.buff = (uint8_t *)malloc(img_size / 2);
+	if (!cfg.buff) {
+		LOG_ERR("Failed to malloc cfg.buff");
 		return false;
 	}
 
-	if (parsing_image(hex_buff, img_buff) == false) {
+	if (parsing_image(img_buff, img_size, &cfg) == false) {
 		LOG_ERR("Failed to parsing image!");
 		goto exit;
 	}
@@ -404,8 +391,8 @@ bool isl69259_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff)
 	uint8_t img_mode = 0;
 	uint8_t mode_check_flag = 0;
 	struct raa_data cmd_line;
-	uint8_t *cur_data = img_buff;
-	uint32_t img_bin_len = fw_update_cfg.image_size / 2;
+	uint8_t *cur_data = cfg.buff;
+	uint32_t img_bin_len = cfg.len;
 	uint32_t remain_buf_len = img_bin_len;
 
 	while (1) {
@@ -495,7 +482,7 @@ bool isl69259_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff)
 
 	ret = true;
 exit:
-	SAFE_FREE(img_buff);
+	SAFE_FREE(cfg.buff);
 	return ret;
 }
 

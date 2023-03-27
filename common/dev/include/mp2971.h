@@ -18,7 +18,7 @@
 
 #include "stdint.h"
 
-bool mp2971_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff);
+bool mp2971_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_size);
 bool mp2971_get_checksum(uint8_t bus, uint8_t addr, uint32_t *checksum);
 
 #endif

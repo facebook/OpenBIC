@@ -31,8 +31,11 @@ extern "C" {
 
 #define MONITOR_THREAD_STACK_SIZE 1024
 
-#define PLDM_MAX_DATA_SIZE 512
+#define PLDM_MAX_DATA_SIZE_DEFAULT 512
 
+#ifndef PLDM_MAX_DATA_SIZE
+#define PLDM_MAX_DATA_SIZE PLDM_MAX_DATA_SIZE_DEFAULT
+#endif
 typedef uint8_t (*pldm_cmd_proc_fn)(void *, uint8_t *, uint16_t, uint8_t, uint8_t *, uint16_t *,
 				    void *);
 
