@@ -29,10 +29,12 @@
 #define CXL_IOEXP_ASIC_PERESET_BIT BIT(6)
 #define CXL_IOEXP_CONTROLLER_PWRGD_VAL 0x7F
 #define CXL_IOEXP_DIMM_PWRGD_VAL 0x07
-#define CXL_IOEXP_BUTTON_PRESS_DELAY_MS 1
+#define CXL_NOT_ALL_POWER_GOOD 0
+#define CXL_ALL_POWER_GOOD 1
 
 #define CXL_CONTROLLER_MUX_CHANNEL 0x01
-#define CXL_DRIVE_READY_DELAY_MS 3000
+#define CXL_DRIVE_READY_DELAY_MS 1000
+#define CXL_POWER_GOOD_DELAY_MS 12
 
 enum IOEXP_NAME {
 	IOEXP_U14,
@@ -51,6 +53,9 @@ void ISR_CXL_IOEXP_ALERT5();
 void ISR_CXL_IOEXP_ALERT6();
 void ISR_CXL_IOEXP_ALERT7();
 
-void init_cxl_set_eid_work();
+void init_cxl_work();
+int check_cxl_power_status();
+int set_cxl_device_reset_pin(uint8_t val);
+void cxl_ioexp_alert_handler(struct k_work *work_item);
 
 #endif
