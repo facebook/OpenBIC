@@ -122,7 +122,6 @@
 
 &i3c0 {
 	status = "okay";
-	assigned-address = <0x9>;
 	pinctrl-0 = <&pinctrl_hvi3c0_default>;
 	i3c-scl-hz = <8000000>;
 	secondary;
