@@ -32,6 +32,9 @@ typedef enum {
 	GT_STAGE_EVT2 = 2,
 	GT_STAGE_DVT = 3,
 	GT_STAGE_PVT = 4,
+	GT_STAGE_PVT2_OP2 = 5,
+	GT_STAGE_PVT2_OP1 = 6,
+	GT_STAGE_PILOT_MP = 7,
 } GT_STAGE_REVISION_ID;
 
 typedef enum {
