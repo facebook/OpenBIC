@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <stdlib.h>
+#include <stdio.h>
 #include <logging/log.h>
 
 #include "libipmi.h"
@@ -33,6 +34,7 @@
 #include "plat_hook.h"
 #include "plat_pldm_monitor.h"
 #include "plat_led.h"
+#include "plat_pldm_fw_update.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -102,6 +104,8 @@ void ISR_DC_ON()
 	if (is_mb_dc_on()) {
 		k_work_schedule(&dc_on_send_cmd_to_dev_work, K_SECONDS(DC_ON_5_SECOND));
 		k_work_schedule(&dc_on_init_pex_work, K_SECONDS(DC_ON_5_SECOND));
+
+		clear_pending_version(COMP_ACT_DC_PWR_CYCLE);
 	}
 	pwr_led_check();
 }

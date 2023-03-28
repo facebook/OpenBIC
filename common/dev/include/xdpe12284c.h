@@ -19,7 +19,7 @@
 
 bool xdpe12284c_get_checksum(uint8_t bus, uint8_t target_addr, uint8_t *checksum);
 bool xdpe12284c_get_remaining_write(uint8_t bus, uint8_t target_addr, uint16_t *remain_write);
-bool xdpe12284c_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff);
+bool xdpe12284c_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_size);
 
 enum INFINEON_PAGE {
 	INFINEON_STATUS_PAGE = 0x60,

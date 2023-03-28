@@ -26,11 +26,11 @@ extern "C" {
 #define MAX_FWUPDATE_RSP_BUF_SIZE 256
 #define MAX_IMAGE_MALLOC_SIZE (1024 * 64)
 
-#define KEYWORD_VR_ISL69259 "renesas_isl69259"
-#define KEYWORD_VR_XDPE12284C "infineon_xdpe12284c"
-#define KEYWORD_VR_MP2971 "mps_mp2971"
+#define KEYWORD_VR_ISL69259 "isl69259"
+#define KEYWORD_VR_XDPE12284C "xdpe12284c"
+#define KEYWORD_VR_MP2971 "mp2971"
 
-#define KEYWORD_CPLD_LATTICE "lattice"
+#define KEYWORD_CPLD_LATTICE "LCMXO3-9400C"
 
 static const char hex_to_ascii[] = { '0', '1', '2', '3', '4', '5', '6', '7',
 				     '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
@@ -266,6 +266,7 @@ typedef struct pldm_fw_update_info {
 	uint16_t activate_method;
 	pldm_act_func self_act_func;
 	pldm_get_fw_version_fn get_fw_version_fn;
+	uint8_t *pending_version_p;
 } pldm_fw_update_info_t;
 extern pldm_fw_update_info_t *comp_config;
 extern uint8_t comp_config_count;

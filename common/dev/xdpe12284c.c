@@ -24,7 +24,6 @@
 #include "util_pmbus.h"
 #include "libutil.h"
 #include "xdpe12284c.h"
-#include "pldm_firmware_update.h"
 
 LOG_MODULE_REGISTER(xdpe12284c);
 
@@ -195,7 +194,7 @@ static float vid_to_float(int val, uint8_t vout_mode)
 	return 0;
 }
 
-static bool find_addr_and_crc(uint8_t *buff, struct xdpe_config *dev_cfg)
+static bool find_addr_and_crc(uint8_t *buff, struct xdpe_config *dev_cfg, uint32_t img_size)
 {
 	CHECK_NULL_ARG_WITH_RETURN(buff, false);
 	CHECK_NULL_ARG_WITH_RETURN(dev_cfg, false);
@@ -226,7 +225,7 @@ static bool find_addr_and_crc(uint8_t *buff, struct xdpe_config *dev_cfg)
 					return false;
 				}
 				dev_cfg->crc_exp = (dev_cfg->crc_exp << 4) | val;
-				if (idx == fw_update_cfg.image_size) {
+				if (idx == img_size) {
 					LOG_ERR("Image got format error in line %d", __LINE__);
 					return false;
 				}
@@ -242,9 +241,9 @@ static bool find_addr_and_crc(uint8_t *buff, struct xdpe_config *dev_cfg)
 	return true;
 }
 
-static bool parsing_image(uint8_t *hex_buff, struct xdpe_config *dev_cfg)
+static bool parsing_image(uint8_t *img_buff, uint32_t img_size, struct xdpe_config *dev_cfg)
 {
-	CHECK_NULL_ARG_WITH_RETURN(hex_buff, false);
+	CHECK_NULL_ARG_WITH_RETURN(img_buff, false);
 	CHECK_NULL_ARG_WITH_RETURN(dev_cfg, false);
 
 	bool ret = false;
@@ -263,19 +262,19 @@ static bool parsing_image(uint8_t *hex_buff, struct xdpe_config *dev_cfg)
 	uint16_t ofst = 0;
 	uint16_t value = 0;
 	int data_idx = 0, val;
-	for (int i = 0; i < fw_update_cfg.image_size; i++) {
+	for (int i = 0; i < img_size; i++) {
 		/* collect data */
 		if (rec_flag == true) {
 			// grep offset and exit keyword
 			if (new_line == true) {
-				val = ascii_to_val(hex_buff[i]);
+				val = ascii_to_val(img_buff[i]);
 				if (val == -1) {
 					LOG_ERR("Image got format error in line %d", __LINE__);
 					goto exit;
 				}
 				if (val != 2) {
-					if (i + 3 < fw_update_cfg.image_size) {
-						if (!strncmp(&hex_buff[i], "[End", 4)) {
+					if (i + 3 < img_size) {
+						if (!strncmp(&img_buff[i], "[End", 4)) {
 							got_end_flag = true;
 							break;
 						}
@@ -284,10 +283,10 @@ static bool parsing_image(uint8_t *hex_buff, struct xdpe_config *dev_cfg)
 					got_end_flag = true;
 					break;
 				} else {
-					if (i + 3 < fw_update_cfg.image_size) {
+					if (i + 3 < img_size) {
 						ofst = 0;
 						for (int j = i; j < (i + 4); j++) {
-							val = ascii_to_val(hex_buff[j]);
+							val = ascii_to_val(img_buff[j]);
 							if (val == -1) {
 								LOG_ERR("Image got format error in line %d",
 									__LINE__);
@@ -300,15 +299,15 @@ static bool parsing_image(uint8_t *hex_buff, struct xdpe_config *dev_cfg)
 				}
 				new_line = false;
 			} else {
-				if (hex_buff[i] == ' ') {
-					if (i + 4 >= fw_update_cfg.image_size) {
+				if (img_buff[i] == ' ') {
+					if (i + 4 >= img_size) {
 						LOG_ERR("Image got format error in line %d",
 							__LINE__);
 						goto exit;
 					}
 
 					// skip collect empty data '----'
-					if (hex_buff[i + 1] == '-') {
+					if (img_buff[i + 1] == '-') {
 						ofst++;
 						i += 4; //pass '----'
 						continue;
@@ -316,7 +315,7 @@ static bool parsing_image(uint8_t *hex_buff, struct xdpe_config *dev_cfg)
 
 					value = 0;
 					for (int j = i + 1; j < (i + 5); j++) {
-						val = ascii_to_val(hex_buff[j]);
+						val = ascii_to_val(img_buff[j]);
 						if (val == -1) {
 							LOG_ERR("Image got format error in line %d",
 								__LINE__);
@@ -337,7 +336,7 @@ static bool parsing_image(uint8_t *hex_buff, struct xdpe_config *dev_cfg)
 					data_idx += 4;
 					ofst++;
 					i += 4; //pass 4 bytes data
-				} else if (hex_buff[i] == 0x0d) {
+				} else if (img_buff[i] == 0x0d) {
 					i++;
 					new_line = true;
 				} else {
@@ -348,20 +347,20 @@ static bool parsing_image(uint8_t *hex_buff, struct xdpe_config *dev_cfg)
 		}
 
 		/* parsing address and crc */
-		if (i + 9 < fw_update_cfg.image_size) {
-			if (!strncmp(&hex_buff[i], "XDPE12284C", 10)) {
-				if (find_addr_and_crc(&hex_buff[i], dev_cfg) == false) {
+		if (i + 9 < img_size) {
+			if (!strncmp(&img_buff[i], "XDPE12284C", 10)) {
+				if (find_addr_and_crc(&img_buff[i], dev_cfg, img_size) == false) {
 					goto exit;
 				}
 			}
 		}
 
 		/* parsing main data */
-		if (i + 13 < fw_update_cfg.image_size) {
-			if (!strncmp(&hex_buff[i], "[Config Data]", 13)) {
-				while (hex_buff[i] != 0x0a) {
+		if (i + 13 < img_size) {
+			if (!strncmp(&img_buff[i], "[Config Data]", 13)) {
+				while (img_buff[i] != 0x0a) {
 					i++; //pass the rest of byte in current line
-					if (i == fw_update_cfg.image_size) {
+					if (i == img_size) {
 						LOG_ERR("Image got format error8");
 						goto exit;
 					}
@@ -381,9 +380,9 @@ exit:
 	return ret;
 }
 
-bool xdpe12284c_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff)
+bool xdpe12284c_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_size)
 {
-	CHECK_NULL_ARG_WITH_RETURN(hex_buff, false);
+	CHECK_NULL_ARG_WITH_RETURN(img_buff, false);
 
 	uint8_t ret = false;
 
@@ -413,7 +412,7 @@ bool xdpe12284c_fwupdate(uint8_t bus, uint8_t addr, uint8_t *hex_buff)
 
 	/* Step2. Image parsing */
 	struct xdpe_config dev_cfg = { 0 };
-	if (parsing_image(hex_buff, &dev_cfg) == false) {
+	if (parsing_image(img_buff, img_size, &dev_cfg) == false) {
 		LOG_ERR("Failed to parsing image!");
 		goto exit;
 	}

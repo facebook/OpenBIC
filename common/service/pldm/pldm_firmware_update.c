@@ -141,15 +141,16 @@ uint8_t pldm_vr_update(void *fw_update_param)
 
 	if (!strncmp(p->comp_version_str, KEYWORD_VR_ISL69259,
 		     ARRAY_SIZE(KEYWORD_VR_ISL69259) - 1)) {
-		if (isl69259_fwupdate(p->bus, p->addr, hex_buff) == false)
+		if (isl69259_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) == false)
 			goto exit;
 	} else if (!strncmp(p->comp_version_str, KEYWORD_VR_XDPE12284C,
 			    ARRAY_SIZE(KEYWORD_VR_XDPE12284C) - 1)) {
-		if (xdpe12284c_fwupdate(p->bus, p->addr, hex_buff) == false)
+		if (xdpe12284c_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) ==
+		    false)
 			goto exit;
 	} else if (!strncmp(p->comp_version_str, KEYWORD_VR_MP2971,
 			    ARRAY_SIZE(KEYWORD_VR_MP2971) - 1)) {
-		if (mp2971_fwupdate(p->bus, p->addr, hex_buff) == false)
+		if (mp2971_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) == false)
 			goto exit;
 	} else {
 		LOG_ERR("Non-support VR detected with component string %s!",
@@ -241,6 +242,21 @@ static uint8_t do_self_activate(uint16_t comp_id)
 				return 1;
 			}
 			break;
+		}
+
+		if (comp_config[idx].activate_method == COMP_ACT_AC_PWR_CYCLE ||
+		    comp_config[idx].activate_method == COMP_ACT_DC_PWR_CYCLE) {
+			SAFE_FREE(comp_config[idx].pending_version_p);
+			uint8_t len = strlen(cur_update_comp_str);
+			comp_config[idx].pending_version_p = (uint8_t *)malloc(len + 1);
+
+			if (!comp_config[idx].pending_version_p) {
+				LOG_ERR("component identifier %d malloc failed",
+					comp_config[idx].comp_identifier);
+				continue;
+			}
+			memcpy(comp_config[idx].pending_version_p, cur_update_comp_str, len);
+			comp_config[idx].pending_version_p[len] = '\0';
 		}
 	}
 
@@ -912,10 +928,6 @@ static bool pldm_get_bic_fw_version(uint8_t *buf, uint8_t *len)
 
 	idx += bin2hex(&tmp_buf[3], 1, &buf[idx], 2);
 
-	buf[idx++] = BIC_FW_platform_0;
-	buf[idx++] = BIC_FW_platform_1;
-	buf[idx++] = BIC_FW_platform_2;
-
 	*len = idx;
 
 	return true;
@@ -961,6 +973,15 @@ static uint8_t get_firmware_parameter(void *mctp_inst, uint8_t *buf, uint16_t le
 		if (!comp_config[i].get_fw_version_fn)
 			continue;
 
+		if (sizeof(struct pldm_get_firmware_parameters_resp) + cnt_len >
+		    PLDM_MAX_DATA_SIZE) {
+			LOG_ERR("Data length %d is over PLDM_MAX_DATA_SIZE define size %d",
+				sizeof(struct pldm_get_firmware_parameters_resp) + cnt_len,
+				PLDM_MAX_DATA_SIZE);
+			resp_p->completion_code = PLDM_ERROR;
+			return PLDM_SUCCESS;
+		}
+
 		struct component_parameter_table *comp_table_p =
 			(struct component_parameter_table *)ver_str_p;
 		ver_str_p += sizeof(struct component_parameter_table);
@@ -968,7 +989,7 @@ static uint8_t get_firmware_parameter(void *mctp_inst, uint8_t *buf, uint16_t le
 		comp_table_p->comp_identifier = comp_config[i].comp_identifier;
 		comp_table_p->comp_classification = comp_config[i].comp_classification;
 		comp_table_p->active_comp_ver_str_type = PLDM_COMP_ASCII;
-		comp_table_p->pending_comp_ver_str_type = PLDM_COMP_VER_STR_TYPE_UNKNOWN;
+		comp_table_p->pending_comp_ver_str_type = PLDM_COMP_ASCII;
 		comp_table_p->pending_comp_ver_str_len = 0x00;
 		comp_table_p->comp_activation_methods = comp_config[i].activate_method;
 
@@ -981,6 +1002,16 @@ static uint8_t get_firmware_parameter(void *mctp_inst, uint8_t *buf, uint16_t le
 		cnt_len += sizeof(struct component_parameter_table) +
 			   comp_table_p->active_comp_ver_str_len;
 		ver_str_p += comp_table_p->active_comp_ver_str_len;
+
+		if (comp_config[i].pending_version_p) {
+			memcpy(ver_str_p, comp_config[i].pending_version_p,
+			       strlen(comp_config[i].pending_version_p));
+			comp_table_p->pending_comp_ver_str_len =
+				strlen(comp_config[i].pending_version_p);
+			cnt_len += comp_table_p->pending_comp_ver_str_len;
+			ver_str_p += comp_table_p->pending_comp_ver_str_len;
+		}
+
 		resp_p->comp_count++;
 	}
 

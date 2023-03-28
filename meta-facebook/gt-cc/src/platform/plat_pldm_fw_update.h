@@ -22,5 +22,6 @@
 #include "pldm_firmware_update.h"
 
 void load_pldmupdate_comp_config(void);
+void clear_pending_version(uint8_t activate_method);
 
 #endif /* _PLAT_FWUPDATE_H_ */
