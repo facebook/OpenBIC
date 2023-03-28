@@ -70,6 +70,12 @@ enum CHECK_POWER_SEQ_NUM_MAPPING {
 	CHECK_POWER_SEQ_08 = OPA_PERST_BIC_RTM_N,
 };
 
+typedef enum {
+    E1S_POWER_SUCCESS = 0,
+    E1S_PERST_SUCCESS = 1,
+} E1S_POWER_ON_STATUS;
+
+
 typedef struct _e1s_power_control_gpio {
 	uint8_t present;
 	uint8_t p12v_efuse_enable;
@@ -104,7 +110,7 @@ bool e1s_power_off_handler(uint8_t initial_stage, e1s_power_control_gpio *e1s_gp
 bool power_on_handler(uint8_t initial_stage);
 bool power_off_handler(uint8_t initial_stage);
 bool notify_cpld_e1s_present(uint8_t index, uint8_t present);
-void abort_cpu_reset_low_thread();
-void cpu_reset_low_thread();
+void abort_cpu_perst_low_thread();
+void cpu_perst_low_thread();
 
 #endif
