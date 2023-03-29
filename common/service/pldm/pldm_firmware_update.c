@@ -448,6 +448,31 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 			goto exit;
 		}
 
+		/* check request data length */
+		uint32_t expect_len = req.length;
+
+		if (req.offset + req.length >
+		    fw_update_cfg.image_size + MIN_FW_UPDATE_BASELINE_TRANS_SIZE) {
+			LOG_WRN("Request length over UA padding limit count 0x%x",
+				MIN_FW_UPDATE_BASELINE_TRANS_SIZE);
+			req.length = fw_update_cfg.image_size - req.offset +
+				     MIN_FW_UPDATE_BASELINE_TRANS_SIZE;
+			expect_len = req.length;
+		}
+
+		if (req.length <= MIN_FW_UPDATE_BASELINE_TRANS_SIZE) {
+			LOG_WRN("Request length smaller than baseline size, modify it from 0x%x to 0x%x",
+				req.length, MIN_FW_UPDATE_BASELINE_TRANS_SIZE);
+			req.length = MIN_FW_UPDATE_BASELINE_TRANS_SIZE;
+		} else if (req.length > fw_update_cfg.max_buff_size) {
+			LOG_WRN("Request length larger than maximum size, modify it from 0x%x to 0x%x",
+				req.length, fw_update_cfg.max_buff_size);
+			req.length = fw_update_cfg.max_buff_size;
+			expect_len = req.length;
+		} else {
+			expect_len = req.length;
+		}
+
 		uint8_t resp_buf[req.length + 1];
 		memset(resp_buf, 0, req.length + 1);
 
@@ -457,16 +482,31 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 					    sizeof(struct pldm_request_firmware_data_req), resp_buf,
 					    ARRAY_SIZE(resp_buf), ext_params);
 
-		/* read_len = request length + completion code */
-		if (read_len != req.length + 1) {
-			LOG_ERR("Request firmware update failed, offset(0x%x), length(0x%x), read length(%d)",
-				req.offset, req.length, read_len);
+		if (read_len == 0) {
+			LOG_ERR("Request data failed at(0x%x, 0x%x), received empty response data",
+				req.offset, req.length);
 			cur_aux_state = STATE_AUX_FAILED;
 			goto exit;
 		}
 
+		if (read_len != (req.length + 1)) {
+			LOG_ERR("Request data failed at(0x%x, 0x%x), received unexpected data length 0x%x)",
+				req.offset, req.length, read_len - 1);
+			cur_aux_state = STATE_AUX_FAILED;
+			goto exit;
+		}
+
+		if (resp_buf[0] != PLDM_SUCCESS) {
+			if (resp_buf[0] != PLDM_FW_UPDATE_CC_DATA_OUT_OF_RANGE) {
+				LOG_ERR("Request data failed at(0x%x, 0x%x), received unexpected cc 0x%x",
+					req.offset, req.length, resp_buf[0]);
+				cur_aux_state = STATE_AUX_FAILED;
+				goto exit;
+			}
+		}
+
 		update_param.data = resp_buf + 1;
-		update_param.data_len = read_len - 1;
+		update_param.data_len = expect_len;
 		update_param.data_ofs = req.offset;
 
 		uint8_t percent = ((update_param.data_ofs + update_param.data_len) * 100) /
