@@ -585,7 +585,7 @@ bool pre_ina233_read(uint8_t sensor_num, void *args)
 		return false;
 	}
 
-	ret = set_mux_channel(*pre_args);
+	ret = set_mux_channel(*pre_args, MUTEX_LOCK_ENABLE);
 	if (ret == false) {
 		LOG_ERR("ina233 switch mux fail");
 		k_mutex_unlock(mutex);
@@ -685,7 +685,7 @@ bool pre_pex89000_read(uint8_t sensor_num, void *args)
 		return false;
 	}
 
-	ret = set_mux_channel(*pre_args);
+	ret = set_mux_channel(*pre_args, MUTEX_LOCK_ENABLE);
 	if (ret == false) {
 		LOG_ERR("pex switch mux fail");
 		k_mutex_unlock(mutex);
@@ -754,14 +754,14 @@ bool pre_accl_mux_switch(uint8_t card_id, uint8_t sensor_num)
 		return false;
 	}
 
-	ret = set_mux_channel(accl_mux);
+	ret = set_mux_channel(accl_mux, MUTEX_LOCK_ENABLE);
 	if (ret == false) {
 		LOG_ERR("ACCL switch mux fail");
 		k_mutex_unlock(mutex);
 		return false;
 	}
 
-	ret = set_mux_channel(channel_mux);
+	ret = set_mux_channel(channel_mux, MUTEX_LOCK_ENABLE);
 	if (ret == false) {
 		LOG_ERR("ACCL switch mux fail");
 		k_mutex_unlock(mutex);

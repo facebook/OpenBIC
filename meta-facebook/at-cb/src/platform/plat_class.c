@@ -296,7 +296,7 @@ void check_asic_card_status()
 			continue;
 		}
 
-		ret = set_mux_channel(i2c_mux);
+		ret = set_mux_channel(i2c_mux, MUTEX_LOCK_ENABLE);
 		if (ret != true) {
 			LOG_ERR("Switch ASIC%d mux fail", index);
 			k_mutex_unlock(mutex);

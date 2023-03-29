@@ -31,6 +31,8 @@
 #include "hal_gpio.h"
 #include "util_worker.h"
 
+bool is_interrupt_ongoing = false;
+
 cxl_work_info cxl_work_item[] = {
 	{ .is_init = false,
 	  .cxl_card_id = CXL_CARD_1,
@@ -104,13 +106,13 @@ void cxl_set_eid_work_handler(struct k_work *work_item)
 	}
 
 	/** Enable mux channel **/
-	ret = set_mux_channel(meb_mux);
+	ret = set_mux_channel(meb_mux, MUTEX_LOCK_ENABLE);
 	if (ret == false) {
 		k_mutex_unlock(meb_mutex);
 		return;
 	}
 
-	ret = set_mux_channel(cxl_mux);
+	ret = set_mux_channel(cxl_mux, MUTEX_LOCK_ENABLE);
 	if (ret == false) {
 		k_mutex_unlock(meb_mutex);
 		return;
@@ -137,7 +139,7 @@ void init_cxl_work()
 	}
 }
 
-int set_cxl_device_reset_pin(uint8_t val)
+int set_cxl_device_reset_pin(uint8_t val, bool is_mutex)
 {
 	int ret = 0;
 	uint8_t retry = 5;
@@ -151,7 +153,11 @@ int set_cxl_device_reset_pin(uint8_t val)
 	msg.tx_len = 1;
 	msg.data[0] = TCA9555_OUTPUT_PORT_REG_0;
 
-	ret = i2c_master_read(&msg, retry);
+	if (is_mutex) {
+		ret = i2c_master_read(&msg, retry);
+	} else {
+		ret = i2c_master_read_without_mutex(&msg, retry);
+	}
 	if (ret != 0) {
 		LOG_ERR("Unable to read ioexp bus: %u addr: 0x%02x", msg.bus, msg.target_addr);
 		return -1;
@@ -176,7 +182,11 @@ int set_cxl_device_reset_pin(uint8_t val)
 	msg.data[0] = TCA9555_OUTPUT_PORT_REG_0;
 	msg.data[1] = set_val;
 
-	ret = i2c_master_write(&msg, retry);
+	if (is_mutex) {
+		ret = i2c_master_write(&msg, retry);
+	} else {
+		ret = i2c_master_write_without_mutex(&msg, retry);
+	}
 	if (ret != 0) {
 		LOG_ERR("Unable to write ioexp to val: 0x%x, bus: %u, addr: 0x%02x", set_val,
 			msg.bus, msg.target_addr);
@@ -186,7 +196,7 @@ int set_cxl_device_reset_pin(uint8_t val)
 	return 0;
 }
 
-int check_cxl_power_status()
+int check_cxl_power_status(bool is_mutex)
 {
 	int ret = 0;
 	uint8_t retry = 5;
@@ -201,7 +211,11 @@ int check_cxl_power_status()
 	msg.tx_len = 1;
 	msg.data[0] = TCA9555_INPUT_PORT_REG_0;
 
-	ret = i2c_master_read(&msg, retry);
+	if (is_mutex) {
+		ret = i2c_master_read(&msg, retry);
+	} else {
+		ret = i2c_master_read_without_mutex(&msg, retry);
+	}
 	if (ret != 0) {
 		LOG_ERR("Unable to read ioexp bus: %u addr: 0x%02x", msg.bus, msg.target_addr);
 		return -1;
@@ -217,7 +231,11 @@ int check_cxl_power_status()
 	msg.tx_len = 1;
 	msg.data[0] = TCA9555_INPUT_PORT_REG_1;
 
-	ret = i2c_master_read(&msg, retry);
+	if (is_mutex) {
+		ret = i2c_master_read(&msg, retry);
+	} else {
+		ret = i2c_master_read_without_mutex(&msg, retry);
+	}
 	if (ret != 0) {
 		LOG_ERR("Unable to read ioexp bus: %u addr: 0x%02x", msg.bus, msg.target_addr);
 		return -1;
@@ -250,7 +268,7 @@ int cxl_pe_reset_control(uint8_t cxl_card_id)
 	msg.tx_len = 1;
 	msg.data[0] = TCA9555_INPUT_PORT_REG_0;
 
-	ret = i2c_master_read(&msg, retry);
+	ret = i2c_master_read_without_mutex(&msg, retry);
 	if (ret != 0) {
 		LOG_ERR("Unable to read ioexp bus: %u addr: 0x%02x", msg.bus, msg.target_addr);
 		return -1;
@@ -266,7 +284,7 @@ int cxl_pe_reset_control(uint8_t cxl_card_id)
 	msg.tx_len = 1;
 	msg.data[0] = TCA9555_INPUT_PORT_REG_1;
 
-	ret = i2c_master_read(&msg, retry);
+	ret = i2c_master_read_without_mutex(&msg, retry);
 	if (ret != 0) {
 		LOG_ERR("Unable to read ioexp bus: %u addr: 0x%02x", msg.bus, msg.target_addr);
 		return -1;
@@ -280,7 +298,7 @@ int cxl_pe_reset_control(uint8_t cxl_card_id)
 	msg.tx_len = 1;
 	msg.data[0] = TCA9555_OUTPUT_PORT_REG_0;
 
-	ret = i2c_master_read(&msg, retry);
+	ret = i2c_master_read_without_mutex(&msg, retry);
 	if (ret != 0) {
 		LOG_ERR("Unable to read ioexp bus: %u addr: 0x%02x", msg.bus, msg.target_addr);
 		return -1;
@@ -308,7 +326,7 @@ int cxl_pe_reset_control(uint8_t cxl_card_id)
 	LOG_INF("[%s] cxl: 0x%x, mb_status: 0x%x, output_status: 0x%x, write: 0x%x", __func__,
 		cxl_card_id, mb_reset_status, u15_output_status, msg.data[1]);
 
-	ret = i2c_master_write(&msg, retry);
+	ret = i2c_master_write_without_mutex(&msg, retry);
 	if (ret != 0) {
 		LOG_ERR("Unable to write ioexp bus: %u addr: 0x%02x", msg.bus, msg.target_addr);
 		return -1;
@@ -319,21 +337,21 @@ int cxl_pe_reset_control(uint8_t cxl_card_id)
 	return 0;
 }
 
-void check_ioexp_status(uint8_t cxl_card_id)
+bool check_ioexp_status(uint8_t cxl_card_id)
 {
 	int ret = 0;
 
 	/** Check CXL controller power good **/
-	ret = check_cxl_power_status();
+	ret = check_cxl_power_status(MUTEX_LOCK_DISENABLE);
 	if (ret < 0) {
 		LOG_ERR("Check CXL controller power fail");
-		return;
+		return false;
 	}
 
 	if (ret == CXL_ALL_POWER_GOOD) {
 		if (cxl_work_item[cxl_card_id].is_device_reset != true) {
 			LOG_INF("[%s] cxl: 0x%x, do device reset", __func__, cxl_card_id);
-			ret = set_cxl_device_reset_pin(HIGH_ACTIVE);
+			ret = set_cxl_device_reset_pin(HIGH_ACTIVE, MUTEX_LOCK_DISENABLE);
 			if (ret == 0) {
 				cxl_work_item[cxl_card_id].is_device_reset = true;
 			} else {
@@ -341,14 +359,17 @@ void check_ioexp_status(uint8_t cxl_card_id)
 			}
 		}
 	} else {
-		set_cxl_device_reset_pin(HIGH_INACTIVE);
+		set_cxl_device_reset_pin(HIGH_INACTIVE, MUTEX_LOCK_DISENABLE);
 		cxl_work_item[cxl_card_id].is_device_reset = false;
 	}
 
 	ret = cxl_pe_reset_control(cxl_card_id);
 	if (ret != 0) {
 		LOG_ERR("CXL pr-reset control fail");
+		return false;
 	}
+
+	return true;
 }
 
 void cxl_ioexp_alert_handler(struct k_work *work_item)
@@ -358,6 +379,8 @@ void cxl_ioexp_alert_handler(struct k_work *work_item)
 	cxl_work_info *cxl_info = CONTAINER_OF(dwork, cxl_work_info, device_reset_work);
 
 	LOG_INF("[%s] cxl: 0x%x", __func__, cxl_info->cxl_card_id);
+
+	is_interrupt_ongoing = true;
 
 	/** MEB mux for cxl channels **/
 	mux_config meb_mux = { 0 };
@@ -371,35 +394,41 @@ void cxl_ioexp_alert_handler(struct k_work *work_item)
 	cxl_mux.target_addr = CXL_FRU_MUX1_ADDR;
 	cxl_mux.channel = CXL_IOEXP_MUX_CHANNEL;
 
-	struct k_mutex *meb_mutex = get_i2c_mux_mutex(meb_mux.bus);
-
-	/** Mutex lock bus **/
-	if (k_mutex_lock(meb_mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS))) {
-		LOG_ERR("mutex locked failed bus%u, id: 0x%x", meb_mux.bus, cxl_info->cxl_card_id);
-		return;
-	}
-
 	/** Enable mux channel **/
-	ret = set_mux_channel(meb_mux);
+	ret = set_mux_channel(meb_mux, MUTEX_LOCK_DISENABLE);
 	if (ret == false) {
-		k_mutex_unlock(meb_mutex);
-		return;
+		LOG_ERR("switch cxl %d meb mux failed", cxl_info->cxl_card_id);
+		goto exit;
 	}
 
-	ret = set_mux_channel(cxl_mux);
+	ret = set_mux_channel(cxl_mux, MUTEX_LOCK_DISENABLE);
 	if (ret == false) {
-		k_mutex_unlock(meb_mutex);
-		return;
+		LOG_ERR("switch cxl %d cxl mux failed", cxl_info->cxl_card_id);
+		goto exit;
 	}
 
 	/** Check io expander **/
-	check_ioexp_status(cxl_info->cxl_card_id);
+	ret = check_ioexp_status(cxl_info->cxl_card_id);
+	if (ret == false) {
+		LOG_ERR("Check cxl %d io expander failed", cxl_info->cxl_card_id);
+		goto exit;
+	}
 
 	/** Initial ioexp U14 **/
-	cxl_single_ioexp_init(IOEXP_U14);
+	ret = cxl_single_ioexp_alert_reset(IOEXP_U14, MUTEX_LOCK_DISENABLE);
+	if (ret == false) {
+		LOG_ERR("Check cxl %d io expander failed", cxl_info->cxl_card_id);
+		goto exit;
+	}
 
-	/** mutex unlock bus **/
-	k_mutex_unlock(meb_mutex);
+exit:
+	meb_mux.channel = 0;
+	ret = set_mux_channel(meb_mux, MUTEX_LOCK_DISENABLE);
+	if (ret == false) {
+		LOG_ERR("switch cxl %d meb mux failed", cxl_info->cxl_card_id);
+	}
+	is_interrupt_ongoing = false;
+	return;
 }
 
 void ISR_NORMAL_PWRGD()

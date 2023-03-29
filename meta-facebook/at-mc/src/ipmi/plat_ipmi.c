@@ -31,6 +31,7 @@
 #include "plat_class.h"
 #include "plat_hook.h"
 #include "plat_dev.h"
+#include "plat_isr.h"
 #include "cci.h"
 #include "pm8702.h"
 #include "power_status.h"
@@ -150,7 +151,7 @@ int pal_write_read_cxl_fru(uint8_t optional, uint8_t fru_id, EEPROM_ENTRY *fru_e
 		return -1;
 	}
 
-	ret = set_mux_channel(cxl_mux);
+	ret = set_mux_channel(cxl_mux, MUTEX_LOCK_ENABLE);
 	if (ret == false) {
 		LOG_ERR("Switch mux channel fail");
 		k_mutex_unlock(mutex);
@@ -166,7 +167,7 @@ int pal_write_read_cxl_fru(uint8_t optional, uint8_t fru_id, EEPROM_ENTRY *fru_e
 	/* Disable mux channel */
 	cxl_mux.channel = 0;
 
-	ret = set_mux_channel(cxl_mux);
+	ret = set_mux_channel(cxl_mux, MUTEX_LOCK_ENABLE);
 	if (ret == false) {
 		LOG_ERR("Disable mux channel fail");
 	}
@@ -230,34 +231,34 @@ int pal_get_pcie_card_sensor_reading(uint8_t read_type, uint8_t sensor_num, uint
 
 	if (cfg->pre_sensor_read_hook) {
 		if (cfg->pre_sensor_read_hook(sensor_num, cfg->pre_sensor_read_args) == false) {
-			LOG_ERR("Pre sensor read function, sensor number: 0x%x, card id: 0x%x",
-				sensor_num, pcie_card_id);
-			ret = post_switch_mux_func(sensor_num, pcie_card_id);
-			if (ret != true) {
-				LOG_ERR("Post switch mux fail, sensor num: 0x%x, card id: 0x%x",
-					sensor_num, pcie_card_id);
-			}
-			return -1;
+			LOG_ERR("Pre sensor read function, sensor number: 0x%x", sensor_num);
+			goto exit;
 		}
 	}
 
 	ret = pal_sensor_drive_read(pcie_card_id, cfg, reading, &sensor_status);
 	if (ret != true) {
-		LOG_ERR("sensor: 0x%x read fail, card id: 0x%x", sensor_num, pcie_card_id);
+		LOG_ERR("sensor: 0x%x read fail, cxl id: 0x%x", sensor_num, parameter);
+		goto exit;
 	}
 
 	if (cfg->post_sensor_read_hook) {
 		if (cfg->post_sensor_read_hook(sensor_num, cfg->post_sensor_read_args, reading) ==
 		    false) {
-			LOG_ERR("Post sensor read function, sensor number: 0x%x, card id: 0x%x",
-				sensor_num, pcie_card_id);
+			LOG_ERR("Post sensor read function, sensor number: 0x%x", sensor_num);
+			goto exit;
 		}
 	}
 
+exit:
 	ret = post_switch_mux_func(sensor_num, pcie_card_id);
 	if (ret != true) {
 		LOG_ERR("Post switch mux fail, sensor num: 0x%x, card id: 0x%x", sensor_num,
 			pcie_card_id);
+	}
+
+	if (is_interrupt_ongoing) {
+		sensor_status = SENSOR_NOT_ACCESSIBLE;
 	}
 
 	switch (sensor_status) {
