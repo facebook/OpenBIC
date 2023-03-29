@@ -45,10 +45,8 @@ bool pre_nvme_read(uint8_t sensor_num, void *args);
 bool post_nvme_read(uint8_t sensor_num, void *args, int *reading);
 bool pre_sq52205_read(uint8_t sensor_num, void *args);
 bool post_sq52205_read(uint8_t sensor_num, void *args, int *reading);
-bool pre_e1s_switch_mux(uint8_t sensor_num, uint8_t card_id);
-bool post_e1s_switch_mux(uint8_t sensor_num, uint8_t card_id);
-bool pre_cxl_switch_mux(uint8_t sensor_num, uint8_t card_id);
-bool post_cxl_switch_mux(uint8_t sensor_num, uint8_t card_id);
+bool pre_cxl_switch_mux(uint8_t sensor_num, uint8_t pcie_card_id);
+bool post_cxl_switch_mux(uint8_t sensor_num, uint8_t pcie_card_id);
 bool pre_cxl_vr_read(uint8_t sensor_num, void *args);
 bool post_cxl_xdpe12284c_read(uint8_t sensor_num, void *args, int *reading);
 

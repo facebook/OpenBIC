@@ -534,14 +534,14 @@ bool is_cxl_access(uint8_t pcie_card_id)
 {
 	int ret = 0;
 	bool is_set_eid = false;
-	uint8_t cxl_card_id = 0;
+	uint8_t cxl_id = 0;
 
-	ret = pcie_card_id_to_cxl_e1s_id(pcie_card_id, &cxl_card_id);
+	ret = pcie_card_id_to_cxl_id(pcie_card_id, &cxl_id);
 	if (ret < 0) {
 		return false;
 	}
 
-	is_set_eid = get_cxl_eid_flag(cxl_card_id);
+	is_set_eid = get_cxl_eid_flag(cxl_id);
 
 	return is_set_eid;
 }
@@ -585,118 +585,36 @@ bool get_cxl_sensor_config_index(uint8_t sensor_num, uint8_t *index)
 	return false;
 }
 
-bool get_pcie_card_mux_config(uint8_t dev_type, uint8_t card_id, uint8_t sensor_num,
+bool get_pcie_card_mux_config(uint8_t card_id, uint8_t sensor_num,
 			      mux_config *card_mux_cfg, mux_config *cxl_mux_cfg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(card_mux_cfg, false);
-	if (dev_type == PCIE_CARD_CXL) {
-		CHECK_NULL_ARG_WITH_RETURN(cxl_mux_cfg, false);
-	}
+	CHECK_NULL_ARG_WITH_RETURN(cxl_mux_cfg, false);
 
 	int ret = -1;
-	uint8_t dev_id = 0;
+	uint8_t cxl_id = 0;
 	uint8_t sensor_config_index = 0;
 	mux_config *tmp_mux_config = { 0 };
 
-	switch (dev_type) {
-	case PCIE_CARD_E1S:
-		switch (card_id) {
-		case CARD_1_INDEX:
-		case CARD_2_INDEX:
-		case CARD_3_INDEX:
-		case CARD_4_INDEX:
-		case CARD_5_INDEX:
-		case CARD_6_INDEX:
-		case CARD_7_INDEX:
-		case CARD_8_INDEX:
-		case CARD_9_INDEX:
-		case CARD_10_INDEX:
-		case CARD_11_INDEX:
-		case CARD_12_INDEX:
-			ret = pcie_card_id_to_cxl_e1s_id(card_id, &dev_id);
-			if (ret != 0) {
-				return false;
-			}
-			switch (sensor_num) {
-			case SENSOR_NUM_TEMP_JCN_E1S_0:
-				*card_mux_cfg = bus_8_pca9548_configs[dev_id];
-				card_mux_cfg->bus =
-					plat_e1s_1_12_sensor_config[E1S_0_SENSOR_CFG_INDEX].port;
-				break;
-			case SENSOR_NUM_TEMP_JCN_E1S_1:
-				*card_mux_cfg = bus_2_pca9548_configs[dev_id];
-				card_mux_cfg->bus =
-					plat_e1s_1_12_sensor_config[E1S_1_SENSOR_CFG_INDEX].port;
-				break;
-			default:
-				LOG_ERR("Invalid e1.s sensor number: 0x%x", sensor_num);
-				return false;
-			}
-			break;
-		case CARD_13_INDEX:
-			switch (sensor_num) {
-			case SENSOR_NUM_TEMP_JCN_E1S_0:
-				*card_mux_cfg = bus_4_pca9548_configs[CARD_13_E1S_0_MUX_CFG_INDEX];
-				card_mux_cfg->bus =
-					plat_e1s_13_14_sensor_config[E1S_0_SENSOR_CFG_INDEX].port;
-				break;
-			case SENSOR_NUM_TEMP_JCN_E1S_1:
-				*card_mux_cfg = bus_4_pca9548_configs[CARD_14_E1S_0_MUX_CFG_INDEX];
-				card_mux_cfg->bus =
-					plat_e1s_13_14_sensor_config[E1S_1_SENSOR_CFG_INDEX].port;
-				break;
-			default:
-				LOG_ERR("Invalid e1.s sensor number: 0x%x", sensor_num);
-				return false;
-			}
-			break;
-		case CARD_14_INDEX:
-			switch (sensor_num) {
-			case SENSOR_NUM_TEMP_JCN_E1S_0:
-				*card_mux_cfg = bus_4_pca9548_configs[CARD_13_E1S_1_MUX_CFG_INDEX];
-				card_mux_cfg->bus =
-					plat_e1s_13_14_sensor_config[E1S_0_SENSOR_CFG_INDEX].port;
-				break;
-			case SENSOR_NUM_TEMP_JCN_E1S_1:
-				*card_mux_cfg = bus_4_pca9548_configs[CARD_14_E1S_1_MUX_CFG_INDEX];
-				card_mux_cfg->bus =
-					plat_e1s_13_14_sensor_config[E1S_0_SENSOR_CFG_INDEX].port;
-				break;
-			default:
-				LOG_ERR("Invalid e1.s sensor number: 0x%x", sensor_num);
-				return false;
-			}
-			break;
-		default:
-			LOG_ERR("Invalid card id: 0x%x", card_id);
-			return false;
-		}
-		break;
-	case PCIE_CARD_CXL:
-		ret = pcie_card_id_to_cxl_e1s_id(card_id, &dev_id);
-		if (ret != 0) {
-			return false;
-		}
-
-		if (get_cxl_sensor_config_index(sensor_num, &sensor_config_index) != true) {
-			LOG_ERR("Invalid sensor number: 0x%x to get sensor config", sensor_num);
-			return false;
-		}
-
-		*card_mux_cfg = bus_2_pca9548_configs[dev_id];
-		card_mux_cfg->bus = MEB_CXL_BUS;
-
-		tmp_mux_config =
-			(mux_config *)plat_cxl_sensor_config[sensor_config_index].priv_data;
-		CHECK_NULL_ARG_WITH_RETURN(tmp_mux_config, false);
-
-		*cxl_mux_cfg = *tmp_mux_config;
-		cxl_mux_cfg->bus = MEB_CXL_BUS;
-		break;
-	default:
-		LOG_ERR("Invalid device type: %d", dev_type);
+	ret = pcie_card_id_to_cxl_id(card_id, &cxl_id);
+	if (ret != 0) {
 		return false;
 	}
+
+	if (get_cxl_sensor_config_index(sensor_num, &sensor_config_index) != true) {
+		LOG_ERR("Invalid sensor number: 0x%x to get sensor config", sensor_num);
+		return false;
+	}
+
+	*card_mux_cfg = bus_2_pca9548_configs[cxl_id];
+	card_mux_cfg->bus = MEB_CXL_BUS;
+
+	tmp_mux_config =
+		(mux_config *)plat_cxl_sensor_config[sensor_config_index].priv_data;
+	CHECK_NULL_ARG_WITH_RETURN(tmp_mux_config, false);
+
+	*cxl_mux_cfg = *tmp_mux_config;
+	cxl_mux_cfg->bus = MEB_CXL_BUS;
 
 	return true;
 }
@@ -713,20 +631,6 @@ void pal_init_drive(sensor_cfg *cfg_table, uint8_t cfg_size, uint8_t device_type
 	bool (*post_switch_mux_func)(uint8_t, uint8_t) = NULL;
 
 	switch (device_type) {
-	case E1S_0_CARD:
-		skip_init_sensor_num = SENSOR_NUM_TEMP_JCN_E1S_0;
-		pre_switch_mux_func = pre_e1s_switch_mux;
-		post_switch_mux_func = post_e1s_switch_mux;
-		break;
-	case E1S_1_CARD:
-		skip_init_sensor_num = SENSOR_NUM_TEMP_JCN_E1S_1;
-		pre_switch_mux_func = pre_e1s_switch_mux;
-		post_switch_mux_func = post_e1s_switch_mux;
-		break;
-	case E1S_0_1_CARD:
-		pre_switch_mux_func = pre_e1s_switch_mux;
-		post_switch_mux_func = post_e1s_switch_mux;
-		break;
 	case CXL_CARD:
 		pre_switch_mux_func = pre_cxl_switch_mux;
 		post_switch_mux_func = post_cxl_switch_mux;
@@ -775,7 +679,7 @@ void *get_pcie_init_sensor_config(uint8_t card_id, uint8_t sensor_number)
 	int ret = -1;
 	uint8_t cxl_id = 0;
 
-	ret = pcie_card_id_to_cxl_e1s_id(card_id, &cxl_id);
+	ret = pcie_card_id_to_cxl_id(card_id, &cxl_id);
 	if (ret != 0) {
 		LOG_ERR("Invalid card id: 0x%x", card_id);
 		return NULL;
