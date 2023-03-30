@@ -473,6 +473,11 @@ typedef struct _apml_mailbox_init_arg_ {
 	uint8_t retry;
 } apml_mailbox_init_arg;
 
+typedef struct _pm8702_dimm_init_arg {
+	bool is_init;
+	uint8_t dimm_id;
+} pm8702_dimm_init_arg;
+
 typedef struct _ddr5_init_power_arg_ {
 	uint8_t HID_code;
 	uint8_t port_number;

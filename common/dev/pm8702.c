@@ -100,6 +100,53 @@ bool pm8702_cmd_handler(void *mctp_inst, mctp_ext_params ext_params, uint16_t op
 	return false;
 }
 
+bool pm8702_read_dimm_temp_from_pioneer(void *mctp_p, mctp_ext_params ext_params, int dimm_id,
+					int16_t *temp_int, int16_t *temp_dec)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_p, false);
+	CHECK_NULL_ARG_WITH_RETURN(temp_int, false);
+	CHECK_NULL_ARG_WITH_RETURN(temp_dec, false);
+
+	bool ret = false;
+
+	mctp_cci_msg msg = { 0 };
+	memcpy(&msg.ext_params, &ext_params, sizeof(mctp_ext_params));
+
+	msg.hdr.op = PM8702_READ_DIMM_TEMP;
+	msg.hdr.pl_len = READ_DIMM_TEMP_REQ_PL_LEN;
+
+	uint8_t rbuf[DIMM_TEMP_RESP_PL_LEN] = { 0 };
+
+	if (!mctp_cci_read(mctp_p, &msg, rbuf, DIMM_TEMP_RESP_PL_LEN)) {
+		LOG_ERR("pm8702_get_dimm_temp fail");
+		SAFE_FREE(msg.pl_data);
+		return ret;
+	}
+
+	LOG_HEXDUMP_DBG(rbuf, DIMM_TEMP_RESP_PL_LEN, "pm8702_get_ddr_temp");
+	dimm_info_header *dimm_info_header_p = (dimm_info_header *)rbuf;
+	int dimm_num = dimm_info_header_p->dimm_num;
+	dimm_slot_info *dimm_slot_info_p = (dimm_slot_info *)(rbuf + sizeof(dimm_info_header));
+
+	for (int i = 0; i < dimm_num; i++) {
+		dimm_slot_info_p = (dimm_slot_info *)(rbuf + sizeof(dimm_info_header) +
+						      (sizeof(dimm_slot_info) * i));
+		if (dimm_id == dimm_slot_info_p->dimm_id) {
+			LOG_DBG("dimm #%d temp: %d.%d\n", dimm_id, *temp_int, *temp_dec);
+			if (dimm_slot_info_p->temp_int == DIMM_ERROR_VALUE) {
+				LOG_ERR("Failed to get the dimm data.");
+				ret = false;
+			} else {
+				*temp_int = dimm_slot_info_p->temp_int;
+				*temp_dec = dimm_slot_info_p->temp_dec * 10;
+				ret = true;
+			}
+		}
+	}
+	SAFE_FREE(msg.pl_data);
+	return ret;
+}
+
 bool pm8702_get_dimm_temp(void *mctp_p, mctp_ext_params ext_params, uint16_t address,
 			  int16_t *interger, int16_t *fraction)
 {
@@ -162,6 +209,8 @@ uint8_t pm8702_read(uint8_t sensor_num, int *reading)
 	uint8_t port = sensor_config[sensor_config_index_map[sensor_num]].port;
 	uint8_t address = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
 	uint8_t pm8702_access = sensor_config[sensor_config_index_map[sensor_num]].offset;
+	pm8702_dimm_init_arg *init_arg =
+		(pm8702_dimm_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
 
 	mctp *mctp_inst = NULL;
 	mctp_ext_params ext_params = { 0 };
@@ -183,6 +232,12 @@ uint8_t pm8702_read(uint8_t sensor_num, int *reading)
 	case dimm_temp:
 		if (pm8702_get_dimm_temp(mctp_inst, ext_params, address, &sval->integer,
 					 &sval->fraction) == false) {
+			return SENSOR_NOT_ACCESSIBLE;
+		}
+		break;
+	case dimm_temp_from_pioneer:
+		if (pm8702_read_dimm_temp_from_pioneer(mctp_inst, ext_params, init_arg->dimm_id,
+						       &sval->integer, &sval->fraction) == false) {
 			return SENSOR_NOT_ACCESSIBLE;
 		}
 		break;
