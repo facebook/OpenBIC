@@ -455,8 +455,7 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 		    fw_update_cfg.image_size + MIN_FW_UPDATE_BASELINE_TRANS_SIZE) {
 			LOG_WRN("Request length over UA padding limit count 0x%x",
 				MIN_FW_UPDATE_BASELINE_TRANS_SIZE);
-			req.length = fw_update_cfg.image_size - req.offset +
-				     MIN_FW_UPDATE_BASELINE_TRANS_SIZE;
+			req.length = fw_update_cfg.image_size - req.offset;
 			expect_len = req.length;
 		}
 
