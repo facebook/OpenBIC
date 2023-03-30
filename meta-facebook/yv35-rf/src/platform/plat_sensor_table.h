@@ -42,10 +42,10 @@
 #define CHIP_TEMP_OFFSET 0x00
 #define DIMM_TEMP_OFFSET 0x01
 
-#define DIMMA_TEMP_ADDR 0x18
-#define DIMMB_TEMP_ADDR 0x19
-#define DIMMC_TEMP_ADDR 0x1A
-#define DIMMD_TEMP_ADDR 0x1B
+#define DIMMA_SPD_ADDR 0x50
+#define DIMMB_SPD_ADDR 0x51
+#define DIMMC_SPD_ADDR 0x52
+#define DIMMD_SPD_ADDR 0x53
 
 /*  threshold sensor number, 1 based  */
 #define SENSOR_NUM_TEMP_TMP75 0x50

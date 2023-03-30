@@ -25,6 +25,7 @@
 #include "util_sys.h"
 #include "cci.h"
 #include "plat_mctp.h"
+#include "pm8702.h"
 #include <logging/log.h>
 
 LOG_MODULE_REGISTER(plat_sensor_table);
@@ -40,24 +41,28 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_TEMP_TMP75, sensor_dev_tmp75, I2C_BUS3, TMP75_MB_ADDR, TMP75_TEMP_OFFSET,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_TEMP_CXL, sensor_dev_pm8702, CXL_EID, NONE, CHIP_TEMP_OFFSET, dc_access, 0, 0,
+	{ SENSOR_NUM_TEMP_CXL, sensor_dev_pm8702, CXL_EID, NONE, chip_temp, dc_access, 0, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_pm8702_read, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_TEMP_DIMMA, sensor_dev_pm8702, CXL_EID, DIMMA_TEMP_ADDR, DIMM_TEMP_OFFSET,
+	  pre_pm8702_read, NULL, post_pm8702_read, NULL, NULL },
+	{ SENSOR_NUM_TEMP_DIMMA, sensor_dev_pm8702, CXL_EID, DIMMA_SPD_ADDR, dimm_temp_from_pioneer,
 	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, pre_pm8702_read, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_TEMP_DIMMB, sensor_dev_pm8702, CXL_EID, DIMMB_TEMP_ADDR, DIMM_TEMP_OFFSET,
+	  SENSOR_INIT_STATUS, pre_pm8702_read, NULL, post_pm8702_read, NULL,
+	  &pm8702_dimm_init_args[0] },
+	{ SENSOR_NUM_TEMP_DIMMB, sensor_dev_pm8702, CXL_EID, DIMMB_SPD_ADDR, dimm_temp_from_pioneer,
 	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, pre_pm8702_read, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_TEMP_DIMMC, sensor_dev_pm8702, CXL_EID, DIMMC_TEMP_ADDR, DIMM_TEMP_OFFSET,
+	  SENSOR_INIT_STATUS, pre_pm8702_read, NULL, post_pm8702_read, NULL,
+	  &pm8702_dimm_init_args[1] },
+	{ SENSOR_NUM_TEMP_DIMMC, sensor_dev_pm8702, CXL_EID, DIMMC_SPD_ADDR, dimm_temp_from_pioneer,
 	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, pre_pm8702_read, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_TEMP_DIMMD, sensor_dev_pm8702, CXL_EID, DIMMD_TEMP_ADDR, DIMM_TEMP_OFFSET,
+	  SENSOR_INIT_STATUS, pre_pm8702_read, NULL, post_pm8702_read, NULL,
+	  &pm8702_dimm_init_args[2] },
+	{ SENSOR_NUM_TEMP_DIMMD, sensor_dev_pm8702, CXL_EID, DIMMD_SPD_ADDR, dimm_temp_from_pioneer,
 	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, pre_pm8702_read, NULL, NULL, NULL, NULL },
+	  SENSOR_INIT_STATUS, pre_pm8702_read, NULL, post_pm8702_read, NULL,
+	  &pm8702_dimm_init_args[3] },
 	{ SENSOR_NUM_TEMP_CXL_CNTR, sensor_dev_tmp75, I2C_BUS2, TMP75_ASIC_ADDR, TMP75_TEMP_OFFSET,
 	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	  SENSOR_INIT_STATUS, pre_pm8702_read, NULL, post_pm8702_read, NULL, NULL },
 
 	// ADC
 	{ SENSOR_NUM_VOL_STBY5V, sensor_dev_ast_adc, ADC_PORT14, NONE, NONE, stby_access, 711, 200,
