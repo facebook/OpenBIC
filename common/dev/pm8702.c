@@ -46,8 +46,7 @@ pm8702_command_info pm8702_cmd_table[] = {
 };
 
 bool pm8702_cmd_handler(void *mctp_inst, mctp_ext_params ext_params, uint16_t opcode,
-			uint8_t *data_buf, uint8_t data_len, uint8_t *response,
-			uint8_t *response_len)
+			uint8_t *data_buf, int data_len, uint8_t *response, uint8_t *response_len)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, false);
 	CHECK_NULL_ARG_WITH_RETURN(response, false);
@@ -65,17 +64,19 @@ bool pm8702_cmd_handler(void *mctp_inst, mctp_ext_params ext_params, uint16_t op
 	for (index = 0; index < ARRAY_SIZE(pm8702_cmd_table); ++index) {
 		if (opcode == pm8702_cmd_table[index].cmd_opcode) {
 			msg.hdr.op = opcode;
-			msg.hdr.pl_len = pm8702_cmd_table[index].payload_len;
+			if (data_len > pm8702_cmd_table[index].payload_len) {
+				LOG_ERR("Transfer data len: 0x%x is over payload len: 0x%x",
+					data_len, msg.hdr.pl_len);
+				msg.hdr.pl_len = pm8702_cmd_table[index].payload_len;
+			} else {
+				msg.hdr.pl_len = data_len;
+			}
+
 			int resp_len = pm8702_cmd_table[index].response_len;
 			uint8_t resp_buf[resp_len];
 			memset(resp_buf, 0, resp_len);
 
 			if (msg.hdr.pl_len != 0) {
-				if (data_len > msg.hdr.pl_len) {
-					LOG_ERR("Transfer data len: 0x%x is over payload len: 0x%x",
-						data_len, msg.hdr.pl_len);
-				}
-
 				msg.pl_data = (uint8_t *)malloc(sizeof(uint8_t) * msg.hdr.pl_len);
 				CHECK_NULL_ARG_WITH_RETURN(msg.pl_data, false);
 
