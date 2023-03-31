@@ -23,7 +23,6 @@ void init_power_off_thread();
 void abort_power_thread();
 void check_power_abnormal(uint8_t power_good_gpio_num, uint8_t control_power_gpio_num);
 void ISR_MB_DC_STATE();
-void ISR_DC_STATE();
 void ISR_MB_RST();
 void ISR_P0V8_ASICA_POWER_GOOD_LOST();
 void ISR_P0V8_ASICD_POWER_GOOD_LOST();

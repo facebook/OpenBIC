@@ -27,6 +27,9 @@
 #define CHKPWR_DELAY_MSEC 100
 #define DEV_RESET_DELAY_USEC 100
 
+#define CXL_POWER_OFF 0
+#define CXL_POWER_ON 1
+
 enum CONTROL_POWER_MODE {
 	ENABLE_POWER_MODE = 0x00,
 	DISABLE_POWER_MODE,
@@ -76,13 +79,9 @@ enum CHECK_POWER_SEQ_NUM_MAPPING {
 };
 
 void set_MB_DC_status(uint8_t gpio_num);
-void set_power_on_seq(uint8_t seq_num);
-void set_power_off_seq(uint8_t seq_num);
 void control_power_on_sequence();
 void control_power_off_sequence();
 void control_power_stage(uint8_t control_mode, uint8_t control_seq);
-int check_power_stage(uint8_t check_mode, uint8_t check_seq);
-bool power_on_handler(uint8_t initial_stage);
-bool power_off_handler(uint8_t initial_stage);
+int check_power_stage(uint8_t check_mode, uint8_t check_seq, uint8_t stage);
 
 #endif

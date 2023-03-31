@@ -23,6 +23,7 @@
 #include "cci.h"
 #include "plat_mctp.h"
 #include "plat_i2c_target.h"
+#include "util_worker.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -43,13 +44,14 @@ void pal_pre_init()
 				1);
 	}
 	plat_mctp_init();
+	/* Initialize platform work queue for handle CXL power on/off sequence */
+	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY);
 }
 
 void pal_set_sys_status()
 {
 	set_MB_DC_status(FM_POWER_EN);
 	set_DC_status(PWRGD_CARD_PWROK);
-	control_power_sequence();
 	set_DC_on_delayed_status();
 	set_DC_off_delayed_status();
 }
