@@ -52,6 +52,7 @@ void control_power_on_sequence()
 		gpio_set(PWRGD_CARD_PWROK, POWER_ON);
 		k_usleep(100);
 		control_power_stage(ENABLE_POWER_MODE, ASIC_DEV_RST_N);
+		k_work_schedule(&record_cxl_version_work, K_SECONDS(10));
 		set_DC_status(PWRGD_CARD_PWROK);
 		gpio_set(LED_CXL_POWER, GPIO_HIGH);
 		k_work_schedule(&set_DC_on_5s_work, K_SECONDS(DC_ON_5_SECOND));
@@ -74,6 +75,7 @@ void control_power_off_sequence()
 		LOG_ERR("Cancel set dc off delay work fail");
 	}
 	set_DC_on_delayed_status();
+	k_work_cancel_delayable(&record_cxl_version_work);
 	gpio_set(ASIC_DEV_RST_N, POWER_OFF);
 
 	// Disable i2c synchronized during error recovery/ASIC i2c pin
