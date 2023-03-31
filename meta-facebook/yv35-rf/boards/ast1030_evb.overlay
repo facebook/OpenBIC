@@ -134,3 +134,7 @@
   aspeed,persist-maps = <0x00000800>;
 };
 
+&sram0 {
+    reg = <0 DT_SIZE_K(512)>, <0x80000 DT_SIZE_K(256)>;
+};
+
