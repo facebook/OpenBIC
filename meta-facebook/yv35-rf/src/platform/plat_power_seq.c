@@ -25,10 +25,14 @@
 #include "plat_sensor_table.h"
 #include "plat_power_seq.h"
 #include <logging/log.h>
+#include "power_status.h"
 
 LOG_MODULE_REGISTER(power_sequence);
-static uint8_t power_on_seq = DEFAULT_POWER_ON_SEQ;
-static uint8_t power_off_seq = DEFAULT_POWER_OFF_SEQ;
+
+#define DC_ON_5_SECOND 5
+K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_delayed_status);
+static bool power_on_handler(uint8_t);
+static bool power_off_handler(uint8_t);
 
 void set_MB_DC_status(uint8_t gpio_num)
 {
@@ -37,18 +41,10 @@ void set_MB_DC_status(uint8_t gpio_num)
 	LOG_INF("gpio number(%d) status(%d)", gpio_num, is_MB_DC_ON);
 }
 
-void set_power_on_seq(uint8_t seq_num)
-{
-	power_on_seq = seq_num;
-}
-
-void set_power_off_seq(uint8_t seq_num)
-{
-	power_off_seq = seq_num;
-}
-
 void control_power_on_sequence()
 {
+	if (get_DC_status())
+		return;
 	bool is_power_on = false;
 	is_power_on = power_on_handler(ASIC_POWER_ON_STAGE);
 
@@ -56,6 +52,9 @@ void control_power_on_sequence()
 		gpio_set(PWRGD_CARD_PWROK, POWER_ON);
 		k_usleep(100);
 		control_power_stage(ENABLE_POWER_MODE, ASIC_DEV_RST_N);
+		set_DC_status(PWRGD_CARD_PWROK);
+		gpio_set(LED_CXL_POWER, GPIO_HIGH);
+		k_work_schedule(&set_DC_on_5s_work, K_SECONDS(DC_ON_5_SECOND));
 		LOG_INF("Power on success");
 	} else {
 		LOG_ERR("Power on fail");
@@ -64,9 +63,17 @@ void control_power_on_sequence()
 
 void control_power_off_sequence()
 {
+	if (!get_DC_status())
+		return;
 	bool is_power_off = false;
 	// Inform Server Board expansion board power off
 	gpio_set(PWRGD_CARD_PWROK, POWER_OFF);
+	set_DC_status(PWRGD_CARD_PWROK);
+	gpio_set(LED_CXL_POWER, GPIO_LOW);
+	if (k_work_cancel_delayable(&set_DC_on_5s_work) != 0) {
+		LOG_ERR("Cancel set dc off delay work fail");
+	}
+	set_DC_on_delayed_status();
 	gpio_set(ASIC_DEV_RST_N, POWER_OFF);
 
 	// Disable i2c synchronized during error recovery/ASIC i2c pin
@@ -101,18 +108,16 @@ void control_power_stage(uint8_t control_mode, uint8_t control_seq)
 	}
 }
 
-int check_power_stage(uint8_t check_mode, uint8_t check_seq)
+int check_power_stage(uint8_t check_mode, uint8_t check_seq, uint8_t stage)
 {
 	int ret = 0;
 	switch (check_mode) {
 	case ENABLE_POWER_MODE: // Check power on stage
-		power_on_seq += 1;
 		if (gpio_get(check_seq) != POWER_ON) {
 			ret = -1;
 		}
 		break;
 	case DISABLE_POWER_MODE: // Check power off stage
-		power_off_seq -= 1;
 		if (gpio_get(check_seq) != POWER_OFF) {
 			ret = -1;
 		}
@@ -135,8 +140,7 @@ int check_power_stage(uint8_t check_mode, uint8_t check_seq)
 		sel_msg.event_data1 =
 			((check_mode == ENABLE_POWER_MODE) ? IPMI_OEM_EVENT_OFFSET_EXP_PWRON_FAIL :
 							     IPMI_OEM_EVENT_OFFSET_EXP_PWROFF_FAIL);
-		sel_msg.event_data2 =
-			((check_mode == ENABLE_POWER_MODE) ? power_on_seq : power_off_seq);
+		sel_msg.event_data2 = stage;
 		sel_msg.event_data3 = get_board_id();
 
 		is_addsel_success = common_add_sel_evt_record(&sel_msg);
@@ -149,7 +153,7 @@ int check_power_stage(uint8_t check_mode, uint8_t check_seq)
 	return ret;
 }
 
-bool power_on_handler(uint8_t initial_stage)
+static bool power_on_handler(uint8_t initial_stage)
 {
 	int check_power_ret = -1;
 	bool enable_power_on_handler = true;
@@ -186,22 +190,26 @@ bool power_on_handler(uint8_t initial_stage)
 
 		switch (control_stage) { // Check VR power machine
 		case ASIC_POWER_ON_STAGE:
-			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_01) != 0) {
+			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_01,
+					      ASIC_POWER_ON_STAGE) != 0) {
 				LOG_ERR("P0V8_ASICA_PWRGD is not enabled!");
 				check_power_ret = -1;
 				break;
 			}
-			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_02) != 0) {
+			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_02,
+					      ASIC_POWER_ON_STAGE) != 0) {
 				LOG_ERR("P0V8_ASICD_PWRGD is not enabled!");
 				check_power_ret = -1;
 				break;
 			}
-			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_03) != 0) {
+			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_03,
+					      ASIC_POWER_ON_STAGE) != 0) {
 				LOG_ERR("P0V9_ASICA_PWRGD is not enabled!");
 				check_power_ret = -1;
 				break;
 			}
-			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_04) != 0) {
+			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_04,
+					      ASIC_POWER_ON_STAGE) != 0) {
 				LOG_ERR("P1V8_ASIC_PG_R is not enabled!");
 				check_power_ret = -1;
 				break;
@@ -210,12 +218,14 @@ bool power_on_handler(uint8_t initial_stage)
 			control_stage = DIMM_POWER_ON_STAGE1;
 			break;
 		case DIMM_POWER_ON_STAGE1:
-			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_05) != 0) {
+			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_05,
+					      DIMM_POWER_ON_STAGE1) != 0) {
 				LOG_ERR("PVPP_AB_PG_R is not enabled!");
 				check_power_ret = -1;
 				break;
 			}
-			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_06) != 0) {
+			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_06,
+					      DIMM_POWER_ON_STAGE1) != 0) {
 				LOG_ERR("PVPP_CD_PG_R is not enabled!");
 				check_power_ret = -1;
 				break;
@@ -224,12 +234,14 @@ bool power_on_handler(uint8_t initial_stage)
 			control_stage = DIMM_POWER_ON_STAGE2;
 			break;
 		case DIMM_POWER_ON_STAGE2:
-			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_07) != 0) {
+			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_07,
+					      DIMM_POWER_ON_STAGE2) != 0) {
 				LOG_ERR("PWRGD_PVDDQ_AB is not enabled!");
 				check_power_ret = -1;
 				break;
 			}
-			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_08) != 0) {
+			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_08,
+					      DIMM_POWER_ON_STAGE2) != 0) {
 				LOG_ERR("PWRGD_PVDDQ_CD is not enabled!");
 				check_power_ret = -1;
 				break;
@@ -238,12 +250,14 @@ bool power_on_handler(uint8_t initial_stage)
 			control_stage = DIMM_POWER_ON_STAGE3;
 			break;
 		case DIMM_POWER_ON_STAGE3:
-			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_09) != 0) {
+			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_09,
+					      DIMM_POWER_ON_STAGE3) != 0) {
 				LOG_ERR("PVTT_AB_PG_R is not enabled!");
 				check_power_ret = -1;
 				break;
 			}
-			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_10) != 0) {
+			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_10,
+					      DIMM_POWER_ON_STAGE3) != 0) {
 				LOG_ERR("PVTT_CD_PG_R is not enabled!");
 				check_power_ret = -1;
 				break;
@@ -282,7 +296,7 @@ bool power_on_handler(uint8_t initial_stage)
 	}
 }
 
-bool power_off_handler(uint8_t initial_stage)
+static bool power_off_handler(uint8_t initial_stage)
 {
 	bool enable_power_off_handler = true;
 	int check_power_ret = -1;
@@ -321,11 +335,13 @@ bool power_off_handler(uint8_t initial_stage)
 
 		switch (control_stage) { // Check VR power machine
 		case DIMM_POWER_OFF_STAGE1:
-			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_10) != 0) {
+			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_10,
+					      DIMM_POWER_OFF_STAGE1) != 0) {
 				check_power_ret = -1;
 				break;
 			}
-			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_09) != 0) {
+			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_09,
+					      DIMM_POWER_OFF_STAGE1) != 0) {
 				check_power_ret = -1;
 				break;
 			}
@@ -333,11 +349,13 @@ bool power_off_handler(uint8_t initial_stage)
 			control_stage = DIMM_POWER_OFF_STAGE2;
 			break;
 		case DIMM_POWER_OFF_STAGE2:
-			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_08) != 0) {
+			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_08,
+					      DIMM_POWER_OFF_STAGE2) != 0) {
 				check_power_ret = -1;
 				break;
 			}
-			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_07) != 0) {
+			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_07,
+					      DIMM_POWER_OFF_STAGE2) != 0) {
 				check_power_ret = -1;
 				break;
 			}
@@ -345,11 +363,13 @@ bool power_off_handler(uint8_t initial_stage)
 			control_stage = DIMM_POWER_OFF_STAGE3;
 			break;
 		case DIMM_POWER_OFF_STAGE3:
-			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_06) != 0) {
+			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_06,
+					      DIMM_POWER_OFF_STAGE3) != 0) {
 				check_power_ret = -1;
 				break;
 			}
-			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_05) != 0) {
+			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_05,
+					      DIMM_POWER_OFF_STAGE3) != 0) {
 				check_power_ret = -1;
 				break;
 			}
@@ -357,7 +377,8 @@ bool power_off_handler(uint8_t initial_stage)
 			control_stage = ASIC_POWER_OFF_STAGE1;
 			break;
 		case ASIC_POWER_OFF_STAGE1:
-			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_04) != 0) {
+			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_04,
+					      ASIC_POWER_OFF_STAGE1) != 0) {
 				check_power_ret = -1;
 				break;
 			}
@@ -365,15 +386,18 @@ bool power_off_handler(uint8_t initial_stage)
 			control_stage = ASIC_POWER_OFF_STAGE2;
 			break;
 		case ASIC_POWER_OFF_STAGE2:
-			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_03) != 0) {
+			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_03,
+					      ASIC_POWER_OFF_STAGE2) != 0) {
 				check_power_ret = -1;
 				break;
 			}
-			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_02) != 0) {
+			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_02,
+					      ASIC_POWER_OFF_STAGE2) != 0) {
 				check_power_ret = -1;
 				break;
 			}
-			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_01) != 0) {
+			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_01,
+					      ASIC_POWER_OFF_STAGE2) != 0) {
 				check_power_ret = -1;
 				break;
 			}
