@@ -37,5 +37,7 @@ void ISR_PVTT_CD_POWER_GOOD_LOST();
 void ISR_PASICA_PMALT();
 void ISR_PVDDQ_AB_PMALT();
 void ISR_PVDDQ_CD_PMALT();
+void record_cxl_version();
+extern struct k_work_delayable record_cxl_version_work;
 
 #endif

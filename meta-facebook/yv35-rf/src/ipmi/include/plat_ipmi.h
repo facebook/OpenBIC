@@ -19,5 +19,6 @@
 
 #define RF_COMPNT_BIC 2
 #define RF_COMPNT_CXL 10
+#define CXL_VERSION_LEN 16
 
 #endif
