@@ -72,6 +72,36 @@ Call the `mctp_start()` to start the MCTP service on the specific interface
 ```c
 mctp_start(p);
 ```
+## Endpoint ID
+------------------
+Endpoint ID use for identifying which controller to receive the MCTP package. To prevent EID conflicts, define below table for reference:
+| Platform Code | Device | EID | Remark |
+| ------------ | ------------ | ------------ | ------------ |
+| All Platform | BIC | 0x00 | BIC common reserve |
+| All Platform | BMC | 0x08 | BMC common default |
+| Cascade Creek | BIC | 0x0A | BIC common default |
+| Moose Creek | BIC | 0x0B |   |
+| Colter Bay | BIC | 0x0C |   |
+| Cascade Creek | NIC0 | 0x10 |   |
+| Cascade Creek | NIC1 | 0x11 |   |
+| Cascade Creek | NIC2 | 0x12 |   |
+| Cascade Creek | NIC3 | 0x13 |   |
+| Cascade Creek | NIC4 | 0x14 |   |
+| Cascade Creek | NIC5 | 0x15 |   |
+| Cascade Creek | NIC6 | 0x16 |   |
+| Cascade Creek | NIC7 | 0x17 |   |
+| Crafter Lake | BIC | 0x20 |   |
+| Y35 Baseboard | BIC | 0x21 |   |
+| Great Lake | BIC | 0x22 |   |
+| Halfdome | BIC | 0x23 |   |
+| Rainball Falls | BIC | 0x24 |   |
+| Delta Lake | BIC | 0x2A |   |
+| Vernal Falls | BIC | 0x2B |   |
+| Rainball Falls | CXL | 0x2E |   |
+| Moose Creek | CXL | 0x2F |   |
+| Olmsted Point A | BIC | 0x30 |   |
+| Olmsted Point B | BIC | 0x31 |   |
+| Waimea Canyon MB | BIC | 0x38 |   |
 ## Acknowledgments
 -----
 - [Management Component Transport Protocol (MCTP) Base Specification (DSP0236)](https://www.dmtf.org/sites/default/files/standards/documents/DSP0236_1.3.0.pdf)
