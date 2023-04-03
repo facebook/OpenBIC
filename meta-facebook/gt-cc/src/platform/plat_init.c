@@ -29,7 +29,10 @@
 
 SCU_CFG scu_cfg[] = {
 	//register    value
-	{ 0x7e6e2618, 0x00FF0000 },
+	{ 0x7e6e2610, 0x00000000 }, //SCU618: Disable GPIO internal pull down #0
+	{ 0x7e6e2614, 0x01000000 }, //SCU618: Disable GPIO internal pull down #1
+	{ 0x7e6e2618, 0x00FF0000 }, //SCU618: Disable GPIO internal pull down #2
+	{ 0x7e6e261C, 0x00000000 }, //SCU618: Disable GPIO internal pull down #3
 };
 
 void pal_pre_init()
