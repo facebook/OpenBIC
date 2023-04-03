@@ -1070,8 +1070,60 @@ bool pal_init_pm8702_info(uint8_t cxl_id)
 	return true;
 }
 
+bool pal_get_pm8702_hbo_status(uint8_t pcie_card_id, uint8_t *resp_buf, uint8_t *resp_len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(resp_buf, false);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, false);
+
+	bool ret = false;
+	uint8_t *req_buf = NULL;
+	uint8_t req_len = HBO_STATUS_REQ_PL_LEN;
+
+	ret = pal_pm8702_command_handler(pcie_card_id, PM8702_HBO_STATUS, req_buf, req_len,
+					 resp_buf, resp_len);
+	if (ret != true) {
+		LOG_ERR("Fail to get card id: 0x%x HBO status", pcie_card_id);
+	}
+
+	return ret;
+}
+
+bool pal_pm8702_transfer_fw(uint8_t pcie_card_id, uint8_t *req_buf, int req_len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(req_buf, false);
+
+	bool ret = false;
+	uint8_t resp_buf[TRANSFER_FW_RESP_PL_LEN];
+	uint8_t resp_len = 0;
+
+	ret = pal_pm8702_command_handler(pcie_card_id, PM8702_HBO_TRANSFER_FW, req_buf, req_len,
+					 resp_buf, &resp_len);
+	if (ret != true) {
+		LOG_ERR("Fail to transfer card id: 0x%x firmware", pcie_card_id);
+	}
+
+	return ret;
+}
+
+bool pal_set_pm8702_active_slot(uint8_t pcie_card_id, uint8_t *req_buf, int req_len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(req_buf, false);
+
+	bool ret = false;
+	uint8_t resp_buf[ACTIVATE_FW_RESP_PL_LEN];
+	uint8_t resp_len = 0;
+
+	ret = pal_pm8702_command_handler(pcie_card_id, PM8702_HBO_ACTIVATE_FW, req_buf, req_len,
+					 resp_buf, &resp_len);
+	if (ret != true) {
+		LOG_ERR("Fail to activate card id: 0x%x slot firmware", pcie_card_id);
+	}
+
+	return ret;
+}
+
 bool pal_pm8702_command_handler(uint8_t pcie_card_id, uint16_t opcode, uint8_t *data_buf,
-				uint8_t data_len, uint8_t *response, uint8_t *response_len)
+				int data_len, uint8_t *response, uint8_t *response_len)
 {
 	if (data_len != 0) {
 		CHECK_NULL_ARG_WITH_RETURN(data_buf, false);

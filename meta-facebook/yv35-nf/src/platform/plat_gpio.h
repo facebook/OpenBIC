@@ -32,7 +32,7 @@
 	gpio_name_to_num(POWER_EN_R)
 
 #define name_gpioB \
-	gpio_name_to_num(ISO_EN_BIC_N_R) \
+	gpio_name_to_num(Reserve_GPIOB0) \
 	gpio_name_to_num(MASTER) \
 	gpio_name_to_num(MUX_OE) \
 	gpio_name_to_num(SMB_12V_INA_ALRT_N) \
@@ -69,7 +69,7 @@
 	gpio_name_to_num(Reserve_GPIOE4) \
 	gpio_name_to_num(SMB_HOST_MUX_PMIC_IN_R) \
 	gpio_name_to_num(SMB_HOST_MUX_DIMM_IN_R) \
-	gpio_name_to_num(UART_BIC_ASIC_EN_R)
+	gpio_name_to_num(Reserve_GPIOE7)
 
 #define name_gpioF \
 	gpio_name_to_num(SLOT_ID0) \
@@ -82,8 +82,8 @@
 	gpio_name_to_num(USB_MUX2_R_OE)
 
 #define name_gpioG \
-	gpio_name_to_num(PWRGD_P12V_STBY_R) \
-	gpio_name_to_num(PWRGD_P3V3_STBY_R) \
+	gpio_name_to_num(Reserve_GPIOG0) \
+	gpio_name_to_num(Reserve_GPIOG1) \
 	gpio_name_to_num(PWRGD_P1V2_STBY_R) \
 	gpio_name_to_num(PVDDQ_AB_EN_BIC) \
 	gpio_name_to_num(PWRGD_PVDDQ_AB_BIC) \
@@ -119,7 +119,7 @@
 	gpio_name_to_num(Reserve_GPIOJ4) \
 	gpio_name_to_num(Reserve_GPIOJ5) \
 	gpio_name_to_num(ADAPTER_SEL_R) \
-	gpio_name_to_num(ISO_EN_ASIC_N_R)
+	gpio_name_to_num(Reserve_GPIOJ7)
 
 #define name_gpioK \
 	gpio_name_to_num(Reserve_GPIOK0) \
@@ -142,8 +142,8 @@
 	gpio_name_to_num(IOE_INT_N_R)
 
 #define name_gpioM \
-	gpio_name_to_num(Reserve_GPIOM0) \
-	gpio_name_to_num(Reserve_GPIOM1) \
+	gpio_name_to_num(BIC_SECUREBOOT) \
+	gpio_name_to_num(LED_CXL_FAULT) \
 	gpio_name_to_num(FM_PWRBRK_PRIMARY_R_N) \
 	gpio_name_to_num(BIC_ESPI_SELECT) \
 	gpio_name_to_num(UART_BIC_R_RXD) \

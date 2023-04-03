@@ -28,6 +28,8 @@
 #include "plat_class.h"
 #include "plat_ipmb.h"
 #include "plat_dimm.h"
+#include "plat_sensor_table.h"
+#include "pmbus.h"
 
 #include "pldm.h"
 #include "plat_mctp.h"
@@ -161,6 +163,75 @@ void OEM_1S_GET_CARD_TYPE(ipmi_msg *msg)
 		break;
 	}
 
+	return;
+}
+
+void OEM_1S_GET_HSC_STATUS(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 0) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t hsc_type = get_hsc_module();
+	I2C_MSG i2c_msg;
+	uint8_t retry = 5;
+
+	i2c_msg.bus = I2C_BUS2;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+
+	switch (hsc_type) {
+	case HSC_MODULE_ADM1278:
+		i2c_msg.target_addr = ADI_ADM1278_ADDR;
+		i2c_msg.data[0] = PMBUS_STATUS_BYTE;
+		break;
+	case HSC_MODULE_LTC4282:
+		i2c_msg.target_addr = ADI_LTC4282_ADDR;
+		i2c_msg.data[0] = LTC4282_STATUS_OFFSET_BYTE1;
+		break;
+	case HSC_MODULE_MP5990:
+		i2c_msg.target_addr = MPS_MP5990_ADDR;
+		i2c_msg.data[0] = PMBUS_STATUS_BYTE;
+		break;
+	case HSC_MODULE_LTC4286:
+		i2c_msg.target_addr = ADI_LTC4286_ADDR;
+		i2c_msg.data[0] = PMBUS_STATUS_BYTE;
+		break;
+	default:
+		LOG_WRN("Unknown hsc module %d", hsc_type);
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_WRN("Failed to read hsc status.");
+		msg->completion_code = CC_TIMEOUT;
+		return;
+	}
+
+	switch (hsc_type) {
+	case HSC_MODULE_ADM1278:
+	case HSC_MODULE_MP5990:
+	case HSC_MODULE_LTC4286:
+		msg->data[1] = i2c_msg.data[0] & 0x1C;
+		break;
+	case HSC_MODULE_LTC4282:
+		msg->data[1] = ((i2c_msg.data[0] & BIT(0)) ? BIT(5) : 0) |
+			       ((i2c_msg.data[0] & BIT(1)) ? BIT(3) : 0) |
+			       ((i2c_msg.data[0] & BIT(2)) ? BIT(4) : 0);
+		break;
+	default:
+		LOG_WRN("Unknown hsc module %d", hsc_type);
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	msg->data[0] = hsc_type;
+	msg->data_len = 2;
+	msg->completion_code = CC_SUCCESS;
 	return;
 }
 

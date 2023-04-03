@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -22,7 +22,7 @@
 #define MONITOR_PMIC_ERROR_STACK_SIZE 4096
 #define MONITOR_PMIC_ERROR_TIME_MS (3 * 1000) // 3s
 
-#define MAX_COUNT_PMIC_ERROR_OFFSET 6
+#define MAX_COUNT_PMIC_ERROR_OFFSET 7
 #define MAX_COUNT_PMIC_ERROR_TYPE 17
 
 #define CL_CPLD_BMC_CHANNEL_ADDR 0x1E // 8 bits
