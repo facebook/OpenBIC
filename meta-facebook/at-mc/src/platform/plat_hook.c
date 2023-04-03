@@ -187,7 +187,7 @@ sq52205_init_arg sq52205_init_args[] = {
 };
 
 ina233_init_arg ina233_init_args[] = {
-	// JCN1
+	// JCN11
 	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode =0b111,
@@ -206,7 +206,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0100,
 	},
 	},
-	// JCN2
+	// JCN12
 	[2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode =0b111,
@@ -225,7 +225,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0100,
 	},
 	},
-	// JCN3
+	// JCN9
 	[4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode =0b111,
@@ -244,7 +244,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0100,
 	},
 	},
-	// JCN4
+	// JCN10
 	[6] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode =0b111,
@@ -263,7 +263,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0100,
 	},
 	},
-	// JCN9
+	// JCN4
 	[8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode =0b111,
@@ -282,7 +282,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0100,
 	},
 	},
-	// JCN10
+	// JCN3
 	[10] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode =0b111,
@@ -301,7 +301,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0100,
 	},
 	},
-	// JCN11
+	// JCN2
 	[12] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode =0b111,
@@ -320,7 +320,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0100,
 	},
 	},
-	// JCN12
+	// JCN1
 	[14] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode =0b111,
@@ -342,56 +342,56 @@ ina233_init_arg ina233_init_args[] = {
 };
 
 ltc2991_init_arg ltc2991_init_args[] = {
-	// JCN1
+	// JCN11
 	[0] = { .is_init = false,
 		.v1_v4_control_operation.value = 0,
 		.v5_v8_control_operation.value = 0 },
 	[1] = { .is_init = false,
 		.v1_v4_control_operation.value = 0,
 		.v5_v8_control_operation.value = 0 },
-	// JCN2
+	// JCN12
 	[2] = { .is_init = false,
 		.v1_v4_control_operation.value = 0,
 		.v5_v8_control_operation.value = 0 },
 	[3] = { .is_init = false,
 		.v1_v4_control_operation.value = 0,
 		.v5_v8_control_operation.value = 0 },
-	// JCN3
+	// JCN9
 	[4] = { .is_init = false,
 		.v1_v4_control_operation.value = 0,
 		.v5_v8_control_operation.value = 0 },
 	[5] = { .is_init = false,
 		.v1_v4_control_operation.value = 0,
 		.v5_v8_control_operation.value = 0 },
-	// JCN4
+	// JCN10
 	[6] = { .is_init = false,
 		.v1_v4_control_operation.value = 0,
 		.v5_v8_control_operation.value = 0 },
 	[7] = { .is_init = false,
 		.v1_v4_control_operation.value = 0,
 		.v5_v8_control_operation.value = 0 },
-	// JCN9
+	// JCN4
 	[8] = { .is_init = false,
 		.v1_v4_control_operation.value = 0,
 		.v5_v8_control_operation.value = 0 },
 	[9] = { .is_init = false,
 		.v1_v4_control_operation.value = 0,
 		.v5_v8_control_operation.value = 0 },
-	// JCN10
+	// JCN3
 	[10] = { .is_init = false,
 		 .v1_v4_control_operation.value = 0,
 		 .v5_v8_control_operation.value = 0 },
 	[11] = { .is_init = false,
 		 .v1_v4_control_operation.value = 0,
 		 .v5_v8_control_operation.value = 0 },
-	// JCN11
+	// JCN2
 	[12] = { .is_init = false,
 		 .v1_v4_control_operation.value = 0,
 		 .v5_v8_control_operation.value = 0 },
 	[13] = { .is_init = false,
 		 .v1_v4_control_operation.value = 0,
 		 .v5_v8_control_operation.value = 0 },
-	// JCN12
+	// JCN1
 	[14] = { .is_init = false,
 		 .v1_v4_control_operation.value = 0,
 		 .v5_v8_control_operation.value = 0 },
@@ -403,16 +403,16 @@ ltc2991_init_arg ltc2991_init_args[] = {
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
  **************************************************************************************************/
-/** JCN 1~4, 9~12 CXL/E1.S 1 mux config **/
+/** CXL ID mux config **/
 mux_config bus_2_pca9548_configs[] = {
-	[0] = { .target_addr = 0x70, .channel = PCA9548A_CHANNEL_0 },
-	[1] = { .target_addr = 0x70, .channel = PCA9548A_CHANNEL_1 },
-	[2] = { .target_addr = 0x70, .channel = PCA9548A_CHANNEL_2 },
-	[3] = { .target_addr = 0x70, .channel = PCA9548A_CHANNEL_3 },
-	[4] = { .target_addr = 0x70, .channel = PCA9548A_CHANNEL_4 },
-	[5] = { .target_addr = 0x70, .channel = PCA9548A_CHANNEL_5 },
-	[6] = { .target_addr = 0x70, .channel = PCA9548A_CHANNEL_6 },
-	[7] = { .target_addr = 0x70, .channel = PCA9548A_CHANNEL_7 },
+	[0] = { .target_addr = 0x70, .channel = PCA9548A_CHANNEL_6 },
+	[1] = { .target_addr = 0x70, .channel = PCA9548A_CHANNEL_7 },
+	[2] = { .target_addr = 0x70, .channel = PCA9548A_CHANNEL_4 },
+	[3] = { .target_addr = 0x70, .channel = PCA9548A_CHANNEL_5 },
+	[4] = { .target_addr = 0x70, .channel = PCA9548A_CHANNEL_3 },
+	[5] = { .target_addr = 0x70, .channel = PCA9548A_CHANNEL_2 },
+	[6] = { .target_addr = 0x70, .channel = PCA9548A_CHANNEL_1 },
+	[7] = { .target_addr = 0x70, .channel = PCA9548A_CHANNEL_0 },
 };
 
 mux_config bus_3_pca9546_configs[] = {
@@ -547,57 +547,11 @@ bool post_sq52205_read(uint8_t sensor_num, void *args, int *reading)
 	return true;
 }
 
-bool pre_e1s_switch_mux(uint8_t sensor_num, uint8_t card_id)
-{
-	mux_config e1s_mux = { 0 };
-	bool ret = get_pcie_card_mux_config(PCIE_CARD_E1S, card_id, sensor_num, &e1s_mux, NULL);
-	if (ret != true) {
-		return ret;
-	}
-
-	int mutex_status = 0;
-	struct k_mutex *mutex = get_i2c_mux_mutex(e1s_mux.bus);
-	mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
-	if (mutex_status != 0) {
-		LOG_ERR("Mutex lock fail, status: %d", mutex_status);
-		return false;
-	}
-
-	ret = set_mux_channel(e1s_mux);
-	if (ret != true) {
-		LOG_ERR("Switch e1s mux fail");
-		k_mutex_unlock(mutex);
-		return false;
-	}
-
-	return true;
-}
-
-bool post_e1s_switch_mux(uint8_t sensor_num, uint8_t card_id)
-{
-	mux_config e1s_mux = { 0 };
-	bool ret = get_pcie_card_mux_config(PCIE_CARD_E1S, card_id, sensor_num, &e1s_mux, NULL);
-	if (ret != true) {
-		return ret;
-	}
-
-	int unlock_status = 0;
-	struct k_mutex *mutex = get_i2c_mux_mutex(e1s_mux.bus);
-	unlock_status = k_mutex_unlock(mutex);
-	if (unlock_status != 0) {
-		LOG_ERR("Mutex unlock fail, status: %d", unlock_status);
-		return false;
-	}
-
-	return true;
-}
-
-bool pre_cxl_switch_mux(uint8_t sensor_num, uint8_t card_id)
+bool pre_cxl_switch_mux(uint8_t sensor_num, uint8_t pcie_card_id)
 {
 	mux_config card_mux = { 0 };
 	mux_config cxl_mux = { 0 };
-	bool ret =
-		get_pcie_card_mux_config(PCIE_CARD_CXL, card_id, sensor_num, &card_mux, &cxl_mux);
+	bool ret = get_pcie_card_mux_config(pcie_card_id, sensor_num, &card_mux, &cxl_mux);
 	if (ret != true) {
 		return ret;
 	}
@@ -629,7 +583,7 @@ bool pre_cxl_switch_mux(uint8_t sensor_num, uint8_t card_id)
 	return true;
 }
 
-bool post_cxl_switch_mux(uint8_t sensor_num, uint8_t card_id)
+bool post_cxl_switch_mux(uint8_t sensor_num, uint8_t pcie_card_id)
 {
 	int unlock_status = 0;
 	struct k_mutex *mutex = get_i2c_mux_mutex(MEB_CXL_BUS);

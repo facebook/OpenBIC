@@ -43,6 +43,19 @@ enum IOEXP_NAME {
 	IOEXP_U17,
 };
 
+typedef struct _cxl_work_info {
+    bool is_init;
+    uint8_t cxl_card_id;
+    uint8_t cxl_channel;
+    bool is_device_reset;
+    bool is_pe_reset;
+    struct k_work_delayable device_reset_work;
+    struct k_work_delayable set_eid_work;
+    
+} cxl_work_info;
+
+extern cxl_work_info cxl_work_item[];
+
 void ISR_NORMAL_PWRGD();
 void ISR_CXL_IOEXP_ALERT0();
 void ISR_CXL_IOEXP_ALERT1();

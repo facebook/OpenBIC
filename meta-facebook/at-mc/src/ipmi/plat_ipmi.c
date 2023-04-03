@@ -37,34 +37,20 @@
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
-int pal_cxl_component_id_map_jcn(uint8_t component_id, uint8_t *card_id)
+int pal_cxl_component_id_map_cxl_id(uint8_t component_id, uint8_t *cxl_id)
 {
-	CHECK_NULL_ARG_WITH_RETURN(card_id, -1);
+	CHECK_NULL_ARG_WITH_RETURN(cxl_id, -1);
 
 	switch (component_id) {
 	case MC_COMPNT_CXL1:
-		*card_id = CXL_CARD_7;
-		break;
 	case MC_COMPNT_CXL2:
-		*card_id = CXL_CARD_8;
-		break;
 	case MC_COMPNT_CXL3:
-		*card_id = CXL_CARD_5;
-		break;
 	case MC_COMPNT_CXL4:
-		*card_id = CXL_CARD_6;
-		break;
 	case MC_COMPNT_CXL5:
-		*card_id = CXL_CARD_4;
-		break;
 	case MC_COMPNT_CXL6:
-		*card_id = CXL_CARD_3;
-		break;
 	case MC_COMPNT_CXL7:
-		*card_id = CXL_CARD_2;
-		break;
 	case MC_COMPNT_CXL8:
-		*card_id = CXL_CARD_1;
+		*cxl_id = component_id - MC_COMPNT_CXL1;
 		break;
 	default:
 		return -1;
@@ -152,7 +138,7 @@ int pal_write_read_cxl_fru(uint8_t optional, uint8_t fru_id, EEPROM_ENTRY *fru_e
 	cxl_mux.bus = I2C_BUS2;
 	cxl_mux.target_addr = CXL_FRU_MUX0_ADDR;
 	cxl_mux.channel = pal_cxl_map_mux0_channel(fru_id);
-	if (cxl_mux.channel < 0) {
+	if (cxl_mux.channel == 0) {
 		LOG_ERR("Get cxl mux0 channel fail");
 		return -1;
 	}
@@ -208,24 +194,11 @@ int pal_get_pcie_card_sensor_reading(uint8_t read_type, uint8_t sensor_num, uint
 	sensor_cfg *cfg = NULL;
 
 	switch (read_type) {
-	case PCIE_CARD_E1S:
-		parameter = sensor_num;
-		pre_switch_mux_func = pre_e1s_switch_mux;
-		post_switch_mux_func = post_e1s_switch_mux;
-		if (sensor_num <= SENSOR_NUM_TEMP_JCN_E1S_1) {
-			index = sensor_num - 1;
-			if (pcie_card_id <= CARD_12_INDEX) {
-				cfg = &plat_e1s_1_12_sensor_config[index];
-			} else {
-				cfg = &plat_e1s_13_14_sensor_config[index];
-			}
-		} else {
-			LOG_ERR("Invalid e1s sensor num: 0x%x", sensor_num);
+	case PCIE_CARD_CXL:
+		if (pcie_card_id_to_cxl_id(pcie_card_id, &parameter) < 0) {
+			LOG_ERR("CXL UNKNOWN pcie card id: %d", pcie_card_id);
 			return -1;
 		}
-		break;
-	case PCIE_CARD_CXL:
-		parameter = pcie_card_id;
 		pre_switch_mux_func = pre_cxl_switch_mux;
 		post_switch_mux_func = post_cxl_switch_mux;
 
@@ -243,7 +216,7 @@ int pal_get_pcie_card_sensor_reading(uint8_t read_type, uint8_t sensor_num, uint
 
 	*reading = 0;
 
-	if (cfg->access_checker(parameter) != true) {
+	if (cfg->access_checker(pcie_card_id) != true) {
 		*card_status |= PCIE_CARD_NOT_ACCESSIABLE_BIT;
 		return 0;
 	}
@@ -268,7 +241,7 @@ int pal_get_pcie_card_sensor_reading(uint8_t read_type, uint8_t sensor_num, uint
 		}
 	}
 
-	ret = pal_sensor_drive_read(pcie_card_id, cfg, reading, &sensor_status);
+	ret = pal_sensor_drive_read(parameter, cfg, reading, &sensor_status);
 	if (ret != true) {
 		LOG_ERR("sensor: 0x%x read fail, card id: 0x%x", sensor_num, pcie_card_id);
 	}
@@ -349,7 +322,7 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 	case MC_COMPNT_CXL6:
 	case MC_COMPNT_CXL7:
 	case MC_COMPNT_CXL8:
-		if (pal_cxl_component_id_map_jcn(component, &cxl_id) != 0) {
+		if (pal_cxl_component_id_map_cxl_id(component, &cxl_id) != 0) {
 			LOG_ERR("Invalid cxl component id: 0x%x", component);
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			return;
@@ -596,20 +569,7 @@ void OEM_1S_GET_PCIE_CARD_SENSOR_READING(ipmi_msg *msg)
 	}
 
 	switch (card_type) {
-	case E1S_0_CARD:
-	case E1S_1_CARD:
-	case E1S_0_1_CARD:
-
-		ret = pal_get_pcie_card_sensor_reading(PCIE_CARD_E1S, sensor_num, pcie_card_id,
-						       &device_status, &reading);
-
-		if (ret < 0) {
-			msg->completion_code = CC_UNSPECIFIED_ERROR;
-			return;
-		}
-		break;
 	case CXL_CARD:
-
 		ret = pal_get_pcie_card_sensor_reading(PCIE_CARD_CXL, sensor_num, pcie_card_id,
 						       &device_status, &reading);
 
@@ -690,8 +650,8 @@ void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 	case (MC_COMPNT_CXL7 | IS_SECTOR_END_MASK):
 	case MC_COMPNT_CXL8:
 	case (MC_COMPNT_CXL8 | IS_SECTOR_END_MASK):
-		if (pal_cxl_component_id_map_jcn((component & WITHOUT_SENCTOR_END_MASK), &cxl_id) !=
-		    0) {
+		if (pal_cxl_component_id_map_cxl_id((component & WITHOUT_SENCTOR_END_MASK),
+						    &cxl_id) != 0) {
 			LOG_ERR("Invalid cxl component id: 0x%x", component);
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			return;
@@ -809,8 +769,8 @@ void OEM_1S_SET_DEVICE_ACTIVE(ipmi_msg *msg)
 	case (MC_COMPNT_CXL6 | IS_SECTOR_END_MASK):
 	case (MC_COMPNT_CXL7 | IS_SECTOR_END_MASK):
 	case (MC_COMPNT_CXL8 | IS_SECTOR_END_MASK):
-		if (pal_cxl_component_id_map_jcn((component & WITHOUT_SENCTOR_END_MASK), &cxl_id) !=
-		    0) {
+		if (pal_cxl_component_id_map_cxl_id((component & WITHOUT_SENCTOR_END_MASK),
+						    &cxl_id) != 0) {
 			LOG_ERR("Invalid cxl component id: 0x%x", component);
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			return;

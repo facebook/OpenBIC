@@ -46,6 +46,7 @@ enum CARD_INFO_INDEX {
 	CARD_12_INDEX,
 	CARD_13_INDEX,
 	CARD_14_INDEX,
+	CARD_INDEX_MAX,
 };
 
 enum CXL_CARD_ID {
@@ -57,6 +58,7 @@ enum CXL_CARD_ID {
 	CXL_CARD_6,
 	CXL_CARD_7,
 	CXL_CARD_8,
+	CXL_CARD_MAX,
 };
 
 enum PCIE_DEVICE_ID {
@@ -80,7 +82,7 @@ void check_pcie_card_type();
 uint8_t prsnt_status_to_card_type(uint8_t presence_status);
 int get_pcie_card_type(uint8_t card_id, uint8_t *card_type);
 int get_pcie_device_type(uint8_t card_id, uint8_t device_id, uint8_t *device_type);
-int pcie_card_id_to_cxl_e1s_id(uint8_t pcie_card_id, uint8_t *dev_id);
+int pcie_card_id_to_cxl_id(uint8_t pcie_card_id, uint8_t *cxl_id);
 int cxl_id_to_pcie_card_id(uint8_t cxl_id, uint8_t *pcie_card_id);
 bool is_cxl_present();
 

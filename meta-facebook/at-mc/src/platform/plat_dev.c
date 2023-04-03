@@ -209,7 +209,7 @@ uint8_t pal_tmp75_read(uint8_t card_id, sensor_cfg *cfg, int *reading)
 
 	ret = i2c_master_read(&msg, retry);
 	if (ret != 0) {
-		LOG_ERR("tmp75 i2c read fail ret: %d", ret);
+		LOG_ERR("cxl %d tmp75 i2c read fail ret: %d", card_id, ret);
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
@@ -259,7 +259,7 @@ uint8_t pal_emc1412_read(uint8_t card_id, sensor_cfg *cfg, int *reading)
 
 	ret = i2c_master_read(&msg, retry);
 	if (ret != 0) {
-		LOG_ERR("i2c write fail ret: %d", ret);
+		LOG_ERR("cxl %d emc1412 i2c read fail ret: %d", card_id, ret);
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
@@ -275,7 +275,7 @@ uint8_t pal_emc1412_read(uint8_t card_id, sensor_cfg *cfg, int *reading)
 
 	ret = i2c_master_read(&msg, retry);
 	if (ret != 0) {
-		LOG_ERR("i2c write fail ret: %d", ret);
+		LOG_ERR("cxl %d emc1412 i2c read fail ret: %d", card_id, ret);
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
@@ -403,7 +403,7 @@ uint8_t pal_ina233_read(uint8_t card_id, sensor_cfg *cfg, int *reading)
 
 	ret = i2c_master_read(&msg, retry);
 	if (ret != 0) {
-		LOG_ERR("i2c read fail ret: %d", ret);
+		LOG_ERR("cxl %d ina233 i2c read fail ret: %d", card_id, ret);
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 	uint8_t offset = cfg->offset;
@@ -470,7 +470,7 @@ uint8_t pal_ina233_init(uint8_t card_id, sensor_cfg *cfg)
 
 		ret = i2c_master_write(&msg, retry);
 		if (ret != 0) {
-			LOG_ERR("i2c write fail ret: %d", ret);
+			LOG_ERR("cxl %d ina233 i2c write fail ret: %d", card_id, ret);
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
 		}
 		init_arg->is_init = true;
@@ -515,7 +515,7 @@ uint8_t pal_ltc2991_read(uint8_t card_id, sensor_cfg *cfg, int *reading)
 
 	ret = i2c_master_write(&msg, retry);
 	if (ret != 0) {
-		LOG_ERR("i2c write fail ret: %d", ret);
+		LOG_ERR("cxl %d ltc2991 i2c write fail ret: %d", card_id, ret);
 		return false;
 	}
 
@@ -531,7 +531,7 @@ uint8_t pal_ltc2991_read(uint8_t card_id, sensor_cfg *cfg, int *reading)
 
 	ret = i2c_master_read(&msg, retry);
 	if (ret != 0) {
-		LOG_ERR("ltc2991 i2c read fail ret: %d", ret);
+		LOG_ERR("cxl %d ltc2991 i2c read fail ret: %d", card_id, ret);
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
@@ -553,7 +553,7 @@ uint8_t pal_ltc2991_read(uint8_t card_id, sensor_cfg *cfg, int *reading)
 
 	ret = i2c_master_read(&msg, retry);
 	if (ret != 0) {
-		LOG_ERR("ltc2991 i2c read fail ret: %d", ret);
+		LOG_ERR("cxl %d ltc2991 i2c read fail ret: %d", card_id, ret);
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
@@ -612,7 +612,7 @@ uint8_t pal_ltc2991_init(uint8_t card_id, sensor_cfg *cfg)
 
 			ret = i2c_master_write(&msg, retry);
 			if (ret != 0) {
-				LOG_ERR("ltc2991 i2c write fail ret: %d", ret);
+				LOG_ERR("cxl %d ltc2991 i2c write fail ret: %d", card_id, ret);
 				return SENSOR_INIT_UNSPECIFIED_ERROR;
 			}
 		}
@@ -627,7 +627,7 @@ uint8_t pal_ltc2991_init(uint8_t card_id, sensor_cfg *cfg)
 
 		ret = i2c_master_read(&msg, retry);
 		if (ret != 0) {
-			LOG_ERR("ltc2991 i2c read fail ret: %d", ret);
+			LOG_ERR("cxl %d ltc2991 i2c read fail ret: %d", card_id, ret);
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
 		}
 
@@ -659,7 +659,7 @@ uint8_t pal_ltc2991_init(uint8_t card_id, sensor_cfg *cfg)
 
 		ret = i2c_master_read(&msg, retry);
 		if (ret != 0) {
-			LOG_ERR("ltc2991 i2c read fail ret: %d", ret);
+			LOG_ERR("cxl %d ltc2991 i2c read fail ret: %d", card_id, ret);
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
 		}
 
@@ -694,6 +694,7 @@ uint8_t pal_xdpe12284c_read(uint8_t card_id, sensor_cfg *cfg, int *reading)
 	msg.data[0] = offset;
 
 	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("cxl %d xdpe12284c i2c read fail ret: %d", card_id, ret);
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
@@ -754,7 +755,7 @@ void cxl_mb_status_init(uint8_t cxl_id)
 	/** MEB mux for cxl channels **/
 	meb_mux.bus = MEB_CXL_BUS;
 	meb_mux.target_addr = CXL_FRU_MUX0_ADDR;
-	meb_mux.channel = BIT(cxl_id);
+	meb_mux.channel = cxl_work_item[cxl_id].cxl_channel;
 
 	/** CXL mux for sensor channels **/
 	cxl_mux.bus = MEB_CXL_BUS;

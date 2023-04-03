@@ -31,55 +31,45 @@
 #include "hal_gpio.h"
 #include "util_worker.h"
 
-typedef struct _cxl_work_info {
-	bool is_init;
-	uint8_t cxl_card_id;
-	uint8_t cxl_channel;
-	bool is_device_reset;
-	bool is_pe_reset;
-	struct k_work_delayable device_reset_work;
-	struct k_work_delayable set_eid_work;
-} cxl_work_info;
-
 cxl_work_info cxl_work_item[] = {
 	{ .is_init = false,
 	  .cxl_card_id = CXL_CARD_1,
-	  .cxl_channel = PCA9848_CHANNEL_0,
-	  .is_device_reset = false,
-	  .is_pe_reset = false },
-	{ .is_init = false,
-	  .cxl_card_id = CXL_CARD_2,
-	  .cxl_channel = PCA9848_CHANNEL_1,
-	  .is_device_reset = false,
-	  .is_pe_reset = false },
-	{ .is_init = false,
-	  .cxl_card_id = CXL_CARD_3,
-	  .cxl_channel = PCA9848_CHANNEL_2,
-	  .is_device_reset = false,
-	  .is_pe_reset = false },
-	{ .is_init = false,
-	  .cxl_card_id = CXL_CARD_4,
-	  .cxl_channel = PCA9848_CHANNEL_3,
-	  .is_device_reset = false,
-	  .is_pe_reset = false },
-	{ .is_init = false,
-	  .cxl_card_id = CXL_CARD_5,
-	  .cxl_channel = PCA9848_CHANNEL_4,
-	  .is_device_reset = false,
-	  .is_pe_reset = false },
-	{ .is_init = false,
-	  .cxl_card_id = CXL_CARD_6,
-	  .cxl_channel = PCA9848_CHANNEL_5,
-	  .is_device_reset = false,
-	  .is_pe_reset = false },
-	{ .is_init = false,
-	  .cxl_card_id = CXL_CARD_7,
 	  .cxl_channel = PCA9848_CHANNEL_6,
 	  .is_device_reset = false,
 	  .is_pe_reset = false },
 	{ .is_init = false,
-	  .cxl_card_id = CXL_CARD_8,
+	  .cxl_card_id = CXL_CARD_2,
 	  .cxl_channel = PCA9848_CHANNEL_7,
+	  .is_device_reset = false,
+	  .is_pe_reset = false },
+	{ .is_init = false,
+	  .cxl_card_id = CXL_CARD_3,
+	  .cxl_channel = PCA9848_CHANNEL_4,
+	  .is_device_reset = false,
+	  .is_pe_reset = false },
+	{ .is_init = false,
+	  .cxl_card_id = CXL_CARD_4,
+	  .cxl_channel = PCA9848_CHANNEL_5,
+	  .is_device_reset = false,
+	  .is_pe_reset = false },
+	{ .is_init = false,
+	  .cxl_card_id = CXL_CARD_5,
+	  .cxl_channel = PCA9848_CHANNEL_3,
+	  .is_device_reset = false,
+	  .is_pe_reset = false },
+	{ .is_init = false,
+	  .cxl_card_id = CXL_CARD_6,
+	  .cxl_channel = PCA9848_CHANNEL_2,
+	  .is_device_reset = false,
+	  .is_pe_reset = false },
+	{ .is_init = false,
+	  .cxl_card_id = CXL_CARD_7,
+	  .cxl_channel = PCA9848_CHANNEL_1,
+	  .is_device_reset = false,
+	  .is_pe_reset = false },
+	{ .is_init = false,
+	  .cxl_card_id = CXL_CARD_8,
+	  .cxl_channel = PCA9848_CHANNEL_0,
 	  .is_device_reset = false,
 	  .is_pe_reset = false },
 };
@@ -430,48 +420,48 @@ void ISR_NORMAL_PWRGD()
 
 void ISR_CXL_IOEXP_ALERT0()
 {
-	k_work_schedule(&cxl_work_item[CXL_CARD_1].device_reset_work,
+	k_work_schedule(&cxl_work_item[CXL_CARD_8].device_reset_work,
 			K_MSEC(CXL_POWER_GOOD_DELAY_MS));
 }
 
 void ISR_CXL_IOEXP_ALERT1()
 {
-	k_work_schedule(&cxl_work_item[CXL_CARD_2].device_reset_work,
+	k_work_schedule(&cxl_work_item[CXL_CARD_7].device_reset_work,
 			K_MSEC(CXL_POWER_GOOD_DELAY_MS));
 }
 
 void ISR_CXL_IOEXP_ALERT2()
 {
-	k_work_schedule(&cxl_work_item[CXL_CARD_3].device_reset_work,
+	k_work_schedule(&cxl_work_item[CXL_CARD_6].device_reset_work,
 			K_MSEC(CXL_POWER_GOOD_DELAY_MS));
 }
 
 void ISR_CXL_IOEXP_ALERT3()
 {
-	k_work_schedule(&cxl_work_item[CXL_CARD_4].device_reset_work,
+	k_work_schedule(&cxl_work_item[CXL_CARD_5].device_reset_work,
 			K_MSEC(CXL_POWER_GOOD_DELAY_MS));
 }
 
 void ISR_CXL_IOEXP_ALERT4()
 {
-	k_work_schedule(&cxl_work_item[CXL_CARD_5].device_reset_work,
+	k_work_schedule(&cxl_work_item[CXL_CARD_3].device_reset_work,
 			K_MSEC(CXL_POWER_GOOD_DELAY_MS));
 }
 
 void ISR_CXL_IOEXP_ALERT5()
 {
-	k_work_schedule(&cxl_work_item[CXL_CARD_6].device_reset_work,
+	k_work_schedule(&cxl_work_item[CXL_CARD_4].device_reset_work,
 			K_MSEC(CXL_POWER_GOOD_DELAY_MS));
 }
 
 void ISR_CXL_IOEXP_ALERT6()
 {
-	k_work_schedule(&cxl_work_item[CXL_CARD_7].device_reset_work,
+	k_work_schedule(&cxl_work_item[CXL_CARD_1].device_reset_work,
 			K_MSEC(CXL_POWER_GOOD_DELAY_MS));
 }
 
 void ISR_CXL_IOEXP_ALERT7()
 {
-	k_work_schedule(&cxl_work_item[CXL_CARD_8].device_reset_work,
+	k_work_schedule(&cxl_work_item[CXL_CARD_2].device_reset_work,
 			K_MSEC(CXL_POWER_GOOD_DELAY_MS));
 }

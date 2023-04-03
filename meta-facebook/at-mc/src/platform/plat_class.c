@@ -93,24 +93,34 @@ struct PCIE_CARD_INFO pcie_card_info[] = {
 		 .card_device_type = UNKNOWN_CARD },
 };
 
-int pcie_card_id_to_cxl_e1s_id(uint8_t pcie_card_id, uint8_t *dev_id)
+int pcie_card_id_to_cxl_id(uint8_t pcie_card_id, uint8_t *cxl_id)
 {
-	CHECK_NULL_ARG_WITH_RETURN(dev_id, -1);
+	CHECK_NULL_ARG_WITH_RETURN(cxl_id, -1);
 
-	uint8_t offset = 0;
 	switch (pcie_card_id) {
 	case CARD_1_INDEX:
+		*cxl_id = CXL_CARD_8;
+		break;
 	case CARD_2_INDEX:
+		*cxl_id = CXL_CARD_7;
+		break;
 	case CARD_3_INDEX:
+		*cxl_id = CXL_CARD_6;
+		break;
 	case CARD_4_INDEX:
-		*dev_id = pcie_card_id;
+		*cxl_id = CXL_CARD_5;
 		break;
 	case CARD_9_INDEX:
+		*cxl_id = CXL_CARD_3;
+		break;
 	case CARD_10_INDEX:
+		*cxl_id = CXL_CARD_4;
+		break;
 	case CARD_11_INDEX:
+		*cxl_id = CXL_CARD_1;
+		break;
 	case CARD_12_INDEX:
-		offset = pcie_card_id - CARD_9_INDEX;
-		*dev_id = CARD_5_INDEX + offset;
+		*cxl_id = CXL_CARD_2;
 		break;
 	default:
 		LOG_ERR("Invalid pcie_card_id: %d", pcie_card_id);
@@ -124,21 +134,30 @@ int cxl_id_to_pcie_card_id(uint8_t cxl_id, uint8_t *pcie_card_id)
 {
 	CHECK_NULL_ARG_WITH_RETURN(pcie_card_id, -1);
 
-	uint8_t offset = 0;
-
 	switch (cxl_id) {
 	case CXL_CARD_1:
+		*pcie_card_id = CARD_11_INDEX;
+		break;
 	case CXL_CARD_2:
+		*pcie_card_id = CARD_12_INDEX;
+		break;
 	case CXL_CARD_3:
+		*pcie_card_id = CARD_9_INDEX;
+		break;
 	case CXL_CARD_4:
-		*pcie_card_id = cxl_id;
+		*pcie_card_id = CARD_10_INDEX;
 		break;
 	case CXL_CARD_5:
+		*pcie_card_id = CARD_4_INDEX;
+		break;
 	case CXL_CARD_6:
+		*pcie_card_id = CARD_3_INDEX;
+		break;
 	case CXL_CARD_7:
+		*pcie_card_id = CARD_2_INDEX;
+		break;
 	case CXL_CARD_8:
-		offset = cxl_id - CXL_CARD_5;
-		*pcie_card_id = CARD_9_INDEX + offset;
+		*pcie_card_id = CARD_1_INDEX;
 		break;
 	default:
 		LOG_ERR("Invalid cxl id: %d", cxl_id);
@@ -180,17 +199,6 @@ void check_pcie_card_type()
 		pcie_card_info[index].card_device_type = prsnt_status_to_card_type(val);
 
 		switch (pcie_card_info[index].card_device_type) {
-		case E1S_0_CARD:
-		case E1S_1_CARD:
-		case E1S_0_1_CARD:
-			if (index <= CARD_12_INDEX) {
-				pal_init_drive(plat_e1s_1_12_sensor_config, E1S_SENSOR_CONFIG_SIZE,
-					       pcie_card_info[index].card_device_type, index);
-			} else {
-				pal_init_drive(plat_e1s_13_14_sensor_config, E1S_SENSOR_CONFIG_SIZE,
-					       pcie_card_info[index].card_device_type, index);
-			}
-			break;
 		case CXL_CARD:
 			pal_init_drive(plat_cxl_sensor_config, CXL_SENSOR_CONFIG_SIZE,
 				       pcie_card_info[index].card_device_type, index);

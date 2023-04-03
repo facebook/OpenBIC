@@ -134,37 +134,37 @@ void pal_load_fru_config(void)
 	memcpy(&fru_config, &plat_fru_config, sizeof(plat_fru_config));
 }
 
-int pal_cxl_map_mux0_channel(uint8_t cxl_id)
+uint8_t pal_cxl_map_mux0_channel(uint8_t cxl_fru_id)
 {
-	int channel = -1;
+	uint8_t channel = 0;
 
-	switch (cxl_id) {
+	switch (cxl_fru_id) {
 	case CXL_FRU_ID1:
-		channel = PCA9548A_CHANNEL_0;
-		break;
-	case CXL_FRU_ID2:
-		channel = PCA9548A_CHANNEL_1;
-		break;
-	case CXL_FRU_ID3:
-		channel = PCA9548A_CHANNEL_2;
-		break;
-	case CXL_FRU_ID4:
-		channel = PCA9548A_CHANNEL_3;
-		break;
-	case CXL_FRU_ID5:
-		channel = PCA9548A_CHANNEL_4;
-		break;
-	case CXL_FRU_ID6:
-		channel = PCA9548A_CHANNEL_5;
-		break;
-	case CXL_FRU_ID7:
 		channel = PCA9548A_CHANNEL_6;
 		break;
-	case CXL_FRU_ID8:
+	case CXL_FRU_ID2:
 		channel = PCA9548A_CHANNEL_7;
 		break;
+	case CXL_FRU_ID3:
+		channel = PCA9548A_CHANNEL_4;
+		break;
+	case CXL_FRU_ID4:
+		channel = PCA9548A_CHANNEL_5;
+		break;
+	case CXL_FRU_ID5:
+		channel = PCA9548A_CHANNEL_3;
+		break;
+	case CXL_FRU_ID6:
+		channel = PCA9548A_CHANNEL_2;
+		break;
+	case CXL_FRU_ID7:
+		channel = PCA9548A_CHANNEL_1;
+		break;
+	case CXL_FRU_ID8:
+		channel = PCA9548A_CHANNEL_0;
+		break;
 	default:
-		channel = -1;
+		channel = PCA9548A_CHANNEL_DISABLE;
 		break;
 	}
 

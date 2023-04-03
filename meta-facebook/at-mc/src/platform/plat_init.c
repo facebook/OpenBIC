@@ -51,7 +51,7 @@ void check_mb_reset_status()
 		}
 
 		if (card_type == CXL_CARD) {
-			ret = pcie_card_id_to_cxl_e1s_id(index, &cxl_id);
+			ret = pcie_card_id_to_cxl_id(index, &cxl_id);
 			if (ret != 0) {
 				continue;
 			}
@@ -83,7 +83,7 @@ void check_cxl_ioexp_is_initialized()
 				continue;
 			}
 
-			ret = pcie_card_id_to_cxl_e1s_id(index, &cxl_id);
+			ret = pcie_card_id_to_cxl_id(index, &cxl_id);
 			if (ret != 0) {
 				continue;
 			}
@@ -91,7 +91,7 @@ void check_cxl_ioexp_is_initialized()
 			for (retry_count = 0; retry_count < CXL_IOEXP_INIT_RETRY_COUNT;
 			     ++retry_count) {
 				if (gpio_get(gpio_alert_pin) != HIGH_ACTIVE) {
-					cxl_channel = BIT(cxl_id);
+					cxl_channel = cxl_work_item[cxl_id].cxl_channel;
 					ret = cxl_ioexp_init(cxl_channel);
 					if (ret != 0) {
 						LOG_ERR("cxl: 0x%x ioexp initial fail", cxl_id);
