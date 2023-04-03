@@ -1080,7 +1080,7 @@ bool post_ltc4286_read(uint8_t sensor_num, void *args, int *reading)
 		val = ADJUST_LTC4286_CURRENT(val);
 		break;
 	case PMBUS_READ_PIN:
-		val = ADJUST_LTC4286_POWER(val);
+		val = is_mb_dc_on() ? ADJUST_LTC4286_POWER(val) : val;
 		break;
 	default:
 		return false;

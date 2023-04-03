@@ -1,0 +1,61 @@
+From 188e17ba13c6a8e6b829a53f90095ea2a0c3697d Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Mon, 27 Mar 2023 14:30:14 +0800
+Subject: [PATCH] i3c: aspeed: Disable static addressing if it is not required.
+
+Skip setting the static address if the "assigned-address" property is not
+assigned in slave mode. This patch is intended to prevent a valid static
+address from affecting the behavior of the i3c slave. The static address
+should only be enabled when the master wants to assign a dynamic address
+using setaasa or setdasa, or when the slave wants to operate in I2C mode.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I285b841d163b866f5865707b5d8609d6011ac415
+---
+ drivers/i3c/i3c_aspeed.c         | 9 ++++++---
+ dts/bindings/i3c/aspeed,i3c.yaml | 2 +-
+ 2 files changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index 518618f731..775af827e7 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -1675,6 +1675,7 @@ int i3c_aspeed_slave_set_static_addr(const struct device *dev, uint8_t static_ad
+ 
+ 	device_addr.value = i3c_register->device_addr.value;
+ 	device_addr.fields.static_addr = static_addr;
++	device_addr.fields.static_addr_valid = static_addr ? 1 : 0;
+ 	i3c_register->device_addr.value = device_addr.value;
+ 
+ 	return 0;
+@@ -1836,9 +1837,11 @@ static int i3c_aspeed_init(const struct device *dev)
+ 	intr_reg.fields.resp_q_ready = 1;
+ 
+ 	if (config->secondary) {
+-		/* setup static address so that we can support SETAASA and SETDASA */
+-		i3c_register->device_addr.fields.static_addr = config->assigned_addr;
+-		i3c_register->device_addr.fields.static_addr_valid = 1;
++		/* setup static address so that we can support SETAASA,SETDASA and i2c mode */
++		if (config->assigned_addr) {
++			i3c_register->device_addr.fields.static_addr = config->assigned_addr;
++			i3c_register->device_addr.fields.static_addr_valid = 1;
++		}
+ 
+ 		/* for slave mode */
+ 		intr_reg.fields.ccc_update = 1;
+diff --git a/dts/bindings/i3c/aspeed,i3c.yaml b/dts/bindings/i3c/aspeed,i3c.yaml
+index de9054e88b..38ab76fc43 100644
+--- a/dts/bindings/i3c/aspeed,i3c.yaml
++++ b/dts/bindings/i3c/aspeed,i3c.yaml
+@@ -14,7 +14,7 @@ properties:
+     description: Initialized as a secondary master / slave device
+ 
+   assigned-address:
+-    required: true
++    required: false
+     type: int
+     description: Dynamic address when playing the role as the main master. Static address when playing the role as the slave.
+ 
+-- 
+2.25.1
+

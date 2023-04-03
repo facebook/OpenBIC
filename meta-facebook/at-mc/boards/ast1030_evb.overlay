@@ -21,6 +21,7 @@
 
 &i2c1 {
 	pinctrl-0 = <&pinctrl_i2c1_default>;
+	clock-frequency = <I2C_BITRATE_STANDARD>;
 	status = "okay";
 };
 

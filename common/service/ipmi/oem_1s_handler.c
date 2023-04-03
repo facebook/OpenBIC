@@ -1202,7 +1202,7 @@ __weak void OEM_1S_CONTROL_SENSOR_POLLING(ipmi_msg *msg)
 			// Enable or Disable sensor polling
 			sensor_config[control_sensor_index].is_enable_polling =
 				((operation == DISABLE_SENSOR_POLLING) ? DISABLE_SENSOR_POLLING :
-									 ENABLE_SENSOR_POLLING);
+									       ENABLE_SENSOR_POLLING);
 			msg->data[return_data_index + 1] =
 				sensor_config[control_sensor_index].is_enable_polling;
 		} else {
@@ -2138,6 +2138,15 @@ __weak void OEM_1S_PRE_POWER_OFF_CONTROL(ipmi_msg *msg)
 	return;
 }
 
+__weak void OEM_1S_SET_DEVICE_ACTIVE(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+	return;
+}
+
 void IPMI_OEM_1S_handler(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -2409,6 +2418,10 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_PRE_POWER_OFF_CONTROL:
 		LOG_DBG("Received 1S PRE POWER OFF CONTROL command");
 		OEM_1S_PRE_POWER_OFF_CONTROL(msg);
+		break;
+	case CMD_OEM_1S_SET_DEVICE_ACTIVE:
+		LOG_DBG("Received 1S SET DEVICE ACTIVE command");
+		OEM_1S_SET_DEVICE_ACTIVE(msg);
 		break;
 	default:
 		LOG_ERR("Invalid OEM message, netfn(0x%x) cmd(0x%x)", msg->netfn, msg->cmd);

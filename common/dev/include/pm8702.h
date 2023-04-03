@@ -107,11 +107,9 @@ typedef enum _pm8702_access {
 bool pm8702_get_dimm_temp(void *mctp_p, mctp_ext_params ext_params, uint16_t address,
 			  int16_t *interger, int16_t *fraction);
 bool pm8702_cmd_handler(void *mctp_inst, mctp_ext_params ext_params, uint16_t opcode,
-			uint8_t *data_buf, uint8_t data_len, uint8_t *response,
-			uint8_t *response_len);
+			uint8_t *data_buf, int data_len, uint8_t *response, uint8_t *response_len);
 bool pm8702_read_dimm_temp_from_pioneer(void *mctp_p, mctp_ext_params ext_params, int dimm_id,
 					int16_t *temp_int, int16_t *temp_dec);
-
 #endif
 
 #endif
