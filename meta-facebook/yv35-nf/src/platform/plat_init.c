@@ -15,6 +15,8 @@
  */
 
 #include "power_status.h"
+#include "expansion_board.h"
+#include "plat_power_seq.h"
 #include "plat_gpio.h"
 
 // Disable BIC internal pull down of GPIO input pin
@@ -29,14 +31,18 @@ SCU_CFG scu_cfg[] = {
 
 void pal_pre_init()
 {
+	init_platform_config();
 	scu_init(scu_cfg, ARRAY_SIZE(scu_cfg));
 }
 
 void pal_set_sys_status()
 {
+	set_MB_DC_status(POWER_EN_R);
 	set_DC_status(PG_CARD_OK);
+	control_power_sequence();
+	set_DC_on_delayed_status();
+	set_DC_off_delayed_status();
 }
-
 
 #define DEF_PROJ_GPIO_PRIORITY 61
 
