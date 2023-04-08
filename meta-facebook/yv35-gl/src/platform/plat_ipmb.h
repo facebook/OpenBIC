@@ -21,12 +21,16 @@
 #include "ipmb.h"
 
 #define IPMB_BMC_BUS I2C_BUS7
+#define IPMB_EXP1_BUS I2C_BUS8
 
 #define BMC_I2C_ADDRESS 0x10
 #define SELF_I2C_ADDRESS 0x20
-#define MAX_IPMB_IDX 2
+#define BIC1_I2C_ADDRESS 0x20
+#define MAX_IPMB_IDX 3
 
-enum { BMC_IPMB_IDX,
+enum {
+	BMC_IPMB_IDX,
+	EXP1_IPMB_IDX,
 };
 
 extern IPMB_config pal_IPMB_config_table[];
