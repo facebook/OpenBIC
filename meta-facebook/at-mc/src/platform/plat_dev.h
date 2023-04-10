@@ -26,7 +26,15 @@ typedef struct _pm8702_dev_info {
 	cci_fw_info_resp dev_info;
 } pm8702_dev_info;
 
+typedef struct _cxl_vr_fw_info {
+	uint8_t checksum[4];
+	uint8_t remaining_write;
+	uint8_t vendor;
+	bool is_init;
+} cxl_vr_fw_info;
+
 extern pm8702_dev_info pm8702_table[];
+extern cxl_vr_fw_info cxl_vr_info_table[];
 
 bool pal_sensor_drive_init(uint8_t card_id, sensor_cfg *cfg, uint8_t *init_status);
 bool pal_sensor_drive_read(uint8_t card_id, sensor_cfg *cfg, int *reading, uint8_t *sensor_status);
