@@ -22,9 +22,10 @@
 #include "plat_sensor_table.h"
 #include "plat_hook.h"
 #include <logging/log.h>
+#include "pmbus.h"
 K_MUTEX_DEFINE(wait_pm8702_mutex);
-
 LOG_MODULE_REGISTER(plat_hook);
+
 /**************************************************************************************************
  * INIT ARGS
 **************************************************************************************************/
@@ -180,6 +181,54 @@ bool pre_isl69254iraz_t_read(uint8_t sensor_num, void *args)
 		LOG_ERR("I2C write fail  ret: %d", ret);
 		return false;
 	}
+	return true;
+}
+
+bool post_isl69254iraz_t_read(uint8_t sensor_num, void *args, int *reading)
+{
+	sensor_val *sval = (sensor_val *)reading;
+	uint8_t cur_sensor;
+	uint8_t vol_sensor;
+
+	switch (sensor_num) {
+	case SENSOR_NUM_PWR_VR0V9A:
+		cur_sensor = SENSOR_NUM_CUR_VR0V9A;
+		vol_sensor = SENSOR_NUM_VOL_VR0V9A;
+		break;
+	case SENSOR_NUM_PWR_VR0V8A:
+		cur_sensor = SENSOR_NUM_CUR_VR0V8A;
+		vol_sensor = SENSOR_NUM_VOL_VR0V8A;
+		break;
+	case SENSOR_NUM_PWR_VR0V8D:
+		cur_sensor = SENSOR_NUM_CUR_VR0V8D;
+		vol_sensor = SENSOR_NUM_VOL_VR0V8D;
+		break;
+	case SENSOR_NUM_PWR_VRVDDQAB:
+		cur_sensor = SENSOR_NUM_CUR_VRVDDQAB;
+		vol_sensor = SENSOR_NUM_VOL_VRVDDQAB;
+		break;
+	case SENSOR_NUM_PWR_VRVDDQCD:
+		cur_sensor = SENSOR_NUM_CUR_VRVDDQCD;
+		vol_sensor = SENSOR_NUM_VOL_VRVDDQCD;
+		break;
+	default:
+		LOG_ERR("Sensor 0x%x was not supported by this post reading function", sensor_num);
+		return false;
+		break;
+	}
+	int16_t IOUT_INT = sensor_config[sensor_config_index_map[cur_sensor]].cache & 0xFFFF;
+	int16_t IOUT_FRAC = sensor_config[sensor_config_index_map[cur_sensor]].cache >> 16;
+	float I_OUT = IOUT_INT + (IOUT_FRAC * 0.001);
+
+	int16_t VOUT_INT = sensor_config[sensor_config_index_map[vol_sensor]].cache & 0xFFFF;
+	int16_t VOUT_FRAC = sensor_config[sensor_config_index_map[vol_sensor]].cache >> 16;
+	float V_OUT = VOUT_INT + (VOUT_FRAC * 0.001);
+
+	float P_OUT = V_OUT * I_OUT;
+
+	sval->integer = (int)P_OUT;
+	sval->fraction = (P_OUT - (int)P_OUT) * 1000;
+
 	return true;
 }
 
