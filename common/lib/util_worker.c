@@ -61,11 +61,13 @@ static void work_handler(struct k_work *item)
 		fn_start_time = k_uptime_get();
 		work_job->fn(work_job->ptr_arg, work_job->ui32_arg);
 		fn_finish_time = k_uptime_get();
+		uint64_t duration = fn_finish_time - fn_start_time;
 
 		/* Processing time too long, print warning message */
-		if ((fn_finish_time - fn_start_time) > WARN_WORK_PROC_TIME_MS) {
-			LOG_ERR("WARN: work %s Processing time too long, %llu ms",
-				log_strdup(work_job->name), (fn_finish_time - fn_start_time));
+		if (duration > WARN_WORK_PROC_TIME_MS) {
+			LOG_ERR("WARN: work %s Processing time too long, 0x%08x_%08x ms",
+				log_strdup(work_job->name), (uint32_t)(duration >> 32),
+				(uint32_t)duration);
 		}
 	}
 	if (k_mutex_lock(&mutex_use_count, K_MSEC(1000))) {
