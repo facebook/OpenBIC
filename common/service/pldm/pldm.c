@@ -399,12 +399,13 @@ uint8_t mctp_pldm_send_msg(void *mctp_p, pldm_msg *msg)
 
 	mctp *mctp_inst = (mctp *)mctp_p;
 
+	uint8_t get_inst_id = 0xff;
+
 	/*
 * The request should be set inst_id/msg_type/mctp_tag_owner in the
 * header
 */
 	if (msg->hdr.rq) {
-		uint8_t get_inst_id = 0xff;
 		if (register_instid(mctp_p, &get_inst_id) == false) {
 			LOG_ERR("Register failed!");
 			return PLDM_ERROR;
@@ -430,6 +431,11 @@ uint8_t mctp_pldm_send_msg(void *mctp_p, pldm_msg *msg)
 
 	if (rc == MCTP_ERROR) {
 		LOG_WRN("mctp_send_msg error!!");
+		if (msg->hdr.rq) {
+			if (unregister_instid(mctp_p, get_inst_id) == false) {
+				LOG_ERR("Unregister failed!");
+			}
+		}
 		return PLDM_ERROR;
 	}
 
