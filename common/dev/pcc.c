@@ -125,7 +125,7 @@ void check_PSB_error(uint32_t postcode)
 	memset(&psb_inform.data, 0xFF, EEPROM_WRITE_SIZE);
 	psb_inform.data[4] = error_code;
 	uint8_t checksum = 0;
-	for (int i = 0; i < (PSB_ERROR_MAX_SIZE - 1); i++) {
+	for (i = 0; i < (PSB_ERROR_MAX_SIZE - 1); i++) {
 		checksum -= psb_inform.data[i];
 	}
 	psb_inform.data[PSB_ERROR_MAX_SIZE - 1] = checksum;
@@ -198,10 +198,8 @@ static void process_postcode(void *arvg0, void *arvg1, void *arvg2)
 		}
 
 		uint16_t current_read_index = pcc_read_index;
-		for (; send_index != current_read_index; send_index++) {
-			if (send_index == PCC_BUFFER_LEN - 1) {
-				send_index = 0;
-			}
+		for (; send_index != current_read_index;
+		     send_index = (send_index + 1) % PCC_BUFFER_LEN) {
 			if (((pcc_read_buffer[send_index] >> 24) & 0xFF) == PSB_POSTCODE_PREFIX) {
 				check_PSB_error(pcc_read_buffer[send_index]);
 			} else if (((pcc_read_buffer[send_index] >> 24) & 0xFF) ==
@@ -225,7 +223,8 @@ static void process_postcode(void *arvg0, void *arvg1, void *arvg2)
 			msg->data[7] = (pcc_read_buffer[send_index] >> 24) & 0xFF;
 			ipmb_error status = ipmb_read(msg, IPMB_inf_index_map[msg->InF_target]);
 			if (status != IPMB_ERROR_SUCCESS) {
-				LOG_ERR("Failed to send 4-byte post code to BMC, status %d.", status);
+				LOG_ERR("Failed to send 4-byte post code to BMC, status %d.",
+					status);
 			}
 			k_yield();
 		}
