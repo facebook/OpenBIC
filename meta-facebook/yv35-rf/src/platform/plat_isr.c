@@ -202,16 +202,17 @@ void ISR_PVTT_CD_POWER_GOOD_LOST()
 	check_power_abnormal(PVTT_CD_PG_R, PVTT_CD_EN_R);
 }
 
-static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num)
+static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num, uint8_t page_num)
 {
 	I2C_MSG msg = { 0 };
+	uint8_t exceptional_count = 0;
 
 	msg.bus = I2C_BUS10;
 	msg.target_addr = vr_addr;
 
-	for (int page = 0; page < 2; page++) {
+	for (int page = 0; page < page_num; page++) {
 		msg.tx_len = 4;
-		msg.rx_len = 2;
+		msg.rx_len = 3;
 
 		memset(&msg.data, 0, I2C_BUFF_SIZE);
 		msg.data[0] = PMBUS_PAGE_PLUS_READ;
@@ -224,32 +225,26 @@ static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num
 			continue;
 		}
 
+		uint8_t status_lsb = msg.data[1];
+		uint8_t status_msb = msg.data[2];
+
 		if (check_vr_type() == VR_RNS) {
-			if (msg.data[1] == NON_ABOVE_ERROR &&
-			    msg.data[2] ==
-				    MFR_SPECIFIC_ERROR) { /*exceptional case: MFR_SPECIFIC occurred*/
+			if (status_lsb == NON_ABOVE_ERROR && status_msb == MFR_SPECIFIC_ERROR) {
+				/* exceptional case: MFR_SPECIFIC occurred */
 				msg.tx_len = 4;
-				msg.rx_len = 1;
+				msg.rx_len = 2;
 				memset(&msg.data, 0, I2C_BUFF_SIZE);
 				msg.data[0] = PMBUS_PAGE_PLUS_READ;
 				msg.data[1] = 0x02;
 				msg.data[2] = page;
 				msg.data[3] = PMBUS_STATUS_MFR_SPECIFIC;
 				if (i2c_master_read(&msg, I2C_RETRY)) {
-					LOG_ERR("Failed to read PMBUS_STATUS_WORD.");
+					LOG_ERR("Failed to read PMBUS_STATUS_MFR_SPECIFIC.");
 					continue;
 				}
-				if (msg.data[1] ==
-				    ADCUNLOCK_BBEVENT_ERROR) { /*exceptional case: ADCUNLOCK and BBEVENT occurred*/
-					msg.tx_len = 4;
-					memset(&msg.data, 0, I2C_BUFF_SIZE);
-					msg.data[0] = PMBUS_PAGE_PLUS_WRITE;
-					msg.data[1] = 0x02;
-					msg.data[2] = page;
-					msg.data[3] = PMBUS_CLEAR_FAULTS;
-					if (i2c_master_write(&msg, I2C_RETRY)) {
-						LOG_ERR("Failed to read PMBUS_STATUS_WORD.");
-					}
+				if (msg.data[1] == ADCUNLOCK_BBEVENT_ERROR) {
+					/* exceptional case: ADCUNLOCK and BBEVENT occurred */
+					exceptional_count++;
 					continue;
 				}
 			}
@@ -266,11 +261,20 @@ static void add_vr_pmalert_sel(uint8_t gpio_num, uint8_t vr_addr, uint8_t vr_num
 		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_VR;
 		sel_msg.sensor_number = SENSOR_NUM_VR_ALERT;
 		sel_msg.event_data1 = (vr_num << 1) | page;
-		sel_msg.event_data2 = msg.data[1];
-		sel_msg.event_data3 = msg.data[2];
+		sel_msg.event_data2 = status_lsb;
+		sel_msg.event_data3 = status_msb;
 
 		if (!common_add_sel_evt_record(&sel_msg)) {
 			LOG_ERR("Failed to add VR PMALERT sel.");
+		}
+	}
+
+	if (exceptional_count == page_num) {
+		msg.tx_len = 1;
+		memset(&msg.data, 0, I2C_BUFF_SIZE);
+		msg.data[0] = PMBUS_CLEAR_FAULTS;
+		if (i2c_master_write(&msg, I2C_RETRY)) {
+			LOG_ERR("Failed to clear faults.");
 		}
 	}
 }
@@ -281,7 +285,7 @@ void ISR_PASICA_PMALT()
 		return;
 	}
 
-	add_vr_pmalert_sel(SMB_VR_PASICA_ALERT_N, VR_A0V9_ADDR, P0V8_P0V9_VR);
+	add_vr_pmalert_sel(SMB_VR_PASICA_ALERT_N, VR_A0V9_ADDR, P0V8_P0V9_VR, 2);
 }
 
 void ISR_PVDDQ_AB_PMALT()
@@ -290,7 +294,7 @@ void ISR_PVDDQ_AB_PMALT()
 		return;
 	}
 
-	add_vr_pmalert_sel(SMB_VR_PVDDQ_AB_ALERT_N, VR_VDDQAB_ADDR, PVDDQ_AB_P0V8_VR);
+	add_vr_pmalert_sel(SMB_VR_PVDDQ_AB_ALERT_N, VR_VDDQAB_ADDR, PVDDQ_AB_P0V8_VR, 2);
 }
 
 void ISR_PVDDQ_CD_PMALT()
@@ -299,5 +303,5 @@ void ISR_PVDDQ_CD_PMALT()
 		return;
 	}
 
-	add_vr_pmalert_sel(SMB_VR_PVDDQ_CD_ALERT_N, VR_VDDQCD_ADDR, PVDDQ_CD_VR);
+	add_vr_pmalert_sel(SMB_VR_PVDDQ_CD_ALERT_N, VR_VDDQCD_ADDR, PVDDQ_CD_VR, 1);
 }

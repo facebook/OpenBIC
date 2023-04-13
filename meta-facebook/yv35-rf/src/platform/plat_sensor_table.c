@@ -333,7 +333,22 @@ int check_vr_type(void)
 	msg.bus = I2C_BUS10;
 	msg.target_addr = VR_A0V9_ADDR;
 	msg.tx_len = 1;
-	msg.rx_len = 7;
+	msg.rx_len = 1;
+	msg.data[0] = PMBUS_IC_DEVICE_ID;
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Failed to read VR IC_DEVICE_ID: register(0x%x)", PMBUS_IC_DEVICE_ID);
+		return -1;
+	}
+
+	uint8_t block_count = msg.data[0];
+	memset(&msg, 0, sizeof(msg));
+	printf("block count : %d \n", block_count);
+
+	msg.bus = I2C_BUS10;
+	msg.target_addr = VR_A0V9_ADDR;
+	msg.tx_len = 1;
+	msg.rx_len = block_count + 1;
 	msg.data[0] = PMBUS_IC_DEVICE_ID;
 
 	if (i2c_master_read(&msg, retry)) {
