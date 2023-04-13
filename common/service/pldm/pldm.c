@@ -394,17 +394,17 @@ send_msg:
 
 uint8_t mctp_pldm_send_msg(void *mctp_p, pldm_msg *msg)
 {
-	if (!mctp_p || !msg)
-		return PLDM_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_p, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(msg, PLDM_ERROR);
 
 	mctp *mctp_inst = (mctp *)mctp_p;
+	uint8_t get_inst_id = 0xff;
 
 	/*
 * The request should be set inst_id/msg_type/mctp_tag_owner in the
 * header
 */
 	if (msg->hdr.rq) {
-		uint8_t get_inst_id = 0xff;
 		if (register_instid(mctp_p, &get_inst_id) == false) {
 			LOG_ERR("Register failed!");
 			return PLDM_ERROR;
@@ -427,17 +427,16 @@ uint8_t mctp_pldm_send_msg(void *mctp_p, pldm_msg *msg)
 	memcpy(buf + sizeof(msg->hdr), msg->buf, msg->len);
 
 	uint8_t rc = mctp_send_msg(mctp_inst, buf, len, msg->ext_params);
-
 	if (rc == MCTP_ERROR) {
-		LOG_WRN("mctp_send_msg error!!");
-		return PLDM_ERROR;
+		LOG_ERR("mctp_send_msg error!!");
+		goto error;
 	}
 
 	if (msg->hdr.rq) {
 		wait_msg *p = (wait_msg *)malloc(sizeof(*p));
 		if (!p) {
 			LOG_WRN("wait_msg alloc failed!");
-			return MCTP_ERROR;
+			goto error;
 		}
 
 		memset(p, 0, sizeof(*p));
@@ -452,6 +451,15 @@ uint8_t mctp_pldm_send_msg(void *mctp_p, pldm_msg *msg)
 	}
 
 	return PLDM_SUCCESS;
+
+error:
+	if (msg->hdr.rq) {
+		if (unregister_instid(mctp_p, get_inst_id) == false) {
+			LOG_ERR("Unregister failed!");
+		}
+	}
+
+	return PLDM_ERROR;
 }
 
 /**
