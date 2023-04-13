@@ -16,12 +16,18 @@
 
 #ifndef PLAT_FRU_H
 #define PLAT_FRU_H
+#include "eeprom.h"
+
+#define CXL_FW_VERSION_START 0x0A00
+#define CXL_FW_VERSION_MAX_SIZE 16
+#define FRU_CFG_NUM MAX_FRU_ID
 
 enum FRU_ID {
 	RF_FRU_ID,
 	MAX_FRU_ID,
 };
 
-#define FRU_CFG_NUM MAX_FRU_ID
+bool get_cxl_version(EEPROM_ENTRY *entry);
+bool set_cxl_version(EEPROM_ENTRY *entry);
 
 #endif

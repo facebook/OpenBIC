@@ -33,7 +33,16 @@
 #include "plat_i2c.h"
 #include "plat_sensor_table.h"
 #include "util_worker.h"
+#include "sensor.h"
+#include "plat_hook.h"
+#include "plat_fru.h"
+#include "eeprom.h"
+#include "cci.h"
+#include "mctp.h"
+#include "plat_mctp.h"
+#include "plat_ipmi.h"
 
+#define DUMMY_ARG 0
 #define POWER_SEQ_CTRL_STACK_SIZE 1000
 #define DC_ON_5_SECOND 5
 #define I2C_RETRY 5
@@ -47,6 +56,7 @@
 LOG_MODULE_REGISTER(plat_isr);
 K_WORK_DEFINE(cxl_power_on_work, control_power_on_sequence);
 K_WORK_DEFINE(cxl_power_off_work, control_power_off_sequence);
+K_WORK_DELAYABLE_DEFINE(record_cxl_version_work, record_cxl_version);
 
 void check_power_abnormal(uint8_t power_good_gpio_num, uint8_t control_power_gpio_num)
 {
@@ -67,6 +77,68 @@ void ISR_MB_DC_STATE()
 		k_work_submit_to_queue(&plat_work_q, &cxl_power_on_work);
 	else
 		k_work_submit_to_queue(&plat_work_q, &cxl_power_off_work);
+}
+
+void record_cxl_version()
+{
+	EEPROM_ENTRY set_cxl_ver = { 0 };
+	EEPROM_ENTRY get_cxl_ver = { 0 };
+	mctp *mctp_inst = NULL;
+	mctp_ext_params ext_params = { 0 };
+	bool ret = false;
+	uint8_t read_len = 0;
+	uint8_t resp_buf[CXL_VERSION_LEN] = { 0 };
+
+	if (get_mctp_info_by_eid(CXL_EID, &mctp_inst, &ext_params) == false) {
+		LOG_ERR("fail set eid\n");
+		goto error;
+	}
+	if (!mctp_inst) {
+		LOG_ERR("fail set mctp_inst\n");
+		goto error;
+	}
+
+	bool pm8702_status = pre_pm8702_read(DUMMY_ARG, DUMMY_ARG);
+
+	if (pm8702_status == true) {
+		ret = cci_get_chip_fw_version(mctp_inst, ext_params, resp_buf, &read_len);
+		post_pm8702_read(DUMMY_ARG, DUMMY_ARG, DUMMY_ARG);
+	} else {
+		LOG_ERR("Fail to get CXL version from pioneer\n");
+		goto error;
+	}
+
+	if (ret == true) {
+		ret = get_cxl_version(&get_cxl_ver);
+		if (ret == false) {
+			LOG_ERR("Get CXL version from eeprom failed");
+			goto error;
+		}
+		memcpy(&set_cxl_ver.data, resp_buf, read_len);
+		int cmp_result = memcmp(&get_cxl_ver.data, &set_cxl_ver.data,
+					CXL_VERSION_LEN * sizeof(uint8_t));
+
+		if (cmp_result == 0) {
+			LOG_DBG("The Written CXL version is the same as the stored CXL version in EEPROM");
+			return;
+		} else {
+			ret = set_cxl_version(&set_cxl_ver);
+			if (ret == true) {
+				LOG_DBG("Set CXL version into eeprom success");
+				return;
+			}
+			goto error;
+		}
+	} else {
+		LOG_ERR("Fail to get CXL version from pioneer\n");
+		goto error;
+	}
+
+error:
+	if (get_DC_status() == true) {
+		k_work_schedule(&record_cxl_version_work, K_SECONDS(1));
+	}
+	return;
 }
 
 void ISR_MB_RST()
