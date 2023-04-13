@@ -22,7 +22,7 @@
 
 LOG_MODULE_REGISTER(common_i2c_mux);
 
-bool set_mux_channel(mux_config mux_cfg)
+bool set_mux_channel(mux_config mux_cfg, bool is_mutex)
 {
 	int status = 0;
 	int retry = 5;
@@ -34,11 +34,20 @@ bool set_mux_channel(mux_config mux_cfg)
 	mux_msg.tx_len = 1;
 	mux_msg.data[0] = mux_cfg.channel;
 
-	status = i2c_master_write(&mux_msg, retry);
-	if (status != 0) {
-		LOG_ERR("set channel fail, status: %d, bus: %d, addr: 0x%x", status, mux_cfg.bus,
-			mux_cfg.target_addr);
-		return false;
+	if (is_mutex) {
+		status = i2c_master_write(&mux_msg, retry);
+		if (status != 0) {
+			LOG_ERR("set channel fail, status: %d, bus: %d, addr: 0x%x", status,
+				mux_cfg.bus, mux_cfg.target_addr);
+			return false;
+		}
+	} else {
+		status = i2c_master_write_without_mutex(&mux_msg, retry);
+		if (status != 0) {
+			LOG_ERR("set channel fail without mutex, status: %d, bus: %d, addr: 0x%x",
+				status, mux_cfg.bus, mux_cfg.target_addr);
+			return false;
+		}
 	}
 
 	return true;

@@ -42,7 +42,7 @@ uint8_t pal_ltc2991_init(uint8_t card_id, sensor_cfg *cfg);
 uint8_t pal_ltc2991_read(uint8_t card_id, sensor_cfg *cfg, int *reading);
 uint8_t pal_xdpe12284c_init(uint8_t card_id, sensor_cfg *cfg);
 uint8_t pal_xdpe12284c_read(uint8_t card_id, sensor_cfg *cfg, int *reading);
-bool cxl_single_ioexp_init(uint8_t ioexp_name);
+bool cxl_single_ioexp_alert_reset(uint8_t ioexp_name, bool is_mutex);
 int cxl_ioexp_init(uint8_t cxl_channel);
 uint8_t pal_pm8702_read(uint8_t card_id, sensor_cfg *cfg, int *reading);
 uint8_t pal_pm8702_init(uint8_t card_id, sensor_cfg *cfg);

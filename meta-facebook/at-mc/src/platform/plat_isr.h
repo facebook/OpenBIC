@@ -44,17 +44,17 @@ enum IOEXP_NAME {
 };
 
 typedef struct _cxl_work_info {
-    bool is_init;
-    uint8_t cxl_card_id;
-    uint8_t cxl_channel;
-    bool is_device_reset;
-    bool is_pe_reset;
-    struct k_work_delayable device_reset_work;
-    struct k_work_delayable set_eid_work;
-    
+	bool is_init;
+	uint8_t cxl_card_id;
+	uint8_t cxl_channel;
+	bool is_device_reset;
+	bool is_pe_reset;
+	struct k_work_delayable device_reset_work;
+	struct k_work_delayable set_eid_work;
 } cxl_work_info;
 
 extern cxl_work_info cxl_work_item[];
+extern bool is_interrupt_ongoing;
 
 void ISR_NORMAL_PWRGD();
 void ISR_CXL_IOEXP_ALERT0();
@@ -67,8 +67,8 @@ void ISR_CXL_IOEXP_ALERT6();
 void ISR_CXL_IOEXP_ALERT7();
 
 void init_cxl_work();
-int check_cxl_power_status();
-int set_cxl_device_reset_pin(uint8_t val);
+int check_cxl_power_status(bool is_mutex);
+int set_cxl_device_reset_pin(uint8_t val, bool is_mutex);
 void cxl_ioexp_alert_handler(struct k_work *work_item);
 
 #endif
