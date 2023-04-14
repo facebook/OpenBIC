@@ -140,6 +140,11 @@ __weak uint8_t get_system_class()
 	return -1;
 }
 
+__weak int pal_get_set_add_debug_sel_mode_status(uint8_t options, uint8_t *status)
+{
+	return -1;
+}
+
 /* The byte-2 of ME response for "Get Self-Test Result" command */
 enum GET_SELF_TEST_RESULT_RESPONSE {
 	NO_ERROR = 0x55,
@@ -187,9 +192,8 @@ int set_me_firmware_mode(uint8_t me_fw_mode)
 						 data_len, data);
 		ret = ipmb_read(me_msg, IPMB_inf_index_map[me_msg->InF_target]);
 		if (ret != IPMB_ERROR_SUCCESS) {
-			LOG_ERR("Failed to set ME firmware mode to 0x%x, ret: 0x%x",
-			       me_fw_mode,
-			       ret);
+			LOG_ERR("Failed to set ME firmware mode to 0x%x, ret: 0x%x", me_fw_mode,
+				ret);
 			continue;
 		}
 

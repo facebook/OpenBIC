@@ -30,6 +30,10 @@
 #include "plat_class.h"
 #include "hal_gpio.h"
 #include "util_worker.h"
+#include "plat_sys.h"
+#include "libipmi.h"
+#include "ipmi.h"
+#include "plat_ipmi.h"
 
 bool is_interrupt_ongoing = false;
 
@@ -38,41 +42,49 @@ cxl_work_info cxl_work_item[] = {
 	  .cxl_card_id = CXL_CARD_1,
 	  .cxl_channel = PCA9848_CHANNEL_6,
 	  .is_device_reset = false,
+	  .is_mb_reset = false,
 	  .is_pe_reset = false },
 	{ .is_init = false,
 	  .cxl_card_id = CXL_CARD_2,
 	  .cxl_channel = PCA9848_CHANNEL_7,
 	  .is_device_reset = false,
+	  .is_mb_reset = false,
 	  .is_pe_reset = false },
 	{ .is_init = false,
 	  .cxl_card_id = CXL_CARD_3,
 	  .cxl_channel = PCA9848_CHANNEL_4,
 	  .is_device_reset = false,
+	  .is_mb_reset = false,
 	  .is_pe_reset = false },
 	{ .is_init = false,
 	  .cxl_card_id = CXL_CARD_4,
 	  .cxl_channel = PCA9848_CHANNEL_5,
 	  .is_device_reset = false,
+	  .is_mb_reset = false,
 	  .is_pe_reset = false },
 	{ .is_init = false,
 	  .cxl_card_id = CXL_CARD_5,
 	  .cxl_channel = PCA9848_CHANNEL_3,
 	  .is_device_reset = false,
+	  .is_mb_reset = false,
 	  .is_pe_reset = false },
 	{ .is_init = false,
 	  .cxl_card_id = CXL_CARD_6,
 	  .cxl_channel = PCA9848_CHANNEL_2,
 	  .is_device_reset = false,
+	  .is_mb_reset = false,
 	  .is_pe_reset = false },
 	{ .is_init = false,
 	  .cxl_card_id = CXL_CARD_7,
 	  .cxl_channel = PCA9848_CHANNEL_1,
 	  .is_device_reset = false,
+	  .is_mb_reset = false,
 	  .is_pe_reset = false },
 	{ .is_init = false,
 	  .cxl_card_id = CXL_CARD_8,
 	  .cxl_channel = PCA9848_CHANNEL_0,
 	  .is_device_reset = false,
+	  .is_mb_reset = false,
 	  .is_pe_reset = false },
 };
 
@@ -125,6 +137,36 @@ void cxl_set_eid_work_handler(struct k_work *work_item)
 	k_mutex_unlock(meb_mutex);
 }
 
+void add_sel_log_to_bmc_handler(struct k_work *work_item)
+{
+	int ret;
+
+	struct k_work_delayable *dwork = k_work_delayable_from_work(work_item);
+	cxl_work_info *work_info = CONTAINER_OF(dwork, cxl_work_info, perst_add_sel_work);
+	ipmi_msg msg = { 0 };
+
+	common_addsel_msg_t sel_msg;
+	sel_msg.InF_target = MCTP;
+	sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+	if (work_info->is_pe_reset) {
+		sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
+	} else {
+		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+	}
+	sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+	sel_msg.event_data1 = work_info->cxl_card_id;
+	sel_msg.event_data2 = work_info->is_mb_reset;
+	sel_msg.event_data3 = work_info->is_pe_reset;
+
+	pal_construct_ipmi_add_sel_msg(&msg, &sel_msg);
+
+	ret = pal_pldm_send_ipmi_request(&msg, MCTP_EID_BMC);
+	if (ret < 0) {
+		LOG_ERR("Failed to send GPIO interrupt event to BMC, cxl id(%d) ret(%d)",
+			work_info->cxl_card_id, ret);
+	}
+}
+
 void init_cxl_work()
 {
 	uint8_t index = 0;
@@ -134,6 +176,9 @@ void init_cxl_work()
 					      cxl_ioexp_alert_handler);
 			k_work_init_delayable(&(cxl_work_item[index].set_eid_work),
 					      cxl_set_eid_work_handler);
+			k_work_init_delayable(&(cxl_work_item[index].perst_add_sel_work),
+					      add_sel_log_to_bmc_handler);
+
 			cxl_work_item[index].is_init = true;
 		}
 	}
@@ -313,6 +358,7 @@ int cxl_pe_reset_control(uint8_t cxl_card_id)
 	msg.tx_len = 2;
 	msg.data[0] = TCA9555_OUTPUT_PORT_REG_0;
 	if (mb_reset_status) {
+		cxl_work_item[cxl_card_id].is_mb_reset = true;
 		msg.data[1] = u15_output_status | CXL_IOEXP_ASIC_PERESET_BIT;
 		if (cxl_work_item[cxl_card_id].is_pe_reset != true) {
 			k_work_schedule_for_queue(&plat_work_q,
@@ -320,6 +366,7 @@ int cxl_pe_reset_control(uint8_t cxl_card_id)
 						  K_MSEC(CXL_DRIVE_READY_DELAY_MS));
 		}
 	} else {
+		cxl_work_item[cxl_card_id].is_mb_reset = false;
 		msg.data[1] = u15_output_status & (~CXL_IOEXP_ASIC_PERESET_BIT);
 	}
 
@@ -332,6 +379,12 @@ int cxl_pe_reset_control(uint8_t cxl_card_id)
 		return -1;
 	} else {
 		cxl_work_item[cxl_card_id].is_pe_reset = (mb_reset_status ? true : false);
+	}
+
+	if (debug_sel_mode == 1) {
+		k_work_schedule_for_queue(&plat_work_q,
+					  &cxl_work_item[cxl_card_id].perst_add_sel_work,
+					  K_MSEC(CXL_DEBUG_SEL_DELAY_MS));
 	}
 
 	return 0;

@@ -27,6 +27,7 @@
 #include "plat_i2c_target.h"
 #include "util_worker.h"
 #include "plat_isr.h"
+#include "plat_sys.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -135,6 +136,7 @@ void pal_post_init()
 {
 	plat_mctp_init();
 	check_mb_reset_status();
+	check_debug_sel_mode_status();
 }
 
 void pal_device_init()

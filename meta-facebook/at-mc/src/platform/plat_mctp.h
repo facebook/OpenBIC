@@ -23,6 +23,7 @@
 #ifndef _PLAT_MCTP_H
 #define _PLAT_MCTP_H
 
+#include "ipmi.h"
 #include "plat_i2c.h"
 
 #define I2C_BUS_BMC I2C_BUS5
@@ -37,6 +38,10 @@
 #define MCTP_EID_BMC 0x08
 #define MCTP_EID_CXL MCTP_EID_DEFAULT
 
+#define MCTP_RESP_DATA_INDEX 4
+/* MCTP CC, Netfn, cmd, IPMI CC */
+#define MCTP_RESP_HEADER_COUNT 4
+
 #define SET_EID_FLAG true
 #define CLEAR_EID_FLAG false
 
@@ -44,5 +49,6 @@ void plat_mctp_init(void);
 void set_cxl_endpoint(uint8_t eid, uint8_t cxl_card_id);
 bool get_cxl_eid_flag(uint8_t cxl_card_id);
 void set_cxl_eid_flag(uint8_t cxl_card_id, bool value);
+int pal_pldm_send_ipmi_request(ipmi_msg *msg, uint8_t eid);
 
 #endif

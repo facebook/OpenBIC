@@ -222,6 +222,67 @@ void set_cxl_endpoint(uint8_t eid, uint8_t cxl_card_id)
 	}
 }
 
+int pal_pldm_send_ipmi_request(ipmi_msg *msg, uint8_t eid)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, -1);
+
+	uint8_t ret = MCTP_ERROR;
+	uint8_t resp_len = 0;
+	pldm_msg pmsg = { 0 };
+	uint8_t req_buf[PLDM_MAX_DATA_SIZE] = { 0 };
+	uint8_t resp_buf[PLDM_MAX_DATA_SIZE] = { 0 };
+	mctp *mctp_inst = NULL;
+
+	ret = get_mctp_info(eid, &mctp_inst, &pmsg.ext_params);
+	if (ret != MCTP_SUCCESS) {
+		LOG_ERR("Invalid EID: 0x%x, unable to get route information", eid);
+		return -1;
+	}
+
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, -1);
+
+	// Set PLDM header
+	pmsg.hdr.msg_type = MCTP_MSG_TYPE_PLDM;
+	pmsg.hdr.pldm_type = PLDM_TYPE_OEM;
+	pmsg.hdr.cmd = PLDM_OEM_IPMI_BRIDGE;
+	pmsg.hdr.rq = PLDM_REQUEST;
+
+	pmsg.buf = req_buf;
+	struct _ipmi_cmd_req *cmd_req = (struct _ipmi_cmd_req *)pmsg.buf;
+
+	set_iana(cmd_req->iana, sizeof(cmd_req->iana));
+	cmd_req->netfn_lun = msg->netfn << 2;
+	cmd_req->cmd = msg->cmd;
+	memcpy(&cmd_req->first_data, msg->data, msg->data_len);
+
+	// Total data len = IANA + ipmi netfn + ipmi cmd + ipmi request data len
+	pmsg.len = sizeof(struct _ipmi_cmd_req) - 1 + msg->data_len;
+
+	// Send request to PLDM/MCTP thread and get response
+	resp_len = mctp_pldm_read(mctp_inst, &pmsg, resp_buf, sizeof(resp_buf));
+	if (resp_len == 0) {
+		LOG_ERR("mctp_pldm_read fail");
+		return -1;
+	}
+
+	struct _pldm_ipmi_cmd_resp *resp = (struct _pldm_ipmi_cmd_resp *)resp_buf;
+	if ((resp->completion_code != MCTP_SUCCESS)) {
+		resp->ipmi_comp_code = CC_UNSPECIFIED_ERROR;
+	}
+
+	msg->completion_code = resp->ipmi_comp_code;
+	msg->netfn = resp->netfn_lun >> 2;
+	msg->cmd = resp->cmd;
+	if (resp_len > MCTP_RESP_HEADER_COUNT) {
+		msg->data_len = resp_len - MCTP_RESP_HEADER_COUNT;
+		memcpy(msg->data, &resp_buf[MCTP_RESP_DATA_INDEX], msg->data_len);
+	} else {
+		msg->data_len = 0;
+	}
+
+	return 0;
+}
+
 void plat_mctp_init(void)
 {
 	LOG_INF("plat_mctp_init");

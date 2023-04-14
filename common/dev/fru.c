@@ -26,7 +26,7 @@ LOG_MODULE_REGISTER(dev_fru);
 
 EEPROM_CFG fru_config[FRU_CFG_NUM];
 
-static bool find_FRU_ID(uint8_t FRUID, uint8_t *fru_id)
+bool find_FRU_ID(uint8_t FRUID, uint8_t *fru_id)
 {
 	CHECK_NULL_ARG_WITH_RETURN(fru_id, false);
 
