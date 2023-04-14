@@ -38,6 +38,7 @@ void pal_pre_init()
 				1);
 	}
 
+	init_platform_config();
 	check_asic_card_status();
 	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY + 1); // work queue for low priority jobs
 }

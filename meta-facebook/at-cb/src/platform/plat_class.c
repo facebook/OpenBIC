@@ -26,11 +26,17 @@
 #include "common_i2c_mux.h"
 #include "pex89000.h"
 #include "plat_sensor_table.h"
+#include "hal_gpio.h"
+#include "plat_gpio.h"
 
 LOG_MODULE_REGISTER(plat_class);
 
 #define NUMBER_OF_ADC_CHANNEL 16
 #define AST1030_ADC_BASE_ADDR 0x7e6e9000
+
+static uint8_t board_revision = UNKNOWN_STAGE;
+static uint8_t hsc_module = HSC_MODULE_UNKNOWN;
+static uint8_t pwr_brick_module = POWER_BRICK_UNKNOWN;
 
 /* ADC information for each channel
  * offset: register offset
@@ -319,4 +325,38 @@ void check_asic_card_status()
 			asic_card_info[index].card_status = ASIC_CARD_NOT_PRESENT;
 		}
 	}
+}
+
+void init_platform_config()
+{
+	board_revision = gpio_get(REV_ID0);
+	board_revision |= gpio_get(REV_ID1) << 1;
+	board_revision |= gpio_get(REV_ID2) << 2;
+
+	if (gpio_get(HSC_MODULE_PIN_NUM)) {
+		hsc_module = HSC_MODULE_LTC4286;
+	} else {
+		hsc_module = HSC_MODULE_ADM1272;
+	}
+
+	if (gpio_get(POWER_BRICK_MODULE_PIN_NUM)) {
+		pwr_brick_module = POWER_BRICK_BMR3512202;
+	} else {
+		pwr_brick_module = POWER_BRICK_Q50SN120A1;
+	}
+}
+
+uint8_t get_board_revision()
+{
+	return board_revision;
+}
+
+uint8_t get_hsc_module()
+{
+	return hsc_module;
+}
+
+uint8_t get_pwr_brick_module()
+{
+	return pwr_brick_module;
 }
