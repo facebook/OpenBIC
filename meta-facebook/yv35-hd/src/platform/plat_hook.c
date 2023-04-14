@@ -34,6 +34,8 @@
 #define ADJUST_LTC4282_POWER(x) ((x * 0.96) - 0.6)
 #define ADJUST_MP5990_CURRENT(x) ((x * 1.0029) + 0.0542)
 #define ADJUST_MP5990_POWER(x) ((x * 1.0081) + 1.8285)
+#define DIMM_HIGH_TEMP_THRESHOLD 80
+#define DRAM_THROTTLE_PERCENT 50
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -315,6 +317,65 @@ bool post_ddr5_pwr_read(uint8_t sensor_num, void *args, int *reading)
 	return true;
 }
 
+void set_dram_throttle_fail_cb(apml_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+	LOG_ERR("Failed to set dram throttle to 0x%x.", msg->ui32_arg);
+}
+
+void set_dram_throttle_cb(apml_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	mailbox_RdData *rddata = (mailbox_RdData *)msg->RdData;
+	if (rddata->error_code != SBRMI_MAILBOX_NO_ERR) {
+		LOG_ERR("Error when set dram throttle to 0x%x, error code %d.", msg->ui32_arg,
+			rddata->error_code);
+	}
+}
+
+void set_dram_throttle_value(uint8_t throttle_percent)
+{
+	apml_msg mailbox_msg = { 0 };
+	mailbox_msg.msg_type = APML_MSG_TYPE_MAILBOX;
+	mailbox_msg.bus = APML_BUS;
+	mailbox_msg.target_addr = SB_RMI_ADDR;
+	mailbox_msg.cb_fn = set_dram_throttle_cb;
+	mailbox_msg.error_cb_fn = set_dram_throttle_fail_cb;
+	mailbox_msg.ui32_arg = throttle_percent;
+
+	mailbox_WrData *wrdata = (mailbox_WrData *)mailbox_msg.WrData;
+	wrdata->command = SBRMI_MAILBOX_WRITE_DRAM_THROTTLE;
+	wrdata->data_in[0] = throttle_percent;
+	apml_read(&mailbox_msg);
+}
+
+void check_dram_throttle(uint8_t sensor_num, int *const reading)
+{
+	static uint8_t dram_throttle_status = 0;
+	static bool is_dram_throttle_happened = false;
+
+	sensor_val *sval = (sensor_val *)reading;
+	float dimm_temp = sval->integer + (0.001 * sval->fraction);
+	uint8_t dimm_index = sensor_num - SENSOR_NUM_TEMP_DIMM_A0;
+
+	if ((dimm_temp >= DIMM_HIGH_TEMP_THRESHOLD)) {
+		dram_throttle_status |= BIT(dimm_index);
+	} else {
+		dram_throttle_status &= ~BIT(dimm_index);
+	}
+
+	if (dram_throttle_status && !is_dram_throttle_happened) {
+		set_dram_throttle_value(DRAM_THROTTLE_PERCENT);
+		is_dram_throttle_happened = true;
+	} else if (!dram_throttle_status && is_dram_throttle_happened) {
+		set_dram_throttle_value(0);
+		is_dram_throttle_happened = false;
+	} else {
+		return;
+	}
+}
+
 bool post_ddr5_temp_read(uint8_t sensor_num, void *args, int *const reading)
 {
 	ARG_UNUSED(args);
@@ -369,6 +430,7 @@ bool post_ddr5_temp_read(uint8_t sensor_num, void *args, int *const reading)
 	data_in->dimm_temp = temp & 0x7FF;
 	apml_read(&mailbox_msg);
 
+	check_dram_throttle(sensor_num, reading);
 	return true;
 }
 
