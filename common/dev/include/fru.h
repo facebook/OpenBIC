@@ -45,6 +45,7 @@ enum {
 
 extern EEPROM_CFG fru_config[];
 
+bool find_FRU_ID(uint8_t FRUID, uint8_t *fru_id);
 uint8_t get_FRU_access(uint8_t FRUID);
 uint16_t find_FRU_size(uint8_t FRUID);
 uint8_t FRU_read(EEPROM_ENTRY *entry);

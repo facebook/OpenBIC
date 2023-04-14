@@ -38,6 +38,7 @@ enum FRU_ID {
 	CXL_FRU_ID6,
 	CXL_FRU_ID7,
 	CXL_FRU_ID8,
+	SYS_DEBUG_ID,
 	// OTHER_FRU_ID,
 	MAX_FRU_ID,
 };
@@ -54,7 +55,7 @@ enum {
 };
 
 /* Skip fru id 0~16, 18~29 */
-#define FRU_CFG_NUM 9
+#define FRU_CFG_NUM 10
 #define BIC_FRU_DEV_ID MC_FRU_ID
 
 uint8_t pal_cxl_map_mux0_channel(uint8_t cxl_fru_id);

@@ -19,6 +19,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "ipmi.h"
 
 #define BIC_FW_DATA_LENGTH 7
 #define PCIE_CARD_NOT_PRESENT 0
@@ -67,5 +68,7 @@ enum PCIE_CARD_SENSOR_READING_TYPE {
 	PCIE_CARD_E1S,
 	PCIE_CARD_CXL,
 };
+
+void pal_construct_ipmi_add_sel_msg(ipmi_msg *msg, common_addsel_msg_t *sel_msg);
 
 #endif

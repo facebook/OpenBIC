@@ -34,6 +34,7 @@
 
 #define CXL_CONTROLLER_MUX_CHANNEL 0x01
 #define CXL_DRIVE_READY_DELAY_MS 1000
+#define CXL_DEBUG_SEL_DELAY_MS 500
 #define CXL_POWER_GOOD_DELAY_MS 12
 
 enum IOEXP_NAME {
@@ -48,9 +49,11 @@ typedef struct _cxl_work_info {
 	uint8_t cxl_card_id;
 	uint8_t cxl_channel;
 	bool is_device_reset;
+	bool is_mb_reset;
 	bool is_pe_reset;
 	struct k_work_delayable device_reset_work;
 	struct k_work_delayable set_eid_work;
+	struct k_work_delayable perst_add_sel_work;
 } cxl_work_info;
 
 extern cxl_work_info cxl_work_item[];

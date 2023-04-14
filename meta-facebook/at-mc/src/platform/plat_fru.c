@@ -127,6 +127,15 @@ const EEPROM_CFG plat_fru_config[] = {
 		CXL_FRU_MUX1_ADDR,
 		CXL_FRU_MUX1_CHANNEL,
 	},
+	{
+		PUYA_P24C128F,
+		SYS_DEBUG_ID,
+		MC_FRU_PORT,
+		MC_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		BIC_CONFIG_START,
+		BIC_CONFIG_SIZE,
+	},
 };
 
 void pal_load_fru_config(void)

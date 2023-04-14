@@ -163,6 +163,9 @@
 #define SENSOR_NUM_TEMP_CXL_DIMMC 0x23
 #define SENSOR_NUM_TEMP_CXL_DIMMD 0x24
 
+/**********************Event**********************/
+#define SENSOR_NUM_SYSTEM_STATUS 0x10
+
 extern sensor_cfg plat_e1s_1_12_sensor_config[];
 extern sensor_cfg plat_e1s_13_14_sensor_config[];
 extern sensor_cfg plat_cxl_sensor_config[];
@@ -175,8 +178,8 @@ bool is_e1s_access(uint8_t sensor_num);
 bool is_cxl_access(uint8_t pcie_card_id);
 struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus);
 bool get_cxl_sensor_config_index(uint8_t sensor_num, uint8_t *index);
-bool get_pcie_card_mux_config(uint8_t card_id, uint8_t sensor_num,
-			      mux_config *card_mux_cfg, mux_config *cxl_mux_cfg);
+bool get_pcie_card_mux_config(uint8_t card_id, uint8_t sensor_num, mux_config *card_mux_cfg,
+			      mux_config *cxl_mux_cfg);
 void pal_init_drive(sensor_cfg *cfg_table, uint8_t cfg_size, uint8_t device_type, uint8_t card_id);
 void *get_pcie_init_sensor_config(uint8_t card_id, uint8_t sensor_number);
 

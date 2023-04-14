@@ -92,4 +92,6 @@ void set_sys_ready_pin(uint8_t ready_gpio_name);
 
 uint8_t get_system_class();
 
+int pal_get_set_add_debug_sel_mode_status(uint8_t options, uint8_t *status);
+
 #endif

@@ -17,4 +17,15 @@
 #ifndef PLAT_SYS_H
 #define PLAT_SYS_H
 
+#include <stdint.h>
+
+enum GET_SET_OPTION {
+	GET_STATUS,
+	SET_STATUS,
+};
+
+extern uint8_t debug_sel_mode;
+
+void check_debug_sel_mode_status();
+
 #endif

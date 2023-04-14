@@ -2065,6 +2065,36 @@ __weak void OEM_1S_BMC_IPMB_ACCESS(ipmi_msg *msg)
 #endif
 }
 
+__weak void OEM_1S_SET_ADD_DEBUG_SEL_MODE(ipmi_msg *msg)
+{
+	int ret;
+	uint8_t options;
+	uint8_t status = 0;
+
+	if (msg->data_len < 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	options = msg->data[0];
+
+	if (msg->data_len == 2) {
+		status = msg->data[1];
+	}
+
+	ret = pal_get_set_add_debug_sel_mode_status(options, &status);
+
+	if (ret < 0) {
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	msg->data[0] = status;
+	msg->data_len = 1;
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
 __weak void OEM_1S_GET_HSC_STATUS(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -2422,6 +2452,10 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_SET_DEVICE_ACTIVE:
 		LOG_DBG("Received 1S SET DEVICE ACTIVE command");
 		OEM_1S_SET_DEVICE_ACTIVE(msg);
+		break;
+	case CMD_OEM_1S_SET_ADD_DEBUG_SEL_MODE:
+		LOG_DBG("Received SET ADD DEBUG SEL MODE command");
+		OEM_1S_SET_ADD_DEBUG_SEL_MODE(msg);
 		break;
 	default:
 		LOG_ERR("Invalid OEM message, netfn(0x%x) cmd(0x%x)", msg->netfn, msg->cmd);
