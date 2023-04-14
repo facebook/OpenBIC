@@ -37,6 +37,8 @@
 #include "plat_hook.h"
 #include "plat_class.h"
 #include "hal_gpio.h"
+#include "xdpe12284c.h"
+#include "util_sys.h"
 
 LOG_MODULE_REGISTER(plat_dev);
 
@@ -84,6 +86,15 @@ enum XDPE12284_VID {
 };
 
 pm8702_dev_info pm8702_table[] = {
+	{ .is_init = false }, { .is_init = false }, { .is_init = false }, { .is_init = false },
+	{ .is_init = false }, { .is_init = false }, { .is_init = false }, { .is_init = false },
+};
+
+cxl_vr_fw_info cxl_vr_info_table[] = {
+	{ .is_init = false }, { .is_init = false }, { .is_init = false }, { .is_init = false },
+	{ .is_init = false }, { .is_init = false }, { .is_init = false }, { .is_init = false },
+	{ .is_init = false }, { .is_init = false }, { .is_init = false }, { .is_init = false },
+	{ .is_init = false }, { .is_init = false }, { .is_init = false }, { .is_init = false },
 	{ .is_init = false }, { .is_init = false }, { .is_init = false }, { .is_init = false },
 	{ .is_init = false }, { .is_init = false }, { .is_init = false }, { .is_init = false },
 };
@@ -750,6 +761,47 @@ uint8_t pal_xdpe12284c_init(uint8_t card_id, sensor_cfg *cfg)
 
 	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+
+	uint8_t cxl_id = 0;
+	pcie_card_id_to_cxl_id(card_id, &cxl_id);
+	switch (cfg->target_addr) {
+	case CXL_VR_A0V8_ADDR:
+		cxl_id = cxl_id * 3;
+		break;
+	case CXL_VR_D0V8_ADDR:
+		cxl_id = cxl_id * 3 + 1;
+		break;
+	case CXL_VR_VDDQCD_ADDR:
+		cxl_id = cxl_id * 3 + 2;
+		break;
+	default:
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+
+	if (!cxl_vr_info_table[cxl_id].is_init) {
+		if (!xdpe12284c_get_checksum(cfg->port, cfg->target_addr,
+					     (cxl_vr_info_table[cxl_id].checksum))) {
+			LOG_ERR("cxl %d %s get checksum failed", card_id,
+				cfg->target_addr == CXL_VR_A0V8_ADDR   ? "VR_P0V89A" :
+				cfg->target_addr == CXL_VR_D0V8_ADDR   ? "VR_P0V8D_PVDDQ_AB" :
+				cfg->target_addr == CXL_VR_VDDQCD_ADDR ? "VR_PVDDQ_CD" :
+									       "unknown vr");
+			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		}
+
+		if (!xdpe12284c_get_remaining_write(
+			    cfg->port, cfg->target_addr,
+			    (uint16_t *)&(cxl_vr_info_table[cxl_id].remaining_write))) {
+			LOG_ERR("cxl %d %s get remaining write failed", card_id,
+				cfg->target_addr == CXL_VR_A0V8_ADDR   ? "VR_P0V89A" :
+				cfg->target_addr == CXL_VR_D0V8_ADDR   ? "VR_P0V8D_PVDDQ_AB" :
+				cfg->target_addr == CXL_VR_VDDQCD_ADDR ? "VR_PVDDQ_CD" :
+									       "unknown vr");
+			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		}
+		cxl_vr_info_table[cxl_id].vendor = VENDOR_INFINEON;
+		cxl_vr_info_table[cxl_id].is_init = true;
 	}
 
 	return SENSOR_INIT_SUCCESS;

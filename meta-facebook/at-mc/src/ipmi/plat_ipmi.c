@@ -321,6 +321,7 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 
 	bool ret = false;
 	uint8_t cxl_id = 0;
+	uint8_t index = 0;
 	uint8_t component = msg->data[0];
 
 	if (component >= MC_COMPNT_MAX) {
@@ -398,6 +399,41 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		memcpy(&msg->data[2], fw_ptr, sizeof(uint8_t) * GET_FW_INFO_REVISION_LEN);
 		msg->data_len = GET_FW_INFO_REVISION_LEN + 2;
 		msg->completion_code = CC_SUCCESS;
+		break;
+	case MC_COMPNT_CXL1_VR_P0V89A:
+	case MC_COMPNT_CXL1_VR_P0V8D_PVDDQ_AB:
+	case MC_COMPNT_CXL1_VR_VR_PVDDQ_CD:
+	case MC_COMPNT_CXL2_VR_P0V89A:
+	case MC_COMPNT_CXL2_VR_P0V8D_PVDDQ_AB:
+	case MC_COMPNT_CXL2_VR_VR_PVDDQ_CD:
+	case MC_COMPNT_CXL3_VR_P0V89A:
+	case MC_COMPNT_CXL3_VR_P0V8D_PVDDQ_AB:
+	case MC_COMPNT_CXL3_VR_VR_PVDDQ_CD:
+	case MC_COMPNT_CXL4_VR_P0V89A:
+	case MC_COMPNT_CXL4_VR_P0V8D_PVDDQ_AB:
+	case MC_COMPNT_CXL4_VR_VR_PVDDQ_CD:
+	case MC_COMPNT_CXL5_VR_P0V89A:
+	case MC_COMPNT_CXL5_VR_P0V8D_PVDDQ_AB:
+	case MC_COMPNT_CXL5_VR_VR_PVDDQ_CD:
+	case MC_COMPNT_CXL6_VR_P0V89A:
+	case MC_COMPNT_CXL6_VR_P0V8D_PVDDQ_AB:
+	case MC_COMPNT_CXL6_VR_VR_PVDDQ_CD:
+	case MC_COMPNT_CXL7_VR_P0V89A:
+	case MC_COMPNT_CXL7_VR_P0V8D_PVDDQ_AB:
+	case MC_COMPNT_CXL7_VR_VR_PVDDQ_CD:
+	case MC_COMPNT_CXL8_VR_P0V89A:
+	case MC_COMPNT_CXL8_VR_P0V8D_PVDDQ_AB:
+	case MC_COMPNT_CXL8_VR_VR_PVDDQ_CD:
+		index = component - MC_COMPNT_CXL1_VR_P0V89A;
+		if (cxl_vr_info_table[index].is_init) {
+			memcpy(&msg->data[0], cxl_vr_info_table[index].checksum, 4);
+			msg->data[4] = cxl_vr_info_table[index].remaining_write;
+			msg->data[5] = cxl_vr_info_table[index].vendor;
+			msg->data_len = 6;
+			msg->completion_code = CC_SUCCESS;
+		} else {
+			msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+		}
 		break;
 	default:
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
