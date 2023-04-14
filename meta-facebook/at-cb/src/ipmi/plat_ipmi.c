@@ -33,6 +33,7 @@
 #include "plat_gpio.h"
 #include "plat_hook.h"
 #include "plat_dev.h"
+#include "common_i2c_mux.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
@@ -444,5 +445,105 @@ void OEM_1S_GET_PCIE_CARD_SENSOR_READING(ipmi_msg *msg)
 	msg->data[0] = device_status;
 	memcpy(&msg->data[1], &reading, sizeof(reading));
 	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
+void OEM_1S_READ_DEVICE_FRU_DATA(ipmi_msg *msg)
+{
+	/* IPMI command format
+	*  Request:
+	*    Byte 0: FRU id
+	*    Byte 1: Device id
+	*    Byte 2~3: Offset
+	*    Byte 4: Read length
+	*  Response:
+	*    Byte 0~: Read data
+	*/
+
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 5) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	bool ret = false;
+	uint8_t retry = 5;
+	uint8_t fru_id = msg->data[0];
+	uint8_t device_id = msg->data[1];
+	uint16_t offset = (msg->data[3] << 8) | msg->data[2];
+	uint8_t read_len = msg->data[4];
+	uint8_t device_fru_addr = 0;
+	I2C_MSG i2c_msg = { 0 };
+	mux_config accl_mux = { 0 };
+	mux_config device_mux = { 0 };
+
+	ret = pal_get_accl_fru_config(fru_id, &accl_mux);
+	if (ret != true) {
+		msg->completion_code = CC_INVALID_PARAM;
+		return;
+	}
+
+	switch (device_id) {
+	case ACCL_DEVICE_1:
+		device_fru_addr = ACCL_FREYA_CH1_FRU_ADDR;
+		break;
+	case ACCL_DEVICE_2:
+		device_fru_addr = ACCL_FREYA_CH2_FRU_ADDR;
+		break;
+	default:
+		LOG_ERR("Invalid device id: 0x%x", device_id);
+		msg->completion_code = CC_INVALID_PARAM;
+		return;
+	}
+
+	device_mux.bus = accl_mux.bus;
+	device_mux.target_addr = ACCL_FREYA_MUX_ADDR;
+	device_mux.channel = BIT(ACCL_FREYA_FRU_MUX_CHAN);
+
+	struct k_mutex *mutex = get_i2c_mux_mutex(accl_mux.bus);
+	int mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
+	if (mutex_status != 0) {
+		LOG_ERR("Mutex lock fail, status: %d, fru id: 0x%x, device id: 0x%x", mutex_status,
+			fru_id, device_id);
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	/* Switch mux channel */
+	ret = set_mux_channel(accl_mux, MUTEX_LOCK_ENABLE);
+	if (ret != true) {
+		LOG_ERR("Switch accl mux channel fail, fru id: 0x%x, device id: 0x%x", fru_id,
+			device_id);
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		goto exit;
+	}
+
+	ret = set_mux_channel(device_mux, MUTEX_LOCK_ENABLE);
+	if (ret != true) {
+		LOG_ERR("Switch accl device mux channel fail, fru id: 0x%x, device id: 0x%x",
+			fru_id, device_id);
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		goto exit;
+	}
+
+	i2c_msg.bus = accl_mux.bus;
+	i2c_msg.target_addr = device_fru_addr;
+	i2c_msg.tx_len = 2; // write 2 byte offset to EEPROM
+	i2c_msg.rx_len = read_len;
+	i2c_msg.data[0] = (offset >> 8) & 0xFF;
+	i2c_msg.data[1] = offset & 0xFF;
+
+	if (i2c_master_read(&i2c_msg, retry) == 0) {
+		msg->data_len = i2c_msg.rx_len + 1;
+		msg->data[0] = i2c_msg.rx_len;
+		memcpy(&msg->data[1], &i2c_msg.data[0], i2c_msg.rx_len);
+		msg->completion_code = CC_SUCCESS;
+	} else {
+		msg->completion_code = CC_FRU_DEV_BUSY;
+	}
+
+exit:
+	k_mutex_unlock(mutex);
 	return;
 }

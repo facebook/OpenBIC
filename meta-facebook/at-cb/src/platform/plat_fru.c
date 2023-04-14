@@ -18,7 +18,13 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <logging/log.h>
 #include "fru.h"
+#include "libutil.h"
+#include "common_i2c_mux.h"
+#include "plat_sensor_table.h"
+
+LOG_MODULE_REGISTER(plat_fru);
 
 const EEPROM_CFG plat_fru_config[] = {
 	// ACB BIC fru
@@ -54,6 +60,7 @@ const EEPROM_CFG plat_fru_config[] = {
 		true,
 		ACCL_1_6_FRU_MUX_ADDR,
 		ACCL_1_7_FRU_MUX_CHAN,
+		&i2c_7_accl_mutex,
 	},
 	// ACCL_2 fru
 	{
@@ -68,6 +75,7 @@ const EEPROM_CFG plat_fru_config[] = {
 		true,
 		ACCL_1_6_FRU_MUX_ADDR,
 		ACCL_2_8_FRU_MUX_CHAN,
+		&i2c_7_accl_mutex,
 	},
 	// ACCL_3 fru
 	{
@@ -82,6 +90,7 @@ const EEPROM_CFG plat_fru_config[] = {
 		true,
 		ACCL_1_6_FRU_MUX_ADDR,
 		ACCL_3_9_FRU_MUX_CHAN,
+		&i2c_7_accl_mutex,
 	},
 	// ACCL_4 fru
 	{
@@ -96,6 +105,7 @@ const EEPROM_CFG plat_fru_config[] = {
 		true,
 		ACCL_1_6_FRU_MUX_ADDR,
 		ACCL_4_10_FRU_MUX_CHAN,
+		&i2c_7_accl_mutex,
 	},
 	// ACCL_5 fru
 	{
@@ -110,6 +120,7 @@ const EEPROM_CFG plat_fru_config[] = {
 		true,
 		ACCL_1_6_FRU_MUX_ADDR,
 		ACCL_5_11_FRU_MUX_CHAN,
+		&i2c_7_accl_mutex,
 	},
 	// ACCL_6 fru
 	{
@@ -124,6 +135,7 @@ const EEPROM_CFG plat_fru_config[] = {
 		true,
 		ACCL_1_6_FRU_MUX_ADDR,
 		ACCL_6_12_FRU_MUX_CHAN,
+		&i2c_7_accl_mutex,
 	},
 	// ACCL_7 fru
 	{
@@ -138,6 +150,7 @@ const EEPROM_CFG plat_fru_config[] = {
 		true,
 		ACCL_7_12_FRU_MUX_ADDR,
 		ACCL_1_7_FRU_MUX_CHAN,
+		&i2c_8_accl_mutex,
 	},
 	// ACCL_8 fru
 	{
@@ -152,6 +165,7 @@ const EEPROM_CFG plat_fru_config[] = {
 		true,
 		ACCL_7_12_FRU_MUX_ADDR,
 		ACCL_2_8_FRU_MUX_CHAN,
+		&i2c_8_accl_mutex,
 	},
 	// ACCL_9 fru
 	{
@@ -166,6 +180,7 @@ const EEPROM_CFG plat_fru_config[] = {
 		true,
 		ACCL_7_12_FRU_MUX_ADDR,
 		ACCL_3_9_FRU_MUX_CHAN,
+		&i2c_8_accl_mutex,
 	},
 	// ACCL_10 fru
 	{
@@ -180,6 +195,7 @@ const EEPROM_CFG plat_fru_config[] = {
 		true,
 		ACCL_7_12_FRU_MUX_ADDR,
 		ACCL_4_10_FRU_MUX_CHAN,
+		&i2c_8_accl_mutex,
 	},
 	// ACCL_11 fru
 	{
@@ -194,6 +210,7 @@ const EEPROM_CFG plat_fru_config[] = {
 		true,
 		ACCL_7_12_FRU_MUX_ADDR,
 		ACCL_5_11_FRU_MUX_CHAN,
+		&i2c_8_accl_mutex,
 	},
 	// ACCL_12 fru
 	{
@@ -208,10 +225,30 @@ const EEPROM_CFG plat_fru_config[] = {
 		true,
 		ACCL_7_12_FRU_MUX_ADDR,
 		ACCL_6_12_FRU_MUX_CHAN,
+		&i2c_8_accl_mutex,
 	},
 };
 
 void pal_load_fru_config(void)
 {
 	memcpy(&fru_config, &plat_fru_config, sizeof(plat_fru_config));
+}
+
+bool pal_get_accl_fru_config(uint8_t accl_fru_id, mux_config *mux_cfg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mux_cfg, false);
+
+	uint8_t index = 0;
+
+	for (index = 0; index < ARRAY_SIZE(plat_fru_config); ++index) {
+		if (plat_fru_config[index].dev_id == accl_fru_id) {
+			mux_cfg->bus = plat_fru_config[index].port;
+			mux_cfg->target_addr = plat_fru_config[index].mux_addr;
+			mux_cfg->channel = BIT(plat_fru_config[index].mux_channel);
+			return true;
+		}
+	}
+
+	LOG_ERR("Invalid fru id: 0x%x", accl_fru_id);
+	return false;
 }

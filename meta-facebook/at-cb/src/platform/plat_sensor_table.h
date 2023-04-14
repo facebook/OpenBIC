@@ -176,6 +176,8 @@
 
 extern sensor_cfg plat_accl_sensor_config[];
 extern const int ACCL_SENSOR_CONFIG_SIZE;
+extern struct k_mutex i2c_7_accl_mutex;
+extern struct k_mutex i2c_8_accl_mutex;
 
 void load_sensor_config(void);
 bool is_mb_dc_on();

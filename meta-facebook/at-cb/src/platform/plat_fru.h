@@ -18,6 +18,7 @@
 #define PLAT_FRU_H
 
 #include "plat_i2c.h"
+#include "common_i2c_mux.h"
 #include "i2c-mux-pca954x.h"
 
 enum FRU_ID {
@@ -39,6 +40,11 @@ enum FRU_ID {
 	MAX_FRU_ID,
 };
 
+enum ACCL_DEVICE_ID {
+	ACCL_DEVICE_1 = 0x01,
+	ACCL_DEVICE_2,
+};
+
 /* Skip fru id 0~12, 14~15, 17 */
 #define FRU_CFG_NUM 14
 #define BIC_FRU_DEV_ID CB_FRU_ID
@@ -58,5 +64,11 @@ enum FRU_ID {
 #define ACCL_4_10_FRU_MUX_CHAN 3
 #define ACCL_5_11_FRU_MUX_CHAN 4
 #define ACCL_6_12_FRU_MUX_CHAN 5
+#define ACCL_FREYA_MUX_ADDR (0xE4 >> 1)
+#define ACCL_FREYA_CH1_FRU_ADDR (0xA4 >> 1)
+#define ACCL_FREYA_CH2_FRU_ADDR (0xA2 >> 1)
+#define ACCL_FREYA_FRU_MUX_CHAN 0
+
+bool pal_get_accl_fru_config(uint8_t accl_fru_id, mux_config *mux_cfg);
 
 #endif
