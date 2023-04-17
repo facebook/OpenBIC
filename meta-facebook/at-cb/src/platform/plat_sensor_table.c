@@ -479,30 +479,36 @@ void load_sensor_config(void)
 	pal_extend_sensor_config();
 }
 
-bool is_mb_dc_on()
+bool is_acb_power_good()
 {
-	// BIC can check motherboard dc power status by P1V8_PEX voltage
-	// Motherboard is dc off if ADC-4 voltage is lower than 1.8V - (1.8V * 7%) = 1.674
+	// BIC can check motherboard dc power status by CPLD power good flag
 	bool ret = false;
-	uint8_t channel = P1V8_PEX_ADC_CHANNEL;
-	float mb_dc_low_threshold = P1V8_PEX_LOW_THRESHOLD;
-	float voltage = 0;
+	uint8_t board_revision = get_board_revision();
 
-	ret = get_adc_voltage(channel, &voltage);
-	if (ret == true) {
-		if (voltage < mb_dc_low_threshold) {
-			ret = false;
+	switch (board_revision) {
+	case POC_STAGE:
+	case EVT1_STAGE:
+		ret = get_acb_power_status();
+		if (ret != true) {
+			LOG_ERR("Get acb power status fail");
+			return false;
 		}
-	} else {
-		LOG_ERR("Ret false");
-	}
 
-	return ret;
+		return get_acb_power_good_flag();
+	case EVT2_STAGE:
+	case DVT_STAGE:
+	case PVT_STAGE:
+	case MP_STAGE:
+		return get_acb_power_good_flag();
+	default:
+		LOG_ERR("Invalid board revision: 0x%x", board_revision);
+		return false;
+	}
 }
 
 bool is_dc_access(uint8_t sensor_num)
 {
-	return is_mb_dc_on();
+	return is_acb_power_good();
 }
 
 bool is_pcie_device_access(uint8_t card_id, uint8_t sensor_num)

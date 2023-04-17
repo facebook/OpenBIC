@@ -28,6 +28,7 @@
 #include "plat_sensor_table.h"
 #include "hal_gpio.h"
 #include "plat_gpio.h"
+#include "ioexp_pca9555.h"
 
 LOG_MODULE_REGISTER(plat_class);
 
@@ -37,26 +38,7 @@ LOG_MODULE_REGISTER(plat_class);
 static uint8_t board_revision = UNKNOWN_STAGE;
 static uint8_t hsc_module = HSC_MODULE_UNKNOWN;
 static uint8_t pwr_brick_module = POWER_BRICK_UNKNOWN;
-
-/* ADC information for each channel
- * offset: register offset
- * shift: data of channel
- */
-struct ADC_INFO {
-	uint32_t offset;
-	uint8_t shift;
-};
-
-struct ADC_INFO adc_info[NUMBER_OF_ADC_CHANNEL] = {
-	{ 0x10, 0 },  { 0x10, 16 },  { 0x14, 0 },  { 0x14, 16 },  { 0x18, 0 },	{ 0x18, 16 },
-	{ 0x1C, 0 },  { 0x1C, 16 },  { 0x110, 0 }, { 0x110, 16 }, { 0x114, 0 }, { 0x114, 16 },
-	{ 0x118, 0 }, { 0x118, 16 }, { 0x11C, 0 }, { 0x11C, 16 }
-};
-
-enum ADC_REF_VOL_SELECTION {
-	REF_VOL_2_5V = 0x0, // 2.5V reference voltage selection
-	REF_VOL_1_2V = 0x40 // 1.2V reference voltage selection
-};
+static bool is_power_good = false;
 
 struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT] = {
   [0] = { .bus = I2C_BUS7,
@@ -169,49 +151,7 @@ struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT] = {
      .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
 };
 
-bool get_adc_voltage(int channel, float *voltage)
-{
-	CHECK_NULL_ARG_WITH_RETURN(voltage, false)
-
-	if (channel >= NUMBER_OF_ADC_CHANNEL) {
-		LOG_ERR("Invalid ADC channel-%d", channel);
-		return false;
-	}
-
-	uint32_t raw_value = 0;
-	uint32_t reg_value = 0;
-	float reference_voltage = 0.0f;
-
-	/* Get ADC reference voltage from Aspeed chip
-	* ADC000: Engine Control
-	* [7:6] Reference Voltage Selection
-	* 00b - 2.5V / 01b - 1.2V / 10b and 11b - External Voltage
-	*/
-	reg_value = sys_read32(AST1030_ADC_BASE_ADDR);
-	switch (reg_value & (BIT(7) | BIT(6))) {
-	case REF_VOL_2_5V:
-		reference_voltage = 2.5;
-		break;
-	case REF_VOL_1_2V:
-		reference_voltage = 1.2;
-		break;
-	default:
-		LOG_ERR("Unsupported external reference voltage");
-		return false;
-	}
-
-	// Read ADC raw value
-	reg_value = sys_read32(AST1030_ADC_BASE_ADDR + adc_info[channel].offset);
-	raw_value =
-		(reg_value >> adc_info[channel].shift) & BIT_MASK(10); // 10-bit(0x3FF) resolution
-
-	// Real voltage = raw data * reference voltage / 2 ^ resolution(10)
-	*voltage = (raw_value * reference_voltage) / 1024;
-
-	return true;
-}
-
-void check_accl_device_presence_status(uint8_t pex_id)
+void check_accl_device_presence_status_via_pex(uint8_t pex_id)
 {
 	uint8_t ret = 0;
 	uint8_t val = 0;
@@ -277,6 +217,97 @@ void check_accl_device_presence_status(uint8_t pex_id)
 	}
 }
 
+void check_accl_device_presence_status_via_ioexp()
+{
+	int ret = -1;
+	int retry = 5;
+	uint8_t addr_index = 0;
+	uint8_t card_index = 0;
+	uint8_t ioexp_index = 0;
+	uint8_t presence_val = 0;
+	uint16_t reg_val = 0;
+	uint8_t ioexp_addr[] = { IOEXP_U228_ADDR, IOEXP_U229_ADDR, IOEXP_U230_ADDR };
+	I2C_MSG msg = { 0 };
+
+	for (addr_index = 0; addr_index < ARRAY_SIZE(ioexp_addr); ++addr_index) {
+		card_index = addr_index * IOEXP_CARD_PRESENCE_COUNT;
+
+		memset(&msg, 0, sizeof(I2C_MSG));
+		msg.bus = I2C_BUS13;
+		msg.target_addr = ioexp_addr[addr_index];
+		msg.rx_len = 1;
+		msg.tx_len = 1;
+		msg.data[0] = PCA9555_OUTPUT_PORT_REG_1;
+
+		ret = i2c_master_read(&msg, retry);
+		if (ret != 0) {
+			LOG_ERR("Fail to read ioexp addr: 0x%x, offset: 0x%x", msg.target_addr,
+				msg.data[0]);
+			continue;
+		}
+
+		reg_val = msg.data[0] << 8;
+
+		memset(&msg, 0, sizeof(I2C_MSG));
+		msg.bus = I2C_BUS13;
+		msg.target_addr = ioexp_addr[addr_index];
+		msg.rx_len = 1;
+		msg.tx_len = 1;
+		msg.data[0] = PCA9555_OUTPUT_PORT_REG_0;
+
+		ret = i2c_master_read(&msg, retry);
+		if (ret != 0) {
+			LOG_ERR("Fail to read ioexp addr: 0x%x, offset: 0x%x", msg.target_addr,
+				msg.data[0]);
+			continue;
+		}
+
+		reg_val |= msg.data[0];
+
+		for (ioexp_index = 0; ioexp_index < IOEXP_CARD_PRESENCE_COUNT; ++ioexp_index) {
+			presence_val = (reg_val >> ((IOEXP_CARD_PRESENCE_COUNT - 1 - ioexp_index) *
+						    IOEXP_CARD_PRESENCE_PIN_COUNT)) &
+				       IOEXP_CARD_PRESENCE_MAP_VAL;
+			switch (presence_val) {
+			case IOEXP_DEV_NOT_PRESENT_VAL:
+				asic_card_info[card_index].asic_1_status =
+					ASIC_CARD_DEVICE_NOT_PRESENT;
+				asic_card_info[card_index].asic_2_status =
+					ASIC_CARD_DEVICE_NOT_PRESENT;
+				break;
+			case IOEXP_DEV_1_PRESENT_VAL:
+				asic_card_info[card_index].asic_1_status = ASIC_CARD_DEVICE_PRESENT;
+				asic_card_info[card_index].asic_2_status =
+					ASIC_CARD_DEVICE_NOT_PRESENT;
+				break;
+			case IOEXP_DEV_2_PRESENT_VAL:
+				asic_card_info[card_index].asic_1_status =
+					ASIC_CARD_DEVICE_NOT_PRESENT;
+				asic_card_info[card_index].asic_2_status = ASIC_CARD_DEVICE_PRESENT;
+				break;
+			case IOEXP_DEV_1_2_PRESENT_VAL:
+				asic_card_info[card_index].asic_1_status = ASIC_CARD_DEVICE_PRESENT;
+				asic_card_info[card_index].asic_2_status = ASIC_CARD_DEVICE_PRESENT;
+				break;
+			default:
+				LOG_ERR("Invalid presence val: 0x%x, addr index: 0x%x, ioexp index: 0x%x, reg val: 0x%x",
+					presence_val, addr_index, ioexp_index, reg_val);
+				break;
+			}
+
+			if ((asic_card_info[card_index].asic_1_status ==
+			     ASIC_CARD_DEVICE_PRESENT) ||
+			    (asic_card_info[card_index].asic_2_status ==
+			     ASIC_CARD_DEVICE_PRESENT)) {
+				pal_init_drive(plat_accl_sensor_config, ACCL_SENSOR_CONFIG_SIZE,
+					       card_index);
+			}
+
+			card_index += 1;
+		}
+	}
+}
+
 void check_asic_card_status()
 {
 	int ret = 0;
@@ -325,6 +356,14 @@ void check_asic_card_status()
 			asic_card_info[index].card_status = ASIC_CARD_NOT_PRESENT;
 		}
 	}
+
+	if (board_revision > EVT1_STAGE) {
+		if (board_revision == UNKNOWN_STAGE) {
+			LOG_ERR("Check accl device presence status failed because board revision is in unknown stage");
+		} else {
+			check_accl_device_presence_status_via_ioexp();
+		}
+	}
 }
 
 void init_platform_config()
@@ -359,4 +398,54 @@ uint8_t get_hsc_module()
 uint8_t get_pwr_brick_module()
 {
 	return pwr_brick_module;
+}
+
+bool get_acb_power_status()
+{
+	int ret = -1;
+	int retry = 5;
+	I2C_MSG msg = { 0 };
+
+	msg.bus = I2C_BUS3;
+	msg.target_addr = CPLD_ADDR;
+	msg.rx_len = 1;
+	msg.tx_len = 1;
+	msg.data[0] = CPLD_PWRGD_1_OFFSET;
+
+	ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Fail to read cpld offset: 0x%x", CPLD_PWRGD_1_OFFSET);
+		return false;
+	}
+
+	if (msg.data[0] & CPLD_PWRGD_BIT) {
+		memset(&msg, 0, sizeof(I2C_MSG));
+
+		msg.bus = I2C_BUS3;
+		msg.target_addr = CPLD_ADDR;
+		msg.rx_len = 1;
+		msg.tx_len = 1;
+		msg.data[0] = CPLD_PWRGD_2_OFFSET;
+
+		ret = i2c_master_read(&msg, retry);
+		if (ret != 0) {
+			LOG_ERR("Fail to read cpld offset: 0x%x", CPLD_PWRGD_2_OFFSET);
+			return false;
+		}
+
+		if (msg.data[0] & CPLD_PWRGD_BIT) {
+			is_power_good = true;
+		} else {
+			is_power_good = false;
+		}
+	} else {
+		is_power_good = false;
+	}
+
+	return true;
+}
+
+bool get_acb_power_good_flag()
+{
+	return is_power_good;
 }

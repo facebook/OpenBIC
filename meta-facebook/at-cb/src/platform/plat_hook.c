@@ -665,7 +665,7 @@ bool pre_pex89000_read(uint8_t sensor_num, void *args)
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
 	/* Can not access i2c mux and PEX89000 when DC off */
-	if (is_mb_dc_on() == false) {
+	if (is_acb_power_good() == false) {
 		return false;
 	}
 

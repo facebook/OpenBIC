@@ -26,6 +26,7 @@ enum BUTTON_OPTIONAL {
 };
 
 void ISR_FIO_BUTTON();
+void ISR_POWER_STATUS_CHANGE();
 void fio_power_button_work_handler();
 
 #endif

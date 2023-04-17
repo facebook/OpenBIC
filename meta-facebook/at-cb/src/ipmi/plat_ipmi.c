@@ -86,7 +86,7 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 	case CB_COMPNT_PCIE_SWITCH0:
 	case CB_COMPNT_PCIE_SWITCH1:
 		/* Only can be read when DC is on */
-		if (is_mb_dc_on() == false) {
+		if (is_acb_power_good() == false) {
 			msg->completion_code = CC_PEX_NOT_POWER_ON;
 			return;
 		}
@@ -182,10 +182,14 @@ void OEM_1S_GET_PCIE_CARD_STATUS(ipmi_msg *msg)
 	}
 
 	if (pcie_device_id == PCIE_DEVICE_ID1 || pcie_device_id == PCIE_DEVICE_ID2) {
-		if (is_check_accl_device_status != true && is_mb_dc_on() == true) {
-			check_accl_device_presence_status(PEX_0_INDEX);
-			check_accl_device_presence_status(PEX_1_INDEX);
+		if (get_board_revision() > EVT1_STAGE) {
 			is_check_accl_device_status = true;
+		} else {
+			if (is_check_accl_device_status != true && is_acb_power_good() == true) {
+				check_accl_device_presence_status_via_pex(PEX_0_INDEX);
+				check_accl_device_presence_status_via_pex(PEX_1_INDEX);
+				is_check_accl_device_status = true;
+			}
 		}
 	}
 
@@ -288,7 +292,7 @@ void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 	case (CB_COMPNT_PCIE_SWITCH0 | IS_SECTOR_END_MASK):
 	case (CB_COMPNT_PCIE_SWITCH1 | IS_SECTOR_END_MASK):
 		/* Only can be update when DC is on */
-		if (is_mb_dc_on() == false) {
+		if (is_acb_power_good() == false) {
 			msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
 			return;
 		}

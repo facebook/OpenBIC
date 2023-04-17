@@ -55,6 +55,7 @@ void pal_device_init()
 
 void pal_set_sys_status()
 {
+	get_acb_power_status();
 	gpio_set(ACB_BIC_READY_N, GPIO_LOW);
 	return;
 }

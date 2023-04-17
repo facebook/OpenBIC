@@ -178,7 +178,7 @@ extern sensor_cfg plat_accl_sensor_config[];
 extern const int ACCL_SENSOR_CONFIG_SIZE;
 
 void load_sensor_config(void);
-bool is_mb_dc_on();
+bool is_acb_power_good();
 bool is_dc_access(uint8_t sensor_num);
 bool is_pcie_device_access(uint8_t card_id, uint8_t sensor_num);
 struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus);

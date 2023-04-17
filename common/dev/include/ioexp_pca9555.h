@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,32 +14,18 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_I2C_H
-#define PLAT_I2C_H
+#ifndef IOEXP_PCA9555_H
+#define IOEXP_PCA9555_H
 
-#include "hal_i2c.h"
-
-// map i2c bus to peripherial bus
-// i2c peripheral 1 based, as used i2c index 0 in firmware.
-#define I2C_BUS1 0
-#define I2C_BUS2 1
-#define I2C_BUS3 2
-#define I2C_BUS4 3
-#define I2C_BUS5 4
-#define I2C_BUS6 5
-#define I2C_BUS7 6
-#define I2C_BUS8 7
-#define I2C_BUS9 8
-#define I2C_BUS10 9
-
-/** i3c register as i2c **/
-#define I2C_BUS11 10
-#define I2C_BUS12 11
-#define I2C_BUS13 12
-#define I3C_BUS1 I2C_BUS11
-#define I3C_BUS2 I2C_BUS12
-#define I3C_BUS3 I2C_BUS13
-
-#define I2C_BUS_MAX_NUM 14
+enum PCA9555_REGISTER {
+	PCA9555_INPUT_PORT_REG_0,
+	PCA9555_INPUT_PORT_REG_1,
+	PCA9555_OUTPUT_PORT_REG_0,
+	PCA9555_OUTPUT_PORT_REG_1,
+	PCA9555_POLARITY_INVERSION_REG_0,
+	PCA9555_POLARITY_INVERSION_REG_1,
+	PCA9555_CONFIG_REG_0,
+	PCA9555_CONFIG_REG_1,
+};
 
 #endif

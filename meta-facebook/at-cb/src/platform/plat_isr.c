@@ -21,6 +21,7 @@
 #include "plat_isr.h"
 #include "plat_gpio.h"
 #include "plat_mctp.h"
+#include "plat_class.h"
 #include "util_worker.h"
 
 LOG_MODULE_REGISTER(plat_isr);
@@ -60,4 +61,9 @@ void ISR_FIO_BUTTON()
 {
 	k_work_schedule_for_queue(&plat_work_q, &fio_power_button_work,
 				  K_MSEC(PRESS_FIO_BUTTON_DELAY_MS));
+}
+
+void ISR_POWER_STATUS_CHANGE()
+{
+	get_acb_power_status();
 }
