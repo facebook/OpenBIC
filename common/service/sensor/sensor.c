@@ -109,6 +109,7 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(pt5161l)
 	sensor_name_to_num(lm75bd118)
 	sensor_name_to_num(tmp461)
+	sensor_name_to_num(mp2985)
 };
 // clang-format on
 
@@ -157,6 +158,7 @@ SENSOR_DRIVE_INIT_DECLARE(i3c_dimm);
 SENSOR_DRIVE_INIT_DECLARE(pt5161l);
 SENSOR_DRIVE_INIT_DECLARE(lm75bd118);
 SENSOR_DRIVE_INIT_DECLARE(tmp461);
+SENSOR_DRIVE_INIT_DECLARE(mp2985);
 
 struct sensor_drive_api {
 	enum SENSOR_DEV dev;
@@ -207,6 +209,7 @@ struct sensor_drive_api {
 	SENSOR_DRIVE_TYPE_INIT_MAP(pt5161l),
 	SENSOR_DRIVE_TYPE_INIT_MAP(lm75bd118),
 	SENSOR_DRIVE_TYPE_INIT_MAP(tmp461),
+	SENSOR_DRIVE_TYPE_INIT_MAP(mp2985),
 };
 
 static void init_sensor_num(void)

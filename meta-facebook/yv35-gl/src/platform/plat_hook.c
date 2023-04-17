@@ -50,6 +50,7 @@ mp5990_init_arg mp5990_init_args[] = { [0] = { .is_init = false,
 					       .iout_cal_gain = 0x021A,
 					       .iout_oc_fault_limit = 0x0054,
 					       .ocw_sc_ref = 0x0ADF } };
+mp2985_init_arg mp2985_init_args[] = { [0] = { .is_init = false } };
 
 struct tca9548 mux_conf_addr_0xe2[8] = {
 	[0] = { .addr = 0xe2, .chan = 0 }, [1] = { .addr = 0xe2, .chan = 1 },
