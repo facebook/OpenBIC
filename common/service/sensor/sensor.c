@@ -691,6 +691,8 @@ __weak void load_sensor_config(void)
 {
 	memcpy(sensor_config, plat_sensor_config, sizeof(sensor_cfg) * SENSOR_CONFIG_SIZE);
 	sensor_config_count = SENSOR_CONFIG_SIZE;
+
+	pal_extend_sensor_config();
 }
 
 void control_sensor_polling(uint8_t sensor_num, uint8_t optional, uint8_t cache_status)

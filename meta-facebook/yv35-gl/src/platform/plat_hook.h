@@ -31,6 +31,7 @@ typedef struct _dimm_pre_proc_arg {
 **************************************************************************************************/
 extern adc_asd_init_arg adc_asd_init_args[];
 extern adm1278_init_arg adm1278_init_args[];
+extern mp5990_init_arg mp5990_init_args[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
