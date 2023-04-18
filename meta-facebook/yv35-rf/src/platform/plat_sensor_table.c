@@ -27,10 +27,9 @@
 #include "plat_mctp.h"
 #include "pm8702.h"
 #include <logging/log.h>
+#include "ina233.h"
 
 LOG_MODULE_REGISTER(plat_sensor_table);
-
-static uint8_t INA233_DEVICE_ID[4] = { 0x02, 0x54, 0x49, 0xe2 };
 
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,

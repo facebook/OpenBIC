@@ -21,11 +21,14 @@
 #include "sensor.h"
 #include "pmbus.h"
 #include "hal_i2c.h"
+#include "ina233.h"
 
 LOG_MODULE_REGISTER(dev_ina233);
 
 #define INA233_CALIBRATION_OFFSET 0xD4
 #define INA233_MFR_ADC_CONFIG 0xD0
+
+uint8_t INA233_DEVICE_ID[3] = { 0x02, 0x54, 0x49 };
 
 uint8_t ina233_read(uint8_t sensor_num, int *reading)
 {

@@ -44,6 +44,10 @@
 #define INA233_CURR_OFFSET 0x8C
 #define INA233_PWR_OFFSET 0x96
 
+#define SQ5220X_VOL_OFFSET 0x02
+#define SQ5220X_PWR_OFFSET 0x03
+#define SQ5220X_CUR_OFFSET 0x04
+
 /* The difference between sensor number in each position is 0x30.
  * E.g. : SENSOR_NUM_1OU_TEMP is 0x40 and SENSOR_NUM_2OU_TEMP is 0x70.
  */
@@ -201,5 +205,12 @@ void pal_extend_sensor_config(void);
 void load_sensor_config(void);
 uint8_t pal_get_extend_sensor_config(void);
 void change_ina233_sensor_addr(void);
+void change_power_monitor_config_for_sq5220x(void);
+int check_pwr_monitor_type(void);
+
+enum POWER_MONITOR_TYPE {
+	PWR_INA233,
+	PWR_SQ5220X,
+};
 
 #endif

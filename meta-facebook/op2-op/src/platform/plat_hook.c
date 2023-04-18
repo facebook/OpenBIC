@@ -44,6 +44,69 @@ ina233_init_arg ina233_init_args[] = {
 	[5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.002 },
 };
 
+sq52205_init_arg sq52205_init_args[] = {
+	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.002,
+	.config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b000,
+		.reset_bit = 0b0,
+	},
+	},
+	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.002,
+	.config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b000,
+		.reset_bit = 0b0,
+	},
+	},
+	[2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.002,
+	.config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b000,
+		.reset_bit = 0b0,
+	},
+	},
+	[3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.002,
+	.config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b000,
+		.reset_bit = 0b0,
+	},
+	},
+	[4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.002,
+	.config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b000,
+		.reset_bit = 0b0,
+	},
+	},
+	[5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.002,
+	.config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b000,
+		.reset_bit = 0b0,
+	},
+	},
+};
+
 i2c_proc_arg i2c_proc_args[] = {
 	[0] = { .bus = I2C_BUS2, .channel = I2C_HUB_CHANNEL_0 },
 	[1] = { .bus = I2C_BUS2, .channel = I2C_HUB_CHANNEL_1 },
