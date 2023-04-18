@@ -47,7 +47,7 @@
 
 #define name_gpioC \
 	gpio_name_to_num(RST_SMB_2_MUX_N) \
-	gpio_name_to_num(RST_BMC_MEB_MUX_N) \
+	gpio_name_to_num(RST_BMC_MEB_MUX1_N) \
 	gpio_name_to_num(RST_SMB_8_MUX_N) \
 	gpio_name_to_num(RST_SMB_7_MUX_N) \
 	gpio_name_to_num(RST_SMB_4_MUX_N) \
@@ -57,46 +57,46 @@
 
 #define name_gpioD \
 	gpio_name_to_num(HSC_D_OC_BIC_N) \
-	gpio_name_to_num(Reserve_GPIOD1) \
-	gpio_name_to_num(Reserve_GPIOD2) \
+	gpio_name_to_num(CPLD_INT_N) \
+	gpio_name_to_num(RST_SMB_NIC0_N) \
 	gpio_name_to_num(RST_SMB_E1S_N) \
 	gpio_name_to_num(P12V_AUX_ALERT_R_N) \
 	gpio_name_to_num(SMB_3_INA233_P12V_AUX_ALERT_N) \
-	gpio_name_to_num(Reserve_GPIOD6) \
+	gpio_name_to_num(RST_SMB_NIC1_N) \
 	gpio_name_to_num(IOEXP_INT_R_N)
 
 #define name_gpioE \
-	gpio_name_to_num(Reserve_GPIOE0) \
-	gpio_name_to_num(Reserve_GPIOE1) \
-	gpio_name_to_num(Reserve_GPIOE2) \
-	gpio_name_to_num(Reserve_GPIOE3) \
-	gpio_name_to_num(Reserve_GPIOE4) \
-	gpio_name_to_num(Reserve_GPIOE5) \
-	gpio_name_to_num(Reserve_GPIOE6) \
-	gpio_name_to_num(Reserve_GPIOE7)
+	gpio_name_to_num(FM_PRSNT1_PCIE_CARD9_R1) \
+	gpio_name_to_num(FM_PRSNT2_PCIE_CARD9_R1) \
+	gpio_name_to_num(FM_PRSNT3_PCIE_CARD9_R1) \
+	gpio_name_to_num(FM_PRSNT4_PCIE_CARD9_R1) \
+	gpio_name_to_num(FM_PRSNT1_PCIE_CARD10_R1) \
+	gpio_name_to_num(FM_PRSNT2_PCIE_CARD10_R1) \
+	gpio_name_to_num(FM_PRSNT3_PCIE_CARD10_R1) \
+	gpio_name_to_num(FM_PRSNT4_PCIE_CARD10_R1)
 
 #define name_gpioF \
 	gpio_name_to_num(MEB_STBY_PWRGD_BIC) \
 	gpio_name_to_num(MEB_NORMAL_PWRGD_BIC) \
-	gpio_name_to_num(Reserve_GPIOF2) \
-	gpio_name_to_num(Reserve_GPIOF3) \
-	gpio_name_to_num(Reserve_GPIOF4) \
+	gpio_name_to_num(RST_USB_HUB1_N) \
+	gpio_name_to_num(RST_USB_HUB2_N) \
+	gpio_name_to_num(RST_USB_HUB3_N) \
 	gpio_name_to_num(Reserve_GPIOF5) \
 	gpio_name_to_num(Reserve_GPIOF6) \
 	gpio_name_to_num(Reserve_GPIOF7)
 
 #define name_gpioG \
-	gpio_name_to_num(Reserve_GPIOG0) \
-	gpio_name_to_num(Reserve_GPIOG1) \
-	gpio_name_to_num(Reserve_GPIOG2) \
-	gpio_name_to_num(Reserve_GPIOG3) \
-	gpio_name_to_num(Reserve_GPIOG4) \
-	gpio_name_to_num(Reserve_GPIOG5) \
-	gpio_name_to_num(Reserve_GPIOG6) \
-	gpio_name_to_num(Reserve_GPIOG7)
+	gpio_name_to_num(FM_PRSNT1_PCIE_CARD3_R1) \
+	gpio_name_to_num(FM_PRSNT2_PCIE_CARD3_R1) \
+	gpio_name_to_num(FM_PRSNT3_PCIE_CARD3_R1) \
+	gpio_name_to_num(FM_PRSNT4_PCIE_CARD3_R1) \
+	gpio_name_to_num(FM_PRSNT1_PCIE_CARD4_R1) \
+	gpio_name_to_num(FM_PRSNT2_PCIE_CARD4_R1) \
+	gpio_name_to_num(FM_PRSNT3_PCIE_CARD4_R1) \
+	gpio_name_to_num(FM_PRSNT4_PCIE_CARD4_R1)
 
 #define name_gpioH \
-	gpio_name_to_num(Reserve_GPIOH0) \
+	gpio_name_to_num(RST_BMC_MEB_MUX0_N) \
 	gpio_name_to_num(Reserve_GPIOH1) \
 	gpio_name_to_num(Reserve_GPIOH2) \
 	gpio_name_to_num(Reserve_GPIOH3) \
