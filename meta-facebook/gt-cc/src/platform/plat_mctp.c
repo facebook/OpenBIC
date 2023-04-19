@@ -343,7 +343,7 @@ static uint8_t get_mctp_route_info(uint8_t dest_endpoint, void **mctp_inst,
 	for (i = 0; i < ARRAY_SIZE(mctp_route_tbl); i++) {
 		mctp_route_entry *p = mctp_route_tbl + i;
 		if (p->endpoint == dest_endpoint) {
-			if (gpio_get(p->dev_present_pin))
+			if ((p->addr == I2C_ADDR_NIC) && gpio_get(p->dev_present_pin))
 				return MCTP_ERROR;
 			*mctp_inst = find_mctp_by_smbus(p->bus);
 			ext_params->type = MCTP_MEDIUM_TYPE_SMBUS;
