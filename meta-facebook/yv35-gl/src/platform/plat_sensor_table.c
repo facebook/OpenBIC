@@ -19,11 +19,17 @@
 #include "sensor.h"
 #include "pmbus.h"
 #include "intel_peci.h"
+#include "hal_gpio.h"
 
 #include "plat_class.h"
+#include "plat_gpio.h"
 #include "plat_i2c.h"
 #include "plat_sensor_table.h"
 #include "plat_hook.h"
+
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(plat_sensor_table);
 
 sensor_cfg plat_sensor_config[] = {
 	/*  number,
@@ -97,11 +103,6 @@ sensor_cfg plat_sensor_config[] = {
 	  0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, pre_nvme_read, &mux_conf_addr_0xe2[1], NULL, NULL, NULL },
 
-	{ SENSOR_NUM_MB_HSC_TEMP_C, sensor_dev_adm1278, I2C_BUS2, HSC_ADM1278_ADDR,
-	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
-	  &adm1278_init_args[0] },
-
 	{ SENSOR_NUM_MB_VR_VCCIN_TEMP_C, sensor_dev_xdpe15284, I2C_BUS5, PVCCIN_ADDR,
 	  VR_TEMP_OFFSET, vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_xdpe15284_read,
@@ -165,11 +166,6 @@ sensor_cfg plat_sensor_config[] = {
 	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
 
 	//Voltage
-	{ SENSOR_NUM_MB_HSC_INPUT_VOLT_V, sensor_dev_adm1278, I2C_BUS2, HSC_ADM1278_ADDR,
-	  PMBUS_READ_VIN, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
-	  &adm1278_init_args[0] },
-
 	{ SENSOR_NUM_MB_VR_VCCIN_VOLT_V, sensor_dev_xdpe15284, I2C_BUS5, PVCCIN_ADDR, VR_VOL_OFFSET,
 	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, pre_xdpe15284_read, &xdpe15284_pre_read_args[0], NULL, NULL, NULL },
@@ -190,11 +186,6 @@ sensor_cfg plat_sensor_config[] = {
 	  SENSOR_INIT_STATUS, pre_xdpe15284_read, &xdpe15284_pre_read_args[1], NULL, NULL, NULL },
 
 	//Current
-	{ SENSOR_NUM_MB_HSC_OUTPUT_CURR_A, sensor_dev_adm1278, I2C_BUS2, HSC_ADM1278_ADDR,
-	  PMBUS_READ_IOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
-	  &adm1278_init_args[0] },
-
 	{ SENSOR_NUM_MB_VR_VCCIN_CURR_A, sensor_dev_xdpe15284, I2C_BUS5, PVCCIN_ADDR, VR_CUR_OFFSET,
 	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, pre_xdpe15284_read, &xdpe15284_pre_read_args[0], NULL, NULL, NULL },
@@ -215,11 +206,6 @@ sensor_cfg plat_sensor_config[] = {
 	  SENSOR_INIT_STATUS, pre_xdpe15284_read, &xdpe15284_pre_read_args[1], NULL, NULL, NULL },
 
 	//Power
-	{ SENSOR_NUM_MB_HSC_INPUT_PWR_W, sensor_dev_adm1278, I2C_BUS2, HSC_ADM1278_ADDR,
-	  PMBUS_READ_PIN, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
-	  &adm1278_init_args[0] },
-
 	{ SENSOR_NUM_MB_VR_VCCIN_PWR_W, sensor_dev_xdpe15284, I2C_BUS5, PVCCIN_ADDR, VR_PWR_OFFSET,
 	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, pre_xdpe15284_read, &xdpe15284_pre_read_args[0], NULL, NULL, NULL },
@@ -244,4 +230,92 @@ sensor_cfg plat_sensor_config[] = {
 	 */
 };
 
+sensor_cfg adm1278_sensor_config_table[] = {
+	{ SENSOR_NUM_MB_HSC_TEMP_C, sensor_dev_adm1278, I2C_BUS2, HSC_ADM1278_ADDR,
+	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &adm1278_init_args[0] },
+	{ SENSOR_NUM_MB_HSC_INPUT_VOLT_V, sensor_dev_adm1278, I2C_BUS2, HSC_ADM1278_ADDR,
+	  PMBUS_READ_VIN, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &adm1278_init_args[0] },
+	{ SENSOR_NUM_MB_HSC_OUTPUT_CURR_A, sensor_dev_adm1278, I2C_BUS2, HSC_ADM1278_ADDR,
+	  PMBUS_READ_IOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &adm1278_init_args[0] },
+	{ SENSOR_NUM_MB_HSC_INPUT_PWR_W, sensor_dev_adm1278, I2C_BUS2, HSC_ADM1278_ADDR,
+	  PMBUS_READ_PIN, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &adm1278_init_args[0] },
+};
+
+sensor_cfg mp5990_sensor_config_table[] = {
+	{ SENSOR_NUM_MB_HSC_TEMP_C, sensor_dev_mp5990, I2C_BUS2, HSC_MP5990_ADDR,
+	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &mp5990_init_args[0] },
+	{ SENSOR_NUM_MB_HSC_INPUT_VOLT_V, sensor_dev_mp5990, I2C_BUS2, HSC_MP5990_ADDR, PMBUS_READ_VIN,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
+	{ SENSOR_NUM_MB_HSC_OUTPUT_CURR_A, sensor_dev_mp5990, I2C_BUS2, HSC_MP5990_ADDR, PMBUS_READ_IOUT,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
+	{ SENSOR_NUM_MB_HSC_INPUT_PWR_W, sensor_dev_mp5990, I2C_BUS2, HSC_MP5990_ADDR, PMBUS_READ_PIN,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
+};
+
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
+
+uint8_t pal_get_extend_sensor_config()
+{
+	uint8_t extend_sensor_config_size = 0;
+	uint8_t hsc_module = get_hsc_module();
+	switch (hsc_module) {
+	case HSC_MODULE_ADM1278:
+		extend_sensor_config_size += ARRAY_SIZE(adm1278_sensor_config_table);
+		break;
+	case HSC_MODULE_MP5990:
+		extend_sensor_config_size += ARRAY_SIZE(mp5990_sensor_config_table);
+		break;
+	default:
+		LOG_ERR("Unsupported HSC module, HSC module: 0x%x", hsc_module);
+		break;
+	}
+
+	return extend_sensor_config_size;
+}
+
+void pal_extend_sensor_config()
+{
+	/* Follow the hardware design,
+	 * the GPIOA7(HSC_SET_EN_R) should be set to "H"
+	 * and the 2OU configuration is set if the 2OU is present.
+	 */
+	CARD_STATUS _2ou_status = get_2ou_status();
+
+	int arg_index = (_2ou_status.present) ? 1 : 0;
+	int gpio_state = (_2ou_status.present) ? GPIO_HIGH : GPIO_LOW;
+	gpio_set(HSC_SET_EN_R, gpio_state);
+
+	uint8_t sensor_count = 0;
+	uint8_t hsc_module = get_hsc_module();
+	switch (hsc_module) {
+	case HSC_MODULE_ADM1278:
+		sensor_count = ARRAY_SIZE(adm1278_sensor_config_table);
+		for (int index = 0; index < sensor_count; index++) {
+			add_sensor_config(adm1278_sensor_config_table[index]);
+		}
+		break;
+	case HSC_MODULE_MP5990:
+		sensor_count = ARRAY_SIZE(mp5990_sensor_config_table);
+		for (int index = 0; index < sensor_count; index++) {
+			mp5990_sensor_config_table[index].init_args = &mp5990_init_args[arg_index];
+			add_sensor_config(mp5990_sensor_config_table[index]);
+		}
+		break;
+	default:
+		LOG_ERR("Unsupported HSC module, HSC module: 0x%x", hsc_module);
+		break;
+	}
+}

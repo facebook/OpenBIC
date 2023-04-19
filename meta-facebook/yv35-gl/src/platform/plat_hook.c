@@ -42,6 +42,14 @@ adc_asd_init_arg adc_asd_init_args[] = { [0] = { .is_init = false } };
 adm1278_init_arg adm1278_init_args[] = {
 	[0] = { .is_init = false, .config = { 0x3F1C }, .r_sense = 0.25 }
 };
+mp5990_init_arg mp5990_init_args[] = { [0] = { .is_init = false,
+					       .iout_cal_gain = 0x01B3,
+					       .iout_oc_fault_limit = 0x0044,
+					       .ocw_sc_ref = 0x0AE0 },
+				       [1] = { .is_init = false,
+					       .iout_cal_gain = 0x021A,
+					       .iout_oc_fault_limit = 0x0054,
+					       .ocw_sc_ref = 0x0ADF } };
 
 struct tca9548 mux_conf_addr_0xe2[8] = {
 	[0] = { .addr = 0xe2, .chan = 0 }, [1] = { .addr = 0xe2, .chan = 1 },
