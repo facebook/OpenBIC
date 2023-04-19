@@ -72,6 +72,158 @@ struct LTC4286_MBR_TABLE ltc4286_mbr_table[] = {
 	{ TEMPERATURE, BOTH, 1, false, 1, 273.15 },
 };
 
+int ltc4286_convert_real_value(uint8_t type, uint8_t vrange_select, float rsense, uint16_t tmp_val,
+			       double *val)
+{
+	CHECK_NULL_ARG_WITH_RETURN(val, -1);
+
+	uint8_t index = 0;
+	float M = 0;
+
+	for (index = 0; index < ARRAY_SIZE(ltc4286_mbr_table); index++) {
+		if (type == ltc4286_mbr_table[index].type) {
+			if ((ltc4286_mbr_table[index].voltage_range == BOTH) ||
+			    (ltc4286_mbr_table[index].voltage_range == vrange_select)) {
+				// Multiplied by r_sense value if it needs
+				M = ltc4286_mbr_table[index].M;
+				if (ltc4286_mbr_table[index].is_multiplied_by_rsense) {
+					M *= rsense;
+				}
+
+				// real value = (1 / M) * raw_value * R - B;
+				*val = (1 / M) * tmp_val * ltc4286_mbr_table[index].R -
+				       ltc4286_mbr_table[index].B;
+				return 0;
+			}
+		}
+	}
+
+	return -1;
+}
+
+int ltc4286_read_iin(uint8_t sensor_num, double *val)
+{
+	CHECK_NULL_ARG_WITH_RETURN(val, -1);
+
+	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+	ltc4286_init_arg *init_arg =
+		(ltc4286_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	CHECK_NULL_ARG_WITH_RETURN(init_arg, -1);
+
+	int ret = 0;
+	uint8_t retry = 5;
+	double vin = 0;
+	double pin = 0;
+	float rsense = init_arg->r_sense_mohm / 1000;
+	I2C_MSG msg = { 0 };
+
+	// Read voltage in
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 2;
+	msg.data[0] = PMBUS_READ_VIN;
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Read vin fail, ret: %d", ret);
+		return -1;
+	}
+
+	ret = ltc4286_convert_real_value(VOLTAGE, init_arg->mfr_config_1.fields.vrange_select,
+					 rsense, ((msg.data[1] << 8) | msg.data[0]), &vin);
+	if (ret != 0) {
+		LOG_ERR("Convert vin value fail");
+		return ret;
+	}
+
+	if (vin == 0) {
+		LOG_ERR("Vin is zero");
+		return -1;
+	}
+
+	// Read power in
+	memset(&msg, 0, sizeof(I2C_MSG));
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 2;
+	msg.data[0] = PMBUS_READ_PIN;
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Read pin fail, ret: %d", ret);
+		return -1;
+	}
+
+	ret = ltc4286_convert_real_value(POWER, init_arg->mfr_config_1.fields.vrange_select, rsense,
+					 ((msg.data[1] << 8) | msg.data[0]), &pin);
+	if (ret != 0) {
+		LOG_ERR("Convert pin value fail");
+		return ret;
+	}
+
+	*val = pin / vin;
+	return 0;
+}
+
+int ltc4286_read_pout(uint8_t sensor_num, double *val)
+{
+	CHECK_NULL_ARG_WITH_RETURN(val, -1);
+
+	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+	ltc4286_init_arg *init_arg =
+		(ltc4286_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	CHECK_NULL_ARG_WITH_RETURN(init_arg, -1);
+
+	int ret = 0;
+	uint8_t retry = 5;
+	double vout = 0;
+	double iout = 0;
+	float rsense = init_arg->r_sense_mohm / 1000;
+	I2C_MSG msg = { 0 };
+
+	// Read voltage out
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 2;
+	msg.data[0] = PMBUS_READ_VOUT;
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Read vout fail, ret: %d", ret);
+		return -1;
+	}
+
+	ret = ltc4286_convert_real_value(VOLTAGE, init_arg->mfr_config_1.fields.vrange_select,
+					 rsense, ((msg.data[1] << 8) | msg.data[0]), &vout);
+	if (ret != 0) {
+		LOG_ERR("Convert vout value fail");
+		return ret;
+	}
+
+	// Read current out
+	memset(&msg, 0, sizeof(I2C_MSG));
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 2;
+	msg.data[0] = PMBUS_READ_IOUT;
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Read iout fail, ret: %d", ret);
+		return -1;
+	}
+
+	ret = ltc4286_convert_real_value(CURRENT, init_arg->mfr_config_1.fields.vrange_select,
+					 rsense, ((msg.data[1] << 8) | msg.data[0]), &iout);
+	if (ret != 0) {
+		LOG_ERR("Convert iout value fail");
+		return ret;
+	}
+
+	*val = vout * iout;
+	return 0;
+}
+
 uint8_t ltc4286_read(uint8_t sensor_num, int *reading)
 {
 	if ((reading == NULL) ||
@@ -88,6 +240,7 @@ uint8_t ltc4286_read(uint8_t sensor_num, int *reading)
 
 	float rsense = init_arg->r_sense_mohm / 1000;
 
+	int ret = 0;
 	uint8_t retry = 5;
 	double val;
 	I2C_MSG msg;
@@ -103,6 +256,9 @@ uint8_t ltc4286_read(uint8_t sensor_num, int *reading)
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
+	sensor_val *sval = (sensor_val *)reading;
+	memset(sval, 0, sizeof(*sval));
+
 	// Choose the corresponding sensor type
 	uint8_t type = 0xFF;
 	switch (cfg->offset) {
@@ -110,6 +266,12 @@ uint8_t ltc4286_read(uint8_t sensor_num, int *reading)
 	case PMBUS_READ_VOUT:
 		type = VOLTAGE;
 		break;
+	case PMBUS_READ_IIN:
+		ret = ltc4286_read_iin(sensor_num, &val);
+		if (ret != 0) {
+			return SENSOR_UNSPECIFIED_ERROR;
+		}
+		goto return_val;
 	case PMBUS_READ_IOUT:
 		type = CURRENT;
 		break;
@@ -119,6 +281,12 @@ uint8_t ltc4286_read(uint8_t sensor_num, int *reading)
 	case PMBUS_READ_PIN:
 		type = POWER;
 		break;
+	case PMBUS_READ_POUT:
+		ret = ltc4286_read_pout(sensor_num, &val);
+		if (ret != 0) {
+			return SENSOR_UNSPECIFIED_ERROR;
+		}
+		goto return_val;
 	default:
 		return SENSOR_NOT_FOUND;
 	}
@@ -158,9 +326,7 @@ uint8_t ltc4286_read(uint8_t sensor_num, int *reading)
 	val = (1 / M) * ((msg.data[1] << 8) | msg.data[0]) * ltc4286_mbr_table[index].R -
 	      ltc4286_mbr_table[index].B;
 
-	sensor_val *sval = (sensor_val *)reading;
-	memset(sval, 0, sizeof(*sval));
-
+return_val:
 	sval->integer = (int32_t)val;
 	sval->fraction = (int32_t)(val * 1000) % 1000;
 
