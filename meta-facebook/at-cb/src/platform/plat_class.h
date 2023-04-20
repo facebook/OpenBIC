@@ -133,5 +133,6 @@ uint8_t get_hsc_module();
 uint8_t get_pwr_brick_module();
 bool get_acb_power_status();
 bool get_acb_power_good_flag();
+int accl_id_mapping_card_id(uint8_t accl_id, uint8_t *card_id);
 
 #endif

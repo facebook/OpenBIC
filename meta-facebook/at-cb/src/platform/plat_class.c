@@ -449,3 +449,20 @@ bool get_acb_power_good_flag()
 {
 	return is_power_good;
 }
+
+int accl_id_mapping_card_id(uint8_t accl_id, uint8_t *card_id)
+{
+	CHECK_NULL_ARG_WITH_RETURN(card_id, -1);
+
+	if (accl_id >= ASIC_CARD_COUNT) {
+		LOG_ERR("Invalid accl id: 0x%x", accl_id);
+	}
+
+	if (board_revision <= EVT1_STAGE) {
+		*card_id = accl_id;
+	} else {
+		*card_id = ASIC_CARD_COUNT - 1 - accl_id;
+	}
+
+	return 0;
+}
