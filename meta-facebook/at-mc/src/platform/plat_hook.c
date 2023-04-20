@@ -186,6 +186,135 @@ sq52205_init_arg sq52205_init_args[] = {
 	},
 };
 
+ina233_init_arg mc_ina233_init_args[] = {
+	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	.mfr_config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b0100,
+	},
+	},
+	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	.mfr_config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b0100,
+	},
+	},
+	[2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	.mfr_config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b0100,
+	},
+	},
+	[3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	.mfr_config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b0100,
+	},
+	},
+	[4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	.mfr_config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b0100,
+	},
+	},
+	[5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	.mfr_config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b0100,
+	},
+	},
+	[6] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	.mfr_config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b0100,
+	},
+	},
+	[7] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	.mfr_config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b0100,
+	},
+	},
+	[8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	.mfr_config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b0100,
+	},
+	},
+	[9] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	.mfr_config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b0100,
+	},
+	},
+	[10] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	.mfr_config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b0100,
+	},
+	},
+	[11] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	.mfr_config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b0100,
+	},
+	},
+	[12] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	.mfr_config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b0100,
+	},
+	},
+	[13] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	.mfr_config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b0100,
+	},
+	},
+};
+
 ina233_init_arg ina233_init_args[] = {
 	// JCN11
 	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,

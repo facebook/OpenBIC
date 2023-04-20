@@ -21,6 +21,8 @@
 
 #include "libutil.h"
 #include "hal_i2c.h"
+#include "hal_gpio.h"
+#include "plat_gpio.h"
 #include "plat_i2c.h"
 #include "plat_class.h"
 #include "plat_sensor_table.h"
@@ -333,4 +335,9 @@ bool is_cxl_present()
 	}
 
 	return false;
+}
+
+uint8_t get_board_revision()
+{
+	return (gpio_get(REV_ID0) << 2) | (gpio_get(REV_ID1) << 1) | gpio_get(REV_ID2);
 }
