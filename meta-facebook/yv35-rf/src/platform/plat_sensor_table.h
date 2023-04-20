@@ -50,7 +50,6 @@
 /*  threshold sensor number, 1 based  */
 #define SENSOR_NUM_TEMP_TMP75 0x50
 #define SENSOR_NUM_TEMP_CXL 0x51
-#define SENSOR_NUM_TEMP_CXL_CNTR 0x52
 #define SENSOR_NUM_TEMP_DIMMA 0x53
 #define SENSOR_NUM_TEMP_DIMMB 0x54
 #define SENSOR_NUM_TEMP_DIMMC 0x55
