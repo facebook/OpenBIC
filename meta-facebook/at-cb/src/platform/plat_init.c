@@ -38,6 +38,7 @@ void pal_pre_init()
 				1);
 	}
 
+	init_platform_config();
 	check_asic_card_status();
 	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY + 1); // work queue for low priority jobs
 }
@@ -54,6 +55,7 @@ void pal_device_init()
 
 void pal_set_sys_status()
 {
+	get_acb_power_status();
 	gpio_set(ACB_BIC_READY_N, GPIO_LOW);
 	return;
 }

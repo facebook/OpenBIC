@@ -62,7 +62,7 @@
 	gpio_name_to_num(RST_USB_HUB3_N) \
 	gpio_name_to_num(RST_USB_HUB4_N) \
 	gpio_name_to_num(RST_USB_HUB5_N) \
-	gpio_name_to_num(Reserve_GPIOD6) \
+	gpio_name_to_num(RST_U13_N) \
 	gpio_name_to_num(Reserve_GPIOD7)
 
 #define name_gpioE \
@@ -83,16 +83,16 @@
 	gpio_name_to_num(USB2_MUX0_SEL) \
 	gpio_name_to_num(USB2_MUX1_SEL) \
 	gpio_name_to_num(USB2_MUX3_SEL) \
-	gpio_name_to_num(JTAG_MUX_SEL)
+	gpio_name_to_num(EN_JTAG_BIC_CPLD_N)
 
 #define name_gpioG \
-	gpio_name_to_num(INT_SMB_MEB_0_N) \
-	gpio_name_to_num(INT_SMB_MEB_1_N) \
-	gpio_name_to_num(Reserve_GPIOG2) \
-	gpio_name_to_num(Reserve_GPIOG3) \
-	gpio_name_to_num(Reserve_GPIOG4) \
-	gpio_name_to_num(Reserve_GPIOG5) \
-	gpio_name_to_num(Reserve_GPIOG6) \
+	gpio_name_to_num(INT_SMB_MEB_0_N_R) \
+	gpio_name_to_num(INT_SMB_MEB_1_N_R) \
+	gpio_name_to_num(INT_U228_N) \
+	gpio_name_to_num(INT_U229_N) \
+	gpio_name_to_num(INT_U230_N) \
+	gpio_name_to_num(INT_U233_N) \
+	gpio_name_to_num(INT_POWER_STATUS_N_R) \
 	gpio_name_to_num(EN_5V_EFUSE)
 
 #define name_gpioH \
@@ -162,7 +162,7 @@
 	gpio_name_to_num(Reserve_GPION3) \
 	gpio_name_to_num(BOARD_ID1) \
 	gpio_name_to_num(BOARD_ID2) \
-	gpio_name_to_num(Reserve_GPION6) \
+	gpio_name_to_num(BOARD_ID3) \
 	gpio_name_to_num(Reserve_GPION7)
 
 #define name_gpioO \

@@ -20,6 +20,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "plat_i2c.h"
+#include "plat_gpio.h"
 #include "i2c-mux-pca954x.h"
 
 #define ASIC_CARD_COUNT 12
@@ -44,6 +45,47 @@
 #define PEX_ACCL_DEV_PRESENT_RESP_COUNT 4
 #define PEX_ACCL_DEV_PRESENT_REG 0x2A080048
 #define PEX_ACCL_PRESENT_MAP_VAL 0x07
+
+#define HSC_MODULE_PIN_NUM BOARD_ID2
+#define POWER_BRICK_MODULE_PIN_NUM BOARD_ID1
+
+#define CPLD_ADDR (0xA0 >> 1)
+#define CPLD_PWRGD_1_OFFSET 0x05
+#define CPLD_PWRGD_2_OFFSET 0x06
+#define CPLD_PWRGD_BIT BIT(0)
+
+#define IOEXP_U228_ADDR (0x40 >> 1)
+#define IOEXP_U229_ADDR (0x42 >> 1)
+#define IOEXP_U230_ADDR (0x44 >> 1)
+#define IOEXP_CARD_PRESENCE_COUNT 4
+#define IOEXP_CARD_PRESENCE_PIN_COUNT 4
+#define IOEXP_CARD_PRESENCE_MAP_VAL 0x0F
+#define IOEXP_DEV_NOT_PRESENT_VAL 0x0F
+#define IOEXP_DEV_1_PRESENT_VAL 0x03
+#define IOEXP_DEV_2_PRESENT_VAL 0x0C
+#define IOEXP_DEV_1_2_PRESENT_VAL 0x00
+
+enum BOARD_REVISION_ID {
+	POC_STAGE = 0b000,
+	EVT1_STAGE = 0b001,
+	EVT2_STAGE = 0b010,
+	DVT_STAGE = 0b011,
+	PVT_STAGE = 0b100,
+	MP_STAGE = 0b101,
+	UNKNOWN_STAGE = 0xFF,
+};
+
+enum HSC_MODULE {
+	HSC_MODULE_ADM1272,
+	HSC_MODULE_LTC4286,
+	HSC_MODULE_UNKNOWN = 0xFF,
+};
+
+enum POWER_BRICK_MODULE {
+	POWER_BRICK_Q50SN120A1,
+	POWER_BRICK_BMR3512202,
+	POWER_BRICK_UNKNOWN = 0xFF,
+};
 
 enum ASIC_CARD_STATUS {
 	ASIC_CARD_NOT_PRESENT,
@@ -84,7 +126,13 @@ struct ASIC_CARD_INFO {
 extern struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT];
 
 void check_asic_card_status();
-bool get_adc_voltage(int channel, float *voltage);
-void check_accl_device_presence_status(uint8_t pex_id);
+void check_accl_device_presence_status_via_pex(uint8_t pex_id);
+void init_platform_config();
+uint8_t get_board_revision();
+uint8_t get_hsc_module();
+uint8_t get_pwr_brick_module();
+bool get_acb_power_status();
+bool get_acb_power_good_flag();
+int accl_id_mapping_card_id(uint8_t accl_id, uint8_t *card_id);
 
 #endif

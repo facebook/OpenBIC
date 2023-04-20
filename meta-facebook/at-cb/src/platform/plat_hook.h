@@ -26,6 +26,7 @@
 **************************************************************************************************/
 extern adc_asd_init_arg adc_asd_init_args[];
 extern adm1272_init_arg adm1272_init_args[];
+extern ltc4286_init_arg ltc4286_init_args[];
 extern ina233_init_arg ina233_init_args[];
 extern pex89000_init_arg pex_sensor_init_args[];
 extern ina233_init_arg accl_ina233_init_args[];

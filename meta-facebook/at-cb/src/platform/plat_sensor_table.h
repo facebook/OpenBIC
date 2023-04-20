@@ -31,8 +31,10 @@
 #define XDPE15284D_ADDR 0x64
 #define ADM1272_1_ADDR 0x10
 #define ADM1272_2_ADDR 0x13
-#define Q50SN120A1_1_ADDR 0x60
-#define Q50SN120A1_2_ADDR 0x61
+#define LTC4286_1_ADDR 0x40
+#define LTC4286_2_ADDR 0x41
+#define POWER_BRICK_1_ADDR 0x60
+#define POWER_BRICK_2_ADDR 0x61
 #define INA233_12V_1_7_ADDR 0x40
 #define INA233_12V_2_8_ADDR 0x41
 #define INA233_12V_3_9_ADDR 0x42
@@ -178,7 +180,7 @@ extern sensor_cfg plat_accl_sensor_config[];
 extern const int ACCL_SENSOR_CONFIG_SIZE;
 
 void load_sensor_config(void);
-bool is_mb_dc_on();
+bool is_acb_power_good();
 bool is_dc_access(uint8_t sensor_num);
 bool is_pcie_device_access(uint8_t card_id, uint8_t sensor_num);
 struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus);

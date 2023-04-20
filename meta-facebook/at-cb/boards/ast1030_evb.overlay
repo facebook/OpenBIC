@@ -82,6 +82,12 @@
 	status = "okay";
 };
 
+&i2c12 {
+	pinctrl-0 = <&pinctrl_i2c12_default>;
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_STANDARD>;
+};
+
 &udc {
 	status = "okay";
 };

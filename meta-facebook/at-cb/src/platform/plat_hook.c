@@ -47,6 +47,11 @@ adm1272_init_arg adm1272_init_args[] = {
 	[1] = { .is_init = false, .is_need_set_pwr_cfg = true, .pwr_monitor_cfg.value = 0x3F3F },
 };
 
+ltc4286_init_arg ltc4286_init_args[] = {
+	[0] = { .is_init = false, .r_sense_mohm = 0.3, .mfr_config_1 = { 0x5572 } },
+	[1] = { .is_init = false, .r_sense_mohm = 0.3, .mfr_config_1 = { 0x5572 } }
+};
+
 ina233_init_arg ina233_init_args[] = {
 	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
@@ -665,7 +670,7 @@ bool pre_pex89000_read(uint8_t sensor_num, void *args)
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
 	/* Can not access i2c mux and PEX89000 when DC off */
-	if (is_mb_dc_on() == false) {
+	if (is_acb_power_good() == false) {
 		return false;
 	}
 

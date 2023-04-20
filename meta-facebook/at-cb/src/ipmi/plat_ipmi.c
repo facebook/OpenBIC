@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <logging/log.h>
 #include "libutil.h"
+#include "fru.h"
 #include "ipmi.h"
 #include "util_spi.h"
 #include "hal_gpio.h"
@@ -86,7 +87,7 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 	case CB_COMPNT_PCIE_SWITCH0:
 	case CB_COMPNT_PCIE_SWITCH1:
 		/* Only can be read when DC is on */
-		if (is_mb_dc_on() == false) {
+		if (is_acb_power_good() == false) {
 			msg->completion_code = CC_PEX_NOT_POWER_ON;
 			return;
 		}
@@ -170,8 +171,10 @@ void OEM_1S_GET_PCIE_CARD_STATUS(ipmi_msg *msg)
 	}
 
 	/* BMC would check pcie card type via fru id and device id */
+	int ret = 0;
 	uint8_t fru_id = msg->data[0];
-	uint8_t pcie_card_id = fru_id - PCIE_CARD_ID_OFFSET;
+	uint8_t accl_id = 0;
+	uint8_t pcie_card_id = 0;
 	uint8_t pcie_device_id = msg->data[1];
 	static bool is_check_accl_status = false;
 	static bool is_check_accl_device_status = false;
@@ -182,10 +185,14 @@ void OEM_1S_GET_PCIE_CARD_STATUS(ipmi_msg *msg)
 	}
 
 	if (pcie_device_id == PCIE_DEVICE_ID1 || pcie_device_id == PCIE_DEVICE_ID2) {
-		if (is_check_accl_device_status != true && is_mb_dc_on() == true) {
-			check_accl_device_presence_status(PEX_0_INDEX);
-			check_accl_device_presence_status(PEX_1_INDEX);
+		if (get_board_revision() > EVT1_STAGE) {
 			is_check_accl_device_status = true;
+		} else {
+			if (is_check_accl_device_status != true && is_acb_power_good() == true) {
+				check_accl_device_presence_status_via_pex(PEX_0_INDEX);
+				check_accl_device_presence_status_via_pex(PEX_1_INDEX);
+				is_check_accl_device_status = true;
+			}
 		}
 	}
 
@@ -218,6 +225,13 @@ void OEM_1S_GET_PCIE_CARD_STATUS(ipmi_msg *msg)
 	case ACCL_10_FRU_ID:
 	case ACCL_11_FRU_ID:
 	case ACCL_12_FRU_ID:
+		accl_id = fru_id - PCIE_CARD_ID_OFFSET;
+		ret = accl_id_mapping_card_id(accl_id, &pcie_card_id);
+		if (ret != 0) {
+			msg->completion_code = CC_INVALID_PARAM;
+			return;
+		}
+
 		switch (pcie_device_id) {
 		case PCIE_DEVICE_ID1:
 			msg->data[0] = asic_card_info[pcie_card_id].card_status;
@@ -288,7 +302,7 @@ void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 	case (CB_COMPNT_PCIE_SWITCH0 | IS_SECTOR_END_MASK):
 	case (CB_COMPNT_PCIE_SWITCH1 | IS_SECTOR_END_MASK):
 		/* Only can be update when DC is on */
-		if (is_mb_dc_on() == false) {
+		if (is_acb_power_good() == false) {
 			msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
 			return;
 		}
@@ -430,7 +444,14 @@ void OEM_1S_GET_PCIE_CARD_SENSOR_READING(ipmi_msg *msg)
 	uint8_t device_status = 0;
 	uint8_t fru_id = msg->data[0];
 	uint8_t sensor_num = msg->data[1];
-	uint8_t card_id = fru_id - ACCL_1_FRU_ID;
+	uint8_t accl_id = fru_id - ACCL_1_FRU_ID;
+	uint8_t card_id = 0;
+
+	ret = accl_id_mapping_card_id(accl_id, &card_id);
+	if (ret != 0) {
+		msg->completion_code = CC_INVALID_PARAM;
+		return;
+	}
 
 	ret = pal_get_pcie_card_sensor_reading(card_id, sensor_num, &device_status, &reading);
 	if (ret != 0) {
@@ -444,5 +465,128 @@ void OEM_1S_GET_PCIE_CARD_SENSOR_READING(ipmi_msg *msg)
 	msg->data[0] = device_status;
 	memcpy(&msg->data[1], &reading, sizeof(reading));
 	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
+void STORAGE_READ_FRUID_DATA(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	int ret = 0;
+	uint8_t status = 0;
+	uint8_t fru_id = msg->data[0];
+	uint8_t accl_id = fru_id - ACCL_1_FRU_ID;
+	uint8_t card_id = 0;
+	EEPROM_ENTRY fru_entry = { 0 };
+
+	if (msg->data_len != 4) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	// Convert fru id based on different board stage
+	ret = accl_id_mapping_card_id(accl_id, &card_id);
+	if (ret != 0) {
+		LOG_ERR("Invalid fru id: 0x%x, accl id: 0x%x", fru_id, accl_id);
+		msg->completion_code = CC_INVALID_PARAM;
+		return;
+	}
+
+	fru_id = card_id + ACCL_1_FRU_ID;
+	fru_entry.config.dev_id = fru_id;
+	fru_entry.offset = (msg->data[2] << 8) | msg->data[1];
+	fru_entry.data_len = msg->data[3];
+
+	// According to IPMI, messages are limited to 32 bytes
+	if (fru_entry.data_len > 32) {
+		msg->completion_code = CC_LENGTH_EXCEEDED;
+		return;
+	}
+
+	// Convert fru id based on different board stage
+
+	status = FRU_read(&fru_entry);
+
+	msg->data_len = fru_entry.data_len + 1;
+	msg->data[0] = fru_entry.data_len;
+	memcpy(&msg->data[1], &fru_entry.data[0], fru_entry.data_len);
+
+	switch (status) {
+	case FRU_READ_SUCCESS:
+		msg->completion_code = CC_SUCCESS;
+		break;
+	case FRU_INVALID_ID:
+		msg->completion_code = CC_INVALID_PARAM;
+		break;
+	case FRU_OUT_OF_RANGE:
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		break;
+	case FRU_FAIL_TO_ACCESS:
+		msg->completion_code = CC_FRU_DEV_BUSY;
+		break;
+	default:
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		break;
+	}
+
+	return;
+}
+
+void STORAGE_WRITE_FRUID_DATA(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	int ret = 0;
+	uint8_t status = 0;
+	uint8_t fru_id = msg->data[0];
+	uint8_t accl_id = fru_id - ACCL_1_FRU_ID;
+	uint8_t card_id = 0;
+	EEPROM_ENTRY fru_entry = { 0 };
+
+	if (msg->data_len != 4) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	// Convert fru id based on different board stage
+	ret = accl_id_mapping_card_id(accl_id, &card_id);
+	if (ret != 0) {
+		LOG_ERR("Invalid fru id: 0x%x, accl id: 0x%x", fru_id, accl_id);
+		msg->completion_code = CC_INVALID_PARAM;
+		return;
+	}
+
+	fru_id = card_id + ACCL_1_FRU_ID;
+	fru_entry.config.dev_id = fru_id;
+	fru_entry.offset = (msg->data[2] << 8) | msg->data[1];
+	fru_entry.data_len = msg->data_len - 3; // skip id and offset
+	if (fru_entry.data_len > 32) { // According to IPMI, messages are limited to 32 bytes
+		msg->completion_code = CC_LENGTH_EXCEEDED;
+		return;
+	}
+	memcpy(&fru_entry.data[0], &msg->data[3], fru_entry.data_len);
+
+	msg->data[0] = msg->data_len - 3;
+	msg->data_len = 1;
+	status = FRU_write(&fru_entry);
+
+	switch (status) {
+	case FRU_WRITE_SUCCESS:
+		msg->completion_code = CC_SUCCESS;
+		break;
+	case FRU_INVALID_ID:
+		msg->completion_code = CC_INVALID_PARAM;
+		break;
+	case FRU_OUT_OF_RANGE:
+		msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+		break;
+	case FRU_FAIL_TO_ACCESS:
+		msg->completion_code = CC_FRU_DEV_BUSY;
+		break;
+	default:
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		break;
+	}
+
 	return;
 }
