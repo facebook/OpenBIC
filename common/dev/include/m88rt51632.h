@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,44 +14,26 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_CLASS_H
-#define PLAT_CLASS_H
+#ifndef M88RT51632_H
+#define M88RT51632_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#include "hal_i2c.h"
 
-enum CARD_POSITION {
-	CARD_POSITION_1OU,
-	CARD_POSITION_2OU,
-	CARD_POSITION_3OU,
-	CARD_POSITION_4OU,
-	CARD_POSITION_UNKNOWN,
-};
+#define I2C_READ_CCODE_START 0x82
+#define I2C_READ_CCODE_END 0x81
+#define I2C_READ_BYTCNT 0x2
+#define I2C_WRITE_CCODE_START 0x87
+#define I2C_WRITE_BYTCNT 0x6
 
-enum CARD_TYPE {
-	CARD_TYPE_OPA,
-	CARD_TYPE_OPB,
-	CARD_TYPE_UNKNOWN,
-};
+#define RETIMER_VERSION 0x0104c
+#define RETIMER_ADDRPORT 0xfff0
+#define RETIMER_DATAPORT 0xfff4
 
-enum RETIMER_TYPE {
-	RETIMER_TYPE_PT5161L,
-	RETIMER_TYPE_M88RT51632,
-	RETIMER_TYPE_UNKNOWN,
-};
+#define M88RT51632_TEMP_OFFSET 0x00
 
-enum E1S_NUMBER {
-	E1S_0,
-	E1S_1,
-	E1S_2,
-	E1S_3,
-	E1S_4,
-};
+#define MAX_SENSORS 2
 
-int init_platform_config();
-uint8_t get_card_type();
-uint8_t get_card_position();
-int check_pcie_retimer_type(void);
-uint8_t get_pcie_retimer_type(void);
+bool m88rt51632_get_vendor_id(I2C_MSG *msg);
+bool m88rt51632_get_fw_version(I2C_MSG *msg, uint32_t *version);
 
 #endif

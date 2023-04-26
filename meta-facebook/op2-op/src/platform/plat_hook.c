@@ -20,7 +20,9 @@
 #include "ast_adc.h"
 #include "sensor.h"
 #include "libutil.h"
+#include "m88rt51632.h"
 #include "rg3mxxb12.h"
+#include "plat_class.h"
 #include "plat_i2c.h"
 #include "plat_hook.h"
 #include "plat_sensor_table.h"
@@ -178,6 +180,7 @@ bool pre_retimer_read(uint8_t sensor_num, void *args)
 	pt5161l_init_arg *init_arg = (pt5161l_init_arg *)cfg->init_args;
 	static uint8_t check_init_count = 0;
 	bool ret = true;
+	uint8_t retimer_type;
 
 	if (init_arg->is_init == false) {
 		if (check_init_count >= RETIMER_INIT_RETRY_COUNT) {
@@ -185,11 +188,29 @@ bool pre_retimer_read(uint8_t sensor_num, void *args)
 			return false;
 		}
 
-		check_init_count += 1;
-		ret = init_drive_type_delayed(cfg);
-		if (ret == false) {
-			LOG_ERR("retimer initial fail");
-			return ret;
+		retimer_type = check_pcie_retimer_type();
+		switch (retimer_type) {
+		case RETIMER_TYPE_PT5161L:
+			check_init_count += 1;
+			cfg->type = sensor_dev_pt5161l;
+			ret = init_drive_type_delayed(cfg);
+			if (ret == false) {
+				LOG_ERR("PT5161L retimer initial fail");
+				return ret;
+			}
+			break;
+		case RETIMER_TYPE_M88RT51632:
+			check_init_count += 1;
+			cfg->type = sensor_dev_m88rt51632;
+			cfg->offset = M88RT51632_TEMP_OFFSET;
+			ret = init_drive_type_delayed(cfg);
+			if (ret == false) {
+				LOG_ERR("M88RT51632 retimer initial fail");
+				return ret;
+			}
+			break;
+		default:
+			break;
 		}
 	}
 

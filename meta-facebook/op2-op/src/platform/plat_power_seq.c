@@ -261,6 +261,11 @@ bool is_all_sequence_done(uint8_t status)
 	return all_sequence_done;
 }
 
+bool is_retimer_done(void)
+{
+	return is_retimer_sequence_done;
+}
+
 void control_power_stage(uint8_t control_mode, uint8_t control_seq)
 {
 	switch (control_mode) {

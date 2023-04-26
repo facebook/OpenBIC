@@ -17,6 +17,9 @@
 #include "libutil.h"
 #include <stdlib.h>
 #include <string.h>
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(libutil);
 
 /*
  * @brief Construct an IPMI message buffer.
@@ -89,4 +92,54 @@ int ascii_to_val(uint8_t ascii_byte)
 		return ascii_byte - 0x41 + 10;
 	else
 		return -1;
+}
+
+uint32_t uint32_t_byte_reverse(uint32_t data)
+{
+	uint32_t re_data;
+
+	re_data = (((data & 0xaaaaaaaa) >> 1) | ((data & 0x55555555) << 1));
+	re_data = (((re_data & 0xcccccccc) >> 2) | ((re_data & 0x33333333) << 2));
+	re_data = (((re_data & 0xf0f0f0f0) >> 4) | ((re_data & 0x0f0f0f0f) << 4));
+	re_data = (((re_data & 0xff00ff00) >> 8) | ((re_data & 0x00ff00ff) << 8));
+
+	return ((re_data >> 16) | ((re_data << 16) & 0xffffffff));
+}
+
+void convert_uint32_t_to_uint8_t_pointer(uint32_t data_32, uint8_t *data_8, uint8_t len,
+					 uint8_t endian)
+{
+	CHECK_NULL_ARG(data_8);
+	int i;
+
+	if (len != 4) {
+		LOG_ERR("Unexpected length %d", len);
+		return;
+	}
+
+	for (i = 0; i < len; ++i) {
+		if (endian == SMALL_ENDIAN) {
+			data_8[i] = (data_32 >> (8 * i)) & 0xFF;
+		} else {
+			data_8[i] = (data_32 >> (24 - 8 * i)) & 0xFF;
+		}
+	}
+}
+
+void convert_uint8_t_pointer_to_uint32_t(uint32_t *data_32, uint8_t *data_8, uint8_t len,
+					 uint8_t endian)
+{
+	CHECK_NULL_ARG(data_32);
+	CHECK_NULL_ARG(data_8);
+
+	if (len != 4) {
+		LOG_ERR("Unexpected length %d", len);
+		return;
+	}
+
+	if (endian == SMALL_ENDIAN) {
+		*data_32 = (data_8[3] << 24) + (data_8[2] << 16) + (data_8[1] << 8) + data_8[0];
+	} else {
+		*data_32 = (data_8[0] << 24) + (data_8[1] << 16) + (data_8[2] << 8) + data_8[3];
+	}
 }
