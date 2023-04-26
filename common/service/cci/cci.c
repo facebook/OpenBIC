@@ -209,7 +209,7 @@ uint16_t mctp_cci_read(void *mctp_p, mctp_cci_msg *msg, uint8_t *rbuf, uint16_t 
 	struct k_msgq *event_msgq_p = (struct k_msgq *)malloc(sizeof(struct k_msgq));
 	if (!event_msgq_p) {
 		LOG_WRN("event_msgq_p alloc failed!");
-		return CCI_ERROR;
+		return 0;
 	}
 	uint16_t ret_len = 0;
 
@@ -219,7 +219,7 @@ uint16_t mctp_cci_read(void *mctp_p, mctp_cci_msg *msg, uint8_t *rbuf, uint16_t 
 	if (!recv_arg_p) {
 		SAFE_FREE(event_msgq_p);
 		LOG_WRN("recv_arg_p alloc failed!");
-		return CCI_ERROR;
+		return 0;
 	}
 	recv_arg_p->msgq = event_msgq_p;
 	recv_arg_p->rbuf = rbuf;
