@@ -30,6 +30,7 @@
 #include "hal_i3c.h"
 #include "libutil.h"
 #include "mctp_ctrl.h"
+#include "plat_power.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -59,6 +60,7 @@ void pal_device_init()
 
 	init_i3c_dimm();
 	start_monitor_pmic_error_thread();
+	init_vpp_power_status();
 }
 
 void pal_set_sys_status()

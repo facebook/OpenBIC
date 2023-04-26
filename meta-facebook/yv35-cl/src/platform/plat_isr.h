@@ -27,7 +27,6 @@ enum GET_SET_M2_OPTION {
 };
 
 void send_gpio_interrupt(uint8_t gpio_num);
-int get_set_1ou_m2_power(ipmi_msg *msg, uint8_t device_id, uint8_t option);
 void ISR_PLTRST();
 void ISR_SLP3();
 void ISR_DC_ON();
