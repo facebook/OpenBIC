@@ -18,6 +18,7 @@
 #include "sensor.h"
 #include "ast_adc.h"
 #include "pmbus.h"
+#include "tmp461.h"
 #include "plat_i2c.h"
 #include "plat_hook.h"
 #include "plat_sensor_table.h"
@@ -30,6 +31,9 @@ sensor_cfg plat_sensor_config[] = {
 	// Temperature =========================================================================
 	{ SENSOR_NUM_TEMP_TMP75, sensor_dev_tmp75, I2C_BUS3, TMP75_1OU_BOARD_ADDR,
 	  TMP75_TEMP_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_CXL, sensor_dev_tmp461, I2C_BUS2, TMP641_CXL_CNTR_ADDR,
+	  TMP461_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 
 	// ADC =================================================================================

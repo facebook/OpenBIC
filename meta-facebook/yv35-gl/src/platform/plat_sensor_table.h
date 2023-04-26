@@ -31,6 +31,8 @@
 #define INF_ADDR (0xDC >> 1)
 #define PVCCD0_ADDR (0xD4 >> 1)
 #define PVCCD1_ADDR (0xD4 >> 1)
+#define EVT_FIVRA_ADDR (0xC4 >> 1)
+#define EVT_PVCCD0_ADDR (0xE4 >> 1)
 #define CPU_PECI_ADDR 0x30
 #define SSD0_ADDR (0xD4 >> 1)
 #define SSD0_OFFSET 0x00

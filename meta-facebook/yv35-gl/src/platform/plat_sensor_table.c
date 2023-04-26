@@ -254,15 +254,18 @@ sensor_cfg mp5990_sensor_config_table[] = {
 	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &mp5990_init_args[0] },
-	{ SENSOR_NUM_MB_HSC_INPUT_VOLT_V, sensor_dev_mp5990, I2C_BUS2, HSC_MP5990_ADDR, PMBUS_READ_VIN,
-	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
-	{ SENSOR_NUM_MB_HSC_OUTPUT_CURR_A, sensor_dev_mp5990, I2C_BUS2, HSC_MP5990_ADDR, PMBUS_READ_IOUT,
-	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
-	{ SENSOR_NUM_MB_HSC_INPUT_PWR_W, sensor_dev_mp5990, I2C_BUS2, HSC_MP5990_ADDR, PMBUS_READ_PIN,
-	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
+	{ SENSOR_NUM_MB_HSC_INPUT_VOLT_V, sensor_dev_mp5990, I2C_BUS2, HSC_MP5990_ADDR,
+	  PMBUS_READ_VIN, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &mp5990_init_args[0] },
+	{ SENSOR_NUM_MB_HSC_OUTPUT_CURR_A, sensor_dev_mp5990, I2C_BUS2, HSC_MP5990_ADDR,
+	  PMBUS_READ_IOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &mp5990_init_args[0] },
+	{ SENSOR_NUM_MB_HSC_INPUT_PWR_W, sensor_dev_mp5990, I2C_BUS2, HSC_MP5990_ADDR,
+	  PMBUS_READ_PIN, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &mp5990_init_args[0] },
 };
 
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
@@ -284,6 +287,46 @@ uint8_t pal_get_extend_sensor_config()
 	}
 
 	return extend_sensor_config_size;
+}
+
+static void check_vr_type(uint8_t index)
+{
+	uint8_t retry = 5;
+	I2C_MSG msg;
+
+	xdpe15284_pre_read_arg *args = sensor_config[index].pre_sensor_read_args;
+	memset(&msg, 0, sizeof(msg));
+	msg.bus = sensor_config[index].port;
+	msg.target_addr = sensor_config[index].target_addr;
+	msg.tx_len = 2;
+	msg.data[0] = 0x00;
+	msg.data[1] = args->vr_page;
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("Failed to switch to VR page %d", args->vr_page);
+		return;
+	}
+
+	/* Get IC Device ID from VR chip */
+	memset(&msg, 0, sizeof(msg));
+	msg.bus = sensor_config[index].port;
+	msg.target_addr = sensor_config[index].target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 7;
+	msg.data[0] = PMBUS_IC_DEVICE_ID;
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Failed to read VR IC_DEVICE_ID: register(0x%x)", PMBUS_IC_DEVICE_ID);
+		return;
+	}
+
+	if ((msg.data[0] == 0x01) && (msg.data[1] == 0x85)) {
+		sensor_config[index].type = sensor_dev_mp2985;
+		sensor_config[index].init_args = &mp2985_init_args[0];
+	} else if ((msg.data[0] == 0x02) && (msg.data[2] == 0x8A)) {
+		sensor_config[index].type = sensor_dev_xdpe15284;
+	} else {
+		LOG_ERR("Unknown VR type");
+	}
 }
 
 void pal_extend_sensor_config()
@@ -317,5 +360,33 @@ void pal_extend_sensor_config()
 	default:
 		LOG_ERR("Unsupported HSC module, HSC module: 0x%x", hsc_module);
 		break;
+	}
+
+	/* Following the hardware design,
+	 * MPS and Renesas VR chips are used in EVT stage.
+	 * And the slave address is changed in EVT stage.
+	 * So, BIC revises VR slave address according to server board revision.
+	 * Besides, BIC judges VR chip type by getting device id
+	 * and then replace sensor config table before loading.
+	 */
+	uint8_t board_revision = get_board_revision();
+	sensor_count = ARRAY_SIZE(plat_sensor_config);
+	for (uint8_t index = 0; index < sensor_count; index++) {
+		if (sensor_config[index].type == sensor_dev_xdpe15284) {
+			if (board_revision == SYS_BOARD_EVT) {
+				switch (sensor_config[index].target_addr) {
+				case FIVRA_ADDR:
+					sensor_config[index].target_addr = EVT_FIVRA_ADDR;
+					break;
+				case PVCCD0_ADDR:
+					sensor_config[index].target_addr = EVT_PVCCD0_ADDR;
+					break;
+
+				default:
+					break;
+				};
+			};
+			check_vr_type(index);
+		}
 	}
 }

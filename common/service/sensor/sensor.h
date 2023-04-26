@@ -142,6 +142,8 @@ enum SENSOR_DEV {
 	sensor_dev_i3c_dimm = 0x26,
 	sensor_dev_pt5161l = 0x27,
 	sensor_dev_lm75bd118 = 0x28,
+	sensor_dev_tmp461 = 0x29,
+	sensor_dev_mp2985 = 0x2A,
 	sensor_dev_max
 };
 
@@ -579,6 +581,10 @@ typedef struct _pt5161l_init_arg_ {
 	uint8_t temp_cal_code_avg; // average temp calibration code
 	bool is_init;
 } pt5161l_init_arg;
+
+typedef struct _mp2985_init_arg {
+	bool is_init;
+} mp2985_init_arg;
 
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;
