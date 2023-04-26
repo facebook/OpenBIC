@@ -25,7 +25,7 @@
     gpio_name_to_num(HSC_TYPE) \
     gpio_name_to_num(H_CPU_MON_FAIL_LVC3_N) \
     gpio_name_to_num(FM_SLPS3_LVC3_N) \
-    gpio_name_to_num(IRQ_BMC_NMI_R_N) \
+    gpio_name_to_num(IRQ_BMC_NMI) \
     gpio_name_to_num(IRQ_UV_DETECT_N) \
     gpio_name_to_num(FM_UV_ADR_TRIGGER_EN_R) \
     gpio_name_to_num(Reserve_GPIOA6) \
