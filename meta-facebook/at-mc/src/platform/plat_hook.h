@@ -25,6 +25,7 @@
 extern mp5990_init_arg mp5990_init_args[];
 extern adc_asd_init_arg adc_asd_init_args[];
 extern sq52205_init_arg sq52205_init_args[];
+extern ina233_init_arg mc_ina233_init_args[];
 extern ina233_init_arg ina233_init_args[];
 extern ltc2991_init_arg ltc2991_init_args[];
 

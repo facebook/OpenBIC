@@ -31,6 +31,14 @@
 #define CXL_PRESENT 0x0E
 #define NO_DEVICE_PRESENT 0x0F
 
+enum BOARD_REVERSION {
+	REV_EVT1,
+	REV_EVT2,
+	REV_DVT,
+	REV_PVT,
+	REV_MP,
+};
+
 enum CARD_INFO_INDEX {
 	CARD_1_INDEX,
 	CARD_2_INDEX,
@@ -85,5 +93,6 @@ int get_pcie_device_type(uint8_t card_id, uint8_t device_id, uint8_t *device_typ
 int pcie_card_id_to_cxl_id(uint8_t pcie_card_id, uint8_t *cxl_id);
 int cxl_id_to_pcie_card_id(uint8_t cxl_id, uint8_t *pcie_card_id);
 bool is_cxl_present();
+uint8_t get_board_revision();
 
 #endif
