@@ -19,7 +19,9 @@
 #include "ast_adc.h"
 #include "sensor.h"
 #include "power_status.h"
+#include "pmbus.h"
 #include "pt5161l.h"
+#include "ina233.h"
 #include "plat_i2c.h"
 #include "plat_sensor_table.h"
 #include "plat_hook.h"
@@ -277,6 +279,11 @@ void load_sensor_config(void)
 
 	// Fix config table in different system/config
 	pal_extend_sensor_config();
+
+	uint8_t power_monitor_ic_type = check_pwr_monitor_type();
+	if (power_monitor_ic_type == PWR_SQ5220X) {
+		change_power_monitor_config_for_sq5220x();
+	}
 }
 
 uint8_t pal_get_extend_sensor_config()
@@ -297,6 +304,34 @@ uint8_t pal_get_extend_sensor_config()
 	}
 
 	return extend_sensor_table_size;
+}
+
+int check_pwr_monitor_type(void)
+{
+	uint8_t retry = 5;
+	uint8_t ret = 0;
+	I2C_MSG msg = { 0 };
+	msg.bus = I2C_BUS3;
+	msg.target_addr = INA233_EXPA_E1S_1_ADDR;
+	msg.tx_len = 1;
+	msg.rx_len = 3;
+	msg.data[0] = PMBUS_MFR_ID;
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Failed to read Power moniter IC_DEVICE_ID: register(0x%x)",
+			PMBUS_IC_DEVICE_ID);
+		return -1;
+	}
+
+	if (memcmp(msg.data, INA233_DEVICE_ID, sizeof(INA233_DEVICE_ID)) == 0) {
+		LOG_INF("Power Monitor type: INA233");
+		ret = PWR_INA233;
+	} else {
+		LOG_INF("Power Monitor type: SQ5220X");
+		ret = PWR_SQ5220X;
+	}
+
+	return ret;
 }
 
 void change_ina233_sensor_addr()
@@ -329,6 +364,50 @@ void change_ina233_sensor_addr()
 				default:
 					break;
 				}
+			}
+		}
+	}
+}
+
+void change_power_monitor_config_for_sq5220x(void)
+{
+	uint8_t index;
+
+	for (index = 0; index < sensor_config_count; ++index) {
+		if (sensor_config[index].type == sensor_dev_ina233) {
+			sensor_config[index].type = sensor_dev_sq52205;
+
+			switch (sensor_config[index].offset) {
+			case INA233_VOLT_OFFSET:
+				sensor_config[index].offset = SQ5220X_VOL_OFFSET;
+				break;
+			case INA233_CURR_OFFSET:
+				sensor_config[index].offset = SQ5220X_CUR_OFFSET;
+				break;
+			case INA233_PWR_OFFSET:
+				sensor_config[index].offset = SQ5220X_PWR_OFFSET;
+				break;
+			default:
+				LOG_ERR("UNKNOWN power monitor offset %x change table failed",
+					sensor_config[index].offset);
+				continue;
+			}
+
+			if (sensor_config[index].init_args == &ina233_init_args[0]) {
+				sensor_config[index].init_args = &sq52205_init_args[0];
+			} else if (sensor_config[index].init_args == &ina233_init_args[1]) {
+				sensor_config[index].init_args = &sq52205_init_args[1];
+			} else if (sensor_config[index].init_args == &ina233_init_args[2]) {
+				sensor_config[index].init_args = &sq52205_init_args[2];
+			} else if (sensor_config[index].init_args == &ina233_init_args[3]) {
+				sensor_config[index].init_args = &sq52205_init_args[3];
+			} else if (sensor_config[index].init_args == &ina233_init_args[4]) {
+				sensor_config[index].init_args = &sq52205_init_args[4];
+			} else if (sensor_config[index].init_args == &ina233_init_args[5]) {
+				sensor_config[index].init_args = &sq52205_init_args[5];
+			} else {
+				LOG_ERR("UNKNOWN init args change table failed");
+				continue;
 			}
 		}
 	}
@@ -405,6 +484,7 @@ bool e1s_access(uint8_t sensor_num)
 
 	switch (sensor_cfgs->type) {
 	case sensor_dev_ina233:
+	case sensor_dev_sq52205:
 		switch (sensor_cfgs->target_addr) {
 		case INA233_EXPA_E1S_0_ADDR:
 		case INA233_EXPB_E1S_0_ADDR:

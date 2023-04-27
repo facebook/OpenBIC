@@ -108,7 +108,6 @@ uint8_t sq52205_init(uint8_t sensor_num)
 
 	if (init_arg->is_init != true) {
 		int ret = 0, retry = 5;
-		uint16_t shunt_unit = 0;
 		uint16_t calibration = 0;
 		I2C_MSG msg = { 0 };
 
@@ -127,16 +126,14 @@ uint8_t sq52205_init(uint8_t sensor_num)
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
 		}
 
-		// Shunt unit = 1 ohm
-		shunt_unit = init_arg->r_shunt * 1000;
 		memset(&msg, 0, sizeof(I2C_MSG));
 		msg.bus = cfg.port;
 		msg.target_addr = cfg.target_addr;
 		msg.tx_len = 3;
 		msg.data[0] = SQ52205_CALIBRATION_OFFSET;
 
-		// Calibration formula = ((2048 * shunt_lsb) / (current_lsb * r_shunt)
-		calibration = (uint16_t)(((2048 * (shunt_unit * SQ52205_SHUNT_LSB)) /
+		// Calibration formula = ((2048 * shunt_lsb) / (current_lsb * r_shunt) round it up
+		calibration = (uint16_t)(((2048 * SQ52205_SHUNT_LSB) /
 					  (init_arg->current_lsb * init_arg->r_shunt)) +
 					 0.5);
 		msg.data[1] = (calibration >> 8) & 0xFF;

@@ -27,6 +27,7 @@ typedef struct _i2c_proc_arg {
 **************************************************************************************************/
 extern adc_asd_init_arg adc_asd_init_args[];
 extern ina233_init_arg ina233_init_args[];
+extern sq52205_init_arg sq52205_init_args[];
 extern i2c_proc_arg i2c_proc_args[];
 extern pt5161l_init_arg pt5161l_init_args[];
 extern struct k_mutex i2c_hub_mutex;
