@@ -31,18 +31,27 @@ struct __attribute__((__packed__)) i2c_msg_package {
 };
 
 struct i2c_target_data {
-	uint8_t i2c_bus; /* i2c bus number */
-	const struct device *i2c_controller; /* i2c controller for one target bus */
-	struct i2c_slave_config config; /* i2c target relative config */
-	uint16_t max_msg_count; /* max message count that target could handle */
-	uint32_t buffer_idx; /* index point to array that store message */
-	struct i2c_msg_package current_msg; /* store message relative stuff */
-	struct k_msgq z_msgq_id; /* message queue of Zephyr api */
+	uint8_t i2c_bus; // i2c bus number
+	const struct device *i2c_controller; // i2c controller for one target bus
+	struct i2c_slave_config config; // i2c target relative config
+
+	/* TARGET WRITE - Support message queue for massive pending messages storage */
+	uint16_t wr_buffer_idx; // message buffer index
+	struct i2c_msg_package target_wr_msg; // message's buffer and length
+	struct k_msgq target_wr_msgq_id; // target write message queue of Zephyr api
+	uint16_t max_msg_count; // max message count for target write message queue
+	bool skip_msg_wr; // skip message write while target stop
+
+	/* TARGET READ - Not support pending messages storage */
+	uint32_t rd_buffer_idx; // message buffer index
+	struct i2c_msg_package target_rd_msg; // message's buffer and length
+	bool (*rd_data_collect_func)(void *); // do something before read first byte
 };
 
 struct _i2c_target_config {
 	uint8_t address;
 	uint32_t i2c_msg_count;
+	bool (*rd_data_collect_func)(void *);
 };
 
 struct i2c_target_device {
@@ -86,6 +95,7 @@ uint8_t i2c_target_status_get(uint8_t bus_num);
 uint8_t i2c_target_status_print(uint8_t bus_num);
 uint8_t i2c_target_cfg_get(uint8_t bus_num, struct _i2c_target_config *cfg);
 uint8_t i2c_target_read(uint8_t bus_num, uint8_t *buff, uint16_t buff_len, uint16_t *msg_len);
+uint8_t i2c_target_write(uint8_t bus_num, uint8_t *buff, uint16_t buff_len);
 int i2c_target_control(uint8_t bus_num, struct _i2c_target_config *cfg,
 		       enum i2c_target_api_control_mode mode);
 

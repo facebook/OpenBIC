@@ -14,35 +14,6 @@
  * limitations under the License.
  */
 
-/*
-  NAME: I2C TARGET DEVICE
-  FILE: hal_i2c_target.c
-  DESCRIPTION: There is 1 callback function "i2c_target_cb" for I2C target ISR handle and user APIs for user access.
-  AUTHOR: MouchenHung
-  DATE/VERSION: 2021.12.09 - v1.4.2
-  Note:
-    (1) Shall not modify code in this file!!!
-
-    (2) "hal_i2c_target.h" must be included!
-
-    (3) User APIs follow check-rule before doing task
-          [api]                               [.is_init] [.is_register]
-        * i2c_target_control                   X          X
-        * i2c_target_read                      O          X
-        * i2c_target_status_get                X          X
-        * i2c_target_status_print              X          X
-        * i2c_target_cfg_get                   O          X
-                                              (O: must equal 1, X: no need to check)
-
-    (4) I2C target function/api usage recommend
-        [ACTIVATE]
-          Use "i2c_target_control()" to register/modify/unregister target bus
-        [READ]
-          Use "i2c_target_read()" to read target queue message
-
-    (5) Target queue method: Zephyr api, unregister the bus while full msgq, register back while msgq get space.
-*/
-
 #include <zephyr.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -67,81 +38,143 @@ static int do_i2c_target_cfg(uint8_t bus_num, struct _i2c_target_config *cfg);
 static int do_i2c_target_register(uint8_t bus_num);
 static int do_i2c_target_unregister(uint8_t bus_num);
 
+static bool do_something_while_rd_start(void *arg)
+{
+	ARG_UNUSED(arg);
+	return true;
+}
+
 static int i2c_target_write_requested(struct i2c_slave_config *config)
 {
+	CHECK_NULL_ARG_WITH_RETURN(config, 1);
+
 	struct i2c_target_data *data;
-
-	if (!config) {
-		LOG_ERR("Get empty config!");
-		return 1;
-	}
-
 	data = CONTAINER_OF(config, struct i2c_target_data, config);
 
-	data->current_msg.msg_length = 0;
-	memset(data->current_msg.msg, 0x0, MAX_I2C_TARGET_BUFF);
-	data->buffer_idx = 0;
+	data->target_wr_msg.msg_length = 0;
+	memset(data->target_wr_msg.msg, 0x0, MAX_I2C_TARGET_BUFF);
+	data->wr_buffer_idx = 0;
+	data->skip_msg_wr = false;
 
 	return 0;
 }
 
 static int i2c_target_write_received(struct i2c_slave_config *config, uint8_t val)
 {
+	CHECK_NULL_ARG_WITH_RETURN(config, 1);
+
 	struct i2c_target_data *data;
-
-	if (!config) {
-		LOG_ERR("Get empty config!");
-		return 1;
-	}
-
 	data = CONTAINER_OF(config, struct i2c_target_data, config);
 
-	if (data->buffer_idx >= MAX_I2C_TARGET_BUFF) {
+	if (data->wr_buffer_idx >= MAX_I2C_TARGET_BUFF) {
 		LOG_ERR("Buffer_idx over limit!");
 		return 1;
 	}
-	data->current_msg.msg[data->buffer_idx++] = val;
+	data->target_wr_msg.msg[data->wr_buffer_idx++] = val;
+
+	return 0;
+}
+
+static int i2c_target_read_requested(struct i2c_slave_config *config, uint8_t *val)
+{
+	CHECK_NULL_ARG_WITH_RETURN(config, 1);
+	CHECK_NULL_ARG_WITH_RETURN(val, 1);
+
+	struct i2c_target_data *data;
+	data = CONTAINER_OF(config, struct i2c_target_data, config);
+
+	if (data->rd_data_collect_func) {
+		if (data->rd_data_collect_func(data) == false)
+			data->skip_msg_wr = true;
+	}
+
+	if (!data->target_rd_msg.msg_length) {
+		LOG_WRN("Data not ready");
+		return 1;
+	}
+
+	data->rd_buffer_idx = 0;
+	*val = data->target_rd_msg.msg[data->rd_buffer_idx++];
+
+	return 0;
+}
+
+static int i2c_target_read_processed(struct i2c_slave_config *config, uint8_t *val)
+{
+	CHECK_NULL_ARG_WITH_RETURN(config, 1);
+	CHECK_NULL_ARG_WITH_RETURN(val, 1);
+
+	struct i2c_target_data *data;
+	data = CONTAINER_OF(config, struct i2c_target_data, config);
+
+	if (data->target_rd_msg.msg_length - data->rd_buffer_idx == 0) {
+		LOG_DBG("No remain buffer to read!");
+		return 1;
+	}
+
+	if (data->rd_buffer_idx >= MAX_I2C_TARGET_BUFF) {
+		LOG_ERR("Buffer_idx over limit!");
+		return 1;
+	}
+
+	*val = data->target_rd_msg.msg[data->rd_buffer_idx++];
 
 	return 0;
 }
 
 static int i2c_target_stop(struct i2c_slave_config *config)
 {
+	CHECK_NULL_ARG_WITH_RETURN(config, 1);
+
 	struct i2c_target_data *data;
-
-	if (!config) {
-		LOG_ERR("Get empty config!");
-		return 1;
-	}
-
 	data = CONTAINER_OF(config, struct i2c_target_data, config);
 
-	if (data->buffer_idx) {
-		data->current_msg.msg_length = data->buffer_idx;
+	int ret = 1;
+
+	if (data->wr_buffer_idx) {
+		if (data->skip_msg_wr == true) {
+			ret = 0;
+			goto clean_up;
+		}
+
+		data->target_wr_msg.msg_length = data->wr_buffer_idx;
 
 		/* try to put new node to message queue */
-		uint8_t ret = k_msgq_put(&data->z_msgq_id, &data->current_msg, K_NO_WAIT);
-		if (ret) {
+		uint8_t status =
+			k_msgq_put(&data->target_wr_msgq_id, &data->target_wr_msg, K_NO_WAIT);
+		if (status) {
 			LOG_ERR("Can't put new node to message queue on bus[%d], cause of %d",
-				data->i2c_bus, ret);
-			return 1;
+				data->i2c_bus, status);
+			goto clean_up;
 		}
 
 		/* if target queue is full, unregister the bus target to prevent next message handle */
-		if (!k_msgq_num_free_get(&data->z_msgq_id)) {
+		if (!k_msgq_num_free_get(&data->target_wr_msgq_id)) {
 			LOG_DBG("Target queue is full, unregister bus[%d]", data->i2c_bus);
 			do_i2c_target_unregister(data->i2c_bus);
 		}
 	}
 
-	return 0;
+	if (data->rd_buffer_idx) {
+		if (data->target_rd_msg.msg_length - data->rd_buffer_idx) {
+			LOG_WRN("Read buffer doesn't read complete");
+		}
+	}
+
+	ret = 0;
+
+clean_up:
+	data->rd_buffer_idx = 0;
+	data->wr_buffer_idx = 0;
+
+	return ret;
 }
 
 static const struct i2c_slave_callbacks i2c_target_cb = {
 	.write_requested = i2c_target_write_requested,
-	.read_requested = NULL,
+	.read_requested = i2c_target_read_requested,
 	.write_received = i2c_target_write_received,
-	.read_processed = NULL,
+	.read_processed = i2c_target_read_processed,
 	.stop = i2c_target_stop,
 };
 
@@ -201,22 +234,21 @@ out:
 */
 uint8_t i2c_target_cfg_get(uint8_t bus_num, struct _i2c_target_config *cfg)
 {
-	uint8_t status;
-
-	if (!cfg)
-		return I2C_TARGET_API_INPUT_ERR;
+	CHECK_NULL_ARG_WITH_RETURN(cfg, I2C_TARGET_API_INPUT_ERR);
 
 	/* check input */
-	status = i2c_target_status_get(bus_num);
-	if (status & (I2C_TARGET_BUS_INVALID | I2C_TARGET_CONTROLLER_ERR | I2C_TARGET_NOT_INIT)) {
-		LOG_ERR("Bus[%d] check status failed with error status 0x%x!", bus_num, status);
+	uint8_t target_status = i2c_target_status_get(bus_num);
+	if (target_status &
+	    (I2C_TARGET_BUS_INVALID | I2C_TARGET_CONTROLLER_ERR | I2C_TARGET_NOT_INIT)) {
+		LOG_ERR("Bus[%d] check status failed with error status 0x%x!", bus_num,
+			target_status);
 		return I2C_TARGET_API_BUS_GET_FAIL;
 	}
 
 	struct i2c_target_data *data = &i2c_target_device_global[bus_num].data;
 
 	cfg->address = data->config.address;
-	cfg->i2c_msg_count = data->z_msgq_id.max_msgs;
+	cfg->i2c_msg_count = data->target_wr_msgq_id.max_msgs;
 
 	return I2C_TARGET_API_NO_ERR;
 }
@@ -232,25 +264,24 @@ uint8_t i2c_target_cfg_get(uint8_t bus_num, struct _i2c_target_config *cfg)
 */
 uint8_t i2c_target_status_print(uint8_t bus_num)
 {
-	uint8_t status;
-
 	/* check input */
-	status = i2c_target_status_get(bus_num);
-	if (status & (I2C_TARGET_BUS_INVALID | I2C_TARGET_CONTROLLER_ERR)) {
-		LOG_ERR("Bus[%d] check status failed with error status 0x%x!", bus_num, status);
+	uint8_t target_status = i2c_target_status_get(bus_num);
+	if (target_status & (I2C_TARGET_BUS_INVALID | I2C_TARGET_CONTROLLER_ERR)) {
+		LOG_ERR("Bus[%d] check status failed with error status 0x%x!", bus_num,
+			target_status);
 		return I2C_TARGET_API_BUS_GET_FAIL;
 	}
 
 	struct i2c_target_data *data = &i2c_target_device_global[bus_num].data;
 	struct i2c_target_device *target_info = &i2c_target_device_global[bus_num];
-	printf("=============================\n");
-	printf("Target bus[%d] monitor\n", bus_num);
-	printf("* init:        %d\n", target_info->is_init);
-	printf("* register:    %d\n", target_info->is_register);
-	printf("* address:     0x%x\n", data->config.address);
-	printf("* status:      %d/%d\n", k_msgq_num_used_get(&data->z_msgq_id),
-	       data->z_msgq_id.max_msgs);
-	printf("=============================\n");
+	LOG_INF("=============================");
+	LOG_INF("Target bus[%d] monitor", bus_num);
+	LOG_INF("* init:        %d", target_info->is_init);
+	LOG_INF("* register:    %d", target_info->is_register);
+	LOG_INF("* address:     0x%x", data->config.address);
+	LOG_INF("* status:      %d/%d", k_msgq_num_used_get(&data->target_wr_msgq_id),
+		data->target_wr_msgq_id.max_msgs);
+	LOG_INF("=============================");
 
 	return I2C_TARGET_API_NO_ERR;
 }
@@ -263,21 +294,21 @@ uint8_t i2c_target_status_print(uint8_t bus_num)
       * *buff: Message that readed back from queue
       * buff_len: Length of buffer
       * *msg_len: Read-back message's length
-  - Return:
+  - Return: 
       * 0, if no error
       * others, get error(check "i2c_target_api_error_status")
 */
 uint8_t i2c_target_read(uint8_t bus_num, uint8_t *buff, uint16_t buff_len, uint16_t *msg_len)
 {
-	uint8_t status;
-
-	if (!buff || !msg_len)
-		return I2C_TARGET_API_INPUT_ERR;
+	CHECK_NULL_ARG_WITH_RETURN(buff, I2C_TARGET_API_INPUT_ERR);
+	CHECK_NULL_ARG_WITH_RETURN(msg_len, I2C_TARGET_API_INPUT_ERR);
 
 	/* check input, support while bus target is unregistered */
-	status = i2c_target_status_get(bus_num);
-	if (status & (I2C_TARGET_BUS_INVALID | I2C_TARGET_CONTROLLER_ERR | I2C_TARGET_NOT_INIT)) {
-		LOG_ERR("Bus[%d] check status failed with error status 0x%x!", bus_num, status);
+	uint8_t target_status = i2c_target_status_get(bus_num);
+	if (target_status &
+	    (I2C_TARGET_BUS_INVALID | I2C_TARGET_CONTROLLER_ERR | I2C_TARGET_NOT_INIT)) {
+		LOG_ERR("Bus[%d] check status failed with error status 0x%x!", bus_num,
+			target_status);
 		return I2C_TARGET_API_BUS_GET_FAIL;
 	}
 
@@ -285,7 +316,7 @@ uint8_t i2c_target_read(uint8_t bus_num, uint8_t *buff, uint16_t buff_len, uint1
 	struct i2c_msg_package local_buf;
 
 	/* wait if there's no any message in message queue */
-	uint8_t ret = k_msgq_get(&data->z_msgq_id, &local_buf, K_FOREVER);
+	uint8_t ret = k_msgq_get(&data->target_wr_msgq_id, &local_buf, K_FOREVER);
 	if (ret) {
 		LOG_ERR("Can't get new node from message queue on bus[%d], cause of %d",
 			data->i2c_bus, ret);
@@ -301,7 +332,8 @@ uint8_t i2c_target_read(uint8_t bus_num, uint8_t *buff, uint16_t buff_len, uint1
 	}
 
 	/* if bus target has been unregister cause of queue full previously, then register it on */
-	if (k_msgq_num_used_get(&data->z_msgq_id) == (data->z_msgq_id.max_msgs - 1)) {
+	if (k_msgq_num_used_get(&data->target_wr_msgq_id) ==
+	    (data->target_wr_msgq_id.max_msgs - 1)) {
 		LOG_DBG("Target queue has available space, register bus[%d]", data->i2c_bus);
 
 		if (do_i2c_target_register(bus_num)) {
@@ -309,6 +341,43 @@ uint8_t i2c_target_read(uint8_t bus_num, uint8_t *buff, uint16_t buff_len, uint1
 			return I2C_TARGET_API_BUS_GET_FAIL;
 		}
 	}
+
+	return I2C_TARGET_API_NO_ERR;
+}
+
+/*
+  - Name: i2c_target_write
+  - Description: Try to put message to i2c target message queue.
+  - Input:
+      * bus_num: Bus number with zero base
+      * *buff: Message that put in queue
+      * buff_len: Length of buffer
+  - Return:
+      * 0, if no error
+      * others, get error(check "i2c_target_api_error_status")
+*/
+uint8_t i2c_target_write(uint8_t bus_num, uint8_t *buff, uint16_t buff_len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(buff, I2C_TARGET_API_INPUT_ERR);
+
+	/* check input, support while bus target is unregistered */
+	uint8_t target_status = i2c_target_status_get(bus_num);
+	if (target_status &
+	    (I2C_TARGET_BUS_INVALID | I2C_TARGET_CONTROLLER_ERR | I2C_TARGET_NOT_INIT)) {
+		LOG_ERR("Bus[%d] check status failed with error status 0x%x!", bus_num,
+			target_status);
+		return I2C_TARGET_API_BUS_GET_FAIL;
+	}
+
+	struct i2c_target_data *data = &i2c_target_device_global[bus_num].data;
+
+	if (buff_len > MAX_I2C_TARGET_BUFF) {
+		LOG_WRN("Given data length %d over limit %d", buff_len, MAX_I2C_TARGET_BUFF);
+		buff_len = MAX_I2C_TARGET_BUFF;
+	}
+
+	memcpy(data->target_rd_msg.msg, buff, buff_len);
+	data->target_rd_msg.msg_length = buff_len;
 
 	return I2C_TARGET_API_NO_ERR;
 }
@@ -327,8 +396,6 @@ uint8_t i2c_target_read(uint8_t bus_num, uint8_t *buff, uint16_t buff_len, uint1
 int i2c_target_control(uint8_t bus_num, struct _i2c_target_config *cfg,
 		       enum i2c_target_api_control_mode mode)
 {
-	int status;
-
 	/* Check input and target status */
 	uint8_t target_status = i2c_target_status_get(bus_num);
 	if (target_status & (I2C_TARGET_BUS_INVALID | I2C_TARGET_CONTROLLER_ERR)) {
@@ -337,33 +404,33 @@ int i2c_target_control(uint8_t bus_num, struct _i2c_target_config *cfg,
 		return I2C_TARGET_API_BUS_GET_FAIL;
 	}
 
+	int ret = I2C_TARGET_API_NO_ERR;
+
 	switch (mode) {
 	/* Case1: do config then register (if already config before, then modify config set) */
 	case I2C_CONTROL_REGISTER:
-		if (!cfg) {
-			return I2C_TARGET_API_INPUT_ERR;
+		CHECK_NULL_ARG_WITH_RETURN(cfg, I2C_TARGET_API_INPUT_ERR);
+
+		ret = do_i2c_target_cfg(bus_num, cfg);
+		if (ret) {
+			LOG_ERR("Bus[%d] config failed with errorcode %d!", bus_num, ret);
+			return ret;
 		}
 
-		status = do_i2c_target_cfg(bus_num, cfg);
-		if (status) {
-			LOG_ERR("Bus[%d] config failed with errorcode %d!", bus_num, status);
-			return status;
-		}
-
-		status = do_i2c_target_register(bus_num);
-		if (status) {
-			LOG_ERR("Bus[%d] register failed with errorcode %d!", bus_num, status);
-			return status;
+		ret = do_i2c_target_register(bus_num);
+		if (ret) {
+			LOG_ERR("Bus[%d] register failed with errorcode %d!", bus_num, ret);
+			return ret;
 		}
 
 		break;
 
 	/* Case2: do unregister only, config not affected */
 	case I2C_CONTROL_UNREGISTER:
-		status = do_i2c_target_unregister(bus_num);
-		if (status) {
-			LOG_ERR("Bus[%d] unregister failed with errorcode %d!", bus_num, status);
-			return status;
+		ret = do_i2c_target_unregister(bus_num);
+		if (ret) {
+			LOG_ERR("Bus[%d] unregister failed with errorcode %d!", bus_num, ret);
+			return ret;
 		}
 
 		break;
@@ -389,15 +456,12 @@ int i2c_target_control(uint8_t bus_num, struct _i2c_target_config *cfg,
 */
 static int do_i2c_target_cfg(uint8_t bus_num, struct _i2c_target_config *cfg)
 {
-	if (!cfg)
-		return I2C_TARGET_API_INPUT_ERR;
+	CHECK_NULL_ARG_WITH_RETURN(cfg, I2C_TARGET_API_INPUT_ERR);
 
-	int status;
-	uint8_t target_status = I2C_TARGET_HAS_NO_ERR;
 	int ret = I2C_TARGET_API_NO_ERR;
 
 	/* check input, support while bus target is unregistered */
-	target_status = i2c_target_status_get(bus_num);
+	uint8_t target_status = i2c_target_status_get(bus_num);
 	if (target_status & (I2C_TARGET_BUS_INVALID | I2C_TARGET_CONTROLLER_ERR)) {
 		LOG_ERR("Bus[%d] check status failed with error status 0x%x!", bus_num,
 			target_status);
@@ -406,9 +470,9 @@ static int do_i2c_target_cfg(uint8_t bus_num, struct _i2c_target_config *cfg)
 
 	/* need unregister first */
 	if (!(target_status & I2C_TARGET_NOT_REGISTER)) {
-		status = do_i2c_target_unregister(bus_num);
+		int status = do_i2c_target_unregister(bus_num);
 		if (status) {
-			LOG_ERR("Target bus[%d] mutex lock failed!", bus_num);
+			LOG_ERR("Target bus[%d] unregister failed cause of %d!", bus_num, status);
 			return I2C_TARGET_API_BUS_GET_FAIL;
 		}
 	}
@@ -426,9 +490,6 @@ static int do_i2c_target_cfg(uint8_t bus_num, struct _i2c_target_config *cfg)
 		LOG_ERR("Target bus[%d] mutex lock failed!", bus_num);
 		return I2C_TARGET_API_LOCK_ERR;
 	}
-
-	uint8_t target_address = cfg->address;
-	uint16_t _max_msg_count = cfg->i2c_msg_count;
 
 	struct i2c_target_data *data = &i2c_target_device_global[bus_num].data;
 	char *i2C_target_queue_buffer;
@@ -460,13 +521,18 @@ static int do_i2c_target_cfg(uint8_t bus_num, struct _i2c_target_config *cfg)
 	else {
 		LOG_DBG("Bus[%d] is going to modified!", bus_num);
 
-		k_msgq_purge(&data->z_msgq_id);
+		k_msgq_purge(&data->target_wr_msgq_id);
 
-		SAFE_FREE(data->z_msgq_id.buffer_start);
+		SAFE_FREE(data->target_wr_msgq_id.buffer_start);
 	}
 
-	data->max_msg_count = _max_msg_count;
-	data->config.address = target_address >> 1; // to 7-bit target address
+	data->max_msg_count = cfg->i2c_msg_count;
+	data->config.address = cfg->address >> 1; // to 7-bit target address
+
+	if (cfg->rd_data_collect_func)
+		data->rd_data_collect_func = cfg->rd_data_collect_func;
+	else
+		data->rd_data_collect_func = do_something_while_rd_start;
 
 	i2C_target_queue_buffer = malloc(data->max_msg_count * sizeof(struct i2c_msg_package));
 	if (!i2C_target_queue_buffer) {
@@ -475,8 +541,8 @@ static int do_i2c_target_cfg(uint8_t bus_num, struct _i2c_target_config *cfg)
 		goto unlock;
 	}
 
-	k_msgq_init(&data->z_msgq_id, i2C_target_queue_buffer, sizeof(struct i2c_msg_package),
-		    data->max_msg_count);
+	k_msgq_init(&data->target_wr_msgq_id, i2C_target_queue_buffer,
+		    sizeof(struct i2c_msg_package), data->max_msg_count);
 
 	i2c_target_device_global[bus_num].is_init = 1;
 
@@ -502,8 +568,6 @@ unlock:
 */
 static int do_i2c_target_register(uint8_t bus_num)
 {
-	int ret = 0;
-
 	/* Check input and target status */
 	uint8_t target_status = i2c_target_status_get(bus_num);
 	if (target_status &
@@ -522,13 +586,13 @@ static int do_i2c_target_register(uint8_t bus_num)
 	struct i2c_target_data *data = &i2c_target_device_global[bus_num].data;
 
 	/* check whether msgq is full */
-	if (!k_msgq_num_free_get(&data->z_msgq_id)) {
+	if (!k_msgq_num_free_get(&data->target_wr_msgq_id)) {
 		LOG_ERR("Bus[%d] msgq is already full, can't register now, please read out message first!",
 			bus_num);
 		return I2C_TARGET_API_MSGQ_ERR;
 	}
 
-	ret = i2c_slave_register(data->i2c_controller, &data->config);
+	int ret = i2c_slave_register(data->i2c_controller, &data->config);
 	if (ret)
 		return ret;
 
@@ -549,8 +613,6 @@ static int do_i2c_target_register(uint8_t bus_num)
 */
 static int do_i2c_target_unregister(uint8_t bus_num)
 {
-	int ret = 0;
-
 	/* Check input and target status */
 	uint8_t target_status = i2c_target_status_get(bus_num);
 	if (target_status &
@@ -568,7 +630,7 @@ static int do_i2c_target_unregister(uint8_t bus_num)
 
 	struct i2c_target_data *data = &i2c_target_device_global[bus_num].data;
 
-	ret = i2c_slave_unregister(data->i2c_controller, &data->config);
+	int ret = i2c_slave_unregister(data->i2c_controller, &data->config);
 	if (ret)
 		return ret;
 
