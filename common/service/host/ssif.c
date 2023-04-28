@@ -502,18 +502,11 @@ static bool ssif_collect_data(uint8_t smb_cmd, uint8_t bus)
 		if (ssif_status_check(ssif_inst, smb_cmd) == false)
 			goto skip_target_read;
 
-		ssif_dev *ssif_inst = ssif_inst_get_by_bus(bus);
-		if (!ssif_inst) {
-			LOG_WRN("Failed to get ssif_inst by i2c bus %d", bus);
-			goto skip_target_read;
-		}
-
 		if (ssif_data_handle(ssif_inst, SSIF_COLLECT_DATA, smb_cmd) == false)
 			goto skip_target_read;
 
-		if (ssif_inst->cur_status == SSIF_STATUS_WAIT_FOR_RD_NEXT) {
+		if (ssif_inst->cur_status == SSIF_STATUS_WAIT_FOR_RD_NEXT)
 			return false;
-		}
 
 		if (ssif_inst->cur_status == SSIF_STATUS_WAIT_FOR_WR_START) {
 			ssif_error_record(ssif_inst->index, SSIF_STATUS_NO_ERR);
