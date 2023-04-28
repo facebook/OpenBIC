@@ -19,6 +19,6 @@
 
 #include <stdint.h>
 
-extern uint8_t INA233_DEVICE_ID[4];
+extern uint8_t INA233_DEVICE_ID[3];
 
 #endif

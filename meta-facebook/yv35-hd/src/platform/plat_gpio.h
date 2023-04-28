@@ -78,18 +78,18 @@
 #define name_gpioF \
 	gpio_name_to_num(CPU_SMERR_BIC_N) \
 	gpio_name_to_num(IRQ_HSC_ALERT2_N) \
-	gpio_name_to_num(Reserve_GPIOF2) \
+	gpio_name_to_num(BIC_CPU_NMI_R_N) \
 	gpio_name_to_num(FM_BMC_DEBUG_ENABLE_N) \
 	gpio_name_to_num(FM_DBP_PRESENT_N) \
 	gpio_name_to_num(FM_FAST_PROCHOT_EN_R_N) \
-	gpio_name_to_num(Reserve_GPIOF6) \
+	gpio_name_to_num(FM_BIOS_ABL_DEBUG_MSG_DIS_N) \
 	gpio_name_to_num(Reserve_GPIOF7)
 
 #define name_gpioG \
 	gpio_name_to_num(Reserve_GPIOG0) \
 	gpio_name_to_num(FM_BIOS_MRC_DEBUG_MSG_DIS) \
 	gpio_name_to_num(FAST_PROCHOT_N) \
-	gpio_name_to_num(Reserve_GPIOG3) \
+	gpio_name_to_num(BIC_CPU_RSVD_N) \
 	gpio_name_to_num(BIC_JTAG_SEL_R) \
 	gpio_name_to_num(Reserve_GPIOG5) \
 	gpio_name_to_num(HSC_OCP_GPIO2_R) \
@@ -140,7 +140,7 @@
 	gpio_name_to_num(Reserve_GPIOL1) \
 	gpio_name_to_num(BIC_JTAG_MUX_SEL) \
 	gpio_name_to_num(BOARD_ID2) \
-	gpio_name_to_num(PVDDCR_CPU0_PMALERT_N) \
+	gpio_name_to_num(Reserve_GPIOL4) \
 	gpio_name_to_num(Reserve_GPIOL5) \
 	gpio_name_to_num(BOARD_ID0) \
 	gpio_name_to_num(BOARD_ID1)
