@@ -37,7 +37,7 @@ valid_projects = {
     "gt": {"cc", },
     "wc": {"mb", },
     "yv3": {"dl", "vf", },
-    "yv35": {"cl", "bb", "rf", "hd", "op", "nf"},
+    "yv35": {"cl", "bb", "rf", "hd", "op", "hda1", "nf"},
 }
 
 # Numeric encoding of boards.
@@ -57,6 +57,7 @@ board_map = {
     "rf": "00011",
     "hd": "00100",
     "op": "00101",
+    "hda1": "00110",
     "nf": "01001",
 }
 
