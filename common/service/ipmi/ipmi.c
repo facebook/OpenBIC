@@ -119,7 +119,7 @@ static uint8_t send_msg_by_pldm(ipmi_msg_cfg *msg_cfg)
 	return 1;
 }
 
-__weak bool pal_request_msg_to_BIC_from_KCS(uint8_t netfn, uint8_t cmd)
+__weak bool pal_request_msg_to_BIC_from_HOST(uint8_t netfn, uint8_t cmd)
 {
 	if (netfn == NETFN_OEM_1S_REQ) {
 		if ((cmd == CMD_OEM_1S_FW_UPDATE) || (cmd == CMD_OEM_1S_RESET_BMC) ||
@@ -132,7 +132,7 @@ __weak bool pal_request_msg_to_BIC_from_KCS(uint8_t netfn, uint8_t cmd)
 	return false;
 }
 
-__weak bool pal_immediate_respond_from_KCS(uint8_t netfn, uint8_t cmd)
+__weak bool pal_immediate_respond_from_HOST(uint8_t netfn, uint8_t cmd)
 {
 	if ((netfn == NETFN_STORAGE_REQ && cmd == CMD_STORAGE_ADD_SEL) ||
 	    ((netfn == NETFN_SENSOR_REQ) && (cmd == CMD_SENSOR_PLATFORM_EVENT))) {

@@ -88,7 +88,7 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 		req = (struct kcs_request *)ibuf;
 		req->netfn = req->netfn >> 2;
 
-		if (pal_request_msg_to_BIC_from_KCS(
+		if (pal_request_msg_to_BIC_from_HOST(
 			    req->netfn, req->cmd)) { // In-band update command, not bridging to bmc
 			current_msg.buffer.InF_source = HOST_KCS_1 + kcs_inst->index;
 			current_msg.buffer.netfn = req->netfn;
@@ -108,7 +108,7 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 				LOG_WRN("KCS retrying put ipmi msgq");
 			}
 		} else { // default command for BMC, should add BIC firmware update, BMC reset, real time sensor read in future
-			if (pal_immediate_respond_from_KCS(req->netfn, req->cmd)) {
+			if (pal_immediate_respond_from_HOST(req->netfn, req->cmd)) {
 				do { // break if malloc fail.
 					uint8_t *kcs_buff;
 					kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
@@ -150,7 +150,6 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 				memcpy(&bridge_msg.data[0], &ibuf[2], bridge_msg.data_len);
 			}
 
-
 			// Check BMC communication interface if use IPMB or not
 			if (!pal_is_interface_use_ipmb(IPMB_inf_index_map[BMC_IPMB])) {
 				int ret = 0;
@@ -174,8 +173,9 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 				kcs_buff[2] = bridge_msg.completion_code;
 				memcpy(&kcs_buff[3], &bridge_msg.data, bridge_msg.data_len);
 
-				if(!pal_immediate_respond_from_KCS(req->netfn, req->cmd)) {
-					kcs_write(kcs_inst->index, kcs_buff, 3 + bridge_msg.data_len);
+				if (!pal_immediate_respond_from_HOST(req->netfn, req->cmd)) {
+					kcs_write(kcs_inst->index, kcs_buff,
+						  3 + bridge_msg.data_len);
 				}
 
 				SAFE_FREE(kcs_buff);

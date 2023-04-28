@@ -296,8 +296,8 @@ static bool ssif_data_handle(ssif_dev *ssif_inst, ssif_action_t action, uint8_t 
 	switch (action) {
 	case SSIF_SEND_IPMI:
 		/* Message to BIC */
-		if (pal_request_msg_to_BIC_from_KCS(ssif_inst->current_ipmi_msg.buffer.netfn,
-						    ssif_inst->current_ipmi_msg.buffer.cmd)) {
+		if (pal_request_msg_to_BIC_from_HOST(ssif_inst->current_ipmi_msg.buffer.netfn,
+						     ssif_inst->current_ipmi_msg.buffer.cmd)) {
 			while (k_msgq_put(&ipmi_msgq, &ssif_inst->current_ipmi_msg, K_NO_WAIT) !=
 			       0) {
 				k_msgq_purge(&ipmi_msgq);
@@ -306,8 +306,9 @@ static bool ssif_data_handle(ssif_dev *ssif_inst, ssif_action_t action, uint8_t 
 			/* Message to BMC */
 		} else {
 			int ret = 0;
-			if (pal_immediate_respond_from_KCS(ssif_inst->current_ipmi_msg.buffer.netfn,
-							   ssif_inst->current_ipmi_msg.buffer.cmd)) {
+			if (pal_immediate_respond_from_HOST(
+				    ssif_inst->current_ipmi_msg.buffer.netfn,
+				    ssif_inst->current_ipmi_msg.buffer.cmd)) {
 				ssif_inst->current_ipmi_msg.buffer.data_len = 0;
 				ssif_inst->current_ipmi_msg.buffer.completion_code = CC_SUCCESS;
 				if (((ssif_inst->current_ipmi_msg.buffer.netfn ==

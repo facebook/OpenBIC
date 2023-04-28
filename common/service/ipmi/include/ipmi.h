@@ -70,9 +70,9 @@ static inline void pack_ipmi_resp(struct ipmi_response *resp, ipmi_msg *ipmi_res
 }
 
 // If command is from KCS, we need to check whether BIC support this command.
-bool pal_request_msg_to_BIC_from_KCS(uint8_t netfn, uint8_t cmd);
+bool pal_request_msg_to_BIC_from_HOST(uint8_t netfn, uint8_t cmd);
 // If command is from KCS, we need to check whether BIC responds immediately.
-bool pal_immediate_respond_from_KCS(uint8_t netfn, uint8_t cmd);
+bool pal_immediate_respond_from_HOST(uint8_t netfn, uint8_t cmd);
 // If command is from KCS, we need to check whether system information is set via BIC.
 int pal_record_bios_fw_version(uint8_t *buf, uint8_t size);
 // If command is from ME, we need to check whether BIC support this command.
