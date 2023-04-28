@@ -31,6 +31,10 @@ LOG_MODULE_REGISTER(hal_i2c);
 #define AST_1030_I2C_REG_LEN 0x80
 #define AST_1030_SLAVE_EN BIT(1)
 
+/* 0x40 : Slave Device Address Register */
+#define AST_I2CS_ADDR_CTRL 0x40
+#define AST_I2CS_ADDR1_MASK 0x7F
+
 static const struct device *dev_i2c[I2C_BUS_MAX_NUM];
 
 struct k_mutex i2c_mutex[I2C_BUS_MAX_NUM];
@@ -54,6 +58,22 @@ int i2c_freq_set(uint8_t i2c_bus, uint8_t i2c_speed_mode, uint8_t en_slave)
 		uint32_t *addr = (uint32_t *)(AST_1030_I2C_BASE + (i2c_bus * AST_1030_I2C_REG_LEN));
 		*addr |= AST_1030_SLAVE_EN;
 	}
+
+	return 0;
+}
+
+int i2c_addr_set(uint8_t i2c_bus, uint8_t i2c_addr)
+{
+	if (check_i2c_bus_valid(i2c_bus) < 0) {
+		LOG_ERR("i2c bus %d is invalid", i2c_bus);
+		return -1;
+	}
+
+	i2c_addr = i2c_addr >> 1; // to 7-bit target address
+
+	uint32_t base = AST_1030_I2C_BASE + (i2c_bus * AST_1030_I2C_REG_LEN);
+	sys_write32(i2c_addr | (sys_read32(base + AST_I2CS_ADDR_CTRL) & ~AST_I2CS_ADDR1_MASK),
+		    base + AST_I2CS_ADDR_CTRL);
 
 	return 0;
 }
