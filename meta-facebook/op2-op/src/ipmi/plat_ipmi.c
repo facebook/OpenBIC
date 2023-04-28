@@ -20,6 +20,7 @@
 #include "ipmi.h"
 #include "libutil.h"
 #include "pt5161l.h"
+#include "m88rt51632.h"
 #include "rg3mxxb12.h"
 #include "power_status.h"
 #include "plat_class.h"
@@ -104,7 +105,10 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 
 	uint8_t card_type = get_card_type();
 	I2C_MSG *i2c_msg;
+	uint8_t retimer_type;
+	uint32_t retimer_version;
 	if (card_type == CARD_TYPE_OPA) {
+		retimer_type = get_pcie_retimer_type();
 		i2c_msg = malloc(sizeof(I2C_MSG));
 	}
 
@@ -122,15 +126,34 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		break;
 	case OL2_COMPNT_RETIMER:
 		if (card_type == CARD_TYPE_OPA) {
-			if (get_DC_status()) {
+			if (is_retimer_done()) {
 				i2c_msg->bus = I2C_BUS4;
 				i2c_msg->target_addr = EXPA_RETIMER_ADDR;
-				if (get_retimer_fw_version(i2c_msg, msg->data)) {
-					msg->data_len = 4;
-					msg->completion_code = CC_SUCCESS;
-				} else {
+
+				switch (retimer_type) {
+				case RETIMER_TYPE_PT5161L:
+					if (get_retimer_fw_version(i2c_msg, msg->data)) {
+						msg->data_len = 4;
+						msg->completion_code = CC_SUCCESS;
+					} else {
+						msg->completion_code = CC_UNSPECIFIED_ERROR;
+					}
+					break;
+				case RETIMER_TYPE_M88RT51632:
+					if (m88rt51632_get_fw_version(i2c_msg, &retimer_version)) {
+						convert_uint32_t_to_uint8_t_pointer(
+							retimer_version, msg->data, 4, BIG_ENDIAN);
+						msg->data_len = 4;
+						msg->completion_code = CC_SUCCESS;
+					} else {
+						msg->completion_code = CC_UNSPECIFIED_ERROR;
+					}
+					break;
+				default:
 					msg->completion_code = CC_UNSPECIFIED_ERROR;
+					break;
 				}
+
 			} else {
 				msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
 			}

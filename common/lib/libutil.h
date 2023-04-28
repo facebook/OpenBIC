@@ -82,6 +82,11 @@ enum BIT_SETTING_READING_N {
 	BIT_CLEAR_N = 1,
 };
 
+enum BYTE_ENDIAN {
+	SMALL_ENDIAN = 0,
+	BIG_ENDIAN = 1,
+};
+
 ipmi_msg construct_ipmi_message(uint8_t seq_source, uint8_t netFn, uint8_t command,
 				uint8_t source_inft, uint8_t target_inft, uint16_t data_len,
 				uint8_t *data);
@@ -91,5 +96,10 @@ I2C_MSG construct_i2c_message(uint8_t bus_id, uint8_t address, uint8_t tx_len, u
 
 void reverse_array(uint8_t arr[], uint8_t size);
 int ascii_to_val(uint8_t ascii_byte);
+uint32_t uint32_t_byte_reverse(uint32_t data);
+void convert_uint32_t_to_uint8_t_pointer(uint32_t data_32, uint8_t *data_8, uint8_t len,
+					 uint8_t endian);
+void convert_uint8_t_pointer_to_uint32_t(uint32_t *data_32, uint8_t *data_8, uint8_t len,
+					 uint8_t endian);
 
 #endif

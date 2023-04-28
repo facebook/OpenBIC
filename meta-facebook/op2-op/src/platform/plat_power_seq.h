@@ -71,10 +71,9 @@ enum CHECK_POWER_SEQ_NUM_MAPPING {
 };
 
 typedef enum {
-    E1S_POWER_SUCCESS = 0,
-    E1S_PERST_SUCCESS = 1,
+	E1S_POWER_SUCCESS = 0,
+	E1S_PERST_SUCCESS = 1,
 } E1S_POWER_ON_STATUS;
-
 
 typedef struct _e1s_power_control_gpio {
 	uint8_t present;
@@ -96,6 +95,7 @@ uint8_t get_e1s_pcie_reset_status(uint8_t index);
 void init_sequence_status();
 void set_sequence_status(uint8_t index, bool status);
 bool is_all_sequence_done(uint8_t status);
+bool is_retimer_done(void);
 void abort_e1s_power_thread(uint8_t index);
 void e1s_power_on_thread(uint8_t index, uint8_t initial_stage);
 void e1s_power_off_thread(uint8_t index);

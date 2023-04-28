@@ -19,10 +19,15 @@
 #include "hal_gpio.h"
 #include "plat_class.h"
 #include "plat_gpio.h"
+#include "plat_sensor_table.h"
+#include "plat_i2c.h"
+#include "pt5161l.h"
+
 LOG_MODULE_REGISTER(plat_class);
 
 static uint8_t card_position = CARD_POSITION_UNKNOWN;
 static uint8_t card_type = CARD_TYPE_UNKNOWN;
+static uint8_t pcie_retimer_type = RETIMER_TYPE_UNKNOWN;
 
 uint8_t get_card_position()
 {
@@ -32,6 +37,11 @@ uint8_t get_card_position()
 uint8_t get_card_type()
 {
 	return card_type;
+}
+
+uint8_t get_pcie_retimer_type(void)
+{
+	return pcie_retimer_type;
 }
 
 int init_platform_config()
@@ -72,4 +82,29 @@ int init_platform_config()
 
 	LOG_INF("OP %s BIC position: %dOU", card_type_name[card_type], card_position + 1);
 	return 1;
+}
+
+int check_pcie_retimer_type(void)
+{
+	uint8_t ret = 0;
+	I2C_MSG msg = { 0 };
+	msg.bus = I2C_BUS4;
+	msg.target_addr = EXPA_RETIMER_ADDR;
+
+	if (!pt5161l_get_vendor_id(&msg)) {
+		LOG_ERR("PCIE RETIMER get vendor id fail");
+		return -1;
+	}
+
+	if (memcmp(msg.data, PT5161L_VENDOR_ID, PT5161L_VENDOR_ID_LENGTH) == 0) {
+		LOG_INF("PCIE RETIMER type: PT5161L");
+		pcie_retimer_type = RETIMER_TYPE_PT5161L;
+		ret = RETIMER_TYPE_PT5161L;
+	} else {
+		LOG_INF("PCIE RETIMER type: M88RT51632");
+		pcie_retimer_type = RETIMER_TYPE_M88RT51632;
+		ret = RETIMER_TYPE_M88RT51632;
+	}
+
+	return ret;
 }

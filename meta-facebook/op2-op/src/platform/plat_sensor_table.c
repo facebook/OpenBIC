@@ -31,6 +31,7 @@
 LOG_MODULE_REGISTER(plat_sensor);
 
 bool e1s_access(uint8_t sensor_num);
+bool retimer_access(uint8_t sensor_num);
 
 sensor_cfg plat_sensor_config[] = {
 	/*  number,
@@ -139,8 +140,9 @@ sensor_cfg plat_expansion_A_sensor_config[] = {
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 
-	{ SENSOR_NUM_1OU_RE_TIMER_TEMP_C, sensor_dev_pt5161l, I2C_BUS4, EXPA_RETIMER_ADDR,
-	  PT5161L_TEMP_OFFSET, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	//reconfig the retimer when the first read retimer temperature
+	{ SENSOR_NUM_1OU_RE_TIMER_TEMP_C, sensor_dev_max, I2C_BUS4, EXPA_RETIMER_ADDR,
+	  PT5161L_TEMP_OFFSET, retimer_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_retimer_read, NULL, NULL, NULL,
 	  &pt5161l_init_args[0] },
 
@@ -473,6 +475,10 @@ void pal_extend_sensor_config()
 		LOG_ERR("Unsupported card type, Card type: 0x%x", card_type);
 		break;
 	}
+}
+bool retimer_access(uint8_t sensor_num)
+{
+	return is_retimer_done();
 }
 
 bool e1s_access(uint8_t sensor_num)

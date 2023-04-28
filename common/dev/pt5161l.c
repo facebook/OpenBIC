@@ -26,6 +26,35 @@ LOG_MODULE_REGISTER(dev_pt5161l);
 K_MUTEX_DEFINE(pt5161l_mutex);
 
 static bool is_update_ongoing = false;
+uint8_t PT5161L_VENDOR_ID[7] = { 0x06, 0x04, 0x00, 0x01, 0x00, 0xFA, 0x1D };
+
+bool pt5161l_get_vendor_id(I2C_MSG *msg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, false);
+	uint8_t retry = 5;
+
+	msg->tx_len = 4;
+	msg->data[0] = 0x02; //COMMAND CODE = 0x02 END=0, START=1, FUNC=3'b000, PEC=0
+	msg->data[1] = 0x02; //byte count
+	msg->data[2] = 0x04; //vendor id lower offset
+	msg->data[3] = 0x00; //vendor id upper offset
+
+	if (i2c_master_write(msg, retry)) {
+		LOG_ERR("Failed to set PCIE RETIMER vendor id offset");
+		return false;
+	}
+
+	memset(msg->data, 0, I2C_BUFF_SIZE);
+	msg->tx_len = 1;
+	msg->rx_len = 7;
+	msg->data[0] = 0x01; //COMMAND CODE = 0x01 END=1, START=0, FUNC=3'b000, PEC=0
+	if (i2c_master_read(msg, retry)) {
+		LOG_ERR("Failed to read PCIE RETIMER vendor id");
+		return false;
+	}
+
+	return true;
+}
 
 //Write multiple data bytes to retimer over I2C
 bool pt5161l_write_block_data(I2C_MSG *msg, uint32_t address, uint8_t num_bytes, uint8_t *values)
