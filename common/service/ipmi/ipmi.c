@@ -119,7 +119,7 @@ static uint8_t send_msg_by_pldm(ipmi_msg_cfg *msg_cfg)
 	return 1;
 }
 
-__weak bool pal_request_msg_to_BIC_from_KCS(uint8_t netfn, uint8_t cmd)
+__weak bool pal_request_msg_to_BIC_from_HOST(uint8_t netfn, uint8_t cmd)
 {
 	if (netfn == NETFN_OEM_1S_REQ) {
 		if ((cmd == CMD_OEM_1S_FW_UPDATE) || (cmd == CMD_OEM_1S_RESET_BMC) ||
@@ -132,7 +132,7 @@ __weak bool pal_request_msg_to_BIC_from_KCS(uint8_t netfn, uint8_t cmd)
 	return false;
 }
 
-__weak bool pal_immediate_respond_from_KCS(uint8_t netfn, uint8_t cmd)
+__weak bool pal_immediate_respond_from_HOST(uint8_t netfn, uint8_t cmd)
 {
 	if ((netfn == NETFN_STORAGE_REQ && cmd == CMD_STORAGE_ADD_SEL) ||
 	    ((netfn == NETFN_SENSOR_REQ) && (cmd == CMD_SENSOR_PLATFORM_EVENT))) {
@@ -352,6 +352,16 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 			SAFE_FREE(kcs_buff);
 			break;
 		}
+#endif
+#ifdef ENABLE_SSIF
+		case HOST_SSIF_1:
+			msg_cfg.buffer.netfn = (msg_cfg.buffer.netfn + 1) << 2;
+			if (ssif_set_data(msg_cfg.buffer.InF_source - HOST_SSIF_1, &msg_cfg) ==
+			    false) {
+				LOG_ERR("Failed to write ssif response data");
+				continue;
+			}
+			break;
 #endif
 		case PLDM:
 			/* the message should be passed to source by pldm format */

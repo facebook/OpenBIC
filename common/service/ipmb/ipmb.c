@@ -696,7 +696,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 						   HOST_KCS_1) {
 						// the source is KCS if the bit[7:4] are 0101b.
 #ifdef CONFIG_IPMI_KCS_ASPEED
-						if (pal_immediate_respond_from_KCS(
+						if (pal_immediate_respond_from_HOST(
 							    current_msg_rx->buffer.netfn & ~BIT(0),
 							    current_msg_rx->buffer.cmd)) {
 							goto cleanup;

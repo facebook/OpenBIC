@@ -105,6 +105,7 @@ typedef struct _I2C_MSG_ {
 } I2C_MSG;
 
 int i2c_freq_set(uint8_t i2c_bus, uint8_t i2c_speed_mode, uint8_t en_slave);
+int i2c_addr_set(uint8_t i2c_bus, uint8_t i2c_addr);
 int i2c_master_read(I2C_MSG *msg, uint8_t retry);
 int i2c_master_read_without_mutex(I2C_MSG *msg, uint8_t retry);
 int i2c_master_write(I2C_MSG *msg, uint8_t retry);

@@ -39,7 +39,7 @@
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
-bool pal_request_msg_to_BIC_from_KCS(uint8_t netfn, uint8_t cmd)
+bool pal_request_msg_to_BIC_from_HOST(uint8_t netfn, uint8_t cmd)
 {
 	if (netfn == NETFN_OEM_1S_REQ) {
 		if ((cmd == CMD_OEM_1S_FW_UPDATE) || (cmd == CMD_OEM_1S_RESET_BMC) ||
