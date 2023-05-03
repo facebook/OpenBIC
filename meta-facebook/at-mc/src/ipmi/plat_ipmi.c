@@ -112,6 +112,7 @@ uint8_t fw_update_pm8702(uint8_t cxl_id, uint8_t pcie_card_id, uint8_t next_acti
 	uint8_t resp_len = 0;
 	pm8702_hbo_status_resp hbo_status = { 0 };
 
+	k_msleep(PM8702_TRANSFER_DELAY_MS);
 	if (pal_get_pm8702_hbo_status(pcie_card_id, (uint8_t *)&hbo_status, &resp_len) != true) {
 		LOG_ERR("Fail to get HBO status");
 		return FWUPDATE_UPDATE_FAIL;
