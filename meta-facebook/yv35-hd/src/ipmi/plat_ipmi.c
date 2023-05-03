@@ -28,6 +28,7 @@
 #include "plat_sensor_table.h"
 #include "sensor.h"
 #include "pmbus.h"
+#include "pcc.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
@@ -383,6 +384,30 @@ void OEM_1S_GET_HSC_STATUS(ipmi_msg *msg)
 
 	msg->data_len = 2;
 	msg->data[0] = hsc_type;
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
+void OEM_1S_GET_4BYTE_POST_CODE(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t page = msg->data[0];
+	if ((page > 17)) {
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		return;
+	}
+	uint16_t read_len, start_idx;
+	start_idx = page * FOUR_BYTE_POST_CODE_PAGE_SIZE;
+	read_len = copy_pcc_read_buffer(start_idx, FOUR_BYTE_POST_CODE_PAGE_SIZE, msg->data,
+					IPMI_MSG_MAX_LENGTH);
+
+	msg->data_len = read_len & 0xFF;
 	msg->completion_code = CC_SUCCESS;
 	return;
 }

@@ -119,13 +119,10 @@ void OEM_1S_SAFE_WRITE_READ_M2_DATA(ipmi_msg *msg);
 void OEM_1S_PRE_POWER_OFF_CONTROL(ipmi_msg *msg);
 void OEM_1S_SET_DEVICE_ACTIVE(ipmi_msg *msg);
 void OEM_1S_SET_ADD_DEBUG_SEL_MODE(ipmi_msg *msg);
+void OEM_1S_GET_4BYTE_POST_CODE(ipmi_msg *msg);
 
 #ifdef CONFIG_SNOOP_ASPEED
 void OEM_1S_GET_POST_CODE(ipmi_msg *msg);
-#endif
-
-#ifdef CONFIG_PCC_ASPEED
-void OEM_1S_GET_4BYTE_POST_CODE(ipmi_msg *msg);
 #endif
 
 #ifdef CONFIG_PECI
