@@ -238,6 +238,7 @@ bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg)
 	uint8_t resp_len = sizeof(struct mctp_to_ipmi_sel_resp);
 	uint8_t rbuf[resp_len];
 
+	memset(&rbuf, 0, resp_len);
 	if (!mctp_pldm_read(find_mctp_by_i3c(I3C_BUS_BMC), &msg, rbuf, resp_len)) {
 		LOG_ERR("mctp_pldm_read fail");
 		return false;
