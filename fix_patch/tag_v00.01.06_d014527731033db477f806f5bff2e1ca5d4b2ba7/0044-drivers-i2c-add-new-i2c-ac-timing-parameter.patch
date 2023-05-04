@@ -1,0 +1,349 @@
+From faa45c303df345bc143e60ced71ccf28493486ab Mon Sep 17 00:00:00 2001
+From: Yang Chen <Yang.Chen@quantatw.com>
+Date: Thu, 4 May 2023 19:44:31 +0800
+Subject: [PATCH] drivers:i2c:add new i2c ac timing parameter
+
+    1. Add multi-master = <0,1> (disable, enable) multi-master.
+    2. Add smbus-timeout = <0,1> (disable, enable) slave timeout.
+    3. Add manual-high-count = <0~15> manual change i2c high clock timing.
+    4. Add manual-low-count = <0~15> manual change i2c low clock timing.
+    5. Add manual-sda-delay = <0~3> manual change i2c sda hold timing.
+    6. The defualt values sync with original driver.
+---
+ drivers/i2c/i2c_aspeed.c         | 63 +++++++++++++++++++++----
+ dts/arm/aspeed/ast10x0.dtsi      | 80 ++++++++++++++++++++++++++++++++
+ dts/bindings/i2c/aspeed,i2c.yaml | 18 +++++++
+ 3 files changed, 151 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/i2c/i2c_aspeed.c b/drivers/i2c/i2c_aspeed.c
+index b2760da6aa..e5b3f3008c 100644
+--- a/drivers/i2c/i2c_aspeed.c
++++ b/drivers/i2c/i2c_aspeed.c
+@@ -268,7 +268,11 @@ struct i2c_aspeed_config {
+ 	uintptr_t buf_base;
+ 	size_t buf_size;
+ 	uint32_t bitrate;
+-	int multi_master;
++	uint8_t multi_master;
++	uint8_t smbus_timeout;
++	uint8_t manual_scl_high;
++	uint8_t manual_scl_low;
++	uint8_t manual_sda_hold;
+ 	int smbus_alert;
+ 	const struct device *clock_dev;
+ 	const clock_control_subsys_t clk_id;
+@@ -301,7 +305,6 @@ struct i2c_aspeed_data {
+
+ 	uint32_t bus_frequency;
+ 	/* master configuration */
+-	bool multi_master;
+ 	int cmd_err;
+ 	uint16_t flags;
+ 	uint8_t         *buf;
+@@ -544,18 +547,54 @@ static uint32_t i2c_aspeed_select_clock(const struct device *dev)
+ 		divider_ratio = MIN(divider_ratio, 32);
+ 		LOG_DBG("divider_ratio min %x", divider_ratio);
+ 		div &= 0xf;
+-		scl_low = ((divider_ratio * 9) / 16) - 1;
+-		LOG_DBG("scl_low %x", scl_low);
++
++		/* Set menual scl low length */
++		if (config->manual_scl_low && config->manual_scl_high) {
++			scl_low = config->manual_scl_low;
++			scl_high = config->manual_scl_high;
++			LOG_DBG("maual scl_low min %x", scl_low);
++			LOG_DBG("maual scl_high min %x", scl_high);
++		} else if (config->manual_scl_low || config->manual_scl_high){
++			if (config->manual_scl_low) {
++				scl_low = config->manual_scl_low;
++				LOG_DBG("maual scl_low min %x", scl_low);
++				scl_high = (divider_ratio - scl_low - 2) & 0xf;
++			} else {
++				scl_high = config->manual_scl_high;
++				LOG_DBG("maual scl_high min %x", scl_high);
++				scl_low = (divider_ratio - scl_high - 2) & 0xf;
++			}
++		} else {
++			scl_low = ((divider_ratio * 9) / 16) - 1;
++			LOG_DBG("default scl_low min%x", scl_low);
++			scl_high = (divider_ratio - scl_low - 2) & 0xf;
++			LOG_DBG("default scl_high min%x", scl_low);
++		}
++
+ 		scl_low = MIN(scl_low, 0xf);
++		scl_high = MIN(scl_high, 0xf);
++
+ 		LOG_DBG("scl_low min %x", scl_low);
+-		scl_high = (divider_ratio - scl_low - 2) & 0xf;
+-		LOG_DBG("scl_high %x", scl_high);
++		LOG_DBG("scl_high min %x", scl_high);
+
+ 		/*Divisor : Base Clock : tCKHighMin : tCK High : tCK Low*/
+ 		ac_timing = ((scl_high-1) << 20) | (scl_high << 16) | (scl_low << 12) | (div);
+-		/* Select time out timer */
+-		ac_timing |= AST_I2CC_toutBaseCLK(I2C_TIMEOUT_CLK);
+-		ac_timing |= AST_I2CC_tTIMEOUT(I2C_TIMEOUT_COUNT);
++		/* Set time out timer */
++		if (config->smbus_timeout) {
++			ac_timing |= AST_I2CC_toutBaseCLK(I2C_TIMEOUT_CLK);
++			ac_timing |= AST_I2CC_tTIMEOUT(I2C_TIMEOUT_COUNT);
++			LOG_DBG("smbus_timeout enable");
++		}
++
++		/* Manual set the sda hold time */
++		if (config->manual_sda_hold) {
++			LOG_DBG("manual_sda_hold %x", config->manual_sda_hold);
++			if (config->manual_sda_hold < 4)
++				ac_timing |= AST_I2CC_tHDDAT(config->manual_sda_hold);
++			else
++				LOG_DBG("invalid sda hold setting %x", config->manual_sda_hold);
++		}
++
+ 		LOG_DBG("ac_timing %x", ac_timing);
+ 	} else {
+ 		for (i = 0; i < ARRAY_SIZE(aspeed_old_i2c_timing_table); i++) {
+@@ -1760,7 +1799,6 @@ static int i2c_aspeed_init(const struct device *dev)
+ 	}
+
+ 	/* default apply multi-master with DMA mode */
+-	config->multi_master = 1;
+ 	config->mode = DMA_MODE;
+
+ 	/* buffer mode base and size */
+@@ -1874,6 +1912,11 @@ static const struct i2c_driver_api i2c_aspeed_driver_api = {
+ 		.base = DT_INST_REG_ADDR(n),					  \
+ 		.irq_config_func = i2c_aspeed_config_func_##n,			  \
+ 		.bitrate = DT_INST_PROP(n, clock_frequency),			  \
++		.multi_master = DT_INST_PROP(n, multi_master),		  \
++		.smbus_timeout = DT_INST_PROP(n, smbus_timeout),		  \
++		.manual_scl_high = DT_INST_PROP(n, manual_high_count),  \
++		.manual_scl_low = DT_INST_PROP(n, manual_low_count),	  \
++		.manual_sda_hold = DT_INST_PROP(n, manual_sda_delay),  \
+ 		.clock_dev = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR(n)),		  \
+ 		.clk_id = (clock_control_subsys_t)DT_INST_CLOCKS_CELL(n, clk_id), \
+ 	};									  \
+diff --git a/dts/arm/aspeed/ast10x0.dtsi b/dts/arm/aspeed/ast10x0.dtsi
+index d582a71faf..6390901947 100644
+--- a/dts/arm/aspeed/ast10x0.dtsi
++++ b/dts/arm/aspeed/ast10x0.dtsi
+@@ -575,6 +575,11 @@
+ 			reg = <0x7e7b0080 0x80>;
+ 			interrupts = <INTR_I2C0 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			multi-master = <1>;
++			smbus-timeout = <1>;
++			manual-high-count = <0>;
++			manual-low-count = <0>;
++			manual-sda-delay = <0>;
+ 			status = "disabled";
+ 			label = "I2C_0";
+ 		};
+@@ -587,6 +592,11 @@
+ 			reg = <0x7e7b0100 0x80>;
+ 			interrupts = <INTR_I2C1 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			multi-master = <1>;
++			smbus-timeout = <1>;
++			manual-high-count = <0>;
++			manual-low-count = <0>;
++			manual-sda-delay = <0>;
+ 			status = "disabled";
+ 			label = "I2C_1";
+ 		};
+@@ -599,6 +609,11 @@
+ 			reg = <0x7e7b0180 0x80>;
+ 			interrupts = <INTR_I2C2 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			multi-master = <1>;
++			smbus-timeout = <1>;
++			manual-high-count = <0>;
++			manual-low-count = <0>;
++			manual-sda-delay = <0>;
+ 			status = "disabled";
+ 			label = "I2C_2";
+ 		};
+@@ -611,6 +626,11 @@
+ 			reg = <0x7e7b0200 0x80>;
+ 			interrupts = <INTR_I2C3 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			multi-master = <1>;
++			smbus-timeout = <1>;
++			manual-high-count = <0>;
++			manual-low-count = <0>;
++			manual-sda-delay = <0>;
+ 			status = "disabled";
+ 			label = "I2C_3";
+ 		};
+@@ -623,6 +643,11 @@
+ 			reg = <0x7e7b0280 0x80>;
+ 			interrupts = <INTR_I2C4 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			multi-master = <1>;
++			smbus-timeout = <1>;
++			manual-high-count = <0>;
++			manual-low-count = <0>;
++			manual-sda-delay = <0>;
+ 			status = "disabled";
+ 			label = "I2C_4";
+ 		};
+@@ -635,6 +660,11 @@
+ 			reg = <0x7e7b0300 0x80>;
+ 			interrupts = <INTR_I2C5 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			multi-master = <1>;
++			smbus-timeout = <1>;
++			manual-high-count = <0>;
++			manual-low-count = <0>;
++			manual-sda-delay = <0>;
+ 			status = "disabled";
+ 			label = "I2C_5";
+ 		};
+@@ -647,6 +677,11 @@
+ 			reg = <0x7e7b0380 0x80>;
+ 			interrupts = <INTR_I2C6 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			multi-master = <1>;
++			smbus-timeout = <1>;
++			manual-high-count = <0>;
++			manual-low-count = <0>;
++			manual-sda-delay = <0>;
+ 			status = "disabled";
+ 			label = "I2C_6";
+ 		};
+@@ -659,6 +694,11 @@
+ 			reg = <0x7e7b0400 0x80>;
+ 			interrupts = <INTR_I2C7 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			multi-master = <1>;
++			smbus-timeout = <1>;
++			manual-high-count = <0>;
++			manual-low-count = <0>;
++			manual-sda-delay = <0>;
+ 			status = "disabled";
+ 			label = "I2C_7";
+ 		};
+@@ -671,6 +711,11 @@
+ 			reg = <0x7e7b0480 0x80>;
+ 			interrupts = <INTR_I2C8 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			multi-master = <1>;
++			smbus-timeout = <1>;
++			manual-high-count = <0>;
++			manual-low-count = <0>;
++			manual-sda-delay = <0>;
+ 			status = "disabled";
+ 			label = "I2C_8";
+ 		};
+@@ -683,6 +728,11 @@
+ 			reg = <0x7e7b0500 0x80>;
+ 			interrupts = <INTR_I2C9 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			multi-master = <1>;
++			smbus-timeout = <1>;
++			manual-high-count = <0>;
++			manual-low-count = <0>;
++			manual-sda-delay = <0>;
+ 			status = "disabled";
+ 			label = "I2C_9";
+ 		};
+@@ -695,6 +745,11 @@
+ 			reg = <0x7e7b0580 0x80>;
+ 			interrupts = <INTR_I2C10 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			multi-master = <1>;
++			smbus-timeout = <1>;
++			manual-high-count = <0>;
++			manual-low-count = <0>;
++			manual-sda-delay = <0>;
+ 			status = "disabled";
+ 			label = "I2C_10";
+ 		};
+@@ -707,6 +762,11 @@
+ 			reg = <0x7e7b0600 0x80>;
+ 			interrupts = <INTR_I2C11 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			multi-master = <1>;
++			smbus-timeout = <1>;
++			manual-high-count = <0>;
++			manual-low-count = <0>;
++			manual-sda-delay = <0>;
+ 			status = "disabled";
+ 			label = "I2C_11";
+ 		};
+@@ -719,6 +779,11 @@
+ 			reg = <0x7e7b0680 0x80>;
+ 			interrupts = <INTR_I2C12 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			multi-master = <1>;
++			smbus-timeout = <1>;
++			manual-high-count = <0>;
++			manual-low-count = <0>;
++			manual-sda-delay = <0>;
+ 			status = "disabled";
+ 			label = "I2C_12";
+ 		};
+@@ -731,6 +796,11 @@
+ 			reg = <0x7e7b0700 0x80>;
+ 			interrupts = <INTR_I2C13 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			multi-master = <1>;
++			smbus-timeout = <1>;
++			manual-high-count = <0>;
++			manual-low-count = <0>;
++			manual-sda-delay = <0>;
+ 			status = "disabled";
+ 			label = "I2C_13";
+ 		};
+@@ -743,6 +813,11 @@
+ 			reg = <0x7e7b0780 0x80>;
+ 			interrupts = <INTR_I2C14 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			multi-master = <1>;
++			smbus-timeout = <1>;
++			manual-high-count = <0>;
++			manual-low-count = <0>;
++			manual-sda-delay = <0>;
+ 			status = "disabled";
+ 			label = "I2C_14";
+ 		};
+@@ -755,6 +830,11 @@
+ 			reg = <0x7e7b0800 0x80>;
+ 			interrupts = <INTR_I2C15 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			multi-master = <1>;
++			smbus-timeout = <1>;
++			manual-high-count = <0>;
++			manual-low-count = <0>;
++			manual-sda-delay = <0>;
+ 			status = "disabled";
+ 			label = "I2C_15";
+ 		};
+diff --git a/dts/bindings/i2c/aspeed,i2c.yaml b/dts/bindings/i2c/aspeed,i2c.yaml
+index dce8ffe5c1..e252ca82e8 100644
+--- a/dts/bindings/i2c/aspeed,i2c.yaml
++++ b/dts/bindings/i2c/aspeed,i2c.yaml
+@@ -16,4 +16,22 @@ properties:
+
+     interrupts:
+       required: true
++    multi-master:
++       type: int
++       required: true
+
++    smbus-timeout:
++       type: int
++       required: true
++
++    manual-high-count:
++       type: int
++       required: true
++
++    manual-low-count:
++       type: int
++       required: true
++
++    manual-sda-delay:
++       type: int
++       required: true
+--
+2.39.2
