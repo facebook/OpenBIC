@@ -46,7 +46,7 @@ LOG_MODULE_REGISTER(ipmb);
 #if MAX_IPMB_IDX
 
 static struct k_mutex mutex_id[MAX_IPMB_IDX]; // mutex for sequence linked list insert/find
-static struct k_mutex mutex_send_req, mutex_send_res, mutex_read;
+static struct k_mutex mutex_send_req[MAX_IPMB_IDX], mutex_send_res, mutex_read;
 static const struct device *dev_ipmb[I2C_BUS_MAX_NUM];
 
 char __aligned(4) ipmb_txqueue_buffer[MAX_IPMB_IDX][IPMB_TXQUEUE_LEN * sizeof(struct ipmi_msg_cfg)];
@@ -923,10 +923,10 @@ ipmb_error ipmb_send_request(ipmi_msg *req, uint8_t index)
 {
 	CHECK_NULL_ARG_WITH_RETURN(req, IPMB_ERROR_UNKNOWN);
 	CHECK_MSGQ_INIT_WITH_RETURN(&ipmb_txqueue[index], IPMB_ERROR_UNKNOWN);
-	CHECK_MUTEX_INIT_WITH_RETURN(&mutex_send_req, IPMB_ERROR_UNKNOWN);
+	CHECK_MUTEX_INIT_WITH_RETURN(&mutex_send_req[index], IPMB_ERROR_UNKNOWN);
 
 	int ret;
-	ret = k_mutex_lock(&mutex_send_req, K_MSEC(1000));
+	ret = k_mutex_lock(&mutex_send_req[index], K_MSEC(1000));
 	if (ret) {
 		LOG_ERR("Failed to lock the mutex");
 		return IPMB_ERROR_MUTEX_LOCK;
@@ -959,10 +959,10 @@ ipmb_error ipmb_send_request(ipmi_msg *req, uint8_t index)
 	LOG_HEXDUMP_DBG(req_cfg.buffer.data, req_cfg.buffer.data_len, "");
 
 	if (k_msgq_put(&ipmb_txqueue[index], &req_cfg, K_MSEC(1000)) != osOK) {
-		k_mutex_unlock(&mutex_send_req);
+		k_mutex_unlock(&mutex_send_req[index]);
 		return IPMB_ERROR_FAILURE;
 	}
-	k_mutex_unlock(&mutex_send_req);
+	k_mutex_unlock(&mutex_send_req[index]);
 	return IPMB_ERROR_SUCCESS;
 }
 
@@ -1309,6 +1309,7 @@ void ipmb_init(void)
 {
 	uint8_t index;
 	register_target_device();
+	int i = 0;
 
 	IPMB_config_table = malloc(MAX_IPMB_IDX * sizeof(IPMB_config));
 	if (IPMB_config_table == NULL) {
@@ -1331,8 +1332,10 @@ void ipmb_init(void)
 	tick_fix = sys_tick_freq / 1000;
 
 	// Initial mutex
-	if (k_mutex_init(&mutex_send_req)) {
-		LOG_ERR(" Failed to initialize IPMB send request mutex");
+	for (i = 0; i < MAX_IPMB_IDX; i++) {
+		if (k_mutex_init(&mutex_send_req[i])) {
+			LOG_ERR(" Failed to initialize IPMB send request mutex, index %d", i);
+		}
 	}
 	if (k_mutex_init(&mutex_send_res)) {
 		LOG_ERR("Failed to initialize IPMB send response mutex");
