@@ -133,6 +133,7 @@ uint8_t mctp_cci_send_msg(void *mctp_p, mctp_cci_msg *msg)
 	CHECK_NULL_ARG_WITH_RETURN(msg, CCI_ERROR);
 
 	mctp *mctp_inst = (mctp *)mctp_p;
+	wait_msg *p = NULL;
 
 	if (!msg->hdr.cci_msg_req_resp) {
 		msg->hdr.msg_tag = mctp_inst->cci_msg_tag++;
@@ -149,20 +150,14 @@ uint8_t mctp_cci_send_msg(void *mctp_p, mctp_cci_msg *msg)
 	}
 	LOG_HEXDUMP_DBG(buf, len, __func__);
 
-	uint8_t rc = mctp_send_msg(mctp_inst, buf, len, msg->ext_params);
-
-	if (rc == CCI_ERROR) {
-		LOG_WRN("mctp_send_msg error!!");
-		return CCI_ERROR;
-	}
 	if (!msg->hdr.cci_msg_req_resp) {
-		wait_msg *p = (wait_msg *)malloc(sizeof(*p));
-		if (!p) {
+		p = (wait_msg *)malloc(sizeof(wait_msg));
+		if (p == NULL) {
 			LOG_WRN("wait_msg alloc failed!");
 			return CCI_ERROR;
 		}
 
-		memset(p, 0, sizeof(*p));
+		memset(p, 0, sizeof(wait_msg));
 		p->mctp_inst = mctp_inst;
 		p->msg = *msg;
 		p->exp_to_ms =
@@ -171,6 +166,17 @@ uint8_t mctp_cci_send_msg(void *mctp_p, mctp_cci_msg *msg)
 		k_mutex_lock(&wait_recv_resp_mutex, K_FOREVER);
 		sys_slist_append(&wait_recv_resp_list, &p->node);
 		k_mutex_unlock(&wait_recv_resp_mutex);
+	}
+
+	uint8_t rc = mctp_send_msg(mctp_inst, buf, len, msg->ext_params);
+	if (rc == CCI_ERROR) {
+		LOG_WRN("mctp_send_msg error!!");
+
+		if (p != NULL) {
+			sys_slist_find_and_remove(&wait_recv_resp_list, &p->node);
+			SAFE_FREE(p);
+		}
+		return CCI_ERROR;
 	}
 
 	return CCI_SUCCESS;
