@@ -22,6 +22,7 @@
 #include "ipmi.h"
 #include "usb.h"
 #include "plat_def.h"
+#include "ipmb.h"
 
 #include <logging/log.h>
 
@@ -42,12 +43,7 @@ static inline void try_ipmi_message(ipmi_msg_cfg *current_msg, int retry)
 	if (current_msg == NULL) {
 		return;
 	}
-
-	for (/*retry*/; k_msgq_put(&ipmi_msgq, current_msg, K_NO_WAIT) != 0 && retry >= 0;
-	     retry--) {
-		k_msgq_purge(&ipmi_msgq);
-		LOG_ERR("USB retrying put ipmi msgq");
-	}
+	ipmb_notify_client(current_msg);
 }
 
 void handle_usb_data(uint8_t *rx_buff, int rx_len)
