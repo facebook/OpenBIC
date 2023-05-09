@@ -386,5 +386,3 @@ void OEM_1S_GET_HSC_STATUS(ipmi_msg *msg)
 	msg->completion_code = CC_SUCCESS;
 	return;
 }
-
-
