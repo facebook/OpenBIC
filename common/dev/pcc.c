@@ -165,7 +165,6 @@ void check_ABL_error(uint32_t postcode)
 	msg->data[0] = 0x00; // Record id byte 0, lsb
 	msg->data[1] = 0x00; // Record id byte 1
 	msg->data[2] = 0xFB; // Record Type: Unified SEL
-	msg->data[3] = 0x21; // General Information
 	msg->data[4] = 0x00; // Timestamp
 	msg->data[5] = 0x00; // Timestamp
 	msg->data[6] = 0x00; // Timestamp
@@ -174,10 +173,17 @@ void check_ABL_error(uint32_t postcode)
 	msg->data[9] = 0xFF; // DIMM Channel
 	msg->data[10] = 0xFF; // DIMM Slot
 	msg->data[11] = 0xFF; // Reserved
-	msg->data[12] = 0x80; // DIMM Error Type
 	msg->data[13] = ABL_error_code_list[i].event_data; // Major code
 	msg->data[14] = error_code & 0xFF; // Minor code
 	msg->data[15] = (error_code >> 8) & 0xFF; // Minor code
+
+	if (error_code == 0xE310) {
+		msg->data[3] = 0x2A;
+		msg->data[12] = 0x07;
+	} else {
+		msg->data[3] = 0x21;
+		msg->data[12] = 0x80;
+	}
 
 	status = ipmb_read(msg, IPMB_inf_index_map[msg->InF_target]);
 	if (status != IPMB_ERROR_SUCCESS) {
