@@ -715,11 +715,12 @@ __weak void OEM_1S_GET_POST_CODE(ipmi_msg *msg)
 }
 #endif
 
-#ifdef CONFIG_PCC_ASPEED
 __weak void OEM_1S_GET_4BYTE_POST_CODE(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
 
+#ifdef CONFIG_PCC_ASPEED
+	uint16_t read_len, start_idx;
 	if (msg->data_len != 1) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
@@ -730,16 +731,18 @@ __weak void OEM_1S_GET_4BYTE_POST_CODE(ipmi_msg *msg)
 		msg->completion_code = CC_INVALID_DATA_FIELD;
 		return;
 	}
-	uint16_t read_len, start_idx;
 	start_idx = page * FOUR_BYTE_POST_CODE_PAGE_SIZE;
 	read_len = copy_pcc_read_buffer(start_idx, FOUR_BYTE_POST_CODE_PAGE_SIZE, msg->data,
 					IPMI_MSG_MAX_LENGTH);
-
 	msg->data_len = read_len & 0xFF;
 	msg->completion_code = CC_SUCCESS;
+#else
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+#endif
+
 	return;
 }
-#endif
 
 #ifdef CONFIG_PECI
 __weak void OEM_1S_PECI_ACCESS(ipmi_msg *msg)
@@ -1202,7 +1205,7 @@ __weak void OEM_1S_CONTROL_SENSOR_POLLING(ipmi_msg *msg)
 			// Enable or Disable sensor polling
 			sensor_config[control_sensor_index].is_enable_polling =
 				((operation == DISABLE_SENSOR_POLLING) ? DISABLE_SENSOR_POLLING :
-									       ENABLE_SENSOR_POLLING);
+									 ENABLE_SENSOR_POLLING);
 			msg->data[return_data_index + 1] =
 				sensor_config[control_sensor_index].is_enable_polling;
 		} else {
@@ -2307,12 +2310,10 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 		OEM_1S_GET_POST_CODE(msg);
 		break;
 #endif
-#ifdef CONFIG_PCC_ASPEED
 	case CMD_OEM_1S_GET_4BYTE_POST_CODE:
 		LOG_DBG("Received 1S Get Post Code (4-Byte) command");
 		OEM_1S_GET_4BYTE_POST_CODE(msg);
 		break;
-#endif
 #ifdef CONFIG_PECI
 	case CMD_OEM_1S_PECI_ACCESS:
 		LOG_DBG("Received 1S Access PECI command");
