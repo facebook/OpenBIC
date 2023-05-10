@@ -39,6 +39,7 @@ SCU_CFG scu_cfg[] = {
 	//register    value
 	{ 0x7e6e2610, 0x0E000100 },
 	{ 0x7e6e2614, 0x00006000 },
+	{ 0x7e6e2634, 0x0000008F },
 };
 
 extern uint8_t ina230_init(uint8_t sensor_num);
