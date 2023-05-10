@@ -153,28 +153,28 @@ uint8_t pal_cxl_map_mux0_channel(uint8_t cxl_fru_id)
 
 	switch (pcie_card_id) {
 	case CARD_1_INDEX:
-		channel = PCA9548A_CHANNEL_6;
+		channel = PCA9548A_CHANNEL_0;
 		break;
 	case CARD_2_INDEX:
-		channel = PCA9548A_CHANNEL_7;
-		break;
-	case CARD_3_INDEX:
-		channel = PCA9548A_CHANNEL_4;
-		break;
-	case CARD_4_INDEX:
-		channel = PCA9548A_CHANNEL_5;
-		break;
-	case CARD_9_INDEX:
-		channel = PCA9548A_CHANNEL_3;
-		break;
-	case CARD_10_INDEX:
-		channel = PCA9548A_CHANNEL_2;
-		break;
-	case CARD_11_INDEX:
 		channel = PCA9548A_CHANNEL_1;
 		break;
+	case CARD_3_INDEX:
+		channel = PCA9548A_CHANNEL_2;
+		break;
+	case CARD_4_INDEX:
+		channel = PCA9548A_CHANNEL_3;
+		break;
+	case CARD_9_INDEX:
+		channel = PCA9548A_CHANNEL_4;
+		break;
+	case CARD_10_INDEX:
+		channel = PCA9548A_CHANNEL_5;
+		break;
+	case CARD_11_INDEX:
+		channel = PCA9548A_CHANNEL_6;
+		break;
 	case CARD_12_INDEX:
-		channel = PCA9548A_CHANNEL_0;
+		channel = PCA9548A_CHANNEL_7;
 		break;
 	default:
 		channel = PCA9548A_CHANNEL_DISABLE;
