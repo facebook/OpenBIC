@@ -178,11 +178,11 @@ void check_ABL_error(uint32_t postcode)
 	msg->data[15] = (error_code >> 8) & 0xFF; // Minor code
 
 	if (error_code == 0xE310) {
-		msg->data[3] = 0x2A;
-		msg->data[12] = 0x07;
+		msg->data[3] = 0x2A; // General Information
+		msg->data[12] = 0x07; // DIMM Error Type
 	} else {
-		msg->data[3] = 0x21;
-		msg->data[12] = 0x80;
+		msg->data[3] = 0x21; // General Information
+		msg->data[12] = 0x80; // DIMM Error Type
 	}
 
 	status = ipmb_read(msg, IPMB_inf_index_map[msg->InF_target]);
