@@ -150,8 +150,8 @@ static uint8_t mctp_pkt_assembling(mctp *mctp_inst, uint8_t *buf, uint16_t len)
 	CHECK_ARG_WITH_RETURN(!len, MCTP_ERROR);
 
 	mctp_hdr *hdr = (mctp_hdr *)buf;
-	uint8_t **buf_p = &mctp_inst->temp_msg_buf[hdr->msg_tag].buf;
-	uint16_t *offset_p = &mctp_inst->temp_msg_buf[hdr->msg_tag].offset;
+	uint8_t **buf_p = &mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].buf;
+	uint16_t *offset_p = &mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].offset;
 
 	/* one packet message, do nothing */
 	if (hdr->som && hdr->eom)
@@ -250,9 +250,9 @@ static void mctp_rx_task(void *arg, void *dummy0, void *dummy1)
 			uint8_t *p = read_buf + sizeof(hdr);
 			uint16_t len = read_len - sizeof(hdr);
 			/* this is assembly message */
-			if (mctp_inst->temp_msg_buf[hdr->msg_tag].buf) {
-				p = mctp_inst->temp_msg_buf[hdr->msg_tag].buf;
-				len = mctp_inst->temp_msg_buf[hdr->msg_tag].offset;
+			if (mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].buf) {
+				p = mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].buf;
+				len = mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].offset;
 
 				LOG_HEXDUMP_DBG(p, len, "mctp assembly data");
 			}
@@ -261,10 +261,10 @@ static void mctp_rx_task(void *arg, void *dummy0, void *dummy1)
 			mctp_inst->rx_cb(mctp_inst, p, len, ext_params);
 		}
 
-		if (mctp_inst->temp_msg_buf[hdr->msg_tag].buf) {
-			free(mctp_inst->temp_msg_buf[hdr->msg_tag].buf);
-			mctp_inst->temp_msg_buf[hdr->msg_tag].buf = NULL;
-			mctp_inst->temp_msg_buf[hdr->msg_tag].offset = 0;
+		if (mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].buf) {
+			free(mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].buf);
+			mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].buf = NULL;
+			mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].offset = 0;
 		}
 	}
 }
@@ -360,7 +360,7 @@ static void mctp_tx_task(void *arg, void *dummy0, void *dummy1)
        * If the message is response, keep the original msg_tag of ext_params
 */
 			hdr->msg_tag = (hdr->to) ? (msg_tag & MCTP_HDR_TAG_MASK) :
-							 mctp_msg.ext_params.msg_tag;
+						   mctp_msg.ext_params.msg_tag;
 
 			hdr->dest_ep = mctp_msg.ext_params.ep;
 			hdr->src_ep = mctp_inst->endpoint;

@@ -171,11 +171,11 @@ typedef struct _mctp {
 	/* write queue */
 	struct k_msgq mctp_tx_queue;
 
-	/* point to the rx message buffer that is assembling */
+	/* point to the rx message buffer that is assembling request/response */
 	struct {
 		uint8_t *buf;
 		uint16_t offset;
-	} temp_msg_buf[MCTP_MAX_MSG_TAG_NUM];
+	} temp_msg_buf[MCTP_MAX_MSG_TAG_NUM][2];
 
 	/* the callback when recevie mctp data */
 	mctp_fn_cb rx_cb;
