@@ -58,6 +58,12 @@ extern "C" {
 
 #define MCTP_POLL_TIME_MS 1
 
+#define MCTP_MSG_TYPE_SHIFT 0
+#define MCTP_MSG_TYPE_MASK 0x7F
+
+#define MCTP_IC_SHIFT 7
+#define MCTP_IC_MASK 0x80
+
 typedef enum {
 	MCTP_MSG_TYPE_CTRL = 0x00,
 	MCTP_MSG_TYPE_PLDM,
@@ -72,7 +78,8 @@ typedef enum {
 typedef enum {
 	MCTP_MEDIUM_TYPE_UNKNOWN = 0,
 	MCTP_MEDIUM_TYPE_SMBUS,
-	MCTP_MEDIUM_TYPE_I3C,
+	MCTP_MEDIUM_TYPE_CONTROLLER_I3C,
+	MCTP_MEDIUM_TYPE_TARGET_I3C,
 	MCTP_MEDIUM_TYPE_MAX
 } MCTP_MEDIUM_TYPE;
 
@@ -119,7 +126,6 @@ typedef uint8_t (*endpoint_resolve)(uint8_t dest_endpoint, void **mctp_inst,
 typedef struct _mctp_i3c_conf {
 	uint8_t bus;
 	uint8_t addr;
-	uint32_t dummy;
 } mctp_i3c_conf;
 
 /* smbus config for mctp medium_conf */
@@ -188,12 +194,28 @@ typedef struct _mctp {
 	uint8_t cci_msg_tag;
 } mctp;
 
-typedef struct _mctp_port {
+typedef struct _mctp_smbus_port {
 	mctp *mctp_inst;
+	uint8_t channel_target;
+	MCTP_MEDIUM_TYPE medium_type;
 	mctp_medium_conf conf;
-	uint8_t mctp_medium_type;
-	uint8_t user_idx;
 } mctp_port;
+
+/* mctp route entry struct */
+typedef struct _mctp_route_entry {
+        uint8_t endpoint;
+        uint8_t bus; /* TODO: only consider smbus/i3c */
+        uint8_t addr; /* TODO: only consider smbus/i3c */
+        uint8_t dev_present_pin;
+} mctp_route_entry;
+
+typedef struct _mctp_msg_handler {
+	MCTP_MSG_TYPE type;
+	mctp_fn_cb msg_handler_cb;
+} mctp_msg_handler;
+
+extern mctp_port mctp_config_table[];
+extern int mctp_config_table_size;
 
 /* public function */
 mctp *mctp_init(void);
@@ -222,7 +244,8 @@ uint8_t mctp_bridge_msg(mctp *mctp_inst, uint8_t *buf, uint16_t len, mctp_ext_pa
 /* medium init/deinit */
 uint8_t mctp_smbus_init(mctp *mctp_inst, mctp_medium_conf medium_conf);
 uint8_t mctp_smbus_deinit(mctp *mctp_inst);
-uint8_t mctp_i3c_init(mctp *mctp_instance, mctp_medium_conf medium_conf);
+uint8_t mctp_i3c_controller_init(mctp *mctp_instance, mctp_medium_conf medium_conf);
+uint8_t mctp_i3c_target_init(mctp *mctp_instance, mctp_medium_conf medium_conf);
 uint8_t mctp_i3c_deinit(mctp *mctp_instance);
 
 /* register endpoint resolve function */
@@ -238,6 +261,9 @@ mctp *pal_get_mctp(uint8_t mctp_medium_type, uint8_t bus);
 int pal_get_target(uint8_t interface);
 int pal_get_medium_type(uint8_t interface);
 uint8_t plat_get_eid();
+int pal_find_bus_in_mctp_port(mctp_port *p);
+mctp *pal_find_mctp_by_bus(uint8_t bus);
+mctp_port *pal_find_mctp_port_by_channel_target(uint8_t target);
 
 #ifdef __cplusplus
 }

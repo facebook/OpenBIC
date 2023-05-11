@@ -53,7 +53,7 @@ static uint8_t set_thread_name(mctp *mctp_inst)
 
 	switch (mctp_inst->medium_type) {
 	case MCTP_MEDIUM_TYPE_SMBUS:
-		LOG_INF("medium_type: smbus");
+		LOG_DBG("medium_type: smbus");
 		mctp_smbus_conf *smbus_conf = (mctp_smbus_conf *)&mctp_inst->medium_conf;
 		snprintf(mctp_inst->mctp_rx_task_name, sizeof(mctp_inst->mctp_rx_task_name),
 			 "mctprx_%02x_%02x_%02x", mctp_inst->medium_type, smbus_conf->bus,
@@ -62,8 +62,9 @@ static uint8_t set_thread_name(mctp *mctp_inst)
 			 "mctptx_%02x_%02x_%02x", mctp_inst->medium_type, smbus_conf->bus,
 			 smbus_conf->addr);
 		break;
-	case MCTP_MEDIUM_TYPE_I3C:
-		LOG_INF("medium_type: i3c");
+	case MCTP_MEDIUM_TYPE_CONTROLLER_I3C:
+	case MCTP_MEDIUM_TYPE_TARGET_I3C:
+		LOG_DBG("medium_type: i3c");
 		mctp_i3c_conf *i3c_conf = (mctp_i3c_conf *)&mctp_inst->medium_conf;
 		snprintf(mctp_inst->mctp_rx_task_name, sizeof(mctp_inst->mctp_rx_task_name),
 			 "mctprx_%02x_%02x_%02x", mctp_inst->medium_type, i3c_conf->bus,
@@ -90,8 +91,11 @@ static uint8_t mctp_medium_init(mctp *mctp_inst, mctp_medium_conf medium_conf)
 	case MCTP_MEDIUM_TYPE_SMBUS:
 		ret = mctp_smbus_init(mctp_inst, medium_conf);
 		break;
-	case MCTP_MEDIUM_TYPE_I3C:
-		ret = mctp_i3c_init(mctp_inst, medium_conf);
+	case MCTP_MEDIUM_TYPE_TARGET_I3C:
+		ret = mctp_i3c_target_init(mctp_inst, medium_conf);
+		break;
+	case MCTP_MEDIUM_TYPE_CONTROLLER_I3C:
+		ret = mctp_i3c_controller_init(mctp_inst, medium_conf);
 		break;
 	default:
 		return MCTP_ERROR;
@@ -108,7 +112,8 @@ static uint8_t mctp_medium_deinit(mctp *mctp_inst)
 	case MCTP_MEDIUM_TYPE_SMBUS:
 		mctp_smbus_deinit(mctp_inst);
 		break;
-	case MCTP_MEDIUM_TYPE_I3C:
+	case MCTP_MEDIUM_TYPE_TARGET_I3C:
+	case MCTP_MEDIUM_TYPE_CONTROLLER_I3C:
 		mctp_i3c_deinit(mctp_inst);
 		break;
 	default:
@@ -627,17 +632,48 @@ bool get_mctp_info_by_eid(uint8_t port, mctp **mctp_inst, mctp_ext_params *ext_p
 	return (get_mctp_info(port, mctp_inst, ext_params) == MCTP_SUCCESS);
 }
 
-__weak mctp *pal_get_mctp(uint8_t mctp_medium_type, uint8_t bus)
+__weak int pal_find_bus_in_mctp_port(mctp_port *p)
 {
+	int bus = -1;
+	switch (p->medium_type) {
+		case MCTP_MEDIUM_TYPE_SMBUS:
+			bus = p->conf.smbus_conf.bus;
+			break;
+		case MCTP_MEDIUM_TYPE_TARGET_I3C:
+		case MCTP_MEDIUM_TYPE_CONTROLLER_I3C:
+			bus = p->conf.i3c_conf.bus;
+			break;
+		default:
+			LOG_WRN("Cannot find medium type");
+			return -1;
+	}
+
+	return bus;
+}
+
+__weak mctp *pal_find_mctp_by_bus(uint8_t bus)
+{
+	uint8_t i;
+	for (i = 0; i < mctp_config_table_size; i++) {
+		mctp_port *p = mctp_config_table + i;
+		int conf_bus = pal_find_bus_in_mctp_port(p);
+		if (bus == conf_bus) {
+			return p->mctp_inst;
+		}
+	}
+
 	return NULL;
 }
 
-__weak int pal_get_target(uint8_t interface)
+__weak mctp_port *pal_find_mctp_port_by_channel_target(uint8_t target)
 {
-	return -1;
-}
+	uint8_t i;
+	for (i = 0; i < mctp_config_table_size; i++) {
+		mctp_port *p = mctp_config_table + i;
+		if (target == p->channel_target) {
+			return p;
+		}
+	}
 
-__weak int pal_get_medium_type(uint8_t interface)
-{
-	return -1;
+	return NULL;
 }
