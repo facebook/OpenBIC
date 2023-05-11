@@ -124,7 +124,10 @@ static bool register_instid(void *mctp_p, uint8_t *inst_num)
 
 void pldm_read_resp_handler(void *args, uint8_t *rbuf, uint16_t rlen)
 {
-	if (!args || !rbuf || !rlen)
+	CHECK_NULL_ARG(args);
+	CHECK_NULL_ARG(rbuf);
+
+	if (!rlen)
 		return;
 
 	pldm_recv_resp_arg *recv_arg = (pldm_recv_resp_arg *)args;
@@ -143,9 +146,8 @@ void pldm_read_resp_handler(void *args, uint8_t *rbuf, uint16_t rlen)
 
 static void pldm_read_timeout_handler(void *args)
 {
-	if (!args) {
-		return;
-	}
+	CHECK_NULL_ARG(args);
+
 	struct k_msgq *msgq = (struct k_msgq *)args;
 	uint8_t status = PLDM_READ_EVENT_TIMEOUT;
 	k_msgq_put(msgq, &status, K_NO_WAIT);
@@ -215,8 +217,8 @@ uint16_t mctp_pldm_read(void *mctp_p, pldm_msg *msg, uint8_t *rbuf, uint16_t rbu
 
 static uint8_t pldm_msg_timeout_check(sys_slist_t *list, struct k_mutex *mutex)
 {
-	if (!list || !mutex)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(list, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(mutex, MCTP_ERROR);
 
 	if (k_mutex_lock(mutex, K_MSEC(PLDM_RESP_MSG_PROC_MUTEX_TIMEOUT_MS))) {
 		LOG_WRN("pldm mutex is locked over %d ms!!", PLDM_RESP_MSG_PROC_MUTEX_TIMEOUT_MS);
@@ -270,7 +272,10 @@ static void pldm_msg_timeout_monitor(void *dummy0, void *dummy1, void *dummy2)
 static uint8_t pldm_resp_msg_process(mctp *const mctp_inst, uint8_t *buf, uint32_t len,
 				     mctp_ext_params ext_params)
 {
-	if (!mctp_inst || !buf || !len)
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+
+	if (!len)
 		return PLDM_ERROR;
 
 	pldm_hdr *hdr = (pldm_hdr *)buf;
@@ -321,7 +326,10 @@ static uint8_t pldm_resp_msg_process(mctp *const mctp_inst, uint8_t *buf, uint32
 
 uint8_t mctp_pldm_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_params ext_params)
 {
-	if (!mctp_p || !buf || !len)
+	CHECK_NULL_ARG_WITH_RETURN(mctp_p, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+
+	if (!len)
 		return PLDM_ERROR;
 
 	mctp *mctp_inst = (mctp *)mctp_p;
@@ -399,11 +407,12 @@ uint8_t mctp_pldm_send_msg(void *mctp_p, pldm_msg *msg)
 
 	mctp *mctp_inst = (mctp *)mctp_p;
 	uint8_t get_inst_id = 0xff;
+	wait_msg *p = NULL;
 
 	/*
-* The request should be set inst_id/msg_type/mctp_tag_owner in the
-* header
-*/
+	* The request should be set inst_id/msg_type/mctp_tag_owner in the
+	* header
+	*/
 	if (msg->hdr.rq) {
 		if (register_instid(mctp_p, &get_inst_id) == false) {
 			LOG_ERR("Register failed!");
@@ -426,14 +435,8 @@ uint8_t mctp_pldm_send_msg(void *mctp_p, pldm_msg *msg)
 	memcpy(buf, &msg->hdr, sizeof(msg->hdr));
 	memcpy(buf + sizeof(msg->hdr), msg->buf, msg->len);
 
-	uint8_t rc = mctp_send_msg(mctp_inst, buf, len, msg->ext_params);
-	if (rc == MCTP_ERROR) {
-		LOG_ERR("mctp_send_msg error!!");
-		goto error;
-	}
-
 	if (msg->hdr.rq) {
-		wait_msg *p = (wait_msg *)malloc(sizeof(*p));
+		p = (wait_msg *)malloc(sizeof(*p));
 		if (!p) {
 			LOG_WRN("wait_msg alloc failed!");
 			goto error;
@@ -448,6 +451,18 @@ uint8_t mctp_pldm_send_msg(void *mctp_p, pldm_msg *msg)
 		k_mutex_lock(&wait_recv_resp_mutex, K_FOREVER);
 		sys_slist_append(&wait_recv_resp_list, &p->node);
 		k_mutex_unlock(&wait_recv_resp_mutex);
+	}
+
+	uint8_t rc = mctp_send_msg(mctp_inst, buf, len, msg->ext_params);
+	if (rc == MCTP_ERROR) {
+		LOG_ERR("mctp_send_msg error!!");
+
+		if (p != NULL) {
+			sys_slist_find_and_remove(&wait_recv_resp_list, &p->node);
+			SAFE_FREE(p);
+		}
+
+		goto error;
 	}
 
 	return PLDM_SUCCESS;
