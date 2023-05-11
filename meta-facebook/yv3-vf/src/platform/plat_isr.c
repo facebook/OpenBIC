@@ -80,7 +80,8 @@ void power_en_int_handler(void)
 #define INA231_ALERT_HANDLER_M2(DEV)                                                               \
 	void ina231_alert_handler_m2_dev##DEV(void)                                                \
 	{                                                                                          \
-		assert_func(DEASSERT_CHK_TYPE_E_INA231_ALERT_##DEV);                               \
+		if (m2_prsnt(DEV) && get_fm_p12v_sw_en(DEV))                                       \
+			assert_func(DEASSERT_CHK_TYPE_E_INA231_ALERT_##DEV);                       \
 	}
 
 void dev_rst(void)
