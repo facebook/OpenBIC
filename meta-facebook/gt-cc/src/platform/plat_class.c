@@ -98,7 +98,8 @@ bool get_adc_voltage(int channel, float *voltage)
 
 GT_STAGE_REVISION_ID get_stage_by_rev_id()
 {
-	return (gpio_get(REV_ID0) | (gpio_get(REV_ID1) << 1) | (gpio_get(REV_ID2) << 2));
+	return (gpio_get(REV_ID0) | (gpio_get(REV_ID1) << 1) | (gpio_get(REV_ID2) << 2) |
+		(gpio_get(BOARD_ID0) << 3));
 }
 
 uint8_t get_hsc_type()

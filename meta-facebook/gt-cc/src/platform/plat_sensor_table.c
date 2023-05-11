@@ -1396,7 +1396,8 @@ void pal_extend_sensor_config()
 	case GT_STAGE_PVT:
 	case GT_STAGE_PVT2_OP2:
 	case GT_STAGE_PVT2_OP1:
-	case GT_STAGE_PILOT_MP:
+	case GT_STAGE_PILOT:
+	case GT_STAGE_MP:
 		LOG_INF("The board is in stage(%d)", stage);
 		memcpy(&sensor_config[sensor_config_count], dvt_pex_sensor_config_table,
 		       ARRAY_SIZE(dvt_pex_sensor_config_table) * sizeof(sensor_cfg));
@@ -1449,7 +1450,8 @@ uint8_t pal_get_extend_sensor_config()
 	case GT_STAGE_PVT:
 	case GT_STAGE_PVT2_OP2:
 	case GT_STAGE_PVT2_OP1:
-	case GT_STAGE_PILOT_MP:
+	case GT_STAGE_PILOT:
+	case GT_STAGE_MP:
 		extend_sensor_config_size += ARRAY_SIZE(dvt_pex_sensor_config_table);
 		extend_sensor_config_size += ARRAY_SIZE(mp5990_hsc_sensor_config_table);
 		extend_sensor_config_size += ARRAY_SIZE(isl69259_vr_sensor_config_table);
