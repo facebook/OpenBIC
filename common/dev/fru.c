@@ -84,7 +84,7 @@ uint8_t FRU_read(EEPROM_ENTRY *entry)
 		return FRU_INVALID_ID;
 	}
 
-	if ((entry->offset + entry->data_len) >=
+	if ((entry->offset + entry->data_len) >
 	    (FRU_START + FRU_SIZE)) { // Check data write out of range
 		LOG_ERR("FRU read out of range, type: %x, ID: %x", entry->config.dev_type,
 			entry->config.dev_id);
