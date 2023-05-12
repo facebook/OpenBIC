@@ -58,5 +58,8 @@ typedef struct {
 } intel_peci_unit;
 
 bool check_dimm_present(uint8_t dimm_channel, uint8_t dimm_num, uint8_t *present_result);
+bool pal_get_power_sku_unit(uint8_t addr);
+bool pal_get_cpu_time(uint8_t addr, uint8_t cmd, uint8_t readlen, uint32_t *run_time);
+bool pal_get_cpu_energy(uint8_t addr, uint8_t cmd, uint8_t readlen, uint32_t *pkg_energy);
 
 #endif
