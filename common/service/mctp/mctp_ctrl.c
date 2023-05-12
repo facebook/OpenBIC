@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/printk.h>
 #include <zephyr.h>
+#include "libutil.h"
 
 LOG_MODULE_DECLARE(mctp);
 
@@ -46,8 +47,11 @@ static sys_slist_t wait_recv_resp_list = SYS_SLIST_STATIC_INIT(&wait_recv_resp_l
 uint8_t mctp_ctrl_cmd_get_endpoint_id(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
 				      uint16_t *resp_len, void *ext_params)
 {
-	if (!mctp_inst || !buf || !resp || !resp_len)
-		return MCTP_ERROR;
+	ARG_UNUSED(ext_params);
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, MCTP_ERROR);
 
 	struct _get_eid_resp *p = (struct _get_eid_resp *)resp;
 
@@ -66,8 +70,8 @@ uint8_t mctp_ctrl_cmd_get_endpoint_id(void *mctp_inst, uint8_t *buf, uint16_t le
 
 static uint8_t mctp_ctrl_msg_timeout_check(sys_slist_t *list, struct k_mutex *mutex)
 {
-	if (!list || !mutex)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(list, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(mutex, MCTP_ERROR);
 
 	if (k_mutex_lock(mutex, K_MSEC(RESP_MSG_PROC_MUTEX_WAIT_TO_MS))) {
 		LOG_WRN("pldm mutex is locked over %d ms!!", RESP_MSG_PROC_MUTEX_WAIT_TO_MS);
@@ -116,7 +120,10 @@ static void mctp_ctrl_msg_timeout_monitor(void *dummy0, void *dummy1, void *dumm
 static uint8_t mctp_ctrl_cmd_resp_process(mctp *mctp_inst, uint8_t *buf, uint32_t len,
 					  mctp_ext_params ext_params)
 {
-	if (!mctp_inst || !buf || !len)
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, MCTP_ERROR);
+
+	if (!len)
 		return MCTP_ERROR;
 
 	if (k_mutex_lock(&wait_recv_resp_mutex, K_MSEC(RESP_MSG_PROC_MUTEX_WAIT_TO_MS))) {
@@ -163,7 +170,10 @@ static mctp_ctrl_cmd_handler_t mctp_ctrl_cmd_tbl[] = {
 
 uint8_t mctp_ctrl_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_params ext_params)
 {
-	if (!mctp_p || !buf || !len)
+	CHECK_NULL_ARG_WITH_RETURN(mctp_p, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, MCTP_ERROR);
+
+	if (!len)
 		return MCTP_ERROR;
 
 	mctp *mctp_inst = (mctp *)mctp_p;
@@ -227,10 +237,12 @@ send_msg:
 
 uint8_t mctp_ctrl_send_msg(void *mctp_p, mctp_ctrl_msg *msg)
 {
-	if (!mctp_p || !msg || !msg->cmd_data)
-		return MCTP_ERROR;
+	CHECK_NULL_ARG_WITH_RETURN(mctp_p, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(msg, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(msg->cmd_data, MCTP_ERROR);
 
 	mctp *mctp_inst = (mctp *)mctp_p;
+	wait_msg *p = NULL;
 
 	if (msg->hdr.rq) {
 		static uint8_t inst_id;
@@ -249,14 +261,8 @@ uint8_t mctp_ctrl_send_msg(void *mctp_p, mctp_ctrl_msg *msg)
 
 	LOG_HEXDUMP_DBG(buf, len, __func__);
 
-	uint8_t rc = mctp_send_msg(mctp_inst, buf, len, msg->ext_params);
-	if (rc == MCTP_ERROR) {
-		LOG_WRN("mctp_send_msg error!!");
-		return MCTP_ERROR;
-	}
-
 	if (msg->hdr.rq) {
-		wait_msg *p = (wait_msg *)malloc(sizeof(*p));
+		p = (wait_msg *)malloc(sizeof(*p));
 		if (!p) {
 			LOG_WRN("wait_msg alloc failed!");
 			return MCTP_ERROR;
@@ -271,6 +277,17 @@ uint8_t mctp_ctrl_send_msg(void *mctp_p, mctp_ctrl_msg *msg)
 		k_mutex_lock(&wait_recv_resp_mutex, K_FOREVER);
 		sys_slist_append(&wait_recv_resp_list, &p->node);
 		k_mutex_unlock(&wait_recv_resp_mutex);
+	}
+
+	uint8_t rc = mctp_send_msg(mctp_inst, buf, len, msg->ext_params);
+	if (rc == MCTP_ERROR) {
+		LOG_WRN("mctp_send_msg error!!");
+
+		if (p != NULL) {
+			sys_slist_find_and_remove(&wait_recv_resp_list, &p->node);
+			SAFE_FREE(p);
+		}
+		return MCTP_ERROR;
 	}
 
 	return MCTP_SUCCESS;
