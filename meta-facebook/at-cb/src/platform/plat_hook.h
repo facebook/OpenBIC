@@ -37,6 +37,7 @@ extern sq52205_init_arg sq52205_init_args[];
  **************************************************************************************************/
 extern mux_config tca9543_configs[];
 extern mux_config pi4msd5v9542_configs[];
+extern mux_config ina233_tca9543_configs[];
 extern vr_page_cfg xdpe15284_page[];
 extern mux_config pca9548_configs[];
 extern mux_config pca9546_configs[];
