@@ -34,8 +34,8 @@ LOG_MODULE_REGISTER(plat_hook);
 #define ADJUST_MP5990_CURRENT(x) ((x * 0.9993) + 0.6114)
 #define ADJUST_LTC4282_POWER(x) ((x * 0.9722) - 16.315)
 #define ADJUST_LTC4282_CURRENT(x) ((x * 0.9634) - 1.0236)
-#define ADJUST_LTC4286_POWER(x) ((x * 0.9699) - 29.589)
-#define ADJUST_LTC4286_CURRENT(x) ((x * 0.9659) - 2.3261)
+#define ADJUST_LTC4286_POWER(x) ((x * 0.95) - 8.6)
+#define ADJUST_LTC4286_CURRENT(x) ((x * 0.95) - 0.7)
 
 K_MUTEX_DEFINE(i2c_bus6_mutex);
 K_MUTEX_DEFINE(i2c_bus9_mutex);
