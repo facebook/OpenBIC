@@ -34,10 +34,10 @@
 #include "util_sys.h"
 #include "util_worker.h"
 #include "plat_mctp.h"
+#include "plat_power.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
-uint8_t _1ou_m2_mapping_table[4] = { 4, 3, 2, 1 };
 uint8_t _1ou_m2_name_mapping_table[4] = {
 	0x3A,
 	0x3C,
@@ -546,31 +546,6 @@ void ISR_RMCA()
 	}
 }
 
-int get_set_1ou_m2_power(ipmi_msg *msg, uint8_t device_id, uint8_t option)
-{
-	CHECK_NULL_ARG_WITH_RETURN(msg, -1);
-	uint32_t iana = IANA_ID;
-	ipmb_error status;
-
-	memset(msg, 0, sizeof(ipmi_msg));
-	msg->InF_source = SELF;
-	msg->InF_target = EXP1_IPMB;
-	msg->netfn = NETFN_OEM_1S_REQ;
-	msg->cmd = CMD_OEM_1S_GET_SET_M2;
-	msg->data_len = 5;
-	memcpy(&msg->data[0], (uint8_t *)&iana, 3);
-	msg->data[3] = _1ou_m2_mapping_table[device_id];
-	msg->data[4] = option;
-	status = ipmb_read(msg, IPMB_inf_index_map[msg->InF_target]);
-	if (status != IPMB_ERROR_SUCCESS) {
-		LOG_ERR("Failed to set get 1OU E1.S power: status 0x%x, id %d, option 0x%x", status,
-			device_id, option);
-		return -1;
-	}
-
-	return 0;
-}
-
 void ISR_CPU_VPP_INT()
 {
 	if (gpio_get(PWRGD_CPU_LVC3) == POWER_ON) {
@@ -586,23 +561,13 @@ void ISR_CPU_VPP_INT()
 		// Bit 1: M.2 device 0
 		// Bit 0: RSVD
 		// default device0, 1, 3 are ON (bit1, 2, 4 = 0)
-		static uint8_t last_vpp_pwr_status = 0xE9;
-		I2C_MSG i2c_msg;
+		uint8_t last_vpp_pwr_status = 0;
+		uint8_t vpp_pwr_status = 0;
 		ipmi_msg msg;
 		common_addsel_msg_t sel_msg;
 
-		// Read VPP power status from SB CPLD
-		memset(&i2c_msg, 0, sizeof(I2C_MSG));
-		i2c_msg.bus = I2C_BUS1;
-		i2c_msg.target_addr = CPLD_ADDR;
-		i2c_msg.data[0] = CPLD_1OU_VPP_POWER_STATUS;
-		i2c_msg.tx_len = 1;
-		i2c_msg.rx_len = 1;
-		if (i2c_master_read(&i2c_msg, retry)) {
-			LOG_ERR("Failed to read CPU VPP status, bus0x%x addr0x%x offset0x%x",
-				i2c_msg.bus, i2c_msg.target_addr, i2c_msg.data[0]);
-			return;
-		}
+		last_vpp_pwr_status = get_last_vpp_power_status();
+		vpp_pwr_status = get_updated_vpp_power_status();
 
 		// Check BIOS is ready to handle VPP (post complete)
 		if (gpio_get(FM_BIOS_POST_CMPLT_BMC_N) != LOW_ACTIVE) {
@@ -612,7 +577,7 @@ void ISR_CPU_VPP_INT()
 		for (device_id = 0; device_id < MAX_1OU_M2_COUNT; device_id++) {
 			// Shift to skip bit 0
 			// VPP power status is start on bit 1
-			vpp_pwr_status_bit = (i2c_msg.data[0] >> (device_id + 1)) & 0x1;
+			vpp_pwr_status_bit = (vpp_pwr_status >> (device_id + 1)) & 0x1;
 			if (vpp_pwr_status_bit ==
 			    ((last_vpp_pwr_status >> (device_id + 1)) & 0x1)) {
 				continue;
@@ -660,7 +625,7 @@ void ISR_CPU_VPP_INT()
 				}
 			}
 		}
-		last_vpp_pwr_status = i2c_msg.data[0];
+
 	}
 }
 
