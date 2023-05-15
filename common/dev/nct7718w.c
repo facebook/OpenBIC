@@ -119,6 +119,54 @@ uint8_t nct7718w_init(uint8_t sensor_num)
 		LOG_ERR("Failed to set RT filter and Alert mode, ret: %d", ret);
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
+
+	memset(&msg, 0, sizeof(msg));
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	msg.data[0] = NCT7718W_ALERT_MASK_OFFSET;
+	msg.data[1] = init_arg->alert_mask & 0xFF;
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Failed to set alert mask, ret: %d", ret);
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+
+	memset(&msg, 0, sizeof(msg));
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	msg.data[0] = NCT7718W_CONFIGURATION_OFFSET;
+	msg.data[1] = init_arg->configuration & 0xFF;
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Failed to set configuration, ret: %d", ret);
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+
+	memset(&msg, 0, sizeof(msg));
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	msg.data[0] = NCT7718W_RT1_CRITICAL_TEMP_OFFSET;
+	msg.data[1] = init_arg->rt1_critical_temperature & 0xFF;
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Failed to set RT1 critical temperature, ret: %d", ret);
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+
+	memset(&msg, 0, sizeof(msg));
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	msg.data[0] = NCT7718W_LT_CRITICAL_TEMP_OFFSET;
+	msg.data[1] = init_arg->lt_critical_temperature & 0xFF;
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Failed to set local critical temperature, ret: %d", ret);
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
 	init_arg->is_init = true;
 
 skip_init:

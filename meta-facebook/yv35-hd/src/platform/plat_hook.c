@@ -58,12 +58,22 @@ mp5990_init_arg mp5990_init_args[] = {
 };
 
 nct7718w_init_arg nct7718w_init_args[] = {
-	[0] = { .is_init = false, .rt1_high_alert_temp = 0x50, .rt_filter_alert_mode = 0x01 },
+	[0] = { .is_init = false,
+		.rt1_high_alert_temp = 0x50,
+		.rt_filter_alert_mode = 0x01,
+		.alert_mask = 0x8B,
+		.configuration = 0x07,
+		.rt1_critical_temperature = 0x64,
+		.lt_critical_temperature = 0x64 },
 };
 
-g788p81u_init_arg g788p81u_init_args[] = {
-	[0] = { .is_init = false, .remote_T_high_limit = 0x50, .alert_mode = 0x01 }
-};
+g788p81u_init_arg g788p81u_init_args[] = { [0] = { .is_init = false,
+						   .remote_T_high_limit = 0x50,
+						   .alert_mode = 0x01,
+						   .alert_mask = 0x8B,
+						   .configuration = 0x07,
+						   .remote_temp_therm_limit = 0x64,
+						   .local_temp_therm_limit = 0x64 } };
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
