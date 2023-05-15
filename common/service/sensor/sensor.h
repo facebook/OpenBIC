@@ -65,8 +65,12 @@ enum ADM1278_OFFSET {
 enum NCT7718W_OFFSET {
 	NCT7718W_LOCAL_TEMP_OFFSET = 0x00,
 	NCT7718W_REMOTE_TEMP_MSB_OFFSET = 0x01,
-	NCT7718W_RT1_HIGH_ALERT_TEMP_OFFSET = 0x07,
+	NCT7718W_CONFIGURATION_OFFSET = 0x03,
+	NCT7718W_RT1_HIGH_ALERT_TEMP_OFFSET = 0x0D,
 	NCT7718W_REMOTE_TEMP_LSB_OFFSET = 0x10,
+	NCT7718W_ALERT_MASK_OFFSET = 0x16,
+	NCT7718W_RT1_CRITICAL_TEMP_OFFSET = 0x19,
+	NCT7718W_LT_CRITICAL_TEMP_OFFSET = 0x20,
 	NCT7718W_RT_FILTER_ALERT_MODE_OFFSET = 0xBF,
 	NCT7718W_CHIP_ID_OFFSET = 0xFD,
 	NCT7718W_VENDOR_ID_OFFSET = 0xFE,
@@ -86,8 +90,12 @@ enum INA230_OFFSET {
 enum G788P81U_OFFSET {
 	G788P81U_LOCAL_TEMP_OFFSET = 0x00,
 	G788P81U_REMOTE_TEMP_OFFSET = 0x01,
-	G788P81U_REMOTE_THIGH_LIMIT_OFFSET = 0x07,
+	G788P81U_CONFIGURATION_OFFSET = 0x03,
+	G788P81U_REMOTE_THIGH_LIMIT_OFFSET = 0x0D,
 	G788P81U_REMOTE_TEMP_EXT_OFFSET = 0x10,
+	G788P81U_ALERT_MASK_OFFSET = 0x16,
+	G788P81U_REMOTE_TEMP_THERM_LIMIT_OFFSET = 0x19,
+	G788P81U_LOCAL_TEMP_THERM_LIMIT_OFFSET = 0x20,
 	G788P81U_ALERT_MODE_OFFSET = 0xBF,
 };
 
@@ -568,12 +576,20 @@ typedef struct _nct7718w_init_arg_ {
 	bool is_init;
 	uint8_t rt1_high_alert_temp;
 	uint8_t rt_filter_alert_mode;
+	uint8_t alert_mask;
+	uint8_t configuration;
+	uint8_t rt1_critical_temperature;
+	uint8_t lt_critical_temperature;
 } nct7718w_init_arg;
 
 typedef struct _g788p81u_init_arg_ {
 	bool is_init;
 	uint8_t remote_T_high_limit;
 	uint8_t alert_mode;
+	uint8_t alert_mask;
+	uint8_t configuration;
+	uint8_t remote_temp_therm_limit;
+	uint8_t local_temp_therm_limit;
 } g788p81u_init_arg;
 
 typedef struct _pt5161l_init_arg_ {

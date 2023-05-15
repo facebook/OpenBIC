@@ -124,6 +124,54 @@ uint8_t g788p81u_init(uint8_t sensor_num)
 		LOG_ERR("Failed to set alert mode, ret: %d", ret);
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
+
+	memset(&msg, 0, sizeof(msg));
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	msg.data[0] = G788P81U_ALERT_MASK_OFFSET;
+	msg.data[1] = init_arg->alert_mask & 0xFF;
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Failed to set alert mask, ret: %d", ret);
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+
+	memset(&msg, 0, sizeof(msg));
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	msg.data[0] = G788P81U_CONFIGURATION_OFFSET;
+	msg.data[1] = init_arg->configuration & 0xFF;
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Failed to set configuration, ret: %d", ret);
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+
+	memset(&msg, 0, sizeof(msg));
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	msg.data[0] = G788P81U_REMOTE_TEMP_THERM_LIMIT_OFFSET;
+	msg.data[1] = init_arg->remote_temp_therm_limit & 0xFF;
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Failed to set remote temperature THERM limit, ret: %d", ret);
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+
+	memset(&msg, 0, sizeof(msg));
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	msg.data[0] = G788P81U_LOCAL_TEMP_THERM_LIMIT_OFFSET;
+	msg.data[1] = init_arg->local_temp_therm_limit & 0xFF;
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Failed to set local temperature THERM limit, ret: %d", ret);
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
 	init_arg->is_init = true;
 
 skip_init:
