@@ -37,8 +37,8 @@ LOG_MODULE_REGISTER(plat_sensor_table);
 struct k_mutex i2c_2_tca9543_mutex;
 struct k_mutex i2c_3_tca9543_mutex;
 struct k_mutex i2c_4_pi4msd5v9542_mutex;
-struct k_mutex i2c_7_mutex;
-struct k_mutex i2c_8_mutex;
+struct k_mutex i2c_7_accl_mutex;
+struct k_mutex i2c_8_accl_mutex;
 
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
@@ -515,6 +515,176 @@ sensor_cfg ltc4286_sensor_config_table[] = {
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &ltc4286_init_args[1] },
 };
 
+sensor_cfg evt2_modify_sensor_config_table[] = {
+	/** INA233 12V 1 **/
+	{ SENSOR_NUM_VOL_P12V_ACCL_1, sensor_dev_ina233, I2C_BUS4, INA233_12V_1_7_ADDR,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[0],
+	  post_ina233_read, &ina233_tca9543_configs[0], &ina233_init_args[0] },
+	{ SENSOR_NUM_CUR_P12V_ACCL_1, sensor_dev_ina233, I2C_BUS4, INA233_12V_1_7_ADDR,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[0],
+	  post_ina233_read, &ina233_tca9543_configs[0], &ina233_init_args[0] },
+	{ SENSOR_NUM_PWR_P12V_ACCL_1, sensor_dev_ina233, I2C_BUS4, INA233_12V_1_7_ADDR,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[0],
+	  post_ina233_read, &ina233_tca9543_configs[0], &ina233_init_args[0] },
+
+	/** INA233 12V 2 **/
+	{ SENSOR_NUM_VOL_P12V_ACCL_2, sensor_dev_ina233, I2C_BUS4, INA233_12V_2_8_ADDR,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[0],
+	  post_ina233_read, &ina233_tca9543_configs[0], &ina233_init_args[1] },
+	{ SENSOR_NUM_CUR_P12V_ACCL_2, sensor_dev_ina233, I2C_BUS4, INA233_12V_2_8_ADDR,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[0],
+	  post_ina233_read, &ina233_tca9543_configs[0], &ina233_init_args[1] },
+	{ SENSOR_NUM_PWR_P12V_ACCL_2, sensor_dev_ina233, I2C_BUS4, INA233_12V_2_8_ADDR,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[0],
+	  post_ina233_read, &ina233_tca9543_configs[0], &ina233_init_args[1] },
+
+	/** INA233 12V 3 **/
+	{ SENSOR_NUM_VOL_P12V_ACCL_3, sensor_dev_ina233, I2C_BUS4, INA233_12V_3_9_ADDR,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[0],
+	  post_ina233_read, &ina233_tca9543_configs[0], &ina233_init_args[2] },
+	{ SENSOR_NUM_CUR_P12V_ACCL_3, sensor_dev_ina233, I2C_BUS4, INA233_12V_3_9_ADDR,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[0],
+	  post_ina233_read, &ina233_tca9543_configs[0], &ina233_init_args[2] },
+	{ SENSOR_NUM_PWR_P12V_ACCL_3, sensor_dev_ina233, I2C_BUS4, INA233_12V_3_9_ADDR,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[0],
+	  post_ina233_read, &ina233_tca9543_configs[0], &ina233_init_args[2] },
+
+	/** INA233 12V 4 **/
+	{ SENSOR_NUM_VOL_P12V_ACCL_4, sensor_dev_ina233, I2C_BUS4, INA233_12V_4_10_ADDR,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[0],
+	  post_ina233_read, &ina233_tca9543_configs[0], &ina233_init_args[3] },
+	{ SENSOR_NUM_CUR_P12V_ACCL_4, sensor_dev_ina233, I2C_BUS4, INA233_12V_4_10_ADDR,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[0],
+	  post_ina233_read, &ina233_tca9543_configs[0], &ina233_init_args[3] },
+	{ SENSOR_NUM_PWR_P12V_ACCL_4, sensor_dev_ina233, I2C_BUS4, INA233_12V_4_10_ADDR,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[0],
+	  post_ina233_read, &ina233_tca9543_configs[0], &ina233_init_args[3] },
+
+	/** INA233 12V 5 **/
+	{ SENSOR_NUM_VOL_P12V_ACCL_5, sensor_dev_ina233, I2C_BUS4, INA233_12V_5_11_ADDR,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[0],
+	  post_ina233_read, &ina233_tca9543_configs[0], &ina233_init_args[4] },
+	{ SENSOR_NUM_CUR_P12V_ACCL_5, sensor_dev_ina233, I2C_BUS4, INA233_12V_5_11_ADDR,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[0],
+	  post_ina233_read, &ina233_tca9543_configs[0], &ina233_init_args[4] },
+	{ SENSOR_NUM_PWR_P12V_ACCL_5, sensor_dev_ina233, I2C_BUS4, INA233_12V_5_11_ADDR,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[0],
+	  post_ina233_read, &ina233_tca9543_configs[0], &ina233_init_args[4] },
+
+	/** INA233 12V 6 **/
+	{ SENSOR_NUM_VOL_P12V_ACCL_6, sensor_dev_ina233, I2C_BUS4, INA233_12V_12_ADDR,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[0],
+	  post_ina233_read, &ina233_tca9543_configs[0], &ina233_init_args[5] },
+	{ SENSOR_NUM_CUR_P12V_ACCL_6, sensor_dev_ina233, I2C_BUS4, INA233_12V_12_ADDR,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[0],
+	  post_ina233_read, &ina233_tca9543_configs[0], &ina233_init_args[5] },
+	{ SENSOR_NUM_PWR_P12V_ACCL_6, sensor_dev_ina233, I2C_BUS4, INA233_12V_12_ADDR,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[0],
+	  post_ina233_read, &ina233_tca9543_configs[0], &ina233_init_args[5] },
+
+	/** INA233 12V 7 **/
+	{ SENSOR_NUM_VOL_P12V_ACCL_7, sensor_dev_ina233, I2C_BUS4, INA233_12V_1_7_ADDR,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[1],
+	  post_ina233_read, &ina233_tca9543_configs[1], &ina233_init_args[6] },
+	{ SENSOR_NUM_CUR_P12V_ACCL_7, sensor_dev_ina233, I2C_BUS4, INA233_12V_1_7_ADDR,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[1],
+	  post_ina233_read, &ina233_tca9543_configs[1], &ina233_init_args[6] },
+	{ SENSOR_NUM_PWR_P12V_ACCL_7, sensor_dev_ina233, I2C_BUS4, INA233_12V_1_7_ADDR,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[1],
+	  post_ina233_read, &ina233_tca9543_configs[1], &ina233_init_args[6] },
+
+	/** INA233 12V 8 **/
+	{ SENSOR_NUM_VOL_P12V_ACCL_8, sensor_dev_ina233, I2C_BUS4, INA233_12V_2_8_ADDR,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[1],
+	  post_ina233_read, &ina233_tca9543_configs[1], &ina233_init_args[7] },
+	{ SENSOR_NUM_CUR_P12V_ACCL_8, sensor_dev_ina233, I2C_BUS4, INA233_12V_2_8_ADDR,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[1],
+	  post_ina233_read, &ina233_tca9543_configs[1], &ina233_init_args[7] },
+	{ SENSOR_NUM_PWR_P12V_ACCL_8, sensor_dev_ina233, I2C_BUS4, INA233_12V_2_8_ADDR,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[1],
+	  post_ina233_read, &ina233_tca9543_configs[1], &ina233_init_args[7] },
+
+	/** INA233 12V 9 **/
+	{ SENSOR_NUM_VOL_P12V_ACCL_9, sensor_dev_ina233, I2C_BUS4, INA233_12V_3_9_ADDR,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[1],
+	  post_ina233_read, &ina233_tca9543_configs[1], &ina233_init_args[8] },
+	{ SENSOR_NUM_CUR_P12V_ACCL_9, sensor_dev_ina233, I2C_BUS4, INA233_12V_3_9_ADDR,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[1],
+	  post_ina233_read, &ina233_tca9543_configs[1], &ina233_init_args[8] },
+	{ SENSOR_NUM_PWR_P12V_ACCL_9, sensor_dev_ina233, I2C_BUS4, INA233_12V_3_9_ADDR,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[1],
+	  post_ina233_read, &ina233_tca9543_configs[1], &ina233_init_args[8] },
+
+	/** INA233 12V 10 **/
+	{ SENSOR_NUM_VOL_P12V_ACCL_10, sensor_dev_ina233, I2C_BUS4, INA233_12V_4_10_ADDR,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[1],
+	  post_ina233_read, &ina233_tca9543_configs[1], &ina233_init_args[9] },
+	{ SENSOR_NUM_CUR_P12V_ACCL_10, sensor_dev_ina233, I2C_BUS4, INA233_12V_4_10_ADDR,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[1],
+	  post_ina233_read, &ina233_tca9543_configs[1], &ina233_init_args[9] },
+	{ SENSOR_NUM_PWR_P12V_ACCL_10, sensor_dev_ina233, I2C_BUS4, INA233_12V_4_10_ADDR,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[1],
+	  post_ina233_read, &ina233_tca9543_configs[1], &ina233_init_args[9] },
+
+	/** INA233 12V 11 **/
+	{ SENSOR_NUM_VOL_P12V_ACCL_11, sensor_dev_ina233, I2C_BUS4, INA233_12V_5_11_ADDR,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[1],
+	  post_ina233_read, &ina233_tca9543_configs[1], &ina233_init_args[10] },
+	{ SENSOR_NUM_CUR_P12V_ACCL_11, sensor_dev_ina233, I2C_BUS4, INA233_12V_5_11_ADDR,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[1],
+	  post_ina233_read, &ina233_tca9543_configs[1], &ina233_init_args[10] },
+	{ SENSOR_NUM_PWR_P12V_ACCL_11, sensor_dev_ina233, I2C_BUS4, INA233_12V_5_11_ADDR,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[1],
+	  post_ina233_read, &ina233_tca9543_configs[1], &ina233_init_args[10] },
+
+	/** INA233 12V 12 **/
+	{ SENSOR_NUM_VOL_P12V_ACCL_12, sensor_dev_ina233, I2C_BUS4, INA233_12V_12_ADDR,
+	  PMBUS_READ_VOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[1],
+	  post_ina233_read, &ina233_tca9543_configs[1], &ina233_init_args[11] },
+	{ SENSOR_NUM_CUR_P12V_ACCL_12, sensor_dev_ina233, I2C_BUS4, INA233_12V_12_ADDR,
+	  PMBUS_READ_IOUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[1],
+	  post_ina233_read, &ina233_tca9543_configs[1], &ina233_init_args[11] },
+	{ SENSOR_NUM_PWR_P12V_ACCL_12, sensor_dev_ina233, I2C_BUS4, INA233_12V_12_ADDR,
+	  PMBUS_READ_POUT, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ina233_read, &ina233_tca9543_configs[1],
+	  post_ina233_read, &ina233_tca9543_configs[1], &ina233_init_args[11] },
+};
+
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
 const int ACCL_SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_accl_sensor_config);
 
@@ -552,6 +722,7 @@ void pal_extend_sensor_config()
 	uint8_t index = 0;
 	uint8_t sensor_count = 0;
 	uint8_t hsc_module = get_hsc_module();
+	uint8_t board_revision = get_board_revision();
 
 	switch (hsc_module) {
 	case HSC_MODULE_ADM1272:
@@ -569,6 +740,13 @@ void pal_extend_sensor_config()
 	default:
 		LOG_ERR("Invalid hsc module: 0x%x", hsc_module);
 		break;
+	}
+
+	if (board_revision > EVT1_STAGE) {
+		sensor_count = ARRAY_SIZE(evt2_modify_sensor_config_table);
+		for (index = 0; index < sensor_count; index++) {
+			add_sensor_config(evt2_modify_sensor_config_table[index]);
+		}
 	}
 }
 
@@ -664,10 +842,10 @@ struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus)
 		mutex = &i2c_4_pi4msd5v9542_mutex;
 		break;
 	case I2C_BUS7:
-		mutex = &i2c_7_mutex;
+		mutex = &i2c_7_accl_mutex;
 		break;
 	case I2C_BUS8:
-		mutex = &i2c_8_mutex;
+		mutex = &i2c_8_accl_mutex;
 		break;
 	default:
 		LOG_ERR("No support for i2c bus %d mutex", i2c_bus);

@@ -543,6 +543,11 @@ mux_config pi4msd5v9542_configs[] = {
 	[1] = { .target_addr = 0x70, .channel = PI4MSD5V9542_CHANNEL_1 },
 };
 
+mux_config ina233_tca9543_configs[] = {
+	[0] = { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_0 },
+	[1] = { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_1 },
+};
+
 vr_page_cfg xdpe15284_page[] = {
 	[0] = { .vr_page = PMBUS_PAGE_0 },
 	[1] = { .vr_page = PMBUS_PAGE_1 },

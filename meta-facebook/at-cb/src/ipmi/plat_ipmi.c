@@ -34,6 +34,7 @@
 #include "plat_gpio.h"
 #include "plat_hook.h"
 #include "plat_dev.h"
+#include "fru.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
@@ -468,6 +469,75 @@ void OEM_1S_GET_PCIE_CARD_SENSOR_READING(ipmi_msg *msg)
 	return;
 }
 
+int pal_write_read_accl_fru(uint8_t fru_id, uint8_t option, EEPROM_ENTRY *fru_entry,
+			    uint8_t *status)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fru_entry, -1);
+	CHECK_NULL_ARG_WITH_RETURN(status, -1);
+
+	bool ret = 0;
+	uint8_t dev_id = 0;
+	uint8_t accl_id = 0;
+	uint8_t card_id = 0;
+	mux_config card_mux = { 0 };
+
+	if (option != ACCL_FRU_READ && option != ACCL_FRU_WRITE) {
+		LOG_ERR("Invalid accl fru option: 0x%x", option);
+		return -1;
+	}
+
+	ret = pal_accl_fru_id_map_accl_id_dev_id(fru_id, &accl_id, &dev_id);
+	if (ret != true) {
+		LOG_ERR("Invalid fru id: 0x%x to card id and dev id", fru_id);
+		return -1;
+	}
+
+	// Convert fru id based on different board stage
+	if (accl_id_mapping_card_id(accl_id, &card_id) != 0) {
+		LOG_ERR("Invalid fru id: 0x%x, accl id: 0x%x to map card id", fru_id, accl_id);
+		return -1;
+	}
+
+	ret = card_id_dev_id_map_fru_id(card_id, dev_id, &fru_entry->config.dev_id);
+	if (ret != true) {
+		LOG_ERR("Invalid card id: 0x%x and dev id: 0x%x to map fru id", card_id, dev_id);
+		return -1;
+	}
+
+	ret = get_accl_mux_config(card_id, &card_mux);
+	if (ret != true) {
+		LOG_ERR("Invalid card id: 0x%x to get accl mux config", card_id);
+		return -1;
+	}
+
+	struct k_mutex *mutex = get_i2c_mux_mutex(card_mux.bus);
+	int mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
+	if (mutex_status != 0) {
+		LOG_ERR("Mutex lock fail, status: %d", mutex_status);
+		return -1;
+	}
+
+	ret = set_mux_channel(card_mux, MUTEX_LOCK_ENABLE);
+	if (ret == false) {
+		LOG_ERR("Switch card mux channel fail");
+		k_mutex_unlock(mutex);
+		return -1;
+	}
+
+	if (option == ACCL_FRU_READ) {
+		*status = FRU_read(fru_entry);
+	} else {
+		*status = FRU_write(fru_entry);
+	}
+
+	mutex_status = k_mutex_unlock(mutex);
+	if (mutex_status != 0) {
+		LOG_ERR("Mutex unlock fail, status: %d", mutex_status);
+	}
+
+	return 0;
+}
+
 void STORAGE_READ_FRUID_DATA(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -475,8 +545,7 @@ void STORAGE_READ_FRUID_DATA(ipmi_msg *msg)
 	int ret = 0;
 	uint8_t status = 0;
 	uint8_t fru_id = msg->data[0];
-	uint8_t accl_id = fru_id - ACCL_1_FRU_ID;
-	uint8_t card_id = 0;
+	uint8_t data_len = msg->data[3];
 	EEPROM_ENTRY fru_entry = { 0 };
 
 	if (msg->data_len != 4) {
@@ -484,28 +553,25 @@ void STORAGE_READ_FRUID_DATA(ipmi_msg *msg)
 		return;
 	}
 
-	// Convert fru id based on different board stage
-	ret = accl_id_mapping_card_id(accl_id, &card_id);
-	if (ret != 0) {
-		LOG_ERR("Invalid fru id: 0x%x, accl id: 0x%x", fru_id, accl_id);
-		msg->completion_code = CC_INVALID_PARAM;
-		return;
-	}
-
-	fru_id = card_id + ACCL_1_FRU_ID;
-	fru_entry.config.dev_id = fru_id;
-	fru_entry.offset = (msg->data[2] << 8) | msg->data[1];
-	fru_entry.data_len = msg->data[3];
-
 	// According to IPMI, messages are limited to 32 bytes
-	if (fru_entry.data_len > 32) {
+	if (data_len > 32) {
 		msg->completion_code = CC_LENGTH_EXCEEDED;
 		return;
 	}
 
-	// Convert fru id based on different board stage
+	fru_entry.config.dev_id = fru_id;
+	fru_entry.offset = (msg->data[2] << 8) | msg->data[1];
+	fru_entry.data_len = data_len;
 
-	status = FRU_read(&fru_entry);
+	if (fru_id == CB_FRU_ID || fru_id == FIO_FRU_ID) {
+		status = FRU_read(&fru_entry);
+	} else {
+		ret = pal_write_read_accl_fru(fru_id, ACCL_FRU_READ, &fru_entry, &status);
+		if (ret != 0) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+	}
 
 	msg->data_len = fru_entry.data_len + 1;
 	msg->data[0] = fru_entry.data_len;
@@ -539,36 +605,43 @@ void STORAGE_WRITE_FRUID_DATA(ipmi_msg *msg)
 	int ret = 0;
 	uint8_t status = 0;
 	uint8_t fru_id = msg->data[0];
-	uint8_t accl_id = fru_id - ACCL_1_FRU_ID;
-	uint8_t card_id = 0;
+	uint8_t data_len = msg->data_len - 3; // skip id and offset
 	EEPROM_ENTRY fru_entry = { 0 };
 
-	if (msg->data_len != 4) {
-		msg->completion_code = CC_INVALID_LENGTH;
-		return;
-	}
-
-	// Convert fru id based on different board stage
-	ret = accl_id_mapping_card_id(accl_id, &card_id);
-	if (ret != 0) {
-		LOG_ERR("Invalid fru id: 0x%x, accl id: 0x%x", fru_id, accl_id);
+	if (fru_id >= ACCL_1_CH1_FREYA_FRU_ID) {
+		LOG_ERR("Not support ACCL freya fru write, fru id: 0x%x", fru_id);
 		msg->completion_code = CC_INVALID_PARAM;
 		return;
 	}
 
-	fru_id = card_id + ACCL_1_FRU_ID;
-	fru_entry.config.dev_id = fru_id;
-	fru_entry.offset = (msg->data[2] << 8) | msg->data[1];
-	fru_entry.data_len = msg->data_len - 3; // skip id and offset
-	if (fru_entry.data_len > 32) { // According to IPMI, messages are limited to 32 bytes
+	if (msg->data_len < 4) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	// According to IPMI, messages are limited to 32 bytes
+	if (data_len > 32) {
 		msg->completion_code = CC_LENGTH_EXCEEDED;
 		return;
 	}
+
+	fru_entry.config.dev_id = fru_id;
+	fru_entry.offset = (msg->data[2] << 8) | msg->data[1];
+	fru_entry.data_len = data_len;
 	memcpy(&fru_entry.data[0], &msg->data[3], fru_entry.data_len);
 
-	msg->data[0] = msg->data_len - 3;
+	if (fru_id == CB_FRU_ID || fru_id == FIO_FRU_ID) {
+		status = FRU_write(&fru_entry);
+	} else {
+		ret = pal_write_read_accl_fru(fru_id, ACCL_FRU_WRITE, &fru_entry, &status);
+		if (ret != 0) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+	}
+
+	msg->data[0] = data_len;
 	msg->data_len = 1;
-	status = FRU_write(&fru_entry);
 
 	switch (status) {
 	case FRU_WRITE_SUCCESS:
