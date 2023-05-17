@@ -680,12 +680,19 @@ sensor_cfg plat_cxl_sensor_config[] = {
 	  post_cxl_xdpe12284c_read, NULL, NULL, &cxl_mux_configs[3] },
 };
 
+sensor_cfg evt2_extend_sensor_config[] = {
+	{ SENSOR_NUM_TEMP_TMP75_OUT, sensor_dev_tmp75, I2C_BUS1, TMP75_OUT_ADDR, TMP75_TEMP_OFFSET,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+};
+
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
 const int MC_SQ52205_SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_mc_sq52205_sensor_config);
 const int MC_INA233_SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_mc_ina233_sensor_config);
 const int E1S_SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_e1s_1_12_sensor_config);
 const int CXL_SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_cxl_sensor_config);
 const int HSC_SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_hsc_mp5990_sensor_config);
+const int EVT2_EXTEND_SENSOR_CONFIG_SIZE = ARRAY_SIZE(evt2_extend_sensor_config);
 
 void pal_extend_sensor_config()
 {
@@ -702,6 +709,9 @@ void pal_extend_sensor_config()
 	case REV_DVT:
 	case REV_PVT:
 	case REV_MP:
+		for (int index = 0; index < EVT2_EXTEND_SENSOR_CONFIG_SIZE; index++) {
+			add_sensor_config(evt2_extend_sensor_config[index]);
+		}
 		break;
 	default:
 		LOG_ERR("Unknown board revision %x", board_revision);
@@ -744,6 +754,7 @@ uint8_t pal_get_extend_sensor_config()
 	case REV_DVT:
 	case REV_PVT:
 	case REV_MP:
+		extend_sensor_config_size += EVT2_EXTEND_SENSOR_CONFIG_SIZE;
 		break;
 	default:
 		LOG_ERR("Unknown board revision %x", board_revision);
