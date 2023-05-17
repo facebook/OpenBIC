@@ -645,7 +645,7 @@ int pldm_send_ipmi_request(ipmi_msg *msg)
 		return false;
 	}
 
-	struct _pldm_ipmi_cmd_resp *resp = (struct _pldm_ipmi_cmd_resp *)rbuf;
+	struct _ipmi_cmd_resp  *resp = (struct _ipmi_cmd_resp  *)rbuf;
 
 	if ((resp->completion_code != MCTP_SUCCESS)) {
 		resp->ipmi_comp_code = CC_UNSPECIFIED_ERROR;
@@ -654,10 +654,10 @@ int pldm_send_ipmi_request(ipmi_msg *msg)
 	msg->completion_code = resp->ipmi_comp_code;
 	msg->netfn = resp->netfn_lun >> 2;
 	msg->cmd = resp->cmd;
-	// MCTP CC, Netfn, cmd, ipmi CC
-	if (res_len > 4) {
-		msg->data_len = res_len - 4;
-		memcpy(msg->data, &rbuf[4], msg->data_len);
+	// MCTP CC, IANA, Netfn, cmd, ipmi CC
+	if (res_len > 7) {
+		msg->data_len = res_len - 7;
+		memcpy(msg->data, &rbuf[7], msg->data_len);
 	} else {
 		msg->data_len = 0;
 	}
