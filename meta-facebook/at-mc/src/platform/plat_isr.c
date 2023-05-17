@@ -131,7 +131,7 @@ void cxl_set_eid_work_handler(struct k_work *work_item)
 	}
 
 	/** Set endpoint id **/
-	set_cxl_endpoint(MCTP_EID_CXL, work_info->cxl_card_id);
+	get_set_cxl_endpoint(work_info->cxl_card_id, MCTP_EID_CXL);
 
 	/** mutex unlock bus **/
 	k_mutex_unlock(meb_mutex);
