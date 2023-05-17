@@ -174,22 +174,7 @@ uint8_t get_mctp_info(uint8_t dest_endpoint, mctp **mctp_inst, mctp_ext_params *
 	return ret;
 }
 
-static void set_endpoint_resp_handler(void *args, uint8_t *buf, uint16_t len)
-{
-	CHECK_NULL_ARG(args);
-	CHECK_NULL_ARG(buf);
-	LOG_HEXDUMP_INF(buf, len, __func__);
-}
-
-static void set_endpoint_resp_timeout(void *args)
-{
-	CHECK_NULL_ARG(args);
-	mctp_ext_params *ext_params = (mctp_ext_params *)args;
-	LOG_ERR("Endpoint 0x%x set endpoint fail, addr: 0x%x", ext_params->ep,
-		ext_params->smbus_ext_params.addr);
-}
-
-void set_cxl_endpoint(uint8_t eid, uint8_t cxl_card_id)
+void get_set_cxl_endpoint(uint8_t cxl_card_id, uint8_t eid)
 {
 	uint8_t ret = 0;
 	mctp *mctp_inst = NULL;
@@ -202,24 +187,42 @@ void set_cxl_endpoint(uint8_t eid, uint8_t cxl_card_id)
 	}
 
 	CHECK_NULL_ARG(mctp_inst);
-	struct _set_eid_req req = { 0 };
-	req.op = SET_EID_REQ_OP_SET_EID;
-	req.eid = eid;
 
-	msg.hdr.cmd = MCTP_CTRL_CMD_SET_ENDPOINT_ID;
+	/** Get eid from CXL **/
+	msg.hdr.cmd = MCTP_CTRL_CMD_GET_ENDPOINT_ID;
 	msg.hdr.rq = MCTP_REQUEST;
-	msg.cmd_data = (uint8_t *)&req;
-	msg.cmd_data_len = sizeof(req);
-	msg.recv_resp_cb_fn = set_endpoint_resp_handler;
-	msg.timeout_cb_fn = set_endpoint_resp_timeout;
-	msg.timeout_cb_fn_args = &msg.ext_params;
+	msg.cmd_data_len = 0;
 
-	ret = mctp_ctrl_send_msg(mctp_inst, &msg);
-	if (ret == MCTP_SUCCESS) {
-		set_cxl_eid_flag(cxl_card_id, SET_EID_FLAG);
-	} else {
-		LOG_ERR("Send mctp control msg fail");
+	struct _get_eid_resp get_eid_resp = { 0 };
+	ret = mctp_ctrl_read(mctp_inst, &msg, (uint8_t *)&get_eid_resp, sizeof(get_eid_resp));
+	if (ret != MCTP_SUCCESS) {
+		LOG_ERR("Fail to get eid, cxl id: 0x%x", cxl_card_id);
+		return;
 	}
+
+	/** Set eid if the getting eid is not match with stored eid **/
+	if (get_eid_resp.eid != eid) {
+		memset(&msg, 0, sizeof(mctp_ctrl_msg));
+
+		struct _set_eid_req set_eid_req = { 0 };
+		struct _set_eid_resp set_eid_resp = { 0 };
+		set_eid_req.op = SET_EID_REQ_OP_SET_EID;
+		set_eid_req.eid = eid;
+
+		msg.hdr.cmd = MCTP_CTRL_CMD_SET_ENDPOINT_ID;
+		msg.hdr.rq = MCTP_REQUEST;
+		msg.cmd_data = (uint8_t *)&set_eid_req;
+		msg.cmd_data_len = sizeof(set_eid_req);
+
+		ret = mctp_ctrl_read(mctp_inst, &msg, (uint8_t *)&set_eid_resp,
+				     sizeof(set_eid_resp));
+		if (ret != MCTP_SUCCESS) {
+			LOG_ERR("Fail to set eid, card id: 0x%x", cxl_card_id);
+			return;
+		}
+	}
+
+	set_cxl_eid_flag(cxl_card_id, SET_EID_FLAG);
 }
 
 int pal_pldm_send_ipmi_request(ipmi_msg *msg, uint8_t eid)

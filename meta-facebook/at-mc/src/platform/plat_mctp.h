@@ -46,7 +46,7 @@
 #define CLEAR_EID_FLAG false
 
 void plat_mctp_init(void);
-void set_cxl_endpoint(uint8_t eid, uint8_t cxl_card_id);
+void get_set_cxl_endpoint(uint8_t cxl_card_id, uint8_t eid);
 bool get_cxl_eid_flag(uint8_t cxl_card_id);
 void set_cxl_eid_flag(uint8_t cxl_card_id, bool value);
 int pal_pldm_send_ipmi_request(ipmi_msg *msg, uint8_t eid);

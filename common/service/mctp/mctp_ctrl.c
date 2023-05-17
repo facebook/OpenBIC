@@ -235,11 +235,52 @@ send_msg:
 	return mctp_send_msg(mctp_inst, resp_buf, resp_len, ext_params);
 }
 
+void mctp_ctrl_read_resp_handler(void *args, uint8_t *read_buf, uint16_t read_len)
+{
+	CHECK_NULL_ARG(args);
+	CHECK_NULL_ARG(read_buf);
+
+	uint8_t status = 0;
+	mctp_ctrl_resp_arg *resp_arg = (mctp_ctrl_resp_arg *)args;
+
+	if (read_len > resp_arg->read_len) {
+		LOG_WRN("Response length(%d) is greater than buffer length(%d)", read_len,
+			resp_arg->read_len);
+		resp_arg->return_len = resp_arg->read_len;
+	} else {
+		resp_arg->return_len = read_len;
+	}
+
+	/* Return first data is completion code */
+	if (read_buf[0] != MCTP_CTRL_CC_SUCCESS) {
+		LOG_ERR("Return code status(0x%x)", read_buf[0]);
+		status = MCTP_CTRL_READ_STATUS_CC_ERROR;
+	} else {
+		memcpy(resp_arg->read_buf, read_buf, resp_arg->return_len);
+		status = MCTP_CTRL_READ_STATUS_SUCCESS;
+	}
+
+	k_msgq_put(resp_arg->msgq, &status, K_NO_WAIT);
+}
+
+void mctp_ctrl_read_timeout_handler(void *args)
+{
+	CHECK_NULL_ARG(args);
+
+	struct k_msgq *msgq = (struct k_msgq *)args;
+	uint8_t status = MCTP_CTRL_READ_STATUS_TIMEOUT;
+
+	k_msgq_put(msgq, &status, K_NO_WAIT);
+}
+
 uint8_t mctp_ctrl_send_msg(void *mctp_p, mctp_ctrl_msg *msg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_p, MCTP_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(msg, MCTP_ERROR);
-	CHECK_NULL_ARG_WITH_RETURN(msg->cmd_data, MCTP_ERROR);
+
+	if (msg->cmd_data_len != 0) {
+		CHECK_NULL_ARG_WITH_RETURN(msg->cmd_data, MCTP_ERROR);
+	}
 
 	mctp *mctp_inst = (mctp *)mctp_p;
 	wait_msg *p = NULL;
@@ -291,6 +332,67 @@ uint8_t mctp_ctrl_send_msg(void *mctp_p, mctp_ctrl_msg *msg)
 	}
 
 	return MCTP_SUCCESS;
+}
+
+uint8_t mctp_ctrl_read(void *mctp_p, mctp_ctrl_msg *msg, uint8_t *read_buf, uint16_t read_len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_p, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(msg, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(read_buf, MCTP_ERROR);
+
+	if (msg->cmd_data_len != 0) {
+		CHECK_NULL_ARG_WITH_RETURN(msg->cmd_data, MCTP_ERROR);
+	}
+
+	uint8_t ret = MCTP_ERROR;
+	uint8_t status = 0;
+	uint8_t status_msgq_buf[1];
+	struct k_msgq *status_msgq = (struct k_msgq *)malloc(sizeof(struct k_msgq));
+	if (status_msgq == NULL) {
+		LOG_ERR("Fail to allocate status_msgq");
+		return ret;
+	}
+
+	k_msgq_init(status_msgq, status_msgq_buf, sizeof(uint8_t), 1);
+
+	mctp_ctrl_resp_arg *resp_arg = (mctp_ctrl_resp_arg *)malloc(sizeof(mctp_ctrl_resp_arg));
+	if (resp_arg == NULL) {
+		SAFE_FREE(status_msgq);
+		LOG_ERR("Fail to allocate resp_arg");
+		return ret;
+	}
+
+	resp_arg->msgq = status_msgq;
+	resp_arg->read_buf = read_buf;
+	resp_arg->read_len = read_len;
+	resp_arg->return_len = 0;
+
+	msg->recv_resp_cb_fn = mctp_ctrl_read_resp_handler;
+	msg->recv_resp_cb_args = (void *)resp_arg;
+	msg->timeout_cb_fn = mctp_ctrl_read_timeout_handler;
+	msg->timeout_cb_fn_args = (void *)status_msgq;
+	msg->timeout_ms = DEFAULT_WAIT_TO_MS;
+
+	if (mctp_ctrl_send_msg(mctp_p, msg) == MCTP_ERROR) {
+		LOG_ERR("Fail to send ctrl msg");
+		goto exit;
+	}
+
+	if (k_msgq_get(status_msgq, &status, K_FOREVER)) {
+		LOG_ERR("Fail to get status from msgq");
+		goto exit;
+	}
+
+	if (status == MCTP_CTRL_READ_STATUS_SUCCESS) {
+		ret = MCTP_SUCCESS;
+	} else {
+		LOG_ERR("MCTP ctrl status: 0x%x", status);
+	}
+
+exit:
+	SAFE_FREE(resp_arg);
+	SAFE_FREE(status_msgq);
+	return ret;
 }
 
 K_THREAD_DEFINE(monitor_tid, 1024, mctp_ctrl_msg_timeout_monitor, NULL, NULL, NULL, 0, 0, 0);

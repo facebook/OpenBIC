@@ -869,7 +869,7 @@ void cxl_mb_status_init(uint8_t cxl_id)
 			return;
 		}
 
-		set_cxl_endpoint(MCTP_EID_CXL, cxl_id);
+		get_set_cxl_endpoint(cxl_id, MCTP_EID_CXL);
 	}
 
 	k_mutex_unlock(meb_mutex);

@@ -37,6 +37,12 @@ typedef struct _mctp_ctrl_cmd_handler {
 #define MCTP_CTRL_CMD_SET_ENDPOINT_ID 0x01
 #define MCTP_CTRL_CMD_GET_ENDPOINT_ID 0x02
 
+#define MCTP_CTRL_CMD_GET_ENDPOINT_ID_REQ_LEN 0x00
+
+#define MCTP_CTRL_READ_STATUS_SUCCESS 0x00
+#define MCTP_CTRL_READ_STATUS_CC_ERROR 0x01
+#define MCTP_CTRL_READ_STATUS_TIMEOUT 0x02
+
 /*
  * MCTP Control Completion Codes
  * See DSP0236 v1.3.0 Table 13.
@@ -112,9 +118,17 @@ typedef struct {
 	void *timeout_cb_fn_args;
 } mctp_ctrl_msg;
 
+typedef struct _mctp_ctrl_resp_arg {
+	struct k_msgq *msgq;
+	uint8_t *read_buf;
+	uint16_t read_len;
+	uint16_t return_len;
+} mctp_ctrl_resp_arg;
+
 uint8_t mctp_ctrl_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_params ext_params);
 
 uint8_t mctp_ctrl_send_msg(void *mctp_p, mctp_ctrl_msg *msg);
+uint8_t mctp_ctrl_read(void *mctp_p, mctp_ctrl_msg *msg, uint8_t *read_buf, uint16_t read_len);
 
 #ifdef __cplusplus
 }
