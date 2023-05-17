@@ -33,7 +33,7 @@ stage_map = {
 
 # Supported boards for each platform.
 valid_projects = {
-    "at": {"cb", },
+    "at": {"cb", "mc", },
     "gt": {"cc", },
     "wc": {"mb", },
     "yv3": {"dl", "vf", },
@@ -43,6 +43,7 @@ valid_projects = {
 # Numeric encoding of boards.
 board_map = {
     # AT
+    "mc": "00001",
     "cb": "00010",
     # GT
     "cc": "00001",
