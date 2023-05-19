@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -32,6 +32,7 @@
 #define I2C_DATA_SIZE 5
 #define NUMBER_OF_ADC_CHANNEL 16
 #define AST1030_ADC_BASE_ADDR 0x7e6e9000
+#define HSC_TYPE_ADC_TOLERANCE 0.2 // V
 
 #define MAX_1OU_M2_COUNT 4
 
