@@ -38,6 +38,7 @@ enum GET_SET_M2_OPTION {
 #define MAX_1OU_M2_COUNT 4
 
 void send_gpio_interrupt(uint8_t gpio_num);
+void ISR_SLP3();
 void PWRGD_CPU_ACTIVE_HANDLE();
 void ISR_BMC_PRDY();
 void ISR_CATERR();
