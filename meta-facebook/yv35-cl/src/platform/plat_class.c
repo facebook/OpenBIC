@@ -359,6 +359,18 @@ void init_platform_config()
 				}
 			}
 		}
+	} else {
+		// If 1ou card not present, disable ADC6(CARD_TYPE_EXP) and set it to GPIO to avoid floating
+		uint32_t read_value = 0;
+		// Disable ADC channel 6: ADC000[22]
+		read_value = sys_read32(REG_ADC_BASE + 0x000);
+		read_value = CLEARBIT(read_value, 22);
+		sys_write32(read_value, REG_ADC_BASE + 0x000);
+
+		// Multi-function pin ctl #5: SCU430[30] is GPIT6
+		read_value = sys_read32(REG_SCU + 0x430);
+		read_value = SETBIT(read_value, 30);
+		sys_write32(read_value, REG_SCU + 0x430);
 	}
 
 	if (_2ou_status.present) {

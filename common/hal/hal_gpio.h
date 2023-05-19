@@ -58,6 +58,7 @@
 #define OPEN_DRAIN 0
 #define PUSH_PULL 1
 
+#define REG_ADC_BASE 0x7e6e9000
 #define REG_GPIO_BASE 0x7e780000
 #define REG_SCU 0x7E6E2000
 #define REG_DIRECTION_OFFSET 4
