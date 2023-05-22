@@ -28,6 +28,7 @@
 #include "pldm.h"
 #include "plat_def.h"
 #include "libutil.h"
+#include "ipmb.h"
 
 LOG_MODULE_REGISTER(kcs);
 
@@ -102,11 +103,7 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 			LOG_DBG("KCS to ipmi netfn 0x%x, cmd 0x%x, length %d",
 				current_msg.buffer.netfn, current_msg.buffer.cmd,
 				current_msg.buffer.data_len);
-
-			while (k_msgq_put(&ipmi_msgq, &current_msg, K_NO_WAIT) != 0) {
-				k_msgq_purge(&ipmi_msgq);
-				LOG_WRN("KCS retrying put ipmi msgq");
-			}
+			ipmb_notify_client(&current_msg);
 		} else { // default command for BMC, should add BIC firmware update, BMC reset, real time sensor read in future
 			if (pal_immediate_respond_from_HOST(req->netfn, req->cmd)) {
 				do { // break if malloc fail.

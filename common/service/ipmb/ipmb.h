@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -198,6 +198,7 @@ ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index);
 ipmb_error ipmb_read(ipmi_msg *msg, uint8_t bus);
 void ipmb_tx_suspend(uint8_t index);
 void ipmb_tx_resume(uint8_t index);
+ipmb_error ipmb_notify_client(ipmi_msg_cfg *msg_cfg);
 
 void pal_encode_response_bridge_cmd(ipmi_msg *bridge_msg, ipmi_msg_cfg *current_msg_rx,
 				    IPMB_config *ipmb_cfg, IPMB_config *IPMB_config_tables);

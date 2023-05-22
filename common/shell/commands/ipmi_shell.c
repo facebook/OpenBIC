@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -41,13 +41,7 @@ void cmd_ipmi_raw(const struct shell *shell, size_t argc, char **argv)
 	for (int i = 0; i < data_len; i++) {
 		msg.buffer.data[i] = strtol(argv[3 + i], NULL, 16);
 	}
-
-	int retry = 0;
-	while (k_msgq_put(&ipmi_msgq, &msg, K_NO_WAIT) != 0 && retry < 3) {
-		k_msgq_purge(&ipmi_msgq);
-		shell_error(shell, "Retry to put msg into ipmi msgq...");
-		retry++;
-	}
+	ipmb_notify_client(&msg);
 
 	if (k_msgq_get(&self_ipmi_msgq, &msg, K_MSEC(1000))) {
 		shell_error(shell, "Failed to get ipmi msgq in time");
@@ -95,7 +89,7 @@ void cmd_ipmi_list(const struct shell *shell, size_t argc, char **argv)
 			msg.buffer.data_len = ARRAY_SIZE(dummy_msg);
 			memcpy(msg.buffer.data, dummy_msg, ARRAY_SIZE(dummy_msg));
 
-			if (k_msgq_put(&ipmi_msgq, &msg, K_NO_WAIT)) {
+			if (ipmb_notify_client(&msg)) {
 				shell_error(shell, "Failed to send req netfn:0x%x cmd:0x%x...",
 					    netfn_idx, cmd_idx);
 				continue;

@@ -16,6 +16,7 @@
 
 #include "pldm.h"
 #include "ipmi.h"
+#include "ipmb.h"
 #include "libutil.h"
 #include <logging/log.h>
 #include <string.h>
@@ -136,10 +137,7 @@ static uint8_t ipmi_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t ins
 	/* store the pldm header in the buffer */
 	memcpy(msg.buffer.data + pldm_hdr_ofs, buf - sizeof(pldm_hdr), sizeof(pldm_hdr));
 
-	while (k_msgq_put(&ipmi_msgq, &msg, K_NO_WAIT) != 0) {
-		k_msgq_purge(&ipmi_msgq);
-		LOG_WRN("Retrying put ipmi msgq");
-	}
+	ipmb_notify_client(&msg);
 
 	return PLDM_LATER_RESP;
 }
