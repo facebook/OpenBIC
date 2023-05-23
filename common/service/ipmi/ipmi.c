@@ -158,6 +158,11 @@ static uint8_t send_msg_by_pldm(ipmi_msg_cfg *msg_cfg)
 	return 1;
 }
 
+__weak bool pal_set_dimm_presence_status(uint8_t *buf)
+{
+	return false;
+}
+
 __weak bool pal_request_msg_to_BIC_from_HOST(uint8_t netfn, uint8_t cmd)
 {
 	if (netfn == NETFN_OEM_1S_REQ) {

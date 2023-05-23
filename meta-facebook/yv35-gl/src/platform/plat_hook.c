@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -28,6 +28,7 @@
 #include "plat_hook.h"
 #include "plat_sensor_table.h"
 #include "plat_gpio.h"
+#include "plat_dimm.h"
 
 #define RDPKG_IDX_DIMM_TEMP 0x0E
 
@@ -139,62 +140,20 @@ bool pre_intel_peci_dimm_read(sensor_cfg *cfg, void *args)
 		return true;
 	}
 
-	const uint8_t read_type = cfg->offset;
-	//Check DIMM Channel
-	if (read_type <= PECI_UNKNOWN || read_type >= PECI_MAX) {
-		LOG_DBG("Sensor not found");
+	if (!is_dimm_inited()) {
+		return true;
+	}
+
+	//Check DIMM is present.
+	uint8_t dimm_id = DIMM_ID_UNKNOWN;
+
+	dimm_id = sensor_num_map_dimm_id(cfg->num);
+	if (dimm_id == DIMM_ID_UNKNOWN) {
+		LOG_ERR("DIMM id is unknown");
 		return false;
 	}
 
-	uint16_t dimm_channel = 0xFF;
-	const uint8_t rlen = 0x05;
-	uint8_t rbuf[rlen];
-	memset(rbuf, 0, sizeof(rbuf));
-
-	switch (read_type) {
-	case PECI_TEMP_CHANNEL0_DIMM0:
-	case PECI_TEMP_CHANNEL0_DIMM1:
-		dimm_channel = 0x00;
-		break;
-	case PECI_TEMP_CHANNEL1_DIMM0:
-	case PECI_TEMP_CHANNEL1_DIMM1:
-		dimm_channel = 0x01;
-		break;
-	case PECI_TEMP_CHANNEL2_DIMM0:
-	case PECI_TEMP_CHANNEL2_DIMM1:
-		dimm_channel = 0x02;
-		break;
-	case PECI_TEMP_CHANNEL3_DIMM0:
-	case PECI_TEMP_CHANNEL3_DIMM1:
-		dimm_channel = 0x03;
-		break;
-	case PECI_TEMP_CHANNEL4_DIMM0:
-	case PECI_TEMP_CHANNEL4_DIMM1:
-		dimm_channel = 0x04;
-		break;
-	case PECI_TEMP_CHANNEL5_DIMM0:
-	case PECI_TEMP_CHANNEL5_DIMM1:
-		dimm_channel = 0x05;
-		break;
-	case PECI_TEMP_CHANNEL6_DIMM0:
-	case PECI_TEMP_CHANNEL6_DIMM1:
-		dimm_channel = 0x06;
-		break;
-	case PECI_TEMP_CHANNEL7_DIMM0:
-	case PECI_TEMP_CHANNEL7_DIMM1:
-		dimm_channel = 0x07;
-		break;
-	default:
-		break;
-	}
-
-	//Check DIMM is present. DIMM is absent if return code is 0x90.
-	if (peci_read(PECI_CMD_RD_PKG_CFG0, cfg->target_addr, RDPKG_IDX_DIMM_TEMP, dimm_channel,
-		      rlen, rbuf) == 0x90) {
-		/* TODO:
-		 * Disable PMIC sensor polling if the DIMM is absent.
-		 */
-
+	if (!get_dimm_presence_status(dimm_id)) {
 		return false;
 	}
 

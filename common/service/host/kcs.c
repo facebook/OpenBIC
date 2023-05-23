@@ -136,6 +136,14 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 					LOG_ERR("Record bios fw version fail");
 				}
 			}
+			if ((req->netfn == NETFN_OEM_Q_REQ) &&
+			    (req->cmd == CMD_OEM_Q_SET_DIMM_INFO) &&
+			    (req->data[4] == CMD_DIMM_LOCATION)) {
+				int ret = pal_set_dimm_presence_status(ibuf);
+				if (!ret) {
+					LOG_ERR("Set dimm presence status fail");
+				}
+			}
 			bridge_msg.data_len = rc - 2; // exclude netfn, cmd
 			bridge_msg.seq_source = 0xff; // No seq for KCS
 			bridge_msg.InF_source = HOST_KCS_1 + kcs_inst->index;

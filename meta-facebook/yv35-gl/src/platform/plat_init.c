@@ -21,6 +21,7 @@
 #include "plat_class.h"
 #include "plat_gpio.h"
 #include "plat_kcs.h"
+#include "plat_dimm.h"
 
 /*
  * The operating voltage of GPIO input pins are lower than actual voltage because the chip 
@@ -67,6 +68,11 @@ void pal_set_sys_status()
 	set_CPU_power_status(PWRGD_CPU_LVC3);
 	set_post_thread();
 	set_sys_ready_pin(BIC_READY);
+}
+
+void pal_device_init()
+{
+	init_dimm_status();
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78
