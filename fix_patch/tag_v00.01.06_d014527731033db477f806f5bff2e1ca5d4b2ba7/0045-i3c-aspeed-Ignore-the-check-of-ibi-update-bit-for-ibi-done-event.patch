@@ -1,0 +1,47 @@
+From 5379c492d302eed008a5314cfbfb802076757176 Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Mon, 8 May 2023 16:03:39 +0800
+Subject: [PATCH] i3c: aspeed: Ignore the check of ibi update bit for ibi done
+ event
+
+The IBI (In-Band Interrupt) update interrupt status does not guarantee
+that the IBI update response status has been updated and increased the
+number of responses. During I3C stress testing, it is possible for the IBI
+update interrupt status to be cleared by the previous response ready
+interrupt.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I6a8200f84517515924c496bb9518aa8afd72d3bb
+---
+ drivers/i3c/i3c_aspeed.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index cdbe748f5d..81ce30aca7 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -831,7 +831,7 @@ static void i3c_aspeed_slave_resp_handler(struct i3c_aspeed_obj *obj, union i3c_
+ 				cb->write_done(obj->slave_data.dev);
+ 			}
+ 		} else {
+-			if (status.fields.ibi_update && resp.fields.tid == SLAVE_TID_IBI_DONE) {
++			if (resp.fields.tid == SLAVE_TID_IBI_DONE) {
+ 				osEventFlagsSet(obj->ibi_event, status.value);
+ 			} else if (resp.fields.tid == SLAVE_TID_MASTER_READ_DATA) {
+ 				osEventFlagsSet(obj->data_event, status.value);
+@@ -1616,7 +1616,6 @@ int i3c_aspeed_slave_put_read_data(const struct device *dev, struct i3c_slave_pa
+ 
+ 		osEventFlagsClear(obj->ibi_event, ~osFlagsError);
+ 		events.value = 0;
+-		events.fields.ibi_update = 1;
+ 		events.fields.resp_q_ready = 1;
+ 
+ 		i3c_register->queue_thld_ctrl.fields.resp_q_thld = 1 - 1;
+@@ -1694,7 +1693,6 @@ int i3c_aspeed_slave_send_sir(const struct device *dev, struct i3c_ibi_payload *
+ 
+ 	osEventFlagsClear(obj->ibi_event, ~osFlagsError);
+ 	events.value = 0;
+-	events.fields.ibi_update = 1;
+ 	events.fields.resp_q_ready = 1;
+ 
+ 	i3c_register->queue_thld_ctrl.fields.resp_q_thld = 1 - 1;
