@@ -18,5 +18,7 @@
 #define XDPE15284_H
 
 bool xdpe15284_get_checksum(uint8_t bus, uint8_t addr, uint8_t *checksum);
+bool xdpe15284_lock_reg(uint8_t bus, uint8_t addr);
+bool xdpe15284_unlock_reg(uint8_t bus, uint8_t addr);
 
 #endif

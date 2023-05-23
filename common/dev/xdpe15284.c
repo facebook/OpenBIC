@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -25,12 +25,15 @@
 
 LOG_MODULE_REGISTER(xdpe15284);
 
+#define XDPE15284_MFR_DISABLE_SECURITY_ONCE 0xCB
 #define XDPE15284_MFR_FW_CMD_REG 0xFE
 #define XDPE15284_MFR_FW_CMD_DATA_REG 0xFD
 #define XDPE15284_MFR_FW_CMD_DATA_LEN 5
 #define XDPE15284_NOP_CMD 0x00
 #define XDPE15284_CALCULATE_CRC_CMD 0x2D
 #define XDPE15284_CALCULATE_CRC_DELAY_MS 10
+
+const uint32_t REG_LOCK_PASSWORD = 0x7F48680C;
 
 bool xdpe15284_get_checksum(uint8_t bus, uint8_t addr, uint8_t *checksum)
 {
@@ -136,6 +139,48 @@ uint8_t xdpe15284_read(uint8_t sensor_num, int *reading)
 
 	return SENSOR_READ_SUCCESS;
 }
+
+bool xdpe15284_lock_reg(uint8_t bus, uint8_t addr) {
+	I2C_MSG i2c_msg = { 0 };
+	int retry = 3;
+
+	/* Reset the MFR data register to default value */
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+	i2c_msg.tx_len = 6;
+	i2c_msg.data[0] = XDPE15284_MFR_DISABLE_SECURITY_ONCE;
+	i2c_msg.data[1] = 0x04;
+	i2c_msg.data[2] = 0x00;
+	i2c_msg.data[3] = 0x00;
+	i2c_msg.data[4] = 0x00;
+
+	if (i2c_master_write(&i2c_msg, retry)) {
+		LOG_ERR("Lock register fail");
+		return false;
+	}
+	return true;
+}
+
+bool xdpe15284_unlock_reg(uint8_t bus, uint8_t addr) {
+	I2C_MSG i2c_msg = { 0 };
+	int retry = 3;
+
+	/* Reset the MFR data register to default value */
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+	i2c_msg.tx_len = 6;
+	i2c_msg.data[0] = XDPE15284_MFR_DISABLE_SECURITY_ONCE;
+	i2c_msg.data[1] = 0x04;
+	memcpy(&(i2c_msg.data[2]), (uint8_t *)&REG_LOCK_PASSWORD, 4);
+
+	if (i2c_master_write(&i2c_msg, retry)) {
+		LOG_ERR("Unlock register fail");
+		return false;
+	}
+	k_usleep(300);
+	return true;
+}
+
 
 uint8_t xdpe15284_init(uint8_t sensor_num)
 {
