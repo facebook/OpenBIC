@@ -176,25 +176,25 @@ void init_hsc_module(uint8_t board_revision)
 		case SYS_BOARD_PVT_HOTSWAP:
 		case SYS_BOARD_MP_HOTSWAP:
 			/* Follow the GPIO table, the HSC device type can be by ADC7(net name: HSC_TYPE_ADC)
-      * If the voltage of ADC-7 is 0.5V(+/- 15%), the hotswap model is ADM1278.
-      * If the voltage of ADC-7 is 1.0V(+/- 15%), the hotswap model is LTC4282.
-      * If the voltage of ADC-7 is 1.5V(+/- 15%), the hotswap model is LTC4286.
+      * If the voltage of ADC-7 is 0.5V(+/- 0.2V), the hotswap model is ADM1278.
+      * If the voltage of ADC-7 is 1.0V(+/- 0.2V), the hotswap model is LTC4282.
+      * If the voltage of ADC-7 is 1.5V(+/- 0.2V), the hotswap model is LTC4286.
       */
 			ret = get_adc_voltage(CHANNEL_7, &voltage_hsc_type_adc);
 			if (ret == false) {
 				LOG_ERR("Fail to get hsc type by adc");
 				break;
 			}
-			if ((voltage_hsc_type_adc > 0.5 - (0.5 * 0.15)) &&
-			    (voltage_hsc_type_adc < 0.5 + (0.5 * 0.15))) {
+			if ((voltage_hsc_type_adc > 0.5 - HSC_TYPE_ADC_TOLERANCE) &&
+			    (voltage_hsc_type_adc < 0.5 + HSC_TYPE_ADC_TOLERANCE)) {
 				hsc_module = HSC_MODULE_ADM1278;
 				break;
-			} else if ((voltage_hsc_type_adc > 1.0 - (1.0 * 0.15)) &&
-				   (voltage_hsc_type_adc < 1.0 + (1.0 * 0.15))) {
+			} else if ((voltage_hsc_type_adc > 1.0 - HSC_TYPE_ADC_TOLERANCE) &&
+				   (voltage_hsc_type_adc < 1.0 + HSC_TYPE_ADC_TOLERANCE)) {
 				hsc_module = HSC_MODULE_LTC4282;
 				break;
-			} else if ((voltage_hsc_type_adc > 1.5 - (1.5 * 0.15)) &&
-				   (voltage_hsc_type_adc < 1.5 + (1.5 * 0.15))) {
+			} else if ((voltage_hsc_type_adc > 1.5 - HSC_TYPE_ADC_TOLERANCE) &&
+				   (voltage_hsc_type_adc < 1.5 + HSC_TYPE_ADC_TOLERANCE)) {
 				hsc_module = HSC_MODULE_LTC4286;
 				break;
 			} else {
