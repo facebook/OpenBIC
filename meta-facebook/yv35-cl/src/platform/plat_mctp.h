@@ -13,7 +13,6 @@ struct mctp_to_ipmi_header_req {
 
 struct mctp_to_ipmi_header_resp {
     uint8_t completion_code;
-    uint8_t iana[IANA_LEN];
     uint8_t netfn_lun;
     uint8_t ipmi_cmd;
     uint8_t ipmi_comp_code;
