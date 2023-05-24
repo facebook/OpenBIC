@@ -23,4 +23,6 @@
 
 #define ENABLE_APML
 
+#define WORKER_STACK_SIZE 4096
+
 #endif
