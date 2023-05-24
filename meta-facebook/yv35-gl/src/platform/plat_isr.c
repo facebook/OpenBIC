@@ -64,7 +64,7 @@ void send_gpio_interrupt(uint8_t gpio_num)
 static void SLP3_handler()
 {
 	common_addsel_msg_t sel_msg;
-	if (gpio_get(PWRGD_CPU_LVC3) == GPIO_LOW) {
+	if ((gpio_get(FM_SLPS3_LVC3_N) == GPIO_HIGH) && (gpio_get(PWRGD_CPU_LVC3) == GPIO_LOW)) {
 		sel_msg.InF_target = BMC_IPMB;
 		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
 		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
@@ -81,7 +81,7 @@ static void SLP3_handler()
 K_WORK_DELAYABLE_DEFINE(SLP3_work, SLP3_handler);
 void ISR_SLP3()
 {
-	if (gpio_get(PWRGD_CPU_LVC3) == GPIO_LOW) {
+	if (gpio_get(FM_SLPS3_LVC3_N) == GPIO_HIGH) {
 		LOG_INF("slp3\n");
 		k_work_schedule(&SLP3_work, K_MSEC(10000));
 		return;
@@ -175,7 +175,6 @@ void Initialize_CPU()
 
 void PWRGD_CPU_ACTIVE_HANDLE()
 {
-	ISR_SLP3();
 	Set_DC_status();
 	Initialize_CPU();
 }
