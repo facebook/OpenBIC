@@ -1,0 +1,58 @@
+From e886e9c1d18827321ee8c593472d2140cb8daba8 Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Mon, 15 May 2023 09:42:37 +0800
+Subject: [PATCH] adc: aspeed: Fix the channel number of each ADC controller.
+
+The number of channels per ADC controller is 8, not 7.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I280c76f36fb1aece719f3b2d0ddcc01a1a189c2f
+---
+ drivers/adc/aspeed/adc_aspeed.c | 6 +++---
+ drivers/adc/aspeed/adc_aspeed.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/adc/aspeed/adc_aspeed.c b/drivers/adc/aspeed/adc_aspeed.c
+index d8e6c1d52f..a7919ed39f 100644
+--- a/drivers/adc/aspeed/adc_aspeed.c
++++ b/drivers/adc/aspeed/adc_aspeed.c
+@@ -272,7 +272,7 @@ static int adc_aspeed_start_read(const struct device *dev,
+ 		return -ENOTSUP;
+ 	}
+ 
+-	if (find_msb_set(sequence->channels) > ASPEED_ADC_CH_NUMBER + 1 ||
++	if (find_msb_set(sequence->channels) > ASPEED_ADC_CH_NUMBER ||
+ 	    !(sequence->channels & config->channels_used)) {
+ 		LOG_ERR("unsupported channels in mask: 0x%08x",
+ 			sequence->channels);
+@@ -313,7 +313,7 @@ static int adc_aspeed_channel_setup(const struct device *dev,
+ 	const struct adc_aspeed_cfg *config = DEV_CFG(dev);
+ 	uint8_t channel_id = channel_cfg->channel_id;
+ 
+-	if (channel_id > ASPEED_ADC_CH_NUMBER) {
++	if (channel_id > ASPEED_ADC_CH_NUMBER - 1) {
+ 		LOG_ERR("Channel %d is not valid", channel_id);
+ 		return -EINVAL;
+ 	}
+@@ -334,7 +334,7 @@ static int adc_aspeed_channel_setup(const struct device *dev,
+ 	}
+ 
+ 	/* The last channel have gain feature for battery sensing */
+-	if (channel_id == ASPEED_ADC_CH_NUMBER) {
++	if (channel_id == ASPEED_ADC_CH_NUMBER - 1) {
+ 		if (channel_cfg->gain != ADC_GAIN_1) {
+ 			if ((config->ref_voltage_mv < 1550 &&
+ 			     channel_cfg->gain != ADC_GAIN_1_3) ||
+diff --git a/drivers/adc/aspeed/adc_aspeed.h b/drivers/adc/aspeed/adc_aspeed.h
+index 3d05942b01..7e348e7511 100644
+--- a/drivers/adc/aspeed/adc_aspeed.h
++++ b/drivers/adc/aspeed/adc_aspeed.h
+@@ -133,7 +133,7 @@ struct adc_register_s {
+ /**********************************************************
+  * ADC feature define
+  *********************************************************/
+-#define ASPEED_ADC_CH_NUMBER            7
++#define ASPEED_ADC_CH_NUMBER            8
+ #define ASPEED_RESOLUTION_BITS          10
+ #define ASPEED_CLOCKS_PER_SAMPLE        12
+ 

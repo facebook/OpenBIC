@@ -1,0 +1,77 @@
+From a860097980578bde78cbde79681b4c8e346bfc7f Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Tue, 14 Feb 2023 18:10:20 +0800
+Subject: [PATCH] adc: aspeed: Add the property to control the enable of
+ channels.
+
+Add the 'aspeed,adc-channels-used' DTS property to enable channels using a
+bitmask instead of enabling all channels by default.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I32d9a8653e1184e0dc025e02cf2dec75cd61b351
+---
+ drivers/adc/aspeed/adc_aspeed.c  | 8 ++++++--
+ dts/bindings/adc/aspeed,adc.yaml | 4 ++++
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/adc/aspeed/adc_aspeed.c b/drivers/adc/aspeed/adc_aspeed.c
+index ac67e09133..59aa490d60 100644
+--- a/drivers/adc/aspeed/adc_aspeed.c
++++ b/drivers/adc/aspeed/adc_aspeed.c
+@@ -50,6 +50,7 @@ struct aspeed_adc_trim_locate {
+ struct adc_aspeed_cfg {
+ 	struct adc_register_s *base;
+ 	uint32_t scu_base;
++	uint32_t channels_used;
+ 	bool trim_valid;
+ 	struct aspeed_adc_trim_locate trim_locate;
+ 	const struct device *clock_dev;
+@@ -256,13 +257,15 @@ static int adc_aspeed_start_read(const struct device *dev,
+ 				 const struct adc_sequence *sequence)
+ {
+ 	struct adc_aspeed_data *priv = DEV_DATA(dev);
++	const struct adc_aspeed_cfg *config = DEV_CFG(dev);
+ 
+ 	if (sequence->resolution != 10) {
+ 		LOG_ERR("unsupported resolution %d", sequence->resolution);
+ 		return -ENOTSUP;
+ 	}
+ 
+-	if (find_msb_set(sequence->channels) > ASPEED_ADC_CH_NUMBER + 1) {
++	if (find_msb_set(sequence->channels) > ASPEED_ADC_CH_NUMBER + 1 ||
++	    !(sequence->channels & config->channels_used)) {
+ 		LOG_ERR("unsupported channels in mask: 0x%08x",
+ 			sequence->channels);
+ 		return -ENOTSUP;
+@@ -416,7 +419,7 @@ static int aspeed_adc_engine_init(const struct device *dev,
+ 		return ret;
+ 	}
+ 
+-	engine_ctrl.fields.channel_enable = 0xff;
++	engine_ctrl.fields.channel_enable = config->channels_used;
+ 	adc_register->engine_ctrl.value = engine_ctrl.value;
+ 
+ 	return 0;
+@@ -485,6 +488,7 @@ static struct adc_driver_api adc_aspeed_api = {
+ 		.base = (struct adc_register_s *)DT_INST_REG_ADDR(n),		       \
+ 		.scu_base = DT_REG_ADDR_BY_IDX(DT_INST_PHANDLE(n, aspeed_scu), 0),     \
+ 		.trim_valid = DT_INST_PROP_OR(n, aspeed_trim_data_valid, false),       \
++		.channels_used = DT_INST_PROP_OR(n, aspeed_adc_channels_used, 0xff),   \
+ 		.trim_locate = { DT_INST_PROP_BY_IDX(n, aspeed_trim_data_locate, 0),   \
+ 				 DT_INST_PROP_BY_IDX(n, aspeed_trim_data_locate, 1) }, \
+ 		.clock_dev = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR(n)),		       \
+diff --git a/dts/bindings/adc/aspeed,adc.yaml b/dts/bindings/adc/aspeed,adc.yaml
+index ceb5e80890..2a8d960f70 100644
+--- a/dts/bindings/adc/aspeed,adc.yaml
++++ b/dts/bindings/adc/aspeed,adc.yaml
+@@ -20,6 +20,10 @@ properties:
+       required: true
+       description: phandle to SCU device tree node
+ 
++    aspeed,adc-channels-used:
++      type: int
++      description: Bitmask of the channels muxed and enabled for this device
++
+     aspeed,trim-data-valid:
+       type: boolean
+       description: |

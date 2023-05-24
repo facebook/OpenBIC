@@ -1,0 +1,104 @@
+From 64d4d3c9b336e4793c64011028d131d82a7f49ac Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Thu, 23 Mar 2023 17:07:13 +0800
+Subject: [PATCH] adc: aspeed: Change the paremeter meaning of the adc set
+ rate.
+
+The rate of sampling one channel has been used instead of the rate of the
+ADC operation clock. Additionally, the formula for obtaining the sampling
+period has been fixed.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I2794b8d2312e686e952d3468be03808321a337e4
+---
+ drivers/adc/aspeed/adc_aspeed.c | 24 ++++++++++++++++--------
+ drivers/adc/aspeed/adc_aspeed.h |  2 +-
+ 2 files changed, 17 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/adc/aspeed/adc_aspeed.c b/drivers/adc/aspeed/adc_aspeed.c
+index 59aa490d60..d8e6c1d52f 100644
+--- a/drivers/adc/aspeed/adc_aspeed.c
++++ b/drivers/adc/aspeed/adc_aspeed.c
+@@ -13,6 +13,7 @@
+ #include <kernel.h>
+ #include <init.h>
+ #include <soc.h>
++#include <aspeed_util.h>
+ 
+ #define ADC_CONTEXT_USES_KERNEL_TIMER
+ #include "../adc_context.h"
+@@ -30,7 +31,7 @@ struct adc_aspeed_data {
+ 	const struct device *dev;
+ 	uint32_t channels;
+ 	uint32_t clk_rate;
+-	uint32_t sampling_rate;
++	uint32_t sampling_period_us;
+ 	bool battery_sensing_enable;
+ 	uint16_t *buffer;
+ 	uint16_t *repeat_buffer;
+@@ -115,22 +116,29 @@ static int adc_aspeed_set_rate(const struct device *dev, uint32_t rate)
+ 	struct adc_aspeed_data *priv = DEV_DATA(dev);
+ 	struct adc_register_s *adc_register = config->base;
+ 	uint32_t clk_src, divisor;
++	uint32_t adc_clk;
+ 	union adc_clock_control_s adc_clk_ctrl;
+ 
++	if (rate > KHZ(500) || rate < KHZ(10)) {
++		LOG_ERR("sampling rate %d out of hw limitation\n", rate);
++		return -ERANGE;
++	}
++	adc_clk = rate * 12;
+ 	/*
+ 	 * Formula of adc clock:
+ 	 * ADC clock = ADC src clock / (divisor_of_adc_clock + 1)
+ 	 * ADC sampling rate = ADC clock / 12
++	 * ADC sampling period us = (1000000 * 12 * (divisor_of_adc_clock + 1)) / ADC src clock
+ 	 */
+ 	clock_control_get_rate(config->clock_dev, NULL, &clk_src);
+-	divisor = (clk_src / rate) - 1;
++	divisor = DIV_ROUND_UP(clk_src, adc_clk) - 1;
+ 	if (divisor >= BIT(16)) {
+-		LOG_ERR("clock freq %d out of range\n", rate);
++		LOG_ERR("Divisor %d out of register range", divisor);
+ 		return -ERANGE;
+ 	}
+-	priv->sampling_rate = ((divisor + 1) * ASPEED_CLOCKS_PER_SAMPLE) *
+-			      (clk_src / USEC_PER_SEC);
+-	LOG_DBG("sampling rate = %dus\n", priv->sampling_rate);
++	priv->sampling_period_us =
++		DIV_ROUND_UP(((divisor + 1) * ASPEED_CLOCKS_PER_SAMPLE * USEC_PER_SEC), clk_src);
++	LOG_DBG("sampling period per channel = %dus\n", priv->sampling_period_us);
+ 	adc_clk_ctrl.value = adc_register->adc_clk_ctrl.value;
+ 	adc_clk_ctrl.fields.divisor_of_adc_clock = divisor;
+ 	adc_register->adc_clk_ctrl.value = adc_clk_ctrl.value;
+@@ -184,7 +192,7 @@ static void aspeed_adc_calibration(const struct device *dev)
+ 	/* After enable compensating sensing need to wait 1ms for adc stable */
+ 	k_msleep(1);
+ 	for (index = 0; index < ASPEED_CV_SAMPLE_TIMES; index++) {
+-		k_usleep(priv->sampling_rate);
++		k_usleep(priv->sampling_period_us);
+ 		raw_data += adc_register->adc_data[0].fields.data_odd;
+ 	}
+ 	raw_data /= ASPEED_CV_SAMPLE_TIMES;
+@@ -445,7 +453,7 @@ static int adc_aspeed_init(const struct device *dev)
+ 		return ret;
+ 	}
+ 
+-	ret = adc_aspeed_set_rate(dev, ASPEED_CLOCK_FREQ_DEFAULT);
++	ret = adc_aspeed_set_rate(dev, ASPEED_SAMPLING_RATE_DEFAULT);
+ 	if (ret) {
+ 		return ret;
+ 	}
+diff --git a/drivers/adc/aspeed/adc_aspeed.h b/drivers/adc/aspeed/adc_aspeed.h
+index bba3a9ae68..3d05942b01 100644
+--- a/drivers/adc/aspeed/adc_aspeed.h
++++ b/drivers/adc/aspeed/adc_aspeed.h
+@@ -162,7 +162,7 @@ struct adc_register_s {
+ /**********************************************************
+  * Software setting
+  *********************************************************/
+-#define ASPEED_CLOCK_FREQ_DEFAULT       3000000
++#define ASPEED_SAMPLING_RATE_DEFAULT    KHZ(250)
+ #define ASPEED_ADC_INIT_TIMEOUT         500000
+ #define ASPEED_CV_SAMPLE_TIMES          10
+ 
