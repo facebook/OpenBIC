@@ -21,12 +21,16 @@
 #include "util_worker.h"
 #include "cmsis_os2.h"
 #include "libutil.h"
+#include "plat_def.h"
 
 #include <logging/log.h>
 
 LOG_MODULE_REGISTER(util_worker);
 
+#ifndef WORKER_STACK_SIZE
 #define WORKER_STACK_SIZE 10000
+#endif
+
 #define WORKER_PRIORITY CONFIG_MAIN_THREAD_PRIORITY
 
 #define MAX_WORK_COUNT 32
