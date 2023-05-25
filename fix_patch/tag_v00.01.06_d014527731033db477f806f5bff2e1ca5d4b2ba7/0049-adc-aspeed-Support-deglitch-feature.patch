@@ -1,0 +1,99 @@
+From e3ddcfa4e520ff5ae925c1095f73d89cc34c83e3 Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Mon, 15 May 2023 09:57:04 +0800
+Subject: [PATCH] adc: aspeed: Support deglitch feature.
+
+Add the parameters upper_bound, lower_bound, and deglitch_en for ADC
+channel configuration. When deglitch_en is set to true, the driver will
+use the upper_bound and lower_bound as threshold values. If the ADC value
+falls outside this threshold, the driver will wait for the ADC sampling
+period and perform an additional read once to achieve the deglitching
+purpose.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: Id96e29f6851bd937caed3ee09c49cb31e88dcaf8
+---
+ drivers/adc/aspeed/adc_aspeed.c | 33 +++++++++++++++++++++++++++++++++
+ include/drivers/adc.h           |  6 ++++++
+ 2 files changed, 39 insertions(+)
+
+diff --git a/drivers/adc/aspeed/adc_aspeed.c b/drivers/adc/aspeed/adc_aspeed.c
+index a7919ed39f..01ab881495 100644
+--- a/drivers/adc/aspeed/adc_aspeed.c
++++ b/drivers/adc/aspeed/adc_aspeed.c
+@@ -36,6 +36,9 @@ struct adc_aspeed_data {
+ 	uint16_t *buffer;
+ 	uint16_t *repeat_buffer;
+ 	bool calibrate;
++	uint16_t upper_bound[ASPEED_ADC_CH_NUMBER];
++	uint16_t lower_bound[ASPEED_ADC_CH_NUMBER];
++	bool deglitch_en[ASPEED_ADC_CH_NUMBER];
+ 	int cv;
+ 	struct k_thread thread;
+ 	struct k_sem acq_sem;
+@@ -101,11 +104,20 @@ static int adc_aspeed_read_channel(const struct device *dev, uint8_t channel,
+ 				   int32_t *result)
+ {
+ 	struct adc_aspeed_data *priv = DEV_DATA(dev);
++	const struct adc_aspeed_cfg *config = DEV_CFG(dev);
+ 
+ 	if (priv->battery_sensing_enable && channel == 7) {
+ 		*result = aspeed_adc_battery_read(dev, channel);
+ 	} else {
+ 		*result = aspeed_adc_read_raw(dev, channel);
++		if (priv->deglitch_en[channel]) {
++			if (*result >= priv->upper_bound[channel] ||
++			    *result <= priv->lower_bound[channel]) {
++				k_busy_wait(priv->sampling_period_us *
++					    popcount(config->channels_used));
++				*result = aspeed_adc_read_raw(dev, channel);
++			}
++		}
+ 	}
+ 	return 0;
+ }
+@@ -333,6 +345,27 @@ static int adc_aspeed_channel_setup(const struct device *dev,
+ 		return -ENOTSUP;
+ 	}
+ 
++	if (channel_cfg->deglitch_en) {
++		if (channel_cfg->upper_bound == 0 ||
++		    channel_cfg->upper_bound >= BIT(ASPEED_RESOLUTION_BITS)) {
++			LOG_ERR("Unsupported upper bound %d", channel_cfg->upper_bound);
++			return -ENOTSUP;
++		}
++
++		if (channel_cfg->lower_bound >= channel_cfg->upper_bound) {
++			LOG_ERR("Unsupported lower bound %d >= upper bound %d",
++				channel_cfg->lower_bound, channel_cfg->upper_bound);
++			return -ENOTSUP;
++		}
++		priv->upper_bound[channel_id] = channel_cfg->upper_bound;
++		priv->lower_bound[channel_id] = channel_cfg->lower_bound;
++		priv->deglitch_en[channel_id] = channel_cfg->deglitch_en;
++	}
++
++	LOG_DBG("channel %d, upper_bound:%d, lower_bound: %d, deglitch_en %d\n", channel_id,
++		priv->upper_bound[channel_id], priv->lower_bound[channel_id],
++		priv->deglitch_en[channel_id]);
++
+ 	/* The last channel have gain feature for battery sensing */
+ 	if (channel_id == ASPEED_ADC_CH_NUMBER - 1) {
+ 		if (channel_cfg->gain != ADC_GAIN_1) {
+diff --git a/include/drivers/adc.h b/include/drivers/adc.h
+index 1ce5cd21fd..5346b6e0dd 100644
+--- a/include/drivers/adc.h
++++ b/include/drivers/adc.h
+@@ -139,6 +139,12 @@ struct adc_channel_cfg {
+ 	 */
+ 	uint8_t input_negative;
+ #endif /* CONFIG_ADC_CONFIGURABLE_INPUTS */
++
++#ifdef CONFIG_ADC_ASPEED
++	uint16_t upper_bound;
++	uint16_t lower_bound;
++	bool deglitch_en;
++#endif
+ };
+ 
+ /**
