@@ -90,6 +90,8 @@ static bool adc_read_mv(uint8_t sensor_num, uint32_t index, uint32_t channel, in
 	}
 
 	int retval;
+	adc_asd_init_arg *init_args =
+		(adc_asd_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
 
 	static struct adc_sequence sequence;
 	sequence.channels = BIT(channel);
@@ -104,6 +106,12 @@ static bool adc_read_mv(uint8_t sensor_num, uint32_t index, uint32_t channel, in
 	channel_cfg.acquisition_time = ADC_ACQUISITION_TIME;
 	channel_cfg.channel_id = channel;
 	channel_cfg.differential = 0;
+	channel_cfg.deglitch_en = 0;
+	if (init_args->deglitch[channel].deglitch_en) {
+		channel_cfg.deglitch_en = init_args->deglitch[channel].deglitch_en;
+		channel_cfg.upper_bound = init_args->deglitch[channel].upper_bound;
+		channel_cfg.lower_bound = init_args->deglitch[channel].lower_bound;
+	}
 
 	retval = adc_channel_setup(dev_adc[index], &channel_cfg);
 
