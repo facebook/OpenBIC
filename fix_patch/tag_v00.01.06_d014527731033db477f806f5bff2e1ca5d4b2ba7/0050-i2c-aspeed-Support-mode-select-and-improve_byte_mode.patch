@@ -1,0 +1,297 @@
+From 2beebb916809899c3d6d0417baedcc1140d1f922 Mon Sep 17 00:00:00 2001
+From: Tommy Haung <tommy_huang@aspeedtech.com>
+Date: Wed, 24 May 2023 17:38:56 +0800
+Subject: [PATCH] drivers:i2c:update slave match behavior
+
+1.Update slave match behvior without recevice done condition.
+
+Signed-off-by: Tommy Haung <tommy_huang@aspeedtech.com>
+Change-Id: Ide50ef5232525dae3e1de16cb4281b086743b39f
+
+From ae90ea25a22f410b365c5a8f8240b3c107946e94 Mon Sep 17 00:00:00 2001
+From: Tommy Haung <tommy_huang@aspeedtech.com>
+Date: Wed, 24 May 2023 14:00:20 +0800
+Subject: [PATCH] drivers:i2c:handle nak/stop/address case
+
+1.Add handling nak/stop/address match case.
+
+Signed-off-by: Tommy Haung <tommy_huang@aspeedtech.com>
+Change-Id: I150f49c897a6f0923ea7addfba1b4445683e3fce
+
+From d364f1d04230ef914bfedb4726c63fe3ff1fde57 Mon Sep 17 00:00:00 2001
+From: Tommy Haung <tommy_huang@aspeedtech.com>
+Date: Tue, 23 May 2023 11:13:10 +0800
+Subject: [PATCH] drivers:i2c:add pending stop handle into byte mode
+
+1.Add interrupt pending condition for byte mode.
+
+Signed-off-by: Tommy Haung <tommy_huang@aspeedtech.com>
+Change-Id: I4ce4358d7cbe10cf324a157609771959d6e42a07
+
+From 35ec58db10e73bd3b102ec80eb3dacf6cfe83539 Mon Sep 17 00:00:00 2001
+From: Tommy Haung <tommy_huang@aspeedtech.com>
+Date: Thu, 25 May 2023 18:42:24 +0800
+Subject: [PATCH] drivers:i2c:add i2c transfer mode parameter
+
+1.Add xfer-mode to idenify which one i2c transfer mode used.
+2.The "BYTE", "BUFF", "DMA" values could be assigned.
+3.The default mode is DMA.
+
+Signed-off-by: Tommy Haung <tommy_huang@aspeedtech.com>
+Change-Id: Ida8485ecfd8adc7dd8e296e4ae6d8f9904a8217a
+
+diff --git a/drivers/i2c/i2c_aspeed.c b/drivers/i2c/i2c_aspeed.c
+index e5b3f3008c..8fb41a5d58 100644
+--- a/drivers/i2c/i2c_aspeed.c
++++ b/drivers/i2c/i2c_aspeed.c
+@@ -255,11 +255,11 @@ LOG_MODULE_REGISTER(i2c_aspeed);
+ #define DEV_BASE(dev) \
+ 	((DEV_CFG(dev))->base)
+ 
+-enum i2c_xfer_mode {
+-	DMA_MODE = 0,
+-	BUFF_MODE,
++ enum i2c_xfer_mode {
+ 	BYTE_MODE,
+-};
++	BUFF_MODE,
++	DMA_MODE,
++ };
+ 
+ struct i2c_aspeed_config {
+ 	uint32_t global_reg;
+@@ -1641,6 +1641,29 @@ void aspeed_i2c_slave_byte_irq(const struct device *dev, uint32_t i2c_base, uint
+ 			slave_cb->write_requested(data->slave_cfg);
+ 		}
+ 
++		data->slave_addr_last = byte_data;
++		break;
++	/*pending stop and start address handle*/
++	case AST_I2CS_SLAVE_MATCH | AST_I2CS_RX_DONE | AST_I2CS_Wait_RX_DMA | AST_I2CS_STOP | AST_I2CS_TX_NAK:
++		LOG_DBG("S : Sw|D|P\n");
++
++		if (slave_cb->stop) {
++			slave_cb->stop(data->slave_cfg);
++		}
++
++		/* clear record slave address */
++		data->slave_addr_last = 0x0;
++
++		/* first address match is address */
++		byte_data =
++		AST_I2CC_GET_RX_BUFF(sys_read32(i2c_base + AST_I2CC_STS_AND_BUFF));
++		LOG_DBG("addr [%x]", byte_data);
++
++		/* address set request */
++		if (slave_cb->write_requested) {
++			slave_cb->write_requested(data->slave_cfg);
++		}
++
+ 		data->slave_addr_last = byte_data;
+ 		break;
+ 	case AST_I2CS_RX_DONE | AST_I2CS_Wait_RX_DMA:
+@@ -1682,16 +1705,29 @@ void aspeed_i2c_slave_byte_irq(const struct device *dev, uint32_t i2c_base, uint
+ 		sys_write32(byte_data, i2c_base + AST_I2CC_STS_AND_BUFF);
+ 		break;
+ 	case AST_I2CS_STOP:
++	case AST_I2CS_STOP | AST_I2CS_TX_NAK:
++	case AST_I2CS_SLAVE_MATCH |AST_I2CS_STOP | AST_I2CS_TX_NAK:
++		LOG_DBG("S : P\n");
+ 		if (slave_cb->stop) {
+ 			slave_cb->stop(data->slave_cfg);
+ 		}
+-	case AST_I2CS_STOP | AST_I2CS_TX_NAK:
+-		LOG_DBG("S : P\n");
+-		/* clear record slave address */
+-		data->slave_addr_last = 0x0;
++
++		if (sts & AST_I2CS_TX_NAK) {
++			/* clear record slave address */
++			data->slave_addr_last = 0x0;
++		}
++
++		if (sts == (AST_I2CS_SLAVE_MATCH |AST_I2CS_STOP | AST_I2CS_TX_NAK)) {
++			LOG_WRN("0x92 occur!!");
++		}
++
++		if(sts & AST_I2CS_SLAVE_MATCH) {
++			/* Don't handle this match for current condition*/
++			sts &= ~(AST_I2CS_SLAVE_MATCH);
++		}
+ 		break;
+ 	default:
+-		LOG_DBG("TODO no pkt_done intr ~~~ ***** sts %x\n", sts);
++		LOG_ERR("TODO no pkt_done intr ~~~ ***** sts %x\n", sts);
+ 		break;
+ 	}
+ 	sys_write32(cmd, i2c_base + AST_I2CS_CMD_STS);
+@@ -1798,9 +1834,6 @@ static int i2c_aspeed_init(const struct device *dev)
+ 		config->clk_div_mode = 1;
+ 	}
+ 
+-	/* default apply multi-master with DMA mode */
+-	config->mode = DMA_MODE;
+-
+ 	/* buffer mode base and size */
+ 	config->buf_base = config->global_reg + i2c_base_offset;
+ 	config->buf_size = I2C_BUF_SIZE;
+@@ -1912,6 +1945,7 @@ static const struct i2c_driver_api i2c_aspeed_driver_api = {
+ 		.base = DT_INST_REG_ADDR(n),					  \
+ 		.irq_config_func = i2c_aspeed_config_func_##n,			  \
+ 		.bitrate = DT_INST_PROP(n, clock_frequency),			  \
++		.mode = DT_ENUM_IDX(DT_INST(n, DT_DRV_COMPAT), xfer_mode),	\
+ 		.multi_master = DT_INST_PROP(n, multi_master),		  \
+ 		.smbus_timeout = DT_INST_PROP(n, smbus_timeout),		  \
+ 		.manual_scl_high = DT_INST_PROP(n, manual_high_count),  \
+diff --git a/dts/arm/aspeed/ast10x0.dtsi b/dts/arm/aspeed/ast10x0.dtsi
+index 6390901947..9f0ae6a7ab 100644
+--- a/dts/arm/aspeed/ast10x0.dtsi
++++ b/dts/arm/aspeed/ast10x0.dtsi
+@@ -575,6 +575,7 @@
+ 			reg = <0x7e7b0080 0x80>;
+ 			interrupts = <INTR_I2C0 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			xfer-mode = "DMA";
+ 			multi-master = <1>;
+ 			smbus-timeout = <1>;
+ 			manual-high-count = <0>;
+@@ -592,6 +593,7 @@
+ 			reg = <0x7e7b0100 0x80>;
+ 			interrupts = <INTR_I2C1 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			xfer-mode = "DMA";
+ 			multi-master = <1>;
+ 			smbus-timeout = <1>;
+ 			manual-high-count = <0>;
+@@ -609,6 +611,7 @@
+ 			reg = <0x7e7b0180 0x80>;
+ 			interrupts = <INTR_I2C2 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			xfer-mode = "DMA";
+ 			multi-master = <1>;
+ 			smbus-timeout = <1>;
+ 			manual-high-count = <0>;
+@@ -626,6 +629,7 @@
+ 			reg = <0x7e7b0200 0x80>;
+ 			interrupts = <INTR_I2C3 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			xfer-mode = "DMA";
+ 			multi-master = <1>;
+ 			smbus-timeout = <1>;
+ 			manual-high-count = <0>;
+@@ -643,6 +647,7 @@
+ 			reg = <0x7e7b0280 0x80>;
+ 			interrupts = <INTR_I2C4 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			xfer-mode = "DMA";
+ 			multi-master = <1>;
+ 			smbus-timeout = <1>;
+ 			manual-high-count = <0>;
+@@ -660,6 +665,7 @@
+ 			reg = <0x7e7b0300 0x80>;
+ 			interrupts = <INTR_I2C5 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			xfer-mode = "DMA";
+ 			multi-master = <1>;
+ 			smbus-timeout = <1>;
+ 			manual-high-count = <0>;
+@@ -677,6 +683,7 @@
+ 			reg = <0x7e7b0380 0x80>;
+ 			interrupts = <INTR_I2C6 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			xfer-mode = "DMA";
+ 			multi-master = <1>;
+ 			smbus-timeout = <1>;
+ 			manual-high-count = <0>;
+@@ -694,6 +701,7 @@
+ 			reg = <0x7e7b0400 0x80>;
+ 			interrupts = <INTR_I2C7 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			xfer-mode = "DMA";
+ 			multi-master = <1>;
+ 			smbus-timeout = <1>;
+ 			manual-high-count = <0>;
+@@ -711,6 +719,7 @@
+ 			reg = <0x7e7b0480 0x80>;
+ 			interrupts = <INTR_I2C8 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			xfer-mode = "DMA";
+ 			multi-master = <1>;
+ 			smbus-timeout = <1>;
+ 			manual-high-count = <0>;
+@@ -728,6 +737,7 @@
+ 			reg = <0x7e7b0500 0x80>;
+ 			interrupts = <INTR_I2C9 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			xfer-mode = "DMA";
+ 			multi-master = <1>;
+ 			smbus-timeout = <1>;
+ 			manual-high-count = <0>;
+@@ -745,6 +755,7 @@
+ 			reg = <0x7e7b0580 0x80>;
+ 			interrupts = <INTR_I2C10 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			xfer-mode = "DMA";
+ 			multi-master = <1>;
+ 			smbus-timeout = <1>;
+ 			manual-high-count = <0>;
+@@ -762,6 +773,7 @@
+ 			reg = <0x7e7b0600 0x80>;
+ 			interrupts = <INTR_I2C11 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			xfer-mode = "DMA";
+ 			multi-master = <1>;
+ 			smbus-timeout = <1>;
+ 			manual-high-count = <0>;
+@@ -779,6 +791,7 @@
+ 			reg = <0x7e7b0680 0x80>;
+ 			interrupts = <INTR_I2C12 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			xfer-mode = "DMA";
+ 			multi-master = <1>;
+ 			smbus-timeout = <1>;
+ 			manual-high-count = <0>;
+@@ -796,6 +809,7 @@
+ 			reg = <0x7e7b0700 0x80>;
+ 			interrupts = <INTR_I2C13 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			xfer-mode = "DMA";
+ 			multi-master = <1>;
+ 			smbus-timeout = <1>;
+ 			manual-high-count = <0>;
+@@ -813,6 +827,7 @@
+ 			reg = <0x7e7b0780 0x80>;
+ 			interrupts = <INTR_I2C14 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			xfer-mode = "DMA";
+ 			multi-master = <1>;
+ 			smbus-timeout = <1>;
+ 			manual-high-count = <0>;
+@@ -830,6 +845,7 @@
+ 			reg = <0x7e7b0800 0x80>;
+ 			interrupts = <INTR_I2C15 AST10X0_IRQ_DEFAULT_PRIORITY>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
++			xfer-mode = "DMA";
+ 			multi-master = <1>;
+ 			smbus-timeout = <1>;
+ 			manual-high-count = <0>;
+diff --git a/dts/bindings/i2c/aspeed,i2c.yaml b/dts/bindings/i2c/aspeed,i2c.yaml
+index e252ca82e8..a0e789d42e 100644
+--- a/dts/bindings/i2c/aspeed,i2c.yaml
++++ b/dts/bindings/i2c/aspeed,i2c.yaml
+@@ -16,6 +16,15 @@ properties:
+ 
+     interrupts:
+       required: true
++
++    xfer-mode:
++      type: string
++      required: true
++      enum:
++          - "BYTE"
++          - "BUFF"
++          - "DMA"
++
+     multi-master:
+        type: int
+        required: true
