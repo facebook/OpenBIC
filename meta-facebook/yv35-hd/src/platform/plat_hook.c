@@ -42,7 +42,25 @@ LOG_MODULE_REGISTER(plat_hook);
 /**************************************************************************************************
  * INIT ARGS
 **************************************************************************************************/
-adc_asd_init_arg ast_adc_init_args[] = { [0] = { .is_init = false } };
+adc_asd_init_arg ast_adc_init_args[] = {
+	[0] = { .is_init = false,
+		.deglitch[0] = { .deglitch_en = true, .upper_bound = 0x333 },
+		.deglitch[1] = { .deglitch_en = true, .upper_bound = 0x303 },
+		.deglitch[2] = { .deglitch_en = true, .upper_bound = 0x2C7 },
+		.deglitch[3] = { .deglitch_en = true, .upper_bound = 0x1DC },
+		.deglitch[4] = { .deglitch_en = true, .upper_bound = 0x1E0 },
+		.deglitch[5] = { .deglitch_en = true, .upper_bound = 0x2C7 },
+	},
+	[1] = {
+		.is_init = false,
+		.deglitch[0] = { .deglitch_en = true, .upper_bound = 0x30B },
+		.deglitch[1] = { .deglitch_en = true, .upper_bound = 0x2EE },
+		.deglitch[2] = { .deglitch_en = true, .upper_bound = 0x209 },
+		.deglitch[4] = { .deglitch_en = true, .upper_bound = 0x333 },
+		.deglitch[5] = { .deglitch_en = true, .upper_bound = 0x333 },
+		.deglitch[6] = { .deglitch_en = true, .upper_bound = 0x25F },
+	}
+};
 
 adm1278_init_arg adm1278_init_args[] = {
 	[0] = { .is_init = false, .config = { 0x3F1C }, .r_sense = 0.3 }
