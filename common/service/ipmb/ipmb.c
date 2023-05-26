@@ -46,7 +46,7 @@ LOG_MODULE_REGISTER(ipmb);
 #if MAX_IPMB_IDX
 
 static struct k_mutex mutex_id[MAX_IPMB_IDX]; // mutex for sequence linked list insert/find
-static struct k_mutex mutex_send_req[MAX_IPMB_IDX], mutex_send_res, mutex_read, mutex_purge_msgq;
+static struct k_mutex mutex_send_req[MAX_IPMB_IDX], mutex_send_res, mutex_read;
 static const struct device *dev_ipmb[I2C_BUS_MAX_NUM];
 
 char __aligned(4) ipmb_txqueue_buffer[MAX_IPMB_IDX][IPMB_TXQUEUE_LEN * sizeof(struct ipmi_msg_cfg)];
@@ -81,7 +81,6 @@ static bool seq_table[MAX_IPMB_IDX][SEQ_NUM]; // Sequence table in BIC for regis
 ipmb_error validate_checksum(uint8_t *buffer, uint8_t buffer_len);
 ipmb_error ipmb_encode(uint8_t *buffer, ipmi_msg *msg);
 ipmb_error ipmb_decode(ipmi_msg *msg, uint8_t *buffer, uint8_t len);
-ipmb_error ipmb_notify_client(ipmi_msg_cfg *msg_cfg);
 
 uint8_t IPMB_inf_index_map[RESERVED]; // map IPMB source/target interface to bus
 
@@ -908,7 +907,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 							current_msg_rx->buffer.InF_source,
 							current_msg_rx->buffer.seq_source);
 					}
-					ipmb_notify_client(current_msg_rx);
+					notify_ipmi_client(current_msg_rx);
 				}
 			}
 		}
@@ -1050,40 +1049,6 @@ ipmb_error ipmb_read(ipmi_msg *msg, uint8_t index)
 exit:
 	k_mutex_unlock(&mutex_read);
 	return ret;
-}
-
-// Send message to IPMI message queue
-ipmb_error ipmb_notify_client(ipmi_msg_cfg *msg_cfg)
-{
-	CHECK_NULL_ARG_WITH_RETURN(msg_cfg, IPMB_ERROR_UNKNOWN);
-	uint32_t free_size = 0;
-	int ret = 0, ret_lock = 0;
-	int retry = 3;
-
-	/* Sends only the ipmi msg, not the control struct */
-	if (!IS_RESPONSE(msg_cfg->buffer)) {
-		ret = k_msgq_put(&ipmi_msgq, msg_cfg, K_NO_WAIT);
-		while ( ret != 0 && retry > 0) {
-			ret_lock = k_mutex_lock(&mutex_purge_msgq, K_MSEC(1000));
-			if (ret_lock < 0) {
-				LOG_ERR("Failed to get ipmi msgq purge mutex");
-				retry--;
-				continue;
-			} else {
-				free_size = k_msgq_num_free_get(&ipmi_msgq);
-				if (free_size == 0) {
-					/* message queue is full: purge old data & try again */
-					LOG_INF("Purge ipmi_msgq due to queue is full");
-					k_msgq_purge(&ipmi_msgq);
-				}
-				k_mutex_unlock(&mutex_purge_msgq);
-			}
-			LOG_INF("Retry to send message to IPMI message queue, ret = %d", ret);
-			ret = k_msgq_put(&ipmi_msgq, msg_cfg, K_NO_WAIT);
-			retry--;
-		}
-	}
-	return (retry == 0) ? IPMB_ERROR_MUTEX_LOCK : IPMB_ERROR_SUCCESS;
 }
 
 ipmb_error ipmb_encode(uint8_t *buffer, ipmi_msg *msg)
@@ -1360,9 +1325,6 @@ void ipmb_init(void)
 	}
 	if (k_mutex_init(&mutex_read)) {
 		LOG_ERR("Failed to initialize IPMB read mutex");
-	}
-	if (k_mutex_init(&mutex_purge_msgq)) {
-		LOG_ERR("Failed to initialize IPMB put msgq mutex");
 	}
 	// Create IPMB threads for each index
 	for (index = 0; index < MAX_IPMB_IDX; index++) {

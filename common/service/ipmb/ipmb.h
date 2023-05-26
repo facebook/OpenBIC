@@ -198,7 +198,6 @@ ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index);
 ipmb_error ipmb_read(ipmi_msg *msg, uint8_t bus);
 void ipmb_tx_suspend(uint8_t index);
 void ipmb_tx_resume(uint8_t index);
-ipmb_error ipmb_notify_client(ipmi_msg_cfg *msg_cfg);
 
 void pal_encode_response_bridge_cmd(ipmi_msg *bridge_msg, ipmi_msg_cfg *current_msg_rx,
 				    IPMB_config *ipmb_cfg, IPMB_config *IPMB_config_tables);

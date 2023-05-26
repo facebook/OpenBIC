@@ -137,7 +137,7 @@ static uint8_t ipmi_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t ins
 	/* store the pldm header in the buffer */
 	memcpy(msg.buffer.data + pldm_hdr_ofs, buf - sizeof(pldm_hdr), sizeof(pldm_hdr));
 
-	ipmb_notify_client(&msg);
+	notify_ipmi_client(&msg);
 
 	return PLDM_LATER_RESP;
 }
