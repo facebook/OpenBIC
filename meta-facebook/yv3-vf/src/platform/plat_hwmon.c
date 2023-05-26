@@ -19,9 +19,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "libipmi.h"
-#include "libutil.h"
-
 #include "plat_m2.h"
 #include "plat_gpio.h"
 #include "plat_power_seq.h"
@@ -99,26 +96,4 @@ int8_t mb_cpld_dev_prsnt_set(uint32_t idx, uint32_t val)
 	}
 
 	return true;
-}
-
-void adc_upper_bound_polling(struct k_work *work)
-{
-	CHECK_NULL_ARG(work);
-
-	uint8_t need_clear = 0;
-	uint32_t interrupt_status = sys_read32(ADC_INTERRUPT_STATUS_REG);
-
-	for (uint8_t i = 1; i < 3; i++) {
-		if (interrupt_status & BIT(i)) {
-			need_clear = 1;
-			add_sel(IPMI_OEM_SENSOR_TYPE_OEM, IPMI_EVENT_TYPE_SENSOR_SPECIFIC,
-				SENSOR_NUM_SYS_STA, IPMI_EVENT_OFFSET_SYS_ADC_UPPER_BOUND,
-				E1S_BOARD_TYPE, i);
-		}
-	}
-
-	if (need_clear)
-		sys_write32(0x000000FF, ADC_INTERRUPT_STATUS_REG);
-
-	k_work_schedule((struct k_work_delayable *)work, K_SECONDS(1));
 }

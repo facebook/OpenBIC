@@ -19,11 +19,5 @@
 
 #define I2C_ADDR_MB_CPLD (0x1E >> 1)
 
-/* ADC bound relate */
-#define ADC_INTERRUPT_STATUS_REG 0x7E6E9004
-#define ADC1_UPPER_BOUND_REG 0x7E6E9034
-#define ADC2_UPPER_BOUND_REG 0x7E6E9038
-
 void BICup1secTickHandler(struct k_work *work);
-void adc_upper_bound_polling(struct k_work *work);
 int8_t mb_cpld_dev_prsnt_set(uint32_t idx, uint32_t val);
