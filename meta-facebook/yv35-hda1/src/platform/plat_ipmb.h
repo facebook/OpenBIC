@@ -36,4 +36,5 @@ enum {
 	EXP2_IPMB_IDX,
 };
 
+extern IPMB_config pal_IPMB_config_table[];
 #endif

@@ -39,6 +39,4 @@ enum _i2c_bus_num {
 	I2C_BUS_MAX_NUM,
 };
 
-#define IPMB_I2C_BMC I2C_BUS7
-
 #endif
