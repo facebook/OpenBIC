@@ -301,8 +301,15 @@ typedef struct _isl28022_init_arg {
 
 } isl28022_init_arg;
 
+typedef struct _adc_asd_deglitch_arg {
+	uint16_t upper_bound;
+	uint16_t lower_bound;
+	bool deglitch_en;
+} adc_asd_deglitch_arg;
+
 typedef struct _adc_asd_init_arg {
 	bool is_init;
+	adc_asd_deglitch_arg deglitch[8];	// 8 channels
 } adc_asd_init_arg;
 
 typedef struct _adm1278_init_arg {

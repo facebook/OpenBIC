@@ -29,8 +29,23 @@ LOG_MODULE_REGISTER(plat_hook);
  * INIT ARGS
 **************************************************************************************************/
 adc_asd_init_arg adc_asd_init_args[] = {
-	[0] = { .is_init = false },
-	[1] = { .is_init = false },
+	[0] = { .is_init = false,
+		.deglitch[1] = { .deglitch_en = true, .upper_bound = 0x2FD },
+		.deglitch[2] = { .deglitch_en = true, .upper_bound = 0x2FD },
+		.deglitch[3] = { .deglitch_en = true, .upper_bound = 0x24A },
+		.deglitch[4] = { .deglitch_en = true, .upper_bound = 0x24A },
+		.deglitch[5] = { .deglitch_en = true, .upper_bound = 0x24A },
+		.deglitch[6] = { .deglitch_en = true, .upper_bound = 0x24A },
+		.deglitch[7] = { .deglitch_en = true, .upper_bound = 0x24A },
+	},
+	[1] = {
+		.is_init = false,
+		.deglitch[0] = { .deglitch_en = true, .upper_bound = 0x2FD },
+		.deglitch[1] = { .deglitch_en = true, .upper_bound = 0x2FD },
+		.deglitch[2] = { .deglitch_en = true, .upper_bound = 0x2FD },
+		.deglitch[3] = { .deglitch_en = true, .upper_bound = 0x2FD },
+		.deglitch[7] = { .deglitch_en = true, .upper_bound = 0x205 },
+	}
 };
 
 ina230_init_arg ina231_init_args[] = {
