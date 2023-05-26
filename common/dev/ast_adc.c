@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include "sensor.h"
 #include "plat_gpio.h"
+#include "plat_def.h"
 #include <zephyr.h>
 #include <drivers/adc.h>
 #include <logging/log.h>
@@ -37,7 +38,9 @@ enum adc_device_idx { adc0, adc1, ADC_NUM };
 #endif
 
 #define ADC_RESOLUTION 10
+#ifndef ADC_CALIBRATION
 #define ADC_CALIBRATION 0
+#endif
 #define ADC_GAIN ADC_GAIN_1
 #define ADC_REFERENCE ADC_REF_INTERNAL
 #define ADC_ACQUISITION_TIME ADC_ACQ_TIME_DEFAULT

@@ -25,4 +25,6 @@
 
 #define WORKER_STACK_SIZE 4096
 
+#define ADC_CALIBRATION 1
+
 #endif
