@@ -117,14 +117,59 @@ void monitor_pmic_error_via_i3c_handler()
 	}
 }
 
-void monitor_pmic_error_via_me_handler()
+int write_read_pmic_via_me(uint8_t dimm_id, uint8_t offset, uint8_t read_len, uint8_t write_len, uint8_t *data, int *data_len)
 {
-	ipmb_error status = 0;
-	int ret = 0, dimm_id = 0;
+	CHECK_NULL_ARG_WITH_RETURN(data, -1);
+	CHECK_NULL_ARG_WITH_RETURN(data_len, -1);
+
+	int ret = 0;
 	uint8_t seq_source = 0xFF;
-	uint8_t dimm_status = SENSOR_INIT_STATUS;
 	memory_write_read_req pmic_req;
 	ipmi_msg pmic_msg;
+	ipmb_error status = IPMB_ERROR_SUCCESS;
+
+	pmic_req.intel_id = INTEL_ID;
+	ret = get_dimm_info(dimm_id, &pmic_req.smbus_identifier,
+			    &pmic_req.smbus_address);
+	if (ret < 0) {
+		return -1;
+	}
+	pmic_req.addr_size = PMIC_ADDR_SIZE;
+	pmic_req.addr_value = offset;
+	pmic_req.data_len = read_len;
+	if (write_len == 0) {
+		pmic_msg = construct_ipmi_message(seq_source, NETFN_NM_REQ,
+				  CMD_SMBUS_READ_MEMORY, SELF, ME_IPMB,
+				  PMIC_READ_DATA_LEN, (uint8_t *)&pmic_req);
+	} else {
+		memcpy(pmic_req.write_data, data, write_len);
+		pmic_msg = construct_ipmi_message(seq_source, NETFN_NM_REQ,
+					  CMD_SMBUS_WRITE_MEMORY, SELF, ME_IPMB,
+					  PMIC_WRITE_DATA_LEN, (uint8_t *)&pmic_req);
+	}
+
+	status = ipmb_read(&pmic_msg, IPMB_inf_index_map[pmic_msg.InF_target]);
+	if ((status == IPMB_ERROR_SUCCESS) &&
+			    (pmic_msg.completion_code == CC_SUCCESS)) {
+		*data_len = pmic_msg.data_len;
+		memcpy(data, pmic_msg.data, pmic_msg.data_len);
+		return 0;
+	}
+
+	LOG_ERR("Failed to write/read PMIC register, dimm id%d bus %d addr 0x%x offset 0x%x status 0x%x CC 0x%x",
+		dimm_id, pmic_req.smbus_identifier, pmic_req.smbus_address, pmic_req.addr_value,
+		status, pmic_msg.completion_code);
+	return -1;
+}
+
+void monitor_pmic_error_via_me_handler()
+{
+	int ret = 0, dimm_id = 0;
+	uint8_t dimm_status = SENSOR_INIT_STATUS;
+	bool is_mps_unlock_region[MAX_COUNT_DIMM] = {false, false, false, false, false, false};
+	uint8_t cache_data[MAX_COUNT_PMIC_ERROR_OFFSET] = {0};
+	int cache_data_len = 0;
+	uint8_t mps_pmic_vender[2] = {0x0B, 0x2A};
 
 	// initialize PMIC error flag array
 	memset(is_pmic_error_flag, false, sizeof(is_pmic_error_flag));
@@ -145,48 +190,65 @@ void monitor_pmic_error_via_me_handler()
 		for (dimm_id = 0; dimm_id < MAX_COUNT_DIMM; dimm_id++) {
 			// If dimm isn't present, skip monitor
 			dimm_status = get_dimm_status(dimm_id);
-			if ((dimm_status != SENSOR_NOT_SUPPORT) &&
+			if ((dimm_status == SENSOR_INIT_STATUS) ||
 			    (dimm_status == SENSOR_NOT_PRESENT)) {
 				continue;
 			}
 
-			// Read PMIC error
-			memset(&pmic_req, 0, sizeof(memory_write_read_req));
-			ret = get_dimm_info(dimm_id, &pmic_req.smbus_identifier,
-					    &pmic_req.smbus_address);
-			if (ret < 0) {
-				continue;
-			}
-			pmic_req.intel_id = INTEL_ID;
-			pmic_req.addr_size = PMIC_ADDR_SIZE;
-			pmic_req.addr_value = PMIC_POR_ERROR_LOG_ADDR_VAL;
-			pmic_req.data_len = MAX_LEN_ME_GET_PMIC_ERR;
-			pmic_msg = construct_ipmi_message(seq_source, NETFN_NM_REQ,
-							  CMD_SMBUS_READ_MEMORY, SELF, ME_IPMB,
-							  PMIC_READ_DATA_LEN, (uint8_t *)&pmic_req);
-
-			// Double check post status before send IPMB to get PMIC error
-			if (get_post_status() == false) {
-				continue;
-			}
-
-			status = ipmb_read(&pmic_msg, IPMB_inf_index_map[pmic_msg.InF_target]);
-			if ((status == IPMB_ERROR_SUCCESS) &&
-			    (pmic_msg.completion_code == CC_SUCCESS)) {
-				// Compare error pattern, if status change add SEL to BMC and update record
-				ret = compare_pmic_error(dimm_id, pmic_msg.data, pmic_msg.data_len,
-							 READ_PMIC_ERROR_VIA_ME);
+			// Read Vender
+			if (!is_mps_unlock_region[dimm_id]) {
+				// Check Vender ID and unlock MPS region
+				memset(cache_data, 0, sizeof(cache_data));
+				ret = write_read_pmic_via_me(dimm_id, PMIC_VENDER_ID_OFFSET, MAX_COUNT_PMIC_VENDER_ID, 0, cache_data, &cache_data_len);
 				if (ret < 0) {
+					LOG_ERR("Failed to check dimm vender, ret %d", ret);
 					continue;
 				}
 
-			} else {
-				LOG_ERR("Failed to get PMIC error, dimm id%d bus %d addr 0x%x status 0x%x CC 0x%x",
-					dimm_id, pmic_req.smbus_identifier, pmic_req.smbus_address,
-					status, pmic_msg.completion_code);
+				if (memcmp(&cache_data[3], mps_pmic_vender, 2) == 0) {
+					cache_data[0] = 0x73;
+					ret = write_read_pmic_via_me(dimm_id, PMIC_VENDOR_MEMORY_REGION_PASSWORD_UPPER_BYTE_OFFSET, PMIC_DATA_LEN, 1, cache_data, &cache_data_len);
+					if (ret < 0) {
+						LOG_ERR("Failed to check dimm vender, ret %d", ret);
+						continue;
+					}
+
+					cache_data[0] = 0x94;
+					ret = write_read_pmic_via_me(dimm_id, PMIC_VENDOR_MEMORY_REGION_PASSWORD_LOWER_BYTE_OFFSET, PMIC_DATA_LEN, 1, cache_data, &cache_data_len);
+					if (ret < 0) {
+						LOG_ERR("Failed to check dimm vender, ret %d", ret);
+						continue;
+					}
+
+					// DIMM Vendor Region
+					// 0x40:　Unlock DIMM Vendor Region
+					cache_data[0] = 0x40;
+					ret = write_read_pmic_via_me(dimm_id, PMIC_VENDOR_PASSWORD_CONTROL_OFFSET, PMIC_DATA_LEN, 1, cache_data, &cache_data_len);
+					if (ret < 0) {
+						LOG_ERR("Failed to check dimm vender, ret %d", ret);
+						continue;
+					}
+				}
+
+				is_mps_unlock_region[dimm_id] = true;
+			}
+
+			// Read PMIC error
+			memset(cache_data, 0, sizeof(cache_data));
+			ret = write_read_pmic_via_me(dimm_id, PMIC_POR_ERROR_LOG_ADDR_VAL, MAX_LEN_ME_GET_PMIC_ERR, 0, cache_data, &cache_data_len);
+			if (ret < 0) {
+				continue;
+			}
+
+			LOG_HEXDUMP_DBG(cache_data, cache_data_len,"pmic error");
+			// Compare error pattern, if status change add SEL to BMC and update record
+			ret = compare_pmic_error(dimm_id, cache_data, cache_data_len,
+					 READ_PMIC_ERROR_VIA_ME);
+			if (ret < 0) {
 				continue;
 			}
 		}
+
 		k_msleep(MONITOR_PMIC_ERROR_TIME_MS);
 	}
 }
@@ -452,5 +514,72 @@ void read_pmic_error_when_dc_off()
 
 	// Switch I3C MUX to CPU after read finish
 	switch_i3c_dimm_mux(I3C_MUX_TO_CPU, DIMM_MUX_TO_DIMM_A0A1A3);
+	return;
+}
+
+void clear_pmic_error()
+{
+	int dimm_id = 0, ret = 0;
+	uint8_t dimm_status = SENSOR_INIT_STATUS;
+	I3C_MSG i3c_msg = { 0 };
+
+	if (k_mutex_lock(&i3c_dimm_mux_mutex, K_MSEC(I3C_DIMM_MUX_MUTEX_TIMEOUT_MS))) {
+		LOG_ERR("Failed to lock I3C dimm MUX");
+		return;
+	}
+
+	for (dimm_id = 0; dimm_id < MAX_COUNT_DIMM; dimm_id++) {
+
+		if ((dimm_id == DIMM_ID_A0) || (dimm_id == DIMM_ID_A4)) {
+			continue;
+		}
+
+		dimm_status = get_dimm_status(dimm_id);
+		if ((dimm_status == SENSOR_INIT_STATUS) ||
+		    (dimm_status == SENSOR_NOT_PRESENT) ||
+		    (dimm_status == SENSOR_POLLING_DISABLE)) {
+			continue;
+		}
+
+		ret = switch_i3c_dimm_mux(I3C_MUX_TO_BIC, dimm_id / (MAX_COUNT_DIMM / 2));
+		if (ret < 0) {
+			continue;
+		}
+
+		i3c_msg.bus = I3C_BUS4;
+		all_brocast_ccc(&i3c_msg);
+
+		i3c_msg.target_addr = pmic_i3c_addr_list[dimm_id % (MAX_COUNT_DIMM / 2)];
+		i3c_msg.tx_len = 2;
+		i3c_msg.rx_len = 1;
+		memset(&i3c_msg.data, 0, 2);
+
+		// Set R39 to clear registers R04 ~ R07
+		// Host Region Codes: 0x74
+		// Clear Registers R04 to R07, Erase MTP memory for R04 Register
+		i3c_msg.data[0] = PMIC_VENDOR_PASSWORD_CONTROL_OFFSET;
+		i3c_msg.data[1] = 0x74;
+		ret = i3c_transfer(&i3c_msg);
+		if (ret != 0) {
+			continue;
+		}
+
+		// Set R14 to clear registers R08 ~ R0B, R33
+		// R14[0]: GLOBAL_CLEAR_STATUS, Clear all status bits
+		i3c_msg.data[0] = PMIC_CLEAR_STATUS_BITS4_OFFSET;
+		i3c_msg.data[1] = 0x01;
+		ret = i3c_transfer(&i3c_msg);
+		if (ret != 0) {
+			continue;
+		}
+	}
+
+	if (k_mutex_unlock(&i3c_dimm_mux_mutex)) {
+		LOG_ERR("Failed to unlock I3C dimm MUX");
+	}
+
+	// Switch I3C MUX to CPU after clear finish
+	switch_i3c_dimm_mux(I3C_MUX_TO_CPU, DIMM_MUX_TO_DIMM_A0A1A3);
+
 	return;
 }

@@ -24,9 +24,15 @@
 
 #define MAX_COUNT_PMIC_ERROR_OFFSET 7
 #define MAX_COUNT_PMIC_ERROR_TYPE 17
+#define MAX_COUNT_PMIC_VENDER_ID 1
 
 #define CL_CPLD_BMC_CHANNEL_ADDR 0x1E // 8 bits
 #define PMIC_FAULT_STATUS_OFFSET 0x0B
+#define PMIC_VENDER_ID_OFFSET 0x3C
+#define PMIC_CLEAR_STATUS_BITS4_OFFSET 0x14
+#define PMIC_VENDOR_MEMORY_REGION_PASSWORD_UPPER_BYTE_OFFSET 0x37
+#define PMIC_VENDOR_MEMORY_REGION_PASSWORD_LOWER_BYTE_OFFSET 0x38
+#define PMIC_VENDOR_PASSWORD_CONTROL_OFFSET 0x39
 
 enum READ_PMIC_ERROR_PATH {
 	READ_PMIC_ERROR_VIA_ME,
@@ -42,5 +48,8 @@ int compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data, uint8_t pmic_err
 void add_pmic_error_sel(uint8_t dimm_id, uint8_t error_type);
 int get_pmic_fault_status();
 void read_pmic_error_when_dc_off();
+void clear_pmic_error();
+int write_read_pmic_via_me(uint8_t dimm_id, uint8_t offset, uint8_t read_len, uint8_t write_len,
+			   uint8_t *data, int *data_len);
 
 #endif

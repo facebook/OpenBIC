@@ -131,6 +131,8 @@ void ISR_DC_ON()
 	if (dc_status) {
 		k_work_schedule(&set_DC_on_5s_work, K_SECONDS(DC_ON_5_SECOND));
 
+		clear_pmic_error();
+
 	} else {
 		set_DC_on_delayed_status();
 
@@ -625,7 +627,6 @@ void ISR_CPU_VPP_INT()
 				}
 			}
 		}
-
 	}
 }
 
