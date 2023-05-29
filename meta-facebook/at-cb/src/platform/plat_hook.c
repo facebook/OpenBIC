@@ -28,6 +28,7 @@
 #include "i2c-mux-pi4msd5v9542.h"
 #include "plat_sensor_table.h"
 #include "i2c-mux-pca954x.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -575,6 +576,10 @@ mux_config pca9546_configs[] = {
 	[3] = { .target_addr = 0x72, .channel = PCA9546A_CHANNEL_3 },
 };
 
+uint8_t plat_monitor_table_arg[] = { PCIE_CARD_1, PCIE_CARD_2,	PCIE_CARD_3,  PCIE_CARD_4,
+				     PCIE_CARD_5, PCIE_CARD_6,	PCIE_CARD_7,  PCIE_CARD_8,
+				     PCIE_CARD_9, PCIE_CARD_10, PCIE_CARD_11, PCIE_CARD_12 };
+
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
  **************************************************************************************************/
@@ -741,17 +746,20 @@ bool post_pex89000_read(uint8_t sensor_num, void *args, int *reading)
 	return true;
 }
 
-bool pre_accl_mux_switch(uint8_t card_id, uint8_t sensor_num)
+bool pre_accl_mux_switch(uint8_t sensor_num, void *arg)
 {
+	CHECK_NULL_ARG_WITH_RETURN(arg, false);
+
 	bool ret = false;
 	mux_config accl_mux = { 0 };
 	mux_config channel_mux = { 0 };
+	uint8_t *card_id = (uint8_t *)arg;
 
-	if (get_accl_mux_config(card_id, &accl_mux) != true) {
+	if (get_accl_mux_config(*card_id, &accl_mux) != true) {
 		return false;
 	}
 
-	if (get_mux_channel_config(card_id, sensor_num, &channel_mux) != true) {
+	if (get_mux_channel_config(*card_id, sensor_num, &channel_mux) != true) {
 		return false;
 	}
 
@@ -781,11 +789,14 @@ bool pre_accl_mux_switch(uint8_t card_id, uint8_t sensor_num)
 	return true;
 }
 
-bool post_accl_mux_switch(uint8_t card_id, uint8_t sensor_num)
+bool post_accl_mux_switch(uint8_t sensor_num, void *arg)
 {
-	mux_config accl_mux = { 0 };
+	CHECK_NULL_ARG_WITH_RETURN(arg, false);
 
-	if (get_accl_mux_config(card_id, &accl_mux) != true) {
+	mux_config accl_mux = { 0 };
+	uint8_t *card_id = (uint8_t *)arg;
+
+	if (get_accl_mux_config(*card_id, &accl_mux) != true) {
 		return false;
 	}
 

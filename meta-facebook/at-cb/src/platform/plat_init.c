@@ -39,7 +39,7 @@ void pal_pre_init()
 	}
 
 	init_platform_config();
-	check_asic_card_status();
+	check_accl_device_presence_status_via_ioexp();
 	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY + 1); // work queue for low priority jobs
 }
 

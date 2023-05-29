@@ -63,7 +63,8 @@ void e1s_pwr_work_handler(struct k_work *work)
 	struct stress_e1s_pwr_s *data = CONTAINER_OF(work, struct stress_e1s_pwr_s, work);
 
 	if (period_count > 0) {
-		if (!get_sensor_reading(e1s_power_sensor_table[data->e1s_idx], &reading,
+		if (!get_sensor_reading(sensor_config, sensor_config_count,
+					e1s_power_sensor_table[data->e1s_idx], &reading,
 					GET_FROM_SENSOR))
 			shell_warn(data->shell, "[%s] Reading E1S dev%d power failed \n", __func__,
 				   data->e1s_idx);

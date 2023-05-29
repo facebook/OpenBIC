@@ -60,10 +60,9 @@
 #define IOEXP_CARD_PRESENCE_COUNT 4
 #define IOEXP_CARD_PRESENCE_PIN_COUNT 4
 #define IOEXP_CARD_PRESENCE_MAP_VAL 0x0F
-#define IOEXP_DEV_NOT_PRESENT_VAL 0x0F
-#define IOEXP_DEV_1_PRESENT_VAL 0x03
-#define IOEXP_DEV_2_PRESENT_VAL 0x0C
-#define IOEXP_DEV_1_2_PRESENT_VAL 0x00
+#define IOEXP_CARD_PRESENT_VAL BIT(3)
+#define IOEXP_DEV_1_PRESENT_VAL BIT(1)
+#define IOEXP_DEV_2_PRESENT_VAL BIT(2)
 
 enum BOARD_REVISION_ID {
 	POC_STAGE = 0b000,
@@ -110,6 +109,21 @@ enum PCIE_DEVICE_ID {
 	PCIE_DEVICE_ID3,
 };
 
+enum PCIE_CARD_INDEX {
+	PCIE_CARD_1,
+	PCIE_CARD_2,
+	PCIE_CARD_3,
+	PCIE_CARD_4,
+	PCIE_CARD_5,
+	PCIE_CARD_6,
+	PCIE_CARD_7,
+	PCIE_CARD_8,
+	PCIE_CARD_9,
+	PCIE_CARD_10,
+	PCIE_CARD_11,
+	PCIE_CARD_12,
+};
+
 struct ASIC_CARD_INFO {
 	uint8_t bus;
 	uint8_t mux_addr;
@@ -118,15 +132,13 @@ struct ASIC_CARD_INFO {
 	bool card_status;
 	uint8_t device_mux_addr;
 	uint8_t device_channel;
-	uint8_t device_reg_offset;
 	bool asic_1_status;
 	bool asic_2_status;
 };
 
 extern struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT];
 
-void check_asic_card_status();
-void check_accl_device_presence_status_via_pex(uint8_t pex_id);
+void check_accl_device_presence_status_via_ioexp();
 void init_platform_config();
 uint8_t get_board_revision();
 uint8_t get_hsc_module();

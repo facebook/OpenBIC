@@ -382,7 +382,8 @@ bool pal_is_time_to_poll(uint8_t sensor_num, int poll_time)
 uint8_t get_hsc_pwr_reading(int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
-	return get_sensor_reading(SENSOR_NUM_PWR_HSCIN, reading, GET_FROM_CACHE);
+	return get_sensor_reading(sensor_config, sensor_config_count, SENSOR_NUM_PWR_HSCIN, reading,
+				  GET_FROM_CACHE);
 }
 
 bool disable_dimm_pmic_sensor(uint8_t sensor_num)
@@ -399,7 +400,6 @@ bool disable_dimm_pmic_sensor(uint8_t sensor_num)
 		}
 	}
 
-	LOG_WRN("Input sensor 0x%x can't find in dimm pmic mapping table",
-		sensor_num);
+	LOG_WRN("Input sensor 0x%x can't find in dimm pmic mapping table", sensor_num);
 	return false;
 }

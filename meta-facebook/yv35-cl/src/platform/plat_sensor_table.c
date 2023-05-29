@@ -501,7 +501,7 @@ void check_outlet_temp_type(uint8_t index)
 
 	if (i2c_master_read(&msg, retry)) {
 		LOG_ERR("Failed to read Outlet_Temp chip ID: register(0x%x)",
-		       NCT7718W_CHIP_ID_OFFSET);
+			NCT7718W_CHIP_ID_OFFSET);
 		return;
 	}
 	CID = msg.data[0];
@@ -514,7 +514,8 @@ void check_outlet_temp_type(uint8_t index)
 	msg.data[0] = NCT7718W_VENDOR_ID_OFFSET;
 
 	if (i2c_master_read(&msg, retry)) {
-		LOG_ERR("Failed to read Outlet_Temp vendor ID: register(0x%x)", NCT7718W_VENDOR_ID_OFFSET);
+		LOG_ERR("Failed to read Outlet_Temp vendor ID: register(0x%x)",
+			NCT7718W_VENDOR_ID_OFFSET);
 		return;
 	}
 	VID = msg.data[0];
@@ -625,7 +626,8 @@ void pal_extend_sensor_config()
 	}
 
 	if (sensor_config_count != sdr_count) {
-		LOG_ERR("Extend sensor SDR and config table not match, sdr size: 0x%x, sensor config size: 0x%x", sdr_count, sensor_config_count);
+		LOG_ERR("Extend sensor SDR and config table not match, sdr size: 0x%x, sensor config size: 0x%x",
+			sdr_count, sensor_config_count);
 	}
 }
 
@@ -655,7 +657,8 @@ bool pal_is_time_to_poll(uint8_t sensor_num, int poll_time)
 
 uint8_t get_hsc_pwr_reading(int *reading)
 {
-	return get_sensor_reading(SENSOR_NUM_PWR_HSCIN, reading, GET_FROM_CACHE);
+	return get_sensor_reading(sensor_config, sensor_config_count, SENSOR_NUM_PWR_HSCIN, reading,
+				  GET_FROM_CACHE);
 }
 
 bool disable_dimm_pmic_sensor(uint8_t sensor_num)
@@ -697,4 +700,3 @@ uint8_t get_dimm_status(uint8_t dimm_index)
 
 	return sensor_config[sensor_index].cache_status;
 }
-

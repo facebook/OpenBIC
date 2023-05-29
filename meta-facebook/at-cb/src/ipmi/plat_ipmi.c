@@ -177,25 +177,6 @@ void OEM_1S_GET_PCIE_CARD_STATUS(ipmi_msg *msg)
 	uint8_t accl_id = 0;
 	uint8_t pcie_card_id = 0;
 	uint8_t pcie_device_id = msg->data[1];
-	static bool is_check_accl_status = false;
-	static bool is_check_accl_device_status = false;
-
-	if (is_check_accl_status != true) {
-		check_asic_card_status();
-		is_check_accl_status = true;
-	}
-
-	if (pcie_device_id == PCIE_DEVICE_ID1 || pcie_device_id == PCIE_DEVICE_ID2) {
-		if (get_board_revision() > EVT1_STAGE) {
-			is_check_accl_device_status = true;
-		} else {
-			if (is_check_accl_device_status != true && is_acb_power_good() == true) {
-				check_accl_device_presence_status_via_pex(PEX_0_INDEX);
-				check_accl_device_presence_status_via_pex(PEX_1_INDEX);
-				is_check_accl_device_status = true;
-			}
-		}
-	}
 
 	switch (fru_id) {
 	case FIO_FRU_ID:
@@ -361,57 +342,34 @@ int pal_get_pcie_card_sensor_reading(uint8_t card_id, uint8_t sensor_num, uint8_
 	CHECK_NULL_ARG_WITH_RETURN(card_status, -1);
 	CHECK_NULL_ARG_WITH_RETURN(reading, -1);
 
-	bool ret = 0;
-	uint8_t index = 0;
 	uint8_t sensor_status = 0;
+	uint8_t cfg_count = 0;
 
-	sensor_cfg *cfg = { 0 };
+	sensor_cfg *cfg = NULL;
 
-	ret = get_accl_sensor_config_index(sensor_num, &index);
-	if (ret != true) {
-		LOG_ERR("Fail to find sensor config via sensor num: 0x%x", sensor_num);
+	cfg = get_accl_sensor_cfg_info(card_id, &cfg_count);
+	if (cfg == NULL) {
+		LOG_ERR("Fail to find ACCL sensor config via card id: 0x%x", card_id);
 		return -1;
 	}
 
-	cfg = &plat_accl_sensor_config[index];
-
-	if (is_pcie_device_access(card_id, sensor_num) != true) {
-		*card_status |= PCIE_CARD_NOT_ACCESSIBLE_BIT;
-		*reading = 0;
-		return 0;
-	}
-
-	ret = pre_accl_mux_switch(card_id, sensor_num);
-	if (ret != true) {
-		LOG_ERR("Pre switch mux fail, sensor num: 0x%x, card id: 0x%x", sensor_num,
-			card_id);
-		return -1;
-	}
-
-	ret = pal_sensor_drive_read(card_id, cfg, reading, &sensor_status);
-	if (ret != true) {
-		LOG_ERR("sensor: 0x%x read fail", sensor_num);
-		ret = post_accl_mux_switch(card_id, sensor_num);
-		if (ret != true) {
-			LOG_ERR("Post switch mux fail, sensor num: 0x%x, card id: 0x%x", sensor_num,
-				card_id);
-		}
-		return -1;
-	}
-
-	ret = post_accl_mux_switch(card_id, sensor_num);
-	if (ret != true) {
-		LOG_ERR("Post switch mux fail, sensor num: 0x%x, card id: 0x%x", sensor_num,
-			card_id);
-	}
+	sensor_status = get_sensor_reading(cfg, cfg_count, sensor_num, reading, GET_FROM_CACHE);
 
 	switch (sensor_status) {
 	case SENSOR_READ_SUCCESS:
 	case SENSOR_READ_ACUR_SUCCESS:
+	case SENSOR_READ_4BYTE_ACUR_SUCCESS:
 		break;
 	case SENSOR_INIT_STATUS:
-	case SENSOR_NOT_ACCESSIBLE:
 		*card_status |= PCIE_CARD_DEVICE_NOT_READY_BIT;
+		*reading = 0;
+		break;
+	case SENSOR_NOT_ACCESSIBLE:
+		*card_status |= PCIE_CARD_NOT_ACCESSIBLE_BIT;
+		*reading = 0;
+		break;
+	case SENSOR_NOT_PRESENT:
+		*card_status |= PCIE_CARD_NOT_PRESENT_BIT;
 		*reading = 0;
 		break;
 	default:
