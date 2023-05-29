@@ -30,25 +30,18 @@ LOG_MODULE_REGISTER(dev_ina233);
 
 uint8_t INA233_DEVICE_ID[3] = { 0x02, 0x54, 0x49 };
 
-uint8_t ina233_read(uint8_t sensor_num, int *reading)
+uint8_t ina233_read(sensor_cfg *cfg, int *reading)
 {
-	if (reading == NULL) {
-		LOG_ERR("input parameter reading is NULL");
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_ERR("sensor 0x%x input parameter is invalid", sensor_num);
-		return SENSOR_UNSPECIFIED_ERROR;
-	}
-
-	ina233_init_arg *init_arg =
-		(ina233_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
-	if (init_arg == NULL) {
-		LOG_ERR("input initial pointer is NULL");
-		return SENSOR_INIT_UNSPECIFIED_ERROR;
-	}
-
+	ina233_init_arg *init_arg = (ina233_init_arg *)cfg->init_args;
 	if (init_arg->is_init != true) {
 		LOG_ERR("device isn't initialized");
 		return SENSOR_UNSPECIFIED_ERROR;
@@ -62,11 +55,11 @@ uint8_t ina233_read(uint8_t sensor_num, int *reading)
 	memset(&msg, 0, sizeof(I2C_MSG));
 	*reading = 0;
 
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.rx_len = 2;
-	msg.data[0] = sensor_config[sensor_config_index_map[sensor_num]].offset;
+	msg.data[0] = cfg->offset;
 
 	ret = i2c_master_read(&msg, retry);
 	if (ret != 0) {
@@ -74,7 +67,7 @@ uint8_t ina233_read(uint8_t sensor_num, int *reading)
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
-	uint8_t offset = sensor_config[sensor_config_index_map[sensor_num]].offset;
+	uint8_t offset = cfg->offset;
 	val = (msg.data[1] << 8) | msg.data[0];
 	sensor_val *sval = (sensor_val *)reading;
 	switch (offset) {
@@ -109,26 +102,22 @@ uint8_t ina233_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t ina233_init(uint8_t sensor_num)
+uint8_t ina233_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_ERR("input sensor number is invalid");
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	ina233_init_arg *init_arg =
-		(ina233_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
-	if (init_arg == NULL) {
-		LOG_ERR("input initial pointer is NULL");
-		return SENSOR_INIT_UNSPECIFIED_ERROR;
-	}
-
+	ina233_init_arg *init_arg = (ina233_init_arg *)cfg->init_args;
 	if (init_arg->mfr_config_init == true) {
 		int ret = 0, retry = 5;
 		I2C_MSG msg = { 0 };
 
-		msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-		msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+		msg.bus = cfg->port;
+		msg.target_addr = cfg->target_addr;
 		msg.tx_len = 3;
 		msg.data[0] = INA233_MFR_ADC_CONFIG;
 		msg.data[1] = init_arg->mfr_config.value & 0xFF;
@@ -146,8 +135,8 @@ uint8_t ina233_init(uint8_t sensor_num)
 		uint16_t calibration = 0;
 		I2C_MSG msg = { 0 };
 
-		msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-		msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+		msg.bus = cfg->port;
+		msg.target_addr = cfg->target_addr;
 		msg.tx_len = 3;
 		msg.data[0] = INA233_CALIBRATION_OFFSET;
 
@@ -163,6 +152,6 @@ uint8_t ina233_init(uint8_t sensor_num)
 		init_arg->is_init = true;
 	}
 
-	sensor_config[sensor_config_index_map[sensor_num]].read = ina233_read;
+	cfg->read = ina233_read;
 	return SENSOR_INIT_SUCCESS;
 }

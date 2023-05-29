@@ -18,7 +18,8 @@
 #define __INA230__
 
 #include <stdint.h>
+#include "sensor.h"
 
-extern uint8_t ina230_reset_alt(uint8_t sensor_num);
+extern uint8_t ina230_reset_alt(sensor_cfg *cfg);
 
 #endif

@@ -22,16 +22,19 @@
 
 LOG_MODULE_REGISTER(dev_nct7718w);
 
-uint8_t nct7718w_read(uint8_t sensor_num, int *reading)
+uint8_t nct7718w_read(sensor_cfg *cfg, int *reading)
 {
-	if (!reading || (sensor_num > SENSOR_NUM_MAX)) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	uint8_t retry = 5;
 	I2C_MSG msg = { 0 };
 
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
@@ -76,12 +79,14 @@ uint8_t nct7718w_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t nct7718w_init(uint8_t sensor_num)
+uint8_t nct7718w_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+
 	nct7718w_init_arg *init_arg = (nct7718w_init_arg *)cfg->init_args;
 	if (init_arg == NULL) {
 		LOG_DBG("Input initial pointer is NULL, skip initialization.");

@@ -36,25 +36,22 @@
 
 LOG_MODULE_REGISTER(dev_ina230);
 
-uint8_t ina230_reset_alt(uint8_t sensor_num)
+uint8_t ina230_reset_alt(sensor_cfg *cfg)
 {
-	I2C_MSG msg = { 0 };
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_UNSPECIFIED_ERROR);
 
-	sensor_cfg *cfg;
-	ina230_init_arg *init_args;
-
-	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_ERR("Invalid sensor number");
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	init_args = (ina230_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	I2C_MSG msg = { 0 };
+	ina230_init_arg *init_args = (ina230_init_arg *)cfg->init_args;
 	if (init_args->is_init == false) {
 		LOG_ERR("Device isn't initialized");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
-
-	cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
@@ -70,30 +67,28 @@ uint8_t ina230_reset_alt(uint8_t sensor_num)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t ina230_read(uint8_t sensor_num, int *reading)
+uint8_t ina230_read(sensor_cfg *cfg, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
+		return SENSOR_UNSPECIFIED_ERROR;
+	}
 
 	double val = 0.0;
 	int16_t signed_reg_val = 0;
 	uint16_t reg_val = 0;
 	I2C_MSG msg = { 0 };
 
-	sensor_cfg *cfg;
-	ina230_init_arg *init_args;
-
-	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_ERR("Invalid sensor number");
-		return SENSOR_UNSPECIFIED_ERROR;
-	}
-
-	init_args = (ina230_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	ina230_init_arg *init_args = (ina230_init_arg *)cfg->init_args;
 	if (init_args->is_init == false) {
 		LOG_ERR("Device isn't initialized");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
-
-	cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
@@ -130,19 +125,19 @@ uint8_t ina230_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t ina230_init(uint8_t sensor_num)
+uint8_t ina230_init(sensor_cfg *cfg)
 {
-	uint16_t calibration = 0, alt_reg = 0;
-	I2C_MSG msg = { 0 };
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_INIT_UNSPECIFIED_ERROR);
 
-	ina230_init_arg *init_args;
-
-	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_ERR("Invalid sensor number");
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	init_args = (ina230_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	uint16_t calibration = 0, alt_reg = 0;
+	I2C_MSG msg = { 0 };
+
+	ina230_init_arg *init_args = (ina230_init_arg *)cfg->init_args;
 
 	if (init_args->r_shunt <= 0.0 || init_args->i_max <= 0.0) {
 		LOG_ERR("INA230 has invalid initial arguments");
@@ -165,8 +160,8 @@ uint8_t ina230_init(uint8_t sensor_num)
 	// The power LSB is internally programmed to equal 25 times the current LSB.
 	init_args->pwr_lsb = init_args->cur_lsb * 25.0;
 
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 3;
 	msg.data[0] = INA230_CFG_OFFSET;
 	msg.data[1] = (init_args->config.value >> 8) & 0xFF;
@@ -248,6 +243,6 @@ uint8_t ina230_init(uint8_t sensor_num)
 	init_args->is_init = true;
 
 skip_init:
-	sensor_config[sensor_config_index_map[sensor_num]].read = ina230_read;
+	cfg->read = ina230_read;
 	return SENSOR_INIT_SUCCESS;
 }

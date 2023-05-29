@@ -196,7 +196,8 @@ bool check_dimm_present(uint8_t dimm_channel, uint8_t dimm_num, uint8_t *present
 					   (uint8_t *)get_dimm_temp_req);
 	ipmb_error ipmb_ret = ipmb_read(dimm_msg, IPMB_inf_index_map[dimm_msg->InF_target]);
 	if ((ipmb_ret != IPMB_ERROR_SUCCESS) || (dimm_msg->completion_code != CC_SUCCESS)) {
-		LOG_ERR("Fail to send get DIMM temperature command ret: 0x%x CC: 0x%x", ipmb_ret, dimm_msg->completion_code);
+		LOG_ERR("Fail to send get DIMM temperature command ret: 0x%x CC: 0x%x", ipmb_ret,
+			dimm_msg->completion_code);
 		goto safe_free;
 	}
 
@@ -387,7 +388,7 @@ static bool get_cpu_temp(uint8_t addr, int *reading)
 	}
 
 	sensor_val margin = { 0 };
-	if (get_cpu_margin(addr, (int *)&margin) == false){
+	if (get_cpu_margin(addr, (int *)&margin) == false) {
 		LOG_ERR("Get CPU margin error");
 		return false;
 	}
@@ -492,15 +493,17 @@ static bool get_dimm_temp(uint8_t addr, uint8_t type, int *reading)
 	return true;
 }
 
-uint8_t intel_peci_read(uint8_t sensor_num, int *reading)
+uint8_t intel_peci_read(sensor_cfg *cfg, int *reading)
 {
-	if (!reading || (sensor_num > SENSOR_NUM_MAX)) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		LOG_ERR("Invalid argument");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	bool ret_val = false;
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 	const uint8_t read_type = cfg->offset;
 	if (read_type <= PECI_UNKNOWN || read_type >= PECI_MAX) {
 		LOG_ERR("Sensor not found");
@@ -549,15 +552,17 @@ uint8_t intel_peci_read(uint8_t sensor_num, int *reading)
 	return ret_val ? SENSOR_READ_SUCCESS : SENSOR_FAIL_TO_ACCESS;
 }
 
-uint8_t intel_peci_init(uint8_t sensor_num)
+uint8_t intel_peci_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		LOG_ERR("PECI init failed, sensor_num exceeds SENSOR_NUM_MAX");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
 	static bool is_init = false;
-	sensor_config[sensor_config_index_map[sensor_num]].read = intel_peci_read;
+	cfg->read = intel_peci_read;
 	if (!is_init) {
 		int ret;
 		ret = peci_init();

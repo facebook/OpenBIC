@@ -16,14 +16,22 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <logging/log.h>
+#include "libutil.h"
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "pmbus.h"
 #include "util_pmbus.h"
 
-uint8_t xdpe19283b_read(uint8_t sensor_num, int *reading)
+LOG_MODULE_REGISTER(xdpe19283b);
+
+uint8_t xdpe19283b_read(sensor_cfg *cfg, int *reading)
 {
-	if (reading == NULL || (sensor_num > SENSOR_NUM_MAX)) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -31,7 +39,6 @@ uint8_t xdpe19283b_read(uint8_t sensor_num, int *reading)
 	sensor_val *sval = (sensor_val *)reading;
 	I2C_MSG msg;
 	memset(sval, 0, sizeof(sensor_val));
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
@@ -46,7 +53,7 @@ uint8_t xdpe19283b_read(uint8_t sensor_num, int *reading)
 	if (offset == PMBUS_READ_VOUT) {
 		/* ULINEAR16, get exponent from VOUT_MODE */
 		float exponent;
-		if (!get_exponent_from_vout_mode(sensor_num, &exponent))
+		if (!get_exponent_from_vout_mode(cfg, &exponent))
 			return SENSOR_FAIL_TO_ACCESS;
 
 		float actual_value = ((msg.data[1] << 8) | msg.data[0]) * exponent;
@@ -66,12 +73,14 @@ uint8_t xdpe19283b_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t xdpe19283b_init(uint8_t sensor_num)
+uint8_t xdpe19283b_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	sensor_config[sensor_config_index_map[sensor_num]].read = xdpe19283b_read;
+	cfg->read = xdpe19283b_read;
 	return SENSOR_INIT_SUCCESS;
 }

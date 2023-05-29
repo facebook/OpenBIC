@@ -24,6 +24,7 @@
 #include "plat_def.h"
 #include "sdr.h"
 #include "libutil.h"
+#include "sensor_shell.h"
 
 #define sensor_name_to_num(x) #x,
 
@@ -216,7 +217,7 @@ enum {
 
 enum { SENSOR_INIT_SUCCESS, SENSOR_INIT_UNSPECIFIED_ERROR };
 
-typedef struct _sensor_cfg__ {
+typedef struct _sensor_cfg_ {
 	uint8_t num;
 	uint8_t type;
 	uint8_t port; // port, bus, channel, etc.
@@ -240,8 +241,20 @@ typedef struct _sensor_cfg__ {
 	void *priv_data;
 	uint8_t retry;
 	uint8_t (*init)(uint8_t, int *);
-	uint8_t (*read)(uint8_t, int *);
+	uint8_t (*read)(struct _sensor_cfg_ *, int *);
 } sensor_cfg;
+
+typedef struct _sensor_monitor_table_info {
+	sensor_cfg *monitor_sensor_cfg;
+	uint8_t cfg_count;
+	bool (*access_checker)(uint8_t);
+	uint8_t access_checker_arg;
+	bool (*pre_monitor)(uint8_t, void *);
+	bool (*post_monitor)(uint8_t, void *);
+	void *pre_post_monitor_arg;
+	void *priv_data;
+	char table_name[MAX_SENSOR_NAME_LENGTH];
+} sensor_monitor_table_info;
 
 typedef struct _sensor_poll_time_cfg {
 	uint8_t sensor_num;
@@ -309,7 +322,7 @@ typedef struct _adc_asd_deglitch_arg {
 
 typedef struct _adc_asd_init_arg {
 	bool is_init;
-	adc_asd_deglitch_arg deglitch[8];	// 8 channels
+	adc_asd_deglitch_arg deglitch[8]; // 8 channels
 } adc_asd_init_arg;
 
 typedef struct _adm1278_init_arg {
@@ -615,10 +628,13 @@ extern sensor_cfg *sensor_config;
 // Mapping sensor number to sensor config index
 extern uint8_t sensor_config_index_map[SENSOR_NUM_MAX];
 extern uint8_t sensor_config_count;
+extern sensor_monitor_table_info *sensor_monitor_table;
+extern uint16_t sensor_monitor_count;
 extern const char *const sensor_type_name[];
 
-void clear_unaccessible_sensor_cache(uint8_t sensor_num);
-uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode);
+void clear_unaccessible_sensor_cache(sensor_cfg *cfg);
+uint8_t get_sensor_reading(sensor_cfg *cfg_table, uint8_t cfg_count, uint8_t sensor_num,
+			   int *reading, uint8_t read_mode);
 void pal_set_sensor_poll_interval(int *interval_ms);
 bool stby_access(uint8_t sensor_num);
 bool dc_access(uint8_t sensor_num);
@@ -640,5 +656,9 @@ void load_sensor_config(void);
 void control_sensor_polling(uint8_t sensor_num, uint8_t optional, uint8_t cache_status);
 bool check_reading_pointer_null_is_allowed(uint8_t sensor_num);
 bool init_drive_type_delayed(sensor_cfg *cfg);
+uint8_t pal_get_monitor_sensor_count();
+void plat_fill_monitor_sensor_table();
+sensor_cfg *find_sensor_cfg_via_sensor_num(sensor_cfg *cfg_table, uint8_t cfg_count,
+					   uint8_t sensor_num);
 
 #endif

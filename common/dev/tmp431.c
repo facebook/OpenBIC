@@ -32,20 +32,24 @@ LOG_MODULE_REGISTER(dev_tmp431);
 
 static uint8_t temperature_range = 0xFF;
 
-uint8_t tmp431_read(uint8_t sensor_num, int *reading)
+uint8_t tmp431_read(sensor_cfg *cfg, int *reading)
 {
-	if (!reading || (sensor_num > SENSOR_NUM_MAX)) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	uint8_t retry = 5, temperature_high_byte = 0xFF, temperature_low_byte = 0xFF;
 	I2C_MSG msg = { 0 };
 
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.rx_len = 1;
-	uint8_t offset = sensor_config[sensor_config_index_map[sensor_num]].offset;
+	uint8_t offset = cfg->offset;
 
 	if (offset == TMP431_LOCAL_TEMPERATRUE) {
 		msg.data[0] = LOCAL_TEMPERATURE_HIGH_BYTE;
@@ -90,9 +94,11 @@ uint8_t tmp431_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t tmp431_init(uint8_t sensor_num)
+uint8_t tmp431_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
@@ -106,8 +112,8 @@ uint8_t tmp431_init(uint8_t sensor_num)
 	}
 
 	// Get the temperature range from chip
-	uint8_t bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	uint8_t target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	uint8_t bus = cfg->port;
+	uint8_t target_addr = cfg->target_addr;
 	uint8_t tx_len = 1;
 	uint8_t rx_len = 1;
 
@@ -122,6 +128,6 @@ uint8_t tmp431_init(uint8_t sensor_num)
 cleanup:
 	SAFE_FREE(data);
 
-	sensor_config[sensor_config_index_map[sensor_num]].read = tmp431_read;
+	cfg->read = tmp431_read;
 	return SENSOR_INIT_SUCCESS;
 }

@@ -569,9 +569,13 @@ exit:
 	return ret;
 }
 
-uint8_t xdpe12284c_read(uint8_t sensor_num, int *reading)
+uint8_t xdpe12284c_read(sensor_cfg *cfg, int *reading)
 {
-	if (reading == NULL || (sensor_num > SENSOR_NUM_MAX)) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -581,10 +585,10 @@ uint8_t xdpe12284c_read(uint8_t sensor_num, int *reading)
 	I2C_MSG msg;
 	memset(sval, 0, sizeof(sensor_val));
 	float actual_value = 0;
-	uint8_t offset = sensor_config[sensor_config_index_map[sensor_num]].offset;
+	uint8_t offset = cfg->offset;
 
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.rx_len = 2;
 	msg.data[0] = offset;
@@ -624,12 +628,14 @@ uint8_t xdpe12284c_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t xdpe12284c_init(uint8_t sensor_num)
+uint8_t xdpe12284c_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	sensor_config[sensor_config_index_map[sensor_num]].read = xdpe12284c_read;
+	cfg->read = xdpe12284c_read;
 	return SENSOR_INIT_SUCCESS;
 }

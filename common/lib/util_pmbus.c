@@ -73,15 +73,16 @@ float slinear11_to_float(uint16_t read_value)
 	return ret;
 }
 
-bool get_exponent_from_vout_mode(uint8_t sensor_num, float *exponent)
+bool get_exponent_from_vout_mode(sensor_cfg *cfg, float *exponent)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(exponent, false);
 
 	uint8_t retry = 5;
 	I2C_MSG msg;
 
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.rx_len = 1;
 	msg.data[0] = PMBUS_VOUT_MODE;
@@ -94,16 +95,17 @@ bool get_exponent_from_vout_mode(uint8_t sensor_num, float *exponent)
 	return true;
 }
 
-int pmbus_read_command(uint8_t sensor_num, uint8_t command, uint8_t *result, uint8_t read_len)
+int pmbus_read_command(sensor_cfg *cfg, uint8_t command, uint8_t *result, uint8_t read_len)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, -1);
 	CHECK_NULL_ARG_WITH_RETURN(result, -1);
 
 	int ret = 0;
 	uint8_t retry = 5;
 	I2C_MSG msg = { 0 };
 
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.rx_len = read_len;
 	msg.data[0] = command;

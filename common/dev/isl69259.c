@@ -351,7 +351,7 @@ static bool check_dev_support(uint8_t bus, uint8_t addr, raa_config_t *raa_info)
 	LOG_INF("* Mode:             %s", raa_info->mode == RAA_GEN2 ? "raa gen2" :
 					  raa_info->mode == RAA_GEN3_LEGACY ?
 								       "raa gen3-lagacy" :
-								       "raa gen3-production");
+									     "raa gen3-production");
 	LOG_INF("* ID:               0x%x", raa_info->devid);
 	LOG_INF("* Revision:         0x%x", raa_info->rev);
 	LOG_INF("* CRC:              0x%x", raa_info->crc);
@@ -521,11 +521,12 @@ bool adjust_of_twos_complement(uint8_t offset, int *val)
 	return ret;
 }
 
-uint8_t isl69259_read(uint8_t sensor_num, int *reading)
+uint8_t isl69259_read(sensor_cfg *cfg, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
 
-	if (sensor_num > SENSOR_NUM_MAX) {
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -533,21 +534,22 @@ uint8_t isl69259_read(uint8_t sensor_num, int *reading)
 	uint8_t retry = 5;
 	int val = 0;
 	sensor_val *sval = (sensor_val *)reading;
-	I2C_MSG msg;
+	I2C_MSG msg = { 0 };
+	;
 	memset(sval, 0, sizeof(sensor_val));
 
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.rx_len = 2;
-	msg.data[0] = sensor_config[sensor_config_index_map[sensor_num]].offset;
+	msg.data[0] = cfg->offset;
 
 	if (i2c_master_read(&msg, retry)) {
 		/* read fail */
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
-	uint8_t offset = sensor_config[sensor_config_index_map[sensor_num]].offset;
+	uint8_t offset = cfg->offset;
 	val = (msg.data[1] << 8) | msg.data[0];
 
 	switch (offset) {
@@ -560,8 +562,7 @@ uint8_t isl69259_read(uint8_t sensor_num, int *reading)
 		/* 0.1 A/LSB, 2's complement */
 		ret = adjust_of_twos_complement(offset, &val);
 		if (ret == false) {
-			LOG_ERR("Adjust reading IOUT value failed - sensor number: 0x%x",
-				sensor_num);
+			LOG_ERR("Adjust reading IOUT value failed - sensor number: 0x%x", cfg->num);
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 
@@ -581,8 +582,7 @@ uint8_t isl69259_read(uint8_t sensor_num, int *reading)
 		/* 1 Watt/LSB, 2's complement */
 		ret = adjust_of_twos_complement(offset, &val);
 		if (ret == false) {
-			LOG_ERR("Adjust reading POUT value failed - sensor number: 0x%x",
-				sensor_num);
+			LOG_ERR("Adjust reading POUT value failed - sensor number: 0x%x", cfg->num);
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 
@@ -597,12 +597,14 @@ uint8_t isl69259_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t isl69259_init(uint8_t sensor_num)
+uint8_t isl69259_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	sensor_config[sensor_config_index_map[sensor_num]].read = isl69259_read;
+	cfg->read = isl69259_read;
 	return SENSOR_INIT_SUCCESS;
 }

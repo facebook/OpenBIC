@@ -101,14 +101,13 @@ int ltc4286_convert_real_value(uint8_t type, uint8_t vrange_select, float rsense
 	return -1;
 }
 
-int ltc4286_read_iin(uint8_t sensor_num, double *val)
+int ltc4286_read_iin(sensor_cfg *cfg, double *val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(val, -1);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, -1);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, -1);
 
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
-	ltc4286_init_arg *init_arg =
-		(ltc4286_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
-	CHECK_NULL_ARG_WITH_RETURN(init_arg, -1);
+	ltc4286_init_arg *init_arg = (ltc4286_init_arg *)cfg->init_args;
 
 	int ret = 0;
 	uint8_t retry = 5;
@@ -165,14 +164,13 @@ int ltc4286_read_iin(uint8_t sensor_num, double *val)
 	return 0;
 }
 
-int ltc4286_read_pout(uint8_t sensor_num, double *val)
+int ltc4286_read_pout(sensor_cfg *cfg, double *val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(val, -1);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, -1);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, -1);
 
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
-	ltc4286_init_arg *init_arg =
-		(ltc4286_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
-	CHECK_NULL_ARG_WITH_RETURN(init_arg, -1);
+	ltc4286_init_arg *init_arg = (ltc4286_init_arg *)cfg->init_args;
 
 	int ret = 0;
 	uint8_t retry = 5;
@@ -224,15 +222,18 @@ int ltc4286_read_pout(uint8_t sensor_num, double *val)
 	return 0;
 }
 
-uint8_t ltc4286_read(uint8_t sensor_num, int *reading)
+uint8_t ltc4286_read(sensor_cfg *cfg, int *reading)
 {
-	if ((reading == NULL) ||
-	    (sensor_config[sensor_config_index_map[sensor_num]].init_args == NULL)) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	ltc4286_init_arg *init_arg =
-		(ltc4286_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	ltc4286_init_arg *init_arg = (ltc4286_init_arg *)cfg->init_args;
 	if (init_arg->is_init == false) {
 		LOG_ERR("Device isn't initialized");
 		return SENSOR_UNSPECIFIED_ERROR;
@@ -244,8 +245,6 @@ uint8_t ltc4286_read(uint8_t sensor_num, int *reading)
 	uint8_t retry = 5;
 	double val;
 	I2C_MSG msg;
-
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
@@ -267,7 +266,7 @@ uint8_t ltc4286_read(uint8_t sensor_num, int *reading)
 		type = VOLTAGE;
 		break;
 	case PMBUS_READ_IIN:
-		ret = ltc4286_read_iin(sensor_num, &val);
+		ret = ltc4286_read_iin(cfg, &val);
 		if (ret != 0) {
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
@@ -282,7 +281,7 @@ uint8_t ltc4286_read(uint8_t sensor_num, int *reading)
 		type = POWER;
 		break;
 	case PMBUS_READ_POUT:
-		ret = ltc4286_read_pout(sensor_num, &val);
+		ret = ltc4286_read_pout(cfg, &val);
 		if (ret != 0) {
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
@@ -333,21 +332,22 @@ return_val:
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t ltc4286_init(uint8_t sensor_num)
+uint8_t ltc4286_init(sensor_cfg *cfg)
 {
-	if (!sensor_config[sensor_config_index_map[sensor_num]].init_args) {
-		LOG_ERR("LTC4286 init args are not provided!");
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
 	I2C_MSG msg;
 	memset(&msg, 0, sizeof(msg));
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	uint8_t retry = 5;
 
-	ltc4286_init_arg *init_args =
-		(ltc4286_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	ltc4286_init_arg *init_args = (ltc4286_init_arg *)cfg->init_args;
 	if (init_args->is_init) {
 		goto init_param;
 	}
@@ -383,6 +383,6 @@ init_param:
 	init_args->is_init = true;
 
 cleanup:
-	sensor_config[sensor_config_index_map[sensor_num]].read = ltc4286_read;
+	cfg->read = ltc4286_read;
 	return SENSOR_INIT_SUCCESS;
 }

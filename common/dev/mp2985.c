@@ -24,14 +24,17 @@
 
 LOG_MODULE_REGISTER(mp2985);
 
-uint8_t mp2985_read(uint8_t sensor_num, int *reading)
+uint8_t mp2985_read(sensor_cfg *cfg, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 	mp2985_init_arg *init_arg = (mp2985_init_arg *)cfg->init_args;
 	if (!init_arg->is_init) {
 		LOG_ERR("device isn't initialized");
@@ -117,27 +120,24 @@ uint8_t mp2985_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t mp2985_init(uint8_t sensor_num)
+uint8_t mp2985_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	if (!sensor_config[sensor_config_index_map[sensor_num]].init_args) {
-		LOG_ERR("%s init args are not provided!", __func__);
-		return SENSOR_INIT_UNSPECIFIED_ERROR;
-	}
-
-	mp2985_init_arg *init_args =
-		(mp2985_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	mp2985_init_arg *init_args = (mp2985_init_arg *)cfg->init_args;
 	if (init_args->is_init)
 		goto skip_init;
 
 	uint8_t retry = 5;
 	I2C_MSG msg;
 	memset(&msg, 0, sizeof(msg));
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 
 	/* Set Page0 */
 	msg.tx_len = 2;
@@ -165,6 +165,6 @@ uint8_t mp2985_init(uint8_t sensor_num)
 	init_args->is_init = true;
 
 skip_init:
-	sensor_config[sensor_config_index_map[sensor_num]].read = mp2985_read;
+	cfg->read = mp2985_read;
 	return SENSOR_INIT_SUCCESS;
 }

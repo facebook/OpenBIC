@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-#ifndef UTIL_PMBUS_H
-#define UTIL_PMBUS_H
+#ifndef NVME_H
+#define NVME_H
 
-#include "sensor.h"
+#include <stdint.h>
 
-float slinear11_to_float(uint16_t);
-bool get_exponent_from_vout_mode(sensor_cfg *, float *);
-int pmbus_read_command(sensor_cfg *cfg, uint8_t command, uint8_t *result, uint8_t read_len);
+#define NVME_TEMP_OFFSET 0x00
+#define NVME_VOLTAGE_RAIL_1_OFFSET 0x75
+#define NVME_VOLTAGE_RAIL_2_OFFSET 0x77
+
+int read_nvme_info(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t read_len, uint8_t *data);
 
 #endif

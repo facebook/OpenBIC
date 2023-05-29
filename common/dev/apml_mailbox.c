@@ -166,14 +166,17 @@ void dimm_temp_write(apml_msg *msg)
 	}
 }
 
-uint8_t apml_mailbox_read(uint8_t sensor_num, int *reading)
+uint8_t apml_mailbox_read(sensor_cfg *cfg, int *reading)
 {
-	if (reading == NULL || (sensor_num > SENSOR_NUM_MAX)) {
-		LOG_DBG("msg passed in as NULL");
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 	apml_mailbox_init_arg *init_arg = (apml_mailbox_init_arg *)cfg->init_args;
 
 	apml_msg mailbox_msg;
@@ -216,13 +219,13 @@ uint8_t apml_mailbox_read(uint8_t sensor_num, int *reading)
 	return cfg->cache_status;
 }
 
-uint8_t apml_mailbox_init(uint8_t sensor_num)
+uint8_t apml_mailbox_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_DBG("msg passed in as NULL");
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 
 	if (cfg->offset == SBRMI_MAILBOX_GET_DIMM_TEMP) {
 		cfg->priv_data = malloc(sizeof(dimm_temp_priv_data));

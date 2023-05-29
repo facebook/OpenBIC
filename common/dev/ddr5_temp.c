@@ -25,16 +25,17 @@
 
 LOG_MODULE_REGISTER(dev_ddr5_temp);
 
-uint8_t ddr5_temp_read(uint8_t sensor_num, int *reading)
+uint8_t ddr5_temp_read(sensor_cfg *cfg, int *reading)
 {
-	if (!reading || (sensor_num > SENSOR_NUM_MAX)) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
-	if (cfg->init_args == NULL) {
-		return SENSOR_UNSPECIFIED_ERROR;
-	}
 	ddr5_init_temp_arg *init_arg = (ddr5_init_temp_arg *)cfg->init_args;
 	uint8_t retry = 5;
 	I2C_MSG msg = { 0 };
@@ -85,12 +86,14 @@ uint8_t ddr5_temp_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t ddr5_temp_init(uint8_t sensor_num)
+uint8_t ddr5_temp_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	sensor_config[sensor_config_index_map[sensor_num]].read = ddr5_temp_read;
+	cfg->read = ddr5_temp_read;
 	return SENSOR_INIT_SUCCESS;
 }

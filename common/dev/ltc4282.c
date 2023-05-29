@@ -155,15 +155,18 @@ exit:
 	return ret;
 }
 
-uint8_t ltc4282_read(uint8_t sensor_num, int *reading)
+uint8_t ltc4282_read(sensor_cfg *cfg, int *reading)
 {
-	if ((reading == NULL) || (sensor_num > SENSOR_NUM_MAX) ||
-	    (sensor_config[sensor_config_index_map[sensor_num]].init_args == NULL)) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	ltc4282_init_arg *init_arg =
-		(ltc4282_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	ltc4282_init_arg *init_arg = (ltc4282_init_arg *)cfg->init_args;
 
 	if (!init_arg->is_init) {
 		LOG_ERR("Device isn't initialized");
@@ -195,8 +198,6 @@ uint8_t ltc4282_read(uint8_t sensor_num, int *reading)
 	double val = 0;
 	I2C_MSG msg = { 0 };
 
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
-
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
@@ -226,7 +227,7 @@ uint8_t ltc4282_read(uint8_t sensor_num, int *reading)
 		val = (val * 16.64 * 0.04 * 256 / 65535 / 65535 / rsense_mohm);
 		break;
 	default:
-		LOG_ERR("Invalid sensor 0x%x offset 0x%x", sensor_num, cfg->offset);
+		LOG_ERR("Invalid sensor 0x%x offset 0x%x", cfg->num, cfg->offset);
 		return SENSOR_NOT_FOUND;
 	}
 
@@ -239,21 +240,22 @@ uint8_t ltc4282_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t ltc4282_init(uint8_t sensor_num)
+uint8_t ltc4282_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
 	I2C_MSG msg;
 	uint8_t retry = 5;
 
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 
-	ltc4282_init_arg *init_args =
-		(ltc4282_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
-
+	ltc4282_init_arg *init_args = (ltc4282_init_arg *)cfg->init_args;
 	if (init_args->is_init) {
 		goto exit;
 	}
@@ -295,7 +297,7 @@ init_param:
 	init_args->is_init = true;
 
 exit:
-	sensor_config[sensor_config_index_map[sensor_num]].read = ltc4282_read;
+	cfg->read = ltc4282_read;
 	return SENSOR_INIT_SUCCESS;
 
 error:

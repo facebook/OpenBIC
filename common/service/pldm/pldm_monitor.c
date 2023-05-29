@@ -93,7 +93,8 @@ uint8_t pldm_get_sensor_reading(void *mctp_inst, uint8_t *buf, uint16_t len, uin
 	uint8_t status;
 	int reading = 0;
 
-	status = get_sensor_reading(sensor_number, &reading, GET_FROM_CACHE);
+	status = get_sensor_reading(sensor_config, sensor_config_count, sensor_number, &reading,
+				    GET_FROM_CACHE);
 
 	switch (status) {
 	case SENSOR_READ_SUCCESS:
@@ -493,7 +494,7 @@ void set_effecter_state_gpio_handler(const uint8_t *buf, uint16_t len, uint8_t *
 			uint8_t gpio_val =
 				((gpio_val_state->effecter_state == EFFECTER_STATE_GPIO_VALUE_LOW) ?
 					 GPIO_LOW :
-					 GPIO_HIGH);
+					       GPIO_HIGH);
 			gpio_set(gpio_pin, gpio_val);
 			*completion_code_p = PLDM_SUCCESS;
 			return;
@@ -595,10 +596,10 @@ void get_effecter_state_gpio_handler(const uint8_t *buf, uint16_t len, uint8_t *
 		gpio_dir_state->present_state = gpio_dir_state->pending_state =
 			((gpio_cfg[gpio_pin].direction == GPIO_INPUT) ?
 				 EFFECTER_STATE_GPIO_DIRECTION_INPUT :
-				 EFFECTER_STATE_GPIO_DIRECTION_OUTPUT);
+				       EFFECTER_STATE_GPIO_DIRECTION_OUTPUT);
 		gpio_val_state->present_state = gpio_val_state->pending_state =
 			(!gpio_get(gpio_pin) ? EFFECTER_STATE_GPIO_VALUE_LOW :
-					       EFFECTER_STATE_GPIO_VALUE_HIGH);
+						     EFFECTER_STATE_GPIO_VALUE_HIGH);
 	}
 
 	*resp_len = PLDM_GET_STATE_EFFECTER_RESP_NO_STATE_FIELD_BYTES +
