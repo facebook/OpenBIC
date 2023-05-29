@@ -27,29 +27,29 @@
 // clang-format off
 
 #define OPA_name_gpioA \
-	gpio_name_to_num(OPA_CLKBUF_E1S_0_OE_N) \
-	gpio_name_to_num(OPA_CLKBUF_E1S_1_OE_N) \
 	gpio_name_to_num(OPA_CLKBUF_E1S_2_OE_N) \
+	gpio_name_to_num(OPA_CLKBUF_E1S_1_OE_N) \
+	gpio_name_to_num(OPA_CLKBUF_E1S_0_OE_N) \
 	gpio_name_to_num(OPA_CLKBUF_RTM_OE_N) \
 	gpio_name_to_num(OPA_CLKBUF_RISER_OE_N) \
-	gpio_name_to_num(OPA_PWRGD_P12V_E1S_0_R) \
+	gpio_name_to_num(OPA_PWRGD_P12V_E1S_2_R) \
 	gpio_name_to_num(OPA_PWRGD_P12V_E1S_1_R) \
-	gpio_name_to_num(OPA_PWRGD_P12V_E1S_2_R)
+	gpio_name_to_num(OPA_PWRGD_P12V_E1S_0_R)
 
 #define OPA_name_gpioB \
 	gpio_name_to_num(OPA_PWRGD_EXP_PWR) \
 	gpio_name_to_num(OPA_RESERVE_GPIOB1) \
-	gpio_name_to_num(OPA_E1S_0_PRSNT_N) \
-	gpio_name_to_num(OPA_E1S_1_PRSNT_N) \
 	gpio_name_to_num(OPA_E1S_2_PRSNT_N) \
+	gpio_name_to_num(OPA_E1S_1_PRSNT_N) \
+	gpio_name_to_num(OPA_E1S_0_PRSNT_N) \
 	gpio_name_to_num(OPA_PWRGD_P3V3_STBY) \
 	gpio_name_to_num(OPA_PWRGD_P1V2_STBY ) \
 	gpio_name_to_num(OPA_SMB_TMP_SENSOR_ALT_N)
 
 #define OPA_name_gpioC \
-	gpio_name_to_num(OPA_PWRGD_P3V3_E1S_0_R) \
-	gpio_name_to_num(OPA_PWRGD_P3V3_E1S_1_R) \
 	gpio_name_to_num(OPA_PWRGD_P3V3_E1S_2_R) \
+	gpio_name_to_num(OPA_PWRGD_P3V3_E1S_1_R) \
+	gpio_name_to_num(OPA_PWRGD_P3V3_E1S_0_R) \
 	gpio_name_to_num(OPA_PWRGD_P1V8_VR) \
 	gpio_name_to_num(OPA_PWRGD_P0V9_VR) \
 	gpio_name_to_num(OPA_BOARD_REV_0) \
@@ -58,21 +58,21 @@
 
 #define OPA_name_gpioD \
 	gpio_name_to_num(OPA_PWRGD_P12V_MAIN) \
-	gpio_name_to_num(OPA_RST_SMBRST_BIC_E1S_0_N) \
-	gpio_name_to_num(OPA_RST_SMBRST_BIC_E1S_1_N) \
 	gpio_name_to_num(OPA_RST_SMBRST_BIC_E1S_2_N) \
+	gpio_name_to_num(OPA_RST_SMBRST_BIC_E1S_1_N) \
+	gpio_name_to_num(OPA_RST_SMBRST_BIC_E1S_0_N) \
 	gpio_name_to_num(OPA_RESET_BIC_RTM_N) \
 	gpio_name_to_num(OPA_RST_USB_HUB_N) \
 	gpio_name_to_num(OPA_PERST_BIC_RTM_N) \
 	gpio_name_to_num(OPA_RESERVE_GPIOD7)
 
 #define OPA_name_gpioE \
-	gpio_name_to_num(OPA_PERST_E1S_0_N) \
-	gpio_name_to_num(OPA_PERST_E1S_1_N) \
 	gpio_name_to_num(OPA_PERST_E1S_2_N) \
-	gpio_name_to_num(OPA_E1S_0_12V_POWER_EN) \
-	gpio_name_to_num(OPA_E1S_1_12V_POWER_EN) \
+	gpio_name_to_num(OPA_PERST_E1S_1_N) \
+	gpio_name_to_num(OPA_PERST_E1S_0_N) \
 	gpio_name_to_num(OPA_E1S_2_12V_POWER_EN) \
+	gpio_name_to_num(OPA_E1S_1_12V_POWER_EN) \
+	gpio_name_to_num(OPA_E1S_0_12V_POWER_EN) \
 	gpio_name_to_num(OPA_EN_P0V9_VR) \
 	gpio_name_to_num(OPA_RESERVE_GPIOE7)
 
@@ -80,21 +80,21 @@
 	gpio_name_to_num(OPA_SMB_PCIE_EXPB_ALERT_N) \
 	gpio_name_to_num(OPA_RST_PCIE_EXP_PERST0_N) \
 	gpio_name_to_num(OPA_CLKBUF_PWRDOWN_R_N) \
-	gpio_name_to_num(OPA_FM_PWRDIS_E1S_0) \
-	gpio_name_to_num(OPA_FM_PWRDIS_E1S_1) \
 	gpio_name_to_num(OPA_FM_PWRDIS_E1S_2) \
+	gpio_name_to_num(OPA_FM_PWRDIS_E1S_1) \
+	gpio_name_to_num(OPA_FM_PWRDIS_E1S_0) \
 	gpio_name_to_num(OPA_SMB_PCIE_EXP1_ALERT_N) \
 	gpio_name_to_num(OPA_RESERVE_GPIOF7)
 
 #define OPA_name_gpioG \
-	gpio_name_to_num(OPA_SMB_E1S_0_INA233_ALT_N) \
-	gpio_name_to_num(OPA_SMB_E1S_1_INA233_ALT_N) \
 	gpio_name_to_num(OPA_SMB_E1S_2_INA233_ALT_N) \
+	gpio_name_to_num(OPA_SMB_E1S_1_INA233_ALT_N) \
+	gpio_name_to_num(OPA_SMB_E1S_0_INA233_ALT_N) \
 	gpio_name_to_num(OPA_SMB_P12V_EDGE_INA233_ALT_N) \
 	gpio_name_to_num(OPA_RTM_IOEXP_INT_N) \
-	gpio_name_to_num(OPA_LED_E1S_0_ATTN_R) \
+	gpio_name_to_num(OPA_LED_E1S_2_ATTN_R) \
 	gpio_name_to_num(OPA_LED_E1S_1_ATTN_R) \
-	gpio_name_to_num(OPA_LED_E1S_2_ATTN_R)
+	gpio_name_to_num(OPA_LED_E1S_0_ATTN_R)
 
 #define OPA_name_gpioH \
 	gpio_name_to_num(OPA_RESERVE_GPIOH0) \
@@ -139,9 +139,9 @@
 #define OPA_name_gpioL \
 	gpio_name_to_num(OPA_RESERVE_GPIOL0) \
 	gpio_name_to_num(OPA_RESERVE_GPIOL1) \
-	gpio_name_to_num(OPA_E1S_0_3V3_POWER_EN) \
-	gpio_name_to_num(OPA_E1S_1_3V3_POWER_EN) \
 	gpio_name_to_num(OPA_E1S_2_3V3_POWER_EN) \
+	gpio_name_to_num(OPA_E1S_1_3V3_POWER_EN) \
+	gpio_name_to_num(OPA_E1S_0_3V3_POWER_EN) \
 	gpio_name_to_num(OPA_RESERVE_GPIOL5) \
 	gpio_name_to_num(OPA_RESERVE_GPIOL6) \
 	gpio_name_to_num(OPA_RESERVE_GPIOL7)
@@ -238,78 +238,78 @@
 
 // For OPB BIC GPIO name
 #define OPB_name_gpioA \
-	gpio_name_to_num(OPB_CLKBUF_E1S_0_OE_N) \
-	gpio_name_to_num(OPB_CLKBUF_E1S_1_OE_N) \
-	gpio_name_to_num(OPB_CLKBUF_E1S_2_OE_N) \
-	gpio_name_to_num(OPB_CLKBUF_E1S_3_OE_N) \
 	gpio_name_to_num(OPB_CLKBUF_E1S_4_OE_N) \
-	gpio_name_to_num(OPB_PWRGD_P12V_E1S_0_R) \
-	gpio_name_to_num(OPB_PWRGD_P12V_E1S_1_R) \
+	gpio_name_to_num(OPB_CLKBUF_E1S_3_OE_N) \
+	gpio_name_to_num(OPB_CLKBUF_E1S_2_OE_N) \
+	gpio_name_to_num(OPB_CLKBUF_E1S_1_OE_N) \
+	gpio_name_to_num(OPB_CLKBUF_E1S_0_OE_N) \
+	gpio_name_to_num(OPB_PWRGD_P12V_E1S_4_R) \
+	gpio_name_to_num(OPB_PWRGD_P12V_E1S_3_R) \
 	gpio_name_to_num(OPB_PWRGD_P12V_E1S_2_R)
 
 #define OPB_name_gpioB \
-	gpio_name_to_num(OPB_PWRGD_P12V_E1S_3_R) \
-	gpio_name_to_num(OPB_PWRGD_P12V_E1S_4_R) \
-	gpio_name_to_num(OPB_E1S_0_PRSNT_N) \
-	gpio_name_to_num(OPB_E1S_1_PRSNT_N) \
-	gpio_name_to_num(OPB_E1S_2_PRSNT_N) \
+	gpio_name_to_num(OPB_PWRGD_P12V_E1S_1_R) \
+	gpio_name_to_num(OPB_PWRGD_P12V_E1S_0_R) \
+	gpio_name_to_num(OPB_E1S_4_PRSNT_N) \
 	gpio_name_to_num(OPB_E1S_3_PRSNT_N) \
-	gpio_name_to_num(OPB_E1S_4_PRSNT_N ) \
+	gpio_name_to_num(OPB_E1S_2_PRSNT_N) \
+	gpio_name_to_num(OPB_E1S_1_PRSNT_N) \
+	gpio_name_to_num(OPB_E1S_0_PRSNT_N ) \
 	gpio_name_to_num(OPB_SMB_TEMP_SENSOR_ALT_N)
 
 #define OPB_name_gpioC \
-	gpio_name_to_num(OPB_PWRGD_P3V3_E1S_0_R) \
-	gpio_name_to_num(OPB_PWRGD_P3V3_E1S_1_R) \
-	gpio_name_to_num(OPB_PWRGD_P3V3_E1S_2_R) \
-	gpio_name_to_num(OPB_PWRGD_P3V3_E1S_3_R) \
 	gpio_name_to_num(OPB_PWRGD_P3V3_E1S_4_R) \
+	gpio_name_to_num(OPB_PWRGD_P3V3_E1S_3_R) \
+	gpio_name_to_num(OPB_PWRGD_P3V3_E1S_2_R) \
+	gpio_name_to_num(OPB_PWRGD_P3V3_E1S_1_R) \
+	gpio_name_to_num(OPB_PWRGD_P3V3_E1S_0_R) \
 	gpio_name_to_num(OPB_BOARD_REV_0) \
 	gpio_name_to_num(OPB_BOARD_REV_1) \
 	gpio_name_to_num(OPB_BOARD_REV_2)
 
 #define OPB_name_gpioD \
 	gpio_name_to_num(OPB_PWRGD_P12V_MAIN) \
-	gpio_name_to_num(OPB_RST_SMBRST_BIC_E1S_0) \
-	gpio_name_to_num(OPB_RST_SMBRST_BIC_E1S_1) \
-	gpio_name_to_num(OPB_RST_SMBRST_BIC_E1S_2) \
-	gpio_name_to_num(OPB_RST_SMBRST_BIC_E1S_3) \
 	gpio_name_to_num(OPB_RST_SMBRST_BIC_E1S_4) \
-	gpio_name_to_num(OPB_RST_E1S_3_PERST) \
-	gpio_name_to_num(OPB_RST_E1S_4_PERST)
+	gpio_name_to_num(OPB_RST_SMBRST_BIC_E1S_3) \
+	gpio_name_to_num(OPB_RST_SMBRST_BIC_E1S_2) \
+	gpio_name_to_num(OPB_RST_SMBRST_BIC_E1S_1) \
+	gpio_name_to_num(OPB_RST_SMBRST_BIC_E1S_0) \
+	gpio_name_to_num(OPB_RST_E1S_4_PERST) \
+	gpio_name_to_num(OPB_RST_E1S_3_PERST)
 
 #define OPB_name_gpioE \
-	gpio_name_to_num(OPB_RST_E1S_0_PERST) \
-	gpio_name_to_num(OPB_RST_E1S_1_PERST) \
 	gpio_name_to_num(OPB_RST_E1S_2_PERST) \
-	gpio_name_to_num(OPB_P12V_E1S_0_EN_R) \
-	gpio_name_to_num(OPB_P12V_E1S_1_EN_R) \
-	gpio_name_to_num(OPB_P12V_E1S_2_EN_R) \
+	gpio_name_to_num(OPB_RST_E1S_1_PERST) \
+	gpio_name_to_num(OPB_RST_E1S_0_PERST) \
+	gpio_name_to_num(OPB_P12V_E1S_4_EN_R) \
 	gpio_name_to_num(OPB_P12V_E1S_3_EN_R) \
-	gpio_name_to_num(OPB_P12V_E1S_4_EN_R)
+	gpio_name_to_num(OPB_P12V_E1S_2_EN_R) \
+	gpio_name_to_num(OPB_P12V_E1S_1_EN_R) \
+	gpio_name_to_num(OPB_P12V_E1S_0_EN_R)
 
 #define OPB_name_gpioF \
 	gpio_name_to_num(OPB_SMB_P12V_MAIN_INA233_ALT_N) \
 	gpio_name_to_num(OPB_PMB_P12V_MAIN_ALT_N) \
 	gpio_name_to_num(OPB_CLKBUF_PWRDOWN_R_N) \
-	gpio_name_to_num(OPB_FM_PWRDIS_E1S_0) \
-	gpio_name_to_num(OPB_FM_PWRDIS_E1S_1) \
-	gpio_name_to_num(OPB_FM_PWRDIS_E1S_2) \
+	gpio_name_to_num(OPB_FM_PWRDIS_E1S_4) \
 	gpio_name_to_num(OPB_FM_PWRDIS_E1S_3) \
-	gpio_name_to_num(OPB_FM_PWRDIS_E1S_4)
+	gpio_name_to_num(OPB_FM_PWRDIS_E1S_2) \
+	gpio_name_to_num(OPB_FM_PWRDIS_E1S_1) \
+	gpio_name_to_num(OPB_FM_PWRDIS_E1S_0)
 
 #define OPB_name_gpioG \
-	gpio_name_to_num(OPB_SMB_E1S_0_INA233_ALT_N) \
-	gpio_name_to_num(OPB_SMB_E1S_1_INA233_ALT_N) \
-	gpio_name_to_num(OPB_SMB_E1S_2_INA233_ALT_N) \
-	gpio_name_to_num(OPB_SMB_E1S_3_INA233_ALT_N) \
 	gpio_name_to_num(OPB_SMB_E1S_4_INA233_ALT_N) \
-	gpio_name_to_num(OPB_LED_E1S_0_ATTN_R) \
-	gpio_name_to_num(OPB_LED_E1S_1_ATTN_R) \
+	gpio_name_to_num(OPB_SMB_E1S_3_INA233_ALT_N) \
+	gpio_name_to_num(OPB_SMB_E1S_2_INA233_ALT_N) \
+	gpio_name_to_num(OPB_SMB_E1S_1_INA233_ALT_N) \
+	gpio_name_to_num(OPB_SMB_E1S_0_INA233_ALT_N) \
+	gpio_name_to_num(OPB_LED_E1S_4_ATTN_R) \
+	gpio_name_to_num(OPB_LED_E1S_3_ATTN_R) \
 	gpio_name_to_num(OPB_LED_E1S_2_ATTN_R)
 
 #define OPB_name_gpioH \
-	gpio_name_to_num(OPB_LED_E1S_3_ATTN_R) \
-	gpio_name_to_num(OPB_LED_E1S_4_ATTN_R) \
+	gpio_name_to_num(OPB_LED_E1S_1_ATTN_R) \
+	gpio_name_to_num(OPB_LED_E1S_0_ATTN_R) \
 	gpio_name_to_num(OPB_HUB1_MASTER_SELECT_R) \
 	gpio_name_to_num(OPB_SMB_IOEXP_ALT_N) \
 	gpio_name_to_num(OPB_RESERVE_GPIOH4) \
@@ -350,11 +350,11 @@
 #define OPB_name_gpioL \
 	gpio_name_to_num(OPB_RESERVE_GPIOL0) \
 	gpio_name_to_num(OPB_RESERVE_GPIOL1) \
-	gpio_name_to_num(OPB_P3V3_E1S_0_EN_R) \
-	gpio_name_to_num(OPB_P3V3_E1S_1_EN_R) \
-	gpio_name_to_num(OPB_P3V3_E1S_2_EN_R) \
-	gpio_name_to_num(OPB_P3V3_E1S_3_EN_R) \
 	gpio_name_to_num(OPB_P3V3_E1S_4_EN_R) \
+	gpio_name_to_num(OPB_P3V3_E1S_3_EN_R) \
+	gpio_name_to_num(OPB_P3V3_E1S_2_EN_R) \
+	gpio_name_to_num(OPB_P3V3_E1S_1_EN_R) \
+	gpio_name_to_num(OPB_P3V3_E1S_0_EN_R) \
 	gpio_name_to_num(OPB_RESERVE_GPIOL7)
 
 #define OPB_name_gpioM \

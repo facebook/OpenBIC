@@ -301,6 +301,7 @@ void OEM_1S_SAFE_WRITE_READ_M2_DATA(ipmi_msg *msg)
 	uint8_t retry = 3;
 	uint8_t device_id = 0, mux_channel = 0;
 	I2C_MSG i2c_msg;
+	uint8_t card_type = get_card_type();
 
 	// at least include device_id, addr, rx_len, offset
 	if (msg->data_len < 4) {
@@ -313,26 +314,18 @@ void OEM_1S_SAFE_WRITE_READ_M2_DATA(ipmi_msg *msg)
 		msg->completion_code = CC_SENSOR_NOT_PRESENT;
 		return;
 	}
-
-	switch (device_id) {
-	case E1S_0:
-		mux_channel = I2C_HUB_CHANNEL_0;
-		break;
-	case E1S_1:
-		mux_channel = I2C_HUB_CHANNEL_1;
-		break;
-	case E1S_2:
-		mux_channel = I2C_HUB_CHANNEL_2;
-		break;
-	case E1S_3:
-		mux_channel = I2C_HUB_CHANNEL_3;
-		break;
-	case E1S_4:
-		mux_channel = I2C_HUB_CHANNEL_4;
-		break;
-	default:
-		msg->completion_code = CC_INVALID_DATA_FIELD;
-		return;
+	if (card_type == CARD_TYPE_OPA) {
+		if (mux_channel >= sizeof(e1s_mux_channel_opa)) {
+			msg->completion_code = CC_INVALID_DATA_FIELD;
+			return;
+		}
+		mux_channel = e1s_mux_channel_opa[device_id];
+	} else {
+		if (mux_channel >= sizeof(e1s_mux_channel_opb)) {
+			msg->completion_code = CC_INVALID_DATA_FIELD;
+			return;
+		}
+		mux_channel = e1s_mux_channel_opb[device_id];
 	}
 
 	i2c_msg.bus = I2C_BUS2;
