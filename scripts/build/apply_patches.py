@@ -63,7 +63,7 @@ def gather_patches(source_path) -> list:
     """
     patches = []
     for (dirpath, _, filenames) in os.walk(source_path):
-        for file in filenames:
+        for file in sorted(filenames):
             full_path = os.path.join(dirpath, file)
             patches.append(full_path)
 
