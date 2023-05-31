@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_SENSOR_TABLE_H
-#define PLAT_SENSOR_TABLE_H
+#ifndef PLAT_POWER_STATUS_H
+#define PLAT_POWER_STATUS_H
 
-/* SENSOR NUMBER - sel */
-#define SENSOR_NUM_SYSTEM_STATUS 0x10
-#define SENSOR_NUM_POWER_ERROR 0x56
-#define SENSOR_NUM_PROC_FAIL 0x65
-#define SENSOR_NUM_VR_OCP 0x71
-#define SENSOR_NUM_VR_HOT 0x72
-#define SENSOR_NUM_VR_FAULT 0x73
-#define SENSOR_NUM_PMIC_ERROR 0xB4
+#include <stdint.h>
+
+void set_mpro_status();
+bool get_mpro_status();
+bool mpro_access(uint8_t sensor_num);
+void bic_heart_beat_init();
 
 #endif
