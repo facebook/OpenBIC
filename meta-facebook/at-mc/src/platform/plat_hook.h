@@ -19,6 +19,11 @@
 
 #include "common_i2c_mux.h"
 
+typedef struct _pwr_monitor_pre_proc_arg {
+	mux_config bus_3_mux_configs;
+	uint8_t jcn_number;
+} pwr_monitor_pre_proc_arg;
+
 /**************************************************************************************************
  * INIT ARGS
 **************************************************************************************************/
@@ -33,11 +38,11 @@ extern ltc2991_init_arg ltc2991_init_args[];
  *  PRE-HOOK/POST-HOOK ARGS
  **************************************************************************************************/
 extern mux_config bus_2_pca9548_configs[];
-extern mux_config bus_3_pca9546_configs[];
 extern mux_config bus_4_pca9548_configs[];
 extern mux_config bus_8_pca9548_configs[];
 extern mux_config cxl_mux_configs[];
 extern vr_page_cfg vr_page_select[];
+extern pwr_monitor_pre_proc_arg pwr_monitor_pre_proc_args[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
