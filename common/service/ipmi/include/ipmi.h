@@ -284,4 +284,6 @@ enum {
 	INDEX_SLOT3 = 0x03,
 };
 
+ipmb_error notify_ipmi_client(ipmi_msg_cfg *msg_cfg);
+
 #endif

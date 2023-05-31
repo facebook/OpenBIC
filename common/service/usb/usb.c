@@ -43,7 +43,7 @@ static inline void try_ipmi_message(ipmi_msg_cfg *current_msg, int retry)
 	if (current_msg == NULL) {
 		return;
 	}
-	ipmb_notify_client(current_msg);
+	notify_ipmi_client(current_msg);
 }
 
 void handle_usb_data(uint8_t *rx_buff, int rx_len)
@@ -60,10 +60,9 @@ void handle_usb_data(uint8_t *rx_buff, int rx_len)
 
 	if (DEBUG_USB) {
 		LOG_DBG("USB: len %d, req: %x %x ID: %x %x %x target: %x offset: %x %x %x %x len: %x %x",
-		       rx_len,
-		       rx_buff[0], rx_buff[1], rx_buff[2], rx_buff[3],
-		       rx_buff[4], rx_buff[5], rx_buff[6], rx_buff[7],
-		       rx_buff[8], rx_buff[9], rx_buff[10], rx_buff[11]);
+			rx_len, rx_buff[0], rx_buff[1], rx_buff[2], rx_buff[3], rx_buff[4],
+			rx_buff[5], rx_buff[6], rx_buff[7], rx_buff[8], rx_buff[9], rx_buff[10],
+			rx_buff[11]);
 	}
 
 	// USB driver must receive 64 byte package from bmc
@@ -76,7 +75,7 @@ void handle_usb_data(uint8_t *rx_buff, int rx_len)
 	if (fwupdate_keep_data) {
 		if ((keep_data_len + rx_len) > IPMI_DATA_MAX_LENGTH) {
 			LOG_ERR("USB FW update recv data over ipmi buff size %d, keep %d, recv %d",
-			       IPMI_DATA_MAX_LENGTH, keep_data_len, rx_len);
+				IPMI_DATA_MAX_LENGTH, keep_data_len, rx_len);
 			keep_data_len = 0;
 			fwupdate_keep_data = false;
 			return;

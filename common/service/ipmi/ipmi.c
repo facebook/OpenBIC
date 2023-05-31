@@ -54,6 +54,42 @@ struct k_msgq ipmi_msgq;
 char __aligned(4) self_ipmi_msgq_buffer[1 * sizeof(struct ipmi_msg_cfg)];
 struct k_msgq self_ipmi_msgq;
 
+static struct k_mutex mutex_purge_msgq;
+
+// Send message to IPMI message queue
+ipmb_error notify_ipmi_client(ipmi_msg_cfg *msg_cfg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg_cfg, IPMB_ERROR_UNKNOWN);
+	uint32_t free_size = 0;
+	int ret = 0, ret_lock = 0;
+	int retry = 3;
+
+	/* Sends only the ipmi msg, not the control struct */
+	if (!IS_RESPONSE(msg_cfg->buffer)) {
+		ret = k_msgq_put(&ipmi_msgq, msg_cfg, K_NO_WAIT);
+		while (ret != 0 && retry > 0) {
+			ret_lock = k_mutex_lock(&mutex_purge_msgq, K_MSEC(1000));
+			if (ret_lock < 0) {
+				LOG_ERR("Failed to get ipmi msgq purge mutex");
+				retry--;
+				continue;
+			} else {
+				free_size = k_msgq_num_free_get(&ipmi_msgq);
+				if (free_size == 0) {
+					/* message queue is full: purge old data & try again */
+					LOG_INF("Purge ipmi_msgq due to queue is full");
+					k_msgq_purge(&ipmi_msgq);
+				}
+				k_mutex_unlock(&mutex_purge_msgq);
+			}
+			LOG_INF("Retry to send message to IPMI message queue, ret = %d", ret);
+			ret = k_msgq_put(&ipmi_msgq, msg_cfg, K_NO_WAIT);
+			retry--;
+		}
+	}
+	return (retry == 0) ? IPMB_ERROR_MUTEX_LOCK : IPMB_ERROR_SUCCESS;
+}
+
 __weak uint32_t get_iana(uint8_t *iana_buf)
 {
 	CHECK_NULL_ARG_WITH_RETURN(iana_buf, 0);
@@ -229,7 +265,8 @@ bool common_add_sel_evt_record(common_addsel_msg_t *sel_msg)
 	return ipmb_flag;
 }
 
-void ipmi_cmd_handle(void *parameters, void *arvg0, void *arvg1) {
+void ipmi_cmd_handle(void *parameters, void *arvg0, void *arvg1)
+{
 	CHECK_NULL_ARG(parameters);
 	ipmi_msg_cfg msg_cfg;
 	uint32_t iana = 0;
@@ -237,7 +274,7 @@ void ipmi_cmd_handle(void *parameters, void *arvg0, void *arvg1) {
 	memcpy(&msg_cfg, (ipmi_msg_cfg *)parameters, sizeof(ipmi_msg_cfg));
 
 	LOG_DBG("msg netfn: %x, cmd: %x, retry %x", ((ipmi_msg_cfg *)parameters)->buffer.netfn,
-			msg_cfg.buffer.cmd, ((ipmi_msg_cfg *)parameters)->retries);
+		msg_cfg.buffer.cmd, ((ipmi_msg_cfg *)parameters)->retries);
 	msg_cfg.buffer.completion_code = CC_INVALID_CMD;
 	switch (msg_cfg.buffer.netfn) {
 	case NETFN_CHASSIS_REQ:
@@ -274,8 +311,7 @@ void ipmi_cmd_handle(void *parameters, void *arvg0, void *arvg1) {
 			       msg_cfg.buffer.data_len);
 			IPMI_OEM_1S_handler(&msg_cfg.buffer);
 			break;
-		} else if (pal_is_not_return_cmd(msg_cfg.buffer.netfn,
-						 msg_cfg.buffer.cmd)) {
+		} else if (pal_is_not_return_cmd(msg_cfg.buffer.netfn, msg_cfg.buffer.cmd)) {
 			// Due to command not returning to bridge command source,
 			// enter command handler and return with other invalid CC
 			msg_cfg.buffer.completion_code = CC_INVALID_IANA;
@@ -287,8 +323,7 @@ void ipmi_cmd_handle(void *parameters, void *arvg0, void *arvg1) {
 			break;
 		}
 	default: // invalid net function
-		LOG_ERR("invalid msg netfn: %x, cmd: %x", msg_cfg.buffer.netfn,
-			msg_cfg.buffer.cmd);
+		LOG_ERR("invalid msg netfn: %x, cmd: %x", msg_cfg.buffer.netfn, msg_cfg.buffer.cmd);
 		msg_cfg.buffer.data_len = 0;
 		break;
 	}
@@ -330,17 +365,14 @@ void ipmi_cmd_handle(void *parameters, void *arvg0, void *arvg1) {
 				return;
 			}
 		}
-		kcs_buff[0] = (msg_cfg.buffer.netfn + 1)
-			      << 2; // ipmi netfn response package
+		kcs_buff[0] = (msg_cfg.buffer.netfn + 1) << 2; // ipmi netfn response package
 		kcs_buff[1] = msg_cfg.buffer.cmd;
 		kcs_buff[2] = msg_cfg.buffer.completion_code;
 		if (msg_cfg.buffer.data_len) {
 			if (msg_cfg.buffer.data_len <= (KCS_BUFF_SIZE - 3))
-				memcpy(&kcs_buff[3], msg_cfg.buffer.data,
-				       msg_cfg.buffer.data_len);
+				memcpy(&kcs_buff[3], msg_cfg.buffer.data, msg_cfg.buffer.data_len);
 			else
-				memcpy(&kcs_buff[3], msg_cfg.buffer.data,
-				       (KCS_BUFF_SIZE - 3));
+				memcpy(&kcs_buff[3], msg_cfg.buffer.data, (KCS_BUFF_SIZE - 3));
 		}
 
 		LOG_DBG("kcs from ipmi netfn %x, cmd %x, length %d, cc %x", kcs_buff[0],
@@ -355,8 +387,7 @@ void ipmi_cmd_handle(void *parameters, void *arvg0, void *arvg1) {
 #ifdef ENABLE_SSIF
 	case HOST_SSIF_1:
 		msg_cfg.buffer.netfn = (msg_cfg.buffer.netfn + 1) << 2;
-		if (ssif_set_data(msg_cfg.buffer.InF_source - HOST_SSIF_1, &msg_cfg) ==
-		    false) {
+		if (ssif_set_data(msg_cfg.buffer.InF_source - HOST_SSIF_1, &msg_cfg) == false) {
 			LOG_ERR("Failed to write ssif response data");
 			continue;
 		}
@@ -382,10 +413,9 @@ void ipmi_cmd_handle(void *parameters, void *arvg0, void *arvg1) {
 			LOG_ERR("IPMI_handler send IPMB resp fail status: %x", status);
 		}
 #endif
-			break;
+		break;
 	}
 	}
-
 }
 
 void IPMI_handler(void *arug0, void *arug1, void *arug2)
@@ -400,8 +430,10 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 		LOG_DBG("IPMI_handler[%d]: netfn: %x", msg_cfg.buffer.data_len,
 			msg_cfg.buffer.netfn);
 		LOG_HEXDUMP_DBG(msg_cfg.buffer.data, msg_cfg.buffer.data_len, "");
-		tid = k_thread_create(&IPMI_handle_thread, IPMI_handle_thread_stack, K_THREAD_STACK_SIZEOF(IPMI_handle_thread_stack),
-			ipmi_cmd_handle, (void*)&msg_cfg, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+		tid = k_thread_create(&IPMI_handle_thread, IPMI_handle_thread_stack,
+				      K_THREAD_STACK_SIZEOF(IPMI_handle_thread_stack),
+				      ipmi_cmd_handle, (void *)&msg_cfg, NULL, NULL,
+				      CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
 		if (k_thread_join(tid, K_SECONDS(1)) == -EAGAIN) { // timeout
 			k_thread_abort(tid);
 			LOG_ERR("%s(): abort the handler due to timeout. netfn: %x, cmd: %x",
@@ -416,6 +448,10 @@ void ipmi_init(void)
 	LOG_DBG("ipmi_init");
 	k_msgq_init(&ipmi_msgq, ipmi_msgq_buffer, sizeof(struct ipmi_msg_cfg), IPMI_BUF_LEN);
 	k_msgq_init(&self_ipmi_msgq, self_ipmi_msgq_buffer, sizeof(struct ipmi_msg_cfg), 1);
+
+	if (k_mutex_init(&mutex_purge_msgq)) {
+		LOG_ERR("Failed to initialize IPMI put msgq mutex");
+	}
 
 	k_thread_create(&IPMI_thread, IPMI_thread_stack, K_THREAD_STACK_SIZEOF(IPMI_thread_stack),
 			IPMI_handler, NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
