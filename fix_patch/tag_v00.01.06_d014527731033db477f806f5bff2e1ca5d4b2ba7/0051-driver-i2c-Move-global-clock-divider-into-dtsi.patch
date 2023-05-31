@@ -1,0 +1,83 @@
+From 70023b5d64dbcdbf7443fda55b04af9cec07cb99 Mon Sep 17 00:00:00 2001
+From: Yang Chen <Yang.Chen@quantatw.com>
+Date: Mon, 29 May 2023 16:39:14 +0800
+Subject: [PATCH] driver:i2c: Move global clock divider into dtsi
+
+1. Move the clock divider setting into .dtsi file.
+2. Update i2c global yaml file.
+---
+ drivers/i2c/i2c_global_aspeed.c         | 10 +++++++---
+ dts/arm/aspeed/ast10x0.dtsi             |  1 +
+ dts/bindings/i2c/aspeed,i2c-global.yaml |  5 +++++
+ 3 files changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/i2c/i2c_global_aspeed.c b/drivers/i2c/i2c_global_aspeed.c
+index d87f6a356c..35d91b14a9 100644
+--- a/drivers/i2c/i2c_global_aspeed.c
++++ b/drivers/i2c/i2c_global_aspeed.c
+@@ -39,13 +39,16 @@ struct i2c_global_config {
+ 	const clock_control_subsys_t clk_id;
+ 	const reset_control_subsys_t rst_id;
+ 	uint32_t clk_src;
++	uint32_t clk_divider;
+ };
+ 
+ #define DEV_CFG(dev)			 \
+ 	((struct i2c_global_config *) \
+ 	 (dev)->config)
+ 
+-#define I2CG_DIV_CTRL 0x62220803
++/* #define I2CG_DIV_CTRL 0x62220803 */
++/* This clock divider setting has been moved into dtsi file */
++
+ /*
+  * APB clk : 50Mhz
+  * div  : scl       : baseclk [APB/((div/2) + 1)] : tBuf [1/bclk * 16]
+@@ -78,8 +81,8 @@ static int i2c_global_init(const struct device *dev)
+ 
+ 	/* set i2c global setting */
+ 	sys_write32(I2CG_SET, i2c_global_base + ASPEED_I2CG_CONTROL);
+-	/* calculate divider */
+-	sys_write32(I2CG_DIV_CTRL, i2c_global_base + ASPEED_I2CG_NEW_CLK_DIV);
++	/* divider parameter */
++	sys_write32(config->clk_divider, i2c_global_base + ASPEED_I2CG_NEW_CLK_DIV);
+ 
+ 	/* initial i2c sram region */
+ 	for (int i = 0; i < ASPEED_I2C_SRAM_SIZE; i++)
+@@ -93,6 +96,7 @@ static const struct i2c_global_config i2c_aspeed_config = {
+ 	.clk_id = (clock_control_subsys_t)DT_INST_CLOCKS_CELL(0, clk_id),
+ 	.rst_id = (reset_control_subsys_t)DT_INST_RESETS_CELL(0, rst_id),
+ 	.clock_dev = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR(0)),
++	.clk_divider = DT_INST_PROP(0, clk_divider),
+ };
+ 
+ 
+diff --git a/dts/arm/aspeed/ast10x0.dtsi b/dts/arm/aspeed/ast10x0.dtsi
+index 6390901947..641549b726 100644
+--- a/dts/arm/aspeed/ast10x0.dtsi
++++ b/dts/arm/aspeed/ast10x0.dtsi
+@@ -564,6 +564,7 @@
+ 			reg = <0x7e7b0000 0x20>;
+ 			clocks = <&sysclk ASPEED_CLK_PCLK>;
+ 			resets = <&sysrst ASPEED_RESET_I2C>;
++			clk-divider = <0x62220803>;
+ 			label = "I2C_GLOBAL";
+ 		};
+ 
+diff --git a/dts/bindings/i2c/aspeed,i2c-global.yaml b/dts/bindings/i2c/aspeed,i2c-global.yaml
+index c65b834ab9..24687b6d30 100644
+--- a/dts/bindings/i2c/aspeed,i2c-global.yaml
++++ b/dts/bindings/i2c/aspeed,i2c-global.yaml
+@@ -9,3 +9,8 @@ description: ASPEED I2C Global controller
+ compatible: "aspeed,i2c-global"
+ 
+ include: base.yaml
++
++properties:
++  clk-divider:
++    type: int
++    required: true
+\ No newline at end of file
+-- 
+2.39.2
+
