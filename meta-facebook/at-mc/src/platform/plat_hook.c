@@ -28,6 +28,7 @@
 #include "ltc2991.h"
 #include "plat_i2c.h"
 #include "plat_ipmi.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -164,26 +165,6 @@ sq52205_init_arg sq52205_init_args[] = {
 		.reset_bit = 0b0,
 	},
 	},
-	[12] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
-	.config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b000,
-		.reset_bit = 0b0,
-	},
-	},
-	[13] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
-	.config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b000,
-		.reset_bit = 0b0,
-	},
-	},
 };
 
 ina233_init_arg mc_ina233_init_args[] = {
@@ -287,24 +268,6 @@ ina233_init_arg mc_ina233_init_args[] = {
 	},
 	},
 	[11] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[12] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[13] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
@@ -544,13 +507,6 @@ mux_config bus_2_pca9548_configs[] = {
 	[7] = { .target_addr = 0x70, .channel = PCA9548A_CHANNEL_0 },
 };
 
-mux_config bus_3_pca9546_configs[] = {
-	[0] = { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_0 },
-	[1] = { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_1 },
-	[2] = { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_2 },
-	[3] = { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_3 },
-};
-
 mux_config bus_4_pca9548_configs[] = {
 	[0] = { .target_addr = 0x70, .channel = PCA9548A_CHANNEL_0 },
 	[1] = { .target_addr = 0x70, .channel = PCA9548A_CHANNEL_1 },
@@ -587,6 +543,21 @@ mux_config cxl_mux_configs[] = {
 vr_page_cfg vr_page_select[] = {
 	[0] = { .vr_page = PMBUS_PAGE_0 },
 	[1] = { .vr_page = PMBUS_PAGE_1 },
+};
+
+pwr_monitor_pre_proc_arg pwr_monitor_pre_proc_args[] = {
+	[0] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_0 }, .jcn_number = 0 },
+	[1] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_0 }, .jcn_number = 1 },
+	[2] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_0 }, .jcn_number = 2 },
+	[3] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_0 }, .jcn_number = 3 },
+	[4] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_1 }, .jcn_number = 4 },
+	[5] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_1 }, .jcn_number = 5 },
+	[6] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_1 }, .jcn_number = 6 },
+	[7] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_1 }, .jcn_number = 7 },
+	[8] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_2 }, .jcn_number = 8 },
+	[9] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_2 }, .jcn_number = 9 },
+	[10] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_2 }, .jcn_number = 10 },
+	[11] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_2 }, .jcn_number = 11 },
 };
 
 /**************************************************************************************************
@@ -641,17 +612,32 @@ bool pre_sq52205_read(uint8_t sensor_num, void *args)
 	// Select Channel
 	bool ret = true;
 	int mutex_status = 0;
-	mux_config *pre_args = (mux_config *)args;
-	pre_args->bus = sensor_config[sensor_config_index_map[sensor_num]].port;
+	uint8_t card_type;
 
-	struct k_mutex *mutex = get_i2c_mux_mutex(pre_args->bus);
+	pwr_monitor_pre_proc_arg *pre_args = (pwr_monitor_pre_proc_arg *)args;
+
+	if (get_pcie_card_type(pre_args->jcn_number, &card_type)) {
+		LOG_ERR("Fail to get card present status");
+		sensor_config[sensor_config_index_map[sensor_num]].is_enable_polling = false;
+		return false;
+	}
+
+	if (card_type == CARD_NOT_PRESENT) {
+		sensor_config[sensor_config_index_map[sensor_num]].is_enable_polling = false;
+		return false;
+	}
+
+	mux_config *mux_args = &(pre_args->bus_3_mux_configs);
+	mux_args->bus = sensor_config[sensor_config_index_map[sensor_num]].port;
+
+	struct k_mutex *mutex = get_i2c_mux_mutex(mux_args->bus);
 	mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
 	if (mutex_status != 0) {
 		LOG_ERR("Mutex lock fail, status: %d", mutex_status);
 		return false;
 	}
 
-	ret = set_mux_channel(*pre_args, MUTEX_LOCK_ENABLE);
+	ret = set_mux_channel(*mux_args, MUTEX_LOCK_ENABLE);
 	return ret;
 }
 
