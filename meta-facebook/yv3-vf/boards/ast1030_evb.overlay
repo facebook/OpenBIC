@@ -17,6 +17,7 @@
 							 &pinctrl_adc10_default
 				 			 &pinctrl_adc11_default 
 				 			 &pinctrl_adc15_default>;
+	aspeed,adc-channels-used = <0x8F>;
 };
 
 &gpio0_a_d {
