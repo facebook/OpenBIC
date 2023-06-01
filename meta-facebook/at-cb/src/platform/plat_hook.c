@@ -583,15 +583,16 @@ uint8_t plat_monitor_table_arg[] = { PCIE_CARD_1, PCIE_CARD_2,	PCIE_CARD_3,  PCI
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
  **************************************************************************************************/
-bool pre_ina233_read(uint8_t sensor_num, void *args)
+bool pre_ina233_read(sensor_cfg *cfg, void *args)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
 	// Select Channel
 	bool ret = true;
 	int mutex_status = 0;
 	mux_config *pre_args = (mux_config *)args;
-	pre_args->bus = sensor_config[sensor_config_index_map[sensor_num]].port;
+	pre_args->bus = cfg->port;
 
 	struct k_mutex *mutex = get_i2c_mux_mutex(pre_args->bus);
 	mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
@@ -609,13 +610,14 @@ bool pre_ina233_read(uint8_t sensor_num, void *args)
 	return ret;
 }
 
-bool post_ina233_read(uint8_t sensor_num, void *args, int *reading)
+bool post_ina233_read(sensor_cfg *cfg, void *args, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	ARG_UNUSED(reading);
 	ARG_UNUSED(args);
 
 	int unlock_status = 0;
-	uint8_t bus = sensor_config[sensor_config_index_map[sensor_num]].port;
+	uint8_t bus = cfg->port;
 
 	struct k_mutex *mutex = get_i2c_mux_mutex(bus);
 	if (mutex->lock_count != 0) {
@@ -630,8 +632,9 @@ bool post_ina233_read(uint8_t sensor_num, void *args, int *reading)
 	return true;
 }
 
-bool pre_xdpe15284_read(uint8_t sensor_num, void *args)
+bool pre_xdpe15284_read(sensor_cfg *cfg, void *args)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
 	bool ret = false;
@@ -646,8 +649,8 @@ bool pre_xdpe15284_read(uint8_t sensor_num, void *args)
 		return false;
 	}
 
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 2;
 	msg.data[0] = PMBUS_PAGE;
 	msg.data[1] = xdpe15284_vr_page->vr_page;
@@ -661,22 +664,24 @@ bool pre_xdpe15284_read(uint8_t sensor_num, void *args)
 	return true;
 }
 
-bool post_xdpe15284_read(uint8_t sensor_num, void *args, int *reading)
+bool post_xdpe15284_read(sensor_cfg *cfg, void *args, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	ARG_UNUSED(reading);
 	ARG_UNUSED(args);
 
 	int unlock_status = k_mutex_unlock(&xdpe15284_mutex);
 	if (unlock_status != 0) {
-		LOG_ERR("Mutex unlock fail, status: %d", unlock_status);
+		LOG_ERR("Mutex unlock fail, status: %d, sensor num: 0x%x", unlock_status, cfg->num);
 		return false;
 	}
 
 	return true;
 }
 
-bool pre_pex89000_read(uint8_t sensor_num, void *args)
+bool pre_pex89000_read(sensor_cfg *cfg, void *args)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
 	/* Can not access i2c mux and PEX89000 when DC off */
@@ -684,7 +689,6 @@ bool pre_pex89000_read(uint8_t sensor_num, void *args)
 		return false;
 	}
 
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 	pex89000_init_arg *pex_init_arg = (pex89000_init_arg *)cfg->init_args;
 
 	bool ret = true;
@@ -709,7 +713,7 @@ bool pre_pex89000_read(uint8_t sensor_num, void *args)
 
 	if (pex_init_arg->is_init == false) {
 		if (check_init_count >= PEX_SWITCH_INIT_RETRY_COUNT) {
-			post_pex89000_read(sensor_num, cfg->post_sensor_read_args, NULL);
+			post_pex89000_read(cfg, cfg->post_sensor_read_args, NULL);
 			return false;
 		}
 
@@ -717,7 +721,7 @@ bool pre_pex89000_read(uint8_t sensor_num, void *args)
 		ret = init_drive_type_delayed(cfg);
 		if (ret == false) {
 			LOG_ERR("pex initial fail");
-			post_pex89000_read(sensor_num, cfg->post_sensor_read_args, NULL);
+			post_pex89000_read(cfg, cfg->post_sensor_read_args, NULL);
 			return ret;
 		}
 	}
@@ -725,13 +729,14 @@ bool pre_pex89000_read(uint8_t sensor_num, void *args)
 	return ret;
 }
 
-bool post_pex89000_read(uint8_t sensor_num, void *args, int *reading)
+bool post_pex89000_read(sensor_cfg *cfg, void *args, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	ARG_UNUSED(reading);
 	ARG_UNUSED(args);
 
 	int unlock_status = 0;
-	uint8_t bus = sensor_config[sensor_config_index_map[sensor_num]].port;
+	uint8_t bus = cfg->port;
 
 	struct k_mutex *mutex = get_i2c_mux_mutex(bus);
 	if (mutex->lock_count != 0) {

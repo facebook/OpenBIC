@@ -101,8 +101,7 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		pex89000_unit *p = (pex89000_unit *)cfg->priv_data;
 
 		if (cfg->pre_sensor_read_hook) {
-			if (cfg->pre_sensor_read_hook(cfg->num, cfg->pre_sensor_read_args) ==
-			    false) {
+			if (cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args) == false) {
 				LOG_ERR("PEX%d pre-read failed!",
 					component - CB_COMPNT_PCIE_SWITCH0);
 				msg->completion_code = CC_PEX_PRE_READING_FAIL;
@@ -112,8 +111,8 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 
 		if (pex_access_engine(cfg->port, cfg->target_addr, p->idx, pex_access_sbr_ver,
 				      &reading)) {
-			if (cfg->post_sensor_read_hook(cfg->num, cfg->post_sensor_read_args,
-						       NULL) == false) {
+			if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) ==
+			    false) {
 				LOG_ERR("PEX%d post-read failed!",
 					component - CB_COMPNT_PCIE_SWITCH0);
 			}
@@ -122,8 +121,8 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		}
 
 		if (cfg->post_sensor_read_hook) {
-			if (cfg->post_sensor_read_hook(cfg->num, cfg->post_sensor_read_args,
-						       NULL) == false) {
+			if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) ==
+			    false) {
 				LOG_ERR("PEX%d post-read failed!",
 					component - CB_COMPNT_PCIE_SWITCH0);
 			}

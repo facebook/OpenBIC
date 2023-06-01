@@ -398,7 +398,8 @@ uint8_t pal_get_extend_sensor_config()
 	return extend_sensor_config_size;
 }
 
-int set_vr_page(uint8_t bus, uint8_t addr, uint8_t page) {
+int set_vr_page(uint8_t bus, uint8_t addr, uint8_t page)
+{
 	I2C_MSG msg;
 	uint8_t retry = 5;
 
@@ -463,9 +464,11 @@ void check_vr_type(uint8_t index)
 		sensor_config[index].type = sensor_dev_xdpe15284;
 		if (sensor_config[index].offset == VR_VOL_CMD) {
 			set_vr_page(sensor_config[index].port, sensor_config[index].target_addr, 0);
-			xdpe15284_lock_reg(sensor_config[index].port, sensor_config[index].target_addr);
+			xdpe15284_lock_reg(sensor_config[index].port,
+					   sensor_config[index].target_addr);
 			set_vr_page(sensor_config[index].port, sensor_config[index].target_addr, 1);
-			xdpe15284_lock_reg(sensor_config[index].port, sensor_config[index].target_addr);
+			xdpe15284_lock_reg(sensor_config[index].port,
+					   sensor_config[index].target_addr);
 		}
 	} else if ((msg.data[0] == 0x04) && (msg.data[1] == 0x00) && (msg.data[2] == 0x81) &&
 		   (msg.data[3] == 0xD2) && (msg.data[4] == 0x49)) {

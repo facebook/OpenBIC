@@ -46,12 +46,12 @@ extern uint8_t plat_monitor_table_arg[];
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
  **************************************************************************************************/
-bool pre_ina233_read(uint8_t sensor_num, void *args);
-bool post_ina233_read(uint8_t sensor_num, void *args, int *reading);
-bool pre_pex89000_read(uint8_t sensor_num, void *args);
-bool post_pex89000_read(uint8_t sensor_num, void *args, int *reading);
-bool pre_xdpe15284_read(uint8_t sensor_num, void *args);
-bool post_xdpe15284_read(uint8_t sensor_num, void *args, int *reading);
+bool pre_ina233_read(sensor_cfg *cfg, void *args);
+bool post_ina233_read(sensor_cfg *cfg, void *args, int *reading);
+bool pre_pex89000_read(sensor_cfg *cfg, void *args);
+bool post_pex89000_read(sensor_cfg *cfg, void *args, int *reading);
+bool pre_xdpe15284_read(sensor_cfg *cfg, void *args);
+bool post_xdpe15284_read(sensor_cfg *cfg, void *args, int *reading);
 bool pre_accl_mux_switch(uint8_t sensor_num, void *arg);
 bool post_accl_mux_switch(uint8_t sensor_num, void *arg);
 

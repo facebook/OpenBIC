@@ -188,15 +188,16 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param)
 	/* Assign VR 0/1 related sensor number to get information for accessing VR */
 	uint8_t sensor_num =
 		(p->comp_id == GT_COMPNT_VR0) ? SENSOR_NUM_PEX_0_VR_TEMP : SENSOR_NUM_PEX_2_VR_TEMP;
+	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 
-	if (!tca9548_select_chan(sensor_num, &mux_conf_addr_0xe0[6])) {
+	if (!tca9548_select_chan(cfg, &mux_conf_addr_0xe0[6])) {
 		LOG_ERR("Component %d: mux switched failed!", p->comp_id);
 		return 1;
 	}
 
 	/* Get bus and target address by sensor number in sensor configuration */
-	p->bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	p->addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	p->bus = cfg->port;
+	p->addr = cfg->target_addr;
 
 	return 0;
 }
@@ -423,7 +424,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 	bool ret = false;
 	uint8_t sensor_num = ((p->comp_identifier == GT_COMPNT_VR0) ? SENSOR_NUM_PEX_0_VR_TEMP :
-								      SENSOR_NUM_PEX_2_VR_TEMP);
+									    SENSOR_NUM_PEX_2_VR_TEMP);
 	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 
 	if (!cfg) {
@@ -432,7 +433,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	}
 
 	if (cfg->pre_sensor_read_hook) {
-		if (!cfg->pre_sensor_read_hook(cfg->num, cfg->pre_sensor_read_args)) {
+		if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
 			LOG_ERR("The VR%d pre-reading hook function failed",
 				(sensor_num == SENSOR_NUM_PEX_0_VR_TEMP) ? 0 : 1);
 			goto post_hook_and_ret;
@@ -521,7 +522,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 post_hook_and_ret:
 	if (cfg->post_sensor_read_hook) {
-		if (!cfg->post_sensor_read_hook(sensor_num, cfg->post_sensor_read_args, NULL)) {
+		if (!cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL)) {
 			LOG_ERR("The VR%d post-reading hook function failed",
 				(sensor_num == SENSOR_NUM_PEX_0_VR_TEMP) ? 0 : 1);
 		}

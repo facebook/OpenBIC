@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sensor.h>
+#include "libutil.h"
 #include "plat_hook.h"
 #include "plat_i2c.h"
 #include <logging/log.h>
@@ -61,11 +62,10 @@ ltc4282_pre_proc_arg ltc4282_pre_read_args[] = {
  * @retval true if setting is successful.
  * @retval false if setting failed.
  */
-bool pre_ltc4282_read(uint8_t sensor_num, void *args)
+bool pre_ltc4282_read(sensor_cfg *cfg, void *args)
 {
-	if (args == NULL) {
-		return false;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
 	ltc4282_pre_proc_arg *pre_proc_args = (ltc4282_pre_proc_arg *)args;
 	uint8_t retry = 5;
@@ -73,8 +73,8 @@ bool pre_ltc4282_read(uint8_t sensor_num, void *args)
 	int val = 0;
 
 	/* get adjust */
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.data[0] = LTC4282_ILIM_ADJUST_OFFSET;
 	msg.rx_len = 1;
@@ -95,7 +95,7 @@ bool pre_ltc4282_read(uint8_t sensor_num, void *args)
 	}
 
 	msg.tx_len = 2;
-	msg.data[0] = sensor_config[sensor_config_index_map[sensor_num]].offset;
+	msg.data[0] = cfg->offset;
 	msg.data[1] = val;
 
 	if (i2c_master_write(&msg, retry) != 0) {

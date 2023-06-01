@@ -389,8 +389,7 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		pex89000_unit *p = (pex89000_unit *)cfg->priv_data;
 
 		if (cfg->pre_sensor_read_hook) {
-			if (cfg->pre_sensor_read_hook(cfg->num, cfg->pre_sensor_read_args) ==
-			    false) {
+			if (cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args) == false) {
 				LOG_ERR("PEX%d pre-read failed!", component - GT_COMPNT_PEX0);
 				msg->completion_code = CC_PEX_PRE_READING_FAIL;
 				return;
@@ -419,8 +418,8 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		}
 
 		if (cfg->post_sensor_read_hook) {
-			if (cfg->post_sensor_read_hook(cfg->num, cfg->post_sensor_read_args,
-						       NULL) == false) {
+			if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) ==
+			    false) {
 				LOG_ERR("PEX%d post-read failed!", component - GT_COMPNT_PEX0);
 			}
 		}
@@ -449,15 +448,16 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		uint8_t buf[5] = { 0 };
 		/* Assign VR 0/1 related sensor number to get information for accessing VR */
 		uint8_t sensor_num = (component == GT_COMPNT_VR0) ? SENSOR_NUM_PEX_0_VR_TEMP :
-								    SENSOR_NUM_PEX_2_VR_TEMP;
-		if (!tca9548_select_chan(sensor_num, &mux_conf_addr_0xe0[6])) {
+									  SENSOR_NUM_PEX_2_VR_TEMP;
+		sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+
+		if (!tca9548_select_chan(cfg, &mux_conf_addr_0xe0[6])) {
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			return;
 		}
 		/* Get bus and target address by sensor number in sensor configuration */
-		i2c_msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-		i2c_msg.target_addr =
-			sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+		i2c_msg.bus = cfg->port;
+		i2c_msg.target_addr = cfg->target_addr;
 
 		/* Write to PMBus command DMAADDR (0xC7) and configuration id address is 0x3F*/
 		i2c_msg.tx_len = 3;

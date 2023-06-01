@@ -263,7 +263,7 @@ int pal_get_pcie_card_sensor_reading(uint8_t read_type, uint8_t sensor_num, uint
 	}
 
 	if (cfg->pre_sensor_read_hook) {
-		if (cfg->pre_sensor_read_hook(sensor_num, cfg->pre_sensor_read_args) == false) {
+		if (cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args) == false) {
 			LOG_ERR("Pre sensor read function, sensor number: 0x%x", sensor_num);
 			goto exit;
 		}
@@ -276,8 +276,7 @@ int pal_get_pcie_card_sensor_reading(uint8_t read_type, uint8_t sensor_num, uint
 	}
 
 	if (cfg->post_sensor_read_hook) {
-		if (cfg->post_sensor_read_hook(sensor_num, cfg->post_sensor_read_args, reading) ==
-		    false) {
+		if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, reading) == false) {
 			LOG_ERR("Post sensor read function, sensor number: 0x%x", sensor_num);
 			goto exit;
 		}

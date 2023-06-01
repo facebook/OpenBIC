@@ -231,9 +231,9 @@ typedef struct _sensor_cfg_ {
 	bool is_enable_polling;
 	int cache;
 	uint8_t cache_status;
-	bool (*pre_sensor_read_hook)(uint8_t, void *);
+	bool (*pre_sensor_read_hook)(struct _sensor_cfg_ *, void *);
 	void *pre_sensor_read_args;
-	bool (*post_sensor_read_hook)(uint8_t, void *, int *);
+	bool (*post_sensor_read_hook)(struct _sensor_cfg_ *, void *, int *);
 	void *post_sensor_read_args;
 	void *init_args;
 
@@ -654,7 +654,7 @@ bool pal_is_time_to_poll(uint8_t sensor_num, int poll_time);
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
 void control_sensor_polling(uint8_t sensor_num, uint8_t optional, uint8_t cache_status);
-bool check_reading_pointer_null_is_allowed(uint8_t sensor_num);
+bool check_reading_pointer_null_is_allowed(sensor_cfg *cfg);
 bool init_drive_type_delayed(sensor_cfg *cfg);
 uint8_t pal_get_monitor_sensor_count();
 void plat_fill_monitor_sensor_table();

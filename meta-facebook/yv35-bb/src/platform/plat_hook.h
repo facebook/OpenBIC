@@ -38,6 +38,6 @@ extern ltc4282_pre_proc_arg ltc4282_pre_read_args[];
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
  **************************************************************************************************/
-bool pre_ltc4282_read(uint8_t sensor_num, void *args);
+bool pre_ltc4282_read(sensor_cfg *cfg, void *args);
 
 #endif

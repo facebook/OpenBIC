@@ -59,8 +59,7 @@ void dc_on_init_pex()
 		/* Only need initial when not initial yet */
 		if (init_arg && !init_arg->is_init) {
 			if (cfg->pre_sensor_read_hook) {
-				if (!cfg->pre_sensor_read_hook(cfg->num,
-							       cfg->pre_sensor_read_args)) {
+				if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
 					LOG_ERR("sensor 0x%x pre sensor read failed!", cfg->num);
 					continue;
 				}
@@ -78,8 +77,8 @@ void dc_on_init_pex()
 				retry[i] = 0;
 			}
 			if (cfg->post_sensor_read_hook) {
-				if (!cfg->post_sensor_read_hook(sensor_num,
-								cfg->post_sensor_read_args, NULL)) {
+				if (!cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args,
+								NULL)) {
 					LOG_ERR("sensor number 0x%x post_read failed", cfg->num);
 				}
 			}

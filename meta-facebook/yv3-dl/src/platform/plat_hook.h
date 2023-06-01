@@ -53,13 +53,13 @@ extern nvme_pre_proc_arg nvme_pre_proc_args[];
  *  PRE-HOOK/POST-HOOK FUNC
  **************************************************************************************************/
 
-bool pre_nvme_read(uint8_t sensor_num, void *args);
-bool pre_vol_bat3v_read(uint8_t sensor_num, void *args);
-bool post_vol_bat3v_read(uint8_t sensor_num, void *args, int *reading);
-bool post_cpu_margin_read(uint8_t sensor_num, void *args, int *reading);
-bool pre_vr_read(uint8_t sensor_num, void *args);
-bool pre_intel_peci_dimm_read(uint8_t sensor_num, void *args);
-bool post_xdpe12284c_read(uint8_t sensor_num, void *args, int *reading);
-bool post_isl69254_read(uint8_t sensor_num, void *args, int *reading);
+bool pre_nvme_read(sensor_cfg *cfg, void *args);
+bool pre_vol_bat3v_read(sensor_cfg *cfg, void *args);
+bool post_vol_bat3v_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_cpu_margin_read(sensor_cfg *cfg, void *args, int *reading);
+bool pre_vr_read(sensor_cfg *cfg, void *args);
+bool pre_intel_peci_dimm_read(sensor_cfg *cfg, void *args);
+bool post_xdpe12284c_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_isl69254_read(sensor_cfg *cfg, void *args, int *reading);
 
 #endif

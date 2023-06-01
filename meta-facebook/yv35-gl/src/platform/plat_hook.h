@@ -43,11 +43,11 @@ extern xdpe15284_pre_read_arg xdpe15284_pre_read_args[];
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
  **************************************************************************************************/
-bool pre_xdpe15284_read(uint8_t sensor_num, void *args);
-bool pre_vol_bat3v_read(uint8_t sensor_num, void *args);
-bool post_vol_bat3v_read(uint8_t sensor_num, void *args, int *reading);
-bool post_cpu_margin_read(uint8_t sensor_num, void *args, int *reading);
-bool pre_nvme_read(uint8_t sensor_num, void *args);
-bool pre_intel_peci_dimm_read(uint8_t sensor_num, void *args);
+bool pre_xdpe15284_read(sensor_cfg *cfg, void *args);
+bool pre_vol_bat3v_read(sensor_cfg *cfg, void *args);
+bool post_vol_bat3v_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_cpu_margin_read(sensor_cfg *cfg, void *args, int *reading);
+bool pre_nvme_read(sensor_cfg *cfg, void *args);
+bool pre_intel_peci_dimm_read(sensor_cfg *cfg, void *args);
 
 #endif
