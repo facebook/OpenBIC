@@ -99,6 +99,7 @@ void pal_set_sys_status()
 	SSDLEDInit();
 
 	delay_function(100, plat_set_dc_status, FM_POWER_EN, 0);
+	set_exp_pwrgd_pin();
 
 	check_irq_fault();
 	// BIC up 1 sec handler
