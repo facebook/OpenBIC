@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -39,6 +39,12 @@ extern struct k_mutex i2c_hub_mutex;
 #define I2C_HUB_CHANNEL_3 0x08
 #define I2C_HUB_CHANNEL_4 0x10
 #define I2C_HUB_CHANNEL_5 0x20
+
+
+const static uint8_t e1s_mux_channel_opa[] = {I2C_HUB_CHANNEL_5, I2C_HUB_CHANNEL_1,
+	I2C_HUB_CHANNEL_0};
+const static uint8_t e1s_mux_channel_opb[] = {I2C_HUB_CHANNEL_4, I2C_HUB_CHANNEL_3,
+	I2C_HUB_CHANNEL_2, I2C_HUB_CHANNEL_1, I2C_HUB_CHANNEL_0};
 
 bool pre_i2c_bus_read(uint8_t sensor_num, void *args);
 bool post_i2c_bus_read(uint8_t sensor_num, void *args, int *reading);

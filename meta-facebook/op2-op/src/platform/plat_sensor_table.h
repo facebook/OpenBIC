@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -26,15 +26,15 @@
 #define EXPA_RETIMER_ADDR (0x46 >> 1)
 #define TMP75_EXPA_TEMP_ADDR (0x94 >> 1)
 #define TMP75_EXPB_TEMP_ADDR (0x9A >> 1)
-#define INA233_EXPA_E1S_0_ADDR (0x8C >> 1)
+#define INA233_EXPA_E1S_0_ADDR (0x98 >> 1)
 #define INA233_EXPA_E1S_1_ADDR (0x88 >> 1)
-#define INA233_EXPA_E1S_2_ADDR (0x98 >> 1)
+#define INA233_EXPA_E1S_2_ADDR (0x8C >> 1)
 #define INA233_EXPA_MAIN_ADDR (0x9A >> 1)
-#define INA233_EXPB_E1S_0_ADDR (0x8A >> 1)
-#define INA233_EXPB_E1S_1_ADDR (0x82 >> 1)
+#define INA233_EXPB_E1S_0_ADDR (0x98 >> 1)
+#define INA233_EXPB_E1S_1_ADDR (0x92 >> 1)
 #define INA233_EXPB_E1S_2_ADDR (0x88 >> 1)
-#define INA233_EXPB_E1S_3_ADDR (0x92 >> 1)
-#define INA233_EXPB_E1S_4_ADDR (0x98 >> 1)
+#define INA233_EXPB_E1S_3_ADDR (0x82 >> 1)
+#define INA233_EXPB_E1S_4_ADDR (0x8A >> 1)
 #define INA233_EXPB_MAIN_ADDR (0x90 >> 1)
 #define NVME_ADDR (0xD4 >> 1)
 

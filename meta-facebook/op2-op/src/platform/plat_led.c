@@ -28,6 +28,10 @@ static uint8_t e1s_amber_led_pre_status[MAX_E1S_IDX] = { LED_STATUS_OFF, LED_STA
 							 LED_STATUS_OFF };
 static uint8_t e1s_amber_led_status[MAX_E1S_IDX] = { LED_STATUS_OFF, LED_STATUS_OFF, LED_STATUS_OFF,
 						     LED_STATUS_OFF, LED_STATUS_OFF };
+static uint8_t els_amber_led_gpio_opa[MAX_E1S_IDX] = { OPA_LED_E1S_0_ATTN_R, OPA_LED_E1S_1_ATTN_R,
+	OPA_LED_E1S_2_ATTN_R};
+static uint8_t els_amber_led_gpio_opb[MAX_E1S_IDX] = { OPB_LED_E1S_0_ATTN_R, OPB_LED_E1S_1_ATTN_R,
+	OPB_LED_E1S_2_ATTN_R, OPB_LED_E1S_3_ATTN_R, OPB_LED_E1S_4_ATTN_R};
 
 #define E1S_LED_BLINK_INIT(device)                                                                 \
 	void blink_handler_##device(struct k_timer *timer)                                         \
@@ -51,30 +55,11 @@ E1S_LED_BLINK_INIT(4);
 
 uint8_t get_e1s_led_gpio(uint8_t device_id)
 {
-	uint8_t gpio_num = UNKNOWN_LED_GPIO;
-
-	switch (device_id) {
-	case E1S_0:
-		gpio_num = OPA_LED_E1S_0_ATTN_R;
-		break;
-	case E1S_1:
-		gpio_num = OPA_LED_E1S_1_ATTN_R;
-		break;
-	case E1S_2:
-		gpio_num = OPA_LED_E1S_2_ATTN_R;
-		break;
-	case E1S_3:
-		gpio_num = OPB_LED_E1S_3_ATTN_R;
-		break;
-	case E1S_4:
-		gpio_num = OPB_LED_E1S_4_ATTN_R;
-		break;
-	default:
-		gpio_num = UNKNOWN_LED_GPIO;
-		break;
+	if (get_card_type() == CARD_TYPE_OPA) {
+		return els_amber_led_gpio_opa[device_id];
+	} else {
+		return els_amber_led_gpio_opb[device_id];
 	}
-
-	return gpio_num;
 }
 
 struct k_timer *get_e1s_led_timer(uint8_t device_id)
