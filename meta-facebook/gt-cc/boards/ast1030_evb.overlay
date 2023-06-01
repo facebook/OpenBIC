@@ -29,6 +29,9 @@
   clock-frequency = <I2C_BITRATE_FAST>;
 };
 
+&i2c_gr {
+    clk-divider = <0x62220E02>;
+};
 &i2c1 {
 	pinctrl-0 = <&pinctrl_i2c1_default>;
 	status = "okay";
