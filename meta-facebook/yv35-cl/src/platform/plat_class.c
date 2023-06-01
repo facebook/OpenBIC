@@ -170,6 +170,21 @@ void init_hsc_module(uint8_t board_revision)
 		case SYS_BOARD_PVT_EFUSE:
 		case SYS_BOARD_MP_EFUSE:
 			hsc_module = HSC_MODULE_MP5990;
+			uint32_t read_value = 0;
+			// Disable ADC channel 7: ADC000[23]
+			read_value = sys_read32(REG_ADC_BASE + 0x000);
+			read_value = CLEARBIT(read_value, 23);
+			sys_write32(read_value, REG_ADC_BASE + 0x000);
+
+			// Multi-function pin ctl #5: SCU430[31] is GPIT7
+			read_value = sys_read32(REG_SCU + 0x430);
+			read_value = SETBIT(read_value, 31);
+			sys_write32(read_value, REG_SCU + 0x430);
+
+			// Enable internal PD
+			read_value = sys_read32(REG_SCU + 0x630);
+			read_value = CLEARBIT(read_value, 31);
+			sys_write32(read_value, REG_SCU + 0x630);
 			break;
 		case SYS_BOARD_EVT3_HOTSWAP:
 		case SYS_BOARD_DVT_HOTSWAP:
