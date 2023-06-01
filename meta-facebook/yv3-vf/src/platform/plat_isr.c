@@ -29,6 +29,7 @@
 #include "plat_power_seq.h"
 #include "plat_util.h"
 #include "plat_isr.h"
+#include "plat_hwmon.h"
 
 extern uint8_t ina230_init(uint8_t sensor_num);
 
@@ -38,7 +39,6 @@ void dev_12v_fault_handler(void)
 {
 	const uint8_t all_12v_pwrgd = check_12v_dev_pwrgd();
 
-	gpio_set(PWRGD_EXP_PWROK, all_12v_pwrgd);
 	gpio_set(LED_PWRGD_P12V_E1S_ALL, all_12v_pwrgd);
 }
 
@@ -55,12 +55,15 @@ void pwrgd_p12v_aux_int_handler(void)
 			m2_dev_power_switch(i, val);
 	}
 
-	dev_12v_fault_handler(); // control PWRGD_EXP_PWROK & LED_PWRGD_P12V_E1S_ALL
+	set_exp_pwrgd_pin(); // control PWRGD_EXP_PWROK
+	dev_12v_fault_handler(); // control LED_PWRGD_P12V_E1S_ALL
 	delay_function((val ? 110 : 1), pwrgd_p12v_aux_100ms_set, val, 0);
 }
 
 void power_en_int_handler(void)
 {
+	set_exp_pwrgd_pin(); // control PWRGD_EXP_PWROK
+
 	/* disable 12V switch first when the system power off */
 	if (!gpio_get(FM_POWER_EN)) {
 		plat_set_dc_status(FM_POWER_EN, 0);
@@ -96,10 +99,11 @@ void dev_rst(void)
 uint8_t get_p12v_flt_status(uint8_t idx)
 {
 	const uint8_t pin = (idx == M2_IDX_E_A) ? IRQ_P12V_E1S_0_FLT_N :
-			    (idx == M2_IDX_E_B) ? IRQ_P12V_E1S_1_FLT_N :
-			    (idx == M2_IDX_E_C) ? IRQ_P12V_E1S_2_FLT_N :
-			    (idx == M2_IDX_E_D) ? IRQ_P12V_E1S_3_FLT_N :
-							0xFF;
+						  (idx == M2_IDX_E_B) ?
+						  IRQ_P12V_E1S_1_FLT_N :
+						  (idx == M2_IDX_E_C) ?
+						  IRQ_P12V_E1S_2_FLT_N :
+						  (idx == M2_IDX_E_D) ? IRQ_P12V_E1S_3_FLT_N : 0xFF;
 
 	if (pin == 0xFF)
 		return 0;
@@ -178,31 +182,31 @@ void irq_fault_sel(uint8_t idx, uint8_t type, uint8_t is_check)
 		if (!m2_prsnt(idx))
 			return;
 		event_data1 = IPMI_EVENT_OFFSET_SYS_IRQ_P12V_E1S_FLT;
-		pin = (idx == 0) ? IRQ_P12V_E1S_0_FLT_N :
-		      (idx == 1) ? IRQ_P12V_E1S_1_FLT_N :
-		      (idx == 2) ? IRQ_P12V_E1S_2_FLT_N :
-		      (idx == 3) ? IRQ_P12V_E1S_3_FLT_N :
-					 0xFF;
-		en_pin = (idx == 0) ? FM_P12V_E1S_0_EN :
-			 (idx == 1) ? FM_P12V_E1S_1_EN :
-			 (idx == 2) ? FM_P12V_E1S_2_EN :
-			 (idx == 3) ? FM_P12V_E1S_3_EN :
-					    0xFF;
+		pin = (idx == 0) ?
+			      IRQ_P12V_E1S_0_FLT_N :
+			      (idx == 1) ? IRQ_P12V_E1S_1_FLT_N :
+					   (idx == 2) ? IRQ_P12V_E1S_2_FLT_N :
+							(idx == 3) ? IRQ_P12V_E1S_3_FLT_N : 0xFF;
+		en_pin = (idx == 0) ?
+				 FM_P12V_E1S_0_EN :
+				 (idx == 1) ? FM_P12V_E1S_1_EN :
+					      (idx == 2) ? FM_P12V_E1S_2_EN :
+							   (idx == 3) ? FM_P12V_E1S_3_EN : 0xFF;
 		break;
 	case P3V3_E1S:
 		if (!m2_prsnt(idx))
 			return;
 		event_data1 = IPMI_EVENT_OFFSET_SYS_IRQ_P3V3_E1S_FLT;
-		pin = (idx == 0) ? IRQ_P3V3_E1S_0_FLT_N :
-		      (idx == 1) ? IRQ_P3V3_E1S_1_FLT_N :
-		      (idx == 2) ? IRQ_P3V3_E1S_2_FLT_N :
-		      (idx == 3) ? IRQ_P3V3_E1S_3_FLT_N :
-					 0xFF;
-		en_pin = (idx == 0) ? FM_P3V3_E1S_0_SW_EN :
-			 (idx == 1) ? FM_P3V3_E1S_1_SW_EN :
-			 (idx == 2) ? FM_P3V3_E1S_2_SW_EN :
-			 (idx == 3) ? FM_P3V3_E1S_3_SW_EN :
-					    0xFF;
+		pin = (idx == 0) ?
+			      IRQ_P3V3_E1S_0_FLT_N :
+			      (idx == 1) ? IRQ_P3V3_E1S_1_FLT_N :
+					   (idx == 2) ? IRQ_P3V3_E1S_2_FLT_N :
+							(idx == 3) ? IRQ_P3V3_E1S_3_FLT_N : 0xFF;
+		en_pin = (idx == 0) ?
+				 FM_P3V3_E1S_0_SW_EN :
+				 (idx == 1) ? FM_P3V3_E1S_1_SW_EN :
+					      (idx == 2) ? FM_P3V3_E1S_2_SW_EN :
+							   (idx == 3) ? FM_P3V3_E1S_3_SW_EN : 0xFF;
 		break;
 	case P12V_EDGE:
 		event_data1 = IPMI_EVENT_OFFSET_SYS_IRQ_P12V_EDGE_FLT;

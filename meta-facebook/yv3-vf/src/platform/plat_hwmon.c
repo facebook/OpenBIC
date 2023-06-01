@@ -97,3 +97,22 @@ int8_t mb_cpld_dev_prsnt_set(uint32_t idx, uint32_t val)
 
 	return true;
 }
+
+void set_exp_pwrgd_pin(void)
+{
+	uint8_t val;
+
+	switch (get_e1s_hsc_config()) {
+	case CONFIG_HSC_ADM1278:
+	case CONFIG_HSC_MAXIN:
+	case CONFIG_HSC_MPS:
+		val = gpio_get(PWRGD_P12V_AUX);
+		break;
+	case CONFIG_HSC_BYPASS:
+	default:
+		val = gpio_get(FM_POWER_EN);
+		break;
+	}
+
+	gpio_set(PWRGD_EXP_PWROK, val);
+}
