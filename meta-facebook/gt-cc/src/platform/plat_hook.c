@@ -260,7 +260,22 @@ ltc4286_init_arg ltc4286_hsc_init_args[] = {
 	[0] = { .is_init = false, .r_sense_mohm = 0.142, .mfr_config_1 = { 0xFFFF } },
 };
 
-adc_asd_init_arg adc_asd_init_args[] = { [0] = { .is_init = false } };
+adc_asd_init_arg ast_adc_init_args[] = {
+	[0] = { .is_init = false,
+		.deglitch[0] = { .deglitch_en = true, .upper_bound = 0x248 },
+		.deglitch[1] = { .deglitch_en = true, .upper_bound = 0x240 },
+		.deglitch[2] = { .deglitch_en = true, .upper_bound = 0x23E },
+		.deglitch[3] = { .deglitch_en = true, .upper_bound = 0x208 },
+		.deglitch[4] = { .deglitch_en = true, .upper_bound = 0x23E },
+		.deglitch[5] = { .deglitch_en = true, .upper_bound = 0x258 },
+		.deglitch[6] = { .deglitch_en = true, .upper_bound = 0x258 },
+	},
+	[1] = {
+		.is_init = false,
+		.deglitch[6] = { .deglitch_en = true, .upper_bound = 0x258 },
+		.deglitch[7] = { .deglitch_en = true, .upper_bound = 0x258 },
+	}
+};
 
 /*
  * MODE: Shunt and bus, continuous

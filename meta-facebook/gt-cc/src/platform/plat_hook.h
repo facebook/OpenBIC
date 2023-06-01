@@ -34,7 +34,7 @@ extern isl28022_init_arg isl28022_nic_sensor_init_args[];
 extern ina230_init_arg ina230_nic_sensor_init_args[];
 
 extern mp5990_init_arg mp5990_hsc_init_args[];
-extern adc_asd_init_arg adc_asd_init_args[];
+extern adc_asd_init_arg ast_adc_init_args[];
 extern isl28022_init_arg isl28022_pex_p1v25_sensor_init_args[];
 extern ina230_init_arg ina230_pex_p1v25_sensor_init_args[];
 extern isl28022_init_arg isl28022_pex_p1v8_sensor_init_args[];
