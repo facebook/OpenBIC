@@ -29,6 +29,7 @@
 #include "plat_power_seq.h"
 #include "plat_util.h"
 #include "plat_isr.h"
+#include "plat_hwmon.h"
 
 extern uint8_t ina230_init(uint8_t sensor_num);
 
@@ -38,7 +39,6 @@ void dev_12v_fault_handler(void)
 {
 	const uint8_t all_12v_pwrgd = check_12v_dev_pwrgd();
 
-	gpio_set(PWRGD_EXP_PWROK, all_12v_pwrgd);
 	gpio_set(LED_PWRGD_P12V_E1S_ALL, all_12v_pwrgd);
 }
 
@@ -55,12 +55,15 @@ void pwrgd_p12v_aux_int_handler(void)
 			m2_dev_power_switch(i, val);
 	}
 
-	dev_12v_fault_handler(); // control PWRGD_EXP_PWROK & LED_PWRGD_P12V_E1S_ALL
+	set_exp_pwrgd_pin(); // control PWRGD_EXP_PWROK
+	dev_12v_fault_handler(); // control LED_PWRGD_P12V_E1S_ALL
 	delay_function((val ? 110 : 1), pwrgd_p12v_aux_100ms_set, val, 0);
 }
 
 void power_en_int_handler(void)
 {
+	set_exp_pwrgd_pin(); // control PWRGD_EXP_PWROK
+
 	/* disable 12V switch first when the system power off */
 	if (!gpio_get(FM_POWER_EN)) {
 		plat_set_dc_status(FM_POWER_EN, 0);
