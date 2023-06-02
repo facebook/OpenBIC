@@ -51,6 +51,8 @@ LOG_MODULE_REGISTER(plat_sensor_table);
 #define CARD_14_E1S_1_MUX_CFG_INDEX 7
 #define PCIE_CARD_INIT_CFG_OFFSET_0 0
 #define PCIE_CARD_INIT_CFG_OFFSET_1 1
+#define CXL_INA233_INIT_OFFSET 2
+#define CXL_LTC2991_INIT_OFFSET 1
 
 struct k_mutex i2c_2_pca9548a_mutex;
 struct k_mutex i2c_3_pca9546a_mutex;
@@ -540,20 +542,20 @@ sensor_cfg plat_cxl_sensor_config[] = {
 	  LTC2991_READ_V2_VOLTAGE, stby_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL,
 	  &cxl_mux_configs[5] },
-	{ SENSOR_NUM_VOL_PVPP_AB, sensor_dev_ltc2991, I2C_BUS2, CXL_U9_LTC2991_ADDR,
-	  LTC2991_READ_V1_VOLTAGE, stby_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_PVPP_AB, sensor_dev_ltc2991, I2C_BUS2, CXL_U8_LTC2991_ADDR,
+	  LTC2991_READ_V4_VOLTAGE, stby_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL,
 	  &cxl_mux_configs[5] },
-	{ SENSOR_NUM_VOL_PVTT_AB, sensor_dev_ltc2991, I2C_BUS2, CXL_U9_LTC2991_ADDR,
-	  LTC2991_READ_V3_VOLTAGE, stby_access, 1, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_PVTT_AB, sensor_dev_ltc2991, I2C_BUS2, CXL_U8_LTC2991_ADDR,
+	  LTC2991_READ_V7_VOLTAGE, stby_access, 1, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL,
 	  &cxl_mux_configs[5] },
-	{ SENSOR_NUM_VOL_PVPP_CD, sensor_dev_ltc2991, I2C_BUS2, CXL_U9_LTC2991_ADDR,
-	  LTC2991_READ_V2_VOLTAGE, stby_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_PVPP_CD, sensor_dev_ltc2991, I2C_BUS2, CXL_U8_LTC2991_ADDR,
+	  LTC2991_READ_V6_VOLTAGE, stby_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL,
 	  &cxl_mux_configs[5] },
-	{ SENSOR_NUM_VOL_PVTT_CD, sensor_dev_ltc2991, I2C_BUS2, CXL_U9_LTC2991_ADDR,
-	  LTC2991_READ_V4_VOLTAGE, stby_access, 1, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_PVTT_CD, sensor_dev_ltc2991, I2C_BUS2, CXL_U8_LTC2991_ADDR,
+	  LTC2991_READ_V8_VOLTAGE, stby_access, 1, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL,
 	  &cxl_mux_configs[5] },
 
@@ -905,7 +907,7 @@ void *get_pcie_init_sensor_config(uint8_t card_id, uint8_t sensor_number)
 	}
 
 	uint8_t index = 0;
-	uint8_t offset = 2;
+	uint8_t offset = 0;
 
 	if (get_cxl_sensor_config_index(sensor_number, &index) != true) {
 		LOG_ERR("Fail to find initial config, card: 0x%x, sensor num: 0x%x", card_id,
@@ -916,18 +918,14 @@ void *get_pcie_init_sensor_config(uint8_t card_id, uint8_t sensor_number)
 	sensor_cfg cfg = plat_cxl_sensor_config[index];
 	switch (cfg.target_addr) {
 	case CXL_U6_INA233_ADDR:
-		offset = (offset * cxl_id) + PCIE_CARD_INIT_CFG_OFFSET_0;
+		offset = (CXL_INA233_INIT_OFFSET * cxl_id) + PCIE_CARD_INIT_CFG_OFFSET_0;
 		return &ina233_init_args[offset];
 	case CXL_U7_INA233_ADDR:
-		offset = (offset * cxl_id) + PCIE_CARD_INIT_CFG_OFFSET_1;
+		offset = (CXL_INA233_INIT_OFFSET * cxl_id) + PCIE_CARD_INIT_CFG_OFFSET_1;
 		return &ina233_init_args[offset];
 	case CXL_U8_LTC2991_ADDR:
-		offset = (offset * cxl_id) + PCIE_CARD_INIT_CFG_OFFSET_0;
+		offset = (CXL_LTC2991_INIT_OFFSET * cxl_id) + PCIE_CARD_INIT_CFG_OFFSET_0;
 		return &ltc2991_init_args[offset];
-	case CXL_U9_LTC2991_ADDR:
-		offset = (offset * cxl_id) + PCIE_CARD_INIT_CFG_OFFSET_1;
-		return &ltc2991_init_args[offset];
-		break;
 	default:
 		LOG_ERR("Invalid cxl address: 0x%x", cfg.target_addr);
 		return NULL;

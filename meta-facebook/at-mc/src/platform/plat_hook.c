@@ -438,58 +438,34 @@ ltc2991_init_arg ltc2991_init_args[] = {
 	[0] = { .is_init = false,
 		.v1_v4_control_operation.value = 0,
 		.v5_v8_control_operation.value = 0 },
+	// JCN12
 	[1] = { .is_init = false,
 		.v1_v4_control_operation.value = 0,
 		.v5_v8_control_operation.value = 0 },
-	// JCN12
+	// JCN9
 	[2] = { .is_init = false,
 		.v1_v4_control_operation.value = 0,
 		.v5_v8_control_operation.value = 0 },
+	// JCN10
 	[3] = { .is_init = false,
 		.v1_v4_control_operation.value = 0,
 		.v5_v8_control_operation.value = 0 },
-	// JCN9
+	// JCN4
 	[4] = { .is_init = false,
 		.v1_v4_control_operation.value = 0,
 		.v5_v8_control_operation.value = 0 },
+	// JCN3
 	[5] = { .is_init = false,
 		.v1_v4_control_operation.value = 0,
 		.v5_v8_control_operation.value = 0 },
-	// JCN10
+	// JCN2
 	[6] = { .is_init = false,
 		.v1_v4_control_operation.value = 0,
 		.v5_v8_control_operation.value = 0 },
+	// JCN1
 	[7] = { .is_init = false,
 		.v1_v4_control_operation.value = 0,
 		.v5_v8_control_operation.value = 0 },
-	// JCN4
-	[8] = { .is_init = false,
-		.v1_v4_control_operation.value = 0,
-		.v5_v8_control_operation.value = 0 },
-	[9] = { .is_init = false,
-		.v1_v4_control_operation.value = 0,
-		.v5_v8_control_operation.value = 0 },
-	// JCN3
-	[10] = { .is_init = false,
-		 .v1_v4_control_operation.value = 0,
-		 .v5_v8_control_operation.value = 0 },
-	[11] = { .is_init = false,
-		 .v1_v4_control_operation.value = 0,
-		 .v5_v8_control_operation.value = 0 },
-	// JCN2
-	[12] = { .is_init = false,
-		 .v1_v4_control_operation.value = 0,
-		 .v5_v8_control_operation.value = 0 },
-	[13] = { .is_init = false,
-		 .v1_v4_control_operation.value = 0,
-		 .v5_v8_control_operation.value = 0 },
-	// JCN1
-	[14] = { .is_init = false,
-		 .v1_v4_control_operation.value = 0,
-		 .v5_v8_control_operation.value = 0 },
-	[15] = { .is_init = false,
-		 .v1_v4_control_operation.value = 0,
-		 .v5_v8_control_operation.value = 0 },
 };
 
 /**************************************************************************************************
