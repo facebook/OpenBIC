@@ -290,11 +290,11 @@ void IPMI_OEM_handler(ipmi_msg *msg)
 		LOG_DBG("Received NM Sensor Read command");
 		OEM_NM_SENSOR_READ(msg);
 		break;
+#endif
 	case CMD_OEM_SET_SYSTEM_GUID:
 		LOG_DBG("Received Set System GUID command");
 		OEM_SET_SYSTEM_GUID(msg);
 		break;
-#endif
 #ifdef ENABLE_FAN
 	case CMD_OEM_SET_FAN_DUTY_MANUAL:
 		LOG_DBG("Received Set Fan Duty (manual) command");
