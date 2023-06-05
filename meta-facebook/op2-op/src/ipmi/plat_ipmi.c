@@ -189,6 +189,8 @@ void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 
 	uint8_t target = msg->data[0];
 	uint8_t status = -1;
+	uint8_t card_type = get_card_type();
+	uint8_t retimer_type;
 	uint32_t offset =
 		((msg->data[4] << 24) | (msg->data[3] << 16) | (msg->data[2] << 8) | msg->data[1]);
 	uint16_t length = ((msg->data[6] << 8) | msg->data[5]);
@@ -216,6 +218,13 @@ void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 			return;
 		}
 
+		if (card_type == CARD_TYPE_OPA) {
+			retimer_type = get_pcie_retimer_type();
+		} else {
+			msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+			return;
+		}
+
 		if (offset > PCIE_RETIMER_UPDATE_MAX_OFFSET) {
 			msg->completion_code = CC_PARAM_OUT_OF_RANGE;
 			return;
@@ -223,8 +232,20 @@ void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 		I2C_MSG i2c_msg;
 		i2c_msg.bus = I2C_BUS4;
 		i2c_msg.target_addr = EXPA_RETIMER_ADDR;
-		status = pcie_retimer_fw_update(&i2c_msg, offset, length, &msg->data[7],
-						(target & IS_SECTOR_END_MASK));
+
+		switch (retimer_type) {
+		case RETIMER_TYPE_PT5161L:
+			status = pcie_retimer_fw_update(&i2c_msg, offset, length, &msg->data[7],
+							(target & IS_SECTOR_END_MASK));
+			break;
+		case RETIMER_TYPE_M88RT51632:
+			status = m88rt51632_fw_update(&i2c_msg, offset, length, &msg->data[7],
+						      (target & IS_SECTOR_END_MASK));
+			break;
+		default:
+			LOG_ERR("firmware update unknown pcie retimer type");
+			break;
+		}
 		break;
 	default:
 		msg->completion_code = CC_INVALID_DATA_FIELD;
