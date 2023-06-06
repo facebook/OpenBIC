@@ -238,11 +238,9 @@ void IPMI_APP_handler(ipmi_msg *msg)
 	case CMD_APP_MASTER_WRITE_READ:
 		APP_MASTER_WRITE_READ(msg);
 		break;
-#ifdef CONFIG_ESPI
 	case CMD_APP_GET_SYSTEM_GUID:
 		APP_GET_SYSTEM_GUID(msg);
 		break;
-#endif
 	default:
 		LOG_ERR("Invalid APP msg netfn: %x, cmd: %x", msg->netfn, msg->cmd);
 		msg->data_len = 0;
