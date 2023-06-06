@@ -1122,9 +1122,9 @@ __weak void OEM_1S_GET_SET_BIC_VGPIO(ipmi_msg *msg)
 			return;
 		}
 
-		if (vw_gpio_get(msg->data[1], &msg->data[1])) {
+		if (vw_gpio_get(msg->data[1], &msg->data[2])) {
 			msg->completion_code = CC_SUCCESS;
-			msg->data_len = 3;
+			msg->data_len = 4;
 		} else {
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			msg->data_len = 0;

@@ -20,13 +20,14 @@
 #define VW_GPIO_DISABLE false
 
 enum vw_gpio_direction {
-	VW_GPIO_INPUT = 0,
-	VW_GPIO_OUTPUT,
+	VW_GPIO_OUTPUT = 0,
+	VW_GPIO_INPUT,
 };
 
 enum vw_gpio_value {
 	VW_GPIO_LOW = 0,
 	VW_GPIO_HIGH,
+	VW_GPIO_UNKNOWN,
 };
 
 typedef struct _vw_gpio_ {
@@ -39,4 +40,5 @@ typedef struct _vw_gpio_ {
 
 bool vw_gpio_get(int number, uint8_t *value);
 bool vw_gpio_set(int number, uint8_t value);
+void vw_gpio_reset(void);
 bool vw_gpio_init(vw_gpio *config, uint8_t size);
