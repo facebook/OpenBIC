@@ -36,30 +36,14 @@ typedef struct _cxl_vr_fw_info {
 extern pm8702_dev_info pm8702_table[];
 extern cxl_vr_fw_info cxl_vr_info_table[];
 
-bool pal_sensor_drive_init(uint8_t card_id, sensor_cfg *cfg, uint8_t *init_status);
-bool pal_sensor_drive_read(uint8_t card_id, sensor_cfg *cfg, int *reading, uint8_t *sensor_status);
-uint8_t pal_tmp75_init(uint8_t card_id, sensor_cfg *cfg);
-uint8_t pal_tmp75_read(uint8_t card_id, sensor_cfg *cfg, int *reading);
-uint8_t pal_emc1412_init(uint8_t card_id, sensor_cfg *cfg);
-uint8_t pal_emc1412_read(uint8_t card_id, sensor_cfg *cfg, int *reading);
-uint8_t pal_nvme_init(uint8_t card_id, sensor_cfg *cfg);
-uint8_t pal_nvme_read(uint8_t card_id, sensor_cfg *cfg, int *reading);
-uint8_t pal_ina233_init(uint8_t card_id, sensor_cfg *cfg);
-uint8_t pal_ina233_read(uint8_t card_id, sensor_cfg *cfg, int *reading);
-uint8_t pal_ltc2991_init(uint8_t card_id, sensor_cfg *cfg);
-uint8_t pal_ltc2991_read(uint8_t card_id, sensor_cfg *cfg, int *reading);
-uint8_t pal_xdpe12284c_init(uint8_t card_id, sensor_cfg *cfg);
-uint8_t pal_xdpe12284c_read(uint8_t card_id, sensor_cfg *cfg, int *reading);
 bool cxl_single_ioexp_alert_reset(uint8_t ioexp_name, bool is_mutex);
 int cxl_ioexp_init(uint8_t cxl_channel);
-uint8_t pal_pm8702_read(uint8_t card_id, sensor_cfg *cfg, int *reading);
-uint8_t pal_pm8702_init(uint8_t card_id, sensor_cfg *cfg);
 void cxl_mb_status_init(uint8_t cxl_id);
 bool pal_init_pm8702_info(uint8_t cxl_id);
-bool pal_pm8702_command_handler(uint8_t pcie_card_id, uint16_t opcode, uint8_t *data_buf,
-				int data_len, uint8_t *response, uint8_t *response_len);
-bool pal_get_pm8702_hbo_status(uint8_t pcie_card_id, uint8_t *resp_buf, uint8_t *resp_len);
-bool pal_pm8702_transfer_fw(uint8_t pcie_card_id, uint8_t *req_buf, int req_len);
-bool pal_set_pm8702_active_slot(uint8_t pcie_card_id, uint8_t *req_buf, int req_len);
+bool pal_pm8702_command_handler(uint8_t cxl_id, uint16_t opcode, uint8_t *data_buf, int data_len,
+				uint8_t *response, uint8_t *response_len);
+bool pal_get_pm8702_hbo_status(uint8_t cxl_id, uint8_t *resp_buf, uint8_t *resp_len);
+bool pal_pm8702_transfer_fw(uint8_t cxl_id, uint8_t *req_buf, int req_len);
+bool pal_set_pm8702_active_slot(uint8_t cxl_id, uint8_t *req_buf, int req_len);
 
 #endif

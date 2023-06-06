@@ -29,8 +29,16 @@
 #include "plat_i2c.h"
 #include "plat_ipmi.h"
 #include "plat_class.h"
+#include "xdpe12284c.h"
+#include "plat_dev.h"
+#include "plat_mctp.h"
+#include "util_sys.h"
 
 LOG_MODULE_REGISTER(plat_hook);
+
+#define VR_A0V8_INIT_OFFSET 0
+#define VR_D0V8_INIT_OFFSET 1
+#define VR_VDDQCD_INIT_OFFSET 2
 
 /**************************************************************************************************
  * INIT ARGS
@@ -468,6 +476,9 @@ ltc2991_init_arg ltc2991_init_args[] = {
 		.v5_v8_control_operation.value = 0 },
 };
 
+uint8_t plat_monitor_table_arg[] = { CXL_CARD_1, CXL_CARD_2, CXL_CARD_3, CXL_CARD_4,
+				     CXL_CARD_5, CXL_CARD_6, CXL_CARD_7, CXL_CARD_8 };
+
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
  **************************************************************************************************/
@@ -516,11 +527,6 @@ mux_config cxl_mux_configs[] = {
 	[5] = { .target_addr = 0x71, .channel = PCA9848_CHANNEL_5 },
 };
 
-vr_page_cfg vr_page_select[] = {
-	[0] = { .vr_page = PMBUS_PAGE_0 },
-	[1] = { .vr_page = PMBUS_PAGE_1 },
-};
-
 pwr_monitor_pre_proc_arg pwr_monitor_pre_proc_args[] = {
 	[0] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_0 }, .jcn_number = 0 },
 	[1] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_0 }, .jcn_number = 1 },
@@ -534,6 +540,28 @@ pwr_monitor_pre_proc_arg pwr_monitor_pre_proc_args[] = {
 	[9] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_2 }, .jcn_number = 9 },
 	[10] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_2 }, .jcn_number = 10 },
 	[11] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_2 }, .jcn_number = 11 },
+};
+
+uint8_t pm8702_pre_arg[] = { CXL_CARD_1, CXL_CARD_2, CXL_CARD_3, CXL_CARD_4,
+			     CXL_CARD_5, CXL_CARD_6, CXL_CARD_7, CXL_CARD_8 };
+
+vr_pre_arg vr_pre_args[] = {
+	[0] = { { .vr_page = PMBUS_PAGE_0 }, .cxl_id = CXL_CARD_1 },
+	[1] = { { .vr_page = PMBUS_PAGE_1 }, .cxl_id = CXL_CARD_1 },
+	[2] = { { .vr_page = PMBUS_PAGE_0 }, .cxl_id = CXL_CARD_2 },
+	[3] = { { .vr_page = PMBUS_PAGE_1 }, .cxl_id = CXL_CARD_2 },
+	[4] = { { .vr_page = PMBUS_PAGE_0 }, .cxl_id = CXL_CARD_3 },
+	[5] = { { .vr_page = PMBUS_PAGE_1 }, .cxl_id = CXL_CARD_3 },
+	[6] = { { .vr_page = PMBUS_PAGE_0 }, .cxl_id = CXL_CARD_4 },
+	[7] = { { .vr_page = PMBUS_PAGE_1 }, .cxl_id = CXL_CARD_4 },
+	[8] = { { .vr_page = PMBUS_PAGE_0 }, .cxl_id = CXL_CARD_5 },
+	[9] = { { .vr_page = PMBUS_PAGE_1 }, .cxl_id = CXL_CARD_5 },
+	[10] = { { .vr_page = PMBUS_PAGE_0 }, .cxl_id = CXL_CARD_6 },
+	[11] = { { .vr_page = PMBUS_PAGE_1 }, .cxl_id = CXL_CARD_6 },
+	[12] = { { .vr_page = PMBUS_PAGE_0 }, .cxl_id = CXL_CARD_7 },
+	[13] = { { .vr_page = PMBUS_PAGE_1 }, .cxl_id = CXL_CARD_7 },
+	[14] = { { .vr_page = PMBUS_PAGE_0 }, .cxl_id = CXL_CARD_8 },
+	[15] = { { .vr_page = PMBUS_PAGE_1 }, .cxl_id = CXL_CARD_8 },
 };
 
 /**************************************************************************************************
@@ -642,11 +670,15 @@ bool post_sq52205_read(sensor_cfg *cfg, void *args, int *reading)
 	return true;
 }
 
-bool pre_cxl_switch_mux(uint8_t sensor_num, uint8_t pcie_card_id)
+bool pre_cxl_switch_mux(uint8_t sensor_num, void *arg)
 {
+	CHECK_NULL_ARG_WITH_RETURN(arg, false);
+
 	mux_config card_mux = { 0 };
 	mux_config cxl_mux = { 0 };
-	bool ret = get_pcie_card_mux_config(pcie_card_id, sensor_num, &card_mux, &cxl_mux);
+	uint8_t *cxl_id = (uint8_t *)arg;
+
+	bool ret = get_pcie_card_mux_config(*cxl_id, sensor_num, &card_mux, &cxl_mux);
 	if (ret != true) {
 		return ret;
 	}
@@ -678,8 +710,10 @@ bool pre_cxl_switch_mux(uint8_t sensor_num, uint8_t pcie_card_id)
 	return true;
 }
 
-bool post_cxl_switch_mux(uint8_t sensor_num, uint8_t pcie_card_id)
+bool post_cxl_switch_mux(uint8_t sensor_num, void *arg)
 {
+	ARG_UNUSED(arg);
+
 	int unlock_status = 0;
 	struct k_mutex *mutex = get_i2c_mux_mutex(MEB_CXL_BUS);
 	unlock_status = k_mutex_unlock(mutex);
@@ -696,16 +730,62 @@ bool pre_cxl_vr_read(sensor_cfg *cfg, void *args)
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
-	vr_page_cfg *vr_page_sel = (vr_page_cfg *)args;
+	vr_pre_arg *pre_arg = (vr_pre_arg *)args;
+
+	uint8_t offset = 0;
 	uint8_t retry = 5;
+	uint8_t cxl_id = pre_arg->cxl_id;
 	I2C_MSG msg = { 0 };
+
+	switch (cfg->target_addr) {
+	case CXL_VR_A0V8_ADDR:
+		offset = cxl_id * 3 + VR_A0V8_INIT_OFFSET;
+		break;
+	case CXL_VR_D0V8_ADDR:
+		offset = cxl_id * 3 + VR_D0V8_INIT_OFFSET;
+		break;
+	case CXL_VR_VDDQCD_ADDR:
+		offset = cxl_id * 3 + VR_VDDQCD_INIT_OFFSET;
+		break;
+	default:
+		LOG_ERR("Invalid xdpe12284 address: 0x%x, cxl id: 0x%x, sensor num: 0x%x",
+			cfg->target_addr, cxl_id, cfg->num);
+		return false;
+	}
+
+	/* Get CXL VR version */
+	if (!cxl_vr_info_table[offset].is_init) {
+		if (!xdpe12284c_get_checksum(cfg->port, cfg->target_addr,
+					     (cxl_vr_info_table[offset].checksum))) {
+			LOG_ERR("cxl id %d %s get checksum failed", cxl_id,
+				cfg->target_addr == CXL_VR_A0V8_ADDR   ? "VR_P0V89A" :
+				cfg->target_addr == CXL_VR_D0V8_ADDR   ? "VR_P0V8D_PVDDQ_AB" :
+				cfg->target_addr == CXL_VR_VDDQCD_ADDR ? "VR_PVDDQ_CD" :
+									       "unknown vr");
+			return false;
+		}
+
+		if (!xdpe12284c_get_remaining_write(
+			    cfg->port, cfg->target_addr,
+			    (uint16_t *)&(cxl_vr_info_table[offset].remaining_write))) {
+			LOG_ERR("cxl id %d %s get remaining write failed", cxl_id,
+				cfg->target_addr == CXL_VR_A0V8_ADDR   ? "VR_P0V89A" :
+				cfg->target_addr == CXL_VR_D0V8_ADDR   ? "VR_P0V8D_PVDDQ_AB" :
+				cfg->target_addr == CXL_VR_VDDQCD_ADDR ? "VR_PVDDQ_CD" :
+									       "unknown vr");
+			return false;
+		}
+
+		cxl_vr_info_table[offset].vendor = VENDOR_INFINEON;
+		cxl_vr_info_table[offset].is_init = true;
+	}
 
 	/* set page */
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 2;
 	msg.data[0] = 0x00;
-	msg.data[1] = vr_page_sel->vr_page;
+	msg.data[1] = pre_arg->page.vr_page;
 
 	if (i2c_master_write(&msg, retry)) {
 		LOG_ERR("Set page fail");
@@ -752,6 +832,25 @@ bool post_cxl_xdpe12284c_read(sensor_cfg *cfg, void *args, int *reading)
 		break;
 	default:
 		break;
+	}
+
+	return true;
+}
+
+bool pre_pm8702_read(sensor_cfg *cfg, void *args)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
+
+	uint8_t *cxl_id = (uint8_t *)args;
+
+	if (get_cxl_eid_flag(*cxl_id) != true) {
+		/* Not ready to polling PM8702 sensor, so skip */
+		cfg->cache_status = SENSOR_POLLING_DISABLE;
+	} else {
+		if (cfg->cache_status == SENSOR_POLLING_DISABLE) {
+			cfg->cache_status = SENSOR_INIT_STATUS;
+		}
 	}
 
 	return true;

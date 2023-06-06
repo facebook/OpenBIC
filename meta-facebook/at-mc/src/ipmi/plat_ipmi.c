@@ -92,8 +92,8 @@ int pal_cxl_component_id_map_cxl_id(uint8_t component_id, uint8_t *cxl_id)
 	return 0;
 }
 
-uint8_t fw_update_pm8702(uint8_t cxl_id, uint8_t pcie_card_id, uint8_t next_active_slot,
-			 uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sector_end)
+uint8_t fw_update_pm8702(uint8_t cxl_id, uint8_t next_active_slot, uint32_t offset,
+			 uint16_t msg_len, uint8_t *msg_buf, bool sector_end)
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg_buf, FWUPDATE_UPDATE_FAIL);
 
@@ -113,7 +113,7 @@ uint8_t fw_update_pm8702(uint8_t cxl_id, uint8_t pcie_card_id, uint8_t next_acti
 	pm8702_hbo_status_resp hbo_status = { 0 };
 
 	k_msleep(PM8702_TRANSFER_DELAY_MS);
-	if (pal_get_pm8702_hbo_status(pcie_card_id, (uint8_t *)&hbo_status, &resp_len) != true) {
+	if (pal_get_pm8702_hbo_status(cxl_id, (uint8_t *)&hbo_status, &resp_len) != true) {
 		LOG_ERR("Fail to get HBO status");
 		return FWUPDATE_UPDATE_FAIL;
 	}
@@ -146,7 +146,7 @@ uint8_t fw_update_pm8702(uint8_t cxl_id, uint8_t pcie_card_id, uint8_t next_acti
 
 	k_msleep(PM8702_TRANSFER_DELAY_MS);
 
-	if (pal_pm8702_transfer_fw(pcie_card_id, (uint8_t *)&update_fw_req, req_len) != true) {
+	if (pal_pm8702_transfer_fw(cxl_id, (uint8_t *)&update_fw_req, req_len) != true) {
 		LOG_ERR("Fail to transfer PM8702 firmware");
 		return FWUPDATE_UPDATE_FAIL;
 	}
@@ -213,93 +213,40 @@ int pal_write_read_cxl_fru(uint8_t optional, uint8_t fru_id, EEPROM_ENTRY *fru_e
 	return 0;
 }
 
-int pal_get_pcie_card_sensor_reading(uint8_t read_type, uint8_t sensor_num, uint8_t pcie_card_id,
-				     uint8_t *card_status, int *reading)
+int pal_get_pcie_card_sensor_reading(uint8_t sensor_num, uint8_t cxl_id, uint8_t *card_status,
+				     int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(card_status, -1);
 	CHECK_NULL_ARG_WITH_RETURN(reading, -1);
 
-	bool ret = 0;
-	uint8_t index = 0;
-	uint8_t parameter = 0;
 	uint8_t sensor_status = 0;
-	bool (*pre_switch_mux_func)(uint8_t, uint8_t) = NULL;
-	bool (*post_switch_mux_func)(uint8_t, uint8_t) = NULL;
+	uint8_t cfg_count = 0;
+
 	sensor_cfg *cfg = NULL;
 
-	switch (read_type) {
-	case PCIE_CARD_CXL:
-		if (pcie_card_id_to_cxl_id(pcie_card_id, &parameter) < 0) {
-			LOG_ERR("CXL UNKNOWN pcie card id: %d", pcie_card_id);
-			return -1;
-		}
-		pre_switch_mux_func = pre_cxl_switch_mux;
-		post_switch_mux_func = post_cxl_switch_mux;
-
-		ret = get_cxl_sensor_config_index(sensor_num, &index);
-		if (ret != true) {
-			LOG_ERR("Invalid cxl sensor num: 0x%x", sensor_num);
-			return -1;
-		}
-		cfg = &plat_cxl_sensor_config[index];
-		break;
-	default:
-		LOG_ERR("Invalid read_type: %d", read_type);
+	cfg = get_cxl_sensor_cfg_info(cxl_id, &cfg_count);
+	if (cfg == NULL) {
+		LOG_ERR("Fail to find CXL sensor config via cxl id: 0x%x", cxl_id);
 		return -1;
 	}
 
-	*reading = 0;
-
-	if (cfg->access_checker(pcie_card_id) != true) {
-		*card_status |= PCIE_CARD_NOT_ACCESSIABLE_BIT;
-		return 0;
-	}
-
-	ret = pre_switch_mux_func(sensor_num, pcie_card_id);
-	if (ret != true) {
-		LOG_ERR("Pre switch mux fail, sensor num: 0x%x, card id: 0x%x", sensor_num,
-			pcie_card_id);
-		return -1;
-	}
-
-	if (cfg->pre_sensor_read_hook) {
-		if (cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args) == false) {
-			LOG_ERR("Pre sensor read function, sensor number: 0x%x", sensor_num);
-			goto exit;
-		}
-	}
-
-	ret = pal_sensor_drive_read(pcie_card_id, cfg, reading, &sensor_status);
-	if (ret != true) {
-		LOG_ERR("sensor: 0x%x read fail, cxl id: 0x%x", sensor_num, parameter);
-		goto exit;
-	}
-
-	if (cfg->post_sensor_read_hook) {
-		if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, reading) == false) {
-			LOG_ERR("Post sensor read function, sensor number: 0x%x", sensor_num);
-			goto exit;
-		}
-	}
-
-exit:
-	ret = post_switch_mux_func(sensor_num, pcie_card_id);
-	if (ret != true) {
-		LOG_ERR("Post switch mux fail, sensor num: 0x%x, card id: 0x%x", sensor_num,
-			pcie_card_id);
-	}
-
-	if (is_interrupt_ongoing) {
-		sensor_status = SENSOR_NOT_ACCESSIBLE;
-	}
+	sensor_status = get_sensor_reading(cfg, cfg_count, sensor_num, reading, GET_FROM_CACHE);
 
 	switch (sensor_status) {
 	case SENSOR_READ_SUCCESS:
 	case SENSOR_READ_ACUR_SUCCESS:
+	case SENSOR_READ_4BYTE_ACUR_SUCCESS:
 		break;
 	case SENSOR_INIT_STATUS:
-	case SENSOR_NOT_ACCESSIBLE:
 		*card_status |= PCIE_CARD_DEVICE_NOT_READY_BIT;
+		*reading = 0;
+		break;
+	case SENSOR_NOT_ACCESSIBLE:
+		*card_status |= PCIE_CARD_NOT_ACCESSIABLE_BIT;
+		*reading = 0;
+		break;
+	case SENSOR_NOT_PRESENT:
+		*card_status |= PCIE_CARD_NOT_PRESENT_BIT;
 		*reading = 0;
 		break;
 	default:
@@ -625,6 +572,7 @@ void OEM_1S_GET_PCIE_CARD_SENSOR_READING(ipmi_msg *msg)
 
 	int ret = -1;
 	int reading = 0;
+	uint8_t cxl_id = 0;
 	uint8_t card_type = 0;
 	uint8_t device_status = 0;
 	uint8_t fru_id = msg->data[0];
@@ -639,10 +587,18 @@ void OEM_1S_GET_PCIE_CARD_SENSOR_READING(ipmi_msg *msg)
 
 	switch (card_type) {
 	case CXL_CARD:
-		ret = pal_get_pcie_card_sensor_reading(PCIE_CARD_CXL, sensor_num, pcie_card_id,
-						       &device_status, &reading);
+		ret = pcie_card_id_to_cxl_id(pcie_card_id, &cxl_id);
+		if (ret != 0) {
+			LOG_ERR("Fail to get CXL id through pcie card id: 0x%x", pcie_card_id);
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
 
-		if (ret < 0) {
+		ret = pal_get_pcie_card_sensor_reading(sensor_num, cxl_id, &device_status,
+						       &reading);
+		if (ret != 0) {
+			LOG_ERR("Fail to get CXL sensor reading, cxl id: 0x%x, sensor num: 0x%x",
+				cxl_id, sensor_num);
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			return;
 		}
@@ -680,7 +636,6 @@ void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 	}
 
 	uint8_t cxl_id = 0;
-	uint8_t pcie_card_id = 0;
 	uint8_t component = msg->data[0];
 	uint8_t status = -1;
 	uint32_t offset =
@@ -726,13 +681,7 @@ void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 			return;
 		}
 
-		if (cxl_id_to_pcie_card_id(cxl_id, &pcie_card_id) != 0) {
-			LOG_ERR("Fail to transfer cxl id: 0x%x to pcie card id", cxl_id);
-			msg->completion_code = CC_INVALID_DATA_FIELD;
-			return;
-		}
-
-		if (is_cxl_access(pcie_card_id) != true) {
+		if (is_cxl_access(cxl_id) != true) {
 			msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
 			return;
 		}
@@ -769,8 +718,8 @@ void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 				next_active_slot;
 		}
 
-		status = fw_update_pm8702(cxl_id, pcie_card_id, next_active_slot, offset, length,
-					  &msg->data[7], (component & IS_SECTOR_END_MASK));
+		status = fw_update_pm8702(cxl_id, next_active_slot, offset, length, &msg->data[7],
+					  (component & IS_SECTOR_END_MASK));
 		break;
 	default:
 		LOG_ERR("target: 0x%x is invalid", component);
@@ -825,7 +774,6 @@ void OEM_1S_SET_DEVICE_ACTIVE(ipmi_msg *msg)
 
 	int req_len = 0;
 	uint8_t cxl_id = 0;
-	uint8_t pcie_card_id = 0;
 	uint8_t component = msg->data[0];
 	uint8_t next_active_slot = 0;
 
@@ -845,13 +793,7 @@ void OEM_1S_SET_DEVICE_ACTIVE(ipmi_msg *msg)
 			return;
 		}
 
-		if (cxl_id_to_pcie_card_id(cxl_id, &pcie_card_id) != 0) {
-			LOG_ERR("Fail to transfer cxl id: 0x%x to pcie card id", cxl_id);
-			msg->completion_code = CC_INVALID_DATA_FIELD;
-			return;
-		}
-
-		if (is_cxl_access(pcie_card_id) != true) {
+		if (is_cxl_access(cxl_id) != true) {
 			msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
 			return;
 		}
@@ -869,8 +811,7 @@ void OEM_1S_SET_DEVICE_ACTIVE(ipmi_msg *msg)
 		activate_req.action = NEXT_COLD_RESET_ACTIVE_FW;
 		activate_req.slot = next_active_slot;
 
-		if (pal_set_pm8702_active_slot(pcie_card_id, (uint8_t *)&activate_req, req_len) !=
-		    true) {
+		if (pal_set_pm8702_active_slot(cxl_id, (uint8_t *)&activate_req, req_len) != true) {
 			LOG_ERR("Fail to set next active slot");
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			return;
