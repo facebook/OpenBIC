@@ -362,6 +362,19 @@ static void send_apml_alert(struct k_work *work)
 	fatal_error_work_info *work_info = CONTAINER_OF(work, fatal_error_work_info, work);
 	if (get_DC_status()) {
 		LOG_INF("Send apml alert to bmc.");
+
+		common_addsel_msg_t sel_msg;
+		sel_msg.InF_target = BMC_IPMB;
+		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_AMD_ALERT_L;
+		sel_msg.event_data2 = work_info->ras_status;
+		sel_msg.event_data3 = 0xFF;
+		if (!common_add_sel_evt_record(&sel_msg)) {
+			LOG_ERR("Failed to assert ALERT_L event log.");
+		}
+
 		send_apml_alert_to_bmc(work_info->ras_status);
 	}
 	SAFE_FREE(work_info);
@@ -375,13 +388,12 @@ void ISR_APML_ALERT()
 		return;
 	}
 
-	if (ras_status & 0x0F) {
+	if (ras_status) {
 		LOG_INF("Fatal error happened, ras_status 0x%x.", ras_status);
 		fatal_error_happened();
 
-		if ((ras_status & 0x01) &&
-		    (apml_write_byte(APML_BUS, SB_RMI_ADDR, SBRMI_RAS_STATUS, 0x01)))
-			LOG_ERR("Failed to clear fatal error.");
+		if (apml_write_byte(APML_BUS, SB_RMI_ADDR, SBRMI_RAS_STATUS, ras_status))
+			LOG_ERR("Failed to clear ras_status.");
 
 		uint8_t status;
 		if (apml_read_byte(APML_BUS, SB_RMI_ADDR, SBRMI_STATUS, &status))
