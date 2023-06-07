@@ -58,5 +58,6 @@ bool pre_xdpe15284_read(sensor_cfg *cfg, void *args);
 bool post_xdpe15284_read(sensor_cfg *cfg, void *args, int *reading);
 bool pre_accl_mux_switch(uint8_t sensor_num, void *arg);
 bool post_accl_mux_switch(uint8_t sensor_num, void *arg);
+bool pre_accl_nvme_read(sensor_cfg *cfg, void *args);
 
 #endif

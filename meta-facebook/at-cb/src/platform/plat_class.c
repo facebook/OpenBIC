@@ -29,6 +29,7 @@
 #include "hal_gpio.h"
 #include "plat_gpio.h"
 #include "ioexp_pca9555.h"
+#include "plat_dev.h"
 
 LOG_MODULE_REGISTER(plat_class);
 
@@ -274,6 +275,7 @@ bool get_acb_power_status()
 {
 	int ret = -1;
 	int retry = 5;
+	bool current_power_status = false;
 	I2C_MSG msg = { 0 };
 
 	msg.bus = I2C_BUS3;
@@ -304,13 +306,16 @@ bool get_acb_power_status()
 		}
 
 		if (msg.data[0] & CPLD_PWRGD_BIT) {
-			is_power_good = true;
-		} else {
-			is_power_good = false;
+			current_power_status = true;
 		}
-	} else {
-		is_power_good = false;
 	}
+
+	if (is_power_good == true && current_power_status == false) {
+		// DC drop
+		clear_freya_cache_flag();
+	}
+
+	is_power_good = current_power_status;
 
 	return true;
 }

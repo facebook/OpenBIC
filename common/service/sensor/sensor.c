@@ -336,7 +336,8 @@ uint8_t get_sensor_reading(sensor_cfg *cfg_table, uint8_t cfg_count, uint8_t sen
 				cfg->cache_status = SENSOR_PRE_READ_ERROR;
 				return cfg->cache_status;
 			}
-			if (cfg->cache_status == SENSOR_NOT_PRESENT) {
+			if ((cfg->cache_status == SENSOR_NOT_PRESENT) ||
+			    (cfg->cache_status == SENSOR_NOT_ACCESSIBLE)) {
 				return cfg->cache_status;
 			}
 		}

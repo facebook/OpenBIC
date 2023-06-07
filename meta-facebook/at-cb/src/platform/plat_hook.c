@@ -29,6 +29,8 @@
 #include "plat_sensor_table.h"
 #include "i2c-mux-pca954x.h"
 #include "plat_class.h"
+#include "plat_dev.h"
+#include "nvme.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -824,6 +826,67 @@ bool post_accl_mux_switch(uint8_t sensor_num, void *arg)
 
 	if (unlock_status != 0) {
 		LOG_ERR("Mutex unlock fail, status: %d", unlock_status);
+		return false;
+	}
+
+	return true;
+}
+
+bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
+
+	int ret = 0;
+	uint8_t nvme_temp = 0;
+	uint8_t nvme_status[FREYA_STATUS_BLOCK_LENGTH] = { 0 };
+	freya_info *accl_freya = (freya_info *)args;
+
+	ret = read_nvme_info(cfg->port, cfg->target_addr, FREYA_STATUS_BLOCK_OFFSET,
+			     FREYA_STATUS_BLOCK_LENGTH, nvme_status);
+	if (ret != 0) {
+		LOG_ERR("ACCL pre-read get freya status fail, sensor num: 0x%x", cfg->num);
+		return false;
+	}
+
+	nvme_temp = nvme_status[NVME_TEMPERATURE_INDEX];
+	if (nvme_temp == 0) {
+		/* Freya not ready */
+		cfg->cache_status = SENSOR_NOT_ACCESSIBLE;
+		return true;
+	}
+
+	switch (cfg->target_addr) {
+	case ACCL_FREYA_1_ADDR:
+		if (accl_freya->is_cache_freya1_info != true) {
+			ret = get_freya_fw_info(cfg->port, cfg->target_addr,
+						&accl_freya->freya1_fw_info);
+			if ((ret == 0) || (ret == FREYA_NOT_SUPPORT_MODULE_IDENTIFIER_RET_CODE)) {
+				accl_freya->is_cache_freya1_info = true;
+				return true;
+			}
+		}
+		break;
+	case ACCL_FREYA_2_ADDR:
+		if (accl_freya->is_cache_freya2_info != true) {
+			ret = get_freya_fw_info(cfg->port, cfg->target_addr,
+						&accl_freya->freya2_fw_info);
+			if ((ret == 0) || (ret == FREYA_NOT_SUPPORT_MODULE_IDENTIFIER_RET_CODE)) {
+				accl_freya->is_cache_freya2_info = true;
+				return true;
+			}
+		}
+		break;
+	default:
+		LOG_ERR("Invalid sensor address: 0x%x, sensor num: 0x%x", cfg->target_addr,
+			cfg->num);
+		return false;
+	}
+
+	if (ret != 0) {
+		if (ret != FREYA_NOT_READY_RET_CODE) {
+			LOG_ERR("Get freya info fail, sensor num: 0x%x", cfg->num);
+		}
 		return false;
 	}
 
