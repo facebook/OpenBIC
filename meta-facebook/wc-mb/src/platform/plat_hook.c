@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "libutil.h"
 #include "sensor.h"
 #include "ipmi.h"
 #include "plat_i2c.h"
@@ -127,19 +128,18 @@ dimm_pre_proc_arg dimm_pre_proc_args[] = {
  * @retval true if setting mux and page is successful.
  * @retval false if setting mux or page fails.
  */
-bool pre_vr_read(uint8_t sensor_num, void *args)
+bool pre_vr_read(sensor_cfg *cfg, void *args)
 {
-	if (args == NULL) {
-		return false;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
 	vr_pre_proc_arg *pre_proc_args = (vr_pre_proc_arg *)args;
 	uint8_t retry = 5;
 	I2C_MSG msg;
 
 	/* set page */
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 2;
 	msg.data[0] = 0x00;
 	msg.data[1] = pre_proc_args->vr_page;
@@ -160,11 +160,12 @@ bool pre_vr_read(uint8_t sensor_num, void *args)
  * @retval true always.
  * @retval false NULL
  */
-bool pre_vol_bat3v_read(uint8_t sensor_num, void *args)
+bool pre_vol_bat3v_read(sensor_cfg *cfg, void *args)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	ARG_UNUSED(args);
 
-	if (sensor_num == SENSOR_NUM_VOL_BAT3V) {
+	if (cfg->num == SENSOR_NUM_VOL_BAT3V) {
 		gpio_set(FM_P3V_BAT_SCALED_EN_R, GPIO_HIGH);
 		k_msleep(500);
 	}
@@ -182,12 +183,13 @@ bool pre_vol_bat3v_read(uint8_t sensor_num, void *args)
  * @retval true always.
  * @retval false NULL
  */
-bool post_vol_bat3v_read(uint8_t sensor_num, void *args, int *reading)
+bool post_vol_bat3v_read(sensor_cfg *cfg, void *args, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	ARG_UNUSED(args);
 	ARG_UNUSED(reading);
 
-	if (sensor_num == SENSOR_NUM_VOL_BAT3V)
+	if (cfg->num == SENSOR_NUM_VOL_BAT3V)
 		gpio_set(FM_P3V_BAT_SCALED_EN_R, GPIO_LOW);
 
 	return true;
@@ -203,10 +205,10 @@ bool post_vol_bat3v_read(uint8_t sensor_num, void *args, int *reading)
  * @retval true if no error
  * @retval false if reading get NULL
  */
-bool post_adm1278_power_read(uint8_t sensor_num, void *args, int *reading)
+bool post_adm1278_power_read(sensor_cfg *cfg, void *args, int *reading)
 {
-	if (!reading)
-		return false;
+	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+	ARG_UNUSED(cfg);
 	ARG_UNUSED(args);
 
 	sensor_val *sval = (sensor_val *)reading;
@@ -228,10 +230,10 @@ bool post_adm1278_power_read(uint8_t sensor_num, void *args, int *reading)
  * @retval true if no error
  * @retval false if reading get NULL
  */
-bool post_adm1278_current_read(uint8_t sensor_num, void *args, int *reading)
+bool post_adm1278_current_read(sensor_cfg *cfg, void *args, int *reading)
 {
-	if (!reading)
-		return false;
+	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+	ARG_UNUSED(cfg);
 	ARG_UNUSED(args);
 
 	sensor_val *sval = (sensor_val *)reading;
@@ -243,8 +245,11 @@ bool post_adm1278_current_read(uint8_t sensor_num, void *args, int *reading)
 	return true;
 }
 
-bool pre_intel_peci_dimm_read(uint8_t sensor_num, void *args)
+bool pre_intel_peci_dimm_read(sensor_cfg *cfg, void *args)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
+
 	if (get_post_status() == false) {
 		// BIC can't check DIMM temperature by ME, return true to keep do sensor initial
 		return true;
@@ -257,8 +262,7 @@ bool pre_intel_peci_dimm_read(uint8_t sensor_num, void *args)
 
 	bool ret = false;
 	uint8_t dimm_present_result = 0;
-	sensor_cfg cfg = sensor_config[sensor_config_index_map[sensor_num]];
-	switch (cfg.offset) {
+	switch (cfg->offset) {
 	case PECI_TEMP_CHANNEL0_DIMM0:
 		ret = check_dimm_present(DIMM_CHANNEL_NUM_0, DIMM_NUMBER_0, &dimm_present_result);
 		break;
@@ -278,8 +282,7 @@ bool pre_intel_peci_dimm_read(uint8_t sensor_num, void *args)
 		ret = check_dimm_present(DIMM_CHANNEL_NUM_7, DIMM_NUMBER_0, &dimm_present_result);
 		break;
 	default:
-		LOG_ERR("input sensor 0x%x offset is invalid, offset: 0x%x",
-		        sensor_num, cfg.offset);
+		LOG_ERR("input sensor 0x%x offset is invalid, offset: 0x%x", cfg->num, cfg->offset);
 		return ret;
 	}
 
@@ -289,7 +292,7 @@ bool pre_intel_peci_dimm_read(uint8_t sensor_num, void *args)
 
 	// Check dimm temperature result, report 0xFF if dimm not present
 	if (dimm_present_result == DIMM_NOT_PRESENT) {
-		ret = disable_dimm_pmic_sensor(sensor_num);
+		ret = disable_dimm_pmic_sensor(cfg->num);
 	}
 
 	pre_proc_args->is_present_checked = true;

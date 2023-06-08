@@ -1189,15 +1189,18 @@ unlock_exit:
 	return ret;
 }
 
-uint8_t pt5161l_read(uint8_t sensor_num, int *reading)
+uint8_t pt5161l_read(sensor_cfg *cfg, int *reading)
 {
-	if ((reading == NULL) || (sensor_num > SENSOR_NUM_MAX) ||
-	    (sensor_config[sensor_config_index_map[sensor_num]].init_args == NULL)) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	pt5161l_init_arg *init_arg =
-		(pt5161l_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	pt5161l_init_arg *init_arg = (pt5161l_init_arg *)cfg->init_args;
 
 	if (!init_arg->is_init) {
 		LOG_ERR("device isn't initialized");
@@ -1212,8 +1215,6 @@ uint8_t pt5161l_read(uint8_t sensor_num, int *reading)
 	I2C_MSG msg = { 0 };
 	uint8_t ret;
 
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
-
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
 
@@ -1225,7 +1226,7 @@ uint8_t pt5161l_read(uint8_t sensor_num, int *reading)
 		}
 		break;
 	default:
-		LOG_ERR("Invalid sensor 0x%x offset 0x%x", sensor_num, cfg->offset);
+		LOG_ERR("Invalid sensor 0x%x offset 0x%x", cfg->num, cfg->offset);
 		return SENSOR_NOT_FOUND;
 	}
 
@@ -1238,18 +1239,20 @@ uint8_t pt5161l_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t pt5161l_init(uint8_t sensor_num)
+uint8_t pt5161l_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
 	I2C_MSG msg;
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 
-	pt5161l_init_arg *init_args =
-		(pt5161l_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	pt5161l_init_arg *init_args = (pt5161l_init_arg *)cfg->init_args;
 
 	if (init_args->is_init) {
 		goto exit;
@@ -1263,7 +1266,7 @@ uint8_t pt5161l_init(uint8_t sensor_num)
 	init_args->is_init = true;
 
 exit:
-	sensor_config[sensor_config_index_map[sensor_num]].read = pt5161l_read;
+	cfg->read = pt5161l_read;
 	return SENSOR_INIT_SUCCESS;
 
 error:

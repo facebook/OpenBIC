@@ -33,11 +33,14 @@ LOG_MODULE_REGISTER(mp5990);
 #define MP5990_EIN_SAMPLE_CNT_MAX 0x1000000
 #define MP5990_EIN_ENERGY_CNT_MAX 0x8000
 
-int mp5990_read_ein(double *val, uint8_t sensor_num)
+int mp5990_read_ein(double *val, sensor_cfg *cfg)
 {
-	if ((val == NULL) || (sensor_num > SENSOR_NUM_MAX)) {
+	CHECK_NULL_ARG_WITH_RETURN(val, -1);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return -1;
 	}
+
 	I2C_MSG msg;
 	uint8_t retry = 5;
 	uint32_t energy = 0, rollover = 0, sample = 0;
@@ -47,10 +50,10 @@ int mp5990_read_ein(double *val, uint8_t sensor_num)
 	static uint32_t last_energy = 0, last_rollover = 0, last_sample = 0;
 	static bool pre_ein = false;
 
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
-	msg.data[0] = sensor_config[sensor_config_index_map[sensor_num]].offset;
+	msg.data[0] = cfg->offset;
 	msg.rx_len = 7;
 
 	if (i2c_master_read(&msg, retry)) {
@@ -100,15 +103,17 @@ int mp5990_read_ein(double *val, uint8_t sensor_num)
 	return 0;
 }
 
-uint8_t mp5990_read(uint8_t sensor_num, int *reading)
+uint8_t mp5990_read(sensor_cfg *cfg, int *reading)
 {
-	if ((reading == NULL) || (sensor_num > SENSOR_NUM_MAX) ||
-	    (sensor_config[sensor_config_index_map[sensor_num]].init_args == NULL)) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	mp5990_init_arg *init_arg =
-		(mp5990_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	mp5990_init_arg *init_arg = (mp5990_init_arg *)cfg->init_args;
 	if (init_arg->is_init == false) {
 		LOG_ERR("Device isn't initialized");
 		return SENSOR_UNSPECIFIED_ERROR;
@@ -118,8 +123,6 @@ uint8_t mp5990_read(uint8_t sensor_num, int *reading)
 	double val;
 	I2C_MSG msg = { 0 };
 	int ret = 0;
-
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
@@ -132,7 +135,7 @@ uint8_t mp5990_read(uint8_t sensor_num, int *reading)
 
 	switch (cfg->offset) {
 	case PMBUS_READ_EIN:
-		ret = mp5990_read_ein(&val, sensor_num);
+		ret = mp5990_read_ein(&val, cfg);
 		if (ret != 0) {
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
@@ -168,19 +171,16 @@ uint8_t mp5990_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t mp5990_init(uint8_t sensor_num)
+uint8_t mp5990_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	if (!sensor_config[sensor_config_index_map[sensor_num]].init_args) {
-		LOG_ERR("MP5990 init args are not provided!");
-		return SENSOR_INIT_UNSPECIFIED_ERROR;
-	}
-
-	mp5990_init_arg *init_args =
-		(mp5990_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	mp5990_init_arg *init_args = (mp5990_init_arg *)cfg->init_args;
 	if (init_args->is_init)
 		goto skip_init;
 
@@ -191,8 +191,8 @@ uint8_t mp5990_init(uint8_t sensor_num)
 		LOG_ERR("memory allocation failed!");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
-	uint8_t bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	uint8_t target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	uint8_t bus = cfg->port;
+	uint8_t target_addr = cfg->target_addr;
 	uint8_t tx_len, rx_len;
 
 	/* Skip setting iout_cal_gain if given 0xFFFF */
@@ -242,6 +242,6 @@ cleanup:
 	SAFE_FREE(data);
 
 skip_init:
-	sensor_config[sensor_config_index_map[sensor_num]].read = mp5990_read;
+	cfg->read = mp5990_read;
 	return SENSOR_INIT_SUCCESS;
 }

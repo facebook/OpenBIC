@@ -176,19 +176,19 @@
 #define SENSOR_NUM_PWR_ACCL_FREYA_1 0x10
 #define SENSOR_NUM_PWR_ACCL_FREYA_2 0x11
 
-extern sensor_cfg plat_accl_sensor_config[];
 extern const int ACCL_SENSOR_CONFIG_SIZE;
 
 void load_sensor_config(void);
 bool is_acb_power_good();
 bool is_dc_access(uint8_t sensor_num);
-bool is_pcie_device_access(uint8_t card_id, uint8_t sensor_num);
+bool is_pcie_device_access(uint8_t card_id);
 struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus);
 int get_accl_bus(uint8_t card_id, uint8_t sensor_number);
-bool get_accl_sensor_config_index(uint8_t sensor_num, uint8_t *index);
+sensor_cfg *get_accl_sensor_config(uint8_t card_id, uint8_t sensor_num);
 bool get_accl_mux_config(uint8_t card_id, mux_config *accl_mux);
 bool get_mux_channel_config(uint8_t card_id, uint8_t sensor_number, mux_config *channel_mux);
 ina233_init_arg *get_accl_init_sensor_config(uint8_t card_id, uint8_t sensor_number);
 void pal_init_drive(sensor_cfg *cfg_table, uint8_t cfg_size, uint8_t card_id);
+sensor_cfg *get_accl_sensor_cfg_info(uint8_t card_id, uint8_t *cfg_count);
 
 #endif

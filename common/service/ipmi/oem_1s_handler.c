@@ -937,12 +937,14 @@ __weak void OEM_1S_ACCURACY_SENSOR_READING(ipmi_msg *msg)
 
 	if (req->read_option == GET_FROM_CACHE) {
 		if (enable_sensor_poll_thread) {
-			status = get_sensor_reading(req->sensor_num, &reading, GET_FROM_CACHE);
+			status = get_sensor_reading(sensor_config, sensor_config_count,
+						    req->sensor_num, &reading, GET_FROM_CACHE);
 		} else {
 			status = SENSOR_POLLING_DISABLE;
 		}
 	} else if (req->read_option == GET_FROM_SENSOR) {
-		status = get_sensor_reading(req->sensor_num, &reading, GET_FROM_SENSOR);
+		status = get_sensor_reading(sensor_config, sensor_config_count, req->sensor_num,
+					    &reading, GET_FROM_SENSOR);
 	} else {
 		LOG_ERR("Error: read_option was not either GET_FROM_CACHE or GET_FROM_SENSOR.");
 		status = SENSOR_UNSPECIFIED_ERROR;
@@ -1205,7 +1207,7 @@ __weak void OEM_1S_CONTROL_SENSOR_POLLING(ipmi_msg *msg)
 			// Enable or Disable sensor polling
 			sensor_config[control_sensor_index].is_enable_polling =
 				((operation == DISABLE_SENSOR_POLLING) ? DISABLE_SENSOR_POLLING :
-									 ENABLE_SENSOR_POLLING);
+									       ENABLE_SENSOR_POLLING);
 			msg->data[return_data_index + 1] =
 				sensor_config[control_sensor_index].is_enable_polling;
 		} else {

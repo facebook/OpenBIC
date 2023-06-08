@@ -15,6 +15,7 @@
  */
 
 #include <stdio.h>
+#include "libutil.h"
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "i2c-mux-tca9548.h"
@@ -22,19 +23,11 @@
 
 LOG_MODULE_REGISTER(i2c_mux_tca9548);
 
-bool tca9548_select_chan(uint8_t sensor_num, void *args)
+bool tca9548_select_chan(sensor_cfg *cfg, void *args)
 {
-	if (!args || (sensor_num > SENSOR_NUM_MAX)) {
-		if (sensor_num > SENSOR_NUM_MAX) {
-			LOG_ERR("Invalid channel num");
-		}
-		else {
-			LOG_ERR("args pointer is NULL");
-		}
-		return false;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 	struct tca9548 *p = (struct tca9548 *)args;
 
 	uint8_t retry = 5;

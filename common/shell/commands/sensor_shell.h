@@ -21,20 +21,26 @@
 
 /* According to IPMI specification Table 43, length of sensor name maximum is 16 bytes. */
 #define MAX_SENSOR_NAME_LENGTH 32 // 31 bytes sensor name and 1 byte null character
+#define COMMON_SENSOR_TABLE_INDEX 0
 
 enum SENSOR_ACCESS { SENSOR_READ, SENSOR_WRITE };
 
-void cmd_sensor_cfg_list_all(const struct shell *shell, size_t argc, char **argv);
-void cmd_sensor_cfg_get(const struct shell *shell, size_t argc, char **argv);
+void cmd_sensor_cfg_list_all_table(const struct shell *shell, size_t argc, char **argv);
+void cmd_sensor_cfg_list_all_sensor(const struct shell *shell, size_t argc, char **argv);
+void cmd_sensor_cfg_get_table_all_sensor(const struct shell *shell, size_t argc, char **argv);
+void cmd_sensor_cfg_get_table_single_sensor(const struct shell *shell, size_t argc, char **argv);
 void cmd_control_sensor_polling(const struct shell *shell, size_t argc, char **argv);
 
-SHELL_STATIC_SUBCMD_SET_CREATE(sub_sensor_cmds,
-			       SHELL_CMD(list_all, NULL, "List all SENSOR config.",
-					 cmd_sensor_cfg_list_all),
-			       SHELL_CMD(get, NULL, "Get SENSOR config", cmd_sensor_cfg_get),
-			       SHELL_CMD(control_sensor_polling, NULL,
-					 "Enable/Disable sensor polling",
-					 cmd_control_sensor_polling),
-			       SHELL_SUBCMD_SET_END);
+SHELL_STATIC_SUBCMD_SET_CREATE(
+	sub_sensor_cmds,
+	SHELL_CMD(list_all_table, NULL, "List all monitor table.", cmd_sensor_cfg_list_all_table),
+	SHELL_CMD(list_all_sensor, NULL, "List all SENSOR config.", cmd_sensor_cfg_list_all_sensor),
+	SHELL_CMD(get_table_all_sensor, NULL, "Get table all SENSOR config",
+		  cmd_sensor_cfg_get_table_all_sensor),
+	SHELL_CMD(get_table_single_sensor, NULL, "Get table single SENSOR config",
+		  cmd_sensor_cfg_get_table_single_sensor),
+	SHELL_CMD(control_sensor_polling, NULL, "Enable/Disable sensor polling",
+		  cmd_control_sensor_polling),
+	SHELL_SUBCMD_SET_END);
 
 #endif

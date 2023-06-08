@@ -25,20 +25,24 @@ LOG_MODULE_REGISTER(dev_tmp461);
 
 static uint8_t temperature_range = 0xFF;
 
-uint8_t tmp461_read(uint8_t sensor_num, int *reading)
+uint8_t tmp461_read(sensor_cfg *cfg, int *reading)
 {
-	if (!reading || (sensor_num > SENSOR_NUM_MAX)) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	uint8_t retry = 5, temperature_high_byte = 0xFF, temperature_low_byte = 0xFF;
 	I2C_MSG msg = { 0 };
 
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.rx_len = 1;
-	uint8_t offset = sensor_config[sensor_config_index_map[sensor_num]].offset;
+	uint8_t offset = cfg->offset;
 
 	switch (offset) {
 	case TMP461_LOCAL_TEMPERATRUE:
@@ -98,9 +102,11 @@ uint8_t tmp461_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t tmp461_init(uint8_t sensor_num)
+uint8_t tmp461_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
@@ -113,8 +119,8 @@ uint8_t tmp461_init(uint8_t sensor_num)
 	}
 
 	// Get the temperature range from chip
-	i2c_msg->bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	i2c_msg->target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	i2c_msg->bus = cfg->port;
+	i2c_msg->target_addr = cfg->target_addr;
 	i2c_msg->tx_len = 1;
 	i2c_msg->rx_len = 1;
 	i2c_msg->data[0] = OFFSET_CONFIGURATION;
@@ -128,6 +134,6 @@ uint8_t tmp461_init(uint8_t sensor_num)
 exit:
 	SAFE_FREE(i2c_msg);
 
-	sensor_config[sensor_config_index_map[sensor_num]].read = tmp461_read;
+	cfg->read = tmp461_read;
 	return SENSOR_INIT_SUCCESS;
 }

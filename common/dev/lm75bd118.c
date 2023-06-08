@@ -28,19 +28,18 @@
 
 LOG_MODULE_REGISTER(dev_lm75bd118);
 
-uint8_t lm75bd118_read(uint8_t sensor_num, int *reading)
+uint8_t lm75bd118_read(sensor_cfg *cfg, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
 
-	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_ERR("Sensor 0x%x input parameter is invalid", sensor_num);
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	sensor_cfg cfg = sensor_config[sensor_config_index_map[sensor_num]];
-
-	if (cfg.offset != LM75BD118_TEMP_REG) {
-		LOG_ERR("Invalid offset: 0x%x", cfg.offset);
+	if (cfg->offset != LM75BD118_TEMP_REG) {
+		LOG_ERR("Invalid offset: 0x%x", cfg->offset);
 		return SENSOR_PARAMETER_NOT_VALID;
 	}
 
@@ -50,11 +49,11 @@ uint8_t lm75bd118_read(uint8_t sensor_num, int *reading)
 	uint8_t retry = 5;
 	I2C_MSG msg = { 0 };
 
-	msg.bus = cfg.port;
-	msg.target_addr = cfg.target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.rx_len = 2;
-	msg.data[0] = cfg.offset;
+	msg.data[0] = cfg->offset;
 
 	ret = i2c_master_read(&msg, retry);
 	if (ret != 0) {
@@ -71,13 +70,14 @@ uint8_t lm75bd118_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t lm75bd118_init(uint8_t sensor_num)
+uint8_t lm75bd118_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_ERR("Sensor 0x%x input parameter is invalid", sensor_num);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	sensor_config[sensor_config_index_map[sensor_num]].read = lm75bd118_read;
+	cfg->read = lm75bd118_read;
 	return SENSOR_INIT_SUCCESS;
 }

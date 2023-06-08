@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "libutil.h"
 #include "sensor.h"
 #include "plat_i2c.h"
 #include "plat_gpio.h"
@@ -886,23 +887,23 @@ pex89000_pre_proc_arg pex89000_pre_read_args[] = {
  * @retval true if setting mux and page is successful.
  * @retval false if setting mux or page fails.
  */
-bool pre_vr_read(uint8_t sensor_num, void *args)
+bool pre_vr_read(sensor_cfg *cfg, void *args)
 {
-	if (!args) {
-		return false;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
+
 	vr_pre_proc_arg *pre_proc_args = (vr_pre_proc_arg *)args;
 	uint8_t retry = 5;
 	I2C_MSG msg = { 0 };
 
-	if (!pre_i2c_bus_read(sensor_num, pre_proc_args->mux_info_p)) {
+	if (!pre_i2c_bus_read((void *)cfg, pre_proc_args->mux_info_p)) {
 		LOG_ERR("pre_i2c_bus_read fail");
 		return false;
 	}
 
 	/* set page */
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 2;
 	msg.data[0] = 0x00;
 	msg.data[1] = pre_proc_args->vr_page;
@@ -914,40 +915,39 @@ bool pre_vr_read(uint8_t sensor_num, void *args)
 	return true;
 }
 
-bool pre_pex89000_read(uint8_t sensor_num, void *args)
+bool pre_pex89000_read(sensor_cfg *cfg, void *args)
 {
-	if (!args) {
-		return false;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
+
 	pex89000_pre_proc_arg *pre_read_args = (pex89000_pre_proc_arg *)args;
 
 	/* Can not access i2c mux and PEX89000 when DC off */
 	if (is_mb_dc_on() == false)
 		return false;
 
-	if (!pre_i2c_bus_read(sensor_num, pre_read_args->mux_info_p)) {
+	if (!pre_i2c_bus_read((void *)cfg, pre_read_args->mux_info_p)) {
 		LOG_ERR("Pre_i2c_bus_read fail.");
 		return false;
 	}
 	return true;
 }
 
-bool pre_i2c_bus_read(uint8_t sensor_num, void *args)
+bool pre_i2c_bus_read(sensor_cfg *cfg, void *args)
 {
-	if (!args)
-		return false;
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
-	struct k_mutex *mutex = find_bus_mutex(sensor_num);
+	struct k_mutex *mutex = find_bus_mutex(cfg);
 
-	if (!mutex)
-		return false;
+	CHECK_NULL_ARG_WITH_RETURN(mutex, false);
 
 	if (k_mutex_lock(mutex, K_MSEC(300))) {
-		LOG_ERR("Sensor number 0x%x mutex lock fail", sensor_num);
+		LOG_ERR("Sensor number 0x%x mutex lock fail", cfg->num);
 		return false;
 	}
 
-	if (!tca9548_select_chan(sensor_num, (struct tca9548 *)args)) {
+	if (!tca9548_select_chan((void *)cfg, (struct tca9548 *)args)) {
 		k_mutex_unlock(mutex);
 		return false;
 	}
@@ -955,16 +955,15 @@ bool pre_i2c_bus_read(uint8_t sensor_num, void *args)
 	return true;
 }
 
-bool post_i2c_bus_read(uint8_t sensor_num, void *args, int *reading)
+bool post_i2c_bus_read(sensor_cfg *cfg, void *args, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	ARG_UNUSED(args);
 	ARG_UNUSED(reading);
 
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
-	struct k_mutex *mutex = find_bus_mutex(sensor_num);
+	struct k_mutex *mutex = find_bus_mutex(cfg);
 
-	if (!mutex)
-		return false;
+	CHECK_NULL_ARG_WITH_RETURN(mutex, false);
 
 	if (cfg->port == I2C_BUS9) {
 		/* Check whether has pre-reading argument, if yes use it to get the i2c mux address. */
@@ -991,24 +990,24 @@ bool post_i2c_bus_read(uint8_t sensor_num, void *args, int *reading)
 		}
 	}
 	if (k_mutex_unlock(mutex)) {
-		LOG_ERR("Sensor num 0x%x mutex unlock failed!", sensor_num);
+		LOG_ERR("Sensor num 0x%x mutex unlock failed!", cfg->num);
 		return false;
 	}
 	return true;
 }
 
-bool post_mp5990_read(uint8_t sensor_num, void *args, int *reading)
+bool post_mp5990_read(sensor_cfg *cfg, void *args, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
+
 	if (!reading) {
-		post_i2c_bus_read(sensor_num, args, reading);
+		post_i2c_bus_read((void *)cfg, args, reading);
 		return false;
 	}
-	ARG_UNUSED(args);
 
-	if (!post_i2c_bus_read(sensor_num, args, reading))
+	if (!post_i2c_bus_read((void *)cfg, args, reading))
 		return false;
-
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 
 	sensor_val *sval = (sensor_val *)reading;
 	float val = sval->integer + (sval->fraction * 0.001);
@@ -1035,18 +1034,18 @@ bool post_mp5990_read(uint8_t sensor_num, void *args, int *reading)
 	return true;
 }
 
-bool post_ltc4282_read(uint8_t sensor_num, void *args, int *reading)
+bool post_ltc4282_read(sensor_cfg *cfg, void *args, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
+
 	if (!reading) {
-		post_i2c_bus_read(sensor_num, args, reading);
+		post_i2c_bus_read((void *)cfg, args, reading);
 		return false;
 	}
-	ARG_UNUSED(args);
 
-	if (!post_i2c_bus_read(sensor_num, args, reading))
+	if (!post_i2c_bus_read(cfg, args, reading))
 		return false;
-
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 
 	sensor_val *sval = (sensor_val *)reading;
 	float val = sval->integer + (sval->fraction * 0.001);
@@ -1071,18 +1070,18 @@ bool post_ltc4282_read(uint8_t sensor_num, void *args, int *reading)
 	return true;
 }
 
-bool post_ltc4286_read(uint8_t sensor_num, void *args, int *reading)
+bool post_ltc4286_read(sensor_cfg *cfg, void *args, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
+
 	if (!reading) {
-		post_i2c_bus_read(sensor_num, args, reading);
+		post_i2c_bus_read((void *)cfg, args, reading);
 		return false;
 	}
-	ARG_UNUSED(args);
 
-	if (!post_i2c_bus_read(sensor_num, args, reading))
+	if (!post_i2c_bus_read((void *)cfg, args, reading))
 		return false;
-
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 
 	sensor_val *sval = (sensor_val *)reading;
 	float val = sval->integer + (sval->fraction * 0.001);
@@ -1107,9 +1106,8 @@ bool post_ltc4286_read(uint8_t sensor_num, void *args, int *reading)
 	return true;
 }
 
-struct k_mutex *find_bus_mutex(uint8_t sensor_num)
+struct k_mutex *find_bus_mutex(sensor_cfg *cfg)
 {
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 	struct k_mutex *mutex = NULL;
 
 	if (cfg->port == I2C_BUS6)

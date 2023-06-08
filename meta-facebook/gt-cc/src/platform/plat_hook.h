@@ -17,6 +17,8 @@
 #ifndef PLAT_HOOK_H
 #define PLAT_HOOK_H
 
+#include "sensor.h"
+
 typedef struct _vr_pre_proc_arg {
 	struct tca9548 *mux_info_p;
 	/* vr page to set */
@@ -55,15 +57,15 @@ extern pex89000_pre_proc_arg pex89000_pre_read_args[];
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
  **************************************************************************************************/
-bool pre_vr_read(uint8_t sensor_num, void *args);
-bool pre_pex89000_read(uint8_t sensor_num, void *args);
-bool pre_i2c_bus_read(uint8_t sensor_num, void *args);
-bool post_i2c_bus_read(uint8_t sensor_num, void *args, int *reading);
-bool post_mp5990_read(uint8_t sensor_num, void *args, int *reading);
-bool post_ltc4282_read(uint8_t sensor_num, void *args, int *reading);
-bool post_ltc4286_read(uint8_t sensor_num, void *args, int *reading);
+bool pre_vr_read(sensor_cfg *cfg, void *args);
+bool pre_pex89000_read(sensor_cfg *cfg, void *args);
+bool pre_i2c_bus_read(sensor_cfg *cfg, void *args);
+bool post_i2c_bus_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_mp5990_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_ltc4282_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_ltc4286_read(sensor_cfg *cfg, void *args, int *reading);
 
-struct k_mutex *find_bus_mutex(uint8_t sensor_num);
+struct k_mutex *find_bus_mutex(sensor_cfg *cfg);
 bool is_mb_dc_on();
 
 #endif

@@ -33,9 +33,13 @@ __weak int pal_get_spd_temp(uint8_t sensor_num, uint8_t *data)
 	return -1;
 }
 
-uint8_t i3c_dimm_read(uint8_t sensor_num, int *reading)
+uint8_t i3c_dimm_read(sensor_cfg *cfg, int *reading)
 {
-	if (reading == NULL || (sensor_num > SENSOR_NUM_MAX)) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -46,9 +50,9 @@ uint8_t i3c_dimm_read(uint8_t sensor_num, int *reading)
 	memset(reading, 0, sizeof(int));
 	sensor_val *sval = (sensor_val *)reading;
 
-	switch (sensor_config[sensor_config_index_map[sensor_num]].offset) {
+	switch (cfg->offset) {
 	case DIMM_PMIC_SWA_PWR:
-		ret = pal_get_pmic_pwr(sensor_num, data);
+		ret = pal_get_pmic_pwr(cfg->num, data);
 		if (ret != 0) {
 			return SENSOR_FAIL_TO_ACCESS;
 		}
@@ -57,7 +61,7 @@ uint8_t i3c_dimm_read(uint8_t sensor_num, int *reading)
 		sval->fraction = (data[0] * PMIC_TOTAL_POWER_MW % 1000) & 0xFFFF;
 		break;
 	case DIMM_SPD_TEMP:
-		ret = pal_get_spd_temp(sensor_num, data);
+		ret = pal_get_spd_temp(cfg->num, data);
 		if (ret != 0) {
 			return SENSOR_FAIL_TO_ACCESS;
 		}
@@ -83,12 +87,14 @@ uint8_t i3c_dimm_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t i3c_dimm_init(uint8_t sensor_num)
+uint8_t i3c_dimm_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	sensor_config[sensor_config_index_map[sensor_num]].read = i3c_dimm_read;
+	cfg->read = i3c_dimm_read;
 	return SENSOR_INIT_SUCCESS;
 }

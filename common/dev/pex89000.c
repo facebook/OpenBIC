@@ -436,20 +436,20 @@ pex89000_unit *find_pex89000_from_idx(uint8_t idx)
 	return NULL;
 }
 
-uint8_t pex89000_read(uint8_t sensor_num, int *reading)
+uint8_t pex89000_read(sensor_cfg *cfg, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->priv_data, SENSOR_UNSPECIFIED_ERROR);
 
 	uint8_t rc = SENSOR_UNSPECIFIED_ERROR;
 
-	pex89000_unit *p =
-		(pex89000_unit *)sensor_config[sensor_config_index_map[sensor_num]].priv_data;
+	pex89000_unit *p = (pex89000_unit *)cfg->priv_data;
 
-	switch (sensor_config[sensor_config_index_map[sensor_num]].offset) {
+	switch (cfg->offset) {
 	case PEX_TEMP:
-		if (pex_access_engine(sensor_config[sensor_config_index_map[sensor_num]].port,
-				      sensor_config[sensor_config_index_map[sensor_num]].target_addr,
-				      p->idx, pex_access_temp, reading)) {
+		if (pex_access_engine(cfg->port, cfg->target_addr, p->idx, pex_access_temp,
+				      reading)) {
 			LOG_ERR("Read temperature failed");
 			rc = SENSOR_FAIL_TO_ACCESS;
 			goto exit;
@@ -457,8 +457,7 @@ uint8_t pex89000_read(uint8_t sensor_num, int *reading)
 
 		break;
 	default:
-		LOG_ERR("Invalid sensor type, (%d)",
-			sensor_config[sensor_config_index_map[sensor_num]].offset);
+		LOG_ERR("Invalid sensor type, (%d)", cfg->offset);
 		goto exit;
 	}
 
@@ -467,15 +466,12 @@ exit:
 	return rc;
 }
 
-uint8_t pex89000_init(uint8_t sensor_num)
+uint8_t pex89000_init(sensor_cfg *cfg)
 {
-	if (sensor_config[sensor_config_index_map[sensor_num]].init_args == NULL) {
-		LOG_ERR("The initial argument is NULL");
-		return SENSOR_INIT_UNSPECIFIED_ERROR;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_INIT_UNSPECIFIED_ERROR);
 
-	pex89000_init_arg *init_arg =
-		(pex89000_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	pex89000_init_arg *init_arg = (pex89000_init_arg *)cfg->init_args;
 
 	pex89000_unit *p;
 	p = find_pex89000_from_idx(init_arg->idx);
@@ -496,9 +492,7 @@ uint8_t pex89000_init(uint8_t sensor_num)
 
 		sys_slist_append(&pex89000_list, &p->node);
 
-		if (pex_dev_get(sensor_config[sensor_config_index_map[sensor_num]].port,
-				sensor_config[sensor_config_index_map[sensor_num]].target_addr,
-				p->idx, &p->pex_type)) {
+		if (pex_dev_get(cfg->port, cfg->target_addr, p->idx, &p->pex_type)) {
 			LOG_ERR("Get pex type failed");
 			sys_slist_find_and_remove(&pex89000_list, &p->node);
 			SAFE_FREE(p);
@@ -506,8 +500,8 @@ uint8_t pex89000_init(uint8_t sensor_num)
 		}
 	}
 
-	sensor_config[sensor_config_index_map[sensor_num]].priv_data = p;
-	sensor_config[sensor_config_index_map[sensor_num]].read = pex89000_read;
+	cfg->priv_data = p;
+	cfg->read = pex89000_read;
 	init_arg->is_init = true;
 
 	return SENSOR_INIT_SUCCESS;

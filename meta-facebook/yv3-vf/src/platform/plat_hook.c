@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "libutil.h"
 #include "ast_adc.h"
 #include "sensor.h"
 #include "hal_i2c.h"
@@ -161,23 +162,21 @@ isl69254iraz_t_pre_arg isl69254iraz_t_pre_read_args[] = {
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
  **************************************************************************************************/
-bool pre_ina233_read(uint8_t sensor_num, void *args)
+bool pre_ina233_read(sensor_cfg *cfg, void *args)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	ARG_UNUSED(args);
-	ina233_init_arg *init_arg =
-		(ina233_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
-	if (init_arg == NULL) {
-		LOG_ERR("Input initial pointer is NULL");
-		return false;
-	}
 
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, false);
+
+	ina233_init_arg *init_arg = (ina233_init_arg *)cfg->init_args;
 	if (init_arg->is_init != true) {
 		int ret = 0, retry = 5;
 		I2C_MSG msg;
 		memset(&msg, 0, sizeof(I2C_MSG));
 
-		msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-		msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+		msg.bus = cfg->port;
+		msg.target_addr = cfg->target_addr;
 		msg.tx_len = 3;
 		// Current_lsb = 0.001 , r_shunt = 0.005
 		// Calibration formula = (0.00512 / (current_lsb * r_shunt)) = 1024(dec) = 0x400(hex)
@@ -195,12 +194,10 @@ bool pre_ina233_read(uint8_t sensor_num, void *args)
 	return true;
 }
 
-bool pre_isl69254iraz_t_read(uint8_t sensor_num, void *args)
+bool pre_isl69254iraz_t_read(sensor_cfg *cfg, void *args)
 {
-	if (args == NULL) {
-		LOG_ERR("Input args are NULL");
-		return false;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
 	isl69254iraz_t_pre_arg *pre_args = (isl69254iraz_t_pre_arg *)args;
 	uint8_t retry = 5;
@@ -209,8 +206,8 @@ bool pre_isl69254iraz_t_read(uint8_t sensor_num, void *args)
 	memset(&msg, 0, sizeof(I2C_MSG));
 
 	/* set page */
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 2;
 	msg.data[0] = VR_PAGE_OFFSET;
 	msg.data[1] = pre_args->vr_page;

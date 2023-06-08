@@ -440,7 +440,7 @@ void check_outlet_temp_type(uint8_t index)
 
 	if (i2c_master_read(&msg, retry)) {
 		LOG_ERR("Failed to read Outlet_Temp chip ID: register(0x%x)",
-		       NCT7718W_CHIP_ID_OFFSET);
+			NCT7718W_CHIP_ID_OFFSET);
 		return;
 	}
 	CID = msg.data[0];
@@ -454,7 +454,7 @@ void check_outlet_temp_type(uint8_t index)
 
 	if (i2c_master_read(&msg, retry)) {
 		LOG_ERR("Failed to read Outlet_Temp vendor ID: register(0x%x)",
-		       NCT7718W_VENDOR_ID_OFFSET);
+			NCT7718W_VENDOR_ID_OFFSET);
 		return;
 	}
 	VID = msg.data[0];
@@ -519,5 +519,6 @@ void pal_extend_sensor_config()
 uint8_t get_hsc_pwr_reading(int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
-	return get_sensor_reading(SENSOR_NUM_HSC_PIN, reading, GET_FROM_CACHE);
+	return get_sensor_reading(sensor_config, sensor_config_count, SENSOR_NUM_HSC_PIN, reading,
+				  GET_FROM_CACHE);
 }

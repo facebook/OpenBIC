@@ -563,15 +563,16 @@ pwr_monitor_pre_proc_arg pwr_monitor_pre_proc_args[] = {
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
  **************************************************************************************************/
-bool pre_nvme_read(uint8_t sensor_num, void *args)
+bool pre_nvme_read(sensor_cfg *cfg, void *args)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
 	// Select Channel
 	bool ret = true;
 	int mutex_status = 0;
 	mux_config *pre_args = (mux_config *)args;
-	pre_args->bus = sensor_config[sensor_config_index_map[sensor_num]].port;
+	pre_args->bus = cfg->port;
 
 	struct k_mutex *mutex = get_i2c_mux_mutex(pre_args->bus);
 	mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
@@ -584,13 +585,14 @@ bool pre_nvme_read(uint8_t sensor_num, void *args)
 	return ret;
 }
 
-bool post_nvme_read(uint8_t sensor_num, void *args, int *reading)
+bool post_nvme_read(sensor_cfg *cfg, void *args, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	ARG_UNUSED(reading);
 	ARG_UNUSED(args);
 
 	int unlock_status = 0;
-	uint8_t bus = sensor_config[sensor_config_index_map[sensor_num]].port;
+	uint8_t bus = cfg->port;
 
 	struct k_mutex *mutex = get_i2c_mux_mutex(bus);
 	if (mutex->lock_count != 0) {
@@ -605,8 +607,9 @@ bool post_nvme_read(uint8_t sensor_num, void *args, int *reading)
 	return true;
 }
 
-bool pre_sq52205_read(uint8_t sensor_num, void *args)
+bool pre_sq52205_read(sensor_cfg *cfg, void *args)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
 	// Select Channel
@@ -618,17 +621,17 @@ bool pre_sq52205_read(uint8_t sensor_num, void *args)
 
 	if (get_pcie_card_type(pre_args->jcn_number, &card_type)) {
 		LOG_ERR("Fail to get card present status");
-		sensor_config[sensor_config_index_map[sensor_num]].is_enable_polling = false;
+		cfg->is_enable_polling = false;
 		return false;
 	}
 
 	if (card_type == CARD_NOT_PRESENT) {
-		sensor_config[sensor_config_index_map[sensor_num]].is_enable_polling = false;
+		cfg->is_enable_polling = false;
 		return false;
 	}
 
 	mux_config *mux_args = &(pre_args->bus_3_mux_configs);
-	mux_args->bus = sensor_config[sensor_config_index_map[sensor_num]].port;
+	mux_args->bus = cfg->port;
 
 	struct k_mutex *mutex = get_i2c_mux_mutex(mux_args->bus);
 	mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
@@ -641,13 +644,14 @@ bool pre_sq52205_read(uint8_t sensor_num, void *args)
 	return ret;
 }
 
-bool post_sq52205_read(uint8_t sensor_num, void *args, int *reading)
+bool post_sq52205_read(sensor_cfg *cfg, void *args, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	ARG_UNUSED(reading);
 	ARG_UNUSED(args);
 
 	int unlock_status = 0;
-	uint8_t bus = sensor_config[sensor_config_index_map[sensor_num]].port;
+	uint8_t bus = cfg->port;
 
 	struct k_mutex *mutex = get_i2c_mux_mutex(bus);
 	if (mutex->lock_count != 0) {
@@ -711,23 +715,18 @@ bool post_cxl_switch_mux(uint8_t sensor_num, uint8_t pcie_card_id)
 	return true;
 }
 
-bool pre_cxl_vr_read(uint8_t sensor_num, void *args)
+bool pre_cxl_vr_read(sensor_cfg *cfg, void *args)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
-
-	uint8_t index = 0;
-	bool ret = get_cxl_sensor_config_index(sensor_num, &index);
-	if (ret == false) {
-		return false;
-	}
 
 	vr_page_cfg *vr_page_sel = (vr_page_cfg *)args;
 	uint8_t retry = 5;
 	I2C_MSG msg = { 0 };
 
 	/* set page */
-	msg.bus = plat_cxl_sensor_config[index].port;
-	msg.target_addr = plat_cxl_sensor_config[index].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 2;
 	msg.data[0] = 0x00;
 	msg.data[1] = vr_page_sel->vr_page;
@@ -739,25 +738,21 @@ bool pre_cxl_vr_read(uint8_t sensor_num, void *args)
 	return true;
 }
 
-bool post_cxl_xdpe12284c_read(uint8_t sensor_num, void *args, int *reading)
+bool post_cxl_xdpe12284c_read(sensor_cfg *cfg, void *args, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	ARG_UNUSED(args);
+
 	if (reading == NULL) {
-		return check_reading_pointer_null_is_allowed(sensor_num);
+		return check_reading_pointer_null_is_allowed(cfg);
 	}
 
 	sensor_val *sval = (sensor_val *)reading;
 	float val = (float)sval->integer + (sval->fraction / 1000.0);
-	uint8_t index = 0;
-	bool ret = get_cxl_sensor_config_index(sensor_num, &index);
-	if (ret == false) {
-		return false;
-	}
-
-	switch (plat_cxl_sensor_config[index].offset) {
+	switch (cfg->offset) {
 	case PMBUS_READ_IOUT:
 		if (val < (-2)) {
-			LOG_ERR("Sensor %x unexpected current reading", sensor_num);
+			LOG_ERR("Sensor %x unexpected current reading", cfg->num);
 			return false;
 		}
 
@@ -769,7 +764,7 @@ bool post_cxl_xdpe12284c_read(uint8_t sensor_num, void *args, int *reading)
 		break;
 	case PMBUS_READ_POUT:
 		if (val < (-4)) {
-			LOG_ERR("Sensor %x unexpected power reading", sensor_num);
+			LOG_ERR("Sensor %x unexpected power reading", cfg->num);
 			return false;
 		}
 

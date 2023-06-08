@@ -105,20 +105,18 @@ int pmic_ipmb_transfer(int *total_pmic_power, uint8_t seq_source, uint8_t netFn,
 	return 0;
 }
 
-uint8_t pmic_read(uint8_t sensor_num, int *reading)
+uint8_t pmic_read(sensor_cfg *cfg, int *reading)
 {
-	if (reading == NULL) {
-		LOG_ERR("Input parameter reading is NULL");
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	if ((sensor_num > SENSOR_NUM_MAX) ||
-	    (sensor_config[sensor_config_index_map[sensor_num]].init_args == NULL)) {
-		LOG_ERR("Sensor 0x%x input parameter is invaild", sensor_num);
-		return SENSOR_UNSPECIFIED_ERROR;
-	}
-
-	pmic_init_arg *pmic_arg = sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	pmic_init_arg *pmic_arg = cfg->init_args;
 	if (pmic_arg->is_init == false) {
 		LOG_ERR("Device isn't initialized");
 		return SENSOR_NOT_FOUND;
@@ -151,14 +149,17 @@ uint8_t pmic_read(uint8_t sensor_num, int *reading)
 #endif
 }
 
-uint8_t pmic_init(uint8_t sensor_num)
+uint8_t pmic_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_ERR("Input sensor number 0x%x is invaild", sensor_num);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
-	sensor_config[sensor_config_index_map[sensor_num]].read = pmic_read;
-	pmic_init_arg *init_arg = sensor_config[sensor_config_index_map[sensor_num]].init_args;
+
+	cfg->read = pmic_read;
+	pmic_init_arg *init_arg = cfg->init_args;
 	init_arg->is_init = true;
 	return SENSOR_INIT_SUCCESS;
 }

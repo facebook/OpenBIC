@@ -29,18 +29,18 @@ LOG_MODULE_REGISTER(dev_sq52205);
 #define SQ52205_CALIBRATION_OFFSET 0x05
 #define SQ52205_SHUNT_LSB 0.0000025
 
-uint8_t sq52205_read(uint8_t sensor_num, int *reading)
+uint8_t sq52205_read(sensor_cfg *cfg, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_UNSPECIFIED_ERROR);
 
-	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_ERR("sensor 0x%x input parameter is invalid", sensor_num);
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	sq52205_init_arg *init_arg =
-		(sq52205_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
-	CHECK_NULL_ARG_WITH_RETURN(init_arg, SENSOR_UNSPECIFIED_ERROR);
+	sq52205_init_arg *init_arg = (sq52205_init_arg *)cfg->init_args;
 
 	if (init_arg->is_init != true) {
 		LOG_ERR("device isn't initialized");
@@ -51,13 +51,11 @@ uint8_t sq52205_read(uint8_t sensor_num, int *reading)
 	float val = 0;
 	I2C_MSG msg = { 0 };
 
-	sensor_cfg cfg = sensor_config[sensor_config_index_map[sensor_num]];
-
-	msg.bus = cfg.port;
-	msg.target_addr = cfg.target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.rx_len = 2;
-	msg.data[0] = cfg.offset;
+	msg.data[0] = cfg->offset;
 
 	ret = i2c_master_read(&msg, retry);
 	if (ret != 0) {
@@ -67,7 +65,7 @@ uint8_t sq52205_read(uint8_t sensor_num, int *reading)
 
 	val = (msg.data[0] << 8) | msg.data[1];
 	sensor_val *sval = (sensor_val *)reading;
-	switch (cfg.offset) {
+	switch (cfg->offset) {
 	case SQ52205_READ_VOL_OFFSET:
 		// 1.25 mV/LSB
 		val = val * 1.25 / 1000;
@@ -85,7 +83,7 @@ uint8_t sq52205_read(uint8_t sensor_num, int *reading)
 		val = val * (25 * init_arg->current_lsb);
 		break;
 	default:
-		LOG_ERR("Offset not supported: 0x%x", cfg.offset);
+		LOG_ERR("Offset not supported: 0x%x", cfg->offset);
 		return SENSOR_PARAMETER_NOT_VALID;
 		break;
 	}
@@ -95,26 +93,24 @@ uint8_t sq52205_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t sq52205_init(uint8_t sensor_num)
+uint8_t sq52205_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_ERR("input sensor number is invalid");
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	sq52205_init_arg *init_arg =
-		(sq52205_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
-	CHECK_NULL_ARG_WITH_RETURN(init_arg, SENSOR_INIT_UNSPECIFIED_ERROR);
+	sq52205_init_arg *init_arg = (sq52205_init_arg *)cfg->init_args;
 
 	if (init_arg->is_init != true) {
 		int ret = 0, retry = 5;
 		uint16_t calibration = 0;
 		I2C_MSG msg = { 0 };
 
-		sensor_cfg cfg = sensor_config[sensor_config_index_map[sensor_num]];
-
-		msg.bus = cfg.port;
-		msg.target_addr = cfg.target_addr;
+		msg.bus = cfg->port;
+		msg.target_addr = cfg->target_addr;
 		msg.tx_len = 3;
 		msg.data[0] = SQ52205_CONFIG_REG_OFFSET;
 		msg.data[1] = (init_arg->config.value >> 8) & 0xFF;
@@ -127,8 +123,8 @@ uint8_t sq52205_init(uint8_t sensor_num)
 		}
 
 		memset(&msg, 0, sizeof(I2C_MSG));
-		msg.bus = cfg.port;
-		msg.target_addr = cfg.target_addr;
+		msg.bus = cfg->port;
+		msg.target_addr = cfg->target_addr;
 		msg.tx_len = 3;
 		msg.data[0] = SQ52205_CALIBRATION_OFFSET;
 
@@ -148,6 +144,6 @@ uint8_t sq52205_init(uint8_t sensor_num)
 		init_arg->is_init = true;
 	}
 
-	sensor_config[sensor_config_index_map[sensor_num]].read = sq52205_read;
+	cfg->read = sq52205_read;
 	return SENSOR_INIT_SUCCESS;
 }

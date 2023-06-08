@@ -35,7 +35,7 @@
 
 LOG_MODULE_REGISTER(sensor);
 
-#define SENSOR_DRIVE_INIT_DECLARE(name) uint8_t name##_init(uint8_t sensor_num)
+#define SENSOR_DRIVE_INIT_DECLARE(name) uint8_t name##_init(sensor_cfg *cfg)
 
 #define SENSOR_DRIVE_TYPE_INIT_MAP(name)                                                           \
 	{                                                                                          \
@@ -62,8 +62,12 @@ const int negative_ten_power[16] = { 1,	    1,		1,	   1,	     1,	      1,
 				     1,	    1000000000, 100000000, 10000000, 1000000, 100000,
 				     10000, 1000,	100,	   10 };
 
-sensor_cfg *sensor_config;
-uint8_t sensor_config_count;
+sensor_cfg *sensor_config = NULL;
+uint8_t sensor_config_count = 0;
+
+sensor_monitor_table_info *sensor_monitor_table;
+uint16_t sensor_monitor_count = 0;
+char common_sensor_table_name[] = "common sensor table";
 
 // clang-format off
 const char *const sensor_type_name[] = {
@@ -164,7 +168,7 @@ SENSOR_DRIVE_INIT_DECLARE(m88rt51632);
 
 struct sensor_drive_api {
 	enum SENSOR_DEV dev;
-	uint8_t (*init)(uint8_t);
+	uint8_t (*init)(sensor_cfg *);
 } sensor_drive_tbl[] = {
 	SENSOR_DRIVE_TYPE_INIT_MAP(tmp75),
 	SENSOR_DRIVE_TYPE_INIT_MAP(ast_adc),
@@ -252,6 +256,22 @@ void map_sensor_num_to_sdr_cfg(void)
 	return;
 }
 
+sensor_cfg *find_sensor_cfg_via_sensor_num(sensor_cfg *cfg_table, uint8_t cfg_count,
+					   uint8_t sensor_num)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg_table, false);
+
+	uint8_t index = 0;
+
+	for (index = 0; index < cfg_count; ++index) {
+		if (cfg_table[index].num == sensor_num) {
+			return &cfg_table[index];
+		}
+	}
+
+	return NULL;
+}
+
 bool access_check(uint8_t sensor_num)
 {
 	bool (*access_checker)(uint8_t);
@@ -260,40 +280,42 @@ bool access_check(uint8_t sensor_num)
 	return (access_checker)(sensor_config[sensor_config_index_map[sensor_num]].num);
 }
 
-void clear_unaccessible_sensor_cache(uint8_t sensor_num)
+void clear_unaccessible_sensor_cache(sensor_cfg *cfg)
 {
-	if (sensor_config[sensor_config_index_map[sensor_num]].cache_status != SENSOR_INIT_STATUS) {
-		sensor_config[sensor_config_index_map[sensor_num]].cache = SENSOR_FAIL;
-		sensor_config[sensor_config_index_map[sensor_num]].cache_status =
-			SENSOR_INIT_STATUS;
+	CHECK_NULL_ARG(cfg);
+
+	if (cfg->cache_status != SENSOR_INIT_STATUS) {
+		cfg->cache = SENSOR_FAIL;
+		cfg->cache_status = SENSOR_INIT_STATUS;
 	}
 }
 
-uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
+uint8_t get_sensor_reading(sensor_cfg *cfg_table, uint8_t cfg_count, uint8_t sensor_num,
+			   int *reading, uint8_t read_mode)
 {
-	if (reading == NULL) {
-		LOG_ERR("Input pointer reading is NULL");
-		return SENSOR_UNSPECIFIED_ERROR;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(cfg_table, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
 
 	// Check sensor information in sensor config table
 	// Block BMC send invalid sensor number by OEM accurate read command
-	if (sensor_config_index_map[sensor_num] == SENSOR_FAIL) {
-		LOG_ERR("Fail to find sensor info in config table, sensor_num: 0x%x", sensor_num);
+	sensor_cfg *cfg = NULL;
+	cfg = find_sensor_cfg_via_sensor_num(cfg_table, cfg_count, sensor_num);
+	if (cfg == NULL) {
+		LOG_ERR("Fail to find sensor info in config table, sensor_num: 0x%x, cfg count: 0x%x",
+			sensor_num, cfg_count);
 		return SENSOR_NOT_FOUND;
 	}
 
 	*reading = 0; // Initial return reading value
 	uint8_t current_status = SENSOR_UNSPECIFIED_ERROR;
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 	bool post_ret = false;
 
 	if (cfg->cache_status == SENSOR_NOT_PRESENT) {
 		return cfg->cache_status;
 	}
 
-	if (!access_check(sensor_num)) { // sensor not accessable
-		clear_unaccessible_sensor_cache(sensor_num);
+	if (cfg->access_checker(sensor_num) != true) { // sensor not accessable
+		clear_unaccessible_sensor_cache(cfg);
 		cfg->cache_status = SENSOR_NOT_ACCESSIBLE;
 		return cfg->cache_status;
 	}
@@ -301,8 +323,7 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 	switch (read_mode) {
 	case GET_FROM_SENSOR:
 		if (cfg->pre_sensor_read_hook) {
-			if (cfg->pre_sensor_read_hook(sensor_num, cfg->pre_sensor_read_args) ==
-			    false) {
+			if (cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args) == false) {
 				LOG_ERR("Failed to do pre sensor read function, sensor number: 0x%x",
 					sensor_num);
 				cfg->cache_status = SENSOR_PRE_READ_ERROR;
@@ -314,7 +335,7 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 		}
 
 		if (cfg->read) {
-			current_status = cfg->read(sensor_num, reading);
+			current_status = cfg->read(cfg, reading);
 		}
 
 		if (current_status == SENSOR_READ_SUCCESS ||
@@ -322,12 +343,12 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 			cfg->retry = 0;
 			if (cfg->post_sensor_read_hook) { // makesure post hook function be called
 				post_ret = cfg->post_sensor_read_hook(
-					sensor_num, cfg->post_sensor_read_args, reading);
+					cfg, cfg->post_sensor_read_args, reading);
 			}
 
-			if (!access_check(
-				    sensor_num)) { // double check access to avoid not accessible read at same moment status change
-				clear_unaccessible_sensor_cache(sensor_num);
+			if (cfg->access_checker(sensor_num) !=
+			    true) { // double check access to avoid not accessible read at same moment status change
+				clear_unaccessible_sensor_cache(cfg);
 				cfg->cache_status = SENSOR_NOT_ACCESSIBLE;
 				return cfg->cache_status;
 			}
@@ -355,8 +376,7 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
        * reading whether is NULL to do the corresponding thing. (Ex: mutex_unlock)
        */
 			if (cfg->post_sensor_read_hook) {
-				if (cfg->post_sensor_read_hook(sensor_num,
-							       cfg->post_sensor_read_args,
+				if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args,
 							       NULL) == false) {
 					LOG_ERR("Sensor number 0x%x reading and post_read fail",
 						sensor_num);
@@ -372,12 +392,11 @@ uint8_t get_sensor_reading(uint8_t sensor_num, int *reading, uint8_t read_mode)
 		case SENSOR_READ_ACUR_SUCCESS:
 		case SENSOR_READ_4BYTE_ACUR_SUCCESS:
 			*reading = cfg->cache;
-			if (!access_check(
-				    sensor_num)) { // double check access to avoid not accessible read at same moment status change
+			if (cfg->access_checker(sensor_num) !=
+			    true) { // double check access to avoid not accessible read at same moment status change
 				cfg->cache_status = SENSOR_NOT_ACCESSIBLE;
 			}
 			return cfg->cache_status;
-			;
 		case SENSOR_INIT_STATUS:
 		case SENSOR_NOT_PRESENT:
 		case SENSOR_NOT_ACCESSIBLE:
@@ -417,54 +436,90 @@ bool get_sensor_poll_enable_flag()
 
 void sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 {
-	uint8_t index = 0, sensor_num = 0;
-	int sensor_poll_interval_ms;
-	int reading;
+	uint16_t table_index = 0;
+	uint8_t sensor_index = 0;
+	uint8_t sensor_num = 0;
+	int sensor_poll_interval_ms = 0;
+	int reading = 0;
+	bool ret = false;
 
 	k_msleep(1000); // delay 1 second to wait for drivers ready before start sensor polling
 
 	pal_set_sensor_poll_interval(&sensor_poll_interval_ms);
 
 	while (1) {
-		for (index = 0; index < sensor_config_count; index++) {
-			// Perform sensor polling according to the sensor number of the sensor config table
-			sensor_num = sensor_config[index].num;
-			if (sensor_poll_enable_flag == false) { /* skip if disable sensor poll */
-				break;
-			}
+		for (table_index = 0; table_index < sensor_monitor_count; ++table_index) {
+			sensor_monitor_table_info *table_info = &sensor_monitor_table[table_index];
 
-			sensor_cfg *config = &sensor_config[sensor_config_index_map[sensor_num]];
-			if (config->cache_status == SENSOR_NOT_PRESENT) {
-				continue;
-			}
-
-			// Check whether monitoring sensor is enabled
-			if (config->is_enable_polling == DISABLE_SENSOR_POLLING) {
-				config->cache = SENSOR_FAIL;
-				config->cache_status = SENSOR_POLLING_DISABLE;
-				continue;
-			}
-
-			if (sdr_index_map[sensor_num] == SENSOR_NULL) { // Check sensor info
-				LOG_ERR("Fail to find sensor SDR info, sensor number: 0x%x",
-					sensor_num);
-				continue;
-			}
-
-			if (sensor_config[index].poll_time != POLL_TIME_DEFAULT) {
-				if (pal_is_time_to_poll(sensor_num,
-							sensor_config[index].poll_time) == false) {
+			if (table_info->access_checker != NULL) {
+				if (table_info->access_checker(table_info->access_checker_arg) !=
+				    true) {
 					continue;
 				}
 			}
 
-			get_sensor_reading(sensor_num, &reading, GET_FROM_SENSOR);
+			sensor_cfg *cfg_table = table_info->monitor_sensor_cfg;
+			if (cfg_table == NULL) {
+				LOG_ERR("Table index: 0x%x is NULL, skip to monitor sensor table",
+					table_index);
+				continue;
+			}
+
+			uint8_t sensor_count = table_info->cfg_count;
+			for (sensor_index = 0; sensor_index < sensor_count; ++sensor_index) {
+				if (sensor_poll_enable_flag ==
+				    false) { /* skip if disable sensor poll */
+					break;
+				}
+				sensor_cfg *cfg = &cfg_table[sensor_index];
+				sensor_num = cfg->num;
+
+				if (cfg->cache_status == SENSOR_NOT_PRESENT) {
+					continue;
+				}
+
+				// Check whether monitoring sensor is enabled
+				if (cfg->is_enable_polling == DISABLE_SENSOR_POLLING) {
+					cfg->cache = SENSOR_FAIL;
+					cfg->cache_status = SENSOR_POLLING_DISABLE;
+					continue;
+				}
+
+				if (cfg->poll_time != POLL_TIME_DEFAULT) {
+					if (pal_is_time_to_poll(sensor_num, cfg->poll_time) ==
+					    false) {
+						continue;
+					}
+				}
+
+				if (table_info->pre_monitor != NULL) {
+					ret = table_info->pre_monitor(
+						sensor_num, table_info->pre_post_monitor_arg);
+					if (ret != true) {
+						LOG_ERR("Pre-monitor fail, table index: 0x%x, sensor num: 0x%x",
+							table_index, sensor_num);
+						continue;
+					}
+				}
+
+				get_sensor_reading(cfg_table, sensor_count, sensor_num, &reading,
+						   GET_FROM_SENSOR);
+
+				if (table_info->post_monitor != NULL) {
+					ret = table_info->post_monitor(
+						sensor_num, table_info->pre_post_monitor_arg);
+					if (ret != true) {
+						LOG_ERR("Post-monitor fail, table index: 0x%x, sensor num: 0x%x",
+							table_index, sensor_num);
+						continue;
+					}
+				}
+			}
 
 			k_yield();
 		}
 
 		is_sensor_ready_flag = true;
-
 		k_msleep(sensor_poll_interval_ms);
 	}
 }
@@ -493,6 +548,16 @@ __weak uint8_t pal_get_extend_sdr()
 __weak uint8_t pal_get_extend_sensor_config()
 {
 	return 0;
+}
+
+__weak uint8_t pal_get_monitor_sensor_count()
+{
+	return 0;
+}
+
+__weak void plat_fill_monitor_sensor_table()
+{
+	return;
 }
 
 void check_init_sensor_size()
@@ -588,27 +653,64 @@ void add_sensor_config(sensor_cfg config)
 	}
 }
 
+void init_sensor_monitor_table()
+{
+	sensor_monitor_count = 1;
+
+	uint8_t plat_monitor_sensor_count = pal_get_monitor_sensor_count();
+	sensor_monitor_count += plat_monitor_sensor_count;
+
+	if (sensor_monitor_count != 0) {
+		sensor_monitor_table = (sensor_monitor_table_info *)malloc(
+			sensor_monitor_count * sizeof(sensor_monitor_table_info));
+		if (sensor_monitor_table == NULL) {
+			LOG_ERR("Fail to allocate memory to store sensor monitor table");
+			return;
+		}
+
+		if (sensor_config != NULL) {
+			sensor_monitor_table[0].monitor_sensor_cfg = sensor_config;
+			sensor_monitor_table[0].cfg_count = sensor_config_count;
+			sensor_monitor_table[0].access_checker = NULL;
+			sensor_monitor_table[0].pre_monitor = NULL;
+			sensor_monitor_table[0].post_monitor = NULL;
+			snprintf(sensor_monitor_table[0].table_name,
+				 sizeof(sensor_monitor_table[0].table_name), "%s",
+				 common_sensor_table_name);
+		}
+
+		if (plat_monitor_sensor_count != 0) {
+			plat_fill_monitor_sensor_table();
+		}
+	}
+}
+
 static inline bool init_drive_type(sensor_cfg *p, uint16_t current_drive)
 {
+	if (p == NULL) {
+		LOG_ERR("p is NULL, current drive: 0x%x", current_drive);
+		return false;
+	}
+
 	int ret = -1;
 	if (p->type != sensor_drive_tbl[current_drive].dev) {
 		return false;
 	}
 
 	if (p->pre_sensor_read_hook) {
-		if (p->pre_sensor_read_hook(p->num, p->pre_sensor_read_args) == false) {
+		if (p->pre_sensor_read_hook(p, p->pre_sensor_read_args) == false) {
 			LOG_ERR("Sensor 0x%x pre sensor read failed!", p->num);
 			return false;
 		}
 	}
 
-	ret = sensor_drive_tbl[current_drive].init(p->num);
+	ret = sensor_drive_tbl[current_drive].init(p);
 	if (ret != SENSOR_INIT_SUCCESS) {
 		LOG_ERR("Sensor num %d initial fail, ret %d", p->num, ret);
 	}
 
 	if (p->post_sensor_read_hook) {
-		if (p->post_sensor_read_hook(p->num, p->post_sensor_read_args, NULL) == false) {
+		if (p->post_sensor_read_hook(p, p->post_sensor_read_args, NULL) == false) {
 			LOG_ERR("Sensor 0x%x post sensor read failed!", p->num);
 		}
 	}
@@ -619,19 +721,68 @@ static inline bool init_drive_type(sensor_cfg *p, uint16_t current_drive)
 static void drive_init(void)
 {
 	const uint16_t max_drive_num = ARRAY_SIZE(sensor_drive_tbl);
-	uint16_t current_drive;
 
-	for (int i = 0; i < sdr_count; i++) {
-		sensor_cfg *p = sensor_config + i;
-		for (current_drive = 0; current_drive < max_drive_num; current_drive++) {
-			if (init_drive_type(p, current_drive)) {
-				break;
+	bool ret = false;
+	uint16_t table_index = 0;
+	uint8_t sensor_index = 0;
+	uint16_t current_drive = 0;
+
+	for (table_index = 0; table_index < sensor_monitor_count; ++table_index) {
+		sensor_monitor_table_info *table_info = &sensor_monitor_table[table_index];
+
+		if (table_info->access_checker != NULL) {
+			if (table_info->access_checker(table_info->access_checker_arg) != true) {
+				LOG_WRN("[%s] table: 0x%x can't access, skip init drive", __func__,
+					table_index);
+				continue;
 			}
 		}
 
-		if (current_drive == max_drive_num) {
-			LOG_ERR("Sensor %d, type = %d is not supported!", i, p->type);
-			p->read = NULL;
+		sensor_cfg *cfg_table = sensor_monitor_table[table_index].monitor_sensor_cfg;
+		if (cfg_table == NULL) {
+			LOG_ERR("Table index: 0x%x is NULL, skip to initialize drive", table_index);
+			continue;
+		}
+
+		for (sensor_index = 0; sensor_index < sensor_monitor_table[table_index].cfg_count;
+		     ++sensor_index) {
+			sensor_cfg *cfg = &cfg_table[sensor_index];
+			for (current_drive = 0; current_drive < max_drive_num; ++current_drive) {
+				if (cfg->type == sensor_drive_tbl[current_drive].dev) {
+					if (table_info->pre_monitor != NULL) {
+						ret = table_info->pre_monitor(
+							cfg->num, table_info->pre_post_monitor_arg);
+						if (ret != true) {
+							LOG_ERR("Pre-monitor fail cause drive init fail, table index: 0x%x, sensor num: 0x%x, type: 0x%x",
+								table_index, cfg->num, cfg->type);
+							break;
+						}
+					}
+
+					ret = init_drive_type(cfg, current_drive);
+					if (ret != true) {
+						LOG_ERR("init drive type fail, table index: 0x%x, sensor num: 0x%x, type: 0x%x",
+							table_index, cfg->num, cfg->type);
+					}
+
+					if (table_info->post_monitor != NULL) {
+						ret = table_info->post_monitor(
+							cfg->num, table_info->pre_post_monitor_arg);
+						if (ret != true) {
+							LOG_ERR("Post-monitor fail cause drive init fail, table index: 0x%x, sensor num: 0x%x, type: 0x%x",
+								table_index, cfg->num, cfg->type);
+						}
+					}
+
+					break;
+				}
+			}
+
+			if (current_drive == max_drive_num) {
+				LOG_ERR("Table index: 0x%x, sensor number: 0x%x, type = 0x%x is not supported!",
+					table_index, cfg->num, cfg->type);
+				cfg->read = NULL;
+			}
 		}
 	}
 }
@@ -670,6 +821,7 @@ bool sensor_init(void)
 	}
 
 	map_sensor_num_to_sdr_cfg();
+	init_sensor_monitor_table();
 
 	/* register read api of sensor_config */
 	drive_init();
@@ -721,9 +873,11 @@ void control_sensor_polling(uint8_t sensor_num, uint8_t optional, uint8_t cache_
 	config->cache_status = cache_status;
 }
 
-bool check_reading_pointer_null_is_allowed(uint8_t sensor_num)
+bool check_reading_pointer_null_is_allowed(sensor_cfg *cfg)
 {
-	uint8_t sensor_retry_count = sensor_config[sensor_config_index_map[sensor_num]].retry;
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+
+	uint8_t sensor_retry_count = cfg->retry;
 
 	/* Reading pointer NULL is allowed in sensor initial stage and sensor reading fail */
 	/* Sensor retry count will be set to zero when the sensor read success */
@@ -744,7 +898,7 @@ bool init_drive_type_delayed(sensor_cfg *cfg)
 
 	for (index = 0; index < max_drive_num; index++) {
 		if (cfg->type == sensor_drive_tbl[index].dev) {
-			ret = sensor_drive_tbl[index].init(cfg->num);
+			ret = sensor_drive_tbl[index].init(cfg);
 			if (ret != SENSOR_INIT_SUCCESS) {
 				return false;
 			}

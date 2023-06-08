@@ -29,11 +29,15 @@
 
 LOG_MODULE_REGISTER(dev_adm1278);
 
-int adm1278_read_ein_ext(float rsense, float *val, uint8_t sensor_num)
+int adm1278_read_ein_ext(float rsense, float *val, sensor_cfg *cfg)
 {
-	if ((val == NULL) || (sensor_num > SENSOR_NUM_MAX)) {
+	CHECK_NULL_ARG_WITH_RETURN(val, -1);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, -1);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return -1;
 	}
+
 	I2C_MSG msg;
 	uint8_t retry = 5;
 	uint32_t energy = 0, rollover = 0, sample = 0;
@@ -43,10 +47,10 @@ int adm1278_read_ein_ext(float rsense, float *val, uint8_t sensor_num)
 	static uint32_t last_energy = 0, last_rollover = 0, last_sample = 0;
 	static bool pre_ein = false;
 
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
-	msg.data[0] = sensor_config[sensor_config_index_map[sensor_num]].offset;
+	msg.data[0] = cfg->offset;
 	msg.rx_len = 8;
 
 	if (i2c_master_read(&msg, retry)) {
@@ -96,21 +100,18 @@ int adm1278_read_ein_ext(float rsense, float *val, uint8_t sensor_num)
 	return 0;
 }
 
-uint8_t adm1278_read(uint8_t sensor_num, int *reading)
+uint8_t adm1278_read(sensor_cfg *cfg, int *reading)
 {
-	if (reading == NULL) {
-		LOG_ERR("Reading pointer passed in as NULL.");
-		return SENSOR_UNSPECIFIED_ERROR;
-	} else if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		LOG_ERR("Sensor number out of range.");
 		return SENSOR_UNSPECIFIED_ERROR;
-	} else if ((sensor_config[sensor_config_index_map[sensor_num]].init_args == NULL)) {
-		LOG_ERR("Init args for sensor are NULL.");
-		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	adm1278_init_arg *init_arg =
-		(adm1278_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	adm1278_init_arg *init_arg = (adm1278_init_arg *)cfg->init_args;
 	if (init_arg->is_init == false) {
 		LOG_ERR("adm1278_read, device isn't initialized");
 		return SENSOR_UNSPECIFIED_ERROR;
@@ -126,11 +127,11 @@ uint8_t adm1278_read(uint8_t sensor_num, int *reading)
 	uint8_t retry = 5;
 	I2C_MSG msg;
 	int ret = 0;
-	uint8_t offset = sensor_config[sensor_config_index_map[sensor_num]].offset;
+	uint8_t offset = cfg->offset;
 
 	if (offset != ADM1278_EIN_EXT_OFFSET) {
-		msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-		msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+		msg.bus = cfg->port;
+		msg.target_addr = cfg->target_addr;
 		msg.tx_len = 1;
 		msg.data[0] = offset;
 		msg.rx_len = 2;
@@ -163,14 +164,14 @@ uint8_t adm1278_read(uint8_t sensor_num, int *reading)
 		break;
 
 	case ADM1278_EIN_EXT_OFFSET:
-		ret = adm1278_read_ein_ext(Rsense, &val, sensor_num);
+		ret = adm1278_read_ein_ext(Rsense, &val, cfg);
 		if (ret != 0) {
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 		break;
 
 	default:
-		LOG_WRN("Invalid sensor 0x%x", sensor_num);
+		LOG_WRN("Invalid sensor 0x%x", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -180,20 +181,17 @@ uint8_t adm1278_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t adm1278_init(uint8_t sensor_num)
+uint8_t adm1278_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		LOG_ERR("Sensor number out of range.");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	if (!sensor_config[sensor_config_index_map[sensor_num]].init_args) {
-		LOG_ERR("ADM1278 init args not provide!");
-		return SENSOR_INIT_UNSPECIFIED_ERROR;
-	}
-
-	adm1278_init_arg *init_args =
-		(adm1278_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	adm1278_init_arg *init_args = (adm1278_init_arg *)cfg->init_args;
 	if (init_args->is_init) {
 		LOG_DBG("adm1278 already initialized.");
 		goto skip_init;
@@ -201,8 +199,8 @@ uint8_t adm1278_init(uint8_t sensor_num)
 
 	uint8_t retry = 5;
 	I2C_MSG msg;
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 3;
 	msg.data[0] = REG_PWR_MT_CFG;
 	msg.data[1] = init_args->config.value & 0xFF;
@@ -214,8 +212,8 @@ uint8_t adm1278_init(uint8_t sensor_num)
 	}
 
 	memset(&msg, 0, sizeof(msg));
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.data[0] = REG_PWR_MT_CFG;
 	msg.rx_len = 2;
@@ -233,6 +231,6 @@ uint8_t adm1278_init(uint8_t sensor_num)
 	init_args->is_init = 1;
 
 skip_init:
-	sensor_config[sensor_config_index_map[sensor_num]].read = adm1278_read;
+	cfg->read = adm1278_read;
 	return SENSOR_INIT_SUCCESS;
 }

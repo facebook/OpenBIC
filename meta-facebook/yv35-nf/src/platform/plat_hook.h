@@ -25,6 +25,6 @@ extern adc_asd_init_arg adc_asd_init_args[];
 extern ina233_init_arg ina233_init_args[];
 extern xdpe12284c_pre_arg xdpe12284c_pre_read_args[];
 
-bool pre_xdpe12284c_read(uint8_t sensor_num, void *args);
+bool pre_xdpe12284c_read(sensor_cfg *cfg, void *args);
 
 #endif

@@ -134,21 +134,21 @@ int adm1272_convert_real_value(uint8_t vrange, uint8_t irange, uint8_t offset, f
 	return 0;
 }
 
-int adm1272_read_pout(uint8_t sensor_num, float *val)
+int adm1272_read_pout(sensor_cfg *cfg, float *val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(val, -1);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, -1);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, -1);
 
-	sensor_cfg cfg = sensor_config[sensor_config_index_map[sensor_num]];
-	adm1272_init_arg *init_arg =
-		(adm1272_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	adm1272_init_arg *init_arg = (adm1272_init_arg *)cfg->init_args;
 
 	uint8_t retry = 5;
 	int ret = 0;
 	float vout = 0;
 	float iout = 0;
 	I2C_MSG msg = { 0 };
-	msg.bus = cfg.port;
-	msg.target_addr = cfg.target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.rx_len = 2;
 	msg.data[0] = PMBUS_READ_VOUT;
@@ -168,8 +168,8 @@ int adm1272_read_pout(uint8_t sensor_num, float *val)
 	}
 
 	memset(&msg, 0, sizeof(msg));
-	msg.bus = cfg.port;
-	msg.target_addr = cfg.target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.rx_len = 2;
 	msg.data[0] = PMBUS_READ_IOUT;
@@ -192,13 +192,13 @@ int adm1272_read_pout(uint8_t sensor_num, float *val)
 	return 0;
 }
 
-int adm1272_read_iin(uint8_t sensor_num, float *val)
+int adm1272_read_iin(sensor_cfg *cfg, float *val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(val, -1);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, -1);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, -1);
 
-	sensor_cfg cfg = sensor_config[sensor_config_index_map[sensor_num]];
-	adm1272_init_arg *init_arg =
-		(adm1272_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	adm1272_init_arg *init_arg = (adm1272_init_arg *)cfg->init_args;
 
 	uint8_t retry = 5;
 	int ret = 0;
@@ -207,8 +207,8 @@ int adm1272_read_iin(uint8_t sensor_num, float *val)
 	I2C_MSG msg = { 0 };
 
 	/* Read voltage in */
-	msg.bus = cfg.port;
-	msg.target_addr = cfg.target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.rx_len = 2;
 	msg.data[0] = PMBUS_READ_VIN;
@@ -229,8 +229,8 @@ int adm1272_read_iin(uint8_t sensor_num, float *val)
 
 	/* Read power in */
 	memset(&msg, 0, sizeof(msg));
-	msg.bus = cfg.port;
-	msg.target_addr = cfg.target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.rx_len = 2;
 	msg.data[0] = PMBUS_READ_PIN;
@@ -253,22 +253,18 @@ int adm1272_read_iin(uint8_t sensor_num, float *val)
 	return 0;
 }
 
-uint8_t adm1272_read(uint8_t sensor_num, int *reading)
+uint8_t adm1272_read(sensor_cfg *cfg, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_UNSPECIFIED_ERROR);
 
-	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_ERR("Input sensor number is invalid, sensor number: 0x%x", sensor_num);
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	if (sensor_config[sensor_config_index_map[sensor_num]].init_args == NULL) {
-		LOG_ERR("Initial arg is NULL");
-		return SENSOR_UNSPECIFIED_ERROR;
-	}
-
-	adm1272_init_arg *init_arg =
-		(adm1272_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	adm1272_init_arg *init_arg = (adm1272_init_arg *)cfg->init_args;
 	if (init_arg->is_init == false) {
 		LOG_WRN("Device isn't initialized");
 		return SENSOR_UNSPECIFIED_ERROR;
@@ -278,11 +274,11 @@ uint8_t adm1272_read(uint8_t sensor_num, int *reading)
 	uint8_t retry = 5;
 	I2C_MSG msg = { 0 };
 	int ret = 0;
-	uint8_t offset = sensor_config[sensor_config_index_map[sensor_num]].offset;
+	uint8_t offset = cfg->offset;
 
 	if ((offset != PMBUS_READ_POUT) && (offset != PMBUS_READ_IIN)) {
-		msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-		msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+		msg.bus = cfg->port;
+		msg.target_addr = cfg->target_addr;
 		msg.tx_len = 1;
 		msg.data[0] = offset;
 		msg.rx_len = 2;
@@ -306,13 +302,13 @@ uint8_t adm1272_read(uint8_t sensor_num, int *reading)
 						 &val);
 		break;
 	case PMBUS_READ_IIN:
-		ret = adm1272_read_iin(sensor_num, &val);
+		ret = adm1272_read_iin(cfg, &val);
 		break;
 	case PMBUS_READ_POUT:
-		ret = adm1272_read_pout(sensor_num, &val);
+		ret = adm1272_read_pout(cfg, &val);
 		break;
 	default:
-		LOG_ERR("Invalid sensor 0x%x offset 0x%x", sensor_num, offset);
+		LOG_ERR("Invalid sensor 0x%x offset 0x%x", cfg->num, offset);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -325,15 +321,16 @@ uint8_t adm1272_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t adm1272_init(uint8_t sensor_num)
+uint8_t adm1272_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_ERR("Sensor number is invalid, sensor number: 0x%x", sensor_num);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	adm1272_init_arg *init_args =
-		(adm1272_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	adm1272_init_arg *init_args = (adm1272_init_arg *)cfg->init_args;
 	uint8_t retry = 5;
 	int ret = -1;
 	I2C_MSG msg = { 0 };
@@ -342,8 +339,8 @@ uint8_t adm1272_init(uint8_t sensor_num)
 		goto skip_set_pwr_cfg;
 	}
 
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 3;
 	msg.data[0] = REG_PWR_MONITOR_CFG;
 	msg.data[1] = init_args->pwr_monitor_cfg.value & 0xFF;
@@ -357,8 +354,8 @@ uint8_t adm1272_init(uint8_t sensor_num)
 	memset(&msg, 0, sizeof(msg));
 
 skip_set_pwr_cfg:
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.data[0] = REG_PWR_MONITOR_CFG;
 	msg.rx_len = 2;
@@ -372,6 +369,6 @@ skip_set_pwr_cfg:
 	init_args->pwr_monitor_cfg.value = ((msg.data[1] << 8) | msg.data[0]);
 	init_args->is_init = 1;
 
-	sensor_config[sensor_config_index_map[sensor_num]].read = adm1272_read;
+	cfg->read = adm1272_read;
 	return SENSOR_INIT_SUCCESS;
 }

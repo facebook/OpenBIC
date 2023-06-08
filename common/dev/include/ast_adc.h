@@ -39,8 +39,6 @@ enum {
 	ADC_PORT15,
 };
 
-int bat_3v_set_gpio(uint8_t sensor_num, void *arg);
 bool adc_init();
-bool adc_sensor_read(uint8_t sensor_num, float *reading);
 
 #endif

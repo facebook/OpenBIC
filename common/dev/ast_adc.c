@@ -72,10 +72,7 @@ static void init_adc_dev()
 
 static bool adc_read_mv(uint8_t sensor_num, uint32_t index, uint32_t channel, int *adc_val)
 {
-	if (!adc_val) {
-		LOG_DBG("ADC val was passed in as null");
-		return false;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(adc_val, false);
 
 	if (sensor_num > SENSOR_NUM_MAX) {
 		LOG_DBG("Invalid sensor number");
@@ -143,26 +140,23 @@ static bool adc_read_mv(uint8_t sensor_num, uint32_t index, uint32_t channel, in
 	return true;
 }
 
-uint8_t ast_adc_read(uint8_t sensor_num, int *reading)
+uint8_t ast_adc_read(sensor_cfg *cfg, int *reading)
 {
-	if (!reading) {
-		LOG_DBG("Reading pointer passed in as null");
-		return SENSOR_UNSPECIFIED_ERROR;
-	}
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
 
-	if (sensor_num > SENSOR_NUM_MAX) {
+	if (cfg->num > SENSOR_NUM_MAX) {
 		LOG_DBG("Invalid sensor number");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 	uint8_t chip = cfg->port / ADC_CHANNEL_COUNT;
 	uint8_t number = cfg->port % ADC_CHANNEL_COUNT;
 	int val = 1, i = 0, average_val = 0;
 
 	for (i = 0; i < cfg->sample_count; i++) {
 		val = 1;
-		if (!adc_read_mv(sensor_num, chip, number, &val))
+		if (!adc_read_mv(cfg->num, chip, number, &val))
 			return SENSOR_FAIL_TO_ACCESS;
 		average_val += val;
 
@@ -170,6 +164,11 @@ uint8_t ast_adc_read(uint8_t sensor_num, int *reading)
 		if (cfg->sample_count > SAMPLE_COUNT_DEFAULT) {
 			k_msleep(ADC_AVERAGE_DELAY_MSEC);
 		}
+	}
+
+	if (cfg->arg1 == 0) {
+		LOG_ERR("Sensor num: 0x%x arg1 is zero", cfg->num);
+		return SENSOR_PARAMETER_NOT_VALID;
 	}
 
 	average_val = average_val / cfg->sample_count;
@@ -182,20 +181,17 @@ uint8_t ast_adc_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t ast_adc_init(uint8_t sensor_num)
+uint8_t ast_adc_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		LOG_DBG("Invalid sensor number");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	if (!sensor_config[sensor_config_index_map[sensor_num]].init_args) {
-		LOG_ERR("ADC init args not provide!");
-		return SENSOR_INIT_UNSPECIFIED_ERROR;
-	}
-
-	adc_asd_init_arg *init_args =
-		(adc_asd_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	adc_asd_init_arg *init_args = (adc_asd_init_arg *)cfg->init_args;
 	if (init_args->is_init)
 		goto skip_init;
 
@@ -232,7 +228,7 @@ uint8_t ast_adc_init(uint8_t sensor_num)
 	init_args->is_init = true;
 
 skip_init:
-	sensor_config[sensor_config_index_map[sensor_num]].read = ast_adc_read;
+	cfg->read = ast_adc_read;
 
 	return SENSOR_INIT_SUCCESS;
 }

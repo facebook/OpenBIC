@@ -96,7 +96,7 @@ static bool m88rt51632_smbus_read_byte(I2C_MSG *msg, uint16_t addr, uint32_t *da
 	if (pec_crc != crc_reslut) {
 		LOG_ERR("The read data pec_crc=0x%x is invalid, the right crc value=0x%x please check",
 			pec_crc, crc_reslut);
-		return -1;
+		return false;
 	}
 
 	uint32_t reverse_data;
@@ -316,10 +316,13 @@ uint8_t m88rt51632_get_temperature(I2C_MSG *msg, float *temperature0, float *tem
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t m88rt51632_read(uint8_t sensor_num, int *reading)
+uint8_t m88rt51632_read(sensor_cfg *cfg, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
-	if (sensor_num > SENSOR_NUM_MAX) {
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -327,8 +330,6 @@ uint8_t m88rt51632_read(uint8_t sensor_num, int *reading)
 	float avg_temperature = 0;
 	I2C_MSG msg = { 0 };
 	uint8_t ret;
-
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
@@ -342,7 +343,7 @@ uint8_t m88rt51632_read(uint8_t sensor_num, int *reading)
 		avg_temperature = (temperature[0] + temperature[1]) / 2;
 		break;
 	default:
-		LOG_ERR("Invalid sensor 0x%x offset 0x%x", sensor_num, cfg->offset);
+		LOG_ERR("Invalid sensor 0x%x offset 0x%x", cfg->num, cfg->offset);
 		return SENSOR_NOT_FOUND;
 	}
 
@@ -355,16 +356,16 @@ uint8_t m88rt51632_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t m88rt51632_init(uint8_t sensor_num)
+uint8_t m88rt51632_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	if (sensor_config[sensor_config_index_map[sensor_num]].init_args != NULL) {
-		pt5161l_init_arg *init_args =
-			(pt5161l_init_arg *)sensor_config[sensor_config_index_map[sensor_num]]
-				.init_args;
+	if (cfg->init_args != NULL) {
+		pt5161l_init_arg *init_args = (pt5161l_init_arg *)cfg->init_args;
 
 		if (init_args->is_init) {
 			goto exit;
@@ -374,6 +375,6 @@ uint8_t m88rt51632_init(uint8_t sensor_num)
 	}
 
 exit:
-	sensor_config[sensor_config_index_map[sensor_num]].read = m88rt51632_read;
+	cfg->read = m88rt51632_read;
 	return SENSOR_INIT_SUCCESS;
 }

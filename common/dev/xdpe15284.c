@@ -90,9 +90,13 @@ bool xdpe15284_get_checksum(uint8_t bus, uint8_t addr, uint8_t *checksum)
 	return true;
 }
 
-uint8_t xdpe15284_read(uint8_t sensor_num, int *reading)
+uint8_t xdpe15284_read(sensor_cfg *cfg, int *reading)
 {
-	if (reading == NULL || (sensor_num > SENSOR_NUM_MAX)) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -101,20 +105,20 @@ uint8_t xdpe15284_read(uint8_t sensor_num, int *reading)
 	I2C_MSG msg;
 	memset(sval, 0, sizeof(sensor_val));
 
-	msg.bus = sensor_config[sensor_config_index_map[sensor_num]].port;
-	msg.target_addr = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.rx_len = 2;
-	msg.data[0] = sensor_config[sensor_config_index_map[sensor_num]].offset;
+	msg.data[0] = cfg->offset;
 
 	if (i2c_master_read(&msg, retry))
 		return SENSOR_FAIL_TO_ACCESS;
 
-	uint8_t offset = sensor_config[sensor_config_index_map[sensor_num]].offset;
+	uint8_t offset = cfg->offset;
 	if (offset == PMBUS_READ_VOUT) {
 		/* ULINEAR16, get exponent from VOUT_MODE */
 		float exponent;
-		if (!get_exponent_from_vout_mode(sensor_num, &exponent))
+		if (!get_exponent_from_vout_mode(cfg, &exponent))
 			return SENSOR_FAIL_TO_ACCESS;
 
 		float actual_value = ((msg.data[1] << 8) | msg.data[0]) * exponent;
@@ -140,7 +144,8 @@ uint8_t xdpe15284_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-bool xdpe15284_lock_reg(uint8_t bus, uint8_t addr) {
+bool xdpe15284_lock_reg(uint8_t bus, uint8_t addr)
+{
 	I2C_MSG i2c_msg = { 0 };
 	int retry = 3;
 
@@ -161,7 +166,8 @@ bool xdpe15284_lock_reg(uint8_t bus, uint8_t addr) {
 	return true;
 }
 
-bool xdpe15284_unlock_reg(uint8_t bus, uint8_t addr) {
+bool xdpe15284_unlock_reg(uint8_t bus, uint8_t addr)
+{
 	I2C_MSG i2c_msg = { 0 };
 	int retry = 3;
 
@@ -181,13 +187,14 @@ bool xdpe15284_unlock_reg(uint8_t bus, uint8_t addr) {
 	return true;
 }
 
-
-uint8_t xdpe15284_init(uint8_t sensor_num)
+uint8_t xdpe15284_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	sensor_config[sensor_config_index_map[sensor_num]].read = xdpe15284_read;
+	cfg->read = xdpe15284_read;
 	return SENSOR_INIT_SUCCESS;
 }

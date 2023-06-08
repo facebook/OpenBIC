@@ -531,9 +531,9 @@ bool mp2971_get_checksum(uint8_t bus, uint8_t addr, uint32_t *checksum)
 	return true;
 }
 
-float get_resolution(uint8_t sensor_num)
+float get_resolution(sensor_cfg *cfg)
 {
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_FAIL_TO_ACCESS);
 
 	uint8_t page = 0;
 	uint16_t mfr_reso_set = 0;
@@ -677,14 +677,15 @@ float get_resolution(uint8_t sensor_num)
 	return 0;
 }
 
-uint8_t mp2971_read(uint8_t sensor_num, int *reading)
+uint8_t mp2971_read(sensor_cfg *cfg, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
-	if (sensor_num > SENSOR_NUM_MAX) {
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
-
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 
 	uint8_t i2c_max_retry = 5;
 	int val = 0;
@@ -729,7 +730,7 @@ uint8_t mp2971_read(uint8_t sensor_num, int *reading)
 		break;
 	}
 
-	float resolution = get_resolution(sensor_num);
+	float resolution = get_resolution(cfg);
 	if (resolution == 0) {
 		return SENSOR_FAIL_TO_ACCESS;
 	}
@@ -739,12 +740,14 @@ uint8_t mp2971_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t mp2971_init(uint8_t sensor_num)
+uint8_t mp2971_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	sensor_config[sensor_config_index_map[sensor_num]].read = mp2971_read;
+	cfg->read = mp2971_read;
 	return SENSOR_INIT_SUCCESS;
 }

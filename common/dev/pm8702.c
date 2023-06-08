@@ -201,17 +201,20 @@ bool pm8702_get_dimm_temp(void *mctp_p, mctp_ext_params ext_params, uint16_t add
 	return true;
 }
 
-uint8_t pm8702_read(uint8_t sensor_num, int *reading)
+uint8_t pm8702_read(sensor_cfg *cfg, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
-	if (sensor_num > SENSOR_NUM_MAX) {
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
-	uint8_t port = sensor_config[sensor_config_index_map[sensor_num]].port;
-	uint8_t address = sensor_config[sensor_config_index_map[sensor_num]].target_addr;
-	uint8_t pm8702_access = sensor_config[sensor_config_index_map[sensor_num]].offset;
-	pm8702_dimm_init_arg *init_arg =
-		(pm8702_dimm_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+
+	uint8_t port = cfg->port;
+	uint8_t address = cfg->target_addr;
+	uint8_t pm8702_access = cfg->offset;
+	pm8702_dimm_init_arg *init_arg = (pm8702_dimm_init_arg *)cfg->init_args;
 
 	mctp *mctp_inst = NULL;
 	mctp_ext_params ext_params = { 0 };
@@ -237,6 +240,7 @@ uint8_t pm8702_read(uint8_t sensor_num, int *reading)
 		}
 		break;
 	case dimm_temp_from_pioneer:
+		CHECK_NULL_ARG_WITH_RETURN(init_arg, SENSOR_UNSPECIFIED_ERROR);
 		if (pm8702_read_dimm_temp_from_pioneer(mctp_inst, ext_params, init_arg->dimm_id,
 						       &sval->integer, &sval->fraction) == false) {
 			return SENSOR_NOT_ACCESSIBLE;
@@ -250,12 +254,15 @@ uint8_t pm8702_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t pm8702_init(uint8_t sensor_num)
+uint8_t pm8702_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
-	sensor_config[sensor_config_index_map[sensor_num]].read = pm8702_read;
+
+	cfg->read = pm8702_read;
 	return SENSOR_INIT_SUCCESS;
 }
 

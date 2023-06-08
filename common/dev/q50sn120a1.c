@@ -24,9 +24,10 @@
 
 LOG_MODULE_REGISTER(dev_q50sn120a1);
 
-int q50sn120a1_read_pout(uint8_t sensor_num, float *pout_value)
+int q50sn120a1_read_pout(sensor_cfg *cfg, float *pout_value)
 {
 	CHECK_NULL_ARG_WITH_RETURN(pout_value, -1)
+	CHECK_NULL_ARG_WITH_RETURN(cfg, -1);
 
 	int ret = 0;
 	float vout = 0;
@@ -36,19 +37,19 @@ int q50sn120a1_read_pout(uint8_t sensor_num, float *pout_value)
 	uint16_t tmp = 0;
 
 	/* Read Vout */
-	if (get_exponent_from_vout_mode(sensor_num, &exponent) == false) {
+	if (get_exponent_from_vout_mode(cfg, &exponent) == false) {
 		LOG_ERR("Fail to get exponent from VOUT mode command");
 		return -1;
 	}
 
-	ret = pmbus_read_command(sensor_num, PMBUS_READ_VOUT, (uint8_t *)&tmp, read_len);
+	ret = pmbus_read_command(cfg, PMBUS_READ_VOUT, (uint8_t *)&tmp, read_len);
 	if (ret != 0) {
 		return -1;
 	}
 	vout = (float)tmp * exponent;
 
 	/* Read Iout */
-	ret = pmbus_read_command(sensor_num, PMBUS_READ_IOUT, (uint8_t *)&tmp, read_len);
+	ret = pmbus_read_command(cfg, PMBUS_READ_IOUT, (uint8_t *)&tmp, read_len);
 	if (ret != 0) {
 		return -1;
 	}
@@ -58,12 +59,13 @@ int q50sn120a1_read_pout(uint8_t sensor_num, float *pout_value)
 	return 0;
 }
 
-uint8_t q50sn120a1_read(uint8_t sensor_num, int *reading)
+uint8_t q50sn120a1_read(sensor_cfg *cfg, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
 
-	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_ERR("Sensor 0x%x input parameter is invalid", sensor_num);
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -72,16 +74,16 @@ uint8_t q50sn120a1_read(uint8_t sensor_num, int *reading)
 	float exponent = 1;
 	uint16_t tmp = 0;
 	uint8_t read_len = 2;
-	uint8_t offset = sensor_config[sensor_config_index_map[sensor_num]].offset;
+	uint8_t offset = cfg->offset;
 
 	switch (offset) {
 	case PMBUS_READ_VOUT:
-		if (get_exponent_from_vout_mode(sensor_num, &exponent) == false) {
+		if (get_exponent_from_vout_mode(cfg, &exponent) == false) {
 			LOG_ERR("Fail to get exponent from VOUT mode command");
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 
-		ret = pmbus_read_command(sensor_num, offset, (uint8_t *)&tmp, read_len);
+		ret = pmbus_read_command(cfg, offset, (uint8_t *)&tmp, read_len);
 		if (ret != 0) {
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
@@ -89,14 +91,14 @@ uint8_t q50sn120a1_read(uint8_t sensor_num, int *reading)
 		break;
 	case PMBUS_READ_IOUT:
 	case PMBUS_READ_TEMPERATURE_1:
-		ret = pmbus_read_command(sensor_num, offset, (uint8_t *)&tmp, read_len);
+		ret = pmbus_read_command(cfg, offset, (uint8_t *)&tmp, read_len);
 		if (ret != 0) {
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 		val = slinear11_to_float(tmp);
 		break;
 	case PMBUS_READ_POUT:
-		ret = q50sn120a1_read_pout(sensor_num, &val);
+		ret = q50sn120a1_read_pout(cfg, &val);
 		if (ret != 0) {
 			return SENSOR_FAIL_TO_ACCESS;
 		}
@@ -113,13 +115,14 @@ uint8_t q50sn120a1_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t q50sn120a1_init(uint8_t sensor_num)
+uint8_t q50sn120a1_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_ERR("Input sensor number is invalid");
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	sensor_config[sensor_config_index_map[sensor_num]].read = q50sn120a1_read;
+	cfg->read = q50sn120a1_read;
 	return SENSOR_INIT_SUCCESS;
 }

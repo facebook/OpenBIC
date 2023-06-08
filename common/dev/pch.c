@@ -26,11 +26,15 @@
 
 LOG_MODULE_REGISTER(dev_pch);
 
-uint8_t pch_read(uint8_t sensor_num, int *reading)
+uint8_t pch_read(sensor_cfg *cfg, int *reading)
 {
-	if (!reading || (sensor_num > SENSOR_NUM_MAX)) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
+
 #if MAX_IPMB_IDX
 	ipmb_error status;
 	ipmi_msg *bridge_msg;
@@ -48,7 +52,7 @@ uint8_t pch_read(uint8_t sensor_num, int *reading)
 	bridge_msg->InF_target = ME_IPMB;
 	bridge_msg->data_len = 1;
 	/* parameter offset is the sensor number to read from pch */
-	bridge_msg->data[0] = sensor_config[sensor_config_index_map[sensor_num]].offset;
+	bridge_msg->data[0] = cfg->offset;
 
 	uint8_t pch_retry_num = 0;
 	for (pch_retry_num = 0; pch_retry_num < 4; pch_retry_num++) {
@@ -89,12 +93,14 @@ uint8_t pch_read(uint8_t sensor_num, int *reading)
 	return SENSOR_UNSPECIFIED_ERROR;
 }
 
-uint8_t pch_init(uint8_t sensor_num)
+uint8_t pch_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	sensor_config[sensor_config_index_map[sensor_num]].read = pch_read;
+	cfg->read = pch_read;
 	return SENSOR_INIT_SUCCESS;
 }

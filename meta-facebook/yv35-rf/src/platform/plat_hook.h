@@ -43,10 +43,10 @@ extern isl69254iraz_t_pre_arg isl69254iraz_t_pre_read_args[];
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
  **************************************************************************************************/
-bool pre_isl69254iraz_t_read(uint8_t sensor_num, void *args);
-bool pre_vr_read(uint8_t sensor_num, void *args);
-bool pre_pm8702_read(uint8_t sensor_num, void *args);
-bool post_pm8702_read(uint8_t sensor_num, void *args, int *reading);
-bool post_isl69254iraz_t_read(uint8_t sensor_num, void *args, int *reading);
+bool pre_isl69254iraz_t_read(sensor_cfg *cfg, void *args);
+bool pre_vr_read(sensor_cfg *cfg, void *args);
+bool pre_pm8702_read(sensor_cfg *cfg, void *args);
+bool post_pm8702_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_isl69254iraz_t_read(sensor_cfg *cfg, void *args, int *reading);
 
 #endif

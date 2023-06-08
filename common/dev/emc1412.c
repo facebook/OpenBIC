@@ -28,12 +28,13 @@ LOG_MODULE_REGISTER(dev_emc1412);
 #define EMC1412_DEFAULT_RESOLUTION 0.125
 #define EMC1412_TEMP_SHIFT_BIT 5
 
-uint8_t emc1412_read(uint8_t sensor_num, int *reading)
+uint8_t emc1412_read(sensor_cfg *cfg, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
 
-	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_ERR("sensor 0x%x input parameter is invalid", sensor_num);
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -42,15 +43,14 @@ uint8_t emc1412_read(uint8_t sensor_num, int *reading)
 	uint16_t val = 0;
 	I2C_MSG msg = { 0 };
 
-	sensor_cfg cfg = sensor_config[sensor_config_index_map[sensor_num]];
-	if (cfg.offset != EMC1412_READ_TEMP) {
-		LOG_ERR("Invalid offset: 0x%x", cfg.offset);
+	if (cfg->offset != EMC1412_READ_TEMP) {
+		LOG_ERR("Invalid offset: 0x%x", cfg->offset);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
 	/* Read temperature msb register */
-	msg.bus = cfg.port;
-	msg.target_addr = cfg.target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.rx_len = 2;
 	msg.data[0] = EMC1412_DEFAULT_TEMP_MSB_REG;
@@ -65,8 +65,8 @@ uint8_t emc1412_read(uint8_t sensor_num, int *reading)
 
 	/* Read temperature lsb register */
 	memset(&msg, 0, sizeof(I2C_MSG));
-	msg.bus = cfg.port;
-	msg.target_addr = cfg.target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.rx_len = 2;
 	msg.data[0] = EMC1412_DEFAULT_TEMP_LSB_REG;
@@ -87,13 +87,14 @@ uint8_t emc1412_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t emc1412_init(uint8_t sensor_num)
+uint8_t emc1412_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_ERR("input sensor number is invalid");
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	sensor_config[sensor_config_index_map[sensor_num]].read = emc1412_read;
+	cfg->read = emc1412_read;
 	return SENSOR_INIT_SUCCESS;
 }

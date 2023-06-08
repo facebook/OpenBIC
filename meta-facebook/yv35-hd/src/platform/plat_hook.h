@@ -57,18 +57,18 @@ extern vr_pre_proc_arg vr_pre_read_args[];
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
  **************************************************************************************************/
-bool pre_nvme_read(uint8_t sensor_num, void *args);
-bool pre_vr_read(uint8_t sensor_num, void *args);
-bool pre_vol_bat3v_read(uint8_t sensor_num, void *args);
-bool post_vol_bat3v_read(uint8_t sensor_num, void *args, int *reading);
-bool post_adm1278_cur_read(uint8_t sensor_num, void *args, int *reading);
-bool post_adm1278_pwr_read(uint8_t sensor_num, void *args, int *reading);
-bool post_ltc4282_cur_read(uint8_t sensor_num, void *args, int *reading);
-bool post_ltc4282_pwr_read(uint8_t sensor_num, void *args, int *reading);
-bool post_mp5990_cur_read(uint8_t sensor_num, void *args, int *reading);
-bool post_mp5990_pwr_read(uint8_t sensor_num, void *args, int *reading);
-bool post_ddr5_pwr_read(uint8_t sensor_num, void *args, int *reading);
-bool post_ddr5_temp_read(uint8_t sensor_num, void *args, int *const reading);
-bool post_amd_tsi_read(uint8_t sensor_num, void *args, int *const reading);
+bool pre_nvme_read(sensor_cfg *cfg, void *args);
+bool pre_vr_read(sensor_cfg *cfg, void *args);
+bool pre_vol_bat3v_read(sensor_cfg *cfg, void *args);
+bool post_vol_bat3v_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_adm1278_cur_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_adm1278_pwr_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_ltc4282_cur_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_ltc4282_pwr_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_mp5990_cur_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_mp5990_pwr_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_ddr5_pwr_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_ddr5_temp_read(sensor_cfg *cfg, void *args, int *const reading);
+bool post_amd_tsi_read(sensor_cfg *cfg, void *args, int *const reading);
 
 #endif

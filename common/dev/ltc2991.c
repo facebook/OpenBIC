@@ -92,23 +92,22 @@ int ltc2991_read_optional_to_register(uint8_t read_optional, uint8_t *msb_regist
 	return 0;
 }
 
-uint8_t ltc2991_read(uint8_t sensor_num, int *reading)
+uint8_t ltc2991_read(sensor_cfg *cfg, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
 
-	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_ERR("sensor 0x%x input parameter is invalid", sensor_num);
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
-
-	sensor_cfg cfg = sensor_config[sensor_config_index_map[sensor_num]];
 
 	int ret = 0;
 	uint8_t retry = 5;
 	uint8_t channel = 0;
 	uint8_t msb_register = 0;
 	uint8_t lsb_register = 0;
-	uint8_t read_optional = cfg.offset;
+	uint8_t read_optional = cfg->offset;
 	uint16_t temp = 0;
 	int16_t val = 0;
 	float parameter = 0;
@@ -116,13 +115,14 @@ uint8_t ltc2991_read(uint8_t sensor_num, int *reading)
 
 	ret = ltc2991_read_optional_to_register(read_optional, &msb_register, &lsb_register,
 						&parameter, &channel);
+
 	if (ret != 0) {
 		return SENSOR_PARAMETER_NOT_VALID;
 	}
 
 	/* Enable voltage channel */
-	msg.bus = cfg.port;
-	msg.target_addr = cfg.target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 2;
 	msg.data[0] = LTC2991_ENABLE_CHANNEL_REG;
 	msg.data[1] = channel;
@@ -137,8 +137,8 @@ uint8_t ltc2991_read(uint8_t sensor_num, int *reading)
 
 	/* Read MSB register */
 	memset(&msg, 0, sizeof(I2C_MSG));
-	msg.bus = cfg.port;
-	msg.target_addr = cfg.target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.rx_len = 1;
 	msg.data[0] = msb_register;
@@ -159,8 +159,8 @@ uint8_t ltc2991_read(uint8_t sensor_num, int *reading)
 
 	/* Read LSB register */
 	memset(&msg, 0, sizeof(I2C_MSG));
-	msg.bus = cfg.port;
-	msg.target_addr = cfg.target_addr;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.rx_len = 1;
 	msg.data[0] = lsb_register;
@@ -181,12 +181,12 @@ uint8_t ltc2991_read(uint8_t sensor_num, int *reading)
 		val = -(~(temp) + 1);
 	}
 
-	if (cfg.arg1 == 0) {
+	if (cfg->arg1 == 0) {
 		LOG_ERR("sensor config setting error, arg1 is 0");
 		return SENSOR_PARAMETER_NOT_VALID;
 	}
 
-	parameter = parameter * cfg.arg0 / cfg.arg1;
+	parameter = parameter * cfg->arg0 / cfg->arg1;
 
 	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = val * parameter;
@@ -194,30 +194,26 @@ uint8_t ltc2991_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t ltc2991_init(uint8_t sensor_num)
+uint8_t ltc2991_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
-		LOG_ERR("input sensor number is invalid");
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	ltc2991_init_arg *init_arg =
-		(ltc2991_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
-	if (init_arg == NULL) {
-		LOG_ERR("input initial pointer is NULL");
-		return SENSOR_INIT_UNSPECIFIED_ERROR;
-	}
+	ltc2991_init_arg *init_arg = (ltc2991_init_arg *)cfg->init_args;
 
 	if (init_arg->is_init != true) {
 		int ret = 0, retry = 5;
 		I2C_MSG msg = { 0 };
-		sensor_cfg cfg = sensor_config[sensor_config_index_map[sensor_num]];
 
 		/* Set V1~V4 control register */
 		if (init_arg->v1_v4_control_operation.value != LTC2991_KEEP_DEFAULT_SETTING) {
 			memset(&msg, 0, sizeof(I2C_MSG));
-			msg.bus = cfg.port;
-			msg.target_addr = cfg.target_addr;
+			msg.bus = cfg->port;
+			msg.target_addr = cfg->target_addr;
 			msg.tx_len = 2;
 			msg.data[0] = LTC2991_V1_V4_CONTROL_REG;
 			msg.data[1] = init_arg->v1_v4_control_operation.value;
@@ -231,8 +227,8 @@ uint8_t ltc2991_init(uint8_t sensor_num)
 
 		/* Read V1~V4 control register */
 		memset(&msg, 0, sizeof(I2C_MSG));
-		msg.bus = cfg.port;
-		msg.target_addr = cfg.target_addr;
+		msg.bus = cfg->port;
+		msg.target_addr = cfg->target_addr;
 		msg.tx_len = 1;
 		msg.rx_len = 1;
 		msg.data[0] = LTC2991_V1_V4_CONTROL_REG;
@@ -248,8 +244,8 @@ uint8_t ltc2991_init(uint8_t sensor_num)
 		/* Set V5~V8 control register */
 		if (init_arg->v5_v8_control_operation.value != LTC2991_KEEP_DEFAULT_SETTING) {
 			memset(&msg, 0, sizeof(I2C_MSG));
-			msg.bus = cfg.port;
-			msg.target_addr = cfg.target_addr;
+			msg.bus = cfg->port;
+			msg.target_addr = cfg->target_addr;
 			msg.tx_len = 2;
 			msg.data[0] = LTC2991_V5_V8_CONTROL_REG;
 			msg.data[1] = init_arg->v5_v8_control_operation.value;
@@ -263,8 +259,8 @@ uint8_t ltc2991_init(uint8_t sensor_num)
 
 		/* Read V5~V8 control register */
 		memset(&msg, 0, sizeof(I2C_MSG));
-		msg.bus = cfg.port;
-		msg.target_addr = cfg.target_addr;
+		msg.bus = cfg->port;
+		msg.target_addr = cfg->target_addr;
 		msg.tx_len = 1;
 		msg.rx_len = 1;
 		msg.data[0] = LTC2991_V5_V8_CONTROL_REG;
@@ -279,6 +275,6 @@ uint8_t ltc2991_init(uint8_t sensor_num)
 		init_arg->is_init = true;
 	}
 
-	sensor_config[sensor_config_index_map[sensor_num]].read = ltc2991_read;
+	cfg->read = ltc2991_read;
 	return SENSOR_INIT_SUCCESS;
 }

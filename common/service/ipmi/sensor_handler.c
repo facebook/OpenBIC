@@ -39,7 +39,8 @@ __weak void SENSOR_GET_SENSOR_READING(ipmi_msg *msg)
 		sensor_report_status = SENSOR_EVENT_MESSAGES_ENABLE | SENSOR_SCANNING_ENABLE;
 
 		//Get sensor reading from bic cache
-		status = get_sensor_reading(msg->data[0], &reading, GET_FROM_CACHE);
+		status = get_sensor_reading(sensor_config, sensor_config_count, msg->data[0],
+					    &reading, GET_FROM_CACHE);
 	} else {
 		status = SENSOR_POLLING_DISABLE;
 	}

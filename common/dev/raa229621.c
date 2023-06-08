@@ -41,13 +41,16 @@ static bool adjust_of_twos_complement(uint8_t offset, int *val)
 	return false;
 }
 
-uint8_t raa229621_read(uint8_t sensor_num, int *reading)
+uint8_t raa229621_read(sensor_cfg *cfg, int *reading)
 {
-	if (reading == NULL || (sensor_num > SENSOR_NUM_MAX)) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 	uint8_t retry = 5;
 	uint8_t offset = cfg->offset;
 
@@ -79,7 +82,7 @@ uint8_t raa229621_read(uint8_t sensor_num, int *reading)
 		/* 0.1 A/LSB, 2's complement */
 		ret = adjust_of_twos_complement(offset, &val);
 		if (ret == false) {
-			LOG_ERR("Adjust reading IOUT value failed - sensor number: 0x%x", sensor_num);
+			LOG_ERR("Adjust reading IOUT value failed - sensor number: 0x%x", cfg->num);
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 		sval->integer = (int16_t)val / 10;
@@ -94,7 +97,7 @@ uint8_t raa229621_read(uint8_t sensor_num, int *reading)
 		/* 1 Watt/LSB, 2's complement */
 		ret = adjust_of_twos_complement(offset, &val);
 		if (ret == false) {
-			LOG_ERR("Adjust reading POUT value failed - sensor number: 0x%x", sensor_num);
+			LOG_ERR("Adjust reading POUT value failed - sensor number: 0x%x", cfg->num);
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 		sval->integer = val;
@@ -109,12 +112,14 @@ uint8_t raa229621_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t raa229621_init(uint8_t sensor_num)
+uint8_t raa229621_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	sensor_config[sensor_config_index_map[sensor_num]].read = raa229621_read;
+	cfg->read = raa229621_read;
 	return SENSOR_INIT_SUCCESS;
 }
