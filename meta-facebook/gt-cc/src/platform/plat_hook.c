@@ -843,6 +843,16 @@ pex89000_init_arg pex_sensor_init_args[] = {
 	[3] = { .idx = 3, .is_init = false },
 };
 
+nct7718w_init_arg nct7718w_init_args[] = {
+	[0] = { .is_init = false,
+		.rt1_high_alert_temp = 0x46,
+		.rt_filter_alert_mode = 0x00,
+		.alert_mask = 0x07,
+		.configuration = 0x85,
+		.rt1_critical_temperature = 0x65,
+		.lt_critical_temperature = 0x65 },
+};
+
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
  **************************************************************************************************/
