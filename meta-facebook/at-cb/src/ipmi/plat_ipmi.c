@@ -35,6 +35,7 @@
 #include "plat_hook.h"
 #include "plat_dev.h"
 #include "fru.h"
+#include "app_handler.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
@@ -661,5 +662,97 @@ void STORAGE_WRITE_FRUID_DATA(ipmi_msg *msg)
 		break;
 	}
 
+	return;
+}
+
+void OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len < 2) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	bool ret = false;
+	uint8_t retry = 0;
+	uint8_t fru_id = msg->data[0];
+	uint8_t card_id = 0;
+	uint8_t accl_id = 0;
+	uint8_t dev_id = 0;
+	uint8_t address = 0;
+	ipmi_msg bridge_msg = { 0 };
+	mux_config card_mux = { 0 };
+
+	ret = pal_accl_fru_id_map_accl_id_dev_id(fru_id, &accl_id, &dev_id);
+	if (ret != true) {
+		LOG_ERR("Invalid fru id: 0x%x to card id and dev id", fru_id);
+		msg->completion_code = CC_INVALID_PARAM;
+		return;
+	}
+
+	switch (dev_id) {
+	case PCIE_DEVICE_ID2:
+		address = ACCL_FREYA_1_ADDR;
+		break;
+	case PCIE_DEVICE_ID3:
+		address = ACCL_FREYA_2_ADDR;
+		break;
+	default:
+		LOG_ERR("Invalid device id: 0x%x", dev_id);
+		msg->completion_code = CC_INVALID_PARAM;
+		return;
+	}
+
+	// Convert fru id based on different board stage
+	if (accl_id_mapping_card_id(accl_id, &card_id) != 0) {
+		LOG_ERR("Invalid fru id: 0x%x, accl id: 0x%x to map card id", fru_id, accl_id);
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	ret = get_accl_mux_config(card_id, &card_mux);
+	if (ret != true) {
+		LOG_ERR("Invalid card id: 0x%x to get accl mux config", card_id);
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	int mutex_status = 0;
+	struct k_mutex *mutex = get_i2c_mux_mutex(card_mux.bus);
+
+	for (retry = 0; retry < 3; ++retry) {
+		mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
+		if (mutex_status == 0) {
+			break;
+		}
+	}
+
+	if (retry >= 3) {
+		LOG_ERR("Mutex lock fail, status: %d", mutex_status);
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	ret = set_mux_channel(card_mux, MUTEX_LOCK_ENABLE);
+	if (ret == false) {
+		LOG_ERR("ACCL switch mux fail, fru id: 0x%x", fru_id);
+		k_mutex_unlock(mutex);
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	bridge_msg.data[0] = card_mux.bus << 1;
+	bridge_msg.data[1] = address << 1;
+	memcpy(&bridge_msg.data[2], &msg->data[1], msg->data_len - 1);
+	bridge_msg.data_len = msg->data_len + 1;
+
+	APP_MASTER_WRITE_READ(&bridge_msg);
+
+	msg->completion_code = bridge_msg.completion_code;
+	msg->data_len = bridge_msg.data_len;
+	memcpy(&msg->data[0], &bridge_msg.data[0], bridge_msg.data_len);
+
+	k_mutex_unlock(mutex);
 	return;
 }
