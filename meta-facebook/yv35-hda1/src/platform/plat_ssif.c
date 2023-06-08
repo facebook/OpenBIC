@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,32 +14,28 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_I2C_h
-#define PLAT_I2C_h
+#include <stdint.h>
+#include <logging/log.h>
+#include "plat_ssif.h"
+#include "plat_i2c.h"
+#include "plat_gpio.h"
+#include "ssif.h"
 
-#include "hal_i2c.h"
-
-// map i2c bus to peripherial bus
-// i2c peripheral 1 based, as used i2c index 0 in firmware.
-enum _i2c_bus_num {
-	I2C_BUS1,
-	I2C_BUS2,
-	I2C_BUS3,
-	I2C_BUS4,
-	I2C_BUS5,
-	I2C_BUS6,
-	I2C_BUS7,
-	I2C_BUS8,
-	I2C_BUS9,
-	I2C_BUS10,
-	I2C_BUS11,
-	I2C_BUS12,
-	I2C_BUS13,
-	I2C_BUS14,
-	I2C_BUS_MAX_NUM,
+LOG_MODULE_REGISTER(plat_ssif);
+struct ssif_init_cfg ssif_cfg_table[] = {
+	{ SSIF_I2C_BUS, SSIF_I2C_ADDR, 0x0A },
 };
 
-#define SSIF_I2C_BUS I2C_BUS4
-#define SSIF_I2C_ADDR 0x20 //8bit
+void pal_ssif_alert_trigger(uint8_t status)
+{
+	LOG_DBG("trigger %d", status);
+	gpio_set(BIC_SALT12_L, status);
+}
 
-#endif
+void ssif_init(void)
+{
+	ssif_device_init(ssif_cfg_table, ARRAY_SIZE(ssif_cfg_table));
+
+	if (ssif_inst_get_by_bus(SSIF_I2C_BUS))
+		gpio_set(BMC_GPIOC3_OK, GPIO_HIGH);
+}
