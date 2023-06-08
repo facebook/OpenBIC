@@ -82,33 +82,6 @@ sensor_cfg plat_sensor_config[] = {
 	  1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
 
-	/** Power module **/
-	{ SENSOR_NUM_TEMP_POWER_BRICK_1, sensor_dev_q50sn120a1, I2C_BUS1, POWER_BRICK_1_ADDR,
-	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_VOL_P12V_AUX_1, sensor_dev_q50sn120a1, I2C_BUS1, POWER_BRICK_1_ADDR,
-	  PMBUS_READ_VOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_CUR_P12V_AUX_1, sensor_dev_q50sn120a1, I2C_BUS1, POWER_BRICK_1_ADDR,
-	  PMBUS_READ_IOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_PWR_P12V_AUX_1, sensor_dev_q50sn120a1, I2C_BUS1, POWER_BRICK_1_ADDR,
-	  PMBUS_READ_POUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-
-	{ SENSOR_NUM_TEMP_POWER_BRICK_2, sensor_dev_q50sn120a1, I2C_BUS1, POWER_BRICK_2_ADDR,
-	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_VOL_P12V_AUX_2, sensor_dev_q50sn120a1, I2C_BUS1, POWER_BRICK_2_ADDR,
-	  PMBUS_READ_VOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_CUR_P12V_AUX_2, sensor_dev_q50sn120a1, I2C_BUS1, POWER_BRICK_2_ADDR,
-	  PMBUS_READ_IOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_PWR_P12V_AUX_2, sensor_dev_q50sn120a1, I2C_BUS1, POWER_BRICK_2_ADDR,
-	  PMBUS_READ_POUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-
 	/** VR **/
 	{ SENSOR_NUM_TEMP_P0V8_VDD_1, sensor_dev_xdpe15284, I2C_BUS1, XDPE15284D_ADDR,
 	  PMBUS_READ_TEMPERATURE_1, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
@@ -1345,6 +1318,62 @@ sensor_cfg ltc4286_sensor_config_table[] = {
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &ltc4286_init_args[1] },
 };
 
+sensor_cfg q50sn120a1_sensor_config_table[] = {
+	{ SENSOR_NUM_TEMP_POWER_BRICK_1, sensor_dev_q50sn120a1, I2C_BUS1, POWER_BRICK_1_ADDR,
+	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_VOL_P12V_AUX_1, sensor_dev_q50sn120a1, I2C_BUS1, POWER_BRICK_1_ADDR,
+	  PMBUS_READ_VOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_CUR_P12V_AUX_1, sensor_dev_q50sn120a1, I2C_BUS1, POWER_BRICK_1_ADDR,
+	  PMBUS_READ_IOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_PWR_P12V_AUX_1, sensor_dev_q50sn120a1, I2C_BUS1, POWER_BRICK_1_ADDR,
+	  PMBUS_READ_POUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+
+	{ SENSOR_NUM_TEMP_POWER_BRICK_2, sensor_dev_q50sn120a1, I2C_BUS1, POWER_BRICK_2_ADDR,
+	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_VOL_P12V_AUX_2, sensor_dev_q50sn120a1, I2C_BUS1, POWER_BRICK_2_ADDR,
+	  PMBUS_READ_VOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_CUR_P12V_AUX_2, sensor_dev_q50sn120a1, I2C_BUS1, POWER_BRICK_2_ADDR,
+	  PMBUS_READ_IOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_PWR_P12V_AUX_2, sensor_dev_q50sn120a1, I2C_BUS1, POWER_BRICK_2_ADDR,
+	  PMBUS_READ_POUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+};
+
+sensor_cfg bmr351_sensor_config_table[] = {
+	{ SENSOR_NUM_TEMP_POWER_BRICK_1, sensor_dev_bmr351, I2C_BUS1, POWER_BRICK_1_ADDR,
+	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_VOL_P12V_AUX_1, sensor_dev_bmr351, I2C_BUS1, POWER_BRICK_1_ADDR,
+	  PMBUS_READ_VOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_CUR_P12V_AUX_1, sensor_dev_bmr351, I2C_BUS1, POWER_BRICK_1_ADDR,
+	  PMBUS_READ_IOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_PWR_P12V_AUX_1, sensor_dev_bmr351, I2C_BUS1, POWER_BRICK_1_ADDR,
+	  PMBUS_READ_POUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+
+	{ SENSOR_NUM_TEMP_POWER_BRICK_2, sensor_dev_bmr351, I2C_BUS1, POWER_BRICK_2_ADDR,
+	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_VOL_P12V_AUX_2, sensor_dev_bmr351, I2C_BUS1, POWER_BRICK_2_ADDR,
+	  PMBUS_READ_VOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_CUR_P12V_AUX_2, sensor_dev_bmr351, I2C_BUS1, POWER_BRICK_2_ADDR,
+	  PMBUS_READ_IOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_PWR_P12V_AUX_2, sensor_dev_bmr351, I2C_BUS1, POWER_BRICK_2_ADDR,
+	  PMBUS_READ_POUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+};
+
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
 const int ACCL_SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_accl1_sensor_config);
 
@@ -1400,6 +1429,7 @@ uint8_t pal_get_extend_sensor_config()
 {
 	uint8_t extend_sensor_config_size = 0;
 	uint8_t hsc_module = get_hsc_module();
+	uint8_t power_brick_module = get_pwr_brick_module();
 
 	switch (hsc_module) {
 	case HSC_MODULE_ADM1272:
@@ -1413,6 +1443,18 @@ uint8_t pal_get_extend_sensor_config()
 		break;
 	}
 
+	switch (power_brick_module) {
+	case POWER_BRICK_Q50SN120A1:
+		extend_sensor_config_size += ARRAY_SIZE(q50sn120a1_sensor_config_table);
+		break;
+	case POWER_BRICK_BMR3512202:
+		extend_sensor_config_size += ARRAY_SIZE(bmr351_sensor_config_table);
+		break;
+	default:
+		LOG_ERR("Invalid power brick module: 0x%x", power_brick_module);
+		break;
+	}
+
 	return extend_sensor_config_size;
 }
 
@@ -1421,6 +1463,7 @@ void pal_extend_sensor_config()
 	uint8_t index = 0;
 	uint8_t sensor_count = 0;
 	uint8_t hsc_module = get_hsc_module();
+	uint8_t power_brick_module = get_pwr_brick_module();
 
 	switch (hsc_module) {
 	case HSC_MODULE_ADM1272:
@@ -1437,6 +1480,24 @@ void pal_extend_sensor_config()
 		break;
 	default:
 		LOG_ERR("Invalid hsc module: 0x%x", hsc_module);
+		break;
+	}
+
+	switch (power_brick_module) {
+	case POWER_BRICK_Q50SN120A1:
+		sensor_count = ARRAY_SIZE(q50sn120a1_sensor_config_table);
+		for (index = 0; index < sensor_count; index++) {
+			add_sensor_config(q50sn120a1_sensor_config_table[index]);
+		}
+		break;
+	case POWER_BRICK_BMR3512202:
+		sensor_count = ARRAY_SIZE(bmr351_sensor_config_table);
+		for (index = 0; index < sensor_count; index++) {
+			add_sensor_config(bmr351_sensor_config_table[index]);
+		}
+		break;
+	default:
+		LOG_ERR("Invalid power brick module: 0x%x", power_brick_module);
 		break;
 	}
 }
@@ -1513,10 +1574,10 @@ bool is_accl_power_good(uint8_t card_id)
 	msg.rx_len = 1;
 	msg.tx_len = 1;
 
-	if (card_id >= PCIE_CARD_1 && card_id <= PCIE_CARD_6) {
+	if (card_id <= PCIE_CARD_6) {
 		msg.data[0] = CPLD_ACCLB_PWRGD_OFFSET;
 		power_good_bit = (1 << (card_id - PCIE_CARD_1));
-	} else if (card_id >= PCIE_CARD_7 && card_id <= PCIE_CARD_12) {
+	} else if (card_id <= PCIE_CARD_12) {
 		msg.data[0] = CPLD_ACCLA_PWRGD_OFFSET;
 		power_good_bit = (1 << (card_id - PCIE_CARD_7));
 	} else {
