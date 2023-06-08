@@ -41,6 +41,7 @@ struct i2c_target_data {
 	struct k_msgq target_wr_msgq_id; // target write message queue of Zephyr api
 	uint16_t max_msg_count; // max message count for target write message queue
 	bool skip_msg_wr; // skip message write while target stop
+	void (*post_wr_rcv_func)(void *); // do something after wr received
 
 	/* TARGET READ - Not support pending messages storage */
 	uint32_t rd_buffer_idx; // message buffer index
@@ -52,6 +53,7 @@ struct _i2c_target_config {
 	uint8_t address;
 	uint32_t i2c_msg_count;
 	bool (*rd_data_collect_func)(void *);
+	void (*post_wr_rcv_func)(void *);
 };
 
 struct i2c_target_device {

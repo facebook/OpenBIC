@@ -31,16 +31,21 @@
 #include "libutil.h"
 #include "plat_i2c.h"
 #include "hal_i2c_target.h"
+#include "hal_gpio.h"
 
 LOG_MODULE_REGISTER(ssif);
 
 #define SSIF_TARGET_MSGQ_SIZE 0x0A
 
 #define SSIF_STATUS_CHECK_PER_MS 100
-#define SSIF_TIMEOUT_MS 3000 // i2c bus drop off maximum time
+#define SSIF_TIMEOUT_MS 5000 // i2c bus drop off maximum time
+
+#define SSIF_RSP_PEC_EN 0
 
 ssif_dev *ssif;
 static uint8_t ssif_channel_cnt = 0;
+
+static bool proc_ssif_ok = false;
 
 bool ssif_set_data(uint8_t channel, ipmi_msg_cfg *msg_cfg)
 {
@@ -84,6 +89,16 @@ bool ssif_set_data(uint8_t channel, ipmi_msg_cfg *msg_cfg)
 	return true;
 }
 
+bool get_ssif_ok()
+{
+	return proc_ssif_ok;
+}
+
+void reset_ssif_ok()
+{
+	proc_ssif_ok = false;
+}
+
 ssif_dev *ssif_inst_get_by_bus(uint8_t bus)
 {
 	for (int i = 0; i < ssif_channel_cnt; i++) {
@@ -114,7 +129,7 @@ void ssif_error_record(uint8_t channel, ssif_err_status_t errcode)
 	}
 }
 
-__weak void pal_ssif_alert_trigger()
+__weak void pal_ssif_alert_trigger(uint8_t status)
 {
 	return;
 }
@@ -213,6 +228,7 @@ static bool ssif_state_machine(ssif_dev *ssif_inst, ssif_status_t status)
 {
 	CHECK_NULL_ARG_WITH_RETURN(ssif_inst, false);
 
+	LOG_DBG("* state machine 0x%x --> 0x%x", ssif_inst->cur_status, status);
 	ssif_inst->cur_status = status;
 	return true;
 }
@@ -282,6 +298,7 @@ static bool ssif_status_check(ssif_dev *ssif_inst, uint8_t smb_cmd)
 	return true;
 
 error:
+	LOG_ERR("Current status 0x%x not expect smb command 0x%x", ssif_inst->cur_status, smb_cmd);
 	ssif_error_record(ssif_inst->index, SSIF_STATUS_INVALID_CMD_IN_CUR_STATUS);
 
 	return false;
@@ -290,8 +307,6 @@ error:
 static bool ssif_data_handle(ssif_dev *ssif_inst, ssif_action_t action, uint8_t smb_cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(ssif_inst, false);
-
-	static uint16_t remain_data_len = 0;
 
 	switch (action) {
 	case SSIF_SEND_IPMI:
@@ -345,30 +360,30 @@ static bool ssif_data_handle(ssif_dev *ssif_inst, ssif_action_t action, uint8_t 
 				}
 			}
 
-			LOG_INF("sending SSIF command to BMC...");
+			do {
+				uint8_t seq_source = 0xFF;
+				ipmi_msg msg;
+				msg = construct_ipmi_message(
+					seq_source, ssif_inst->current_ipmi_msg.buffer.netfn,
+					ssif_inst->current_ipmi_msg.buffer.cmd, SELF, BMC_IPMB,
+					ssif_inst->current_ipmi_msg.buffer.data_len,
+					ssif_inst->current_ipmi_msg.buffer.data);
+				ipmb_error ipmb_ret =
+					ipmb_read(&msg, IPMB_inf_index_map[msg.InF_target]);
+				if (ipmb_ret != IPMB_ERROR_SUCCESS) {
+					LOG_ERR("SSIF[%d] Failed to send SSIF msg to BMC with ret: 0x%x",
+						ssif_inst->index, ipmb_ret);
+					break;
+				}
 
-			uint8_t seq_source = 0xFF;
-			ipmi_msg msg;
-			msg = construct_ipmi_message(seq_source,
-						     ssif_inst->current_ipmi_msg.buffer.netfn,
-						     ssif_inst->current_ipmi_msg.buffer.cmd, SELF,
-						     BMC_IPMB,
-						     ssif_inst->current_ipmi_msg.buffer.data_len,
-						     ssif_inst->current_ipmi_msg.buffer.data);
-			ipmb_error ipmb_ret = ipmb_read(&msg, IPMB_inf_index_map[msg.InF_target]);
-			if ((ipmb_ret != IPMB_ERROR_SUCCESS) ||
-			    (msg.completion_code != CC_SUCCESS)) {
-				LOG_ERR("SSIF[%d] Failed to send SSIF msg to BMC with ret: 0x%x CC: 0x%x\n",
-					ssif_inst->index, ipmb_ret, msg.completion_code);
-			}
-
-			ipmi_msg_cfg ssif_rsp = { 0 };
-			ssif_rsp.buffer = msg;
-			ssif_rsp.buffer.netfn = ssif_rsp.buffer.netfn << 2;
-			if (ssif_set_data(ssif_inst->index, &ssif_rsp) == false) {
-				LOG_ERR("SSIF[%d] failed to write ssif response data",
-					ssif_inst->index);
-			}
+				ipmi_msg_cfg ssif_rsp = { 0 };
+				ssif_rsp.buffer = msg;
+				ssif_rsp.buffer.netfn = ssif_rsp.buffer.netfn << 2;
+				if (ssif_set_data(ssif_inst->index, &ssif_rsp) == false) {
+					LOG_ERR("SSIF[%d] failed to write ssif response data",
+						ssif_inst->index);
+				}
+			} while (0);
 		}
 
 		if (k_sem_take(&ssif_inst->rsp_buff_sem, K_MSEC(1500)) != 0) {
@@ -377,23 +392,21 @@ static bool ssif_data_handle(ssif_dev *ssif_inst, ssif_action_t action, uint8_t 
 			return false;
 		}
 
-		LOG_DBG("SSIF[%d] ipmi rsp netfn 0x%x, cmd 0x%x, cc 0x%x, data length %d:",
+		LOG_INF("SSIF[%d] ipmi rsp netfn 0x%x, cmd 0x%x, cc 0x%x, data length %d:",
 			ssif_inst->index, ssif_inst->rsp_buff[0], ssif_inst->rsp_buff[1],
 			ssif_inst->rsp_buff[2], ssif_inst->rsp_buf_len - 3);
-		LOG_HEXDUMP_DBG(ssif_inst->rsp_buff + 3, ssif_inst->rsp_buf_len - 3, "");
+		LOG_HEXDUMP_INF(ssif_inst->rsp_buff + 3, ssif_inst->rsp_buf_len - 3, "");
 
 		/* unlock i2c bus address */
-		if (ssif_inst->addr_lock == true) {
-			if (ssif_lock_ctl(ssif_inst, false) == false) {
-				LOG_ERR("SSIF[%d] can't unlock address after sending message",
-					ssif_inst->index);
-				ssif_error_record(ssif_inst->index, SSIF_STATUS_ADDR_LOCK_ERR);
-				return false;
-			}
+		if (ssif_lock_ctl(ssif_inst, false) == false) {
+			LOG_ERR("SSIF[%d] can't unlock address after sending message",
+				ssif_inst->index);
+			ssif_error_record(ssif_inst->index, SSIF_STATUS_ADDR_LOCK_ERR);
+			return false;
 		}
 
 		/* Let HOST know data ready by i2c alert pin */
-		pal_ssif_alert_trigger();
+		pal_ssif_alert_trigger(GPIO_LOW);
 		break;
 
 	case SSIF_COLLECT_DATA: {
@@ -405,42 +418,42 @@ static bool ssif_data_handle(ssif_dev *ssif_inst, ssif_action_t action, uint8_t 
 		if (ssif_inst->rsp_buf_len) {
 			switch (smb_cmd) {
 			case SSIF_RD_START: {
-				remain_data_len = ssif_inst->rsp_buf_len;
+				ssif_inst->remain_data_len = ssif_inst->rsp_buf_len;
 				ssif_inst->cur_rd_blck = 0;
-				if (remain_data_len > SSIF_MAX_IPMI_DATA_SIZE) {
+				if (ssif_inst->remain_data_len > SSIF_MAX_IPMI_DATA_SIZE) {
 					wdata[1] = (SSIF_MULTI_RD_KEY >> 8) & 0xFF;
 					wdata[2] = SSIF_MULTI_RD_KEY & 0xFF;
 					memcpy(wdata + 3, ssif_inst->rsp_buff,
 					       SSIF_MAX_IPMI_DATA_SIZE - 2);
 					wdata_len = SSIF_MAX_IPMI_DATA_SIZE;
 					next_status = SSIF_STATUS_WAIT_FOR_RD_NEXT;
-					remain_data_len -= (SSIF_MAX_IPMI_DATA_SIZE - 2);
+					ssif_inst->remain_data_len -= (SSIF_MAX_IPMI_DATA_SIZE - 2);
 				} else {
 					memcpy(wdata + 1, ssif_inst->rsp_buff,
 					       ssif_inst->rsp_buf_len);
 					wdata_len = ssif_inst->rsp_buf_len;
 					next_status = SSIF_STATUS_WAIT_FOR_WR_START;
-					remain_data_len = 0;
+					ssif_inst->remain_data_len = 0;
 				}
 				break;
 			}
 
 			case SSIF_RD_NEXT: {
-				if (remain_data_len > (SSIF_MAX_IPMI_DATA_SIZE - 1)) {
+				if (ssif_inst->remain_data_len > (SSIF_MAX_IPMI_DATA_SIZE - 1)) {
 					wdata[1] = ssif_inst->cur_rd_blck;
 					wdata_len = SSIF_MAX_IPMI_DATA_SIZE;
 					next_status = SSIF_STATUS_WAIT_FOR_RD_NEXT;
 				} else {
 					wdata[1] = 0xFF;
-					wdata_len = remain_data_len + 1;
+					wdata_len = ssif_inst->remain_data_len + 1;
 					ssif_state_machine(ssif_inst, SSIF_STATUS_RD_END);
 					next_status = SSIF_STATUS_WAIT_FOR_WR_START;
 				}
 				memcpy(wdata + 2,
-				       ssif_inst->rsp_buff +
-					       (ssif_inst->rsp_buf_len - remain_data_len),
+				       ssif_inst->rsp_buff + (ssif_inst->rsp_buf_len -
+							      ssif_inst->remain_data_len),
 				       wdata_len - 1);
-				remain_data_len -= (wdata_len - 1);
+				ssif_inst->remain_data_len -= (wdata_len - 1);
 				ssif_inst->cur_rd_blck++;
 				break;
 			}
@@ -452,13 +465,18 @@ static bool ssif_data_handle(ssif_dev *ssif_inst, ssif_action_t action, uint8_t 
 			}
 
 			wdata[0] = wdata_len;
-			wdata[wdata_len + 1] =
-				ssif_pec_get(ssif_inst->addr, smb_cmd, wdata, wdata_len + 1);
+			wdata_len++;
+
+			if (SSIF_RSP_PEC_EN == 1) {
+				wdata[wdata_len + 1] = ssif_pec_get(ssif_inst->addr, smb_cmd, wdata,
+								    wdata_len + 1);
+				wdata_len++;
+			}
 
 			LOG_INF("SSIF[%d] write RSP data:", ssif_inst->index);
-			LOG_HEXDUMP_INF(wdata, wdata_len + 2, "");
+			LOG_HEXDUMP_INF(wdata, wdata_len, "");
 
-			uint8_t rc = i2c_target_write(ssif_inst->i2c_bus, wdata, wdata_len + 2);
+			uint8_t rc = i2c_target_write(ssif_inst->i2c_bus, wdata, wdata_len);
 			if (rc) {
 				LOG_ERR("SSIF[%d] i2c_target_write fail, ret %d\n",
 					ssif_inst->index, rc);
@@ -490,6 +508,9 @@ static bool ssif_collect_data(uint8_t smb_cmd, uint8_t bus)
 	if ((smb_cmd != SSIF_RD_START) && (smb_cmd != SSIF_RD_NEXT) && (smb_cmd != SSIF_RD_RETRY)) {
 		return true;
 	}
+
+	/* Deassert after master read back */
+	pal_ssif_alert_trigger(GPIO_HIGH);
 
 	ssif_dev *ssif_inst = ssif_inst_get_by_bus(bus);
 	if (!ssif_inst) {
@@ -545,6 +566,35 @@ static bool ssif_write_data(void *arg)
 	return true;
 }
 
+static void ssif_bus_drop(void *arg)
+{
+	CHECK_NULL_ARG(arg);
+
+	struct i2c_target_data *data = (struct i2c_target_data *)arg;
+
+	/* Only check fisrt byte from received data */
+	if (data->wr_buffer_idx == 1) {
+		uint8_t smb_cmd = data->target_wr_msg.msg[0];
+		/* Drop bus if write last message and wait for next read */
+		if ((smb_cmd == SSIF_WR_SINGLE) || (smb_cmd == SSIF_WR_MULTI_END)) {
+			ssif_dev *ssif_inst = ssif_inst_get_by_bus(data->i2c_bus);
+			if (!ssif_inst) {
+				LOG_ERR("Could not find ssif inst by i2c bus %d", data->i2c_bus);
+				ssif_error_record(ssif_inst->index, SSIF_STATUS_UNKNOWN_ERR);
+				return;
+			}
+
+			//pal_ssif_alert_trigger(GPIO_LOW);
+			if (ssif_lock_ctl(ssif_inst, true) == false) {
+				LOG_ERR("Could not lock address");
+				ssif_error_record(ssif_inst->index, SSIF_STATUS_ADDR_LOCK_ERR);
+				return;
+			}
+			//pal_ssif_alert_trigger(GPIO_HIGH);
+		}
+	}
+}
+
 static void ssif_timeout_monitor(void *dummy0, void *dummy1, void *dummy2)
 {
 	ARG_UNUSED(dummy0);
@@ -560,10 +610,10 @@ static void ssif_timeout_monitor(void *dummy0, void *dummy1, void *dummy2)
 
 			int64_t cur_uptime = k_uptime_get();
 			if ((ssif[idx].exp_to_ms <= cur_uptime)) {
-				printf("SSIF[%d] msg timeout, ssif unlock!!", idx);
+				LOG_WRN("SSIF[%d] msg timeout, ssif unlock!!", idx);
 				ssif_error_record(ssif[idx].index, SSIF_STATUS_ADDR_LCK_TIMEOUT);
 				if (ssif_lock_ctl(&ssif[idx], false) == false) {
-					printf("SSIF[%d] unlock failed", idx);
+					LOG_ERR("SSIF[%d] unlock failed", idx);
 					ssif_error_record(ssif[idx].index,
 							  SSIF_STATUS_ADDR_LOCK_ERR);
 				}
@@ -582,14 +632,6 @@ static bool ssif_data_pre_handle(ssif_dev *ssif_inst, uint8_t smb_cmd)
 		LOG_ERR("SSIF[%d] not expect READ commands in this thread", ssif_inst->index);
 		ssif_error_record(ssif_inst->index, SSIF_STATUS_UNKNOWN_ERR);
 		return false;
-	}
-
-	/* Drop bus if write last message and wait for next read */
-	if ((smb_cmd == SSIF_WR_SINGLE) || (smb_cmd == SSIF_WR_MULTI_END)) {
-		if (ssif_lock_ctl(ssif_inst, true) == false) {
-			LOG_ERR("Could not lock address");
-			ssif_error_record(ssif_inst->index, SSIF_STATUS_ADDR_LOCK_ERR);
-		}
 	}
 
 	if (ssif_status_check(ssif_inst, smb_cmd) == false) {
@@ -622,6 +664,8 @@ static void ssif_read_task(void *arvg0, void *arvg1, void *arvg2)
 			ssif_error_record(ssif_inst->index, SSIF_STATUS_TARGET_WR_RD_ERROR);
 			goto cold_reset;
 		}
+
+		proc_ssif_ok = true;
 
 		if (rlen == 0) {
 			LOG_ERR("SSIF[%d] received invalid length of message", ssif_inst->index);
@@ -790,6 +834,7 @@ void ssif_device_init(struct ssif_init_cfg *config, uint8_t size)
 		cfg.address = config[i].addr;
 		cfg.i2c_msg_count = config[i].target_msgq_cnt;
 		cfg.rd_data_collect_func = ssif_write_data;
+		cfg.post_wr_rcv_func = ssif_bus_drop;
 
 		if (i2c_target_control(config[i].i2c_bus, &cfg, I2C_CONTROL_REGISTER) !=
 		    I2C_TARGET_API_NO_ERR) {
@@ -811,6 +856,7 @@ void ssif_device_init(struct ssif_init_cfg *config, uint8_t size)
 		ssif[i].addr = config[i].addr >> 1;
 		ssif[i].addr_lock = false;
 		ssif[i].cur_status = SSIF_STATUS_WAIT_FOR_WR_START;
+		ssif[i].index = i;
 		ssif_error_record(ssif[i].index, SSIF_STATUS_NO_ERR);
 
 		snprintf(ssif[i].task_name, sizeof(ssif[i].task_name), "ssif%d_polling",
