@@ -25,6 +25,7 @@
 #include "libutil.h"
 #include "plat_gpio.h"
 #include "plat_i2c.h"
+#include "plat_sensor_table.h"
 
 #include <logging/log.h>
 
@@ -156,6 +157,8 @@ void init_hsc_module(uint8_t board_revision)
 {
 	bool ret = false;
 	float voltage_hsc_type_adc = 0;
+	I2C_MSG i2c_msg = { 0 };
+	int retry = 3;
 
 	if (get_system_class() == SYS_CLASS_1) {
 		/* Class 1 */
@@ -221,6 +224,29 @@ void init_hsc_module(uint8_t board_revision)
 			LOG_ERR("Unknown board revision: 0x%x", board_revision);
 			break;
 		}
+
+		// Disable MPS5990 VIN_UVLO fault event
+		// EFUSE_CFG 0xC4 bit 7 is VIN_UVLO_FAULT
+		if (hsc_module == HSC_MODULE_MP5990) {
+			i2c_msg.bus = I2C_BUS2;
+			i2c_msg.target_addr = MPS_MP5990_ADDR;
+			i2c_msg.tx_len = 1;
+			i2c_msg.rx_len = 2;
+			i2c_msg.data[0] = MPS_MP5990_OFFSET_EFUSE_CFG;
+			if (i2c_master_read(&i2c_msg, retry) == 0) {
+				i2c_msg.tx_len = 3;
+				i2c_msg.data[2] = i2c_msg.data[1];
+				i2c_msg.data[1] = CLEARBIT(i2c_msg.data[0], 7);
+				i2c_msg.data[0] = MPS_MP5990_OFFSET_EFUSE_CFG;
+
+				if (i2c_master_write(&i2c_msg, retry) != 0) {
+					LOG_ERR("Failed to disable MPS5990 VIN_UVLO fault event due to write failed");
+				}
+			} else {
+				LOG_ERR("Failed to disable MPS5990 VIN_UVLO fault event due to read failed");
+			}
+		}
+
 	} else {
 		/* Class 2 */
 		hsc_module = HSC_MODULE_ADM1278;
