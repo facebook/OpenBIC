@@ -580,7 +580,6 @@ static void ssif_bus_drop(void *arg)
 			ssif_dev *ssif_inst = ssif_inst_get_by_bus(data->i2c_bus);
 			if (!ssif_inst) {
 				LOG_ERR("Could not find ssif inst by i2c bus %d", data->i2c_bus);
-				ssif_error_record(ssif_inst->index, SSIF_STATUS_UNKNOWN_ERR);
 				return;
 			}
 
