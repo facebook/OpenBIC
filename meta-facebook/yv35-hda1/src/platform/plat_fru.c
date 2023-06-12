@@ -56,8 +56,13 @@ const EEPROM_CFG plat_bios_version_area_config = {
 
 /* PSB error information */
 const EEPROM_CFG plat_psb_error_area_config = {
-	NV_ATMEL_24C128,     MB_FRU_ID,       MB_FRU_PORT,	MB_CPU_EEPROM_ADDR,
-	FRU_DEV_ACCESS_BYTE, PSB_ERROR_START, PSB_ERROR_MAX_SIZE,
+	NV_ATMEL_24C128,
+	MB_FRU_ID,
+	MB_FRU_PORT,
+	MB_CPU_EEPROM_ADDR,
+	FRU_DEV_ACCESS_BYTE,
+	PSB_ERROR_START,
+	PSB_ERROR_MAX_SIZE,
 };
 
 void pal_load_fru_config(void)
