@@ -26,7 +26,7 @@
 #include "ipmb.h"
 #include "hal_i2c_target.h"
 
-#define SSIF_THREAD_STACK_SIZE 3072
+#define SSIF_THREAD_STACK_SIZE 4096
 #define SSIF_POLLING_INTERVAL 100
 #define SSIF_MAX_IPMI_DATA_SIZE 32
 #define SSIF_BUFF_SIZE 50
@@ -106,7 +106,8 @@ typedef struct _ssif_dev {
 	struct k_mutex rsp_buff_mutex;
 	struct k_sem rsp_buff_sem;
 	uint8_t rsp_buff[IPMI_MSG_MAX_LENGTH];
-	uint16_t rsp_buf_len;
+	uint16_t rsp_buf_len; // Length of collected data
+	uint16_t remain_data_len; // Length of remain data
 	ipmi_msg_cfg current_ipmi_msg;
 	uint16_t cur_rd_blck; // for multi-read middle/end
 
@@ -156,7 +157,9 @@ ssif_err_status_t ssif_get_error_status();
 bool ssif_set_data(uint8_t channel, ipmi_msg_cfg *msg_cfg);
 void ssif_error_record(uint8_t channel, ssif_err_status_t errcode);
 ssif_dev *ssif_inst_get_by_bus(uint8_t bus);
-void pal_ssif_alert_trigger();
+void pal_ssif_alert_trigger(uint8_t status);
+bool get_ssif_ok();
+void reset_ssif_ok();
 
 #endif /* ENABLE_SSIF */
 

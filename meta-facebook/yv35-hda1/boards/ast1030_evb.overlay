@@ -41,6 +41,7 @@
 	pinctrl-0 = <&pinctrl_i2c3_default>;
 	status = "okay";
 	clock-frequency = <I2C_BITRATE_FAST_PLUS>;
+	xfer-mode = "BYTE";
 };
 
 &i2c4 {
@@ -208,5 +209,5 @@
 };
 
 &sram0 {
-    reg = <0 DT_SIZE_K(512)>, <0x80000 DT_SIZE_K(256)>;
+    reg = <0 DT_SIZE_K(700)>, <DT_SIZE_K(700) DT_SIZE_K(68)>;
 };

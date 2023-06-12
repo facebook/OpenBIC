@@ -44,6 +44,11 @@ static bool do_something_while_rd_start(void *arg)
 	return true;
 }
 
+static void do_something_after_wr_rcv(void *arg)
+{
+	ARG_UNUSED(arg);
+}
+
 static int i2c_target_write_requested(struct i2c_slave_config *config)
 {
 	CHECK_NULL_ARG_WITH_RETURN(config, 1);
@@ -71,6 +76,9 @@ static int i2c_target_write_received(struct i2c_slave_config *config, uint8_t va
 		return 1;
 	}
 	data->target_wr_msg.msg[data->wr_buffer_idx++] = val;
+
+	if (data->post_wr_rcv_func)
+		data->post_wr_rcv_func(data);
 
 	return 0;
 }
@@ -533,6 +541,11 @@ static int do_i2c_target_cfg(uint8_t bus_num, struct _i2c_target_config *cfg)
 		data->rd_data_collect_func = cfg->rd_data_collect_func;
 	else
 		data->rd_data_collect_func = do_something_while_rd_start;
+
+	if (cfg->post_wr_rcv_func)
+		data->post_wr_rcv_func = cfg->post_wr_rcv_func;
+	else
+		data->post_wr_rcv_func = do_something_after_wr_rcv;
 
 	i2C_target_queue_buffer = malloc(data->max_msg_count * sizeof(struct i2c_msg_package));
 	if (!i2C_target_queue_buffer) {
