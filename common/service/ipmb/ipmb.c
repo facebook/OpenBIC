@@ -34,6 +34,10 @@
 #include <zephyr.h>
 #include "plat_ipmb.h"
 
+#ifdef ENABLE_MPRO
+#include "plat_pldm.h"
+#endif
+
 #include "pldm.h"
 #include <logging/log.h>
 
@@ -516,6 +520,10 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 						LOG_ERR("The request message is from RESERVED");
 					} else if (current_msg_tx->buffer.InF_source == SELF) {
 						LOG_ERR("Failed to send command");
+					} else if (current_msg_tx->buffer.InF_source == MPRO_PLDM) {
+#ifdef ENABLE_MPRO
+						LOG_ERR("Failed to send command from Mpro");
+#endif
 					} else if ((current_msg_tx->buffer.InF_source & 0xF0) ==
 						   HOST_KCS_1) {
 						// the source is KCS if the bit[7:4] are 0101b.
@@ -732,6 +740,11 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 							  kcs_buff,
 							  current_msg_rx->buffer.data_len + 3);
 						SAFE_FREE(kcs_buff);
+#endif
+					} else if ((current_msg_rx->buffer.InF_source) ==
+						   MPRO_PLDM) {
+#ifdef ENABLE_MPRO
+						pldm_send_ipmb_rsp(&current_msg_rx->buffer);
 #endif
 					} else if (current_msg_rx->buffer.InF_source == ME_IPMB) {
 						ipmi_msg *bridge_msg =

@@ -14,12 +14,25 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_DEF_H
-#define PLAT_DEF_H
+#ifndef _PLAT_MCTP_h
+#define _PLAT_MCTP_h
 
-#define BMC_USB_PORT "CDC_ACM_0"
+#include "plat_i2c.h"
 
-#define ENABLE_SSIF
-#define ENABLE_MPRO
+/* i2c 8 bit address */
+#define I2C_ADDR_BIC 0x40
+#define I2C_ADDR_MPRO 0x9E
 
-#endif
+/* i2c dev bus */
+#define I2C_BUS_MPRO I2C_BUS14
+
+/* mctp endpoint */
+#define MCTP_EID_MPRO 0x10
+#define PLDM_TID_MPRO 0x01
+
+/* init the mctp moduel for platform */
+void plat_mctp_init(void);
+void send_cmd_to_dev(struct k_timer *timer);
+void send_cmd_to_dev_handler(struct k_work *work);
+
+#endif /* _PLAT_MCTP_h */

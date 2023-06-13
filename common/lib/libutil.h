@@ -101,5 +101,6 @@ void convert_uint32_t_to_uint8_t_pointer(uint32_t data_32, uint8_t *data_8, uint
 					 uint8_t endian);
 void convert_uint8_t_pointer_to_uint32_t(uint32_t *data_32, uint8_t *data_8, uint8_t len,
 					 uint8_t endian);
+double power(double x, double y);
 
 #endif

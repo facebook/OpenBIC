@@ -154,6 +154,13 @@ enum pldm_oem_platform_completion_codes {
 	PLDM_OEM_GPIO_EFFECTER_VALUE_UNKNOWN = 0x85,
 };
 
+/* Y = (mX + b) * 10^r */
+typedef struct _pldm_sensor_pdr_parm {
+	float resolution; // from PDR (m)
+	float ofst; // from PDR (b)
+	int8_t unit_modifier; // from PDR (r)
+} pldm_sensor_pdr_parm;
+
 struct pldm_get_sensor_reading_req {
 	uint16_t sensor_id;
 	uint8_t rearm_event_state;
@@ -203,6 +210,24 @@ enum pldm_event_message_global_enable {
 	PLDM_EVENT_MESSAGE_GLOBAL_ENABLE_POLLING,
 	PLDM_EVENT_MESSAGE_GLOBAL_ENABLE_ASYNC_KEEP_ALIVE
 };
+
+struct pldm_sensor_event_op_exp_data {
+	uint8_t op_state;
+	uint8_t pre_op_state;
+} __attribute__((packed));
+
+struct pldm_sensor_event_state_exp_data {
+	uint16_t sensor_ofst;
+	uint8_t event_state;
+	uint8_t pre_event_state;
+} __attribute__((packed));
+
+struct pldm_sensor_event_numeric_exp_data {
+	uint8_t event_state;
+	uint8_t pre_event_state;
+	uint8_t sensor_data_size;
+	uint8_t reading[1];
+} __attribute__((packed));
 
 struct pldm_platform_event_message_req {
 	uint8_t format_version;
@@ -258,6 +283,10 @@ struct pldm_set_event_receiver_req {
 	uint16_t heartbeat_timer;
 } __attribute__((packed));
 
+struct pldm_set_event_receiver_resp {
+	uint8_t completion_code;
+} __attribute__((packed));
+
 typedef struct state_field_state_effecter_set {
 	uint8_t set_request;
 	uint8_t effecter_state;
@@ -285,6 +314,14 @@ struct pldm_get_state_effecter_states_resp {
 	get_effecter_state_field_t field[8];
 } __attribute__((packed));
 
+struct pldm_event_message_buffer_size_req {
+	uint16_t event_receiver_max_buffer_size;
+} __attribute__((packed));
+
+struct pldm_event_message_buffer_size_resp {
+	uint8_t completion_code;
+} __attribute__((packed));
+
 uint8_t pldm_monitor_handler_query(uint8_t code, void **ret_fn);
 
 uint8_t pldm_platform_event_message_req(void *mctp_inst, mctp_ext_params ext_params,
@@ -309,6 +346,10 @@ uint8_t plat_pldm_set_state_effecter_state_handler(const uint8_t *buf, uint16_t 
 
 uint8_t plat_pldm_get_state_effecter_state_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
 						   uint16_t *resp_len);
+
+uint8_t pldm_event_len_check(uint8_t *buf, uint16_t len);
+float pldm_sensor_cal(uint8_t *buf, uint8_t len, pldm_sensor_readings_data_type_t data_type,
+		      pldm_sensor_pdr_parm parm);
 
 #ifdef __cplusplus
 }

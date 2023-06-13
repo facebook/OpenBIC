@@ -21,6 +21,7 @@
 #include "plat_gpio.h"
 #include "plat_class.h"
 #include "plat_i2c.h"
+#include "plat_mctp.h"
 #include "plat_ssif.h"
 #include "plat_power_status.h"
 #include "util_worker.h"
@@ -54,6 +55,8 @@ void pal_pre_init()
 
 void pal_post_init()
 {
+	plat_mctp_init();
+
 	ssif_init();
 }
 
