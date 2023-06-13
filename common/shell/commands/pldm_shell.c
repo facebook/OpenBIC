@@ -59,7 +59,8 @@ void cmd_pldm_send_req(const struct shell *shell, size_t argc, char **argv)
 		return;
 	}
 
-	shell_print(shell, "* mctp: 0x%x addr: 0x%x eid: 0x%x msg_type: 0x%x", mctp_inst, pmsg.ext_params.smbus_ext_params.addr, mctp_dest_eid, MCTP_MSG_TYPE_PLDM);
+	shell_print(shell, "* mctp: 0x%x addr: 0x%x eid: 0x%x msg_type: 0x%x", mctp_inst,
+		    pmsg.ext_params.smbus_ext_params.addr, mctp_dest_eid, MCTP_MSG_TYPE_PLDM);
 	shell_print(shell, "  pldm_type: 0x%x pldm cmd: 0x%x", pldm_type, pldm_cmd);
 	shell_hexdump(shell, pmsg.buf, pmsg.len);
 
