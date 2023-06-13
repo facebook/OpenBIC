@@ -221,9 +221,12 @@ bool check_dimm_status(void *mctp_p, uint8_t index, mctp_ext_params ext_params)
 	return true;
 }
 
-uint8_t mpro_read(uint8_t sensor_num, int *reading)
+uint8_t mpro_read(sensor_cfg *cfg, int *reading)
 {
-	if (!reading || (sensor_num > SENSOR_NUM_MAX)) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -234,17 +237,17 @@ uint8_t mpro_read(uint8_t sensor_num, int *reading)
 
 	int map_idx = 0;
 	for (; map_idx < MPRO_MAP_TAB_SIZE; map_idx++) {
-		if (sensor_num == mpro_sensor_map[map_idx].sensor_num)
+		if (cfg->num == mpro_sensor_map[map_idx].sensor_num)
 			break;
 	}
 
 	if (map_idx == MPRO_MAP_TAB_SIZE) {
-		LOG_ERR("Can't find any Mpro sensor by given sensor number 0x%x", sensor_num);
+		LOG_ERR("Can't find any Mpro sensor by given sensor number 0x%x", cfg->num);
 		return SENSOR_NOT_FOUND;
 	}
 
 	uint16_t mpro_sensor_num = mpro_sensor_map[map_idx].mpro_sensor_num;
-	uint8_t mpro_eid = sensor_config[sensor_config_index_map[sensor_num]].port;
+	uint8_t mpro_eid = cfg->port;
 
 	mctp *mctp_inst = NULL;
 	mctp_ext_params ext_params = { 0 };
@@ -252,13 +255,7 @@ uint8_t mpro_read(uint8_t sensor_num, int *reading)
 		LOG_ERR("Failed to get mctp info by Mpro eid 0x%x", mpro_eid);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
-	/*
-	if ( (mpro_sensor_num >= MPRO_SENSOR_NUM_TMP_DIMM0) && (mpro_sensor_num <= MPRO_SENSOR_NUM_TMP_DIMM15)) {
-		if (check_dimm_status(mctp_inst, (mpro_sensor_num - MPRO_SENSOR_NUM_TMP_DIMM0)/2, ext_params) == false) {
-			return SENSOR_NOT_ACCESSIBLE;
-		}
-	}
-*/
+
 	pldm_msg pmsg = { 0 };
 	pmsg.hdr.msg_type = MCTP_MSG_TYPE_PLDM;
 	pmsg.hdr.pldm_type = PLDM_TYPE_PLAT_MON_CTRL;
@@ -311,9 +308,11 @@ uint8_t mpro_read(uint8_t sensor_num, int *reading)
 	return SENSOR_READ_SUCCESS;
 }
 
-uint8_t mpro_init(uint8_t sensor_num)
+uint8_t mpro_init(sensor_cfg *cfg)
 {
-	if (sensor_num > SENSOR_NUM_MAX) {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
@@ -322,7 +321,7 @@ uint8_t mpro_init(uint8_t sensor_num)
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	sensor_config[sensor_config_index_map[sensor_num]].read = mpro_read;
+	cfg->read = mpro_read;
 	return SENSOR_INIT_SUCCESS;
 }
 

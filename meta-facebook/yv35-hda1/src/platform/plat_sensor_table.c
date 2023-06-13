@@ -19,8 +19,12 @@
 #include <logging/log.h>
 #include "plat_sensor_table.h"
 #include "sensor.h"
+#include "mpro.h"
 
 LOG_MODULE_REGISTER(plat_sensor_table);
+
+struct plat_mpro_sensor_mapping mpro_sensor_map[] = {};
+const int MPRO_MAP_TAB_SIZE = ARRAY_SIZE(mpro_sensor_map);
 
 sensor_cfg plat_sensor_config[] = {
 	/* number, type, port, address, offset, access check, arg0, arg1, cache, cache_status,
