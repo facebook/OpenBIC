@@ -90,8 +90,8 @@ bool pldm_request_msg_need_bypass(uint8_t *buf, uint32_t len)
 			(struct pldm_platform_event_message_req *)(buf + sizeof(*hdr));
 		if (req_p->event_class == PLDM_SENSOR_EVENT) {
 			uint16_t sensor_id = req_p->event_data[0] | (req_p->event_data[1] << 8);
-			for (int i = 0; i < ARRAY_SIZE(event_sensor_sup_lst); i++) {
-				if (sensor_id == event_sensor_sup_lst[i].sensor_id)
+			for (int j = 0; j < ARRAY_SIZE(event_sensor_sup_lst); j++) {
+				if (sensor_id == event_sensor_sup_lst[j].sensor_id)
 					return false;
 			}
 		}
