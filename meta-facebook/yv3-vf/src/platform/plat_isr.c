@@ -31,7 +31,7 @@
 #include "plat_isr.h"
 #include "plat_hwmon.h"
 
-extern uint8_t ina230_init(uint8_t sensor_num);
+extern uint8_t ina230_init(sensor_cfg *cfg);
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -157,7 +157,16 @@ void prsnt_int_handler(uint32_t idx, uint32_t arg1)
 	for (i = 0; i < retry; i++) {
 		if (!is_prsnt)
 			break;
-		if (ina230_init(m2_idx2sensornum(idx)) == SENSOR_INIT_SUCCESS)
+
+		const uint8_t sen_num = m2_idx2sensornum(idx);
+		if (sen_num == 0xFF)
+			break;
+
+		sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sen_num]];
+		if (!cfg)
+			break;
+
+		if (ina230_init(cfg) == SENSOR_INIT_SUCCESS)
 			break;
 		k_msleep(10); // retry delay time 10ms
 	}
