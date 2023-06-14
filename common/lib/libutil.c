@@ -144,7 +144,7 @@ void convert_uint8_t_pointer_to_uint32_t(uint32_t *data_32, uint8_t *data_8, uin
 	}
 }
 
-double power(double x, double y)
+double power(double x, int y)
 {
 	double result = 1;
 
