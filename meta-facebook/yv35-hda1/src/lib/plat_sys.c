@@ -14,9 +14,24 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_SYS_H
-#define PLAT_SYS_H
+#include "plat_sys.h"
+#include "util_sys.h"
+#include "hal_gpio.h"
+#include "plat_gpio.h"
+#include "util_worker.h"
 
-#define BMC_COLD_RESET_DELAY_MS 1000
+/* BMC reset */
+void BMC_reset_handler()
+{
+	gpio_set(RST_BMC_R_N, GPIO_LOW);
+	k_msleep(10);
+	gpio_set(RST_BMC_R_N, GPIO_HIGH);
+}
 
-#endif
+K_WORK_DELAYABLE_DEFINE(BMC_reset_work, BMC_reset_handler);
+int pal_submit_bmc_cold_reset()
+{
+	k_work_schedule_for_queue(&plat_work_q, &BMC_reset_work, K_MSEC(BMC_COLD_RESET_DELAY_MS));
+	return 0;
+}
+/* BMC reset */
