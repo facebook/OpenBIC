@@ -24,8 +24,26 @@
 #include "plat_class.h"
 #include "plat_ipmb.h"
 #include <logging/log.h>
+#include "plat_dimm.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
+
+bool pal_set_dimm_presence_status(uint8_t *buf)
+{
+	CHECK_NULL_ARG_WITH_RETURN(buf, -1);
+
+	uint8_t dimm_index = buf[DIMM_INDEX_BYTE];
+	uint8_t status = buf[DIMM_STATUS_BYTE];
+
+	if (dimm_index < DIMM_INDEX_MIN || dimm_index > DIMM_INDEX_MAX) {
+		LOG_ERR("DIMM index is out of range");
+		return false;
+	}
+
+	set_dimm_presence_status(dimm_index, status);
+
+	return true;
+}
 
 void OEM_1S_GET_CARD_TYPE(ipmi_msg *msg)
 {

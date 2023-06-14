@@ -70,6 +70,8 @@ static inline void pack_ipmi_resp(struct ipmi_response *resp, ipmi_msg *ipmi_res
 	}
 }
 
+// If command is from KCS, we need to check dimm presnece status
+bool pal_set_dimm_presence_status(uint8_t *buf);
 // If command is from KCS, we need to check whether BIC support this command.
 bool pal_request_msg_to_BIC_from_HOST(uint8_t netfn, uint8_t cmd);
 // If command is from KCS, we need to check whether BIC responds immediately.
@@ -197,6 +199,12 @@ enum {
 	CMD_OEM_GET_MB_INDEX = 0xF0,
 	CMD_OEM_SET_FAN_DUTY_MANUAL = 0xF1,
 	CMD_OEM_GET_SET_FAN_CTRL_MODE = 0xF2,
+};
+
+// OEM Q Command Codes (0x36)
+enum {
+	CMD_OEM_Q_SET_DIMM_INFO = 0x12,
+	CMD_OEM_Q_GET_DIMM_INFO = 0x13,
 };
 
 // OEM 1S Command Codes (0x38)

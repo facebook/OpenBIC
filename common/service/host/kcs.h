@@ -29,6 +29,7 @@
 #define KCS_MAX_CHANNEL_NUM 0x0F
 
 #define CMD_SYS_INFO_FW_VERSION 0x01
+#define CMD_DIMM_LOCATION 0x01
 #define KCS_TASK_NAME_LEN 32
 
 typedef struct _kcs_dev {
