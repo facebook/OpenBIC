@@ -42,7 +42,7 @@ SCU_CFG scu_cfg[] = {
 	{ 0x7e6e2634, 0x0000008F },
 };
 
-extern uint8_t ina230_init(uint8_t sensor_num);
+extern uint8_t ina230_init(sensor_cfg *cfg);
 static void BICup5secTickHandler(struct k_work *work);
 
 K_WORK_DELAYABLE_DEFINE(up_1sec_handler, BICup1secTickHandler);
@@ -78,7 +78,7 @@ static void BICup5secTickHandler(struct k_work *work)
 			if (!m2_prsnt(m2_sensornum2idx(sensor_config[i].num)))
 				continue;
 
-			if (ina230_init(sensor_config[i].num) != SENSOR_INIT_SUCCESS) {
+			if (ina230_init(sensor_config + i) != SENSOR_INIT_SUCCESS) {
 				LOG_ERR("sensor_config[%02x].num = %02x re-init ina230 failed!, retry it after 5 seconds",
 					i, sensor_config[i].num);
 				k_work_schedule((struct k_work_delayable *)work, K_SECONDS(5));
