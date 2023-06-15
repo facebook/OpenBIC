@@ -539,14 +539,19 @@ mux_config tca9543_configs[] = {
 	[1] = { .target_addr = 0x71, .channel = TCA9543A_CHANNEL_1 },
 };
 
-mux_config pi4msd5v9542_configs[] = {
-	[0] = { .target_addr = 0x70, .channel = PI4MSD5V9542_CHANNEL_0 },
-	[1] = { .target_addr = 0x70, .channel = PI4MSD5V9542_CHANNEL_1 },
-};
-
-mux_config ina233_tca9543_configs[] = {
-	[0] = { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_0 },
-	[1] = { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_1 },
+pwr_monitor_pre_proc_arg pwr_monitor_pre_proc_args[] = {
+	[0] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_1 }, .card_id = 0 },
+	[1] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_1 }, .card_id = 1 },
+	[2] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_1 }, .card_id = 2 },
+	[3] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_1 }, .card_id = 3 },
+	[4] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_1 }, .card_id = 4 },
+	[5] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_1 }, .card_id = 5 },
+	[6] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_0 }, .card_id = 6 },
+	[7] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_0 }, .card_id = 7 },
+	[8] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_0 }, .card_id = 8 },
+	[9] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_0 }, .card_id = 9 },
+	[10] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_0 }, .card_id = 10 },
+	[11] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_0 }, .card_id = 11 },
 };
 
 vr_page_cfg xdpe15284_page[] = {
@@ -555,18 +560,18 @@ vr_page_cfg xdpe15284_page[] = {
 };
 
 mux_config pca9548_configs[] = {
-	[0] = { .bus = I2C_BUS7, .target_addr = 0x70, .channel = PCA9548A_CHANNEL_0 },
-	[1] = { .bus = I2C_BUS7, .target_addr = 0x70, .channel = PCA9548A_CHANNEL_1 },
-	[2] = { .bus = I2C_BUS7, .target_addr = 0x70, .channel = PCA9548A_CHANNEL_2 },
-	[3] = { .bus = I2C_BUS7, .target_addr = 0x70, .channel = PCA9548A_CHANNEL_3 },
-	[4] = { .bus = I2C_BUS7, .target_addr = 0x70, .channel = PCA9548A_CHANNEL_4 },
-	[5] = { .bus = I2C_BUS7, .target_addr = 0x70, .channel = PCA9548A_CHANNEL_5 },
-	[6] = { .bus = I2C_BUS8, .target_addr = 0x74, .channel = PCA9548A_CHANNEL_0 },
-	[7] = { .bus = I2C_BUS8, .target_addr = 0x74, .channel = PCA9548A_CHANNEL_1 },
-	[8] = { .bus = I2C_BUS8, .target_addr = 0x74, .channel = PCA9548A_CHANNEL_2 },
-	[9] = { .bus = I2C_BUS8, .target_addr = 0x74, .channel = PCA9548A_CHANNEL_3 },
-	[10] = { .bus = I2C_BUS8, .target_addr = 0x74, .channel = PCA9548A_CHANNEL_4 },
-	[11] = { .bus = I2C_BUS8, .target_addr = 0x74, .channel = PCA9548A_CHANNEL_5 },
+	[0] = { .bus = I2C_BUS8, .target_addr = 0x74, .channel = PCA9548A_CHANNEL_5 },
+	[1] = { .bus = I2C_BUS8, .target_addr = 0x74, .channel = PCA9548A_CHANNEL_4 },
+	[2] = { .bus = I2C_BUS8, .target_addr = 0x74, .channel = PCA9548A_CHANNEL_3 },
+	[3] = { .bus = I2C_BUS8, .target_addr = 0x74, .channel = PCA9548A_CHANNEL_2 },
+	[4] = { .bus = I2C_BUS8, .target_addr = 0x74, .channel = PCA9548A_CHANNEL_1 },
+	[5] = { .bus = I2C_BUS8, .target_addr = 0x74, .channel = PCA9548A_CHANNEL_0 },
+	[6] = { .bus = I2C_BUS7, .target_addr = 0x70, .channel = PCA9548A_CHANNEL_5 },
+	[7] = { .bus = I2C_BUS7, .target_addr = 0x70, .channel = PCA9548A_CHANNEL_4 },
+	[8] = { .bus = I2C_BUS7, .target_addr = 0x70, .channel = PCA9548A_CHANNEL_3 },
+	[9] = { .bus = I2C_BUS7, .target_addr = 0x70, .channel = PCA9548A_CHANNEL_2 },
+	[10] = { .bus = I2C_BUS7, .target_addr = 0x70, .channel = PCA9548A_CHANNEL_1 },
+	[11] = { .bus = I2C_BUS7, .target_addr = 0x70, .channel = PCA9548A_CHANNEL_0 },
 };
 
 mux_config pca9546_configs[] = {
@@ -591,17 +596,23 @@ bool pre_ina233_read(sensor_cfg *cfg, void *args)
 	// Select Channel
 	bool ret = true;
 	int mutex_status = 0;
-	mux_config *pre_args = (mux_config *)args;
-	pre_args->bus = cfg->port;
+	pwr_monitor_pre_proc_arg *pre_args = (pwr_monitor_pre_proc_arg *)args;
+	mux_config mux_cfg = pre_args->mux_configs;
+	mux_cfg.bus = cfg->port;
 
-	struct k_mutex *mutex = get_i2c_mux_mutex(pre_args->bus);
+	if (asic_card_info[pre_args->card_id].card_status == ASIC_CARD_NOT_PRESENT) {
+		cfg->is_enable_polling = false;
+		return false;
+	}
+
+	struct k_mutex *mutex = get_i2c_mux_mutex(mux_cfg.bus);
 	mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
 	if (mutex_status != 0) {
 		LOG_ERR("Mutex lock fail, status: %d", mutex_status);
 		return false;
 	}
 
-	ret = set_mux_channel(*pre_args, MUTEX_LOCK_ENABLE);
+	ret = set_mux_channel(mux_cfg, MUTEX_LOCK_ENABLE);
 	if (ret == false) {
 		LOG_ERR("ina233 switch mux fail");
 		k_mutex_unlock(mutex);

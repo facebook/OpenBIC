@@ -171,9 +171,7 @@ void OEM_1S_GET_PCIE_CARD_STATUS(ipmi_msg *msg)
 	}
 
 	/* BMC would check pcie card type via fru id and device id */
-	int ret = 0;
 	uint8_t fru_id = msg->data[0];
-	uint8_t accl_id = 0;
 	uint8_t pcie_card_id = 0;
 	uint8_t pcie_device_id = msg->data[1];
 
@@ -206,12 +204,7 @@ void OEM_1S_GET_PCIE_CARD_STATUS(ipmi_msg *msg)
 	case ACCL_10_FRU_ID:
 	case ACCL_11_FRU_ID:
 	case ACCL_12_FRU_ID:
-		accl_id = fru_id - PCIE_CARD_ID_OFFSET;
-		ret = accl_id_mapping_card_id(accl_id, &pcie_card_id);
-		if (ret != 0) {
-			msg->completion_code = CC_INVALID_PARAM;
-			return;
-		}
+		pcie_card_id = fru_id - PCIE_CARD_ID_OFFSET;
 
 		switch (pcie_device_id) {
 		case PCIE_DEVICE_ID1:
@@ -402,14 +395,7 @@ void OEM_1S_GET_PCIE_CARD_SENSOR_READING(ipmi_msg *msg)
 	uint8_t device_status = 0;
 	uint8_t fru_id = msg->data[0];
 	uint8_t sensor_num = msg->data[1];
-	uint8_t accl_id = fru_id - ACCL_1_FRU_ID;
-	uint8_t card_id = 0;
-
-	ret = accl_id_mapping_card_id(accl_id, &card_id);
-	if (ret != 0) {
-		msg->completion_code = CC_INVALID_PARAM;
-		return;
-	}
+	uint8_t card_id = fru_id - ACCL_1_FRU_ID;
 
 	ret = pal_get_pcie_card_sensor_reading(card_id, sensor_num, &device_status, &reading);
 	if (ret != 0) {
@@ -434,7 +420,6 @@ int pal_write_read_accl_fru(uint8_t fru_id, uint8_t option, EEPROM_ENTRY *fru_en
 
 	bool ret = 0;
 	uint8_t dev_id = 0;
-	uint8_t accl_id = 0;
 	uint8_t card_id = 0;
 	mux_config card_mux = { 0 };
 
@@ -443,21 +428,9 @@ int pal_write_read_accl_fru(uint8_t fru_id, uint8_t option, EEPROM_ENTRY *fru_en
 		return -1;
 	}
 
-	ret = pal_accl_fru_id_map_accl_id_dev_id(fru_id, &accl_id, &dev_id);
+	ret = pal_accl_fru_id_map_accl_id_dev_id(fru_id, &card_id, &dev_id);
 	if (ret != true) {
 		LOG_ERR("Invalid fru id: 0x%x to card id and dev id", fru_id);
-		return -1;
-	}
-
-	// Convert fru id based on different board stage
-	if (accl_id_mapping_card_id(accl_id, &card_id) != 0) {
-		LOG_ERR("Invalid fru id: 0x%x, accl id: 0x%x to map card id", fru_id, accl_id);
-		return -1;
-	}
-
-	ret = card_id_dev_id_map_fru_id(card_id, dev_id, &fru_entry->config.dev_id);
-	if (ret != true) {
-		LOG_ERR("Invalid card id: 0x%x and dev id: 0x%x to map fru id", card_id, dev_id);
 		return -1;
 	}
 

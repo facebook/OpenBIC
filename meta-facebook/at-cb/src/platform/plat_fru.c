@@ -470,24 +470,3 @@ bool pal_accl_fru_id_map_accl_id_dev_id(uint8_t accl_fru_id, uint8_t *accl_id, u
 
 	return true;
 }
-
-bool card_id_dev_id_map_fru_id(uint8_t card_id, uint8_t dev_id, uint8_t *fru_id)
-{
-	CHECK_NULL_ARG_WITH_RETURN(fru_id, false);
-
-	switch (dev_id) {
-	case PCIE_DEVICE_ID1:
-		*fru_id = ACCL_1_FRU_ID + card_id;
-		break;
-	case PCIE_DEVICE_ID2:
-		*fru_id = ACCL_1_CH1_FREYA_FRU_ID + (card_id * 2);
-		break;
-	case PCIE_DEVICE_ID3:
-		*fru_id = ACCL_1_CH2_FREYA_FRU_ID + (card_id * 2);
-		break;
-	default:
-		return false;
-	}
-
-	return true;
-}
