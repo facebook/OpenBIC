@@ -25,8 +25,8 @@
 
 #define ASIC_CARD_COUNT 12
 #define ASIC_CARD_FRU_ADDR 0xAC
-#define ASIC_CARD_1_6_MUX_ADDR 0x70
-#define ASIC_CARD_7_12_MUX_ADDR 0x74
+#define ASIC_CARD_1_6_MUX_ADDR 0x74
+#define ASIC_CARD_7_12_MUX_ADDR 0x70
 #define ASIC_CARD_DEVICE_MUX_ADDR 0x72
 #define ASIC_CARD_NOT_PRESENT_VAL 0x07
 #define ASIC_DEV_NOT_PRESENT_VAL 0x06
@@ -145,6 +145,5 @@ uint8_t get_hsc_module();
 uint8_t get_pwr_brick_module();
 bool get_acb_power_status();
 bool get_acb_power_good_flag();
-int accl_id_mapping_card_id(uint8_t accl_id, uint8_t *card_id);
 
 #endif

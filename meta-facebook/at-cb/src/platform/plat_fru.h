@@ -76,11 +76,9 @@ enum ACCL_FRU_OPTION {
 #define CB_FRU_ADDR (0xAC >> 1)
 #define FIO_FRU_PORT I2C_BUS10
 #define FIO_FRU_ADDR (0xA2 >> 1)
-#define ACCL_1_6_FRU_PORT I2C_BUS7
-#define ACCL_7_12_FRU_PORT I2C_BUS8
+#define ACCL_1_6_FRU_PORT I2C_BUS8
+#define ACCL_7_12_FRU_PORT I2C_BUS7
 #define ACCL_FRU_ADDR (0xA6 >> 1)
-#define ACCL_1_6_FRU_MUX_ADDR (0xE0 >> 1)
-#define ACCL_7_12_FRU_MUX_ADDR (0xE8 >> 1)
 #define ACCL_1_7_FRU_MUX_CHAN 0
 #define ACCL_2_8_FRU_MUX_CHAN 1
 #define ACCL_3_9_FRU_MUX_CHAN 2
@@ -91,6 +89,5 @@ enum ACCL_FRU_OPTION {
 #define ACCL_FREYA_CH2_FRU_ADDR (0xA2 >> 1)
 
 bool pal_accl_fru_id_map_accl_id_dev_id(uint8_t accl_fru_id, uint8_t *accl_id, uint8_t *dev_id);
-bool card_id_dev_id_map_fru_id(uint8_t card_id, uint8_t dev_id, uint8_t *fru_id);
 
 #endif

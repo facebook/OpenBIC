@@ -41,47 +41,7 @@ static uint8_t pwr_brick_module = POWER_BRICK_UNKNOWN;
 static bool is_power_good = false;
 
 struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT] = {
-  [0] = { .bus = I2C_BUS7,
-    .mux_addr = ASIC_CARD_1_6_MUX_ADDR,
-    .mux_channel = PCA9548A_CHANNEL_0,
-    .card_status = ASIC_CARD_UNKNOWN_STATUS,
-    .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
-    .device_channel = PCA9546A_CHANNEL_0,
-    .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
-    .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
-  [1] = { .bus = I2C_BUS7,
-    .mux_addr = ASIC_CARD_1_6_MUX_ADDR,
-    .mux_channel = PCA9548A_CHANNEL_1,
-    .card_status = ASIC_CARD_UNKNOWN_STATUS,
-    .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
-    .device_channel = PCA9546A_CHANNEL_0,
-    .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
-    .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
-  [2] = { .bus = I2C_BUS7,
-    .mux_addr = ASIC_CARD_1_6_MUX_ADDR,
-    .mux_channel = PCA9548A_CHANNEL_2,
-    .card_status = ASIC_CARD_UNKNOWN_STATUS,
-    .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
-    .device_channel = PCA9546A_CHANNEL_0,
-    .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
-    .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
-  [3] = { .bus = I2C_BUS7,
-    .mux_addr = ASIC_CARD_1_6_MUX_ADDR,
-    .mux_channel = PCA9548A_CHANNEL_3,
-    .card_status = ASIC_CARD_UNKNOWN_STATUS,
-    .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
-    .device_channel = PCA9546A_CHANNEL_0,
-    .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
-    .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
-  [4] = { .bus = I2C_BUS7,
-    .mux_addr = ASIC_CARD_1_6_MUX_ADDR,
-    .mux_channel = PCA9548A_CHANNEL_4,
-    .card_status = ASIC_CARD_UNKNOWN_STATUS,
-    .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
-    .device_channel = PCA9546A_CHANNEL_0,
-    .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
-    .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
-  [5] = { .bus = I2C_BUS7,
+  [0] = { .bus = I2C_BUS8,
     .mux_addr = ASIC_CARD_1_6_MUX_ADDR,
     .mux_channel = PCA9548A_CHANNEL_5,
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
@@ -89,31 +49,63 @@ struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT] = {
     .device_channel = PCA9546A_CHANNEL_0,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
-  [6] = { .bus = I2C_BUS8,
-    .mux_addr = ASIC_CARD_7_12_MUX_ADDR,
-    .mux_channel = PCA9548A_CHANNEL_0,
+  [1] = { .bus = I2C_BUS8,
+    .mux_addr = ASIC_CARD_1_6_MUX_ADDR,
+    .mux_channel = PCA9548A_CHANNEL_4,
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
     .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
     .device_channel = PCA9546A_CHANNEL_0,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
-  [7] = { .bus = I2C_BUS8,
-    .mux_addr = ASIC_CARD_7_12_MUX_ADDR,
-    .mux_channel = PCA9548A_CHANNEL_1,
+  [2] = { .bus = I2C_BUS8,
+    .mux_addr = ASIC_CARD_1_6_MUX_ADDR,
+    .mux_channel = PCA9548A_CHANNEL_3,
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
     .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
     .device_channel = PCA9546A_CHANNEL_0,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
-  [8] = { .bus = I2C_BUS8,
-    .mux_addr = ASIC_CARD_7_12_MUX_ADDR,
+  [3] = { .bus = I2C_BUS8,
+    .mux_addr = ASIC_CARD_1_6_MUX_ADDR,
     .mux_channel = PCA9548A_CHANNEL_2,
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
     .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
     .device_channel = PCA9546A_CHANNEL_0,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
-  [9] = { .bus = I2C_BUS8,
+  [4] = { .bus = I2C_BUS8,
+    .mux_addr = ASIC_CARD_1_6_MUX_ADDR,
+    .mux_channel = PCA9548A_CHANNEL_1,
+    .card_status = ASIC_CARD_UNKNOWN_STATUS,
+    .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
+    .device_channel = PCA9546A_CHANNEL_0,
+    .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
+    .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
+  [5] = { .bus = I2C_BUS8,
+    .mux_addr = ASIC_CARD_1_6_MUX_ADDR,
+    .mux_channel = PCA9548A_CHANNEL_0,
+    .card_status = ASIC_CARD_UNKNOWN_STATUS,
+    .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
+    .device_channel = PCA9546A_CHANNEL_0,
+    .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
+    .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
+  [6] = { .bus = I2C_BUS7,
+    .mux_addr = ASIC_CARD_7_12_MUX_ADDR,
+    .mux_channel = PCA9548A_CHANNEL_5,
+    .card_status = ASIC_CARD_UNKNOWN_STATUS,
+    .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
+    .device_channel = PCA9546A_CHANNEL_0,
+    .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
+    .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
+  [7] = { .bus = I2C_BUS7,
+    .mux_addr = ASIC_CARD_7_12_MUX_ADDR,
+    .mux_channel = PCA9548A_CHANNEL_4,
+    .card_status = ASIC_CARD_UNKNOWN_STATUS,
+    .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
+    .device_channel = PCA9546A_CHANNEL_0,
+    .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
+    .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
+  [8] = { .bus = I2C_BUS7,
     .mux_addr = ASIC_CARD_7_12_MUX_ADDR,
     .mux_channel = PCA9548A_CHANNEL_3,
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
@@ -121,17 +113,25 @@ struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT] = {
     .device_channel = PCA9546A_CHANNEL_0,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
-  [10] = { .bus = I2C_BUS8,
+  [9] = { .bus = I2C_BUS7,
+    .mux_addr = ASIC_CARD_7_12_MUX_ADDR,
+    .mux_channel = PCA9548A_CHANNEL_2,
+    .card_status = ASIC_CARD_UNKNOWN_STATUS,
+    .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
+    .device_channel = PCA9546A_CHANNEL_0,
+    .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
+    .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
+  [10] = { .bus = I2C_BUS7,
      .mux_addr = ASIC_CARD_7_12_MUX_ADDR,
-     .mux_channel = PCA9548A_CHANNEL_4,
+     .mux_channel = PCA9548A_CHANNEL_1,
      .card_status = ASIC_CARD_UNKNOWN_STATUS,
      .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
      .device_channel = PCA9546A_CHANNEL_0,
      .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
      .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
-  [11] = { .bus = I2C_BUS8,
+  [11] = { .bus = I2C_BUS7,
      .mux_addr = ASIC_CARD_7_12_MUX_ADDR,
-     .mux_channel = PCA9548A_CHANNEL_5,
+     .mux_channel = PCA9548A_CHANNEL_0,
      .card_status = ASIC_CARD_UNKNOWN_STATUS,
      .device_mux_addr = ASIC_CARD_DEVICE_MUX_ADDR,
      .device_channel = PCA9546A_CHANNEL_0,
@@ -171,7 +171,7 @@ void check_accl_device_presence_status_via_ioexp()
 	I2C_MSG msg = { 0 };
 
 	for (addr_index = 0; addr_index < ARRAY_SIZE(ioexp_addr); ++addr_index) {
-		card_index = addr_index * IOEXP_CARD_PRESENCE_COUNT;
+		card_index = 11 - (addr_index * IOEXP_CARD_PRESENCE_COUNT);
 
 		memset(&msg, 0, sizeof(I2C_MSG));
 		msg.bus = I2C_BUS13;
@@ -231,7 +231,7 @@ void check_accl_device_presence_status_via_ioexp()
 					ASIC_CARD_DEVICE_NOT_PRESENT;
 			}
 
-			card_index += 1;
+			card_index -= 1;
 		}
 	}
 }
@@ -318,21 +318,4 @@ bool get_acb_power_status()
 bool get_acb_power_good_flag()
 {
 	return is_power_good;
-}
-
-int accl_id_mapping_card_id(uint8_t accl_id, uint8_t *card_id)
-{
-	CHECK_NULL_ARG_WITH_RETURN(card_id, -1);
-
-	if (accl_id >= ASIC_CARD_COUNT) {
-		LOG_ERR("Invalid accl id: 0x%x", accl_id);
-	}
-
-	if (board_revision <= EVT1_STAGE) {
-		*card_id = accl_id;
-	} else {
-		*card_id = ASIC_CARD_COUNT - 1 - accl_id;
-	}
-
-	return 0;
 }

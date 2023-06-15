@@ -21,6 +21,11 @@
 #include "sensor.h"
 #include "common_i2c_mux.h"
 
+typedef struct _pwr_monitor_pre_proc_arg {
+	mux_config mux_configs;
+	uint8_t card_id;
+} pwr_monitor_pre_proc_arg;
+
 /**************************************************************************************************
  * INIT ARGS
 **************************************************************************************************/
@@ -36,12 +41,11 @@ extern sq52205_init_arg sq52205_init_args[];
  *  PRE-HOOK/POST-HOOK ARGS
  **************************************************************************************************/
 extern mux_config tca9543_configs[];
-extern mux_config pi4msd5v9542_configs[];
-extern mux_config ina233_tca9543_configs[];
 extern vr_page_cfg xdpe15284_page[];
 extern mux_config pca9548_configs[];
 extern mux_config pca9546_configs[];
 extern uint8_t plat_monitor_table_arg[];
+extern pwr_monitor_pre_proc_arg pwr_monitor_pre_proc_args[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
