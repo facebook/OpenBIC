@@ -15,6 +15,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <sys/crc.h>
@@ -23,8 +24,11 @@
 #include "sensor.h"
 #include "m88rt51632.h"
 #include "hal_i2c.h"
+#include "util_spi.h"
 
 LOG_MODULE_REGISTER(dev_m88rt51632);
+K_MUTEX_DEFINE(m88rt51632_mutex);
+static bool is_update_ongoing = false;
 
 static uint8_t cal_crc8_pec(uint8_t *crc_list, uint8_t len)
 {
@@ -151,6 +155,13 @@ bool m88rt51632_get_vendor_id(I2C_MSG *msg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg, false);
 	uint8_t retry = 5;
+	bool ret = false;
+
+	if (k_mutex_lock(&m88rt51632_mutex, K_MSEC(M88RT51632_MUTEX_LOCK_MS))) {
+		LOG_ERR("m88rt51632 mutex lock failed");
+		k_msleep(10);
+		return false;
+	}
 
 	msg->tx_len = 4;
 	msg->data[0] = 0x02; //COMMAND CODE = 0x02 END=0, START=1, FUNC=3'b000, PEC=0
@@ -160,7 +171,7 @@ bool m88rt51632_get_vendor_id(I2C_MSG *msg)
 
 	if (i2c_master_write(msg, retry)) {
 		LOG_ERR("Failed to set PCIE RETIMER vendor id offset");
-		return false;
+		goto exit;
 	}
 
 	memset(msg->data, 0, I2C_BUFF_SIZE);
@@ -169,10 +180,16 @@ bool m88rt51632_get_vendor_id(I2C_MSG *msg)
 	msg->data[0] = 0x01; //COMMAND CODE = 0x01 END=1, START=0, FUNC=3'b000, PEC=0
 	if (i2c_master_read(msg, retry)) {
 		LOG_ERR("Failed to read PCIE RETIMER vendor id");
-		return false;
+		goto exit;
 	}
 
-	return true;
+	ret = true;
+
+exit:
+	if (k_mutex_unlock(&m88rt51632_mutex)) {
+		LOG_ERR("m88rt51632 mutex unlock failed");
+	}
+	return ret;
 }
 
 /**
@@ -235,6 +252,98 @@ bool m88rt51632_get_fw_version(I2C_MSG *msg, uint32_t *version)
 	return true;
 }
 
+uint8_t m88rt51632_do_update(I2C_MSG *msg, uint32_t start_offset, uint8_t *txbuf, uint16_t msg_len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, FWUPDATE_UPDATE_FAIL);
+	CHECK_NULL_ARG_WITH_RETURN(txbuf, FWUPDATE_UPDATE_FAIL);
+	uint8_t index;
+	uint32_t offset = M88RT51632_EEPROM_BASE_OFFSET + start_offset;
+
+	for (index = 0; index < msg_len; ++index) {
+		if (!montage_retimer_write(msg, offset, txbuf[index])) {
+			LOG_ERR("write eeprom offset %x fail", offset);
+			return FWUPDATE_UPDATE_FAIL;
+		}
+		offset++;
+		k_msleep(10); // wait 10ms till burn EEPROM complete
+	}
+	return FWUPDATE_SUCCESS;
+}
+
+uint8_t m88rt51632_fw_update(I2C_MSG *msg, uint32_t offset, uint16_t msg_len, uint8_t *msg_buf,
+			     uint8_t flag)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, FWUPDATE_UPDATE_FAIL);
+	CHECK_NULL_ARG_WITH_RETURN(msg_buf, FWUPDATE_UPDATE_FAIL);
+	static bool is_init = false;
+	static uint8_t *txbuf = NULL;
+	static uint32_t start_offset = 0;
+	uint32_t ret = 0;
+
+	if (!is_init) {
+		SAFE_FREE(txbuf);
+		txbuf = (uint8_t *)malloc(IMAGE_PACKAGE_SIZE);
+		if (txbuf == NULL) { // Retry alloc
+			k_msleep(100);
+			txbuf = (uint8_t *)malloc(IMAGE_PACKAGE_SIZE);
+		}
+		if (txbuf == NULL) {
+			LOG_ERR("eeprom offset %x, failed to allocate txbuf.", offset);
+			return FWUPDATE_OUT_OF_HEAP;
+		}
+		is_init = true;
+		is_update_ongoing = true;
+		start_offset = offset;
+		k_msleep(10);
+	}
+
+	if (msg_len > IMAGE_PACKAGE_SIZE) {
+		LOG_ERR("eeprom offset %x, recv data 0x%x over sector size 0x%x", offset, msg_len,
+			IMAGE_PACKAGE_SIZE);
+		SAFE_FREE(txbuf);
+		k_msleep(10);
+		is_init = false;
+		is_update_ongoing = false;
+		return FWUPDATE_OVER_LENGTH;
+	}
+
+	memcpy(txbuf, msg_buf, msg_len);
+
+	if ((msg_len == IMAGE_PACKAGE_SIZE) || (flag & SECTOR_END_FLAG)) {
+		if (k_mutex_lock(&m88rt51632_mutex, K_FOREVER)) {
+			LOG_ERR("m88rt51632 mutex lock failed");
+			SAFE_FREE(txbuf);
+			k_msleep(10);
+			return FWUPDATE_UPDATE_FAIL;
+		}
+
+		ret = m88rt51632_do_update(msg, start_offset, txbuf, msg_len);
+
+		if (k_mutex_unlock(&m88rt51632_mutex)) {
+			LOG_ERR("m88rt51632 mutex unlock failed");
+			SAFE_FREE(txbuf);
+			return FWUPDATE_UPDATE_FAIL;
+		}
+
+		SAFE_FREE(txbuf);
+		k_msleep(10);
+
+		if (ret) {
+			LOG_ERR("Failed to update PCIE retimer eeprom, status %d", ret);
+			return FWUPDATE_UPDATE_FAIL;
+		} else {
+			LOG_INF("PCIE retimer %x update success", start_offset);
+		}
+
+		is_init = false;
+		is_update_ongoing = false;
+
+		return ret;
+	}
+
+	return FWUPDATE_SUCCESS;
+}
+
 uint8_t m88rt51632_get_temperature(I2C_MSG *msg, float *temperature0, float *temperature1)
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg, SENSOR_UNSPECIFIED_ERROR);
@@ -248,28 +357,34 @@ uint8_t m88rt51632_get_temperature(I2C_MSG *msg, float *temperature0, float *tem
 	uint32_t ts_sts, flag, ODR, ts_ctl;
 	float res[2];
 
+	if (k_mutex_lock(&m88rt51632_mutex, K_MSEC(M88RT51632_MUTEX_LOCK_MS))) {
+		LOG_ERR("m88rt51632 mutex lock failed");
+		k_msleep(10);
+		return SENSOR_UNSPECIFIED_ERROR;
+	}
+
 	for (i = 0; i < MAX_SENSORS; i++) {
 		if (!montage_retimer_read(msg, ts_ctl_add[i], &ts_ctl)) {
 			LOG_ERR("montage get temperature read addr %x failed", ts_ctl_add[i]);
-			return SENSOR_UNSPECIFIED_ERROR;
+			goto error;
 		}
 		ts_ctl = ts_ctl & 0xFFFFFFF8;
 
 		if (!montage_retimer_write(msg, ts_ctl_add[i], ts_ctl)) {
 			LOG_ERR("montage get temperature write ts_ctl %x failed", ts_ctl);
-			return SENSOR_UNSPECIFIED_ERROR;
+			goto error;
 		}
 
 		if (!montage_retimer_write(msg, ts_ctl_add[i], ts_ctl | 0x4)) {
 			LOG_ERR("montage get temperature write ts_ctl | 0x4 %x failed",
 				ts_ctl | 0x4);
-			return SENSOR_UNSPECIFIED_ERROR;
+			goto error;
 		}
 
 		if (!montage_retimer_write(msg, ts_ctl_add[i], ts_ctl | 0x5)) {
 			LOG_ERR("montage get temperature write ts_ctl | 0x5 %x failed",
 				ts_ctl | 0x5);
-			return SENSOR_UNSPECIFIED_ERROR;
+			goto error;
 		}
 
 		timeout = 0;
@@ -277,7 +392,7 @@ uint8_t m88rt51632_get_temperature(I2C_MSG *msg, float *temperature0, float *tem
 		for (j = 0; j < 100; j++) {
 			if (!montage_retimer_read(msg, ts_sts_add[i], &ts_sts)) {
 				LOG_ERR("montage get temperature read system status failed");
-				return SENSOR_UNSPECIFIED_ERROR;
+				goto error;
 			}
 
 			if (GETBIT(ts_sts, 16)) {
@@ -292,12 +407,12 @@ uint8_t m88rt51632_get_temperature(I2C_MSG *msg, float *temperature0, float *tem
 
 		if (timeout == 1) {
 			LOG_ERR("read temperature timeout!");
-			return SENSOR_UNSPECIFIED_ERROR;
+			goto error;
 		}
 
 		if (!montage_retimer_read(msg, ts_sts_add[i], &ts_sts)) {
 			LOG_ERR("montage get temperature read addr %x failed", ts_sts_add[i]);
-			return SENSOR_UNSPECIFIED_ERROR;
+			goto error;
 		}
 
 		flag = (ts_sts >> 12) & 0x1;
@@ -313,7 +428,18 @@ uint8_t m88rt51632_get_temperature(I2C_MSG *msg, float *temperature0, float *tem
 	*temperature0 = res[0];
 	*temperature1 = res[1];
 
+	if (k_mutex_unlock(&m88rt51632_mutex)) {
+		LOG_ERR("m88rt51632 mutex unlock failed");
+	}
+
 	return SENSOR_READ_SUCCESS;
+
+error:
+	if (k_mutex_unlock(&m88rt51632_mutex)) {
+		LOG_ERR("m88rt51632 mutex unlock failed");
+	}
+
+	return SENSOR_UNSPECIFIED_ERROR;
 }
 
 uint8_t m88rt51632_read(sensor_cfg *cfg, int *reading)
@@ -333,6 +459,10 @@ uint8_t m88rt51632_read(sensor_cfg *cfg, int *reading)
 
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
+
+	if (is_update_ongoing) {
+		return SENSOR_NOT_ACCESSIBLE;
+	}
 
 	switch (cfg->offset) {
 	case M88RT51632_TEMP_OFFSET:

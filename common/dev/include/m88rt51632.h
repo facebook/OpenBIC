@@ -30,10 +30,17 @@
 #define RETIMER_DATAPORT 0xfff4
 
 #define M88RT51632_TEMP_OFFSET 0x00
+#define M88RT51632_EEPROM_BASE_OFFSET 0x800000
 
 #define MAX_SENSORS 2
 
+#define IMAGE_PACKAGE_SIZE 0x40
+
+#define M88RT51632_MUTEX_LOCK_MS 1000
+
 bool m88rt51632_get_vendor_id(I2C_MSG *msg);
 bool m88rt51632_get_fw_version(I2C_MSG *msg, uint32_t *version);
+uint8_t m88rt51632_fw_update(I2C_MSG *msg, uint32_t offset, uint16_t msg_len, uint8_t *msg_buf,
+			     uint8_t flag);
 
 #endif
