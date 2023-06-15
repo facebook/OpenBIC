@@ -412,6 +412,11 @@ void init_platform_config()
 		read_value = sys_read32(REG_SCU + 0x430);
 		read_value = SETBIT(read_value, 30);
 		sys_write32(read_value, REG_SCU + 0x430);
+
+		// Enable internal PD
+		read_value = sys_read32(REG_SCU + 0x630);
+		read_value = CLEARBIT(read_value, 30);
+		sys_write32(read_value, REG_SCU + 0x630);
 	}
 
 	if (_2ou_status.present) {
