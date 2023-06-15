@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_DEF_H
-#define PLAT_DEF_H
+#ifndef PLDM_SHELL_H
+#define PLDM_SHELL_H
 
-#define BMC_USB_PORT "CDC_ACM_0"
+#include <shell/shell.h>
 
-#define ENABLE_SSIF
-#define ENABLE_MPRO
+void cmd_pldm_send_req(const struct shell *shell, size_t argc, char **argv);
+
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_pldm_cmds,
+			       SHELL_CMD(sendreq, NULL, "Send out PLDM request.",
+					 cmd_pldm_send_req),
+			       SHELL_SUBCMD_SET_END);
 
 #endif

@@ -17,6 +17,18 @@
 #ifndef PLAT_SENSOR_TABLE_H
 #define PLAT_SENSOR_TABLE_H
 
+/* SENSOR ADDRESS(7-bit)/OFFSET */
+#define TMP75_IN_ADDR (0x94 >> 1)
+#define TMP75_OUT_ADDR (0x92 >> 1)
+#define TMP75_FIO_ADDR (0x90 >> 1)
+#define SSD_ADDR (0xD4 >> 1)
+#define MPRO_ADDR (0x9E >> 1)
+
+#define ADM1278_ADDR (0x80 >> 1)
+#define LTC4282_ADDR (0x82 >> 1)
+#define TEMP_HSC_ADDR (0x98 >> 1)
+#define MP5990_ADDR (0xA0 >> 1)
+
 /* SENSOR NUMBER - sel */
 #define SENSOR_NUM_SYSTEM_STATUS 0x10
 #define SENSOR_NUM_POWER_ERROR 0x56

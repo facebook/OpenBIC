@@ -143,3 +143,19 @@ void convert_uint8_t_pointer_to_uint32_t(uint32_t *data_32, uint8_t *data_8, uin
 		*data_32 = (data_8[0] << 24) + (data_8[1] << 16) + (data_8[2] << 8) + data_8[3];
 	}
 }
+
+double power(double x, int y)
+{
+	double result = 1;
+
+	if (y < 0) {
+		y = -y;
+		while (y--)
+			result /= x;
+	} else {
+		while (y--)
+			result *= x;
+	}
+
+	return result;
+}

@@ -46,6 +46,9 @@
 #ifdef ENABLE_APML
 #include "plat_apml.h"
 #endif
+#ifdef ENABLE_MPRO
+#include "mpro.h"
+#endif
 #include "pcc.h"
 #include "hal_wdt.h"
 
@@ -719,7 +722,7 @@ __weak void OEM_1S_GET_4BYTE_POST_CODE(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
 
-#ifdef CONFIG_PCC_ASPEED
+#if defined(CONFIG_PCC_ASPEED)
 	uint16_t read_len, start_idx;
 	if (msg->data_len != 1) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -734,6 +737,23 @@ __weak void OEM_1S_GET_4BYTE_POST_CODE(ipmi_msg *msg)
 	start_idx = page * FOUR_BYTE_POST_CODE_PAGE_SIZE;
 	read_len = copy_pcc_read_buffer(start_idx, FOUR_BYTE_POST_CODE_PAGE_SIZE, msg->data,
 					IPMI_MSG_MAX_LENGTH);
+	msg->data_len = read_len & 0xFF;
+	msg->completion_code = CC_SUCCESS;
+#elif defined(ENABLE_MPRO)
+	uint16_t read_len, start_idx;
+	if (msg->data_len != 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t page = msg->data[0];
+	if ((page > 17)) {
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		return;
+	}
+	start_idx = page * FOUR_BYTE_POST_CODE_PAGE_SIZE;
+	read_len = copy_mpro_read_buffer(start_idx, FOUR_BYTE_POST_CODE_PAGE_SIZE, msg->data,
+					 IPMI_MSG_MAX_LENGTH);
 	msg->data_len = read_len & 0xFF;
 	msg->completion_code = CC_SUCCESS;
 #else
@@ -1207,7 +1227,7 @@ __weak void OEM_1S_CONTROL_SENSOR_POLLING(ipmi_msg *msg)
 			// Enable or Disable sensor polling
 			sensor_config[control_sensor_index].is_enable_polling =
 				((operation == DISABLE_SENSOR_POLLING) ? DISABLE_SENSOR_POLLING :
-									       ENABLE_SENSOR_POLLING);
+									 ENABLE_SENSOR_POLLING);
 			msg->data[return_data_index + 1] =
 				sensor_config[control_sensor_index].is_enable_polling;
 		} else {
