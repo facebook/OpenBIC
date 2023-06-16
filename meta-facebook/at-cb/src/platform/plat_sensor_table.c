@@ -1501,6 +1501,38 @@ bool is_acb_power_good()
 	}
 }
 
+bool is_accl_power_good(uint8_t card_id)
+{
+	int ret = 0;
+	int retry = 5;
+	I2C_MSG msg = { 0 };
+	uint8_t power_good_bit = 0;
+
+	msg.bus = I2C_BUS3;
+	msg.target_addr = CPLD_ADDR;
+	msg.rx_len = 1;
+	msg.tx_len = 1;
+
+	if (card_id >= PCIE_CARD_1 && card_id <= PCIE_CARD_6) {
+		msg.data[0] = CPLD_ACCLB_PWRGD_OFFSET;
+		power_good_bit = (1 << (card_id - PCIE_CARD_1));
+	} else if (card_id >= PCIE_CARD_7 && card_id <= PCIE_CARD_12) {
+		msg.data[0] = CPLD_ACCLA_PWRGD_OFFSET;
+		power_good_bit = (1 << (card_id - PCIE_CARD_7));
+	} else {
+		LOG_ERR("%s() invalid card id %u ", __func__, card_id);
+		return false;
+	}
+
+	ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("%s() Fail to read card %u status from cpld", __func__, card_id);
+		return false;
+	}
+
+	return (msg.data[0] & power_good_bit);
+}
+
 bool is_dc_access(uint8_t sensor_num)
 {
 	return is_acb_power_good();
@@ -1514,6 +1546,7 @@ bool is_pcie_device_access(uint8_t card_id)
 	}
 
 	bool ret = false;
+	bool is_power_good = false;
 	uint8_t index = 0;
 	uint8_t cfg_count = 0;
 	sensor_cfg *cfg_table = NULL;
@@ -1525,9 +1558,15 @@ bool is_pcie_device_access(uint8_t card_id)
 				card_id);
 			return ret;
 		}
+		is_power_good = is_accl_power_good(card_id);
 
 		for (index = 0; index < cfg_count; ++index) {
 			sensor_cfg *cfg = &cfg_table[index];
+
+			if (!is_power_good) {
+				cfg->cache_status = SENSOR_NOT_ACCESSIBLE;
+				continue;
+			}
 
 			switch (cfg->target_addr) {
 			case ACCL_FREYA_1_ADDR:
@@ -1554,6 +1593,10 @@ bool is_pcie_device_access(uint8_t card_id)
 				break;
 			}
 		}
+		if (!is_power_good) {
+			return false;
+		}
+
 		return true;
 	} else {
 		return false;
