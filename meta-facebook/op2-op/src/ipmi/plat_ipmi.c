@@ -104,13 +104,9 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 	component = msg->data[0];
 
 	uint8_t card_type = get_card_type();
-	I2C_MSG *i2c_msg;
+	I2C_MSG *i2c_msg = NULL;
 	uint8_t retimer_type;
 	uint32_t retimer_version;
-	if (card_type == CARD_TYPE_OPA) {
-		retimer_type = get_pcie_retimer_type();
-		i2c_msg = malloc(sizeof(I2C_MSG));
-	}
 
 	switch (component) {
 	case OL2_COMPNT_BIC:
@@ -126,6 +122,8 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		break;
 	case OL2_COMPNT_RETIMER:
 		if (card_type == CARD_TYPE_OPA) {
+			retimer_type = get_pcie_retimer_type();
+			i2c_msg = malloc(sizeof(I2C_MSG));
 			if (is_retimer_done()) {
 				i2c_msg->bus = I2C_BUS4;
 				i2c_msg->target_addr = EXPA_RETIMER_ADDR;
