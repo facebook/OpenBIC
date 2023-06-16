@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -21,7 +21,7 @@
 
 #define PLATFORM_NAME "Yosemite V3.5"
 #define PROJECT_NAME "Crater Lake"
-#define PROJECT_STAGE PVT
+#define PROJECT_STAGE MP
 
 /*
  * 0x01 motherboard
@@ -32,7 +32,7 @@
 #define DEVICE_REVISION 0x80
 
 #define FIRMWARE_REVISION_1 GET_FW_VERSION1(BOARD_ID, PROJECT_STAGE)
-#define FIRMWARE_REVISION_2 0x08
+#define FIRMWARE_REVISION_2 0x01
 
 #define IPMI_VERSION 0x02
 #define ADDITIONAL_DEVICE_SUPPORT 0xBF
@@ -41,7 +41,7 @@
 
 #define BIC_FW_YEAR_MSB 0x20
 #define BIC_FW_YEAR_LSB 0x23
-#define BIC_FW_WEEK 0x21
+#define BIC_FW_WEEK 0x24
 #define BIC_FW_VER 0x01
 #define BIC_FW_platform_0 0x63 // char: c
 #define BIC_FW_platform_1 0x6c // char: l
