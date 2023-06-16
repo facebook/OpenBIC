@@ -17,4 +17,32 @@
 #ifndef PLAT_HOOK_H
 #define PLAT_HOOK_H
 
+#include "sensor.h"
+
+/**************************************************************************************************
+ * INIT ARGS
+**************************************************************************************************/
+extern adc_asd_init_arg ast_adc_init_args[];
+extern adm1278_init_arg adm1278_init_args[];
+extern ltc4282_init_arg ltc4282_init_args[];
+extern mp5990_init_arg mp5990_init_args[];
+
+/**************************************************************************************************
+ *  PRE-HOOK/POST-HOOK ARGS
+ **************************************************************************************************/
+extern struct tca9548 mux_conf_addr_0xe2[];
+
+/**************************************************************************************************
+ *  PRE-HOOK/POST-HOOK FUNC
+ **************************************************************************************************/
+bool pre_nvme_read(sensor_cfg *cfg, void *args);
+bool pre_vol_bat3v_read(sensor_cfg *cfg, void *args);
+bool post_vol_bat3v_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_adm1278_cur_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_adm1278_pwr_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_ltc4282_cur_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_ltc4282_pwr_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_mp5990_cur_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_mp5990_pwr_read(sensor_cfg *cfg, void *args, int *reading);
+
 #endif
