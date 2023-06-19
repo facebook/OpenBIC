@@ -69,6 +69,10 @@ uint8_t m2_sensornum2idx(uint8_t sensor_num) //  m.2 power/voltage sensor num to
 	       (sensor_num == SENSOR_NUM_INA231_VOL_M2B) ? M2_IDX_E_B :
 	       (sensor_num == SENSOR_NUM_INA231_VOL_M2C) ? M2_IDX_E_C :
 	       (sensor_num == SENSOR_NUM_INA231_VOL_M2D) ? M2_IDX_E_D :
+	       (sensor_num == SENSOR_NUM_NVME_TEMP_M2A)	 ? M2_IDX_E_A :
+	       (sensor_num == SENSOR_NUM_NVME_TEMP_M2B)	 ? M2_IDX_E_B :
+	       (sensor_num == SENSOR_NUM_NVME_TEMP_M2C)	 ? M2_IDX_E_C :
+	       (sensor_num == SENSOR_NUM_NVME_TEMP_M2D)	 ? M2_IDX_E_D :
 								 M2_IDX_E_MAX;
 }
 
@@ -162,6 +166,30 @@ bool is_m2_sen_readable(uint8_t sen_num)
 						     M2_IDX_E_MAX;
 
 	return (m2_pwrgd(idx) && get_dev_pwrgd(idx)) ? true : false;
+}
+
+bool is_nvme_temp_readable(uint8_t sen_num)
+{
+	uint8_t idx = m2_sensornum2idx(sen_num);
+	uint8_t bus = m2_idx2bus(idx);
+
+	bool ret = is_m2_sen_readable(sen_num);
+	if (!ret)
+		return false;
+
+	if (!get_nvme_dev_ready_15s(idx)) { // device on 15s
+		// write nvme addr 0xD4
+		uint8_t retry = 3;
+		I2C_MSG msg = { 0 };
+		msg.bus = bus;
+		msg.target_addr = NVME_ADDR;
+		msg.tx_len = 0;
+
+		if (i2c_master_write(&msg, retry))
+			ret = false;
+	}
+
+	return ret;
 }
 
 uint8_t exchange_m2_idx(uint8_t idx) // exchange m2 idx 0/1/2/3 to 3/2/1/0

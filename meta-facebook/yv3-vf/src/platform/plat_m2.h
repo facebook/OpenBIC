@@ -44,10 +44,10 @@ uint8_t m2_bus2rst(uint8_t bus);
 uint8_t m2_idx2bus(uint8_t idx);
 uint8_t m2_idx2sensornum(uint8_t idx);
 uint8_t m2_sensornum2idx(uint8_t sensor_num);
-
 uint8_t m2_pwrgd(uint8_t idx);
 uint8_t m2_get_prefix_sen_num(uint8_t idx);
 uint8_t m2_prsnt(uint8_t idx);
 uint8_t rst_edsff(uint8_t idx, uint8_t val);
 bool is_m2_sen_readable(uint8_t sen_num);
+bool is_nvme_temp_readable(uint8_t sen_num);
 uint8_t exchange_m2_idx(uint8_t idx);

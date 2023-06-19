@@ -22,6 +22,7 @@
 
 void pwr_related_pin_init(void);
 uint8_t get_dev_pwrgd(uint8_t idx);
+uint8_t get_nvme_dev_ready_15s(uint8_t idx);
 uint8_t fm_p3v3_sw_en(uint8_t idx, uint8_t val);
 uint8_t fm_p12v_sw_en(uint8_t idx, uint8_t val);
 uint8_t clkbuf_oe_en(uint8_t idx, uint8_t val);
