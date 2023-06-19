@@ -1009,12 +1009,7 @@ bool post_i2c_bus_read(sensor_cfg *cfg, void *args, int *reading)
 bool post_mp5990_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
-	CHECK_NULL_ARG_WITH_RETURN(args, false);
-
-	if (!reading) {
-		post_i2c_bus_read((void *)cfg, args, reading);
-		return false;
-	}
+	ARG_UNUSED(args);
 
 	if (!post_i2c_bus_read((void *)cfg, args, reading))
 		return false;
@@ -1047,12 +1042,7 @@ bool post_mp5990_read(sensor_cfg *cfg, void *args, int *reading)
 bool post_ltc4282_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
-	CHECK_NULL_ARG_WITH_RETURN(args, false);
-
-	if (!reading) {
-		post_i2c_bus_read((void *)cfg, args, reading);
-		return false;
-	}
+	ARG_UNUSED(args);
 
 	if (!post_i2c_bus_read(cfg, args, reading))
 		return false;
@@ -1083,12 +1073,7 @@ bool post_ltc4282_read(sensor_cfg *cfg, void *args, int *reading)
 bool post_ltc4286_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
-	CHECK_NULL_ARG_WITH_RETURN(args, false);
-
-	if (!reading) {
-		post_i2c_bus_read((void *)cfg, args, reading);
-		return false;
-	}
+	ARG_UNUSED(args);
 
 	if (!post_i2c_bus_read((void *)cfg, args, reading))
 		return false;

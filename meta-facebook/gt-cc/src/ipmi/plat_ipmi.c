@@ -105,11 +105,6 @@ void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 	}
 
 	if ((target == GT_COMPNT_BIC) || (target == (GT_COMPNT_BIC | IS_SECTOR_END_MASK))) {
-		// Expect BIC firmware size not bigger than 320k
-		if (offset > BIC_UPDATE_MAX_OFFSET) {
-			msg->completion_code = CC_PARAM_OUT_OF_RANGE;
-			return;
-		}
 		status = fw_update(offset, length, &msg->data[7], (target & IS_SECTOR_END_MASK),
 				   DEVSPI_FMC_CS0);
 	} else if (((target & WITHOUT_SENCTOR_END_MASK) == GT_COMPNT_PEX0) ||
