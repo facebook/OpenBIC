@@ -1537,7 +1537,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x5A, // UCT
+		0x5D, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
 		0x50, // LCT
@@ -1781,10 +1781,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x58, // UCT
+		0x5A, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
-		0x54, // LCT
+		0x4F, // LCT
 		0x00, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
@@ -2025,7 +2025,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x5A, // UCT
+		0x5D, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
 		0x50, // LCT
