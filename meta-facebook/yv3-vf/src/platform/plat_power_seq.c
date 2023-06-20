@@ -32,6 +32,7 @@
 
 static uint8_t is_pwrgd_p12v_aux_100ms;
 static uint8_t sensor_pwrgd_1s[M2_IDX_E_MAX];
+static uint8_t nvme_dev_ready_15s[M2_IDX_E_MAX];
 
 void pwr_related_pin_init(void)
 {
@@ -56,6 +57,16 @@ uint8_t get_dev_pwrgd(uint8_t idx)
 static void set_sensor_pwrgd_1s(uint8_t idx)
 {
 	sensor_pwrgd_1s[idx] = 1;
+}
+
+uint8_t get_nvme_dev_ready_15s(uint8_t idx)
+{
+	return nvme_dev_ready_15s[idx];
+}
+
+static void set_nvme_dev_ready_15s(uint8_t idx)
+{
+	nvme_dev_ready_15s[idx] = 1;
 }
 
 uint8_t fm_p3v3_sw_en(uint8_t idx, uint8_t val)
@@ -293,8 +304,10 @@ void dev_pwrgd_handler(uint8_t idx)
 
 	if (get_fm_p12v_sw_en(idx)) {
 		delay_function(1000, set_sensor_pwrgd_1s, idx, 0);
+		delay_function(15000, set_nvme_dev_ready_15s, idx, 0);
 	} else {
 		sensor_pwrgd_1s[idx] = 0;
+		nvme_dev_ready_15s[idx] = 0;
 	}
 }
 
