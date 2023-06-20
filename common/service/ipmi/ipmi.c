@@ -25,6 +25,11 @@
 #include "kcs.h"
 #endif
 
+#include "plat_def.h"
+#ifdef ENABLE_SSIF
+#include "ssif.h"
+#endif
+
 #include "usb.h"
 #include <string.h>
 #include <stdlib.h>
@@ -392,10 +397,8 @@ void ipmi_cmd_handle(void *parameters, void *arvg0, void *arvg1)
 #ifdef ENABLE_SSIF
 	case HOST_SSIF_1:
 		msg_cfg.buffer.netfn = (msg_cfg.buffer.netfn + 1) << 2;
-		if (ssif_set_data(msg_cfg.buffer.InF_source - HOST_SSIF_1, &msg_cfg) == false) {
+		if (ssif_set_data(msg_cfg.buffer.InF_source - HOST_SSIF_1, &msg_cfg) == false)
 			LOG_ERR("Failed to write ssif response data");
-			continue;
-		}
 		break;
 #endif
 	case PLDM:
