@@ -1,0 +1,25 @@
+From cd75f2928d82c10cdad112b383df1b11731165a2 Mon Sep 17 00:00:00 2001
+From: Tommy Haung <tommy_huang@aspeedtech.com>
+Date: Fri, 16 Jun 2023 08:23:22 +0800
+Subject: [PATCH] drivers: i2c: update match rxdone case
+
+1.Update the match/rx_done/wait_rx/stop case into write request case.
+
+Signed-off-by: Tommy Haung <tommy_huang@aspeedtech.com>
+Change-Id: Ifbf5ffda2453d9bc21fe90e3c245404a2590c44d
+---
+ drivers/i2c/i2c_aspeed.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/i2c/i2c_aspeed.c b/drivers/i2c/i2c_aspeed.c
+index f5e99a7cc9..d0ca13fbb1 100644
+--- a/drivers/i2c/i2c_aspeed.c
++++ b/drivers/i2c/i2c_aspeed.c
+@@ -1645,6 +1645,7 @@ void aspeed_i2c_slave_byte_irq(const struct device *dev, uint32_t i2c_base, uint
+ 		break;
+ 	/*pending stop and start address handle*/
+ 	case AST_I2CS_SLAVE_MATCH | AST_I2CS_RX_DONE | AST_I2CS_Wait_RX_DMA | AST_I2CS_STOP | AST_I2CS_TX_NAK:
++	case AST_I2CS_SLAVE_MATCH | AST_I2CS_RX_DONE | AST_I2CS_Wait_RX_DMA | AST_I2CS_STOP:
+ 		LOG_DBG("S : Sw|D|P\n");
+ 
+ 		if (slave_cb->stop) {
