@@ -147,6 +147,61 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		msg->data_len = VR_FW_VERSION_LEN + 2;
 		msg->completion_code = CC_SUCCESS;
 		break;
+	case CB_COMPNT_ACCL1_CH1_FREYA:
+	case CB_COMPNT_ACCL1_CH2_FREYA:
+	case CB_COMPNT_ACCL2_CH1_FREYA:
+	case CB_COMPNT_ACCL2_CH2_FREYA:
+	case CB_COMPNT_ACCL3_CH1_FREYA:
+	case CB_COMPNT_ACCL3_CH2_FREYA:
+	case CB_COMPNT_ACCL4_CH1_FREYA:
+	case CB_COMPNT_ACCL4_CH2_FREYA:
+	case CB_COMPNT_ACCL5_CH1_FREYA:
+	case CB_COMPNT_ACCL5_CH2_FREYA:
+	case CB_COMPNT_ACCL6_CH1_FREYA:
+	case CB_COMPNT_ACCL6_CH2_FREYA:
+	case CB_COMPNT_ACCL7_CH1_FREYA:
+	case CB_COMPNT_ACCL7_CH2_FREYA:
+	case CB_COMPNT_ACCL8_CH1_FREYA:
+	case CB_COMPNT_ACCL8_CH2_FREYA:
+	case CB_COMPNT_ACCL9_CH1_FREYA:
+	case CB_COMPNT_ACCL9_CH2_FREYA:
+	case CB_COMPNT_ACCL10_CH1_FREYA:
+	case CB_COMPNT_ACCL10_CH2_FREYA:
+	case CB_COMPNT_ACCL11_CH1_FREYA:
+	case CB_COMPNT_ACCL11_CH2_FREYA:
+	case CB_COMPNT_ACCL12_CH1_FREYA:
+	case CB_COMPNT_ACCL12_CH2_FREYA:
+		if (is_acb_power_good() != true) {
+			msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+			return;
+		}
+
+		uint8_t card_id = (component - CB_COMPNT_ACCL1_CH1_FREYA) / 2;
+		uint8_t dev_id = (component - CB_COMPNT_ACCL1_CH1_FREYA) % 2;
+
+		if (dev_id == FREYA_ID1) {
+			if (asic_card_info[card_id].asic_1_status != ASIC_CARD_DEVICE_PRESENT) {
+				msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+				return;
+			}
+
+			memcpy(&msg->data[2], &accl_freya_info[card_id].freya1_fw_info,
+			       FREYA_FW_VERSION_LENGTH);
+		} else {
+			if (asic_card_info[card_id].asic_2_status != ASIC_CARD_DEVICE_PRESENT) {
+				msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+				return;
+			}
+
+			memcpy(&msg->data[2], &accl_freya_info[card_id].freya2_fw_info,
+			       FREYA_FW_VERSION_LENGTH);
+		}
+
+		msg->data[0] = component;
+		msg->data[1] = FREYA_FW_VERSION_LENGTH;
+		msg->data_len = FREYA_FW_VERSION_LENGTH + 2;
+		msg->completion_code = CC_SUCCESS;
+		break;
 	default:
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
 		break;
@@ -631,13 +686,6 @@ void OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT(ipmi_msg *msg)
 	default:
 		LOG_ERR("Invalid device id: 0x%x", dev_id);
 		msg->completion_code = CC_INVALID_PARAM;
-		return;
-	}
-
-	// Convert fru id based on different board stage
-	if (accl_id_mapping_card_id(accl_id, &card_id) != 0) {
-		LOG_ERR("Invalid fru id: 0x%x, accl id: 0x%x to map card id", fru_id, accl_id);
-		msg->completion_code = CC_UNSPECIFIED_ERROR;
 		return;
 	}
 
