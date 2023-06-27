@@ -45,6 +45,8 @@
 #include "pex89000.h"
 #include "power_status.h"
 
+#define GT_BIC_UPDATE_MAX_OFFSET KB(410)
+
 LOG_MODULE_REGISTER(plat_ipmi);
 
 struct bridge_compnt_info_s {
@@ -105,8 +107,8 @@ void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 	}
 
 	if ((target == GT_COMPNT_BIC) || (target == (GT_COMPNT_BIC | IS_SECTOR_END_MASK))) {
-		// Expect BIC firmware size not bigger than 320k
-		if (offset > BIC_UPDATE_MAX_OFFSET) {
+		// Expect BIC firmware size not bigger than 410k
+		if (offset > GT_BIC_UPDATE_MAX_OFFSET) {
 			msg->completion_code = CC_PARAM_OUT_OF_RANGE;
 			return;
 		}
