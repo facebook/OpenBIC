@@ -31,6 +31,7 @@
 #include "plat_class.h"
 #include "plat_dev.h"
 #include "nvme.h"
+#include "plat_ipmi.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -839,6 +840,7 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 
 	int ret = 0;
 	uint8_t nvme_temp = 0;
+	uint8_t drive_ready_bit = 0;
 	uint8_t nvme_status[FREYA_STATUS_BLOCK_LENGTH] = { 0 };
 	freya_info *accl_freya = (freya_info *)args;
 
@@ -850,10 +852,26 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 	}
 
 	nvme_temp = nvme_status[NVME_TEMPERATURE_INDEX];
-	if (nvme_temp == 0) {
+	drive_ready_bit = (nvme_status[FREYA_READY_STATUS_OFFSET] & FREYA_READY_STATUS_BIT);
+	if ((nvme_temp == 0) || (drive_ready_bit != 0)) {
 		/* Freya not ready */
-		cfg->cache_status = SENSOR_NOT_ACCESSIBLE;
+		cfg->cache_status = SENSOR_POLLING_DISABLE;
+
+		switch (cfg->target_addr) {
+		case ACCL_FREYA_1_ADDR:
+			accl_freya->freya1_fw_info.is_freya_ready = FREYA_NOT_READY;
+			break;
+		case ACCL_FREYA_2_ADDR:
+			accl_freya->freya2_fw_info.is_freya_ready = FREYA_NOT_READY;
+			break;
+		default:
+			break;
+		}
 		return true;
+	} else {
+		if (cfg->cache_status == SENSOR_POLLING_DISABLE) {
+			cfg->cache_status = SENSOR_INIT_STATUS;
+		}
 	}
 
 	switch (cfg->target_addr) {
