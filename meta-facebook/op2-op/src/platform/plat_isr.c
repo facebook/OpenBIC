@@ -43,18 +43,21 @@ k_tid_t power_tid;
 static bool is_e1s_P12V_fault_assert[MAX_E1S_IDX] = { false, false, false, false, false };
 static bool is_e1s_P3V3_fault_assert[MAX_E1S_IDX] = { false, false, false, false, false };
 
-#define E1S_POWER_FAULT_HANDLER(device, power)                                                     \
-	void ISR_E1S_##device##_##power##_POWER_FAULT()                                            \
+#define OPA_E1S_POWER_FAULT_HANDLER(device, power)                                                 \
+	void OPA_ISR_E1S_##device##_##power##_POWER_FAULT()                                        \
 	{                                                                                          \
-		if ((gpio_get(OPB_PWRGD_##power##_E1S_##device##_R) == POWER_OFF) &&               \
-		    (gpio_get(OPB_##power##_E1S_##device##_EN_R) == POWER_ON)) {                   \
+		uint8_t log = 0;                                                                   \
+		log = gpio_get(OPA_PWRGD_##power##_E1S_##device##_R);                              \
+		LOG_ERR("OPA GPIO = %d, OPA = %d", OPA_PWRGD_##power##_E1S_##device##_R, log);     \
+		if ((gpio_get(OPA_PWRGD_##power##_E1S_##device##_R) == POWER_OFF) &&               \
+		    (gpio_get(OPA_E1S_##device##_##power##_POWER_EN) == POWER_ON)) {               \
 			send_system_status_event(IPMI_EVENT_TYPE_SENSOR_SPECIFIC,                  \
 						 IPMI_EVENT_OFFSET_SYS_E1S_##power##_FAULT,        \
 						 E1S_##device);                                    \
 			is_e1s_##power##_fault_assert[E1S_##device] = true;                        \
 		} else {                                                                           \
-			if ((gpio_get(OPB_##power##_E1S_##device##_EN_R) == POWER_ON) &&           \
-			    (gpio_get(OPB_##power##_E1S_##device##_EN_R) == POWER_ON)) {           \
+			if ((gpio_get(OPA_E1S_##device##_##power##_POWER_EN) == POWER_ON) &&       \
+			    (gpio_get(OPA_PWRGD_##power##_E1S_##device##_R) == POWER_ON)) {        \
 				if (is_e1s_##power##_fault_assert[E1S_##device]) {                 \
 					send_system_status_event(                                  \
 						IPMI_OEM_EVENT_TYPE_DEASSERT,                      \
@@ -66,16 +69,49 @@ static bool is_e1s_P3V3_fault_assert[MAX_E1S_IDX] = { false, false, false, false
 		}                                                                                  \
 	}
 
-E1S_POWER_FAULT_HANDLER(0, P12V);
-E1S_POWER_FAULT_HANDLER(1, P12V);
-E1S_POWER_FAULT_HANDLER(2, P12V);
-E1S_POWER_FAULT_HANDLER(3, P12V);
-E1S_POWER_FAULT_HANDLER(4, P12V);
-E1S_POWER_FAULT_HANDLER(0, P3V3);
-E1S_POWER_FAULT_HANDLER(1, P3V3);
-E1S_POWER_FAULT_HANDLER(2, P3V3);
-E1S_POWER_FAULT_HANDLER(3, P3V3);
-E1S_POWER_FAULT_HANDLER(4, P3V3);
+#define OPB_E1S_POWER_FAULT_HANDLER(device, power)                                                 \
+	void OPB_ISR_E1S_##device##_##power##_POWER_FAULT()                                        \
+	{                                                                                          \
+		uint8_t log = 0;                                                                   \
+		log = gpio_get(OPB_PWRGD_##power##_E1S_##device##_R);                              \
+		LOG_ERR("OPB GPIO = %d, OPB = %d", OPB_PWRGD_##power##_E1S_##device##_R, log);     \
+		if ((gpio_get(OPB_PWRGD_##power##_E1S_##device##_R) == POWER_OFF) &&               \
+		    (gpio_get(OPB_##power##_E1S_##device##_EN_R) == POWER_ON)) {                   \
+			send_system_status_event(IPMI_EVENT_TYPE_SENSOR_SPECIFIC,                  \
+						 IPMI_EVENT_OFFSET_SYS_E1S_##power##_FAULT,        \
+						 E1S_##device);                                    \
+			is_e1s_##power##_fault_assert[E1S_##device] = true;                        \
+		} else {                                                                           \
+			if ((gpio_get(OPB_##power##_E1S_##device##_EN_R) == POWER_ON) &&           \
+			    (gpio_get(OPB_PWRGD_##power##_E1S_##device##_R) == POWER_ON)) {        \
+				if (is_e1s_##power##_fault_assert[E1S_##device]) {                 \
+					send_system_status_event(                                  \
+						IPMI_OEM_EVENT_TYPE_DEASSERT,                      \
+						IPMI_EVENT_OFFSET_SYS_E1S_##power##_FAULT,         \
+						E1S_##device);                                     \
+					is_e1s_##power##_fault_assert[E1S_##device] = false;       \
+				}                                                                  \
+			}                                                                          \
+		}                                                                                  \
+	}
+
+OPA_E1S_POWER_FAULT_HANDLER(0, P12V);
+OPA_E1S_POWER_FAULT_HANDLER(1, P12V);
+OPA_E1S_POWER_FAULT_HANDLER(2, P12V);
+OPA_E1S_POWER_FAULT_HANDLER(0, P3V3);
+OPA_E1S_POWER_FAULT_HANDLER(1, P3V3);
+OPA_E1S_POWER_FAULT_HANDLER(2, P3V3);
+
+OPB_E1S_POWER_FAULT_HANDLER(0, P12V);
+OPB_E1S_POWER_FAULT_HANDLER(1, P12V);
+OPB_E1S_POWER_FAULT_HANDLER(2, P12V);
+OPB_E1S_POWER_FAULT_HANDLER(3, P12V);
+OPB_E1S_POWER_FAULT_HANDLER(4, P12V);
+OPB_E1S_POWER_FAULT_HANDLER(0, P3V3);
+OPB_E1S_POWER_FAULT_HANDLER(1, P3V3);
+OPB_E1S_POWER_FAULT_HANDLER(2, P3V3);
+OPB_E1S_POWER_FAULT_HANDLER(3, P3V3);
+OPB_E1S_POWER_FAULT_HANDLER(4, P3V3);
 
 void control_power_sequence()
 {
@@ -191,9 +227,22 @@ void ISR_E1S_P12V_MAIN_INA233_ALERT()
 
 void ISR_E1S_0_PRSNT_N()
 {
-	//OPA_E1S_0_PRSNT_N is the same as OPB_E1S_0_PRSNT_N
-	notify_cpld_e1s_present(E1S_0, gpio_get(OPB_E1S_0_PRSNT_N));
-	if (gpio_get(OPB_E1S_0_PRSNT_N) == GPIO_LOW) {
+	uint8_t gpio_num;
+	uint8_t card_type = get_card_type();
+
+	switch (card_type) {
+	case CARD_TYPE_OPA:
+		gpio_num = OPA_E1S_0_PRSNT_N;
+		break;
+	case CARD_TYPE_OPB:
+		gpio_num = OPB_E1S_0_PRSNT_N;
+		break;
+	default:
+		return;
+	}
+
+	notify_cpld_e1s_present(E1S_0, gpio_get(gpio_num));
+	if (gpio_get(gpio_num) == GPIO_LOW) {
 		send_system_status_event(IPMI_EVENT_TYPE_SENSOR_SPECIFIC,
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_0);
 
@@ -210,9 +259,22 @@ void ISR_E1S_0_PRSNT_N()
 
 void ISR_E1S_1_PRSNT_N()
 {
-	//OPA_E1S_1_PRSNT_N is the same as OPB_E1S_1_PRSNT_N
-	notify_cpld_e1s_present(E1S_1, gpio_get(OPB_E1S_1_PRSNT_N));
-	if (gpio_get(OPB_E1S_1_PRSNT_N) == GPIO_LOW) {
+	uint8_t gpio_num;
+	uint8_t card_type = get_card_type();
+
+	switch (card_type) {
+	case CARD_TYPE_OPA:
+		gpio_num = OPA_E1S_1_PRSNT_N;
+		break;
+	case CARD_TYPE_OPB:
+		gpio_num = OPB_E1S_1_PRSNT_N;
+		break;
+	default:
+		return;
+	}
+
+	notify_cpld_e1s_present(E1S_1, gpio_get(gpio_num));
+	if (gpio_get(gpio_num) == GPIO_LOW) {
 		send_system_status_event(IPMI_EVENT_TYPE_SENSOR_SPECIFIC,
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_1);
 
@@ -229,9 +291,22 @@ void ISR_E1S_1_PRSNT_N()
 
 void ISR_E1S_2_PRSNT_N()
 {
-	//OPA_E1S_2_PRSNT_N is the same as OPB_E1S_2_PRSNT_N
-	notify_cpld_e1s_present(E1S_2, gpio_get(OPB_E1S_2_PRSNT_N));
-	if (gpio_get(OPB_E1S_2_PRSNT_N) == GPIO_LOW) {
+	uint8_t gpio_num;
+	uint8_t card_type = get_card_type();
+
+	switch (card_type) {
+	case CARD_TYPE_OPA:
+		gpio_num = OPA_E1S_2_PRSNT_N;
+		break;
+	case CARD_TYPE_OPB:
+		gpio_num = OPB_E1S_2_PRSNT_N;
+		break;
+	default:
+		return;
+	}
+
+	notify_cpld_e1s_present(E1S_2, gpio_get(gpio_num));
+	if (gpio_get(gpio_num) == GPIO_LOW) {
 		send_system_status_event(IPMI_EVENT_TYPE_SENSOR_SPECIFIC,
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_2);
 
