@@ -31,6 +31,7 @@
 #include "plat_class.h"
 #include "plat_dev.h"
 #include "sq52205.h"
+#include "nvme.h"
 
 LOG_MODULE_REGISTER(plat_sensor_table);
 
@@ -1416,6 +1417,9 @@ sensor_monitor_table_info plat_monitor_table[] = {
 	  (void *)&plat_monitor_table_arg[11], "ACCL 12 sensor table" },
 };
 
+bool accl_card_init_status[] = { false, false, false, false, false, false,
+				 false, false, false, false, false, false };
+
 void load_sensor_config(void)
 {
 	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
@@ -1621,44 +1625,74 @@ bool is_pcie_device_access(uint8_t card_id)
 		}
 		is_power_good = is_accl_power_good(card_id);
 
-		for (index = 0; index < cfg_count; ++index) {
-			sensor_cfg *cfg = &cfg_table[index];
+		if (is_power_good) {
+			if (accl_card_init_status[card_id] == false) {
+				for (index = 0; index < cfg_count; ++index) {
+					sensor_cfg *cfg = &cfg_table[index];
 
-			if (!is_power_good) {
+					if (pre_accl_mux_switch(cfg->num, (void *)&card_id) !=
+					    true) {
+						LOG_ERR("Fail to pre-switch ACCL mux to check access, card id: 0x%x",
+							card_id);
+						break;
+					}
+
+					if (init_drive_type_delayed(cfg) != true) {
+						post_accl_mux_switch(cfg->num, (void *)&card_id);
+						break;
+					}
+
+					if (post_accl_mux_switch(cfg->num, (void *)&card_id) !=
+					    true) {
+						LOG_ERR("Fail to post-switch ACCL mux to check access, card id: 0x%x",
+							card_id);
+					}
+				}
+
+				if (index >= cfg_count) {
+					accl_card_init_status[card_id] = true;
+				}
+			}
+
+			for (index = 0; index < cfg_count; ++index) {
+				sensor_cfg *cfg = &cfg_table[index];
+
+				switch (cfg->target_addr) {
+				case ACCL_FREYA_1_ADDR:
+					if (asic_card_info[card_id].asic_1_status !=
+					    ASIC_CARD_DEVICE_PRESENT) {
+						cfg->cache_status = SENSOR_NOT_PRESENT;
+					} else {
+						if (cfg->cache_status == SENSOR_NOT_PRESENT) {
+							cfg->cache_status = SENSOR_INIT_STATUS;
+						}
+					}
+					break;
+				case ACCL_FREYA_2_ADDR:
+					if (asic_card_info[card_id].asic_2_status !=
+					    ASIC_CARD_DEVICE_PRESENT) {
+						cfg->cache_status = SENSOR_NOT_PRESENT;
+					} else {
+						if (cfg_table[index].cache_status ==
+						    SENSOR_NOT_PRESENT) {
+							cfg->cache_status = SENSOR_INIT_STATUS;
+						}
+					}
+					break;
+				default:
+					break;
+				}
+			}
+			return true;
+		} else {
+			for (index = 0; index < cfg_count; ++index) {
+				sensor_cfg *cfg = &cfg_table[index];
 				cfg->cache_status = SENSOR_NOT_ACCESSIBLE;
-				continue;
 			}
 
-			switch (cfg->target_addr) {
-			case ACCL_FREYA_1_ADDR:
-				if (asic_card_info[card_id].asic_1_status !=
-				    ASIC_CARD_DEVICE_PRESENT) {
-					cfg->cache_status = SENSOR_NOT_PRESENT;
-				} else {
-					if (cfg->cache_status == SENSOR_NOT_PRESENT) {
-						cfg->cache_status = SENSOR_INIT_STATUS;
-					}
-				}
-				break;
-			case ACCL_FREYA_2_ADDR:
-				if (asic_card_info[card_id].asic_2_status !=
-				    ASIC_CARD_DEVICE_PRESENT) {
-					cfg->cache_status = SENSOR_NOT_PRESENT;
-				} else {
-					if (cfg_table[index].cache_status == SENSOR_NOT_PRESENT) {
-						cfg->cache_status = SENSOR_INIT_STATUS;
-					}
-				}
-				break;
-			default:
-				break;
-			}
-		}
-		if (!is_power_good) {
+			accl_card_init_status[card_id] = false;
 			return false;
 		}
-
-		return true;
 	} else {
 		return false;
 	}

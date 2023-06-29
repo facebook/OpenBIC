@@ -242,6 +242,7 @@ int pal_get_pcie_card_sensor_reading(uint8_t sensor_num, uint8_t cxl_id, uint8_t
 		*reading = 0;
 		break;
 	case SENSOR_NOT_ACCESSIBLE:
+	case SENSOR_POLLING_DISABLE:
 		*card_status |= PCIE_CARD_NOT_ACCESSIABLE_BIT;
 		*reading = 0;
 		break;
