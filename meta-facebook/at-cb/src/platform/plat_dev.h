@@ -20,10 +20,6 @@
 #include <stdint.h>
 #include "sensor.h"
 
-#define NVME_TEMP_OFFSET 0x00
-#define NVME_VOLTAGE_RAIL_1_OFFSET 0x75
-#define NVME_VOLTAGE_RAIL_2_OFFSET 0x77
-
 #define FREYA_STATUS_BLOCK_OFFSET 0x00
 #define FREYA_STATUS_BLOCK_LENGTH 0x08
 #define FREYA_READY_STATUS_BIT BIT(6)
@@ -69,12 +65,6 @@ enum FREYA_ID {
 
 extern freya_info accl_freya_info[];
 
-bool pal_sensor_drive_init(uint8_t card_id, sensor_cfg *cfg, uint8_t *init_status);
-bool pal_sensor_drive_read(uint8_t card_id, sensor_cfg *cfg, int *reading, uint8_t *sensor_status);
-uint8_t pal_nvme_init(uint8_t card_id, sensor_cfg *cfg);
-uint8_t pal_nvme_read(uint8_t card_id, sensor_cfg *cfg, int *reading);
-uint8_t pal_ina233_init(uint8_t card_id, sensor_cfg *cfg);
-uint8_t pal_ina233_read(uint8_t card_id, sensor_cfg *cfg, int *reading);
 void clear_freya_cache_flag();
 int get_freya_fw_info(uint8_t bus, uint8_t addr, freya_fw_info *fw_info);
 
