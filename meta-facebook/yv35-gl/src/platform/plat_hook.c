@@ -134,7 +134,7 @@ bool post_cpu_margin_read(sensor_cfg *cfg, void *args, int *reading)
 bool pre_intel_peci_dimm_read(sensor_cfg *cfg, void *args)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
-	CHECK_NULL_ARG_WITH_RETURN(args, false);
+	ARG_UNUSED(args);
 
 	if (get_post_status() == false) {
 		return true;
