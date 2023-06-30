@@ -199,15 +199,6 @@ void check_pcie_card_type()
 		      pcie_card_info[index].value_bit;
 
 		pcie_card_info[index].card_device_type = prsnt_status_to_card_type(val);
-
-		switch (pcie_card_info[index].card_device_type) {
-		case CXL_CARD:
-			pal_init_drive(plat_cxl_sensor_config, CXL_SENSOR_CONFIG_SIZE,
-				       pcie_card_info[index].card_device_type, index);
-			break;
-		default:
-			break;
-		}
 	}
 }
 

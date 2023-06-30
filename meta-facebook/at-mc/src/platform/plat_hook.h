@@ -24,6 +24,11 @@ typedef struct _pwr_monitor_pre_proc_arg {
 	uint8_t jcn_number;
 } pwr_monitor_pre_proc_arg;
 
+typedef struct _vr_pre_arg {
+	vr_page_cfg page;
+	uint8_t cxl_id;
+} vr_pre_arg;
+
 /**************************************************************************************************
  * INIT ARGS
 **************************************************************************************************/
@@ -33,6 +38,7 @@ extern sq52205_init_arg sq52205_init_args[];
 extern ina233_init_arg mc_ina233_init_args[];
 extern ina233_init_arg ina233_init_args[];
 extern ltc2991_init_arg ltc2991_init_args[];
+extern uint8_t plat_monitor_table_arg[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
@@ -41,8 +47,9 @@ extern mux_config bus_2_pca9548_configs[];
 extern mux_config bus_4_pca9548_configs[];
 extern mux_config bus_8_pca9548_configs[];
 extern mux_config cxl_mux_configs[];
-extern vr_page_cfg vr_page_select[];
 extern pwr_monitor_pre_proc_arg pwr_monitor_pre_proc_args[];
+extern uint8_t pm8702_pre_arg[];
+extern vr_pre_arg vr_pre_args[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
@@ -51,9 +58,10 @@ bool pre_nvme_read(sensor_cfg *cfg, void *args);
 bool post_nvme_read(sensor_cfg *cfg, void *args, int *reading);
 bool pre_sq52205_read(sensor_cfg *cfg, void *args);
 bool post_sq52205_read(sensor_cfg *cfg, void *args, int *reading);
-bool pre_cxl_switch_mux(uint8_t sensor_num, uint8_t pcie_card_id);
-bool post_cxl_switch_mux(uint8_t sensor_num, uint8_t pcie_card_id);
+bool pre_cxl_switch_mux(uint8_t sensor_num, void *arg);
+bool post_cxl_switch_mux(uint8_t sensor_num, void *arg);
 bool pre_cxl_vr_read(sensor_cfg *cfg, void *args);
 bool post_cxl_xdpe12284c_read(sensor_cfg *cfg, void *args, int *reading);
+bool pre_pm8702_read(sensor_cfg *cfg, void *args);
 
 #endif
