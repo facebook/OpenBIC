@@ -48,10 +48,20 @@ enum E1S_NUMBER {
 	E1S_4,
 };
 
+enum BOARD_REVISION_ID {
+	EVT_STAGE = 0b000,
+	DVT_STAGE = 0b001,
+	PVT_STAGE = 0b010,
+	MP_STAGE = 0b011,
+	UNKNOWN_STAGE = 0xFF,
+};
+
 int init_platform_config();
 uint8_t get_card_type();
 uint8_t get_card_position();
 int check_pcie_retimer_type(void);
 uint8_t get_pcie_retimer_type(void);
+uint8_t get_board_revision();
+void init_board_revision();
 
 #endif

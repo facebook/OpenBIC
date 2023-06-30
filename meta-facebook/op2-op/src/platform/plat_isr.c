@@ -79,15 +79,19 @@ E1S_POWER_FAULT_HANDLER(4, P3V3);
 
 void control_power_sequence()
 {
+	uint8_t board_revision = get_board_revision();
+
 	if (gpio_get(FM_EXP_MAIN_PWR_EN) == POWER_ON) { // op power on
 		if (!is_all_sequence_done(POWER_ON)) {
 			abort_power_thread();
 			init_power_on_thread(BOARD_POWER_ON_STAGE0);
 		}
 	} else { // op power off
-		if (!is_all_sequence_done(POWER_OFF)) {
-			abort_power_thread();
-			init_power_off_thread();
+		if (board_revision != EVT_STAGE) {
+			if (!is_all_sequence_done(POWER_OFF)) {
+				abort_power_thread();
+				init_power_off_thread();
+			}
 		}
 	}
 }
