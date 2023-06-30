@@ -353,6 +353,13 @@ static bool get_cpu_margin(uint8_t addr, int *reading)
 
 	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = ((int16_t)((rbuf[2] << 8) | rbuf[1]) >> 6) + 1;
+
+	// CPU margin value should be negative
+	if (sval->integer > 0) {
+		LOG_ERR("CPU margin value is larger then 0, the raw data rbuf[1]: 0x%x rbuf[2]: 0x%x",
+			rbuf[1], rbuf[2]);
+	}
+
 	return true;
 }
 

@@ -117,6 +117,7 @@ bool pre_nvme_read(sensor_cfg *cfg, void *args)
 
 	return true;
 }
+
 bool post_cpu_margin_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
@@ -126,8 +127,13 @@ bool post_cpu_margin_read(sensor_cfg *cfg, void *args, int *reading)
 		return check_reading_pointer_null_is_allowed(cfg);
 
 	sensor_val *sval = (sensor_val *)reading;
+
 	// The margin sensor should be shown as negative value in BMC.
-	sval->integer = -sval->integer;
+	if (sval->integer > 0) {
+		LOG_ERR("CPU margin value should not be positive, return NA");
+		return false;
+	}
+
 	return true;
 }
 
