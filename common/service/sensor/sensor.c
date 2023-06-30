@@ -340,7 +340,7 @@ uint8_t get_sensor_reading(sensor_cfg *cfg_table, uint8_t cfg_count, uint8_t sen
 				return cfg->cache_status;
 			}
 			if ((cfg->cache_status == SENSOR_NOT_PRESENT) ||
-			    (cfg->cache_status == SENSOR_NOT_ACCESSIBLE)) {
+			    (cfg->cache_status == SENSOR_POLLING_DISABLE)) {
 				return cfg->cache_status;
 			}
 		}
