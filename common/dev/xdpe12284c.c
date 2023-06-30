@@ -604,8 +604,13 @@ uint8_t xdpe12284c_read(sensor_cfg *cfg, int *reading)
 	case PMBUS_READ_POUT:
 	case PMBUS_READ_TEMPERATURE_1:
 		actual_value = slinear11_to_float(val);
-		sval->integer = actual_value;
-		sval->fraction = (actual_value - sval->integer) * 1000;
+		if (offset == PMBUS_READ_IOUT && actual_value < 0) {
+			sval->integer = 0;
+			sval->fraction = 0;
+		} else {
+			sval->integer = actual_value;
+			sval->fraction = (actual_value - sval->integer) * 1000;
+		}
 		break;
 	case PMBUS_READ_VOUT:
 		msg.tx_len = 1;
