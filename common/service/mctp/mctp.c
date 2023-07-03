@@ -360,7 +360,7 @@ static void mctp_tx_task(void *arg, void *dummy0, void *dummy1)
        * If the message is response, keep the original msg_tag of ext_params
 */
 			hdr->msg_tag = (hdr->to) ? (msg_tag & MCTP_HDR_TAG_MASK) :
-						   mctp_msg.ext_params.msg_tag;
+							 mctp_msg.ext_params.msg_tag;
 
 			hdr->dest_ep = mctp_msg.ext_params.ep;
 			hdr->src_ep = mctp_inst->endpoint;
@@ -558,8 +558,10 @@ static uint8_t mctp_pass_tx_task(mctp *mctp_inst, uint8_t *buf, uint16_t len,
 	int ret = k_msgq_put(&mctp_inst->mctp_tx_queue, &mctp_msg, K_NO_WAIT);
 	if (!ret) {
 		uint8_t evt = MCTP_ERROR;
-		if (k_msgq_get(&evt_msgq, &evt, K_FOREVER))
+		if (k_msgq_get(&evt_msgq, &evt, K_FOREVER)) {
 			LOG_WRN("failed to get status from msgq!");
+			goto error;
+		}
 
 		return evt;
 	}
