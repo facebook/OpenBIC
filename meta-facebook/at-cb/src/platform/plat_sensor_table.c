@@ -31,6 +31,7 @@
 #include "plat_class.h"
 #include "plat_dev.h"
 #include "sq52205.h"
+#include "nvme.h"
 
 LOG_MODULE_REGISTER(plat_sensor_table);
 
@@ -362,29 +363,29 @@ sensor_cfg plat_accl1_sensor_config[] = {
 	/** Nvme Temperature **/
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[11],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[0],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[11],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[0],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** Nvme Voltage **/
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[11],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[0],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[11],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[0],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[11],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[0],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[11],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[0],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** INA233 Voltage **/
@@ -434,29 +435,29 @@ sensor_cfg plat_accl2_sensor_config[] = {
 	/** Nvme Temperature **/
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[10],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[1],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[10],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[1],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** Nvme Voltage **/
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[10],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[1],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[10],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[1],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[10],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[1],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[10],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[1],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** INA233 Voltage **/
@@ -506,29 +507,29 @@ sensor_cfg plat_accl3_sensor_config[] = {
 	/** Nvme Temperature **/
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[9],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[2],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[9],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[2],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** Nvme Voltage **/
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[9],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[2],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[9],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[2],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[9],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[2],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[9],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[2],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** INA233 Voltage **/
@@ -578,29 +579,29 @@ sensor_cfg plat_accl4_sensor_config[] = {
 	/** Nvme Temperature **/
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[8],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[3],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[8],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[3],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** Nvme Voltage **/
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[8],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[3],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[8],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[3],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[8],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[3],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[8],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[3],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** INA233 Voltage **/
@@ -650,29 +651,29 @@ sensor_cfg plat_accl5_sensor_config[] = {
 	/** Nvme Temperature **/
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[7],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[4],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[7],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[4],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** Nvme Voltage **/
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[7],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[4],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[7],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[4],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[7],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[4],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[7],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[4],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** INA233 Voltage **/
@@ -722,29 +723,29 @@ sensor_cfg plat_accl6_sensor_config[] = {
 	/** Nvme Temperature **/
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[6],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[5],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[6],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[5],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** Nvme Voltage **/
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[6],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[5],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[6],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[5],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[6],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[5],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[6],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[5],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** INA233 Voltage **/
@@ -794,29 +795,29 @@ sensor_cfg plat_accl7_sensor_config[] = {
 	/** Nvme Temperature **/
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[0],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[6],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[0],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[6],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** Nvme Voltage **/
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[0],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[6],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[0],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[6],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[0],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[6],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[0],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[6],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** INA233 Voltage **/
@@ -866,29 +867,29 @@ sensor_cfg plat_accl8_sensor_config[] = {
 	/** Nvme Temperature **/
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[1],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[7],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[1],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[7],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** Nvme Voltage **/
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[1],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[7],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[1],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[7],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[1],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[7],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[1],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[7],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** INA233 Voltage **/
@@ -938,29 +939,29 @@ sensor_cfg plat_accl9_sensor_config[] = {
 	/** Nvme Temperature **/
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[2],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[8],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[2],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[8],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** Nvme Voltage **/
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[2],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[8],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[2],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[8],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[2],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[8],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[2],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[8],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** INA233 Voltage **/
@@ -1010,29 +1011,29 @@ sensor_cfg plat_accl10_sensor_config[] = {
 	/** Nvme Temperature **/
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[3],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[9],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[3],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[9],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** Nvme Voltage **/
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[3],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[9],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[3],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[9],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[3],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[9],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[3],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[9],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** INA233 Voltage **/
@@ -1082,29 +1083,29 @@ sensor_cfg plat_accl11_sensor_config[] = {
 	/** Nvme Temperature **/
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[4],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[10],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[4],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[10],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** Nvme Voltage **/
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[4],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[10],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[4],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[10],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[4],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[10],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[4],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[10],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** INA233 Voltage **/
@@ -1154,29 +1155,29 @@ sensor_cfg plat_accl12_sensor_config[] = {
 	/** Nvme Temperature **/
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[5],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[11],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_TEMP_ACCL_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[5],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[11],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** Nvme Voltage **/
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[5],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[11],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[5],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[11],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[5],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[11],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 	{ SENSOR_NUM_VOL_ACCL_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
 	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[5],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_freya_info[11],
 	  NULL, NULL, NULL, &pca9546_configs[0] },
 
 	/** INA233 Voltage **/
@@ -1416,6 +1417,9 @@ sensor_monitor_table_info plat_monitor_table[] = {
 	  (void *)&plat_monitor_table_arg[11], "ACCL 12 sensor table" },
 };
 
+bool accl_card_init_status[] = { false, false, false, false, false, false,
+				 false, false, false, false, false, false };
+
 void load_sensor_config(void)
 {
 	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
@@ -1621,44 +1625,74 @@ bool is_pcie_device_access(uint8_t card_id)
 		}
 		is_power_good = is_accl_power_good(card_id);
 
-		for (index = 0; index < cfg_count; ++index) {
-			sensor_cfg *cfg = &cfg_table[index];
+		if (is_power_good) {
+			if (accl_card_init_status[card_id] == false) {
+				for (index = 0; index < cfg_count; ++index) {
+					sensor_cfg *cfg = &cfg_table[index];
 
-			if (!is_power_good) {
+					if (pre_accl_mux_switch(cfg->num, (void *)&card_id) !=
+					    true) {
+						LOG_ERR("Fail to pre-switch ACCL mux to check access, card id: 0x%x",
+							card_id);
+						break;
+					}
+
+					if (init_drive_type_delayed(cfg) != true) {
+						post_accl_mux_switch(cfg->num, (void *)&card_id);
+						break;
+					}
+
+					if (post_accl_mux_switch(cfg->num, (void *)&card_id) !=
+					    true) {
+						LOG_ERR("Fail to post-switch ACCL mux to check access, card id: 0x%x",
+							card_id);
+					}
+				}
+
+				if (index >= cfg_count) {
+					accl_card_init_status[card_id] = true;
+				}
+			}
+
+			for (index = 0; index < cfg_count; ++index) {
+				sensor_cfg *cfg = &cfg_table[index];
+
+				switch (cfg->target_addr) {
+				case ACCL_FREYA_1_ADDR:
+					if (asic_card_info[card_id].asic_1_status !=
+					    ASIC_CARD_DEVICE_PRESENT) {
+						cfg->cache_status = SENSOR_NOT_PRESENT;
+					} else {
+						if (cfg->cache_status == SENSOR_NOT_PRESENT) {
+							cfg->cache_status = SENSOR_INIT_STATUS;
+						}
+					}
+					break;
+				case ACCL_FREYA_2_ADDR:
+					if (asic_card_info[card_id].asic_2_status !=
+					    ASIC_CARD_DEVICE_PRESENT) {
+						cfg->cache_status = SENSOR_NOT_PRESENT;
+					} else {
+						if (cfg_table[index].cache_status ==
+						    SENSOR_NOT_PRESENT) {
+							cfg->cache_status = SENSOR_INIT_STATUS;
+						}
+					}
+					break;
+				default:
+					break;
+				}
+			}
+			return true;
+		} else {
+			for (index = 0; index < cfg_count; ++index) {
+				sensor_cfg *cfg = &cfg_table[index];
 				cfg->cache_status = SENSOR_NOT_ACCESSIBLE;
-				continue;
 			}
 
-			switch (cfg->target_addr) {
-			case ACCL_FREYA_1_ADDR:
-				if (asic_card_info[card_id].asic_1_status !=
-				    ASIC_CARD_DEVICE_PRESENT) {
-					cfg->cache_status = SENSOR_NOT_PRESENT;
-				} else {
-					if (cfg->cache_status == SENSOR_NOT_PRESENT) {
-						cfg->cache_status = SENSOR_INIT_STATUS;
-					}
-				}
-				break;
-			case ACCL_FREYA_2_ADDR:
-				if (asic_card_info[card_id].asic_2_status !=
-				    ASIC_CARD_DEVICE_PRESENT) {
-					cfg->cache_status = SENSOR_NOT_PRESENT;
-				} else {
-					if (cfg_table[index].cache_status == SENSOR_NOT_PRESENT) {
-						cfg->cache_status = SENSOR_INIT_STATUS;
-					}
-				}
-				break;
-			default:
-				break;
-			}
-		}
-		if (!is_power_good) {
+			accl_card_init_status[card_id] = false;
 			return false;
 		}
-
-		return true;
 	} else {
 		return false;
 	}
@@ -1762,81 +1796,4 @@ bool get_mux_channel_config(uint8_t card_id, uint8_t sensor_number, mux_config *
 	mux_cfg->bus = accl_bus;
 	*channel_mux = *mux_cfg;
 	return true;
-}
-
-ina233_init_arg *get_accl_init_sensor_config(uint8_t card_id, uint8_t sensor_number)
-{
-	if (card_id >= ASIC_CARD_COUNT) {
-		LOG_ERR("Invalid accl card id: 0x%x", card_id);
-		return NULL;
-	}
-
-	uint8_t offset = 3;
-	sensor_cfg *cfg = NULL;
-
-	cfg = get_accl_sensor_config(card_id, sensor_number);
-	if (cfg == NULL) {
-		return NULL;
-	}
-
-	switch (cfg->target_addr) {
-	case ACCL_12V_INA233_ADDR:
-		offset = (offset * card_id) + ACCL_12V_INA233_INIT_ARG_OFFSET;
-		break;
-	case ACCL_3V3_1_INA233_ADDR:
-		offset = (offset * card_id) + ACCL_3V3_1_INA233_INIT_ARG_OFFSET;
-		break;
-	case ACCL_3V3_2_INA233_ADDR:
-		offset = (offset * card_id) + ACCL_3V3_2_INA233_INIT_ARG_OFFSET;
-		break;
-	default:
-		LOG_ERR("Invalid accl ina233 address: 0x%x", cfg->target_addr);
-		return NULL;
-	}
-
-	return &accl_ina233_init_args[offset];
-}
-
-void pal_init_drive(sensor_cfg *cfg_table, uint8_t cfg_size, uint8_t card_id)
-{
-	CHECK_NULL_ARG(cfg_table);
-
-	bool ret = false;
-	uint8_t index = 0;
-	uint8_t sensor_num = 0;
-	uint8_t init_status = 0;
-	sensor_cfg *cfg = NULL;
-
-	for (index = 0; index < cfg_size; index++) {
-		cfg = &cfg_table[index];
-		sensor_num = cfg->num;
-
-		if (is_pcie_device_access(sensor_num) != true) {
-			continue;
-		}
-
-		ret = pre_accl_mux_switch(sensor_num, (void *)&card_id);
-		if (ret != true) {
-			LOG_ERR("Pre switch mux fail, sensor num: 0x%x, card id: 0x%x", sensor_num,
-				card_id);
-			continue;
-		}
-
-		ret = pal_sensor_drive_init(card_id, cfg, &init_status);
-		if (ret == true) {
-			if (init_status != SENSOR_INIT_SUCCESS) {
-				LOG_ERR("Initial sensor drive fail, sensor num: 0x%x, card id: 0x%x",
-					sensor_num, card_id);
-			}
-		} else {
-			LOG_ERR("Map initial sensor function fail, sensor num: 0x%x, card id: 0x%x",
-				sensor_num, card_id);
-		}
-
-		ret = post_accl_mux_switch(sensor_num, (void *)&card_id);
-		if (ret != true) {
-			LOG_ERR("Post switch mux fail, sensor num: 0x%x, card id: 0x%x", sensor_num,
-				card_id);
-		}
-	}
 }

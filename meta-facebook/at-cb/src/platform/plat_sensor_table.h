@@ -187,8 +187,6 @@ int get_accl_bus(uint8_t card_id, uint8_t sensor_number);
 sensor_cfg *get_accl_sensor_config(uint8_t card_id, uint8_t sensor_num);
 bool get_accl_mux_config(uint8_t card_id, mux_config *accl_mux);
 bool get_mux_channel_config(uint8_t card_id, uint8_t sensor_number, mux_config *channel_mux);
-ina233_init_arg *get_accl_init_sensor_config(uint8_t card_id, uint8_t sensor_number);
-void pal_init_drive(sensor_cfg *cfg_table, uint8_t cfg_size, uint8_t card_id);
 sensor_cfg *get_accl_sensor_cfg_info(uint8_t card_id, uint8_t *cfg_count);
 
 #endif
