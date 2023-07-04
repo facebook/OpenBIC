@@ -52,6 +52,9 @@ LOG_MODULE_REGISTER(plat_sensor_table);
 #define PCIE_CARD_INIT_CFG_OFFSET_0 0
 #define PCIE_CARD_INIT_CFG_OFFSET_1 1
 
+#define DELAYED_INIT_SENSOR_RETRY_MAX 5
+#define COMMON_SENSOR_MONITOR_INDEX 0
+
 struct k_mutex i2c_2_pca9548a_mutex;
 struct k_mutex i2c_3_pca9546a_mutex;
 struct k_mutex i2c_4_pca9548a_mutex;
@@ -70,16 +73,16 @@ sensor_cfg plat_sensor_config[] = {
 	/** NVME **/
 	{ SENSOR_NUM_TEMP_E1S_0, sensor_dev_nvme, I2C_BUS4, E1S_ADDR, E1S_OFFSET, is_e1s_access, 0,
 	  0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_nvme_read, &bus_4_pca9548_configs[0], post_nvme_read, NULL, NULL },
+	  pre_nvme_read, &bus_4_pca9548_configs[3], post_nvme_read, NULL, NULL },
 	{ SENSOR_NUM_TEMP_E1S_1, sensor_dev_nvme, I2C_BUS4, E1S_ADDR, E1S_OFFSET, is_e1s_access, 0,
 	  0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_nvme_read, &bus_4_pca9548_configs[1], post_nvme_read, NULL, NULL },
+	  pre_nvme_read, &bus_4_pca9548_configs[2], post_nvme_read, NULL, NULL },
 	{ SENSOR_NUM_TEMP_E1S_2, sensor_dev_nvme, I2C_BUS4, E1S_ADDR, E1S_OFFSET, is_e1s_access, 0,
 	  0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_nvme_read, &bus_4_pca9548_configs[2], post_nvme_read, NULL, NULL },
+	  pre_nvme_read, &bus_4_pca9548_configs[1], post_nvme_read, NULL, NULL },
 	{ SENSOR_NUM_TEMP_E1S_3, sensor_dev_nvme, I2C_BUS4, E1S_ADDR, E1S_OFFSET, is_e1s_access, 0,
 	  0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_nvme_read, &bus_4_pca9548_configs[3], post_nvme_read, NULL, NULL },
+	  pre_nvme_read, &bus_4_pca9548_configs[0], post_nvme_read, NULL, NULL },
 
 	/** ADC **/
 	{ SENSOR_NUM_VOL_P3V3_AUX, sensor_dev_ast_adc, ADC_PORT0, NONE, NONE, stby_access, 2, 1,
@@ -1714,6 +1717,9 @@ sensor_monitor_table_info plat_monitor_table[] = {
 	  (void *)&plat_monitor_table_arg[7], "CXL 8 sensor table" },
 };
 
+bool pcie_card_init_status[] = { false, false, false, false, false, false, false,
+				 false, false, false, false, false, false, false };
+
 void pal_extend_sensor_config()
 {
 	uint8_t board_revision = get_board_revision();
@@ -1798,6 +1804,19 @@ void plat_fill_monitor_sensor_table()
 	       plat_monitor_sensor_count * sizeof(sensor_monitor_table_info));
 }
 
+sensor_cfg *get_common_sensor_cfg_info(uint8_t sensor_num)
+{
+	uint8_t cfg_count = sensor_monitor_table[COMMON_SENSOR_MONITOR_INDEX].cfg_count;
+	sensor_cfg *cfg_table =
+		sensor_monitor_table[COMMON_SENSOR_MONITOR_INDEX].monitor_sensor_cfg;
+
+	if (cfg_table != NULL) {
+		return find_sensor_cfg_via_sensor_num(cfg_table, cfg_count, sensor_num);
+	}
+
+	return NULL;
+}
+
 sensor_cfg *get_cxl_sensor_cfg_info(uint8_t cxl_id, uint8_t *cfg_count)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg_count, NULL);
@@ -1827,27 +1846,28 @@ bool is_dc_access(uint8_t sensor_num)
 bool is_e1s_access(uint8_t sensor_num)
 {
 	int ret = false;
-	uint8_t card_id = 0;
+	int power_status = 0;
+	uint8_t pcie_card_id = 0;
 	uint8_t card_type = 0;
 
 	switch (sensor_num) {
 	case SENSOR_NUM_TEMP_E1S_0:
-		card_id = CARD_5_INDEX;
+		pcie_card_id = CARD_8_INDEX;
 		break;
 	case SENSOR_NUM_TEMP_E1S_1:
-		card_id = CARD_6_INDEX;
+		pcie_card_id = CARD_7_INDEX;
 		break;
 	case SENSOR_NUM_TEMP_E1S_2:
-		card_id = CARD_7_INDEX;
+		pcie_card_id = CARD_6_INDEX;
 		break;
 	case SENSOR_NUM_TEMP_E1S_3:
-		card_id = CARD_8_INDEX;
+		pcie_card_id = CARD_5_INDEX;
 		break;
 	default:
 		return false;
 	}
 
-	ret = get_pcie_card_type(card_id, &card_type);
+	ret = get_pcie_card_type(pcie_card_id, &card_type);
 	if (ret < 0) {
 		return false;
 	}
@@ -1856,7 +1876,49 @@ bool is_e1s_access(uint8_t sensor_num)
 		return false;
 	}
 
-	return true;
+	power_status = get_pcie_card_power_status(pcie_card_id);
+	if (power_status < 0) {
+		LOG_ERR("Fail to get E1.S power status, pcie card id: 0x%x", pcie_card_id);
+		return false;
+	}
+
+	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
+	if (cfg == NULL) {
+		LOG_ERR("Fail to get sensor cfg via sensor num, sensor num: 0x%x", sensor_num);
+		return false;
+	}
+
+	if (power_status & PCIE_CARD_POWER_GOOD_BIT) {
+		if (pcie_card_init_status[pcie_card_id] != true) {
+			if (cfg->pre_sensor_read_hook) {
+				if (cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args) !=
+				    true) {
+					LOG_ERR("E1.S pre-read fail, sensor num: 0x%x", sensor_num);
+					return false;
+				}
+			}
+
+			if (init_drive_type_delayed(cfg) != true) {
+				if (cfg->post_sensor_read_hook) {
+					cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args,
+								   NULL);
+				}
+				return false;
+			}
+
+			if (cfg->post_sensor_read_hook) {
+				cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL);
+			}
+
+			pcie_card_init_status[pcie_card_id] = true;
+		}
+
+		return true;
+	} else {
+		cfg->cache_status = SENSOR_NOT_ACCESSIBLE;
+		pcie_card_init_status[pcie_card_id] = false;
+		return false;
+	}
 }
 
 bool is_cxl_access(uint8_t cxl_id)
@@ -1867,8 +1929,12 @@ bool is_cxl_access(uint8_t cxl_id)
 	}
 
 	int ret = 0;
+	int power_status = 0;
 	uint8_t pcie_card_id = 0;
 	uint8_t card_type = 0;
+	uint8_t index = 0;
+	uint8_t cfg_count = 0;
+	sensor_cfg *cfg_table = NULL;
 
 	ret = cxl_id_to_pcie_card_id(cxl_id, &pcie_card_id);
 	if (ret != 0) {
@@ -1883,7 +1949,56 @@ bool is_cxl_access(uint8_t cxl_id)
 	}
 
 	if (card_type == CXL_CARD) {
-		return true;
+		power_status = get_pcie_card_power_status(pcie_card_id);
+		if (power_status < 0) {
+			LOG_ERR("Fail to get CXL card power status, cxl id: 0x%x", cxl_id);
+			return false;
+		}
+
+		cfg_table = get_cxl_sensor_cfg_info(cxl_id, &cfg_count);
+		if (cfg_table == NULL) {
+			LOG_ERR("Fail to get CXL sensor cfg table to check access, cxl id: 0x%x",
+				cxl_id);
+			return false;
+		}
+
+		if (power_status & PCIE_CARD_POWER_GOOD_BIT) {
+			if (pcie_card_init_status[pcie_card_id] != true) {
+				for (index = 0; index < cfg_count; ++index) {
+					sensor_cfg *cfg = &cfg_table[index];
+
+					if (pre_cxl_switch_mux(cfg->num, (void *)&cxl_id) != true) {
+						LOG_ERR("Delay initial sensor pre-cxl switch mux fail, cxl id: 0x%x, sensor num: 0x%x",
+							cxl_id, cfg->num);
+						break;
+					}
+
+					if (init_drive_type_delayed(cfg) != true) {
+						post_cxl_switch_mux(cfg->num, (void *)&cxl_id);
+						break;
+					}
+
+					if (post_cxl_switch_mux(cfg->num, (void *)&cxl_id) !=
+					    true) {
+						LOG_ERR("Delay initial sensor post-cxl switch mux fail, cxl id: 0x%x, sensor num: 0x%x",
+							cxl_id, cfg->num);
+					}
+				}
+
+				if (index >= cfg_count) {
+					pcie_card_init_status[pcie_card_id] = true;
+				}
+			}
+			return true;
+		} else {
+			for (index = 0; index < cfg_count; ++index) {
+				sensor_cfg *cfg = &cfg_table[index];
+				cfg->cache_status = SENSOR_NOT_ACCESSIBLE;
+			}
+
+			pcie_card_init_status[pcie_card_id] = false;
+			return false;
+		}
 	} else {
 		return false;
 	}

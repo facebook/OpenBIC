@@ -21,6 +21,8 @@
 #include "sensor.h"
 #include "cci.h"
 
+#define CXL_IOEXP_INIT_RETRY_COUNT 5
+
 typedef struct _pm8702_dev_info {
 	bool is_init;
 	cci_fw_info_resp dev_info;
@@ -45,5 +47,6 @@ bool pal_pm8702_command_handler(uint8_t cxl_id, uint16_t opcode, uint8_t *data_b
 bool pal_get_pm8702_hbo_status(uint8_t cxl_id, uint8_t *resp_buf, uint8_t *resp_len);
 bool pal_pm8702_transfer_fw(uint8_t cxl_id, uint8_t *req_buf, int req_len);
 bool pal_set_pm8702_active_slot(uint8_t cxl_id, uint8_t *req_buf, int req_len);
+void init_cxl_card_ioexp(uint8_t cxl_id);
 
 #endif

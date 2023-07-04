@@ -73,5 +73,6 @@ void init_cxl_work();
 int check_cxl_power_status(bool is_mutex);
 int set_cxl_device_reset_pin(uint8_t val, bool is_mutex);
 void cxl_ioexp_alert_handler(struct k_work *work_item);
+bool check_ioexp_status(uint8_t cxl_card_id);
 
 #endif

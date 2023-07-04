@@ -31,6 +31,8 @@
 #define CXL_PRESENT 0x0E
 #define NO_DEVICE_PRESENT 0x0F
 
+#define PCIE_CARD_POWER_GOOD_BIT BIT(0)
+
 enum BOARD_REVERSION {
 	REV_EVT1,
 	REV_EVT2,
@@ -94,5 +96,6 @@ int pcie_card_id_to_cxl_id(uint8_t pcie_card_id, uint8_t *cxl_id);
 int cxl_id_to_pcie_card_id(uint8_t cxl_id, uint8_t *pcie_card_id);
 bool is_cxl_present();
 uint8_t get_board_revision();
+int get_pcie_card_power_status(uint8_t pcie_card_id);
 
 #endif

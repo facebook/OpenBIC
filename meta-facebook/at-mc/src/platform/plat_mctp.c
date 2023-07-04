@@ -174,7 +174,7 @@ uint8_t get_mctp_info(uint8_t dest_endpoint, mctp **mctp_inst, mctp_ext_params *
 	return ret;
 }
 
-void get_set_cxl_endpoint(uint8_t cxl_card_id, uint8_t eid)
+bool get_set_cxl_endpoint(uint8_t cxl_card_id, uint8_t eid)
 {
 	uint8_t ret = 0;
 	mctp *mctp_inst = NULL;
@@ -183,10 +183,10 @@ void get_set_cxl_endpoint(uint8_t cxl_card_id, uint8_t eid)
 	ret = get_mctp_info(eid, &mctp_inst, &msg.ext_params);
 	if (ret != MCTP_SUCCESS) {
 		LOG_ERR("Get mctp route info fail");
-		return;
+		return false;
 	}
 
-	CHECK_NULL_ARG(mctp_inst);
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, false);
 
 	/** Get eid from CXL **/
 	msg.hdr.cmd = MCTP_CTRL_CMD_GET_ENDPOINT_ID;
@@ -197,7 +197,7 @@ void get_set_cxl_endpoint(uint8_t cxl_card_id, uint8_t eid)
 	ret = mctp_ctrl_read(mctp_inst, &msg, (uint8_t *)&get_eid_resp, sizeof(get_eid_resp));
 	if (ret != MCTP_SUCCESS) {
 		LOG_ERR("Fail to get eid, cxl id: 0x%x", cxl_card_id);
-		return;
+		return false;
 	}
 
 	/** Set eid if the getting eid is not match with stored eid **/
@@ -218,11 +218,12 @@ void get_set_cxl_endpoint(uint8_t cxl_card_id, uint8_t eid)
 				     sizeof(set_eid_resp));
 		if (ret != MCTP_SUCCESS) {
 			LOG_ERR("Fail to set eid, card id: 0x%x", cxl_card_id);
-			return;
+			return false;
 		}
 	}
 
 	set_cxl_eid_flag(cxl_card_id, SET_EID_FLAG);
+	return true;
 }
 
 int pal_pldm_send_ipmi_request(ipmi_msg *msg, uint8_t eid)

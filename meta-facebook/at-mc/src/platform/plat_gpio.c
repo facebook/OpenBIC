@@ -267,37 +267,37 @@ bool pal_load_gpio_config(void)
 	return 1;
 }
 
-int get_cxl_ioexp_alert_pin(uint8_t card_id, uint8_t *alert_pin)
+int get_cxl_ioexp_alert_pin(uint8_t cxl_id, uint8_t *alert_pin)
 {
 	CHECK_NULL_ARG_WITH_RETURN(alert_pin, -1);
 
-	switch (card_id) {
-	case CARD_1_INDEX:
-		*alert_pin = SMB_2_MUX1_CH0_ALERT_R_N;
-		break;
-	case CARD_2_INDEX:
-		*alert_pin = SMB_2_MUX1_CH1_ALERT_R_N;
-		break;
-	case CARD_3_INDEX:
-		*alert_pin = SMB_2_MUX1_CH2_ALERT_R_N;
-		break;
-	case CARD_4_INDEX:
-		*alert_pin = SMB_2_MUX1_CH3_ALERT_R_N;
-		break;
-	case CARD_9_INDEX:
-		*alert_pin = SMB_2_MUX1_CH4_ALERT_R_N;
-		break;
-	case CARD_10_INDEX:
-		*alert_pin = SMB_2_MUX1_CH5_ALERT_R_N;
-		break;
-	case CARD_11_INDEX:
+	switch (cxl_id) {
+	case CXL_CARD_1:
 		*alert_pin = SMB_2_MUX1_CH6_ALERT_R_N;
 		break;
-	case CARD_12_INDEX:
+	case CXL_CARD_2:
 		*alert_pin = SMB_2_MUX1_CH7_ALERT_R_N;
 		break;
+	case CXL_CARD_3:
+		*alert_pin = SMB_2_MUX1_CH4_ALERT_R_N;
+		break;
+	case CXL_CARD_4:
+		*alert_pin = SMB_2_MUX1_CH5_ALERT_R_N;
+		break;
+	case CXL_CARD_5:
+		*alert_pin = SMB_2_MUX1_CH3_ALERT_R_N;
+		break;
+	case CXL_CARD_6:
+		*alert_pin = SMB_2_MUX1_CH2_ALERT_R_N;
+		break;
+	case CXL_CARD_7:
+		*alert_pin = SMB_2_MUX1_CH1_ALERT_R_N;
+		break;
+	case CXL_CARD_8:
+		*alert_pin = SMB_2_MUX1_CH0_ALERT_R_N;
+		break;
 	default:
-		LOG_ERR("Input cxl id: 0x%x is invalid", card_id);
+		LOG_ERR("Input cxl id: 0x%x is invalid", cxl_id);
 		return -1;
 	}
 

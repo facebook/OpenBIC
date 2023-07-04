@@ -93,6 +93,8 @@ LOG_MODULE_REGISTER(plat_isr);
 void cxl_set_eid_work_handler(struct k_work *work_item)
 {
 	bool ret = false;
+	uint8_t retry = 5;
+	uint8_t index = 0;
 
 	struct k_work_delayable *dwork = k_work_delayable_from_work(work_item);
 	cxl_work_info *work_info = CONTAINER_OF(dwork, cxl_work_info, set_eid_work);
@@ -111,30 +113,38 @@ void cxl_set_eid_work_handler(struct k_work *work_item)
 
 	struct k_mutex *meb_mutex = get_i2c_mux_mutex(meb_mux.bus);
 
-	/** Mutex lock bus **/
-	if (k_mutex_lock(meb_mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS))) {
-		LOG_ERR("mutex locked failed bus%u", meb_mux.bus);
-		return;
-	}
+	for (index = 0; index < retry; ++index) {
+		/** Mutex lock bus **/
+		if (k_mutex_lock(meb_mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS))) {
+			LOG_ERR("mutex locked failed on bus1, cxl id: 0x%x",
+				work_info->cxl_card_id);
+			continue;
+		}
 
-	/** Enable mux channel **/
-	ret = set_mux_channel(meb_mux, MUTEX_LOCK_ENABLE);
-	if (ret == false) {
+		/** Enable mux channel **/
+		ret = set_mux_channel(meb_mux, MUTEX_LOCK_ENABLE);
+		if (ret == false) {
+			k_mutex_unlock(meb_mutex);
+			continue;
+		}
+
+		ret = set_mux_channel(cxl_mux, MUTEX_LOCK_ENABLE);
+		if (ret == false) {
+			k_mutex_unlock(meb_mutex);
+			continue;
+		}
+
+		/** Set endpoint id **/
+		ret = get_set_cxl_endpoint(work_info->cxl_card_id, MCTP_EID_CXL);
+		if (ret != true) {
+			LOG_ERR("Fail to set eid, cxl id: 0x%x", work_info->cxl_card_id);
+			k_mutex_unlock(meb_mutex);
+			continue;
+		}
+		/** mutex unlock bus **/
 		k_mutex_unlock(meb_mutex);
-		return;
+		break;
 	}
-
-	ret = set_mux_channel(cxl_mux, MUTEX_LOCK_ENABLE);
-	if (ret == false) {
-		k_mutex_unlock(meb_mutex);
-		return;
-	}
-
-	/** Set endpoint id **/
-	get_set_cxl_endpoint(work_info->cxl_card_id, MCTP_EID_CXL);
-
-	/** mutex unlock bus **/
-	k_mutex_unlock(meb_mutex);
 }
 
 void add_sel_log_to_bmc_handler(struct k_work *work_item)

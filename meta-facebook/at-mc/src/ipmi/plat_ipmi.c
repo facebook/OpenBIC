@@ -395,7 +395,9 @@ void STORAGE_READ_FRUID_DATA(ipmi_msg *msg)
 	CHECK_NULL_ARG(msg);
 
 	int ret = -1;
+	int power_status = 0;
 	uint8_t status = 0;
+	uint8_t pcie_card_id = msg->data[0] - PCIE_CARD_ID_OFFSET;
 	EEPROM_ENTRY fru_entry;
 
 	if (msg->data_len != 4) {
@@ -414,6 +416,19 @@ void STORAGE_READ_FRUID_DATA(ipmi_msg *msg)
 	}
 
 	if (fru_entry.config.dev_id != MC_FRU_ID) {
+		power_status = get_pcie_card_power_status(pcie_card_id);
+		if (power_status < 0) {
+			LOG_ERR("Fail to get PCIE card power status, pcie card id: 0x%x",
+				pcie_card_id);
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+
+		if ((power_status & PCIE_CARD_POWER_GOOD_BIT) == 0) {
+			msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+			return;
+		}
+
 		ret = pal_write_read_cxl_fru(CXL_FRU_READ, fru_entry.config.dev_id, &fru_entry,
 					     &status);
 		if (ret < 0) {
@@ -456,7 +471,9 @@ void STORAGE_WRITE_FRUID_DATA(ipmi_msg *msg)
 	CHECK_NULL_ARG(msg);
 
 	int ret = -1;
+	int power_status = 0;
 	uint8_t status;
+	uint8_t pcie_card_id = msg->data[0] - PCIE_CARD_ID_OFFSET;
 	EEPROM_ENTRY fru_entry;
 
 	if (msg->data_len < 4) {
@@ -477,6 +494,19 @@ void STORAGE_WRITE_FRUID_DATA(ipmi_msg *msg)
 	msg->data_len = 1;
 
 	if (fru_entry.config.dev_id != MC_FRU_ID) {
+		power_status = get_pcie_card_power_status(pcie_card_id);
+		if (power_status < 0) {
+			LOG_ERR("Fail to get PCIE card power status, pcie card id: 0x%x",
+				pcie_card_id);
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+
+		if ((power_status & PCIE_CARD_POWER_GOOD_BIT) == 0) {
+			msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+			return;
+		}
+
 		ret = pal_write_read_cxl_fru(CXL_FRU_WRITE, fru_entry.config.dev_id, &fru_entry,
 					     &status);
 		if (ret < 0) {

@@ -618,7 +618,9 @@ bool pre_sq52205_read(sensor_cfg *cfg, void *args)
 
 	// Select Channel
 	bool ret = true;
+	bool is_sensor_init_done = false;
 	int mutex_status = 0;
+	int power_status = 0;
 	uint8_t card_type;
 
 	pwr_monitor_pre_proc_arg *pre_args = (pwr_monitor_pre_proc_arg *)args;
@@ -634,6 +636,25 @@ bool pre_sq52205_read(sensor_cfg *cfg, void *args)
 		return false;
 	}
 
+	power_status = get_pcie_card_power_status(pre_args->jcn_number);
+	if (power_status < 0) {
+		LOG_ERR("Fail to get PCIE card power status, pcie card id: 0x%x",
+			pre_args->jcn_number);
+		return false;
+	}
+
+	is_sensor_init_done = get_sensor_init_done_flag();
+	if (is_sensor_init_done) {
+		if ((power_status & PCIE_CARD_POWER_GOOD_BIT) == 0) {
+			cfg->cache_status = SENSOR_POLLING_DISABLE;
+			return true;
+		} else {
+			if (cfg->cache_status == SENSOR_POLLING_DISABLE) {
+				cfg->cache_status = SENSOR_INIT_STATUS;
+			}
+		}
+	}
+
 	mux_config *mux_args = &(pre_args->bus_3_mux_configs);
 	mux_args->bus = cfg->port;
 
@@ -645,6 +666,10 @@ bool pre_sq52205_read(sensor_cfg *cfg, void *args)
 	}
 
 	ret = set_mux_channel(*mux_args, MUTEX_LOCK_ENABLE);
+	if (ret != true) {
+		k_mutex_unlock(mutex);
+	}
+
 	return ret;
 }
 
@@ -851,6 +876,20 @@ bool pre_pm8702_read(sensor_cfg *cfg, void *args)
 		if (cfg->cache_status == SENSOR_POLLING_DISABLE) {
 			cfg->cache_status = SENSOR_INIT_STATUS;
 		}
+	}
+
+	switch (cfg->cache_status) {
+	case SENSOR_READ_SUCCESS:
+	case SENSOR_READ_ACUR_SUCCESS:
+	case SENSOR_READ_4BYTE_ACUR_SUCCESS:
+		/* Sensor reading success */
+	case SENSOR_INIT_STATUS:
+	case SENSOR_NOT_ACCESSIBLE:
+	case SENSOR_POLLING_DISABLE:
+		/* Not ready to polling PM8702 sensor */
+		break;
+	default:
+		return false;
 	}
 
 	return true;

@@ -250,6 +250,6 @@ extern char *gpio_name[];
 
 void enable_PRDY_interrupt();
 void disable_PRDY_interrupt();
-int get_cxl_ioexp_alert_pin(uint8_t card_id, uint8_t *alert_pin);
+int get_cxl_ioexp_alert_pin(uint8_t cxl_id, uint8_t *alert_pin);
 
 #endif
