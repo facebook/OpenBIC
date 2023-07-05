@@ -431,6 +431,10 @@ uint8_t pldm_send_platform_event(uint8_t event_class, uint16_t id, uint8_t ext_c
 		return pldm_send_effecter_event_message(event_receiver_info_p->mctp_inst_p,
 							event_receiver_info_p->ext_params, id,
 							ext_class, event_data, event_data_length);
+	case PLDM_OEM_EVENT_START ... PLDM_OEM_EVENT_END:
+		return pldm_platform_event_message_req(event_receiver_info_p->mctp_inst_p,
+						       event_receiver_info_p->ext_params,
+						       event_class, event_data, event_data_length);
 	default:
 		LOG_ERR("Unsupported event class, (%d)", event_class);
 		return PLDM_ERROR;

@@ -117,9 +117,9 @@ void ISR_NIC_ADC_ALERT()
 
 	event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_STATUS;
 	event.event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT :
-					     PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL;
+				       PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL;
 	event.previous_event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL :
-						      PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT;
+						PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT;
 
 	LOG_WRN("NIC ADC is %s", is_alert ? "alert" : "non-alert");
 
@@ -149,9 +149,9 @@ void ISR_PEX_ADC_ALERT()
 
 	event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_STATUS;
 	event.event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT :
-					     PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL;
+				       PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL;
 	event.previous_event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL :
-						      PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT;
+						PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT;
 
 	LOG_WRN("PEX ADC is %s", is_alert ? "alert" : "non-alert");
 
@@ -171,9 +171,9 @@ void ISR_SMB_FPGA_ALERT()
 
 	event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_STATUS;
 	event.event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT :
-					     PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL;
+				       PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL;
 	event.previous_event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL :
-						      PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT;
+						PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT;
 
 	LOG_WRN("FPGA SMB is %s", is_alert ? "alert" : "non-alert");
 
@@ -193,9 +193,9 @@ void ISR_VR_PMBUS_ALERT()
 
 	event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_STATUS;
 	event.event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT :
-					     PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL;
+				       PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL;
 	event.previous_event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL :
-						      PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT;
+						PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT;
 
 	LOG_WRN("VR PMBUS is %s", is_alert ? "alert" : "non-alert");
 
@@ -205,6 +205,7 @@ void ISR_VR_PMBUS_ALERT()
 		LOG_ERR("Send VR PMBUS alert event log failed");
 	}
 	light_fault_led_check();
+	vr_alert_check();
 }
 
 void ISR_HSC_SMB_ALERT()
@@ -215,9 +216,9 @@ void ISR_HSC_SMB_ALERT()
 
 	event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_STATUS;
 	event.event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT :
-					     PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL;
+				       PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL;
 	event.previous_event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL :
-						      PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT;
+						PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT;
 
 	LOG_WRN("HSC SMB is %s", is_alert ? "alert" : "non-alert");
 
