@@ -244,7 +244,7 @@ struct pldm_platform_event_message_resp {
 struct pldm_sensor_event_data {
 	uint16_t sensor_id;
 	uint8_t sensor_event_class_type;
-	uint8_t event_class_data[1];
+	uint8_t event_class_data[];
 } __attribute__((packed));
 
 struct pldm_sensor_event_state_sensor_state {
