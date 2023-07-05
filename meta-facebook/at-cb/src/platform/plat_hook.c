@@ -36,6 +36,7 @@
 LOG_MODULE_REGISTER(plat_hook);
 
 #define PEX_SWITCH_INIT_RETRY_COUNT 3
+#define ACCL_SENSOR_COUNT 6
 
 struct k_mutex xdpe15284_mutex;
 
@@ -172,345 +173,6 @@ pex89000_init_arg pex_sensor_init_args[] = {
 	[1] = { .idx = 1, .is_init = false },
 };
 
-ina233_init_arg accl_ina233_init_args[] = {
-	// ACCL 1
-	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	// ACCL 2
-	[3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	// ACCL 3
-	[6] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[7] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	// ACCL 4
-	[9] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[10] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[11] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	// ACCL 5
-	[12] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[13] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[14] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	// ACCL 6
-	[15] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[16] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[17] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	// ACCL 7
-	[18] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[19] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[20] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	// ACCL 8
-	[21] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[22] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[23] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	// ACCL 9
-	[24] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[25] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[26] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	// ACCL 10
-	[27] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[28] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[29] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	// ACCL 11
-	[30] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[31] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[32] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	// ACCL 12
-	[33] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[34] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-	[35] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
-	.mfr_config = {
-		.operating_mode =0b111,
-		.shunt_volt_time = 0b100,
-		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
-		.rsvd = 0b0100,
-	},
-	},
-};
-
 sq52205_init_arg sq52205_init_args[] = {
 	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
 	.config = {
@@ -584,6 +246,36 @@ mux_config pca9546_configs[] = {
 	[3] = { .target_addr = 0x72, .channel = PCA9546A_CHANNEL_3 },
 };
 
+accl_card_info accl_card_info_args[] = {
+	[0] = { .card_id = 0, .freya_info_ptr = &accl_freya_info[0] },
+	[1] = { .card_id = 1, .freya_info_ptr = &accl_freya_info[1] },
+	[2] = { .card_id = 2, .freya_info_ptr = &accl_freya_info[2] },
+	[3] = { .card_id = 3, .freya_info_ptr = &accl_freya_info[3] },
+	[4] = { .card_id = 4, .freya_info_ptr = &accl_freya_info[4] },
+	[5] = { .card_id = 5, .freya_info_ptr = &accl_freya_info[5] },
+	[6] = { .card_id = 6, .freya_info_ptr = &accl_freya_info[6] },
+	[7] = { .card_id = 7, .freya_info_ptr = &accl_freya_info[7] },
+	[8] = { .card_id = 8, .freya_info_ptr = &accl_freya_info[8] },
+	[9] = { .card_id = 9, .freya_info_ptr = &accl_freya_info[9] },
+	[10] = { .card_id = 10, .freya_info_ptr = &accl_freya_info[10] },
+	[11] = { .card_id = 11, .freya_info_ptr = &accl_freya_info[11] },
+};
+
+accl_card_sensor_info accl_sensor_info_args[] = {
+	[0] = { .is_sensor_init = false, .start_sensor_num = SENSOR_NUM_TEMP_ACCL_1_FREYA_1 },
+	[1] = { .is_sensor_init = false, .start_sensor_num = SENSOR_NUM_TEMP_ACCL_2_FREYA_1 },
+	[2] = { .is_sensor_init = false, .start_sensor_num = SENSOR_NUM_TEMP_ACCL_3_FREYA_1 },
+	[3] = { .is_sensor_init = false, .start_sensor_num = SENSOR_NUM_TEMP_ACCL_4_FREYA_1 },
+	[4] = { .is_sensor_init = false, .start_sensor_num = SENSOR_NUM_TEMP_ACCL_5_FREYA_1 },
+	[5] = { .is_sensor_init = false, .start_sensor_num = SENSOR_NUM_TEMP_ACCL_6_FREYA_1 },
+	[6] = { .is_sensor_init = false, .start_sensor_num = SENSOR_NUM_TEMP_ACCL_7_FREYA_1 },
+	[7] = { .is_sensor_init = false, .start_sensor_num = SENSOR_NUM_TEMP_ACCL_8_FREYA_1 },
+	[8] = { .is_sensor_init = false, .start_sensor_num = SENSOR_NUM_TEMP_ACCL_9_FREYA_1 },
+	[9] = { .is_sensor_init = false, .start_sensor_num = SENSOR_NUM_TEMP_ACCL_10_FREYA_1 },
+	[10] = { .is_sensor_init = false, .start_sensor_num = SENSOR_NUM_TEMP_ACCL_11_FREYA_1 },
+	[11] = { .is_sensor_init = false, .start_sensor_num = SENSOR_NUM_TEMP_ACCL_12_FREYA_1 },
+};
+
 uint8_t plat_monitor_table_arg[] = { PCIE_CARD_1, PCIE_CARD_2,	PCIE_CARD_3,  PCIE_CARD_4,
 				     PCIE_CARD_5, PCIE_CARD_6,	PCIE_CARD_7,  PCIE_CARD_8,
 				     PCIE_CARD_9, PCIE_CARD_10, PCIE_CARD_11, PCIE_CARD_12 };
@@ -598,6 +290,8 @@ bool pre_ina233_read(sensor_cfg *cfg, void *args)
 
 	// Select Channel
 	bool ret = true;
+	bool is_power_good = false;
+	bool is_sensor_init_done = false;
 	int mutex_status = 0;
 	pwr_monitor_pre_proc_arg *pre_args = (pwr_monitor_pre_proc_arg *)args;
 	mux_config mux_cfg = pre_args->mux_configs;
@@ -606,6 +300,19 @@ bool pre_ina233_read(sensor_cfg *cfg, void *args)
 	if (asic_card_info[pre_args->card_id].card_status == ASIC_CARD_NOT_PRESENT) {
 		cfg->is_enable_polling = false;
 		return false;
+	}
+
+	is_sensor_init_done = get_sensor_init_done_flag();
+	if (is_sensor_init_done) {
+		is_power_good = is_accl_power_good(pre_args->card_id);
+		if (is_power_good != true) {
+			cfg->cache_status = SENSOR_POLLING_DISABLE;
+			return true;
+		}
+
+		if (cfg->cache_status == SENSOR_POLLING_DISABLE) {
+			cfg->cache_status = SENSOR_INIT_STATUS;
+		}
 	}
 
 	struct k_mutex *mutex = get_i2c_mux_mutex(mux_cfg.bus);
@@ -765,90 +472,111 @@ bool post_pex89000_read(sensor_cfg *cfg, void *args, int *reading)
 	return true;
 }
 
-bool pre_accl_mux_switch(uint8_t sensor_num, void *arg)
-{
-	CHECK_NULL_ARG_WITH_RETURN(arg, false);
-
-	bool ret = false;
-	mux_config accl_mux = { 0 };
-	mux_config channel_mux = { 0 };
-	uint8_t *card_id = (uint8_t *)arg;
-
-	if (get_accl_mux_config(*card_id, &accl_mux) != true) {
-		return false;
-	}
-
-	if (get_mux_channel_config(*card_id, sensor_num, &channel_mux) != true) {
-		return false;
-	}
-
-	int mutex_status = 0;
-	struct k_mutex *mutex = get_i2c_mux_mutex(accl_mux.bus);
-
-	mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
-	if (mutex_status != 0) {
-		LOG_ERR("Mutex lock fail, status: %d", mutex_status);
-		return false;
-	}
-
-	ret = set_mux_channel(accl_mux, MUTEX_LOCK_ENABLE);
-	if (ret == false) {
-		LOG_ERR("ACCL switch mux fail");
-		k_mutex_unlock(mutex);
-		return false;
-	}
-
-	ret = set_mux_channel(channel_mux, MUTEX_LOCK_ENABLE);
-	if (ret == false) {
-		LOG_ERR("ACCL switch mux fail");
-		k_mutex_unlock(mutex);
-		return false;
-	}
-
-	return true;
-}
-
-bool post_accl_mux_switch(uint8_t sensor_num, void *arg)
-{
-	CHECK_NULL_ARG_WITH_RETURN(arg, false);
-
-	mux_config accl_mux = { 0 };
-	uint8_t *card_id = (uint8_t *)arg;
-
-	if (get_accl_mux_config(*card_id, &accl_mux) != true) {
-		return false;
-	}
-
-	int unlock_status = 0;
-	struct k_mutex *mutex = get_i2c_mux_mutex(accl_mux.bus);
-	if (mutex->lock_count != 0) {
-		unlock_status = k_mutex_unlock(mutex);
-	}
-
-	if (unlock_status != 0) {
-		LOG_ERR("Mutex unlock fail, status: %d", unlock_status);
-		return false;
-	}
-
-	return true;
-}
-
 bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
+	accl_card_info *card_info_args = (accl_card_info *)args;
+	uint8_t card_id = card_info_args->card_id;
+	freya_info *accl_freya = card_info_args->freya_info_ptr;
+
+	CHECK_NULL_ARG_WITH_RETURN(card_info_args->freya_info_ptr, false);
+
+	/** Check whether Freya is accessible **/
+	if (asic_card_info[card_id].card_status != ASIC_CARD_PRESENT) {
+		cfg->cache_status = SENSOR_NOT_PRESENT;
+		return true;
+	}
+
+	switch (cfg->target_addr) {
+	case ACCL_FREYA_1_ADDR:
+		if (asic_card_info[card_id].asic_1_status != ASIC_CARD_DEVICE_PRESENT) {
+			cfg->cache_status = SENSOR_NOT_PRESENT;
+			return true;
+		}
+		break;
+	case ACCL_FREYA_2_ADDR:
+		if (asic_card_info[card_id].asic_2_status != ASIC_CARD_DEVICE_PRESENT) {
+			cfg->cache_status = SENSOR_NOT_PRESENT;
+			return true;
+		}
+		break;
+	default:
+		break;
+	}
+
+	/** Check ACCL card power status **/
+	bool is_power_good = false;
+	uint8_t index = 0;
+
+	is_power_good = is_accl_power_good(card_id);
+	if (is_power_good != true) {
+		cfg->cache_status = SENSOR_POLLING_DISABLE;
+		accl_sensor_info_args[card_id].is_sensor_init = false;
+		return true;
+	}
+
+	if (cfg->cache_status == SENSOR_POLLING_DISABLE) {
+		cfg->cache_status = SENSOR_INIT_STATUS;
+	}
+
+	mux_config accl_mux = { 0 };
+	if (get_accl_mux_config(card_id, &accl_mux) != true) {
+		LOG_ERR("Fail to get ACCL card mux config, card id: 0x%x, sensor num: 0x%x",
+			card_id, cfg->num);
+		return false;
+	}
+
+	int mutex_status = 0;
+	struct k_mutex *mutex = get_i2c_mux_mutex(cfg->port);
+
+	mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
+	if (mutex_status != 0) {
+		LOG_ERR("Mutex lock fail, status: %d, card id: 0x%x, sensor num: 0x%x",
+			mutex_status, card_id, cfg->num);
+		return false;
+	}
+
+	if (set_mux_channel(accl_mux, MUTEX_LOCK_ENABLE) == false) {
+		LOG_ERR("ACCL switch card mux fail, card id: 0x%x, sensor num: 0x%x", card_id,
+			cfg->num);
+		goto error_exit;
+	}
+
+	if (accl_sensor_info_args[card_id].is_sensor_init != true) {
+		for (index = 0; index < ACCL_SENSOR_COUNT; ++index) {
+			uint8_t sensor_num =
+				accl_sensor_info_args[card_id].start_sensor_num + index;
+
+			sensor_cfg *accl_sensor_cfg = get_common_sensor_cfg_info(sensor_num);
+			if (accl_sensor_cfg == NULL) {
+				LOG_ERR("Fail to get sensor cfg info, card id: 0x%x, sensor num: 0x%x",
+					card_id, sensor_num);
+				goto error_exit;
+			}
+
+			if (init_drive_type_delayed(accl_sensor_cfg) != true) {
+				LOG_ERR("Fail to delayed init sensor, card id: 0x%x, sensor num: 0x%x",
+					card_id, accl_sensor_cfg->num);
+				goto error_exit;
+			}
+		}
+
+		accl_sensor_info_args[card_id].is_sensor_init = true;
+	}
+
 	int ret = 0;
 	uint8_t nvme_temp = 0;
 	uint8_t drive_ready_bit = 0;
 	uint8_t nvme_status[FREYA_STATUS_BLOCK_LENGTH] = { 0 };
-	freya_info *accl_freya = (freya_info *)args;
 
 	ret = read_nvme_info(cfg->port, cfg->target_addr, FREYA_STATUS_BLOCK_OFFSET,
 			     FREYA_STATUS_BLOCK_LENGTH, nvme_status);
 	if (ret != 0) {
-		LOG_ERR("ACCL pre-read get freya status fail, sensor num: 0x%x", cfg->num);
-		return false;
+		LOG_ERR("ACCL pre-read get freya status fail, card id: 0x%x, sensor num: 0x%x",
+			card_id, cfg->num);
+		goto error_exit;
 	}
 
 	nvme_temp = nvme_status[NVME_TEMPERATURE_INDEX];
@@ -867,11 +595,9 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 		default:
 			break;
 		}
+
+		k_mutex_unlock(mutex);
 		return true;
-	} else {
-		if (cfg->cache_status == SENSOR_POLLING_DISABLE) {
-			cfg->cache_status = SENSOR_INIT_STATUS;
-		}
 	}
 
 	switch (cfg->target_addr) {
@@ -896,15 +622,43 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 		}
 		break;
 	default:
-		LOG_ERR("Invalid sensor address: 0x%x, sensor num: 0x%x", cfg->target_addr,
+		LOG_ERR("Invalid Freya sensor address, card id: 0x%x, sensor num: 0x%x", card_id,
 			cfg->num);
-		return false;
+		goto error_exit;
 	}
 
 	if (ret != 0) {
 		if (ret != FREYA_NOT_READY_RET_CODE) {
 			LOG_ERR("Get freya info fail, sensor num: 0x%x", cfg->num);
 		}
+		goto error_exit;
+	}
+
+	return true;
+
+error_exit:
+	k_mutex_unlock(mutex);
+	return false;
+}
+
+bool post_accl_nvme_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
+	ARG_UNUSED(reading);
+
+	int unlock_status = 0;
+	uint8_t bus = cfg->port;
+	accl_card_info *card_info_args = (accl_card_info *)args;
+
+	struct k_mutex *mutex = get_i2c_mux_mutex(bus);
+	if (mutex->lock_count != 0) {
+		unlock_status = k_mutex_unlock(mutex);
+	}
+
+	if (unlock_status != 0) {
+		LOG_ERR("Mutex unlock fail, status: %d, card id: 0x%x, sensor num: 0x%x",
+			unlock_status, card_info_args->card_id, cfg->num);
 		return false;
 	}
 
