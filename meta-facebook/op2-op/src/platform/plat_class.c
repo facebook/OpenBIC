@@ -28,6 +28,7 @@ LOG_MODULE_REGISTER(plat_class);
 static uint8_t card_position = CARD_POSITION_UNKNOWN;
 static uint8_t card_type = CARD_TYPE_UNKNOWN;
 static uint8_t pcie_retimer_type = RETIMER_TYPE_UNKNOWN;
+static uint8_t board_revision = UNKNOWN_STAGE;
 
 uint8_t get_card_position()
 {
@@ -42,6 +43,11 @@ uint8_t get_card_type()
 uint8_t get_pcie_retimer_type(void)
 {
 	return pcie_retimer_type;
+}
+
+uint8_t get_board_revision()
+{
+	return board_revision;
 }
 
 int init_platform_config()
@@ -107,4 +113,17 @@ int check_pcie_retimer_type(void)
 	}
 
 	return ret;
+}
+
+void init_board_revision(void)
+{
+	if (card_type == CARD_TYPE_OPA) {
+		board_revision = gpio_get(OPA_BOARD_REV_0);
+		board_revision |= gpio_get(OPA_BOARD_REV_1) << 1;
+		board_revision |= gpio_get(OPA_BOARD_REV_2) << 2;
+	} else {
+		board_revision = gpio_get(OPB_BOARD_REV_0);
+		board_revision |= gpio_get(OPB_BOARD_REV_1) << 1;
+		board_revision |= gpio_get(OPB_BOARD_REV_2) << 2;
+	}
 }

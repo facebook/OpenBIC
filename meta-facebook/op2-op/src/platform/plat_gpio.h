@@ -400,7 +400,7 @@
 #define OPB_name_gpioQ \
 	gpio_name_to_num(OPB_FM_EXP_MAIN_PWR_EN) \
 	gpio_name_to_num(OPB_RESERVE_GPIOQ1) \
-	gpio_name_to_num(OPB_RESERVE_GPIOQ2) \
+	gpio_name_to_num(OPB_BIC_MAIN_PWR_EN_R) \
 	gpio_name_to_num(OPB_SMB_BIC_ALERT_N_R) \
 	gpio_name_to_num(OPB_RST_CPLD_PERST1_N) \
 	gpio_name_to_num(OPB_RESERVE_GPIOQ5) \

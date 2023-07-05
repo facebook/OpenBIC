@@ -797,7 +797,7 @@ bool power_on_handler(uint8_t initial_stage)
 	bool enable_power_on_handler = true;
 	uint8_t control_stage = initial_stage;
 	uint8_t index = 0;
-
+	uint8_t board_revision = get_board_revision();
 	uint8_t card_type = get_card_type();
 	if (card_type == CARD_TYPE_UNKNOWN) {
 		LOG_ERR("UNKNOWN CARD TYPE");
@@ -807,6 +807,9 @@ bool power_on_handler(uint8_t initial_stage)
 	while (enable_power_on_handler == true) {
 		switch (control_stage) { // Enable VR power machine
 		case BOARD_POWER_ON_STAGE0:
+			if (board_revision == DVT_STAGE && card_type == CARD_TYPE_OPB) {
+				control_power_stage(ENABLE_POWER_MODE, OPB_BIC_MAIN_PWR_EN_R);
+			}
 			break;
 		case BOARD_POWER_ON_STAGE1:
 			control_power_stage(ENABLE_POWER_MODE, OPA_EN_P0V9_VR);
@@ -856,6 +859,9 @@ bool power_on_handler(uint8_t initial_stage)
 				break;
 			}
 			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_02) != 0) {
+				if (board_revision == DVT_STAGE && card_type == CARD_TYPE_OPB) {
+					control_power_stage(DISABLE_POWER_MODE, OPB_BIC_MAIN_PWR_EN_R);
+				}
 				LOG_ERR("PWRGD_P12V_MAIN is not enabled!");
 				check_power_ret = -1;
 				break;
@@ -956,6 +962,7 @@ bool power_off_handler(uint8_t initial_stage)
 	int all_e1s_power_check = 0;
 	uint8_t control_stage = initial_stage;
 	uint8_t index = 0;
+	uint8_t board_revision = get_board_revision();
 	uint8_t card_type = get_card_type();
 	if (card_type == CARD_TYPE_UNKNOWN) {
 		LOG_ERR("UNKNOWN CARD TYPE");
@@ -994,6 +1001,11 @@ bool power_off_handler(uint8_t initial_stage)
 			break;
 		case BOARD_POWER_OFF_STAGE1:
 			control_power_stage(DISABLE_POWER_MODE, OPA_EN_P0V9_VR);
+			break;
+		case BOARD_POWER_OFF_STAGE2:
+			if (board_revision == DVT_STAGE && card_type == CARD_TYPE_OPB) {
+				control_power_stage(DISABLE_POWER_MODE, OPB_BIC_MAIN_PWR_EN_R);
+			}
 			break;
 		default:
 			LOG_ERR("Stage 0x%x not supported", initial_stage);
@@ -1064,6 +1076,15 @@ bool power_off_handler(uint8_t initial_stage)
 		case BOARD_POWER_OFF_STAGE1:
 			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_04) != 0) {
 				LOG_ERR("OPA_PWRGD_P0V9_VR is not disabled!");
+				check_power_ret = -1;
+				break;
+			}
+			check_power_ret = 0;
+			control_stage = BOARD_POWER_OFF_STAGE2;
+			break;
+		case BOARD_POWER_OFF_STAGE2:
+			if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_02) != 0) {
+				LOG_ERR("OPB_BIC_MAIN_PWR_EN_R is not disabled!");
 				check_power_ret = -1;
 				break;
 			}

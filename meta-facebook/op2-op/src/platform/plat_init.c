@@ -91,6 +91,7 @@ DEVICE_DEFINE(PRE_DEF_PROJ_GPIO, "PRE_DEF_PROJ_GPIO_NAME", &gpio_init, NULL, NUL
 
 void pal_set_sys_status()
 {
+	init_board_revision();
 	init_sequence_status();
 	set_DC_status(FM_EXP_MAIN_PWR_EN);
 	control_power_sequence();
