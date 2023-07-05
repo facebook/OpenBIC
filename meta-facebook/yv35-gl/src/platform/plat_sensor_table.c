@@ -224,6 +224,9 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_MB_VR_VCCD1_PWR_W, sensor_dev_xdpe15284, I2C_BUS5, PVCCD1_ADDR, VR_PWR_OFFSET,
 	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, pre_xdpe15284_read, &xdpe15284_pre_read_args[1], NULL, NULL, NULL },
+	{ SENSOR_NUM_MB_SOC_CPU_PWR_W, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR, PECI_PWR_CPU,
+	  post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 
 	/* TODO:
 	 * DIMM power sensors are pending because I3C hasn't be ready yet.

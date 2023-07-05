@@ -34,7 +34,7 @@ LOG_MODULE_REGISTER(dev_intel_peci);
 
 static intel_peci_unit unit_info;
 
-static bool get_power_sku_unit(uint8_t addr)
+__weak bool pal_get_power_sku_unit(uint8_t addr)
 {
 	static int is_read_before;
 
@@ -75,7 +75,6 @@ static bool get_power_sku_unit(uint8_t addr)
 
 	SAFE_FREE(readbuf);
 	return true;
-
 cleanup:
 	SAFE_FREE(readbuf);
 	return false;
@@ -210,68 +209,113 @@ safe_free:
 	return ret;
 }
 
-static bool read_cpu_power(uint8_t addr, int *reading)
+__weak bool pal_get_cpu_time(uint8_t addr, uint8_t cmd, uint8_t readlen, uint32_t *run_time)
 {
-	if (reading == NULL) {
-		LOG_ERR("Invalid argument");
-		return false;
-	}
-
-	uint8_t command = PECI_RD_PKG_CFG0_CMD;
-	uint8_t readlen = 0x05;
-	uint8_t u8index[2] = { 0x03, 0x1F };
-	uint16_t u16Param[2] = { 0x00FF, 0x0000 };
+	uint8_t time_index = 0x01F;
+	uint16_t time_param = 0x0000;
 	int ret = 0;
-	uint32_t pkg_energy, run_time, diff_energy, diff_time;
-	static uint32_t last_pkg_energy = 0, last_run_time = 0;
 
 	uint8_t *readbuf = (uint8_t *)malloc(2 * readlen * sizeof(uint8_t));
 	if (!readbuf) {
-		LOG_ERR("Fail to allocate readbuf memory");
+		LOG_ERR("Get cpu time fail to allocate readbuf memory");
 		return false;
 	}
 
-	ret = peci_read(command, addr, u8index[0], u16Param[0], readlen, readbuf);
+	ret = peci_read(cmd, addr, time_index, time_param, readlen, readbuf);
 	if (ret) {
-		LOG_ERR("PECI read error");
+		LOG_ERR("Get cpu time peci read error");
 		goto cleanup;
 	}
-	ret = peci_read(command, addr, u8index[1], u16Param[1], readlen, &readbuf[5]);
-	if (ret) {
-		LOG_ERR("PECI read error");
-		goto cleanup;
-	}
-	if (readbuf[0] != PECI_CC_RSP_SUCCESS || readbuf[5] != PECI_CC_RSP_SUCCESS) {
-		if (readbuf[0] == PECI_CC_ILLEGAL_REQUEST ||
-		    readbuf[5] == PECI_CC_ILLEGAL_REQUEST) {
-			LOG_ERR("Unknown request");
+	if (readbuf[0] != PECI_CC_RSP_SUCCESS) {
+		if (readbuf[0] == PECI_CC_ILLEGAL_REQUEST) {
+			LOG_ERR("Get cpu time unknown request");
 		} else {
-			LOG_ERR("PECI control hardware, firmware or associated logic error");
+			LOG_ERR("Get cpu time peci control hardware, firmware or associated logic error");
 		}
 		goto cleanup;
 	}
 
-	if (!get_power_sku_unit(addr)) {
-		LOG_ERR("PECI get power sku unit failed!");
+	*run_time = readbuf[4];
+	*run_time = (*run_time << 8) | readbuf[3];
+	*run_time = (*run_time << 8) | readbuf[2];
+	*run_time = (*run_time << 8) | readbuf[1];
+
+	return true;
+cleanup:
+	SAFE_FREE(readbuf);
+	return false;
+}
+
+__weak bool pal_get_cpu_energy(uint8_t addr, uint8_t cmd, uint8_t readlen, uint32_t *pkg_energy)
+{
+	uint8_t energy_index = 0x03;
+	uint16_t energy_param = 0x00FF;
+	int ret = 0;
+
+	uint8_t *readbuf = (uint8_t *)malloc(2 * readlen * sizeof(uint8_t));
+	if (!readbuf) {
+		LOG_ERR("Get cpu power fail to allocate readbuf memory");
+		return false;
+	}
+
+	ret = peci_read(cmd, addr, energy_index, energy_param, readlen, readbuf);
+	if (ret) {
+		LOG_ERR("Get cpu energy peci read error");
+		goto cleanup;
+	}
+	if (readbuf[0] != PECI_CC_RSP_SUCCESS) {
+		if (readbuf[0] == PECI_CC_ILLEGAL_REQUEST) {
+			LOG_ERR("Get cpu energy unknown request");
+		} else {
+			LOG_ERR("Get cpu energy peci control hardware, firmware or associated logic error");
+		}
 		goto cleanup;
 	}
 
-	pkg_energy = readbuf[4];
-	pkg_energy = (pkg_energy << 8) | readbuf[3];
-	pkg_energy = (pkg_energy << 8) | readbuf[2];
-	pkg_energy = (pkg_energy << 8) | readbuf[1];
+	*pkg_energy = readbuf[4];
+	*pkg_energy = (*pkg_energy << 8) | readbuf[3];
+	*pkg_energy = (*pkg_energy << 8) | readbuf[2];
+	*pkg_energy = (*pkg_energy << 8) | readbuf[1];
 
-	run_time = readbuf[9];
-	run_time = (run_time << 8) | readbuf[8];
-	run_time = (run_time << 8) | readbuf[7];
-	run_time = (run_time << 8) | readbuf[6];
+	return true;
+cleanup:
+	SAFE_FREE(readbuf);
+	return false;
+}
+
+bool read_cpu_power(uint8_t addr, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+
+	uint8_t command = PECI_RD_PKG_CFG0_CMD;
+	uint8_t readlen = 0x05;
+	bool ret = true;
+	uint32_t pkg_energy, run_time, diff_energy, diff_time;
+	static uint32_t last_pkg_energy = 0, last_run_time = 0;
+
+	ret = pal_get_cpu_energy(addr, command, readlen, &pkg_energy);
+	if (!ret) {
+		LOG_ERR("PECI get cpu energy failed!");
+		return false;
+	}
+
+	ret = pal_get_cpu_time(addr, command, readlen, &run_time);
+	if (!ret) {
+		LOG_ERR("PECI get cpu time failed!");
+		return false;
+	}
+
+	if (!pal_get_power_sku_unit(addr)) {
+		LOG_ERR("PECI get power sku unit failed!");
+		return false;
+	}
 
 	if (last_pkg_energy == 0 &&
 	    last_run_time == 0) { // first read, need second data to calculate
 		last_pkg_energy = pkg_energy;
 		last_run_time = run_time;
 		LOG_DBG("CPU power first read");
-		goto cleanup;
+		return false;
 	}
 
 	if (pkg_energy >= last_pkg_energy) {
@@ -290,7 +334,7 @@ static bool read_cpu_power(uint8_t addr, int *reading)
 
 	if (diff_time == 0) {
 		LOG_DBG("CPU power time elapsed is zero");
-		goto cleanup;
+		return false;
 	}
 
 	float pwr_scale = 1;
@@ -302,12 +346,7 @@ static bool read_cpu_power(uint8_t addr, int *reading)
 
 	*reading = ((float)diff_energy / (float)diff_time) * pwr_scale;
 
-	SAFE_FREE(readbuf);
 	return true;
-
-cleanup:
-	SAFE_FREE(readbuf);
-	return false;
 }
 
 static bool get_cpu_tjmax(uint8_t addr, int *reading)
