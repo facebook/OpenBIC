@@ -920,3 +920,8 @@ bool init_drive_type_delayed(sensor_cfg *cfg)
 
 	return false;
 }
+
+bool get_sensor_init_done_flag()
+{
+	return is_sensor_initial_done;
+}

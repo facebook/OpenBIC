@@ -662,5 +662,6 @@ uint8_t pal_get_monitor_sensor_count();
 void plat_fill_monitor_sensor_table();
 sensor_cfg *find_sensor_cfg_via_sensor_num(sensor_cfg *cfg_table, uint8_t cfg_count,
 					   uint8_t sensor_num);
+bool get_sensor_init_done_flag();
 
 #endif

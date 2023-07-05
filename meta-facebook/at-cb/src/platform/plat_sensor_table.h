@@ -147,46 +147,115 @@
 #define SENSOR_NUM_PWR_P12V_ACCL_11 0x51
 #define SENSOR_NUM_PWR_P12V_ACCL_12 0x52
 
+/** ACCL card 1 sensor number **/
+#define SENSOR_NUM_TEMP_ACCL_1_FREYA_1 0x70
+#define SENSOR_NUM_VOL_ACCL_1_FREYA_1_1 0x71
+#define SENSOR_NUM_VOL_ACCL_1_FREYA_1_2 0x72
+#define SENSOR_NUM_TEMP_ACCL_1_FREYA_2 0x73
+#define SENSOR_NUM_VOL_ACCL_1_FREYA_2_1 0x74
+#define SENSOR_NUM_VOL_ACCL_1_FREYA_2_2 0x75
+
+/** ACCL card 2 sensor number **/
+#define SENSOR_NUM_TEMP_ACCL_2_FREYA_1 0x76
+#define SENSOR_NUM_VOL_ACCL_2_FREYA_1_1 0x77
+#define SENSOR_NUM_VOL_ACCL_2_FREYA_1_2 0x78
+#define SENSOR_NUM_TEMP_ACCL_2_FREYA_2 0x79
+#define SENSOR_NUM_VOL_ACCL_2_FREYA_2_1 0x7A
+#define SENSOR_NUM_VOL_ACCL_2_FREYA_2_2 0x7B
+
+/** ACCL card 3 sensor number **/
+#define SENSOR_NUM_TEMP_ACCL_3_FREYA_1 0x7C
+#define SENSOR_NUM_VOL_ACCL_3_FREYA_1_1 0x7D
+#define SENSOR_NUM_VOL_ACCL_3_FREYA_1_2 0x7E
+#define SENSOR_NUM_TEMP_ACCL_3_FREYA_2 0x7F
+#define SENSOR_NUM_VOL_ACCL_3_FREYA_2_1 0x80
+#define SENSOR_NUM_VOL_ACCL_3_FREYA_2_2 0x81
+
+/** ACCL card 4 sensor number **/
+#define SENSOR_NUM_TEMP_ACCL_4_FREYA_1 0x82
+#define SENSOR_NUM_VOL_ACCL_4_FREYA_1_1 0x83
+#define SENSOR_NUM_VOL_ACCL_4_FREYA_1_2 0x84
+#define SENSOR_NUM_TEMP_ACCL_4_FREYA_2 0x85
+#define SENSOR_NUM_VOL_ACCL_4_FREYA_2_1 0x86
+#define SENSOR_NUM_VOL_ACCL_4_FREYA_2_2 0x87
+
+/** ACCL card 5 sensor number **/
+#define SENSOR_NUM_TEMP_ACCL_5_FREYA_1 0x88
+#define SENSOR_NUM_VOL_ACCL_5_FREYA_1_1 0x89
+#define SENSOR_NUM_VOL_ACCL_5_FREYA_1_2 0x8A
+#define SENSOR_NUM_TEMP_ACCL_5_FREYA_2 0x8B
+#define SENSOR_NUM_VOL_ACCL_5_FREYA_2_1 0x8C
+#define SENSOR_NUM_VOL_ACCL_5_FREYA_2_2 0x8D
+
+/** ACCL card 6 sensor number **/
+#define SENSOR_NUM_TEMP_ACCL_6_FREYA_1 0x8E
+#define SENSOR_NUM_VOL_ACCL_6_FREYA_1_1 0x8F
+#define SENSOR_NUM_VOL_ACCL_6_FREYA_1_2 0x90
+#define SENSOR_NUM_TEMP_ACCL_6_FREYA_2 0x91
+#define SENSOR_NUM_VOL_ACCL_6_FREYA_2_1 0x92
+#define SENSOR_NUM_VOL_ACCL_6_FREYA_2_2 0x93
+
+/** ACCL card 7 sensor number **/
+#define SENSOR_NUM_TEMP_ACCL_7_FREYA_1 0x94
+#define SENSOR_NUM_VOL_ACCL_7_FREYA_1_1 0x95
+#define SENSOR_NUM_VOL_ACCL_7_FREYA_1_2 0x96
+#define SENSOR_NUM_TEMP_ACCL_7_FREYA_2 0x97
+#define SENSOR_NUM_VOL_ACCL_7_FREYA_2_1 0x98
+#define SENSOR_NUM_VOL_ACCL_7_FREYA_2_2 0x99
+
+/** ACCL card 8 sensor number **/
+#define SENSOR_NUM_TEMP_ACCL_8_FREYA_1 0x9A
+#define SENSOR_NUM_VOL_ACCL_8_FREYA_1_1 0x9B
+#define SENSOR_NUM_VOL_ACCL_8_FREYA_1_2 0x9C
+#define SENSOR_NUM_TEMP_ACCL_8_FREYA_2 0x9D
+#define SENSOR_NUM_VOL_ACCL_8_FREYA_2_1 0x9E
+#define SENSOR_NUM_VOL_ACCL_8_FREYA_2_2 0x9F
+
+/** ACCL card 9 sensor number **/
+#define SENSOR_NUM_TEMP_ACCL_9_FREYA_1 0xA0
+#define SENSOR_NUM_VOL_ACCL_9_FREYA_1_1 0xA1
+#define SENSOR_NUM_VOL_ACCL_9_FREYA_1_2 0xA2
+#define SENSOR_NUM_TEMP_ACCL_9_FREYA_2 0xA3
+#define SENSOR_NUM_VOL_ACCL_9_FREYA_2_1 0xA4
+#define SENSOR_NUM_VOL_ACCL_9_FREYA_2_2 0xA5
+
+/** ACCL card 10 sensor number **/
+#define SENSOR_NUM_TEMP_ACCL_10_FREYA_1 0xA6
+#define SENSOR_NUM_VOL_ACCL_10_FREYA_1_1 0xA7
+#define SENSOR_NUM_VOL_ACCL_10_FREYA_1_2 0xA8
+#define SENSOR_NUM_TEMP_ACCL_10_FREYA_2 0xA9
+#define SENSOR_NUM_VOL_ACCL_10_FREYA_2_1 0xAA
+#define SENSOR_NUM_VOL_ACCL_10_FREYA_2_2 0xAB
+
+/** ACCL card 11 sensor number **/
+#define SENSOR_NUM_TEMP_ACCL_11_FREYA_1 0xAC
+#define SENSOR_NUM_VOL_ACCL_11_FREYA_1_1 0xAD
+#define SENSOR_NUM_VOL_ACCL_11_FREYA_1_2 0xAE
+#define SENSOR_NUM_TEMP_ACCL_11_FREYA_2 0xAF
+#define SENSOR_NUM_VOL_ACCL_11_FREYA_2_1 0xB0
+#define SENSOR_NUM_VOL_ACCL_11_FREYA_2_2 0xB1
+
+/** ACCL card 12 sensor number **/
+#define SENSOR_NUM_TEMP_ACCL_12_FREYA_1 0xB2
+#define SENSOR_NUM_VOL_ACCL_12_FREYA_1_1 0xB3
+#define SENSOR_NUM_VOL_ACCL_12_FREYA_1_2 0xB4
+#define SENSOR_NUM_TEMP_ACCL_12_FREYA_2 0xB5
+#define SENSOR_NUM_VOL_ACCL_12_FREYA_2_1 0xB6
+#define SENSOR_NUM_VOL_ACCL_12_FREYA_2_2 0xB7
+
 /** ACCL sensor config **/
 #define ACCL_FREYA_1_ADDR (0xD6 >> 1)
 #define ACCL_FREYA_2_ADDR (0xD0 >> 1)
-#define ACCL_12V_INA233_ADDR (0x80 >> 1)
-#define ACCL_3V3_1_INA233_ADDR (0x82 >> 1)
-#define ACCL_3V3_2_INA233_ADDR (0x84 >> 1)
-#define ACCL_12V_INA233_INIT_ARG_OFFSET 0
-#define ACCL_3V3_1_INA233_INIT_ARG_OFFSET 1
-#define ACCL_3V3_2_INA233_INIT_ARG_OFFSET 2
-
-/** ACCL sensor number **/
-#define SENSOR_NUM_TEMP_ACCL_FREYA_1 0x01
-#define SENSOR_NUM_TEMP_ACCL_FREYA_2 0x02
-#define SENSOR_NUM_VOL_ACCL_P12V_EFUSE 0x03
-#define SENSOR_NUM_VOL_ACCL_P3V3_1 0x04
-#define SENSOR_NUM_VOL_ACCL_P3V3_2 0x05
-#define SENSOR_NUM_VOL_ACCL_FREYA_1_1 0x06
-#define SENSOR_NUM_VOL_ACCL_FREYA_1_2 0x07
-#define SENSOR_NUM_VOL_ACCL_FREYA_2_1 0x0B
-#define SENSOR_NUM_VOL_ACCL_FREYA_2_2 0x0C
-#define SENSOR_NUM_CUR_ACCL_P12V_EFUSE 0x08
-#define SENSOR_NUM_CUR_ACCL_P3V3_1 0x09
-#define SENSOR_NUM_CUR_ACCL_P3V3_2 0x0A
-#define SENSOR_NUM_PWR_ACCL_P12V_EFUSE 0x0D
-#define SENSOR_NUM_PWR_ACCL_P3V3_1 0x0E
-#define SENSOR_NUM_PWR_ACCL_P3V3_2 0x0F
-#define SENSOR_NUM_PWR_ACCL_FREYA_1 0x10
-#define SENSOR_NUM_PWR_ACCL_FREYA_2 0x11
-
-extern const int ACCL_SENSOR_CONFIG_SIZE;
 
 void load_sensor_config(void);
 bool is_acb_power_good();
 bool is_dc_access(uint8_t sensor_num);
-bool is_pcie_device_access(uint8_t card_id);
 struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus);
 int get_accl_bus(uint8_t card_id, uint8_t sensor_number);
 sensor_cfg *get_accl_sensor_config(uint8_t card_id, uint8_t sensor_num);
 bool get_accl_mux_config(uint8_t card_id, mux_config *accl_mux);
-bool get_mux_channel_config(uint8_t card_id, uint8_t sensor_number, mux_config *channel_mux);
 sensor_cfg *get_accl_sensor_cfg_info(uint8_t card_id, uint8_t *cfg_count);
+bool is_accl_power_good(uint8_t card_id);
+sensor_cfg *get_common_sensor_cfg_info(uint8_t sensor_num);
 
 #endif
