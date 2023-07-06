@@ -312,7 +312,10 @@ bool get_acb_power_status()
 
 	if (is_power_good == true && current_power_status == false) {
 		// DC drop
-		clear_freya_cache_flag();
+		uint8_t index = 0;
+		for (index = 0; index < ASIC_CARD_COUNT; ++index) {
+			clear_freya_cache_flag(index);
+		}
 	}
 
 	is_power_good = current_power_status;

@@ -46,16 +46,20 @@ freya_info accl_freya_info[] = {
 	[11] = { .is_cache_freya1_info = false, .is_cache_freya2_info = false },
 };
 
-void clear_freya_cache_flag()
+void clear_freya_cache_flag(uint8_t card_id)
 {
-	uint8_t index = 0;
-
-	for (index = 0; index < ARRAY_SIZE(accl_freya_info); ++index) {
-		accl_freya_info[index].is_cache_freya1_info = false;
-		accl_freya_info[index].is_cache_freya2_info = false;
-		memset(&accl_freya_info[index].freya1_fw_info, 0, FREYA_FW_VERSION_LENGTH);
-		memset(&accl_freya_info[index].freya2_fw_info, 0, FREYA_FW_VERSION_LENGTH);
+	if (card_id >= ARRAY_SIZE(accl_freya_info)) {
+		LOG_ERR("Invalid card id to clear freya cache flag, card id: 0x%x", card_id);
+		return;
 	}
+
+	accl_freya_info[card_id].is_cache_freya1_info = false;
+	accl_freya_info[card_id].is_cache_freya2_info = false;
+	memset(&accl_freya_info[card_id].freya1_fw_info, 0, FREYA_FW_VERSION_LENGTH);
+	memset(&accl_freya_info[card_id].freya2_fw_info, 0, FREYA_FW_VERSION_LENGTH);
+
+	accl_freya_info[card_id].freya1_fw_info.is_freya_ready = FREYA_NOT_READY;
+	accl_freya_info[card_id].freya2_fw_info.is_freya_ready = FREYA_NOT_READY;
 }
 
 int get_freya_fw_info(uint8_t bus, uint8_t addr, freya_fw_info *fw_info)
