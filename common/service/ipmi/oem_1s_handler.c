@@ -51,6 +51,7 @@
 #endif
 #include "pcc.h"
 #include "hal_wdt.h"
+#include "pldm.h"
 
 #define BIOS_UPDATE_MAX_OFFSET 0x4000000
 #define BIC_UPDATE_MAX_OFFSET 0x50000
@@ -159,9 +160,14 @@ __weak void OEM_1S_MSG_OUT(ipmi_msg *msg)
 	// Return to source while data is invalid or sending req to Tx task fail
 	if (msg->completion_code != CC_SUCCESS) {
 		msg->data_len = 0;
-		status = ipmb_send_response(msg, IPMB_inf_index_map[msg->InF_source]);
-		if (status != IPMB_ERROR_SUCCESS) {
-			LOG_ERR("OEM_MSG_OUT send IPMB resp fail status: %x", status);
+		// Check interface and decide transfer MCTP/PLDM or IPMB
+		if ((msg->InF_source == PLDM) || (msg->InF_source == MCTP)) {
+			pldm_send_ipmi_response(msg->InF_source, msg);
+		} else {
+			status = ipmb_send_response(msg, IPMB_inf_index_map[msg->InF_source]);
+			if (status != IPMB_ERROR_SUCCESS) {
+				LOG_ERR("OEM_MSG_OUT send IPMB resp fail status: %x", status);
+			}
 		}
 	}
 #else
