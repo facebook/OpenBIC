@@ -35,7 +35,7 @@
 
 LOG_MODULE_REGISTER(plat_hook);
 
-#define PEX_SWITCH_INIT_RETRY_COUNT 3
+#define PEX_SWITCH_INIT_RETRY_COUNT 20
 #define ACCL_SENSOR_COUNT 6
 
 struct k_mutex xdpe15284_mutex;
