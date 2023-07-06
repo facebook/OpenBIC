@@ -173,6 +173,26 @@ sq52205_init_arg sq52205_init_args[] = {
 		.reset_bit = 0b0,
 	},
 	},
+	[12] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+	.config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b000,
+		.reset_bit = 0b0,
+	},
+	},
+	[13] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+	.config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b000,
+		.reset_bit = 0b0,
+	},
+	},
 };
 
 ina233_init_arg mc_ina233_init_args[] = {
@@ -276,6 +296,24 @@ ina233_init_arg mc_ina233_init_args[] = {
 	},
 	},
 	[11] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	.mfr_config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b0100,
+	},
+	},
+	[12] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	.mfr_config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b0100,
+	},
+	},
+	[13] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
@@ -540,6 +578,8 @@ pwr_monitor_pre_proc_arg pwr_monitor_pre_proc_args[] = {
 	[9] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_2 }, .jcn_number = 9 },
 	[10] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_2 }, .jcn_number = 10 },
 	[11] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_2 }, .jcn_number = 11 },
+	[12] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_3 }, .jcn_number = 12 },
+	[13] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_3 }, .jcn_number = 13 },
 };
 
 uint8_t pm8702_pre_arg[] = { CXL_CARD_1, CXL_CARD_2, CXL_CARD_3, CXL_CARD_4,

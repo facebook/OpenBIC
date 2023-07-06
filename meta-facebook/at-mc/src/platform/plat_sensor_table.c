@@ -264,6 +264,34 @@ sensor_cfg plat_mc_sq52205_sensor_config[] = {
 	  SQ52205_READ_PWR_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_sq52205_read,
 	  &pwr_monitor_pre_proc_args[11], post_sq52205_read, NULL, &sq52205_init_args[11] },
+
+	/** SQ52205_13 **/
+	{ SENSOR_NUM_VOL_P12V_AUX_CARD13, sensor_dev_sq52205, I2C_BUS3, SQ52205_3_ADDR,
+	  SQ52205_READ_VOL_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_sq52205_read,
+	  &pwr_monitor_pre_proc_args[12], post_sq52205_read, NULL, &sq52205_init_args[12] },
+	{ SENSOR_NUM_CUR_P12V_AUX_CARD13, sensor_dev_sq52205, I2C_BUS3, SQ52205_3_ADDR,
+	  SQ52205_READ_CUR_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_sq52205_read,
+	  &pwr_monitor_pre_proc_args[12], post_sq52205_read, NULL, &sq52205_init_args[12] },
+	{ SENSOR_NUM_PWR_P12V_AUX_CARD13, sensor_dev_sq52205, I2C_BUS3, SQ52205_3_ADDR,
+	  SQ52205_READ_PWR_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_sq52205_read,
+	  &pwr_monitor_pre_proc_args[12], post_sq52205_read, NULL, &sq52205_init_args[12] },
+
+	/** SQ52205_14 **/
+	{ SENSOR_NUM_VOL_P12V_AUX_CARD14, sensor_dev_sq52205, I2C_BUS3, SQ52205_4_ADDR,
+	  SQ52205_READ_VOL_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_sq52205_read,
+	  &pwr_monitor_pre_proc_args[13], post_sq52205_read, NULL, &sq52205_init_args[13] },
+	{ SENSOR_NUM_CUR_P12V_AUX_CARD14, sensor_dev_sq52205, I2C_BUS3, SQ52205_4_ADDR,
+	  SQ52205_READ_CUR_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_sq52205_read,
+	  &pwr_monitor_pre_proc_args[13], post_sq52205_read, NULL, &sq52205_init_args[13] },
+	{ SENSOR_NUM_PWR_P12V_AUX_CARD14, sensor_dev_sq52205, I2C_BUS3, SQ52205_4_ADDR,
+	  SQ52205_READ_PWR_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_sq52205_read,
+	  &pwr_monitor_pre_proc_args[13], post_sq52205_read, NULL, &sq52205_init_args[13] },
 };
 
 sensor_cfg plat_mc_ina233_sensor_config[] = {
@@ -434,6 +462,34 @@ sensor_cfg plat_mc_ina233_sensor_config[] = {
 	  PMBUS_READ_POUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_sq52205_read,
 	  &pwr_monitor_pre_proc_args[11], post_sq52205_read, NULL, &mc_ina233_init_args[11] },
+
+	/** INA233_13 **/
+	{ SENSOR_NUM_VOL_P12V_AUX_CARD13, sensor_dev_ina233, I2C_BUS3, SQ52205_3_ADDR,
+	  PMBUS_READ_VOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_sq52205_read,
+	  &pwr_monitor_pre_proc_args[12], post_sq52205_read, NULL, &mc_ina233_init_args[12] },
+	{ SENSOR_NUM_CUR_P12V_AUX_CARD13, sensor_dev_ina233, I2C_BUS3, SQ52205_3_ADDR,
+	  PMBUS_READ_IOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_sq52205_read,
+	  &pwr_monitor_pre_proc_args[12], post_sq52205_read, NULL, &mc_ina233_init_args[12] },
+	{ SENSOR_NUM_PWR_P12V_AUX_CARD13, sensor_dev_ina233, I2C_BUS3, SQ52205_3_ADDR,
+	  PMBUS_READ_POUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_sq52205_read,
+	  &pwr_monitor_pre_proc_args[12], post_sq52205_read, NULL, &mc_ina233_init_args[12] },
+
+	/** INA233_14 **/
+	{ SENSOR_NUM_VOL_P12V_AUX_CARD14, sensor_dev_ina233, I2C_BUS3, SQ52205_4_ADDR,
+	  PMBUS_READ_VOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_sq52205_read,
+	  &pwr_monitor_pre_proc_args[13], post_sq52205_read, NULL, &mc_ina233_init_args[13] },
+	{ SENSOR_NUM_CUR_P12V_AUX_CARD14, sensor_dev_ina233, I2C_BUS3, SQ52205_4_ADDR,
+	  PMBUS_READ_IOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_sq52205_read,
+	  &pwr_monitor_pre_proc_args[13], post_sq52205_read, NULL, &mc_ina233_init_args[13] },
+	{ SENSOR_NUM_PWR_P12V_AUX_CARD14, sensor_dev_ina233, I2C_BUS3, SQ52205_4_ADDR,
+	  PMBUS_READ_POUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_sq52205_read,
+	  &pwr_monitor_pre_proc_args[13], post_sq52205_read, NULL, &mc_ina233_init_args[13] },
 };
 
 sensor_cfg plat_hsc_mp5990_sensor_config[] = {
