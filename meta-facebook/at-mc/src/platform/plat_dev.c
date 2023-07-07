@@ -35,6 +35,7 @@
 #include "plat_hook.h"
 #include "plat_class.h"
 #include "hal_gpio.h"
+#include "plat_gpio.h"
 
 LOG_MODULE_REGISTER(plat_dev);
 
@@ -138,7 +139,9 @@ void cxl_mb_status_init(uint8_t cxl_id)
 			return;
 		}
 
-		get_set_cxl_endpoint(cxl_id, MCTP_EID_CXL);
+		if (get_set_cxl_endpoint(cxl_id, MCTP_EID_CXL) != true) {
+			LOG_ERR("Fail to set eid, cxl id: 0x%x", cxl_id);
+		}
 	}
 
 	k_mutex_unlock(meb_mutex);
@@ -361,6 +364,30 @@ int cxl_ioexp_init(uint8_t cxl_channel)
 	k_mutex_unlock(meb_mutex);
 
 	return 0;
+}
+
+void init_cxl_card_ioexp(uint8_t cxl_id)
+{
+	int ret = 0;
+	uint8_t retry_count = 0;
+	uint8_t gpio_alert_pin = 0;
+
+	ret = get_cxl_ioexp_alert_pin(cxl_id, &gpio_alert_pin);
+	if (ret != 0) {
+		LOG_ERR("Fail to get gpio alert pin, cxl id: 0x%x", cxl_id);
+		return;
+	}
+
+	for (retry_count = 0; retry_count < CXL_IOEXP_INIT_RETRY_COUNT; ++retry_count) {
+		if (gpio_get(gpio_alert_pin) != HIGH_ACTIVE) {
+			ret = cxl_ioexp_init(cxl_work_item[cxl_id].cxl_channel);
+			if (ret != 0) {
+				LOG_ERR("cxl: 0x%x ioexp initial fail", cxl_id);
+			}
+		} else {
+			return;
+		}
+	}
 }
 
 uint8_t pal_pm8702_read(uint8_t card_id, sensor_cfg *cfg, int *reading)

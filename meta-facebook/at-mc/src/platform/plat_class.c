@@ -31,6 +31,7 @@ LOG_MODULE_REGISTER(plat_class);
 
 struct PCIE_CARD_INFO {
 	uint8_t cpld_offset;
+	uint8_t power_status_offset;
 	uint8_t value_bit;
 	uint8_t value_shift_bit;
 	uint8_t card_device_type;
@@ -38,58 +39,72 @@ struct PCIE_CARD_INFO {
 
 struct PCIE_CARD_INFO pcie_card_info[] = {
 	[0] = { .cpld_offset = 0x20,
+		.power_status_offset = 0x11,
 		.value_bit = 0x0F,
 		.value_shift_bit = 4,
 		.card_device_type = UNKNOWN_CARD },
 	[1] = { .cpld_offset = 0x20,
+		.power_status_offset = 0x12,
 		.value_bit = 0x0F,
 		.value_shift_bit = 0,
 		.card_device_type = UNKNOWN_CARD },
 	[2] = { .cpld_offset = 0x21,
+		.power_status_offset = 0x13,
 		.value_bit = 0x0F,
 		.value_shift_bit = 4,
 		.card_device_type = UNKNOWN_CARD },
 	[3] = { .cpld_offset = 0x21,
+		.power_status_offset = 0x14,
 		.value_bit = 0x0F,
 		.value_shift_bit = 0,
 		.card_device_type = UNKNOWN_CARD },
 	[4] = { .cpld_offset = 0x22,
+		.power_status_offset = 0x15,
 		.value_bit = 0x01,
 		.value_shift_bit = 3,
 		.card_device_type = UNKNOWN_CARD },
 	[5] = { .cpld_offset = 0x22,
+		.power_status_offset = 0x16,
 		.value_bit = 0x01,
 		.value_shift_bit = 2,
 		.card_device_type = UNKNOWN_CARD },
 	[6] = { .cpld_offset = 0x22,
+		.power_status_offset = 0x17,
 		.value_bit = 0x01,
 		.value_shift_bit = 1,
 		.card_device_type = UNKNOWN_CARD },
 	[7] = { .cpld_offset = 0x22,
+		.power_status_offset = 0x18,
 		.value_bit = 0x01,
 		.value_shift_bit = 0,
 		.card_device_type = UNKNOWN_CARD },
 	[8] = { .cpld_offset = 0x23,
+		.power_status_offset = 0x19,
 		.value_bit = 0x0F,
 		.value_shift_bit = 4,
 		.card_device_type = UNKNOWN_CARD },
 	[9] = { .cpld_offset = 0x23,
+		.power_status_offset = 0x1A,
 		.value_bit = 0x0F,
 		.value_shift_bit = 0,
 		.card_device_type = UNKNOWN_CARD },
 	[10] = { .cpld_offset = 0x24,
+		 .power_status_offset = 0x1B,
 		 .value_bit = 0x0F,
 		 .value_shift_bit = 4,
 		 .card_device_type = UNKNOWN_CARD },
 	[11] = { .cpld_offset = 0x24,
+		 .power_status_offset = 0x1C,
 		 .value_bit = 0x0F,
 		 .value_shift_bit = 0,
 		 .card_device_type = UNKNOWN_CARD },
 	[12] = { .cpld_offset = 0x25,
+		 .power_status_offset = 0x1D,
 		 .value_bit = 0x07,
 		 .value_shift_bit = 3,
 		 .card_device_type = UNKNOWN_CARD },
 	[13] = { .cpld_offset = 0x25,
+		 .power_status_offset = 0x1E,
 		 .value_bit = 0x07,
 		 .value_shift_bit = 0,
 		 .card_device_type = UNKNOWN_CARD },
@@ -331,4 +346,28 @@ bool is_cxl_present()
 uint8_t get_board_revision()
 {
 	return (gpio_get(REV_ID0) << 2) | (gpio_get(REV_ID1) << 1) | gpio_get(REV_ID2);
+}
+
+int get_pcie_card_power_status(uint8_t pcie_card_id)
+{
+	if (pcie_card_id > CARD_14_INDEX) {
+		return -1;
+	}
+
+	uint8_t retry = 3;
+	uint8_t power_status_offset = pcie_card_info[pcie_card_id].power_status_offset;
+	I2C_MSG i2c_msg = { 0 };
+
+	i2c_msg.bus = CPLD_BUS;
+	i2c_msg.target_addr = CPLD_ADDR;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = power_status_offset;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("Get PCIE card power status fail, pcie card id: 0x%x", pcie_card_id);
+		return -1;
+	}
+
+	return i2c_msg.data[0];
 }

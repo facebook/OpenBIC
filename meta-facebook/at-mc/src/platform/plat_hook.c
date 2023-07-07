@@ -173,6 +173,26 @@ sq52205_init_arg sq52205_init_args[] = {
 		.reset_bit = 0b0,
 	},
 	},
+	[12] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+	.config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b000,
+		.reset_bit = 0b0,
+	},
+	},
+	[13] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+	.config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b000,
+		.reset_bit = 0b0,
+	},
+	},
 };
 
 ina233_init_arg mc_ina233_init_args[] = {
@@ -276,6 +296,24 @@ ina233_init_arg mc_ina233_init_args[] = {
 	},
 	},
 	[11] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	.mfr_config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b0100,
+	},
+	},
+	[12] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	.mfr_config = {
+		.operating_mode =0b111,
+		.shunt_volt_time = 0b100,
+		.bus_volt_time = 0b100,
+		.aver_mode = 0b111, //set 1024 average times
+		.rsvd = 0b0100,
+	},
+	},
+	[13] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
@@ -540,6 +578,8 @@ pwr_monitor_pre_proc_arg pwr_monitor_pre_proc_args[] = {
 	[9] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_2 }, .jcn_number = 9 },
 	[10] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_2 }, .jcn_number = 10 },
 	[11] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_2 }, .jcn_number = 11 },
+	[12] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_3 }, .jcn_number = 12 },
+	[13] = { { .target_addr = 0x70, .channel = PCA9546A_CHANNEL_3 }, .jcn_number = 13 },
 };
 
 uint8_t pm8702_pre_arg[] = { CXL_CARD_1, CXL_CARD_2, CXL_CARD_3, CXL_CARD_4,
@@ -618,7 +658,9 @@ bool pre_sq52205_read(sensor_cfg *cfg, void *args)
 
 	// Select Channel
 	bool ret = true;
+	bool is_sensor_init_done = false;
 	int mutex_status = 0;
+	int power_status = 0;
 	uint8_t card_type;
 
 	pwr_monitor_pre_proc_arg *pre_args = (pwr_monitor_pre_proc_arg *)args;
@@ -634,6 +676,25 @@ bool pre_sq52205_read(sensor_cfg *cfg, void *args)
 		return false;
 	}
 
+	power_status = get_pcie_card_power_status(pre_args->jcn_number);
+	if (power_status < 0) {
+		LOG_ERR("Fail to get PCIE card power status, pcie card id: 0x%x",
+			pre_args->jcn_number);
+		return false;
+	}
+
+	is_sensor_init_done = get_sensor_init_done_flag();
+	if (is_sensor_init_done) {
+		if ((power_status & PCIE_CARD_POWER_GOOD_BIT) == 0) {
+			cfg->cache_status = SENSOR_POLLING_DISABLE;
+			return true;
+		} else {
+			if (cfg->cache_status == SENSOR_POLLING_DISABLE) {
+				cfg->cache_status = SENSOR_INIT_STATUS;
+			}
+		}
+	}
+
 	mux_config *mux_args = &(pre_args->bus_3_mux_configs);
 	mux_args->bus = cfg->port;
 
@@ -645,6 +706,10 @@ bool pre_sq52205_read(sensor_cfg *cfg, void *args)
 	}
 
 	ret = set_mux_channel(*mux_args, MUTEX_LOCK_ENABLE);
+	if (ret != true) {
+		k_mutex_unlock(mutex);
+	}
+
 	return ret;
 }
 
@@ -851,6 +916,20 @@ bool pre_pm8702_read(sensor_cfg *cfg, void *args)
 		if (cfg->cache_status == SENSOR_POLLING_DISABLE) {
 			cfg->cache_status = SENSOR_INIT_STATUS;
 		}
+	}
+
+	switch (cfg->cache_status) {
+	case SENSOR_READ_SUCCESS:
+	case SENSOR_READ_ACUR_SUCCESS:
+	case SENSOR_READ_4BYTE_ACUR_SUCCESS:
+		/* Sensor reading success */
+	case SENSOR_INIT_STATUS:
+	case SENSOR_NOT_ACCESSIBLE:
+	case SENSOR_POLLING_DISABLE:
+		/* Not ready to polling PM8702 sensor */
+		break;
+	default:
+		return false;
 	}
 
 	return true;

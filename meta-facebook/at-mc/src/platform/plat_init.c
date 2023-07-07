@@ -31,9 +31,6 @@
 
 LOG_MODULE_REGISTER(plat_init);
 
-#define CXL_IOEXP_INIT_RETRY_COUNT 5
-#define CXL_IOEXP_INIT_DELAY_MS 10
-
 SCU_CFG scu_cfg[] = {
 	//register    value
 };
@@ -41,6 +38,7 @@ SCU_CFG scu_cfg[] = {
 void check_mb_reset_status()
 {
 	int ret = 0;
+	int power_status = 0;
 	uint8_t index = 0;
 	uint8_t cxl_id = 0;
 	uint8_t card_type = 0;
@@ -52,12 +50,15 @@ void check_mb_reset_status()
 		}
 
 		if (card_type == CXL_CARD) {
-			ret = pcie_card_id_to_cxl_id(index, &cxl_id);
-			if (ret != 0) {
-				continue;
-			}
+			power_status = get_pcie_card_power_status(index);
+			if (power_status & PCIE_CARD_POWER_GOOD_BIT) {
+				ret = pcie_card_id_to_cxl_id(index, &cxl_id);
+				if (ret != 0) {
+					continue;
+				}
 
-			cxl_mb_status_init(cxl_id);
+				cxl_mb_status_init(cxl_id);
+			}
 		}
 	}
 }
@@ -65,12 +66,9 @@ void check_mb_reset_status()
 void check_cxl_ioexp_is_initialized()
 {
 	int ret = 0;
-	uint8_t retry_count = 0;
 	uint8_t index = 0;
 	uint8_t cxl_id = 0;
 	uint8_t card_type = 0;
-	uint8_t cxl_channel = 0;
-	uint8_t gpio_alert_pin = 0;
 
 	for (index = CARD_1_INDEX; index <= CARD_12_INDEX; ++index) {
 		ret = get_pcie_card_type(index, &card_type);
@@ -79,30 +77,12 @@ void check_cxl_ioexp_is_initialized()
 		}
 
 		if (card_type == CXL_CARD) {
-			ret = get_cxl_ioexp_alert_pin(index, &gpio_alert_pin);
-			if (ret != 0) {
-				continue;
-			}
-
 			ret = pcie_card_id_to_cxl_id(index, &cxl_id);
 			if (ret != 0) {
 				continue;
 			}
 
-			for (retry_count = 0; retry_count < CXL_IOEXP_INIT_RETRY_COUNT;
-			     ++retry_count) {
-				if (gpio_get(gpio_alert_pin) != HIGH_ACTIVE) {
-					cxl_channel = cxl_work_item[cxl_id].cxl_channel;
-					ret = cxl_ioexp_init(cxl_channel);
-					if (ret != 0) {
-						LOG_ERR("cxl: 0x%x ioexp initial fail", cxl_id);
-					}
-				} else {
-					break;
-				}
-			}
-
-			k_msleep(CXL_IOEXP_INIT_DELAY_MS);
+			init_cxl_card_ioexp(cxl_id);
 		}
 	}
 }

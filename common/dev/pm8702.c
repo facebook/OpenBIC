@@ -229,21 +229,21 @@ uint8_t pm8702_read(sensor_cfg *cfg, int *reading)
 	switch (pm8702_access) {
 	case chip_temp:
 		if (cci_get_chip_temp(mctp_inst, ext_params, &sval->integer) == false) {
-			return SENSOR_NOT_ACCESSIBLE;
+			return SENSOR_FAIL_TO_ACCESS;
 		}
 		sval->fraction = 0;
 		break;
 	case dimm_temp:
 		if (pm8702_get_dimm_temp(mctp_inst, ext_params, address, &sval->integer,
 					 &sval->fraction) == false) {
-			return SENSOR_NOT_ACCESSIBLE;
+			return SENSOR_FAIL_TO_ACCESS;
 		}
 		break;
 	case dimm_temp_from_pioneer:
 		CHECK_NULL_ARG_WITH_RETURN(init_arg, SENSOR_UNSPECIFIED_ERROR);
 		if (pm8702_read_dimm_temp_from_pioneer(mctp_inst, ext_params, init_arg->dimm_id,
 						       &sval->integer, &sval->fraction) == false) {
-			return SENSOR_NOT_ACCESSIBLE;
+			return SENSOR_FAIL_TO_ACCESS;
 		}
 		break;
 	default:
