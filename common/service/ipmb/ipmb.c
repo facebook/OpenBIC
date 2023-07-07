@@ -193,7 +193,6 @@ void insert_req_ipmi_msg(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
 				k_mutex_unlock(&mutex_id[index]);
 				return;
 			}
-
 			pnode->next = temp->next;
 			SAFE_FREE(temp);
 			seq_current_count[index]--;
@@ -244,7 +243,7 @@ bool find_req_ipmi_msg(ipmi_msg_cfg *pnode, ipmi_msg *msg, uint8_t index)
 	}
 
 	while ((pnode != NULL && pnode->next != ptr_start) &&
-	       (((pnode->next)->buffer.netfn != (msg->netfn - 1)) ||
+	       (((pnode->next)->buffer.netfn != (msg->netfn & (~0x01))) ||
 		((pnode->next)->buffer.cmd != msg->cmd) ||
 		((pnode->next)->buffer.seq_target != msg->seq_target))) {
 		pnode = pnode->next;
@@ -568,12 +567,21 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 						current_msg_tx->buffer.completion_code =
 							CC_NODE_BUSY;
 
-						if (ipmb_send_response(
-							    &current_msg_tx->buffer,
-							    IPMB_inf_index_map[current_msg_tx->buffer
-										       .InF_source]) !=
-						    IPMB_ERROR_SUCCESS) {
-							LOG_ERR("Failed to send IPMB response message");
+						// Check interface and decide transfer MCTP/PLDM or IPMB
+						if ((current_msg_tx->buffer.InF_source == PLDM) ||
+						    (current_msg_tx->buffer.InF_source == MCTP)) {
+							pldm_send_ipmi_response(
+								current_msg_tx->buffer.InF_source,
+								&current_msg_tx->buffer);
+						} else {
+							if (ipmb_send_response(
+								    &current_msg_tx->buffer,
+								    IPMB_inf_index_map
+									    [current_msg_tx->buffer
+										     .InF_source]) !=
+							    IPMB_ERROR_SUCCESS) {
+								LOG_ERR("Failed to send IPMB response message");
+							}
 						}
 					}
 
