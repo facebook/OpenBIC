@@ -514,6 +514,7 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 	if (is_power_good != true) {
 		cfg->cache_status = SENSOR_POLLING_DISABLE;
 		accl_sensor_info_args[card_id].is_sensor_init = false;
+		clear_freya_cache_flag(card_id);
 		return true;
 	}
 
@@ -552,7 +553,7 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 			sensor_cfg *accl_sensor_cfg = get_common_sensor_cfg_info(sensor_num);
 			if (accl_sensor_cfg == NULL) {
 				LOG_ERR("Fail to get sensor cfg info, card id: 0x%x, sensor num: 0x%x",
-					card_id, accl_sensor_cfg->num);
+					card_id, sensor_num);
 				goto error_exit;
 			}
 
