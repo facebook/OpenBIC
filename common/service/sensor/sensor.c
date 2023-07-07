@@ -653,7 +653,7 @@ void add_sensor_config(sensor_cfg config)
 	uint8_t index = get_sensor_config_index(config.num);
 	if (index != SENSOR_NUM_MAX) {
 		memcpy(&sensor_config[index], &config, sizeof(sensor_cfg));
-		LOG_ERR("Replace the sensor[0x%02x] configuration", config.num);
+		LOG_INF("Change the sensor[0x%02x] configuration", config.num);
 		return;
 	}
 	// Check config table size before adding sensor config
