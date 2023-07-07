@@ -442,7 +442,7 @@ void IPMI_handler(void *arug0, void *arug1, void *arug2)
 				      K_THREAD_STACK_SIZEOF(IPMI_handle_thread_stack),
 				      ipmi_cmd_handle, (void *)&msg_cfg, NULL, NULL,
 				      CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
-		if (k_thread_join(tid, K_SECONDS(1)) == -EAGAIN) { // timeout
+		if (k_thread_join(tid, K_SECONDS(3)) == -EAGAIN) { // timeout
 			k_thread_abort(tid);
 			LOG_ERR("%s(): abort the handler due to timeout. netfn: %x, cmd: %x",
 				__func__, msg_cfg.buffer.netfn, msg_cfg.buffer.cmd);
