@@ -19,6 +19,7 @@
 #include "sensor.h"
 #include "hal_gpio.h"
 #include "pldm.h"
+#include "pmbus.h"
 
 #include "plat_gpio.h"
 #include "plat_sensor_table.h"
@@ -235,9 +236,9 @@ void ssd_alert_check_ina230(uint8_t idx, uint8_t *flag)
 		struct pldm_sensor_event_state_sensor_state event;
 		event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_STATUS;
 		event.event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT :
-						     PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL;
+					       PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL;
 		event.previous_event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL :
-							      PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT;
+							PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT;
 
 		if (pldm_send_platform_event(PLDM_SENSOR_EVENT, PLDM_EVENT_SENSOR_E1S_0 + idx,
 					     PLDM_STATE_SENSOR_STATE, (uint8_t *)&event,
@@ -325,9 +326,9 @@ void ssd_alert_check_isl28022(uint8_t idx, uint8_t *flag)
 		struct pldm_sensor_event_state_sensor_state event;
 		event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_STATUS;
 		event.event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT :
-						     PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL;
+					       PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL;
 		event.previous_event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL :
-							      PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT;
+							PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT;
 
 		if (pldm_send_platform_event(PLDM_SENSOR_EVENT, PLDM_EVENT_SENSOR_E1S_0 + idx,
 					     PLDM_STATE_SENSOR_STATE, (uint8_t *)&event,
@@ -456,6 +457,70 @@ void nic_present_check()
 	}
 }
 
+void vr_alert_check()
+{
+	const static uint8_t vr_sensor_num[2] = { SENSOR_NUM_PEX_0_VR_TEMP,
+						  SENSOR_NUM_PEX_2_VR_TEMP };
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(vr_sensor_num); i++) {
+		sensor_cfg *cfg = &sensor_config[sensor_config_index_map[vr_sensor_num[i]]];
+		I2C_MSG i2c_msg = { 0 };
+
+		if (!cfg) {
+			LOG_ERR("The pointer to VR%d config is NULL", i);
+			continue;
+		}
+
+		if (cfg->pre_sensor_read_hook) {
+			if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args))
+				LOG_ERR("Pre-sensor reading hook function failed");
+		}
+
+		i2c_msg.bus = cfg->port;
+		i2c_msg.target_addr = cfg->target_addr;
+		i2c_msg.tx_len = 1;
+		i2c_msg.rx_len = 2;
+		i2c_msg.data[0] = PMBUS_STATUS_WORD;
+
+		if (i2c_master_read(&i2c_msg, 5)) {
+			LOG_ERR("I2C master read failed");
+			if (cfg->post_sensor_read_hook) {
+				if (!cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args,
+								NULL)) {
+					LOG_ERR("Post-sensor reading hook function failed");
+				}
+			}
+			continue;
+		}
+
+		struct pldm_sensor_event_numeric_sensor_state event;
+		uint8_t vr_sensor_id = (vr_sensor_num[i] == SENSOR_NUM_PEX_0_VR_TEMP) ?
+					       PLDM_EVENT_SENSOR_VR_0 :
+					       PLDM_EVENT_SENSOR_VR_1;
+		uint16_t status_word;
+
+		event.event_state = PLDM_SENSOR_WARNING;
+		event.previous_event_state = PLDM_SENSOR_NORMAL;
+		event.sensor_data_size = PLDM_SENSOR_DATA_SIZE_UINT16;
+		status_word = i2c_msg.data[0] << 8 | i2c_msg.data[1];
+
+		memcpy(event.present_reading, &status_word, sizeof(status_word));
+
+		if (pldm_send_platform_event(PLDM_SENSOR_EVENT, vr_sensor_id,
+					     PLDM_NUMERIC_SENSOR_STATE, (uint8_t *)&event,
+					     sizeof(struct pldm_sensor_event_numeric_sensor_state) +
+						     1)) {
+			LOG_ERR("Send event log for VR alert status word failed");
+		}
+
+		if (cfg->post_sensor_read_hook) {
+			if (!cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL)) {
+				LOG_ERR("Post-sensor reading hook function failed");
+			}
+		}
+	}
+}
+
 static void plat_set_effecter_led_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
 					  uint16_t *resp_len)
 {
@@ -500,10 +565,10 @@ static void plat_set_effecter_led_handler(const uint8_t *buf, uint16_t len, uint
 	if (led_val_state->set_request == PLDM_REQUEST_SET) {
 		uint8_t val = ((led_val_state->effecter_state == EFFECTER_STATE_LED_VALUE_ON) ?
 				       LED_CTRL_ON :
-					     LED_CTRL_OFF);
+				       LED_CTRL_OFF);
 		bool (*ctrl_func)(uint8_t, uint8_t) =
 			((effector_id == PLAT_EFFECTER_ID_POWER_LED) ? &pwr_led_control :
-									     &fault_led_control);
+								       &fault_led_control);
 
 		if (ctrl_func && ctrl_func(LED_CTRL_SRC_BMC, val))
 			*completion_code_p = PLDM_SUCCESS;
@@ -565,7 +630,7 @@ static void plat_set_effecter_ssd_led_handler(const uint8_t *buf, uint16_t len, 
 	if (led_val_state->set_request == PLDM_REQUEST_SET) {
 		uint8_t val = ((led_val_state->effecter_state == EFFECTER_STATE_LED_VALUE_ON) ?
 				       LED_CTRL_ON :
-					     LED_CTRL_OFF);
+				       LED_CTRL_OFF);
 		if (e1s_led_control(effector_id, val))
 			*completion_code_p = PLDM_SUCCESS;
 		else
@@ -608,7 +673,7 @@ static void plat_get_effecter_led_handler(const uint8_t *buf, uint16_t len, uint
 		state->effecter_op_state = PLDM_EFFECTER_ENABLED_NOUPDATEPENDING;
 		state->present_state = state->pending_state =
 			((status == LED_CTRL_ON) ? EFFECTER_STATE_LED_VALUE_ON :
-							 EFFECTER_STATE_LED_VALUE_OFF);
+						   EFFECTER_STATE_LED_VALUE_OFF);
 	} else {
 		state->effecter_op_state = PLDM_EFFECTER_STATUSUNKNOWN;
 		state->present_state = state->pending_state = EFFECTER_STATE_LED_VALUE_UNKNOWN;
@@ -651,7 +716,7 @@ static void plat_get_effecter_ssd_led_handler(const uint8_t *buf, uint16_t len, 
 		state->effecter_op_state = PLDM_EFFECTER_ENABLED_NOUPDATEPENDING;
 		state->present_state = state->pending_state =
 			((status == LED_CTRL_ON) ? EFFECTER_STATE_LED_VALUE_ON :
-							 EFFECTER_STATE_LED_VALUE_OFF);
+						   EFFECTER_STATE_LED_VALUE_OFF);
 	} else {
 		state->effecter_op_state =
 			is_access ? PLDM_EFFECTER_STATUSUNKNOWN : PLDM_EFFECTER_UNAVAILABLE;

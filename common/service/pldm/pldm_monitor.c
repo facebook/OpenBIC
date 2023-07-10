@@ -263,17 +263,27 @@ static uint8_t pldm_send_sensor_event_message(void *mctp_inst, mctp_ext_params e
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(sensor_event_data, PLDM_ERROR_INVALID_DATA);
 
-	struct pldm_sensor_event_data sensor_event = { 0 };
+	uint8_t ret = PLDM_ERROR;
+	struct pldm_sensor_event_data *sensor_event_p = (struct pldm_sensor_event_data *)malloc(
+		sizeof(struct pldm_sensor_event_data) + event_data_length);
 
-	if (pldm_encode_sensor_event_data(&sensor_event, sensor_id, sensor_event_class,
-					  sensor_event_data, event_data_length) != PLDM_SUCCESS) {
-		LOG_ERR("Encode event data failed");
+	if (!sensor_event_p) {
+		LOG_ERR("pldm_sensor_event_data malloc failed");
 		return PLDM_ERROR;
 	}
+	if (pldm_encode_sensor_event_data(sensor_event_p, sensor_id, sensor_event_class,
+					  sensor_event_data, event_data_length) != PLDM_SUCCESS) {
+		LOG_ERR("Encode event data failed");
+		goto exit;
+	}
 
-	return pldm_platform_event_message_req(
-		mctp_inst, ext_params, PLDM_SENSOR_EVENT, (uint8_t *)&sensor_event,
-		sizeof(struct pldm_sensor_event_data) + event_data_length - 1);
+	ret = pldm_platform_event_message_req(
+		mctp_inst, ext_params, PLDM_SENSOR_EVENT, (uint8_t *)sensor_event_p,
+		sizeof(struct pldm_sensor_event_data) + event_data_length);
+
+exit:
+	SAFE_FREE(sensor_event_p);
+	return ret;
 }
 
 static uint8_t pldm_send_effecter_event_message(void *mctp_inst, mctp_ext_params ext_params,
