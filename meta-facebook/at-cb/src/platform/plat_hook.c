@@ -58,7 +58,7 @@ ltc4286_init_arg ltc4286_init_args[] = {
 };
 
 ina233_init_arg ina233_init_args[] = {
-	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.00117647, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
@@ -67,7 +67,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0100,
 	},
 	},
-	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.00117647, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
@@ -76,7 +76,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0100,
 	},
 	},
-	[2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	[2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.00117647, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
@@ -85,7 +85,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0100,
 	},
 	},
-	[3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	[3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.00117647, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
@@ -94,7 +94,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0100,
 	},
 	},
-	[4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	[4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.00117647, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
@@ -112,7 +112,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0100,
 	},
 	},
-	[6] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	[6] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.00117647, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
@@ -121,7 +121,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0100,
 	},
 	},
-	[7] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	[7] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.00117647, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
@@ -130,7 +130,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0100,
 	},
 	},
-	[8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	[8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.00117647, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
@@ -139,7 +139,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0100,
 	},
 	},
-	[9] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	[9] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.00117647, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
@@ -148,7 +148,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0100,
 	},
 	},
-	[10] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	[10] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.00117647, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
@@ -174,7 +174,7 @@ pex89000_init_arg pex_sensor_init_args[] = {
 };
 
 sq52205_init_arg sq52205_init_args[] = {
-	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0010002,
 	.config = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
@@ -184,7 +184,7 @@ sq52205_init_arg sq52205_init_args[] = {
 		.reset_bit = 0b0,
 	},
 	},
-	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0010002,
 	.config = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
