@@ -240,6 +240,7 @@ __weak bool pal_get_cpu_time(uint8_t addr, uint8_t cmd, uint8_t readlen, uint32_
 	*run_time = (*run_time << 8) | readbuf[2];
 	*run_time = (*run_time << 8) | readbuf[1];
 
+	SAFE_FREE(readbuf);
 	return true;
 cleanup:
 	SAFE_FREE(readbuf);
@@ -277,6 +278,7 @@ __weak bool pal_get_cpu_energy(uint8_t addr, uint8_t cmd, uint8_t readlen, uint3
 	*pkg_energy = (*pkg_energy << 8) | readbuf[2];
 	*pkg_energy = (*pkg_energy << 8) | readbuf[1];
 
+	SAFE_FREE(readbuf);
 	return true;
 cleanup:
 	SAFE_FREE(readbuf);
