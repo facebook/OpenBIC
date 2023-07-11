@@ -1,0 +1,116 @@
+From 32277119a6e96457138746fcb86c8ec8751cc733 Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Tue, 13 Jun 2023 17:51:02 +0800
+Subject: [PATCH] adc: aspeed: Extend the delay time to meet ADC hw behavior.
+
+The patch is intended to extend the delay time when the last channel of
+the ADC is enabled. In our ADC, it takes 12 dummy sampling periods to
+switch the sampling channel from CH7 to CH0. Therefore, the patch checks
+the enable status of channel 7 in order to determine the appropriate delay
+period for obtaining the updated ADC values of each channel.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: Ib1e8c96ea94b0b88c1cca3b140843dffa5ef4179
+---
+ drivers/adc/aspeed/adc_aspeed.c | 38 +++++++++++++++++++++++++--------
+ 1 file changed, 29 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/adc/aspeed/adc_aspeed.c b/drivers/adc/aspeed/adc_aspeed.c
+index b2249a9cc2b..54069f3f916 100644
+--- a/drivers/adc/aspeed/adc_aspeed.c
++++ b/drivers/adc/aspeed/adc_aspeed.c
+@@ -32,6 +32,8 @@ struct adc_aspeed_data {
+ 	uint32_t channels;
+ 	uint32_t clk_rate;
+ 	uint32_t sampling_period_us;
++	uint32_t val_update_period_us;
++	uint32_t required_eoc_num;
+ 	bool battery_sensing_enable;
+ 	uint16_t *buffer;
+ 	uint16_t *repeat_buffer;
+@@ -106,7 +108,6 @@ static int adc_aspeed_read_channel(const struct device *dev, uint8_t channel,
+ 				   int32_t *result)
+ {
+ 	struct adc_aspeed_data *priv = DEV_DATA(dev);
+-	const struct adc_aspeed_cfg *config = DEV_CFG(dev);
+ 
+ 	if (priv->battery_sensing_enable && channel == 7) {
+ 		*result = aspeed_adc_battery_read(dev, channel);
+@@ -115,8 +116,7 @@ static int adc_aspeed_read_channel(const struct device *dev, uint8_t channel,
+ 		if (priv->deglitch_en[channel]) {
+ 			if (*result >= priv->upper_bound[channel] ||
+ 			    *result <= priv->lower_bound[channel]) {
+-				k_busy_wait(priv->sampling_period_us *
+-					    popcount(config->channels_used));
++				k_busy_wait(priv->val_update_period_us);
+ 				*result = aspeed_adc_read_raw(dev, channel);
+ 			}
+ 		}
+@@ -152,7 +152,11 @@ static int adc_aspeed_set_rate(const struct device *dev, uint32_t rate)
+ 	}
+ 	priv->sampling_period_us =
+ 		DIV_ROUND_UP(((divisor + 1) * ASPEED_CLOCKS_PER_SAMPLE * USEC_PER_SEC), clk_src);
+-	LOG_DBG("sampling period per channel = %dus\n", priv->sampling_period_us);
++	priv->val_update_period_us = DIV_ROUND_UP(
++		((divisor + 1) * ASPEED_CLOCKS_PER_SAMPLE * USEC_PER_SEC * priv->required_eoc_num),
++		clk_src);
++	LOG_DBG("sampling period per channel = %dus, val update period = %dus\n",
++		priv->sampling_period_us, priv->val_update_period_us);
+ 	adc_clk_ctrl.value = adc_register->adc_clk_ctrl.value;
+ 	adc_clk_ctrl.fields.divisor_of_adc_clock = divisor;
+ 	adc_register->adc_clk_ctrl.value = adc_clk_ctrl.value;
+@@ -442,7 +446,25 @@ static void aspeed_acquisition_thread(struct adc_aspeed_data *data)
+ 	}
+ }
+ 
+-static int aspeed_adc_engine_init(const struct device *dev,
++static void adc_aspeed_channel_config(const struct device *dev)
++{
++	const struct adc_aspeed_cfg *config = DEV_CFG(dev);
++	struct adc_aspeed_data *priv = DEV_DATA(dev);
++	struct adc_register_s *adc_register = config->base;
++	union adc_engine_control_s engine_ctrl;
++
++	engine_ctrl.value = adc_register->engine_ctrl.value;
++	engine_ctrl.fields.channel_enable = config->channels_used;
++	adc_register->engine_ctrl.value = engine_ctrl.value;
++
++	priv->required_eoc_num = popcount(config->channels_used);
++	if (config->channels_used & BIT(ASPEED_ADC_CH_NUMBER - 1))
++		priv->required_eoc_num += 12;
++
++	return;
++}
++
++static int adc_aspeed_engine_init(const struct device *dev,
+ 				  uint32_t timeout_ms)
+ {
+ 	const struct adc_aspeed_cfg *config = DEV_CFG(dev);
+@@ -463,9 +485,6 @@ static int aspeed_adc_engine_init(const struct device *dev,
+ 		return ret;
+ 	}
+ 
+-	engine_ctrl.fields.channel_enable = config->channels_used;
+-	adc_register->engine_ctrl.value = engine_ctrl.value;
+-
+ 	return 0;
+ }
+ 
+@@ -489,12 +508,13 @@ static int adc_aspeed_init(const struct device *dev)
+ 		return ret;
+ 	}
+ 
++	adc_aspeed_channel_config(dev);
+ 	ret = adc_aspeed_set_rate(dev, ASPEED_SAMPLING_RATE_DEFAULT);
+ 	if (ret) {
+ 		return ret;
+ 	}
+ 
+-	ret = aspeed_adc_engine_init(dev, 1000);
++	ret = adc_aspeed_engine_init(dev, 1000);
+ 	if (ret) {
+ 		return ret;
+ 	}
+-- 
+2.25.1
+
