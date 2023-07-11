@@ -201,8 +201,18 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
@@ -210,8 +220,28 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	[2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
@@ -219,8 +249,18 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	[3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
@@ -228,8 +268,18 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	[4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
@@ -237,8 +287,18 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	[5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
@@ -246,8 +306,18 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	[6] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
@@ -255,8 +325,18 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	[7] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
@@ -264,8 +344,18 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	[8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
@@ -273,8 +363,18 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	[9] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
@@ -282,8 +382,18 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	[10] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
@@ -291,8 +401,18 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	[11] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
@@ -300,8 +420,18 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	[12] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
@@ -309,8 +439,18 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	[13] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
@@ -318,8 +458,18 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 };
@@ -331,8 +481,18 @@ ina233_init_arg ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
@@ -340,8 +500,18 @@ ina233_init_arg ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	// JCN12
@@ -350,8 +520,18 @@ ina233_init_arg ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	[3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
@@ -359,8 +539,18 @@ ina233_init_arg ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	// JCN9
@@ -369,8 +559,18 @@ ina233_init_arg ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	[5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
@@ -378,8 +578,18 @@ ina233_init_arg ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	// JCN10
@@ -388,8 +598,18 @@ ina233_init_arg ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	[7] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
@@ -397,8 +617,18 @@ ina233_init_arg ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	// JCN4
@@ -407,8 +637,18 @@ ina233_init_arg ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	[9] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
@@ -416,8 +656,18 @@ ina233_init_arg ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	// JCN3
@@ -426,8 +676,18 @@ ina233_init_arg ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	[11] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
@@ -435,8 +695,18 @@ ina233_init_arg ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	// JCN2
@@ -445,8 +715,18 @@ ina233_init_arg ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	[13] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
@@ -454,8 +734,18 @@ ina233_init_arg ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	// JCN1
@@ -464,8 +754,18 @@ ina233_init_arg ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
+	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
 	},
 	},
 	[15] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
@@ -473,9 +773,19 @@ ina233_init_arg ina233_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b0100,
 	},
+	.is_need_mfr_device_config_init = true,
+	.mfr_device_config = {
+		.apol = 0b0,
+		.alert_behavior = 0b1,
+		.ein_autoclear = 0b1,
+		.i2c_filt = 0b0,
+		.ein_accum = 0b00,
+		.rsvd = 0b0,
+		.ein_status = 0b0,
+  },
 	},
 };
 
