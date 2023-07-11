@@ -144,7 +144,6 @@ void ISR_SLP3()
 void ISR_DBP_PRSNT()
 {
 	common_addsel_msg_t sel_msg;
-	gpio_set(BIC_JTAG_SEL_R, gpio_get(FM_DBP_PRESENT_N));
 	if ((gpio_get(FM_DBP_PRESENT_N) == GPIO_HIGH)) {
 		sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 	} else {
