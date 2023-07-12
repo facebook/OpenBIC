@@ -79,6 +79,32 @@ sensor_cfg plat_sensor_config[] = {
 	  is_nic_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 
+	/* NIC optics 0-7 temperature sensor */
+	{ SENSOR_NUM_TEMP_NIC_OPTICS_0, sensor_dev_cx7, I2C_BUS1, NIC_ADDR, NONE,
+	  is_nic_optics_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &cx7_init_args[0] },
+	{ SENSOR_NUM_TEMP_NIC_OPTICS_1, sensor_dev_cx7, I2C_BUS2, NIC_ADDR, NONE,
+	  is_nic_optics_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &cx7_init_args[1] },
+	{ SENSOR_NUM_TEMP_NIC_OPTICS_2, sensor_dev_cx7, I2C_BUS3, NIC_ADDR, NONE,
+	  is_nic_optics_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &cx7_init_args[2] },
+	{ SENSOR_NUM_TEMP_NIC_OPTICS_3, sensor_dev_cx7, I2C_BUS4, NIC_ADDR, NONE,
+	  is_nic_optics_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &cx7_init_args[3] },
+	{ SENSOR_NUM_TEMP_NIC_OPTICS_4, sensor_dev_cx7, I2C_BUS11, NIC_ADDR, NONE,
+	  is_nic_optics_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &cx7_init_args[4] },
+	{ SENSOR_NUM_TEMP_NIC_OPTICS_5, sensor_dev_cx7, I2C_BUS12, NIC_ADDR, NONE,
+	  is_nic_optics_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &cx7_init_args[5] },
+	{ SENSOR_NUM_TEMP_NIC_OPTICS_6, sensor_dev_cx7, I2C_BUS13, NIC_ADDR, NONE,
+	  is_nic_optics_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &cx7_init_args[6] },
+	{ SENSOR_NUM_TEMP_NIC_OPTICS_7, sensor_dev_cx7, I2C_BUS14, NIC_ADDR, NONE,
+	  is_nic_optics_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &cx7_init_args[7] },
+
 	/* ADC voltage */
 	{ SENSOR_NUM_BB_P12V_AUX, sensor_dev_ast_adc, ADC_PORT0, NONE, NONE, stby_access, 1780, 200,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
@@ -1616,6 +1642,13 @@ bool is_e1s_access(uint8_t sensor_num)
 bool is_nic_access(uint8_t sensor_num)
 {
 	uint8_t pin_index = ((sensor_num >> 4) * 3) + ((sensor_num & BIT_MASK(4)) / 5);
+
+	return !gpio_get(nic_prsnt_pin[pin_index]) ? true : false;
+}
+
+bool is_nic_optics_access(uint8_t sensor_num)
+{
+	uint8_t pin_index = sensor_num & GENMASK(3, 0);
 
 	return !gpio_get(nic_prsnt_pin[pin_index]) ? true : false;
 }

@@ -20,7 +20,7 @@
 #include "hal_gpio.h"
 #include "pldm.h"
 #include "pmbus.h"
-
+#include "plat_fru.h"
 #include "plat_gpio.h"
 #include "plat_sensor_table.h"
 #include "plat_pldm_monitor.h"
@@ -35,10 +35,12 @@ LOG_MODULE_REGISTER(plat_pldm_monitor);
 /* Chassis-specific entities 8192 - 16383 */
 #define PLDM_OEM_ENTITY_LED 8192
 #define PLDM_OEM_ENTITY_SSD_LED 8193
+#define PLDM_OEM_ENTITY_NIC_TYPE 8194
 
 enum pldm_plat_effecter_id_high_byte {
 	PLAT_EFFECTER_ID_GPIO_HIGH_BYTE = (0xFF << 8),
 	PLAT_EFFECTER_ID_LED_HIGH_BYTE = (0xE0 << 8),
+	PLAT_EFFECTER_ID_NIC_TYPE_HIGH_BYTE = (0xD0 << 8),
 };
 
 static struct plat_state_effecter_info {
@@ -119,6 +121,10 @@ static struct plat_state_effecter_info {
 	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX + 18] = { 
 		.entity_type = PLDM_OEM_ENTITY_SSD_LED, 
 		.effecter_id = PLAT_EFFECTER_ID_LED_HIGH_BYTE | PLAT_EFFECTER_ID_LED_E1S_15, 
+	},
+	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX + 19] = { 
+		.entity_type = PLDM_OEM_ENTITY_NIC_TYPE, 
+		.effecter_id = (PLAT_EFFECTER_ID_NIC_TYPE_HIGH_BYTE | PLAT_EFFECTER_ID_NIC_TYPE),
 	},
 };
 
@@ -730,6 +736,57 @@ static void plat_get_effecter_ssd_led_handler(const uint8_t *buf, uint16_t len, 
 	res_p->completion_code = PLDM_SUCCESS;
 }
 
+static void plat_get_effecter_nic_type_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
+					       uint16_t *resp_len)
+{
+	CHECK_NULL_ARG(buf);
+	CHECK_NULL_ARG(resp);
+	CHECK_NULL_ARG(resp_len);
+
+	struct pldm_get_state_effecter_states_req *req_p =
+		(struct pldm_get_state_effecter_states_req *)buf;
+	struct pldm_get_state_effecter_states_resp *res_p =
+		(struct pldm_get_state_effecter_states_resp *)resp;
+
+	uint8_t effector_id = req_p->effecter_id & BIT_MASK(8);
+	get_effecter_state_field_t *state = &res_p->field[0];
+	*resp_len = 1;
+
+	if ((effector_id != PLAT_EFFECTER_ID_NIC_TYPE)) {
+		LOG_ERR("Unsupport NIC_TYPE effecter ID(%d)", effector_id);
+		res_p->completion_code = PLDM_ERROR_INVALID_DATA;
+		return;
+	}
+
+	uint8_t type = check_nic_type_by_fru();
+
+	switch (type) {
+	case NIC_CONFIG_UNKNOWN:
+		state->effecter_op_state = PLDM_EFFECTER_ENABLED_NOUPDATEPENDING;
+		state->present_state = state->pending_state = EFFECTER_STATE_NIC_TYPE_UNKNOWN;
+		break;
+	case NIC_CONFIG_CX7:
+		state->effecter_op_state = PLDM_EFFECTER_ENABLED_NOUPDATEPENDING;
+		state->present_state = state->pending_state = EFFECTER_STATE_NIC_TYPE_CX7;
+		break;
+	case NIC_CONFIG_IB_CX7:
+		state->effecter_op_state = PLDM_EFFECTER_ENABLED_NOUPDATEPENDING;
+		state->present_state = state->pending_state = EFFECTER_STATE_NIC_TYPE_CX7_IB;
+		break;
+	default:
+		state->effecter_op_state = PLDM_EFFECTER_STATUSUNKNOWN;
+		state->present_state = state->pending_state = EFFECTER_STATE_NIC_TYPE_UNKNOWN;
+		LOG_ERR("Unsupport NIC type, (%d)", type);
+		break;
+	}
+
+	*resp_len = PLDM_GET_STATE_EFFECTER_RESP_NO_STATE_FIELD_BYTES +
+		    (sizeof(get_effecter_state_field_t) *
+		     PLDM_PLATFORM_OEM_NIC_TYPE_EFFECTER_STATE_FIELD_COUNT);
+	res_p->composite_effecter_count = PLDM_PLATFORM_OEM_NIC_TYPE_EFFECTER_STATE_FIELD_COUNT;
+	res_p->completion_code = PLDM_SUCCESS;
+}
+
 static struct plat_state_effecter_info *find_state_effecter_info(uint16_t effecter_id)
 {
 	for (uint8_t i = 0; i < ARRAY_SIZE(plat_state_effecter_table); i++) {
@@ -823,6 +880,9 @@ uint8_t plat_pldm_get_state_effecter_state_handler(const uint8_t *buf, uint16_t 
 		break;
 	case PLDM_OEM_ENTITY_SSD_LED:
 		plat_get_effecter_ssd_led_handler(buf, len, resp, resp_len);
+		break;
+	case PLDM_OEM_ENTITY_NIC_TYPE:
+		plat_get_effecter_nic_type_handler(buf, len, resp, resp_len);
 		break;
 	default:
 		LOG_ERR("Unsupport entity type, (%d)", info_p->entity_type);

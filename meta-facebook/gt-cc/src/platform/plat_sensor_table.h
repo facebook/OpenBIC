@@ -22,6 +22,7 @@
 
 /* Define configuration for sensors */
 #define NIC_TEMP_OFFSET 0x01
+#define NIC_OPTICS_TEMP_OFFSET 0x01
 #define TMP75_TEMP_OFFSET 0x00
 #define NIC_ADDR (0x3E >> 1)
 #define NIC_0_POWER_MONITOR_ADDR (0x80 >> 1)
@@ -268,6 +269,15 @@
 #define SENSOR_NUM_CURR_E1S_15 0xBE
 #define SENSOR_NUM_POUT_E1S_15 0xBF
 
+#define SENSOR_NUM_TEMP_NIC_OPTICS_0 0xC0
+#define SENSOR_NUM_TEMP_NIC_OPTICS_1 0xC1
+#define SENSOR_NUM_TEMP_NIC_OPTICS_2 0xC2
+#define SENSOR_NUM_TEMP_NIC_OPTICS_3 0xC3
+#define SENSOR_NUM_TEMP_NIC_OPTICS_4 0xC4
+#define SENSOR_NUM_TEMP_NIC_OPTICS_5 0xC5
+#define SENSOR_NUM_TEMP_NIC_OPTICS_6 0xC6
+#define SENSOR_NUM_TEMP_NIC_OPTICS_7 0xC7
+
 /* The sensors of different source components by ADC */
 #define SENSOR_NUM_HSC_TYPE 0xF0
 #define SENSOR_NUM_VR_TYPE 0xF1
@@ -277,6 +287,7 @@ uint8_t plat_get_config_size();
 void load_sensor_config(void);
 bool is_e1s_access(uint8_t sensor_num);
 bool is_nic_access(uint8_t sensor_num);
+bool is_nic_optics_access(uint8_t sensor_num);
 bool is_dc_access(uint8_t sensor_num);
 
 #endif

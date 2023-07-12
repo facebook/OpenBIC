@@ -18,6 +18,7 @@
 #define _PLAT_MCTP_h
 
 #include "storage_handler.h"
+#include "pldm_oem.h"
 
 struct mctp_to_ipmi_header_req {
 	uint8_t iana[IANA_LEN];
