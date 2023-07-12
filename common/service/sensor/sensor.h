@@ -440,6 +440,19 @@ typedef struct _ina233_init_arg_ {
 			uint16_t rsvd : 4; // bit[15:12] are reserved.
 		};
 	} mfr_config;
+	bool is_need_mfr_device_config_init;
+	union {
+		uint8_t value;
+		struct {
+			uint8_t apol : 1;
+			uint8_t alert_behavior : 1;
+			uint8_t ein_autoclear : 1;
+			uint8_t i2c_filt : 1;
+			uint8_t ein_accum : 2;
+			uint8_t rsvd : 1;
+			uint8_t ein_status : 1;
+		};
+	} mfr_device_config;
 } ina233_init_arg;
 
 typedef struct _max16550a_init_arg_ {

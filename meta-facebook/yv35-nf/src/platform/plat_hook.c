@@ -38,6 +38,7 @@ ina233_init_arg ina233_init_args[] = {
 		.aver_mode = 0b011,
 		.rsvd = 0b0100,
 	},
+	.is_need_mfr_device_config_init = false,
 	},
 	// P3V3
 	[1] = {
@@ -52,6 +53,7 @@ ina233_init_arg ina233_init_args[] = {
 		.aver_mode = 0b011,
 		.rsvd = 0b0100,
 	},
+	.is_need_mfr_device_config_init = false,
 	},
 };
 

@@ -50,6 +50,7 @@ ina233_init_arg ina233_init_args[] = {
 		.aver_mode = 0b011,	//set 64 average times
 		.rsvd = 0b0100,
 	},
+	.is_need_mfr_device_config_init = false,
 	},
 	[1] = {
 	.is_init = false,
@@ -63,6 +64,7 @@ ina233_init_arg ina233_init_args[] = {
 		.aver_mode = 0b011,
 		.rsvd = 0b0100,
 	},
+	.is_need_mfr_device_config_init = false,
 	},
 };
 

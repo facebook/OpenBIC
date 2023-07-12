@@ -38,12 +38,30 @@ K_MUTEX_DEFINE(i2c_hub_mutex);
 adc_asd_init_arg adc_asd_init_args[] = { [0] = { .is_init = false } };
 
 ina233_init_arg ina233_init_args[] = {
-	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.002 },
-	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.002 },
-	[2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.002 },
-	[3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.002 },
-	[4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.002 },
-	[5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.002 },
+	[0] = { .is_init = false,
+		.current_lsb = 0.001,
+		.r_shunt = 0.002,
+		.is_need_mfr_device_config_init = false },
+	[1] = { .is_init = false,
+		.current_lsb = 0.001,
+		.r_shunt = 0.002,
+		.is_need_mfr_device_config_init = false },
+	[2] = { .is_init = false,
+		.current_lsb = 0.001,
+		.r_shunt = 0.002,
+		.is_need_mfr_device_config_init = false },
+	[3] = { .is_init = false,
+		.current_lsb = 0.001,
+		.r_shunt = 0.002,
+		.is_need_mfr_device_config_init = false },
+	[4] = { .is_init = false,
+		.current_lsb = 0.001,
+		.r_shunt = 0.002,
+		.is_need_mfr_device_config_init = false },
+	[5] = { .is_init = false,
+		.current_lsb = 0.001,
+		.r_shunt = 0.002,
+		.is_need_mfr_device_config_init = false },
 };
 
 sq52205_init_arg sq52205_init_args[] = {
