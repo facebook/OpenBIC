@@ -2052,6 +2052,7 @@ bool is_cxl_access(uint8_t cxl_id)
 				cfg->cache_status = SENSOR_NOT_ACCESSIBLE;
 			}
 
+			clear_cxl_card_cache_value(cxl_id);
 			pcie_card_init_status[pcie_card_id] = false;
 			return false;
 		}

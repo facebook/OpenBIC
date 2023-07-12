@@ -502,6 +502,7 @@ void ISR_NORMAL_PWRGD()
 	if (gpio_get(MEB_NORMAL_PWRGD_BIC) == HIGH_INACTIVE) {
 		for (index = 0; index < CXL_CARD_8; ++index) {
 			set_cxl_eid_flag(index, CLEAR_EID_FLAG);
+			clear_cxl_card_cache_value(index);
 		}
 	} else {
 		for (index = 0; index < ARRAY_SIZE(cxl_work_item); ++index) {

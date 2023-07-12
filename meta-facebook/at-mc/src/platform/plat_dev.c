@@ -63,6 +63,8 @@ LOG_MODULE_REGISTER(plat_dev);
 
 #define PM8702_DEFAULT_SENSOR_NUM SENSOR_NUM_TEMP_CXL_DIMMA
 
+#define CXL_CARD_VR_COUNT 3
+
 pm8702_dev_info pm8702_table[] = {
 	{ .is_init = false }, { .is_init = false }, { .is_init = false }, { .is_init = false },
 	{ .is_init = false }, { .is_init = false }, { .is_init = false }, { .is_init = false },
@@ -76,6 +78,25 @@ cxl_vr_fw_info cxl_vr_info_table[] = {
 	{ .is_init = false }, { .is_init = false }, { .is_init = false }, { .is_init = false },
 	{ .is_init = false }, { .is_init = false }, { .is_init = false }, { .is_init = false },
 };
+
+void clear_cxl_card_cache_value(uint8_t cxl_id)
+{
+	if (cxl_id >= ARRAY_SIZE(pm8702_table)) {
+		LOG_ERR("Fail to clear CXL card cache by invalid cxl id: 0x%x", cxl_id);
+		return;
+	}
+
+	uint8_t index = 0;
+	uint8_t offset = 0;
+
+	pm8702_table[cxl_id].is_init = false;
+	memset(&pm8702_table[cxl_id].dev_info, 0, sizeof(cci_fw_info_resp));
+
+	for (index = 0; index < CXL_CARD_VR_COUNT; ++index) {
+		offset = cxl_id * CXL_CARD_VR_COUNT + index;
+		memset(&cxl_vr_info_table[offset], 0, sizeof(cxl_vr_fw_info));
+	}
+}
 
 void cxl_mb_status_init(uint8_t cxl_id)
 {
