@@ -854,6 +854,17 @@ nct7718w_init_arg nct7718w_init_args[] = {
 		.lt_critical_temperature = 0x65 },
 };
 
+cx7_init_arg cx7_init_args[] = {
+	[0] = { .is_init = false, .endpoint = 0x10, .sensor_id = 0x0008 },
+	[1] = { .is_init = false, .endpoint = 0x11, .sensor_id = 0x0008 },
+	[2] = { .is_init = false, .endpoint = 0x12, .sensor_id = 0x0008 },
+	[3] = { .is_init = false, .endpoint = 0x13, .sensor_id = 0x0008 },
+	[4] = { .is_init = false, .endpoint = 0x14, .sensor_id = 0x0008 },
+	[5] = { .is_init = false, .endpoint = 0x15, .sensor_id = 0x0008 },
+	[6] = { .is_init = false, .endpoint = 0x16, .sensor_id = 0x0008 },
+	[7] = { .is_init = false, .endpoint = 0x17, .sensor_id = 0x0008 },
+};
+
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
  **************************************************************************************************/

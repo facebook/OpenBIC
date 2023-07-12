@@ -77,12 +77,20 @@ enum plat_pldm_device_state_set_offset {
 };
 
 #define PLDM_PLATFORM_OEM_LED_EFFECTER_STATE_FIELD_COUNT 1
+#define PLDM_PLATFORM_OEM_NIC_TYPE_EFFECTER_STATE_FIELD_COUNT 1
 
 enum plat_effecter_states_set_led_value {
 	EFFECTER_STATE_LED_VALUE_UNKNOWN = 0x00,
 	EFFECTER_STATE_LED_VALUE_ON = 0x01,
 	EFFECTER_STATE_LED_VALUE_OFF = 0x02,
 	EFFECTER_STATE_LED_VALUE_MAX,
+};
+
+enum plat_effecter_states_nic_type_value {
+	EFFECTER_STATE_NIC_TYPE_UNKNOWN = 0x00,
+	EFFECTER_STATE_NIC_TYPE_CX7 = 0x01,
+	EFFECTER_STATE_NIC_TYPE_CX7_IB = 0x02,
+	EFFECTER_STATE_NIC_TYPE_MAX,
 };
 
 enum plat_pldm_effecter_id {
@@ -104,6 +112,7 @@ enum plat_pldm_effecter_id {
 	PLAT_EFFECTER_ID_LED_E1S_13 = 0x1D,
 	PLAT_EFFECTER_ID_LED_E1S_14 = 0x1E,
 	PLAT_EFFECTER_ID_LED_E1S_15 = 0x1F,
+	PLAT_EFFECTER_ID_NIC_TYPE = 0x00,
 };
 
 void ssd_alert_check(uint8_t group);

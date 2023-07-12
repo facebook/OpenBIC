@@ -126,6 +126,30 @@ static mctp *find_mctp_by_smbus(uint8_t bus)
 	return NULL;
 }
 
+uint8_t get_mctp_info(uint8_t dest_endpoint, mctp **mctp_inst, mctp_ext_params *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, MCTP_ERROR);
+
+	uint8_t rc = MCTP_ERROR;
+	uint32_t i;
+
+	for (i = 0; i < ARRAY_SIZE(mctp_route_tbl); i++) {
+		mctp_route_entry *p = mctp_route_tbl + i;
+		if (!p) {
+			return MCTP_ERROR;
+		}
+		if (p->endpoint == dest_endpoint) {
+			*mctp_inst = find_mctp_by_smbus(p->bus);
+			ext_params->type = MCTP_MEDIUM_TYPE_SMBUS;
+			ext_params->smbus_ext_params.addr = p->addr;
+			rc = MCTP_SUCCESS;
+			break;
+		}
+	}
+	return rc;
+}
+
 static void set_endpoint_resp_handler(void *args, uint8_t *buf, uint16_t len)
 {
 	if (!buf || !len)

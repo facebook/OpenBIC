@@ -156,6 +156,7 @@ enum SENSOR_DEV {
 	sensor_dev_m88rt51632 = 0x2B,
 	sensor_dev_mpro = 0x2C,
 	sensor_dev_bmr351 = 0x2D,
+	sensor_dev_cx7 = 0x2E,
 	sensor_dev_max
 };
 
@@ -637,6 +638,12 @@ typedef struct _pt5161l_init_arg_ {
 typedef struct _mp2985_init_arg {
 	bool is_init;
 } mp2985_init_arg;
+
+typedef struct _cx7_init_arg {
+	bool is_init;
+	uint8_t endpoint;
+	uint16_t sensor_id;
+} cx7_init_arg;
 
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;
