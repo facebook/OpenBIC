@@ -20,6 +20,8 @@
 #define APML_SUCCESS 0
 #define APML_ERROR 1
 
+#define RMI_SOFT_RESET_BIT BIT(0)
+
 enum APML_MSG_TYPE {
 	APML_MSG_TYPE_MAILBOX,
 	APML_MSG_TYPE_CPUID,
@@ -41,6 +43,7 @@ enum SBTSI_REGISTER {
 	SBTSI_CONFIG = 0x03,
 	SBTSI_UPDATE_RATE = 0x04,
 	SBTSI_HIGH_TEMP_INTEGER_THRESHOLD = 0x07,
+	SBTSI_CONFIG_WRITE = 0x09,
 	SBTSI_CPU_TEMP_DEC = 0x10,
 };
 
@@ -52,6 +55,7 @@ enum SBRMI_MAILBOX_ERR_CODE {
 };
 
 enum SBRMI_REGISTER {
+	SBRMI_REVISION = 0x00,
 	SBRMI_STATUS = 0x02,
 	SBRMI_OUTBANDMSG_INST0 = 0x30,
 	SBRMI_OUTBANDMSG_INST1 = 0x31,
@@ -129,5 +133,6 @@ uint8_t get_apml_response_by_index(apml_msg *msg, uint8_t index);
 uint8_t apml_read(apml_msg *msg);
 void apml_init();
 void fatal_error_happened();
+void apml_recovery();
 
 #endif

@@ -21,6 +21,10 @@
 #include "power_status.h"
 #include <logging/log.h>
 #include "libutil.h"
+#include "plat_def.h"
+
+#ifdef ENABLE_APML
+#include "plat_apml.h"
 
 LOG_MODULE_REGISTER(apml);
 
@@ -30,6 +34,7 @@ LOG_MODULE_REGISTER(apml);
 #define APML_HANDLER_STACK_SIZE 2048
 #define APML_MSGQ_LEN 32
 #define WAIT_TIME_MS 10
+#define RECOVERY_SBRMI_RETRY_MAX 5
 
 struct k_msgq apml_msgq;
 struct k_thread apml_thread;
@@ -138,6 +143,7 @@ static uint8_t access_MCA(apml_msg *msg)
 
 	if (!wait_HwAlert_set(msg, RETRY_MAX)) {
 		LOG_ERR("HwAlert not be set, retry %d times.", RETRY_MAX);
+		return APML_ERROR;
 	}
 
 	if (read_MCA_response(msg)) {
@@ -202,6 +208,7 @@ static uint8_t access_CPUID(apml_msg *msg)
 
 	if (!wait_HwAlert_set(msg, RETRY_MAX)) {
 		LOG_ERR("HwAlert not be set, retry %d times.", RETRY_MAX);
+		return APML_ERROR;
 	}
 
 	if (read_CPUID_response(msg)) {
@@ -412,6 +419,7 @@ static void apml_handler(void *arvg0, void *arvg1, void *arvg2)
 			if (msg_data.error_cb_fn) {
 				msg_data.error_cb_fn(&msg_data);
 			}
+			apml_recovery();
 		} else {
 			if (msg_data.cb_fn) {
 				msg_data.cb_fn(&msg_data);
@@ -436,3 +444,48 @@ void fatal_error_happened()
 {
 	is_fatal_error_happened = true;
 }
+
+void apml_recovery()
+{
+	uint8_t ret, read_data = 0x00;
+	ret = apml_read_byte(APML_BUS, SB_RMI_ADDR, SBRMI_REVISION, &read_data);
+
+	if (ret) {
+		LOG_ERR("Failed to read SBRMI revision.");
+	}
+
+	if ((ret || (read_data != PLAT_SBRMI_REVISION)) && get_post_status()) {
+		LOG_INF("Recovery SBRMI.");
+		if (apml_read_byte(APML_BUS, SB_TSI_ADDR, SBTSI_CONFIG, &read_data)) {
+			LOG_ERR("Failed to read SBTSI config.");
+			return;
+		}
+
+		if (apml_write_byte(APML_BUS, SB_TSI_ADDR, SBTSI_CONFIG_WRITE,
+				    read_data | RMI_SOFT_RESET_BIT)) {
+			LOG_ERR("Failed to write SBTSI config.");
+			return;
+		}
+
+		uint8_t i = 0;
+		for (; i < RECOVERY_SBRMI_RETRY_MAX; i++) {
+			read_data = 0;
+			if (apml_read_byte(APML_BUS, SB_TSI_ADDR, SBTSI_CONFIG, &read_data)) {
+				LOG_ERR("Failed to read SBTSI config.");
+				return;
+			}
+
+			if (!(read_data & RMI_SOFT_RESET_BIT)) {
+				break;
+			}
+			k_msleep(10);
+		}
+
+		if (i == RECOVERY_SBRMI_RETRY_MAX) {
+			LOG_ERR("RMISoftReset bit is not cleared.");
+		}
+	}
+	return;
+}
+
+#endif

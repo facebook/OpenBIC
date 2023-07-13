@@ -25,6 +25,7 @@
 #define SB_TSI_ADDR 0x4C
 #define TSI_HIGH_TEMP_THRESHOLD 0x5F
 #define TSI_TEMP_ALERT_UPDATE_RATE 0x0A
+#define PLAT_SBRMI_REVISION 0x20
 
 typedef struct _addc_trigger_info {
 	uint8_t event_version;
