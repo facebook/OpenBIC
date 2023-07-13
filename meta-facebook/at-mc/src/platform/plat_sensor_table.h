@@ -40,10 +40,10 @@
 #define SENSOR_NUM_TEMP_TMP75_IN 0x01
 #define SENSOR_NUM_TEMP_TMP75_OUT 0x02
 #define SENSOR_NUM_TEMP_PU4 0x03
-#define SENSOR_NUM_TEMP_E1S_0 0x34
-#define SENSOR_NUM_TEMP_E1S_1 0x35
-#define SENSOR_NUM_TEMP_E1S_2 0x36
-#define SENSOR_NUM_TEMP_E1S_3 0x37
+#define SENSOR_NUM_TEMP_E1S_1 0x34
+#define SENSOR_NUM_TEMP_E1S_2 0x35
+#define SENSOR_NUM_TEMP_E1S_3 0x36
+#define SENSOR_NUM_TEMP_E1S_4 0x37
 
 #define SENSOR_NUM_VOL_P12V_AUX 0x04
 #define SENSOR_NUM_VOL_P3V3_AUX 0x05
@@ -175,5 +175,6 @@ struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus);
 bool get_pcie_card_mux_config(uint8_t cxl_id, uint8_t sensor_num, mux_config *card_mux_cfg,
 			      mux_config *cxl_mux_cfg);
 sensor_cfg *get_cxl_sensor_cfg_info(uint8_t cxl_id, uint8_t *cfg_count);
+sensor_cfg *get_common_sensor_cfg_info(uint8_t sensor_num);
 
 #endif

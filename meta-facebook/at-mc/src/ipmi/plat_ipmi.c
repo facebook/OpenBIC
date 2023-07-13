@@ -36,6 +36,7 @@
 #include "pm8702.h"
 #include "power_status.h"
 #include "plat_ipmb.h"
+#include "app_handler.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
@@ -857,5 +858,78 @@ void OEM_1S_SET_DEVICE_ACTIVE(ipmi_msg *msg)
 
 	msg->data_len = 0;
 	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
+void OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len < 2) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t fru_id = msg->data[0];
+	uint8_t sensor_num = 0;
+	ipmi_msg bridge_msg = { 0 };
+
+	switch (fru_id) {
+	case MC_E1S_1_FRU_ID:
+		sensor_num = SENSOR_NUM_TEMP_E1S_1;
+		break;
+	case MC_E1S_2_FRU_ID:
+		sensor_num = SENSOR_NUM_TEMP_E1S_2;
+		break;
+	case MC_E1S_3_FRU_ID:
+		sensor_num = SENSOR_NUM_TEMP_E1S_3;
+		break;
+	case MC_E1S_4_FRU_ID:
+		sensor_num = SENSOR_NUM_TEMP_E1S_4;
+		break;
+	default:
+		msg->completion_code = CC_INVALID_PARAM;
+		return;
+	}
+
+	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
+	if (cfg == NULL) {
+		LOG_ERR("Fail to find sensor cfg via sensor num: 0x%x, fru id: 0x%x", sensor_num,
+			fru_id);
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	if (cfg->access_checker(sensor_num) != true) {
+		msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+		return;
+	}
+
+	if (cfg->pre_sensor_read_hook) {
+		if (cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args) != true) {
+			LOG_ERR("Failed to do pre sensor read function, sensor num: 0x%x",
+				cfg->num);
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+	}
+
+	bridge_msg.data[0] = cfg->port << 1;
+	bridge_msg.data[1] = cfg->target_addr << 1;
+	memcpy(&bridge_msg.data[2], &msg->data[1], msg->data_len - 1);
+	bridge_msg.data_len = msg->data_len + 1;
+
+	APP_MASTER_WRITE_READ(&bridge_msg);
+
+	if (cfg->post_sensor_read_hook) {
+		if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) != true) {
+			LOG_ERR("Failed to do post sensor read function, sensor num: 0x%x",
+				cfg->num);
+		}
+	}
+
+	msg->completion_code = bridge_msg.completion_code;
+	msg->data_len = bridge_msg.data_len;
+	memcpy(&msg->data[0], &bridge_msg.data[0], bridge_msg.data_len);
 	return;
 }

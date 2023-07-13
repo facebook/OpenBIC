@@ -71,16 +71,16 @@ sensor_cfg plat_sensor_config[] = {
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 
 	/** NVME **/
-	{ SENSOR_NUM_TEMP_E1S_0, sensor_dev_nvme, I2C_BUS4, E1S_ADDR, E1S_OFFSET, is_e1s_access, 0,
-	  0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_nvme_read, &bus_4_pca9548_configs[3], post_nvme_read, NULL, NULL },
 	{ SENSOR_NUM_TEMP_E1S_1, sensor_dev_nvme, I2C_BUS4, E1S_ADDR, E1S_OFFSET, is_e1s_access, 0,
 	  0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_nvme_read, &bus_4_pca9548_configs[2], post_nvme_read, NULL, NULL },
+	  pre_nvme_read, &bus_4_pca9548_configs[3], post_nvme_read, NULL, NULL },
 	{ SENSOR_NUM_TEMP_E1S_2, sensor_dev_nvme, I2C_BUS4, E1S_ADDR, E1S_OFFSET, is_e1s_access, 0,
 	  0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_nvme_read, &bus_4_pca9548_configs[1], post_nvme_read, NULL, NULL },
+	  pre_nvme_read, &bus_4_pca9548_configs[2], post_nvme_read, NULL, NULL },
 	{ SENSOR_NUM_TEMP_E1S_3, sensor_dev_nvme, I2C_BUS4, E1S_ADDR, E1S_OFFSET, is_e1s_access, 0,
+	  0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_nvme_read, &bus_4_pca9548_configs[1], post_nvme_read, NULL, NULL },
+	{ SENSOR_NUM_TEMP_E1S_4, sensor_dev_nvme, I2C_BUS4, E1S_ADDR, E1S_OFFSET, is_e1s_access, 0,
 	  0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  pre_nvme_read, &bus_4_pca9548_configs[0], post_nvme_read, NULL, NULL },
 
@@ -1907,16 +1907,16 @@ bool is_e1s_access(uint8_t sensor_num)
 	uint8_t card_type = 0;
 
 	switch (sensor_num) {
-	case SENSOR_NUM_TEMP_E1S_0:
+	case SENSOR_NUM_TEMP_E1S_1:
 		pcie_card_id = CARD_8_INDEX;
 		break;
-	case SENSOR_NUM_TEMP_E1S_1:
+	case SENSOR_NUM_TEMP_E1S_2:
 		pcie_card_id = CARD_7_INDEX;
 		break;
-	case SENSOR_NUM_TEMP_E1S_2:
+	case SENSOR_NUM_TEMP_E1S_3:
 		pcie_card_id = CARD_6_INDEX;
 		break;
-	case SENSOR_NUM_TEMP_E1S_3:
+	case SENSOR_NUM_TEMP_E1S_4:
 		pcie_card_id = CARD_5_INDEX;
 		break;
 	default:
