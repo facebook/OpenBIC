@@ -75,10 +75,85 @@ static void add_pmic_error_sel(uint8_t dimm_id, uint8_t error_type)
 	}
 }
 
+static void clear_pmic_error(uint8_t dimm_id)
+{
+	uint8_t retry = 5;
+	I2C_MSG *msg = (I2C_MSG *)malloc(sizeof(I2C_MSG));
+	if (msg == NULL) {
+		LOG_ERR("Failed to allocate memory.");
+		return;
+	}
+
+	/* Set R35 to clear error injection */
+	memset(msg, 0, sizeof(*msg));
+	msg->bus = (dimm_id < (MAX_COUNT_DIMM / 2)) ? I2C_BUS11 : I2C_BUS12;
+	msg->target_addr = PMIC_addr[dimm_id % 4];
+	msg->tx_len = 2;
+	msg->data[0] = 0x35;
+	msg->data[1] = 0x00;
+
+	if (i2c_master_write(msg, retry)) {
+		LOG_ERR("Failed to set PMIC R35 to 0x00.");
+	}
+
+	uint8_t i = 0;
+	for (; i < CLEAR_MTP_RETRY_MAX; i++) {
+		/* Set R39 to clear MTP and R04-R07 */
+		memset(msg, 0, sizeof(*msg));
+		msg->bus = (dimm_id < (MAX_COUNT_DIMM / 2)) ? I2C_BUS11 : I2C_BUS12;
+		msg->target_addr = PMIC_addr[dimm_id % 4];
+		msg->tx_len = 2;
+		msg->data[0] = 0x39;
+		msg->data[1] = 0x74;
+
+		if (i2c_master_write(msg, retry)) {
+			LOG_ERR("Failed to set PMIC R39 to 0x74.");
+			continue;
+		}
+
+		k_msleep(100);
+
+		memset(msg, 0, sizeof(*msg));
+		msg->bus = (dimm_id < (MAX_COUNT_DIMM / 2)) ? I2C_BUS11 : I2C_BUS12;
+		msg->target_addr = PMIC_addr[dimm_id % 4];
+		msg->tx_len = 1;
+		msg->rx_len = 1;
+		msg->data[0] = 0x39;
+
+		if (i2c_master_read(msg, retry)) {
+			LOG_ERR("Failed to read PMIC R39.");
+			continue;
+		}
+
+		if ((msg->data[0] == 0x74) || (msg->data[0] == 0x5a)) {
+			break;
+		}
+	}
+
+	if (i == CLEAR_MTP_RETRY_MAX) {
+		LOG_ERR("Failed to clear MTP, retry reach max.");
+	}
+
+	/* Set R14 to clear R08-R0B, R33 */
+	memset(msg, 0, sizeof(*msg));
+	msg->bus = (dimm_id < (MAX_COUNT_DIMM / 2)) ? I2C_BUS11 : I2C_BUS12;
+	msg->target_addr = PMIC_addr[dimm_id % 4];
+	msg->tx_len = 2;
+	msg->data[0] = 0x14;
+	msg->data[1] = 0x01;
+
+	if (i2c_master_write(msg, retry)) {
+		LOG_ERR("Failed to set PMIC R14 to 0x01.");
+	}
+	SAFE_FREE(msg);
+	return;
+}
+
 static void compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data)
 {
 	CHECK_NULL_ARG(pmic_err_data);
 
+	bool is_pmic_error_match = false;
 	uint8_t err_index, reg_index, data_index, pattern;
 
 	for (err_index = 0; err_index < MAX_COUNT_PMIC_ERROR_TYPE; err_index++) {
@@ -101,6 +176,7 @@ static void compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data)
 
 		// All bytes of error pattern are match
 		if (reg_index == MAX_LEN_GET_PMIC_ERROR_INFO) {
+			is_pmic_error_match = true;
 			if (is_pmic_error_flag[dimm_id][err_index] == false) {
 				add_pmic_error_sel(dimm_id, err_index);
 				is_pmic_error_flag[dimm_id][err_index] = true;
@@ -108,6 +184,10 @@ static void compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data)
 		} else { // One byte of error pattern is not match
 			is_pmic_error_flag[dimm_id][err_index] = false;
 		}
+	}
+
+	if (is_pmic_error_match) {
+		clear_pmic_error(dimm_id);
 	}
 }
 
