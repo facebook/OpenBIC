@@ -239,7 +239,12 @@ void OEM_1S_MSG_OUT(ipmi_msg *msg)
 	case MPRO_PLDM:
 		if (msg->data_len < 3) {
 			msg->completion_code = CC_INVALID_LENGTH;
-			return;
+			goto error;
+		}
+
+		if (get_mpro_status() == false) {
+			msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+			goto error;
 		}
 
 		pldm_msg pmsg = { 0 };
@@ -266,13 +271,13 @@ void OEM_1S_MSG_OUT(ipmi_msg *msg)
 		if (get_mctp_info_by_eid(MCTP_EID_MPRO, &mctp_inst, &pmsg.ext_params) == false) {
 			LOG_ERR("Failed to get mctp info by eid 0x%x", MCTP_EID_MPRO);
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
-			return;
+			goto error;
 		}
 
 		if (mctp_pldm_send_msg(mctp_inst, &pmsg) != PLDM_SUCCESS) {
 			LOG_ERR("Failed to send mctp-pldm request command to mpro");
 			msg->completion_code = CC_BRIDGE_MSG_ERR;
-			return;
+			goto error;
 		}
 
 		return;
@@ -342,6 +347,7 @@ void OEM_1S_MSG_OUT(ipmi_msg *msg)
 		}
 	}
 
+error:
 	// Return to source while data is invalid or sending req to Tx task fail
 	if (msg->completion_code != CC_SUCCESS) {
 		msg->data_len = 0;
