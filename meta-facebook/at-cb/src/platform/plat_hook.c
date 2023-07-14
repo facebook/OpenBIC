@@ -53,8 +53,8 @@ adm1272_init_arg adm1272_init_args[] = {
 };
 
 ltc4286_init_arg ltc4286_init_args[] = {
-	[0] = { .is_init = false, .r_sense_mohm = 0.3, .mfr_config_1 = { 0x5572 } },
-	[1] = { .is_init = false, .r_sense_mohm = 0.3, .mfr_config_1 = { 0x5572 } }
+	[0] = { .is_init = false, .r_sense_mohm = 0.3, .mfr_config_1 = { 0x6D72 } },
+	[1] = { .is_init = false, .r_sense_mohm = 0.3, .mfr_config_1 = { 0x6D72 } }
 };
 
 ina233_init_arg ina233_init_args[] = {

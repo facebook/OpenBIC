@@ -246,13 +246,15 @@ uint8_t ltc4286_read(sensor_cfg *cfg, int *reading)
 	double val;
 	I2C_MSG msg;
 
-	msg.bus = cfg->port;
-	msg.target_addr = cfg->target_addr;
-	msg.tx_len = 1;
-	msg.rx_len = 2;
-	msg.data[0] = cfg->offset;
-	if (i2c_master_read(&msg, retry)) {
-		return SENSOR_FAIL_TO_ACCESS;
+	if ((cfg->offset != PMBUS_READ_IIN) && (cfg->offset != PMBUS_READ_POUT)) {
+		msg.bus = cfg->port;
+		msg.target_addr = cfg->target_addr;
+		msg.tx_len = 1;
+		msg.rx_len = 2;
+		msg.data[0] = cfg->offset;
+		if (i2c_master_read(&msg, retry)) {
+			return SENSOR_FAIL_TO_ACCESS;
+		}
 	}
 
 	sensor_val *sval = (sensor_val *)reading;
