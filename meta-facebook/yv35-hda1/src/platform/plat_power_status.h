@@ -23,5 +23,7 @@ void set_mpro_status();
 bool get_mpro_status();
 bool mpro_access(uint8_t sensor_num);
 void bic_heart_beat_init();
+void mpro_padding();
+void mpro_heart_beat_check_init();
 
 #endif

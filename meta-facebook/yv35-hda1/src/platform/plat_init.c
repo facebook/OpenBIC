@@ -47,6 +47,8 @@ void pal_pre_init()
 {
 	bic_heart_beat_init();
 
+	mpro_heart_beat_check_init();
+
 	init_platform_config();
 
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));

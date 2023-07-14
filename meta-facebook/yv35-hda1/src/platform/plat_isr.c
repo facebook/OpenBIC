@@ -96,6 +96,20 @@ void ISR_CPU_FAULT_ALERT()
 {
 	isr_dbg_print(S0_BMC_GPIOA2_FAULT_ALERT);
 	send_gpio_interrupt(S0_BMC_GPIOA2_FAULT_ALERT);
+
+	common_addsel_msg_t sel_msg;
+	if (gpio_get(BMC_GPIOL1_SYS_PWRGD) == GPIO_HIGH) {
+		sel_msg.InF_target = BMC_IPMB;
+		sel_msg.sensor_type = IPMI_SENSOR_TYPE_PROCESSOR;
+		sel_msg.sensor_number = SENSOR_NUM_CPU_FAULT;
+		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+		sel_msg.event_data1 = 0xFF;
+		sel_msg.event_data2 = 0xFF;
+		sel_msg.event_data3 = 0xFF;
+		if (!common_add_sel_evt_record(&sel_msg)) {
+			LOG_ERR("CPU fault addsel fail");
+		}
+	}
 }
 
 void ISR_CPU_JTAG_CMPL2()
@@ -104,6 +118,7 @@ void ISR_CPU_JTAG_CMPL2()
 }
 
 K_TIMER_DEFINE(send_cmd_timer, send_cmd_to_dev, NULL);
+
 void ISR_MPRO_BOOT_OK()
 {
 	isr_dbg_print(S0_BMC_GPIOA5_FW_BOOT_OK);
@@ -116,15 +131,30 @@ void ISR_MPRO_BOOT_OK()
 	}
 }
 
+bool last_hb = false;
 void ISR_MPRO_HB()
 {
-	isr_dbg_print(S0_BMC_MPRO_HEARTBEAT);
+	mpro_padding();
 }
 
 void ISR_CPU_SHD_ACK()
 {
 	isr_dbg_print(S0_BMC_GPIOB0_SHD_ACK_L);
 	send_gpio_interrupt(S0_BMC_GPIOB0_SHD_ACK_L);
+
+	common_addsel_msg_t sel_msg;
+	if (gpio_get(BMC_GPIOL1_SYS_PWRGD) == GPIO_HIGH) {
+		sel_msg.InF_target = BMC_IPMB;
+		sel_msg.sensor_type = IPMI_SENSOR_TYPE_PROCESSOR;
+		sel_msg.sensor_number = SENSOR_NUM_CPU_SHD;
+		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+		sel_msg.event_data1 = 0xFF;
+		sel_msg.event_data2 = 0xFF;
+		sel_msg.event_data3 = 0xFF;
+		if (!common_add_sel_evt_record(&sel_msg)) {
+			LOG_ERR("CPU shutdown addsel fail");
+		}
+	}
 }
 
 void ISR_CPU_REBOOT_ACK()
@@ -177,7 +207,7 @@ void ISR_CPU_HIGHTEMP()
 		sel_msg.InF_target = BMC_IPMB;
 		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
 		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
-		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_THROTTLE;
+		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_FMTHROTTLE;
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!common_add_sel_evt_record(&sel_msg)) {
