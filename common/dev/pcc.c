@@ -32,6 +32,9 @@
 #define PSB_POSTCODE_PREFIX 0xEE
 #define ABL_POSTCODE_PREFIX 0xEA
 
+#define PCCR0_EN_DMA_MODE BIT(14)
+#define PCCR0_EN BIT(0)
+
 LOG_MODULE_REGISTER(pcc);
 
 K_THREAD_STACK_DEFINE(process_postcode_thread, PROCESS_POSTCODE_STACK_SIZE);
@@ -278,6 +281,11 @@ void pcc_init()
 	}
 	/* set registers to enable pcc */
 	uint32_t reg_data;
+
+	reg_data = sys_read32(0x7E789130);
+	sys_write32(reg_data & ~(PCCR0_EN_DMA_MODE | PCCR0_EN), 0x7E789130);
+	sys_write32(reg_data | (PCCR0_EN_DMA_MODE | PCCR0_EN), 0x7E789130);
+
 	sys_write32(0x00820080, 0x7E789090);
 
 	reg_data = sys_read32(0x7E789100);
