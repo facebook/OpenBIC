@@ -32,6 +32,12 @@
 #define PSB_POSTCODE_PREFIX 0xEE
 #define ABL_POSTCODE_PREFIX 0xEA
 
+#define AST1030_LPC_BASE_ADDR 0x7E789000
+#define LPC_HICR6_REG (AST1030_LPC_BASE_ADDR + 0x84)
+#define LPC_SNPWADR_REG (AST1030_LPC_BASE_ADDR + 0x90)
+#define LPC_HICRB_REG (AST1030_LPC_BASE_ADDR + 0x100)
+#define LPC_PCCR0_REG (AST1030_LPC_BASE_ADDR + 0x130)
+
 #define PCCR0_EN_DMA_MODE BIT(14)
 #define PCCR0_EN BIT(0)
 
@@ -282,17 +288,17 @@ void pcc_init()
 	/* set registers to enable pcc */
 	uint32_t reg_data;
 
-	reg_data = sys_read32(0x7E789130);
-	sys_write32(reg_data & ~(PCCR0_EN_DMA_MODE | PCCR0_EN), 0x7E789130);
-	sys_write32(reg_data | (PCCR0_EN_DMA_MODE | PCCR0_EN), 0x7E789130);
+	reg_data = sys_read32(LPC_PCCR0_REG);
+	sys_write32(reg_data & ~(PCCR0_EN_DMA_MODE | PCCR0_EN), LPC_PCCR0_REG);
+	sys_write32(reg_data | (PCCR0_EN_DMA_MODE | PCCR0_EN), LPC_PCCR0_REG);
 
-	sys_write32(0x00820080, 0x7E789090);
+	sys_write32(0x00820080, LPC_SNPWADR_REG);
 
-	reg_data = sys_read32(0x7E789100);
-	sys_write32(reg_data | 0x0000C000, 0x7E789100);
+	reg_data = sys_read32(LPC_HICRB_REG);
+	sys_write32(reg_data | 0x0000C000, LPC_HICRB_REG);
 
-	reg_data = sys_read32(0x7E789084);
-	sys_write32((reg_data | 0x00080000) & ~0x0001ffff, 0x7E789084);
+	reg_data = sys_read32(LPC_HICR6_REG);
+	sys_write32((reg_data | 0x00080000) & ~0x0001ffff, LPC_HICR6_REG);
 
 	k_sem_init(&get_postcode_sem, 0, 1);
 
