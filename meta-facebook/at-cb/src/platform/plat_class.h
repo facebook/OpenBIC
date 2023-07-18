@@ -141,7 +141,7 @@ struct ASIC_CARD_INFO {
 extern struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT];
 
 void check_accl_device_presence_status_via_ioexp();
-void init_platform_config();
+int init_platform_config();
 uint8_t get_board_revision();
 uint8_t get_hsc_module();
 uint8_t get_pwr_brick_module();

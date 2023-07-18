@@ -17,16 +17,28 @@
 #include <zephyr.h>
 #include <stdio.h>
 #include <string.h>
+#include <logging/log.h>
+#include "libutil.h"
 #include "cmsis_os.h"
 #include "hal_gpio.h"
 #include "plat_gpio.h"
 #include "plat_isr.h"
+#include "plat_class.h"
+
+LOG_MODULE_REGISTER(plat_gpio);
 
 #define gpio_name_to_num(x) #x,
 char *gpio_name[] = {
 	name_gpioA name_gpioB name_gpioC name_gpioD name_gpioE name_gpioF name_gpioG name_gpioH
 		name_gpioI name_gpioJ name_gpioK name_gpioL name_gpioM name_gpioN name_gpioO
 			name_gpioP name_gpioQ name_gpioR name_gpioS name_gpioT name_gpioU
+};
+
+char *update_gpio_name[] = {
+	update_name_gpioA update_name_gpioB update_name_gpioC update_name_gpioD name_gpioE
+		name_gpioF name_gpioG name_gpioH name_gpioI name_gpioJ name_gpioK update_name_gpioL
+			update_name_gpioM name_gpioN name_gpioO update_name_gpioP update_name_gpioQ
+				name_gpioR update_name_gpioS name_gpioT name_gpioU
 };
 #undef gpio_name_to_num
 
@@ -254,10 +266,92 @@ GPIO_CFG plat_gpio_cfg[] = {
 	{ CHIP_GPIO, 167, DISABLE, DISABLE, GPIO_INPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
 };
 
+GPIO_CFG update_gpio_cfg[] = {
+  { CHIP_GPIO, 4, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 10, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 11, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 12, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 19, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 30, DISABLE, DISABLE, GPIO_INPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 44, ENABLE, DISABLE, GPIO_OUTPUT, GPIO_HIGH, OPEN_DRAIN, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 45, ENABLE, DISABLE, GPIO_OUTPUT, GPIO_HIGH, OPEN_DRAIN, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 46, ENABLE, DISABLE, GPIO_OUTPUT, GPIO_LOW, OPEN_DRAIN, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 47, ENABLE, DISABLE, GPIO_OUTPUT, GPIO_HIGH, OPEN_DRAIN, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 88, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 89, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 90, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 91, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 92, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 93, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 94, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 95, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 97, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 99, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 100, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 101, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 127, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 131, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 132, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 145, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+  { CHIP_GPIO, 146, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+};
 // clang-format on
+
+void init_board_rev_gpio()
+{
+	// Need to init two GPIO before check expansion card position
+	// Due to we doesn't intial GPIO table, using aspeed GPIO API to init GPIO
+	const struct device *gpio_dev;
+	gpio_dev = device_get_binding("GPIO0_M_P");
+
+	gpio_pin_configure(gpio_dev, (REV_ID0 % GPIO_GROUP_SIZE), GPIO_INPUT);
+	gpio_pin_configure(gpio_dev, (REV_ID1 % GPIO_GROUP_SIZE), GPIO_INPUT);
+	gpio_pin_configure(gpio_dev, (REV_ID2 % GPIO_GROUP_SIZE), GPIO_INPUT);
+	gpio_pin_configure(gpio_dev, (HSC_MODULE_PIN_NUM % GPIO_GROUP_SIZE), GPIO_INPUT);
+	gpio_pin_configure(gpio_dev, (POWER_BRICK_MODULE_PIN_NUM % GPIO_GROUP_SIZE), GPIO_INPUT);
+}
+
+void update_gpio_cfg_name()
+{
+	uint8_t table_index = 0;
+	uint8_t update_index = 0;
+	uint8_t board_rev = get_board_revision();
+
+	switch (board_rev) {
+	case POC_STAGE:
+	case EVT1_STAGE:
+	case EVT2_STAGE:
+		break;
+	case DVT_STAGE:
+	case PVT_STAGE:
+	case MP_STAGE:
+		for (update_index = 0; update_index < ARRAY_SIZE(update_gpio_cfg); ++update_index) {
+			for (table_index = 0; table_index < ARRAY_SIZE(plat_gpio_cfg);
+			     ++table_index) {
+				if (update_gpio_cfg[update_index].number ==
+				    plat_gpio_cfg[table_index].number) {
+					memcpy(&plat_gpio_cfg[table_index],
+					       &update_gpio_cfg[update_index], sizeof(GPIO_CFG));
+					break;
+				}
+
+				if (table_index >= ARRAY_SIZE(plat_gpio_cfg)) {
+					LOG_ERR("Update GPIO cfg fail, gpio number: 0x%x",
+						update_gpio_cfg[update_index].number);
+				}
+			}
+		}
+
+		memcpy(&gpio_name, &update_gpio_name, sizeof(update_gpio_name));
+		break;
+	default:
+		LOG_ERR("Update GPIO cfg fail, board revision: 0x%x", board_rev);
+	}
+}
 
 bool pal_load_gpio_config(void)
 {
+	update_gpio_cfg_name();
 	memcpy(&gpio_cfg[0], &plat_gpio_cfg[0], sizeof(plat_gpio_cfg));
 	return 1;
 };

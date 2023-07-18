@@ -237,23 +237,31 @@ void check_accl_device_presence_status_via_ioexp()
 	}
 }
 
-void init_platform_config()
+int init_platform_config()
 {
-	board_revision = gpio_get(REV_ID0);
-	board_revision |= gpio_get(REV_ID1) << 1;
-	board_revision |= gpio_get(REV_ID2) << 2;
+	init_board_rev_gpio();
 
-	if (gpio_get(HSC_MODULE_PIN_NUM)) {
+	// Need dymic loading GPIO table, using aspeed GPIO API to get GPIO value
+	const struct device *gpio_dev;
+	gpio_dev = device_get_binding("GPIO0_M_P");
+
+	board_revision = gpio_pin_get(gpio_dev, (REV_ID0 % GPIO_GROUP_SIZE));
+	board_revision |= gpio_pin_get(gpio_dev, (REV_ID1 % GPIO_GROUP_SIZE)) << 1;
+	board_revision |= gpio_pin_get(gpio_dev, (REV_ID2 % GPIO_GROUP_SIZE)) << 2;
+
+	if (gpio_pin_get(gpio_dev, (HSC_MODULE_PIN_NUM % GPIO_GROUP_SIZE))) {
 		hsc_module = HSC_MODULE_LTC4286;
 	} else {
 		hsc_module = HSC_MODULE_ADM1272;
 	}
 
-	if (gpio_get(POWER_BRICK_MODULE_PIN_NUM)) {
+	if (gpio_pin_get(gpio_dev, (POWER_BRICK_MODULE_PIN_NUM % GPIO_GROUP_SIZE))) {
 		pwr_brick_module = POWER_BRICK_BMR3512202;
 	} else {
 		pwr_brick_module = POWER_BRICK_Q50SN120A1;
 	}
+
+	return 0;
 }
 
 uint8_t get_board_revision()
