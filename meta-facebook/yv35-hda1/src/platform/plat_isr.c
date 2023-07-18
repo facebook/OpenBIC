@@ -131,7 +131,6 @@ void ISR_MPRO_BOOT_OK()
 	}
 }
 
-bool last_hb = false;
 void ISR_MPRO_HB()
 {
 	mpro_padding();
