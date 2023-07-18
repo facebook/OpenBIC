@@ -39,6 +39,8 @@ enum BOARD_REVERSION {
 	REV_DVT,
 	REV_PVT,
 	REV_MP,
+	REV_PRE_DVT,
+	REV_UNKNOWN = 0xFF,
 };
 
 enum CARD_INFO_INDEX {
@@ -97,5 +99,6 @@ int cxl_id_to_pcie_card_id(uint8_t cxl_id, uint8_t *pcie_card_id);
 bool is_cxl_present();
 uint8_t get_board_revision();
 int get_pcie_card_power_status(uint8_t pcie_card_id);
+int init_platform_config();
 
 #endif
