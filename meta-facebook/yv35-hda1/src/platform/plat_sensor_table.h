@@ -137,6 +137,8 @@
 #define SENSOR_NUM_VR_HOT 0xB2
 #define SENSOR_NUM_VR_FAULT 0xB3
 #define SENSOR_NUM_PMIC_ERROR 0xB4
+#define SENSOR_NUM_CPU_FAULT 0xC0
+#define SENSOR_NUM_CPU_SHD 0xC1
 
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
