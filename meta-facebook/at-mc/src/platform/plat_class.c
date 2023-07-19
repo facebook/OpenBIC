@@ -37,6 +37,8 @@ struct PCIE_CARD_INFO {
 	uint8_t card_device_type;
 };
 
+uint8_t board_revision = REV_UNKNOWN;
+
 struct PCIE_CARD_INFO pcie_card_info[] = {
 	[0] = { .cpld_offset = 0x20,
 		.power_status_offset = 0x11,
@@ -345,7 +347,7 @@ bool is_cxl_present()
 
 uint8_t get_board_revision()
 {
-	return (gpio_get(REV_ID0) << 2) | (gpio_get(REV_ID1) << 1) | gpio_get(REV_ID2);
+	return board_revision;
 }
 
 int get_pcie_card_power_status(uint8_t pcie_card_id)
@@ -370,4 +372,19 @@ int get_pcie_card_power_status(uint8_t pcie_card_id)
 	}
 
 	return i2c_msg.data[0];
+}
+
+int init_platform_config()
+{
+	init_board_rev_gpio();
+
+	// Need dymic loading GPIO table, using aspeed GPIO API to get GPIO value
+	const struct device *gpio_dev;
+	gpio_dev = device_get_binding("GPIO0_M_P");
+
+	board_revision = gpio_pin_get(gpio_dev, (REV_ID2 % GPIO_GROUP_SIZE));
+	board_revision |= gpio_pin_get(gpio_dev, (REV_ID1 % GPIO_GROUP_SIZE)) << 1;
+	board_revision |= gpio_pin_get(gpio_dev, (REV_ID0 % GPIO_GROUP_SIZE)) << 2;
+
+	return 0;
 }

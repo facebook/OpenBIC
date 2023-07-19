@@ -234,6 +234,85 @@
 	gpio_name_to_num(Reserve_GPIOU6) \
 	gpio_name_to_num(Reserve_GPIOU7)
 
+#define update_name_gpioD \
+  gpio_name_to_num(HSC_D_OC_BIC_N) \
+  gpio_name_to_num(CPLD_INT_N) \
+  gpio_name_to_num(RST_SMB_NIC0_N) \
+  gpio_name_to_num(RST_SMB_E1S_N) \
+  gpio_name_to_num(P12V_AUX_ALERT_R_N) \
+  gpio_name_to_num(SMB_3_INA233_P12V_AUX_CH0_ALERT_N) \
+  gpio_name_to_num(RST_SMB_NIC1_N) \
+  gpio_name_to_num(IOEXP_INT_R_N)
+
+#define update_name_gpioE \
+  gpio_name_to_num(PWRGD_CARD8_0V6_PWR_BIC) \
+  gpio_name_to_num(PWRGD_CARD7_0V6_PWR_BIC) \
+  gpio_name_to_num(RST_USB_HUB3_N) \
+  gpio_name_to_num(RESERVE_GPIOE3) \
+  gpio_name_to_num(RESERVE_GPIOE4) \
+  gpio_name_to_num(PWRGD_CARD6_0V6_PWR_BIC) \
+  gpio_name_to_num(PWRGD_CARD5_0V6_PWR_BIC) \
+  gpio_name_to_num(PWRGD_CARD3_0V6_PWR_BIC)
+
+#define update_name_gpioF \
+  gpio_name_to_num(MEB_STBY_PWRGD_BIC) \
+  gpio_name_to_num(MEB_NORMAL_PWRGD_BIC) \
+  gpio_name_to_num(RST_USB_HUB1_N) \
+  gpio_name_to_num(RST_USB_HUB2_N) \
+  gpio_name_to_num(RESERVE_GPIOF4) \
+  gpio_name_to_num(Reserve_GPIOF5) \
+  gpio_name_to_num(Reserve_GPIOF6) \
+  gpio_name_to_num(Reserve_GPIOF7)
+
+#define update_name_gpioG \
+  gpio_name_to_num(Reserve_GPIOG0) \
+  gpio_name_to_num(Reserve_GPIOG1) \
+  gpio_name_to_num(Reserve_GPIOG2) \
+  gpio_name_to_num(Reserve_GPIOG3) \
+  gpio_name_to_num(Reserve_GPIOG4) \
+  gpio_name_to_num(Reserve_GPIOG5) \
+  gpio_name_to_num(Reserve_GPIOG6) \
+  gpio_name_to_num(Reserve_GPIOG7)
+
+#define update_name_gpioH \
+  gpio_name_to_num(RST_BMC_MEB_MUX0_N) \
+  gpio_name_to_num(Reserve_GPIOH1) \
+  gpio_name_to_num(Reserve_GPIOH2) \
+  gpio_name_to_num(PWRGD_CARD4_0V6_PWR_BIC) \
+  gpio_name_to_num(Reserve_GPIOH4) \
+  gpio_name_to_num(Reserve_GPIOH5) \
+  gpio_name_to_num(Reserve_GPIOH6) \
+  gpio_name_to_num(Reserve_GPIOH7)
+
+#define update_name_gpioL \
+  gpio_name_to_num(Reserve_GPIOL0) \
+  gpio_name_to_num(Reserve_GPIOL1) \
+  gpio_name_to_num(PWRGD_CARD1_0V6_PWR_BIC) \
+  gpio_name_to_num(PWRGD_CARD2_0V6_PWR_BIC) \
+  gpio_name_to_num(RST_MB_PERST_MEB0_R1_N) \
+  gpio_name_to_num(RST_MB_PERST_MEB1_R1_N) \
+  gpio_name_to_num(Reserve_GPIOL6) \
+  gpio_name_to_num(RST_SMB_6_MUX_N)
+
+#define update_name_gpioM \
+  gpio_name_to_num(Reserve_GPIOM0) \
+  gpio_name_to_num(RST_I3C_4_MUX_N) \
+  gpio_name_to_num(Reserve_GPIOM2) \
+  gpio_name_to_num(SMB_3_INA233_P12V_AUX_CH1_ALERT_N) \
+  gpio_name_to_num(Reserve_GPIOM4) \
+  gpio_name_to_num(Reserve_GPIOM5) \
+  gpio_name_to_num(Reserve_GPIOM6) \
+  gpio_name_to_num(Reserve_GPIOM7)
+
+#define update_name_gpioN \
+  gpio_name_to_num(Reserve_GPION0) \
+  gpio_name_to_num(SMB_3_INA233_P12V_AUX_CH2_ALERT_N) \
+  gpio_name_to_num(Reserve_GPION2) \
+  gpio_name_to_num(SMB_3_INA233_P12V_AUX_CH3_ALERT_N) \
+  gpio_name_to_num(BOARD_ID1) \
+  gpio_name_to_num(BOARD_ID2) \
+  gpio_name_to_num(BOARD_ID3) \
+  gpio_name_to_num(BOARD_ID4)
 // clang-format on
 
 #define gpio_name_to_num(x) x,
@@ -251,5 +330,6 @@ extern char *gpio_name[];
 void enable_PRDY_interrupt();
 void disable_PRDY_interrupt();
 int get_cxl_ioexp_alert_pin(uint8_t cxl_id, uint8_t *alert_pin);
+void init_board_rev_gpio();
 
 #endif
