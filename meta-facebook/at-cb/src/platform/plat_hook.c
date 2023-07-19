@@ -324,19 +324,39 @@ mux_config tca9543_configs[] = {
 	[1] = { .target_addr = 0x71, .channel = TCA9543A_CHANNEL_1 },
 };
 
-pwr_monitor_pre_proc_arg pwr_monitor_pre_proc_args[] = {
-	[0] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_1 }, .card_id = 0 },
-	[1] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_1 }, .card_id = 1 },
-	[2] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_1 }, .card_id = 2 },
-	[3] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_1 }, .card_id = 3 },
-	[4] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_1 }, .card_id = 4 },
-	[5] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_1 }, .card_id = 5 },
-	[6] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_0 }, .card_id = 6 },
-	[7] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_0 }, .card_id = 7 },
-	[8] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_0 }, .card_id = 8 },
-	[9] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_0 }, .card_id = 9 },
-	[10] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_0 }, .card_id = 10 },
-	[11] = { { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_0 }, .card_id = 11 },
+mux_config ina233_configs[] = {
+	[0] = { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_0 },
+	[1] = { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_1 },
+};
+
+pwr_monitor_pre_proc_arg pwr_monitor_pre_dvt_args[] = {
+	[0] = { .mux_configs = &ina233_configs[1], .card_id = 0 },
+	[1] = { .mux_configs = &ina233_configs[1], .card_id = 1 },
+	[2] = { .mux_configs = &ina233_configs[1], .card_id = 2 },
+	[3] = { .mux_configs = &ina233_configs[1], .card_id = 3 },
+	[4] = { .mux_configs = &ina233_configs[1], .card_id = 4 },
+	[5] = { .mux_configs = &ina233_configs[1], .card_id = 5 },
+	[6] = { .mux_configs = &ina233_configs[0], .card_id = 6 },
+	[7] = { .mux_configs = &ina233_configs[0], .card_id = 7 },
+	[8] = { .mux_configs = &ina233_configs[0], .card_id = 8 },
+	[9] = { .mux_configs = &ina233_configs[0], .card_id = 9 },
+	[10] = { .mux_configs = &ina233_configs[0], .card_id = 10 },
+	[11] = { .mux_configs = &ina233_configs[0], .card_id = 11 },
+};
+
+pwr_monitor_pre_proc_arg pwr_monitor_args[] = {
+	[0] = { .mux_configs = NULL, .card_id = 0 },
+	[1] = { .mux_configs = NULL, .card_id = 1 },
+	[2] = { .mux_configs = NULL, .card_id = 2 },
+	[3] = { .mux_configs = NULL, .card_id = 3 },
+	[4] = { .mux_configs = NULL, .card_id = 4 },
+	[5] = { .mux_configs = NULL, .card_id = 5 },
+	[6] = { .mux_configs = NULL, .card_id = 6 },
+	[7] = { .mux_configs = NULL, .card_id = 7 },
+	[8] = { .mux_configs = NULL, .card_id = 8 },
+	[9] = { .mux_configs = NULL, .card_id = 9 },
+	[10] = { .mux_configs = NULL, .card_id = 10 },
+	[11] = { .mux_configs = NULL, .card_id = 11 },
 };
 
 vr_page_cfg xdpe15284_page[] = {
@@ -414,8 +434,6 @@ bool pre_ina233_read(sensor_cfg *cfg, void *args)
 	bool is_sensor_init_done = false;
 	int mutex_status = 0;
 	pwr_monitor_pre_proc_arg *pre_args = (pwr_monitor_pre_proc_arg *)args;
-	mux_config mux_cfg = pre_args->mux_configs;
-	mux_cfg.bus = cfg->port;
 
 	if (asic_card_info[pre_args->card_id].card_status == ASIC_CARD_NOT_PRESENT) {
 		cfg->is_enable_polling = false;
@@ -435,39 +453,49 @@ bool pre_ina233_read(sensor_cfg *cfg, void *args)
 		}
 	}
 
-	struct k_mutex *mutex = get_i2c_mux_mutex(mux_cfg.bus);
-	mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
-	if (mutex_status != 0) {
-		LOG_ERR("Mutex lock fail, status: %d", mutex_status);
-		return false;
+	if (pre_args->mux_configs != NULL) {
+		mux_config *mux_cfg = pre_args->mux_configs;
+		mux_cfg->bus = cfg->port;
+
+		struct k_mutex *mutex = get_i2c_mux_mutex(mux_cfg->bus);
+		mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
+		if (mutex_status != 0) {
+			LOG_ERR("Mutex lock fail, status: %d", mutex_status);
+			return false;
+		}
+
+		ret = set_mux_channel(*mux_cfg, MUTEX_LOCK_ENABLE);
+		if (ret == false) {
+			LOG_ERR("ina233 switch mux fail");
+			k_mutex_unlock(mutex);
+		}
+
+		return ret;
 	}
 
-	ret = set_mux_channel(mux_cfg, MUTEX_LOCK_ENABLE);
-	if (ret == false) {
-		LOG_ERR("ina233 switch mux fail");
-		k_mutex_unlock(mutex);
-	}
-
-	return ret;
+	return true;
 }
 
 bool post_ina233_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
 	ARG_UNUSED(reading);
-	ARG_UNUSED(args);
 
-	int unlock_status = 0;
-	uint8_t bus = cfg->port;
+	pwr_monitor_pre_proc_arg *pre_args = (pwr_monitor_pre_proc_arg *)args;
+	if (pre_args->mux_configs != NULL) {
+		int unlock_status = 0;
+		uint8_t bus = cfg->port;
 
-	struct k_mutex *mutex = get_i2c_mux_mutex(bus);
-	if (mutex->lock_count != 0) {
-		unlock_status = k_mutex_unlock(mutex);
-	}
+		struct k_mutex *mutex = get_i2c_mux_mutex(bus);
+		if (mutex->lock_count != 0) {
+			unlock_status = k_mutex_unlock(mutex);
+		}
 
-	if (unlock_status != 0) {
-		LOG_ERR("Mutex unlock fail, status: %d", unlock_status);
-		return false;
+		if (unlock_status != 0) {
+			LOG_ERR("Mutex unlock fail, status: %d", unlock_status);
+			return false;
+		}
 	}
 
 	return true;

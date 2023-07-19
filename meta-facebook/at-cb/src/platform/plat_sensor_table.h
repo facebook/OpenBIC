@@ -247,6 +247,14 @@
 #define ACCL_FREYA_1_ADDR (0xD6 >> 1)
 #define ACCL_FREYA_2_ADDR (0xD0 >> 1)
 
+typedef struct _sensor_compatible_cfg {
+	uint8_t num;
+	uint8_t port;
+	uint8_t target_addr;
+	void *pre_sensor_read_args;
+	void *post_sensor_read_args;
+} sensor_compatible_cfg;
+
 void load_sensor_config(void);
 bool is_acb_power_good();
 bool is_dc_access(uint8_t sensor_num);
@@ -257,5 +265,6 @@ bool get_accl_mux_config(uint8_t card_id, mux_config *accl_mux);
 sensor_cfg *get_accl_sensor_cfg_info(uint8_t card_id, uint8_t *cfg_count);
 bool is_accl_power_good(uint8_t card_id);
 sensor_cfg *get_common_sensor_cfg_info(uint8_t sensor_num);
+void update_plat_sensor_cfg_by_stage();
 
 #endif

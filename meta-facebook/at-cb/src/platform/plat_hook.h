@@ -23,7 +23,7 @@
 #include "common_i2c_mux.h"
 
 typedef struct _pwr_monitor_pre_proc_arg {
-	mux_config mux_configs;
+	mux_config *mux_configs;
 	uint8_t card_id;
 } pwr_monitor_pre_proc_arg;
 
@@ -55,7 +55,8 @@ extern vr_page_cfg xdpe15284_page[];
 extern mux_config pca9548_configs[];
 extern mux_config pca9546_configs[];
 extern uint8_t plat_monitor_table_arg[];
-extern pwr_monitor_pre_proc_arg pwr_monitor_pre_proc_args[];
+extern pwr_monitor_pre_proc_arg pwr_monitor_pre_dvt_args[];
+extern pwr_monitor_pre_proc_arg pwr_monitor_args[];
 extern accl_card_info accl_card_info_args[];
 
 /**************************************************************************************************

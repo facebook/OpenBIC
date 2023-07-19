@@ -25,6 +25,7 @@
 
 // clang-format off
 
+// For Pre-DVT BIC GPIO name
 #define name_gpioA \
 	gpio_name_to_num(Reserve_GPIOA0) \
 	gpio_name_to_num(INT_SMB_BIC_PEX0_N_R) \
@@ -188,6 +189,7 @@
 #define name_gpioQ \
 	gpio_name_to_num(Reserve_GPIOQ0) \
 	gpio_name_to_num(Reserve_GPIOQ1) \
+	gpio_name_to_num(Reserve_GPIOQ2) \
 	gpio_name_to_num(Reserve_GPIOQ3) \
 	gpio_name_to_num(Reserve_GPIOQ4) \
 	gpio_name_to_num(Reserve_GPIOQ5) \
@@ -234,6 +236,95 @@
 	gpio_name_to_num(Reserve_GPIOU6) \
 	gpio_name_to_num(Reserve_GPIOU7)
 
+#define update_name_gpioA \
+	gpio_name_to_num(Reserve_GPIOA0) \
+	gpio_name_to_num(INT_SMB_BIC_PEX0_N_R) \
+	gpio_name_to_num(INT_SMB_BIC_PEX1_N_R) \
+	gpio_name_to_num(SMB_P1V25_ALRT_N_R) \
+	gpio_name_to_num(INA233_ACCL1_ALRT_N_R) \
+	gpio_name_to_num(INA233_ACCL2_ALRT_N_R) \
+	gpio_name_to_num(INA233_ACCL3_ALRT_N_R) \
+	gpio_name_to_num(FIO_PWRBTN_N_R)
+
+#define update_name_gpioB \
+	gpio_name_to_num(ASD_MUX2_SEL) \
+	gpio_name_to_num(ASD_MUX2_EN_R4_N) \
+	gpio_name_to_num(INA233_ACCL4_ALRT_N_R) \
+	gpio_name_to_num(INA233_ACCL5_ALRT_N_R) \
+	gpio_name_to_num(INA233_ACCL6_ALRT_N_R) \
+	gpio_name_to_num(TYPE_C_PLUG_DETECT_R) \
+	gpio_name_to_num(MEB_STRAP0_N_R) \
+	gpio_name_to_num(MEB_STRAP1_N_R)
+
+#define update_name_gpioC \
+	gpio_name_to_num(RST_SMB_MUX0_ACCL_N) \
+	gpio_name_to_num(RST_SMB_MUX1_ACCL_N) \
+	gpio_name_to_num(RST_BMC_FROM_ACB_N) \
+	gpio_name_to_num(INA233_ACCL7_ALRT_N_R) \
+	gpio_name_to_num(SPI_ROM0_SEL) \
+	gpio_name_to_num(SPI_ROM1_SEL) \
+	gpio_name_to_num(ACB_THERM_OVERT_N) \
+	gpio_name_to_num(RST_BIC_SELF_HW_RST_N)
+
+#define update_name_gpioD \
+	gpio_name_to_num(RST_USB_HUB0_N) \
+	gpio_name_to_num(RST_USB_HUB1_N) \
+	gpio_name_to_num(RST_USB_HUB2_N) \
+	gpio_name_to_num(RST_USB_HUB3_N) \
+	gpio_name_to_num(RST_USB_HUB4_N) \
+	gpio_name_to_num(RST_USB_HUB5_N) \
+	gpio_name_to_num(Reserve_GPIOD6) \
+	gpio_name_to_num(Reserve_GPIOD7)
+
+#define update_name_gpioL \
+	gpio_name_to_num(P3V3_ACCL12_PG) \
+	gpio_name_to_num(P3V3_ACCL11_PG) \
+	gpio_name_to_num(P3V3_ACCL10_PG) \
+	gpio_name_to_num(P3V3_ACCL9_PG) \
+	gpio_name_to_num(P3V3_ACCL8_PG) \
+	gpio_name_to_num(P3V3_ACCL7_PG) \
+	gpio_name_to_num(P3V3_ACCL6_PG) \
+	gpio_name_to_num(P3V3_ACCL5_PG)
+
+#define update_name_gpioM \
+	gpio_name_to_num(Reserve_GPIOM0) \
+	gpio_name_to_num(P3V3_ACCL4_PG) \
+	gpio_name_to_num(Reserve_GPIOM2) \
+	gpio_name_to_num(P3V3_ACCL3_PG) \
+	gpio_name_to_num(P3V3_ACCL2_PG) \
+	gpio_name_to_num(P3V3_ACCL1_PG) \
+	gpio_name_to_num(Reserve_GPIOM6) \
+	gpio_name_to_num(Reserve_GPIOM7)
+
+#define update_name_gpioP \
+	gpio_name_to_num(Reserve_GPIOP0) \
+	gpio_name_to_num(Reserve_GPIOP1) \
+	gpio_name_to_num(Reserve_GPIOP2) \
+	gpio_name_to_num(Reserve_GPIOP3) \
+	gpio_name_to_num(Reserve_GPIOP4) \
+	gpio_name_to_num(Reserve_GPIOP5) \
+	gpio_name_to_num(Reserve_GPIOP6) \
+	gpio_name_to_num(INA233_ACCL10_ALRT_N_R)
+
+#define update_name_gpioQ \
+	gpio_name_to_num(Reserve_GPIOQ0) \
+	gpio_name_to_num(Reserve_GPIOQ1) \
+	gpio_name_to_num(Reserve_GPIOQ2) \
+	gpio_name_to_num(INA233_ACCL11_ALRT_N_R) \
+	gpio_name_to_num(INA233_ACCL12_ALRT_N_R) \
+	gpio_name_to_num(Reserve_GPIOQ5) \
+	gpio_name_to_num(Reserve_GPIOQ6) \
+	gpio_name_to_num(Reserve_GPIOQ7)
+
+#define update_name_gpioS \
+	gpio_name_to_num(Reserve_GPIOS0) \
+	gpio_name_to_num(INA233_ACCL8_ALRT_N_R) \
+	gpio_name_to_num(INA233_ACCL9_ALRT_N_R) \
+	gpio_name_to_num(Reserve_GPIOS3) \
+	gpio_name_to_num(Reserve_GPIOS4) \
+	gpio_name_to_num(Reserve_GPIOS5) \
+	gpio_name_to_num(Reserve_GPIOS6) \
+	gpio_name_to_num(Reserve_GPIOS7)
 // clang-format on
 
 #define gpio_name_to_num(x) x,
@@ -246,8 +337,8 @@ enum _GPIO_NUMS_ {
 extern enum _GPIO_NUMS_ GPIO_NUMS;
 #undef gpio_name_to_num
 
-extern char *gpio_name[];
-
 void enable_PRDY_interrupt();
 void disable_PRDY_interrupt();
+void init_board_rev_gpio();
+
 #endif
