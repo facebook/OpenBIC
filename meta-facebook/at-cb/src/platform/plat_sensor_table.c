@@ -37,8 +37,6 @@ LOG_MODULE_REGISTER(plat_sensor_table);
 
 #define COMMON_SENSOR_MONITOR_INDEX 0
 
-struct k_mutex i2c_2_tca9543_mutex;
-struct k_mutex i2c_3_tca9543_mutex;
 struct k_mutex i2c_4_pi4msd5v9542_mutex;
 struct k_mutex i2c_7_accl_mutex;
 struct k_mutex i2c_8_accl_mutex;
@@ -123,12 +121,10 @@ sensor_cfg plat_sensor_config[] = {
 	/** PEX temp **/
 	{ SENSOR_NUM_TEMP_PEX_0, sensor_dev_pex89000, I2C_BUS2, PEX89144_I2CS_ADDR, PEX_TEMP,
 	  is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, pre_pex89000_read, &tca9543_configs[0], post_pex89000_read,
-	  &tca9543_configs[0], &pex_sensor_init_args[0] },
+	  SENSOR_INIT_STATUS, pre_pex89000_read, NULL, NULL, NULL, &pex_sensor_init_args[0] },
 	{ SENSOR_NUM_TEMP_PEX_1, sensor_dev_pex89000, I2C_BUS3, PEX89144_I2CS_ADDR, PEX_TEMP,
 	  is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, pre_pex89000_read, &tca9543_configs[1], post_pex89000_read,
-	  &tca9543_configs[1], &pex_sensor_init_args[1] },
+	  SENSOR_INIT_STATUS, pre_pex89000_read, NULL, NULL, NULL, &pex_sensor_init_args[1] },
 
 	/** SQ52205 **/
 	{ SENSOR_NUM_VOL_P12V_1_M_AUX, sensor_dev_sq52205, I2C_BUS2, SQ52205_P1V25_1_ADDR,
@@ -1093,12 +1089,6 @@ struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus)
 	struct k_mutex *mutex = NULL;
 
 	switch (i2c_bus) {
-	case I2C_BUS2:
-		mutex = &i2c_2_tca9543_mutex;
-		break;
-	case I2C_BUS3:
-		mutex = &i2c_3_tca9543_mutex;
-		break;
 	case I2C_BUS4:
 		mutex = &i2c_4_pi4msd5v9542_mutex;
 		break;

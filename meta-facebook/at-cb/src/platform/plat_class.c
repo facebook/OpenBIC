@@ -30,6 +30,7 @@
 #include "plat_gpio.h"
 #include "ioexp_pca9555.h"
 #include "plat_dev.h"
+#include "i2c-mux-tca9543a.h"
 
 LOG_MODULE_REGISTER(plat_class);
 
@@ -334,4 +335,38 @@ bool get_acb_power_status()
 bool get_acb_power_good_flag()
 {
 	return is_power_good;
+}
+
+void init_i2c_bus_mux()
+{
+	bool ret;
+	static bool is_pex0_init_mux = false;
+	static bool is_pex1_init_mux = false;
+
+	mux_config mux_cfg = { 0 };
+
+	// Enable i2c mux channel 1
+	if (is_pex0_init_mux != true) {
+		mux_cfg.bus = PEX_0_BUS;
+		mux_cfg.target_addr = PEX89144_0_MUX_ADDR;
+		mux_cfg.channel = TCA9543A_CHANNEL_1;
+		ret = set_mux_channel(mux_cfg, MUTEX_LOCK_ENABLE);
+		if (ret) {
+			is_pex0_init_mux = true;
+		} else {
+			LOG_ERR("Enable i2c bus 2 mux fail");
+		}
+	}
+
+	if (is_pex1_init_mux != true) {
+		mux_cfg.bus = PEX_1_BUS;
+		mux_cfg.target_addr = PEX89144_1_MUX_ADDR;
+		mux_cfg.channel = TCA9543A_CHANNEL_1;
+		ret = set_mux_channel(mux_cfg, MUTEX_LOCK_ENABLE);
+		if (ret) {
+			is_pex1_init_mux = true;
+		} else {
+			LOG_ERR("Enable i2c bus 3 mux fail");
+		}
+	}
 }
