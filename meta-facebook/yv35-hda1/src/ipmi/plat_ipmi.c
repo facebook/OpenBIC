@@ -25,6 +25,7 @@
 #include "plat_fru.h"
 #include "util_spi.h"
 #include "plat_sensor_table.h"
+#include "plat_power_status.h"
 #include "ipmb.h"
 #include "mctp.h"
 #include "pldm.h"
