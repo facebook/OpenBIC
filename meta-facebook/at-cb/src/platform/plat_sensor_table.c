@@ -121,10 +121,12 @@ sensor_cfg plat_sensor_config[] = {
 	/** PEX temp **/
 	{ SENSOR_NUM_TEMP_PEX_0, sensor_dev_pex89000, I2C_BUS2, PEX89144_I2CS_ADDR, PEX_TEMP,
 	  is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, pre_pex89000_read, NULL, NULL, NULL, &pex_sensor_init_args[0] },
+	  SENSOR_INIT_STATUS, pre_pex89000_read, &tca9543_configs[0], NULL, NULL,
+	  &pex_sensor_init_args[0] },
 	{ SENSOR_NUM_TEMP_PEX_1, sensor_dev_pex89000, I2C_BUS3, PEX89144_I2CS_ADDR, PEX_TEMP,
 	  is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, pre_pex89000_read, NULL, NULL, NULL, &pex_sensor_init_args[1] },
+	  SENSOR_INIT_STATUS, pre_pex89000_read, &tca9543_configs[1], NULL, NULL,
+	  &pex_sensor_init_args[1] },
 
 	/** SQ52205 **/
 	{ SENSOR_NUM_VOL_P12V_1_M_AUX, sensor_dev_sq52205, I2C_BUS2, SQ52205_P1V25_1_ADDR,
