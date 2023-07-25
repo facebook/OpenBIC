@@ -598,6 +598,7 @@ void pal_extend_sensor_config()
 	case SYS_BOARD_DVT_HOTSWAP:
 	case SYS_BOARD_PVT_HOTSWAP:
 	case SYS_BOARD_MP_HOTSWAP:
+	case SYS_BOARD_MP_2_HOTSWAP:
 		/* Replace the temperature sensors configuration including "HSC Temp" and "MB Outlet Temp."
 		 * For these two sensors, the reading values are read from TMP431 chip.data.num
 		 */
