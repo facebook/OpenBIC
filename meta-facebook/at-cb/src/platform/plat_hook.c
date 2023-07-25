@@ -319,6 +319,11 @@ sq52205_init_arg sq52205_init_args[] = {
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
  **************************************************************************************************/
+mux_config tca9543_configs[] = {
+	[0] = { .target_addr = PEX89144_0_MUX_ADDR, .channel = TCA9543A_CHANNEL_1 },
+	[1] = { .target_addr = PEX89144_1_MUX_ADDR, .channel = TCA9543A_CHANNEL_1 },
+};
+
 mux_config ina233_configs[] = {
 	[0] = { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_0 },
 	[1] = { .target_addr = 0x70, .channel = TCA9543A_CHANNEL_1 },
@@ -546,7 +551,7 @@ bool post_xdpe15284_read(sensor_cfg *cfg, void *args, int *reading)
 bool pre_pex89000_read(sensor_cfg *cfg, void *args)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
-	ARG_UNUSED(args);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
 	/* Can not access i2c mux and PEX89000 when DC off */
 	if (is_acb_power_good() == false) {
@@ -554,12 +559,19 @@ bool pre_pex89000_read(sensor_cfg *cfg, void *args)
 	}
 
 	pex89000_init_arg *pex_init_arg = (pex89000_init_arg *)cfg->init_args;
+	mux_config *pre_args = (mux_config *)args;
+	pre_args->bus = cfg->port;
 
 	bool ret = true;
 	static uint8_t check_init_count = 0;
 
+	ret = set_mux_channel(*pre_args, MUTEX_LOCK_ENABLE);
+	if (ret == false) {
+		LOG_ERR("PEX switch mux fail, sensor num: 0x%x", cfg->num);
+		return ret;
+	}
+
 	if (pex_init_arg->is_init == false) {
-		init_i2c_bus_mux();
 		if (check_init_count >= PEX_SWITCH_INIT_RETRY_COUNT) {
 			return false;
 		}
