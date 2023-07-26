@@ -1026,7 +1026,7 @@ ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index)
 	LOG_HEXDUMP_DBG(resp_cfg.buffer.data, resp_cfg.buffer.data_len, "");
 
 	/* Blocks here until is able put message in tx queue */
-	if (k_msgq_put(&ipmb_txqueue[index], &resp_cfg, K_FOREVER) != osOK) {
+	if (k_msgq_put(&ipmb_txqueue[index], &resp_cfg, K_MSEC(1000)) != osOK) {
 		k_mutex_unlock(&mutex_send_res);
 		return IPMB_ERROR_FAILURE;
 	}
