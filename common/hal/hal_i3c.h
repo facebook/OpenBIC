@@ -110,6 +110,7 @@ void util_init_i3c(void);
 int i3c_smq_read(I3C_MSG *msg);
 int i3c_smq_write(I3C_MSG *msg);
 int i3c_attach(I3C_MSG *msg);
+int i3c_detach(I3C_MSG *msg);
 int i3c_transfer(I3C_MSG *msg);
 int i3c_brocast_ccc(I3C_MSG *msg, uint8_t ccc_id, uint8_t ccc_addr);
 int i3c_spd_reg_read(I3C_MSG *msg, bool is_nvm);

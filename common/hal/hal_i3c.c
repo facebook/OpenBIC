@@ -35,7 +35,8 @@ static struct k_mutex mutex_read[I3C_MAX_NUM];
 int i3c_slave_mqueue_read(const struct device *dev, uint8_t *dest, int budget);
 int i3c_slave_mqueue_write(const struct device *dev, uint8_t *src, int size);
 
-static struct i3c_dev_desc *find_matching_desc(const struct device *dev, uint8_t desc_addr)
+static struct i3c_dev_desc *find_matching_desc(const struct device *dev, uint8_t desc_addr,
+					       int *pos)
 {
 	CHECK_NULL_ARG_WITH_RETURN(dev, NULL);
 
@@ -45,6 +46,10 @@ static struct i3c_dev_desc *find_matching_desc(const struct device *dev, uint8_t
 	for (i = 0; i < I3C_MAX_NUM; i++) {
 		desc = &i3c_desc_table[i];
 		if ((desc->master_dev == dev) && (desc->info.dynamic_addr == desc_addr)) {
+			if (pos == NULL) {
+				return desc;
+			}
+			*pos = i;
 			return desc;
 		}
 	}
@@ -143,6 +148,39 @@ int i3c_attach(I3C_MSG *msg)
 	return -ret;
 }
 
+int i3c_detach(I3C_MSG *msg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, -EINVAL);
+
+	int ret = 0, pos = 0, i;
+	struct i3c_dev_desc *desc;
+
+	if (!dev_i3c[msg->bus]) {
+		LOG_ERR("Failed to detach address 0x%x due to undefined bus%u", msg->target_addr,
+			msg->bus);
+		return -ENODEV;
+	}
+
+	desc = find_matching_desc(dev_i3c[msg->bus], msg->target_addr, &pos);
+	if (desc == NULL) {
+		LOG_ERR("Failed to detach address 0x%x due to unknown address", msg->target_addr);
+		return -ENODEV;
+	}
+
+	ret = i3c_master_detach_device(dev_i3c[msg->bus], desc);
+	if (ret != 0) {
+		LOG_ERR("Failed to detach address 0x%x, ret: %d", msg->target_addr, ret);
+		return -ret;
+	}
+
+	for (i = pos; i < i3c_desc_count; i++) {
+		i3c_desc_table[i] = i3c_desc_table[i + 1];
+	}
+	i3c_desc_count--;
+
+	return -ret;
+}
+
 int i3c_brocast_ccc(I3C_MSG *msg, uint8_t ccc_id, uint8_t ccc_addr)
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg, -EINVAL);
@@ -182,11 +220,11 @@ int i3c_transfer(I3C_MSG *msg)
 		return -ENODEV;
 	}
 
-	int ret = 0;
+	int ret = 0, *pos = NULL;
 	struct i3c_dev_desc *desc;
 	struct i3c_priv_xfer xfer_data[I3C_MAX_BUFFER_COUNT];
 
-	desc = find_matching_desc(dev_i3c[msg->bus], msg->target_addr);
+	desc = find_matching_desc(dev_i3c[msg->bus], msg->target_addr, pos);
 	if (desc == NULL) {
 		LOG_ERR("Failed to transfer messages to address 0x%x due to unknown address",
 			msg->target_addr);
@@ -219,7 +257,7 @@ int i3c_spd_reg_read(I3C_MSG *msg, bool is_nvm)
 		return -ENODEV;
 	}
 
-	int ret = 0;
+	int ret = 0, *pos = NULL;
 	struct i3c_dev_desc *desc;
 	uint8_t addr = (msg->data[1] << 8 | msg->data[0]) % 64;
 	uint8_t block_addr = (msg->data[1] << 8 | msg->data[0]) / 64;
@@ -232,7 +270,7 @@ int i3c_spd_reg_read(I3C_MSG *msg, bool is_nvm)
 	}
 	uint8_t offset[2] = { offset0, offset1 };
 
-	desc = find_matching_desc(dev_i3c[msg->bus], msg->target_addr);
+	desc = find_matching_desc(dev_i3c[msg->bus], msg->target_addr, pos);
 	if (desc == NULL) {
 		LOG_ERR("Failed to transfer messages to address 0x%x due to unknown address",
 			msg->target_addr);
@@ -252,8 +290,9 @@ int i3c_controller_write(I3C_MSG *msg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg, -EINVAL);
 
+	int *pos = NULL;
 	struct i3c_dev_desc *target;
-	target = find_matching_desc(dev_i3c[msg->bus], msg->target_addr);
+	target = find_matching_desc(dev_i3c[msg->bus], msg->target_addr, pos);
 	if (target == NULL) {
 		LOG_ERR("Failed to write messages to address 0x%x due to unknown address",
 			msg->target_addr);
