@@ -25,6 +25,7 @@
 #include "plat_mctp.h"
 #include "plat_ssif.h"
 #include "plat_power_status.h"
+#include "plat_fru.h"
 #include "util_worker.h"
 
 SCU_CFG scu_cfg[] = {
@@ -63,6 +64,8 @@ void pal_post_init()
 	plat_mctp_init();
 
 	ssif_init();
+
+	write_bsd_version();
 }
 
 void pal_set_sys_status()
