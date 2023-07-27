@@ -3,6 +3,8 @@
 - Description: Tools that used to generate package image for pldm fw update.
 - Release:
 	* pldm_update_pkg_gen:
+		- v1.7.0 - 2023/07/27
+			- Follow standard arg-parsing method, command format not change.
 		- v1.6.0 - 2023/07/24
 			- Default debug mode enable and upload first version to OpenBIC.
 			- Fix debug mode can't execute issue.

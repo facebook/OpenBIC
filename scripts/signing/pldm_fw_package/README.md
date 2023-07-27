@@ -6,7 +6,7 @@ Package generator for pldm fw update.
 
 ### Latest rlease:
     * pldm_pkg_gen_app: NON-SUPPORT
-    * pldm_update_pkg_gen: v1.6 - 2023/07/24
+    * pldm_update_pkg_gen: v1.7.0 - 2023/07/27
     * pldm_fwup_pkg_creator: v1.1.0 - 2023/03/21
 
 ### Version:
@@ -14,6 +14,11 @@ Package generator for pldm fw update.
 - NON-SUPPORT
 
 **[pldm_update_pkg_gen]**
+- 1.7.0 - Modify arg-parsing method - 2023/07/27
+  - Feature:
+  	- Follow standard arg-parsing method, command format not change.
+  - Bug:
+  	- none
 - 1.6.0 - Fix bug - 2023/07/24
   - Feature:
   	- Default debug mode enable and upload first version to OpenBIC.
