@@ -35,6 +35,13 @@
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
+enum HDA1_FIRMWARE_COMPONENT {
+	HDA1_COMPNT_CPLD = 1,
+	HDA1_COMPNT_BIC,
+	HDA1_COMPNT_BIOS,
+	HDA1_COMPNT_BSD,
+};
+
 bool pal_request_msg_to_BIC_from_HOST(uint8_t netfn, uint8_t cmd)
 {
 	if (netfn == NETFN_OEM_1S_REQ) {
@@ -155,6 +162,55 @@ void OEM_1S_GET_BIOS_VERSION(ipmi_msg *msg)
 	}
 
 	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
+void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t component;
+	component = msg->data[0];
+
+	switch (component) {
+	case HDA1_COMPNT_BIC:
+		msg->data[0] = BIC_FW_YEAR_MSB;
+		msg->data[1] = BIC_FW_YEAR_LSB;
+		msg->data[2] = BIC_FW_WEEK;
+		msg->data[3] = BIC_FW_VER;
+		msg->data[4] = BIC_FW_platform_0;
+		msg->data[5] = BIC_FW_platform_1;
+		msg->data[6] = BIC_FW_platform_2;
+		msg->data_len = 7;
+		msg->completion_code = CC_SUCCESS;
+		break;
+
+	case HDA1_COMPNT_BSD: {
+		write_bsd_version();
+		k_msleep(100);
+		uint32_t bsd_version = read_bsd_version();
+		if (bsd_version == 0) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			break;
+		}
+
+		msg->data_len = sizeof(bsd_version);
+		for (int i = 0; i < msg->data_len; i++)
+			msg->data[i] = (bsd_version >> (8 * ((msg->data_len - 1) - i))) & 0xFF;
+
+		msg->completion_code = CC_SUCCESS;
+		break;
+	}
+
+	default:
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		break;
+	}
 	return;
 }
 
