@@ -27,7 +27,6 @@
 LOG_MODULE_REGISTER(plat_fru);
 
 #define BSD_IMG_SIZE_OFST 40
-#define BSD_IMG_SIZE_BYTE_CNT 2
 #define MAX_BSD_IMG_SIZE 1024
 
 const EEPROM_CFG plat_fru_config[] = {
@@ -64,14 +63,24 @@ const EEPROM_CFG plat_bios_version_area_config = {
 
 /* CPU eeprom - BSD image */
 const EEPROM_CFG plat_bsd_area_config = {
-	NV_ATMEL_24C128,     MB_FRU_ID,       MB_CPU_FRU_PORT,  MB_CPU_FRU_ADDR,
-	FRU_DEV_ACCESS_BYTE, BSD_IMAGE_START, MAX_BSD_IMG_SIZE,
+	NV_ATMEL_24C128,
+	MB_FRU_ID,
+	MB_CPU_FRU_PORT,
+	MB_CPU_FRU_ADDR,
+	FRU_DEV_ACCESS_BYTE,
+	BSD_IMAGE_START,
+	MAX_BSD_IMG_SIZE,
 };
 
 /* MB eeprom - BSD version(crc32) */
 const EEPROM_CFG plat_bsd_version_area_config = {
-	NV_ATMEL_24C128,     MB_FRU_ID,		MB_FRU_PORT,	  MB_FRU_ADDR,
-	FRU_DEV_ACCESS_BYTE, BSD_VERSION_START, BSD_VERSION_MAX_SIZE,
+	NV_ATMEL_24C128,
+	MB_FRU_ID,
+	MB_FRU_PORT,
+	MB_FRU_ADDR,
+	FRU_DEV_ACCESS_BYTE,
+	BSD_VERSION_START,
+	BSD_VERSION_MAX_SIZE,
 };
 
 void pal_load_fru_config(void)

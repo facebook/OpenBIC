@@ -20,10 +20,11 @@
 #include "eeprom.h"
 #include "fru.h"
 
-enum { MB_FRU_ID,
-       DPV2_FRU_ID,
-       // OTHER_FRU_ID,
-       MAX_FRU_ID,
+enum {
+	MB_FRU_ID,
+	DPV2_FRU_ID,
+	// OTHER_FRU_ID,
+	MAX_FRU_ID,
 };
 
 #define FRU_CFG_NUM MAX_FRU_ID
