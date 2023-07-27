@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
-import sys, subprocess, os
+import sys, subprocess, argparse
 
 import lib.json_cfg as json_lib
 from lib.common_lib import Common_msg, Common_file, System_ctrl
 
 APP_NAME = "PLDM UPDATE PACKAGE GENERATOR"
 APP_AUTH = "Mouchen"
-APP_RELEASE_VER = "1.6"
-APP_RELEASE_DATE = "2023/07/24"
+APP_RELEASE_VER = "1.7"
+APP_RELEASE_DATE = "2023/07/27"
 
 PLATFORM_PATH = "./platform"
 CONFIG_FILE = "pldm_cfg.json"
@@ -57,24 +57,6 @@ else:
         print("Current os " + platform_os + " is not supported!")
         sys.exit(1)
 
-def APP_HELP():
-    msg_hdr_print("n", "--------------------------------------------------------------------", "\n")
-    msg_hdr_print("n", "HELP:")
-    msg_hdr_print("n", "-p      Platform select.")
-    msg_hdr_print("n", "          [gt] GrandTeton")
-    msg_hdr_print("n", "-b      Board select.")
-    msg_hdr_print("n", "          [swb] SwitchBoard")
-    msg_hdr_print("n", "-s      Stage select.")
-    msg_hdr_print("n", "          [poc/evt/dvt/pvt/mp]")
-    msg_hdr_print("n", "-c      Component id select.")
-    msg_hdr_print("n", "          Please follow spec, could be list(-c 1 2).")
-    msg_hdr_print("n", "-v      Component version string select.")
-    msg_hdr_print("n", '          Please follow spec, could be list(-v "ver1" "ver2").')
-    msg_hdr_print("n", "-i      Component image select.")
-    msg_hdr_print("n", "          Please follow spec, could be list(-i ./img1 ./img2).")
-    msg_hdr_print("n", "")
-    msg_hdr_print("n", "--------------------------------------------------------------------")
-
 def APP_HEADER():
     msg_hdr_print("n", "========================================================")
     msg_hdr_print("n", "* APP name:    "+APP_NAME)
@@ -83,6 +65,16 @@ def APP_HEADER():
     msg_hdr_print("n", "* APP date:    "+APP_RELEASE_DATE)
     msg_hdr_print("n", "* NOTE: This APP is based on pldm_fwup_pkg_creator.py")
     msg_hdr_print("n", "========================================================")
+
+def get_parser():
+    parser = argparse.ArgumentParser(description="HELP:")
+    parser.add_argument("-p", "--platform", type=str, required=True, help="Platform select.")
+    parser.add_argument("-b", "--board", type=str, required=True, help="Board select.")
+    parser.add_argument("-s", "--stage", type=str, choices=['poc', 'evt', 'dvt', 'pvt', 'mp'], required=True, help="Stage select.")
+    parser.add_argument("-c", "--compid", type=int, nargs='*', required=True, help="Component id select. Please follow spec, could be list(-c 1 2).")
+    parser.add_argument("-v", "--version", type=str, nargs='*', required=True, help="Component version string select. Please follow spec, could be list(-v 'dev1 ver1' 'dev2 ver2').")
+    parser.add_argument("-i", "--image", type=str, nargs='*', required=True, help="Component image select. Please follow spec, could be list(-i ./img1 ./img2).")
+    return parser
 
 def PLAT_CheckVRChecksum(str, byte_num):
     if len(str) < byte_num*2:
@@ -97,101 +89,28 @@ def PLAT_CheckVRChecksum(str, byte_num):
             return False
 
     return True
-class APP_ARG():
-    def __init__(self, argv):
-        self.argv = argv
-        self.argc = len(self.argv)
-        self.platform_select = "na"
-        self.board_select = "na"
-        self.stage_select = "na"
-        self.comp_id_lst = []
-        self.comp_verstr_lst = []
-        self.comp_img_lst = []
-
-    def arg_parsing(self):
-        #collect_flag = [0,0,0,0,0]
-        keyword_lst = ["-p", "-b", "-s", "-c", "-v", "-i"]
-        collect_flag = [0] * len(keyword_lst)
-        for i in range(self.argc):
-            if self.argv[i] == "-p":
-                if i+1 < self.argc:
-                    if "-" not in self.argv[i+1]:
-                        self.platform_select = self.argv[i+1]
-                        i+=1
-                        collect_flag[0] = 1
-
-            if self.argv[i] == "-b":
-                if i+1 < self.argc:
-                    if "-" not in self.argv[i+1]:
-                        self.board_select = self.argv[i+1]
-                        i+=1
-                        collect_flag[1] = 1
-
-            if self.argv[i] == "-s":
-                if i+1 < self.argc:
-                    if "-" not in self.argv[i+1]:
-                        self.stage_select = self.argv[i+1]
-                        i+=1
-                        collect_flag[2] = 1
-
-            if self.argv[i] == "-c":
-                if i+1 < self.argc:
-                    for j in range(i+1, self.argc, 1):
-                        if self.argv[j] in keyword_lst:
-                            break
-                        else:
-                            self.comp_id_lst.append(int(self.argv[j], 10))
-                    i += len(self.comp_id_lst)
-                    collect_flag[3] = 1
-
-            if self.argv[i] == "-v":
-                if i+1 < self.argc:
-                    for j in range(i+1, self.argc, 1):
-                        if self.argv[j] in keyword_lst:
-                            break
-                        else:
-                            self.comp_verstr_lst.append(self.argv[j])
-                    i += len(self.comp_verstr_lst)
-                    collect_flag[4] = 1
-
-            if self.argv[i] == "-i":
-                if i+1 < self.argc:
-                    for j in range(i+1, self.argc, 1):
-                        if self.argv[j] in keyword_lst:
-                            break
-                        else:
-                            self.comp_img_lst.append(self.argv[j])
-                    i += len(self.comp_img_lst)
-                    collect_flag[5] = 1
-
-        for flag in collect_flag:
-            if flag == 0:
-                msg_hdr_print('e', "Input argments lost.")
-                return 1
-
-        if len(self.comp_id_lst) != len(self.comp_verstr_lst) or len(self.comp_verstr_lst) != len(self.comp_img_lst):
-            msg_hdr_print('e', "component id, version, image count should be the same")
-            return 1
-
-        return 0
 
 if __name__ == '__main__':
     APP_HEADER()
 
-    if len(sys.argv) != 1:
-        app_arg = APP_ARG(sys.argv)
-        if app_arg.arg_parsing() == 1:
-            msg_hdr_print('e', "Input argments error.")
-            sys.exit(1)
-        select_platform = app_arg.platform_select
-        select_board = app_arg.board_select
-        select_stage = app_arg.stage_select
-        select_comp_id_lst = app_arg.comp_id_lst
-        select_comp_version_lst = app_arg.comp_verstr_lst
-        select_comp_img_lst = app_arg.comp_img_lst
-    else:
-        APP_HELP()
-        sys.exit(1)
+    parser = get_parser()
+    args = parser.parse_args()
+
+    select_platform = args.platform
+    select_board = args.board
+    select_stage = args.stage
+    select_comp_id_lst = args.compid
+    select_comp_version_lst = args.version
+    select_comp_img_lst = args.image
+
+    if len(select_comp_id_lst) != len(select_comp_version_lst) or len(select_comp_version_lst) != len(select_comp_img_lst):
+        msg_hdr_print('e', "Component id, version, image count should be the same")
+        sys.exit(0)
+
+    for i in range(len(select_comp_version_lst)):
+        if (len(select_comp_version_lst[i].split(' ')) != 2):
+            msg_hdr_print('e', "Component #" + str(i+1) + " got invalid version format, should be '<device> <ver>'")
+            sys.exit(0)
 
     PACKAGE_CONFIG = []
     DESC_INFO = []
@@ -199,7 +118,7 @@ if __name__ == '__main__':
 
     cfg_file = resource_path(PLATFORM_PATH + "/cfg_" + str(select_platform) + "_" + str(select_board) + ".json")
     if not is_file_exist(cfg_file):
-        msg_hdr_print('e', "Can't find config file of platform [" + str(select_platform) + "] board [" + str(select_board) + "]")
+        msg_hdr_print('e', "Can't find config file " + cfg_file.split('./')[1] + " by given platform[" + str(select_platform) + "] and board[" + str(select_board) + "]")
         sys.exit(0)
 
     PLAT_INFO = json_lib.TOOL_pldm_plat_cfg_R(cfg_file)
@@ -209,7 +128,6 @@ if __name__ == '__main__':
         DESC_INFO[3]["VendorDefinedDescriptorData"] = STAGE_CFG[select_stage]
     except:
         msg_hdr_print('e', "Invalid given stage [" + str(select_stage) + "]")
-        APP_HELP()
         sys.exit(1)
 
     package_name_lst = []
