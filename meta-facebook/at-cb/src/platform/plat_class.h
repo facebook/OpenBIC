@@ -24,27 +24,6 @@
 #include "i2c-mux-pca954x.h"
 
 #define ASIC_CARD_COUNT 12
-#define ASIC_CARD_FRU_ADDR 0xAC
-#define ASIC_CARD_1_6_MUX_ADDR 0x74
-#define ASIC_CARD_7_12_MUX_ADDR 0x70
-#define ASIC_CARD_DEVICE_MUX_ADDR 0x72
-#define ASIC_CARD_NOT_PRESENT_VAL 0x07
-#define ASIC_DEV_NOT_PRESENT_VAL 0x06
-#define ASIC_DEV_1_PRESENT_VAL 0x02
-#define ASIC_DEV_2_PRESENT_VAL 0x04
-#define ASIC_DEV_1_2_PRESENT_VAL 0x00
-
-#define PEX_0_BUS I2C_BUS2
-#define PEX_1_BUS I2C_BUS3
-#define PEX_ADDR 0x59
-#define PEX_0_INDEX 0
-#define PEX_1_INDEX 1
-#define PEX_0_START_ACCL_ID 0
-#define PEX_1_START_ACCL_ID 6
-#define PEX_ACCL_DEV_PRESENT_REG_COUNT 6
-#define PEX_ACCL_DEV_PRESENT_RESP_COUNT 4
-#define PEX_ACCL_DEV_PRESENT_REG 0x2A080048
-#define PEX_ACCL_PRESENT_MAP_VAL 0x07
 
 #define HSC_MODULE_PIN_NUM BOARD_ID2
 #define POWER_BRICK_MODULE_PIN_NUM BOARD_ID1
@@ -54,6 +33,8 @@
 #define CPLD_PWRGD_2_OFFSET 0x06
 #define CPLD_ACCLA_PWRGD_OFFSET 0x24
 #define CPLD_ACCLB_PWRGD_OFFSET 0x25
+#define CPLD_ACCL_1_6_PRESENT_OFFSET 0x3E
+#define CPLD_ACCL_7_12_PRESENT_OFFSET 0x3F
 #define CPLD_PWRGD_BIT BIT(0)
 
 #define IOEXP_U228_ADDR (0x40 >> 1)
@@ -100,6 +81,12 @@ enum ASIC_CARD_DEVICE_STATUS {
 	ASIC_CARD_DEVICE_UNKNOWN_STATUS = 0xFF,
 };
 
+enum ASIC_CARD_TYPE {
+	ASIC_CARD_WITH_FREYA,
+	ASIC_CARD_WITH_ARTEMIS_MODULE,
+	ASIC_CARD_UNKNOWN_TYPE = 0xFF,
+};
+
 enum FIO_STATUS {
 	FIO_NOT_PRESENT,
 	FIO_PRESENT,
@@ -127,13 +114,8 @@ enum PCIE_CARD_INDEX {
 };
 
 struct ASIC_CARD_INFO {
-	uint8_t bus;
-	uint8_t mux_addr;
-	uint8_t mux_channel;
-
 	bool card_status;
-	uint8_t device_mux_addr;
-	uint8_t device_channel;
+	uint8_t card_type;
 	bool asic_1_status;
 	bool asic_2_status;
 };

@@ -18,7 +18,13 @@
 #define PLAT_SDR_TABLE_H
 
 #include <stdint.h>
+#include "sdr.h"
 
 #define MAX_SENSOR_SIZE 60
+
+void load_sdr_table(void);
+void pal_extend_full_sdr_table();
+uint8_t pal_get_extend_sdr();
+SDR_Full_sensor *get_artemis_module_sdr_table(uint8_t card_id);
 
 #endif

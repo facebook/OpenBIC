@@ -217,7 +217,7 @@ void OEM_1S_GET_PCIE_CARD_STATUS(ipmi_msg *msg)
 	*    Byte 1: PCIE device id
 	*  Response:
 	*    Byte 0: PCIE card presence status (0: not present, 1: present)
-	*    Byte 1: Reserve (Default value is 0) */
+	*    Byte 1: Card type (0: freya, 1: Artemis module) */
 
 	CHECK_NULL_ARG(msg);
 
@@ -276,7 +276,7 @@ void OEM_1S_GET_PCIE_CARD_STATUS(ipmi_msg *msg)
 			msg->completion_code = CC_PARAM_OUT_OF_RANGE;
 			return;
 		}
-		msg->data[1] = RESERVE_DEFAULT_VALUE;
+		msg->data[1] = asic_card_info[pcie_card_id].card_type;
 		msg->completion_code = CC_SUCCESS;
 		break;
 	default:
@@ -664,13 +664,12 @@ void OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT(ipmi_msg *msg)
 	uint8_t retry = 0;
 	uint8_t fru_id = msg->data[0];
 	uint8_t card_id = 0;
-	uint8_t accl_id = 0;
 	uint8_t dev_id = 0;
 	uint8_t address = 0;
 	ipmi_msg bridge_msg = { 0 };
 	mux_config card_mux = { 0 };
 
-	ret = pal_accl_fru_id_map_accl_id_dev_id(fru_id, &accl_id, &dev_id);
+	ret = pal_accl_fru_id_map_accl_id_dev_id(fru_id, &card_id, &dev_id);
 	if (ret != true) {
 		LOG_ERR("Invalid fru id: 0x%x to card id and dev id", fru_id);
 		msg->completion_code = CC_INVALID_PARAM;
@@ -679,10 +678,18 @@ void OEM_1S_BRIDGE_I2C_MSG_BY_COMPNT(ipmi_msg *msg)
 
 	switch (dev_id) {
 	case PCIE_DEVICE_ID2:
-		address = ACCL_FREYA_1_ADDR;
+		if (asic_card_info[card_id].card_type == ASIC_CARD_WITH_ARTEMIS_MODULE) {
+			address = ACCL_ARTEMIS_MODULE_1_ADDR;
+		} else {
+			address = ACCL_FREYA_1_ADDR;
+		}
 		break;
 	case PCIE_DEVICE_ID3:
-		address = ACCL_FREYA_2_ADDR;
+		if (asic_card_info[card_id].card_type == ASIC_CARD_WITH_ARTEMIS_MODULE) {
+			address = ACCL_ARTEMIS_MODULE_2_ADDR;
+		} else {
+			address = ACCL_FREYA_2_ADDR;
+		}
 		break;
 	default:
 		LOG_ERR("Invalid device id: 0x%x", dev_id);

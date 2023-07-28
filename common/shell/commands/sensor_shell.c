@@ -50,6 +50,8 @@ const char *const sensor_status_name[] = {
 	sensor_name_to_num(api_unregister)
 	sensor_name_to_num(4byte_acur_read_success)
 	sensor_name_to_num(sensor_not_present)
+	sensor_name_to_num(pec_error)
+	sensor_name_to_num(parameter_not_valid)
 };
 // clang-format on
 

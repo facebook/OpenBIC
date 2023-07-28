@@ -606,12 +606,14 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 
 	switch (cfg->target_addr) {
 	case ACCL_FREYA_1_ADDR:
+	case ACCL_ARTEMIS_MODULE_1_ADDR:
 		if (asic_card_info[card_id].asic_1_status != ASIC_CARD_DEVICE_PRESENT) {
 			cfg->cache_status = SENSOR_NOT_PRESENT;
 			return true;
 		}
 		break;
 	case ACCL_FREYA_2_ADDR:
+	case ACCL_ARTEMIS_MODULE_2_ADDR:
 		if (asic_card_info[card_id].asic_2_status != ASIC_CARD_DEVICE_PRESENT) {
 			cfg->cache_status = SENSOR_NOT_PRESENT;
 			return true;
@@ -703,6 +705,7 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 
 		switch (cfg->target_addr) {
 		case ACCL_FREYA_1_ADDR:
+		case ACCL_ARTEMIS_MODULE_1_ADDR:
 			if (accl_freya->is_cache_freya1_info) {
 				accl_freya->is_cache_freya1_info = false;
 				memset(&accl_freya->freya1_fw_info, 0, FREYA_FW_VERSION_LENGTH);
@@ -710,6 +713,7 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 			accl_freya->freya1_fw_info.is_freya_ready = FREYA_NOT_READY;
 			break;
 		case ACCL_FREYA_2_ADDR:
+		case ACCL_ARTEMIS_MODULE_2_ADDR:
 			if (accl_freya->is_cache_freya2_info) {
 				accl_freya->is_cache_freya2_info = false;
 				memset(&accl_freya->freya2_fw_info, 0, FREYA_FW_VERSION_LENGTH);
@@ -726,6 +730,7 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 
 	switch (cfg->target_addr) {
 	case ACCL_FREYA_1_ADDR:
+	case ACCL_ARTEMIS_MODULE_1_ADDR:
 		if (accl_freya->is_cache_freya1_info != true) {
 			ret = get_freya_fw_info(cfg->port, cfg->target_addr,
 						&accl_freya->freya1_fw_info);
@@ -736,6 +741,7 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 		}
 		break;
 	case ACCL_FREYA_2_ADDR:
+	case ACCL_ARTEMIS_MODULE_2_ADDR:
 		if (accl_freya->is_cache_freya2_info != true) {
 			ret = get_freya_fw_info(cfg->port, cfg->target_addr,
 						&accl_freya->freya2_fw_info);
