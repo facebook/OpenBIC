@@ -146,6 +146,26 @@ bool write_bsd_version()
 	uint16_t bsd_img_size = 0;
 	uint8_t bsd_img_buff[MAX_BSD_IMG_SIZE] = { 0 };
 
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+	msg.bus = MB_CPU_FRU_PORT;
+	msg.target_addr = MB_CPU_FRU_ADDR;
+	msg.tx_len = 2;
+	msg.rx_len = 2;
+	msg.data[0] = (BSD_IMG_SIZE_OFST >> 8) & 0xFF;
+	msg.data[1] = BSD_IMG_SIZE_OFST & 0xFF;
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_WRN("I2C read failed.");
+		goto exit;
+	}
+
+	bsd_img_size = msg.data[0] | (msg.data[1] << 8);
+	if (!bsd_img_size || (bsd_img_size > MAX_BSD_IMG_SIZE)) {
+		LOG_ERR("Get invalid bsd image size.");
+		goto exit;
+	}
+
 	EEPROM_ENTRY entry = { 0 };
 	entry.config = plat_bsd_area_config;
 	entry.config.start_offset = 0x0000;
@@ -158,16 +178,7 @@ bool write_bsd_version()
 			goto exit;
 		}
 
-		if (!bsd_img_size &&
-		    (entry.config.start_offset + EEPROM_WRITE_SIZE) > BSD_IMG_SIZE_OFST) {
-			bsd_img_size =
-				entry.data[BSD_IMG_SIZE_OFST - entry.config.start_offset] |
-				(entry.data[BSD_IMG_SIZE_OFST - entry.config.start_offset + 1]
-				 << 8);
-		}
-
-		if (bsd_img_size &&
-		    (entry.config.start_offset + EEPROM_WRITE_SIZE > bsd_img_size)) {
+		if (entry.config.start_offset + EEPROM_WRITE_SIZE > bsd_img_size) {
 			memcpy(&bsd_img_buff[entry.config.start_offset], entry.data,
 			       bsd_img_size - entry.config.start_offset);
 			break;
