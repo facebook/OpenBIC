@@ -771,6 +771,14 @@ bool pre_pex89000_read(sensor_cfg *cfg, void *args)
 	mux_config *pre_args = (mux_config *)args;
 	pre_args->bus = cfg->port;
 
+	/* Check if switch is ready */
+	if (get_board_revision() > EVT2_STAGE) {
+		if (is_sw_ready(cfg->num) != true) {
+			LOG_WRN("Switch is not ready, sensor num: 0x%x", cfg->num);
+			return false;
+		}
+	}
+
 	bool ret = true;
 	static uint8_t check_init_count = 0;
 
@@ -781,6 +789,7 @@ bool pre_pex89000_read(sensor_cfg *cfg, void *args)
 	}
 
 	if (pex_init_arg->is_init == false) {
+		// Workaround for EVT2
 		if (check_init_count >= PEX_SWITCH_INIT_RETRY_COUNT) {
 			return false;
 		}

@@ -26,6 +26,7 @@
 #include "plat_class.h"
 #include "util_worker.h"
 #include "plat_sensor_table.h"
+#include "plat_dev.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 

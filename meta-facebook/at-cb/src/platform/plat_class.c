@@ -435,7 +435,6 @@ bool get_acb_power_status()
 	}
 
 	is_power_good = current_power_status;
-
 	return true;
 }
 

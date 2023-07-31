@@ -16,6 +16,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <drivers/sensor.h>
+#include <drivers/pwm.h>
 #include <logging/log.h>
 #include "sensor.h"
 #include "pmbus.h"
@@ -30,6 +32,17 @@
 #include "plat_ipmi.h"
 
 LOG_MODULE_REGISTER(plat_dev);
+
+#define SW_HEARTBEAT_STACK_SIZE 512
+#define SW_HEARTBEAT_DELAY_MS 2000
+K_THREAD_STACK_DEFINE(sw_heartbeat_thread, SW_HEARTBEAT_STACK_SIZE);
+struct k_thread sw_heartbeat_thread_handler;
+k_tid_t sw_heartbeat_tid;
+
+static bool is_sw0_ready = false;
+static bool is_sw1_ready = false;
+struct k_mutex sw0_ready_mutex;
+struct k_mutex sw1_ready_mutex;
 
 freya_info accl_freya_info[] = {
 	[0] = { .is_cache_freya1_info = false, .is_cache_freya2_info = false },
@@ -115,4 +128,132 @@ int get_freya_fw_info(uint8_t bus, uint8_t addr, freya_fw_info *fw_info)
 	memcpy(&fw_info->major_version, &read_buf[FREYA_FIRMWARE_VERSION_OFFSET],
 	       FREYA_FIRMWARE_VERSION_LENGTH);
 	return 0;
+}
+
+bool get_pex_heartbeat(char *label)
+{
+	CHECK_NULL_ARG_WITH_RETURN(label, false);
+
+	const struct device *heartbeat = NULL;
+	struct sensor_value sensor_value;
+	int ret = 0;
+
+	heartbeat = device_get_binding(label);
+	if (heartbeat == NULL) {
+		LOG_ERR("%s device not found", label);
+		return false;
+	}
+
+	ret = sensor_sample_fetch(heartbeat);
+	if (ret < 0) {
+		LOG_ERR("Failed to read %s due to sensor_sample_fetch failed, ret: %d", label, ret);
+		return false;
+	}
+
+	ret = sensor_channel_get(heartbeat, SENSOR_CHAN_RPM, &sensor_value);
+	if (ret < 0) {
+		LOG_ERR("Failed to read %s due to sensor_channel_get failed, ret: %d", label, ret);
+		return false;
+	}
+
+	if (sensor_value.val1 <= 0) {
+		return false;
+	}
+
+	return true;
+}
+
+void sw_heartbeat_read()
+{
+	bool ret = false;
+	int mutex_status = 0;
+
+	while (1) {
+		if (get_acb_power_good_flag()) {
+			ret = get_pex_heartbeat("HB0");
+			if (ret != true) {
+				LOG_ERR("Fail to get switch 0 heartbeat");
+			}
+
+			mutex_status =
+				k_mutex_lock(&sw0_ready_mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
+			if (mutex_status != 0) {
+				LOG_ERR("Set PESW ready0 mutex lock fail, status: %d",
+					mutex_status);
+				continue;
+			}
+
+			is_sw0_ready = ret;
+			k_mutex_unlock(&sw0_ready_mutex);
+
+			ret = get_pex_heartbeat("HB1");
+			if (ret != true) {
+				LOG_ERR("Fail to get switch 1 heartbeat");
+			}
+
+			mutex_status =
+				k_mutex_lock(&sw1_ready_mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
+			if (mutex_status != 0) {
+				LOG_ERR("Set PESW ready1 mutex lock fail, status: %d",
+					mutex_status);
+				continue;
+			}
+
+			is_sw1_ready = ret;
+			k_mutex_unlock(&sw1_ready_mutex);
+		} else {
+			is_sw0_ready = false;
+			is_sw1_ready = false;
+		}
+
+		k_msleep(SW_HEARTBEAT_DELAY_MS);
+	}
+}
+
+void init_sw_heartbeat_thread()
+{
+	if (sw_heartbeat_tid != NULL &&
+	    (strcmp(k_thread_state_str(sw_heartbeat_tid), "dead") != 0) &&
+	    (strcmp(k_thread_state_str(sw_heartbeat_tid), "unknown") != 0)) {
+		return;
+	}
+	sw_heartbeat_tid =
+		k_thread_create(&sw_heartbeat_thread_handler, sw_heartbeat_thread,
+				K_THREAD_STACK_SIZEOF(sw_heartbeat_thread), sw_heartbeat_read, NULL,
+				NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+	k_thread_name_set(&sw_heartbeat_thread_handler, "sw_heartbeat_thread");
+}
+
+bool is_sw_ready(uint8_t sensor_num)
+{
+	bool ready;
+	int mutex_status = 0;
+
+	switch (sensor_num) {
+	case SENSOR_NUM_TEMP_PEX_0:
+		mutex_status = k_mutex_lock(&sw0_ready_mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
+		if (mutex_status != 0) {
+			LOG_ERR("Mutex lock fail, status: %d", mutex_status);
+			return false;
+			;
+		}
+		ready = is_sw0_ready;
+		k_mutex_unlock(&sw0_ready_mutex);
+		break;
+	case SENSOR_NUM_TEMP_PEX_1:
+		mutex_status = k_mutex_lock(&sw1_ready_mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
+		if (mutex_status != 0) {
+			LOG_ERR("Mutex lock fail, status: %d", mutex_status);
+			return false;
+		}
+		ready = is_sw1_ready;
+		k_mutex_unlock(&sw1_ready_mutex);
+		break;
+	default:
+		LOG_ERR("Invalid sensor number to get switch heartbeat, sensor num: 0x%x",
+			sensor_num);
+		return false;
+	}
+
+	return ready;
 }
