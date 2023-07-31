@@ -31,10 +31,12 @@ enum {
 
 #define MB_FRU_PORT 0x01
 #define MB_FRU_ADDR 0x54
-#define MB_CPU_EEPROM_ADDR 0x50
 
 #define DPV2_FRU_PORT 0x08
 #define DPV2_FRU_ADDR 0x51
+
+#define MB_CPU_FRU_PORT 0x0C
+#define MB_CPU_FRU_ADDR 0x50
 
 #define BIOS_FW_VERSION_START 0x0A00
 #define BIOS_FW_VERSION_MAX_SIZE 34
@@ -42,11 +44,14 @@ enum {
 #define BIOS_FW_VERSION_SECOND_BLOCK_OFFSET 17
 #define BIOS_FW_VERSION_BLOCK_MAX_SIZE 17
 
-#define PSB_ERROR_START 0x0002
-#define PSB_ERROR_MAX_SIZE 9
+#define BSD_IMAGE_START 0x0000
+#define BSD_VERSION_START 0x0A40
+#define BSD_VERSION_MAX_SIZE 4
 
 bool get_bios_version_area_config(EEPROM_CFG *config);
 int set_bios_version(EEPROM_ENTRY *entry, uint8_t block_index);
 int get_bios_version(EEPROM_ENTRY *entry, uint8_t block_index);
+bool write_bsd_version();
+uint32_t read_bsd_version();
 
 #endif
