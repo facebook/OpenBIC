@@ -172,6 +172,7 @@ void init_hsc_module(uint8_t board_revision)
 		case SYS_BOARD_DVT_EFUSE:
 		case SYS_BOARD_PVT_EFUSE:
 		case SYS_BOARD_MP_EFUSE:
+		case SYS_BOARD_MP_2_EFUSE:
 			hsc_module = HSC_MODULE_MP5990;
 			uint32_t read_value = 0;
 			// Disable ADC channel 7: ADC000[23]
@@ -193,6 +194,7 @@ void init_hsc_module(uint8_t board_revision)
 		case SYS_BOARD_DVT_HOTSWAP:
 		case SYS_BOARD_PVT_HOTSWAP:
 		case SYS_BOARD_MP_HOTSWAP:
+		case SYS_BOARD_MP_2_HOTSWAP:
 			/* Follow the GPIO table, the HSC device type can be by ADC7(net name: HSC_TYPE_ADC)
       * If the voltage of ADC-7 is 0.5V(+/- 0.2V), the hotswap model is ADM1278.
       * If the voltage of ADC-7 is 1.0V(+/- 0.2V), the hotswap model is LTC4282.
