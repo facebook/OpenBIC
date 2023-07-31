@@ -24,6 +24,7 @@
 #include "plat_i2c_target.h"
 #include "util_worker.h"
 #include "plat_pldm_monitor.h"
+#include "plat_dev.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -68,6 +69,7 @@ void pal_device_init()
 void pal_set_sys_status()
 {
 	get_acb_power_status();
+	init_sw_heartbeat_work();
 	gpio_set(ACB_BIC_READY_N, GPIO_LOW);
 	return;
 }

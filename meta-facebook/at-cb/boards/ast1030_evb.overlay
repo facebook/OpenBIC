@@ -183,3 +183,27 @@
 &sram0 {
 	reg = <0 DT_SIZE_K(708)>, <DT_SIZE_K(708) DT_SIZE_K(60)>;
 };
+
+&tach { 
+	status = "okay";
+
+	pinctrl-0 = <&pinctrl_tach8_default &pinctrl_tach9_default>;
+
+	fan@0 {
+		reg = <8>;
+		pulse-pr = <2>;
+		min-rpm = <10>;
+		tach-div = <5>;
+		tach-mode = <2>;
+		label = "HB0";
+	};
+
+	fan@1 {
+		reg = <9>;
+		pulse-pr = <2>;
+		min-rpm = <10>;
+		tach-div = <5>;
+		tach-mode = <2>;
+		label = "HB1";
+	};
+};

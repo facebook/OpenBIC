@@ -75,5 +75,7 @@ extern vr_fw_info cb_vr_fw_info;
 
 void clear_freya_cache_flag(uint8_t card_id);
 int get_freya_fw_info(uint8_t bus, uint8_t addr, freya_fw_info *fw_info);
+bool is_sw_ready(uint8_t sensor_num);
+void init_sw_heartbeat_work();
 
 #endif
