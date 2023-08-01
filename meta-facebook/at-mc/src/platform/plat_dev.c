@@ -162,6 +162,13 @@ void cxl_mb_status_init(uint8_t cxl_id)
 
 		if (get_set_cxl_endpoint(cxl_id, MCTP_EID_CXL) != true) {
 			LOG_ERR("Fail to set eid, cxl id: 0x%x", cxl_id);
+		} else {
+			if (pm8702_table[cxl_id].is_init != true) {
+				ret = pal_init_pm8702_info(cxl_id);
+				if (ret != true) {
+					LOG_ERR("Initial cxl id: 0x%x info fail", cxl_id);
+				}
+			}
 		}
 	}
 
