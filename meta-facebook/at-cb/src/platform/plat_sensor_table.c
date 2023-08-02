@@ -1317,6 +1317,21 @@ sensor_compatible_cfg pre_dvt_update_cfg_table[] = {
 	  &pwr_monitor_pre_dvt_args[11] },
 };
 
+sensor_poll_delay_cfg sensor_poll_delay_cfgs[] = {
+	{ PCIE_CARD_1, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_2, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_3, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_4, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_5, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_6, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_7, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_8, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_9, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_10, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_11, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_12, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+};
+
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
 
 void load_sensor_config(void)
@@ -1660,5 +1675,42 @@ bool get_accl_mux_config(uint8_t card_id, mux_config *accl_mux)
 	}
 
 	*accl_mux = pca9548_configs[card_id];
+	return true;
+}
+
+bool is_time_to_poll_card_sensor(uint8_t card_id)
+{
+	if (card_id >= ARRAY_SIZE(sensor_poll_delay_cfgs)) {
+		LOG_ERR("Invalid card id: 0x%x to check card polling time", card_id);
+		return false;
+	}
+
+	if (is_accl_power_good(card_id) != true) {
+		sensor_poll_delay_cfgs[card_id].is_last_time_power_good = false;
+		sensor_poll_delay_cfgs[card_id].card_first_power_good_time =
+			ACCL_POWER_GOOD_TIME_DEFAULT;
+		return false;
+	}
+
+	/* Record ACCL card power on time when ACCL card first power good */
+	if (sensor_poll_delay_cfgs[card_id].is_last_time_power_good != true) {
+		sensor_poll_delay_cfgs[card_id].card_first_power_good_time = k_uptime_get();
+		sensor_poll_delay_cfgs[card_id].is_last_time_power_good = true;
+		return false;
+	}
+
+	/* Polling ACCL sensor when ACCL card power on time exceeds the delay time */
+	if (sensor_poll_delay_cfgs[card_id].card_first_power_good_time !=
+	    ACCL_POWER_GOOD_TIME_DEFAULT) {
+		int64_t diff_time = (k_uptime_get() -
+				     sensor_poll_delay_cfgs[card_id].card_first_power_good_time);
+		if (diff_time < ACCL_SENSOR_POLL_DELAY_MS) {
+			return false;
+		} else {
+			sensor_poll_delay_cfgs[card_id].card_first_power_good_time =
+				ACCL_POWER_GOOD_TIME_DEFAULT;
+		}
+	}
+
 	return true;
 }

@@ -277,6 +277,8 @@
 
 #define ACCL_FREYA_SENSOR_COUNT 6
 #define ACCL_ARTEMIS_MODULE_SENSOR_COUNT 8
+#define ACCL_POWER_GOOD_TIME_DEFAULT 0
+#define ACCL_SENSOR_POLL_DELAY_MS 10000
 
 typedef struct _sensor_compatible_cfg {
 	uint8_t num;
@@ -285,6 +287,12 @@ typedef struct _sensor_compatible_cfg {
 	void *pre_sensor_read_args;
 	void *post_sensor_read_args;
 } sensor_compatible_cfg;
+
+typedef struct _sensor_poll_delay_cfg {
+	uint8_t card_id;
+	bool is_last_time_power_good;
+	int64_t card_first_power_good_time;
+} sensor_poll_delay_cfg;
 
 void load_sensor_config(void);
 bool is_acb_power_good();
@@ -298,5 +306,6 @@ bool is_accl_power_good(uint8_t card_id);
 sensor_cfg *get_common_sensor_cfg_info(uint8_t sensor_num);
 void update_plat_sensor_cfg_by_stage();
 sensor_cfg *get_artemis_module_sensor_cfg(uint8_t card_id);
+bool is_time_to_poll_card_sensor(uint8_t card_id);
 
 #endif

@@ -132,7 +132,6 @@ void check_accl_device_presence_status_via_ioexp()
 	uint8_t card_index = 0;
 	uint8_t ioexp_index = 0;
 	uint8_t presence_val = 0;
-	uint8_t board_revision = get_board_revision();
 	uint16_t reg_val = 0;
 	uint8_t ioexp_addr[] = { IOEXP_U228_ADDR, IOEXP_U229_ADDR, IOEXP_U230_ADDR };
 	I2C_MSG msg = { 0 };
