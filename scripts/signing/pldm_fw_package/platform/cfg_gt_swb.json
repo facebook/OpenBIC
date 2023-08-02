@@ -1,0 +1,68 @@
+{
+    "PlatformDescriptor": [
+        {
+            "DescriptorType" : 1,
+            "DescriptorData" : "0000A015"
+        },
+        {
+            "DescriptorType" : 65535,
+            "VendorDefinedDescriptorTitleString" : "Platform",
+            "VendorDefinedDescriptorData" : "Grand Teton"
+    
+        },
+        {
+            "DescriptorType" : 65535,
+            "VendorDefinedDescriptorTitleString" : "BoardID",
+            "VendorDefinedDescriptorData" : "SwitchBoard"
+        },
+        {
+            "DescriptorType" : 65535,
+            "VendorDefinedDescriptorTitleString" : "Stage",
+            "VendorDefinedDescriptorData" : "na"
+        }
+    ],
+    "SupportDevice" : [
+        {
+            "CompID" : [2],
+            "Vendor" : "aspeed",
+            "Device" : "ast1030",
+            "CheckSum" : "n",
+            "pkg_suffix" : ".pldm"
+        },
+        {
+            "CompID" : [0,1],
+            "Vendor" : "reneses",
+            "Device" : "isl69259",
+            "CheckSum" : "y",
+            "pkg_suffix" : ".pldm"
+        },
+        {
+            "CompID" : [0,1],
+            "Vendor" : "infineon",
+            "Device" : "xdpe12284c",
+            "CheckSum" : "y",
+            "pkg_suffix" : ".pldm"
+        },
+        {
+            "CompID" : [0,1],
+            "Vendor" : "mps",
+            "Device" : "mp2971",
+            "CheckSum" : "y",
+            "pkg_suffix" : ".pldm"
+        },
+        {
+            "CompID" : [3,4,5,6],
+            "Vendor" : "broadcom",
+            "Device" : "pex89000",
+            "CheckSum" : "n",
+            "pkg_suffix" : ".pldm"
+        },
+        {
+            "CompID" : [7],
+            "Vendor" : "lattice",
+            "Device" : "LCMXO3-9400C",
+            "CheckSum" : "n",
+            "pkg_suffix" : ".pldm"
+        }
+    ]
+}
