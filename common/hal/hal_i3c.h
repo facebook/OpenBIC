@@ -114,4 +114,6 @@ int i3c_transfer(I3C_MSG *msg);
 int i3c_brocast_ccc(I3C_MSG *msg, uint8_t ccc_id, uint8_t ccc_addr);
 int i3c_spd_reg_read(I3C_MSG *msg, bool is_nvm);
 
+int i3c_controller_write(I3C_MSG *msg);
+
 #endif

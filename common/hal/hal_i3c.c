@@ -101,7 +101,7 @@ int i3c_smq_write(I3C_MSG *msg)
 	}
 
 	if (!dev_i3c[msg->bus]) {
-		LOG_ERR("Bus %u is not defined",msg->bus);
+		LOG_ERR("Bus %u is not defined", msg->bus);
 		k_mutex_unlock(&mutex_write[msg->bus]);
 		return -ENODEV;
 	}
@@ -248,6 +248,34 @@ int i3c_spd_reg_read(I3C_MSG *msg, bool is_nvm)
 	return ret;
 }
 
+int i3c_controller_write(I3C_MSG *msg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, -EINVAL);
+
+	struct i3c_dev_desc *target;
+	target = find_matching_desc(dev_i3c[msg->bus], msg->target_addr);
+	if (target == NULL) {
+		LOG_ERR("Failed to write messages to address 0x%x due to unknown address",
+			msg->target_addr);
+		return -ENODEV;
+	}
+
+	struct i3c_priv_xfer xfer[1];
+
+	xfer[0].rnw = I3C_WRITE_CMD;
+	xfer[0].len = msg->tx_len;
+	xfer[0].data.out = &msg->data;
+
+	int ret = i3c_master_priv_xfer(target, xfer, 1);
+	if (ret != 0) {
+		LOG_ERR("Failed to write messages to bus 0x%d addr 0x%x, ret: %d", msg->bus,
+			msg->target_addr, ret);
+		return false;
+	}
+
+	return true;
+}
+
 void util_init_i3c(void)
 {
 #ifdef DEV_I3C_0
@@ -301,10 +329,10 @@ void util_init_i3c(void)
 #endif
 	for (int i = 0; i <= I3C_MAX_NUM; ++i) {
 		if (k_mutex_init(&mutex_read[i])) {
-			LOG_ERR("Mutex %d init error.",i);
+			LOG_ERR("Mutex %d init error.", i);
 		}
 		if (k_mutex_init(&mutex_write[i])) {
-			LOG_ERR("Mutex %d init error.",i);
+			LOG_ERR("Mutex %d init error.", i);
 		}
 	}
 }
