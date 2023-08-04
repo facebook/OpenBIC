@@ -969,8 +969,8 @@ bool pre_sq52205_read(sensor_cfg *cfg, void *args)
 	// Select Channel
 	bool ret = true;
 	bool is_sensor_init_done = false;
+	bool is_time_to_polling = false;
 	int mutex_status = 0;
-	int power_status = 0;
 	uint8_t card_type;
 
 	pwr_monitor_pre_proc_arg *pre_args = (pwr_monitor_pre_proc_arg *)args;
@@ -986,16 +986,11 @@ bool pre_sq52205_read(sensor_cfg *cfg, void *args)
 		return false;
 	}
 
-	power_status = get_pcie_card_power_status(pre_args->jcn_number);
-	if (power_status < 0) {
-		LOG_ERR("Fail to get PCIE card power status, pcie card id: 0x%x",
-			pre_args->jcn_number);
-		return false;
-	}
-
 	is_sensor_init_done = get_sensor_init_done_flag();
+	is_time_to_polling = is_time_to_poll_card_sensor(pre_args->jcn_number);
+
 	if (is_sensor_init_done) {
-		if ((power_status & PCIE_CARD_POWER_GOOD_BIT) == 0) {
+		if (is_time_to_polling != true) {
 			cfg->cache_status = SENSOR_POLLING_DISABLE;
 			return true;
 		} else {

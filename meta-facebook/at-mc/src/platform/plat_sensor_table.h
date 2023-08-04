@@ -165,6 +165,15 @@
 /**********************Event**********************/
 #define SENSOR_NUM_SYSTEM_STATUS 0x10
 
+#define PCIE_CARD_POWER_GOOD_TIME_DEFAULT 0
+#define PCIE_CARD_SENSOR_POLL_DELAY_MS 10000
+
+typedef struct _sensor_poll_delay_cfg {
+	uint8_t pcie_card_id;
+	bool is_last_time_power_good;
+	int64_t card_first_power_good_time;
+} sensor_poll_delay_cfg;
+
 extern const int CXL_SENSOR_CONFIG_SIZE;
 
 void load_sensor_config(void);
@@ -176,5 +185,6 @@ bool get_pcie_card_mux_config(uint8_t cxl_id, uint8_t sensor_num, mux_config *ca
 			      mux_config *cxl_mux_cfg);
 sensor_cfg *get_cxl_sensor_cfg_info(uint8_t cxl_id, uint8_t *cfg_count);
 sensor_cfg *get_common_sensor_cfg_info(uint8_t sensor_num);
+bool is_time_to_poll_card_sensor(uint8_t pcie_card_id);
 
 #endif

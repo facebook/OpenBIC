@@ -1773,6 +1773,23 @@ sensor_monitor_table_info plat_monitor_table[] = {
 	  (void *)&plat_monitor_table_arg[7], "CXL 8 sensor table" },
 };
 
+sensor_poll_delay_cfg sensor_poll_delay_cfgs[] = {
+	{ CARD_1_INDEX, false, PCIE_CARD_POWER_GOOD_TIME_DEFAULT },
+	{ CARD_2_INDEX, false, PCIE_CARD_POWER_GOOD_TIME_DEFAULT },
+	{ CARD_3_INDEX, false, PCIE_CARD_POWER_GOOD_TIME_DEFAULT },
+	{ CARD_4_INDEX, false, PCIE_CARD_POWER_GOOD_TIME_DEFAULT },
+	{ CARD_5_INDEX, false, PCIE_CARD_POWER_GOOD_TIME_DEFAULT },
+	{ CARD_6_INDEX, false, PCIE_CARD_POWER_GOOD_TIME_DEFAULT },
+	{ CARD_7_INDEX, false, PCIE_CARD_POWER_GOOD_TIME_DEFAULT },
+	{ CARD_8_INDEX, false, PCIE_CARD_POWER_GOOD_TIME_DEFAULT },
+	{ CARD_9_INDEX, false, PCIE_CARD_POWER_GOOD_TIME_DEFAULT },
+	{ CARD_10_INDEX, false, PCIE_CARD_POWER_GOOD_TIME_DEFAULT },
+	{ CARD_11_INDEX, false, PCIE_CARD_POWER_GOOD_TIME_DEFAULT },
+	{ CARD_12_INDEX, false, PCIE_CARD_POWER_GOOD_TIME_DEFAULT },
+	{ CARD_13_INDEX, false, PCIE_CARD_POWER_GOOD_TIME_DEFAULT },
+	{ CARD_14_INDEX, false, PCIE_CARD_POWER_GOOD_TIME_DEFAULT },
+};
+
 bool pcie_card_init_status[] = { false, false, false, false, false, false, false,
 				 false, false, false, false, false, false, false };
 
@@ -1902,7 +1919,7 @@ bool is_dc_access(uint8_t sensor_num)
 bool is_e1s_access(uint8_t sensor_num)
 {
 	int ret = false;
-	int power_status = 0;
+	bool is_time_to_polling = false;
 	uint8_t pcie_card_id = 0;
 	uint8_t card_type = 0;
 
@@ -1932,19 +1949,14 @@ bool is_e1s_access(uint8_t sensor_num)
 		return false;
 	}
 
-	power_status = get_pcie_card_power_status(pcie_card_id);
-	if (power_status < 0) {
-		LOG_ERR("Fail to get E1.S power status, pcie card id: 0x%x", pcie_card_id);
-		return false;
-	}
-
 	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
 	if (cfg == NULL) {
 		LOG_ERR("Fail to get sensor cfg via sensor num, sensor num: 0x%x", sensor_num);
 		return false;
 	}
 
-	if (power_status & PCIE_CARD_POWER_GOOD_BIT) {
+	is_time_to_polling = is_time_to_poll_card_sensor(pcie_card_id);
+	if (is_time_to_polling) {
 		if (pcie_card_init_status[pcie_card_id] != true) {
 			if (cfg->pre_sensor_read_hook) {
 				if (cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args) !=
@@ -1985,7 +1997,7 @@ bool is_cxl_access(uint8_t cxl_id)
 	}
 
 	int ret = 0;
-	int power_status = 0;
+	bool is_time_to_polling = false;
 	uint8_t pcie_card_id = 0;
 	uint8_t card_type = 0;
 	uint8_t index = 0;
@@ -2005,12 +2017,6 @@ bool is_cxl_access(uint8_t cxl_id)
 	}
 
 	if (card_type == CXL_CARD) {
-		power_status = get_pcie_card_power_status(pcie_card_id);
-		if (power_status < 0) {
-			LOG_ERR("Fail to get CXL card power status, cxl id: 0x%x", cxl_id);
-			return false;
-		}
-
 		cfg_table = get_cxl_sensor_cfg_info(cxl_id, &cfg_count);
 		if (cfg_table == NULL) {
 			LOG_ERR("Fail to get CXL sensor cfg table to check access, cxl id: 0x%x",
@@ -2018,7 +2024,8 @@ bool is_cxl_access(uint8_t cxl_id)
 			return false;
 		}
 
-		if (power_status & PCIE_CARD_POWER_GOOD_BIT) {
+		is_time_to_polling = is_time_to_poll_card_sensor(pcie_card_id);
+		if (is_time_to_polling) {
 			if (pcie_card_init_status[pcie_card_id] != true) {
 				for (index = 0; index < cfg_count; ++index) {
 					sensor_cfg *cfg = &cfg_table[index];
@@ -2119,6 +2126,52 @@ bool get_pcie_card_mux_config(uint8_t cxl_id, uint8_t sensor_num, mux_config *ca
 
 	*cxl_mux_cfg = *tmp_mux_config;
 	cxl_mux_cfg->bus = MEB_CXL_BUS;
+
+	return true;
+}
+
+bool is_time_to_poll_card_sensor(uint8_t pcie_card_id)
+{
+	if (pcie_card_id >= ARRAY_SIZE(sensor_poll_delay_cfgs)) {
+		LOG_ERR("Invalid pcie card id: 0x%x to check card polling time", pcie_card_id);
+		return false;
+	}
+
+	int power_status = 0;
+
+	power_status = get_pcie_card_power_status(pcie_card_id);
+	if (power_status < 0) {
+		LOG_ERR("Fail to get PCIE card power status, pcie card id: 0x%x", pcie_card_id);
+		return false;
+	}
+
+	if ((power_status & PCIE_CARD_POWER_GOOD_BIT) == 0) {
+		sensor_poll_delay_cfgs[pcie_card_id].is_last_time_power_good = false;
+		sensor_poll_delay_cfgs[pcie_card_id].card_first_power_good_time =
+			PCIE_CARD_POWER_GOOD_TIME_DEFAULT;
+		return false;
+	}
+
+	/* Record PCIE card power on time when PCIE card first power good */
+	if (sensor_poll_delay_cfgs[pcie_card_id].is_last_time_power_good != true) {
+		sensor_poll_delay_cfgs[pcie_card_id].card_first_power_good_time = k_uptime_get();
+		sensor_poll_delay_cfgs[pcie_card_id].is_last_time_power_good = true;
+		return false;
+	}
+
+	/* Polling PCIE sensor when PCIE card power on time exceeds the delay time */
+	if (sensor_poll_delay_cfgs[pcie_card_id].card_first_power_good_time !=
+	    PCIE_CARD_POWER_GOOD_TIME_DEFAULT) {
+		int64_t diff_time =
+			(k_uptime_get() -
+			 sensor_poll_delay_cfgs[pcie_card_id].card_first_power_good_time);
+		if (diff_time < PCIE_CARD_SENSOR_POLL_DELAY_MS) {
+			return false;
+		} else {
+			sensor_poll_delay_cfgs[pcie_card_id].card_first_power_good_time =
+				PCIE_CARD_POWER_GOOD_TIME_DEFAULT;
+		}
+	}
 
 	return true;
 }
