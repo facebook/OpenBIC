@@ -113,7 +113,7 @@ void add_full_sdr_table(SDR_Full_sensor add_item)
 
 	if (index != SENSOR_NUM_MAX) {
 		memcpy(&full_sdr_table[index], &add_item, sizeof(SDR_Full_sensor));
-		LOG_ERR("Replace the sensor[0x%02x] SDR", add_item.sensor_num);
+		LOG_INF("Replace the sensor[0x%02x] SDR", add_item.sensor_num);
 		return;
 	}
 	// Check SDR table size before adding SDR

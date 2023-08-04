@@ -96,6 +96,8 @@ uint8_t nvme_read(sensor_cfg *cfg, int *reading)
 	case NVME_TEMP_OFFSET:
 		rx_len = NVMe_TEMP_READ_LEN;
 		break;
+	case NVME_CORE_VOLTAGE_1_OFFSET:
+	case NVME_CORE_VOLTAGE_2_OFFSET:
 	case NVME_VOLTAGE_RAIL_1_OFFSET:
 	case NVME_VOLTAGE_RAIL_2_OFFSET:
 		rx_len = NVMe_VOLTAGE_RAIL_READ_LEN;
@@ -154,6 +156,8 @@ uint8_t nvme_read(sensor_cfg *cfg, int *reading)
 		sval->fraction = 0;
 		return SENSOR_READ_SUCCESS;
 	}
+	case NVME_CORE_VOLTAGE_1_OFFSET:
+	case NVME_CORE_VOLTAGE_2_OFFSET:
 	case NVME_VOLTAGE_RAIL_1_OFFSET:
 	case NVME_VOLTAGE_RAIL_2_OFFSET:
 		// 100 uV/LSB
