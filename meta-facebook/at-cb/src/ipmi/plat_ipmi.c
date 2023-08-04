@@ -36,6 +36,7 @@
 #include "plat_dev.h"
 #include "fru.h"
 #include "app_handler.h"
+#include "plat_ipmb.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
@@ -49,6 +50,37 @@ struct SWITCH_MUX_INFO pcie_switch_mux_info[PEX_MAX_NUMBER] = {
 		.sw_to_flash_value = GPIO_HIGH,
 		.bic_to_flash_value = GPIO_LOW },
 };
+
+void pal_construct_ipmi_add_sel_msg(ipmi_msg *msg, common_addsel_msg_t *sel_msg)
+{
+	CHECK_NULL_ARG(msg);
+	CHECK_NULL_ARG(sel_msg);
+
+	static uint16_t record_id = 0x1;
+	uint8_t system_event_record = 0x02;
+	uint8_t evt_msg_version = 0x04;
+
+	msg->data_len = 16;
+	msg->InF_source = SELF;
+	msg->InF_target = sel_msg->InF_target;
+	msg->netfn = NETFN_STORAGE_REQ;
+	msg->cmd = CMD_STORAGE_ADD_SEL;
+	msg->data[0] = (record_id & 0xFF); // Record id byte 0, lsb
+	msg->data[1] = ((record_id >> 8) & 0xFF); // Record id byte 1
+	msg->data[2] = system_event_record; // Record type
+	msg->data[3] = 0x00; // Timestamp, bmc would fill up for bic
+	msg->data[4] = 0x00; // Timestamp, bmc would fill up for bic
+	msg->data[5] = 0x00; // Timestamp, bmc would fill up for bic
+	msg->data[6] = 0x00; // Timestamp, bmc would fill up for bic
+	msg->data[7] = (SELF_I2C_ADDRESS << 1); // Generator id
+	msg->data[8] = 0x00; // Generator id
+	msg->data[9] = evt_msg_version; // Event message format version
+	memcpy(&msg->data[10], &sel_msg->sensor_type,
+	       sizeof(common_addsel_msg_t) - sizeof(uint8_t));
+	record_id++;
+
+	return;
+}
 
 void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 {

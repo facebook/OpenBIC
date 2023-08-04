@@ -18,6 +18,7 @@
 #define PLAT_IPMI_H
 
 #include <stdint.h>
+#include "ipmi.h"
 
 #define BIC_FW_DATA_LENGTH 7
 #define VR_FW_VERSION_LEN 4
@@ -83,5 +84,7 @@ enum CB_FIRMWARE_COMPONENT {
 	CB_COMPNT_ACCL12_CH2_FREYA,
 	CB_COMPNT_MAX,
 };
+
+void pal_construct_ipmi_add_sel_msg(ipmi_msg *msg, common_addsel_msg_t *sel_msg);
 
 #endif
