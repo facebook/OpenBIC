@@ -32,6 +32,7 @@ jobs:
           yv35-hd,
           yv35-rf,
           yv4-sd,
+          yv4-ff,
         ]
         # Need to set this to false otherwise it will cancel all platform builds if one fails.
       fail-fast: false
