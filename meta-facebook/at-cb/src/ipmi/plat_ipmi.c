@@ -476,8 +476,10 @@ int pal_write_read_accl_fru(uint8_t fru_id, uint8_t option, EEPROM_ENTRY *fru_en
 	CHECK_NULL_ARG_WITH_RETURN(status, -1);
 
 	bool ret = 0;
+	uint8_t retry = 0;
 	uint8_t dev_id = 0;
 	uint8_t card_id = 0;
+	int mutex_status = 0;
 	mux_config card_mux = { 0 };
 
 	if (option != ACCL_FRU_READ && option != ACCL_FRU_WRITE) {
@@ -498,9 +500,15 @@ int pal_write_read_accl_fru(uint8_t fru_id, uint8_t option, EEPROM_ENTRY *fru_en
 	}
 
 	struct k_mutex *mutex = get_i2c_mux_mutex(card_mux.bus);
-	int mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
-	if (mutex_status != 0) {
-		LOG_ERR("Mutex lock fail, status: %d", mutex_status);
+	for (retry = 0; retry < 3; ++retry) {
+		mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
+		if (mutex_status == 0) {
+			break;
+		}
+	}
+
+	if (retry >= 3) {
+		LOG_ERR("Mutex lock fail, status: %d, fru id: 0x%x", mutex_status, fru_id);
 		return -1;
 	}
 
