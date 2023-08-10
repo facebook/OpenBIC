@@ -519,12 +519,27 @@ void pal_extend_sensor_config()
 {
 	uint8_t sensor_count = 0;
 	uint8_t card_type = get_card_type();
+	uint8_t board_revision = get_board_revision();
+	uint8_t card_position = get_card_position();
+	uint8_t sensor_number_p1v8_adc = SENSOR_NUM_1OU_P1V8_ADC_VOLT;
+	uint8_t sensor_number_p1v2_adc = SENSOR_NUM_1OU_P1V2_ADC_VOLT;
+	if (card_position == CARD_POSITION_3OU) {
+		sensor_number_p1v8_adc += ((CARD_POSITION_3OU - CARD_POSITION_1OU) * SENSOR_NUMBER_INTERVAL);
+		sensor_number_p1v2_adc += ((CARD_POSITION_3OU - CARD_POSITION_1OU) * SENSOR_NUMBER_INTERVAL);
+	}
 
 	switch (card_type) {
 	case CARD_TYPE_OPA:
-
 		sensor_count = ARRAY_SIZE(plat_expansion_A_sensor_config);
 		for (int index = 0; index < sensor_count; index++) {
+			if (board_revision != EVT_STAGE) {
+				if (sensor_config[index].num == sensor_number_p1v8_adc) {
+					sensor_config[index].port = ADC_PORT11;
+				}
+				if (sensor_config[index].num == sensor_number_p1v2_adc) {
+					sensor_config[index].port = ADC_PORT14;
+				}
+			}
 			add_sensor_config(plat_expansion_A_sensor_config[index]);
 		}
 		break;
