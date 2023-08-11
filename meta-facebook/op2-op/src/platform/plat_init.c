@@ -53,6 +53,8 @@ void pal_pre_init()
 	uint8_t type = get_card_type();
 	uint8_t slave_port = 0x0;
 
+	init_board_revision();
+
 	/* Initialize I3C HUB (connects to E1.s)
 	 * For OPA expansion,
 	 * the I3C HUB slave port-0/1/5 should be enabled.
@@ -91,7 +93,6 @@ DEVICE_DEFINE(PRE_DEF_PROJ_GPIO, "PRE_DEF_PROJ_GPIO_NAME", &gpio_init, NULL, NUL
 
 void pal_set_sys_status()
 {
-	init_board_revision();
 	init_sequence_status();
 	set_DC_status(FM_EXP_MAIN_PWR_EN);
 	control_power_sequence();
