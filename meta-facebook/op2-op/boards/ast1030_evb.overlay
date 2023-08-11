@@ -99,6 +99,10 @@
 	status = "okay";
 };
 
+&gpio0_q_t {
+	aspeed,persist-maps = <0x00000004>;
+};
+
 &fmc_cs0 {
 	status = "okay";
 	spi-max-buswidth = <4>;
