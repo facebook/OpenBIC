@@ -199,7 +199,7 @@ if __name__ == '__main__':
         msg_hdr_print("n", "Using package file name [" + pkg_file_name + "].")
 
     if DBG_EN == True:
-        cmd_line = ["python", command_prefix, pkg_file_name, CONFIG_FILE]
+        cmd_line = ["python3", command_prefix, pkg_file_name, CONFIG_FILE]
     else:
         cmd_line = [command_prefix, pkg_file_name, CONFIG_FILE]
 

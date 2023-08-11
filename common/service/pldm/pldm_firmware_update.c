@@ -420,12 +420,7 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 	pldm_fw_update_param_t update_param = { 0 };
 	update_param.comp_id = cur_update_comp_id;
 	update_param.comp_version_str = cur_update_comp_str;
-	if (cur_update_comp_id < comp_config_count)
-		update_param.inf = fw_info->inf;
-	else {
-		LOG_ERR("Given component id %d doesn't exist in config table", cur_update_comp_id);
-		return;
-	}
+	update_param.inf = fw_info->inf;
 
 	/* do pre-update */
 	if (fw_info->pre_update_func) {
