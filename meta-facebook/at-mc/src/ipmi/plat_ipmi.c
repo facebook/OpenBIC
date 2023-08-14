@@ -162,6 +162,8 @@ int pal_write_read_cxl_fru(uint8_t optional, uint8_t fru_id, EEPROM_ENTRY *fru_e
 	CHECK_NULL_ARG_WITH_RETURN(status, -1);
 
 	bool ret = 0;
+	uint8_t retry = 0;
+	int mutex_status = 0;
 
 	if (optional != CXL_FRU_WRITE && optional != CXL_FRU_READ) {
 		LOG_ERR("CXL fru optional is invalid, optional: %d", optional);
@@ -179,9 +181,15 @@ int pal_write_read_cxl_fru(uint8_t optional, uint8_t fru_id, EEPROM_ENTRY *fru_e
 	}
 
 	struct k_mutex *mutex = get_i2c_mux_mutex(cxl_mux.bus);
-	int mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
-	if (mutex_status != 0) {
-		LOG_ERR("Mutex lock fail, status: %d", mutex_status);
+	for (retry = 0; retry < 5; ++retry) {
+		mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
+		if (mutex_status == 0) {
+			break;
+		}
+	}
+
+	if (retry >= 5) {
+		LOG_ERR("Mutex lock fail, status: %d, fru id: 0x%x", mutex_status, fru_id);
 		return -1;
 	}
 
