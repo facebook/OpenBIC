@@ -116,3 +116,10 @@ void set_exp_pwrgd_pin(void)
 
 	gpio_set(PWRGD_EXP_PWROK, val);
 }
+
+void plat_nvme_bus_reset(uint8_t bus) //NVMe_smb_rst
+{
+	gpio_set(m2_bus2rst(bus), GPIO_LOW);
+	k_msleep(2);
+	gpio_set(m2_bus2rst(bus), GPIO_HIGH);
+}
