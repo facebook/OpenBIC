@@ -36,6 +36,11 @@
 
 LOG_MODULE_REGISTER(nvme);
 
+__weak void plat_nvme_bus_reset(uint8_t bus)
+{
+	return;
+}
+
 int read_nvme_info(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t read_len, uint8_t *data)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, -1);
@@ -53,6 +58,7 @@ int read_nvme_info(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t read_len, 
 	ret = i2c_master_read(&msg, retry);
 	if (ret != 0) {
 		LOG_ERR("I2C read bus: 0x%x, addr: 0x%x, offset: 0x%x fail", bus, addr, offset);
+		plat_nvme_bus_reset(bus);
 		return -1;
 	}
 
