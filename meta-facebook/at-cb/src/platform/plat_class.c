@@ -147,7 +147,7 @@ void check_accl_device_presence_status_via_ioexp()
 		ret = i2c_master_read(&msg, retry);
 		if (ret != 0) {
 			LOG_ERR("Fail to read cpld offset: 0x%x", CPLD_ACCL_1_6_PRESENT_OFFSET);
-			return false;
+			return;
 		}
 
 		reg_val = msg.data[0];
@@ -162,7 +162,7 @@ void check_accl_device_presence_status_via_ioexp()
 		ret = i2c_master_read(&msg, retry);
 		if (ret != 0) {
 			LOG_ERR("Fail to read cpld offset: 0x%x", CPLD_ACCL_1_6_PRESENT_OFFSET);
-			return false;
+			return;
 		}
 
 		reg_val |= msg.data[0];

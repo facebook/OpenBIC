@@ -18,15 +18,39 @@
 #define PLAT_FUNC_H
 
 #include <stdint.h>
+#include "ipmi.h"
 
 #define PRESS_FIO_BUTTON_DELAY_MS 4000
+#define ADDSEL_EVENT_DATA_DEFAULT 0xFF
 
 enum BUTTON_OPTIONAL {
 	OPTIONAL_AC_OFF = 0x01,
 };
 
+typedef struct _add_sel_info {
+	bool is_init;
+	uint8_t gpio_num;
+	common_addsel_msg_t sel_msg;
+	struct k_work_delayable add_sel_work;
+} add_sel_info;
+
 void ISR_FIO_BUTTON();
 void ISR_POWER_STATUS_CHANGE();
+void ISR_VR_ALERT();
+void ISR_P1V25_ALERT();
+void ISR_P12V_ACCL1_ALERT();
+void ISR_P12V_ACCL2_ALERT();
+void ISR_P12V_ACCL3_ALERT();
+void ISR_P12V_ACCL4_ALERT();
+void ISR_P12V_ACCL5_ALERT();
+void ISR_P12V_ACCL6_ALERT();
+void ISR_P12V_ACCL7_ALERT();
+void ISR_P12V_ACCL8_ALERT();
+void ISR_P12V_ACCL9_ALERT();
+void ISR_P12V_ACCL10_ALERT();
+void ISR_P12V_ACCL11_ALERT();
+void ISR_P12V_ACCL12_ALERT();
 void fio_power_button_work_handler();
+void vr_alert_work_handler();
 
 #endif

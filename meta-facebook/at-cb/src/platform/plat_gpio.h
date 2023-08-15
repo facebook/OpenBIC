@@ -329,9 +329,10 @@
 
 #define gpio_name_to_num(x) x,
 enum _GPIO_NUMS_ {
-	name_gpioA name_gpioB name_gpioC name_gpioD name_gpioE name_gpioF name_gpioG name_gpioH
-		name_gpioI name_gpioJ name_gpioK name_gpioL name_gpioM name_gpioN name_gpioO
-			name_gpioP name_gpioQ name_gpioR name_gpioS name_gpioT name_gpioU
+	update_name_gpioA update_name_gpioB update_name_gpioC update_name_gpioD name_gpioE
+		name_gpioF name_gpioG name_gpioH name_gpioI name_gpioJ name_gpioK update_name_gpioL
+			update_name_gpioM name_gpioN name_gpioO update_name_gpioP update_name_gpioQ
+				name_gpioR update_name_gpioS name_gpioT name_gpioU
 };
 
 extern enum _GPIO_NUMS_ GPIO_NUMS;
