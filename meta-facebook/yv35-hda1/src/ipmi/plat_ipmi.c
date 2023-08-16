@@ -39,7 +39,7 @@ enum HDA1_FIRMWARE_COMPONENT {
 	HDA1_COMPNT_CPLD = 1,
 	HDA1_COMPNT_BIC,
 	HDA1_COMPNT_BIOS,
-	HDA1_COMPNT_BSD,
+	HDA1_COMPNT_BSD = 63,
 };
 
 bool pal_request_msg_to_BIC_from_HOST(uint8_t netfn, uint8_t cmd)
