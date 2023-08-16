@@ -28,6 +28,7 @@ typedef enum pldm_platform_monitor_commands {
 	PLDM_MONITOR_CMD_CODE_GET_SENSOR_READING = 0x11,
 	PLDM_MONITOR_CMD_CODE_SET_EVENT_RECEIVER = 0x04,
 	PLDM_MONITOR_CMD_CODE_PLATFORM_EVENT_MESSAGE = 0x0A,
+	PLDM_MONITOR_CMD_CODE_EVENT_MESSAGE_BUFF_SIZE = 0x0D,
 	PLDM_MONITOR_CMD_CODE_SET_STATE_EFFECTER_STATES = 0x39,
 	PLDM_MONITOR_CMD_CODE_GET_STATE_EFFECTER_STATES = 0x3A,
 } pldm_platform_monitor_commands_t;
@@ -320,6 +321,7 @@ struct pldm_event_message_buffer_size_req {
 
 struct pldm_event_message_buffer_size_resp {
 	uint8_t completion_code;
+	uint16_t term_max_buff_size;
 } __attribute__((packed));
 
 uint8_t pldm_monitor_handler_query(uint8_t code, void **ret_fn);

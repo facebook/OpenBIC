@@ -235,7 +235,7 @@ static void set_event_receiver(void)
 
 	pmsg.hdr.msg_type = MCTP_MSG_TYPE_PLDM;
 	pmsg.hdr.pldm_type = PLDM_TYPE_PLAT_MON_CTRL;
-	pmsg.hdr.cmd = 0x04;
+	pmsg.hdr.cmd = PLDM_MONITOR_CMD_CODE_SET_EVENT_RECEIVER;
 	pmsg.hdr.rq = PLDM_REQUEST;
 
 	struct pldm_set_event_receiver_req req = { 0 };
@@ -275,7 +275,7 @@ static void event_message_buffer_size(void)
 
 	pmsg.hdr.msg_type = MCTP_MSG_TYPE_PLDM;
 	pmsg.hdr.pldm_type = PLDM_TYPE_PLAT_MON_CTRL;
-	pmsg.hdr.cmd = 0x0D;
+	pmsg.hdr.cmd = PLDM_MONITOR_CMD_CODE_EVENT_MESSAGE_BUFF_SIZE;
 	pmsg.hdr.rq = PLDM_REQUEST;
 
 	struct pldm_event_message_buffer_size_req req = { 0 };
@@ -292,9 +292,9 @@ static void event_message_buffer_size(void)
 
 	struct pldm_event_message_buffer_size_resp *resp =
 		(struct pldm_event_message_buffer_size_resp *)resp_buf;
-	if (resp->completion_code == PLDM_SUCCESS)
-		LOG_INF("Event message buffer size set SUCCESS!");
-	else
+	if (resp->completion_code == PLDM_SUCCESS) {
+		LOG_INF("Event message buffer size set %d SUCCESS!", resp->term_max_buff_size);
+	} else
 		LOG_ERR("Event message buffer size response = 0x%x", resp->completion_code);
 }
 
