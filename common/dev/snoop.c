@@ -100,6 +100,16 @@ void reset_postcode_ok()
 	proc_postcode_ok = false;
 }
 
+static void snoop_rx_callback(const uint8_t *snoop0, const uint8_t *snoop1)
+{
+	proc_postcode_ok = true;
+	if (snoop0 != NULL) {
+		snoop_read_buffer[snoop_read_num % SNOOP_MAX_LEN] = *snoop0;
+		snoop_read_num++;
+	}
+
+}
+
 void snoop_read()
 {
 	int rc;
@@ -110,21 +120,10 @@ void snoop_read()
 		LOG_ERR("snoop read buffer alloc fail");
 		return;
 	}
-
-	while (1) {
-		rc = snoop_aspeed_read(snoop_dev, 0, snoop_data, true);
-		if (rc == 0) {
-			proc_postcode_ok = true;
-			if (!k_mutex_lock(&snoop_mutex, K_MSEC(1000))) {
-				snoop_read_buffer[snoop_read_num % SNOOP_MAX_LEN] = *snoop_data;
-				snoop_read_num++;
-			} else {
-				LOG_ERR("snoop read lock fail");
-			}
-			if (k_mutex_unlock(&snoop_mutex)) {
-				LOG_ERR("snoop read unlock fail");
-			}
-		}
+	rc = snoop_aspeed_register_rx_callback(snoop_dev, snoop_rx_callback);
+	if (rc != 0) {
+		printk("Cannot register RX callback\n");
+		return;
 	}
 }
 
