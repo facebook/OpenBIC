@@ -2868,20 +2868,20 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_AMP, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x8B, // [7:0] M bits
+		0x01, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
 		0x00, // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
-		0xE0, // Rexp, Bexp
+		0x00, // Rexp, Bexp
 		0x00, // analog characteristic
 		0x00, // nominal reading
 		0x00, // normal maximum
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0x24, // UNRT
-		0x21, // UCT
+		0x36, // UNRT
+		0x32, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
@@ -2892,7 +2892,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"HSC_OUTPUT_CURR_A",
+		"MB_HSC_OUTPUT_CURR_A",
 	},
 	{
 		// VRD-PCP Current
@@ -3541,7 +3541,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x32, // [7:0] M bits
+		0x0A, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -3553,8 +3553,8 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0x0C, // UNRT
-		0x0B, // UCT
+		0x42, // UNRT
+		0x3C, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
