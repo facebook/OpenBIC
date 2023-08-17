@@ -146,6 +146,7 @@ void cxl_set_eid_work_handler(struct k_work *work_item)
 			ret = pal_init_pm8702_info(work_info->cxl_card_id);
 			if (ret != true) {
 				LOG_ERR("Initial cxl id: 0x%x info fail", work_info->cxl_card_id);
+				k_mutex_unlock(meb_mutex);
 				continue;
 			}
 		}
