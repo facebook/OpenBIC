@@ -37,6 +37,7 @@
 #include "fru.h"
 #include "app_handler.h"
 #include "plat_ipmb.h"
+#include "mp2985.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
@@ -169,7 +170,49 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		msg->completion_code = CC_SUCCESS;
 		break;
 	case CB_COMPNT_VR_XDPE15284:
-		if (xdpe15284_get_checksum(I2C_BUS1, XDPE15284D_ADDR, &msg->data[2]) == false) {
+		if (is_acb_power_good() == false) {
+			msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+			return;
+		}
+
+		switch (get_vr_module()) {
+		case VR_XDPE15284D:
+			if (xdpe15284_get_checksum(I2C_BUS1, XDPE15284D_ADDR, &msg->data[2]) ==
+			    false) {
+				msg->completion_code = CC_UNSPECIFIED_ERROR;
+				return;
+			}
+			break;
+		case VR_MP2985H: {
+			sensor_cfg *vr_cfg =
+				&sensor_config[sensor_config_index_map[SENSOR_NUM_TEMP_P0V8_VDD_1]];
+			if (vr_cfg->pre_sensor_read_hook) {
+				if (vr_cfg->pre_sensor_read_hook(
+					    vr_cfg, vr_cfg->pre_sensor_read_args) == false) {
+					LOG_ERR("VR MP2985H pre-read fail");
+					msg->completion_code = CC_UNSPECIFIED_ERROR;
+					return;
+				}
+			}
+			if (mp2985_get_checksum(I2C_BUS1, XDPE15284D_ADDR, &msg->data[2]) ==
+			    false) {
+				msg->completion_code = CC_UNSPECIFIED_ERROR;
+				if (vr_cfg->post_sensor_read_hook) {
+					vr_cfg->post_sensor_read_hook(
+						vr_cfg, vr_cfg->post_sensor_read_args, NULL);
+				}
+				return;
+			}
+			if (vr_cfg->post_sensor_read_hook) {
+				if (vr_cfg->post_sensor_read_hook(
+					    vr_cfg, vr_cfg->post_sensor_read_args, NULL) == false) {
+					LOG_ERR("VR MP2985H post-read fail");
+				}
+			}
+			break;
+		}
+		default:
+			LOG_ERR("Unknown VR module: 0x%x, Fail to get VR version", get_vr_module());
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			return;
 		}

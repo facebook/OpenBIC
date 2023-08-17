@@ -25,8 +25,10 @@
 
 #define ASIC_CARD_COUNT 12
 
+#define POWER_MONITOR_PIN_NUM BOARD_ID3
 #define HSC_MODULE_PIN_NUM BOARD_ID2
 #define POWER_BRICK_MODULE_PIN_NUM BOARD_ID1
+#define VR_MODULE_PIN_NUM BOARD_ID0
 
 #define CPLD_ADDR (0xA0 >> 1)
 #define CPLD_PWRGD_1_OFFSET 0x05
@@ -63,10 +65,22 @@ enum HSC_MODULE {
 	HSC_MODULE_UNKNOWN = 0xFF,
 };
 
+enum VR_MODULE {
+	VR_XDPE15284D,
+	VR_MP2985H,
+	VR_UNKNOWN = 0xFF,
+};
+
 enum POWER_BRICK_MODULE {
 	POWER_BRICK_Q50SN120A1,
 	POWER_BRICK_BMR3512202,
 	POWER_BRICK_UNKNOWN = 0xFF,
+};
+
+enum POWER_MONITOR_MODULE {
+	POWER_MONITOR_INA233_SQ52205,
+	POWER_MONITOR_SQ52205_INA230,
+	POWER_MONITOR_UNKNOWN = 0xFF,
 };
 
 enum ASIC_CARD_STATUS {
@@ -126,7 +140,9 @@ void check_accl_device_presence_status_via_ioexp();
 int init_platform_config();
 uint8_t get_board_revision();
 uint8_t get_hsc_module();
+uint8_t get_vr_module();
 uint8_t get_pwr_brick_module();
+uint8_t get_pwr_monitor_module();
 bool get_acb_power_status();
 bool get_acb_power_good_flag();
 
