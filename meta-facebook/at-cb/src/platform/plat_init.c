@@ -26,6 +26,8 @@
 
 SCU_CFG scu_cfg[] = {
 	//register    value
+	{ 0x7e6e2618, 0xFF000000 },
+	{ 0x7e6e261c, 0x0000003A },
 };
 
 void pal_pre_init()
@@ -38,6 +40,7 @@ void pal_pre_init()
 				1);
 	}
 
+	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
 	check_accl_device_presence_status_via_ioexp();
 	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY + 1); // work queue for low priority jobs
 }
