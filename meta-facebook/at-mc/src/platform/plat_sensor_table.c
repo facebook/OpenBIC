@@ -1805,6 +1805,7 @@ void pal_extend_sensor_config()
 		}
 		break;
 	case REV_EVT2:
+	case REV_PRE_DVT:
 	case REV_DVT:
 	case REV_PVT:
 	case REV_MP:
@@ -1850,6 +1851,7 @@ uint8_t pal_get_extend_sensor_config()
 		extend_sensor_config_size += HSC_SENSOR_CONFIG_SIZE;
 		break;
 	case REV_EVT2:
+	case REV_PRE_DVT:
 	case REV_DVT:
 	case REV_PVT:
 	case REV_MP:

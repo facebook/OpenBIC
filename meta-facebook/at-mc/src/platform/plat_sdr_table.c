@@ -3418,6 +3418,7 @@ uint8_t pal_get_extend_sdr()
 		extend_sdr_table_size += HSC_SDR_TABLE_SIZE;
 		break;
 	case REV_EVT2:
+	case REV_PRE_DVT:
 	case REV_DVT:
 	case REV_PVT:
 	case REV_MP:
@@ -3440,6 +3441,7 @@ void pal_extend_full_sdr_table()
 		}
 		break;
 	case REV_EVT2:
+	case REV_PRE_DVT:
 	case REV_DVT:
 	case REV_PVT:
 	case REV_MP:
