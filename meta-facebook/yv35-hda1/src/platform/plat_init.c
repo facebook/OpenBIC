@@ -42,6 +42,9 @@ SCU_CFG scu_cfg[] = {
 	{ 0x7e6e2630, 0xFF000000 },
 	/* Set GPIOU/V/X internal pull-up/down after gpio init */
 	{ 0x7e6e2634, 0x000000FF },
+
+	/* Set I2C10(rtc) freq little bit lower than 400k */
+	{ 0x7e7b0504, 0x0899e202 },
 };
 
 void pal_pre_init()
