@@ -43,9 +43,12 @@ typedef struct _accl_card_sensor_info {
 extern adc_asd_init_arg adc_asd_init_args[];
 extern adm1272_init_arg adm1272_init_args[];
 extern ltc4286_init_arg ltc4286_init_args[];
-extern ina233_init_arg ina233_init_args[];
+extern ina233_init_arg accl_pwr_monitor_ina233_init_args[];
+extern sq52205_init_arg accl_pwr_monitor_sq52205_init_args[];
 extern pex89000_init_arg pex_sensor_init_args[];
-extern sq52205_init_arg sq52205_init_args[];
+extern sq52205_init_arg u178_179_sq52205_init_args[];
+extern ina230_init_arg u178_179_ina230_init_args[];
+extern mp2985_init_arg mp2985_init_args[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS

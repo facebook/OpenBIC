@@ -53,11 +53,11 @@ adm1272_init_arg adm1272_init_args[] = {
 };
 
 ltc4286_init_arg ltc4286_init_args[] = {
-	[0] = { .is_init = false, .r_sense_mohm = 0.3, .mfr_config_1 = { 0x6D72 } },
-	[1] = { .is_init = false, .r_sense_mohm = 0.3, .mfr_config_1 = { 0x6D72 } }
+	[0] = { .is_init = false, .r_sense_mohm = 0.3, .mfr_config_1 = { 0xFFFF } },
+	[1] = { .is_init = false, .r_sense_mohm = 0.3, .mfr_config_1 = { 0xFFFF } }
 };
 
-ina233_init_arg ina233_init_args[] = {
+ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001151079, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode = 0b111,
@@ -288,12 +288,135 @@ ina233_init_arg ina233_init_args[] = {
 	},
 };
 
+sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
+        [0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        .config = {
+                .operating_mode =0b111,
+                .shunt_volt_time = 0b100,
+                .bus_volt_time = 0b100,
+                .aver_mode = 0b111, //set 1024 average times
+                .rsvd = 0b000,
+                .reset_bit = 0b0,
+        },
+        },
+        [1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        .config = {
+                .operating_mode =0b111,
+                .shunt_volt_time = 0b100,
+                .bus_volt_time = 0b100,
+                .aver_mode = 0b111, //set 1024 average times
+                .rsvd = 0b000,
+                .reset_bit = 0b0,
+        },
+        },
+        [2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        .config = {
+                .operating_mode =0b111,
+                .shunt_volt_time = 0b100,
+                .bus_volt_time = 0b100,
+                .aver_mode = 0b111, //set 1024 average times
+                .rsvd = 0b000,
+                .reset_bit = 0b0,
+        },
+        },
+        [3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        .config = {
+                .operating_mode =0b111,
+                .shunt_volt_time = 0b100,
+                .bus_volt_time = 0b100,
+                .aver_mode = 0b111, //set 1024 average times
+                .rsvd = 0b000,
+                .reset_bit = 0b0,
+        },
+        },
+        [4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        .config = {
+                .operating_mode =0b111,
+                .shunt_volt_time = 0b100,
+                .bus_volt_time = 0b100,
+                .aver_mode = 0b111, //set 1024 average times
+                .rsvd = 0b000,
+                .reset_bit = 0b0,
+        },
+        },
+        [5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        .config = {
+                .operating_mode =0b111,
+                .shunt_volt_time = 0b100,
+                .bus_volt_time = 0b100,
+                .aver_mode = 0b111, //set 1024 average times
+                .rsvd = 0b000,
+                .reset_bit = 0b0,
+        },
+        },
+        [6] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        .config = {
+                .operating_mode =0b111,
+                .shunt_volt_time = 0b100,
+                .bus_volt_time = 0b100,
+                .aver_mode = 0b111, //set 1024 average times
+                .rsvd = 0b000,
+                .reset_bit = 0b0,
+        },
+        },
+        [7] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        .config = {
+                .operating_mode =0b111,
+                .shunt_volt_time = 0b100,
+                .bus_volt_time = 0b100,
+                .aver_mode = 0b111, //set 1024 average times
+                .rsvd = 0b000,
+                .reset_bit = 0b0,
+        },
+        },
+        [8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        .config = {
+                .operating_mode =0b111,
+                .shunt_volt_time = 0b100,
+                .bus_volt_time = 0b100,
+                .aver_mode = 0b111, //set 1024 average times
+                .rsvd = 0b000,
+                .reset_bit = 0b0,
+        },
+        },
+        [9] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        .config = {
+                .operating_mode =0b111,
+                .shunt_volt_time = 0b100,
+                .bus_volt_time = 0b100,
+                .aver_mode = 0b111, //set 1024 average times
+                .rsvd = 0b000,
+                .reset_bit = 0b0,
+        },
+        },
+        [10] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        .config = {
+                .operating_mode =0b111,
+                .shunt_volt_time = 0b100,
+                .bus_volt_time = 0b100,
+                .aver_mode = 0b111, //set 1024 average times
+                .rsvd = 0b000,
+                .reset_bit = 0b0,
+        },
+        },
+        [11] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        .config = {
+                .operating_mode =0b111,
+                .shunt_volt_time = 0b100,
+                .bus_volt_time = 0b100,
+                .aver_mode = 0b111, //set 1024 average times
+                .rsvd = 0b000,
+                .reset_bit = 0b0,
+        },
+        },
+};
+
 pex89000_init_arg pex_sensor_init_args[] = {
 	[0] = { .idx = 0, .is_init = false },
 	[1] = { .idx = 1, .is_init = false },
 };
 
-sq52205_init_arg sq52205_init_args[] = {
+sq52205_init_arg u178_179_sq52205_init_args[] = {
 	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0010002,
 	.config = {
 		.operating_mode =0b111,
@@ -315,6 +438,33 @@ sq52205_init_arg sq52205_init_args[] = {
 	},
 	},
 };
+
+ina230_init_arg u178_179_ina230_init_args[] = {
+	[0] = { .is_init = false,
+	.config = {
+		.MODE = 0b111,
+                .VSH_CT = 0b100,
+                .VBUS_CT = 0b100,
+                .AVG = 0b111,
+        },
+        .alt_cfg.value = 0,
+        .r_shunt = 0.001,
+        .i_max = 32.768,
+	},
+	[1] = { .is_init = false,
+        .config = {
+                .MODE = 0b111,
+                .VSH_CT = 0b100,
+                .VBUS_CT = 0b100,
+                .AVG = 0b111,
+        },
+        .alt_cfg.value = 0,
+        .r_shunt = 0.001,
+        .i_max = 32.768,
+        },
+};
+
+mp2985_init_arg mp2985_init_args[] = { [0] = { .is_init = false } };
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
@@ -460,13 +610,15 @@ bool pre_ina233_read(sensor_cfg *cfg, void *args)
 		struct k_mutex *mutex = get_i2c_mux_mutex(mux_cfg->bus);
 		mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
 		if (mutex_status != 0) {
-			LOG_ERR("Mutex lock fail, status: %d", mutex_status);
+			LOG_ERR("Mutex lock fail, status: %d, card id: 0x%x", mutex_status,
+				pre_args->card_id);
 			return false;
 		}
 
 		ret = set_mux_channel(*mux_cfg, MUTEX_LOCK_ENABLE);
 		if (ret == false) {
-			LOG_ERR("ina233 switch mux fail");
+			LOG_ERR("Switch mux fail, card id: 0x%x, sensor num: 0x%x",
+				pre_args->card_id, cfg->num);
 			k_mutex_unlock(mutex);
 		}
 
@@ -527,6 +679,7 @@ bool pre_xdpe15284_read(sensor_cfg *cfg, void *args)
 	ret = i2c_master_write(&msg, retry);
 	if (ret != 0) {
 		LOG_ERR("Set xdpe15284 page fail, ret: %d", ret);
+		k_mutex_unlock(&xdpe15284_mutex);
 		return false;
 	}
 

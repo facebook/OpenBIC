@@ -39,6 +39,8 @@ LOG_MODULE_REGISTER(plat_class);
 static uint8_t board_revision = UNKNOWN_STAGE;
 static uint8_t hsc_module = HSC_MODULE_UNKNOWN;
 static uint8_t pwr_brick_module = POWER_BRICK_UNKNOWN;
+static uint8_t pwr_monitor_module = POWER_MONITOR_UNKNOWN;
+static uint8_t vr_module = VR_UNKNOWN;
 static bool is_power_good = false;
 
 struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT] = {
@@ -290,6 +292,18 @@ int init_platform_config()
 		pwr_brick_module = POWER_BRICK_Q50SN120A1;
 	}
 
+	if (gpio_pin_get(gpio_dev, (POWER_MONITOR_PIN_NUM % GPIO_GROUP_SIZE))) {
+		pwr_monitor_module = POWER_MONITOR_SQ52205_INA230;
+	} else {
+		pwr_monitor_module = POWER_MONITOR_INA233_SQ52205;
+	}
+
+	if (gpio_pin_get(gpio_dev, (VR_MODULE_PIN_NUM % GPIO_GROUP_SIZE))) {
+		vr_module = VR_MP2985H;
+	} else {
+		vr_module = VR_XDPE15284D;
+	}
+
 	return 0;
 }
 
@@ -306,6 +320,16 @@ uint8_t get_hsc_module()
 uint8_t get_pwr_brick_module()
 {
 	return pwr_brick_module;
+}
+
+uint8_t get_pwr_monitor_module()
+{
+	return pwr_monitor_module;
+}
+
+uint8_t get_vr_module()
+{
+	return vr_module;
 }
 
 bool get_acb_power_status()

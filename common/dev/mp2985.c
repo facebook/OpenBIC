@@ -21,8 +21,48 @@
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "pmbus.h"
+#include "mp2985.h"
 
 LOG_MODULE_REGISTER(mp2985);
+
+#define MP2985_GET_USER_DATA 0xB8
+
+bool mp2985_get_checksum(uint8_t bus, uint8_t addr, uint8_t *checksum)
+{
+	CHECK_NULL_ARG_WITH_RETURN(checksum, false);
+
+	uint8_t retry = 3;
+	I2C_MSG i2c_msg = { 0 };
+
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+	i2c_msg.tx_len = 2;
+	i2c_msg.data[0] = PMBUS_PAGE;
+	i2c_msg.data[1] = 0x0;
+	if (i2c_master_write(&i2c_msg, retry)) {
+		LOG_ERR("Fail to set page to 0, bus: 0x%x, addr: 0x%x", bus, addr);
+		return false;
+	}
+
+	memset(&i2c_msg, 0, sizeof(I2C_MSG));
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 5;
+	i2c_msg.data[0] = MP2985_GET_USER_DATA;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("Fail to read checksum, bus: 0x%x, addr: 0x%x", bus, addr);
+		return false;
+	}
+
+	checksum[0] = i2c_msg.data[4];
+	checksum[1] = i2c_msg.data[3];
+	checksum[2] = i2c_msg.data[2];
+	checksum[3] = i2c_msg.data[1];
+
+	return true;
+}
 
 uint8_t mp2985_read(sensor_cfg *cfg, int *reading)
 {
