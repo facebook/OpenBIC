@@ -163,11 +163,11 @@ void check_accl_device_presence_status_via_ioexp()
 
 		ret = i2c_master_read(&msg, retry);
 		if (ret != 0) {
-			LOG_ERR("Fail to read cpld offset: 0x%x", CPLD_ACCL_1_6_PRESENT_OFFSET);
+			LOG_ERR("Fail to read cpld offset: 0x%x", CPLD_ACCL_7_12_PRESENT_OFFSET);
 			return;
 		}
 
-		reg_val |= msg.data[0];
+		reg_val |= (msg.data[0] << 8);
 
 		for (card_index = 0; card_index < ASIC_CARD_COUNT; ++card_index) {
 			if (card_index < (ASIC_CARD_COUNT / 2)) {
@@ -178,9 +178,8 @@ void check_accl_device_presence_status_via_ioexp()
 				shift_offset = (ASIC_CARD_COUNT / 2);
 			}
 
-			if (((presence_val >>
-			      ((ASIC_CARD_COUNT / 2 - 1) - (card_index - shift_offset))) &
-			     BIT(0)) == LOW_ACTIVE) {
+			if ((((presence_val >> (card_index - shift_offset))) & BIT(0)) ==
+			    LOW_ACTIVE) {
 				asic_card_info[card_index].card_status = ASIC_CARD_PRESENT;
 				asic_card_info[card_index].card_type =
 					ASIC_CARD_WITH_ARTEMIS_MODULE;
