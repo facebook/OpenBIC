@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include "sensor.h"
 #include "pldm.h"
+#include "pdr.h"
 #include "hal_gpio.h"
 
 #ifndef PLDM_MONITOR_EVENT_QUEUE_MSG_NUM_MAX
@@ -781,12 +782,78 @@ uint8_t pldm_get_state_effecter_states(void *mctp_inst, uint8_t *buf, uint16_t l
 	return plat_pldm_get_state_effecter_state_handler(buf, len, resp, resp_len);
 }
 
+uint8_t pldm_get_pdr_info(void *mctp_inst, uint8_t *buf, uint16_t len,
+				     uint8_t instance_id, uint8_t *resp, uint16_t *resp_len,
+				     void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
+
+	struct pldm_get_pdr_info_resp *res_p = (struct pldm_get_pdr_info_resp *)resp;
+
+	PDR_INFO* pdr_info = get_pdr_info();
+	if (pdr_info == NULL) {
+		LOG_ERR("The PDR table is empty");
+		return PLDM_ERROR;
+	}
+
+	res_p->repository_state = pdr_info->repository_state;
+	res_p->record_count = pdr_info->record_count;
+	res_p->repository_size = pdr_info->repository_size;
+	res_p->largest_record_size = pdr_info->largest_record_size;
+	*resp_len = sizeof(struct pldm_get_pdr_info_resp);
+	res_p->completion_code = PLDM_SUCCESS;
+
+	return PLDM_SUCCESS;
+}
+
+uint8_t pldm_get_pdr(void *mctp_inst, uint8_t *buf, uint16_t len,
+				     uint8_t instance_id, uint8_t *resp, uint16_t *resp_len,
+				     void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
+
+	struct pldm_get_pdr_req *req_p = (struct pldm_get_pdr_req *)buf;
+	struct pldm_get_pdr_resp *res_p = (struct pldm_get_pdr_resp *)resp;
+
+	PDR_numeric_sensor* numeric_sensor_table = get_pdr_table();
+	if (numeric_sensor_table == NULL) {
+		LOG_ERR("The PDR table is empty");
+		return PLDM_ERROR;
+	}
+
+	uint8_t *pdr_table = (uint8_t *)&numeric_sensor_table[req_p->record_handle];
+	memcpy(&res_p->record_data[0], pdr_table, sizeof(PDR_numeric_sensor));
+
+	uint16_t pdr_count = get_pdr_size();
+	if (req_p->record_handle + 1 >= pdr_count) {
+		res_p->next_record_handle = 0x00000000;
+	} else {
+		res_p->next_record_handle = req_p->record_handle + 1;
+	}
+
+	res_p->transfer_flag = PLDM_TRANSFER_FLAG_START_AND_END;
+	res_p->response_count = sizeof(res_p->record_data);
+	*resp_len = sizeof(struct pldm_get_pdr_resp);
+	res_p->completion_code = PLDM_SUCCESS;
+	return PLDM_SUCCESS;
+}
+
 static pldm_cmd_handler pldm_monitor_cmd_tbl[] = {
 	{ PLDM_MONITOR_CMD_CODE_GET_SENSOR_READING, pldm_get_sensor_reading },
 	{ PLDM_MONITOR_CMD_CODE_SET_EVENT_RECEIVER, pldm_set_event_receiver },
 	{ PLDM_MONITOR_CMD_CODE_PLATFORM_EVENT_MESSAGE, pldm_platform_event_message },
 	{ PLDM_MONITOR_CMD_CODE_SET_STATE_EFFECTER_STATES, pldm_set_state_effecter_states },
 	{ PLDM_MONITOR_CMD_CODE_GET_STATE_EFFECTER_STATES, pldm_get_state_effecter_states },
+	{ PLDM_MONITOR_CMD_CODE_GET_PDR_INFO, pldm_get_pdr_info },
+	{ PLDM_MONITOR_CMD_CODE_GET_PDR, pldm_get_pdr },
 };
 
 uint8_t pldm_monitor_handler_query(uint8_t code, void **ret_fn)
