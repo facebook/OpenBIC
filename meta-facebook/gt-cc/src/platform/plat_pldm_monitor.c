@@ -29,9 +29,6 @@
 
 LOG_MODULE_REGISTER(plat_pldm_monitor);
 
-/* Define from Platform Level Data Model (PLDM) State 
-   Set Specification (DSP0249) Table 15 – Entity ID codes*/
-#define PLDM_ENTITY_IO_CONTROLLER 145
 /* Chassis-specific entities 8192 - 16383 */
 #define PLDM_OEM_ENTITY_LED 8192
 #define PLDM_OEM_ENTITY_SSD_LED 8193
