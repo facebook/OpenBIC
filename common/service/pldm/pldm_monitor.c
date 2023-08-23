@@ -803,3 +803,18 @@ uint8_t pldm_monitor_handler_query(uint8_t code, void **ret_fn)
 	*ret_fn = (void *)fn;
 	return fn ? PLDM_SUCCESS : PLDM_ERROR;
 }
+
+__weak void plat_pldm_set_effecter_state_host_power_control(const uint8_t *buf, uint16_t len,
+                                                         uint8_t *resp, uint16_t *resp_len)
+{
+       CHECK_NULL_ARG(buf);
+       CHECK_NULL_ARG(resp);
+       CHECK_NULL_ARG(resp_len);
+
+       uint8_t *completion_code_p = resp;
+       *resp_len = 1;
+       LOG_WRN("Not implemented in the platform code");
+       *completion_code_p = PLDM_ERROR_UNSUPPORTED_PLDM_CMD;
+
+       return;
+}
