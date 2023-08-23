@@ -1,0 +1,141 @@
+From b88255a0b89138359bc344af883e553f66119740 Mon Sep 17 00:00:00 2001
+From: Chia-Wei Wang <chiawei_wang@aspeedtech.com>
+Date: Fri, 28 Jul 2023 17:16:42 +0800
+Subject: [PATCH] espi: aspeed: Save memory space if features disabled
+
+Avoid reserving non-cached buffer if features such as
+memory cycle or DMA are not enabled.
+
+Signed-off-by: Chia-Wei Wang <chiawei_wang@aspeedtech.com>
+Change-Id: If310e49d1996de62328a15c19558d292f9555d59
+---
+ drivers/espi/espi_aspeed.c                    | 37 ++++++++++++++++---
+ dts/bindings/espi/aspeed,espi.yaml            |  5 +++
+ .../demo/boards/ast1030_evb.overlay           |  1 +
+ 3 files changed, 38 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/espi/espi_aspeed.c b/drivers/espi/espi_aspeed.c
+index ddddbb90bf..445fee9e3a 100644
+--- a/drivers/espi/espi_aspeed.c
++++ b/drivers/espi/espi_aspeed.c
+@@ -299,10 +299,21 @@ static uint32_t espi_base;
+ #define ESPI_PLD_LEN_MAX        (1UL << 12)
+ 
+ /* peripheral channel */
++#if DT_INST_PROP(0, perif_dma_mode)
+ static uint8_t perif_pc_rx_buf[ESPI_PLD_LEN_MAX] NON_CACHED_BSS;
+ static uint8_t perif_pc_tx_buf[ESPI_PLD_LEN_MAX] NON_CACHED_BSS;
+ static uint8_t perif_np_tx_buf[ESPI_PLD_LEN_MAX] NON_CACHED_BSS;
++#else
++static uint8_t perif_pc_rx_buf[0];
++static uint8_t perif_pc_tx_buf[0];
++static uint8_t perif_np_tx_buf[0];
++#endif
++
++#if DT_INST_PROP(0, perif_memcyc_enable)
+ static uint8_t perif_mcyc_buf[DT_INST_PROP(0, perif_memcyc_size)]  __attribute__((aligned(DT_INST_PROP(0, perif_memcyc_size)))) NON_CACHED_BSS;
++#else
++static uint8_t perif_mcyc_buf[0];
++#endif
+ 
+ struct espi_aspeed_perif {
+ 	uint8_t dma_mode;
+@@ -316,6 +327,7 @@ struct espi_aspeed_perif {
+ 	uint8_t *np_tx_virt;
+ 	uintptr_t np_tx_addr;
+ 
++	uint8_t mcyc_en;
+ 	uint8_t *mcyc_virt;
+ 	uint32_t mcyc_size;
+ 	uintptr_t mcyc_saddr;
+@@ -339,12 +351,14 @@ static void espi_aspeed_perif_init(struct espi_aspeed_perif *perif)
+ {
+ 	uint32_t reg;
+ 
+-	ESPI_WR(perif->mcyc_saddr, ESPI_PERIF_PC_RX_SADDR);
+-	ESPI_WR(perif->mcyc_taddr, ESPI_PERIF_PC_RX_TADDR);
++	if (perif->mcyc_en) {
++		ESPI_WR(perif->mcyc_saddr, ESPI_PERIF_PC_RX_SADDR);
++		ESPI_WR(perif->mcyc_taddr, ESPI_PERIF_PC_RX_TADDR);
+ 
+-	reg = ESPI_RD(ESPI_CTRL2);
+-	reg &= ~(ESPI_CTRL2_MEMCYC_RD_DIS | ESPI_CTRL2_MEMCYC_WR_DIS);
+-	ESPI_WR(reg, ESPI_CTRL2);
++		reg = ESPI_RD(ESPI_CTRL2);
++		reg &= ~(ESPI_CTRL2_MEMCYC_RD_DIS | ESPI_CTRL2_MEMCYC_WR_DIS);
++		ESPI_WR(reg, ESPI_CTRL2);
++	}
+ 
+ 	if (perif->dma_mode) {
+ 		ESPI_WR(perif->pc_rx_addr, ESPI_PERIF_PC_RX_DMA);
+@@ -445,10 +459,17 @@ struct oob_rx_dma_desc {
+ 	uint8_t dirty : 1;
+ } __packed;
+ 
++#if DT_INST_PROP(0, oob_dma_mode)
+ static struct oob_tx_dma_desc oob_tx_desc[OOB_TX_DMA_DESC_NUM] NON_CACHED_BSS;
+ static struct oob_rx_dma_desc oob_rx_desc[OOB_RX_DMA_DESC_NUM] NON_CACHED_BSS;
+ static uint8_t oob_tx_buf[OOB_TX_DMA_BUF_SIZE] NON_CACHED_BSS;
+ static uint8_t oob_rx_buf[OOB_RX_DMA_BUF_SIZE] NON_CACHED_BSS;
++#else
++static struct oob_tx_dma_desc oob_tx_desc[0];
++static struct oob_rx_dma_desc oob_rx_desc[0];
++static uint8_t oob_tx_buf[0];
++static uint8_t oob_rx_buf[0];
++#endif
+ 
+ struct espi_aspeed_oob {
+ 	uint8_t dma_mode;
+@@ -555,8 +576,13 @@ static void espi_aspeed_oob_init(struct espi_aspeed_oob *oob)
+ #define FLASH_ERASE     0x02
+ #define FLASH_TAG       0x00
+ 
++#if DT_INST_PROP(0, flash_dma_mode)
+ static uint8_t flash_tx_buf[ESPI_PLD_LEN_MAX] NON_CACHED_BSS;
+ static uint8_t flash_rx_buf[ESPI_PLD_LEN_MAX] NON_CACHED_BSS;
++#else
++static uint8_t flash_tx_buf[0];
++static uint8_t flash_rx_buf[0];
++#endif
+ 
+ struct espi_aspeed_flash {
+ 	uint8_t dma_mode;
+@@ -736,6 +762,7 @@ static int espi_aspeed_init(const struct device *dev)
+ 	perif->pc_tx_addr = TO_PHY_ADDR(perif->pc_tx_virt);
+ 	perif->np_tx_virt = perif_np_tx_buf;
+ 	perif->np_tx_addr = TO_PHY_ADDR(perif->np_tx_virt);
++	perif->mcyc_en = DT_INST_PROP(0, perif_memcyc_enable);
+ 	perif->mcyc_virt = perif_mcyc_buf;
+ 	perif->mcyc_size = DT_INST_PROP(0, perif_memcyc_size);
+ 	perif->mcyc_saddr = DT_INST_PROP(0, perif_memcyc_src_addr);
+diff --git a/dts/bindings/espi/aspeed,espi.yaml b/dts/bindings/espi/aspeed,espi.yaml
+index 90795386eb..693002f1b8 100644
+--- a/dts/bindings/espi/aspeed,espi.yaml
++++ b/dts/bindings/espi/aspeed,espi.yaml
+@@ -22,6 +22,11 @@ properties:
+       required: false
+       description: enable DMA for peripheral channel
+ 
++    perif,memcyc-enable:
++      type: boolean
++      required: false
++      description: enable memory cycle for peripheral channel
++
+     perif,memcyc-src-addr:
+       type: int
+       required: true
+diff --git a/samples/boards/ast1030_evb/demo/boards/ast1030_evb.overlay b/samples/boards/ast1030_evb/demo/boards/ast1030_evb.overlay
+index 114747b920..1e9160526b 100644
+--- a/samples/boards/ast1030_evb/demo/boards/ast1030_evb.overlay
++++ b/samples/boards/ast1030_evb/demo/boards/ast1030_evb.overlay
+@@ -370,6 +370,7 @@
+ 
+ &espi {
+ 	status = "okay";
++	perif,memcyc-enable;
+ 	perif,memcyc-src-addr = <0x98000000>;
+ 	perif,memcyc-size = <0x10000>;
+ 	flash,safs-mode = <0x2>;
+-- 
+2.25.1
+
