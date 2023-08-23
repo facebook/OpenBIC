@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -22,9 +22,11 @@
 #include "plat_gpio.h"
 #include "plat_kcs.h"
 #include "plat_dimm.h"
+#include "plat_i3c.h"
+#include "plat_pmic.h"
 
 /*
- * The operating voltage of GPIO input pins are lower than actual voltage because the chip 
+ * The operating voltage of GPIO input pins are lower than actual voltage because the chip
  * internal pull-down is enabled.
  * BIC disables the internal GPIO pull-down for all input pins.
  *
@@ -49,6 +51,7 @@ SCU_CFG scu_cfg[] = {
 
 void pal_pre_init()
 {
+	init_i3c_hub();
 	init_platform_config();
 	scu_init(scu_cfg, ARRAY_SIZE(scu_cfg));
 	if (!pal_load_vw_gpio_config()) {
@@ -72,7 +75,9 @@ void pal_set_sys_status()
 
 void pal_device_init()
 {
-	init_dimm_status();
+	init_i3c_dimm_prsnt_status();
+	start_get_dimm_info_thread();
+	start_monitor_pmic_error_thread();
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78

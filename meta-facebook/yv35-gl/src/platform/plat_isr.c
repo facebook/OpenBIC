@@ -29,7 +29,9 @@
 #include "plat_isr.h"
 #include "plat_gpio.h"
 #include "plat_ipmb.h"
+#include "plat_dimm.h"
 #include "plat_sensor_table.h"
+#include "plat_pmic.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -149,7 +151,10 @@ static void PROC_FAIL_handler(struct k_work *work)
 }
 
 K_WORK_DELAYABLE_DEFINE(PROC_FAIL_work, PROC_FAIL_handler);
+K_WORK_DELAYABLE_DEFINE(read_pmic_critical_work, read_pmic_error_when_dc_off);
 
+// The PMIC needs a total of 100ms from CAMP signal assertion to complete the write operation
+#define READ_PMIC_CRITICAL_ERROR_MS 100
 void Initialize_CPU()
 {
 	//check CPU's status by PWRGD_CPU_LVC3
@@ -159,9 +164,14 @@ void Initialize_CPU()
 		init_send_postcode_thread();
 		/* start thread proc_fail_handler after 10 seconds */
 		k_work_schedule(&PROC_FAIL_work, K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
+
+		clear_pmic_error();
 	} else {
 		ISR_POST_COMPLETE(VW_GPIO_LOW);
 		abort_snoop_thread();
+
+		// Read PMIC error when DC off
+		k_work_schedule(&read_pmic_critical_work, K_MSEC(READ_PMIC_CRITICAL_ERROR_MS));
 
 		if (k_work_cancel_delayable(&PROC_FAIL_work) != 0) {
 			LOG_ERR("Cancel proc_fail delay work fail");
@@ -227,6 +237,9 @@ void ISR_PLTRST()
 {
 	vw_gpio_reset();
 	send_gpio_interrupt(RST_PLTRST_BUF_N);
+
+	// Switch I3C mux to cpu when host reset or host DC on
+	switch_i3c_dimm_mux(I3C_MUX_TO_CPU);
 }
 
 void ISR_DBP_PRSNT()
@@ -474,6 +487,11 @@ void ISR_POST_COMPLETE(uint8_t gpio_value)
 {
 	bool is_post_completed = (gpio_value == VW_GPIO_HIGH) ? true : false;
 	set_post_complete(is_post_completed);
+
+	if (is_post_completed) {
+		// Switch I3C mux to bic after post complete
+		switch_i3c_dimm_mux(I3C_MUX_TO_BIC);
+	}
 
 	post_complete.gpio_value = gpio_value;
 	k_work_init_delayable(&post_complete.work, post_complete_handler);

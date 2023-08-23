@@ -116,6 +116,14 @@
 #define SENSOR_NUM_PROC_FAIL 0x65
 #define SENSOR_NUM_VR_HOT 0xB2
 #define SENSOR_NUM_CPUDIMM_HOT 0xB3
+#define SENSOR_NUM_PMIC_ERROR 0xB4
 #define SENSOR_NUM_CATERR 0xEB
+
+typedef struct _dimm_pmic_mapping_cfg {
+	uint8_t dimm_sensor_num;
+	uint8_t mapping_pmic_sensor_num;
+} dimm_pmic_mapping_cfg;
+
+uint8_t get_dimm_status(uint8_t dimm_index);
 
 #endif

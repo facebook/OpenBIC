@@ -60,6 +60,16 @@ struct tca9548 mux_conf_addr_0xe2[8] = {
 	[6] = { .addr = 0xe2, .chan = 6 }, [7] = { .addr = 0xe2, .chan = 7 },
 };
 
+dimm_post_proc_arg dimm_post_proc_args[] = {
+	[1] = { .dimm_channel = DIMM_CHANNEL_NUM_1, .dimm_number = DIMM_NUMBER_0 },
+	[2] = { .dimm_channel = DIMM_CHANNEL_NUM_2, .dimm_number = DIMM_NUMBER_0 },
+	[3] = { .dimm_channel = DIMM_CHANNEL_NUM_3, .dimm_number = DIMM_NUMBER_0 },
+	[4] = { .dimm_channel = DIMM_CHANNEL_NUM_4, .dimm_number = DIMM_NUMBER_0 },
+	[5] = { .dimm_channel = DIMM_CHANNEL_NUM_5, .dimm_number = DIMM_NUMBER_0 },
+	[6] = { .dimm_channel = DIMM_CHANNEL_NUM_6, .dimm_number = DIMM_NUMBER_0 },
+	[7] = { .dimm_channel = DIMM_CHANNEL_NUM_7, .dimm_number = DIMM_NUMBER_0 },
+};
+
 bool pre_xdpe15284_read(sensor_cfg *cfg, void *args)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
@@ -137,7 +147,7 @@ bool post_cpu_margin_read(sensor_cfg *cfg, void *args, int *reading)
 	return true;
 }
 
-bool pre_intel_peci_dimm_read(sensor_cfg *cfg, void *args)
+bool pre_intel_dimm_i3c_read(sensor_cfg *cfg, void *args)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	ARG_UNUSED(args);
@@ -146,7 +156,7 @@ bool pre_intel_peci_dimm_read(sensor_cfg *cfg, void *args)
 		return true;
 	}
 
-	if (!is_dimm_inited()) {
+	if (!is_dimm_prsnt_inited()) {
 		return true;
 	}
 
@@ -160,6 +170,41 @@ bool pre_intel_peci_dimm_read(sensor_cfg *cfg, void *args)
 	}
 
 	if (!get_dimm_presence_status(dimm_id)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool post_intel_dimm_i3c_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+
+	if (!get_post_status()) {
+		return true;
+	}
+
+	dimm_post_proc_arg *post_proc_args = (dimm_post_proc_arg *)args;
+	sensor_val *sval = (sensor_val *)reading;
+
+	uint8_t addr = 0, write_len = 0, read_len = 0, cmd = 0, read_buf = 0;
+	uint8_t write_buf[PECI_WR_PKG_LEN_DWORD] = { 0 };
+	int ret = 0;
+
+	// Using PECI WrPkgConfig command to feedback DIMM temperature to CPU
+	addr = CPU_PECI_ADDR;
+	write_len = PECI_WR_PKG_LEN_DWORD;
+	read_len = PECI_WR_PKG_RD_LEN;
+	cmd = PECI_CMD_WR_PKG_CFG0;
+	write_buf[0] = 0x00;
+	write_buf[1] = WRPKG_IDX_DIMM_TEMP;
+	write_buf[2] = post_proc_args->dimm_channel;
+	write_buf[3] = post_proc_args->dimm_number;
+	write_buf[4] = sval->integer;
+
+	ret = peci_write(cmd, addr, read_len, &read_buf, write_len, write_buf);
+	if (ret != 0) {
+		LOG_ERR("Failed to write DIMM temperature to CPU, ret= %d", ret);
 		return false;
 	}
 
