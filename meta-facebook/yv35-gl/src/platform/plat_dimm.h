@@ -70,6 +70,12 @@ enum I3C_DIMM_SPD_ADDR {
 	DIMM_SPD_D_H_ADDR = 0x56,
 };
 
+enum DIMM_DEVICE_TYPE {
+	DIMM_SPD = 0x00,
+	DIMM_SPD_NVM = 0x01,
+	DIMM_PMIC = 0x02,
+};
+
 typedef struct dimm_info {
 	bool is_present;
 	uint8_t pmic_error_data[MAX_LEN_I3C_GET_PMIC_ERR];
