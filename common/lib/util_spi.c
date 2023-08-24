@@ -30,8 +30,15 @@
 #include "libutil.h"
 #include "ipmi.h"
 #include <crypto/hash.h>
+#include "plat_def.h"
 
 LOG_MODULE_REGISTER(util_spi);
+
+#ifndef FW_UPDATE_RETRY_MAX_COUNT
+#define FW_UPDATE_RETRY_MAX_COUNT 0
+#endif
+
+static int default_retry_count = FW_UPDATE_RETRY_MAX_COUNT;
 
 static struct {
 	char *name;
@@ -266,8 +273,14 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, uint8_t f
 	static bool is_init = 0;
 	static uint8_t *txbuf = NULL;
 	static uint32_t start_offset = 0, buf_offset = 0;
+	static int fw_update_retry = 0;
 	uint32_t ret = 0;
 	const struct device *flash_dev;
+
+	if (offset == 0) {
+		// Set default fw update retry count at first package
+		fw_update_retry = default_retry_count;
+	}
 
 	if (!is_init) {
 		SAFE_FREE(txbuf);
@@ -287,13 +300,30 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, uint8_t f
 	}
 
 	if (offset != (start_offset + buf_offset)) {
-		LOG_ERR("SPI index %d, recorded offset 0x%x but updating 0x%x", flash_position,
-			start_offset + buf_offset, offset);
-		SAFE_FREE(txbuf);
-		txbuf = NULL;
-		k_msleep(10);
-		is_init = 0;
-		return FWUPDATE_REPEATED_UPDATED;
+		fw_update_retry -= 1;
+		LOG_ERR("SPI index %d, recorded offset 0x%x but updating 0x%x, buf_offset: 0x%x",
+			flash_position, start_offset + buf_offset, offset, buf_offset);
+		if (fw_update_retry < 0) {
+			LOG_ERR("SPI index %d, retry reached max: %d", flash_position,
+				fw_update_retry);
+			SAFE_FREE(txbuf);
+			txbuf = NULL;
+			k_msleep(10);
+			is_init = 0;
+			return FWUPDATE_REPEATED_UPDATED;
+		} else {
+			if (start_offset > offset) {
+				start_offset = offset;
+				buf_offset = 0;
+			} else {
+				buf_offset = offset - start_offset;
+			}
+			LOG_ERR("SPI index %d, modify start_offset to 0x%x, buf_offset to 0x%x, retry count: %d",
+				flash_position, start_offset, buf_offset, fw_update_retry);
+		}
+	} else {
+		// Recovery retry count
+		fw_update_retry = default_retry_count;
 	}
 
 	if ((buf_offset + msg_len) > SECTOR_SZ_64K) {
@@ -374,6 +404,11 @@ int read_fw_image(uint32_t offset, uint8_t msg_len, uint8_t *msg_buf, uint8_t fl
 	}
 
 	return flash_read(flash_dev, offset, msg_buf, msg_len);
+}
+
+void set_default_retry_count(int count)
+{
+	default_retry_count = count;
 }
 
 __weak uint8_t fw_update_cxl(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, bool sector_end)

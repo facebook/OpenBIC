@@ -700,6 +700,11 @@ void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 			msg->completion_code = CC_PARAM_OUT_OF_RANGE;
 			return;
 		}
+		if (offset == 0) {
+			// Set default fw update retry count at first package
+			set_default_retry_count(FW_UPDATE_RETRY_MAX_COUNT);
+		}
+
 		status = fw_update(offset, length, &msg->data[7], (component & IS_SECTOR_END_MASK),
 				   DEVSPI_FMC_CS0);
 		break;
