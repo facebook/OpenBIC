@@ -55,6 +55,7 @@ typedef enum pldm_platform_monitor_commands {
 #define PLDM_MONITOR_SENSOR_DATA_SIZE_INT32 4
 
 #define PLDM_PLATFORM_OEM_GPIO_EFFECTER_STATE_FIELD_COUNT 2
+#define PLDM_PLATFORM_OEM_HOST_POWER_CTRL_EFFECTER_STATE_FIELD_COUNT 1
 #define PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX 167
 
 typedef enum pldm_sensor_readings_data_type {
@@ -109,6 +110,16 @@ enum oem_effecter_states_gpio_value {
 	EFFECTER_STATE_GPIO_VALUE_MAX
 };
 
+enum oem_effecter_states_power_status {
+	EFFECTER_STATE_POWER_STATUS_UNKNOWN = 0x00,
+	EFFECTER_STATE_POWER_STATUS_ON = 0x01,
+	EFFECTER_STATE_POWER_STATUS_OFF = 0x02,
+	EFFECTER_STATE_POWER_STATUS_CYCLE = 0x03,
+	EFFECTER_STATE_POWER_STATUS_RESET = 0x04,
+	EFFECTER_STATE_POWER_STATUS_GRACEFUL_SHUTDOWN = 0x05,
+	EFFECTER_STATE_POWER_STATUS_MAX
+};
+
 enum pldm_sensor_present_state {
 	PLDM_SENSOR_UNKNOWN = 0x0,
 	PLDM_SENSOR_NORMAL = 0x01,
@@ -153,6 +164,13 @@ enum pldm_oem_platform_completion_codes {
 	PLDM_OEM_GPIO_UNSUPPORT_RANGE = 0x83,
 	PLDM_OEM_GPIO_EFFECTER_INVALID_SET_VALUE = 0x84,
 	PLDM_OEM_GPIO_EFFECTER_VALUE_UNKNOWN = 0x85,
+};
+
+/* Define from Platform Level Data Model (PLDM) State
+Set Specification (DSP0249) Table 15 – Entity ID codes*/
+enum pldm_entity_types {
+	PLDM_ENTITY_SUB_CHASSIS = 46,
+	PLDM_ENTITY_IO_CONTROLLER  = 145,
 };
 
 /* Y = (mX + b) * 10^r */
@@ -347,6 +365,9 @@ uint8_t plat_pldm_set_state_effecter_state_handler(const uint8_t *buf, uint16_t 
 						   uint16_t *resp_len);
 
 uint8_t plat_pldm_get_state_effecter_state_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
+						   uint16_t *resp_len);
+
+void plat_pldm_set_effecter_state_host_power_control(const uint8_t *buf, uint16_t len, uint8_t *resp,
 						   uint16_t *resp_len);
 
 uint8_t pldm_event_len_check(uint8_t *buf, uint16_t len);
