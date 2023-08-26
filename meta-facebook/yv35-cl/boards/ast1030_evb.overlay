@@ -169,7 +169,7 @@
 
 &snoop {
 	status = "okay";
-	port = <0x80>, <0x81>;
+	port = <0x80>;
 };
 
 &fmc {
