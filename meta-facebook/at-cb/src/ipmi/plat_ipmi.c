@@ -145,10 +145,12 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 
 		if (pex_access_engine(cfg->port, cfg->target_addr, p->idx, pex_access_sbr_ver,
 				      &reading)) {
-			if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) ==
-			    false) {
-				LOG_ERR("PEX%d post-read failed!",
-					component - CB_COMPNT_PCIE_SWITCH0);
+			if (cfg->post_sensor_read_hook) {
+				if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args,
+							       NULL) == false) {
+					LOG_ERR("PEX%d post-read failed!",
+						component - CB_COMPNT_PCIE_SWITCH0);
+				}
 			}
 			msg->completion_code = CC_PEX_ACCESS_FAIL;
 			return;
