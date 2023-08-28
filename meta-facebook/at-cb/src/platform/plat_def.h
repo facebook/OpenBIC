@@ -18,5 +18,7 @@
 #define PLAT_DEF_H
 
 #define BMC_USB_PORT "CDC_ACM_0"
+#define KEYWORD_CPLD_LATTICE "LCMXO3-4300C"
+#define BIC_FW_VERSION_ADD_FRU_NAME
 
 #endif

@@ -22,6 +22,7 @@ extern "C" {
 #endif
 
 #include "pldm.h"
+#include "plat_def.h"
 
 #define MAX_FWUPDATE_RSP_BUF_SIZE 256
 #define MAX_IMAGE_MALLOC_SIZE (1024 * 64)
@@ -30,7 +31,9 @@ extern "C" {
 #define KEYWORD_VR_XDPE12284C "xdpe12284c"
 #define KEYWORD_VR_MP2971 "mp2971"
 
+#ifndef KEYWORD_CPLD_LATTICE
 #define KEYWORD_CPLD_LATTICE "LCMXO3-9400C"
+#endif
 
 static const char hex_to_ascii[] = { '0', '1', '2', '3', '4', '5', '6', '7',
 				     '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
@@ -127,23 +130,22 @@ enum pldm_firmware_update_aux_state {
 /**
  * PLDM component classification
  */
-enum {
-	COMP_CLASS_TYPE_UNKNOWN = 0x0000,
-	COMP_CLASS_TYPE_OTHER,
-	COMP_CLASS_TYPE_DRIVER,
-	COMP_CLASS_TYPE_CFG_SW,
-	COMP_CLASS_TYPE_APP_SW,
-	COMP_CLASS_TYPE_INSTR,
-	COMP_CLASS_TYPE_FW_BIOS,
-	COMP_CLASS_TYPE_DIAG_SW,
-	COMP_CLASS_TYPE_OS,
-	COMP_CLASS_TYPE_MW,
-	COMP_CLASS_TYPE_FW,
-	COMP_CLASS_TYPE_BIOS_FC,
-	COMP_CLASS_TYPE_SP_SV_P,
-	COMP_CLASS_TYPE_SW_BUNDLE,
-	COMP_CLASS_TYPE_DOWNSTREAM = 0xFFFF,
-	COMP_CLASS_TYPE_MAX = 0x10000,
+enum { COMP_CLASS_TYPE_UNKNOWN = 0x0000,
+       COMP_CLASS_TYPE_OTHER,
+       COMP_CLASS_TYPE_DRIVER,
+       COMP_CLASS_TYPE_CFG_SW,
+       COMP_CLASS_TYPE_APP_SW,
+       COMP_CLASS_TYPE_INSTR,
+       COMP_CLASS_TYPE_FW_BIOS,
+       COMP_CLASS_TYPE_DIAG_SW,
+       COMP_CLASS_TYPE_OS,
+       COMP_CLASS_TYPE_MW,
+       COMP_CLASS_TYPE_FW,
+       COMP_CLASS_TYPE_BIOS_FC,
+       COMP_CLASS_TYPE_SP_SV_P,
+       COMP_CLASS_TYPE_SW_BUNDLE,
+       COMP_CLASS_TYPE_DOWNSTREAM = 0xFFFF,
+       COMP_CLASS_TYPE_MAX = 0x10000,
 };
 
 /** 

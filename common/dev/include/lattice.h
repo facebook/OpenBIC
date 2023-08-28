@@ -78,6 +78,7 @@ struct lattice_dev_config {
 
 bool lattice_fwupdate(lattice_update_config_t *config);
 bool cpld_i2c_get_id(uint8_t bus, uint8_t addr, uint32_t *dev_id);
+bool cpld_i2c_get_usercode(uint8_t bus, uint8_t addr, uint32_t *usercode);
 lattice_dev_type_t find_type_by_str(char *str);
 
 #endif
