@@ -35,6 +35,7 @@
 #include "plat_pldm_monitor.h"
 #include "plat_led.h"
 #include "plat_pldm_fw_update.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -43,6 +44,7 @@ void dc_on_send_cmd_to_dev();
 
 K_WORK_DELAYABLE_DEFINE(dc_on_init_pex_work, dc_on_init_pex);
 K_WORK_DELAYABLE_DEFINE(dc_on_send_cmd_to_dev_work, dc_on_send_cmd_to_dev);
+K_WORK_DEFINE(vr_status_mfr_specific_check_work, vr_status_mfr_specific_check_handler);
 
 #define DC_ON_5_SECOND 5
 #define DC_ON_PEX_INIT_RETRY 5
@@ -187,9 +189,15 @@ void ISR_SMB_FPGA_ALERT()
 
 void ISR_VR_PMBUS_ALERT()
 {
-	struct pldm_sensor_event_state_sensor_state event;
-
 	bool is_alert = !gpio_get(SMB_ALERT_PMBUS_R_N);
+
+	if (is_alert && (get_vr_type() == VR_RNS_ISL69259)) {
+		LOG_INF("ISR_VR_PMBUS_ALERT triggered, check VR PMBUS_STATUS_MFR_SPECIFIC register");
+		k_work_submit(&vr_status_mfr_specific_check_work);
+		return;
+	}
+
+	struct pldm_sensor_event_state_sensor_state event;
 
 	event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_STATUS;
 	event.event_state = is_alert ? PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT :

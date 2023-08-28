@@ -463,6 +463,107 @@ void nic_present_check()
 	}
 }
 
+void vr_status_mfr_specific_check_handler(struct k_work *work)
+{
+	uint8_t vr_sensor_num[2] = { SENSOR_NUM_PEX_0_VR_TEMP, SENSOR_NUM_PEX_2_VR_TEMP };
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(vr_sensor_num); i++) {
+		sensor_cfg *cfg = &sensor_config[sensor_config_index_map[vr_sensor_num[i]]];
+		I2C_MSG i2c_msg = { 0 };
+
+		if (!cfg) {
+			LOG_ERR("The pointer to VR%d config is NULL", i);
+			continue;
+		}
+
+		if (cfg->pre_sensor_read_hook) {
+			if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
+				LOG_ERR("Pre-sensor reading hook function failed, VR%d status mfr specific check failed",
+					i);
+				if (cfg->post_sensor_read_hook) {
+					if (!cfg->post_sensor_read_hook(
+						    cfg, cfg->post_sensor_read_args, NULL)) {
+						LOG_ERR("Post-sensor reading hook function failed");
+					}
+				}
+				continue;
+			}
+		}
+
+		/**
+		 * Get PMBUS_STATUS_MFR_SPECIFIC
+		*/
+		i2c_msg.bus = cfg->port;
+		i2c_msg.target_addr = cfg->target_addr;
+		i2c_msg.tx_len = 1;
+		i2c_msg.rx_len = 1;
+		i2c_msg.data[0] = PMBUS_STATUS_MFR_SPECIFIC;
+
+		if (i2c_master_read(&i2c_msg, 5)) {
+			LOG_ERR("I2C master read failed, VR%d status mfr specific check failed", i);
+			if (cfg->post_sensor_read_hook) {
+				if (!cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args,
+								NULL)) {
+					LOG_ERR("Post-sensor reading hook function failed");
+				}
+			}
+			continue;
+		}
+
+		uint8_t status_mfr;
+		status_mfr = i2c_msg.data[0];
+		LOG_DBG("status_mfr = 0x%x", status_mfr);
+
+		/**
+		 * Clear faults when bit ADCUNLOCK or BBEVENT is high
+		*/
+		if ((status_mfr & BIT(3)) || (status_mfr & BIT(7))) {
+			LOG_INF("VR%d register PMBUS_STATUS_MFR_SPECIFIC(80h) is 0x%x, bit ADCUNLOCK or BBEVENT is high, clear faults",
+				i, status_mfr);
+
+			gpio_interrupt_conf(SMB_ALERT_PMBUS_R_N, GPIO_INT_DISABLE);
+
+			i2c_msg.tx_len = 1;
+			i2c_msg.rx_len = 0;
+			i2c_msg.data[0] = PMBUS_CLEAR_FAULTS;
+
+			if (i2c_master_write(&i2c_msg, 5)) {
+				LOG_ERR("VR%d Failed to clear fault", i);
+			}
+
+			//Wait VR to clear fault, to prevent unnecessary interrupt
+			k_msleep(5);
+			gpio_interrupt_conf(SMB_ALERT_PMBUS_R_N, GPIO_INT_EDGE_BOTH);
+		}
+
+		if (cfg->post_sensor_read_hook) {
+			if (!cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL)) {
+				LOG_ERR("Post-sensor reading hook function failed");
+			}
+		}
+	}
+
+	bool is_alert = !gpio_get(SMB_ALERT_PMBUS_R_N);
+
+	if (is_alert) {
+		struct pldm_sensor_event_state_sensor_state event;
+
+		event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_STATUS;
+		event.event_state = PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT;
+		event.previous_event_state = PLDM_STATE_SET_OEM_DEVICE_STATUS_NORMAL;
+
+		LOG_WRN("VR PMBUS is alert");
+
+		if (pldm_send_platform_event(PLDM_SENSOR_EVENT, PLDM_EVENT_SENSOR_VR,
+					     PLDM_STATE_SENSOR_STATE, (uint8_t *)&event,
+					     sizeof(struct pldm_sensor_event_state_sensor_state))) {
+			LOG_ERR("Send VR PMBUS alert event log failed");
+		}
+		light_fault_led_check();
+		vr_alert_check();
+	}
+}
+
 void vr_alert_check()
 {
 	const static uint8_t vr_sensor_num[2] = { SENSOR_NUM_PEX_0_VR_TEMP,
@@ -478,8 +579,17 @@ void vr_alert_check()
 		}
 
 		if (cfg->pre_sensor_read_hook) {
-			if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args))
-				LOG_ERR("Pre-sensor reading hook function failed");
+			if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
+				LOG_ERR("Pre-sensor reading hook function failed, VR%d alert check failed",
+					i);
+				if (cfg->post_sensor_read_hook) {
+					if (!cfg->post_sensor_read_hook(
+						    cfg, cfg->post_sensor_read_args, NULL)) {
+						LOG_ERR("Post-sensor reading hook function failed");
+					}
+				}
+				continue;
+			}
 		}
 
 		i2c_msg.bus = cfg->port;
