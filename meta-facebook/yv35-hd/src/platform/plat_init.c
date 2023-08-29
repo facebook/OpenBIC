@@ -31,6 +31,7 @@
 SCU_CFG scu_cfg[] = {
 	//register    value
 	{ 0x7e6e2610, 0xffffffff },
+	{ 0x7e6e2614, 0xffffffff },
 	{ 0x7e6e2618, 0xdc000000 },
 	{ 0x7e6e261c, 0x00000F32 },
 };
