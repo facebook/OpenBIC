@@ -47,36 +47,42 @@ uint8_t cx7_read(sensor_cfg *cfg, int *reading)
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
-	uint8_t req_buf[10] = { 0 };
 	uint8_t resp_buf[10] = { 0 };
-	pldm_msg pmsg = { 0 };
-	pmsg.ext_params = ext_params;
-	pmsg.hdr.msg_type = MCTP_MSG_TYPE_PLDM;
-	pmsg.hdr.pldm_type = PLDM_TYPE_PLAT_MON_CTRL;
-	pmsg.hdr.cmd = 0x11;
-	pmsg.hdr.rq = PLDM_REQUEST;
-	pmsg.len = sizeof(struct pldm_get_sensor_reading_req);
+	uint8_t req_len = sizeof(struct pldm_get_sensor_reading_req);
+	struct pldm_get_sensor_reading_req req = { 0 };
+	req.sensor_id = init_arg->sensor_id;
+	req.rearm_event_state = 0;
 
-	pmsg.buf = req_buf;
-	struct pldm_get_sensor_reading_req *cmd_req =
-		(struct pldm_get_sensor_reading_req *)pmsg.buf;
-	cmd_req->sensor_id = init_arg->sensor_id;
-	cmd_req->rearm_event_state = 0;
+	uint16_t resp_len =
+		pldm_platform_monitor_read(mctp_inst, ext_params,
+					   PLDM_MONITOR_CMD_CODE_GET_SENSOR_READING,
+					   (uint8_t *)&req, req_len, resp_buf, sizeof(resp_buf));
 
-	uint16_t resp_len = mctp_pldm_read(mctp_inst, &pmsg, resp_buf, sizeof(resp_buf));
 	if (resp_len == 0) {
-		LOG_ERR("Failed to get mctp info by eid 0x%x", mctp_dest_eid);
+		LOG_ERR("Failed to get CX7 sensor #%d reading", init_arg->sensor_id);
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
-	if (resp_buf[0] != PLDM_SUCCESS) {
-		LOG_ERR("Failed to get get sensor reading");
+	struct pldm_get_sensor_reading_resp *res = (struct pldm_get_sensor_reading_resp *)resp_buf;
+
+	if ((res->completion_code != PLDM_SUCCESS) ||
+	    (res->sensor_data_size != PLDM_SENSOR_DATA_SIZE_SINT16)) {
+		LOG_ERR("Failed to get get sensor reading, completion_code = 0x%x, sensor_data_size = 0x%x",
+			res->completion_code, res->sensor_data_size);
 		return SENSOR_FAIL_TO_ACCESS;
-	} else {
+	}
+
+	if (res->sensor_operational_state == PLDM_SENSOR_ENABLED) {
 		sensor_val *sval = (sensor_val *)reading;
-		sval->integer = (resp_buf[8] << 8) | resp_buf[7];
+		sval->integer = (res->present_reading[1] << 8) | res->present_reading[0];
 		sval->fraction = 0;
 		return SENSOR_READ_SUCCESS;
+	} else if (res->sensor_operational_state == PLDM_SENSOR_UNAVAILABLE) {
+		return SENSOR_UNAVAILABLE;
+	} else {
+		LOG_ERR("CX7 Failed to get get sensor reading, sensor operational state=0x%x",
+			res->sensor_operational_state);
+		return SENSOR_FAIL_TO_ACCESS;
 	}
 }
 

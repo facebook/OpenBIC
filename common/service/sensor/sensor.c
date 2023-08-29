@@ -417,6 +417,8 @@ uint8_t get_sensor_reading(sensor_cfg *cfg_table, uint8_t cfg_count, uint8_t sen
 		case SENSOR_POLLING_DISABLE:
 			cfg->cache = SENSOR_FAIL;
 			return cfg->cache_status;
+		case SENSOR_UNAVAILABLE:
+			return cfg->cache_status;
 		default:
 			cfg->cache = SENSOR_FAIL;
 			LOG_ERR("Failed to read sensor value from cache, sensor number: 0x%x, cache status: 0x%x",
