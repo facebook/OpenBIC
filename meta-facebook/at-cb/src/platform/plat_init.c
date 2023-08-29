@@ -23,6 +23,7 @@
 #include "plat_class.h"
 #include "plat_i2c_target.h"
 #include "util_worker.h"
+#include "plat_pldm_monitor.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -47,7 +48,15 @@ void pal_pre_init()
 
 void pal_post_init()
 {
+	uint8_t board_revision = get_board_revision();
 	plat_mctp_init();
+	/* Send device presence log when the BIC is AC on */
+	if (is_ac_lost()) {
+		plat_accl_present_check();
+		if (board_revision > EVT2_STAGE) {
+			plat_accl_power_cable_present_check();
+		}
+	}
 }
 
 void pal_device_init()
