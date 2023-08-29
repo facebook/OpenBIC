@@ -35,6 +35,8 @@
 #define CPLD_PWRGD_2_OFFSET 0x06
 #define CPLD_ACCLA_PWRGD_OFFSET 0x24
 #define CPLD_ACCLB_PWRGD_OFFSET 0x25
+#define CPLD_ACCL_7_12_POWER_CABLE_PRESENT_OFFSET 0x26
+#define CPLD_ACCL_1_6_POWER_CABLE_PRESENT_OFFSET 0x27
 #define CPLD_ACCL_1_6_PRESENT_OFFSET 0x3F
 #define CPLD_ACCL_7_12_PRESENT_OFFSET 0x3E
 #define CPLD_PWRGD_BIT BIT(0)
@@ -129,6 +131,7 @@ enum PCIE_CARD_INDEX {
 
 struct ASIC_CARD_INFO {
 	bool card_status;
+	bool pwr_cbl_status;
 	uint8_t card_type;
 	bool asic_1_status;
 	bool asic_2_status;

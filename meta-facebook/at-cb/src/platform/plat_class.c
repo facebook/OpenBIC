@@ -46,61 +46,73 @@ static bool is_power_good = false;
 struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT] = {
   [0] = {
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
+	.pwr_cbl_status  = ASIC_CARD_UNKNOWN_STATUS,
     .card_type = ASIC_CARD_UNKNOWN_TYPE,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
   [1] = {
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
+	.pwr_cbl_status  = ASIC_CARD_UNKNOWN_STATUS,
     .card_type = ASIC_CARD_UNKNOWN_TYPE,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
   [2] = {
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
+	.pwr_cbl_status  = ASIC_CARD_UNKNOWN_STATUS,
     .card_type = ASIC_CARD_UNKNOWN_TYPE,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
   [3] = {
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
+	.pwr_cbl_status  = ASIC_CARD_UNKNOWN_STATUS,
     .card_type = ASIC_CARD_UNKNOWN_TYPE,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
   [4] = {
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
+	.pwr_cbl_status  = ASIC_CARD_UNKNOWN_STATUS,
     .card_type = ASIC_CARD_UNKNOWN_TYPE,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
   [5] = {
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
+	.pwr_cbl_status  = ASIC_CARD_UNKNOWN_STATUS,
     .card_type = ASIC_CARD_UNKNOWN_TYPE,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
   [6] = {
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
+	.pwr_cbl_status  = ASIC_CARD_UNKNOWN_STATUS,
     .card_type = ASIC_CARD_UNKNOWN_TYPE,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
   [7] = {
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
+	.pwr_cbl_status  = ASIC_CARD_UNKNOWN_STATUS,
     .card_type = ASIC_CARD_UNKNOWN_TYPE,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
   [8] = {
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
+	.pwr_cbl_status  = ASIC_CARD_UNKNOWN_STATUS,
     .card_type = ASIC_CARD_UNKNOWN_TYPE,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
   [9] = {
     .card_status = ASIC_CARD_UNKNOWN_STATUS,
+	.pwr_cbl_status  = ASIC_CARD_UNKNOWN_STATUS,
     .card_type = ASIC_CARD_UNKNOWN_TYPE,
     .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
     .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
   [10] = {
      .card_status = ASIC_CARD_UNKNOWN_STATUS,
+	 .pwr_cbl_status  = ASIC_CARD_UNKNOWN_STATUS,
      .card_type = ASIC_CARD_UNKNOWN_TYPE,
      .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
      .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
   [11] = {
      .card_status = ASIC_CARD_UNKNOWN_STATUS,
+	 .pwr_cbl_status  = ASIC_CARD_UNKNOWN_STATUS,
      .card_type = ASIC_CARD_UNKNOWN_TYPE,
      .asic_1_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS,
      .asic_2_status = ASIC_CARD_DEVICE_UNKNOWN_STATUS, },
@@ -134,7 +146,9 @@ void check_accl_device_presence_status_via_ioexp()
 	uint8_t card_index = 0;
 	uint8_t ioexp_index = 0;
 	uint8_t presence_val = 0;
+	uint8_t pwr_cable_prsnt_val = 0;
 	uint16_t reg_val = 0;
+	uint16_t reg_val_pwr_cbl_prsnt = 0;
 	uint8_t ioexp_addr[] = { IOEXP_U228_ADDR, IOEXP_U229_ADDR, IOEXP_U230_ADDR };
 	I2C_MSG msg = { 0 };
 
@@ -169,12 +183,46 @@ void check_accl_device_presence_status_via_ioexp()
 
 		reg_val |= (msg.data[0] << 8);
 
+		memset(&msg, 0, sizeof(I2C_MSG));
+		msg.bus = I2C_BUS3;
+		msg.target_addr = CPLD_ADDR;
+		msg.rx_len = 1;
+		msg.tx_len = 1;
+		msg.data[0] = CPLD_ACCL_1_6_POWER_CABLE_PRESENT_OFFSET;
+
+		ret = i2c_master_read(&msg, retry);
+		if (ret != 0) {
+			LOG_ERR("Fail to read cpld offset: 0x%x",
+				CPLD_ACCL_1_6_POWER_CABLE_PRESENT_OFFSET);
+			return;
+		}
+
+		reg_val_pwr_cbl_prsnt = msg.data[0];
+
+		memset(&msg, 0, sizeof(I2C_MSG));
+		msg.bus = I2C_BUS3;
+		msg.target_addr = CPLD_ADDR;
+		msg.rx_len = 1;
+		msg.tx_len = 1;
+		msg.data[0] = CPLD_ACCL_7_12_POWER_CABLE_PRESENT_OFFSET;
+
+		ret = i2c_master_read(&msg, retry);
+		if (ret != 0) {
+			LOG_ERR("Fail to read cpld offset: 0x%x",
+				CPLD_ACCL_7_12_POWER_CABLE_PRESENT_OFFSET);
+			return;
+		}
+
+		reg_val_pwr_cbl_prsnt |= (msg.data[0] << 8);
+
 		for (card_index = 0; card_index < ASIC_CARD_COUNT; ++card_index) {
 			if (card_index < (ASIC_CARD_COUNT / 2)) {
 				presence_val = reg_val & 0xFF;
+				pwr_cable_prsnt_val = reg_val_pwr_cbl_prsnt & 0xFF;
 				shift_offset = 0;
 			} else {
 				presence_val = (reg_val >> 8) & 0xFF;
+				pwr_cable_prsnt_val = (reg_val_pwr_cbl_prsnt >> 8) & 0xFF;
 				shift_offset = (ASIC_CARD_COUNT / 2);
 			}
 
@@ -185,6 +233,13 @@ void check_accl_device_presence_status_via_ioexp()
 					ASIC_CARD_WITH_ARTEMIS_MODULE;
 			} else {
 				asic_card_info[card_index].card_status = ASIC_CARD_NOT_PRESENT;
+			}
+
+			if ((((pwr_cable_prsnt_val >> (card_index - shift_offset))) & BIT(0)) ==
+			    LOW_ACTIVE) {
+				asic_card_info[card_index].pwr_cbl_status = ASIC_CARD_PRESENT;
+			} else {
+				asic_card_info[card_index].pwr_cbl_status = ASIC_CARD_NOT_PRESENT;
 			}
 		}
 	}
