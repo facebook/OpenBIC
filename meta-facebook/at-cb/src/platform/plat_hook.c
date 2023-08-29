@@ -928,7 +928,10 @@ bool post_accl_nvme_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
-	ARG_UNUSED(reading);
+
+	if (reading == NULL) {
+		return check_reading_pointer_null_is_allowed(cfg);
+	}
 
 	int unlock_status = 0;
 	uint8_t bus = cfg->port;
@@ -943,6 +946,15 @@ bool post_accl_nvme_read(sensor_cfg *cfg, void *args, int *reading)
 		LOG_ERR("Mutex unlock fail, status: %d, card id: 0x%x, sensor num: 0x%x",
 			unlock_status, card_info_args->card_id, cfg->num);
 		return false;
+	}
+
+	if (cfg->offset == NVME_CORE_VOLTAGE_1_OFFSET ||
+	    cfg->offset == NVME_CORE_VOLTAGE_2_OFFSET) {
+		// Correct core voltage 1 and 2 resolution from 1mv to 100uv
+		sensor_val *sval = (sensor_val *)reading;
+		float val = ((float)sval->integer + (sval->fraction / 1000.0)) / 10;
+		sval->integer = (int)val & 0xFFFF;
+		sval->fraction = (val - sval->integer) * 1000;
 	}
 
 	return true;
