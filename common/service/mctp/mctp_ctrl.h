@@ -37,6 +37,8 @@ typedef struct _mctp_ctrl_cmd_handler {
 #define MCTP_CTRL_CMD_SET_ENDPOINT_ID 0x01
 #define MCTP_CTRL_CMD_GET_ENDPOINT_ID 0x02
 
+#define MCTP_CTRL_CMD_GET_MESSAGE_TYPE_SUPPORT 0x05
+
 #define MCTP_CTRL_CMD_GET_ENDPOINT_ID_REQ_LEN 0x00
 
 #define MCTP_CTRL_READ_STATUS_SUCCESS 0x00
@@ -78,6 +80,21 @@ enum eid_type {
 	DYNAMIC_EID,
 	STATIC_EID,
 };
+
+/*
+Reference from DSP0239_1.3.0 Table 1
+*/
+enum message_type {
+	TYPE_MCTP_CONTROL,
+	TYPE_PLDM,
+	TYPE_MAX_SIZE,
+};
+
+struct _get_message_type_resp {
+	uint8_t completion_code;
+	uint8_t type_count;
+	uint8_t type_number[0];
+} __attribute__((packed));
 
 struct _get_eid_resp {
 	uint8_t completion_code;
