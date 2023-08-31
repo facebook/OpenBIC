@@ -48,8 +48,14 @@ adc_asd_init_arg adc_asd_init_args[] = {
 };
 
 adm1272_init_arg adm1272_init_args[] = {
-	[0] = { .is_init = false, .is_need_set_pwr_cfg = true, .pwr_monitor_cfg.value = 0x3F3F },
-	[1] = { .is_init = false, .is_need_set_pwr_cfg = true, .pwr_monitor_cfg.value = 0x3F3F },
+	[0] = { .is_init = false,
+		.is_need_set_pwr_cfg = true,
+		.pwr_monitor_cfg.value = 0x3F3F,
+		.r_sense_mohm = 0.3 },
+	[1] = { .is_init = false,
+		.is_need_set_pwr_cfg = true,
+		.pwr_monitor_cfg.value = 0x3F3F,
+		.r_sense_mohm = 0.3 },
 };
 
 ltc4286_init_arg ltc4286_init_args[] = {
@@ -943,6 +949,27 @@ bool post_accl_nvme_read(sensor_cfg *cfg, void *args, int *reading)
 		LOG_ERR("Mutex unlock fail, status: %d, card id: 0x%x, sensor num: 0x%x",
 			unlock_status, card_info_args->card_id, cfg->num);
 		return false;
+	}
+
+	return true;
+}
+
+bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+
+	if (reading == NULL) {
+		return check_reading_pointer_null_is_allowed(cfg);
+	}
+
+	if (cfg->offset == PMBUS_READ_IOUT || cfg->offset == PMBUS_READ_IIN ||
+	    cfg->offset == PMBUS_READ_POUT || cfg->offset == PMBUS_READ_PIN) {
+		// multiply 98% for accuracy
+		sensor_val *sval = (sensor_val *)reading;
+		float val = ((float)sval->integer + (sval->fraction / 1000.0)) * 0.98;
+		sval->integer = (int)val & 0xFFFF;
+		sval->fraction = (val - sval->integer) * 1000;
 	}
 
 	return true;

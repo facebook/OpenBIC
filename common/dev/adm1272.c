@@ -26,11 +26,12 @@ LOG_MODULE_REGISTER(dev_adm1272);
 
 #define REG_PWR_MONITOR_CFG 0xD4
 
-int adm1272_convert_real_value(uint8_t vrange, uint8_t irange, uint8_t offset, float *val)
+int adm1272_convert_real_value(uint8_t vrange, uint8_t irange, float rsense, uint8_t offset,
+			       float *val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(val, -1);
 
-	int convert_coefficient_m = 0;
+	float convert_coefficient_m = 0;
 	int convert_coefficient_b = 0;
 	int convert_coefficient_R = 0;
 
@@ -64,6 +65,7 @@ int adm1272_convert_real_value(uint8_t vrange, uint8_t irange, uint8_t offset, f
 			LOG_ERR("Irange 0x%x is invalid", irange);
 			return -1;
 		}
+		convert_coefficient_m *= rsense;
 		convert_coefficient_b = 20480;
 		convert_coefficient_R = 10;
 		break;
@@ -110,6 +112,7 @@ int adm1272_convert_real_value(uint8_t vrange, uint8_t irange, uint8_t offset, f
 			LOG_ERR("Vrange 0x%x is invalid", vrange);
 			return -1;
 		}
+		convert_coefficient_m *= rsense;
 		convert_coefficient_b = 0;
 		break;
 
@@ -160,8 +163,8 @@ int adm1272_read_pout(sensor_cfg *cfg, float *val)
 	}
 	vout = (msg.data[1] << 8) | msg.data[0];
 	ret = adm1272_convert_real_value(init_arg->pwr_monitor_cfg.fields.VRANGE,
-					 init_arg->pwr_monitor_cfg.fields.IRANGE, PMBUS_READ_VOUT,
-					 &vout);
+					 init_arg->pwr_monitor_cfg.fields.IRANGE,
+					 init_arg->r_sense_mohm, PMBUS_READ_VOUT, &vout);
 	if (ret != 0) {
 		LOG_ERR("Convert vout value fail");
 		return -1;
@@ -181,8 +184,8 @@ int adm1272_read_pout(sensor_cfg *cfg, float *val)
 	}
 	iout = (msg.data[1] << 8) | msg.data[0];
 	ret = adm1272_convert_real_value(init_arg->pwr_monitor_cfg.fields.VRANGE,
-					 init_arg->pwr_monitor_cfg.fields.IRANGE, PMBUS_READ_IOUT,
-					 &iout);
+					 init_arg->pwr_monitor_cfg.fields.IRANGE,
+					 init_arg->r_sense_mohm, PMBUS_READ_IOUT, &iout);
 	if (ret != 0) {
 		LOG_ERR("Convert iout value fail");
 		return -1;
@@ -220,8 +223,8 @@ int adm1272_read_iin(sensor_cfg *cfg, float *val)
 	}
 	vin = (msg.data[1] << 8) | msg.data[0];
 	ret = adm1272_convert_real_value(init_arg->pwr_monitor_cfg.fields.VRANGE,
-					 init_arg->pwr_monitor_cfg.fields.IRANGE, PMBUS_READ_VIN,
-					 &vin);
+					 init_arg->pwr_monitor_cfg.fields.IRANGE,
+					 init_arg->r_sense_mohm, PMBUS_READ_VIN, &vin);
 	if ((ret != 0) || (vin == 0)) {
 		LOG_ERR("Convert vin value fail");
 		return -1;
@@ -242,8 +245,8 @@ int adm1272_read_iin(sensor_cfg *cfg, float *val)
 	}
 	pin = (msg.data[1] << 8) | msg.data[0];
 	ret = adm1272_convert_real_value(init_arg->pwr_monitor_cfg.fields.VRANGE,
-					 init_arg->pwr_monitor_cfg.fields.IRANGE, PMBUS_READ_PIN,
-					 &pin);
+					 init_arg->pwr_monitor_cfg.fields.IRANGE,
+					 init_arg->r_sense_mohm, PMBUS_READ_PIN, &pin);
 	if (ret != 0) {
 		LOG_ERR("Convert pin value fail");
 		return -1;
@@ -298,8 +301,8 @@ uint8_t adm1272_read(sensor_cfg *cfg, int *reading)
 	case PMBUS_READ_PIN:
 		val = (msg.data[1] << 8) | msg.data[0];
 		ret = adm1272_convert_real_value(init_arg->pwr_monitor_cfg.fields.VRANGE,
-						 init_arg->pwr_monitor_cfg.fields.IRANGE, offset,
-						 &val);
+						 init_arg->pwr_monitor_cfg.fields.IRANGE,
+						 init_arg->r_sense_mohm, offset, &val);
 		break;
 	case PMBUS_READ_IIN:
 		ret = adm1272_read_iin(cfg, &val);
