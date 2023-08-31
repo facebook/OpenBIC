@@ -583,6 +583,29 @@ bool cpld_i2c_get_id(uint8_t bus, uint8_t addr, uint32_t *dev_id)
 	return true;
 }
 
+bool cpld_i2c_get_usercode(uint8_t bus, uint8_t addr, uint32_t *usercode)
+{
+	CHECK_NULL_ARG_WITH_RETURN(usercode, false);
+
+	uint8_t retry = 3;
+	I2C_MSG i2c_msg = { 0 };
+
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+
+	i2c_msg.tx_len = 4;
+	i2c_msg.rx_len = 4;
+	i2c_msg.data[0] = USERCODE;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("Failed to read usercode register, bus: 0x%x, addr: 0x%x", bus, addr);
+		return false;
+	}
+
+	memcpy(usercode, i2c_msg.data, i2c_msg.rx_len);
+	return true;
+}
+
 static bool x02x03_i2c_update(lattice_update_config_t *config)
 {
 	CHECK_NULL_ARG_WITH_RETURN(config, false);

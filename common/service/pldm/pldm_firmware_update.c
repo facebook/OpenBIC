@@ -949,12 +949,16 @@ static bool pldm_get_bic_fw_version(uint8_t *buf, uint8_t *len)
 	uint8_t tmp_buf[4];
 	uint8_t idx = 0;
 
+#ifdef BIC_FW_VERSION_ADD_FRU_NAME
+	buf[idx++] = (char)BIC_FW_platform_0;
+	buf[idx++] = (char)BIC_FW_platform_1;
+#endif
 	tmp_buf[0] = BIC_FW_YEAR_MSB;
 	tmp_buf[1] = BIC_FW_YEAR_LSB;
 	tmp_buf[2] = BIC_FW_WEEK;
 	tmp_buf[3] = BIC_FW_VER;
 
-	idx += bin2hex(tmp_buf, 2, buf, 4);
+	idx += bin2hex(tmp_buf, 2, &buf[idx], 4);
 	buf[idx++] = '.';
 
 	idx += bin2hex(&tmp_buf[2], 1, &buf[idx], 2);

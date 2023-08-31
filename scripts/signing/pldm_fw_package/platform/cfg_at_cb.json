@@ -1,5 +1,5 @@
 {
-    "PlatformDescriptor": [
+	"PlatformDescriptor": [
         {
             "DescriptorType" : 1,
             "DescriptorData" : "0000A015"
@@ -26,6 +26,13 @@
             "CompID" : [2],
             "Vendor" : "aspeed",
             "Device" : "ast1030",
+            "CheckSum" : "n",
+            "pkg_suffix" : ".pldm"
+        },
+	{
+            "CompID" : [7],
+            "Vendor" : "lattice",
+            "Device" : "LCMXO3-4300C",
             "CheckSum" : "n",
             "pkg_suffix" : ".pldm"
         }
