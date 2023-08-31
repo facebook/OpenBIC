@@ -166,8 +166,9 @@ uint8_t nvme_read(sensor_cfg *cfg, int *reading)
 	case NVME_CORE_VOLTAGE_2_OFFSET:
 	case NVME_VOLTAGE_RAIL_1_OFFSET:
 	case NVME_VOLTAGE_RAIL_2_OFFSET:
-		// 100 uV/LSB
-		val = ((read_resp[0] << 8) | read_resp[1]) / 10;
+		// 1 mV/LSB
+		// Voltage rail reading value can correct on post-read function
+		val = ((read_resp[0] << 8) | read_resp[1]);
 
 		sval->integer = (val / 1000) & 0xFFFF;
 		sval->fraction = (val - (sval->integer * 1000)) & 0xFFFF;
