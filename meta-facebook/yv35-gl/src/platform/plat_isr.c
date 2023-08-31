@@ -152,6 +152,7 @@ static void PROC_FAIL_handler(struct k_work *work)
 
 K_WORK_DELAYABLE_DEFINE(PROC_FAIL_work, PROC_FAIL_handler);
 K_WORK_DELAYABLE_DEFINE(read_pmic_critical_work, read_pmic_error_when_dc_off);
+K_WORK_DEFINE(clear_pmic_error_work, clear_pmic_error);
 
 // The PMIC needs a total of 100ms from CAMP signal assertion to complete the write operation
 #define READ_PMIC_CRITICAL_ERROR_MS 100
@@ -165,7 +166,7 @@ void Initialize_CPU()
 		/* start thread proc_fail_handler after 10 seconds */
 		k_work_schedule(&PROC_FAIL_work, K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
 
-		clear_pmic_error();
+		k_work_submit(&clear_pmic_error_work);
 	} else {
 		ISR_POST_COMPLETE(VW_GPIO_LOW);
 		abort_snoop_thread();
