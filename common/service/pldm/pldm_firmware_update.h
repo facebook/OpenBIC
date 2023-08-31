@@ -206,6 +206,19 @@ enum pldm_component_classification_values {
 	PLDM_COMP_DOWNSTREAM_DEVICE = 0xFFFF
 };
 
+/** @brief Descriptor types defined in PLDM firmware update specification
+ *  DSP0267 Table 7 – Descriptor identifier table
+ */
+enum pldm_firmware_update_descriptor_types {
+	PLDM_FWUP_IANA_ENTERPRISE_ID = 0x0001,
+	PLDM_FWUP_VENDOR_DEFINED = 0xFFFF
+};
+
+/** @brief Descriptor types length defined in PLDM firmware update specification
+ *  DSP0267 Table 7 – Descriptor identifier table
+ */
+enum pldm_firmware_update_descriptor_types_length { PLDM_FWUP_IANA_ENTERPRISE_ID_LENGTH = 4 };
+
 /**
  * Component response for PassComponentTable and UpdateComponent commands
  */
@@ -417,6 +430,24 @@ struct pldm_apply_complete_req {
 	uint16_t compActivationMethodsModification;
 } __attribute__((packed));
 
+/**
+ * Structure representing QueryDeviceIdentifiers request
+ */
+struct pldm_query_device_identifiers_resp {
+	uint8_t completion_code;
+	uint32_t device_identifiers_len;
+	uint8_t descriptor_count;
+} __attribute__((packed));
+
+/**
+ *  Structure representing descriptor type, length and value
+ */
+struct pldm_descriptor_tlv {
+	uint16_t descriptor_type;
+	uint16_t descriptor_length;
+	uint8_t descriptor_data[1];
+} __attribute__((packed));
+
 struct pldm_get_firmware_parameters_resp {
 	uint8_t completion_code;
 	union {
@@ -462,6 +493,9 @@ uint8_t pldm_bic_update(void *fw_update_param);
 uint8_t pldm_vr_update(void *fw_update_param);
 uint8_t pldm_cpld_update(void *fw_update_param);
 uint8_t pldm_bic_activate(void *arg);
+
+uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uint8_t *resp,
+					   uint16_t *resp_len);
 
 #ifdef __cplusplus
 }
