@@ -23,4 +23,7 @@
 #define KEYWORD_CPLD_LATTICE "LCMXO3-4300C"
 #define BIC_FW_VERSION_ADD_FRU_NAME
 
+#define PLDM_SEND_FAIL_DELAY_MS                                                                    \
+	20 // Workaround to avoid responding too frequently and being unable to reply
+
 #endif

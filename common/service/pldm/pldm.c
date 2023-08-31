@@ -25,6 +25,7 @@
 #include <zephyr.h>
 #include "libutil.h"
 #include "ipmi.h"
+#include "plat_def.h"
 
 LOG_MODULE_REGISTER(pldm);
 
@@ -195,6 +196,9 @@ uint16_t mctp_pldm_read(void *mctp_p, pldm_msg *msg, uint8_t *rbuf, uint16_t rbu
 	for (uint8_t retry_count = 0; retry_count < PLDM_MSG_MAX_RETRY; retry_count++) {
 		uint8_t event = 0;
 		if (mctp_pldm_send_msg(mctp_p, msg) == PLDM_ERROR) {
+#ifdef PLDM_SEND_FAIL_DELAY_MS
+			k_msleep(PLDM_SEND_FAIL_DELAY_MS);
+#endif
 			LOG_WRN("Send msg failed!");
 			continue;
 		}
