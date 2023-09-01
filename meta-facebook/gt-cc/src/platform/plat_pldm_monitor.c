@@ -480,12 +480,6 @@ void vr_status_mfr_specific_check_handler(struct k_work *work)
 			if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
 				LOG_ERR("Pre-sensor reading hook function failed, VR%d status mfr specific check failed",
 					i);
-				if (cfg->post_sensor_read_hook) {
-					if (!cfg->post_sensor_read_hook(
-						    cfg, cfg->post_sensor_read_args, NULL)) {
-						LOG_ERR("Post-sensor reading hook function failed");
-					}
-				}
 				continue;
 			}
 		}
@@ -582,12 +576,6 @@ void vr_alert_check()
 			if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
 				LOG_ERR("Pre-sensor reading hook function failed, VR%d alert check failed",
 					i);
-				if (cfg->post_sensor_read_hook) {
-					if (!cfg->post_sensor_read_hook(
-						    cfg, cfg->post_sensor_read_args, NULL)) {
-						LOG_ERR("Post-sensor reading hook function failed");
-					}
-				}
 				continue;
 			}
 		}
