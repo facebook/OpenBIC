@@ -121,5 +121,6 @@ void nic_present_check();
 void pal_load_pldm_effcter_table();
 void plat_pldm_assign_gpio_effecter_id();
 void vr_alert_check();
+void vr_status_mfr_specific_check_handler();
 
 #endif
