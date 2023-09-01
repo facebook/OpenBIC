@@ -88,6 +88,12 @@ enum ACCL_FRU_OPTION {
 #define ACCL_FREYA_CH1_FRU_ADDR (0xA4 >> 1)
 #define ACCL_FREYA_CH2_FRU_ADDR (0xA2 >> 1)
 
+#define MP2985_REMAINING_WRITE_START 0x0A00
+#define MP2985_REMAINING_WRITE_MAX_SIZE 1
+#define MP2985_REMAINING_WRITE_MAX_COUNT 100
+
 bool pal_accl_fru_id_map_accl_id_dev_id(uint8_t accl_fru_id, uint8_t *accl_id, uint8_t *dev_id);
+bool set_mp2985_remaining_write(uint8_t count);
+bool get_mp2985_remaining_write(uint8_t *count);
 
 #endif

@@ -28,16 +28,20 @@ LOG_MODULE_REGISTER(xdpe15284);
 #define XDPE15284_MFR_DISABLE_SECURITY_ONCE 0xCB
 #define XDPE15284_MFR_FW_CMD_REG 0xFE
 #define XDPE15284_MFR_FW_CMD_DATA_REG 0xFD
-#define XDPE15284_MFR_FW_CMD_DATA_LEN 5
+#define XDPE15284_MFR_FW_CMD_DATA_LEN 4
+#define XDPE15284_REMAINING_WRITE_DATA_LEN 2
 #define XDPE15284_NOP_CMD 0x00
+#define XDPE15284_GET_REMAINING_WR_CMD 0x10
 #define XDPE15284_CALCULATE_CRC_CMD 0x2D
-#define XDPE15284_CALCULATE_CRC_DELAY_MS 10
+#define XDPE15284_WAIT_DATA_DELAY_MS 10
+#define XDPE15284C_CONF_SIZE 1344 // Config(604) + PMBus(504) + SVID(156) + PMBusPartial(80)
 
 const uint32_t REG_LOCK_PASSWORD = 0x7F48680C;
 
-bool xdpe15284_get_checksum(uint8_t bus, uint8_t addr, uint8_t *checksum)
+bool xdpe15284_mfr_fw_operation(uint8_t bus, uint8_t addr, uint8_t cmd, uint8_t rx_len,
+				uint8_t *buf)
 {
-	CHECK_NULL_ARG_WITH_RETURN(checksum, false);
+	CHECK_NULL_ARG_WITH_RETURN(buf, false);
 
 	uint8_t retry = 3;
 	I2C_MSG i2c_msg = { 0 };
@@ -50,44 +54,71 @@ bool xdpe15284_get_checksum(uint8_t bus, uint8_t addr, uint8_t *checksum)
 	i2c_msg.data[1] = XDPE15284_NOP_CMD;
 
 	if (i2c_master_write(&i2c_msg, retry)) {
-		LOG_ERR("Reset data register fail");
+		LOG_ERR("Reset data register fail, cmd: 0x%x", cmd);
 		return false;
 	}
 
-	/* Send the command to get firmware crc checksum */
+	/* Send the command to get request data */
 	memset(&i2c_msg, 0, sizeof(I2C_MSG));
 	i2c_msg.bus = bus;
 	i2c_msg.target_addr = addr;
 	i2c_msg.tx_len = 2;
 	i2c_msg.data[0] = XDPE15284_MFR_FW_CMD_REG;
-	i2c_msg.data[1] = XDPE15284_CALCULATE_CRC_CMD;
+	i2c_msg.data[1] = cmd;
 
 	if (i2c_master_write(&i2c_msg, retry)) {
-		LOG_ERR("Write calculate crc command to register fail");
+		LOG_ERR("Write command to register fail, cmd: 0x%x", cmd);
 		return false;
 	}
 
-	k_msleep(XDPE15284_CALCULATE_CRC_DELAY_MS);
+	k_msleep(XDPE15284_WAIT_DATA_DELAY_MS);
 
-	/* Read the firmware checksum in MFR firmware command data register */
+	/* Read data in MFR firmware command data register */
 	memset(&i2c_msg, 0, sizeof(I2C_MSG));
 	i2c_msg.bus = bus;
 	i2c_msg.target_addr = addr;
 	i2c_msg.tx_len = 1;
-	i2c_msg.rx_len = XDPE15284_MFR_FW_CMD_DATA_LEN;
+	i2c_msg.rx_len = rx_len + 1;
 	i2c_msg.data[0] = XDPE15284_MFR_FW_CMD_DATA_REG;
 
 	if (i2c_master_read(&i2c_msg, retry)) {
-		LOG_ERR("Read version from register fail");
+		LOG_ERR("Read data from register fail, cmd: 0x%x", cmd);
 		return false;
 	}
 
-	checksum[0] = i2c_msg.data[4];
-	checksum[1] = i2c_msg.data[3];
-	checksum[2] = i2c_msg.data[2];
-	checksum[3] = i2c_msg.data[1];
-
+	memcpy(buf, &i2c_msg.data[1], rx_len);
 	return true;
+}
+
+bool xdpe15284_get_checksum(uint8_t bus, uint8_t addr, uint8_t *checksum)
+{
+	CHECK_NULL_ARG_WITH_RETURN(checksum, false);
+
+	bool ret = xdpe15284_mfr_fw_operation(bus, addr, XDPE15284_CALCULATE_CRC_CMD,
+					      XDPE15284_MFR_FW_CMD_DATA_LEN, checksum);
+	if (ret != true) {
+		LOG_ERR("Get checksum fail, bus: 0x%x, addr: 0x%x", bus, addr);
+		return ret;
+	}
+
+	reverse_array(checksum, XDPE15284_MFR_FW_CMD_DATA_LEN);
+	return ret;
+}
+
+bool xdpe15284_get_remaining_wr(uint8_t bus, uint8_t addr, uint8_t *data)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+
+	uint8_t buf[XDPE15284_REMAINING_WRITE_DATA_LEN] = { 0 };
+	bool ret = xdpe15284_mfr_fw_operation(bus, addr, XDPE15284_GET_REMAINING_WR_CMD,
+					      XDPE15284_REMAINING_WRITE_DATA_LEN, buf);
+	if (ret != true) {
+		LOG_ERR("Get remaining write count fail, bus: 0x%x, addr: 0x%x", bus, addr);
+		return ret;
+	}
+
+	*data = ((buf[1] << 8 | buf[0]) / XDPE15284C_CONF_SIZE) & 0xFF;
+	return ret;
 }
 
 uint8_t xdpe15284_read(sensor_cfg *cfg, int *reading)

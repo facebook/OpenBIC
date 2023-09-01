@@ -46,6 +46,8 @@ freya_info accl_freya_info[] = {
 	[11] = { .is_cache_freya1_info = false, .is_cache_freya2_info = false },
 };
 
+vr_fw_info cb_vr_fw_info = { .is_init = false };
+
 void clear_freya_cache_flag(uint8_t card_id)
 {
 	if (card_id >= ARRAY_SIZE(accl_freya_info)) {

@@ -52,6 +52,8 @@ typedef enum {
 	VENDOR_TI,
 	VENDOR_INFINEON,
 	VENDOR_VISHAY,
+	VENDOR_ONSEMI,
+	VENDOR_MPS,
 } VR_VENDOR_ID;
 
 typedef enum {

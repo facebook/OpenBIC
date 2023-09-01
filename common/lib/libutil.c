@@ -159,3 +159,25 @@ double power(double x, int y)
 
 	return result;
 }
+
+int uint8_t_to_dec_ascii_pointer(uint8_t val, uint8_t *result, uint8_t len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(result, -1);
+
+	uint8_t idx = 0;
+	uint8_t digit = 0;
+	uint8_t divisor = 100;
+
+	while ((divisor > 0) && (idx < len)) {
+		if ((val / divisor) == 0 && (idx == 0)) {
+		} else {
+			digit = val / divisor;
+			result[idx] = 0x30 + digit;
+			idx += 1;
+			val -= digit * divisor;
+		}
+		divisor /= 10;
+	}
+
+	return idx;
+}
