@@ -39,7 +39,23 @@ xdpe15284_pre_read_arg xdpe15284_pre_read_args[] = {
 	[1] = { 0x1 },
 };
 
-adc_asd_init_arg adc_asd_init_args[] = { [0] = { .is_init = false } };
+adc_asd_init_arg adc_asd_init_args[] = {
+	[0] = { .is_init = false,
+		.deglitch[0] = { .deglitch_en = true, .upper_bound = 0x33C },
+		.deglitch[2] = { .deglitch_en = true, .upper_bound = 0x2DA },
+		.deglitch[3] = { .deglitch_en = true, .upper_bound = 0x1D1 },
+		.deglitch[4] = { .deglitch_en = true, .upper_bound = 0x1DE },
+	},
+	[1] = {
+		.is_init = false,
+		.deglitch[0] = { .deglitch_en = false,					   },
+		.deglitch[1] = { .deglitch_en = true, .upper_bound = 0x28C },
+		.deglitch[3] = { .deglitch_en = true, .upper_bound = 0x372 },
+		.deglitch[5] = { .deglitch_en = true, .upper_bound = 0x213 },
+		.deglitch[6] = { .deglitch_en = true, .upper_bound = 0x2F6 },
+		.deglitch[7] = { .deglitch_en = true, .upper_bound = 0x31D },
+	}
+};
 adm1278_init_arg adm1278_init_args[] = {
 	[0] = { .is_init = false, .config = { 0x3F1C }, .r_sense = 0.25 }
 };
