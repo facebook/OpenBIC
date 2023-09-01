@@ -69,6 +69,11 @@ uint8_t pldm_bic_update(void *fw_update_param)
 
 	uint8_t update_flag = 0;
 
+	if (p->data_ofs == 0) {
+		// Set default fw update retry count at first package
+		set_default_retry_count(0);
+	}
+
 	/* prepare next data offset and length */
 	p->next_ofs = p->data_ofs + p->data_len;
 	p->next_len = fw_update_cfg.max_buff_size;

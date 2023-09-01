@@ -56,6 +56,7 @@ int pal_get_prot_flash_position();
 bool pal_switch_bios_spi_mux(int gpio_status);
 int pal_get_cxl_flash_position();
 int do_update(const struct device *flash_device, off_t offset, uint8_t *buf, size_t len);
+void set_default_retry_count(int count);
 
 enum FIRMWARE_UPDATE_RETURN_CODE {
 	FWUPDATE_SUCCESS,
