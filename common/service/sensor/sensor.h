@@ -559,6 +559,7 @@ typedef struct _adm1272_init_arg {
 	/* Initialize function will set following arguments, no need to give value */
 	bool is_init;
 	bool is_need_set_pwr_cfg;
+	float r_sense_mohm;
 
 } adm1272_init_arg;
 
