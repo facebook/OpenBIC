@@ -22,5 +22,6 @@
 #include "pldm_firmware_update.h"
 
 void load_pldmupdate_comp_config(void);
+int load_mctp_support_types(uint8_t *type_len, uint8_t *types);
 
 #endif /* _PLAT_FWUPDATE_H_ */

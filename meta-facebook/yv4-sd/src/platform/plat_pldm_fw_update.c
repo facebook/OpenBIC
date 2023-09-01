@@ -30,6 +30,11 @@ enum FIRMWARE_COMPONENT {
 	SD_COMPNT_BIC,
 };
 
+uint8_t MCTP_SUPPORTED_MESSAGES_TYPES[] = {
+	TYPE_MCTP_CONTROL,
+	TYPE_PLDM,
+};
+
 /* PLDM FW update table */
 pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 	{
@@ -102,4 +107,11 @@ void load_pldmupdate_comp_config(void)
 	}
 
 	memcpy(comp_config, PLDMUPDATE_FW_CONFIG_TABLE, sizeof(PLDMUPDATE_FW_CONFIG_TABLE));
+}
+
+int load_mctp_support_types(uint8_t *type_len, uint8_t *types)
+{
+	*type_len = sizeof(MCTP_SUPPORTED_MESSAGES_TYPES);
+	memcpy(types, MCTP_SUPPORTED_MESSAGES_TYPES, sizeof(MCTP_SUPPORTED_MESSAGES_TYPES));
+	return MCTP_SUCCESS;
 }
