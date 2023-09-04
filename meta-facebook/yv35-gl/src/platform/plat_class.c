@@ -182,7 +182,36 @@ void init_platform_config()
 	if (status)
 		LOG_ERR("failed to get class type from cpld, ret %d", status);
 	class_type = msg.data[0];
-	_1ou_status.present = ((class_type & BIT(2)) ? false : true);
+
+	_1ou_status.present = false;
+
+	if (!(class_type & BIT(2))) {
+		if ((class_type & BIT(0)) && (class_type & BIT(1)) && (class_type & BIT(4))) {
+			float epsilon = 0.001;
+			int count = 0;
+			for (; count < ARRAY_SIZE(_1ou_card_mapping_table); count++) {
+				if (((_1ou_card_mapping_table[count].voltage - 0.3) <
+				     epsilon) && // Check if the voltage in the mapping table matches 0.3V.
+				    (_1ou_card_mapping_table[count].condition ==
+				     LOWER)) { //If BIT2 is low and BIT0,1,4 are high, SI test card need to be changed to E1S card when ADC6 is lower than 0.3V
+					_1ou_card_mapping_table[count].card_type =
+						TYPE_1OU_EXP_WITH_E1S;
+					_1ou_status.present = true;
+					break;
+				}
+			}
+			if (_1ou_card_mapping_table[count].card_type != TYPE_1OU_EXP_WITH_E1S) {
+				LOG_ERR("Failed to initialize 1OU card mapping table because E1S card doesn't add in it");
+			}
+		} else if (!(class_type & BIT(0)) && !(class_type & BIT(1)) &&
+			   !(class_type & BIT(4))) { //BIT0,1,2,4 are low when inserting 1OU card.
+			_1ou_status.present = true;
+		} else {
+			LOG_ERR("Failed to check 1OU card's presence because the register 05h's value is abnormal. Value: 0x%02x",
+				class_type);
+		}
+	}
+
 	_2ou_status.present = ((class_type & BIT(3)) ? false : true);
 
 	/* BIC judges the 1OU card type according the ADC-6(0-based) voltage.
