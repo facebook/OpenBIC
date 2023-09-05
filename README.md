@@ -16,6 +16,7 @@ oby35-hd | ![badge](https://img.shields.io/endpoint?url=https://gist.githubuserc
 oby35-rf | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/yv35-rf.json) | Yosemite v3.5 Rainbow Falls Board
 oby4-sd | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/yv4-sd.json) | Yosemite v4 Santinel Dome Board
 oby4-ff | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/yv4-ff.json) | Yosemite v4 Floating Falls
+oby4-wf | ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/goldenbug/62fb115c4fa43a02acad226534e10932/raw/yv4-wf.json) | Yosemite v4 Wailua Falls
 
 ## Contents
 
