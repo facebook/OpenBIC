@@ -44,6 +44,14 @@ static const char hex_to_ascii[] = { '0', '1', '2', '3', '4', '5', '6', '7',
 	{                                                                                          \
 		PLDM_COMMON_ERR_STR, hex_to_ascii[code]                                            \
 	}
+
+#define CHECK_PLDM_FW_UPDATE_RESULT_WITH_RETURN(component_id, offset, length, val, ret_val)                \
+	if (val != 0) {                                                                                    \
+		LOG_ERR("Component id: 0x%x firmware update fail, status: %d, offset: 0x%x, length: 0x%x", \
+			component_id, val, offset, length);                                                \
+		return ret_val;                                                                            \
+	}
+
 /** 
  * PLDM Firmware update commands
  */
@@ -130,22 +138,23 @@ enum pldm_firmware_update_aux_state {
 /**
  * PLDM component classification
  */
-enum { COMP_CLASS_TYPE_UNKNOWN = 0x0000,
-       COMP_CLASS_TYPE_OTHER,
-       COMP_CLASS_TYPE_DRIVER,
-       COMP_CLASS_TYPE_CFG_SW,
-       COMP_CLASS_TYPE_APP_SW,
-       COMP_CLASS_TYPE_INSTR,
-       COMP_CLASS_TYPE_FW_BIOS,
-       COMP_CLASS_TYPE_DIAG_SW,
-       COMP_CLASS_TYPE_OS,
-       COMP_CLASS_TYPE_MW,
-       COMP_CLASS_TYPE_FW,
-       COMP_CLASS_TYPE_BIOS_FC,
-       COMP_CLASS_TYPE_SP_SV_P,
-       COMP_CLASS_TYPE_SW_BUNDLE,
-       COMP_CLASS_TYPE_DOWNSTREAM = 0xFFFF,
-       COMP_CLASS_TYPE_MAX = 0x10000,
+enum {
+	COMP_CLASS_TYPE_UNKNOWN = 0x0000,
+	COMP_CLASS_TYPE_OTHER,
+	COMP_CLASS_TYPE_DRIVER,
+	COMP_CLASS_TYPE_CFG_SW,
+	COMP_CLASS_TYPE_APP_SW,
+	COMP_CLASS_TYPE_INSTR,
+	COMP_CLASS_TYPE_FW_BIOS,
+	COMP_CLASS_TYPE_DIAG_SW,
+	COMP_CLASS_TYPE_OS,
+	COMP_CLASS_TYPE_MW,
+	COMP_CLASS_TYPE_FW,
+	COMP_CLASS_TYPE_BIOS_FC,
+	COMP_CLASS_TYPE_SP_SV_P,
+	COMP_CLASS_TYPE_SW_BUNDLE,
+	COMP_CLASS_TYPE_DOWNSTREAM = 0xFFFF,
+	COMP_CLASS_TYPE_MAX = 0x10000,
 };
 
 /** 

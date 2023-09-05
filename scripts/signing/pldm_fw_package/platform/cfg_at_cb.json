@@ -35,6 +35,13 @@
             "Device" : "LCMXO3-4300C",
             "CheckSum" : "n",
             "pkg_suffix" : ".pldm"
+        },
+	{
+            "CompID" : [3,4],
+            "Vendor" : "broadcom",
+            "Device" : "pex89000",
+            "CheckSum" : "n",
+            "pkg_suffix" : ".pldm"
         }
     ]
 }

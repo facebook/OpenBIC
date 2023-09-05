@@ -126,7 +126,7 @@ void convert_uint32_t_to_uint8_t_pointer(uint32_t data_32, uint8_t *data_8, uint
 	}
 }
 
-void convert_uint8_t_pointer_to_uint32_t(uint32_t *data_32, uint8_t *data_8, uint8_t len,
+void convert_uint8_t_pointer_to_uint32_t(uint32_t *data_32, const uint8_t *data_8, uint8_t len,
 					 uint8_t endian)
 {
 	CHECK_NULL_ARG(data_32);
