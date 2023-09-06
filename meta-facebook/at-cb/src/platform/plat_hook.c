@@ -44,7 +44,19 @@ struct k_mutex xdpe15284_mutex;
  * INIT ARGS
 **************************************************************************************************/
 adc_asd_init_arg adc_asd_init_args[] = {
-	[0] = { .is_init = false },
+	[0] = { .is_init = false,
+		.deglitch[3] = { .deglitch_en = true, .upper_bound = 0x2D3 },
+		.deglitch[4] = { .deglitch_en = true, .upper_bound = 0x306 },
+		.deglitch[5] = { .deglitch_en = true, .upper_bound = 0x20D },
+		.deglitch[7] = { .deglitch_en = true, .upper_bound = 0x25C },
+	},
+	[1] = {
+		.is_init = false,
+		.deglitch[2] = { .deglitch_en = true, .upper_bound = 0x306 },
+		.deglitch[3] = { .deglitch_en = true, .upper_bound = 0x306 },
+		.deglitch[4] = { .deglitch_en = true, .upper_bound = 0x219 },
+		.deglitch[5] = { .deglitch_en = true, .upper_bound = 0x219 },
+	}
 };
 
 adm1272_init_arg adm1272_init_args[] = {

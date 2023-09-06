@@ -50,7 +50,13 @@ mp5990_init_arg mp5990_init_args[] = {
 		.ocw_sc_ref = 0x05A0 },
 };
 
-adc_asd_init_arg adc_asd_init_args[] = { [0] = { .is_init = false } };
+adc_asd_init_arg adc_asd_init_args[] = {
+	[0] = { .is_init = false,
+		.deglitch[0] = { .deglitch_en = true, .upper_bound = 0x2D3 },
+		.deglitch[1] = { .deglitch_en = true, .upper_bound = 0x20D },
+		.deglitch[2] = { .deglitch_en = true, .upper_bound = 0x2AE },
+	}
+};
 
 sq52205_init_arg sq52205_init_args[] = {
 	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
