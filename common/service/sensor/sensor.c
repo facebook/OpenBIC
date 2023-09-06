@@ -22,6 +22,7 @@
 #include <logging/log.h>
 #include "power_status.h"
 #include "sdr.h"
+#include "pdr.h"
 #include "hal_i2c.h"
 #include "plat_sensor_table.h"
 #include "plat_sdr_table.h"
@@ -808,6 +809,14 @@ bool sensor_init(void)
 	init_sensor_num();
 	// Check init SDR size is equal to sensor config size
 	check_init_sensor_size();
+	// TODO: move to PLDM PDR sensor service
+	uint16_t pdr_size = plat_get_pdr_size();
+	if (pdr_size != 0) {
+		pdr_init();
+	} else {
+		LOG_ERR("Platform PDR table not configured");
+	}
+
 	if (sensor_config_size != 0) {
 		full_sdr_table =
 			(SDR_Full_sensor *)malloc(sensor_config_size * sizeof(SDR_Full_sensor));
