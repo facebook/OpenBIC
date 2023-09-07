@@ -489,11 +489,6 @@ void ISR_POST_COMPLETE(uint8_t gpio_value)
 	bool is_post_completed = (gpio_value == VW_GPIO_HIGH) ? true : false;
 	set_post_complete(is_post_completed);
 
-	if (is_post_completed) {
-		// Switch I3C mux to bic after post complete
-		switch_i3c_dimm_mux(I3C_MUX_TO_BIC);
-	}
-
 	post_complete.gpio_value = gpio_value;
 	k_work_init_delayable(&post_complete.work, post_complete_handler);
 	k_work_schedule(&post_complete.work, K_MSEC(10));
