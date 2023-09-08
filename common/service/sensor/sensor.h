@@ -561,6 +561,12 @@ typedef struct _adm1272_init_arg {
 	bool is_need_set_pwr_cfg;
 	float r_sense_mohm;
 
+#ifdef MORE_THAN_ONE_ADM1272
+	bool is_record_ein;
+	uint32_t last_energy;
+	uint32_t last_rollover;
+	uint32_t last_sample;
+#endif
 } adm1272_init_arg;
 
 typedef struct _sq52205_init_arg_ {

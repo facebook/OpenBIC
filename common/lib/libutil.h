@@ -72,6 +72,13 @@
 #define CHECK_MUTEX_INIT_WITH_RETURN(mutex, ret_val)                                               \
 	CHECK_NULL_ARG_WITH_RETURN((mutex)->wait_q.waitq.head, ret_val);
 
+#define SET_FLAG_WITH_RETURN(flag, set_val, ret_val)                                               \
+	if (flag != true) {                                                                        \
+		LOG_DBG("Set parameter \"" #flag "\" to true");                                    \
+		flag = set_val;                                                                    \
+		return ret_val;                                                                    \
+	}
+
 enum BIT_SETTING_READING {
 	BIT_SET = 1,
 	BIT_CLEAR = 0,

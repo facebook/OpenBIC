@@ -63,11 +63,21 @@ adm1272_init_arg adm1272_init_args[] = {
 	[0] = { .is_init = false,
 		.is_need_set_pwr_cfg = true,
 		.pwr_monitor_cfg.value = 0x3F3F,
-		.r_sense_mohm = 0.3 },
+		.r_sense_mohm = 0.3,
+		.is_record_ein = false,
+		.last_energy = 0,
+		.last_rollover = 0,
+		.last_sample = 0,
+	},
 	[1] = { .is_init = false,
 		.is_need_set_pwr_cfg = true,
 		.pwr_monitor_cfg.value = 0x3F3F,
-		.r_sense_mohm = 0.3 },
+		.r_sense_mohm = 0.3,
+		.is_record_ein = false,
+		.last_energy = 0,
+		.last_rollover = 0,
+		.last_sample = 0,
+	},
 };
 
 ltc4286_init_arg ltc4286_init_args[] = {
@@ -987,10 +997,18 @@ bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
 		return check_reading_pointer_null_is_allowed(cfg);
 	}
 
+	sensor_val *sval = (sensor_val *)reading;
+	if (cfg->offset == PMBUS_READ_IOUT || cfg->offset == PMBUS_READ_IIN) {
+		// Adjust negative current value to zero according to power team suggestion
+		if ((int)sval->integer < 0) {
+			*reading = 0;
+			return true;
+		}
+	}
+
 	if (cfg->offset == PMBUS_READ_IOUT || cfg->offset == PMBUS_READ_IIN ||
 	    cfg->offset == PMBUS_READ_POUT || cfg->offset == PMBUS_READ_PIN) {
 		// multiply 98% for accuracy
-		sensor_val *sval = (sensor_val *)reading;
 		float val = ((float)sval->integer + (sval->fraction / 1000.0)) * 0.98;
 		sval->integer = (int)val & 0xFFFF;
 		sval->fraction = (val - sval->integer) * 1000;
