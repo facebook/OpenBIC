@@ -322,120 +322,144 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
                 .bus_volt_time = 0b100,
-                .aver_mode = 0b111, //set 1024 average times
+                .aver_mode = 0b011, //set 64 average times
                 .rsvd = 0b000,
                 .reset_bit = 0b0,
         },
+        .is_need_accum_config_init = true,
+        .accum_config.value = 0x4C04,
         },
         [1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
                 .bus_volt_time = 0b100,
-                .aver_mode = 0b111, //set 1024 average times
+                .aver_mode = 0b011, //set 64 average times
                 .rsvd = 0b000,
                 .reset_bit = 0b0,
         },
+        .is_need_accum_config_init = true,
+        .accum_config.value = 0x4C04,
         },
         [2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
                 .bus_volt_time = 0b100,
-                .aver_mode = 0b111, //set 1024 average times
+                .aver_mode = 0b011, //set 64 average times
                 .rsvd = 0b000,
                 .reset_bit = 0b0,
         },
+        .is_need_accum_config_init = true,
+        .accum_config.value = 0x4C04,
         },
         [3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
                 .bus_volt_time = 0b100,
-                .aver_mode = 0b111, //set 1024 average times
+                .aver_mode = 0b011, //set 64 average times
                 .rsvd = 0b000,
                 .reset_bit = 0b0,
         },
+        .is_need_accum_config_init = true,
+        .accum_config.value = 0x4C04,
         },
         [4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
                 .bus_volt_time = 0b100,
-                .aver_mode = 0b111, //set 1024 average times
+                .aver_mode = 0b011, //set 64 average times
                 .rsvd = 0b000,
                 .reset_bit = 0b0,
         },
+        .is_need_accum_config_init = true,
+        .accum_config.value = 0x4C04,
         },
         [5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
                 .bus_volt_time = 0b100,
-                .aver_mode = 0b111, //set 1024 average times
+                .aver_mode = 0b011, //set 64 average times
                 .rsvd = 0b000,
                 .reset_bit = 0b0,
         },
+        .is_need_accum_config_init = true,
+        .accum_config.value = 0x4C04,
         },
         [6] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
                 .bus_volt_time = 0b100,
-                .aver_mode = 0b111, //set 1024 average times
+                .aver_mode = 0b011, //set 64 average times
                 .rsvd = 0b000,
                 .reset_bit = 0b0,
         },
+        .is_need_accum_config_init = true,
+        .accum_config.value = 0x4C04,
         },
         [7] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
                 .bus_volt_time = 0b100,
-                .aver_mode = 0b111, //set 1024 average times
+                .aver_mode = 0b011, //set 64 average times
                 .rsvd = 0b000,
                 .reset_bit = 0b0,
         },
+        .is_need_accum_config_init = true,
+        .accum_config.value = 0x4C04,
         },
         [8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
                 .bus_volt_time = 0b100,
-                .aver_mode = 0b111, //set 1024 average times
+                .aver_mode = 0b011, //set 64 average times
                 .rsvd = 0b000,
                 .reset_bit = 0b0,
         },
+        .is_need_accum_config_init = true,
+        .accum_config.value = 0x4C04,
         },
         [9] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
                 .bus_volt_time = 0b100,
-                .aver_mode = 0b111, //set 1024 average times
+                .aver_mode = 0b011, //set 64 average times
                 .rsvd = 0b000,
                 .reset_bit = 0b0,
         },
+        .is_need_accum_config_init = true,
+        .accum_config.value = 0x4C04,
         },
         [10] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
                 .bus_volt_time = 0b100,
-                .aver_mode = 0b111, //set 1024 average times
+                .aver_mode = 0b011, //set 64 average times
                 .rsvd = 0b000,
                 .reset_bit = 0b0,
         },
+        .is_need_accum_config_init = true,
+        .accum_config.value = 0x4C04,
         },
         [11] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
                 .bus_volt_time = 0b100,
-                .aver_mode = 0b111, //set 1024 average times
+                .aver_mode = 0b011, //set 64 average times
                 .rsvd = 0b000,
                 .reset_bit = 0b0,
         },
+        .is_need_accum_config_init = true,
+        .accum_config.value = 0x4C04,
         },
 };
 
@@ -450,20 +474,24 @@ sq52205_init_arg u178_179_sq52205_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b000,
 		.reset_bit = 0b0,
 	},
+	.is_need_accum_config_init = true,
+	.accum_config.value = 0x4C04,
 	},
 	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0010002,
 	.config = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b000,
 		.reset_bit = 0b0,
 	},
+	.is_need_accum_config_init = true,
+	.accum_config.value = 0x4C04,
 	},
 };
 
