@@ -14,12 +14,35 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_DEF_H
-#define PLAT_DEF_H
+#include "plat_pdr_table.h"
 
-#define ENABLE_PLDM
+#include <stdio.h>
+#include <string.h>
 
-#define HOST_KCS_PORT kcs3
-#define BMC_USB_PORT "CDC_ACM_0"
+#include "pdr.h"
+#include "sensor.h"
+#include "plat_sensor_table.h"
+#include <logging/log.h>
 
-#endif
+LOG_MODULE_REGISTER(plat_pdr_table);
+
+PDR_numeric_sensor plat_pdr_table[] = {
+	{
+		//PDR common header
+		{
+
+		},
+		//numeric sensor format
+	},
+};
+
+const int PDR_TABLE_SIZE = ARRAY_SIZE(plat_pdr_table);
+uint16_t plat_get_pdr_size()
+{
+	return PDR_TABLE_SIZE;
+}
+
+void plat_load_pdr_table(PDR_numeric_sensor *numeric_sensor_table)
+{
+	memcpy(numeric_sensor_table, plat_pdr_table, sizeof(plat_pdr_table));
+}

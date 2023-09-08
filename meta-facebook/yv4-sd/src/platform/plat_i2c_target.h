@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_DEF_H
-#define PLAT_DEF_H
+#ifndef PLAT_I2C_SLAVE_H
+#define PLAT_I2C_SLAVE_H
 
-#define ENABLE_PLDM
+#include <drivers/i2c.h>
+#include "hal_i2c_target.h"
 
-#define HOST_KCS_PORT kcs3
-#define BMC_USB_PORT "CDC_ACM_0"
+#define TARGET_ENABLE 1
+#define TARGET_DISABLE 0
 
 #endif
