@@ -19,12 +19,16 @@
 #include "hal_i3c.h"
 #include "hal_wdt.h"
 #include "ipmi.h"
+#include "plat_def.h"
 
 #ifdef CONFIG_IPMI_KCS_ASPEED
 #include "kcs.h"
 #endif
 
 #include "sensor.h"
+#ifdef ENABLE_PLDM_SENSOR
+#include "pldm_sensor.h"
+#endif
 #include "timer.h"
 #include "usb.h"
 #include <logging/log.h>
@@ -61,6 +65,9 @@ void main(void)
 	util_init_i3c();
 	pal_pre_init();
 	sensor_init();
+#ifdef ENABLE_PLDM_SENSOR
+	pldm_sensor_monitor_init();
+#endif
 	FRU_init();
 	ipmi_init();
 #ifdef CONFIG_USB

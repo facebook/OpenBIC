@@ -70,7 +70,8 @@ static void init_adc_dev()
 #endif
 }
 
-static bool adc_read_mv(uint8_t sensor_num, uint32_t index, uint32_t channel, int *adc_val)
+static bool adc_read_mv(sensor_cfg *cfg, uint8_t sensor_num, uint32_t index, uint32_t channel,
+			int *adc_val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(adc_val, false);
 
@@ -90,8 +91,7 @@ static bool adc_read_mv(uint8_t sensor_num, uint32_t index, uint32_t channel, in
 	}
 
 	int retval;
-	adc_asd_init_arg *init_args =
-		(adc_asd_init_arg *)sensor_config[sensor_config_index_map[sensor_num]].init_args;
+	adc_asd_init_arg *init_args = (adc_asd_init_arg *)cfg->init_args;
 
 	static struct adc_sequence sequence;
 	sequence.channels = BIT(channel);
@@ -156,7 +156,7 @@ uint8_t ast_adc_read(sensor_cfg *cfg, int *reading)
 
 	for (i = 0; i < cfg->sample_count; i++) {
 		val = 1;
-		if (!adc_read_mv(cfg->num, chip, number, &val))
+		if (!adc_read_mv(cfg, cfg->num, chip, number, &val))
 			return SENSOR_FAIL_TO_ACCESS;
 		average_val += val;
 

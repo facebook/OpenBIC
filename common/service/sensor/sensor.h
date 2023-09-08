@@ -260,6 +260,11 @@ typedef struct _sensor_monitor_table_info {
 	char table_name[MAX_SENSOR_NAME_LENGTH];
 } sensor_monitor_table_info;
 
+typedef struct _sensor_drive_api {
+	enum SENSOR_DEV dev;
+	uint8_t (*init)(struct _sensor_cfg_ *);
+} sensor_drive_api;
+
 typedef struct _sensor_poll_time_cfg {
 	uint8_t sensor_num;
 	int64_t last_access_time;
@@ -677,6 +682,7 @@ extern uint8_t sensor_config_count;
 extern sensor_monitor_table_info *sensor_monitor_table;
 extern uint16_t sensor_monitor_count;
 extern const char *const sensor_type_name[];
+extern sensor_drive_api sensor_drive_tbl[];
 
 void clear_unaccessible_sensor_cache(sensor_cfg *cfg);
 uint8_t get_sensor_reading(sensor_cfg *cfg_table, uint8_t cfg_count, uint8_t sensor_num,
