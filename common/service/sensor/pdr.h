@@ -7,6 +7,8 @@
 #define TIMESTAMP104_SIZE 13//A binary datetime type formatted as a series of 13 bytes
 #define NUMERIC_PDR_SIZE 108
 
+typedef float real32_t;
+
 uint8_t pdr_init(void);
 
 enum pdr_repository_state {
@@ -46,16 +48,16 @@ typedef struct __attribute__((packed)) {
 	uint8_t aux_oem_unit_handle;
 	uint8_t is_linear;
 	uint8_t sensor_data_size;
-	int32_t resolution;
-	int32_t offset;
+	real32_t resolution;
+	real32_t offset;
 	uint16_t accuracy;
 	uint8_t plus_tolerance;
 	uint8_t minus_tolerance;
-	uint8_t hysteresis;
+	uint32_t hysteresis;
 	uint8_t supported_thresholds;
 	uint8_t threshold_and_hysteresis_volatility;
-	int32_t state_transition_interval;
-	int32_t update_interval;
+	real32_t state_transition_interval;
+	real32_t update_interval;
 	uint32_t max_readable;
 	uint32_t min_readable;
 	uint8_t range_field_format;
