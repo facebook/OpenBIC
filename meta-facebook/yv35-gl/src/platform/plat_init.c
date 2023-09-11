@@ -20,11 +20,16 @@
 #include "util_sys.h"
 #include "plat_class.h"
 #include "plat_gpio.h"
-#include "plat_kcs.h"
 #include "plat_dimm.h"
 #include "plat_i3c.h"
+#include "snoop.h"
+#include "pcc.h"
+#include "plat_i2c.h"
 #include "plat_pmic.h"
 #include "plat_cpu.h"
+#include "plat_kcs.h"
+#include "rg3mxxb12.h"
+#include "util_worker.h"
 
 /*
  * The operating voltage of GPIO input pins are lower than actual voltage because the chip
@@ -54,6 +59,20 @@ void pal_pre_init()
 {
 	init_i3c_hub();
 	init_platform_config();
+	CARD_STATUS _1ou_status = get_1ou_status();
+	CARD_STATUS _2ou_status = get_2ou_status();
+	if (_1ou_status.present && (_1ou_status.card_type == TYPE_1OU_OLMSTED_POINT)) {
+		// Initialize I3C HUB (HD BIC connects to Olympic2 1ou expension-A and B)
+		if (!rg3mxxb12_i2c_mode_only_init(I2C_BUS8, BIT(2), ldo_1_8_volt, pullup_1k_ohm)) {
+			printk("failed to initialize 1ou rg3mxxb12\n");
+		}
+	}
+	if (_2ou_status.present && (_1ou_status.card_type == TYPE_1OU_OLMSTED_POINT)) {
+		// Initialize I3C HUB (HD BIC connects to Olympic2 3ou expension-A and B)
+		if (!rg3mxxb12_i2c_mode_only_init(I2C_BUS9, BIT(2), ldo_1_8_volt, pullup_1k_ohm)) {
+			printk("failed to initialize 3ou rg3mxxb12\n");
+		}
+	}
 	scu_init(scu_cfg, ARRAY_SIZE(scu_cfg));
 	if (!pal_load_vw_gpio_config()) {
 		printk("failed to initialize vw gpio\n");
