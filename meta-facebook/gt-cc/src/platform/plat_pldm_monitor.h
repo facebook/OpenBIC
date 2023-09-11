@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "pldm_monitor.h"
 
 #ifndef PLAT_PLDM_MONITOR_H
 #define PLAT_PLDM_MONITOR_H
@@ -20,6 +21,16 @@
 extern uint8_t e1s_prsnt_pin[4][4];
 extern uint8_t nic_prsnt_pin[];
 extern uint8_t pex_sensor_num_table[];
+
+#define MAX_STATE_EFFECTER_IDX 187
+
+enum pldm_plat_effecter_id_high_byte {
+	PLAT_EFFECTER_ID_GPIO_HIGH_BYTE = (0xFF << 8),
+	PLAT_EFFECTER_ID_LED_HIGH_BYTE = (0xE0 << 8),
+	PLAT_EFFECTER_ID_NIC_TYPE_HIGH_BYTE = (0xD0 << 8),
+};
+
+extern struct pldm_state_effecter_info plat_state_effecter_table[];
 
 enum plat_pldm_event_sensor_num {
 	// BIC
@@ -119,7 +130,6 @@ void ssd_alert_check(uint8_t group);
 void ssd_present_check();
 void nic_present_check();
 void pal_load_pldm_effcter_table();
-void plat_pldm_assign_gpio_effecter_id();
 void vr_alert_check();
 void vr_status_mfr_specific_check_handler();
 

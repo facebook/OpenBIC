@@ -48,6 +48,10 @@ static struct pldm_event_receiver_info {
 	.ext_params = { 0 },
 };
 
+struct pldm_state_effecter_info *state_effecter_table;
+
+uint16_t pldm_state_effecter_index = 0;
+
 static uint8_t get_sensor_data_size(pldm_sensor_readings_data_type_t data_type)
 {
 	switch (data_type) {
@@ -600,7 +604,7 @@ void set_effecter_state_gpio_handler(const uint8_t *buf, uint16_t len, uint8_t *
 	*resp_len = 1;
 
 	/* Check whether the range of AST1030 gpio pins is correct */
-	if (gpio_pin > PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX) {
+	if (gpio_pin > PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_MAX) {
 		LOG_ERR("Unsupport GPIO pin number, (%d)", gpio_pin);
 		*completion_code_p = PLDM_OEM_GPIO_UNSUPPORT_RANGE;
 		return;
@@ -654,7 +658,8 @@ void set_effecter_state_gpio_handler(const uint8_t *buf, uint16_t len, uint8_t *
 }
 
 __weak uint8_t plat_pldm_set_state_effecter_state_handler(const uint8_t *buf, uint16_t len,
-							  uint8_t *resp, uint16_t *resp_len)
+							  uint8_t *resp, uint16_t *resp_len,
+							  struct pldm_state_effecter_info *info_p)
 {
 	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
@@ -670,7 +675,8 @@ __weak uint8_t plat_pldm_set_state_effecter_state_handler(const uint8_t *buf, ui
 }
 
 __weak uint8_t plat_pldm_get_state_effecter_state_handler(const uint8_t *buf, uint16_t len,
-							  uint8_t *resp, uint16_t *resp_len)
+							  uint8_t *resp, uint16_t *resp_len,
+							  struct pldm_state_effecter_info *info_p)
 {
 	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
@@ -711,7 +717,15 @@ uint8_t pldm_set_state_effecter_states(void *mctp_inst, uint8_t *buf, uint16_t l
 		return PLDM_SUCCESS;
 	}
 
-	return plat_pldm_set_state_effecter_state_handler(buf, len, resp, resp_len);
+	struct pldm_state_effecter_info *info_p = find_state_effecter_info(req_p->effecter_id);
+
+	if (!info_p) {
+		LOG_ERR("Can't find effecter ID (0x%x) info", req_p->effecter_id);
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+		return PLDM_SUCCESS;
+	}
+
+	return plat_pldm_set_state_effecter_state_handler(buf, len, resp, resp_len, info_p);
 }
 
 void get_effecter_state_gpio_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
@@ -724,7 +738,7 @@ void get_effecter_state_gpio_handler(const uint8_t *buf, uint16_t len, uint8_t *
 	struct pldm_get_state_effecter_states_resp *res_p =
 		(struct pldm_get_state_effecter_states_resp *)resp;
 
-	if (gpio_pin > PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX) {
+	if (gpio_pin > PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_MAX) {
 		LOG_ERR("Unsupport GPIO pin number, (%d)", gpio_pin);
 		res_p->completion_code = PLDM_OEM_GPIO_UNSUPPORT_RANGE;
 		return;
@@ -770,8 +784,11 @@ uint8_t pldm_get_state_effecter_states(void *mctp_inst, uint8_t *buf, uint16_t l
 	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
 
+	struct pldm_get_state_effecter_states_req *req_p =
+		(struct pldm_get_state_effecter_states_req *)buf;
 	struct pldm_get_state_effecter_states_resp *res_p =
 		(struct pldm_get_state_effecter_states_resp *)resp;
+	uint8_t *completion_code_p = resp;
 	*resp_len = 1;
 
 	if (len != sizeof(struct pldm_get_state_effecter_states_req)) {
@@ -779,7 +796,15 @@ uint8_t pldm_get_state_effecter_states(void *mctp_inst, uint8_t *buf, uint16_t l
 		return PLDM_SUCCESS;
 	}
 
-	return plat_pldm_get_state_effecter_state_handler(buf, len, resp, resp_len);
+	struct pldm_state_effecter_info *info_p = find_state_effecter_info(req_p->effecter_id);
+
+	if (!info_p) {
+		LOG_ERR("Can't find effecter ID (0x%x) info", req_p->effecter_id);
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+		return PLDM_SUCCESS;
+	}
+
+	return plat_pldm_get_state_effecter_state_handler(buf, len, resp, resp_len, info_p);
 }
 
 uint8_t pldm_get_pdr_info(void *mctp_inst, uint8_t *buf, uint16_t len,
@@ -888,4 +913,41 @@ __weak void plat_pldm_set_effecter_state_host_power_control(const uint8_t *buf, 
 	*completion_code_p = PLDM_ERROR_UNSUPPORTED_PLDM_CMD;
 
 	return;
+}
+
+void pldm_assign_gpio_effecter_id(int plat_effecter_id_gpio_high_byte)
+{
+	for (uint8_t i = 0; i <= PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_MAX; i++) {
+		state_effecter_table[i].effecter_id = (plat_effecter_id_gpio_high_byte | i);
+	}
+	return;
+}
+
+void pldm_load_state_effecter_table(uint16_t state_effecter_index)
+{
+	pldm_state_effecter_index = state_effecter_index;
+
+	state_effecter_table =
+		malloc(state_effecter_index * sizeof(struct pldm_state_effecter_info));
+	if (state_effecter_table == NULL) {
+		LOG_ERR("Failed to allocate memory");
+		return;
+	}
+	plat_pldm_load_state_effecter_table();
+	return;
+}
+
+__weak void plat_pldm_load_state_effecter_table(void)
+{
+	return;
+}
+
+struct pldm_state_effecter_info *find_state_effecter_info(uint16_t effecter_id)
+{
+	for (uint8_t i = 0; i < pldm_state_effecter_index; i++) {
+		if (state_effecter_table[i].effecter_id == effecter_id)
+			return &state_effecter_table[i];
+	}
+
+	return NULL;
 }

@@ -61,7 +61,8 @@ void pal_post_init()
 	gpio_set(BIC_SYS_READY_N, GPIO_LOW);
 
 	sys_led_init_and_check();
-	plat_pldm_assign_gpio_effecter_id();
+	pldm_load_state_effecter_table(MAX_STATE_EFFECTER_IDX);
+	pldm_assign_gpio_effecter_id(PLAT_EFFECTER_ID_GPIO_HIGH_BYTE);
 }
 
 void pal_set_sys_status()

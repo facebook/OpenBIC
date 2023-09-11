@@ -59,7 +59,7 @@ typedef enum pldm_platform_monitor_commands {
 
 #define PLDM_PLATFORM_OEM_GPIO_EFFECTER_STATE_FIELD_COUNT 2
 #define PLDM_PLATFORM_OEM_HOST_POWER_CTRL_EFFECTER_STATE_FIELD_COUNT 1
-#define PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_NAX 167
+#define PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_MAX 167
 
 typedef enum pldm_sensor_readings_data_type {
 	PLDM_SENSOR_DATA_SIZE_UINT8,
@@ -381,6 +381,13 @@ struct pldm_get_pdr_info_resp {
 	uint8_t data_transfer_handle_timeout;
 } __attribute__((packed));
 
+struct pldm_state_effecter_info {
+	uint16_t entity_type;
+	uint16_t effecter_id;
+};
+
+extern struct pldm_state_effecter_info *state_effecter_table;
+
 uint8_t pldm_monitor_handler_query(uint8_t code, void **ret_fn);
 
 uint8_t pldm_platform_event_message_req(void *mctp_inst, mctp_ext_params ext_params,
@@ -401,13 +408,23 @@ void get_effecter_state_gpio_handler(const uint8_t *buf, uint16_t len, uint8_t *
 				     uint16_t *resp_len, uint8_t gpio_pin);
 
 uint8_t plat_pldm_set_state_effecter_state_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
-						   uint16_t *resp_len);
+						   uint16_t *resp_len,
+						   struct pldm_state_effecter_info *info_p);
 
 uint8_t plat_pldm_get_state_effecter_state_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
-						   uint16_t *resp_len);
+						   uint16_t *resp_len,
+						   struct pldm_state_effecter_info *info_p);
 
 void plat_pldm_set_effecter_state_host_power_control(const uint8_t *buf, uint16_t len, uint8_t *resp,
 						   uint16_t *resp_len);
+
+void pldm_assign_gpio_effecter_id();
+
+void pldm_load_state_effecter_table(uint16_t state_effecter_index);
+
+void plat_pldm_load_state_effecter_table();
+
+struct pldm_state_effecter_info *find_state_effecter_info(uint16_t effecter_id);
 
 uint8_t pldm_event_len_check(uint8_t *buf, uint16_t len);
 float pldm_sensor_cal(uint8_t *buf, uint8_t len, pldm_sensor_readings_data_type_t data_type,
