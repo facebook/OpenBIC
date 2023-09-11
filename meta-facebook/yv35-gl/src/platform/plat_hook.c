@@ -61,11 +61,11 @@ adm1278_init_arg adm1278_init_args[] = {
 };
 mp5990_init_arg mp5990_init_args[] = { [0] = { .is_init = false,
 					       .iout_cal_gain = 0x01B3,
-					       .iout_oc_fault_limit = 0x0044,
+					       .iout_oc_fault_limit = 0x0050,
 					       .ocw_sc_ref = 0x0AE0 },
 				       [1] = { .is_init = false,
 					       .iout_cal_gain = 0x021A,
-					       .iout_oc_fault_limit = 0x0054,
+					       .iout_oc_fault_limit = 0x0058,
 					       .ocw_sc_ref = 0x0ADF } };
 mp2985_init_arg mp2985_init_args[] = { [0] = { .is_init = false } };
 
