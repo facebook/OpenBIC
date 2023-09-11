@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -60,6 +60,8 @@ typedef struct {
 bool check_dimm_present(uint8_t dimm_channel, uint8_t dimm_num, uint8_t *present_result);
 bool pal_get_power_sku_unit(uint8_t addr);
 bool pal_get_cpu_time(uint8_t addr, uint8_t cmd, uint8_t readlen, uint32_t *run_time);
-bool pal_get_cpu_energy(uint8_t addr, uint8_t cmd, uint8_t readlen, uint32_t *pkg_energy);
+bool pal_get_cpu_energy(uint8_t addr, uint32_t *pkg_energy, uint32_t *run_time);
+void pal_cal_cpu_power(intel_peci_unit unit_info, uint32_t diff_energy, uint32_t diff_time,
+		       int *reading);
 
 #endif

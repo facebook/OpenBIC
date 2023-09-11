@@ -1,18 +1,4 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+#include "plat_cpu.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,40 +12,58 @@
 
 LOG_MODULE_REGISTER(pal_cpu);
 
-bool pal_get_cpu_time(uint8_t addr, uint8_t cmd, uint8_t readlen, uint32_t *run_time)
+bool pal_get_cpu_energy(uint8_t addr, uint32_t *pkg_energy, uint32_t *run_time)
 {
-	uint8_t writelen = 0x05;
-	uint8_t time_buf[4] = { 0x12, 0x1F, 0x00, 0x00 };
+	uint8_t command = PECI_RD_PKG_CFG0_CMD;
+	uint8_t readlen = 0x09;
+	uint8_t index = 0x03;
+	uint16_t parameter = 0x00FF;
 	int ret = 0;
 
 	uint8_t *readbuf = (uint8_t *)malloc(readlen * sizeof(uint8_t));
 	if (!readbuf) {
-		LOG_ERR("Get cpu time fail to allocate readbuf memory");
+		LOG_ERR("%s fail to allocate readbuf memory", __func__);
 		return false;
 	}
 
-	ret = peci_write(cmd, addr, readlen, readbuf, writelen, time_buf);
+	ret = peci_read(command, addr, index, parameter, readlen, readbuf);
 	if (ret) {
-		LOG_ERR("Get cpu time peci write error");
+		LOG_ERR("PECI read cpu energy and time error");
 		goto cleanup;
 	}
 	if (readbuf[0] != PECI_CC_RSP_SUCCESS) {
 		if (readbuf[0] == PECI_CC_ILLEGAL_REQUEST) {
-			LOG_ERR("Get cpu time unknown request");
+			LOG_ERR("%s unknown request", __func__);
 		} else {
-			LOG_ERR("Get cpu time peci control hardware, firmware or associated logic error");
+			LOG_ERR("%s peci control hardware, firmware or associated logic error",
+				__func__);
 		}
 		goto cleanup;
 	}
 
-	*run_time = readbuf[4];
-	*run_time = (*run_time << 8) | readbuf[3];
-	*run_time = (*run_time << 8) | readbuf[2];
-	*run_time = (*run_time << 8) | readbuf[1];
+	*pkg_energy = readbuf[4];
+	*pkg_energy = (*pkg_energy << 8) | readbuf[3];
+	*pkg_energy = (*pkg_energy << 8) | readbuf[2];
+	*pkg_energy = (*pkg_energy << 8) | readbuf[1];
+
+	*run_time = readbuf[8];
+	*run_time = (*run_time << 8) | readbuf[7];
+	*run_time = (*run_time << 8) | readbuf[6];
+	*run_time = (*run_time << 8) | readbuf[5];
 
 	SAFE_FREE(readbuf);
 	return true;
 cleanup:
 	SAFE_FREE(readbuf);
 	return false;
+}
+
+void pal_cal_cpu_power(intel_peci_unit unit_info, uint32_t diff_energy, uint32_t diff_time,
+		       int *reading)
+{
+	float time_unit_energy = (float)((float)diff_energy * (float)CPU_TIME_UNIT);
+
+	float pwr_scale = (float)(1 / (float)(1 << unit_info.energy_unit));
+
+	*reading = (time_unit_energy / (float)diff_time) * pwr_scale;
 }
