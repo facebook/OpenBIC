@@ -112,6 +112,7 @@
 // Event-only sensor number definition
 #define SENSOR_NUM_SYSTEM_STATUS 0x10
 #define SENSOR_NUM_END_OF_POST 0x11
+#define SENSOR_NUM_CPU0_THERM_STATUS 0x1C
 #define SENSOR_NUM_POWER_ERROR 0x56
 #define SENSOR_NUM_PROC_FAIL 0x65
 #define SENSOR_NUM_VR_HOT 0xB2
