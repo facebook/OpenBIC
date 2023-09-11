@@ -35,7 +35,38 @@ K_MUTEX_DEFINE(i2c_hub_mutex);
 /**************************************************************************************************
  * INIT ARGS
 **************************************************************************************************/
-adc_asd_init_arg adc_asd_init_args[] = { [0] = { .is_init = false } };
+adc_asd_init_arg adc_expa_asd_init_args[] = {
+	[0] = { 
+		.is_init = false,
+		.deglitch[0] = { .deglitch_en = true, .upper_bound = 0x2DB },
+		.deglitch[1] = { .deglitch_en = true, .upper_bound = 0x2DB },
+		.deglitch[2] = { .deglitch_en = true, .upper_bound = 0x2DB },
+		.deglitch[5] = { .deglitch_en = true, .upper_bound = 0x2DB },
+		.deglitch[6] = { .deglitch_en = true, .upper_bound = 0x31A },
+		.deglitch[7] = { .deglitch_en = true, .upper_bound = 0X18D },
+	},
+	[1] = {
+		.is_init = false,
+		.deglitch[0] = { .deglitch_en = true, .upper_bound = 0x214 },
+	}
+};
+
+adc_asd_init_arg adc_expb_asd_init_args[] = {
+	[0] = { 
+		.is_init = false,
+		.deglitch[0] = { .deglitch_en = true, .upper_bound = 0x2DB },
+		.deglitch[1] = { .deglitch_en = true, .upper_bound = 0x2DB },
+		.deglitch[2] = { .deglitch_en = true, .upper_bound = 0x2DB },
+		.deglitch[3] = { .deglitch_en = true, .upper_bound = 0x2DB },
+		.deglitch[4] = { .deglitch_en = true, .upper_bound = 0x2DB },
+		.deglitch[5] = { .deglitch_en = true, .upper_bound = 0x2DB },
+	},
+	[1] = {
+		.is_init = false,
+		.deglitch[3] = { .deglitch_en = true, .upper_bound = 0x31A },
+		.deglitch[6] = { .deglitch_en = true, .upper_bound = 0x214 },
+	}
+};
 
 ina233_init_arg ina233_init_args[] = {
 	[0] = { .is_init = false,

@@ -103,31 +103,31 @@ sensor_cfg plat_expansion_A_sensor_config[] = {
 	//adc
 	{ SENSOR_NUM_1OU_P3V3_STBY_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT5, NONE, NONE, stby_access,
 	  2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_expa_asd_init_args[0] },
 
 	{ SENSOR_NUM_1OU_E1S_SSD0_P3V3_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT2, NONE, NONE,
 	  e1s_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_expa_asd_init_args[0] },
 
 	{ SENSOR_NUM_1OU_E1S_SSD1_P3V3_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT1, NONE, NONE,
 	  e1s_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_expa_asd_init_args[0] },
 
 	{ SENSOR_NUM_1OU_E1S_SSD2_P3V3_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT0, NONE, NONE,
 	  e1s_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_expa_asd_init_args[0] },
 
 	{ SENSOR_NUM_1OU_P1V8_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT6, NONE, NONE, dc_access, 1, 1,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	  NULL, NULL, NULL, NULL, &adc_expa_asd_init_args[0] },
 
 	{ SENSOR_NUM_1OU_P0V9_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT7, NONE, NONE, dc_access, 1, 1,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	  NULL, NULL, NULL, NULL, &adc_expa_asd_init_args[0] },
 
 	{ SENSOR_NUM_1OU_P1V2_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT8, NONE, NONE, dc_access, 1, 1,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	  NULL, NULL, NULL, NULL, &adc_expa_asd_init_args[1] },
 
 	//INA233 VOL
 	{ SENSOR_NUM_1OU_E1S_SSD0_P12V_VOLT, sensor_dev_ina233, I2C_BUS3, INA233_EXPA_E1S_0_ADDR,
@@ -215,35 +215,35 @@ sensor_cfg plat_expansion_B_sensor_config[] = {
 	//adc
 	{ SENSOR_NUM_2OU_E1S_SSD0_P3V3_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT4, NONE, NONE,
 	  e1s_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_expb_asd_init_args[0] },
 
 	{ SENSOR_NUM_2OU_E1S_SSD1_P3V3_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT3, NONE, NONE,
 	  e1s_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_expb_asd_init_args[0] },
 
 	{ SENSOR_NUM_2OU_E1S_SSD2_P3V3_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT2, NONE, NONE,
 	  e1s_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_expb_asd_init_args[0] },
 
 	{ SENSOR_NUM_2OU_E1S_SSD3_P3V3_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT1, NONE, NONE,
 	  e1s_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_expb_asd_init_args[0] },
 
 	{ SENSOR_NUM_2OU_E1S_SSD4_P3V3_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT0, NONE, NONE,
 	  e1s_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_expb_asd_init_args[0] },
 
 	{ SENSOR_NUM_2OU_P3V3_STBY_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT5, NONE, NONE, stby_access,
 	  2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_expb_asd_init_args[0] },
 
 	{ SENSOR_NUM_2OU_P1V8_STBY_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT11, NONE, NONE,
 	  stby_access, 1, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_expb_asd_init_args[1] },
 
 	{ SENSOR_NUM_2OU_P1V2_STBY_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT14, NONE, NONE,
 	  stby_access, 1, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_expb_asd_init_args[1] },
 
 	//INA233 VOL
 	{ SENSOR_NUM_2OU_E1S_SSD0_P12V_VOLT, sensor_dev_ina233, I2C_BUS3, INA233_EXPB_E1S_0_ADDR,
