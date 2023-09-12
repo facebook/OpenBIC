@@ -47,6 +47,7 @@ LOG_MODULE_REGISTER(mp2971);
 #define VR_MPS_CMD_STORE_MULTI_CODE 0xF3
 
 #define MP2856_DISABLE_WRITE_PROTECT 0x63
+#define MP2856_DISABLE_MEM_PROTECT 0x00
 
 /*Page29 */
 #define VR_MPS_REG_CRC_USER 0xFF
@@ -79,7 +80,7 @@ struct mp2856_data {
 	uint16_t cfg_id;
 	uint8_t page;
 	uint8_t reg_addr;
-	uint32_t reg_data;
+	uint8_t reg_data[4];
 	uint8_t reg_len;
 };
 
@@ -124,7 +125,7 @@ static bool mp2856_write_data(uint8_t bus, uint8_t addr, struct mp2856_data *dat
 
 	i2c_msg.tx_len = data->reg_len + 1;
 	i2c_msg.data[0] = data->reg_addr;
-	memcpy(&i2c_msg.data[1], &data->reg_data, data->reg_len);
+	memcpy(&i2c_msg.data[1], &data->reg_data[0], data->reg_len);
 
 	if (i2c_master_write(&i2c_msg, retry)) {
 		LOG_ERR("Failed to write register 0x%02X", data->reg_addr);
@@ -250,6 +251,36 @@ static bool mp2856_unlock_write_protect_mode(uint8_t bus, uint8_t addr)
 				return false;
 			}
 		}
+	} else {
+		//Memory protection mode
+		//check write protect status
+		if (mp2856_set_page(bus, addr, VR_MPS_PAGE_0) == false) {
+			return false;
+		}
+
+		i2c_msg.tx_len = 1;
+		i2c_msg.rx_len = 1;
+		i2c_msg.data[0] = VR_MPS_REG_WRITE_PROTECT;
+
+		if (i2c_master_read(&i2c_msg, retry)) {
+			LOG_ERR("Failed to read register 0x%02X", VR_MPS_REG_WRITE_PROTECT);
+			return false;
+		}
+
+		if (i2c_msg.data[0] == MP2856_DISABLE_MEM_PROTECT) {
+			return true;
+		} else {
+			//Unlock Memory Write protection
+			i2c_msg.tx_len = 2;
+			i2c_msg.data[0] = VR_MPS_REG_WRITE_PROTECT;
+			i2c_msg.data[1] = MP2856_DISABLE_MEM_PROTECT;
+
+			if (i2c_master_write(&i2c_msg, retry)) {
+				LOG_ERR("Failed to write register 0x%02X",
+					VR_MPS_REG_WRITE_PROTECT);
+				return false;
+			}
+		}
 	}
 
 	return true;
@@ -287,17 +318,18 @@ static bool parsing_image(uint8_t *img_buff, uint32_t img_size, struct mp2856_co
 				break;
 			}
 		}
-		if (img_buff[i] != 0x09 && img_buff[i] != 0x0d) {
+		if (((img_buff[i] != 0x09) && img_buff[i] != 0x0d) &&
+			(cur_ele_idx != ATE_WRITE_TYPE)) {
 			// pass non hex charactor
 			int val = ascii_to_val(img_buff[i]);
 			if (val == -1)
 				continue;
+
 			data_store = (data_store << 4) | val;
 			data_idx++;
 			continue;
 		}
 
-		uint8_t byte_cnt = data_idx % 2 == 0 ? data_idx / 2 : (data_idx / 2 + 1);
 		switch (cur_ele_idx) {
 		case ATE_CONF_ID:
 			cur_line->cfg_id = data_store & 0xffff;
@@ -318,14 +350,22 @@ static bool parsing_image(uint8_t *img_buff, uint32_t img_size, struct mp2856_co
 			break;
 
 		case ATE_REG_DATA_HEX:
-			cur_line->reg_data = data_store;
-			cur_line->reg_len = byte_cnt;
+			*((uint32_t*)cur_line->reg_data) = data_store;
+			cur_line->reg_len = data_idx % 2 == 0 ? data_idx / 2 : (data_idx / 2 + 1);
 			break;
 
 		case ATE_REG_DATA_DEC:
 			break;
 
 		case ATE_WRITE_TYPE:
+			/* write type only with only number means byte write/read.
+			 * write type with prefix "B" means word write/read, using write length as the first data byte.
+			 */
+			if (!strncmp(&img_buff[i], "B", 1)) {
+				memmove(&cur_line->reg_data[1], &cur_line->reg_data[0], cur_line->reg_len);
+				cur_line->reg_data[0] = cur_line->reg_len;
+				cur_line->reg_len += 1;
+			}
 			break;
 
 		default:
@@ -335,11 +375,15 @@ static bool parsing_image(uint8_t *img_buff, uint32_t img_size, struct mp2856_co
 
 		data_idx = 0;
 		data_store = 0;
+
 		if (img_buff[i] == 0x09) {
 			cur_ele_idx++;
 		} else if (img_buff[i] == 0x0d) {
-			LOG_DBG("vr[%d] page: %d addr:%x data:%x", dev_cfg->wr_cnt, cur_line->page,
-				cur_line->reg_addr, cur_line->reg_data);
+			LOG_DBG("vr[%d] page: %d addr:%x", dev_cfg->wr_cnt, cur_line->page,
+				cur_line->reg_addr);
+			for(int i=0; i< cur_line->reg_len; i++) {
+				LOG_DBG("data:%x", cur_line->reg_data[i]);
+			}
 			cur_ele_idx = 0;
 			dev_cfg->wr_cnt++;
 			if (dev_cfg->wr_cnt > max_line) {

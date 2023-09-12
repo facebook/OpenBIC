@@ -29,6 +29,8 @@ extern "C" {
 
 #define KEYWORD_VR_ISL69259 "isl69259"
 #define KEYWORD_VR_XDPE12284C "xdpe12284c"
+#define KEYWORD_VR_MP2856 "mp2856"
+#define KEYWORD_VR_MP2857 "mp2857"
 #define KEYWORD_VR_MP2971 "mp2971"
 
 #ifndef KEYWORD_CPLD_LATTICE
