@@ -153,8 +153,12 @@ uint8_t pldm_vr_update(void *fw_update_param)
 		if (xdpe12284c_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) ==
 		    false)
 			goto exit;
-	} else if (!strncmp(p->comp_version_str, KEYWORD_VR_MP2971,
-			    ARRAY_SIZE(KEYWORD_VR_MP2971) - 1)) {
+	} else if ((!strncmp(p->comp_version_str, KEYWORD_VR_MP2971,
+				ARRAY_SIZE(KEYWORD_VR_MP2971) - 1)) ||
+				(!strncmp(p->comp_version_str, KEYWORD_VR_MP2856,
+			    ARRAY_SIZE(KEYWORD_VR_MP2856) - 1)) ||
+				(!strncmp(p->comp_version_str, KEYWORD_VR_MP2857,
+			    ARRAY_SIZE(KEYWORD_VR_MP2857) - 1))) {
 		if (mp2971_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) == false)
 			goto exit;
 	} else {
