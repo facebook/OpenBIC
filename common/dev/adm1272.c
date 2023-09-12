@@ -25,9 +25,12 @@
 LOG_MODULE_REGISTER(dev_adm1272);
 
 #define REG_PWR_MONITOR_CFG 0xD4
+#define ADM1272_EIN_ROLLOVER_CNT_MAX 0x100
+#define ADM1272_EIN_SAMPLE_CNT_MAX 0x1000000
+#define ADM1272_EIN_ENERGY_CNT_MAX 0x8000
 
-int adm1272_convert_real_value(uint8_t vrange, uint8_t irange, float rsense, uint8_t offset,
-			       float *val)
+static int adm1272_convert_real_value(uint8_t vrange, uint8_t irange, float rsense, uint8_t offset,
+				      float *val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(val, -1);
 
@@ -137,7 +140,7 @@ int adm1272_convert_real_value(uint8_t vrange, uint8_t irange, float rsense, uin
 	return 0;
 }
 
-int adm1272_read_pout(sensor_cfg *cfg, float *val)
+static int adm1272_read_pout(sensor_cfg *cfg, float *val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(val, -1);
 	CHECK_NULL_ARG_WITH_RETURN(cfg, -1);
@@ -195,7 +198,7 @@ int adm1272_read_pout(sensor_cfg *cfg, float *val)
 	return 0;
 }
 
-int adm1272_read_iin(sensor_cfg *cfg, float *val)
+static int adm1272_read_iin(sensor_cfg *cfg, float *val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(val, -1);
 	CHECK_NULL_ARG_WITH_RETURN(cfg, -1);
@@ -256,6 +259,89 @@ int adm1272_read_iin(sensor_cfg *cfg, float *val)
 	return 0;
 }
 
+static int adm1272_read_ein(sensor_cfg *cfg, float *val)
+{
+	CHECK_NULL_ARG_WITH_RETURN(val, -1);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, -1);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, -1);
+
+	adm1272_init_arg *init_arg = (adm1272_init_arg *)cfg->init_args;
+
+	uint8_t retry = 5;
+	int ret = 0;
+	I2C_MSG msg = { 0 };
+
+	uint32_t energy = 0, rollover = 0, sample = 0;
+	uint32_t pre_energy = 0, pre_rollover = 0, pre_sample = 0;
+	uint32_t sample_diff = 0;
+	double energy_diff = 0;
+
+	/* Read EIN */
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 7;
+	msg.data[0] = cfg->offset;
+
+	ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Read EIN fail, ret: %d, sensor num: 0x%x", ret, cfg->num);
+		return -1;
+	}
+
+	/* Record the previous and current data */
+#ifdef MORE_THAN_ONE_ADM1272
+	pre_energy = init_arg->last_energy;
+	pre_rollover = init_arg->last_rollover;
+	pre_sample = init_arg->last_sample;
+
+	init_arg->last_energy = energy = (msg.data[2] << 8) | msg.data[1];
+	init_arg->last_rollover = rollover = msg.data[3];
+	init_arg->last_sample = sample = (msg.data[6] << 16) | (msg.data[5] << 8) | msg.data[4];
+
+	SET_FLAG_WITH_RETURN(init_arg->is_record_ein, true, -1);
+#else
+	static bool is_record_ein = false;
+	static uint32_t last_energy = 0, last_rollover = 0, last_sample = 0;
+
+	pre_energy = last_energy;
+	pre_rollover = last_rollover;
+	pre_sample = last_sample;
+
+	last_energy = energy = (msg.data[2] << 8) | msg.data[1];
+	last_rollover = rollover = msg.data[3];
+	last_sample = sample = (msg.data[6] << 16) | (msg.data[5] << 8) | msg.data[4];
+
+	SET_FLAG_WITH_RETURN(is_record_ein, true, -1);
+#endif
+
+	if ((pre_rollover > rollover) || ((pre_rollover == rollover) && (pre_energy > energy))) {
+		rollover += ADM1272_EIN_ROLLOVER_CNT_MAX;
+	}
+
+	if (pre_sample > sample) {
+		sample += ADM1272_EIN_SAMPLE_CNT_MAX;
+	}
+
+	energy_diff = (double)(rollover - pre_rollover) * ADM1272_EIN_ENERGY_CNT_MAX +
+		      (double)energy - (double)pre_energy;
+	if (energy_diff < 0) {
+		LOG_DBG("Energy difference is less than zero.");
+		return -1;
+	}
+
+	sample_diff = sample - pre_sample;
+	if (sample_diff == 0) {
+		LOG_DBG("Sample difference is less than zero.");
+		return -1;
+	}
+
+	*val = (double)(energy_diff / sample_diff);
+	return adm1272_convert_real_value(init_arg->pwr_monitor_cfg.fields.VRANGE,
+					  init_arg->pwr_monitor_cfg.fields.IRANGE,
+					  init_arg->r_sense_mohm, PMBUS_READ_PIN, val);
+}
+
 uint8_t adm1272_read(sensor_cfg *cfg, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
@@ -279,7 +365,8 @@ uint8_t adm1272_read(sensor_cfg *cfg, int *reading)
 	int ret = 0;
 	uint8_t offset = cfg->offset;
 
-	if ((offset != PMBUS_READ_POUT) && (offset != PMBUS_READ_IIN)) {
+	if ((offset != PMBUS_READ_POUT) && (offset != PMBUS_READ_IIN) &&
+	    (offset != PMBUS_READ_EIN)) {
 		msg.bus = cfg->port;
 		msg.target_addr = cfg->target_addr;
 		msg.tx_len = 1;
@@ -309,6 +396,9 @@ uint8_t adm1272_read(sensor_cfg *cfg, int *reading)
 		break;
 	case PMBUS_READ_POUT:
 		ret = adm1272_read_pout(cfg, &val);
+		break;
+	case PMBUS_READ_EIN:
+		ret = adm1272_read_ein(cfg, &val);
 		break;
 	default:
 		LOG_ERR("Invalid sensor 0x%x offset 0x%x", cfg->num, offset);

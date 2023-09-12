@@ -74,6 +74,7 @@ sq52205_init_arg sq52205_init_args[] = {
 		.rsvd = 0b000,
 		.reset_bit = 0b0,
 	},
+	.is_need_accum_config_init = false,
 	},
 	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.002,
 	.config = {
@@ -84,6 +85,7 @@ sq52205_init_arg sq52205_init_args[] = {
 		.rsvd = 0b000,
 		.reset_bit = 0b0,
 	},
+	.is_need_accum_config_init = false,
 	},
 	[2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.002,
 	.config = {
@@ -94,6 +96,7 @@ sq52205_init_arg sq52205_init_args[] = {
 		.rsvd = 0b000,
 		.reset_bit = 0b0,
 	},
+	.is_need_accum_config_init = false,
 	},
 	[3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.002,
 	.config = {
@@ -104,6 +107,7 @@ sq52205_init_arg sq52205_init_args[] = {
 		.rsvd = 0b000,
 		.reset_bit = 0b0,
 	},
+	.is_need_accum_config_init = false,
 	},
 	[4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.002,
 	.config = {
@@ -114,6 +118,7 @@ sq52205_init_arg sq52205_init_args[] = {
 		.rsvd = 0b000,
 		.reset_bit = 0b0,
 	},
+	.is_need_accum_config_init = false,
 	},
 	[5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.002,
 	.config = {
@@ -124,6 +129,7 @@ sq52205_init_arg sq52205_init_args[] = {
 		.rsvd = 0b000,
 		.reset_bit = 0b0,
 	},
+	.is_need_accum_config_init = false,
 	},
 };
 

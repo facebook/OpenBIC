@@ -561,6 +561,12 @@ typedef struct _adm1272_init_arg {
 	bool is_need_set_pwr_cfg;
 	float r_sense_mohm;
 
+#ifdef MORE_THAN_ONE_ADM1272
+	bool is_record_ein;
+	uint32_t last_energy;
+	uint32_t last_rollover;
+	uint32_t last_sample;
+#endif
 } adm1272_init_arg;
 
 typedef struct _sq52205_init_arg_ {
@@ -578,6 +584,22 @@ typedef struct _sq52205_init_arg_ {
 			uint16_t reset_bit : 1;
 		};
 	} config;
+
+	bool is_need_accum_config_init;
+	union {
+		uint16_t value;
+		struct {
+			uint8_t clear_ein : 1;
+			uint8_t switch_ein_mode : 1;
+			uint8_t rsvd : 5;
+			uint8_t timer : 3;
+			uint8_t ein_auto_clear : 1;
+			uint8_t switch_adc_mode : 1;
+			uint8_t ein_accum : 2;
+			uint8_t accum_mode : 1;
+			uint8_t ein_status : 1;
+		};
+	} accum_config;
 } sq52205_init_arg;
 
 typedef struct _ltc2991_init_arg_ {
