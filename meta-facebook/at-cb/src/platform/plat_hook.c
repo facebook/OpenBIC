@@ -778,6 +778,10 @@ bool pre_xdpe15284_read(sensor_cfg *cfg, void *args)
 			LOG_ERR("Unknown VR module: 0x%x", vr_module);
 			return false;
 		}
+
+		// Set write protection value to enable writing page command
+		xdpe15284_set_write_protect_default_val(
+			XDPE15284_DISABLE_ALL_WRITE_EXCEPT_THREE_COMMANDS_VAL);
 	}
 
 	mutex_status = k_mutex_lock(&xdpe15284_mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));

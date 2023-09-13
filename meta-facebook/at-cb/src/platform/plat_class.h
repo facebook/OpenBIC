@@ -148,6 +148,5 @@ uint8_t get_pwr_brick_module();
 uint8_t get_pwr_monitor_module();
 bool get_acb_power_status();
 bool get_acb_power_good_flag();
-void enable_xdpe15284_password();
 
 #endif
