@@ -21,6 +21,7 @@
 extern uint8_t e1s_prsnt_pin[4][4];
 extern uint8_t nic_prsnt_pin[];
 extern uint8_t pex_sensor_num_table[];
+extern uint8_t e1s_sensor_table[16];
 
 #define MAX_STATE_EFFECTER_IDX 187
 

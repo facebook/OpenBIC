@@ -26,6 +26,8 @@
 #include "i2c-mux-tca9548.h"
 #include "pex89000.h"
 #include "pmbus.h"
+#include "nvme.h"
+#include "plat_pldm_monitor.h"
 
 #include <logging/log.h>
 
@@ -1141,6 +1143,37 @@ struct k_mutex *find_bus_mutex(sensor_cfg *cfg)
 		return NULL;
 
 	return mutex;
+}
+
+void ssd_drive_reinit(void)
+{
+	disable_sensor_poll();
+
+	uint8_t ssd_index = 0;
+	int ssd_num_max = ARRAY_SIZE(e1s_sensor_table);
+
+	for (ssd_index = 0; ssd_index < ssd_num_max; ssd_index++) {
+		uint8_t sensor_num = e1s_sensor_table[ssd_index];
+		sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+
+		if (!is_e1s_access(sensor_num))
+			continue;
+
+		if (cfg->read != NULL) {
+			LOG_DBG("sensor number 0x%x cfg->read is init \n", cfg->num);
+			continue;
+		}
+
+		LOG_INF("sensor number 0x%x cfg->read not init, do reinit", cfg->num);
+		nvme_init(cfg);
+
+		if (cfg->read != NULL) {
+			LOG_INF("sensor number 0x%x cfg->read reinit success", cfg->num);
+		} else {
+			LOG_ERR("sensor number 0x%x cfg->read reinit fail", cfg->num);
+		}
+	}
+	enable_sensor_poll();
 }
 
 bool is_mb_dc_on()
