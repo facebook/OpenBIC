@@ -100,5 +100,6 @@ bool is_cxl_present();
 uint8_t get_board_revision();
 int get_pcie_card_power_status(uint8_t pcie_card_id);
 int init_platform_config();
+void set_reset_smb4_mux_pin();
 
 #endif

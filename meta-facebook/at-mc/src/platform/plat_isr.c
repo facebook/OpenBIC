@@ -504,6 +504,8 @@ exit:
 	return;
 }
 
+#define SET_RESET_SMB4_MUX_DELAY_MS 10
+K_WORK_DELAYABLE_DEFINE(set_reset_smb4_mux_pin_work, set_reset_smb4_mux_pin);
 void ISR_NORMAL_PWRGD()
 {
 	uint8_t index = 0;
@@ -519,6 +521,9 @@ void ISR_NORMAL_PWRGD()
 			cxl_work_item[index].is_device_reset = false;
 		}
 	}
+
+	k_work_schedule_for_queue(&plat_work_q, &set_reset_smb4_mux_pin_work,
+				  K_MSEC(SET_RESET_SMB4_MUX_DELAY_MS));
 }
 
 void ISR_CXL_IOEXP_ALERT0()
