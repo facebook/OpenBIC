@@ -90,7 +90,7 @@ void check_cxl_ioexp_is_initialized()
 void pal_pre_init()
 {
 	uint8_t board_rev = get_board_revision();
-	if (board_rev == REV_EVT2 ) {
+	if (board_rev == REV_EVT2) {
 		i2c_freq_set(I2C_BUS_BMC, I2C_SPEED_STANDARD, 0);
 	}
 
@@ -132,6 +132,7 @@ void pal_device_init()
 void pal_set_sys_status()
 {
 	set_DC_status(MEB_NORMAL_PWRGD_BIC);
+	set_reset_smb4_mux_pin();
 }
 
 #define DEF_PLAT_CONFIG_PRIORITY 77

@@ -388,3 +388,12 @@ int init_platform_config()
 
 	return 0;
 }
+
+void set_reset_smb4_mux_pin()
+{
+	if (gpio_get(MEB_NORMAL_PWRGD_BIC)) {
+		gpio_set(RST_SMB_4_MUX_N, GPIO_HIGH);
+	} else {
+		gpio_set(RST_SMB_4_MUX_N, GPIO_LOW);
+	}
+}
