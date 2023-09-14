@@ -50,6 +50,11 @@ bool is_dimm_prsnt_inited()
 	return dimm_prsnt_inited;
 }
 
+bool is_dimm_ready_monitor(uint8_t dimm_id)
+{
+	return dimm_data[dimm_id].is_ready_monitor;
+}
+
 void get_dimm_info_handler()
 {
 	I3C_MSG i3c_msg = { 0 };
@@ -161,6 +166,7 @@ void get_dimm_info_handler()
 
 			// Double check before read each DIMM info
 			if (!get_post_status()) {
+				dimm_data[dimm_id].is_ready_monitor = false;
 				break;
 			}
 
@@ -185,6 +191,7 @@ void get_dimm_info_handler()
 
 			// Double check before read each DIMM info
 			if (!get_post_status()) {
+				dimm_data[dimm_id].is_ready_monitor = false;
 				break;
 			}
 
@@ -206,6 +213,8 @@ void get_dimm_info_handler()
 				memcpy(&dimm_data[dimm_id].pmic_error_data, &i3c_msg.data,
 				       sizeof(dimm_data[dimm_id].pmic_error_data));
 			}
+			// If the DIMM is ready for monitoring, BIC can send its temperature to CPU by PECI.
+			dimm_data[dimm_id].is_ready_monitor = true;
 		}
 
 		if (k_mutex_unlock(&i3c_dimm_mutex)) {
