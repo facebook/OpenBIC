@@ -22,7 +22,6 @@
 #include "pmbus.h"
 #include "plat_fru.h"
 #include "plat_gpio.h"
-#include "plat_sensor_table.h"
 #include "plat_pldm_monitor.h"
 #include "plat_class.h"
 #include "plat_led.h"
@@ -156,7 +155,7 @@ uint8_t ssd_power_ic_sensor_table[] = {
 	SENSOR_NUM_VOLT_E1S_15,
 };
 
-uint8_t e1s_sensor_table[16] = {
+uint8_t e1s_sensor_table[SSD_MAX_NUMBER] = {
 	SENSOR_NUM_TEMP_E1S_0,	SENSOR_NUM_TEMP_E1S_1,	SENSOR_NUM_TEMP_E1S_2,
 	SENSOR_NUM_TEMP_E1S_3,	SENSOR_NUM_TEMP_E1S_4,	SENSOR_NUM_TEMP_E1S_5,
 	SENSOR_NUM_TEMP_E1S_6,	SENSOR_NUM_TEMP_E1S_7,	SENSOR_NUM_TEMP_E1S_8,
