@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "pldm_monitor.h"
+#include "plat_sensor_table.h"
 
 #ifndef PLAT_PLDM_MONITOR_H
 #define PLAT_PLDM_MONITOR_H
@@ -21,6 +22,7 @@
 extern uint8_t e1s_prsnt_pin[4][4];
 extern uint8_t nic_prsnt_pin[];
 extern uint8_t pex_sensor_num_table[];
+extern uint8_t e1s_sensor_table[SSD_MAX_NUMBER];
 
 #define MAX_STATE_EFFECTER_IDX 187
 

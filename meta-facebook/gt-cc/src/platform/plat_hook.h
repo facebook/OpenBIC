@@ -68,6 +68,7 @@ bool post_ltc4282_read(sensor_cfg *cfg, void *args, int *reading);
 bool post_ltc4286_read(sensor_cfg *cfg, void *args, int *reading);
 
 struct k_mutex *find_bus_mutex(sensor_cfg *cfg);
+void ssd_drive_reinit(void);
 bool is_mb_dc_on();
 
 #endif

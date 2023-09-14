@@ -26,5 +26,6 @@
 #define NVME_VOLTAGE_RAIL_2_OFFSET 0x77
 
 int read_nvme_info(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t read_len, uint8_t *data);
+uint8_t nvme_init(sensor_cfg *cfg);
 
 #endif
