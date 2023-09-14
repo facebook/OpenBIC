@@ -408,6 +408,17 @@ const EEPROM_CFG plat_fru_config[] = {
 	},
 };
 
+// MP2985 remaining write is stored in CB EEPROM, but the location of EEPROM is different from fru information
+const EEPROM_CFG plat_mp2985_remaining_wr_area_config = {
+	PUYA_P24C128F,
+	CB_FRU_ID,
+	CB_FRU_PORT,
+	CB_FRU_ADDR,
+	FRU_DEV_ACCESS_BYTE,
+	MP2985_REMAINING_WRITE_START,
+	MP2985_REMAINING_WRITE_MAX_SIZE,
+};
+
 void pal_load_fru_config(void)
 {
 	memcpy(&fru_config, &plat_fru_config, sizeof(plat_fru_config));
@@ -469,4 +480,41 @@ bool pal_accl_fru_id_map_accl_id_dev_id(uint8_t accl_fru_id, uint8_t *accl_id, u
 	}
 
 	return true;
+}
+
+bool set_mp2985_remaining_write(uint8_t count)
+{
+	bool ret = false;
+	EEPROM_ENTRY entry = { 0 };
+
+	entry.config = plat_mp2985_remaining_wr_area_config;
+	entry.data_len = MP2985_REMAINING_WRITE_MAX_SIZE;
+	entry.data[0] = count;
+
+	ret = eeprom_write(&entry);
+	if (ret != true) {
+		LOG_ERR("Fail to write MP2985 remaining write");
+	}
+
+	return ret;
+}
+
+bool get_mp2985_remaining_write(uint8_t *count)
+{
+	CHECK_NULL_ARG_WITH_RETURN(count, false);
+
+	bool ret = false;
+	EEPROM_ENTRY entry = { 0 };
+
+	entry.config = plat_mp2985_remaining_wr_area_config;
+	entry.data_len = MP2985_REMAINING_WRITE_MAX_SIZE;
+
+	ret = eeprom_read(&entry);
+	if (ret != true) {
+		LOG_ERR("Fail to read MP2985 remaining write");
+		return false;
+	}
+
+	*count = entry.data[0];
+	return ret;
 }

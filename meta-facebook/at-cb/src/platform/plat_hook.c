@@ -32,6 +32,10 @@
 #include "plat_dev.h"
 #include "nvme.h"
 #include "plat_ipmi.h"
+#include "util_sys.h"
+#include "plat_fru.h"
+#include "xdpe15284.h"
+#include "mp2985.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -717,8 +721,68 @@ bool pre_xdpe15284_read(sensor_cfg *cfg, void *args)
 	bool ret = false;
 	int retry = 3;
 	int mutex_status = 0;
+	uint8_t vr_module = get_vr_module();
 	I2C_MSG msg = { 0 };
 	vr_page_cfg *xdpe15284_vr_page = (vr_page_cfg *)args;
+
+	if (cb_vr_fw_info.is_init == false) {
+		switch (vr_module) {
+		case VR_XDPE15284D:
+			ret = xdpe15284_get_checksum(cfg->port, cfg->target_addr,
+						     cb_vr_fw_info.checksum);
+			if (ret != true) {
+				LOG_ERR("XDPE15284 fails to get checksum");
+				return false;
+			}
+
+			ret = xdpe15284_get_remaining_wr(cfg->port, cfg->target_addr,
+							 &cb_vr_fw_info.remaining_write);
+			if (ret != true) {
+				LOG_ERR("XDPE15284 fails to get remaining write");
+				return false;
+			}
+
+			cb_vr_fw_info.vendor = VENDOR_INFINEON;
+			cb_vr_fw_info.is_init = true;
+			break;
+		case VR_MP2985H:
+			ret = mp2985_get_checksum(cfg->port, cfg->target_addr,
+						  cb_vr_fw_info.checksum);
+			if (ret != true) {
+				LOG_ERR("MP2985H fails to get checksum");
+				return false;
+			}
+
+			uint8_t count = 0;
+			ret = get_mp2985_remaining_write(&count);
+			if (ret != true) {
+				LOG_ERR("MP2985H fails to get remaining write");
+				return false;
+			}
+
+			if (count == 0xFF) {
+				ret = set_mp2985_remaining_write(MP2985_REMAINING_WRITE_MAX_COUNT);
+				if (ret != true) {
+					LOG_ERR("MP2985H fails to set remaining write");
+					return false;
+				}
+
+				cb_vr_fw_info.remaining_write = MP2985_REMAINING_WRITE_MAX_COUNT;
+			} else {
+				cb_vr_fw_info.remaining_write = count;
+			}
+			cb_vr_fw_info.vendor = VENDOR_MPS;
+			cb_vr_fw_info.is_init = true;
+			break;
+		default:
+			LOG_ERR("Unknown VR module: 0x%x", vr_module);
+			return false;
+		}
+
+		// Set write protection value to enable writing page command
+		xdpe15284_set_write_protect_default_val(
+			XDPE15284_DISABLE_ALL_WRITE_EXCEPT_THREE_COMMANDS_VAL);
+	}
 
 	mutex_status = k_mutex_lock(&xdpe15284_mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
 	if (mutex_status != 0) {

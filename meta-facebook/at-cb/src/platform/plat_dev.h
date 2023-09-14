@@ -58,12 +58,20 @@ typedef struct _freya_info {
 	freya_fw_info freya2_fw_info;
 } freya_info;
 
+typedef struct _vr_fw_info {
+	uint8_t checksum[4];
+	uint8_t remaining_write;
+	uint8_t vendor;
+	bool is_init;
+} vr_fw_info;
+
 enum FREYA_ID {
 	FREYA_ID1,
 	FREYA_ID2,
 };
 
 extern freya_info accl_freya_info[];
+extern vr_fw_info cb_vr_fw_info;
 
 void clear_freya_cache_flag(uint8_t card_id);
 int get_freya_fw_info(uint8_t bus, uint8_t addr, freya_fw_info *fw_info);

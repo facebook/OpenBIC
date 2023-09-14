@@ -22,22 +22,125 @@
 #include "hal_i2c.h"
 #include "util_pmbus.h"
 #include "pmbus.h"
+#include "xdpe15284.h"
 
 LOG_MODULE_REGISTER(xdpe15284);
 
 #define XDPE15284_MFR_DISABLE_SECURITY_ONCE 0xCB
 #define XDPE15284_MFR_FW_CMD_REG 0xFE
 #define XDPE15284_MFR_FW_CMD_DATA_REG 0xFD
-#define XDPE15284_MFR_FW_CMD_DATA_LEN 5
+#define XDPE15284_MFR_FW_CMD_DATA_LEN 4
+#define XDPE15284_REMAINING_WRITE_DATA_LEN 2
 #define XDPE15284_NOP_CMD 0x00
+#define XDPE15284_GET_REMAINING_WR_CMD 0x10
 #define XDPE15284_CALCULATE_CRC_CMD 0x2D
-#define XDPE15284_CALCULATE_CRC_DELAY_MS 10
+#define XDPE15284_WAIT_DATA_DELAY_MS 10
+#define XDPE15284C_CONF_SIZE 1344 // Config(604) + PMBus(504) + SVID(156) + PMBusPartial(80)
+
+#define XDPE15284_WRITE_PROTECT_CMD_REG 0x10
+#define XDPE15284_WRITE_PROTECT_DEFAULT_VAL 0xFF
 
 const uint32_t REG_LOCK_PASSWORD = 0x7F48680C;
+static uint8_t write_protect_default_val = XDPE15284_WRITE_PROTECT_DEFAULT_VAL;
 
-bool xdpe15284_get_checksum(uint8_t bus, uint8_t addr, uint8_t *checksum)
+static bool xdpe15284_set_write_protect_reg(uint8_t bus, uint8_t addr, uint8_t optional)
 {
-	CHECK_NULL_ARG_WITH_RETURN(checksum, false);
+	uint8_t set_val = 0;
+
+	switch (optional) {
+	case XDPE15284_ENABLE_WRITE_PROTECT:
+		set_val = write_protect_default_val;
+		break;
+	case XDPE15284_DISABLE_WRITE_PROTECT:
+		set_val = XDPE15284_DISABLE_WRITE_PROTECT_VAL;
+		break;
+	default:
+		LOG_ERR("Invalid optional: 0x%x to set write protect reg", optional);
+		return false;
+	}
+
+	uint8_t retry = 3;
+	I2C_MSG i2c_msg = { 0 };
+
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+	i2c_msg.tx_len = 2;
+	i2c_msg.data[0] = XDPE15284_WRITE_PROTECT_CMD_REG;
+	i2c_msg.data[1] = set_val;
+
+	if (i2c_master_write(&i2c_msg, retry)) {
+		LOG_ERR("Set write protect register fail, bus: 0x%x, addr: 0x%x, set_val: 0x%x",
+			bus, addr, set_val);
+		return false;
+	}
+
+	k_msleep(XDPE15284_WAIT_DATA_DELAY_MS);
+
+	memset(&i2c_msg, 0, sizeof(I2C_MSG));
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = XDPE15284_WRITE_PROTECT_CMD_REG;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("Read write protect register fail, bus: 0x%x, addr: 0x%x", bus, addr);
+		return false;
+	}
+
+	if (i2c_msg.data[0] != set_val) {
+		LOG_ERR("Set write protect register fail, bus: 0x%x, addr: 0x%x, ret_val: 0x%x, set_val: 0x%x",
+			bus, addr, i2c_msg.data[0], set_val);
+		return false;
+	}
+
+	return true;
+}
+
+static bool init_write_protect_default_val(uint8_t bus, uint8_t addr)
+{
+	uint8_t retry = 3;
+	I2C_MSG i2c_msg = { 0 };
+
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = XDPE15284_WRITE_PROTECT_CMD_REG;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("Read write protect register fail, bus: 0x%x, addr: 0x%x", bus, addr);
+		return false;
+	}
+
+	write_protect_default_val = i2c_msg.data[0];
+	return true;
+}
+
+bool xdpe15284_set_write_protect(uint8_t bus, uint8_t addr, uint8_t option)
+{
+	if (write_protect_default_val != XDPE15284_DISABLE_WRITE_PROTECT_VAL) {
+		if (write_protect_default_val == XDPE15284_WRITE_PROTECT_DEFAULT_VAL) {
+			if (init_write_protect_default_val(bus, addr) != true) {
+				return false;
+			}
+		}
+		return xdpe15284_set_write_protect_reg(bus, addr, option);
+	}
+
+	return true;
+}
+
+void xdpe15284_set_write_protect_default_val(uint8_t val)
+{
+	// Set write protection default value according to different projects
+	write_protect_default_val = val;
+}
+
+bool xdpe15284_mfr_fw_operation(uint8_t bus, uint8_t addr, uint8_t cmd, uint8_t rx_len,
+				uint8_t *buf)
+{
+	CHECK_NULL_ARG_WITH_RETURN(buf, false);
 
 	uint8_t retry = 3;
 	I2C_MSG i2c_msg = { 0 };
@@ -50,44 +153,93 @@ bool xdpe15284_get_checksum(uint8_t bus, uint8_t addr, uint8_t *checksum)
 	i2c_msg.data[1] = XDPE15284_NOP_CMD;
 
 	if (i2c_master_write(&i2c_msg, retry)) {
-		LOG_ERR("Reset data register fail");
+		LOG_ERR("Reset data register fail, cmd: 0x%x", cmd);
 		return false;
 	}
 
-	/* Send the command to get firmware crc checksum */
+	/* Send the command to get request data */
 	memset(&i2c_msg, 0, sizeof(I2C_MSG));
 	i2c_msg.bus = bus;
 	i2c_msg.target_addr = addr;
 	i2c_msg.tx_len = 2;
 	i2c_msg.data[0] = XDPE15284_MFR_FW_CMD_REG;
-	i2c_msg.data[1] = XDPE15284_CALCULATE_CRC_CMD;
+	i2c_msg.data[1] = cmd;
 
 	if (i2c_master_write(&i2c_msg, retry)) {
-		LOG_ERR("Write calculate crc command to register fail");
+		LOG_ERR("Write command to register fail, cmd: 0x%x", cmd);
 		return false;
 	}
 
-	k_msleep(XDPE15284_CALCULATE_CRC_DELAY_MS);
+	k_msleep(XDPE15284_WAIT_DATA_DELAY_MS);
 
-	/* Read the firmware checksum in MFR firmware command data register */
+	/* Read data in MFR firmware command data register */
 	memset(&i2c_msg, 0, sizeof(I2C_MSG));
 	i2c_msg.bus = bus;
 	i2c_msg.target_addr = addr;
 	i2c_msg.tx_len = 1;
-	i2c_msg.rx_len = XDPE15284_MFR_FW_CMD_DATA_LEN;
+	i2c_msg.rx_len = rx_len + 1;
 	i2c_msg.data[0] = XDPE15284_MFR_FW_CMD_DATA_REG;
 
 	if (i2c_master_read(&i2c_msg, retry)) {
-		LOG_ERR("Read version from register fail");
+		LOG_ERR("Read data from register fail, cmd: 0x%x", cmd);
 		return false;
 	}
 
-	checksum[0] = i2c_msg.data[4];
-	checksum[1] = i2c_msg.data[3];
-	checksum[2] = i2c_msg.data[2];
-	checksum[3] = i2c_msg.data[1];
-
+	memcpy(buf, &i2c_msg.data[1], rx_len);
 	return true;
+}
+
+bool xdpe15284_get_checksum(uint8_t bus, uint8_t addr, uint8_t *checksum)
+{
+	CHECK_NULL_ARG_WITH_RETURN(checksum, false);
+
+	bool ret = xdpe15284_set_write_protect(bus, addr, XDPE15284_DISABLE_WRITE_PROTECT);
+	if (ret != true) {
+		LOG_ERR("Disable write protect fail before getting checksum");
+		return ret;
+	}
+
+	ret = xdpe15284_mfr_fw_operation(bus, addr, XDPE15284_CALCULATE_CRC_CMD,
+					 XDPE15284_MFR_FW_CMD_DATA_LEN, checksum);
+	if (ret != true) {
+		LOG_ERR("Get checksum fail, bus: 0x%x, addr: 0x%x", bus, addr);
+		return ret;
+	}
+
+	ret = xdpe15284_set_write_protect(bus, addr, XDPE15284_ENABLE_WRITE_PROTECT);
+	if (ret != true) {
+		LOG_ERR("Enable write protect fail after getting checksum");
+	}
+
+	reverse_array(checksum, XDPE15284_MFR_FW_CMD_DATA_LEN);
+	return ret;
+}
+
+bool xdpe15284_get_remaining_wr(uint8_t bus, uint8_t addr, uint8_t *data)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+
+	uint8_t buf[XDPE15284_REMAINING_WRITE_DATA_LEN] = { 0 };
+	bool ret = xdpe15284_set_write_protect(bus, addr, XDPE15284_DISABLE_WRITE_PROTECT);
+	if (ret != true) {
+		LOG_ERR("Disable write protect fail before getting remaining write");
+		return ret;
+	}
+
+	ret = xdpe15284_mfr_fw_operation(bus, addr, XDPE15284_GET_REMAINING_WR_CMD,
+					 XDPE15284_REMAINING_WRITE_DATA_LEN, buf);
+	if (ret != true) {
+		LOG_ERR("Get remaining write count fail, bus: 0x%x, addr: 0x%x", bus, addr);
+		return ret;
+	}
+
+	ret = xdpe15284_set_write_protect(bus, addr, XDPE15284_ENABLE_WRITE_PROTECT);
+	if (ret != true) {
+		LOG_ERR("Enable write protect fail after getting remaining write");
+	}
+
+	*data = ((buf[1] << 8 | buf[0]) / XDPE15284C_CONF_SIZE) & 0xFF;
+	return ret;
 }
 
 uint8_t xdpe15284_read(sensor_cfg *cfg, int *reading)

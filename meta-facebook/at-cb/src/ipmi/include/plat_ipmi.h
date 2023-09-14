@@ -19,6 +19,7 @@
 
 #include <stdint.h>
 #include "ipmi.h"
+#include "plat_sensor_table.h"
 
 #define BIC_FW_DATA_LENGTH 7
 #define VR_FW_VERSION_LEN 4
@@ -86,5 +87,6 @@ enum CB_FIRMWARE_COMPONENT {
 };
 
 void pal_construct_ipmi_add_sel_msg(ipmi_msg *msg, common_addsel_msg_t *sel_msg);
+extern struct SWITCH_MUX_INFO pcie_switch_mux_info[PEX_MAX_NUMBER];
 
 #endif

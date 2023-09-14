@@ -106,8 +106,9 @@ int ascii_to_val(uint8_t ascii_byte);
 uint32_t uint32_t_byte_reverse(uint32_t data);
 void convert_uint32_t_to_uint8_t_pointer(uint32_t data_32, uint8_t *data_8, uint8_t len,
 					 uint8_t endian);
-void convert_uint8_t_pointer_to_uint32_t(uint32_t *data_32, uint8_t *data_8, uint8_t len,
+void convert_uint8_t_pointer_to_uint32_t(uint32_t *data_32, const uint8_t *data_8, uint8_t len,
 					 uint8_t endian);
 double power(double x, int y);
+int uint8_t_to_dec_ascii_pointer(uint8_t val, uint8_t *result, uint8_t len);
 
 #endif
