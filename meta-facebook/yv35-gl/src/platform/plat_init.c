@@ -24,6 +24,7 @@
 #include "plat_dimm.h"
 #include "plat_i3c.h"
 #include "plat_pmic.h"
+#include "plat_cpu.h"
 
 /*
  * The operating voltage of GPIO input pins are lower than actual voltage because the chip
@@ -78,6 +79,7 @@ void pal_device_init()
 	init_i3c_dimm_prsnt_status();
 	start_get_dimm_info_thread();
 	start_monitor_pmic_error_thread();
+	start_monitor_cpu_thread();
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78

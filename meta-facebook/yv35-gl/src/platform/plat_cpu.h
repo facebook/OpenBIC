@@ -19,4 +19,14 @@
 
 #define CPU_TIME_UNIT 100000000
 
+#define MONITOR_CPU_STACK_SIZE 600
+#define MONITOR_CPU_TIME_MS 1000
+
+#define RDPKG_IDX_PKG_THERMAL_STATUS 0x14
+#define THERMAL_STATUS_DEASSERT 0
+#define THERMAL_STATUS_ASSERT 1
+
+void monitor_cpu_handler();
+void start_monitor_cpu_thread();
+
 #endif

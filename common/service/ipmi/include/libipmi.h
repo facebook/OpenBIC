@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -46,6 +46,7 @@
 #define IPMI_OEM_SENSOR_TYPE_SYS_BOOT_STA 0xCA
 #define IPMI_OEM_SENSOR_TYPE_VR 0xCB
 #define IPMI_OEM_SENSOR_TYPE_HDT 0xCC
+#define IPMI_OEM_SENSOR_TYPE_CPU_THERM_STATUS 0xCD
 
 /* event/reading type, see IPMI spec 42.1, table 42-1 */
 #define IPMI_EVENT_TYPE_THRESHOLD 0x01
@@ -189,6 +190,11 @@
 #define IPMI_OEM_EVENT_OFFSET_VPP_EVENT 0x0B
 #define IPMI_OEM_EVENT_OFFSET_1OU 0x01
 #define IPMI_OEM_EVENT_OFFSET_2OU 0x02
+
+/* sensor-specific offset for  CPUX_THERM_STATUS*/
+#define IPMI_OEM_EVENT_OFFSET_CPU_CRIT_TEMP 0x00
+#define IPMI_OEM_EVENT_OFFSET_PROCHOT 0x01
+#define IPMI_OEM_EVENT_OFFSET_TCC_ACT 0x02
 
 enum ipmi_chassis_control_e {
 	IPMI_CHASSIS_CTRL_POWER_DOWN,
