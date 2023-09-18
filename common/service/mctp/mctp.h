@@ -188,6 +188,13 @@ typedef struct _mctp {
 	uint8_t cci_msg_tag;
 } mctp;
 
+typedef struct _mctp_port {
+	mctp *mctp_inst;
+	mctp_medium_conf conf;
+	uint8_t mctp_medium_type;
+	uint8_t user_idx;
+} mctp_port;
+
 /* public function */
 mctp *mctp_init(void);
 
