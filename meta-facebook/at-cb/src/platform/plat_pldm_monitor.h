@@ -43,6 +43,7 @@ enum plat_pldm_event_sensor_num {
 	PLDM_EVENT_ACCL_PWR_CBL_10,
 	PLDM_EVENT_ACCL_PWR_CBL_11,
 	PLDM_EVENT_ACCL_PWR_CBL_12,
+	PLDM_EVENT_FIO,
 };
 
 enum plat_pldm_device_state_set_offset {
@@ -52,5 +53,6 @@ enum plat_pldm_device_state_set_offset {
 
 void plat_accl_present_check();
 void plat_accl_power_cable_present_check();
+void plat_fio_present_check();
 
 #endif
