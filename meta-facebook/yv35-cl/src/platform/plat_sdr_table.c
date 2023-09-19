@@ -243,7 +243,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // discrete reading mask/ settable
 		IPMI_SDR_UCT_SETTABLE | IPMI_SDR_LCT_SETTABLE | IPMI_SDR_UCT_READABLE |
 			IPMI_SDR_LCT_READABLE, // threshold mask/ readable threshold mask
-		0x00, // sensor unit
+		0x80, // sensor unit
 		IPMI_SENSOR_UNIT_DEGREE_C, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
@@ -259,8 +259,8 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0x7D, // UNRT
-		0x00, // UCT
+		0x00, // UNRT
+		-0x03, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
@@ -381,7 +381,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0x7D, // UNRT
+		0x00, // UNRT
 		0x00, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
