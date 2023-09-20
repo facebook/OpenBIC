@@ -463,6 +463,9 @@ void check_vr_type(uint8_t index)
 	} else if ((msg.data[0] == 0x02) && (msg.data[2] == 0x8A)) {
 		sensor_config[index].type = sensor_dev_xdpe15284;
 		if (sensor_config[index].offset == VR_VOL_CMD) {
+			if (pre_ifx_vr_cache_crc(sensor_config, index) == false) {
+				LOG_ERR("XDPE15284 fails to cache the crc");
+			}
 			set_vr_page(sensor_config[index].port, sensor_config[index].target_addr, 0);
 			xdpe15284_lock_reg(sensor_config[index].port,
 					   sensor_config[index].target_addr);

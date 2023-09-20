@@ -33,6 +33,8 @@
 #include "hal_peci.h"
 #include "power_status.h"
 #include "libutil.h"
+#include "xdpe15284.h"
+#include "util_sys.h"
 
 #include "i2c-mux-tca9548.h"
 
@@ -100,6 +102,10 @@ pmic_init_arg pmic_init_args[] = {
 
 // R_load is the value of resistance connected to EFUSE , and EFUSE would adjust the reading accuracy according to r_load
 max16550a_init_arg max16550a_init_args[] = { [0] = { .r_load = 14000 } };
+
+ifx_vr_fw_info ifx_vr_fw_info_table[] = {
+	{ .is_init = false }, { .is_init = false }, { .is_init = false }
+};
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
@@ -517,5 +523,47 @@ bool post_intel_dimm_i3c_read(sensor_cfg *cfg, void *args, int *reading)
 		return false;
 	}
 
+	return true;
+}
+
+bool pre_ifx_vr_cache_crc(sensor_cfg *cfg, uint8_t index)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+
+	uint8_t offset = 0;
+	int ret = 0;
+
+	switch (cfg[index].target_addr) {
+	case PVCCIN_ADDR:
+		offset = IFX_VR_VCCIN;
+		break;
+	case PVCCFA_EHV_ADDR:
+		offset = IFX_VR_VCCFA;
+		break;
+	case PVCCD_HV_ADDR:
+		offset = IFX_VR_VCCD;
+		break;
+	}
+
+	/* Get IFX VR version */
+	if (!ifx_vr_fw_info_table[offset].is_init) {
+		xdpe15284_unlock_reg(cfg[index].port, cfg[index].target_addr);
+		ret = xdpe15284_get_checksum(cfg[index].port, cfg[index].target_addr,
+					     ifx_vr_fw_info_table[offset].checksum);
+		if (ret != true) {
+			LOG_ERR("XDPE15284 fails to get checksum");
+			return false;
+		}
+
+		ret = xdpe15284_get_remaining_wr(cfg[index].port, cfg[index].target_addr,
+						 &ifx_vr_fw_info_table[offset].remaining_write);
+		if (ret != true) {
+			LOG_ERR("XDPE15284 fails to get remaining write");
+			return false;
+		}
+
+		ifx_vr_fw_info_table[offset].vendor = VENDOR_INFINEON;
+		ifx_vr_fw_info_table[offset].is_init = true;
+	}
 	return true;
 }

@@ -24,12 +24,15 @@
 #include "fru.h"
 #include "eeprom.h"
 #include "power_status.h"
+#include "sensor.h"
 #include "plat_fru.h"
 #include "plat_class.h"
+#include "plat_hook.h"
 #include "plat_ipmb.h"
 #include "plat_dimm.h"
 #include "plat_sensor_table.h"
 #include "pmbus.h"
+#include "oem_1s_handler.h"
 
 #include "pldm.h"
 #include "plat_mctp.h"
@@ -396,5 +399,95 @@ void OEM_1S_GET_DIMM_I3C_MUX_SELECTION(ipmi_msg *msg)
 
 	msg->completion_code = CC_SUCCESS;
 	msg->data_len = 1;
+	return;
+}
+
+void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+	uint8_t index = 0;
+
+	if (msg->data_len != 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t component = msg->data[0];
+	ipmb_error status;
+	ipmi_msg *bridge_msg;
+
+	switch (component) {
+	case COMPNT_CPLD:
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		break;
+	case COMPNT_BIC:
+		msg->data[0] = BIC_FW_YEAR_MSB;
+		msg->data[1] = BIC_FW_YEAR_LSB;
+		msg->data[2] = BIC_FW_WEEK;
+		msg->data[3] = BIC_FW_VER;
+		msg->data[4] = BIC_FW_platform_0;
+		msg->data[5] = BIC_FW_platform_1;
+		msg->data[6] = BIC_FW_platform_2;
+		msg->data_len = 7;
+		msg->completion_code = CC_SUCCESS;
+		break;
+	case COMPNT_ME:
+		if ((IPMB_inf_index_map[ME_IPMB] == RESERVED) ||
+		    (IPMB_config_table[IPMB_inf_index_map[ME_IPMB]].enable_status == DISABLE)) {
+			LOG_ERR("IPMB ME interface not enabled.");
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+
+		bridge_msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
+		if (bridge_msg == NULL) {
+			msg->completion_code = CC_OUT_OF_SPACE;
+			return;
+		}
+		bridge_msg->data_len = 0;
+		bridge_msg->seq_source = 0xff;
+		bridge_msg->InF_source = SELF;
+		bridge_msg->InF_target = ME_IPMB;
+		bridge_msg->netfn = NETFN_APP_REQ;
+		bridge_msg->cmd = CMD_APP_GET_DEVICE_ID;
+
+		status = ipmb_read(bridge_msg, IPMB_inf_index_map[bridge_msg->InF_target]);
+		if (status != IPMB_ERROR_SUCCESS) {
+			LOG_ERR("ipmb read fail status: %x", status);
+			SAFE_FREE(bridge_msg);
+			msg->completion_code = CC_BRIDGE_MSG_ERR;
+			return;
+		} else {
+			msg->data[0] = bridge_msg->data[2] & 0x7F;
+			msg->data[1] = bridge_msg->data[3] >> 4;
+			msg->data[2] = bridge_msg->data[3] & 0x0F;
+			msg->data[3] = bridge_msg->data[12];
+			msg->data[4] = bridge_msg->data[13] >> 4;
+			msg->data_len = 5;
+			msg->completion_code = CC_SUCCESS;
+			SAFE_FREE(bridge_msg);
+		}
+		break;
+	case COMPNT_PVCCIN:
+	case COMPNT_PVCCFA_EHV_FIVRA:
+	case COMPNT_PVCCD_HV:
+	case COMPNT_PVCCINFAON:
+	case COMPNT_PVCCFA_EHV:
+		/* Only for Infineon xdpe15284 */
+		index = component - COMPNT_PVCCIN;
+		if (ifx_vr_fw_info_table[index].is_init) {
+			memcpy(&msg->data[0], ifx_vr_fw_info_table[index].checksum, 4);
+			msg->data[4] = ifx_vr_fw_info_table[index].remaining_write;
+			msg->data[5] = ifx_vr_fw_info_table[index].vendor;
+			msg->data_len = 6;
+			msg->completion_code = CC_SUCCESS;
+		} else {
+			msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+		}
+		break;
+	default:
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		break;
+	}
 	return;
 }
