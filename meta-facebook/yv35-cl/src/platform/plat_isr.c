@@ -38,6 +38,8 @@
 
 LOG_MODULE_REGISTER(plat_isr);
 
+static bool is_smi_assert = false;
+
 uint8_t _1ou_m2_name_mapping_table[4] = {
 	0x3A,
 	0x3C,
@@ -638,7 +640,7 @@ void ISR_NMI()
 		sel_msg.InF_target = BMC_IPMB;
 		sel_msg.sensor_type = IPMI_SENSOR_TYPE_CRITICAL_INT;
 		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
-		sel_msg.sensor_number = SENSOR_NUM_NMI;
+		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
 		sel_msg.event_data1 = IPMI_EVENT_CRITICAL_INT_FP_NMI;
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
@@ -659,5 +661,65 @@ void ISR_RST_PLTRST_PLD()
 
 	if (k_mutex_unlock(&i3c_dimm_mux_mutex)) {
 		LOG_ERR("Failed to unlock I3C dimm MUX");
+	}
+}
+
+void smi_handler()
+{
+	if (gpio_get(RST_PLTRST_PLD_N) == GPIO_HIGH && gpio_get(PWRGD_CPU_LVC3) == GPIO_HIGH &&
+	    gpio_get(IRQ_SMI_ACTIVE_BMC_N) == GPIO_LOW) {
+		common_addsel_msg_t sel_msg;
+		memset(&sel_msg, 0, sizeof(common_addsel_msg_t));
+
+		sel_msg.InF_target = BMC_IPMB;
+		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_SMI90s;
+		sel_msg.event_data2 = 0xFF;
+		sel_msg.event_data3 = 0xFF;
+		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
+			LOG_ERR("Failed to add SMI assertion SEL");
+		}
+		is_smi_assert = true;
+	}
+}
+
+K_WORK_DELAYABLE_DEFINE(smi_work, smi_handler);
+void ISR_SMI()
+{
+	/* Refer to "16.6 I/O Signal Planes and States"
+	 *,which is in "6th Generation Intel® Core™ Processor Families I/O Platform".
+	 * 
+	 * BIC doesn't need to check SMI GPIO in "during reset" and "S5 power off" 
+	 *states
+	 */
+	if (gpio_get(RST_PLTRST_PLD_N) == GPIO_HIGH && gpio_get(PWRGD_CPU_LVC3) == GPIO_HIGH) {
+		if (gpio_get(IRQ_SMI_ACTIVE_BMC_N) == GPIO_LOW) {
+			/* start thread smi_handler after 90 seconds */
+			k_work_schedule_for_queue(&plat_work_q, &smi_work,
+						  K_SECONDS(DETECT_SMI_DELAY_90S));
+		} else {
+			if (k_work_cancel_delayable(&smi_work) != 0) {
+				LOG_ERR("Failed to cancel SMI delayable work");
+			}
+			if (is_smi_assert) {
+				common_addsel_msg_t sel_msg;
+				memset(&sel_msg, 0, sizeof(common_addsel_msg_t));
+
+				sel_msg.InF_target = BMC_IPMB;
+				sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+				sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+				sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
+				sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_SMI90s;
+				sel_msg.event_data2 = 0xFF;
+				sel_msg.event_data3 = 0xFF;
+				if (!common_add_sel_evt_record(&sel_msg)) {
+					LOG_ERR("Failed to add SMI deassertion SEL");
+				}
+
+				is_smi_assert = false;
+			}
+		}
 	}
 }
