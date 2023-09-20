@@ -78,6 +78,7 @@ enum DIMM_DEVICE_TYPE {
 
 typedef struct dimm_info {
 	bool is_present;
+	bool is_ready_monitor;
 	uint8_t pmic_error_data[MAX_LEN_I3C_GET_PMIC_ERR];
 	uint8_t pmic_pwr_data[MAX_LEN_I3C_GET_PMIC_PWR];
 	uint8_t spd_temp_data[MAX_LEN_I3C_GET_SPD_TEMP];
@@ -92,6 +93,7 @@ extern dimm_info dimm_data[MAX_COUNT_DIMM];
 void start_get_dimm_info_thread();
 void get_dimm_info_handler();
 bool is_dimm_prsnt_inited();
+bool is_dimm_ready_monitor(uint8_t dimm_id);
 void init_i3c_dimm_prsnt_status();
 bool get_dimm_presence_status(uint8_t dimm_id);
 void set_dimm_presence_status(uint8_t index, uint8_t status);

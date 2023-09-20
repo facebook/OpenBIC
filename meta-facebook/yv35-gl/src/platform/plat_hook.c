@@ -203,6 +203,11 @@ bool post_intel_dimm_i3c_read(sensor_cfg *cfg, void *args, int *reading)
 	dimm_post_proc_arg *post_proc_args = (dimm_post_proc_arg *)args;
 	sensor_val *sval = (sensor_val *)reading;
 
+	// If DIMM information handler is not ready, BIC won't send the DIMM's temperature to CPU by PECI.
+	if (!is_dimm_ready_monitor(post_proc_args->dimm_channel)) {
+		return true;
+	}
+
 	uint8_t addr = 0, write_len = 0, read_len = 0, cmd = 0, read_buf = 0;
 	uint8_t write_buf[PECI_WR_PKG_LEN_DWORD] = { 0 };
 	int ret = 0;
