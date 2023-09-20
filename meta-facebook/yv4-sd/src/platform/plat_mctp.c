@@ -36,17 +36,11 @@ LOG_MODULE_REGISTER(plat_mctp);
 #define I2C_BUS_BMC 0x02
 
 /* mctp endpoint */
-#define MCTP_EID_BMC 0x09
+#define MCTP_EID_BMC 0x08
 #define MCTP_EID_SELF 0x0A
 
 K_TIMER_DEFINE(send_cmd_timer, send_cmd_to_dev, NULL);
 K_WORK_DEFINE(send_cmd_work, send_cmd_to_dev_handler);
-
-typedef struct _mctp_smbus_port {
-	mctp *mctp_inst;
-	mctp_medium_conf conf;
-	uint8_t user_idx;
-} mctp_smbus_port;
 
 /* mctp route entry struct */
 typedef struct _mctp_route_entry {
@@ -60,8 +54,10 @@ typedef struct _mctp_msg_handler {
 	mctp_fn_cb msg_handler_cb;
 } mctp_msg_handler;
 
-static mctp_smbus_port smbus_port[] = {
-	{ .conf.smbus_conf.addr = I2C_ADDR_BIC, .conf.smbus_conf.bus = I2C_BUS_BMC },
+static mctp_port plat_mctp_port[] = {
+	{ .conf.smbus_conf.addr = I2C_ADDR_BIC,
+	  .conf.smbus_conf.bus = I2C_BUS_BMC,
+	  .mctp_medium_type = MCTP_MEDIUM_TYPE_SMBUS },
 };
 
 mctp_route_entry mctp_route_tbl[] = {
@@ -71,8 +67,8 @@ mctp_route_entry mctp_route_tbl[] = {
 static mctp *find_mctp_by_smbus(uint8_t bus)
 {
 	uint8_t i;
-	for (i = 0; i < ARRAY_SIZE(smbus_port); i++) {
-		mctp_smbus_port *p = smbus_port + i;
+	for (i = 0; i < ARRAY_SIZE(plat_mctp_port); i++) {
+		mctp_port *p = plat_mctp_port + i;
 
 		if (bus == p->conf.smbus_conf.bus) {
 			return p->mctp_inst;
@@ -107,8 +103,8 @@ static void set_dev_endpoint(void)
 		if (p->bus == I2C_BUS_BMC && p->addr == I2C_ADDR_BMC)
 			continue;
 
-		for (uint8_t j = 0; j < ARRAY_SIZE(smbus_port); j++) {
-			if (p->bus != smbus_port[j].conf.smbus_conf.bus)
+		for (uint8_t j = 0; j < ARRAY_SIZE(plat_mctp_port); j++) {
+			if (p->bus != plat_mctp_port[j].conf.smbus_conf.bus)
 				continue;
 
 			struct _set_eid_req req = { 0 };
@@ -117,7 +113,7 @@ static void set_dev_endpoint(void)
 
 			mctp_ctrl_msg msg;
 			memset(&msg, 0, sizeof(msg));
-			msg.ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
+			msg.ext_params.type = plat_mctp_port[j].mctp_medium_type;
 			msg.ext_params.smbus_ext_params.addr = p->addr;
 
 			msg.hdr.cmd = MCTP_CTRL_CMD_SET_ENDPOINT_ID;
@@ -296,8 +292,8 @@ void plat_mctp_init(void)
 	int ret = 0;
 
 	/* init the mctp/pldm instance */
-	for (uint8_t i = 0; i < ARRAY_SIZE(smbus_port); i++) {
-		mctp_smbus_port *p = smbus_port + i;
+	for (uint8_t i = 0; i < ARRAY_SIZE(plat_mctp_port); i++) {
+		mctp_port *p = plat_mctp_port + i;
 
 		p->mctp_inst = mctp_init();
 		if (!p->mctp_inst) {
@@ -305,8 +301,7 @@ void plat_mctp_init(void)
 			continue;
 		}
 
-		uint8_t rc =
-			mctp_set_medium_configure(p->mctp_inst, MCTP_MEDIUM_TYPE_SMBUS, p->conf);
+		uint8_t rc = mctp_set_medium_configure(p->mctp_inst, p->mctp_medium_type, p->conf);
 		if (rc != MCTP_SUCCESS) {
 			LOG_ERR("mctp set medium configure failed");
 		}
@@ -317,4 +312,14 @@ void plat_mctp_init(void)
 
 		ret = mctp_start(p->mctp_inst);
 	}
+}
+
+uint8_t plat_get_mctp_port_count()
+{
+	return ARRAY_SIZE(plat_mctp_port);
+}
+
+mctp_port *plat_get_mctp_port(uint8_t index)
+{
+	return plat_mctp_port + index;
 }
