@@ -64,3 +64,17 @@ void plat_accl_power_cable_present_check()
 		}
 	}
 }
+
+void plat_fio_present_check()
+{
+	struct pldm_sensor_event_state_sensor_state event;
+	event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_PRESENCE;
+	event.event_state = gpio_get(PRSNT_FIO_N) == LOW_ACTIVE ? PLDM_STATE_SET_PRESENT :
+								  PLDM_STATE_SET_NOT_PRESENT;
+	event.previous_event_state = PLDM_STATE_SET_NOT_PRESENT;
+	if (pldm_send_platform_event(PLDM_SENSOR_EVENT, PLDM_EVENT_FIO, PLDM_STATE_SENSOR_STATE,
+				     (uint8_t *)&event,
+				     sizeof(struct pldm_sensor_event_state_sensor_state))) {
+		LOG_ERR("Send FIO cable presence event log failed");
+	}
+}
