@@ -110,7 +110,7 @@ uint8_t mctp_ctrl_cmd_get_endpoint_id(void *mctp_inst, uint8_t *buf, uint16_t le
 
 	struct _get_eid_resp *p = (struct _get_eid_resp *)resp;
 
-	p->eid = MCTP_DEFAULT_ENDPOINT;
+	p->eid = plat_get_eid();
 	p->eid_type = STATIC_EID;
 	p->endpoint_type = BRIDGE;
 	/* Not support fairness arbitration */

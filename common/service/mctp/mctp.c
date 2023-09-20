@@ -390,6 +390,11 @@ static void mctp_tx_task(void *arg, void *dummy0, void *dummy1)
 	}
 }
 
+__weak uint8_t plat_get_eid()
+{
+	return MCTP_DEFAULT_ENDPOINT;
+}
+
 /* mctp handle initial */
 mctp *mctp_init(void)
 {
@@ -401,7 +406,7 @@ mctp *mctp_init(void)
 	memset(mctp_inst, 0, sizeof(*mctp_inst));
 	mctp_inst->medium_type = MCTP_MEDIUM_TYPE_UNKNOWN;
 	mctp_inst->max_msg_size = MCTP_DEFAULT_MSG_MAX_SIZE;
-	mctp_inst->endpoint = MCTP_DEFAULT_ENDPOINT;
+	mctp_inst->endpoint = plat_get_eid();
 
 	LOG_DBG("mctp_inst = %p", mctp_inst);
 	return mctp_inst;

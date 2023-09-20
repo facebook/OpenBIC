@@ -237,6 +237,7 @@ uint8_t mctp_reg_msg_rx_func(mctp *mctp_inst, mctp_fn_cb rx_cb);
 mctp *pal_get_mctp(uint8_t mctp_medium_type, uint8_t bus);
 int pal_get_target(uint8_t interface);
 int pal_get_medium_type(uint8_t interface);
+uint8_t plat_get_eid();
 
 #ifdef __cplusplus
 }
