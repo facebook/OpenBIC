@@ -18,6 +18,7 @@
 #include "ipmi.h"
 #include "sensor.h"
 #include "plat_ipmb.h"
+#include "plat_class.h"
 
 #include "hal_i2c.h"
 
@@ -287,10 +288,22 @@ mctp *pal_get_mctp(uint8_t mctp_medium_type, uint8_t bus)
 	}
 }
 
+uint8_t plat_eid = MCTP_DEFAULT_ENDPOINT;
+void plat_set_eid_by_slot()
+{
+	uint8_t slot_eid = get_slot_eid();
+	plat_eid = slot_eid;
+}
+
+uint8_t plat_get_eid()
+{
+	return plat_eid;
+}
+
 void plat_mctp_init(void)
 {
 	int ret = 0;
-
+	plat_set_eid_by_slot();
 	/* init the mctp/pldm instance */
 	for (uint8_t i = 0; i < ARRAY_SIZE(plat_mctp_port); i++) {
 		mctp_port *p = plat_mctp_port + i;
