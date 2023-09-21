@@ -856,27 +856,26 @@ uint8_t pldm_get_pdr(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instan
 	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
 
+	int response_count = 0;
+	uint32_t record_count = get_record_count();
 	struct pldm_get_pdr_req *req_p = (struct pldm_get_pdr_req *)buf;
 	struct pldm_get_pdr_resp *res_p = (struct pldm_get_pdr_resp *)resp;
 
-	PDR_numeric_sensor *numeric_sensor_table = get_pdr_table();
-	if (numeric_sensor_table == NULL) {
-		LOG_ERR("The PDR table is empty");
+	response_count =
+		get_pdr_table_via_record_handle(&res_p->record_data[0], req_p->record_handle);
+	if (response_count <= 0) {
+		LOG_ERR("Failed to get PDR for record handle: %x\n", req_p->record_handle);
 		return PLDM_ERROR;
 	}
 
-	uint8_t *pdr_table = (uint8_t *)&numeric_sensor_table[req_p->record_handle];
-	memcpy(&res_p->record_data[0], pdr_table, sizeof(PDR_numeric_sensor));
-
-	uint16_t pdr_count = get_pdr_size();
-	if (req_p->record_handle + 1 >= pdr_count) {
+	if (req_p->record_handle + 1 >= record_count) {
 		res_p->next_record_handle = 0x00000000;
 	} else {
 		res_p->next_record_handle = req_p->record_handle + 1;
 	}
 
 	res_p->transfer_flag = PLDM_TRANSFER_FLAG_START_AND_END;
-	res_p->response_count = sizeof(res_p->record_data);
+	res_p->response_count = response_count;
 	*resp_len = sizeof(struct pldm_get_pdr_resp);
 	res_p->completion_code = PLDM_SUCCESS;
 	return PLDM_SUCCESS;

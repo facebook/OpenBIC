@@ -37,7 +37,7 @@ PDR_numeric_sensor plat_pdr_table[] = {
 };
 
 const int PDR_TABLE_SIZE = ARRAY_SIZE(plat_pdr_table);
-uint16_t plat_get_pdr_size()
+uint32_t plat_get_pdr_size(uint8_t pdr_type)
 {
 	return PDR_TABLE_SIZE;
 }

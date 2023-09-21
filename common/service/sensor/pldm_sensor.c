@@ -336,9 +336,12 @@ void pldm_sensor_poll_thread_init()
 void pldm_sensor_monitor_init()
 {
 	LOG_INF("Init PDR table");
-	uint16_t pdr_size = plat_get_pdr_size();
+	uint16_t pdr_size = plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR);
 	if (pdr_size != 0) {
-		pdr_init();
+		if (pdr_init() != 0) {
+			LOG_ERR("Falied to initialize Platform PDR table");
+			return;
+		}
 	} else {
 		LOG_ERR("Platform PDR table not configured");
 	}

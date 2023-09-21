@@ -3,13 +3,17 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <sys/byteorder.h>
 
-#define TIMESTAMP104_SIZE 13//A binary datetime type formatted as a series of 13 bytes
+#define TIMESTAMP104_SIZE 13 //A binary datetime type formatted as a series of 13 bytes
 #define NUMERIC_PDR_SIZE 108
+#define MAX_LANGUAGE_TAG_LEN 3 //name language tag: "en"
+#define MAX_AUX_SENSOR_NAME_LEN 40
 
 typedef float real32_t;
+typedef uint_least16_t char16_t;
 
-uint8_t pdr_init(void);
+int pdr_init(void);
 
 enum pdr_repository_state {
 	PDR_STATE_AVAILABLE = 0x00,
@@ -22,6 +26,32 @@ enum PDR_SENSOR_INIT_STATE {
 	PDR_SENSOR_USEINIT_PDR,
 	PDR_SENSOR_ENABLE,
 	PDR_SENSOR_DISABLE,
+};
+
+enum pldm_pdr_types {
+	PLDM_TERMINUS_LOCATOR_PDR = 1,
+	PLDM_NUMERIC_SENSOR_PDR = 2,
+	PLDM_NUMERIC_SENSOR_INITIALIZATION_PDR = 3,
+	PLDM_STATE_SENSOR_PDR = 4,
+	PLDM_STATE_SENSOR_INITIALIZATION_PDR = 5,
+	PLDM_SENSOR_AUXILIARY_NAMES_PDR = 6,
+	PLDM_OEM_UNIT_PDR = 7,
+	PLDM_OEM_STATE_SET_PDR = 8,
+	PLDM_NUMERIC_EFFECTER_PDR = 9,
+	PLDM_NUMERIC_EFFECTER_INITIALIZATION_PDR = 10,
+	PLDM_STATE_EFFECTER_PDR = 11,
+	PLDM_STATE_EFFECTER_INITIALIZATION_PDR = 12,
+	PLDM_EFFECTER_AUXILIARY_NAMES_PDR = 13,
+	PLDM_EFFECTER_OEM_SEMANTIC_PDR = 14,
+	PLDM_PDR_ENTITY_ASSOCIATION = 15,
+	PLDM_ENTITY_AUXILIARY_NAMES_PDR = 16,
+	PLDM_OEM_ENTITY_ID_PDR = 17,
+	PLDM_INTERRUPT_ASSOCIATION_PDR = 18,
+	PLDM_EVENT_LOG_PDR = 19,
+	PLDM_PDR_FRU_RECORD_SET = 20,
+	PLDM_COMPACT_NUMERIC_SENSOR_PDR = 21,
+	PLDM_OEM_DEVICE_PDR = 126,
+	PLDM_OEM_PDR = 127,
 };
 
 typedef struct __attribute__((packed)) {
@@ -81,6 +111,16 @@ typedef struct __attribute__((packed)) {
 } PDR_numeric_sensor;
 
 typedef struct __attribute__((packed)) {
+	PDR_common_header pdr_common_header;
+	uint16_t terminus_handle;
+	uint16_t sensor_id;
+	uint8_t sensor_count;
+	uint8_t nameStringCount;
+	char nameLanguageTag[MAX_LANGUAGE_TAG_LEN];
+	char16_t sensorName[MAX_AUX_SENSOR_NAME_LEN];
+} PDR_sensor_auxiliary_names;
+
+typedef struct __attribute__((packed)) {
 	uint8_t repository_state;
 	uint8_t update_time[TIMESTAMP104_SIZE];
 	uint8_t oem_update_time[TIMESTAMP104_SIZE];
@@ -90,10 +130,11 @@ typedef struct __attribute__((packed)) {
 	uint8_t data_transfer_handle_timeout;
 } PDR_INFO;
 
-PDR_INFO* get_pdr_info();
-PDR_numeric_sensor* get_pdr_table();
-uint16_t get_pdr_size();
-uint16_t plat_get_pdr_size();
-void plat_load_pdr_table(PDR_numeric_sensor* numeric_sensor_table);
+PDR_INFO *get_pdr_info();
+uint32_t get_record_count();
+uint32_t plat_get_pdr_size(uint8_t pdr_type);
+void plat_load_numeric_sensor_pdr_table(PDR_numeric_sensor *numeric_sensor_table);
+void plat_load_aux_sensor_names_pdr_table(PDR_sensor_auxiliary_names *aux_sensor_name_table);
+int get_pdr_table_via_record_handle(uint8_t *record_data, uint32_t record_handle);
 
 #endif

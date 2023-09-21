@@ -22,7 +22,7 @@
 
 #define MAX_SENSOR_SIZE 60
 
-uint16_t plat_get_pdr_size();
+uint32_t plat_get_pdr_size(uint8_t pdr_type);
 void plat_load_pdr_table(PDR_numeric_sensor *numeric_sensor_table);
 
 #endif
