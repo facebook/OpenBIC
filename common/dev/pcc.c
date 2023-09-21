@@ -29,6 +29,11 @@
 #include "plat_sensor_table.h"
 #include "plat_fru.h"
 
+#ifdef ENABLE_PLDM
+#include "pldm_oem.h"
+#include "plat_mctp.h"
+#endif
+
 #define PSB_POSTCODE_PREFIX 0xEE
 #define ABL_POSTCODE_PREFIX 0xEA
 
@@ -40,6 +45,7 @@
 
 #define PCCR0_EN_DMA_MODE BIT(14)
 #define PCCR0_EN BIT(0)
+#define POST_CODE_SIZE 4
 
 LOG_MODULE_REGISTER(pcc);
 
@@ -107,6 +113,7 @@ void check_PSB_error(uint32_t postcode)
 		return;
 	}
 
+#ifndef ENABLE_PLDM
 	/* Match PSB error */
 	/* Add SEL */
 	common_addsel_msg_t sel_msg;
@@ -135,6 +142,7 @@ void check_PSB_error(uint32_t postcode)
 	if (!write_psb_inform(&psb_inform)) {
 		LOG_ERR("Failed to write PSB to EEPROM, post code 0x%08x.", postcode);
 	}
+#endif
 }
 
 void check_ABL_error(uint32_t postcode)
@@ -149,7 +157,7 @@ void check_ABL_error(uint32_t postcode)
 	if (i == ARRAY_SIZE(ABL_error_code_list)) {
 		return;
 	}
-
+#ifndef ENABLE_PLDM
 	ipmb_error status;
 	ipmi_msg *msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
 	if (msg == NULL) {
@@ -196,19 +204,100 @@ void check_ABL_error(uint32_t postcode)
 		LOG_ERR("Failed to record ABL SEL, post code 0x%08x, ret %d", postcode, status);
 	}
 	SAFE_FREE(msg);
+#endif
+}
+
+#ifdef ENABLE_PLDM
+bool pldm_send_post_code_to_bmc(uint16_t send_index)
+{
+	pldm_msg msg = { 0 };
+	msg.ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
+	msg.ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
+
+	msg.hdr.pldm_type = PLDM_TYPE_OEM;
+	msg.hdr.cmd = PLDM_OEM_WRITE_FILE_IO;
+	msg.hdr.rq = 1;
+
+	struct pldm_oem_write_file_io_req *ptr = (struct pldm_oem_write_file_io_req *)malloc(
+		sizeof(struct pldm_oem_write_file_io_req) + (POST_CODE_SIZE * sizeof(uint8_t)));
+
+	if (ptr == NULL) {
+		LOG_ERR("Memory allocation failed.");
+		return false;
+	}
+
+	ptr->cmd_code = POST_CODE;
+	ptr->data_length = POST_CODE_SIZE;
+	ptr->messages[0] = pcc_read_buffer[send_index] & 0xFF;
+	ptr->messages[1] = (pcc_read_buffer[send_index] >> 8) & 0xFF;
+	ptr->messages[2] = (pcc_read_buffer[send_index] >> 16) & 0xFF;
+	ptr->messages[3] = (pcc_read_buffer[send_index] >> 24) & 0xFF;
+
+	msg.buf = (uint8_t *)ptr;
+	msg.len = sizeof(struct pldm_oem_write_file_io_req) + POST_CODE_SIZE;
+
+	uint8_t resp_len = sizeof(struct pldm_oem_write_file_io_resp);
+	uint8_t rbuf[resp_len];
+
+	if (!mctp_pldm_read(find_mctp_by_smbus(I2C_BUS_BMC), &msg, rbuf, resp_len)) {
+		LOG_ERR("mctp_pldm_read fail");
+		return false;
+	}
+
+	struct pldm_oem_write_file_io_resp *resp = (struct pldm_oem_write_file_io_resp *)rbuf;
+	if (resp->completion_code != PLDM_SUCCESS) {
+		LOG_ERR("Check reponse completion code fail %x", resp->completion_code);
+	}
+
+	SAFE_FREE(ptr);
+	return true;
+}
+#endif
+
+bool ipmi_send_post_code_to_bmc(uint16_t send_index)
+{
+	ipmi_msg *msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
+	if (msg == NULL) {
+		LOG_ERR("Memory allocation failed.");
+		return false;
+	}
+
+	memset(msg, 0, sizeof(ipmi_msg));
+	msg->InF_source = SELF;
+	msg->InF_target = BMC_IPMB;
+	msg->netfn = NETFN_OEM_1S_REQ;
+	msg->cmd = CMD_OEM_1S_SEND_4BYTE_POST_CODE_TO_BMC;
+	msg->data_len = 8;
+	msg->data[0] = IANA_ID & 0xFF;
+	msg->data[1] = (IANA_ID >> 8) & 0xFF;
+	msg->data[2] = (IANA_ID >> 16) & 0xFF;
+	msg->data[3] = POST_CODE_SIZE;
+	msg->data[4] = pcc_read_buffer[send_index] & 0xFF;
+	msg->data[5] = (pcc_read_buffer[send_index] >> 8) & 0xFF;
+	msg->data[6] = (pcc_read_buffer[send_index] >> 16) & 0xFF;
+	msg->data[7] = (pcc_read_buffer[send_index] >> 24) & 0xFF;
+	ipmb_error status = ipmb_read(msg, IPMB_inf_index_map[msg->InF_target]);
+	if (status != IPMB_ERROR_SUCCESS) {
+		LOG_ERR("Failed to send 4-byte post code to BMC, status %d.", status);
+		return false;
+	}
+	SAFE_FREE(msg)
+	return true;
+}
+
+bool send_post_code_to_bmc(uint16_t send_index)
+{
+#ifdef ENABLE_PLDM
+	return pldm_send_post_code_to_bmc(send_index);
+#else
+	return ipmi_send_post_code_to_bmc(send_index);
+#endif
 }
 
 static void process_postcode(void *arvg0, void *arvg1, void *arvg2)
 {
 	uint16_t send_index = 0;
 	while (1) {
-		k_sem_take(&get_postcode_sem, K_FOREVER);
-		ipmi_msg *msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
-		if (msg == NULL) {
-			LOG_ERR("Memory allocation failed.");
-			continue;
-		}
-
 		uint16_t current_read_index = pcc_read_index;
 		for (; send_index != current_read_index;
 		     send_index = (send_index + 1) % PCC_BUFFER_LEN) {
@@ -219,28 +308,12 @@ static void process_postcode(void *arvg0, void *arvg1, void *arvg2)
 				check_ABL_error(pcc_read_buffer[send_index]);
 			}
 
-			memset(msg, 0, sizeof(ipmi_msg));
-			msg->InF_source = SELF;
-			msg->InF_target = BMC_IPMB;
-			msg->netfn = NETFN_OEM_1S_REQ;
-			msg->cmd = CMD_OEM_1S_SEND_4BYTE_POST_CODE_TO_BMC;
-			msg->data_len = 8;
-			msg->data[0] = IANA_ID & 0xFF;
-			msg->data[1] = (IANA_ID >> 8) & 0xFF;
-			msg->data[2] = (IANA_ID >> 16) & 0xFF;
-			msg->data[3] = 4;
-			msg->data[4] = pcc_read_buffer[send_index] & 0xFF;
-			msg->data[5] = (pcc_read_buffer[send_index] >> 8) & 0xFF;
-			msg->data[6] = (pcc_read_buffer[send_index] >> 16) & 0xFF;
-			msg->data[7] = (pcc_read_buffer[send_index] >> 24) & 0xFF;
-			ipmb_error status = ipmb_read(msg, IPMB_inf_index_map[msg->InF_target]);
-			if (status != IPMB_ERROR_SUCCESS) {
-				LOG_ERR("Failed to send 4-byte post code to BMC, status %d.",
-					status);
-			}
+			k_sem_take(&get_postcode_sem, K_FOREVER);
+
+			send_post_code_to_bmc(send_index);
+
 			k_yield();
 		}
-		SAFE_FREE(msg)
 	}
 }
 
