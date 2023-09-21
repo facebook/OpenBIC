@@ -18,6 +18,9 @@
 #define I3C_STATIC_ADDR_FF_BIC 0x9
 #define I3C_STATIC_ADDR_WF_BIC 0xA
 
+/* mctp endpoint */
+#define MCTP_EID_BMC 0x08
+
 struct mctp_to_ipmi_header_req {
 	uint8_t iana[IANA_LEN];
 	uint8_t netfn_lun;
