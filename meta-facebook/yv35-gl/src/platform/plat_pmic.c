@@ -240,20 +240,20 @@ void read_pmic_error_when_dc_off()
 	// bit 2: DIMM CD Fault
 	// bit 3: DIMM AB Fault
 	if (GETBIT(pmic_fault_status, 0)) {
-		is_pmic_fault[DIMM_ID_G] = true;
-		is_pmic_fault[DIMM_ID_H] = true;
+		is_pmic_fault[DIMM_ID_A6] = true;
+		is_pmic_fault[DIMM_ID_A7] = true;
 	}
 	if (GETBIT(pmic_fault_status, 1)) {
-		is_pmic_fault[DIMM_ID_E] = true;
-		is_pmic_fault[DIMM_ID_F] = true;
+		is_pmic_fault[DIMM_ID_A4] = true;
+		is_pmic_fault[DIMM_ID_A5] = true;
 	}
 	if (GETBIT(pmic_fault_status, 2)) {
-		is_pmic_fault[DIMM_ID_C] = true;
-		is_pmic_fault[DIMM_ID_D] = true;
+		is_pmic_fault[DIMM_ID_A2] = true;
+		is_pmic_fault[DIMM_ID_A3] = true;
 	}
 	if (GETBIT(pmic_fault_status, 3)) {
-		is_pmic_fault[DIMM_ID_A] = true;
-		is_pmic_fault[DIMM_ID_B] = true;
+		is_pmic_fault[DIMM_ID_A0] = true;
+		is_pmic_fault[DIMM_ID_A1] = true;
 	}
 
 	if (k_mutex_lock(&i3c_dimm_mutex, K_MSEC(I3C_DIMM_MUTEX_TIMEOUT_MS))) {

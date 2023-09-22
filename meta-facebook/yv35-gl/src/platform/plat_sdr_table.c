@@ -276,7 +276,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_MB_DIMMA_TEMP_C, // sensor number
+		SENSOR_NUM_MB_DIMMA0_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -325,7 +325,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB_DIMMA_TEMP_C",
+		"MB_DIMMA0_TEMP_C",
 	},
 	{
 		0x00,
@@ -336,7 +336,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_MB_DIMMB_TEMP_C, // sensor number
+		SENSOR_NUM_MB_DIMMA1_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -385,7 +385,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB_DIMMB_TEMP_C",
+		"MB_DIMMA1_TEMP_C",
 	},
 	{
 		0x00,
@@ -396,7 +396,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_MB_DIMMC_TEMP_C, // sensor number
+		SENSOR_NUM_MB_DIMMA2_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -445,7 +445,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB_DIMMC_TEMP_C",
+		"MB_DIMMA2_TEMP_C",
 	},
 	{
 		0x00,
@@ -456,7 +456,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_MB_DIMMD_TEMP_C, // sensor number
+		SENSOR_NUM_MB_DIMMA3_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -505,7 +505,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB_DIMMD_TEMP_C",
+		"MB_DIMMA3_TEMP_C",
 	},
 	{
 		0x00,
@@ -516,7 +516,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_MB_DIMME_TEMP_C, // sensor number
+		SENSOR_NUM_MB_DIMMA4_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -565,7 +565,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB_DIMME_TEMP_C",
+		"MB_DIMMA4_TEMP_C",
 	},
 	{
 		0x00,
@@ -576,7 +576,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_MB_DIMMF_TEMP_C, // sensor number
+		SENSOR_NUM_MB_DIMMA5_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -625,7 +625,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB_DIMMF_TEMP_C",
+		"MB_DIMMA5_TEMP_C",
 	},
 	{
 		0x00,
@@ -636,7 +636,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_MB_DIMMG_TEMP_C, // sensor number
+		SENSOR_NUM_MB_DIMMA6_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -685,7 +685,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB_DIMMG_TEMP_C",
+		"MB_DIMMA6_TEMP_C",
 	},
 	{
 		0x00,
@@ -696,7 +696,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_MB_DIMMH_TEMP_C, // sensor number
+		SENSOR_NUM_MB_DIMMA7_TEMP_C, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -745,7 +745,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB_DIMMH_TEMP_C",
+		"MB_DIMMA7_TEMP_C",
 	},
 	{
 		0x00,
@@ -2974,7 +2974,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"MB_VR_VCCD1_PWR_W",
 	},
 	{
-		// DIMMA power
+		// DIMMA0 power
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -2983,7 +2983,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_MB_VR_DIMMA_PMIC_PWR_W, // sensor number
+		SENSOR_NUM_MB_VR_DIMMA0_PMIC_PWR_W, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -3032,10 +3032,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB_VR_DIMMA_PMIC_PWR_W",
+		"MB_VR_DIMMA0_PMIC_PWR_W",
 	},
 	{
-		// DIMMB power
+		// DIMMA1 power
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -3044,7 +3044,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_MB_VR_DIMMB_PMIC_PWR_W, // sensor number
+		SENSOR_NUM_MB_VR_DIMMA1_PMIC_PWR_W, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -3093,10 +3093,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB_VR_DIMMB_PMIC_PWR_W",
+		"MB_VR_DIMMA1_PMIC_PWR_W",
 	},
 	{
-		// DIMMC power
+		// DIMMA2 power
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -3105,7 +3105,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_MB_VR_DIMMC_PMIC_PWR_W, // sensor number
+		SENSOR_NUM_MB_VR_DIMMA2_PMIC_PWR_W, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -3154,10 +3154,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB_VR_DIMMC_PMIC_PWR_W",
+		"MB_VR_DIMMA2_PMIC_PWR_W",
 	},
 	{
-		// DIMMD power
+		// DIMMA3 power
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -3166,7 +3166,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_MB_VR_DIMMD_PMIC_PWR_W, // sensor number
+		SENSOR_NUM_MB_VR_DIMMA3_PMIC_PWR_W, // sensor number
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
 		IPMI_SDR_SENSOR_INIT_SCAN | IPMI_SDR_SENSOR_INIT_EVENT |
@@ -3214,10 +3214,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB_VR_DIMMD_PMIC_PWR_W",
+		"MB_VR_DIMMA3_PMIC_PWR_W",
 	},
 	{
-		// DIMME power
+		// DIMMA4 power
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -3226,7 +3226,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_MB_VR_DIMME_PMIC_PWR_W, // sensor number
+		SENSOR_NUM_MB_VR_DIMMA4_PMIC_PWR_W, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -3275,10 +3275,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB_VR_DIMME_PMIC_PWR_W",
+		"MB_VR_DIMMA4_PMIC_PWR_W",
 	},
 	{
-		// DIMMF power
+		// DIMMA5 power
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -3287,7 +3287,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_MB_VR_DIMMF_PMIC_PWR_W, // sensor number
+		SENSOR_NUM_MB_VR_DIMMA5_PMIC_PWR_W, // sensor number
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
 		IPMI_SDR_SENSOR_INIT_SCAN | IPMI_SDR_SENSOR_INIT_EVENT |
@@ -3335,10 +3335,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB_VR_DIMMF_PMIC_PWR_W",
+		"MB_VR_DIMMA5_PMIC_PWR_W",
 	},
 	{
-		// DIMMG power
+		// DIMMA6 power
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -3347,7 +3347,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_MB_VR_DIMMG_PMIC_PWR_W, // sensor number
+		SENSOR_NUM_MB_VR_DIMMA6_PMIC_PWR_W, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -3396,10 +3396,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB_VR_DIMMG_PMIC_PWR_W",
+		"MB_VR_DIMMA6_PMIC_PWR_W",
 	},
 	{
-		// DIMMH power
+		// DIMMA7 power
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -3408,7 +3408,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_MB_VR_DIMMH_PMIC_PWR_W, // sensor number
+		SENSOR_NUM_MB_VR_DIMMA7_PMIC_PWR_W, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -3457,7 +3457,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB_VR_DIMMH_PMIC_PWR_W",
+		"MB_VR_DIMMA7_PMIC_PWR_W",
 	},
 	{
 		0x00,
@@ -3517,7 +3517,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"CPU_PWR",
+		"MB_SOC_PACKAGE_PWR_W",
 	},
 };
 
