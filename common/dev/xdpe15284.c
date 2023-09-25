@@ -142,46 +142,61 @@ bool xdpe15284_mfr_fw_operation(uint8_t bus, uint8_t addr, uint8_t cmd, uint8_t 
 {
 	CHECK_NULL_ARG_WITH_RETURN(buf, false);
 
+	int ret = 0;
+	uint8_t index = 0;
 	uint8_t retry = 3;
 	I2C_MSG i2c_msg = { 0 };
 
-	/* Reset the MFR data register to default value */
-	i2c_msg.bus = bus;
-	i2c_msg.target_addr = addr;
-	i2c_msg.tx_len = 2;
-	i2c_msg.data[0] = XDPE15284_MFR_FW_CMD_REG;
-	i2c_msg.data[1] = XDPE15284_NOP_CMD;
+	for (index = 0; index < retry; ++index) {
+		/* Reset the MFR data register to default value */
+		memset(&i2c_msg, 0, sizeof(I2C_MSG));
+		i2c_msg.bus = bus;
+		i2c_msg.target_addr = addr;
+		i2c_msg.tx_len = 2;
+		i2c_msg.data[0] = XDPE15284_MFR_FW_CMD_REG;
+		i2c_msg.data[1] = XDPE15284_NOP_CMD;
 
-	if (i2c_master_write(&i2c_msg, retry)) {
-		LOG_ERR("Reset data register fail, cmd: 0x%x", cmd);
-		return false;
+		ret = i2c_master_write(&i2c_msg, 1);
+		if (ret != 0) {
+			LOG_ERR("Reset data register fail, cmd: 0x%x", cmd);
+			continue;
+		}
+
+		/* Send the command to get request data */
+		memset(&i2c_msg, 0, sizeof(I2C_MSG));
+		i2c_msg.bus = bus;
+		i2c_msg.target_addr = addr;
+		i2c_msg.tx_len = 2;
+		i2c_msg.data[0] = XDPE15284_MFR_FW_CMD_REG;
+		i2c_msg.data[1] = cmd;
+
+		ret = i2c_master_write(&i2c_msg, 1);
+		if (ret != 0) {
+			LOG_ERR("Write command to register fail, cmd: 0x%x", cmd);
+			continue;
+		}
+
+		k_msleep(XDPE15284_WAIT_DATA_DELAY_MS);
+
+		/* Read data in MFR firmware command data register */
+		memset(&i2c_msg, 0, sizeof(I2C_MSG));
+		i2c_msg.bus = bus;
+		i2c_msg.target_addr = addr;
+		i2c_msg.tx_len = 1;
+		i2c_msg.rx_len = rx_len + 1;
+		i2c_msg.data[0] = XDPE15284_MFR_FW_CMD_DATA_REG;
+
+		ret = i2c_master_read(&i2c_msg, 1);
+		if (ret != 0) {
+			LOG_ERR("Read data from register fail, cmd: 0x%x", cmd);
+			continue;
+		}
+
+		break;
 	}
 
-	/* Send the command to get request data */
-	memset(&i2c_msg, 0, sizeof(I2C_MSG));
-	i2c_msg.bus = bus;
-	i2c_msg.target_addr = addr;
-	i2c_msg.tx_len = 2;
-	i2c_msg.data[0] = XDPE15284_MFR_FW_CMD_REG;
-	i2c_msg.data[1] = cmd;
-
-	if (i2c_master_write(&i2c_msg, retry)) {
-		LOG_ERR("Write command to register fail, cmd: 0x%x", cmd);
-		return false;
-	}
-
-	k_msleep(XDPE15284_WAIT_DATA_DELAY_MS);
-
-	/* Read data in MFR firmware command data register */
-	memset(&i2c_msg, 0, sizeof(I2C_MSG));
-	i2c_msg.bus = bus;
-	i2c_msg.target_addr = addr;
-	i2c_msg.tx_len = 1;
-	i2c_msg.rx_len = rx_len + 1;
-	i2c_msg.data[0] = XDPE15284_MFR_FW_CMD_DATA_REG;
-
-	if (i2c_master_read(&i2c_msg, retry)) {
-		LOG_ERR("Read data from register fail, cmd: 0x%x", cmd);
+	if (ret != 0) {
+		LOG_ERR("Retry reach max, bus: 0x%x, addr: 0x%x", bus, addr);
 		return false;
 	}
 
