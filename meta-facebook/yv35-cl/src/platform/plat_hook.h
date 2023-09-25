@@ -35,6 +35,19 @@ typedef struct _dimm_post_proc_arg {
 	uint8_t dimm_number;
 } dimm_post_proc_arg;
 
+typedef struct _ifx_vr_fw_info {
+	uint8_t checksum[4];
+	uint8_t remaining_write;
+	uint8_t vendor;
+	bool is_init;
+} ifx_vr_fw_info;
+
+enum IFX_VR_ID {
+	IFX_VR_VCCIN = 0x0,
+	IFX_VR_VCCFA,
+	IFX_VR_VCCD,
+};
+
 /**************************************************************************************************
  * INIT ARGS
 **************************************************************************************************/
@@ -45,6 +58,8 @@ extern pmic_init_arg pmic_init_args[];
 extern max16550a_init_arg max16550a_init_args[];
 extern ltc4286_init_arg ltc4286_init_args[];
 extern ltc4282_init_arg ltc4282_init_args[];
+extern ifx_vr_fw_info ifx_vr_fw_info_table[];
+
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
@@ -71,5 +86,6 @@ bool post_ltc4286_read(sensor_cfg *cfg, void *args, int *reading);
 bool post_ltc4282_read(sensor_cfg *cfg, void *args, int *reading);
 bool pre_intel_dimm_i3c_read(sensor_cfg *cfg, void *args);
 bool post_intel_dimm_i3c_read(sensor_cfg *cfg, void *args, int *reading);
+bool pre_ifx_vr_cache_crc(sensor_cfg *cfg, uint8_t index);
 
 #endif
