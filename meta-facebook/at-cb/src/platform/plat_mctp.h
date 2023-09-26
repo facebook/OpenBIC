@@ -24,6 +24,7 @@
 #define _PLAT_MCTP_H
 
 #include "ipmi.h"
+#include "mctp.h"
 #include "plat_i2c.h"
 
 #define I2C_BUS_BMC I2C_BUS9
@@ -40,5 +41,6 @@
 
 void plat_mctp_init(void);
 int pal_pldm_send_ipmi_request(ipmi_msg *msg, uint8_t eid);
+uint8_t get_mctp_route_info(uint8_t dest_endpoint, void **mctp_inst, mctp_ext_params *ext_params);
 
 #endif
