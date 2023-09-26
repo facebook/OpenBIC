@@ -192,3 +192,15 @@ int find_byte_data_in_buf(const uint8_t *buf, uint8_t byte_data, int start_index
 	}
 	return -1;
 }
+
+void clear_bits(uint32_t *value, int start_bit, int end_bit)
+{
+	if ((start_bit < 0) || (end_bit > 31)) {
+		LOG_ERR("Unexpected bit range '%d' ~ '%d'", start_bit, end_bit);
+		return;
+	}
+
+	for (int index = start_bit; index <= end_bit; index++) {
+		*value = CLEARBIT(*value, index);
+	}
+}
