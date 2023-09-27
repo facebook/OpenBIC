@@ -72,6 +72,7 @@ sq52205_init_arg sq52205_init_args[] = {
 	},
 	.is_need_accum_config_init = true,
 	.accum_config.value = 0x4C04,
+	.is_need_set_alert_threshold = false,
 	},
 	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
 	.config = {
@@ -84,6 +85,7 @@ sq52205_init_arg sq52205_init_args[] = {
 	},
 	.is_need_accum_config_init = true,
 	.accum_config.value = 0x4C04,
+	.is_need_set_alert_threshold = false,
 	},
 	[2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
 	.config = {
@@ -96,6 +98,7 @@ sq52205_init_arg sq52205_init_args[] = {
 	},
 	.is_need_accum_config_init = true,
 	.accum_config.value = 0x4C04,
+	.is_need_set_alert_threshold = false,
 	},
 	[3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
 	.config = {
@@ -108,6 +111,7 @@ sq52205_init_arg sq52205_init_args[] = {
 	},
 	.is_need_accum_config_init = true,
 	.accum_config.value = 0x4C04,
+	.is_need_set_alert_threshold = false,
 	},
 	[4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
 	.config = {
@@ -120,6 +124,7 @@ sq52205_init_arg sq52205_init_args[] = {
 	},
 	.is_need_accum_config_init = true,
 	.accum_config.value = 0x4C04,
+	.is_need_set_alert_threshold = false,
 	},
 	[5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
 	.config = {
@@ -132,6 +137,7 @@ sq52205_init_arg sq52205_init_args[] = {
 	},
 	.is_need_accum_config_init = true,
 	.accum_config.value = 0x4C04,
+	.is_need_set_alert_threshold = false,
 	},
 	[6] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
 	.config = {
@@ -144,6 +150,7 @@ sq52205_init_arg sq52205_init_args[] = {
 	},
 	.is_need_accum_config_init = true,
 	.accum_config.value = 0x4C04,
+	.is_need_set_alert_threshold = false,
 	},
 	[7] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
 	.config = {
@@ -156,6 +163,7 @@ sq52205_init_arg sq52205_init_args[] = {
 	},
 	.is_need_accum_config_init = true,
 	.accum_config.value = 0x4C04,
+	.is_need_set_alert_threshold = false,
 	},
 	[8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
 	.config = {
@@ -168,6 +176,7 @@ sq52205_init_arg sq52205_init_args[] = {
 	},
 	.is_need_accum_config_init = true,
 	.accum_config.value = 0x4C04,
+	.is_need_set_alert_threshold = false,
 	},
 	[9] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
 	.config = {
@@ -180,6 +189,7 @@ sq52205_init_arg sq52205_init_args[] = {
 	},
 	.is_need_accum_config_init = true,
 	.accum_config.value = 0x4C04,
+	.is_need_set_alert_threshold = false,
 	},
 	[10] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
 	.config = {
@@ -192,6 +202,7 @@ sq52205_init_arg sq52205_init_args[] = {
 	},
 	.is_need_accum_config_init = true,
 	.accum_config.value = 0x4C04,
+	.is_need_set_alert_threshold = false,
 	},
 	[11] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
 	.config = {
@@ -204,6 +215,7 @@ sq52205_init_arg sq52205_init_args[] = {
 	},
 	.is_need_accum_config_init = true,
 	.accum_config.value = 0x4C04,
+	.is_need_set_alert_threshold = false,
 	},
 	[12] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
 	.config = {
@@ -216,6 +228,7 @@ sq52205_init_arg sq52205_init_args[] = {
 	},
 	.is_need_accum_config_init = true,
 	.accum_config.value = 0x4C04,
+	.is_need_set_alert_threshold = false,
 	},
 	[13] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
 	.config = {
@@ -228,6 +241,7 @@ sq52205_init_arg sq52205_init_args[] = {
 	},
 	.is_need_accum_config_init = true,
 	.accum_config.value = 0x4C04,
+	.is_need_set_alert_threshold = false,
 	},
 };
 
@@ -250,6 +264,7 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
@@ -279,6 +294,7 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	[2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
@@ -298,6 +314,7 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	[3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
@@ -317,6 +334,7 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	[4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
@@ -336,6 +354,7 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	[5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
@@ -355,6 +374,7 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	[6] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
@@ -374,6 +394,7 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	[7] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
@@ -393,6 +414,7 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	[8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
@@ -412,6 +434,7 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	[9] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
@@ -431,6 +454,7 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	[10] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
@@ -450,6 +474,7 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	[11] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
@@ -469,6 +494,7 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	[12] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
@@ -488,6 +514,7 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	[13] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
@@ -507,6 +534,7 @@ ina233_init_arg mc_ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 };
 
@@ -530,6 +558,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
 	.mfr_config = {
@@ -549,6 +578,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	// JCN12
 	[2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
@@ -569,6 +599,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	[3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
 	.mfr_config = {
@@ -588,6 +619,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	// JCN9
 	[4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
@@ -608,6 +640,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	[5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
 	.mfr_config = {
@@ -627,6 +660,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	// JCN10
 	[6] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
@@ -647,6 +681,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	[7] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
 	.mfr_config = {
@@ -666,6 +701,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	// JCN4
 	[8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
@@ -686,6 +722,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	[9] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
 	.mfr_config = {
@@ -705,6 +742,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	// JCN3
 	[10] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
@@ -725,6 +763,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	[11] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
 	.mfr_config = {
@@ -744,6 +783,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	// JCN2
 	[12] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
@@ -764,6 +804,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	[13] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
 	.mfr_config = {
@@ -783,6 +824,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	// JCN1
 	[14] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
@@ -803,6 +845,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = false,
 	},
 	[15] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005, .mfr_config_init = true,
 	.mfr_config = {
@@ -822,6 +865,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0,
 		.ein_status = 0b0,
   },
+	.is_need_set_alert_threshold = false,
 	},
 };
 

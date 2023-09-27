@@ -19,6 +19,8 @@
 
 #include <stdint.h>
 
+#define INA233_NO_SET_ALERT_THRESHOLD 0
+
 extern uint8_t INA233_DEVICE_ID[3];
 
 #endif

@@ -51,6 +51,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0100,
 	},
 	.is_need_mfr_device_config_init = false,
+	.is_need_set_alert_threshold = false,
 	},
 	[1] = {
 	.is_init = false,
@@ -65,6 +66,7 @@ ina233_init_arg ina233_init_args[] = {
 		.rsvd = 0b0100,
 	},
 	.is_need_mfr_device_config_init = false,
+	.is_need_set_alert_threshold = false,
 	},
 };
 

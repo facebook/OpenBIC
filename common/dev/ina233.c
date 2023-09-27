@@ -28,10 +28,45 @@ LOG_MODULE_REGISTER(dev_ina233);
 #define INA233_CALIBRATION_OFFSET 0xD4
 #define INA233_MFR_ADC_CONFIG 0xD0
 #define INA233_MFR_DEVICE_CONFIG 0xD5
+#define INA233_MFR_ALERT_MASK 0xD2
+
+#define INA233_IOUT_OC_WARN_LIMIT_REG 0x4A
+#define INA233_VIN_OV_WARN_LIMIT_REG 0x57
+#define INA233_VIN_UV_WARN_LIMIT_REG 0x58
+#define INA233_PIN_OP_WARN_LIMIT_REG 0x6B
 
 #define INA233_EIN_POWER_CNT_MAX 0x10000
 
 uint8_t INA233_DEVICE_ID[3] = { 0x02, 0x54, 0x49 };
+
+static int ina233_set_alert_threshold(sensor_cfg *cfg, uint8_t offset, int set_val)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, -1);
+
+	if (set_val == INA233_NO_SET_ALERT_THRESHOLD) {
+		return 0;
+	}
+
+	int ret = 0;
+	uint8_t retry = 5;
+
+	I2C_MSG msg = { 0 };
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 3;
+	msg.data[0] = offset;
+	msg.data[1] = set_val & 0xFF;
+	msg.data[2] = (set_val >> 8) & 0xFF;
+
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("i2c set alert threshold fail ret: %d, sensor num: 0x%x, offset: 0x%x, set val: 0x%x",
+			ret, cfg->num, offset, set_val);
+		return -1;
+	}
+
+	return 0;
+}
 
 int ina233_read_ein(sensor_cfg *cfg, int16_t *val)
 {
@@ -201,6 +236,32 @@ uint8_t ina233_init(sensor_cfg *cfg)
 		if (ret != 0) {
 			LOG_ERR("i2c write MFR_DEVICE_CONFIG fail ret: %d, sensor num: 0x%x", ret,
 				cfg->num);
+			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		}
+	}
+
+	if (init_arg->is_need_set_alert_threshold) {
+		ret = ina233_set_alert_threshold(cfg, INA233_IOUT_OC_WARN_LIMIT_REG,
+						 init_arg->iout_oc_warn_limit);
+		if (ret != 0) {
+			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		}
+
+		ret = ina233_set_alert_threshold(cfg, INA233_VIN_OV_WARN_LIMIT_REG,
+						 init_arg->vin_ov_warn_limit);
+		if (ret != 0) {
+			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		}
+
+		ret = ina233_set_alert_threshold(cfg, INA233_VIN_UV_WARN_LIMIT_REG,
+						 init_arg->vin_uv_warn_limit);
+		if (ret != 0) {
+			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		}
+
+		ret = ina233_set_alert_threshold(cfg, INA233_PIN_OP_WARN_LIMIT_REG,
+						 init_arg->pin_op_warn_limit);
+		if (ret != 0) {
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
 		}
 	}

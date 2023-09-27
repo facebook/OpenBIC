@@ -455,6 +455,11 @@ typedef struct _ina233_init_arg_ {
 			uint8_t ein_status : 1;
 		};
 	} mfr_device_config;
+	bool is_need_set_alert_threshold;
+	uint16_t iout_oc_warn_limit;
+	uint16_t vin_ov_warn_limit;
+	uint16_t vin_uv_warn_limit;
+	uint16_t pin_op_warn_limit;
 } ina233_init_arg;
 
 typedef struct _max16550a_init_arg_ {
@@ -600,6 +605,21 @@ typedef struct _sq52205_init_arg_ {
 			uint8_t ein_status : 1;
 		};
 	} accum_config;
+
+	bool is_need_set_alert_threshold;
+	union {
+		// Only use 5-bit for setting alert bit
+		uint8_t value;
+		struct {
+			uint8_t power_over_bit : 1;
+			uint8_t bus_voltage_uv : 1;
+			uint8_t bus_voltage_ov : 1;
+			uint8_t shunt_voltage_uv : 1;
+			uint8_t shunt_voltage_ov : 1;
+			uint8_t resv : 3;
+		};
+	} alert_mask_config;
+	uint16_t alert_threshold;
 } sq52205_init_arg;
 
 typedef struct _ltc2991_init_arg_ {

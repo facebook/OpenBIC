@@ -36,6 +36,7 @@
 #include "plat_fru.h"
 #include "xdpe15284.h"
 #include "mp2985.h"
+#include "sq52205.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -101,13 +102,15 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_mfr_device_config_init = true,
 	.mfr_device_config = {
 		.apol = 0b0,
-		.alert_behavior = 0b1,
+		.alert_behavior = 0b0,
 		.ein_autoclear = 0b1,
 		.i2c_filt = 0b0,
 		.ein_accum = 0b00,
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = true,
+	.pin_op_warn_limit = 0x2B01,
 	},
 	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0011523, .mfr_config_init = true,
 	.mfr_config = {
@@ -120,13 +123,15 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_mfr_device_config_init = true,
 	.mfr_device_config = {
 		.apol = 0b0,
-		.alert_behavior = 0b1,
+		.alert_behavior = 0b0,
 		.ein_autoclear = 0b1,
 		.i2c_filt = 0b0,
 		.ein_accum = 0b00,
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = true,
+	.pin_op_warn_limit = 0x2B01,
 	},
 	[2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001149, .mfr_config_init = true,
 	.mfr_config = {
@@ -139,13 +144,15 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_mfr_device_config_init = true,
 	.mfr_device_config = {
 		.apol = 0b0,
-		.alert_behavior = 0b1,
+		.alert_behavior = 0b0,
 		.ein_autoclear = 0b1,
 		.i2c_filt = 0b0,
 		.ein_accum = 0b00,
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = true,
+	.pin_op_warn_limit = 0x2B01,
 	},
 	[3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001148, .mfr_config_init = true,
 	.mfr_config = {
@@ -158,13 +165,15 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_mfr_device_config_init = true,
 	.mfr_device_config = {
 		.apol = 0b0,
-		.alert_behavior = 0b1,
+		.alert_behavior = 0b0,
 		.ein_autoclear = 0b1,
 		.i2c_filt = 0b0,
 		.ein_accum = 0b00,
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = true,
+	.pin_op_warn_limit = 0x2B01,
 	},
 	[4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001147982, .mfr_config_init = true,
 	.mfr_config = {
@@ -177,13 +186,15 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_mfr_device_config_init = true,
 	.mfr_device_config = {
 		.apol = 0b0,
-		.alert_behavior = 0b1,
+		.alert_behavior = 0b0,
 		.ein_autoclear = 0b1,
 		.i2c_filt = 0b0,
 		.ein_accum = 0b00,
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = true,
+	.pin_op_warn_limit = 0x2B01,
 	},
 	[5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0009859, .mfr_config_init = true,
 	.mfr_config = {
@@ -196,13 +207,15 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_mfr_device_config_init = true,
 	.mfr_device_config = {
 		.apol = 0b0,
-		.alert_behavior = 0b1,
+		.alert_behavior = 0b0,
 		.ein_autoclear = 0b1,
 		.i2c_filt = 0b0,
 		.ein_accum = 0b00,
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = true,
+	.pin_op_warn_limit = 0x2B01,
 	},
 	[6] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001147982, .mfr_config_init = true,
 	.mfr_config = {
@@ -215,13 +228,15 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_mfr_device_config_init = true,
 	.mfr_device_config = {
 		.apol = 0b0,
-		.alert_behavior = 0b1,
+		.alert_behavior = 0b0,
 		.ein_autoclear = 0b1,
 		.i2c_filt = 0b0,
 		.ein_accum = 0b00,
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = true,
+	.pin_op_warn_limit = 0x2B01,
 	},
 	[7] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001152115, .mfr_config_init = true,
 	.mfr_config = {
@@ -234,13 +249,15 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_mfr_device_config_init = true,
 	.mfr_device_config = {
 		.apol = 0b0,
-		.alert_behavior = 0b1,
+		.alert_behavior = 0b0,
 		.ein_autoclear = 0b1,
 		.i2c_filt = 0b0,
 		.ein_accum = 0b00,
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = true,
+	.pin_op_warn_limit = 0x2B01,
 	},
 	[8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001114, .mfr_config_init = true,
 	.mfr_config = {
@@ -253,13 +270,15 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_mfr_device_config_init = true,
 	.mfr_device_config = {
 		.apol = 0b0,
-		.alert_behavior = 0b1,
+		.alert_behavior = 0b0,
 		.ein_autoclear = 0b1,
 		.i2c_filt = 0b0,
 		.ein_accum = 0b00,
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = true,
+	.pin_op_warn_limit = 0x2B01,
 	},
 	[9] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0011547, .mfr_config_init = true,
 	.mfr_config = {
@@ -272,13 +291,15 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_mfr_device_config_init = true,
 	.mfr_device_config = {
 		.apol = 0b0,
-		.alert_behavior = 0b1,
+		.alert_behavior = 0b0,
 		.ein_autoclear = 0b1,
 		.i2c_filt = 0b0,
 		.ein_accum = 0b00,
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = true,
+	.pin_op_warn_limit = 0x2B01,
 	},
 	[10] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001135758, .mfr_config_init = true,
 	.mfr_config = {
@@ -291,13 +312,15 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_mfr_device_config_init = true,
 	.mfr_device_config = {
 		.apol = 0b0,
-		.alert_behavior = 0b1,
+		.alert_behavior = 0b0,
 		.ein_autoclear = 0b1,
 		.i2c_filt = 0b0,
 		.ein_accum = 0b00,
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = true,
+	.pin_op_warn_limit = 0x2B01,
 	},
 	[11] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0009848, .mfr_config_init = true,
 	.mfr_config = {
@@ -310,13 +333,15 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_mfr_device_config_init = true,
 	.mfr_device_config = {
 		.apol = 0b0,
-		.alert_behavior = 0b1,
+		.alert_behavior = 0b0,
 		.ein_autoclear = 0b1,
 		.i2c_filt = 0b0,
 		.ein_accum = 0b00,
 		.rsvd = 0b0,
 		.ein_status = 0b0,
 	},
+	.is_need_set_alert_threshold = true,
+	.pin_op_warn_limit = 0x2B01,
 	},
 };
 
@@ -332,6 +357,9 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         },
         .is_need_accum_config_init = true,
         .accum_config.value = 0x4C04,
+        .is_need_set_alert_threshold = true,
+        .alert_threshold = 0x2B01,
+        .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
         [1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
         .config = {
@@ -344,6 +372,9 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         },
         .is_need_accum_config_init = true,
         .accum_config.value = 0x4C04,
+        .is_need_set_alert_threshold = true,
+        .alert_threshold = 0x2B01,
+        .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
         [2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
         .config = {
@@ -356,6 +387,9 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         },
         .is_need_accum_config_init = true,
         .accum_config.value = 0x4C04,
+        .is_need_set_alert_threshold = true,
+        .alert_threshold = 0x2B01,
+        .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
         [3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
         .config = {
@@ -368,6 +402,9 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         },
         .is_need_accum_config_init = true,
         .accum_config.value = 0x4C04,
+        .is_need_set_alert_threshold = true,
+        .alert_threshold = 0x2B01,
+        .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
         [4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
         .config = {
@@ -380,6 +417,9 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         },
         .is_need_accum_config_init = true,
         .accum_config.value = 0x4C04,
+        .is_need_set_alert_threshold = true,
+        .alert_threshold = 0x2B01,
+        .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
         [5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
         .config = {
@@ -392,6 +432,9 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         },
         .is_need_accum_config_init = true,
         .accum_config.value = 0x4C04,
+        .is_need_set_alert_threshold = true,
+        .alert_threshold = 0x2B01,
+        .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
         [6] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
         .config = {
@@ -404,6 +447,9 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         },
         .is_need_accum_config_init = true,
         .accum_config.value = 0x4C04,
+        .is_need_set_alert_threshold = true,
+        .alert_threshold = 0x2B01,
+        .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
         [7] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
         .config = {
@@ -416,6 +462,9 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         },
         .is_need_accum_config_init = true,
         .accum_config.value = 0x4C04,
+        .is_need_set_alert_threshold = true,
+        .alert_threshold = 0x2B01,
+        .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
         [8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
         .config = {
@@ -428,6 +477,9 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         },
         .is_need_accum_config_init = true,
         .accum_config.value = 0x4C04,
+        .is_need_set_alert_threshold = true,
+        .alert_threshold = 0x2B01,
+        .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
         [9] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
         .config = {
@@ -440,6 +492,9 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         },
         .is_need_accum_config_init = true,
         .accum_config.value = 0x4C04,
+        .is_need_set_alert_threshold = true,
+        .alert_threshold = 0x2B01,
+        .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
         [10] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
         .config = {
@@ -452,6 +507,9 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         },
         .is_need_accum_config_init = true,
         .accum_config.value = 0x4C04,
+        .is_need_set_alert_threshold = true,
+        .alert_threshold = 0x2B01,
+        .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
         [11] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
         .config = {
@@ -464,6 +522,9 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         },
         .is_need_accum_config_init = true,
         .accum_config.value = 0x4C04,
+        .is_need_set_alert_threshold = true,
+        .alert_threshold = 0x2B01,
+        .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
 };
 
@@ -484,6 +545,9 @@ sq52205_init_arg u178_179_sq52205_init_args[] = {
 	},
 	.is_need_accum_config_init = true,
 	.accum_config.value = 0x4C04,
+	.is_need_set_alert_threshold = true,
+	.alert_threshold = 0x051D,
+	.alert_mask_config.value = SQ52205_ENABLE_OP,
 	},
 	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0010002,
 	.config = {
@@ -496,6 +560,9 @@ sq52205_init_arg u178_179_sq52205_init_args[] = {
 	},
 	.is_need_accum_config_init = true,
 	.accum_config.value = 0x4C04,
+	.is_need_set_alert_threshold = true,
+	.alert_threshold = 0x051D,
+	.alert_mask_config.value = SQ52205_ENABLE_OP,
 	},
 };
 
@@ -507,7 +574,8 @@ ina230_init_arg u178_179_ina230_init_args[] = {
                 .VBUS_CT = 0b100,
                 .AVG = 0b111,
         },
-        .alt_cfg.value = 0,
+        .alt_cfg.POL = 1, // Enable the Over-Limit Power alert function
+        .alert_value = 32.736,
         .r_shunt = 0.001,
         .i_max = 32.768,
 	},
@@ -518,7 +586,8 @@ ina230_init_arg u178_179_ina230_init_args[] = {
                 .VBUS_CT = 0b100,
                 .AVG = 0b111,
         },
-        .alt_cfg.value = 0,
+        .alt_cfg.POL = 1, // Enable the Over-Limit Power alert function
+        .alert_value = 32.736,
         .r_shunt = 0.001,
         .i_max = 32.768,
         },

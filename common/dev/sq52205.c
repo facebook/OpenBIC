@@ -27,9 +27,76 @@ LOG_MODULE_REGISTER(dev_sq52205);
 
 #define SQ52205_CONFIG_REG_OFFSET 0x00
 #define SQ52205_CALIBRATION_OFFSET 0x05
+#define SQ52205_MASK_ENABLE_OFFSET 0x06
+#define SQ52205_ALERT_LIMIT_OFFSET 0x07
 #define SQ52205_ACCUM_CONFIG_OFFSET 0x0D
 #define SQ52205_SHUNT_LSB 0.0000025
 #define SQ52205_EIN_POWER_CNT_MAX 0x10000
+
+#define SQ52205_ALERT_MASK_SHIFT_OFFSET 11
+
+static int sq52205_set_alert_threshold(sensor_cfg *cfg, uint8_t alert_mask, uint16_t set_val)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, -1);
+
+	int ret = 0;
+	uint8_t retry = 5;
+	uint16_t mask = 0;
+
+	I2C_MSG msg = { 0 };
+
+	/* Set alert threshold */
+	memset(&msg, 0, sizeof(I2C_MSG));
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 3;
+	msg.data[0] = SQ52205_ALERT_LIMIT_OFFSET;
+	msg.data[1] = (set_val >> 8) & 0xFF;
+	msg.data[2] = set_val & 0xFF;
+
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("i2c set alert threshold fail ret: %d, sensor num: 0x%x, set val: 0x%x",
+			ret, cfg->num, set_val);
+		return -1;
+	}
+
+	/* Read enable_mask register */
+	memset(&msg, 0, sizeof(I2C_MSG));
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 2;
+	msg.data[0] = SQ52205_MASK_ENABLE_OFFSET;
+
+	ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("i2c read mask fail ret: %d, sensor num: 0x%x, alert mask: 0x%x", ret,
+			cfg->num, alert_mask);
+		return -1;
+	}
+
+	mask = (((msg.data[0] << 8) | msg.data[1]) |
+		(alert_mask << SQ52205_ALERT_MASK_SHIFT_OFFSET));
+
+	/* Set alert mask */
+	memset(&msg, 0, sizeof(I2C_MSG));
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 3;
+	msg.data[0] = SQ52205_MASK_ENABLE_OFFSET;
+	msg.data[1] = (mask >> 8) & 0xFF;
+	msg.data[2] = mask & 0xFF;
+
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("i2c set alert mask fail ret: %d, sensor num: 0x%x, mask: 0x%x", ret,
+			cfg->num, mask);
+		return -1;
+	}
+
+	return 0;
+}
 
 static int sq52205_calculate_ein(uint8_t *data_buf, float *val)
 {
@@ -191,6 +258,15 @@ uint8_t sq52205_init(sensor_cfg *cfg)
 			if (ret != 0) {
 				LOG_ERR("i2c write accum config fail ret: %d, sensor num: 0x%x",
 					ret, cfg->num);
+				return SENSOR_INIT_UNSPECIFIED_ERROR;
+			}
+		}
+
+		if (init_arg->is_need_set_alert_threshold != false) {
+			ret = sq52205_set_alert_threshold(cfg, init_arg->alert_mask_config.value,
+							  init_arg->alert_threshold);
+			if (ret != 0) {
+				LOG_ERR("i2c set alert threshold fail, sensor num: 0x%x", cfg->num);
 				return SENSOR_INIT_UNSPECIFIED_ERROR;
 			}
 		}
