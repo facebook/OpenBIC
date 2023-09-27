@@ -26,6 +26,7 @@
 #include "plat_class.h"
 #include "util_worker.h"
 #include "plat_sensor_table.h"
+#include "plat_dev.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -141,6 +142,7 @@ void ISR_FIO_BUTTON()
 void ISR_POWER_STATUS_CHANGE()
 {
 	get_acb_power_status();
+	init_sw_heartbeat_work();
 };
 
 ISR_SENSOR_ALERT(VR, SMB_P0V8_ALERT_N, P0V8_VR, BOARD_ID0)

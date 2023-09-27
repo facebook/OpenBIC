@@ -1,0 +1,32 @@
+From 3e49ac5df8e22bd90daa68630e50d4c9a1d70c05 Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Wed, 13 Sep 2023 14:28:35 +0800
+Subject: [PATCH] sensor: tach: Add the sleep for get rpm.
+
+Add a 1us sleep to the polling procedure for obtaining RPM to prevent the
+CPU from being blocked for too long. This is necessary because the timeout
+value is user-defined, and setting a large value could potentially lead to
+system hangs.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I119be48ef6e5f75fe4c8dffc33fc7865b983841e
+---
+ drivers/sensor/aspeed/tach_aspeed.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/sensor/aspeed/tach_aspeed.c b/drivers/sensor/aspeed/tach_aspeed.c
+index be6a9cedea4..9cf0d324159 100644
+--- a/drivers/sensor/aspeed/tach_aspeed.c
++++ b/drivers/sensor/aspeed/tach_aspeed.c
+@@ -56,7 +56,7 @@ static int tach_aspeed_sample_fetch(const struct device *dev, enum sensor_channe
+ 	ret = reg_read_poll_timeout(
+ 		tach_reg, tach_status, tach_status,
+ 		tach_status.fields.tach_full_measurement,
+-		0, DEV_DATA(dev)->sample_period);
++		1, DEV_DATA(dev)->sample_period);
+ 	if (ret) {
+ 		return ret;
+ 	}
+-- 
+2.25.1
+
