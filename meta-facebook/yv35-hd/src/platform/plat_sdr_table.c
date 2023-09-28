@@ -253,7 +253,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x69, // UNRT
-		0x5F, // UCT
+		0x5A, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
