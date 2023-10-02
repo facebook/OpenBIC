@@ -28,6 +28,72 @@
 
 LOG_MODULE_REGISTER(plat_pldm_monitor);
 
+struct pldm_state_effecter_info plat_state_effecter_table[] = {
+	[0 ... PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_MAX] = {
+		.entity_type = PLDM_ENTITY_IO_CONTROLLER,
+	},
+};
+
+void plat_pldm_load_state_effecter_table(void)
+{
+	memcpy(state_effecter_table, plat_state_effecter_table, sizeof(plat_state_effecter_table));
+	return;
+}
+
+uint8_t plat_pldm_set_state_effecter_state_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
+						   uint16_t *resp_len,
+						   struct pldm_state_effecter_info *info_p)
+{
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(info_p, PLDM_ERROR);
+	CHECK_ARG_WITH_RETURN(!len, PLDM_ERROR);
+
+	uint8_t *completion_code_p = resp;
+	*resp_len = 1;
+
+	switch (info_p->entity_type) {
+	case PLDM_ENTITY_IO_CONTROLLER:
+		set_effecter_state_gpio_handler(buf, len, resp, resp_len,
+						(uint8_t)(info_p->effecter_id & GENMASK(7, 0)));
+		break;
+	default:
+		LOG_ERR("Unsupport entity type, (%d)", info_p->entity_type);
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+		break;
+	}
+
+	return PLDM_SUCCESS;
+}
+
+uint8_t plat_pldm_get_state_effecter_state_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
+						   uint16_t *resp_len,
+						   struct pldm_state_effecter_info *info_p)
+{
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(info_p, PLDM_ERROR);
+	CHECK_ARG_WITH_RETURN(!len, PLDM_ERROR);
+
+	uint8_t *completion_code_p = resp;
+	*resp_len = 1;
+
+	switch (info_p->entity_type) {
+	case PLDM_ENTITY_IO_CONTROLLER:
+		get_effecter_state_gpio_handler(buf, len, resp, resp_len,
+						(uint8_t)(info_p->effecter_id & GENMASK(7, 0)));
+		break;
+	default:
+		LOG_ERR("Unsupport entity type, (%d)", info_p->entity_type);
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+		break;
+	}
+
+	return PLDM_SUCCESS;
+}
+
 void plat_accl_present_check()
 {
 	bool is_present = ASIC_CARD_NOT_PRESENT;

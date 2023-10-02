@@ -14,8 +14,18 @@
  * limitations under the License.
  */
 
+#include "pldm_monitor.h"
+
 #ifndef PLAT_PLDM_MONITOR_H
 #define PLAT_PLDM_MONITOR_H
+
+#define MAX_STATE_EFFECTER_IDX 168
+
+enum pldm_plat_effecter_id_high_byte {
+	PLAT_EFFECTER_ID_GPIO_HIGH_BYTE = (0xFF << 8),
+};
+
+extern struct pldm_state_effecter_info plat_state_effecter_table[];
 
 enum plat_pldm_event_sensor_num {
 	// ACCL1 - ACCL12

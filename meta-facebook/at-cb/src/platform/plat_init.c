@@ -51,6 +51,8 @@ void pal_post_init()
 {
 	uint8_t board_revision = get_board_revision();
 	plat_mctp_init();
+	pldm_load_state_effecter_table(MAX_STATE_EFFECTER_IDX);
+	pldm_assign_gpio_effecter_id(PLAT_EFFECTER_ID_GPIO_HIGH_BYTE);
 	/* Send device presence log when the BIC is AC on */
 	if (is_ac_lost()) {
 		plat_fio_present_check();
@@ -58,6 +60,9 @@ void pal_post_init()
 		if (board_revision > EVT2_STAGE) {
 			plat_accl_power_cable_present_check();
 		}
+	} else {
+		// open usb hub while bic boot up
+		gpio_set(RST_USB_HUB0_N, GPIO_HIGH);
 	}
 }
 
