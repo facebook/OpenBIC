@@ -1,0 +1,23 @@
+From 25b1a2c2818db3616584a29bee9083cdcd420d46 Mon Sep 17 00:00:00 2001
+From: RickyWu-wiwynn <ricky_cx_wu@wiwynn.com>
+Date: Thu, 21 Sep 2023 16:17:16 +0800
+Subject: [PATCH] board: ast1030 evb: compile with C11
+
+Compile the project of ast1030 evb with C11.
+---
+ boards/arm/ast1030_evb/CMakeLists.txt | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/boards/arm/ast1030_evb/CMakeLists.txt b/boards/arm/ast1030_evb/CMakeLists.txt
+index fcc0e1ee2d..14ebc1ad7d 100644
+--- a/boards/arm/ast1030_evb/CMakeLists.txt
++++ b/boards/arm/ast1030_evb/CMakeLists.txt
+@@ -4,3 +4,5 @@
+ if(CONFIG_PINMUX_ASPEED)
+     zephyr_include_directories(.)
+ endif()
++
++set_property(GLOBAL PROPERTY CSTD c11)
+-- 
+2.24.1
+
