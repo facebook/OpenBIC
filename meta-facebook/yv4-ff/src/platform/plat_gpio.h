@@ -25,7 +25,7 @@
     gpio_name_to_num(PWR_ON_RST_N_R) \
     gpio_name_to_num(SYS_RST_N_R) \
     gpio_name_to_num(PERST_ASIC_N_R) \
-    gpio_name_to_num(Reserve_GPIOA3) \
+    gpio_name_to_num(JTAG2_NTRST2_R) \
     gpio_name_to_num(RST_PCIE_MB_EXP_N) \
     gpio_name_to_num(BIC_PWR_EN_4C) \
     gpio_name_to_num(PG_CARD_OK) \
@@ -39,7 +39,7 @@
     gpio_name_to_num(SMBUS_ALERT_R_N) \
     gpio_name_to_num(FM_PWRBRK_PRIMARY_R_N) \
     gpio_name_to_num(BIC_ESPI_SELECT) \
-    gpio_name_to_num(SPI_RST_FLASH_N_R)
+    gpio_name_to_num(RST_SPI_FLASH_N)
 
 #define name_gpioC \
     gpio_name_to_num(P0V85_BIC_ASIC_EN) \
@@ -155,7 +155,7 @@
     gpio_name_to_num(Reserve_GPION0) \
     gpio_name_to_num(Reserve_GPION1) \
     gpio_name_to_num(Reserve_GPION2) \
-    gpio_name_to_num(Reserve_GPION3) \
+    gpio_name_to_num(EN_CLK_100M_OSC) \
     gpio_name_to_num(Reserve_GPION4) \
     gpio_name_to_num(Reserve_GPION5) \
     gpio_name_to_num(Reserve_GPION6) \
@@ -235,27 +235,9 @@
 
 #define gpio_name_to_num(x) x,
 enum _GPIO_NUMS_ {
-    name_gpioA
-    name_gpioB
-    name_gpioC
-    name_gpioD
-    name_gpioE
-    name_gpioF
-    name_gpioG
-    name_gpioH
-    name_gpioI
-    name_gpioJ
-    name_gpioK
-    name_gpioL
-    name_gpioM
-    name_gpioN
-    name_gpioO
-    name_gpioP
-    name_gpioQ
-    name_gpioR
-    name_gpioS
-    name_gpioT
-    name_gpioU
+	name_gpioA name_gpioB name_gpioC name_gpioD name_gpioE name_gpioF name_gpioG name_gpioH
+		name_gpioI name_gpioJ name_gpioK name_gpioL name_gpioM name_gpioN name_gpioO
+			name_gpioP name_gpioQ name_gpioR name_gpioS name_gpioT name_gpioU
 };
 
 extern enum _GPIO_NUMS_ GPIO_NUMS;
