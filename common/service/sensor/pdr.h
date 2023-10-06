@@ -17,6 +17,13 @@ enum pdr_repository_state {
 	PDR_STATE_FAILED = 0x02,
 };
 
+enum PDR_SENSOR_INIT_STATE {
+	PDR_SENSOR_NO_INIT = 0,
+	PDR_SENSOR_USEINIT_PDR,
+	PDR_SENSOR_ENABLE,
+	PDR_SENSOR_DISABLE,
+};
+
 typedef struct __attribute__((packed)) {
 	uint32_t record_handle;
 	uint8_t PDR_header_version;
