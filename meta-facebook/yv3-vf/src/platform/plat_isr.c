@@ -258,6 +258,24 @@ void check_irq_fault(void)
 	irq_fault_sel(0, P12V_EDGE, 1);
 }
 
+bool plat_gpio_immediate_int_cb(uint8_t gpio_num)
+{
+	bool ret = false;
+
+	switch (gpio_num) {
+	case IRQ_P12V_E1S_0_FLT_N:
+	case IRQ_P12V_E1S_1_FLT_N:
+	case IRQ_P12V_E1S_2_FLT_N:
+	case IRQ_P12V_E1S_3_FLT_N:
+		ret = true;
+		break;
+	default:
+		break;
+	}
+
+	return ret;
+}
+
 #define DEV_PRSNT_HANDLER(idx)                                                                     \
 	void prsnt_int_handler_dev##idx(void)                                                      \
 	{                                                                                          \
@@ -273,13 +291,17 @@ void check_irq_fault(void)
 #define DEV_FAULT_HANDLER(idx)                                                                     \
 	void dev_12v_fault_handler_dev##idx(void)                                                  \
 	{                                                                                          \
-		dev_12v_fault_handler();                                                           \
 		static int64_t pre_time[M2_IDX_E_MAX];                                             \
 		int64_t current_time = k_uptime_get();                                             \
 		if ((current_time - pre_time[idx]) < 10) {                                         \
 			return;                                                                    \
 		}                                                                                  \
 		pre_time[idx] = current_time;                                                      \
+		if (gpio_get(IRQ_P12V_E1S_##idx##_FLT_N) == 0) {                                   \
+			rst_edsff(idx, 0);                                                         \
+			clkbuf_oe_en(idx, 0);                                                      \
+		}                                                                                  \
+		dev_12v_fault_handler();                                                           \
 		irq_fault_sel(idx, P12V_E1S, 0);                                                   \
 	}
 

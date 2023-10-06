@@ -72,6 +72,12 @@ uint32_t GPIO_MULTI_FUNC_PIN_CTL_REG_ACCESS[] = {
 };
 const int GPIO_MULTI_FUNC_CFG_SIZE = ARRAY_SIZE(GPIO_MULTI_FUNC_PIN_CTL_REG_ACCESS);
 
+/* If you want to process the callback function immediately, return true */
+__weak bool plat_gpio_immediate_int_cb(uint8_t gpio_num)
+{
+	return false;
+}
+
 void irq_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pins)
 {
 	uint8_t group, index, gpio_num;
@@ -110,7 +116,10 @@ void irq_callback(const struct device *dev, struct gpio_callback *cb, uint32_t p
 		return;
 	}
 
-	k_work_submit_to_queue(&gpio_work_queue, &gpio_work[gpio_num]);
+	if (plat_gpio_immediate_int_cb(gpio_num))
+		gpio_cfg[gpio_num].int_cb();
+	else
+		k_work_submit_to_queue(&gpio_work_queue, &gpio_work[gpio_num]);
 }
 
 static void gpio_init_cb(uint8_t gpio_num)
