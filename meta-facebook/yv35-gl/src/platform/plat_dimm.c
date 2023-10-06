@@ -25,10 +25,10 @@ k_tid_t get_dimm_info_tid;
 
 struct k_mutex i3c_dimm_mutex;
 
-uint8_t pmic_i3c_addr_list[MAX_COUNT_DIMM / 2] = { PMIC_A_E_ADDR, PMIC_B_F_ADDR, PMIC_C_G_ADDR,
-						   PMIC_D_H_ADDR };
-uint8_t spd_i3c_addr_list[MAX_COUNT_DIMM / 2] = { DIMM_SPD_A_E_ADDR, DIMM_SPD_B_F_ADDR,
-						  DIMM_SPD_C_G_ADDR, DIMM_SPD_D_H_ADDR };
+uint8_t pmic_i3c_addr_list[MAX_COUNT_DIMM / 2] = { PMIC_A0_A4_ADDR, PMIC_A1_A5_ADDR, PMIC_A2_A6_ADDR,
+						   PMIC_A3_A7_ADDR };
+uint8_t spd_i3c_addr_list[MAX_COUNT_DIMM / 2] = { DIMM_SPD_A0_A4_ADDR, DIMM_SPD_A1_A5_ADDR,
+						  DIMM_SPD_A2_A6_ADDR, DIMM_SPD_A3_A7_ADDR };
 
 dimm_info dimm_data[MAX_COUNT_DIMM];
 
@@ -228,7 +228,7 @@ void get_dimm_info_handler()
 void init_i3c_dimm_prsnt_status()
 {
 	int index;
-	for (index = DIMM_ID_A; index < MAX_COUNT_DIMM; index++) {
+	for (index = DIMM_ID_A0; index < MAX_COUNT_DIMM; index++) {
 		ipmi_msg msg = { 0 };
 
 		msg.InF_source = SELF;
@@ -278,37 +278,37 @@ uint8_t sensor_num_map_dimm_id(uint8_t sensor_num)
 	uint8_t dimm_id = DIMM_ID_UNKNOWN;
 
 	switch (sensor_num) {
-	case SENSOR_NUM_MB_DIMMA_TEMP_C:
-	case SENSOR_NUM_MB_VR_DIMMA_PMIC_PWR_W:
-		dimm_id = DIMM_ID_A;
+	case SENSOR_NUM_MB_DIMMA0_TEMP_C:
+	case SENSOR_NUM_MB_VR_DIMMA0_PMIC_PWR_W:
+		dimm_id = DIMM_ID_A0;
 		break;
-	case SENSOR_NUM_MB_DIMMB_TEMP_C:
-	case SENSOR_NUM_MB_VR_DIMMB_PMIC_PWR_W:
-		dimm_id = DIMM_ID_B;
+	case SENSOR_NUM_MB_DIMMA1_TEMP_C:
+	case SENSOR_NUM_MB_VR_DIMMA1_PMIC_PWR_W:
+		dimm_id = DIMM_ID_A1;
 		break;
-	case SENSOR_NUM_MB_DIMMC_TEMP_C:
-	case SENSOR_NUM_MB_VR_DIMMC_PMIC_PWR_W:
-		dimm_id = DIMM_ID_C;
+	case SENSOR_NUM_MB_DIMMA2_TEMP_C:
+	case SENSOR_NUM_MB_VR_DIMMA2_PMIC_PWR_W:
+		dimm_id = DIMM_ID_A2;
 		break;
-	case SENSOR_NUM_MB_DIMMD_TEMP_C:
-	case SENSOR_NUM_MB_VR_DIMMD_PMIC_PWR_W:
-		dimm_id = DIMM_ID_D;
+	case SENSOR_NUM_MB_DIMMA3_TEMP_C:
+	case SENSOR_NUM_MB_VR_DIMMA3_PMIC_PWR_W:
+		dimm_id = DIMM_ID_A3;
 		break;
-	case SENSOR_NUM_MB_DIMME_TEMP_C:
-	case SENSOR_NUM_MB_VR_DIMME_PMIC_PWR_W:
-		dimm_id = DIMM_ID_E;
+	case SENSOR_NUM_MB_DIMMA4_TEMP_C:
+	case SENSOR_NUM_MB_VR_DIMMA4_PMIC_PWR_W:
+		dimm_id = DIMM_ID_A4;
 		break;
-	case SENSOR_NUM_MB_DIMMF_TEMP_C:
-	case SENSOR_NUM_MB_VR_DIMMF_PMIC_PWR_W:
-		dimm_id = DIMM_ID_F;
+	case SENSOR_NUM_MB_DIMMA5_TEMP_C:
+	case SENSOR_NUM_MB_VR_DIMMA5_PMIC_PWR_W:
+		dimm_id = DIMM_ID_A5;
 		break;
-	case SENSOR_NUM_MB_DIMMG_TEMP_C:
-	case SENSOR_NUM_MB_VR_DIMMG_PMIC_PWR_W:
-		dimm_id = DIMM_ID_G;
+	case SENSOR_NUM_MB_DIMMA6_TEMP_C:
+	case SENSOR_NUM_MB_VR_DIMMA6_PMIC_PWR_W:
+		dimm_id = DIMM_ID_A6;
 		break;
-	case SENSOR_NUM_MB_DIMMH_TEMP_C:
-	case SENSOR_NUM_MB_VR_DIMMH_PMIC_PWR_W:
-		dimm_id = DIMM_ID_H;
+	case SENSOR_NUM_MB_DIMMA7_TEMP_C:
+	case SENSOR_NUM_MB_VR_DIMMA7_PMIC_PWR_W:
+		dimm_id = DIMM_ID_A7;
 		break;
 	default:
 		dimm_id = DIMM_ID_UNKNOWN;
