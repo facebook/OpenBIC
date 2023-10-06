@@ -106,7 +106,7 @@ struct _1OU_CARD_MAPPING_TABLE _1ou_card_mapping_table[] = {
 	{ 1.26, RANGE, TYPE_1OU_NIAGARA_FALLS },
 	{ 1.5, RANGE, TYPE_1OU_EXP_WITH_NIC },
 	{ 1.75, RANGE, TYPE_1OU_VERNAL_FALLS_WITH_AST },
-	{ 2.0, RANGE, TYPE_1OU_KAHUNA_FALLS },
+	{ 2.0, RANGE, TYPE_1OU_OLMSTED_POINT },
 };
 
 bool get_adc_voltage(int channel, float *voltage)
@@ -232,6 +232,7 @@ void init_platform_config()
 	 *  - 05h: Kahuna Falls
 	 *  - 06h: Waimano falls (CXL with 2 DDR4 DIMMs+2 E1S)
 	 *  - 07h: Expansion with NIC
+	 *    08h: OPA/OPB
 	 */
 	if (_1ou_status.present) {
 		float voltage;
@@ -284,6 +285,12 @@ void init_platform_config()
 						voltage);
 				}
 			}
+		}
+	}
+
+	if (_2ou_status.present) {
+		if (_1ou_status.card_type == TYPE_1OU_OLMSTED_POINT) {
+			_2ou_status.card_type = TYPE_1OU_OLMSTED_POINT;
 		}
 	}
 
