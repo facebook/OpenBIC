@@ -38,6 +38,8 @@ LOG_MODULE_REGISTER(util_spi);
 #define FW_UPDATE_RETRY_MAX_COUNT 0
 #endif
 
+#define IS25WP256D_ID 0x9D7019
+
 static int default_retry_count = FW_UPDATE_RETRY_MAX_COUNT;
 
 static struct {
@@ -353,6 +355,15 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, uint8_t f
 				return rc;
 			}
 			flash_device_list[flash_position].isinit = true;
+		}
+
+		if (start_offset == 0) {
+			//IS25WP256D need to set 4byte address mode before update
+			uint8_t jedec_id[3] = { 0 };
+			flash_read_jedec_id(flash_dev, jedec_id);
+			if ((jedec_id[0] << 16 | jedec_id[1] << 8 | jedec_id[2]) == IS25WP256D_ID) {
+				spi_nor_config_4byte_mode(flash_dev, true);
+			}
 		}
 
 		ret = do_update(flash_dev, start_offset, txbuf, buf_offset);
