@@ -31,6 +31,7 @@ enum name {
 	I2C_BUS7,
 	I2C_BUS8,
 	I2C_BUS9,
+	I2C_BUS10,
 	I2C_BUS_MAX_NUM,
 };
 

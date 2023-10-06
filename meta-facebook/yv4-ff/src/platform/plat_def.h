@@ -22,5 +22,7 @@
 #define BMC_USB_PORT "CDC_ACM_0"
 
 #define ENABLE_PLDM
+#define ENABLE_PLDM_SENSOR
+#define ENABLE_CCI
 
 #endif
