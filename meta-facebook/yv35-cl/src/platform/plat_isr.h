@@ -20,6 +20,8 @@
 #include <stdint.h>
 #include "ipmi.h"
 
+#define DETECT_SMI_DELAY_90S 90
+
 enum GET_SET_M2_OPTION {
 	DEVICE_SET_POWER_OFF = 0x00,
 	DEVICE_SET_POWER_ON = 0x01,
@@ -49,5 +51,6 @@ void ISR_RMCA();
 void ISR_CPU_VPP_INT();
 void ISR_NMI();
 void ISR_RST_PLTRST_PLD();
+void ISR_SMI();
 
 #endif
