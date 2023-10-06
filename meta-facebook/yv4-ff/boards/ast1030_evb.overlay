@@ -73,6 +73,12 @@
 	clock-frequency = <I2C_BITRATE_FAST>;
 };
 
+&i2c9 {
+        pinctrl-0 = <&pinctrl_i2c9_default>;
+        status = "okay";
+        clock-frequency = <I2C_BITRATE_FAST>;
+};
+
 &i3c0 {
 	status = "okay";
 	assigned-address = <0x9>;
@@ -95,8 +101,16 @@
 	status = "okay";
 };
 
+&uart1 {
+  status = "okay";
+};
+
 &uart5 {
 	current-speed = <57600>;
+};
+
+&uart8 {
+  status = "okay";
 };
 
 &fmc {
@@ -174,4 +188,19 @@
 
 &gpio0_m_p {
 	aspeed,persist-maps = <0x00000800>;
+};
+
+&tach { 
+	status = "okay";
+
+	pinctrl-0 = <&pinctrl_tach8_default &pinctrl_tach9_default>;
+
+	fan@0 {
+		reg = <9>;
+		pulse-pr = <2>;
+		min-rpm = <10>;
+		tach-div = <5>;
+		tach-mode = <2>;
+		label = "HB0";
+	};
 };

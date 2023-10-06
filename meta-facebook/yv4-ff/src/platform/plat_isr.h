@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -17,7 +17,16 @@
 #ifndef PLAT_ISR_H
 #define PLAT_ISR_H
 
-void ISR_MB_DC_STAGUS_CHAGNE();
+#include <stdint.h>
+#include "ipmi.h"
+
+// BIC checks for CXL readiness every three seconds, with a maximum of 10 attempts
+#define CXL_READY_RETRY_TIMES 10
+#define CXL_READY_INTERVAL_SECONDS 3
+#define CXL_HEART_BEAT_LABEL "HB0"
+
+void ISR_MB_DC_STATUS_CHANGE();
 void ISR_MB_PCIE_RST();
+void ISR_CXL_PG_ON();
 
 #endif
