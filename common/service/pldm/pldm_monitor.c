@@ -662,7 +662,7 @@ void set_effecter_state_gpio_handler(const uint8_t *buf, uint16_t len, uint8_t *
 			uint8_t gpio_val =
 				((gpio_val_state->effecter_state == EFFECTER_STATE_GPIO_VALUE_LOW) ?
 					 GPIO_LOW :
-					 GPIO_HIGH);
+					       GPIO_HIGH);
 			gpio_set(gpio_pin, gpio_val);
 			*completion_code_p = PLDM_SUCCESS;
 			return;
@@ -774,10 +774,10 @@ void get_effecter_state_gpio_handler(const uint8_t *buf, uint16_t len, uint8_t *
 		gpio_dir_state->present_state = gpio_dir_state->pending_state =
 			((gpio_cfg[gpio_pin].direction == GPIO_INPUT) ?
 				 EFFECTER_STATE_GPIO_DIRECTION_INPUT :
-				 EFFECTER_STATE_GPIO_DIRECTION_OUTPUT);
+				       EFFECTER_STATE_GPIO_DIRECTION_OUTPUT);
 		gpio_val_state->present_state = gpio_val_state->pending_state =
 			(!gpio_get(gpio_pin) ? EFFECTER_STATE_GPIO_VALUE_LOW :
-					       EFFECTER_STATE_GPIO_VALUE_HIGH);
+						     EFFECTER_STATE_GPIO_VALUE_HIGH);
 	}
 
 	*resp_len = PLDM_GET_STATE_EFFECTER_RESP_NO_STATE_FIELD_BYTES +
@@ -820,9 +820,8 @@ uint8_t pldm_get_state_effecter_states(void *mctp_inst, uint8_t *buf, uint16_t l
 	return plat_pldm_get_state_effecter_state_handler(buf, len, resp, resp_len, info_p);
 }
 
-uint8_t pldm_get_pdr_info(void *mctp_inst, uint8_t *buf, uint16_t len,
-				     uint8_t instance_id, uint8_t *resp, uint16_t *resp_len,
-				     void *ext_params)
+uint8_t pldm_get_pdr_info(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id,
+			  uint8_t *resp, uint16_t *resp_len, void *ext_params)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
@@ -832,7 +831,7 @@ uint8_t pldm_get_pdr_info(void *mctp_inst, uint8_t *buf, uint16_t len,
 
 	struct pldm_get_pdr_info_resp *res_p = (struct pldm_get_pdr_info_resp *)resp;
 
-	PDR_INFO* pdr_info = get_pdr_info();
+	PDR_INFO *pdr_info = get_pdr_info();
 	if (pdr_info == NULL) {
 		LOG_ERR("The PDR table is empty");
 		return PLDM_ERROR;
@@ -848,9 +847,8 @@ uint8_t pldm_get_pdr_info(void *mctp_inst, uint8_t *buf, uint16_t len,
 	return PLDM_SUCCESS;
 }
 
-uint8_t pldm_get_pdr(void *mctp_inst, uint8_t *buf, uint16_t len,
-				     uint8_t instance_id, uint8_t *resp, uint16_t *resp_len,
-				     void *ext_params)
+uint8_t pldm_get_pdr(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id,
+		     uint8_t *resp, uint16_t *resp_len, void *ext_params)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
@@ -861,7 +859,7 @@ uint8_t pldm_get_pdr(void *mctp_inst, uint8_t *buf, uint16_t len,
 	struct pldm_get_pdr_req *req_p = (struct pldm_get_pdr_req *)buf;
 	struct pldm_get_pdr_resp *res_p = (struct pldm_get_pdr_resp *)resp;
 
-	PDR_numeric_sensor* numeric_sensor_table = get_pdr_table();
+	PDR_numeric_sensor *numeric_sensor_table = get_pdr_table();
 	if (numeric_sensor_table == NULL) {
 		LOG_ERR("The PDR table is empty");
 		return PLDM_ERROR;
@@ -963,4 +961,55 @@ struct pldm_state_effecter_info *find_state_effecter_info(uint16_t effecter_id)
 	}
 
 	return NULL;
+}
+
+uint8_t pldm_fill_addsel_req(struct pldm_set_state_effecter_states_req *req, uint16_t effecter_id,
+			     uint8_t device_type, uint8_t board_info, uint8_t event_type)
+{
+	CHECK_NULL_ARG_WITH_RETURN(req, PLDM_ERROR);
+
+	req->effecter_id = effecter_id;
+	req->composite_effecter_count = PLDM_COMPOSITE_EFFECTER_COUNT_ADDSEL;
+	req->field[0].set_request = PLDM_REQUEST_SET;
+	req->field[0].effecter_state = device_type;
+	req->field[1].set_request = PLDM_REQUEST_SET;
+	req->field[1].effecter_state = board_info;
+	req->field[2].set_request = PLDM_REQUEST_SET;
+	req->field[2].effecter_state = event_type;
+
+	return PLDM_SUCCESS;
+}
+
+uint8_t pldm_send_set_state_effecter_states_req(struct pldm_set_state_effecter_states_req *req,
+						void *mctp_inst, mctp_ext_params ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(req, PLDM_ERROR);
+
+	if ((req->composite_effecter_count < PLDM_COMPOSITE_EFFECTER_COUNT_MIN) ||
+	    (req->composite_effecter_count > PLDM_COMPOSITE_EFFECTER_COUNT_MAX)) {
+		LOG_ERR("Invalid composite effecter count: 0x%x", req->composite_effecter_count);
+		return PLDM_ERROR;
+	}
+
+	uint8_t completion_code = PLDM_ERROR;
+	uint8_t req_len = sizeof(struct pldm_set_state_effecter_states_req);
+	uint8_t resp_len = sizeof(completion_code);
+	pldm_msg msg = { 0 };
+
+	memcpy(&msg.ext_params, &ext_params, sizeof(mctp_ext_params));
+
+	msg.hdr.pldm_type = PLDM_TYPE_PLAT_MON_CTRL;
+	msg.hdr.cmd = PLDM_MONITOR_CMD_CODE_SET_STATE_EFFECTER_STATES;
+	msg.hdr.rq = 1;
+	msg.buf = (uint8_t *)req;
+	msg.len = req_len;
+
+	uint16_t read_len = mctp_pldm_read(mctp_inst, &msg, &completion_code, resp_len);
+	if ((!read_len) || (completion_code != PLDM_SUCCESS)) {
+		LOG_ERR("Send event message failed, read_len (%d) comp_code (0x%x)", read_len,
+			completion_code);
+		return PLDM_ERROR;
+	}
+
+	return PLDM_SUCCESS;
 }

@@ -61,6 +61,12 @@ typedef enum pldm_platform_monitor_commands {
 #define PLDM_PLATFORM_OEM_HOST_POWER_CTRL_EFFECTER_STATE_FIELD_COUNT 1
 #define PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_MAX 167
 
+#define PLDM_COMPOSITE_EFFECTER_COUNT_MIN 0x01
+#define PLDM_COMPOSITE_EFFECTER_COUNT_MAX 0x08
+#define PLDM_COMPOSITE_EFFECTER_COUNT_ADDSEL 0x03
+#define PLDM_ADDSEL_ASSERT_MASK 0x80
+#define PLDM_ADDSEL_DEASSERT_MASK 0x7F
+
 typedef enum pldm_sensor_readings_data_type {
 	PLDM_SENSOR_DATA_SIZE_UINT8,
 	PLDM_SENSOR_DATA_SIZE_SINT8,
@@ -173,7 +179,7 @@ enum pldm_oem_platform_completion_codes {
 Set Specification (DSP0249) Table 15 – Entity ID codes*/
 enum pldm_entity_types {
 	PLDM_ENTITY_SUB_CHASSIS = 46,
-	PLDM_ENTITY_IO_CONTROLLER  = 145,
+	PLDM_ENTITY_IO_CONTROLLER = 145,
 };
 
 /* Y = (mX + b) * 10^r */
@@ -386,6 +392,14 @@ struct pldm_state_effecter_info {
 	uint16_t effecter_id;
 };
 
+enum pldm_effecter_id_high_byte {
+	PLDM_EFFECTER_ID_FUNC_HIGH_BYTE = 0x00,
+};
+
+enum pldm_effecter_id_low_byte {
+	PLDM_EFFECTER_ID_ADDSEL_LOW_BYTE = 0x05,
+};
+
 extern struct pldm_state_effecter_info *state_effecter_table;
 
 uint8_t pldm_monitor_handler_query(uint8_t code, void **ret_fn);
@@ -415,8 +429,8 @@ uint8_t plat_pldm_get_state_effecter_state_handler(const uint8_t *buf, uint16_t 
 						   uint16_t *resp_len,
 						   struct pldm_state_effecter_info *info_p);
 
-void plat_pldm_set_effecter_state_host_power_control(const uint8_t *buf, uint16_t len, uint8_t *resp,
-						   uint16_t *resp_len);
+void plat_pldm_set_effecter_state_host_power_control(const uint8_t *buf, uint16_t len,
+						     uint8_t *resp, uint16_t *resp_len);
 
 void pldm_assign_gpio_effecter_id();
 
@@ -429,6 +443,10 @@ struct pldm_state_effecter_info *find_state_effecter_info(uint16_t effecter_id);
 uint8_t pldm_event_len_check(uint8_t *buf, uint16_t len);
 float pldm_sensor_cal(uint8_t *buf, uint8_t len, pldm_sensor_readings_data_type_t data_type,
 		      pldm_sensor_pdr_parm parm);
+uint8_t pldm_send_set_state_effecter_states_req(struct pldm_set_state_effecter_states_req *req,
+						void *mctp_inst, mctp_ext_params ext_params);
+uint8_t pldm_fill_addsel_req(struct pldm_set_state_effecter_states_req *req, uint16_t effecter_id,
+			     uint8_t device_type, uint8_t board_info, uint8_t event_type);
 
 #ifdef __cplusplus
 }

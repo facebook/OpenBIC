@@ -21,7 +21,8 @@
 #include "ipmi.h"
 
 #define PRESS_FIO_BUTTON_DELAY_MS 4000
-#define ADDSEL_EVENT_DATA_DEFAULT 0xFF
+#define ADDSEL_EVENT_TYPE_DEFAULT 0x00
+#define ADDSEL_EVENT_TYPE_OP 0x01
 
 enum BUTTON_OPTIONAL {
 	OPTIONAL_AC_OFF = 0x01,
@@ -30,13 +31,16 @@ enum BUTTON_OPTIONAL {
 typedef struct _add_sel_info {
 	bool is_init;
 	uint8_t gpio_num;
-	common_addsel_msg_t sel_msg;
+	uint8_t device_type;
+	uint8_t board_info;
+	uint8_t event_type;
 	struct k_work_delayable add_sel_work;
 } add_sel_info;
 
 void ISR_FIO_BUTTON();
 void ISR_POWER_STATUS_CHANGE();
 void ISR_VR_ALERT();
+void ISR_PMBUS_ALERT();
 void ISR_P1V25_ALERT();
 void ISR_P12V_ACCL1_ALERT();
 void ISR_P12V_ACCL2_ALERT();

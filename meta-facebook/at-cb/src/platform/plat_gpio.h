@@ -237,7 +237,7 @@
 	gpio_name_to_num(Reserve_GPIOU7)
 
 #define update_name_gpioA \
-	gpio_name_to_num(Reserve_GPIOA0) \
+	gpio_name_to_num(SMB_PMBUS_ALERT_N_R) \
 	gpio_name_to_num(INT_SMB_BIC_PEX0_N_R) \
 	gpio_name_to_num(INT_SMB_BIC_PEX1_N_R) \
 	gpio_name_to_num(SMB_P1V25_ALRT_N_R) \
