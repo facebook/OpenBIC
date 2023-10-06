@@ -29,6 +29,12 @@ extern "C" {
 /* commands of pldm type 0x3F : PLDM_TYPE_OEM */
 #define PLDM_OEM_CMD_ECHO 0x00
 #define PLDM_OEM_IPMI_BRIDGE 0x01
+#define PLDM_OEM_WRITE_FILE_IO 0x02
+#define PLDM_OEM_READ_FILE_IO 0x03
+
+enum cmd_type {
+   POST_CODE = 0x00,
+};
 
 struct _cmd_echo_req {
 	uint8_t iana[IANA_LEN];
@@ -55,6 +61,16 @@ struct _ipmi_cmd_resp {
 	uint8_t cmd;
 	uint8_t ipmi_comp_code;
 	uint8_t first_data;
+} __attribute__((packed));
+
+struct pldm_oem_write_file_io_req {
+	uint8_t cmd_code;
+	uint32_t data_length;
+	uint8_t messages[];
+} __attribute__((packed));
+
+struct pldm_oem_write_file_io_resp {
+	uint8_t completion_code;
 } __attribute__((packed));
 
 uint8_t check_iana(const uint8_t *iana);
