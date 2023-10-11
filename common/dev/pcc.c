@@ -298,6 +298,7 @@ static void process_postcode(void *arvg0, void *arvg1, void *arvg2)
 {
 	uint16_t send_index = 0;
 	while (1) {
+		k_sem_take(&get_postcode_sem, K_FOREVER);
 		uint16_t current_read_index = pcc_read_index;
 		for (; send_index != current_read_index;
 		     send_index = (send_index + 1) % PCC_BUFFER_LEN) {
@@ -307,8 +308,6 @@ static void process_postcode(void *arvg0, void *arvg1, void *arvg2)
 				   ABL_POSTCODE_PREFIX) {
 				check_ABL_error(pcc_read_buffer[send_index]);
 			}
-
-			k_sem_take(&get_postcode_sem, K_FOREVER);
 
 			send_post_code_to_bmc(send_index);
 
