@@ -42,6 +42,13 @@
             "Device" : "pex89000",
             "CheckSum" : "n",
             "pkg_suffix" : ".pldm"
+        },
+	{
+            "CompID" : [0],
+            "Vendor" : "infineon",
+            "Device" : "xdpe15284",
+            "CheckSum" : "n",
+            "pkg_suffix" : ".pldm"
         }
     ]
 }
