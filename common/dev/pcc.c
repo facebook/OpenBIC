@@ -213,6 +213,7 @@ bool pldm_send_post_code_to_bmc(uint16_t send_index)
 	pldm_msg msg = { 0 };
 	msg.ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
 	msg.ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
+	msg.ext_params.ep = MCTP_EID_BMC;
 
 	msg.hdr.pldm_type = PLDM_TYPE_OEM;
 	msg.hdr.cmd = PLDM_OEM_WRITE_FILE_IO;
