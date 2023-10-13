@@ -203,10 +203,11 @@ typedef struct _mctp_smbus_port {
 
 /* mctp route entry struct */
 typedef struct _mctp_route_entry {
-        uint8_t endpoint;
-        uint8_t bus; /* TODO: only consider smbus/i3c */
-        uint8_t addr; /* TODO: only consider smbus/i3c */
-        uint8_t dev_present_pin;
+	uint8_t endpoint;
+	uint8_t bus; /* TODO: only consider smbus/i3c */
+	uint8_t addr; /* TODO: only consider smbus/i3c */
+	uint8_t dev_present_pin;
+	bool set_endpoint;
 } mctp_route_entry;
 
 typedef struct _mctp_msg_handler {
