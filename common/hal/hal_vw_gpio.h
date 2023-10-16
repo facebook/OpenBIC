@@ -16,6 +16,12 @@
 
 #include <drivers/espi.h>
 
+// Aspeed ESPI register definition
+#define AST_ESPI_BASE 0x7E6EE000
+#define AST_ESPI_SYSEVT 0x98
+#define AST_ESPI_GPIO_VAL 0x9C
+#define AST_ESPI_GPIO_DIR 0xC0
+
 #define VW_GPIO_ENABLE true
 #define VW_GPIO_DISABLE false
 
