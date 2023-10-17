@@ -27,23 +27,34 @@
 #include "plat_i2c.h"
 #include "mp2971.h"
 #include "util_spi.h"
+#include "plat_i2c.h"
+#include "pt5161l.h"
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
 static uint8_t plat_pldm_pre_vr_update(void *fw_update_param);
 static uint8_t plat_pldm_post_vr_update(void *fw_update_param);
 static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
+static uint8_t plat_pldm_pre_retimer_update(void *fw_update_param);
+static bool plat_get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 
 enum FIRMWARE_COMPONENT {
 	SD_COMPNT_BIC,
 	SD_COMPNT_VR_PVDDCR_CPU1,
 	SD_COMPNT_VR_PVDD11_S3,
 	SD_COMPNT_VR_PVDDCR_CPU0,
+	SD_COMPNT_X16_RETIMER,
+	SD_COMPNT_X8_RETIMER,
 };
 
 uint8_t MCTP_SUPPORTED_MESSAGES_TYPES[] = {
 	TYPE_MCTP_CONTROL,
 	TYPE_PLDM,
+};
+
+enum RETIMER_ADDR {
+	X16_RETIMER_ADDR = 0x20,
+	X8_RETIMER_ADDR = 0x23,
 };
 
 /* PLDM FW update table */
@@ -99,6 +110,32 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.activate_method = COMP_ACT_AC_PWR_CYCLE,
 		.self_act_func = NULL,
 		.get_fw_version_fn = plat_get_vr_fw_version,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = SD_COMPNT_X16_RETIMER,
+		.comp_classification_index = 0x00,
+		.pre_update_func = plat_pldm_pre_retimer_update,
+		.update_func = pldm_retimer_update,
+		.pos_update_func = NULL,
+		.inf = COMP_UPDATE_VIA_I2C,
+		.activate_method = COMP_ACT_SELF,
+		.self_act_func = NULL,
+		.get_fw_version_fn = plat_get_retimer_fw_version,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = SD_COMPNT_X8_RETIMER,
+		.comp_classification_index = 0x00,
+		.pre_update_func = plat_pldm_pre_retimer_update,
+		.update_func = pldm_retimer_update,
+		.pos_update_func = NULL,
+		.inf = COMP_UPDATE_VIA_I2C,
+		.activate_method = COMP_ACT_SELF,
+		.self_act_func = NULL,
+		.get_fw_version_fn = plat_get_retimer_fw_version,
 	},
 };
 
@@ -241,6 +278,55 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	buf_p += 8;
 
 	ret = true;
+
+	return ret;
+}
+
+static uint8_t plat_pldm_pre_retimer_update(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+
+	p->bus = I2C_BUS6;
+
+	if (p->comp_id == SD_COMPNT_X16_RETIMER) {
+		p->addr = X16_RETIMER_ADDR;
+	} else {
+		p->addr = X8_RETIMER_ADDR;
+	}
+
+	return 0;
+}
+
+static bool plat_get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(info_p, false);
+	CHECK_NULL_ARG_WITH_RETURN(buf, false);
+	CHECK_NULL_ARG_WITH_RETURN(len, false);
+
+	pldm_fw_update_info_t *p = (pldm_fw_update_info_t *)info_p;
+
+	bool ret = false;
+	uint8_t version[RETIMER_PT5161L_FW_VER_LEN];
+	I2C_MSG i2c_msg;
+
+	i2c_msg.bus = I2C_BUS6;
+
+	if (p->comp_identifier == SD_COMPNT_X16_RETIMER) {
+		i2c_msg.target_addr = X16_RETIMER_ADDR;
+	} else if (p->comp_identifier == SD_COMPNT_X8_RETIMER) {
+		i2c_msg.target_addr = X8_RETIMER_ADDR;
+	} else {
+		LOG_ERR("Unknown component identifier for retimer");
+		return ret;
+	}
+
+	uint8_t *buf_p = buf;
+	ret = get_retimer_fw_version(&i2c_msg, version);
+	memcpy(buf_p, version, RETIMER_PT5161L_FW_VER_LEN);
+	*len += bin2hex(version, 4, buf_p, 8);
+	buf_p += 8;
 
 	return ret;
 }
