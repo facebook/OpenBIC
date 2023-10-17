@@ -14,29 +14,33 @@
  * limitations under the License.
  */
 
+#include <logging/log.h>
+#include "util_worker.h"
 #include "hal_gpio.h"
-#include "util_sys.h"
-#include "pldm_monitor.h"
-#include "power_status.h"
 #include "plat_gpio.h"
 #include "plat_power_seq.h"
-#include "plat_pldm_monitor.h"
+#include "plat_isr.h"
 
-#define DEF_PROJ_GPIO_PRIORITY 78
+LOG_MODULE_REGISTER(plat_isr);
 
-void pal_set_sys_status()
+K_WORK_DEFINE(cxl_power_on_work, execute_power_on_sequence);
+K_WORK_DEFINE(cxl_power_off_work, execute_power_off_sequence);
+
+void ISR_MB_DC_STAGUS_CHAGNE()
 {
 	set_mb_dc_status(FM_POWER_EN_R);
-	set_DC_status(PG_CARD_OK);
-	set_sys_ready_pin(BIC_READY_R);
+
+	if (gpio_get(FM_POWER_EN_R) == POWER_ON) {
+		//init_power_on_thread(CLK_POWER_ON_STAGE);
+		k_work_submit(&cxl_power_on_work);
+	} else {
+		//init_power_off_thread(DIMM_POWER_OFF_STAGE_1);
+		k_work_submit(&cxl_power_off_work);
+	}
 }
 
-void pal_post_init()
+void ISR_MB_PCIE_RST()
 {
-	pldm_load_state_effecter_table(PLAT_PLDM_MAX_STATE_EFFECTER_IDX);
-	pldm_assign_gpio_effecter_id(PLAT_EFFECTER_ID_GPIO_HIGH_BYTE);
+	gpio_set(PERST_ASIC1_N_R, gpio_get(RST_PCIE_MB_EXP_N));
+	gpio_set(PERST_ASIC2_N_R, gpio_get(RST_PCIE_MB_EXP_N));
 }
-
-
-DEVICE_DEFINE(PRE_DEF_PROJ_GPIO, "PRE_DEF_PROJ_GPIO_NAME", &gpio_init, NULL, NULL, NULL,
-	      POST_KERNEL, DEF_PROJ_GPIO_PRIORITY, NULL);
