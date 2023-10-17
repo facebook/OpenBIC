@@ -91,7 +91,7 @@ ltc4286_init_arg ltc4286_init_args[] = {
 };
 
 ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
-	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001151079, .mfr_config_init = true,
+	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode = 0b111,
 		.shunt_volt_time = 0b100,
@@ -112,7 +112,7 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_set_alert_threshold = true,
 	.pin_op_warn_limit = 0x2B01,
 	},
-	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0011523, .mfr_config_init = true,
+	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode = 0b111,
 		.shunt_volt_time = 0b100,
@@ -133,7 +133,7 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_set_alert_threshold = true,
 	.pin_op_warn_limit = 0x2B01,
 	},
-	[2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001149, .mfr_config_init = true,
+	[2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode = 0b111,
 		.shunt_volt_time = 0b100,
@@ -154,7 +154,7 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_set_alert_threshold = true,
 	.pin_op_warn_limit = 0x2B01,
 	},
-	[3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001148, .mfr_config_init = true,
+	[3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode = 0b111,
 		.shunt_volt_time = 0b100,
@@ -175,7 +175,7 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_set_alert_threshold = true,
 	.pin_op_warn_limit = 0x2B01,
 	},
-	[4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001147982, .mfr_config_init = true,
+	[4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode = 0b111,
 		.shunt_volt_time = 0b100,
@@ -196,7 +196,7 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_set_alert_threshold = true,
 	.pin_op_warn_limit = 0x2B01,
 	},
-	[5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0009859, .mfr_config_init = true,
+	[5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode = 0b111,
 		.shunt_volt_time = 0b100,
@@ -217,7 +217,7 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_set_alert_threshold = true,
 	.pin_op_warn_limit = 0x2B01,
 	},
-	[6] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001147982, .mfr_config_init = true,
+	[6] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode = 0b111,
 		.shunt_volt_time = 0b100,
@@ -238,7 +238,7 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_set_alert_threshold = true,
 	.pin_op_warn_limit = 0x2B01,
 	},
-	[7] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001152115, .mfr_config_init = true,
+	[7] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode = 0b111,
 		.shunt_volt_time = 0b100,
@@ -259,7 +259,7 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_set_alert_threshold = true,
 	.pin_op_warn_limit = 0x2B01,
 	},
-	[8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001114, .mfr_config_init = true,
+	[8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode = 0b111,
 		.shunt_volt_time = 0b100,
@@ -280,7 +280,7 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_set_alert_threshold = true,
 	.pin_op_warn_limit = 0x2B01,
 	},
-	[9] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0011547, .mfr_config_init = true,
+	[9] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode = 0b111,
 		.shunt_volt_time = 0b100,
@@ -301,7 +301,7 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_set_alert_threshold = true,
 	.pin_op_warn_limit = 0x2B01,
 	},
-	[10] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001135758, .mfr_config_init = true,
+	[10] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode = 0b111,
 		.shunt_volt_time = 0b100,
@@ -322,7 +322,7 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_set_alert_threshold = true,
 	.pin_op_warn_limit = 0x2B01,
 	},
-	[11] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0009848, .mfr_config_init = true,
+	[11] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode = 0b111,
 		.shunt_volt_time = 0b100,
@@ -534,7 +534,7 @@ pex89000_init_arg pex_sensor_init_args[] = {
 };
 
 sq52205_init_arg u178_179_sq52205_init_args[] = {
-	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0010002,
+	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
 	.config = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
@@ -549,7 +549,7 @@ sq52205_init_arg u178_179_sq52205_init_args[] = {
 	.alert_threshold = 0x051D,
 	.alert_mask_config.value = SQ52205_ENABLE_OP,
 	},
-	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0010002,
+	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
 	.config = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
