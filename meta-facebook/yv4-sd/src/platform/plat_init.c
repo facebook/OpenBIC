@@ -26,6 +26,7 @@
 #include "hal_i3c.h"
 #include "libutil.h"
 #include "mctp_ctrl.h"
+#include "rg3mxxb12.h"
 #include "plat_mctp.h"
 #include "plat_i2c_target.h"
 #include "plat_pldm_monitor.h"
@@ -42,6 +43,34 @@ void pal_pre_init()
 	}
 
 	init_platform_config();
+
+	//TODO: if 1OU card present
+	// i3c master initial
+	I3C_MSG i3c_msg = { 0 };
+	i3c_msg.bus = I3C_BUS_HUB;
+	i3c_msg.target_addr = I3C_ADDR_HUB;
+
+	const int rstdaa_count = 2;
+	int ret = 0;
+
+	for (int i = 0; i < rstdaa_count; i++) {
+		ret = i3c_brocast_ccc(&i3c_msg, I3C_CCC_RSTDAA, I3C_BROADCAST_ADDR);
+		if (ret != 0) {
+			printf("Error to reset daa. count = %d\n", i);
+		}
+	}
+
+	ret = i3c_brocast_ccc(&i3c_msg, I3C_CCC_SETAASA, I3C_BROADCAST_ADDR);
+	if (ret != 0) {
+		printf("Error to set daa\n");
+	}
+
+	i3c_attach(&i3c_msg);
+
+	// Initialize I3C HUB
+	if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, ldo_1_2_volt)) {
+		printk("failed to initialize 1ou rg3mxxb12\n");
+	}
 }
 
 void pal_post_init()
