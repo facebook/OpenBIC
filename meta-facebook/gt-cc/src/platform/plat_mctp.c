@@ -36,11 +36,6 @@
 
 LOG_MODULE_REGISTER(plat_mctp);
 
-#define MCTP_MSG_TYPE_SHIFT 0
-#define MCTP_MSG_TYPE_MASK 0x7F
-#define MCTP_IC_SHIFT 7
-#define MCTP_IC_MASK 0x80
-
 /* i2c 8 bit address */
 #define I2C_ADDR_BIC 0x40
 #define I2C_ADDR_BMC 0x20
@@ -70,26 +65,7 @@ LOG_MODULE_REGISTER(plat_mctp);
 K_TIMER_DEFINE(send_cmd_timer, send_cmd_to_dev, NULL);
 K_WORK_DEFINE(send_cmd_work, send_cmd_to_dev_handler);
 
-typedef struct _mctp_smbus_port {
-	mctp *mctp_inst;
-	mctp_medium_conf conf;
-	uint8_t user_idx;
-} mctp_smbus_port;
-
-/* mctp route entry struct */
-typedef struct _mctp_route_entry {
-	uint8_t endpoint;
-	uint8_t bus; /* TODO: only consider smbus/i3c */
-	uint8_t addr; /* TODO: only consider smbus/i3c */
-	uint8_t dev_present_pin;
-} mctp_route_entry;
-
-typedef struct _mctp_msg_handler {
-	MCTP_MSG_TYPE type;
-	mctp_fn_cb msg_handler_cb;
-} mctp_msg_handler;
-
-static mctp_smbus_port smbus_port[] = {
+static mctp_port smbus_port[] = {
 	{ .conf.smbus_conf.addr = I2C_ADDR_BIC, .conf.smbus_conf.bus = I2C_BUS_BMC },
 	{ .conf.smbus_conf.addr = I2C_ADDR_BIC, .conf.smbus_conf.bus = I2C_BUS_NIC_0 },
 	{ .conf.smbus_conf.addr = I2C_ADDR_BIC, .conf.smbus_conf.bus = I2C_BUS_NIC_1 },
@@ -117,7 +93,7 @@ static mctp *find_mctp_by_smbus(uint8_t bus)
 {
 	uint8_t i;
 	for (i = 0; i < ARRAY_SIZE(smbus_port); i++) {
-		mctp_smbus_port *p = smbus_port + i;
+		mctp_port *p = smbus_port + i;
 
 		if (bus == p->conf.smbus_conf.bus)
 			return p->mctp_inst;
@@ -397,7 +373,7 @@ void plat_mctp_init(void)
 
 	/* init the mctp/pldm instance */
 	for (uint8_t i = 0; i < ARRAY_SIZE(smbus_port); i++) {
-		mctp_smbus_port *p = smbus_port + i;
+		mctp_port *p = smbus_port + i;
 		LOG_DBG("smbus port %d", i);
 		LOG_DBG("bus = %x, addr = %x", p->conf.smbus_conf.bus, p->conf.smbus_conf.addr);
 
