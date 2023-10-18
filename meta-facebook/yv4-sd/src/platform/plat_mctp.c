@@ -43,22 +43,10 @@ LOG_MODULE_REGISTER(plat_mctp);
 K_TIMER_DEFINE(send_cmd_timer, send_cmd_to_dev, NULL);
 K_WORK_DEFINE(send_cmd_work, send_cmd_to_dev_handler);
 
-/* mctp route entry struct */
-typedef struct _mctp_route_entry {
-	uint8_t endpoint;
-	uint8_t bus; /* TODO: only consider smbus/i3c */
-	uint8_t addr; /* TODO: only consider smbus/i3c */
-} mctp_route_entry;
-
-typedef struct _mctp_msg_handler {
-	MCTP_MSG_TYPE type;
-	mctp_fn_cb msg_handler_cb;
-} mctp_msg_handler;
-
 static mctp_port plat_mctp_port[] = {
 	{ .conf.smbus_conf.addr = I2C_ADDR_BIC,
 	  .conf.smbus_conf.bus = I2C_BUS_BMC,
-	  .mctp_medium_type = MCTP_MEDIUM_TYPE_SMBUS },
+	  .medium_type = MCTP_MEDIUM_TYPE_SMBUS },
 };
 
 mctp_route_entry mctp_route_tbl[] = {
@@ -114,7 +102,7 @@ static void set_dev_endpoint(void)
 
 			mctp_ctrl_msg msg;
 			memset(&msg, 0, sizeof(msg));
-			msg.ext_params.type = plat_mctp_port[j].mctp_medium_type;
+			msg.ext_params.type = plat_mctp_port[j].medium_type;
 			msg.ext_params.smbus_ext_params.addr = p->addr;
 
 			msg.hdr.cmd = MCTP_CTRL_CMD_SET_ENDPOINT_ID;
@@ -278,9 +266,9 @@ int pal_get_target(uint8_t interface)
 	return target;
 }
 
-mctp *pal_get_mctp(uint8_t mctp_medium_type, uint8_t bus)
+mctp *pal_get_mctp(uint8_t medium_type, uint8_t bus)
 {
-	switch (mctp_medium_type) {
+	switch (medium_type) {
 	case MCTP_MEDIUM_TYPE_SMBUS:
 		return find_mctp_by_smbus(bus);
 	default:
@@ -314,7 +302,7 @@ void plat_mctp_init(void)
 			continue;
 		}
 
-		uint8_t rc = mctp_set_medium_configure(p->mctp_inst, p->mctp_medium_type, p->conf);
+		uint8_t rc = mctp_set_medium_configure(p->mctp_inst, p->medium_type, p->conf);
 		if (rc != MCTP_SUCCESS) {
 			LOG_ERR("mctp set medium configure failed");
 		}
