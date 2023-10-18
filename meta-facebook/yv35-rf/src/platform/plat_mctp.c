@@ -41,7 +41,8 @@ LOG_MODULE_REGISTER(plat_mctp);
 K_TIMER_DEFINE(send_cmd_timer, send_cmd_to_dev, NULL);
 K_WORK_DEFINE(send_cmd_work, send_cmd_to_dev_handler);
 
-static mctp_smbus_port smbus_port[] = {
+int mctp_config_table_size = 1;
+mctp_port mctp_config_table[] = {
 	{ .conf.smbus_conf.addr = I2C_ADDR_BIC, .conf.smbus_conf.bus = I2C_BUS_CXL },
 };
 
@@ -52,8 +53,8 @@ static mctp_route_entry mctp_route_tbl[] = {
 mctp *find_mctp_by_smbus(uint8_t bus)
 {
 	uint8_t i;
-	for (i = 0; i < ARRAY_SIZE(smbus_port); i++) {
-		mctp_smbus_port *p = smbus_port + i;
+	for (i = 0; i < mctp_config_table_size; i++) {
+		mctp_port *p = mctp_config_table + i;
 		if (!p) {
 			return NULL;
 		}
@@ -83,11 +84,11 @@ static void set_dev_endpoint(void)
 {
 	for (uint8_t i = 0; i < ARRAY_SIZE(mctp_route_tbl); i++) {
 		mctp_route_entry *p = mctp_route_tbl + i;
-		for (uint8_t j = 0; j < ARRAY_SIZE(smbus_port); j++) {
+		for (uint8_t j = 0; j < mctp_config_table_size; j++) {
 			if (!p) {
 				return;
 			}
-			if (p->bus != smbus_port[j].conf.smbus_conf.bus) {
+			if (p->bus != mctp_config_table[j].conf.smbus_conf.bus) {
 				continue;
 			}
 			printk("Prepare send endpoint bus 0x%x, addr 0x%x\n", p->bus, p->addr);
@@ -201,8 +202,8 @@ void send_cmd_to_dev(struct k_timer *timer)
 void plat_mctp_init()
 {
 	LOG_INF("plat_mctp_init");
-	for (uint8_t i = 0; i < ARRAY_SIZE(smbus_port); i++) {
-		mctp_smbus_port *p = smbus_port + i;
+	for (uint8_t i = 0; i < mctp_config_table_size; i++) {
+		mctp_port *p = mctp_config_table + i;
 		if (!p) {
 			return;
 		}
