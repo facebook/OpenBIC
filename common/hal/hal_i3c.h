@@ -92,6 +92,10 @@
 #define I3C_DEBUG 0
 #define I3C_SMQ_SUCCESS 0
 #define I3C_MAX_BUFFER_COUNT 2
+#define IBI_PAYLOAD_SIZE 128
+
+#define I3C_DEV_STR_LEN 8
+#define I3C_BUS_STR_LEN 4
 
 enum I3C_WRITE_READ_CMD {
 	I3C_WRITE_CMD = 0,
@@ -106,9 +110,18 @@ typedef struct _I3C_MSG_ {
 	uint8_t data[I3C_MAX_DATA_SIZE];
 } I3C_MSG;
 
+typedef struct _i3c_ibi_dev {
+	uint8_t data_rx[I3C_MAX_DATA_SIZE];
+	struct i3c_ibi_payload i3c_payload;
+	struct k_sem ibi_complete;
+} i3c_ibi_dev;
+
 void util_init_i3c(void);
 int i3c_smq_read(I3C_MSG *msg);
 int i3c_smq_write(I3C_MSG *msg);
+int i3c_slave_mqueue_read(const struct device *dev, uint8_t *dest, int budget);
+int i3c_slave_mqueue_write(const struct device *dev, uint8_t *src, int size);
+
 int i3c_attach(I3C_MSG *msg);
 int i3c_detach(I3C_MSG *msg);
 int i3c_transfer(I3C_MSG *msg);
@@ -116,5 +129,9 @@ int i3c_brocast_ccc(I3C_MSG *msg, uint8_t ccc_id, uint8_t ccc_addr);
 int i3c_spd_reg_read(I3C_MSG *msg, bool is_nvm);
 
 int i3c_controller_write(I3C_MSG *msg);
+int i3c_controller_ibi_init(I3C_MSG *msg);
+int i3c_controller_ibi_read(I3C_MSG *msg);
+int i3c_controller_write(I3C_MSG *msg);
+int i3c_target_set_address(I3C_MSG *msg);
 
 #endif

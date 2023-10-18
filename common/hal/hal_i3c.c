@@ -28,6 +28,7 @@ LOG_MODULE_REGISTER(hal_i3c);
 static const struct device *dev_i3c[I3C_MAX_NUM];
 static const struct device *dev_i3c_smq[I3C_MAX_NUM];
 static struct i3c_dev_desc i3c_desc_table[I3C_MAX_NUM];
+static i3c_ibi_dev i3c_ibi_dev_table[I3C_MAX_NUM];
 static int i3c_desc_count = 0;
 static struct k_mutex mutex_write[I3C_MAX_NUM];
 static struct k_mutex mutex_read[I3C_MAX_NUM];
@@ -374,4 +375,214 @@ void util_init_i3c(void)
 			LOG_ERR("Mutex %d init error.", i);
 		}
 	}
+}
+
+static int get_bus_id(struct i3c_dev_desc *desc)
+{
+	char i3c_dev_name[I3C_DEV_STR_LEN] = {0};
+	const char delim[2] = "_";
+	char *saveptr = NULL;
+	char *substr = NULL;
+	int bus_id;
+
+
+	strncpy(i3c_dev_name, desc->master_dev->name, I3C_DEV_STR_LEN);
+
+	substr = strtok_r(i3c_dev_name, delim, &saveptr);
+	substr = strtok_r(NULL, delim, &saveptr);
+
+	bus_id = atoi(substr);
+	if (bus_id > I3C_MAX_NUM) {
+		LOG_ERR("bus id out of range, bus = %d", bus_id);
+		return -1;
+	}
+
+	return bus_id;
+}
+
+static int find_dev_i3c_idx(struct i3c_dev_desc *desc)
+{
+	int bus_id = get_bus_id(desc);
+	if (bus_id < 0) {
+		return -1;
+	}
+
+	int i = 0;
+	struct i3c_dev_desc *desc_ptr = NULL;
+	for (i = 0; i < i3c_desc_count; i++) {
+		desc_ptr = &i3c_desc_table[i];
+
+		int table_bus_id = get_bus_id(desc_ptr);
+		if (table_bus_id < 0) {
+			return -1;
+		}
+
+		if ((table_bus_id == bus_id) && (desc->info.dynamic_addr == desc_ptr->info.dynamic_addr)) {
+			return i;
+		}
+	}
+
+	LOG_ERR("Not found id in i3c table");
+
+	return -1;
+}
+
+static struct i3c_ibi_payload *ibi_write_requested(struct i3c_dev_desc *desc)
+{
+	int idx = find_dev_i3c_idx(desc);
+	if (idx < 0) {
+		LOG_ERR("%s: find dev i3c idx failed. idx = %d", __func__, idx);
+	}
+	i3c_ibi_dev_table[idx].i3c_payload.size = 0;
+	i3c_ibi_dev_table[idx].i3c_payload.buf = i3c_ibi_dev_table[idx].data_rx;
+
+	return &i3c_ibi_dev_table[idx].i3c_payload;
+}
+
+static void ibi_write_done(struct i3c_dev_desc *desc)
+{
+	int idx = find_dev_i3c_idx(desc);
+	if (idx < 0) {
+		LOG_ERR("%s: find dev i3c idx failed. idx = %d", __func__, idx);
+	}
+	k_sem_give(&i3c_ibi_dev_table[idx].ibi_complete);
+}
+
+static struct i3c_ibi_callbacks i3c_ibi_def_callbacks = {
+	.write_requested = ibi_write_requested,
+	.write_done = ibi_write_done,
+};
+
+int
+i3c_controller_ibi_init(I3C_MSG *msg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, -EINVAL);
+
+	if (!dev_i3c[msg->bus]) {
+		LOG_ERR("Failed to receive messages to address 0x%x due to undefined bus%u",
+			msg->target_addr, msg->bus);
+		return -ENODEV;
+	}
+
+	struct i3c_dev_desc *target;
+	target = find_matching_desc(dev_i3c[msg->bus], msg->target_addr, NULL);
+	if (target == NULL) {
+		LOG_ERR("Failed to reveive messages to address 0x%x due to unknown address",
+			msg->target_addr);
+		return -ENODEV;
+	}
+
+	int ret = 0;
+
+	int idx = find_dev_i3c_idx(target);
+	if (idx < 0) {
+		LOG_ERR("%s: find dev i3c idx failed. idx = %d", __func__, idx);
+	}
+
+	k_sem_init(&i3c_ibi_dev_table[idx].ibi_complete, 0, 1);
+
+	ret = i3c_master_send_rstdaa(dev_i3c[msg->bus]);
+	if (ret) {
+		LOG_ERR("Failed to send rstdaa");
+	}
+
+	ret = i3c_master_send_rstdaa(dev_i3c[msg->bus]);
+	if (ret) {
+		LOG_ERR("Failed to 2nd send rstdaa");
+	}
+
+	ret = i3c_master_send_aasa(dev_i3c[msg->bus]);
+	if (ret) {
+		LOG_ERR("Failed to send aasa");
+	}
+
+	ret = i3c_master_send_getpid(dev_i3c[msg->bus], target->info.dynamic_addr, &target->info.pid);
+	if (ret) {
+		LOG_ERR("Failed to get pid");
+	}
+
+	ret = i3c_master_send_getbcr(dev_i3c[msg->bus], target->info.dynamic_addr, &target->info.bcr);
+	if (ret) {
+		LOG_ERR("Failed to get bcr");
+	}
+
+	ret = i3c_master_request_ibi(target, &i3c_ibi_def_callbacks);
+	if (ret != 0) {
+		LOG_ERR("Failed to request SIR, bus = %x, addr = %u",msg->target_addr, msg->bus);
+	}
+
+	ret = i3c_master_enable_ibi(target);
+	if (ret != 0) {
+		LOG_ERR("Failed to enable SIR, bus = %x, addr = %u",msg->target_addr, msg->bus);
+	}
+
+	return -ret;
+}
+
+int i3c_controller_ibi_read(I3C_MSG *msg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, -EINVAL);
+
+	if (!dev_i3c[msg->bus]) {
+		LOG_ERR("Failed to receive messages to address 0x%x due to undefined bus%u",
+			msg->target_addr, msg->bus);
+		return -ENODEV;
+	}
+
+	struct i3c_dev_desc *target;
+	target = find_matching_desc(dev_i3c[msg->bus], msg->target_addr, NULL);
+	if (target == NULL) {
+		LOG_ERR("Failed to reveive messages to address 0x%x due to unknown address",
+			msg->target_addr);
+		return -ENODEV;
+	}
+
+	int idx = find_dev_i3c_idx(target);
+	if (idx < 0) {
+		LOG_ERR("%s: find dev i3c idx failed. idx = %d", __func__, idx);
+	}
+
+	/* master device waits for the IBI from the target */
+	k_sem_take(&i3c_ibi_dev_table[idx].ibi_complete, K_FOREVER);
+
+	/* init the flag for the next loop */
+	k_sem_init(&i3c_ibi_dev_table[idx].ibi_complete, 0, 1);
+
+	int ret = 0;
+
+	/* check result: first byte (MDB) shall match the DT property mandatory-data-byte */
+	if (IS_MDB_PENDING_READ_NOTIFY(i3c_ibi_dev_table[idx].data_rx[0])) {
+		struct i3c_priv_xfer xfer;
+
+		/* initiate a private read transfer to read the pending data */
+		xfer.rnw = 1;
+		xfer.len = IBI_PAYLOAD_SIZE;
+		xfer.data.in = i3c_ibi_dev_table[idx].data_rx;
+		k_yield();
+		ret = i3c_master_priv_xfer(target, &xfer, 1);
+		if (ret) {
+ 			LOG_ERR("ibi read failed. ret = %d", ret);
+		}
+		msg->rx_len = xfer.len;
+		memcpy (msg->data, i3c_ibi_dev_table[idx].data_rx, IBI_PAYLOAD_SIZE);
+	}
+
+	return msg->rx_len;
+}
+
+int i3c_target_set_address(I3C_MSG *msg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, -EINVAL);
+
+	if (!dev_i3c[msg->bus]) {
+		return -ENODEV;
+	}
+
+	int ret = i3c_slave_set_static_addr(dev_i3c[msg->bus], msg->target_addr);
+	if (ret != 0) {
+		LOG_ERR("Failed to set address 0x%x, ret: %d", msg->target_addr, ret);
+		return -1;
+	}
+
+	return 0;
 }
