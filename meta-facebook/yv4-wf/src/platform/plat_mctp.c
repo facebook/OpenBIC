@@ -31,25 +31,7 @@ LOG_MODULE_REGISTER(plat_mctp);
 /* i2c dev bus*/
 #define I2C_BUS_BMC 0x01
 
-typedef struct _mctp_smbus_port {
-	mctp *mctp_inst;
-	mctp_medium_conf conf;
-	uint8_t user_idx;
-} mctp_smbus_port;
-
-/* mctp route entry struct */
-typedef struct _mctp_route_entry {
-	uint8_t endpoint;
-	uint8_t bus; /* TODO: only consider smbus/i3c */
-	uint8_t addr; /* TODO: only consider smbus/i3c */
-} mctp_route_entry;
-
-typedef struct _mctp_msg_handler {
-	MCTP_MSG_TYPE type;
-	mctp_fn_cb msg_handler_cb;
-} mctp_msg_handler;
-
-static mctp_smbus_port smbus_port[] = {
+static mctp_port plat_mctp_port[] = {
 	/* TODO: Set smbus port table*/
 	{ 0 },
 };
@@ -62,8 +44,8 @@ mctp_route_entry mctp_route_tbl[] = {
 static mctp *find_mctp_by_smbus(uint8_t bus)
 {
 	uint8_t i;
-	for (i = 0; i < ARRAY_SIZE(smbus_port); i++) {
-		mctp_smbus_port *p = smbus_port + i;
+	for (i = 0; i < ARRAY_SIZE(plat_mctp_port); i++) {
+		mctp_port *p = plat_mctp_port + i;
 
 		if (bus == p->conf.smbus_conf.bus) {
 			return p->mctp_inst;
@@ -169,8 +151,8 @@ void plat_mctp_init(void)
 	int ret = 0;
 
 	/* init the mctp/pldm instance */
-	for (uint8_t i = 0; i < ARRAY_SIZE(smbus_port); i++) {
-		mctp_smbus_port *p = smbus_port + i;
+	for (uint8_t i = 0; i < ARRAY_SIZE(plat_mctp_port); i++) {
+		mctp_port *p = plat_mctp_port + i;
 
 		p->mctp_inst = mctp_init();
 		if (!p->mctp_inst) {
@@ -190,4 +172,14 @@ void plat_mctp_init(void)
 
 		ret = mctp_start(p->mctp_inst);
 	}
+}
+
+uint8_t plat_get_mctp_port_count()
+{
+	return ARRAY_SIZE(plat_mctp_port);
+}
+
+mctp_port *plat_get_mctp_port(uint8_t index)
+{
+	return plat_mctp_port + index;
 }
