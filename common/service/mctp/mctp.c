@@ -651,11 +651,21 @@ __weak int pal_find_bus_in_mctp_port(mctp_port *p)
 	return bus;
 }
 
+__weak uint8_t plat_get_mctp_port_count()
+{
+	return 0;
+}
+
+__weak mctp_port *plat_get_mctp_port(uint8_t index)
+{
+	return NULL;
+}
+
 __weak mctp *pal_find_mctp_by_bus(uint8_t bus)
 {
-	uint8_t i;
-	for (i = 0; i < mctp_config_table_size; i++) {
-		mctp_port *p = mctp_config_table + i;
+	uint8_t plat_mctp_port_count = plat_get_mctp_port_count();
+	for (uint8_t i = 0; i < plat_mctp_port_count; i++) {
+		mctp_port *p = plat_get_mctp_port(i);
 		int conf_bus = pal_find_bus_in_mctp_port(p);
 		if (bus == conf_bus) {
 			return p->mctp_inst;
@@ -667,9 +677,9 @@ __weak mctp *pal_find_mctp_by_bus(uint8_t bus)
 
 __weak mctp_port *pal_find_mctp_port_by_channel_target(uint8_t target)
 {
-	uint8_t i;
-	for (i = 0; i < mctp_config_table_size; i++) {
-		mctp_port *p = mctp_config_table + i;
+	uint8_t plat_mctp_port_count = plat_get_mctp_port_count();
+	for (uint8_t i = 0; i < plat_mctp_port_count; i++) {
+		mctp_port *p = plat_get_mctp_port(i);
 		if (target == p->channel_target) {
 			return p;
 		}
