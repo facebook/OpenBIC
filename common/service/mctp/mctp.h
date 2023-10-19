@@ -214,8 +214,8 @@ typedef struct _mctp_msg_handler {
 	mctp_fn_cb msg_handler_cb;
 } mctp_msg_handler;
 
-extern mctp_port mctp_config_table[];
-extern int mctp_config_table_size;
+uint8_t plat_get_mctp_port_count();
+mctp_port *plat_get_mctp_port(uint8_t index);
 
 /* public function */
 mctp *mctp_init(void);

@@ -49,16 +49,6 @@ __weak int load_mctp_support_types(uint8_t *type_len, uint8_t *types)
 	return -1;
 }
 
-__weak uint8_t plat_get_mctp_port_count()
-{
-	return 0;
-}
-
-__weak mctp_port *plat_get_mctp_port(uint8_t index)
-{
-	return NULL;
-}
-
 uint8_t mctp_ctrl_cmd_set_endpoint_id(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
 				      uint16_t *resp_len, void *ext_params)
 {

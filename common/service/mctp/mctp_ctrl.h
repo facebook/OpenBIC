@@ -147,9 +147,6 @@ uint8_t mctp_ctrl_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext
 uint8_t mctp_ctrl_send_msg(void *mctp_p, mctp_ctrl_msg *msg);
 uint8_t mctp_ctrl_read(void *mctp_p, mctp_ctrl_msg *msg, uint8_t *read_buf, uint16_t read_len);
 
-uint8_t plat_get_mctp_port_count();
-mctp_port *plat_get_mctp_port(uint8_t index);
-
 #ifdef __cplusplus
 }
 #endif
