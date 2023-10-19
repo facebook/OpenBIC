@@ -37,8 +37,7 @@ LOG_MODULE_REGISTER(plat_mctp);
 K_TIMER_DEFINE(send_cmd_timer, send_cmd_to_dev, NULL);
 K_WORK_DEFINE(send_cmd_work, send_cmd_to_dev_handler);
 
-int mctp_config_table_size = 1;
-mctp_port mctp_config_table[] = {
+mctp_port plat_mctp_port[] = {
 	{	.channel_target = BMC_IPMB,
 		.medium_type = MCTP_MEDIUM_TYPE_TARGET_I3C,
 		.conf.i3c_conf.bus = I3C_BUS_BMC,
@@ -75,8 +74,8 @@ static void set_dev_endpoint(void)
 		if (p->bus == I3C_BUS_BMC && p->addr == I3C_STATIC_ADDR_BMC)
 			continue;
 
-		for (uint8_t j = 0; j < mctp_config_table_size; j++) {
-			if (p->bus != mctp_config_table[j].conf.i3c_conf.bus)
+		for (uint8_t j = 0; j < ARRAY_SIZE(plat_mctp_port); j++) {
+			if (p->bus != plat_mctp_port[j].conf.i3c_conf.bus)
 				continue;
 
 			struct _set_eid_req req = { 0 };
@@ -221,8 +220,8 @@ void plat_mctp_init(void)
 	int ret = 0;
 
 	/* init the mctp/pldm instance */
-	for (uint8_t i = 0; i < mctp_config_table_size; i++) {
-		mctp_port *p = mctp_config_table + i;
+	for (uint8_t i = 0; i < ARRAY_SIZE(plat_mctp_port); i++) {
+		mctp_port *p = plat_mctp_port + i;
 
 		p->mctp_inst = mctp_init();
 		if (!p->mctp_inst) {
@@ -243,3 +242,13 @@ void plat_mctp_init(void)
 	}
 }
 
+
+uint8_t plat_get_mctp_port_count()
+{
+	return ARRAY_SIZE(plat_mctp_port);
+}
+
+mctp_port *plat_get_mctp_port(uint8_t index)
+{
+	return plat_mctp_port + index;
+}
