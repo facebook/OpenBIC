@@ -21,6 +21,7 @@
 #include "plat_gpio.h"
 #include "util_worker.h"
 #include "plat_mctp.h"
+#include "plat_apml.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "hal_i3c.h"
@@ -35,6 +36,8 @@
 
 void pal_pre_init()
 {
+	apml_init();
+
 	/* init i2c target */
 	for (int index = 0; index < MAX_TARGET_NUM; index++) {
 		if (I2C_TARGET_ENABLE_TABLE[index])
@@ -86,6 +89,13 @@ void pal_set_sys_status()
 {
 	set_DC_status(PWRGD_CPU_LVC3);
 	set_DC_on_delayed_status();
+	set_post_status(FM_BIOS_POST_CMPLT_BIC_N);
+
+	if (get_post_status()) {
+		apml_recovery();
+		set_tsi_threshold();
+		read_cpuid();
+	}
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78

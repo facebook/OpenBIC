@@ -105,6 +105,7 @@ enum DIMM_RELATED_OFFSET {
 	DIMM_SPD_TEMP = 0x31,
 };
 
+// The sequence needs to same with table sensor_drive_tbl
 enum SENSOR_DEV {
 	sensor_dev_tmp75 = 0,
 	sensor_dev_ast_adc = 0x01,
@@ -130,10 +131,8 @@ enum SENSOR_DEV {
 	sensor_dev_raa229621 = 0x15,
 	sensor_dev_nct7718w = 0x16,
 	sensor_dev_ltc4286 = 0x17,
-#ifdef ENABLE_APML
 	sensor_dev_amd_tsi = 0x18,
 	sensor_dev_apml_mailbox = 0x19,
-#endif
 	sensor_dev_xdpe19283b = 0x1A,
 	sensor_dev_g788p81u = 0x1B,
 	sensor_dev_mp2856gut = 0x1C,
@@ -142,9 +141,7 @@ enum SENSOR_DEV {
 	sensor_dev_adm1272 = 0x1F,
 	sensor_dev_q50sn120a1 = 0x20,
 	sensor_dev_mp2971 = 0x21,
-#ifdef ENABLE_PM8702
 	sensor_dev_pm8702 = 0x22,
-#endif
 	sensor_dev_ltc2991 = 0x23,
 	sensor_dev_sq52205 = 0x24,
 	sensor_dev_emc1412 = 0x25,

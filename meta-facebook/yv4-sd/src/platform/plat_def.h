@@ -21,6 +21,7 @@
 #define ENABLE_MCTP_I3C
 #define ENABLE_PLDM_SENSOR
 #define ENABLE_CCI
+#define ENABLE_APML
 
 #define HOST_KCS_PORT kcs3
 #define BMC_USB_PORT "CDC_ACM_0"

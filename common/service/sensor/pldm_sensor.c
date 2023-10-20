@@ -172,11 +172,25 @@ void pldm_sensor_get_reading(sensor_cfg *pldm_sensor_cfg, uint32_t *update_time,
 	if (pldm_sensor_cfg->read) {
 		status = pldm_sensor_cfg->read(pldm_sensor_cfg, &reading);
 
+		if (pldm_sensor_cfg->type == sensor_dev_apml_mailbox) {
+			*update_time = (k_uptime_get_32() / 1000);
+
+			if (pldm_sensor_cfg->post_sensor_read_hook) {
+				if (!pldm_sensor_cfg->post_sensor_read_hook(
+					    pldm_sensor_cfg, pldm_sensor_cfg->post_sensor_read_args,
+					    NULL)) {
+					LOG_DBG("Failed to pose read sensor_num 0x%x of thread %d",
+						sensor_num, thread_id);
+				}
+			}
+			return;
+		}
+
 		if ((status != SENSOR_READ_SUCCESS) && (status != SENSOR_READ_ACUR_SUCCESS)) {
 			pldm_sensor_cfg->cache_status = PLDM_SENSOR_FAILED;
 			*update_time = (k_uptime_get_32() / 1000);
-			LOG_ERR("Failed to read sensor_num 0x%x of thread %d", sensor_num,
-				thread_id);
+			LOG_ERR("Failed to read sensor_num 0x%x of thread %d, status0x%x",
+				sensor_num, thread_id, status);
 
 			// If sensor read fails, let the reading argument in the post_sensor_read_hook function to NULL.
 			// All post_sensor_read_hook function define in each platform should check reading
@@ -226,7 +240,7 @@ int pldm_sensor_polling_pre_check(pldm_sensor_info *pldm_snr_list)
 
 	ret = sensor_drive_tbl[pldm_snr_list->pldm_sensor_cfg.type].init(
 		&pldm_snr_list->pldm_sensor_cfg);
-	if (ret < 0) {
+	if (ret != SENSOR_INIT_SUCCESS) {
 		pldm_snr_list->pldm_sensor_cfg.cache_status = PLDM_SENSOR_FAILED;
 		LOG_ERR("Failed to init sensor 0x%x", pldm_snr_list->pdr_numeric_sensor.sensor_id);
 	} else {

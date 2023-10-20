@@ -18,6 +18,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "sensor.h"
+#include "pldm_monitor.h"
 #include "plat_def.h"
 #include <logging/log.h>
 #ifdef ENABLE_APML
@@ -44,7 +45,11 @@ void apml_read_fail_cb(apml_msg *msg)
 		init_arg->retry++;
 	} else {
 		LOG_ERR("Access APML mailbox failed, sensor number 0x%x", cfg->num);
+#ifdef ENABLE_PLDM_SENSOR
+		cfg->cache_status = PLDM_SENSOR_FAILED;
+#else
 		cfg->cache_status = SENSOR_UNSPECIFIED_ERROR;
+#endif
 	}
 }
 
@@ -76,7 +81,11 @@ void cpu_power_write(apml_msg *msg)
 	sval.integer = raw_data / 1000;
 	sval.fraction = raw_data % 1000;
 	memcpy(&cfg->cache, &sval, sizeof(sensor_val));
+#ifdef ENABLE_PLDM_SENSOR
+	cfg->cache_status = PLDM_SENSOR_ENABLED;
+#else
 	cfg->cache_status = SENSOR_READ_4BYTE_ACUR_SUCCESS;
+#endif
 }
 
 void dimm_pwr_write(apml_msg *msg)
