@@ -92,8 +92,8 @@
 	pinctrl-0 = <&pinctrl_i3c2_default>;
 	i3c-scl-hz = <12500000>;
 	assigned-address = <0x11>;
-	i3c-pp-scl-hi-period-ns = <100>;
-	i3c-pp-scl-lo-period-ns = <100>;
+	i3c-pp-scl-hi-period-ns = <40>;
+	i3c-pp-scl-lo-period-ns = <40>;
 };
 
 &i2c13 {
