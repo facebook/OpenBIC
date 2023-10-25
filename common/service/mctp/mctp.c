@@ -23,6 +23,7 @@
 #include <sys/printk.h>
 #include <zephyr.h>
 #include "libutil.h"
+#include "plat_def.h"
 
 LOG_MODULE_REGISTER(mctp);
 
@@ -91,12 +92,14 @@ static uint8_t mctp_medium_init(mctp *mctp_inst, mctp_medium_conf medium_conf)
 	case MCTP_MEDIUM_TYPE_SMBUS:
 		ret = mctp_smbus_init(mctp_inst, medium_conf);
 		break;
+#ifdef ENABLE_MCTP_I3C
 	case MCTP_MEDIUM_TYPE_TARGET_I3C:
 		ret = mctp_i3c_target_init(mctp_inst, medium_conf);
 		break;
 	case MCTP_MEDIUM_TYPE_CONTROLLER_I3C:
 		ret = mctp_i3c_controller_init(mctp_inst, medium_conf);
 		break;
+#endif
 	default:
 		return MCTP_ERROR;
 	}
@@ -112,10 +115,12 @@ static uint8_t mctp_medium_deinit(mctp *mctp_inst)
 	case MCTP_MEDIUM_TYPE_SMBUS:
 		mctp_smbus_deinit(mctp_inst);
 		break;
+#ifdef ENABLE_MCTP_I3C
 	case MCTP_MEDIUM_TYPE_TARGET_I3C:
 	case MCTP_MEDIUM_TYPE_CONTROLLER_I3C:
 		mctp_i3c_deinit(mctp_inst);
 		break;
+#endif
 	default:
 		return MCTP_ERROR;
 	}
