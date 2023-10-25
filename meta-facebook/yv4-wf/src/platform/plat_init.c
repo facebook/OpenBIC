@@ -15,8 +15,20 @@
  */
 
 #include "hal_gpio.h"
+#include "util_sys.h"
+#include "pldm_monitor.h"
+#include "power_status.h"
+#include "plat_gpio.h"
+#include "plat_power_seq.h"
+#include "plat_pldm_monitor.h"
 
 #define DEF_PROJ_GPIO_PRIORITY 78
+
+void pal_post_init()
+{
+	pldm_load_state_effecter_table(PLAT_PLDM_MAX_STATE_EFFECTER_IDX);
+	pldm_assign_gpio_effecter_id(PLAT_EFFECTER_ID_GPIO_HIGH_BYTE);
+}
 
 DEVICE_DEFINE(PRE_DEF_PROJ_GPIO, "PRE_DEF_PROJ_GPIO_NAME", &gpio_init, NULL, NULL, NULL,
 	      POST_KERNEL, DEF_PROJ_GPIO_PRIORITY, NULL);
