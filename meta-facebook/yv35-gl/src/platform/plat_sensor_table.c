@@ -371,6 +371,9 @@ static void check_vr_type(uint8_t index)
 		sensor_config[index].init_args = &mp2985_init_args[0];
 	} else if ((msg.data[0] == 0x02) && (msg.data[2] == 0x8A)) {
 		sensor_config[index].type = sensor_dev_xdpe15284;
+	} else if ((msg.data[0] == 0x04) && (msg.data[1] == 0x00) && (msg.data[2] == 0x81) &&
+		   (msg.data[3] == 0xD2) && (msg.data[4] == 0x49)) {
+		sensor_config[index].type = sensor_dev_isl69259;
 	} else {
 		LOG_ERR("Unknown VR type");
 	}
