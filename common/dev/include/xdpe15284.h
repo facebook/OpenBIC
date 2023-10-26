@@ -32,6 +32,17 @@ enum XDPE15284_WRITE_PROTECT_REG_VAL {
 	XDPE15284_DISABLE_ALL_WRITE_EXCEPT_WRITE_PROTECT_VAL = 0x80,
 };
 
+enum XDPE15284_STATUS_BIT {
+	XDPE15284_NONE_OF_ABOVE = BIT(0),
+	XDPE15284_COMMUNICATION_MEMORY_LOGIC_BIT = BIT(1),
+	XDPE15284_TEMPERATURE_FAULT_BIT = BIT(2),
+	XDPE15284_UNDER_VOLTAGE_FAULT_BIT = BIT(3),
+	XDPE15284_OVER_CURRENT_FAULT_BIT = BIT(4),
+	XDPE15284_OVER_VOLTAGE_FAULT_BIT = BIT(5),
+	XDPE15284_OUTPUT_OFF_BIT = BIT(6),
+	XDPE15284_BUSY_BIT = BIT(7),
+};
+
 bool xdpe15284_get_checksum(uint8_t bus, uint8_t addr, uint8_t *checksum);
 bool xdpe15284_lock_reg(uint8_t bus, uint8_t addr);
 bool xdpe15284_unlock_reg(uint8_t bus, uint8_t addr);
@@ -39,5 +50,6 @@ bool xdpe15284_get_remaining_wr(uint8_t bus, uint8_t addr, uint8_t *data);
 bool xdpe15284_enable_write_protect(uint8_t bus, uint8_t addr);
 bool xdpe15284_disable_write_protect(uint8_t bus, uint8_t addr);
 void xdpe15284_set_write_protect_default_val(uint8_t val);
+bool xdpe15284_get_status_byte(uint8_t bus, uint8_t addr, uint8_t *data);
 
 #endif
