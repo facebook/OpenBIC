@@ -330,6 +330,30 @@ bool xdpe15284_get_remaining_wr(uint8_t bus, uint8_t addr, uint8_t *data)
 	return ret;
 }
 
+bool xdpe15284_get_status_byte(uint8_t bus, uint8_t addr, uint8_t *data)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+
+	int ret = -1;
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+
+	msg.bus = bus;
+	msg.target_addr = addr;
+	msg.tx_len = 1;
+	msg.rx_len = 1;
+	msg.data[0] = PMBUS_STATUS_BYTE;
+
+	ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Get status byte fail, bus: 0x%x, addr: 0x%x", bus, addr);
+		return false;
+	}
+
+	*data = msg.data[0];
+	return true;
+}
+
 uint8_t xdpe15284_read(sensor_cfg *cfg, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);

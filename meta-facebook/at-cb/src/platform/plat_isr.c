@@ -28,13 +28,24 @@
 #include "plat_sensor_table.h"
 #include "plat_dev.h"
 #include "plat_pldm_monitor.h"
+#include "xdpe15284.h"
 
 LOG_MODULE_REGISTER(plat_isr);
+
+typedef struct _vr_sensor_info {
+	uint8_t sensor_num;
+	uint8_t last_status;
+} vr_sensor_info;
+
+vr_sensor_info vr_info[] = {
+	{ .sensor_num = SENSOR_NUM_TEMP_P0V8_VDD_1, .last_status = 0 },
+	{ .sensor_num = SENSOR_NUM_TEMP_P0V8_VDD_2, .last_status = 0 },
+};
 
 add_sel_info add_sel_work_item[] = {
 	{ .is_init = false,
 	  .gpio_num = SMB_P0V8_ALERT_N,
-	  .device_type = OEM_IPMI_EVENT_P0V8_VR_ALERT,
+	  .device_type = ADDSEL_DEVICE_TYPE_DEFAULT,
 	  .event_type = ADDSEL_EVENT_TYPE_DEFAULT },
 	{ .is_init = false,
 	  .gpio_num = SMB_PMBUS_ALERT_N_R,
@@ -47,51 +58,51 @@ add_sel_info add_sel_work_item[] = {
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL1_ALRT_N_R,
 	  .device_type = OEM_IPMI_EVENT_P12V_ACCL1_MONITOR_ALERT,
-	  .event_type = ADDSEL_EVENT_TYPE_OP },
+	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL2_ALRT_N_R,
 	  .device_type = OEM_IPMI_EVENT_P12V_ACCL2_MONITOR_ALERT,
-	  .event_type = ADDSEL_EVENT_TYPE_OP },
+	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL3_ALRT_N_R,
 	  .device_type = OEM_IPMI_EVENT_P12V_ACCL3_MONITOR_ALERT,
-	  .event_type = ADDSEL_EVENT_TYPE_OP },
+	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL4_ALRT_N_R,
 	  .device_type = OEM_IPMI_EVENT_P12V_ACCL4_MONITOR_ALERT,
-	  .event_type = ADDSEL_EVENT_TYPE_OP },
+	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL5_ALRT_N_R,
 	  .device_type = OEM_IPMI_EVENT_P12V_ACCL5_MONITOR_ALERT,
-	  .event_type = ADDSEL_EVENT_TYPE_OP },
+	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL6_ALRT_N_R,
 	  .device_type = OEM_IPMI_EVENT_P12V_ACCL6_MONITOR_ALERT,
-	  .event_type = ADDSEL_EVENT_TYPE_OP },
+	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL7_ALRT_N_R,
 	  .device_type = OEM_IPMI_EVENT_P12V_ACCL7_MONITOR_ALERT,
-	  .event_type = ADDSEL_EVENT_TYPE_OP },
+	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL8_ALRT_N_R,
 	  .device_type = OEM_IPMI_EVENT_P12V_ACCL8_MONITOR_ALERT,
-	  .event_type = ADDSEL_EVENT_TYPE_OP },
+	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL9_ALRT_N_R,
 	  .device_type = OEM_IPMI_EVENT_P12V_ACCL9_MONITOR_ALERT,
-	  .event_type = ADDSEL_EVENT_TYPE_OP },
+	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL10_ALRT_N_R,
 	  .device_type = OEM_IPMI_EVENT_P12V_ACCL10_MONITOR_ALERT,
-	  .event_type = ADDSEL_EVENT_TYPE_OP },
+	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL11_ALRT_N_R,
 	  .device_type = OEM_IPMI_EVENT_P12V_ACCL11_MONITOR_ALERT,
-	  .event_type = ADDSEL_EVENT_TYPE_OP },
+	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL12_ALRT_N_R,
 	  .device_type = OEM_IPMI_EVENT_P12V_ACCL12_MONITOR_ALERT,
-	  .event_type = ADDSEL_EVENT_TYPE_OP },
+	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 };
 
 add_sel_info *get_addsel_work(uint8_t gpio_num)
@@ -159,12 +170,101 @@ void fio_power_button_work_handler()
 	}
 }
 
+void vr_alert_addsel(uint8_t sensor_num, uint8_t device_type, uint8_t board_info,
+		     uint8_t event_type, uint8_t status)
+{
+	uint8_t type = event_type;
+
+	if (status & XDPE15284_TEMPERATURE_FAULT_BIT) {
+		type = event_type | PLDM_ADDSEL_OVER_TEMPERATURE_EVENT;
+		if (plat_set_effecter_states_req(device_type, board_info, type) != PLDM_SUCCESS) {
+			LOG_ERR("Fail to addsel VR: 0x%x temperature fault event", sensor_num);
+		}
+	}
+	if (status & XDPE15284_UNDER_VOLTAGE_FAULT_BIT) {
+		type = event_type | PLDM_ADDSEL_UNDER_VOLTAGE_EVENT;
+		if (plat_set_effecter_states_req(device_type, board_info, type) != PLDM_SUCCESS) {
+			LOG_ERR("Fail to addsel VR: 0x%x under voltage event", sensor_num);
+		}
+	}
+	if (status & XDPE15284_OVER_CURRENT_FAULT_BIT) {
+		type = event_type | PLDM_ADDSEL_OVER_CURRENT_EVENT;
+		if (plat_set_effecter_states_req(device_type, board_info, type) != PLDM_SUCCESS) {
+			LOG_ERR("Fail to addsel VR: 0x%x over current event", sensor_num);
+		}
+	}
+	if (status & XDPE15284_OVER_VOLTAGE_FAULT_BIT) {
+		type = event_type | PLDM_ADDSEL_OVER_VOLTAGE_EVENT;
+		if (plat_set_effecter_states_req(device_type, board_info, type) != PLDM_SUCCESS) {
+			LOG_ERR("Fail to addsel VR: 0x%x over voltage event", sensor_num);
+		}
+	}
+}
+
+void parse_vr_alert_event(add_sel_info *work_info)
+{
+	CHECK_NULL_ARG(work_info);
+
+	bool ret = 0;
+	uint8_t index = 0;
+	uint8_t status = 0;
+	uint8_t sensor_num = 0;
+
+	for (index = 0; index < ARRAY_SIZE(vr_info); ++index) {
+		sensor_num = vr_info[index].sensor_num;
+		work_info->device_type = ((sensor_num == SENSOR_NUM_TEMP_P0V8_VDD_1) ?
+						  OEM_IPMI_EVENT_P0V8_VDD1_ALERT :
+						  OEM_IPMI_EVENT_P0V8_VDD2_ALERT);
+
+		sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+		if (cfg->pre_sensor_read_hook) {
+			if (cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args) != true) {
+				LOG_ERR("VR sensor: 0x%x pre-read fail", sensor_num);
+				continue;
+			}
+		}
+
+		ret = xdpe15284_get_status_byte(cfg->port, cfg->target_addr, &status);
+		if (cfg->post_sensor_read_hook) {
+			if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) !=
+			    true) {
+				LOG_ERR("VR sensor: 0x%x post-read fail", sensor_num);
+			}
+		}
+
+		if (ret != true) {
+			LOG_ERR("Get VR sensor: 0x%x status fail", sensor_num);
+			continue;
+		}
+
+		if (work_info->event_type & PLDM_ADDSEL_ASSERT_MASK) {
+			// Alert pin is triggered (Active)
+			vr_info[index].last_status = status;
+			vr_alert_addsel(sensor_num, work_info->device_type, work_info->board_info,
+					PLDM_ADDSEL_ASSERT_MASK, status);
+		} else {
+			// Alert pin is triggered (INACTIVE)
+			// Send deassert event based on the previous assert event
+			uint8_t tmp = vr_info[index].last_status;
+			vr_info[index].last_status = status;
+			status = tmp;
+			vr_alert_addsel(sensor_num, work_info->device_type, work_info->board_info,
+					0, status);
+		}
+	}
+}
+
 void add_sel_work_handler(struct k_work *work_item)
 {
 	struct k_work_delayable *dwork = k_work_delayable_from_work(work_item);
 	add_sel_info *work_info = CONTAINER_OF(dwork, add_sel_info, add_sel_work);
 
 	uint8_t ret = 0;
+
+	if (work_info->gpio_num == SMB_P0V8_ALERT_N) {
+		parse_vr_alert_event(work_info);
+		return;
+	}
 
 	ret = plat_set_effecter_states_req(work_info->device_type, work_info->board_info,
 					   work_info->event_type);
