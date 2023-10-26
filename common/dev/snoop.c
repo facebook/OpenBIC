@@ -32,7 +32,7 @@
 LOG_MODULE_REGISTER(dev_snoop);
 
 const struct device *snoop_dev;
-uint8_t *snoop_data;
+uint8_t snoop_data;
 static uint8_t *snoop_read_buffer;
 int snoop_read_num = 0;
 int send_postcode_start_position = 0;
@@ -112,11 +112,11 @@ void snoop_read()
 	}
 
 	while (1) {
-		rc = snoop_aspeed_read(snoop_dev, 0, snoop_data, true);
+		rc = snoop_aspeed_read(snoop_dev, 0, &snoop_data, true);
 		if (rc == 0) {
 			proc_postcode_ok = true;
 			if (!k_mutex_lock(&snoop_mutex, K_MSEC(1000))) {
-				snoop_read_buffer[snoop_read_num % SNOOP_MAX_LEN] = *snoop_data;
+				snoop_read_buffer[snoop_read_num % SNOOP_MAX_LEN] = snoop_data;
 				snoop_read_num++;
 				if (k_mutex_unlock(&snoop_mutex)) {
 					LOG_ERR("snoop read unlock fail");
