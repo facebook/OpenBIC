@@ -27,6 +27,7 @@
 #include "mp2971.h"
 #include "lattice.h"
 #include "plat_version.h"
+#include "xdpe15284.h"
 
 LOG_MODULE_DECLARE(pldm);
 
@@ -156,6 +157,9 @@ uint8_t pldm_vr_update(void *fw_update_param)
 	} else if (!strncmp(p->comp_version_str, KEYWORD_VR_MP2971,
 			    ARRAY_SIZE(KEYWORD_VR_MP2971) - 1)) {
 		if (mp2971_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) == false)
+			goto exit;
+	} else if (!strncmp(p->comp_version_str, KEYWORD_VR_XDPE15284, ARRAY_SIZE(KEYWORD_VR_XDPE15284) - 1)) {
+		if (xdpe15284_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) == false)
 			goto exit;
 	} else {
 		LOG_ERR("Non-support VR detected with component string %s!",

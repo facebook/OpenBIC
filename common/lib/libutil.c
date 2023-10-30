@@ -181,3 +181,14 @@ int uint8_t_to_dec_ascii_pointer(uint8_t val, uint8_t *result, uint8_t len)
 
 	return idx;
 }
+
+int find_byte_data_in_buf(const uint8_t *buf, uint8_t byte_data, int start_index, int end_index)
+{
+	int index = 0;
+	for (index = start_index; index < end_index; ++index) {
+		if (buf[index] == byte_data) {
+			return index;
+		}
+	}
+	return -1;
+}

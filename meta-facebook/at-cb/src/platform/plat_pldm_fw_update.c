@@ -48,6 +48,8 @@ static uint8_t pldm_pre_pex_update(void *fw_update_param);
 static uint8_t pldm_pex_update(void *fw_update_param);
 static uint8_t pldm_post_pex_update(void *fw_update_param);
 static bool get_pex_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
+static uint8_t pldm_pre_vr_update(void *fw_update_param);
+static uint8_t pldm_post_vr_update(void *fw_update_param);
 
 /* PLDM FW update table */
 pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
@@ -82,9 +84,9 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
 		.comp_identifier = CB_COMPNT_VR_XDPE15284,
 		.comp_classification_index = 0x00,
-		.pre_update_func = NULL,
-		.update_func = NULL,
-		.pos_update_func = NULL,
+		.pre_update_func = pldm_pre_vr_update,
+		.update_func = pldm_vr_update,
+		.pos_update_func = pldm_post_vr_update,
 		.inf = COMP_UPDATE_VIA_I2C,
 		.activate_method = COMP_ACT_AC_PWR_CYCLE,
 		.self_act_func = NULL,
@@ -341,6 +343,31 @@ static bool get_pex_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	idx += bin2hex(&tmp_buf[i], 1, &buf[idx], 2);
 	*len = idx;
 	return true;
+}
+
+static uint8_t pldm_pre_vr_update(void *fw_update_param)
+{
+        CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+        pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+
+        /* Stop sensor polling */
+        disable_sensor_poll();
+
+        p->bus = I2C_BUS1;
+        p->addr = XDPE15284D_ADDR;
+
+        return 0;
+}
+
+static uint8_t pldm_post_vr_update(void *fw_update_param)
+{
+        ARG_UNUSED(fw_update_param);
+
+        /* Start sensor polling */
+        enable_sensor_poll();
+
+        return 0;
 }
 
 void load_pldmupdate_comp_config(void)
