@@ -707,9 +707,15 @@ __weak void OEM_1S_GET_POST_CODE(ipmi_msg *msg)
 		uint8_t offset = 0;
 		if (snoop_read_num > POST_CODE_BUF_SIZE) {
 			postcode_num = POST_CODE_BUF_SIZE;
-			offset = snoop_read_num % POST_CODE_BUF_SIZE;
+			if (snoop_read_num > SNOOP_MAX_LEN) {
+				offset = (snoop_read_num % SNOOP_MAX_LEN) + SNOOP_MAX_LEN -
+					 POST_CODE_BUF_SIZE;
+			} else {
+				offset = (snoop_read_num % SNOOP_MAX_LEN) + snoop_read_num -
+					 POST_CODE_BUF_SIZE;
+			}
 		}
-		copy_snoop_read_buffer(offset, postcode_num, msg->data, COPY_ALL_POSTCODE);
+		copy_snoop_read_buffer(offset, postcode_num, msg->data, COPY_SPECIFIC_POSTCODE);
 	}
 
 	for (int i = 0; i < (postcode_num / 2); ++i) {
