@@ -183,6 +183,11 @@ out:
 bool rg3mxxb12_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt)
 {
 	bool ret = false;
+	uint8_t value;
+
+	// Set Low-Dropout Regulators(LDO) voltage to VIOM and VIOS
+	value = (ldo_volt << VIOM0_OFFSET) | (ldo_volt << VIOM1_OFFSET) |
+		(ldo_volt << VIOS0_OFFSET) | (ldo_volt << VIOS1_OFFSET);
 
 	uint8_t cmd_unprotect[2] = { RG3MXXB12_PROTECTION_REG, 0x69 };
 	uint8_t cmd_protect[2] = { RG3MXXB12_PROTECTION_REG, 0x00 };
@@ -191,7 +196,7 @@ bool rg3mxxb12_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt)
 		 * Refer to RG3MxxB12 datasheet page 13, LDO voltage depends
 		 * on each project's hard design
 		 */
-		{ RG3MXXB12_VOLT_LDO_SETTING, ldo_volt },
+		{ RG3MXXB12_VOLT_LDO_SETTING, value },
 		{ RG3MXXB12_SSPORTS_AGENT_ENABLE, 0x0 },
 		{ RG3MXXB12_SSPORTS_GPIO_ENABLE, 0x0 },
 		{ RG3MXXB12_SLAVE_PORT_ENABLE, 0x0 },
