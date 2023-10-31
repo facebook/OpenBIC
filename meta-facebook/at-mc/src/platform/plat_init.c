@@ -89,11 +89,6 @@ void check_cxl_ioexp_is_initialized()
 
 void pal_pre_init()
 {
-	uint8_t board_rev = get_board_revision();
-	if (board_rev == REV_EVT2) {
-		i2c_freq_set(I2C_BUS_BMC, I2C_SPEED_STANDARD, 0);
-	}
-
 	check_pcie_card_type();
 	check_cxl_ioexp_is_initialized();
 
