@@ -101,6 +101,10 @@ bool pre_nvme_read(sensor_cfg *cfg, void *args)
 		uint8_t bus = cfg->port;
 		bool nvme_present_result = false;
 
+		if (!cfg->access_checker(cfg->num)) {
+			return false;
+		}
+
 		i2c_scan(bus, i2c_dev, &dev_count);
 
 		for (device_index = 0; device_index < dev_count; ++device_index) {
@@ -113,6 +117,11 @@ bool pre_nvme_read(sensor_cfg *cfg, void *args)
 		if (nvme_present_result == false) {
 			control_sensor_polling(cfg->num, DISABLE_SENSOR_POLLING,
 					       SENSOR_NOT_PRESENT);
+		} else {
+			if (!init_drive_type_delayed(cfg)) {
+				LOG_ERR("NVME initial fail");
+				return false;
+			}
 		}
 
 		pre_proc_args->is_present_checked = true;
