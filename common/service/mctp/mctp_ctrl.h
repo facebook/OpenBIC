@@ -147,6 +147,8 @@ uint8_t mctp_ctrl_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext
 uint8_t mctp_ctrl_send_msg(void *mctp_p, mctp_ctrl_msg *msg);
 uint8_t mctp_ctrl_read(void *mctp_p, mctp_ctrl_msg *msg, uint8_t *read_buf, uint16_t read_len);
 
+void plat_update_mctp_routing_table(uint8_t eid);
+
 #ifdef __cplusplus
 }
 #endif
