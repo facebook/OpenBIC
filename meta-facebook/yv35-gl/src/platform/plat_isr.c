@@ -168,7 +168,6 @@ void Initialize_CPU()
 
 		k_work_submit(&clear_pmic_error_work);
 	} else {
-		ISR_POST_COMPLETE(VW_GPIO_LOW);
 		abort_snoop_thread();
 
 		// Read PMIC error when DC off
@@ -479,14 +478,14 @@ static void post_complete_handler(struct k_work *work)
 	}
 }
 
+K_WORK_DELAYABLE_DEFINE(post_completework, post_complete_handler);
 void ISR_POST_COMPLETE(uint8_t gpio_value)
 {
 	bool is_post_completed = (gpio_value == VW_GPIO_HIGH) ? true : false;
 	set_post_complete(is_post_completed);
 
 	post_complete.gpio_value = gpio_value;
-	k_work_init_delayable(&post_complete.work, post_complete_handler);
-	k_work_schedule(&post_complete.work, K_MSEC(10));
+	k_work_schedule(&post_completework, K_MSEC(10));
 }
 
 static void adr_mode0_handler(struct k_work *work)
