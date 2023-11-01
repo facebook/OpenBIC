@@ -114,6 +114,9 @@ static void set_dev_endpoint(void)
 			continue;
 
 		for (uint8_t j = 0; j < ARRAY_SIZE(plat_mctp_port); j++) {
+			if (p->bus != plat_mctp_port[j].conf.smbus_conf.bus)
+				continue;
+
 			struct _set_eid_req req = { 0 };
 			req.op = SET_EID_REQ_OP_SET_EID;
 			req.eid = p->endpoint;
