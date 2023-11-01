@@ -213,3 +213,13 @@
 &sram0 {
 	reg = <0 DT_SIZE_K(642)>, <DT_SIZE_K(642) DT_SIZE_K(126)>;
 };
+
+&pcc {
+	status = "okay";
+	addr = <0x80>;
+	addr-xbit = <0x3>;
+	addr-hbit-sel = <0x1>;
+	rec-mode = <0x1>;
+	dma-mode;
+	dma-ringbuf-size = <0x4000>;
+};

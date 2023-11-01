@@ -29,16 +29,6 @@ LOG_MODULE_REGISTER(plat_mctp);
 #define MCTP_IC_SHIFT 7
 #define MCTP_IC_MASK 0x80
 
-/* i2c 8 bit address */
-#define I2C_ADDR_BIC 0x40
-#define I2C_ADDR_BMC 0x20
-
-/* i2c dev bus*/
-#define I2C_BUS_BMC 0x02
-
-/* mctp endpoint */
-#define MCTP_EID_BMC 0x08
-
 // dynamic allocate eids
 #define MCTP_EID_FF_BIC 0
 #define MCTP_EID_WF_BIC 0

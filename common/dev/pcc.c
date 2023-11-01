@@ -239,7 +239,7 @@ bool pldm_send_post_code_to_bmc(uint16_t send_index)
 	uint8_t resp_len = sizeof(struct pldm_oem_write_file_io_resp);
 	uint8_t rbuf[resp_len];
 
-	if (!mctp_pldm_read(find_mctp_by_smbus(I2C_BUS_BMC), &msg, rbuf, resp_len)) {
+	if (!mctp_pldm_read(find_mctp_by_bus(I2C_BUS_BMC), &msg, rbuf, resp_len)) {
 		LOG_ERR("mctp_pldm_read fail");
 		return false;
 	}
