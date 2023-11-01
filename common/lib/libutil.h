@@ -111,5 +111,6 @@ void convert_uint8_t_pointer_to_uint32_t(uint32_t *data_32, const uint8_t *data_
 double power(double x, int y);
 int uint8_t_to_dec_ascii_pointer(uint8_t val, uint8_t *result, uint8_t len);
 int find_byte_data_in_buf(const uint8_t *buf, uint8_t byte_data, int start_index, int end_index);
+void clear_bits(uint32_t *value, int start_bit, int end_bit);
 
 #endif
