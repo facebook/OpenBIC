@@ -19,4 +19,32 @@
 
 #include "hal_gpio.h"
 
+// gpio_cfg(chip, number, is_init, direction, status, int_type, int_callback)
+// dedicate gpio A0~A7, B0~B7, C0~C7, D0~D7, E0~E7, total 40 gpios
+// Default name: Reserve_GPIOH0
+
+// clang-format off
+
+#define name_gpioA \
+	gpio_name_to_num(Reserve_GPIOA0) \
+	gpio_name_to_num(Reserve_GPIOA1) \
+	gpio_name_to_num(Reserve_GPIOA2) \
+	gpio_name_to_num(PWRGD_CPU_LVC3) \
+	gpio_name_to_num(Reserve_GPIOA4) \
+	gpio_name_to_num(Reserve_GPIOA5) \
+	gpio_name_to_num(Reserve_GPIOA6) \
+	gpio_name_to_num(Reserve_GPIOA7)
+
+// clang-format on
+
+#define gpio_name_to_num(x) x,
+enum _GPIO_NUMS_ {
+	name_gpioA
+};
+
+extern enum _GPIO_NUMS_ GPIO_NUMS;
+#undef gpio_name_to_num
+
+extern char *gpio_name[];
+
 #endif

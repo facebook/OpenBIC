@@ -80,6 +80,12 @@ void pal_post_init()
 	pldm_assign_gpio_effecter_id(PLAT_EFFECTER_ID_GPIO_HIGH_BYTE);
 }
 
+void pal_set_sys_status()
+{
+	set_DC_status(PWRGD_CPU_LVC3);
+	set_DC_on_delayed_status();
+}
+
 #define DEF_PROJ_GPIO_PRIORITY 78
 
 DEVICE_DEFINE(PRE_DEF_PROJ_GPIO, "PRE_DEF_PROJ_GPIO_NAME", &gpio_init, NULL, NULL, NULL,
