@@ -123,6 +123,7 @@ int get_freya_fw_info(uint8_t bus, uint8_t addr, freya_fw_info *fw_info)
 	ret = read_nvme_info(bus, addr, FREYA_MODULE_IDENTIFIER_BLOCK_OFFSET,
 			     FREYA_MODULE_IDENTIFIER_BLOCK_LENGTH, read_buf);
 	if (ret != 0) {
+		fw_info->is_freya_ready = FREYA_NOT_READY;
 		LOG_ERR("Read freya module identifier fail, bus: 0x%x, addr: 0x%x", bus, addr);
 		return -1;
 	}
@@ -130,7 +131,7 @@ int get_freya_fw_info(uint8_t bus, uint8_t addr, freya_fw_info *fw_info)
 	fw_info->is_module_identifier_support =
 		((read_buf[FREYA_MODULE_IDENTIFIER_OFFSET] != IS_FREYA_MODULE_IDENTIFIER_SUPPORT) ?
 			 FREYA_NOT_SUPPORT_MODULE_IDENTIFIER :
-			       FREYA_SUPPORT_MODULE_IDENTIFIER);
+			 FREYA_SUPPORT_MODULE_IDENTIFIER);
 	if (fw_info->is_module_identifier_support == FREYA_NOT_SUPPORT_MODULE_IDENTIFIER) {
 		return FREYA_NOT_SUPPORT_MODULE_IDENTIFIER_RET_CODE;
 	}
@@ -141,18 +142,21 @@ int get_freya_fw_info(uint8_t bus, uint8_t addr, freya_fw_info *fw_info)
 	ret = read_nvme_info(bus, addr, FREYA_FIRMWARE_VERSION_BLOCK_OFFSET,
 			     FREYA_FIRMWARE_VERSION_BLOCK_LENGTH, read_buf);
 	if (ret != 0) {
+		fw_info->is_freya_ready = FREYA_NOT_READY;
 		LOG_ERR("Read freya firmware version fail, bus: 0x%x, addr: 0x%x", bus, addr);
 		return -1;
 	}
 
-	// Workaround: Check PSOC and QSPI firmware version, report freya not ready if reading value is invalid
-	ret = check_fw_version_valid(&read_buf[PSOC_QSPI_FW_INDEX], SOC_QSPI_FW_LENGTH);
-	if (ret != 0) {
-		if (ret == FREYA_NOT_READY_RET_CODE) {
-			memset(&fw_info, 0, FREYA_FW_VERSION_LENGTH);
-			fw_info->is_freya_ready = FREYA_NOT_READY;
+	if ((addr == ACCL_ARTEMIS_MODULE_1_ADDR) || (addr == ACCL_ARTEMIS_MODULE_2_ADDR)) {
+		// Workaround: Check PSOC and QSPI firmware version, report freya not ready if reading value is invalid
+		ret = check_fw_version_valid(&read_buf[PSOC_QSPI_FW_INDEX], SOC_QSPI_FW_LENGTH);
+		if (ret != 0) {
+			if (ret == FREYA_NOT_READY_RET_CODE) {
+				memset(&fw_info, 0, FREYA_FW_VERSION_LENGTH);
+				fw_info->is_freya_ready = FREYA_NOT_READY;
+			}
+			return ret;
 		}
-		return ret;
 	}
 
 	memcpy(&fw_info->major_version, &read_buf[FREYA_FIRMWARE_VERSION_OFFSET],
