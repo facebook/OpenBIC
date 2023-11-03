@@ -17,6 +17,7 @@
 #include "hal_gpio.h"
 #include "power_status.h"
 #include "rg3mxxb12.h"
+#include "p3h284x.h"
 #include "plat_gpio.h"
 #include "plat_class.h"
 #include "plat_i2c.h"
@@ -52,8 +53,11 @@ void pal_pre_init()
 {
 	uint8_t type = get_card_type();
 	uint8_t slave_port = 0x0;
+	uint16_t i3c_hub_type = I3C_HUB_TYPE_UNKNOWN;
 
 	init_board_revision();
+	init_i3c_hub_type();
+	i3c_hub_type = get_i3c_hub_type();
 
 	/* Initialize I3C HUB (connects to E1.s)
 	 * For OPA expansion,
@@ -80,9 +84,16 @@ void pal_pre_init()
 		return;
 	}
 
-	if (!rg3mxxb12_i2c_mode_only_init(I2C_BUS2, slave_port, ldo_1_2_volt, pullup_1k_ohm)) {
-		printk("failed to initialize rg3mxxb12\n");
+	if (i3c_hub_type == RG3M88B12_DEVICE_INFO) {
+		if (!rg3mxxb12_i2c_mode_only_init(I2C_BUS2, slave_port, rg3mxxb12_ldo_1_2_volt, rg3mxxb12_pullup_1k_ohm)) {
+			printk("failed to initialize rg3mxxb12\n");
+		}
+	} else {
+		if (!p3h284x_i2c_mode_only_init(I2C_BUS2, slave_port, p3g284x_ldo_1_2_volt, p3g284x_pullup_1k_ohm)) {
+			printk("failed to initialize p3h284x\n");
+		}
 	}
+
 }
 
 DEVICE_DEFINE(PRE_DEF_PLAT_CONFIG, "PRE_DEF_PLATFOMR", &init_platform_config, NULL, NULL, NULL,

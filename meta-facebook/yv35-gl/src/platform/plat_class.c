@@ -26,6 +26,8 @@
 #include "libutil.h"
 #include "plat_gpio.h"
 #include "plat_i2c.h"
+#include "rg3mxxb12.h"
+#include "p3h284x.h"
 LOG_MODULE_REGISTER(plat_class);
 
 #define NUMBER_OF_ADC_CHANNEL 16
@@ -35,6 +37,8 @@ static uint8_t board_revision = 0x0F;
 static uint8_t hsc_module = HSC_MODULE_UNKNOWN;
 static CARD_STATUS _1ou_status = { false, TYPE_1OU_UNKNOWN };
 static CARD_STATUS _2ou_status = { false, TYPE_2OU_UNKNOWN };
+static uint16_t i3c_hub_type = I3C_HUB_TYPE_UNKNOWN;
+static uint16_t exp_i3c_hub_type = I3C_HUB_TYPE_UNKNOWN;
 
 uint8_t get_system_class()
 {
@@ -59,6 +63,16 @@ uint8_t get_board_revision()
 uint8_t get_hsc_module()
 {
 	return hsc_module;
+}
+
+uint16_t get_i3c_hub_type()
+{
+	return i3c_hub_type;
+}
+
+uint16_t get_exp_i3c_hub_type()
+{
+	return exp_i3c_hub_type;
 }
 
 /* ADC information for each channel
@@ -302,4 +316,25 @@ void init_platform_config()
 
 	LOG_INF("BIC class type(class-%d), 1ou present status(%d), 2ou present status(%d), board revision(0x%x)\n",
 		system_class, (int)_1ou_status.present, (int)_2ou_status.present, board_revision);
+}
+
+void init_i3c_hub_type(void)
+{
+	if (rg3mxxb12_get_device_info(I2C_BUS8, &exp_i3c_hub_type)) {
+		LOG_INF("I3C hub type: rg3mxxb12");
+	} else if (p3h284x_get_device_info(I2C_BUS8, &exp_i3c_hub_type)) {
+		LOG_INF("I3C hub type: p3h284x");
+	} else {
+		LOG_ERR("I3C hub get device type fail");
+		return;
+	}
+
+	if (rg3mxxb12_get_device_info(I3C_BUS4, &i3c_hub_type) && (i3c_hub_type == RG3M88B12_DEVICE_INFO)) {
+		LOG_INF("I3C hub type: rg3mxxb12");
+	} else if (p3h284x_get_device_info(I3C_BUS4, &i3c_hub_type)) {
+		LOG_INF("I3C hub type: p3h284x");
+	} else {
+		LOG_ERR("I3C hub get device type fail");
+		return;
+	}
 }

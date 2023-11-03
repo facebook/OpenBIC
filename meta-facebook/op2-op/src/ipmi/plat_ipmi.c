@@ -22,6 +22,7 @@
 #include "pt5161l.h"
 #include "m88rt51632.h"
 #include "rg3mxxb12.h"
+#include "p3h284x.h"
 #include "power_status.h"
 #include "plat_class.h"
 #include "plat_i2c.h"
@@ -321,6 +322,7 @@ void OEM_1S_SAFE_WRITE_READ_M2_DATA(ipmi_msg *msg)
 	uint8_t device_id = 0, mux_channel = 0;
 	I2C_MSG i2c_msg;
 	uint8_t card_type = get_card_type();
+	uint16_t i3c_hub_type = get_i3c_hub_type();
 
 	// at least include device_id, addr, rx_len, offset
 	if (msg->data_len < 4) {
@@ -366,10 +368,18 @@ void OEM_1S_SAFE_WRITE_READ_M2_DATA(ipmi_msg *msg)
 	}
 
 	// Change channel
-	if (!rg3mxxb12_select_slave_port_connect(i2c_msg.bus, mux_channel)) {
-		msg->completion_code = CC_UNSPECIFIED_ERROR;
-		k_mutex_unlock(&i2c_hub_mutex);
-		return;
+	if (i3c_hub_type == RG3M88B12_DEVICE_INFO) {
+		if (!rg3mxxb12_select_slave_port_connect(i2c_msg.bus, mux_channel)) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			k_mutex_unlock(&i2c_hub_mutex);
+			return;
+		}
+	} else {
+		if (!p3h284x_select_slave_port_connect(i2c_msg.bus, mux_channel)) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			k_mutex_unlock(&i2c_hub_mutex);
+			return;
+		}
 	}
 
 	memcpy(&i2c_msg.data[0], &msg->data[3], i2c_msg.tx_len);
@@ -391,8 +401,14 @@ void OEM_1S_SAFE_WRITE_READ_M2_DATA(ipmi_msg *msg)
 	}
 
 	// Close all channels after write read
-	if (!rg3mxxb12_select_slave_port_connect(i2c_msg.bus, RG3MXXB12_SSPORTS_ALL_DISCONNECT)) {
-		LOG_ERR("Failed to close I3C HUB (I2C mode) channel");
+	if (i3c_hub_type == RG3M88B12_DEVICE_INFO) {
+		if (!rg3mxxb12_select_slave_port_connect(i2c_msg.bus, RG3MXXB12_SSPORTS_ALL_DISCONNECT)) {
+			LOG_ERR("Failed to close I3C HUB (I2C mode) channel");
+		}
+	} else {
+		if (!p3h284x_select_slave_port_connect(i2c_msg.bus, P3H284X_SSPORTS_ALL_DISCONNECT)) {
+			LOG_ERR("Failed to close I3C HUB (I2C mode) channel");
+		}
 	}
 
 	if (k_mutex_unlock(&i2c_hub_mutex)) {

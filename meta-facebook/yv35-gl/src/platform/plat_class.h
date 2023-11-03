@@ -25,6 +25,8 @@
 #define NUMBER_OF_ADC_CHANNEL 16
 #define AST1030_ADC_BASE_ADDR 0x7e6e9000
 
+#define I3C_BUS4 3
+
 enum BIC_BOARD_REVISION {
 	SYS_BOARD_POC = 0x0,
 	SYS_BOARD_EVT,
@@ -69,6 +71,12 @@ enum HSC_MODULE {
 	HSC_MODULE_UNKNOWN,
 };
 
+enum I3C_HUB_TYPE {
+	I3C_HUB_TYPE_RNS,
+	I3C_HUB_TYPE_NXP,
+	I3C_HUB_TYPE_UNKNOWN,
+};
+
 /* ADC channel number */
 enum ADC_CHANNEL {
 	CHANNEL_6 = 6,
@@ -82,5 +90,8 @@ uint8_t get_hsc_module();
 bool get_adc_voltage(int channel, float *voltage);
 uint8_t get_board_revision();
 void init_platform_config();
+uint16_t get_i3c_hub_type();
+uint16_t get_exp_i3c_hub_type();
+void init_i3c_hub_type();
 
 #endif
