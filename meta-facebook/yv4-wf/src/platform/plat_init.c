@@ -21,6 +21,7 @@
 #include "plat_gpio.h"
 #include "plat_power_seq.h"
 #include "plat_pldm_monitor.h"
+#include "plat_isr.h"
 
 #define DEF_PROJ_GPIO_PRIORITY 78
 
@@ -29,6 +30,7 @@ void pal_set_sys_status()
 	set_mb_dc_status(FM_POWER_EN_R);
 	set_DC_status(PG_CARD_OK);
 	set_sys_ready_pin(BIC_READY_R);
+	set_ioe4_pin();
 }
 
 void pal_post_init()
