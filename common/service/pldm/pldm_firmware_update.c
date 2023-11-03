@@ -28,6 +28,7 @@
 #include "lattice.h"
 #include "plat_version.h"
 #include "xdpe15284.h"
+#include "pt5161l.h"
 
 LOG_MODULE_DECLARE(pldm);
 
@@ -204,6 +205,62 @@ uint8_t pldm_cpld_update(void *fw_update_param)
 	} else {
 		LOG_ERR("Component version string %s not contains support device's keyword",
 			log_strdup(p->comp_version_str));
+		return 1;
+	}
+
+	return 0;
+}
+
+uint8_t pldm_retimer_update(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+
+	CHECK_NULL_ARG_WITH_RETURN(p->data, 1);
+
+	uint8_t update_flag = 0;
+	uint8_t ret;
+	I2C_MSG i2c_msg;
+
+	i2c_msg.bus = p->bus;
+	i2c_msg.target_addr = p->addr;
+
+	if (p->data_ofs == 0) {
+		LOG_INF("First block for retimer update");
+	}
+
+	/* prepare next data offset and length */
+	p->next_ofs = p->data_ofs + p->data_len;
+	p->next_len = fw_update_cfg.max_buff_size;
+
+	if (p->next_ofs < fw_update_cfg.image_size) {
+		if (p->next_ofs + p->next_len > fw_update_cfg.image_size)
+			p->next_len = fw_update_cfg.image_size - p->next_ofs;
+
+		if (((p->next_ofs % SECTOR_SZ_256) + p->next_len) > SECTOR_SZ_256)
+			p->next_len = SECTOR_SZ_256 - (p->next_ofs % SECTOR_SZ_256);
+	} else {
+		/* current data is the last packet
+		 * set the next data length to 0 to inform the update completely
+		 */
+		p->next_len = 0;
+		update_flag = SECTOR_END_FLAG;
+	}
+
+	if (!strncmp(p->comp_version_str, KEYWORD_RETIMER_PT5161L,
+		     ARRAY_SIZE(KEYWORD_RETIMER_PT5161L) - 1)) {
+		ret = pcie_retimer_fw_update(&i2c_msg, p->data_ofs, p->data_len, p->data,
+					     update_flag);
+	} else {
+		LOG_ERR("Non-support retimer detected with component string %s!",
+			log_strdup(p->comp_version_str));
+		return 1;
+	}
+
+	if (ret) {
+		LOG_ERR("Retimer update failed, offset(0x%x), length(0x%x), status(%d)",
+			p->data_ofs, p->data_len, ret);
 		return 1;
 	}
 
