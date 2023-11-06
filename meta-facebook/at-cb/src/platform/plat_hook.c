@@ -904,6 +904,26 @@ bool pre_pex89000_read(sensor_cfg *cfg, void *args)
 	mux_config *pre_args = (mux_config *)args;
 	pre_args->bus = cfg->port;
 
+	bool ret = true;
+	uint8_t error_status = 0;
+	uint8_t bit_val =
+		(cfg->num == SENSOR_NUM_TEMP_PEX_0 ? CPLD_SW_0_ERR_BIT : CPLD_SW_1_ERR_BIT);
+
+	ret = set_mux_channel(*pre_args, MUTEX_LOCK_ENABLE);
+	if (ret == false) {
+		LOG_ERR("PEX switch mux fail, sensor num: 0x%x", cfg->num);
+		return ret;
+	}
+
+	if (get_cpld_register(CPLD_SW_ERR_OFFSET, &error_status) == 0) {
+		if (error_status & bit_val) { // Switch error pin is active
+			get_switch_error_status(cfg->num, cfg->port, cfg->target_addr,
+						pex_init_arg->idx);
+		}
+	} else {
+		LOG_ERR("Get switch debug register value fail, sensor num: 0x%x", cfg->num);
+	}
+
 	/* Check if switch is ready */
 	if (get_board_revision() > EVT2_STAGE) {
 		if (is_sw_ready(cfg->num) != true) {
@@ -912,15 +932,7 @@ bool pre_pex89000_read(sensor_cfg *cfg, void *args)
 		}
 	}
 
-	bool ret = true;
 	static uint8_t check_init_count = 0;
-
-	ret = set_mux_channel(*pre_args, MUTEX_LOCK_ENABLE);
-	if (ret == false) {
-		LOG_ERR("PEX switch mux fail, sensor num: 0x%x", cfg->num);
-		return ret;
-	}
-
 	if (pex_init_arg->is_init == false) {
 		// Workaround for EVT2
 		if (check_init_count >= PEX_SWITCH_INIT_RETRY_COUNT) {

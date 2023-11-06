@@ -52,4 +52,10 @@ enum pldm_state_set_oem_device_status {
 	PLDM_STATE_SET_OEM_DEVICE_STATUS_ALERT = 2,
 };
 
+enum pldm_state_set_oem_device_power_status {
+	PLDM_STATE_SET_OEM_DEVICE_NOT_POWER_ON_YET,
+	PLDM_STATE_SET_OEM_DEVICE_POWER_GOOD,
+	PLDM_STATE_SET_OEM_DEVICE_POWER_GOOD_FAIL,
+};
+
 #endif

@@ -137,12 +137,25 @@ void plat_fio_present_check()
 	struct pldm_sensor_event_state_sensor_state event;
 	event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_PRESENCE;
 	event.event_state = gpio_get(PRSNT_FIO_N) == LOW_ACTIVE ? PLDM_STATE_SET_PRESENT :
-									PLDM_STATE_SET_NOT_PRESENT;
+								  PLDM_STATE_SET_NOT_PRESENT;
 	event.previous_event_state = PLDM_STATE_SET_NOT_PRESENT;
 	if (pldm_send_platform_event(PLDM_SENSOR_EVENT, PLDM_EVENT_FIO, PLDM_STATE_SENSOR_STATE,
 				     (uint8_t *)&event,
 				     sizeof(struct pldm_sensor_event_state_sensor_state))) {
 		LOG_ERR("Send FIO cable presence event log failed");
+	}
+}
+
+void plat_accl_power_good_fail_event(uint8_t card_id)
+{
+	struct pldm_sensor_event_state_sensor_state event;
+	event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_POWER_STATUS;
+	event.previous_event_state = PLDM_STATE_SET_OEM_DEVICE_NOT_POWER_ON_YET;
+	event.event_state = PLDM_STATE_SET_OEM_DEVICE_POWER_GOOD_FAIL;
+	if (pldm_send_platform_event(PLDM_SENSOR_EVENT, PLDM_EVENT_ACCL_1 + card_id,
+				     PLDM_STATE_SENSOR_STATE, (uint8_t *)&event,
+				     sizeof(struct pldm_sensor_event_state_sensor_state))) {
+		LOG_ERR("Send card_id: 0x%x power good fail event failed", card_id);
 	}
 }
 

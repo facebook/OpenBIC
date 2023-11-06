@@ -30,6 +30,7 @@ typedef enum pex_access {
 	pex_access_sbr_ver,
 	pex_access_flash_ver,
 	pex_access_register,
+	pex_access_ccr_system_error,
 	pex_access_unknown
 } pex_access_t;
 
@@ -51,6 +52,30 @@ typedef struct {
 	pex_dev_t pex_type;
 	sys_snode_t node; // linked list node
 } pex89000_unit;
+
+enum PEX_CCR_SYSTEM_ERROR_STATUS {
+	PEX_SYSTEM_ERROR = BIT(0),
+	PEX_FATAL_ERROR = BIT(1),
+	PEX_POR_BISR_TIMEOUT = BIT(4),
+	PEX_ARM_FLASH_SIGNATURE_FAIL = BIT(5),
+	PEX_WDT0_CPU_RESET = BIT(6),
+	PEX_WDT0_SYSTEM_RESET = BIT(7),
+	PEX_WDT1_CPU_RESET = BIT(8),
+	PEX_WDT1_SYSTEM_RESET = BIT(9),
+	PEX_LOCAL_CPU_PARITY_ERROR = BIT(15),
+	PEX_SECURE_BOOT_FAIL = BIT(16),
+	PEX_SBR_LOAD_FAIL = BIT(18),
+	PEX_STATION_0_FATAL_ERROR = BIT(20),
+	PEX_STATION_1_FATAL_ERROR = BIT(21),
+	PEX_STATION_2_FATAL_ERROR = BIT(22),
+	PEX_STATION_3_FATAL_ERROR = BIT(23),
+	PEX_STATION_4_FATAL_ERROR = BIT(24),
+	PEX_STATION_5_FATAL_ERROR = BIT(25),
+	PEX_STATION_6_FATAL_ERROR = BIT(26),
+	PEX_STATION_7_FATAL_ERROR = BIT(27),
+	PEX_STATION_8_FATAL_ERROR = BIT(28),
+	PEX_PSB_STATION_FATAL_ERROR = BIT(31)
+};
 
 /* Note: Could be used only after pex89000 sensor init successed */
 uint8_t pex_access_engine(uint8_t bus, uint8_t addr, uint8_t idx, pex_access_t key, uint32_t *resp);
