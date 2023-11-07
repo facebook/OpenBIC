@@ -45,20 +45,18 @@ void execute_power_on_sequence()
 
 	// If CXL is on, doesn't need to power on again
 	if (get_DC_status()) {
-		LOG_INF("%s is ON",__func__);
 		return;
 	}
 
-	LOG_INF("%s", __func__);
 	ret = power_on_handler(CLK_POWER_ON_STAGE);
 	if (ret == 0) {
 		gpio_set(PG_CARD_OK, POWER_ON);
 		gpio_set(LED_CXL_POWER, POWER_ON);
 		set_DC_status(PG_CARD_OK);
 		k_work_schedule(&set_dc_on_5s_work, K_SECONDS(DC_ON_DELAY5_SEC));
-		LOG_INF("CXL Power on success");
+		LOG_INF("CXL power on success");
 	} else {
-		LOG_ERR("CXL Power on fail");
+		LOG_ERR("CXL power on fail");
 	}
 }
 
@@ -68,11 +66,9 @@ void execute_power_off_sequence()
 
 	// If CXL is off, doesn't need to power off again
 	if (!get_DC_status()) {
-		LOG_INF("%s is OFF",__func__);
 		return;
 	}
 
-	LOG_INF("%s", __func__);
 	gpio_set(PG_CARD_OK, POWER_OFF);
 	gpio_set(LED_CXL_POWER, GPIO_LOW);
 	set_DC_status(PG_CARD_OK);
@@ -87,7 +83,7 @@ void execute_power_off_sequence()
 	if (ret == 0) {
 		LOG_INF("CXL power off success");
 	} else {
-		LOG_INF("CXL power off fail");
+		LOG_ERR("CXL power off fail");
 	}
 }
 
@@ -96,11 +92,7 @@ int power_on_handler(uint8_t power_stage)
 	int ret = 0;
 	int ctrl_stage = 0;
 
-	LOG_INF("%s", __func__);
-
 	for (ctrl_stage = power_stage; ctrl_stage < MAX_POWER_ON_STAGES; ctrl_stage++) {
-		LOG_INF("%s ctrl0x%x", __func__, ctrl_stage);
-
 		// Set power enable pin to enable power
 		enable_powers(ctrl_stage);
 
@@ -124,8 +116,6 @@ int power_off_handler(uint8_t power_stage)
 	int ctrl_stage = 0;
 
 	for (ctrl_stage = power_stage; ctrl_stage < MAX_POWER_OFF_STAGES; ctrl_stage++) {
-		LOG_INF("%s ctrl0x%x", __func__, ctrl_stage);
-
 		// Set power enable pin to enable power
 		disable_powers(ctrl_stage);
 
@@ -356,7 +346,7 @@ bool is_power_controlled(uint8_t power_pin, uint8_t check_power_status, char *po
 		return true;
 	} else {
 		// TODO: Add event to BMC
-		LOG_INF("Failed to power %s %s (0x%x)", check_power_status ? "on" : "off",
+		LOG_ERR("Failed to power %s %s (0x%x)", check_power_status ? "on" : "off",
 			power_name, power_pin);
 		return false;
 	}
