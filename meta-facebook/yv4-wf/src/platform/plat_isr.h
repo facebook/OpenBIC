@@ -14,27 +14,44 @@
  * limitations under the License.
  */
 
+#include <kernel.h>
+#include "ioexp_tca9555.h"
+
 #ifndef PLAT_ISR_H
 #define PLAT_ISR_H
 
+#define ADDR_IOE1 (0x40 >> 1)
+#define ADDR_IOE2 (0x42 >> 1)
+#define ADDR_IOE3 (0x44 >> 1)
 #define ADDR_IOE4 (0x46 >> 1)
 
 #define E1S_PRESENT_BIT BIT(2)
 #define ASIC_CLK_BIT BIT(4)
 #define E1S_CLK_BIT BIT(5)
 #define E1S_PE_RESET_BIT BIT(6)
+#define IOE_SWITCH_MUX_TO_BIC 0x0f
 
-#define IOE4_CONFIGUTATION_PINS 0x8f
+#define CXL_READY_SECONDS 30
+#define IOE_READY_MSEC 1000
 
 enum set_ioe4_cmd {
 	SET_CLK = 0,
 	SET_PE_RST,
 };
 
+typedef struct {
+	uint8_t addr;
+	uint8_t conf_reg;
+	uint8_t conf_dir;
+	uint8_t output_reg;
+	uint8_t output_val;
+} IOE_CFG;
+
 void ISR_MB_DC_STAGUS_CHAGNE();
 void ISR_MB_PCIE_RST();
 void ISR_E1S_PWR_ON();
+void ISR_CXL_PG_ON();
 
-void set_ioe4_pin();
+void set_ioe_init();
 
 #endif
