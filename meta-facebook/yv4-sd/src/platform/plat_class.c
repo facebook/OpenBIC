@@ -53,8 +53,9 @@ struct _SLOT_EID_MAPPING_TABLE {
 };
 
 struct _SLOT_EID_MAPPING_TABLE _slot_eid_mapping_table[] = {
-	{ 0.1, LOWER, SLOT1 }, { 0.3, RANGE, SLOT2 }, { 0.6, RANGE, SLOT3 }, { 0.9, RANGE, SLOT4 },
-	{ 1.2, RANGE, SLOT5 }, { 1.5, RANGE, SLOT6 }, { 1.8, RANGE, SLOT7 }, { 2.1, RANGE, SLOT8 },
+	{ 0.1, LOWER, SLOT1 },	 { 0.088, RANGE, SLOT2 }, { 0.180, RANGE, SLOT3 },
+	{ 0.271, RANGE, SLOT4 }, { 0.365, RANGE, SLOT5 }, { 0.459, RANGE, SLOT6 },
+	{ 0.531, RANGE, SLOT7 }, { 0.607, RANGE, SLOT8 },
 };
 
 uint8_t slot_eid = 0;
@@ -109,8 +110,17 @@ bool get_adc_voltage(int channel, float *voltage)
 void init_platform_config()
 {
 	float voltage;
+	float p3v3_stby_voltage;
 	bool success = get_adc_voltage(CHANNEL_13, &voltage);
+
 	if (success) {
+		success = get_adc_voltage(CHANNEL_2, &p3v3_stby_voltage);
+		p3v3_stby_voltage *= 2; // voltage division is 0.5
+		if (!success) {
+			LOG_ERR("Fail to get 3v3 standby voltage. Set to default value.");
+			p3v3_stby_voltage = 3.3f;
+		}
+
 		for (int i = 0; i < ARRAY_SIZE(_slot_eid_mapping_table); i++) {
 			float typical_voltage = _slot_eid_mapping_table[i].voltage;
 			switch (_slot_eid_mapping_table[i].condition) {
@@ -125,8 +135,8 @@ void init_platform_config()
 				}
 				break;
 			case RANGE:
-				if ((voltage > typical_voltage - (typical_voltage * 0.07)) &&
-				    (voltage < typical_voltage + (typical_voltage * 0.07))) {
+				if ((voltage > (p3v3_stby_voltage * typical_voltage * 0.93)) &&
+				    (voltage < (p3v3_stby_voltage * typical_voltage * 1.07))) {
 					slot_eid = _slot_eid_mapping_table[i].slot_eid;
 				}
 				break;
@@ -137,4 +147,6 @@ void init_platform_config()
 			}
 		}
 	}
+
+	LOG_INF("Slot EID = %d", slot_eid);
 }
