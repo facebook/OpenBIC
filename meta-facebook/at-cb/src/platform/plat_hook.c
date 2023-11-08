@@ -1078,14 +1078,6 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 	switch (cfg->target_addr) {
 	case ACCL_FREYA_1_ADDR:
 	case ACCL_ARTEMIS_MODULE_1_ADDR:
-		if (accl_freya->freya1_fw_info.is_freya_ready != FREYA_READY) {
-			// Workaround: Record ready flag at the last sensor of ASIC, and get firmware version in the next sensor polling for confirming version ready
-			if (cfg->offset == NVME_VOLTAGE_RAIL_2_OFFSET) {
-				accl_freya->freya1_fw_info.is_freya_ready = FREYA_READY;
-			}
-			return true;
-		}
-
 		if (accl_freya->is_cache_freya1_info != true) {
 			ret = get_freya_fw_info(cfg->port, cfg->target_addr,
 						&accl_freya->freya1_fw_info);
@@ -1097,14 +1089,6 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 		break;
 	case ACCL_FREYA_2_ADDR:
 	case ACCL_ARTEMIS_MODULE_2_ADDR:
-		if (accl_freya->freya2_fw_info.is_freya_ready != FREYA_READY) {
-			// Workaround: Record ready flag at the last sensor of ASIC, and get firmware version in the next sensor polling for confirming version ready
-			if (cfg->offset == NVME_VOLTAGE_RAIL_2_OFFSET) {
-				accl_freya->freya2_fw_info.is_freya_ready = FREYA_READY;
-			}
-			return true;
-		}
-
 		if (accl_freya->is_cache_freya2_info != true) {
 			ret = get_freya_fw_info(cfg->port, cfg->target_addr,
 						&accl_freya->freya2_fw_info);
