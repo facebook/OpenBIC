@@ -217,6 +217,7 @@ void send_post_code_to_BMC()
 					continue;
 				}
 			} else {
+				send_postcode_msg->InF_target = PLDM;
 				status = pldm_send_ipmi_request(send_postcode_msg);
 				SAFE_FREE(send_postcode_msg);
 			}

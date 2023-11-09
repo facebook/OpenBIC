@@ -38,7 +38,7 @@ K_TIMER_DEFINE(send_cmd_timer, send_cmd_to_dev, NULL);
 K_WORK_DEFINE(send_cmd_work, send_cmd_to_dev_handler);
 
 mctp_port plat_mctp_port[] = {
-	{	.channel_target = BMC_IPMB,
+	{	.channel_target = PLDM,
 		.medium_type = MCTP_MEDIUM_TYPE_TARGET_I3C,
 		.conf.i3c_conf.bus = I3C_BUS_BMC,
 		.conf.i3c_conf.addr = I3C_STATIC_ADDR_BMC

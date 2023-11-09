@@ -365,7 +365,7 @@ void add_pmic_error_sel(uint8_t dimm_id, uint8_t error_type)
 	common_addsel_msg_t sel_msg;
 
 	memset(&sel_msg, 0, sizeof(common_addsel_msg_t));
-	sel_msg.InF_target = MCTP;
+	sel_msg.InF_target = PLDM;
 	sel_msg.sensor_type = IPMI_SENSOR_TYPE_PROCESSOR;
 	sel_msg.sensor_number = SENSOR_NUM_PMIC_ERROR;
 	sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
@@ -385,7 +385,7 @@ int get_pmic_fault_status()
 
 	// Get slot ID
 	ipmi_msg.InF_source = SELF;
-	ipmi_msg.InF_target = MCTP;
+	ipmi_msg.InF_target = PLDM;
 	ipmi_msg.netfn = NETFN_OEM_REQ;
 	ipmi_msg.cmd = CMD_OEM_GET_BOARD_ID;
 	ipmi_msg.data_len = 0;
@@ -403,7 +403,7 @@ int get_pmic_fault_status()
 
 	// Read SB CPLD (BMC channel) to know which PMIC happen critical error
 	ipmi_msg.InF_source = SELF;
-	ipmi_msg.InF_target = MCTP;
+	ipmi_msg.InF_target = PLDM;
 	ipmi_msg.netfn = NETFN_APP_REQ;
 	ipmi_msg.cmd = CMD_APP_MASTER_WRITE_READ;
 	ipmi_msg.data_len = 4;

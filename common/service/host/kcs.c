@@ -158,8 +158,8 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 			// Check BMC communication interface if use IPMB or not
 			if (!pal_is_interface_use_ipmb(IPMB_inf_index_map[BMC_IPMB])) {
 				int ret = 0;
-
 				// Send request to MCTP/PLDM thread to ask BMC
+				bridge_msg.InF_target = PLDM;
 				ret = pldm_send_ipmi_request(&bridge_msg);
 				if (ret < 0) {
 					LOG_ERR("kcs_read_task send to BMC fail");

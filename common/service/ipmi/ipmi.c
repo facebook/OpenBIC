@@ -165,7 +165,7 @@ static uint8_t send_msg_by_pldm(ipmi_msg_cfg *msg_cfg)
 
 __weak bool pal_set_dimm_presence_status(uint8_t *buf)
 {
-	return false;
+	return true;
 }
 
 __weak bool pal_request_msg_to_BIC_from_HOST(uint8_t netfn, uint8_t cmd)

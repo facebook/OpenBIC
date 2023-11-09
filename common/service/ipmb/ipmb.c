@@ -865,6 +865,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 						LOG_ERR("bridge_msg allocation failed");
 						goto cleanup;
 					}
+
 					memset(bridge_msg, 0, sizeof(ipmi_msg));
 
 					bridge_msg->data_len = current_msg_rx->buffer.data_len;
@@ -883,6 +884,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 					if (!pal_is_interface_use_ipmb(
 						    IPMB_inf_index_map[BMC_IPMB])) {
 						// Send ME request to MCTP/PLDM thread to BMC and get response
+						bridge_msg->InF_target = PLDM;
 						pldm_send_ipmi_request(bridge_msg);
 						bridge_msg->netfn = current_msg_rx->buffer.netfn;
 						bridge_msg->seq = current_msg_rx->buffer.seq;
@@ -1020,7 +1022,6 @@ ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index)
 	resp_cfg.buffer.src_LUN = resp->dest_LUN;
 	resp_cfg.buffer.cmd = resp->cmd;
 	resp_cfg.retries = 0;
-
 	LOG_DBG("Send resp message, index(%d) cc(0x%x) data[%d]:", index,
 		resp_cfg.buffer.completion_code, resp_cfg.buffer.data_len);
 	LOG_HEXDUMP_DBG(resp_cfg.buffer.data, resp_cfg.buffer.data_len, "");

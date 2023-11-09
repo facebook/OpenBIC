@@ -301,6 +301,7 @@ __weak void STORAGE_ADD_SEL(ipmi_msg *msg)
 			return;
 		}
 	} else {
+		add_sel_msg->InF_target = PLDM;
 		status = pldm_send_ipmi_request(add_sel_msg);
 		free(add_sel_msg);
 		msg->data_len = 0;

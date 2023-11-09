@@ -559,7 +559,7 @@ int pldm_send_ipmi_response(uint8_t interface, ipmi_msg *msg)
 	memset(&pmsg, 0, sizeof(pmsg));
 	memset(&resp_buf, 0, sizeof(resp_buf));
 
-	mctp_port *p = pal_find_mctp_port_by_channel_target(msg->InF_target);
+	mctp_port *p = pal_find_mctp_port_by_channel_target(interface);
 	CHECK_NULL_ARG_WITH_RETURN(p, -1);
 
 	int medium_type = p->medium_type;
@@ -597,7 +597,6 @@ int pldm_send_ipmi_response(uint8_t interface, ipmi_msg *msg)
 	LOG_HEXDUMP_DBG(pmsg.buf, pmsg.len, "pmsg.buf");
 
 	CHECK_NULL_ARG_WITH_RETURN(p->mctp_inst, -1);
-
 	// Send response to PLDM/MCTP thread
 	mctp_pldm_send_msg(p->mctp_inst, &pmsg);
 	return 0;
