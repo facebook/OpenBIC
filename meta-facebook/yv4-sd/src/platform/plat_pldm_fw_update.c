@@ -150,32 +150,65 @@ uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uin
 		(struct pldm_query_device_identifiers_resp *)resp;
 
 	resp_p->completion_code = PLDM_SUCCESS;
-	resp_p->descriptor_count = 0x01;
+	resp_p->descriptor_count = 0x02;
 
 	uint8_t iana[PLDM_FWUP_IANA_ENTERPRISE_ID_LENGTH] = { 0x00, 0x00, 0xA0, 0x15 };
 
+	// Set the device id for sd bic
+	uint8_t deviceId[PLDM_FWUP_IANA_ENTERPRISE_ID_LENGTH] = { 0x00, 0x00 };
+
+	uint8_t total_size_of_iana_descriptor =
+		sizeof(struct pldm_descriptor_tlv) + sizeof(iana) - 1;
+
+	uint8_t total_size_of_device_id_descriptor =
+		sizeof(struct pldm_descriptor_tlv) + sizeof(deviceId) - 1;
+
+	if (sizeof(struct pldm_query_device_identifiers_resp) + total_size_of_iana_descriptor +
+		    total_size_of_device_id_descriptor >
+	    PLDM_MAX_DATA_SIZE) {
+		LOG_ERR("QueryDeviceIdentifiers data length is over PLDM_MAX_DATA_SIZE define size %d",
+			PLDM_MAX_DATA_SIZE);
+		resp_p->completion_code = PLDM_ERROR;
+		return PLDM_ERROR;
+	}
+
 	// Allocate data for tlv which including descriptors data
-	struct pldm_descriptor_tlv *tlv_ptr =
-		malloc(sizeof(struct pldm_descriptor_tlv) + sizeof(iana) - 1);
+	struct pldm_descriptor_tlv *tlv_ptr = malloc(total_size_of_iana_descriptor);
+	if (tlv_ptr == NULL) {
+		LOG_ERR("Memory allocation failed!");
+		return PLDM_ERROR;
+	}
 
 	tlv_ptr->descriptor_type = PLDM_FWUP_IANA_ENTERPRISE_ID;
 	tlv_ptr->descriptor_length = PLDM_FWUP_IANA_ENTERPRISE_ID_LENGTH;
 	memcpy(tlv_ptr->descriptor_data, iana, sizeof(iana));
 
-	// Set pointer to the end of identifiers
 	uint8_t *end_of_id_ptr =
 		(uint8_t *)resp + sizeof(struct pldm_query_device_identifiers_resp);
 
-	uint8_t total_len_of_tlv = sizeof(struct pldm_descriptor_tlv) + sizeof(iana) - 1;
-
-	// Copy tlv at end of identifiers
-	memcpy(end_of_id_ptr, tlv_ptr, total_len_of_tlv);
-
-	resp_p->device_identifiers_len = total_len_of_tlv;
-
-	*resp_len = sizeof(struct pldm_query_device_identifiers_resp) + total_len_of_tlv;
-
+	memcpy(end_of_id_ptr, tlv_ptr, total_size_of_iana_descriptor);
 	free(tlv_ptr);
+
+	tlv_ptr = malloc(total_size_of_device_id_descriptor);
+	if (tlv_ptr == NULL) {
+		LOG_ERR("Memory allocation failed!");
+		return PLDM_ERROR;
+	}
+
+	tlv_ptr->descriptor_type = PLDM_PCI_DEVICE_ID;
+	tlv_ptr->descriptor_length = PLDM_PCI_DEVICE_ID_LENGTH;
+	memcpy(tlv_ptr->descriptor_data, deviceId, sizeof(deviceId));
+
+	end_of_id_ptr += total_size_of_iana_descriptor;
+	memcpy(end_of_id_ptr, tlv_ptr, total_size_of_device_id_descriptor);
+	free(tlv_ptr);
+
+	resp_p->device_identifiers_len =
+		total_size_of_iana_descriptor + total_size_of_device_id_descriptor;
+
+	*resp_len = sizeof(struct pldm_query_device_identifiers_resp) +
+		    total_size_of_iana_descriptor + total_size_of_device_id_descriptor;
+
 	return PLDM_SUCCESS;
 }
 
@@ -203,7 +236,8 @@ int load_mctp_support_types(uint8_t *type_len, uint8_t *types)
 	return MCTP_SUCCESS;
 }
 
-static uint8_t plat_pldm_pre_vr_update(void *fw_update_param) {
+static uint8_t plat_pldm_pre_vr_update(void *fw_update_param)
+{
 	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
 
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
@@ -225,7 +259,8 @@ static uint8_t plat_pldm_pre_vr_update(void *fw_update_param) {
 	return 0;
 }
 
-static uint8_t plat_pldm_post_vr_update(void *fw_update_param) {
+static uint8_t plat_pldm_post_vr_update(void *fw_update_param)
+{
 	ARG_UNUSED(fw_update_param);
 
 	set_vr_monitor_status(true);
