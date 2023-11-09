@@ -3610,7 +3610,7 @@ int plat_pldm_sensor_get_sensor_count(int thread_id)
 	return count;
 }
 
-void plat_pldm_sensor_get_pdr_numeric_sesnor(int thread_id, int sensor_num,
+void plat_pldm_sensor_get_pdr_numeric_sensor(int thread_id, int sensor_num,
 					     PDR_numeric_sensor *numeric_sensor_table)
 {
 	switch (thread_id) {
@@ -3653,8 +3653,8 @@ void plat_load_numeric_sensor_pdr_table(PDR_numeric_sensor *numeric_sensor_table
 	for (thread_id = 0; thread_id < MAX_SENSOR_THREAD_ID; thread_id++) {
 		max_sensor_num = plat_pldm_sensor_get_sensor_count(thread_id);
 		for (sensor_num = 0; sensor_num < max_sensor_num; sensor_num++) {
-			plat_pldm_sensor_get_pdr_numeric_sesnor(thread_id, sensor_num,
-					       &numeric_sensor_table[current_sensor_size]);
+			plat_pldm_sensor_get_pdr_numeric_sensor(
+				thread_id, sensor_num, &numeric_sensor_table[current_sensor_size]);
 			current_sensor_size++;
 		}
 	}
