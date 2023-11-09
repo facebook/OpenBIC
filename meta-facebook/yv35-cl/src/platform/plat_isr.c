@@ -57,7 +57,7 @@ void send_gpio_interrupt(uint8_t gpio_num)
 
 	msg.data_len = 5;
 	msg.InF_source = SELF;
-	msg.InF_target = MCTP;
+	msg.InF_target = PLDM;
 	msg.netfn = NETFN_OEM_1S_REQ;
 	msg.cmd = CMD_OEM_1S_SEND_INTERRUPT_TO_BMC;
 
@@ -78,7 +78,7 @@ static void SLP3_handler()
 {
 	common_addsel_msg_t sel_msg;
 	if ((gpio_get(FM_SLPS3_PLD_N) == GPIO_HIGH) && (gpio_get(PWRGD_SYS_PWROK) == GPIO_LOW)) {
-		sel_msg.InF_target = MCTP;
+		sel_msg.InF_target = PLDM;
 		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
 		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
@@ -144,7 +144,7 @@ void ISR_DC_ON()
 		if ((gpio_get(FM_SLPS3_PLD_N) == GPIO_HIGH) &&
 		    (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH)) {
 			common_addsel_msg_t sel_msg;
-			sel_msg.InF_target = MCTP;
+			sel_msg.InF_target = PLDM;
 			sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_OEM_C3;
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 			sel_msg.sensor_number = SENSOR_NUM_POWER_ERROR;
@@ -159,7 +159,7 @@ void ISR_DC_ON()
 
 	msg.data_len = 4;
 	msg.InF_source = SELF;
-	msg.InF_target = MCTP;
+	msg.InF_target = PLDM;
 	msg.netfn = NETFN_OEM_1S_REQ;
 	msg.cmd = CMD_OEM_1S_SEND_HOST_POWER_STATE_TO_BMC;
 
@@ -188,7 +188,7 @@ static void PROC_FAIL_handler(struct k_work *work)
 		bool ret = false;
 
 		memset(&sel_msg, 0, sizeof(common_addsel_msg_t));
-		sel_msg.InF_target = MCTP;
+		sel_msg.InF_target = PLDM;
 		sel_msg.sensor_type = IPMI_SENSOR_TYPE_PROCESSOR;
 		sel_msg.sensor_number = SENSOR_NUM_PROC_FAIL;
 		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
@@ -232,7 +232,7 @@ static void CAT_ERR_handler(struct k_work *work)
 		bool ret = false;
 
 		memset(&sel_msg, 0, sizeof(common_addsel_msg_t));
-		sel_msg.InF_target = MCTP;
+		sel_msg.InF_target = PLDM;
 		sel_msg.sensor_type = IPMI_SENSOR_TYPE_PROCESSOR;
 		sel_msg.sensor_number = SENSOR_NUM_CATERR;
 		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
@@ -285,7 +285,7 @@ void ISR_FM_THROTTLE()
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}
 
-		sel_msg.InF_target = MCTP;
+		sel_msg.InF_target = PLDM;
 		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
 		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
 		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_FMTHROTTLE;
@@ -317,7 +317,7 @@ void ISR_HSC_THROTTLE()
 				return;
 			}
 
-			sel_msg.InF_target = MCTP;
+			sel_msg.InF_target = PLDM;
 			sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
 			sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
 			sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_PMBUSALERT;
@@ -346,7 +346,7 @@ static void mb_throttle_handler(struct k_work *work)
 			is_mb_throttle_assert = true;
 		}
 
-		sel_msg.InF_target = MCTP;
+		sel_msg.InF_target = PLDM;
 		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
 		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
 		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_FIRMWAREASSERT;
@@ -384,7 +384,7 @@ void ISR_SOC_THMALTRIP()
 			sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_MEMORY_THERMALTRIP;
 		}
 
-		sel_msg.InF_target = MCTP;
+		sel_msg.InF_target = PLDM;
 		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
 		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
@@ -410,7 +410,7 @@ void ISR_SYS_THROTTLE()
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}
 
-		sel_msg.InF_target = MCTP;
+		sel_msg.InF_target = PLDM;
 		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
 		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
 		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_THROTTLE;
@@ -439,7 +439,7 @@ void ISR_PCH_THMALTRIP()
 		return;
 	}
 
-	sel_msg.InF_target = MCTP;
+	sel_msg.InF_target = PLDM;
 	sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
 	sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
 	sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_PCHHOT;
@@ -460,7 +460,7 @@ void ISR_HSC_OC()
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}
 
-		sel_msg.InF_target = MCTP;
+		sel_msg.InF_target = PLDM;
 		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
 		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
 		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_HSCTIMER;
@@ -482,7 +482,7 @@ void ISR_CPU_MEMHOT()
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}
 
-		sel_msg.InF_target = MCTP;
+		sel_msg.InF_target = PLDM;
 		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_CPU_DIMM_HOT;
 		sel_msg.sensor_number = SENSOR_NUM_CPUDIMM_HOT;
 		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_DIMM_HOT;
@@ -504,7 +504,7 @@ void ISR_CPUVR_HOT()
 			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}
 
-		sel_msg.InF_target = MCTP;
+		sel_msg.InF_target = PLDM;
 		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_CPU_DIMM_VR_HOT;
 		sel_msg.sensor_number = SENSOR_NUM_VR_HOT;
 		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_CPU_VR_HOT;
@@ -520,7 +520,7 @@ void ISR_PCH_PWRGD()
 {
 	common_addsel_msg_t sel_msg;
 	if (gpio_get(FM_SLPS3_PLD_N) == GPIO_HIGH) {
-		sel_msg.InF_target = MCTP;
+		sel_msg.InF_target = PLDM;
 		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_OEM_C3;
 		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		sel_msg.sensor_number = SENSOR_NUM_POWER_ERROR;
@@ -537,7 +537,7 @@ void ISR_RMCA()
 {
 	if ((gpio_get(RST_PLTRST_BUF_N) == GPIO_HIGH) || (gpio_get(PWRGD_CPU_LVC3) == GPIO_HIGH)) {
 		common_addsel_msg_t sel_msg;
-		sel_msg.InF_target = MCTP;
+		sel_msg.InF_target = PLDM;
 		sel_msg.sensor_type = IPMI_SENSOR_TYPE_PROCESSOR;
 		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		sel_msg.sensor_number = SENSOR_NUM_CATERR;
@@ -617,7 +617,7 @@ void ISR_CPU_VPP_INT()
 			// Add SEL about VPP power event
 			if (gpio_get(FM_SLPS3_PLD_N) == LOW_INACTIVE) {
 				memset(&sel_msg, 0, sizeof(common_addsel_msg_t));
-				sel_msg.InF_target = MCTP;
+				sel_msg.InF_target = PLDM;
 				sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
 				sel_msg.event_type = IPMI_OEM_EVENT_TYPE_NOTIFY;
 				sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
@@ -637,7 +637,7 @@ void ISR_NMI()
 	if ((gpio_get(RST_PLTRST_PLD_N) == GPIO_HIGH) && (gpio_get(PWRGD_SYS_PWROK) == GPIO_HIGH)) {
 		common_addsel_msg_t sel_msg;
 		memset(&sel_msg, 0, sizeof(common_addsel_msg_t));
-		sel_msg.InF_target = BMC_IPMB;
+		sel_msg.InF_target = PLDM;
 		sel_msg.sensor_type = IPMI_SENSOR_TYPE_CRITICAL_INT;
 		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
@@ -671,7 +671,7 @@ void smi_handler()
 		common_addsel_msg_t sel_msg;
 		memset(&sel_msg, 0, sizeof(common_addsel_msg_t));
 
-		sel_msg.InF_target = BMC_IPMB;
+		sel_msg.InF_target = PLDM;
 		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
 		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
 		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
