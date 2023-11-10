@@ -88,12 +88,42 @@
 	clock-frequency = <I2C_BITRATE_FAST>;
 };
 
+&i3c0 {
+	status = "okay";
+	assigned-address = <0xA>;
+	pinctrl-0 = <&pinctrl_i3c0_default>;
+	i3c-scl-hz = <12500000>;
+	ibi-append-pec;
+	secondary;
+	i3c0_smq: i3c-slave-mqueue@A {
+		compatible = "aspeed,i3c-slave-mqueue";
+		reg = <0xA>;
+		msg-size = <256>;
+		num-of-msgs = <8>;
+		mandatory-data-byte = <0xbf>;
+		label = "I3C_SMQ_0";
+		status = "okay";
+	};
+};
+
 &udc {
+	status = "okay";
+};
+
+&uart1 {
+	status = "okay";
+};
+
+&uart2 {
 	status = "okay";
 };
 
 &uart5 {
 	current-speed = <57600>;
+};
+
+&uart8 {
+  status = "okay";
 };
 
 &fmc {
@@ -131,6 +161,24 @@
 };
 
 &spi1_cs0 {
+	status = "okay";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+	re-init-support;
+};
+
+&spi2 {
+	status = "okay";
+};
+
+&spi2_cs0 {
+	status = "okay";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+	re-init-support;
+};
+
+&spi2_cs1 {
 	status = "okay";
 	spi-max-buswidth = <4>;
 	spi-max-frequency = <50000000>;
