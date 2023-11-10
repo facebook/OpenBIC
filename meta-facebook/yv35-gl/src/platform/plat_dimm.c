@@ -14,8 +14,10 @@
 #include "power_status.h"
 #include "plat_i2c.h"
 #include "plat_isr.h"
+#include "plat_class.h"
 #include "libutil.h"
 #include "rg3mxxb12.h"
+#include "p3h284x.h"
 
 LOG_MODULE_REGISTER(plat_dimm);
 
@@ -61,6 +63,8 @@ void get_dimm_info_handler()
 	int i;
 
 	i3c_msg.bus = I3C_BUS4;
+	uint16_t i3c_hub_type = I3C_HUB_TYPE_UNKNOWN;
+	i3c_hub_type = get_i3c_hub_type();
 
 	// Attach PMIC addr
 	for (i = 0; i < (MAX_COUNT_DIMM / 2); i++) {
@@ -121,12 +125,22 @@ void get_dimm_info_handler()
 								   I3C_HUB_TO_DIMMEFGH :
 								   I3C_HUB_TO_DIMMABCD;
 
-			if (!rg3mxxb12_set_slave_port(I3C_BUS4, RG3MXXB12_DEFAULT_STATIC_ADDRESS,
+			if (i3c_hub_type == RG3M88B12_DEVICE_INFO) {
+				if (!rg3mxxb12_set_slave_port(I3C_BUS4, RG3MXXB12_DEFAULT_STATIC_ADDRESS,
 						      slave_port_setting)) {
-				clear_unaccessible_dimm_data(dimm_id);
-				LOG_ERR("Failed to set slave port to slave port: 0x%x",
-					slave_port_setting);
-				continue;
+					clear_unaccessible_dimm_data(dimm_id);
+					LOG_ERR("Failed to set slave port to slave port: 0x%x",
+						slave_port_setting);
+					continue;
+				}
+			} else {
+				if (!p3h284x_set_slave_port(I3C_BUS4, P3H284X_DEFAULT_STATIC_ADDRESS,
+						      slave_port_setting)) {
+					clear_unaccessible_dimm_data(dimm_id);
+					LOG_ERR("Failed to set slave port to slave port: 0x%x",
+						slave_port_setting);
+					continue;
+				}
 			}
 
 			memset(&i3c_msg, 0, sizeof(I3C_MSG));

@@ -21,7 +21,13 @@
 #include "hal_i3c.h"
 
 #define RG3MXXB12_DEFAULT_STATIC_ADDRESS 0x70
+#define RG3M87B12_DEVICE_INFO 0x1287
+#define RG3M88B12_DEVICE_INFO 0x1288
+#define RG3M47B12_DEVICE_INFO 0x1247
+#define RG3M4812_DEVICE_INFO 0x1248
 
+#define RG3MXXB12_DEVICE_INFO0_REG 0x0
+#define RG3MXXB12_DEVICE_INFO1_REG 0x1
 #define RG3MXXB12_PROTECTION_REG 0x10
 #define RG3MXXB12_MASTER_PORT_CONFIG 0x11
 #define RG3MXXB12_SLAVE_PORT_ENABLE 0x12
@@ -35,11 +41,11 @@
 #define RG3MXXB12_SSPORTS_PULLUP_ENABLE 0x53
 
 /* 0x10 : Unlock Device Configuration Protection Code */
-#define PROTECTION_LOCK 0x00
-#define PROTECTION_UNLOCK 0x69
+#define RG3MXXB12_PROTECTION_LOCK 0x00
+#define RG3MXXB12_PROTECTION_UNLOCK 0x69
 
 /* 0x15 : Master Side Port Configuration */
-#define HUB_NETWORK_ALWAYS_I3C 5
+#define RG3MXXB12_HUB_NETWORK_ALWAYS_I3C 5
 
 /* 0x16 : Interface Voltage LDO Setting */
 #define VIOS1_OFFSET 6
@@ -47,7 +53,7 @@
 #define VIOM1_OFFSET 2
 #define VIOM0_OFFSET 0
 
-/* 0x17 : Master Side Port Configuration */
+/* 0x11 : Master Side Port Configuration */
 #define MPORT_OD_ONLY 4
 
 /* 0x19 : Pull-up Resistor Value */
@@ -56,18 +62,18 @@
 
 #define RG3MXXB12_SSPORTS_ALL_DISCONNECT 0x00
 
-enum ldo_volt {
-	ldo_1_0_volt = 0,
-	ldo_1_1_volt,
-	ldo_1_2_volt,
-	ldo_1_8_volt,
+enum rg3mxxb12_ldo_volt {
+	rg3mxxb12_ldo_1_0_volt = 0,
+	rg3mxxb12_ldo_1_1_volt,
+	rg3mxxb12_ldo_1_2_volt,
+	rg3mxxb12_ldo_1_8_volt,
 };
 
-enum pull_up_resistor {
-	pullup_250_ohm = 0,
-	pullup_500_ohm,
-	pullup_1k_ohm,
-	pullup_2k_ohm,
+enum rg3mxxb12_pull_up_resistor {
+	rg3mxxb12_pullup_250_ohm = 0,
+	rg3mxxb12_pullup_500_ohm,
+	rg3mxxb12_pullup_1k_ohm,
+	rg3mxxb12_pullup_2k_ohm,
 };
 
 bool rg3mxxb12_i2c_mode_only_init(uint8_t bus, uint8_t slave_port, uint8_t ldo_volt,
@@ -75,5 +81,6 @@ bool rg3mxxb12_i2c_mode_only_init(uint8_t bus, uint8_t slave_port, uint8_t ldo_v
 bool rg3mxxb12_select_slave_port_connect(uint8_t bus, uint8_t slave_port);
 bool rg3mxxb12_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt);
 bool rg3mxxb12_set_slave_port(uint8_t bus, uint8_t addr, uint8_t setting);
+bool rg3mxxb12_get_device_info(uint8_t bus, uint16_t *i3c_hub_type);
 
 #endif

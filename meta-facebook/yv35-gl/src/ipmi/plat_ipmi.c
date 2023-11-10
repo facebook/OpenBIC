@@ -26,8 +26,10 @@
 #include "plat_i3c.h"
 #include "power_status.h"
 #include "rg3mxxb12.h"
+#include "p3h284x.h"
 #include "plat_ipmi.h"
 #include "plat_ipmb.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
@@ -124,6 +126,8 @@ void OEM_1S_WRITE_READ_DIMM(ipmi_msg *msg)
 	i3c_msg.bus = I3C_BUS4;
 	i3c_msg.tx_len = msg->data_len - 3;
 	i3c_msg.rx_len = msg->data[2];
+	uint16_t i3c_hub_type = I3C_HUB_TYPE_UNKNOWN;
+	i3c_hub_type = get_i3c_hub_type();
 
 	// Check offset byte count: SPD_NVM has 2 bytes offset
 	if (device_type == DIMM_SPD_NVM) {
@@ -158,11 +162,20 @@ void OEM_1S_WRITE_READ_DIMM(ipmi_msg *msg)
 	uint8_t slave_port_setting =
 		(dimm_id / (MAX_COUNT_DIMM / 2)) ? I3C_HUB_TO_DIMMEFGH : I3C_HUB_TO_DIMMABCD;
 
-	if (!rg3mxxb12_set_slave_port(I3C_BUS4, RG3MXXB12_DEFAULT_STATIC_ADDRESS,
+	if (i3c_hub_type == RG3M88B12_DEVICE_INFO) {
+		if (!rg3mxxb12_set_slave_port(I3C_BUS4, RG3MXXB12_DEFAULT_STATIC_ADDRESS,
 				      slave_port_setting)) {
-		LOG_ERR("Failed to set slave port to slave port: 0x%x", slave_port_setting);
-		msg->completion_code = CC_UNSPECIFIED_ERROR;
-		goto exit;
+			LOG_ERR("Failed to set slave port to slave port: 0x%x", slave_port_setting);
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			goto exit;
+		}
+	} else {
+		if (!p3h284x_set_slave_port(I3C_BUS4, P3H284X_DEFAULT_STATIC_ADDRESS,
+				      slave_port_setting)) {
+			LOG_ERR("Failed to set slave port to slave port: 0x%x", slave_port_setting);
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			goto exit;
+		}
 	}
 
 	switch (device_type) {

@@ -74,7 +74,7 @@ static bool rg3mxxb12_register_write(uint8_t bus, uint8_t offset, uint8_t value)
 
 static bool rg3mxxb12_protected_register(uint8_t bus, bool lock)
 {
-	uint8_t val = lock ? PROTECTION_LOCK : PROTECTION_UNLOCK;
+	uint8_t val = lock ? RG3MXXB12_PROTECTION_LOCK : RG3MXXB12_PROTECTION_UNLOCK;
 	if (!rg3mxxb12_register_write(bus, RG3MXXB12_PROTECTION_REG, val)) {
 		return false;
 	}
@@ -87,6 +87,20 @@ bool rg3mxxb12_select_slave_port_connect(uint8_t bus, uint8_t slave_port)
 	if (!rg3mxxb12_register_write(bus, RG3MXXB12_SSPORTS_HUB_NETWORK_CONNECTION, slave_port)) {
 		return false;
 	}
+	return true;
+}
+
+bool rg3mxxb12_get_device_info(uint8_t bus, uint16_t *i3c_hub_type)
+{
+	uint8_t device_info0, device_info1 = 0;
+
+	if (rg3mxxb12_register_read(bus, RG3MXXB12_DEVICE_INFO0_REG, &device_info0)) {
+		rg3mxxb12_register_read(bus, RG3MXXB12_DEVICE_INFO1_REG, &device_info1);
+	} else {
+		return false;
+	}
+
+	*i3c_hub_type = (device_info1 << 8) | device_info0;
 	return true;
 }
 
@@ -135,7 +149,7 @@ bool rg3mxxb12_i2c_mode_only_init(uint8_t bus, uint8_t slave_port, uint8_t ldo_v
 	if (!rg3mxxb12_register_read(bus, RG3MXXB12_HUB_NETWORK_OPERATION_MODE, &value)) {
 		goto out;
 	}
-	value = CLEARBIT(value, HUB_NETWORK_ALWAYS_I3C);
+	value = CLEARBIT(value, RG3MXXB12_HUB_NETWORK_ALWAYS_I3C);
 	if (!rg3mxxb12_register_write(bus, RG3MXXB12_HUB_NETWORK_OPERATION_MODE, value)) {
 		goto out;
 	}

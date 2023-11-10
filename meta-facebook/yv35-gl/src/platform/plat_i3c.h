@@ -23,8 +23,6 @@
 #define LDO_VOLT 0x3A
 #define DEFAULT_SLAVE_PORT_SETTING 0x3F
 
-#define I3C_BUS4 3
-
 void init_i3c_hub();
 
 #endif

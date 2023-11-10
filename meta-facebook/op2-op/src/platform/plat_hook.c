@@ -22,6 +22,7 @@
 #include "libutil.h"
 #include "m88rt51632.h"
 #include "rg3mxxb12.h"
+#include "p3h284x.h"
 #include "plat_class.h"
 #include "plat_i2c.h"
 #include "plat_hook.h"
@@ -204,6 +205,7 @@ bool pre_i2c_bus_read(sensor_cfg *cfg, void *args)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
+	uint16_t i3c_hub_type = get_i3c_hub_type();
 
 	if (k_mutex_lock(&i2c_hub_mutex, K_MSEC(I2C_HUB_MUTEX_TIMEOUT_MS))) {
 		LOG_ERR("sensor number 0x%x mutex lock fail", cfg->num);
@@ -212,9 +214,16 @@ bool pre_i2c_bus_read(sensor_cfg *cfg, void *args)
 
 	i2c_proc_arg *pre_proc_args = (i2c_proc_arg *)args;
 
-	if (!rg3mxxb12_select_slave_port_connect(pre_proc_args->bus, pre_proc_args->channel)) {
-		k_mutex_unlock(&i2c_hub_mutex);
-		return false;
+	if (i3c_hub_type == RG3M88B12_DEVICE_INFO) {
+		if (!rg3mxxb12_select_slave_port_connect(pre_proc_args->bus, pre_proc_args->channel)) {
+			k_mutex_unlock(&i2c_hub_mutex);
+			return false;
+		}
+	} else {
+		if (!p3h284x_select_slave_port_connect(pre_proc_args->bus, pre_proc_args->channel)) {
+			k_mutex_unlock(&i2c_hub_mutex);
+			return false;
+		}
 	}
 
 	return true;
@@ -225,6 +234,7 @@ bool post_i2c_bus_read(sensor_cfg *cfg, void *args, int *reading)
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
 	ARG_UNUSED(reading);
+	uint16_t i3c_hub_type = get_i3c_hub_type();
 
 	i2c_proc_arg *post_proc_args = (i2c_proc_arg *)args;
 
@@ -232,11 +242,20 @@ bool post_i2c_bus_read(sensor_cfg *cfg, void *args, int *reading)
        * close all channels after the sensor read to avoid conflict with 
        * other devices reading.
        */
-	if (!rg3mxxb12_select_slave_port_connect(post_proc_args->bus,
+	if (i3c_hub_type == RG3M88B12_DEVICE_INFO) {
+		if (!rg3mxxb12_select_slave_port_connect(post_proc_args->bus,
 						 RG3MXXB12_SSPORTS_ALL_DISCONNECT)) {
-		k_mutex_unlock(&i2c_hub_mutex);
-		LOG_ERR("Close HUB channel failed!");
-		return false;
+			k_mutex_unlock(&i2c_hub_mutex);
+			LOG_ERR("Close HUB channel failed!");
+			return false;
+		}
+	} else {
+		if (!p3h284x_select_slave_port_connect(post_proc_args->bus,
+						 P3H284X_SSPORTS_ALL_DISCONNECT)) {
+			k_mutex_unlock(&i2c_hub_mutex);
+			LOG_ERR("Close HUB channel failed!");
+			return false;
+		}
 	}
 
 	if (k_mutex_unlock(&i2c_hub_mutex)) {

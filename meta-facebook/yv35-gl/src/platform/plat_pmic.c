@@ -29,7 +29,9 @@
 #include "plat_i3c.h"
 #include "plat_sensor_table.h"
 #include "plat_dimm.h"
+#include "plat_class.h"
 #include "rg3mxxb12.h"
+#include "p3h284x.h"
 
 LOG_MODULE_REGISTER(plat_pmic);
 
@@ -329,6 +331,8 @@ void clear_pmic_error()
 	int dimm_id, ret = 0;
 	uint8_t dimm_status = SENSOR_INIT_STATUS;
 	I3C_MSG i3c_msg = { 0 };
+	uint16_t i3c_hub_type = I3C_HUB_TYPE_UNKNOWN;
+	i3c_hub_type = get_i3c_hub_type();
 
 	if (k_mutex_lock(&i3c_dimm_mutex, K_MSEC(I3C_DIMM_MUTEX_TIMEOUT_MS))) {
 		LOG_ERR("Failed to lock I3C dimm MUX");
@@ -351,10 +355,18 @@ void clear_pmic_error()
 							   I3C_HUB_TO_DIMMEFGH :
 							   I3C_HUB_TO_DIMMABCD;
 
-		if (!rg3mxxb12_set_slave_port(I3C_BUS4, RG3MXXB12_DEFAULT_STATIC_ADDRESS,
+		if (i3c_hub_type == RG3M88B12_DEVICE_INFO) {
+			if (!rg3mxxb12_set_slave_port(I3C_BUS4, RG3MXXB12_DEFAULT_STATIC_ADDRESS,
 					      slave_port_setting)) {
-			LOG_ERR("Failed to set slave port to slave port: 0x%x", slave_port_setting);
-			continue;
+				LOG_ERR("Failed to set slave port to slave port: 0x%x", slave_port_setting);
+				continue;
+			}
+		} else {
+			if (!p3h284x_set_slave_port(I3C_BUS4, P3H284X_DEFAULT_STATIC_ADDRESS,
+					      slave_port_setting)) {
+				LOG_ERR("Failed to set slave port to slave port: 0x%x", slave_port_setting);
+				continue;
+			}
 		}
 
 		// Broadcast CCC after switch DIMM mux

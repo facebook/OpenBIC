@@ -40,6 +40,12 @@ enum RETIMER_TYPE {
 	RETIMER_TYPE_UNKNOWN,
 };
 
+enum I3C_HUB_TYPE {
+	I3C_HUB_TYPE_RNS,
+	I3C_HUB_TYPE_NXP,
+	I3C_HUB_TYPE_UNKNOWN,
+};
+
 enum E1S_NUMBER {
 	E1S_0,
 	E1S_1,
@@ -59,9 +65,11 @@ enum BOARD_REVISION_ID {
 int init_platform_config();
 uint8_t get_card_type();
 uint8_t get_card_position();
+uint16_t get_i3c_hub_type();
 int check_pcie_retimer_type(void);
 uint8_t get_pcie_retimer_type(void);
 uint8_t get_board_revision();
 void init_board_revision();
+void init_i3c_hub_type();
 
 #endif

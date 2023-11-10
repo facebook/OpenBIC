@@ -22,6 +22,8 @@
 #include "plat_sensor_table.h"
 #include "plat_i2c.h"
 #include "pt5161l.h"
+#include "rg3mxxb12.h"
+#include "p3h284x.h"
 
 LOG_MODULE_REGISTER(plat_class);
 
@@ -29,6 +31,7 @@ static uint8_t card_position = CARD_POSITION_UNKNOWN;
 static uint8_t card_type = CARD_TYPE_UNKNOWN;
 static uint8_t pcie_retimer_type = RETIMER_TYPE_UNKNOWN;
 static uint8_t board_revision = UNKNOWN_STAGE;
+static uint16_t i3c_hub_type = I3C_HUB_TYPE_UNKNOWN;
 
 uint8_t get_card_position()
 {
@@ -38,6 +41,11 @@ uint8_t get_card_position()
 uint8_t get_card_type()
 {
 	return card_type;
+}
+
+uint16_t get_i3c_hub_type()
+{
+	return i3c_hub_type;
 }
 
 uint8_t get_pcie_retimer_type(void)
@@ -125,5 +133,17 @@ void init_board_revision(void)
 		board_revision = gpio_get(OPB_BOARD_REV_0);
 		board_revision |= gpio_get(OPB_BOARD_REV_1) << 1;
 		board_revision |= gpio_get(OPB_BOARD_REV_2) << 2;
+	}
+}
+
+void init_i3c_hub_type(void)
+{
+	if (rg3mxxb12_get_device_info(I2C_BUS2, &i3c_hub_type) && (i3c_hub_type == RG3M88B12_DEVICE_INFO)) {
+		LOG_INF("I3C hub type: rg3mxxb12");
+	} else if (p3h284x_get_device_info(I2C_BUS2, &i3c_hub_type)) {
+		LOG_INF("I3C hub type: p3h284x");
+	} else {
+		LOG_ERR("I3C hub get device type fail");
+		return;
 	}
 }
