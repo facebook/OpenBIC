@@ -66,7 +66,7 @@ void pal_pre_init()
 	CARD_STATUS _1ou_status = get_1ou_status();
 	CARD_STATUS _2ou_status = get_2ou_status();
 	if (_1ou_status.present && (_1ou_status.card_type == TYPE_1OU_OLMSTED_POINT)) {
-		if (exp_i3c_hub_type == RG3M88B12_DEVICE_INFO) {
+		if (exp_i3c_hub_type == RG3M87B12_DEVICE_INFO) {
 			// Initialize I3C HUB (HD BIC connects to Olympic2 1ou expension-A and B)
 			if (!rg3mxxb12_i2c_mode_only_init(I2C_BUS8, BIT(2), rg3mxxb12_ldo_1_8_volt, rg3mxxb12_pullup_1k_ohm)) {
 				printk("failed to initialize 1ou rg3mxxb12\n");
@@ -79,7 +79,7 @@ void pal_pre_init()
 	}
 	if (_2ou_status.present && (_1ou_status.card_type == TYPE_1OU_OLMSTED_POINT)) {
 		// Initialize I3C HUB (HD BIC connects to Olympic2 3ou expension-A and B)
-		if (exp_i3c_hub_type == RG3M88B12_DEVICE_INFO) {
+		if (exp_i3c_hub_type == RG3M87B12_DEVICE_INFO) {
 			if (!rg3mxxb12_i2c_mode_only_init(I2C_BUS9, BIT(2), rg3mxxb12_ldo_1_8_volt, rg3mxxb12_pullup_1k_ohm)) {
 				printk("failed to initialize 3ou rg3mxxb12\n");
 			}

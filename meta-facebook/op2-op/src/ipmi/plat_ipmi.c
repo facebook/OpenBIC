@@ -107,7 +107,7 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 	uint8_t card_type = get_card_type();
 	I2C_MSG *i2c_msg = NULL;
 	uint8_t retimer_type;
-	uint32_t retimer_version;
+	uint32_t retimer_version = RETIMER_UNKNOWN_VERSION;
 
 	switch (component) {
 	case OL2_COMPNT_BIC:
@@ -128,24 +128,37 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 			if (is_retimer_done()) {
 				i2c_msg->bus = I2C_BUS4;
 				i2c_msg->target_addr = EXPA_RETIMER_ADDR;
-
+				retimer_version = get_pcie_retimer_version();
 				switch (retimer_type) {
 				case RETIMER_TYPE_PT5161L:
-					if (get_retimer_fw_version(i2c_msg, msg->data)) {
+					if (retimer_version == RETIMER_UNKNOWN_VERSION) {
+						if (get_retimer_fw_version(i2c_msg, msg->data)) {
+							msg->data_len = 4;
+							msg->completion_code = CC_SUCCESS;
+						} else {
+							msg->completion_code = CC_UNSPECIFIED_ERROR;
+						}
+					} else {
+						convert_uint32_t_to_uint8_t_pointer(retimer_version, msg->data, 4, BIG_ENDIAN);
 						msg->data_len = 4;
 						msg->completion_code = CC_SUCCESS;
-					} else {
-						msg->completion_code = CC_UNSPECIFIED_ERROR;
 					}
 					break;
 				case RETIMER_TYPE_M88RT51632:
-					if (m88rt51632_get_fw_version(i2c_msg, &retimer_version)) {
+					if (retimer_version == RETIMER_UNKNOWN_VERSION) {
+						if (m88rt51632_get_fw_version(i2c_msg, &retimer_version)) {
+							convert_uint32_t_to_uint8_t_pointer(
+								retimer_version, msg->data, 4, BIG_ENDIAN);
+							msg->data_len = 4;
+							msg->completion_code = CC_SUCCESS;
+						} else {
+							msg->completion_code = CC_UNSPECIFIED_ERROR;
+						}
+					} else {
 						convert_uint32_t_to_uint8_t_pointer(
 							retimer_version, msg->data, 4, BIG_ENDIAN);
 						msg->data_len = 4;
 						msg->completion_code = CC_SUCCESS;
-					} else {
-						msg->completion_code = CC_UNSPECIFIED_ERROR;
 					}
 					break;
 				default:
@@ -368,7 +381,7 @@ void OEM_1S_SAFE_WRITE_READ_M2_DATA(ipmi_msg *msg)
 	}
 
 	// Change channel
-	if (i3c_hub_type == RG3M88B12_DEVICE_INFO) {
+	if (i3c_hub_type == RG3M87B12_DEVICE_INFO) {
 		if (!rg3mxxb12_select_slave_port_connect(i2c_msg.bus, mux_channel)) {
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			k_mutex_unlock(&i2c_hub_mutex);
@@ -401,7 +414,7 @@ void OEM_1S_SAFE_WRITE_READ_M2_DATA(ipmi_msg *msg)
 	}
 
 	// Close all channels after write read
-	if (i3c_hub_type == RG3M88B12_DEVICE_INFO) {
+	if (i3c_hub_type == RG3M87B12_DEVICE_INFO) {
 		if (!rg3mxxb12_select_slave_port_connect(i2c_msg.bus, RG3MXXB12_SSPORTS_ALL_DISCONNECT)) {
 			LOG_ERR("Failed to close I3C HUB (I2C mode) channel");
 		}

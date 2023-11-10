@@ -38,6 +38,8 @@
 
 #define M88RT51632_MUTEX_LOCK_MS 1000
 
+#define MAX_RETRY 3
+
 bool m88rt51632_get_vendor_id(I2C_MSG *msg);
 bool m88rt51632_get_fw_version(I2C_MSG *msg, uint32_t *version);
 uint8_t m88rt51632_fw_update(I2C_MSG *msg, uint32_t offset, uint16_t msg_len, uint8_t *msg_buf,

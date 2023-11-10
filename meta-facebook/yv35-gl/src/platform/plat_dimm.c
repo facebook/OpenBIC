@@ -125,7 +125,7 @@ void get_dimm_info_handler()
 								   I3C_HUB_TO_DIMMEFGH :
 								   I3C_HUB_TO_DIMMABCD;
 
-			if (i3c_hub_type == RG3M88B12_DEVICE_INFO) {
+			if (i3c_hub_type == RG3M87B12_DEVICE_INFO) {
 				if (!rg3mxxb12_set_slave_port(I3C_BUS4, RG3MXXB12_DEFAULT_STATIC_ADDRESS,
 						      slave_port_setting)) {
 					clear_unaccessible_dimm_data(dimm_id);

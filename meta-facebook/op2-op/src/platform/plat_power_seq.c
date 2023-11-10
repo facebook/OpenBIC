@@ -186,6 +186,7 @@ void init_sequence_status()
 	case CARD_TYPE_OPA:
 		if (gpio_get(OPA_PERST_BIC_RTM_N) == GPIO_HIGH) {
 			is_retimer_sequence_done = true;
+			cache_pcie_retimer_version();
 		}
 
 		for (index = 0; index < OPA_MAX_E1S_IDX; ++index) {
@@ -928,6 +929,7 @@ bool power_on_handler(uint8_t initial_stage)
 					break;
 				}
 				is_retimer_sequence_done = true;
+				cache_pcie_retimer_version();
 			}
 			check_power_ret = 0;
 			control_stage = E1S_POWER_ON_STAGE0;

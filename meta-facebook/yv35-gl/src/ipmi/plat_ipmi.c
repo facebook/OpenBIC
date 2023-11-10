@@ -162,7 +162,7 @@ void OEM_1S_WRITE_READ_DIMM(ipmi_msg *msg)
 	uint8_t slave_port_setting =
 		(dimm_id / (MAX_COUNT_DIMM / 2)) ? I3C_HUB_TO_DIMMEFGH : I3C_HUB_TO_DIMMABCD;
 
-	if (i3c_hub_type == RG3M88B12_DEVICE_INFO) {
+	if (i3c_hub_type == RG3M87B12_DEVICE_INFO) {
 		if (!rg3mxxb12_set_slave_port(I3C_BUS4, RG3MXXB12_DEFAULT_STATIC_ADDRESS,
 				      slave_port_setting)) {
 			LOG_ERR("Failed to set slave port to slave port: 0x%x", slave_port_setting);
