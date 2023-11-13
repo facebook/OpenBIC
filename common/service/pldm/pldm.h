@@ -27,6 +27,7 @@ extern "C" {
 #include "pldm_monitor.h"
 #include "pldm_firmware_update.h"
 #include "pldm_state_set.h"
+#include "pldm_smbios.h"
 #include "ipmb.h"
 
 #define MONITOR_THREAD_STACK_SIZE 1024
@@ -41,7 +42,7 @@ typedef uint8_t (*pldm_cmd_proc_fn)(void *, uint8_t *, uint16_t, uint8_t, uint8_
 
 typedef enum {
 	PLDM_TYPE_BASE = 0x00,
-	PLDM_TYPE_SMBIOS,
+	PLDM_TYPE_SMBIOS = 0x01,
 	PLDM_TYPE_PLAT_MON_CTRL,
 	PLDM_TYPE_BIOS_CTRL_CONF,
 	PLDM_TYPE_FW_UPDATE = 0x05,

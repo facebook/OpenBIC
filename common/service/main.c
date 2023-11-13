@@ -29,6 +29,9 @@
 #ifdef ENABLE_PLDM_SENSOR
 #include "pldm_sensor.h"
 #endif
+#ifdef ENABLE_PLDM
+#include "pldm_smbios.h"
+#endif
 #include "timer.h"
 #include "usb.h"
 #include <logging/log.h>
@@ -67,6 +70,9 @@ void main(void)
 	sensor_init();
 #ifdef ENABLE_PLDM_SENSOR
 	pldm_sensor_monitor_init();
+#endif
+#ifdef ENABLE_PLDM
+	pldm_smbios_init_structures();
 #endif
 	FRU_init();
 	ipmi_init();

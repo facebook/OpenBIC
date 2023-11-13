@@ -30,6 +30,11 @@
 #include "libutil.h"
 #include "ipmb.h"
 
+#ifdef ENABLE_PLDM
+#include "plat_mctp.h"
+#include "pldm_smbios.h"
+#endif
+
 LOG_MODULE_REGISTER(kcs);
 
 kcs_dev *kcs;
@@ -55,14 +60,90 @@ void reset_kcs_ok()
 	proc_kcs_ok = false;
 }
 
+#ifdef ENABLE_PLDM
+
+enum cmd_app_get_sys_info_params {
+	LENGTH_INDEX = 0x05, // skip netfun, cmd code, paramter selctor, set selctor, encoding
+	VERIONS_START_INDEX = 0x06,
+};
+
+static uint8_t init_text_string_value(const char *new_text_string, char *text_strings)
+{
+	const uint8_t NULL_BYTE = 1, EMPTY_TEXT_STRINGS_SIZE = 2;
+	const uint8_t original_size = pldm_smbios_get_text_strings_size(text_strings);
+	const uint8_t new_text_string_len = strlen(new_text_string);
+	uint8_t new_text_string_start_idx = original_size - 1;
+
+	if (original_size == EMPTY_TEXT_STRINGS_SIZE) {
+		new_text_string_start_idx = 0;
+	}
+
+	text_strings = realloc(text_strings, original_size + new_text_string_len + NULL_BYTE);
+	memcpy(text_strings + new_text_string_start_idx, new_text_string, new_text_string_len);
+
+	*(text_strings + new_text_string_start_idx + new_text_string_len) = '\0';
+	*(text_strings + new_text_string_start_idx + new_text_string_len + 1) = '\0';
+	return pldm_smbios_get_text_strings_count(text_strings);
+}
+
+static void init_bios_information(smbios_bios_information *bios_info, char *bios_version)
+{
+	const uint8_t NOT_IMPLEMENTED = 0;
+
+	bios_info->header.type = SMBIOS_BIOS_INFORMATION;
+	bios_info->text_strings = malloc(sizeof(char) * 2);
+	bios_info->text_strings[0] = bios_info->text_strings[1] = '\0';
+
+	/* DSP0134: 12h + number of BIOS Characteristics Extension Bytes.*/
+	bios_info->header.length = 0x12;
+	bios_info->header.handle = 0x0000;
+	bios_info->vendor = init_text_string_value("N/A", bios_info->text_strings);
+	bios_info->bios_version = init_text_string_value(bios_version, bios_info->text_strings);
+	bios_info->bios_starting_address_segment = NOT_IMPLEMENTED;
+	bios_info->bios_release_date = init_text_string_value("N/A", bios_info->text_strings);
+	bios_info->bios_rom_size = NOT_IMPLEMENTED;
+	bios_info->bios_characteristics = NOT_IMPLEMENTED;
+	bios_info->bios_characteristics_extension_bytes = NOT_IMPLEMENTED;
+	bios_info->system_bios_major_release = NOT_IMPLEMENTED;
+	bios_info->system_bios_minor_release = NOT_IMPLEMENTED;
+	bios_info->embedded_controller_firmware_major_release = NOT_IMPLEMENTED;
+	bios_info->embedded_controller_firmware_minor_release = NOT_IMPLEMENTED;
+	bios_info->extended_bios_rom_size = NOT_IMPLEMENTED;
+}
+
+static int update_bios_information(char *bios_version_start_ptr, uint8_t bios_version_len)
+{
+	smbios_bios_information *bios_info = malloc(sizeof(smbios_bios_information));
+
+	char *bios_version_str = malloc(sizeof(char) * bios_version_len + 1);
+	memcpy(bios_version_str, bios_version_start_ptr, bios_version_len);
+	*(bios_version_str + bios_version_len) = '\0';
+
+	init_bios_information(bios_info, bios_version_str);
+
+	int rc = pldm_smbios_set_bios_information(bios_info);
+	if (rc < 0) {
+		LOG_ERR("Failed to set smbios information, error code=%d", rc);
+	}
+
+	SAFE_FREE(bios_info->text_strings);
+	SAFE_FREE(bios_info);
+	SAFE_FREE(bios_version_str);
+
+	return rc;
+}
+
+#endif
+
 static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 {
 	int rc = 0;
 	uint8_t ibuf[KCS_BUFF_SIZE];
+#ifndef ENABLE_PLDM
 	ipmi_msg bridge_msg;
-	ipmi_msg_cfg current_msg;
 	ipmb_error status;
-
+#endif
+	ipmi_msg_cfg current_msg;
 	struct kcs_request *req;
 
 	ARG_UNUSED(arvg1);
@@ -128,6 +209,26 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 					SAFE_FREE(kcs_buff);
 				} while (0);
 			}
+#ifdef ENABLE_PLDM
+			/*
+			Bios needs get self test and get system info before getting set system info
+			*/
+			if ((req->netfn == NETFN_APP_REQ) &&
+			    (req->cmd == CMD_APP_GET_SELFTEST_RESULTS)) {
+				uint8_t *kcs_buff;
+				kcs_buff = malloc(4);
+				if (kcs_buff == NULL) {
+					LOG_ERR("Memory allocation failed");
+					continue;
+				}
+				kcs_buff[0] = req->netfn;
+				kcs_buff[1] = req->cmd;
+				kcs_buff[2] = 0x00;
+				kcs_buff[3] = 0x55;
+				kcs_write(kcs_inst->index, kcs_buff, 4);
+				SAFE_FREE(kcs_buff);
+			}
+#endif
 			if ((req->netfn == NETFN_APP_REQ) &&
 			    (req->cmd == CMD_APP_SET_SYS_INFO_PARAMS) &&
 			    (req->data[0] == CMD_SYS_INFO_FW_VERSION)) {
@@ -135,6 +236,14 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 				if (ret == -1) {
 					LOG_ERR("Record bios fw version fail");
 				}
+#ifdef ENABLE_PLDM
+				char *bios_version = ibuf + VERIONS_START_INDEX;
+				uint8_t length = ibuf[LENGTH_INDEX];
+				ret = update_bios_information(bios_version, length);
+				if (ret < 0) {
+					LOG_ERR("Failed to send bios version to bmc, rc = %d", ret);
+				}
+#endif
 			}
 			if ((req->netfn == NETFN_OEM_Q_REQ) &&
 			    (req->cmd == CMD_OEM_Q_SET_DIMM_INFO) &&
@@ -144,6 +253,7 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 					LOG_ERR("Set dimm presence status fail");
 				}
 			}
+#ifndef ENABLE_PLDM
 			bridge_msg.data_len = rc - 2; // exclude netfn, cmd
 			bridge_msg.seq_source = 0xff; // No seq for KCS
 			bridge_msg.InF_source = HOST_KCS_1 + kcs_inst->index;
@@ -192,6 +302,7 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 						status);
 				}
 			}
+#endif
 		}
 	}
 }

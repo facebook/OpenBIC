@@ -61,6 +61,7 @@ typedef struct _pldm_recv_resp_arg {
 
 static struct _pldm_handler_query_entry query_tbl[] = {
 	{ PLDM_TYPE_BASE, pldm_base_handler_query },
+	{ PLDM_TYPE_SMBIOS, pldm_smbios_handler_query },
 	{ PLDM_TYPE_PLAT_MON_CTRL, pldm_monitor_handler_query },
 	{ PLDM_TYPE_FW_UPDATE, pldm_fw_update_handler_query },
 	{ PLDM_TYPE_OEM, pldm_oem_handler_query },
