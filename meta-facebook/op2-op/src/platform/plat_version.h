@@ -32,7 +32,7 @@
 #define DEVICE_REVISION 0x80
 
 #define FIRMWARE_REVISION_1 GET_FW_VERSION1(BOARD_ID, PROJECT_STAGE)
-#define FIRMWARE_REVISION_2 0x03
+#define FIRMWARE_REVISION_2 0x04
 
 #define IPMI_VERSION 0x02
 #define ADDITIONAL_DEVICE_SUPPORT 0xBF
@@ -41,7 +41,7 @@
 
 #define BIC_FW_YEAR_MSB 0x20
 #define BIC_FW_YEAR_LSB 0x23
-#define BIC_FW_WEEK 0x43
+#define BIC_FW_WEEK 0x46
 #define BIC_FW_VER 0x01
 #define BIC_FW_platform_0 0x6f // char: o
 #define BIC_FW_platform_1 0x70 // char: p
