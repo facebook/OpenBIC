@@ -17,6 +17,8 @@
 #ifndef MP2985H_H
 #define MP2985H_H
 
+int mp2985_set_power_regular_mode(uint8_t bus, uint8_t addr);
 bool mp2985_get_checksum(uint8_t bus, uint8_t addr, uint8_t *checksum);
+bool mp2985_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_size);
 
 #endif
