@@ -47,6 +47,9 @@ void execute_power_on_sequence()
 	if (get_DC_status()) {
 		return;
 	}
+	/* Switch muxs to CXL before power on*/
+	gpio_set(SEL_SMB_MUX_PMIC_R, GPIO_LOW);
+	gpio_set(SEL_SMB_MUX_DIMM_R, GPIO_LOW);
 
 	ret = power_on_handler(CLK_POWER_ON_STAGE);
 	if (ret == 0) {

@@ -15,6 +15,9 @@
  */
 
 #include <logging/log.h>
+#include <drivers/sensor.h>
+#include <drivers/pwm.h>
+
 #include "util_worker.h"
 #include "hal_gpio.h"
 #include "plat_gpio.h"
@@ -26,7 +29,7 @@ LOG_MODULE_REGISTER(plat_isr);
 K_WORK_DEFINE(cxl_power_on_work, execute_power_on_sequence);
 K_WORK_DEFINE(cxl_power_off_work, execute_power_off_sequence);
 
-void ISR_MB_DC_STAGUS_CHAGNE()
+void ISR_MB_DC_STATUS_CHANGE()
 {
 	set_mb_dc_status(POWER_EN_R);
 
@@ -40,4 +43,41 @@ void ISR_MB_DC_STAGUS_CHAGNE()
 void ISR_MB_PCIE_RST()
 {
 	gpio_set(PERST_ASIC_N_R, gpio_get(RST_PCIE_MB_EXP_N));
+}
+
+static void CXL_READY_handler()
+{
+	const struct device *heartbeat = NULL;
+	int heartbeat_status = 0;
+
+	heartbeat = device_get_binding(CXL_HEART_BEAT_LABEL);
+	if (heartbeat == NULL) {
+		LOG_ERR("%s device not found", CXL_HEART_BEAT_LABEL);
+		return;
+	}
+
+	for (int times = 0; times < CXL_READY_RETRY_TIMES; times++) {
+		heartbeat_status = sensor_sample_fetch(heartbeat);
+		if (heartbeat_status < 0) {
+			k_sleep(K_SECONDS(CXL_READY_INTERVAL_SECONDS));
+			continue;
+		}
+		/* Switch muxs to BIC*/
+		gpio_set(SEL_SMB_MUX_PMIC_R, GPIO_HIGH);
+		gpio_set(SEL_SMB_MUX_DIMM_R, GPIO_HIGH);
+		return;
+	}
+	LOG_ERR("Failed to read %s due to sensor_sample_fetch failed, ret: %d",
+		CXL_HEART_BEAT_LABEL, heartbeat_status);
+	return;
+}
+
+K_WORK_DELAYABLE_DEFINE(CXL_READY_thread, CXL_READY_handler);
+
+void ISR_CXL_PG_ON()
+{
+	if (k_work_cancel_delayable(&CXL_READY_thread) != 0) {
+		LOG_ERR("Failed to cancel CXL_READY thread");
+	}
+	k_work_schedule(&CXL_READY_thread, K_SECONDS(CXL_READY_INTERVAL_SECONDS));
 }
