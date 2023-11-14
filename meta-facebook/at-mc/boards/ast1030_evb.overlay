@@ -38,6 +38,7 @@
 &i2c4 {
 	pinctrl-0 = <&pinctrl_i2c4_default>;
 	clock-frequency = <I2C_BITRATE_FAST>;
+	manual-sda-delay = <1>;	
 	status = "okay";
 };
 
