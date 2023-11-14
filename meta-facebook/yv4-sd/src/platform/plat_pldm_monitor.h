@@ -17,7 +17,7 @@
 #ifndef PLAT_PLDM_MONITOR_H
 #define PLAT_PLDM_MONITOR_H
 
-#define PLAT_PLDM_MAX_STATE_EFFECTER_IDX 169
+#define PLAT_PLDM_MAX_STATE_EFFECTER_IDX 170
 
 #define PLAT_PLDM_HOST_PWR_CTRL_DEFAULT 0xFF
 #define PLAT_PLDM_HOST_PWR_BTN_LOW 0xFE
@@ -25,6 +25,10 @@
 
 enum pldm_plat_effecter_id_high_byte {
 	PLAT_EFFECTER_ID_GPIO_HIGH_BYTE = (0xFF << 8),
+};
+
+enum plat_pldm_effecter_id {
+	PLAT_PLDM_EFFECTER_ID_REINIT_I3C_HUB = 0x0101,
 };
 
 extern struct pldm_state_effecter_info plat_state_effecter_table[];
