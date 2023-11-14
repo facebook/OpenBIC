@@ -25,6 +25,7 @@
 #include "plat_i2c.h"
 #include "plat_sensor_table.h"
 #include "plat_pldm_monitor.h"
+#include "plat_isr.h"
 
 LOG_MODULE_REGISTER(plat_pldm_monitor);
 
@@ -48,6 +49,10 @@ struct pldm_state_effecter_info plat_state_effecter_table[] = {
 	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_MAX + 1] = {
 		.entity_type = PLDM_ENTITY_SUB_CHASSIS,
 		.effecter_id = 0x0000,
+	},
+	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_MAX + 2] = {
+		.entity_type = PLDM_ENTITY_DEVICE_DRIVER,
+		.effecter_id = PLAT_PLDM_EFFECTER_ID_REINIT_I3C_HUB,
 	},
 };
 
@@ -77,6 +82,10 @@ uint8_t plat_pldm_set_state_effecter_state_handler(const uint8_t *buf, uint16_t 
 	case PLDM_ENTITY_SUB_CHASSIS:
 		plat_pldm_set_effecter_state_host_power_control(buf, len, resp, resp_len);
 		break;
+	case PLDM_ENTITY_DEVICE_DRIVER:
+		plat_pldm_set_effecter_state_reinit_i3c_hub(buf, len, resp, resp_len);
+		break;
+
 	default:
 		LOG_ERR("Unsupport entity type, (%d)", info_p->entity_type);
 		*completion_code_p = PLDM_ERROR_INVALID_DATA;
@@ -195,6 +204,52 @@ void plat_pldm_set_effecter_state_host_power_control(const uint8_t *buf, uint16_
 	default:
 		LOG_ERR("Unsupported host power control effecter state, (%d)",
 				host_power_state->effecter_state);
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+	}
+
+	return;
+}
+
+void plat_pldm_set_effecter_state_reinit_i3c_hub(const uint8_t *buf, uint16_t len, uint8_t *resp,
+						 uint16_t *resp_len)
+{
+	LOG_DBG("Access plat_pldm_set_effecter_state_reinit_i3c_hub");
+	ARG_UNUSED(len);
+
+	struct pldm_set_state_effecter_states_req *req_p =
+		(struct pldm_set_state_effecter_states_req *)buf;
+	uint8_t *completion_code_p = resp;
+	*resp_len = 1;
+
+	if (req_p->composite_effecter_count >
+	    PLDM_PLATFORM_OEM_I3C_HUB_REINIT_EFFECTER_STATE_FIELD_COUNT) {
+		LOG_ERR("Unsupported reinit i3c hub effecter count, (%d)",
+			req_p->composite_effecter_count);
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+		return;
+	}
+
+	set_effecter_state_field_t *reinit_i3c_hub_state = &req_p->field[0];
+
+	switch (reinit_i3c_hub_state->set_request) {
+	case PLDM_NO_CHANGE:
+		return;
+	case PLDM_REQUEST_SET:
+		break;
+	default:
+		LOG_ERR("Invalid reinit i3c hub set request (%d)",
+			reinit_i3c_hub_state->set_request);
+		*completion_code_p = PLDM_PLATFORM_UNSUPPORTED_EFFECTERSTATE;
+		return;
+	}
+
+	switch (reinit_i3c_hub_state->effecter_state) {
+	case EFFECTER_STATE_I3C_HUB_REINIT:
+		reinit_i3c_hub();
+		break;
+	default:
+		LOG_ERR("Unsupported reinit i3c hub effecter state, (%d)",
+			reinit_i3c_hub_state->effecter_state);
 		*completion_code_p = PLDM_ERROR_INVALID_DATA;
 	}
 

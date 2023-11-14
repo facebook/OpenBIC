@@ -69,7 +69,7 @@ void pal_pre_init()
 	i3c_attach(&i3c_msg);
 
 	// Initialize I3C HUB
-	if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, ldo_1_2_volt)) {
+	if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, rg3mxxb12_ldo_1_2_volt)) {
 		printk("failed to initialize 1ou rg3mxxb12\n");
 	}
 }

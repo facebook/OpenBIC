@@ -20,5 +20,8 @@
 #include <stdint.h>
 
 void ISR_DC_ON();
+void ISR_POST_COMPLETE();
+
+void reinit_i3c_hub();
 
 #endif

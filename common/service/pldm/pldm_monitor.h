@@ -59,6 +59,7 @@ typedef enum pldm_platform_monitor_commands {
 
 #define PLDM_PLATFORM_OEM_GPIO_EFFECTER_STATE_FIELD_COUNT 2
 #define PLDM_PLATFORM_OEM_HOST_POWER_CTRL_EFFECTER_STATE_FIELD_COUNT 1
+#define PLDM_PLATFORM_OEM_I3C_HUB_REINIT_EFFECTER_STATE_FIELD_COUNT 1
 #define PLDM_PLATFORM_OEM_SWITCH_UART_EFFECTER_STATE_FIELD_COUNT 1
 #define PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_MAX 167
 
@@ -130,6 +131,11 @@ enum oem_effecter_states_power_status {
 	EFFECTER_STATE_POWER_STATUS_MAX
 };
 
+enum oem_effecter_states_reinit_i3c_hub {
+	EFFECTER_STATE_I3C_HUB_REINIT = 0x01,
+	EFFECTER_STATE_I3C_HUB_MAX,
+};
+
 enum pldm_sensor_present_state {
 	PLDM_SENSOR_UNKNOWN = 0x0,
 	PLDM_SENSOR_NORMAL = 0x01,
@@ -179,6 +185,7 @@ enum pldm_oem_platform_completion_codes {
 /* Define from Platform Level Data Model (PLDM) State
 Set Specification (DSP0249) Table 15 – Entity ID codes*/
 enum pldm_entity_types {
+	PLDM_ENTITY_DEVICE_DRIVER = 35,
 	PLDM_ENTITY_SUB_CHASSIS = 46,
 	PLDM_ENTITY_IO_CONTROLLER = 145,
 	PLDM_ENTITY_OTHER_BUS = 160,
@@ -433,6 +440,9 @@ uint8_t plat_pldm_get_state_effecter_state_handler(const uint8_t *buf, uint16_t 
 
 void plat_pldm_set_effecter_state_host_power_control(const uint8_t *buf, uint16_t len,
 						     uint8_t *resp, uint16_t *resp_len);
+
+void plat_pldm_set_effecter_state_reinit_i3c_hub(const uint8_t *buf, uint16_t len, uint8_t *resp,
+						 uint16_t *resp_len);
 
 void pldm_assign_gpio_effecter_id();
 
