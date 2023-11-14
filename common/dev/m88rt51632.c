@@ -243,9 +243,27 @@ bool montage_retimer_write(I2C_MSG *msg, uint32_t addr, uint32_t data)
 bool m88rt51632_get_fw_version(I2C_MSG *msg, uint32_t *version)
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg, false);
+	uint8_t retry = 0;
+
+	for (; retry < MAX_RETRY; retry++) {
+		if (k_mutex_lock(&m88rt51632_mutex, K_MSEC(M88RT51632_MUTEX_LOCK_MS))) {
+			k_msleep(10);
+		} else {
+			break;
+		}
+	}
+	if (retry == MAX_RETRY) {
+		LOG_ERR("m88rt51632 mutex lock failed");
+		return false;
+	}
 
 	if (!montage_retimer_read(msg, RETIMER_VERSION, version)) {
 		LOG_ERR("montage get pcie retimer version failed");
+		return false;
+	}
+
+	if (k_mutex_unlock(&m88rt51632_mutex)) {
+		LOG_ERR("m88rt51632 mutex unlock failed");
 		return false;
 	}
 

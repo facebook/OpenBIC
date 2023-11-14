@@ -20,6 +20,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define RETIMER_UNKNOWN_VERSION -1
+#define RETIMER_VERSION_MAX_LENGTH 5
+
 enum CARD_POSITION {
 	CARD_POSITION_1OU,
 	CARD_POSITION_2OU,
@@ -71,5 +74,7 @@ uint8_t get_pcie_retimer_type(void);
 uint8_t get_board_revision();
 void init_board_revision();
 void init_i3c_hub_type();
+uint32_t get_pcie_retimer_version();
+void cache_pcie_retimer_version();
 
 #endif

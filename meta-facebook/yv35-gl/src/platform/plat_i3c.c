@@ -32,7 +32,7 @@ void init_i3c_hub()
 	i3c_msg.target_addr = RG3MXXB12_DEFAULT_STATIC_ADDRESS;
 	i3c_attach(&i3c_msg);
 
-	if (i3c_hub_type == RG3M88B12_DEVICE_INFO) {
+	if (i3c_hub_type == RG3M87B12_DEVICE_INFO) {
 		if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, LDO_VOLT)) {
 			LOG_ERR("Failed to initialize i3c hub");
 		}

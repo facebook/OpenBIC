@@ -84,7 +84,7 @@ void pal_pre_init()
 		return;
 	}
 
-	if (i3c_hub_type == RG3M88B12_DEVICE_INFO) {
+	if (i3c_hub_type == RG3M87B12_DEVICE_INFO) {
 		if (!rg3mxxb12_i2c_mode_only_init(I2C_BUS2, slave_port, rg3mxxb12_ldo_1_2_volt, rg3mxxb12_pullup_1k_ohm)) {
 			printk("failed to initialize rg3mxxb12\n");
 		}

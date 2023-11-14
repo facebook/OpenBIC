@@ -329,7 +329,7 @@ void init_i3c_hub_type(void)
 		return;
 	}
 
-	if (rg3mxxb12_get_device_info(I3C_BUS4, &i3c_hub_type) && (i3c_hub_type == RG3M88B12_DEVICE_INFO)) {
+	if (rg3mxxb12_get_device_info(I3C_BUS4, &i3c_hub_type) && (i3c_hub_type == RG3M87B12_DEVICE_INFO)) {
 		LOG_INF("I3C hub type: rg3mxxb12");
 	} else if (p3h284x_get_device_info(I3C_BUS4, &i3c_hub_type)) {
 		LOG_INF("I3C hub type: p3h284x");
