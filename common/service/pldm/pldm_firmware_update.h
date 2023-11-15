@@ -226,13 +226,17 @@ enum pldm_component_classification_values {
  */
 enum pldm_firmware_update_descriptor_types {
 	PLDM_FWUP_IANA_ENTERPRISE_ID = 0x0001,
+	PLDM_PCI_DEVICE_ID = 0x0100,
 	PLDM_FWUP_VENDOR_DEFINED = 0xFFFF
 };
 
 /** @brief Descriptor types length defined in PLDM firmware update specification
  *  DSP0267 Table 7 – Descriptor identifier table
  */
-enum pldm_firmware_update_descriptor_types_length { PLDM_FWUP_IANA_ENTERPRISE_ID_LENGTH = 4 };
+enum pldm_firmware_update_descriptor_types_length {
+	PLDM_FWUP_IANA_ENTERPRISE_ID_LENGTH = 4,
+	PLDM_PCI_DEVICE_ID_LENGTH = 2
+};
 
 /**
  * Component response for PassComponentTable and UpdateComponent commands
