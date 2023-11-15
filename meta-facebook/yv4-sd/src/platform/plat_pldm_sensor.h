@@ -29,6 +29,7 @@
 #define ADDR_VR_PVDD11 (0XE4 >> 1)
 #define ADDR_X8_INA233 (0x8A >> 1)
 #define ADDR_X16_INA233 (0x82 >> 1)
+#define ADDR_NVME (0xD4 >> 1)
 
 #define OFFSET_TMP75_TEMP 0x00
 #define OFFSET_NVME_TEMP 0x00
