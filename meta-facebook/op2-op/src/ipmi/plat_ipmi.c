@@ -511,3 +511,20 @@ void OEM_1S_GET_SSD_STATUS(ipmi_msg *msg)
 
 	return;
 }
+
+void OEM_1S_GET_PCIE_RETIMER_TYPE(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 0) {
+		msg->data_len = 0;
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	msg->data_len = 1;
+	msg->data[0] = get_pcie_retimer_type();
+	msg->completion_code = CC_SUCCESS;
+
+	return;
+}
