@@ -22,6 +22,13 @@
 
 #define RMI_SOFT_RESET_BIT BIT(0)
 
+#define SB_TSI_ADDR 0x4C
+#define SB_RMI_ADDR 0x3C
+
+#define SBRMI_CMD_CODE_LEN_DEFAULT 1
+#define SBRMI_CMD_CODE_LEN_TWO_BYTE 2
+#define SBRMI_REV_BRTH 0x21
+
 enum APML_MSG_TYPE {
 	APML_MSG_TYPE_MAILBOX,
 	APML_MSG_TYPE_CPUID,
@@ -134,5 +141,7 @@ uint8_t apml_read(apml_msg *msg);
 void apml_init();
 void fatal_error_happened();
 void apml_recovery();
+int pal_check_sbrmi_command_code_length();
+int set_sbrmi_command_code_len(uint8_t value);
 
 #endif

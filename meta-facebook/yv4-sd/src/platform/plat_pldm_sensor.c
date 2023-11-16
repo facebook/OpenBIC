@@ -21,6 +21,7 @@
 #include "sensor.h"
 #include "pldm_sensor.h"
 #include "pldm_monitor.h"
+#include "plat_apml.h"
 #include "plat_hook.h"
 #include "plat_i2c.h"
 #include "plat_pldm_sensor.h"
@@ -32,6 +33,7 @@ static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = 
 	{ ADC_SENSOR_THREAD_ID, "ADC_PLDM_SENSOR_THREAD" },
 	{ VR_SENSOR_THREAD_ID, "VR_PLDM_SENSOR_THREAD" },
 	{ MB_TEMP_SENSOR_THREAD_ID, "MB_TEMP_SENSOR_THREAD" },
+	{ CPU_SENSOR_THREAD_ID, "CPU_TEMP_SENSOR_THREAD" },
 };
 
 pldm_sensor_info plat_pldm_sensor_adc_table[] = {
@@ -2095,6 +2097,145 @@ pldm_sensor_info plat_pldm_sensor_mb_temp_table[] = {
 	},
 };
 
+pldm_sensor_info plat_pldm_sensor_cpu_table[] = {
+
+	{
+		{
+			// MB_CPU_TEMP_C
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				0x02, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			0x0004, //uint16_t sensor_id;
+			0x007C, //uint16_t entity_type;
+			0x0005, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			PDR_SENSOR_USEINIT_PDR, //uint8_t sensor_init;
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x02, //uint8_t base_unit;
+			-3, //int8_t unit_modifier;
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x04, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			0xFF, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //int32_t state_transition_interval;
+			5, //int32_t update_interval;
+			0x00030D40, //uint32_t max_readable;
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0xFF, //uint8_t range_field_support;
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0x00000000, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00016378, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.type = sensor_dev_amd_tsi,
+			.port = I2C_BUS14,
+			.target_addr = SB_TSI_ADDR,
+			.offset = PMBUS_READ_TEMPERATURE_1,
+			.access_checker = post_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.post_sensor_read_hook = post_amd_tsi_read,
+		},
+	},
+	{
+		{
+			// MB_CPU_PWR_W
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				0x02, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			0x002E, //uint16_t sensor_id;
+			0x007C, //uint16_t entity_type;
+			0x000B, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			PDR_SENSOR_USEINIT_PDR, //uint8_t sensor_init;
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x07, //uint8_t base_unit;
+			-2, //int8_t unit_modifier;
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x4, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			0xFF, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //int32_t state_transition_interval;
+			5, //int32_t update_interval;
+			0x000FFFFF, //uint32_t max_readable;
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0xFF, //uint8_t range_field_support;
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0x00000000, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00000000, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.type = sensor_dev_apml_mailbox,
+			.port = I2C_BUS14,
+			.target_addr = SB_RMI_ADDR, //ADDR_APML
+			.offset = SBRMI_MAILBOX_PKGPWR,
+			.access_checker = post_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.init_args = &apml_mailbox_init_args[0],
+		},
+	},
+};
 
 PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 	{
@@ -3089,8 +3230,7 @@ uint32_t plat_get_pdr_size(uint8_t pdr_type)
 {
 	int total_size = 0, i = 0;
 
-	switch (pdr_type)
-	{
+	switch (pdr_type) {
 	case PLDM_NUMERIC_SENSOR_PDR:
 		for (i = 0; i < MAX_SENSOR_THREAD_ID; i++) {
 			total_size += plat_pldm_sensor_get_sensor_count(i);
@@ -3120,6 +3260,8 @@ pldm_sensor_info *plat_pldm_sensor_load(int thread_id)
 		return plat_pldm_sensor_vr_table;
 	case MB_TEMP_SENSOR_THREAD_ID:
 		return plat_pldm_sensor_mb_temp_table;
+	case CPU_SENSOR_THREAD_ID:
+		return plat_pldm_sensor_cpu_table;
 	default:
 		LOG_ERR("Unknow pldm sensor thread id %d", thread_id);
 		return NULL;
@@ -3140,6 +3282,9 @@ int plat_pldm_sensor_get_sensor_count(int thread_id)
 	case MB_TEMP_SENSOR_THREAD_ID:
 		count = ARRAY_SIZE(plat_pldm_sensor_mb_temp_table);
 		break;
+	case CPU_SENSOR_THREAD_ID:
+		count = ARRAY_SIZE(plat_pldm_sensor_cpu_table);
+		break;
 	default:
 		count = -1;
 		LOG_ERR("Unknow pldm sensor thread id %d", thread_id);
@@ -3149,20 +3294,28 @@ int plat_pldm_sensor_get_sensor_count(int thread_id)
 	return count;
 }
 
-void plat_pldm_sensor_get_pdr_numeric_sesnor(int thread_id, int sensor_num, PDR_numeric_sensor *numeric_sensor_table)
+void plat_pldm_sensor_get_pdr_numeric_sesnor(int thread_id, int sensor_num,
+					     PDR_numeric_sensor *numeric_sensor_table)
 {
 	switch (thread_id) {
 	case ADC_SENSOR_THREAD_ID:
-		memcpy(numeric_sensor_table, &plat_pldm_sensor_adc_table[sensor_num].pdr_numeric_sensor,
+		memcpy(numeric_sensor_table,
+		       &plat_pldm_sensor_adc_table[sensor_num].pdr_numeric_sensor,
 		       sizeof(PDR_numeric_sensor));
 		break;
 	case VR_SENSOR_THREAD_ID:
-		memcpy(numeric_sensor_table, &plat_pldm_sensor_vr_table[sensor_num].pdr_numeric_sensor,
+		memcpy(numeric_sensor_table,
+		       &plat_pldm_sensor_vr_table[sensor_num].pdr_numeric_sensor,
 		       sizeof(PDR_numeric_sensor));
 		break;
 	case MB_TEMP_SENSOR_THREAD_ID:
 		memcpy(numeric_sensor_table,
 		       &plat_pldm_sensor_mb_temp_table[sensor_num].pdr_numeric_sensor,
+		       sizeof(PDR_numeric_sensor));
+		break;
+	case CPU_SENSOR_THREAD_ID:
+		memcpy(numeric_sensor_table,
+		       &plat_pldm_sensor_cpu_table[sensor_num].pdr_numeric_sensor,
 		       sizeof(PDR_numeric_sensor));
 		break;
 	default:
@@ -3179,8 +3332,8 @@ void plat_load_numeric_sensor_pdr_table(PDR_numeric_sensor *numeric_sensor_table
 	for (thread_id = 0; thread_id < MAX_SENSOR_THREAD_ID; thread_id++) {
 		max_sensor_num = plat_pldm_sensor_get_sensor_count(thread_id);
 		for (sensor_num = 0; sensor_num < max_sensor_num; sensor_num++) {
-			plat_pldm_sensor_get_pdr_numeric_sesnor(thread_id, sensor_num,
-					       &numeric_sensor_table[current_sensor_size]);
+			plat_pldm_sensor_get_pdr_numeric_sesnor(
+				thread_id, sensor_num, &numeric_sensor_table[current_sensor_size]);
 			current_sensor_size++;
 		}
 	}
@@ -3188,5 +3341,6 @@ void plat_load_numeric_sensor_pdr_table(PDR_numeric_sensor *numeric_sensor_table
 
 void plat_load_aux_sensor_names_pdr_table(PDR_sensor_auxiliary_names *aux_sensor_name_table)
 {
-	memcpy(aux_sensor_name_table, &plat_pdr_sensor_aux_names_table, sizeof(plat_pdr_sensor_aux_names_table));
+	memcpy(aux_sensor_name_table, &plat_pdr_sensor_aux_names_table,
+	       sizeof(plat_pdr_sensor_aux_names_table));
 }
