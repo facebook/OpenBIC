@@ -301,7 +301,7 @@ bool is_power_controlled(int cxl_id, int power_pin, uint8_t check_power_status, 
 	} else {
 		// TODO: Add event to BMC
 		LOG_ERR("Failed to power %s CXL %d %s (gpio num %d)", check_power_status ? "on" : "off",
-			cxl_id, power_name, power_pin);
+			cxl_id + 1, power_name, power_pin);
 		return false;
 	}
 }
