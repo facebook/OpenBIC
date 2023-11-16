@@ -223,3 +223,8 @@
 	dma-mode;
 	dma-ringbuf-size = <0x4000>;
 };
+
+&kcs3 {
+  status = "okay";
+  addr = <0xca2>;
+};
