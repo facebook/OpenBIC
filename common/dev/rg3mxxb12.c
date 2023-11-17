@@ -22,6 +22,27 @@ LOG_MODULE_REGISTER(dev_rg3mxxb12);
 
 #define RETRY 3
 
+static bool rg3mxxb12_register_read_i3c(uint8_t bus, uint8_t offset, uint8_t *value)
+{
+	CHECK_NULL_ARG_WITH_RETURN(value, false);
+	int ret = -1;
+	I3C_MSG i3c_msg = { 0 };
+
+	i3c_msg.bus = bus;
+	i3c_msg.target_addr = RG3MXXB12_DEFAULT_STATIC_ADDRESS;
+	i3c_msg.tx_len = 1;
+	i3c_msg.data[0] = offset;
+	i3c_msg.rx_len = 1;
+	ret = i3c_transfer(&i3c_msg);
+	if (ret != 0) {
+		LOG_ERR("Failed to read rg3mxxb12 register via I3C 0x%x, bus-%d ret = %d", offset, bus, ret);
+		return false;
+	}
+	*value = i3c_msg.data[0];
+
+	return true;
+}
+
 static bool rg3mxxb12_register_read(uint8_t bus, uint8_t offset, uint8_t *value)
 {
 	CHECK_NULL_ARG_WITH_RETURN(value, false);
@@ -96,6 +117,20 @@ bool rg3mxxb12_get_device_info(uint8_t bus, uint16_t *i3c_hub_type)
 
 	if (rg3mxxb12_register_read(bus, RG3MXXB12_DEVICE_INFO0_REG, &device_info0)) {
 		rg3mxxb12_register_read(bus, RG3MXXB12_DEVICE_INFO1_REG, &device_info1);
+	} else {
+		return false;
+	}
+
+	*i3c_hub_type = (device_info1 << 8) | device_info0;
+	return true;
+}
+
+bool rg3mxxb12_get_device_info_i3c(uint8_t bus, uint16_t *i3c_hub_type)
+{
+	uint8_t device_info0, device_info1 = 0;
+
+	if (rg3mxxb12_register_read_i3c(bus, RG3MXXB12_DEVICE_INFO0_REG, &device_info0)) {
+		rg3mxxb12_register_read_i3c(bus, RG3MXXB12_DEVICE_INFO1_REG, &device_info1);
 	} else {
 		return false;
 	}
