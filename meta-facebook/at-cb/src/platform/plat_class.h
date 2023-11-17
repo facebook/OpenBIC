@@ -33,6 +33,7 @@
 #define CPLD_ADDR (0xA0 >> 1)
 #define CPLD_PWRGD_1_OFFSET 0x05
 #define CPLD_PWRGD_2_OFFSET 0x06
+#define CPLD_SW_ERR_OFFSET 0x0F
 #define CPLD_ACCLA_PWRGD_OFFSET 0x24
 #define CPLD_ACCLB_PWRGD_OFFSET 0x25
 #define CPLD_ACCL_7_12_POWER_CABLE_PRESENT_OFFSET 0x26
@@ -40,6 +41,8 @@
 #define CPLD_ACCL_1_6_PRESENT_OFFSET 0x3F
 #define CPLD_ACCL_7_12_PRESENT_OFFSET 0x3E
 #define CPLD_PWRGD_BIT BIT(0)
+#define CPLD_SW_0_ERR_BIT BIT(1)
+#define CPLD_SW_1_ERR_BIT BIT(0)
 
 #define IOEXP_U228_ADDR (0x40 >> 1)
 #define IOEXP_U229_ADDR (0x42 >> 1)
@@ -148,5 +151,6 @@ uint8_t get_pwr_brick_module();
 uint8_t get_pwr_monitor_module();
 bool get_acb_power_status();
 bool get_acb_power_good_flag();
+int get_cpld_register(uint8_t offset, uint8_t *value);
 
 #endif

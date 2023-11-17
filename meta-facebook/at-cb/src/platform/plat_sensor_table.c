@@ -32,6 +32,7 @@
 #include "plat_dev.h"
 #include "sq52205.h"
 #include "nvme.h"
+#include "plat_pldm_monitor.h"
 
 LOG_MODULE_REGISTER(plat_sensor_table);
 
@@ -1553,18 +1554,18 @@ sensor_compatible_cfg pre_dvt_update_cfg_table[] = {
 };
 
 sensor_poll_delay_cfg sensor_poll_delay_cfgs[] = {
-	{ PCIE_CARD_1, false, ACCL_POWER_GOOD_TIME_DEFAULT },
-	{ PCIE_CARD_2, false, ACCL_POWER_GOOD_TIME_DEFAULT },
-	{ PCIE_CARD_3, false, ACCL_POWER_GOOD_TIME_DEFAULT },
-	{ PCIE_CARD_4, false, ACCL_POWER_GOOD_TIME_DEFAULT },
-	{ PCIE_CARD_5, false, ACCL_POWER_GOOD_TIME_DEFAULT },
-	{ PCIE_CARD_6, false, ACCL_POWER_GOOD_TIME_DEFAULT },
-	{ PCIE_CARD_7, false, ACCL_POWER_GOOD_TIME_DEFAULT },
-	{ PCIE_CARD_8, false, ACCL_POWER_GOOD_TIME_DEFAULT },
-	{ PCIE_CARD_9, false, ACCL_POWER_GOOD_TIME_DEFAULT },
-	{ PCIE_CARD_10, false, ACCL_POWER_GOOD_TIME_DEFAULT },
-	{ PCIE_CARD_11, false, ACCL_POWER_GOOD_TIME_DEFAULT },
-	{ PCIE_CARD_12, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_1, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
+	{ PCIE_CARD_2, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
+	{ PCIE_CARD_3, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
+	{ PCIE_CARD_4, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
+	{ PCIE_CARD_5, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
+	{ PCIE_CARD_6, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
+	{ PCIE_CARD_7, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
+	{ PCIE_CARD_8, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
+	{ PCIE_CARD_9, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
+	{ PCIE_CARD_10, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
+	{ PCIE_CARD_11, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
+	{ PCIE_CARD_12, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
 };
 
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
@@ -1990,8 +1991,15 @@ bool is_time_to_poll_card_sensor(uint8_t card_id)
 		sensor_poll_delay_cfgs[card_id].is_last_time_power_good = false;
 		sensor_poll_delay_cfgs[card_id].card_first_power_good_time =
 			ACCL_POWER_GOOD_TIME_DEFAULT;
+
+		if (sensor_poll_delay_cfgs[card_id].is_check_power != true) {
+			plat_accl_power_good_fail_event(card_id);
+			sensor_poll_delay_cfgs[card_id].is_check_power = true;
+		}
 		return false;
 	}
+
+	sensor_poll_delay_cfgs[card_id].is_check_power = true;
 
 	/* Record ACCL card power on time when ACCL card first power good */
 	if (sensor_poll_delay_cfgs[card_id].is_last_time_power_good != true) {
@@ -2014,4 +2022,11 @@ bool is_time_to_poll_card_sensor(uint8_t card_id)
 	}
 
 	return true;
+}
+
+void clear_accl_check_power_flag()
+{
+	for (uint8_t index = 0; index < ARRAY_SIZE(sensor_poll_delay_cfgs); ++index) {
+		sensor_poll_delay_cfgs[index].is_check_power = false;
+	}
 }
