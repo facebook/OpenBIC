@@ -14,14 +14,20 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_DEF_H
-#define PLAT_DEF_H
+#ifndef PLAT_PLDM_SENSOR_H
+#define PLAT_PLDM_SENSOR_H
 
-#define BMC_USB_PORT "CDC_ACM_0"
+#include "pdr.h"
 
-#define ENABLE_MCTP_I3C
+#define UPDATE_INTERVAL_1S 1
 
-#define ENABLE_PLDM
-#define ENABLE_PLDM_SENSOR
-#define ENABLE_CCI
+enum SENSOR_THREAD_LIST {
+	ADC_SENSOR_THREAD_ID = 0,
+	MAX_SENSOR_THREAD_ID,
+};
+
+int plat_pldm_sensor_get_sensor_count(int thread_id);
+void plat_pldm_sensor_get_pdr_numeric_sensor(int thread_id, int sensor_num,
+					     PDR_numeric_sensor *numeric_sensor_table);
+
 #endif

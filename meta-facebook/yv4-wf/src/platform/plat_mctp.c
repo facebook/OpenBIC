@@ -73,6 +73,11 @@ mctp_route_entry plat_mctp_route_tbl[] = {
 	{ MCTP_EID_CXL2, I2C_BUS_CXL2, I2C_ADDR_CXL2, .set_endpoint = true },
 };
 
+uint8_t MCTP_SUPPORTED_MESSAGES_TYPES[] = {
+	TYPE_MCTP_CONTROL,
+	TYPE_PLDM,
+};
+
 static mctp *find_mctp_by_bus(uint8_t bus)
 {
 	uint8_t i;
@@ -297,4 +302,11 @@ void plat_update_mctp_routing_table(uint8_t eid)
 	k_timer_start(&send_cmd_timer, K_MSEC(30000), K_NO_WAIT);
 
 	return;
+}
+
+int load_mctp_support_types(uint8_t *type_len, uint8_t *types)
+{
+	*type_len = sizeof(MCTP_SUPPORTED_MESSAGES_TYPES);
+	memcpy(types, MCTP_SUPPORTED_MESSAGES_TYPES, sizeof(MCTP_SUPPORTED_MESSAGES_TYPES));
+	return MCTP_SUCCESS;
 }
