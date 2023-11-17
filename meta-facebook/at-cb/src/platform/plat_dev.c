@@ -81,20 +81,6 @@ void clear_freya_cache_flag(uint8_t card_id)
 	accl_freya_info[card_id].freya2_fw_info.is_freya_ready = FREYA_NOT_READY;
 }
 
-int check_fw_version_valid(uint8_t *check_fw_version, uint8_t check_len)
-{
-	CHECK_NULL_ARG_WITH_RETURN(check_fw_version, -1);
-
-	for (uint8_t index = 0; index < check_len; ++index) {
-		if (check_fw_version[index] == INVALID_FW_DATA ||
-		    check_fw_version[index] == UNEXPECTED_FW_DATA) {
-			return FREYA_NOT_READY_RET_CODE;
-		}
-	}
-
-	return 0;
-}
-
 int get_freya_fw_info(uint8_t bus, uint8_t addr, freya_fw_info *fw_info)
 {
 	CHECK_NULL_ARG_WITH_RETURN(fw_info, -1);
@@ -145,18 +131,6 @@ int get_freya_fw_info(uint8_t bus, uint8_t addr, freya_fw_info *fw_info)
 		fw_info->is_freya_ready = FREYA_NOT_READY;
 		LOG_ERR("Read freya firmware version fail, bus: 0x%x, addr: 0x%x", bus, addr);
 		return -1;
-	}
-
-	if ((addr == ACCL_ARTEMIS_MODULE_1_ADDR) || (addr == ACCL_ARTEMIS_MODULE_2_ADDR)) {
-		// Workaround: Check PSOC and QSPI firmware version, report freya not ready if reading value is invalid
-		ret = check_fw_version_valid(&read_buf[PSOC_QSPI_FW_INDEX], SOC_QSPI_FW_LENGTH);
-		if (ret != 0) {
-			if (ret == FREYA_NOT_READY_RET_CODE) {
-				memset(&fw_info, 0, FREYA_FW_VERSION_LENGTH);
-				fw_info->is_freya_ready = FREYA_NOT_READY;
-			}
-			return ret;
-		}
 	}
 
 	memcpy(&fw_info->major_version, &read_buf[FREYA_FIRMWARE_VERSION_OFFSET],
