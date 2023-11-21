@@ -32,6 +32,7 @@
 #include "plat_i2c_target.h"
 #include "plat_pldm_monitor.h"
 #include "plat_class.h"
+#include "plat_i3c.h"
 #include "pcc.h"
 
 void pal_pre_init()
@@ -72,7 +73,7 @@ void pal_pre_init()
 	i3c_attach(&i3c_msg);
 
 	// Initialize I3C HUB
-	if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, rg3mxxb12_ldo_1_2_volt)) {
+	if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, LDO_VOLT)) {
 		printk("failed to initialize 1ou rg3mxxb12\n");
 	}
 }

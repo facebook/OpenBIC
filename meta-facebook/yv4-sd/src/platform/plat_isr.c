@@ -33,6 +33,7 @@
 #include "plat_i2c.h"
 #include "plat_mctp.h"
 #include "plat_apml.h"
+#include "plat_i3c.h"
 #include "plat_isr.h"
 
 LOG_MODULE_REGISTER(plat_isr, LOG_LEVEL_DBG);
@@ -67,7 +68,7 @@ void reinit_i3c_hub()
 	i3c_attach(&i3c_msg);
 
 	// Initialize I3C HUB
-	if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, rg3mxxb12_ldo_1_2_volt)) {
+	if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, LDO_VOLT)) {
 		printk("failed to initialize 1ou rg3mxxb12\n");
 	}
 

@@ -20,6 +20,10 @@
 #include "hal_i2c.h"
 #include "hal_i3c.h"
 
+#define V_LDO_SETTING(vios1, vios0, viom1, viom0)                                                  \
+	((vios1 << VIOS1_OFFSET) | (vios0 << VIOS0_OFFSET) | (viom1 << VIOM1_OFFSET) |             \
+	 (viom0 << VIOM0_OFFSET))
+
 #define RG3MXXB12_DEFAULT_STATIC_ADDRESS 0x70
 #define RG3M87B12_DEVICE_INFO 0x1287
 #define RG3M88B12_DEVICE_INFO 0x1288
