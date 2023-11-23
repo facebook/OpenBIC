@@ -241,6 +241,22 @@ ina230_init_arg ina230_nic_sensor_init_args[] = {
 		.alert_value = 18.0,
 		.i_max = 16.384
   },
+  [7] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.POL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 18.0,
+		.i_max = 16.384
+  },
 };
 
 mp5990_init_arg mp5990_hsc_init_args[] = {
@@ -1164,7 +1180,7 @@ void ssd_drive_reinit(void)
 			LOG_ERR("sensor number 0x%x cfg->read not init, do reinit", cfg->num);
 		}
 
-		if (!nvme_init(cfg)) {
+		if (nvme_init(cfg)) {
 			LOG_ERR("sensor number 0x%x cfg->read reinit fail", cfg->num);
 		}
 	}
