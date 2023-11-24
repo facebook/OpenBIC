@@ -244,4 +244,25 @@ extern enum _GPIO_NUMS_ GPIO_NUMS;
 
 extern char *gpio_name[];
 
+/*IO expander cofiguration*/
+
+enum IOE_PIN_NUM {
+	IOE_P00 = 0,
+	IOE_P01 = 1,
+	IOE_P02 = 2,
+	IOE_P03 = 3,
+	IOE_P04 = 4,
+	IOE_P05 = 5,
+	IOE_P06 = 6,
+	IOE_P07 = 7,
+	IOE_P10 = 0,
+	IOE_P11 = 1,
+	IOE_P12 = 2,
+	IOE_P13 = 3,
+	IOE_P14 = 4,
+	IOE_P15 = 5,
+	IOE_P16 = 6,
+	IOE_P17 = 7,
+};
+
 #endif

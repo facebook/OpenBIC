@@ -31,6 +31,10 @@
 #define SETBITS(x, y, z) (x | (y << z))
 #define GETBIT(x, y) ((x & (1ULL << y)) > y)
 #define CLEARBIT(x, y) (x & (~(1ULL << y)))
+#define CLEARBITS(x, y, z)                                                                         \
+	for (int i = y; i <= z; ++i) {                                                             \
+		x = CLEARBIT(x, i);                                                                \
+	}
 
 #define SHELL_CHECK_NULL_ARG(arg_ptr)                                                              \
 	if (arg_ptr == NULL) {                                                                     \
