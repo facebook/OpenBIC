@@ -35,8 +35,14 @@
 #include "plat_i3c.h"
 #include "pcc.h"
 
+SCU_CFG scu_cfg[] = {
+	//register    value
+	{ 0x7e6e2618, 0x00c00000 },
+};
+
 void pal_pre_init()
 {
+	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
 	apml_init();
 
 	/* init i2c target */
