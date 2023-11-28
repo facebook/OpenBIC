@@ -26,8 +26,14 @@
 #include "plat_sensor_table.h"
 #include "plat_pldm_monitor.h"
 #include "plat_isr.h"
+#include "power_status.h"
 
 LOG_MODULE_REGISTER(plat_pldm_monitor);
+#define SET_POWER_STACK 1024
+K_KERNEL_STACK_MEMBER(set_power_sequence_stack, SET_POWER_STACK);
+static struct k_thread set_power_sequence_thread;
+k_tid_t set_power_sequence_tid;
+static K_SEM_DEFINE(cmd_sem, 1, 1);
 
 #define PLAT_PLDM_POWER_ON_BUTTON_MSEC 1000
 #define PLAT_PLDM_RESET_BUTTON_MSEC 1000
@@ -121,12 +127,78 @@ uint8_t plat_pldm_get_state_effecter_state_handler(const uint8_t *buf, uint16_t 
 	return PLDM_SUCCESS;
 }
 
+void plat_pldm_do_host_button_sequence(void *power_sequence, void *pressing_interval, void *arvg1)
+{
+	uint8_t retry = 3;
+	I2C_MSG i2c_msg;
+	i2c_msg.bus = CPLD_IO_I2C_BUS;
+	i2c_msg.target_addr = CPLD_IO_I2C_ADDR; //server board cpld addr
+	i2c_msg.tx_len = 2;
+	i2c_msg.rx_len = 0;
+	i2c_msg.data[0] = 0x00;
+
+	uint32_t interval = POINTER_TO_UINT(pressing_interval);
+
+	for (int i = 0; i < PLAT_PLDM_SEQUENCE_CNT; i++) {
+		i2c_msg.data[1] = ((uint8_t *)power_sequence)[i];
+		if (i2c_master_write(&i2c_msg, retry)) {
+			LOG_ERR("Fail to do i2c master write");
+		}
+
+		if (i == 1) {
+			k_msleep(interval);
+		}
+	}
+	k_sem_give(&cmd_sem);
+}
+
+void plat_pldm_power_cycle(void *arg1, void *arg2, void *arg3)
+{
+	uint8_t retry = 3;
+	I2C_MSG i2c_msg;
+	i2c_msg.bus = CPLD_IO_I2C_BUS;
+	i2c_msg.target_addr = CPLD_IO_I2C_ADDR; //server board cpld addr
+	i2c_msg.tx_len = 2;
+	i2c_msg.rx_len = 0;
+	i2c_msg.data[0] = 0x00;
+
+	// Do power off when current power is ON
+	if (get_DC_status() == true) {
+		// Power off
+		for (int i = 0; i < PLAT_PLDM_SEQUENCE_CNT; i++) {
+			i2c_msg.data[1] = power_sequence[i];
+			if (i2c_master_write(&i2c_msg, retry)) {
+				LOG_ERR("Fail to do i2c master write");
+			}
+
+			if (i == 1) {
+				k_msleep(PLAT_PLDM_POWER_OFF_BUTTON_MSEC);
+			}
+		}
+		k_msleep(PLAT_PLDM_POWER_CYCLE_INTERVAL_MSEC);
+	}
+
+	// Power on
+	for (int i = 0; i < PLAT_PLDM_SEQUENCE_CNT; i++) {
+		i2c_msg.data[1] = power_sequence[i];
+		if (i2c_master_write(&i2c_msg, retry)) {
+			LOG_ERR("Fail to do i2c master write");
+		}
+
+		if (i == 1) {
+			k_msleep(PLAT_PLDM_POWER_ON_BUTTON_MSEC);
+		}
+	}
+
+	k_sem_give(&cmd_sem);
+}
+
 uint8_t plat_pldm_host_button_sequence(const uint8_t *power_sequence, uint16_t pressing_interval)
 {
 	uint8_t retry = 3;
 	I2C_MSG i2c_msg;
-	i2c_msg.bus = I2C_BUS5;
-	i2c_msg.target_addr = 0x21; //server board cpld addr
+	i2c_msg.bus = CPLD_IO_I2C_BUS;
+	i2c_msg.target_addr = CPLD_IO_I2C_ADDR; //server board cpld addr
 	i2c_msg.tx_len = 2;
 	i2c_msg.rx_len = 0;
 	i2c_msg.data[0] = 0x00;
@@ -173,22 +245,43 @@ void plat_pldm_set_effecter_state_host_power_control(const uint8_t *buf, uint16_
 
 	switch (host_power_state->effecter_state) {
 	case EFFECTER_STATE_POWER_STATUS_ON:
-		if (plat_pldm_host_button_sequence(power_sequence, PLAT_PLDM_POWER_ON_BUTTON_MSEC) != 0) {
+		if (get_DC_status() == true) {
+			break;
+		}
+
+		if (plat_pldm_host_button_sequence(power_sequence,
+						   PLAT_PLDM_POWER_ON_BUTTON_MSEC) != 0) {
 			LOG_ERR("Failed to do host power on");
 		}
 		break;
 	case EFFECTER_STATE_POWER_STATUS_OFF:
-		if (plat_pldm_host_button_sequence(power_sequence, PLAT_PLDM_POWER_OFF_BUTTON_MSEC) != 0) {
-			LOG_ERR("Failed to do host power off");
+		if (get_DC_status() == false) {
+			break;
+		}
+
+		if (k_sem_take(&cmd_sem, K_NO_WAIT) != 0) {
+			LOG_ERR("Ignore. Previous cmd still executing.");
+		} else {
+			set_power_sequence_tid = k_thread_create(
+				&set_power_sequence_thread, set_power_sequence_stack,
+				K_THREAD_STACK_SIZEOF(set_power_sequence_stack),
+				plat_pldm_do_host_button_sequence, (void *)power_sequence,
+				UINT_TO_POINTER(PLAT_PLDM_POWER_OFF_BUTTON_MSEC), NULL,
+				CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+			k_thread_name_set(&set_power_sequence_thread, "do_power_off_thread");
 		}
 		break;
 	case EFFECTER_STATE_POWER_STATUS_CYCLE:
-		if (plat_pldm_host_button_sequence(power_sequence, PLAT_PLDM_POWER_OFF_BUTTON_MSEC) != 0) {
-			LOG_ERR("Failed to do host power cycle");
-		}
-		k_msleep(PLAT_PLDM_POWER_CYCLE_INTERVAL_MSEC);
-		if (plat_pldm_host_button_sequence(power_sequence, PLAT_PLDM_POWER_ON_BUTTON_MSEC) != 0) {
-			LOG_ERR("Failed to do host power cycle");
+		if (k_sem_take(&cmd_sem, K_NO_WAIT) != 0) {
+			LOG_ERR("Ignore. Previous cmd still executing.");
+		} else {
+			set_power_sequence_tid =
+				k_thread_create(&set_power_sequence_thread,
+						set_power_sequence_stack,
+						K_THREAD_STACK_SIZEOF(set_power_sequence_stack),
+						plat_pldm_power_cycle, NULL, NULL, NULL,
+						CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+			k_thread_name_set(&set_power_sequence_thread, "do_power_cycle_thread");
 		}
 		break;
 	case EFFECTER_STATE_POWER_STATUS_RESET:
