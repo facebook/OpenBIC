@@ -22,6 +22,7 @@
 //#include "plat_class.h"
 #include "plat_gpio.h"
 #include "plat_power_seq.h"
+#include "plat_isr.h"
 
 LOG_MODULE_REGISTER(plat_power_seq);
 
@@ -345,6 +346,14 @@ void execute_power_off_sequence()
 	} else {
 		is_cxl_power_on[CXL_ID_1] = true;
 		LOG_ERR("CXL 2 power off fail");
+	}
+
+	uint8_t ioe2_output_value = 0;
+
+	if (get_ioe_value(ADDR_IOE2, TCA9555_OUTPUT_PORT_REG_0, &ioe2_output_value) == 0) {
+		CLEARBITS(ioe2_output_value, IOE_P00,
+			  IOE_P03) // Disable P0~P3 to switch mux to CXL.
+		set_ioe_value(ADDR_IOE2, TCA9555_OUTPUT_PORT_REG_0, ioe2_output_value);
 	}
 }
 
