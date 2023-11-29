@@ -21,6 +21,8 @@
 
 void ISR_DC_ON();
 void ISR_POST_COMPLETE();
+void ISR_BMC_READY();
+void sync_bmc_ready_pin();
 void reinit_i3c_hub();
 
 #endif

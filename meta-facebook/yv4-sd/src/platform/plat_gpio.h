@@ -249,4 +249,5 @@ extern enum _GPIO_NUMS_ GPIO_NUMS;
 
 extern char *gpio_name[];
 
+void sync_bmc_ready_pin();
 #endif
