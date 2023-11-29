@@ -34,8 +34,8 @@
 #include "plat_mctp.h"
 #endif
 
-#define PSB_POSTCODE_PREFIX 0xEE
-#define ABL_POSTCODE_PREFIX 0xEA
+#define PSB_POSTCODE_PREFIX 0xEE00
+#define ABL_POSTCODE_PREFIX 0xEA00
 
 #define AST1030_LPC_BASE_ADDR 0x7E789000
 #define LPC_HICR6_REG (AST1030_LPC_BASE_ADDR + 0x84)
@@ -121,7 +121,7 @@ void check_PSB_error(uint32_t postcode)
 	sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_PSB_ERROR;
 	sel_msg.sensor_number = SENSOR_NUM_PSB_BOOT_ERROR;
 	sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
-	sel_msg.event_data1 = PSB_POSTCODE_PREFIX;
+	sel_msg.event_data1 = 0xEE;
 	sel_msg.event_data2 = error_code;
 	sel_msg.event_data3 = 0xFF;
 	if (!common_add_sel_evt_record(&sel_msg)) {
@@ -303,9 +303,10 @@ static void process_postcode(void *arvg0, void *arvg1, void *arvg2)
 		uint16_t current_read_index = pcc_read_index;
 		for (; send_index != current_read_index;
 		     send_index = (send_index + 1) % PCC_BUFFER_LEN) {
-			if (((pcc_read_buffer[send_index] >> 24) & 0xFF) == PSB_POSTCODE_PREFIX) {
+			if (((pcc_read_buffer[send_index] >> 16) & BIT_MASK(16)) ==
+			    PSB_POSTCODE_PREFIX) {
 				check_PSB_error(pcc_read_buffer[send_index]);
-			} else if (((pcc_read_buffer[send_index] >> 24) & 0xFF) ==
+			} else if (((pcc_read_buffer[send_index] >> 16) & BIT_MASK(16)) ==
 				   ABL_POSTCODE_PREFIX) {
 				check_ABL_error(pcc_read_buffer[send_index]);
 			}
