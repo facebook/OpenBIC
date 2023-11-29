@@ -51,7 +51,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			0x0018, //uint16_t sensor_id;
+			0x0020, //uint16_t sensor_id;
 			0x0087, //uint16_t entity_type;
 			0x0002, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
@@ -119,7 +119,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			0x0019, //uint16_t sensor_id;
+			0x0021, //uint16_t sensor_id;
 			0x0087, //uint16_t entity_type;
 			0x0003, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
@@ -187,7 +187,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			0x001A, //uint16_t sensor_id;
+			0x0022, //uint16_t sensor_id;
 			0x0087, //uint16_t entity_type;
 			0x0004, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
@@ -255,7 +255,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			0x001B, //uint16_t sensor_id;
+			0x0023, //uint16_t sensor_id;
 			0x0087, //uint16_t entity_type;
 			0x0005, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
@@ -307,6 +307,8 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			.init_args = &ast_adc_init_args[0],
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.pre_sensor_read_hook = pre_p3v_bat_read,
+			.post_sensor_read_hook = post_p3v_bat_read,
 		},
 	},
 	{
@@ -323,7 +325,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			0x001C, //uint16_t sensor_id;
+			0x0024, //uint16_t sensor_id;
 			0x0087, //uint16_t entity_type;
 			0x0006, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
@@ -391,7 +393,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			0x001D, //uint16_t sensor_id;
+			0x0025, //uint16_t sensor_id;
 			0x0087, //uint16_t entity_type;
 			0x0007, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
@@ -459,7 +461,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			0x001E, //uint16_t sensor_id;
+			0x0026, //uint16_t sensor_id;
 			0x0087, //uint16_t entity_type;
 			0x0008, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
@@ -527,7 +529,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			0x001F, //uint16_t sensor_id;
+			0x0027, //uint16_t sensor_id;
 			0x0087, //uint16_t entity_type;
 			0x0009, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
@@ -595,7 +597,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			0x0020, //uint16_t sensor_id;
+			0x0028, //uint16_t sensor_id;
 			0x0087, //uint16_t entity_type;
 			0x000A, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
@@ -663,7 +665,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			0x0021, //uint16_t sensor_id;
+			0x0029, //uint16_t sensor_id;
 			0x0087, //uint16_t entity_type;
 			0x000B, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
@@ -731,7 +733,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			0x0022, //uint16_t sensor_id;
+			0x002A, //uint16_t sensor_id;
 			0x0087, //uint16_t entity_type;
 			0x000C, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
@@ -787,6 +789,74 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 	},
 	{
 		{
+			// PVDD11 S3 Voltage
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			0x002B, //uint16_t sensor_id;
+			0x0087, //uint16_t entity_type;
+			0x000D, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init;
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x05, //uint8_t base_unit;
+			-2, //int8_t unit_modifier;
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x4, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			0xFF, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x00000000, //uint32_t max_readable;
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0xFF, //uint8_t range_field_support;
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0x00000000, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00000074, //uint32_t critical_high;
+			0x00000067, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.type = sensor_dev_ast_adc,
+			.port = ADC_PORT14,
+			.access_checker = stby_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.arg0 = 1,
+			.arg1 = 1,
+			.init_args = &ast_adc_init_args[1],
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+		},
+	},
+	{
+		{
 			// Sidecar detect stby Voltage
 			/*** PDR common header***/
 			{
@@ -799,9 +869,9 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			0x0023, //uint16_t sensor_id;
+			0x002C, //uint16_t sensor_id;
 			0x0087, //uint16_t entity_type;
-			0x000D, //uint16_t entity_instance_number;
+			0x000E, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init;
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -2640,7 +2710,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0018,
+		.sensor_id = 0x0020,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -2657,7 +2727,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0019,
+		.sensor_id = 0x0021,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -2674,7 +2744,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x001A,
+		.sensor_id = 0x0022,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -2691,7 +2761,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x001B,
+		.sensor_id = 0x0023,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -2708,7 +2778,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x001C,
+		.sensor_id = 0x0024,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -2725,7 +2795,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x001D,
+		.sensor_id = 0x0025,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -2742,7 +2812,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x001E,
+		.sensor_id = 0x0026,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -2759,7 +2829,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x001F,
+		.sensor_id = 0x0027,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -2776,7 +2846,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0020,
+		.sensor_id = 0x0028,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -2793,7 +2863,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0021,
+		.sensor_id = 0x0029,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -2810,11 +2880,28 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0022,
+		.sensor_id = 0x002A,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
 		.sensorName = u"MB_ADC_SLOT_DETECT_VOLT_V",
+	},
+	{
+		// MB_ADC_PVDD11_S3_VOLT_V
+		/*** PDR common header***/
+		{
+			.record_handle = 0x00000000,
+			.PDR_header_version = 0x01,
+			.PDR_type = PLDM_SENSOR_AUXILIARY_NAMES_PDR,
+			.record_change_number = 0x0000,
+			.data_length = 0x0000,
+		},
+		.terminus_handle = 0x0000,
+		.sensor_id = 0x002B,
+		.sensor_count = 0x1,
+		.nameStringCount = 0x1,
+		.nameLanguageTag = "en",
+		.sensorName = u"MB_ADC_PVDD11_S3_VOLT_V",
 	},
 	{
 		// MB_ADC_SIDECAR_DETECT_VOLT_V
@@ -2827,7 +2914,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0023,
+		.sensor_id = 0x002C,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",

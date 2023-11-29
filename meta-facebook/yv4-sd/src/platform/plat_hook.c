@@ -17,8 +17,10 @@
 #include <logging/log.h>
 #include "power_status.h"
 #include "apml.h"
+#include "hal_gpio.h"
 #include "plat_apml.h"
 #include "plat_hook.h"
+#include "plat_gpio.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -99,5 +101,24 @@ bool post_amd_tsi_read(sensor_cfg *cfg, void *args, int *const reading)
 
 	// TODO: if throttle send event to BMC
 
+	return true;
+}
+
+bool pre_p3v_bat_read(sensor_cfg *cfg, void *args)
+{
+	if (gpio_set(P3V_BAT_SCALED_R_EN, GPIO_HIGH)) {
+		LOG_ERR("failed to enable p3v bat read");
+		return false;
+	}
+	k_msleep(60);
+	return true;
+}
+
+bool post_p3v_bat_read(sensor_cfg *cfg, void *args, int *const reading)
+{
+	if (gpio_set(P3V_BAT_SCALED_R_EN, GPIO_LOW)) {
+		LOG_ERR("failed to disable p3v bat read");
+		return false;
+	}
 	return true;
 }
