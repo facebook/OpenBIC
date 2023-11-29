@@ -61,6 +61,8 @@ isl28022_init_arg isl28022_nic_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 13.312,
 		.r_shunt = 2,
 		.is_init = false },
 	[1] = { .config.fields.MODE = 0b111,
@@ -70,6 +72,8 @@ isl28022_init_arg isl28022_nic_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 13.312,
 		.r_shunt = 2,
 		.is_init = false },
 	[2] = { .config.fields.MODE = 0b111,
@@ -79,6 +83,8 @@ isl28022_init_arg isl28022_nic_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 13.312,
 		.r_shunt = 2,
 		.is_init = false },
 	[3] = { .config.fields.MODE = 0b111,
@@ -88,6 +94,8 @@ isl28022_init_arg isl28022_nic_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 13.312,
 		.r_shunt = 2,
 		.is_init = false },
 	[4] = { .config.fields.MODE = 0b111,
@@ -97,6 +105,8 @@ isl28022_init_arg isl28022_nic_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 13.312,
 		.r_shunt = 2,
 		.is_init = false },
 	[5] = { .config.fields.MODE = 0b111,
@@ -106,6 +116,8 @@ isl28022_init_arg isl28022_nic_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 13.312,
 		.r_shunt = 2,
 		.is_init = false },
 	[6] = { .config.fields.MODE = 0b111,
@@ -115,6 +127,8 @@ isl28022_init_arg isl28022_nic_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 13.312,
 		.r_shunt = 2,
 		.is_init = false },
 	[7] = { .config.fields.MODE = 0b111,
@@ -124,6 +138,8 @@ isl28022_init_arg isl28022_nic_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 13.312,
 		.r_shunt = 2,
 		.is_init = false },
 };
@@ -139,10 +155,10 @@ ina230_init_arg ina230_nic_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
   [1] = { 
@@ -155,10 +171,10 @@ ina230_init_arg ina230_nic_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
   [2] = { 
@@ -171,10 +187,10 @@ ina230_init_arg ina230_nic_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
   [3] = { 
@@ -187,10 +203,10 @@ ina230_init_arg ina230_nic_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
   [4] = { 
@@ -203,10 +219,10 @@ ina230_init_arg ina230_nic_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
   [5] = { 
@@ -219,10 +235,10 @@ ina230_init_arg ina230_nic_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
   [6] = { 
@@ -235,12 +251,29 @@ ina230_init_arg ina230_nic_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
+  [7] = { 
+    .is_init = false,
+		.config = {
+		  .MODE = 0b111, 
+			.VSH_CT = 0b100,
+			.VBUS_CT = 0b100,
+			.AVG = 0b000,
+		},
+		.alt_cfg = {
+			.LEN = 1,
+			.BOL = 1,
+		},
+		.r_shunt = 0.002,
+		.alert_value = 13.2,
+		.i_max = 16.384
+  },
+  
 };
 
 mp5990_init_arg mp5990_hsc_init_args[] = {
@@ -294,6 +327,8 @@ isl28022_init_arg isl28022_pex_p1v25_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 1.536,
 		.r_shunt = 2,
 		.is_init = false },
 	[1] = { .config.fields.MODE = 0b111,
@@ -303,6 +338,8 @@ isl28022_init_arg isl28022_pex_p1v25_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 1.536,
 		.r_shunt = 2,
 		.is_init = false },
 	[2] = { .config.fields.MODE = 0b111,
@@ -312,6 +349,8 @@ isl28022_init_arg isl28022_pex_p1v25_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 1.536,
 		.r_shunt = 2,
 		.is_init = false },
 	[3] = { .config.fields.MODE = 0b111,
@@ -321,6 +360,8 @@ isl28022_init_arg isl28022_pex_p1v25_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 1.536,
 		.r_shunt = 2,
 		.is_init = false },
 };
@@ -336,10 +377,10 @@ ina230_init_arg ina230_pex_p1v25_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 1.32,
 		.i_max = 16.384
   },
   [1] = { 
@@ -352,10 +393,10 @@ ina230_init_arg ina230_pex_p1v25_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 1.32,
 		.i_max = 16.384
   },
   [2] = { 
@@ -368,10 +409,10 @@ ina230_init_arg ina230_pex_p1v25_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 1.32,
 		.i_max = 16.384
   },
   [3] = { 
@@ -384,10 +425,10 @@ ina230_init_arg ina230_pex_p1v25_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 1.32,
 		.i_max = 16.384
   },
 };
@@ -405,6 +446,8 @@ isl28022_init_arg isl28022_pex_p1v8_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 2.048,
 		.r_shunt = 2,
 		.is_init = false },
 };
@@ -420,10 +463,10 @@ ina230_init_arg ina230_pex_p1v8_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 2.0,
 		.i_max = 16.384
   },
 };
@@ -441,6 +484,8 @@ isl28022_init_arg isl28022_ssd_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 13.312,
 		.r_shunt = 2,
 		.is_init = false },
 	[1] = { .config.fields.MODE = 0b111,
@@ -450,6 +495,8 @@ isl28022_init_arg isl28022_ssd_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 13.312,
 		.r_shunt = 2,
 		.is_init = false },
 	[2] = { .config.fields.MODE = 0b111,
@@ -459,6 +506,8 @@ isl28022_init_arg isl28022_ssd_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 13.312,
 		.r_shunt = 2,
 		.is_init = false },
 	[3] = { .config.fields.MODE = 0b111,
@@ -468,6 +517,8 @@ isl28022_init_arg isl28022_ssd_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 13.312,
 		.r_shunt = 2,
 		.is_init = false },
 	[4] = { .config.fields.MODE = 0b111,
@@ -477,6 +528,8 @@ isl28022_init_arg isl28022_ssd_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 13.312,
 		.r_shunt = 2,
 		.is_init = false },
 	[5] = { .config.fields.MODE = 0b111,
@@ -486,6 +539,8 @@ isl28022_init_arg isl28022_ssd_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 13.312,
 		.r_shunt = 2,
 		.is_init = false },
 	[6] = { .config.fields.MODE = 0b111,
@@ -495,6 +550,8 @@ isl28022_init_arg isl28022_ssd_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 13.312,
 		.r_shunt = 2,
 		.is_init = false },
 	[7] = { .config.fields.MODE = 0b111,
@@ -504,6 +561,8 @@ isl28022_init_arg isl28022_ssd_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 13.312,
 		.r_shunt = 2,
 		.is_init = false },
 	[8] = { .config.fields.MODE = 0b111,
@@ -513,6 +572,8 @@ isl28022_init_arg isl28022_ssd_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 13.312,
 		.r_shunt = 2,
 		.is_init = false },
 	[9] = { .config.fields.MODE = 0b111,
@@ -522,6 +583,8 @@ isl28022_init_arg isl28022_ssd_sensor_init_args[] = {
 		.config.fields.BRNG = 0b00,
 		.aux_control_config.do_config = true,
 		.aux_control_config.config.fields.INTREN = 1,
+		.bus_volt_threshold_config.do_config = true,
+		.bus_volt_threshold_config.max_threshold_limit = 13.312,
 		.r_shunt = 2,
 		.is_init = false },
 	[10] = { .config.fields.MODE = 0b111,
@@ -531,6 +594,8 @@ isl28022_init_arg isl28022_ssd_sensor_init_args[] = {
 		 .config.fields.BRNG = 0b00,
 		 .aux_control_config.do_config = true,
 		 .aux_control_config.config.fields.INTREN = 1,
+		 .bus_volt_threshold_config.do_config = true,
+		 .bus_volt_threshold_config.max_threshold_limit = 13.312,
 		 .r_shunt = 2,
 		 .is_init = false },
 	[11] = { .config.fields.MODE = 0b111,
@@ -540,6 +605,8 @@ isl28022_init_arg isl28022_ssd_sensor_init_args[] = {
 		 .config.fields.BRNG = 0b00,
 		 .aux_control_config.do_config = true,
 		 .aux_control_config.config.fields.INTREN = 1,
+		 .bus_volt_threshold_config.do_config = true,
+		 .bus_volt_threshold_config.max_threshold_limit = 13.312,
 		 .r_shunt = 2,
 		 .is_init = false },
 	[12] = { .config.fields.MODE = 0b111,
@@ -549,6 +616,8 @@ isl28022_init_arg isl28022_ssd_sensor_init_args[] = {
 		 .config.fields.BRNG = 0b00,
 		 .aux_control_config.do_config = true,
 		 .aux_control_config.config.fields.INTREN = 1,
+		 .bus_volt_threshold_config.do_config = true,
+		 .bus_volt_threshold_config.max_threshold_limit = 13.312,
 		 .r_shunt = 2,
 		 .is_init = false },
 	[13] = { .config.fields.MODE = 0b111,
@@ -558,6 +627,8 @@ isl28022_init_arg isl28022_ssd_sensor_init_args[] = {
 		 .config.fields.BRNG = 0b00,
 		 .aux_control_config.do_config = true,
 		 .aux_control_config.config.fields.INTREN = 1,
+		 .bus_volt_threshold_config.do_config = true,
+		 .bus_volt_threshold_config.max_threshold_limit = 13.312,
 		 .r_shunt = 2,
 		 .is_init = false },
 	[14] = { .config.fields.MODE = 0b111,
@@ -567,6 +638,8 @@ isl28022_init_arg isl28022_ssd_sensor_init_args[] = {
 		 .config.fields.BRNG = 0b00,
 		 .aux_control_config.do_config = true,
 		 .aux_control_config.config.fields.INTREN = 1,
+		 .bus_volt_threshold_config.do_config = true,
+		 .bus_volt_threshold_config.max_threshold_limit = 13.312,
 		 .r_shunt = 2,
 		 .is_init = false },
 	[15] = { .config.fields.MODE = 0b111,
@@ -576,6 +649,8 @@ isl28022_init_arg isl28022_ssd_sensor_init_args[] = {
 		 .config.fields.BRNG = 0b00,
 		 .aux_control_config.do_config = true,
 		 .aux_control_config.config.fields.INTREN = 1,
+		 .bus_volt_threshold_config.do_config = true,
+		 .bus_volt_threshold_config.max_threshold_limit = 13.312,
 		 .r_shunt = 2,
 		 .is_init = false },
 };
@@ -591,10 +666,10 @@ ina230_init_arg ina230_ssd_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
   [1] = { 
@@ -607,10 +682,10 @@ ina230_init_arg ina230_ssd_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
   [2] = { 
@@ -623,10 +698,10 @@ ina230_init_arg ina230_ssd_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
   [3] = { 
@@ -639,10 +714,10 @@ ina230_init_arg ina230_ssd_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
   [4] = { 
@@ -655,10 +730,10 @@ ina230_init_arg ina230_ssd_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
   [5] = { 
@@ -671,10 +746,10 @@ ina230_init_arg ina230_ssd_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
   [6] = { 
@@ -687,10 +762,10 @@ ina230_init_arg ina230_ssd_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
   [7] = { 
@@ -703,10 +778,10 @@ ina230_init_arg ina230_ssd_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
   [8] = { 
@@ -719,10 +794,10 @@ ina230_init_arg ina230_ssd_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
   [9] = { 
@@ -735,10 +810,10 @@ ina230_init_arg ina230_ssd_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
   [10] = { 
@@ -751,10 +826,10 @@ ina230_init_arg ina230_ssd_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
   [11] = { 
@@ -767,10 +842,10 @@ ina230_init_arg ina230_ssd_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
   [12] = { 
@@ -783,10 +858,10 @@ ina230_init_arg ina230_ssd_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
   [13] = { 
@@ -799,10 +874,10 @@ ina230_init_arg ina230_ssd_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
   [14] = { 
@@ -815,10 +890,10 @@ ina230_init_arg ina230_ssd_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
   [15] = { 
@@ -831,10 +906,10 @@ ina230_init_arg ina230_ssd_sensor_init_args[] = {
 		},
 		.alt_cfg = {
 			.LEN = 1,
-			.POL = 1,
+			.BOL = 1,
 		},
 		.r_shunt = 0.002,
-		.alert_value = 18.0,
+		.alert_value = 13.2,
 		.i_max = 16.384
   },
 };
