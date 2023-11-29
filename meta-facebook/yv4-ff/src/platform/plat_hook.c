@@ -56,24 +56,38 @@ adc_asd_init_arg ast_adc_init_args[] = {
 	}
 };
 
+ina233_init_arg ina233_init_args[] = {
+	[0] = {
+		.is_init = false,
+		.current_lsb = 0.005,
+		.r_shunt = 0.001,
+		.mfr_config_init = false,
+		.is_need_mfr_device_config_init = false,
+		.is_need_set_alert_threshold = false,
+	},
+};
+
 bool pre_vr_read(sensor_cfg *cfg, void *args)
 {
-	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
-	CHECK_NULL_ARG_WITH_RETURN(args, false);
+        CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+        CHECK_NULL_ARG_WITH_RETURN(args, false);
 
-	vr_pre_read_arg *pre_read_args = (vr_pre_read_arg *)args;
-	uint8_t retry = 5;
-	I2C_MSG msg;
-
-	/* set page */
-	msg.bus = cfg->port;
-	msg.target_addr = cfg->target_addr;
-	msg.tx_len = 2;
-	msg.data[0] = 0x00;
-	msg.data[1] = pre_read_args->vr_page;
-	if (i2c_master_write(&msg, retry)) {
-		LOG_ERR("Failed to set page");
-		return false;
-	}
-	return true;
+        if (gpio_get(SEL_SMB_MUX_PMIC_R) == GPIO_LOW) {
+                return true;
+        } else {
+                vr_pre_read_arg *pre_read_args = (vr_pre_read_arg *)args;
+                uint8_t retry = 5;
+                I2C_MSG msg;
+                /* set page */
+                msg.bus = cfg->port;
+                msg.target_addr = cfg->target_addr;
+                msg.tx_len = 2;
+                msg.data[0] = 0x00;
+                msg.data[1] = pre_read_args->vr_page;
+                if (i2c_master_write(&msg, retry)) {
+                        LOG_ERR("Failed to set page");
+                        return true;
+                }
+                return true;
+        }
 }

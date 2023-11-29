@@ -24,7 +24,7 @@ typedef struct _vr_pre_read_arg {
 
 extern vr_pre_read_arg vr_pre_read_args[];
 extern adc_asd_init_arg ast_adc_init_args[];
-
+extern ina233_init_arg ina233_init_args[];
 bool pre_vr_read(sensor_cfg *cfg, void *args);
 
 #endif
