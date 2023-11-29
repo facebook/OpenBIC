@@ -129,7 +129,7 @@ uint8_t tmp461_init(sensor_cfg *cfg)
 		goto exit;
 	}
 
-	temperature_range = GETBIT(i2c_msg->data[0], 2) ? TEMP_RANGE_M40_127 : TEMP_RANGE_M64_191;
+	temperature_range = GETBIT(i2c_msg->data[0], 2) ? TEMP_RANGE_M64_191 : TEMP_RANGE_M40_127;
 
 exit:
 	SAFE_FREE(i2c_msg);
