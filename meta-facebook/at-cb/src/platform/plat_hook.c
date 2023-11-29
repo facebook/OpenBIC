@@ -259,7 +259,7 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_set_alert_threshold = true,
 	.pin_op_warn_limit = 0x2B01,
 	},
-	[8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	[8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.00101607, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode = 0b111,
 		.shunt_volt_time = 0b100,
@@ -346,7 +346,7 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 };
 
 sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
-        [0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.00101688,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -361,7 +361,7 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         .alert_threshold = 0x2B01,
         .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
-        [1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0010136,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -376,7 +376,7 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         .alert_threshold = 0x2B01,
         .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
-        [2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0010242,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -391,7 +391,7 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         .alert_threshold = 0x2B01,
         .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
-        [3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0010202,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -406,7 +406,7 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         .alert_threshold = 0x2B01,
         .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
-        [4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.00103205,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -421,7 +421,7 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         .alert_threshold = 0x2B01,
         .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
-        [5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.00103665,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -436,7 +436,7 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         .alert_threshold = 0x2B01,
         .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
-        [6] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [6] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.00103143,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -451,7 +451,7 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         .alert_threshold = 0x2B01,
         .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
-        [7] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [7] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0010296,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -466,7 +466,7 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         .alert_threshold = 0x2B01,
         .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
-        [8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0010394,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -481,7 +481,7 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         .alert_threshold = 0x2B01,
         .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
-        [9] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [9] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.00102977,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -496,7 +496,7 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         .alert_threshold = 0x2B01,
         .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
-        [10] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [10] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001027288,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -511,7 +511,7 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         .alert_threshold = 0x2B01,
         .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
-        [11] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [11] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001029353,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
