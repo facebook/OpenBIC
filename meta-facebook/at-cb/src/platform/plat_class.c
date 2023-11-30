@@ -32,6 +32,7 @@
 #include "ioexp_pca9555.h"
 #include "plat_dev.h"
 #include "plat_pldm_monitor.h"
+#include "util_worker.h"
 
 LOG_MODULE_REGISTER(plat_class);
 
@@ -414,7 +415,6 @@ bool get_acb_power_status()
 			clear_freya_cache_flag(index);
 		}
 		clear_sw_error_check_flag();
-		clear_accl_check_power_flag();
 	}
 
 	is_power_good = current_power_status;

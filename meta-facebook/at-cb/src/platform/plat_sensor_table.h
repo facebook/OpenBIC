@@ -292,7 +292,6 @@ typedef struct _sensor_poll_delay_cfg {
 	uint8_t card_id;
 	bool is_last_time_power_good;
 	int64_t card_first_power_good_time;
-	bool is_check_power;
 } sensor_poll_delay_cfg;
 
 void load_sensor_config(void);
@@ -308,6 +307,6 @@ sensor_cfg *get_common_sensor_cfg_info(uint8_t sensor_num);
 void update_plat_sensor_cfg_by_stage();
 sensor_cfg *get_artemis_module_sensor_cfg(uint8_t card_id);
 bool is_time_to_poll_card_sensor(uint8_t card_id);
-void clear_accl_check_power_flag();
+bool is_accl_cable_power_good(uint8_t card_id);
 
 #endif

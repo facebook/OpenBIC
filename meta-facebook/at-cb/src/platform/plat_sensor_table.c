@@ -1554,18 +1554,18 @@ sensor_compatible_cfg pre_dvt_update_cfg_table[] = {
 };
 
 sensor_poll_delay_cfg sensor_poll_delay_cfgs[] = {
-	{ PCIE_CARD_1, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
-	{ PCIE_CARD_2, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
-	{ PCIE_CARD_3, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
-	{ PCIE_CARD_4, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
-	{ PCIE_CARD_5, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
-	{ PCIE_CARD_6, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
-	{ PCIE_CARD_7, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
-	{ PCIE_CARD_8, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
-	{ PCIE_CARD_9, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
-	{ PCIE_CARD_10, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
-	{ PCIE_CARD_11, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
-	{ PCIE_CARD_12, false, ACCL_POWER_GOOD_TIME_DEFAULT, false },
+	{ PCIE_CARD_1, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_2, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_3, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_4, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_5, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_6, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_7, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_8, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_9, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_10, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_11, false, ACCL_POWER_GOOD_TIME_DEFAULT },
+	{ PCIE_CARD_12, false, ACCL_POWER_GOOD_TIME_DEFAULT },
 };
 
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
@@ -1908,6 +1908,33 @@ bool is_accl_power_good(uint8_t card_id)
 	return (msg.data[0] & power_good_bit);
 }
 
+bool is_accl_cable_power_good(uint8_t card_id)
+{
+	if (card_id > PCIE_CARD_12) {
+		LOG_ERR("Invalid card id: 0x%x to get accl cable power good register", card_id);
+		return false;
+	}
+
+	int ret = 0;
+	uint8_t val = 0;
+	uint8_t cable_pwr_good_bit = 0;
+
+	if (card_id <= PCIE_CARD_6) {
+		cable_pwr_good_bit = (1 << (card_id - PCIE_CARD_1));
+		ret = get_cpld_register(CPLD_ACCL_1_6_POWER_CABLE_PG_OFFSET, &val);
+	} else {
+		cable_pwr_good_bit = (1 << (card_id - PCIE_CARD_7));
+		ret = get_cpld_register(CPLD_ACCL_7_12_POWER_CABLE_PG_OFFSET, &val);
+	}
+
+	if (ret != 0) {
+		LOG_ERR("Read ACCL power cable PG register fail, card id: 0x%x", card_id);
+		return false;
+	}
+
+	return (val & cable_pwr_good_bit);
+}
+
 bool is_dc_access(uint8_t sensor_num)
 {
 	return is_acb_power_good();
@@ -1991,15 +2018,8 @@ bool is_time_to_poll_card_sensor(uint8_t card_id)
 		sensor_poll_delay_cfgs[card_id].is_last_time_power_good = false;
 		sensor_poll_delay_cfgs[card_id].card_first_power_good_time =
 			ACCL_POWER_GOOD_TIME_DEFAULT;
-
-		if (sensor_poll_delay_cfgs[card_id].is_check_power != true) {
-			plat_accl_power_good_fail_event(card_id);
-			sensor_poll_delay_cfgs[card_id].is_check_power = true;
-		}
 		return false;
 	}
-
-	sensor_poll_delay_cfgs[card_id].is_check_power = true;
 
 	/* Record ACCL card power on time when ACCL card first power good */
 	if (sensor_poll_delay_cfgs[card_id].is_last_time_power_good != true) {
@@ -2022,11 +2042,4 @@ bool is_time_to_poll_card_sensor(uint8_t card_id)
 	}
 
 	return true;
-}
-
-void clear_accl_check_power_flag()
-{
-	for (uint8_t index = 0; index < ARRAY_SIZE(sensor_poll_delay_cfgs); ++index) {
-		sensor_poll_delay_cfgs[index].is_check_power = false;
-	}
 }

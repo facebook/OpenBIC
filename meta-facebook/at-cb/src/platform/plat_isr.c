@@ -32,10 +32,14 @@
 
 LOG_MODULE_REGISTER(plat_isr);
 
+#define NORMAL_POWER_GOOD_CHECK_DELAY_MS 5000
+
 typedef struct _vr_sensor_info {
 	uint8_t sensor_num;
 	uint8_t last_status;
 } vr_sensor_info;
+
+void check_accl_card_pwr_good_work_handler();
 
 vr_sensor_info vr_info[] = {
 	{ .sensor_num = SENSOR_NUM_TEMP_P0V8_VDD_1, .last_status = 0 },
@@ -274,6 +278,23 @@ void add_sel_work_handler(struct k_work *work_item)
 	}
 }
 
+K_WORK_DELAYABLE_DEFINE(check_accl_card_pwr_good_work, check_accl_card_pwr_good_work_handler);
+void check_accl_card_pwr_good_work_handler()
+{
+	uint8_t card_id = 0;
+
+	for (card_id = 0; card_id < ASIC_CARD_COUNT; ++card_id) {
+		if (is_accl_power_good(card_id) != true) {
+			plat_accl_power_good_fail_event(card_id);
+		} else {
+			// Check ACCL cable power good status if ACCL card power good
+			if (is_accl_cable_power_good(card_id) != true) {
+				plat_accl_cable_power_good_fail_event(card_id);
+			}
+		}
+	}
+}
+
 void ISR_FIO_BUTTON()
 {
 	k_work_schedule_for_queue(&plat_work_q, &fio_power_button_work,
@@ -284,6 +305,14 @@ void ISR_POWER_STATUS_CHANGE()
 {
 	get_acb_power_status();
 	init_sw_heartbeat_work();
+	if (get_acb_power_good_flag()) {
+		k_work_schedule_for_queue(&plat_work_q, &check_accl_card_pwr_good_work,
+					  K_MSEC(NORMAL_POWER_GOOD_CHECK_DELAY_MS));
+	} else {
+		if (k_work_cancel_delayable(&check_accl_card_pwr_good_work) != 0) {
+			LOG_ERR("Cancel check_accl_card_pwr_good_work fail");
+		}
+	}
 };
 
 ISR_SENSOR_ALERT(VR, SMB_P0V8_ALERT_N, BOARD_ID0)
