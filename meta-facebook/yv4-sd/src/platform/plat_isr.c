@@ -104,3 +104,9 @@ void ISR_POST_COMPLETE()
 		read_cpuid();
 	}
 }
+
+void ISR_BMC_READY()
+{
+	sync_bmc_ready_pin();
+}
+
