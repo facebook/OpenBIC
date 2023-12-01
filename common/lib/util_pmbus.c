@@ -119,3 +119,23 @@ int pmbus_read_command(sensor_cfg *cfg, uint8_t command, uint8_t *result, uint8_
 	memcpy(result, &msg.data[0], read_len * sizeof(uint8_t));
 	return 0;
 }
+
+int pmbus_set_page(uint8_t bus, uint8_t addr, uint8_t page)
+{
+	int ret = 0;
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+
+	msg.bus = bus;
+	msg.target_addr = addr;
+	msg.tx_len = 2;
+	msg.data[0] = PMBUS_PAGE;
+	msg.data[1] = page;
+
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("PMbus set page: 0x%x fail, ret: %d, bus: 0x%x, addr: 0x%x", page, ret, bus,
+			addr);
+	}
+	return ret;
+}

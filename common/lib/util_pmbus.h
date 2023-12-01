@@ -22,5 +22,6 @@
 float slinear11_to_float(uint16_t);
 bool get_exponent_from_vout_mode(sensor_cfg *, float *);
 int pmbus_read_command(sensor_cfg *cfg, uint8_t command, uint8_t *result, uint8_t read_len);
+int pmbus_set_page(uint8_t bus, uint8_t addr, uint8_t page);
 
 #endif

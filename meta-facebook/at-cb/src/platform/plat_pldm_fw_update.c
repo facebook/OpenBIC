@@ -35,6 +35,8 @@
 #include "plat_dev.h"
 #include "util_sys.h"
 #include "pex89000.h"
+#include "plat_fru.h"
+#include "mp2985.h"
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
@@ -50,6 +52,7 @@ static uint8_t pldm_post_pex_update(void *fw_update_param);
 static bool get_pex_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 static uint8_t pldm_pre_vr_update(void *fw_update_param);
 static uint8_t pldm_post_vr_update(void *fw_update_param);
+static uint8_t plat_pldm_vr_update(void *fw_update_param);
 
 /* PLDM FW update table */
 pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
@@ -85,7 +88,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.comp_identifier = CB_COMPNT_VR_XDPE15284,
 		.comp_classification_index = 0x00,
 		.pre_update_func = pldm_pre_vr_update,
-		.update_func = pldm_vr_update,
+		.update_func = plat_pldm_vr_update,
 		.pos_update_func = pldm_post_vr_update,
 		.inf = COMP_UPDATE_VIA_I2C,
 		.activate_method = COMP_ACT_AC_PWR_CYCLE,
@@ -347,27 +350,98 @@ static bool get_pex_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 static uint8_t pldm_pre_vr_update(void *fw_update_param)
 {
-        CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
 
-        pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 
-        /* Stop sensor polling */
-        disable_sensor_poll();
+	/* Stop sensor polling */
+	disable_sensor_poll();
 
-        p->bus = I2C_BUS1;
-        p->addr = XDPE15284D_ADDR;
+	p->bus = I2C_BUS1;
+	p->addr = XDPE15284D_ADDR;
 
-        return 0;
+	return 0;
+}
+
+static uint8_t plat_pldm_vr_update(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, PLDM_FW_UPDATE_ERROR);
+
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+
+	uint8_t count = 0;
+	uint8_t update_result = 0;
+	uint8_t vr_module = get_vr_module();
+
+	switch (vr_module) {
+	case VR_XDPE15284D:
+		if (strncmp(p->comp_version_str, KEYWORD_VR_XDPE15284,
+			    ARRAY_SIZE(KEYWORD_VR_XDPE15284) - 1) != 0) {
+			return PLDM_FW_UPDATE_ERROR;
+		}
+		break;
+	case VR_MP2985H:
+		if (strncmp(p->comp_version_str, KEYWORD_VR_MP2985,
+			    ARRAY_SIZE(KEYWORD_VR_MP2985) - 1) != 0) {
+			return PLDM_FW_UPDATE_ERROR;
+		}
+
+		if (cb_vr_fw_info.is_init) {
+			count = cb_vr_fw_info.remaining_write;
+		} else {
+			if (get_mp2985_remaining_write(&count) != true) {
+				LOG_ERR("Fail to get mp2985 remaining write");
+				return PLDM_FW_UPDATE_ERROR;
+			}
+		}
+
+		if (count == 0) {
+			LOG_ERR("MP2985 have insufficient remaining writes");
+			return PLDM_FW_UPDATE_ERROR;
+		}
+
+		int ret = -1;
+		int retry = 5;
+		uint8_t offset = CPLD_NORMAL_ENABLE_OFFSET;
+
+		I2C_MSG msg = construct_i2c_message(I2C_BUS3, CPLD_ADDR, 1, &offset, 1);
+		ret = i2c_master_read(&msg, retry);
+		if (ret != 0) {
+			LOG_ERR("Fail to get cpld normal enable register");
+			return PLDM_FW_UPDATE_ERROR;
+		}
+
+		if ((msg.data[0] & CPLD_P0V8_1_EN_BIT) == 0) {
+			ret = mp2985_set_power_regular_mode(p->bus, p->addr);
+			if (ret != 0) {
+				LOG_ERR("Fail to set power regular mode");
+				return PLDM_FW_UPDATE_ERROR;
+			}
+		}
+		break;
+	default:
+		LOG_ERR("Unknown VR module: 0x%x", vr_module);
+		return PLDM_FW_UPDATE_ERROR;
+	}
+
+	update_result = pldm_vr_update(fw_update_param);
+	if (update_result != PLDM_FW_UPDATE_ERROR) {
+		if (set_mp2985_remaining_write(count - 1) != true) {
+			LOG_ERR("Fail to set mp2985 remaining write to 0x%x", count - 1);
+		}
+	}
+
+	return update_result;
 }
 
 static uint8_t pldm_post_vr_update(void *fw_update_param)
 {
-        ARG_UNUSED(fw_update_param);
+	ARG_UNUSED(fw_update_param);
 
-        /* Start sensor polling */
-        enable_sensor_poll();
+	/* Start sensor polling */
+	enable_sensor_poll();
 
-        return 0;
+	return 0;
 }
 
 void load_pldmupdate_comp_config(void)
