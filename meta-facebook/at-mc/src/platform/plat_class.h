@@ -90,6 +90,16 @@ enum PCIE_CARD_TYPE {
 	UNKNOWN_CARD = 0xFF,
 };
 
+struct PCIE_CARD_INFO {
+	uint8_t cpld_offset;
+	uint8_t power_status_offset;
+	uint8_t value_bit;
+	uint8_t value_shift_bit;
+	uint8_t card_device_type;
+};
+
+extern struct PCIE_CARD_INFO pcie_card_info[CARD_INDEX_MAX];
+
 void check_pcie_card_type();
 uint8_t prsnt_status_to_card_type(uint8_t presence_status);
 int get_pcie_card_type(uint8_t card_id, uint8_t *card_type);
