@@ -1,0 +1,60 @@
+From 3e670f9401d0945ab9770f6e9f35ad6ac2b93a53 Mon Sep 17 00:00:00 2001
+From: PeterHo-wiwynn <Peter_MH_Ho@wiwynn.com>
+Date: Tue, 5 Dec 2023 10:28:04 +0800
+Subject: [PATCH] i3c: aspeed: make DCR configurable
+
+Make Device Characteristic Register configurable in dts.
+See https://www.mipi.org/mipi_i3c_device_characteristics_register for detail.
+---
+ drivers/i3c/i3c_aspeed.c         | 3 +++
+ dts/bindings/i3c/aspeed,i3c.yaml | 6 ++++++
+ 2 files changed, 9 insertions(+)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index b6c0c47147..40165b809b 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -486,6 +486,7 @@ struct i3c_aspeed_config {
+ 	uint16_t pid_extra_info;
+ 	int secondary;
+ 	int assigned_addr;
++	int dcr;
+ 	int inst_id;
+ 	int ibi_append_pec;
+ 	int priv_xfer_pec;
+@@ -1116,6 +1117,7 @@ static void i3c_aspeed_init_pid(struct i3c_aspeed_obj *obj)
+ 
+ 	slave_char.value = i3c_register->slave_char.value;
+ 	slave_char.fields.bcr = 0x66;
++	slave_char.fields.dcr = config->dcr;
+ 	i3c_register->slave_char.value = slave_char.value;
+ }
+ 
+@@ -1918,6 +1920,7 @@ static int i3c_aspeed_init(const struct device *dev)
+ 		.i3c_scl_hz = DT_INST_PROP_OR(n, i3c_scl_hz, 0),                                   \
+ 		.secondary = DT_INST_PROP_OR(n, secondary, 0),                                     \
+ 		.assigned_addr = DT_INST_PROP_OR(n, assigned_address, 0),                          \
++		.dcr = DT_INST_PROP_OR(n, dcr, 0),                                                 \
+ 		.inst_id = DT_INST_PROP_OR(n, instance_id, 0),                                     \
+ 		.ibi_append_pec = DT_INST_PROP_OR(n, ibi_append_pec, 0),                           \
+ 		.priv_xfer_pec = DT_INST_PROP_OR(n, priv_xfer_pec, 0),                             \
+diff --git a/dts/bindings/i3c/aspeed,i3c.yaml b/dts/bindings/i3c/aspeed,i3c.yaml
+index 38ab76fc43..83cc0cddf3 100644
+--- a/dts/bindings/i3c/aspeed,i3c.yaml
++++ b/dts/bindings/i3c/aspeed,i3c.yaml
+@@ -18,6 +18,12 @@ properties:
+     type: int
+     description: Dynamic address when playing the role as the main master. Static address when playing the role as the slave.
+ 
++  dcr:
++    required: false
++    type: int
++    description: Device Characteristic Register (DCR).
++                 See https://www.mipi.org/mipi_i3c_device_characteristics_register for detail.
++
+   instance-id:
+     required: true
+     type: int
+-- 
+2.25.1
+
