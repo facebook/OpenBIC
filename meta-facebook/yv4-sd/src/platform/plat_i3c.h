@@ -19,6 +19,8 @@
 
 #include "rg3mxxb12.h"
 
+#define I3C_BUS3 2
+
 #define LDO_VOLT                                                                                   \
 	V_LDO_SETTING(rg3mxxb12_ldo_1_2_volt, rg3mxxb12_ldo_1_2_volt, rg3mxxb12_ldo_1_2_volt,      \
 		      rg3mxxb12_ldo_1_2_volt)
