@@ -33,8 +33,8 @@
 
 #define name_gpioB \
     gpio_name_to_num(PAD_CORE_TAP_CTRL_L_R) \
-    gpio_name_to_num(IOE_RST_N) \
-    gpio_name_to_num(INT_IOE_R_N) \
+    gpio_name_to_num(Reserve_GPIOB1) \
+    gpio_name_to_num(Reserve_GPIOB2) \
     gpio_name_to_num(BIC_SECUREBOOT) \
     gpio_name_to_num(SMBUS_ALERT_R_N) \
     gpio_name_to_num(FM_PWRBRK_PRIMARY_R_N) \
@@ -66,7 +66,7 @@
     gpio_name_to_num(ALT_TMPS_N) \
     gpio_name_to_num(ALT_INA_R_N) \
     gpio_name_to_num(USB_MUX1_SEL_R) \
-    gpio_name_to_num(USB_MUX2_SEL_R) \
+    gpio_name_to_num(Reserve_GPIOE4) \
     gpio_name_to_num(SEL_SMB_MUX_PMIC_R) \
     gpio_name_to_num(SEL_SMB_MUX_DIMM_R) \
     gpio_name_to_num(SEL_SPI_MUX_R)
@@ -93,9 +93,9 @@
 
 #define name_gpioH \
     gpio_name_to_num(PWRGD_P5V_STBY_BIC) \
-    gpio_name_to_num(LED_ASIC_R_HB) \
+    gpio_name_to_num(LED_ASIC_BIC_HB) \
     gpio_name_to_num(BIC_READY_R) \
-    gpio_name_to_num(ADAPTER_SEL_R) \
+    gpio_name_to_num(ADAPTER_VCC) \
     gpio_name_to_num(Reserve_GPIOH4) \
     gpio_name_to_num(Reserve_GPIOH5) \
     gpio_name_to_num(Reserve_GPIOH6) \
@@ -142,7 +142,7 @@
     gpio_name_to_num(OE_USB_MUX1_R_N)
 
 #define name_gpioM \
-    gpio_name_to_num(OE_USB_MUX2_R_N) \
+    gpio_name_to_num(Reserve_GPIOM0) \
     gpio_name_to_num(OE_FM_SPI_MUX_R_N) \
     gpio_name_to_num(EN_LS_JTAG2_BIC_R) \
     gpio_name_to_num(EN_LS_SPI_BIC_R) \
@@ -178,12 +178,12 @@
     gpio_name_to_num(Reserve_GPIOP3) \
     gpio_name_to_num(Reserve_GPIOP4) \
     gpio_name_to_num(Reserve_GPIOP5) \
-    gpio_name_to_num(LED_ASIC_R_1) \
-    gpio_name_to_num(LED_ASIC_R_2)
+    gpio_name_to_num(LED_ASIC_BIC_1) \
+    gpio_name_to_num(LED_ASIC_BIC_2)
 
 #define name_gpioQ \
-    gpio_name_to_num(Reserve_GPIOQ0) \
-    gpio_name_to_num(LED_ASIC_R_3) \
+    gpio_name_to_num(LED_ASIC_BIC_3) \
+    gpio_name_to_num(Reserve_GPIOQ1) \
     gpio_name_to_num(Reserve_GPIOQ2) \
     gpio_name_to_num(Reserve_GPIOQ3) \
     gpio_name_to_num(Reserve_GPIOQ4) \
