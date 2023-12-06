@@ -17,6 +17,15 @@
 #ifndef PLAT_HOOK_H
 #define PLAT_HOOK_H
 
+typedef struct _vr_pre_read_arg {
+	/* vr page to set */
+	uint8_t vr_page;
+} vr_pre_read_arg;
+
 extern adc_asd_init_arg ast_adc_init_args[];
+extern ina233_init_arg ina233_init_args[];
+extern vr_pre_read_arg vr_pre_read_args[];
+
+bool pre_vr_read(sensor_cfg *cfg, void *args);
 
 #endif
