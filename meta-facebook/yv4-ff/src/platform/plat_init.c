@@ -72,6 +72,7 @@ void pal_set_sys_status()
 {
 	set_mb_dc_status(POWER_EN_R);
 	set_DC_status(PG_CARD_OK);
+	set_DC_on_delayed_status();
 	set_sys_ready_pin(BIC_READY_R);
 }
 
