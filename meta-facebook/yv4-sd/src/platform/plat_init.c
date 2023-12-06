@@ -34,6 +34,7 @@
 #include "plat_class.h"
 #include "plat_i3c.h"
 #include "pcc.h"
+#include "plat_kcs.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -88,6 +89,7 @@ void pal_post_init()
 {
 	plat_mctp_init();
 	pcc_init();
+	kcs_init();
 	pldm_load_state_effecter_table(PLAT_PLDM_MAX_STATE_EFFECTER_IDX);
 	pldm_assign_gpio_effecter_id(PLAT_EFFECTER_ID_GPIO_HIGH_BYTE);
 }
