@@ -14,14 +14,28 @@
  * limitations under the License.
  */
 
-#ifndef UTIL_PMBUS_H
-#define UTIL_PMBUS_H
+#ifndef PLAT_APML_H
+#define PLAT_APML_H
 
-#include "sensor.h"
+#include "apml.h"
+#include "plat_i2c.h"
 
-float slinear11_to_float(uint16_t);
-bool get_exponent_from_vout_mode(sensor_cfg *, float *);
-int pmbus_read_command(sensor_cfg *cfg, uint8_t command, uint8_t *result, uint8_t read_len);
-int pmbus_set_page(uint8_t bus, uint8_t addr, uint8_t page);
+#define APML_BUS I2C_BUS14
+#define TSI_HIGH_TEMP_THRESHOLD 0x5F
+#define TSI_TEMP_ALERT_UPDATE_RATE 0x0A
+#define PLAT_SBRMI_REVISION 0x20
+
+typedef struct _addc_trigger_info {
+	uint8_t event_version;
+	uint8_t RAS_status;
+	uint8_t total_socket;
+	uint8_t apml_index;
+	uint8_t cpuid[16];
+} __attribute__((__packed__)) addc_trigger_info;
+
+bool get_tsi_status();
+void reset_tsi_status();
+void set_tsi_threshold();
+void read_cpuid();
 
 #endif

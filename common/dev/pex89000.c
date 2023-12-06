@@ -55,6 +55,7 @@ LOG_MODULE_REGISTER(dev_pex89000);
 #define BRCM_REG_CHIP_REVID 0xFFF00004
 #define BRCM_REG_SBR_ID 0xFFF00008
 #define BRCM_REG_FLASH_VER 0x100005f8
+#define BRCM_REG_CCR_SYSTEM_ERR 0xFFF000A8
 
 #define BRCM_VAL_TEMP_SNR0_CTL_RESET 0x000653E8
 
@@ -327,6 +328,13 @@ uint8_t pex_access_engine(uint8_t bus, uint8_t addr, uint8_t idx, pex_access_t k
 		}
 		break;
 	}
+	case pex_access_ccr_system_error:
+		if (pex89000_chime_to_axi_read(bus, addr, BRCM_REG_CCR_SYSTEM_ERR, resp)) {
+			LOG_ERR("Access CCR system error register(0x%x) failed at pex(%d)",
+				BRCM_REG_CCR_SYSTEM_ERR, p->idx);
+			rc = pex_api_unspecific_err;
+		}
+		break;
 	default:
 		LOG_ERR("Invalid key, (%d)", key);
 		rc = pex_api_unspecific_err;

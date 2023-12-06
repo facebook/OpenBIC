@@ -20,6 +20,10 @@
 #include "hal_i2c.h"
 #include "hal_i3c.h"
 
+#define V_LDO_SETTING(vios1, vios0, viom1, viom0)                                                  \
+	((vios1 << VIOS1_OFFSET) | (vios0 << VIOS0_OFFSET) | (viom1 << VIOM1_OFFSET) |             \
+	 (viom0 << VIOM0_OFFSET))
+
 #define RG3MXXB12_DEFAULT_STATIC_ADDRESS 0x70
 #define RG3M87B12_DEVICE_INFO 0x1287
 #define RG3M88B12_DEVICE_INFO 0x1288
@@ -82,5 +86,6 @@ bool rg3mxxb12_select_slave_port_connect(uint8_t bus, uint8_t slave_port);
 bool rg3mxxb12_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt);
 bool rg3mxxb12_set_slave_port(uint8_t bus, uint8_t addr, uint8_t setting);
 bool rg3mxxb12_get_device_info(uint8_t bus, uint16_t *i3c_hub_type);
+bool rg3mxxb12_get_device_info_i3c(uint8_t bus, uint16_t *i3c_hub_type);
 
 #endif

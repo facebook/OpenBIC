@@ -13,7 +13,6 @@ void init_i3c_hub()
 	I3C_MSG i3c_msg = { 0 };
 	i3c_msg.bus = I3C_BUS4;
 	uint16_t i3c_hub_type = I3C_HUB_TYPE_UNKNOWN;
-	i3c_hub_type = get_i3c_hub_type();
 
 	int ret = 0;
 	int i;
@@ -31,6 +30,8 @@ void init_i3c_hub()
 
 	i3c_msg.target_addr = RG3MXXB12_DEFAULT_STATIC_ADDRESS;
 	i3c_attach(&i3c_msg);
+	init_i3c_hub_type();
+	i3c_hub_type = get_i3c_hub_type();
 
 	if (i3c_hub_type == RG3M87B12_DEVICE_INFO) {
 		if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, LDO_VOLT)) {

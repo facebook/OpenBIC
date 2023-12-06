@@ -53,5 +53,7 @@ void ISR_E1S_PWR_ON();
 void ISR_CXL_PG_ON();
 
 void set_ioe_init();
+int get_ioe_value(uint8_t ioe_addr, uint8_t ioe_reg, uint8_t *value);
+int set_ioe_value(uint8_t ioe_addr, uint8_t ioe_reg, uint8_t value);
 
 #endif

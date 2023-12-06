@@ -14,24 +14,27 @@
  * limitations under the License.
  */
 
-#include "plat_isr.h"
 #include <logging/log.h>
 #include "libipmi.h"
 #include "kcs.h"
+#include "rg3mxxb12.h"
 #include "power_status.h"
 #include "sensor.h"
 #include "snoop.h"
-#include "rg3mxxb12.h"
-#include "plat_gpio.h"
-#include "plat_class.h"
-#include "plat_sensor_table.h"
-#include "plat_i2c.h"
+#include "apml.h"
 #include "hal_gpio.h"
 #include "hal_i2c.h"
 #include "hal_i3c.h"
 #include "util_sys.h"
 #include "util_worker.h"
+#include "plat_gpio.h"
+#include "plat_class.h"
+#include "plat_sensor_table.h"
+#include "plat_i2c.h"
 #include "plat_mctp.h"
+#include "plat_apml.h"
+#include "plat_i3c.h"
+#include "plat_isr.h"
 
 LOG_MODULE_REGISTER(plat_isr, LOG_LEVEL_DBG);
 
@@ -65,7 +68,7 @@ void reinit_i3c_hub()
 	i3c_attach(&i3c_msg);
 
 	// Initialize I3C HUB
-	if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, rg3mxxb12_ldo_1_2_volt)) {
+	if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, LDO_VOLT)) {
 		printk("failed to initialize 1ou rg3mxxb12\n");
 	}
 
@@ -89,3 +92,21 @@ void ISR_DC_ON()
 		set_DC_on_delayed_status();
 	}
 }
+
+void ISR_POST_COMPLETE()
+{
+	set_post_status(FM_BIOS_POST_CMPLT_BIC_N);
+
+	pal_check_sbrmi_command_code_length();
+
+	if (get_post_status()) {
+		set_tsi_threshold();
+		read_cpuid();
+	}
+}
+
+void ISR_BMC_READY()
+{
+	sync_bmc_ready_pin();
+}
+

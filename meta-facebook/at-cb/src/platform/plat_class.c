@@ -31,6 +31,8 @@
 #include "plat_gpio.h"
 #include "ioexp_pca9555.h"
 #include "plat_dev.h"
+#include "plat_pldm_monitor.h"
+#include "util_worker.h"
 
 LOG_MODULE_REGISTER(plat_class);
 
@@ -138,10 +140,32 @@ uint8_t reverse_ioexp_val(uint8_t val)
 	return (first_four | last_four);
 }
 
+int get_cpld_register(uint8_t offset, uint8_t *value)
+{
+	CHECK_NULL_ARG_WITH_RETURN(value, -1);
+
+	int ret = -1;
+	int retry = 5;
+	I2C_MSG msg = { 0 };
+
+	msg.bus = I2C_BUS3;
+	msg.target_addr = CPLD_ADDR;
+	msg.rx_len = 1;
+	msg.tx_len = 1;
+	msg.data[0] = offset;
+
+	ret = i2c_master_read(&msg, retry);
+	if (ret == 0) {
+		*value = msg.data[0];
+	}
+	return ret;
+}
+
 void check_accl_device_presence_status_via_ioexp()
 {
 	int ret = -1;
 	int retry = 5;
+	uint8_t val = 0;
 	uint8_t shift_offset = 0;
 	uint8_t addr_index = 0;
 	uint8_t card_index = 0;
@@ -155,66 +179,39 @@ void check_accl_device_presence_status_via_ioexp()
 
 	if (board_revision > EVT2_STAGE) {
 		// Get ACCL card present status through CPLD
-		msg.bus = I2C_BUS3;
-		msg.target_addr = CPLD_ADDR;
-		msg.rx_len = 1;
-		msg.tx_len = 1;
-		msg.data[0] = CPLD_ACCL_1_6_PRESENT_OFFSET;
-
-		ret = i2c_master_read(&msg, retry);
+		ret = get_cpld_register(CPLD_ACCL_1_6_PRESENT_OFFSET, &val);
 		if (ret != 0) {
 			LOG_ERR("Fail to read cpld offset: 0x%x", CPLD_ACCL_1_6_PRESENT_OFFSET);
 			return;
 		}
 
-		reg_val = msg.data[0];
+		reg_val = val;
 
-		memset(&msg, 0, sizeof(I2C_MSG));
-		msg.bus = I2C_BUS3;
-		msg.target_addr = CPLD_ADDR;
-		msg.rx_len = 1;
-		msg.tx_len = 1;
-		msg.data[0] = CPLD_ACCL_7_12_PRESENT_OFFSET;
-
-		ret = i2c_master_read(&msg, retry);
+		ret = get_cpld_register(CPLD_ACCL_7_12_PRESENT_OFFSET, &val);
 		if (ret != 0) {
 			LOG_ERR("Fail to read cpld offset: 0x%x", CPLD_ACCL_7_12_PRESENT_OFFSET);
 			return;
 		}
 
-		reg_val |= (msg.data[0] << 8);
+		reg_val |= (val << 8);
 
-		memset(&msg, 0, sizeof(I2C_MSG));
-		msg.bus = I2C_BUS3;
-		msg.target_addr = CPLD_ADDR;
-		msg.rx_len = 1;
-		msg.tx_len = 1;
-		msg.data[0] = CPLD_ACCL_1_6_POWER_CABLE_PRESENT_OFFSET;
-
-		ret = i2c_master_read(&msg, retry);
+		ret = get_cpld_register(CPLD_ACCL_1_6_POWER_CABLE_PRESENT_OFFSET, &val);
 		if (ret != 0) {
 			LOG_ERR("Fail to read cpld offset: 0x%x",
 				CPLD_ACCL_1_6_POWER_CABLE_PRESENT_OFFSET);
 			return;
 		}
 
-		reg_val_pwr_cbl_prsnt = msg.data[0];
+		reg_val_pwr_cbl_prsnt = val;
 
-		memset(&msg, 0, sizeof(I2C_MSG));
-		msg.bus = I2C_BUS3;
-		msg.target_addr = CPLD_ADDR;
-		msg.rx_len = 1;
-		msg.tx_len = 1;
-		msg.data[0] = CPLD_ACCL_7_12_POWER_CABLE_PRESENT_OFFSET;
-
-		ret = i2c_master_read(&msg, retry);
+		ret = get_cpld_register(CPLD_ACCL_7_12_POWER_CABLE_PRESENT_OFFSET, &val);
 		if (ret != 0) {
 			LOG_ERR("Fail to read cpld offset: 0x%x",
 				CPLD_ACCL_7_12_POWER_CABLE_PRESENT_OFFSET);
 			return;
 		}
 
-		reg_val_pwr_cbl_prsnt |= (msg.data[0] << 8);
+		reg_val_pwr_cbl_prsnt |= (val << 8);
 
 		for (card_index = 0; card_index < ASIC_CARD_COUNT; ++card_index) {
 			if (card_index < (ASIC_CARD_COUNT / 2)) {
@@ -390,38 +387,23 @@ uint8_t get_vr_module()
 bool get_acb_power_status()
 {
 	int ret = -1;
-	int retry = 5;
+	uint8_t val = 0;
 	bool current_power_status = false;
-	I2C_MSG msg = { 0 };
 
-	msg.bus = I2C_BUS3;
-	msg.target_addr = CPLD_ADDR;
-	msg.rx_len = 1;
-	msg.tx_len = 1;
-	msg.data[0] = CPLD_PWRGD_1_OFFSET;
-
-	ret = i2c_master_read(&msg, retry);
+	ret = get_cpld_register(CPLD_PWRGD_1_OFFSET, &val);
 	if (ret != 0) {
 		LOG_ERR("Fail to read cpld offset: 0x%x", CPLD_PWRGD_1_OFFSET);
 		return false;
 	}
 
-	if (msg.data[0] & CPLD_PWRGD_BIT) {
-		memset(&msg, 0, sizeof(I2C_MSG));
-
-		msg.bus = I2C_BUS3;
-		msg.target_addr = CPLD_ADDR;
-		msg.rx_len = 1;
-		msg.tx_len = 1;
-		msg.data[0] = CPLD_PWRGD_2_OFFSET;
-
-		ret = i2c_master_read(&msg, retry);
+	if (val & CPLD_PWRGD_BIT) {
+		ret = get_cpld_register(CPLD_PWRGD_2_OFFSET, &val);
 		if (ret != 0) {
 			LOG_ERR("Fail to read cpld offset: 0x%x", CPLD_PWRGD_2_OFFSET);
 			return false;
 		}
 
-		if (msg.data[0] & CPLD_PWRGD_BIT) {
+		if (val & CPLD_PWRGD_BIT) {
 			current_power_status = true;
 		}
 	}
@@ -432,6 +414,7 @@ bool get_acb_power_status()
 		for (index = 0; index < ASIC_CARD_COUNT; ++index) {
 			clear_freya_cache_flag(index);
 		}
+		clear_sw_error_check_flag();
 	}
 
 	is_power_good = current_power_status;

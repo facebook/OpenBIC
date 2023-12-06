@@ -65,6 +65,14 @@ typedef struct _vr_fw_info {
 	bool is_init;
 } vr_fw_info;
 
+typedef struct _switch_error_check_info {
+	bool is_addsel;
+	bool is_init_work;
+	uint8_t device_type;
+	uint32_t error_status;
+	struct k_work_delayable add_sel_work;
+} switch_error_check_info;
+
 enum FREYA_ID {
 	FREYA_ID1,
 	FREYA_ID2,
@@ -72,10 +80,13 @@ enum FREYA_ID {
 
 extern freya_info accl_freya_info[];
 extern vr_fw_info cb_vr_fw_info;
+extern switch_error_check_info sw_error_check_info[];
 
 void clear_freya_cache_flag(uint8_t card_id);
 int get_freya_fw_info(uint8_t bus, uint8_t addr, freya_fw_info *fw_info);
 bool is_sw_ready(uint8_t sensor_num);
 void init_sw_heartbeat_work();
+void clear_sw_error_check_flag();
+void get_switch_error_status(uint8_t sensor_num, uint8_t bus, uint8_t addr, uint8_t index);
 
 #endif

@@ -32,10 +32,14 @@
 
 LOG_MODULE_REGISTER(plat_isr);
 
+#define NORMAL_POWER_GOOD_CHECK_DELAY_MS 5000
+
 typedef struct _vr_sensor_info {
 	uint8_t sensor_num;
 	uint8_t last_status;
 } vr_sensor_info;
+
+void check_accl_card_pwr_good_work_handler();
 
 vr_sensor_info vr_info[] = {
 	{ .sensor_num = SENSOR_NUM_TEMP_P0V8_VDD_1, .last_status = 0 },
@@ -45,63 +49,63 @@ vr_sensor_info vr_info[] = {
 add_sel_info add_sel_work_item[] = {
 	{ .is_init = false,
 	  .gpio_num = SMB_P0V8_ALERT_N,
-	  .device_type = ADDSEL_DEVICE_TYPE_DEFAULT,
-	  .event_type = ADDSEL_EVENT_TYPE_DEFAULT },
+	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_DEFAULT,
+	  .event_type = PLDM_ADDSEL_EVENT_TYPE_DEFAULT },
 	{ .is_init = false,
 	  .gpio_num = SMB_PMBUS_ALERT_N_R,
-	  .device_type = OEM_IPMI_EVENT_POWER_BRICK_ALERT,
-	  .event_type = ADDSEL_EVENT_TYPE_DEFAULT },
+	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_POWER_BRICK_ALERT,
+	  .event_type = PLDM_ADDSEL_EVENT_TYPE_DEFAULT },
 	{ .is_init = false,
 	  .gpio_num = SMB_P1V25_ALRT_N_R,
-	  .device_type = OEM_IPMI_EVENT_P1V25_MONITOR_ALERT,
-	  .event_type = ADDSEL_EVENT_TYPE_DEFAULT },
+	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P1V25_MONITOR_ALERT,
+	  .event_type = PLDM_ADDSEL_EVENT_TYPE_DEFAULT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL1_ALRT_N_R,
-	  .device_type = OEM_IPMI_EVENT_P12V_ACCL1_MONITOR_ALERT,
+	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL1_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL2_ALRT_N_R,
-	  .device_type = OEM_IPMI_EVENT_P12V_ACCL2_MONITOR_ALERT,
+	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL2_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL3_ALRT_N_R,
-	  .device_type = OEM_IPMI_EVENT_P12V_ACCL3_MONITOR_ALERT,
+	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL3_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL4_ALRT_N_R,
-	  .device_type = OEM_IPMI_EVENT_P12V_ACCL4_MONITOR_ALERT,
+	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL4_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL5_ALRT_N_R,
-	  .device_type = OEM_IPMI_EVENT_P12V_ACCL5_MONITOR_ALERT,
+	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL5_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL6_ALRT_N_R,
-	  .device_type = OEM_IPMI_EVENT_P12V_ACCL6_MONITOR_ALERT,
+	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL6_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL7_ALRT_N_R,
-	  .device_type = OEM_IPMI_EVENT_P12V_ACCL7_MONITOR_ALERT,
+	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL7_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL8_ALRT_N_R,
-	  .device_type = OEM_IPMI_EVENT_P12V_ACCL8_MONITOR_ALERT,
+	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL8_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL9_ALRT_N_R,
-	  .device_type = OEM_IPMI_EVENT_P12V_ACCL9_MONITOR_ALERT,
+	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL9_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL10_ALRT_N_R,
-	  .device_type = OEM_IPMI_EVENT_P12V_ACCL10_MONITOR_ALERT,
+	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL10_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL11_ALRT_N_R,
-	  .device_type = OEM_IPMI_EVENT_P12V_ACCL11_MONITOR_ALERT,
+	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL11_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
 	  .gpio_num = INA233_ACCL12_ALRT_N_R,
-	  .device_type = OEM_IPMI_EVENT_P12V_ACCL12_MONITOR_ALERT,
+	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL12_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 };
 
@@ -213,8 +217,8 @@ void parse_vr_alert_event(add_sel_info *work_info)
 	for (index = 0; index < ARRAY_SIZE(vr_info); ++index) {
 		sensor_num = vr_info[index].sensor_num;
 		work_info->device_type = ((sensor_num == SENSOR_NUM_TEMP_P0V8_VDD_1) ?
-						  OEM_IPMI_EVENT_P0V8_VDD1_ALERT :
-						  OEM_IPMI_EVENT_P0V8_VDD2_ALERT);
+						  PLDM_ADDSEL_DEVICE_TYPE_P0V8_VDD1_ALERT :
+						  PLDM_ADDSEL_DEVICE_TYPE_P0V8_VDD2_ALERT);
 
 		sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 		if (cfg->pre_sensor_read_hook) {
@@ -274,6 +278,23 @@ void add_sel_work_handler(struct k_work *work_item)
 	}
 }
 
+K_WORK_DELAYABLE_DEFINE(check_accl_card_pwr_good_work, check_accl_card_pwr_good_work_handler);
+void check_accl_card_pwr_good_work_handler()
+{
+	uint8_t card_id = 0;
+
+	for (card_id = 0; card_id < ASIC_CARD_COUNT; ++card_id) {
+		if (is_accl_power_good(card_id) != true) {
+			plat_accl_power_good_fail_event(card_id);
+		} else {
+			// Check ACCL cable power good status if ACCL card power good
+			if (is_accl_cable_power_good(card_id) != true) {
+				plat_accl_cable_power_good_fail_event(card_id);
+			}
+		}
+	}
+}
+
 void ISR_FIO_BUTTON()
 {
 	k_work_schedule_for_queue(&plat_work_q, &fio_power_button_work,
@@ -284,6 +305,14 @@ void ISR_POWER_STATUS_CHANGE()
 {
 	get_acb_power_status();
 	init_sw_heartbeat_work();
+	if (get_acb_power_good_flag()) {
+		k_work_schedule_for_queue(&plat_work_q, &check_accl_card_pwr_good_work,
+					  K_MSEC(NORMAL_POWER_GOOD_CHECK_DELAY_MS));
+	} else {
+		if (k_work_cancel_delayable(&check_accl_card_pwr_good_work) != 0) {
+			LOG_ERR("Cancel check_accl_card_pwr_good_work fail");
+		}
+	}
 };
 
 ISR_SENSOR_ALERT(VR, SMB_P0V8_ALERT_N, BOARD_ID0)

@@ -259,7 +259,7 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 	.is_need_set_alert_threshold = true,
 	.pin_op_warn_limit = 0x2B01,
 	},
-	[8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001, .mfr_config_init = true,
+	[8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.00101607, .mfr_config_init = true,
 	.mfr_config = {
 		.operating_mode = 0b111,
 		.shunt_volt_time = 0b100,
@@ -346,7 +346,7 @@ ina233_init_arg accl_pwr_monitor_ina233_init_args[] = {
 };
 
 sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
-        [0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.00101688,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -361,7 +361,7 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         .alert_threshold = 0x2B01,
         .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
-        [1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0010136,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -376,7 +376,7 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         .alert_threshold = 0x2B01,
         .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
-        [2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0010242,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -391,7 +391,7 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         .alert_threshold = 0x2B01,
         .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
-        [3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0010202,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -406,7 +406,7 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         .alert_threshold = 0x2B01,
         .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
-        [4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [4] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.00103205,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -421,7 +421,7 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         .alert_threshold = 0x2B01,
         .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
-        [5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [5] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.00103665,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -436,7 +436,7 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         .alert_threshold = 0x2B01,
         .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
-        [6] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [6] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.00103143,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -451,7 +451,7 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         .alert_threshold = 0x2B01,
         .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
-        [7] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [7] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0010296,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -466,7 +466,7 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         .alert_threshold = 0x2B01,
         .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
-        [8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [8] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.0010394,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -481,7 +481,7 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         .alert_threshold = 0x2B01,
         .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
-        [9] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [9] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.00102977,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -496,7 +496,7 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         .alert_threshold = 0x2B01,
         .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
-        [10] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [10] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001027288,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -511,7 +511,7 @@ sq52205_init_arg accl_pwr_monitor_sq52205_init_args[] = {
         .alert_threshold = 0x2B01,
         .alert_mask_config.value = SQ52205_ENABLE_OP,
         },
-        [11] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001,
+        [11] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.001029353,
         .config = {
                 .operating_mode =0b111,
                 .shunt_volt_time = 0b100,
@@ -904,6 +904,26 @@ bool pre_pex89000_read(sensor_cfg *cfg, void *args)
 	mux_config *pre_args = (mux_config *)args;
 	pre_args->bus = cfg->port;
 
+	bool ret = true;
+	uint8_t error_status = 0;
+	uint8_t bit_val =
+		(cfg->num == SENSOR_NUM_TEMP_PEX_0 ? CPLD_SW_0_ERR_BIT : CPLD_SW_1_ERR_BIT);
+
+	ret = set_mux_channel(*pre_args, MUTEX_LOCK_ENABLE);
+	if (ret == false) {
+		LOG_ERR("PEX switch mux fail, sensor num: 0x%x", cfg->num);
+		return ret;
+	}
+
+	if (get_cpld_register(CPLD_SW_ERR_OFFSET, &error_status) == 0) {
+		if (error_status & bit_val) { // Switch error pin is active
+			get_switch_error_status(cfg->num, cfg->port, cfg->target_addr,
+						pex_init_arg->idx);
+		}
+	} else {
+		LOG_ERR("Get switch debug register value fail, sensor num: 0x%x", cfg->num);
+	}
+
 	/* Check if switch is ready */
 	if (get_board_revision() > EVT2_STAGE) {
 		if (is_sw_ready(cfg->num) != true) {
@@ -912,15 +932,7 @@ bool pre_pex89000_read(sensor_cfg *cfg, void *args)
 		}
 	}
 
-	bool ret = true;
 	static uint8_t check_init_count = 0;
-
-	ret = set_mux_channel(*pre_args, MUTEX_LOCK_ENABLE);
-	if (ret == false) {
-		LOG_ERR("PEX switch mux fail, sensor num: 0x%x", cfg->num);
-		return ret;
-	}
-
 	if (pex_init_arg->is_init == false) {
 		// Workaround for EVT2
 		if (check_init_count >= PEX_SWITCH_INIT_RETRY_COUNT) {
@@ -1078,14 +1090,6 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 	switch (cfg->target_addr) {
 	case ACCL_FREYA_1_ADDR:
 	case ACCL_ARTEMIS_MODULE_1_ADDR:
-		if (accl_freya->freya1_fw_info.is_freya_ready != FREYA_READY) {
-			// Workaround: Record ready flag at the last sensor of ASIC, and get firmware version in the next sensor polling for confirming version ready
-			if (cfg->offset == NVME_VOLTAGE_RAIL_2_OFFSET) {
-				accl_freya->freya1_fw_info.is_freya_ready = FREYA_READY;
-			}
-			return true;
-		}
-
 		if (accl_freya->is_cache_freya1_info != true) {
 			ret = get_freya_fw_info(cfg->port, cfg->target_addr,
 						&accl_freya->freya1_fw_info);
@@ -1097,14 +1101,6 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 		break;
 	case ACCL_FREYA_2_ADDR:
 	case ACCL_ARTEMIS_MODULE_2_ADDR:
-		if (accl_freya->freya2_fw_info.is_freya_ready != FREYA_READY) {
-			// Workaround: Record ready flag at the last sensor of ASIC, and get firmware version in the next sensor polling for confirming version ready
-			if (cfg->offset == NVME_VOLTAGE_RAIL_2_OFFSET) {
-				accl_freya->freya2_fw_info.is_freya_ready = FREYA_READY;
-			}
-			return true;
-		}
-
 		if (accl_freya->is_cache_freya2_info != true) {
 			ret = get_freya_fw_info(cfg->port, cfg->target_addr,
 						&accl_freya->freya2_fw_info);

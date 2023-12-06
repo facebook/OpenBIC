@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,14 +14,20 @@
  * limitations under the License.
  */
 
-#ifndef UTIL_PMBUS_H
-#define UTIL_PMBUS_H
+#ifndef PLAT_PLDM_SENSOR_H
+#define PLAT_PLDM_SENSOR_H
 
-#include "sensor.h"
+#include "pdr.h"
 
-float slinear11_to_float(uint16_t);
-bool get_exponent_from_vout_mode(sensor_cfg *, float *);
-int pmbus_read_command(sensor_cfg *cfg, uint8_t command, uint8_t *result, uint8_t read_len);
-int pmbus_set_page(uint8_t bus, uint8_t addr, uint8_t page);
+#define UPDATE_INTERVAL_1S 1
+
+enum SENSOR_THREAD_LIST {
+	ADC_SENSOR_THREAD_ID = 0,
+	MAX_SENSOR_THREAD_ID,
+};
+
+int plat_pldm_sensor_get_sensor_count(int thread_id);
+void plat_pldm_sensor_get_pdr_numeric_sensor(int thread_id, int sensor_num,
+					     PDR_numeric_sensor *numeric_sensor_table);
 
 #endif

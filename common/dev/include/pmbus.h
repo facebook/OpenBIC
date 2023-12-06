@@ -20,6 +20,8 @@
 enum PMBUS_PAGE_NUM {
 	PMBUS_PAGE_0,
 	PMBUS_PAGE_1,
+	PMBUS_PAGE_2,
+	PMBUS_PAGE_3,
 };
 
 enum pmbus_regs {

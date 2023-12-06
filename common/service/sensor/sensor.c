@@ -43,6 +43,11 @@ LOG_MODULE_REGISTER(sensor);
 		sensor_dev_##name, name##_init                                                     \
 	}
 
+#define SENSOR_DRIVE_TYPE_UNUSE(name)                                                           \
+	{                                                                                          \
+		sensor_dev_##name, NULL                                                     \
+	}
+
 #define SENSOR_READ_RETRY_MAX 3
 
 extern sensor_cfg plat_sensor_config[];
@@ -175,20 +180,26 @@ SENSOR_DRIVE_INIT_DECLARE(mpro);
 SENSOR_DRIVE_INIT_DECLARE(bmr351);
 SENSOR_DRIVE_INIT_DECLARE(cx7);
 
+// The sequence needs to same with SENSOR_DEV ID
 sensor_drive_api sensor_drive_tbl[] = {
 	SENSOR_DRIVE_TYPE_INIT_MAP(tmp75),
 	SENSOR_DRIVE_TYPE_INIT_MAP(ast_adc),
+	SENSOR_DRIVE_TYPE_INIT_MAP(intel_peci),
 	SENSOR_DRIVE_TYPE_INIT_MAP(isl69259),
+	SENSOR_DRIVE_TYPE_INIT_MAP(adm1278),
 	SENSOR_DRIVE_TYPE_INIT_MAP(nvme),
+	SENSOR_DRIVE_TYPE_INIT_MAP(pch),
 	SENSOR_DRIVE_TYPE_INIT_MAP(mp5990),
 	SENSOR_DRIVE_TYPE_INIT_MAP(isl28022),
 	SENSOR_DRIVE_TYPE_INIT_MAP(pex89000),
-	SENSOR_DRIVE_TYPE_INIT_MAP(intel_peci),
-	SENSOR_DRIVE_TYPE_INIT_MAP(pch),
-	SENSOR_DRIVE_TYPE_INIT_MAP(adm1278),
 	SENSOR_DRIVE_TYPE_INIT_MAP(tps53689),
 	SENSOR_DRIVE_TYPE_INIT_MAP(xdpe15284),
 	SENSOR_DRIVE_TYPE_INIT_MAP(ltc4282),
+#if ENABLE_FAN
+	SENSOR_DRIVE_TYPE_INIT_MAP(ast_fan),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(ast_fan),
+#endif
 	SENSOR_DRIVE_TYPE_INIT_MAP(tmp431),
 	SENSOR_DRIVE_TYPE_INIT_MAP(pmic),
 	SENSOR_DRIVE_TYPE_INIT_MAP(ina233),
@@ -202,6 +213,9 @@ sensor_drive_api sensor_drive_tbl[] = {
 #ifdef ENABLE_APML
 	SENSOR_DRIVE_TYPE_INIT_MAP(amd_tsi),
 	SENSOR_DRIVE_TYPE_INIT_MAP(apml_mailbox),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(amd_tsi),
+	SENSOR_DRIVE_TYPE_UNUSE(apml_mailbox),
 #endif
 	SENSOR_DRIVE_TYPE_INIT_MAP(xdpe19283b),
 	SENSOR_DRIVE_TYPE_INIT_MAP(g788p81u),
@@ -213,6 +227,8 @@ sensor_drive_api sensor_drive_tbl[] = {
 	SENSOR_DRIVE_TYPE_INIT_MAP(mp2971),
 #ifdef ENABLE_PM8702
 	SENSOR_DRIVE_TYPE_INIT_MAP(pm8702),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(pm8702),
 #endif
 	SENSOR_DRIVE_TYPE_INIT_MAP(ltc2991),
 	SENSOR_DRIVE_TYPE_INIT_MAP(sq52205),
@@ -225,6 +241,8 @@ sensor_drive_api sensor_drive_tbl[] = {
 	SENSOR_DRIVE_TYPE_INIT_MAP(m88rt51632),
 #ifdef ENABLE_MPRO
 	SENSOR_DRIVE_TYPE_INIT_MAP(mpro),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(mpro),
 #endif
 	SENSOR_DRIVE_TYPE_INIT_MAP(bmr351),
 	SENSOR_DRIVE_TYPE_INIT_MAP(cx7),

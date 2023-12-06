@@ -27,6 +27,8 @@
 #define ADDR_VR_CPU1 (0XC6 >> 1)
 #define ADDR_VR_PVDDIO (0XC6 >> 1)
 #define ADDR_VR_PVDD11 (0XE4 >> 1)
+#define ADDR_X8_INA233 (0x8A >> 1)
+#define ADDR_X16_INA233 (0x82 >> 1)
 
 #define OFFSET_TMP75_TEMP 0x00
 #define OFFSET_NVME_TEMP 0x00
@@ -38,11 +40,13 @@ enum SENSOR_THREAD_LIST {
 	ADC_SENSOR_THREAD_ID = 0,
 	VR_SENSOR_THREAD_ID,
 	MB_TEMP_SENSOR_THREAD_ID,
+	CPU_SENSOR_THREAD_ID,
+	INA233_SENSOR_THREAD_ID,
 	MAX_SENSOR_THREAD_ID,
 };
 
 int plat_pldm_sensor_get_sensor_count(int thread_id);
-void plat_pldm_sensor_get_pdr_numeric_sesnor(int thread_id, int sensor_num,
-			    PDR_numeric_sensor *numeric_sensor_table);
+void plat_pldm_sensor_get_pdr_numeric_sensor(int thread_id, int sensor_num,
+					     PDR_numeric_sensor *numeric_sensor_table);
 
 #endif

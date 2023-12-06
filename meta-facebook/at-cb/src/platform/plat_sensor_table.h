@@ -280,26 +280,6 @@
 #define ACCL_POWER_GOOD_TIME_DEFAULT 0
 #define ACCL_SENSOR_POLL_DELAY_MS 10000
 
-/** Event **/
-#define SENSOR_NUM_BIC_SENSOR_ALERT 0x10
-
-#define OEM_IPMI_EVENT_P0V8_VDD1_ALERT 0x01
-#define OEM_IPMI_EVENT_P0V8_VDD2_ALERT 0x02
-#define OEM_IPMI_EVENT_POWER_BRICK_ALERT 0x03
-#define OEM_IPMI_EVENT_P1V25_MONITOR_ALERT 0x04
-#define OEM_IPMI_EVENT_P12V_ACCL1_MONITOR_ALERT 0x05
-#define OEM_IPMI_EVENT_P12V_ACCL2_MONITOR_ALERT 0x06
-#define OEM_IPMI_EVENT_P12V_ACCL3_MONITOR_ALERT 0x07
-#define OEM_IPMI_EVENT_P12V_ACCL4_MONITOR_ALERT 0x08
-#define OEM_IPMI_EVENT_P12V_ACCL5_MONITOR_ALERT 0x09
-#define OEM_IPMI_EVENT_P12V_ACCL6_MONITOR_ALERT 0x0A
-#define OEM_IPMI_EVENT_P12V_ACCL7_MONITOR_ALERT 0x0B
-#define OEM_IPMI_EVENT_P12V_ACCL8_MONITOR_ALERT 0x0C
-#define OEM_IPMI_EVENT_P12V_ACCL9_MONITOR_ALERT 0x0D
-#define OEM_IPMI_EVENT_P12V_ACCL10_MONITOR_ALERT 0x0E
-#define OEM_IPMI_EVENT_P12V_ACCL11_MONITOR_ALERT 0x0F
-#define OEM_IPMI_EVENT_P12V_ACCL12_MONITOR_ALERT 0x10
-
 typedef struct _sensor_compatible_cfg {
 	uint8_t num;
 	uint8_t port;
@@ -327,5 +307,6 @@ sensor_cfg *get_common_sensor_cfg_info(uint8_t sensor_num);
 void update_plat_sensor_cfg_by_stage();
 sensor_cfg *get_artemis_module_sensor_cfg(uint8_t card_id);
 bool is_time_to_poll_card_sensor(uint8_t card_id);
+bool is_accl_cable_power_good(uint8_t card_id);
 
 #endif

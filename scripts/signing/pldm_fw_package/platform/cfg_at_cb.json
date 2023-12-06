@@ -49,6 +49,13 @@
             "Device" : "xdpe15284",
             "CheckSum" : "n",
             "pkg_suffix" : ".pldm"
+        },
+	{
+            "CompID" : [0],
+            "Vendor" : "mps",
+            "Device" : "mp2985",
+            "CheckSum" : "n",
+            "pkg_suffix" : ".pldm"
         }
     ]
 }

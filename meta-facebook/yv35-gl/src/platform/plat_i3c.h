@@ -20,7 +20,9 @@
 #include "hal_i3c.h"
 
 #define RSTDAA_COUNT 2
-#define LDO_VOLT 0x3A
+#define LDO_VOLT                                                                                   \
+	V_LDO_SETTING(rg3mxxb12_ldo_1_0_volt, rg3mxxb12_ldo_1_8_volt, rg3mxxb12_ldo_1_2_volt,      \
+		      rg3mxxb12_ldo_1_2_volt)
 #define DEFAULT_SLAVE_PORT_SETTING 0x3F
 
 void init_i3c_hub();

@@ -321,20 +321,18 @@ void init_platform_config()
 void init_i3c_hub_type(void)
 {
 	if (rg3mxxb12_get_device_info(I2C_BUS8, &exp_i3c_hub_type)) {
-		LOG_INF("I3C hub type: rg3mxxb12");
+		LOG_INF("Expansion I3C hub type: rg3mxxb12");
 	} else if (p3h284x_get_device_info(I2C_BUS8, &exp_i3c_hub_type)) {
-		LOG_INF("I3C hub type: p3h284x");
+		LOG_INF("Expansion I3C hub type: p3h284x");
 	} else {
-		LOG_ERR("I3C hub get device type fail");
-		return;
+		LOG_ERR("Expansion I3C hub get device type fail");
 	}
 
-	if (rg3mxxb12_get_device_info(I3C_BUS4, &i3c_hub_type) && (i3c_hub_type == RG3M87B12_DEVICE_INFO)) {
+	if (rg3mxxb12_get_device_info_i3c(I3C_BUS4, &i3c_hub_type) && (i3c_hub_type == RG3M87B12_DEVICE_INFO)) {
 		LOG_INF("I3C hub type: rg3mxxb12");
-	} else if (p3h284x_get_device_info(I3C_BUS4, &i3c_hub_type)) {
+	} else if (p3h284x_get_device_info_i3c(I3C_BUS4, &i3c_hub_type)) {
 		LOG_INF("I3C hub type: p3h284x");
 	} else {
 		LOG_ERR("I3C hub get device type fail");
-		return;
 	}
 }

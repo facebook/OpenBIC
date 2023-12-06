@@ -93,6 +93,8 @@ void pal_pre_init()
 	if (!pal_load_vw_gpio_config()) {
 		printk("failed to initialize vw gpio\n");
 	}
+
+	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY + 1); // work queue for low priority jobs
 }
 
 void pal_post_init()

@@ -78,5 +78,6 @@ bool p3h284x_select_slave_port_connect(uint8_t bus, uint8_t slave_port);
 bool p3h284x_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt);
 bool p3h284x_set_slave_port(uint8_t bus, uint8_t addr, uint8_t setting);
 bool p3h284x_get_device_info(uint8_t bus, uint16_t *i3c_hub_type);
+bool p3h284x_get_device_info_i3c(uint8_t bus, uint16_t *i3c_hub_type);
 
 #endif

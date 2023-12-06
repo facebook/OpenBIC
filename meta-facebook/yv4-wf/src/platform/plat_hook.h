@@ -14,14 +14,9 @@
  * limitations under the License.
  */
 
-#ifndef UTIL_PMBUS_H
-#define UTIL_PMBUS_H
+#ifndef PLAT_HOOK_H
+#define PLAT_HOOK_H
 
-#include "sensor.h"
-
-float slinear11_to_float(uint16_t);
-bool get_exponent_from_vout_mode(sensor_cfg *, float *);
-int pmbus_read_command(sensor_cfg *cfg, uint8_t command, uint8_t *result, uint8_t read_len);
-int pmbus_set_page(uint8_t bus, uint8_t addr, uint8_t page);
+extern adc_asd_init_arg ast_adc_init_args[];
 
 #endif

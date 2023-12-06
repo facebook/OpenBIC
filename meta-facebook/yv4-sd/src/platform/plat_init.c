@@ -21,6 +21,7 @@
 #include "plat_gpio.h"
 #include "util_worker.h"
 #include "plat_mctp.h"
+#include "plat_apml.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "hal_i3c.h"
@@ -31,11 +32,20 @@
 #include "plat_i2c_target.h"
 #include "plat_pldm_monitor.h"
 #include "plat_class.h"
+#include "plat_i3c.h"
 #include "pcc.h"
 #include "plat_kcs.h"
 
+SCU_CFG scu_cfg[] = {
+	//register    value
+	{ 0x7e6e2618, 0x00c00000 },
+};
+
 void pal_pre_init()
 {
+	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
+	apml_init();
+
 	/* init i2c target */
 	for (int index = 0; index < MAX_TARGET_NUM; index++) {
 		if (I2C_TARGET_ENABLE_TABLE[index])
@@ -70,7 +80,7 @@ void pal_pre_init()
 	i3c_attach(&i3c_msg);
 
 	// Initialize I3C HUB
-	if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, rg3mxxb12_ldo_1_2_volt)) {
+	if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, LDO_VOLT)) {
 		printk("failed to initialize 1ou rg3mxxb12\n");
 	}
 }
@@ -88,6 +98,14 @@ void pal_set_sys_status()
 {
 	set_DC_status(PWRGD_CPU_LVC3);
 	set_DC_on_delayed_status();
+	set_post_status(FM_BIOS_POST_CMPLT_BIC_N);
+	sync_bmc_ready_pin();
+
+	if (get_post_status()) {
+		apml_recovery();
+		set_tsi_threshold();
+		read_cpuid();
+	}
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78

@@ -22,6 +22,27 @@ LOG_MODULE_REGISTER(dev_rg3mxxb12);
 
 #define RETRY 3
 
+static bool rg3mxxb12_register_read_i3c(uint8_t bus, uint8_t offset, uint8_t *value)
+{
+	CHECK_NULL_ARG_WITH_RETURN(value, false);
+	int ret = -1;
+	I3C_MSG i3c_msg = { 0 };
+
+	i3c_msg.bus = bus;
+	i3c_msg.target_addr = RG3MXXB12_DEFAULT_STATIC_ADDRESS;
+	i3c_msg.tx_len = 1;
+	i3c_msg.data[0] = offset;
+	i3c_msg.rx_len = 1;
+	ret = i3c_transfer(&i3c_msg);
+	if (ret != 0) {
+		LOG_ERR("Failed to read rg3mxxb12 register via I3C 0x%x, bus-%d ret = %d", offset, bus, ret);
+		return false;
+	}
+	*value = i3c_msg.data[0];
+
+	return true;
+}
+
 static bool rg3mxxb12_register_read(uint8_t bus, uint8_t offset, uint8_t *value)
 {
 	CHECK_NULL_ARG_WITH_RETURN(value, false);
@@ -96,6 +117,20 @@ bool rg3mxxb12_get_device_info(uint8_t bus, uint16_t *i3c_hub_type)
 
 	if (rg3mxxb12_register_read(bus, RG3MXXB12_DEVICE_INFO0_REG, &device_info0)) {
 		rg3mxxb12_register_read(bus, RG3MXXB12_DEVICE_INFO1_REG, &device_info1);
+	} else {
+		return false;
+	}
+
+	*i3c_hub_type = (device_info1 << 8) | device_info0;
+	return true;
+}
+
+bool rg3mxxb12_get_device_info_i3c(uint8_t bus, uint16_t *i3c_hub_type)
+{
+	uint8_t device_info0, device_info1 = 0;
+
+	if (rg3mxxb12_register_read_i3c(bus, RG3MXXB12_DEVICE_INFO0_REG, &device_info0)) {
+		rg3mxxb12_register_read_i3c(bus, RG3MXXB12_DEVICE_INFO1_REG, &device_info1);
 	} else {
 		return false;
 	}
@@ -197,11 +232,6 @@ out:
 bool rg3mxxb12_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt)
 {
 	bool ret = false;
-	uint8_t value;
-
-	// Set Low-Dropout Regulators(LDO) voltage to VIOM and VIOS
-	value = (ldo_volt << VIOM0_OFFSET) | (ldo_volt << VIOM1_OFFSET) |
-		(ldo_volt << VIOS0_OFFSET) | (ldo_volt << VIOS1_OFFSET);
 
 	uint8_t cmd_unprotect[2] = { RG3MXXB12_PROTECTION_REG, 0x69 };
 	uint8_t cmd_protect[2] = { RG3MXXB12_PROTECTION_REG, 0x00 };
@@ -210,7 +240,7 @@ bool rg3mxxb12_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt)
 		 * Refer to RG3MxxB12 datasheet page 13, LDO voltage depends
 		 * on each project's hard design
 		 */
-		{ RG3MXXB12_VOLT_LDO_SETTING, value },
+		{ RG3MXXB12_VOLT_LDO_SETTING, ldo_volt },
 		{ RG3MXXB12_SSPORTS_AGENT_ENABLE, 0x0 },
 		{ RG3MXXB12_SSPORTS_GPIO_ENABLE, 0x0 },
 		{ RG3MXXB12_SLAVE_PORT_ENABLE, 0x0 },
