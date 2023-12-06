@@ -25,6 +25,35 @@ LOG_MODULE_REGISTER(dev_tmp461);
 
 static uint8_t temperature_range = 0xFF;
 
+bool tmp461_get_temp_range(sensor_cfg *cfg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	uint8_t retry = 5;
+	I2C_MSG *i2c_msg = (I2C_MSG *)malloc(sizeof(I2C_MSG));
+
+	if (i2c_msg == NULL) {
+		LOG_ERR("Failed to allocate memory");
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+
+	// Get the temperature range from chip
+	i2c_msg->bus = cfg->port;
+	i2c_msg->target_addr = cfg->target_addr;
+	i2c_msg->tx_len = 1;
+	i2c_msg->rx_len = 1;
+	i2c_msg->data[0] = OFFSET_CONFIGURATION;
+	if (i2c_master_read(i2c_msg, retry) != 0) {
+		LOG_ERR("Failed to read TMP461 register(0x%x)", OFFSET_CONFIGURATION);
+		SAFE_FREE(i2c_msg);
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+
+	temperature_range = GETBIT(i2c_msg->data[0], 2) ? TEMP_RANGE_M64_191 : TEMP_RANGE_M40_127;
+	SAFE_FREE(i2c_msg);
+	return SENSOR_INIT_SUCCESS;
+}
+
 uint8_t tmp461_read(sensor_cfg *cfg, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
@@ -33,6 +62,12 @@ uint8_t tmp461_read(sensor_cfg *cfg, int *reading)
 	if (cfg->num > SENSOR_NUM_MAX) {
 		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
+	}
+
+	if (temperature_range == TEMP_RANGE_NO_INIT) {
+		if (tmp461_get_temp_range(cfg) != 0) {
+			return SENSOR_UNSPECIFIED_ERROR;
+		}
 	}
 
 	uint8_t retry = 5, temperature_high_byte = 0xFF, temperature_low_byte = 0xFF;
@@ -110,29 +145,7 @@ uint8_t tmp461_init(sensor_cfg *cfg)
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	uint8_t retry = 5;
-	I2C_MSG *i2c_msg = (I2C_MSG *)malloc(sizeof(I2C_MSG));
-
-	if (i2c_msg == NULL) {
-		LOG_ERR("Failed to allocate memory");
-		return SENSOR_INIT_UNSPECIFIED_ERROR;
-	}
-
-	// Get the temperature range from chip
-	i2c_msg->bus = cfg->port;
-	i2c_msg->target_addr = cfg->target_addr;
-	i2c_msg->tx_len = 1;
-	i2c_msg->rx_len = 1;
-	i2c_msg->data[0] = OFFSET_CONFIGURATION;
-	if (i2c_master_read(i2c_msg, retry) != 0) {
-		LOG_ERR("Failed to read TMP461 register(0x%x)", OFFSET_CONFIGURATION);
-		goto exit;
-	}
-
-	temperature_range = GETBIT(i2c_msg->data[0], 2) ? TEMP_RANGE_M64_191 : TEMP_RANGE_M40_127;
-
-exit:
-	SAFE_FREE(i2c_msg);
+	tmp461_get_temp_range(cfg);
 
 	cfg->read = tmp461_read;
 	return SENSOR_INIT_SUCCESS;
