@@ -1135,23 +1135,22 @@ bool post_accl_nvme_read(sensor_cfg *cfg, void *args, int *reading)
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
+	int unlock_status = 0;
+        uint8_t bus = cfg->port;
+        accl_card_info *card_info_args = (accl_card_info *)args;
+
+        struct k_mutex *mutex = get_i2c_mux_mutex(bus);
+        if (mutex->lock_count != 0) {
+                unlock_status = k_mutex_unlock(mutex);
+        }
+
+        if (unlock_status != 0) {
+                LOG_ERR("Mutex unlock fail, status: %d, card id: 0x%x, sensor num: 0x%x",
+                        unlock_status, card_info_args->card_id, cfg->num);
+        }
+
 	if (reading == NULL) {
 		return check_reading_pointer_null_is_allowed(cfg);
-	}
-
-	int unlock_status = 0;
-	uint8_t bus = cfg->port;
-	accl_card_info *card_info_args = (accl_card_info *)args;
-
-	struct k_mutex *mutex = get_i2c_mux_mutex(bus);
-	if (mutex->lock_count != 0) {
-		unlock_status = k_mutex_unlock(mutex);
-	}
-
-	if (unlock_status != 0) {
-		LOG_ERR("Mutex unlock fail, status: %d, card id: 0x%x, sensor num: 0x%x",
-			unlock_status, card_info_args->card_id, cfg->num);
-		return false;
 	}
 
 	if (cfg->offset == NVME_CORE_VOLTAGE_1_OFFSET ||
