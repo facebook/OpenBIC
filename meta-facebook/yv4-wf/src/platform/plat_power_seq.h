@@ -20,6 +20,7 @@
 #include "plat_gpio.h"
 
 #define DC_ON_DELAY5_SEC 5
+#define CXL_READY_SECONDS 30
 #define CHK_PWR_DELAY_MSEC 100
 #define SYS_CLK_STABLE_DELAY_MSEC 25
 #define PWR_ON_RST_DELAY_MSEC 25

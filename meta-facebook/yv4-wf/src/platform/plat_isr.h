@@ -31,7 +31,6 @@
 #define E1S_PE_RESET_BIT BIT(6)
 #define IOE_SWITCH_MUX_TO_BIC 0x0f
 
-#define CXL_READY_SECONDS 30
 #define IOE_READY_MSEC 1000
 
 enum set_ioe4_cmd {

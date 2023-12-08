@@ -200,6 +200,15 @@ void set_ioe_init()
 			msg.data[1] = (ioe_cfg[i].output_val & 0xCF) | (msg.data[0] & 0x30);
 			msg.data[0] = TCA9555_OUTPUT_PORT_REG_1;
 			ret = i2c_master_write(&msg, retry);
+
+		} else if ((ioe_cfg[i].addr == ADDR_IOE2) &&
+			   (ioe_cfg[i].output_reg == TCA9555_OUTPUT_PORT_REG_0) &&
+			   (gpio_get(PG_CARD_OK) == HIGH_ACTIVE)) { // If all CXL have been already.
+			msg.data[0] = ioe_cfg[i].output_reg;
+			msg.data[1] = (ioe_cfg[i].output_val |
+				       IOE_SWITCH_MUX_TO_BIC); // Enable P0~P3 to switch mux to BIC.
+			ret = i2c_master_write(&msg, retry);
+
 		} else {
 			msg.data[0] = ioe_cfg[i].output_reg;
 			msg.data[1] = ioe_cfg[i].output_val;
@@ -226,23 +235,6 @@ void check_ioexp_status()
 void set_asic_and_e1s_clk_handler()
 {
 	set_ioe4_control(SET_CLK);
-}
-
-static void CXL_READY_handler()
-{
-	/* TODO:
-	 * In normal states, DIMM and PMIC muxs should be switch to BIC after checking CXL heartbeat is ready. However, WF's heartbeat is not ready yet
-	 * ,so we need to make the workaround for switch muxs.
-	 */
-
-	uint8_t value = 0x0;
-
-	if (get_ioe_value(ADDR_IOE2, TCA9555_OUTPUT_PORT_REG_0, &value) == 0) {
-		value |= IOE_SWITCH_MUX_TO_BIC; // Enable P0~P3 to switch mux to BIC.
-		set_ioe_value(ADDR_IOE2, TCA9555_OUTPUT_PORT_REG_0, value);
-	}
-
-	return;
 }
 
 K_WORK_DEFINE(cxl_power_on_work, execute_power_on_sequence);
@@ -278,13 +270,4 @@ K_WORK_DEFINE(e1s_pwr_on_work, set_asic_and_e1s_clk_handler);
 void ISR_E1S_PWR_ON()
 {
 	k_work_submit(&e1s_pwr_on_work);
-}
-
-K_WORK_DELAYABLE_DEFINE(CXL_READY_thread, CXL_READY_handler);
-void ISR_CXL_PG_ON()
-{
-	if (k_work_cancel_delayable(&CXL_READY_thread) != 0) {
-		LOG_ERR("Failed to cancel CXL_READY thread");
-	}
-	k_work_schedule(&CXL_READY_thread, K_SECONDS(CXL_READY_SECONDS));
 }
