@@ -26,7 +26,10 @@
 
 LOG_MODULE_REGISTER(plat_power_seq);
 
+static void cxl_ready_handler();
+
 K_WORK_DELAYABLE_DEFINE(set_dc_on_5s_work, set_DC_on_delayed_status);
+K_WORK_DELAYABLE_DEFINE(cxl_ready_thread, cxl_ready_handler);
 K_WORK_DELAYABLE_DEFINE(enable_asic1_power_on_rst_work, enable_asic1_power_on_rst);
 K_WORK_DELAYABLE_DEFINE(enable_asic2_power_on_rst_work, enable_asic2_power_on_rst);
 
@@ -146,6 +149,7 @@ void execute_power_on_sequence()
 		gpio_set(PG_CARD_OK, POWER_ON);
 		set_DC_status(PG_CARD_OK);
 		k_work_schedule(&set_dc_on_5s_work, K_SECONDS(DC_ON_DELAY5_SEC));
+		k_work_schedule(&cxl_ready_thread, K_SECONDS(CXL_READY_SECONDS));
 	}
 }
 
@@ -328,6 +332,10 @@ void execute_power_off_sequence()
 		LOG_ERR("Cancel set dc off delay work fail");
 	}
 
+	if (k_work_cancel_delayable(&cxl_ready_thread) != 0) {
+		LOG_ERR("Failed to cancel cxl_ready_thread");
+	}
+
 	set_DC_on_delayed_status();
 
 	ret = power_off_handler(CXL_ID_0, DIMM_POWER_OFF_STAGE_1);
@@ -491,4 +499,21 @@ int check_powers_disabled(int cxl_id, int pwr_stage)
 	}
 
 	return 0;
+}
+
+static void cxl_ready_handler()
+{
+	/* TODO:
+	 * In normal states, DIMM and PMIC muxs should be switch to BIC after checking CXL heartbeat is ready. However, WF's heartbeat is not ready yet
+	 * ,so we need to make the workaround for switch muxs.
+	 */
+
+	uint8_t value = 0x0;
+
+	if (get_ioe_value(ADDR_IOE2, TCA9555_OUTPUT_PORT_REG_0, &value) == 0) {
+		value |= IOE_SWITCH_MUX_TO_BIC; // Enable P0~P3 to switch mux to BIC.
+		set_ioe_value(ADDR_IOE2, TCA9555_OUTPUT_PORT_REG_0, value);
+	}
+
+	return;
 }
