@@ -20,6 +20,10 @@
 #include "plat_gpio.h"
 
 #define DC_ON_DELAY5_SEC 5
+// BIC checks for CXL readiness every three seconds, with a maximum of 10 attempts
+#define CXL_READY_RETRY_TIMES 10
+#define CXL_READY_INTERVAL_SECONDS 3
+#define CXL_HEART_BEAT_LABEL "HB0"
 #define CHK_PWR_DELAY_MSEC 100
 #define SYS_CLK_STABLE_DELAY_MSEC 25
 #define PWR_ON_RST_DELAY_MSEC 25

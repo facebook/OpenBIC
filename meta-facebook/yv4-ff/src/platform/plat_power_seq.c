@@ -16,6 +16,9 @@
 
 #include <stdio.h>
 #include <logging/log.h>
+#include <drivers/sensor.h>
+#include <drivers/pwm.h>
+
 #include "power_status.h"
 #include "plat_class.h"
 #include "plat_gpio.h"
@@ -23,7 +26,10 @@
 
 LOG_MODULE_REGISTER(plat_power_seq);
 
+static void cxl_ready_handler();
+
 K_WORK_DELAYABLE_DEFINE(set_dc_on_5s_work, set_DC_on_delayed_status);
+K_WORK_DELAYABLE_DEFINE(cxl_ready_thread, cxl_ready_handler);
 K_WORK_DELAYABLE_DEFINE(enable_power_on_rst_work, enable_power_on_rst);
 
 void enable_power_on_rst()
@@ -57,6 +63,7 @@ void execute_power_on_sequence()
 		gpio_set(LED_CXL_POWER, POWER_ON);
 		set_DC_status(PG_CARD_OK);
 		k_work_schedule(&set_dc_on_5s_work, K_SECONDS(DC_ON_DELAY5_SEC));
+		k_work_schedule(&cxl_ready_thread, K_SECONDS(CXL_READY_INTERVAL_SECONDS));
 		LOG_INF("CXL power on success");
 	} else {
 		LOG_ERR("CXL power on fail");
@@ -78,6 +85,10 @@ void execute_power_off_sequence()
 
 	if (k_work_cancel_delayable(&set_dc_on_5s_work) != 0) {
 		LOG_ERR("Cancel set dc off delay work fail");
+	}
+
+	if (k_work_cancel_delayable(&cxl_ready_thread) != 0) {
+		LOG_ERR("Failed to cancel cxl_ready_thread");
 	}
 
 	set_DC_on_delayed_status();
@@ -353,4 +364,31 @@ bool is_power_controlled(uint8_t power_pin, uint8_t check_power_status, char *po
 			power_name, power_pin);
 		return false;
 	}
+}
+
+static void cxl_ready_handler()
+{
+	const struct device *heartbeat = NULL;
+	int heartbeat_status = 0;
+
+	heartbeat = device_get_binding(CXL_HEART_BEAT_LABEL);
+	if (heartbeat == NULL) {
+		LOG_ERR("%s device not found", CXL_HEART_BEAT_LABEL);
+		return;
+	}
+
+	for (int times = 0; times < CXL_READY_RETRY_TIMES; times++) {
+		heartbeat_status = sensor_sample_fetch(heartbeat);
+		if (heartbeat_status < 0) {
+			k_sleep(K_SECONDS(CXL_READY_INTERVAL_SECONDS));
+			continue;
+		}
+		/* Switch muxs to BIC*/
+		gpio_set(SEL_SMB_MUX_PMIC_R, GPIO_HIGH);
+		gpio_set(SEL_SMB_MUX_DIMM_R, GPIO_HIGH);
+		return;
+	}
+	LOG_ERR("Failed to read %s due to sensor_sample_fetch failed, ret: %d",
+		CXL_HEART_BEAT_LABEL, heartbeat_status);
+	return;
 }
