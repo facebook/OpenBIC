@@ -20,13 +20,7 @@
 #include <stdint.h>
 #include "ipmi.h"
 
-// BIC checks for CXL readiness every three seconds, with a maximum of 10 attempts
-#define CXL_READY_RETRY_TIMES 10
-#define CXL_READY_INTERVAL_SECONDS 3
-#define CXL_HEART_BEAT_LABEL "HB0"
-
 void ISR_MB_DC_STATUS_CHANGE();
 void ISR_MB_PCIE_RST();
-void ISR_CXL_PG_ON();
 
 #endif
