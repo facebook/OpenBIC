@@ -413,8 +413,8 @@ void pal_extend_sensor_config()
 	}
 
 	/* Following the hardware design,
-	 * MPS and Renesas VR chips are used in EVT stage.
-	 * And the slave address is changed in EVT stage.
+	 * MPS and Renesas VR chips are used after EVT stage.
+	 * And the slave address is changed after EVT stage.
 	 * So, BIC revises VR slave address according to server board revision.
 	 * Besides, BIC judges VR chip type by getting device id
 	 * and then replace sensor config table before loading.
@@ -423,7 +423,7 @@ void pal_extend_sensor_config()
 	sensor_count = ARRAY_SIZE(plat_sensor_config);
 	for (uint8_t index = 0; index < sensor_count; index++) {
 		if (sensor_config[index].type == sensor_dev_xdpe15284) {
-			if (board_revision == SYS_BOARD_EVT) {
+			if ((board_revision >= SYS_BOARD_EVT) && (board_revision <= SYS_BOARD_MP)) {
 				switch (sensor_config[index].target_addr) {
 				case FIVRA_ADDR:
 					sensor_config[index].target_addr = EVT_FIVRA_ADDR;
