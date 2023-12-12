@@ -91,7 +91,7 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_VOL_P1V2_AUX, sensor_dev_ast_adc, ADC_PORT1, NONE, NONE, stby_access, 1, 1,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
-	{ SENSOR_NUM_VOL_P3V3, sensor_dev_ast_adc, ADC_PORT2, NONE, NONE, stby_access, 2, 1,
+	{ SENSOR_NUM_VOL_P3V3, sensor_dev_ast_adc, ADC_PORT2, NONE, NONE, is_dc_access, 2, 1,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
 };
