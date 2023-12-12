@@ -462,13 +462,11 @@ struct vgpio_info post_complete;
 
 static void post_complete_handler(struct k_work *work)
 {
-	/* Add "END_OF_POST" event log to BMC */
-	struct vgpio_info *info = CONTAINER_OF(work, struct vgpio_info, work);
+	// Add "END_OF_POST" event log to BMC
 	common_addsel_msg_t sel_msg;
 	sel_msg.InF_target = BMC_IPMB;
 	sel_msg.sensor_type = IPMI_SENSOR_TYPE_SYS_EVENT;
-	sel_msg.event_type = (info->gpio_value == VW_GPIO_HIGH) ? IPMI_EVENT_TYPE_SENSOR_SPECIFIC :
-								  IPMI_OEM_EVENT_TYPE_DEASSERT;
+	sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 	sel_msg.sensor_number = SENSOR_NUM_END_OF_POST;
 	sel_msg.event_data1 = IPMI_EVENT_OEM_SYSTEM_BOOT_EVENT;
 	sel_msg.event_data2 = 0xFF;
@@ -485,7 +483,11 @@ void ISR_POST_COMPLETE(uint8_t gpio_value)
 	set_post_complete(is_post_completed);
 
 	post_complete.gpio_value = gpio_value;
-	k_work_schedule(&post_completework, K_MSEC(10));
+
+	// Only send when post is complete
+	if (is_post_completed) {
+		k_work_schedule(&post_completework, K_MSEC(10));
+	}
 }
 
 static void adr_mode0_handler(struct k_work *work)
