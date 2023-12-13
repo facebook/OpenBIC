@@ -21,6 +21,8 @@
 #include <stdint.h>
 #include "pldm_firmware_update.h"
 
+#define INF_CRC_PREFIX "Infineon "
+
 void load_pldmupdate_comp_config(void);
 
 #endif /* _PLAT_FWUPDATE_H_ */
