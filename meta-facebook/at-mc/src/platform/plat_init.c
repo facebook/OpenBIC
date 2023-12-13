@@ -28,6 +28,7 @@
 #include "util_worker.h"
 #include "plat_isr.h"
 #include "plat_sys.h"
+#include "plat_pldm_monitor.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -117,6 +118,9 @@ void pal_post_init()
 	plat_mctp_init();
 	check_mb_reset_status();
 	check_debug_sel_mode_status();
+	if (is_ac_lost()) {
+		plat_ssd_present_check();
+	}
 }
 
 void pal_device_init()

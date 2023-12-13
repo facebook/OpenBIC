@@ -29,14 +29,6 @@
 
 LOG_MODULE_REGISTER(plat_class);
 
-struct PCIE_CARD_INFO {
-	uint8_t cpld_offset;
-	uint8_t power_status_offset;
-	uint8_t value_bit;
-	uint8_t value_shift_bit;
-	uint8_t card_device_type;
-};
-
 uint8_t board_revision = REV_UNKNOWN;
 
 struct PCIE_CARD_INFO pcie_card_info[] = {
