@@ -47,6 +47,9 @@
 #define CPLD_SW_0_ERR_BIT BIT(1)
 #define CPLD_SW_1_ERR_BIT BIT(0)
 #define CPLD_P0V8_1_EN_BIT BIT(0)
+#define CPLD_ACCL_3V3_POWER_FAULT_BIT BIT(0)
+#define CPLD_ACCL_12V_POWER_FAULT_BIT BIT(1)
+#define CPLD_ACCL_3V3_AUX_FAULT_BIT BIT(2)
 
 #define IOEXP_U228_ADDR (0x40 >> 1)
 #define IOEXP_U229_ADDR (0x42 >> 1)
@@ -136,12 +139,28 @@ enum PCIE_CARD_INDEX {
 	PCIE_CARD_12,
 };
 
+enum CPLD_ACCL_POWER_FAULT_REG {
+	ACCL1_POWER_FAULT_REG = 0x5C,
+	ACCL2_POWER_FAULT_REG = 0x5B,
+	ACCL3_POWER_FAULT_REG = 0x5A,
+	ACCL4_POWER_FAULT_REG = 0x59,
+	ACCL5_POWER_FAULT_REG = 0x58,
+	ACCL6_POWER_FAULT_REG = 0x57,
+	ACCL7_POWER_FAULT_REG = 0x56,
+	ACCL8_POWER_FAULT_REG = 0x55,
+	ACCL9_POWER_FAULT_REG = 0x54,
+	ACCL10_POWER_FAULT_REG = 0x53,
+	ACCL11_POWER_FAULT_REG = 0x52,
+	ACCL12_POWER_FAULT_REG = 0x51,
+};
+
 struct ASIC_CARD_INFO {
 	bool card_status;
 	bool pwr_cbl_status;
 	uint8_t card_type;
 	bool asic_1_status;
 	bool asic_2_status;
+	uint8_t power_fault_reg;
 };
 
 extern struct ASIC_CARD_INFO asic_card_info[ASIC_CARD_COUNT];

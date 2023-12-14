@@ -46,6 +46,11 @@ typedef struct _alert_event_cfg {
 	uint16_t bit_map;
 } alert_event_cfg;
 
+typedef struct _accl_power_fault_info {
+	uint8_t check_bit;
+	uint8_t power_fault_state;
+} accl_power_fault_info;
+
 void check_accl_card_pwr_good_work_handler();
 
 alert_sensor_info vr_info[] = {
@@ -386,15 +391,49 @@ void add_sel_work_handler(struct k_work *work_item)
 K_WORK_DELAYABLE_DEFINE(check_accl_card_pwr_good_work, check_accl_card_pwr_good_work_handler);
 void check_accl_card_pwr_good_work_handler()
 {
+	int ret = 0;
+	uint8_t val = 0;
+	uint8_t index = 0;
 	uint8_t card_id = 0;
+	accl_power_fault_info power_fault_info[] = {
+		{ .check_bit = CPLD_ACCL_3V3_POWER_FAULT_BIT,
+		  .power_fault_state = PLDM_STATE_SET_OEM_DEVICE_3V3_POWER_FAULT },
+		{ .check_bit = CPLD_ACCL_12V_POWER_FAULT_BIT,
+		  .power_fault_state = PLDM_STATE_SET_OEM_DEVICE_12V_POWER_FAULT },
+		{ .check_bit = CPLD_ACCL_3V3_AUX_FAULT_BIT,
+		  .power_fault_state = PLDM_STATE_SET_OEM_DEVICE_3V3_AUX_FAULT },
+	};
 
-	for (card_id = 0; card_id < ASIC_CARD_COUNT; ++card_id) {
-		if (is_accl_power_good(card_id) != true) {
-			plat_accl_power_good_fail_event(card_id);
-		} else {
-			// Check ACCL cable power good status if ACCL card power good
-			if (is_accl_cable_power_good(card_id) != true) {
+	for (card_id = 0; card_id < ARRAY_SIZE(asic_card_info); ++card_id) {
+		if (is_accl_cable_power_good(card_id) != true) {
+			if (is_accl_power_good(card_id)) {
+				// Send ACCL cable power good fail event
 				plat_accl_cable_power_good_fail_event(card_id);
+			} else {
+				ret = get_cpld_register(asic_card_info[card_id].power_fault_reg,
+							&val);
+				if (ret != 0) {
+					LOG_ERR("Failed to check power fault register, card id: 0x%x, reg: 0x%x",
+						card_id, asic_card_info[card_id].power_fault_reg);
+					plat_accl_power_good_fail_event(
+						card_id, PLDM_STATE_SET_OEM_DEVICE_POWER_GOOD_FAIL);
+					continue;
+				}
+
+				for (index = 0; index < ARRAY_SIZE(power_fault_info); ++index) {
+					if (val & power_fault_info[index].check_bit) {
+						plat_accl_power_good_fail_event(
+							card_id,
+							power_fault_info[index].power_fault_state);
+						break;
+					}
+				}
+
+				if (index >= ARRAY_SIZE(power_fault_info)) {
+					// No power fault occurs but ACCL power good fail
+					plat_accl_power_good_fail_event(
+						card_id, PLDM_STATE_SET_OEM_DEVICE_POWER_GOOD_FAIL);
+				}
 			}
 		}
 	}
