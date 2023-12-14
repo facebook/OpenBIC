@@ -25,6 +25,11 @@
 
 LOG_MODULE_DECLARE(pldm);
 
+__weak uint8_t plat_pldm_get_tid()
+{
+	return DEFAULT_TID;
+}
+
 uint8_t set_tid(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id, uint8_t *resp,
 		uint16_t *resp_len, void *ext_params)
 {
@@ -48,7 +53,7 @@ uint8_t get_tid(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id
 
 	struct _get_tid_resp *p = (struct _get_tid_resp *)resp;
 	p->completion_code = PLDM_SUCCESS;
-	p->tid = DEFAULT_TID;
+	p->tid = plat_pldm_get_tid();
 	*resp_len = sizeof(*p);
 	return PLDM_SUCCESS;
 }
