@@ -48,6 +48,8 @@ LOG_MODULE_REGISTER(plat_mctp);
 #define MCTP_EID_MB_BIC 0
 #define MCTP_EID_CXL 0
 
+uint8_t plat_eid = MCTP_DEFAULT_ENDPOINT;
+
 K_TIMER_DEFINE(send_cmd_timer, send_cmd_to_dev, NULL);
 K_WORK_DEFINE(send_cmd_work, send_cmd_to_dev_handler);
 
@@ -356,6 +358,9 @@ mctp_port *plat_get_mctp_port(uint8_t index)
 
 void plat_update_mctp_routing_table(uint8_t eid)
 {
+	// Set platform eid
+	plat_eid = eid;
+
 	// update sd bic eid
 	mctp_route_entry *p = plat_mctp_route_tbl + 1;
 	p->endpoint = eid - 1;
@@ -375,4 +380,9 @@ int load_mctp_support_types(uint8_t *type_len, uint8_t *types)
 	*type_len = sizeof(MCTP_SUPPORTED_MESSAGES_TYPES);
 	memcpy(types, MCTP_SUPPORTED_MESSAGES_TYPES, sizeof(MCTP_SUPPORTED_MESSAGES_TYPES));
 	return MCTP_SUCCESS;
+}
+
+uint8_t plat_get_eid()
+{
+	return plat_eid;
 }
