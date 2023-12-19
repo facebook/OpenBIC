@@ -23,6 +23,8 @@
 #include "plat_gpio.h"
 #include "plat_dimm.h"
 
+#define RETIMER_INIT_RETRY_COUNT 3
+
 LOG_MODULE_REGISTER(plat_hook);
 
 adc_asd_init_arg ast_adc_init_args[] = {
@@ -71,6 +73,16 @@ ina233_init_arg ina233_init_args[] = {
 		.is_need_set_alert_threshold = false,
 	},
 };
+
+pt5161l_init_arg pt5161l_init_args[] = {
+	[0] = { .is_init = false,
+	.temp_cal_code_pma_a = { 0, 0, 0, 0 },
+	.temp_cal_code_pma_b = { 0, 0, 0, 0 },
+	.temp_cal_code_avg = 0 },
+	[1] = { .is_init = false,
+	.temp_cal_code_pma_a = { 0, 0, 0, 0 },
+	.temp_cal_code_pma_b = { 0, 0, 0, 0 },
+	.temp_cal_code_avg = 0 } };
 
 bool pre_vr_read(sensor_cfg *cfg, void *args)
 {
@@ -157,4 +169,27 @@ bool post_p3v_bat_read(sensor_cfg *cfg, void *args, int *const reading)
 		return false;
 	}
 	return true;
+}
+
+bool pre_retimer_read(sensor_cfg *cfg, void *args)
+{
+	pt5161l_init_arg *init_arg = (pt5161l_init_arg *)cfg->init_args;
+	static uint8_t check_init_count = 0;
+	bool ret = true;
+
+	if (init_arg->is_init == false) {
+		if (check_init_count >= RETIMER_INIT_RETRY_COUNT) {
+			LOG_ERR("retimer initial fail reach max retry");
+			return false;
+		}
+
+		check_init_count += 1;
+		ret = init_drive_type_delayed(cfg);
+		if (ret == false) {
+			LOG_ERR("retimer initial fail");
+			return ret;
+		}
+	}
+
+	return ret;
 }
