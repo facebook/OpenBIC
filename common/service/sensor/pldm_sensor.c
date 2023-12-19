@@ -218,16 +218,20 @@ void pldm_sensor_get_reading(sensor_cfg *pldm_sensor_cfg, uint32_t *update_time,
 		}
 	}
 
-	pldm_sensor_cfg->cache_status = PLDM_SENSOR_ENABLED;
 	*update_time = (k_uptime_get_32() / 1000);
 	pldm_sensor_cfg->cache = reading;
+	pldm_sensor_cfg->cache_status = PLDM_SENSOR_ENABLED;
 }
 
-int pldm_sensor_polling_pre_check(pldm_sensor_info *pldm_snr_list)
+int pldm_sensor_polling_pre_check(pldm_sensor_info *pldm_snr_list, int sensor_num)
 {
 	CHECK_NULL_ARG_WITH_RETURN(pldm_snr_list, -1);
 
 	int ret = 0;
+
+	if (pldm_snr_list->pldm_sensor_cfg.access_checker(sensor_num) == false) {
+		return -1;
+	}
 
 	if (pldm_snr_list->pldm_sensor_cfg.pre_sensor_read_hook) {
 		if (!pldm_snr_list->pldm_sensor_cfg.pre_sensor_read_hook(
@@ -263,6 +267,12 @@ int pldm_polling_sensor_reading(pldm_sensor_info *pldm_snr_list, int pldm_sensor
 				int thread_id, int sensor_num)
 {
 	CHECK_NULL_ARG_WITH_RETURN(pldm_snr_list, -1);
+
+	if (pldm_snr_list->pldm_sensor_cfg.cache_status == PLDM_SENSOR_INITIALIZING) {
+		if (pldm_sensor_polling_pre_check(&pldm_sensor_list[thread_id][sensor_num], sensor_num) != 0) {
+			return -1;
+		}
+	}
 
 	if (pldm_snr_list->pdr_numeric_sensor.sensor_init != PDR_SENSOR_ENABLE) {
 		pldm_snr_list->pldm_sensor_cfg.cache_status = PLDM_SENSOR_DISABLED;
@@ -302,12 +312,6 @@ void pldm_sensor_polling_handler(void *arug0, void *arug1, void *arug2)
 	if (pldm_sensor_list[thread_id] == NULL) {
 		LOG_ERR("Failed to load PLDM sensor list of thread%d, ret%d", thread_id, ret);
 		return;
-	}
-
-	for (sensor_num = 0; sensor_num < pldm_sensor_count; sensor_num++) {
-		if (pldm_sensor_polling_pre_check(&pldm_sensor_list[thread_id][sensor_num]) != 0) {
-			continue;
-		}
 	}
 
 	while (1) {
