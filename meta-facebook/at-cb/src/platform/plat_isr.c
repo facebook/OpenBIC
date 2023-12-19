@@ -29,21 +29,33 @@
 #include "plat_dev.h"
 #include "plat_pldm_monitor.h"
 #include "xdpe15284.h"
+#include "q50sn120a1.h"
+#include "pmbus.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
 #define NORMAL_POWER_GOOD_CHECK_DELAY_MS 5000
 
-typedef struct _vr_sensor_info {
+typedef struct _alert_sensor_info {
 	uint8_t sensor_num;
-	uint8_t last_status;
-} vr_sensor_info;
+	uint16_t last_status;
+} alert_sensor_info;
+
+typedef struct _alert_event_cfg {
+	uint8_t event_type;
+	uint16_t bit_map;
+} alert_event_cfg;
 
 void check_accl_card_pwr_good_work_handler();
 
-vr_sensor_info vr_info[] = {
+alert_sensor_info vr_info[] = {
 	{ .sensor_num = SENSOR_NUM_TEMP_P0V8_VDD_1, .last_status = 0 },
 	{ .sensor_num = SENSOR_NUM_TEMP_P0V8_VDD_2, .last_status = 0 },
+};
+
+alert_sensor_info power_brick_info[] = {
+	{ .sensor_num = SENSOR_NUM_TEMP_POWER_BRICK_1, .last_status = 0 },
+	{ .sensor_num = SENSOR_NUM_TEMP_POWER_BRICK_2, .last_status = 0 },
 };
 
 add_sel_info add_sel_work_item[] = {
@@ -53,7 +65,7 @@ add_sel_info add_sel_work_item[] = {
 	  .event_type = PLDM_ADDSEL_EVENT_TYPE_DEFAULT },
 	{ .is_init = false,
 	  .gpio_num = SMB_PMBUS_ALERT_N_R,
-	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_POWER_BRICK_ALERT,
+	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_POWER_BRICK_0_ALERT,
 	  .event_type = PLDM_ADDSEL_EVENT_TYPE_DEFAULT },
 	{ .is_init = false,
 	  .gpio_num = SMB_P1V25_ALRT_N_R,
@@ -178,29 +190,26 @@ void vr_alert_addsel(uint8_t sensor_num, uint8_t device_type, uint8_t board_info
 		     uint8_t event_type, uint8_t status)
 {
 	uint8_t type = event_type;
+	uint8_t index = 0;
+	alert_event_cfg vr_event_cfg[] = {
+		{ .event_type = PLDM_ADDSEL_OVER_TEMPERATURE_EVENT,
+		  .bit_map = XDPE15284_TEMPERATURE_FAULT_BIT },
+		{ .event_type = PLDM_ADDSEL_UNDER_VOLTAGE_EVENT,
+		  .bit_map = XDPE15284_UNDER_VOLTAGE_FAULT_BIT },
+		{ .event_type = PLDM_ADDSEL_OVER_CURRENT_EVENT,
+		  .bit_map = XDPE15284_OVER_CURRENT_FAULT_BIT },
+		{ .event_type = PLDM_ADDSEL_OVER_VOLTAGE_EVENT,
+		  .bit_map = XDPE15284_OVER_VOLTAGE_FAULT_BIT },
+	};
 
-	if (status & XDPE15284_TEMPERATURE_FAULT_BIT) {
-		type = event_type | PLDM_ADDSEL_OVER_TEMPERATURE_EVENT;
-		if (plat_set_effecter_states_req(device_type, board_info, type) != PLDM_SUCCESS) {
-			LOG_ERR("Fail to addsel VR: 0x%x temperature fault event", sensor_num);
-		}
-	}
-	if (status & XDPE15284_UNDER_VOLTAGE_FAULT_BIT) {
-		type = event_type | PLDM_ADDSEL_UNDER_VOLTAGE_EVENT;
-		if (plat_set_effecter_states_req(device_type, board_info, type) != PLDM_SUCCESS) {
-			LOG_ERR("Fail to addsel VR: 0x%x under voltage event", sensor_num);
-		}
-	}
-	if (status & XDPE15284_OVER_CURRENT_FAULT_BIT) {
-		type = event_type | PLDM_ADDSEL_OVER_CURRENT_EVENT;
-		if (plat_set_effecter_states_req(device_type, board_info, type) != PLDM_SUCCESS) {
-			LOG_ERR("Fail to addsel VR: 0x%x over current event", sensor_num);
-		}
-	}
-	if (status & XDPE15284_OVER_VOLTAGE_FAULT_BIT) {
-		type = event_type | PLDM_ADDSEL_OVER_VOLTAGE_EVENT;
-		if (plat_set_effecter_states_req(device_type, board_info, type) != PLDM_SUCCESS) {
-			LOG_ERR("Fail to addsel VR: 0x%x over voltage event", sensor_num);
+	for (index = 0; index < ARRAY_SIZE(vr_event_cfg); ++index) {
+		if (status & vr_event_cfg[index].bit_map) {
+			type = event_type | vr_event_cfg[index].event_type;
+			if (plat_set_effecter_states_req(device_type, board_info, type) !=
+			    PLDM_SUCCESS) {
+				LOG_ERR("Fail to addsel VR: 0x%x event, event type: 0x%x",
+					sensor_num, vr_event_cfg[index].event_type);
+			}
 		}
 	}
 }
@@ -258,6 +267,97 @@ void parse_vr_alert_event(add_sel_info *work_info)
 	}
 }
 
+void parse_power_brick_alert_event(add_sel_info *work_info)
+{
+	CHECK_NULL_ARG(work_info);
+
+	int ret = 0;
+	uint8_t type = 0;
+	uint8_t index = 0;
+	uint8_t sensor_num = 0;
+	uint8_t sensor_count = 0;
+	uint16_t status = 0;
+	alert_event_cfg power_brick_event_cfg[] = {
+		{ .event_type = PLDM_ADDSEL_CML_FAULT, .bit_map = PMBUS_CML_FAULT },
+		{ .event_type = PLDM_ADDSEL_TEMPERATURE_WARNING_FAULT,
+		  .bit_map = PMBUS_TEMPERATURE_WARNING_FAULT },
+		{ .event_type = PLDM_ADDSEL_UNDER_VOLTAGE_EVENT,
+		  .bit_map = PMBUS_UNDER_VOLTAGE_FAULT },
+		{ .event_type = PLDM_ADDSEL_OVER_CURRENT_EVENT,
+		  .bit_map = PMBUS_OVER_CURRENT_FAULT },
+		{ .event_type = PLDM_ADDSEL_OVER_VOLTAGE_EVENT,
+		  .bit_map = PMBUS_OVER_VOLTAGE_FAULT },
+		{ .event_type = PLDM_ADDSEL_POWER_OFF_FAULT, .bit_map = PMBUS_POWER_OFF_FAULT },
+		{ .event_type = PLDM_ADDSEL_POWER_GOOD_FAULT, .bit_map = PMBUS_POWER_GOOD_FAULT },
+		{ .event_type = PLDM_ADDSEL_INPUT_VOLTAGE_FAULT,
+		  .bit_map = PMBUS_INPUT_VOLTAGE_FAULT },
+		{ .event_type = PLDM_ADDSEL_OUTPUT_CURRENT_WARNING_FAULT,
+		  .bit_map = PMBUS_OUTPUT_CURRENT_WARNING_FAULT },
+		{ .event_type = PLDM_ADDSEL_OUTPUT_VOLTAGE_WARNING_FAULT,
+		  .bit_map = PMBUS_OUTPUT_VOLTAGE_WARNING_FAULT },
+	};
+	alert_event_cfg bmr351_additional_event_cfg[] = {
+		{ .event_type = PLDM_ADDSEL_MFR_SPECIFIC_FAULT,
+		  .bit_map = PMBUS_MFR_SPECIFIC_FAULT },
+		{ .event_type = PLDM_ADDSEL_NO_LISTED_FAULT, .bit_map = PMBUS_NO_LISTED_FAULT },
+	};
+
+	for (sensor_count = 0; sensor_count < ARRAY_SIZE(power_brick_info); ++sensor_count) {
+		sensor_num = power_brick_info[sensor_count].sensor_num;
+		work_info->device_type = ((sensor_num == SENSOR_NUM_TEMP_POWER_BRICK_1) ?
+						  PLDM_ADDSEL_DEVICE_TYPE_POWER_BRICK_0_ALERT :
+						  PLDM_ADDSEL_DEVICE_TYPE_POWER_BRICK_1_ALERT);
+
+		sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+		ret = q50sn120a1_get_status_word(cfg->port, cfg->target_addr, &status);
+		if (ret != 0) {
+			LOG_ERR("Get Power brick sensor: 0x%x status fail", sensor_num);
+			continue;
+		}
+
+		if (work_info->event_type & PLDM_ADDSEL_ASSERT_MASK) {
+			// Alert pin is triggered (Active)
+			power_brick_info[sensor_count].last_status = status;
+			type = PLDM_ADDSEL_ASSERT_MASK;
+		} else {
+			// Alert pin is triggered (INACTIVE)
+			// Send deassert event based on the previous assert event
+			uint16_t tmp = power_brick_info[sensor_count].last_status;
+			power_brick_info[sensor_count].last_status = status;
+			status = tmp;
+			type = 0;
+		}
+
+		for (index = 0; index < ARRAY_SIZE(power_brick_event_cfg); ++index) {
+			if (status & power_brick_event_cfg[index].bit_map) {
+				type |= power_brick_event_cfg[index].event_type;
+				if (plat_set_effecter_states_req(work_info->device_type,
+								 work_info->board_info,
+								 type) != PLDM_SUCCESS) {
+					LOG_ERR("Fail to addsel power brick: 0x%x event, event type: 0x%x",
+						sensor_num,
+						power_brick_event_cfg[index].event_type);
+				}
+			}
+		}
+
+		if (get_pwr_brick_module() == POWER_BRICK_BMR3512202) {
+			for (index = 0; index < ARRAY_SIZE(bmr351_additional_event_cfg); ++index) {
+				if (status & bmr351_additional_event_cfg[index].bit_map) {
+					type |= bmr351_additional_event_cfg[index].event_type;
+					if (plat_set_effecter_states_req(work_info->device_type,
+									 work_info->board_info,
+									 type) != PLDM_SUCCESS) {
+						LOG_ERR("Fail to addsel power brick: 0x%x event, event type: 0x%x",
+							sensor_num,
+							power_brick_event_cfg[index].event_type);
+					}
+				}
+			}
+		}
+	}
+}
+
 void add_sel_work_handler(struct k_work *work_item)
 {
 	struct k_work_delayable *dwork = k_work_delayable_from_work(work_item);
@@ -267,6 +367,11 @@ void add_sel_work_handler(struct k_work *work_item)
 
 	if (work_info->gpio_num == SMB_P0V8_ALERT_N) {
 		parse_vr_alert_event(work_info);
+		return;
+	}
+
+	if (work_info->gpio_num == SMB_PMBUS_ALERT_N_R) {
+		parse_power_brick_alert_event(work_info);
 		return;
 	}
 

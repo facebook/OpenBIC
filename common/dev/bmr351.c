@@ -40,14 +40,16 @@ static int bmr351_read_pout(sensor_cfg *cfg, float *pout_value)
 		return -1;
 	}
 
-	ret = pmbus_read_command(cfg, PMBUS_READ_VOUT, (uint8_t *)&tmp, read_len);
+	ret = pmbus_read_command(cfg->port, cfg->target_addr, PMBUS_READ_VOUT, (uint8_t *)&tmp,
+				 read_len);
 	if (ret != 0) {
 		return -1;
 	}
 	vout = (float)tmp * exponent;
 
 	/* Read Iout */
-	ret = pmbus_read_command(cfg, PMBUS_READ_IOUT, (uint8_t *)&tmp, read_len);
+	ret = pmbus_read_command(cfg->port, cfg->target_addr, PMBUS_READ_IOUT, (uint8_t *)&tmp,
+				 read_len);
 	if (ret != 0) {
 		return -1;
 	}
@@ -81,7 +83,8 @@ uint8_t bmr351_read(sensor_cfg *cfg, int *reading)
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 
-		ret = pmbus_read_command(cfg, offset, (uint8_t *)&tmp, read_len);
+		ret = pmbus_read_command(cfg->port, cfg->target_addr, offset, (uint8_t *)&tmp,
+					 read_len);
 		if (ret != 0) {
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
@@ -89,7 +92,8 @@ uint8_t bmr351_read(sensor_cfg *cfg, int *reading)
 		break;
 	case PMBUS_READ_IOUT:
 	case PMBUS_READ_TEMPERATURE_1:
-		ret = pmbus_read_command(cfg, offset, (uint8_t *)&tmp, read_len);
+		ret = pmbus_read_command(cfg->port, cfg->target_addr, offset, (uint8_t *)&tmp,
+					 read_len);
 		if (ret != 0) {
 			return SENSOR_UNSPECIFIED_ERROR;
 		}

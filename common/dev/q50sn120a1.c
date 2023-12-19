@@ -24,6 +24,14 @@
 
 LOG_MODULE_REGISTER(dev_q50sn120a1);
 
+int q50sn120a1_get_status_word(uint8_t bus, uint8_t addr, uint16_t *status)
+{
+	CHECK_NULL_ARG_WITH_RETURN(status, -1);
+
+	return pmbus_read_command(bus, addr, PMBUS_STATUS_WORD, (uint8_t *)status,
+				  sizeof(uint16_t));
+}
+
 int q50sn120a1_read_pout(sensor_cfg *cfg, float *pout_value)
 {
 	CHECK_NULL_ARG_WITH_RETURN(pout_value, -1)
@@ -42,14 +50,16 @@ int q50sn120a1_read_pout(sensor_cfg *cfg, float *pout_value)
 		return -1;
 	}
 
-	ret = pmbus_read_command(cfg, PMBUS_READ_VOUT, (uint8_t *)&tmp, read_len);
+	ret = pmbus_read_command(cfg->port, cfg->target_addr, PMBUS_READ_VOUT, (uint8_t *)&tmp,
+				 read_len);
 	if (ret != 0) {
 		return -1;
 	}
 	vout = (float)tmp * exponent;
 
 	/* Read Iout */
-	ret = pmbus_read_command(cfg, PMBUS_READ_IOUT, (uint8_t *)&tmp, read_len);
+	ret = pmbus_read_command(cfg->port, cfg->target_addr, PMBUS_READ_IOUT, (uint8_t *)&tmp,
+				 read_len);
 	if (ret != 0) {
 		return -1;
 	}
@@ -83,7 +93,8 @@ uint8_t q50sn120a1_read(sensor_cfg *cfg, int *reading)
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 
-		ret = pmbus_read_command(cfg, offset, (uint8_t *)&tmp, read_len);
+		ret = pmbus_read_command(cfg->port, cfg->target_addr, offset, (uint8_t *)&tmp,
+					 read_len);
 		if (ret != 0) {
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
@@ -91,7 +102,8 @@ uint8_t q50sn120a1_read(sensor_cfg *cfg, int *reading)
 		break;
 	case PMBUS_READ_IOUT:
 	case PMBUS_READ_TEMPERATURE_1:
-		ret = pmbus_read_command(cfg, offset, (uint8_t *)&tmp, read_len);
+		ret = pmbus_read_command(cfg->port, cfg->target_addr, offset, (uint8_t *)&tmp,
+					 read_len);
 		if (ret != 0) {
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
