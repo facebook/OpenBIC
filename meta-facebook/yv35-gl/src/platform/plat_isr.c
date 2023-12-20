@@ -320,26 +320,24 @@ void ISR_MB_THROTTLE()
 void ISR_SOC_THMALTRIP()
 {
 	common_addsel_msg_t sel_msg;
-	if (gpio_get(RST_PLTRST_SYNC_LVC3_N) == GPIO_LOW) {
-		if (gpio_get(H_CPU_MEMTRIP_LVC3_N) ==
-		    GPIO_LOW) { // Reference pin for memory thermal trip event
-			sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_MEMORY_THERMALTRIP;
-		} else {
-			sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_THERMAL_TRIP;
-		}
+	if (gpio_get(H_CPU_MEMTRIP_LVC3_N) ==
+	    GPIO_LOW) { // Reference pin for memory thermal trip event
+		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_MEMORY_THERMALTRIP;
+	} else {
+		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_THERMAL_TRIP;
+	}
 
-		sel_msg.InF_target = BMC_IPMB;
-		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
-		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
-		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
-		sel_msg.event_data2 = 0xFF;
-		sel_msg.event_data3 = 0xFF;
-		if (!common_add_sel_evt_record(&sel_msg)) {
-			if (sel_msg.event_data1 == IPMI_OEM_EVENT_OFFSET_SYS_THERMAL_TRIP) {
-				LOG_ERR("Failed to add SOC Thermal trip SEL");
-			} else {
-				LOG_ERR("Failed to add Memory Thermal trip SEL");
-			}
+	sel_msg.InF_target = BMC_IPMB;
+	sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+	sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+	sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+	sel_msg.event_data2 = 0xFF;
+	sel_msg.event_data3 = 0xFF;
+	if (!common_add_sel_evt_record(&sel_msg)) {
+		if (sel_msg.event_data1 == IPMI_OEM_EVENT_OFFSET_SYS_THERMAL_TRIP) {
+			LOG_ERR("Failed to add SOC Thermal trip SEL");
+		} else {
+			LOG_ERR("Failed to add Memory Thermal trip SEL");
 		}
 	}
 }
