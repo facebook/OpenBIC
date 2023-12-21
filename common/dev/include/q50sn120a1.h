@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,15 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef UTIL_PMBUS_H
-#define UTIL_PMBUS_H
+#ifndef __Q50SN120A1__
+#define __Q50SN120A1__
 
-#include "sensor.h"
+#include <stdint.h>
 
-float slinear11_to_float(uint16_t);
-bool get_exponent_from_vout_mode(sensor_cfg *, float *);
-int pmbus_read_command(uint8_t bus, uint8_t addr, uint8_t command, uint8_t *result,
-		       uint8_t read_len);
-int pmbus_set_page(uint8_t bus, uint8_t addr, uint8_t page);
+int q50sn120a1_get_status_word(uint8_t bus, uint8_t addr, uint16_t *status);
 
 #endif

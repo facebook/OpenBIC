@@ -95,17 +95,17 @@ bool get_exponent_from_vout_mode(sensor_cfg *cfg, float *exponent)
 	return true;
 }
 
-int pmbus_read_command(sensor_cfg *cfg, uint8_t command, uint8_t *result, uint8_t read_len)
+int pmbus_read_command(uint8_t bus, uint8_t addr, uint8_t command, uint8_t *result,
+		       uint8_t read_len)
 {
-	CHECK_NULL_ARG_WITH_RETURN(cfg, -1);
 	CHECK_NULL_ARG_WITH_RETURN(result, -1);
 
 	int ret = 0;
 	uint8_t retry = 5;
 	I2C_MSG msg = { 0 };
 
-	msg.bus = cfg->port;
-	msg.target_addr = cfg->target_addr;
+	msg.bus = bus;
+	msg.target_addr = addr;
 	msg.tx_len = 1;
 	msg.rx_len = read_len;
 	msg.data[0] = command;
