@@ -54,6 +54,9 @@ static const uint8_t pmic_err_pattern[MAX_COUNT_PMIC_ERROR_TYPE][MAX_LEN_GET_PMI
 	{ 0x00, 0x00, 0x00, 0x00, 0x02, 0xF0, 0x00 }, // CURRENT_LIMIT_WARNING
 	{ 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00 }, // CURRENT_TEMP_SHUTDOWN
 };
+static const uint8_t pmic_critical_error_index[MAX_LEN_PMIC_CRITICAL_ERROR_INDEX] = { 0, 1,  2, 3,
+										      4, 6,  7, 8,
+										      9, 10, 16 };
 
 static bool is_pmic_error_flag[MAX_COUNT_DIMM][MAX_COUNT_PMIC_ERROR_TYPE];
 
@@ -73,6 +76,16 @@ static void add_pmic_error_sel(uint8_t dimm_id, uint8_t error_type)
 		LOG_ERR("Fail to add PMIC error event log: dimm %d error 0x%x", dimm_id,
 			error_type);
 	}
+}
+
+static bool is_critical_error(uint8_t dimm_id)
+{
+	for (int i = 0; i < MAX_LEN_PMIC_CRITICAL_ERROR_INDEX; i++) {
+		if (is_pmic_error_flag[dimm_id][pmic_critical_error_index[i]]) {
+			return true;
+		}
+	}
+	return false;
 }
 
 static void clear_pmic_error(uint8_t dimm_id)
@@ -96,42 +109,44 @@ static void clear_pmic_error(uint8_t dimm_id)
 		LOG_ERR("Failed to set PMIC R35 to 0x00.");
 	}
 
-	uint8_t i = 0;
-	for (; i < CLEAR_MTP_RETRY_MAX; i++) {
-		/* Set R39 to clear MTP and R04-R07 */
-		memset(msg, 0, sizeof(*msg));
-		msg->bus = (dimm_id < (MAX_COUNT_DIMM / 2)) ? I2C_BUS11 : I2C_BUS12;
-		msg->target_addr = PMIC_addr[dimm_id % 4];
-		msg->tx_len = 2;
-		msg->data[0] = 0x39;
-		msg->data[1] = 0x74;
+	if (is_critical_error(dimm_id)) {
+		uint8_t i = 0;
+		for (; i < CLEAR_MTP_RETRY_MAX; i++) {
+			/* Set R39 to clear MTP and R04-R07 */
+			memset(msg, 0, sizeof(*msg));
+			msg->bus = (dimm_id < (MAX_COUNT_DIMM / 2)) ? I2C_BUS11 : I2C_BUS12;
+			msg->target_addr = PMIC_addr[dimm_id % 4];
+			msg->tx_len = 2;
+			msg->data[0] = 0x39;
+			msg->data[1] = 0x74;
 
-		if (i2c_master_write(msg, retry)) {
-			LOG_ERR("Failed to set PMIC R39 to 0x74.");
-			continue;
+			if (i2c_master_write(msg, retry)) {
+				LOG_ERR("Failed to set PMIC R39 to 0x74.");
+				continue;
+			}
+
+			k_msleep(100);
+
+			memset(msg, 0, sizeof(*msg));
+			msg->bus = (dimm_id < (MAX_COUNT_DIMM / 2)) ? I2C_BUS11 : I2C_BUS12;
+			msg->target_addr = PMIC_addr[dimm_id % 4];
+			msg->tx_len = 1;
+			msg->rx_len = 4;
+			msg->data[0] = 0x04;
+
+			if (i2c_master_read(msg, retry)) {
+				LOG_ERR("Failed to read PMIC R39.");
+				continue;
+			}
+
+			if (!(msg->data[0] || msg->data[1] || msg->data[2] || msg->data[3])) {
+				break;
+			}
 		}
 
-		k_msleep(100);
-
-		memset(msg, 0, sizeof(*msg));
-		msg->bus = (dimm_id < (MAX_COUNT_DIMM / 2)) ? I2C_BUS11 : I2C_BUS12;
-		msg->target_addr = PMIC_addr[dimm_id % 4];
-		msg->tx_len = 1;
-		msg->rx_len = 1;
-		msg->data[0] = 0x39;
-
-		if (i2c_master_read(msg, retry)) {
-			LOG_ERR("Failed to read PMIC R39.");
-			continue;
+		if (i == CLEAR_MTP_RETRY_MAX) {
+			LOG_ERR("Failed to clear MTP, retry reach max.");
 		}
-
-		if ((msg->data[0] == 0x74) || (msg->data[0] == 0x5a)) {
-			break;
-		}
-	}
-
-	if (i == CLEAR_MTP_RETRY_MAX) {
-		LOG_ERR("Failed to clear MTP, retry reach max.");
 	}
 
 	/* Set R14 to clear R08-R0B, R33 */
