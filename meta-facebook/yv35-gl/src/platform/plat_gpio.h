@@ -35,7 +35,7 @@
     gpio_name_to_num(Reserve_GPIOB0) \
     gpio_name_to_num(RST_USB_HUB_N_R) \
     gpio_name_to_num(A_P3V_BAT_SCALED_EN_R) \
-    gpio_name_to_num(Reserve_GPIOB3) \
+    gpio_name_to_num(DAM_BIC_R_EN) \
     gpio_name_to_num(Reserve_GPIOB4) \
     gpio_name_to_num(FM_SLPS4_PLD_N) \
     gpio_name_to_num(FM_CPU0_CD_INIT_ERROR) \
