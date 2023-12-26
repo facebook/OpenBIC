@@ -67,10 +67,10 @@ enum cmd_app_get_sys_info_params {
 	VERIONS_START_INDEX = 0x06,
 };
 
-static uint8_t init_text_string_value(const char *new_text_string, char *text_strings)
+static uint8_t init_text_string_value(const char *new_text_string, char **text_strings)
 {
 	const uint8_t NULL_BYTE = 1, EMPTY_TEXT_STRINGS_SIZE = 2;
-	const uint8_t original_size = pldm_smbios_get_text_strings_size(text_strings);
+	const uint8_t original_size = pldm_smbios_get_text_strings_size(*text_strings);
 	const uint8_t new_text_string_len = strlen(new_text_string);
 	uint8_t new_text_string_start_idx = original_size - 1;
 
@@ -78,12 +78,17 @@ static uint8_t init_text_string_value(const char *new_text_string, char *text_st
 		new_text_string_start_idx = 0;
 	}
 
-	text_strings = realloc(text_strings, original_size + new_text_string_len + NULL_BYTE);
-	memcpy(text_strings + new_text_string_start_idx, new_text_string, new_text_string_len);
+	*text_strings = realloc(*text_strings, original_size + new_text_string_len + NULL_BYTE);
+	if (!(*text_strings))
+	{
+		LOG_ERR("%s:%s:%d: Failed to allocate memory.", __FILE__, __func__, __LINE__);
+		return 0;
+	}
+	memcpy(((*text_strings) + new_text_string_start_idx), new_text_string, new_text_string_len);
 
-	*(text_strings + new_text_string_start_idx + new_text_string_len) = '\0';
-	*(text_strings + new_text_string_start_idx + new_text_string_len + 1) = '\0';
-	return pldm_smbios_get_text_strings_count(text_strings);
+	*((*text_strings) + new_text_string_start_idx + new_text_string_len) = '\0';
+	*((*text_strings) + new_text_string_start_idx + new_text_string_len + 1) = '\0';
+	return pldm_smbios_get_text_strings_count(*text_strings);
 }
 
 static void init_bios_information(smbios_bios_information *bios_info, char *bios_version)
@@ -92,15 +97,19 @@ static void init_bios_information(smbios_bios_information *bios_info, char *bios
 
 	bios_info->header.type = SMBIOS_BIOS_INFORMATION;
 	bios_info->text_strings = malloc(sizeof(char) * 2);
+	if (!bios_info->text_strings)
+	{
+		LOG_ERR("%s:%s:%d: Failed to allocate memory.", __FILE__, __func__, __LINE__);
+		return;
+	}
 	bios_info->text_strings[0] = bios_info->text_strings[1] = '\0';
-
 	/* DSP0134: 12h + number of BIOS Characteristics Extension Bytes.*/
 	bios_info->header.length = 0x12;
 	bios_info->header.handle = 0x0000;
-	bios_info->vendor = init_text_string_value("N/A", bios_info->text_strings);
-	bios_info->bios_version = init_text_string_value(bios_version, bios_info->text_strings);
+	bios_info->vendor = init_text_string_value("N/A", &bios_info->text_strings);
+	bios_info->bios_version = init_text_string_value(bios_version, &bios_info->text_strings);
 	bios_info->bios_starting_address_segment = NOT_IMPLEMENTED;
-	bios_info->bios_release_date = init_text_string_value("N/A", bios_info->text_strings);
+	bios_info->bios_release_date = init_text_string_value("N/A", &bios_info->text_strings);
 	bios_info->bios_rom_size = NOT_IMPLEMENTED;
 	bios_info->bios_characteristics = NOT_IMPLEMENTED;
 	bios_info->bios_characteristics_extension_bytes = NOT_IMPLEMENTED;
@@ -116,6 +125,11 @@ static int update_bios_information(char *bios_version_start_ptr, uint8_t bios_ve
 	smbios_bios_information *bios_info = malloc(sizeof(smbios_bios_information));
 
 	char *bios_version_str = malloc(sizeof(char) * bios_version_len + 1);
+	if (!bios_version_str)
+	{
+		LOG_ERR("%s:%s:%d: Failed to allocate memory.", __FILE__, __func__, __LINE__);
+		return -1;
+	}
 	memcpy(bios_version_str, bios_version_start_ptr, bios_version_len);
 	*(bios_version_str + bios_version_len) = '\0';
 
@@ -241,7 +255,7 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 				uint8_t length = ibuf[LENGTH_INDEX];
 				ret = update_bios_information(bios_version, length);
 				if (ret < 0) {
-					LOG_ERR("Failed to send bios version to bmc, rc = %d", ret);
+					LOG_ERR("Failed to update bios information, rc = %d", ret);
 				}
 #endif
 			}
