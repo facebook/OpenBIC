@@ -168,7 +168,12 @@ static uint8_t read_MCA_response(apml_msg *msg)
 		return APML_ERROR;
 	}
 
-	memcpy(msg->RdData, &i2c_msg.data[2], sizeof(mca_RdData));
+	if ((command_code_len == SBRMI_CMD_CODE_LEN_TWO_BYTE) &&
+	    (msg->target_addr == SB_RMI_ADDR)) {
+		memcpy(msg->RdData, &i2c_msg.data[2], sizeof(mca_RdData));
+	} else {
+		memcpy(msg->RdData, &i2c_msg.data[1], sizeof(mca_RdData));
+	}
 	return APML_SUCCESS;
 }
 
@@ -255,7 +260,12 @@ static uint8_t read_CPUID_response(apml_msg *msg)
 		return APML_ERROR;
 	}
 
-	memcpy(msg->RdData, &i2c_msg.data[2], sizeof(cpuid_RdData));
+	if ((command_code_len == SBRMI_CMD_CODE_LEN_TWO_BYTE) &&
+	    (msg->target_addr == SB_RMI_ADDR)) {
+		memcpy(msg->RdData, &i2c_msg.data[2], sizeof(cpuid_RdData));
+	} else {
+		memcpy(msg->RdData, &i2c_msg.data[1], sizeof(cpuid_RdData));
+	}
 	return APML_SUCCESS;
 }
 
