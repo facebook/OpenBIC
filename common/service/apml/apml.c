@@ -211,7 +211,6 @@ static uint8_t write_CPUID_request(apml_msg *msg)
 	I2C_MSG i2c_msg;
 	i2c_msg.bus = msg->bus;
 	i2c_msg.target_addr = msg->target_addr;
-	i2c_msg.tx_len = 10;
 
 	if ((command_code_len == SBRMI_CMD_CODE_LEN_TWO_BYTE) &&
 	    (msg->target_addr == SB_RMI_ADDR)) {
