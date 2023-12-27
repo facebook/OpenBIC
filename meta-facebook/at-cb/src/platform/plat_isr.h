@@ -28,6 +28,7 @@ enum BUTTON_OPTIONAL {
 
 typedef struct _add_sel_info {
 	bool is_init;
+	int delay_ms;
 	uint8_t gpio_num;
 	uint8_t device_type;
 	uint8_t board_info;
