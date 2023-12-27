@@ -54,6 +54,30 @@ enum plat_pldm_event_sensor_num {
 	PLDM_EVENT_ACCL_PWR_CBL_11,
 	PLDM_EVENT_ACCL_PWR_CBL_12,
 	PLDM_EVENT_FIO,
+	PLDM_EVENT_ACCL_1_DEV_1,
+	PLDM_EVENT_ACCL_1_DEV_2,
+	PLDM_EVENT_ACCL_2_DEV_1,
+	PLDM_EVENT_ACCL_2_DEV_2,
+	PLDM_EVENT_ACCL_3_DEV_1,
+	PLDM_EVENT_ACCL_3_DEV_2,
+	PLDM_EVENT_ACCL_4_DEV_1,
+	PLDM_EVENT_ACCL_4_DEV_2,
+	PLDM_EVENT_ACCL_5_DEV_1,
+	PLDM_EVENT_ACCL_5_DEV_2,
+	PLDM_EVENT_ACCL_6_DEV_1,
+	PLDM_EVENT_ACCL_6_DEV_2,
+	PLDM_EVENT_ACCL_7_DEV_1,
+	PLDM_EVENT_ACCL_7_DEV_2,
+	PLDM_EVENT_ACCL_8_DEV_1,
+	PLDM_EVENT_ACCL_8_DEV_2,
+	PLDM_EVENT_ACCL_9_DEV_1,
+	PLDM_EVENT_ACCL_9_DEV_2,
+	PLDM_EVENT_ACCL_10_DEV_1,
+	PLDM_EVENT_ACCL_10_DEV_2,
+	PLDM_EVENT_ACCL_11_DEV_1,
+	PLDM_EVENT_ACCL_11_DEV_2,
+	PLDM_EVENT_ACCL_12_DEV_1,
+	PLDM_EVENT_ACCL_12_DEV_2,
 };
 
 enum PLDM_ADDSEL_DEVICE_TYPE {
@@ -122,6 +146,13 @@ enum plat_pldm_device_state_set_offset {
 	PLDM_STATE_SET_OFFSET_DEVICE_PRESENCE = 0,
 	PLDM_STATE_SET_OFFSET_DEVICE_STATUS = 1,
 	PLDM_STATE_SET_OFFSET_DEVICE_POWER_STATUS = 2,
+	PLDM_STATE_SET_OFFSET_DEVICE_NVME_STATUS = 3,
+};
+
+enum pldm_state_set_oem_device_nvme_status {
+	PLDM_STATE_SET_OEM_DEVICE_NVME_UNKNOWN_STATUS,
+	PLDM_STATE_SET_OEM_DEVICE_NVME_NOT_READY,
+	PLDM_STATE_SET_OEM_DEVICE_NVME_READY,
 };
 
 void plat_accl_present_check();
@@ -129,6 +160,7 @@ void plat_accl_power_cable_present_check();
 void plat_fio_present_check();
 void plat_accl_power_good_fail_event(uint8_t card_id, uint8_t current_state);
 void plat_accl_cable_power_good_fail_event(uint8_t card_id);
+void plat_asic_nvme_status_event(uint8_t card_id, uint8_t device_id, uint8_t status);
 uint8_t plat_set_effecter_states_req(uint8_t device_type, uint8_t board_info, uint8_t event_type);
 
 #endif

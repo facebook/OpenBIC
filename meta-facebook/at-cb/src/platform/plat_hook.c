@@ -37,6 +37,7 @@
 #include "xdpe15284.h"
 #include "mp2985.h"
 #include "sq52205.h"
+#include "plat_pldm_monitor.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -1069,12 +1070,22 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 		switch (cfg->target_addr) {
 		case ACCL_FREYA_1_ADDR:
 		case ACCL_ARTEMIS_MODULE_1_ADDR:
+			if (accl_freya->is_cache_freya1_info != false) {
+				plat_asic_nvme_status_event(
+					card_id, PCIE_DEVICE_ID1,
+					PLDM_STATE_SET_OEM_DEVICE_NVME_NOT_READY);
+			}
 			accl_freya->is_cache_freya1_info = false;
 			memset(&accl_freya->freya1_fw_info, 0, FREYA_FW_VERSION_LENGTH);
 			accl_freya->freya1_fw_info.is_freya_ready = FREYA_NOT_READY;
 			break;
 		case ACCL_FREYA_2_ADDR:
 		case ACCL_ARTEMIS_MODULE_2_ADDR:
+			if (accl_freya->is_cache_freya2_info != false) {
+				plat_asic_nvme_status_event(
+					card_id, PCIE_DEVICE_ID2,
+					PLDM_STATE_SET_OEM_DEVICE_NVME_NOT_READY);
+			}
 			accl_freya->is_cache_freya2_info = false;
 			memset(&accl_freya->freya2_fw_info, 0, FREYA_FW_VERSION_LENGTH);
 			accl_freya->freya2_fw_info.is_freya_ready = FREYA_NOT_READY;
@@ -1094,6 +1105,8 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 			ret = get_freya_fw_info(cfg->port, cfg->target_addr,
 						&accl_freya->freya1_fw_info);
 			if ((ret == 0) || (ret == FREYA_NOT_SUPPORT_MODULE_IDENTIFIER_RET_CODE)) {
+				plat_asic_nvme_status_event(card_id, PCIE_DEVICE_ID1,
+							    PLDM_STATE_SET_OEM_DEVICE_NVME_READY);
 				accl_freya->is_cache_freya1_info = true;
 				return true;
 			}
@@ -1105,6 +1118,8 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 			ret = get_freya_fw_info(cfg->port, cfg->target_addr,
 						&accl_freya->freya2_fw_info);
 			if ((ret == 0) || (ret == FREYA_NOT_SUPPORT_MODULE_IDENTIFIER_RET_CODE)) {
+				plat_asic_nvme_status_event(card_id, PCIE_DEVICE_ID2,
+							    PLDM_STATE_SET_OEM_DEVICE_NVME_READY);
 				accl_freya->is_cache_freya2_info = true;
 				return true;
 			}
@@ -1136,18 +1151,18 @@ bool post_accl_nvme_read(sensor_cfg *cfg, void *args, int *reading)
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
 	int unlock_status = 0;
-        uint8_t bus = cfg->port;
-        accl_card_info *card_info_args = (accl_card_info *)args;
+	uint8_t bus = cfg->port;
+	accl_card_info *card_info_args = (accl_card_info *)args;
 
-        struct k_mutex *mutex = get_i2c_mux_mutex(bus);
-        if (mutex->lock_count != 0) {
-                unlock_status = k_mutex_unlock(mutex);
-        }
+	struct k_mutex *mutex = get_i2c_mux_mutex(bus);
+	if (mutex->lock_count != 0) {
+		unlock_status = k_mutex_unlock(mutex);
+	}
 
-        if (unlock_status != 0) {
-                LOG_ERR("Mutex unlock fail, status: %d, card id: 0x%x, sensor num: 0x%x",
-                        unlock_status, card_info_args->card_id, cfg->num);
-        }
+	if (unlock_status != 0) {
+		LOG_ERR("Mutex unlock fail, status: %d, card id: 0x%x, sensor num: 0x%x",
+			unlock_status, card_info_args->card_id, cfg->num);
+	}
 
 	if (reading == NULL) {
 		return check_reading_pointer_null_is_allowed(cfg);
