@@ -29,7 +29,9 @@
 #define ASIC_CLK_BIT BIT(4)
 #define E1S_CLK_BIT BIT(5)
 #define E1S_PE_RESET_BIT BIT(6)
-#define IOE_SWITCH_MUX_TO_BIC 0x0f
+
+// Only switch VR MUX
+#define IOE_SWITCH_MUX_TO_BIC 0x05
 
 #define IOE_READY_MSEC 1000
 

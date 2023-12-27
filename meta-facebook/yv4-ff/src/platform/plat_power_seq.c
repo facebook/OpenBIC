@@ -385,7 +385,6 @@ static void cxl_ready_handler()
 		}
 		/* Switch muxs to BIC*/
 		gpio_set(SEL_SMB_MUX_PMIC_R, GPIO_HIGH);
-		gpio_set(SEL_SMB_MUX_DIMM_R, GPIO_HIGH);
 		return;
 	}
 	LOG_ERR("Failed to read %s due to sensor_sample_fetch failed, ret: %d",
