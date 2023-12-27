@@ -21,8 +21,6 @@
 #include <stdint.h>
 #include "pldm_firmware_update.h"
 
-#define MPS_CRC_PREFIX "MPS "
-
 void load_pldmupdate_comp_config(void);
 int load_mctp_support_types(uint8_t *type_len, uint8_t *types);
 
