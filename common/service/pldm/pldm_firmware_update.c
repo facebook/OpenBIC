@@ -30,6 +30,7 @@
 #include "xdpe15284.h"
 #include "pt5161l.h"
 #include "mp2985.h"
+#include "raa229621.h"
 
 LOG_MODULE_DECLARE(pldm);
 
@@ -172,6 +173,13 @@ uint8_t pldm_vr_update(void *fw_update_param)
 	} else if (!strncmp(p->comp_version_str, KEYWORD_VR_MP2985,
 			    ARRAY_SIZE(KEYWORD_VR_MP2985) - 1)) {
 		if (mp2985_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) == false)
+			goto exit;
+	} else if ((!strncmp(p->comp_version_str, KEYWORD_VR_RAA229620,
+			     ARRAY_SIZE(KEYWORD_VR_RAA229620) - 1)) ||
+		   (!strncmp(p->comp_version_str, KEYWORD_VR_RAA229621,
+			     ARRAY_SIZE(KEYWORD_VR_RAA229621) - 1))) {
+		if (raa229621_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) ==
+		    false)
 			goto exit;
 	} else {
 		LOG_ERR("Non-support VR detected with component string %s!",
