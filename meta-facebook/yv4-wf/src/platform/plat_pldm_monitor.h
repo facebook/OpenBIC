@@ -22,7 +22,7 @@
 #define LPC_HICR9_REG (LPC_BASE_ADDR + 0x98)
 #define LPC_HICRA_REG (LPC_BASE_ADDR + 0x9C)
 
-#define PLAT_PLDM_MAX_STATE_EFFECTER_IDX 169
+#define PLAT_PLDM_MAX_STATE_EFFECTER_IDX 171
 
 enum pldm_plat_effecter_id_high_byte {
 	PLAT_EFFECTER_ID_GPIO_HIGH_BYTE = (0xFF << 8),
@@ -30,6 +30,8 @@ enum pldm_plat_effecter_id_high_byte {
 
 enum plat_pldm_effecter_id {
 	PLAT_PLDM_EFFECTER_ID_UART_SWITCH = 0x0003,
+	PLAT_PLDM_EFFECTER_ID_SPI1_REINIT = 0x0102,
+	PLAT_PLDM_EFFECTER_ID_SPI2_REINIT = 0x0103
 };
 
 enum plat_pldm_uart_number {
