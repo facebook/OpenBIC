@@ -32,5 +32,6 @@ bool pre_vr_read(sensor_cfg *cfg, void *args);
 bool post_amd_tsi_read(sensor_cfg *cfg, void *args, int *const reading);
 bool pre_p3v_bat_read(sensor_cfg *cfg, void *args);
 bool post_p3v_bat_read(sensor_cfg *cfg, void *args, int *const reading);
+bool pre_dimm_i3c_read(sensor_cfg *cfg, void *args);
 
 #endif

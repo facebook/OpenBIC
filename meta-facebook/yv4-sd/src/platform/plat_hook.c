@@ -21,6 +21,7 @@
 #include "plat_apml.h"
 #include "plat_hook.h"
 #include "plat_gpio.h"
+#include "plat_dimm.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -119,7 +120,23 @@ bool post_amd_tsi_read(sensor_cfg *cfg, void *args, int *const reading)
 	}
 
 	// TODO: if throttle send event to BMC
+	return true;
+}
 
+bool pre_dimm_i3c_read(sensor_cfg *cfg, void *args)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+
+	if (!get_post_status()) {
+		return true;
+	}
+
+	uint8_t dimm_id = sensor_num_map_dimm_id(cfg->num);
+	if (get_dimm_present(dimm_id) ==
+	    DIMM_NOT_PRSNT) { // Stop monitoring DIMM when it is not present.
+		return false;
+	}
 	return true;
 }
 
