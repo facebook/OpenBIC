@@ -48,7 +48,7 @@ static bool is_e1s_P3V3_fault_assert[MAX_E1S_IDX] = { false, false, false, false
 	{                                                                                          \
 		uint8_t log = 0;                                                                   \
 		log = gpio_get(OPA_PWRGD_##power##_E1S_##device##_R);                              \
-		LOG_ERR("OPA GPIO = %d, OPA = %d", OPA_PWRGD_##power##_E1S_##device##_R, log);     \
+		LOG_DBG("OPA GPIO = %d, OPA = %d", OPA_PWRGD_##power##_E1S_##device##_R, log);     \
 		if ((gpio_get(OPA_PWRGD_##power##_E1S_##device##_R) == POWER_OFF) &&               \
 		    (gpio_get(OPA_E1S_##device##_##power##_POWER_EN) == POWER_ON)) {               \
 			send_system_status_event(IPMI_EVENT_TYPE_SENSOR_SPECIFIC,                  \
@@ -74,7 +74,7 @@ static bool is_e1s_P3V3_fault_assert[MAX_E1S_IDX] = { false, false, false, false
 	{                                                                                          \
 		uint8_t log = 0;                                                                   \
 		log = gpio_get(OPB_PWRGD_##power##_E1S_##device##_R);                              \
-		LOG_ERR("OPB GPIO = %d, OPB = %d", OPB_PWRGD_##power##_E1S_##device##_R, log);     \
+		LOG_DBG("OPB GPIO = %d, OPB = %d", OPB_PWRGD_##power##_E1S_##device##_R, log);     \
 		if ((gpio_get(OPB_PWRGD_##power##_E1S_##device##_R) == POWER_OFF) &&               \
 		    (gpio_get(OPB_##power##_E1S_##device##_EN_R) == POWER_ON)) {                   \
 			send_system_status_event(IPMI_EVENT_TYPE_SENSOR_SPECIFIC,                  \
@@ -124,10 +124,8 @@ void control_power_sequence()
 		}
 	} else { // op power off
 		if (board_revision != EVT_STAGE) {
-			if (!is_all_sequence_done(POWER_OFF)) {
-				abort_power_thread();
-				init_power_off_thread();
-			}
+			abort_power_thread();
+			init_power_off_thread();
 		}
 	}
 }
@@ -249,9 +247,10 @@ void ISR_E1S_0_PRSNT_N()
 	if (gpio_get(gpio_num) == GPIO_LOW) {
 		send_system_status_event(IPMI_EVENT_TYPE_SENSOR_SPECIFIC,
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_0);
-
-		abort_e1s_power_thread(E1S_0);
-		e1s_power_on_thread(E1S_0, E1S_POWER_ON_STAGE0);
+		if (gpio_get(FM_EXP_MAIN_PWR_EN) == GPIO_HIGH) {
+			abort_e1s_power_thread(E1S_0);
+			e1s_power_on_thread(E1S_0, E1S_POWER_ON_STAGE0);
+		}
 	} else {
 		send_system_status_event(IPMI_OEM_EVENT_TYPE_DEASSERT,
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_0);
@@ -281,9 +280,10 @@ void ISR_E1S_1_PRSNT_N()
 	if (gpio_get(gpio_num) == GPIO_LOW) {
 		send_system_status_event(IPMI_EVENT_TYPE_SENSOR_SPECIFIC,
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_1);
-
-		abort_e1s_power_thread(E1S_1);
-		e1s_power_on_thread(E1S_1, E1S_POWER_ON_STAGE0);
+		if (gpio_get(FM_EXP_MAIN_PWR_EN) == GPIO_HIGH) {
+			abort_e1s_power_thread(E1S_1);
+			e1s_power_on_thread(E1S_1, E1S_POWER_ON_STAGE0);
+		}
 	} else {
 		send_system_status_event(IPMI_OEM_EVENT_TYPE_DEASSERT,
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_1);
@@ -313,9 +313,10 @@ void ISR_E1S_2_PRSNT_N()
 	if (gpio_get(gpio_num) == GPIO_LOW) {
 		send_system_status_event(IPMI_EVENT_TYPE_SENSOR_SPECIFIC,
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_2);
-
-		abort_e1s_power_thread(E1S_2);
-		e1s_power_on_thread(E1S_2, E1S_POWER_ON_STAGE0);
+		if (gpio_get(FM_EXP_MAIN_PWR_EN) == GPIO_HIGH) {
+			abort_e1s_power_thread(E1S_2);
+			e1s_power_on_thread(E1S_2, E1S_POWER_ON_STAGE0);
+		}
 	} else {
 		send_system_status_event(IPMI_OEM_EVENT_TYPE_DEASSERT,
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_2);
@@ -331,9 +332,10 @@ void ISR_E1S_3_PRSNT_N()
 	if (gpio_get(OPB_E1S_3_PRSNT_N) == GPIO_LOW) {
 		send_system_status_event(IPMI_EVENT_TYPE_SENSOR_SPECIFIC,
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_3);
-
-		abort_e1s_power_thread(E1S_3);
-		e1s_power_on_thread(E1S_3, E1S_POWER_ON_STAGE0);
+		if (gpio_get(FM_EXP_MAIN_PWR_EN) == GPIO_HIGH) {
+			abort_e1s_power_thread(E1S_3);
+			e1s_power_on_thread(E1S_3, E1S_POWER_ON_STAGE0);
+		}
 	} else {
 		send_system_status_event(IPMI_OEM_EVENT_TYPE_DEASSERT,
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_3);
@@ -349,9 +351,10 @@ void ISR_E1S_4_PRSNT_N()
 	if (gpio_get(OPB_E1S_4_PRSNT_N) == GPIO_LOW) {
 		send_system_status_event(IPMI_EVENT_TYPE_SENSOR_SPECIFIC,
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_4);
-
-		abort_e1s_power_thread(E1S_4);
-		e1s_power_on_thread(E1S_4, E1S_POWER_ON_STAGE0);
+		if (gpio_get(FM_EXP_MAIN_PWR_EN) == GPIO_HIGH) {
+			abort_e1s_power_thread(E1S_4);
+			e1s_power_on_thread(E1S_4, E1S_POWER_ON_STAGE0);
+		}
 	} else {
 		send_system_status_event(IPMI_OEM_EVENT_TYPE_DEASSERT,
 					 IPMI_EVENT_OFFSET_STS_E1S_PRESENT, E1S_4);
