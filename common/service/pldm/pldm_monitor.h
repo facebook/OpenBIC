@@ -60,6 +60,7 @@ typedef enum pldm_platform_monitor_commands {
 #define PLDM_PLATFORM_OEM_GPIO_EFFECTER_STATE_FIELD_COUNT 2
 #define PLDM_PLATFORM_OEM_HOST_POWER_CTRL_EFFECTER_STATE_FIELD_COUNT 1
 #define PLDM_PLATFORM_OEM_I3C_HUB_REINIT_EFFECTER_STATE_FIELD_COUNT 1
+#define PLDM_PLATFORM_OEM_SPI_REINIT_EFFECTER_STATE_FIELD_COUNT 1
 #define PLDM_PLATFORM_OEM_SWITCH_UART_EFFECTER_STATE_FIELD_COUNT 1
 #define PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_MAX 167
 
@@ -134,6 +135,11 @@ enum oem_effecter_states_power_status {
 enum oem_effecter_states_reinit_i3c_hub {
 	EFFECTER_STATE_I3C_HUB_REINIT = 0x01,
 	EFFECTER_STATE_I3C_HUB_MAX,
+};
+
+enum oem_effecter_states_reinit_spi {
+	EFFECTER_STATE_SPI_REINIT = 0x01,
+	EFFECTER_STATE_SPI_REINIT_MAX,
 };
 
 enum pldm_sensor_present_state {
@@ -429,6 +435,9 @@ void set_effecter_state_gpio_handler(const uint8_t *buf, uint16_t len, uint8_t *
 
 void get_effecter_state_gpio_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
 				     uint16_t *resp_len, uint8_t gpio_pin);
+
+void pldm_spi_reinit(const char* spi_dev_str, const uint8_t *buf, uint16_t len, uint8_t *resp,
+				     uint16_t *resp_len);
 
 uint8_t plat_pldm_set_state_effecter_state_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
 						   uint16_t *resp_len,
