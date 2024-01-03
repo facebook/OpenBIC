@@ -70,12 +70,13 @@
 	i3c-scl-hz = <12500000>;
 	secondary;
 	ibi-append-pec;
+	dcr = <0xCC>;
 	i3c0_smq: i3c-slave-mqueue@9 {
 		compatible = "aspeed,i3c-slave-mqueue";
 		reg = <0x9>;
 		msg-size = <256>;
 		num-of-msgs = <8>;
-		mandatory-data-byte = <0xbf>;
+		mandatory-data-byte = <0xAE>;
 		label = "I3C_SMQ_0";
 		status = "okay";
 	};
