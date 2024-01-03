@@ -27,11 +27,13 @@ extern adc_asd_init_arg ast_adc_init_args[];
 extern apml_mailbox_init_arg apml_mailbox_init_args[];
 extern vr_pre_proc_arg vr_pre_read_args[];
 extern ina233_init_arg ina233_init_args[];
+extern pt5161l_init_arg pt5161l_init_args[];
 
 bool pre_vr_read(sensor_cfg *cfg, void *args);
 bool post_amd_tsi_read(sensor_cfg *cfg, void *args, int *const reading);
 bool pre_p3v_bat_read(sensor_cfg *cfg, void *args);
 bool post_p3v_bat_read(sensor_cfg *cfg, void *args, int *const reading);
 bool pre_dimm_i3c_read(sensor_cfg *cfg, void *args);
+bool pre_retimer_read(sensor_cfg *cfg, void *args);
 
 #endif
