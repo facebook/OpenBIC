@@ -29,6 +29,8 @@
 #define SYS_CPLD_BMC_CHANNEL_ADDR 0x1E // 8 bits
 #define PMIC_FAULT_STATUS_OFFSET 0x0B
 
+#define MAX_LEN_PMIC_CRITICAL_ERROR_INDEX 11
+
 #define CLEAR_MTP_RETRY_MAX 5
 
 void start_monitor_pmic_error_thread();
