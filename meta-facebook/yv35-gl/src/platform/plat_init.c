@@ -117,6 +117,7 @@ void pal_device_init()
 	start_get_dimm_info_thread();
 	start_monitor_pmic_error_thread();
 	start_monitor_cpu_thread();
+	start_monitor_smi_thread();
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78

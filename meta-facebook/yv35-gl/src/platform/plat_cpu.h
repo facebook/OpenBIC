@@ -21,6 +21,11 @@
 
 #define MONITOR_CPU_STACK_SIZE 600
 #define MONITOR_CPU_TIME_MS 1000
+#define MONITOR_SMIOUT_STACK_SIZE 400
+#define MONITOR_SMIOUT_TIME_MS 1000
+
+#define SMIOUT_INDEX 9
+#define SMIOUT_TIMEOUT 90
 
 #define RDPKG_IDX_PKG_THERMAL_STATUS 0x14
 #define THERMAL_STATUS_DEASSERT 0
@@ -28,5 +33,7 @@
 
 void monitor_cpu_handler();
 void start_monitor_cpu_thread();
+void monitor_smiout_handler();
+void start_monitor_smi_thread();
 
 #endif

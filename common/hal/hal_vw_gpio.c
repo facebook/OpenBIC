@@ -21,11 +21,6 @@
 
 LOG_MODULE_REGISTER(hal_vw_gpio);
 
-// Aspeed ESPI register definition
-#define AST_ESPI_BASE 0x7E6EE000
-#define AST_ESPI_GPIO_VAL 0x9C
-#define AST_ESPI_GPIO_DIR 0xC0
-
 static const struct device *espi_dev;
 static struct espi_callback vw_cb;
 static vw_gpio *vw_gpio_cfg;
