@@ -36,8 +36,8 @@
 #define AUXILIARY_FW_REVISION 0x00000000
 
 #define BIC_FW_YEAR_MSB 0x20
-#define BIC_FW_YEAR_LSB 0x23
-#define BIC_FW_WEEK 0x50
+#define BIC_FW_YEAR_LSB 0x24
+#define BIC_FW_WEEK 0x01
 #define BIC_FW_VER 0x01
 #define BIC_FW_platform_0 0x66 // char: f
 #define BIC_FW_platform_1 0x66 // char: f
