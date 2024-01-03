@@ -17,7 +17,7 @@
 #ifndef PLAT_PLDM_MONITOR_H
 #define PLAT_PLDM_MONITOR_H
 
-#define PLAT_PLDM_MAX_STATE_EFFECTER_IDX 169
+#define PLAT_PLDM_MAX_STATE_EFFECTER_IDX 170
 
 #define LPC_BASE_ADDR 0x7E789000 // Refer to Chapter32: LPC Controller in AST1030 datasheet v1.0
 #define LPC_HICR9_REG (LPC_BASE_ADDR + 0x98)
@@ -29,6 +29,7 @@ enum pldm_plat_effecter_id_high_byte {
 
 enum plat_pldm_effecter_id {
 	PLAT_PLDM_EFFECTER_ID_UART_SWITCH = 0x0003,
+	PLAT_PLDM_EFFECTER_ID_SPI_REINIT = 0x0102,
 };
 
 enum plat_pldm_uart_number {
