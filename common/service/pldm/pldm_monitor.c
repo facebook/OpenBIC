@@ -379,10 +379,17 @@ uint8_t pldm_platform_event_message_req(void *mctp_inst, mctp_ext_params ext_par
 	return PLDM_SUCCESS;
 }
 
+__weak void plat_send_event_pre_work()
+{
+        return;
+}
+
 static void process_event_message_queue(struct k_work *work)
 {
 	CHECK_NULL_ARG(work);
 	struct pldm_event_pkt *pkt;
+
+	plat_send_event_pre_work();
 
 	if ((pkt = k_fifo_get(&send_event_pkt_fifo, K_NO_WAIT)) != NULL) {
 		if (pldm_send_platform_event(pkt->event_class, pkt->id, pkt->ext_class,
@@ -664,7 +671,7 @@ void set_effecter_state_gpio_handler(const uint8_t *buf, uint16_t len, uint8_t *
 			uint8_t gpio_val =
 				((gpio_val_state->effecter_state == EFFECTER_STATE_GPIO_VALUE_LOW) ?
 					 GPIO_LOW :
-					       GPIO_HIGH);
+					 GPIO_HIGH);
 			gpio_set(gpio_pin, gpio_val);
 			*completion_code_p = PLDM_SUCCESS;
 			return;
@@ -826,10 +833,10 @@ void get_effecter_state_gpio_handler(const uint8_t *buf, uint16_t len, uint8_t *
 		gpio_dir_state->present_state = gpio_dir_state->pending_state =
 			((gpio_cfg[gpio_pin].direction == GPIO_INPUT) ?
 				 EFFECTER_STATE_GPIO_DIRECTION_INPUT :
-				       EFFECTER_STATE_GPIO_DIRECTION_OUTPUT);
+				 EFFECTER_STATE_GPIO_DIRECTION_OUTPUT);
 		gpio_val_state->present_state = gpio_val_state->pending_state =
 			(!gpio_get(gpio_pin) ? EFFECTER_STATE_GPIO_VALUE_LOW :
-						     EFFECTER_STATE_GPIO_VALUE_HIGH);
+					       EFFECTER_STATE_GPIO_VALUE_HIGH);
 	}
 
 	*resp_len = PLDM_GET_STATE_EFFECTER_RESP_NO_STATE_FIELD_BYTES +

@@ -90,6 +90,16 @@ void clear_freya_cache_flag(uint8_t card_id)
 		return;
 	}
 
+	if (accl_freya_info[card_id].is_cache_freya1_info != false) {
+		plat_asic_nvme_status_event(card_id, PCIE_DEVICE_ID1,
+					    PLDM_STATE_SET_OEM_DEVICE_NVME_NOT_READY);
+	}
+
+	if (accl_freya_info[card_id].is_cache_freya2_info != false) {
+		plat_asic_nvme_status_event(card_id, PCIE_DEVICE_ID2,
+					    PLDM_STATE_SET_OEM_DEVICE_NVME_NOT_READY);
+	}
+
 	accl_freya_info[card_id].is_cache_freya1_info = false;
 	accl_freya_info[card_id].is_cache_freya2_info = false;
 	memset(&accl_freya_info[card_id].freya1_fw_info, 0, FREYA_FW_VERSION_LENGTH);

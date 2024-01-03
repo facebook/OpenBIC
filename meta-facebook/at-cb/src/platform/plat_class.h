@@ -24,6 +24,7 @@
 #include "i2c-mux-pca954x.h"
 
 #define ASIC_CARD_COUNT 12
+#define ACCL_CARD_DEV_COUNT 2
 
 #define POWER_MONITOR_PIN_NUM BOARD_ID3
 #define HSC_MODULE_PIN_NUM BOARD_ID2

@@ -26,6 +26,9 @@
 #include "plat_pldm_monitor.h"
 #include "plat_class.h"
 #include "plat_mctp.h"
+#include "util_sys.h"
+#include "plat_dev.h"
+#include "plat_ipmi.h"
 
 LOG_MODULE_REGISTER(plat_pldm_monitor);
 
@@ -176,6 +179,50 @@ void plat_accl_cable_power_good_fail_event(uint8_t card_id)
 				     PLDM_STATE_SENSOR_STATE, (uint8_t *)&event,
 				     sizeof(struct pldm_sensor_event_state_sensor_state))) {
 		LOG_ERR("Send card_id: 0x%x cable power good fail event failed", card_id);
+	}
+}
+
+void plat_asic_nvme_status_event(uint8_t card_id, uint8_t device_id, uint8_t status)
+{
+	if (card_id >= ASIC_CARD_COUNT || device_id >= ACCL_CARD_DEV_COUNT) {
+		LOG_ERR("Invalid card id: 0x%x, device id: 0x%x", card_id, device_id);
+		return;
+	}
+
+	struct pldm_sensor_event_state_sensor_state event;
+	event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_NVME_STATUS;
+	event.previous_event_state = PLDM_STATE_SET_OEM_DEVICE_NVME_UNKNOWN_STATUS;
+	event.event_state = status;
+	if (pldm_send_platform_event(PLDM_SENSOR_EVENT,
+				     (card_id * 2 + device_id) + PLDM_EVENT_ACCL_1_DEV_1,
+				     PLDM_STATE_SENSOR_STATE, (uint8_t *)&event,
+				     sizeof(struct pldm_sensor_event_state_sensor_state))) {
+		LOG_ERR("Send card_id: 0x%x device id: 0x%x status:%s nvme event failed", card_id,
+			device_id,
+			((status == PLDM_STATE_SET_OEM_DEVICE_NVME_NOT_READY) ? "not ready" :
+										"ready"));
+	}
+}
+
+void plat_send_event_pre_work()
+{
+	if (is_ac_lost() == false) {
+		// BMC reboot
+		uint8_t index = 0;
+		uint8_t status = 0;
+		for (index = 0; index < ASIC_CARD_COUNT; ++index) {
+			status = ((accl_freya_info[index].freya1_fw_info.is_freya_ready ==
+				   FREYA_READY) ?
+					  PLDM_STATE_SET_OEM_DEVICE_NVME_READY :
+					  PLDM_STATE_SET_OEM_DEVICE_NVME_NOT_READY);
+			plat_asic_nvme_status_event(index, PCIE_DEVICE_ID1, status);
+
+			status = ((accl_freya_info[index].freya2_fw_info.is_freya_ready ==
+				   FREYA_READY) ?
+					  PLDM_STATE_SET_OEM_DEVICE_NVME_READY :
+					  PLDM_STATE_SET_OEM_DEVICE_NVME_NOT_READY);
+			plat_asic_nvme_status_event(index, PCIE_DEVICE_ID2, status);
+		}
 	}
 }
 
