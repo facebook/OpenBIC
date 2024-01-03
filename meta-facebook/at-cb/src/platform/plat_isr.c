@@ -34,6 +34,8 @@
 
 LOG_MODULE_REGISTER(plat_isr);
 
+#define ALERT_EVENT_DEFAULT_DELAY_MS 0
+#define POWER_BRICK_ALERT_DELAY_MS 400
 #define NORMAL_POWER_GOOD_CHECK_DELAY_MS 5000
 
 typedef struct _alert_sensor_info {
@@ -65,62 +67,77 @@ alert_sensor_info power_brick_info[] = {
 
 add_sel_info add_sel_work_item[] = {
 	{ .is_init = false,
+	  .delay_ms = ALERT_EVENT_DEFAULT_DELAY_MS,
 	  .gpio_num = SMB_P0V8_ALERT_N,
 	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_DEFAULT,
 	  .event_type = PLDM_ADDSEL_EVENT_TYPE_DEFAULT },
 	{ .is_init = false,
+	  .delay_ms = POWER_BRICK_ALERT_DELAY_MS,
 	  .gpio_num = SMB_PMBUS_ALERT_N_R,
 	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_POWER_BRICK_0_ALERT,
 	  .event_type = PLDM_ADDSEL_EVENT_TYPE_DEFAULT },
 	{ .is_init = false,
+	  .delay_ms = ALERT_EVENT_DEFAULT_DELAY_MS,
 	  .gpio_num = SMB_P1V25_ALRT_N_R,
 	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P1V25_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_EVENT_TYPE_DEFAULT },
 	{ .is_init = false,
+	  .delay_ms = ALERT_EVENT_DEFAULT_DELAY_MS,
 	  .gpio_num = INA233_ACCL1_ALRT_N_R,
 	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL1_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
+	  .delay_ms = ALERT_EVENT_DEFAULT_DELAY_MS,
 	  .gpio_num = INA233_ACCL2_ALRT_N_R,
 	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL2_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
+	  .delay_ms = ALERT_EVENT_DEFAULT_DELAY_MS,
 	  .gpio_num = INA233_ACCL3_ALRT_N_R,
 	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL3_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
+	  .delay_ms = ALERT_EVENT_DEFAULT_DELAY_MS,
 	  .gpio_num = INA233_ACCL4_ALRT_N_R,
 	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL4_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
+	  .delay_ms = ALERT_EVENT_DEFAULT_DELAY_MS,
 	  .gpio_num = INA233_ACCL5_ALRT_N_R,
 	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL5_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
+	  .delay_ms = ALERT_EVENT_DEFAULT_DELAY_MS,
 	  .gpio_num = INA233_ACCL6_ALRT_N_R,
 	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL6_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
+	  .delay_ms = ALERT_EVENT_DEFAULT_DELAY_MS,
 	  .gpio_num = INA233_ACCL7_ALRT_N_R,
 	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL7_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
+	  .delay_ms = ALERT_EVENT_DEFAULT_DELAY_MS,
 	  .gpio_num = INA233_ACCL8_ALRT_N_R,
 	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL8_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
+	  .delay_ms = ALERT_EVENT_DEFAULT_DELAY_MS,
 	  .gpio_num = INA233_ACCL9_ALRT_N_R,
 	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL9_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
+	  .delay_ms = ALERT_EVENT_DEFAULT_DELAY_MS,
 	  .gpio_num = INA233_ACCL10_ALRT_N_R,
 	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL10_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
+	  .delay_ms = ALERT_EVENT_DEFAULT_DELAY_MS,
 	  .gpio_num = INA233_ACCL11_ALRT_N_R,
 	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL11_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
 	{ .is_init = false,
+	  .delay_ms = ALERT_EVENT_DEFAULT_DELAY_MS,
 	  .gpio_num = INA233_ACCL12_ALRT_N_R,
 	  .device_type = PLDM_ADDSEL_DEVICE_TYPE_P12V_ACCL12_MONITOR_ALERT,
 	  .event_type = PLDM_ADDSEL_OVER_POWER_EVENT },
@@ -157,7 +174,12 @@ add_sel_info *get_addsel_work(uint8_t gpio_num)
 		} else {                                                                           \
 			work->event_type = work->event_type & PLDM_ADDSEL_DEASSERT_MASK;           \
 		}                                                                                  \
-		k_work_schedule_for_queue(&plat_work_q, &work->add_sel_work, K_NO_WAIT);           \
+		if (work->delay_ms != ALERT_EVENT_DEFAULT_DELAY_MS) {                              \
+			k_work_schedule_for_queue(&plat_work_q, &work->add_sel_work,               \
+						  K_MSEC(work->delay_ms));                         \
+		} else {                                                                           \
+			k_work_schedule_for_queue(&plat_work_q, &work->add_sel_work, K_NO_WAIT);   \
+		}                                                                                  \
 	}
 
 K_WORK_DELAYABLE_DEFINE(fio_power_button_work, fio_power_button_work_handler);
