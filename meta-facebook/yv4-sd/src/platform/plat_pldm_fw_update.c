@@ -21,14 +21,15 @@
 #include "libutil.h"
 #include "pldm.h"
 #include "pldm_firmware_update.h"
-#include "plat_pldm_fw_update.h"
 #include "mctp_ctrl.h"
 #include "power_status.h"
-#include "plat_i2c.h"
-#include "mp2971.h"
 #include "util_spi.h"
+#include "plat_pldm_fw_update.h"
 #include "plat_i2c.h"
+#include "plat_gpio.h"
+#include "mp2971.h"
 #include "pt5161l.h"
+#include "raa229621.h"
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
@@ -55,6 +56,12 @@ uint8_t MCTP_SUPPORTED_MESSAGES_TYPES[] = {
 enum RETIMER_ADDR {
 	X16_RETIMER_ADDR = 0x20,
 	X8_RETIMER_ADDR = 0x23,
+};
+
+enum VR_TYPE {
+	VR_TYPE_UNKNOWN,
+	VR_TYPE_MPS,
+	VR_TYPE_RNS,
 };
 
 /* PLDM FW update table */
@@ -278,8 +285,10 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 	bool ret = false;
 	uint32_t version;
+	uint16_t remain = 0xFFFF;
 	uint8_t bus = I2C_BUS4;
 	uint8_t addr = 0;
+	uint8_t vr_type = VR_TYPE_UNKNOWN;
 
 	if (p->comp_identifier == SD_COMPNT_VR_PVDDCR_CPU1) {
 		addr = 0x63;
@@ -291,26 +300,72 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		LOG_ERR("Unknown component identifier for VR");
 	}
 
+	if (gpio_get(VR_TYPE_1) == GPIO_LOW) {
+		vr_type = VR_TYPE_MPS;
+	} else {
+		vr_type = VR_TYPE_RNS;
+	}
+
+	const char *vr_name[] = {
+		[VR_TYPE_UNKNOWN] = NULL,
+		[VR_TYPE_MPS] = "MPS ",
+		[VR_TYPE_RNS] = "Renesas ",
+	};
+
+	const uint8_t *vr_name_p = vr_name[vr_type];
 	set_vr_monitor_status(false);
-	if (!mp2971_get_checksum(bus, addr, &version)) {
-		LOG_ERR("The VR version reading failed");
+	switch (vr_type) {
+	case VR_TYPE_MPS:
+		if (!mp2971_get_checksum(bus, addr, &version)) {
+			LOG_ERR("Read VR checksum failed");
+			return ret;
+		}
+		break;
+	case VR_TYPE_RNS:
+		if (!raa229621_get_crc(bus, addr, &version)) {
+			LOG_ERR("Read VR checksum failed");
+			return ret;
+		}
+
+		if (raa229621_get_remaining_wr(bus, addr, (uint8_t *)&remain) < 0) {
+			LOG_ERR("Read VR remaining write failed");
+			return ret;
+		}
+
+		break;
+	default:
+		LOG_ERR("Unknown VR device");
 		return ret;
 	}
 	set_vr_monitor_status(true);
 
 	version = sys_cpu_to_be32(version);
+	const char *remain_str_p = ", Remaining Write: ";
 	uint8_t *buf_p = buf;
-	const uint8_t *vr_name_p = MPS_CRC_PREFIX;
+	*len = 0;
+
 	if (!vr_name_p) {
 		LOG_ERR("The pointer of VR string name is NULL");
 		return ret;
 	}
-	*len = 0;
+
+	if (PLDM_MAX_DATA_SIZE < (strlen(vr_name_p) + strlen(remain_str_p) + 10)) {
+		LOG_ERR("vr version string wiil be too long to operate, failed");
+		return ret;
+	}
 
 	memcpy(buf_p, vr_name_p, strlen(vr_name_p));
 	buf_p += strlen(vr_name_p);
 	*len += bin2hex((uint8_t *)&version, 4, buf_p, 8) + strlen(vr_name_p);
 	buf_p += 8;
+
+	if (remain != 0xFFFF) {
+		memcpy(buf_p, remain_str_p, strlen(remain_str_p));
+		buf_p += strlen(remain_str_p);
+		remain = (uint8_t)((remain % 10) | (remain / 10 << 4));
+		*len += bin2hex((uint8_t *)&remain, 1, buf_p, 2) + strlen(remain_str_p);
+		buf_p += 2;
+	}
 
 	ret = true;
 
