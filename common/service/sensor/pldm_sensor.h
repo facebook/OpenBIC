@@ -47,7 +47,7 @@ bool pldm_sensor_is_interval_ready(pldm_sensor_info *pldm_sensor_list);
 pldm_sensor_thread *plat_pldm_sensor_load_thread();
 pldm_sensor_info *plat_pldm_sensor_load(int thread_id);
 int plat_pldm_sensor_get_sensor_count(int thread_id);
-int pldm_sensor_polling_pre_check(pldm_sensor_info *pldm_snr_list);
+int pldm_sensor_polling_pre_check(pldm_sensor_info *pldm_snr_list, int sensor_num);
 int pldm_polling_sensor_reading(pldm_sensor_info *pldm_snr_list, int pldm_sensor_count,
 				int thread_id, int sensor_num);
 
