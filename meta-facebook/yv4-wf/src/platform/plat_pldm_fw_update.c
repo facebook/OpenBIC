@@ -22,12 +22,25 @@
 #include "pldm.h"
 #include "pldm_firmware_update.h"
 #include "plat_pldm_fw_update.h"
+#include "plat_i2c.h"
+#include "plat_pldm_sensor.h"
+#include "power_status.h"
 #include "mctp_ctrl.h"
+#include "xdpe12284c.h"
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
+static bool plat_pldm_vr_i2c_info_get( int comp_identifier , uint8_t *bus, uint8_t *addr);
+static uint8_t plat_pldm_pre_vr_update(void *fw_update_param);
+static uint8_t plat_pldm_post_vr_update(void *fw_update_param);
+static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
+
 enum FIRMWARE_COMPONENT {
 	WF_COMPNT_BIC,
+	WF_COMPNT_VR_PVDDQ_AB_ASIC1,
+	WF_COMPNT_VR_PVDDQ_CD_ASIC1,
+	WF_COMPNT_VR_PVDDQ_AB_ASIC2,
+	WF_COMPNT_VR_PVDDQ_CD_ASIC2,
 };
 
 /* PLDM FW update table */
@@ -44,6 +57,58 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.activate_method = COMP_ACT_SELF,
 		.self_act_func = pldm_bic_activate,
 		.get_fw_version_fn = NULL,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = WF_COMPNT_VR_PVDDQ_AB_ASIC1,
+		.comp_classification_index = 0x00,
+		.pre_update_func = plat_pldm_pre_vr_update,
+		.update_func = pldm_vr_update,
+		.pos_update_func = plat_pldm_post_vr_update,
+		.inf = COMP_UPDATE_VIA_I2C,
+		.activate_method = COMP_ACT_AC_PWR_CYCLE,
+		.self_act_func = NULL,
+		.get_fw_version_fn = plat_get_vr_fw_version,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = WF_COMPNT_VR_PVDDQ_CD_ASIC1,
+		.comp_classification_index = 0x00,
+		.pre_update_func = plat_pldm_pre_vr_update,
+		.update_func = pldm_vr_update,
+		.pos_update_func = plat_pldm_post_vr_update,
+		.inf = COMP_UPDATE_VIA_I2C,
+		.activate_method = COMP_ACT_AC_PWR_CYCLE,
+		.self_act_func = NULL,
+		.get_fw_version_fn = plat_get_vr_fw_version,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = WF_COMPNT_VR_PVDDQ_AB_ASIC2,
+		.comp_classification_index = 0x00,
+		.pre_update_func = plat_pldm_pre_vr_update,
+		.update_func = pldm_vr_update,
+		.pos_update_func = plat_pldm_post_vr_update,
+		.inf = COMP_UPDATE_VIA_I2C,
+		.activate_method = COMP_ACT_AC_PWR_CYCLE,
+		.self_act_func = NULL,
+		.get_fw_version_fn = plat_get_vr_fw_version,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = WF_COMPNT_VR_PVDDQ_CD_ASIC2,
+		.comp_classification_index = 0x00,
+		.pre_update_func = plat_pldm_pre_vr_update,
+		.update_func = pldm_vr_update,
+		.pos_update_func = plat_pldm_post_vr_update,
+		.inf = COMP_UPDATE_VIA_I2C,
+		.activate_method = COMP_ACT_AC_PWR_CYCLE,
+		.self_act_func = NULL,
+		.get_fw_version_fn = plat_get_vr_fw_version,
 	},
 };
 
@@ -135,4 +200,113 @@ void load_pldmupdate_comp_config(void)
 	}
 
 	memcpy(comp_config, PLDMUPDATE_FW_CONFIG_TABLE, sizeof(PLDMUPDATE_FW_CONFIG_TABLE));
+}
+
+static bool plat_pldm_vr_i2c_info_get( int comp_identifier , uint8_t *bus, uint8_t *addr)
+{
+	switch (comp_identifier) {
+	case WF_COMPNT_VR_PVDDQ_AB_ASIC1:
+		*bus = (uint8_t)I2C_BUS8;
+		*addr = (uint8_t)ADDR_VR_PVDDQ_AB_ASIC1;
+		break;
+	case WF_COMPNT_VR_PVDDQ_CD_ASIC1:
+		*bus = (uint8_t)I2C_BUS8;
+		*addr = (uint8_t)ADDR_VR_PVDDQ_CD_ASIC1;
+		break;
+	case WF_COMPNT_VR_PVDDQ_AB_ASIC2:
+		*bus = (uint8_t)I2C_BUS3;
+		*addr = (uint8_t)ADDR_VR_PVDDQ_AB_ASIC2;
+		break;
+	case WF_COMPNT_VR_PVDDQ_CD_ASIC2:
+		*bus = (uint8_t)I2C_BUS3;
+		*addr = (uint8_t)ADDR_VR_PVDDQ_CD_ASIC2;
+		break;
+	default:
+		LOG_ERR("Unknown component identifier for VR");
+		return false;
+	}
+	return true;
+}
+
+static uint8_t plat_pldm_pre_vr_update(void *fw_update_param) {
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+
+	/* Stop sensor polling */
+	set_vr_monitor_status(false);
+
+	plat_pldm_vr_i2c_info_get(p->comp_id, &p->bus, &p->addr);
+
+	return 0;
+}
+
+static uint8_t plat_pldm_post_vr_update(void *fw_update_param) {
+	ARG_UNUSED(fw_update_param);
+
+	set_vr_monitor_status(true);
+
+	return 0;
+}
+
+static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(info_p, false);
+	CHECK_NULL_ARG_WITH_RETURN(buf, false);
+	CHECK_NULL_ARG_WITH_RETURN(len, false);
+
+	pldm_fw_update_info_t *p = (pldm_fw_update_info_t *)info_p;
+
+
+	bool ret = false;
+	uint8_t bus = 0;
+	uint8_t addr = 0;
+	uint32_t version;
+	uint16_t remain = 0xFFFF;
+
+	plat_pldm_vr_i2c_info_get(p->comp_identifier, &bus, &addr);
+
+	set_vr_monitor_status(false);
+	if (!xdpe12284c_get_checksum(bus, addr, (uint8_t *)&version)) {
+		LOG_ERR("The VR XDPE12284 version reading failed");
+		return ret;
+	}
+
+	if (!xdpe12284c_get_remaining_write(bus, addr, &remain)) {
+		LOG_ERR("The VR XDPE12284 remaining reading failed");
+		return ret;
+	}
+
+	set_vr_monitor_status(true);
+
+	const char *remain_str_p = ", Remaining Write: ";
+	uint8_t *buf_p = buf;
+	const uint8_t *vr_name_p = INF_CRC_PREFIX;
+	if (!vr_name_p) {
+		LOG_ERR("The pointer of VR string name is NULL");
+		return ret;
+	}
+	*len = 0;
+
+	if (PLDM_MAX_DATA_SIZE < (strlen(vr_name_p) + strlen(remain_str_p) + 10)) {
+		LOG_ERR("vr version string wiil be too long to operate, failed");
+		return ret;
+	}
+
+	memcpy(buf_p, vr_name_p, strlen(vr_name_p));
+	buf_p += strlen(vr_name_p);
+	*len += bin2hex((uint8_t *)&version, 4, buf_p, 8) + strlen(vr_name_p);
+	buf_p += 8;
+
+	if (remain != 0xFFFF) {
+		memcpy(buf_p, remain_str_p, strlen(remain_str_p));
+		buf_p += strlen(remain_str_p);
+		remain = (uint8_t)((remain % 10) | (remain / 10 << 4));
+		*len += bin2hex((uint8_t *)&remain, 1, buf_p, 2) + strlen(remain_str_p);
+		buf_p += 2;
+	}
+
+	ret = true;
+
+	return ret;
 }
