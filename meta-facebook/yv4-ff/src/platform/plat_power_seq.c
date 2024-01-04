@@ -20,13 +20,14 @@
 #include <drivers/pwm.h>
 
 #include "power_status.h"
+#include "vistara.h"
 #include "plat_class.h"
 #include "plat_gpio.h"
 #include "plat_power_seq.h"
 
 LOG_MODULE_REGISTER(plat_power_seq);
 
-static void cxl_ready_handler();
+static bool is_cxl_ready = false;
 
 K_WORK_DELAYABLE_DEFINE(set_dc_on_5s_work, set_DC_on_delayed_status);
 K_WORK_DELAYABLE_DEFINE(cxl_ready_thread, cxl_ready_handler);
@@ -93,6 +94,7 @@ void execute_power_off_sequence()
 
 	set_DC_on_delayed_status();
 
+	is_cxl_ready = false;
 	ret = power_off_handler(DIMM_POWER_OFF_STAGE_1);
 	if (ret == 0) {
 		LOG_INF("CXL power off success");
@@ -366,7 +368,7 @@ bool is_power_controlled(uint8_t power_pin, uint8_t check_power_status, char *po
 	}
 }
 
-static void cxl_ready_handler()
+void cxl_ready_handler()
 {
 	const struct device *heartbeat = NULL;
 	int heartbeat_status = 0;
@@ -383,6 +385,10 @@ static void cxl_ready_handler()
 			k_sleep(K_SECONDS(CXL_READY_INTERVAL_SECONDS));
 			continue;
 		}
+
+		is_cxl_ready = true;
+		LOG_INF("CXL is ready");
+
 		/* Switch muxs to BIC*/
 		gpio_set(SEL_SMB_MUX_PMIC_R, GPIO_HIGH);
 		return;
@@ -390,4 +396,14 @@ static void cxl_ready_handler()
 	LOG_ERR("Failed to read %s due to sensor_sample_fetch failed, ret: %d",
 		CXL_HEART_BEAT_LABEL, heartbeat_status);
 	return;
+}
+
+bool get_cxl_ready_status()
+{
+	return is_cxl_ready;
+}
+
+bool cxl_ready_access(uint8_t sensor_num)
+{
+	return get_cxl_ready_status();
 }

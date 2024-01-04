@@ -24,5 +24,6 @@
 #define ENABLE_PLDM
 #define ENABLE_PLDM_SENSOR
 #define ENABLE_CCI
+#define ENABLE_VISTARA
 
 #endif
