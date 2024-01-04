@@ -49,7 +49,7 @@ struct ADC_INFO {
 };
 
 struct ADC_INFO adc_info[NUMBER_OF_ADC_CHANNEL] = {
-	{ 0x10, 0 },  { 0x10, 16 },  { 0x14, 0 },  { 0x14, 16 },  { 0x18, 0 },  { 0x18, 16 },
+	{ 0x10, 0 },  { 0x10, 16 },  { 0x14, 0 },  { 0x14, 16 },  { 0x18, 0 },	{ 0x18, 16 },
 	{ 0x1C, 0 },  { 0x1C, 16 },  { 0x110, 0 }, { 0x110, 16 }, { 0x114, 0 }, { 0x114, 16 },
 	{ 0x118, 0 }, { 0x118, 16 }, { 0x11C, 0 }, { 0x11C, 16 },
 };
@@ -83,12 +83,9 @@ enum ADC_CHANNEL {
 };
 
 struct _1OU_CARD_MAPPING_TABLE _1ou_card_mapping_table[] = {
-	{ 0.3, LOWER, TYPE_1OU_SI_TEST_CARD },
-	{ 0.5, RANGE, TYPE_1OU_EXP_WITH_6_M2 },
-	{ 0.75, RANGE, TYPE_1OU_RAINBOW_FALLS },
-	{ 1.0, RANGE, TYPE_1OU_VERNAL_FALLS_WITH_TI },
-	{ 1.5, RANGE, TYPE_1OU_EXP_WITH_NIC },
-	{ 1.75, RANGE, TYPE_1OU_VERNAL_FALLS_WITH_AST },
+	{ 0.3, LOWER, TYPE_1OU_SI_TEST_CARD },	 { 0.5, RANGE, TYPE_1OU_EXP_WITH_6_M2 },
+	{ 0.75, RANGE, TYPE_1OU_RAINBOW_FALLS }, { 1.0, RANGE, TYPE_1OU_VERNAL_FALLS_WITH_TI },
+	{ 1.5, RANGE, TYPE_1OU_EXP_WITH_NIC },	 { 1.75, RANGE, TYPE_1OU_VERNAL_FALLS_WITH_AST },
 };
 
 bool get_adc_voltage(int channel, float *voltage)
@@ -154,7 +151,8 @@ uint8_t get_hsc_module()
 
 void init_hsc_module()
 {
-	hsc_module = (gpio_get(HSC_DETECT2) << 2) | (gpio_get(HSC_DETECT1) << 1) | gpio_get(HSC_DETECT0);
+	hsc_module =
+		(gpio_get(HSC_DETECT2) << 2) | (gpio_get(HSC_DETECT1) << 1) | gpio_get(HSC_DETECT0);
 }
 
 void init_platform_config()
@@ -270,7 +268,7 @@ void init_platform_config()
 					break;
 				default:
 					LOG_ERR("Unknown condition 0x%x",
-					       _1ou_card_mapping_table[cnt].condition);
+						_1ou_card_mapping_table[cnt].condition);
 					break;
 				}
 
@@ -284,14 +282,14 @@ void init_platform_config()
 									data, rx_len);
 					if (i2c_master_write(&i2c_msg, retry)) {
 						LOG_ERR("Failed to set 1OU card detection to CPLD register(0x%x)",
-						       data[0]);
+							data[0]);
 					}
 					break;
 				}
 				if ((cnt == ARRAY_SIZE(_1ou_card_mapping_table)) &&
 				    (_1ou_status.card_type == TYPE_1OU_UNKNOWN)) {
 					LOG_ERR("Unknown the 1OU card type, the voltage of ADC channel-6 is %fV",
-					       voltage);
+						voltage);
 				}
 			}
 		}
@@ -313,7 +311,7 @@ void init_platform_config()
 			default:
 				_2ou_status.card_type = TYPE_2OU_UNKNOWN;
 				LOG_WRN("Unknown the 2OU card type, the card type read from CPLD is 0x%x",
-				       i2c_msg.data[0]);
+					i2c_msg.data[0]);
 				break;
 			}
 		}

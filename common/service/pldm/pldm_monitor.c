@@ -381,7 +381,7 @@ uint8_t pldm_platform_event_message_req(void *mctp_inst, mctp_ext_params ext_par
 
 __weak void plat_send_event_pre_work()
 {
-        return;
+	return;
 }
 
 static void process_event_message_queue(struct k_work *work)
@@ -679,8 +679,8 @@ void set_effecter_state_gpio_handler(const uint8_t *buf, uint16_t len, uint8_t *
 	}
 }
 
-void pldm_spi_reinit(const char* spi_dev_str, const uint8_t *buf, uint16_t len, uint8_t *resp,
-				     uint16_t *resp_len)
+void pldm_spi_reinit(const char *spi_dev_str, const uint8_t *buf, uint16_t len, uint8_t *resp,
+		     uint16_t *resp_len)
 {
 	CHECK_NULL_ARG(buf);
 	CHECK_NULL_ARG(resp);
@@ -702,31 +702,31 @@ void pldm_spi_reinit(const char* spi_dev_str, const uint8_t *buf, uint16_t len, 
 
 	set_effecter_state_field_t *reinit_spi_state = &req_p->field[0];
 
-    switch (reinit_spi_state->set_request) {
-    case PLDM_NO_CHANGE:
-            return;
-    case PLDM_REQUEST_SET:
-            break;
-    default:
-            LOG_ERR("Invalid reinit SPI reinit set request (%d)",
-                    reinit_spi_state->set_request);
-            *completion_code_p = PLDM_PLATFORM_UNSUPPORTED_EFFECTERSTATE;
-            return;
-    }
+	switch (reinit_spi_state->set_request) {
+	case PLDM_NO_CHANGE:
+		return;
+	case PLDM_REQUEST_SET:
+		break;
+	default:
+		LOG_ERR("Invalid reinit SPI reinit set request (%d)",
+			reinit_spi_state->set_request);
+		*completion_code_p = PLDM_PLATFORM_UNSUPPORTED_EFFECTERSTATE;
+		return;
+	}
 
-    const struct device *flash_dev_spi;
+	const struct device *flash_dev_spi;
 
 	flash_dev_spi = device_get_binding(spi_dev_str);
 
-    switch (reinit_spi_state->effecter_state) {
-    case EFFECTER_STATE_SPI_REINIT:
-            spi_nor_re_init(flash_dev_spi);
-            break;
-    default:
-            LOG_ERR("Unsupported reinit i3c hub effecter state, (%d)",
-                    reinit_spi_state->effecter_state);
-            *completion_code_p = PLDM_ERROR_INVALID_DATA;
-    }
+	switch (reinit_spi_state->effecter_state) {
+	case EFFECTER_STATE_SPI_REINIT:
+		spi_nor_re_init(flash_dev_spi);
+		break;
+	default:
+		LOG_ERR("Unsupported reinit i3c hub effecter state, (%d)",
+			reinit_spi_state->effecter_state);
+		*completion_code_p = PLDM_ERROR_INVALID_DATA;
+	}
 }
 
 __weak uint8_t plat_pldm_set_state_effecter_state_handler(const uint8_t *buf, uint16_t len,

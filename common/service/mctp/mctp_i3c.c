@@ -32,15 +32,14 @@ LOG_MODULE_REGISTER(mctp_i3c);
 #define MCTP_I3C_PEC_ENABLE 0
 #endif
 
-static uint16_t mctp_i3c_read(void *mctp_p, uint8_t *buf, uint32_t len,
-				  mctp_ext_params *extra_data)
+static uint16_t mctp_i3c_read(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_params *extra_data)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_p, MCTP_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(buf, MCTP_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(extra_data, MCTP_ERROR);
 
 	mctp *mctp_inst = (mctp *)mctp_p;
-	I3C_MSG i3c_msg = {0};
+	I3C_MSG i3c_msg = { 0 };
 
 	i3c_msg.bus = mctp_inst->medium_conf.i3c_conf.bus;
 	i3c_msg.target_addr = mctp_inst->medium_conf.i3c_conf.addr;
@@ -70,8 +69,7 @@ static uint16_t mctp_i3c_read(void *mctp_p, uint8_t *buf, uint32_t len,
 	return i3c_msg.rx_len;
 }
 
-static uint16_t mctp_i3c_write(void *mctp_p, uint8_t *buf, uint32_t len,
-				   mctp_ext_params extra_data)
+static uint16_t mctp_i3c_write(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_params extra_data)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_p, MCTP_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(buf, MCTP_ERROR);
@@ -191,7 +189,7 @@ uint8_t mctp_i3c_controller_init(mctp *mctp_instance, mctp_medium_conf medium_co
 	mctp_instance->write_data = mctp_i3c_write;
 
 	// i3c master initial
-	LOG_INF("Bus= 0x%x, Addr = 0x%x",medium_conf.i3c_conf.bus, medium_conf.i3c_conf.addr);
+	LOG_INF("Bus= 0x%x, Addr = 0x%x", medium_conf.i3c_conf.bus, medium_conf.i3c_conf.addr);
 	I3C_MSG i3c_msg = { 0 };
 	i3c_msg.bus = medium_conf.i3c_conf.bus;
 	i3c_msg.target_addr = medium_conf.i3c_conf.addr;

@@ -379,12 +379,11 @@ void util_init_i3c(void)
 
 static int get_bus_id(struct i3c_dev_desc *desc)
 {
-	char i3c_dev_name[I3C_DEV_STR_LEN] = {0};
+	char i3c_dev_name[I3C_DEV_STR_LEN] = { 0 };
 	const char delim[2] = "_";
 	char *saveptr = NULL;
 	char *substr = NULL;
 	int bus_id;
-
 
 	strncpy(i3c_dev_name, desc->master_dev->name, I3C_DEV_STR_LEN);
 
@@ -417,7 +416,8 @@ static int find_dev_i3c_idx(struct i3c_dev_desc *desc)
 			return -1;
 		}
 
-		if ((table_bus_id == bus_id) && (desc->info.dynamic_addr == desc_ptr->info.dynamic_addr)) {
+		if ((table_bus_id == bus_id) &&
+		    (desc->info.dynamic_addr == desc_ptr->info.dynamic_addr)) {
 			return i;
 		}
 	}
@@ -453,8 +453,7 @@ static struct i3c_ibi_callbacks i3c_ibi_def_callbacks = {
 	.write_done = ibi_write_done,
 };
 
-int
-i3c_controller_ibi_init(I3C_MSG *msg)
+int i3c_controller_ibi_init(I3C_MSG *msg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg, -EINVAL);
 
@@ -496,24 +495,26 @@ i3c_controller_ibi_init(I3C_MSG *msg)
 		LOG_ERR("Failed to send aasa");
 	}
 
-	ret = i3c_master_send_getpid(dev_i3c[msg->bus], target->info.dynamic_addr, &target->info.pid);
+	ret = i3c_master_send_getpid(dev_i3c[msg->bus], target->info.dynamic_addr,
+				     &target->info.pid);
 	if (ret) {
 		LOG_ERR("Failed to get pid");
 	}
 
-	ret = i3c_master_send_getbcr(dev_i3c[msg->bus], target->info.dynamic_addr, &target->info.bcr);
+	ret = i3c_master_send_getbcr(dev_i3c[msg->bus], target->info.dynamic_addr,
+				     &target->info.bcr);
 	if (ret) {
 		LOG_ERR("Failed to get bcr");
 	}
 
 	ret = i3c_master_request_ibi(target, &i3c_ibi_def_callbacks);
 	if (ret != 0) {
-		LOG_ERR("Failed to request SIR, bus = %x, addr = %u",msg->target_addr, msg->bus);
+		LOG_ERR("Failed to request SIR, bus = %x, addr = %u", msg->target_addr, msg->bus);
 	}
 
 	ret = i3c_master_enable_ibi(target);
 	if (ret != 0) {
-		LOG_ERR("Failed to enable SIR, bus = %x, addr = %u",msg->target_addr, msg->bus);
+		LOG_ERR("Failed to enable SIR, bus = %x, addr = %u", msg->target_addr, msg->bus);
 	}
 
 	return -ret;
@@ -561,10 +562,10 @@ int i3c_controller_ibi_read(I3C_MSG *msg)
 		k_yield();
 		ret = i3c_master_priv_xfer(target, &xfer, 1);
 		if (ret) {
- 			LOG_ERR("ibi read failed. ret = %d", ret);
+			LOG_ERR("ibi read failed. ret = %d", ret);
 		}
 		msg->rx_len = xfer.len;
-		memcpy (msg->data, i3c_ibi_dev_table[idx].data_rx, IBI_PAYLOAD_SIZE);
+		memcpy(msg->data, i3c_ibi_dev_table[idx].data_rx, IBI_PAYLOAD_SIZE);
 	}
 
 	return msg->rx_len;

@@ -122,4 +122,3 @@ void ISR_BMC_READY()
 {
 	sync_bmc_ready_pin();
 }
-

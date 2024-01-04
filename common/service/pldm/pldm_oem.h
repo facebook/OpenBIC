@@ -33,7 +33,7 @@ extern "C" {
 #define PLDM_OEM_READ_FILE_IO 0x03
 
 enum cmd_type {
-   POST_CODE = 0x00,
+	POST_CODE = 0x00,
 };
 
 struct _cmd_echo_req {

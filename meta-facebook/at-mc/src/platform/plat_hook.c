@@ -1215,7 +1215,7 @@ bool pre_cxl_vr_read(sensor_cfg *cfg, void *args)
 				cfg->target_addr == CXL_VR_A0V8_ADDR   ? "VR_P0V89A" :
 				cfg->target_addr == CXL_VR_D0V8_ADDR   ? "VR_P0V8D_PVDDQ_AB" :
 				cfg->target_addr == CXL_VR_VDDQCD_ADDR ? "VR_PVDDQ_CD" :
-									       "unknown vr");
+									 "unknown vr");
 			return false;
 		}
 
@@ -1226,7 +1226,7 @@ bool pre_cxl_vr_read(sensor_cfg *cfg, void *args)
 				cfg->target_addr == CXL_VR_A0V8_ADDR   ? "VR_P0V89A" :
 				cfg->target_addr == CXL_VR_D0V8_ADDR   ? "VR_P0V8D_PVDDQ_AB" :
 				cfg->target_addr == CXL_VR_VDDQCD_ADDR ? "VR_PVDDQ_CD" :
-									       "unknown vr");
+									 "unknown vr");
 			return false;
 		}
 

@@ -255,7 +255,7 @@ bool pt5161l_read_block_data_to_sram(I2C_MSG *msg, uint32_t micro_ind_struct_oft
 		// Write eeprom addr
 		uint8_t eeprom_addr_bytes[3];
 		int eeprom_acc_addr = eeprom_offset - PT5161L_MAIN_SRAM_DMEM_OFFSET + byte_index;
-		eeprom_addr_bytes[0] = (eeprom_acc_addr)&0xff;
+		eeprom_addr_bytes[0] = (eeprom_acc_addr) & 0xff;
 		eeprom_addr_bytes[1] = (eeprom_acc_addr >> 8) & 0xff;
 		eeprom_addr_bytes[2] = (eeprom_acc_addr >> 16) & 0xff;
 		ret = pt5161l_write_block_data(msg, micro_ind_struct_oft, 3, eeprom_addr_bytes);

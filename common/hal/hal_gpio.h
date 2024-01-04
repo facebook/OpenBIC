@@ -117,7 +117,7 @@ enum GPIO_STATUS {
 	HIGH_INACTIVE = GPIO_LOW,
 };
 
-extern char * gpio_name[];
+extern char *gpio_name[];
 
 extern uint8_t gpio_ind_to_num_table[];
 extern uint8_t gpio_ind_to_num_table_cnt;

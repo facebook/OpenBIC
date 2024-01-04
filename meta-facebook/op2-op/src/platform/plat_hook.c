@@ -215,12 +215,14 @@ bool pre_i2c_bus_read(sensor_cfg *cfg, void *args)
 	i2c_proc_arg *pre_proc_args = (i2c_proc_arg *)args;
 
 	if (i3c_hub_type == RG3M87B12_DEVICE_INFO) {
-		if (!rg3mxxb12_select_slave_port_connect(pre_proc_args->bus, pre_proc_args->channel)) {
+		if (!rg3mxxb12_select_slave_port_connect(pre_proc_args->bus,
+							 pre_proc_args->channel)) {
 			k_mutex_unlock(&i2c_hub_mutex);
 			return false;
 		}
 	} else {
-		if (!p3h284x_select_slave_port_connect(pre_proc_args->bus, pre_proc_args->channel)) {
+		if (!p3h284x_select_slave_port_connect(pre_proc_args->bus,
+						       pre_proc_args->channel)) {
 			k_mutex_unlock(&i2c_hub_mutex);
 			return false;
 		}
@@ -244,14 +246,14 @@ bool post_i2c_bus_read(sensor_cfg *cfg, void *args, int *reading)
        */
 	if (i3c_hub_type == RG3M87B12_DEVICE_INFO) {
 		if (!rg3mxxb12_select_slave_port_connect(post_proc_args->bus,
-						 RG3MXXB12_SSPORTS_ALL_DISCONNECT)) {
+							 RG3MXXB12_SSPORTS_ALL_DISCONNECT)) {
 			k_mutex_unlock(&i2c_hub_mutex);
 			LOG_ERR("Close HUB channel failed!");
 			return false;
 		}
 	} else {
 		if (!p3h284x_select_slave_port_connect(post_proc_args->bus,
-						 P3H284X_SSPORTS_ALL_DISCONNECT)) {
+						       P3H284X_SSPORTS_ALL_DISCONNECT)) {
 			k_mutex_unlock(&i2c_hub_mutex);
 			LOG_ERR("Close HUB channel failed!");
 			return false;

@@ -85,15 +85,16 @@ void pal_pre_init()
 	}
 
 	if (i3c_hub_type == RG3M87B12_DEVICE_INFO) {
-		if (!rg3mxxb12_i2c_mode_only_init(I2C_BUS2, slave_port, rg3mxxb12_ldo_1_2_volt, rg3mxxb12_pullup_1k_ohm)) {
+		if (!rg3mxxb12_i2c_mode_only_init(I2C_BUS2, slave_port, rg3mxxb12_ldo_1_2_volt,
+						  rg3mxxb12_pullup_1k_ohm)) {
 			printk("failed to initialize rg3mxxb12\n");
 		}
 	} else {
-		if (!p3h284x_i2c_mode_only_init(I2C_BUS2, slave_port, p3g284x_ldo_1_2_volt, p3g284x_pullup_1k_ohm)) {
+		if (!p3h284x_i2c_mode_only_init(I2C_BUS2, slave_port, p3g284x_ldo_1_2_volt,
+						p3g284x_pullup_1k_ohm)) {
 			printk("failed to initialize p3h284x\n");
 		}
 	}
-
 }
 
 DEVICE_DEFINE(PRE_DEF_PLAT_CONFIG, "PRE_DEF_PLATFOMR", &init_platform_config, NULL, NULL, NULL,

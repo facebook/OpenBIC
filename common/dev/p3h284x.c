@@ -35,7 +35,8 @@ static bool p3h284x_register_read_i3c(uint8_t bus, uint8_t offset, uint8_t *valu
 	i3c_msg.rx_len = 1;
 	ret = i3c_transfer(&i3c_msg);
 	if (ret != 0) {
-		LOG_ERR("Failed to read p3h284x register via I3C 0x%x, bus-%d ret = %d", offset, bus, ret);
+		LOG_ERR("Failed to read p3h284x register via I3C 0x%x, bus-%d ret = %d", offset,
+			bus, ret);
 		return false;
 	}
 	*value = i3c_msg.data[0];
@@ -140,7 +141,7 @@ bool p3h284x_get_device_info_i3c(uint8_t bus, uint16_t *i3c_hub_type)
 }
 
 bool p3h284x_i2c_mode_only_init(uint8_t bus, uint8_t slave_port, uint8_t ldo_volt,
-				  uint8_t pullup_resistor)
+				uint8_t pullup_resistor)
 {
 	bool ret = false;
 	uint8_t value;

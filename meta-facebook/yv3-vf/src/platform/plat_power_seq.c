@@ -75,7 +75,7 @@ uint8_t fm_p3v3_sw_en(uint8_t idx, uint8_t val)
 			    (idx == M2_IDX_E_B) ? FM_P3V3_E1S_1_SW_EN :
 			    (idx == M2_IDX_E_C) ? FM_P3V3_E1S_2_SW_EN :
 			    (idx == M2_IDX_E_D) ? FM_P3V3_E1S_3_SW_EN :
-							0xFF;
+						  0xFF;
 
 	if (pin == 0xFF)
 		return 1;
@@ -91,7 +91,7 @@ uint8_t fm_p12v_sw_en(uint8_t idx, uint8_t val)
 			    (idx == M2_IDX_E_B) ? FM_P12V_E1S_1_EN :
 			    (idx == M2_IDX_E_C) ? FM_P12V_E1S_2_EN :
 			    (idx == M2_IDX_E_D) ? FM_P12V_E1S_3_EN :
-							0xFF;
+						  0xFF;
 
 	if (pin == 0xFF)
 		return 1;
@@ -108,7 +108,7 @@ uint8_t get_fm_p12v_sw_en(uint8_t idx)
 			    (idx == M2_IDX_E_B) ? FM_P12V_E1S_1_EN :
 			    (idx == M2_IDX_E_C) ? FM_P12V_E1S_2_EN :
 			    (idx == M2_IDX_E_D) ? FM_P12V_E1S_3_EN :
-							0xFF;
+						  0xFF;
 
 	if (pin == 0xFF)
 		return 0;
@@ -122,7 +122,7 @@ uint8_t clkbuf_oe_en(uint8_t idx, uint8_t val)
 			    (idx == M2_IDX_E_B) ? CLKBUF_E1S_1_OE_N :
 			    (idx == M2_IDX_E_C) ? CLKBUF_E1S_2_OE_N :
 			    (idx == M2_IDX_E_D) ? CLKBUF_E1S_3_OE_N :
-							0xFF;
+						  0xFF;
 
 	if (pin == 0xFF)
 		return 1;
@@ -137,7 +137,7 @@ uint8_t get_fm_pwrdis_status(uint8_t idx)
 			    (idx == M2_IDX_E_B) ? FM_PWRDIS_E1S_1 :
 			    (idx == M2_IDX_E_C) ? FM_PWRDIS_E1S_2 :
 			    (idx == M2_IDX_E_D) ? FM_PWRDIS_E1S_3 :
-							0xFF;
+						  0xFF;
 
 	if (pin == 0xFF)
 		return 0;
@@ -151,7 +151,7 @@ uint8_t fm_pwrdis_en(uint8_t idx, uint8_t val)
 			    (idx == M2_IDX_E_B) ? FM_PWRDIS_E1S_1 :
 			    (idx == M2_IDX_E_C) ? FM_PWRDIS_E1S_2 :
 			    (idx == M2_IDX_E_D) ? FM_PWRDIS_E1S_3 :
-							0xFF;
+						  0xFF;
 
 	if (pin == 0xFF)
 		return 1;
@@ -298,7 +298,7 @@ void dev_pwrgd_handler(uint8_t idx)
 			    (idx == M2_IDX_E_B) ? FM_P12V_E1S_1_EN :
 			    (idx == M2_IDX_E_C) ? FM_P12V_E1S_2_EN :
 			    (idx == M2_IDX_E_D) ? FM_P12V_E1S_3_EN :
-							0xFF;
+						  0xFF;
 	if (pin == 0xFF)
 		return;
 

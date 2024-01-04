@@ -256,6 +256,7 @@ void add_pmic_error_sel(uint8_t dimm_id, uint8_t error_type)
 	sel_msg.event_data2 = error_type;
 	sel_msg.event_data3 = 0xFF;
 	if (!common_add_sel_evt_record(&sel_msg)) {
-		LOG_ERR("Failed to add PMIC error event log: dimm%d error 0x%x", dimm_id, error_type);
+		LOG_ERR("Failed to add PMIC error event log: dimm%d error 0x%x", dimm_id,
+			error_type);
 	}
 }

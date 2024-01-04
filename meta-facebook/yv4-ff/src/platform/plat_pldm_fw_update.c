@@ -30,7 +30,7 @@
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
-static bool plat_pldm_vr_i2c_info_get( int comp_identifier , uint8_t *bus, uint8_t *addr);
+static bool plat_pldm_vr_i2c_info_get(int comp_identifier, uint8_t *bus, uint8_t *addr);
 static uint8_t plat_pldm_pre_vr_update(void *fw_update_param);
 static uint8_t plat_pldm_post_vr_update(void *fw_update_param);
 static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
@@ -174,7 +174,7 @@ void load_pldmupdate_comp_config(void)
 	memcpy(comp_config, PLDMUPDATE_FW_CONFIG_TABLE, sizeof(PLDMUPDATE_FW_CONFIG_TABLE));
 }
 
-static bool plat_pldm_vr_i2c_info_get( int comp_identifier , uint8_t *bus, uint8_t *addr)
+static bool plat_pldm_vr_i2c_info_get(int comp_identifier, uint8_t *bus, uint8_t *addr)
 {
 	switch (comp_identifier) {
 	case FF_COMPNT_VR_PVDDQ_AB_ASIC:
@@ -192,7 +192,8 @@ static bool plat_pldm_vr_i2c_info_get( int comp_identifier , uint8_t *bus, uint8
 	return true;
 }
 
-static uint8_t plat_pldm_pre_vr_update(void *fw_update_param) {
+static uint8_t plat_pldm_pre_vr_update(void *fw_update_param)
+{
 	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
 
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
@@ -205,7 +206,8 @@ static uint8_t plat_pldm_pre_vr_update(void *fw_update_param) {
 	return 0;
 }
 
-static uint8_t plat_pldm_post_vr_update(void *fw_update_param) {
+static uint8_t plat_pldm_post_vr_update(void *fw_update_param)
+{
 	ARG_UNUSED(fw_update_param);
 
 	set_vr_monitor_status(true);
@@ -220,7 +222,6 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	CHECK_NULL_ARG_WITH_RETURN(len, false);
 
 	pldm_fw_update_info_t *p = (pldm_fw_update_info_t *)info_p;
-
 
 	bool ret = false;
 	uint8_t bus = 0;

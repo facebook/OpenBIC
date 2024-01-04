@@ -19,8 +19,9 @@
 
 #define FRU_CFG_NUM MAX_FRU_ID
 
-enum { MB_FRU_ID,
-       MAX_FRU_ID,
+enum {
+	MB_FRU_ID,
+	MAX_FRU_ID,
 };
 
 #endif

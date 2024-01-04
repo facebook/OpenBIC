@@ -25,7 +25,6 @@
 
 LOG_MODULE_REGISTER(plat_ipmb);
 
-
 IPMB_config pal_IPMB_config_table[] = {
 	// index, interface, channel, bus, channel_target_address, enable_status, self_address,
 	// rx_thread_name, tx_thread_name

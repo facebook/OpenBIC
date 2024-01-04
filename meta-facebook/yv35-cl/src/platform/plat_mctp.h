@@ -5,28 +5,28 @@
 #include "pldm.h"
 
 struct mctp_to_ipmi_header_req {
-    uint8_t iana[IANA_LEN];
-    uint8_t netfn_lun;
-    uint8_t ipmi_cmd;
+	uint8_t iana[IANA_LEN];
+	uint8_t netfn_lun;
+	uint8_t ipmi_cmd;
 } __attribute__((__packed__));
 ;
 
 struct mctp_to_ipmi_header_resp {
-    uint8_t completion_code;
-    uint8_t netfn_lun;
-    uint8_t ipmi_cmd;
-    uint8_t ipmi_comp_code;
+	uint8_t completion_code;
+	uint8_t netfn_lun;
+	uint8_t ipmi_cmd;
+	uint8_t ipmi_comp_code;
 } __attribute__((__packed__));
 ;
 
 struct mctp_to_ipmi_sel_req {
-    struct mctp_to_ipmi_header_req header;
-    struct ipmi_storage_add_sel_req req_data;
+	struct mctp_to_ipmi_header_req header;
+	struct ipmi_storage_add_sel_req req_data;
 } __attribute__((__packed__));
 
 struct mctp_to_ipmi_sel_resp {
-    struct mctp_to_ipmi_header_resp header;
-    struct ipmi_storage_add_sel_resp resp_data;
+	struct mctp_to_ipmi_header_resp header;
+	struct ipmi_storage_add_sel_resp resp_data;
 } __attribute__((__packed__));
 
 /* init the mctp moduel for platform */

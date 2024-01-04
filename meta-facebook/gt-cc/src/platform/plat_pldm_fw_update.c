@@ -424,7 +424,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 	bool ret = false;
 	uint8_t sensor_num = ((p->comp_identifier == GT_COMPNT_VR0) ? SENSOR_NUM_PEX_0_VR_TEMP :
-									    SENSOR_NUM_PEX_2_VR_TEMP);
+								      SENSOR_NUM_PEX_2_VR_TEMP);
 	sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 
 	if (!cfg) {

@@ -29,7 +29,7 @@ uint8_t m2_bus2idx(uint8_t bus)
 	       (bus == I2C_BUS_M2B) ? M2_IDX_E_B :
 	       (bus == I2C_BUS_M2C) ? M2_IDX_E_C :
 	       (bus == I2C_BUS_M2D) ? M2_IDX_E_D :
-					    M2_IDX_E_MAX;
+				      M2_IDX_E_MAX;
 }
 
 uint8_t m2_bus2rst(uint8_t bus)
@@ -38,7 +38,7 @@ uint8_t m2_bus2rst(uint8_t bus)
 	       (bus == I2C_BUS_M2B) ? RST_SMB_E1S_1_N :
 	       (bus == I2C_BUS_M2C) ? RST_SMB_E1S_2_N :
 	       (bus == I2C_BUS_M2D) ? RST_SMB_E1S_3_N :
-					    0xFF;
+				      0xFF;
 }
 
 uint8_t m2_idx2bus(uint8_t idx)
@@ -47,7 +47,7 @@ uint8_t m2_idx2bus(uint8_t idx)
 	       (idx == M2_IDX_E_B) ? I2C_BUS_M2B :
 	       (idx == M2_IDX_E_C) ? I2C_BUS_M2C :
 	       (idx == M2_IDX_E_D) ? I2C_BUS_M2D :
-					   0xFF;
+				     0xFF;
 }
 
 uint8_t m2_idx2sensornum(uint8_t idx) // index to m.2 power sensor number
@@ -56,7 +56,7 @@ uint8_t m2_idx2sensornum(uint8_t idx) // index to m.2 power sensor number
 	       (idx == M2_IDX_E_B) ? SENSOR_NUM_INA231_PWR_M2B :
 	       (idx == M2_IDX_E_C) ? SENSOR_NUM_INA231_PWR_M2C :
 	       (idx == M2_IDX_E_D) ? SENSOR_NUM_INA231_PWR_M2D :
-					   0xFF;
+				     0xFF;
 }
 
 uint8_t m2_sensornum2idx(uint8_t sensor_num) //  m.2 power/voltage sensor num to index
@@ -73,7 +73,7 @@ uint8_t m2_sensornum2idx(uint8_t sensor_num) //  m.2 power/voltage sensor num to
 	       (sensor_num == SENSOR_NUM_NVME_TEMP_M2B)	 ? M2_IDX_E_B :
 	       (sensor_num == SENSOR_NUM_NVME_TEMP_M2C)	 ? M2_IDX_E_C :
 	       (sensor_num == SENSOR_NUM_NVME_TEMP_M2D)	 ? M2_IDX_E_D :
-								 M2_IDX_E_MAX;
+							   M2_IDX_E_MAX;
 }
 
 uint8_t m2_pwrgd(uint8_t idx)
@@ -113,8 +113,8 @@ uint8_t m2_pwrgd(uint8_t idx)
 	}
 
 	return ((flt_pin == 0xFF) || (p12v_en_pin == 0xFF) || (pwrdis == 0xFF)) ?
-			     0 :
-			     (get_fm_p12v_sw_en(idx) && gpio_get(flt_pin) && !gpio_get(pwrdis));
+		       0 :
+		       (get_fm_p12v_sw_en(idx) && gpio_get(flt_pin) && !gpio_get(pwrdis));
 }
 
 uint8_t m2_get_prefix_sen_num(uint8_t idx)
@@ -123,7 +123,7 @@ uint8_t m2_get_prefix_sen_num(uint8_t idx)
 	       (idx == M2_IDX_E_B) ? PREFIX_M2B :
 	       (idx == M2_IDX_E_C) ? PREFIX_M2C :
 	       (idx == M2_IDX_E_D) ? PREFIX_M2D :
-					   0xFF;
+				     0xFF;
 }
 
 uint8_t m2_prsnt(uint8_t idx)
@@ -132,7 +132,7 @@ uint8_t m2_prsnt(uint8_t idx)
 			    (idx == M2_IDX_E_B) ? FM_PRSNT_E1S_1_N :
 			    (idx == M2_IDX_E_C) ? FM_PRSNT_E1S_2_N :
 			    (idx == M2_IDX_E_D) ? FM_PRSNT_E1S_3_N :
-							0xFF;
+						  0xFF;
 
 	if (pin == 0xFF)
 		return 0;
@@ -146,7 +146,7 @@ uint8_t rst_edsff(uint8_t idx, uint8_t val)
 			    (idx == M2_IDX_E_B) ? RST_BIC_E1S_1_N :
 			    (idx == M2_IDX_E_C) ? RST_BIC_E1S_2_N :
 			    (idx == M2_IDX_E_D) ? RST_BIC_E1S_3_N :
-							0xFF;
+						  0xFF;
 
 	if (pin == 0xFF)
 		return 1;
@@ -163,7 +163,7 @@ bool is_m2_sen_readable(uint8_t sen_num)
 		      (prefix == PREFIX_M2B) ? M2_IDX_E_B :
 		      (prefix == PREFIX_M2C) ? M2_IDX_E_C :
 		      (prefix == PREFIX_M2D) ? M2_IDX_E_D :
-						     M2_IDX_E_MAX;
+					       M2_IDX_E_MAX;
 
 	return (m2_pwrgd(idx) && get_dev_pwrgd(idx)) ? true : false;
 }

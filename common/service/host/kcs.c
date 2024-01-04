@@ -79,8 +79,7 @@ static uint8_t init_text_string_value(const char *new_text_string, char **text_s
 	}
 
 	*text_strings = realloc(*text_strings, original_size + new_text_string_len + NULL_BYTE);
-	if (!(*text_strings))
-	{
+	if (!(*text_strings)) {
 		LOG_ERR("%s:%s:%d: Failed to allocate memory.", __FILE__, __func__, __LINE__);
 		return 0;
 	}
@@ -97,8 +96,7 @@ static void init_bios_information(smbios_bios_information *bios_info, char *bios
 
 	bios_info->header.type = SMBIOS_BIOS_INFORMATION;
 	bios_info->text_strings = malloc(sizeof(char) * 2);
-	if (!bios_info->text_strings)
-	{
+	if (!bios_info->text_strings) {
 		LOG_ERR("%s:%s:%d: Failed to allocate memory.", __FILE__, __func__, __LINE__);
 		return;
 	}
@@ -125,8 +123,7 @@ static int update_bios_information(char *bios_version_start_ptr, uint8_t bios_ve
 	smbios_bios_information *bios_info = malloc(sizeof(smbios_bios_information));
 
 	char *bios_version_str = malloc(sizeof(char) * bios_version_len + 1);
-	if (!bios_version_str)
-	{
+	if (!bios_version_str) {
 		LOG_ERR("%s:%s:%d: Failed to allocate memory.", __FILE__, __func__, __LINE__);
 		return -1;
 	}

@@ -436,8 +436,8 @@ void set_effecter_state_gpio_handler(const uint8_t *buf, uint16_t len, uint8_t *
 void get_effecter_state_gpio_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
 				     uint16_t *resp_len, uint8_t gpio_pin);
 
-void pldm_spi_reinit(const char* spi_dev_str, const uint8_t *buf, uint16_t len, uint8_t *resp,
-				     uint16_t *resp_len);
+void pldm_spi_reinit(const char *spi_dev_str, const uint8_t *buf, uint16_t len, uint8_t *resp,
+		     uint16_t *resp_len);
 
 uint8_t plat_pldm_set_state_effecter_state_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
 						   uint16_t *resp_len,

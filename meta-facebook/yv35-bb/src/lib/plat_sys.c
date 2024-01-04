@@ -95,7 +95,8 @@ void submit_button_event(uint8_t button_id, uint8_t target_slot, uint8_t event_t
 	sel_msg.event_data3 = 0xFF;
 
 	if ((target_slot != SLOT1_BIC) && (target_slot != SLOT3_BIC)) {
-		LOG_ERR("Input target slot is invalid, button id: %d, target slot: %d", button_id, target_slot);
+		LOG_ERR("Input target slot is invalid, button id: %d, target slot: %d", button_id,
+			target_slot);
 		return;
 	}
 	sel_msg.InF_target = target_slot;

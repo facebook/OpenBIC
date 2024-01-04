@@ -29,9 +29,10 @@ static uint8_t e1s_amber_led_pre_status[MAX_E1S_IDX] = { LED_STATUS_OFF, LED_STA
 static uint8_t e1s_amber_led_status[MAX_E1S_IDX] = { LED_STATUS_OFF, LED_STATUS_OFF, LED_STATUS_OFF,
 						     LED_STATUS_OFF, LED_STATUS_OFF };
 static uint8_t els_amber_led_gpio_opa[MAX_E1S_IDX] = { OPA_LED_E1S_0_ATTN_R, OPA_LED_E1S_1_ATTN_R,
-	OPA_LED_E1S_2_ATTN_R};
+						       OPA_LED_E1S_2_ATTN_R };
 static uint8_t els_amber_led_gpio_opb[MAX_E1S_IDX] = { OPB_LED_E1S_0_ATTN_R, OPB_LED_E1S_1_ATTN_R,
-	OPB_LED_E1S_2_ATTN_R, OPB_LED_E1S_3_ATTN_R, OPB_LED_E1S_4_ATTN_R};
+						       OPB_LED_E1S_2_ATTN_R, OPB_LED_E1S_3_ATTN_R,
+						       OPB_LED_E1S_4_ATTN_R };
 
 #define E1S_LED_BLINK_INIT(device)                                                                 \
 	void blink_handler_##device(struct k_timer *timer)                                         \

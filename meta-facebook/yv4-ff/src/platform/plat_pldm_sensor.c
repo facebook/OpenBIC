@@ -2628,7 +2628,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensorName = u"FF_VR_PVDDQ_AB_VOLT_V",
 	},
 	{
-		// FF_ADC_P0V75_ASIC_VOLT_V 
+		// FF_ADC_P0V75_ASIC_VOLT_V
 		/*** PDR common header***/
 		{
 			.record_handle = 0x00000000,
@@ -2645,7 +2645,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensorName = u"FF_ADC_P0V75_ASIC_VOLT_V",
 	},
 	{
-		// FF_ADC_PVPP_AB_VOLT_V 
+		// FF_ADC_PVPP_AB_VOLT_V
 		/*** PDR common header***/
 		{
 			.record_handle = 0x00000000,
@@ -2662,7 +2662,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensorName = u"FF_ADC_PVPP_AB_VOLT_V",
 	},
 	{
-		// FF_ADC_PVPP_CD_VOLT_V 
+		// FF_ADC_PVPP_CD_VOLT_V
 		/*** PDR common header***/
 		{
 			.record_handle = 0x00000000,
@@ -2679,7 +2679,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensorName = u"FF_ADC_PVPP_CD_VOLT_V",
 	},
 	{
-		// FF_ADC_PVTT_AB_VOLT_V 
+		// FF_ADC_PVTT_AB_VOLT_V
 		/*** PDR common header***/
 		{
 			.record_handle = 0x00000000,
@@ -2696,7 +2696,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensorName = u"FF_ADC_PVTT_AB_VOLT_V",
 	},
 	{
-		// FF_ADC_PVTT_CD_VOLT_V 
+		// FF_ADC_PVTT_CD_VOLT_V
 		/*** PDR common header***/
 		{
 			.record_handle = 0x00000000,
@@ -2713,7 +2713,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensorName = u"FF_ADC_PVTT_CD_VOLT_V",
 	},
 	{
-		// FF_INA233_P12V_STBY_CURR_A 
+		// FF_INA233_P12V_STBY_CURR_A
 		/*** PDR common header***/
 		{
 			.record_handle = 0x00000000,
@@ -2730,7 +2730,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensorName = u"FF_INA233_P12V_STBY_CURR_A",
 	},
 	{
-		// FF_VR_P0V8_ASIC_CURR_A 
+		// FF_VR_P0V8_ASIC_CURR_A
 		/*** PDR common header***/
 		{
 			.record_handle = 0x00000000,
@@ -2747,7 +2747,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensorName = u"FF_VR_P0V8_ASIC_CURR_A",
 	},
 	{
-		// FF_VR_PVDDQ_CD_CURR_A 
+		// FF_VR_PVDDQ_CD_CURR_A
 		/*** PDR common header***/
 		{
 			.record_handle = 0x00000000,
@@ -2764,7 +2764,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensorName = u"FF_VR_PVDDQ_CD_CURR_A",
 	},
 	{
-		// FF_VR_P0V85_ASIC_CURR_A 
+		// FF_VR_P0V85_ASIC_CURR_A
 		/*** PDR common header***/
 		{
 			.record_handle = 0x00000000,
@@ -2781,7 +2781,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensorName = u"FF_VR_P0V85_ASIC_CURR_A",
 	},
 	{
-		// FF_VR_PVDDQ_AB_CURR_A 
+		// FF_VR_PVDDQ_AB_CURR_A
 		/*** PDR common header***/
 		{
 			.record_handle = 0x00000000,
@@ -2798,7 +2798,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensorName = u"FF_VR_PVDDQ_AB_CURR_A",
 	},
 	{
-		// FF_INA233_P12V_STBY_PWR_W 
+		// FF_INA233_P12V_STBY_PWR_W
 		/*** PDR common header***/
 		{
 			.record_handle = 0x00000000,
@@ -2815,7 +2815,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensorName = u"FF_INA233_P12V_STBY_PWR_W",
 	},
 	{
-		// FF_VR_P0V85_ASIC_PWR_W 
+		// FF_VR_P0V85_ASIC_PWR_W
 		/*** PDR common header***/
 		{
 			.record_handle = 0x00000000,
@@ -2849,7 +2849,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensorName = u"FF_VR_PVDDQ_AB_PWR_W",
 	},
 	{
-		// FF_VR_P0V8_ASIC_PWR_W 
+		// FF_VR_P0V8_ASIC_PWR_W
 		/*** PDR common header***/
 		{
 			.record_handle = 0x00000000,
@@ -2883,7 +2883,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensorName = u"FF_VR_PVDDQ_CD_PWR_W",
 	},
 	{
-		// FF_CH0_DIMM_A_TEMP_C 
+		// FF_CH0_DIMM_A_TEMP_C
 		/*** PDR common header***/
 		{
 			.record_handle = 0x00000000,
@@ -2900,7 +2900,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensorName = u"FF_CH0_DIMM_A_TEMP_C",
 	},
 	{
-		// FF_CH0_DIMM_B_TEMP_C 
+		// FF_CH0_DIMM_B_TEMP_C
 		/*** PDR common header***/
 		{
 			.record_handle = 0x00000000,
@@ -2917,7 +2917,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensorName = u"FF_CH0_DIMM_B_TEMP_C",
 	},
 	{
-		// FF_CH1_DIMM_C_TEMP_C 
+		// FF_CH1_DIMM_C_TEMP_C
 		/*** PDR common header***/
 		{
 			.record_handle = 0x00000000,
@@ -2934,7 +2934,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensorName = u"FF_CH1_DIMM_C_TEMP_C",
 	},
 	{
-		// FF_CH1_DIMM_D_TEMP_C 
+		// FF_CH1_DIMM_D_TEMP_C
 		/*** PDR common header***/
 		{
 			.record_handle = 0x00000000,
@@ -2956,8 +2956,7 @@ uint32_t plat_get_pdr_size(uint8_t pdr_type)
 {
 	int total_size = 0, i = 0;
 
-	switch (pdr_type)
-	{
+	switch (pdr_type) {
 	case PLDM_NUMERIC_SENSOR_PDR:
 		for (i = 0; i < MAX_SENSOR_THREAD_ID; i++) {
 			total_size += plat_pldm_sensor_get_sensor_count(i);
@@ -3068,5 +3067,6 @@ void plat_load_numeric_sensor_pdr_table(PDR_numeric_sensor *numeric_sensor_table
 
 void plat_load_aux_sensor_names_pdr_table(PDR_sensor_auxiliary_names *aux_sensor_name_table)
 {
-	memcpy(aux_sensor_name_table, &plat_pdr_sensor_aux_names_table, sizeof(plat_pdr_sensor_aux_names_table));
+	memcpy(aux_sensor_name_table, &plat_pdr_sensor_aux_names_table,
+	       sizeof(plat_pdr_sensor_aux_names_table));
 }

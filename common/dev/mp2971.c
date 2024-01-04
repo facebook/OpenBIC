@@ -319,7 +319,7 @@ static bool parsing_image(uint8_t *img_buff, uint32_t img_size, struct mp2856_co
 			}
 		}
 		if (((img_buff[i] != 0x09) && img_buff[i] != 0x0d) &&
-			(cur_ele_idx != ATE_WRITE_TYPE)) {
+		    (cur_ele_idx != ATE_WRITE_TYPE)) {
 			// pass non hex charactor
 			int val = ascii_to_val(img_buff[i]);
 			if (val == -1)
@@ -350,7 +350,7 @@ static bool parsing_image(uint8_t *img_buff, uint32_t img_size, struct mp2856_co
 			break;
 
 		case ATE_REG_DATA_HEX:
-			*((uint32_t*)cur_line->reg_data) = data_store;
+			*((uint32_t *)cur_line->reg_data) = data_store;
 			cur_line->reg_len = data_idx % 2 == 0 ? data_idx / 2 : (data_idx / 2 + 1);
 			break;
 
@@ -359,7 +359,8 @@ static bool parsing_image(uint8_t *img_buff, uint32_t img_size, struct mp2856_co
 
 		case ATE_WRITE_TYPE:
 			if (!strncmp(&img_buff[i], "B", 1)) {
-				memmove(&cur_line->reg_data[1], &cur_line->reg_data[0], cur_line->reg_len);
+				memmove(&cur_line->reg_data[1], &cur_line->reg_data[0],
+					cur_line->reg_len);
 				cur_line->reg_data[0] = cur_line->reg_len;
 				cur_line->reg_len += 1;
 			}
@@ -378,7 +379,7 @@ static bool parsing_image(uint8_t *img_buff, uint32_t img_size, struct mp2856_co
 		} else if (img_buff[i] == 0x0d) {
 			LOG_DBG("vr[%d] page: %d addr:%x", dev_cfg->wr_cnt, cur_line->page,
 				cur_line->reg_addr);
-			for(int i=0; i< cur_line->reg_len; i++) {
+			for (int i = 0; i < cur_line->reg_len; i++) {
 				LOG_DBG("data:%x", cur_line->reg_data[i]);
 			}
 			cur_ele_idx = 0;

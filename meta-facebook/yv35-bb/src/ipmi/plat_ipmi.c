@@ -29,7 +29,6 @@
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
-
 void OEM_CABLE_DETECTION(ipmi_msg *msg)
 {
 	if (msg == NULL) {
