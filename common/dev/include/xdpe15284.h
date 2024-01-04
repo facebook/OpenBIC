@@ -52,5 +52,6 @@ bool xdpe15284_disable_write_protect(uint8_t bus, uint8_t addr);
 void xdpe15284_set_write_protect_default_val(uint8_t val);
 bool xdpe15284_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_size);
 bool xdpe15284_get_status_byte(uint8_t bus, uint8_t addr, uint8_t *data);
+bool xdpe15284_set_write_protect(uint8_t bus, uint8_t addr, uint8_t option);
 
 #endif

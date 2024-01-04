@@ -34,6 +34,8 @@
 #include "pex89000.h"
 #include "pldm_monitor.h"
 #include "plat_pldm_monitor.h"
+#include "xdpe15284.h"
+#include "util_pmbus.h"
 
 LOG_MODULE_REGISTER(plat_dev);
 
@@ -368,4 +370,49 @@ void get_switch_error_status(uint8_t sensor_num, uint8_t bus, uint8_t addr, uint
 					  &(sw_error_check_info[sw_index].add_sel_work), K_NO_WAIT);
 		sw_error_check_info[sw_index].is_addsel = true;
 	}
+}
+
+bool init_vr_write_protect(uint8_t bus, uint8_t addr, uint8_t default_val)
+{
+	int ret = 0;
+	uint8_t page = 0;
+	uint8_t reg_val = 0;
+
+	xdpe15284_set_write_protect_default_val(default_val);
+	ret = pmbus_read_command(bus, addr, PMBUS_PAGE, &reg_val, 1);
+	if (ret != 0) {
+		LOG_ERR("Get bus: 0x%x, addr: 0x%x, page fail", bus, addr);
+		return false;
+	}
+
+	page = reg_val;
+	if (xdpe15284_set_write_protect(bus, addr, XDPE15284_ENABLE_WRITE_PROTECT) != true) {
+		LOG_ERR("Initialize page: 0x%x write protect to 0x%x fail", page, default_val);
+		return false;
+	}
+
+	page = (page == PMBUS_PAGE_0 ? PMBUS_PAGE_1 : PMBUS_PAGE_0);
+	ret = pmbus_set_page(bus, addr, page);
+	if (ret != 0) {
+		LOG_ERR("Set bus: 0x%x, addr: 0x%x to page: 0x%x fail", bus, addr, page);
+		return false;
+	}
+
+	ret = pmbus_read_command(bus, addr, PMBUS_PAGE, &reg_val, 1);
+	if (ret != 0) {
+		LOG_ERR("Get bus: 0x%x, addr: 0x%x, page fail", bus, addr);
+		return false;
+	}
+
+	if (reg_val != page) {
+		LOG_ERR("Set page to 0x%x fail", page);
+		return false;
+	}
+
+	if (xdpe15284_set_write_protect(bus, addr, XDPE15284_ENABLE_WRITE_PROTECT) != true) {
+		LOG_ERR("Initialize page: 0x%x write protect to 0x%x fail", page, default_val);
+		return false;
+	}
+
+	return true;
 }

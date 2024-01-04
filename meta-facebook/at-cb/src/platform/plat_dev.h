@@ -88,5 +88,6 @@ bool is_sw_ready(uint8_t sensor_num);
 void init_sw_heartbeat_work();
 void clear_sw_error_check_flag();
 void get_switch_error_status(uint8_t sensor_num, uint8_t bus, uint8_t addr, uint8_t index);
+bool init_vr_write_protect(uint8_t bus, uint8_t addr, uint8_t default_val);
 
 #endif
