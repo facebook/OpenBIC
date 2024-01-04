@@ -107,11 +107,11 @@ static void mctp_smbus_read_hook(uint8_t *data, uint16_t *len)
 	if (hdr->byte_count != *len - sizeof(smbus_hdr)) {
 		LOG_HEXDUMP_DBG(data, *len, "Data before move:");
 		if (hdr->byte_count == 0x0F) {
-			LOG_INF("Data length (%d) move 1 byte.....", *len);
+			LOG_DBG("Data length (%d) move 1 byte.....", *len);
 			*len -= 1;
 			memcpy(data, data + 1, *len);
 		} else {
-			LOG_INF("Data length (%d) move 2 bytes.....", *len);
+			LOG_DBG("Data length (%d) move 2 bytes.....", *len);
 			*len -= 2;
 			memcpy(data, data + 2, *len);
 		}
