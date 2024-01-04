@@ -51,7 +51,7 @@ void plat_pldm_load_state_effecter_table(void)
 	return;
 }
 
-void plat_pldm_dev_driver_hadnler(const uint8_t *buf, uint16_t len, uint8_t *resp,
+void plat_pldm_dev_driver_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
 				  uint16_t *resp_len, uint16_t effecter_id)
 {
 	CHECK_NULL_ARG(buf);
@@ -158,7 +158,7 @@ uint8_t plat_pldm_set_state_effecter_state_handler(const uint8_t *buf, uint16_t 
 		plat_pldm_switch_uart(buf, len, resp, resp_len);
 		break;
 	case PLDM_ENTITY_DEVICE_DRIVER:
-		plat_pldm_dev_driver_hadnler(buf, len, resp, resp_len, info_p->effecter_id);
+		plat_pldm_dev_driver_handler(buf, len, resp, resp_len, info_p->effecter_id);
 		break;
 	default:
 		LOG_ERR("Unsupport entity type, (%d)", info_p->entity_type);
