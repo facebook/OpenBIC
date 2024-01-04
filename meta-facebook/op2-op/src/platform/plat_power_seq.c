@@ -862,7 +862,8 @@ bool power_on_handler(uint8_t initial_stage)
 			}
 			if (check_power_stage(ENABLE_POWER_MODE, CHECK_POWER_SEQ_02) != 0) {
 				if (board_revision != EVT_STAGE && card_type == CARD_TYPE_OPB) {
-					control_power_stage(DISABLE_POWER_MODE, OPB_BIC_MAIN_PWR_EN_R);
+					control_power_stage(DISABLE_POWER_MODE,
+							    OPB_BIC_MAIN_PWR_EN_R);
 				}
 				LOG_ERR("PWRGD_P12V_MAIN is not enabled!");
 				check_power_ret = -1;
@@ -1087,7 +1088,8 @@ bool power_off_handler(uint8_t initial_stage)
 			break;
 		case BOARD_POWER_OFF_STAGE2:
 			if (board_revision != EVT_STAGE && card_type == CARD_TYPE_OPB) {
-				if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_02) != 0) {
+				if (check_power_stage(DISABLE_POWER_MODE, CHECK_POWER_SEQ_02) !=
+				    0) {
 					LOG_ERR("OPB_BIC_MAIN_PWR_EN_R is not disabled!");
 					check_power_ret = -1;
 					break;

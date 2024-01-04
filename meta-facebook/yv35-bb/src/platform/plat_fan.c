@@ -100,15 +100,15 @@ int pal_get_fan_rpm(uint8_t fan_id, uint16_t *rpm)
 
 	ret = sensor_sample_fetch(fan_dev);
 	if (ret < 0) {
-		LOG_ERR("Failed to read FAN%d due to sensor_sample_fetch failed, ret: %d",
-		        fan_id, ret);
+		LOG_ERR("Failed to read FAN%d due to sensor_sample_fetch failed, ret: %d", fan_id,
+			ret);
 		return ret;
 	}
 
 	ret = sensor_channel_get(fan_dev, SENSOR_CHAN_RPM, &sensor_value);
 	if (ret < 0) {
-		LOG_ERR("Failed to read FAN%d due to sensor_channel_get failed, ret: %d",
-		        fan_id, ret);
+		LOG_ERR("Failed to read FAN%d due to sensor_channel_get failed, ret: %d", fan_id,
+			ret);
 		return ret;
 	}
 
@@ -160,8 +160,7 @@ int pal_set_fan_duty(uint8_t pwm_id, uint8_t duty, uint8_t slot_index)
 				final_duty = pwm_record[0][pwm_id];
 			}
 		} else {
-			LOG_ERR("Invalid slot index: %d",
-			        slot_index);
+			LOG_ERR("Invalid slot index: %d", slot_index);
 			return -1;
 		}
 

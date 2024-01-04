@@ -266,8 +266,6 @@ bool pal_load_gpio_config(void)
 
 void sync_bmc_ready_pin()
 {
-        uint8_t gpio_val = gpio_get(FM_CPLD_BMC_BIC_READY);
-        gpio_set(BMC_READY, gpio_val);
+	uint8_t gpio_val = gpio_get(FM_CPLD_BMC_BIC_READY);
+	gpio_set(BMC_READY, gpio_val);
 }
-
-

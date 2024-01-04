@@ -73,7 +73,7 @@ enum p3g284x_pull_up_resistor {
 };
 
 bool p3h284x_i2c_mode_only_init(uint8_t bus, uint8_t slave_port, uint8_t ldo_volt,
-				  uint8_t pullup_resistor);
+				uint8_t pullup_resistor);
 bool p3h284x_select_slave_port_connect(uint8_t bus, uint8_t slave_port);
 bool p3h284x_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt);
 bool p3h284x_set_slave_port(uint8_t bus, uint8_t addr, uint8_t setting);

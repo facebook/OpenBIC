@@ -23,7 +23,6 @@
 
 LOG_MODULE_REGISTER(plat_fru);
 
-
 const EEPROM_CFG plat_fru_config[] = {
 	{
 		NV_ATMEL_24C128,

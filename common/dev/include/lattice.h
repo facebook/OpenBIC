@@ -38,8 +38,9 @@ enum sector_type {
 	UFM2,
 };
 
-enum { CPLD_TAR_I2C = 0x01,
-       CPLD_TAR_JTAG = 0x02,
+enum {
+	CPLD_TAR_I2C = 0x01,
+	CPLD_TAR_JTAG = 0x02,
 };
 
 struct lattice_img_config {

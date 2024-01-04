@@ -48,7 +48,7 @@ void init_i3c_hub()
 		}
 
 		if (!p3h284x_set_slave_port(I3C_BUS4, P3H284X_DEFAULT_STATIC_ADDRESS,
-					      DEFAULT_SLAVE_PORT_SETTING)) {
+					    DEFAULT_SLAVE_PORT_SETTING)) {
 			LOG_ERR("Error to set slave port");
 		}
 	}

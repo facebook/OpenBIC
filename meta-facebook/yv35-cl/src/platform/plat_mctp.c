@@ -25,11 +25,11 @@
 LOG_MODULE_REGISTER(plat_mctp);
 
 /* i3c 8-bit addr */
-#define I3C_STATIC_ADDR_BIC		0x40
-#define I3C_STATIC_ADDR_BMC		0x20
+#define I3C_STATIC_ADDR_BIC 0x40
+#define I3C_STATIC_ADDR_BMC 0x20
 
 /* i3c dev bus */
-#define I3C_BUS_BMC	0
+#define I3C_BUS_BMC 0
 
 /* mctp endpoint */
 #define MCTP_EID_BMC 0x01
@@ -38,11 +38,10 @@ K_TIMER_DEFINE(send_cmd_timer, send_cmd_to_dev, NULL);
 K_WORK_DEFINE(send_cmd_work, send_cmd_to_dev_handler);
 
 mctp_port plat_mctp_port[] = {
-	{	.channel_target = PLDM,
-		.medium_type = MCTP_MEDIUM_TYPE_TARGET_I3C,
-		.conf.i3c_conf.bus = I3C_BUS_BMC,
-		.conf.i3c_conf.addr = I3C_STATIC_ADDR_BMC
-	},
+	{ .channel_target = PLDM,
+	  .medium_type = MCTP_MEDIUM_TYPE_TARGET_I3C,
+	  .conf.i3c_conf.bus = I3C_BUS_BMC,
+	  .conf.i3c_conf.addr = I3C_STATIC_ADDR_BMC },
 };
 
 mctp_route_entry mctp_route_tbl[] = {
@@ -208,7 +207,8 @@ bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg)
 
 	if ((resp->header.completion_code != MCTP_SUCCESS) ||
 	    (resp->header.ipmi_comp_code != CC_SUCCESS)) {
-		LOG_ERR("Check reponse completion code fail %x %x", resp->header.completion_code, resp->header.ipmi_comp_code);
+		LOG_ERR("Check reponse completion code fail %x %x", resp->header.completion_code,
+			resp->header.ipmi_comp_code);
 		return false;
 	}
 
@@ -229,7 +229,7 @@ void plat_mctp_init(void)
 			continue;
 		}
 
-		uint8_t rc = mctp_set_medium_configure(p->mctp_inst, p->medium_type , p->conf);
+		uint8_t rc = mctp_set_medium_configure(p->mctp_inst, p->medium_type, p->conf);
 		if (rc != MCTP_SUCCESS) {
 			LOG_INF("mctp set medium configure failed");
 		}
@@ -241,7 +241,6 @@ void plat_mctp_init(void)
 		ret = mctp_start(p->mctp_inst);
 	}
 }
-
 
 uint8_t plat_get_mctp_port_count()
 {

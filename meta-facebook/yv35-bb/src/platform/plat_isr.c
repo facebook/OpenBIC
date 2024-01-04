@@ -251,7 +251,8 @@ void set_BIC_slot_isolator(uint8_t pwr_state_gpio_num, uint8_t isolator_gpio_num
 	}
 
 	if (ret < 0) {
-		LOG_ERR("Failed to set slot isolator due to set gpio %d is failed", isolator_gpio_num);
+		LOG_ERR("Failed to set slot isolator due to set gpio %d is failed",
+			isolator_gpio_num);
 	}
 }
 

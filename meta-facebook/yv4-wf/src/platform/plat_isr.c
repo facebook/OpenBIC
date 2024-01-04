@@ -183,11 +183,12 @@ void set_ioe_init()
 		ret = i2c_master_write(&msg, retry);
 		if (ret != 0) {
 			LOG_ERR("Unable to write ioexp bus when initializing IOE, addr: 0x%02x",
-					msg.target_addr);
+				msg.target_addr);
 			return;
 		}
 
-		if ((ioe_cfg[i].addr == ADDR_IOE4) && (ioe_cfg[i].output_reg == TCA9555_OUTPUT_PORT_REG_1)) {
+		if ((ioe_cfg[i].addr == ADDR_IOE4) &&
+		    (ioe_cfg[i].output_reg == TCA9555_OUTPUT_PORT_REG_1)) {
 			msg.tx_len = 1;
 			ret = i2c_master_read(&msg, retry);
 			if (ret != 0) {
@@ -217,7 +218,7 @@ void set_ioe_init()
 
 		if (ret != 0) {
 			LOG_ERR("Unable to write ioexp bus when initializing IOE, addr: 0x%02x",
-					msg.target_addr);
+				msg.target_addr);
 			return;
 		}
 	}

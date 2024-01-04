@@ -325,13 +325,14 @@ sensor_cfg plat_expansion_B_sensor_config[] = {
 };
 
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
-const static uint8_t ina233_addr_opa[] = {INA233_EXPA_E1S_0_ADDR, INA233_EXPA_E1S_1_ADDR,
-	INA233_EXPA_E1S_2_ADDR};
-const static uint8_t ina233_addr_opb[] = {INA233_EXPB_E1S_0_ADDR, INA233_EXPB_E1S_1_ADDR,
-	INA233_EXPB_E1S_2_ADDR, INA233_EXPB_E1S_3_ADDR, INA233_EXPB_E1S_4_ADDR};
-const static uint8_t e1s_adc_channel_opa[] = {ADC_PORT2, ADC_PORT1, ADC_PORT0};
-const static uint8_t e1s_adc_channel_opb[] = {ADC_PORT4, ADC_PORT3, ADC_PORT2,
-	ADC_PORT1, ADC_PORT0};
+const static uint8_t ina233_addr_opa[] = { INA233_EXPA_E1S_0_ADDR, INA233_EXPA_E1S_1_ADDR,
+					   INA233_EXPA_E1S_2_ADDR };
+const static uint8_t ina233_addr_opb[] = { INA233_EXPB_E1S_0_ADDR, INA233_EXPB_E1S_1_ADDR,
+					   INA233_EXPB_E1S_2_ADDR, INA233_EXPB_E1S_3_ADDR,
+					   INA233_EXPB_E1S_4_ADDR };
+const static uint8_t e1s_adc_channel_opa[] = { ADC_PORT2, ADC_PORT1, ADC_PORT0 };
+const static uint8_t e1s_adc_channel_opb[] = { ADC_PORT4, ADC_PORT3, ADC_PORT2, ADC_PORT1,
+					       ADC_PORT0 };
 
 void load_sensor_config(void)
 {
@@ -524,8 +525,10 @@ void pal_extend_sensor_config()
 	uint8_t sensor_number_p1v8_adc = SENSOR_NUM_1OU_P1V8_ADC_VOLT;
 	uint8_t sensor_number_p1v2_adc = SENSOR_NUM_1OU_P1V2_ADC_VOLT;
 	if (card_position == CARD_POSITION_3OU) {
-		sensor_number_p1v8_adc += ((CARD_POSITION_3OU - CARD_POSITION_1OU) * SENSOR_NUMBER_INTERVAL);
-		sensor_number_p1v2_adc += ((CARD_POSITION_3OU - CARD_POSITION_1OU) * SENSOR_NUMBER_INTERVAL);
+		sensor_number_p1v8_adc +=
+			((CARD_POSITION_3OU - CARD_POSITION_1OU) * SENSOR_NUMBER_INTERVAL);
+		sensor_number_p1v2_adc +=
+			((CARD_POSITION_3OU - CARD_POSITION_1OU) * SENSOR_NUMBER_INTERVAL);
 	}
 
 	switch (card_type) {

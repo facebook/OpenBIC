@@ -370,7 +370,7 @@ static void mctp_tx_task(void *arg, void *dummy0, void *dummy1)
        * If the message is response, keep the original msg_tag of ext_params
 */
 			hdr->msg_tag = (hdr->to) ? (msg_tag & MCTP_HDR_TAG_MASK) :
-							 mctp_msg.ext_params.msg_tag;
+						   mctp_msg.ext_params.msg_tag;
 
 			hdr->dest_ep = mctp_msg.ext_params.ep;
 			hdr->src_ep = mctp_inst->endpoint;
@@ -641,16 +641,16 @@ __weak int pal_find_bus_in_mctp_port(mctp_port *p)
 {
 	int bus = -1;
 	switch (p->medium_type) {
-		case MCTP_MEDIUM_TYPE_SMBUS:
-			bus = p->conf.smbus_conf.bus;
-			break;
-		case MCTP_MEDIUM_TYPE_TARGET_I3C:
-		case MCTP_MEDIUM_TYPE_CONTROLLER_I3C:
-			bus = p->conf.i3c_conf.bus;
-			break;
-		default:
-			LOG_WRN("Cannot find medium type");
-			return -1;
+	case MCTP_MEDIUM_TYPE_SMBUS:
+		bus = p->conf.smbus_conf.bus;
+		break;
+	case MCTP_MEDIUM_TYPE_TARGET_I3C:
+	case MCTP_MEDIUM_TYPE_CONTROLLER_I3C:
+		bus = p->conf.i3c_conf.bus;
+		break;
+	default:
+		LOG_WRN("Cannot find medium type");
+		return -1;
 	}
 
 	return bus;

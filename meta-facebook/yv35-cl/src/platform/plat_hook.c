@@ -103,9 +103,9 @@ pmic_init_arg pmic_init_args[] = {
 // R_load is the value of resistance connected to EFUSE , and EFUSE would adjust the reading accuracy according to r_load
 max16550a_init_arg max16550a_init_args[] = { [0] = { .r_load = 14000 } };
 
-ifx_vr_fw_info ifx_vr_fw_info_table[] = {
-	{ .is_init = false }, { .is_init = false }, { .is_init = false }
-};
+ifx_vr_fw_info ifx_vr_fw_info_table[] = { { .is_init = false },
+					  { .is_init = false },
+					  { .is_init = false } };
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS

@@ -66,8 +66,8 @@ int peci_ping(uint8_t address)
 
 	ret = peci_transfer(dev, &pkgcfg);
 	if (ret) {
-		LOG_ERR("Failed to send the PECI PING command(0x%x), status: %d",
-		       pkgcfg.cmd_code, ret);
+		LOG_ERR("Failed to send the PECI PING command(0x%x), status: %d", pkgcfg.cmd_code,
+			ret);
 	}
 
 	return ret;
@@ -179,8 +179,7 @@ int peci_read(uint8_t cmd, uint8_t address, uint8_t u8Index, uint16_t u16Param, 
 	}
 
 	if (ret) {
-		LOG_ERR("Failed to send PECI Command(0x%x), status: %d",
-		       rdpkgcfg.cmd_code, ret);
+		LOG_ERR("Failed to send PECI Command(0x%x), status: %d", rdpkgcfg.cmd_code, ret);
 	}
 
 	SAFE_FREE(rdpkgcfg.tx_buffer.buf);

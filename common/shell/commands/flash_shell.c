@@ -23,7 +23,6 @@
 
 LOG_MODULE_REGISTER(flash_shell);
 
-
 /*
     Command FLASH
 */

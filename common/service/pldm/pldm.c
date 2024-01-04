@@ -645,8 +645,7 @@ int pldm_send_ipmi_request(ipmi_msg *msg)
 
 	LOG_HEXDUMP_DBG(pmsg.buf, pmsg.len, "pmsg.buf");
 	// Send request to PLDM/MCTP thread and get response
-	uint8_t res_len =
-		mctp_pldm_read(p->mctp_inst, &pmsg, rbuf, sizeof(rbuf));
+	uint8_t res_len = mctp_pldm_read(p->mctp_inst, &pmsg, rbuf, sizeof(rbuf));
 
 	if (!res_len) {
 		LOG_ERR("mctp_pldm_read fail");

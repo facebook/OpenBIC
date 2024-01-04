@@ -139,16 +139,19 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 							msg->completion_code = CC_UNSPECIFIED_ERROR;
 						}
 					} else {
-						convert_uint32_t_to_uint8_t_pointer(retimer_version, msg->data, 4, BIG_ENDIAN);
+						convert_uint32_t_to_uint8_t_pointer(
+							retimer_version, msg->data, 4, BIG_ENDIAN);
 						msg->data_len = 4;
 						msg->completion_code = CC_SUCCESS;
 					}
 					break;
 				case RETIMER_TYPE_M88RT51632:
 					if (retimer_version == RETIMER_UNKNOWN_VERSION) {
-						if (m88rt51632_get_fw_version(i2c_msg, &retimer_version)) {
+						if (m88rt51632_get_fw_version(i2c_msg,
+									      &retimer_version)) {
 							convert_uint32_t_to_uint8_t_pointer(
-								retimer_version, msg->data, 4, BIG_ENDIAN);
+								retimer_version, msg->data, 4,
+								BIG_ENDIAN);
 							msg->data_len = 4;
 							msg->completion_code = CC_SUCCESS;
 						} else {
@@ -415,11 +418,13 @@ void OEM_1S_SAFE_WRITE_READ_M2_DATA(ipmi_msg *msg)
 
 	// Close all channels after write read
 	if (i3c_hub_type == RG3M87B12_DEVICE_INFO) {
-		if (!rg3mxxb12_select_slave_port_connect(i2c_msg.bus, RG3MXXB12_SSPORTS_ALL_DISCONNECT)) {
+		if (!rg3mxxb12_select_slave_port_connect(i2c_msg.bus,
+							 RG3MXXB12_SSPORTS_ALL_DISCONNECT)) {
 			LOG_ERR("Failed to close I3C HUB (I2C mode) channel");
 		}
 	} else {
-		if (!p3h284x_select_slave_port_connect(i2c_msg.bus, P3H284X_SSPORTS_ALL_DISCONNECT)) {
+		if (!p3h284x_select_slave_port_connect(i2c_msg.bus,
+						       P3H284X_SSPORTS_ALL_DISCONNECT)) {
 			LOG_ERR("Failed to close I3C HUB (I2C mode) channel");
 		}
 	}

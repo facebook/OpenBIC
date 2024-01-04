@@ -351,7 +351,7 @@ static bool check_dev_support(uint8_t bus, uint8_t addr, raa_config_t *raa_info)
 	LOG_INF("* Mode:             %s", raa_info->mode == RAA_GEN2 ? "raa gen2" :
 					  raa_info->mode == RAA_GEN3_LEGACY ?
 								       "raa gen3-lagacy" :
-									     "raa gen3-production");
+								       "raa gen3-production");
 	LOG_INF("* ID:               0x%x", raa_info->devid);
 	LOG_INF("* Revision:         0x%x", raa_info->rev);
 	LOG_INF("* CRC:              0x%x", raa_info->crc);

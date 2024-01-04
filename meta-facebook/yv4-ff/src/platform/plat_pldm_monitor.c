@@ -52,7 +52,7 @@ void plat_pldm_load_state_effecter_table(void)
 }
 
 void plat_pldm_dev_driver_hadnler(const uint8_t *buf, uint16_t len, uint8_t *resp,
-				     uint16_t *resp_len, uint16_t effecter_id)
+				  uint16_t *resp_len, uint16_t effecter_id)
 {
 	CHECK_NULL_ARG(buf);
 	CHECK_NULL_ARG(resp);
@@ -71,7 +71,6 @@ void plat_pldm_dev_driver_hadnler(const uint8_t *buf, uint16_t len, uint8_t *res
 		return;
 		break;
 	}
-
 }
 
 void plat_pldm_switch_uart(const uint8_t *buf, uint16_t len, uint8_t *resp, uint16_t *resp_len)

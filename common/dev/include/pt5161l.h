@@ -19,9 +19,9 @@
 
 #include "hal_i2c.h"
 
-#define PT5161L_I2C_MST_INIT_CTRL_BIT_BANG_MODE_EN_GET(x) (((x)&0x04) >> 2)
+#define PT5161L_I2C_MST_INIT_CTRL_BIT_BANG_MODE_EN_GET(x) (((x) & 0x04) >> 2)
 #define PT5161L_I2C_MST_INIT_CTRL_BIT_BANG_MODE_EN_SET(x) (((x) << 2) & 0x04)
-#define PT5161L_I2C_MST_INIT_CTRL_BIT_BANG_MODE_EN_MODIFY(r, x) ((((x) << 2) & 0x04) | ((r)&0xfb))
+#define PT5161L_I2C_MST_INIT_CTRL_BIT_BANG_MODE_EN_MODIFY(r, x) ((((x) << 2) & 0x04) | ((r) & 0xfb))
 
 #define PT5161L_SELF_WR_CSR_CMD 1
 #define PT5161L_MAIN_MICRO_FW_INFO (96 * 1024 - 128)

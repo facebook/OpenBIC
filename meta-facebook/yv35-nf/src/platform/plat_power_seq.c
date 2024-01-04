@@ -426,7 +426,7 @@ int check_power_status(uint8_t power_status, uint8_t power_seq)
 		sel_msg->sensor_number = SENSOR_NUM_POWER_ERROR;
 		sel_msg->event_data1 =
 			((power_status == POWER_ON) ? IPMI_OEM_EVENT_OFFSET_EXP_PWRON_FAIL :
-							    IPMI_OEM_EVENT_OFFSET_EXP_PWROFF_FAIL);
+						      IPMI_OEM_EVENT_OFFSET_EXP_PWROFF_FAIL);
 		sel_msg->event_data2 = power_seq;
 		sel_msg->event_data3 = get_board_id();
 

@@ -35,7 +35,8 @@ static bool rg3mxxb12_register_read_i3c(uint8_t bus, uint8_t offset, uint8_t *va
 	i3c_msg.rx_len = 1;
 	ret = i3c_transfer(&i3c_msg);
 	if (ret != 0) {
-		LOG_ERR("Failed to read rg3mxxb12 register via I3C 0x%x, bus-%d ret = %d", offset, bus, ret);
+		LOG_ERR("Failed to read rg3mxxb12 register via I3C 0x%x, bus-%d ret = %d", offset,
+			bus, ret);
 		return false;
 	}
 	*value = i3c_msg.data[0];

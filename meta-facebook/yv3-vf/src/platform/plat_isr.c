@@ -102,7 +102,7 @@ uint8_t get_p12v_flt_status(uint8_t idx)
 			    (idx == M2_IDX_E_B) ? IRQ_P12V_E1S_1_FLT_N :
 			    (idx == M2_IDX_E_C) ? IRQ_P12V_E1S_2_FLT_N :
 			    (idx == M2_IDX_E_D) ? IRQ_P12V_E1S_3_FLT_N :
-							0xFF;
+						  0xFF;
 
 	if (pin == 0xFF)
 		return 0;
@@ -194,12 +194,12 @@ void irq_fault_sel(uint8_t idx, uint8_t type, uint8_t is_check)
 		      (idx == 1) ? IRQ_P12V_E1S_1_FLT_N :
 		      (idx == 2) ? IRQ_P12V_E1S_2_FLT_N :
 		      (idx == 3) ? IRQ_P12V_E1S_3_FLT_N :
-					 0xFF;
+				   0xFF;
 		en_pin = (idx == 0) ? FM_P12V_E1S_0_EN :
 			 (idx == 1) ? FM_P12V_E1S_1_EN :
 			 (idx == 2) ? FM_P12V_E1S_2_EN :
 			 (idx == 3) ? FM_P12V_E1S_3_EN :
-					    0xFF;
+				      0xFF;
 		break;
 	case P3V3_E1S:
 		if (!m2_prsnt(idx))
@@ -209,12 +209,12 @@ void irq_fault_sel(uint8_t idx, uint8_t type, uint8_t is_check)
 		      (idx == 1) ? IRQ_P3V3_E1S_1_FLT_N :
 		      (idx == 2) ? IRQ_P3V3_E1S_2_FLT_N :
 		      (idx == 3) ? IRQ_P3V3_E1S_3_FLT_N :
-					 0xFF;
+				   0xFF;
 		en_pin = (idx == 0) ? FM_P3V3_E1S_0_SW_EN :
 			 (idx == 1) ? FM_P3V3_E1S_1_SW_EN :
 			 (idx == 2) ? FM_P3V3_E1S_2_SW_EN :
 			 (idx == 3) ? FM_P3V3_E1S_3_SW_EN :
-					    0xFF;
+				      0xFF;
 		break;
 	case P12V_EDGE:
 		event_data1 = IPMI_EVENT_OFFSET_SYS_IRQ_P12V_EDGE_FLT;

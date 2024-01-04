@@ -43,10 +43,12 @@ static K_SEM_DEFINE(cmd_sem, 1, 1);
 
 #define PLAT_PLDM_SEQUENCE_CNT 3
 
-static uint8_t power_sequence[PLAT_PLDM_SEQUENCE_CNT] = {PLAT_PLDM_HOST_PWR_CTRL_DEFAULT, PLAT_PLDM_HOST_PWR_BTN_LOW,
-			PLAT_PLDM_HOST_PWR_CTRL_DEFAULT};
-static uint8_t reset_sequence[PLAT_PLDM_SEQUENCE_CNT] = {PLAT_PLDM_HOST_PWR_CTRL_DEFAULT, PLAT_PLDM_HOST_RST_BTN_LOW,
-			PLAT_PLDM_HOST_PWR_CTRL_DEFAULT};
+static uint8_t power_sequence[PLAT_PLDM_SEQUENCE_CNT] = { PLAT_PLDM_HOST_PWR_CTRL_DEFAULT,
+							  PLAT_PLDM_HOST_PWR_BTN_LOW,
+							  PLAT_PLDM_HOST_PWR_CTRL_DEFAULT };
+static uint8_t reset_sequence[PLAT_PLDM_SEQUENCE_CNT] = { PLAT_PLDM_HOST_PWR_CTRL_DEFAULT,
+							  PLAT_PLDM_HOST_RST_BTN_LOW,
+							  PLAT_PLDM_HOST_PWR_CTRL_DEFAULT };
 
 struct pldm_state_effecter_info plat_state_effecter_table[] = {
 	[0 ... PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_MAX] = {
@@ -217,7 +219,7 @@ uint8_t plat_pldm_host_button_sequence(const uint8_t *power_sequence, uint16_t p
 }
 
 void plat_pldm_set_effecter_state_host_power_control(const uint8_t *buf, uint16_t len,
-							  uint8_t *resp, uint16_t *resp_len)
+						     uint8_t *resp, uint16_t *resp_len)
 {
 	CHECK_NULL_ARG(buf);
 	CHECK_NULL_ARG(resp);
@@ -228,8 +230,10 @@ void plat_pldm_set_effecter_state_host_power_control(const uint8_t *buf, uint16_
 	uint8_t *completion_code_p = resp;
 	*resp_len = 1;
 
-	if (req_p->composite_effecter_count != PLDM_PLATFORM_OEM_HOST_POWER_CTRL_EFFECTER_STATE_FIELD_COUNT) {
-		LOG_ERR("Unsupported host power control effecter count, (%d)", req_p->composite_effecter_count);
+	if (req_p->composite_effecter_count !=
+	    PLDM_PLATFORM_OEM_HOST_POWER_CTRL_EFFECTER_STATE_FIELD_COUNT) {
+		LOG_ERR("Unsupported host power control effecter count, (%d)",
+			req_p->composite_effecter_count);
 		*completion_code_p = PLDM_ERROR_INVALID_DATA;
 		return;
 	}
@@ -237,8 +241,8 @@ void plat_pldm_set_effecter_state_host_power_control(const uint8_t *buf, uint16_
 	set_effecter_state_field_t *host_power_state = &req_p->field[0];
 
 	if (host_power_state->set_request >= PLDM_SET_REQUEST_MAX) {
-		  LOG_ERR("Invalid host power control set request (%d)",
-					host_power_state->set_request);
+		LOG_ERR("Invalid host power control set request (%d)",
+			host_power_state->set_request);
 		*completion_code_p = PLDM_PLATFORM_UNSUPPORTED_EFFECTERSTATE;
 		return;
 	}
@@ -285,18 +289,20 @@ void plat_pldm_set_effecter_state_host_power_control(const uint8_t *buf, uint16_
 		}
 		break;
 	case EFFECTER_STATE_POWER_STATUS_RESET:
-		if (plat_pldm_host_button_sequence(reset_sequence, PLAT_PLDM_RESET_BUTTON_MSEC) != 0) {
+		if (plat_pldm_host_button_sequence(reset_sequence, PLAT_PLDM_RESET_BUTTON_MSEC) !=
+		    0) {
 			LOG_ERR("Failed to do host power reset");
 		}
 		break;
 	case EFFECTER_STATE_POWER_STATUS_GRACEFUL_SHUTDOWN:
-		if (plat_pldm_host_button_sequence(power_sequence, PLAT_PLDM_GRACEFUL_SHUTDOWN_BUTTON_MSEC) != 0) {
+		if (plat_pldm_host_button_sequence(power_sequence,
+						   PLAT_PLDM_GRACEFUL_SHUTDOWN_BUTTON_MSEC) != 0) {
 			LOG_ERR("Failed to do host graceful shutdown");
 		}
 		break;
 	default:
 		LOG_ERR("Unsupported host power control effecter state, (%d)",
-				host_power_state->effecter_state);
+			host_power_state->effecter_state);
 		*completion_code_p = PLDM_ERROR_INVALID_DATA;
 	}
 

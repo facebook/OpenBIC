@@ -473,7 +473,7 @@ void cmd_control_sensor_polling(const struct shell *shell, size_t argc, char **a
 	}
 
 	cfg->is_enable_polling = ((operation == DISABLE_SENSOR_POLLING) ? DISABLE_SENSOR_POLLING :
-										ENABLE_SENSOR_POLLING);
+									  ENABLE_SENSOR_POLLING);
 	shell_print(shell, "Table idx: 0x%x, Sensor number 0x%x %s sensor polling success",
 		    table_idx, sensor_num,
 		    ((operation == DISABLE_SENSOR_POLLING) ? "disable" : "enable"));

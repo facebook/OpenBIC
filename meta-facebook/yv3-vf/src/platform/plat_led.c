@@ -52,7 +52,7 @@ uint8_t GetSSDLEDPin(uint8_t idx)
 			    (idx == M2_IDX_E_B) ? LED_BIC_E1S_1 :
 			    (idx == M2_IDX_E_C) ? LED_BIC_E1S_2 :
 			    (idx == M2_IDX_E_D) ? LED_BIC_E1S_3 :
-							0xFF;
+						  0xFF;
 	return pin;
 }
 
@@ -62,7 +62,7 @@ struct k_timer *idx_to_ssdled_timer(uint8_t idx)
 	       (idx == M2_IDX_E_B) ? &ssdled_blink_B :
 	       (idx == M2_IDX_E_C) ? &ssdled_blink_C :
 	       (idx == M2_IDX_E_D) ? &ssdled_blink_D :
-					   NULL;
+				     NULL;
 }
 
 void SSDLEDSet(uint8_t idx, uint8_t behaviour)
@@ -79,8 +79,7 @@ void SSDLEDSet(uint8_t idx, uint8_t behaviour)
 		gpio_set(pin, !gpio_get(pin));
 		break;
 	default:
-		LOG_ERR("Error LED  %d behaviour %d!",
-		        idx, behaviour);
+		LOG_ERR("Error LED  %d behaviour %d!", idx, behaviour);
 		break;
 	}
 }

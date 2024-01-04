@@ -146,7 +146,7 @@ uint8_t gpio_get_reg_value(uint8_t gpio_num, uint8_t reg_offset)
 	uint8_t res = (sys_read32(GPIO_GROUP_REG_ACCESS[gpio_group] + reg_offset) &
 		       BIT(gpio_group_index)) ?
 			      1 :
-				    0;
+			      0;
 
 	return res;
 }

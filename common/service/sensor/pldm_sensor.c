@@ -269,7 +269,8 @@ int pldm_polling_sensor_reading(pldm_sensor_info *pldm_snr_list, int pldm_sensor
 	CHECK_NULL_ARG_WITH_RETURN(pldm_snr_list, -1);
 
 	if (pldm_snr_list->pldm_sensor_cfg.cache_status == PLDM_SENSOR_INITIALIZING) {
-		if (pldm_sensor_polling_pre_check(&pldm_sensor_list[thread_id][sensor_num], sensor_num) != 0) {
+		if (pldm_sensor_polling_pre_check(&pldm_sensor_list[thread_id][sensor_num],
+						  sensor_num) != 0) {
 			return -1;
 		}
 	}

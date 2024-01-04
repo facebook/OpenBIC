@@ -450,7 +450,7 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		uint8_t buf[5] = { 0 };
 		/* Assign VR 0/1 related sensor number to get information for accessing VR */
 		uint8_t sensor_num = (component == GT_COMPNT_VR0) ? SENSOR_NUM_PEX_0_VR_TEMP :
-									  SENSOR_NUM_PEX_2_VR_TEMP;
+								    SENSOR_NUM_PEX_2_VR_TEMP;
 		sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 
 		if (!tca9548_select_chan(cfg, &mux_conf_addr_0xe0[6])) {

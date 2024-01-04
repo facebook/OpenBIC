@@ -34,7 +34,6 @@
 
 LOG_MODULE_REGISTER(plat_sys);
 
-
 /* BMC reset */
 void BMC_reset_handler()
 {

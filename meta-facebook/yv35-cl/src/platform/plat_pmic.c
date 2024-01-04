@@ -117,7 +117,8 @@ void monitor_pmic_error_via_i3c_handler()
 	}
 }
 
-int write_read_pmic_via_me(uint8_t dimm_id, uint8_t offset, uint8_t read_len, uint8_t write_len, uint8_t *data, int *data_len)
+int write_read_pmic_via_me(uint8_t dimm_id, uint8_t offset, uint8_t read_len, uint8_t write_len,
+			   uint8_t *data, int *data_len)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, -1);
 	CHECK_NULL_ARG_WITH_RETURN(data_len, -1);
@@ -129,8 +130,7 @@ int write_read_pmic_via_me(uint8_t dimm_id, uint8_t offset, uint8_t read_len, ui
 	ipmb_error status = IPMB_ERROR_SUCCESS;
 
 	pmic_req.intel_id = INTEL_ID;
-	ret = get_dimm_info(dimm_id, &pmic_req.smbus_identifier,
-			    &pmic_req.smbus_address);
+	ret = get_dimm_info(dimm_id, &pmic_req.smbus_identifier, &pmic_req.smbus_address);
 	if (ret < 0) {
 		return -1;
 	}
@@ -138,19 +138,18 @@ int write_read_pmic_via_me(uint8_t dimm_id, uint8_t offset, uint8_t read_len, ui
 	pmic_req.addr_value = offset;
 	pmic_req.data_len = read_len;
 	if (write_len == 0) {
-		pmic_msg = construct_ipmi_message(seq_source, NETFN_NM_REQ,
-				  CMD_SMBUS_READ_MEMORY, SELF, ME_IPMB,
-				  PMIC_READ_DATA_LEN, (uint8_t *)&pmic_req);
+		pmic_msg = construct_ipmi_message(seq_source, NETFN_NM_REQ, CMD_SMBUS_READ_MEMORY,
+						  SELF, ME_IPMB, PMIC_READ_DATA_LEN,
+						  (uint8_t *)&pmic_req);
 	} else {
 		memcpy(pmic_req.write_data, data, write_len);
-		pmic_msg = construct_ipmi_message(seq_source, NETFN_NM_REQ,
-					  CMD_SMBUS_WRITE_MEMORY, SELF, ME_IPMB,
-					  PMIC_WRITE_DATA_LEN, (uint8_t *)&pmic_req);
+		pmic_msg = construct_ipmi_message(seq_source, NETFN_NM_REQ, CMD_SMBUS_WRITE_MEMORY,
+						  SELF, ME_IPMB, PMIC_WRITE_DATA_LEN,
+						  (uint8_t *)&pmic_req);
 	}
 
 	status = ipmb_read(&pmic_msg, IPMB_inf_index_map[pmic_msg.InF_target]);
-	if ((status == IPMB_ERROR_SUCCESS) &&
-			    (pmic_msg.completion_code == CC_SUCCESS)) {
+	if ((status == IPMB_ERROR_SUCCESS) && (pmic_msg.completion_code == CC_SUCCESS)) {
 		*data_len = pmic_msg.data_len;
 		memcpy(data, pmic_msg.data, pmic_msg.data_len);
 		return 0;
@@ -166,10 +165,10 @@ void monitor_pmic_error_via_me_handler()
 {
 	int ret = 0, dimm_id = 0;
 	uint8_t dimm_status = SENSOR_INIT_STATUS;
-	bool is_mps_unlock_region[MAX_COUNT_DIMM] = {false, false, false, false, false, false};
-	uint8_t cache_data[MAX_COUNT_PMIC_ERROR_OFFSET] = {0};
+	bool is_mps_unlock_region[MAX_COUNT_DIMM] = { false, false, false, false, false, false };
+	uint8_t cache_data[MAX_COUNT_PMIC_ERROR_OFFSET] = { 0 };
 	int cache_data_len = 0;
-	uint8_t mps_pmic_vender[2] = {0x0B, 0x2A};
+	uint8_t mps_pmic_vender[2] = { 0x0B, 0x2A };
 
 	// initialize PMIC error flag array
 	memset(is_pmic_error_flag, false, sizeof(is_pmic_error_flag));
@@ -199,7 +198,9 @@ void monitor_pmic_error_via_me_handler()
 			if (!is_mps_unlock_region[dimm_id]) {
 				// Check Vender ID and unlock MPS region
 				memset(cache_data, 0, sizeof(cache_data));
-				ret = write_read_pmic_via_me(dimm_id, PMIC_VENDER_ID_OFFSET, MAX_COUNT_PMIC_VENDER_ID, 0, cache_data, &cache_data_len);
+				ret = write_read_pmic_via_me(dimm_id, PMIC_VENDER_ID_OFFSET,
+							     MAX_COUNT_PMIC_VENDER_ID, 0,
+							     cache_data, &cache_data_len);
 				if (ret < 0) {
 					LOG_ERR("Failed to check dimm vender, ret %d", ret);
 					continue;
@@ -207,14 +208,20 @@ void monitor_pmic_error_via_me_handler()
 
 				if (memcmp(&cache_data[3], mps_pmic_vender, 2) == 0) {
 					cache_data[0] = 0x73;
-					ret = write_read_pmic_via_me(dimm_id, PMIC_VENDOR_MEMORY_REGION_PASSWORD_UPPER_BYTE_OFFSET, PMIC_DATA_LEN, 1, cache_data, &cache_data_len);
+					ret = write_read_pmic_via_me(
+						dimm_id,
+						PMIC_VENDOR_MEMORY_REGION_PASSWORD_UPPER_BYTE_OFFSET,
+						PMIC_DATA_LEN, 1, cache_data, &cache_data_len);
 					if (ret < 0) {
 						LOG_ERR("Failed to check dimm vender, ret %d", ret);
 						continue;
 					}
 
 					cache_data[0] = 0x94;
-					ret = write_read_pmic_via_me(dimm_id, PMIC_VENDOR_MEMORY_REGION_PASSWORD_LOWER_BYTE_OFFSET, PMIC_DATA_LEN, 1, cache_data, &cache_data_len);
+					ret = write_read_pmic_via_me(
+						dimm_id,
+						PMIC_VENDOR_MEMORY_REGION_PASSWORD_LOWER_BYTE_OFFSET,
+						PMIC_DATA_LEN, 1, cache_data, &cache_data_len);
 					if (ret < 0) {
 						LOG_ERR("Failed to check dimm vender, ret %d", ret);
 						continue;
@@ -223,7 +230,9 @@ void monitor_pmic_error_via_me_handler()
 					// DIMM Vendor Region
 					// 0x40:　Unlock DIMM Vendor Region
 					cache_data[0] = 0x40;
-					ret = write_read_pmic_via_me(dimm_id, PMIC_VENDOR_PASSWORD_CONTROL_OFFSET, PMIC_DATA_LEN, 1, cache_data, &cache_data_len);
+					ret = write_read_pmic_via_me(
+						dimm_id, PMIC_VENDOR_PASSWORD_CONTROL_OFFSET,
+						PMIC_DATA_LEN, 1, cache_data, &cache_data_len);
 					if (ret < 0) {
 						LOG_ERR("Failed to check dimm vender, ret %d", ret);
 						continue;
@@ -235,15 +244,17 @@ void monitor_pmic_error_via_me_handler()
 
 			// Read PMIC error
 			memset(cache_data, 0, sizeof(cache_data));
-			ret = write_read_pmic_via_me(dimm_id, PMIC_POR_ERROR_LOG_ADDR_VAL, MAX_LEN_ME_GET_PMIC_ERR, 0, cache_data, &cache_data_len);
+			ret = write_read_pmic_via_me(dimm_id, PMIC_POR_ERROR_LOG_ADDR_VAL,
+						     MAX_LEN_ME_GET_PMIC_ERR, 0, cache_data,
+						     &cache_data_len);
 			if (ret < 0) {
 				continue;
 			}
 
-			LOG_HEXDUMP_DBG(cache_data, cache_data_len,"pmic error");
+			LOG_HEXDUMP_DBG(cache_data, cache_data_len, "pmic error");
 			// Compare error pattern, if status change add SEL to BMC and update record
 			ret = compare_pmic_error(dimm_id, cache_data, cache_data_len,
-					 READ_PMIC_ERROR_VIA_ME);
+						 READ_PMIC_ERROR_VIA_ME);
 			if (ret < 0) {
 				continue;
 			}
@@ -529,14 +540,12 @@ void clear_pmic_error()
 	}
 
 	for (dimm_id = 0; dimm_id < MAX_COUNT_DIMM; dimm_id++) {
-
 		if ((dimm_id == DIMM_ID_A0) || (dimm_id == DIMM_ID_A4)) {
 			continue;
 		}
 
 		dimm_status = get_dimm_status(dimm_id);
-		if ((dimm_status == SENSOR_INIT_STATUS) ||
-		    (dimm_status == SENSOR_NOT_PRESENT) ||
+		if ((dimm_status == SENSOR_INIT_STATUS) || (dimm_status == SENSOR_NOT_PRESENT) ||
 		    (dimm_status == SENSOR_POLLING_DISABLE)) {
 			continue;
 		}
