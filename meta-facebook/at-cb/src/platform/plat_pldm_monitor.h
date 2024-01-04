@@ -159,7 +159,7 @@ void plat_accl_present_check();
 void plat_accl_power_cable_present_check();
 void plat_fio_present_check();
 void plat_accl_power_good_fail_event(uint8_t card_id, uint8_t current_state);
-void plat_accl_cable_power_good_fail_event(uint8_t card_id);
+void plat_accl_cable_power_good_fail_event(uint8_t card_id, uint8_t status);
 void plat_asic_nvme_status_event(uint8_t card_id, uint8_t device_id, uint8_t status);
 uint8_t plat_set_effecter_states_req(uint8_t device_type, uint8_t board_info, uint8_t event_type);
 

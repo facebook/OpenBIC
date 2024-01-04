@@ -169,16 +169,17 @@ void plat_accl_power_good_fail_event(uint8_t card_id, uint8_t currenr_state)
 	}
 }
 
-void plat_accl_cable_power_good_fail_event(uint8_t card_id)
+void plat_accl_cable_power_good_fail_event(uint8_t card_id, uint8_t status)
 {
 	struct pldm_sensor_event_state_sensor_state event;
 	event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_POWER_STATUS;
 	event.previous_event_state = PLDM_STATE_SET_OEM_DEVICE_NO_POWER_GOOD;
-	event.event_state = PLDM_STATE_SET_OEM_DEVICE_POWER_GOOD_FAIL;
+	event.event_state = status;
 	if (pldm_send_platform_event(PLDM_SENSOR_EVENT, PLDM_EVENT_ACCL_PWR_CBL_1 + card_id,
 				     PLDM_STATE_SENSOR_STATE, (uint8_t *)&event,
 				     sizeof(struct pldm_sensor_event_state_sensor_state))) {
-		LOG_ERR("Send card_id: 0x%x cable power good fail event failed", card_id);
+		LOG_ERR("Send card_id: 0x%x cable power good fail event failed, status: 0x%x",
+			card_id, status);
 	}
 }
 

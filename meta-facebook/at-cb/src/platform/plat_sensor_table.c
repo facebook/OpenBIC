@@ -1935,6 +1935,34 @@ bool is_accl_cable_power_good(uint8_t card_id)
 	return (val & cable_pwr_good_bit);
 }
 
+bool is_accl_cable_power_good_timeout(uint8_t card_id)
+{
+	if (card_id > PCIE_CARD_12) {
+		LOG_ERR("Invalid card id: 0x%x to get accl cable power good timeout register",
+			card_id);
+		return false;
+	}
+
+	int ret = 0;
+	uint8_t val = 0;
+	uint8_t cable_pwr_good_bit = 0;
+
+	if (card_id <= PCIE_CARD_6) {
+		cable_pwr_good_bit = (1 << (card_id - PCIE_CARD_1));
+		ret = get_cpld_register(CPLD_ACCL_1_6_POWER_CABLE_PG_TIMEOUT_OFFSET, &val);
+	} else {
+		cable_pwr_good_bit = (1 << (card_id - PCIE_CARD_7));
+		ret = get_cpld_register(CPLD_ACCL_7_12_POWER_CABLE_PG_TIMEOUT_OFFSET, &val);
+	}
+
+	if (ret != 0) {
+		LOG_ERR("Read ACCL power cable PG timeout register fail, card id: 0x%x", card_id);
+		return false;
+	}
+
+	return (val & cable_pwr_good_bit);
+}
+
 bool is_dc_access(uint8_t sensor_num)
 {
 	return is_acb_power_good();

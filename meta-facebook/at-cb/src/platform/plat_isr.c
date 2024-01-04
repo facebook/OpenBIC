@@ -428,9 +428,16 @@ void check_accl_card_pwr_good_work_handler()
 
 	for (card_id = 0; card_id < ARRAY_SIZE(asic_card_info); ++card_id) {
 		if (is_accl_cable_power_good(card_id) != true) {
+			if (is_accl_cable_power_good_timeout(card_id)) {
+				plat_accl_cable_power_good_fail_event(
+					card_id, PLDM_STATE_SET_OEM_DEVICE_NO_POWER_GOOD);
+				continue;
+			}
+
 			if (is_accl_power_good(card_id)) {
 				// Send ACCL cable power good fail event
-				plat_accl_cable_power_good_fail_event(card_id);
+				plat_accl_cable_power_good_fail_event(
+					card_id, PLDM_STATE_SET_OEM_DEVICE_POWER_GOOD_FAIL);
 			} else {
 				ret = get_cpld_register(asic_card_info[card_id].power_fault_reg,
 							&val);
