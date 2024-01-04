@@ -30,13 +30,17 @@
 DEVICE_DEFINE(PRE_DEF_PROJ_GPIO, "PRE_DEF_PROJ_GPIO_NAME", &gpio_init, NULL, NULL, NULL,
 	      POST_KERNEL, DEF_PROJ_GPIO_PRIORITY, NULL);
 
+K_WORK_DELAYABLE_DEFINE(cxl_ready_check, cxl_ready_handler);
 void pal_set_sys_status()
 {
 	set_mb_dc_status(FM_POWER_EN_R);
 	set_DC_status(PG_CARD_OK);
 	set_DC_on_delayed_status();
-	set_sys_ready_pin(BIC_READY_R);
 	set_ioe_init();
+	if (gpio_get(PG_CARD_OK) == POWER_ON) {
+		k_work_schedule(&cxl_ready_check, K_SECONDS(CXL_READY_SECONDS));
+	}
+	set_sys_ready_pin(BIC_READY_R);
 }
 
 void pal_pre_init()

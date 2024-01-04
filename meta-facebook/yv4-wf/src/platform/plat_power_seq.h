@@ -98,5 +98,8 @@ int power_on_handler(int cxl_id, int power_stage);
 int power_off_handler(int cxl_id, int power_stage);
 void execute_power_on_sequence();
 void execute_power_off_sequence();
+void cxl_ready_handler();
+bool get_cxl_ready_status(uint8_t cxl_id);
+bool cxl_ready_access(uint8_t sensor_num);
 
 #endif
