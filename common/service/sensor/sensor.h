@@ -154,6 +154,7 @@ enum SENSOR_DEV {
 	sensor_dev_mpro = 0x2C,
 	sensor_dev_bmr351 = 0x2D,
 	sensor_dev_cx7 = 0x2E,
+	sensor_dev_vistara = 0x2F,
 	sensor_dev_max
 };
 
