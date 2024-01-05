@@ -16,6 +16,7 @@
 #include "mctp_ctrl.h"
 #include "pldm.h"
 #include "ipmi.h"
+#include "cci.h"
 #include "sensor.h"
 #include "plat_ipmb.h"
 
@@ -170,6 +171,11 @@ static uint8_t mctp_msg_recv(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_
 		mctp_pldm_cmd_handler(mctp_p, buf, len, ext_params);
 		break;
 
+	case MCTP_MSG_TYPE_CCI:
+		LOG_DBG("type: mctp_cci");
+		mctp_cci_cmd_handler(mctp_p, buf, len, ext_params);
+		break;
+
 	default:
 		LOG_WRN("Cannot find message receive function!!");
 		return MCTP_ERROR;
@@ -198,6 +204,34 @@ static uint8_t get_mctp_route_info(uint8_t dest_endpoint, void **mctp_inst,
 				ext_params->type = MCTP_MEDIUM_TYPE_TARGET_I3C;
 				ext_params->i3c_ext_params.addr = p->addr;
 			}
+			rc = MCTP_SUCCESS;
+			break;
+		}
+	}
+
+	return rc;
+}
+
+uint8_t get_mctp_info(uint8_t dest_endpoint, mctp **mctp_inst, mctp_ext_params *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, MCTP_ERROR);
+
+	uint8_t rc = MCTP_ERROR;
+	uint32_t i;
+
+	for (i = 0; i < ARRAY_SIZE(plat_mctp_route_tbl); i++) {
+		mctp_route_entry *p = plat_mctp_route_tbl + i;
+		if (p->endpoint == dest_endpoint) {
+			*mctp_inst = find_mctp_by_bus(p->bus);
+			if (p->bus != I3C_BUS_SD_BIC) {
+				ext_params->type = MCTP_MEDIUM_TYPE_SMBUS;
+				ext_params->smbus_ext_params.addr = p->addr;
+			} else {
+				ext_params->type = MCTP_MEDIUM_TYPE_TARGET_I3C;
+				ext_params->i3c_ext_params.addr = p->addr;
+			}
+			ext_params->ep = p->endpoint;
 			rc = MCTP_SUCCESS;
 			break;
 		}
@@ -385,4 +419,10 @@ int load_mctp_support_types(uint8_t *type_len, uint8_t *types)
 uint8_t plat_get_eid()
 {
 	return plat_eid;
+}
+
+uint8_t plat_get_cxl_eid(uint8_t cxl_id)
+{
+	// Only one CXL
+	return (plat_eid + 2);
 }

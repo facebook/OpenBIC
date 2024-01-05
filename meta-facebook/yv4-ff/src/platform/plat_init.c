@@ -78,6 +78,12 @@ void pal_set_sys_status()
 	set_mb_dc_status(POWER_EN_R);
 	set_DC_status(PG_CARD_OK);
 	set_DC_on_delayed_status();
+
+	// Check CXL ready status if host is DC on
+	if (gpio_get(PG_CARD_OK) == POWER_ON) {
+		cxl_ready_handler();
+	}
+
 	set_sys_ready_pin(BIC_READY_R);
 }
 
