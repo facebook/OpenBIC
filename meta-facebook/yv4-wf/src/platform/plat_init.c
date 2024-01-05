@@ -24,6 +24,7 @@
 #include "plat_isr.h"
 #include "plat_mctp.h"
 #include "plat_i2c_target.h"
+#include "libutil.h"
 
 #define DEF_PROJ_GPIO_PRIORITY 78
 
@@ -47,6 +48,15 @@ void pal_pre_init()
 			i2c_target_control(
 				index, (struct _i2c_target_config *)&I2C_TARGET_CONFIG_TABLE[index],
 				1);
+	}
+
+
+	uint8_t ioe2_output_value = 0;
+	if (get_ioe_value(ADDR_IOE2, TCA9555_OUTPUT_PORT_REG_0, &ioe2_output_value) == 0) {
+		// BIC starts monitoring VR only after the PMIC mux is switched to BIC.
+		if((GETBIT(ioe2_output_value, IOE_P00) == 0) ||  (GETBIT(ioe2_output_value, IOE_P02) == 0)) {
+			set_vr_monitor_status(false);
+		}
 	}
 }
 
