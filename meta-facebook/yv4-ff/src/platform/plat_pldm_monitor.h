@@ -33,8 +33,9 @@ enum plat_pldm_effecter_id {
 };
 
 enum plat_pldm_uart_number {
-	UART_BIC = 0,
-	UART_VISTARA,
+	UART_BIC = 0, // Uart5
+	UART1,
+	UART2,
 	UART_MAX,
 };
 

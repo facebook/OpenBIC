@@ -112,13 +112,22 @@ void plat_pldm_switch_uart(const uint8_t *buf, uint16_t len, uint8_t *resp, uint
 	clear_bits(&hicra_val, 0, 2);
 
 	switch (uart_number) {
-	case UART_VISTARA:
+	case UART1:
 		// IO1 to IO5: Ｗrite 0101b to bit[11:8]
 		hicr9_val = SETBITS(hicr9_val, 0b0101, 8);
 		sys_write32(hicr9_val, LPC_HICR9_REG);
 
 		// IO5 to IO1: Write 111b to bit[2:0]
 		hicra_val = SETBITS(hicra_val, 0b111, 0);
+		sys_write32(hicra_val, LPC_HICRA_REG);
+		break;
+	case UART2:
+		// IO5 to IO2: Write 0110b to bit[11:8]
+		hicr9_val = SETBITS(hicr9_val, 0b0110, 8);
+		sys_write32(hicr9_val, LPC_HICR9_REG);
+
+		// IO2 to IO5: Write 111b to bit[5:3]
+		hicra_val = SETBITS(hicra_val, 0b111, 3);
 		sys_write32(hicra_val, LPC_HICRA_REG);
 		break;
 	case UART_BIC:
