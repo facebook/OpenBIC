@@ -26,14 +26,13 @@
 
 LOG_MODULE_REGISTER(plat_power_seq);
 
-static void cxl_ready_handler();
-
 K_WORK_DELAYABLE_DEFINE(set_dc_on_5s_work, set_DC_on_delayed_status);
 K_WORK_DELAYABLE_DEFINE(cxl_ready_thread, cxl_ready_handler);
 K_WORK_DELAYABLE_DEFINE(enable_asic1_power_on_rst_work, enable_asic1_power_on_rst);
 K_WORK_DELAYABLE_DEFINE(enable_asic2_power_on_rst_work, enable_asic2_power_on_rst);
 
 static bool is_cxl_power_on[MAX_CXL_ID] = { false, false };
+static bool is_cxl_ready[MAX_CXL_ID] = { false, false };
 
 cxl_power_control_gpio cxl_power_ctrl_pin[MAX_CXL_ID] = {
 	[0] = {
@@ -338,6 +337,7 @@ void execute_power_off_sequence()
 
 	set_DC_on_delayed_status();
 
+	is_cxl_ready[CXL_ID_0] = false;
 	ret = power_off_handler(CXL_ID_0, DIMM_POWER_OFF_STAGE_1);
 	if (ret == 0) {
 		is_cxl_power_on[CXL_ID_0] = false;
@@ -347,6 +347,7 @@ void execute_power_off_sequence()
 		LOG_ERR("CXL 1 power off fail");
 	}
 
+	is_cxl_ready[CXL_ID_1] = false;
 	ret = power_off_handler(CXL_ID_1, DIMM_POWER_OFF_STAGE_1);
 	if (ret == 0) {
 		is_cxl_power_on[CXL_ID_1] = false;
@@ -501,7 +502,7 @@ int check_powers_disabled(int cxl_id, int pwr_stage)
 	return 0;
 }
 
-static void cxl_ready_handler()
+void cxl_ready_handler()
 {
 	/* TODO:
 	 * In normal states, DIMM and PMIC muxs should be switch to BIC after checking CXL heartbeat is ready. However, WF's heartbeat is not ready yet
@@ -515,5 +516,21 @@ static void cxl_ready_handler()
 		set_ioe_value(ADDR_IOE2, TCA9555_OUTPUT_PORT_REG_0, value);
 	}
 
+	is_cxl_ready[CXL_ID_0] = true;
+	LOG_INF("CXL1 is ready");
+	is_cxl_ready[CXL_ID_1] = true;
+	LOG_INF("CXL2 is ready");
+
 	return;
+}
+
+bool get_cxl_ready_status(uint8_t cxl_id)
+{
+	return is_cxl_ready[cxl_id];
+}
+
+bool cxl_ready_access(uint8_t sensor_num)
+{
+	uint8_t cxl_id = sensor_num / 4;
+	return get_cxl_ready_status(cxl_id);
 }
