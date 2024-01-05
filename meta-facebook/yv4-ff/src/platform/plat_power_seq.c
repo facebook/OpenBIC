@@ -56,6 +56,7 @@ void execute_power_on_sequence()
 	/* Switch muxs to CXL before power on*/
 	gpio_set(SEL_SMB_MUX_PMIC_R, GPIO_LOW);
 	gpio_set(SEL_SMB_MUX_DIMM_R, GPIO_LOW);
+	set_vr_monitor_status(false);
 
 	ret = power_on_handler(CLK_POWER_ON_STAGE);
 	if (ret == 0) {
@@ -385,6 +386,8 @@ static void cxl_ready_handler()
 		}
 		/* Switch muxs to BIC*/
 		gpio_set(SEL_SMB_MUX_PMIC_R, GPIO_HIGH);
+		gpio_set(SEL_SMB_MUX_DIMM_R, GPIO_HIGH);
+		set_vr_monitor_status(true);
 		return;
 	}
 	LOG_ERR("Failed to read %s due to sensor_sample_fetch failed, ret: %d",
