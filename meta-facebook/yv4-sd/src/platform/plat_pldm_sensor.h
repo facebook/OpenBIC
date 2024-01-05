@@ -30,6 +30,8 @@
 
 #define ADDR_X8_INA233 (0x8A >> 1)
 #define ADDR_X16_INA233 (0x82 >> 1)
+#define ADDR_E1S_BOOT_INA233 (0x8A >> 1)
+#define ADDR_E1S_DATA_INA233 (0x80 >> 1)
 #define ADDR_X8_RETIMER (0x46 >> 1)
 #define ADDR_X16_RETIMER (0x40 >> 1)
 #define ADDR_NVME (0xD4 >> 1)

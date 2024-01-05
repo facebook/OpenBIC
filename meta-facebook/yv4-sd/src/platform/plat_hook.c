@@ -72,6 +72,22 @@ ina233_init_arg ina233_init_args[] = {
 		.is_need_mfr_device_config_init = false,
 		.is_need_set_alert_threshold = false,
 	},
+	[2] = {
+		.is_init = false,
+		.current_lsb = 0.001,
+		.r_shunt = 0.002,
+		.mfr_config_init = false,
+		.is_need_mfr_device_config_init = false,
+		.is_need_set_alert_threshold = false,
+	},
+	[3] = {
+		.is_init = false,
+		.current_lsb = 0.001,
+		.r_shunt = 0.002,
+		.mfr_config_init = false,
+		.is_need_mfr_device_config_init = false,
+		.is_need_set_alert_threshold = false,
+	},
 };
 
 pt5161l_init_arg pt5161l_init_args[] = { [0] = { .is_init = false,
