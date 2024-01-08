@@ -19,11 +19,13 @@
 #include "ast_adc.h"
 #include "pdr.h"
 #include "sensor.h"
+#include "vistara.h"
 #include "pldm_sensor.h"
 #include "pldm_monitor.h"
 #include "plat_i2c.h"
-#include "plat_pldm_sensor.h"
+#include "plat_power_seq.h"
 #include "plat_hook.h"
+#include "plat_pldm_sensor.h"
 
 LOG_MODULE_REGISTER(plat_pldm_sensor);
 
