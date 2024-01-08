@@ -159,6 +159,7 @@ void cache_pcie_retimer_version(void)
 		LOG_ERR("Unknown PCIE RETIMER");
 		break;
 	}
+	SAFE_FREE(i2c_msg);
 }
 
 void init_board_revision(void)
