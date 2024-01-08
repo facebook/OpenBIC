@@ -392,7 +392,6 @@ void cxl_ready_handler()
 
 		/* Switch muxs to BIC*/
 		gpio_set(SEL_SMB_MUX_PMIC_R, GPIO_HIGH);
-		gpio_set(SEL_SMB_MUX_DIMM_R, GPIO_HIGH);
 		set_vr_monitor_status(true);
 		return;
 	}
