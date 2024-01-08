@@ -2722,7 +2722,7 @@ pldm_sensor_info plat_pldm_sensor_cpu_table[] = {
 	},
 	{
 		{
-			// MB_CPU_PWR_W
+			// MB_SOC_PACKAGE_PWR_W
 			/*** PDR common header***/
 			{
 				0x00000000, //uint32_t record_handle
@@ -2734,7 +2734,7 @@ pldm_sensor_info plat_pldm_sensor_cpu_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			0x002E, //uint16_t sensor_id;
+			NUM_SOC_PACKAGE_PWR, //uint16_t sensor_id;
 			0x007C, //uint16_t entity_type;
 			0x000B, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
@@ -4978,7 +4978,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensorName = u"MB_VR_PVDD11_PWR_W",
 	},
 	{
-		// MB_CPU_PWR_W
+		// MB_SOC_PACKAGE_PWR_W
 		/*** PDR common header***/
 		{
 			.record_handle = 0x00000000,
@@ -4988,7 +4988,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x002E,
+		.sensor_id = NUM_SOC_PACKAGE_PWR,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
