@@ -60,9 +60,6 @@ void pal_post_init()
 		if (board_revision > EVT2_STAGE) {
 			plat_accl_power_cable_present_check();
 		}
-	} else {
-		// open usb hub while bic boot up
-		gpio_set(RST_USB_HUB0_N, GPIO_HIGH);
 	}
 }
 
