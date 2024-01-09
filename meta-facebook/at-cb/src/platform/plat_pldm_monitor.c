@@ -207,23 +207,18 @@ void plat_asic_nvme_status_event(uint8_t card_id, uint8_t device_id, uint8_t sta
 
 void plat_send_event_pre_work()
 {
-	if (is_ac_lost() == false) {
-		// BMC reboot
-		uint8_t index = 0;
-		uint8_t status = 0;
-		for (index = 0; index < ASIC_CARD_COUNT; ++index) {
-			status = ((accl_freya_info[index].freya1_fw_info.is_freya_ready ==
-				   FREYA_READY) ?
-					  PLDM_STATE_SET_OEM_DEVICE_NVME_READY :
-					  PLDM_STATE_SET_OEM_DEVICE_NVME_NOT_READY);
-			plat_asic_nvme_status_event(index, PCIE_DEVICE_ID1, status);
+	uint8_t index = 0;
+	uint8_t status = 0;
+	for (index = 0; index < ASIC_CARD_COUNT; ++index) {
+		status = ((accl_freya_info[index].freya1_fw_info.is_freya_ready == FREYA_READY) ?
+				  PLDM_STATE_SET_OEM_DEVICE_NVME_READY :
+				  PLDM_STATE_SET_OEM_DEVICE_NVME_NOT_READY);
+		plat_asic_nvme_status_event(index, PCIE_DEVICE_ID1, status);
 
-			status = ((accl_freya_info[index].freya2_fw_info.is_freya_ready ==
-				   FREYA_READY) ?
-					  PLDM_STATE_SET_OEM_DEVICE_NVME_READY :
-					  PLDM_STATE_SET_OEM_DEVICE_NVME_NOT_READY);
-			plat_asic_nvme_status_event(index, PCIE_DEVICE_ID2, status);
-		}
+		status = ((accl_freya_info[index].freya2_fw_info.is_freya_ready == FREYA_READY) ?
+				  PLDM_STATE_SET_OEM_DEVICE_NVME_READY :
+				  PLDM_STATE_SET_OEM_DEVICE_NVME_NOT_READY);
+		plat_asic_nvme_status_event(index, PCIE_DEVICE_ID2, status);
 	}
 }
 
