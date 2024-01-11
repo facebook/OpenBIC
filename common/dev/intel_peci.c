@@ -26,6 +26,7 @@
 #include "util_sys.h"
 #include "intel_dimm.h"
 #include <logging/log.h>
+#include "time.h"
 
 LOG_MODULE_REGISTER(dev_intel_peci);
 
@@ -325,6 +326,110 @@ bool read_cpu_power(uint8_t addr, int *reading)
 	return true;
 }
 
+__weak bool pal_get_dimm_energy(uint8_t addr, uint32_t *pkg_energy)
+{
+	CHECK_NULL_ARG_WITH_RETURN(pkg_energy, false);
+
+	uint8_t command = PECI_RD_PKG_CFG0_CMD;
+	uint8_t readlen = 0x05;
+	uint8_t energy_status_index = 0x04;
+	uint16_t energy_status_param = 0x00FF;
+	int ret = 0;
+
+	uint8_t *readbuf = (uint8_t *)malloc(readlen * sizeof(uint8_t));
+	if (!readbuf) {
+		LOG_ERR("%s fail to allocate readbuf memory", __func__);
+		return false;
+	}
+
+	ret = peci_read(command, addr, energy_status_index, energy_status_param, readlen, readbuf);
+	if (ret) {
+		LOG_ERR("PECI read total DIMM energy error");
+		goto cleanup;
+	}
+	if (readbuf[0] != PECI_CC_RSP_SUCCESS) {
+		if (readbuf[0] == PECI_CC_ILLEGAL_REQUEST) {
+			LOG_ERR("Read total DIMM energy unknown request");
+		} else {
+			LOG_ERR("Read total DIMM energy PECI control hardware, firmware or associated logic error");
+		}
+		goto cleanup;
+	}
+
+	*pkg_energy = readbuf[4];
+	*pkg_energy = (*pkg_energy << 8) | readbuf[3];
+	*pkg_energy = (*pkg_energy << 8) | readbuf[2];
+	*pkg_energy = (*pkg_energy << 8) | readbuf[1];
+
+	SAFE_FREE(readbuf);
+	return true;
+
+cleanup:
+	SAFE_FREE(readbuf);
+	return false;
+}
+
+__weak void pal_cal_total_dimm_power(intel_peci_unit unit_info, uint32_t diff_energy,
+				     uint32_t diff_time, int *reading)
+{
+	CHECK_NULL_ARG(reading);
+
+	float pwr_scale = 1;
+	if (unit_info.energy_unit > unit_info.time_unit)
+		pwr_scale =
+			(float)(1 / (float)(1 << (unit_info.energy_unit - unit_info.time_unit)));
+	else
+		pwr_scale = (float)(1 << (unit_info.energy_unit - unit_info.time_unit));
+
+	*reading = ((float)diff_energy / (float)diff_time) * pwr_scale;
+}
+
+bool read_total_dimm_power(uint8_t addr, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+
+	bool ret = true;
+	uint32_t pkg_energy, diff_energy, run_time, diff_time;
+	static uint32_t last_pkg_energy = 0, last_run_time = 0;
+
+	ret = pal_get_dimm_energy(addr, &pkg_energy);
+
+	run_time = k_uptime_get_32();
+
+	if (!ret) {
+		LOG_ERR("PECI pal get cpu energy failed!");
+		return false;
+	}
+
+	if (last_pkg_energy == 0 &&
+	    last_run_time == 0) { // first read, need second data to calculate
+		last_pkg_energy = pkg_energy;
+		last_run_time = run_time;
+		LOG_DBG("Total DIMM power first read");
+		return false;
+	}
+
+	if (pkg_energy >= last_pkg_energy) {
+		diff_energy = pkg_energy - last_pkg_energy;
+	} else {
+		diff_energy = pkg_energy + (0xffffffff - last_pkg_energy + 1);
+	}
+	last_pkg_energy = pkg_energy;
+
+	diff_time = run_time - last_run_time;
+	last_run_time = run_time;
+
+	if (diff_time == 0) {
+		LOG_DBG("Total DIMM power time elapsed is zero");
+		return false;
+	}
+
+	diff_energy *= 1000;
+	pal_cal_total_dimm_power(unit_info, diff_energy, diff_time, reading);
+
+	return true;
+}
+
 static bool get_cpu_tjmax(uint8_t addr, int *reading)
 {
 	if (!reading) {
@@ -515,6 +620,21 @@ static bool get_dimm_temp(uint8_t addr, uint8_t type, int *reading)
 	return true;
 }
 
+static bool get_dimm_total_pwr(uint8_t addr, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+
+	int total_pwr = 0;
+	if (read_total_dimm_power(addr, &total_pwr) == false) {
+		LOG_ERR("Read total DIMM power error");
+		return false;
+	}
+
+	sensor_val *sval = (sensor_val *)reading;
+	sval->integer = (int16_t)total_pwr;
+	return true;
+}
+
 uint8_t intel_peci_read(sensor_cfg *cfg, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
@@ -562,6 +682,9 @@ uint8_t intel_peci_read(sensor_cfg *cfg, int *reading)
 		break;
 	case PECI_PWR_CPU:
 		ret_val = get_cpu_pwr(cfg->target_addr, reading);
+		break;
+	case PECI_POWER_TOTAL_DIMM:
+		ret_val = get_dimm_total_pwr(cfg->target_addr, reading);
 		break;
 	default:
 		break;

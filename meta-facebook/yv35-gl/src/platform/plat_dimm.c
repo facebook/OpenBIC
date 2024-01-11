@@ -18,6 +18,7 @@
 #include "libutil.h"
 #include "rg3mxxb12.h"
 #include "p3h284x.h"
+#include "intel_peci.h"
 
 LOG_MODULE_REGISTER(plat_dimm);
 
@@ -465,4 +466,14 @@ void clear_unaccessible_dimm_data(uint8_t dimm_id)
 	       sizeof(dimm_data[dimm_id].pmic_pwr_data));
 	memset(dimm_data[dimm_id].spd_temp_data, SENSOR_FAIL,
 	       sizeof(dimm_data[dimm_id].spd_temp_data));
+}
+
+void pal_cal_total_dimm_power(intel_peci_unit unit_info, uint32_t diff_energy, uint32_t diff_time,
+			      int *reading)
+{
+	CHECK_NULL_ARG(reading);
+
+	float pwr_scale = (float)(1 / (float)(1 << unit_info.energy_unit));
+
+	*reading = ((float)diff_energy / (float)diff_time) * pwr_scale;
 }
