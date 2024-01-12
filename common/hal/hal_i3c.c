@@ -316,6 +316,19 @@ int i3c_controller_write(I3C_MSG *msg)
 	return true;
 }
 
+int i3c_set_pid(I3C_MSG *msg, uint16_t slot_pid)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, -EINVAL);
+
+	int ret = i3c_set_pid_extra_info(dev_i3c[msg->bus], slot_pid);
+	if (ret != 0) {
+		LOG_ERR("Failed to set pid to bus 0x%d, ret: %d", msg->bus, ret);
+		return false;
+	}
+
+	return true;
+}
+
 void util_init_i3c(void)
 {
 #ifdef DEV_I3C_0
