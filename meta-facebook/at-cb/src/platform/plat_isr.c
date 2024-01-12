@@ -34,6 +34,7 @@
 
 LOG_MODULE_REGISTER(plat_isr);
 
+#define VR_WRITE_RETRY_MAX_COUNT 5
 #define ALERT_EVENT_DEFAULT_DELAY_MS 0
 #define POWER_BRICK_ALERT_DELAY_MS 400
 #define NORMAL_POWER_GOOD_CHECK_DELAY_MS 5000
@@ -246,6 +247,7 @@ void parse_vr_alert_event(add_sel_info *work_info)
 	CHECK_NULL_ARG(work_info);
 
 	bool ret = 0;
+	uint8_t retry = 0;
 	uint8_t index = 0;
 	uint8_t status = 0;
 	uint8_t sensor_num = 0;
@@ -258,9 +260,15 @@ void parse_vr_alert_event(add_sel_info *work_info)
 
 		sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
 		if (cfg->pre_sensor_read_hook) {
-			if (cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args) != true) {
-				LOG_ERR("VR sensor: 0x%x pre-read fail", sensor_num);
-				continue;
+			// Add retry to set VR page to avoid it busy to unable response
+			for (retry = 0; retry < VR_WRITE_RETRY_MAX_COUNT; ++retry) {
+				if (cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args) !=
+				    true) {
+					LOG_ERR("VR sensor: 0x%x pre-read fail", sensor_num);
+					continue;
+				} else {
+					break;
+				}
 			}
 		}
 

@@ -850,8 +850,11 @@ bool pre_xdpe15284_read(sensor_cfg *cfg, void *args)
 		}
 
 		// Set write protection value to enable writing page command
-		xdpe15284_set_write_protect_default_val(
-			XDPE15284_DISABLE_ALL_WRITE_EXCEPT_THREE_COMMANDS_VAL);
+		ret = init_vr_write_protect(cfg->port, cfg->target_addr,
+					    XDPE15284_DISABLE_ALL_WRITE_EXCEPT_THREE_COMMANDS_VAL);
+		if (ret != true) {
+			LOG_ERR("Initialize VR write protect fail");
+		}
 	}
 
 	mutex_status = k_mutex_lock(&xdpe15284_mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
@@ -866,14 +869,15 @@ bool pre_xdpe15284_read(sensor_cfg *cfg, void *args)
 	msg.data[0] = PMBUS_PAGE;
 	msg.data[1] = xdpe15284_vr_page->vr_page;
 
-	ret = i2c_master_write(&msg, retry);
-	if (ret != 0) {
-		LOG_ERR("Set xdpe15284 page fail, ret: %d", ret);
-		k_mutex_unlock(&xdpe15284_mutex);
-		return false;
+	if (i2c_master_write(&msg, retry) != 0) {
+		LOG_ERR("Set xdpe15284 page fail");
+		ret = false;
+	} else {
+		ret = true;
 	}
 
-	return true;
+	k_mutex_unlock(&xdpe15284_mutex);
+	return ret;
 }
 
 bool post_xdpe15284_read(sensor_cfg *cfg, void *args, int *reading)
