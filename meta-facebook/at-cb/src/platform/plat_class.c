@@ -439,6 +439,7 @@ bool get_acb_power_status()
 			clear_freya_cache_flag(index);
 		}
 		clear_sw_error_check_flag();
+		clear_accl_cable_power_fault_flag();
 	}
 
 	is_power_good = current_power_status;

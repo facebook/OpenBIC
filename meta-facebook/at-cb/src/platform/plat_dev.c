@@ -36,10 +36,12 @@
 #include "plat_pldm_monitor.h"
 #include "xdpe15284.h"
 #include "util_pmbus.h"
+#include "plat_isr.h"
+#include "pldm_state_set.h"
 
 LOG_MODULE_REGISTER(plat_dev);
 
-#define SW_HEARTBEAT_STACK_SIZE 512
+#define SW_HEARTBEAT_STACK_SIZE 1024
 #define SW_HEARTBEAT_DELAY_MS 2000
 
 #define PSOC_QSPI_FW_INDEX (FREYA_FIRMWARE_VERSION_OFFSET + 2)
@@ -53,6 +55,9 @@ k_tid_t sw_heartbeat_tid;
 
 static bool is_sw0_ready = false;
 static bool is_sw1_ready = false;
+static bool accl_cable_power_fault[ASIC_CARD_COUNT] = {
+	false, false, false, false, false, false, false, false, false, false, false, false,
+};
 
 typedef struct _sw_error_event_cfg {
 	uint8_t event_type;
@@ -109,6 +114,14 @@ void clear_freya_cache_flag(uint8_t card_id)
 
 	accl_freya_info[card_id].freya1_fw_info.is_freya_ready = FREYA_NOT_READY;
 	accl_freya_info[card_id].freya2_fw_info.is_freya_ready = FREYA_NOT_READY;
+}
+
+void clear_accl_cable_power_fault_flag()
+{
+	uint8_t index = 0;
+	for (index = 0; index < ARRAY_SIZE(accl_cable_power_fault); ++index) {
+		accl_cable_power_fault[index] = false;
+	}
 }
 
 int get_freya_fw_info(uint8_t bus, uint8_t addr, freya_fw_info *fw_info)
@@ -204,6 +217,18 @@ bool get_pex_heartbeat(char *label)
 void sw_heartbeat_read()
 {
 	bool ret = false;
+	uint8_t index = 0, pwr_fault_index = 0;
+	uint8_t val = 0;
+	int result = 0;
+
+	accl_power_fault_info power_fault_info[] = {
+		{ .check_bit = CPLD_ACCL_3V3_POWER_FAULT_BIT,
+		  .power_fault_state = PLDM_STATE_SET_OEM_DEVICE_3V3_POWER_FAULT },
+		{ .check_bit = CPLD_ACCL_12V_POWER_FAULT_BIT,
+		  .power_fault_state = PLDM_STATE_SET_OEM_DEVICE_12V_POWER_FAULT },
+		{ .check_bit = CPLD_ACCL_3V3_AUX_FAULT_BIT,
+		  .power_fault_state = PLDM_STATE_SET_OEM_DEVICE_3V3_AUX_FAULT },
+	};
 
 	while (1) {
 		ret = get_pex_heartbeat("HB0");
@@ -219,6 +244,38 @@ void sw_heartbeat_read()
 		}
 
 		is_sw1_ready = ret;
+
+		// Check ACCL power fault
+		for (index = 0; index < ASIC_CARD_COUNT; ++index) {
+			if (accl_cable_power_fault[index] != true) {
+				ret = is_accl_cable_power_good_fault(index);
+				if (ret != false) {
+					plat_accl_cable_power_good_fail_event(
+						index, PLDM_STATE_SET_OEM_DEVICE_POWER_GOOD_FAULT);
+					accl_cable_power_fault[index] = true;
+					continue;
+				}
+
+				result = get_cpld_register(asic_card_info[index].power_fault_reg,
+							   &val);
+				if (ret != 0) {
+					LOG_ERR("Failed to get power fault register, card id: 0x%x, reg: 0x%x",
+						index, asic_card_info[index].power_fault_reg);
+					continue;
+				}
+
+				for (pwr_fault_index = 0;
+				     pwr_fault_index < ARRAY_SIZE(power_fault_info);
+				     ++pwr_fault_index) {
+					if (val & power_fault_info[pwr_fault_index].check_bit) {
+						plat_accl_power_good_fail_event(
+							index, power_fault_info[pwr_fault_index]
+								       .power_fault_state);
+						accl_cable_power_fault[index] = true;
+					}
+				}
+			}
+		}
 
 		k_msleep(SW_HEARTBEAT_DELAY_MS);
 	}
