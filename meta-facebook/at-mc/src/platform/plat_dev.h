@@ -49,5 +49,7 @@ bool pal_pm8702_transfer_fw(uint8_t cxl_id, uint8_t *req_buf, int req_len);
 bool pal_set_pm8702_active_slot(uint8_t cxl_id, uint8_t *req_buf, int req_len);
 void init_cxl_card_ioexp(uint8_t cxl_id);
 void clear_cxl_card_cache_value(uint8_t cxl_id);
+void init_ssd_power_fault_work();
+void clear_ssd_power_fault_flag();
 
 #endif

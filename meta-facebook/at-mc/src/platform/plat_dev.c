@@ -36,6 +36,9 @@
 #include "plat_class.h"
 #include "hal_gpio.h"
 #include "plat_gpio.h"
+#include "power_status.h"
+#include "plat_pldm_monitor.h"
+#include "pldm_state_set.h"
 
 LOG_MODULE_REGISTER(plat_dev);
 
@@ -65,6 +68,12 @@ LOG_MODULE_REGISTER(plat_dev);
 
 #define CXL_CARD_VR_COUNT 3
 
+#define MONITOR_SSD_POWER_FAULT_STACK_SIZE 1536
+#define MONITOR_SSD_POWER_FAULT_DELAY_MS 2000
+K_THREAD_STACK_DEFINE(monitor_ssd_power_fault_thread, MONITOR_SSD_POWER_FAULT_STACK_SIZE);
+struct k_thread ssd_power_fault_thread_handler;
+k_tid_t ssd_power_fault_tid;
+
 pm8702_dev_info pm8702_table[] = {
 	{ .is_init = false }, { .is_init = false }, { .is_init = false }, { .is_init = false },
 	{ .is_init = false }, { .is_init = false }, { .is_init = false }, { .is_init = false },
@@ -78,6 +87,21 @@ cxl_vr_fw_info cxl_vr_info_table[] = {
 	{ .is_init = false }, { .is_init = false }, { .is_init = false }, { .is_init = false },
 	{ .is_init = false }, { .is_init = false }, { .is_init = false }, { .is_init = false },
 };
+
+static bool ssd_power_fault[SSD_COUNT] = {
+	false,
+	false,
+	false,
+	false,
+};
+
+void clear_ssd_power_fault_flag()
+{
+	uint8_t index = 0;
+	for (index = 0; index < ARRAY_SIZE(ssd_power_fault); ++index) {
+		ssd_power_fault[index] = false;
+	}
+}
 
 void clear_cxl_card_cache_value(uint8_t cxl_id)
 {
@@ -579,4 +603,72 @@ bool pal_pm8702_command_handler(uint8_t cxl_id, uint16_t opcode, uint8_t *data_b
 	}
 
 	return true;
+}
+
+void monitor_ssd_power_fault()
+{
+	while (1) {
+		uint8_t index = 0;
+		uint8_t retry = 3;
+		uint8_t status = 0;
+		uint8_t bit_count = 8;
+		I2C_MSG i2c_msg = { 0 };
+
+		i2c_msg.bus = CPLD_BUS;
+		i2c_msg.target_addr = CPLD_ADDR;
+		i2c_msg.tx_len = 1;
+		i2c_msg.rx_len = 1;
+		i2c_msg.data[0] = CPLD_SSD_POWER_FAULT_REG;
+		if (i2c_master_read(&i2c_msg, retry)) {
+			LOG_ERR("Get SSD power fault register value fail");
+		} else {
+			for (index = 0; index < bit_count; ++index) {
+				if (ssd_power_fault[index / 2] != true) {
+					if (i2c_msg.data[0] & BIT(index)) {
+						status =
+							((index % 2) ?
+								 PLDM_STATE_SET_OEM_DEVICE_12V_AUX_POWER_FAULT :
+								 PLDM_STATE_SET_OEM_DEVICE_3V3_AUX_FAULT);
+						plat_send_ssd_power_fault_event(index / 2, status);
+						ssd_power_fault[index / 2] = true;
+					}
+				}
+			}
+		}
+
+		k_msleep(MONITOR_SSD_POWER_FAULT_DELAY_MS);
+	}
+}
+
+void init_ssd_power_fault_thread()
+{
+	if (ssd_power_fault_tid != NULL &&
+	    (strcmp(k_thread_state_str(ssd_power_fault_tid), "dead") != 0) &&
+	    (strcmp(k_thread_state_str(ssd_power_fault_tid), "unknown") != 0)) {
+		return;
+	}
+	ssd_power_fault_tid =
+		k_thread_create(&ssd_power_fault_thread_handler, monitor_ssd_power_fault_thread,
+				K_THREAD_STACK_SIZEOF(monitor_ssd_power_fault_thread),
+				monitor_ssd_power_fault, NULL, NULL, NULL,
+				CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+	k_thread_name_set(&ssd_power_fault_thread_handler, "ssd_power_fault_thread");
+}
+
+void abort_ssd_power_fault_thread()
+{
+	if (ssd_power_fault_tid != NULL &&
+	    (strcmp(k_thread_state_str(ssd_power_fault_tid), "dead") != 0) &&
+	    (strcmp(k_thread_state_str(ssd_power_fault_tid), "unknown") != 0)) {
+		k_thread_abort(ssd_power_fault_tid);
+	}
+}
+
+void init_ssd_power_fault_work()
+{
+	if (get_DC_status()) {
+		init_ssd_power_fault_thread();
+	} else {
+		abort_ssd_power_fault_thread();
+	}
 }
