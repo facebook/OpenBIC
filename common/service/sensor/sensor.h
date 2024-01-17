@@ -105,6 +105,12 @@ enum DIMM_RELATED_OFFSET {
 	DIMM_SPD_TEMP = 0x31,
 };
 
+enum ADS112C_OFFSET {
+	ADS112C_FLOW_OFFSET = 0x00,
+	ADS112C_PRESS_OFFSET = 0x01,
+	ADS112C_TEMP_OFFSET = 0x02,
+};
+
 // The sequence needs to same with table sensor_drive_tbl
 enum SENSOR_DEV {
 	sensor_dev_tmp75 = 0,
@@ -155,6 +161,7 @@ enum SENSOR_DEV {
 	sensor_dev_bmr351 = 0x2D,
 	sensor_dev_cx7 = 0x2E,
 	sensor_dev_vistara = 0x2F,
+	sensor_dev_ads112c = 0x30,
 	sensor_dev_max
 };
 
