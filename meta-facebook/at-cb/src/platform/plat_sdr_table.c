@@ -9615,9 +9615,6 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"ACCL_12_Freya_2_VOL_2",
 	},
-};
-
-SDR_Full_sensor artemis_module1_extand_sdr_table[] = {
 	{
 		// ACCL 1 ASIC 1 P12V_AUX
 		0x00,
@@ -9740,9 +9737,6 @@ SDR_Full_sensor artemis_module1_extand_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"ACCL_1_ASIC_2_P12V_AUX Vol",
 	},
-};
-
-SDR_Full_sensor artemis_module2_extand_sdr_table[] = {
 	{
 		// ACCL 2 ASIC 1 P12V_AUX
 		0x00,
@@ -9865,9 +9859,6 @@ SDR_Full_sensor artemis_module2_extand_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"ACCL_2_ASIC_2_P12V_AUX Vol",
 	},
-};
-
-SDR_Full_sensor artemis_module3_extand_sdr_table[] = {
 	{
 		// ACCL 3 ASIC 1 P12V_AUX
 		0x00,
@@ -9990,9 +9981,6 @@ SDR_Full_sensor artemis_module3_extand_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"ACCL_3_ASIC_2_P12V_AUX Vol",
 	},
-};
-
-SDR_Full_sensor artemis_module4_extand_sdr_table[] = {
 	{
 		// ACCL 4 ASIC 1 P12V_AUX
 		0x00,
@@ -10115,9 +10103,6 @@ SDR_Full_sensor artemis_module4_extand_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"ACCL_4_ASIC_2_P12V_AUX Vol",
 	},
-};
-
-SDR_Full_sensor artemis_module5_extand_sdr_table[] = {
 	{
 		// ACCL 5 ASIC 1 P12V_AUX
 		0x00,
@@ -10240,9 +10225,6 @@ SDR_Full_sensor artemis_module5_extand_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"ACCL_5_ASIC_2_P12V_AUX Vol",
 	},
-};
-
-SDR_Full_sensor artemis_module6_extand_sdr_table[] = {
 	{
 		// ACCL 6 ASIC 1 P12V_AUX
 		0x00,
@@ -10365,9 +10347,6 @@ SDR_Full_sensor artemis_module6_extand_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"ACCL_6_ASIC_2_P12V_AUX Vol",
 	},
-};
-
-SDR_Full_sensor artemis_module7_extand_sdr_table[] = {
 	{
 		// ACCL 7 ASIC 1 P12V_AUX
 		0x00,
@@ -10490,9 +10469,6 @@ SDR_Full_sensor artemis_module7_extand_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"ACCL_7_ASIC_2_P12V_AUX Vol",
 	},
-};
-
-SDR_Full_sensor artemis_module8_extand_sdr_table[] = {
 	{
 		// ACCL 8 ASIC 1 P12V_AUX
 		0x00,
@@ -10615,9 +10591,6 @@ SDR_Full_sensor artemis_module8_extand_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"ACCL_8_ASIC_2_P12V_AUX Vol",
 	},
-};
-
-SDR_Full_sensor artemis_module9_extand_sdr_table[] = {
 	{
 		// ACCL 9 ASIC 1 P12V_AUX
 		0x00,
@@ -10740,9 +10713,6 @@ SDR_Full_sensor artemis_module9_extand_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"ACCL_9_ASIC_2_P12V_AUX Vol",
 	},
-};
-
-SDR_Full_sensor artemis_module10_extand_sdr_table[] = {
 	{
 		// ACCL 10 ASIC 1 P12V_AUX
 		0x00,
@@ -10865,9 +10835,6 @@ SDR_Full_sensor artemis_module10_extand_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"ACCL_10_ASIC_2_P12V_AUX Vol",
 	},
-};
-
-SDR_Full_sensor artemis_module11_extand_sdr_table[] = {
 	{
 		// ACCL 11 ASIC 1 P12V_AUX
 		0x00,
@@ -10990,9 +10957,6 @@ SDR_Full_sensor artemis_module11_extand_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"ACCL_11_ASIC_2_P12V_AUX Vol",
 	},
-};
-
-SDR_Full_sensor artemis_module12_extand_sdr_table[] = {
 	{
 		// ACCL 12 ASIC 1 P12V_AUX
 		0x00,
@@ -11118,72 +11082,6 @@ SDR_Full_sensor artemis_module12_extand_sdr_table[] = {
 };
 
 const int SDR_TABLE_SIZE = ARRAY_SIZE(plat_sdr_table);
-const int ARTEMIS_MODULE_TABLE_SIZE = ARRAY_SIZE(artemis_module1_extand_sdr_table);
-
-uint8_t pal_get_extend_sdr()
-{
-	uint8_t index = 0;
-	uint8_t extend_sdr_table_size = 0;
-
-	for (index = 0; index < ASIC_CARD_COUNT; ++index) {
-		if (asic_card_info[index].card_type == ASIC_CARD_WITH_ARTEMIS_MODULE) {
-			extend_sdr_table_size +=
-				(ACCL_ARTEMIS_MODULE_SENSOR_COUNT - ACCL_FREYA_SENSOR_COUNT);
-		}
-	}
-
-	return extend_sdr_table_size;
-}
-
-void pal_extend_full_sdr_table()
-{
-	uint8_t card_index = 0;
-
-	for (card_index = 0; card_index < ASIC_CARD_COUNT; ++card_index) {
-		if (asic_card_info[card_index].card_type == ASIC_CARD_WITH_ARTEMIS_MODULE) {
-			SDR_Full_sensor *sdr_table = get_artemis_module_sdr_table(card_index);
-			if (sdr_table == NULL) {
-				LOG_ERR("Fail to get SDR table via card id: 0x%x", card_index);
-				continue;
-			}
-			for (int index = 0; index < ARTEMIS_MODULE_TABLE_SIZE; ++index) {
-				add_full_sdr_table(sdr_table[index]);
-			}
-		}
-	}
-}
-
-SDR_Full_sensor *get_artemis_module_sdr_table(uint8_t card_id)
-{
-	switch (card_id) {
-	case PCIE_CARD_1:
-		return artemis_module1_extand_sdr_table;
-	case PCIE_CARD_2:
-		return artemis_module2_extand_sdr_table;
-	case PCIE_CARD_3:
-		return artemis_module3_extand_sdr_table;
-	case PCIE_CARD_4:
-		return artemis_module4_extand_sdr_table;
-	case PCIE_CARD_5:
-		return artemis_module5_extand_sdr_table;
-	case PCIE_CARD_6:
-		return artemis_module6_extand_sdr_table;
-	case PCIE_CARD_7:
-		return artemis_module7_extand_sdr_table;
-	case PCIE_CARD_8:
-		return artemis_module8_extand_sdr_table;
-	case PCIE_CARD_9:
-		return artemis_module9_extand_sdr_table;
-	case PCIE_CARD_10:
-		return artemis_module10_extand_sdr_table;
-	case PCIE_CARD_11:
-		return artemis_module11_extand_sdr_table;
-	case PCIE_CARD_12:
-		return artemis_module12_extand_sdr_table;
-	default:
-		return NULL;
-	}
-}
 
 void load_sdr_table(void)
 {
