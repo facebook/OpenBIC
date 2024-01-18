@@ -185,6 +185,7 @@ SENSOR_DRIVE_INIT_DECLARE(cx7);
 SENSOR_DRIVE_INIT_DECLARE(vistara);
 #endif
 SENSOR_DRIVE_INIT_DECLARE(ads112c);
+SENSOR_DRIVE_INIT_DECLARE(nct7363);
 
 // The sequence needs to same with SENSOR_DEV ID
 sensor_drive_api sensor_drive_tbl[] = {
@@ -236,6 +237,7 @@ sensor_drive_api sensor_drive_tbl[] = {
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(vistara),
 #endif
+SENSOR_DRIVE_TYPE_INIT_MAP(nct7363),
 };
 
 static void init_sensor_num(void)
