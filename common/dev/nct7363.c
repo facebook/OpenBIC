@@ -118,19 +118,42 @@ uint8_t nct363_init(sensor_cfg *cfg)
 	// please add in plat_hook.c
 	/*
 	nct7363_init_arg nct7363_init_args[] = {
-		// mode 0
+		// mode 0 
+		//GPIO setting: Reserved=11, FANINx=10, PWMx=01, GPIOXX=00
 		[0] = { 
 			//16 ports
 			.is_init = false,
-			.init_pin_config{
-				.GPIO_00_to_03_Pin_Function_Configuration = 0b00,
-				.GPIO_04_to_07_Pin_Function_Configuration = 0b00,
-				.GPIO_10_to_13_Pin_Function_Configuration = 0b00,
-				.GPIO_14_to_17_Pin_Function_Configuration = 0b00,
-				.PWM_0_to_7_Enable = 0b00,
-				.PWM_8_to_15_Enable = 0b00,
-				.FANIN_0_to_7_Monitoring_Enable = 0b00,
-				.FANIN_8_to_15_Monitoring_Enable = 0b00,
+			.init__pin_config{
+				.GPIO_00_to_03_Pin_Function_Configuration = 0b00000000,
+				.GPIO_04_to_07_Pin_Function_Configuration = 0b00000000,
+				.GPIO_10_to_13_Pin_Function_Configuration = 0b00000000,
+				.GPIO_14_to_17_Pin_Function_Configuration = 0b00000000,
+				.PWM_0_to_7_Enable = 0b00000000,
+				.PWM_8_to_15_Enable = 0b00000000,
+				.FANIN_0_to_7_Monitoring_Enable = 0b00000000,
+				.FANIN_8_to_15_Monitoring_Enable = 0b00000000,
+			},
+			.init_16_pin_config{
+				.GPIO00
+				.GPIO01
+				.GPIO02
+				.GPIO03
+				.GPIO04
+				.GPIO05
+				.GPIO06
+				.GPIO07
+				.GPIO10
+				.GPIO11
+				.GPIO12
+				.GPIO13
+				.GPIO14
+				.GPIO15
+				.GPIO16
+				.GPIO17
+				.PWM_0_to_7_Enable
+				.PWM_8_to_15_Enable
+				.FANIN_0_to_7_Monitoring_Enable
+				.FANIN_8_to_15_Monitoring_Enable
 			},
 			//which port to monitor or set
 			.port = 0,
