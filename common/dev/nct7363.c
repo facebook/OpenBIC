@@ -29,6 +29,15 @@ struct nct7363_data {
 
 	char valid;
 };
+uint8_t combine_gpio_setting_data(uint8_t bit_7_6, uint8_t bit_5_4, uint8_t bit_3_2, uint8_t bit_1_0){
+	uint8_t data = 0;
+	data |= bit_7_6 << 6;
+	data |= bit_5_4 << 4;
+	data |= bit_3_2 << 2;
+	data |= bit_1_0 << 0;
+	return data;
+}
+
 uint8_t nct363_read(sensor_cfg *cfg, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
@@ -134,26 +143,26 @@ uint8_t nct363_init(sensor_cfg *cfg)
 				.FANIN_8_to_15_Monitoring_Enable = 0b00000000,
 			},
 			.init_16_pin_config{
-				.GPIO00
-				.GPIO01
-				.GPIO02
-				.GPIO03
-				.GPIO04
-				.GPIO05
-				.GPIO06
-				.GPIO07
-				.GPIO10
-				.GPIO11
-				.GPIO12
-				.GPIO13
-				.GPIO14
-				.GPIO15
-				.GPIO16
-				.GPIO17
-				.PWM_0_to_7_Enable
-				.PWM_8_to_15_Enable
-				.FANIN_0_to_7_Monitoring_Enable
-				.FANIN_8_to_15_Monitoring_Enable
+				.GPIO00 = 0b00,
+				.GPIO01 = 0b00,
+				.GPIO02 = 0b00,
+				.GPIO03 = 0b00,
+				.GPIO04 = 0b00,
+				.GPIO05 = 0b00,
+				.GPIO06 = 0b00,
+				.GPIO07 = 0b00,
+				.GPIO10 = 0b00,
+				.GPIO11 = 0b00,
+				.GPIO12 = 0b00,
+				.GPIO13 = 0b00,
+				.GPIO14 = 0b00,
+				.GPIO15 = 0b00,
+				.GPIO16 = 0b00,
+				.GPIO17 = 0b00,
+				.PWM_0_to_7_Enable = 0b00000000,
+				.PWM_8_to_15_Enable = 0b00000000,
+				.FANIN_0_to_7_Monitoring_Enable = 0b00000000,
+				.FANIN_8_to_15_Monitoring_Enable = 0b00000000,
 			},
 			//which port to monitor or set
 			.port = 0,
@@ -170,10 +179,17 @@ uint8_t nct363_init(sensor_cfg *cfg)
 	I2C_MSG init_msg = { 0 };
 	uint8_t retry = 5;
 	nct7363_init_arg *nct7363_init_arg_data = (nct7363_init_arg *)cfg->init_args;
+	//// init_pin_config ////
 	uint8_t GPIO_00_to_03_Pin__Configuration_REG_msg = cfg->init_args.init_pin_config.GPIO_00_to_03_Pin_Function_Configuration;
 	uint8_t GPIO_04_to_07_Pin__Configuration_REG_msg = cfg->init_args.init_pin_config.GPIO_04_to_07_Pin_Function_Configuration;
 	uint8_t GPIO_10_to_13_Pin__Configuration_REG_msg = cfg->init_args.init_pin_config.GPIO_10_to_13_Pin_Function_Configuration;
 	uint8_t GPIO_14_to_17_Pin__Configuration_REG_msg = cfg->init_args.init_pin_config.GPIO_14_to_17_Pin_Function_Configuration;
+	//// init_16_pin_config ////
+	uint8_t GPIO_00_to_03_Pin__Configuration_REG_msg = combine_gpio_setting_data(cfg->init_args.init_16_pin_config.GPIO03,cfg->init_args.init_16_pin_config.GPIO02,cfg->init_args.init_16_pin_config.GPIO01,cfg->init_args.init_16_pin_config.GPIO00);
+	uint8_t GPIO_04_to_07_Pin__Configuration_REG_msg = combine_gpio_setting_data(cfg->init_args.init_16_pin_config.GPIO07,cfg->init_args.init_16_pin_config.GPIO06,cfg->init_args.init_16_pin_config.GPIO05,cfg->init_args.init_16_pin_config.GPIO04);
+	uint8_t GPIO_10_to_13_Pin__Configuration_REG_msg = combine_gpio_setting_data(cfg->init_args.init_16_pin_config.GPIO13,cfg->init_args.init_16_pin_config.GPIO12,cfg->init_args.init_16_pin_config.GPIO11,cfg->init_args.init_16_pin_config.GPIO10);
+	uint8_t GPIO_14_to_17_Pin__Configuration_REG_msg = combine_gpio_setting_data(cfg->init_args.init_16_pin_config.GPIO17,cfg->init_args.init_16_pin_config.GPIO16,cfg->init_args.init_16_pin_config.GPIO15,cfg->init_args.init_16_pin_config.GPIO14);
+
 	uint8_t nct7363_REG_PWM_CTRL_OUTPUT_0_to_7_msg = cfg->init_args.init_pin_config.PWM_0_to_7_Enable;
 	uint8_t nct7363_REG_PWM_CTRL_OUTPUT_8_to_15_msg = cfg->init_args.init_pin_config.PWM_8_to_15_Enable;
 	uint8_t nct7363_REG_FANIN_CTRL1_msg = cfg->init_args.init_pin_config.FANIN_0_to_7_Monitoring_Enable;
