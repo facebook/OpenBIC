@@ -111,6 +111,10 @@ uint8_t ina230_read(sensor_cfg *cfg, int *reading)
 		val = (double)(reg_val)*init_args->pwr_lsb;
 		break;
 	case INA230_CUR_OFFSET:
+		if (GETBIT(msg.data[0], 7)) {
+			// If raw value is negative, set it zero.
+			reg_val = 0;
+		}
 		signed_reg_val = (int16_t)reg_val;
 		val = (double)(signed_reg_val)*init_args->cur_lsb;
 		break;
