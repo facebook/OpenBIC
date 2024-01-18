@@ -178,6 +178,8 @@ uint8_t nct363_init(sensor_cfg *cfg)
 	}
 	I2C_MSG init_msg = { 0 };
 	uint8_t retry = 5;
+	init_msg.bus = cfg->port;
+	init_msg.target_addr = cfg->target_addr;
 	nct7363_init_arg *nct7363_init_arg_data = (nct7363_init_arg *)cfg->init_args;
 	//// init_pin_config ////
 	uint8_t GPIO_00_to_03_Pin__Configuration_REG_msg = cfg->init_args.init_pin_config.GPIO_00_to_03_Pin_Function_Configuration;
@@ -185,61 +187,86 @@ uint8_t nct363_init(sensor_cfg *cfg)
 	uint8_t GPIO_10_to_13_Pin__Configuration_REG_msg = cfg->init_args.init_pin_config.GPIO_10_to_13_Pin_Function_Configuration;
 	uint8_t GPIO_14_to_17_Pin__Configuration_REG_msg = cfg->init_args.init_pin_config.GPIO_14_to_17_Pin_Function_Configuration;
 	//// init_16_pin_config ////
+	/*
 	uint8_t GPIO_00_to_03_Pin__Configuration_REG_msg = combine_gpio_setting_data(cfg->init_args.init_16_pin_config.GPIO03,cfg->init_args.init_16_pin_config.GPIO02,cfg->init_args.init_16_pin_config.GPIO01,cfg->init_args.init_16_pin_config.GPIO00);
 	uint8_t GPIO_04_to_07_Pin__Configuration_REG_msg = combine_gpio_setting_data(cfg->init_args.init_16_pin_config.GPIO07,cfg->init_args.init_16_pin_config.GPIO06,cfg->init_args.init_16_pin_config.GPIO05,cfg->init_args.init_16_pin_config.GPIO04);
 	uint8_t GPIO_10_to_13_Pin__Configuration_REG_msg = combine_gpio_setting_data(cfg->init_args.init_16_pin_config.GPIO13,cfg->init_args.init_16_pin_config.GPIO12,cfg->init_args.init_16_pin_config.GPIO11,cfg->init_args.init_16_pin_config.GPIO10);
 	uint8_t GPIO_14_to_17_Pin__Configuration_REG_msg = combine_gpio_setting_data(cfg->init_args.init_16_pin_config.GPIO17,cfg->init_args.init_16_pin_config.GPIO16,cfg->init_args.init_16_pin_config.GPIO15,cfg->init_args.init_16_pin_config.GPIO14);
-
+	*/
 	uint8_t nct7363_REG_PWM_CTRL_OUTPUT_0_to_7_msg = cfg->init_args.init_pin_config.PWM_0_to_7_Enable;
 	uint8_t nct7363_REG_PWM_CTRL_OUTPUT_8_to_15_msg = cfg->init_args.init_pin_config.PWM_8_to_15_Enable;
 	uint8_t nct7363_REG_FANIN_CTRL1_msg = cfg->init_args.init_pin_config.FANIN_0_to_7_Monitoring_Enable;
 	uint8_t nct7363_REG_FANIN_CTRL2_msg = cfg->init_args.init_pin_config.FANIN_8_to_15_Monitoring_Enable;
 
 	///////////   set GPIO/PWM/FAN configuration   ///////////////////////
-	if (i2c_master_write(&GPIO_00_to_03_Pin__Configuration_REG_msg, retry)) {
+	init_msg.tx_len = 2;
+	init_msg.data[0]=  GPIO_00_to_03_Pin__Configuration_REG;
+	init_msg.data[1]=  GPIO_00_to_03_Pin__Configuration_REG_msg;
+	if (i2c_master_write(&init_msg, retry)) {
 		LOG_ERR("set nct363 set GPIO_00_to_03_Pin__Configuration_REG fail");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
-	
-	if (i2c_master_write(&GPIO_04_to_07_Pin__Configuration_REG_msg, retry)) {
+	init_msg.data[0]=  GPIO_04_to_07_Pin__Configuration_REG;
+	init_msg.data[1]=  GPIO_04_to_07_Pin__Configuration_REG_msg;
+	if (i2c_master_write(&init_msg, retry)) {
 		LOG_ERR("set nct363 set GPIO_04_to_07_Pin__Configuration_REG fail");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
-	if (i2c_master_write(&GPIO_10_to_13_Pin__Configuration_REG_msg, retry)) {
+	init_msg.data[0]=  GPIO_10_to_13_Pin__Configuration_REG;
+	init_msg.data[1]=  GPIO_10_to_13_Pin__Configuration_REG_msg;
+	if (i2c_master_write(&init_msg, retry)) {
 		LOG_ERR("set nct363 set GPIO_10_to_13_Pin__Configuration_REG fail");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
-	if (i2c_master_write(&GPIO_14_to_17_Pin__Configuration_REG_msg, retry)) {
+	init_msg.data[0]=  GPIO_14_to_17_Pin__Configuration_REG;
+	init_msg.data[1]=  GPIO_14_to_17_Pin__Configuration_REG_msg;
+	if (i2c_master_write(&init_msg, retry)) {
 		LOG_ERR("set nct363 set GPIO_14_to_17_Pin__Configuration_REG fail");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
 	///////////   set PWM  output   ///////////////////////
-	if (i2c_master_write(&nct7363_REG_PWM_CTRL_OUTPUT_0_to_7_msg, retry)) {
+	init_msg.data[0]=  nct7363_REG_PWM_CTRL_OUTPUT_0_to_7;
+	init_msg.data[1]=  nct7363_REG_PWM_CTRL_OUTPUT_0_to_7_msg;
+	if (i2c_master_write(&init_msg, retry)) {
 		LOG_ERR("set nct363 set nct7363_REG_PWM_CTRL_OUTPUT_0_to_7 fail");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
-	if (i2c_master_write(&nct7363_REG_PWM_CTRL_OUTPUT_8_to_15_msg, retry)) {
+	init_msg.data[0]=  nct7363_REG_PWM_CTRL_OUTPUT_8_to_15;
+	init_msg.data[1]=  nct7363_REG_PWM_CTRL_OUTPUT_8_to_15_msg;
+	if (i2c_master_write(&init_msg, retry)) {
 		LOG_ERR("set nct363 set nct7363_REG_PWM_CTRL_OUTPUT_8_to_15 fail");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
 	///////////   set FANIN control    ///////////////////////
-	if (i2c_master_write(&nct7363_REG_FANIN_CTRL1_msg, retry)) {
+	init_msg.data[0]=  nct7363_REG_FANIN_CTRL1;
+	init_msg.data[1]=  nct7363_REG_FANIN_CTRL1_msg;
+	if (i2c_master_write(&init_msg, retry)) {
 		LOG_ERR("set nct7363_REG_FANIN_CTRL1 fail");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
-	if (i2c_master_write(&nct7363_REG_FANIN_CTRL2_msg, retry)) {
+	init_msg.data[0]=  nct7363_REG_FANIN_CTRL2;
+	init_msg.data[1]=  nct7363_REG_FANIN_CTRL2_msg;
+	if (i2c_master_write(&init_msg, retry)) {
 		LOG_ERR("set nct7363_REG_FANIN_CTRL2 fail");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
 	////// set init fan duty ////
-	uint8_t init_duty = 0x66;  // 40% need to check
-	if (i2c_master_write(&init_duty, retry)) {
-		LOG_ERR("set init_fan_duty_status fail");
-		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	  for (int i = 0; i < 15; i++)
+	{
+		uint8_t duty_offset = nct7363_REG_PWM_BASE_OFFSET + i*2;
+		init_msg.tx_len = 2;
+		init_msg.data[0]=  duty_offset;
+		init_msg.data[1]=  0x66;  // 40% duty for init
+
+		if (i2c_master_write(&init_msg, retry)) {
+			LOG_ERR("set NCT7363_FAN_CTRL_SET_DUTY fail, status: %d", NCT7363_FAN_CTRL_SET_DUTY_status);
+			return 	SENSOR_INIT_UNSPECIFIED_ERROR; 
+		}
 	}
+	
 
 	cfg->read = nct363_read;
 

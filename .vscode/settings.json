@@ -1,7 +1,5 @@
 {
     "files.associations": {
-        "nct363.h": "c",
-        "nct7363test.h": "c",
         "nct7363.h": "c"
     }
 }
