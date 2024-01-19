@@ -872,11 +872,11 @@ bool pre_xdpe15284_read(sensor_cfg *cfg, void *args)
 	if (i2c_master_write(&msg, retry) != 0) {
 		LOG_ERR("Set xdpe15284 page fail");
 		ret = false;
+		k_mutex_unlock(&xdpe15284_mutex);
 	} else {
 		ret = true;
 	}
 
-	k_mutex_unlock(&xdpe15284_mutex);
 	return ret;
 }
 
