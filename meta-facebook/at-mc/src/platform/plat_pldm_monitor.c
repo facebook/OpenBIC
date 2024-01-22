@@ -25,6 +25,7 @@
 #include "plat_sensor_table.h"
 #include "plat_pldm_monitor.h"
 #include "plat_class.h"
+#include "pldm_state_set.h"
 
 LOG_MODULE_REGISTER(plat_pldm_monitor);
 
@@ -46,5 +47,18 @@ void plat_ssd_present_check()
 					CARD_8_INDEX - i + 1);
 			}
 		}
+	}
+}
+
+void plat_send_ssd_power_fault_event(uint8_t ssd_id, uint8_t status)
+{
+	struct pldm_sensor_event_state_sensor_state event;
+	event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_POWER_STATUS;
+	event.event_state = status;
+	event.previous_event_state = PLDM_STATE_SET_OEM_DEVICE_NO_POWER_GOOD;
+	if (pldm_send_platform_event(PLDM_SENSOR_EVENT, PLDM_EVENT_SSD_1 + ssd_id,
+				     PLDM_STATE_SENSOR_STATE, (uint8_t *)&event,
+				     sizeof(struct pldm_sensor_event_state_sensor_state))) {
+		LOG_ERR("Send SSD%d power fault event log failed", ssd_id);
 	}
 }

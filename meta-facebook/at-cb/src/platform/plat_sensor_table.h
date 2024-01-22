@@ -294,6 +294,14 @@ typedef struct _sensor_poll_delay_cfg {
 	int64_t card_first_power_good_time;
 } sensor_poll_delay_cfg;
 
+enum ACCL_POWER_REGISTER_OPTION {
+	ACCL_CARD_12V_POWER_GOOD,
+	ACCL_CARD_3V3_POWER_GOOD,
+	ACCL_CABLE_POWER_GOOD,
+	ACCL_CABLE_POWER_GOOD_TIMEOUT,
+	ACCL_CABLE_POWER_GOOD_FAULT,
+};
+
 void load_sensor_config(void);
 bool is_acb_power_good();
 bool is_dc_access(uint8_t sensor_num);
@@ -303,11 +311,13 @@ sensor_cfg *get_accl_sensor_config(uint8_t card_id, uint8_t sensor_num);
 bool get_accl_mux_config(uint8_t card_id, mux_config *accl_mux);
 sensor_cfg *get_accl_sensor_cfg_info(uint8_t card_id, uint8_t *cfg_count);
 bool is_accl_power_good(uint8_t card_id);
+bool is_accl_cable_power_good(uint8_t card_id);
+bool is_accl_cable_power_good_timeout(uint8_t card_id);
+bool is_accl_cable_power_good_fault(uint8_t card_id);
 sensor_cfg *get_common_sensor_cfg_info(uint8_t sensor_num);
 void update_plat_sensor_cfg_by_stage();
 sensor_cfg *get_artemis_module_sensor_cfg(uint8_t card_id);
 bool is_time_to_poll_card_sensor(uint8_t card_id);
-bool is_accl_cable_power_good(uint8_t card_id);
-bool is_accl_cable_power_good_timeout(uint8_t card_id);
+bool get_accl_power_status(uint8_t card_id, uint8_t option);
 
 #endif

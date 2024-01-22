@@ -1486,91 +1486,79 @@ bool is_acb_power_good()
 	}
 }
 
-bool is_accl_power_good(uint8_t card_id)
+bool get_accl_power_status(uint8_t card_id, uint8_t option)
 {
 	int ret = 0;
-	int retry = 5;
-	I2C_MSG msg = { 0 };
-	uint8_t power_good_bit = 0;
+	uint8_t val = 0;
+	uint8_t power_status_bit = 0;
+	uint8_t accl_1_6_register = 0;
+	uint8_t accl_7_12_register = 0;
 
-	msg.bus = I2C_BUS3;
-	msg.target_addr = CPLD_ADDR;
-	msg.rx_len = 1;
-	msg.tx_len = 1;
+	switch (option) {
+	case ACCL_CARD_12V_POWER_GOOD:
+		accl_1_6_register = CPLD_12V_ACCLB_PWRGD_OFFSET;
+		accl_7_12_register = CPLD_12V_ACCLA_PWRGD_OFFSET;
+		break;
+	case ACCL_CARD_3V3_POWER_GOOD:
+		accl_1_6_register = CPLD_ACCLB_PWRGD_OFFSET;
+		accl_7_12_register = CPLD_ACCLA_PWRGD_OFFSET;
+		break;
+	case ACCL_CABLE_POWER_GOOD:
+		accl_1_6_register = CPLD_ACCL_1_6_POWER_CABLE_PG_OFFSET;
+		accl_7_12_register = CPLD_ACCL_7_12_POWER_CABLE_PG_OFFSET;
+		break;
+	case ACCL_CABLE_POWER_GOOD_TIMEOUT:
+		accl_1_6_register = CPLD_ACCL_1_6_POWER_CABLE_PG_TIMEOUT_OFFSET;
+		accl_7_12_register = CPLD_ACCL_7_12_POWER_CABLE_PG_TIMEOUT_OFFSET;
+		break;
+	case ACCL_CABLE_POWER_GOOD_FAULT:
+		accl_1_6_register = CPLD_ACCL_1_6_POWER_CABLE_PG_FAULT_OFFSET;
+		accl_7_12_register = CPLD_ACCL_7_12_POWER_CABLE_PG_FAULT_OFFSET;
+		break;
+	default:
+		LOG_ERR("[%s] invalid option: 0x%x", __func__, option);
+		return false;
+	}
 
 	if (card_id <= PCIE_CARD_6) {
-		msg.data[0] = CPLD_ACCLB_PWRGD_OFFSET;
-		power_good_bit = (1 << (card_id - PCIE_CARD_1));
+		power_status_bit = (1 << (card_id - PCIE_CARD_1));
+		ret = get_cpld_register(accl_1_6_register, &val);
 	} else if (card_id <= PCIE_CARD_12) {
-		msg.data[0] = CPLD_ACCLA_PWRGD_OFFSET;
-		power_good_bit = (1 << (card_id - PCIE_CARD_7));
+		power_status_bit = (1 << (card_id - PCIE_CARD_7));
+		ret = get_cpld_register(accl_7_12_register, &val);
 	} else {
-		LOG_ERR("%s() invalid card id %u ", __func__, card_id);
+		LOG_ERR("[%s] invalid card id: 0x%x", __func__, card_id);
 		return false;
 	}
 
-	ret = i2c_master_read(&msg, retry);
 	if (ret != 0) {
-		LOG_ERR("%s() Fail to read card %u status from cpld", __func__, card_id);
+		LOG_ERR("Get cpld register value fail, card id: 0x%x, option: 0x%x", card_id,
+			option);
 		return false;
 	}
 
-	return (msg.data[0] & power_good_bit);
+	return (val & power_status_bit);
+}
+
+bool is_accl_power_good(uint8_t card_id)
+{
+	return (get_accl_power_status(card_id, ACCL_CARD_3V3_POWER_GOOD) &
+		get_accl_power_status(card_id, ACCL_CARD_12V_POWER_GOOD));
 }
 
 bool is_accl_cable_power_good(uint8_t card_id)
 {
-	if (card_id > PCIE_CARD_12) {
-		LOG_ERR("Invalid card id: 0x%x to get accl cable power good register", card_id);
-		return false;
-	}
-
-	int ret = 0;
-	uint8_t val = 0;
-	uint8_t cable_pwr_good_bit = 0;
-
-	if (card_id <= PCIE_CARD_6) {
-		cable_pwr_good_bit = (1 << (card_id - PCIE_CARD_1));
-		ret = get_cpld_register(CPLD_ACCL_1_6_POWER_CABLE_PG_OFFSET, &val);
-	} else {
-		cable_pwr_good_bit = (1 << (card_id - PCIE_CARD_7));
-		ret = get_cpld_register(CPLD_ACCL_7_12_POWER_CABLE_PG_OFFSET, &val);
-	}
-
-	if (ret != 0) {
-		LOG_ERR("Read ACCL power cable PG register fail, card id: 0x%x", card_id);
-		return false;
-	}
-
-	return (val & cable_pwr_good_bit);
+	return get_accl_power_status(card_id, ACCL_CABLE_POWER_GOOD);
 }
 
 bool is_accl_cable_power_good_timeout(uint8_t card_id)
 {
-	if (card_id > PCIE_CARD_12) {
-		LOG_ERR("Invalid card id: 0x%x to get accl cable power good timeout register",
-			card_id);
-		return false;
-	}
+	return get_accl_power_status(card_id, ACCL_CABLE_POWER_GOOD_TIMEOUT);
+}
 
-	int ret = 0;
-	uint8_t val = 0;
-	uint8_t cable_pwr_good_bit = 0;
-
-	if (card_id <= PCIE_CARD_6) {
-		cable_pwr_good_bit = (1 << (card_id - PCIE_CARD_1));
-		ret = get_cpld_register(CPLD_ACCL_1_6_POWER_CABLE_PG_TIMEOUT_OFFSET, &val);
-	} else {
-		cable_pwr_good_bit = (1 << (card_id - PCIE_CARD_7));
-		ret = get_cpld_register(CPLD_ACCL_7_12_POWER_CABLE_PG_TIMEOUT_OFFSET, &val);
-	}
-
-	if (ret != 0) {
-		LOG_ERR("Read ACCL power cable PG timeout register fail, card id: 0x%x", card_id);
-		return false;
-	}
-
-	return (val & cable_pwr_good_bit);
+bool is_accl_cable_power_good_fault(uint8_t card_id)
+{
+	return get_accl_power_status(card_id, ACCL_CABLE_POWER_GOOD_FAULT);
 }
 
 bool is_dc_access(uint8_t sensor_num)
