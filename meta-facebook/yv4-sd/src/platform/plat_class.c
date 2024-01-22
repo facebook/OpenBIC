@@ -10,6 +10,7 @@
 #include "plat_gpio.h"
 #include "plat_i2c.h"
 #include "plat_sensor_table.h"
+#include "hal_i3c.h"
 
 #include <logging/log.h>
 
@@ -50,12 +51,13 @@ struct _SLOT_EID_MAPPING_TABLE {
 	float voltage;
 	uint8_t condition;
 	uint8_t slot_eid;
+	uint16_t slot_pid;
 };
 
 struct _SLOT_EID_MAPPING_TABLE _slot_eid_mapping_table[] = {
-	{ 0.1, LOWER, SLOT1 },	 { 0.088, RANGE, SLOT2 }, { 0.180, RANGE, SLOT3 },
-	{ 0.271, RANGE, SLOT4 }, { 0.365, RANGE, SLOT5 }, { 0.459, RANGE, SLOT6 },
-	{ 0.531, RANGE, SLOT7 }, { 0.607, RANGE, SLOT8 },
+	{ 0.1, LOWER, SLOT1, SLOT1_PID }, { 0.088, RANGE, SLOT2, SLOT2_PID }, { 0.180, RANGE, SLOT3, SLOT3_PID },
+	{ 0.271, RANGE, SLOT4, SLOT4_PID }, { 0.365, RANGE, SLOT5, SLOT5_PID }, { 0.459, RANGE, SLOT6, SLOT6_PID },
+	{ 0.531, RANGE, SLOT7, SLOT7_PID }, { 0.607, RANGE, SLOT8, SLOT8_PID },
 };
 
 uint8_t slot_eid = 0;
@@ -109,8 +111,13 @@ bool get_adc_voltage(int channel, float *voltage)
 
 void init_platform_config()
 {
+	I3C_MSG i3c_msg;
 	float voltage;
 	float p3v3_stby_voltage;
+	uint16_t slot_pid = 0;
+
+	i3c_msg.bus = 0;
+
 	bool success = get_adc_voltage(CHANNEL_13, &voltage);
 
 	if (success) {
@@ -127,17 +134,20 @@ void init_platform_config()
 			case LOWER:
 				if (voltage <= typical_voltage) {
 					slot_eid = _slot_eid_mapping_table[i].slot_eid;
+					slot_pid = _slot_eid_mapping_table[i].slot_pid;
 				}
 				break;
 			case HIGHER:
 				if (voltage >= typical_voltage) {
 					slot_eid = _slot_eid_mapping_table[i].slot_eid;
+					slot_pid = _slot_eid_mapping_table[i].slot_pid;
 				}
 				break;
 			case RANGE:
 				if ((voltage > (p3v3_stby_voltage * typical_voltage * 0.93)) &&
 				    (voltage < (p3v3_stby_voltage * typical_voltage * 1.07))) {
 					slot_eid = _slot_eid_mapping_table[i].slot_eid;
+					slot_pid = _slot_eid_mapping_table[i].slot_pid;
 				}
 				break;
 			default:
@@ -149,4 +159,5 @@ void init_platform_config()
 	}
 
 	LOG_INF("Slot EID = %d", slot_eid);
+	i3c_set_pid(&i3c_msg, slot_pid);
 }
