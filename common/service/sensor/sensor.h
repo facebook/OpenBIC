@@ -109,6 +109,8 @@ enum ADS112C_OFFSET {
 	ADS112C_FLOW_OFFSET = 0x00,
 	ADS112C_PRESS_OFFSET = 0x01,
 	ADS112C_TEMP_OFFSET = 0x02,
+	ADS112C_OTHER_OFFSET = 0x03,
+	ADS112C_LEAKAGE_OFFSET = 0x04,	
 };
 
 // The sequence needs to same with table sensor_drive_tbl
