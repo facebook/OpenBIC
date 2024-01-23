@@ -126,6 +126,7 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(cx7)
 	sensor_name_to_num(vistara)
 	sensor_name_to_num(ads112c)
+	sensor_name_to_num(nct7363)
 };
 // clang-format on
 

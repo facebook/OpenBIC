@@ -706,18 +706,19 @@ typedef struct _nct7363_init_arg {
 	bool is_init;
 	union {
 		uint8_t value;
-		struct {
+		struct {			
 			uint8_t GPIO_00_to_03_Pin_Function_Configuration: 8;
 			uint8_t GPIO_04_to_07_Pin_Function_Configuration: 8;
 			uint8_t GPIO_10_to_13_Pin_Function_Configuration: 8;
 			uint8_t GPIO_14_to_17_Pin_Function_Configuration: 8;
+			uint8_t GPIO0x_Input_Output_Configuration: 8;
+			uint8_t GPIO1x_Input_Output_Configuration: 8;
 			uint8_t	PWM_0_to_7_Enable: 8;
 			uint8_t PWM_8_to_15_Enable: 8;
 			uint8_t FANIN_0_to_7_Monitoring_Enable: 8;
 			uint8_t FANIN_8_to_15_Monitoring_Enable: 8;
 		};
 	} init_pin_config;
-
 	union {
 		uint8_t value;
 		struct {
@@ -743,9 +744,6 @@ typedef struct _nct7363_init_arg {
 			uint8_t FANIN_8_to_15_Monitoring_Enable: 8;
 		};
 	} init_16_pin_config;
-
-
-	uint8_t port; 
 	uint8_t fan_poles;
 	uint8_t duty; 
 } nct7363_init_arg;
