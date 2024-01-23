@@ -34,6 +34,8 @@
 #include "libipmi.h"
 #include "ipmi.h"
 #include "plat_ipmi.h"
+#include "plat_pldm_monitor.h"
+#include "pldm_state_set.h"
 
 bool is_interrupt_ongoing = false;
 
@@ -504,22 +506,58 @@ exit:
 	return;
 }
 
+void check_ssd_power_good_timeout()
+{
+	uint8_t index = 0;
+	uint8_t retry = 3;
+	uint8_t status = 0;
+	uint8_t bit_count = 8;
+	I2C_MSG i2c_msg = { 0 };
+
+	i2c_msg.bus = CPLD_BUS;
+	i2c_msg.target_addr = CPLD_ADDR;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = CPLD_SSD_POWER_GOOD_TIMEOUT;
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("Get SSD power good timeout register value fail");
+	} else {
+		for (index = 0; index < bit_count; ++index) {
+			if (i2c_msg.data[0] & BIT(index)) {
+				status = ((index % 2) ?
+						  PLDM_STATE_SET_OEM_DEVICE_12V_AUX_NO_POWER_GOOD :
+						  PLDM_STATE_SET_OEM_DEVICE_3V3_AUX_NO_POWER_GOOD);
+				plat_send_ssd_power_fault_event(index / 2, status);
+			}
+		}
+	}
+}
+
 #define SET_RESET_SMB4_MUX_DELAY_MS 10
 K_WORK_DELAYABLE_DEFINE(set_reset_smb4_mux_pin_work, set_reset_smb4_mux_pin);
+#define SSD_POWER_GOOD_TIMEOUT_DELAY_MS 5000
+K_WORK_DELAYABLE_DEFINE(check_ssd_power_good_timeout_work, check_ssd_power_good_timeout);
 void ISR_NORMAL_PWRGD()
 {
 	uint8_t index = 0;
 	set_DC_status(MEB_NORMAL_PWRGD_BIC);
+	init_ssd_power_fault_work();
 
 	if (gpio_get(MEB_NORMAL_PWRGD_BIC) == HIGH_INACTIVE) {
 		for (index = 0; index < CXL_CARD_8; ++index) {
 			set_cxl_eid_flag(index, CLEAR_EID_FLAG);
 			clear_cxl_card_cache_value(index);
 		}
+		clear_ssd_power_fault_flag();
+		if (k_work_cancel_delayable(&check_ssd_power_good_timeout_work) != 0) {
+			LOG_ERR("Cancel check_ssd_power_good_timeout_work fail");
+		}
 	} else {
 		for (index = 0; index < ARRAY_SIZE(cxl_work_item); ++index) {
 			cxl_work_item[index].is_device_reset = false;
 		}
+		k_work_schedule_for_queue(&plat_work_q, &check_ssd_power_good_timeout_work,
+					  K_MSEC(SSD_POWER_GOOD_TIMEOUT_DELAY_MS));
 	}
 
 	k_work_schedule_for_queue(&plat_work_q, &set_reset_smb4_mux_pin_work,

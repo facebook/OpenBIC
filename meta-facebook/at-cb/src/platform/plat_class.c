@@ -262,6 +262,10 @@ void check_accl_device_presence_status_via_ioexp()
 				asic_card_info[card_index].pwr_cbl_status = ASIC_CARD_PRESENT;
 			} else {
 				asic_card_info[card_index].pwr_cbl_status = ASIC_CARD_NOT_PRESENT;
+				asic_card_info[card_index].asic_1_status =
+					ASIC_CARD_DEVICE_NOT_PRESENT;
+				asic_card_info[card_index].asic_2_status =
+					ASIC_CARD_DEVICE_NOT_PRESENT;
 			}
 		}
 	}
@@ -312,31 +316,14 @@ void check_accl_device_presence_status_via_ioexp()
 					asic_card_info[card_index].card_status = ASIC_CARD_PRESENT;
 					asic_card_info[card_index].card_type =
 						ASIC_CARD_WITH_ARTEMIS_MODULE;
+					asic_card_info[card_index].asic_1_status =
+						ASIC_CARD_DEVICE_PRESENT;
+					asic_card_info[card_index].asic_2_status =
+						ASIC_CARD_DEVICE_PRESENT;
 				} else {
 					asic_card_info[card_index].card_status =
 						ASIC_CARD_NOT_PRESENT;
 				}
-			}
-
-			if ((presence_val & IOEXP_DEV_1_PRESENT_VAL) == LOW_ACTIVE) {
-				asic_card_info[card_index].asic_1_status = ASIC_CARD_DEVICE_PRESENT;
-				asic_card_info[card_index].card_type = ASIC_CARD_WITH_FREYA;
-			} else {
-				asic_card_info[card_index].asic_1_status =
-					ASIC_CARD_DEVICE_NOT_PRESENT;
-			}
-
-			if ((presence_val & IOEXP_DEV_2_PRESENT_VAL) == LOW_ACTIVE) {
-				asic_card_info[card_index].asic_2_status = ASIC_CARD_DEVICE_PRESENT;
-				asic_card_info[card_index].card_type = ASIC_CARD_WITH_FREYA;
-			} else {
-				asic_card_info[card_index].asic_2_status =
-					ASIC_CARD_DEVICE_NOT_PRESENT;
-			}
-
-			if (asic_card_info[card_index].card_type == ASIC_CARD_WITH_ARTEMIS_MODULE) {
-				asic_card_info[card_index].asic_1_status = ASIC_CARD_DEVICE_PRESENT;
-				asic_card_info[card_index].asic_2_status = ASIC_CARD_DEVICE_PRESENT;
 			}
 
 			card_index -= 1;
@@ -439,6 +426,7 @@ bool get_acb_power_status()
 			clear_freya_cache_flag(index);
 		}
 		clear_sw_error_check_flag();
+		clear_accl_cable_power_fault_flag();
 	}
 
 	is_power_good = current_power_status;

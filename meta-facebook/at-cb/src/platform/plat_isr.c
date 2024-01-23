@@ -49,11 +49,6 @@ typedef struct _alert_event_cfg {
 	uint16_t bit_map;
 } alert_event_cfg;
 
-typedef struct _accl_power_fault_info {
-	uint8_t check_bit;
-	uint8_t power_fault_state;
-} accl_power_fault_info;
-
 void check_accl_card_pwr_good_work_handler();
 
 alert_sensor_info vr_info[] = {
@@ -425,13 +420,13 @@ void check_accl_card_pwr_good_work_handler()
 	uint8_t val = 0;
 	uint8_t index = 0;
 	uint8_t card_id = 0;
-	accl_power_fault_info power_fault_info[] = {
-		{ .check_bit = CPLD_ACCL_3V3_POWER_FAULT_BIT,
-		  .power_fault_state = PLDM_STATE_SET_OEM_DEVICE_3V3_POWER_FAULT },
-		{ .check_bit = CPLD_ACCL_12V_POWER_FAULT_BIT,
-		  .power_fault_state = PLDM_STATE_SET_OEM_DEVICE_12V_POWER_FAULT },
-		{ .check_bit = CPLD_ACCL_3V3_AUX_FAULT_BIT,
-		  .power_fault_state = PLDM_STATE_SET_OEM_DEVICE_3V3_AUX_FAULT },
+	accl_power_fault_info power_timeout_info[] = {
+		{ .check_bit = CPLD_ACCL_3V3_POWER_TOUT_BIT,
+		  .power_fault_state = PLDM_STATE_SET_OEM_DEVICE_3V3_NO_POWER_GOOD },
+		{ .check_bit = CPLD_ACCL_12V_POWER_TOUT_BIT,
+		  .power_fault_state = PLDM_STATE_SET_OEM_DEVICE_12V_NO_POWER_GOOD },
+		{ .check_bit = CPLD_ACCL_3V3_AUX_POWER_TOUT_BIT,
+		  .power_fault_state = PLDM_STATE_SET_OEM_DEVICE_3V3_AUX_NO_POWER_GOOD },
 	};
 
 	for (card_id = 0; card_id < ARRAY_SIZE(asic_card_info); ++card_id) {
@@ -457,16 +452,17 @@ void check_accl_card_pwr_good_work_handler()
 					continue;
 				}
 
-				for (index = 0; index < ARRAY_SIZE(power_fault_info); ++index) {
-					if (val & power_fault_info[index].check_bit) {
+				bool is_occur_timeout = false;
+				for (index = 0; index < ARRAY_SIZE(power_timeout_info); ++index) {
+					if (val & power_timeout_info[index].check_bit) {
+						is_occur_timeout = true;
 						plat_accl_power_good_fail_event(
 							card_id,
-							power_fault_info[index].power_fault_state);
-						break;
+							power_timeout_info[index].power_fault_state);
 					}
 				}
 
-				if (index >= ARRAY_SIZE(power_fault_info)) {
+				if (is_occur_timeout != true) {
 					// No power fault occurs but ACCL power good fail
 					plat_accl_power_good_fail_event(
 						card_id, PLDM_STATE_SET_OEM_DEVICE_POWER_GOOD_FAIL);

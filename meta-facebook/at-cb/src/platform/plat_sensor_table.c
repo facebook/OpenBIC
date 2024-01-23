@@ -95,316 +95,436 @@ sensor_cfg plat_sensor_config[] = {
 	  &pex_sensor_init_args[1] },
 
 	/** ACCL card 1 **/
-	{ SENSOR_NUM_TEMP_ACCL_1_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_1_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[0],
 	  post_accl_nvme_read, &accl_card_info_args[0], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_1_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_1_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[0],
 	  post_accl_nvme_read, &accl_card_info_args[0], NULL },
-	{ SENSOR_NUM_VOL_ACCL_1_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_1_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[0],
 	  post_accl_nvme_read, &accl_card_info_args[0], NULL },
-	{ SENSOR_NUM_VOL_ACCL_1_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_1_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[0],
 	  post_accl_nvme_read, &accl_card_info_args[0], NULL },
-	{ SENSOR_NUM_VOL_ACCL_1_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_1_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[0],
 	  post_accl_nvme_read, &accl_card_info_args[0], NULL },
-	{ SENSOR_NUM_VOL_ACCL_1_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_1_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[0],
 	  post_accl_nvme_read, &accl_card_info_args[0], NULL },
+	{ SENSOR_NUM_VOL_ACCL_1_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
+	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[0], post_accl_nvme_read, &accl_card_info_args[0],
+	  NULL },
+	{ SENSOR_NUM_VOL_ACCL_1_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
+	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[0], post_accl_nvme_read, &accl_card_info_args[0],
+	  NULL },
 
 	/** ACCL card 2 **/
-	{ SENSOR_NUM_TEMP_ACCL_2_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_2_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[1],
 	  post_accl_nvme_read, &accl_card_info_args[1], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_2_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_2_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[1],
 	  post_accl_nvme_read, &accl_card_info_args[1], NULL },
-	{ SENSOR_NUM_VOL_ACCL_2_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_2_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[1],
 	  post_accl_nvme_read, &accl_card_info_args[1], NULL },
-	{ SENSOR_NUM_VOL_ACCL_2_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_2_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[1],
 	  post_accl_nvme_read, &accl_card_info_args[1], NULL },
-	{ SENSOR_NUM_VOL_ACCL_2_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_2_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[1],
 	  post_accl_nvme_read, &accl_card_info_args[1], NULL },
-	{ SENSOR_NUM_VOL_ACCL_2_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_2_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[1],
 	  post_accl_nvme_read, &accl_card_info_args[1], NULL },
+	{ SENSOR_NUM_VOL_ACCL_2_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
+	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[1], post_accl_nvme_read, &accl_card_info_args[1],
+	  NULL },
+	{ SENSOR_NUM_VOL_ACCL_2_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
+	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[1], post_accl_nvme_read, &accl_card_info_args[1],
+	  NULL },
 
 	/** ACCL card 3 **/
-	{ SENSOR_NUM_TEMP_ACCL_3_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_3_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[2],
 	  post_accl_nvme_read, &accl_card_info_args[2], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_3_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_3_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[2],
 	  post_accl_nvme_read, &accl_card_info_args[2], NULL },
-	{ SENSOR_NUM_VOL_ACCL_3_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_3_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[2],
 	  post_accl_nvme_read, &accl_card_info_args[2], NULL },
-	{ SENSOR_NUM_VOL_ACCL_3_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_3_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[2],
 	  post_accl_nvme_read, &accl_card_info_args[2], NULL },
-	{ SENSOR_NUM_VOL_ACCL_3_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_3_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[2],
 	  post_accl_nvme_read, &accl_card_info_args[2], NULL },
-	{ SENSOR_NUM_VOL_ACCL_3_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_3_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[2],
 	  post_accl_nvme_read, &accl_card_info_args[2], NULL },
+	{ SENSOR_NUM_VOL_ACCL_3_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
+	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[2], post_accl_nvme_read, &accl_card_info_args[2],
+	  NULL },
+	{ SENSOR_NUM_VOL_ACCL_3_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
+	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[2], post_accl_nvme_read, &accl_card_info_args[2],
+	  NULL },
 
 	/** ACCL card 4 **/
-	{ SENSOR_NUM_TEMP_ACCL_4_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_4_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[3],
 	  post_accl_nvme_read, &accl_card_info_args[3], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_4_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_4_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[3],
 	  post_accl_nvme_read, &accl_card_info_args[3], NULL },
-	{ SENSOR_NUM_VOL_ACCL_4_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_4_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[3],
 	  post_accl_nvme_read, &accl_card_info_args[3], NULL },
-	{ SENSOR_NUM_VOL_ACCL_4_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_4_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[3],
 	  post_accl_nvme_read, &accl_card_info_args[3], NULL },
-	{ SENSOR_NUM_VOL_ACCL_4_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_4_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[3],
 	  post_accl_nvme_read, &accl_card_info_args[3], NULL },
-	{ SENSOR_NUM_VOL_ACCL_4_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_4_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[3],
 	  post_accl_nvme_read, &accl_card_info_args[3], NULL },
+	{ SENSOR_NUM_VOL_ACCL_4_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
+	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[3], post_accl_nvme_read, &accl_card_info_args[3],
+	  NULL },
+	{ SENSOR_NUM_VOL_ACCL_4_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
+	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[3], post_accl_nvme_read, &accl_card_info_args[3],
+	  NULL },
 
 	/** ACCL card 5 **/
-	{ SENSOR_NUM_TEMP_ACCL_5_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_5_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[4],
 	  post_accl_nvme_read, &accl_card_info_args[4], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_5_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_5_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[4],
 	  post_accl_nvme_read, &accl_card_info_args[4], NULL },
-	{ SENSOR_NUM_VOL_ACCL_5_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_5_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[4],
 	  post_accl_nvme_read, &accl_card_info_args[4], NULL },
-	{ SENSOR_NUM_VOL_ACCL_5_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_5_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[4],
 	  post_accl_nvme_read, &accl_card_info_args[4], NULL },
-	{ SENSOR_NUM_VOL_ACCL_5_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_5_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[4],
 	  post_accl_nvme_read, &accl_card_info_args[4], NULL },
-	{ SENSOR_NUM_VOL_ACCL_5_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_5_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[4],
 	  post_accl_nvme_read, &accl_card_info_args[4], NULL },
+	{ SENSOR_NUM_VOL_ACCL_5_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
+	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[4], post_accl_nvme_read, &accl_card_info_args[4],
+	  NULL },
+	{ SENSOR_NUM_VOL_ACCL_5_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
+	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[4], post_accl_nvme_read, &accl_card_info_args[4],
+	  NULL },
 
 	/** ACCL card 6 **/
-	{ SENSOR_NUM_TEMP_ACCL_6_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_6_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[5],
 	  post_accl_nvme_read, &accl_card_info_args[5], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_6_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_6_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[5],
 	  post_accl_nvme_read, &accl_card_info_args[5], NULL },
-	{ SENSOR_NUM_VOL_ACCL_6_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_6_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[5],
 	  post_accl_nvme_read, &accl_card_info_args[5], NULL },
-	{ SENSOR_NUM_VOL_ACCL_6_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_6_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[5],
 	  post_accl_nvme_read, &accl_card_info_args[5], NULL },
-	{ SENSOR_NUM_VOL_ACCL_6_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_6_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[5],
 	  post_accl_nvme_read, &accl_card_info_args[5], NULL },
-	{ SENSOR_NUM_VOL_ACCL_6_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_6_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[5],
 	  post_accl_nvme_read, &accl_card_info_args[5], NULL },
+	{ SENSOR_NUM_VOL_ACCL_6_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
+	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[5], post_accl_nvme_read, &accl_card_info_args[5],
+	  NULL },
+	{ SENSOR_NUM_VOL_ACCL_6_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
+	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[5], post_accl_nvme_read, &accl_card_info_args[5],
+	  NULL },
 
-	/** ACCL card 7 **/
-	{ SENSOR_NUM_TEMP_ACCL_7_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_7_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[6],
 	  post_accl_nvme_read, &accl_card_info_args[6], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_7_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_7_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[6],
 	  post_accl_nvme_read, &accl_card_info_args[6], NULL },
-	{ SENSOR_NUM_VOL_ACCL_7_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_7_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[6],
 	  post_accl_nvme_read, &accl_card_info_args[6], NULL },
-	{ SENSOR_NUM_VOL_ACCL_7_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_7_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[6],
 	  post_accl_nvme_read, &accl_card_info_args[6], NULL },
-	{ SENSOR_NUM_VOL_ACCL_7_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_7_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[6],
 	  post_accl_nvme_read, &accl_card_info_args[6], NULL },
-	{ SENSOR_NUM_VOL_ACCL_7_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_7_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[6],
 	  post_accl_nvme_read, &accl_card_info_args[6], NULL },
+	{ SENSOR_NUM_VOL_ACCL_7_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
+	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[6], post_accl_nvme_read, &accl_card_info_args[6],
+	  NULL },
+	{ SENSOR_NUM_VOL_ACCL_7_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
+	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[6], post_accl_nvme_read, &accl_card_info_args[6],
+	  NULL },
 
 	/** ACCL card 8 **/
-	{ SENSOR_NUM_TEMP_ACCL_8_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_8_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[7],
 	  post_accl_nvme_read, &accl_card_info_args[7], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_8_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_8_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[7],
 	  post_accl_nvme_read, &accl_card_info_args[7], NULL },
-	{ SENSOR_NUM_VOL_ACCL_8_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_8_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[7],
 	  post_accl_nvme_read, &accl_card_info_args[7], NULL },
-	{ SENSOR_NUM_VOL_ACCL_8_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_8_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[7],
 	  post_accl_nvme_read, &accl_card_info_args[7], NULL },
-	{ SENSOR_NUM_VOL_ACCL_8_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_8_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[7],
 	  post_accl_nvme_read, &accl_card_info_args[7], NULL },
-	{ SENSOR_NUM_VOL_ACCL_8_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_8_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[7],
 	  post_accl_nvme_read, &accl_card_info_args[7], NULL },
+	{ SENSOR_NUM_VOL_ACCL_8_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
+	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[7], post_accl_nvme_read, &accl_card_info_args[7],
+	  NULL },
+	{ SENSOR_NUM_VOL_ACCL_8_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
+	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[7], post_accl_nvme_read, &accl_card_info_args[7],
+	  NULL },
 
 	/** ACCL card 9 **/
-	{ SENSOR_NUM_TEMP_ACCL_9_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_9_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[8],
 	  post_accl_nvme_read, &accl_card_info_args[8], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_9_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_9_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[8],
 	  post_accl_nvme_read, &accl_card_info_args[8], NULL },
-	{ SENSOR_NUM_VOL_ACCL_9_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_9_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[8],
 	  post_accl_nvme_read, &accl_card_info_args[8], NULL },
-	{ SENSOR_NUM_VOL_ACCL_9_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_9_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[8],
 	  post_accl_nvme_read, &accl_card_info_args[8], NULL },
-	{ SENSOR_NUM_VOL_ACCL_9_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_9_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[8],
 	  post_accl_nvme_read, &accl_card_info_args[8], NULL },
-	{ SENSOR_NUM_VOL_ACCL_9_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_9_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[8],
 	  post_accl_nvme_read, &accl_card_info_args[8], NULL },
+	{ SENSOR_NUM_VOL_ACCL_9_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
+	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[8], post_accl_nvme_read, &accl_card_info_args[8],
+	  NULL },
+	{ SENSOR_NUM_VOL_ACCL_9_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
+	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[8], post_accl_nvme_read, &accl_card_info_args[8],
+	  NULL },
 
 	/** ACCL card 10 **/
-	{ SENSOR_NUM_TEMP_ACCL_10_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_10_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[9],
 	  post_accl_nvme_read, &accl_card_info_args[9], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_10_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_10_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[9],
 	  post_accl_nvme_read, &accl_card_info_args[9], NULL },
-	{ SENSOR_NUM_VOL_ACCL_10_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_10_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[9],
 	  post_accl_nvme_read, &accl_card_info_args[9], NULL },
-	{ SENSOR_NUM_VOL_ACCL_10_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_10_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[9],
 	  post_accl_nvme_read, &accl_card_info_args[9], NULL },
-	{ SENSOR_NUM_VOL_ACCL_10_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_10_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[9],
 	  post_accl_nvme_read, &accl_card_info_args[9], NULL },
-	{ SENSOR_NUM_VOL_ACCL_10_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_10_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[9],
 	  post_accl_nvme_read, &accl_card_info_args[9], NULL },
+	{ SENSOR_NUM_VOL_ACCL_10_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
+	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[9], post_accl_nvme_read, &accl_card_info_args[9],
+	  NULL },
+	{ SENSOR_NUM_VOL_ACCL_10_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
+	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[9], post_accl_nvme_read, &accl_card_info_args[9],
+	  NULL },
 
 	/** ACCL card 11 **/
-	{ SENSOR_NUM_TEMP_ACCL_11_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_11_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
 	  &accl_card_info_args[10], post_accl_nvme_read, &accl_card_info_args[10], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_11_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_11_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
 	  &accl_card_info_args[10], post_accl_nvme_read, &accl_card_info_args[10], NULL },
-	{ SENSOR_NUM_VOL_ACCL_11_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_11_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
 	  &accl_card_info_args[10], post_accl_nvme_read, &accl_card_info_args[10], NULL },
-	{ SENSOR_NUM_VOL_ACCL_11_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_11_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
 	  &accl_card_info_args[10], post_accl_nvme_read, &accl_card_info_args[10], NULL },
-	{ SENSOR_NUM_VOL_ACCL_11_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_11_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
 	  &accl_card_info_args[10], post_accl_nvme_read, &accl_card_info_args[10], NULL },
-	{ SENSOR_NUM_VOL_ACCL_11_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_11_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
 	  &accl_card_info_args[10], post_accl_nvme_read, &accl_card_info_args[10], NULL },
+	{ SENSOR_NUM_VOL_ACCL_11_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
+	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[10], post_accl_nvme_read,
+	  &accl_card_info_args[10], NULL },
+	{ SENSOR_NUM_VOL_ACCL_11_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
+	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[10], post_accl_nvme_read,
+	  &accl_card_info_args[10], NULL },
 
 	/** ACCL card 12 **/
-	{ SENSOR_NUM_TEMP_ACCL_12_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_12_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
 	  &accl_card_info_args[11], post_accl_nvme_read, &accl_card_info_args[11], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_12_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
+	{ SENSOR_NUM_TEMP_ACCL_12_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
 	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
 	  &accl_card_info_args[11], post_accl_nvme_read, &accl_card_info_args[11], NULL },
-	{ SENSOR_NUM_VOL_ACCL_12_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_12_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
 	  &accl_card_info_args[11], post_accl_nvme_read, &accl_card_info_args[11], NULL },
-	{ SENSOR_NUM_VOL_ACCL_12_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_1_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_12_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
 	  &accl_card_info_args[11], post_accl_nvme_read, &accl_card_info_args[11], NULL },
-	{ SENSOR_NUM_VOL_ACCL_12_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_12_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
 	  &accl_card_info_args[11], post_accl_nvme_read, &accl_card_info_args[11], NULL },
-	{ SENSOR_NUM_VOL_ACCL_12_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_FREYA_2_ADDR,
-	  NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_VOL_ACCL_12_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
+	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
 	  &accl_card_info_args[11], post_accl_nvme_read, &accl_card_info_args[11], NULL },
+	{ SENSOR_NUM_VOL_ACCL_12_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
+	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[11], post_accl_nvme_read,
+	  &accl_card_info_args[11], NULL },
+	{ SENSOR_NUM_VOL_ACCL_12_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
+	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_accl_nvme_read, &accl_card_info_args[11], post_accl_nvme_read,
+	  &accl_card_info_args[11], NULL },
+
 };
 
 sensor_cfg adm1272_sensor_config_table[] = {
@@ -1023,461 +1143,6 @@ sensor_cfg power_monitor_sq52205_ina230_sensor_config_table[] = {
 	  &u178_179_ina230_init_args[1] },
 };
 
-sensor_cfg artemis_module_1_sensor_cfg[] = {
-	/** ACCL card 1 **/
-	{ SENSOR_NUM_TEMP_ACCL_1_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[0],
-	  post_accl_nvme_read, &accl_card_info_args[0], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_1_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[0],
-	  post_accl_nvme_read, &accl_card_info_args[0], NULL },
-	{ SENSOR_NUM_VOL_ACCL_1_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[0],
-	  post_accl_nvme_read, &accl_card_info_args[0], NULL },
-	{ SENSOR_NUM_VOL_ACCL_1_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[0],
-	  post_accl_nvme_read, &accl_card_info_args[0], NULL },
-	{ SENSOR_NUM_VOL_ACCL_1_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[0],
-	  post_accl_nvme_read, &accl_card_info_args[0], NULL },
-	{ SENSOR_NUM_VOL_ACCL_1_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[0],
-	  post_accl_nvme_read, &accl_card_info_args[0], NULL },
-	{ SENSOR_NUM_VOL_ACCL_1_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
-	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[0], post_accl_nvme_read, &accl_card_info_args[0],
-	  NULL },
-	{ SENSOR_NUM_VOL_ACCL_1_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
-	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[0], post_accl_nvme_read, &accl_card_info_args[0],
-	  NULL },
-};
-
-sensor_cfg artemis_module_2_sensor_cfg[] = {
-	/** ACCL card 2 **/
-	{ SENSOR_NUM_TEMP_ACCL_2_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[1],
-	  post_accl_nvme_read, &accl_card_info_args[1], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_2_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[1],
-	  post_accl_nvme_read, &accl_card_info_args[1], NULL },
-	{ SENSOR_NUM_VOL_ACCL_2_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[1],
-	  post_accl_nvme_read, &accl_card_info_args[1], NULL },
-	{ SENSOR_NUM_VOL_ACCL_2_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[1],
-	  post_accl_nvme_read, &accl_card_info_args[1], NULL },
-	{ SENSOR_NUM_VOL_ACCL_2_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[1],
-	  post_accl_nvme_read, &accl_card_info_args[1], NULL },
-	{ SENSOR_NUM_VOL_ACCL_2_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[1],
-	  post_accl_nvme_read, &accl_card_info_args[1], NULL },
-	{ SENSOR_NUM_VOL_ACCL_2_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
-	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[1], post_accl_nvme_read, &accl_card_info_args[1],
-	  NULL },
-	{ SENSOR_NUM_VOL_ACCL_2_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
-	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[1], post_accl_nvme_read, &accl_card_info_args[1],
-	  NULL },
-};
-
-sensor_cfg artemis_module_3_sensor_cfg[] = {
-	/** ACCL card 3 **/
-	{ SENSOR_NUM_TEMP_ACCL_3_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[2],
-	  post_accl_nvme_read, &accl_card_info_args[2], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_3_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[2],
-	  post_accl_nvme_read, &accl_card_info_args[2], NULL },
-	{ SENSOR_NUM_VOL_ACCL_3_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[2],
-	  post_accl_nvme_read, &accl_card_info_args[2], NULL },
-	{ SENSOR_NUM_VOL_ACCL_3_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[2],
-	  post_accl_nvme_read, &accl_card_info_args[2], NULL },
-	{ SENSOR_NUM_VOL_ACCL_3_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[2],
-	  post_accl_nvme_read, &accl_card_info_args[2], NULL },
-	{ SENSOR_NUM_VOL_ACCL_3_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[2],
-	  post_accl_nvme_read, &accl_card_info_args[2], NULL },
-	{ SENSOR_NUM_VOL_ACCL_3_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
-	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[2], post_accl_nvme_read, &accl_card_info_args[2],
-	  NULL },
-	{ SENSOR_NUM_VOL_ACCL_3_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
-	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[2], post_accl_nvme_read, &accl_card_info_args[2],
-	  NULL },
-};
-
-sensor_cfg artemis_module_4_sensor_cfg[] = {
-	/** ACCL card 4 **/
-	{ SENSOR_NUM_TEMP_ACCL_4_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[3],
-	  post_accl_nvme_read, &accl_card_info_args[3], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_4_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[3],
-	  post_accl_nvme_read, &accl_card_info_args[3], NULL },
-	{ SENSOR_NUM_VOL_ACCL_4_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[3],
-	  post_accl_nvme_read, &accl_card_info_args[3], NULL },
-	{ SENSOR_NUM_VOL_ACCL_4_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[3],
-	  post_accl_nvme_read, &accl_card_info_args[3], NULL },
-	{ SENSOR_NUM_VOL_ACCL_4_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[3],
-	  post_accl_nvme_read, &accl_card_info_args[3], NULL },
-	{ SENSOR_NUM_VOL_ACCL_4_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[3],
-	  post_accl_nvme_read, &accl_card_info_args[3], NULL },
-	{ SENSOR_NUM_VOL_ACCL_4_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
-	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[3], post_accl_nvme_read, &accl_card_info_args[3],
-	  NULL },
-	{ SENSOR_NUM_VOL_ACCL_4_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
-	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[3], post_accl_nvme_read, &accl_card_info_args[3],
-	  NULL },
-};
-
-sensor_cfg artemis_module_5_sensor_cfg[] = {
-	/** ACCL card 5 **/
-	{ SENSOR_NUM_TEMP_ACCL_5_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[4],
-	  post_accl_nvme_read, &accl_card_info_args[4], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_5_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[4],
-	  post_accl_nvme_read, &accl_card_info_args[4], NULL },
-	{ SENSOR_NUM_VOL_ACCL_5_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[4],
-	  post_accl_nvme_read, &accl_card_info_args[4], NULL },
-	{ SENSOR_NUM_VOL_ACCL_5_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[4],
-	  post_accl_nvme_read, &accl_card_info_args[4], NULL },
-	{ SENSOR_NUM_VOL_ACCL_5_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[4],
-	  post_accl_nvme_read, &accl_card_info_args[4], NULL },
-	{ SENSOR_NUM_VOL_ACCL_5_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[4],
-	  post_accl_nvme_read, &accl_card_info_args[4], NULL },
-	{ SENSOR_NUM_VOL_ACCL_5_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
-	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[4], post_accl_nvme_read, &accl_card_info_args[4],
-	  NULL },
-	{ SENSOR_NUM_VOL_ACCL_5_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
-	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[4], post_accl_nvme_read, &accl_card_info_args[4],
-	  NULL },
-};
-
-sensor_cfg artemis_module_6_sensor_cfg[] = {
-	/** ACCL card 6 **/
-	{ SENSOR_NUM_TEMP_ACCL_6_FREYA_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[5],
-	  post_accl_nvme_read, &accl_card_info_args[5], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_6_FREYA_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[5],
-	  post_accl_nvme_read, &accl_card_info_args[5], NULL },
-	{ SENSOR_NUM_VOL_ACCL_6_FREYA_1_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[5],
-	  post_accl_nvme_read, &accl_card_info_args[5], NULL },
-	{ SENSOR_NUM_VOL_ACCL_6_FREYA_1_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[5],
-	  post_accl_nvme_read, &accl_card_info_args[5], NULL },
-	{ SENSOR_NUM_VOL_ACCL_6_FREYA_2_1, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[5],
-	  post_accl_nvme_read, &accl_card_info_args[5], NULL },
-	{ SENSOR_NUM_VOL_ACCL_6_FREYA_2_2, sensor_dev_nvme, I2C_BUS8, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[5],
-	  post_accl_nvme_read, &accl_card_info_args[5], NULL },
-	{ SENSOR_NUM_VOL_ACCL_6_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
-	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[5], post_accl_nvme_read, &accl_card_info_args[5],
-	  NULL },
-	{ SENSOR_NUM_VOL_ACCL_6_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS8,
-	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[5], post_accl_nvme_read, &accl_card_info_args[5],
-	  NULL },
-};
-
-sensor_cfg artemis_module_7_sensor_cfg[] = {
-	{ SENSOR_NUM_TEMP_ACCL_7_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[6],
-	  post_accl_nvme_read, &accl_card_info_args[6], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_7_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[6],
-	  post_accl_nvme_read, &accl_card_info_args[6], NULL },
-	{ SENSOR_NUM_VOL_ACCL_7_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[6],
-	  post_accl_nvme_read, &accl_card_info_args[6], NULL },
-	{ SENSOR_NUM_VOL_ACCL_7_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[6],
-	  post_accl_nvme_read, &accl_card_info_args[6], NULL },
-	{ SENSOR_NUM_VOL_ACCL_7_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[6],
-	  post_accl_nvme_read, &accl_card_info_args[6], NULL },
-	{ SENSOR_NUM_VOL_ACCL_7_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[6],
-	  post_accl_nvme_read, &accl_card_info_args[6], NULL },
-	{ SENSOR_NUM_VOL_ACCL_7_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
-	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[6], post_accl_nvme_read, &accl_card_info_args[6],
-	  NULL },
-	{ SENSOR_NUM_VOL_ACCL_7_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
-	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[6], post_accl_nvme_read, &accl_card_info_args[6],
-	  NULL },
-};
-
-sensor_cfg artemis_module_8_sensor_cfg[] = {
-	/** ACCL card 8 **/
-	{ SENSOR_NUM_TEMP_ACCL_8_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[7],
-	  post_accl_nvme_read, &accl_card_info_args[7], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_8_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[7],
-	  post_accl_nvme_read, &accl_card_info_args[7], NULL },
-	{ SENSOR_NUM_VOL_ACCL_8_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[7],
-	  post_accl_nvme_read, &accl_card_info_args[7], NULL },
-	{ SENSOR_NUM_VOL_ACCL_8_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[7],
-	  post_accl_nvme_read, &accl_card_info_args[7], NULL },
-	{ SENSOR_NUM_VOL_ACCL_8_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[7],
-	  post_accl_nvme_read, &accl_card_info_args[7], NULL },
-	{ SENSOR_NUM_VOL_ACCL_8_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[7],
-	  post_accl_nvme_read, &accl_card_info_args[7], NULL },
-	{ SENSOR_NUM_VOL_ACCL_8_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
-	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[7], post_accl_nvme_read, &accl_card_info_args[7],
-	  NULL },
-	{ SENSOR_NUM_VOL_ACCL_8_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
-	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[7], post_accl_nvme_read, &accl_card_info_args[7],
-	  NULL },
-};
-
-sensor_cfg artemis_module_9_sensor_cfg[] = {
-	/** ACCL card 9 **/
-	{ SENSOR_NUM_TEMP_ACCL_9_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[8],
-	  post_accl_nvme_read, &accl_card_info_args[8], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_9_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[8],
-	  post_accl_nvme_read, &accl_card_info_args[8], NULL },
-	{ SENSOR_NUM_VOL_ACCL_9_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[8],
-	  post_accl_nvme_read, &accl_card_info_args[8], NULL },
-	{ SENSOR_NUM_VOL_ACCL_9_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[8],
-	  post_accl_nvme_read, &accl_card_info_args[8], NULL },
-	{ SENSOR_NUM_VOL_ACCL_9_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[8],
-	  post_accl_nvme_read, &accl_card_info_args[8], NULL },
-	{ SENSOR_NUM_VOL_ACCL_9_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[8],
-	  post_accl_nvme_read, &accl_card_info_args[8], NULL },
-	{ SENSOR_NUM_VOL_ACCL_9_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
-	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[8], post_accl_nvme_read, &accl_card_info_args[8],
-	  NULL },
-	{ SENSOR_NUM_VOL_ACCL_9_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
-	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[8], post_accl_nvme_read, &accl_card_info_args[8],
-	  NULL },
-};
-
-sensor_cfg artemis_module_10_sensor_cfg[] = {
-	/** ACCL card 10 **/
-	{ SENSOR_NUM_TEMP_ACCL_10_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[9],
-	  post_accl_nvme_read, &accl_card_info_args[9], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_10_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[9],
-	  post_accl_nvme_read, &accl_card_info_args[9], NULL },
-	{ SENSOR_NUM_VOL_ACCL_10_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[9],
-	  post_accl_nvme_read, &accl_card_info_args[9], NULL },
-	{ SENSOR_NUM_VOL_ACCL_10_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[9],
-	  post_accl_nvme_read, &accl_card_info_args[9], NULL },
-	{ SENSOR_NUM_VOL_ACCL_10_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[9],
-	  post_accl_nvme_read, &accl_card_info_args[9], NULL },
-	{ SENSOR_NUM_VOL_ACCL_10_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read, &accl_card_info_args[9],
-	  post_accl_nvme_read, &accl_card_info_args[9], NULL },
-	{ SENSOR_NUM_VOL_ACCL_10_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
-	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[9], post_accl_nvme_read, &accl_card_info_args[9],
-	  NULL },
-	{ SENSOR_NUM_VOL_ACCL_10_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
-	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[9], post_accl_nvme_read, &accl_card_info_args[9],
-	  NULL },
-};
-
-sensor_cfg artemis_module_11_sensor_cfg[] = {
-	/** ACCL card 11 **/
-	{ SENSOR_NUM_TEMP_ACCL_11_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
-	  &accl_card_info_args[10], post_accl_nvme_read, &accl_card_info_args[10], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_11_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
-	  &accl_card_info_args[10], post_accl_nvme_read, &accl_card_info_args[10], NULL },
-	{ SENSOR_NUM_VOL_ACCL_11_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
-	  &accl_card_info_args[10], post_accl_nvme_read, &accl_card_info_args[10], NULL },
-	{ SENSOR_NUM_VOL_ACCL_11_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
-	  &accl_card_info_args[10], post_accl_nvme_read, &accl_card_info_args[10], NULL },
-	{ SENSOR_NUM_VOL_ACCL_11_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
-	  &accl_card_info_args[10], post_accl_nvme_read, &accl_card_info_args[10], NULL },
-	{ SENSOR_NUM_VOL_ACCL_11_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
-	  &accl_card_info_args[10], post_accl_nvme_read, &accl_card_info_args[10], NULL },
-	{ SENSOR_NUM_VOL_ACCL_11_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
-	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[10], post_accl_nvme_read,
-	  &accl_card_info_args[10], NULL },
-	{ SENSOR_NUM_VOL_ACCL_11_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
-	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[10], post_accl_nvme_read,
-	  &accl_card_info_args[10], NULL },
-};
-
-sensor_cfg artemis_module_12_sensor_cfg[] = {
-	/** ACCL card 12 **/
-	{ SENSOR_NUM_TEMP_ACCL_12_FREYA_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
-	  &accl_card_info_args[11], post_accl_nvme_read, &accl_card_info_args[11], NULL },
-	{ SENSOR_NUM_TEMP_ACCL_12_FREYA_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_TEMP_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
-	  &accl_card_info_args[11], post_accl_nvme_read, &accl_card_info_args[11], NULL },
-	{ SENSOR_NUM_VOL_ACCL_12_FREYA_1_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
-	  &accl_card_info_args[11], post_accl_nvme_read, &accl_card_info_args[11], NULL },
-	{ SENSOR_NUM_VOL_ACCL_12_FREYA_1_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_1_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
-	  &accl_card_info_args[11], post_accl_nvme_read, &accl_card_info_args[11], NULL },
-	{ SENSOR_NUM_VOL_ACCL_12_FREYA_2_1, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_1_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
-	  &accl_card_info_args[11], post_accl_nvme_read, &accl_card_info_args[11], NULL },
-	{ SENSOR_NUM_VOL_ACCL_12_FREYA_2_2, sensor_dev_nvme, I2C_BUS7, ACCL_ARTEMIS_MODULE_2_ADDR,
-	  NVME_CORE_VOLTAGE_2_OFFSET, is_dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_accl_nvme_read,
-	  &accl_card_info_args[11], post_accl_nvme_read, &accl_card_info_args[11], NULL },
-	{ SENSOR_NUM_VOL_ACCL_12_ASIC_1_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
-	  ACCL_ARTEMIS_MODULE_1_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[11], post_accl_nvme_read,
-	  &accl_card_info_args[11], NULL },
-	{ SENSOR_NUM_VOL_ACCL_12_ASIC_2_P12V_AUX, sensor_dev_nvme, I2C_BUS7,
-	  ACCL_ARTEMIS_MODULE_2_ADDR, NVME_VOLTAGE_RAIL_2_OFFSET, is_dc_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_accl_nvme_read, &accl_card_info_args[11], post_accl_nvme_read,
-	  &accl_card_info_args[11], NULL },
-};
-
 sensor_compatible_cfg pre_dvt_update_cfg_table[] = {
 	{ SENSOR_NUM_VOL_P12V_ACCL_1, I2C_BUS4, INA233_12V_1_7_ADDR, &pwr_monitor_pre_dvt_args[0],
 	  &pwr_monitor_pre_dvt_args[0] },
@@ -1582,7 +1247,6 @@ void load_sensor_config(void)
 
 uint8_t pal_get_extend_sensor_config()
 {
-	uint8_t index = 0;
 	uint8_t extend_sensor_config_size = 0;
 	uint8_t hsc_module = get_hsc_module();
 	uint8_t vr_module = get_vr_module();
@@ -1639,20 +1303,12 @@ uint8_t pal_get_extend_sensor_config()
 		break;
 	}
 
-	for (index = 0; index < ASIC_CARD_COUNT; ++index) {
-		if (asic_card_info[index].card_type == ASIC_CARD_WITH_ARTEMIS_MODULE) {
-			extend_sensor_config_size +=
-				(ACCL_ARTEMIS_MODULE_SENSOR_COUNT - ACCL_FREYA_SENSOR_COUNT);
-		}
-	}
-
 	return extend_sensor_config_size;
 }
 
 void pal_extend_sensor_config()
 {
 	uint8_t index = 0;
-	uint8_t card_index = 0;
 	uint8_t sensor_count = 0;
 	uint8_t hsc_module = get_hsc_module();
 	uint8_t vr_module = get_vr_module();
@@ -1730,20 +1386,6 @@ void pal_extend_sensor_config()
 		LOG_ERR("Invalid vr module: 0x%x", vr_module);
 		break;
 	}
-
-	for (card_index = 0; card_index < ASIC_CARD_COUNT; ++card_index) {
-		if (asic_card_info[card_index].card_type == ASIC_CARD_WITH_ARTEMIS_MODULE) {
-			sensor_cfg *cfg = get_artemis_module_sensor_cfg(card_index);
-			if (cfg == NULL) {
-				LOG_ERR("Fail to get Artemis module via card id: 0x%x", card_index);
-				continue;
-			}
-			sensor_count = ARRAY_SIZE(artemis_module_1_sensor_cfg);
-			for (index = 0; index < sensor_count; index++) {
-				add_sensor_config(cfg[index]);
-			}
-		}
-	}
 }
 
 void update_plat_sensor_cfg_by_stage()
@@ -1817,38 +1459,6 @@ sensor_cfg *get_accl_sensor_cfg_info(uint8_t card_id, uint8_t *cfg_count)
 	return cfg;
 }
 
-sensor_cfg *get_artemis_module_sensor_cfg(uint8_t card_id)
-{
-	switch (card_id) {
-	case PCIE_CARD_1:
-		return artemis_module_1_sensor_cfg;
-	case PCIE_CARD_2:
-		return artemis_module_2_sensor_cfg;
-	case PCIE_CARD_3:
-		return artemis_module_3_sensor_cfg;
-	case PCIE_CARD_4:
-		return artemis_module_4_sensor_cfg;
-	case PCIE_CARD_5:
-		return artemis_module_5_sensor_cfg;
-	case PCIE_CARD_6:
-		return artemis_module_6_sensor_cfg;
-	case PCIE_CARD_7:
-		return artemis_module_7_sensor_cfg;
-	case PCIE_CARD_8:
-		return artemis_module_8_sensor_cfg;
-	case PCIE_CARD_9:
-		return artemis_module_9_sensor_cfg;
-	case PCIE_CARD_10:
-		return artemis_module_10_sensor_cfg;
-	case PCIE_CARD_11:
-		return artemis_module_11_sensor_cfg;
-	case PCIE_CARD_12:
-		return artemis_module_12_sensor_cfg;
-	default:
-		return NULL;
-	}
-}
-
 bool is_acb_power_good()
 {
 	// BIC can check motherboard dc power status by CPLD power good flag
@@ -1876,91 +1486,79 @@ bool is_acb_power_good()
 	}
 }
 
-bool is_accl_power_good(uint8_t card_id)
+bool get_accl_power_status(uint8_t card_id, uint8_t option)
 {
 	int ret = 0;
-	int retry = 5;
-	I2C_MSG msg = { 0 };
-	uint8_t power_good_bit = 0;
+	uint8_t val = 0;
+	uint8_t power_status_bit = 0;
+	uint8_t accl_1_6_register = 0;
+	uint8_t accl_7_12_register = 0;
 
-	msg.bus = I2C_BUS3;
-	msg.target_addr = CPLD_ADDR;
-	msg.rx_len = 1;
-	msg.tx_len = 1;
+	switch (option) {
+	case ACCL_CARD_12V_POWER_GOOD:
+		accl_1_6_register = CPLD_12V_ACCLB_PWRGD_OFFSET;
+		accl_7_12_register = CPLD_12V_ACCLA_PWRGD_OFFSET;
+		break;
+	case ACCL_CARD_3V3_POWER_GOOD:
+		accl_1_6_register = CPLD_ACCLB_PWRGD_OFFSET;
+		accl_7_12_register = CPLD_ACCLA_PWRGD_OFFSET;
+		break;
+	case ACCL_CABLE_POWER_GOOD:
+		accl_1_6_register = CPLD_ACCL_1_6_POWER_CABLE_PG_OFFSET;
+		accl_7_12_register = CPLD_ACCL_7_12_POWER_CABLE_PG_OFFSET;
+		break;
+	case ACCL_CABLE_POWER_GOOD_TIMEOUT:
+		accl_1_6_register = CPLD_ACCL_1_6_POWER_CABLE_PG_TIMEOUT_OFFSET;
+		accl_7_12_register = CPLD_ACCL_7_12_POWER_CABLE_PG_TIMEOUT_OFFSET;
+		break;
+	case ACCL_CABLE_POWER_GOOD_FAULT:
+		accl_1_6_register = CPLD_ACCL_1_6_POWER_CABLE_PG_FAULT_OFFSET;
+		accl_7_12_register = CPLD_ACCL_7_12_POWER_CABLE_PG_FAULT_OFFSET;
+		break;
+	default:
+		LOG_ERR("[%s] invalid option: 0x%x", __func__, option);
+		return false;
+	}
 
 	if (card_id <= PCIE_CARD_6) {
-		msg.data[0] = CPLD_ACCLB_PWRGD_OFFSET;
-		power_good_bit = (1 << (card_id - PCIE_CARD_1));
+		power_status_bit = (1 << (card_id - PCIE_CARD_1));
+		ret = get_cpld_register(accl_1_6_register, &val);
 	} else if (card_id <= PCIE_CARD_12) {
-		msg.data[0] = CPLD_ACCLA_PWRGD_OFFSET;
-		power_good_bit = (1 << (card_id - PCIE_CARD_7));
+		power_status_bit = (1 << (card_id - PCIE_CARD_7));
+		ret = get_cpld_register(accl_7_12_register, &val);
 	} else {
-		LOG_ERR("%s() invalid card id %u ", __func__, card_id);
+		LOG_ERR("[%s] invalid card id: 0x%x", __func__, card_id);
 		return false;
 	}
 
-	ret = i2c_master_read(&msg, retry);
 	if (ret != 0) {
-		LOG_ERR("%s() Fail to read card %u status from cpld", __func__, card_id);
+		LOG_ERR("Get cpld register value fail, card id: 0x%x, option: 0x%x", card_id,
+			option);
 		return false;
 	}
 
-	return (msg.data[0] & power_good_bit);
+	return (val & power_status_bit);
+}
+
+bool is_accl_power_good(uint8_t card_id)
+{
+	return (get_accl_power_status(card_id, ACCL_CARD_3V3_POWER_GOOD) &
+		get_accl_power_status(card_id, ACCL_CARD_12V_POWER_GOOD));
 }
 
 bool is_accl_cable_power_good(uint8_t card_id)
 {
-	if (card_id > PCIE_CARD_12) {
-		LOG_ERR("Invalid card id: 0x%x to get accl cable power good register", card_id);
-		return false;
-	}
-
-	int ret = 0;
-	uint8_t val = 0;
-	uint8_t cable_pwr_good_bit = 0;
-
-	if (card_id <= PCIE_CARD_6) {
-		cable_pwr_good_bit = (1 << (card_id - PCIE_CARD_1));
-		ret = get_cpld_register(CPLD_ACCL_1_6_POWER_CABLE_PG_OFFSET, &val);
-	} else {
-		cable_pwr_good_bit = (1 << (card_id - PCIE_CARD_7));
-		ret = get_cpld_register(CPLD_ACCL_7_12_POWER_CABLE_PG_OFFSET, &val);
-	}
-
-	if (ret != 0) {
-		LOG_ERR("Read ACCL power cable PG register fail, card id: 0x%x", card_id);
-		return false;
-	}
-
-	return (val & cable_pwr_good_bit);
+	return get_accl_power_status(card_id, ACCL_CABLE_POWER_GOOD);
 }
 
 bool is_accl_cable_power_good_timeout(uint8_t card_id)
 {
-	if (card_id > PCIE_CARD_12) {
-		LOG_ERR("Invalid card id: 0x%x to get accl cable power good timeout register",
-			card_id);
-		return false;
-	}
+	return get_accl_power_status(card_id, ACCL_CABLE_POWER_GOOD_TIMEOUT);
+}
 
-	int ret = 0;
-	uint8_t val = 0;
-	uint8_t cable_pwr_good_bit = 0;
-
-	if (card_id <= PCIE_CARD_6) {
-		cable_pwr_good_bit = (1 << (card_id - PCIE_CARD_1));
-		ret = get_cpld_register(CPLD_ACCL_1_6_POWER_CABLE_PG_TIMEOUT_OFFSET, &val);
-	} else {
-		cable_pwr_good_bit = (1 << (card_id - PCIE_CARD_7));
-		ret = get_cpld_register(CPLD_ACCL_7_12_POWER_CABLE_PG_TIMEOUT_OFFSET, &val);
-	}
-
-	if (ret != 0) {
-		LOG_ERR("Read ACCL power cable PG timeout register fail, card id: 0x%x", card_id);
-		return false;
-	}
-
-	return (val & cable_pwr_good_bit);
+bool is_accl_cable_power_good_fault(uint8_t card_id)
+{
+	return get_accl_power_status(card_id, ACCL_CABLE_POWER_GOOD_FAULT);
 }
 
 bool is_dc_access(uint8_t sensor_num)
