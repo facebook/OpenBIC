@@ -98,23 +98,41 @@ uint8_t plat_pldm_get_state_effecter_state_handler(const uint8_t *buf, uint16_t 
 	return PLDM_SUCCESS;
 }
 
+void plat_send_accl_present_event(uint8_t card_id, uint8_t option)
+{
+	uint8_t start_id = 0;
+
+	switch (option) {
+	case ACCL_CARD_PRESENCE:
+		start_id = PLDM_EVENT_ACCL_1;
+		break;
+	case ACCL_CABLE_PRESENCE:
+		start_id = PLDM_EVENT_ACCL_PWR_CBL_1;
+		break;
+	default:
+		LOG_ERR("Invalid option: 0x%x", option);
+		return;
+	}
+
+	struct pldm_sensor_event_state_sensor_state event;
+	event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_PRESENCE;
+	event.event_state = PLDM_STATE_SET_NOT_PRESENT;
+	event.previous_event_state = PLDM_STATE_SET_NOT_PRESENT;
+	if (pldm_send_platform_event(PLDM_SENSOR_EVENT, start_id + card_id, PLDM_STATE_SENSOR_STATE,
+				     (uint8_t *)&event,
+				     sizeof(struct pldm_sensor_event_state_sensor_state))) {
+		LOG_ERR("Send ACCL presence event log fail, card id: 0x%x, option: 0x%x", card_id,
+			option);
+	}
+}
+
 void plat_accl_present_check()
 {
 	bool is_present = ASIC_CARD_NOT_PRESENT;
-	struct pldm_sensor_event_state_sensor_state event;
 	for (uint8_t i = 0; i < ASIC_CARD_COUNT; i++) {
 		is_present = asic_card_info[i].card_status;
-		event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_PRESENCE;
 		if (is_present == ASIC_CARD_NOT_PRESENT) {
-			event.event_state = PLDM_STATE_SET_NOT_PRESENT;
-			event.previous_event_state = PLDM_STATE_SET_NOT_PRESENT;
-			if (pldm_send_platform_event(
-				    PLDM_SENSOR_EVENT, PLDM_EVENT_ACCL_1 + i,
-				    PLDM_STATE_SENSOR_STATE, (uint8_t *)&event,
-				    sizeof(struct pldm_sensor_event_state_sensor_state))) {
-				LOG_ERR("Send ACCL%d presence event log failed",
-					PLDM_EVENT_ACCL_1 + i);
-			}
+			plat_send_accl_present_event(i, ACCL_CARD_PRESENCE);
 		}
 	}
 }
@@ -122,20 +140,10 @@ void plat_accl_present_check()
 void plat_accl_power_cable_present_check()
 {
 	bool is_present = ASIC_CARD_NOT_PRESENT;
-	struct pldm_sensor_event_state_sensor_state event;
 	for (uint8_t i = 0; i < ASIC_CARD_COUNT; i++) {
 		is_present = asic_card_info[i].pwr_cbl_status;
-		event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_PRESENCE;
 		if (is_present == ASIC_CARD_NOT_PRESENT) {
-			event.event_state = PLDM_STATE_SET_NOT_PRESENT;
-			event.previous_event_state = PLDM_STATE_SET_NOT_PRESENT;
-			if (pldm_send_platform_event(
-				    PLDM_SENSOR_EVENT, PLDM_EVENT_ACCL_PWR_CBL_1 + i,
-				    PLDM_STATE_SENSOR_STATE, (uint8_t *)&event,
-				    sizeof(struct pldm_sensor_event_state_sensor_state))) {
-				LOG_ERR("Send ACCL%d power cable presence event log failed",
-					PLDM_EVENT_ACCL_PWR_CBL_1 + i);
-			}
+			plat_send_accl_present_event(i, ACCL_CABLE_PRESENCE);
 		}
 	}
 }
