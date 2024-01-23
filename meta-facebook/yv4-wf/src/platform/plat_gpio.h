@@ -19,6 +19,11 @@
 
 #include "hal_gpio.h"
 
+#define POC_Reserve_GPIOF2 42
+#define POC_Reserve_GPIOF3 43
+#define POC_EN_P3V3_E1S_0_R 48
+#define POC_PWRGD_P3V3_E1S_0_R 49
+
 // clang-format off
 #define name_gpioA \
 	gpio_name_to_num(PWR_ON_RST_ASIC1_N) \
@@ -73,16 +78,16 @@
 #define name_gpioF \
 	gpio_name_to_num(PWRGD_PVDDQ_CD_ASIC2) \
 	gpio_name_to_num(PWRGD_P0V75_ASIC2) \
-	gpio_name_to_num(Reserve_GPIOF2) \
-	gpio_name_to_num(Reserve_GPIOF3) \
+	gpio_name_to_num(EN_P3V3_E1S_0_R) \
+	gpio_name_to_num(PWRGD_P3V3_E1S_0_R) \
 	gpio_name_to_num(EN_PVTT_AB_ASIC2_0V6_R) \
 	gpio_name_to_num(PWRGD_PVTT_AB_ASIC2) \
 	gpio_name_to_num(EN_PVTT_CD_ASIC2_0V6_R) \
 	gpio_name_to_num(PWRGD_PVTT_CD_ASIC2)
 
 #define name_gpioG \
-	gpio_name_to_num(EN_P3V3_E1S_0_R) \
-	gpio_name_to_num(PWRGD_P3V3_E1S_0_R) \
+	gpio_name_to_num(LED_ASIC1_LS_HB) \
+	gpio_name_to_num(LED_ASIC2_LS_HB) \
 	gpio_name_to_num(EN_P12V_E1S_0_R) \
 	gpio_name_to_num(PWRGD_P12V_E1S_0_R) \
 	gpio_name_to_num(EN_PVDDQ_AB_ASIC1_R) \
