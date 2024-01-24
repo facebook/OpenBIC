@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <logging/log.h>
-
+#include "sensor.h"
 LOG_MODULE_REGISTER(plat_hook);
 
 /**************************************************************************************************
@@ -28,43 +28,51 @@ nct7363_init_arg nct7363_init_args[] = {
     //Fan BD
     [0] = { 
         .is_init = false, 
-        .init_pin_config.GPIO_14_to_17_Pin_Function_Configuration = 0b00001001,
-        .init_pin_config.GPIO0x_Input_Output_Configuration = 0b11111110,
-        .init_pin_config.GPIO1x_Input_Output_Configuration = 0b11111100,
-        .init_pin_config.PWM_8_to_15_Enable = 0b10000000,
-        .init_pin_config.FANIN_0_to_7_Monitoring_Enable = 0b00100000,
+            .init_pin_config = {
+                .GPIO_14_to_17_Pin_Function_Configuration = 0b00001001,
+                .GPIO0x_Input_Output_Configuration = 0b11111110,
+                .GPIO1x_Input_Output_Configuration = 0b11111100,
+                .PWM_8_to_15_Enable = 0b10000000,
+                .FANIN_0_to_7_Monitoring_Enable = 0b00100000,
+            },
         .fan_poles = 0,
     },	
     // Management BD
     [1] = { 
         .is_init = false,
-        .init_pin_config.GPIO_00_to_03_Pin_Function_Configuration = 0b00101001,
-        .init_pin_config.GPIO0x_Input_Output_Configuration = 0b11101111,
-        .init_pin_config.GPIO1x_Input_Output_Configuration = 0b11111111,
-        .init_pin_config.PWM_0_to_7_Enable = 0b00000001,
-        .init_pin_config.FANIN_8_to_15_Monitoring_Enable = 0b00000110,
+            .init_pin_config = {
+                .GPIO_00_to_03_Pin_Function_Configuration = 0b00101001,
+                .GPIO0x_Input_Output_Configuration = 0b11101111,
+                .GPIO1x_Input_Output_Configuration = 0b11111111,
+                .PWM_0_to_7_Enable = 0b00000001,
+                .FANIN_8_to_15_Monitoring_Enable = 0b00000110,
+            },
         .fan_poles = 0,
     },
     //Backplane BD
     [2] = { 
         .is_init = false,
-        .init_pin_config.GPIO_00_to_03_Pin_Function_Configuration = 0b10010101,
-        .init_pin_config.GPIO_04_to_07_Pin_Function_Configuration = 0b00101010,
-        .init_pin_config.GPIO0x_Input_Output_Configuration = 0b11111111,
-        .init_pin_config.GPIO1x_Input_Output_Configuration = 0b00000000,
-        .init_pin_config.PWM_0_to_7_Enable = 0b00000111,
-        .init_pin_config.FANIN_8_to_15_Monitoring_Enable = 0b01111000,
+            .init_pin_config = {
+                .GPIO_00_to_03_Pin_Function_Configuration = 0b10010101,
+                .GPIO_04_to_07_Pin_Function_Configuration = 0b00101010,
+                .GPIO0x_Input_Output_Configuration = 0b11111111,
+                .GPIO1x_Input_Output_Configuration = 0b00000000,
+                .PWM_0_to_7_Enable = 0b00000111,
+                .FANIN_8_to_15_Monitoring_Enable = 0b01111000,
+            },
         .fan_poles = 0,
     },
     //Pump BD
     [3] = { 
         .is_init = false,
-        .init_pin_config.GPIO_00_to_03_Pin_Function_Configuration = 0b00000101,
-        .init_pin_config.GPIO_04_to_07_Pin_Function_Configuration = 0b00101010,
-        .init_pin_config.GPIO0x_Input_Output_Configuration = 0b11111111,
-        .init_pin_config.GPIO1x_Input_Output_Configuration = 0b11111100,
-        .init_pin_config.PWM_0_to_7_Enable = 0b00000011,
-        .init_pin_config.FANIN_8_to_15_Monitoring_Enable = 0b01110000,
+            .init_pin_config = {
+                .GPIO_00_to_03_Pin_Function_Configuration = 0b00000101,
+                .GPIO_04_to_07_Pin_Function_Configuration = 0b00101010,
+                .GPIO0x_Input_Output_Configuration = 0b11111111,
+                .GPIO1x_Input_Output_Configuration = 0b11111100,
+                .PWM_0_to_7_Enable = 0b00000011,
+                .FANIN_8_to_15_Monitoring_Enable = 0b01110000,
+            },
         .fan_poles = 0,
     },
 };
@@ -75,3 +83,4 @@ nct7363_init_arg nct7363_init_args[] = {
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
  **************************************************************************************************/
+
