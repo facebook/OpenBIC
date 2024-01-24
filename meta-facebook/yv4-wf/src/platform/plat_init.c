@@ -25,8 +25,13 @@
 #include "plat_mctp.h"
 #include "plat_i2c_target.h"
 #include "libutil.h"
+#include "plat_class.h"
 
+#define DEF_PLAT_CONFIG_PRIORITY 77
 #define DEF_PROJ_GPIO_PRIORITY 78
+
+DEVICE_DEFINE(PRE_DEF_PLAT_CONFIG, "PRE_DEF_PLATFOMR", &init_platform_config, NULL, NULL, NULL,
+	      POST_KERNEL, DEF_PLAT_CONFIG_PRIORITY, NULL);
 
 DEVICE_DEFINE(PRE_DEF_PROJ_GPIO, "PRE_DEF_PROJ_GPIO_NAME", &gpio_init, NULL, NULL, NULL,
 	      POST_KERNEL, DEF_PROJ_GPIO_PRIORITY, NULL);
@@ -54,11 +59,11 @@ void pal_pre_init()
 				1);
 	}
 
-
 	uint8_t ioe2_output_value = 0;
 	if (get_ioe_value(ADDR_IOE2, TCA9555_OUTPUT_PORT_REG_0, &ioe2_output_value) == 0) {
 		// BIC starts monitoring VR only after the PMIC mux is switched to BIC.
-		if((GETBIT(ioe2_output_value, IOE_P00) == 0) ||  (GETBIT(ioe2_output_value, IOE_P02) == 0)) {
+		if ((GETBIT(ioe2_output_value, IOE_P00) == 0) ||
+		    (GETBIT(ioe2_output_value, IOE_P02) == 0)) {
 			set_vr_monitor_status(false);
 		}
 	}
