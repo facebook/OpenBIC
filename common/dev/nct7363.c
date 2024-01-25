@@ -21,6 +21,7 @@
 #include <logging/log.h>
 #include <nct7363.h>
 #include <string.h>
+#include <math.h>
 LOG_MODULE_REGISTER(dev_nct7363);
 uint8_t combine_gpio_setting_data(uint8_t bit_7_6, uint8_t bit_5_4, uint8_t bit_3_2,
 				  uint8_t bit_1_0)
@@ -35,14 +36,49 @@ uint8_t combine_gpio_setting_data(uint8_t bit_7_6, uint8_t bit_5_4, uint8_t bit_
 uint8_t nct7363_set_duty(uint8_t bus, uint8_t address, uint8_t port, uint8_t duty)
 {
 	I2C_MSG msg = { 0 };
-	uint8_t retry = 5;
-	uint8_t port_offset = port;
-	uint8_t duty_offset = nct7363_REG_PWM_BASE_OFFSET + port_offset * 2;
 	msg.bus = bus;
 	msg.target_addr = address;
+	uint8_t retry = 5;
+	uint8_t port_offset = port;
+	uint8_t duty_offset = NCT7363_REG_PWM_BASE_OFFSET + port_offset * 2;
+	uint8_t step_offset = Speed_Control_Portx_Configuration_Register_BASE_OFFSET + (port_offset/2);
+	uint8_t step_mode = 0;
+	float duty_in_255 = 0;
+	// check duty step mode
+	msg.rx_len = 1;
+	msg.tx_len = 1;
+	msg.data[0] = step_offset;
+	if (i2c_master_read(&msg, retry)) {
+		return SENSOR_FAIL_TO_ACCESS;
+	}
+	switch (port_offset % 2)
+	{
+		case 0:
+		{
+			step_mode = (msg.data[0]>> 2) & 1;
+			break;
+		}
+		case 1:
+		{
+			step_mode = (msg.data[0]>> 6) & 1;
+			break;
+		}
+		default:
+			LOG_ERR("Unknown error when get step mode");
+			break ;
+	}
+	// set duty
+	if (step_mode == 0) 
+	{
+		duty_in_255 = 127 * duty / 100; // 0x7F
+	}
+	else
+	{
+		duty_in_255 = 255 * duty / 100; // 0xFF
+	}
 	msg.tx_len = 2;
 	msg.data[0] = duty_offset;
-	msg.data[1] = duty;
+	msg.data[1] = (uint8_t)duty_in_255;
 
 	if (i2c_master_write(&msg, retry)) {
 		LOG_ERR("set NCT7363_FAN_CTRL_SET_DUTY fail");
@@ -62,14 +98,14 @@ uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 	I2C_MSG msg = { 0 };
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
-	uint32_t rpm = 0;
+	float rpm = 0;
 	uint8_t offset = cfg->offset;
 	uint8_t port_offset = cfg->arg0;
 	uint8_t fan_roles = cfg->arg1;
 	uint8_t fan_count_high_byte_offset =
-			nct7363_REG_FAN_COUNT_VALUE_HIGH_BYTE_BASE_OFFSET + port_offset * 2;
+			NCT7363_REG_FAN_COUNT_VALUE_HIGH_BYTE_BASE_OFFSET + port_offset * 2;
 	uint8_t fan_count_low_byte_offset =
-			nct7363_REG_FAN_COUNT_VALUE_LOW_BYTE_BASE_OFFSET + port_offset * 2;
+			NCT7363_REG_FAN_COUNT_VALUE_LOW_BYTE_BASE_OFFSET + port_offset * 2;
 	switch (offset) {
 	case NCT7363_FAN_SPEED_OFFSET:
 		
@@ -87,7 +123,7 @@ uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 		}
 		uint8_t fan_count_low_byte = msg.data[0];
 		uint16_t fan_count_value =
-			(fan_count_high_byte << 5) | (fan_count_low_byte & nct7363_FAN_LSB_MASK);
+			(fan_count_high_byte << 5) | (fan_count_low_byte & NCT7363_FAN_LSB_MASK);
 		/* count result */
 		rpm = 1350000 / (fan_count_value * (fan_roles / 4));
 		break;
@@ -177,34 +213,34 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 	/* set PWM output */
-	init_msg.data[0] = nct7363_REG_PWM_CTRL_OUTPUT_0_to_7;
+	init_msg.data[0] = NCT7363_REG_PWM_CTRL_OUTPUT_0_to_7;
 	init_msg.data[1] = nct7363_reg_pwm_ctrl_output_0_to_7_msg;
 	if (i2c_master_write(&init_msg, retry)) {
-		LOG_ERR("set nct363 set nct7363_REG_PWM_CTRL_OUTPUT_0_to_7 fail");
+		LOG_ERR("set nct363 set NCT7363_REG_PWM_CTRL_OUTPUT_0_to_7 fail");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
-	init_msg.data[0] = nct7363_REG_PWM_CTRL_OUTPUT_8_to_15;
+	init_msg.data[0] = NCT7363_REG_PWM_CTRL_OUTPUT_8_to_15;
 	init_msg.data[1] = nct7363_reg_pwml_ctr_outpu_8_to_15_msg;
 	if (i2c_master_write(&init_msg, retry)) {
-		LOG_ERR("set nct363 set nct7363_REG_PWM_CTRL_OUTPUT_8_to_15 fail");
+		LOG_ERR("set nct363 set NCT7363_REG_PWM_CTRL_OUTPUT_8_to_15 fail");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 	/*  set FANIN control */
-	init_msg.data[0] = nct7363_REG_FANIN_CTRL1;
+	init_msg.data[0] = NCT7363_REG_FANIN_CTRL1;
 	init_msg.data[1] = nct7363_reg_fanin_ctrl1_msg;
 	if (i2c_master_write(&init_msg, retry)) {
-		LOG_ERR("set nct7363_REG_FANIN_CTRL1 fail");
+		LOG_ERR("set NCT7363_REG_FANIN_CTRL1 fail");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
-	init_msg.data[0] = nct7363_REG_FANIN_CTRL2;
+	init_msg.data[0] = NCT7363_REG_FANIN_CTRL2;
 	init_msg.data[1] = nct7363_reg_fanin_ctrl2_msg;
 	if (i2c_master_write(&init_msg, retry)) {
-		LOG_ERR("set nct7363_REG_FANIN_CTRL2 fail");
+		LOG_ERR("set NCT7363_REG_FANIN_CTRL2 fail");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 	/*  set init fan duty */
 	for (int i = 0; i < 15; i++) {
-		uint8_t duty_offset = nct7363_REG_PWM_BASE_OFFSET + i * 2;
+		uint8_t duty_offset = NCT7363_REG_PWM_BASE_OFFSET + i * 2;
 		init_msg.tx_len = 2;
 		init_msg.data[0] = duty_offset;
 		init_msg.data[1] = 0x66; // 40% duty for init

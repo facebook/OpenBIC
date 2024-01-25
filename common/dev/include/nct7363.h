@@ -15,12 +15,12 @@
  */
 #ifndef NCT7363_H
 #define NCT7363_H
-#define nct7363_REG_DID 0xFD
-#define nct7363_ID_MASK 0xFFFFFF
-#define nct7363_ID (0x491988 & nct7363_ID_MASK) /* Chip ID */
+#define NCT7363_REG_DID 0xFD
+#define NCT7363_ID_MASK 0xFFFFFF
+#define NCT7363_ID (0x491988 & NCT7363_ID_MASK) /* Chip ID */
 
-#define nct7363_REG_I2C_ADDR 0x46
-#define nct7363_REG_GLOBAL_CONTROL 0x00
+#define NCT7363_REG_I2C_ADDR 0x46
+#define NCT7363_REG_GLOBAL_CONTROL 0x00
 
 #define GPIO0x_Input_Output_Configuration_REG 0x03
 #define GPIO1x_Input_Output_Configuration_REG 0x13
@@ -29,17 +29,19 @@
 #define GPIO_04_to_07_Pin_Configuration_REG 0x21
 #define GPIO_10_to_13_Pin_Configuration_REG 0x22
 #define GPIO_14_to_17_Pin_Configuration_REG 0x23
-#define nct7363_REG_PWM_CTRL_OUTPUT_0_to_7 0x38
-#define nct7363_REG_PWM_CTRL_OUTPUT_8_to_15 0x39
-#define nct7363_REG_FANIN_CTRL1 0x41
-#define nct7363_REG_FANIN_CTRL2 0x42
+#define NCT7363_REG_PWM_CTRL_OUTPUT_0_to_7 0x38
+#define NCT7363_REG_PWM_CTRL_OUTPUT_8_to_15 0x39
+#define NCT7363_REG_FANIN_CTRL1 0x41
+#define NCT7363_REG_FANIN_CTRL2 0x42
 
-#define nct7363_REG_FAN_COUNT_VALUE_HIGH_BYTE_BASE_OFFSET 0x48
-#define nct7363_REG_FAN_COUNT_VALUE_LOW_BYTE_BASE_OFFSET 0x49
+#define NCT7363_REG_FAN_COUNT_VALUE_HIGH_BYTE_BASE_OFFSET 0x48
+#define NCT7363_REG_FAN_COUNT_VALUE_LOW_BYTE_BASE_OFFSET 0x49
 
-#define nct7363_FAN_LSB_MASK 0x1F
+#define NCT7363_FAN_LSB_MASK 0x1F
 #define FANIN_Monitoring_Global_Controller_Register 0x40
-#define nct7363_REG_PWM_BASE_OFFSET 0x90
+#define NCT7363_REG_PWM_BASE_OFFSET 0x90
+
+#define Speed_Control_Portx_Configuration_Register_BASE_OFFSET 0xB0
 /* nct7363 port*/
 #define NCT7363_1_FAN 0x00
 #define NCT7363_2_FAN 0x01
