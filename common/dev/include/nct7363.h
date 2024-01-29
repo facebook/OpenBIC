@@ -59,6 +59,9 @@
 #define NCT7363_14_FAN 0x0D
 #define NCT7363_15_FAN 0x0E
 #define NCT7363_16_FAN 0x0F
+
+#define FAN_Status_REG_0_to_7 0x34
+#define FAN_Status_REG_8_to_15 0x35
 struct nct7363_data {
 	uint16_t has_fan; /* Enable fan 0-15 */
 	uint16_t fan_speed[16]; /* Register value combine */
@@ -70,6 +73,7 @@ struct nct7363_data {
 };
 enum nct7363_sensor_offset {
 	NCT7363_FAN_SPEED_OFFSET,
+	NCT7363_FAN_STATUS_OFFSET,
 };
 
 #endif

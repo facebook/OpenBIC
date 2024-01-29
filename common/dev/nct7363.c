@@ -127,6 +127,31 @@ uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 		/* count result */
 		rpm = 1350000 / (fan_count_value * (fan_roles / 4));
 		break;
+	case NCT7363_FAN_STATUS_OFFSET:
+		msg.rx_len = 1;
+		msg.tx_len = 1;
+		msg.data[0] = FAN_Status_REG_0_to_7;
+		if (i2c_master_read(&msg, retry)) {
+			return SENSOR_FAIL_TO_ACCESS;
+		}
+		uint8_t fan_status_0_to_7 = msg.data[0];
+		msg.data[0] = FAN_Status_REG_8_to_15;
+		if (i2c_master_read(&msg, retry)) {
+			return SENSOR_FAIL_TO_ACCESS;
+		}
+		uint8_t fan_status_8_to_15 = msg.data[0];
+		uint16_t fan_status =
+			(fan_status_8_to_15 << 8) | (fan_status_0_to_7 );
+		for (int i = 0; i < 16; i++) {
+			if ((fan_status & 1) ==1) {
+				LOG_ERR("FAN%d is not working", i);
+			}
+			else {
+				continue;
+			}
+			fan_status = fan_status >> 1;
+		}
+		break;
 	default:
 		LOG_ERR("Unknown register offset(%d)", offset);
 		return SENSOR_UNSPECIFIED_ERROR;
