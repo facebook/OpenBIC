@@ -148,7 +148,7 @@ uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 			}
 			fan_status = fan_status >> 1;
 		}
-		break;
+		return SENSOR_READ_SUCCESS;
 	default:
 		LOG_ERR("Unknown register offset(%d)", offset);
 		return SENSOR_UNSPECIFIED_ERROR;
