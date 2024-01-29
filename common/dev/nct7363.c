@@ -146,9 +146,6 @@ uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 			if ((fan_status & 1) ==1) {
 				LOG_ERR("FAN%d is not working", i);
 			}
-			else {
-				continue;
-			}
 			fan_status = fan_status >> 1;
 		}
 		break;
