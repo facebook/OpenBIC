@@ -164,7 +164,8 @@ enum SENSOR_DEV {
 	sensor_dev_cx7 = 0x2E,
 	sensor_dev_vistara = 0x2F,
 	sensor_dev_ads112c = 0x30,
-	sensor_dev_hdc1080 = 0x31,
+	sensor_dev_nct7363 = 0x31,
+	sensor_dev_hdc1080 = 0x32,
 	sensor_dev_max
 };
 
@@ -701,6 +702,52 @@ typedef struct _cx7_init_arg {
 	uint8_t endpoint;
 	uint16_t sensor_id;
 } cx7_init_arg;
+
+typedef struct _nct7363_init_arg {
+	bool is_init;
+	union {
+		uint8_t value;
+		struct {
+			uint8_t GPIO_00_to_03_Pin_Function_Configuration : 8;
+			uint8_t GPIO_04_to_07_Pin_Function_Configuration : 8;
+			uint8_t GPIO_10_to_13_Pin_Function_Configuration : 8;
+			uint8_t GPIO_14_to_17_Pin_Function_Configuration : 8;
+			uint8_t GPIO0x_Input_Output_Configuration : 8;
+			uint8_t GPIO1x_Input_Output_Configuration : 8;
+			uint8_t PWM_0_to_7_Enable : 8;
+			uint8_t PWM_8_to_15_Enable : 8;
+			uint8_t FANIN_0_to_7_Monitoring_Enable : 8;
+			uint8_t FANIN_8_to_15_Monitoring_Enable : 8;
+		};
+	} init_pin_config;
+	union {
+		uint8_t value;
+		struct {
+			uint8_t GPIO00 : 2;
+			uint8_t GPIO01 : 2;
+			uint8_t GPIO02 : 2;
+			uint8_t GPIO03 : 2;
+			uint8_t GPIO04 : 2;
+			uint8_t GPIO05 : 2;
+			uint8_t GPIO06 : 2;
+			uint8_t GPIO07 : 2;
+			uint8_t GPIO10 : 2;
+			uint8_t GPIO11 : 2;
+			uint8_t GPIO12 : 2;
+			uint8_t GPIO13 : 2;
+			uint8_t GPIO14 : 2;
+			uint8_t GPIO15 : 2;
+			uint8_t GPIO16 : 2;
+			uint8_t GPIO17 : 2;
+			uint8_t PWM_0_to_7_Enable : 8;
+			uint8_t PWM_8_to_15_Enable : 8;
+			uint8_t FANIN_0_to_7_Monitoring_Enable : 8;
+			uint8_t FANIN_8_to_15_Monitoring_Enable : 8;
+		};
+	} init_16_pin_config;
+	uint8_t fan_poles;
+	uint8_t duty;
+} nct7363_init_arg;
 
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;
