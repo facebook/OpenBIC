@@ -62,6 +62,10 @@
 
 #define FAN_Status_REG_0_to_7 0x34
 #define FAN_Status_REG_8_to_15 0x35
+
+#define NCT7363_FAN_COUNT_ThRESHOLD_REG_HIGH_BYTE_BASE_OFFSET 0x6C
+#define NCT7363_FAN_COUNT_ThRESHOLD_REG_LOW_BYTE_BASE_OFFSET 0x6D
+
 struct nct7363_data {
 	uint16_t has_fan; /* Enable fan 0-15 */
 	uint16_t fan_speed[16]; /* Register value combine */
