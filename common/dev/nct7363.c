@@ -33,7 +33,7 @@ uint8_t combine_gpio_setting_data(uint8_t bit_7_6, uint8_t bit_5_4, uint8_t bit_
 	data |= bit_1_0 << 0;
 	return data;
 }
-uint8_t nct7363_set_Threshold(uint8_t bus, uint8_t address, uint8_t port, uint16_t Threshold)
+uint8_t nct7363_set_Threshold(uint8_t bus, uint8_t address, uint8_t port, uint16_t threshold)
 {
 	I2C_MSG msg = { 0 };
 	msg.bus = bus;
@@ -42,13 +42,14 @@ uint8_t nct7363_set_Threshold(uint8_t bus, uint8_t address, uint8_t port, uint16
 	uint8_t port_offset = port;
 	uint8_t threshold_offset_high_byte = NCT7363_FAN_COUNT_ThRESHOLD_REG_HIGH_BYTE_BASE_OFFSET + port_offset * 2;
 	uint8_t threshold_offset_low_byte = NCT7363_FAN_COUNT_ThRESHOLD_REG_LOW_BYTE_BASE_OFFSET + port_offset * 2;
-	uint8_t threshold_low_byte_value = Threshold & NCT7363_FAN_LSB_MASK;
-	uint8_t threshold_high_byte_value = Threshold >> 8;
+	uint8_t threshold_low_byte_value = threshold & NCT7363_FAN_LSB_MASK;
+	uint8_t threshold_high_byte_value = threshold >> 8;
 	// write high byte value
 	msg.tx_len = 2;
 	msg.data[0] = threshold_offset_high_byte;
 	msg.data[1] = threshold_high_byte_value;
 	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("set NCT7363_threshold_high_byte_value fail");
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 	// write low byte value
@@ -56,6 +57,7 @@ uint8_t nct7363_set_Threshold(uint8_t bus, uint8_t address, uint8_t port, uint16
 	msg.data[0] = threshold_offset_low_byte;
 	msg.data[1] = threshold_low_byte_value;
 	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("set NCT7363_threshold_low_byte_value fail");
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 	return 0;
@@ -288,8 +290,29 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 		LOG_ERR("set NCT7363_REG_FANIN_CTRL2 fail");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
+	/* set init threshold  */
+	for (int i = 0; i < 16; i++) {
+		// init threshold high byte value
+		uint8_t threshold_high_byte_offset = NCT7363_FAN_COUNT_ThRESHOLD_REG_HIGH_BYTE_BASE_OFFSET + i * 2;
+		init_msg.tx_len = 2;
+		init_msg.data[0] = threshold_high_byte_offset;
+		init_msg.data[1] = (nct7363_init_arg_data->threshold) >> 8;
+		if (i2c_master_write(&init_msg, retry)) {
+			LOG_ERR("set NCT7363_ThRESHOLD_HIGH_BYTE_REG fail");
+			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		}
+		// init threshold low byte value
+		uint8_t threshold_low_byte_offset = NCT7363_FAN_COUNT_ThRESHOLD_REG_LOW_BYTE_BASE_OFFSET + i * 2;
+		init_msg.tx_len = 2;
+		init_msg.data[0] = threshold_low_byte_offset;
+		init_msg.data[1] = (nct7363_init_arg_data->threshold) & NCT7363_FAN_LSB_MASK;
+		if (i2c_master_write(&init_msg, retry)) {
+			LOG_ERR("set NCT7363_ThRESHOLD_LOW_BYTE_REG fail");
+			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		}
+	}
 	/*  set init fan duty */
-	for (int i = 0; i < 15; i++) {
+	for (int i = 0; i < 16; i++) {
 		uint8_t duty_offset = NCT7363_REG_PWM_BASE_OFFSET + i * 2;
 		init_msg.tx_len = 2;
 		init_msg.data[0] = duty_offset;

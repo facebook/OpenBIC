@@ -746,6 +746,7 @@ typedef struct _nct7363_init_arg {
 	} init_16_pin_config;
 	uint8_t fan_poles;
 	uint8_t duty;
+	uint16_t threshold;
 } nct7363_init_arg;
 
 extern bool enable_sensor_poll_thread;
