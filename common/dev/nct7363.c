@@ -33,6 +33,34 @@ uint8_t combine_gpio_setting_data(uint8_t bit_7_6, uint8_t bit_5_4, uint8_t bit_
 	data |= bit_1_0 << 0;
 	return data;
 }
+uint8_t nct7363_set_Threshold(uint8_t bus, uint8_t address, uint8_t port, uint16_t Threshold)
+{
+	I2C_MSG msg = { 0 };
+	msg.bus = bus;
+	msg.target_addr = address;
+	uint8_t retry = 5;
+	uint8_t port_offset = port;
+	uint8_t threshold_offset_high_byte = NCT7363_FAN_COUNT_ThRESHOLD_REG_HIGH_BYTE_BASE_OFFSET + port_offset * 2;
+	uint8_t threshold_offset_low_byte = NCT7363_FAN_COUNT_ThRESHOLD_REG_LOW_BYTE_BASE_OFFSET + port_offset * 2;
+	uint8_t threshold_low_byte_value = Threshold & NCT7363_FAN_LSB_MASK;
+	uint8_t threshold_high_byte_value = Threshold >> 8;
+	// write high byte value
+	msg.tx_len = 2;
+	msg.data[0] = threshold_offset_high_byte;
+	msg.data[1] = threshold_high_byte_value;
+	if (i2c_master_write(&msg, retry)) {
+		return SENSOR_FAIL_TO_ACCESS;
+	}
+	// write low byte value
+	msg.tx_len = 2;
+	msg.data[0] = threshold_offset_low_byte;
+	msg.data[1] = threshold_low_byte_value;
+	if (i2c_master_write(&msg, retry)) {
+		return SENSOR_FAIL_TO_ACCESS;
+	}
+	return 0;
+}
+
 uint8_t nct7363_set_duty(uint8_t bus, uint8_t address, uint8_t port, uint8_t duty)
 {
 	I2C_MSG msg = { 0 };
