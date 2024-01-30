@@ -92,10 +92,10 @@
 &i3c2 {
 	status = "okay";
 	pinctrl-0 = <&pinctrl_i3c2_default>;
-	i3c-scl-hz = <12500000>;
+	i3c-scl-hz = <1000000>;
 	assigned-address = <0x11>;
-	i3c-pp-scl-hi-period-ns = <40>;
-	i3c-pp-scl-lo-period-ns = <40>;
+	i3c-pp-scl-hi-period-ns = <500>;
+	i3c-pp-scl-lo-period-ns = <500>;
 };
 
 &i2c13 {
