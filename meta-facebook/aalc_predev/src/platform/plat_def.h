@@ -20,5 +20,6 @@
 #define BMC_USB_PORT "CDC_ACM_0"
 
 #define ADC_CALIBRATION 1
+#define MORE_THAN_ONE_ADM1272
 
 #endif

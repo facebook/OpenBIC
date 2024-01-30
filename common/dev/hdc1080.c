@@ -51,7 +51,7 @@ uint8_t hdc1080_read(sensor_cfg *cfg, int *reading)
 	case HDC1080_TEMP_OFFSET:
 		val = ((msg.data[1] << 8 | msg.data[0]) / 65536) * 165 - 40;
 		break;
-	case HDC1080_HUMIDITY_OFFSET:
+	case HDC1080_HUM_OFFSET:
 		val = ((msg.data[1] << 8 | msg.data[0]) / 65536) * 100; // 100%RH
 		break;
 	default:

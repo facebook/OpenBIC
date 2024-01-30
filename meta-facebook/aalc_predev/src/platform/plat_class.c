@@ -19,4 +19,11 @@
 #include "plat_class.h"
 #include <logging/log.h>
 
+static uint8_t hsc_module = HSC_MODULE_ADM1272;
+
+uint8_t get_hsc_module()
+{
+	return hsc_module;
+}
+
 LOG_MODULE_REGISTER(plat_class);
