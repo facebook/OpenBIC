@@ -19,10 +19,10 @@
 #include <logging/log.h>
 #include "libutil.h"
 #include "power_status.h"
-//#include "plat_class.h"
+#include "plat_class.h"
 #include "plat_gpio.h"
-#include "plat_power_seq.h"
 #include "plat_isr.h"
+#include "plat_power_seq.h"
 
 LOG_MODULE_REGISTER(plat_power_seq);
 
@@ -123,7 +123,11 @@ void execute_power_on_sequence()
 	}
 
 	// TODO: check E1S present
-	gpio_set(EN_P3V3_E1S_0_R, POWER_ON);
+	if (get_board_revision() == BOARD_POC) {
+		gpio_set(POC_EN_P3V3_E1S_0_R, POWER_ON);
+	} else {
+		gpio_set(EN_P3V3_E1S_0_R, POWER_ON);
+	}
 	gpio_set(EN_P12V_E1S_0_R, POWER_ON);
 
 	ret = power_on_handler(CXL_ID_0, CLK_POWER_ON_STAGE);
@@ -321,7 +325,11 @@ void execute_power_off_sequence()
 	}
 
 	// TODO: check E1S present
-	gpio_set(EN_P3V3_E1S_0_R, POWER_OFF);
+	if (get_board_revision() == BOARD_POC) {
+		gpio_set(POC_EN_P3V3_E1S_0_R, POWER_OFF);
+	} else {
+		gpio_set(EN_P3V3_E1S_0_R, POWER_OFF);
+	}
 	gpio_set(EN_P12V_E1S_0_R, POWER_OFF);
 
 	gpio_set(PG_CARD_OK, POWER_OFF);
