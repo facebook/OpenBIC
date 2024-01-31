@@ -30,6 +30,7 @@ enum plat_pldm_device_state_set_offset {
 	PLDM_STATE_SET_OFFSET_DEVICE_POWER_STATUS = 2,
 };
 
+void plat_send_ssd_present_event(uint8_t ssd_id);
 void plat_ssd_present_check();
 void plat_send_ssd_power_fault_event(uint8_t ssd_id, uint8_t status);
 

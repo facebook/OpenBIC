@@ -29,23 +29,27 @@
 
 LOG_MODULE_REGISTER(plat_pldm_monitor);
 
+void plat_send_ssd_present_event(uint8_t ssd_id)
+{
+	struct pldm_sensor_event_state_sensor_state event;
+	event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_PRESENCE;
+	event.event_state = PLDM_STATE_SET_NOT_PRESENT;
+	event.previous_event_state = PLDM_STATE_SET_NOT_PRESENT;
+
+	if (pldm_send_platform_event(PLDM_SENSOR_EVENT, PLDM_EVENT_SSD_1 + ssd_id,
+				     PLDM_STATE_SENSOR_STATE, (uint8_t *)&event,
+				     sizeof(struct pldm_sensor_event_state_sensor_state))) {
+		LOG_ERR("Send SSD%d presence event log failed", ssd_id + 1);
+	}
+}
+
 void plat_ssd_present_check()
 {
 	bool is_present = CARD_NOT_PRESENT;
-	struct pldm_sensor_event_state_sensor_state event;
 	for (uint8_t i = CARD_8_INDEX; i >= CARD_5_INDEX; i--) {
 		is_present = pcie_card_info[i].card_device_type;
-		event.sensor_offset = PLDM_STATE_SET_OFFSET_DEVICE_PRESENCE;
 		if (is_present != E1S_PRESENT) {
-			event.event_state = PLDM_STATE_SET_NOT_PRESENT;
-			event.previous_event_state = PLDM_STATE_SET_NOT_PRESENT;
-			if (pldm_send_platform_event(
-				    PLDM_SENSOR_EVENT, PLDM_EVENT_SSD_1 + CARD_8_INDEX - i,
-				    PLDM_STATE_SENSOR_STATE, (uint8_t *)&event,
-				    sizeof(struct pldm_sensor_event_state_sensor_state))) {
-				LOG_ERR("Send SSD%d presence event log failed",
-					CARD_8_INDEX - i + 1);
-			}
+			plat_send_ssd_present_event(CARD_8_INDEX - i);
 		}
 	}
 }

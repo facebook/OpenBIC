@@ -26,8 +26,16 @@
 #include "plat_i2c.h"
 #include "plat_class.h"
 #include "plat_sensor_table.h"
+#include "plat_pldm_monitor.h"
 
 LOG_MODULE_REGISTER(plat_class);
+
+#define PRESENCE_CHECK_STACK_SIZE 1024
+#define PRESENCE_CHECK_DELAY_MS 5000
+
+K_THREAD_STACK_DEFINE(presence_check_thread, PRESENCE_CHECK_STACK_SIZE);
+struct k_thread presence_check_thread_handler;
+k_tid_t presence_check_tid;
 
 uint8_t board_revision = REV_UNKNOWN;
 
@@ -178,36 +186,59 @@ int cxl_id_to_pcie_card_id(uint8_t cxl_id, uint8_t *pcie_card_id)
 	return 0;
 }
 
-void check_pcie_card_type()
+int check_pcie_card_presence_status(uint8_t card_id, uint8_t *card_type)
 {
-	int index = 0;
+	CHECK_NULL_ARG_WITH_RETURN(card_type, -1);
+
+	if (card_id >= ARRAY_SIZE(pcie_card_info)) {
+		LOG_ERR("Fail to get pcie card presence status because of invalid card id: 0x%x",
+			card_id);
+		return -1;
+	}
+
+	int ret = -1;
 	uint8_t val = 0;
 	uint8_t retry = 3;
 	I2C_MSG i2c_msg = { 0 };
 
+	i2c_msg.bus = CPLD_BUS;
+	i2c_msg.target_addr = CPLD_ADDR;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = pcie_card_info[card_id].cpld_offset;
+
+	ret = i2c_master_read(&i2c_msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Fail to get pcid card info, card id: 0x%x, offset: 0x%x", card_id,
+			pcie_card_info[card_id].cpld_offset);
+		return ret;
+	}
+
+	val = ((i2c_msg.data[0]) >> pcie_card_info[card_id].value_shift_bit) &
+	      pcie_card_info[card_id].value_bit;
+
+	if ((card_id == CARD_13_INDEX) || (card_id == CARD_14_INDEX)) {
+		/* CPLD register reads back the presence value of PCIE card 13/14 doesn't include present_1 bit */
+		/* Add present_1 bit value to map card type from presence status */
+		val = (val << 1) + 1;
+	}
+
+	*card_type = prsnt_status_to_card_type(val);
+	return 0;
+}
+
+void check_pcie_card_type()
+{
+	int ret = 0;
+	int index = 0;
+
 	for (index = 0; index < ARRAY_SIZE(pcie_card_info); ++index) {
-		/* Workaround: Skip to check JCN 13 and 14 card type */
-		if (index == CARD_13_INDEX || index == CARD_14_INDEX) {
-			pcie_card_info[index].card_device_type = CARD_NOT_PRESENT;
+		ret = check_pcie_card_presence_status(index,
+						      &pcie_card_info[index].card_device_type);
+		if (ret != 0) {
+			LOG_ERR("Fail to check pcie card type");
 			continue;
 		}
-
-		memset(&i2c_msg, 0, sizeof(I2C_MSG));
-		i2c_msg.bus = CPLD_BUS;
-		i2c_msg.target_addr = CPLD_ADDR;
-		i2c_msg.tx_len = 1;
-		i2c_msg.rx_len = 1;
-		i2c_msg.data[0] = pcie_card_info[index].cpld_offset;
-
-		if (i2c_master_read(&i2c_msg, retry)) {
-			LOG_ERR("Initial pcie card %d info fail", index);
-			continue;
-		}
-
-		val = ((i2c_msg.data[0]) >> pcie_card_info[index].value_shift_bit) &
-		      pcie_card_info[index].value_bit;
-
-		pcie_card_info[index].card_device_type = prsnt_status_to_card_type(val);
 	}
 }
 
@@ -388,4 +419,45 @@ void set_reset_smb4_mux_pin()
 	} else {
 		gpio_set(RST_SMB_4_MUX_N, GPIO_LOW);
 	}
+}
+
+void presence_check_handler()
+{
+	int ret = 0;
+	uint8_t index = 0;
+	uint8_t card_type = 0;
+
+	while (1) {
+		for (index = CARD_8_INDEX; index >= CARD_5_INDEX; index--) {
+			ret = check_pcie_card_presence_status(index, &card_type);
+			if (ret != 0) {
+				LOG_ERR("Fail to get pcie card presence status on presence_check_handler");
+				continue;
+			}
+
+			if (card_type != pcie_card_info[index].card_device_type) {
+				if (card_type == CARD_NOT_PRESENT) {
+					plat_send_ssd_present_event(CARD_8_INDEX - index);
+				}
+			}
+
+			pcie_card_info[index].card_device_type = card_type;
+		}
+
+		k_msleep(PRESENCE_CHECK_DELAY_MS);
+	}
+}
+
+void init_accl_presence_check_work()
+{
+	if (presence_check_tid != NULL &&
+	    (strcmp(k_thread_state_str(presence_check_tid), "dead") != 0) &&
+	    (strcmp(k_thread_state_str(presence_check_tid), "unknown") != 0)) {
+		return;
+	}
+	presence_check_tid = k_thread_create(&presence_check_thread_handler, presence_check_thread,
+					     K_THREAD_STACK_SIZEOF(presence_check_thread),
+					     presence_check_handler, NULL, NULL, NULL,
+					     CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+	k_thread_name_set(&presence_check_thread_handler, "presence_check_thread");
 }
