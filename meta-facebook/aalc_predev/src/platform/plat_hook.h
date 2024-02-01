@@ -19,6 +19,8 @@
 
 #include "pmbus.h"
 #include "sensor.h"
+#include "common_i2c_mux.h"
+#include "i2c-mux-pca954x.h"
 
 /**************************************************************************************************
  * INIT ARGS
@@ -29,6 +31,12 @@ extern nct7363_init_arg nct7363_init_args[];
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
  **************************************************************************************************/
+extern mux_config bus_1_PCA9546A_configs[];
+extern mux_config bus_2_PCA9546A_configs[];
+extern mux_config bus_6_PCA9546A_configs[];
+extern mux_config bus_7_PCA9546A_configs[];
+extern mux_config bus_8_PCA9546A_configs[];
+extern mux_config bus_9_PCA9546A_configs[];
 
 bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading);
 #endif
