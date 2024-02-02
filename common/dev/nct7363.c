@@ -41,9 +41,9 @@ uint8_t nct7363_set_Threshold(uint8_t bus, uint8_t address, uint8_t port, uint16
 	uint8_t retry = 5;
 	uint8_t port_offset = port;
 	uint8_t threshold_offset_high_byte =
-		NCT7363_FAN_COUNT_ThRESHOLD_REG_HIGH_BYTE_BASE_OFFSET + port_offset * 2;
+		NCT7363_FAN_COUNT_THRESHOLD_REG_HIGH_BYTE_BASE_OFFSET + port_offset * 2;
 	uint8_t threshold_offset_low_byte =
-		NCT7363_FAN_COUNT_ThRESHOLD_REG_LOW_BYTE_BASE_OFFSET + port_offset * 2;
+		NCT7363_FAN_COUNT_THRESHOLD_REG_LOW_BYTE_BASE_OFFSET + port_offset * 2;
 	uint8_t threshold_low_byte_value = threshold & NCT7363_FAN_LSB_MASK;
 	uint8_t threshold_high_byte_value = threshold >> 8;
 	// write high byte value
@@ -126,6 +126,7 @@ uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
 	float rpm = 0;
+	int gpio_result = 0;
 	uint8_t offset = cfg->offset;
 	uint8_t port_offset = cfg->arg0;
 	uint8_t fan_roles = cfg->arg1;
@@ -152,8 +153,12 @@ uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 		uint16_t fan_count_value =
 			(fan_count_high_byte << 5) | (fan_count_low_byte & NCT7363_FAN_LSB_MASK);
 		/* count result */
-		rpm = 1350000 / (fan_count_value * (fan_roles / 4));
-		break;
+		rpm = 1350000 / (fan_count_value * (fan_roles / 4)); // RPM
+		/* return result */
+		sensor_val *sval = (sensor_val *)reading;
+		sval->integer = (int16_t)rpm;
+		sval->fraction = (int16_t)(rpm * 1000) % 1000;
+		return SENSOR_READ_SUCCESS;
 	case NCT7363_FAN_STATUS_OFFSET:
 		msg.rx_len = 1;
 		msg.tx_len = 1;
@@ -175,14 +180,39 @@ uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 			fan_status = fan_status >> 1;
 		}
 		return SENSOR_READ_SUCCESS;
+	case NCT7363_GPIO_READ_OFFSET:
+		msg.rx_len = 1;
+		msg.tx_len = 1;
+		if (port_offset >= 0 && port_offset <= 7) {
+			msg.data[0] = NCT7363_GPIO0x_INPUT_PORT_REG_OFFSET;
+			if (i2c_master_read(&msg, retry)) {
+				return SENSOR_FAIL_TO_ACCESS;
+			}
+			/* get port offset gpio data*/
+			gpio_result = (msg.data[0] >> port_offset) & 1;
+			/* return result */
+			sensor_val *sval = (sensor_val *)reading;
+			sval->integer = (int16_t)gpio_result;
+			return SENSOR_READ_SUCCESS;
+		} else if (port_offset >= 10 && port_offset <= 17) {
+			msg.data[0] = NCT7363_GPIO1x_INPUT_PORT_REG_OFFSET;
+			if (i2c_master_read(&msg, retry)) {
+				return SENSOR_FAIL_TO_ACCESS;
+			}
+			/* get port offset gpio data*/
+			gpio_result = (msg.data[0] >> (port_offset - 10)) & 1;
+			/* return result */
+			sensor_val *sval = (sensor_val *)reading;
+			sval->integer = (int16_t)gpio_result;
+			return SENSOR_READ_SUCCESS;
+		} else {
+			LOG_ERR("Read GPIO port %d error!", port_offset);
+			return SENSOR_UNSPECIFIED_ERROR;
+		}
 	default:
 		LOG_ERR("Unknown register offset(%d)", offset);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
-	sensor_val *sval = (sensor_val *)reading;
-	sval->integer = (int32_t)rpm;
-	sval->fraction = (int32_t)(rpm * 1000) % 1000;
-	return SENSOR_READ_SUCCESS;
 }
 
 uint8_t nct7363_init(sensor_cfg *cfg)
@@ -290,7 +320,7 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 	for (int i = 0; i < 16; i++) {
 		// init threshold high byte value
 		uint8_t threshold_high_byte_offset =
-			NCT7363_FAN_COUNT_ThRESHOLD_REG_HIGH_BYTE_BASE_OFFSET + i * 2;
+			NCT7363_FAN_COUNT_THRESHOLD_REG_HIGH_BYTE_BASE_OFFSET + i * 2;
 		init_msg.tx_len = 2;
 		init_msg.data[0] = threshold_high_byte_offset;
 		init_msg.data[1] = (nct7363_init_arg_data->threshold) >> 8;
@@ -300,7 +330,7 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 		}
 		// init threshold low byte value
 		uint8_t threshold_low_byte_offset =
-			NCT7363_FAN_COUNT_ThRESHOLD_REG_LOW_BYTE_BASE_OFFSET + i * 2;
+			NCT7363_FAN_COUNT_THRESHOLD_REG_LOW_BYTE_BASE_OFFSET + i * 2;
 		init_msg.tx_len = 2;
 		init_msg.data[0] = threshold_low_byte_offset;
 		init_msg.data[1] = (nct7363_init_arg_data->threshold) & NCT7363_FAN_LSB_MASK;

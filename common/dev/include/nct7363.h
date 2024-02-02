@@ -43,29 +43,33 @@
 
 #define Speed_Control_Portx_Configuration_Register_BASE_OFFSET 0xB0
 /* nct7363 port*/
-#define NCT7363_1_FAN 0x00
-#define NCT7363_2_FAN 0x01
-#define NCT7363_3_FAN 0x02
-#define NCT7363_4_FAN 0x03
-#define NCT7363_5_FAN 0x04
-#define NCT7363_6_FAN 0x05
-#define NCT7363_7_FAN 0x06
-#define NCT7363_8_FAN 0x07
-#define NCT7363_9_FAN 0x08
-#define NCT7363_10_FAN 0x09
-#define NCT7363_11_FAN 0x0A
-#define NCT7363_12_FAN 0x0B
-#define NCT7363_13_FAN 0x0C
-#define NCT7363_14_FAN 0x0D
-#define NCT7363_15_FAN 0x0E
-#define NCT7363_16_FAN 0x0F
+#define NCT7363_0_FAN 0x00
+#define NCT7363_1_FAN 0x01
+#define NCT7363_2_FAN 0x02
+#define NCT7363_3_FAN 0x03
+#define NCT7363_4_FAN 0x04
+#define NCT7363_5_FAN 0x05
+#define NCT7363_6_FAN 0x06
+#define NCT7363_7_FAN 0x07
+#define NCT7363_8_FAN 0x08
+#define NCT7363_9_FAN 0x09
+#define NCT7363_10_FAN 0x0A
+#define NCT7363_11_FAN 0x0B
+#define NCT7363_12_FAN 0x0C
+#define NCT7363_13_FAN 0x0D
+#define NCT7363_14_FAN 0x0E
+#define NCT7363_15_FAN 0x0F
+#define NCT7363_16_FAN 0x10
+#define NCT7363_17_FAN 0x11
 
 #define FAN_Status_REG_0_to_7 0x34
 #define FAN_Status_REG_8_to_15 0x35
 
-#define NCT7363_FAN_COUNT_ThRESHOLD_REG_HIGH_BYTE_BASE_OFFSET 0x6C
-#define NCT7363_FAN_COUNT_ThRESHOLD_REG_LOW_BYTE_BASE_OFFSET 0x6D
+#define NCT7363_FAN_COUNT_THRESHOLD_REG_HIGH_BYTE_BASE_OFFSET 0x6C
+#define NCT7363_FAN_COUNT_THRESHOLD_REG_LOW_BYTE_BASE_OFFSET 0x6D
 
+#define NCT7363_GPIO0x_INPUT_PORT_REG_OFFSET 0x00
+#define NCT7363_GPIO1x_INPUT_PORT_REG_OFFSET 0x10
 struct nct7363_data {
 	uint16_t has_fan; /* Enable fan 0-15 */
 	uint16_t fan_speed[16]; /* Register value combine */
@@ -78,6 +82,7 @@ struct nct7363_data {
 enum nct7363_sensor_offset {
 	NCT7363_FAN_SPEED_OFFSET,
 	NCT7363_FAN_STATUS_OFFSET,
+	NCT7363_GPIO_READ_OFFSET,
 };
 
 #endif
