@@ -1377,7 +1377,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_Pump_BPB, // sensor number
+		SENSOR_NUM_PUMP_BPB, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -1426,7 +1426,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"Pump_BPB",
+		"PUMP_BPB",
 	},
 	{
 		// MB HDC1080 humility

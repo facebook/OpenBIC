@@ -68,7 +68,7 @@
 #define SENSOR_NUM_LEAK_BPB_ADS_1 0x11
 #define SENSOR_NUM_LEAK_BPB_ADS_2 0x12
 #define SENSOR_NUM_LEAK_BPB_ADS_3 0x13
-#define SENSOR_NUM_Pump_BPB 0x14 
+#define SENSOR_NUM_PUMP_BPB 0x14 
 #define SENSOR_NUM_FAN_BPB_2 0x15 // no use
 #define SENSOR_NUM_FAN_BPB_3 0x16 // no use
 #define SENSOR_NUM_PUMP_PB_1 0x17
@@ -299,6 +299,9 @@
 #define SENSOR_NUM_BPB_Level_1_RACK 0xEB
 #define SENSOR_NUM_BPB_Level_2_RACK 0xEC
 #define SENSOR_NUM_BPB_Level_3_CDU 0xED
+/* ast1030 fan sensor number */
+#define SENSOR_NUM_FAN_MB_1 0xEE
+#define SENSOR_NUM_FAN_MB_2 0xEF
 
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
