@@ -74,6 +74,7 @@ struct nct7363_data {
 enum nct7363_sensor_offset {
 	NCT7363_FAN_SPEED_OFFSET,
 	NCT7363_FAN_STATUS_OFFSET,
+	NCT7363_GPIO_READ_OFFSET,
 };
 
 #endif
