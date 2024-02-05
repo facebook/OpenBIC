@@ -640,7 +640,7 @@ void ISR_NMI()
 		sel_msg.InF_target = PLDM;
 		sel_msg.sensor_type = IPMI_SENSOR_TYPE_CRITICAL_INT;
 		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
-		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+		sel_msg.sensor_number = SENSOR_NUM_NMI;
 		sel_msg.event_data1 = IPMI_EVENT_CRITICAL_INT_FP_NMI;
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
