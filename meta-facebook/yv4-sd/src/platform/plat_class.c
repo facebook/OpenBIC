@@ -48,16 +48,18 @@ enum CONDITION {
 };
 
 struct _SLOT_EID_MAPPING_TABLE {
-	float voltage;
+	float low_voltage;
+	float high_voltage;
 	uint8_t condition;
 	uint8_t slot_eid;
 	uint16_t slot_pid;
 };
 
 struct _SLOT_EID_MAPPING_TABLE _slot_eid_mapping_table[] = {
-	{ 0.1, LOWER, SLOT1, SLOT1_PID }, { 0.088, RANGE, SLOT2, SLOT2_PID }, { 0.180, RANGE, SLOT3, SLOT3_PID },
-	{ 0.271, RANGE, SLOT4, SLOT4_PID }, { 0.365, RANGE, SLOT5, SLOT5_PID }, { 0.459, RANGE, SLOT6, SLOT6_PID },
-	{ 0.531, RANGE, SLOT7, SLOT7_PID }, { 0.607, RANGE, SLOT8, SLOT8_PID },
+	{ 0, 0.15, LOWER, SLOT1, SLOT1_PID },	   { 0.15, 0.45, RANGE, SLOT2, SLOT2_PID },
+	{ 0.45, 0.75, RANGE, SLOT3, SLOT3_PID },   { 0.75, 1.05, RANGE, SLOT4, SLOT4_PID },
+	{ 1.05, 1.35, RANGE, SLOT5, SLOT5_PID },   { 1.35, 1.625, RANGE, SLOT6, SLOT6_PID },
+	{ 1.625, 1.875, RANGE, SLOT7, SLOT7_PID }, { 1.875, 2.5, HIGHER, SLOT8, SLOT8_PID },
 };
 
 uint8_t slot_eid = 0;
@@ -129,23 +131,23 @@ void init_platform_config()
 		}
 
 		for (int i = 0; i < ARRAY_SIZE(_slot_eid_mapping_table); i++) {
-			float typical_voltage = _slot_eid_mapping_table[i].voltage;
+			float high_voltage = _slot_eid_mapping_table[i].high_voltage;
+			float low_voltage = _slot_eid_mapping_table[i].low_voltage;
 			switch (_slot_eid_mapping_table[i].condition) {
 			case LOWER:
-				if (voltage <= typical_voltage) {
+				if (voltage <= high_voltage) {
 					slot_eid = _slot_eid_mapping_table[i].slot_eid;
 					slot_pid = _slot_eid_mapping_table[i].slot_pid;
 				}
 				break;
 			case HIGHER:
-				if (voltage >= typical_voltage) {
+				if (voltage >= low_voltage) {
 					slot_eid = _slot_eid_mapping_table[i].slot_eid;
 					slot_pid = _slot_eid_mapping_table[i].slot_pid;
 				}
 				break;
 			case RANGE:
-				if ((voltage > (p3v3_stby_voltage * typical_voltage * 0.93)) &&
-				    (voltage < (p3v3_stby_voltage * typical_voltage * 1.07))) {
+				if ((voltage > low_voltage) && (voltage <= high_voltage)) {
 					slot_eid = _slot_eid_mapping_table[i].slot_eid;
 					slot_pid = _slot_eid_mapping_table[i].slot_pid;
 				}
