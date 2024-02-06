@@ -270,4 +270,9 @@ enum IOE_PIN_NUM {
 	IOE_P17 = 7,
 };
 
+int get_ioe_value(uint8_t ioe_addr, uint8_t ioe_reg, uint8_t *value);
+int set_ioe_value(uint8_t ioe_addr, uint8_t ioe_reg, uint8_t value);
+void init_ioe_config();
+int check_ioe4_e1s_prsnt_pin();
+
 #endif
