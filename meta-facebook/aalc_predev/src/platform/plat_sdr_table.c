@@ -2586,8 +2586,8 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_BPB_P51V_AUX",
-	},  
-	{ 
+	},
+	{
 		// SENSOR_NUM_FAN_FB_BUS1_1
 		0x00,
 		0x00, // record ID
@@ -2648,7 +2648,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FAN_FB_BUS1_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_FAN_FB_BUS1_2
 		0x00,
 		0x00, // record ID
@@ -2709,7 +2709,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FAN_FB_BUS1_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_FAN_FB_BUS1_3
 		0x00,
 		0x00, // record ID
@@ -2770,7 +2770,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FAN_FB_BUS1_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_FAN_FB_BUS1_4
 		0x00,
 		0x00, // record ID
@@ -2831,7 +2831,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FAN_FB_BUS1_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_FAN_FB_BUS2_1
 		0x00,
 		0x00, // record ID
@@ -2892,7 +2892,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FAN_FB_BUS2_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_FAN_FB_BUS2_2
 		0x00,
 		0x00, // record ID
@@ -2953,7 +2953,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FAN_FB_BUS2_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_FAN_FB_BUS2_3
 		0x00,
 		0x00, // record ID
@@ -3014,7 +3014,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FAN_FB_BUS2_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_FAN_FB_BUS2_4
 		0x00,
 		0x00, // record ID
@@ -3075,7 +3075,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FAN_FB_BUS2_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_FAN_FB_BUS6_1
 		0x00,
 		0x00, // record ID
@@ -3136,7 +3136,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FAN_FB_BUS6_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_FAN_FB_BUS6_2
 		0x00,
 		0x00, // record ID
@@ -3197,7 +3197,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FAN_FB_BUS6_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_FAN_FB_BUS6_3
 		0x00,
 		0x00, // record ID
@@ -3258,7 +3258,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FAN_FB_BUS6_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_FAN_FB_BUS6_4
 		0x00,
 		0x00, // record ID
@@ -3319,7 +3319,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FAN_FB_BUS6_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_FAN_FB_BUS7_1
 		0x00,
 		0x00, // record ID
@@ -3380,7 +3380,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FAN_FB_BUS7_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_FAN_FB_BUS7_2
 		0x00,
 		0x00, // record ID
@@ -3441,7 +3441,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FAN_FB_BUS7_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_FAN_FB_BUS7_3
 		0x00,
 		0x00, // record ID
@@ -3502,7 +3502,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FAN_FB_BUS7_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_FAN_FB_BUS7_4
 		0x00,
 		0x00, // record ID
@@ -3563,7 +3563,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FAN_FB_BUS7_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_BUS1_1
 		0x00,
 		0x00, // record ID
@@ -3624,7 +3624,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_BUS1_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_BUS1_2
 		0x00,
 		0x00, // record ID
@@ -3685,7 +3685,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_BUS1_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_BUS1_3
 		0x00,
 		0x00, // record ID
@@ -3746,7 +3746,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_BUS1_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_BUS1_4
 		0x00,
 		0x00, // record ID
@@ -3807,7 +3807,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_BUS1_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_BUS2_1
 		0x00,
 		0x00, // record ID
@@ -3868,7 +3868,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_BUS2_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_BUS2_2
 		0x00,
 		0x00, // record ID
@@ -3929,7 +3929,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_BUS2_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_BUS2_3
 		0x00,
 		0x00, // record ID
@@ -3990,7 +3990,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_BUS2_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_BUS2_4
 		0x00,
 		0x00, // record ID
@@ -4051,7 +4051,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_BUS2_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_BUS6_1
 		0x00,
 		0x00, // record ID
@@ -4112,7 +4112,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_BUS6_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_BUS6_2
 		0x00,
 		0x00, // record ID
@@ -4173,7 +4173,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_BUS6_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_BUS6_3
 		0x00,
 		0x00, // record ID
@@ -4234,7 +4234,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_BUS6_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_BUS6_4
 		0x00,
 		0x00, // record ID
@@ -4295,7 +4295,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_BUS6_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_BUS7_1
 		0x00,
 		0x00, // record ID
@@ -4356,7 +4356,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_BUS7_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_BUS7_2
 		0x00,
 		0x00, // record ID
@@ -4417,7 +4417,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_BUS7_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_BUS7_3
 		0x00,
 		0x00, // record ID
@@ -4478,7 +4478,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_BUS7_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_BUS7_4
 		0x00,
 		0x00, // record ID
@@ -4539,7 +4539,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_BUS7_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_HUM_FB_BUS1_1
 		0x00,
 		0x00, // record ID
@@ -4600,7 +4600,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"HUM_FB_BUS1_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_HUM_FB_BUS1_2
 		0x00,
 		0x00, // record ID
@@ -4661,7 +4661,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"HUM_FB_BUS1_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_HUM_FB_BUS1_3
 		0x00,
 		0x00, // record ID
@@ -4722,7 +4722,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"HUM_FB_BUS1_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_HUM_FB_BUS1_4
 		0x00,
 		0x00, // record ID
@@ -4783,7 +4783,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"HUM_FB_BUS1_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_HUM_FB_BUS2_1
 		0x00,
 		0x00, // record ID
@@ -4844,7 +4844,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"HUM_FB_BUS2_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_HUM_FB_BUS2_2
 		0x00,
 		0x00, // record ID
@@ -4905,7 +4905,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"HUM_FB_BUS2_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_HUM_FB_BUS2_3
 		0x00,
 		0x00, // record ID
@@ -4966,7 +4966,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"HUM_FB_BUS2_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_HUM_FB_BUS2_4
 		0x00,
 		0x00, // record ID
@@ -5027,7 +5027,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"HUM_FB_BUS2_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_HUM_FB_BUS6_1
 		0x00,
 		0x00, // record ID
@@ -5088,7 +5088,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"HUM_FB_BUS6_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_HUM_FB_BUS6_2
 		0x00,
 		0x00, // record ID
@@ -5149,7 +5149,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"HUM_FB_BUS6_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_HUM_FB_BUS6_3
 		0x00,
 		0x00, // record ID
@@ -5210,7 +5210,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"HUM_FB_BUS6_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_HUM_FB_BUS6_4
 		0x00,
 		0x00, // record ID
@@ -5271,7 +5271,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"HUM_FB_BUS6_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_HUM_FB_BUS7_1
 		0x00,
 		0x00, // record ID
@@ -5332,7 +5332,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"HUM_FB_BUS7_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_HUM_FB_BUS7_2
 		0x00,
 		0x00, // record ID
@@ -5393,7 +5393,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"HUM_FB_BUS7_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_HUM_FB_BUS7_3
 		0x00,
 		0x00, // record ID
@@ -5454,7 +5454,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"HUM_FB_BUS7_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_HUM_FB_BUS7_4
 		0x00,
 		0x00, // record ID
@@ -5515,7 +5515,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"HUM_FB_BUS7_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_HSC_BUS1_1
 		0x00,
 		0x00, // record ID
@@ -5576,7 +5576,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_HSC_BUS1_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_STBY_BUS1_1
 		0x00,
 		0x00, // record ID
@@ -5637,7 +5637,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_STBY_BUS1_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_AUX_BUS1_1
 		0x00,
 		0x00, // record ID
@@ -5698,7 +5698,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_AUX_BUS1_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_STBY_BUS1_1
 		0x00,
 		0x00, // record ID
@@ -5759,7 +5759,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_STBY_BUS1_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_AUX_BUS1_1
 		0x00,
 		0x00, // record ID
@@ -5820,7 +5820,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_AUX_BUS1_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_STBY_BUS1_1
 		0x00,
 		0x00, // record ID
@@ -5881,7 +5881,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_STBY_BUS1_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_AUX_BUS1_1
 		0x00,
 		0x00, // record ID
@@ -5942,7 +5942,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_AUX_BUS1_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_HSC_BUS1_2
 		0x00,
 		0x00, // record ID
@@ -6003,7 +6003,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_HSC_BUS1_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_STBY_BUS1_2
 		0x00,
 		0x00, // record ID
@@ -6064,7 +6064,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_STBY_BUS1_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_AUX_BUS1_2
 		0x00,
 		0x00, // record ID
@@ -6125,7 +6125,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_AUX_BUS1_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_STBY_BUS1_2
 		0x00,
 		0x00, // record ID
@@ -6186,7 +6186,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_STBY_BUS1_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_AUX_BUS1_2
 		0x00,
 		0x00, // record ID
@@ -6247,7 +6247,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_AUX_BUS1_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_STBY_BUS1_2
 		0x00,
 		0x00, // record ID
@@ -6308,7 +6308,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_STBY_BUS1_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_AUX_BUS1_2
 		0x00,
 		0x00, // record ID
@@ -6369,7 +6369,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_AUX_BUS1_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_HSC_BUS1_3
 		0x00,
 		0x00, // record ID
@@ -6430,7 +6430,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_HSC_BUS1_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_STBY_BUS1_3
 		0x00,
 		0x00, // record ID
@@ -6491,7 +6491,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_STBY_BUS1_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_AUX_BUS1_3
 		0x00,
 		0x00, // record ID
@@ -6552,7 +6552,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_AUX_BUS1_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_STBY_BUS1_3
 		0x00,
 		0x00, // record ID
@@ -6613,7 +6613,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_STBY_BUS1_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_AUX_BUS1_3
 		0x00,
 		0x00, // record ID
@@ -6674,7 +6674,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_AUX_BUS1_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_STBY_BUS1_3
 		0x00,
 		0x00, // record ID
@@ -6735,7 +6735,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_STBY_BUS1_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_AUX_BUS1_3
 		0x00,
 		0x00, // record ID
@@ -6796,7 +6796,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_AUX_BUS1_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_HSC_BUS1_4
 		0x00,
 		0x00, // record ID
@@ -6857,7 +6857,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_HSC_BUS1_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_STBY_BUS1_4
 		0x00,
 		0x00, // record ID
@@ -6918,7 +6918,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_STBY_BUS1_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_AUX_BUS1_4
 		0x00,
 		0x00, // record ID
@@ -6979,7 +6979,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_AUX_BUS1_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_STBY_BUS1_4
 		0x00,
 		0x00, // record ID
@@ -7040,7 +7040,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_STBY_BUS1_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_AUX_BUS1_4
 		0x00,
 		0x00, // record ID
@@ -7101,7 +7101,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_AUX_BUS1_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_STBY_BUS1_4
 		0x00,
 		0x00, // record ID
@@ -7162,7 +7162,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_STBY_BUS1_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_AUX_BUS1_4
 		0x00,
 		0x00, // record ID
@@ -7223,7 +7223,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_AUX_BUS1_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_HSC_BUS2_1
 		0x00,
 		0x00, // record ID
@@ -7284,7 +7284,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_HSC_BUS2_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_STBY_BUS2_1
 		0x00,
 		0x00, // record ID
@@ -7345,7 +7345,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_STBY_BUS2_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_AUX_BUS2_1
 		0x00,
 		0x00, // record ID
@@ -7406,7 +7406,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_AUX_BUS2_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_STBY_BUS2_1
 		0x00,
 		0x00, // record ID
@@ -7467,7 +7467,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_STBY_BUS2_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_AUX_BUS2_1
 		0x00,
 		0x00, // record ID
@@ -7528,7 +7528,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_AUX_BUS2_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_STBY_BUS2_1
 		0x00,
 		0x00, // record ID
@@ -7589,7 +7589,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_STBY_BUS2_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_AUX_BUS2_1
 		0x00,
 		0x00, // record ID
@@ -7650,7 +7650,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_AUX_BUS2_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_HSC_BUS2_2
 		0x00,
 		0x00, // record ID
@@ -7711,7 +7711,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_HSC_BUS2_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_STBY_BUS2_2
 		0x00,
 		0x00, // record ID
@@ -7772,7 +7772,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_STBY_BUS2_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_AUX_BUS2_2
 		0x00,
 		0x00, // record ID
@@ -7833,7 +7833,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_AUX_BUS2_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_STBY_BUS2_2
 		0x00,
 		0x00, // record ID
@@ -7894,7 +7894,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_STBY_BUS2_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_AUX_BUS2_2
 		0x00,
 		0x00, // record ID
@@ -7955,7 +7955,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_AUX_BUS2_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_STBY_BUS2_2
 		0x00,
 		0x00, // record ID
@@ -8016,7 +8016,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_STBY_BUS2_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_AUX_BUS2_2
 		0x00,
 		0x00, // record ID
@@ -8077,7 +8077,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_AUX_BUS2_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_HSC_BUS2_3
 		0x00,
 		0x00, // record ID
@@ -8138,7 +8138,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_HSC_BUS2_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_STBY_BUS2_3
 		0x00,
 		0x00, // record ID
@@ -8199,7 +8199,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_STBY_BUS2_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_AUX_BUS2_3
 		0x00,
 		0x00, // record ID
@@ -8260,7 +8260,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_AUX_BUS2_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_STBY_BUS2_3
 		0x00,
 		0x00, // record ID
@@ -8321,7 +8321,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_STBY_BUS2_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_AUX_BUS2_3
 		0x00,
 		0x00, // record ID
@@ -8382,7 +8382,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_AUX_BUS2_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_STBY_BUS2_3
 		0x00,
 		0x00, // record ID
@@ -8443,7 +8443,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_STBY_BUS2_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_AUX_BUS2_3
 		0x00,
 		0x00, // record ID
@@ -8504,7 +8504,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_AUX_BUS2_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_HSC_BUS2_4
 		0x00,
 		0x00, // record ID
@@ -8565,7 +8565,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_HSC_BUS2_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_STBY_BUS2_4
 		0x00,
 		0x00, // record ID
@@ -8626,7 +8626,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_STBY_BUS2_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_AUX_BUS2_4
 		0x00,
 		0x00, // record ID
@@ -8687,7 +8687,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_AUX_BUS2_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_STBY_BUS2_4
 		0x00,
 		0x00, // record ID
@@ -8748,7 +8748,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_STBY_BUS2_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_AUX_BUS2_4
 		0x00,
 		0x00, // record ID
@@ -8809,7 +8809,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_AUX_BUS2_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_STBY_BUS2_4
 		0x00,
 		0x00, // record ID
@@ -8870,7 +8870,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_STBY_BUS2_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_AUX_BUS2_4
 		0x00,
 		0x00, // record ID
@@ -8931,7 +8931,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_AUX_BUS2_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_HSC_BUS6_1
 		0x00,
 		0x00, // record ID
@@ -8992,7 +8992,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_HSC_BUS6_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_STBY_BUS6_1
 		0x00,
 		0x00, // record ID
@@ -9053,7 +9053,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_STBY_BUS6_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_AUX_BUS6_1
 		0x00,
 		0x00, // record ID
@@ -9114,7 +9114,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_AUX_BUS6_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_STBY_BUS6_1
 		0x00,
 		0x00, // record ID
@@ -9175,7 +9175,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_STBY_BUS6_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_AUX_BUS6_1
 		0x00,
 		0x00, // record ID
@@ -9236,7 +9236,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_AUX_BUS6_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_STBY_BUS6_1
 		0x00,
 		0x00, // record ID
@@ -9297,7 +9297,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_STBY_BUS6_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_AUX_BUS6_1
 		0x00,
 		0x00, // record ID
@@ -9358,7 +9358,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_AUX_BUS6_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_HSC_BUS6_2
 		0x00,
 		0x00, // record ID
@@ -9419,7 +9419,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_HSC_BUS6_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_STBY_BUS6_2
 		0x00,
 		0x00, // record ID
@@ -9480,7 +9480,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_STBY_BUS6_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_AUX_BUS6_2
 		0x00,
 		0x00, // record ID
@@ -9541,7 +9541,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_AUX_BUS6_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_STBY_BUS6_2
 		0x00,
 		0x00, // record ID
@@ -9602,7 +9602,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_STBY_BUS6_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_AUX_BUS6_2
 		0x00,
 		0x00, // record ID
@@ -9663,7 +9663,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_AUX_BUS6_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_STBY_BUS6_2
 		0x00,
 		0x00, // record ID
@@ -9724,7 +9724,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_STBY_BUS6_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_AUX_BUS6_2
 		0x00,
 		0x00, // record ID
@@ -9785,7 +9785,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_AUX_BUS6_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_HSC_BUS6_3
 		0x00,
 		0x00, // record ID
@@ -9846,7 +9846,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_HSC_BUS6_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_STBY_BUS6_3
 		0x00,
 		0x00, // record ID
@@ -9907,7 +9907,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_STBY_BUS6_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_AUX_BUS6_3
 		0x00,
 		0x00, // record ID
@@ -9968,7 +9968,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_AUX_BUS6_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_STBY_BUS6_3
 		0x00,
 		0x00, // record ID
@@ -10029,7 +10029,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_STBY_BUS6_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_AUX_BUS6_3
 		0x00,
 		0x00, // record ID
@@ -10090,7 +10090,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_AUX_BUS6_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_STBY_BUS6_3
 		0x00,
 		0x00, // record ID
@@ -10151,7 +10151,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_STBY_BUS6_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_AUX_BUS6_3
 		0x00,
 		0x00, // record ID
@@ -10212,7 +10212,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_AUX_BUS6_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_HSC_BUS6_4
 		0x00,
 		0x00, // record ID
@@ -10273,7 +10273,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_HSC_BUS6_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_STBY_BUS6_4
 		0x00,
 		0x00, // record ID
@@ -10334,7 +10334,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_STBY_BUS6_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_AUX_BUS6_4
 		0x00,
 		0x00, // record ID
@@ -10395,7 +10395,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_AUX_BUS6_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_STBY_BUS6_4
 		0x00,
 		0x00, // record ID
@@ -10456,7 +10456,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_STBY_BUS6_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_AUX_BUS6_4
 		0x00,
 		0x00, // record ID
@@ -10517,7 +10517,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_AUX_BUS6_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_STBY_BUS6_4
 		0x00,
 		0x00, // record ID
@@ -10578,7 +10578,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_STBY_BUS6_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_AUX_BUS6_4
 		0x00,
 		0x00, // record ID
@@ -10639,7 +10639,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_AUX_BUS6_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_HSC_BUS7_1
 		0x00,
 		0x00, // record ID
@@ -10700,7 +10700,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_HSC_BUS7_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_STBY_BUS7_1
 		0x00,
 		0x00, // record ID
@@ -10761,7 +10761,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_STBY_BUS7_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_AUX_BUS7_1
 		0x00,
 		0x00, // record ID
@@ -10822,7 +10822,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_AUX_BUS7_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_STBY_BUS7_1
 		0x00,
 		0x00, // record ID
@@ -10883,7 +10883,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_STBY_BUS7_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_AUX_BUS7_1
 		0x00,
 		0x00, // record ID
@@ -10944,7 +10944,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_AUX_BUS7_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_STBY_BUS7_1
 		0x00,
 		0x00, // record ID
@@ -11005,7 +11005,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_STBY_BUS7_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_AUX_BUS7_1
 		0x00,
 		0x00, // record ID
@@ -11066,7 +11066,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_AUX_BUS7_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_HSC_BUS7_2
 		0x00,
 		0x00, // record ID
@@ -11127,7 +11127,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_HSC_BUS7_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_STBY_BUS7_2
 		0x00,
 		0x00, // record ID
@@ -11188,7 +11188,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_STBY_BUS7_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_AUX_BUS7_2
 		0x00,
 		0x00, // record ID
@@ -11249,7 +11249,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_AUX_BUS7_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_STBY_BUS7_2
 		0x00,
 		0x00, // record ID
@@ -11310,7 +11310,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_STBY_BUS7_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_AUX_BUS7_2
 		0x00,
 		0x00, // record ID
@@ -11371,7 +11371,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_AUX_BUS7_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_STBY_BUS7_2
 		0x00,
 		0x00, // record ID
@@ -11432,7 +11432,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_STBY_BUS7_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_AUX_BUS7_2
 		0x00,
 		0x00, // record ID
@@ -11493,7 +11493,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_AUX_BUS7_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_HSC_BUS7_3
 		0x00,
 		0x00, // record ID
@@ -11554,7 +11554,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_HSC_BUS7_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_STBY_BUS7_3
 		0x00,
 		0x00, // record ID
@@ -11615,7 +11615,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_STBY_BUS7_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_AUX_BUS7_3
 		0x00,
 		0x00, // record ID
@@ -11676,7 +11676,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_AUX_BUS7_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_STBY_BUS7_3
 		0x00,
 		0x00, // record ID
@@ -11737,7 +11737,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_STBY_BUS7_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_AUX_BUS7_3
 		0x00,
 		0x00, // record ID
@@ -11798,7 +11798,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_AUX_BUS7_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_STBY_BUS7_3
 		0x00,
 		0x00, // record ID
@@ -11859,7 +11859,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_STBY_BUS7_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_AUX_BUS7_3
 		0x00,
 		0x00, // record ID
@@ -11920,7 +11920,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_AUX_BUS7_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_FB_HSC_BUS7_4
 		0x00,
 		0x00, // record ID
@@ -11981,7 +11981,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_FB_HSC_BUS7_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_STBY_BUS7_4
 		0x00,
 		0x00, // record ID
@@ -12042,7 +12042,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_STBY_BUS7_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_FB_P48V_AUX_BUS7_4
 		0x00,
 		0x00, // record ID
@@ -12103,7 +12103,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_FB_P48V_AUX_BUS7_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_STBY_BUS7_4
 		0x00,
 		0x00, // record ID
@@ -12164,7 +12164,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_STBY_BUS7_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_FB_P48V_AUX_BUS7_4
 		0x00,
 		0x00, // record ID
@@ -12225,7 +12225,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_FB_P48V_AUX_BUS7_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_STBY_BUS7_4
 		0x00,
 		0x00, // record ID
@@ -12286,7 +12286,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_STBY_BUS7_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_FB_P48V_AUX_BUS7_4
 		0x00,
 		0x00, // record ID
@@ -12347,7 +12347,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_FB_P48V_AUX_BUS7_4",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PUMP_PB_1
 		0x00,
 		0x00, // record ID
@@ -12408,7 +12408,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PUMP_PB_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_FAN_1_PB_1
 		0x00,
 		0x00, // record ID
@@ -12469,7 +12469,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FAN_1_PB_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_FAN_2_PB_1
 		0x00,
 		0x00, // record ID
@@ -12530,7 +12530,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FAN_2_PB_1",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PUMP_PB_2
 		0x00,
 		0x00, // record ID
@@ -12591,7 +12591,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PUMP_PB_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_FAN_1_PB_2
 		0x00,
 		0x00, // record ID
@@ -12652,7 +12652,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FAN_1_PB_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_FAN_2_PB_2
 		0x00,
 		0x00, // record ID
@@ -12713,7 +12713,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FAN_2_PB_2",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PUMP_PB_3
 		0x00,
 		0x00, // record ID
@@ -12774,7 +12774,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PUMP_PB_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_FAN_1_PB_3
 		0x00,
 		0x00, // record ID
@@ -12835,7 +12835,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FAN_1_PB_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_FAN_2_PB_3
 		0x00,
 		0x00, // record ID
@@ -12896,7 +12896,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FAN_2_PB_3",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_PB_1_HSC_BUS8
 		0x00,
 		0x00, // record ID
@@ -12957,7 +12957,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_PB_1_HSC_BUS8",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_PB_1_P48V_STBY_BUS8
 		0x00,
 		0x00, // record ID
@@ -13018,7 +13018,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_PB_1_P48V_STBY_BUS8",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_PB_1_P48V_AUX_BUS8
 		0x00,
 		0x00, // record ID
@@ -13079,7 +13079,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_PB_1_P48V_AUX_BUS8",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_PB_1_P48V_STBY_BUS8
 		0x00,
 		0x00, // record ID
@@ -13140,7 +13140,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_PB_1_P48V_STBY_BUS8",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_PB_1_P48V_AUX_BUS8
 		0x00,
 		0x00, // record ID
@@ -13201,7 +13201,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_PB_1_P48V_AUX_BUS8",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_PB_1_P48V_STBY_BUS8
 		0x00,
 		0x00, // record ID
@@ -13262,7 +13262,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_PB_1_P48V_STBY_BUS8",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_PB_1_P48V_AUX_BUS8
 		0x00,
 		0x00, // record ID
@@ -13323,7 +13323,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_PB_1_P48V_AUX_BUS8",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_PB_2_HSC_BUS8
 		0x00,
 		0x00, // record ID
@@ -13384,7 +13384,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_PB_2_HSC_BUS8",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_PB_2_P48V_STBY_BUS8
 		0x00,
 		0x00, // record ID
@@ -13445,7 +13445,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_PB_2_P48V_STBY_BUS8",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_PB_2_P48V_AUX_BUS8
 		0x00,
 		0x00, // record ID
@@ -13506,7 +13506,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_PB_2_P48V_AUX_BUS8",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_PB_2_P48V_STBY_BUS8
 		0x00,
 		0x00, // record ID
@@ -13567,7 +13567,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_PB_2_P48V_STBY_BUS8",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_PB_2_P48V_AUX_BUS8
 		0x00,
 		0x00, // record ID
@@ -13628,7 +13628,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_PB_2_P48V_AUX_BUS8",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_PB_2_P48V_STBY_BUS8
 		0x00,
 		0x00, // record ID
@@ -13689,7 +13689,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_PB_2_P48V_STBY_BUS8",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_PB_2_P48V_AUX_BUS8
 		0x00,
 		0x00, // record ID
@@ -13750,7 +13750,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_PB_2_P48V_AUX_BUS8",
 	},
-	{ 
+	{
 		// SENSOR_NUM_TEMP_PB_3_HSC_BUS8
 		0x00,
 		0x00, // record ID
@@ -13811,7 +13811,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"TEMP_PB_3_HSC_BUS8",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_PB_3_P48V_STBY_BUS8
 		0x00,
 		0x00, // record ID
@@ -13872,7 +13872,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_PB_3_P48V_STBY_BUS8",
 	},
-	{ 
+	{
 		// SENSOR_NUM_VOL_PB_3_P48V_AUX_BUS8
 		0x00,
 		0x00, // record ID
@@ -13933,7 +13933,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"VOL_PB_3_P48V_AUX_BUS8",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_PB_3_P48V_STBY_BUS8
 		0x00,
 		0x00, // record ID
@@ -13994,7 +13994,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_PB_3_P48V_STBY_BUS8",
 	},
-	{ 
+	{
 		// SENSOR_NUM_CUR_PB_3_P48V_AUX_BUS8
 		0x00,
 		0x00, // record ID
@@ -14055,7 +14055,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"CUR_PB_3_P48V_AUX_BUS8",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_PB_3_P48V_STBY_BUS8
 		0x00,
 		0x00, // record ID
@@ -14116,7 +14116,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_PB_3_P48V_STBY_BUS8",
 	},
-	{ 
+	{
 		// SENSOR_NUM_PWR_PB_3_P48V_AUX_BUS8
 		0x00,
 		0x00, // record ID
@@ -14176,8 +14176,8 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PWR_PB_3_P48V_AUX_BUS8",
-	}, 
-	{ 
+	},
+	{
 		// SENSOR_NUM_BPB_Level_1_RACK
 		0x00,
 		0x00, // record ID
@@ -14238,7 +14238,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"BPB_Level_1_RACK",
 	},
-	{ 
+	{
 		// SENSOR_NUM_BPB_Level_2_RACK
 		0x00,
 		0x00, // record ID
@@ -14299,7 +14299,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"BPB_Level_2_RACK",
 	},
-	{ 
+	{
 		// SENSOR_NUM_BPB_Level_3_CDU
 		0x00,
 		0x00, // record ID
@@ -14359,7 +14359,129 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"BPB_Level_3_CDU",
-	}, 
+	},
+	{
+		// SENSOR_NUM_PRESS_SB_ADS_1
+		0x00,
+		0x00, // record ID
+		IPMI_SDR_VER_15, // SDR ver
+		IPMI_SDR_FULL_SENSOR, // record type
+		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
+
+		SELF_I2C_ADDRESS << 1, // owner id
+		0x00, // owner lun
+		SENSOR_NUM_PRESS_SB_ADS_1, // sensor number
+
+		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
+		0x00, // entity instance
+		IPMI_SDR_SENSOR_INIT_SCAN | IPMI_SDR_SENSOR_INIT_EVENT |
+			IPMI_SDR_SENSOR_INIT_THRESHOLD | IPMI_SDR_SENSOR_INIT_TYPE |
+			IPMI_SDR_SENSOR_INIT_DEF_EVENT |
+			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
+		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
+			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
+		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
+		0x00, // assert event mask
+		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
+			IPMI_SDR_ASSERT_MASK_LCT_LO, // assert threshold reading mask
+		0x00, // deassert event mask
+		IPMI_SDR_CMP_RETURN_UCT | IPMI_SDR_DEASSERT_MASK_UCT_LO |
+			IPMI_SDR_DEASSERT_MASK_LCT_HI, // deassert threshold reading mask
+		0x00, // discrete reading mask/ settable
+		IPMI_SDR_UCT_SETTABLE | IPMI_SDR_LCT_SETTABLE | IPMI_SDR_UCT_READABLE |
+			IPMI_SDR_LCT_READABLE, // threshold mask/ readable threshold mask
+		0x80, // sensor unit
+		IPMI_SENSOR_UNIT_DEGREE_C, // base unit
+		0x00, // modifier unit
+		IPMI_SDR_LINEAR_LINEAR, // linearization
+		0x01, // [7:0] M bits
+		0x00, // [9:8] M bits, tolerance
+		0x00, // [7:0] B bits
+		0x00, // [9:8] B bits, tolerance
+		0x00, // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
+		0x00, // Rexp, Bexp
+		0x00, // analog characteristic
+		0x00, // nominal reading
+		0x00, // normal maximum
+		0x00, // normal minimum
+		0x00, // sensor maximum reading
+		0x00, // sensor minimum reading
+		0x96, // UNRT
+		0x30, // UCT
+		0x00, // UNCT
+		0x00, // LNRT
+		0x00, // LCT
+		0x00, // LNCT
+		0x00, // positive-going threshold
+		0x00, // negative-going threshold
+		0x00, // reserved
+		0x00, // reserved
+		0x00, // OEM
+		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
+		"PRESS_SB_ADS_1",
+	},
+	{
+		// SENSOR_NUM_PRESS_SB_ADS_2
+		0x00,
+		0x00, // record ID
+		IPMI_SDR_VER_15, // SDR ver
+		IPMI_SDR_FULL_SENSOR, // record type
+		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
+
+		SELF_I2C_ADDRESS << 1, // owner id
+		0x00, // owner lun
+		SENSOR_NUM_PRESS_SB_ADS_2, // sensor number
+
+		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
+		0x00, // entity instance
+		IPMI_SDR_SENSOR_INIT_SCAN | IPMI_SDR_SENSOR_INIT_EVENT |
+			IPMI_SDR_SENSOR_INIT_THRESHOLD | IPMI_SDR_SENSOR_INIT_TYPE |
+			IPMI_SDR_SENSOR_INIT_DEF_EVENT |
+			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
+		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
+			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
+		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
+		0x00, // assert event mask
+		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
+			IPMI_SDR_ASSERT_MASK_LCT_LO, // assert threshold reading mask
+		0x00, // deassert event mask
+		IPMI_SDR_CMP_RETURN_UCT | IPMI_SDR_DEASSERT_MASK_UCT_LO |
+			IPMI_SDR_DEASSERT_MASK_LCT_HI, // deassert threshold reading mask
+		0x00, // discrete reading mask/ settable
+		IPMI_SDR_UCT_SETTABLE | IPMI_SDR_LCT_SETTABLE | IPMI_SDR_UCT_READABLE |
+			IPMI_SDR_LCT_READABLE, // threshold mask/ readable threshold mask
+		0x80, // sensor unit
+		IPMI_SENSOR_UNIT_DEGREE_C, // base unit
+		0x00, // modifier unit
+		IPMI_SDR_LINEAR_LINEAR, // linearization
+		0x01, // [7:0] M bits
+		0x00, // [9:8] M bits, tolerance
+		0x00, // [7:0] B bits
+		0x00, // [9:8] B bits, tolerance
+		0x00, // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
+		0x00, // Rexp, Bexp
+		0x00, // analog characteristic
+		0x00, // nominal reading
+		0x00, // normal maximum
+		0x00, // normal minimum
+		0x00, // sensor maximum reading
+		0x00, // sensor minimum reading
+		0x96, // UNRT
+		0x30, // UCT
+		0x00, // UNCT
+		0x00, // LNRT
+		0x00, // LCT
+		0x00, // LNCT
+		0x00, // positive-going threshold
+		0x00, // negative-going threshold
+		0x00, // reserved
+		0x00, // reserved
+		0x00, // OEM
+		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
+		"PRESS_SB_ADS_2",
+	},
 };
 
 const int SDR_TABLE_SIZE = ARRAY_SIZE(plat_sdr_table);

@@ -171,7 +171,14 @@ sensor_cfg plat_sensor_config[] = {
 	  ADS112C_PRESS_OFFSET, stby_access, 0, ADS112C_MUX_4_CON, SAMPLE_COUNT_DEFAULT,
 	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  NULL },
-
+	{ SENSOR_NUM_PRESS_SB_ADS_1, sensor_dev_ads112c, I2C_BUS9, SB_ADS112C_ADDR,
+	  ADS112C_PRESS_OFFSET, stby_access, ADS112C_MUX_1_CON, 0, SAMPLE_COUNT_DEFAULT,
+	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL,
+	  &bus_9_PCA9546A_configs[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_PRESS_SB_ADS_2, sensor_dev_ads112c, I2C_BUS9, SB_ADS112C_ADDR,
+	  ADS112C_PRESS_OFFSET, stby_access, ADS112C_MUX_2_CON, 0, SAMPLE_COUNT_DEFAULT,
+	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL,
+	  &bus_9_PCA9546A_configs[0], NULL, NULL, NULL },
 	/* flow */
 	{ SENSOR_NUM_FLOW_BPB_ADS, sensor_dev_ads112c, I2C_BUS5, BPB_ADS112C_4_ADDR,
 	  ADS112C_FLOW_OFFSET, stby_access, 0, ADS112C_MUX_1_CON, SAMPLE_COUNT_DEFAULT,
@@ -968,13 +975,12 @@ sensor_cfg adm1272_sensor_config_table[] = {
 	  post_adm1272_read, &adm1272_init_args[1] },
 };
 
+//const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) + ARRAY_SIZE(adm1272_sensor_config_table);
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
-
 void load_sensor_config(void)
 {
 	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
 	sensor_config_count = ARRAY_SIZE(plat_sensor_config);
-
 	pal_extend_sensor_config();
 }
 
@@ -989,10 +995,25 @@ void pal_extend_sensor_config()
 		sensor_count = ARRAY_SIZE(adm1272_sensor_config_table);
 		for (index = 0; index < sensor_count; index++) {
 			add_sensor_config(adm1272_sensor_config_table[index]);
+			LOG_ERR("add HSC_MODULE_ADM1272 sensor config");
 		}
 		break;
 	default:
 		LOG_ERR("Invalid hsc module: 0x%x", hsc_module);
 		break;
 	}
+	return;
+}
+uint8_t pal_get_extend_sensor_config()
+{
+	uint8_t extend_sensor_config_size = 0;
+	uint8_t stage = get_hsc_module();
+	switch (stage) {
+	case HSC_MODULE_ADM1272:
+		extend_sensor_config_size += ARRAY_SIZE(adm1272_sensor_config_table);
+	default:
+		LOG_ERR("Unsupport stage: (%d).", stage);
+		break;
+	}
+	return extend_sensor_config_size;
 }
