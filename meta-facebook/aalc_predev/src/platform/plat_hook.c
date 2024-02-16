@@ -17,12 +17,35 @@
 #include <stdio.h>
 #include <string.h>
 #include <logging/log.h>
-#include "sensor.h"
+#include "plat_hook.h"
+#include "plat_class.h"
+
 LOG_MODULE_REGISTER(plat_hook);
 
 /**************************************************************************************************
  * INIT ARGS
 **************************************************************************************************/
+adm1272_init_arg adm1272_init_args[] = {
+	[0] = { .is_init = false,
+		.is_need_set_pwr_cfg = true,
+		.pwr_monitor_cfg.value = 0x3F3F,
+		.r_sense_mohm = 0.3,
+		.is_record_ein = false,
+		.last_energy = 0,
+		.last_rollover = 0,
+		.last_sample = 0,
+	},
+	[1] = { .is_init = false,
+		.is_need_set_pwr_cfg = true,
+		.pwr_monitor_cfg.value = 0x3F3F,
+		.r_sense_mohm = 0.3,
+		.is_record_ein = false,
+		.last_energy = 0,
+		.last_rollover = 0,
+		.last_sample = 0,
+	},
+};
+
 nct7363_init_arg nct7363_init_args[] = {
     //GPIO setting: Reserved=11, FANINx=10, PWMx=01, GPIOXX=00
     //Fan BD
@@ -79,8 +102,68 @@ nct7363_init_arg nct7363_init_args[] = {
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
  **************************************************************************************************/
-
+mux_config bus_1_PCA9546A_configs[] = {
+    [0] = { .target_addr = 0xE0, .channel = PCA9546A_CHANNEL_0 },
+	[1] = { .target_addr = 0xE0, .channel = PCA9546A_CHANNEL_1 },
+	[2] = { .target_addr = 0xE0, .channel = PCA9546A_CHANNEL_2 },
+	[3] = { .target_addr = 0xE0, .channel = PCA9546A_CHANNEL_3 },
+};
+mux_config bus_2_PCA9546A_configs[] = {
+    [0] = { .target_addr = 0xE2, .channel = PCA9546A_CHANNEL_0 },
+	[1] = { .target_addr = 0xE2, .channel = PCA9546A_CHANNEL_1 },
+	[2] = { .target_addr = 0xE2, .channel = PCA9546A_CHANNEL_2 },
+	[3] = { .target_addr = 0xE2, .channel = PCA9546A_CHANNEL_3 },
+};
+mux_config bus_6_PCA9546A_configs[] = {
+    [0] = { .target_addr = 0xE4, .channel = PCA9546A_CHANNEL_0 },
+	[1] = { .target_addr = 0xE4, .channel = PCA9546A_CHANNEL_1 },
+	[2] = { .target_addr = 0xE4, .channel = PCA9546A_CHANNEL_2 },
+	[3] = { .target_addr = 0xE4, .channel = PCA9546A_CHANNEL_3 },
+};
+mux_config bus_7_PCA9546A_configs[] = {
+    [0] = { .target_addr = 0xE6, .channel = PCA9546A_CHANNEL_0 },
+	[1] = { .target_addr = 0xE6, .channel = PCA9546A_CHANNEL_1 },
+	[2] = { .target_addr = 0xE6, .channel = PCA9546A_CHANNEL_2 },
+	[3] = { .target_addr = 0xE6, .channel = PCA9546A_CHANNEL_3 },
+};
+mux_config bus_8_PCA9546A_configs[] = {
+    [0] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_0 },
+	[1] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_1 },
+	[2] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_2 },
+};
+mux_config bus_9_PCA9546A_configs[] = {
+    [0] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_1 }, // sensor box
+	[1] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_2 }, // PDB
+};
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
  **************************************************************************************************/
 
+bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+
+	if (reading == NULL) {
+		return check_reading_pointer_null_is_allowed(cfg);
+	}
+
+	sensor_val *sval = (sensor_val *)reading;
+	if (cfg->offset == PMBUS_READ_IOUT || cfg->offset == PMBUS_READ_IIN) {
+		// Adjust negative current value to zero according to power team suggestion
+		if ((int)sval->integer < 0) {
+			*reading = 0;
+			return true;
+		}
+	}
+
+	if (cfg->offset == PMBUS_READ_IOUT || cfg->offset == PMBUS_READ_IIN ||
+	    cfg->offset == PMBUS_READ_POUT || cfg->offset == PMBUS_READ_PIN) {
+		// multiply 98% for accuracy
+		float val = ((float)sval->integer + (sval->fraction / 1000.0)) * 0.98;
+		sval->integer = (int)val & 0xFFFF;
+		sval->fraction = (val - sval->integer) * 1000;
+	}
+
+	return true;
+}

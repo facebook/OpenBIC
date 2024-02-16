@@ -14,7 +14,16 @@
  * limitations under the License.
  */
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #ifndef PLAT_CLASS_H
 #define PLAT_CLASS_H
+
+enum HSC_MODULE {
+	HSC_MODULE_ADM1272,
+};
+
+uint8_t get_hsc_module();
 
 #endif
