@@ -207,3 +207,19 @@
 		label = "HB1";
 	};
 };
+
+&gpio0_a_d {
+        aspeed,persist-maps = <0x3F000100>;
+};
+
+&gpio0_e_h {
+        aspeed,persist-maps = <0x00007000>;
+};
+
+&gpio0_i_l {
+        aspeed,persist-maps = <0xFF000000>;
+};
+
+&gpio0_m_p {
+        aspeed,persist-maps = <0x0000003A>;
+};
