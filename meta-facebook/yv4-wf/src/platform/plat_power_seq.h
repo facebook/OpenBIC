@@ -23,7 +23,7 @@
 #define CXL_READY_SECONDS 30
 #define CHK_PWR_DELAY_MSEC 100
 #define SYS_CLK_STABLE_DELAY_MSEC 25
-#define PWR_ON_RST_DELAY_MSEC 25
+#define PWR_RST_DELAY_MSEC 25
 #define P1V8_POWER_OFF_DELAY_MSEC 3500
 
 #define POWER_SEQ_CTRL_STACK_SIZE 1000
@@ -87,8 +87,8 @@ enum POWER_OFF_STAGE {
 };
 
 void set_mb_dc_status(uint8_t gpio_num);
-void enable_asic1_power_on_rst();
-void enable_asic2_power_on_rst();
+void enable_asic1_rst();
+void enable_asic2_rst();
 bool is_power_controlled(int cxl_id, int power_pin, uint8_t check_power_status, char *power_name);
 int check_powers_enabled(int cxl_id, int pwr_stage);
 int check_powers_disabled(int cxl_id, int pwr_stage);
