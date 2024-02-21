@@ -66,16 +66,31 @@ void send_gpio_interrupt(uint8_t gpio_num)
 static void SLP3_handler()
 {
 	common_addsel_msg_t sel_msg;
+	uint8_t retry = 5;
+
 	if ((gpio_get(FM_SLPS3_LVC3_N) == GPIO_HIGH) && (gpio_get(PWRGD_CPU_LVC3) == GPIO_LOW)) {
-		sel_msg.InF_target = BMC_IPMB;
-		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
-		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
-		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
-		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_VRWATCHDOG;
-		sel_msg.event_data2 = 0xFF;
-		sel_msg.event_data3 = 0xFF;
-		if (!common_add_sel_evt_record(&sel_msg)) {
-			LOG_ERR("VR watchdog timeout addsel fail");
+		I2C_MSG msg;
+		msg.bus = SB_CPLD_BUS;
+		msg.target_addr = SB_CPLD_ADDR;
+		msg.tx_len = 1;
+		msg.rx_len = 1;
+		msg.data[0] = SB_CPLD_REG_SLP3_PLD_N;
+		ipmb_error status = i2c_master_read(&msg, retry);
+		if (status) {
+			LOG_ERR("%s() failed to get cpld register, ret %d", __func__, status);
+			return;
+		}
+		if (GETBIT(msg.data[0], 1) == GPIO_HIGH) {
+			sel_msg.InF_target = BMC_IPMB;
+			sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+			sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+			sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_VRWATCHDOG;
+			sel_msg.event_data2 = 0xFF;
+			sel_msg.event_data3 = 0xFF;
+			if (!common_add_sel_evt_record(&sel_msg)) {
+				LOG_ERR("VR watchdog timeout addsel fail");
+			}
 		}
 	}
 }
