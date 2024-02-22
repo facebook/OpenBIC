@@ -213,7 +213,13 @@
 };
 
 &sram0 {
-	reg = <0 DT_SIZE_K(642)>, <DT_SIZE_K(642) DT_SIZE_K(126)>;
+	/*
+	* The cacheable/non-cacheable memory regions should be aligned to 32KB.
+	* Refer to the AST1030 data sheet section of "SCUA50: CM4F Cacheable Area Statement".
+	* It is currently written as 24KB, and Aspeed will correct to 32KB in the next version.
+	* 0xa0000 is the starting offset of the non-cacheable area.
+	*/
+	reg = <0 DT_SIZE_K(640)>, <0xa0000 DT_SIZE_K(128)>;
 };
 
 &pcc {
