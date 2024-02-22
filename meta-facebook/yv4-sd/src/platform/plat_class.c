@@ -56,16 +56,23 @@ struct _SLOT_EID_MAPPING_TABLE {
 };
 
 struct _SLOT_EID_MAPPING_TABLE _slot_eid_mapping_table[] = {
-	{ 0, 0.15, LOWER, SLOT1, SLOT1_PID },	   { 0.15, 0.45, RANGE, SLOT2, SLOT2_PID },
-	{ 0.45, 0.75, RANGE, SLOT3, SLOT3_PID },   { 0.75, 1.05, RANGE, SLOT4, SLOT4_PID },
-	{ 1.05, 1.35, RANGE, SLOT5, SLOT5_PID },   { 1.35, 1.625, RANGE, SLOT6, SLOT6_PID },
-	{ 1.625, 1.875, RANGE, SLOT7, SLOT7_PID }, { 1.875, 2.5, HIGHER, SLOT8, SLOT8_PID },
+	{ 0, 0.15, LOWER, SLOT1_EID, SLOT1_PID },      { 0.15, 0.45, RANGE, SLOT2_EID, SLOT2_PID },
+	{ 0.45, 0.75, RANGE, SLOT3_EID, SLOT3_PID },   { 0.75, 1.05, RANGE, SLOT4_EID, SLOT4_PID },
+	{ 1.05, 1.35, RANGE, SLOT5_EID, SLOT5_PID },   { 1.35, 1.625, RANGE, SLOT6_EID, SLOT6_PID },
+	{ 1.625, 1.875, RANGE, SLOT7_EID, SLOT7_PID }, { 1.875, 2.5, HIGHER, SLOT8_EID, SLOT8_PID },
 };
 
 uint8_t slot_eid = 0;
+uint8_t slot_id = 0;
+
 uint8_t get_slot_eid()
 {
 	return slot_eid;
+}
+
+uint8_t get_slot_id()
+{
+	return slot_id;
 }
 
 bool get_adc_voltage(int channel, float *voltage)
@@ -138,18 +145,21 @@ void init_platform_config()
 				if (voltage <= high_voltage) {
 					slot_eid = _slot_eid_mapping_table[i].slot_eid;
 					slot_pid = _slot_eid_mapping_table[i].slot_pid;
+					slot_id = i + 1;
 				}
 				break;
 			case HIGHER:
 				if (voltage >= low_voltage) {
 					slot_eid = _slot_eid_mapping_table[i].slot_eid;
 					slot_pid = _slot_eid_mapping_table[i].slot_pid;
+					slot_id = i + 1;
 				}
 				break;
 			case RANGE:
 				if ((voltage > low_voltage) && (voltage <= high_voltage)) {
 					slot_eid = _slot_eid_mapping_table[i].slot_eid;
 					slot_pid = _slot_eid_mapping_table[i].slot_pid;
+					slot_id = i + 1;
 				}
 				break;
 			default:
@@ -160,6 +170,6 @@ void init_platform_config()
 		}
 	}
 
-	LOG_INF("Slot EID = %d", slot_eid);
+	LOG_INF("Slot EID = %d, Slot ID = %d", slot_eid, slot_id);
 	i3c_set_pid(&i3c_msg, slot_pid);
 }
