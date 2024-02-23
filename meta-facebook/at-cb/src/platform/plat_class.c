@@ -568,3 +568,61 @@ void init_accl_presence_check_work()
 					     CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
 	k_thread_name_set(&presence_check_thread_handler, "presence_check_thread");
 }
+
+void init_asic_jtag_select_ioexp()
+{
+	int ret = 0;
+	int retry = 5;
+	uint8_t tx_len = 2;
+	uint8_t output_0_value = 0;
+	uint8_t output_1_value = 0;
+	uint8_t config_0_value = 0;
+	uint8_t config_1_value = 0;
+	uint8_t data[tx_len];
+	I2C_MSG msg = { 0 };
+	memset(data, 0, sizeof(uint8_t) * tx_len);
+
+	/** Write U233 ioexp output 0 register **/
+	data[0] = PCA9555_OUTPUT_PORT_REG_0;
+	data[1] = output_0_value;
+	msg = construct_i2c_message(I2C_BUS13, IOEXP_U233_ADDR, tx_len, data, 0);
+
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Unable to write ioexp output 0 register bus: %u addr: 0x%02x", msg.bus,
+			msg.target_addr);
+	}
+
+	/** Write U233 ioexp output 1 register **/
+	data[0] = PCA9555_OUTPUT_PORT_REG_1;
+	data[1] = output_1_value;
+	msg = construct_i2c_message(I2C_BUS13, IOEXP_U233_ADDR, tx_len, data, 0);
+
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Unable to write ioexp output 1 register bus: %u addr: 0x%02x", msg.bus,
+			msg.target_addr);
+	}
+
+	/** Write U233 ioexp config 0 register **/
+	data[0] = PCA9555_CONFIG_REG_0;
+	data[1] = config_0_value;
+	msg = construct_i2c_message(I2C_BUS13, IOEXP_U233_ADDR, tx_len, data, 0);
+
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Unable to write ioexp config 0 register bus: %u addr: 0x%02x", msg.bus,
+			msg.target_addr);
+	}
+
+	/** Write U233 ioexp config 1 register **/
+	data[0] = PCA9555_CONFIG_REG_1;
+	data[1] = config_1_value;
+	msg = construct_i2c_message(I2C_BUS13, IOEXP_U233_ADDR, tx_len, data, 0);
+
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Unable to write ioexp config 1 register bus: %u addr: 0x%02x", msg.bus,
+			msg.target_addr);
+	}
+}
