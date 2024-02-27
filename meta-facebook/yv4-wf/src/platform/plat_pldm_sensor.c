@@ -4660,17 +4660,17 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			UPDATE_INTERVAL_3S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0xFF, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
-			0x00000000, //uint32_t warning_high;
-			0x00001D4C, //uint32_t warning_low;
-			0x0000251C, //uint32_t critical_high;
-			0x00000FA0, //uint32_t critical_low;
-			0x000030D4, //uint32_t fatal_high;
-			0x00000000, //uint32_t fatal_low;
+			0x00000000, //int32_t warning_high;
+			0x00001D4C, //int32_t warning_low;
+			0x0000251C, //int32_t critical_high;
+			0x00000FA0, //int32_t critical_low;
+			0x000030D4, //int32_t fatal_high;
+			-0x000007D0, //int32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -4726,17 +4726,17 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			UPDATE_INTERVAL_3S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0xFF, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
-			0x00000000, //uint32_t warning_high;
-			0x00001D4C, //uint32_t warning_low;
-			0x0000251C, //uint32_t critical_high;
-			0x00000FA0, //uint32_t critical_low;
-			0x000030D4, //uint32_t fatal_high;
-			0x00000000, //uint32_t fatal_low;
+			0x00000000, //int32_t warning_high;
+			0x00001D4C, //int32_t warning_low;
+			0x0000251C, //int32_t critical_high;
+			0x00000FA0, //int32_t critical_low;
+			0x000030D4, //int32_t fatal_high;
+			-0x000007D0, //int32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -4792,17 +4792,17 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			UPDATE_INTERVAL_3S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0xFF, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
-			0x00000000, //uint32_t warning_high;
-			0x00001D4C, //uint32_t warning_low;
-			0x0000251C, //uint32_t critical_high;
-			0x00000FA0, //uint32_t critical_low;
-			0x000030D4, //uint32_t fatal_high;
-			0x00000000, //uint32_t fatal_low;
+			0x00000000, //int32_t warning_high;
+			0x00001D4C, //int32_t warning_low;
+			0x0000251C, //int32_t critical_high;
+			0x00000FA0, //int32_t critical_low;
+			0x000030D4, //int32_t fatal_high;
+			-0x000007D0, //int32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -4858,17 +4858,17 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			UPDATE_INTERVAL_3S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0xFF, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
-			0x00000000, //uint32_t warning_high;
-			0x00001D4C, //uint32_t warning_low;
-			0x0000251C, //uint32_t critical_high;
-			0x00000FA0, //uint32_t critical_low;
-			0x000030D4, //uint32_t fatal_high;
-			0x00000000, //uint32_t fatal_low;
+			0x00000000, //int32_t warning_high;
+			0x00001D4C, //int32_t warning_low;
+			0x0000251C, //int32_t critical_high;
+			0x00000FA0, //int32_t critical_low;
+			0x000030D4, //int32_t fatal_high;
+			-0x000007D0, //int32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -4924,17 +4924,17 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			UPDATE_INTERVAL_3S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0xFF, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
-			0x00000000, //uint32_t warning_high;
-			0x00001D4C, //uint32_t warning_low;
-			0x0000251C, //uint32_t critical_high;
-			0x00000FA0, //uint32_t critical_low;
-			0x000030D4, //uint32_t fatal_high;
-			0x00000000, //uint32_t fatal_low;
+			0x00000000, //int32_t warning_high;
+			0x00001D4C, //int32_t warning_low;
+			0x0000251C, //int32_t critical_high;
+			0x00000FA0, //int32_t critical_low;
+			0x000030D4, //int32_t fatal_high;
+			-0x000007D0, //int32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -4990,17 +4990,17 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			UPDATE_INTERVAL_3S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0xFF, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
-			0x00000000, //uint32_t warning_high;
-			0x00001D4C, //uint32_t warning_low;
-			0x0000251C, //uint32_t critical_high;
-			0x00000FA0, //uint32_t critical_low;
-			0x000030D4, //uint32_t fatal_high;
-			0x00000000, //uint32_t fatal_low;
+			0x00000000, //int32_t warning_high;
+			0x00001D4C, //int32_t warning_low;
+			0x0000251C, //int32_t critical_high;
+			0x00000FA0, //int32_t critical_low;
+			0x000030D4, //int32_t fatal_high;
+			-0x000007D0, //int32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -5056,17 +5056,17 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			UPDATE_INTERVAL_3S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0xFF, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
-			0x00000000, //uint32_t warning_high;
-			0x00001D4C, //uint32_t warning_low;
-			0x0000251C, //uint32_t critical_high;
-			0x00000FA0, //uint32_t critical_low;
-			0x000030D4, //uint32_t fatal_high;
-			0x00000000, //uint32_t fatal_low;
+			0x00000000, //int32_t warning_high;
+			0x00001D4C, //int32_t warning_low;
+			0x0000251C, //int32_t critical_high;
+			0x00000FA0, //int32_t critical_low;
+			0x000030D4, //int32_t fatal_high;
+			-0x000007D0, //int32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -5122,17 +5122,17 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			UPDATE_INTERVAL_3S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0xFF, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
-			0x00000000, //uint32_t warning_high;
-			0x00001D4C, //uint32_t warning_low;
-			0x0000251C, //uint32_t critical_high;
-			0x00000FA0, //uint32_t critical_low;
-			0x000030D4, //uint32_t fatal_high;
-			0x00000000, //uint32_t fatal_low;
+			0x00000000, //int32_t warning_high;
+			0x00001D4C, //int32_t warning_low;
+			0x0000251C, //int32_t critical_high;
+			0x00000FA0, //int32_t critical_low;
+			0x000030D4, //int32_t fatal_high;
+			-0x000007D0, //int32_t fatal_low;
 		},
 		.update_time = 0,
 		{
