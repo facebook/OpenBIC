@@ -105,6 +105,14 @@ enum DIMM_RELATED_OFFSET {
 	DIMM_SPD_TEMP = 0x31,
 };
 
+enum ADS112C_OFFSET {
+	ADS112C_FLOW_OFFSET = 0x00,
+	ADS112C_PRESS_OFFSET = 0x01,
+	ADS112C_TEMP_OFFSET = 0x02,
+	ADS112C_OTHER_OFFSET = 0x03,
+	ADS112C_LEAKAGE_OFFSET = 0x04,
+};
+
 // The sequence needs to same with table sensor_drive_tbl
 enum SENSOR_DEV {
 	sensor_dev_tmp75 = 0,
@@ -156,6 +164,9 @@ enum SENSOR_DEV {
 	sensor_dev_cx7 = 0x2E,
 	sensor_dev_vistara = 0x2F,
 	sensor_dev_max11617 = 0x30,
+	sensor_dev_ads112c = 0x31,
+	sensor_dev_nct7363 = 0x32,
+	sensor_dev_hdc1080 = 0x33,
 	sensor_dev_max
 };
 
@@ -699,6 +710,53 @@ typedef struct _max11617_init_arg {
 	uint8_t config_byte;
 	float scalefactor[12];
 } max11617_init_arg;
+
+typedef struct _nct7363_init_arg {
+	bool is_init;
+	union {
+		uint8_t value;
+		struct {
+			uint8_t GPIO_00_to_03_Pin_Function_Configuration : 8;
+			uint8_t GPIO_04_to_07_Pin_Function_Configuration : 8;
+			uint8_t GPIO_10_to_13_Pin_Function_Configuration : 8;
+			uint8_t GPIO_14_to_17_Pin_Function_Configuration : 8;
+			uint8_t GPIO0x_Input_Output_Configuration : 8;
+			uint8_t GPIO1x_Input_Output_Configuration : 8;
+			uint8_t PWM_0_to_7_Enable : 8;
+			uint8_t PWM_8_to_15_Enable : 8;
+			uint8_t FANIN_0_to_7_Monitoring_Enable : 8;
+			uint8_t FANIN_8_to_15_Monitoring_Enable : 8;
+		};
+	} init_pin_config;
+	union {
+		uint8_t value;
+		struct {
+			uint8_t GPIO00 : 2;
+			uint8_t GPIO01 : 2;
+			uint8_t GPIO02 : 2;
+			uint8_t GPIO03 : 2;
+			uint8_t GPIO04 : 2;
+			uint8_t GPIO05 : 2;
+			uint8_t GPIO06 : 2;
+			uint8_t GPIO07 : 2;
+			uint8_t GPIO10 : 2;
+			uint8_t GPIO11 : 2;
+			uint8_t GPIO12 : 2;
+			uint8_t GPIO13 : 2;
+			uint8_t GPIO14 : 2;
+			uint8_t GPIO15 : 2;
+			uint8_t GPIO16 : 2;
+			uint8_t GPIO17 : 2;
+			uint8_t PWM_0_to_7_Enable : 8;
+			uint8_t PWM_8_to_15_Enable : 8;
+			uint8_t FANIN_0_to_7_Monitoring_Enable : 8;
+			uint8_t FANIN_8_to_15_Monitoring_Enable : 8;
+		};
+	} init_16_pin_config;
+	uint8_t fan_poles;
+	uint8_t duty;
+	uint16_t threshold;
+} nct7363_init_arg;
 
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;

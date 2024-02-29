@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "nct7363.h": "c",
+        "plat_sensor_table.h": "c",
+        "sensor.h": "c"
+    }
+}
