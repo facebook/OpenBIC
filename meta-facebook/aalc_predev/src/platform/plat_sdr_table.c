@@ -5515,8 +5515,8 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"FB_14_FAN_TACH_RPM",
 	},
-	{
-		// SENSOR_NUM_PUMP_PB_1
+	{ 
+		// SENSOR_NUM_PB_1_PUMP_TACH_RPM
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -5525,7 +5525,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_PUMP_PB_1, // sensor number
+		SENSOR_NUM_PB_1_PUMP_TACH_RPM, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -5574,10 +5574,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"PUMP_PB_1",
+		"PB_1_PUMP_TACH_RPM",
 	},
-	{
-		// SENSOR_NUM_FAN_1_PB_1
+	{ 
+		// SENSOR_NUM_PB_1_FAN_1_TACH_RPM
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -5586,7 +5586,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FAN_1_PB_1, // sensor number
+		SENSOR_NUM_PB_1_FAN_1_TACH_RPM, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -5635,10 +5635,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FAN_1_PB_1",
+		"PB_1_FAN_1_TACH_RPM",
 	},
-	{
-		// SENSOR_NUM_FAN_2_PB_1
+	{ 
+		// SENSOR_NUM_PB_1_FAN_2_TACH_RPM
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -5647,7 +5647,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FAN_2_PB_1, // sensor number
+		SENSOR_NUM_PB_1_FAN_2_TACH_RPM, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -5696,10 +5696,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FAN_2_PB_1",
+		"PB_1_FAN_2_TACH_RPM",
 	},
-	{
-		// SENSOR_NUM_PUMP_PB_2
+	{ 
+		// SENSOR_NUM_PB_2_PUMP_TACH_RPM
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -5708,7 +5708,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_PUMP_PB_2, // sensor number
+		SENSOR_NUM_PB_2_PUMP_TACH_RPM, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -5757,10 +5757,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"PUMP_PB_2",
+		"PB_2_PUMP_TACH_RPM",
 	},
-	{
-		// SENSOR_NUM_FAN_1_PB_2
+	{ 
+		// SENSOR_NUM_PB_2_FAN_1_TACH_RPM
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -5769,7 +5769,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FAN_1_PB_2, // sensor number
+		SENSOR_NUM_PB_2_FAN_1_TACH_RPM, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -5818,10 +5818,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FAN_1_PB_2",
+		"PB_2_FAN_1_TACH_RPM",
 	},
-	{
-		// SENSOR_NUM_FAN_2_PB_2
+	{ 
+		// SENSOR_NUM_PB_2_FAN_2_TACH_RPM
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -5830,7 +5830,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FAN_2_PB_2, // sensor number
+		SENSOR_NUM_PB_2_FAN_2_TACH_RPM, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -5879,10 +5879,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FAN_2_PB_2",
+		"PB_2_FAN_2_TACH_RPM",
 	},
-	{
-		// SENSOR_NUM_PUMP_PB_3
+	{ 
+		// SENSOR_NUM_PB_3_PUMP_TACH_RPM
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -5891,7 +5891,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_PUMP_PB_3, // sensor number
+		SENSOR_NUM_PB_3_PUMP_TACH_RPM, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -5940,10 +5940,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"PUMP_PB_3",
+		"PB_3_PUMP_TACH_RPM",
 	},
-	{
-		// SENSOR_NUM_FAN_1_PB_3
+	{ 
+		// SENSOR_NUM_PB_3_FAN_1_TACH_RPM
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -5952,7 +5952,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FAN_1_PB_3, // sensor number
+		SENSOR_NUM_PB_3_FAN_1_TACH_RPM, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -6001,10 +6001,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FAN_1_PB_3",
+		"PB_3_FAN_1_TACH_RPM",
 	},
-	{
-		// SENSOR_NUM_FAN_2_PB_3
+	{ 
+		// SENSOR_NUM_PB_3_FAN_2_TACH_RPM
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -6013,7 +6013,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FAN_2_PB_3, // sensor number
+		SENSOR_NUM_PB_3_FAN_2_TACH_RPM, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -6062,7 +6062,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FAN_2_PB_3",
+		"PB_3_FAN_2_TACH_RPM",
 	},
 	{
 		// SENSOR_NUM_MB_FAN1_TACH_RPM
