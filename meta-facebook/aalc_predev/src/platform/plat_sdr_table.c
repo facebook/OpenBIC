@@ -6431,7 +6431,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"BPB_CDU_LEVEL_3",
 	},
 	{
-		// SENSOR_NUM_SB_HEX_PRESSURE_1_PRESS_KPA
+		// SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -6440,7 +6440,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_SB_HEX_PRESSURE_1_PRESS_KPA, // sensor number
+		SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -6489,10 +6489,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"SB_HEX_PRESSURE_1_PRESS_KPA",
+		"BPB_RPU_COOLANT_INLET_P_KPA",
 	},
 	{
-		// SENSOR_NUM_SB_HEX_PRESSURE_2_PRESS_KPA
+		// SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -6501,7 +6501,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_SB_HEX_PRESSURE_2_PRESS_KPA, // sensor number
+		SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -6550,10 +6550,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"SB_HEX_PRESSURE_2_PRESS_KPA",
+		"BPB_RPU_COOLANT_OUTLET_P_KPA",
 	},
 	{
-		// SENSOR_NUM_BPB_RPU_COOLANT_INLET_PRESSURE_KPA
+		// SENSOR_NUM_BPB_RACK_PRESSURE_3_P_KPA
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -6562,7 +6562,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_BPB_RPU_COOLANT_INLET_PRESSURE_KPA, // sensor number
+		SENSOR_NUM_BPB_RACK_PRESSURE_3_P_KPA, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -6611,10 +6611,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"BPB_RPU_COOLANT_INLET_PRESSURE",
+		"BPB_RACK_PRESSURE_3_P_KPA",
 	},
 	{
-		// SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_PRESSURE_KPA
+		// SENSOR_NUM_BPB_RACK_PRESSURE_4_P_KPA
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -6623,7 +6623,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_PRESSURE_KPA, // sensor number
+		SENSOR_NUM_BPB_RACK_PRESSURE_4_P_KPA, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -6672,10 +6672,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"BPB_RPU_COOLANT_OUTLET_PRESSURE",
+		"BPB_RACK_PRESSURE_4_P_KPA",
 	},
 	{
-		// SENSOR_NUM_BPB_RACK_PRESSURE_3_PRESS_KPA
+		// SENSOR_NUM_SB_HEX_PRESSURE_1_P_KPA
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -6684,7 +6684,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_BPB_RACK_PRESSURE_3_PRESS_KPA, // sensor number
+		SENSOR_NUM_SB_HEX_PRESSURE_1_P_KPA, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -6733,10 +6733,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"BPB_RACK_PRESSURE_3_PRESS_KPA",
+		"SB_HEX_PRESSURE_1_P_KPA",
 	},
 	{
-		// SENSOR_NUM_BPB_RACK_PRESSURE_4_PRESS_KPA
+		// SENSOR_NUM_SB_HEX_PRESSURE_2_P_KPA
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -6745,7 +6745,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_BPB_RACK_PRESSURE_4_PRESS_KPA, // sensor number
+		SENSOR_NUM_SB_HEX_PRESSURE_2_P_KPA, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -6794,7 +6794,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"BPB_RACK_PRESSURE_4_PRESS_KPA",
+		"SB_HEX_PRESSURE_2_P_KPA",
 	},
 	{
 		// SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM
@@ -8566,7 +8566,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"SB_HEX_AIR_OUTLET_4_TEMP_C",
 	},
 	{
-		// SENSOR_NUM_FB_1_HDC1080DMBR_HUM_PERCENTAGE_RH
+		// SENSOR_NUM_FB_1_HUM_PCT_RH
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -8575,7 +8575,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FB_1_HDC1080DMBR_HUM_PERCENTAGE_RH, // sensor number
+		SENSOR_NUM_FB_1_HUM_PCT_RH, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -8624,10 +8624,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FB_1_HDC1080DMBR_HUM",
+		"FB_1_HUM_PCT_RH",
 	},
 	{
-		// SENSOR_NUM_FB_2_HDC1080DMBR_HUM_PERCENTAGE_RH
+		// SENSOR_NUM_FB_2_HUM_PCT_RH
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -8636,7 +8636,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FB_2_HDC1080DMBR_HUM_PERCENTAGE_RH, // sensor number
+		SENSOR_NUM_FB_2_HUM_PCT_RH, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -8685,10 +8685,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FB_2_HDC1080DMBR_HUM",
+		"FB_2_HUM_PCT_RH",
 	},
 	{
-		// SENSOR_NUM_FB_3_HDC1080DMBR_HUM_PERCENTAGE_RH
+		// SENSOR_NUM_FB_3_HUM_PCT_RH
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -8697,7 +8697,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FB_3_HDC1080DMBR_HUM_PERCENTAGE_RH, // sensor number
+		SENSOR_NUM_FB_3_HUM_PCT_RH, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -8746,10 +8746,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FB_3_HDC1080DMBR_HUM",
+		"FB_3_HUM_PCT_RH",
 	},
 	{
-		// SENSOR_NUM_FB_4_HDC1080DMBR_HUM_PERCENTAGE_RH
+		// SENSOR_NUM_FB_4_HUM_PCT_RH
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -8758,7 +8758,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FB_4_HDC1080DMBR_HUM_PERCENTAGE_RH, // sensor number
+		SENSOR_NUM_FB_4_HUM_PCT_RH, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -8807,10 +8807,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FB_4_HDC1080DMBR_HUM",
+		"FB_4_HUM_PCT_RH",
 	},
 	{
-		// SENSOR_NUM_FB_5_HDC1080DMBR_HUM_PERCENTAGE_RH
+		// SENSOR_NUM_FB_5_HUM_PCT_RH
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -8819,7 +8819,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FB_5_HDC1080DMBR_HUM_PERCENTAGE_RH, // sensor number
+		SENSOR_NUM_FB_5_HUM_PCT_RH, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -8868,10 +8868,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FB_5_HDC1080DMBR_HUM",
+		"FB_5_HUM_PCT_RH",
 	},
 	{
-		// SENSOR_NUM_FB_6_HDC1080DMBR_HUM_PERCENTAGE_RH
+		// SENSOR_NUM_FB_6_HUM_PCT_RH
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -8880,7 +8880,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FB_6_HDC1080DMBR_HUM_PERCENTAGE_RH, // sensor number
+		SENSOR_NUM_FB_6_HUM_PCT_RH, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -8929,10 +8929,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FB_6_HDC1080DMBR_HUM",
+		"FB_6_HUM_PCT_RH",
 	},
 	{
-		// SENSOR_NUM_FB_7_HDC1080DMBR_HUM_PERCENTAGE_RH
+		// SENSOR_NUM_FB_7_HUM_PCT_RH
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -8941,7 +8941,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FB_7_HDC1080DMBR_HUM_PERCENTAGE_RH, // sensor number
+		SENSOR_NUM_FB_7_HUM_PCT_RH, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -8990,10 +8990,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FB_7_HDC1080DMBR_HUM",
+		"FB_7_HUM_PCT_RH",
 	},
 	{
-		// SENSOR_NUM_FB_8_HDC1080DMBR_HUM_PERCENTAGE_RH
+		// SENSOR_NUM_FB_8_HUM_PCT_RH
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -9002,7 +9002,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FB_8_HDC1080DMBR_HUM_PERCENTAGE_RH, // sensor number
+		SENSOR_NUM_FB_8_HUM_PCT_RH, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -9051,10 +9051,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FB_8_HDC1080DMBR_HUM",
+		"FB_8_HUM_PCT_RH",
 	},
 	{
-		// SENSOR_NUM_FB_9_HDC1080DMBR_HUM_PERCENTAGE_RH
+		// SENSOR_NUM_FB_9_HUM_PCT_RH
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -9063,7 +9063,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FB_9_HDC1080DMBR_HUM_PERCENTAGE_RH, // sensor number
+		SENSOR_NUM_FB_9_HUM_PCT_RH, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -9112,10 +9112,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FB_9_HDC1080DMBR_HUM",
+		"FB_9_HUM_PCT_RH",
 	},
 	{
-		// SENSOR_NUM_FB_10_HDC1080DMBR_HUM_PERCENTAGE_RH
+		// SENSOR_NUM_FB_10_HUM_PCT_RH
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -9124,7 +9124,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FB_10_HDC1080DMBR_HUM_PERCENTAGE_RH, // sensor number
+		SENSOR_NUM_FB_10_HUM_PCT_RH, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -9173,10 +9173,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FB_10_HDC1080DMBR_HUM",
+		"FB_10_HUM_PCT_RH",
 	},
 	{
-		// SENSOR_NUM_FB_11_HDC1080DMBR_HUM_PERCENTAGE_RH
+		// SENSOR_NUM_FB_11_HUM_PCT_RH
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -9185,7 +9185,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FB_11_HDC1080DMBR_HUM_PERCENTAGE_RH, // sensor number
+		SENSOR_NUM_FB_11_HUM_PCT_RH, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -9234,10 +9234,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FB_11_HDC1080DMBR_HUM",
+		"FB_11_HUM_PCT_RH",
 	},
 	{
-		// SENSOR_NUM_FB_12_HDC1080DMBR_HUM_PERCENTAGE_RH
+		// SENSOR_NUM_FB_12_HUM_PCT_RH
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -9246,7 +9246,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FB_12_HDC1080DMBR_HUM_PERCENTAGE_RH, // sensor number
+		SENSOR_NUM_FB_12_HUM_PCT_RH, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -9295,10 +9295,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FB_12_HDC1080DMBR_HUM",
+		"FB_12_HUM_PCT_RH",
 	},
 	{
-		// SENSOR_NUM_FB_13_HDC1080DMBR_HUM_PERCENTAGE_RH
+		// SENSOR_NUM_FB_13_HUM_PCT_RH
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -9307,7 +9307,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FB_13_HDC1080DMBR_HUM_PERCENTAGE_RH, // sensor number
+		SENSOR_NUM_FB_13_HUM_PCT_RH, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -9356,10 +9356,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FB_13_HDC1080DMBR_HUM",
+		"FB_13_HUM_PCT_RH",
 	},
 	{
-		// SENSOR_NUM_FB_14_HDC1080DMBR_HUM_PERCENTAGE_RH
+		// SENSOR_NUM_FB_14_HUM_PCT_RH
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -9368,7 +9368,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_FB_14_HDC1080DMBR_HUM_PERCENTAGE_RH, // sensor number
+		SENSOR_NUM_FB_14_HUM_PCT_RH, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -9417,10 +9417,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"FB_14_HDC1080DMBR_HUM",
+		"FB_14_HUM_PCT_RH",
 	},
 	{
-		// SENSOR_NUM_MB_HDC1080DMBR_HUM_PERCENTAGE_RH
+		// SENSOR_NUM_MB_HUM_PCT_RH
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -9429,7 +9429,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_MB_HDC1080DMBR_HUM_PERCENTAGE_RH, // sensor number
+		SENSOR_NUM_MB_HUM_PCT_RH, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -9478,10 +9478,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB_HDC1080DMBR_HUM_PERCENTAGE_RH",
+		"MB_HUM_PCT_RH",
 	},
 	{
-		// SENSOR_NUM_PDB_HDC1080DMBR_HUM_PERCENTAGE_RH
+		// SENSOR_NUM_PDB_HUM_PCT_RH
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -9490,7 +9490,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_PDB_HDC1080DMBR_HUM_PERCENTAGE_RH, // sensor number
+		SENSOR_NUM_PDB_HUM_PCT_RH, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -9539,10 +9539,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"PDB_HDC1080DMBR_HUM",
+		"PDB_HUM_PCT_RH",
 	},
 	{
-		// SENSOR_NUM_PB_1_HDC1080DMBR_HUM_PERCENTAGE_RH
+		// SENSOR_NUM_PB_1_HUM_PCT_RH
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -9551,7 +9551,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_PB_1_HDC1080DMBR_HUM_PERCENTAGE_RH, // sensor number
+		SENSOR_NUM_PB_1_HUM_PCT_RH, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -9600,10 +9600,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"PB_1_HDC1080DMBR_HUM",
+		"PB_1_HUM_PCT_RH",
 	},
 	{
-		// SENSOR_NUM_PB_2_HDC1080DMBR_HUM_PERCENTAGE_RH
+		// SENSOR_NUM_PB_2_HUM_PCT_RH
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -9612,7 +9612,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_PB_2_HDC1080DMBR_HUM_PERCENTAGE_RH, // sensor number
+		SENSOR_NUM_PB_2_HUM_PCT_RH, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -9661,10 +9661,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"PB_2_HDC1080DMBR_HUM",
+		"PB_2_HUM_PCT_RH",
 	},
 	{
-		// SENSOR_NUM_PB_3_HDC1080DMBR_HUM_PERCENTAGE_RH
+		// SENSOR_NUM_PB_3_HUM_PCT_RH
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -9673,7 +9673,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_PB_3_HDC1080DMBR_HUM_PERCENTAGE_RH, // sensor number
+		SENSOR_NUM_PB_3_HUM_PCT_RH, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -9722,7 +9722,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"PB_3_HDC1080DMBR_HUM",
+		"PB_3_HUM_PCT_RH",
 	},
 	{
 		// SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_1
