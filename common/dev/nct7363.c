@@ -256,51 +256,51 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 	init_msg.data[0] = GPIO_00_to_03_Pin_Configuration_REG;
 	init_msg.data[1] = gpio_00_to_03_pin_configuration_reg_msg;
 	if (i2c_master_write(&init_msg, retry)) {
-		LOG_ERR("set nct363 set GPIO_00_to_03_Pin_Configuration_REG fail");
+		LOG_ERR("set nct7363 set GPIO_00_to_03_Pin_Configuration_REG fail");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 	init_msg.data[0] = GPIO_04_to_07_Pin_Configuration_REG;
 	init_msg.data[1] = gpio_04_to_07_pin_configuration_reg_msg;
 	if (i2c_master_write(&init_msg, retry)) {
-		LOG_ERR("set nct363 set GPIO_04_to_07_Pin_Configuration_REG fail");
+		LOG_ERR("set nct7363 set GPIO_04_to_07_Pin_Configuration_REG fail");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 	init_msg.data[0] = GPIO_10_to_13_Pin_Configuration_REG;
 	init_msg.data[1] = gpio_10_to_13_pin_configuration_reg_msg;
 	if (i2c_master_write(&init_msg, retry)) {
-		LOG_ERR("set nct363 set GPIO_10_to_13_Pin_Configuration_REG fail");
+		LOG_ERR("set nct7363 set GPIO_10_to_13_Pin_Configuration_REG fail");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 	init_msg.data[0] = GPIO_14_to_17_Pin_Configuration_REG;
 	init_msg.data[1] = gpio_14_to_17_pin_configuration_reg_msg;
 	if (i2c_master_write(&init_msg, retry)) {
-		LOG_ERR("set nct363 set GPIO_14_to_17_Pin_Configuration_REG fail");
+		LOG_ERR("set nct7363 set GPIO_14_to_17_Pin_Configuration_REG fail");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 	/* set GPIO input/output */
 	init_msg.data[0] = GPIO0x_Input_Output_Configuration_REG;
 	init_msg.data[1] = gpio0x_input_output_configuration_msg;
 	if (i2c_master_write(&init_msg, retry)) {
-		LOG_ERR("set nct363 set GPIO0x_Input_Output_Configuration fail");
+		LOG_ERR("set nct7363 set GPIO0x_Input_Output_Configuration fail");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 	init_msg.data[0] = GPIO1x_Input_Output_Configuration_REG;
 	init_msg.data[1] = gpio1x_input_output_configuration_msg;
 	if (i2c_master_write(&init_msg, retry)) {
-		LOG_ERR("set nct363 set GPIO1x_Input_Output_Configuration fail");
+		LOG_ERR("set nct7363 set GPIO1x_Input_Output_Configuration fail");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 	/* set PWM output */
 	init_msg.data[0] = NCT7363_REG_PWM_CTRL_OUTPUT_0_to_7;
 	init_msg.data[1] = nct7363_reg_pwm_ctrl_output_0_to_7_msg;
 	if (i2c_master_write(&init_msg, retry)) {
-		LOG_ERR("set nct363 set NCT7363_REG_PWM_CTRL_OUTPUT_0_to_7 fail");
+		LOG_ERR("set nct7363 set NCT7363_REG_PWM_CTRL_OUTPUT_0_to_7 fail");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 	init_msg.data[0] = NCT7363_REG_PWM_CTRL_OUTPUT_8_to_15;
 	init_msg.data[1] = nct7363_reg_pwml_ctr_outpu_8_to_15_msg;
 	if (i2c_master_write(&init_msg, retry)) {
-		LOG_ERR("set nct363 set NCT7363_REG_PWM_CTRL_OUTPUT_8_to_15 fail");
+		LOG_ERR("set nct7363 set NCT7363_REG_PWM_CTRL_OUTPUT_8_to_15 fail");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 	/*  set FANIN control */
