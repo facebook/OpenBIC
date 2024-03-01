@@ -285,7 +285,7 @@ bool pre_retimer_read(sensor_cfg *cfg, void *args)
 			return false;
 		}
 
-		retimer_type = check_pcie_retimer_type();
+		retimer_type = get_pcie_retimer_type();
 		switch (retimer_type) {
 		case RETIMER_TYPE_PT5161L:
 			check_init_count += 1;

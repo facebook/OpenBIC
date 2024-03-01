@@ -75,6 +75,27 @@ vr_pre_read_arg vr_pre_read_args[] = {
 	[1] = { 0x1 },
 };
 
+/* Setup Byte:
+	bit[7](register bit) = 1
+	bit[6-4] follow Table of Reference Voltage on max11617 datasheet
+	Configuration Byte:
+	bit[7](register bit) = 0
+	bit[4-1] is for channel selection
+*/
+max11617_init_arg max11617_init_args[] = {
+	[0] = {
+		.is_init = false,
+		.setup_byte = 0xd2,
+		.scalefactor[0] = 2,
+		.scalefactor[1] = 2,
+		.scalefactor[2] = 1,
+		.scalefactor[3] = 1,
+		.scalefactor[4] = 1,
+		.scalefactor[5] = 1,
+		.scalefactor[6] = 1,
+	},
+};
+
 bool pre_vr_read(sensor_cfg *cfg, void *args)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);

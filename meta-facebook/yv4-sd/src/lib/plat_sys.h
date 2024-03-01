@@ -17,4 +17,9 @@
 #ifndef PLAT_SYS_H
 #define PLAT_SYS_H
 
+#define BMC_COLD_RESET_DELAY_MS 1000
+#define BMC_COLD_RESET_PULL_GPIO_INTERVAL_MS 10
+
+int pal_submit_bmc_cold_reset();
+
 #endif

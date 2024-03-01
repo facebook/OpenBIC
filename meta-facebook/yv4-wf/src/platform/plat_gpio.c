@@ -15,9 +15,13 @@
  */
 
 #include <string.h>
+#include <logging/log.h>
 #include "plat_isr.h"
 #include "plat_class.h"
 #include "plat_gpio.h"
+#include "plat_i2c.h"
+
+LOG_MODULE_REGISTER(plat_gpio);
 
 #define gpio_name_to_num(x) #x,
 char *gpio_name[] = {
@@ -78,7 +82,7 @@ GPIO_CFG plat_gpio_cfg[] = {
 	{ CHIP_GPIO, 28, ENABLE, ENABLE, GPIO_OUTPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
 	{ CHIP_GPIO, 29, ENABLE, DISABLE, GPIO_INPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
 	{ CHIP_GPIO, 30, ENABLE, ENABLE, GPIO_OUTPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
-	{ CHIP_GPIO, 31, ENABLE, DISABLE, GPIO_INPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+	{ CHIP_GPIO, 31, ENABLE, DISABLE, GPIO_INPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_EDGE_BOTH, ISR_SET_CXL_LED },
 
 	/** Group E: 32-39 **/
 	{ CHIP_GPIO, 32, ENABLE, ENABLE, GPIO_OUTPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
@@ -98,7 +102,7 @@ GPIO_CFG plat_gpio_cfg[] = {
 	{ CHIP_GPIO, 44, ENABLE, ENABLE, GPIO_OUTPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
 	{ CHIP_GPIO, 45, ENABLE, DISABLE, GPIO_INPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
 	{ CHIP_GPIO, 46, ENABLE, ENABLE, GPIO_OUTPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
-	{ CHIP_GPIO, 47, ENABLE, DISABLE, GPIO_INPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
+	{ CHIP_GPIO, 47, ENABLE, DISABLE, GPIO_INPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_EDGE_BOTH, ISR_SET_CXL_LED },
 
 	/** Group G: 48-55 **/
 	{ CHIP_GPIO, 48, ENABLE, DISABLE, GPIO_INPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
@@ -273,4 +277,129 @@ bool pal_load_gpio_config(void)
 
 	memcpy(&gpio_cfg[0], &plat_gpio_cfg[0], sizeof(plat_gpio_cfg));
 	return true;
+}
+
+// IO Expander
+IOE_CFG ioe_cfg[] = {
+	{ ADDR_IOE1, TCA9555_CONFIG_REG_0, 0x18, TCA9555_OUTPUT_PORT_REG_0, 0x00 },
+	{ ADDR_IOE1, TCA9555_CONFIG_REG_1, 0xC0, TCA9555_OUTPUT_PORT_REG_1, 0xFE },
+	{ ADDR_IOE2, TCA9555_CONFIG_REG_0, 0xF0, TCA9555_OUTPUT_PORT_REG_0, 0x00 },
+	{ ADDR_IOE2, TCA9555_CONFIG_REG_1, 0xC0, TCA9555_OUTPUT_PORT_REG_1, 0x00 },
+	{ ADDR_IOE3, TCA9555_CONFIG_REG_0, 0xE7, TCA9555_OUTPUT_PORT_REG_0, 0x18 },
+	{ ADDR_IOE3, TCA9555_CONFIG_REG_1, 0xF0, TCA9555_OUTPUT_PORT_REG_1, 0x00 },
+	{ ADDR_IOE4, TCA9555_CONFIG_REG_0, 0x10, TCA9555_OUTPUT_PORT_REG_0, 0x3F },
+	{ ADDR_IOE4, TCA9555_CONFIG_REG_1, 0x04, TCA9555_OUTPUT_PORT_REG_1, 0x3E },
+};
+
+int get_ioe_value(uint8_t ioe_addr, uint8_t ioe_reg, uint8_t *value)
+{
+	int ret = 0;
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+
+	msg.bus = I2C_BUS6;
+	msg.target_addr = ioe_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 1;
+	msg.data[0] = ioe_reg;
+
+	ret = i2c_master_read(&msg, retry);
+
+	if (ret != 0) {
+		LOG_DBG("Failed to read IOE(0x%02X). The register is 0x%02X.", ioe_addr, ioe_reg);
+		return -1;
+	}
+
+	*value = msg.data[0];
+
+	return 0;
+}
+
+int set_ioe_value(uint8_t ioe_addr, uint8_t ioe_reg, uint8_t value)
+{
+	int ret = 0;
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+
+	msg.bus = I2C_BUS6;
+	msg.target_addr = ioe_addr;
+	msg.tx_len = 2;
+	msg.rx_len = 1;
+	msg.data[0] = ioe_reg;
+	msg.data[1] = value;
+
+	ret = i2c_master_write(&msg, retry);
+
+	if (ret != 0) {
+		LOG_DBG("Failed to write IOE(0x%02X). The register is 0x%02X and the value is 0x%02X",
+			ioe_addr, ioe_reg, value);
+		return -1;
+	}
+
+	return 0;
+}
+
+void init_ioe_config()
+{
+	int ret = 0;
+	uint8_t ioe_reg_value = 0;
+
+	for (int i = 0; i < ARRAY_SIZE(ioe_cfg); i++) {
+		ret = set_ioe_value(ioe_cfg[i].addr, ioe_cfg[i].conf_reg, ioe_cfg[i].conf_dir);
+
+		if (ret != 0) {
+			LOG_ERR("Failed to initialize IOE(0x%02x)'s direction. The register is :0x%02X",
+				ioe_cfg[i].addr, ioe_cfg[i].conf_reg);
+		}
+
+		if ((ioe_cfg[i].addr == ADDR_IOE4) &&
+		    (ioe_cfg[i].output_reg == TCA9555_OUTPUT_PORT_REG_1)) {
+			// Get the last state before initializing.
+			ret = get_ioe_value(ioe_cfg[i].addr, ioe_cfg[i].output_reg, &ioe_reg_value);
+
+			if (ret != 0) {
+				LOG_ERR("Failed to get E1S present from IOE4");
+				continue;
+			}
+			// Reserve the bit 4&5's last state.
+			ioe_reg_value = (ioe_cfg[i].output_val & 0xCF) | (ioe_reg_value & 0x30);
+
+		} else if ((ioe_cfg[i].addr == ADDR_IOE2) &&
+			   (ioe_cfg[i].output_reg == TCA9555_OUTPUT_PORT_REG_0) &&
+			   (gpio_get(PG_CARD_OK) == HIGH_ACTIVE)) { // If all CXL have been already.
+			ioe_reg_value =
+				(ioe_cfg[i].output_val |
+				 IOE_SWITCH_MUX_TO_BIC); // Enable P0~P3 to switch mux to BIC.
+		} else {
+			ioe_reg_value = ioe_cfg[i].output_val;
+		}
+
+		ret = set_ioe_value(ioe_cfg[i].addr, ioe_cfg[i].output_reg, ioe_reg_value);
+
+		if (ret != 0) {
+			LOG_ERR("Failed to initialize IOE(0x%02x)'s state. The register is :0x%02X",
+				ioe_cfg[i].addr, ioe_cfg[i].conf_reg);
+		}
+	}
+}
+
+int check_ioe4_e1s_prsnt_pin()
+{
+	int ret = 0;
+	uint8_t io_input_status = 0, e1s_present_status = 0;
+
+	ret = get_ioe_value(ADDR_IOE4, TCA9555_INPUT_PORT_REG_1, &io_input_status);
+
+	if (ret != 0) {
+		return ret;
+	}
+
+	e1s_present_status = io_input_status & TCA9555_PORT_2;
+
+	if (e1s_present_status != 0) { // e1s is not present when present pin is low.
+		LOG_WRN("E1S is not present");
+		return -1;
+	} else {
+		return 0;
+	}
 }

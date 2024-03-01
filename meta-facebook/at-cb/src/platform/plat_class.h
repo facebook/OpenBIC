@@ -65,6 +65,7 @@
 #define IOEXP_U228_ADDR (0x40 >> 1)
 #define IOEXP_U229_ADDR (0x42 >> 1)
 #define IOEXP_U230_ADDR (0x44 >> 1)
+#define IOEXP_U233_ADDR (0x46 >> 1)
 #define IOEXP_CARD_PRESENCE_COUNT 4
 #define IOEXP_CARD_PRESENCE_PIN_COUNT 4
 #define IOEXP_CARD_PRESENCE_MAP_VAL 0x0F
@@ -164,6 +165,11 @@ enum CPLD_ACCL_POWER_FAULT_REG {
 	ACCL12_POWER_FAULT_REG = 0x51,
 };
 
+enum ACCL_PRESENCE_OPTION {
+	ACCL_CARD_PRESENCE,
+	ACCL_CABLE_PRESENCE,
+};
+
 struct ASIC_CARD_INFO {
 	bool card_status;
 	bool pwr_cbl_status;
@@ -185,5 +191,7 @@ uint8_t get_pwr_monitor_module();
 bool get_acb_power_status();
 bool get_acb_power_good_flag();
 int get_cpld_register(uint8_t offset, uint8_t *value);
+void init_accl_presence_check_work();
+void init_asic_jtag_select_ioexp();
 
 #endif

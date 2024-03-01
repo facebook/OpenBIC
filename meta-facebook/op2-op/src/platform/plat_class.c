@@ -133,7 +133,7 @@ int check_pcie_retimer_type(void)
 
 void cache_pcie_retimer_version(void)
 {
-	check_pcie_retimer_type();
+	uint8_t retimer_type = get_pcie_retimer_type();
 	I2C_MSG *i2c_msg = NULL;
 	i2c_msg = malloc(sizeof(I2C_MSG));
 	i2c_msg->bus = I2C_BUS4;
@@ -141,7 +141,7 @@ void cache_pcie_retimer_version(void)
 	uint8_t data[RETIMER_VERSION_MAX_LENGTH];
 	memset(data, 0, RETIMER_VERSION_MAX_LENGTH);
 
-	switch (pcie_retimer_type) {
+	switch (retimer_type) {
 	case RETIMER_TYPE_PT5161L:
 		if (get_retimer_fw_version(i2c_msg, data)) {
 			convert_uint8_t_pointer_to_uint32_t(&pcie_retimer_version, data, 4,

@@ -334,16 +334,18 @@ static bool get_pex_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 	uint8_t tmp_buf[4] = { 0 };
 	uint8_t idx = 0;
-	uint8_t i = 0;
 
 	memcpy(tmp_buf, &reading, sizeof(reading));
 	reverse_array(tmp_buf, sizeof(reading));
-	for (i = 0; i < ARRAY_SIZE(tmp_buf) - 1; i++) {
-		idx += bin2hex(&tmp_buf[i], 1, &buf[idx], 2);
-		buf[idx++] = '.';
-	}
 
-	idx += bin2hex(&tmp_buf[i], 1, &buf[idx], 2);
+	idx += bin2hex(&tmp_buf[0], 1, &buf[idx], 2);
+	buf[idx++] = '.';
+	idx += bin2hex(&tmp_buf[1], 1, &buf[idx], 2);
+	buf[idx++] = '.';
+	idx += bin2hex(&tmp_buf[3], 1, &buf[idx], 2);
+	//Append the config id into the version string
+	buf[idx++] = '-';
+	idx += bin2hex(&tmp_buf[2], 1, &buf[idx], 2);
 	*len = idx;
 	return true;
 }

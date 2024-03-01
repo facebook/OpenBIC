@@ -218,6 +218,51 @@ __weak void APP_MASTER_WRITE_READ(ipmi_msg *msg)
 	return;
 }
 
+__weak void APP_GET_BMC_GLOBAL_ENABLES(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+	return;
+}
+
+__weak void APP_SET_ACPI_POWER(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+	return;
+}
+
+__weak void APP_GET_DEVICE_GUID(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+	return;
+}
+
+__weak void APP_CLEAR_MESSAGE_FLAGS(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+	return;
+}
+
+__weak void APP_GET_CAHNNEL_INFO(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+	return;
+}
+
 void IPMI_APP_handler(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -240,6 +285,18 @@ void IPMI_APP_handler(ipmi_msg *msg)
 		break;
 	case CMD_APP_GET_SYSTEM_GUID:
 		APP_GET_SYSTEM_GUID(msg);
+		break;
+	case CMD_APP_GET_BMC_GLOBAL_ENABLES:
+		APP_GET_BMC_GLOBAL_ENABLES(msg);
+		break;
+	case CMD_APP_SET_ACPI_POWER:
+		APP_SET_ACPI_POWER(msg);
+		break;
+	case CMD_APP_CLEAR_MESSAGE_FLAGS:
+		APP_CLEAR_MESSAGE_FLAGS(msg);
+		break;
+	case CMD_APP_GET_CAHNNEL_INFO:
+		APP_GET_CAHNNEL_INFO(msg);
 		break;
 	default:
 		LOG_ERR("Invalid APP msg netfn: %x, cmd: %x", msg->netfn, msg->cmd);

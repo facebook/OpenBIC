@@ -42,7 +42,7 @@ void pal_set_sys_status()
 	set_mb_dc_status(FM_POWER_EN_R);
 	set_DC_status(PG_CARD_OK);
 	set_DC_on_delayed_status();
-	set_ioe_init();
+	init_ioe_config();
 	if (gpio_get(PG_CARD_OK) == POWER_ON) {
 		k_work_schedule(&cxl_ready_check, K_SECONDS(CXL_READY_SECONDS));
 	}
@@ -62,8 +62,8 @@ void pal_pre_init()
 	uint8_t ioe2_output_value = 0;
 	if (get_ioe_value(ADDR_IOE2, TCA9555_OUTPUT_PORT_REG_0, &ioe2_output_value) == 0) {
 		// BIC starts monitoring VR only after the PMIC mux is switched to BIC.
-		if ((GETBIT(ioe2_output_value, IOE_P00) == 0) ||
-		    (GETBIT(ioe2_output_value, IOE_P02) == 0)) {
+		if ((GETBIT(ioe2_output_value, IOE_P00) == 0) || // SEL_SMB_HOST_MUX_PMIC1_IN_R
+		    (GETBIT(ioe2_output_value, IOE_P02) == 0)) { // SEL_SMB_HOST_MUX_PMIC2_IN_R
 			set_vr_monitor_status(false);
 		}
 	}
