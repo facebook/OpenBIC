@@ -27,6 +27,8 @@ target_include_directories(app PRIVATE ${common_path} ${common_path}/service/ipm
 target_include_directories(app PRIVATE ${common_path}/shell/commands)
 target_include_directories(app PRIVATE src/ipmi/include src/platform src/lib)
 
+target_include_directories(app PRIVATE ${common_path}/service/modbus)
+
 # Fail build if there are any warnings 
 target_compile_options(app PRIVATE -Werror)
 

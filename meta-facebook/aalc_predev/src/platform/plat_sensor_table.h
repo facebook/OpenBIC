@@ -307,4 +307,5 @@
 
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
+
 #endif

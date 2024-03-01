@@ -1017,3 +1017,4 @@ uint8_t pal_get_extend_sensor_config()
 	}
 	return extend_sensor_config_size;
 }
+
