@@ -155,5 +155,4 @@ bool get_adc_voltage(int channel, float *voltage)
 
 void init_platform_config()
 {
-
 }
