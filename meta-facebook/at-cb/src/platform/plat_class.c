@@ -39,6 +39,13 @@ LOG_MODULE_REGISTER(plat_class);
 #define NUMBER_OF_ADC_CHANNEL 16
 #define AST1030_ADC_BASE_ADDR 0x7e6e9000
 
+#define PRESENCE_CHECK_STACK_SIZE 1024
+#define PRESENCE_CHECK_DELAY_MS 5000
+
+K_THREAD_STACK_DEFINE(presence_check_thread, PRESENCE_CHECK_STACK_SIZE);
+struct k_thread presence_check_thread_handler;
+k_tid_t presence_check_tid;
+
 static uint8_t board_revision = UNKNOWN_STAGE;
 static uint8_t hsc_module = HSC_MODULE_UNKNOWN;
 static uint8_t pwr_brick_module = POWER_BRICK_UNKNOWN;
@@ -185,12 +192,81 @@ int get_cpld_register(uint8_t offset, uint8_t *value)
 	return ret;
 }
 
+int get_accl_presence_status(uint8_t option, uint16_t *reg_val)
+{
+	CHECK_NULL_ARG_WITH_RETURN(reg_val, -1);
+
+	int ret = -1;
+	uint8_t val = 0;
+	uint8_t accl_1_6_offset = 0;
+	uint8_t accl_7_12_offset = 0;
+
+	switch (option) {
+	case ACCL_CARD_PRESENCE:
+		accl_1_6_offset = CPLD_ACCL_1_6_PRESENT_OFFSET;
+		accl_7_12_offset = CPLD_ACCL_7_12_PRESENT_OFFSET;
+		break;
+	case ACCL_CABLE_PRESENCE:
+		accl_1_6_offset = CPLD_ACCL_1_6_POWER_CABLE_PRESENT_OFFSET;
+		accl_7_12_offset = CPLD_ACCL_7_12_POWER_CABLE_PRESENT_OFFSET;
+		break;
+	default:
+		LOG_ERR("[%s] Invalid option: 0x%x", __func__, option);
+		return -1;
+	}
+
+	ret = get_cpld_register(accl_1_6_offset, &val);
+	if (ret != 0) {
+		LOG_ERR("[%s] Get cpld register fail, register: 0x%x", __func__, accl_1_6_offset);
+		return -1;
+	}
+
+	*reg_val = val;
+
+	ret = get_cpld_register(accl_7_12_offset, &val);
+	if (ret != 0) {
+		LOG_ERR("[%s] Get cpld register fail, register: 0x%x", __func__, accl_7_12_offset);
+		return -1;
+	}
+
+	*reg_val |= (val << 8);
+	return 0;
+}
+
+int get_accl_presence_val(uint8_t card_id, uint16_t val, bool *is_present)
+{
+	CHECK_NULL_ARG_WITH_RETURN(is_present, -1);
+
+	if (card_id >= ASIC_CARD_COUNT) {
+		LOG_ERR("[%s] Invalid card id: 0x%x", __func__, card_id);
+		return -1;
+	}
+
+	uint8_t presence_val = 0;
+	uint8_t shift_offset = 0;
+
+	if (card_id < (ASIC_CARD_COUNT / 2)) {
+		presence_val = val & 0xFF;
+		shift_offset = 0;
+	} else {
+		presence_val = (val >> 8) & 0xFF;
+		shift_offset = (ASIC_CARD_COUNT / 2);
+	}
+
+	if ((((presence_val >> (card_id - shift_offset))) & BIT(0)) == LOW_ACTIVE) {
+		*is_present = true;
+	} else {
+		*is_present = false;
+	}
+
+	return 0;
+}
+
 void check_accl_device_presence_status_via_ioexp()
 {
 	int ret = -1;
 	int retry = 5;
-	uint8_t val = 0;
-	uint8_t shift_offset = 0;
+	bool is_present = false;
 	uint8_t addr_index = 0;
 	uint8_t card_index = 0;
 	uint8_t ioexp_index = 0;
@@ -203,69 +279,51 @@ void check_accl_device_presence_status_via_ioexp()
 
 	if (board_revision > EVT2_STAGE) {
 		// Get ACCL card present status through CPLD
-		ret = get_cpld_register(CPLD_ACCL_1_6_PRESENT_OFFSET, &val);
+		ret = get_accl_presence_status(ACCL_CARD_PRESENCE, &reg_val);
 		if (ret != 0) {
-			LOG_ERR("Fail to read cpld offset: 0x%x", CPLD_ACCL_1_6_PRESENT_OFFSET);
+			LOG_ERR("Fail to get accl presence status, option: 0x%x",
+				ACCL_CARD_PRESENCE);
 			return;
 		}
 
-		reg_val = val;
-
-		ret = get_cpld_register(CPLD_ACCL_7_12_PRESENT_OFFSET, &val);
+		ret = get_accl_presence_status(ACCL_CABLE_PRESENCE, &reg_val_pwr_cbl_prsnt);
 		if (ret != 0) {
-			LOG_ERR("Fail to read cpld offset: 0x%x", CPLD_ACCL_7_12_PRESENT_OFFSET);
+			LOG_ERR("Fail to get accl presence status, option: 0x%x",
+				ACCL_CABLE_PRESENCE);
 			return;
 		}
-
-		reg_val |= (val << 8);
-
-		ret = get_cpld_register(CPLD_ACCL_1_6_POWER_CABLE_PRESENT_OFFSET, &val);
-		if (ret != 0) {
-			LOG_ERR("Fail to read cpld offset: 0x%x",
-				CPLD_ACCL_1_6_POWER_CABLE_PRESENT_OFFSET);
-			return;
-		}
-
-		reg_val_pwr_cbl_prsnt = val;
-
-		ret = get_cpld_register(CPLD_ACCL_7_12_POWER_CABLE_PRESENT_OFFSET, &val);
-		if (ret != 0) {
-			LOG_ERR("Fail to read cpld offset: 0x%x",
-				CPLD_ACCL_7_12_POWER_CABLE_PRESENT_OFFSET);
-			return;
-		}
-
-		reg_val_pwr_cbl_prsnt |= (val << 8);
 
 		for (card_index = 0; card_index < ASIC_CARD_COUNT; ++card_index) {
-			if (card_index < (ASIC_CARD_COUNT / 2)) {
-				presence_val = reg_val & 0xFF;
-				pwr_cable_prsnt_val = reg_val_pwr_cbl_prsnt & 0xFF;
-				shift_offset = 0;
-			} else {
-				presence_val = (reg_val >> 8) & 0xFF;
-				pwr_cable_prsnt_val = (reg_val_pwr_cbl_prsnt >> 8) & 0xFF;
-				shift_offset = (ASIC_CARD_COUNT / 2);
+			ret = get_accl_presence_val(card_index, presence_val, &is_present);
+			if (ret != 0) {
+				LOG_ERR("[%s] Get ACCL card presence value fail, card id: 0x%x",
+					__func__, card_index);
+				continue;
 			}
 
-			if ((((presence_val >> (card_index - shift_offset))) & BIT(0)) ==
-			    LOW_ACTIVE) {
+			if (is_present) {
 				asic_card_info[card_index].card_status = ASIC_CARD_PRESENT;
 				asic_card_info[card_index].card_type =
 					ASIC_CARD_WITH_ARTEMIS_MODULE;
 			} else {
 				asic_card_info[card_index].card_status = ASIC_CARD_NOT_PRESENT;
-			}
-
-			if ((((pwr_cable_prsnt_val >> (card_index - shift_offset))) & BIT(0)) ==
-			    LOW_ACTIVE) {
-				asic_card_info[card_index].pwr_cbl_status = ASIC_CARD_PRESENT;
-			} else {
-				asic_card_info[card_index].pwr_cbl_status = ASIC_CARD_NOT_PRESENT;
 				asic_card_info[card_index].asic_1_status =
 					ASIC_CARD_DEVICE_NOT_PRESENT;
 				asic_card_info[card_index].asic_2_status =
 					ASIC_CARD_DEVICE_NOT_PRESENT;
+			}
+
+			ret = get_accl_presence_val(card_index, pwr_cable_prsnt_val, &is_present);
+			if (ret != 0) {
+				LOG_ERR("[%s] Get ACCL cable presence value fail, card id: 0x%x",
+					__func__, card_index);
+				continue;
+			}
+
+			if (is_present) {
+				asic_card_info[card_index].pwr_cbl_status = ASIC_CARD_PRESENT;
+			} else {
+				asic_card_info[card_index].pwr_cbl_status = ASIC_CARD_NOT_PRESENT;
 			}
 		}
 	}
@@ -437,4 +495,134 @@ bool get_acb_power_status()
 bool get_acb_power_good_flag()
 {
 	return is_power_good;
+}
+
+void presence_check_handler()
+{
+	int ret = 0;
+	bool is_present = false;
+	uint8_t index = 0;
+	uint8_t present_val = 0;
+	uint16_t card_reg_val = 0;
+	uint16_t cable_reg_val = 0;
+
+	while (1) {
+		ret = get_accl_presence_status(ACCL_CARD_PRESENCE, &card_reg_val);
+		if (ret != 0) {
+			LOG_ERR("[%s] Get ACCL card presence status fail", __func__);
+			k_msleep(PRESENCE_CHECK_DELAY_MS);
+			continue;
+		}
+
+		ret = get_accl_presence_status(ACCL_CABLE_PRESENCE, &cable_reg_val);
+		if (ret != 0) {
+			LOG_ERR("[%s] Get ACCL cable presence status fail", __func__);
+			k_msleep(PRESENCE_CHECK_DELAY_MS);
+			continue;
+		}
+
+		for (index = 0; index < ASIC_CARD_COUNT; ++index) {
+			ret = get_accl_presence_val(index, card_reg_val, &is_present);
+			if (ret != 0) {
+				LOG_ERR("[%s] Get ACCL card presence value fail, card id: 0x%x",
+					__func__, index);
+				continue;
+			}
+
+			present_val = (is_present ? ASIC_CARD_PRESENT : ASIC_CARD_NOT_PRESENT);
+			if ((asic_card_info[index].card_status != present_val) &&
+			    (present_val == ASIC_CARD_NOT_PRESENT)) {
+				plat_send_accl_present_event(index, ACCL_CARD_PRESENCE);
+			}
+			asic_card_info[index].card_status = present_val;
+
+			ret = get_accl_presence_val(index, cable_reg_val, &is_present);
+			if (ret != 0) {
+				LOG_ERR("[%s] Get ACCL cable presence value fail, card id: 0x%x",
+					__func__, index);
+				continue;
+			}
+
+			present_val = (is_present ? ASIC_CARD_PRESENT : ASIC_CARD_NOT_PRESENT);
+			if ((asic_card_info[index].pwr_cbl_status != present_val) &&
+			    (present_val == ASIC_CARD_NOT_PRESENT)) {
+				plat_send_accl_present_event(index, ACCL_CABLE_PRESENCE);
+			}
+			asic_card_info[index].pwr_cbl_status = present_val;
+		}
+
+		k_msleep(PRESENCE_CHECK_DELAY_MS);
+	}
+}
+
+void init_accl_presence_check_work()
+{
+	if (presence_check_tid != NULL &&
+	    (strcmp(k_thread_state_str(presence_check_tid), "dead") != 0) &&
+	    (strcmp(k_thread_state_str(presence_check_tid), "unknown") != 0)) {
+		return;
+	}
+	presence_check_tid = k_thread_create(&presence_check_thread_handler, presence_check_thread,
+					     K_THREAD_STACK_SIZEOF(presence_check_thread),
+					     presence_check_handler, NULL, NULL, NULL,
+					     CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+	k_thread_name_set(&presence_check_thread_handler, "presence_check_thread");
+}
+
+void init_asic_jtag_select_ioexp()
+{
+	int ret = 0;
+	int retry = 5;
+	uint8_t tx_len = 2;
+	uint8_t output_0_value = 0;
+	uint8_t output_1_value = 0;
+	uint8_t config_0_value = 0;
+	uint8_t config_1_value = 0;
+	uint8_t data[tx_len];
+	I2C_MSG msg = { 0 };
+	memset(data, 0, sizeof(uint8_t) * tx_len);
+
+	/** Write U233 ioexp output 0 register **/
+	data[0] = PCA9555_OUTPUT_PORT_REG_0;
+	data[1] = output_0_value;
+	msg = construct_i2c_message(I2C_BUS13, IOEXP_U233_ADDR, tx_len, data, 0);
+
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Unable to write ioexp output 0 register bus: %u addr: 0x%02x", msg.bus,
+			msg.target_addr);
+	}
+
+	/** Write U233 ioexp output 1 register **/
+	data[0] = PCA9555_OUTPUT_PORT_REG_1;
+	data[1] = output_1_value;
+	msg = construct_i2c_message(I2C_BUS13, IOEXP_U233_ADDR, tx_len, data, 0);
+
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Unable to write ioexp output 1 register bus: %u addr: 0x%02x", msg.bus,
+			msg.target_addr);
+	}
+
+	/** Write U233 ioexp config 0 register **/
+	data[0] = PCA9555_CONFIG_REG_0;
+	data[1] = config_0_value;
+	msg = construct_i2c_message(I2C_BUS13, IOEXP_U233_ADDR, tx_len, data, 0);
+
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Unable to write ioexp config 0 register bus: %u addr: 0x%02x", msg.bus,
+			msg.target_addr);
+	}
+
+	/** Write U233 ioexp config 1 register **/
+	data[0] = PCA9555_CONFIG_REG_1;
+	data[1] = config_1_value;
+	msg = construct_i2c_message(I2C_BUS13, IOEXP_U233_ADDR, tx_len, data, 0);
+
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Unable to write ioexp config 1 register bus: %u addr: 0x%02x", msg.bus,
+			msg.target_addr);
+	}
 }

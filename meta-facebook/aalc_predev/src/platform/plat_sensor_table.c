@@ -698,7 +698,7 @@ void pal_extend_sensor_config()
 		sensor_count = ARRAY_SIZE(adm1272_sensor_config_table);
 		for (index = 0; index < sensor_count; index++) {
 			add_sensor_config(adm1272_sensor_config_table[index]);
-			LOG_ERR("add HSC_MODULE_ADM1272 sensor config");
+			//LOG_ERR("add HSC_MODULE_ADM1272 sensor config");
 		}
 		break;
 	default:

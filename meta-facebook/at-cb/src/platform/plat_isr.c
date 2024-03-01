@@ -430,43 +430,23 @@ void check_accl_card_pwr_good_work_handler()
 	};
 
 	for (card_id = 0; card_id < ARRAY_SIZE(asic_card_info); ++card_id) {
-		if (is_accl_cable_power_good(card_id) != true) {
-			if (is_accl_cable_power_good_timeout(card_id)) {
-				plat_accl_cable_power_good_fail_event(
-					card_id, PLDM_STATE_SET_OEM_DEVICE_NO_POWER_GOOD);
-				continue;
-			}
+		if (is_accl_cable_power_good_timeout(card_id)) {
+			plat_accl_cable_power_good_fail_event(
+				card_id, PLDM_STATE_SET_OEM_DEVICE_NO_POWER_GOOD);
+			continue;
+		}
 
-			if (is_accl_power_good(card_id)) {
-				// Send ACCL cable power good fail event
-				plat_accl_cable_power_good_fail_event(
-					card_id, PLDM_STATE_SET_OEM_DEVICE_POWER_GOOD_FAIL);
-			} else {
-				ret = get_cpld_register(asic_card_info[card_id].power_fault_reg,
-							&val);
-				if (ret != 0) {
-					LOG_ERR("Failed to check power fault register, card id: 0x%x, reg: 0x%x",
-						card_id, asic_card_info[card_id].power_fault_reg);
-					plat_accl_power_good_fail_event(
-						card_id, PLDM_STATE_SET_OEM_DEVICE_POWER_GOOD_FAIL);
-					continue;
-				}
+		ret = get_cpld_register(asic_card_info[card_id].power_fault_reg, &val);
+		if (ret != 0) {
+			LOG_ERR("Failed to check power fault register, card id: 0x%x, reg: 0x%x",
+				card_id, asic_card_info[card_id].power_fault_reg);
+			continue;
+		}
 
-				bool is_occur_timeout = false;
-				for (index = 0; index < ARRAY_SIZE(power_timeout_info); ++index) {
-					if (val & power_timeout_info[index].check_bit) {
-						is_occur_timeout = true;
-						plat_accl_power_good_fail_event(
-							card_id,
-							power_timeout_info[index].power_fault_state);
-					}
-				}
-
-				if (is_occur_timeout != true) {
-					// No power fault occurs but ACCL power good fail
-					plat_accl_power_good_fail_event(
-						card_id, PLDM_STATE_SET_OEM_DEVICE_POWER_GOOD_FAIL);
-				}
+		for (index = 0; index < ARRAY_SIZE(power_timeout_info); ++index) {
+			if (val & power_timeout_info[index].check_bit) {
+				plat_accl_power_good_fail_event(
+					card_id, power_timeout_info[index].power_fault_state);
 			}
 		}
 	}

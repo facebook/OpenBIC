@@ -163,9 +163,10 @@ enum SENSOR_DEV {
 	sensor_dev_bmr351 = 0x2D,
 	sensor_dev_cx7 = 0x2E,
 	sensor_dev_vistara = 0x2F,
-	sensor_dev_ads112c = 0x30,
-	sensor_dev_nct7363 = 0x31,
-	sensor_dev_hdc1080 = 0x32,
+	sensor_dev_max11617 = 0x30,
+	sensor_dev_ads112c = 0x31,
+	sensor_dev_nct7363 = 0x32,
+	sensor_dev_hdc1080 = 0x33,
 	sensor_dev_max
 };
 
@@ -702,6 +703,13 @@ typedef struct _cx7_init_arg {
 	uint8_t endpoint;
 	uint16_t sensor_id;
 } cx7_init_arg;
+
+typedef struct _max11617_init_arg {
+	bool is_init;
+	uint8_t setup_byte;
+	uint8_t config_byte;
+	float scalefactor[12];
+} max11617_init_arg;
 
 typedef struct _nct7363_init_arg {
 	bool is_init;
