@@ -52,15 +52,15 @@ nct7363_init_arg nct7363_init_args[] = {
     [0] = { 
         .is_init = false, 
             .init_pin_config = {
-                .GPIO_14_to_17_Pin_Function_Configuration = 0b00001001,
-                .GPIO0x_Input_Output_Configuration = 0b11111110,
+                .GPIO_14_to_17_Pin_Function_Configuration = 0b01001000,
+                .GPIO0x_Input_Output_Configuration = 0b00000100,
                 .GPIO1x_Input_Output_Configuration = 0b11111100,
                 .PWM_8_to_15_Enable = 0b10000000,
                 .FANIN_0_to_7_Monitoring_Enable = 0b00100000,
             },
         .fan_poles = 0,
     },	
-    // Management BD
+    // Management BD(no used)
     [1] = { 
         .is_init = false,
             .init_pin_config = {
@@ -77,11 +77,11 @@ nct7363_init_arg nct7363_init_args[] = {
         .is_init = false,
             .init_pin_config = {
                 .GPIO_00_to_03_Pin_Function_Configuration = 0b10010101,
-                .GPIO_04_to_07_Pin_Function_Configuration = 0b00101010,
+                .GPIO_04_to_07_Pin_Function_Configuration = 0b00000000,
                 .GPIO0x_Input_Output_Configuration = 0b11111111,
                 .GPIO1x_Input_Output_Configuration = 0b00000000,
                 .PWM_0_to_7_Enable = 0b00000111,
-                .FANIN_8_to_15_Monitoring_Enable = 0b01111000,
+                .FANIN_8_to_15_Monitoring_Enable = 0b00001000,
             },
         .fan_poles = 0,
     },
