@@ -31,7 +31,16 @@ enum SLOT_PID {
 	SLOT8_PID = 0x0023,
 };
 
+enum BOARD_REV_ID {
+	BOARD_REV_POC = 0x00,
+	BOARD_REV_EVT = 0x01,
+	BOARD_REV_DVT = 0x03,
+	BOARD_REV_PVT = 0x05,
+	BOARD_REV_MP = 0x06,
+};
+
 bool get_adc_voltage(int channel, float *voltage);
+bool get_board_rev(uint8_t *board_rev);
 uint8_t get_slot_eid();
 uint8_t get_slot_id();
 void init_platform_config();
