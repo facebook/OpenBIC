@@ -102,12 +102,12 @@ typedef struct __attribute__((packed)) {
 	uint32_t nominal_value;
 	uint32_t normal_max;
 	uint32_t normal_min;
-	uint32_t warning_high;
-	uint32_t warning_low;
-	uint32_t critical_high;
-	uint32_t critical_low;
-	uint32_t fatal_high;
-	uint32_t fatal_low;
+	int32_t warning_high;
+	int32_t warning_low;
+	int32_t critical_high;
+	int32_t critical_low;
+	int32_t fatal_high;
+	int32_t fatal_low;
 } PDR_numeric_sensor;
 
 typedef struct __attribute__((packed)) {
