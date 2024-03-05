@@ -220,26 +220,6 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 					SAFE_FREE(kcs_buff);
 				} while (0);
 			}
-#ifdef ENABLE_PLDM
-			/*
-			Bios needs get self test and get system info before getting set system info
-			*/
-			if ((req->netfn == NETFN_APP_REQ) &&
-			    (req->cmd == CMD_APP_GET_SELFTEST_RESULTS)) {
-				uint8_t *kcs_buff;
-				kcs_buff = malloc(4);
-				if (kcs_buff == NULL) {
-					LOG_ERR("Memory allocation failed");
-					continue;
-				}
-				kcs_buff[0] = req->netfn;
-				kcs_buff[1] = req->cmd;
-				kcs_buff[2] = 0x00;
-				kcs_buff[3] = 0x55;
-				kcs_write(kcs_inst->index, kcs_buff, 4);
-				SAFE_FREE(kcs_buff);
-			}
-#endif
 			if ((req->netfn == NETFN_APP_REQ) &&
 			    (req->cmd == CMD_APP_SET_SYS_INFO_PARAMS) &&
 			    (req->data[0] == CMD_SYS_INFO_FW_VERSION)) {
