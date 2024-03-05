@@ -19,7 +19,7 @@
 #include <logging/log.h>
 #include "plat_hook.h"
 #include "plat_class.h"
-
+#include "nct7363.h"
 LOG_MODULE_REGISTER(plat_hook);
 
 /**************************************************************************************************
@@ -47,55 +47,85 @@ adm1272_init_arg adm1272_init_args[] = {
 };
 
 nct7363_init_arg nct7363_init_args[] = {
-    //GPIO setting: Reserved=11, FANINx=10, PWMx=01, GPIOXX=00
-    //Fan BD
+    // GPIO setting: Reserved=11, FANINx=10, PWMx=01, GPIOXX=00
+    // gpio_dir == 1 : input(default), gpio_dir == 0 : output
+    // Fan BD
     [0] = { 
         .is_init = false, 
-            .init_pin_config = {
-                .GPIO_14_to_17_Pin_Function_Configuration = 0b01001000,
-                .GPIO0x_Input_Output_Configuration = 0b00000100,
-                .GPIO1x_Input_Output_Configuration = 0b11111100,
-                .PWM_8_to_15_Enable = 0b10000000,
-                .FANIN_0_to_7_Monitoring_Enable = 0b00100000,
-            },
+        .pin_type[13] = NCT7363_PIN_TPYE_FANIN,
+        .pin_type[14] = NCT7363_PIN_TPYE_PWM,
+        .gpio_dir[0] = 0,
+        .gpio_dir[1] = 0,
+        .gpio_dir[2] = 1,
+        .gpio_dir[3] = 0,
+        .gpio_dir[4] = 0,
+        .gpio_dir[5] = 0,
+        .gpio_dir[6] = 0,
+        .gpio_dir[7] = 0,
+        .gpio_dir[8] = 0,
+        .gpio_dir[9] = 0,
+        .gpio_dir[10] = 1,
+        .gpio_dir[11] = 1,
+        .gpio_dir[12] = 1,
+        .gpio_dir[13] = 1,
+        .gpio_dir[14] = 1,
+        .gpio_dir[15] = 1,
         .fan_poles = 0,
     },	
     // Management BD(no used)
     [1] = { 
         .is_init = false,
-            .init_pin_config = {
-                .GPIO_00_to_03_Pin_Function_Configuration = 0b00101001,
-                .GPIO0x_Input_Output_Configuration = 0b11101111,
-                .GPIO1x_Input_Output_Configuration = 0b11111111,
-                .PWM_0_to_7_Enable = 0b00000001,
-                .FANIN_8_to_15_Monitoring_Enable = 0b00000110,
-            },
         .fan_poles = 0,
     },
     //Backplane BD
     [2] = { 
         .is_init = false,
-            .init_pin_config = {
-                .GPIO_00_to_03_Pin_Function_Configuration = 0b10010101,
-                .GPIO_04_to_07_Pin_Function_Configuration = 0b00000000,
-                .GPIO0x_Input_Output_Configuration = 0b11111111,
-                .GPIO1x_Input_Output_Configuration = 0b00000000,
-                .PWM_0_to_7_Enable = 0b00000111,
-                .FANIN_8_to_15_Monitoring_Enable = 0b00001000,
-            },
+        .pin_type[0] = NCT7363_PIN_TPYE_PWM,
+        .pin_type[1] = NCT7363_PIN_TPYE_PWM,
+        .pin_type[2] = NCT7363_PIN_TPYE_PWM,
+        .pin_type[3] = NCT7363_PIN_TPYE_FANIN,
+        .gpio_dir[0] = 1,
+        .gpio_dir[1] = 1,
+        .gpio_dir[2] = 1,
+        .gpio_dir[3] = 1,
+        .gpio_dir[4] = 1,
+        .gpio_dir[5] = 1,
+        .gpio_dir[6] = 1,
+        .gpio_dir[7] = 1,
+        .gpio_dir[8] = 0,
+        .gpio_dir[9] = 0,
+        .gpio_dir[10] = 0,
+        .gpio_dir[11] = 0,
+        .gpio_dir[12] = 0,
+        .gpio_dir[13] = 0,
+        .gpio_dir[14] = 0,
+        .gpio_dir[15] = 0,
         .fan_poles = 0,
     },
     //Pump BD
     [3] = { 
         .is_init = false,
-            .init_pin_config = {
-                .GPIO_00_to_03_Pin_Function_Configuration = 0b00000101,
-                .GPIO_04_to_07_Pin_Function_Configuration = 0b00101010,
-                .GPIO0x_Input_Output_Configuration = 0b11111111,
-                .GPIO1x_Input_Output_Configuration = 0b11111100,
-                .PWM_0_to_7_Enable = 0b00000011,
-                .FANIN_8_to_15_Monitoring_Enable = 0b01110000,
-            },
+        .pin_type[0] = NCT7363_PIN_TPYE_PWM,
+        .pin_type[1] = NCT7363_PIN_TPYE_PWM,
+        .pin_type[4] = NCT7363_PIN_TPYE_FANIN,
+        .pin_type[5] = NCT7363_PIN_TPYE_FANIN,
+        .pin_type[6] = NCT7363_PIN_TPYE_FANIN,
+        .gpio_dir[0] = 1,
+        .gpio_dir[1] = 1,
+        .gpio_dir[2] = 1,
+        .gpio_dir[3] = 1,
+        .gpio_dir[4] = 1,
+        .gpio_dir[5] = 1,
+        .gpio_dir[6] = 1,
+        .gpio_dir[7] = 1,
+        .gpio_dir[8] = 0,
+        .gpio_dir[9] = 0,
+        .gpio_dir[10] = 1,
+        .gpio_dir[11] = 1,
+        .gpio_dir[12] = 1,
+        .gpio_dir[13] = 1,
+        .gpio_dir[14] = 1,
+        .gpio_dir[15] = 1,
         .fan_poles = 0,
     },
 };
