@@ -39,4 +39,5 @@ extern mux_config bus_8_PCA9546A_configs[];
 extern mux_config bus_9_PCA9546A_configs[];
 
 bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading);
 #endif
