@@ -45,6 +45,8 @@ void pal_pre_init()
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
 	init_asic_jtag_select_ioexp();
 	check_accl_device_presence_status_via_ioexp();
+	get_acb_power_status();
+	init_sw_heartbeat_work();
 	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY + 1); // work queue for low priority jobs
 }
 
@@ -72,8 +74,6 @@ void pal_device_init()
 
 void pal_set_sys_status()
 {
-	get_acb_power_status();
-	init_sw_heartbeat_work();
 	gpio_set(ACB_BIC_READY_N, GPIO_LOW);
 	return;
 }

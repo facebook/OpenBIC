@@ -230,7 +230,17 @@ void sw_heartbeat_read()
 		  .power_fault_state = PLDM_STATE_SET_OEM_DEVICE_3V3_AUX_FAULT },
 	};
 
+	is_sw0_ready = get_acb_power_good_flag();
+	is_sw1_ready = get_acb_power_good_flag();
+
 	while (1) {
+		if (get_acb_power_good_flag() == false) {
+			is_sw0_ready = false;
+			is_sw1_ready = false;
+			k_msleep(SW_HEARTBEAT_DELAY_MS);
+			continue;
+		}
+
 		ret = get_pex_heartbeat("HB0");
 		if (ret != true) {
 			LOG_ERR("Fail to get switch 0 heartbeat");
@@ -295,15 +305,6 @@ void init_sw_heartbeat_thread()
 	k_thread_name_set(&sw_heartbeat_thread_handler, "sw_heartbeat_thread");
 }
 
-void abort_sw_heartbeat_thread()
-{
-	if (sw_heartbeat_tid != NULL &&
-	    (strcmp(k_thread_state_str(sw_heartbeat_tid), "dead") != 0) &&
-	    (strcmp(k_thread_state_str(sw_heartbeat_tid), "unknown") != 0)) {
-		k_thread_abort(sw_heartbeat_tid);
-	}
-}
-
 bool is_sw_ready(uint8_t sensor_num)
 {
 	switch (sensor_num) {
@@ -322,13 +323,7 @@ void init_sw_heartbeat_work()
 {
 	uint8_t board_revision = get_board_revision();
 	if (board_revision > EVT2_STAGE) {
-		if (get_acb_power_good_flag()) {
-			init_sw_heartbeat_thread();
-		} else {
-			abort_sw_heartbeat_thread();
-			is_sw0_ready = false;
-			is_sw1_ready = false;
-		}
+		init_sw_heartbeat_thread();
 	}
 }
 

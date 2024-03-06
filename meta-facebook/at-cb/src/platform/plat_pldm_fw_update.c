@@ -306,13 +306,13 @@ static bool get_pex_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		return false;
 	}
 
-	uint8_t unit_idx = ((pex89000_unit *)(cfg->priv_data))->idx;
 	if (cfg->pre_sensor_read_hook) {
 		if (cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args) == false) {
 			LOG_ERR("PEX%d pre-read fail", pex_id);
 			return false;
 		}
 	}
+	uint8_t unit_idx = ((pex89000_unit *)(cfg->priv_data))->idx;
 
 	if (pex_access_engine(cfg->port, cfg->target_addr, unit_idx, pex_access_sbr_ver,
 			      &reading)) {
