@@ -138,7 +138,7 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 	int gpio_result = 0;
 	uint8_t offset = cfg->offset;
 	uint8_t port_offset = cfg->arg0;
-	uint8_t fan_poles= cfg->arg1;
+	uint8_t fan_poles = cfg->arg1;
 	uint8_t fan_count_high_byte_offset =
 		NCT7363_REG_FAN_COUNT_VALUE_HIGH_BYTE_BASE_OFFSET + port_offset * 2;
 	uint8_t fan_count_low_byte_offset =
@@ -186,15 +186,13 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 		for (int i = 0; i < 16; i++) {
 			if ((fan_status & 1) == 1) {
 				LOG_ERR("FAN%d is not working", i);
-				error_flag+=1;
+				error_flag += 1;
 			}
 			fan_status = fan_status >> 1;
 		}
 		if (error_flag == 0) {
-
 			return 0;
-		}
-		else {
+		} else {
 			return -1;
 		}
 	case NCT7363_GPIO_READ_OFFSET:
@@ -243,17 +241,20 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 	uint8_t offset, val;
 	/* check pin_type */
 	for (uint8_t i = 0; i < 16; i++) {
-		if (nct7363_init_arg_data->pin_type[i] == NCT7363_PIN_TPYE_GPIO || nct7363_init_arg_data->pin_type[i] == NCT7363_PIN_TPYE_PWM || nct7363_init_arg_data->pin_type[i] == NCT7363_PIN_TPYE_FANIN || nct7363_init_arg_data->pin_type[i] == NCT7363_PIN_TPYE_RESERVED){
+		if (nct7363_init_arg_data->pin_type[i] == NCT7363_PIN_TPYE_GPIO ||
+		    nct7363_init_arg_data->pin_type[i] == NCT7363_PIN_TPYE_PWM ||
+		    nct7363_init_arg_data->pin_type[i] == NCT7363_PIN_TPYE_FANIN ||
+		    nct7363_init_arg_data->pin_type[i] == NCT7363_PIN_TPYE_RESERVED) {
 			continue;
-		}	
-		else{
+		} else {
 			LOG_ERR("Unknown pin_type, pin number(%d)", i);
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 	}
 	/* init_pin_config */
 	for (uint8_t i = 0; i < 4; i++) {
-		offset = GPIO_00_to_03_Pin_Configuration_REG + i; // Pin_Configuration_REG base offset
+		offset = GPIO_00_to_03_Pin_Configuration_REG +
+			 i; // Pin_Configuration_REG base offset
 		val = (nct7363_init_arg_data->pin_type[3 + 4 * i] << 6) | // 03 07 13 17
 		      (nct7363_init_arg_data->pin_type[2 + 4 * i] << 4) | // 02 06 12 16
 		      (nct7363_init_arg_data->pin_type[1 + 4 * i] << 2) | // 01 05 11 15
@@ -263,58 +264,47 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 	/* init gpio input/output */
-	uint8_t offset_gpio0x= 0, offset_gpio1x= 0, val_gpio0x= 0, val_gpio1x= 0;
+	uint8_t offset_gpio0x = 0, offset_gpio1x = 0, val_gpio0x = 0, val_gpio1x = 0;
 	offset_gpio0x = GPIO0x_Input_Output_Configuration_REG;
 	offset_gpio1x = GPIO1x_Input_Output_Configuration_REG;
 	for (uint8_t i = 0; i < 8; i++) {
 		val_gpio0x = (val_gpio0x << 1) | nct7363_init_arg_data->gpio_dir[i];
-		val_gpio1x = (val_gpio1x << 1) | nct7363_init_arg_data->gpio_dir[i+8];
+		val_gpio1x = (val_gpio1x << 1) | nct7363_init_arg_data->gpio_dir[i + 8];
 	}
 	if (nct7363_write(cfg, offset_gpio0x, val_gpio0x))
-			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	if (nct7363_write(cfg, offset_gpio1x, val_gpio1x))
-			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
 
 	/* set PWM output */
-	uint8_t offset_pwm_ctrl_0_7= 0, offset_pwm_ctrl_8_15= 0, val_pwm_ctrl_0_7= 0, val_pwm_ctrl_8_15= 0;
+	uint8_t offset_pwm_ctrl_0_7 = 0, offset_pwm_ctrl_8_15 = 0, val_pwm_ctrl_0_7 = 0,
+		val_pwm_ctrl_8_15 = 0;
 	offset_pwm_ctrl_0_7 = NCT7363_REG_PWM_CTRL_OUTPUT_0_to_7;
 	offset_pwm_ctrl_8_15 = NCT7363_REG_PWM_CTRL_OUTPUT_8_to_15;
-	for (int i = 7; i >= 0; i--) {
+	for (int i = 0; i < 8; i++) {
 		if (nct7363_init_arg_data->pin_type[i] == NCT7363_PIN_TPYE_PWM)
-			val_pwm_ctrl_0_7 = (val_pwm_ctrl_0_7 << 1) | 1;
-		else{
-			val_pwm_ctrl_0_7 = (val_pwm_ctrl_0_7 << 1) | 0;
-		}
-		if (nct7363_init_arg_data->pin_type[i+8] == NCT7363_PIN_TPYE_PWM)
-			val_pwm_ctrl_8_15 = (val_pwm_ctrl_8_15 << 1) | 1;
-		else{
-			val_pwm_ctrl_8_15 = (val_pwm_ctrl_8_15 << 1) | 0;
-		}
+			val_pwm_ctrl_0_7 |= (1 << i);
+		if (nct7363_init_arg_data->pin_type[i + 8] == NCT7363_PIN_TPYE_PWM)
+			val_pwm_ctrl_8_15 |= (1 << i);
 	}
 	if (nct7363_write(cfg, offset_pwm_ctrl_0_7, val_pwm_ctrl_0_7))
-			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	if (nct7363_write(cfg, offset_pwm_ctrl_8_15, val_pwm_ctrl_8_15))
-			return SENSOR_INIT_UNSPECIFIED_ERROR;
-	/* set FANIN */		
-	uint8_t offset_fanin_0_7= 0, offset_fanin_8_15= 0, val_fanin_0_7= 0, val_fanin_8_15 = 0;
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	/* set FANIN */
+	uint8_t offset_fanin_0_7 = 0, offset_fanin_8_15 = 0, val_fanin_0_7 = 0, val_fanin_8_15 = 0;
 	offset_fanin_0_7 = NCT7363_REG_FANIN_CTRL1;
 	offset_fanin_8_15 = NCT7363_REG_FANIN_CTRL2;
-	for (int i = 7; i >= 0; i--) {
+	for (int i = 0; i < 8; i++) {
 		if (nct7363_init_arg_data->pin_type[i] == NCT7363_PIN_TPYE_FANIN)
-			val_fanin_0_7 = (val_fanin_0_7 << 1) | 1;
-		else{
-			val_fanin_0_7 = (val_fanin_0_7 << 1) | 0;
-		}
-		if (nct7363_init_arg_data->pin_type[i+8] == NCT7363_PIN_TPYE_FANIN)
-			val_fanin_8_15 = (val_fanin_8_15 << 1) | 1;
-		else{
-			val_fanin_8_15 = (val_fanin_8_15 << 1) | 0;
-		}
+			val_fanin_0_7 |= (1 << i);
+		if (nct7363_init_arg_data->pin_type[i + 8] == NCT7363_PIN_TPYE_FANIN)
+			val_fanin_8_15 |= (1 << i);
 	}
 	if (nct7363_write(cfg, offset_fanin_0_7, val_fanin_0_7))
-			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	if (nct7363_write(cfg, offset_fanin_8_15, val_fanin_8_15))
-			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
 
 	/* set init threshold  */
 	for (int i = 0; i < 16; i++) {
@@ -336,7 +326,6 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 
 		if (nct7363_write(cfg, offset, val))
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
-
 	}
 	nct7363_init_arg_data->is_init = true;
 	cfg->arg1 = nct7363_init_arg_data->fan_poles;

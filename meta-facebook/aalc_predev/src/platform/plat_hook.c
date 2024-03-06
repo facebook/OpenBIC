@@ -54,16 +54,7 @@ nct7363_init_arg nct7363_init_args[] = {
         .is_init = false, 
         .pin_type[13] = NCT7363_PIN_TPYE_FANIN,
         .pin_type[14] = NCT7363_PIN_TPYE_PWM,
-        .gpio_dir[0] = 0,
-        .gpio_dir[1] = 0,
         .gpio_dir[2] = 1,
-        .gpio_dir[3] = 0,
-        .gpio_dir[4] = 0,
-        .gpio_dir[5] = 0,
-        .gpio_dir[6] = 0,
-        .gpio_dir[7] = 0,
-        .gpio_dir[8] = 0,
-        .gpio_dir[9] = 0,
         .gpio_dir[10] = 1,
         .gpio_dir[11] = 1,
         .gpio_dir[12] = 1,
@@ -92,14 +83,6 @@ nct7363_init_arg nct7363_init_args[] = {
         .gpio_dir[5] = 1,
         .gpio_dir[6] = 1,
         .gpio_dir[7] = 1,
-        .gpio_dir[8] = 0,
-        .gpio_dir[9] = 0,
-        .gpio_dir[10] = 0,
-        .gpio_dir[11] = 0,
-        .gpio_dir[12] = 0,
-        .gpio_dir[13] = 0,
-        .gpio_dir[14] = 0,
-        .gpio_dir[15] = 0,
         .fan_poles = 0,
     },
     //Pump BD
@@ -118,8 +101,6 @@ nct7363_init_arg nct7363_init_args[] = {
         .gpio_dir[5] = 1,
         .gpio_dir[6] = 1,
         .gpio_dir[7] = 1,
-        .gpio_dir[8] = 0,
-        .gpio_dir[9] = 0,
         .gpio_dir[10] = 1,
         .gpio_dir[11] = 1,
         .gpio_dir[12] = 1,
@@ -133,36 +114,36 @@ nct7363_init_arg nct7363_init_args[] = {
  *  PRE-HOOK/POST-HOOK ARGS
  **************************************************************************************************/
 mux_config bus_1_PCA9546A_configs[] = {
-    [0] = { .target_addr = 0xE0, .channel = PCA9546A_CHANNEL_0 },
+	[0] = { .target_addr = 0xE0, .channel = PCA9546A_CHANNEL_0 },
 	[1] = { .target_addr = 0xE0, .channel = PCA9546A_CHANNEL_1 },
 	[2] = { .target_addr = 0xE0, .channel = PCA9546A_CHANNEL_2 },
 	[3] = { .target_addr = 0xE0, .channel = PCA9546A_CHANNEL_3 },
 };
 mux_config bus_2_PCA9546A_configs[] = {
-    [0] = { .target_addr = 0xE2, .channel = PCA9546A_CHANNEL_0 },
+	[0] = { .target_addr = 0xE2, .channel = PCA9546A_CHANNEL_0 },
 	[1] = { .target_addr = 0xE2, .channel = PCA9546A_CHANNEL_1 },
 	[2] = { .target_addr = 0xE2, .channel = PCA9546A_CHANNEL_2 },
 	[3] = { .target_addr = 0xE2, .channel = PCA9546A_CHANNEL_3 },
 };
 mux_config bus_6_PCA9546A_configs[] = {
-    [0] = { .target_addr = 0xE4, .channel = PCA9546A_CHANNEL_0 },
+	[0] = { .target_addr = 0xE4, .channel = PCA9546A_CHANNEL_0 },
 	[1] = { .target_addr = 0xE4, .channel = PCA9546A_CHANNEL_1 },
 	[2] = { .target_addr = 0xE4, .channel = PCA9546A_CHANNEL_2 },
 	[3] = { .target_addr = 0xE4, .channel = PCA9546A_CHANNEL_3 },
 };
 mux_config bus_7_PCA9546A_configs[] = {
-    [0] = { .target_addr = 0xE6, .channel = PCA9546A_CHANNEL_0 },
+	[0] = { .target_addr = 0xE6, .channel = PCA9546A_CHANNEL_0 },
 	[1] = { .target_addr = 0xE6, .channel = PCA9546A_CHANNEL_1 },
 	[2] = { .target_addr = 0xE6, .channel = PCA9546A_CHANNEL_2 },
 	[3] = { .target_addr = 0xE6, .channel = PCA9546A_CHANNEL_3 },
 };
 mux_config bus_8_PCA9546A_configs[] = {
-    [0] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_0 },
+	[0] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_0 },
 	[1] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_1 },
 	[2] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_2 },
 };
 mux_config bus_9_PCA9546A_configs[] = {
-    [0] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_1 }, // sensor box
+	[0] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_1 }, // sensor box
 	[1] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_2 }, // PDB
 };
 /**************************************************************************************************
