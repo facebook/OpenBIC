@@ -54,6 +54,8 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.activate_method = COMP_ACT_SELF,
 		.self_act_func = pldm_bic_activate,
 		.get_fw_version_fn = NULL,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
 	},
 	{
 		.enable = true,
@@ -67,12 +69,14 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.activate_method = COMP_ACT_AC_PWR_CYCLE,
 		.self_act_func = NULL,
 		.get_fw_version_fn = get_cpld_user_code,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
 	},
 };
 
 static uint8_t pldm_pre_cpld_update(void *fw_update_param)
 {
-	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, PLDM_FW_UPDATE_ERROR);
 
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 
@@ -81,7 +85,7 @@ static uint8_t pldm_pre_cpld_update(void *fw_update_param)
 		p->addr = CPLD_BUS_13_ADDR;
 	}
 
-	return 0;
+	return PLDM_FW_UPDATE_SUCCESS;
 }
 
 static bool get_cpld_user_code(void *info_p, uint8_t *buf, uint8_t *len)

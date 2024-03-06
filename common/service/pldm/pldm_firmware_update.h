@@ -68,6 +68,7 @@ enum pldm_firmware_update_commands {
 	/* inventory commands */
 	PLDM_FW_UPDATE_CMD_CODE_QUERY_DEVICE_IDENTIFIERS = 0x01,
 	PLDM_FW_UPDATE_CMD_CODE_GET_FIRMWARE_PARAMETERS = 0x02,
+	PLDM_FW_UPDATE_CMD_CODE_QUERY_DOWNSTREAM_IDENTIFIERS = 0x04,
 
 	/* update commands */
 	PLDM_FW_UPDATE_CMD_CODE_REQUEST_UPDATE = 0x10,
@@ -147,23 +148,22 @@ enum pldm_firmware_update_aux_state {
 /**
  * PLDM component classification
  */
-enum {
-	COMP_CLASS_TYPE_UNKNOWN = 0x0000,
-	COMP_CLASS_TYPE_OTHER,
-	COMP_CLASS_TYPE_DRIVER,
-	COMP_CLASS_TYPE_CFG_SW,
-	COMP_CLASS_TYPE_APP_SW,
-	COMP_CLASS_TYPE_INSTR,
-	COMP_CLASS_TYPE_FW_BIOS,
-	COMP_CLASS_TYPE_DIAG_SW,
-	COMP_CLASS_TYPE_OS,
-	COMP_CLASS_TYPE_MW,
-	COMP_CLASS_TYPE_FW,
-	COMP_CLASS_TYPE_BIOS_FC,
-	COMP_CLASS_TYPE_SP_SV_P,
-	COMP_CLASS_TYPE_SW_BUNDLE,
-	COMP_CLASS_TYPE_DOWNSTREAM = 0xFFFF,
-	COMP_CLASS_TYPE_MAX = 0x10000,
+enum { COMP_CLASS_TYPE_UNKNOWN = 0x0000,
+       COMP_CLASS_TYPE_OTHER,
+       COMP_CLASS_TYPE_DRIVER,
+       COMP_CLASS_TYPE_CFG_SW,
+       COMP_CLASS_TYPE_APP_SW,
+       COMP_CLASS_TYPE_INSTR,
+       COMP_CLASS_TYPE_FW_BIOS,
+       COMP_CLASS_TYPE_DIAG_SW,
+       COMP_CLASS_TYPE_OS,
+       COMP_CLASS_TYPE_MW,
+       COMP_CLASS_TYPE_FW,
+       COMP_CLASS_TYPE_BIOS_FC,
+       COMP_CLASS_TYPE_SP_SV_P,
+       COMP_CLASS_TYPE_SW_BUNDLE,
+       COMP_CLASS_TYPE_DOWNSTREAM = 0xFFFF,
+       COMP_CLASS_TYPE_MAX = 0x10000,
 };
 
 /**
@@ -202,6 +202,18 @@ enum pldm_firmware_update_apply_result_values {
   used in the future. */
 };
 
+enum pldm_firmware_update_transfer_operation_flag {
+	PLDM_FW_UPDATE_GET_NEXT_PART,
+	PLDM_FW_UPDATE_GET_FIRST_PART,
+};
+
+enum pldm_firmware_update_transfer_flag {
+	PLDM_FW_UPDATE_TRANSFER_START = 0x01,
+	PLDM_FW_UPDATE_TRANSFER_MIDDLE = 0x02,
+	PLDM_FW_UPDATE_TRANSFER_END = 0x04,
+	PLDM_FW_UPDATE_TRANSFER_START_AND_END = 0x05,
+};
+
 /**
  * component classification values define in PLDM firmware update specification
  * Table 27
@@ -228,8 +240,11 @@ enum pldm_component_classification_values {
  *  DSP0267 Table 7 – Descriptor identifier table
  */
 enum pldm_firmware_update_descriptor_types {
+	PLDM_PCI_VENDOR_ID = 0x0000,
 	PLDM_FWUP_IANA_ENTERPRISE_ID = 0x0001,
 	PLDM_PCI_DEVICE_ID = 0x0100,
+	PLDM_ASCII_MODEL_NUMBER_LONG_STRING = 0x0106,
+	PLDM_ASCII_MODEL_NUMBER_SHORT_STRING = 0x0107,
 	PLDM_FWUP_VENDOR_DEFINED = 0xFFFF
 };
 
@@ -237,8 +252,11 @@ enum pldm_firmware_update_descriptor_types {
  *  DSP0267 Table 7 – Descriptor identifier table
  */
 enum pldm_firmware_update_descriptor_types_length {
+	PLDM_PCI_VENDOR_ID_LENGTH = 2,
 	PLDM_FWUP_IANA_ENTERPRISE_ID_LENGTH = 4,
-	PLDM_PCI_DEVICE_ID_LENGTH = 2
+	PLDM_PCI_DEVICE_ID_LENGTH = 2,
+	PLDM_ASCII_MODEL_NUMBER_LONG_STRING_LENGTH = 40,
+	PLDM_ASCII_MODEL_NUMBER_SHORT_STRING_LENGTH = 10,
 };
 
 /**
@@ -277,6 +295,7 @@ typedef enum fd_update_interface {
 // typedef uint8_t (*pldm_fwupdate_func)(uint16_t comp_id, void *mctp_p, void *ext_params);
 typedef uint8_t (*pldm_fwupdate_func)(void *fw_update_param);
 typedef uint8_t (*pldm_act_func)(void *arg);
+typedef uint8_t (*pldm_apply_work)(void *arg);
 typedef bool (*pldm_get_fw_version_fn)(void *info_p, uint8_t *buf, uint8_t *len);
 typedef struct pldm_fw_update_param {
 	uint16_t comp_id;
@@ -301,9 +320,12 @@ typedef struct pldm_fw_update_info {
 	pldm_fwupdate_func pos_update_func;
 	fd_update_interface_t inf;
 	uint16_t activate_method;
+	pldm_apply_work self_apply_work_func;
+	void *self_apply_work_arg;
 	pldm_act_func self_act_func;
 	pldm_get_fw_version_fn get_fw_version_fn;
 	uint8_t *pending_version_p;
+	char *comp_version_str;
 } pldm_fw_update_info_t;
 extern pldm_fw_update_info_t *comp_config;
 extern uint8_t comp_config_count;
@@ -470,6 +492,20 @@ struct pldm_descriptor_tlv {
 	uint8_t descriptor_data[1];
 } __attribute__((packed));
 
+struct pldm_vendor_defined_descriptor_tlv {
+	uint16_t descriptor_type;
+	uint16_t descriptor_length;
+	uint8_t vendor_define_title_type;
+	uint8_t descriptor_title_length;
+	uint8_t descriptor_data[1];
+} __attribute__((packed));
+
+struct pldm_descriptor_string {
+	uint16_t descriptor_type;
+	char *title_string;
+	char *descriptor_data;
+} __attribute__((packed));
+
 struct pldm_get_firmware_parameters_resp {
 	uint8_t completion_code;
 	union {
@@ -508,6 +544,26 @@ struct component_parameter_table {
 	uint32_t capabilities_during_update;
 } __attribute__((packed));
 
+struct pldm_query_downstream_identifier_req {
+	uint32_t datatransferhandle;
+	uint8_t transferoperationflag;
+} __attribute__((packed));
+
+struct pldm_query_downstream_identifier_resp {
+	uint8_t completion_code;
+	uint32_t nextdatatransferhandle;
+	uint8_t transferflag;
+	uint32_t downstreamdevicelength;
+	uint16_t numbwerofdownstreamdevice;
+	uint16_t downstreamdeviceindex;
+	uint8_t downstreamdescriptorcount;
+} __attribute__((packed));
+
+struct pldm_downstream_identifier_table {
+	struct pldm_descriptor_string *descriptor;
+	uint8_t descriptor_count;
+};
+
 uint8_t pldm_fw_update_handler_query(uint8_t code, void **ret_fn);
 uint16_t pldm_fw_update_read(void *mctp_p, enum pldm_firmware_update_commands cmd, uint8_t *req,
 			     uint16_t req_len, uint8_t *rbuf, uint16_t rbuf_len, void *ext_params);
@@ -519,6 +575,14 @@ uint8_t pldm_bic_activate(void *arg);
 
 uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uint8_t *resp,
 					   uint16_t *resp_len);
+uint8_t plat_pldm_query_downstream_identifiers(const uint8_t *buf, uint16_t len, uint8_t *resp,
+					       uint16_t *resp_len);
+
+int get_descriptor_type_length(uint16_t type);
+int get_device_single_descriptor_length(struct pldm_descriptor_string data);
+int get_device_descriptor_total_length(struct pldm_descriptor_string *table, uint8_t table_count);
+uint8_t fill_descriptor_into_buf(struct pldm_descriptor_string *descriptor, uint8_t *buf,
+				 uint8_t *fill_length, uint16_t current_length);
 
 #ifdef __cplusplus
 }
