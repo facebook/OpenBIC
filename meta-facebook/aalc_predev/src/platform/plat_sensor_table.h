@@ -46,6 +46,7 @@
 #define ADS112C_MUX_4_CON 0xA1 //AINP = AIN3, AINN = AVSS
 
 /* define sensors offset */
+#define TMP75_TEMP_OFFSET 0x00
 
 #define SENSOR_NUM_FB_1_HSC_TEMP_C 0x00
 #define SENSOR_NUM_FB_1_HSC_P48V_VIN_VOLT_V 0x01
@@ -209,7 +210,7 @@
 #define SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_2 0x9F
 #define SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_3 0xA0
 
-#define TMP75_TEMP_OFFSET 0xA1
+
 
 #define TACH_PORT0                                                                                 \
 	0x01 // this might write in ast_fan deiver, but now we don't have it, so just write here to avoid error
