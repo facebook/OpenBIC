@@ -49,22 +49,7 @@ uint8_t ads112c_read(sensor_cfg *cfg, int *reading)
 	uint8_t retry = 10;
 	uint8_t i2c_retry = 3;
 	I2C_MSG msg;
-	uint8_t muxArg = cfg->arg0;
 
-	msg.bus = cfg->port;
-	msg.target_addr = cfg->target_addr;
-	msg.tx_len = 2;
-	msg.data[0] = CMD_WREG | CFG_REG_OFFSET0; //WREG command: 0100 rrxx (rr register address = 00)
-	msg.data[1] = 0x00 | muxArg; //configuration register settings are changed to the default gain = 1
-	if (i2c_master_write(&msg, i2c_retry)) {
-		LOG_ERR("Write the respective register configurations failed");
-		return SENSOR_INIT_UNSPECIFIED_ERROR;
-	}
-
-	memset(&msg, 0, sizeof(msg));
-
-	//msg.data[0] = CMD_WREG | CFG_REG_OFFSET0 ; //WREG command: 0100 rrxx (rr register address = 00)
-	//msg.data[1] = 0x00 |s muxArg; //configuration register settings are changed to the default gain = 1
 	int i = 0;
 	for (i = 0; i < retry; i++) {
 		msg.bus = cfg->port;
@@ -132,9 +117,11 @@ uint8_t ads112c_init(sensor_cfg *cfg)
 
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
-	msg.tx_len = 2;
+	msg.tx_len = 4;
+	msg.data[0] = CMD_WREG | CFG_REG_OFFSET0; //WREG command: 0100 rrxx (rr register address = 00)
+	msg.data[1] = cfg->arg0; //Configuration Register 0	
 	msg.data[0] = CMD_WREG | CFG_REG_OFFSET1; //WREG command: 0100 rrxx (rr register address = 01)(spec sample is 0x42)
-	msg.data[1] = 0x08; //continuous conversion mode.
+	msg.data[1] = ADS112C_REG1_CONTINUEMODE | ADS112C_REG1_EXTERNALV; //Configuration Register 1: continuous conversion mode.
 	if (i2c_master_write(&msg, i2c_retry)) {
 		LOG_ERR("Write the respective register configurations failed");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;

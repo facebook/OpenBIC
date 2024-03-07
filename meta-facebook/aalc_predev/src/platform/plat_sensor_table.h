@@ -40,10 +40,6 @@
 #define SB_TMP461_4_ADDR (0x96 >> 1)
 #define FB_ADM1272_ADDR (0x22 >> 1)
 #define PB_ADM1272_ADDR (0x24 >> 1)
-#define ADS112C_MUX_1_CON 0x80 //AINP = AIN0, AINN = AVSS
-#define ADS112C_MUX_2_CON 0x90 //AINP = AIN1, AINN = AVSS
-#define ADS112C_MUX_3_CON 0xA0 //AINP = AIN2, AINN = AVSS
-#define ADS112C_MUX_4_CON 0xA1 //AINP = AIN3, AINN = AVSS
 
 /* define sensors offset */
 #define TMP75_TEMP_OFFSET 0x00
