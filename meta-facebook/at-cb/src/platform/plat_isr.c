@@ -461,7 +461,6 @@ void ISR_FIO_BUTTON()
 void ISR_POWER_STATUS_CHANGE()
 {
 	get_acb_power_status();
-	init_sw_heartbeat_work();
 	if (get_acb_power_good_flag()) {
 		k_work_schedule_for_queue(&plat_work_q, &check_accl_card_pwr_good_work,
 					  K_MSEC(NORMAL_POWER_GOOD_CHECK_DELAY_MS));
