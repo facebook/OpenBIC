@@ -103,36 +103,36 @@ nct7363_init_arg nct7363_init_args[] = {
  *  PRE-HOOK/POST-HOOK ARGS
  **************************************************************************************************/
 mux_config bus_1_PCA9546A_configs[] = {
-    [0] = { .target_addr = 0xE0, .channel = PCA9546A_CHANNEL_0 },
+	[0] = { .target_addr = 0xE0, .channel = PCA9546A_CHANNEL_0 },
 	[1] = { .target_addr = 0xE0, .channel = PCA9546A_CHANNEL_1 },
 	[2] = { .target_addr = 0xE0, .channel = PCA9546A_CHANNEL_2 },
 	[3] = { .target_addr = 0xE0, .channel = PCA9546A_CHANNEL_3 },
 };
 mux_config bus_2_PCA9546A_configs[] = {
-    [0] = { .target_addr = 0xE2, .channel = PCA9546A_CHANNEL_0 },
+	[0] = { .target_addr = 0xE2, .channel = PCA9546A_CHANNEL_0 },
 	[1] = { .target_addr = 0xE2, .channel = PCA9546A_CHANNEL_1 },
 	[2] = { .target_addr = 0xE2, .channel = PCA9546A_CHANNEL_2 },
 	[3] = { .target_addr = 0xE2, .channel = PCA9546A_CHANNEL_3 },
 };
 mux_config bus_6_PCA9546A_configs[] = {
-    [0] = { .target_addr = 0xE4, .channel = PCA9546A_CHANNEL_0 },
+	[0] = { .target_addr = 0xE4, .channel = PCA9546A_CHANNEL_0 },
 	[1] = { .target_addr = 0xE4, .channel = PCA9546A_CHANNEL_1 },
 	[2] = { .target_addr = 0xE4, .channel = PCA9546A_CHANNEL_2 },
 	[3] = { .target_addr = 0xE4, .channel = PCA9546A_CHANNEL_3 },
 };
 mux_config bus_7_PCA9546A_configs[] = {
-    [0] = { .target_addr = 0xE6, .channel = PCA9546A_CHANNEL_0 },
+	[0] = { .target_addr = 0xE6, .channel = PCA9546A_CHANNEL_0 },
 	[1] = { .target_addr = 0xE6, .channel = PCA9546A_CHANNEL_1 },
 	[2] = { .target_addr = 0xE6, .channel = PCA9546A_CHANNEL_2 },
 	[3] = { .target_addr = 0xE6, .channel = PCA9546A_CHANNEL_3 },
 };
 mux_config bus_8_PCA9546A_configs[] = {
-    [0] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_0 },
+	[0] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_0 },
 	[1] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_1 },
 	[2] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_2 },
 };
 mux_config bus_9_PCA9546A_configs[] = {
-    [0] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_1 }, // sensor box
+	[0] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_1 }, // sensor box
 	[1] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_2 }, // PDB
 };
 /**************************************************************************************************
