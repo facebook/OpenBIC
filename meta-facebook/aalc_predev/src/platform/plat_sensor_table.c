@@ -33,6 +33,13 @@ LOG_MODULE_REGISTER(plat_sensor_table);
 
 #define CONFIG_ISL69260 false
 
+struct k_mutex i2c_1_PCA9546a_mutex;
+struct k_mutex i2c_2_PCA9546a_mutex;
+struct k_mutex i2c_6_pca9546a_mutex;
+struct k_mutex i2c_7_PCA9546a_mutex;
+struct k_mutex i2c_8_PCA9546a_mutex;
+struct k_mutex i2c_9_PCA9546a_mutex;
+
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
 	   access check arg0, arg1, sample_count, cache, cache_status, mux_address, mux_offset,
@@ -60,8 +67,8 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_PB_3_PUMP_TACH_RPM, sensor_dev_nct7363, I2C_BUS8, PB_NCT7363_ADDR, NCT7363_FAN_SPEED_OFFSET, stby_access, NCT7363_12_FAN, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read, &bus_8_PCA9546A_configs[0], post_PCA9546A_read, NULL, &nct7363_init_args[3] },
 	{ SENSOR_NUM_PB_3_FAN_1_TACH_RPM, sensor_dev_nct7363, I2C_BUS8, PB_NCT7363_ADDR, NCT7363_FAN_SPEED_OFFSET, stby_access, NCT7363_13_FAN, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read, &bus_8_PCA9546A_configs[1], post_PCA9546A_read, NULL, &nct7363_init_args[3] },
 	{ SENSOR_NUM_PB_3_FAN_2_TACH_RPM, sensor_dev_nct7363, I2C_BUS8, PB_NCT7363_ADDR, NCT7363_FAN_SPEED_OFFSET, stby_access, NCT7363_14_FAN, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read, &bus_8_PCA9546A_configs[2], post_PCA9546A_read, NULL, &nct7363_init_args[3] },
-	{ SENSOR_NUM_MB_FAN1_TACH_RPM, sensor_dev_ast_fan, TACH_PORT0, NONE, NONE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_MB_FAN2_TACH_RPM, sensor_dev_ast_fan, TACH_PORT1, NONE, NONE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	/*{ SENSOR_NUM_MB_FAN1_TACH_RPM, sensor_dev_ast_fan, TACH_PORT0, NONE, NONE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_MB_FAN2_TACH_RPM, sensor_dev_ast_fan, TACH_PORT1, NONE, NONE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },*/
 	{ SENSOR_NUM_BPB_RACK_LEVEL_1, sensor_dev_nct7363, I2C_BUS5, BPB_NCT7363_ADDR, NCT7363_GPIO_READ_OFFSET, stby_access, NCT7363_4_FAN, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &nct7363_init_args[2] },
 	{ SENSOR_NUM_BPB_RACK_LEVEL_2, sensor_dev_nct7363, I2C_BUS5, BPB_NCT7363_ADDR, NCT7363_GPIO_READ_OFFSET, stby_access, NCT7363_5_FAN, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &nct7363_init_args[2] },
 	{ SENSOR_NUM_BPB_CDU_LEVEL_3, sensor_dev_nct7363, I2C_BUS5, BPB_NCT7363_ADDR, NCT7363_GPIO_READ_OFFSET, stby_access, NCT7363_6_FAN, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &nct7363_init_args[2] },
@@ -244,4 +251,34 @@ uint8_t pal_get_extend_sensor_config()
 		break;
 	}
 	return extend_sensor_config_size;
+}
+struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus)
+{
+	struct k_mutex *mutex = NULL;
+
+	switch (i2c_bus) {
+	case I2C_BUS1:
+		mutex = &i2c_1_PCA9546a_mutex;
+		break;
+	case I2C_BUS2:
+		mutex = &i2c_2_PCA9546a_mutex;
+		break;
+	case I2C_BUS6:
+		mutex = &i2c_6_pca9546a_mutex;
+		break;
+	case I2C_BUS7:
+		mutex = &i2c_7_PCA9546a_mutex;
+		break;
+	case I2C_BUS8:
+		mutex = &i2c_8_PCA9546a_mutex;
+		break;
+	case I2C_BUS9:
+		mutex = &i2c_9_PCA9546a_mutex;
+		break;
+	default:
+		LOG_ERR("No support for i2c bus %d mutex", i2c_bus);
+		break;
+	}
+
+	return mutex;
 }

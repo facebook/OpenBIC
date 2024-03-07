@@ -146,8 +146,8 @@
 #define SENSOR_NUM_PB_3_PUMP_TACH_RPM 0x60
 #define SENSOR_NUM_PB_3_FAN_1_TACH_RPM 0x61
 #define SENSOR_NUM_PB_3_FAN_2_TACH_RPM 0x62
-#define SENSOR_NUM_MB_FAN1_TACH_RPM 0x63
-#define SENSOR_NUM_MB_FAN2_TACH_RPM 0x64
+/*#define SENSOR_NUM_MB_FAN1_TACH_RPM 0x63
+#define SENSOR_NUM_MB_FAN2_TACH_RPM 0x64*/
 #define SENSOR_NUM_BPB_RACK_LEVEL_1 0x65
 #define SENSOR_NUM_BPB_RACK_LEVEL_2 0x66
 #define SENSOR_NUM_BPB_CDU_LEVEL_3 0x67
@@ -208,6 +208,7 @@
 #define SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_1 0x9E
 #define SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_2 0x9F
 #define SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_3 0xA0
+
 #define TMP75_TEMP_OFFSET 0xA1
 
 #define TACH_PORT0                                                                                 \
@@ -215,4 +216,5 @@
 #define TACH_PORT1 0x02 // if driver is ok,then we can remove this
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
+struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus);
 #endif

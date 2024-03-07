@@ -6064,7 +6064,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PB_3_FAN_2_TACH_RPM",
 	},
-	{ 
+	/*{ 
 		// SENSOR_NUM_MB_FAN1_TACH_RPM
 		0x00,
 		0x00, // record ID
@@ -6185,7 +6185,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"MB_FAN2_TACH_RPM",
-	},
+	},*/
 	{ 
 		// SENSOR_NUM_BPB_RACK_LEVEL_1
 		0x00,
