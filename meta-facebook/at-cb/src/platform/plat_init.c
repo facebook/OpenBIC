@@ -64,7 +64,10 @@ void pal_post_init()
 			plat_accl_power_cable_present_check();
 		}
 	}
-	init_accl_presence_check_work();
+
+	if (board_revision > EVT2_STAGE) {
+		init_accl_presence_check_work();
+	}
 }
 
 void pal_device_init()
