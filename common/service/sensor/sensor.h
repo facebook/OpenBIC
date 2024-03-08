@@ -100,51 +100,16 @@ enum G788P81U_OFFSET {
 	G788P81U_ALERT_MODE_OFFSET = 0xBF,
 };
 
-enum ADS112C_REG0_CONFIG {
-	//Input multiplexer configuration(Bit 7:4)
-	ADS112C_REG0_INPUT_AIN0AIN1 = 0x00, //AINP = AIN0, AINN = AIN1
-	ADS112C_REG0_INPUT_AIN0AIN2 = 0x10, //AINP = AIN0, AINN = AIN2
-	ADS112C_REG0_INPUT_AIN0AIN3 = 0x20, //AINP = AIN0, AINN = AIN3
-	ADS112C_REG0_INPUT_AIN1AIN0 = 0x30, //AINP = AIN1, AINN = AIN0
-	ADS112C_REG0_INPUT_AIN1AIN2 = 0x40, //AINP = AIN1, AINN = AIN2
-	ADS112C_REG0_INPUT_AIN1AIN3 = 0x50, //AINP = AIN1, AINN = AIN3
-	ADS112C_REG0_INPUT_AIN2AIN3 = 0x60, //AINP = AIN2, AINN = AIN3
-	ADS112C_REG0_INPUT_AIN3AIN2 = 0x70, //AINP = AIN3, AINN = AIN2			
-	ADS112C_REG0_INPUT_AIN0AVSS = 0x80, //AINP = AIN0, AINN = AVSS
-	ADS112C_REG0_INPUT_AIN1AVSS = 0x90, //AINP = AIN1, AINN = AVSS
-	ADS112C_REG0_INPUT_AIN2AVSS = 0xA0, //AINP = AIN2, AINN = AVSS
-	ADS112C_REG0_INPUT_AIN3AVSS = 0xB0, //AINP = AIN3, AINN = AVSS
-	//Gain configuration(Bit 3:1)
-	ADS112C_REG0_GAIN1 = 0x00,		//Gain = 1 (default)
-	ADS112C_REG0_GAIN2 = 0x02,
-	ADS112C_REG0_GAIN4 = 0x04,
-	ADS112C_REG0_GAIN8 = 0x06,
-	ADS112C_REG0_GAIN16 = 0x08,
-	ADS112C_REG0_GAIN32 = 0x0A,
-	ADS112C_REG0_GAIN64 = 0x0C,
-	ADS112C_REG0_GAIN128 = 0x0E,			
-    //Disables and bypasses the internal low-noise PGA (Bit 0)
-	ADS112C_REG0_PGA_ENABLE = 0x00,
-	ADS112C_REG0_PGA_DISABLE = 0x01,
-
-	ADS112C_MUX_1_CON = 0x80, //AINP = AIN0, AINN = AVSS
-	ADS112C_MUX_2_CON = 0x90, //AINP = AIN1, AINN = AVSS
-	ADS112C_MUX_3_CON = 0xA0, //AINP = AIN2, AINN = AVSS
-	ADS112C_MUX_4_CON = 0xA1, //AINP = AIN3, AINN = AVSS	
-};
-
-enum ADS112C_REG1_CONFIG {
-	//Conversion mode. (Bit 3)
-	ADS112C_REG1_SINGLEMODE = 0x00,
-	ADS112C_REG1_CONTINUEMODE = 0x08,
-	//Voltage reference selection. (Bit 2:1)
-	ADS112C_REG1_INTERNALV = 0x00,
-	ADS112C_REG1_EXTERNALV = 0x02,	
-};
-
 enum DIMM_RELATED_OFFSET {
 	DIMM_PMIC_SWA_PWR = 0x0C,
 	DIMM_SPD_TEMP = 0x31,
+};
+
+enum ADS112C_OFFSET {
+	ADS112C_MUX_1_CON = 0x80, //AINP = AIN0, AINN = AVSS
+	ADS112C_MUX_2_CON = 0x90, //AINP = AIN1, AINN = AVSS
+	ADS112C_MUX_3_CON = 0xA0, //AINP = AIN2, AINN = AVSS
+	ADS112C_MUX_4_CON = 0xA1, //AINP = AIN3, AINN = AVSS
 };
 
 // The sequence needs to same with table sensor_drive_tbl
@@ -791,6 +756,14 @@ typedef struct _nct7363_init_arg {
 	uint8_t duty;
 	uint16_t threshold;
 } nct7363_init_arg;
+
+typedef struct _ads112c_init_arg {
+	uint8_t reg0_input;
+	uint8_t reg0_gain;
+	uint8_t reg0_pga;
+	uint8_t reg1_conversion;
+	uint8_t reg1_vol_refer;
+} ads112c_init_arg;
 
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;

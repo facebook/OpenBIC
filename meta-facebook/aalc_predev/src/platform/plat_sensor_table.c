@@ -35,8 +35,8 @@ LOG_MODULE_REGISTER(plat_sensor_table);
 
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
-	   access check arg0, arg1, sample_count, cache, cache_status, mux_address, mux_offset,
-	   pre_sensor_read_fn, pre_sensor_read_args, post_sensor_read_fn, post_sensor_read_fn  */
+	   access check, arg0, arg1, sample_count, cache, cache_status, mux_address, mux_offset,
+	   pre_sensor_read_fn, pre_sensor_read_args, post_sensor_read_fn, pre_sensor_read_args  */
 
 	/* temperature */
 	{ SENSOR_NUM_TEMP_BB_TMP75, sensor_dev_tmp75, I2C_BUS4, BB_TMP75_ADDR, TMP75_TEMP_OFFSET,

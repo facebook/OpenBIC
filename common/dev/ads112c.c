@@ -19,22 +19,9 @@
 #include <logging/log.h>
 #include "sensor.h"
 #include "hal_i2c.h"
+#include "ads112c.h"
 
 LOG_MODULE_REGISTER(dev_ads112c);
-
-// Command Byte to control device
-#define CMD_RESET 0x06 //000 011x(06h)
-#define CMD_START_SYNC 0x08 //000 100x(08h)
-#define CMD_POWERDOWN 0x02 //000 001x(08h)
-#define CMD_RDATA 0x10 //001 000x(10h)
-#define CMD_RREG 0x20 //010 000x(20h)
-#define CMD_WREG 0x40 //100 000x(40h)
-
-// Configuration Registers offset
-#define CFG_REG_OFFSET0 0x00
-#define CFG_REG_OFFSET1 0x04
-#define CFG_REG_OFFSET2 0x08
-#define CFG_REG_OFFSET3 0x0C
 
 uint8_t ads112c_read(sensor_cfg *cfg, int *reading)
 {
@@ -115,13 +102,15 @@ uint8_t ads112c_init(sensor_cfg *cfg)
 
 	memset(&msg, 0, sizeof(msg));
 
+	ads112c_init_arg *init_arg = (ads112c_init_arg *)cfg->init_args;
+
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 4;
 	msg.data[0] = CMD_WREG | CFG_REG_OFFSET0; //WREG command: 0100 rrxx (rr register address = 00)
-	msg.data[1] = cfg->arg0; //Configuration Register 0	
+	msg.data[1] = init_arg->reg0_input | init_arg->reg0_gain | init_arg->reg0_pga; //Configuration Register 0	
 	msg.data[0] = CMD_WREG | CFG_REG_OFFSET1; //WREG command: 0100 rrxx (rr register address = 01)(spec sample is 0x42)
-	msg.data[1] = ADS112C_REG1_CONTINUEMODE | ADS112C_REG1_EXTERNALV; //Configuration Register 1: continuous conversion mode.
+	msg.data[1] = init_arg->reg1_conversion | init_arg->reg1_vol_refer; //Configuration Register 1: continuous conversion mode.
 	if (i2c_master_write(&msg, i2c_retry)) {
 		LOG_ERR("Write the respective register configurations failed");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
