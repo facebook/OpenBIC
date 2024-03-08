@@ -217,5 +217,5 @@
 #define TACH_PORT1 0x02 // if driver is ok,then we can remove this
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
-struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus);
+
 #endif

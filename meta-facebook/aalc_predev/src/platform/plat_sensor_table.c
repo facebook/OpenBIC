@@ -33,12 +33,7 @@ LOG_MODULE_REGISTER(plat_sensor_table);
 
 #define CONFIG_ISL69260 false
 
-struct k_mutex i2c_1_PCA9546a_mutex;
-struct k_mutex i2c_2_PCA9546a_mutex;
-struct k_mutex i2c_6_pca9546a_mutex;
-struct k_mutex i2c_7_PCA9546a_mutex;
-struct k_mutex i2c_8_PCA9546a_mutex;
-struct k_mutex i2c_9_PCA9546a_mutex;
+
 
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
@@ -751,34 +746,4 @@ uint8_t pal_get_extend_sensor_config()
 		break;
 	}
 	return extend_sensor_config_size;
-}
-struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus)
-{
-	struct k_mutex *mutex = NULL;
-
-	switch (i2c_bus) {
-	case I2C_BUS1:
-		mutex = &i2c_1_PCA9546a_mutex;
-		break;
-	case I2C_BUS2:
-		mutex = &i2c_2_PCA9546a_mutex;
-		break;
-	case I2C_BUS6:
-		mutex = &i2c_6_pca9546a_mutex;
-		break;
-	case I2C_BUS7:
-		mutex = &i2c_7_PCA9546a_mutex;
-		break;
-	case I2C_BUS8:
-		mutex = &i2c_8_PCA9546a_mutex;
-		break;
-	case I2C_BUS9:
-		mutex = &i2c_9_PCA9546a_mutex;
-		break;
-	default:
-		LOG_ERR("No support for i2c bus %d mutex", i2c_bus);
-		break;
-	}
-
-	return mutex;
 }
