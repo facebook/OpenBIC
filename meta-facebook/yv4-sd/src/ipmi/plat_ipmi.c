@@ -124,6 +124,7 @@ void APP_COLD_RESET(ipmi_msg *msg)
 	msg->data_len = 0;
 	return;
 }
+
 void OEM_GET_CHASSIS_POSITION(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -149,5 +150,24 @@ void OEM_GET_CHASSIS_POSITION(ipmi_msg *msg)
 	 */
 
 	msg->data[0] = SLOT_PRESENT + slot_id;
+	return;
+}
+
+void APP_GET_SELFTEST_RESULTS(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 0) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	// Bios needs get self test and get system info before getting set system info
+	// Using hardcode directly response
+	msg->data[0] = 0x55;
+	msg->data[1] = 0x00;
+	msg->data_len = 2;
+	msg->completion_code = CC_SUCCESS;
+
 	return;
 }
