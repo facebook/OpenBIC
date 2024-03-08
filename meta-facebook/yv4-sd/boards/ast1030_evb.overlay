@@ -59,6 +59,12 @@
 	clock-frequency = <I2C_BITRATE_FAST>;
 };
 
+&i2c9 {
+	pinctrl-0 = <&pinctrl_i2c9_default>;
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_FAST>;
+};
+
 &i3c_gr {
 	status = "okay";
 	pull-up-resistor-ohm = <2000>, <2000>, <2000>, <2000>, <2000>, <2000>;
@@ -219,7 +225,7 @@
 	* It is currently written as 24KB, and Aspeed will correct to 32KB in the next version.
 	* 0xa0000 is the starting offset of the non-cacheable area.
 	*/
-	reg = <0 DT_SIZE_K(640)>, <0xa0000 DT_SIZE_K(128)>;
+	reg = <0 DT_SIZE_K(672)>, <0xa8000 DT_SIZE_K(96)>;
 };
 
 &pcc {

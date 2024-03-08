@@ -14,6 +14,8 @@
 
 #include <logging/log.h>
 
+#define BOARD_REVISION_PRSNT_BITS 0x07
+
 LOG_MODULE_REGISTER(plat_class);
 
 /* ADC information for each channel
@@ -73,6 +75,37 @@ uint8_t get_slot_eid()
 uint8_t get_slot_id()
 {
 	return slot_id;
+}
+
+bool get_board_rev(uint8_t *board_rev)
+{
+	int retry = 5;
+	I2C_MSG msg = { 0 };
+
+	msg.bus = CPLD_IO_I2C_BUS;
+	msg.target_addr = CPLD_IO_I2C_ADDR;
+	msg.tx_len = 1;
+	msg.rx_len = 1;
+	msg.data[0] = CPLD_REG_BOARD_REVISION_ID;
+	if (i2c_master_read(&msg, retry) != 0) {
+		LOG_ERR("Failed to get board revision from cpld");
+		return false;
+	}
+
+	*board_rev = msg.data[0] & BOARD_REVISION_PRSNT_BITS;
+
+	switch (*board_rev) {
+	case BOARD_REV_POC:
+	case BOARD_REV_EVT:
+	case BOARD_REV_DVT:
+	case BOARD_REV_PVT:
+	case BOARD_REV_MP:
+		LOG_DBG("Board revision 0x%x", *board_rev);
+		return true;
+	default:
+		LOG_ERR("Invalid board revision 0x%x", *board_rev);
+		return false;
+	}
 }
 
 bool get_adc_voltage(int channel, float *voltage)
