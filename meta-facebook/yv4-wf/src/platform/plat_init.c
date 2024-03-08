@@ -30,6 +30,13 @@
 #define DEF_PLAT_CONFIG_PRIORITY 77
 #define DEF_PROJ_GPIO_PRIORITY 78
 
+SCU_CFG scu_cfg[] = {
+	//register    value
+	{ 0x7e6e2610, 0x0AAAA800 },
+	{ 0x7e6e2614, 0x0AABAB00 },
+	{ 0x7e6e2618, 0x50000000 },
+};
+
 DEVICE_DEFINE(PRE_DEF_PLAT_CONFIG, "PRE_DEF_PLATFOMR", &init_platform_config, NULL, NULL, NULL,
 	      POST_KERNEL, DEF_PLAT_CONFIG_PRIORITY, NULL);
 
@@ -67,6 +74,7 @@ void pal_pre_init()
 			set_vr_monitor_status(false);
 		}
 	}
+	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
 }
 
 void pal_post_init()
