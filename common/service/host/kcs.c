@@ -90,7 +90,7 @@ static uint8_t init_text_string_value(const char *new_text_string, char **text_s
 	return pldm_smbios_get_text_strings_count(*text_strings);
 }
 
-static void init_bios_information(smbios_bios_information *bios_info, char *bios_version)
+static int init_bios_information(smbios_bios_information *bios_info, char *bios_version)
 {
 	const uint8_t NOT_IMPLEMENTED = 0;
 
@@ -98,7 +98,7 @@ static void init_bios_information(smbios_bios_information *bios_info, char *bios
 	bios_info->text_strings = malloc(sizeof(char) * 2);
 	if (!bios_info->text_strings) {
 		LOG_ERR("%s:%s:%d: Failed to allocate memory.", __FILE__, __func__, __LINE__);
-		return;
+		return -1;
 	}
 	bios_info->text_strings[0] = bios_info->text_strings[1] = '\0';
 	/* DSP0134: 12h + number of BIOS Characteristics Extension Bytes.*/
@@ -116,27 +116,37 @@ static void init_bios_information(smbios_bios_information *bios_info, char *bios
 	bios_info->embedded_controller_firmware_major_release = NOT_IMPLEMENTED;
 	bios_info->embedded_controller_firmware_minor_release = NOT_IMPLEMENTED;
 	bios_info->extended_bios_rom_size = NOT_IMPLEMENTED;
+
+	return 0;
 }
 
 static int update_bios_information(char *bios_version_start_ptr, uint8_t bios_version_len)
 {
+	int rc = -1;
 	smbios_bios_information *bios_info = malloc(sizeof(smbios_bios_information));
 
 	char *bios_version_str = malloc(sizeof(char) * bios_version_len + 1);
-	if (!bios_version_str) {
+	if (!bios_version_str || !bios_info) {
 		LOG_ERR("%s:%s:%d: Failed to allocate memory.", __FILE__, __func__, __LINE__);
-		return -1;
+		rc = -1;
+		goto exit;
 	}
 	memcpy(bios_version_str, bios_version_start_ptr, bios_version_len);
 	*(bios_version_str + bios_version_len) = '\0';
 
-	init_bios_information(bios_info, bios_version_str);
-
-	int rc = pldm_smbios_set_bios_information(bios_info);
+	rc = init_bios_information(bios_info, bios_version_str);
 	if (rc < 0) {
-		LOG_ERR("Failed to set smbios information, error code=%d", rc);
+		LOG_ERR("Failed to initialize bios information, error code=%d", rc);
+		goto exit;
 	}
 
+	rc = pldm_smbios_set_bios_information(bios_info);
+	if (rc < 0) {
+		LOG_ERR("Failed to set smbios information, error code=%d", rc);
+		goto exit;
+	}
+
+exit:
 	SAFE_FREE(bios_info->text_strings);
 	SAFE_FREE(bios_info);
 	SAFE_FREE(bios_version_str);
