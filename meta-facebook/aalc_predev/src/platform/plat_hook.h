@@ -48,4 +48,6 @@ enum ADS112C_SENSOR_OFFSET {
 
 bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading);
 bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading);
+bool pre_PCA9546A_read(sensor_cfg *cfg, void *args);
+bool post_PCA9546A_read(sensor_cfg *cfg, void *args, int *reading);
 #endif
