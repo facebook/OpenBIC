@@ -19,12 +19,9 @@
 #include <logging/log.h>
 #include "plat_hook.h"
 #include "plat_class.h"
-<<<<<<< HEAD
 #include "ads112c.h"
-=======
 #include "plat_i2c.h"
 #include "sensor.h"
->>>>>>> 96340ac
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -114,25 +111,31 @@ nct7363_init_arg nct7363_init_args[] = {
 };
 
 ads112c_init_arg ads112c_init_args[] = {
-	[0] = { .reg0_input = ADS112C_REG0_INPUT_AIN0AVSS,
-		.reg0_gain = ADS112C_REG0_GAIN1,
-		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
-		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
-		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
-	},
-	[1] = { .reg0_input = ADS112C_REG0_INPUT_AIN1AVSS,
+	[0] = { .reg0_input = ADS112C_REG0_INPUT_AIN0AIN1,
 		.reg0_gain = ADS112C_REG0_GAIN1,
 		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
 	},    
-	[2] = { .reg0_input = ADS112C_REG0_INPUT_AIN2AVSS,
+	[1] = { .reg0_input = ADS112C_REG0_INPUT_AIN0AVSS,
 		.reg0_gain = ADS112C_REG0_GAIN1,
 		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
 	},
-	[3] = { .reg0_input = ADS112C_REG0_INPUT_AIN3AVSS,
+	[2] = { .reg0_input = ADS112C_REG0_INPUT_AIN1AVSS,
+		.reg0_gain = ADS112C_REG0_GAIN1,
+		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
+		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
+		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
+	},    
+	[3] = { .reg0_input = ADS112C_REG0_INPUT_AIN2AVSS,
+		.reg0_gain = ADS112C_REG0_GAIN1,
+		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
+		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
+		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
+	},
+	[4] = { .reg0_input = ADS112C_REG0_INPUT_AIN3AVSS,
 		.reg0_gain = ADS112C_REG0_GAIN1,
 		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
