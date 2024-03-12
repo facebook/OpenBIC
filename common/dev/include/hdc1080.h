@@ -17,7 +17,32 @@
 #ifndef HDC1080_H
 #define HDC1080_H
 
+enum HDC1080_MODE {
+	TEMP_OR_HUM = 0, // Temperature or Humidity is acquired.
+	TEMP_THEN_HUM, // Temperature and Humidity are acquired in sequence, Temperature first
+};
+
+enum HDC1080_TEMP_RESOLUTION {
+	TEMP_14_BIT = 0,
+	TEMP_11_BIT,
+};
+
+enum HDC1080_HUM_RESOLUTION {
+	HUM_14_BIT = 0,
+	HUM_11_BIT,
+	HUM_8_BIT,
+};
+
+typedef struct {
+	uint8_t idx; // Create index based on init variable
+	uint8_t mode;
+	uint8_t tres; // Temperature Measurement Resolution
+	uint8_t hres; //Humidity Measurement Resolution
+	sys_snode_t node; // linked list node
+} hdc1080_data;
+
 #define HDC1080_TEMP_OFFSET 0x00
 #define HDC1080_HUM_OFFSET 0x01
+#define HDC1080_CONFIGURE_OFFSET 0x02
 
 #endif //HDC1080_H
