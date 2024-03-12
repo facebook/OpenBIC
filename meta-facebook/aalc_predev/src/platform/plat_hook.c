@@ -20,7 +20,17 @@
 #include "plat_hook.h"
 #include "plat_class.h"
 #include "nct7363.h"
+#include "plat_i2c.h"
+#include "sensor.h"
+
 LOG_MODULE_REGISTER(plat_hook);
+
+struct k_mutex i2c_1_PCA9546a_mutex;
+struct k_mutex i2c_2_PCA9546a_mutex;
+struct k_mutex i2c_6_pca9546a_mutex;
+struct k_mutex i2c_7_PCA9546a_mutex;
+struct k_mutex i2c_8_PCA9546a_mutex;
+struct k_mutex i2c_9_PCA9546a_mutex;
 
 /**************************************************************************************************
  * INIT ARGS
@@ -149,7 +159,82 @@ mux_config bus_9_PCA9546A_configs[] = {
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
  **************************************************************************************************/
+struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus)
+{
+	struct k_mutex *mutex = NULL;
 
+	switch (i2c_bus) {
+	case I2C_BUS1:
+		mutex = &i2c_1_PCA9546a_mutex;
+		break;
+	case I2C_BUS2:
+		mutex = &i2c_2_PCA9546a_mutex;
+		break;
+	case I2C_BUS6:
+		mutex = &i2c_6_pca9546a_mutex;
+		break;
+	case I2C_BUS7:
+		mutex = &i2c_7_PCA9546a_mutex;
+		break;
+	case I2C_BUS8:
+		mutex = &i2c_8_PCA9546a_mutex;
+		break;
+	case I2C_BUS9:
+		mutex = &i2c_9_PCA9546a_mutex;
+		break;
+	default:
+		LOG_ERR("No support for i2c bus %d mutex", i2c_bus);
+		break;
+	}
+
+	return mutex;
+}
+bool pre_PCA9546A_read(sensor_cfg *cfg, void *args)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
+
+	// Select Channel
+	bool ret = true;
+	int mutex_status = 0;
+	mux_config *pre_args = (mux_config *)args;
+	pre_args->bus = cfg->port;
+
+	struct k_mutex *mutex = get_i2c_mux_mutex(pre_args->bus);
+	mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
+	if (mutex_status != 0) {
+		LOG_ERR("Mutex lock fail, status: %d", mutex_status);
+		return false;
+	}
+
+	ret = set_mux_channel(*pre_args, MUTEX_LOCK_ENABLE);
+	if (ret != true) {
+		k_mutex_unlock(mutex);
+	}
+
+	return ret;
+}
+bool post_PCA9546A_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(reading);
+	ARG_UNUSED(args);
+
+	int unlock_status = 0;
+	uint8_t bus = cfg->port;
+
+	struct k_mutex *mutex = get_i2c_mux_mutex(bus);
+	if (mutex->lock_count != 0) {
+		unlock_status = k_mutex_unlock(mutex);
+	}
+
+	if (unlock_status != 0) {
+		LOG_ERR("Mutex unlock fail, status: %d", unlock_status);
+		return false;
+	}
+
+	return true;
+}
 bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
