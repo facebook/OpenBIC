@@ -292,39 +292,9 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
     short int read16Bits =(short int) *reading;
     double ads112c_default_vol = 5;
     ads112c_init_arg *init_arg = (ads112c_init_arg *)cfg->init_args;
+    double gainValue = 1 << (init_arg->reg0_gain >> 1);
 
-    double genValue;
-    switch (init_arg->reg0_gain) {
-        case ADS112C_REG0_GAIN1:
-        genValue = 1;
-        break;
-        case ADS112C_REG0_GAIN2:
-        genValue = 2;
-        break;
-        case ADS112C_REG0_GAIN4:
-        genValue = 4;
-        break;
-        case ADS112C_REG0_GAIN8:
-        genValue = 8;
-        break;
-        case ADS112C_REG0_GAIN16:
-        genValue = 16;
-        break;
-        case ADS112C_REG0_GAIN32:
-        genValue = 32;
-        break;
-        case ADS112C_REG0_GAIN64:
-        genValue = 64;
-        break;
-        case ADS112C_REG0_GAIN128:
-        genValue = 128;
-        break;
-        default:
-        genValue = 1;
-        break;        
-    }
-
-    double rawValue = (double) read16Bits * ads112c_default_vol / (32768 * genValue); //(2 · VREF / Gain) / (2^16)
+    double rawValue = (double) read16Bits * ads112c_default_vol / (32768 * gainValue); //(2 · VREF / Gain) / (2^16)
 
 	double val;
 	double v_val, flow_Pmax = 400, flow_Pmin = 10, press_Pmax = 50, press_Pmin = 0;
@@ -359,6 +329,10 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = (int)val & 0xFFFF;
 	sval->fraction = (val - sval->integer) * 1000;
-
-	return true;
+    //according to pre_sensor_read_fn(pre_PCA9546A_read), determinies if apply post_PCA9546A_read
+    if (cfg -> pre_sensor_read_hook != NULL) {
+        post_PCA9546A_read(cfg, args, reading);
+    }
+	
+    return true;
 }
