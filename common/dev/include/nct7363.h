@@ -70,6 +70,8 @@
 
 #define NCT7363_GPIO0x_INPUT_PORT_REG_OFFSET 0x00
 #define NCT7363_GPIO1x_INPUT_PORT_REG_OFFSET 0x10
+
+#define NCT7363_WDT_REG_OFFSET 0x2A
 struct nct7363_data {
 	uint16_t has_fan; /* Enable fan 0-15 */
 	uint16_t fan_speed[16]; /* Register value combine */
@@ -93,5 +95,11 @@ enum nct7363_pin_type {
 enum nct7363_gpio_type {
 	NCT7363_GPIO_OUTPUT,
 	NCT7363_GPIO_INPUT
+};
+enum nct7363_wdt_sec {
+	WDT_30_SEC , 
+	WDT_7dot5_SEC,
+	WDT_3dot75_SEC,
+	WDT_15_SEC
 };
 #endif
