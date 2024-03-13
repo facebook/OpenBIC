@@ -330,15 +330,13 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 	/* set wdt  */
 	offset = NCT7363_WDT_REG_OFFSET;
 	uint8_t val_wdt = 0;
-	if (nct7363_init_arg_data->watchdog_timeout[0]==1){
-		val_wdt  = 0b10000000;
-	}
-	else{
-		val_wdt  = 0b00000000;
+	if (nct7363_init_arg_data->watchdog_timeout[0] == 1) {
+		val_wdt = 0b10000000;
+	} else {
+		val_wdt = 0b00000000;
 	}
 	uint8_t time = nct7363_init_arg_data->watchdog_timeout[1];
-	switch (time)
-	{
+	switch (time) {
 	case WDT_30_SEC:
 		val_wdt |= 0b00001100;
 		break;
@@ -356,8 +354,8 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 		break;
 	}
 	if (nct7363_write(cfg, offset, val_wdt))
-			return SENSOR_INIT_UNSPECIFIED_ERROR;
-			
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+
 	nct7363_init_arg_data->is_init = true;
 	cfg->arg1 = nct7363_init_arg_data->fan_poles;
 	cfg->read = nct7363_read;

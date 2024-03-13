@@ -43,8 +43,7 @@ adm1272_init_arg adm1272_init_args[] = {
 		.is_record_ein = false,
 		.last_energy = 0,
 		.last_rollover = 0,
-		.last_sample = 0,
-        
+		.last_sample = 0,      
 	},
 	[1] = { .is_init = false,
 		.is_need_set_pwr_cfg = true,

@@ -92,14 +92,6 @@ enum nct7363_pin_type {
 	NCT7363_PIN_TPYE_FANIN,
 	NCT7363_PIN_TPYE_RESERVED
 };
-enum nct7363_gpio_type {
-	NCT7363_GPIO_OUTPUT,
-	NCT7363_GPIO_INPUT
-};
-enum nct7363_wdt_sec {
-	WDT_30_SEC , 
-	WDT_7dot5_SEC,
-	WDT_3dot75_SEC,
-	WDT_15_SEC
-};
+enum nct7363_gpio_type { NCT7363_GPIO_OUTPUT, NCT7363_GPIO_INPUT };
+enum nct7363_wdt_sec { WDT_30_SEC, WDT_7dot5_SEC, WDT_3dot75_SEC, WDT_15_SEC };
 #endif

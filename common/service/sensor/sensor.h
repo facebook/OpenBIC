@@ -719,7 +719,8 @@ typedef struct _nct7363_init_arg {
 	uint8_t duty;
 	uint16_t threshold;
 	uint8_t gpio_dir[16]; // gpio_dir == 1 : input(default), gpio_dir == 0 : output
-	uint8_t watchdog_timeout[2]; // [0]:WDT is enable/disable(1/0), [1]:11, 30 sec;10, 7.5 sec;01, 3.75 sec;00, 15 sec (default)
+	uint8_t watchdog_timeout
+		[2]; // [0]:WDT is enable/disable(1/0), [1]:11, 30 sec;10, 7.5 sec;01, 3.75 sec;00, 15 sec (default)
 } nct7363_init_arg;
 
 typedef struct _hdc1080_init_arg {
