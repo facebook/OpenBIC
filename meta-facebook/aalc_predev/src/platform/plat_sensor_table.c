@@ -31,10 +31,6 @@
 
 LOG_MODULE_REGISTER(plat_sensor_table);
 
-#define CONFIG_ISL69260 false
-
-
-
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
 	   access check arg0, arg1, sample_count, cache, cache_status, mux_address, mux_offset,
