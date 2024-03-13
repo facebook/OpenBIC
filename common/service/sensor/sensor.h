@@ -759,6 +759,13 @@ typedef struct _nct7363_init_arg {
 	uint16_t threshold;
 } nct7363_init_arg;
 
+typedef struct _hdc1080_init_arg {
+	uint8_t idx;
+	uint8_t mode;
+	uint8_t tres; // Temperature Measurement Resolution
+	uint8_t hres; //Humidity Measurement Resolution
+} hdc1080_init_arg;
+
 typedef struct _ast_tach_init_arg {
 	bool is_init;
 } ast_tach_init_arg;
