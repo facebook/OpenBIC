@@ -25,6 +25,25 @@
 
 // clang-format off
 
+#define EVT_EXAMAX_RESERVED_1 18
+#define EVT_EXAMAX_RESERVED_2 25
+#define EVT_EXAMAX_RESERVED_4 43
+#define EVT_CPU_TYPE_1 52
+#define EVT_RTM_IOEXP_INT_N 53
+#define EVT_EXAMAX_RESERVED_3 55
+#define EVT_AUTH_COMPLETE 72
+#define EVT_BIC_READY_TOP_EXP 73
+#define EVT_RTM2_IOEXP_INT_N 74
+#define EVT_SIDECAR_CABLE_PRESENT 75
+#define EVT_BIC_READY_FRONT_EXP 76
+#define EVT_CPU_BIC_RTC_GET_N 77
+#define EVT_SMB_RTM1_INA233_ALRT_N 78
+#define EVT_SMB_RTM2_INA233_ALRT_N 79
+#define EVT_EXAMMAX_TYPE 95
+#define EVT_Reserve_GPIOM0 96
+#define EVT_MEDUSA_HSC_R_PG 98
+#define EVT_Reserve_GPIOM3 99
+
 #define name_gpioA \
 	gpio_name_to_num(FM_CPU_BIC_SLP_S5_N) \
 	gpio_name_to_num(FM_CPU_BIC_SLP_S3_N) \
@@ -48,7 +67,7 @@
 #define name_gpioC \
 	gpio_name_to_num(PVDDCR_CPU0_PMALERT_N) \
 	gpio_name_to_num(FM_HSC_TIMER_ALT_N) \
-	gpio_name_to_num(EXAMAX_RESERVED_1) \
+	gpio_name_to_num(SMB_RTM1_INA233_ALRT_N) \
 	gpio_name_to_num(PVDDCR_CPU1_PMALERT_N) \
 	gpio_name_to_num(PWRBTN_N) \
 	gpio_name_to_num(RST_BMC_R_N) \
@@ -57,7 +76,7 @@
 
 #define name_gpioD \
 	gpio_name_to_num(FM_SOL_UART_CH_SEL_R) \
-	gpio_name_to_num(EXAMAX_RESERVED_2) \
+	gpio_name_to_num(SMB_RTM2_INA233_ALRT_N) \
 	gpio_name_to_num(FAST_PROCHOT_N) \
 	gpio_name_to_num(BIC_JTAG_SEL_R) \
 	gpio_name_to_num(FM_CPU_BIC_PROCHOT_LVT3_N) \
@@ -79,7 +98,7 @@
 	gpio_name_to_num(CARD_TYPE_EXP) \
 	gpio_name_to_num(CPU_ERROR_BIC_LVC3_R_N) \
 	gpio_name_to_num(PVDD11_S3_PMALERT_N) \
-	gpio_name_to_num(EXAMAX_RESERVED_4) \
+	gpio_name_to_num(BIC_READY_FRONT_EXP) \
 	gpio_name_to_num(CPU_TYPE0) \
 	gpio_name_to_num(FM_BMC_DEBUG_ENABLE_R_N) \
 	gpio_name_to_num(FM_DBP_PRESENT_N) \
@@ -90,10 +109,10 @@
 	gpio_name_to_num(FM_CPLD_BMC_BIC_READY) \
 	gpio_name_to_num(BIC_JTAG_MUX_SEL) \
 	gpio_name_to_num(RST_PLTRST_BIC_N) \
-	gpio_name_to_num(CPU_TYPE1) \
-	gpio_name_to_num(RTM_IOEXP_INT_N) \
+	gpio_name_to_num(CPU_BIC_RTC_GET_N) \
+	gpio_name_to_num(AUTH_COMPLETE) \
 	gpio_name_to_num(P3V3_STBY_SIDECAR_FAULT_N) \
-	gpio_name_to_num(EXAMAX_RESERVED_3)
+	gpio_name_to_num(BIC_READY_TOP_EXP)
 
 #define name_gpioH \
 	gpio_name_to_num(PRSNT_CEM_CONN) \
@@ -116,14 +135,14 @@
 	gpio_name_to_num(Reserve_GPIOI7)
 
 #define name_gpioJ \
-	gpio_name_to_num(AUTH_COMPLETE) \
-	gpio_name_to_num(BIC_READY_TOP_EXP) \
-	gpio_name_to_num(RTM2_IOEXP_INT_N) \
-	gpio_name_to_num(SIDECAR_CABLE_PRESENT) \
-	gpio_name_to_num(BIC_READY_FRONT_EXP) \
-	gpio_name_to_num(CPU_BIC_RTC_GET_N) \
-	gpio_name_to_num(SMB_RTM1_INA233_ALRT_N) \
-	gpio_name_to_num(SMB_RTM2_INA233_ALRT_N)
+	gpio_name_to_num(Reserve_GPIOJ0) \
+	gpio_name_to_num(Reserve_GPIOJ1) \
+	gpio_name_to_num(Reserve_GPIOJ2) \
+	gpio_name_to_num(Reserve_GPIOJ3) \
+	gpio_name_to_num(RTM2_INT_N) \
+	gpio_name_to_num(RTM_IOEXP_INT_N) \
+	gpio_name_to_num(Reserve_GPIOJ6) \
+	gpio_name_to_num(Reserve_GPIOJ7)
 
 #define name_gpioK \
 	gpio_name_to_num(Reserve_GPIOK0) \
@@ -143,23 +162,23 @@
 	gpio_name_to_num(SMB_E1S_1_INA233_ALRT_N) \
 	gpio_name_to_num(VR_TYPE_0) \
 	gpio_name_to_num(VR_TYPE_1) \
-	gpio_name_to_num(EXAMAX_TYPE)
+	gpio_name_to_num(RTM_TYPE_0)
 
 #define name_gpioM \
-	gpio_name_to_num(Reserve_GPIOM0) \
+	gpio_name_to_num(RTM_TYPE_1) \
 	gpio_name_to_num(Reserve_GPIOM1) \
-	gpio_name_to_num(MEDUSA_HSC_R_PG) \
-	gpio_name_to_num(Reserve_GPIOM3) \
+	gpio_name_to_num(Reserve_GPIOM2) \
+	gpio_name_to_num(BIC_ESPI_SELECT) \
 	gpio_name_to_num(Reserve_GPIOM4) \
 	gpio_name_to_num(Reserve_GPIOM5) \
 	gpio_name_to_num(Reserve_GPIOM6) \
 	gpio_name_to_num(Reserve_GPIOM7)
 
 #define name_gpioN \
-	gpio_name_to_num(SGPIO_BMC_CLK_R) \
-	gpio_name_to_num(SGPIO_BMC_LD_R_N) \
-	gpio_name_to_num(SGPIO_BMC_DOUT_R) \
-	gpio_name_to_num(SGPIO_BMC_DIN) \
+	gpio_name_to_num(Reserve_GPION0) \
+	gpio_name_to_num(Reserve_GPION1) \
+	gpio_name_to_num(Reserve_GPION2) \
+	gpio_name_to_num(Reserve_GPION3) \
 	gpio_name_to_num(Reserve_GPION4) \
 	gpio_name_to_num(Reserve_GPION5) \
 	gpio_name_to_num(Reserve_GPION6) \

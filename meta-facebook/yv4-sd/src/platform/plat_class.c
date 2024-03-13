@@ -100,7 +100,7 @@ bool get_board_rev(uint8_t *board_rev)
 	case BOARD_REV_DVT:
 	case BOARD_REV_PVT:
 	case BOARD_REV_MP:
-		LOG_DBG("Board revision 0x%x", *board_rev);
+		LOG_INF("Board revision 0x%x", *board_rev);
 		return true;
 	default:
 		LOG_ERR("Invalid board revision 0x%x", *board_rev);
