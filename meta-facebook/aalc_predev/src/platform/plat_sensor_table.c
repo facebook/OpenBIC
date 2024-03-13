@@ -27,13 +27,12 @@
 #include "tmp461.h"
 #include "hdc1080.h"
 #include "nct7363.h"
+#include "ast_tach.h"
 #include <logging/log.h>
 
 LOG_MODULE_REGISTER(plat_sensor_table);
 
 #define CONFIG_ISL69260 false
-
-
 
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
@@ -131,8 +130,12 @@ sensor_cfg plat_sensor_config[] = {
 	  NCT7363_FAN_SPEED_OFFSET, stby_access, NCT7363_14_FAN, 0, SAMPLE_COUNT_DEFAULT,
 	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
 	  &bus_8_PCA9546A_configs[2], post_PCA9546A_read, NULL, &nct7363_init_args[3] },
-	/*{ SENSOR_NUM_MB_FAN1_TACH_RPM, sensor_dev_ast_fan, TACH_PORT0, NONE, NONE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_MB_FAN2_TACH_RPM, sensor_dev_ast_fan, TACH_PORT1, NONE, NONE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },*/
+	{ SENSOR_NUM_MB_FAN1_TACH_RPM, sensor_dev_ast_tach, TACH_PORT0, NONE, AST_TACH_RPM,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_MB_FAN2_TACH_RPM, sensor_dev_ast_tach, TACH_PORT1, NONE, AST_TACH_RPM,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 	{ SENSOR_NUM_BPB_RACK_LEVEL_1, sensor_dev_nct7363, I2C_BUS5, BPB_NCT7363_ADDR,
 	  NCT7363_GPIO_READ_OFFSET, stby_access, NCT7363_4_FAN, 0, SAMPLE_COUNT_DEFAULT,
 	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
