@@ -722,6 +722,13 @@ typedef struct _nct7363_init_arg {
 	uint8_t watchdog_timeout[2]; // [0]:WDT is enable/disable(1/0), [1]:11, 30 sec;10, 7.5 sec;01, 3.75 sec;00, 15 sec (default)
 } nct7363_init_arg;
 
+typedef struct _hdc1080_init_arg {
+	uint8_t idx;
+	uint8_t mode;
+	uint8_t tres; // Temperature Measurement Resolution
+	uint8_t hres; //Humidity Measurement Resolution
+} hdc1080_init_arg;
+
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;
 // Mapping sensor number to sensor config index
