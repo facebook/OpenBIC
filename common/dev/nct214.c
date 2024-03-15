@@ -60,6 +60,13 @@ uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 	uint8_t external_temperature_upper_byte_offset = EXTERNAL_TEMP_UPPER_BYTE_REG;
 	uint8_t external_temperature_lower_byte_offset = EXTERNAL_TEMP_LOWER_BYTE_REG;
 	sensor_val *sval = (sensor_val *)reading;
+	msg.rx_len = 1;
+	msg.tx_len = 1;
+	msg.data[0] = CONFIG_REG_READ;
+	if (i2c_master_read(&msg, retry)) {
+			return SENSOR_FAIL_TO_ACCESS;
+	}
+	uint8_t temperature_range_select = (msg.data[0] >> 2) & 1;
 	switch (offset) {
 	case LOCAL_TEMP:
 
@@ -70,8 +77,12 @@ uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 			return SENSOR_FAIL_TO_ACCESS;
 		}
 		uint8_t val_local_temp = msg.data[0];
-
-		sval->integer = (int16_t)val_local_temp;
+		if (temperature_range_select == 1){
+			sval->integer = (int16_t)((float)val_local_temp-(float)64);
+		}
+		else{
+			sval->integer = (int16_t)val_local_temp;
+		}	
 		sval->fraction = 0;
 		return SENSOR_READ_SUCCESS;
 
@@ -89,8 +100,13 @@ uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 			return SENSOR_FAIL_TO_ACCESS;
 		}
 		uint8_t val_external_temp_upper_byte = msg.data[0];
-
-		sval->integer = (int16_t)val_external_temp_upper_byte;
+		
+		if (temperature_range_select == 1){
+			sval->integer = (int16_t)((float)val_external_temp_upper_byte-(float)64);
+		}
+		else{
+			sval->integer = (int16_t)val_external_temp_upper_byte;
+		}	
 		switch (val_external_temp_lower_byte)
 		{
 		case 0:
