@@ -1,7 +1,8 @@
 #define MODBUS_UART_BAUDRATE_LOW 19200
 #define MODBUS_UART_BAUDRATE_HIGH 115200
 #define MODBUS_UART_PARITY UART_CFG_PARITY_NONE
-#define MODBUS_UART_RESPONSE_T 500000
+#define MODBUS_UART_RESPONSE_T 1000000 
+//from zephyr/samples/subsys/modbus/rtu_client, client_param: rx_timeout = 1000000(default 50000)
 
 enum {
 	MODBUS_READ_WRITE_REGISTER_SUCCESS,

@@ -35,8 +35,8 @@ int reading;
 
 modbus_sensor_cfg plat_modbus_sensors[] = {
 	/* sensor number,  modbus data addr  */
-	{ SENSOR_NUM_TEMP_BB_TMP75, MODBUS_TEMP_BB_TMP75_ADDR },
-	{ SENSOR_NUM_TEMP_BPB_TMP75, MODBUS_TEMP_BPB_TMP75_ADDR },
+	{ SENSOR_NUM_BB_TMP75_TEMP_C, MODBUS_TEMP_BB_TMP75_ADDR },
+	{ SENSOR_NUM_BPB_RPU_OUTLET_TEMP_C, MODBUS_TEMP_BPB_TMP75_ADDR },
 };
 
 static int holding_reg_rd(uint16_t addr, uint16_t *reg)
@@ -103,13 +103,12 @@ static struct modbus_user_callbacks mbs_cbs = {
 
 const static struct modbus_iface_param server_param = {
 	.mode = MODBUS_MODE_RTU,
-	.rx_timeout = MODBUS_UART_RESPONSE_T,
 	.server = {
 		.user_cb = &mbs_cbs,
 		.unit_id = MODBUS_UART_NODE_ADDR,
 	},
 	.serial = {
-		.baud = MODBUS_UART_BAUDRATE_HIGH,
+		.baud = MODBUS_UART_BAUDRATE_LOW,
 		.parity = UART_CFG_PARITY_NONE,
 	},
 };
