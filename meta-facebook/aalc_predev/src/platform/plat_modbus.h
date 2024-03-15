@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,36 +14,24 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
-#include "hal_gpio.h"
-#include <logging/log.h>
-#include "plat_modbus.h"
+#include <stdbool.h>
+#include <stdint.h>
+#include <kernel.h>
 
-LOG_MODULE_REGISTER(plat_init);
+#define MODBUS_SERVER_THREAD_SIZE 3056
 
-#define DEF_PROJ_GPIO_PRIORITY 78
+#define MODBUS_UART_NODE_ADDR 0x0C
+#define MODBUS_UART_FP_OFFSET 5000
 
- void pal_pre_init()
-{
-	return;
-}
+void modbus_server_handler_init(void);
 
- void pal_post_init()
-{
-	modbus_server_handler_init();
-	return;
-}
+typedef struct _modbus_sensor_cfg {
+	uint8_t sensor_num;
+	uint16_t data_addr;
+} modbus_sensor_cfg;
+//sensor_monitor_table_info
 
- void pal_device_init()
-{
-	return;
-}
-
- void pal_set_sys_status()
-{
-	return;
-}
-
-
-DEVICE_DEFINE(PRE_DEF_PROJ_GPIO, "PRE_DEF_PROJ_GPIO_NAME", &gpio_init, NULL, NULL, NULL,
-	      POST_KERNEL, DEF_PROJ_GPIO_PRIORITY, NULL);
+/* define modbus data address */
+#define MODBUS_TEMP_BB_TMP75_ADDR 0x0101
+#define MODBUS_TEMP_BPB_TMP75_ADDR 0x0102
+#define MODBUS_POWER_RPU_ADDR 0x9999
