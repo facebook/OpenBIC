@@ -356,7 +356,7 @@ uint8_t pldm_platform_event_message_req(void *mctp_inst, mctp_ext_params ext_par
 
 	req.event_class = event_class;
 	req.format_version = 0x01;
-	req.tid = DEFAULT_TID;
+	req.tid = plat_pldm_get_tid();
 
 	memcpy(&req.event_data, event_data, event_data_length);
 
