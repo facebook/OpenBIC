@@ -9905,7 +9905,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"SB_HEX_AIR_OUTLET_2ND_SRC_1_TEMP_C",
+		"SB_2ND_SRC_1_TEMP_C",
 	},
 	{
 		// SENSOR_NUM_SB_HEX_AIR_OUTLET_2ND_SRC_2_TEMP_C
@@ -9966,7 +9966,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"SB_HEX_AIR_OUTLET_2ND_SRC_2_TEMP_C",
+		"SB_2ND_SRC_2_TEMP_C",
 	},
 	{
 		// SENSOR_NUM_SB_HEX_AIR_OUTLET_2ND_SRC_3_TEMP_C
@@ -10027,7 +10027,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"SB_HEX_AIR_OUTLET_2ND_SRC_3_TEMP_C",
+		"SB__2ND_SRC_3_TEMP_C",
 	},
 	{
 		// SENSOR_NUM_SB_HEX_AIR_OUTLET_2ND_SRC_4_TEMP_C
@@ -10088,7 +10088,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"SB_HEX_AIR_OUTLET_2ND_SRC_4_TEMP_C",
+		"SB_2ND_SRC_4_TEMP_C",
 	},
 };
 
