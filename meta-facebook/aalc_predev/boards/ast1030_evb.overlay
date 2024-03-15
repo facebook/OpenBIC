@@ -94,7 +94,6 @@
 
 &uart1 {
 	status = "okay";
-    current-speed = <115200>;
 	modbus0 {
 		compatible = "zephyr,modbus-serial";
 		label = "MODBUS0";
