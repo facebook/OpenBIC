@@ -38,6 +38,10 @@
 #define SB_TMP461_2_ADDR (0x92 >> 1)
 #define SB_TMP461_3_ADDR (0x94 >> 1)
 #define SB_TMP461_4_ADDR (0x96 >> 1)
+#define SB_NCT214_1_ADDR (0x30 >> 1)
+#define SB_NCT214_2_ADDR (0x52 >> 1)
+#define SB_NCT214_3_ADDR (0x98 >> 1)
+#define SB_NCT214_4_ADDR (0x32 >> 1)
 #define FB_ADM1272_ADDR (0x22 >> 1)
 #define PB_ADM1272_ADDR (0x24 >> 1)
 #define ADS112C_MUX_1_CON 0x80 //AINP = AIN0, AINN = AVSS
@@ -209,8 +213,10 @@
 #define SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_1 0x9E
 #define SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_2 0x9F
 #define SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_3 0xA0
-
-
+#define SENSOR_NUM_SB_HEX_AIR_OUTLET_2ND_SRC_1_TEMP_C 0xA1
+#define SENSOR_NUM_SB_HEX_AIR_OUTLET_2ND_SRC_2_TEMP_C 0xA2
+#define SENSOR_NUM_SB_HEX_AIR_OUTLET_2ND_SRC_3_TEMP_C 0xA3
+#define SENSOR_NUM_SB_HEX_AIR_OUTLET_2ND_SRC_4_TEMP_C 0xA4
 
 #define TACH_PORT0                                                                                 \
 	0x01 // this might write in ast_fan deiver, but now we don't have it, so just write here to avoid error

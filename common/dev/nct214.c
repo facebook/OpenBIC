@@ -64,11 +64,11 @@ uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 	msg.tx_len = 1;
 	msg.data[0] = CONFIG_REG_READ;
 	if (i2c_master_read(&msg, retry)) {
-			return SENSOR_FAIL_TO_ACCESS;
+		return SENSOR_FAIL_TO_ACCESS;
 	}
 	uint8_t temperature_range_select = (msg.data[0] >> 2) & 1;
 	switch (offset) {
-	case LOCAL_TEMP:
+	case NCT214_LOCAL_TEMPERATRUE:
 
 		msg.rx_len = 1;
 		msg.tx_len = 1;
@@ -77,16 +77,15 @@ uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 			return SENSOR_FAIL_TO_ACCESS;
 		}
 		uint8_t val_local_temp = msg.data[0];
-		if (temperature_range_select == 1){
-			sval->integer = (int16_t)((float)val_local_temp-(float)64);
-		}
-		else{
+		if (temperature_range_select == 1) {
+			sval->integer = (int16_t)((float)val_local_temp - (float)64);
+		} else {
 			sval->integer = (int16_t)val_local_temp;
-		}	
+		}
 		sval->fraction = 0;
 		return SENSOR_READ_SUCCESS;
 
-	case EXTERNAL_TEMP:
+	case NCT214_REMOTE_TEMPERATRUE:
 		msg.rx_len = 1;
 		msg.tx_len = 1;
 		msg.data[0] = external_temperature_lower_byte_offset;
@@ -94,21 +93,19 @@ uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 			return SENSOR_FAIL_TO_ACCESS;
 		}
 		uint8_t val_external_temp_lower_byte = msg.data[0];
-		val_external_temp_lower_byte = val_external_temp_lower_byte >> 6;  // get two MSBs
+		val_external_temp_lower_byte = val_external_temp_lower_byte >> 6; // get two MSBs
 		msg.data[0] = external_temperature_upper_byte_offset;
 		if (i2c_master_read(&msg, retry)) {
 			return SENSOR_FAIL_TO_ACCESS;
 		}
 		uint8_t val_external_temp_upper_byte = msg.data[0];
-		
-		if (temperature_range_select == 1){
-			sval->integer = (int16_t)((float)val_external_temp_upper_byte-(float)64);
-		}
-		else{
+
+		if (temperature_range_select == 1) {
+			sval->integer = (int16_t)((float)val_external_temp_upper_byte - (float)64);
+		} else {
 			sval->integer = (int16_t)val_external_temp_upper_byte;
-		}	
-		switch (val_external_temp_lower_byte)
-		{
+		}
+		switch (val_external_temp_lower_byte) {
 		case 0:
 			sval->fraction = 0;
 			break;
@@ -126,7 +123,7 @@ uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 			return SENSOR_UNSPECIFIED_ERROR;
 			break;
 		}
-		
+
 		return SENSOR_READ_SUCCESS;
 	default:
 		LOG_ERR("Unknown register offset(%d)", offset);

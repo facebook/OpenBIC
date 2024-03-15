@@ -33,8 +33,6 @@ LOG_MODULE_REGISTER(plat_sensor_table);
 
 #define CONFIG_ISL69260 false
 
-
-
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
 	   access check arg0, arg1, sample_count, cache, cache_status, mux_address, mux_offset,
@@ -704,7 +702,12 @@ sensor_cfg adm1272_sensor_config_table[] = {
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, post_adm1272_read,
 	  &adm1272_init_args[1] },
 };
-
+sensor_cfg nct214_config_table[] = {
+	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_2ND_SRC_1_TEMP_C, sensor_dev_nct214, I2C_BUS9, SB_NCT214_1_ADDR, NCT214_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read, &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
+	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_2ND_SRC_2_TEMP_C, sensor_dev_nct214, I2C_BUS9, SB_NCT214_2_ADDR, NCT214_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read, &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
+	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_2ND_SRC_3_TEMP_C, sensor_dev_nct214, I2C_BUS9, SB_NCT214_3_ADDR, NCT214_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read, &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
+	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_2ND_SRC_4_TEMP_C, sensor_dev_nct214, I2C_BUS9, SB_NCT214_4_ADDR, NCT214_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read, &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
+}
 //const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) + ARRAY_SIZE(adm1272_sensor_config_table);
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
 void load_sensor_config(void)
