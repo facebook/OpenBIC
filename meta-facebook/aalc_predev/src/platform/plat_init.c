@@ -22,11 +22,6 @@
 
 LOG_MODULE_REGISTER(plat_init);
 
-void pal_post_init()
-{
-	ast_pwm_init();
-}
-
 #define DEF_PROJ_GPIO_PRIORITY 78
 
  void pal_pre_init()
@@ -36,8 +31,8 @@ void pal_post_init()
 
  void pal_post_init()
 {
+	ast_pwm_init();
 	modbus_server_handler_init();
-	return;
 }
 
  void pal_device_init()
