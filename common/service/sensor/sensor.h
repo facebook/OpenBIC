@@ -757,6 +757,7 @@ typedef struct _nct7363_init_arg {
 	uint16_t threshold;
 } nct7363_init_arg;
 
+
 typedef struct _ads112c_init_arg {
 	uint8_t reg0_input;
 	uint8_t reg0_gain;
@@ -764,6 +765,13 @@ typedef struct _ads112c_init_arg {
 	uint8_t reg1_conversion;
 	uint8_t reg1_vol_refer;
 } ads112c_init_arg;
+
+typedef struct _hdc1080_init_arg {
+	uint8_t idx;
+	uint8_t mode;
+	uint8_t tres; // Temperature Measurement Resolution
+	uint8_t hres; //Humidity Measurement Resolution
+} hdc1080_init_arg;
 
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;
