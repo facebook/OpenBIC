@@ -288,7 +288,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0xFF, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
-			UPDATE_INTERVAL_1S, //int32_t update_interval;
+			UPDATA_INTERNAL_1HR, //int32_t update_interval;
 			0x000084D0, //uint32_t max_readable;
 			0x00006F54, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
