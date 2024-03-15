@@ -33,8 +33,6 @@ LOG_MODULE_REGISTER(plat_sensor_table);
 
 #define CONFIG_ISL69260 false
 
-
-
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
 	   access check arg0, arg1, sample_count, cache, cache_status, mux_address, mux_offset,
@@ -681,11 +679,11 @@ sensor_cfg adm1272_sensor_config_table[] = {
 	  &adm1272_init_args[1] },
 	{ SENSOR_NUM_BB_HSC_P51V_IOUT_CURR_A, sensor_dev_adm1272, I2C_BUS4, BB_ADM1272_ADDR,
 	  PMBUS_READ_IOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, post_adm1272_read,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, post_adm1272_read, NULL,
 	  &adm1272_init_args[1] },
 	{ SENSOR_NUM_BB_HSC_P51V_PIN_PWR_W, sensor_dev_adm1272, I2C_BUS4, BB_ADM1272_ADDR,
 	  PMBUS_READ_PIN, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, post_adm1272_read,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, post_adm1272_read, NULL,
 	  &adm1272_init_args[1] },
 	{ SENSOR_NUM_BPB_HSC_P48V_TEMP_C, sensor_dev_adm1272, I2C_BUS4, BPB_ADM1272_ADDR,
 	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
@@ -697,11 +695,11 @@ sensor_cfg adm1272_sensor_config_table[] = {
 	  &adm1272_init_args[1] },
 	{ SENSOR_NUM_BPB_HSC_P51V_IOUT_CURR_A, sensor_dev_adm1272, I2C_BUS4, BPB_ADM1272_ADDR,
 	  PMBUS_READ_IOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, post_adm1272_read,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, post_adm1272_read, NULL,
 	  &adm1272_init_args[1] },
 	{ SENSOR_NUM_BPB_HSC_P51V_PIN_PWR_W, sensor_dev_adm1272, I2C_BUS4, BPB_ADM1272_ADDR,
 	  PMBUS_READ_PIN, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, post_adm1272_read,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, post_adm1272_read, NULL,
 	  &adm1272_init_args[1] },
 };
 
