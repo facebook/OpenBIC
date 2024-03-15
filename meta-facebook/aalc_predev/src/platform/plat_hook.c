@@ -19,6 +19,7 @@
 #include <logging/log.h>
 #include "plat_hook.h"
 #include "plat_class.h"
+#include "ads112c.h"
 #include "plat_i2c.h"
 #include "sensor.h"
 
@@ -107,6 +108,39 @@ nct7363_init_arg nct7363_init_args[] = {
             },
         .fan_poles = 0,
     },
+};
+
+ads112c_init_arg ads112c_init_args[] = {
+	[0] = { .reg0_input = ADS112C_REG0_INPUT_AIN0AIN1,
+		.reg0_gain = ADS112C_REG0_GAIN1,
+		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
+		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
+		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
+	},    
+	[1] = { .reg0_input = ADS112C_REG0_INPUT_AIN0AVSS,
+		.reg0_gain = ADS112C_REG0_GAIN1,
+		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
+		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
+		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
+	},
+	[2] = { .reg0_input = ADS112C_REG0_INPUT_AIN1AVSS,
+		.reg0_gain = ADS112C_REG0_GAIN1,
+		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
+		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
+		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
+	},    
+	[3] = { .reg0_input = ADS112C_REG0_INPUT_AIN2AVSS,
+		.reg0_gain = ADS112C_REG0_GAIN1,
+		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
+		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
+		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
+	},
+	[4] = { .reg0_input = ADS112C_REG0_INPUT_AIN3AVSS,
+		.reg0_gain = ADS112C_REG0_GAIN1,
+		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
+		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
+		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
+	},
 };
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
@@ -250,4 +284,55 @@ bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
 	}
 
 	return true;
+}
+
+bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
+{
+
+    short int read16Bits =(short int) *reading;
+    double ads112c_default_vol = 5;
+    ads112c_init_arg *init_arg = (ads112c_init_arg *)cfg->init_args;
+    double gainValue = 1 << (init_arg->reg0_gain >> 1);
+
+    double rawValue = (double) read16Bits * ads112c_default_vol / (32768 * gainValue); //(2 · VREF / Gain) / (2^16)
+
+	double val;
+	double v_val, flow_Pmax = 400, flow_Pmin = 10, press_Pmax = 50, press_Pmin = 0;
+
+	switch (cfg->offset) {
+	case ADS112C_FLOW_OFFSET: //Flow_Rate_LPM
+		v_val = 5 - ((32767 - rawValue) * 0.000153);
+		val = ((flow_Pmax - flow_Pmin) * (2 * v_val - 1) / 8) + 10;
+		//val = (((v_val / 5) - 0.1) / (0.8 / (flow_Pmax - flow_Pmin))) + 10;
+		val = (val - 7.56494) * 0.294524;
+		val = 1.2385 * ((2.5147 * val) - 2.4892);
+		val = (1.7571 * val) - 0.8855;
+		break;
+
+	case ADS112C_PRESS_OFFSET: //Filter_P/Outlet_P/Inlet_P
+		v_val = 5 - ((32767 - rawValue) * 0.000153);
+		val = ((press_Pmax - press_Pmin) * (2 * v_val - 1) / 8) + 10;
+		//val = (((v_val / 5) - 0.1) / (0.8 / (press_Pmax - press_Pmin))) + 10;
+		val = ((0.9828 * val) - 9.9724) * 6.894759;
+		break;
+
+	case ADS112C_TEMP_OFFSET: //RDHx_Hot_Liq_T/CDU_Inlet_Liq_T
+		val = (rawValue - 15888) * 0.015873;
+		val = (1.1685 * val) - 4.5991;
+		break;
+
+	default:
+		val = rawValue * 1.0;
+		break;
+	}
+
+	sensor_val *sval = (sensor_val *)reading;
+	sval->integer = (int)val & 0xFFFF;
+	sval->fraction = (val - sval->integer) * 1000;
+    //according to pre_sensor_read_fn(pre_PCA9546A_read), determinies if apply post_PCA9546A_read
+    if (cfg -> pre_sensor_read_hook != NULL) {
+        post_PCA9546A_read(cfg, args, reading);
+    }
+	
+    return true;
 }

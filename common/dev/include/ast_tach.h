@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,42 +14,32 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
-#include "hal_gpio.h"
-#include "plat_pwm.h"
-#include <logging/log.h>
-#include "plat_modbus.h"
+#ifndef TACH_H
+#define TACH_H
 
-LOG_MODULE_REGISTER(plat_init);
+#include "sensor.h"
 
-void pal_post_init()
-{
-	ast_pwm_init();
-}
+enum {
+	AST_TACH_RPM = 0,
+};
 
-#define DEF_PROJ_GPIO_PRIORITY 78
+enum {
+	TACH_PORT0 = 0,
+	TACH_PORT1,
+	TACH_PORT2,
+	TACH_PORT3,
+	TACH_PORT4,
+	TACH_PORT5,
+	TACH_PORT6,
+	TACH_PORT7,
+	TACH_PORT8,
+	TACH_PORT9,
+	TACH_PORT10,
+	TACH_PORT11,
+	TACH_PORT12,
+	TACH_PORT13,
+	TACH_PORT14,
+	TACH_PORT15,
+};
 
- void pal_pre_init()
-{
-	return;
-}
-
- void pal_post_init()
-{
-	modbus_server_handler_init();
-	return;
-}
-
- void pal_device_init()
-{
-	return;
-}
-
- void pal_set_sys_status()
-{
-	return;
-}
-
-
-DEVICE_DEFINE(PRE_DEF_PROJ_GPIO, "PRE_DEF_PROJ_GPIO_NAME", &gpio_init, NULL, NULL, NULL,
-	      POST_KERNEL, DEF_PROJ_GPIO_PRIORITY, NULL);
+#endif //TACH_H

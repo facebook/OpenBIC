@@ -106,11 +106,10 @@ enum DIMM_RELATED_OFFSET {
 };
 
 enum ADS112C_OFFSET {
-	ADS112C_FLOW_OFFSET = 0x00,
-	ADS112C_PRESS_OFFSET = 0x01,
-	ADS112C_TEMP_OFFSET = 0x02,
-	ADS112C_OTHER_OFFSET = 0x03,
-	ADS112C_LEAKAGE_OFFSET = 0x04,
+	ADS112C_MUX_1_CON = 0x80, //AINP = AIN0, AINN = AVSS
+	ADS112C_MUX_2_CON = 0x90, //AINP = AIN1, AINN = AVSS
+	ADS112C_MUX_3_CON = 0xA0, //AINP = AIN2, AINN = AVSS
+	ADS112C_MUX_4_CON = 0xA1, //AINP = AIN3, AINN = AVSS
 };
 
 // The sequence needs to same with table sensor_drive_tbl
@@ -167,6 +166,7 @@ enum SENSOR_DEV {
 	sensor_dev_ads112c = 0x31,
 	sensor_dev_nct7363 = 0x32,
 	sensor_dev_hdc1080 = 0x33,
+	sensor_dev_ast_tach = 0x34,
 	sensor_dev_max
 };
 
@@ -757,6 +757,26 @@ typedef struct _nct7363_init_arg {
 	uint8_t duty;
 	uint16_t threshold;
 } nct7363_init_arg;
+
+
+typedef struct _ads112c_init_arg {
+	uint8_t reg0_input;
+	uint8_t reg0_gain;
+	uint8_t reg0_pga;
+	uint8_t reg1_conversion;
+	uint8_t reg1_vol_refer;
+} ads112c_init_arg;
+
+typedef struct _hdc1080_init_arg {
+	uint8_t idx;
+	uint8_t mode;
+	uint8_t tres; // Temperature Measurement Resolution
+	uint8_t hres; //Humidity Measurement Resolution
+} hdc1080_init_arg;
+
+typedef struct _ast_tach_init_arg {
+	bool is_init;
+} ast_tach_init_arg;
 
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;
