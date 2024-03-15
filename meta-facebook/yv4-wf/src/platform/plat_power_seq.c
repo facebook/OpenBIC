@@ -28,8 +28,8 @@ LOG_MODULE_REGISTER(plat_power_seq);
 
 K_WORK_DELAYABLE_DEFINE(set_dc_on_5s_work, set_DC_on_delayed_status);
 K_WORK_DELAYABLE_DEFINE(cxl_ready_thread, cxl_ready_handler);
-K_WORK_DELAYABLE_DEFINE(enable_asic1_power_on_rst_work, enable_asic1_power_on_rst);
-K_WORK_DELAYABLE_DEFINE(enable_asic2_power_on_rst_work, enable_asic2_power_on_rst);
+K_WORK_DELAYABLE_DEFINE(enable_asic1_rst_work, enable_asic1_rst);
+K_WORK_DELAYABLE_DEFINE(enable_asic2_rst_work, enable_asic2_rst);
 
 static bool is_cxl_power_on[MAX_CXL_ID] = { false, false };
 static bool is_cxl_ready[MAX_CXL_ID] = { false, false };
@@ -94,13 +94,15 @@ cxl_power_good_gpio cxl_power_good_pin[MAX_CXL_ID] = {
 	.pvtt_cd_dimm_pg = PWRGD_PVTT_AB_ASIC2, },
 };
 
-void enable_asic1_power_on_rst()
+void enable_asic1_rst()
 {
+	gpio_set(SYS_RST_ASIC1_N_R, POWER_ON);
 	gpio_set(PWR_ON_RST_ASIC1_N, POWER_ON);
 }
 
-void enable_asic2_power_on_rst()
+void enable_asic2_rst()
 {
+	gpio_set(SYS_RST_ASIC2_N_R, POWER_ON);
 	gpio_set(PWR_ON_RST_ASIC2_N, POWER_ON);
 }
 
@@ -194,21 +196,6 @@ void enable_powers(int cxl_id, int pwr_stage)
 	case ASIC_POWER_ON_STAGE_2:
 		gpio_set(cxl_power_ctrl_pin[cxl_id].p1v2_asic_en, POWER_ON);
 		gpio_set(cxl_power_ctrl_pin[cxl_id].p1v8_asic_en, POWER_ON);
-		// set PWR_ON_RST_N after P1V8 enable 25ms
-		switch (cxl_id) {
-		case CXL_ID_0:
-			k_work_schedule(&enable_asic1_power_on_rst_work,
-					K_MSEC(PWR_ON_RST_DELAY_MSEC));
-			break;
-		case CXL_ID_1:
-			k_work_schedule(&enable_asic2_power_on_rst_work,
-					K_MSEC(PWR_ON_RST_DELAY_MSEC));
-			break;
-		default:
-			LOG_ERR("Unknown CXL id %d to enable PWR_ON_RST", cxl_id);
-			break;
-		}
-		gpio_set(cxl_power_ctrl_pin[cxl_id].sys_rst, POWER_ON);
 		break;
 	case DIMM_POWER_ON_STAGE_1:
 		gpio_set(cxl_power_ctrl_pin[cxl_id].pvpp_ab_dimm_en, POWER_ON);
@@ -221,6 +208,17 @@ void enable_powers(int cxl_id, int pwr_stage)
 	case DIMM_POWER_ON_STAGE_3:
 		gpio_set(cxl_power_ctrl_pin[cxl_id].pvtt_ab_dimm_en, POWER_ON);
 		gpio_set(cxl_power_ctrl_pin[cxl_id].pvtt_cd_dimm_en, POWER_ON);
+		switch (cxl_id) {
+		case CXL_ID_0:
+			k_work_schedule(&enable_asic1_rst_work, K_MSEC(PWR_RST_DELAY_MSEC));
+			break;
+		case CXL_ID_1:
+			k_work_schedule(&enable_asic2_rst_work, K_MSEC(PWR_RST_DELAY_MSEC));
+			break;
+		default:
+			LOG_ERR("Unknown CXL id %d to enable PWR_ON_RST", cxl_id);
+			break;
+		}
 		break;
 	default:
 		LOG_ERR("Unknown stage 0x%x to enable power", pwr_stage);
