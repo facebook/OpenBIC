@@ -20,10 +20,15 @@
 #include <logging/log.h>
 
 static uint8_t hsc_module = HSC_MODULE_ADM1272;
+static uint8_t sensorbox_2nd_src_temp_module = SB_2ND_SRC_NCT214;
 
 uint8_t get_hsc_module()
 {
 	return hsc_module;
 }
 
+uint8_t get_2nd_src_temp_module()
+{
+	return sensorbox_2nd_src_temp_module;
+}
 LOG_MODULE_REGISTER(plat_class);

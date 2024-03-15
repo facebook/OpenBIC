@@ -22,8 +22,14 @@
 
 enum HSC_MODULE {
 	HSC_MODULE_ADM1272,
+	HSC_MODULE_UNKNOWN = 0xFF,
+};
+enum TEMP_MODULE {
+	SB_TMP461,
+	SB_2ND_SRC_NCT214,
+	TEMP_MODULE_UNKNOWN = 0xFF,
 };
 
 uint8_t get_hsc_module();
-
+uint8_t get_2nd_src_temp_module();
 #endif

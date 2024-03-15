@@ -744,6 +744,13 @@ void pal_extend_sensor_config()
 			//LOG_ERR("add HSC_MODULE_ADM1272 sensor config");
 		}
 		break;
+	case SB_2ND_SRC_NCT214:
+		sensor_count = ARRAY_SIZE(nct214_config_table);
+		for (index = 0; index < sensor_count; index++) {
+			add_sensor_config(nct214_config_table[index]);
+			//LOG_ERR("add SB_2ND_SRC_NCT214 sensor config");
+		}
+		break;
 	default:
 		LOG_ERR("Invalid hsc module: 0x%x", hsc_module);
 		break;
