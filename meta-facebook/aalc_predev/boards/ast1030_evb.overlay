@@ -128,3 +128,29 @@
 &udc {
 	status = "okay";
 };
+
+&pwm {
+	status = "okay";
+	pinctrl-0 = <&pinctrl_pwm0_default>;
+};
+
+&tach {
+	status = "okay";
+	pinctrl-0 = <&pinctrl_tach0_default &pinctrl_tach1_default>;
+
+	fan@0 {
+		reg = <0>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN0";
+	};
+
+	fan@1 {
+		reg = <1>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN1";
+	};
+};

@@ -166,6 +166,7 @@ enum SENSOR_DEV {
 	sensor_dev_ads112c = 0x31,
 	sensor_dev_nct7363 = 0x32,
 	sensor_dev_hdc1080 = 0x33,
+	sensor_dev_ast_tach = 0x34,
 	sensor_dev_max
 };
 
@@ -772,6 +773,10 @@ typedef struct _hdc1080_init_arg {
 	uint8_t tres; // Temperature Measurement Resolution
 	uint8_t hres; //Humidity Measurement Resolution
 } hdc1080_init_arg;
+
+typedef struct _ast_tach_init_arg {
+	bool is_init;
+} ast_tach_init_arg;
 
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;
