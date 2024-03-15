@@ -73,14 +73,14 @@ nct7363_init_arg nct7363_init_args[] = {
         .gpio_dir[15] = 1,
         .fan_poles = 0,
         .watchdog_timeout[0] = 0,
-        .watchdog_timeout[1] = WDT_15_SEC,
+        .watchdog_timeout[1] = WDT_7dot5_SEC,
     },	
     // Management BD(no used)
     [1] = { 
         .is_init = false,
         .fan_poles = 0,
         .watchdog_timeout[0] = 0,
-        .watchdog_timeout[1] = WDT_15_SEC,
+        .watchdog_timeout[1] = WDT_7dot5_SEC,
     },
     //Backplane BD
     [2] = { 
@@ -99,7 +99,7 @@ nct7363_init_arg nct7363_init_args[] = {
         .gpio_dir[7] = 1,
         .fan_poles = 0,
         .watchdog_timeout[0] = 0,
-        .watchdog_timeout[1] = WDT_15_SEC,
+        .watchdog_timeout[1] = WDT_7dot5_SEC,
     },
     //Pump BD
     [3] = { 
@@ -125,7 +125,7 @@ nct7363_init_arg nct7363_init_args[] = {
         .gpio_dir[15] = 1,
         .fan_poles = 0,
         .watchdog_timeout[0] = 0,
-        .watchdog_timeout[1] = WDT_15_SEC,
+        .watchdog_timeout[1] = WDT_7dot5_SEC,
     },
 };
 /**************************************************************************************************
