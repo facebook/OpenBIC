@@ -105,31 +105,12 @@ uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 		} else {
 			sval->integer = (int16_t)val_external_temp_upper_byte;
 		}
-		switch (val_external_temp_lower_byte) {
-		case 0:
-			sval->fraction = 0;
-			break;
-		case 1:
-			sval->fraction = 0.25;
-			break;
-		case 2:
-			sval->fraction = 0.5;
-			break;
-		case 3:
-			sval->fraction = 0.75;
-			break;
-		default:
-			LOG_ERR("Unknown external_temp_lower_byte");
-			return SENSOR_UNSPECIFIED_ERROR;
-			break;
-		}
-
+		sval->fraction = (float)val_external_temp_lower_byte * 0.25;
 		return SENSOR_READ_SUCCESS;
 	default:
 		LOG_ERR("Unknown register offset(%d)", offset);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
-	return SENSOR_READ_SUCCESS;
 }
 
 uint8_t nct214_init(sensor_cfg *cfg)
