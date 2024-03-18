@@ -210,10 +210,6 @@
 #define SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_2 0x9F
 #define SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_3 0xA0
 
-#define TACH_PORT0                                                                                 \
-	0x01 // this might write in ast_fan deiver, but now we don't have it, so just write here to avoid error
-#define TACH_PORT1 0x02 // if driver is ok,then we can remove this
-
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
 
