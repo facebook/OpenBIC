@@ -17,9 +17,13 @@
 #include <stdio.h>
 #include "hal_gpio.h"
 #include <logging/log.h>
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_init);
-
+void pal_pre_init()
+{
+	init_aalc_config();
+}
 #define DEF_PROJ_GPIO_PRIORITY 78
 
 DEVICE_DEFINE(PRE_DEF_PROJ_GPIO, "PRE_DEF_PROJ_GPIO_NAME", &gpio_init, NULL, NULL, NULL,

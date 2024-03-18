@@ -30,7 +30,7 @@ enum TEMP_MODULE {
 	SB_NCT214,
 	TEMP_MODULE_UNKNOWN = 0xFF,
 };
-
+void init_aalc_config();
 uint8_t get_hsc_module();
 uint8_t get_temp_module();
 #endif
