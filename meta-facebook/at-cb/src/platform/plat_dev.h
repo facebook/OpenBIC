@@ -39,7 +39,8 @@
 #define FREYA_FIRMWARE_VERSION_LENGTH 5
 #define FREYA_NOT_READY_RET_CODE -2
 #define FREYA_NOT_SUPPORT_MODULE_IDENTIFIER_RET_CODE -3
-#define WAIT_FIRMWARE_READY_DELAY_S 3
+#define WAIT_FIRMWARE_READY_DELAY_S 1
+#define UNKNOWN_TYPE 0xFF
 
 typedef struct _freya_fw_info {
 	uint8_t is_freya_ready;
@@ -84,6 +85,7 @@ typedef struct _wait_fw_update_status_info {
 	bool is_work_done;
 	uint8_t bus;
 	uint8_t addr;
+	uint8_t type;
 	uint8_t status;
 	uint8_t result;
 	uint8_t timeout_s;
@@ -110,6 +112,7 @@ extern vr_fw_info cb_vr_fw_info;
 extern switch_error_check_info sw_error_check_info[];
 extern wait_fw_update_status_info atm_wait_fw_info;
 
+int get_boot1_complete_bit(uint8_t bus, uint8_t addr, uint8_t *bit);
 void clear_freya_cache_flag(uint8_t card_id);
 void clear_accl_cable_power_fault_flag();
 int get_freya_fw_info(uint8_t bus, uint8_t addr, freya_fw_info *fw_info);

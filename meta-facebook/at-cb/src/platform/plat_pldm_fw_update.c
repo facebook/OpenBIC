@@ -59,6 +59,7 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param);
 static uint8_t pldm_post_vr_update(void *fw_update_param);
 static uint8_t plat_pldm_vr_update(void *fw_update_param);
 static uint8_t pldm_pre_atm_update(void *fw_update_param);
+static uint8_t pldm_pre_boot1_update(void *fw_update_param);
 static uint8_t pldm_post_atm_update(void *fw_update_param);
 static uint8_t pldm_atm_update(void *fw_update_param);
 static uint8_t pldm_atm_apply_work();
@@ -171,6 +172,21 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.get_fw_version_fn = get_atm_fw_version,
 		.self_apply_work_func = pldm_atm_apply_work,
 		.comp_version_str = "qspi",
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = CB_COMPNT_ACCL1_CH1_FREYA,
+		.comp_classification_index = 0x00,
+		.pre_update_func = pldm_pre_boot1_update,
+		.update_func = pldm_atm_update,
+		.pos_update_func = pldm_post_atm_update,
+		.inf = COMP_UPDATE_VIA_I2C,
+		.activate_method = COMP_ACT_AC_PWR_CYCLE,
+		.self_act_func = NULL,
+		.get_fw_version_fn = get_atm_fw_version,
+		.self_apply_work_func = pldm_atm_apply_work,
+		.comp_version_str = "boot1",
 	},
 };
 
@@ -545,16 +561,80 @@ static bool get_atm_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	}
 }
 
+static uint8_t pldm_pre_boot1_update(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, PLDM_FW_UPDATE_ERROR);
+
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+	uint8_t card_id = (p->comp_id - CB_COMPNT_ACCL1_CH1_FREYA) / 2;
+	uint8_t device_id = ((p->comp_id - CB_COMPNT_ACCL1_CH1_FREYA) % 2);
+
+	if (is_time_to_poll_card_sensor(card_id) != true) {
+		LOG_ERR("Artemis module power status not ready, card id: 0x%x", card_id);
+		return PLDM_FW_UPDATE_ERROR;
+	}
+
+	if (device_id == PCIE_DEVICE_ID1) {
+		if (accl_freya_info[card_id].freya1_fw_info.is_freya_ready != FREYA_NOT_READY) {
+			LOG_ERR("Not support boot1 firmware update when nvme ready, card id: 0x%x, device id: 0x%x",
+				card_id, device_id);
+			return PLDM_FW_UPDATE_ERROR;
+		}
+	} else {
+		if (accl_freya_info[card_id].freya2_fw_info.is_freya_ready != FREYA_NOT_READY) {
+			LOG_ERR("Not support boot1 firmware update when nvme ready, card id: 0x%x, device id: 0x%x",
+				card_id, device_id);
+			return PLDM_FW_UPDATE_ERROR;
+		}
+	}
+
+	/* Stop sensor polling at first package */
+	if (p->data_ofs == 0) {
+		disable_sensor_poll();
+	}
+
+	mux_config accl_mux = { 0 };
+	if (get_accl_mux_config(card_id, &accl_mux) != true) {
+		LOG_ERR("Fail to get ACCL card mux config, card id: 0x%x", card_id);
+		return PLDM_FW_UPDATE_ERROR;
+	}
+
+	if (set_mux_channel(accl_mux, MUTEX_LOCK_ENABLE) == false) {
+		LOG_ERR("ACCL switch card mux fail, card id: 0x%x", card_id);
+		return PLDM_FW_UPDATE_ERROR;
+	}
+
+	p->bus = ((card_id < (ASIC_CARD_COUNT / 2)) ? I2C_BUS8 : I2C_BUS7);
+	p->addr = (p->comp_id % 2 ? ACCL_ARTEMIS_MODULE_2_ADDR : ACCL_ARTEMIS_MODULE_1_ADDR);
+
+	return PLDM_FW_UPDATE_SUCCESS;
+}
+
 static uint8_t pldm_pre_atm_update(void *fw_update_param)
 {
 	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, PLDM_FW_UPDATE_ERROR);
 
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 	uint8_t card_id = (p->comp_id - CB_COMPNT_ACCL1_CH1_FREYA) / 2;
+	uint8_t device_id = ((p->comp_id - CB_COMPNT_ACCL1_CH1_FREYA) % 2);
 
 	if (is_time_to_poll_card_sensor(card_id) != true) {
 		LOG_ERR("Artemis module power status not ready, card id: 0x%x", card_id);
 		return PLDM_FW_UPDATE_ERROR;
+	}
+
+	if (device_id == PCIE_DEVICE_ID1) {
+		if (accl_freya_info[card_id].freya1_fw_info.is_freya_ready != FREYA_READY) {
+			LOG_ERR("ACCL card: 0x%x, device id: 0x%x nvme not ready", card_id,
+				device_id);
+			return PLDM_FW_UPDATE_ERROR;
+		}
+	} else {
+		if (accl_freya_info[card_id].freya2_fw_info.is_freya_ready != FREYA_READY) {
+			LOG_ERR("ACCL card: 0x%x, device id: 0x%x nvme not ready", card_id,
+				device_id);
+			return PLDM_FW_UPDATE_ERROR;
+		}
 	}
 
 	mux_config accl_mux = { 0 };
