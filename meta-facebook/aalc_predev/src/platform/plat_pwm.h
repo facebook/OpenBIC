@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,42 +14,7 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
-#include "hal_gpio.h"
-#include "plat_pwm.h"
-#include <logging/log.h>
-#include "plat_class.h"
-#include "plat_modbus.h"
+#define PWM_PORT0 0
 
-
-LOG_MODULE_REGISTER(plat_init);
-void pal_pre_init()
-{
-	init_aalc_config();
-}
-#define DEF_PROJ_GPIO_PRIORITY 78
-
- void pal_pre_init()
-{
-	return;
-}
-
- void pal_post_init()
-{
-	ast_pwm_init();
-	modbus_server_handler_init();
-}
-
- void pal_device_init()
-{
-	return;
-}
-
- void pal_set_sys_status()
-{
-	return;
-}
-
-
-DEVICE_DEFINE(PRE_DEF_PROJ_GPIO, "PRE_DEF_PROJ_GPIO_NAME", &gpio_init, NULL, NULL, NULL,
-	      POST_KERNEL, DEF_PROJ_GPIO_PRIORITY, NULL);
+void ast_pwm_init(void);
+int ast_pwm_set(uint8_t idx, int duty);
