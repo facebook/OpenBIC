@@ -109,7 +109,7 @@ const static struct modbus_iface_param server_param = {
 	},
 	.serial = {
 		.baud = MODBUS_UART_BAUDRATE_LOW,
-		.parity = UART_CFG_PARITY_NONE,
+		.parity = UART_CFG_PARITY_EVEN,
 	},
 };
 
