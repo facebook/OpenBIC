@@ -714,13 +714,12 @@ typedef struct _max11617_init_arg {
 typedef struct _nct7363_init_arg {
 	bool is_init;
 	uint8_t value;
-	uint8_t pin_type[16];
+	uint8_t pin_type
+		[16]; // According to the right pin position of the component, from top to bottom, they are 0 to 16 respectively.
 	uint8_t fan_poles;
 	uint8_t duty;
 	uint16_t threshold;
-	uint8_t gpio_dir[16]; // gpio_dir == 1 : input(default), gpio_dir == 0 : output
-	uint8_t watchdog_timeout
-		[2]; // [0]:WDT is enable/disable(1/0), [1]:11, 30 sec;10, 7.5 sec;01, 3.75 sec;00, 15 sec (default)
+	uint8_t wdt_cfg;
 } nct7363_init_arg;
 
 typedef struct _hdc1080_init_arg {
