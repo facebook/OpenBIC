@@ -19,16 +19,16 @@
 #include "plat_class.h"
 #include <logging/log.h>
 
-static uint8_t hsc_module = HSC_MODULE_ADM1272;
-static uint8_t sensorbox_2nd_src_temp_module = SB_2ND_SRC_NCT214;
+static uint8_t hsc_module = HSC_MODULE_ADM1272; // user can change hsc module here
+static uint8_t temp_module = SB_TMP461; // user can change temp module here
 
 uint8_t get_hsc_module()
 {
 	return hsc_module;
 }
 
-uint8_t get_2nd_src_temp_module()
+uint8_t get_temp_module()
 {
-	return sensorbox_2nd_src_temp_module;
+	return temp_module;
 }
 LOG_MODULE_REGISTER(plat_class);

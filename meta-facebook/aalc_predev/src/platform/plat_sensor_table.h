@@ -213,10 +213,6 @@
 #define SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_1 0x9E
 #define SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_2 0x9F
 #define SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_3 0xA0
-#define SENSOR_NUM_SB_HEX_AIR_OUTLET_2ND_SRC_1_TEMP_C 0xA1
-#define SENSOR_NUM_SB_HEX_AIR_OUTLET_2ND_SRC_2_TEMP_C 0xA2
-#define SENSOR_NUM_SB_HEX_AIR_OUTLET_2ND_SRC_3_TEMP_C 0xA3
-#define SENSOR_NUM_SB_HEX_AIR_OUTLET_2ND_SRC_4_TEMP_C 0xA4
 
 #define TACH_PORT0                                                                                 \
 	0x01 // this might write in ast_fan deiver, but now we don't have it, so just write here to avoid error

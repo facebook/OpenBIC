@@ -767,6 +767,7 @@ typedef struct _hdc1080_init_arg {
 } hdc1080_init_arg;
 
 typedef struct _nct214_init_arg {
+	bool is_init;
 	uint8_t Configuration_Register;
 } nct214_init_arg;
 

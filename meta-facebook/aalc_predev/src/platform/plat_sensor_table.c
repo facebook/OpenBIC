@@ -32,6 +32,8 @@
 
 LOG_MODULE_REGISTER(plat_sensor_table);
 
+static void load_hsc_sensor_table(void);
+static void load_temperature_sensor_table(void);
 #define CONFIG_ISL69260 false
 
 sensor_cfg plat_sensor_config[] = {
@@ -263,22 +265,6 @@ sensor_cfg plat_sensor_config[] = {
 	  HDC1080_TEMP_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
 	  &bus_9_PCA9546A_configs[1], post_PCA9546A_read, NULL, NULL },
-	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_1_TEMP_C, sensor_dev_tmp461, I2C_BUS9, SB_TMP461_1_ADDR,
-	  TMP461_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
-	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
-	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_2_TEMP_C, sensor_dev_tmp461, I2C_BUS9, SB_TMP461_2_ADDR,
-	  TMP461_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
-	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
-	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_3_TEMP_C, sensor_dev_tmp461, I2C_BUS9, SB_TMP461_3_ADDR,
-	  TMP461_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
-	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
-	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_4_TEMP_C, sensor_dev_tmp461, I2C_BUS9, SB_TMP461_4_ADDR,
-	  TMP461_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
-	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
 	{ SENSOR_NUM_FB_1_HUM_PCT_RH, sensor_dev_hdc1080, I2C_BUS1, HDC1080_ADDR,
 	  HDC1080_HUM_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
@@ -703,25 +689,50 @@ sensor_cfg adm1272_sensor_config_table[] = {
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, post_adm1272_read,
 	  &adm1272_init_args[1] },
 };
-sensor_cfg nct214_config_table[] = {
-	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_2ND_SRC_1_TEMP_C, sensor_dev_nct214, I2C_BUS9,
-	  SB_NCT214_1_ADDR, NCT214_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT,
-	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
+sensor_cfg tmp461_config_table[] = {
+	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_1_TEMP_C, sensor_dev_tmp461, I2C_BUS9, SB_TMP461_1_ADDR,
+	  TMP461_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
 	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
-	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_2ND_SRC_2_TEMP_C, sensor_dev_nct214, I2C_BUS9,
-	  SB_NCT214_2_ADDR, NCT214_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT,
-	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
+	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_2_TEMP_C, sensor_dev_tmp461, I2C_BUS9, SB_TMP461_2_ADDR,
+	  TMP461_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
 	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
-	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_2ND_SRC_3_TEMP_C, sensor_dev_nct214, I2C_BUS9,
-	  SB_NCT214_3_ADDR, NCT214_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT,
-	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
+	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_3_TEMP_C, sensor_dev_tmp461, I2C_BUS9, SB_TMP461_3_ADDR,
+	  TMP461_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
 	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
-	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_2ND_SRC_4_TEMP_C, sensor_dev_nct214, I2C_BUS9,
-	  SB_NCT214_4_ADDR, NCT214_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT,
-	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
+	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_4_TEMP_C, sensor_dev_tmp461, I2C_BUS9, SB_TMP461_4_ADDR,
+	  TMP461_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
 	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
 };
-//const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) + ARRAY_SIZE(adm1272_sensor_config_table);
+sensor_cfg nct214_config_table[] = {
+	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_1_TEMP_C, sensor_dev_nct214, I2C_BUS9, SB_NCT214_1_ADDR,
+	  NCT214_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
+	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
+	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_2_TEMP_C, sensor_dev_nct214, I2C_BUS9, SB_NCT214_2_ADDR,
+	  NCT214_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
+	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
+	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_3_TEMP_C, sensor_dev_nct214, I2C_BUS9, SB_NCT214_3_ADDR,
+	  NCT214_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
+	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
+	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_4_TEMP_C, sensor_dev_nct214, I2C_BUS9, SB_NCT214_4_ADDR,
+	  NCT214_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
+	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
+};
+sensor_cfg xdp710_sensor_config_table[] = {
+	// need to fix
+	{ SENSOR_NUM_FB_1_HSC_TEMP_C, sensor_dev_adm1272, I2C_BUS1, FB_ADM1272_ADDR,
+	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
+	  &bus_1_PCA9546A_configs[0], post_PCA9546A_read, NULL, &adm1272_init_args[1] },
+};
+
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
 void load_sensor_config(void)
 {
@@ -732,31 +743,57 @@ void load_sensor_config(void)
 
 void pal_extend_sensor_config()
 {
-	uint8_t index = 0;
-	uint8_t sensor_count = 0;
-	uint8_t hsc_module = get_hsc_module();
+	load_hsc_sensor_table();
+	load_temperature_sensor_table();
+}
 
-	switch (hsc_module) {
+static void load_hsc_sensor_table()
+{
+	uint8_t module = get_hsc_module();
+
+	switch (module) {
 	case HSC_MODULE_ADM1272:
-		sensor_count = ARRAY_SIZE(adm1272_sensor_config_table);
-		for (index = 0; index < sensor_count; index++) {
-			add_sensor_config(adm1272_sensor_config_table[index]);
-			//LOG_ERR("add HSC_MODULE_ADM1272 sensor config");
-		}
+		memcpy(&sensor_config[sensor_config_count], adm1272_sensor_config_table,
+		       ARRAY_SIZE(adm1272_sensor_config_table) * sizeof(sensor_cfg));
+		sensor_config_count += ARRAY_SIZE(adm1272_sensor_config_table);
 		break;
-	case SB_2ND_SRC_NCT214:
-		sensor_count = ARRAY_SIZE(nct214_config_table);
-		for (index = 0; index < sensor_count; index++) {
-			add_sensor_config(nct214_config_table[index]);
-			//LOG_ERR("add SB_2ND_SRC_NCT214 sensor config");
-		}
+	case HSC_MODULE_XDP710:
+		memcpy(&sensor_config[sensor_config_count], xdp710_sensor_config_table,
+		       ARRAY_SIZE(xdp710_sensor_config_table) * sizeof(sensor_cfg));
+		sensor_config_count += ARRAY_SIZE(xdp710_sensor_config_table);
 		break;
+	case HSC_MODULE_UNKNOWN:
 	default:
-		LOG_ERR("Invalid hsc module: 0x%x", hsc_module);
+		LOG_ERR("Unknown HSC type(%d), load HSC sensor table failed", module);
 		break;
 	}
 	return;
 }
+
+static void load_temperature_sensor_table()
+{
+	uint8_t module = get_temp_module();
+
+	switch (module) {
+	case SB_TMP461:
+		memcpy(&sensor_config[sensor_config_count], tmp461_config_table,
+		       ARRAY_SIZE(tmp461_config_table) * sizeof(sensor_cfg));
+		sensor_config_count += ARRAY_SIZE(tmp461_config_table);
+		break;
+	case SB_NCT214:
+		memcpy(&sensor_config[sensor_config_count], nct214_config_table,
+		       ARRAY_SIZE(nct214_config_table) * sizeof(sensor_cfg));
+		sensor_config_count += ARRAY_SIZE(nct214_config_table);
+		break;
+	case TEMP_MODULE_UNKNOWN:
+	default:
+		LOG_ERR("Unknown temperature type(%d), load temperature sensor table failed",
+			module);
+		break;
+	}
+	return;
+}
+
 uint8_t pal_get_extend_sensor_config()
 {
 	uint8_t extend_sensor_config_size = 0;

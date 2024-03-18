@@ -139,7 +139,8 @@ uint8_t nct214_init(sensor_cfg *cfg)
 	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
-
+	nct214_init_arg *nct214_init_arg_data = (nct214_init_arg *)cfg->init_args;
+	nct214_init_arg_data->is_init = true;
 	cfg->read = nct214_read;
 	return SENSOR_INIT_SUCCESS;
 }
