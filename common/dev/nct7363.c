@@ -241,7 +241,7 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 	uint8_t offset, val;
 	/* check pin_type */
 	for (uint8_t i = 0; i < 16; i++) {
-		if (nct7363_init_arg_data->pin_type[i] <= 4) {
+		if (nct7363_init_arg_data->pin_type[i] < NCT7363_PIN_TPYE_ERROR) {
 			continue;
 		} else {
 			LOG_ERR("Unknown pin_type, pin number(%d)", i);
@@ -252,26 +252,11 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 	for (uint8_t i = 0; i < 4; i++) {
 		offset = GPIO_00_to_03_Pin_Configuration_REG +
 			 i; // Pin_Configuration_REG base offset
-		uint8_t pin_type_temp_03 = nct7363_init_arg_data->pin_type[3 + 4 * i];
-		uint8_t pin_type_temp_02 = nct7363_init_arg_data->pin_type[2 + 4 * i];
-		uint8_t pin_type_temp_01 = nct7363_init_arg_data->pin_type[1 + 4 * i];
-		uint8_t pin_type_temp_00 = nct7363_init_arg_data->pin_type[4 * i];
-		if (pin_type_temp_03 == NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT) {
-			pin_type_temp_03 = NCT7363_PIN_TPYE_GPIO;
-		}
-		if (pin_type_temp_02 == NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT) {
-			pin_type_temp_02 = NCT7363_PIN_TPYE_GPIO;
-		}
-		if (pin_type_temp_01 == NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT) {
-			pin_type_temp_01 = NCT7363_PIN_TPYE_GPIO;
-		}
-		if (pin_type_temp_00 == NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT) {
-			pin_type_temp_00 = NCT7363_PIN_TPYE_GPIO;
-		}
-		val = (pin_type_temp_03 << 6) | // 03 07 13 17
-		      (pin_type_temp_02 << 4) | // 02 06 12 16
-		      (pin_type_temp_01 << 2) | // 01 05 11 15
-		      (pin_type_temp_00); // 00 04 10 14
+		// get last 2 bits of pin_type
+		val = ((nct7363_init_arg_data->pin_type[3 + 4 * i] & 0x03) << 6) | // 03 07 13 17
+		      ((nct7363_init_arg_data->pin_type[2 + 4 * i] & 0x03) << 4) | // 02 06 12 16
+		      ((nct7363_init_arg_data->pin_type[1 + 4 * i] & 0x03) << 2) | // 01 05 11 15
+		      (nct7363_init_arg_data->pin_type[4 * i] & 0x03); // 00 04 10 14
 
 		if (nct7363_write(cfg, offset, val))
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
@@ -351,26 +336,17 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 	offset = NCT7363_WDT_REG_OFFSET;
 	uint8_t val_wdt = 0;
 	uint8_t wdt_setting = nct7363_init_arg_data->wdt_cfg;
-	switch (wdt_setting) {
-	case WDT_30_SEC:
-		val_wdt |= (1 << 7) | (WDT_30_SEC << 2);
-		break;
-	case WDT_7dot5_SEC:
-		val_wdt |= (1 << 7) | (WDT_7dot5_SEC << 2);
-		break;
-	case WDT_3dot75_SEC:
-		val_wdt |= (1 << 7) | (WDT_3dot75_SEC << 2);
-		break;
-	case WDT_15_SEC:
-		val_wdt |= (1 << 7) | (WDT_15_SEC << 2);
-		break;
-	case WDT_DISABLE:
-		break;
-	default:
+	if (wdt_setting < WDT_ERROR) {
+		if (wdt_setting == WDT_DISABLE) {
+			val_wdt = 0;
+		} else {
+			val_wdt |= (1 << 7) | (wdt_setting << 2);
+		}
+	} else {
 		LOG_ERR("WDT init fail !");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
-		break;
 	}
+
 	if (nct7363_write(cfg, offset, val_wdt))
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 
