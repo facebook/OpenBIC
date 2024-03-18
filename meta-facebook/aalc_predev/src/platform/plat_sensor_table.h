@@ -40,10 +40,6 @@
 #define SB_TMP461_4_ADDR (0x96 >> 1)
 #define FB_ADM1272_ADDR (0x22 >> 1)
 #define PB_ADM1272_ADDR (0x24 >> 1)
-#define ADS112C_MUX_1_CON 0x80 //AINP = AIN0, AINN = AVSS
-#define ADS112C_MUX_2_CON 0x90 //AINP = AIN1, AINN = AVSS
-#define ADS112C_MUX_3_CON 0xA0 //AINP = AIN2, AINN = AVSS
-#define ADS112C_MUX_4_CON 0xA1 //AINP = AIN3, AINN = AVSS
 
 /* define sensors offset */
 #define TMP75_TEMP_OFFSET 0x00
@@ -147,8 +143,8 @@
 #define SENSOR_NUM_PB_3_PUMP_TACH_RPM 0x60
 #define SENSOR_NUM_PB_3_FAN_1_TACH_RPM 0x61
 #define SENSOR_NUM_PB_3_FAN_2_TACH_RPM 0x62
-/*#define SENSOR_NUM_MB_FAN1_TACH_RPM 0x63
-#define SENSOR_NUM_MB_FAN2_TACH_RPM 0x64*/
+#define SENSOR_NUM_MB_FAN1_TACH_RPM 0x63
+#define SENSOR_NUM_MB_FAN2_TACH_RPM 0x64
 #define SENSOR_NUM_BPB_RACK_LEVEL_1 0x65
 #define SENSOR_NUM_BPB_RACK_LEVEL_2 0x66
 #define SENSOR_NUM_BPB_CDU_LEVEL_3 0x67
@@ -210,11 +206,6 @@
 #define SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_2 0x9F
 #define SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_3 0xA0
 
-
-
-#define TACH_PORT0                                                                                 \
-	0x01 // this might write in ast_fan deiver, but now we don't have it, so just write here to avoid error
-#define TACH_PORT1 0x02 // if driver is ok,then we can remove this
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
 
