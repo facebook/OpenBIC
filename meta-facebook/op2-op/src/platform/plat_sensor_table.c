@@ -32,6 +32,7 @@ LOG_MODULE_REGISTER(plat_sensor);
 
 bool e1s_access(uint8_t sensor_num);
 bool retimer_access(uint8_t sensor_num);
+bool edge_access(uint8_t sensor_num);
 
 sensor_cfg plat_sensor_config[] = {
 	/*  number,
@@ -55,19 +56,19 @@ sensor_cfg plat_sensor_config[] = {
 
 	//INA233 VOL
 	{ SENSOR_NUM_1OU_P12V_EDGE_VOLT, sensor_dev_ina233, I2C_BUS3, INA233_EXPA_MAIN_ADDR,
-	  INA233_VOLT_OFFSET, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  INA233_VOLT_OFFSET, edge_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &ina233_init_args[5] },
 
 	//INA233 CURR
 	{ SENSOR_NUM_1OU_P12V_EDGE_CURR, sensor_dev_ina233, I2C_BUS3, INA233_EXPA_MAIN_ADDR,
-	  INA233_CURR_OFFSET, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  INA233_CURR_OFFSET, edge_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &ina233_init_args[5] },
 
 	//INA233 PWR
 	{ SENSOR_NUM_1OU_P12V_EDGE_PWR, sensor_dev_ina233, I2C_BUS3, INA233_EXPA_MAIN_ADDR,
-	  INA233_PWR_OFFSET, dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  INA233_PWR_OFFSET, edge_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &ina233_init_args[5] },
 };
@@ -633,5 +634,10 @@ bool e1s_access(uint8_t sensor_num)
 		LOG_ERR("Unsupported sensor device for e1s checking.");
 		break;
 	}
-	return get_e1s_present(e1s_index) && get_DC_on_delayed_status();
+	return get_e1s_present(e1s_index) && get_e1s_power_good(e1s_index);
+}
+
+bool edge_access(uint8_t sensor_num)
+{
+	return get_DC_on_delayed_status() && get_edge_power_good();
 }
