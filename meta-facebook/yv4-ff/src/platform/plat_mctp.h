@@ -38,5 +38,6 @@ uint8_t plat_get_mctp_port_count();
 mctp_port *plat_get_mctp_port(uint8_t index);
 void plat_update_mctp_routing_table(uint8_t eid);
 int load_mctp_support_types(uint8_t *type_len, uint8_t *types);
+uint8_t plat_get_eid();
 
 #endif /* _PLAT_MCTP_h */

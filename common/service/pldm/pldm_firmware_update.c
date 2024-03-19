@@ -37,6 +37,7 @@ LOG_MODULE_DECLARE(pldm);
 #define PLDM_FW_UPDATE_STACK_SIZE 4096
 #define UPDATE_THREAD_DELAY_SECOND 1
 #define MIN_FW_UPDATE_BASELINE_TRANS_SIZE 32
+#define PLDM_NO_SUPPORT_PROGRESS_PERCENT 0x65
 
 pldm_fw_update_info_t *comp_config = NULL;
 uint8_t comp_config_count = 0;
@@ -61,6 +62,54 @@ static bool keep_update_flag = false;
 __weak void load_pldmupdate_comp_config(void)
 {
 	LOG_ERR("Failed to load pldm update table config");
+}
+
+__weak uint16_t plat_find_update_info_work(uint16_t comp_id)
+{
+	// Adjust component id to find device info by platform
+	return comp_id;
+}
+
+int get_descriptor_type_length(uint16_t type)
+{
+	switch (type) {
+	case PLDM_PCI_VENDOR_ID:
+		return PLDM_PCI_VENDOR_ID_LENGTH;
+	case PLDM_FWUP_IANA_ENTERPRISE_ID:
+		return PLDM_FWUP_IANA_ENTERPRISE_ID_LENGTH;
+	case PLDM_PCI_DEVICE_ID:
+		return PLDM_PCI_DEVICE_ID_LENGTH;
+	case PLDM_ASCII_MODEL_NUMBER_LONG_STRING:
+		return PLDM_ASCII_MODEL_NUMBER_LONG_STRING_LENGTH;
+	case PLDM_ASCII_MODEL_NUMBER_SHORT_STRING:
+		return PLDM_ASCII_MODEL_NUMBER_SHORT_STRING_LENGTH;
+	default:
+		return -1;
+	}
+}
+
+int get_device_single_descriptor_length(struct pldm_descriptor_string data)
+{
+	if (data.descriptor_type != PLDM_FWUP_VENDOR_DEFINED) {
+		return (sizeof(struct pldm_descriptor_tlv) - 1 + strlen(data.descriptor_data));
+	} else {
+		return (sizeof(struct pldm_vendor_defined_descriptor_tlv) - 1 +
+			strlen(data.title_string) + strlen(data.descriptor_data));
+	}
+}
+
+int get_device_descriptor_total_length(struct pldm_descriptor_string *table, uint8_t table_count)
+{
+	CHECK_NULL_ARG_WITH_RETURN(table, -1);
+
+	int length = 0;
+	uint8_t index = 0;
+
+	for (index = 0; index < table_count; ++index) {
+		length += get_device_single_descriptor_length(table[index]);
+	}
+
+	return length;
 }
 
 uint8_t pldm_bic_update(void *fw_update_param)
@@ -300,11 +349,12 @@ static uint8_t verify_comp(uint16_t comp_class, uint16_t comp_id, uint8_t comp_c
 	}
 
 	int tab_idx;
+	uint16_t component_id = plat_find_update_info_work(comp_id);
 	for (tab_idx = 0; tab_idx < comp_config_count; tab_idx++) {
 		if (comp_config[tab_idx].enable == DISABLE)
 			continue;
 		if (comp_class == comp_config[tab_idx].comp_classification &&
-		    comp_id == comp_config[tab_idx].comp_identifier &&
+		    component_id == comp_config[tab_idx].comp_identifier &&
 		    comp_class_idx == comp_config[tab_idx].comp_classification_index)
 			break;
 	}
@@ -464,9 +514,17 @@ static pldm_fw_update_info_t *find_update_info(uint16_t comp_id)
 		return NULL;
 	}
 
+	uint16_t component_id = plat_find_update_info_work(comp_id);
 	for (uint8_t idx = 0; idx < comp_config_count; idx++) {
-		if (comp_config[idx].comp_identifier == comp_id) {
-			return &comp_config[idx];
+		if (comp_config[idx].comp_identifier == component_id) {
+			if (comp_config[idx].comp_version_str == NULL) {
+				return &comp_config[idx];
+			} else {
+				if ((strncmp(comp_config[idx].comp_version_str, cur_update_comp_str,
+					     strlen(comp_config[idx].comp_version_str)) == 0)) {
+					return &comp_config[idx];
+				}
+			}
 		}
 	}
 
@@ -631,7 +689,13 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 	state_update(STATE_APPLY);
 
 	LOG_INF("Apply complete");
-	if (report_tranfer(mctp_p, ext_params, PLDM_FW_UPDATE_APPLY_SUCCESS)) {
+
+	uint8_t apply_result = PLDM_FW_UPDATE_APPLY_SUCCESS;
+	if (fw_info->self_apply_work_func != NULL) {
+		apply_result = fw_info->self_apply_work_func(fw_info->self_apply_work_arg);
+	}
+
+	if (report_tranfer(mctp_p, ext_params, apply_result)) {
 		report_tranfer(mctp_p, ext_params, PLDM_FW_UPDATE_GENERIC_ERROR);
 		cur_aux_state = STATE_AUX_FAILED;
 		goto exit;
@@ -878,6 +942,7 @@ static uint8_t update_component(void *mctp_inst, uint8_t *buf, uint16_t len, uin
 	cur_update_comp_id = req_p->comp_identifier;
 	memcpy(cur_update_comp_str, buf + sizeof(struct pldm_update_component_req),
 	       req_p->comp_ver_str_len);
+	cur_update_comp_str[req_p->comp_ver_str_len] = '\0';
 
 	mctp_ext_params *extra_data = (mctp_ext_params *)malloc(sizeof(mctp_ext_params));
 
@@ -981,8 +1046,9 @@ static uint8_t get_status(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t i
 		resp_p->aux_state_status = 0x0A; //generic error
 	else
 		resp_p->aux_state_status = 0;
+
 	resp_p->reason_code = 0; //not support
-	resp_p->prog_percent = 0x65; //not support
+	resp_p->prog_percent = PLDM_NO_SUPPORT_PROGRESS_PERCENT; //not support
 	resp_p->update_op_flag_en = 0;
 	*resp_len = sizeof(struct pldm_get_status_resp);
 
@@ -1158,8 +1224,37 @@ static uint8_t query_device_identifiers(void *mctp_inst, uint8_t *buf, uint16_t 
 	return plat_pldm_query_device_identifiers(buf, len, resp, resp_len);
 }
 
+static uint8_t query_downstream_identifiers(void *mctp_inst, uint8_t *buf, uint16_t len,
+					    uint8_t instance_id, uint8_t *resp, uint16_t *resp_len,
+					    void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
+
+	return plat_pldm_query_downstream_identifiers(buf, len, resp, resp_len);
+}
+
 __weak uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uint8_t *resp,
 						  uint16_t *resp_len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+
+	uint8_t *completion_code_p = resp;
+
+	*completion_code_p = PLDM_ERROR_UNSUPPORTED_PLDM_CMD;
+	*resp_len = 1;
+	LOG_WRN("Not supported command");
+
+	return PLDM_ERROR_UNSUPPORTED_PLDM_CMD;
+}
+
+__weak uint8_t plat_pldm_query_downstream_identifiers(const uint8_t *buf, uint16_t len,
+						      uint8_t *resp, uint16_t *resp_len)
 {
 	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
@@ -1177,6 +1272,7 @@ __weak uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t l
 static pldm_cmd_handler pldm_fw_update_cmd_tbl[] = {
 	{ PLDM_FW_UPDATE_CMD_CODE_QUERY_DEVICE_IDENTIFIERS, query_device_identifiers },
 	{ PLDM_FW_UPDATE_CMD_CODE_GET_FIRMWARE_PARAMETERS, get_firmware_parameter },
+	{ PLDM_FW_UPDATE_CMD_CODE_QUERY_DOWNSTREAM_IDENTIFIERS, query_downstream_identifiers },
 	{ PLDM_FW_UPDATE_CMD_CODE_REQUEST_UPDATE, request_update },
 	{ PLDM_FW_UPDATE_CMD_CODE_PASS_COMPONENT_TABLE, pass_component_table },
 	{ PLDM_FW_UPDATE_CMD_CODE_UPDATE_COMPONENT, update_component },
@@ -1207,4 +1303,82 @@ uint8_t pldm_fw_update_handler_query(uint8_t code, void **ret_fn)
 
 	*ret_fn = (void *)fn;
 	return fn ? PLDM_SUCCESS : PLDM_ERROR;
+}
+
+uint8_t fill_descriptor_into_buf(struct pldm_descriptor_string *descriptor, uint8_t *buf,
+				 uint8_t *fill_length, uint16_t current_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(descriptor, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(fill_length, PLDM_ERROR);
+
+	char data[2];
+	uint8_t val = 0;
+	uint8_t index = 0;
+	uint8_t data_ptr[sizeof(struct pldm_descriptor_tlv) +
+			 PLDM_ASCII_MODEL_NUMBER_LONG_STRING_LENGTH] = {
+		0
+	}; // Max descriptor length
+	uint8_t descriptor_count = get_device_single_descriptor_length(*descriptor);
+	if (current_length + descriptor_count > PLDM_MAX_DATA_SIZE) {
+		LOG_ERR("Current length + fill length is over PLDM_MAX_DATA_SIZE define size, current length: 0x%x, descriptor length: 0x%x",
+			current_length, descriptor_count);
+		return PLDM_ERROR;
+	}
+
+	if (descriptor->descriptor_type != PLDM_FWUP_VENDOR_DEFINED) {
+		struct pldm_descriptor_tlv *tlv_ptr = (struct pldm_descriptor_tlv *)data_ptr;
+		tlv_ptr->descriptor_type = descriptor->descriptor_type;
+		int type_length = get_descriptor_type_length(descriptor->descriptor_type);
+		if (type_length < 0) {
+			LOG_ERR("Fail to get descriptor type length, type: 0x%x",
+				descriptor->descriptor_type);
+			return PLDM_ERROR;
+		}
+
+		// Two characters are represented as a uint8_t
+		if (((strlen(descriptor->descriptor_data) / 2) != type_length) ||
+		    (strlen(descriptor->descriptor_data) % 2 != 0)) {
+			LOG_ERR("Invalid descriptor data length, data length: 0x%x, type length: 0x%x",
+				strlen(descriptor->descriptor_data), type_length);
+			return PLDM_ERROR;
+		}
+
+		descriptor_count -= type_length;
+
+		for (index = 0; index < type_length; ++index) {
+			strncpy(data, &descriptor->descriptor_data[index * 2], 2);
+			val = strtol(data, NULL, 16);
+			tlv_ptr->descriptor_data[index] = val;
+		}
+		tlv_ptr->descriptor_length = type_length;
+		memcpy(buf, tlv_ptr, descriptor_count);
+	} else {
+		if (descriptor->title_string == NULL) {
+			if (descriptor->descriptor_data != NULL) {
+				LOG_ERR("Title string is NULL, descriptor data: %s",
+					descriptor->descriptor_data);
+			} else {
+				LOG_ERR("Title string and Descriptor data is NULL");
+			}
+			return PLDM_ERROR;
+		}
+		struct pldm_vendor_defined_descriptor_tlv *tlv_ptr =
+			(struct pldm_vendor_defined_descriptor_tlv *)data_ptr;
+		tlv_ptr->descriptor_type = PLDM_FWUP_VENDOR_DEFINED;
+		tlv_ptr->descriptor_length = sizeof(tlv_ptr->vendor_define_title_type) +
+					     sizeof(tlv_ptr->descriptor_title_length) +
+					     strlen(descriptor->title_string) +
+					     strlen(descriptor->descriptor_data);
+		tlv_ptr->vendor_define_title_type = PLDM_COMP_ASCII;
+		tlv_ptr->descriptor_title_length = strlen(descriptor->title_string);
+		memcpy(tlv_ptr->descriptor_data, descriptor->title_string,
+		       tlv_ptr->descriptor_title_length);
+		memcpy(&tlv_ptr->descriptor_data[tlv_ptr->descriptor_title_length],
+		       descriptor->descriptor_data, strlen(descriptor->descriptor_data));
+		memcpy(buf, tlv_ptr, descriptor_count);
+	}
+
+	*fill_length = descriptor_count;
+	return PLDM_SUCCESS;
 }

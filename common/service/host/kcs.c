@@ -33,6 +33,7 @@
 #ifdef ENABLE_PLDM
 #include "plat_mctp.h"
 #include "pldm_smbios.h"
+#include "pldm_monitor.h"
 #endif
 
 LOG_MODULE_REGISTER(kcs);
@@ -90,7 +91,7 @@ static uint8_t init_text_string_value(const char *new_text_string, char **text_s
 	return pldm_smbios_get_text_strings_count(*text_strings);
 }
 
-static void init_bios_information(smbios_bios_information *bios_info, char *bios_version)
+static int init_bios_information(smbios_bios_information *bios_info, char *bios_version)
 {
 	const uint8_t NOT_IMPLEMENTED = 0;
 
@@ -98,7 +99,7 @@ static void init_bios_information(smbios_bios_information *bios_info, char *bios
 	bios_info->text_strings = malloc(sizeof(char) * 2);
 	if (!bios_info->text_strings) {
 		LOG_ERR("%s:%s:%d: Failed to allocate memory.", __FILE__, __func__, __LINE__);
-		return;
+		return -1;
 	}
 	bios_info->text_strings[0] = bios_info->text_strings[1] = '\0';
 	/* DSP0134: 12h + number of BIOS Characteristics Extension Bytes.*/
@@ -116,27 +117,37 @@ static void init_bios_information(smbios_bios_information *bios_info, char *bios
 	bios_info->embedded_controller_firmware_major_release = NOT_IMPLEMENTED;
 	bios_info->embedded_controller_firmware_minor_release = NOT_IMPLEMENTED;
 	bios_info->extended_bios_rom_size = NOT_IMPLEMENTED;
+
+	return 0;
 }
 
 static int update_bios_information(char *bios_version_start_ptr, uint8_t bios_version_len)
 {
+	int rc = -1;
 	smbios_bios_information *bios_info = malloc(sizeof(smbios_bios_information));
 
 	char *bios_version_str = malloc(sizeof(char) * bios_version_len + 1);
-	if (!bios_version_str) {
+	if (!bios_version_str || !bios_info) {
 		LOG_ERR("%s:%s:%d: Failed to allocate memory.", __FILE__, __func__, __LINE__);
-		return -1;
+		rc = -1;
+		goto exit;
 	}
 	memcpy(bios_version_str, bios_version_start_ptr, bios_version_len);
 	*(bios_version_str + bios_version_len) = '\0';
 
-	init_bios_information(bios_info, bios_version_str);
-
-	int rc = pldm_smbios_set_bios_information(bios_info);
+	rc = init_bios_information(bios_info, bios_version_str);
 	if (rc < 0) {
-		LOG_ERR("Failed to set smbios information, error code=%d", rc);
+		LOG_ERR("Failed to initialize bios information, error code=%d", rc);
+		goto exit;
 	}
 
+	rc = pldm_smbios_set_bios_information(bios_info);
+	if (rc < 0) {
+		LOG_ERR("Failed to set smbios information, error code=%d", rc);
+		goto exit;
+	}
+
+exit:
 	SAFE_FREE(bios_info->text_strings);
 	SAFE_FREE(bios_info);
 	SAFE_FREE(bios_version_str);
@@ -221,23 +232,17 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 				} while (0);
 			}
 #ifdef ENABLE_PLDM
-			/*
-			Bios needs get self test and get system info before getting set system info
-			*/
-			if ((req->netfn == NETFN_APP_REQ) &&
-			    (req->cmd == CMD_APP_GET_SELFTEST_RESULTS)) {
-				uint8_t *kcs_buff;
-				kcs_buff = malloc(4);
-				if (kcs_buff == NULL) {
-					LOG_ERR("Memory allocation failed");
-					continue;
-				}
-				kcs_buff[0] = req->netfn;
-				kcs_buff[1] = req->cmd;
-				kcs_buff[2] = 0x00;
-				kcs_buff[3] = 0x55;
-				kcs_write(kcs_inst->index, kcs_buff, 4);
-				SAFE_FREE(kcs_buff);
+			//Send SEL entry to BMC via PLDM command with OEM event class 0xFB
+			if ((req->netfn == NETFN_STORAGE_REQ) &&
+			    (req->cmd == CMD_STORAGE_ADD_SEL)) {
+				// Send SEL to BMC via PLDM over MCTP
+				mctp_ext_params ext_params = {0};
+				ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
+				ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
+				ext_params.ep = MCTP_EID_BMC;
+				uint8_t pldm_event_length = rc - 5; // exclude netfn, cmd, record_id, record_type
+				pldm_platform_event_message_req(
+					find_mctp_by_bus(I2C_BUS_BMC), ext_params, 0xFB, &ibuf[5], pldm_event_length);
 			}
 #endif
 			if ((req->netfn == NETFN_APP_REQ) &&

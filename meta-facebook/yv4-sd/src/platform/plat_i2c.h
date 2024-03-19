@@ -27,10 +27,12 @@
 #define I2C_BUS4 3
 #define I2C_BUS5 4
 #define I2C_BUS6 5
+#define I2C_BUS10 9
 #define I2C_BUS14 13
 
 #define CPLD_IO_I2C_BUS I2C_BUS5
 #define CPLD_IO_I2C_ADDR 0x21
+#define CPLD_REG_BOARD_REVISION_ID 0x08
 
 #define I2C_BUS_MAX_NUM 14
 

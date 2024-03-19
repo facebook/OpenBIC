@@ -68,6 +68,9 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.activate_method = COMP_ACT_SELF,
 		.self_act_func = pldm_bic_activate,
 		.get_fw_version_fn = NULL,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
+
 	},
 	{
 		.enable = true,
@@ -81,6 +84,8 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.activate_method = COMP_ACT_AC_PWR_CYCLE,
 		.self_act_func = NULL,
 		.get_fw_version_fn = get_cpld_user_code,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
 	},
 	{
 		.enable = true,
@@ -94,6 +99,8 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.activate_method = COMP_ACT_AC_PWR_CYCLE,
 		.self_act_func = NULL,
 		.get_fw_version_fn = get_vr_fw_version,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
 	},
 	{
 		.enable = true,
@@ -107,6 +114,8 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.activate_method = COMP_ACT_DC_PWR_CYCLE,
 		.self_act_func = NULL,
 		.get_fw_version_fn = get_pex_fw_version,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
 	},
 	{
 		.enable = true,
@@ -120,12 +129,14 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.activate_method = COMP_ACT_DC_PWR_CYCLE,
 		.self_act_func = NULL,
 		.get_fw_version_fn = get_pex_fw_version,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
 	},
 };
 
 static uint8_t pldm_pre_cpld_update(void *fw_update_param)
 {
-	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, PLDM_FW_UPDATE_ERROR);
 
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 
@@ -134,7 +145,7 @@ static uint8_t pldm_pre_cpld_update(void *fw_update_param)
 		p->addr = CPLD_BUS_5_ADDR;
 	}
 
-	return 0;
+	return PLDM_FW_UPDATE_SUCCESS;
 }
 
 static bool get_cpld_user_code(void *info_p, uint8_t *buf, uint8_t *len)
@@ -206,11 +217,11 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 static uint8_t pldm_pre_pex_update(void *fw_update_param)
 {
-	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, PLDM_FW_UPDATE_ERROR);
 
 	if (is_acb_power_good() == false) {
 		LOG_WRN("Can't update switch firmware because ACB dc off");
-		return 1;
+		return PLDM_FW_UPDATE_ERROR;
 	}
 
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
@@ -260,7 +271,7 @@ static uint8_t pldm_pex_update(void *fw_update_param)
 
 static uint8_t pldm_post_pex_update(void *fw_update_param)
 {
-	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, PLDM_FW_UPDATE_ERROR);
 
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 	uint8_t pex_id = p->comp_id - CB_COMPNT_PCIE_SWITCH0;
@@ -306,13 +317,13 @@ static bool get_pex_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		return false;
 	}
 
-	uint8_t unit_idx = ((pex89000_unit *)(cfg->priv_data))->idx;
 	if (cfg->pre_sensor_read_hook) {
 		if (cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args) == false) {
 			LOG_ERR("PEX%d pre-read fail", pex_id);
 			return false;
 		}
 	}
+	uint8_t unit_idx = ((pex89000_unit *)(cfg->priv_data))->idx;
 
 	if (pex_access_engine(cfg->port, cfg->target_addr, unit_idx, pex_access_sbr_ver,
 			      &reading)) {

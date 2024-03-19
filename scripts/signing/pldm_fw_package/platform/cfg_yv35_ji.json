@@ -1,0 +1,33 @@
+{
+    "PlatformDescriptor": [
+        {
+            "DescriptorType" : 1,
+            "DescriptorData" : "0000A015"
+        },
+        {
+            "DescriptorType" : 65535,
+            "VendorDefinedDescriptorTitleString" : "Platform",
+            "VendorDefinedDescriptorData" : "Yosemite V3.5"
+
+        },
+        {
+            "DescriptorType" : 65535,
+            "VendorDefinedDescriptorTitleString" : "BoardID",
+            "VendorDefinedDescriptorData" : "Java Island"
+        },
+        {
+            "DescriptorType" : 65535,
+            "VendorDefinedDescriptorTitleString" : "Stage",
+            "VendorDefinedDescriptorData" : "na"
+        }
+    ],
+    "SupportDevice" : [
+        {
+            "CompID" : [2],
+            "Vendor" : "aspeed",
+            "Device" : "ast1030",
+            "CheckSum" : "n",
+            "pkg_suffix" : ".pldm"
+        }
+    ]
+}

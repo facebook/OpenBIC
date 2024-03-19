@@ -21,6 +21,9 @@
 #include <stdint.h>
 #include "pldm_firmware_update.h"
 
+#define PLDM_FW_UPDATE_SUCCESS 0
+#define PLDM_FW_UPDATE_ERROR 1
+
 void load_pldmupdate_comp_config(void);
 void clear_pending_version(uint8_t activate_method);
 

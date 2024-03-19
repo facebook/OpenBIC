@@ -24,9 +24,13 @@
 #include "plat_pldm_fw_update.h"
 #include "plat_i2c.h"
 #include "plat_pldm_sensor.h"
+#include "plat_isr.h"
+#include "plat_gpio.h"
 #include "power_status.h"
 #include "mctp_ctrl.h"
 #include "xdpe12284c.h"
+#include "ioexp_tca9555.h"
+#include "util_spi.h"
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
@@ -34,6 +38,9 @@ static bool plat_pldm_vr_i2c_info_get(int comp_identifier, uint8_t *bus, uint8_t
 static uint8_t plat_pldm_pre_vr_update(void *fw_update_param);
 static uint8_t plat_pldm_post_vr_update(void *fw_update_param);
 static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
+static uint8_t plat_pldm_pre_cxl_update(void *fw_update_param);
+static uint8_t plat_pldm_post_cxl_update(void *fw_update_param);
+static uint8_t pldm_cxl_update(void *fw_update_param);
 
 enum FIRMWARE_COMPONENT {
 	WF_COMPNT_BIC,
@@ -41,6 +48,8 @@ enum FIRMWARE_COMPONENT {
 	WF_COMPNT_VR_PVDDQ_CD_ASIC1,
 	WF_COMPNT_VR_PVDDQ_AB_ASIC2,
 	WF_COMPNT_VR_PVDDQ_CD_ASIC2,
+	WF_COMPNT_CXL1,
+	WF_COMPNT_CXL2,
 };
 
 /* PLDM FW update table */
@@ -57,6 +66,8 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.activate_method = COMP_ACT_SELF,
 		.self_act_func = pldm_bic_activate,
 		.get_fw_version_fn = NULL,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
 	},
 	{
 		.enable = true,
@@ -110,6 +121,32 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.self_act_func = NULL,
 		.get_fw_version_fn = plat_get_vr_fw_version,
 	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = WF_COMPNT_CXL1,
+		.comp_classification_index = 0x00,
+		.pre_update_func = plat_pldm_pre_cxl_update,
+		.update_func = pldm_cxl_update,
+		.pos_update_func = plat_pldm_post_cxl_update,
+		.inf = COMP_UPDATE_VIA_SPI,
+		.activate_method = COMP_ACT_DC_PWR_CYCLE,
+		.self_act_func = NULL,
+		.get_fw_version_fn = NULL,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = WF_COMPNT_CXL2,
+		.comp_classification_index = 0x00,
+		.pre_update_func = plat_pldm_pre_cxl_update,
+		.update_func = pldm_cxl_update,
+		.pos_update_func = plat_pldm_post_cxl_update,
+		.inf = COMP_UPDATE_VIA_SPI,
+		.activate_method = COMP_ACT_DC_PWR_CYCLE,
+		.self_act_func = NULL,
+		.get_fw_version_fn = NULL,
+	},
 };
 
 uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uint8_t *resp,
@@ -123,12 +160,15 @@ uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uin
 		(struct pldm_query_device_identifiers_resp *)resp;
 
 	resp_p->completion_code = PLDM_SUCCESS;
-	resp_p->descriptor_count = 0x02;
+	resp_p->descriptor_count = 0x03;
 
 	uint8_t iana[PLDM_FWUP_IANA_ENTERPRISE_ID_LENGTH] = { 0x00, 0x00, 0xA0, 0x15 };
 
 	// Set the device id for ff bic
-	uint8_t deviceId[PLDM_FWUP_IANA_ENTERPRISE_ID_LENGTH] = { 0x00, 0x02 };
+	uint8_t deviceId[PLDM_PCI_DEVICE_ID_LENGTH] = { 0x00, 0x02 };
+
+	uint8_t slotNumber = plat_get_eid() / 10;
+	uint8_t slot[PLDM_ASCII_MODEL_NUMBER_SHORT_STRING_LENGTH] = { (char)(slotNumber + '0') };
 
 	uint8_t total_size_of_iana_descriptor =
 		sizeof(struct pldm_descriptor_tlv) + sizeof(iana) - 1;
@@ -136,8 +176,11 @@ uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uin
 	uint8_t total_size_of_device_id_descriptor =
 		sizeof(struct pldm_descriptor_tlv) + sizeof(deviceId) - 1;
 
+	uint8_t total_size_of_slot_descriptor =
+		sizeof(struct pldm_descriptor_tlv) + sizeof(slot) - 1;
+
 	if (sizeof(struct pldm_query_device_identifiers_resp) + total_size_of_iana_descriptor +
-		    total_size_of_device_id_descriptor >
+		    total_size_of_device_id_descriptor + total_size_of_slot_descriptor >
 	    PLDM_MAX_DATA_SIZE) {
 		LOG_ERR("QueryDeviceIdentifiers data length is over PLDM_MAX_DATA_SIZE define size %d",
 			PLDM_MAX_DATA_SIZE);
@@ -176,11 +219,27 @@ uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uin
 	memcpy(end_of_id_ptr, tlv_ptr, total_size_of_device_id_descriptor);
 	free(tlv_ptr);
 
-	resp_p->device_identifiers_len =
-		total_size_of_iana_descriptor + total_size_of_device_id_descriptor;
+	tlv_ptr = malloc(total_size_of_slot_descriptor);
+	if (tlv_ptr == NULL) {
+		LOG_ERR("Memory allocation failed!");
+		return PLDM_ERROR;
+	}
+
+	tlv_ptr->descriptor_type = PLDM_ASCII_MODEL_NUMBER_SHORT_STRING;
+	tlv_ptr->descriptor_length = PLDM_ASCII_MODEL_NUMBER_SHORT_STRING_LENGTH;
+	memcpy(tlv_ptr->descriptor_data, slot, sizeof(slot));
+
+	end_of_id_ptr += total_size_of_device_id_descriptor;
+	memcpy(end_of_id_ptr, tlv_ptr, total_size_of_slot_descriptor);
+	free(tlv_ptr);
+
+	resp_p->device_identifiers_len = total_size_of_iana_descriptor +
+					 total_size_of_device_id_descriptor +
+					 total_size_of_slot_descriptor;
 
 	*resp_len = sizeof(struct pldm_query_device_identifiers_resp) +
-		    total_size_of_iana_descriptor + total_size_of_device_id_descriptor;
+		    total_size_of_iana_descriptor + total_size_of_device_id_descriptor +
+		    total_size_of_slot_descriptor;
 
 	return PLDM_SUCCESS;
 }
@@ -310,4 +369,114 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	ret = true;
 
 	return ret;
+}
+
+static uint8_t plat_pldm_pre_cxl_update(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+	uint8_t cxl_comp_id = p->comp_id;
+	uint8_t value = 0;
+
+	if (get_ioe_value(ADDR_IOE1, TCA9555_OUTPUT_PORT_REG_0, &value) != 0) {
+		return 1;
+	}
+
+	switch (cxl_comp_id) {
+	case WF_COMPNT_CXL1:
+		// Switch SPI1 MUX to BIC
+		value = SETBIT(value, IOE_P05);
+		break;
+	case WF_COMPNT_CXL2:
+		// Switch SPI2 MUX to BIC
+		value = SETBIT(value, IOE_P06);
+		break;
+	default:
+		LOG_ERR("Unknown CXL component ID %d", cxl_comp_id);
+		return 1;
+	}
+
+	set_ioe_value(ADDR_IOE1, TCA9555_OUTPUT_PORT_REG_0, value);
+
+	return 0;
+}
+
+static uint8_t plat_pldm_post_cxl_update(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+	uint8_t cxl_comp_id = p->comp_id;
+	uint8_t value = 0;
+
+	if (get_ioe_value(ADDR_IOE1, TCA9555_OUTPUT_PORT_REG_0, &value) != 0) {
+		return 1;
+	}
+
+	switch (cxl_comp_id) {
+	case WF_COMPNT_CXL1:
+		// Switch SPI1 MUX to CXL
+		value = CLEARBIT(value, IOE_P05);
+		break;
+	case WF_COMPNT_CXL2:
+		// Switch SPI2 MUX to CXL
+		value = CLEARBIT(value, IOE_P06);
+		break;
+	default:
+		LOG_ERR("Unknown CXL component ID %d", cxl_comp_id);
+		return 1;
+	}
+
+	set_ioe_value(ADDR_IOE1, TCA9555_OUTPUT_PORT_REG_0, value);
+
+	return 0;
+}
+
+static uint8_t pldm_cxl_update(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+
+	CHECK_NULL_ARG_WITH_RETURN(p->data, 1);
+
+	uint8_t update_flag = 0;
+
+	// Prepare next data offset and length
+	p->next_ofs = p->data_ofs + p->data_len;
+	p->next_len = fw_update_cfg.max_buff_size;
+
+	if (p->next_ofs < fw_update_cfg.image_size) {
+		if (p->next_ofs + p->next_len > fw_update_cfg.image_size)
+			p->next_len = fw_update_cfg.image_size - p->next_ofs;
+
+		if (((p->next_ofs % SECTOR_SZ_64K) + p->next_len) > SECTOR_SZ_64K)
+			p->next_len = SECTOR_SZ_64K - (p->next_ofs % SECTOR_SZ_64K);
+	} else {
+		// Current data is the last packet
+		// Set the next data length to 0 to inform the update completely
+		p->next_len = 0;
+		update_flag = (SECTOR_END_FLAG | NO_RESET_FLAG);
+	}
+
+	uint8_t cxl_comp_id = p->comp_id;
+	uint8_t spi_device = 0xFF;
+	switch (cxl_comp_id) {
+	case WF_COMPNT_CXL1:
+		spi_device = DEVSPI_SPI1_CS0;
+		break;
+	case WF_COMPNT_CXL2:
+		spi_device = DEVSPI_SPI2_CS0;
+		break;
+	default:
+		LOG_ERR("Unknown CXL component ID %d", cxl_comp_id);
+		return 1;
+	}
+
+	uint8_t ret = fw_update(p->data_ofs, p->data_len, p->data, update_flag, spi_device);
+
+	CHECK_PLDM_FW_UPDATE_RESULT_WITH_RETURN(p->comp_id, p->data_ofs, p->data_len, ret, 1);
+
+	return 0;
 }

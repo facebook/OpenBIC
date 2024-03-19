@@ -21,6 +21,7 @@
 #include "libutil.h"
 #include "apml.h"
 #include "plat_apml.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_apml);
 
@@ -31,6 +32,7 @@ int pal_check_sbrmi_command_code_length()
 {
 	int ret = 0, i = 0, retry = 5;
 	I2C_MSG i2c_msg;
+	uint8_t board_rev = 0;
 
 	if (!get_post_status()) {
 		return 0;
@@ -38,7 +40,19 @@ int pal_check_sbrmi_command_code_length()
 
 	// Sending 1 byte address size in Turin cause unrecoverable error
 	// Before trying to switch to 1 bytes, retry.to use 2 bytes to get revision
-	i2c_msg.bus = I2C_BUS14;
+
+	if (get_board_rev(&board_rev) == false) {
+		LOG_ERR("Failed to get board revision.");
+		return -1;
+	}
+
+	if (board_rev <= BOARD_REV_EVT) {
+		i2c_msg.bus = I2C_BUS14;
+	} else {
+		// For DVT and later, the hardware design was changed to I2C_BUS10
+		i2c_msg.bus = I2C_BUS10;
+	}
+
 	i2c_msg.target_addr = SB_RMI_ADDR;
 	i2c_msg.rx_len = 1;
 	i2c_msg.tx_len = 2;

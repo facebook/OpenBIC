@@ -55,6 +55,8 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.activate_method = COMP_ACT_SELF,
 		.self_act_func = pldm_bic_activate,
 		.get_fw_version_fn = NULL,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
 	},
 	{
 		.enable = true,
@@ -68,6 +70,8 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.activate_method = COMP_ACT_AC_PWR_CYCLE,
 		.self_act_func = NULL,
 		.get_fw_version_fn = plat_get_vr_fw_version,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
 	},
 	{
 		.enable = true,
@@ -81,6 +85,8 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.activate_method = COMP_ACT_AC_PWR_CYCLE,
 		.self_act_func = NULL,
 		.get_fw_version_fn = plat_get_vr_fw_version,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
 	},
 };
 
@@ -95,12 +101,15 @@ uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uin
 		(struct pldm_query_device_identifiers_resp *)resp;
 
 	resp_p->completion_code = PLDM_SUCCESS;
-	resp_p->descriptor_count = 0x02;
+	resp_p->descriptor_count = 0x03;
 
 	uint8_t iana[PLDM_FWUP_IANA_ENTERPRISE_ID_LENGTH] = { 0x00, 0x00, 0xA0, 0x15 };
 
 	// Set the device id for ff bic
-	uint8_t deviceId[PLDM_FWUP_IANA_ENTERPRISE_ID_LENGTH] = { 0x00, 0x01 };
+	uint8_t deviceId[PLDM_PCI_DEVICE_ID_LENGTH] = { 0x00, 0x01 };
+
+	uint8_t slotNumber = plat_get_eid() / 10;
+	uint8_t slot[PLDM_ASCII_MODEL_NUMBER_SHORT_STRING_LENGTH] = { (char)(slotNumber + '0') };
 
 	uint8_t total_size_of_iana_descriptor =
 		sizeof(struct pldm_descriptor_tlv) + sizeof(iana) - 1;
@@ -108,8 +117,11 @@ uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uin
 	uint8_t total_size_of_device_id_descriptor =
 		sizeof(struct pldm_descriptor_tlv) + sizeof(deviceId) - 1;
 
+	uint8_t total_size_of_slot_descriptor =
+		sizeof(struct pldm_descriptor_tlv) + sizeof(slot) - 1;
+
 	if (sizeof(struct pldm_query_device_identifiers_resp) + total_size_of_iana_descriptor +
-		    total_size_of_device_id_descriptor >
+		    total_size_of_device_id_descriptor + total_size_of_slot_descriptor >
 	    PLDM_MAX_DATA_SIZE) {
 		LOG_ERR("QueryDeviceIdentifiers data length is over PLDM_MAX_DATA_SIZE define size %d",
 			PLDM_MAX_DATA_SIZE);
@@ -148,11 +160,27 @@ uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uin
 	memcpy(end_of_id_ptr, tlv_ptr, total_size_of_device_id_descriptor);
 	free(tlv_ptr);
 
-	resp_p->device_identifiers_len =
-		total_size_of_iana_descriptor + total_size_of_device_id_descriptor;
+	tlv_ptr = malloc(total_size_of_slot_descriptor);
+	if (tlv_ptr == NULL) {
+		LOG_ERR("Memory allocation failed!");
+		return PLDM_ERROR;
+	}
+
+	tlv_ptr->descriptor_type = PLDM_ASCII_MODEL_NUMBER_SHORT_STRING;
+	tlv_ptr->descriptor_length = PLDM_ASCII_MODEL_NUMBER_SHORT_STRING_LENGTH;
+	memcpy(tlv_ptr->descriptor_data, slot, sizeof(slot));
+
+	end_of_id_ptr += total_size_of_device_id_descriptor;
+	memcpy(end_of_id_ptr, tlv_ptr, total_size_of_slot_descriptor);
+	free(tlv_ptr);
+
+	resp_p->device_identifiers_len = total_size_of_iana_descriptor +
+					 total_size_of_device_id_descriptor +
+					 total_size_of_slot_descriptor;
 
 	*resp_len = sizeof(struct pldm_query_device_identifiers_resp) +
-		    total_size_of_iana_descriptor + total_size_of_device_id_descriptor;
+		    total_size_of_iana_descriptor + total_size_of_device_id_descriptor +
+		    total_size_of_slot_descriptor;
 
 	return PLDM_SUCCESS;
 }
