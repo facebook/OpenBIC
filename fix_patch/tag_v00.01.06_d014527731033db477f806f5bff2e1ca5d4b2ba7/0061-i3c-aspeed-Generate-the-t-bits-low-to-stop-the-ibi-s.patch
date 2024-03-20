@@ -1,0 +1,117 @@
+From e97844b11318d20b70966fd6abe9ef197790010b Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Wed, 29 Mar 2023 17:53:14 +0800
+Subject: [PATCH] i3c: aspeed: Generate the t-bits low to stop the ibi storm.
+
+Under certain conditions, such as when an IBI interrupt is received and
+SDA remains high after the address phase, the i3c master may enter an
+infinite loop while trying to read data until the t-bit low appears.
+This commit addresses the issue by gerenating the fake t-bit low to stop
+the IBI storm when receiving an IBI with an unrecognized address or when
+the received data length of IBI is larger than the maximum IBI payload.
+This issue can't be solved by abort function, because it doesn't work when
+i3c fsm at Servicing IBI Transfer (0xe) and Clock extension state (0x12).
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I87e6c7d06ad3040a5f2f577f8edf6ac0f2f4be71
+---
+ drivers/i3c/i3c_aspeed.c     | 37 ++++++++++++++++++++++++++++++++++++
+ soc/arm/aspeed/aspeed_util.h | 20 +++++++++++++++++++
+ 2 files changed, 57 insertions(+)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index 3e075f4667..5886ed7bf3 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -276,6 +276,7 @@ union i3c_present_state_s {
+ 		volatile uint32_t current_master : 1;		/* bit[2] */
+ 		volatile uint32_t reserved0 : 5;		/* bit[7:3] */
+ #define CM_TFR_STS_SLAVE_HALT	0x6
++#define CM_TFR_STS_MASTER_SERV_IBI	0xe
+ 		volatile uint32_t cm_tfr_sts : 6;		/* bit[13:8] */
+ 		volatile uint32_t reserved1 : 2;		/* bit[15:14] */
+ 		volatile uint32_t cm_tfr_st_sts : 6;		/* bit[21:16] */
+@@ -579,6 +580,39 @@ void i3c_aspeed_isolate_scl_sda(int inst_id, bool iso)
+ 	}
+ }
+ 
++static bool aspeed_i3c_fsm_is_idle(struct i3c_register_s *i3c_register)
++{
++	uint32_t temp;
++
++	/*
++	 * Clear the IBI queue to enable the hardware to generate SCL and
++	 * begin detecting the T-bit low to stop reading IBI data.
++	 */
++	temp = i3c_register->ibi_queue_status.value;
++	if (i3c_register->present_state.fields.cm_tfr_sts)
++		return false;
++	return true;
++}
++
++void i3c_aspeed_gen_tbits_low(struct i3c_aspeed_obj *obj)
++{
++	struct i3c_aspeed_config *config = obj->config;
++	struct i3c_register_s *i3c_register = config->base;
++	uint32_t i3c_gr = DT_REG_ADDR(DT_NODELABEL(i3c_gr));
++	uint32_t value;
++	int ret;
++
++	i3c_aspeed_isolate_scl_sda(config->inst_id, true);
++	value = sys_read32(i3c_gr + I3CG_REG1(config->inst_id));
++	value &= ~SDA_IN_SW_MODE_VAL;
++	sys_write32(value, i3c_gr + I3CG_REG1(config->inst_id));
++	ret = readx_poll_timeout(aspeed_i3c_fsm_is_idle, i3c_register, 0, 2000);
++	i3c_aspeed_isolate_scl_sda(config->inst_id, false);
++
++	if (ret)
++		LOG_ERR("Failed to recovery the i3c fsm from %x to idle: %d",
++			i3c_register->present_state.fields.cm_tfr_sts, ret);
++}
+ void i3c_aspeed_toggle_scl_in(int inst_id)
+ {
+ 	uint32_t i3c_gr = DT_REG_ADDR(DT_NODELABEL(i3c_gr));
+@@ -907,6 +941,9 @@ out:
+ 			for (j = 0; j < nwords; j++) {
+ 				tmp = i3c_register->ibi_queue_status.value;
+ 			}
++			if (i3c_register->present_state.fields.cm_tfr_sts ==
++			    CM_TFR_STS_MASTER_SERV_IBI)
++				i3c_aspeed_gen_tbits_low(obj);
+ 		}
+ 	}
+ }
+diff --git a/soc/arm/aspeed/aspeed_util.h b/soc/arm/aspeed/aspeed_util.h
+index 66f72241cc..6063970407 100644
+--- a/soc/arm/aspeed/aspeed_util.h
++++ b/soc/arm/aspeed/aspeed_util.h
+@@ -68,6 +68,26 @@
+ 		__ret;								    \
+ 	})
+ 
++#define readx_poll_timeout(op, args, sleep_us, timeout_ms)			    \
++	({									    \
++		uint32_t __timeout_tick = Z_TIMEOUT_MS(timeout_ms).ticks;	    \
++		uint32_t __start = sys_clock_tick_get_32();			    \
++		int __ret = 0;							    \
++		for (;;) {							    \
++			if (op(args)) {						    \
++				break;						    \
++			}							    \
++			if ((sys_clock_tick_get_32() - __start) > __timeout_tick) { \
++				__ret = -ETIMEDOUT;				    \
++				break;						    \
++			}							    \
++			if (sleep_us) {						    \
++				k_usleep(sleep_us);				    \
++			}							    \
++		}								    \
++		__ret;								    \
++	})
++
+ /* Common reset control device name for all ASPEED SOC family */
+ #define ASPEED_RST_CTRL_NAME DT_INST_RESETS_LABEL(0)
+ 
+-- 
+2.25.1
+

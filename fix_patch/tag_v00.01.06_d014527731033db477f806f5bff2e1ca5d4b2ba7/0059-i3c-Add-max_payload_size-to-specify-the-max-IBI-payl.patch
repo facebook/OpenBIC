@@ -1,0 +1,61 @@
+From efe6c10c807d94a2997757a756c3f9eda99f27fe Mon Sep 17 00:00:00 2001
+From: Dylan Hung <dylan_hung@aspeedtech.com>
+Date: Wed, 29 Mar 2023 13:48:18 +0800
+Subject: [PATCH] i3c: Add max_payload_size to specify the max IBI payload size
+
+Add max_payload_size as a configuration in the application to specify
+the max IBI payload size. This will make the I3C platform driver to
+filter out IBIs with illegal payload sizes and avoid data corruption.
+
+Signed-off-by: Dylan Hung <dylan_hung@aspeedtech.com>
+Change-Id: I9d06b629bc573ee1730c5ab1c829bbbd9933e68e
+---
+ drivers/i3c/i3c_aspeed.c       | 6 ++++++
+ include/drivers/i3c/i3c.h      | 1 +
+ tests/boards/ast1030/src/i3c.c | 1 +
+ 3 files changed, 8 insertions(+)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index 32e44a1bff..1fe49c2d06 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -877,6 +877,12 @@ static void i3c_aspeed_master_rx_ibi(struct i3c_aspeed_obj *obj)
+ 
+ 		nbytes = ibi_status.length;
+ 		nwords = nbytes >> 2;
++		if ((payload->size + ibi_status.length) > payload->max_payload_size) {
++			LOG_ERR("IBI length exceeds the max size (%d bytes)\n",
++				payload->max_payload_size);
++			goto out;
++		}
++
+ 		for (j = 0; j < nwords; j++) {
+ 			dst[j] = i3c_register->ibi_queue_status.value;
+ 		}
+diff --git a/include/drivers/i3c/i3c.h b/include/drivers/i3c/i3c.h
+index 576dd34bff..3f4a2bf369 100644
+--- a/include/drivers/i3c/i3c.h
++++ b/include/drivers/i3c/i3c.h
+@@ -113,6 +113,7 @@ struct i3c_dev_desc {
+ #define IBI_MDB_ASPEED			IBI_MDB_ID(IBI_MDB_GRP_PENDING_READ_NOTIF, 0x1f)
+ 
+ struct i3c_ibi_payload {
++	int max_payload_size;
+ 	int size;
+ 	uint8_t *buf;
+ };
+diff --git a/tests/boards/ast1030/src/i3c.c b/tests/boards/ast1030/src/i3c.c
+index 7badc00a40..d500889e14 100644
+--- a/tests/boards/ast1030/src/i3c.c
++++ b/tests/boards/ast1030/src/i3c.c
+@@ -41,6 +41,7 @@ static struct i3c_ibi_payload *test_ibi_write_requested(struct i3c_dev_desc *des
+ {
+ 	i3c_payload.buf = test_data_rx;
+ 	i3c_payload.size = 0;
++	i3c_payload.max_payload_size = MAX_DATA_SIZE;
+ 
+ 	return &i3c_payload;
+ }
+-- 
+2.25.1
+

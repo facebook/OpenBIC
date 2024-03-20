@@ -1,0 +1,72 @@
+From c6645dc196dbc1f09eee919eac5cfbcbafd6ce13 Mon Sep 17 00:00:00 2001
+From: Jamin Lin <jamin_lin@aspeedtech.com>
+Date: Tue, 4 Jul 2023 15:27:54 +0800
+Subject: [PATCH] drivers:i3c: fix calling unregistered callback function
+
+It set the data type of pos "uint32_t".
+However, i3c_aspeed_get_pos function return status is "int".
+If the slave address did not be found in i3c_aspeed_get_pos
+function, this function returned "-1". Due to the incorrect
+data type of pos, the value of pos would be "0xffffffff"
+
+The max i3c device descriptor was 32, so it got the NULL
+i3c device descriptor and called unregistered callback
+function and it caused system crash.
+
+Signed-off-by: Jamin Lin <jamin_lin@aspeedtech.com>
+Change-Id: I9a49a9f784526c13c73b103ff8261cb8678a7c75
+---
+ drivers/i3c/i3c_aspeed.c | 20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index 244ddad079..4a572b0312 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -877,9 +877,10 @@ static void i3c_aspeed_master_rx_ibi(struct i3c_aspeed_obj *obj)
+ 	struct i3c_aspeed_dev_priv *priv;
+ 	struct i3c_ibi_status ibi_status;
+ 	struct i3c_ibi_payload *payload;
+-	uint32_t i, j, nstatus, nbytes, nwords, pos, tmp;
++	uint32_t i, j, nstatus, nbytes, nwords, tmp;
+ 	uint32_t *dst;
+ 	bool data_consumed;
++	int pos;
+ 
+ 	nstatus = i3c_register->queue_status_level.fields.ibi_status_cnt;
+ 	if (!nstatus) {
+@@ -899,7 +900,12 @@ static void i3c_aspeed_master_rx_ibi(struct i3c_aspeed_obj *obj)
+ 			goto out;
+ 		}
+ 
+-		if (ibi_status.id == (0x2 << 1)) {
++		if ((ibi_status.id >> 1) != 0x2 && !(ibi_status.id & 0x1)) {
++			LOG_INF("Receive Controller Role Request event (Not supported for now)\n");
++			goto out;
++		}
++
++		if ((ibi_status.id >> 1) == 0x2 && !(ibi_status.id & 0x1)) {
+ 			LOG_INF("Receive Hot-join event (Not supported for now)\n");
+ 			goto out;
+ 		}
+@@ -910,7 +916,17 @@ static void i3c_aspeed_master_rx_ibi(struct i3c_aspeed_obj *obj)
+ 			goto out;
+ 		}
+ 
++		if (pos > ARRAY_SIZE(obj->dev_descs)) {
++			LOG_ERR("pos(%d) exceeds the max device(%ld)\n", pos, ARRAY_SIZE(obj->dev_descs));
++			goto out;
++		}
++
+ 		i3cdev = obj->dev_descs[pos];
++		if (!i3cdev) {
++			LOG_ERR("device descriptor not found\n");
++			goto out;
++		}
++
+ 		priv = DESC_PRIV(i3cdev);
+ 		if (priv->ibi.incomplete) {
+ 			payload = priv->ibi.incomplete;
+-- 
+2.25.1
+
