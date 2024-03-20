@@ -232,6 +232,7 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 				} while (0);
 			}
 #ifdef ENABLE_PLDM
+#ifndef ENABLE_OEM_PLDM
 			//Send SEL entry to BMC via PLDM command with OEM event class 0xFB
 			if ((req->netfn == NETFN_STORAGE_REQ) &&
 			    (req->cmd == CMD_STORAGE_ADD_SEL)) {
@@ -244,6 +245,7 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 				pldm_platform_event_message_req(
 					find_mctp_by_bus(I2C_BUS_BMC), ext_params, 0xFB, &ibuf[5], pldm_event_length);
 			}
+#endif
 #endif
 			if ((req->netfn == NETFN_APP_REQ) &&
 			    (req->cmd == CMD_APP_SET_SYS_INFO_PARAMS) &&
