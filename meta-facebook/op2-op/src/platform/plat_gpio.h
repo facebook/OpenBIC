@@ -151,8 +151,8 @@
 	gpio_name_to_num(OPA_RESERVE_GPIOM1) \
 	gpio_name_to_num(OPA_RESERVE_GPIOM2) \
 	gpio_name_to_num(OPA_RESERVE_GPIOM3) \
-	gpio_name_to_num(OPA_RESERVE_GPIOM4) \
-	gpio_name_to_num(OPA_RESERVE_GPIOM5) \
+	gpio_name_to_num(SMB_LS_MUX_EN) \
+	gpio_name_to_num(SELECT_SMB_MUX_N) \
 	gpio_name_to_num(OPA_RESERVE_GPIOM6) \
 	gpio_name_to_num(OPA_RESERVE_GPIOM7)
 
