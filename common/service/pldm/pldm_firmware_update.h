@@ -198,6 +198,10 @@ enum pldm_firmware_update_verify_result_values {
  */
 enum pldm_firmware_update_apply_result_values {
 	PLDM_FW_UPDATE_APPLY_SUCCESS = 0x00,
+	PLDM_FW_UPDATE_APPLY_SUCCESS_HAS_MODIFY_ACTIVATE_METHOD,
+	PLDM_FW_UPDATE_APPLY_FAIL_WITH_MEMORY_WRITE_ISSUE,
+	PLDM_FW_UPDATE_APPLY_TIMEOUT_OCCURRED = 0x09,
+	PLDM_FW_UPDATE_APPLY_GENERIC_ERROR_OCCURRED,
 	/* Other values that are not currently used, and will be defined if they are
   used in the future. */
 };
