@@ -42,6 +42,7 @@
 #define NCT7363_REG_PWM_BASE_OFFSET 0x90
 
 #define Speed_Control_Portx_Configuration_Register_BASE_OFFSET 0xB0
+#define Speed_Control_Port_Divisor_Register_BASE_OFFSET 0x91
 /* nct7363 port*/
 #define NCT7363_0_FAN 0x00
 #define NCT7363_1_FAN 0x01

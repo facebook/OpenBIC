@@ -56,13 +56,13 @@ uint8_t nct7363_set_threshold(uint8_t bus, uint8_t address, uint8_t port, uint16
 	return 0;
 }
 
-uint8_t nct7363_set_duty(sensor_cfg *cfg, uint8_t duty)
+uint8_t nct7363_set_duty(sensor_cfg *cfg, uint8_t duty, uint8_t port)
 {
 	I2C_MSG msg = { 0 };
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
 	uint8_t retry = 5;
-	uint8_t port_offset = cfg->port;
+	uint8_t port_offset = port;
 	uint8_t duty_offset = NCT7363_REG_PWM_BASE_OFFSET + port_offset * 2;
 	uint8_t step_offset =
 		Speed_Control_Portx_Configuration_Register_BASE_OFFSET + (port_offset / 2);
@@ -121,6 +121,61 @@ static bool nct7363_write(sensor_cfg *cfg, uint8_t offset, uint8_t val)
 	}
 
 	return true;
+}
+static uint8_t fan_frequency_convert(uint8_t frequency, uint8_t step_offset)
+{
+	int val_reg = 0;
+	val_reg = (int)(((16000000 / ((float)frequency * (float)step_offset)) - 1) + 0.5);
+	if ((uint8_t)val_reg >> 7 == 0) {
+		return (uint8_t)val_reg;
+	} else {
+		LOG_ERR("Wrong when setting frequency, value: 0x%02x", frequency);
+		return 0;
+	}
+}
+
+uint8_t nct7363_set_frequency(sensor_cfg *cfg, uint8_t port)
+{
+	I2C_MSG msg = { 0 };
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	nct7363_init_arg *nct7363_init_arg_data = (nct7363_init_arg *)cfg->init_args;
+	uint8_t retry = 5;
+	uint8_t port_offset = port;
+	uint8_t step_offset =
+		Speed_Control_Portx_Configuration_Register_BASE_OFFSET + (port_offset / 2);
+	uint8_t step_mode = 0;
+	uint8_t val_freq = 0, offset_freq = 0;
+	// check duty step mode
+	msg.rx_len = 1;
+	msg.tx_len = 1;
+	msg.data[0] = step_offset;
+	if (i2c_master_read(&msg, retry)) {
+		return SENSOR_FAIL_TO_ACCESS;
+	}
+	switch (port_offset % 2) {
+	case 0: {
+		step_mode = (msg.data[0] >> 2) & 1;
+		break;
+	}
+	case 1: {
+		step_mode = (msg.data[0] >> 6) & 1;
+		break;
+	}
+	default:
+		LOG_ERR("Unknown error when get step mode");
+		break;
+	}
+	offset_freq = Speed_Control_Port_Divisor_Register_BASE_OFFSET + port_offset * 2;
+	val_freq = fan_frequency_convert(nct7363_init_arg_data->fan_frequency[port_offset],
+					 step_offset);
+	if (val_freq == 0) {
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	} else {
+		if (nct7363_write(cfg, offset_freq, val_freq))
+			return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+	return SENSOR_INIT_SUCCESS;
 }
 static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 {
@@ -281,16 +336,38 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 	if (nct7363_write(cfg, offset_gpio1x, val_gpio1x))
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 
-	/* set PWM output */
+	/* set PWM output and frequency */
 	uint8_t offset_pwm_ctrl_0_7 = 0, offset_pwm_ctrl_8_15 = 0, val_pwm_ctrl_0_7 = 0,
-		val_pwm_ctrl_8_15 = 0;
+		val_pwm_ctrl_8_15 = 0, offset_pwm_freq = 0, val_pwm_freq = 0;
 	offset_pwm_ctrl_0_7 = NCT7363_REG_PWM_CTRL_OUTPUT_0_to_7;
 	offset_pwm_ctrl_8_15 = NCT7363_REG_PWM_CTRL_OUTPUT_8_to_15;
+	uint8_t step_set = 1;
 	for (int i = 0; i < 8; i++) {
-		if (nct7363_init_arg_data->pin_type[i] == NCT7363_PIN_TPYE_PWM)
+		if (nct7363_init_arg_data->pin_type[i] == NCT7363_PIN_TPYE_PWM) {
 			val_pwm_ctrl_0_7 |= (1 << i);
-		if (nct7363_init_arg_data->pin_type[i + 8] == NCT7363_PIN_TPYE_PWM)
+			offset_pwm_freq = Speed_Control_Port_Divisor_Register_BASE_OFFSET + i * 2;
+			val_pwm_freq = fan_frequency_convert(
+				nct7363_init_arg_data->fan_frequency[i], step_set);
+			if (val_pwm_freq == 0) {
+				return SENSOR_INIT_UNSPECIFIED_ERROR;
+			} else {
+				if (nct7363_write(cfg, offset_pwm_freq, val_pwm_freq))
+					return SENSOR_INIT_UNSPECIFIED_ERROR;
+			}
+		}
+		if (nct7363_init_arg_data->pin_type[i + 8] == NCT7363_PIN_TPYE_PWM) {
 			val_pwm_ctrl_8_15 |= (1 << i);
+			offset_pwm_freq =
+				Speed_Control_Port_Divisor_Register_BASE_OFFSET + (i + 8) * 2;
+			val_pwm_freq = fan_frequency_convert(
+				nct7363_init_arg_data->fan_frequency[i + 8], step_set);
+			if (val_pwm_freq == 0) {
+				return SENSOR_INIT_UNSPECIFIED_ERROR;
+			} else {
+				if (nct7363_write(cfg, offset_pwm_freq, val_pwm_freq))
+					return SENSOR_INIT_UNSPECIFIED_ERROR;
+			}
+		}
 	}
 	if (nct7363_write(cfg, offset_pwm_ctrl_0_7, val_pwm_ctrl_0_7))
 		return SENSOR_INIT_UNSPECIFIED_ERROR;

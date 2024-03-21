@@ -717,11 +717,11 @@ typedef struct _nct7363_init_arg {
 	uint8_t pin_type
 		[16]; // According to the pin position on the right side of the component, from top to bottom, there are 16 pins in total.
 	uint8_t fan_poles;
+	uint8_t fan_frequency[16];
 	uint8_t duty;
 	uint16_t threshold;
 	uint8_t wdt_cfg;
 } nct7363_init_arg;
-
 
 typedef struct _ads112c_init_arg {
 	uint8_t reg0_input;
