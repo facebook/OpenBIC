@@ -159,6 +159,26 @@ bool get_e1s_power_good(uint8_t index)
 	return power_good;
 }
 
+bool get_edge_power_good()
+{
+	uint8_t card_type = get_card_type();
+	bool power_good = false;
+
+	switch (card_type) {
+	case CARD_TYPE_OPA:
+		power_good = gpio_get(OPA_PWRGD_P12V_MAIN);
+		break;
+	case CARD_TYPE_OPB:
+		power_good = gpio_get(OPB_PWRGD_P12V_MAIN);
+		break;
+	default:
+		LOG_ERR("UNKNOWN CARD TYPE");
+		break;
+	}
+
+	return power_good;
+}
+
 uint8_t get_e1s_pcie_reset_status(uint8_t index)
 {
 	uint8_t card_type = get_card_type();
