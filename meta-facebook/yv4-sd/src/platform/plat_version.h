@@ -21,7 +21,7 @@
 
 #define PLATFORM_NAME "Yosemite V4"
 #define PROJECT_NAME "Sentinel Dome"
-#define PROJECT_STAGE POC
+#define PROJECT_STAGE DVT
 
 /*
  * 0x01 motherboard
@@ -41,7 +41,7 @@
 
 #define BIC_FW_YEAR_MSB 0x20
 #define BIC_FW_YEAR_LSB 0x24
-#define BIC_FW_WEEK 0x06
+#define BIC_FW_WEEK 0x12
 #define BIC_FW_VER 0x01
 #define BIC_FW_platform_0 0x73 // char: s
 #define BIC_FW_platform_1 0x64 // char: d
