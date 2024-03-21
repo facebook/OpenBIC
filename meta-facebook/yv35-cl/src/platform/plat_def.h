@@ -21,6 +21,7 @@
 #define ENABLE_ISL69260
 #define ENABLE_FIX_SENSOR
 #define ENABLE_PLDM
+#define ENABLE_OEM_PLDM
 #define ENABLE_MCTP_I3C
 
 #define BMC_USB_PORT "CDC_ACM_0"
