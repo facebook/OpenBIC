@@ -103,6 +103,8 @@ void pal_set_sys_status()
 	set_DC_on_delayed_status();
 	set_post_status(FM_BIOS_POST_CMPLT_BIC_N);
 	sync_bmc_ready_pin();
+	set_sys_ready_pin(BIC_READY_R);
+	reset_usb_hub();
 
 	if (get_post_status()) {
 		apml_recovery();
