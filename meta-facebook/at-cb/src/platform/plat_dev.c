@@ -53,6 +53,130 @@ K_THREAD_STACK_DEFINE(sw_heartbeat_thread, SW_HEARTBEAT_STACK_SIZE);
 struct k_thread sw_heartbeat_thread_handler;
 k_tid_t sw_heartbeat_tid;
 
+/* Artemis module firmware update related define */
+#define HBIN_HEADER_UID 0x36148967
+#define HBIN_HEADER_VER 0x03
+#define HBIN_HEADER_SIZE 0x30
+#define PAYLOAD_HEADER_UID1 0x1D436F81
+#define PAYLOAD_HEADER_UID2 0xE2BC907E
+#define PAYLOAD_HEADER_SIZE 0x10
+#define PAYLOAD_HEADER_VER 0x02
+#define PAYLOAD_HEADER_TYPE_QSPI 0x16
+#define PAYLOAD_HEADER_TYPE_PSOC 0x1C
+
+#define TARGET_SRC_DEFAULT_VAL 0x00
+#define TARGET_DEST_DEFAULT_VAL 0x01
+#define FW_UPDATE_COMMAND_DEFAULT_VAL 0x01
+#define ERROR_CODE_REG_LEN 4
+#define TRANSFER_MEM_INFO_LEN 8
+#define BLOCK_DATA_COUNT 32
+#define WAIT_FIRMWARE_READY_DELAY_TIMEOUT_S 5
+#define WAIT_QSPI_FIRMWARE_UPDATE_COMPLETE_TIMEOUT_S 15
+#define WAIT_PSOC_FIRMWARE_UPDATE_COMPLETE_TIMEOUT_S 60
+#define FW_ABORT_UPDATE_RETURN_VAL -2
+#define FW_READY_WAIT_TIMEOUT_RETURN_VAL -2
+#define FW_EXEC_STATUS_RUNNING_RETURN_VAL 1
+
+#define CHECK_IS_PROGRESS_DELAY_MS 1000
+
+enum ATM_FW_UPDATE_REG_OFFSET {
+	SB_CMD_FW_SMBUS_ERROR_CODE = 0x82,
+	SB_CMD_FW_UPDATE = 0x84,
+	SB_CMD_FW_UPDATE_CONTROL = 0x85,
+	SB_CMD_FW_UPDATE_EXT = 0x87,
+	SB_CMD_FW_UPDATE_ERROR_CODE = 0x94,
+	TRANSFER_MEM_START = 0xA4,
+	TRANSFER_HEADER_PAGE = 0xC1,
+	TRANSFER_DATA_PACKET = 0xC7,
+	EXEC_STATUS = 0xEB,
+	EXEC_RESULT = 0xED,
+};
+
+enum ATM_SB_CMD_FW_UPDATE_BIT {
+	SB_CMD_FW_UPDATE_IN_PROGRESS_BIT = BIT(1),
+	SB_CMD_FW_UPDATE_UPDATE_COMPLETE_BIT = BIT(2),
+	SB_CMD_FW_UPDATE_TRANSFER_DONE_BIT = BIT(3),
+	SB_CMD_FW_UPDATE_TRANSFER_READY_BIT = BIT(6),
+	SB_CMD_FW_UPDATE_INITIATE_DOWNLOAD_BIT = BIT(7),
+};
+
+typedef struct _hbin_header {
+	uint32_t uid;
+	uint16_t header_ver;
+	uint16_t header_size;
+	uint8_t fw_ver;
+	uint8_t over;
+	uint8_t addr_lanes;
+	uint8_t data_lanes;
+	uint8_t rdcmd;
+	uint8_t rd_dummy;
+	uint8_t div;
+	uint8_t resv;
+	uint32_t cert1_offset;
+	uint32_t cert1_size;
+	uint32_t cert2_offset;
+	uint32_t cert2_size;
+	uint32_t cert3_offset;
+	uint32_t cert3_size;
+	uint32_t payload_offset;
+	uint32_t payload_size;
+} hbin_header;
+
+typedef struct _payload_header {
+	uint32_t uid1;
+	uint32_t uid2;
+	uint16_t header_size;
+	uint8_t type;
+	uint8_t header_ver;
+	uint8_t flags;
+	uint8_t device;
+	uint8_t unused2;
+	uint8_t unused3;
+} payload_header;
+
+typedef struct _sb_cmd_fw_update {
+	uint8_t length;
+	uint8_t control_option;
+	uint8_t pec;
+} __attribute__((__packed__)) sb_cmd_fw_update;
+
+typedef struct _sb_cmd_fw_update_ext {
+	uint8_t length;
+	uint32_t payload_size;
+	uint32_t payload_addr;
+	uint8_t target_src;
+	uint8_t target_dest;
+	uint8_t command;
+	uint8_t fw_flash;
+	uint8_t error_code;
+	uint8_t cert1_error_code;
+	uint8_t cert2_error_code;
+	uint8_t cert3_error_code;
+	uint8_t phantom_flash;
+	uint8_t exec_fw_reset;
+	uint16_t reserved;
+	uint32_t state_info;
+	uint8_t pec;
+} __attribute__((__packed__)) sb_cmd_fw_update_ext;
+
+typedef struct _sb_transfer_header {
+	uint8_t length;
+	uint16_t page;
+	uint16_t reserved;
+	uint8_t pec;
+} __attribute__((__packed__)) sb_transfer_header;
+
+typedef struct _sb_transferdata_packet {
+	uint8_t length;
+	uint8_t data[32];
+	uint8_t pec;
+} __attribute__((__packed__)) sb_transferdata_packet;
+
+wait_fw_update_status_info atm_wait_fw_info = { .is_init = false,
+						.is_work_done = false,
+						.status = EXEC_STATUS_DEFAULT,
+						.result = EXEC_RESULT_DEFAULT };
+
 static bool is_sw0_ready = false;
 static bool is_sw1_ready = false;
 static bool accl_cable_power_fault[ASIC_CARD_COUNT] = {
@@ -467,4 +591,611 @@ bool init_vr_write_protect(uint8_t bus, uint8_t addr, uint8_t default_val)
 	}
 
 	return true;
+}
+
+int sb_cmd_fw_update_bit_operation(uint8_t bus, uint8_t addr, uint8_t optional, uint8_t bit_value)
+{
+	int ret = 0;
+	int retry = 5;
+	uint8_t set_val = 0;
+	const uint8_t control_offset = 1;
+	I2C_MSG msg = { 0 };
+
+	msg.bus = bus;
+	msg.target_addr = addr;
+	msg.tx_len = 1;
+	msg.rx_len = sizeof(sb_cmd_fw_update);
+	msg.data[0] = SB_CMD_FW_UPDATE;
+
+	ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Get sb_cmd_fw_update data fail, bus: 0x%x, addr: 0x%x, operation: 0x%x, bit_val: 0x%x",
+			bus, addr, optional, bit_value);
+		return ret;
+	}
+
+	switch (optional) {
+	case BIT_GET:
+		// Get BIT value
+		return (msg.data[control_offset] & bit_value);
+
+	case BIT_SET:
+		// Set BIT value
+		set_val = msg.data[control_offset] | bit_value;
+		break;
+
+	case BIT_CLEAR:
+		// Clear BIT value
+		set_val = msg.data[control_offset] & (~bit_value);
+		break;
+
+	default:
+		LOG_ERR("Invalid optional of bit operation: 0x%x", optional);
+		return -1;
+	}
+
+	sb_cmd_fw_update arg = { 0 };
+	arg.control_option = set_val;
+
+	msg.tx_len = sizeof(sb_cmd_fw_update) + 1;
+	msg.data[0] = SB_CMD_FW_UPDATE;
+	memcpy(&msg.data[1], &arg, sizeof(sb_cmd_fw_update));
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Set sb_cmd_fw_update data fail, bus: 0x%x, addr: 0x%x, operation: 0x%x, bit_val: 0x%x",
+			bus, addr, optional, bit_value);
+		return ret;
+	}
+
+	return 0;
+}
+
+int check_fw_update_bit_operation(uint8_t bus, uint8_t addr, uint8_t optional, uint8_t bit_value)
+{
+	int ret = 0;
+	uint8_t expected_val = 0;
+
+	switch (optional) {
+	case BIT_SET:
+	case BIT_CLEAR:
+		ret = sb_cmd_fw_update_bit_operation(bus, addr, optional, bit_value);
+		if (ret != 0) {
+			return ret;
+		}
+
+		ret = sb_cmd_fw_update_bit_operation(bus, addr, BIT_GET, bit_value);
+		if (ret < 0) {
+			LOG_ERR("Checking: Fail to get bit val: 0x%x", bit_value);
+			return ret;
+		}
+
+		expected_val = ((optional == BIT_SET) ? bit_value : 0);
+		if (ret != expected_val) {
+			// Retry
+			ret = sb_cmd_fw_update_bit_operation(bus, addr, optional, bit_value);
+			if (ret != 0) {
+				LOG_ERR("Checking: Fail to %s bit val: 0x%x",
+					((optional == BIT_SET) ? "set" : "clear"), bit_value);
+				return ret;
+			}
+
+			ret = sb_cmd_fw_update_bit_operation(bus, addr, BIT_GET, bit_value);
+			if (ret < 0) {
+				LOG_ERR("Checking: Retry to get bit val: 0x%x fail", bit_value);
+				return ret;
+			}
+
+			if (ret != expected_val) {
+				LOG_ERR("Checking: Retry to %s bit val: 0x%x fail",
+					((optional == BIT_SET) ? "set" : "clear"), bit_value);
+				return -1;
+			}
+		}
+
+		return 0;
+	default:
+		LOG_ERR("Invalid optional of bit operation: 0x%x", optional);
+		return -1;
+	}
+}
+
+int get_atm_transfer_info(uint8_t bus, uint8_t addr, uint32_t *transfer_mem_start,
+			  uint32_t *transfer_mem_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(transfer_mem_start, -1);
+	CHECK_NULL_ARG_WITH_RETURN(transfer_mem_size, -1);
+
+	int ret = 0;
+	int retry = 5;
+	uint8_t offset = TRANSFER_MEM_START;
+	I2C_MSG msg = { 0 };
+
+	msg = construct_i2c_message(bus, addr, 1, &offset, TRANSFER_MEM_INFO_LEN);
+
+	ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Get transfer_mem info fail, bus: 0x%x, addr: 0x%x", bus, addr);
+		return ret;
+	}
+
+	memcpy(transfer_mem_start, &msg.data[0], sizeof(uint32_t));
+	memcpy(transfer_mem_size, &msg.data[4], sizeof(uint32_t));
+	return ret;
+}
+
+int check_error_status(uint8_t bus, uint8_t addr, uint32_t *error_code, uint8_t *smbus_error_code)
+{
+	CHECK_NULL_ARG_WITH_RETURN(error_code, -1);
+	CHECK_NULL_ARG_WITH_RETURN(smbus_error_code, -1);
+
+	int ret = 0;
+	int retry = 5;
+	uint8_t offset = SB_CMD_FW_UPDATE_ERROR_CODE;
+	I2C_MSG msg = { 0 };
+
+	msg = construct_i2c_message(bus, addr, 1, &offset, sizeof(uint32_t));
+
+	ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Get error code value fail, bus: 0x%x, addr: 0x%x", bus, addr);
+		return ret;
+	}
+
+	memcpy(error_code, &msg.data[0], sizeof(uint32_t));
+
+	offset = SB_CMD_FW_SMBUS_ERROR_CODE;
+	msg = construct_i2c_message(bus, addr, 1, &offset, sizeof(uint8_t));
+
+	ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Get smbus error code value fail, bus: 0x%x, addr: 0x%x", bus, addr);
+		return ret;
+	}
+
+	*smbus_error_code = msg.data[0];
+	return ret;
+}
+
+int pre_atm_fw_update_check(uint8_t *msg_buf, uint16_t buf_len, hbin_header *h_header,
+			    payload_header *p_header)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg_buf, -1);
+	CHECK_NULL_ARG_WITH_RETURN(h_header, -1);
+	CHECK_NULL_ARG_WITH_RETURN(p_header, -1);
+
+	memset(h_header, 0, sizeof(hbin_header));
+	memset(p_header, 0, sizeof(payload_header));
+
+	if (buf_len < sizeof(hbin_header)) {
+		LOG_ERR("buf length less than hbin header length, buf_len: 0x%x", buf_len);
+		return -1;
+	}
+	memcpy(h_header, &msg_buf[0], sizeof(hbin_header));
+	if (buf_len < h_header->payload_offset + sizeof(payload_header)) {
+		LOG_ERR("buf length less than hbin header length + payload header lenght, buf_len: 0x%x, payload_offset: 0x%x",
+			buf_len, h_header->payload_offset);
+		return -1;
+	}
+	memcpy(p_header, &msg_buf[h_header->payload_offset], sizeof(payload_header));
+
+	if ((h_header->uid != HBIN_HEADER_UID) || (h_header->header_ver != HBIN_HEADER_VER) ||
+	    (h_header->header_size != HBIN_HEADER_SIZE)) {
+		LOG_ERR("Invalid hbin header data, UID: 0x%x, version: 0x%x, size: 0x%x",
+			h_header->uid, h_header->header_ver, h_header->header_size);
+		return -1;
+	}
+
+	if ((p_header->uid1 != PAYLOAD_HEADER_UID1) || (p_header->uid2 != PAYLOAD_HEADER_UID2) ||
+	    (p_header->header_size != PAYLOAD_HEADER_SIZE) ||
+	    (p_header->header_ver != PAYLOAD_HEADER_VER)) {
+		LOG_ERR("Invalid payload header data, UID1: 0x%x, UID2: 0x%x, size: 0x%x, version: 0x%x",
+			p_header->uid1, p_header->uid2, p_header->header_size,
+			p_header->header_ver);
+		return -1;
+	}
+
+	if ((p_header->type != PAYLOAD_HEADER_TYPE_QSPI) &&
+	    (p_header->type != PAYLOAD_HEADER_TYPE_PSOC)) {
+		LOG_ERR("Invalid payload header type: 0x%x", p_header->type);
+		return -1;
+	}
+	return 0;
+}
+
+int check_is_fw_abort_update(uint8_t bus, uint8_t addr, uint32_t *error_code,
+			     uint8_t *smbus_error_code)
+{
+	CHECK_NULL_ARG_WITH_RETURN(error_code, -1);
+	CHECK_NULL_ARG_WITH_RETURN(smbus_error_code, -1);
+
+	int ret = -1;
+
+	/* Check initiate_download bit */
+	ret = sb_cmd_fw_update_bit_operation(bus, addr, BIT_GET,
+					     SB_CMD_FW_UPDATE_INITIATE_DOWNLOAD_BIT);
+	if (ret < 0) {
+		LOG_ERR("Check initiate_download bit value fail, bus: 0x%x, addr: 0x%x", bus, addr);
+		return ret;
+	}
+
+	if (ret == 0) {
+		/* Firmware abort the update */
+		ret = check_error_status(bus, addr, error_code, smbus_error_code);
+		if (ret != 0) {
+			LOG_ERR("Firmware abort update but check firmware update status fail, bus: 0x%x, addr: 0x%x",
+				bus, addr);
+			return ret;
+		}
+		return FW_ABORT_UPDATE_RETURN_VAL;
+	}
+
+	return 0;
+}
+
+int wait_for_fw_ready(uint8_t bus, uint8_t addr, uint8_t bit_value, uint8_t timeout_s)
+{
+	int ret = -1;
+	uint8_t index = 0;
+
+	for (index = 0; index < timeout_s; ++index) {
+		k_sleep(K_SECONDS(WAIT_FIRMWARE_READY_DELAY_S));
+
+		ret = sb_cmd_fw_update_bit_operation(bus, addr, BIT_GET, bit_value);
+		if (ret < 0) {
+			LOG_ERR("Check firmware status fail for checking firmware ready, bus: 0x%x, addr: 0x%x, bit_val: 0x%x, current wait time: 0x%x",
+				bus, addr, bit_value, index + 1);
+			return -1;
+		}
+
+		if (ret != 0) {
+			/* Firmware ready */
+			return 0;
+		}
+	}
+
+	LOG_ERR("Wait firmware ready timeout, bus: 0x%x, addr: 0x%x, bit_val: 0x%x, timeout: 0x%x",
+		bus, addr, bit_value, timeout_s);
+	return FW_READY_WAIT_TIMEOUT_RETURN_VAL;
+}
+
+int init_fw_update_setting(uint8_t bus, uint8_t addr, uint32_t image_size, uint32_t transfer_addr)
+{
+	int ret = 0;
+	int retry = 5;
+	uint8_t tbuf[sizeof(sb_cmd_fw_update_ext) + 1] = { 0 };
+	uint8_t smbus_error_code = 0;
+	uint32_t error_code = 0;
+	I2C_MSG msg = { 0 };
+
+	tbuf[0] = SB_CMD_FW_UPDATE_EXT;
+	msg = construct_i2c_message(bus, addr, 1, tbuf, sizeof(sb_cmd_fw_update_ext));
+	ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Read sb_cmd_fw_update_ext data fail, bus: 0x%x, addr: 0x%x, payload_size: 0x%x, payload_addr: 0x%x",
+			bus, addr, image_size, transfer_addr);
+		return ret;
+	}
+
+	tbuf[0] = SB_CMD_FW_UPDATE_EXT;
+	memcpy(&tbuf[1], &msg.data[0], sizeof(sb_cmd_fw_update_ext));
+
+	sb_cmd_fw_update_ext *arg = (sb_cmd_fw_update_ext *)&tbuf[1];
+	arg->payload_size = image_size;
+	arg->payload_addr = transfer_addr;
+	arg->target_src = TARGET_SRC_DEFAULT_VAL;
+	arg->target_dest = TARGET_DEST_DEFAULT_VAL;
+	arg->command = FW_UPDATE_COMMAND_DEFAULT_VAL;
+	arg->error_code = 0;
+	arg->cert1_error_code = 0;
+	arg->cert2_error_code = 0;
+	arg->cert3_error_code = 0;
+
+	msg = construct_i2c_message(bus, addr, sizeof(sb_cmd_fw_update_ext) + 1, tbuf, 0);
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Initial firmware update setting fail, bus: 0x%x, addr: 0x%x, payload_size: 0x%x, payload_addr: 0x%x",
+			bus, addr, image_size, transfer_addr);
+		return ret;
+	}
+
+	/* Initiate download */
+	ret = sb_cmd_fw_update_bit_operation(bus, addr, BIT_SET,
+					     SB_CMD_FW_UPDATE_INITIATE_DOWNLOAD_BIT);
+	if (ret != 0) {
+		LOG_ERR("Set initiate download fail, bus: 0x%x, addr: 0x%x", bus, addr);
+		return ret;
+	}
+
+	ret = check_is_fw_abort_update(bus, addr, &error_code, &smbus_error_code);
+	if (ret != 0) {
+		if (ret == FW_ABORT_UPDATE_RETURN_VAL) {
+			LOG_ERR("Firmware abort update on init firmware update setting because error code: 0x%x, smmbus error code: 0x%x, bus: 0x%x, addr: 0x%x",
+				error_code, smbus_error_code, bus, addr);
+		}
+		return ret;
+	}
+
+	/* Wait for firmware transfer ready */
+	ret = wait_for_fw_ready(bus, addr, SB_CMD_FW_UPDATE_TRANSFER_READY_BIT,
+				WAIT_FIRMWARE_READY_DELAY_TIMEOUT_S);
+	if (ret == FW_READY_WAIT_TIMEOUT_RETURN_VAL) {
+		LOG_ERR("Wait firmware ready timeout on init firmware update setting, bus: 0x%x, addr: 0x%x",
+			bus, addr);
+	}
+	return ret;
+}
+
+int check_exec_status(uint8_t bus, uint8_t addr, uint8_t *status, uint8_t *result)
+{
+	CHECK_NULL_ARG_WITH_RETURN(status, -1);
+	CHECK_NULL_ARG_WITH_RETURN(result, -1);
+
+	int ret = 0;
+	int retry = 5;
+	uint8_t offset = 0;
+	I2C_MSG msg = { 0 };
+
+	offset = EXEC_STATUS;
+	msg = construct_i2c_message(bus, addr, 1, &offset, 1);
+
+	ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Check exec_status fail, bus: 0x%x, addr: 0x%x", bus, addr);
+		return ret;
+	}
+
+	*status = msg.data[0];
+
+	offset = EXEC_RESULT;
+	msg = construct_i2c_message(bus, addr, 1, &offset, 1);
+
+	ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Check exec_result fail, bus: 0x%x, addr: 0x%x", bus, addr);
+		return ret;
+	}
+
+	*result = msg.data[0];
+	return ret;
+}
+
+void wait_firmware_work_handler(struct k_work *work_item)
+{
+	struct k_work_delayable *dwork = k_work_delayable_from_work(work_item);
+	wait_fw_update_status_info *work_info =
+		CONTAINER_OF(dwork, wait_fw_update_status_info, wait_firmware_work);
+
+	int ret = -1;
+	int index = 0;
+
+	for (index = 0; index < work_info->timeout_s; ++index) {
+		k_sleep(K_SECONDS(WAIT_FIRMWARE_READY_DELAY_S));
+
+		ret = check_exec_status(work_info->bus, work_info->addr, &work_info->status,
+					&work_info->result);
+		if (ret != 0) {
+			LOG_WRN("Check exec status fail on waiting firmware work, current time: 0x%x",
+				index + 1);
+			continue;
+		}
+
+		if (work_info->status == EXEC_STATUS_COMPLETE) {
+			if (work_info->result != EXEC_RESULT_PASS) {
+				LOG_ERR("Error: exec result is %s",
+					(work_info->result == EXEC_RESULT_ABORTED ? "aborted" :
+										    "fail"));
+			}
+			work_info->is_work_done = true;
+			return;
+		}
+	}
+
+	LOG_ERR("Wait firmware exec status timeout, total wait: %d seconds", work_info->timeout_s);
+	work_info->status = EXEC_STATUS_TIMEOUT;
+	work_info->is_work_done = true;
+	return;
+}
+
+int transfer_data(uint8_t bus, uint8_t addr, uint32_t offset, uint8_t *msg_buf, uint16_t buf_len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg_buf, -1);
+
+	int ret = 0;
+	int retry = 5;
+	uint8_t index = 0;
+	uint8_t data_len = 0;
+	uint8_t package_count =
+		((buf_len % BLOCK_DATA_COUNT == 0) ? (buf_len / BLOCK_DATA_COUNT) :
+						     (buf_len / BLOCK_DATA_COUNT + 1));
+	uint8_t tbuf[sizeof(sb_transferdata_packet) + 1] = { 0 };
+	uint32_t page = 0;
+	I2C_MSG msg = { 0 };
+	sb_transfer_header header = { 0 };
+	sb_transferdata_packet packet = { 0 };
+
+	for (index = 0; index < package_count; ++index) {
+		data_len = ((((index + 1) * BLOCK_DATA_COUNT) <= buf_len) ?
+				    BLOCK_DATA_COUNT :
+				    (buf_len - (index * BLOCK_DATA_COUNT)));
+
+		/* Set page */
+		header.page = ((offset + (index * BLOCK_DATA_COUNT)) / BLOCK_DATA_COUNT);
+		tbuf[0] = TRANSFER_HEADER_PAGE;
+		memcpy(&tbuf[1], &header, sizeof(sb_transfer_header));
+		msg = construct_i2c_message(bus, addr, sizeof(sb_transfer_header) + 1, tbuf, 0);
+
+		ret = i2c_master_write(&msg, retry);
+		if (ret != 0) {
+			LOG_ERR("Set page: 0x%x fail, bus: 0x%x, addr: 0x%x, offset: 0x%x", page,
+				bus, addr, offset);
+			return ret;
+		}
+
+		memcpy(&packet.data[0], &msg_buf[index * BLOCK_DATA_COUNT], data_len);
+		tbuf[0] = TRANSFER_DATA_PACKET;
+		memcpy(&tbuf[1], &packet, sizeof(sb_transferdata_packet));
+		msg = construct_i2c_message(bus, addr, sizeof(sb_transferdata_packet) + 1, tbuf, 0);
+
+		ret = i2c_master_write(&msg, retry);
+		if (ret != 0) {
+			LOG_ERR("Transfer data fail, bus: 0x%x, addr: 0x%x, page: 0x%x, offset: 0x%x",
+				bus, addr, page, offset);
+			return ret;
+		}
+	}
+	return 0;
+}
+
+int atm_fw_update(uint8_t bus, uint8_t addr, uint32_t offset, uint8_t *msg_buf, uint16_t buf_len,
+		  uint32_t image_size, bool is_end_package)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg_buf, -1);
+
+	static hbin_header h_header = { 0 };
+	static payload_header p_header = { 0 };
+	static uint32_t transfer_mem_start = 0;
+	static uint32_t transfer_mem_size = 0;
+
+	int ret = -1;
+	uint8_t exec_status = 0;
+	uint8_t exec_result = 0;
+	uint8_t smbus_error_code = 0;
+	uint32_t error_code = 0;
+
+	if (offset == 0) {
+		ret = get_atm_transfer_info(bus, addr, &transfer_mem_start, &transfer_mem_size);
+		if (ret != 0) {
+			return ret;
+		}
+		if (image_size >= transfer_mem_size) {
+			LOG_ERR("Artemis module image size more than transfer_mem_size, image_size: 0x%x, transfer_mem_size: 0x%x",
+				image_size, transfer_mem_size);
+			return -1;
+		}
+		ret = pre_atm_fw_update_check(msg_buf, buf_len, &h_header, &p_header);
+		if (ret != 0) {
+			LOG_ERR("Artemis module pre-check fail");
+			return ret;
+		}
+
+		/* Step 1 ~ 3 */
+		ret = init_fw_update_setting(bus, addr, image_size, transfer_mem_start);
+		if (ret != 0) {
+			LOG_ERR("Artemis module initialize setting fail");
+			goto exit;
+		}
+	}
+
+	/* Step 4 */
+	ret = transfer_data(bus, addr, offset, msg_buf, buf_len);
+	if (ret != 0) {
+		LOG_ERR("Artemis module transfer data fail");
+		goto exit;
+	}
+
+	if (is_end_package) {
+		/* Step 5: Set transfer_done */
+		ret = check_fw_update_bit_operation(bus, addr, BIT_SET,
+						    SB_CMD_FW_UPDATE_TRANSFER_DONE_BIT);
+		if (ret != 0) {
+			LOG_ERR("Set transfer_done fail, bus: 0x%x, addr: 0x%x", bus, addr);
+			goto exit;
+		}
+
+		/* Step 6: Check firmware update status and Check firmware is progress */
+		ret = check_is_fw_abort_update(bus, addr, &error_code, &smbus_error_code);
+		if (ret != 0) {
+			if (ret == FW_ABORT_UPDATE_RETURN_VAL) {
+				LOG_ERR("Firmware abort update on Step 6 because error code: 0x%x, smbus error code: 0x%x, bus: 0x%x, addr: 0x%x",
+					error_code, smbus_error_code, bus, addr);
+			}
+			goto exit;
+		}
+
+		ret = wait_for_fw_ready(bus, addr, SB_CMD_FW_UPDATE_IN_PROGRESS_BIT,
+					WAIT_FIRMWARE_READY_DELAY_TIMEOUT_S);
+		if (ret != 0) {
+			if (ret == FW_READY_WAIT_TIMEOUT_RETURN_VAL) {
+				LOG_ERR("Wait firmware update complete timeout on Step 6, bus: 0x%x, addr: 0x%x",
+					bus, addr);
+			}
+			goto exit;
+		}
+
+		/* Step 7: Clear transfer_done */
+		ret = check_fw_update_bit_operation(bus, addr, BIT_CLEAR,
+						    SB_CMD_FW_UPDATE_TRANSFER_DONE_BIT);
+		if (ret != 0) {
+			LOG_ERR("Clear transfer_done fail, bus: 0x%x, addr: 0x%x", bus, addr);
+			goto exit;
+		}
+
+		/* Step 8: Check firmware update status, Wait firmware update complete and Clear update_complete */
+		ret = check_is_fw_abort_update(bus, addr, &error_code, &smbus_error_code);
+		if (ret != 0) {
+			if (ret == FW_ABORT_UPDATE_RETURN_VAL) {
+				LOG_ERR("Firmware abort update on Step 8 because error code: 0x%x, smbus error code: 0x%x,  bus: 0x%x, addr: 0x%x",
+					error_code, smbus_error_code, bus, addr);
+			}
+			goto exit;
+		}
+
+		ret = wait_for_fw_ready(bus, addr, SB_CMD_FW_UPDATE_UPDATE_COMPLETE_BIT,
+					WAIT_FIRMWARE_READY_DELAY_TIMEOUT_S);
+		if (ret != 0) {
+			if (ret == FW_READY_WAIT_TIMEOUT_RETURN_VAL) {
+				LOG_ERR("Wait firmware update complete timeout on Step 8, bus: 0x%x, addr: 0x%x",
+					bus, addr);
+			}
+			goto exit;
+		}
+
+		ret = check_fw_update_bit_operation(bus, addr, BIT_CLEAR,
+						    SB_CMD_FW_UPDATE_UPDATE_COMPLETE_BIT);
+		if (ret != 0) {
+			LOG_ERR("Clear update_complete fail on Step 8, bus: 0x%x, addr: 0x%x", bus,
+				addr);
+			goto exit;
+		}
+
+		/* Step 9: Check error_code, exec_status, exec_result */
+		ret = check_error_status(bus, addr, &error_code, &smbus_error_code);
+		if (ret != 0) {
+			LOG_ERR("Get error code fail on Step 9, bus: 0x%x, addr: 0x%x", bus, addr);
+			goto exit;
+		}
+
+		ret = check_exec_status(bus, addr, &exec_status, &exec_result);
+		if (ret != 0) {
+			LOG_ERR("Get exec status fail on Step 9, bus: 0x%x, addr: 0x%x", bus, addr);
+			goto exit;
+		}
+
+		LOG_INF("Error code: 0x%x, smbus error code: 0x%x, exec status: 0x%x, exec_result: 0x%x after firmware update complete",
+			error_code, smbus_error_code, exec_status, exec_result);
+
+		if (atm_wait_fw_info.is_init != true) {
+			k_work_init_delayable(&(atm_wait_fw_info.wait_firmware_work),
+					      wait_firmware_work_handler);
+			atm_wait_fw_info.is_init = true;
+		}
+
+		atm_wait_fw_info.bus = bus;
+		atm_wait_fw_info.addr = addr;
+		atm_wait_fw_info.timeout_s = (p_header.type == PAYLOAD_HEADER_TYPE_QSPI ?
+						      WAIT_QSPI_FIRMWARE_UPDATE_COMPLETE_TIMEOUT_S :
+						      WAIT_PSOC_FIRMWARE_UPDATE_COMPLETE_TIMEOUT_S);
+
+		k_work_schedule_for_queue(&plat_work_q, &atm_wait_fw_info.wait_firmware_work,
+					  K_NO_WAIT);
+	} else {
+		return 0;
+	}
+exit:
+	/* Clear initiate_download */
+	if (check_fw_update_bit_operation(bus, addr, BIT_CLEAR,
+					  SB_CMD_FW_UPDATE_INITIATE_DOWNLOAD_BIT) != 0) {
+		LOG_ERR("Abort firmware update fail, bus: 0x%x, addr: 0x%x", bus, addr);
+	}
+	return ret;
 }

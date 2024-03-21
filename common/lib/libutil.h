@@ -84,8 +84,9 @@
 	}
 
 enum BIT_SETTING_READING {
-	BIT_SET = 1,
 	BIT_CLEAR = 0,
+	BIT_SET = 1,
+	BIT_GET = 2,
 };
 
 enum BIT_SETTING_READING_N {

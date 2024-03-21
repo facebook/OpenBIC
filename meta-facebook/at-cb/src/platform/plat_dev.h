@@ -39,6 +39,7 @@
 #define FREYA_FIRMWARE_VERSION_LENGTH 5
 #define FREYA_NOT_READY_RET_CODE -2
 #define FREYA_NOT_SUPPORT_MODULE_IDENTIFIER_RET_CODE -3
+#define WAIT_FIRMWARE_READY_DELAY_S 3
 
 typedef struct _freya_fw_info {
 	uint8_t is_freya_ready;
@@ -78,9 +79,36 @@ enum FREYA_ID {
 	FREYA_ID2,
 };
 
+typedef struct _wait_fw_update_status_info {
+	bool is_init;
+	bool is_work_done;
+	uint8_t bus;
+	uint8_t addr;
+	uint8_t status;
+	uint8_t result;
+	uint8_t timeout_s;
+	struct k_work_delayable wait_firmware_work;
+} wait_fw_update_status_info;
+
+enum ATM_EXEC_STATUS {
+	EXEC_STATUS_IDLE,
+	EXEC_STATUS_RUNNING,
+	EXEC_STATUS_COMPLETE,
+	EXEC_STATUS_TIMEOUT, // Add for BIC trace exec status
+	EXEC_STATUS_DEFAULT = 0xFF,
+};
+
+enum ATM_EXEC_RESULT {
+	EXEC_RESULT_PASS,
+	EXEC_RESULT_ABORTED,
+	EXEC_RESULT_FAIL,
+	EXEC_RESULT_DEFAULT = 0xFF,
+};
+
 extern freya_info accl_freya_info[];
 extern vr_fw_info cb_vr_fw_info;
 extern switch_error_check_info sw_error_check_info[];
+extern wait_fw_update_status_info atm_wait_fw_info;
 
 void clear_freya_cache_flag(uint8_t card_id);
 void clear_accl_cable_power_fault_flag();
@@ -90,5 +118,7 @@ void init_sw_heartbeat_work();
 void clear_sw_error_check_flag();
 void get_switch_error_status(uint8_t sensor_num, uint8_t bus, uint8_t addr, uint8_t index);
 bool init_vr_write_protect(uint8_t bus, uint8_t addr, uint8_t default_val);
+int atm_fw_update(uint8_t bus, uint8_t addr, uint32_t offset, uint8_t *msg_buf, uint16_t buf_len,
+		  uint32_t image_size, bool is_end_package);
 
 #endif
