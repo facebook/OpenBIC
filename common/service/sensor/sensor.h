@@ -167,6 +167,7 @@ enum SENSOR_DEV {
 	sensor_dev_nct7363 = 0x32,
 	sensor_dev_hdc1080 = 0x33,
 	sensor_dev_ast_tach = 0x34,
+	sensor_dev_xdp710 = 0x35,
 	sensor_dev_max
 };
 
@@ -758,7 +759,6 @@ typedef struct _nct7363_init_arg {
 	uint16_t threshold;
 } nct7363_init_arg;
 
-
 typedef struct _ads112c_init_arg {
 	uint8_t reg0_input;
 	uint8_t reg0_gain;
@@ -777,6 +777,11 @@ typedef struct _hdc1080_init_arg {
 typedef struct _ast_tach_init_arg {
 	bool is_init;
 } ast_tach_init_arg;
+
+typedef struct _xdp710_init_arg {
+	bool is_init;
+	float r_sense;
+} xdp710_init_arg;
 
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;
