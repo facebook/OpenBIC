@@ -125,13 +125,19 @@ int i3c_attach(I3C_MSG *msg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg, -EINVAL);
 
-	int ret = 0;
-	struct i3c_dev_desc *desc;
+	int ret = 0, pos = 0;
+	struct i3c_dev_desc *desc = NULL;
 
 	if (!dev_i3c[msg->bus]) {
 		LOG_ERR("Failed to attach address 0x%x due to undefined bus%u", msg->target_addr,
 			msg->bus);
 		return -ENODEV;
+	}
+
+	desc = find_matching_desc(dev_i3c[msg->bus], msg->target_addr, &pos);
+	if (desc != NULL) {
+		LOG_INF("addr 0x%x already attach", msg->target_addr);
+		return -ret;
 	}
 
 	desc = &i3c_desc_table[i3c_desc_count];
@@ -204,8 +210,8 @@ int i3c_brocast_ccc(I3C_MSG *msg, uint8_t ccc_id, uint8_t ccc_addr)
 
 	ret = i3c_master_send_ccc(dev_i3c[msg->bus], &ccc);
 	if (ret != 0) {
-		LOG_ERR("Failed to broadcast ccc 0x%x to addresses 0x%x due to undefined bus%u",
-			ccc_id, ccc_addr, ret);
+		LOG_ERR("Failed to broadcast ccc 0x%x to addresses 0x%x bus%u, ret%d",
+                       ccc_id, ccc_addr, msg->bus, ret);
 	}
 
 	return -ret;

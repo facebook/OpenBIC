@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <zephyr.h>
+#include <soc.h>
 #include "hal_gpio.h"
 #include "hal_peci.h"
 #include "power_status.h"
@@ -46,6 +48,7 @@ SCU_CFG scu_cfg[] = {
 void pal_pre_init()
 {
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
+	aspeed_print_sysrst_info();
 	apml_init();
 
 	/* init i2c target */

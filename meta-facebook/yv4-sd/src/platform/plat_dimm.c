@@ -76,7 +76,10 @@ void get_dimm_info_handler()
 		}
 
 		if (is_dimm_checked_presnt == false) {
-			init_dimm_prsnt_status();
+			if (init_dimm_prsnt_status() < 0){
+				k_msleep(GET_DIMM_INFO_TIME_MS);
+				continue;
+			}
 		}
 
 		if (k_mutex_lock(&i3c_dimm_mutex, K_MSEC(I3C_DIMM_MUTEX_TIMEOUT_MS))) {
@@ -344,13 +347,18 @@ int all_brocast_ccc(I3C_MSG *i3c_msg)
 	return ret;
 }
 
-void init_dimm_prsnt_status()
+int init_dimm_prsnt_status()
 {
 	I3C_MSG i3c_msg = { 0 };
 	int ret = 0;
 
 	// Clear DIMM data
 	memset(dimm_data, 0, sizeof(dimm_data));
+
+	if (k_mutex_lock(&i3c_dimm_mutex, K_MSEC(I3C_DIMM_MUTEX_TIMEOUT_MS))) {
+		LOG_ERR("Failed to lock I3C dimm MUX");
+		return -1;
+	}
 
 	// Init DIMM present status
 	for (uint8_t dimm_id = 0; dimm_id < DIMM_ID_MAX; dimm_id++) {
@@ -396,7 +404,12 @@ void init_dimm_prsnt_status()
 		i3c_detach(&i3c_msg);
 	}
 
+	if (k_mutex_unlock(&i3c_dimm_mutex)) {
+		LOG_ERR("Failed to unlock I3C dimm MUX");
+	}
+
 	is_dimm_checked_presnt = true;
+	return 0;
 }
 
 uint8_t get_dimm_present(uint8_t dimm_id)
