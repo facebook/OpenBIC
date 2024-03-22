@@ -446,6 +446,7 @@ static struct i3c_ibi_payload *ibi_write_requested(struct i3c_dev_desc *desc)
 	if (idx < 0) {
 		LOG_ERR("%s: find dev i3c idx failed. idx = %d", __func__, idx);
 	}
+	i3c_ibi_dev_table[idx].i3c_payload.max_payload_size = I3C_MAX_DATA_SIZE;
 	i3c_ibi_dev_table[idx].i3c_payload.size = 0;
 	i3c_ibi_dev_table[idx].i3c_payload.buf = i3c_ibi_dev_table[idx].data_rx;
 
