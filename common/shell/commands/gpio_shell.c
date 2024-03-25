@@ -28,13 +28,10 @@
  */
 
 #define GET_BIT_VAL(val, n) ((val & BIT(n)) >> (n))
-#define NUM_OF_GROUP 6
-#define REG_SCU 0x7E6E2000
-#define REG_GPIO_BASE 0x7e780000
 #define GPIO_DEVICE_PREFIX "GPIO0_"
 
-int num_of_pin_in_one_group_lst[NUM_OF_GROUP] = { 32, 32, 32, 32, 32, 16 };
-char GPIO_GROUP_NAME_LST[NUM_OF_GROUP][10] = { "GPIO0_A_D", "GPIO0_E_H", "GPIO0_I_L",
+int num_of_pin_in_one_group_lst[GPIO_GROUP_NUM] = { 32, 32, 32, 32, 32, 16 };
+char GPIO_GROUP_NAME_LST[GPIO_GROUP_NUM][10] = { "GPIO0_A_D", "GPIO0_E_H", "GPIO0_I_L",
 					       "GPIO0_M_P", "GPIO0_Q_T", "GPIO0_U_V" };
 enum GPIO_ACCESS { GPIO_READ, GPIO_WRITE };
 
