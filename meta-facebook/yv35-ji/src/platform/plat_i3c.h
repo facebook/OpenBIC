@@ -23,7 +23,11 @@
 #define I3C_BUS2 1
 #define I3C_BUS3 2
 
-#define PLDM_I3C_BMC I3C_BUS1
+#define MCTP_I3C_BIC_ADDR 0x40 //8-bit addr
+
+#define MCTP_I3C_BMC_BUS I3C_BUS1
+#define MCTP_I3C_BMC_ADDR 0x20 //8-bit addr
+
 #define PLDM_I3C_1OU I3C_BUS2
 #define PLDM_I3C_2OU I3C_BUS3
 
