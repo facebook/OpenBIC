@@ -22,6 +22,7 @@
 #include <nct7363.h>
 #include <string.h>
 #include <math.h>
+#include <sys/util.h>
 LOG_MODULE_REGISTER(dev_nct7363);
 
 uint8_t nct7363_set_threshold(uint8_t bus, uint8_t address, uint8_t port, uint16_t threshold)
@@ -64,43 +65,16 @@ uint8_t nct7363_set_duty(sensor_cfg *cfg, uint8_t duty, uint8_t port)
 	uint8_t retry = 5;
 	uint8_t port_offset = port;
 	uint8_t duty_offset = NCT7363_REG_PWM_BASE_OFFSET + port_offset * 2;
-	uint8_t step_offset =
-		Speed_Control_Portx_Configuration_Register_BASE_OFFSET + (port_offset / 2);
-	uint8_t step_mode = 0;
 	float duty_in_255 = 0;
-	// check duty step mode
-	msg.rx_len = 1;
-	msg.tx_len = 1;
-	msg.data[0] = step_offset;
-	if (i2c_master_read(&msg, retry)) {
-		return SENSOR_FAIL_TO_ACCESS;
-	}
-	switch (port_offset % 2) {
-	case 0: {
-		step_mode = (msg.data[0] >> 2) & 1;
-		break;
-	}
-	case 1: {
-		step_mode = (msg.data[0] >> 6) & 1;
-		break;
-	}
-	default:
-		LOG_ERR("Unknown error when get step mode");
-		break;
-	}
 	// set duty
-	if (step_mode == 0) {
-		duty_in_255 = 127 * duty / 100; // 0x7F
-	} else {
-		duty_in_255 = 255 * duty / 100; // 0xFF
-	}
+	duty_in_255 = 255 * duty / 100; // 0xFF
 	msg.tx_len = 2;
 	msg.data[0] = duty_offset;
 	msg.data[1] = (uint8_t)duty_in_255;
 
 	if (i2c_master_write(&msg, retry)) {
 		LOG_ERR("set NCT7363_FAN_CTRL_SET_DUTY fail");
-		return 0xFF; // set duty fail
+		return SENSOR_INIT_UNSPECIFIED_ERROR; // set duty fail
 	}
 	return 0;
 }
@@ -122,14 +96,23 @@ static bool nct7363_write(sensor_cfg *cfg, uint8_t offset, uint8_t val)
 
 	return true;
 }
-static uint8_t fan_frequency_convert(uint8_t frequency, uint8_t step_offset)
+static uint8_t fan_frequency_convert(float frequency)
 {
 	int val_reg = 0;
-	val_reg = (int)(((16000000 / ((float)frequency * (float)step_offset)) - 1) + 0.5);
-	if ((uint8_t)val_reg >> 7 == 0) {
+	float step_value =
+		1; // Because the step is 1, frequency is between 1.91Hz~244.14Hz(divel = 1) and 488.28125Hz~62.5kHz(divel = 0)
+	// divel = 0
+	if (frequency >= 488.28125 && frequency <= 62500) {
+		val_reg = (int)(((16000000 / (frequency * (step_value + 1) * 128)) - 1) + 0.5);
+		return (uint8_t)val_reg;
+	}
+	// devel = 1
+	else if (frequency > 1.907 && frequency < 244.14) {
+		val_reg =
+			(int)(((16000000 / (frequency * (step_value + 1) * 128 * 256)) - 1) + 0.5);
 		return (uint8_t)val_reg;
 	} else {
-		LOG_ERR("Wrong when setting frequency, value: 0x%02x", frequency);
+		LOG_ERR("Wrong when frequency convert, value: 0x%f", frequency);
 		return 0;
 	}
 }
@@ -140,40 +123,17 @@ uint8_t nct7363_set_frequency(sensor_cfg *cfg, uint8_t port)
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
 	nct7363_init_arg *nct7363_init_arg_data = (nct7363_init_arg *)cfg->init_args;
-	uint8_t retry = 5;
 	uint8_t port_offset = port;
-	uint8_t step_offset =
-		Speed_Control_Portx_Configuration_Register_BASE_OFFSET + (port_offset / 2);
-	uint8_t step_mode = 0;
 	uint8_t val_freq = 0, offset_freq = 0;
-	// check duty step mode
-	msg.rx_len = 1;
-	msg.tx_len = 1;
-	msg.data[0] = step_offset;
-	if (i2c_master_read(&msg, retry)) {
-		return SENSOR_FAIL_TO_ACCESS;
-	}
-	switch (port_offset % 2) {
-	case 0: {
-		step_mode = (msg.data[0] >> 2) & 1;
-		break;
-	}
-	case 1: {
-		step_mode = (msg.data[0] >> 6) & 1;
-		break;
-	}
-	default:
-		LOG_ERR("Unknown error when get step mode");
-		break;
-	}
+
 	offset_freq = Speed_Control_Port_Divisor_Register_BASE_OFFSET + port_offset * 2;
-	val_freq = fan_frequency_convert(nct7363_init_arg_data->fan_frequency[port_offset],
-					 step_offset);
+	val_freq = fan_frequency_convert(nct7363_init_arg_data->fan_frequency[port_offset]);
 	if (val_freq == 0) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	} else {
 		if (nct7363_write(cfg, offset_freq, val_freq))
-			return SENSOR_INIT_UNSPECIFIED_ERROR;
+			LOG_ERR("Set frequency error");
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 	return SENSOR_INIT_SUCCESS;
 }
@@ -205,12 +165,14 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 		msg.tx_len = 1;
 		msg.data[0] = fan_count_high_byte_offset;
 		if (i2c_master_read(&msg, retry)) {
+			LOG_ERR("Read fan_count_high_byte_offset fail");
 			return SENSOR_FAIL_TO_ACCESS;
 		}
 		uint8_t fan_count_high_byte = msg.data[0];
 
 		msg.data[0] = fan_count_low_byte_offset;
 		if (i2c_master_read(&msg, retry)) {
+			LOG_ERR("Read fan_count_low_byte_offset fail");
 			return SENSOR_FAIL_TO_ACCESS;
 		}
 		uint8_t fan_count_low_byte = msg.data[0];
@@ -229,11 +191,13 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 		int error_flag = 0;
 		msg.data[0] = FAN_Status_REG_0_to_7;
 		if (i2c_master_read(&msg, retry)) {
+			LOG_ERR("Read FAN_Status_REG_0_to_7 fail");
 			return SENSOR_FAIL_TO_ACCESS;
 		}
 		uint8_t fan_status_0_to_7 = msg.data[0];
 		msg.data[0] = FAN_Status_REG_8_to_15;
 		if (i2c_master_read(&msg, retry)) {
+			LOG_ERR("Read FAN_Status_REG_8_to_15 fail");
 			return SENSOR_FAIL_TO_ACCESS;
 		}
 		uint8_t fan_status_8_to_15 = msg.data[0];
@@ -254,8 +218,9 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 		msg.rx_len = 1;
 		msg.tx_len = 1;
 		if (port_offset >= 0 && port_offset <= 7) {
-			msg.data[0] = NCT7363_GPIO0x_INPUT_PORT_REG_OFFSET;
+			msg.data[0] = NCT7363_GPIO0x_OUTPUT_PORT_REG_OFFSET;
 			if (i2c_master_read(&msg, retry)) {
+				LOG_ERR("Read NCT7363_GPIO0x_OUTPUT_PORT_REG_OFFSET fail");
 				return SENSOR_FAIL_TO_ACCESS;
 			}
 			/* get port offset gpio data*/
@@ -264,13 +229,14 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 			sensor_val *sval = (sensor_val *)reading;
 			sval->integer = (int16_t)gpio_result;
 			return SENSOR_READ_SUCCESS;
-		} else if (port_offset >= 10 && port_offset <= 17) {
-			msg.data[0] = NCT7363_GPIO1x_INPUT_PORT_REG_OFFSET;
+		} else if (port_offset >= 8 && port_offset <= 15) {
+			msg.data[0] = NCT7363_GPIO1x_OUTPUT_PORT_REG_OFFSET;
 			if (i2c_master_read(&msg, retry)) {
+				LOG_ERR("Read NCT7363_GPIO1x_OUTPUT_PORT_REG_OFFSET fail");
 				return SENSOR_FAIL_TO_ACCESS;
 			}
 			/* get port offset gpio data*/
-			gpio_result = (msg.data[0] >> (port_offset - 10)) & 1;
+			gpio_result = (msg.data[0] >> (port_offset - 8)) & 1;
 			/* return result */
 			sensor_val *sval = (sensor_val *)reading;
 			sval->integer = (int16_t)gpio_result;
@@ -341,26 +307,17 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 		val_pwm_ctrl_8_15 = 0, offset_pwm_freq = 0, val_pwm_freq = 0;
 	offset_pwm_ctrl_0_7 = NCT7363_REG_PWM_CTRL_OUTPUT_0_to_7;
 	offset_pwm_ctrl_8_15 = NCT7363_REG_PWM_CTRL_OUTPUT_8_to_15;
-	uint8_t step_set = 1;
-	for (int i = 0; i < 8; i++) {
+
+	for (int i = 0; i < 16; i++) {
 		if (nct7363_init_arg_data->pin_type[i] == NCT7363_PIN_TPYE_PWM) {
-			val_pwm_ctrl_0_7 |= (1 << i);
-			offset_pwm_freq = Speed_Control_Port_Divisor_Register_BASE_OFFSET + i * 2;
-			val_pwm_freq = fan_frequency_convert(
-				nct7363_init_arg_data->fan_frequency[i], step_set);
-			if (val_pwm_freq == 0) {
-				return SENSOR_INIT_UNSPECIFIED_ERROR;
+			if (i < 8) {
+				val_pwm_ctrl_0_7 |= BIT(i);
 			} else {
-				if (nct7363_write(cfg, offset_pwm_freq, val_pwm_freq))
-					return SENSOR_INIT_UNSPECIFIED_ERROR;
+				val_pwm_ctrl_8_15 |= BIT(i);
 			}
-		}
-		if (nct7363_init_arg_data->pin_type[i + 8] == NCT7363_PIN_TPYE_PWM) {
-			val_pwm_ctrl_8_15 |= (1 << i);
-			offset_pwm_freq =
-				Speed_Control_Port_Divisor_Register_BASE_OFFSET + (i + 8) * 2;
-			val_pwm_freq = fan_frequency_convert(
-				nct7363_init_arg_data->fan_frequency[i + 8], step_set);
+			offset_pwm_freq = Speed_Control_Port_Divisor_Register_BASE_OFFSET + i * 2;
+			val_pwm_freq =
+				fan_frequency_convert(nct7363_init_arg_data->fan_frequency[i]);
 			if (val_pwm_freq == 0) {
 				return SENSOR_INIT_UNSPECIFIED_ERROR;
 			} else {
@@ -379,46 +336,29 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 	offset_fanin_8_15 = NCT7363_REG_FANIN_CTRL2;
 	for (int i = 0; i < 8; i++) {
 		if (nct7363_init_arg_data->pin_type[i] == NCT7363_PIN_TPYE_FANIN)
-			val_fanin_0_7 |= (1 << i);
+			val_fanin_8_15 |= BIT(i);
 		if (nct7363_init_arg_data->pin_type[i + 8] == NCT7363_PIN_TPYE_FANIN)
-			val_fanin_8_15 |= (1 << i);
+			val_fanin_0_7 |= BIT(i);
 	}
 	if (nct7363_write(cfg, offset_fanin_0_7, val_fanin_0_7))
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	if (nct7363_write(cfg, offset_fanin_8_15, val_fanin_8_15))
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 
-	/* set init threshold  */
 	for (int i = 0; i < 16; i++) {
-		// init threshold high byte value
-		offset = NCT7363_FAN_COUNT_THRESHOLD_REG_HIGH_BYTE_BASE_OFFSET + i * 2;
-		val = (nct7363_init_arg_data->threshold) >> 8;
-		if (nct7363_write(cfg, offset, val))
-			return SENSOR_INIT_UNSPECIFIED_ERROR;
-
-		// init threshold low byte value
-		offset = NCT7363_FAN_COUNT_THRESHOLD_REG_LOW_BYTE_BASE_OFFSET + i * 2;
-		val = (nct7363_init_arg_data->threshold) & NCT7363_FAN_LSB_MASK;
-		if (nct7363_write(cfg, offset, val))
-			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		/* set init threshold  */
+		nct7363_set_threshold(cfg->port, cfg->target_addr, i,
+				      nct7363_init_arg_data->threshold);
 
 		/*  set init fan duty */
-		offset = NCT7363_REG_PWM_BASE_OFFSET + i * 2;
-		val = 0x66; // 40% duty for init
-
-		if (nct7363_write(cfg, offset, val))
-			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		nct7363_set_duty(cfg, 0x66, i); // 40% duty for init
 	}
 	/* set wdt  */
 	offset = NCT7363_WDT_REG_OFFSET;
 	uint8_t val_wdt = 0;
 	uint8_t wdt_setting = nct7363_init_arg_data->wdt_cfg;
 	if (wdt_setting < WDT_ERROR) {
-		if (wdt_setting == WDT_DISABLE) {
-			val_wdt = 0;
-		} else {
-			val_wdt |= (1 << 7) | (wdt_setting << 2);
-		}
+		val_wdt = BIT(7) | (wdt_setting << 2);
 	} else {
 		LOG_ERR("WDT init fail !");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
