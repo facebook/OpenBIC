@@ -26,6 +26,7 @@
 #include "plat_pldm_sensor.h"
 #include "plat_isr.h"
 #include "plat_gpio.h"
+#include "plat_power_seq.h"
 #include "power_status.h"
 #include "mctp_ctrl.h"
 #include "xdpe12284c.h"
@@ -301,7 +302,7 @@ static uint8_t plat_pldm_pre_vr_update(void *fw_update_param)
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 
 	/* Stop sensor polling */
-	set_vr_monitor_status(false);
+	set_cxl_vr_access(MAX_CXL_ID, false);
 
 	plat_pldm_vr_i2c_info_get(p->comp_id, &p->bus, &p->addr);
 
@@ -312,7 +313,7 @@ static uint8_t plat_pldm_post_vr_update(void *fw_update_param)
 {
 	ARG_UNUSED(fw_update_param);
 
-	set_vr_monitor_status(true);
+	set_cxl_vr_access(MAX_CXL_ID, true);
 
 	return 0;
 }
@@ -349,7 +350,7 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	};
 
 	const uint8_t *vr_name_p = vr_name[vr_type];
-	set_vr_monitor_status(false);
+	set_cxl_vr_access(MAX_CXL_ID, false);
 	switch (vr_type) {
 	case VR_TYPE_INF:
 		if (!xdpe12284c_get_checksum(bus, addr, (uint8_t *)&version)) {
@@ -372,7 +373,8 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		LOG_ERR("Unknown VR device");
 		return ret;
 	}
-	set_vr_monitor_status(true);
+
+	set_cxl_vr_access(MAX_CXL_ID, true);
 
 	const char *remain_str_p = ", Remaining Write: ";
 	uint8_t *buf_p = buf;
