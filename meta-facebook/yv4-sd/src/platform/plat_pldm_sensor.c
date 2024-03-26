@@ -156,7 +156,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x0C, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -292,7 +292,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x000084D0, //uint32_t max_readable;
 			0x00006F54, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x0F, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -362,7 +362,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x0C, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -634,7 +634,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00003138, //uint32_t max_readable;
 			0x00002C88, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x0F, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -770,7 +770,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -838,7 +838,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x0C, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -906,7 +906,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -977,7 +977,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1046,7 +1046,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1115,7 +1115,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1184,7 +1184,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1253,7 +1253,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1322,7 +1322,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x0C, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1391,7 +1391,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x0C, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1460,7 +1460,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x0C, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1529,7 +1529,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x0C, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1598,7 +1598,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x0C, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1667,7 +1667,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1736,7 +1736,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1805,7 +1805,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1874,7 +1874,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1943,7 +1943,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2012,7 +2012,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2081,7 +2081,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2150,7 +2150,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2219,7 +2219,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2288,7 +2288,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2360,7 +2360,7 @@ pldm_sensor_info plat_pldm_sensor_mb_temp_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2427,7 +2427,7 @@ pldm_sensor_info plat_pldm_sensor_mb_temp_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2494,7 +2494,7 @@ pldm_sensor_info plat_pldm_sensor_mb_temp_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2561,7 +2561,7 @@ pldm_sensor_info plat_pldm_sensor_mb_temp_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2628,7 +2628,7 @@ pldm_sensor_info plat_pldm_sensor_mb_temp_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2699,7 +2699,7 @@ pldm_sensor_info plat_pldm_sensor_cpu_table[] = {
 			0x00030D40, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2767,7 +2767,7 @@ pldm_sensor_info plat_pldm_sensor_cpu_table[] = {
 			0x000FFFFF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2840,7 +2840,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x05, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2909,7 +2909,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x05, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2978,7 +2978,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3047,7 +3047,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3252,7 +3252,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3320,7 +3320,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3388,7 +3388,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3456,7 +3456,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3524,7 +3524,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3593,7 +3593,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3665,7 +3665,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3734,7 +3734,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3803,7 +3803,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3872,7 +3872,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3941,7 +3941,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4010,7 +4010,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4079,7 +4079,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4148,7 +4148,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4217,7 +4217,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4286,7 +4286,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4355,7 +4355,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4424,7 +4424,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4493,7 +4493,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x0000639C, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x05, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4562,7 +4562,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x0000639C, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x05, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4631,7 +4631,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x0000639C, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x05, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4700,7 +4700,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x0000639C, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x05, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4769,7 +4769,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x0000639C, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x05, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4838,7 +4838,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x0000639C, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x05, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4907,7 +4907,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x0000639C, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x05, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4976,7 +4976,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x0000639C, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x05, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -5045,7 +5045,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x0000639C, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x05, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -5114,7 +5114,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x0000639C, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x05, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -5183,7 +5183,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x0000639C, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x05, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -5252,7 +5252,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x0000639C, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x05, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
