@@ -31,6 +31,8 @@
 
 LOG_MODULE_REGISTER(plat_hook);
 
+#define ADJUST_P0V85_VOLTAGE(x) (x * 1.01)
+
 adc_asd_init_arg ast_adc_init_args[] = {
 	[0] = { .is_init = false,
 		.deglitch[0] = { .deglitch_en = false,},
@@ -114,5 +116,20 @@ bool pre_vr_read(sensor_cfg *cfg, void *args)
 		LOG_ERR("Failed to set page");
 		return true;
 	}
+	return true;
+}
+
+bool post_p085v_voltage_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	ARG_UNUSED(cfg);
+	ARG_UNUSED(args);
+	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+
+	sensor_val *sval = (sensor_val *)reading;
+	float val = (float)sval->integer + (sval->fraction / 1000.0);
+
+	val = ADJUST_P0V85_VOLTAGE(val);
+	sval->integer = (int)val & 0xFFFF;
+	sval->fraction = (val - sval->integer) * 1000;
 	return true;
 }
