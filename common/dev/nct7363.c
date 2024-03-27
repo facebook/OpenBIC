@@ -153,16 +153,20 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 	int gpio_result = 0;
 	uint8_t offset = cfg->offset;
 	uint8_t port_offset = cfg->arg0;
-	if (port_offset > 7) {
-		port_offset -= 8; //fanin8~15 = pwm/gpio0~7
-	} else {
-		port_offset += 8; //fan0~7 = pwm/gpio8~15
-	}
 	uint8_t fan_poles = cfg->arg1;
-	uint8_t fan_count_high_byte_offset =
-		NCT7363_REG_FAN_COUNT_VALUE_HIGH_BYTE_BASE_OFFSET + port_offset * 2;
-	uint8_t fan_count_low_byte_offset =
-		NCT7363_REG_FAN_COUNT_VALUE_LOW_BYTE_BASE_OFFSET + port_offset * 2;
+	if (port_offset > 7) {
+		// fanin8~15 = pwm/gpio0~7
+		uint8_t fan_count_high_byte_offset =
+			NCT7363_REG_FAN_COUNT_VALUE_HIGH_BYTE_BASE_OFFSET + (port_offset - 8) * 2;
+		uint8_t fan_count_low_byte_offset =
+			NCT7363_REG_FAN_COUNT_VALUE_LOW_BYTE_BASE_OFFSET + (port_offset - 8) * 2;
+	} else {
+		// fan0~7 = pwm/gpio8~15
+		uint8_t fan_count_high_byte_offset =
+			NCT7363_REG_FAN_COUNT_VALUE_HIGH_BYTE_BASE_OFFSET + (port_offset + 8) * 2;
+		uint8_t fan_count_low_byte_offset =
+			NCT7363_REG_FAN_COUNT_VALUE_LOW_BYTE_BASE_OFFSET + (port_offset + 8) * 2;
+	}
 	switch (offset) {
 	case NCT7363_FAN_SPEED_OFFSET:
 
