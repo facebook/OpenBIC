@@ -32,12 +32,23 @@ uint8_t nct7363_set_threshold(uint8_t bus, uint8_t address, uint8_t port, uint16
 	msg.target_addr = address;
 	uint8_t retry = 5;
 	uint8_t port_offset = port;
-	uint8_t threshold_offset_high_byte =
-		NCT7363_FAN_COUNT_THRESHOLD_REG_HIGH_BYTE_BASE_OFFSET + port_offset * 2;
-	uint8_t threshold_offset_low_byte =
-		NCT7363_FAN_COUNT_THRESHOLD_REG_LOW_BYTE_BASE_OFFSET + port_offset * 2;
+	uint8_t threshold_offset_high_byte = 0;
+	uint8_t threshold_offset_low_byte = 0;
 	uint8_t threshold_low_byte_value = threshold & NCT7363_FAN_LSB_MASK;
 	uint8_t threshold_high_byte_value = threshold >> 8;
+	if (port_offset > 7) {
+		// fanin8~15 = pwm/gpio0~7
+		threshold_offset_high_byte = NCT7363_FAN_COUNT_THRESHOLD_REG_HIGH_BYTE_BASE_OFFSET +
+					     (port_offset - 8) * 2;
+		threshold_offset_low_byte = NCT7363_FAN_COUNT_THRESHOLD_REG_LOW_BYTE_BASE_OFFSET +
+					    (port_offset - 8) * 2;
+	} else {
+		// fan0~7 = pwm/gpio8~15
+		threshold_offset_high_byte = NCT7363_FAN_COUNT_THRESHOLD_REG_HIGH_BYTE_BASE_OFFSET +
+					     (port_offset + 8) * 2;
+		threshold_offset_low_byte = NCT7363_FAN_COUNT_THRESHOLD_REG_LOW_BYTE_BASE_OFFSET +
+					    (port_offset + 8) * 2;
+	}
 	// write high byte value
 	msg.tx_len = 2;
 	msg.data[0] = threshold_offset_high_byte;
