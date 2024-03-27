@@ -360,9 +360,6 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_2, sensor_dev_ads112c, I2C_BUS5, BPB_ADS112C_3_ADDR,
 	  ADS112C_LEAKAGE_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, post_ads112c_read, NULL, &ads112c_init_args[0] },
-	{ SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_3, sensor_dev_ads112c, I2C_BUS5, BPB_ADS112C_3_ADDR,
-	  ADS112C_LEAKAGE_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, post_ads112c_read, NULL, &ads112c_init_args[0] },
 };
 
 sensor_cfg adm1272_sensor_config_table[] = {
