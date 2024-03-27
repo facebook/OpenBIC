@@ -21,6 +21,7 @@
 #include "hal_i2c.h"
 #include "pmbus.h"
 #include "adm1272.h"
+#include <sys/util.h>
 
 LOG_MODULE_REGISTER(dev_adm1272);
 
@@ -28,6 +29,28 @@ LOG_MODULE_REGISTER(dev_adm1272);
 #define ADM1272_EIN_ROLLOVER_CNT_MAX 0x100
 #define ADM1272_EIN_SAMPLE_CNT_MAX 0x1000000
 #define ADM1272_EIN_ENERGY_CNT_MAX 0x8000
+int enable_hsc(sensor_cfg *cfg, bool enable_flag)
+{
+	uint8_t retry = 5;
+	int ret = -1;
+	I2C_MSG msg = { 0 };
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	msg.data[0] = REG_PWR_MONITOR_CFG;
+	if (enable_flag == 1) {
+		msg.data[1] = BIT(7); // enable hsc
+	} else {
+		msg.data[1] = 0; // disable hsc
+	}
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Set enable hsc fail");
+		return SENSOR_PARAMETER_NOT_VALID;
+	}
+	LOG_INF("Set enable hsc success");
+	return 0;
+}
 
 static int adm1272_convert_real_value(uint8_t vrange, uint8_t irange, float rsense, uint8_t offset,
 				      float *val)
