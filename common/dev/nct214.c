@@ -23,25 +23,6 @@
 
 LOG_MODULE_REGISTER(nct214);
 
-/*static bool nct214_write(sensor_cfg *cfg, uint8_t offset, uint8_t val)
-{
-	I2C_MSG msg = { 0 };
-	uint8_t retry = 5;
-	msg.bus = cfg->port;
-	msg.target_addr = cfg->target_addr;
-	msg.tx_len = 2;
-
-	msg.data[0] = offset;
-	msg.data[1] = val;
-
-	if (i2c_master_write(&msg, retry)) {
-		LOG_ERR("nct214 write offset 0x%02x, val 0x%02x fail", offset, val);
-		return false;
-	}
-
-	return true;
-}
-*/
 uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);

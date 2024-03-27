@@ -35,7 +35,7 @@ LOG_MODULE_REGISTER(plat_sensor_table);
 
 static void load_hsc_sensor_table(void);
 static void load_temperature_sensor_table(void);
-#define CONFIG_ISL69260 false
+
 
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
