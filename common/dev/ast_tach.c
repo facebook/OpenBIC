@@ -16,74 +16,56 @@
 
 #include <drivers/pwm.h>
 #include <drivers/sensor.h>
+#include "sensor.h"
 #include <logging/log.h>
 
 #include "ast_tach.h"
 
 LOG_MODULE_REGISTER(dev_ast_tach);
 
-// init tach device list
 #undef DT_DRV_COMPAT
 #if DT_HAS_COMPAT_STATUS_OKAY(aspeed_tach)
 #define DT_DRV_COMPAT aspeed_tach
 #endif
 
-#define FAN_LABELS(node_id) { .device_label = DT_LABEL(node_id) },
-#define FAN_NODE_LABELS(n) DT_FOREACH_CHILD(DT_DRV_INST(n), FAN_LABELS)
-#define FAN_INIT_MACRO() DT_INST_FOREACH_STATUS_OKAY(FAN_NODE_LABELS)
-static struct fan_handle {
-	char *device_label;
-} fan_list[] = { FAN_INIT_MACRO() };
-
-#define FAN_NUM ARRAY_SIZE(fan_list)
-
-#if DT_NODE_EXISTS(DT_NODELABEL(tach))
-#define DEV_TACH
-#endif
-
-static const struct device *dev_tach;
-static int is_ready;
+static const struct device *dev_tach[TACH_MAX_NUM];
 
 static void init_tach_dev(void)
 {
-#ifdef DEV_TACH
-	dev_tach = device_get_binding("TACH");
-	if (!(device_is_ready(dev_tach)))
-		LOG_WRN("TACH device not ready!");
-	else
-		is_ready = 1;
-#endif
+	for (uint8_t i = TACH_PORT0; i < TACH_MAX_NUM; i++) {
+		char device_name[6];
+		snprintf(device_name, sizeof(device_name), "FAN%d", i);
+		dev_tach[i] = device_get_binding(device_name);
+	}
 }
 
 static uint8_t get_fan_rpm(uint8_t port, int32_t *val)
 {
-	const struct device *tach_dev;
 	struct sensor_value sensor_value;
 	int ret = 0;
 
-	if (port >= FAN_NUM) {
+	if (port >= TACH_MAX_NUM) {
 		LOG_ERR("port %d out of range", port);
-		return SENSOR_UNSPECIFIED_ERROR;
+		return SENSOR_PARAMETER_NOT_VALID;
 	}
 
-	tach_dev = device_get_binding(fan_list[port].device_label);
-	if (tach_dev == NULL) {
-		LOG_ERR("FAN%d device not found", port);
-		return SENSOR_UNSPECIFIED_ERROR;
+	if (dev_tach[port] == NULL) {
+		LOG_ERR("tach dev %d NULL", port);
+		return SENSOR_UNAVAILABLE;
 	}
 
-	ret = sensor_sample_fetch(tach_dev);
+	ret = sensor_sample_fetch(dev_tach[port]);
 	if (ret < 0) {
 		LOG_ERR("Failed to read FAN%d due to sensor_sample_fetch failed, ret: %d", port,
 			ret);
-		return SENSOR_UNSPECIFIED_ERROR;
+		return SENSOR_FAIL_TO_ACCESS;
 	}
 
-	ret = sensor_channel_get(tach_dev, SENSOR_CHAN_RPM, &sensor_value);
+	ret = sensor_channel_get(dev_tach[port], SENSOR_CHAN_RPM, &sensor_value);
 	if (ret < 0) {
 		LOG_ERR("Failed to read FAN%d due to sensor_channel_get failed, ret: %d", port,
 			ret);
-		return SENSOR_UNSPECIFIED_ERROR;
+		return SENSOR_FAIL_TO_ACCESS;
 	}
 
 	*val = sensor_value.val1;
@@ -136,11 +118,6 @@ uint8_t ast_tach_init(sensor_cfg *cfg)
 		goto skip_init;
 
 	init_tach_dev();
-
-	if (!is_ready) {
-		LOG_ERR("TACH are not ready to use!");
-		return SENSOR_INIT_UNSPECIFIED_ERROR;
-	}
 
 	init_args->is_init = true;
 

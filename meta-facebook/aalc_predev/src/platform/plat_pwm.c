@@ -25,19 +25,15 @@ LOG_MODULE_REGISTER(plat_pwm);
 
 static const struct device *pwm_dev;
 
-void ast_pwm_init(void)
+int ast_pwm_set(int duty)
 {
-	const struct device *pwm_dev;
+	return pwm_pin_set_cycles(pwm_dev, PWM_PORT0, MAX_FAN_DUTY_VALUE, (uint32_t)duty, 0);
+}
+
+void init_pwm_dev(void)
+{
 	pwm_dev = device_get_binding("PWM");
 
 	if (pwm_dev == NULL)
 		LOG_ERR("FAN PWM init failed due to device not found");
-
-	if (pwm_pin_set_cycles(pwm_dev, PWM_PORT0, MAX_FAN_DUTY_VALUE, 70, 0) < 0) //default 70 duty
-		LOG_ERR("Set default PWM0 failed");
-}
-
-int ast_pwm_set(uint8_t idx, int duty)
-{
-	return pwm_pin_set_cycles(pwm_dev, (uint32_t)idx, MAX_FAN_DUTY_VALUE, (uint32_t)duty, 0);
 }
