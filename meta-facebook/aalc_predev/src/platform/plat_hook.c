@@ -19,6 +19,7 @@
 #include <logging/log.h>
 #include "plat_hook.h"
 #include "plat_class.h"
+#include "nct7363.h"
 #include "ads112c.h"
 #include "plat_i2c.h"
 #include "sensor.h"
@@ -43,7 +44,7 @@ adm1272_init_arg adm1272_init_args[] = {
 		.is_record_ein = false,
 		.last_energy = 0,
 		.last_rollover = 0,
-		.last_sample = 0,
+		.last_sample = 0,      
 	},
 	[1] = { .is_init = false,
 		.is_need_set_pwr_cfg = true,
@@ -57,56 +58,55 @@ adm1272_init_arg adm1272_init_args[] = {
 };
 
 nct7363_init_arg nct7363_init_args[] = {
-    //GPIO setting: Reserved=11, FANINx=10, PWMx=01, GPIOXX=00
-    //Fan BD
+    // GPIO setting: Reserved=11, FANINx=10, PWMx=01, GPIOXX=00
+    // gpio_dir == 1 : input(default), gpio_dir == 0 : output
+    // Fan BD
     [0] = { 
         .is_init = false, 
-            .init_pin_config = {
-                .GPIO_14_to_17_Pin_Function_Configuration = 0b01001000,
-                .GPIO0x_Input_Output_Configuration = 0b00000100,
-                .GPIO1x_Input_Output_Configuration = 0b11111100,
-                .PWM_8_to_15_Enable = 0b10000000,
-                .FANIN_0_to_7_Monitoring_Enable = 0b00100000,
-            },
+        .pin_type[0] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[8] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[9] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[13] = NCT7363_PIN_TPYE_FANIN,
+        .pin_type[15] = NCT7363_PIN_TPYE_PWM,
         .fan_poles = 0,
+        .wdt_cfg = WDT_7dot5_SEC,
     },	
     // Management BD(no used)
     [1] = { 
         .is_init = false,
-            .init_pin_config = {
-                .GPIO_00_to_03_Pin_Function_Configuration = 0b00101001,
-                .GPIO0x_Input_Output_Configuration = 0b11101111,
-                .GPIO1x_Input_Output_Configuration = 0b11111111,
-                .PWM_0_to_7_Enable = 0b00000001,
-                .FANIN_8_to_15_Monitoring_Enable = 0b00000110,
-            },
         .fan_poles = 0,
+        .wdt_cfg = WDT_7dot5_SEC,
     },
     //Backplane BD
     [2] = { 
         .is_init = false,
-            .init_pin_config = {
-                .GPIO_00_to_03_Pin_Function_Configuration = 0b10010101,
-                .GPIO_04_to_07_Pin_Function_Configuration = 0b00000000,
-                .GPIO0x_Input_Output_Configuration = 0b11111111,
-                .GPIO1x_Input_Output_Configuration = 0b00000000,
-                .PWM_0_to_7_Enable = 0b00000111,
-                .FANIN_8_to_15_Monitoring_Enable = 0b00001000,
-            },
+        .pin_type[0] = NCT7363_PIN_TPYE_PWM,
+        .pin_type[1] = NCT7363_PIN_TPYE_PWM,
+        .pin_type[2] = NCT7363_PIN_TPYE_PWM,
+        .pin_type[3] = NCT7363_PIN_TPYE_FANIN,
+        .pin_type[8] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[9] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[10] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[11] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[12] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[13] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[14] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[15] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
         .fan_poles = 0,
+        .wdt_cfg = WDT_7dot5_SEC,
     },
     //Pump BD
     [3] = { 
         .is_init = false,
-            .init_pin_config = {
-                .GPIO_00_to_03_Pin_Function_Configuration = 0b00000101,
-                .GPIO_04_to_07_Pin_Function_Configuration = 0b00101010,
-                .GPIO0x_Input_Output_Configuration = 0b11111111,
-                .GPIO1x_Input_Output_Configuration = 0b11111100,
-                .PWM_0_to_7_Enable = 0b00000011,
-                .FANIN_8_to_15_Monitoring_Enable = 0b01110000,
-            },
+        .pin_type[0] = NCT7363_PIN_TPYE_PWM,
+        .pin_type[1] = NCT7363_PIN_TPYE_PWM,
+        .pin_type[4] = NCT7363_PIN_TPYE_FANIN,
+        .pin_type[5] = NCT7363_PIN_TPYE_FANIN,
+        .pin_type[6] = NCT7363_PIN_TPYE_FANIN,
+        .pin_type[8] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[9] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
         .fan_poles = 0,
+        .wdt_cfg = WDT_7dot5_SEC,
     },
 };
 
