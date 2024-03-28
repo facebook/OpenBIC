@@ -26,8 +26,13 @@
 #include "plat_power_seq.h"
 #include "plat_hook.h"
 #include "plat_pldm_sensor.h"
+#include "plat_isr.h"
 
 LOG_MODULE_REGISTER(plat_pldm_sensor);
+
+#define VR_DEVICE_UNKNOWN 0xFF
+
+void plat_pldm_sensor_change_vr_dev();
 
 static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = {
 	// thread id, thread name
@@ -6327,6 +6332,7 @@ pldm_sensor_info *plat_pldm_sensor_load(int thread_id)
 	case INA233_SENSOR_THREAD_ID:
 		return plat_pldm_sensor_ina233_table;
 	case VR_SENSOR_THREAD_ID:
+		plat_pldm_sensor_change_vr_dev();
 		return plat_pldm_sensor_vr_table;
 	case DIMM_SENSOR_THREAD_ID:
 		return plat_pldm_sensor_dimm_table;
@@ -6429,4 +6435,42 @@ void plat_load_aux_sensor_names_pdr_table(PDR_sensor_auxiliary_names *aux_sensor
 {
 	memcpy(aux_sensor_name_table, &plat_pdr_sensor_aux_names_table,
 	       sizeof(plat_pdr_sensor_aux_names_table));
+}
+
+void plat_pldm_sensor_change_vr_dev()
+{
+	uint8_t vr_dev = VR_DEVICE_UNKNOWN;
+	if (plat_pldm_sensor_get_vr_dev(&vr_dev) != GET_VR_DEV_SUCCESS) {
+		LOG_ERR("Unable to change the VR device due to its unknown status.");
+		return;
+	}
+
+	for (int index = 0; index < plat_pldm_sensor_get_sensor_count(VR_SENSOR_THREAD_ID);
+	     index++) {
+		plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type = vr_dev;
+	}
+}
+
+uint8_t plat_pldm_sensor_get_vr_dev(uint8_t *vr_dev)
+{
+	/*
+	 * Get VR type from IOE3 P14
+	 * High - MPS
+	 * Low - IFX
+	 */
+
+	uint8_t reg = 0;
+	if (get_ioe_value(ADDR_IOE3, TCA9555_INPUT_PORT_REG_1, &reg) == -1) {
+		LOG_ERR("Failed to get the VR type.");
+		*vr_dev = VR_DEVICE_UNKNOWN;
+		return GET_VR_DEV_FAILED;
+	}
+
+	if (GETBIT(reg, IOE_P14)) {
+		*vr_dev = sensor_dev_mp2971;
+	} else {
+		*vr_dev = sensor_dev_xdpe12284c;
+	}
+
+	return GET_VR_DEV_SUCCESS;
 }
