@@ -39,11 +39,11 @@ uint8_t xdp710_read(sensor_cfg *cfg, int *reading)
 	}
 
 	if (!init_arg->r_sense) {
-		LOG_ERR("Rsense not provided");
+		LOG_ERR("r_sense not provided");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	float Rsense = init_arg->r_sense;
+	float r_sense = init_arg->r_sense;
 	float val;
 	uint8_t retry = 5;
 	I2C_MSG msg;
@@ -66,10 +66,10 @@ uint8_t xdp710_read(sensor_cfg *cfg, int *reading)
 		val = (float)((msg.data[1] << 8) | msg.data[0]) * 100 / 4653;
 		break;
 	case PMBUS_READ_IOUT:
-		val = (float)(((msg.data[1] << 8) | msg.data[0]) * 100) / (23165 * Rsense);
+		val = (float)(((msg.data[1] << 8) | msg.data[0]) * 100) / (23165 * r_sense);
 		break;
 	case PMBUS_READ_PIN:
-		val = (float)(((msg.data[1] << 8) | msg.data[0]) * 100) / (4211 * Rsense);
+		val = (float)(((msg.data[1] << 8) | msg.data[0]) * 100) / (4211 * r_sense);
 		break;
 
 	default:
