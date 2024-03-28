@@ -167,6 +167,8 @@ enum SENSOR_DEV {
 	sensor_dev_nct7363 = 0x32,
 	sensor_dev_hdc1080 = 0x33,
 	sensor_dev_ast_tach = 0x34,
+	sensor_dev_xdp710 = 0x35,
+  sensor_dev_nct214 = 0x36,
 	sensor_dev_max
 };
 
@@ -713,51 +715,15 @@ typedef struct _max11617_init_arg {
 
 typedef struct _nct7363_init_arg {
 	bool is_init;
-	union {
-		uint8_t value;
-		struct {
-			uint8_t GPIO_00_to_03_Pin_Function_Configuration : 8;
-			uint8_t GPIO_04_to_07_Pin_Function_Configuration : 8;
-			uint8_t GPIO_10_to_13_Pin_Function_Configuration : 8;
-			uint8_t GPIO_14_to_17_Pin_Function_Configuration : 8;
-			uint8_t GPIO0x_Input_Output_Configuration : 8;
-			uint8_t GPIO1x_Input_Output_Configuration : 8;
-			uint8_t PWM_0_to_7_Enable : 8;
-			uint8_t PWM_8_to_15_Enable : 8;
-			uint8_t FANIN_0_to_7_Monitoring_Enable : 8;
-			uint8_t FANIN_8_to_15_Monitoring_Enable : 8;
-		};
-	} init_pin_config;
-	union {
-		uint8_t value;
-		struct {
-			uint8_t GPIO00 : 2;
-			uint8_t GPIO01 : 2;
-			uint8_t GPIO02 : 2;
-			uint8_t GPIO03 : 2;
-			uint8_t GPIO04 : 2;
-			uint8_t GPIO05 : 2;
-			uint8_t GPIO06 : 2;
-			uint8_t GPIO07 : 2;
-			uint8_t GPIO10 : 2;
-			uint8_t GPIO11 : 2;
-			uint8_t GPIO12 : 2;
-			uint8_t GPIO13 : 2;
-			uint8_t GPIO14 : 2;
-			uint8_t GPIO15 : 2;
-			uint8_t GPIO16 : 2;
-			uint8_t GPIO17 : 2;
-			uint8_t PWM_0_to_7_Enable : 8;
-			uint8_t PWM_8_to_15_Enable : 8;
-			uint8_t FANIN_0_to_7_Monitoring_Enable : 8;
-			uint8_t FANIN_8_to_15_Monitoring_Enable : 8;
-		};
-	} init_16_pin_config;
+	uint8_t value;
+	uint8_t pin_type
+		[16]; // According to the pin position on the right side of the component, from top to bottom, there are 16 pins in total.
 	uint8_t fan_poles;
+	float fan_frequency[16];
 	uint8_t duty;
 	uint16_t threshold;
+	uint8_t wdt_cfg;
 } nct7363_init_arg;
-
 
 typedef struct _ads112c_init_arg {
 	uint8_t reg0_input;
@@ -777,6 +743,16 @@ typedef struct _hdc1080_init_arg {
 typedef struct _ast_tach_init_arg {
 	bool is_init;
 } ast_tach_init_arg;
+
+typedef struct _xdp710_init_arg {
+	bool is_init;
+	float r_sense;
+} xdp710_init_arg;
+
+typedef struct _nct214_init_arg {
+	bool is_init;
+	uint8_t configuration_register;
+} nct214_init_arg;
 
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;
