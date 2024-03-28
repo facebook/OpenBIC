@@ -14,23 +14,18 @@
  * limitations under the License.
  */
 
-#include <stdbool.h>
-#include <stdint.h>
+#ifndef NCT214_H
+#define NCT214_H
 
-#ifndef PLAT_CLASS_H
-#define PLAT_CLASS_H
+#define LOCAL_TEMP_REG 0x00
+#define EXTERNAL_TEMP_UPPER_BYTE_REG 0x01
+#define EXTERNAL_TEMP_LOWER_BYTE_REG 0x10
+#define CONFIG_REG_READ 0x03
+#define CONFIG_REG_WRITE 0x09
 
-enum HSC_MODULE {
-	HSC_MODULE_ADM1272,
-	HSC_MODULE_XDP710,
-	HSC_MODULE_UNKNOWN = 0xFF,
+enum NCT214_CHANNELS {
+	NCT214_LOCAL_TEMPERATRUE,
+	NCT214_REMOTE_TEMPERATRUE,
 };
-enum TEMP_MODULE {
-	SB_TMP461,
-	SB_NCT214,
-	TEMP_MODULE_UNKNOWN = 0xFF,
-};
-void init_aalc_config();
-uint8_t get_hsc_module();
-uint8_t get_temp_module();
+
 #endif
