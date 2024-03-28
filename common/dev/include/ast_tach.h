@@ -17,8 +17,6 @@
 #ifndef TACH_H
 #define TACH_H
 
-#include "sensor.h"
-
 enum {
 	AST_TACH_RPM = 0,
 };
@@ -40,6 +38,7 @@ enum {
 	TACH_PORT13,
 	TACH_PORT14,
 	TACH_PORT15,
+	TACH_MAX_NUM,
 };
 
 #endif //TACH_H

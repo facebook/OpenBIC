@@ -22,15 +22,17 @@
 #include "plat_modbus.h"
 
 LOG_MODULE_REGISTER(plat_init);
+
+#define DEF_PROJ_GPIO_PRIORITY 78
+
 void pal_pre_init()
 {
 	init_aalc_config();
 }
-#define DEF_PROJ_GPIO_PRIORITY 78
 
 void pal_post_init()
 {
-	ast_pwm_init();
+	init_pwm_dev();
 	modbus_server_handler_init();
 }
 
