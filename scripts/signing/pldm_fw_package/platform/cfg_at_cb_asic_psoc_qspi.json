@@ -95,6 +95,51 @@
                     "DescriptorData": "0201"
                 }
             ]
+        },
+        {
+            "DeviceUpdateOptionFlags": [0],
+            "ComponentImageSetVersionString": "PLDM_UPDATE_SUPPORTED_DEVICE",
+            "ApplicableComponents": [0],
+            "Descriptors": [
+                {
+                    "DescriptorType": 1,
+                    "DescriptorData": "0000A015"
+                },
+                {
+                    "DescriptorType" : 65535,
+                    "VendorDefinedDescriptorTitleStringType" : 2,
+                    "VendorDefinedDescriptorTitleString" : "Platform",
+                    "VendorDefinedDescriptorData" : "Artemis"
+                },
+                {
+                    "DescriptorType" : 65535,
+                    "VendorDefinedDescriptorTitleStringType" : 2,
+                    "VendorDefinedDescriptorTitleString" : "Board",
+                    "VendorDefinedDescriptorData" : "ColterBay"
+                },
+                {
+                    "DescriptorType" : 65535,
+                    "VendorDefinedDescriptorTitleStringType" : 2,
+                    "VendorDefinedDescriptorTitleString" : "Stage",
+                    "VendorDefinedDescriptorData" : "PVT"
+                },
+                {
+                    "DescriptorType": 262,
+                    "DescriptorData": "62726f6164636f6d5f61736963000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    "DescriptorType": 263,
+                    "DescriptorData": "33000000000000000000"
+                },
+                {
+                    "DescriptorType": 0,
+                    "DescriptorData": "1D9B"
+                },
+                {
+                    "DescriptorType": 256,
+                    "DescriptorData": "0201"
+                }
+            ]
         }
     ],
     "ComponentImageInformationArea": [
@@ -103,14 +148,21 @@
             "ComponentIdentifier": 0,
             "ComponentOptions": [0],
             "RequestedComponentActivationMethod": [0],
-            "ComponentVersionString": "psoc v12.100"
+            "ComponentVersionString": "psoc v17.100"
         },
         {
             "ComponentClassification": 65535,
             "ComponentIdentifier": 0,
             "ComponentOptions": [0],
             "RequestedComponentActivationMethod": [0],
-            "ComponentVersionString": "qspi v10"
+            "ComponentVersionString": "qspi v12"
+        },
+        {
+            "ComponentClassification": 65535,
+            "ComponentIdentifier": 0,
+            "ComponentOptions": [0],
+            "RequestedComponentActivationMethod": [0],
+            "ComponentVersionString": "boot1 v3.5"
         }
     ]
 }
