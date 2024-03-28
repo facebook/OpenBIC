@@ -18,24 +18,352 @@
 #include "fru.h"
 #include "plat_fru.h"
 #include "plat_i2c.h"
+#include "plat_modbus.h"
+#include "i2c-mux-pca954x.h"
+#include "modbus_server.h"
 
-#define AALC_FRU_PORT I2C_BUS10
-#define AALC_FRU_ADDR (0xA6 >> 1)
-
-#define AALC_FRU_START 0x3800 // start at 0x3800
+#define AALC_FRU_START 0x0000
 #define AALC_FRU_SIZE 0x0400 // size 1KB
+
+#define FRU_ADDR_MIN FRU_FB_PART_ADDR
+#define FRU_ADDR_MAX FRU_MFR_SERIEL_ADDR
 
 const EEPROM_CFG plat_fru_config[] = {
 	{
-		NV_ATMEL_24C128,
-		AALC_FRU_ID,
-		AALC_FRU_PORT,
-		AALC_FRU_ADDR,
+		ST_M24512_RDW,
+		MB_FRU_ID,
+		I2C_BUS10,
+		MB_FRU_ADDR,
 		FRU_DEV_ACCESS_BYTE,
 		AALC_FRU_START,
 		AALC_FRU_SIZE,
 	},
+	{
+		NV_ATMEL_24C02,
+		BB_FRU_ID,
+		I2C_BUS4,
+		BB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+	},
+	{
+		NV_ATMEL_24C02,
+		BPB_FRU_ID,
+		I2C_BUS4,
+		BPB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+	},
+	{
+		NV_ATMEL_24C02,
+		SB_FRU_ID,
+		I2C_BUS9,
+		SB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+		true,
+		SB_MUX_ADDR,
+		PCA9546A_CHANNEL_1,
+	},
+	{
+		NV_ATMEL_24C02,
+		PDB_FRU_ID,
+		I2C_BUS9,
+		PDB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+		true,
+		SB_MUX_ADDR,
+		PCA9546A_CHANNEL_2,
+	},
+	{
+		NV_ATMEL_24C02,
+		PB_1_FRU_ID,
+		I2C_BUS8,
+		PB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+		true,
+		PB_MUX_ADDR,
+		PCA9546A_CHANNEL_0,
+	},
+	{
+		NV_ATMEL_24C02,
+		PB_2_FRU_ID,
+		I2C_BUS8,
+		PB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+		true,
+		PB_MUX_ADDR,
+		PCA9546A_CHANNEL_1,
+	},
+	{
+		NV_ATMEL_24C02,
+		PB_3_FRU_ID,
+		I2C_BUS8,
+		PB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+		true,
+		PB_MUX_ADDR,
+		PCA9546A_CHANNEL_2,
+	},
+	{
+		NV_ATMEL_24C02,
+		FB_1_FRU_ID,
+		I2C_BUS1,
+		FB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+		true,
+		FB_1_4_MUX_ADDR,
+		PCA9546A_CHANNEL_0,
+	},
+	{
+		NV_ATMEL_24C02,
+		FB_2_FRU_ID,
+		I2C_BUS1,
+		FB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+		true,
+		FB_1_4_MUX_ADDR,
+		PCA9546A_CHANNEL_1,
+	},
+	{
+		NV_ATMEL_24C02,
+		FB_3_FRU_ID,
+		I2C_BUS1,
+		FB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+		true,
+		FB_1_4_MUX_ADDR,
+		PCA9546A_CHANNEL_2,
+	},
+	{
+		NV_ATMEL_24C02,
+		FB_4_FRU_ID,
+		I2C_BUS1,
+		FB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+		true,
+		FB_1_4_MUX_ADDR,
+		PCA9546A_CHANNEL_3,
+	},
+	{
+		NV_ATMEL_24C02,
+		FB_5_FRU_ID,
+		I2C_BUS2,
+		FB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+		true,
+		FB_5_8_MUX_ADDR,
+		PCA9546A_CHANNEL_0,
+	},
+	{
+		NV_ATMEL_24C02,
+		FB_6_FRU_ID,
+		I2C_BUS2,
+		FB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+		true,
+		FB_5_8_MUX_ADDR,
+		PCA9546A_CHANNEL_1,
+	},
+	{
+		NV_ATMEL_24C02,
+		FB_7_FRU_ID,
+		I2C_BUS2,
+		FB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+		true,
+		FB_5_8_MUX_ADDR,
+		PCA9546A_CHANNEL_2,
+	},
+	{
+		NV_ATMEL_24C02,
+		FB_8_FRU_ID,
+		I2C_BUS2,
+		FB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+		true,
+		FB_5_8_MUX_ADDR,
+		PCA9546A_CHANNEL_3,
+	},
+	{
+		NV_ATMEL_24C02,
+		FB_9_FRU_ID,
+		I2C_BUS6,
+		FB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+		true,
+		FB_9_12_MUX_ADDR,
+		PCA9546A_CHANNEL_0,
+	},
+	{
+		NV_ATMEL_24C02,
+		FB_10_FRU_ID,
+		I2C_BUS6,
+		FB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+		true,
+		FB_9_12_MUX_ADDR,
+		PCA9546A_CHANNEL_1,
+	},
+	{
+		NV_ATMEL_24C02,
+		FB_11_FRU_ID,
+		I2C_BUS6,
+		FB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+		true,
+		FB_9_12_MUX_ADDR,
+		PCA9546A_CHANNEL_2,
+	},
+	{
+		NV_ATMEL_24C02,
+		FB_12_FRU_ID,
+		I2C_BUS6,
+		FB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+		true,
+		FB_9_12_MUX_ADDR,
+		PCA9546A_CHANNEL_3,
+	},
+	{
+		NV_ATMEL_24C02,
+		FB_13_FRU_ID,
+		I2C_BUS7,
+		FB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+		true,
+		FB_13_14_MUX_ADDR,
+		PCA9546A_CHANNEL_0,
+	},
+	{
+		NV_ATMEL_24C02,
+		FB_14_FRU_ID,
+		I2C_BUS7,
+		FB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+		true,
+		FB_13_14_MUX_ADDR,
+		PCA9546A_CHANNEL_1,
+	},
 };
+
+modbus_fru_cfg modbus_FRUs[] = {
+	/* fru id, fru offset, fru field size(register),  modbus data addr  */
+	{ MB_FRU_ID, 0, 8, FRU_FB_PART_ADDR },
+	{ MB_FRU_ID, 8, 8, FRU_MFR_MODEL_ADDR },
+	{ MB_FRU_ID, 16, 4, FRU_MFR_DATE_ADDR },
+	{ MB_FRU_ID, 20, 8, FRU_MFR_SERIEL_ADDR },
+	{ MB_FRU_ID, 28, 4, FRU_WORKORDER_ADDR },
+	{ MB_FRU_ID, 32, 4, FRU_HW_REVISION_ADDR },
+	{ MB_FRU_ID, 36, 4, FRU_FW_REVISION_ADDR },
+	{ MB_FRU_ID, 40, 2, FRU_TOTAL_UP_TIME_ADDR },
+	{ MB_FRU_ID, 42, 2, FRU_LAST_ON_TIME_ADDR },
+	{ MB_FRU_ID, 44, 4, FRU_HMI_REVISION_ADDR },
+	{ MB_FRU_ID, 48, 4, FRU_NOAH_ARK_CONFIG_ADDR },
+	{ MB_FRU_ID, 52, 4, FRU_HEATEXCHANGER_CONTROLBOX_FPBN_ADDR },
+	{ MB_FRU_ID, 56, 4, FRU_QUANTA_FB_PART_ADDR},		
+};
+
+uint8_t modbus_read_fruid_data(uint16_t *data, uint16_t addr, uint16_t callback_num)
+{
+	uint8_t status;
+	EEPROM_ENTRY fru_entry;
+
+	uint8_t fru_length = ARRAY_SIZE(modbus_FRUs);
+	for (uint8_t index = 0; index < fru_length; index++) {
+		if (modbus_FRUs[index].field_addr == addr) {
+			if ((modbus_FRUs[index].field_size * 2) != sizeof(*data)) {
+				 return MODBUS_READ_WRITE_REGISTER_FAIL;
+			}			
+			fru_entry.config.dev_id = modbus_FRUs[index].fru_id;
+			fru_entry.offset = modbus_FRUs[index].field_offset * 2;
+			fru_entry.data_len = modbus_FRUs[index].field_size * 2;
+			callback_num = modbus_FRUs[index].field_size;
+			break;
+		}
+	}
+
+	status = FRU_read(&fru_entry);
+	memcpy(data, &fru_entry.data[0], fru_entry.data_len);
+
+    return status; 
+}
+
+uint8_t modbus_write_fruid_data(uint16_t *data, uint16_t addr)
+{
+
+	uint8_t status;
+	EEPROM_ENTRY fru_entry;
+
+	uint8_t fru_length = ARRAY_SIZE(modbus_FRUs);
+	for (uint8_t index = 0; index < fru_length; index++) {
+		if (modbus_FRUs[index].field_addr == addr) {
+			if ((modbus_FRUs[index].field_size * 2) != sizeof(*data)) {
+				 return MODBUS_READ_WRITE_REGISTER_FAIL;
+			}
+
+			fru_entry.config.dev_id = modbus_FRUs[index].fru_id;
+			fru_entry.offset = modbus_FRUs[index].field_offset * 2;
+			fru_entry.data_len = modbus_FRUs[index].field_size * 2;
+			break;
+		}
+	}
+
+	memcpy(&fru_entry.data[0], data, fru_entry.data_len);
+
+	status = FRU_write(&fru_entry);
+
+	return status;
+}
+
+uint8_t fru_field_datasize(uint16_t addr) {
+		uint8_t fru_length = ARRAY_SIZE(modbus_FRUs);
+		for (uint8_t index = 0; index < fru_length; index++) {
+			if (modbus_FRUs[index].field_addr == addr) {
+				return modbus_FRUs[index].field_size;
+			}
+		}
+		return 0;
+}
 
 void pal_load_fru_config(void)
 {
