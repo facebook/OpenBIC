@@ -83,17 +83,17 @@ void gpio_int_default();
 #define name_gpioG	\
 	gpio_name_to_num(Reserve_GPIOG0) \
 	gpio_name_to_num(Reserve_GPIOG1) \
-	gpio_name_to_num(Reserve_GPIOG2) \
-	gpio_name_to_num(Reserve_GPIOG3) \
-	gpio_name_to_num(Reserve_GPIOG4) \
-	gpio_name_to_num(Reserve_GPIOG5) \
-	gpio_name_to_num(Reserve_GPIOG6) \
-	gpio_name_to_num(Reserve_GPIOG7)
+	gpio_name_to_num(BIC_RPU_READY0) \
+	gpio_name_to_num(IT_LEAK_ALERT0_R) \
+	gpio_name_to_num(RJ45_CONN0_GPIO0_R) \
+	gpio_name_to_num(RJ45_CONN0_GPIO1_R) \
+	gpio_name_to_num(RJ45_CONN0_GPIO2_R) \
+	gpio_name_to_num(BIC_RPU_READY1)
 #define name_gpioH	\
-	gpio_name_to_num(Reserve_GPIOH0) \
-	gpio_name_to_num(Reserve_GPIOH1) \
-	gpio_name_to_num(Reserve_GPIOH2) \
-	gpio_name_to_num(Reserve_GPIOH3) \
+	gpio_name_to_num(IT_LEAK_ALERT1_R) \
+	gpio_name_to_num(RJ45_CONN1_GPIO0_R) \
+	gpio_name_to_num(RJ45_CONN1_GPIO1_R) \
+	gpio_name_to_num(RJ45_CONN1_GPIO2_R) \
 	gpio_name_to_num(Reserve_GPIOH4) \
 	gpio_name_to_num(Reserve_GPIOH5) \
 	gpio_name_to_num(Reserve_GPIOH6) \
@@ -149,38 +149,38 @@ void gpio_int_default();
 	gpio_name_to_num(Reserve_GPION1) \
 	gpio_name_to_num(Reserve_GPION2) \
 	gpio_name_to_num(Reserve_GPION3) \
-	gpio_name_to_num(Reserve_GPION4) \
-	gpio_name_to_num(Reserve_GPION5) \
-	gpio_name_to_num(Reserve_GPION6) \
-	gpio_name_to_num(Reserve_GPION7)
+	gpio_name_to_num(USB_DEBUG_RST_BTN_R_N) \
+	gpio_name_to_num(USB_DEBUG_PWR_BTN_R_N) \
+	gpio_name_to_num(P12V_BRICK_ALERT_LF_R) \
+	gpio_name_to_num(P48V_BRI_STBY_FAULT)
 #define name_gpioO	\
 	gpio_name_to_num(Reserve_GPIOO0) \
 	gpio_name_to_num(Reserve_GPIOO1) \
 	gpio_name_to_num(Reserve_GPIOO2) \
 	gpio_name_to_num(Reserve_GPIOO3) \
-	gpio_name_to_num(Reserve_GPIOO4) \
-	gpio_name_to_num(Reserve_GPIOO5) \
-	gpio_name_to_num(Reserve_GPIOO6) \
-	gpio_name_to_num(Reserve_GPIOO7)
+	gpio_name_to_num(BIC_RPU_READY2) \
+	gpio_name_to_num(IT_LEAK_ALERT2_R) \
+	gpio_name_to_num(RJ45_CONN2_GPIO0_R) \
+	gpio_name_to_num(RJ45_CONN2_GPIO1_R)
 #define name_gpioP	\
-	gpio_name_to_num(Reserve_GPIOP0) \
+	gpio_name_to_num(RJ45_CONN2_GPIO2_R) \
 	gpio_name_to_num(Reserve_GPIOP1) \
 	gpio_name_to_num(Reserve_GPIOP2) \
 	gpio_name_to_num(Reserve_GPIOP3) \
 	gpio_name_to_num(Reserve_GPIOP4) \
 	gpio_name_to_num(Reserve_GPIOP5) \
-	gpio_name_to_num(Reserve_GPIOP6) \
+	gpio_name_to_num(BIC_RCVR_BTN_N) \
 	gpio_name_to_num(Reserve_GPIOP7)
 // GPIOQ5 hardware not define
 #define name_gpioQ	\
-	gpio_name_to_num(Reserve_GPIOQ0) \
-	gpio_name_to_num(Reserve_GPIOQ1) \
-	gpio_name_to_num(Reserve_GPIOQ2) \
-	gpio_name_to_num(Reserve_GPIOQ3) \
-	gpio_name_to_num(Reserve_GPIOQ4) \
+	gpio_name_to_num(BIC_RPU_READY3) \
+	gpio_name_to_num(IT_LEAK_ALERT3_R) \
+	gpio_name_to_num(RJ45_CONN3_GPIO0_R) \
+	gpio_name_to_num(RJ45_CONN3_GPIO1_R) \
+	gpio_name_to_num(RJ45_CONN3_GPIO2_R) \
 	gpio_name_to_num(Reserve_GPIOQ5) \
 	gpio_name_to_num(Reserve_GPIOQ6) \
-	gpio_name_to_num(Reserve_GPIOQ7)
+	gpio_name_to_num(FM_BIC_READY_R_N)
 #define name_gpioR	\
 	gpio_name_to_num(Reserve_GPIOR0) \
 	gpio_name_to_num(Reserve_GPIOR1) \
