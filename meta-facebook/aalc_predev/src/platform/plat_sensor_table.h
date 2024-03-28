@@ -208,7 +208,7 @@
 #define SENSOR_NUM_PB_3_HUM_PCT_RH 0x9D
 #define SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_1 0x9E
 #define SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_2 0x9F
-#define SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_3 0xA0
+
 
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
