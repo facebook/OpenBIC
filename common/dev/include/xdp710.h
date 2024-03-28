@@ -18,7 +18,7 @@
 #define ADM1272_H
 
 enum XDP710_VSNS_CS {
-	VSNS_CS_12dot5,
+	VSNS_CS_12_5,
 	VSNS_CS_25,
 	VSNS_CS_50,
 	VSNS_CS_100,
