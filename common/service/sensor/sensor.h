@@ -778,7 +778,7 @@ typedef struct _hdc1080_init_arg {
 
 typedef struct _nct214_init_arg {
 	bool is_init;
-	uint8_t Configuration_Register;
+	uint8_t configuration_register;
 } nct214_init_arg;
 
 typedef struct _ast_tach_init_arg {
