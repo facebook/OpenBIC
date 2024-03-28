@@ -14,37 +14,14 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
-#include "hal_gpio.h"
-#include "plat_pwm.h"
-#include <logging/log.h>
-#include "plat_class.h"
-#include "plat_modbus.h"
+#ifndef ADM1272_H
+#define ADM1272_H
 
-LOG_MODULE_REGISTER(plat_init);
+enum XDP710_VSNS_CS {
+	VSNS_CS_12_5,
+	VSNS_CS_25,
+	VSNS_CS_50,
+	VSNS_CS_100,
+};
 
-#define DEF_PROJ_GPIO_PRIORITY 78
-
-void pal_pre_init()
-{
-	init_aalc_config();
-}
-
-void pal_post_init()
-{
-	init_pwm_dev();
-	modbus_server_handler_init();
-}
-
-void pal_device_init()
-{
-	return;
-}
-
-void pal_set_sys_status()
-{
-	return;
-}
-
-DEVICE_DEFINE(PRE_DEF_PROJ_GPIO, "PRE_DEF_PROJ_GPIO_NAME", &gpio_init, NULL, NULL, NULL,
-	      POST_KERNEL, DEF_PROJ_GPIO_PRIORITY, NULL);
+#endif

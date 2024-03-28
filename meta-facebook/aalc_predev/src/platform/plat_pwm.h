@@ -16,5 +16,5 @@
 
 #define PWM_PORT0 0
 
-void ast_pwm_init(void);
-int ast_pwm_set(uint8_t idx, int duty);
+void init_pwm_dev(void);
+int ast_pwm_set(int duty);
