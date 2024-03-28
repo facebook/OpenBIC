@@ -28,7 +28,7 @@ uint8_t xdp710_read(sensor_cfg *cfg, int *reading)
 	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_UNSPECIFIED_ERROR);
 
 	if (cfg->num > SENSOR_NUM_MAX) {
-		LOG_ERR("sensor number out of range.");
+		LOG_ERR("Sensor number out of range.");
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
