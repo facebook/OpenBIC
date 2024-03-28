@@ -129,8 +129,9 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(ads112c)
 	sensor_name_to_num(nct7363)
 	sensor_name_to_num(hdc1080)
-	sensor_name_to_num(nct214)
 	sensor_name_to_num(ast_tach)
+	sensor_name_to_num(xdp710)
+	sensor_name_to_num(nct214)    
 };
 // clang-format on
 
@@ -193,8 +194,9 @@ SENSOR_DRIVE_INIT_DECLARE(max11617);
 SENSOR_DRIVE_INIT_DECLARE(ads112c);
 SENSOR_DRIVE_INIT_DECLARE(nct7363);
 SENSOR_DRIVE_INIT_DECLARE(hdc1080);
-SENSOR_DRIVE_INIT_DECLARE(nct214);
 SENSOR_DRIVE_INIT_DECLARE(ast_tach);
+SENSOR_DRIVE_INIT_DECLARE(xdp710);
+SENSOR_DRIVE_INIT_DECLARE(nct214);
 
 // The sequence needs to same with SENSOR_DEV ID
 sensor_drive_api sensor_drive_tbl[] = {
@@ -247,7 +249,8 @@ sensor_drive_api sensor_drive_tbl[] = {
 	SENSOR_DRIVE_TYPE_UNUSE(vistara),
 #endif
 	SENSOR_DRIVE_TYPE_INIT_MAP(max11617),	SENSOR_DRIVE_TYPE_INIT_MAP(nct7363),
-	SENSOR_DRIVE_TYPE_INIT_MAP(ast_tach),SENSOR_DRIVE_TYPE_INIT_MAP(nct214),
+	SENSOR_DRIVE_TYPE_INIT_MAP(xdp710), SENSOR_DRIVE_TYPE_INIT_MAP(ast_tach),
+  SENSOR_DRIVE_TYPE_INIT_MAP(nct214),
 };
 
 static void init_sensor_num(void)
