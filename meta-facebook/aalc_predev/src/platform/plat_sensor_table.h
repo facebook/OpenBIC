@@ -38,6 +38,10 @@
 #define SB_TMP461_2_ADDR (0x92 >> 1)
 #define SB_TMP461_3_ADDR (0x94 >> 1)
 #define SB_TMP461_4_ADDR (0x96 >> 1)
+#define SB_NCT214_1_ADDR (0x30 >> 1)
+#define SB_NCT214_2_ADDR (0x52 >> 1)
+#define SB_NCT214_3_ADDR (0x98 >> 1)
+#define SB_NCT214_4_ADDR (0x32 >> 1)
 #define FB_ADM1272_ADDR (0x22 >> 1)
 #define PB_ADM1272_ADDR (0x24 >> 1)
 

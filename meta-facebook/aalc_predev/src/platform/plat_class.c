@@ -19,11 +19,20 @@
 #include "plat_class.h"
 #include <logging/log.h>
 
-static uint8_t hsc_module = HSC_MODULE_ADM1272;
-
+static uint8_t hsc_module = 0;
+static uint8_t temp_module = 0;
+void init_aalc_config()
+{
+	hsc_module = HSC_MODULE_ADM1272; // user can change hsc module here
+	temp_module = SB_TMP461; // user can change temp module here
+}
 uint8_t get_hsc_module()
 {
 	return hsc_module;
 }
 
+uint8_t get_temp_module()
+{
+	return temp_module;
+}
 LOG_MODULE_REGISTER(plat_class);

@@ -18,33 +18,31 @@
 #include "hal_gpio.h"
 #include "plat_pwm.h"
 #include <logging/log.h>
+#include "plat_class.h"
 #include "plat_modbus.h"
 
 LOG_MODULE_REGISTER(plat_init);
-
+void pal_pre_init()
+{
+	init_aalc_config();
+}
 #define DEF_PROJ_GPIO_PRIORITY 78
 
- void pal_pre_init()
-{
-	return;
-}
-
- void pal_post_init()
+void pal_post_init()
 {
 	ast_pwm_init();
 	modbus_server_handler_init();
 }
 
- void pal_device_init()
+void pal_device_init()
 {
 	return;
 }
 
- void pal_set_sys_status()
+void pal_set_sys_status()
 {
 	return;
 }
-
 
 DEVICE_DEFINE(PRE_DEF_PROJ_GPIO, "PRE_DEF_PROJ_GPIO_NAME", &gpio_init, NULL, NULL, NULL,
 	      POST_KERNEL, DEF_PROJ_GPIO_PRIORITY, NULL);
