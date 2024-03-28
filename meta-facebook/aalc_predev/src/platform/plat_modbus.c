@@ -32,9 +32,10 @@ K_KERNEL_STACK_MEMBER(modbus_server_thread_stack, MODBUS_SERVER_THREAD_SIZE);
 
 static char server_iface_name[] = "MODBUS0";
 //{DT_PROP(DT_INST(1, zephyr_modbus_serial), label)};
-static uint16_t holding_reg[16];
-static uint16_t tmpreading[16];
-static uint8_t callback_num = 0;
+static uint16_t regs_wr[16];
+static uint16_t regs_rd[16];
+static uint8_t cb_num;
+static uint16_t cb_addr[2];
 
 modbus_sensor_cfg plat_modbus_sensors[] = {
 	/* sensor number,  modbus data addr  */
@@ -44,16 +45,15 @@ modbus_sensor_cfg plat_modbus_sensors[] = {
 
 static int holding_reg_rd(uint16_t addr, uint16_t *reg)
 {
-	if (callback_num > 0) {
-		*reg = tmpreading[callback_num - 1];
-		callback_num--;
-		if (callback_num == 0) {
-			memset(tmpreading, 0, sizeof(tmpreading));
-		}
+	if (cb_num > 0 && (addr > cb_addr[0] && addr <= cb_addr[1])) {
+		*reg = regs_rd[cb_num - 1];
+		cb_num--;
 		return MODBUS_READ_WRITE_REGISTER_SUCCESS;
-	} else if (callback_num < 0) {
-		return MODBUS_READ_WRITE_REGISTER_FAIL;
 	}
+
+	cb_num = 0;
+	memset(&cb_addr, 0, sizeof(cb_addr));
+	memset(&regs_rd, 0, sizeof(regs_rd));
 
 	if (addr < 0x9200) { // sensor addr is less than 0x9200
 		int reading = 0;
@@ -68,12 +68,12 @@ static int holding_reg_rd(uint16_t addr, uint16_t *reg)
 				if (status ==
 				    SENSOR_READ_SUCCESS) { //reading type is int(4Bytes = 2 registers)
 					*reg = reading & 0x0000FFFF;
-					callback_num = sizeof(reading) - 1;
-					tmpreading[0] = (reading >> 8) >> 8;
+					cb_num = sizeof(reading) - 1;
+					cb_addr[1] = addr + cb_num;
+					cb_addr[0] = addr;
+					regs_rd[0] = (reading >> 8) >> 8;
 					return MODBUS_READ_WRITE_REGISTER_SUCCESS;
 				} else {
-					memset(tmpreading, 0, sizeof(tmpreading));
-					callback_num = 0;
 					LOG_ERR("Read Modbus Sensor failed");
 					return MODBUS_READ_WRITE_REGISTER_FAIL;
 				}
@@ -90,14 +90,16 @@ static int holding_reg_rd(uint16_t addr, uint16_t *reg)
 		case FRU_MFR_DATE_ADDR:
 		case FRU_MFR_SERIEL_ADDR:
 		case MODBUS_POWER_RPU_ADDR:
-			status = modbus_read_fruid_data(tmpreading, addr, callback_num);
+			status = modbus_read_fruid_data(regs_rd, addr, cb_num);
 			if (status == FRU_READ_SUCCESS) {
-				*reg = tmpreading[callback_num - 1];
-				callback_num--;
+				*reg = regs_rd[cb_num - 1];
+				cb_num--;
+				cb_addr[1] = addr + cb_num;
+				cb_addr[0] = addr;
 				return MODBUS_READ_WRITE_REGISTER_SUCCESS;
 			} else {
-				memset(tmpreading, 0, sizeof(tmpreading));
-				callback_num = 0;
+				memset(&regs_rd, 0, sizeof(regs_rd));
+				cb_num = 0;
 				return MODBUS_READ_WRITE_REGISTER_FAIL;
 			}
 		default:
@@ -109,17 +111,19 @@ static int holding_reg_rd(uint16_t addr, uint16_t *reg)
 
 		return MODBUS_READ_WRITE_REGISTER_SUCCESS;
 	}
+
+	LOG_ERR("Wrong Modbus Sensor Addr");
+	return MODBUS_ADDR_NOT_DEFINITION;
 }
 
 static int holding_reg_wr(uint16_t addr, uint16_t reg)
 {
 	uint8_t status = 0;
-	if (callback_num > 0) {
-		holding_reg[callback_num - 1] = reg;
-		callback_num--;
-		if (callback_num == 0) {
-			status = modbus_write_fruid_data(holding_reg, addr);
-			memset(&holding_reg, 0, sizeof(holding_reg));
+	if (cb_num > 0 && (addr > cb_addr[0] && addr <= cb_addr[1])) {
+		regs_wr[cb_num - 1] = reg;
+		cb_num--;
+		if (cb_num == 0) {
+			status = modbus_write_fruid_data(regs_wr, addr);
 			if (status == FRU_WRITE_SUCCESS) {
 				return MODBUS_READ_WRITE_REGISTER_SUCCESS;
 			} else {
@@ -127,9 +131,11 @@ static int holding_reg_wr(uint16_t addr, uint16_t reg)
 			}
 		}
 		return MODBUS_READ_WRITE_REGISTER_SUCCESS;
-	} else if (callback_num < 0) {
-		return MODBUS_READ_WRITE_REGISTER_FAIL;
 	}
+
+	cb_num = 0;
+	memset(&cb_addr, 0, sizeof(cb_addr));
+	memset(&regs_rd, 0, sizeof(regs_rd));	
 
 	switch (addr) {
 	case FRU_FB_PART_ADDR:
@@ -137,13 +143,15 @@ static int holding_reg_wr(uint16_t addr, uint16_t reg)
 	case FRU_MFR_DATE_ADDR:
 	case FRU_MFR_SERIEL_ADDR:
 	case MODBUS_POWER_RPU_ADDR:
-		callback_num = fru_field_datasize(addr);
-		if (callback_num > 0) {
-			holding_reg[callback_num - 1] = reg;
-			callback_num--;
+		cb_num = fru_field_datasize(addr);
+		if (cb_num > 0) {
+			regs_wr[cb_num - 1] = reg;
+			cb_num--;
+			cb_addr[1] = addr + cb_num;
+			cb_addr[0] = addr;			
 			return MODBUS_READ_WRITE_REGISTER_SUCCESS;
 		} else {
-			callback_num = 0;
+			cb_num = 0;
 			return MODBUS_READ_WRITE_REGISTER_FAIL;
 		}
 
@@ -152,9 +160,8 @@ static int holding_reg_wr(uint16_t addr, uint16_t reg)
 		return MODBUS_READ_WRITE_REGISTER_FAIL;
 	}
 
-	holding_reg[addr] = reg;
-
-	return MODBUS_READ_WRITE_REGISTER_SUCCESS;
+	LOG_ERR("Wrong Modbus Sensor Addr");
+	return MODBUS_ADDR_NOT_DEFINITION;
 }
 
 static struct modbus_user_callbacks mbs_cbs = {
