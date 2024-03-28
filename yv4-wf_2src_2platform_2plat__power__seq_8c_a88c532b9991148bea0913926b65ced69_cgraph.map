@@ -1,0 +1,9 @@
+<map id="cxl_ready_handler" name="cxl_ready_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,131,83"/>
+<area shape="rect" id="node2" href="$yv4-wf_2src_2platform_2plat__gpio_8c.html#a49fcac8a9cff9b16dbba2845722cf9ec" title=" " alt="" coords="203,5,305,32"/>
+<area shape="rect" id="node5" href="$yv4-wf_2src_2platform_2plat__gpio_8c.html#a43019cd492c200adbe11065b5b69a4d5" title=" " alt="" coords="203,56,305,83"/>
+<area shape="rect" id="node7" href="$power__status_8c.html#aabc3ff81629af1ec305612399750fbcc" title=" " alt="" coords="179,107,329,133"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="379,5,497,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="547,31,689,57"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="377,56,499,83"/>
+</map>

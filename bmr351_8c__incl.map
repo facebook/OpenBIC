@@ -1,0 +1,23 @@
+<map id="common/dev/bmr351.c" name="common/dev/bmr351.c">
+<area shape="rect" id="node1" title=" " alt="" coords="369,5,524,32"/>
+<area shape="rect" id="node2" title=" " alt="" coords="181,393,241,420"/>
+<area shape="rect" id="node3" title=" " alt="" coords="183,80,247,107"/>
+<area shape="rect" id="node4" title=" " alt="" coords="271,80,366,107"/>
+<area shape="rect" id="node5" href="$sensor_8h.html" title=" " alt="" coords="369,162,439,189"/>
+<area shape="rect" id="node11" href="$libutil_8h.html" title=" " alt="" coords="543,244,606,271"/>
+<area shape="rect" id="node14" href="$hal__i2c_8h.html" title=" " alt="" coords="601,319,674,345"/>
+<area shape="rect" id="node19" href="$pmbus_8h.html" title=" " alt="" coords="695,80,766,107"/>
+<area shape="rect" id="node21" href="$util__pmbus_8h.html" title=" " alt="" coords="442,80,537,107"/>
+<area shape="rect" id="node6" title=" " alt="" coords="276,319,351,345"/>
+<area shape="rect" id="node7" title=" " alt="" coords="383,319,447,345"/>
+<area shape="rect" id="node8" title=" " alt="" coords="452,244,519,271"/>
+<area shape="rect" id="node9" title=" " alt="" coords="43,244,122,271"/>
+<area shape="rect" id="node10" href="$sdr_8h.html" title=" " alt="" coords="327,244,377,271"/>
+<area shape="rect" id="node17" href="$sensor__shell_8h.html" title=" " alt="" coords="146,244,251,271"/>
+<area shape="rect" id="node12" href="$ipmb_8h.html" title=" " alt="" coords="485,319,545,345"/>
+<area shape="rect" id="node13" title=" " alt="" coords="469,393,561,420"/>
+<area shape="rect" id="node15" title=" " alt="" coords="587,393,679,420"/>
+<area shape="rect" id="node16" title=" " alt="" coords="703,393,862,420"/>
+<area shape="rect" id="node18" title=" " alt="" coords="153,319,244,345"/>
+<area shape="rect" id="node20" title=" " alt="" coords="682,155,806,196"/>
+</map>

@@ -1,0 +1,17 @@
+<map id="common/service/sensor/sensor.h" name="common/service/sensor/sensor.h">
+<area shape="rect" id="node1" title=" " alt="" coords="173,5,334,47"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,169,80,196"/>
+<area shape="rect" id="node3" title=" " alt="" coords="239,169,303,196"/>
+<area shape="rect" id="node4" title=" " alt="" coords="123,95,189,121"/>
+<area shape="rect" id="node5" title=" " alt="" coords="214,95,293,121"/>
+<area shape="rect" id="node6" href="$sdr_8h.html" title=" " alt="" coords="48,95,99,121"/>
+<area shape="rect" id="node7" href="$libutil_8h.html" title=" " alt="" coords="369,95,431,121"/>
+<area shape="rect" id="node14" href="$sensor__shell_8h.html" title=" " alt="" coords="497,95,602,121"/>
+<area shape="rect" id="node8" href="$ipmb_8h.html" title=" " alt="" coords="454,169,514,196"/>
+<area shape="rect" id="node11" href="$hal__i2c_8h.html" title=" " alt="" coords="327,169,401,196"/>
+<area shape="rect" id="node9" title=" " alt="" coords="453,244,545,271"/>
+<area shape="rect" id="node10" title=" " alt="" coords="569,244,629,271"/>
+<area shape="rect" id="node12" title=" " alt="" coords="154,244,246,271"/>
+<area shape="rect" id="node13" title=" " alt="" coords="270,244,429,271"/>
+<area shape="rect" id="node15" title=" " alt="" coords="539,169,629,196"/>
+</map>

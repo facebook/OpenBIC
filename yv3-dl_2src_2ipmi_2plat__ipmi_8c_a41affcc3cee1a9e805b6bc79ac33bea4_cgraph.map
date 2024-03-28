@@ -1,0 +1,8 @@
+<map id="OEM_1S_GET_SET_GPIO" name="OEM_1S_GET_SET_GPIO">
+<area shape="rect" id="node1" title=" " alt="" coords="5,82,184,108"/>
+<area shape="rect" id="node2" href="$hal__gpio_8c.html#aba20fe1f621c6477f568ea944e37f5c4" title=" " alt="" coords="411,82,489,108"/>
+<area shape="rect" id="node3" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="262,31,333,58"/>
+<area shape="rect" id="node4" href="$hal__gpio_8c.html#a4d458f50b4d444eaf62350b6e1dcdb4c" title=" " alt="" coords="234,82,361,108"/>
+<area shape="rect" id="node5" href="$oem__1s__handler_8c.html#a62e416f7945bd41253b0bebd3f3fe8ec" title=" " alt="" coords="232,132,363,159"/>
+<area shape="rect" id="node6" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="262,183,333,210"/>
+</map>

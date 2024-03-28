@@ -1,0 +1,9 @@
+<map id="smi_handler" name="smi_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,97,57"/>
+<area shape="rect" id="node2" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="186,5,257,32"/>
+<area shape="rect" id="node3" href="$gt-cc_2src_2platform_2plat__mctp_8c.html#a998a1c1d667b48c6de3aef50f5dc86aa" title=" " alt="" coords="145,56,297,83"/>
+<area shape="rect" id="node4" href="$at-cb_2src_2platform_2plat__mctp_8c.html#aa91b2fdee8959aa54116d3b9b3b6c031" title=" " alt="" coords="345,5,489,32"/>
+<area shape="rect" id="node5" href="$pldm_8c.html#a90114495fe7507fbfbdcd388f02911aa" title=" " alt="" coords="358,56,477,83"/>
+<area shape="rect" id="node7" href="$pldm__oem_8c.html#acdcd72cd46e1f10b7be19781bb1b9866" title=" " alt="" coords="382,107,453,133"/>
+<area shape="rect" id="node6" href="$pldm_8c.html#a41d615349cd666a0f5372f4f4f0c9507" title=" " alt="" coords="537,56,700,83"/>
+</map>

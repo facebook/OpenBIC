@@ -1,0 +1,12 @@
+<map id="start_get_dimm_info_thread" name="start_get_dimm_info_thread">
+<area shape="rect" id="node1" title=" " alt="" coords="5,74,145,115"/>
+<area shape="rect" id="node2" href="$yv35-cl_2src_2platform_2plat__dimm_8c.html#a792c9e629ce4059455353c138f8166ed" title=" " alt="" coords="193,81,349,108"/>
+<area shape="rect" id="node3" href="$power__status_8c.html#abeff55e3cd2e8563760154b81f37f286" title=" " alt="" coords="417,5,532,32"/>
+<area shape="rect" id="node4" href="$yv35-cl_2src_2platform_2plat__dimm_8c.html#a6f1e0fbcc1ab1855ed89593cfa22efcf" title=" " alt="" coords="423,56,526,83"/>
+<area shape="rect" id="node6" href="$yv35-cl_2src_2platform_2plat__dimm_8c.html#a4ffd699f3653c33f5780335f085254ff" title=" " alt="" coords="410,107,539,133"/>
+<area shape="rect" id="node9" href="$yv35-cl_2src_2platform_2plat__dimm_8c.html#af33feea8a08ae270156e7128f4b3f04f" title=" " alt="" coords="397,157,552,184"/>
+<area shape="rect" id="node5" href="$hal__i3c_8c.html#af83165cbbc94536c7af28d58bc801a29" title=" " alt="" coords="619,56,702,83"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="601,107,720,133"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="769,132,912,159"/>
+<area shape="rect" id="node10" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="600,157,721,184"/>
+</map>

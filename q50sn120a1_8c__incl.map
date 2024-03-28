@@ -1,0 +1,23 @@
+<map id="common/dev/q50sn120a1.c" name="common/dev/q50sn120a1.c">
+<area shape="rect" id="node1" title=" " alt="" coords="555,5,736,32"/>
+<area shape="rect" id="node2" title=" " alt="" coords="187,393,247,420"/>
+<area shape="rect" id="node3" title=" " alt="" coords="683,80,747,107"/>
+<area shape="rect" id="node4" title=" " alt="" coords="771,80,866,107"/>
+<area shape="rect" id="node5" href="$sensor_8h.html" title=" " alt="" coords="409,162,479,189"/>
+<area shape="rect" id="node14" href="$hal__i2c_8h.html" title=" " alt="" coords="609,319,682,345"/>
+<area shape="rect" id="node19" href="$pmbus_8h.html" title=" " alt="" coords="890,80,961,107"/>
+<area shape="rect" id="node21" href="$util__pmbus_8h.html" title=" " alt="" coords="413,80,507,107"/>
+<area shape="rect" id="node6" title=" " alt="" coords="252,319,327,345"/>
+<area shape="rect" id="node7" title=" " alt="" coords="424,319,488,345"/>
+<area shape="rect" id="node8" title=" " alt="" coords="224,244,291,271"/>
+<area shape="rect" id="node9" title=" " alt="" coords="315,244,394,271"/>
+<area shape="rect" id="node10" href="$sdr_8h.html" title=" " alt="" coords="419,244,469,271"/>
+<area shape="rect" id="node11" href="$libutil_8h.html" title=" " alt="" coords="545,244,607,271"/>
+<area shape="rect" id="node17" href="$sensor__shell_8h.html" title=" " alt="" coords="43,244,149,271"/>
+<area shape="rect" id="node12" href="$ipmb_8h.html" title=" " alt="" coords="513,319,573,345"/>
+<area shape="rect" id="node13" title=" " alt="" coords="483,393,575,420"/>
+<area shape="rect" id="node15" title=" " alt="" coords="599,393,691,420"/>
+<area shape="rect" id="node16" title=" " alt="" coords="715,393,874,420"/>
+<area shape="rect" id="node18" title=" " alt="" coords="51,319,141,345"/>
+<area shape="rect" id="node20" title=" " alt="" coords="863,155,987,196"/>
+</map>

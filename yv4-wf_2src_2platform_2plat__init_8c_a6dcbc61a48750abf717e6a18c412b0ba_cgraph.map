@@ -1,0 +1,10 @@
+<map id="pal_pre_init" name="pal_pre_init">
+<area shape="rect" id="node1" title=" " alt="" coords="5,81,93,108"/>
+<area shape="rect" id="node2" href="$yv4-wf_2src_2platform_2plat__gpio_8c.html#a49fcac8a9cff9b16dbba2845722cf9ec" title=" " alt="" coords="165,5,268,32"/>
+<area shape="rect" id="node5" href="$hal__i2c__target_8c.html#a0735e316a62a2116e6c3311aa8e9e9f8" title=" " alt="" coords="154,56,279,83"/>
+<area shape="rect" id="node7" href="$hal__gpio_8c.html#a1db4534c169d95721a020915d2e5fccf" title=" " alt="" coords="183,107,250,133"/>
+<area shape="rect" id="node8" href="$power__status_8c.html#aabc3ff81629af1ec305612399750fbcc" title=" " alt="" coords="141,157,292,184"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="354,5,473,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="535,5,677,32"/>
+<area shape="rect" id="node6" href="$hal__i2c__target_8c.html#a2f708033f90c1afa66581d9ca8a965fb" title=" " alt="" coords="340,56,487,83"/>
+</map>

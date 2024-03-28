@@ -1,0 +1,12 @@
+<map id="mctp_add_sel_to_ipmi" name="mctp_add_sel_to_ipmi">
+<area shape="rect" id="node1" title=" " alt="" coords="5,107,157,133"/>
+<area shape="rect" id="node2" href="$yv4-sd_2src_2platform_2plat__mctp_8c.html#a6c1e8decffe4d616e82fbec4d61ebf5e" title=" " alt="" coords="217,5,344,32"/>
+<area shape="rect" id="node3" href="$at-cb_2src_2platform_2plat__mctp_8c.html#aa91b2fdee8959aa54116d3b9b3b6c031" title=" " alt="" coords="209,56,353,83"/>
+<area shape="rect" id="node4" href="$pldm_8c.html#a90114495fe7507fbfbdcd388f02911aa" title=" " alt="" coords="221,107,340,133"/>
+<area shape="rect" id="node6" href="$mctp_8c.html#a5282477d38fe149b431e64bbd0f2d97e" title=" " alt="" coords="205,157,356,184"/>
+<area shape="rect" id="node10" href="$pldm__oem_8c.html#acdcd72cd46e1f10b7be19781bb1b9866" title=" " alt="" coords="245,208,316,235"/>
+<area shape="rect" id="node5" href="$pldm_8c.html#a41d615349cd666a0f5372f4f4f0c9507" title=" " alt="" coords="411,81,573,108"/>
+<area shape="rect" id="node7" href="$mctp_8c.html#a752227fc47b360aa40ef1cf681a383ca" title=" " alt="" coords="404,132,580,159"/>
+<area shape="rect" id="node8" href="$mctp_8c.html#a4c9ae739f05c8e45397f9d5863e504e0" title=" " alt="" coords="425,183,559,209"/>
+<area shape="rect" id="node9" href="$mctp_8c.html#a674999be3a58cb0d9b19893abb92d65f" title=" " alt="" coords="425,234,559,275"/>
+</map>

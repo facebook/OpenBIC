@@ -1,0 +1,19 @@
+<map id="common/dev/lm75bd118.c" name="common/dev/lm75bd118.c">
+<area shape="rect" id="node1" title=" " alt="" coords="256,5,431,32"/>
+<area shape="rect" id="node2" title=" " alt="" coords="313,304,373,331"/>
+<area shape="rect" id="node3" title=" " alt="" coords="211,80,305,107"/>
+<area shape="rect" id="node4" href="$libutil_8h.html" title=" " alt="" coords="381,155,444,181"/>
+<area shape="rect" id="node8" href="$hal__i2c_8h.html" title=" " alt="" coords="155,229,228,256"/>
+<area shape="rect" id="node11" href="$sensor_8h.html" title=" " alt="" coords="580,80,651,107"/>
+<area shape="rect" id="node5" title=" " alt="" coords="553,229,617,256"/>
+<area shape="rect" id="node6" href="$ipmb_8h.html" title=" " alt="" coords="383,229,443,256"/>
+<area shape="rect" id="node7" title=" " alt="" coords="397,304,489,331"/>
+<area shape="rect" id="node9" title=" " alt="" coords="5,304,97,331"/>
+<area shape="rect" id="node10" title=" " alt="" coords="121,304,280,331"/>
+<area shape="rect" id="node12" title=" " alt="" coords="649,229,723,256"/>
+<area shape="rect" id="node13" title=" " alt="" coords="878,155,945,181"/>
+<area shape="rect" id="node14" title=" " alt="" coords="468,155,547,181"/>
+<area shape="rect" id="node15" href="$sdr_8h.html" title=" " alt="" coords="622,155,673,181"/>
+<area shape="rect" id="node16" href="$sensor__shell_8h.html" title=" " alt="" coords="748,155,853,181"/>
+<area shape="rect" id="node17" title=" " alt="" coords="755,229,846,256"/>
+</map>

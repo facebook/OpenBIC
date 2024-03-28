@@ -1,0 +1,22 @@
+<map id="common/dev/max16550a.c" name="common/dev/max16550a.c">
+<area shape="rect" id="node1" title=" " alt="" coords="572,5,750,32"/>
+<area shape="rect" id="node2" title=" " alt="" coords="172,319,232,345"/>
+<area shape="rect" id="node3" title=" " alt="" coords="664,80,728,107"/>
+<area shape="rect" id="node4" href="$sensor_8h.html" title=" " alt="" coords="359,80,430,107"/>
+<area shape="rect" id="node13" href="$hal__i2c_8h.html" title=" " alt="" coords="596,244,670,271"/>
+<area shape="rect" id="node18" href="$pmbus_8h.html" title=" " alt="" coords="752,80,823,107"/>
+<area shape="rect" id="node20" title=" " alt="" coords="847,80,942,107"/>
+<area shape="rect" id="node5" title=" " alt="" coords="325,244,400,271"/>
+<area shape="rect" id="node6" title=" " alt="" coords="424,244,488,271"/>
+<area shape="rect" id="node7" title=" " alt="" coords="154,162,221,189"/>
+<area shape="rect" id="node8" title=" " alt="" coords="246,162,324,189"/>
+<area shape="rect" id="node9" href="$sdr_8h.html" title=" " alt="" coords="400,162,450,189"/>
+<area shape="rect" id="node10" href="$libutil_8h.html" title=" " alt="" coords="526,162,588,189"/>
+<area shape="rect" id="node16" href="$sensor__shell_8h.html" title=" " alt="" coords="24,162,130,189"/>
+<area shape="rect" id="node11" href="$ipmb_8h.html" title=" " alt="" coords="512,244,572,271"/>
+<area shape="rect" id="node12" title=" " alt="" coords="471,319,563,345"/>
+<area shape="rect" id="node14" title=" " alt="" coords="587,319,679,345"/>
+<area shape="rect" id="node15" title=" " alt="" coords="703,319,862,345"/>
+<area shape="rect" id="node17" title=" " alt="" coords="32,244,122,271"/>
+<area shape="rect" id="node19" title=" " alt="" coords="726,155,850,196"/>
+</map>

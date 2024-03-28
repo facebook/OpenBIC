@@ -1,0 +1,9 @@
+<map id="OEM_1S_GET_FW_VERSION" name="OEM_1S_GET_FW_VERSION">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,205,57"/>
+<area shape="rect" id="node2" href="$yv35-rf_2src_2platform_2plat__fru_8c.html#a5721bef9490ca8bc97779342477f066c" title=" " alt="" coords="253,31,365,57"/>
+<area shape="rect" id="node3" href="$eeprom_8c.html#af84d506534770494cca55b2db24730ba" title=" " alt="" coords="413,31,511,57"/>
+<area shape="rect" id="node4" href="$eeprom_8c.html#ac470cc411f066d8f6bc2c1d7a74c8a5a" title=" " alt="" coords="559,5,697,32"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="747,56,865,83"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="745,5,867,32"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="915,31,1057,57"/>
+</map>

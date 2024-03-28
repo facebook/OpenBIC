@@ -1,0 +1,25 @@
+<map id="meta&#45;facebook/yv35&#45;nf/src/platform/plat_sensor_table.c" name="meta&#45;facebook/yv35&#45;nf/src/platform/plat_sensor_table.c">
+<area shape="rect" id="node1" title=" " alt="" coords="479,5,618,61"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,348,65,375"/>
+<area shape="rect" id="node3" href="$sensor_8h.html" title=" " alt="" coords="369,109,440,136"/>
+<area shape="rect" id="node17" href="$ast__adc_8h.html" title=" " alt="" coords="633,191,712,218"/>
+<area shape="rect" id="node18" href="$pmbus_8h.html" title=" " alt="" coords="648,109,719,136"/>
+<area shape="rect" id="node20" href="$tmp461_8h.html" title=" " alt="" coords="549,109,623,136"/>
+<area shape="rect" id="node21" href="$yv35-nf_2src_2platform_2plat__i2c_8h.html" title=" " alt="" coords="203,109,281,136"/>
+<area shape="rect" id="node22" href="$yv35-nf_2src_2platform_2plat__hook_8h.html" title=" " alt="" coords="743,109,831,136"/>
+<area shape="rect" id="node23" href="$yv35-nf_2src_2platform_2plat__sensor__table_8h.html" title=" " alt="" coords="873,109,1008,136"/>
+<area shape="rect" id="node4" title=" " alt="" coords="543,273,618,300"/>
+<area shape="rect" id="node5" title=" " alt="" coords="642,273,706,300"/>
+<area shape="rect" id="node6" title=" " alt="" coords="363,191,430,218"/>
+<area shape="rect" id="node7" title=" " alt="" coords="455,191,533,218"/>
+<area shape="rect" id="node8" href="$sdr_8h.html" title=" " alt="" coords="558,191,609,218"/>
+<area shape="rect" id="node9" href="$libutil_8h.html" title=" " alt="" coords="225,191,288,218"/>
+<area shape="rect" id="node15" href="$sensor__shell_8h.html" title=" " alt="" coords="44,191,149,218"/>
+<area shape="rect" id="node10" href="$ipmb_8h.html" title=" " alt="" coords="159,273,219,300"/>
+<area shape="rect" id="node12" href="$hal__i2c_8h.html" title=" " alt="" coords="243,273,316,300"/>
+<area shape="rect" id="node11" title=" " alt="" coords="117,348,209,375"/>
+<area shape="rect" id="node13" title=" " alt="" coords="233,348,325,375"/>
+<area shape="rect" id="node14" title=" " alt="" coords="349,348,508,375"/>
+<area shape="rect" id="node16" title=" " alt="" coords="43,273,134,300"/>
+<area shape="rect" id="node19" title=" " alt="" coords="788,184,912,225"/>
+</map>

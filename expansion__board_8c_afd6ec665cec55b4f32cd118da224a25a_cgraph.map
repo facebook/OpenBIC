@@ -1,0 +1,5 @@
+<map id="init_platform_config" name="init_platform_config">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,140,57"/>
+<area shape="rect" id="node2" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="214,5,285,32"/>
+<area shape="rect" id="node3" href="$expansion__board_8c.html#af66fedc722e9e8c84c7563940e2ef678" title=" " alt="" coords="188,56,311,83"/>
+</map>

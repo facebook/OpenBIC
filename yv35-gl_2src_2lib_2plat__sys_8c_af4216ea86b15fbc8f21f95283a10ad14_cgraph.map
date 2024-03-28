@@ -1,0 +1,5 @@
+<map id="BMC_reset_handler" name="BMC_reset_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,5,141,32"/>
+<area shape="rect" id="node2" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="189,5,260,32"/>
+<area shape="rect" id="node3" href="$hal__gpio_8c.html#aba20fe1f621c6477f568ea944e37f5c4" title=" " alt="" coords="308,5,387,32"/>
+</map>

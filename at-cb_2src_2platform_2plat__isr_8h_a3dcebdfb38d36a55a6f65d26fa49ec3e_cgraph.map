@@ -1,0 +1,8 @@
+<map id="ISR_POWER_STATUS_CHANGE" name="ISR_POWER_STATUS_CHANGE">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,228,57"/>
+<area shape="rect" id="node2" href="$at-cb_2src_2platform_2plat__class_8c.html#ab792e5ab34dd1dbfd3988dbe68b3716e" title=" " alt="" coords="276,5,448,32"/>
+<area shape="rect" id="node3" href="$at-cb_2src_2platform_2plat__class_8c.html#a2f2cd33d9b8735a424a77494156450d4" title=" " alt="" coords="285,56,439,83"/>
+<area shape="rect" id="node4" href="$at-cb_2src_2platform_2plat__class_8c.html#a6a54497033563f8d0666943817d1e92a" title=" " alt="" coords="496,56,617,83"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="665,56,784,83"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="832,56,975,83"/>
+</map>

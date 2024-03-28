@@ -1,0 +1,46 @@
+var p3h284x_8h =
+[
+    [ "CP0_OFFSET", "p3h284x_8h.html#a3229579dbf60ab37a66e169054d2cc32", null ],
+    [ "CP1_OFFSET", "p3h284x_8h.html#a3bc4c5ced70113c704039f94559f6248", null ],
+    [ "CP_OD_ONLY", "p3h284x_8h.html#ada0dafaa7173a5f18b88799e3ebcb59a", null ],
+    [ "P3H284X_CONTROLLER_PORT_CONFIG", "p3h284x_8h.html#ac962c4e265326e87d3cc477d2d9df43d", null ],
+    [ "P3H284X_DEFAULT_STATIC_ADDRESS", "p3h284x_8h.html#ab08114e45e65f90b4fae33d23fe37834", null ],
+    [ "P3H284X_DEVICE_INFO0_REG", "p3h284x_8h.html#aa5d3228e15ee06e1cfee511beae9a43f", null ],
+    [ "P3H284X_DEVICE_INFO1_REG", "p3h284x_8h.html#aaebf9f500f0b7fbaff5754ebe9d950ab", null ],
+    [ "P3H284X_HUB_NETWORK_ALWAYS_I3C", "p3h284x_8h.html#aa08ffa1c7cd59cd0083f79dc1ac2efe9", null ],
+    [ "P3H284X_HUB_NETWORK_OPERATION_MODE", "p3h284x_8h.html#a9a6f3a74ae1659927c77edeae4286dd2", null ],
+    [ "P3H284X_PROTECTION_LOCK", "p3h284x_8h.html#a8fcf93eb7cfd88ddfcb8ae428ee31db7", null ],
+    [ "P3H284X_PROTECTION_REG", "p3h284x_8h.html#a07b72f2fe066b546193f1e6c3cb16973", null ],
+    [ "P3H284X_PROTECTION_UNLOCK", "p3h284x_8h.html#ab1e9ede3f06c6deed28cc4404ef01013", null ],
+    [ "P3H284X_SSPORTS_ALL_DISCONNECT", "p3h284x_8h.html#a2b49312c1e9bcbee4a4dc10ef3a4504d", null ],
+    [ "P3H284X_TARGET_PORT_ENABLE", "p3h284x_8h.html#a28ff6f3b6e95891d977d18137d472088", null ],
+    [ "P3H284X_TARGET_PORTS_AGENT_ENABLE", "p3h284x_8h.html#a9182b8fad5c9eefae33ba7c0e47df8b7", null ],
+    [ "P3H284X_TARGET_PORTS_GPIO_ENABLE", "p3h284x_8h.html#a8f3f7fe577bfe8136b70fe1eeb69a0d0", null ],
+    [ "P3H284X_TARGET_PORTS_MODE_SETTING", "p3h284x_8h.html#a377ad4e14f5a01fa455c5f145e7df254", null ],
+    [ "P3H284X_TARGET_PORTS_PULLUP_ENABLE", "p3h284x_8h.html#aa48a7196ce5ba434bd822e0eaabc58c6", null ],
+    [ "P3H284X_TARGET_PORTS_PULLUP_SETTING", "p3h284x_8h.html#a817b57b7ff1d0c2b4208825d23af8f57", null ],
+    [ "P3H284X_TARGET_PORTSHUB_NETWORK_CONNECTION", "p3h284x_8h.html#ab8e6f0f9fc88f8cf2574301b43fd617d", null ],
+    [ "P3H284X_VOLT_LDO_SETTING", "p3h284x_8h.html#a15556315c1847c41782abff8ee9b7220", null ],
+    [ "TARGET_PORTS_VCCIO0_PULLUP_OFFSET", "p3h284x_8h.html#ac4ef2399740fb33d0fe0fcf4235176e6", null ],
+    [ "TARGET_PORTS_VCCIO1_PULLUP_OFFSET", "p3h284x_8h.html#a3777e6642b3f044cdc97dcc0495adee4", null ],
+    [ "TP_VCCIO0_OFFSET", "p3h284x_8h.html#ad4bc5abdf9202811ec5d333730ef38f6", null ],
+    [ "TP_VCCIO1_OFFSET", "p3h284x_8h.html#a754a74ba4c4262f8403cb35192b742dc", null ],
+    [ "p3g284x_ldo_volt", "p3h284x_8h.html#a212ab5484bc1e7ebe4d99bf9c3745a1c", [
+      [ "p3g284x_ldo_1_0_volt", "p3h284x_8h.html#a212ab5484bc1e7ebe4d99bf9c3745a1cac06cb3424e8d6d14aaac15cfe182449c", null ],
+      [ "p3g284x_ldo_1_1_volt", "p3h284x_8h.html#a212ab5484bc1e7ebe4d99bf9c3745a1ca5776eaf78e10e2656be008b98e217bf1", null ],
+      [ "p3g284x_ldo_1_2_volt", "p3h284x_8h.html#a212ab5484bc1e7ebe4d99bf9c3745a1ca9a8b41a5341daf3d0e6efaafd6e97f68", null ],
+      [ "p3g284x_ldo_1_8_volt", "p3h284x_8h.html#a212ab5484bc1e7ebe4d99bf9c3745a1ca01b9b91b1a475327ed96e4ae8341287d", null ]
+    ] ],
+    [ "p3g284x_pull_up_resistor", "p3h284x_8h.html#a5ed0c124293146eb070391a087a42edb", [
+      [ "p3g284x_pullup_250_ohm", "p3h284x_8h.html#a5ed0c124293146eb070391a087a42edbaba4e343d22e95adbb80850e58c582020", null ],
+      [ "p3g284x_pullup_500_ohm", "p3h284x_8h.html#a5ed0c124293146eb070391a087a42edbad3d7fde05cb7c5ace7e1c33d0d3347fb", null ],
+      [ "p3g284x_pullup_1k_ohm", "p3h284x_8h.html#a5ed0c124293146eb070391a087a42edba9da15072ad7fbd24c81cb64d59ff78d0", null ],
+      [ "p3g284x_pullup_2k_ohm", "p3h284x_8h.html#a5ed0c124293146eb070391a087a42edbac719289dea6d4ea8048915458c892d7d", null ]
+    ] ],
+    [ "p3h284x_get_device_info", "p3h284x_8h.html#a2591a121f7253a911bffccf7235dbbb6", null ],
+    [ "p3h284x_get_device_info_i3c", "p3h284x_8h.html#a2c39b21aadc7d24f55fec3286e3ac6f7", null ],
+    [ "p3h284x_i2c_mode_only_init", "p3h284x_8h.html#a034be14d3815b5aac2bd55cb0fd29350", null ],
+    [ "p3h284x_i3c_mode_only_init", "p3h284x_8h.html#a1fe117ca279cb84e129ed28023f51225", null ],
+    [ "p3h284x_select_slave_port_connect", "p3h284x_8h.html#ad883687b2a9932241578e6e2e41d1065", null ],
+    [ "p3h284x_set_slave_port", "p3h284x_8h.html#a734e94661ee8abbb04b7a8351ce6ee39", null ]
+];

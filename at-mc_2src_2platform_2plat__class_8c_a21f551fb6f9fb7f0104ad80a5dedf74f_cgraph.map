@@ -1,0 +1,11 @@
+<map id="init_accl_presence_check_work" name="init_accl_presence_check_work">
+<area shape="rect" id="node1" title=" " alt="" coords="5,49,136,90"/>
+<area shape="rect" id="node2" href="$at-cb_2src_2platform_2plat__class_8c.html#a830f5306880410f81f41ac177d9f715c" title=" " alt="" coords="184,56,351,83"/>
+<area shape="rect" id="node3" href="$at-cb_2src_2platform_2plat__class_8c.html#a46acfadd7a662b366e10fcab5186f827" title=" " alt="" coords="399,5,573,32"/>
+<area shape="rect" id="node7" href="$at-cb_2src_2platform_2plat__class_8c.html#aa0344d722f0b13452fef2a5fb95acfac" title=" " alt="" coords="409,56,563,83"/>
+<area shape="rect" id="node8" href="$at-cb_2src_2platform_2plat__pldm__monitor_8c.html#a687f9468ff0cfa6629a4f10b7f9fb067" title=" " alt="" coords="407,107,565,149"/>
+<area shape="rect" id="node4" href="$at-cb_2src_2platform_2plat__class_8c.html#a6a54497033563f8d0666943817d1e92a" title=" " alt="" coords="630,5,751,32"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="808,5,927,32"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="975,5,1117,32"/>
+<area shape="rect" id="node9" href="$pldm__monitor_8c.html#aee425d655113020d7d424cc5b86d756c" title=" " alt="" coords="621,107,760,149"/>
+</map>

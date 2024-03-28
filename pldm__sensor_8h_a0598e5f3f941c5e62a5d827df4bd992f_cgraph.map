@@ -1,0 +1,7 @@
+<map id="plat_pldm_sensor_load" name="plat_pldm_sensor_load">
+<area shape="rect" id="node1" title=" " alt="" coords="5,46,160,73"/>
+<area shape="rect" id="node2" href="$yv4-sd_2src_2platform_2plat__pldm__sensor_8c.html#ac71d31036cd1cc538a7d1bbe1c1882de" title=" " alt="" coords="208,39,381,80"/>
+<area shape="rect" id="node3" href="$yv4-ff_2src_2platform_2plat__pldm__sensor_8c.html#a18272dc8dce4f373b85555817c2cc6f3" title=" " alt="" coords="429,5,579,47"/>
+<area shape="rect" id="node4" href="$yv4-sd_2src_2platform_2plat__pldm__sensor_8c.html#af4281c23c804342282b5f9f19ed5d929" title=" " alt="" coords="429,71,579,112"/>
+<area shape="rect" id="node5" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="627,78,697,105"/>
+</map>
