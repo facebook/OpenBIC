@@ -300,10 +300,10 @@ modbus_fru_cfg modbus_FRUs[] = {
 	{ MB_FRU_ID, 44, 4, FRU_HMI_REVISION_ADDR },
 	{ MB_FRU_ID, 48, 4, FRU_NOAH_ARK_CONFIG_ADDR },
 	{ MB_FRU_ID, 52, 4, FRU_HEATEXCHANGER_CONTROLBOX_FPBN_ADDR },
-	{ MB_FRU_ID, 56, 4, FRU_QUANTA_FB_PART_ADDR},		
+	{ MB_FRU_ID, 56, 4, FRU_QUANTA_FB_PART_ADDR },
 };
 
-uint8_t modbus_read_fruid_data(uint16_t *data, uint16_t addr, uint16_t callback_num)
+uint8_t modbus_read_fruid_data(uint16_t *data, uint16_t addr, uint16_t reg_qty)
 {
 	uint8_t status;
 	EEPROM_ENTRY fru_entry;
@@ -311,58 +311,56 @@ uint8_t modbus_read_fruid_data(uint16_t *data, uint16_t addr, uint16_t callback_
 	uint8_t fru_length = ARRAY_SIZE(modbus_FRUs);
 	for (uint8_t index = 0; index < fru_length; index++) {
 		if (modbus_FRUs[index].field_addr == addr) {
-			if ((modbus_FRUs[index].field_size * 2) != sizeof(*data)) {
-				 return MODBUS_READ_WRITE_REGISTER_FAIL;
-			}			
+			if (modbus_FRUs[index].field_size != reg_qty) {
+				return FRU_FAIL_TO_ACCESS;
+			}
 			fru_entry.config.dev_id = modbus_FRUs[index].fru_id;
 			fru_entry.offset = modbus_FRUs[index].field_offset * 2;
 			fru_entry.data_len = modbus_FRUs[index].field_size * 2;
-			callback_num = modbus_FRUs[index].field_size;
-			break;
+
+			status = FRU_read(&fru_entry);
+			memcpy(data, &fru_entry.data[0], fru_entry.data_len);
+
+			return status;
 		}
 	}
 
-	status = FRU_read(&fru_entry);
-	memcpy(data, &fru_entry.data[0], fru_entry.data_len);
-
-    return status; 
+	return FRU_OUT_OF_RANGE;
 }
 
-uint8_t modbus_write_fruid_data(uint16_t *data, uint16_t addr)
+uint8_t modbus_write_fruid_data(uint16_t *data, uint16_t addr, uint16_t reg_qty)
 {
-
 	uint8_t status;
 	EEPROM_ENTRY fru_entry;
 
 	uint8_t fru_length = ARRAY_SIZE(modbus_FRUs);
 	for (uint8_t index = 0; index < fru_length; index++) {
 		if (modbus_FRUs[index].field_addr == addr) {
-			if ((modbus_FRUs[index].field_size * 2) != sizeof(*data)) {
-				 return MODBUS_READ_WRITE_REGISTER_FAIL;
+			if (modbus_FRUs[index].field_size != reg_qty) {
+				return FRU_FAIL_TO_ACCESS;
 			}
-
 			fru_entry.config.dev_id = modbus_FRUs[index].fru_id;
 			fru_entry.offset = modbus_FRUs[index].field_offset * 2;
 			fru_entry.data_len = modbus_FRUs[index].field_size * 2;
-			break;
+			
+			memcpy(&fru_entry.data[0], data, fru_entry.data_len);
+			status = FRU_write(&fru_entry);
+
+			return status;
 		}
 	}
-
-	memcpy(&fru_entry.data[0], data, fru_entry.data_len);
-
-	status = FRU_write(&fru_entry);
-
-	return status;
+	return FRU_OUT_OF_RANGE;
 }
 
-uint8_t fru_field_datasize(uint16_t addr) {
-		uint8_t fru_length = ARRAY_SIZE(modbus_FRUs);
-		for (uint8_t index = 0; index < fru_length; index++) {
-			if (modbus_FRUs[index].field_addr == addr) {
-				return modbus_FRUs[index].field_size;
-			}
+uint8_t fru_field_datasize(uint16_t addr)
+{
+	uint8_t fru_length = ARRAY_SIZE(modbus_FRUs);
+	for (uint8_t index = 0; index < fru_length; index++) {
+		if (modbus_FRUs[index].field_addr == addr) {
+			return modbus_FRUs[index].field_size;
 		}
-		return 0;
+	}
+	return 0;
 }
 
 void pal_load_fru_config(void)

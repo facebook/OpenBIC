@@ -70,7 +70,7 @@ typedef struct _modbus_fru_cfg {
 #define PB_MUX_ADDR 0xE8
 #define SB_MUX_ADDR 0xE8
 
-uint8_t modbus_read_fruid_data(uint16_t *data, uint16_t addr, uint16_t callback_num);
-uint8_t modbus_write_fruid_data(uint16_t *data, uint16_t addr);
+uint8_t modbus_read_fruid_data(uint16_t *data, uint16_t addr, uint16_t reg_qty);
+uint8_t modbus_write_fruid_data(uint16_t *data, uint16_t addr, uint16_t reg_qty);
 uint8_t fru_field_datasize(uint16_t addr);
 #endif
