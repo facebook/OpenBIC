@@ -47,10 +47,10 @@ bool enable_adm1272_hsc(uint8_t bus,uint8_t addr, bool enable_flag)
 	ret = i2c_master_write(&msg, retry);
 	if (ret != 0) {
 		LOG_ERR("Set enable hsc fail");
-		return 1;
+		return false;
 	}
 	LOG_INF("Set enable hsc success");
-	return 0;
+	return true;
 }
 
 static int adm1272_convert_real_value(uint8_t vrange, uint8_t irange, float rsense, uint8_t offset,
