@@ -29,7 +29,7 @@ LOG_MODULE_REGISTER(dev_adm1272);
 #define ADM1272_EIN_ROLLOVER_CNT_MAX 0x100
 #define ADM1272_EIN_SAMPLE_CNT_MAX 0x1000000
 #define ADM1272_EIN_ENERGY_CNT_MAX 0x8000
-int enable_hsc(sensor_cfg *cfg, bool enable_flag)
+int enable_adm1272_hsc(sensor_cfg *cfg, bool enable_flag)
 {
 	uint8_t retry = 5;
 	int ret = -1;
@@ -46,10 +46,10 @@ int enable_hsc(sensor_cfg *cfg, bool enable_flag)
 	ret = i2c_master_write(&msg, retry);
 	if (ret != 0) {
 		LOG_ERR("Set enable hsc fail");
-		return SENSOR_PARAMETER_NOT_VALID;
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 	LOG_INF("Set enable hsc success");
-	return 0;
+	return SENSOR_INIT_SUCCESS;
 }
 
 static int adm1272_convert_real_value(uint8_t vrange, uint8_t irange, float rsense, uint8_t offset,
