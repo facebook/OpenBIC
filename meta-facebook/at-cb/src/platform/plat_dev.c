@@ -1282,3 +1282,40 @@ exit:
 	}
 	return ret;
 }
+
+#define CLK_GEN_SSC_HW_EXPECT_VALUE 0x02
+void init_clk_gen_spread_spectrum_control_register()
+{
+	int ret = -1;
+	int retry = 5;
+	uint8_t ssc = 0;
+	I2C_MSG msg = { 0 };
+
+	msg.bus = I2C_BUS3;
+	msg.target_addr = CLOCK_GEN_ADDR;
+	msg.rx_len = 2;
+	msg.tx_len = 1;
+	msg.data[0] = 0x01;
+
+	ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Get spread spectrum control register fail data");
+		return;
+	}
+
+	ssc = msg.data[1];
+	if ((ssc >> 6) != CLK_GEN_SSC_HW_EXPECT_VALUE) {
+		LOG_INF("Get unexpected SSC HW control data %x", ssc);
+		//enable software control ssc
+		msg.rx_len = 0;
+		msg.tx_len = 3;
+		msg.data[0] = 0x01;
+		msg.data[1] = 0x01;
+		msg.data[2] = ((ssc | BIT(5)) | BIT(4)) & (~BIT(3));
+
+		ret = i2c_master_write(&msg, retry);
+		if (ret != 0) {
+			LOG_ERR("Set spread spectrum control register fail data %x", msg.data[3]);
+		}
+	}
+}
