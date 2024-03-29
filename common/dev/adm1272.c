@@ -29,13 +29,13 @@ LOG_MODULE_REGISTER(dev_adm1272);
 #define ADM1272_EIN_ROLLOVER_CNT_MAX 0x100
 #define ADM1272_EIN_SAMPLE_CNT_MAX 0x1000000
 #define ADM1272_EIN_ENERGY_CNT_MAX 0x8000
-uint8_t enable_adm1272_hsc(sensor_cfg *cfg, bool enable_flag)
+uint8_t enable_adm1272_hsc(uint8_t bus,uint8_t target_addr, bool enable_flag)
 {
 	uint8_t retry = 5;
 	int ret = -1;
 	I2C_MSG msg = { 0 };
-	msg.bus = cfg->port;
-	msg.target_addr = cfg->target_addr;
+	msg.bus = bus;
+	msg.target_addr = target_addr;
 	msg.tx_len = 2;
 	msg.data[0] = REG_PWR_MONITOR_CFG;
 	if (enable_flag == 1) {
