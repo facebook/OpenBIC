@@ -23,7 +23,6 @@
 #include "adm1272.h"
 #include <sys/util.h>
 
-
 LOG_MODULE_REGISTER(dev_adm1272);
 
 #define REG_PWR_MONITOR_CFG 0xD4
