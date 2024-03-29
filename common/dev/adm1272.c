@@ -22,7 +22,7 @@
 #include "pmbus.h"
 #include "adm1272.h"
 #include <sys/util.h>
-#include <stdbool.h>
+
 
 LOG_MODULE_REGISTER(dev_adm1272);
 
