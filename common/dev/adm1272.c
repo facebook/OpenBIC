@@ -22,6 +22,7 @@
 #include "pmbus.h"
 #include "adm1272.h"
 #include <sys/util.h>
+#include <stdbool.h>
 
 LOG_MODULE_REGISTER(dev_adm1272);
 
@@ -29,7 +30,7 @@ LOG_MODULE_REGISTER(dev_adm1272);
 #define ADM1272_EIN_ROLLOVER_CNT_MAX 0x100
 #define ADM1272_EIN_SAMPLE_CNT_MAX 0x1000000
 #define ADM1272_EIN_ENERGY_CNT_MAX 0x8000
-uint8_t enable_adm1272_hsc(uint8_t bus,uint8_t addr, bool enable_flag)
+bool enable_adm1272_hsc(uint8_t bus,uint8_t addr, bool enable_flag)
 {
 	uint8_t retry = 5;
 	int ret = -1;
@@ -46,10 +47,10 @@ uint8_t enable_adm1272_hsc(uint8_t bus,uint8_t addr, bool enable_flag)
 	ret = i2c_master_write(&msg, retry);
 	if (ret != 0) {
 		LOG_ERR("Set enable hsc fail");
-		return SENSOR_INIT_UNSPECIFIED_ERROR;
+		return 1;
 	}
 	LOG_INF("Set enable hsc success");
-	return SENSOR_INIT_SUCCESS;
+	return 0;
 }
 
 static int adm1272_convert_real_value(uint8_t vrange, uint8_t irange, float rsense, uint8_t offset,
