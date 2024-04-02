@@ -374,6 +374,7 @@ int init_dimm_prsnt_status()
 			continue;
 		}
 
+		k_msleep(I3C_TRANSFER_DELAY_TIME_MS);
 		i3c_msg.bus = I3C_BUS3;
 		i3c_msg.target_addr = spd_i3c_addr_list[dimm_id % (DIMM_ID_MAX / 2)];
 		i3c_attach(&i3c_msg);
@@ -387,6 +388,7 @@ int init_dimm_prsnt_status()
 			continue;
 		}
 
+		k_msleep(I3C_TRANSFER_DELAY_TIME_MS);
 		// Read SPD vender to check dimm present
 		i3c_msg.tx_len = 1;
 		i3c_msg.rx_len = 1;
@@ -402,6 +404,7 @@ int init_dimm_prsnt_status()
 			dimm_data[dimm_id].is_present = DIMM_PRSNT;
 		}
 		i3c_detach(&i3c_msg);
+		k_msleep(I3C_TRANSFER_DELAY_TIME_MS);
 	}
 
 	if (k_mutex_unlock(&i3c_dimm_mutex)) {
