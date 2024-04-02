@@ -36,7 +36,6 @@ LOG_MODULE_REGISTER(plat_sensor_table);
 static void load_hsc_sensor_table(void);
 static void load_temperature_sensor_table(void);
 
-
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
 	   access check, arg0, arg1, sample_count, cache, cache_status, mux_address, mux_offset,
@@ -352,7 +351,24 @@ sensor_cfg plat_sensor_config[] = {
 	  &ads112c_init_args[0] },
 	{ SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_2, sensor_dev_ads112c, I2C_BUS5, BPB_ADS112C_3_ADDR,
 	  ADS112C_LEAKAGE_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, post_ads112c_read, NULL, &ads112c_init_args[0] },
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, post_ads112c_read, NULL,
+	  &ads112c_init_args[0] },
+	// ADC
+	{ SENSOR_NUM_V_12_AUX, sensor_dev_ast_adc, ADC_PORT0, NONE, NONE, dc_access, 676, 100,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	{ SENSOR_NUM_V_5_AUX, sensor_dev_ast_adc, ADC_PORT1, NONE, NONE, dc_access, 711, 200,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	{ SENSOR_NUM_V_3_3_AUX, sensor_dev_ast_adc, ADC_PORT2, NONE, NONE, dc_access, 2, 1,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	{ SENSOR_NUM_V_1_2_AUX, sensor_dev_ast_adc, ADC_PORT3, NONE, NONE, dc_access, 1, 1,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
+	{ SENSOR_NUM_V_5_USB, sensor_dev_ast_adc, ADC_PORT4, NONE, NONE, dc_access, 711, 200,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
 
 };
 

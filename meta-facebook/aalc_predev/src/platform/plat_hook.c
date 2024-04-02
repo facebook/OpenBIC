@@ -142,6 +142,10 @@ ads112c_init_arg ads112c_init_args[] = {
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
 	},
 };
+
+adc_asd_init_arg adc_asd_init_args[] = {
+	[0] = { .is_init = false,},
+};
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
  **************************************************************************************************/
@@ -288,13 +292,13 @@ bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
 
 bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 {
+	short int read16Bits = (short int)*reading;
+	double ads112c_default_vol = 5;
+	ads112c_init_arg *init_arg = (ads112c_init_arg *)cfg->init_args;
+	double gainValue = 1 << (init_arg->reg0_gain >> 1);
 
-    short int read16Bits =(short int) *reading;
-    double ads112c_default_vol = 5;
-    ads112c_init_arg *init_arg = (ads112c_init_arg *)cfg->init_args;
-    double gainValue = 1 << (init_arg->reg0_gain >> 1);
-
-    double rawValue = (double) read16Bits * ads112c_default_vol / (32768 * gainValue); //(2 · VREF / Gain) / (2^16)
+	double rawValue = (double)read16Bits * ads112c_default_vol /
+			  (32768 * gainValue); //(2 · VREF / Gain) / (2^16)
 
 	double val;
 	double v_val, flow_Pmax = 400, flow_Pmin = 10, press_Pmax = 50, press_Pmin = 0;
@@ -329,10 +333,10 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = (int)val & 0xFFFF;
 	sval->fraction = (val - sval->integer) * 1000;
-    //according to pre_sensor_read_fn(pre_PCA9546A_read), determinies if apply post_PCA9546A_read
-    if (cfg -> pre_sensor_read_hook != NULL) {
-        post_PCA9546A_read(cfg, args, reading);
-    }
-	
-    return true;
+	//according to pre_sensor_read_fn(pre_PCA9546A_read), determinies if apply post_PCA9546A_read
+	if (cfg->pre_sensor_read_hook != NULL) {
+		post_PCA9546A_read(cfg, args, reading);
+	}
+
+	return true;
 }
