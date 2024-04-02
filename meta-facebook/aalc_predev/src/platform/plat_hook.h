@@ -28,6 +28,7 @@
 extern adm1272_init_arg adm1272_init_args[];
 extern nct7363_init_arg nct7363_init_args[];
 extern ads112c_init_arg ads112c_init_args[];
+extern adc_asd_init_arg adc_asd_init_args[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
