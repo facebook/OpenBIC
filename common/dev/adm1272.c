@@ -52,8 +52,6 @@ bool enable_adm1272_hsc(uint8_t bus,uint8_t addr, bool enable_flag)
 	msg.data[0] = OPERATION_REGISTER;
 	if (enable_flag == 1) {
 		msg.data[1] = BIT(7); // enable hsc
-	} else {
-		msg.data[1] = 0; // disable hsc
 	}
 	ret = i2c_master_write(&msg, retry);
 	if (ret != 0) {
