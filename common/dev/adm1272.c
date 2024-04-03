@@ -29,6 +29,17 @@ LOG_MODULE_REGISTER(dev_adm1272);
 #define ADM1272_EIN_ROLLOVER_CNT_MAX 0x100
 #define ADM1272_EIN_SAMPLE_CNT_MAX 0x1000000
 #define ADM1272_EIN_ENERGY_CNT_MAX 0x8000
+#define OPERATION_REGISTER 0x01;
+
+enum ADM1272_IRANGE {
+	IRANGE_0MV_TO_15MV = 0x0,
+	IRANGE_0MV_TO_30MV = 0x1,
+};
+
+enum ADM1272_VRANGE {
+	VRANGE_0V_TO_60V = 0x0,
+	VRANGE_0V_TO_100V = 0x1,
+};
 
 bool enable_adm1272_hsc(uint8_t bus,uint8_t addr, bool enable_flag)
 {
@@ -38,7 +49,7 @@ bool enable_adm1272_hsc(uint8_t bus,uint8_t addr, bool enable_flag)
 	msg.bus = bus;
 	msg.target_addr = addr;
 	msg.tx_len = 2;
-	msg.data[0] = REG_PWR_MONITOR_CFG;
+	msg.data[0] = OPERATION_REGISTER;
 	if (enable_flag == 1) {
 		msg.data[1] = BIT(7); // enable hsc
 	} else {
