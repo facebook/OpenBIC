@@ -21,6 +21,11 @@
 #include "plat_modbus.h"
 #include "i2c-mux-pca954x.h"
 #include "modbus_server.h"
+#include <libutil.h>
+#include <stdlib.h>
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(plat_fru);
 
 #define AALC_FRU_START 0x0000
 #define AALC_FRU_SIZE 0x0400 // size 1KB
@@ -305,6 +310,7 @@ modbus_fru_cfg modbus_FRUs[] = {
 
 uint8_t modbus_read_fruid_data(uint16_t *data, uint16_t addr, uint16_t reg_qty)
 {
+	CHECK_NULL_ARG_WITH_RETURN(data, FRU_DATA_NULL);
 	uint8_t status;
 	EEPROM_ENTRY fru_entry;
 
@@ -330,6 +336,7 @@ uint8_t modbus_read_fruid_data(uint16_t *data, uint16_t addr, uint16_t reg_qty)
 
 uint8_t modbus_write_fruid_data(uint16_t *data, uint16_t addr, uint16_t reg_qty)
 {
+	CHECK_NULL_ARG_WITH_RETURN(data, FRU_DATA_NULL);
 	uint8_t status;
 	EEPROM_ENTRY fru_entry;
 

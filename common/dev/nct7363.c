@@ -70,6 +70,7 @@ uint8_t nct7363_set_threshold(uint8_t bus, uint8_t address, uint8_t port, uint16
 
 uint8_t nct7363_set_duty(sensor_cfg *cfg, uint8_t duty, uint8_t port)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	I2C_MSG msg = { 0 };
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
@@ -91,6 +92,7 @@ uint8_t nct7363_set_duty(sensor_cfg *cfg, uint8_t duty, uint8_t port)
 }
 static bool nct7363_write(sensor_cfg *cfg, uint8_t offset, uint8_t val)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	I2C_MSG msg = { 0 };
 	uint8_t retry = 5;
 	msg.bus = cfg->port;
@@ -130,6 +132,8 @@ static uint8_t fan_frequency_convert(float frequency)
 
 uint8_t nct7363_set_frequency(sensor_cfg *cfg, uint8_t port)
 {
+	
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	I2C_MSG msg = { 0 };
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
