@@ -27,7 +27,7 @@ uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
-	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_UNSPECIFIED_ERROR);
+	
 	if (cfg->num > SENSOR_NUM_MAX) {
 		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
@@ -98,6 +98,7 @@ uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 uint8_t nct214_init(sensor_cfg *cfg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_UNSPECIFIED_ERROR);
 
 	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
