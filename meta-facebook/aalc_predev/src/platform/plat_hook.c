@@ -299,7 +299,6 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
 	CHECK_NULL_ARG_WITH_RETURN(reading, false);
-	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, false);
 	short int read16Bits = (short int)*reading;
 	double ads112c_default_vol = 5;
 	ads112c_init_arg *init_arg = (ads112c_init_arg *)cfg->init_args;
