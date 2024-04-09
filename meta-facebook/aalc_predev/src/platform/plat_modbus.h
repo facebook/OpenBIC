@@ -24,12 +24,15 @@
 #define MODBUS_UART_FP_OFFSET 5000
 
 void modbus_server_handler_init(void);
-
-typedef struct _modbus_sensor_cfg {
-	uint8_t sensor_num;
-	uint16_t data_addr;
-} modbus_sensor_cfg;
-//sensor_monitor_table_info
+typedef struct _modbus_command_mapping {
+	uint16_t addr;
+	uint8_t (*wr_fn)(struct _modbus_command_mapping *);
+	uint8_t (*rd_fn)(struct _modbus_command_mapping *);
+	uint8_t arg0;
+	uint8_t arg1;
+	uint8_t size;
+	uint16_t *data;
+} modbus_command_mapping;
 
 /* define modbus data address */
 #define MODBUS_TEMP_BB_TMP75_ADDR 0x0101

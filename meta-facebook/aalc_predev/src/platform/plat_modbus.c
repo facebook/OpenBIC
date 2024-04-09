@@ -13,177 +13,115 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "plat_modbus.h"
-#include "plat_sensor_table.h"
+#include <stdlib.h>
 #include <sys/util.h>
 #include <drivers/gpio.h>
 #include <modbus/modbus.h>
+#include <time.h>
 #include <logging/log.h>
 #include "sensor.h"
 #include "modbus_server.h"
 #include "fru.h"
 #include "eeprom.h"
+#include "libutil.h"
+
+#include "plat_modbus.h"
+#include "plat_sensor_table.h"
 #include "plat_fru.h"
-#include <time.h>
 
 LOG_MODULE_REGISTER(plat_modbus);
+
+static char server_iface_name[] = "MODBUS0";
 
 struct k_thread modbus_server_thread;
 K_KERNEL_STACK_MEMBER(modbus_server_thread_stack, MODBUS_SERVER_THREAD_SIZE);
 
-static char server_iface_name[] = "MODBUS0";
-//{DT_PROP(DT_INST(1, zephyr_modbus_serial), label)};
-static uint16_t regs_wr[16];
-static uint16_t regs_rd[16];
-static uint8_t cb_num;
-static uint16_t cb_addr[2];
-
-modbus_sensor_cfg plat_modbus_sensors[] = {
-	/* sensor number,  modbus data addr  */
-	{ SENSOR_NUM_BB_TMP75_TEMP_C, MODBUS_TEMP_BB_TMP75_ADDR },
-	{ SENSOR_NUM_BPB_RPU_OUTLET_TEMP_C, MODBUS_TEMP_BPB_TMP75_ADDR },
-};
-
-static int holding_reg_rd(uint16_t addr, uint16_t *reg, uint16_t reg_qty)
+static uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd)
 {
-	if (cb_num > 0 && (addr > cb_addr[0] && addr <= cb_addr[1])) {
-		*reg = regs_rd[cb_num - 1];
-		cb_num--;
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_ARG_NULL);
+
+	int reading = 0;
+	uint8_t status = get_sensor_reading(sensor_config, sensor_config_count, cmd->arg0, &reading,
+					    GET_FROM_CACHE);
+
+	if (status == SENSOR_READ_SUCCESS) {
+		memcpy(&cmd->data, &reading, sizeof(uint16_t) * cmd->size);
 		return MODBUS_READ_WRITE_REGISTER_SUCCESS;
 	}
 
-	cb_num = 0;
-	memset(&cb_addr, 0, sizeof(cb_addr));
-	memset(&regs_rd, 0, sizeof(regs_rd));
-
-	if (addr < 0x9200) { // sensor addr is less than 0x9200
-		int reading = 0;
-		if ((reg_qty * 2) != sizeof(reading))  
-			return MODBUS_NOT_IN_REGISTER_VAL_RANGE;
-
-		for (uint8_t index = 0; index < sensor_config_count; index++) {
-			if (plat_modbus_sensors[index].data_addr == addr) {
-				uint8_t status =
-					get_sensor_reading(sensor_config, sensor_config_count,
-							   plat_modbus_sensors[index].sensor_num,
-							   &reading, GET_FROM_CACHE);
-
-				if (status == SENSOR_READ_SUCCESS) { //reading type is int(4Bytes = 2 registers)
-					regs_rd[0] = reading & 0x0000FFFF;
-					regs_rd[1] = (reading >> 8) >> 8;
-					cb_num = reg_qty - 1;					
-					*reg = regs_rd[cb_num];										
-					cb_addr[0] = addr;
-					cb_addr[1] = addr + cb_num;										
-					return MODBUS_READ_WRITE_REGISTER_SUCCESS;
-				} else {
-					LOG_ERR("Read Modbus Sensor failed");
-					return MODBUS_READ_WRITE_REGISTER_FAIL;
-				}
-			}
-		}
-
-		LOG_ERR("Wrong Modbus Sensor Addr");
-		return MODBUS_ADDR_NOT_DEFINITION;
-	} else {
-		uint8_t status = 0;
-		switch (addr) {
-		case FRU_FB_PART_ADDR:
-		case FRU_MFR_MODEL_ADDR:
-		case FRU_MFR_DATE_ADDR:
-		case FRU_MFR_SERIEL_ADDR:
-		case MODBUS_POWER_RPU_ADDR:
-		case FRU_WORKORDER_ADDR:
-		case FRU_HW_REVISION_ADDR:
-		case FRU_FW_REVISION_ADDR:
-		case FRU_TOTAL_UP_TIME_ADDR:
-		case FRU_LAST_ON_TIME_ADDR:
-		case FRU_HMI_REVISION_ADDR:
-		case FRU_NOAH_ARK_CONFIG_ADDR:
-		case FRU_HEATEXCHANGER_CONTROLBOX_FPBN_ADDR:
-		case FRU_QUANTA_FB_PART_ADDR:
-			status = modbus_read_fruid_data(regs_rd, addr, reg_qty);
-			if (status == FRU_READ_SUCCESS) {
-				cb_num = reg_qty - 1;
-				*reg = regs_rd[cb_num];					
-				cb_addr[0] = addr;				
-				cb_addr[1] = addr + cb_num;			
-				return MODBUS_READ_WRITE_REGISTER_SUCCESS;
-			} else {
-				return MODBUS_READ_WRITE_REGISTER_FAIL;
-			}
-		default:
-			LOG_ERR("Read Modbus Sensor failed");
-			return MODBUS_READ_WRITE_REGISTER_FAIL;
-		}
-
-		//printk("Holding register read, addr %u, val %u\n", addr, *reg);
-
-		return MODBUS_READ_WRITE_REGISTER_SUCCESS;
-	}
-
-	LOG_ERR("Wrong Modbus Sensor Addr");
-	return MODBUS_ADDR_NOT_DEFINITION;
+	return MODBUS_READ_WRITE_REGISTER_FAIL;
 }
 
-static int holding_reg_wr(uint16_t addr, uint16_t reg, uint16_t reg_qty)
-{
-	uint8_t status = 0;
-	if (reg_qty > 0) {
-		if (cb_num == 0) {
-			cb_num = reg_qty;
-			cb_addr[1] = addr + cb_num - 1;
-			cb_addr[0] = addr;
-		}
+modbus_command_mapping modbus_command_table[] = {
+	{ MODBUS_TEMP_BB_TMP75_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_BB_TMP75_TEMP_C, 0,
+	  1 },
+	{ MODBUS_TEMP_BPB_TMP75_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BPB_RPU_OUTLET_TEMP_C, 0, 1 },
+};
 
-		if (cb_num >= 0 && (addr >= cb_addr[0] && addr <= cb_addr[1])) {
-			regs_wr[cb_num - 1] = reg;
-			cb_num--;
-			if (cb_num == 0) {
-				goto wr_func;
-			} else {
-				return MODBUS_READ_WRITE_REGISTER_SUCCESS;
-			}
-		}
+static modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)
+{
+	for (uint8_t i = 0; i < ARRAY_SIZE(modbus_command_table); i++) {
+		if (addr >= modbus_command_table[i].addr &&
+		    addr < (modbus_command_table[i].addr + modbus_command_table[i].size))
+			return &modbus_command_table[i];
 	}
 
-	memset(&cb_addr, 0, sizeof(cb_addr));
-	memset(&regs_wr, 0, sizeof(regs_wr));
-	cb_num = 0;
-	return MODBUS_READ_WRITE_REGISTER_FAIL;
+	return NULL;
+}
 
-	wr_func:
-		switch (cb_addr[0]) {
-		case FRU_FB_PART_ADDR:
-		case FRU_MFR_MODEL_ADDR:
-		case FRU_MFR_DATE_ADDR:
-		case FRU_MFR_SERIEL_ADDR:
-		case MODBUS_POWER_RPU_ADDR:
-		case FRU_WORKORDER_ADDR:
-		case FRU_HW_REVISION_ADDR:
-		case FRU_FW_REVISION_ADDR:
-		case FRU_TOTAL_UP_TIME_ADDR:
-		case FRU_LAST_ON_TIME_ADDR:
-		case FRU_HMI_REVISION_ADDR:
-		case FRU_NOAH_ARK_CONFIG_ADDR:
-		case FRU_HEATEXCHANGER_CONTROLBOX_FPBN_ADDR:
-		case FRU_QUANTA_FB_PART_ADDR:
-			status = modbus_write_fruid_data(regs_wr, cb_addr[0], reg_qty);
-			memset(&cb_addr, 0, sizeof(cb_addr));
-			memset(&regs_wr, 0, sizeof(regs_wr));
-			cb_num = 0;			
-			if (status == FRU_WRITE_SUCCESS) {
-				return MODBUS_READ_WRITE_REGISTER_SUCCESS;
-			} else {
-				return MODBUS_READ_WRITE_REGISTER_FAIL;
-			}
-		default:
-			memset(&cb_addr, 0, sizeof(cb_addr));
-			memset(&regs_wr, 0, sizeof(regs_wr));
-			cb_num = 0;		
-			LOG_ERR("Read Modbus Sensor failed");
-			return MODBUS_ADDR_NOT_DEFINITION;
+void init_modbus_command_table(void)
+{
+	for (uint16_t i = 0; i < ARRAY_SIZE(modbus_command_table); i++) {
+		if (modbus_command_table[i].data)
+			SAFE_FREE(modbus_command_table[i].data);
+
+		modbus_command_table[i].data =
+			(uint16_t *)malloc(modbus_command_table[i].size * sizeof(uint16_t));
+		if (modbus_command_table[i].data == NULL) {
+			LOG_ERR("modbus_command_mapping[%i] malloc fail", i);
+			return;
 		}
+	}
+}
+
+static int holding_reg_wr(uint16_t addr, uint16_t reg)
+{
+	modbus_command_mapping *ptr = ptr_to_modbus_table(addr);
+	if (!ptr) {
+		LOG_ERR("modbus write command 0x%x not find!\n", addr);
+		return MODBUS_ADDR_NOT_DEFINITION;
+	}
+
+	int ret = MODBUS_READ_WRITE_REGISTER_SUCCESS;
+	uint8_t offset = addr - ptr->addr;
+
+	ptr->data[offset] = reg;
+
+	if (offset == (ptr->size - 1) && ptr->wr_fn)
+		ret = ptr->wr_fn(ptr);
+
+	return ret;
+}
+
+static int holding_reg_rd(uint16_t addr, uint16_t *reg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(reg, MODBUS_ARG_NULL);
+
+	modbus_command_mapping *ptr = ptr_to_modbus_table(addr);
+	if (!ptr) {
+		LOG_ERR("modbus read command 0x%x not find!\n", addr);
+		return MODBUS_ADDR_NOT_DEFINITION;
+	}
+
+	int ret = MODBUS_READ_WRITE_REGISTER_SUCCESS;
+	uint8_t offset = addr - ptr->addr;
+
+	if (offset == 0 && ptr->rd_fn)
+		ret = ptr->rd_fn(ptr);
+
+	*reg = ptr->data[offset];
+	return ret;
 }
 
 static struct modbus_user_callbacks mbs_cbs = {
