@@ -29,6 +29,7 @@ LOG_MODULE_REGISTER(dev_adm1272);
 #define ADM1272_EIN_ROLLOVER_CNT_MAX 0x100
 #define ADM1272_EIN_SAMPLE_CNT_MAX 0x1000000
 #define ADM1272_EIN_ENERGY_CNT_MAX 0x8000
+#define OPERATION_REGISTER 0x01;
 
 bool enable_adm1272_hsc(uint8_t bus,uint8_t addr, bool enable_flag)
 {
@@ -38,11 +39,9 @@ bool enable_adm1272_hsc(uint8_t bus,uint8_t addr, bool enable_flag)
 	msg.bus = bus;
 	msg.target_addr = addr;
 	msg.tx_len = 2;
-	msg.data[0] = REG_PWR_MONITOR_CFG;
+	msg.data[0] = OPERATION_REGISTER;
 	if (enable_flag == 1) {
 		msg.data[1] = BIT(7); // enable hsc
-	} else {
-		msg.data[1] = 0; // disable hsc
 	}
 	ret = i2c_master_write(&msg, retry);
 	if (ret != 0) {
