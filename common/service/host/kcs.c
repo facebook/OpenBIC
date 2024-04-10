@@ -155,6 +155,50 @@ exit:
 	return rc;
 }
 
+static int send_bios_version_to_bmc(char *bios_version, uint8_t bios_version_len)
+{
+	pldm_msg msg = { 0 };
+	msg.ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
+	msg.ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
+	msg.ext_params.ep = MCTP_EID_BMC;
+
+	msg.hdr.pldm_type = PLDM_TYPE_OEM;
+	msg.hdr.cmd = PLDM_OEM_WRITE_FILE_IO;
+	msg.hdr.rq = 1;
+
+	struct pldm_oem_write_file_io_req *ptr = (struct pldm_oem_write_file_io_req *)malloc(
+		sizeof(struct pldm_oem_write_file_io_req) + (sizeof(uint8_t) * bios_version_len));
+
+	if (!ptr) {
+		LOG_ERR("Failed to allocate memory.");
+		return 1;
+	}
+
+	ptr->cmd_code = BIOS_VERSION;
+	ptr->data_length = bios_version_len;
+	memcpy(ptr->messages, bios_version, bios_version_len);
+
+	msg.buf = (uint8_t *)ptr;
+	msg.len = sizeof(struct pldm_oem_write_file_io_req) + bios_version_len;
+
+	uint8_t resp_len = sizeof(struct pldm_oem_write_file_io_resp);
+	uint8_t rbuf[resp_len];
+
+	if (!mctp_pldm_read(find_mctp_by_bus(I2C_BUS_BMC), &msg, rbuf, resp_len)) {
+		LOG_ERR("mctp_pldm_read fail");
+		return 2;
+	}
+
+	struct pldm_oem_write_file_io_resp *resp = (struct pldm_oem_write_file_io_resp *)rbuf;
+	if (resp->completion_code != PLDM_SUCCESS) {
+		LOG_ERR("Check reponse completion code fail %x", resp->completion_code);
+		return resp->completion_code;
+	}
+
+	SAFE_FREE(ptr);
+	return 0;
+}
+
 #endif
 
 static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
@@ -260,6 +304,11 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 				ret = update_bios_information(bios_version, length);
 				if (ret < 0) {
 					LOG_ERR("Failed to update bios information, rc = %d", ret);
+				}
+
+				ret = send_bios_version_to_bmc(bios_version, length);
+				if (ret < 0) {
+					LOG_ERR("Failed to send bios version to bmc, rc = %d", ret);
 				}
 #endif
 			}
