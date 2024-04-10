@@ -41,6 +41,7 @@ static void init_tach_dev(void)
 
 static uint8_t get_fan_rpm(uint8_t port, int32_t *val)
 {
+	CHECK_NULL_ARG_WITH_RETURN(val, SENSOR_UNSPECIFIED_ERROR);
 	struct sensor_value sensor_value;
 	int ret = 0;
 

@@ -21,6 +21,11 @@
 #include "plat_modbus.h"
 #include "i2c-mux-pca954x.h"
 #include "modbus_server.h"
+#include <libutil.h>
+#include <stdlib.h>
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(plat_fru);
 
 #define AALC_FRU_START 0x0000
 #define AALC_FRU_SIZE 0x0400 // size 1KB

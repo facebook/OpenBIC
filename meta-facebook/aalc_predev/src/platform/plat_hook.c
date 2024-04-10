@@ -243,6 +243,8 @@ bool pre_PCA9546A_read(sensor_cfg *cfg, void *args)
 bool post_PCA9546A_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
+	CHECK_NULL_ARG_WITH_RETURN(reading, false);
 	ARG_UNUSED(reading);
 	ARG_UNUSED(args);
 
@@ -264,6 +266,8 @@ bool post_PCA9546A_read(sensor_cfg *cfg, void *args, int *reading)
 bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
+	CHECK_NULL_ARG_WITH_RETURN(reading, false);
 	ARG_UNUSED(args);
 
 	if (reading == NULL) {
@@ -292,6 +296,9 @@ bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
 
 bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
+	CHECK_NULL_ARG_WITH_RETURN(reading, false);
 	short int read16Bits = (short int)*reading;
 	double ads112c_default_vol = 5;
 	ads112c_init_arg *init_arg = (ads112c_init_arg *)cfg->init_args;
