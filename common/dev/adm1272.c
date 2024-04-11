@@ -31,7 +31,7 @@ LOG_MODULE_REGISTER(dev_adm1272);
 #define ADM1272_EIN_ENERGY_CNT_MAX 0x8000
 #define OPERATION_REGISTER 0x01;
 
-bool enable_adm1272_hsc(uint8_t bus,uint8_t addr, bool enable_flag)
+bool enable_adm1272_hsc(uint8_t bus, uint8_t addr, bool enable_flag)
 {
 	uint8_t retry = 5;
 	int ret = -1;
