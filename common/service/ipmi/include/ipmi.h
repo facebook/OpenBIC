@@ -190,8 +190,9 @@ enum {
 	CMD_STORAGE_ADD_SEL = 0x44,
 };
 
-// DCMI Command Codes (0x2C)
+// Application Extension Code (0x2c)
 enum {
+	CMD_DCMI_GET_PICMG_PROPERTIES = 0x00,
 	CMD_DCMI_SEND_BOOT_PROGRESS_CODE = 0x02,
 	CMD_DCMI_GET_BOOT_PROGRESS_CODE = 0x03,
 };
