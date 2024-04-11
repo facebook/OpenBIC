@@ -32,6 +32,8 @@
 #define CXL_LED_BIT BIT(2)
 // Only switch VR MUX
 #define IOE_SWITCH_MUX_TO_BIC 0x05
+#define IOE_SWITCH_CXL1_VR_TO_BIC 0x01
+#define IOE_SWITCH_CXL2_VR_TO_BIC 0x04
 
 #define IOE_READY_MSEC 1000
 

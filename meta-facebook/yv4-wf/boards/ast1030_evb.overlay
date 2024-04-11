@@ -217,3 +217,27 @@
 &gpio0_m_p {
 	aspeed,persist-maps = <0x00000A02>;
 };
+
+&tach {
+	status = "okay";
+
+	pinctrl-0 = <&pinctrl_tach0_default &pinctrl_tach1_default>;
+
+	fan@0 {
+		reg = <0>;
+		pulse-pr = <2>;
+		min-rpm = <10>;
+		tach-div = <5>;
+		tach-mode = <2>;
+		label = "HB0";
+	};
+
+	fan@1 {
+		reg = <1>;
+		pulse-pr = <2>;
+		min-rpm = <10>;
+		tach-div = <5>;
+		tach-mode = <2>;
+		label = "HB1";
+	};
+};

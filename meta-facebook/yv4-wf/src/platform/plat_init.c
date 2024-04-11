@@ -43,7 +43,8 @@ DEVICE_DEFINE(PRE_DEF_PLAT_CONFIG, "PRE_DEF_PLATFOMR", &init_platform_config, NU
 DEVICE_DEFINE(PRE_DEF_PROJ_GPIO, "PRE_DEF_PROJ_GPIO_NAME", &gpio_init, NULL, NULL, NULL,
 	      POST_KERNEL, DEF_PROJ_GPIO_PRIORITY, NULL);
 
-K_WORK_DELAYABLE_DEFINE(cxl_ready_check, cxl_ready_handler);
+K_WORK_DELAYABLE_DEFINE(cxl1_ready_check, cxl1_ready_handler);
+K_WORK_DELAYABLE_DEFINE(cxl2_ready_check, cxl2_ready_handler);
 void pal_set_sys_status()
 {
 	set_mb_dc_status(FM_POWER_EN_R);
@@ -51,7 +52,8 @@ void pal_set_sys_status()
 	set_DC_on_delayed_status();
 	init_ioe_config();
 	if (gpio_get(PG_CARD_OK) == POWER_ON) {
-		k_work_schedule(&cxl_ready_check, K_SECONDS(CXL_READY_SECONDS));
+		k_work_schedule(&cxl1_ready_check, K_SECONDS(CXL_READY_INTERVAL_SECONDS));
+		k_work_schedule(&cxl2_ready_check, K_SECONDS(CXL_READY_INTERVAL_SECONDS));
 	}
 	set_sys_ready_pin(BIC_READY_R);
 }
@@ -71,7 +73,7 @@ void pal_pre_init()
 		// BIC starts monitoring VR only after the PMIC mux is switched to BIC.
 		if ((GETBIT(ioe2_output_value, IOE_P00) == 0) || // SEL_SMB_HOST_MUX_PMIC1_IN_R
 		    (GETBIT(ioe2_output_value, IOE_P02) == 0)) { // SEL_SMB_HOST_MUX_PMIC2_IN_R
-			set_vr_monitor_status(false);
+			set_cxl_vr_access(MAX_CXL_ID, false);
 		}
 	}
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));

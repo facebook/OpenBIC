@@ -21,6 +21,11 @@
 
 #define DC_ON_DELAY5_SEC 5
 #define CXL_READY_SECONDS 30
+#define CXL_READY_RETRY_TIMES 10
+#define CXL1_HEART_BEAT_LABEL "HB0"
+#define CXL2_HEART_BEAT_LABEL "HB1"
+#define CXL_READY_INTERVAL_SECONDS 3
+#define SWITCH_IOE_MUX_TIMEOUT_SECONDS 1
 #define CHK_PWR_DELAY_MSEC 100
 #define SYS_CLK_STABLE_DELAY_MSEC 25
 #define PWR_RST_DELAY_MSEC 25
@@ -98,8 +103,12 @@ int power_on_handler(int cxl_id, int power_stage);
 int power_off_handler(int cxl_id, int power_stage);
 void execute_power_on_sequence();
 void execute_power_off_sequence();
-void cxl_ready_handler();
+void cxl1_ready_handler();
+void cxl2_ready_handler();
 bool get_cxl_ready_status(uint8_t cxl_id);
 bool cxl_ready_access(uint8_t sensor_num);
+void set_cxl_vr_access(uint8_t cxl_id, bool value);
+bool cxl1_vr_access(uint8_t sensor_num);
+bool cxl2_vr_access(uint8_t sensor_num);
 
 #endif
