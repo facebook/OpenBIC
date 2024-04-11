@@ -290,6 +290,8 @@ bool pal_load_gpio_config(void)
 		plat_gpio_cfg[EVT_MEDUSA_HSC_R_PG].is_init = ENABLE;
 		gpio_name[EVT_MEDUSA_HSC_R_PG] = "MEDUSA_HSC_R_PG";
 		plat_gpio_cfg[EVT_Reserve_GPIOM3].is_init = DISABLE;
+		plat_gpio_cfg[EVT_BIC_READY_FRONT_EXP].is_init = ENABLE;
+		gpio_name[EVT_BIC_READY_FRONT_EXP] = "BIC_READY_FRONT_EXP";
 	}
 
 	memcpy(&gpio_cfg[0], &plat_gpio_cfg[0], sizeof(plat_gpio_cfg));
