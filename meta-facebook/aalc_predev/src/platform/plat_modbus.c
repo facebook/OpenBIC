@@ -15,6 +15,7 @@
  */
 #include <stdlib.h>
 #include <sys/util.h>
+#include <sys/byteorder.h>
 #include <drivers/gpio.h>
 #include <modbus/modbus.h>
 #include <time.h>
@@ -31,10 +32,12 @@
 
 LOG_MODULE_REGISTER(plat_modbus);
 
-static char server_iface_name[] = "MODBUS0";
+#define FW_UPDATE_SWITCH_FC 0x64
+#define FW_UPDATE_SWITCH_ADDR 0x0119
+#define FW_UPDATE_ENABLE_DATA 0x0101
+#define FW_UPDATE_DISABLE_DATA 0x0100
 
-struct k_thread modbus_server_thread;
-K_KERNEL_STACK_MEMBER(modbus_server_thread_stack, MODBUS_SERVER_THREAD_SIZE);
+static char server_iface_name[] = "MODBUS0";
 
 static float pow_of_10(int8_t exp)
 {
@@ -63,7 +66,7 @@ static float pow_of_10(int8_t exp)
 */
 static uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd)
 {
-	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_ARG_NULL);
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
 	int reading = 0;
 	uint8_t status = get_sensor_reading(sensor_config, sensor_config_count, cmd->arg0, &reading,
@@ -75,10 +78,10 @@ static uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd)
 		float r = pow_of_10(cmd->arg2);
 		uint16_t byte_val = val / cmd->arg1 / r; // scale
 		memcpy(&cmd->data, &byte_val, sizeof(uint16_t) * cmd->size);
-		return MODBUS_READ_WRITE_REGISTER_SUCCESS;
+		return MODBUS_EXC_NONE;
 	}
 
-	return MODBUS_READ_WRITE_REGISTER_FAIL;
+	return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 }
 
 modbus_command_mapping modbus_command_table[] = {
@@ -470,15 +473,15 @@ static int holding_reg_wr(uint16_t addr, uint16_t reg)
 	modbus_command_mapping *ptr = ptr_to_modbus_table(addr);
 	if (!ptr) {
 		LOG_ERR("modbus write command 0x%x not find!\n", addr);
-		return MODBUS_ADDR_NOT_DEFINITION;
+		return MODBUS_EXC_ILLEGAL_DATA_ADDR;
 	}
 
 	if (!ptr->wr_fn) {
 		LOG_ERR("modbus write function 0x%x not set!\n", addr);
-		return MODBUS_ARG_NULL;
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
 	}
 
-	int ret = MODBUS_READ_WRITE_REGISTER_SUCCESS;
+	int ret = MODBUS_EXC_NONE;
 	uint8_t offset = addr - ptr->addr;
 
 	ptr->data[offset] = reg;
@@ -491,20 +494,20 @@ static int holding_reg_wr(uint16_t addr, uint16_t reg)
 
 static int holding_reg_rd(uint16_t addr, uint16_t *reg)
 {
-	CHECK_NULL_ARG_WITH_RETURN(reg, MODBUS_ARG_NULL);
+	CHECK_NULL_ARG_WITH_RETURN(reg, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
 	modbus_command_mapping *ptr = ptr_to_modbus_table(addr);
 	if (!ptr) {
 		LOG_ERR("modbus read command 0x%x not find!\n", addr);
-		return MODBUS_ADDR_NOT_DEFINITION;
+		return MODBUS_EXC_ILLEGAL_DATA_ADDR;
 	}
 
 	if (!ptr->rd_fn) {
 		LOG_ERR("modbus read function 0x%x not set!\n", addr);
-		return MODBUS_ARG_NULL;
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
 	}
 
-	int ret = MODBUS_READ_WRITE_REGISTER_SUCCESS;
+	int ret = MODBUS_EXC_NONE;
 	uint8_t offset = addr - ptr->addr;
 
 	if (offset == 0)
@@ -531,23 +534,80 @@ const static struct modbus_iface_param server_param = {
 	},
 };
 
+
+/*
 static void modbus_server_handler(void *arug0, void *arug1, void *arug2)
 {
 	int val;
 
 	val = init_modbus_server(*server_iface_name, server_param);
+
 	if (val != 0) {
 		LOG_ERR("Failed to initialize server");
 		return;
 	}
+
+	val = modbus_register_user_fc(*server_iface_name, &modbus_cfg_custom);		
+	if (val != 0) {
+		LOG_ERR("Failed to initialize server");
+		return;
+	}
+}*/
+
+
+static bool custom_handler(const int iface, const struct modbus_adu *rx_adu,
+			   struct modbus_adu *tx_adu, uint8_t *const excep_code,
+			   void *const user_data)
+{
+	static uint8_t req_len;
+	static uint8_t res_len;
+
+	switch (rx_adu->fc) {
+	case FW_UPDATE_SWITCH_FC:
+		req_len = 4;
+		res_len = 4;
+		if (rx_adu->length != req_len) {
+			*excep_code = MODBUS_EXC_ILLEGAL_DATA_VAL;
+			return true;
+		}
+		uint16_t addr = (rx_adu->data[0] << 8) | rx_adu->data[1];
+		if (addr == FW_UPDATE_SWITCH_ADDR) {
+			uint16_t data = (rx_adu->data[2] << 8) | rx_adu->data[3];
+			if (data == FW_UPDATE_ENABLE_DATA || data == FW_UPDATE_DISABLE_DATA) {
+				memcpy(&tx_adu->data, &rx_adu->data, req_len);
+				tx_adu->length = res_len;
+			} else {
+				*excep_code = MODBUS_EXC_ILLEGAL_DATA_VAL;
+			}
+		} else {
+			*excep_code = MODBUS_EXC_ILLEGAL_DATA_ADDR;
+		}
+		return true;
+	default:
+		*excep_code = MODBUS_EXC_ILLEGAL_FC;
+		return true;
+	}
 }
 
-//void sensor_poll_init()
-void modbus_server_handler_init(void)
+MODBUS_CUSTOM_FC_DEFINE(custom, custom_handler, 100, NULL);
+
+
+int init_custom_modbus_server(void)
 {
-	k_thread_create(&modbus_server_thread, modbus_server_thread_stack,
-			K_THREAD_STACK_SIZEOF(modbus_server_thread_stack), modbus_server_handler,
-			NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
-	k_thread_name_set(&modbus_server_thread, "modbus_server_handler");
-	return;
+	int server_iface = modbus_iface_get_by_name(server_iface_name);
+
+	if (server_iface < 0) {
+		LOG_ERR("Failed to get iface index for %s",
+			server_iface_name);
+		return -ENODEV;
+	}
+	//return modbus_init_server(server_iface, server_param);
+	int err = modbus_init_server(server_iface, server_param);
+
+	if (err < 0) {
+		return err;
+	}
+
+	return modbus_register_user_fc(server_iface, &modbus_cfg_custom);
 }
+

@@ -18,12 +18,17 @@
 #include <stdint.h>
 #include <kernel.h>
 
-#define MODBUS_SERVER_THREAD_SIZE 3056
-
 #define MODBUS_UART_NODE_ADDR 0x0C
 #define MODBUS_UART_FP_OFFSET 5000
 
-void modbus_server_handler_init(void);
+/*MODBUS Serial Line Parameter*/
+#define MODBUS_UART_BAUDRATE_LOW 19200
+#define MODBUS_UART_BAUDRATE_HIGH 115200
+#define MODBUS_UART_PARITY UART_CFG_PARITY_NONE
+#define MODBUS_UART_RESPONSE_T 1000000
+//from zephyr/samples/subsys/modbus/rtu_client, client_param: rx_timeout = 1000000(default 50000)
+
+int init_custom_modbus_server(void);
 typedef struct _modbus_command_mapping {
 	uint16_t addr;
 	uint8_t (*wr_fn)(struct _modbus_command_mapping *);
