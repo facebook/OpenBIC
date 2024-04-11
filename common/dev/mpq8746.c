@@ -303,9 +303,8 @@ static bool parsing_image(uint8_t *img_buff, uint32_t img_size, struct mpq8746_c
 		} else if (img_buff[i] == 0x0d) {
 			LOG_DBG("vr[%d] page: %d addr:%x", dev_cfg->wr_cnt, cur_line->page,
 				cur_line->reg_addr);
-			for (int i = 0; i < cur_line->reg_len; i++) {
-				LOG_DBG("data:%x", cur_line->reg_data[i]);
-			}
+			LOG_HEXDUMP_DBG(cur_line->reg_data, cur_line->reg_len, "data:");
+
 			cur_ele_idx = 0;
 			dev_cfg->wr_cnt++;
 			if (dev_cfg->wr_cnt > max_line) {

@@ -538,9 +538,8 @@ static bool parsing_image(uint8_t *img_buff, uint32_t img_size, struct mp289x_co
 		} else if (img_buff[i] == 0x0d) {
 			LOG_DBG("vr[%d] page: %d addr:%x", dev_cfg->wr_cnt, cur_line->page,
 				cur_line->reg_addr);
-			for (int i = 0; i < cur_line->reg_len; i++) {
-				LOG_DBG("data:%x", cur_line->reg_data[i]);
-			}
+			LOG_HEXDUMP_DBG(cur_line->reg_data, cur_line->reg_len, "data:");
+
 			cur_ele_idx = 0;
 			dev_cfg->wr_cnt++;
 			if (dev_cfg->wr_cnt > max_line) {
@@ -635,7 +634,7 @@ bool mp289x_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_
 
 	if (i2c_master_read(&i2c_msg, retry)) {
 		LOG_ERR("Failed to read error status");
-		return 0xFF;
+		return false;
 	}
 
 	uint16_t state_d0 = i2c_msg.data[0] | (i2c_msg.data[1] << 8);
