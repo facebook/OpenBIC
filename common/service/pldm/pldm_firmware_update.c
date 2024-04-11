@@ -1224,6 +1224,19 @@ static uint8_t query_device_identifiers(void *mctp_inst, uint8_t *buf, uint16_t 
 	return plat_pldm_query_device_identifiers(buf, len, resp, resp_len);
 }
 
+static uint8_t query_downstream_devices(void *mctp_inst, uint8_t *buf, uint16_t len,
+					uint8_t instance_id, uint8_t *resp, uint16_t *resp_len,
+					void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
+
+	return plat_pldm_query_downstream_devices(buf, len, resp, resp_len);
+}
+
 static uint8_t query_downstream_identifiers(void *mctp_inst, uint8_t *buf, uint16_t len,
 					    uint8_t instance_id, uint8_t *resp, uint16_t *resp_len,
 					    void *ext_params)
@@ -1237,6 +1250,84 @@ static uint8_t query_downstream_identifiers(void *mctp_inst, uint8_t *buf, uint1
 	return plat_pldm_query_downstream_identifiers(buf, len, resp, resp_len);
 }
 
+static uint8_t get_downstream_firmware_parameters(void *mctp_inst, uint8_t *buf, uint16_t len,
+						  uint8_t instance_id, uint8_t *resp,
+						  uint16_t *resp_len, void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
+
+	struct pldm_get_downstream_firmware_parameters_resp *resp_p =
+		(struct pldm_get_downstream_firmware_parameters_resp *)resp;
+
+	*resp_len = 1;
+
+	if (len != sizeof(struct pldm_get_downstream_firmware_parameters_req)) {
+		resp_p->completion_code = PLDM_ERROR_INVALID_LENGTH;
+		return PLDM_SUCCESS;
+	}
+
+	uint8_t *curr_downstream_device =
+		(uint8_t *)resp_p + sizeof(struct pldm_get_downstream_firmware_parameters_resp);
+	uint16_t param_table_len = 0;
+	uint8_t error_code[] = PLDM_CREATE_ERR_STR_ARRAY(PLDM_COMMON_ERR_CODE);
+
+	for (uint8_t i = 1 /* skip BIC itself */; i < comp_config_count; i++) {
+		if (!comp_config[i].get_fw_version_fn)
+			continue;
+
+		if (sizeof(struct pldm_get_downstream_firmware_parameters_resp) + param_table_len >
+		    PLDM_MAX_DATA_SIZE) {
+			LOG_ERR("Data length %d is over PLDM_MAX_DATA_SIZE define size %d",
+				sizeof(struct pldm_get_downstream_firmware_parameters_resp) +
+					param_table_len,
+				PLDM_MAX_DATA_SIZE);
+			resp_p->completion_code = PLDM_ERROR;
+			return PLDM_SUCCESS;
+		}
+
+		struct component_parameter_table *comp_table_p =
+			(struct component_parameter_table *)curr_downstream_device;
+		curr_downstream_device += sizeof(struct component_parameter_table);
+
+		comp_table_p->comp_identifier = comp_config[i].comp_identifier;
+		comp_table_p->comp_classification = comp_config[i].comp_classification;
+		comp_table_p->active_comp_ver_str_type = PLDM_COMP_ASCII;
+		comp_table_p->pending_comp_ver_str_type = PLDM_COMP_ASCII;
+		comp_table_p->pending_comp_ver_str_len = 0x00;
+		comp_table_p->comp_activation_methods = comp_config[i].activate_method;
+
+		if (!comp_config[i].get_fw_version_fn(&comp_config[i], curr_downstream_device,
+						      &comp_table_p->active_comp_ver_str_len)) {
+			comp_table_p->active_comp_ver_str_len = sizeof(error_code);
+			memcpy(curr_downstream_device, &error_code, sizeof(error_code));
+		}
+
+		param_table_len += sizeof(struct component_parameter_table) +
+				   comp_table_p->active_comp_ver_str_len;
+		curr_downstream_device += comp_table_p->active_comp_ver_str_len;
+
+		if (comp_config[i].pending_version_p) {
+			memcpy(curr_downstream_device, comp_config[i].pending_version_p,
+			       strlen(comp_config[i].pending_version_p));
+			comp_table_p->pending_comp_ver_str_len =
+				strlen(comp_config[i].pending_version_p);
+			param_table_len += comp_table_p->pending_comp_ver_str_len;
+			curr_downstream_device += comp_table_p->pending_comp_ver_str_len;
+		}
+
+		resp_p->downstream_device_count++;
+	}
+
+	resp_p->completion_code = PLDM_SUCCESS;
+	*resp_len = sizeof(struct pldm_get_downstream_firmware_parameters_resp) + param_table_len;
+
+	return PLDM_SUCCESS;
+}
+
 __weak uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uint8_t *resp,
 						  uint16_t *resp_len)
 {
@@ -1248,7 +1339,21 @@ __weak uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t l
 
 	*completion_code_p = PLDM_ERROR_UNSUPPORTED_PLDM_CMD;
 	*resp_len = 1;
-	LOG_WRN("Not supported command");
+
+	return PLDM_ERROR_UNSUPPORTED_PLDM_CMD;
+}
+
+__weak uint8_t plat_pldm_query_downstream_devices(const uint8_t *buf, uint16_t len, uint8_t *resp,
+						  uint16_t *resp_len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+
+	uint8_t *completion_code_p = resp;
+
+	*completion_code_p = PLDM_ERROR_UNSUPPORTED_PLDM_CMD;
+	*resp_len = 1;
 
 	return PLDM_ERROR_UNSUPPORTED_PLDM_CMD;
 }
@@ -1264,7 +1369,6 @@ __weak uint8_t plat_pldm_query_downstream_identifiers(const uint8_t *buf, uint16
 
 	*completion_code_p = PLDM_ERROR_UNSUPPORTED_PLDM_CMD;
 	*resp_len = 1;
-	LOG_WRN("Not supported command");
 
 	return PLDM_ERROR_UNSUPPORTED_PLDM_CMD;
 }
@@ -1272,7 +1376,10 @@ __weak uint8_t plat_pldm_query_downstream_identifiers(const uint8_t *buf, uint16
 static pldm_cmd_handler pldm_fw_update_cmd_tbl[] = {
 	{ PLDM_FW_UPDATE_CMD_CODE_QUERY_DEVICE_IDENTIFIERS, query_device_identifiers },
 	{ PLDM_FW_UPDATE_CMD_CODE_GET_FIRMWARE_PARAMETERS, get_firmware_parameter },
+	{ PLDM_FW_UPDATE_CMD_CODE_QUERY_DOWNSTREAM_DEVICES, query_downstream_devices },
 	{ PLDM_FW_UPDATE_CMD_CODE_QUERY_DOWNSTREAM_IDENTIFIERS, query_downstream_identifiers },
+	{ PLDM_FW_UPDATE_CMD_CODE_GET_DOWNSTREAM_FW_PARAMETERS,
+	  get_downstream_firmware_parameters },
 	{ PLDM_FW_UPDATE_CMD_CODE_REQUEST_UPDATE, request_update },
 	{ PLDM_FW_UPDATE_CMD_CODE_PASS_COMPONENT_TABLE, pass_component_table },
 	{ PLDM_FW_UPDATE_CMD_CODE_UPDATE_COMPONENT, update_component },
