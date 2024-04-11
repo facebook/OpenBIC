@@ -33,14 +33,16 @@
 #include "hal_i2c_target.h"
 #include "hal_gpio.h"
 
+#ifdef ENABLE_SBMR
+#include "sbmr.h"
+#endif
+
 LOG_MODULE_REGISTER(ssif);
 
 #define SSIF_TARGET_MSGQ_SIZE 0x0A
 
 #define SSIF_STATUS_CHECK_PER_MS 100
 #define SSIF_TIMEOUT_MS 5000 // i2c bus drop off maximum time
-
-#define SSIF_RSP_PEC_EN 0
 
 ssif_dev *ssif;
 static uint8_t ssif_channel_cnt = 0;
@@ -130,6 +132,11 @@ void ssif_error_record(uint8_t channel, ssif_err_status_t errcode)
 }
 
 __weak void pal_ssif_alert_trigger(uint8_t status)
+{
+	return;
+}
+
+__weak void pal_bios_post_complete()
 {
 	return;
 }
@@ -248,7 +255,8 @@ static bool ssif_status_check(ssif_dev *ssif_inst, uint8_t smb_cmd)
 	switch (smb_cmd) {
 	case SSIF_WR_SINGLE:
 	case SSIF_WR_MULTI_START:
-		if (ssif_inst->cur_status != SSIF_STATUS_WAIT_FOR_WR_START)
+		if (ssif_inst->cur_status != SSIF_STATUS_WAIT_FOR_WR_START &&
+		    ssif_inst->cur_status != SSIF_STATUS_WAIT_FOR_RD_START)
 			goto error;
 		if (smb_cmd == SSIF_WR_SINGLE)
 			ssif_state_machine(ssif_inst, SSIF_STATUS_WR_SINGLE_START);
@@ -313,6 +321,17 @@ static bool ssif_data_handle(ssif_dev *ssif_inst, ssif_action_t action, uint8_t 
 		/* Message to BIC */
 		if (pal_request_msg_to_BIC_from_HOST(ssif_inst->current_ipmi_msg.buffer.netfn,
 						     ssif_inst->current_ipmi_msg.buffer.cmd)) {
+#ifdef ENABLE_SBMR
+			if (ssif_inst->current_ipmi_msg.buffer.netfn == NETFN_DCMI_REQ) {
+				if (smbr_cmd_handler(&ssif_inst->current_ipmi_msg.buffer) == true) {
+					if (ssif_set_data(ssif_inst->index,
+							  &ssif_inst->current_ipmi_msg) == false) {
+						LOG_ERR("Failed to write ssif response data");
+					}
+				}
+				goto exit;
+			}
+#endif
 			while (k_msgq_put(&ipmi_msgq, &ssif_inst->current_ipmi_msg, K_NO_WAIT) !=
 			       0) {
 				k_msgq_purge(&ipmi_msgq);
@@ -360,6 +379,11 @@ static bool ssif_data_handle(ssif_dev *ssif_inst, ssif_action_t action, uint8_t 
 				}
 			}
 
+			if ((ssif_inst->current_ipmi_msg.buffer.netfn == NETFN_OEM_REQ) &&
+			    (ssif_inst->current_ipmi_msg.buffer.cmd == CMD_OEM_POST_END)) {
+				pal_bios_post_complete();
+			}
+
 			do {
 				uint8_t seq_source = 0xFF;
 				ipmi_msg msg;
@@ -368,13 +392,37 @@ static bool ssif_data_handle(ssif_dev *ssif_inst, ssif_action_t action, uint8_t 
 					ssif_inst->current_ipmi_msg.buffer.cmd, SELF, BMC_IPMB,
 					ssif_inst->current_ipmi_msg.buffer.data_len,
 					ssif_inst->current_ipmi_msg.buffer.data);
-				ipmb_error ipmb_ret =
-					ipmb_read(&msg, IPMB_inf_index_map[msg.InF_target]);
-				if (ipmb_ret != IPMB_ERROR_SUCCESS) {
-					LOG_ERR("SSIF[%d] Failed to send SSIF msg to BMC with ret: 0x%x",
-						ssif_inst->index, ipmb_ret);
+
+#if MAX_IPMB_IDX
+				// Check BMC communication interface if use IPMB or not
+				if (!pal_is_interface_use_ipmb(IPMB_inf_index_map[BMC_IPMB])) {
+					msg.InF_target = PLDM;
+					// Send request to MCTP/PLDM thread to ask BMC
+					int ret = pldm_send_ipmi_request(&msg);
+					if (ret < 0) {
+						LOG_ERR("SSIF[%d] Failed to send SSIF msg to BMC via PLDM with ret: 0x%x",
+							ssif_inst->index, ret);
+						break;
+					}
+				} else {
+					ipmb_error ipmb_ret =
+						ipmb_read(&msg, IPMB_inf_index_map[msg.InF_target]);
+					if (ipmb_ret != IPMB_ERROR_SUCCESS) {
+						LOG_ERR("SSIF[%d] Failed to send SSIF msg to BMC via IPMB with ret: 0x%x",
+							ssif_inst->index, ipmb_ret);
+						break;
+					}
+				}
+#else
+				msg.InF_target = PLDM;
+				// Send request to MCTP/PLDM thread to ask BMC
+				int ret = pldm_send_ipmi_request(&msg);
+				if (ret < 0) {
+					LOG_ERR("SSIF[%d] Failed to send SSIF msg to BMC via PLDM with ret: 0x%x",
+						ssif_inst->index, ret);
 					break;
 				}
+#endif
 
 				ipmi_msg_cfg ssif_rsp = { 0 };
 				ssif_rsp.buffer = msg;
@@ -386,6 +434,7 @@ static bool ssif_data_handle(ssif_dev *ssif_inst, ssif_action_t action, uint8_t 
 			} while (0);
 		}
 
+	exit:
 		if (k_sem_take(&ssif_inst->rsp_buff_sem, K_MSEC(1500)) != 0) {
 			LOG_ERR("SSIF[%d] Get ipmi response message timeout!", ssif_inst->index);
 			ssif_error_record(ssif_inst->index, SSIF_STATUS_RSP_MSG_TIMEOUT);
@@ -467,11 +516,10 @@ static bool ssif_data_handle(ssif_dev *ssif_inst, ssif_action_t action, uint8_t 
 			wdata[0] = wdata_len;
 			wdata_len++;
 
-			if (SSIF_RSP_PEC_EN == 1) {
-				wdata[wdata_len + 1] = ssif_pec_get(ssif_inst->addr, smb_cmd, wdata,
-								    wdata_len + 1);
-				wdata_len++;
-			}
+#ifdef ENABLE_SSIF_RSP_PEC
+			wdata[wdata_len] = ssif_pec_get(ssif_inst->addr, smb_cmd, wdata, wdata_len);
+			wdata_len++;
+#endif
 
 			LOG_DBG("SSIF[%d] write RSP data:", ssif_inst->index);
 			LOG_HEXDUMP_DBG(wdata, wdata_len, "");

@@ -190,9 +190,10 @@ enum {
 	CMD_STORAGE_ADD_SEL = 0x44,
 };
 
-// Application Extension Code (0x2c)
+// DCMI Command Codes (0x2C)
 enum {
-	CMD_DCMI_GET_PICMG_PROPERTIES = 0x00,
+	CMD_DCMI_SEND_BOOT_PROGRESS_CODE = 0x02,
+	CMD_DCMI_GET_BOOT_PROGRESS_CODE = 0x03,
 };
 
 // OEM NM Command Codes (0x2E)
@@ -203,6 +204,8 @@ enum {
 // OEM Command Codes (0x30)
 enum {
 	CMD_OEM_GET_BOARD_ID = 0x37,
+	CMD_OEM_POST_START = 0x73,
+	CMD_OEM_POST_END = 0x74,
 	CMD_OEM_CABLE_DETECTION = 0xCB,
 	CMD_OEM_NM_SENSOR_READ = 0xE2,
 	CMD_OEM_SET_SYSTEM_GUID = 0xEF,
