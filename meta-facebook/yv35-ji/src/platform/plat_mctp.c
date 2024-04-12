@@ -31,10 +31,15 @@ mctp_port plat_mctp_port[] = {
 	  .medium_type = MCTP_MEDIUM_TYPE_TARGET_I3C,
 	  .conf.i3c_conf.bus = MCTP_I3C_BMC_BUS,
 	  .conf.i3c_conf.addr = MCTP_I3C_BMC_ADDR },
+	{ .channel_target = PLDM,
+	  .medium_type = MCTP_MEDIUM_TYPE_SMBUS,
+	  .conf.smbus_conf.bus = MCTP_I2C_SATMC_BUS,
+	  .conf.smbus_conf.addr = MCTP_I2C_BIC_ADDR },
 };
 
 mctp_route_entry mctp_route_tbl[] = {
 	{ MCTP_EID_BMC, MCTP_I3C_BMC_BUS, MCTP_I3C_BMC_ADDR },
+	{ MCTP_EID_SATMC, MCTP_I2C_SATMC_BUS, MCTP_I2C_SATMC_ADDR },
 };
 
 static void set_endpoint_resp_handler(void *args, uint8_t *buf, uint16_t len)

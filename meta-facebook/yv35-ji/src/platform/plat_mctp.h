@@ -6,6 +6,7 @@
 
 /* mctp endpoint */
 #define MCTP_EID_BMC 0x08
+#define MCTP_EID_SATMC 0xF0
 
 struct mctp_to_ipmi_header_req {
 	uint8_t iana[IANA_LEN];
