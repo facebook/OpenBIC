@@ -34,6 +34,8 @@ LOG_MODULE_REGISTER(plat_class);
 static uint8_t system_class = SYS_CLASS_1;
 static uint8_t board_revision = 0x0F;
 static uint8_t hsc_module = HSC_MODULE_UNKNOWN;
+static uint8_t retimer_module = RETIMER_MODULE_UNKNOWN;
+static uint8_t oth_module = OTH_MODULE_UNKNOWN;
 static CARD_STATUS _1ou_status = { false, TYPE_1OU_UNKNOWN };
 static CARD_STATUS _2ou_status = { false, TYPE_2OU_UNKNOWN };
 
@@ -60,6 +62,16 @@ uint8_t get_board_revision()
 uint8_t get_hsc_module()
 {
 	return hsc_module;
+}
+
+uint8_t get_oth_module()
+{
+	return oth_module;
+}
+
+uint8_t get_retimer_module()
+{
+	return retimer_module;
 }
 
 /* ADC information for each channel
@@ -155,4 +167,10 @@ bool get_adc_voltage(int channel, float *voltage)
 
 void init_platform_config()
 {
+	retimer_module = gpio_get(BOARD_ID4);
+	oth_module = gpio_get(BOARD_ID5);
+	hsc_module = gpio_get(HSC_TYPE_0);
+
+	LOG_INF("Retimer module: %d, OTH module: %d, HSC module: %d", retimer_module, oth_module,
+		hsc_module);
 }
