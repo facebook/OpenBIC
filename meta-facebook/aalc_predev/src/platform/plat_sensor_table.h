@@ -29,7 +29,9 @@
 #define BPB_ADS112C_2_ADDR (0x8A >> 1)
 #define BPB_ADS112C_3_ADDR (0x82 >> 1)
 #define BPB_ADS112C_4_ADDR (0x80 >> 1)
-#define SB_ADS112C_ADDR (0x80 >> 1)
+#define SB_ADS112C_1_ADDR (0x80 >> 1)
+#define SB_ADS112C_2_ADDR (0x82 >> 1)
+#define SB_ADS112C_3_ADDR (0x88 >> 1)
 #define BPB_NCT7363_ADDR (0x40 >> 1)
 #define FB_NCT7363_ADDR (0x42 >> 1)
 #define PB_NCT7363_ADDR (0x40 >> 1)
@@ -213,6 +215,9 @@
 #define SENSOR_NUM_V_3_3_AUX 0xA2
 #define SENSOR_NUM_V_1_2_AUX 0xA3
 #define SENSOR_NUM_V_5_USB 0xA4
+#define SENSOR_NUM_SB_LEAKAGE_1 0xA5
+#define SENSOR_NUM_SB_LEAKAGE_2 0xA6
+#define SENSOR_NUM_SB_LEAKAGE_3 0xA7
 
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
