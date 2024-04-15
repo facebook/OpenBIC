@@ -27,11 +27,15 @@
 #include "plat_pldm_fw_update.h"
 #include "plat_i2c.h"
 #include "plat_gpio.h"
+#include "plat_pldm_sensor.h"
+
 #include "mp2971.h"
 #include "pt5161l.h"
 #include "raa229621.h"
 #include "plat_class.h"
 #include "plat_pldm_device_identifier.h"
+#include "sensor.h"
+#include "tps53689.h"
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
@@ -63,9 +67,11 @@ enum RETIMER_ADDR {
 };
 
 enum VR_TYPE {
-	VR_TYPE_UNKNOWN,
 	VR_TYPE_MPS,
 	VR_TYPE_RNS,
+	VR_TYPE_IFX,
+	VR_TYPE_TI,
+	VR_TYPE_UNKNOWN = 0xFF,
 };
 
 /* PLDM FW update table */
@@ -518,7 +524,7 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	uint16_t remain = 0xFFFF;
 	uint8_t bus = I2C_BUS4;
 	uint8_t addr = 0;
-	uint8_t vr_type = VR_TYPE_UNKNOWN;
+	uint8_t vr_type = VR_TYPE_UNKNOWN, vr_dev = VR_DEVICE_UNKNOWN;
 
 	if (p->comp_identifier == SD_COMPNT_VR_PVDDCR_CPU1) {
 		addr = 0x63;
@@ -530,16 +536,33 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		LOG_ERR("Unknown component identifier for VR");
 	}
 
-	if (gpio_get(VR_TYPE_1) == GPIO_LOW) {
+	if (plat_pldm_sensor_get_vr_dev(&vr_dev) != 0) {
+		LOG_ERR("Failed to get VR device");
+		return ret;
+	}
+
+	switch (vr_dev) {
+	case sensor_dev_mp2856gut:
 		vr_type = VR_TYPE_MPS;
-	} else {
+		break;
+	case sensor_dev_raa229621:
 		vr_type = VR_TYPE_RNS;
+		break;
+	case sensor_dev_xdpe19283b:
+		vr_type = VR_TYPE_IFX;
+		break;
+	case sensor_dev_tps53689:
+		vr_type = VR_TYPE_TI;
+		break;
+	default:
+		LOG_ERR("Unknown VR type");
+		return ret;
 	}
 
 	const char *vr_name[] = {
+		[VR_TYPE_MPS] = "MPS ",	     [VR_TYPE_RNS] = "Renesas ",
+		[VR_TYPE_IFX] = "Infineon ", [VR_TYPE_TI] = "Texas Instruments ",
 		[VR_TYPE_UNKNOWN] = NULL,
-		[VR_TYPE_MPS] = "MPS ",
-		[VR_TYPE_RNS] = "Renesas ",
 	};
 
 	const uint8_t *vr_name_p = vr_name[vr_type];
@@ -561,7 +584,15 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 			LOG_ERR("Read VR remaining write failed");
 			return ret;
 		}
-
+		break;
+	case VR_TYPE_IFX:
+		LOG_ERR("Infineon VR does not support FW version read");
+		break;
+	case VR_TYPE_TI:
+		if (!tps536xx_get_crc(bus, addr, &version)) {
+			LOG_ERR("Read TI VR checksum failed");
+			return ret;
+		}
 		break;
 	default:
 		LOG_ERR("Unknown VR device");
