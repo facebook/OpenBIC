@@ -179,7 +179,7 @@ index 06e44bd241..09b116bc27 100644
 +		cfg->rtu_timeout = (numof_bits * if_delay_max) * 4 /
  				   param.serial.baud;
  	} else {
- 		cfg->rtu_timeout = (numof_bits * if_delay_max) / 38400; 
+ 		cfg->rtu_timeout = (numof_bits * if_delay_max) / 38400;
 diff --git a/subsys/modbus/modbus_server.c b/subsys/modbus/modbus_server.c
 index 6a8b0710f9..40134e3c28 100644
 --- a/subsys/modbus/modbus_server.c
