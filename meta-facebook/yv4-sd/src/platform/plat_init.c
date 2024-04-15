@@ -49,7 +49,6 @@ void pal_pre_init()
 {
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
 	aspeed_print_sysrst_info();
-	apml_init();
 
 	/* init i2c target */
 	for (int index = 0; index < MAX_TARGET_NUM; index++) {
@@ -108,6 +107,7 @@ void pal_set_sys_status()
 	sync_bmc_ready_pin();
 	set_sys_ready_pin(BIC_READY_R);
 	reset_usb_hub();
+	apml_init();
 
 	if (get_post_status()) {
 		apml_recovery();
