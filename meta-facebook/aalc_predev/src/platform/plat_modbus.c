@@ -30,6 +30,8 @@
 #include "plat_sensor_table.h"
 #include "plat_fru.h"
 
+#include <modbus_internal.h>
+
 LOG_MODULE_REGISTER(plat_modbus);
 
 #define FW_UPDATE_SWITCH_FC 0x64
@@ -37,6 +39,7 @@ LOG_MODULE_REGISTER(plat_modbus);
 #define FW_UPDATE_ENABLE_DATA 0x0101
 #define FW_UPDATE_DISABLE_DATA 0x0100
 
+//{ DT_PROP(DT_INST(0, zephyr_modbus_serial), label) }
 static char server_iface_name[] = "MODBUS0";
 
 static float pow_of_10(int8_t exp)
@@ -534,71 +537,40 @@ const static struct modbus_iface_param server_param = {
 	},
 };
 
-
-/*
-static void modbus_server_handler(void *arug0, void *arug1, void *arug2)
+static bool custom_handler_fc64(const int iface, const struct modbus_adu *rx_adu,
+				struct modbus_adu *tx_adu, uint8_t *const excep_code,
+				void *const user_data)
 {
-	int val;
+	static uint8_t req_len = 4;
+	static uint8_t res_len = 4;
 
-	val = init_modbus_server(*server_iface_name, server_param);
-
-	if (val != 0) {
-		LOG_ERR("Failed to initialize server");
-		return;
+	if (rx_adu->length != req_len) {
+		*excep_code = MODBUS_EXC_ILLEGAL_DATA_VAL;
+		return true;
 	}
-
-	val = modbus_register_user_fc(*server_iface_name, &modbus_cfg_custom);		
-	if (val != 0) {
-		LOG_ERR("Failed to initialize server");
-		return;
-	}
-}*/
-
-
-static bool custom_handler(const int iface, const struct modbus_adu *rx_adu,
-			   struct modbus_adu *tx_adu, uint8_t *const excep_code,
-			   void *const user_data)
-{
-	static uint8_t req_len;
-	static uint8_t res_len;
-
-	switch (rx_adu->fc) {
-	case FW_UPDATE_SWITCH_FC:
-		req_len = 4;
-		res_len = 4;
-		if (rx_adu->length != req_len) {
-			*excep_code = MODBUS_EXC_ILLEGAL_DATA_VAL;
-			return true;
-		}
-		uint16_t addr = (rx_adu->data[0] << 8) | rx_adu->data[1];
-		if (addr == FW_UPDATE_SWITCH_ADDR) {
-			uint16_t data = (rx_adu->data[2] << 8) | rx_adu->data[3];
-			if (data == FW_UPDATE_ENABLE_DATA || data == FW_UPDATE_DISABLE_DATA) {
-				memcpy(&tx_adu->data, &rx_adu->data, req_len);
-				tx_adu->length = res_len;
-			} else {
-				*excep_code = MODBUS_EXC_ILLEGAL_DATA_VAL;
-			}
+	uint16_t addr = (rx_adu->data[0] << 8) | rx_adu->data[1];
+	if (addr == FW_UPDATE_SWITCH_ADDR) {
+		uint16_t data = (rx_adu->data[2] << 8) | rx_adu->data[3];
+		if (data == FW_UPDATE_ENABLE_DATA || data == FW_UPDATE_DISABLE_DATA) {
+			memcpy(&tx_adu->data, &rx_adu->data, req_len);
+			tx_adu->length = res_len;
 		} else {
-			*excep_code = MODBUS_EXC_ILLEGAL_DATA_ADDR;
+			*excep_code = MODBUS_EXC_ILLEGAL_DATA_VAL;
 		}
-		return true;
-	default:
-		*excep_code = MODBUS_EXC_ILLEGAL_FC;
-		return true;
+	} else {
+		*excep_code = MODBUS_EXC_ILLEGAL_DATA_ADDR;
 	}
+	return true;
 }
 
-MODBUS_CUSTOM_FC_DEFINE(custom, custom_handler, 100, NULL);
-
+MODBUS_CUSTOM_FC_DEFINE(custom_fc64, custom_handler_fc64, FW_UPDATE_SWITCH_FC, NULL);
 
 int init_custom_modbus_server(void)
 {
 	int server_iface = modbus_iface_get_by_name(server_iface_name);
 
 	if (server_iface < 0) {
-		LOG_ERR("Failed to get iface index for %s",
-			server_iface_name);
+		LOG_ERR("Failed to get iface index for %s", server_iface_name);
 		return -ENODEV;
 	}
 	//return modbus_init_server(server_iface, server_param);
@@ -608,6 +580,5 @@ int init_custom_modbus_server(void)
 		return err;
 	}
 
-	return modbus_register_user_fc(server_iface, &modbus_cfg_custom);
+	return modbus_register_user_fc(server_iface, &modbus_cfg_custom_fc64);
 }
-
