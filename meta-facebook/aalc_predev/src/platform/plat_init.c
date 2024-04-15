@@ -33,7 +33,7 @@ void pal_pre_init()
 void pal_post_init()
 {
 	init_pwm_dev();
-	modbus_server_handler_init();
+	init_custom_modbus_server();
 }
 
 void pal_device_init()
