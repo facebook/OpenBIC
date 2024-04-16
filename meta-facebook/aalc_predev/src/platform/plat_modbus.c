@@ -72,34 +72,6 @@ static float pow_of_10(int8_t exp)
 uint16_t OPERATION_DISABLE = 0x00;
 uint16_t OPERATION_ENABLE = 0x01;
 
-static bool pump_status(void)
-{
-	
-	/* write check pump statuscode here*/
-	bool pump_status = true;
-	if (pump_status == true){
-		return true;
-	}
-	else{
-		return false;
-	}
-
-}
-
-void check_pump_status_handler(struct k_work *work)
-{
-	if (!work) {
-		LOG_ERR("Check pump status get NULL work handler!");
-		return;
-	}
-
-	if (!pump_status()) {
-		k_work_schedule((struct k_work_delayable *)work, K_SECONDS(1));
-	}
-}
-
-K_WORK_DELAYABLE_DEFINE(up_1sec_handler, check_pump_status_handler);
-
 static sensor_cfg *get_sensor_config_data(modbus_command_mapping *cmd)
 {
 	// Check sensor information in sensor config table
@@ -146,16 +118,15 @@ static uint8_t modbus_reset_adm1272_reg(modbus_command_mapping *cmd)
 	// 1 enable, 0 disable, stop pump first
 	if (enable_adm1272_hsc(bus, addr, enable_flag) == true) {
 		// check pump is already enable
-		k_work_schedule(&up_1sec_handler, K_SECONDS(1));
+		//k_work_schedule(&up_1sec_handler, K_SECONDS(1));
+		k_msleep(3000);
 		// enable pump
 		if (enable_adm1272_hsc(bus, addr, 1) == true) {
 			return MODBUS_EXC_NONE;
-		}
-		else{
+		} else {
 			return MODBUS_EXC_GW_TARGET_FAILED_TO_RESP;
 		}
-	}
-	else{
+	} else {
 		return MODBUS_EXC_GW_TARGET_FAILED_TO_RESP;
 	}
 }
@@ -504,6 +475,9 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_1, 1, 0, 1 },
 	{ MODBUS_LEAK_RACK_FLOOR_GPO_AND_RELAY_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_2, 1, 0, 1 },
+	// modbus writre
+	{ MODBUS_PUMP_SETTING_ADDR, modbus_reset_adm1272_reg, NULL,
+	  SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W, 1, 0, 1, &OPERATION_DISABLE },
 };
 
 static modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)
