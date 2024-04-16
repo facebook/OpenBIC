@@ -29,7 +29,7 @@
 #include "plat_modbus.h"
 #include "plat_sensor_table.h"
 #include "plat_fru.h"
-
+#include "adm1272.h"
 #include <modbus_internal.h>
 
 LOG_MODULE_REGISTER(plat_modbus);
@@ -67,6 +67,53 @@ static float pow_of_10(int8_t exp)
 
 	actual_val =  raw_val * m * (10 ^ r)
 */
+
+// define adm1272 operation status
+uint16_t OPERATION_DISABLE = 0x00;
+uint16_t OPERATION_ENABLE = 0x01;
+
+static bool pump_status(void)
+{
+	
+	/* write check pump statuscode here*/
+	bool pump_status = true;
+	if (pump_status == true){
+		return true;
+	}
+	else{
+		return false;
+	}
+
+}
+
+void check_pump_status_handler(struct k_work *work)
+{
+	if (!work) {
+		LOG_ERR("Check pump status get NULL work handler!");
+		return;
+	}
+
+	if (!pump_status()) {
+		k_work_schedule((struct k_work_delayable *)work, K_SECONDS(1));
+	}
+}
+
+K_WORK_DELAYABLE_DEFINE(up_1sec_handler, check_pump_status_handler);
+
+static sensor_cfg *get_sensor_config_data(modbus_command_mapping *cmd)
+{
+	// Check sensor information in sensor config table
+	uint8_t sensor_num = cmd->arg0;
+	sensor_cfg *cfg = NULL;
+	cfg = find_sensor_cfg_via_sensor_num(sensor_config, sensor_config_count, sensor_num);
+	if (cfg == NULL) {
+		LOG_ERR("Fail to find sensor info in config table, sensor_num: 0x%x, cfg count: 0x%x",
+			sensor_num, sensor_config_count);
+		return NULL;
+	}
+	return cfg;
+}
+
 static uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
@@ -85,6 +132,32 @@ static uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd)
 	}
 
 	return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+}
+
+static uint8_t modbus_reset_adm1272_reg(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+	// Check sensor information in sensor config table
+	sensor_cfg *cfg = get_sensor_config_data(cmd);
+	//uint8_t bus,uint8_t addr, bool enable_flag
+	uint8_t bus = cfg->port;
+	uint8_t addr = cfg->target_addr;
+	bool enable_flag = false;
+	// 1 enable, 0 disable, stop pump first
+	if (enable_adm1272_hsc(bus, addr, enable_flag) == true) {
+		// check pump is already enable
+		k_work_schedule(&up_1sec_handler, K_SECONDS(1));
+		// enable pump
+		if (enable_adm1272_hsc(bus, addr, 1) == true) {
+			return MODBUS_EXC_NONE;
+		}
+		else{
+			return MODBUS_EXC_GW_TARGET_FAILED_TO_RESP;
+		}
+	}
+	else{
+		return MODBUS_EXC_GW_TARGET_FAILED_TO_RESP;
+	}
 }
 
 modbus_command_mapping modbus_command_table[] = {
