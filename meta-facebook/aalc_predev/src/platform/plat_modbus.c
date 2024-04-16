@@ -118,7 +118,6 @@ static uint8_t modbus_reset_adm1272_reg(modbus_command_mapping *cmd)
 	// 1 enable, 0 disable, stop pump first
 	if (enable_adm1272_hsc(bus, addr, enable_flag) == true) {
 		// check pump is already enable
-		//k_work_schedule(&up_1sec_handler, K_SECONDS(1));
 		k_msleep(3000);
 		// enable pump
 		if (enable_adm1272_hsc(bus, addr, 1) == true) {
