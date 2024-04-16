@@ -14,15 +14,9 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_DEF_H
-#define PLAT_DEF_H
+#ifndef PLAT_SSIF_H
+#define PLAT_SSIF_H
 
-#define BMC_USB_PORT "CDC_ACM_0"
-
-#define WORKER_STACK_SIZE 4096
-#define ENABLE_MCTP_I3C
-#define ENABLE_SSIF
-#define ENABLE_SSIF_RSP_PEC
-#define ENABLE_SBMR
+void ssif_init(void);
 
 #endif
