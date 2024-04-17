@@ -23,6 +23,7 @@
 
 #include "plat_def.h"
 #include "sdr.h"
+#include "pldm_monitor.h"
 #include "libutil.h"
 #include "sensor_shell.h"
 
@@ -156,6 +157,7 @@ enum SENSOR_DEV {
 	sensor_dev_cx7 = 0x2E,
 	sensor_dev_vistara = 0x2F,
 	sensor_dev_max11617 = 0x30,
+	sensor_dev_nv_satmc = 0x31,
 	sensor_dev_max
 };
 
@@ -699,6 +701,14 @@ typedef struct _max11617_init_arg {
 	uint8_t config_byte;
 	float scalefactor[12];
 } max11617_init_arg;
+
+typedef struct _nv_satmc_init_arg {
+	bool is_init;
+	uint8_t endpoint;
+	uint16_t sensor_id;
+	uint8_t state_sensor_idx; //only used for state sensor
+	pldm_sensor_pdr_parm parm; //only used for numeric sensor
+} nv_satmc_init_arg;
 
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;

@@ -27,6 +27,7 @@ extern "C" {
 /* command number of pldm type 0x02 : PLDM for platform monitor and control */
 typedef enum pldm_platform_monitor_commands {
 	PLDM_MONITOR_CMD_CODE_GET_SENSOR_READING = 0x11,
+	PLDM_MONITOR_CMD_CODE_GET_STATE_SENSOR_READING = 0x21,
 	PLDM_MONITOR_CMD_CODE_SET_EVENT_RECEIVER = 0x04,
 	PLDM_MONITOR_CMD_CODE_PLATFORM_EVENT_MESSAGE = 0x0A,
 	PLDM_MONITOR_CMD_CODE_EVENT_MESSAGE_BUFF_SIZE = 0x0D,
@@ -199,8 +200,8 @@ enum pldm_entity_types {
 
 /* Y = (mX + b) * 10^r */
 typedef struct _pldm_sensor_pdr_parm {
-	float resolution; // from PDR (m)
-	float ofst; // from PDR (b)
+	int64_t resolution; // from PDR (m)
+	int64_t ofst; // from PDR (b)
 	int8_t unit_modifier; // from PDR (r)
 } pldm_sensor_pdr_parm;
 
@@ -364,6 +365,25 @@ struct pldm_event_message_buffer_size_req {
 struct pldm_event_message_buffer_size_resp {
 	uint8_t completion_code;
 	uint16_t term_max_buff_size;
+} __attribute__((packed));
+
+typedef struct state_field_state_sensor_reading_get {
+	uint8_t sensor_op_state;
+	uint8_t present_state;
+	uint8_t previous_state;
+	uint8_t event_state;
+} __attribute__((packed)) state_sensor_reading_state_field_t;
+
+struct pldm_get_state_sensor_reading_req {
+	uint16_t sensor_id;
+	uint8_t sensor_rearm;
+	uint8_t rsv;
+} __attribute__((packed));
+
+struct pldm_get_state_sensor_reading_resp {
+	uint8_t completion_code;
+	uint8_t composite_sensor_count;
+	state_sensor_reading_state_field_t field[8];
 } __attribute__((packed));
 
 enum pldm_get_pdr_transfer_flag {
