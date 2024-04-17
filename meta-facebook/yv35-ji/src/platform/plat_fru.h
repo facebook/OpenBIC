@@ -18,6 +18,7 @@
 #define PLAT_FRU_H
 
 #include "eeprom.h"
+#include "plat_i2c.h"
 
 enum {
 	MB_FRU_ID,
@@ -27,7 +28,7 @@ enum {
 
 #define FRU_CFG_NUM MAX_FRU_ID
 
-#define MB_FRU_PORT 0x0A
+#define MB_FRU_PORT I2C_BUS10
 #define MB_FRU_ADDR 0x50
 
 #define BIOS_FW_VERSION_START 0x0A00
