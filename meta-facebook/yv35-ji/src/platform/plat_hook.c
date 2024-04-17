@@ -71,16 +71,34 @@ ina230_init_arg ina230_init_args[] = {
 #ifdef ENABLE_NVIDIA
 nv_satmc_init_arg satmc_init_args[] = {
 	/* numeric sensor */
-	[0] = { .is_init = false, .endpoint = MCTP_EID_SATMC, .sensor_id = NV_SATMC_SENSOR_NUM_TMP_GRACE },
-	[1] = { .is_init = false, .endpoint = MCTP_EID_SATMC, .sensor_id = NV_SATMC_SENSOR_NUM_PWR_VDD_CPU },
-	[2] = { .is_init = false, .endpoint = MCTP_EID_SATMC, .sensor_id = NV_SATMC_SENSOR_NUM_VOL_VDD_CPU },
-	[3] = { .is_init = false, .endpoint = MCTP_EID_SATMC, .sensor_id = NV_SATMC_SENSOR_NUM_PWR_VDD_SOC },
-	[4] = { .is_init = false, .endpoint = MCTP_EID_SATMC, .sensor_id = NV_SATMC_SENSOR_NUM_VOL_VDD_SOC },
-	[5] = { .is_init = false, .endpoint = MCTP_EID_SATMC, .sensor_id = NV_SATMC_SENSOR_NUM_PWR_GRACE },
+	[0] = { .is_init = false,
+		.endpoint = MCTP_EID_SATMC,
+		.sensor_id = NV_SATMC_SENSOR_NUM_TMP_GRACE },
+	[1] = { .is_init = false,
+		.endpoint = MCTP_EID_SATMC,
+		.sensor_id = NV_SATMC_SENSOR_NUM_PWR_VDD_CPU },
+	[2] = { .is_init = false,
+		.endpoint = MCTP_EID_SATMC,
+		.sensor_id = NV_SATMC_SENSOR_NUM_VOL_VDD_CPU },
+	[3] = { .is_init = false,
+		.endpoint = MCTP_EID_SATMC,
+		.sensor_id = NV_SATMC_SENSOR_NUM_PWR_VDD_SOC },
+	[4] = { .is_init = false,
+		.endpoint = MCTP_EID_SATMC,
+		.sensor_id = NV_SATMC_SENSOR_NUM_VOL_VDD_SOC },
+	[5] = { .is_init = false,
+		.endpoint = MCTP_EID_SATMC,
+		.sensor_id = NV_SATMC_SENSOR_NUM_PWR_GRACE },
 	/* state sensor */
-	[6] = { .endpoint = MCTP_EID_SATMC, .sensor_id = NV_SATMC_SENSOR_NUM_CPU_THROT_STATE, .state_sensor_idx = 0 },
-	[7] = { .endpoint = MCTP_EID_SATMC, .sensor_id = NV_SATMC_SENSOR_NUM_POWER_BREAK, .state_sensor_idx = 0 },
-	[8] = { .endpoint = MCTP_EID_SATMC, .sensor_id = NV_SATMC_SENSOR_NUM_SPARE_CH_PRESENCE, .state_sensor_idx = 0 },
+	[6] = { .endpoint = MCTP_EID_SATMC,
+		.sensor_id = NV_SATMC_SENSOR_NUM_CPU_THROT_STATE,
+		.state_sensor_idx = 0 },
+	[7] = { .endpoint = MCTP_EID_SATMC,
+		.sensor_id = NV_SATMC_SENSOR_NUM_POWER_BREAK,
+		.state_sensor_idx = 0 },
+	[8] = { .endpoint = MCTP_EID_SATMC,
+		.sensor_id = NV_SATMC_SENSOR_NUM_SPARE_CH_PRESENCE,
+		.state_sensor_idx = 0 },
 };
 #endif
 
@@ -88,12 +106,15 @@ nv_satmc_init_arg satmc_init_args[] = {
  *  PRE-HOOK/POST-HOOK ARGS
  **************************************************************************************************/
 struct tca9548 mux_conf_addr_0xe0[4] = {
-	[0] = { .addr = 0xe0, .chan = 0 }, [1] = { .addr = 0xe0, .chan = 1 },
-	[2] = { .addr = 0xe0, .chan = 2 }, [3] = { .addr = 0xe0, .chan = 3 },
+	[0] = { .addr = 0xe0, .chan = 0 },
+	[1] = { .addr = 0xe0, .chan = 1 },
+	[2] = { .addr = 0xe0, .chan = 2 },
+	[3] = { .addr = 0xe0, .chan = 3 },
 };
 
 struct tca9548 mux_conf_addr_0xe2[2] = {
-	[0] = { .addr = 0xe2, .chan = 0 }, [1] = { .addr = 0xe2, .chan = 1 },
+	[0] = { .addr = 0xe2, .chan = 0 },
+	[1] = { .addr = 0xe2, .chan = 1 },
 };
 
 /**************************************************************************************************

@@ -31,28 +31,28 @@
 LOG_MODULE_REGISTER(nv_satmc);
 
 struct nv_satmc_sensor_parm satmc_sensor_cfg_list[] = {
-	{NV_SATMC_SENSOR_NUM_PWR_VDD_CPU, {1, 0, -3}},
-	{NV_SATMC_SENSOR_NUM_VOL_VDD_CPU, {1, 0, -3}},
-	{NV_SATMC_SENSOR_NUM_PWR_VDD_SOC, {1, 0, -3}},
-	{NV_SATMC_SENSOR_NUM_VOL_VDD_SOC, {1, 0, -3}},
-	{NV_SATMC_SENSOR_NUM_PWR_MODULE, {1, 0, -3}},
-	{NV_SATMC_SENSOR_NUM_ENG_MODULE, {1, 0, 0}},
-	{NV_SATMC_SENSOR_NUM_PWR_GRACE, {1, 0, -3}},
-	{NV_SATMC_SENSOR_NUM_ENG_GRACE, {1, 0, 0}},
-	{NV_SATMC_SENSOR_NUM_PWR_TOTAL_MODULE, {1, 0, -3}},
-	{NV_SATMC_SENSOR_NUM_ENG_TOTAL_MODULE, {1, 0, 0}},
-	{NV_SATMC_SENSOR_NUM_CNT_PAGE_RETIRE, {1, 0, 0}},
-	{NV_SATMC_SENSOR_NUM_TMP_GRACE, {1, 0, -3}},
-	{NV_SATMC_SENSOR_NUM_TMP_GRACE_LIMIT, {1, 0, -3}},
-	{NV_SATMC_SENSOR_NUM_FRQ_MEMORY, {1, 0, 3}},
-	{NV_SATMC_SENSOR_NUM_FRQ_MAX_CPU, {1, 0, 0}},
+	{ NV_SATMC_SENSOR_NUM_PWR_VDD_CPU, { 1, 0, -3 } },
+	{ NV_SATMC_SENSOR_NUM_VOL_VDD_CPU, { 1, 0, -3 } },
+	{ NV_SATMC_SENSOR_NUM_PWR_VDD_SOC, { 1, 0, -3 } },
+	{ NV_SATMC_SENSOR_NUM_VOL_VDD_SOC, { 1, 0, -3 } },
+	{ NV_SATMC_SENSOR_NUM_PWR_MODULE, { 1, 0, -3 } },
+	{ NV_SATMC_SENSOR_NUM_ENG_MODULE, { 1, 0, 0 } },
+	{ NV_SATMC_SENSOR_NUM_PWR_GRACE, { 1, 0, -3 } },
+	{ NV_SATMC_SENSOR_NUM_ENG_GRACE, { 1, 0, 0 } },
+	{ NV_SATMC_SENSOR_NUM_PWR_TOTAL_MODULE, { 1, 0, -3 } },
+	{ NV_SATMC_SENSOR_NUM_ENG_TOTAL_MODULE, { 1, 0, 0 } },
+	{ NV_SATMC_SENSOR_NUM_CNT_PAGE_RETIRE, { 1, 0, 0 } },
+	{ NV_SATMC_SENSOR_NUM_TMP_GRACE, { 1, 0, -3 } },
+	{ NV_SATMC_SENSOR_NUM_TMP_GRACE_LIMIT, { 1, 0, -3 } },
+	{ NV_SATMC_SENSOR_NUM_FRQ_MEMORY, { 1, 0, 3 } },
+	{ NV_SATMC_SENSOR_NUM_FRQ_MAX_CPU, { 1, 0, 0 } },
 };
 
 const int SATMC_SENSOR_CFG_LIST_SIZE = ARRAY_SIZE(satmc_sensor_cfg_list);
 
 pldm_sensor_pdr_parm *find_sensor_parm_by_id(uint16_t sensor_id)
 {
-	for (int i=0; i<SATMC_SENSOR_CFG_LIST_SIZE; i++) {
+	for (int i = 0; i < SATMC_SENSOR_CFG_LIST_SIZE; i++) {
 		if (satmc_sensor_cfg_list[i].nv_satmc_sensor_id == sensor_id)
 			return &satmc_sensor_cfg_list[i].cal_parm;
 	}
@@ -85,25 +85,25 @@ uint8_t nv_satmc_read(sensor_cfg *cfg, int *reading)
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
-	if ((init_arg->sensor_id == NV_SATMC_SENSOR_NUM_CPU_THROT_STATE) || 
-		(init_arg->sensor_id == NV_SATMC_SENSOR_NUM_POWER_BREAK) ||
-		(init_arg->sensor_id == NV_SATMC_SENSOR_NUM_SPARE_CH_PRESENCE)) {
+	if ((init_arg->sensor_id == NV_SATMC_SENSOR_NUM_CPU_THROT_STATE) ||
+	    (init_arg->sensor_id == NV_SATMC_SENSOR_NUM_POWER_BREAK) ||
+	    (init_arg->sensor_id == NV_SATMC_SENSOR_NUM_SPARE_CH_PRESENCE)) {
 		req_len = sizeof(struct pldm_get_state_sensor_reading_req);
-		struct pldm_get_state_sensor_reading_req req = {0};
+		struct pldm_get_state_sensor_reading_req req = { 0 };
 		req.sensor_id = init_arg->sensor_id;
 
-		uint16_t resp_len =
-		pldm_platform_monitor_read(mctp_inst, ext_params,
-					   PLDM_MONITOR_CMD_CODE_GET_STATE_SENSOR_READING,
-					   (uint8_t *)&req, req_len, resp_buf, sizeof(resp_buf));
+		uint16_t resp_len = pldm_platform_monitor_read(
+			mctp_inst, ext_params, PLDM_MONITOR_CMD_CODE_GET_STATE_SENSOR_READING,
+			(uint8_t *)&req, req_len, resp_buf, sizeof(resp_buf));
 
 		if (resp_len == 0) {
 			LOG_ERR("Failed to get SatMC sensor #0x%x reading", init_arg->sensor_id);
 			return SENSOR_FAIL_TO_ACCESS;
 		}
 
-		struct pldm_get_state_sensor_reading_resp *res = (struct pldm_get_state_sensor_reading_resp *)resp_buf;
-		
+		struct pldm_get_state_sensor_reading_resp *res =
+			(struct pldm_get_state_sensor_reading_resp *)resp_buf;
+
 		if (res->completion_code != PLDM_SUCCESS) {
 			LOG_ERR("Get SatMC sensor #%04x with bad cc 0x%x", init_arg->sensor_id,
 				res->completion_code);
@@ -111,7 +111,8 @@ uint8_t nv_satmc_read(sensor_cfg *cfg, int *reading)
 		}
 
 		if (init_arg->state_sensor_idx >= res->composite_sensor_count) {
-			LOG_ERR("Failed to get SatMC sensor #0x%x state with index %d", init_arg->sensor_id, init_arg->state_sensor_idx);
+			LOG_ERR("Failed to get SatMC sensor #0x%x state with index %d",
+				init_arg->sensor_id, init_arg->state_sensor_idx);
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 
@@ -167,13 +168,15 @@ uint8_t nv_satmc_read(sensor_cfg *cfg, int *reading)
 	LOG_DBG("SatMC sensor#0x%04x", init_arg->sensor_id);
 	LOG_HEXDUMP_DBG(res->present_reading, resp_len - 7, "");
 
-	val = pldm_sensor_cal(res->present_reading, resp_len - 7, res->sensor_data_size, init_arg->parm);
+	val = pldm_sensor_cal(res->present_reading, resp_len - 7, res->sensor_data_size,
+			      init_arg->parm);
 
 exit:
 	sval->integer = (int)val & 0xFFFF;
 	sval->fraction = (val - sval->integer) * 1000;
 
-	LOG_DBG("SatMC sensor #0x%04x --> %d.%03d", init_arg->sensor_id, sval->integer, sval->fraction);
+	LOG_DBG("SatMC sensor #0x%04x --> %d.%03d", init_arg->sensor_id, sval->integer,
+		sval->fraction);
 
 	return SENSOR_READ_SUCCESS;
 }
