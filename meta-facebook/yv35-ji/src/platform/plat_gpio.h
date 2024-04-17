@@ -26,11 +26,11 @@
 // clang-format off
 
 #define name_gpioA \
-	gpio_name_to_num(FPGA_READY) \
-	gpio_name_to_num(FAN_FULL_SPEED_FPGA_L) \
-	gpio_name_to_num(PWR_BRAKE_L) \
+	gpio_name_to_num(Reserve_GPIOA0) \
+	gpio_name_to_num(Reserve_GPIOA1) \
+	gpio_name_to_num(Reserve_GPIOA2) \
 	gpio_name_to_num(INA230_E1S_ALERT_L) \
-	gpio_name_to_num(Reserve_GPIOA4) \
+	gpio_name_to_num(I2C_2_CPU_ALERT_R_L) \
 	gpio_name_to_num(FPGA_WATCH_DOG_TIMER0_L) \
 	gpio_name_to_num(FPGA_WATCH_DOG_TIMER1_L) \
 	gpio_name_to_num(HSC_OCP_GPIO1)
@@ -61,13 +61,13 @@
 	gpio_name_to_num(Reserve_GPIOD2) \
 	gpio_name_to_num(BMC_READY) \
 	gpio_name_to_num(BIC_READY) \
-	gpio_name_to_num(PWR_BRAKE_CPU1_L) \
+	gpio_name_to_num(PWR_BRAKE_CPU1) \
 	gpio_name_to_num(Reserve_GPIOD6) \
 	gpio_name_to_num(Reserve_GPIOD7)
 
 #define name_gpioE \
 	gpio_name_to_num(RUN_POWER_PG) \
-	gpio_name_to_num(Reserve_GPIOE1) \
+	gpio_name_to_num(BIC_RETIMER_MUX_SEL) \
 	gpio_name_to_num(SPI_BMC_FPGA_INT_L) \
 	gpio_name_to_num(IRQ_HSC_ALERT1_L) \
 	gpio_name_to_num(I2C_SENSOR_LVC_ALERT_L) \
