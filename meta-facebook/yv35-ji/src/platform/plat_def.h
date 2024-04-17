@@ -24,5 +24,6 @@
 #define ENABLE_SSIF
 #define ENABLE_SSIF_RSP_PEC
 #define ENABLE_SBMR
+#define ENABLE_NVIDIA
 
 #endif
