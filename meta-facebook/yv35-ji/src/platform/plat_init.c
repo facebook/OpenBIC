@@ -61,6 +61,9 @@ void pal_device_init()
 
 void pal_set_sys_status()
 {
+	set_DC_status(RUN_POWER_PG); // Grace don't have DC status pin to BIC
+	set_DC_on_delayed_status();
+
 	set_sys_ready_pin(BIC_READY);
 	set_CPU_power_status(RUN_POWER_PG);
 	set_post_complete(false);
