@@ -32,8 +32,8 @@
 #include "plat_mctp.h"
 #endif
 
-#define ADJUST_MP5990_CURRENT(x) (x)
-#define ADJUST_MP5990_POWER(x) (x)
+#define ADJUST_MP5990_CURRENT(x) (x * 1) // temporary set
+#define ADJUST_MP5990_POWER(x) (x * 1) // temporary set
 
 LOG_MODULE_REGISTER(plat_hook);
 
