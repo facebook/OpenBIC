@@ -29,6 +29,7 @@
 #include "plat_modbus.h"
 #include "plat_sensor_table.h"
 #include "plat_fru.h"
+#include "plat_fw_update.h"
 
 #include <modbus_internal.h>
 
@@ -431,6 +432,9 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_1, 1, 0, 1 },
 	{ MODBUS_LEAK_RACK_FLOOR_GPO_AND_RELAY_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_2, 1, 0, 1 },
+    //FW UPDATE
+	{ MODBUS_FW_REVISION_ADDR, NULL, modbus_get_fw_reversion, 0, 0, 0, 1 },
+	{ MODBUS_FW_DOWNLOAD_ADDR, modbus_fw_download, NULL, 0, 0, 0, 103 },		  
 };
 
 static modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)
@@ -486,12 +490,14 @@ static int holding_reg_wr(uint16_t addr, uint16_t reg)
 
 	int ret = MODBUS_EXC_NONE;
 	uint8_t offset = addr - ptr->addr;
-
+	ptr->offset = offset;
 	ptr->data[offset] = reg;
 
-	if (offset == (ptr->size - 1))
+	if (offset == (ptr->size - 1)) {
 		ret = ptr->wr_fn(ptr);
-
+		ptr->offset = 0;
+		free(ptr->data);
+	}
 	return ret;
 }
 

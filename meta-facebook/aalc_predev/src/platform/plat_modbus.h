@@ -38,7 +38,8 @@ typedef struct _modbus_command_mapping {
 	uint8_t arg2;
 	uint8_t size;
 	uint16_t *data;
-} modbus_command_mapping;
+	uint8_t offset;
+} 	modbus_command_mapping;
 
 /* define modbus data address */
 #define MODBUS_TEMP_BB_TMP75_ADDR 0x0101
@@ -235,10 +236,13 @@ typedef struct _modbus_command_mapping {
 #define FRU_MFR_SERIEL_ADDR 0x19D8
 #define FRU_WORKORDER_ADDR 0x19E0
 #define FRU_HW_REVISION_ADDR 0x19E4
-#define FRU_FW_REVISION_ADDR 0x19E8
+#define MODBUS_FW_REVISION_ADDR 0x19E8
 #define FRU_TOTAL_UP_TIME_ADDR 0x19EC
 #define FRU_LAST_ON_TIME_ADDR 0x19EF
 #define FRU_HMI_REVISION_ADDR 0x19F2
 #define FRU_NOAH_ARK_CONFIG_ADDR 0x19F8
 #define FRU_HEATEXCHANGER_CONTROLBOX_FPBN_ADDR 0x1A00
 #define FRU_QUANTA_FB_PART_ADDR 0x1A0C
+
+#define MODBUS_FW_REVISION_ADDR 0x19E8
+#define MODBUS_FW_DOWNLOAD_ADDR 0x2000
