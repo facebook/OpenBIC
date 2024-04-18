@@ -31,6 +31,7 @@
 #include "plat_fru.h"
 
 #include <modbus_internal.h>
+#include "plat_modbus_debug.h"
 
 LOG_MODULE_REGISTER(plat_modbus);
 
@@ -68,25 +69,6 @@ static float pow_of_10(int8_t exp)
 	actual_val =  raw_val * m * (10 ^ r)
 */
 
-static int8_t modbus_master_i2c_write(modbus_command_mapping *cmd)
-{
-	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-
-	uint8_t retry = 5;
-	I2C_MSG msg;
-	msg.bus = cmd->arg0;
-	msg.target_addr = cmd->arg1;
-	msg.tx_len = 2;
-	msg.data[0] = cmd->arg2;
-	msg.data[1] = cmd->data;
-	int result = i2c_master_write(&msg, retry);
-	if (result != 0) {
-		LOG_ERR("I2C write fail");
-		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-	}
-	return MODBUS_EXC_NONE;
-	
-}
 static uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
@@ -452,8 +434,9 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_LEAK_RACK_FLOOR_GPO_AND_RELAY_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_2, 1, 0, 1 },
 	/* write */
-	{ MODBUS_MASTER_I2C_WRITE_ADDR, modbus_master_i2c_write, NULL, NULL, 1, 0, 1 },
-	{ MODBUS_MASTER_I2C_READ_ADDR, modbus_master_i2c_read, NULL, NULL, 1, 0, 1 },
+	{ MODBUS_MASTER_I2C_WRITE_ADDR, modbus_command_i2c_write, NULL, 0, 1, 0, 1 },
+	{ MODBUS_MASTER_I2C_WRITE_FOR_READ_ADDR, modbus_command_i2c_write_for_read, NULL, 0, 1, 0, 1 },
+	{ MODBUS_MASTER_I2C_READ_ADDR, modbus_command_i2c_read, NULL, 0, 1, 0, 1 },
 };
 
 static modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)
