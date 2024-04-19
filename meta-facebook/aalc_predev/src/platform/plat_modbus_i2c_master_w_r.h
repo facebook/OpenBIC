@@ -14,6 +14,5 @@
  * limitations under the License.
  */
 
-uint8_t modbus_command_i2c_write(modbus_command_mapping *cmd);
-uint8_t modbus_command_i2c_write_for_read(modbus_command_mapping *cmd);
-uint8_t modbus_command_i2c_read(modbus_command_mapping *cmd);
+uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd);
+uint8_t modbus_command_i2c_master_write_read_response(modbus_command_mapping *cmd);
