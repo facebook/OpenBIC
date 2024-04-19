@@ -105,6 +105,7 @@ void execute_power_on_sequence();
 void execute_power_off_sequence();
 void cxl1_ready_handler();
 void cxl2_ready_handler();
+void set_cxl_ready_status(uint8_t cxl_id, bool value);
 bool get_cxl_ready_status(uint8_t cxl_id);
 bool cxl_ready_access(uint8_t sensor_num);
 void set_cxl_vr_access(uint8_t cxl_id, bool value);

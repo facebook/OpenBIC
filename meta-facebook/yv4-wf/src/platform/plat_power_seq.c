@@ -34,6 +34,14 @@ K_WORK_DELAYABLE_DEFINE(cxl2_ready_thread, cxl2_ready_handler);
 K_WORK_DELAYABLE_DEFINE(enable_asic1_rst_work, enable_asic1_rst);
 K_WORK_DELAYABLE_DEFINE(enable_asic2_rst_work, enable_asic2_rst);
 
+#define CXL_READY_HANDLER_STACK_SIZE 1024
+
+K_THREAD_STACK_DEFINE(cxl1_stack_area, CXL_READY_HANDLER_STACK_SIZE);
+struct k_thread cxl1_thread_data;
+
+K_THREAD_STACK_DEFINE(cxl2_stack_area, CXL_READY_HANDLER_STACK_SIZE);
+struct k_thread cxl2_thread_data;
+
 K_MUTEX_DEFINE(switch_ioe_mux_mutex);
 
 static bool is_cxl_power_on[MAX_CXL_ID] = { false, false };
@@ -160,8 +168,22 @@ void execute_power_on_sequence()
 		gpio_set(PG_CARD_OK, POWER_ON);
 		set_DC_status(PG_CARD_OK);
 		k_work_schedule(&set_dc_on_5s_work, K_SECONDS(DC_ON_DELAY5_SEC));
-		k_work_schedule(&cxl1_ready_thread, K_SECONDS(CXL_READY_INTERVAL_SECONDS));
-		k_work_schedule(&cxl2_ready_thread, K_SECONDS(CXL_READY_INTERVAL_SECONDS));
+
+		k_tid_t cxl1_tid = k_thread_create(&cxl1_thread_data, cxl1_stack_area,
+                                        K_THREAD_STACK_SIZEOF(cxl1_stack_area),
+                                        cxl1_ready_handler, NULL, NULL, NULL,
+                                        CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+
+		k_tid_t cxl2_tid = k_thread_create(&cxl2_thread_data, cxl2_stack_area,
+                                        K_THREAD_STACK_SIZEOF(cxl2_stack_area),
+                                        cxl2_ready_handler, NULL, NULL, NULL,
+                                        CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+
+		k_thread_name_set(cxl1_tid, "cxl1_ready_thread");
+		k_thread_name_set(cxl2_tid, "cxl2_ready_thread");
+
+		k_thread_start(cxl1_tid);
+		k_thread_start(cxl2_tid);
 	}
 }
 
@@ -617,6 +639,12 @@ bool cxl1_vr_access(uint8_t sensor_num)
 bool cxl2_vr_access(uint8_t sensor_num)
 {
 	return is_cxl_vr_accessible[CXL_ID_1];
+}
+
+void set_cxl_ready_status(uint8_t cxl_id, bool value)
+{
+	is_cxl_ready[cxl_id] = value;
+	return;
 }
 
 bool get_cxl_ready_status(uint8_t cxl_id)

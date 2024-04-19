@@ -52,8 +52,8 @@ void pal_set_sys_status()
 	set_DC_on_delayed_status();
 	init_ioe_config();
 	if (gpio_get(PG_CARD_OK) == POWER_ON) {
-		k_work_schedule(&cxl1_ready_check, K_SECONDS(CXL_READY_INTERVAL_SECONDS));
-		k_work_schedule(&cxl2_ready_check, K_SECONDS(CXL_READY_INTERVAL_SECONDS));
+		set_cxl_ready_status(CXL_ID_0, true);
+		set_cxl_ready_status(CXL_ID_1, true);
 	}
 	set_sys_ready_pin(BIC_READY_R);
 }
