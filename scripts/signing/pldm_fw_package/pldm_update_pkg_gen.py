@@ -6,9 +6,8 @@ import lib.json_cfg as json_lib
 from lib.common_lib import Common_msg, Common_file, System_ctrl
 
 APP_NAME = "PLDM UPDATE PACKAGE GENERATOR"
-APP_AUTH = "Mouchen"
-APP_RELEASE_VER = "1.7"
-APP_RELEASE_DATE = "2023/07/27"
+APP_RELEASE_VER = "1.8"
+APP_RELEASE_DATE = "2024/04/19"
 
 PLATFORM_PATH = "./platform"
 CONFIG_FILE = "pldm_cfg.json"
@@ -60,7 +59,6 @@ else:
 def APP_HEADER():
     msg_hdr_print("n", "========================================================")
     msg_hdr_print("n", "* APP name:    "+APP_NAME)
-    msg_hdr_print("n", "* APP auth:    "+APP_AUTH)
     msg_hdr_print("n", "* APP version: "+APP_RELEASE_VER)
     msg_hdr_print("n", "* APP date:    "+APP_RELEASE_DATE)
     msg_hdr_print("n", "* NOTE: This APP is based on pldm_fwup_pkg_creator.py")
@@ -81,7 +79,7 @@ def PLAT_CheckVRChecksum(str, byte_num):
         return False
 
     focus_str = str[0:byte_num*2]
-    print(focus_str)
+
     for c in focus_str:
         try:
             int(c, 16)
@@ -142,8 +140,14 @@ if __name__ == '__main__':
                     found_verify_flag = 1
 
                     if comp["CheckSum"] == "y":
-                        if PLAT_CheckVRChecksum(given_subfix, 4) == False:
-                            msg_hdr_print('e', "Component #" + str(select_comp_id_lst[i]) + " sub version string [" + given_subfix + "] need CheckSum in front!")
+                        img_checksum = given_subfix.split('_')[0]
+                        # checksum should be even
+                        if len(img_checksum) % 2 != 0:
+                            msg_hdr_print('e', "Component #" + str(select_comp_id_lst[i]) + " checksum [" + img_checksum + "] byte count should be even!")
+                            sys.exit(1)
+                        checksum_byte_cnt = int(len(img_checksum)/2)
+                        if PLAT_CheckVRChecksum(img_checksum, checksum_byte_cnt) == False:
+                            msg_hdr_print('e', "Component #" + str(select_comp_id_lst[i]) + " sub version string [" + given_subfix + "] need CheckSum in front with format <checksum_version>!")
                             sys.exit(1)
                     break
         
