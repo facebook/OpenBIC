@@ -1,8 +1,11 @@
 #include <string.h>
+#include <stdlib.h>
 #include "plat_version.h"
 #include "plat_modbus.h"
 #include "modbus_server.h"
 #include "util_spi.h"
+
+#define UPADTE_FW_DATA_LENGTH_MIN 3 // contain 2 regs(offeset)+ 1 reg(length) at least
 
 uint8_t modbus_get_fw_reversion(modbus_command_mapping *cmd)
 {
@@ -13,30 +16,15 @@ uint8_t modbus_get_fw_reversion(modbus_command_mapping *cmd)
 
 uint8_t modbus_fw_download(modbus_command_mapping *cmd)
 {
+	uint32_t offset = cmd->data[0] << 16 | cmd->data[1]; // offset
+	uint16_t msg_len = cmd->data[2] & 0x7FFF; // length
+	uint8_t flag = (cmd->data[2] & (1 << 15)) ? (1 << 7) : 0;
 
-    static uint32_t offset;
-    static uint16_t msg_len; 
-    static uint8_t *msg_buf= NULL; 
-    static uint8_t flag;  
+	if (cmd->data_len < UPADTE_FW_DATA_LENGTH_MIN)
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
 
-    if (cmd->offset < 3) {
-        return MODBUS_EXC_ILLEGAL_DATA_VAL;
-    } else if (cmd->offset >= 3) {
-        if ((cmd->data[2] >> 8) == 0x10) //flag
-            flag = SECTOR_END_FLAG;
-        else if ((cmd->data[2] >> 8) > 0)
-            return MODBUS_EXC_ILLEGAL_DATA_VAL;
-            
-        msg_len = cmd->data[2] & 0x00FF; // length
-        offset = cmd->data[0] << 16 | cmd->data[1]; // offset
- 
-        if (msg_len != (cmd->offset) * 2 || (msg_len != 68 && msg_len != (cmd->size)* 2 && !flag)) 
-            return MODBUS_EXC_ILLEGAL_DATA_VAL;
-        else {
-            memcpy(&msg_buf[(cmd->offset) * 2], &cmd->data, msg_len);
-        }
+	if (msg_len != ((cmd->data_len - UPADTE_FW_DATA_LENGTH_MIN) * 2))
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
 
-    }
-
-    return fw_update(offset, msg_len, msg_buf, flag, DEVSPI_FMC_CS0);
+	return fw_update(offset, msg_len, (uint8_t *) &cmd->data[UPADTE_FW_DATA_LENGTH_MIN], flag, DEVSPI_FMC_CS0);
 }

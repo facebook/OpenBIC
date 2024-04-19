@@ -490,13 +490,12 @@ static int holding_reg_wr(uint16_t addr, uint16_t reg)
 
 	int ret = MODBUS_EXC_NONE;
 	uint8_t offset = addr - ptr->addr;
-	ptr->offset = offset;
+	ptr->data_len = offset;
 	ptr->data[offset] = reg;
 
 	if (offset == (ptr->size - 1)) {
 		ret = ptr->wr_fn(ptr);
-		ptr->offset = 0;
-		free(ptr->data);
+		memset(&ptr->data, 0, sizeof(ptr->data));
 	}
 	return ret;
 }

@@ -38,7 +38,7 @@ typedef struct _modbus_command_mapping {
 	uint8_t arg2;
 	uint8_t size;
 	uint16_t *data;
-	uint8_t offset;
+	uint8_t data_len;
 } 	modbus_command_mapping;
 
 /* define modbus data address */
