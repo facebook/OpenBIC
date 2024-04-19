@@ -14,7 +14,4 @@
  * limitations under the License.
  */
 
-#include <modbus_internal.h>
-#include "adm1272.h"
-
-uint8_t modbus_pump_setting(modbus_command_mapping *cmd);
+uint16_t pump_reset(uint8_t sensor_num);
