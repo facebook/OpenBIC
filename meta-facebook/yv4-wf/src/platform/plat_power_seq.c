@@ -337,6 +337,9 @@ void execute_power_off_sequence()
 	}
 	gpio_set(EN_P12V_E1S_0_R, POWER_OFF);
 
+	is_cxl_ready[CXL_ID_0] = false;
+	is_cxl_ready[CXL_ID_1] = false;
+
 	gpio_set(PG_CARD_OK, POWER_OFF);
 	set_DC_status(PG_CARD_OK);
 
@@ -354,7 +357,6 @@ void execute_power_off_sequence()
 
 	set_DC_on_delayed_status();
 
-	is_cxl_ready[CXL_ID_0] = false;
 	ret = power_off_handler(CXL_ID_0, DIMM_POWER_OFF_STAGE_1);
 	if (ret == 0) {
 		is_cxl_power_on[CXL_ID_0] = false;
@@ -364,7 +366,6 @@ void execute_power_off_sequence()
 		LOG_ERR("CXL 1 power off fail");
 	}
 
-	is_cxl_ready[CXL_ID_1] = false;
 	ret = power_off_handler(CXL_ID_1, DIMM_POWER_OFF_STAGE_1);
 	if (ret == 0) {
 		is_cxl_power_on[CXL_ID_1] = false;
@@ -624,8 +625,12 @@ bool get_cxl_ready_status(uint8_t cxl_id)
 	return is_cxl_ready[cxl_id];
 }
 
-bool cxl_ready_access(uint8_t sensor_num)
+bool cxl1_ready_access(uint8_t sensor_num)
 {
-	uint8_t cxl_id = sensor_num / 4;
-	return get_cxl_ready_status(cxl_id);
+	return get_cxl_ready_status(CXL_ID_0);
+}
+
+bool cxl2_ready_access(uint8_t sensor_num)
+{
+	return get_cxl_ready_status(CXL_ID_1);
 }
