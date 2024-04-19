@@ -52,15 +52,17 @@ uint16_t pump_reset(uint8_t sensor_num)
 	// 1 enable, 0 disable, stop pump first
 	if (enable_adm1272_hsc(bus, addr, enable_flag) == true) {
 		// check pump is already enable
-		k_msleep(3000);
+		k_msleep(500);
 		// enable pump
 		if (enable_adm1272_hsc(bus, addr, 1) == true) {
 			return true;
 		} else {
+			LOG_ERR("Fail when start the pump.");
 			return false;
 		}
 	} else {
-		return true;
+		LOG_ERR("Fail when stop the pump.");
+		return false;
 	}
 }
 

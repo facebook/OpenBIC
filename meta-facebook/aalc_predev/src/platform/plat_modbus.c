@@ -104,13 +104,28 @@ uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 	case CLEAR_LOG:
 		break;
 	case PUMP_1_RESET:
-		return pump_reset(SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W);
+		if (pump_reset(SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W) == true){
+			return MODBUS_EXC_NONE;
+		}
+		else{
+			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
 		break;
 	case PUMP_2_RESET:
-		return pump_reset(SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W);
+		if (pump_reset(SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W) == true){
+			return MODBUS_EXC_NONE;
+		}
+		else{
+			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
 		break;
 	case PUMP_3_RESET:
-		return pump_reset(SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W);
+		if (pump_reset(SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W) == true){
+			return MODBUS_EXC_NONE;
+		}
+		else{
+			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
 		break;
 	case PUMP_4_RESET:
 		break;
