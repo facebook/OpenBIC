@@ -42,7 +42,7 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 	I2C_MSG msg;
 	msg.bus = target_bus;
 	msg.target_addr = target_addr;
-	if(cmd->data){ //?
+	if(cmd->data == NULL){ // check data is not null
 		return MODBUS_EXC_ILLEGAL_DATA_VAL;
 	}
 	else if (target_read_length == 0) { // only write
