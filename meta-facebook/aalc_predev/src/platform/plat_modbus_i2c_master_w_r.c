@@ -15,7 +15,6 @@
  */
 #include <stdlib.h>
 #include <sys/util.h>
-
 #include <modbus/modbus.h>
 #include "modbus_server.h"
 #include "hal_i2c.h"
