@@ -29,6 +29,8 @@
 #include "plat_modbus.h"
 #include "plat_sensor_table.h"
 #include "plat_fru.h"
+#include "hal_gpio.h"
+#include "plat_gpio.h"
 
 #include <modbus_internal.h>
 
@@ -471,6 +473,37 @@ init_fail:
 	free_modbus_command_table_memory();
 }
 
+static int coil_rd(uint16_t addr, bool *state)
+{
+	CHECK_NULL_ARG_WITH_RETURN(state, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	if (addr < plat_gpio_cfg_size()) { //GPIO number
+		int val = gpio_get((uint8_t)addr);
+		if (val == 0 || val == 1)
+			*state = (bool)val;
+		else
+			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+	} else {
+		return MODBUS_EXC_ILLEGAL_DATA_ADDR;
+	}
+
+	return MODBUS_EXC_NONE;
+}
+
+static int coil_wr(uint16_t addr, bool state)
+{
+	if (addr < plat_gpio_cfg_size()) { //GPIO number
+		gpio_set((uint8_t)addr, (uint8_t)state);
+		return MODBUS_EXC_NONE;
+	} else if (addr == 0x0C30) { // FW update: Set RPU Stop/Run
+		return MODBUS_EXC_NONE;
+	} else if (addr == 0x0C31) { // FW update: Synax Check
+		return MODBUS_EXC_NONE;
+	} else {
+		return MODBUS_EXC_ILLEGAL_DATA_ADDR;
+	}
+}
+
 static int holding_reg_wr(uint16_t addr, uint16_t reg)
 {
 	modbus_command_mapping *ptr = ptr_to_modbus_table(addr);
@@ -523,6 +556,8 @@ static int holding_reg_rd(uint16_t addr, uint16_t *reg)
 static struct modbus_user_callbacks mbs_cbs = {
 	.holding_reg_rd = holding_reg_rd,
 	.holding_reg_wr = holding_reg_wr,
+	.coil_rd = coil_rd,
+	.coil_wr = coil_wr,	
 };
 
 const static struct modbus_iface_param server_param = {
