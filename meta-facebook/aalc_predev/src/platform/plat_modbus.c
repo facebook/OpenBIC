@@ -433,8 +433,8 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_LEAK_RACK_FLOOR_GPO_AND_RELAY_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_2, 1, 0, 1 },
     //FW UPDATE
-	{ MODBUS_FW_REVISION_ADDR, NULL, modbus_get_fw_reversion, 0, 0, 0, 1 },
-	{ MODBUS_FW_DOWNLOAD_ADDR, modbus_fw_download, NULL, 0, 0, 0, 103 },		  
+	{ MODBUS_FW_REVISION_ADDR, NULL, modbus_get_fw_reversion, 0, 1, 0, 1 },
+	{ MODBUS_FW_DOWNLOAD_ADDR, modbus_fw_download, NULL, 0, 0, 0, 103 },	  
 };
 
 static modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)
@@ -578,12 +578,10 @@ int init_custom_modbus_server(void)
 		LOG_ERR("Failed to get iface index for %s", server_iface_name);
 		return -ENODEV;
 	}
-	//return modbus_init_server(server_iface, server_param);
 	int err = modbus_init_server(server_iface, server_param);
 
-	if (err < 0) {
+	if (err < 0)
 		return err;
-	}
 
 	return modbus_register_user_fc(server_iface, &modbus_cfg_custom_fc64);
 }
