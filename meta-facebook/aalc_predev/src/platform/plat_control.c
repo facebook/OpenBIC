@@ -52,11 +52,11 @@ uint16_t pump_reset(uint8_t sensor_num)
 	uint8_t addr = cfg->target_addr;
 	bool enable_flag = false;
 	// 1 enable, 0 disable, stop pump first
-	if (enable_adm1272_hsc(bus, addr, enable_flag) == true) {
+	if (enable_adm1272_hsc(bus, addr, enable_flag)) {
 		// check pump is already enable
 		k_msleep(500);
 		// enable pump
-		if (enable_adm1272_hsc(bus, addr, 1) == true) {
+		if (enable_adm1272_hsc(bus, addr, 1)) {
 			return true;
 		} else {
 			LOG_ERR("Fail when start the pump.");
@@ -84,7 +84,7 @@ uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 		case CLEAR_LOG:
 			break;
 		case PUMP_1_RESET:
-			if (pump_reset(SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W) == true){
+			if (pump_reset(SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W)){
 				return MODBUS_EXC_NONE;
 			}
 			else{
@@ -92,7 +92,7 @@ uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 			}
 			break;
 		case PUMP_2_RESET:
-			if (pump_reset(SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W) == true){
+			if (pump_reset(SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W)){
 				return MODBUS_EXC_NONE;
 			}
 			else{
@@ -100,14 +100,12 @@ uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 			}
 			break;
 		case PUMP_3_RESET:
-			if (pump_reset(SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W) == true){
+			if (pump_reset(SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W)){
 				return MODBUS_EXC_NONE;
 			}
 			else{
 				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 			}
-			break;
-		case PUMP_4_RESET:
 			break;
 		default:
 			LOG_ERR("invalid pump setting");

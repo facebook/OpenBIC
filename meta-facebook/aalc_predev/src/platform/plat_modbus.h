@@ -56,7 +56,6 @@ enum pump_state {
 	PUMP_1_RESET,
 	PUMP_2_RESET,
 	PUMP_3_RESET,
-	PUMP_4_RESET,
 };
 
 /* define modbus data address */
