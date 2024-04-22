@@ -33,21 +33,19 @@ LOG_MODULE_REGISTER(plat_modbus_i2c_write_read);
 uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-	// write data: bus(2Bytes), addr(2Bytes), reg(2Bytes), read length(2Bytes), data(24Bytes)
+	// write data: bus(2Bytes), addr(2Bytes), read length(2Bytes), data(26Bytes)
 	// if it is only write,read length will be 0
+		uint8_t target_bus = cmd->data[0] & BIT_MASK(7); // get 7:0 bit data
+		uint8_t target_addr = cmd->data[1] & BIT_MASK(7);
+		uint8_t target_read_length = cmd->data[2] & BIT_MASK(7);
 	if (cmd->data[3] == 0) { // only write
 		uint8_t retry = 5;
 		I2C_MSG msg;
-		uint8_t target_bus = cmd->data[0] &= BIT_MASK(7); // get 7:0 bit data
-		uint8_t target_addr = cmd->data[1] &= BIT_MASK(7);
-		uint8_t target_reg = cmd->data[2] &= BIT_MASK(7);
-
 		msg.bus = target_bus;
 		msg.target_addr = target_addr;
 		msg.tx_len = 9;
-		msg.data[0] = target_reg;
 		for (int i = 0; i < 8; i++) {
-			msg.data[i+1] = cmd->data[i+4] &= BIT_MASK(7);
+			msg.data[i] = cmd->data[i+3] & BIT_MASK(7);
 		}
 		int result = i2c_master_write(&msg, retry);
 		if (result != 0) {
@@ -58,18 +56,15 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 	}
 	else {
 		if (i2c_w_r_flag == false) {
-			temp_read_length = cmd->data[3] &= BIT_MASK(7); // read length
+			temp_read_length = cmd->data[3] & BIT_MASK(7); // read length
 			temp_i2c_reg = cmd->data[2] &= BIT_MASK(7); // reg
-			uint8_t target_bus = cmd->data[0] &= BIT_MASK(7);
-			uint8_t target_addr = cmd->data[1] &= BIT_MASK(7);
-			uint8_t target_reg = cmd->data[2] &= BIT_MASK(7);
-			uint8_t target_read_length = cmd->data[3] &= BIT_MASK(7);
+
 			uint8_t retry = 5;
 			I2C_MSG msg;
 			msg.bus = target_bus;
 			msg.target_addr = target_addr;
 			msg.tx_len = 2;
-			msg.data[0] = target_reg;
+			msg.data[0] = cmd->data[3] & BIT_MASK(7);
 			msg.rx_len = (int)target_read_length;
 			int result = i2c_master_read(&msg, retry);
 			
@@ -86,7 +81,6 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 				{
 					temp_read_data[i] = 0xff;
 				}
-							
 			}
 			i2c_w_r_flag = true;
 		} else {
@@ -110,7 +104,6 @@ uint8_t modbus_command_i2c_master_write_read_response(modbus_command_mapping *cm
 			else{
 				cmd->data[i] = 0xff;
 			}
-			
 		}
 		i2c_w_r_flag = false;
 		return true;
