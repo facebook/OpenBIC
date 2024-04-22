@@ -22,6 +22,8 @@
 #include <logging/log.h>
 #include <sys/util.h>
 #include "plat_sensor_table.h"
+#include "plat_modbus.h"
+#include "modbus_server.h"
 #include "plat_control.h"
 #include "adm1272.h"
 
@@ -64,5 +66,53 @@ uint16_t pump_reset(uint8_t sensor_num)
 		LOG_ERR("Fail when stop the pump.");
 		return false;
 	}
+}
+uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
+{
+		CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+		switch ((int)cmd->data) {
+		case PUMP_REDUNDENT_SWITCHED:
+		case MANUAL_CONTROL_PUMP:
+		case MANUAL_CONTROL_FAN:
+		case AUTOTUNE_FLOW_CONTROL:
+		case AUTOTUNE_PRESSURE_BALANCE_CONTROL:
+		case SYSTEM_STOP:
+		case RPU_REMOTE_POWER_CYCLE:
+		case MANUAL_CONTROL:
+		case CLEAR_PUMP_RUNNING_TIME:
+		case CLEAR_LOG:
+			break;
+		case PUMP_1_RESET:
+			if (pump_reset(SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W) == true){
+				return MODBUS_EXC_NONE;
+			}
+			else{
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+			}
+			break;
+		case PUMP_2_RESET:
+			if (pump_reset(SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W) == true){
+				return MODBUS_EXC_NONE;
+			}
+			else{
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+			}
+			break;
+		case PUMP_3_RESET:
+			if (pump_reset(SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W) == true){
+				return MODBUS_EXC_NONE;
+			}
+			else{
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+			}
+			break;
+		case PUMP_4_RESET:
+			break;
+		default:
+			LOG_ERR("invalid pump setting");
+			return MODBUS_EXC_ILLEGAL_DATA_VAL;
+		}
+		return MODBUS_EXC_NONE;
 }
 
