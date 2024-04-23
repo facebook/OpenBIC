@@ -29,8 +29,10 @@
 #include "plat_modbus.h"
 #include "plat_sensor_table.h"
 #include "plat_fru.h"
+#include "plat_control.h"
+#include "hal_gpio.h"
+#include "plat_gpio.h"
 #include "plat_fw_update.h"
-
 #include <modbus_internal.h>
 
 LOG_MODULE_REGISTER(plat_modbus);
@@ -68,6 +70,7 @@ static float pow_of_10(int8_t exp)
 
 	actual_val =  raw_val * m * (10 ^ r)
 */
+
 static uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
@@ -432,9 +435,11 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_1, 1, 0, 1 },
 	{ MODBUS_LEAK_RACK_FLOOR_GPO_AND_RELAY_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_2, 1, 0, 1 },
+	// modbus write
+	{ MODBUS_PUMP_SETTING_ADDR, modbus_pump_setting, NULL, 0, 0, 0, 1},
     //FW UPDATE
 	{ MODBUS_FW_REVISION_ADDR, NULL, modbus_get_fw_reversion, 0, 0, 0, 1 },
-	{ MODBUS_FW_DOWNLOAD_ADDR, modbus_fw_download, NULL, 0, 0, 0, 103 },	  
+	{ MODBUS_FW_DOWNLOAD_ADDR, modbus_fw_download, NULL, 0, 0, 0, 103 },  
 };
 
 static modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)
@@ -473,6 +478,37 @@ void init_modbus_command_table(void)
 
 init_fail:
 	free_modbus_command_table_memory();
+}
+
+static int coil_rd(uint16_t addr, bool *state)
+{
+	CHECK_NULL_ARG_WITH_RETURN(state, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	if (addr < plat_gpio_cfg_size()) { //GPIO number
+		int val = gpio_get((uint8_t)addr);
+		if (val == 0 || val == 1)
+			*state = (bool)val;
+		else
+			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+	} else {
+		return MODBUS_EXC_ILLEGAL_DATA_ADDR;
+	}
+
+	return MODBUS_EXC_NONE;
+}
+
+static int coil_wr(uint16_t addr, bool state)
+{
+	if (addr < plat_gpio_cfg_size()) { //GPIO number
+		gpio_set((uint8_t)addr, (uint8_t)state);
+		return MODBUS_EXC_NONE;
+	} else if (addr == 0x0C30) { // FW update: Set RPU Stop/Run
+		return MODBUS_EXC_NONE;
+	} else if (addr == 0x0C31) { // FW update: Synax Check
+		return MODBUS_EXC_NONE;
+	} else {
+		return MODBUS_EXC_ILLEGAL_DATA_ADDR;
+	}
 }
 
 static int holding_reg_wr(uint16_t addr, uint16_t reg)
@@ -528,6 +564,8 @@ static int holding_reg_rd(uint16_t addr, uint16_t *reg)
 static struct modbus_user_callbacks mbs_cbs = {
 	.holding_reg_rd = holding_reg_rd,
 	.holding_reg_wr = holding_reg_wr,
+	.coil_rd = coil_rd,
+	.coil_wr = coil_wr,	
 };
 
 const static struct modbus_iface_param server_param = {

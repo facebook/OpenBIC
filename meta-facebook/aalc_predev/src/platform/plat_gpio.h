@@ -20,6 +20,7 @@
 #include "hal_gpio.h"
 
 void gpio_int_default();
+uint16_t plat_gpio_cfg_size(void);
 
 // clang-format off
 

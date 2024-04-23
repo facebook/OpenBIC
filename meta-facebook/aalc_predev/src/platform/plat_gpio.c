@@ -394,3 +394,8 @@ bool pal_load_gpio_config(void)
 	memcpy(&gpio_cfg[0], &plat_gpio_cfg[0], sizeof(plat_gpio_cfg));
 	return 1;
 };
+
+uint16_t plat_gpio_cfg_size(void)
+{
+	return ARRAY_SIZE(plat_gpio_cfg);
+};
