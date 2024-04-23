@@ -25,8 +25,7 @@
 
 static bool i2c_w_r_flag;
 static uint16_t temp_read_length;
-static uint16_t temp_read_data[16] = {[0 ... 15] = 0xff}; //16 registers
-
+static uint16_t temp_read_data[16] = {0}; //16 registers
 
 LOG_MODULE_REGISTER(plat_modbus_i2c_write_read);
 
@@ -38,21 +37,20 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 	uint8_t target_bus;
 	uint8_t target_addr;
 	uint8_t target_read_length;
-	uint8_t write_length = 8; // need to set uint8_t data_len here;
 	I2C_MSG msg;
 	uint8_t retry = 5;
-	if(write_length <= 3){ // check bus,addr,read length is not null
+	uint8_t data_len = 8; // need to set uint8_t data_len here;
+	if(data_len <= 3) // check bus,addr,read length is not null
 		return MODBUS_EXC_ILLEGAL_DATA_VAL;
-	}
+	uint8_t write_length = data_len -3; 
 	target_bus = cmd->data[0] & BIT_MASK(8); // get 7:0 bit data, BIT_MASK(n): get 0~n-1 bit data
 	target_addr = cmd->data[1] & BIT_MASK(8);
 	target_read_length = cmd->data[2] & BIT_MASK(8);
 	msg.bus = target_bus;
 	msg.target_addr = target_addr;
-	msg.tx_len = write_length - 3; // write length need to -3 (bus,addr,read length)
-	for (int i = 0; i < write_length-3 ; i++) {
+	msg.tx_len = write_length; // write length need to -3 (bus,addr,read length)
+	for (int i = 0; i < write_length; i++)
 		msg.data[i] = cmd->data[i+3] & BIT_MASK(8);
-	}
 	if (target_read_length == 0) { // only write
 		int result = i2c_master_write(&msg, retry);
 		if (result != 0) {
@@ -68,14 +66,13 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 	temp_read_length = target_read_length; // read length
 	msg.rx_len = (int)temp_read_length;
 	int result = i2c_master_read(&msg, retry);
-	
 	if (result != 0) {
 		LOG_ERR("I2C read fail \n");
 		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 	}
-	for (int i = 0; i < temp_read_length; i++) {
+	memset(temp_read_data, 0xff,32);
+	for (int i = 0; i < temp_read_length; i++)
 		temp_read_data[i] = msg.data[i];
-	}
 	i2c_w_r_flag = true;
 	return MODBUS_EXC_NONE;
 }
@@ -89,9 +86,8 @@ uint8_t modbus_command_i2c_master_write_read_response(modbus_command_mapping *cm
 		LOG_ERR("Please do modbus_command_i2c_write_for_read first \n");
 		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 	}
-	for (int i = 0; i < temp_read_length; i++) {
+	for (int i = 0; i < temp_read_length; i++)
 		cmd->data[i] = temp_read_data[i];
-	}
 	i2c_w_r_flag = false;
 	return MODBUS_EXC_NONE;
 
