@@ -29,9 +29,9 @@
 #include "plat_modbus.h"
 #include "plat_sensor_table.h"
 #include "plat_fru.h"
+#include "plat_control.h"
 #include "hal_gpio.h"
 #include "plat_gpio.h"
-
 #include <modbus_internal.h>
 
 LOG_MODULE_REGISTER(plat_modbus);
@@ -69,6 +69,7 @@ static float pow_of_10(int8_t exp)
 
 	actual_val =  raw_val * m * (10 ^ r)
 */
+
 static uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
@@ -433,6 +434,8 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_1, 1, 0, 1 },
 	{ MODBUS_LEAK_RACK_FLOOR_GPO_AND_RELAY_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_2, 1, 0, 1 },
+	// modbus writre
+	{ MODBUS_PUMP_SETTING_ADDR, modbus_pump_setting, NULL, 0, 0, 0, 1},
 };
 
 static modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)
