@@ -50,9 +50,8 @@ bool pump_reset(uint8_t sensor_num)
 	//uint8_t bus,uint8_t addr, bool enable_flag
 	uint8_t bus = cfg->port;
 	uint8_t addr = cfg->target_addr;
-	bool enable_flag = false;
 	// 1 enable, 0 disable, stop pump first
-	if (enable_adm1272_hsc(bus, addr, enable_flag)) {
+	if (enable_adm1272_hsc(bus, addr, false)) {
 		// check pump is already enable
 		k_msleep(500);
 		// enable pump
