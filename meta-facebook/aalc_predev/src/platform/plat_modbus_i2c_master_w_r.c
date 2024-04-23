@@ -76,7 +76,7 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 			LOG_ERR("I2C read fail \n");
 			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 		}
-		for (int i = 0; i < MODBUS_DATA_MAX_SIZE; i++) {
+		for (int i = 0; i < I2C_MWR_MODBUS_READ_DATA_SIZE; i++) {
 			if (i < temp_read_length)
 			{
 				temp_read_data[i] = msg.data[i];
@@ -102,7 +102,7 @@ uint8_t modbus_command_i2c_master_write_read_response(modbus_command_mapping *cm
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 	// write data: bus(2Bytes), addr(2Bytes), read length(2Bytes), data(reg:2Bytes+data:24Bytes)
 	if (i2c_w_r_flag == true) {
-		for (int i = 0; i < MODBUS_DATA_MAX_SIZE; i++) {
+		for (int i = 0; i < I2C_MWR_MODBUS_READ_DATA_SIZE; i++) {
 			if (i < temp_read_length){
 				cmd->data[i] = temp_read_data[i];
 			}

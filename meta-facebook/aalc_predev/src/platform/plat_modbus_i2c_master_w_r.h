@@ -13,6 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define MODBUS_DATA_MAX_SIZE 16 //16 registers(2 bytes each)
+#define I2C_MWR_MODBUS_READ_DATA_SIZE 16 //16 registers(2 bytes each)
 uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd);
 uint8_t modbus_command_i2c_master_write_read_response(modbus_command_mapping *cmd);
