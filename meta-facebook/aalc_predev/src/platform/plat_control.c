@@ -43,7 +43,7 @@ static sensor_cfg *get_sensor_config_data(uint8_t sensor_num)
 	return cfg;
 }
 
-uint16_t pump_reset(uint8_t sensor_num)
+bool pump_reset(uint8_t sensor_num)
 {
 	// Check sensor information in sensor config table
 	sensor_cfg *cfg = get_sensor_config_data(sensor_num);
@@ -56,7 +56,7 @@ uint16_t pump_reset(uint8_t sensor_num)
 		// check pump is already enable
 		k_msleep(500);
 		// enable pump
-		if (enable_adm1272_hsc(bus, addr, 1)) {
+		if (enable_adm1272_hsc(bus, addr, true)) {
 			return true;
 		} else {
 			LOG_ERR("Fail when start the pump.");
@@ -71,7 +71,7 @@ uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 {
 		CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
-		switch ((int)cmd->data) {
+		switch (cmd->data[0]) {
 		case PUMP_REDUNDENT_SWITCHED:
 		case MANUAL_CONTROL_PUMP:
 		case MANUAL_CONTROL_FAN:

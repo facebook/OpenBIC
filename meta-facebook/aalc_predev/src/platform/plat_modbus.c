@@ -433,7 +433,7 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_LEAK_RACK_FLOOR_GPO_AND_RELAY_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_2, 1, 0, 1 },
 	// modbus writre
-	{ MODBUS_PUMP_SETTING_ADDR, modbus_pump_setting, NULL, 0, 1, 0, 1},
+	{ MODBUS_PUMP_SETTING_ADDR, modbus_pump_setting, NULL, 0, 0, 0, 1},
 };
 
 static modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)

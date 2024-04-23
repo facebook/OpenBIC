@@ -14,5 +14,5 @@
  * limitations under the License.
  */
 
-uint16_t pump_reset(uint8_t sensor_num);
+bool pump_reset(uint8_t sensor_num);
 uint8_t modbus_pump_setting(modbus_command_mapping *cmd);
