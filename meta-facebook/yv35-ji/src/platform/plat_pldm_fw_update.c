@@ -133,12 +133,6 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param)
 	/* Stop sensor polling */
 	disable_sensor_poll();
 
-	/* Switch mux */
-	gpio_set(BIC_CPLD_VRD_MUX_SEL, GPIO_LOW);
-
-	/* Enable power block */
-	gpio_set(FM_VR_FW_PROGRAM_L, GPIO_LOW);
-
 	/* Get bus and target address by sensor number in sensor configuration */
 	switch (p->comp_id) {
 	case JI_COMPNT_CPUDVDD:
@@ -168,12 +162,6 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param)
 static uint8_t pldm_post_vr_update(void *fw_update_param)
 {
 	ARG_UNUSED(fw_update_param);
-
-	/* Switch mux */
-	gpio_set(BIC_CPLD_VRD_MUX_SEL, GPIO_HIGH);
-
-	/* Disable power block */
-	gpio_set(FM_VR_FW_PROGRAM_L, GPIO_HIGH);
 
 	/* Start sensor polling */
 	enable_sensor_poll();
