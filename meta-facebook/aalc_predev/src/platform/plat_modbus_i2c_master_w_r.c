@@ -25,7 +25,7 @@
 
 static bool i2c_w_r_flag;
 static uint16_t temp_read_length;
-static uint16_t temp_read_data[16] = {0}; //16 registers
+static uint16_t temp_read_data[16]; //16 registers
 
 LOG_MODULE_REGISTER(plat_modbus_i2c_write_read);
 
@@ -70,7 +70,7 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 		LOG_ERR("I2C read fail \n");
 		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 	}
-	memset(temp_read_data, 0xff,32);
+	memset(temp_read_data, 0xff,sizeof(temp_read_data));
 	for (int i = 0; i < temp_read_length; i++)
 		temp_read_data[i] = msg.data[i];
 	i2c_w_r_flag = true;
