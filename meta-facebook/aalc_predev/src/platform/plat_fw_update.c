@@ -10,7 +10,7 @@
 uint8_t modbus_get_fw_reversion(modbus_command_mapping *cmd)
 {
 	uint16_t byte_val = FIRMWARE_REVISION_1 << 8 | FIRMWARE_REVISION_2;
-	memcpy(&cmd->data, &byte_val, sizeof(uint16_t) * cmd->size);
+	memcpy(cmd->data, &byte_val, sizeof(uint16_t) * cmd->size);
 	return MODBUS_EXC_NONE;
 }
 

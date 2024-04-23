@@ -433,7 +433,7 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_LEAK_RACK_FLOOR_GPO_AND_RELAY_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_2, 1, 0, 1 },
     //FW UPDATE
-	{ MODBUS_FW_REVISION_ADDR, NULL, modbus_get_fw_reversion, 0, 1, 0, 1 },
+	{ MODBUS_FW_REVISION_ADDR, NULL, modbus_get_fw_reversion, 0, 0, 0, 1 },
 	{ MODBUS_FW_DOWNLOAD_ADDR, modbus_fw_download, NULL, 0, 0, 0, 103 },	  
 };
 
@@ -495,7 +495,7 @@ static int holding_reg_wr(uint16_t addr, uint16_t reg)
 
 	if (offset == (ptr->size - 1)) {
 		ret = ptr->wr_fn(ptr);
-		memset(&ptr->data, 0, sizeof(ptr->data));
+		memset(ptr->data, 0, ptr->size);
 	}
 	return ret;
 }
