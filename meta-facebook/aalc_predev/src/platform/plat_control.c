@@ -35,10 +35,9 @@ static sensor_cfg *get_sensor_config_data(uint8_t sensor_num)
 	// Check sensor information in sensor config table
 	sensor_cfg *cfg = NULL;
 	cfg = find_sensor_cfg_via_sensor_num(sensor_config, sensor_config_count, sensor_num);
-	if (cfg == NULL) {
+	if (cfg == NULL)
 		LOG_ERR("Fail to find sensor info in config table, sensor_num: 0x%x, cfg count: 0x%x",
 			sensor_num, sensor_config_count);
-	}
 	return cfg;
 }
 
@@ -46,9 +45,8 @@ bool pump_reset(uint8_t sensor_num)
 {
 	// Check sensor information in sensor config table
 	sensor_cfg *cfg = get_sensor_config_data(sensor_num);
-	if (cfg == NULL) {
+	if (cfg == NULL)
 		return false;
-	}
 	//uint8_t bus,uint8_t addr, bool enable_flag
 	uint8_t bus = cfg->port;
 	uint8_t addr = cfg->target_addr;
@@ -57,12 +55,11 @@ bool pump_reset(uint8_t sensor_num)
 		// check pump is already enable
 		k_msleep(500);
 		// enable pump
-		if (enable_adm1272_hsc(bus, addr, true)) {
+		if (enable_adm1272_hsc(bus, addr, true))
 			return true;
-		} else {
+		else
 			LOG_ERR("Fail when start the pump.");
 			return false;
-		}
 	} else {
 		LOG_ERR("Fail when stop the pump.");
 		return false;
@@ -84,19 +81,16 @@ uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 		case CLEAR_PUMP_RUNNING_TIME:
 		case CLEAR_LOG:
 		case PUMP_1_RESET:
-			if (pump_reset(SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W)){
+			if (pump_reset(SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W))
 				break;
-			}
 			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 		case PUMP_2_RESET:
-			if (pump_reset(SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W)){
+			if (pump_reset(SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W))
 				break;
-			}
 			return MODBUS_EXC_SERVER_DEVICE_FAILURE;	
 		case PUMP_3_RESET:
-			if (pump_reset(SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W)){
+			if (pump_reset(SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W))
 				break;
-			}
 			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 		default:
 			LOG_ERR("invalid pump setting");
