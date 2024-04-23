@@ -30,7 +30,7 @@
 
 /* MODBUS Command for i2c w/r */
 #define MODBUS_MASTER_I2C_WRITE_READ_ADDR 0x1050
-#define MODBUS_MASTER_I2C_WRITE_READ_RESPONSE_ADDR 0x1051
+#define MODBUS_MASTER_I2C_WRITE_READ_RESPONSE_ADDR 0x1060
 
 int init_custom_modbus_server(void);
 typedef struct _modbus_command_mapping {

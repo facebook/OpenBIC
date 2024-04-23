@@ -432,8 +432,9 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_LEAK_RACK_FLOOR_GPO_AND_RELAY_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_2, 1, 0, 1 },
 	/* write */
+	// addr, write_fn, read_fn, arg0, arg1, arg2, size
 	{ MODBUS_MASTER_I2C_WRITE_READ_ADDR, modbus_command_i2c_master_write_read, NULL, 0, 0, 0, 16},
-	{ MODBUS_MASTER_I2C_WRITE_READ_RESPONSE_ADDR, modbus_command_i2c_master_write_read_response, NULL, 0, 0, 0, 16},
+	{ MODBUS_MASTER_I2C_WRITE_READ_RESPONSE_ADDR, NULL, modbus_command_i2c_master_write_read_response, 0, 0, 0, 16},
 };
 
 static modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)

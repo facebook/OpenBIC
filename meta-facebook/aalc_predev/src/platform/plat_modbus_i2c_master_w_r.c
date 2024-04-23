@@ -21,6 +21,7 @@
 #include <logging/log.h>
 #include "libutil.h"
 #include "plat_modbus.h"
+#include "plat_modbus_i2c_master_w_r.h"
 
 static bool i2c_w_r_flag;
 static uint8_t temp_i2c_reg;
@@ -35,20 +36,27 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 	// write data: bus(2Bytes), addr(2Bytes), read length(2Bytes), data(26Bytes)
 	// if it is only write,read length will be 0
-	uint8_t target_bus = cmd->data[0] & BIT_MASK(7); // get 7:0 bit data
-	uint8_t target_addr = cmd->data[1] & BIT_MASK(7);
-	uint8_t target_read_length = cmd->data[2] & BIT_MASK(7);
-	uint8_t retry = 5;
+	uint8_t target_bus;
+	uint8_t target_addr;
+	uint8_t target_read_length;
+	uint8_t write_length;
 	I2C_MSG msg;
-	msg.bus = target_bus;
-	msg.target_addr = target_addr;
+	uint8_t retry = 5;
 	if(cmd->data == NULL){ // check data is not null
 		return MODBUS_EXC_ILLEGAL_DATA_VAL;
 	}
-	else if (target_read_length == 0) { // only write
-		msg.tx_len = 9;
-		for (int i = 0; i < 8; i++) {
-			msg.data[i] = cmd->data[i+3] & BIT_MASK(7);
+	else{
+		target_bus = cmd->data[0] & BIT_MASK(8); // get 7:0 bit data, BIT_MASK(n): get 0~n-1 bit data
+		target_addr = cmd->data[1] & BIT_MASK(8);
+		target_read_length = cmd->data[2] & BIT_MASK(8);
+		msg.bus = target_bus;
+		msg.target_addr = target_addr;
+		write_length = 8; // need to set uint8_t data_len here
+	}
+	if (target_read_length == 0) { // only write
+		msg.tx_len = write_length - 3; // write length need to -3 (bus,addr,read length)
+		for (int i = 0; i < write_length ; i++) {
+			msg.data[i] = cmd->data[i+3] & BIT_MASK(8);
 		}
 		int result = i2c_master_write(&msg, retry);
 		if (result != 0) {
@@ -59,8 +67,8 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 	}
 	else if (i2c_w_r_flag == false) {
 		temp_read_length = target_read_length; // read length
-		temp_i2c_reg = cmd->data[3] & BIT_MASK(7); // reg
-		msg.tx_len = 2;
+		temp_i2c_reg = cmd->data[3] & BIT_MASK(8); // reg
+		msg.tx_len = 1;
 		msg.data[0] = temp_i2c_reg;
 		msg.rx_len = (int)temp_read_length;
 		int result = i2c_master_read(&msg, retry);
@@ -69,7 +77,7 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 			LOG_ERR("I2C read fail \n");
 			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 		}
-		for (int i = 0; i < 16; i++) {
+		for (int i = 0; i < MODBUS_DATA_MAX_SIZE; i++) {
 			if (i < temp_read_length)
 			{
 				temp_read_data[i] = msg.data[i];
@@ -95,7 +103,7 @@ uint8_t modbus_command_i2c_master_write_read_response(modbus_command_mapping *cm
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 	// write data: bus(2Bytes), addr(2Bytes), read length(2Bytes), data(reg:2Bytes+data:24Bytes)
 	if (i2c_w_r_flag == true) {
-		for (int i = 0; i < 16; i++) {
+		for (int i = 0; i < MODBUS_DATA_MAX_SIZE; i++) {
 			if (i < temp_read_length){
 				cmd->data[i] = temp_read_data[i];
 			}
