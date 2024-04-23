@@ -38,7 +38,6 @@ static sensor_cfg *get_sensor_config_data(uint8_t sensor_num)
 	if (cfg == NULL) {
 		LOG_ERR("Fail to find sensor info in config table, sensor_num: 0x%x, cfg count: 0x%x",
 			sensor_num, sensor_config_count);
-		return NULL;
 	}
 	return cfg;
 }
@@ -81,31 +80,21 @@ uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 		case MANUAL_CONTROL:
 		case CLEAR_PUMP_RUNNING_TIME:
 		case CLEAR_LOG:
-			break;
 		case PUMP_1_RESET:
 			if (pump_reset(SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W)){
-				return MODBUS_EXC_NONE;
+				break;
 			}
-			else{
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-			}
-			break;
+			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 		case PUMP_2_RESET:
 			if (pump_reset(SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W)){
-				return MODBUS_EXC_NONE;
+				break;
 			}
-			else{
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-			}
-			break;
+			return MODBUS_EXC_SERVER_DEVICE_FAILURE;	
 		case PUMP_3_RESET:
 			if (pump_reset(SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W)){
-				return MODBUS_EXC_NONE;
+				break;
 			}
-			else{
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-			}
-			break;
+			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 		default:
 			LOG_ERR("invalid pump setting");
 			return MODBUS_EXC_ILLEGAL_DATA_VAL;
