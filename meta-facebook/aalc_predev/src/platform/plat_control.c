@@ -46,6 +46,9 @@ bool pump_reset(uint8_t sensor_num)
 {
 	// Check sensor information in sensor config table
 	sensor_cfg *cfg = get_sensor_config_data(sensor_num);
+	if (cfg == NULL) {
+		return false;
+	}
 	//uint8_t bus,uint8_t addr, bool enable_flag
 	uint8_t bus = cfg->port;
 	uint8_t addr = cfg->target_addr;
