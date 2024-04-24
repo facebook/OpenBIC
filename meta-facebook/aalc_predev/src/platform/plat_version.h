@@ -21,7 +21,7 @@
 
 #define PLATFORM_NAME "AALC"
 #define PROJECT_NAME "AALC"
-#define PROJECT_STAGE POC
+#define PROJECT_STAGE EVT
 
 /*
  * 0xFF AALC TBD
