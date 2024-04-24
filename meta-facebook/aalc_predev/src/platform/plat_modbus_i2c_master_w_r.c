@@ -23,7 +23,6 @@
 #include "plat_modbus.h"
 #include "plat_modbus_i2c_master_w_r.h"
 
-static bool i2c_w_r_flag;
 static uint16_t temp_read_length;
 static uint16_t temp_read_data[16]; //16 registers
 
@@ -59,10 +58,6 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 		}
 		return MODBUS_EXC_NONE;
 	}
-	if (i2c_w_r_flag) {
-		LOG_ERR("Write or read I2c fail, please to read data first \n");
-		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-	}
 	temp_read_length = target_read_length; // read length
 	msg.rx_len = (int)temp_read_length;
 	int result = i2c_master_read(&msg, retry);
@@ -73,7 +68,6 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 	memset(temp_read_data, 0xff,sizeof(temp_read_data));
 	for (int i = 0; i < temp_read_length; i++)
 		temp_read_data[i] = msg.data[i];
-	i2c_w_r_flag = true;
 	return MODBUS_EXC_NONE;
 }
 
@@ -82,13 +76,8 @@ uint8_t modbus_command_i2c_master_write_read_response(modbus_command_mapping *cm
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 	// write data: bus(2Bytes), addr(2Bytes), read length(2Bytes), data(reg:2Bytes+data:24Bytes)
-	if (i2c_w_r_flag == false){
-		LOG_ERR("Please do modbus_command_i2c_write_for_read first \n");
-		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-	}
 	for (int i = 0; i < temp_read_length; i++)
 		cmd->data[i] = temp_read_data[i];
-	i2c_w_r_flag = false;
 	return MODBUS_EXC_NONE;
 
 }
