@@ -377,7 +377,7 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 				      nct7363_init_arg_data->threshold);
 
 		/*  set init fan duty */
-		nct7363_set_duty(cfg, 0x66, i); // 40% duty for init
+		nct7363_set_duty(cfg, 40, i); // 40% duty for init
 	}
 	/* set wdt  */
 	offset = NCT7363_WDT_REG_OFFSET;
