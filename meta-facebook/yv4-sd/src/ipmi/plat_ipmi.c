@@ -134,6 +134,12 @@ void OEM_GET_CHASSIS_POSITION(ipmi_msg *msg)
 
 	uint8_t slot_id = get_slot_id();
 
+	uint8_t blade_config = BLADE_CONFIG_UNKNOWN;
+	if (get_blade_config(&blade_config) == false) {
+		LOG_ERR("Failed to get the blade configuration");
+		return;
+	}
+
 	/*   msg->data[0] format:
 	 *
 	 *   Slot Present (Bit 7):
@@ -149,7 +155,7 @@ void OEM_GET_CHASSIS_POSITION(ipmi_msg *msg)
 	 *       1000: Slot 8
 	 */
 
-	msg->data[0] = SLOT_PRESENT + slot_id;
+	msg->data[0] = SLOT_PRESENT + blade_config + slot_id;
 	return;
 }
 

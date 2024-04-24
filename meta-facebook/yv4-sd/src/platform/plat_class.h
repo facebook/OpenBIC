@@ -4,9 +4,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define CHANNEL_2 2
-#define CHANNEL_13 13
-#define NUMBER_OF_ADC_CHANNEL 16
 #define AST1030_ADC_BASE_ADDR 0x7e6e9000
 
 enum SLOT_EID {
@@ -39,10 +36,24 @@ enum BOARD_REV_ID {
 	BOARD_REV_MP = 0x06,
 };
 
+enum ADC_CHANNEL {
+	ADC_CHANNEL_2 = 2,
+	ADC_CHANNEL_12 = 12,
+	ADC_CHANNEL_13 = 13,
+	NUMBER_OF_ADC_CHANNEL = 16,
+};
+
+enum BLADE_CONFIG {
+	BLADE_CONFIG_T1M = 0x00,
+	BLADE_CONFIG_T1C = 0x10,
+	BLADE_CONFIG_UNKNOWN = 0xff,
+};
+
 bool get_adc_voltage(int channel, float *voltage);
 bool get_board_rev(uint8_t *board_rev);
 uint8_t get_slot_eid();
 uint8_t get_slot_id();
+bool get_blade_config(uint8_t *blade_config);
 void init_platform_config();
 
 #endif
