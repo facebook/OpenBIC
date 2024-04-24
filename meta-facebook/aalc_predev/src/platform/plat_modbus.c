@@ -443,15 +443,16 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C, 1, 0, 1 },
 	{ MODBUS_LEAKAGE_STATUS_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
 	// PUMP SETTING
-	{ MODBUS_PUMP_SETTING_ADDR, modbus_pump_setting, NULL, 0, 0, 0, 1},
-  //FW UPDATE
+	{ MODBUS_PUMP_SETTING_ADDR, modbus_pump_setting, NULL, 0, 0, 0, 1 },
+	//FW UPDATE
 	{ MODBUS_FW_REVISION_ADDR, NULL, modbus_get_fw_reversion, 0, 0, 0, 1 },
-	{ MODBUS_FW_DOWNLOAD_ADDR, modbus_fw_download, NULL, 0, 0, 0, 103 },  
+	{ MODBUS_FW_DOWNLOAD_ADDR, modbus_fw_download, NULL, 0, 0, 0, 103 },
 	// i2c master write read
-	{ MODBUS_MASTER_I2C_WRITE_READ_ADDR, modbus_command_i2c_master_write_read, NULL, 0, 0, 0, 16},
-	{ MODBUS_MASTER_I2C_WRITE_READ_RESPONSE_ADDR, NULL, modbus_command_i2c_master_write_read_response, 0, 0, 0, 16},
+	{ MODBUS_MASTER_I2C_WRITE_READ_ADDR, modbus_command_i2c_master_write_read, NULL, 0, 0, 0,
+	  16 },
+	{ MODBUS_MASTER_I2C_WRITE_READ_RESPONSE_ADDR, NULL,
+	  modbus_command_i2c_master_write_read_response, 0, 0, 0, 16 },
 };
-
 
 static modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)
 {
