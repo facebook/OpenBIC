@@ -212,6 +212,11 @@
 #define SENSOR_NUM_SB_LEAKAGE_1 0x9F
 #define SENSOR_NUM_SB_LEAKAGE_2 0xA0
 #define SENSOR_NUM_SB_LEAKAGE_3 0xA1
+#define SENSOR_NUM_V_12_AUX 0xA2
+#define SENSOR_NUM_V_5_AUX 0xA3
+#define SENSOR_NUM_V_3_3_AUX 0xA4
+#define SENSOR_NUM_V_1_2_AUX 0xA5
+#define SENSOR_NUM_V_5_USB 0xA6
 
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
