@@ -28,10 +28,6 @@
 #define MODBUS_UART_RESPONSE_T 1000000
 //from zephyr/samples/subsys/modbus/rtu_client, client_param: rx_timeout = 1000000(default 50000)
 
-/* MODBUS Command for i2c w/r */
-#define MODBUS_MASTER_I2C_WRITE_READ_ADDR 0x1050
-#define MODBUS_MASTER_I2C_WRITE_READ_RESPONSE_ADDR 0x1060
-
 int init_custom_modbus_server(void);
 typedef struct _modbus_command_mapping {
 	uint16_t addr;
