@@ -39,7 +39,7 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 	uint8_t target_read_length;
 	I2C_MSG msg;
 	uint8_t retry = 5;
-	uint8_t data_len = 8; // need to set uint8_t data_len here;
+	uint8_t data_len = cmd->data_len; // set data_len
 	if(data_len <= 3) // check bus,addr,read length is not null
 		return MODBUS_EXC_ILLEGAL_DATA_VAL;
 	uint8_t write_length = data_len -3; 
