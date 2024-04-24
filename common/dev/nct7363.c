@@ -68,7 +68,7 @@ uint8_t nct7363_set_threshold(uint8_t bus, uint8_t address, uint8_t port, uint16
 	return 0;
 }
 
-uint8_t nct7363_set_duty(sensor_cfg *cfg, int duty, uint8_t port)
+uint8_t nct7363_set_duty(sensor_cfg *cfg, uint8_t duty, uint8_t port)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	I2C_MSG msg = { 0 };
@@ -377,7 +377,7 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 				      nct7363_init_arg_data->threshold);
 
 		/*  set init fan duty */
-		nct7363_set_duty(cfg, 40, i); // 40% duty for init
+		nct7363_set_duty(cfg, 0x66, i); // 40% duty for init
 	}
 	/* set wdt  */
 	offset = NCT7363_WDT_REG_OFFSET;
