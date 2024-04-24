@@ -9603,7 +9603,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"PB_3_HUM_PCT_RH",
 	},
 	{ 
-		// SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_V
+		// SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -9612,7 +9612,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_V, // sensor number
+		SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -9661,10 +9661,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"BPB_CDU_COOLANT_LEAKAGE_V",
+		"BPB_CDU_COOLANT_LEAKAGE_VOLT_V",
 	},
 	{ 
-		// SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_V
+		// SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_VOLT_V
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -9673,7 +9673,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_V, // sensor number
+		SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -9722,10 +9722,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"BPB_RACK_COOLANT_LEAKAGE_V",
+		"BPB_RACK_COOLANT_LEAKAGE_VOLT_V",
 	},
 	{ 
-		// SENSOR_NUM_SB_LEAKAGE_1_V
+		// SENSOR_NUM_SB_LEAKAGE_1_VOLT_V
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -9734,7 +9734,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_SB_LEAKAGE_1_V, // sensor number
+		SENSOR_NUM_SB_LEAKAGE_1_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -9783,10 +9783,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"SB_LEAKAGE_1_V",
+		"SB_LEAKAGE_1_VOLT_V",
 	},
 	{ 
-		// SENSOR_NUM_SB_LEAKAGE_2_V
+		// SENSOR_NUM_SB_LEAKAGE_2_VOLT_V
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -9795,7 +9795,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_SB_LEAKAGE_2_V, // sensor number
+		SENSOR_NUM_SB_LEAKAGE_2_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -9844,10 +9844,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"SB_LEAKAGE_2_V",
+		"SB_LEAKAGE_2_VOLT_V",
 	},
 	{ 
-		// SENSOR_NUM_SB_LEAKAGE_3_V
+		// SENSOR_NUM_SB_LEAKAGE_3_VOLT_V
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -9856,7 +9856,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_SB_LEAKAGE_3_V, // sensor number
+		SENSOR_NUM_SB_LEAKAGE_3_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -9905,7 +9905,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"SB_LEAKAGE_3_V",
+		"SB_LEAKAGE_3_VOLT_V",
 	},
 	{}, //SENSOR_NUM_V_12_AUX	
 	{}, //SENSOR_NUM_V_5_AUX	
