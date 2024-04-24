@@ -24,7 +24,9 @@ extern "C" {
 #include "pldm.h"
 #include "plat_def.h"
 
+#ifndef MAX_FWUPDATE_RSP_BUF_SIZE
 #define MAX_FWUPDATE_RSP_BUF_SIZE 256
+#endif
 #define MAX_IMAGE_MALLOC_SIZE (1024 * 64)
 
 #define KEYWORD_VR_ISL69259 "isl69259"
