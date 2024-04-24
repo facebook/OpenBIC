@@ -9907,6 +9907,11 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"SB_LEAKAGE_3",
 	},
+	{}, //SENSOR_NUM_V_12_AUX	
+	{}, //SENSOR_NUM_V_5_AUX	
+	{}, //SENSOR_NUM_V_3_3_AUX	
+	{}, //SENSOR_NUM_V_1_2_AUX	
+	{}, //SENSOR_NUM_V_1_2_AUX
 };
 
 const int SDR_TABLE_SIZE = ARRAY_SIZE(plat_sdr_table);
