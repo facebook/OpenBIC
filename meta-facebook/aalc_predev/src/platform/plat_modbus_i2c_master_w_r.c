@@ -60,7 +60,7 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 		return MODBUS_EXC_NONE;
 	}
 
-	temp_read_length = target_read_length; // read length
+	temp_read_length = target_read_length;
 	msg.rx_len = (int)temp_read_length;
 	int result = i2c_master_read(&msg, retry);
 	if (result != 0) {
