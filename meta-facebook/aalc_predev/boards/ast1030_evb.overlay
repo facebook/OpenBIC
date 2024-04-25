@@ -154,3 +154,7 @@
 		label = "FAN1";
 	};
 };
+
+&gpio0_q_t {
+       gpio-reserved = <0xf9f360>;
+};

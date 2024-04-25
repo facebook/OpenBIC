@@ -45,6 +45,13 @@ LOG_MODULE_REGISTER(plat_modbus);
 //{ DT_PROP(DT_INST(0, zephyr_modbus_serial), label) }
 static char server_iface_name[] = "MODBUS0";
 
+typedef struct {
+	struct k_work work; // for wr fn only
+	struct k_timer timer;
+	struct _modbus_command_mapping *cmd;
+} wr_timeout_t;
+static wr_timeout_t wr_timeout;
+
 static float pow_of_10(int8_t exp)
 {
 	float ret = 1.0;
@@ -84,7 +91,7 @@ static uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd)
 		float val = (sval->integer * 1000 + sval->fraction) / 1000;
 		float r = pow_of_10(cmd->arg2);
 		uint16_t byte_val = val / cmd->arg1 / r; // scale
-		memcpy(&cmd->data, &byte_val, sizeof(uint16_t) * cmd->size);
+		memcpy(cmd->data, &byte_val, sizeof(uint16_t) * cmd->cmd_size);
 		return MODBUS_EXC_NONE;
 	}
 
@@ -436,21 +443,38 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_LEAK_RACK_FLOOR_GPO_AND_RELAY_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_2, 1, 0, 1 },
 	// PUMP SETTING
-	{ MODBUS_PUMP_SETTING_ADDR, modbus_pump_setting, NULL, 0, 0, 0, 1},
-    //FW UPDATE
+	{ MODBUS_PUMP_SETTING_ADDR, modbus_pump_setting, NULL, 0, 0, 0, 1 },
+	//FW UPDATE
 	{ MODBUS_FW_REVISION_ADDR, NULL, modbus_get_fw_reversion, 0, 0, 0, 1 },
-	{ MODBUS_FW_DOWNLOAD_ADDR, modbus_fw_download, NULL, 0, 0, 0, 103 },  
+	{ MODBUS_FW_DOWNLOAD_ADDR, modbus_fw_download, NULL, 0, 0, 0, 103 },
 	// i2c master write read
-	{ MODBUS_MASTER_I2C_WRITE_READ_ADDR, modbus_command_i2c_master_write_read, NULL, 0, 0, 0, 16},
-	{ MODBUS_MASTER_I2C_WRITE_READ_RESPONSE_ADDR, NULL, modbus_command_i2c_master_write_read_response, 0, 0, 0, 16},
+	{ MODBUS_MASTER_I2C_WRITE_READ_ADDR, modbus_command_i2c_master_write_read, NULL, 0, 0, 0,
+	  16 },
+	{ MODBUS_MASTER_I2C_WRITE_READ_RESPONSE_ADDR, NULL,
+	  modbus_command_i2c_master_write_read_response, 0, 0, 0, 16 },
 };
 
+static void wr_work_fn(struct k_work *my_work)
+{
+	CHECK_NULL_ARG(my_work);
+
+	wr_timeout.cmd->wr_fn(wr_timeout.cmd);
+	memset(wr_timeout.cmd->data, 0, sizeof(uint16_t) * wr_timeout.cmd->cmd_size);
+}
+
+static void wr_timeout_fn(struct k_timer *my_timer)
+{
+	CHECK_NULL_ARG(my_timer);
+
+	k_work_submit(&wr_timeout.work);
+	k_timer_stop(my_timer);
+}
 
 static modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)
 {
 	for (uint16_t i = 0; i < ARRAY_SIZE(modbus_command_table); i++) {
-		if (addr >= modbus_command_table[i].addr &&
-		    addr < (modbus_command_table[i].addr + modbus_command_table[i].size))
+		if ((addr >= modbus_command_table[i].addr) &&
+		    (addr < (modbus_command_table[i].addr + modbus_command_table[i].cmd_size)))
 			return &modbus_command_table[i];
 	}
 
@@ -471,12 +495,16 @@ void init_modbus_command_table(void)
 			SAFE_FREE(modbus_command_table[i].data);
 
 		modbus_command_table[i].data =
-			(uint16_t *)malloc(modbus_command_table[i].size * sizeof(uint16_t));
+			(uint16_t *)malloc(modbus_command_table[i].cmd_size * sizeof(uint16_t));
 		if (modbus_command_table[i].data == NULL) {
 			LOG_ERR("modbus_command_mapping[%i] malloc fail", i);
 			goto init_fail;
 		}
 	}
+
+	// init write timeout timer
+	k_work_init(&wr_timeout.work, wr_work_fn);
+	k_timer_init(&wr_timeout.timer, wr_timeout_fn, NULL);
 
 	return;
 
@@ -530,12 +558,15 @@ static int holding_reg_wr(uint16_t addr, uint16_t reg)
 
 	int ret = MODBUS_EXC_NONE;
 	uint8_t offset = addr - ptr->addr;
-	ptr->data_len = offset;
+	ptr->data_len = offset + 1;
 	ptr->data[offset] = reg;
 
-	if (offset == (ptr->size - 1)) {
+	wr_timeout.cmd = ptr;
+	k_timer_start(&wr_timeout.timer, K_MSEC(10), K_NO_WAIT);
+	if (offset == (ptr->cmd_size - 1)) {
 		ret = ptr->wr_fn(ptr);
-		memset(ptr->data, 0, ptr->size);
+		k_timer_stop(&wr_timeout.timer);
+		memset(ptr->data, 0, sizeof(uint16_t) * ptr->cmd_size);
 	}
 	return ret;
 }
@@ -569,7 +600,7 @@ static struct modbus_user_callbacks mbs_cbs = {
 	.holding_reg_rd = holding_reg_rd,
 	.holding_reg_wr = holding_reg_wr,
 	.coil_rd = coil_rd,
-	.coil_wr = coil_wr,	
+	.coil_wr = coil_wr,
 };
 
 const static struct modbus_iface_param server_param = {
