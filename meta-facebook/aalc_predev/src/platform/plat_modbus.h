@@ -17,7 +17,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-
 #define MODBUS_UART_NODE_ADDR 0x0C
 #define MODBUS_UART_FP_OFFSET 5000
 
@@ -33,6 +32,7 @@
 #define MODBUS_MASTER_I2C_WRITE_READ_RESPONSE_ADDR 0x1060
 
 int init_custom_modbus_server(void);
+void init_modbus_command_table(void);
 typedef struct _modbus_command_mapping {
 	uint16_t addr;
 	uint8_t (*wr_fn)(struct _modbus_command_mapping *);
@@ -40,10 +40,11 @@ typedef struct _modbus_command_mapping {
 	uint8_t arg0;
 	uint8_t arg1;
 	uint8_t arg2;
-	uint8_t size;
+	uint8_t cmd_size;
+
 	uint16_t *data;
-	uint8_t data_len;
-} 	modbus_command_mapping;
+	uint8_t data_len; // how many registers
+} modbus_command_mapping;
 
 enum pump_state {
 	PUMP_REDUNDENT_SWITCHED,
@@ -53,7 +54,7 @@ enum pump_state {
 	AUTOTUNE_PRESSURE_BALANCE_CONTROL,
 	SYSTEM_STOP,
 	RPU_REMOTE_POWER_CYCLE,
-	REVERSE_STATE_1, 
+	REVERSE_STATE_1,
 	REVERSE_STATE_2,
 	MANUAL_CONTROL,
 	CLEAR_PUMP_RUNNING_TIME,
