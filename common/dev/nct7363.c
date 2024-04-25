@@ -23,7 +23,16 @@
 #include <string.h>
 #include <math.h>
 #include <sys/util.h>
+
 LOG_MODULE_REGISTER(dev_nct7363);
+
+#define NCT7363_PIN_NUMBER_SIZE 16
+#define NCT7363_PIN_FUNC_REG_SIZE 4
+#define NCT7363_REG_SIZE 8
+#define FREQUENCY_DIVEL_0_RANGE_MAX 62500
+#define FREQUENCY_DIVEL_0_RANGE_MIN 488.28125
+#define FREQUENCY_DIVEL_1_RANGE_MAX 244.14
+#define FREQUENCY_DIVEL_1_RANGE_MIN 1.907
 
 uint8_t nct7363_set_threshold(uint8_t bus, uint8_t address, uint8_t port, uint16_t threshold)
 {
@@ -284,30 +293,34 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
+
 	nct7363_init_arg *nct7363_init_arg_data = (nct7363_init_arg *)cfg->init_args;
-	uint8_t offset, val;
-	/* check pin_type */
-	for (uint8_t i = 0; i < 16; i++) {
-		if (nct7363_init_arg_data->pin_type[i] < NCT7363_PIN_TPYE_ERROR) {
-			continue;
-		} else {
+
+	
+	/* check pin_type is correct */
+	for (uint8_t i = 0; i < NCT7363_PIN_NUMBER_SIZE; i++) {
+		if (nct7363_init_arg_data->pin_type[i] >= NCT7363_PIN_TPYE_ERROR) {
 			LOG_ERR("Unknown pin_type, pin number(%d)", i);
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 	}
-	/* init_pin_config */
-	for (uint8_t i = 0; i < 4; i++) {
-		offset = GPIO_00_to_03_Pin_Configuration_REG +
-			 i; // Pin_Configuration_REG base offset
-		// get last 2 bits of pin_type
-		val = ((nct7363_init_arg_data->pin_type[3 + 4 * i] & 0x03) << 6) | // 03 07 13 17
-		      ((nct7363_init_arg_data->pin_type[2 + 4 * i] & 0x03) << 4) | // 02 06 12 16
-		      ((nct7363_init_arg_data->pin_type[1 + 4 * i] & 0x03) << 2) | // 01 05 11 15
-		      (nct7363_init_arg_data->pin_type[4 * i] & 0x03); // 00 04 10 14
 
-		if (nct7363_write(cfg, offset, val))
+
+	/* init_pin_config */
+	uint8_t offset, val;
+	for (uint8_t i = 0; i < NCT7363_PIN_FUNC_REG_SIZE; i++) {
+		offset = GPIO_00_TO_03_PIN_CONFIGURATION_REG + i; // base reg
+		// get last 2 bits of pin_type
+		val = ((nct7363_init_arg_data->pin_type[3 + NCT7363_PIN_FUNC_REG_SIZE * i] & BIT_MASK(2)) << 6) | // 03 07 13 17
+			((nct7363_init_arg_data->pin_type[2 + NCT7363_PIN_FUNC_REG_SIZE * i] & BIT_MASK(2)) << 4) | // 02 06 12 16
+			((nct7363_init_arg_data->pin_type[1 + NCT7363_PIN_FUNC_REG_SIZE * i] & BIT_MASK(2)) << 2) | // 01 05 11 15
+			(nct7363_init_arg_data->pin_type[NCT7363_PIN_FUNC_REG_SIZE * i] &  BIT_MASK(2)); // 00 04 10 14
+		if (!nct7363_write(cfg, offset, val)){
+			LOG_ERR("Error when setting PIN_CONFIGURATION_REG.");
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		}
 	}
+
 	/* init gpio input/output */
 	uint8_t offset_gpio0x = 0, offset_gpio1x = 0, val_gpio0x = 0xff, val_gpio1x = 0xff;
 	offset_gpio0x = GPIO0x_Input_Output_Configuration_REG;
