@@ -227,6 +227,7 @@ bool pre_PCA9546A_read(sensor_cfg *cfg, void *args)
 	pre_args->bus = cfg->port;
 
 	struct k_mutex *mutex = get_i2c_mux_mutex(pre_args->bus);
+	CHECK_NULL_ARG_WITH_RETURN(mutex, false);
 	mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
 	if (mutex_status != 0) {
 		LOG_ERR("Mutex lock fail, status: %d", mutex_status);
@@ -243,8 +244,6 @@ bool pre_PCA9546A_read(sensor_cfg *cfg, void *args)
 bool post_PCA9546A_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
-	CHECK_NULL_ARG_WITH_RETURN(args, false);
-	CHECK_NULL_ARG_WITH_RETURN(reading, false);
 	ARG_UNUSED(reading);
 	ARG_UNUSED(args);
 
@@ -252,6 +251,7 @@ bool post_PCA9546A_read(sensor_cfg *cfg, void *args, int *reading)
 	uint8_t bus = cfg->port;
 
 	struct k_mutex *mutex = get_i2c_mux_mutex(bus);
+	CHECK_NULL_ARG_WITH_RETURN(mutex, false);
 	if (mutex->lock_count != 0) {
 		unlock_status = k_mutex_unlock(mutex);
 	}
@@ -266,9 +266,9 @@ bool post_PCA9546A_read(sensor_cfg *cfg, void *args, int *reading)
 bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
-	CHECK_NULL_ARG_WITH_RETURN(args, false);
-	CHECK_NULL_ARG_WITH_RETURN(reading, false);
 	ARG_UNUSED(args);
+	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+	
 
 	if (reading == NULL) {
 		return check_reading_pointer_null_is_allowed(cfg);
