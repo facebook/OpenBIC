@@ -65,8 +65,8 @@ typedef struct _cxl_power_good_gpio {
 } cxl_power_good_gpio;
 
 enum CXL_NUM {
-	CXL_ID_0 = 0,
-	CXL_ID_1,
+	CXL_ID_1 = 0,
+	CXL_ID_2,
 	MAX_CXL_ID,
 };
 

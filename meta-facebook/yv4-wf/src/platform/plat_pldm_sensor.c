@@ -4682,7 +4682,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 		.update_time = 0,
 		{
 			.type = sensor_dev_vistara,
-			.port = CXL_ID_0,
+			.port = CXL_ID_1,
 			.target_addr = DIMMA_ID,
 			.access_checker = cxl1_ready_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
@@ -4748,7 +4748,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 		.update_time = 0,
 		{
 			.type = sensor_dev_vistara,
-			.port = CXL_ID_0,
+			.port = CXL_ID_1,
 			.target_addr = DIMMB_ID,
 			.access_checker = cxl1_ready_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
@@ -4814,7 +4814,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 		.update_time = 0,
 		{
 			.type = sensor_dev_vistara,
-			.port = CXL_ID_0,
+			.port = CXL_ID_1,
 			.target_addr = DIMMC_ID,
 			.access_checker = cxl1_ready_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
@@ -4880,7 +4880,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 		.update_time = 0,
 		{
 			.type = sensor_dev_vistara,
-			.port = CXL_ID_0,
+			.port = CXL_ID_1,
 			.target_addr = DIMMD_ID,
 			.access_checker = cxl1_ready_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
@@ -4946,7 +4946,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 		.update_time = 0,
 		{
 			.type = sensor_dev_vistara,
-			.port = CXL_ID_1,
+			.port = CXL_ID_2,
 			.target_addr = DIMMA_ID,
 			.access_checker = cxl2_ready_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
@@ -5012,7 +5012,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 		.update_time = 0,
 		{
 			.type = sensor_dev_vistara,
-			.port = CXL_ID_1,
+			.port = CXL_ID_2,
 			.target_addr = DIMMB_ID,
 			.access_checker = cxl2_ready_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
@@ -5078,7 +5078,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 		.update_time = 0,
 		{
 			.type = sensor_dev_vistara,
-			.port = CXL_ID_1,
+			.port = CXL_ID_2,
 			.target_addr = DIMMC_ID,
 			.access_checker = cxl2_ready_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
@@ -5144,7 +5144,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 		.update_time = 0,
 		{
 			.type = sensor_dev_vistara,
-			.port = CXL_ID_1,
+			.port = CXL_ID_2,
 			.target_addr = DIMMD_ID,
 			.access_checker = cxl2_ready_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,

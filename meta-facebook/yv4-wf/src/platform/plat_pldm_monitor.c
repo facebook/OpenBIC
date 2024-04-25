@@ -197,9 +197,9 @@ static void plat_get_cxl_ready_state(const uint8_t *buf, uint16_t len, uint8_t *
 	get_effecter_state_field_t *cxl2_state = &res_p->field[1];
 
 	cxl1_state->effecter_op_state = PLDM_EFFECTER_ENABLED_NOUPDATEPENDING;
-	cxl1_state->present_state = cxl1_state->pending_state = (get_cxl_ready_status(CXL_ID_0) ? 1 : 0);
+	cxl1_state->present_state = cxl1_state->pending_state = (get_cxl_ready_status(CXL_ID_1) ? 1 : 0);
 	cxl2_state->effecter_op_state = PLDM_EFFECTER_ENABLED_NOUPDATEPENDING;
-	cxl2_state->present_state = cxl2_state->pending_state = (get_cxl_ready_status(CXL_ID_1) ? 1 : 0);
+	cxl2_state->present_state = cxl2_state->pending_state = (get_cxl_ready_status(CXL_ID_2) ? 1 : 0);
 
 	*resp_len = PLDM_GET_STATE_EFFECTER_RESP_NO_STATE_FIELD_BYTES +
 		    (sizeof(get_effecter_state_field_t) * 2);

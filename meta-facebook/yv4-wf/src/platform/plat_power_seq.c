@@ -146,25 +146,25 @@ void execute_power_on_sequence()
 	}
 	gpio_set(EN_P12V_E1S_0_R, POWER_ON);
 
-	ret = power_on_handler(CXL_ID_0, ASIC_POWER_ON_STAGE_1);
-	if (ret == 0) {
-		is_cxl_power_on[CXL_ID_0] = true;
-		LOG_INF("CXL 1 power on success");
-	} else {
-		is_cxl_power_on[CXL_ID_0] = false;
-		LOG_ERR("CXL 1 power on fail");
-	}
-
 	ret = power_on_handler(CXL_ID_1, ASIC_POWER_ON_STAGE_1);
 	if (ret == 0) {
 		is_cxl_power_on[CXL_ID_1] = true;
-		LOG_INF("CXL 2 power on success");
+		LOG_INF("CXL 1 power on success");
 	} else {
 		is_cxl_power_on[CXL_ID_1] = false;
+		LOG_ERR("CXL 1 power on fail");
+	}
+
+	ret = power_on_handler(CXL_ID_2, ASIC_POWER_ON_STAGE_1);
+	if (ret == 0) {
+		is_cxl_power_on[CXL_ID_2] = true;
+		LOG_INF("CXL 2 power on success");
+	} else {
+		is_cxl_power_on[CXL_ID_2] = false;
 		LOG_ERR("CXL 2 power on fail");
 	}
 
-	if (is_cxl_power_on[CXL_ID_0] && is_cxl_power_on[CXL_ID_1]) {
+	if (is_cxl_power_on[CXL_ID_1] && is_cxl_power_on[CXL_ID_2]) {
 		gpio_set(PG_CARD_OK, POWER_ON);
 		set_DC_status(PG_CARD_OK);
 		k_work_schedule(&set_dc_on_5s_work, K_SECONDS(DC_ON_DELAY5_SEC));
@@ -244,10 +244,10 @@ void enable_powers(int cxl_id, int pwr_stage)
 		gpio_set(cxl_power_ctrl_pin[cxl_id].pvtt_ab_dimm_en, POWER_ON);
 		gpio_set(cxl_power_ctrl_pin[cxl_id].pvtt_cd_dimm_en, POWER_ON);
 		switch (cxl_id) {
-		case CXL_ID_0:
+		case CXL_ID_1:
 			k_work_schedule(&enable_asic1_rst_work, K_MSEC(PWR_RST_DELAY_MSEC));
 			break;
-		case CXL_ID_1:
+		case CXL_ID_2:
 			k_work_schedule(&enable_asic2_rst_work, K_MSEC(PWR_RST_DELAY_MSEC));
 			break;
 		default:
@@ -364,8 +364,8 @@ void execute_power_off_sequence()
 	}
 	gpio_set(EN_P12V_E1S_0_R, POWER_OFF);
 
-	is_cxl_ready[CXL_ID_0] = false;
 	is_cxl_ready[CXL_ID_1] = false;
+	is_cxl_ready[CXL_ID_2] = false;
 
 	gpio_set(PG_CARD_OK, POWER_OFF);
 	set_DC_status(PG_CARD_OK);
@@ -384,21 +384,21 @@ void execute_power_off_sequence()
 
 	set_DC_on_delayed_status();
 
-	ret = power_off_handler(CXL_ID_0, DIMM_POWER_OFF_STAGE_1);
-	if (ret == 0) {
-		is_cxl_power_on[CXL_ID_0] = false;
-		LOG_INF("CXL 1 power off success");
-	} else {
-		is_cxl_power_on[CXL_ID_0] = true;
-		LOG_ERR("CXL 1 power off fail");
-	}
-
 	ret = power_off_handler(CXL_ID_1, DIMM_POWER_OFF_STAGE_1);
 	if (ret == 0) {
 		is_cxl_power_on[CXL_ID_1] = false;
-		LOG_INF("CXL 2 power off success");
+		LOG_INF("CXL 1 power off success");
 	} else {
 		is_cxl_power_on[CXL_ID_1] = true;
+		LOG_ERR("CXL 1 power off fail");
+	}
+
+	ret = power_off_handler(CXL_ID_2, DIMM_POWER_OFF_STAGE_1);
+	if (ret == 0) {
+		is_cxl_power_on[CXL_ID_2] = false;
+		LOG_INF("CXL 2 power off success");
+	} else {
+		is_cxl_power_on[CXL_ID_2] = true;
 		LOG_ERR("CXL 2 power off fail");
 	}
 
@@ -581,11 +581,11 @@ void cxl1_ready_handler()
 			continue;
 		}
 
-		is_cxl_ready[CXL_ID_0] = true;
+		is_cxl_ready[CXL_ID_1] = true;
 		LOG_INF("CXL1 is ready");
 		/* Switch muxs to BIC*/
 		switch_mux_to_bic(IOE_SWITCH_CXL1_VR_TO_BIC);
-		set_cxl_vr_access(CXL_ID_0, true);
+		set_cxl_vr_access(CXL_ID_1, true);
 
 		return;
 	}
@@ -612,11 +612,11 @@ void cxl2_ready_handler()
 			continue;
 		}
 
-		is_cxl_ready[CXL_ID_1] = true;
+		is_cxl_ready[CXL_ID_2] = true;
 		LOG_INF("CXL2 is ready");
 		/* Switch muxs to BIC*/
 		switch_mux_to_bic(IOE_SWITCH_CXL2_VR_TO_BIC);
-		set_cxl_vr_access(CXL_ID_1, true);
+		set_cxl_vr_access(CXL_ID_2, true);
 
 		return;
 	}
@@ -629,8 +629,8 @@ void set_cxl_vr_access(uint8_t cxl_id, bool value)
 {
 	// Set all vr access if cxl_id == MAX_CXL_ID
 	if (cxl_id == MAX_CXL_ID) {
-		is_cxl_vr_accessible[CXL_ID_0] = value;
 		is_cxl_vr_accessible[CXL_ID_1] = value;
+		is_cxl_vr_accessible[CXL_ID_2] = value;
 		return;
 	}
 	is_cxl_vr_accessible[cxl_id] = value;
@@ -639,12 +639,12 @@ void set_cxl_vr_access(uint8_t cxl_id, bool value)
 
 bool cxl1_vr_access(uint8_t sensor_num)
 {
-	return is_cxl_vr_accessible[CXL_ID_0];
+	return is_cxl_vr_accessible[CXL_ID_1];
 }
 
 bool cxl2_vr_access(uint8_t sensor_num)
 {
-	return is_cxl_vr_accessible[CXL_ID_1];
+	return is_cxl_vr_accessible[CXL_ID_2];
 }
 
 void set_cxl_ready_status(uint8_t cxl_id, bool value)
@@ -660,10 +660,10 @@ bool get_cxl_ready_status(uint8_t cxl_id)
 
 bool cxl1_ready_access(uint8_t sensor_num)
 {
-	return get_cxl_ready_status(CXL_ID_0);
+	return get_cxl_ready_status(CXL_ID_1);
 }
 
 bool cxl2_ready_access(uint8_t sensor_num)
 {
-	return get_cxl_ready_status(CXL_ID_1);
+	return get_cxl_ready_status(CXL_ID_2);
 }

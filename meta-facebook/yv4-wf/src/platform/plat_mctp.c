@@ -360,9 +360,9 @@ uint8_t plat_get_eid()
 uint8_t plat_get_cxl_eid(uint8_t cxl_id)
 {
 	switch (cxl_id) {
-	case CXL_ID_0:
-		return (plat_eid + 2);
 	case CXL_ID_1:
+		return (plat_eid + 2);
+	case CXL_ID_2:
 		return (plat_eid + 3);
 	default:
 		return UNKNOWN_CXL_EID;
