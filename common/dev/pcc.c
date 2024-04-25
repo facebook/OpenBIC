@@ -28,6 +28,7 @@
 #include "libipmi.h"
 #include "plat_sensor_table.h"
 #include "plat_fru.h"
+#include "util_sys.h"
 
 #ifdef ENABLE_PLDM
 #include "pldm_oem.h"
@@ -57,6 +58,7 @@ static uint32_t pcc_read_buffer[PCC_BUFFER_LEN];
 static uint16_t pcc_read_len = 0, pcc_read_index = 0;
 static bool proc_4byte_postcode_ok = false;
 static struct k_sem get_postcode_sem;
+static uint8_t bmc_interface = 0;
 
 static uint8_t PSB_error_code_list[] = { 0x03, 0x04, 0x05, 0x0B, 0x10, 0x13, 0x14, 0x18, 0x22, 0x3E,
 					 0x62, 0x64, 0x69, 0x6C, 0x6F, 0x78, 0x79, 0x7A, 0x7B, 0x7C,
@@ -211,9 +213,19 @@ void check_ABL_error(uint32_t postcode)
 bool pldm_send_post_code_to_bmc(uint16_t send_index)
 {
 	pldm_msg msg = { 0 };
-	msg.ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
-	msg.ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
-	msg.ext_params.ep = MCTP_EID_BMC;
+	uint8_t bmc_bus = I2C_BUS_BMC;
+
+	if (bmc_interface == BMC_INTERFACE_I3C) {
+		bmc_bus = I3C_BUS_BMC;
+		msg.ext_params.type = MCTP_MEDIUM_TYPE_TARGET_I3C;
+		msg.ext_params.i3c_ext_params.addr = I3C_STATIC_ADDR_BMC;
+		msg.ext_params.ep = MCTP_EID_BMC;
+	} else {
+		bmc_bus = I2C_BUS_BMC;
+		msg.ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
+		msg.ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
+		msg.ext_params.ep = MCTP_EID_BMC;
+	}
 
 	msg.hdr.pldm_type = PLDM_TYPE_OEM;
 	msg.hdr.cmd = PLDM_OEM_WRITE_FILE_IO;
@@ -240,7 +252,7 @@ bool pldm_send_post_code_to_bmc(uint16_t send_index)
 	uint8_t resp_len = sizeof(struct pldm_oem_write_file_io_resp);
 	uint8_t rbuf[resp_len];
 
-	if (!mctp_pldm_read(find_mctp_by_bus(I2C_BUS_BMC), &msg, rbuf, resp_len)) {
+	if (!mctp_pldm_read(find_mctp_by_bus(bmc_bus), &msg, rbuf, resp_len)) {
 		LOG_ERR("mctp_pldm_read fail");
 		return false;
 	}
@@ -359,6 +371,8 @@ void pcc_init()
 		LOG_ERR("No pcc device found.");
 		return;
 	}
+	bmc_interface = pal_get_bmc_interface();
+
 	/* set registers to enable pcc */
 	uint32_t reg_data;
 

@@ -47,6 +47,12 @@ enum SYSTEM_RESET_TYPE {
 	FULL_CHIP_RESET = SYS_REBOOT_COLD,
 };
 
+// Interface to communicate with BMC
+enum {
+	BMC_INTERFACE_I2C = 0x0,
+	BMC_INTERFACE_I3C = 0x1,
+};
+
 typedef enum {
 	VENDOR_RENESAS = 0,
 	VENDOR_TI,
@@ -95,5 +101,6 @@ void set_sys_ready_pin(uint8_t ready_gpio_name);
 uint8_t get_system_class();
 
 int pal_get_set_add_debug_sel_mode_status(uint8_t options, uint8_t *status);
+uint8_t pal_get_bmc_interface();
 
 #endif
