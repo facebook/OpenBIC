@@ -23,10 +23,10 @@
 #include "plat_modbus.h"
 #include "plat_modbus_i2c_master_w_r.h"
 
-#define I2C_MASTER_WRITE_READ_SIZE_MAX 16 // 16 registers
+#define I2C_MASTER_READ_BACK_MAX_SIZE 16 // 16 registers
 
 static uint16_t temp_read_length;
-static uint16_t temp_read_data[I2C_MASTER_WRITE_READ_SIZE_MAX]; 
+static uint16_t temp_read_data[I2C_MASTER_READ_BACK_MAX_SIZE]; 
 
 LOG_MODULE_REGISTER(plat_modbus_i2c_write_read);
 
@@ -68,7 +68,6 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 	}
 
 	memset(temp_read_data, 0xff, sizeof(temp_read_data));
-	
 	for (int i = 0; i < temp_read_length; i++)
 		temp_read_data[i] = msg.data[i];
 
@@ -81,7 +80,7 @@ uint8_t modbus_command_i2c_master_write_read_response(modbus_command_mapping *cm
 
 	// write data: bus(2Bytes), addr(2Bytes), read length(2Bytes), data(reg:2Bytes+data:24Bytes)
 	for (int i = 0; i < temp_read_length; i++)
-		memcpy(cmd->data, &temp_read_data, I2C_MASTER_WRITE_READ_SIZE_MAX*2);
+		memcpy(cmd->data, &temp_read_data, I2C_MASTER_READ_BACK_MAX_SIZE*2);
 
 	return MODBUS_EXC_NONE;
 }
