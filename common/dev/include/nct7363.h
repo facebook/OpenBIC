@@ -44,6 +44,7 @@
 
 #define SPEED_CONTROL_PORT_CONF_REG_BASE_OFFSET 0xB0
 #define SPEED_CONTROL_PORT_DIVISOR_BASE_OFFSET 0x91
+
 /* nct7363 port*/
 enum nct7363_port {
 	NCT7363_1_PORT,
@@ -74,6 +75,7 @@ enum nct7363_port {
 #define NCT7363_GPIO1x_OUTPUT_PORT_REG_OFFSET 0x10
 
 #define NCT7363_WDT_REG_OFFSET 0x2A
+
 struct nct7363_data {
 	uint16_t has_fan; /* Enable fan 0-15 */
 	uint16_t fan_speed[16]; /* Register value combine */
@@ -101,13 +103,6 @@ enum nct7363_pin_type {
 
 enum nct7363_gpio_type { NCT7363_GPIO_OUTPUT, NCT7363_GPIO_INPUT };
 
-enum nct7363_wdt_sec {
-	WDT_15_SEC,
-	WDT_3DOT75_SEC,
-	WDT_7DOT5_SEC,
-	WDT_30_SEC,
-	WDT_DISABLE,
-	WDT_ERROR
-};
+enum nct7363_wdt_sec { WDT_15_SEC, WDT_3_75_SEC, WDT_7_5_SEC, WDT_30_SEC, WDT_DISABLE, WDT_ERROR };
 
 #endif

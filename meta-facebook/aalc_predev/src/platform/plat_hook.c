@@ -69,13 +69,13 @@ nct7363_init_arg nct7363_init_args[] = {
         .pin_type[13] = NCT7363_PIN_TPYE_FANIN,
         .pin_type[15] = NCT7363_PIN_TPYE_PWM,
         .fan_poles = 0,
-        .wdt_cfg = WDT_7DOT5_SEC,
+        .wdt_cfg = WDT_7_5_SEC,
     },	
     // Management BD(no used)
     [1] = { 
         .is_init = false,
         .fan_poles = 0,
-        .wdt_cfg = WDT_7DOT5_SEC,
+        .wdt_cfg = WDT_7_5_SEC,
     },
     //Backplane BD
     [2] = { 
@@ -93,7 +93,7 @@ nct7363_init_arg nct7363_init_args[] = {
         .pin_type[14] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
         .pin_type[15] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
         .fan_poles = 0,
-        .wdt_cfg = WDT_7DOT5_SEC,
+        .wdt_cfg = WDT_7_5_SEC,
     },
     //Pump BD
     [3] = { 
@@ -106,7 +106,7 @@ nct7363_init_arg nct7363_init_args[] = {
         .pin_type[8] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
         .pin_type[9] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
         .fan_poles = 0,
-        .wdt_cfg = WDT_7DOT5_SEC,
+        .wdt_cfg = WDT_7_5_SEC,
     },
 };
 
@@ -268,7 +268,6 @@ bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	ARG_UNUSED(args);
 	CHECK_NULL_ARG_WITH_RETURN(reading, false);
-	
 
 	if (reading == NULL) {
 		return check_reading_pointer_null_is_allowed(cfg);
