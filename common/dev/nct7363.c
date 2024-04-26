@@ -66,7 +66,7 @@ bool nct7363_set_threshold(sensor_cfg *cfg, uint16_t threshold)
 	msg.tx_len = 2;
 	msg.data[0] = threshold_offset_high_byte;
 	msg.data[1] = threshold_high_byte_value;
-	if ((i2c_master_write(&msg, retry) != 0)) {
+	if (i2c_master_write(&msg, retry) != 0) {
 		LOG_ERR("set NCT7363_threshold_high_byte_value fail");
 		return false;
 	}
