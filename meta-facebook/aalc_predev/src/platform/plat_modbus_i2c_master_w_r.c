@@ -39,7 +39,6 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 	if (cmd->data_len <= 3) // check bus,addr,read length is not null
 		return MODBUS_EXC_ILLEGAL_DATA_VAL;
 
-	const uint8_t write_length = cmd->data_len - 3;
 	const uint8_t target_bus = cmd->data[0] & BIT_MASK(8); // get 7:0 bit data
 	const uint8_t target_addr = cmd->data[1] & BIT_MASK(8);
 	const uint8_t target_read_length = cmd->data[2] & BIT_MASK(8);
@@ -47,8 +46,8 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 	uint8_t retry = 5;
 	msg.bus = target_bus;
 	msg.target_addr = target_addr;
-	msg.tx_len = write_length; // write length need to -3 (bus,addr,read length)
-	for (int i = 0; i < write_length; i++)
+	msg.tx_len = cmd->data_len - 3; // write length need to -3 (bus,addr,read length)
+	for (int i = 0; i < cmd->data_len - 3; i++)
 		msg.data[i] = cmd->data[i + 3] & BIT_MASK(8);
 
 	if (target_read_length == 0) { // only write
