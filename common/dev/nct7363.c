@@ -234,16 +234,16 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 		msg.rx_len = 1;
 		msg.tx_len = 1;
 		int error_flag = 0;
-		msg.data[0] = FAN_Status_REG_0_to_7;
+		msg.data[0] = FAN_STATUS_0_TO_7_REG;
 		if (i2c_master_read(&msg, retry)) {
-			LOG_ERR("Read FAN_Status_REG_0_to_7 fail");
+			LOG_ERR("Read FAN_STATUS_0_TO_7_REG fail");
 			return SENSOR_FAIL_TO_ACCESS;
 		}
 
 		uint8_t fan_status_0_to_7 = msg.data[0];
-		msg.data[0] = FAN_Status_REG_8_to_15;
+		msg.data[0] = FAN_STATUS_8_TO_15_REG;
 		if (i2c_master_read(&msg, retry)) {
-			LOG_ERR("Read FAN_Status_REG_8_to_15 fail");
+			LOG_ERR("Read FAN_STATUS_8_TO_15_REG fail");
 			return SENSOR_FAIL_TO_ACCESS;
 		}
 
