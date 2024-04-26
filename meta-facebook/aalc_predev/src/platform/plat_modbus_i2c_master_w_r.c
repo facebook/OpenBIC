@@ -23,10 +23,10 @@
 #include "plat_modbus.h"
 #include "plat_modbus_i2c_master_w_r.h"
 
-#define TEMP_READ_LENGTH 16
+#define I2C_MASTER_WRITE_READ_SIZE_MAX 16 // 16 registers
 
 static uint16_t temp_read_length;
-static uint16_t temp_read_data[TEMP_READ_LENGTH]; // 16 registers
+static uint16_t temp_read_data[I2C_MASTER_WRITE_READ_SIZE_MAX]; 
 
 LOG_MODULE_REGISTER(plat_modbus_i2c_write_read);
 
@@ -47,7 +47,7 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 	msg.bus = target_bus;
 	msg.target_addr = target_addr;
 	msg.tx_len = cmd->data_len - 3; // write length need to -3 (bus,addr,read length)
-	for (int i = 0; i < cmd->data_len - 3; i++)
+	for (int i = 0; i < (cmd->data_len - 3); i++)
 		msg.data[i] = cmd->data[i + 3] & BIT_MASK(8);
 
 	if (target_read_length == 0) { // only write
@@ -68,6 +68,7 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 	}
 
 	memset(temp_read_data, 0xff, sizeof(temp_read_data));
+	
 	for (int i = 0; i < temp_read_length; i++)
 		temp_read_data[i] = msg.data[i];
 
@@ -77,9 +78,10 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 uint8_t modbus_command_i2c_master_write_read_response(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
 	// write data: bus(2Bytes), addr(2Bytes), read length(2Bytes), data(reg:2Bytes+data:24Bytes)
 	for (int i = 0; i < temp_read_length; i++)
-		cmd->data[i] = temp_read_data[i];
+		memcpy(cmd->data, &temp_read_data, I2C_MASTER_WRITE_READ_SIZE_MAX*2);
 
 	return MODBUS_EXC_NONE;
 }
