@@ -134,7 +134,7 @@ static bool nct7363_write(sensor_cfg *cfg, uint8_t offset, uint8_t val)
 static bool fan_frequency_convert(float frequency, uint8_t *output_freqency)
 {
 	int val_reg = 0;
-	float step_value = 1;
+	uint8_t step_value = 1;
 
 	// divel = 0
 	if (frequency >= FREQUENCY_DIVEL_0_RANGE_MIN && frequency <= FREQUENCY_DIVEL_0_RANGE_MAX) {

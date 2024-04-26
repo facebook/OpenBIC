@@ -266,8 +266,8 @@ bool post_PCA9546A_read(sensor_cfg *cfg, void *args, int *reading)
 bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
-	ARG_UNUSED(args);
 	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+	ARG_UNUSED(args);
 
 	if (reading == NULL) {
 		return check_reading_pointer_null_is_allowed(cfg);
