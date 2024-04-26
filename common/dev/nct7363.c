@@ -66,7 +66,7 @@ bool nct7363_set_threshold(sensor_cfg *cfg, uint16_t threshold)
 	msg.tx_len = 2;
 	msg.data[0] = threshold_offset_high_byte;
 	msg.data[1] = threshold_high_byte_value;
-	if (((i2c_master_write(&msg, retry)) != 0)) {
+	if ((i2c_master_write(&msg, retry) != 0)) {
 		LOG_ERR("set NCT7363_threshold_high_byte_value fail");
 		return false;
 	}
@@ -75,7 +75,7 @@ bool nct7363_set_threshold(sensor_cfg *cfg, uint16_t threshold)
 	msg.tx_len = 2;
 	msg.data[0] = threshold_offset_low_byte;
 	msg.data[1] = threshold_low_byte_value;
-	if ((i2c_master_write(&msg, retry)) != 0) {
+	if (i2c_master_write(&msg, retry) != 0) {
 		LOG_ERR("set NCT7363_threshold_low_byte_value fail");
 		return false;
 	}
@@ -105,7 +105,7 @@ bool nct7363_set_duty(sensor_cfg *cfg, uint8_t duty)
 	msg.data[0] = duty_offset;
 	msg.data[1] = (uint8_t)duty_in_255;
 
-	if ((i2c_master_write(&msg, retry)) != 0) {
+	if (i2c_master_write(&msg, retry) != 0) {
 		LOG_ERR("set NCT7363_FAN_CTRL_SET_DUTY fail");
 		return false;
 	}
@@ -124,7 +124,7 @@ static bool nct7363_write(sensor_cfg *cfg, uint8_t offset, uint8_t val)
 	msg.data[0] = offset;
 	msg.data[1] = val;
 
-	if ((i2c_master_write(&msg, retry)) != 0) {
+	if (i2c_master_write(&msg, retry) != 0) {
 		LOG_ERR("nct7363 write offset 0x%02x, val 0x%02x fail", offset, val);
 		return false;
 	}
