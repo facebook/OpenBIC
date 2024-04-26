@@ -79,8 +79,7 @@ uint8_t modbus_command_i2c_master_write_read_response(modbus_command_mapping *cm
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
 	// write data: bus(2Bytes), addr(2Bytes), read length(2Bytes), data(reg:2Bytes+data:24Bytes)
-	for (int i = 0; i < temp_read_length; i++)
-		memcpy(cmd->data, &temp_read_data, I2C_MASTER_READ_BACK_MAX_SIZE*2);
+	memcpy(cmd->data, temp_read_data, sizeof(uint16_t) * temp_read_length);
 
 	return MODBUS_EXC_NONE;
 }
