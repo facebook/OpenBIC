@@ -63,50 +63,50 @@ nct7363_init_arg nct7363_init_args[] = {
     // Fan BD
     [0] = { 
         .is_init = false, 
-        .pin_type[0] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .pin_type[8] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .pin_type[9] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .pin_type[13] = NCT7363_PIN_TPYE_FANIN,
-        .pin_type[15] = NCT7363_PIN_TPYE_PWM,
+        .pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
+        .pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
         .fan_poles = 0,
-        .wdt_cfg = WDT_7dot5_SEC,
+        .wdt_cfg = WDT_7_5_SEC,
     },	
     // Management BD(no used)
     [1] = { 
         .is_init = false,
         .fan_poles = 0,
-        .wdt_cfg = WDT_7dot5_SEC,
+        .wdt_cfg = WDT_7_5_SEC,
     },
     //Backplane BD
     [2] = { 
         .is_init = false,
-        .pin_type[0] = NCT7363_PIN_TPYE_PWM,
-        .pin_type[1] = NCT7363_PIN_TPYE_PWM,
-        .pin_type[2] = NCT7363_PIN_TPYE_PWM,
-        .pin_type[3] = NCT7363_PIN_TPYE_FANIN,
-        .pin_type[8] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .pin_type[9] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .pin_type[10] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .pin_type[11] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .pin_type[12] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .pin_type[13] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .pin_type[14] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .pin_type[15] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_PWM,
+        .pin_type[NCT7363_2_PORT] = NCT7363_PIN_TPYE_PWM,
+        .pin_type[NCT7363_3_PORT] = NCT7363_PIN_TPYE_PWM,
+        .pin_type[NCT7363_4_PORT] = NCT7363_PIN_TPYE_FANIN,
+        .pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[NCT7363_12_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[NCT7363_13_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[NCT7363_14_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[NCT7363_16_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
         .fan_poles = 0,
-        .wdt_cfg = WDT_7dot5_SEC,
+        .wdt_cfg = WDT_7_5_SEC,
     },
     //Pump BD
     [3] = { 
         .is_init = false,
-        .pin_type[0] = NCT7363_PIN_TPYE_PWM,
-        .pin_type[1] = NCT7363_PIN_TPYE_PWM,
-        .pin_type[4] = NCT7363_PIN_TPYE_FANIN,
-        .pin_type[5] = NCT7363_PIN_TPYE_FANIN,
-        .pin_type[6] = NCT7363_PIN_TPYE_FANIN,
-        .pin_type[8] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .pin_type[9] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_PWM,
+        .pin_type[NCT7363_2_PORT] = NCT7363_PIN_TPYE_PWM,
+        .pin_type[NCT7363_5_PORT] = NCT7363_PIN_TPYE_FANIN,
+        .pin_type[NCT7363_6_PORT] = NCT7363_PIN_TPYE_FANIN,
+        .pin_type[NCT7363_7_PORT] = NCT7363_PIN_TPYE_FANIN,
+        .pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+        .pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
         .fan_poles = 0,
-        .wdt_cfg = WDT_7dot5_SEC,
+        .wdt_cfg = WDT_7_5_SEC,
     },
 };
 
@@ -227,6 +227,7 @@ bool pre_PCA9546A_read(sensor_cfg *cfg, void *args)
 	pre_args->bus = cfg->port;
 
 	struct k_mutex *mutex = get_i2c_mux_mutex(pre_args->bus);
+	CHECK_NULL_ARG_WITH_RETURN(mutex, false);
 	mutex_status = k_mutex_lock(mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
 	if (mutex_status != 0) {
 		LOG_ERR("Mutex lock fail, status: %d", mutex_status);
@@ -243,8 +244,6 @@ bool pre_PCA9546A_read(sensor_cfg *cfg, void *args)
 bool post_PCA9546A_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
-	CHECK_NULL_ARG_WITH_RETURN(args, false);
-	CHECK_NULL_ARG_WITH_RETURN(reading, false);
 	ARG_UNUSED(reading);
 	ARG_UNUSED(args);
 
@@ -252,6 +251,7 @@ bool post_PCA9546A_read(sensor_cfg *cfg, void *args, int *reading)
 	uint8_t bus = cfg->port;
 
 	struct k_mutex *mutex = get_i2c_mux_mutex(bus);
+	CHECK_NULL_ARG_WITH_RETURN(mutex, false);
 	if (mutex->lock_count != 0) {
 		unlock_status = k_mutex_unlock(mutex);
 	}
@@ -266,7 +266,6 @@ bool post_PCA9546A_read(sensor_cfg *cfg, void *args, int *reading)
 bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
-	CHECK_NULL_ARG_WITH_RETURN(args, false);
 	CHECK_NULL_ARG_WITH_RETURN(reading, false);
 	ARG_UNUSED(args);
 
