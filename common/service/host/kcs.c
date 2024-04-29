@@ -29,6 +29,7 @@
 #include "plat_def.h"
 #include "libutil.h"
 #include "ipmb.h"
+#include "util_sys.h"
 
 #ifdef ENABLE_PLDM
 #include "plat_mctp.h"
@@ -40,6 +41,7 @@ LOG_MODULE_REGISTER(kcs);
 
 kcs_dev *kcs;
 static bool proc_kcs_ok = false;
+static uint8_t bmc_interface = 0;
 
 void kcs_write(uint8_t index, uint8_t *buf, uint32_t buf_sz)
 {
@@ -155,12 +157,24 @@ exit:
 	return rc;
 }
 
+#ifndef ENABLE_OEM_PLDM
+
 static int send_bios_version_to_bmc(char *bios_version, uint8_t bios_version_len)
 {
 	pldm_msg msg = { 0 };
-	msg.ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
-	msg.ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
-	msg.ext_params.ep = MCTP_EID_BMC;
+	uint8_t bmc_bus = I2C_BUS_BMC;
+
+	if (bmc_interface == BMC_INTERFACE_I3C) {
+		bmc_bus = I3C_BUS_BMC;
+		msg.ext_params.type = MCTP_MEDIUM_TYPE_TARGET_I3C;
+		msg.ext_params.i3c_ext_params.addr = I3C_STATIC_ADDR_BMC;
+		msg.ext_params.ep = MCTP_EID_BMC;
+	} else {
+		bmc_bus = I2C_BUS_BMC;
+		msg.ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
+		msg.ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
+		msg.ext_params.ep = MCTP_EID_BMC;
+	}
 
 	msg.hdr.pldm_type = PLDM_TYPE_OEM;
 	msg.hdr.cmd = PLDM_OEM_WRITE_FILE_IO;
@@ -184,7 +198,7 @@ static int send_bios_version_to_bmc(char *bios_version, uint8_t bios_version_len
 	uint8_t resp_len = sizeof(struct pldm_oem_write_file_io_resp);
 	uint8_t rbuf[resp_len];
 
-	if (!mctp_pldm_read(find_mctp_by_bus(I2C_BUS_BMC), &msg, rbuf, resp_len)) {
+	if (!mctp_pldm_read(find_mctp_by_bus(bmc_bus), &msg, rbuf, resp_len)) {
 		LOG_ERR("mctp_pldm_read fail");
 		return 2;
 	}
@@ -198,6 +212,8 @@ static int send_bios_version_to_bmc(char *bios_version, uint8_t bios_version_len
 	SAFE_FREE(ptr);
 	return 0;
 }
+
+#endif
 
 #endif
 
@@ -282,12 +298,22 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 			    (req->cmd == CMD_STORAGE_ADD_SEL)) {
 				// Send SEL to BMC via PLDM over MCTP
 				mctp_ext_params ext_params = {0};
-				ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
-				ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
-				ext_params.ep = MCTP_EID_BMC;
 				uint8_t pldm_event_length = rc - 5; // exclude netfn, cmd, record_id, record_type
+				uint8_t bmc_bus = I2C_BUS_BMC;
+
+				if (bmc_interface == BMC_INTERFACE_I3C) {
+					bmc_bus = I3C_BUS_BMC;
+					ext_params.type = MCTP_MEDIUM_TYPE_TARGET_I3C;
+					ext_params.i3c_ext_params.addr = I3C_STATIC_ADDR_BMC;
+					ext_params.ep = MCTP_EID_BMC;
+				} else {
+					bmc_bus = I2C_BUS_BMC;
+					ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
+					ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
+					ext_params.ep = MCTP_EID_BMC;
+				}
 				pldm_platform_event_message_req(
-					find_mctp_by_bus(I2C_BUS_BMC), ext_params, 0xFB, &ibuf[5], pldm_event_length);
+					find_mctp_by_bus(bmc_bus), ext_params, 0xFB, &ibuf[5], pldm_event_length);
 			}
 #endif
 #endif
@@ -305,11 +331,12 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 				if (ret < 0) {
 					LOG_ERR("Failed to update bios information, rc = %d", ret);
 				}
-
+#ifndef ENABLE_OEM_PLDM
 				ret = send_bios_version_to_bmc(bios_version, length);
 				if (ret < 0) {
 					LOG_ERR("Failed to send bios version to bmc, rc = %d", ret);
 				}
+#endif
 #endif
 			}
 			if ((req->netfn == NETFN_OEM_Q_REQ) &&
@@ -381,6 +408,8 @@ void kcs_device_init(char **config, uint8_t size)
 	if (!kcs)
 		return;
 	memset(kcs, 0, size * sizeof(*kcs));
+
+	bmc_interface = pal_get_bmc_interface();
 
 	/* IPMI channel target [50h-5Fh] are reserved for KCS channel.
 	 * The max channel number KCS_MAX_CHANNEL_NUM is 0xF.

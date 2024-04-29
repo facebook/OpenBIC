@@ -19,8 +19,10 @@
 #include "sensor.h"
 #include "plat_ipmb.h"
 #include "plat_class.h"
+#include "util_sys.h"
 
 #include "hal_i2c.h"
+#include "hal_i3c.h"
 
 LOG_MODULE_REGISTER(plat_mctp);
 
@@ -39,10 +41,15 @@ LOG_MODULE_REGISTER(plat_mctp);
 K_TIMER_DEFINE(send_cmd_timer, send_cmd_to_dev, NULL);
 K_WORK_DEFINE(send_cmd_work, send_cmd_to_dev_handler);
 
+static uint8_t bmc_interface = BMC_INTERFACE_I2C;
+
 static mctp_port plat_mctp_port[] = {
 	{ .conf.smbus_conf.addr = I2C_ADDR_BIC,
 	  .conf.smbus_conf.bus = I2C_BUS_BMC,
 	  .medium_type = MCTP_MEDIUM_TYPE_SMBUS },
+	{ .conf.i3c_conf.addr = I3C_STATIC_ADDR_BMC,
+	  .conf.i3c_conf.bus = I3C_BUS_BMC,
+	  .medium_type = MCTP_MEDIUM_TYPE_TARGET_I3C },
 	{ .conf.i3c_conf.addr = I3C_STATIC_ADDR_FF_BIC,
 	  .conf.i3c_conf.bus = I3C_BUS_HUB,
 	  .medium_type = MCTP_MEDIUM_TYPE_CONTROLLER_I3C },
@@ -52,7 +59,8 @@ static mctp_port plat_mctp_port[] = {
 };
 
 mctp_route_entry plat_mctp_route_tbl[] = {
-	{ MCTP_EID_BMC, I2C_BUS_BMC, I2C_ADDR_BMC },
+	{ MCTP_EID_BMC, I2C_BUS_BMC, I2C_ADDR_BMC, .set_endpoint = false },
+	{ MCTP_EID_BMC, I3C_BUS_BMC, I3C_STATIC_ADDR_BMC, .set_endpoint = false },
 	{ MCTP_EID_FF_BIC, I3C_BUS_HUB, I3C_STATIC_ADDR_FF_BIC, .set_endpoint = true },
 	{ MCTP_EID_WF_BIC, I3C_BUS_HUB, I3C_STATIC_ADDR_WF_BIC, .set_endpoint = true },
 	{ MCTP_EID_FF_CXL, I3C_BUS_HUB, I3C_STATIC_ADDR_FF_BIC, .set_endpoint = false },
@@ -70,7 +78,7 @@ mctp *find_mctp_by_bus(uint8_t bus)
 			if (bus == p->conf.smbus_conf.bus) {
 				return p->mctp_inst;
 			}
-		} else if (p->medium_type == MCTP_MEDIUM_TYPE_CONTROLLER_I3C) {
+		} else if (p->medium_type == MCTP_MEDIUM_TYPE_TARGET_I3C || p->medium_type == MCTP_MEDIUM_TYPE_CONTROLLER_I3C) {
 			if (bus == p->conf.i3c_conf.bus) {
 				return p->mctp_inst;
 			}
@@ -193,15 +201,23 @@ static uint8_t get_mctp_route_info(uint8_t dest_endpoint, void **mctp_inst,
 	CHECK_NULL_ARG_WITH_RETURN(ext_params, MCTP_ERROR);
 
 	uint8_t rc = MCTP_ERROR;
+	uint8_t bmc_bus = I2C_BUS_BMC;
 	uint32_t i;
 
 	for (i = 0; i < ARRAY_SIZE(plat_mctp_route_tbl); i++) {
 		mctp_route_entry *p = plat_mctp_route_tbl + i;
 		if (p->endpoint == dest_endpoint) {
 			if (dest_endpoint == MCTP_EID_BMC) {
-				*mctp_inst = find_mctp_by_bus(p->bus);
-				ext_params->type = MCTP_MEDIUM_TYPE_SMBUS;
-				ext_params->smbus_ext_params.addr = p->addr;
+				if (bmc_interface == BMC_INTERFACE_I3C) {
+					bmc_bus = I3C_BUS_BMC;
+					ext_params->type = MCTP_MEDIUM_TYPE_TARGET_I3C;
+					ext_params->i3c_ext_params.addr = I3C_STATIC_ADDR_BMC;
+				} else {
+					bmc_bus = I2C_BUS_BMC;
+					ext_params->type = MCTP_MEDIUM_TYPE_SMBUS;
+					ext_params->smbus_ext_params.addr = I2C_ADDR_BMC;
+				}
+				*mctp_inst = find_mctp_by_bus(bmc_bus);
 			} else {
 				*mctp_inst = find_mctp_by_addr(p->addr);
 				ext_params->type = MCTP_MEDIUM_TYPE_CONTROLLER_I3C;
@@ -235,9 +251,20 @@ bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg)
 
 	pldm_msg msg = { 0 };
 	struct mctp_to_ipmi_sel_req req = { 0 };
+	uint8_t bmc_bus = I2C_BUS_BMC;
+	uint8_t bmc_addr = I2C_ADDR_BMC;
 
-	msg.ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
-	msg.ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
+	if (bmc_interface == BMC_INTERFACE_I3C) {
+		bmc_bus = I3C_BUS_BMC;
+		bmc_addr = I3C_STATIC_ADDR_BMC;
+		msg.ext_params.type = MCTP_MEDIUM_TYPE_TARGET_I3C;
+		msg.ext_params.i3c_ext_params.addr = bmc_addr;
+	} else {
+		bmc_bus = I2C_BUS_BMC;
+		bmc_addr = I2C_ADDR_BMC;
+		msg.ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
+		msg.ext_params.smbus_ext_params.addr = bmc_addr;
+	}
 
 	msg.hdr.pldm_type = PLDM_TYPE_OEM;
 	msg.hdr.cmd = PLDM_OEM_IPMI_BRIDGE;
@@ -254,7 +281,7 @@ bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg)
 	req.header.netfn_lun = (NETFN_STORAGE_REQ << 2);
 	req.header.ipmi_cmd = CMD_STORAGE_ADD_SEL;
 	req.req_data.event.record_type = system_event_record;
-	req.req_data.event.gen_id[0] = (I2C_ADDR_BIC << 1);
+	req.req_data.event.gen_id[0] = (bmc_addr << 1);
 	req.req_data.event.evm_rev = evt_msg_version;
 
 	memcpy(&req.req_data.event.sensor_type, &sel_msg->sensor_type,
@@ -263,7 +290,7 @@ bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg)
 	uint8_t resp_len = sizeof(struct mctp_to_ipmi_sel_resp);
 	uint8_t rbuf[resp_len];
 
-	if (!mctp_pldm_read(find_mctp_by_bus(I2C_BUS_BMC), &msg, rbuf, resp_len)) {
+	if (!mctp_pldm_read(find_mctp_by_bus(bmc_bus), &msg, rbuf, resp_len)) {
 		LOG_ERR("mctp_pldm_read fail");
 		return false;
 	}
@@ -336,7 +363,7 @@ void plat_set_eid_by_slot()
 void set_routing_table_eid()
 {
 	// skip bmc
-	for (uint8_t i = 1; i < ARRAY_SIZE(plat_mctp_route_tbl); i++) {
+	for (uint8_t i = 2; i < ARRAY_SIZE(plat_mctp_route_tbl); i++) {
 		mctp_route_entry *p = plat_mctp_route_tbl + i;
 		p->endpoint = plat_eid + i;
 	}
@@ -352,9 +379,31 @@ void plat_mctp_init(void)
 	int ret = 0;
 	plat_set_eid_by_slot();
 	set_routing_table_eid();
+	bmc_interface = pal_get_bmc_interface();
 	/* init the mctp/pldm instance */
 	for (uint8_t i = 0; i < ARRAY_SIZE(plat_mctp_port); i++) {
 		mctp_port *p = plat_mctp_port + i;
+
+		switch (p->medium_type) {
+			case MCTP_MEDIUM_TYPE_SMBUS:
+				if (bmc_interface == BMC_INTERFACE_I2C) {
+					LOG_INF("Using I2C interface to communicate with BMC");
+				} else {
+					// Ignore to initialize BMC mctp I2C if bmc interface is I3C.
+					continue;
+				}
+				break;
+			case MCTP_MEDIUM_TYPE_TARGET_I3C:
+				if (bmc_interface == BMC_INTERFACE_I3C) {
+					LOG_INF("Using I3C interface to communicate with BMC");
+				} else {
+					// Ignore to initialize BMC mctp I3C if bmc interface is I2C.
+					continue;
+				}
+				break;
+			default:
+				break;
+		}
 
 		p->mctp_inst = mctp_init();
 		if (!p->mctp_inst) {
