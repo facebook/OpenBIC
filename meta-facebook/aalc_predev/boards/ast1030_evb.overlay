@@ -101,6 +101,15 @@
 	};
 };
 
+&uart2 {
+	status = "okay";
+	modbus1 {
+		compatible = "zephyr,modbus-serial";
+		label = "MODBUS1";
+		status = "okay";
+	};
+};
+
 &uart5 {
 	current-speed = <57600>;
 };

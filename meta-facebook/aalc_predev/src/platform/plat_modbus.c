@@ -43,14 +43,16 @@ LOG_MODULE_REGISTER(plat_modbus);
 #define FW_UPDATE_DISABLE_DATA 0x0100
 
 //{ DT_PROP(DT_INST(0, zephyr_modbus_serial), label) }
-static char server_iface_name[] = "MODBUS0";
 
 typedef struct {
-	struct k_work work; // for wr fn only
-	struct k_timer timer;
-	struct _modbus_command_mapping *cmd;
-} wr_timeout_t;
-static wr_timeout_t wr_timeout;
+	char *iface_name;
+	bool is_custom_fc64;
+} modbus_server;
+modbus_server modbus_server_config[] = {
+	// iface_name, is_custom_fc64
+	{ "MODBUS0", true },
+	{ "MODBUS1", false },
+};
 
 static float pow_of_10(int8_t exp)
 {
@@ -461,22 +463,6 @@ modbus_command_mapping modbus_command_table[] = {
 	  modbus_command_i2c_master_write_read_response, 0, 0, 0, 16 },
 };
 
-static void wr_work_fn(struct k_work *my_work)
-{
-	CHECK_NULL_ARG(my_work);
-
-	wr_timeout.cmd->wr_fn(wr_timeout.cmd);
-	memset(wr_timeout.cmd->data, 0, sizeof(uint16_t) * wr_timeout.cmd->cmd_size);
-}
-
-static void wr_timeout_fn(struct k_timer *my_timer)
-{
-	CHECK_NULL_ARG(my_timer);
-
-	k_work_submit(&wr_timeout.work);
-	k_timer_stop(my_timer);
-}
-
 static modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)
 {
 	for (uint16_t i = 0; i < ARRAY_SIZE(modbus_command_table); i++) {
@@ -508,10 +494,6 @@ void init_modbus_command_table(void)
 			goto init_fail;
 		}
 	}
-
-	// init write timeout timer
-	k_work_init(&wr_timeout.work, wr_work_fn);
-	k_timer_init(&wr_timeout.timer, wr_timeout_fn, NULL);
 
 	return;
 
@@ -550,7 +532,7 @@ static int coil_wr(uint16_t addr, bool state)
 	}
 }
 
-static int holding_reg_wr(uint16_t addr, uint16_t reg)
+static int holding_reg_multi_wr(char *iface_name, uint16_t addr, uint16_t *reg, uint16_t num_regs)
 {
 	modbus_command_mapping *ptr = ptr_to_modbus_table(addr);
 	if (!ptr) {
@@ -563,22 +545,14 @@ static int holding_reg_wr(uint16_t addr, uint16_t reg)
 		return MODBUS_EXC_ILLEGAL_DATA_VAL;
 	}
 
-	int ret = MODBUS_EXC_NONE;
-	uint8_t offset = addr - ptr->addr;
-	ptr->data_len = offset + 1;
-	ptr->data[offset] = reg;
+	ptr->start_addr = addr;
+	ptr->data_len = num_regs;
+	memcpy(ptr->data, reg, sizeof(uint16_t) * ptr->data_len);
 
-	wr_timeout.cmd = ptr;
-	k_timer_start(&wr_timeout.timer, K_MSEC(10), K_NO_WAIT);
-	if (offset == (ptr->cmd_size - 1)) {
-		ret = ptr->wr_fn(ptr);
-		k_timer_stop(&wr_timeout.timer);
-		memset(ptr->data, 0, sizeof(uint16_t) * ptr->cmd_size);
-	}
-	return ret;
+	return ptr->wr_fn(ptr);
 }
 
-static int holding_reg_rd(uint16_t addr, uint16_t *reg)
+static int holding_reg_multi_rd(char *iface_name, uint16_t addr, uint16_t *reg, uint16_t num_regs)
 {
 	CHECK_NULL_ARG_WITH_RETURN(reg, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
@@ -594,20 +568,21 @@ static int holding_reg_rd(uint16_t addr, uint16_t *reg)
 	}
 
 	int ret = MODBUS_EXC_NONE;
-	uint8_t offset = addr - ptr->addr;
+	ptr->start_addr = addr;
+	ptr->data_len = num_regs;
 
-	if (offset == 0)
-		ret = ptr->rd_fn(ptr);
+	ret = ptr->rd_fn(ptr);
 
-	*reg = ptr->data[offset];
+	memcpy(reg, ptr->data, sizeof(uint16_t) * ptr->data_len);
+
 	return ret;
 }
 
 static struct modbus_user_callbacks mbs_cbs = {
-	.holding_reg_rd = holding_reg_rd,
-	.holding_reg_wr = holding_reg_wr,
 	.coil_rd = coil_rd,
 	.coil_wr = coil_wr,
+	.holding_reg_multi_rd = holding_reg_multi_rd,
+	.holding_reg_multi_wr = holding_reg_multi_wr,
 };
 
 const static struct modbus_iface_param server_param = {
@@ -652,16 +627,30 @@ MODBUS_CUSTOM_FC_DEFINE(custom_fc64, custom_handler_fc64, FW_UPDATE_SWITCH_FC, N
 
 int init_custom_modbus_server(void)
 {
-	int server_iface = modbus_iface_get_by_name(server_iface_name);
+	LOG_ERR("init_custom_modbus_server");
+	int server_iface;
+	int ret = 0; // 0: success
+	for (uint8_t i = 0; i < ARRAY_SIZE(modbus_server_config); i++) {
+		server_iface = modbus_iface_get_by_name(modbus_server_config[i].iface_name);
 
-	if (server_iface < 0) {
-		LOG_ERR("Failed to get iface index for %s", server_iface_name);
-		return -ENODEV;
+		if (server_iface < 0) {
+			LOG_ERR("Failed to get iface index for %s",
+				modbus_server_config[i].iface_name);
+			return -ENODEV;
+		}
+		int err = modbus_init_server(server_iface, server_param);
+
+		if (err < 0) {
+			return err;
+			LOG_ERR("modbus_init_server fail %d\n", i);
+		}
+
+		if (modbus_server_config[i].is_custom_fc64) {
+			ret = modbus_register_user_fc(server_iface, &modbus_cfg_custom_fc64);
+			if (ret)
+				return ret;
+		}
 	}
-	int err = modbus_init_server(server_iface, server_param);
 
-	if (err < 0)
-		return err;
-
-	return modbus_register_user_fc(server_iface, &modbus_cfg_custom_fc64);
+	return ret;
 }
