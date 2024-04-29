@@ -1,0 +1,466 @@
+From 234f676b1df184f52775d95cd29d541506c3d1dc Mon Sep 17 00:00:00 2001
+From: Hung-Yi <hung-yi.li@quantatw.com>
+Date: Mon, 29 Apr 2024 16:27:26 +0800
+Subject: [PATCH] modbus: aspeed: add/fix modbus server
+
+1. add user define fc
+2. add modbus multiple write/read cb function
+3. fix uart parity none stop bit from 2 to 1
+---
+ include/modbus/modbus.h         |  76 ++++++++++++++
+ subsys/modbus/modbus_core.c     |  36 +++++++
+ subsys/modbus/modbus_internal.h |   2 +
+ subsys/modbus/modbus_serial.c   |   2 +-
+ subsys/modbus/modbus_server.c   | 174 ++++++++++++++++++++++----------
+ 5 files changed, 238 insertions(+), 52 deletions(-)
+
+diff --git a/include/modbus/modbus.h b/include/modbus/modbus.h
+index 400dc8b9d9..2bcd43e196 100644
+--- a/include/modbus/modbus.h
++++ b/include/modbus/modbus.h
+@@ -31,6 +31,7 @@
+ #define ZEPHYR_INCLUDE_MODBUS_H_
+ 
+ #include <drivers/uart.h>
++#include <sys/slist.h>
+ 
+ #ifdef __cplusplus
+ extern "C" {
+@@ -350,9 +351,17 @@ struct modbus_user_callbacks {
+ 	/** Holding Register read callback */
+ 	int (*holding_reg_rd)(uint16_t addr, uint16_t *reg);
+ 
++	/** Holding Register read callback with multiple registers read back */
++	int (*holding_reg_multi_rd)(char *iface_name, uint16_t addr, uint16_t *reg,
++				    uint16_t num_regs);
++
+ 	/** Holding Register write callback */
+ 	int (*holding_reg_wr)(uint16_t addr, uint16_t reg);
+ 
++	/** Holding Register write callback with multiple registers write */
++	int (*holding_reg_multi_wr)(char *iface_name, uint16_t addr, uint16_t *reg,
++				    uint16_t num_regs);
++
+ 	/** Floating Point Holding Register read callback */
+ 	int (*holding_reg_rd_fp)(uint16_t addr, float *reg);
+ 
+@@ -382,6 +391,55 @@ int modbus_iface_get_by_name(const char *iface_name);
+  */
+ typedef int (*modbus_raw_cb_t)(const int iface, const struct modbus_adu *adu);
+ 
++/**
++ * @brief Custom function code handler function signature.
++ *
++ * Modbus allows user defined function codes which can be used to extend
++ * the base protocol. These callbacks can also be used to implement
++ * function codes currently not supported by Zephyr's Modbus subsystem.
++ *
++ * If an error occurs during the handling of the request, the handler should
++ * signal this by setting excep_code to a modbus exception code.
++ *
++ * User data pointer can be used to pass state between subsequent calls to
++ * the handler.
++ *
++ * @param iface      Modbus interface index
++ * @param rx_adu     Pointer to the received ADU struct
++ * @param tx_adu     Pointer to the outgoing ADU struct
++ * @param excep_code Pointer to possible exception code
++ * @param user_data  Pointer to user data
++ *
++ * @retval           true If response should be sent, false otherwise
++ */
++typedef bool (*modbus_custom_cb_t)(const int iface, const struct modbus_adu *const rx_adu,
++				   struct modbus_adu *const tx_adu, uint8_t *const excep_code,
++				   void *const user_data);
++
++/** @cond INTERNAL_HIDDEN */
++/**
++ * @brief Custom function code definition.
++ */
++struct modbus_custom_fc {
++	sys_snode_t node;
++	modbus_custom_cb_t cb;
++	void *user_data;
++	uint8_t fc;
++	uint8_t excep_code;
++};
++/** @endcond INTERNAL_HIDDEN */
++
++/**
++ * @brief Helper macro for initializing custom function code structs
++ */
++#define MODBUS_CUSTOM_FC_DEFINE(name, user_cb, user_fc, userdata)                                  \
++	static struct modbus_custom_fc modbus_cfg_##name = {                                       \
++		.cb = user_cb,                                                                     \
++		.user_data = userdata,                                                             \
++		.fc = user_fc,                                                                     \
++		.excep_code = MODBUS_EXC_NONE,                                                     \
++	}
++
+ /**
+  * @brief Modbus interface mode
+  */
+@@ -525,6 +583,24 @@ void modbus_raw_set_server_failure(struct modbus_adu *adu);
+  */
+ int modbus_raw_backend_txn(const int iface, struct modbus_adu *adu);
+ 
++/**
++ * @brief Register a user-defined function code handler.
++ *
++ * The Modbus specification allows users to define standard function codes
++ * missing from Zephyr's Modbus implementation as well as add non-standard
++ * function codes in the ranges 65 to 72 and 100 to 110 (decimal), as per
++ * specification.
++ *
++ * This function registers a new handler at runtime for the given
++ * function code.
++ *
++ * @param iface        Modbus client interface index
++ * @param custom_fc    User defined function code and callback pair
++ *
++ * @retval           0 on success
++ */
++int modbus_register_user_fc(const int iface, struct modbus_custom_fc *custom_fc);
++
+ #ifdef __cplusplus
+ }
+ #endif
+diff --git a/subsys/modbus/modbus_core.c b/subsys/modbus/modbus_core.c
+index 78b1ceebe7..e26ab4a0a1 100644
+--- a/subsys/modbus/modbus_core.c
++++ b/subsys/modbus/modbus_core.c
+@@ -215,6 +215,14 @@ static struct modbus_context *modbus_init_iface(const uint8_t iface)
+ 	return ctx;
+ }
+ 
++static int modbus_user_fc_init(struct modbus_context *ctx, struct modbus_iface_param param)
++{
++	sys_slist_init(&ctx->user_defined_cbs);
++	LOG_DBG("Initializing user-defined function code support.");
++
++	return 0;
++}
++
+ int modbus_init_server(const int iface, struct modbus_iface_param param)
+ {
+ 	struct modbus_context *ctx = NULL;
+@@ -238,6 +246,12 @@ int modbus_init_server(const int iface, struct modbus_iface_param param)
+ 		goto init_server_error;
+ 	}
+ 
++	if (modbus_user_fc_init(ctx, param) != 0) {
++		LOG_ERR("Failed to init MODBUS user defined function codes");
++		rc = -EINVAL;
++		goto init_server_error;
++	}
++
+ 	switch (param.mode) {
+ 	case MODBUS_MODE_RTU:
+ 	case MODBUS_MODE_ASCII:
+@@ -281,6 +295,28 @@ init_server_error:
+ 	return rc;
+ }
+ 
++int modbus_register_user_fc(const int iface, struct modbus_custom_fc *custom_fc)
++{
++	struct modbus_context *ctx = modbus_get_context(iface);
++
++	if (!custom_fc) {
++		LOG_ERR("Provided function code handler was NULL");
++		return -EINVAL;
++	}
++
++	if (custom_fc->fc & BIT(7)) {
++		LOG_ERR("Function codes must have MSB of 0");
++		return -EINVAL;
++	}
++
++	custom_fc->excep_code = MODBUS_EXC_NONE;
++
++	LOG_DBG("Registered new custom function code %d", custom_fc->fc);
++	sys_slist_append(&ctx->user_defined_cbs, &custom_fc->node);
++
++	return 0;
++}
++
+ int modbus_init_client(const int iface, struct modbus_iface_param param)
+ {
+ 	struct modbus_context *ctx = NULL;
+diff --git a/subsys/modbus/modbus_internal.h b/subsys/modbus/modbus_internal.h
+index a916d21f38..533a4c7103 100644
+--- a/subsys/modbus/modbus_internal.h
++++ b/subsys/modbus/modbus_internal.h
+@@ -144,6 +144,8 @@ struct modbus_context {
+ 	uint16_t mbs_server_msg_ctr;
+ 	uint16_t mbs_noresp_ctr;
+ #endif
++	/* A linked list of function code, handler pairs */
++	sys_slist_t user_defined_cbs;
+ 	/* Unit ID */
+ 	uint8_t unit_id;
+ 
+diff --git a/subsys/modbus/modbus_serial.c b/subsys/modbus/modbus_serial.c
+index 06e44bd241..06a3679804 100644
+--- a/subsys/modbus/modbus_serial.c
++++ b/subsys/modbus/modbus_serial.c
+@@ -565,7 +565,7 @@ int modbus_serial_init(struct modbus_context *ctx,
+ 	case UART_CFG_PARITY_NONE:
+ 		/* Use of no parity requires 2 stop bits */
+ 		uart_cfg.parity = param.serial.parity;
+-		uart_cfg.stop_bits = UART_CFG_STOP_BITS_2;
++		uart_cfg.stop_bits = UART_CFG_STOP_BITS_1;
+ 		break;
+ 	default:
+ 		return -EINVAL;
+diff --git a/subsys/modbus/modbus_server.c b/subsys/modbus/modbus_server.c
+index bd0addac35..630ab07b2d 100644
+--- a/subsys/modbus/modbus_server.c
++++ b/subsys/modbus/modbus_server.c
+@@ -325,7 +325,8 @@ static bool mbs_fc03_hreg_read(struct modbus_context *ctx)
+ 	if ((reg_addr < MODBUS_FP_EXTENSIONS_ADDR) ||
+ 	    !IS_ENABLED(CONFIG_MODBUS_FP_EXTENSIONS)) {
+ 		/* Read integer register */
+-		if (ctx->mbs_user_cb->holding_reg_rd == NULL) {
++		if ((ctx->mbs_user_cb->holding_reg_rd == NULL) &&
++		    (ctx->mbs_user_cb->holding_reg_multi_rd == NULL)) {
+ 			mbs_exception_rsp(ctx, MODBUS_EXC_ILLEGAL_FC);
+ 			return true;
+ 		}
+@@ -362,30 +363,11 @@ static bool mbs_fc03_hreg_read(struct modbus_context *ctx)
+ 
+ 	/* Reset the pointer to the start of the response payload */
+ 	presp = &ctx->tx_adu.data[1];
+-	/* Loop through each register requested. */
+-	while (reg_qty > 0) {
+-		if (reg_addr < MODBUS_FP_EXTENSIONS_ADDR) {
+-			uint16_t reg;
+ 
+-			/* Read integer register */
+-			err = ctx->mbs_user_cb->holding_reg_rd(reg_addr, &reg);
+-			if (err == 0) {
+-				sys_put_be16(reg, presp);
+-				presp += sizeof(uint16_t);
+-			}
+-
+-		} else if (IS_ENABLED(CONFIG_MODBUS_FP_EXTENSIONS)) {
+-			float fp;
+-			uint32_t reg;
+-
+-			/* Read floating-point register */
+-			err = ctx->mbs_user_cb->holding_reg_rd_fp(reg_addr, &fp);
+-			if (err == 0) {
+-				memcpy(&reg, &fp, sizeof(reg));
+-				sys_put_be32(reg, presp);
+-				presp += sizeof(uint32_t);
+-			}
+-		}
++	/* call the multiple register read if the function exist */
++	if (ctx->mbs_user_cb->holding_reg_multi_rd) {
++		err = ctx->mbs_user_cb->holding_reg_multi_rd(ctx->iface_name, reg_addr,
++							     (uint16_t *)presp, reg_qty);
+ 
+ 		if (err != 0) {
+ 			LOG_INF("Holding register address not supported");
+@@ -393,9 +375,46 @@ static bool mbs_fc03_hreg_read(struct modbus_context *ctx)
+ 			return true;
+ 		}
+ 
+-		/* Increment current register address */
+-		reg_addr++;
+-		reg_qty--;
++		for (uint16_t i = 0; i < reg_qty; i++) {
++			uint16_t *p = (uint16_t *)(presp + (i * sizeof(uint16_t)));
++			sys_put_be16(*p, presp + (i * sizeof(uint16_t)));
++		}
++
++	} else {
++		/* Loop through each register requested. */
++		while (reg_qty > 0) {
++			if (reg_addr < MODBUS_FP_EXTENSIONS_ADDR) {
++				uint16_t reg;
++
++				/* Read integer register */
++				err = ctx->mbs_user_cb->holding_reg_rd(reg_addr, &reg);
++				if (err == 0) {
++					sys_put_be16(reg, presp);
++					presp += sizeof(uint16_t);
++				}
++
++			} else if (IS_ENABLED(CONFIG_MODBUS_FP_EXTENSIONS)) {
++				float fp;
++				uint32_t reg;
++
++				/* Read floating-point register */
++				err = ctx->mbs_user_cb->holding_reg_rd_fp(reg_addr, &fp);
++				if (err == 0) {
++					memcpy(&reg, &fp, sizeof(reg));
++					sys_put_be32(reg, presp);
++					presp += sizeof(uint32_t);
++				}
++			}
++
++			if (err != 0) {
++				LOG_INF("Holding register address not supported");
++				mbs_exception_rsp(ctx, MODBUS_EXC_ILLEGAL_DATA_ADDR);
++				return true;
++			}
++			/* Increment current register address */
++			reg_addr++;
++			reg_qty--;
++		}
+ 	}
+ 
+ 	return true;
+@@ -596,7 +615,8 @@ static bool mbs_fc06_hreg_write(struct modbus_context *ctx)
+ 		return false;
+ 	}
+ 
+-	if (ctx->mbs_user_cb->holding_reg_wr == NULL) {
++	if ((ctx->mbs_user_cb->holding_reg_wr == NULL) &&
++	    (ctx->mbs_user_cb->holding_reg_multi_wr == NULL)) {
+ 		mbs_exception_rsp(ctx, MODBUS_EXC_ILLEGAL_FC);
+ 		return true;
+ 	}
+@@ -604,7 +624,12 @@ static bool mbs_fc06_hreg_write(struct modbus_context *ctx)
+ 	reg_addr = sys_get_be16(&ctx->rx_adu.data[0]);
+ 	reg_val = sys_get_be16(&ctx->rx_adu.data[2]);
+ 
+-	err = ctx->mbs_user_cb->holding_reg_wr(reg_addr, reg_val);
++	/* call the multiple register write if the function exist */
++	if (ctx->mbs_user_cb->holding_reg_multi_wr)
++		err = ctx->mbs_user_cb->holding_reg_multi_wr(ctx->iface_name, reg_addr, &reg_val,
++							     1);
++	else
++		err = ctx->mbs_user_cb->holding_reg_wr(reg_addr, reg_val);
+ 
+ 	if (err != 0) {
+ 		LOG_INF("Register address not supported");
+@@ -848,7 +873,8 @@ static bool mbs_fc16_hregs_write(struct modbus_context *ctx)
+ 	if ((reg_addr < MODBUS_FP_EXTENSIONS_ADDR) ||
+ 	    !IS_ENABLED(CONFIG_MODBUS_FP_EXTENSIONS)) {
+ 		/* Write integer register */
+-		if (ctx->mbs_user_cb->holding_reg_wr == NULL) {
++		if ((ctx->mbs_user_cb->holding_reg_wr == NULL) &&
++		    (ctx->mbs_user_cb->holding_reg_multi_wr == NULL)) {
+ 			mbs_exception_rsp(ctx, MODBUS_EXC_ILLEGAL_FC);
+ 			return true;
+ 		}
+@@ -892,30 +918,47 @@ static bool mbs_fc16_hregs_write(struct modbus_context *ctx)
+ 	/* The 1st registers data byte is 6th element in payload */
+ 	prx_data = &ctx->rx_adu.data[5];
+ 
+-	for (uint16_t reg_cntr = 0; reg_cntr < reg_qty; reg_cntr++) {
+-		uint16_t addr = reg_addr + reg_cntr;
+-
+-		if ((reg_addr < MODBUS_FP_EXTENSIONS_ADDR) ||
+-		    !IS_ENABLED(CONFIG_MODBUS_FP_EXTENSIONS)) {
+-			uint16_t reg_val = sys_get_be16(prx_data);
+-
+-			prx_data += sizeof(uint16_t);
+-			err = ctx->mbs_user_cb->holding_reg_wr(addr, reg_val);
+-		} else {
+-			uint32_t reg_val = sys_get_be32(prx_data);
+-			float fp;
+-
+-			/* Write to floating point register */
+-			memcpy(&fp, &reg_val, sizeof(float));
+-			prx_data += sizeof(uint32_t);
+-			err = ctx->mbs_user_cb->holding_reg_wr_fp(addr, fp);
++	/* call the multiple register write if the function exist */
++	if (ctx->mbs_user_cb->holding_reg_multi_wr) {
++		for (uint16_t i = 0; i < reg_qty; i++) {
++			uint16_t *p = (uint16_t *)(prx_data + (i * sizeof(uint16_t)));
++			sys_put_be16(*p, prx_data + (i * sizeof(uint16_t)));
+ 		}
+ 
++		err = ctx->mbs_user_cb->holding_reg_multi_wr(ctx->iface_name, reg_addr,
++							     (uint16_t *)prx_data, reg_qty);
++
+ 		if (err != 0) {
+ 			LOG_INF("Register address not supported");
+ 			mbs_exception_rsp(ctx, MODBUS_EXC_ILLEGAL_DATA_ADDR);
+ 			return true;
+ 		}
++	} else {
++		for (uint16_t reg_cntr = 0; reg_cntr < reg_qty; reg_cntr++) {
++			uint16_t addr = reg_addr + reg_cntr;
++
++			if ((reg_addr < MODBUS_FP_EXTENSIONS_ADDR) ||
++			    !IS_ENABLED(CONFIG_MODBUS_FP_EXTENSIONS)) {
++				uint16_t reg_val = sys_get_be16(prx_data);
++
++				prx_data += sizeof(uint16_t);
++				err = ctx->mbs_user_cb->holding_reg_wr(addr, reg_val);
++			} else {
++				uint32_t reg_val = sys_get_be32(prx_data);
++				float fp;
++
++				/* Write to floating point register */
++				memcpy(&fp, &reg_val, sizeof(float));
++				prx_data += sizeof(uint32_t);
++				err = ctx->mbs_user_cb->holding_reg_wr_fp(addr, fp);
++			}
++
++			if (err != 0) {
++				LOG_INF("Register address not supported");
++				mbs_exception_rsp(ctx, MODBUS_EXC_ILLEGAL_DATA_ADDR);
++				return true;
++			}
++		}
+ 	}
+ 
+ 	/* Assemble response payload */
+@@ -926,6 +969,38 @@ static bool mbs_fc16_hregs_write(struct modbus_context *ctx)
+ 	return true;
+ }
+ 
++static bool mbs_try_user_fc(struct modbus_context *ctx, uint8_t fc)
++{
++	struct modbus_custom_fc *p;
++
++	LOG_DBG("Searching for custom Modbus handlers for code %u", fc);
++
++	SYS_SLIST_FOR_EACH_CONTAINER (&ctx->user_defined_cbs, p, node) {
++		if (p->fc == fc) {
++			int iface = modbus_iface_get_by_ctx(ctx);
++			bool rval;
++
++			LOG_DBG("Found custom handler");
++
++			p->excep_code = MODBUS_EXC_NONE;
++			rval = p->cb(iface, &ctx->rx_adu, &ctx->tx_adu, &p->excep_code,
++				     p->user_data);
++
++			if (p->excep_code != MODBUS_EXC_NONE) {
++				LOG_INF("Custom handler failed with code %d", p->excep_code);
++				mbs_exception_rsp(ctx, p->excep_code);
++			}
++
++			return rval;
++		}
++	}
++
++	LOG_ERR("Function code 0x%02x not implemented", fc);
++	mbs_exception_rsp(ctx, MODBUS_EXC_ILLEGAL_FC);
++
++	return true;
++}
++
+ bool modbus_server_handler(struct modbus_context *ctx)
+ {
+ 	bool send_reply = false;
+@@ -993,10 +1068,7 @@ bool modbus_server_handler(struct modbus_context *ctx)
+ 		break;
+ 
+ 	default:
+-		LOG_ERR("Function code 0x%02x not implemented", fc);
+-		mbs_exception_rsp(ctx, MODBUS_EXC_ILLEGAL_FC);
+-		send_reply = true;
+-		break;
++		send_reply = mbs_try_user_fc(ctx, fc);
+ 	}
+ 
+ 	if (addr == 0) {
+-- 
+2.17.1
+
