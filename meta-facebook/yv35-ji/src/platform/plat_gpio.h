@@ -157,7 +157,7 @@
 	gpio_name_to_num(Reserve_GPIOM7)
 
 #define name_gpioN \
-	gpio_name_to_num(Reserve_GPION0) \
+	gpio_name_to_num(VIRTUAL_BIOS_POST_COMPLETE_L) \
 	gpio_name_to_num(Reserve_GPION1) \
 	gpio_name_to_num(Reserve_GPION2) \
 	gpio_name_to_num(Reserve_GPION3) \

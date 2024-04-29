@@ -66,7 +66,7 @@ void pal_set_sys_status()
 
 	set_sys_ready_pin(BIC_READY);
 	set_CPU_power_status(RUN_POWER_PG);
-	set_post_complete(false);
+	set_post_status(VIRTUAL_BIOS_POST_COMPLETE_L);
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78

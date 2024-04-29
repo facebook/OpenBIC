@@ -201,7 +201,6 @@ void ISR_PWRGD_CPU()
 	set_CPU_power_status(RUN_POWER_PG);
 	set_DC_status(RUN_POWER_PG); // Grace don't have DC status pin to BIC
 	send_gpio_interrupt(RUN_POWER_PG);
-	set_post_complete(false); //temporary set cause of postcomplete gpio not ready
 
 	if (CPU_power_good() == true) {
 		reset_sbmr_postcode_buffer();
@@ -209,6 +208,9 @@ void ISR_PWRGD_CPU()
 		k_work_schedule_for_queue(&plat_work_q, &PROC_FAIL_work,
 					  K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
 	} else {
+		/* Pull high virtual bios complete pin */
+		gpio_set(VIRTUAL_BIOS_POST_COMPLETE_L, GPIO_HIGH);
+		set_post_status(VIRTUAL_BIOS_POST_COMPLETE_L);
 		if (k_work_cancel_delayable(&PROC_FAIL_work) != 0) {
 			LOG_ERR("Failed to cancel proc_fail delay work.");
 		}

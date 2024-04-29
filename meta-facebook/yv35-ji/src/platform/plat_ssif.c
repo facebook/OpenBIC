@@ -48,5 +48,8 @@ K_TIMER_DEFINE(send_cmd_timer, send_cmd_to_dev, NULL);
 void pal_bios_post_complete()
 {
 	k_timer_start(&send_cmd_timer, K_MSEC(3000), K_NO_WAIT);
-	set_post_complete(true);
+
+	/* Pull low virtual bios complete pin */
+	gpio_set(VIRTUAL_BIOS_POST_COMPLETE_L, GPIO_LOW);
+	set_post_status(VIRTUAL_BIOS_POST_COMPLETE_L);
 }
