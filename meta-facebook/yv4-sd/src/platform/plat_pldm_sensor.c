@@ -27,11 +27,13 @@
 #include "plat_i2c.h"
 #include "plat_pldm_sensor.h"
 #include "plat_dimm.h"
+#include "plat_class.h"
 #include "plat_gpio.h"
 
 LOG_MODULE_REGISTER(plat_pldm_sensor);
 
 void plat_pldm_sensor_change_vr_dev();
+void plat_pldm_sensor_change_cpu_bus();
 
 static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = {
 	// thread id, thread name
@@ -6610,6 +6612,7 @@ pldm_sensor_info *plat_pldm_sensor_load(int thread_id)
 	case MB_TEMP_SENSOR_THREAD_ID:
 		return plat_pldm_sensor_mb_temp_table;
 	case CPU_SENSOR_THREAD_ID:
+		plat_pldm_sensor_change_cpu_bus();
 		return plat_pldm_sensor_cpu_table;
 	case INA233_SENSOR_THREAD_ID:
 		return plat_pldm_sensor_ina233_table;
@@ -6726,6 +6729,25 @@ void plat_pldm_sensor_change_vr_dev()
 	     index++) {
 		plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type = vr_dev;
 	}
+}
+
+void plat_pldm_sensor_change_cpu_bus()
+{
+	uint8_t board_rev = BOARD_REV_EVT;
+
+	if (get_board_rev(&board_rev) == false) {
+		LOG_ERR("Failed to get board revision.");
+		return;
+	}
+
+	if (board_rev > BOARD_REV_EVT) {
+		// For DVT and later, the hardware design was changed to I2C_BUS10
+		for (int i = 0; i < plat_pldm_sensor_get_sensor_count(CPU_SENSOR_THREAD_ID); i++) {
+			plat_pldm_sensor_cpu_table[i].pldm_sensor_cfg.port = I2C_BUS10;
+		}
+	}
+
+	return;
 }
 
 uint8_t plat_pldm_sensor_get_vr_dev(uint8_t *vr_dev)

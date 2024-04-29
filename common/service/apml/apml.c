@@ -43,6 +43,7 @@ K_THREAD_STACK_DEFINE(apml_handler_stack, APML_HANDLER_STACK_SIZE);
 apml_buffer apml_resp_buffer[APML_RESP_BUFFER_SIZE];
 static bool is_fatal_error_happened;
 static int command_code_len = SBRMI_CMD_CODE_LEN_DEFAULT;
+static int apml_bus = APML_BUS_UNKNOWN;
 
 uint8_t apml_read_byte(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t *read_data)
 {
@@ -514,6 +515,11 @@ static void apml_handler(void *arvg0, void *arvg1, void *arvg2)
 void apml_init()
 {
 	LOG_DBG("apml_init");
+	apml_bus = pal_get_apml_bus();
+	if (apml_bus == APML_BUS_UNKNOWN) {
+		LOG_ERR("Failed to set APML bus");
+		return;
+	}
 
 	pal_check_sbrmi_command_code_length();
 
@@ -533,7 +539,7 @@ void fatal_error_happened()
 void apml_recovery()
 {
 	uint8_t ret, read_data = 0x00;
-	ret = apml_read_byte(APML_BUS, SB_RMI_ADDR, SBRMI_REVISION, &read_data);
+	ret = apml_read_byte(apml_bus, SB_RMI_ADDR, SBRMI_REVISION, &read_data);
 
 	if (ret) {
 		LOG_ERR("Failed to read SBRMI revision.");
@@ -542,12 +548,12 @@ void apml_recovery()
 	if ((ret || ((read_data != PLAT_SBRMI_REVISION) && (read_data != SBRMI_REV_BRTH))) &&
 	    get_post_status()) {
 		LOG_INF("Recovery SBRMI.");
-		if (apml_read_byte(APML_BUS, SB_TSI_ADDR, SBTSI_CONFIG, &read_data)) {
+		if (apml_read_byte(apml_bus, SB_TSI_ADDR, SBTSI_CONFIG, &read_data)) {
 			LOG_ERR("Failed to read SBTSI config.");
 			return;
 		}
 
-		if (apml_write_byte(APML_BUS, SB_TSI_ADDR, SBTSI_CONFIG_WRITE,
+		if (apml_write_byte(apml_bus, SB_TSI_ADDR, SBTSI_CONFIG_WRITE,
 				    read_data | RMI_SOFT_RESET_BIT)) {
 			LOG_ERR("Failed to write SBTSI config.");
 			return;
@@ -556,7 +562,7 @@ void apml_recovery()
 		uint8_t i = 0;
 		for (; i < RECOVERY_SBRMI_RETRY_MAX; i++) {
 			read_data = 0;
-			if (apml_read_byte(APML_BUS, SB_TSI_ADDR, SBTSI_CONFIG, &read_data)) {
+			if (apml_read_byte(apml_bus, SB_TSI_ADDR, SBTSI_CONFIG, &read_data)) {
 				LOG_ERR("Failed to read SBTSI config.");
 				return;
 			}
@@ -572,6 +578,16 @@ void apml_recovery()
 		}
 	}
 	return;
+}
+
+__weak uint8_t pal_get_apml_bus()
+{
+	return APML_BUS_UNKNOWN;
+}
+
+uint8_t apml_get_bus()
+{
+	return apml_bus;
 }
 
 #endif
