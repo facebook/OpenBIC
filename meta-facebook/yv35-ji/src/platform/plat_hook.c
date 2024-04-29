@@ -188,24 +188,13 @@ bool pre_tmp451_read(sensor_cfg *cfg, void *args)
 
 	gpio_set(BIC_TMP_LVSFT_EN, GPIO_HIGH);
 
-	struct tca9548 *p = (struct tca9548 *)args;
-
-	uint8_t retry = 200; //workaround for poc board
-	I2C_MSG msg = { 0 };
-
-	msg.bus = cfg->port;
-	/* change address to 7-bit */
-	msg.target_addr = ((p->addr) >> 1);
-	msg.tx_len = 2;
-	msg.data[0] = 0x00;
-	msg.data[1] = (1 << (p->chan));
-
-	if (i2c_master_write(&msg, retry)) {
-		LOG_ERR("I2C master write failed");
-		return false;
+	int retry = 200; // workaround for poc board
+	for (int i = 0; i < retry; i++) {
+		if (tca9548_select_chan(cfg, (struct tca9548 *)args))
+			return true;
 	}
 
-	return true;
+	return false;
 }
 
 bool pre_tmp75_read(sensor_cfg *cfg, void *args)
@@ -213,22 +202,11 @@ bool pre_tmp75_read(sensor_cfg *cfg, void *args)
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
-	struct tca9548 *p = (struct tca9548 *)args;
-
-	uint8_t retry = 200; //workaround for poc board
-	I2C_MSG msg = { 0 };
-
-	msg.bus = cfg->port;
-	/* change address to 7-bit */
-	msg.target_addr = ((p->addr) >> 1);
-	msg.tx_len = 2;
-	msg.data[0] = 0x00;
-	msg.data[1] = (1 << (p->chan));
-
-	if (i2c_master_write(&msg, retry)) {
-		LOG_ERR("I2C master write failed");
-		return false;
+	int retry = 200; // workaround for poc board
+	for (int i = 0; i < retry; i++) {
+		if (tca9548_select_chan(cfg, (struct tca9548 *)args))
+			return true;
 	}
 
-	return true;
+	return false;
 }
