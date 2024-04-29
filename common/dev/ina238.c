@@ -135,7 +135,7 @@ uint8_t ina238_read(sensor_cfg *cfg, int *reading)
 			return SENSOR_FAIL_TO_ACCESS;
 		}
 
-		int32_t pwr_val = ((msg.data[0] << 16) | msg.data[1] << 8) | msg.data[2];
+		uint32_t pwr_val = ((msg.data[0] << 16) | msg.data[1] << 8) | msg.data[2];
 		val = 0.2 * twoscomplement_to_decimal(pwr_val) * current_lsb;
 
 		break;
