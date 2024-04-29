@@ -37,15 +37,16 @@ LOG_MODULE_REGISTER(dev_ina238);
 uint16_t current_lsb = 0;
 uint16_t conf = 0;
 
-static uint16_t twoscomplement_to_decimal(uint16_t twoscomplement_val) 
+static uint16_t twoscomplement_to_decimal(uint16_t twoscomplement_val)
 {
-    if (twoscomplement_val & MSB_MASK) { // Check if MSB is 1 (negative number)
-        twoscomplement_val = ~twoscomplement_val + 1; // Two's complement operation for negative numbers
-        return -twoscomplement_val; // Return negative number
-    }
-    return twoscomplement_val; // Return positive number as is
-}
+	if (twoscomplement_val & MSB_MASK) { // Check if MSB is 1 (negative number)
+		twoscomplement_val =
+			~twoscomplement_val + 1; // Two's complement operation for negative numbers
+		return -twoscomplement_val; // Return negative number
+	}
 
+	return twoscomplement_val; // Return positive number as is
+}
 
 uint8_t ina238_read(sensor_cfg *cfg, int *reading)
 {
@@ -70,7 +71,7 @@ uint8_t ina238_read(sensor_cfg *cfg, int *reading)
 		if (i2c_master_read(&msg, I2C_RETRY)) {
 			LOG_ERR("Failed to read shunt voltage from INA238");
 			return SENSOR_FAIL_TO_ACCESS;
-		}	
+		}
 
 		uint16_t vshunt_val = (msg.data[0] << 8) | msg.data[1];
 		if ((conf & READ_ADCRANGE_MASK) == ADCRANGE_1S_1) {
@@ -78,7 +79,6 @@ uint8_t ina238_read(sensor_cfg *cfg, int *reading)
 		} else {
 			val = twoscomplement_to_decimal(vshunt_val) * ADCRANGE_0_CONVERSION_FACTOR;
 		}
-		
 
 		break;
 	case INA238_VBUS_OFFSET:
@@ -89,10 +89,10 @@ uint8_t ina238_read(sensor_cfg *cfg, int *reading)
 		if (i2c_master_read(&msg, I2C_RETRY)) {
 			LOG_ERR("Failed to read bus voltage from INA238");
 			return SENSOR_FAIL_TO_ACCESS;
-		}	
+		}
 
 		uint16_t vbus_val = (msg.data[0] << 8) | msg.data[1];
-		val = twoscomplement_to_decimal(vbus_val) * VBUS_CONVERSION_FACTOR ;
+		val = twoscomplement_to_decimal(vbus_val) * VBUS_CONVERSION_FACTOR;
 
 		break;
 	case INA238_DIETEMP_OFFSET:
@@ -105,7 +105,8 @@ uint8_t ina238_read(sensor_cfg *cfg, int *reading)
 			return SENSOR_FAIL_TO_ACCESS;
 		}
 
-		uint16_t dietemp_val = (msg.data[0] << 4) | (msg.data[1] >> 4); // 15~4 total 12bits temperature
+		uint16_t dietemp_val =
+			(msg.data[0] << 4) | (msg.data[1] >> 4); // 15~4 total 12bits temperature
 		val = twoscomplement_to_decimal(dietemp_val) * DIETEMP_CONVERSION_FACTOR;
 
 		break;
@@ -137,7 +138,7 @@ uint8_t ina238_read(sensor_cfg *cfg, int *reading)
 		int32_t pwr_val = ((msg.data[0] << 16) | msg.data[1] << 8) | msg.data[2];
 		val = 0.2 * twoscomplement_to_decimal(pwr_val) * current_lsb;
 
-		break;	
+		break;
 	default:
 		LOG_ERR("Unknown offset: 0x%x", cfg->offset);
 		return SENSOR_UNSPECIFIED_ERROR;
@@ -177,11 +178,12 @@ uint8_t ina238_init(sensor_cfg *cfg)
 	/* calculate Current_LSB */
 	//Current_LSB = Maximum Expected Current/(2^15)
 	init_args->cur_lsb = init_args->i_max / 32768.0;
-	if (init_args->cur_lsb > 0x80)	// cur_lsb max = 0x80
-	{	
+	if (init_args->cur_lsb > 0x80) // cur_lsb max = 0x80
+	{
 		LOG_ERR("Current LSB is out of range");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
+
 	current_lsb = init_args->cur_lsb;
 
 	/* Write the calibration value */
@@ -200,14 +202,13 @@ uint8_t ina238_init(sensor_cfg *cfg)
 	// set conversion factor based on ADCRANGE setting
 	init_args->adc_range = (msg.data[0] << 8) | msg.data[1];
 	conf = init_args->adc_range;
-
 	if ((conf & READ_ADCRANGE_MASK) == ADCRANGE_1S_1) {
 		shunt_cal *= 4;
-	} 
+	}
 
-	if(shunt_cal > SHUNT_CAL_MAX_VAL) {
+	if (shunt_cal > SHUNT_CAL_MAX_VAL) {
 		LOG_ERR("Shunt calibration value is out of range");
-		return SENSOR_INIT_UNSPECIFIED_ERROR;	
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
 	msg.tx_len = 3;
@@ -218,8 +219,7 @@ uint8_t ina238_init(sensor_cfg *cfg)
 		LOG_ERR("Failed to write the calibration value in INA238 ");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
-	
+
 	cfg->read = ina238_read;
 	return SENSOR_INIT_SUCCESS;
-
 }
