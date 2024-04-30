@@ -24,7 +24,6 @@
 #include "fru.h"
 #include "plat_fru.h"
 
-
 LOG_MODULE_REGISTER(plat_fru);
 
 #define AALC_FRU_START 0x0000
@@ -291,45 +290,23 @@ const EEPROM_CFG plat_fru_config[] = {
 	},
 };
 
-fru_modbus_addr_cfg modbus_Addr_FRUs[] = {
-	/* fru id, fru offset, fru field size(register),  modbus data addr  */
-	{ MB_FRU_ID, MODBUS_MB_FRU_ADDR },	 { BB_FRU_ID, MODBUS_BB_FRU_ADDR },
-	{ BPB_FRU_ID, MODBUS_BPB_FRU_ADDR },	 { PDB_FRU_ID, MODBUS_PDB_FRU_ADDR },
-	{ SB_FRU_ID, MODBUS_SB_FRU_ADDR },	 { PB_1_FRU_ID, MODBUS_PB_1_FRU_ADDR },
-	{ PB_2_FRU_ID, MODBUS_PB_2_FRU_ADDR },	 { PB_3_FRU_ID, MODBUS_PB_3_FRU_ADDR },
-	{ FB_1_FRU_ID, MODBUS_FB_1_FRU_ADDR },	 { FB_2_FRU_ID, MODBUS_FB_2_FRU_ADDR },
-	{ FB_3_FRU_ID, MODBUS_FB_3_FRU_ADDR },	 { FB_4_FRU_ID, MODBUS_FB_4_FRU_ADDR },
-	{ FB_5_FRU_ID, MODBUS_FB_5_FRU_ADDR },	 { FB_6_FRU_ID, MODBUS_FB_6_FRU_ADDR },
-	{ FB_7_FRU_ID, MODBUS_FB_7_FRU_ADDR },	 { FB_8_FRU_ID, MODBUS_FB_8_FRU_ADDR },
-	{ FB_9_FRU_ID, MODBUS_FB_9_FRU_ADDR },	 { FB_10_FRU_ID, MODBUS_FB_10_FRU_ADDR },
-	{ FB_11_FRU_ID, MODBUS_FB_11_FRU_ADDR }, { FB_12_FRU_ID, MODBUS_FB_12_FRU_ADDR },
-	{ FB_13_FRU_ID, MODBUS_FB_13_FRU_ADDR }, { FB_14_FRU_ID, MODBUS_FB_14_FRU_ADDR },
-};
-
 uint8_t modbus_read_fruid_data(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-	
+
 	uint8_t status;
 	EEPROM_ENTRY fru_entry;
 
-	uint8_t addr_len = ARRAY_SIZE(modbus_Addr_FRUs);
-	for (uint8_t i = 0; i < addr_len; i++) {
-		if (cmd->addr == modbus_Addr_FRUs[i].field_addr) {
-			fru_entry.config.dev_id = modbus_Addr_FRUs[i].fru_id;
-			fru_entry.offset = (cmd->start_ofs - cmd->addr) * 2;
-			fru_entry.data_len = (cmd->data_len) * 2;
+	fru_entry.config.dev_id = cmd->arg0; //fru id
+	fru_entry.offset = (cmd->start_addr - cmd->addr) * 2;
+	fru_entry.data_len = (cmd->data_len) * 2;
 
-			memcpy(&fru_entry.data[0], cmd->data, fru_entry.data_len);
-			status = FRU_read(&fru_entry);
-			if (status == FRU_READ_SUCCESS)
-				return MODBUS_EXC_NONE;
-			else
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
-	}
+	status = FRU_read(&fru_entry);
+	if (status != FRU_READ_SUCCESS)
+		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 
- 	return MODBUS_EXC_ILLEGAL_DATA_ADDR;
+	memcpy(cmd->data, &fru_entry.data[0], fru_entry.data_len);
+	return MODBUS_EXC_NONE;
 }
 
 uint8_t modbus_write_fruid_data(modbus_command_mapping *cmd)
@@ -339,23 +316,16 @@ uint8_t modbus_write_fruid_data(modbus_command_mapping *cmd)
 	uint8_t status;
 	EEPROM_ENTRY fru_entry;
 
-	uint8_t addr_len = ARRAY_SIZE(modbus_Addr_FRUs);
-	for (uint8_t i = 0; i < addr_len; i++) {
-		if (cmd->addr == modbus_Addr_FRUs[i].field_addr) {
-			fru_entry.config.dev_id = modbus_Addr_FRUs[i].fru_id;
-			fru_entry.offset = (cmd->start_ofs - cmd->addr) * 2;
-			fru_entry.data_len = (cmd->data_len) * 2;
+	fru_entry.config.dev_id = cmd->arg0; //fru id
+	fru_entry.offset = (cmd->start_addr - cmd->addr) * 2;
+	fru_entry.data_len = (cmd->data_len) * 2;
 
-			memcpy(&fru_entry.data[0], cmd->data, fru_entry.data_len);
-			status = FRU_write(&fru_entry);
-			if (status == FRU_WRITE_SUCCESS)
-				return MODBUS_EXC_NONE;
-			else
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
-	}
+	memcpy(&fru_entry.data[0], cmd->data, fru_entry.data_len);
+	status = FRU_write(&fru_entry);
+	if (status != FRU_WRITE_SUCCESS)
+		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 
- 	return MODBUS_EXC_ILLEGAL_DATA_ADDR;
+	return MODBUS_EXC_NONE;
 }
 
 void pal_load_fru_config(void)

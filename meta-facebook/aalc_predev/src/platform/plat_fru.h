@@ -48,12 +48,6 @@ enum FRU_ID {
 	MAX_FRU_ID,
 };
 
-typedef struct _fru_modbus_addr_cfg {
-	uint8_t fru_id;
-	uint16_t field_addr;	
-} fru_modbus_addr_cfg;
-
-
 #define FRU_CFG_NUM MAX_FRU_ID
 
 #define MB_FRU_ADDR 0xA6
