@@ -74,7 +74,7 @@ uint8_t ina238_read(sensor_cfg *cfg, int *reading)
 		}
 
 		uint16_t vshunt_val = (msg.data[0] << 8) | msg.data[1];
-		if ((conf & READ_ADCRANGE_MASK) == ADCRANGE_1S_1) {
+		if (conf == ADCRANGE_1S_1) {
 			val = twoscomplement_to_decimal(vshunt_val) * ADCRANGE_1_CONVERSION_FACTOR;
 		} else {
 			val = twoscomplement_to_decimal(vshunt_val) * ADCRANGE_0_CONVERSION_FACTOR;
@@ -200,11 +200,10 @@ uint8_t ina238_init(sensor_cfg *cfg)
 	}
 
 	// set conversion factor based on ADCRANGE setting
-	init_args->adc_range = (msg.data[0] << 8) | msg.data[1];
-	conf = init_args->adc_range;
-	if ((conf & READ_ADCRANGE_MASK) == ADCRANGE_1S_1) {
+	init_args->conf = (msg.data[0] << 8) | msg.data[1];
+	conf = init_args->conf & READ_ADCRANGE_MASK;
+	if (conf == ADCRANGE_1S_1)
 		shunt_cal *= 4;
-	}
 
 	if (shunt_cal > SHUNT_CAL_MAX_VAL) {
 		LOG_ERR("Shunt calibration value is out of range");

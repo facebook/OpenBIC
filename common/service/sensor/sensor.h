@@ -188,7 +188,7 @@ enum SENSOR_DEV {
 	sensor_dev_hdc1080 = 0x33,
 	sensor_dev_ast_tach = 0x34,
 	sensor_dev_xdp710 = 0x35,
-  	sensor_dev_nct214 = 0x36,
+	sensor_dev_nct214 = 0x36,
 	sensor_dev_ina238 = 0x37,
 	sensor_dev_max
 };
@@ -782,7 +782,7 @@ typedef struct _ina238_init_arg {
 	double cur_lsb;
 	/* Expected maximum current */
 	double i_max;
-	uint16_t adc_range;
+	uint16_t conf;
 } ina238_init_arg;
 
 extern bool enable_sensor_poll_thread;
