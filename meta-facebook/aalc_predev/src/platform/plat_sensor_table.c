@@ -33,6 +33,8 @@
 
 LOG_MODULE_REGISTER(plat_sensor_table);
 
+#define COMMON_SENSOR_MONITOR_INDEX 0
+
 static void load_hsc_sensor_table(void);
 static void load_temperature_sensor_table(void);
 
@@ -836,4 +838,17 @@ uint8_t pal_get_extend_sensor_config()
 		break;
 	}
 	return extend_sensor_config_size;
+}
+
+sensor_cfg *get_common_sensor_cfg_info(uint8_t sensor_num)
+{
+	uint8_t cfg_count = sensor_monitor_table[COMMON_SENSOR_MONITOR_INDEX].cfg_count;
+	sensor_cfg *cfg_table =
+		sensor_monitor_table[COMMON_SENSOR_MONITOR_INDEX].monitor_sensor_cfg;
+
+	if (cfg_table != NULL) {
+		return find_sensor_cfg_via_sensor_num(cfg_table, cfg_count, sensor_num);
+	}
+
+	return NULL;
 }

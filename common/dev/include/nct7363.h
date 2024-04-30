@@ -105,4 +105,6 @@ enum nct7363_gpio_type { NCT7363_GPIO_OUTPUT, NCT7363_GPIO_INPUT };
 
 enum nct7363_wdt_sec { WDT_15_SEC, WDT_3_75_SEC, WDT_7_5_SEC, WDT_30_SEC, WDT_DISABLE, WDT_ERROR };
 
+bool nct7363_set_duty(sensor_cfg *cfg, uint8_t duty);
+
 #endif
