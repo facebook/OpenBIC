@@ -42,6 +42,9 @@ LOG_MODULE_DECLARE(pldm);
 #define MIN_FW_UPDATE_BASELINE_TRANS_SIZE 32
 #define PLDM_NO_SUPPORT_PROGRESS_PERCENT 0x65
 
+#define GET_EEPROM_SLAVE_MASK(offset) (((offset) >> 16) & 0xF)
+#define GET_EERPOM_OFFSET(offset) ((offset)&0xFFFF)
+
 pldm_fw_update_info_t *comp_config = NULL;
 uint8_t comp_config_count = 0;
 
@@ -348,6 +351,107 @@ uint8_t pldm_retimer_update(void *fw_update_param)
 	}
 
 	return 0;
+}
+
+uint8_t pldm_retimer_recovery(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+
+	CHECK_NULL_ARG_WITH_RETURN(p->data, 1);
+
+	uint8_t update_flag = 0;
+	uint8_t ret;
+	I2C_MSG i2c_msg;
+
+	i2c_msg.bus = p->bus;
+	i2c_msg.target_addr = p->addr;
+
+	if (p->data_ofs == 0) {
+		LOG_INF("First block for retimer update");
+	}
+
+	/* prepare next data offset and length */
+	p->next_ofs = p->data_ofs + p->data_len;
+	p->next_len = fw_update_cfg.max_buff_size;
+
+	if (p->next_ofs < fw_update_cfg.image_size) {
+		if (p->next_ofs + p->next_len > fw_update_cfg.image_size)
+			p->next_len = fw_update_cfg.image_size - p->next_ofs;
+
+		if (((p->next_ofs % SECTOR_SZ_256) + p->next_len) > SECTOR_SZ_256)
+			p->next_len = SECTOR_SZ_256 - (p->next_ofs % SECTOR_SZ_256);
+	} else {
+		/* current data is the last packet
+		 * set the next data length to 0 to inform the update completely
+		 */
+		p->next_len = 0;
+		update_flag = SECTOR_END_FLAG;
+	}
+
+	if (!strncmp(p->comp_version_str, KEYWORD_RETIMER_PT5161L,
+		     ARRAY_SIZE(KEYWORD_RETIMER_PT5161L) - 1)) {
+		ret = fw_recovery_eeprom(&i2c_msg, p->data_ofs, p->data_len, p->data, update_flag);
+		if (ret) {
+			LOG_ERR("Retimer recovery failed, offset(0x%x), length(0x%x), status(%d)",
+				p->data_ofs, p->data_len, ret);
+			return 1;
+		}
+	} else {
+		LOG_ERR("Non-support retimer detected with component string %s!",
+			log_strdup(p->comp_version_str));
+		return 1;
+	}
+
+	return 0;
+}
+
+uint8_t fw_recovery_eeprom(I2C_MSG *msg, uint32_t offset, uint16_t msg_len, uint8_t *msg_buf,
+			   uint8_t flag)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, FWUPDATE_UPDATE_FAIL);
+	CHECK_NULL_ARG_WITH_RETURN(msg_buf, FWUPDATE_UPDATE_FAIL);
+	uint8_t buffer_offset = 0;
+	uint32_t ret = 0;
+	uint8_t per_len = RETIMER_IMAGE_PACKAGE_SIZE;
+	uint8_t retry = 3;
+	msg->target_addr += GET_EEPROM_SLAVE_MASK(offset);
+	offset = GET_EERPOM_OFFSET(offset);
+
+	if (msg_len > RETIMER_IMAGE_PACKAGE_SIZE) {
+		LOG_ERR("eeprom offset %x, recv data 0x%x over sector size 0x%x", offset, msg_len,
+			RETIMER_IMAGE_PACKAGE_SIZE);
+		k_msleep(10);
+		return FWUPDATE_OVER_LENGTH;
+	}
+
+	if ((msg_len == RETIMER_IMAGE_PACKAGE_SIZE) || (flag & SECTOR_END_FLAG)) {
+		for (; msg_len > 0;) {
+			if (msg_len >= per_len) {
+				msg_len -= per_len;
+			} else {
+				per_len = msg_len;
+				msg_len -= per_len;
+			}
+			msg->data[0] = (offset >> 8) & 0xFF;
+			msg->data[1] = offset & 0xFF;
+			memcpy(&msg->data[2], &msg_buf[buffer_offset], per_len);
+			msg->tx_len = 2 + per_len;
+			ret = i2c_master_write(msg, retry);
+			if (ret) {
+				LOG_ERR("Fail to write retimer eeprom");
+				return FWUPDATE_UPDATE_FAIL;
+			}
+			k_msleep(10);
+			buffer_offset += per_len;
+			offset += per_len;
+		}
+
+		LOG_INF("PCIE retimer %x update success", offset);
+	}
+
+	return ret;
 }
 
 K_WORK_DELAYABLE_DEFINE(submit_warm_reset_work, submit_bic_warm_reset);

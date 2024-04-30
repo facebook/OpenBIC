@@ -23,11 +23,13 @@ extern "C" {
 
 #include "pldm.h"
 #include "plat_def.h"
+#include "hal_i2c.h"
 
 #ifndef MAX_FWUPDATE_RSP_BUF_SIZE
 #define MAX_FWUPDATE_RSP_BUF_SIZE 256
 #endif
 #define MAX_IMAGE_MALLOC_SIZE (1024 * 64)
+#define RETIMER_IMAGE_PACKAGE_SIZE 64
 
 #define KEYWORD_VR_ISL69259 "isl69259"
 #define KEYWORD_VR_XDPE12284C "xdpe12284c"
@@ -641,6 +643,9 @@ uint8_t pldm_bic_update(void *fw_update_param);
 uint8_t pldm_vr_update(void *fw_update_param);
 uint8_t pldm_cpld_update(void *fw_update_param);
 uint8_t pldm_retimer_update(void *fw_update_param);
+uint8_t pldm_retimer_recovery(void *fw_update_param);
+uint8_t fw_recovery_eeprom(I2C_MSG *msg, uint32_t offset, uint16_t msg_len, uint8_t *msg_buf,
+			   uint8_t flag);
 uint8_t pldm_bic_activate(void *arg);
 
 uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uint8_t *resp,
