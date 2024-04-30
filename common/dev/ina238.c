@@ -23,7 +23,7 @@
 
 #define I2C_RETRY 5
 #define MSB_MASK BIT(15)
-#define READ_ADCRANGE_MASK BIT(4)
+#define ADCRANGE_SET_TO_1 BIT(4)
 #define SHUNT_CAL_MAX_VAL 0x7FFF
 #define INTERNAL_FIXED_VALUE 819200000
 #define ADCRANGE_1S_1 0x10
@@ -79,11 +79,10 @@ uint8_t ina238_read(sensor_cfg *cfg, int *reading)
 		}
 
 		vshunt_val = (msg.data[0] << 8) | msg.data[1];
-		if ((init_args->conf & READ_ADCRANGE_MASK) == ADCRANGE_1S_1) {
+		if (init_args->adc_range) 
 			val = twoscomplement_to_decimal(vshunt_val) * ADCRANGE_1_CONVERSION_FACTOR;
-		} else {
-			val = twoscomplement_to_decimal(vshunt_val) * ADCRANGE_0_CONVERSION_FACTOR;
-		}
+		
+		val = twoscomplement_to_decimal(vshunt_val) * ADCRANGE_0_CONVERSION_FACTOR;
 
 		break;
 	case INA238_VBUS_OFFSET:
@@ -166,18 +165,21 @@ uint8_t ina238_init(sensor_cfg *cfg)
 
 	ina238_init_arg *init_args = (ina238_init_arg *)cfg->init_args;
 
-	/* Configure the chip using default values */
 	I2C_MSG msg = { 0 };
-	msg.bus = cfg->port;
-	msg.target_addr = cfg->target_addr;
-	msg.tx_len = 3;
-	msg.data[0] = INA238_CFG_OFFSET;
-	msg.data[1] = 0x00;
-	msg.data[2] = 0x00;
-	if (i2c_master_write(&msg, I2C_RETRY)) {
-		LOG_ERR("Failed to init INA238 ");
-		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	/* Configure the chip using default values */
+	if (init_args->adc_range) {
+		msg.bus = cfg->port;
+		msg.target_addr = cfg->target_addr;
+		msg.tx_len = 3;
+		msg.data[0] = INA238_CFG_OFFSET;
+		msg.data[1] = 0x00;
+		msg.data[2] = ADCRANGE_SET_TO_1;
+		if (i2c_master_write(&msg, I2C_RETRY)) {
+			LOG_ERR("Failed to init INA238 ");
+			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		}
 	}
+	
 
 	/* calculate Current_LSB */
 	//Current_LSB = Maximum Expected Current/(2^15)
@@ -204,8 +206,7 @@ uint8_t ina238_init(sensor_cfg *cfg)
 	}
 
 	// set conversion factor based on ADCRANGE setting
-	init_args->conf = (msg.data[0] << 8) | msg.data[1];
-	if ((init_args->conf & READ_ADCRANGE_MASK) == ADCRANGE_1S_1)
+	if (init_args->adc_range)
 		shunt_cal *= 4;
 
 	if (shunt_cal > SHUNT_CAL_MAX_VAL) {

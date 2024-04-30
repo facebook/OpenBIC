@@ -757,11 +757,10 @@ typedef struct _nct214_init_arg {
 
 typedef struct _ina238_init_arg {
 	bool is_init;
-	/* Shunt resistor value. Unit: Ohm. */
-	double r_shunt;
+	double r_shunt; /* Shunt resistor value. Unit: Ohm. */
 	double cur_lsb;
-	/* Expected maximum current */
-	double i_max;
+	bool adc_range;
+	double i_max; /* Expected maximum current */
 	uint16_t conf;
 } ina238_init_arg;
 
