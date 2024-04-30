@@ -153,7 +153,6 @@ ina238_init_arg ina238_init_args[] = {
 	[0] = { 
 		.is_init = false, 
 		.r_shunt = 0.1, 
-		.cur_lsb = 0.1,
 		.adc_range = INA238_ADC_RANGE_PN_163, 
 		.i_max = 0.1,
 	},
