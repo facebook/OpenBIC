@@ -22,7 +22,7 @@
 #include <logging/log.h>
 
 #define I2C_RETRY 5
-#define MSB_MASK BIT(7)
+#define MSB_MASK BIT(15)
 #define READ_ADCRANGE_MASK BIT(4)
 #define SHUNT_CAL_MAX_VAL 0x7FFF
 #define INTERNAL_FIXED_VALUE 819200000
