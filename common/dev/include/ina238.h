@@ -40,4 +40,10 @@ enum INA238_OFFSET {
 	INA238_DEVICE_ID_OFFSET = 0x3F,
 };
 
+enum INA238_ADC_RANGE {
+	/* IN+ and IN–, 0:±163.84 mV, 1:±40.96 mV */
+	INA238_ADC_RANGE_PN_163 = 0x00,
+	INA238_ADC_RANGE_PN_40 = 0x10,
+};
+
 #endif

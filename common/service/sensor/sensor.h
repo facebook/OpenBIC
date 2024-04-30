@@ -759,7 +759,7 @@ typedef struct _ina238_init_arg {
 	bool is_init;
 	double r_shunt; /* Shunt resistor value. Unit: Ohm. */
 	double cur_lsb;
-	bool adc_range; /* IN+ and IN–, 0:±163.84 mV, 1:±40.96 mV */
+	uint8_t adc_range; /* IN+ and IN–, 0:±163.84 mV, 1:±40.96 mV */
 	double i_max; /* Expected maximum current */
 	uint16_t conf;
 } ina238_init_arg;

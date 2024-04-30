@@ -21,6 +21,7 @@
 #include "plat_class.h"
 #include "nct7363.h"
 #include "ads112c.h"
+#include "ina238.h"
 #include "plat_i2c.h"
 #include "sensor.h"
 
@@ -146,6 +147,18 @@ ads112c_init_arg ads112c_init_args[] = {
 adc_asd_init_arg adc_asd_init_args[] = {
 	[0] = { .is_init = false,},
 };
+
+ina238_init_arg ina238_init_args[] = {
+	// PDB board
+	[0] = { 
+		.is_init = false, 
+		.r_shunt = 0.1, 
+		.cur_lsb = 0.1,
+		.adc_range = INA238_ADC_RANGE_PN_163, 
+		.i_max = 0.1,
+	},
+};
+
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
  **************************************************************************************************/
