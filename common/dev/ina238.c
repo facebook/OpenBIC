@@ -34,8 +34,8 @@
 
 LOG_MODULE_REGISTER(dev_ina238);
 
-uint16_t current_lsb = 0;
-uint16_t conf = 0;
+static uint16_t current_lsb = 0;
+static uint16_t conf = 0;
 
 static uint16_t twoscomplement_to_decimal(uint16_t twoscomplement_val)
 {
