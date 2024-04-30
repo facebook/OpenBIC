@@ -38,6 +38,7 @@ enum cmd_type {
 	POST_CODE = 0x00,
 	BIOS_VERSION = 0x01,
 	POWER_CONTROL = 0x02,
+	HTTP_BOOT = 0X03,
 	APML_ALERT = 0x04,
 };
 
@@ -82,6 +83,23 @@ struct pldm_oem_write_file_io_req {
 
 struct pldm_oem_write_file_io_resp {
 	uint8_t completion_code;
+} __attribute__((packed));
+
+struct pldm_oem_read_file_io_req {
+	uint8_t cmd_code;
+	uint8_t data_length;
+	uint8_t transfer_flag;
+	uint8_t highOffset;
+	uint8_t lowOffset;
+} __attribute__((packed));
+
+struct pldm_oem_read_file_io_resp {
+	uint8_t completion_code;
+	uint8_t data_length;
+	uint8_t transfer_flag;
+	uint8_t highOffset;
+	uint8_t lowOffset;
+	uint8_t messages[];
 } __attribute__((packed));
 
 uint8_t check_iana(const uint8_t *iana);
