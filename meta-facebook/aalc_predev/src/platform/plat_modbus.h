@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#ifndef PLAT_MODBUS_H
+#define PLAT_MODBUS_H
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -45,26 +48,8 @@ typedef struct _modbus_command_mapping {
 	/* private */
 	uint16_t start_addr; // first addr for multiple register write/read
 	uint16_t *data;
-	uint8_t data_len; // how many registers
-} modbus_command_mapping;
-
-enum pump_state {
-	PUMP_REDUNDENT_SWITCHED,
-	MANUAL_CONTROL_PUMP,
-	MANUAL_CONTROL_FAN,
-	AUTOTUNE_FLOW_CONTROL,
-	AUTOTUNE_PRESSURE_BALANCE_CONTROL,
-	SYSTEM_STOP,
-	RPU_REMOTE_POWER_CYCLE,
-	REVERSE_STATE_1,
-	REVERSE_STATE_2,
-	MANUAL_CONTROL,
-	CLEAR_PUMP_RUNNING_TIME,
-	CLEAR_LOG,
-	PUMP_1_RESET,
-	PUMP_2_RESET,
-	PUMP_3_RESET,
-};
+	uint8_t data_len;
+}	modbus_command_mapping;
 
 /* define modbus data address */
 #define MODBUS_TEMP_BB_TMP75_ADDR 0x0101
@@ -260,20 +245,32 @@ enum pump_state {
 #define MODBUS_LEAKAGE_STATUS_ADDR 0x9202
 #define MODBUS_PUMP_SETTING_ADDR 0x9410
 
-//FRU Info
-#define FRU_FB_PART_ADDR 0x19C4
-#define FRU_MFR_MODEL_ADDR 0x19CC
-#define FRU_MFR_DATE_ADDR 0x19D4
-#define FRU_MFR_SERIEL_ADDR 0x19D8
-#define FRU_WORKORDER_ADDR 0x19E0
-#define FRU_HW_REVISION_ADDR 0x19E4
-#define MODBUS_FW_REVISION_ADDR 0x19E8
-#define FRU_TOTAL_UP_TIME_ADDR 0x19EC
-#define FRU_LAST_ON_TIME_ADDR 0x19EF
-#define FRU_HMI_REVISION_ADDR 0x19F2
-#define FRU_NOAH_ARK_CONFIG_ADDR 0x19F8
-#define FRU_HEATEXCHANGER_CONTROLBOX_FPBN_ADDR 0x1A00
-#define FRU_QUANTA_FB_PART_ADDR 0x1A0C
-
 #define MODBUS_FW_REVISION_ADDR 0x19E8
 #define MODBUS_FW_DOWNLOAD_ADDR 0x2000
+
+//FRU Regs
+#define MODBUS_MB_FRU_ADDR 0xB000
+#define MODBUS_BB_FRU_ADDR 0xB100
+#define MODBUS_BPB_FRU_ADDR 0xB200
+#define MODBUS_PDB_FRU_ADDR 0xB300
+#define MODBUS_SB_FRU_ADDR 0xB400
+#define MODBUS_PB_1_FRU_ADDR 0xB500
+#define MODBUS_PB_2_FRU_ADDR 0xB600
+#define MODBUS_PB_3_FRU_ADDR 0xB700
+#define MODBUS_FB_1_FRU_ADDR 0xB800
+#define MODBUS_FB_2_FRU_ADDR 0xB900
+#define MODBUS_FB_3_FRU_ADDR 0xBA00
+#define MODBUS_FB_4_FRU_ADDR 0xBB00
+#define MODBUS_FB_5_FRU_ADDR 0xBC00
+#define MODBUS_FB_6_FRU_ADDR 0xBD00
+#define MODBUS_FB_7_FRU_ADDR 0xBE00
+#define MODBUS_FB_8_FRU_ADDR 0xBF00
+#define MODBUS_FB_9_FRU_ADDR 0xC000
+#define MODBUS_FB_10_FRU_ADDR 0xC100
+#define MODBUS_FB_11_FRU_ADDR 0xC200
+#define MODBUS_FB_12_FRU_ADDR 0xC300
+#define MODBUS_FB_13_FRU_ADDR 0xC400
+#define MODBUS_FB_14_FRU_ADDR 0xC500
+
+
+#endif

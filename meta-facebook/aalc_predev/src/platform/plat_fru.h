@@ -17,16 +17,20 @@
 #ifndef PLAT_FRU_H
 #define PLAT_FRU_H
 
+#include "plat_modbus.h"
+
+uint8_t modbus_read_fruid_data(modbus_command_mapping *cmd);
+uint8_t modbus_write_fruid_data(modbus_command_mapping *cmd);
 
 enum FRU_ID {
-	MB_FRU_ID = 0x01,
+	MB_FRU_ID = 0x00,
 	BB_FRU_ID,
 	BPB_FRU_ID,
-	SB_FRU_ID,
 	PDB_FRU_ID,	
+	SB_FRU_ID,
 	PB_1_FRU_ID,
 	PB_2_FRU_ID,
-	PB_3_FRU_ID,		
+	PB_3_FRU_ID,				
 	FB_1_FRU_ID,
 	FB_2_FRU_ID,
 	FB_3_FRU_ID,
@@ -40,17 +44,14 @@ enum FRU_ID {
 	FB_11_FRU_ID,
 	FB_12_FRU_ID,
 	FB_13_FRU_ID,
-	FB_14_FRU_ID,
+	FB_14_FRU_ID,	
 	MAX_FRU_ID,
 };
 
-
-typedef struct _modbus_fru_cfg {
+typedef struct _fru_modbus_addr_cfg {
 	uint8_t fru_id;
-	uint8_t field_size;	
-	uint16_t field_offset;
 	uint16_t field_addr;	
-} modbus_fru_cfg;
+} fru_modbus_addr_cfg;
 
 
 #define FRU_CFG_NUM MAX_FRU_ID
@@ -70,7 +71,4 @@ typedef struct _modbus_fru_cfg {
 #define PB_MUX_ADDR 0xE8
 #define SB_MUX_ADDR 0xE8
 
-uint8_t modbus_read_fruid_data(uint16_t *data, uint16_t addr, uint16_t reg_qty);
-uint8_t modbus_write_fruid_data(uint16_t *data, uint16_t addr, uint16_t reg_qty);
-uint8_t fru_field_datasize(uint16_t addr);
 #endif
