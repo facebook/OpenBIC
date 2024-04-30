@@ -189,8 +189,6 @@ uint8_t ina238_init(sensor_cfg *cfg)
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	
-
 	/* Write the calibration value */
 	// SHUNT_CAL = 819.2 x 10^6 x CURRENT_LSB x R_SHUNT
 	uint16_t shunt_cal = INTERNAL_FIXED_VALUE * (init_args->cur_lsb) * (init_args->r_shunt);
