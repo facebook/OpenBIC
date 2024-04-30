@@ -165,6 +165,9 @@ uint8_t ina238_init(sensor_cfg *cfg)
 
 	ina238_init_arg *init_args = (ina238_init_arg *)cfg->init_args;
 
+	if (init_args->is_init)
+		goto skip_init;
+
 	I2C_MSG msg = { 0 };
 	/* Configure the chip using default values */
 	if (init_args->adc_range) {
@@ -219,7 +222,9 @@ uint8_t ina238_init(sensor_cfg *cfg)
 		LOG_ERR("Failed to write the calibration value in INA238 ");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
+	init_args->is_init = true;
 
+skip_init:
 	cfg->read = ina238_read;
 	return SENSOR_INIT_SUCCESS;
 }
