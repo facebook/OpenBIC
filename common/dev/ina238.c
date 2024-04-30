@@ -81,8 +81,8 @@ uint8_t ina238_read(sensor_cfg *cfg, int *reading)
 		vshunt_val = (msg.data[0] << 8) | msg.data[1];
 		if (init_args->adc_range) 
 			val = twoscomplement_to_decimal(vshunt_val) * ADCRANGE_1_CONVERSION_FACTOR;
-		
-		val = twoscomplement_to_decimal(vshunt_val) * ADCRANGE_0_CONVERSION_FACTOR;
+		else
+			val = twoscomplement_to_decimal(vshunt_val) * ADCRANGE_0_CONVERSION_FACTOR;
 
 		break;
 	case INA238_VBUS_OFFSET:
@@ -179,7 +179,6 @@ uint8_t ina238_init(sensor_cfg *cfg)
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
 		}
 	}
-	
 
 	/* calculate Current_LSB */
 	//Current_LSB = Maximum Expected Current/(2^15)
