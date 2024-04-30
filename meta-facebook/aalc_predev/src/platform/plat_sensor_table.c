@@ -33,9 +33,6 @@
 
 LOG_MODULE_REGISTER(plat_sensor_table);
 
-static void load_hsc_sensor_table(void);
-static void load_temperature_sensor_table(void);
-
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
 	   access check, arg0, arg1, sample_count, cache, cache_status, mux_address, mux_offset,
@@ -772,68 +769,82 @@ void load_sensor_config(void)
 }
 
 void pal_extend_sensor_config()
-{
-	load_hsc_sensor_table();
-	load_temperature_sensor_table();
-}
+{	
+	uint8_t index = 0;
+	uint8_t sensor_count = 0;
+	uint8_t hsc_module = get_hsc_module();
 
-static void load_hsc_sensor_table()
-{
-	uint8_t module = get_hsc_module();
-
-	switch (module) {
+	switch (hsc_module) {
 	case HSC_MODULE_ADM1272:
-		memcpy(&sensor_config[sensor_config_count], adm1272_sensor_config_table,
-		       ARRAY_SIZE(adm1272_sensor_config_table) * sizeof(sensor_cfg));
-		sensor_config_count += ARRAY_SIZE(adm1272_sensor_config_table);
+		sensor_count = ARRAY_SIZE(adm1272_sensor_config_table);
+		for (index = 0; index < sensor_count; index++) 
+			add_sensor_config(adm1272_sensor_config_table[index]);
+
 		break;
 	case HSC_MODULE_XDP710:
-		memcpy(&sensor_config[sensor_config_count], xdp710_sensor_config_table,
-		       ARRAY_SIZE(xdp710_sensor_config_table) * sizeof(sensor_cfg));
-		sensor_config_count += ARRAY_SIZE(xdp710_sensor_config_table);
+		sensor_count = ARRAY_SIZE(xdp710_sensor_config_table);
+		for (index = 0; index < sensor_count; index++)
+			add_sensor_config(xdp710_sensor_config_table[index]);
+
 		break;
-	case HSC_MODULE_UNKNOWN:
 	default:
-		LOG_ERR("Unknown HSC type(%d), load HSC sensor table failed", module);
+		LOG_ERR("Unknown HSC type(%d), load HSC sensor table failed", hsc_module);
 		break;
 	}
-	return;
-}
-
-static void load_temperature_sensor_table()
-{
-	uint8_t module = get_temp_module();
-
-	switch (module) {
+	
+	uint8_t temp_module = get_temp_module();
+	switch (temp_module) {
 	case SB_TMP461:
-		memcpy(&sensor_config[sensor_config_count], tmp461_config_table,
-		       ARRAY_SIZE(tmp461_config_table) * sizeof(sensor_cfg));
-		sensor_config_count += ARRAY_SIZE(tmp461_config_table);
+		sensor_count = ARRAY_SIZE(tmp461_config_table);
+		for (index = 0; index < sensor_count; index++) 
+			add_sensor_config(tmp461_config_table[index]);
+
 		break;
 	case SB_NCT214:
-		memcpy(&sensor_config[sensor_config_count], nct214_config_table,
-		       ARRAY_SIZE(nct214_config_table) * sizeof(sensor_cfg));
-		sensor_config_count += ARRAY_SIZE(nct214_config_table);
+		sensor_count = ARRAY_SIZE(nct214_config_table);
+		for (index = 0; index < sensor_count; index++) 
+			add_sensor_config(nct214_config_table[index]);
+
 		break;
-	case TEMP_MODULE_UNKNOWN:
 	default:
 		LOG_ERR("Unknown temperature type(%d), load temperature sensor table failed",
-			module);
+			temp_module);
 		break;
 	}
-	return;
 }
 
 uint8_t pal_get_extend_sensor_config()
 {
 	uint8_t extend_sensor_config_size = 0;
-	uint8_t stage = get_hsc_module();
-	switch (stage) {
+	uint8_t hsc_module = get_hsc_module();
+	switch (hsc_module) {
 	case HSC_MODULE_ADM1272:
 		extend_sensor_config_size += ARRAY_SIZE(adm1272_sensor_config_table);
+
+		break;
+	case HSC_MODULE_XDP710:
+		extend_sensor_config_size += ARRAY_SIZE(xdp710_sensor_config_table);
+
+		break;
 	default:
-		LOG_ERR("Unsupport stage: (%d).", stage);
+		LOG_ERR("Unsupport hsc module: (%d).", hsc_module);
 		break;
 	}
+
+	uint8_t temp_module = get_temp_module();
+	switch (temp_module) {
+	case SB_TMP461:
+		extend_sensor_config_size += ARRAY_SIZE(tmp461_config_table);
+
+		break;
+	case SB_NCT214:
+		extend_sensor_config_size += ARRAY_SIZE(nct214_config_table);
+
+		break;
+	default:
+		LOG_ERR("Unsupport temperature module: (%d),", temp_module);
+		break;
+	}
+
 	return extend_sensor_config_size;
 }
