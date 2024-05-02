@@ -764,6 +764,7 @@ sensor_cfg xdp710_sensor_config_table[] = {
 	  &bus_1_PCA9546A_configs[0], post_PCA9546A_read, NULL, &adm1272_init_args[1] },
 };
 
+// total config size = plat_sensor_config + sensor(main/second sensor) config table
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) +
 			       ARRAY_SIZE(adm1272_sensor_config_table) +
 			       ARRAY_SIZE(tmp461_config_table);
