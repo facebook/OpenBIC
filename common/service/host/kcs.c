@@ -199,12 +199,14 @@ static int send_bios_version_to_bmc(char *bios_version, uint8_t bios_version_len
 	uint8_t rbuf[resp_len];
 
 	if (!mctp_pldm_read(find_mctp_by_bus(bmc_bus), &msg, rbuf, resp_len)) {
+		SAFE_FREE(ptr);
 		LOG_ERR("mctp_pldm_read fail");
 		return 2;
 	}
 
 	struct pldm_oem_write_file_io_resp *resp = (struct pldm_oem_write_file_io_resp *)rbuf;
 	if (resp->completion_code != PLDM_SUCCESS) {
+		SAFE_FREE(ptr);
 		LOG_ERR("Check reponse completion code fail %x", resp->completion_code);
 		return resp->completion_code;
 	}
