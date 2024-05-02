@@ -760,11 +760,13 @@ sensor_cfg xdp710_sensor_config_table[] = {
 	  &bus_1_PCA9546A_configs[0], post_PCA9546A_read, NULL, &adm1272_init_args[1] },
 };
 
-const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
+const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) + ARRAY_SIZE(adm1272_sensor_config_table) + ARRAY_SIZE(tmp461_config_table);
+
 void load_sensor_config(void)
 {
 	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
 	sensor_config_count = ARRAY_SIZE(plat_sensor_config);
+
 	pal_extend_sensor_config();
 }
 
@@ -776,13 +778,11 @@ void pal_extend_sensor_config()
 
 	switch (hsc_module) {
 	case HSC_MODULE_ADM1272:
-		sensor_count = ARRAY_SIZE(adm1272_sensor_config_table);
 		for (index = 0; index < sensor_count; index++)
 			add_sensor_config(adm1272_sensor_config_table[index]);
 
 		break;
 	case HSC_MODULE_XDP710:
-		sensor_count = ARRAY_SIZE(xdp710_sensor_config_table);
 		for (index = 0; index < sensor_count; index++)
 			add_sensor_config(xdp710_sensor_config_table[index]);
 
@@ -795,13 +795,15 @@ void pal_extend_sensor_config()
 	uint8_t temp_module = get_temp_module();
 	switch (temp_module) {
 	case SB_TMP461:
-		sensor_count = ARRAY_SIZE(tmp461_config_table);
-		for (index = 0; index < sensor_count; index++)
+		for (index = 0; index < sensor_count; index++){
+			LOG_WRN("SB_TMP461 start");
 			add_sensor_config(tmp461_config_table[index]);
+			LOG_WRN("SB_TMP461 ok ,%d", index);
+		}
+			
 
 		break;
 	case SB_NCT214:
-		sensor_count = ARRAY_SIZE(nct214_config_table);
 		for (index = 0; index < sensor_count; index++)
 			add_sensor_config(nct214_config_table[index]);
 
@@ -811,40 +813,4 @@ void pal_extend_sensor_config()
 			temp_module);
 		break;
 	}
-}
-
-uint8_t pal_get_extend_sensor_config()
-{
-	uint8_t extend_sensor_config_size = 0;
-	uint8_t hsc_module = get_hsc_module();
-	switch (hsc_module) {
-	case HSC_MODULE_ADM1272:
-		extend_sensor_config_size += ARRAY_SIZE(adm1272_sensor_config_table);
-
-		break;
-	case HSC_MODULE_XDP710:
-		extend_sensor_config_size += ARRAY_SIZE(xdp710_sensor_config_table);
-
-		break;
-	default:
-		LOG_ERR("Unsupport hsc module: (%d).", hsc_module);
-		break;
-	}
-
-	uint8_t temp_module = get_temp_module();
-	switch (temp_module) {
-	case SB_TMP461:
-		extend_sensor_config_size += ARRAY_SIZE(tmp461_config_table);
-
-		break;
-	case SB_NCT214:
-		extend_sensor_config_size += ARRAY_SIZE(nct214_config_table);
-
-		break;
-	default:
-		LOG_ERR("Unsupport temperature module: (%d),", temp_module);
-		break;
-	}
-
-	return extend_sensor_config_size;
 }
