@@ -793,5 +793,6 @@ void plat_fill_monitor_sensor_table();
 sensor_cfg *find_sensor_cfg_via_sensor_num(sensor_cfg *cfg_table, uint8_t cfg_count,
 					   uint8_t sensor_num);
 bool get_sensor_init_done_flag();
+sensor_cfg *get_common_sensor_cfg_info(uint8_t sensor_num);
 
 #endif

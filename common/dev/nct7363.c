@@ -83,7 +83,7 @@ bool nct7363_set_threshold(sensor_cfg *cfg, uint16_t threshold)
 	return true;
 }
 
-bool nct7363_set_duty(sensor_cfg *cfg, uint8_t duty)
+bool nct7363_set_duty(sensor_cfg *cfg, uint8_t duty, uint8_t port)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 
@@ -410,7 +410,7 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
 
 		/*  set init fan duty */
-		bool set_duty = nct7363_set_duty(cfg, 40); // 40% duty for init
+		bool set_duty = nct7363_set_duty(cfg, 40, i); // 40% duty for init
 		if (!set_duty)
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
