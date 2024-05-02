@@ -758,32 +758,29 @@ sensor_cfg xdp710_sensor_config_table[] = {
 	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
 	  &bus_1_PCA9546A_configs[0], post_PCA9546A_read, NULL, &adm1272_init_args[1] },
+	{ SENSOR_NUM_FB_2_HSC_TEMP_C, sensor_dev_adm1272, I2C_BUS1, FB_ADM1272_ADDR,
+	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
+	  &bus_1_PCA9546A_configs[0], post_PCA9546A_read, NULL, &adm1272_init_args[1] },
 };
 
-const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) + ARRAY_SIZE(adm1272_sensor_config_table) + ARRAY_SIZE(tmp461_config_table);
+const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) +
+			       ARRAY_SIZE(adm1272_sensor_config_table) +
+			       ARRAY_SIZE(tmp461_config_table);
 
-void load_sensor_config(void)
-{
-	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
-	sensor_config_count = ARRAY_SIZE(plat_sensor_config);
-
-	pal_extend_sensor_config();
-}
-
-void pal_extend_sensor_config()
+void load_hsc_sensor_config()
 {
 	uint8_t index = 0;
-	uint8_t sensor_count = 0;
 	uint8_t hsc_module = get_hsc_module();
 
 	switch (hsc_module) {
 	case HSC_MODULE_ADM1272:
-		for (index = 0; index < sensor_count; index++)
+		for (index = 0; index < ARRAY_SIZE(adm1272_sensor_config_table); index++)
 			add_sensor_config(adm1272_sensor_config_table[index]);
 
 		break;
 	case HSC_MODULE_XDP710:
-		for (index = 0; index < sensor_count; index++)
+		for (index = 0; index < ARRAY_SIZE(xdp710_sensor_config_table); index++)
 			add_sensor_config(xdp710_sensor_config_table[index]);
 
 		break;
@@ -791,20 +788,21 @@ void pal_extend_sensor_config()
 		LOG_ERR("Unknown HSC type(%d), load HSC sensor table failed", hsc_module);
 		break;
 	}
+}
 
+void load_sb_temp_sensor_config()
+{
+	uint8_t index = 0;
 	uint8_t temp_module = get_temp_module();
+
 	switch (temp_module) {
 	case SB_TMP461:
-		for (index = 0; index < sensor_count; index++){
-			LOG_WRN("SB_TMP461 start");
+		for (index = 0; index < ARRAY_SIZE(tmp461_config_table); index++)
 			add_sensor_config(tmp461_config_table[index]);
-			LOG_WRN("SB_TMP461 ok ,%d", index);
-		}
-			
 
 		break;
 	case SB_NCT214:
-		for (index = 0; index < sensor_count; index++)
+		for (index = 0; index < ARRAY_SIZE(nct214_config_table); index++)
 			add_sensor_config(nct214_config_table[index]);
 
 		break;
@@ -813,4 +811,13 @@ void pal_extend_sensor_config()
 			temp_module);
 		break;
 	}
+}
+
+void load_sensor_config(void)
+{
+	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
+	sensor_config_count = ARRAY_SIZE(plat_sensor_config);
+
+	load_hsc_sensor_config();
+	load_sb_temp_sensor_config();
 }
