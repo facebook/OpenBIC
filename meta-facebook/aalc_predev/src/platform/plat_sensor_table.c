@@ -758,10 +758,6 @@ sensor_cfg xdp710_sensor_config_table[] = {
 	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
 	  &bus_1_PCA9546A_configs[0], post_PCA9546A_read, NULL, &adm1272_init_args[1] },
-	{ SENSOR_NUM_FB_2_HSC_TEMP_C, sensor_dev_adm1272, I2C_BUS1, FB_ADM1272_ADDR,
-	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
-	  &bus_1_PCA9546A_configs[0], post_PCA9546A_read, NULL, &adm1272_init_args[1] },
 };
 
 // total config size = plat_sensor_config + sensor(main/second sensor) config table
