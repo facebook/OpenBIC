@@ -15,6 +15,9 @@
  */
 #ifndef NCT7363_H
 #define NCT7363_H
+
+#include "sensor.h"
+
 #define NCT7363_REG_DID 0xFD
 #define NCT7363_ID_MASK 0xFFFFFF
 #define NCT7363_ID (0x491988 & NCT7363_ID_MASK) /* Chip ID */
@@ -104,7 +107,4 @@ enum nct7363_pin_type {
 enum nct7363_gpio_type { NCT7363_GPIO_OUTPUT, NCT7363_GPIO_INPUT };
 
 enum nct7363_wdt_sec { WDT_15_SEC, WDT_3_75_SEC, WDT_7_5_SEC, WDT_30_SEC, WDT_DISABLE, WDT_ERROR };
-
-bool nct7363_set_duty(sensor_cfg *cfg, uint8_t duty);
-
 #endif
