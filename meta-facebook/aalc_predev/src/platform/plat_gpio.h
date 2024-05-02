@@ -150,8 +150,8 @@ uint16_t plat_gpio_cfg_size(void);
 	gpio_name_to_num(Reserve_GPION1) \
 	gpio_name_to_num(Reserve_GPION2) \
 	gpio_name_to_num(Reserve_GPION3) \
-	gpio_name_to_num(USB_DEBUG_RST_BTN_R_N) \
-	gpio_name_to_num(USB_DEBUG_PWR_BTN_R_N) \
+	gpio_name_to_num(Reserve_GPION4) \
+	gpio_name_to_num(SMB_FRONT_IO_TMP_ALERT_N) \
 	gpio_name_to_num(P12V_BRICK_ALERT_LF_R) \
 	gpio_name_to_num(P48V_BRI_STBY_FAULT)
 #define name_gpioO	\
@@ -171,7 +171,7 @@ uint16_t plat_gpio_cfg_size(void);
 	gpio_name_to_num(Reserve_GPIOP4) \
 	gpio_name_to_num(Reserve_GPIOP5) \
 	gpio_name_to_num(BIC_RCVR_BTN_N) \
-	gpio_name_to_num(Reserve_GPIOP7)
+	gpio_name_to_num(FM_BIC_READY_R_N)
 // GPIOQ5 hardware not define
 #define name_gpioQ	\
 	gpio_name_to_num(BIC_RPU_READY3) \
@@ -181,7 +181,7 @@ uint16_t plat_gpio_cfg_size(void);
 	gpio_name_to_num(RJ45_CONN3_GPIO2_R) \
 	gpio_name_to_num(Reserve_GPIOQ5) \
 	gpio_name_to_num(Reserve_GPIOQ6) \
-	gpio_name_to_num(FM_BIC_READY_R_N)
+	gpio_name_to_num(Reserve_GPIOQ7)
 #define name_gpioR	\
 	gpio_name_to_num(Reserve_GPIOR0) \
 	gpio_name_to_num(Reserve_GPIOR1) \
