@@ -19,7 +19,6 @@
 
 #include <stdint.h>
 #include <pmbus.h>
-#include "sensor.h"
 
 /* define sensors address(7 bit) */
 #define BB_TMP75_ADDR (0x9E >> 1)
@@ -220,6 +219,5 @@
 #define SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_3 0xA6
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
-sensor_cfg *get_common_sensor_cfg_info(uint8_t sensor_num);
 
 #endif

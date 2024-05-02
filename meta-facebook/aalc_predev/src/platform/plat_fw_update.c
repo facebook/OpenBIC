@@ -6,10 +6,6 @@
 #include <logging/log.h>
 #include "util_spi.h"
 #include "libutil.h"
-#include "sensor.h"
-#include "nct7363.h"
-#include "plat_sensor_table.h"
-#include "plat_fw_update.h"
 
 LOG_MODULE_REGISTER(plat_fw_update);
 
@@ -40,45 +36,4 @@ uint8_t modbus_fw_download(modbus_command_mapping *cmd)
 
 	return fw_update(offset, msg_len, (uint8_t *)&cmd->data[UPADTE_FW_DATA_LENGTH_MIN], flag,
 			 DEVSPI_FMC_CS0);
-}
-
-uint8_t all_fan_full_duty()
-{
-	const uint8_t fb_fan_pwm_sensors[14] = {
-		SENSOR_NUM_FB_1_FAN_TACH_RPM,  SENSOR_NUM_FB_2_FAN_TACH_RPM,
-		SENSOR_NUM_FB_3_FAN_TACH_RPM,  SENSOR_NUM_FB_4_FAN_TACH_RPM,
-		SENSOR_NUM_FB_5_FAN_TACH_RPM,  SENSOR_NUM_FB_6_FAN_TACH_RPM,
-		SENSOR_NUM_FB_7_FAN_TACH_RPM,  SENSOR_NUM_FB_8_FAN_TACH_RPM,
-		SENSOR_NUM_FB_9_FAN_TACH_RPM,  SENSOR_NUM_FB_10_FAN_TACH_RPM,
-		SENSOR_NUM_FB_11_FAN_TACH_RPM, SENSOR_NUM_FB_12_FAN_TACH_RPM,
-		SENSOR_NUM_FB_13_FAN_TACH_RPM, SENSOR_NUM_FB_14_FAN_TACH_RPM,
-	};
-
-	const uint8_t pb_fan_pwm_sensors[3] = {
-		SENSOR_NUM_PB_1_FAN_1_TACH_RPM,
-		SENSOR_NUM_PB_2_FAN_1_TACH_RPM,
-		SENSOR_NUM_PB_3_FAN_1_TACH_RPM,
-	};
-
-	for (int j = 0; j < ARRAY_SIZE(fb_fan_pwm_sensors); j++) {
-		sensor_cfg *fan_cfg = get_common_sensor_cfg_info(fb_fan_pwm_sensors[j]);
-		if (fan_cfg == NULL)
-			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-
-        fan_cfg->port = NCT7363_17_PORT;//PWM write port
-		if (nct7363_set_duty(fan_cfg, 100))
-			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-	}
-
-	for (int j = 0; j < ARRAY_SIZE(pb_fan_pwm_sensors); j++) {
-		sensor_cfg *fan_cfg = get_common_sensor_cfg_info(pb_fan_pwm_sensors[j]);
-		if (fan_cfg == NULL)
-			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-
-        fan_cfg->port = NCT7363_12_PORT;//PWM write port
-		if (nct7363_set_duty(fan_cfg, 100))
-			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-	}    
-
-	return MODBUS_EXC_NONE;
 }

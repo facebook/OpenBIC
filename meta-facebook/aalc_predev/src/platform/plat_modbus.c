@@ -35,6 +35,7 @@
 #include <modbus_internal.h>
 #include "plat_modbus_i2c_master_w_r.h"
 #include "libutil.h"
+#include "plat_pwm.h"
 
 LOG_MODULE_REGISTER(plat_modbus);
 
@@ -526,8 +527,10 @@ static int coil_wr(uint16_t addr, bool state)
 		return MODBUS_EXC_NONE;
 	} else if (addr == MODBUS_RPU_RUN_ADDR) { // FW update: Set RPU Stop/Run
 		if (!state) { //Set RPU Stop
+			if (ctl_all_pwm_dev(100))
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+				
 			disable_sensor_poll();
-			return all_fan_full_duty();
 		}
 		// return success for Setting RPU RUN
 		return MODBUS_EXC_NONE;
