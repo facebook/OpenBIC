@@ -827,12 +827,16 @@ uint8_t plat_pldm_query_downstream_identifiers(const uint8_t *buf, uint16_t len,
 	uint8_t ret = PLDM_ERROR;
 	uint8_t index = 0;
 	uint8_t length = 0;
-	uint8_t *end_of_id_ptr =
-		(uint8_t *)resp + sizeof(struct pldm_query_downstream_identifier_resp);
+	uint8_t *end_of_id_ptr = (uint8_t *)resp +
+				 sizeof(struct pldm_query_downstream_identifier_resp) +
+				 sizeof(struct pldm_downstream_device);
 	struct pldm_query_downstream_identifier_req *req_p =
 		(struct pldm_query_downstream_identifier_req *)buf;
 	struct pldm_query_downstream_identifier_resp *resp_p =
 		(struct pldm_query_downstream_identifier_resp *)resp;
+	struct pldm_downstream_device *downstream_device =
+		(struct pldm_downstream_device
+			 *)(resp + sizeof(struct pldm_query_downstream_identifier_resp));
 
 	resp_p->completion_code = PLDM_ERROR;
 	switch (req_p->transferoperationflag) {
@@ -859,7 +863,7 @@ uint8_t plat_pldm_query_downstream_identifiers(const uint8_t *buf, uint16_t len,
 
 	resp_p->numbwerofdownstreamdevice =
 		downstream_table[req_p->datatransferhandle].descriptor_count;
-	resp_p->downstreamdeviceindex = req_p->datatransferhandle;
+	downstream_device->downstreamdeviceindex = req_p->datatransferhandle;
 
 	uint16_t total_size_of_descriptor = 0;
 	struct pldm_descriptor_string *descriptor_table =
@@ -878,10 +882,11 @@ uint8_t plat_pldm_query_downstream_identifiers(const uint8_t *buf, uint16_t len,
 	}
 
 	resp_p->downstreamdevicelength = total_size_of_descriptor + sizeof(uint16_t) +
-					 sizeof(resp_p->downstreamdeviceindex) +
-					 sizeof(resp_p->downstreamdescriptorcount);
-	resp_p->downstreamdescriptorcount = total_size_of_descriptor;
-	*resp_len = sizeof(struct pldm_query_downstream_identifier_resp) + total_size_of_descriptor;
+					 sizeof(downstream_device->downstreamdeviceindex) +
+					 sizeof(downstream_device->downstreamdescriptorcount);
+	downstream_device->downstreamdescriptorcount = total_size_of_descriptor;
+	*resp_len = sizeof(struct pldm_query_downstream_identifier_resp) +
+		    sizeof(struct pldm_downstream_device) + total_size_of_descriptor;
 	resp_p->completion_code = PLDM_SUCCESS;
 	return PLDM_SUCCESS;
 }
