@@ -20,6 +20,7 @@
 #define BMC_USB_PORT "CDC_ACM_0"
 
 #define ENABLE_MCTP_I3C
+#define MCTP_I3C_PEC_ENABLE 1
 
 #define ENABLE_PLDM
 #define ENABLE_PLDM_SENSOR
