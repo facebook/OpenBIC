@@ -22,6 +22,10 @@
 
 #define RETIMER_UNKNOWN_VERSION -1
 #define RETIMER_VERSION_MAX_LENGTH 5
+#define CLOCK_BUFFER_ADDR 0x6B
+#define CLOCK_BUFFER_REG_LOC 0x01
+#define CLOCK_BUFFER_BYPASS_DATA_1 0x08
+#define CLOCK_BUFFER_BYPASS_DATA_2 0x2E
 
 enum CARD_POSITION {
 	CARD_POSITION_1OU,
@@ -76,5 +80,6 @@ void init_board_revision();
 void init_i3c_hub_type();
 uint32_t get_pcie_retimer_version();
 void cache_pcie_retimer_version();
+void set_clock_buffer_bypass_mode();
 
 #endif

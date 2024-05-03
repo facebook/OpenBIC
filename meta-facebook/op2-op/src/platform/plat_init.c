@@ -105,6 +105,7 @@ DEVICE_DEFINE(PRE_DEF_PROJ_GPIO, "PRE_DEF_PROJ_GPIO_NAME", &gpio_init, NULL, NUL
 
 void pal_set_sys_status()
 {
+	set_clock_buffer_bypass_mode();
 	init_sequence_status();
 	set_DC_status(FM_EXP_MAIN_PWR_EN);
 	control_power_sequence();
