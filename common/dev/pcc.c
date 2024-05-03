@@ -253,6 +253,7 @@ bool pldm_send_post_code_to_bmc(uint16_t send_index)
 	uint8_t rbuf[resp_len];
 
 	if (!mctp_pldm_read(find_mctp_by_bus(bmc_bus), &msg, rbuf, resp_len)) {
+		SAFE_FREE(ptr);
 		LOG_ERR("mctp_pldm_read fail");
 		return false;
 	}
@@ -291,6 +292,7 @@ bool ipmi_send_post_code_to_bmc(uint16_t send_index)
 	msg->data[7] = (pcc_read_buffer[send_index] >> 24) & 0xFF;
 	ipmb_error status = ipmb_read(msg, IPMB_inf_index_map[msg->InF_target]);
 	if (status != IPMB_ERROR_SUCCESS) {
+		SAFE_FREE(msg);
 		LOG_ERR("Failed to send 4-byte post code to BMC, status %d.", status);
 		return false;
 	}

@@ -44,8 +44,8 @@ typedef enum pldm_platform_monitor_commands {
 /* Define size of response */
 #define PLDM_GET_STATE_EFFECTER_RESP_NO_STATE_FIELD_BYTES 2
 
-/* The maximum event data size of event type currently support */
-#define PLDM_MONITOR_EVENT_DATA_SIZE_MAX 7
+/* The maximum event data size of event type currently support, ipmi event 16 bytes */
+#define PLDM_MONITOR_EVENT_DATA_SIZE_MAX 16
 /* The default maximum event message number in the queue */
 #define PLDM_MONITOR_EVENT_QUEUE_MSG_NUM_MAX_DEFAULT 10
 #define PLDM_MONITOR_SENSOR_SUPPORT_MAX 0xFF
@@ -277,7 +277,7 @@ struct pldm_platform_event_message_req {
 	uint8_t format_version;
 	uint8_t tid;
 	uint8_t event_class;
-	uint8_t event_data[1];
+	uint8_t event_data[PLDM_MONITOR_EVENT_DATA_SIZE_MAX];
 } __attribute__((packed));
 
 struct pldm_platform_event_message_resp {

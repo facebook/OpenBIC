@@ -346,7 +346,13 @@ uint8_t pldm_platform_event_message_req(void *mctp_inst, mctp_ext_params ext_par
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(event_data, PLDM_ERROR_INVALID_DATA);
 
-	uint8_t req_len = sizeof(struct pldm_platform_event_message_req) + event_data_length - 1;
+	if (event_data_length > PLDM_MONITOR_EVENT_DATA_SIZE_MAX) {
+		LOG_ERR("Exceed max event data size, (%d)", event_data_length);
+		return PLDM_ERROR_INVALID_LENGTH;
+	}
+
+	uint8_t req_len = sizeof(struct pldm_platform_event_message_req) + event_data_length -
+			  PLDM_MONITOR_EVENT_DATA_SIZE_MAX;
 	uint8_t resp_len = sizeof(struct pldm_platform_event_message_resp);
 	uint8_t rbuf[resp_len];
 
