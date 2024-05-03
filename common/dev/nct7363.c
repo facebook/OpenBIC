@@ -188,6 +188,7 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+	nct7363_init_arg *nct7363_init_arg_data = (nct7363_init_arg *)cfg->init_args;
 	if (cfg->num > SENSOR_NUM_MAX) {
 		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
@@ -201,7 +202,7 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 	int gpio_result = 0;
 	uint8_t offset = cfg->offset;
 	uint8_t port_offset = cfg->arg0;
-	uint8_t fan_poles = cfg->arg1;
+	uint8_t fan_poles = nct7363_init_arg_data->fan_poles;
 	uint8_t fan_count_high_byte_offset = 0;
 	uint8_t fan_count_low_byte_offset = 0;
 	if (port_offset > NCT7363_8_PORT) {
@@ -423,8 +424,6 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 			}
 		}
 	}
-
-	cfg->arg1 = nct7363_init_arg_data->fan_poles;
 
 	/* enable PWM */
 	if (!nct7363_write(cfg, NCT7363_PWM_CTRL_OUTPUT_0_TO_7_REG, val_pwm_ctrl_0_7))
