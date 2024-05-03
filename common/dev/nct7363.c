@@ -109,8 +109,6 @@ bool nct7363_set_duty(sensor_cfg *cfg, uint8_t duty, uint8_t port)
 	msg.tx_len = 2;
 	msg.data[0] = duty_offset;
 	msg.data[1] = (uint8_t)duty_in_255;
-	LOG_WRN("duty offset: 0x%x", duty_offset);
-	LOG_WRN("duty value: 0x%x", (uint8_t)duty_in_255);
 	if (i2c_master_write(&msg, retry) != 0) {
 		LOG_ERR("set NCT7363_FAN_CTRL_SET_DUTY fail");
 		return false;
@@ -407,8 +405,6 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 	for (int i = 0; i < NCT7363_PIN_NUMBER; i++) {
 		/* set init threshold  */
 		if (nct7363_init_arg_data->pin_type[i] == NCT7363_PIN_TPYE_FANIN) {
-			LOG_WRN("set threshold, ping port num=  %d", i);
-			LOG_WRN("threshold = 0x%x", nct7363_init_arg_data->threshold[i]);
 			bool set_threshold = nct7363_set_threshold(cfg, nct7363_init_arg_data->threshold[i], i);
 			if (!set_threshold){
 				LOG_ERR("set init threshold error");
