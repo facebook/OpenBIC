@@ -36,25 +36,26 @@ LOG_MODULE_REGISTER(dev_nct7363);
 #define NCT7363_FAN_LSB_MASK BIT_MASK(5)
 #define MAX_THRESHOLD_VAL 0x1FFF
 
-bool nct7363_set_threshold(sensor_cfg *cfg, uint16_t threshold, uint8_t port)
+bool nct7363_set_threshold(sensor_cfg *cfg, uint16_t threshold)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 
-	if(threshold > MAX_THRESHOLD_VAL) {
+	if (threshold > MAX_THRESHOLD_VAL) {
 		LOG_ERR("Threshold value is too large");
 		return false;
 	}
-	
+
 	I2C_MSG msg = { 0 };
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
 	uint8_t retry = 5;
-	uint8_t port_offset = port;
+	uint8_t port_offset = cfg->arg0;
 	uint8_t threshold_offset_high_byte = 0;
 	uint8_t threshold_offset_low_byte = 0;
-	uint8_t threshold_low_byte_value = threshold & NCT7363_FAN_LSB_MASK;// threshold data 4:0
+	uint8_t threshold_low_byte_value =
+		threshold & NCT7363_FAN_LSB_MASK; // threshold data 4:0, unit:RPM
 	uint8_t threshold_high_byte_value = threshold >> 5; // threshold data 12:5
-	
+
 	if (port_offset > NCT7363_8_PORT) {
 		// fanin8~15 = pwm/gpio0~7
 		threshold_offset_high_byte = NCT7363_FAN_COUNT_THRESHOLD_REG_HIGH_BYTE_BASE_OFFSET +
@@ -93,7 +94,7 @@ bool nct7363_set_duty(sensor_cfg *cfg, uint8_t duty, uint8_t port)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 
-	if(duty > 100 || duty < 0) {
+	if (duty > 100 || duty < 0) {
 		LOG_ERR("Set invalid duty: %d", duty);
 		return false;
 	}
@@ -178,8 +179,8 @@ bool nct7363_set_frequency(sensor_cfg *cfg, float frequency)
 
 	if (!nct7363_write(cfg, freq_offset, output_freq))
 		LOG_ERR("Set frequency error");
-		return false;
-		
+	return false;
+
 	return true;
 }
 
@@ -317,7 +318,7 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 }
 
 uint8_t nct7363_init(sensor_cfg *cfg)
-{	
+{
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
 
 	if (cfg->num > SENSOR_NUM_MAX) {
@@ -398,15 +399,16 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 			}
 
 			if (!nct7363_write(cfg, offset_pwm_freq, output_init_freq))
-				return SENSOR_INIT_UNSPECIFIED_ERROR;			
+				return SENSOR_INIT_UNSPECIFIED_ERROR;
 		}
 	}
 
 	for (int i = 0; i < NCT7363_PIN_NUMBER; i++) {
 		/* set init threshold  */
 		if (nct7363_init_arg_data->pin_type[i] == NCT7363_PIN_TPYE_FANIN) {
-			bool set_threshold = nct7363_set_threshold(cfg, nct7363_init_arg_data->threshold[i], i);
-			if (!set_threshold){
+			bool set_threshold =
+				nct7363_set_threshold(cfg, nct7363_init_arg_data->threshold[i]);
+			if (!set_threshold) {
 				LOG_ERR("set init threshold error");
 				return SENSOR_INIT_UNSPECIFIED_ERROR;
 			}
@@ -415,10 +417,10 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 		/*  set init fan duty */
 		if (nct7363_init_arg_data->pin_type[i] == NCT7363_PIN_TPYE_PWM) {
 			bool set_duty = nct7363_set_duty(cfg, 40, i); // 40% duty for init
-			if (!set_duty){
+			if (!set_duty) {
 				LOG_ERR("set init duty error");
 				return SENSOR_INIT_UNSPECIFIED_ERROR;
-			}			
+			}
 		}
 	}
 
