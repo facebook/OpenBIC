@@ -448,9 +448,9 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_FB_13_HUM_PCT_RH, 1, 0, 1 },
 	{ MODBUS_FB_14_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_FB_14_HUM_PCT_RH, 1, 0, 1 },
-	{ MODBUS_BPB_HEX_WATER_INLET_TEMP_C_ADDR, NULL, modbus_get_senser_reading,
-	  SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C, 1, 0, 1 },
+	// LEAKAGE
 	{ MODBUS_LEAKAGE_STATUS_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_SB_TTV_COOLANT_LEAKAGE_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
 	// PUMP SETTING
 	{ MODBUS_PUMP_SETTING_ADDR, modbus_pump_setting, NULL, 0, 0, 0, 1 },
 	//FW UPDATE
