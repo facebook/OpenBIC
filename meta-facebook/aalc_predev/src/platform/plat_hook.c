@@ -71,8 +71,9 @@ nct7363_init_arg nct7363_init_args[] = {
         .pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
         .wdt_cfg = WDT_7_5_SEC,
 		.fan_poles = 0,
-		.fan_frequency[NCT7363_17_PORT] = 5000, // for test
-		.threshold[NCT7363_15_PORT] = 50, //for test
+		// for test
+		.fan_frequency[NCT7363_17_PORT] = 5000, 
+		.threshold[NCT7363_15_PORT] = 50,
     },	
     // Management BD(no used)
     [1] = { 
