@@ -177,10 +177,11 @@ bool nct7363_set_frequency(sensor_cfg *cfg, float frequency)
 	if (!convert_result)
 		return false;
 
-	if (!nct7363_write(cfg, freq_offset, output_freq))
+	if (!nct7363_write(cfg, freq_offset, output_freq)){
 		LOG_ERR("Set frequency error");
-	return false;
-
+		return false;
+	}
+		
 	return true;
 }
 
