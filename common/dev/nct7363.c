@@ -52,8 +52,8 @@ bool nct7363_set_threshold(sensor_cfg *cfg, uint16_t threshold, uint8_t port)
 	uint8_t port_offset = port;
 	uint8_t threshold_offset_high_byte = 0;
 	uint8_t threshold_offset_low_byte = 0;
-	uint8_t threshold_low_byte_value = threshold & NCT7363_FAN_LSB_MASK;
-	uint8_t threshold_high_byte_value = threshold >> 5;
+	uint8_t threshold_low_byte_value = threshold & NCT7363_FAN_LSB_MASK;// threshold data 4:0
+	uint8_t threshold_high_byte_value = threshold >> 5; // threshold data 12:5
 	
 	if (port_offset > NCT7363_8_PORT) {
 		// fanin8~15 = pwm/gpio0~7
