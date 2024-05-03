@@ -47,6 +47,7 @@ static uint16_t twoscomplement_to_decimal(uint16_t twoscomplement_val)
 
 uint8_t ina238_read(sensor_cfg *cfg, int *reading)
 {
+	LOG_WRN("ina238 read");
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_INIT_UNSPECIFIED_ERROR);
@@ -155,7 +156,8 @@ uint8_t ina238_read(sensor_cfg *cfg, int *reading)
 }
 
 uint8_t ina238_init(sensor_cfg *cfg)
-{
+{	
+	LOG_WRN("ina238 init");
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_INIT_UNSPECIFIED_ERROR);
 
@@ -169,16 +171,30 @@ uint8_t ina238_init(sensor_cfg *cfg)
 		goto skip_init;
 
 	I2C_MSG msg = { 0 };
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
 	/* Configure the chip using default values */
 	if (init_args->adc_range) {
-		msg.bus = cfg->port;
-		msg.target_addr = cfg->target_addr;
 		msg.tx_len = 3;
 		msg.data[0] = INA238_CFG_OFFSET;
 		msg.data[1] = 0x00;
 		msg.data[2] = ADCRANGE_SET_TO_1;
 		if (i2c_master_write(&msg, I2C_RETRY)) {
 			LOG_ERR("Failed to init INA238 ");
+			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		}
+	}
+
+	/* enable alert latch */
+	if(init_args->alert_latch) {
+		uint16_t alert_latch_val = 0x0001; // default value
+		WRITE_BIT(alert_latch_val, 15, 1);
+		msg.tx_len = 3;
+		msg.data[0] = INA238_DIAG_ALRT_OFFSET;
+		msg.data[1] = alert_latch_val >> 8;
+		msg.data[2] = alert_latch_val & BIT_MASK(8);
+		if (i2c_master_write(&msg, I2C_RETRY)) {
+			LOG_ERR("Failed to enable alert latch in INA238 ");
 			return SENSOR_INIT_UNSPECIFIED_ERROR;
 		}
 	}
@@ -195,15 +211,6 @@ uint8_t ina238_init(sensor_cfg *cfg)
 	/* Write the calibration value */
 	// SHUNT_CAL = 819.2 x 10^6 x CURRENT_LSB x R_SHUNT
 	uint16_t shunt_cal = INTERNAL_FIXED_VALUE * (init_args->cur_lsb) * (init_args->r_shunt);
-
-	// Read conf back
-	msg.tx_len = 1;
-	msg.rx_len = 2;
-	msg.data[0] = INA238_CFG_OFFSET;
-	if (i2c_master_read(&msg, I2C_RETRY)) {
-		LOG_ERR("Failed to read configuration from INA238 when reading shunt voltage");
-		return SENSOR_FAIL_TO_ACCESS;
-	}
 
 	// set conversion factor based on ADCRANGE setting
 	if (init_args->adc_range)
@@ -222,6 +229,7 @@ uint8_t ina238_init(sensor_cfg *cfg)
 		LOG_ERR("Failed to write the calibration value in INA238 ");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
+
 	init_args->is_init = true;
 
 skip_init:

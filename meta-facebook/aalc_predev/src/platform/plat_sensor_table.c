@@ -28,6 +28,7 @@
 #include "hdc1080.h"
 #include "nct7363.h"
 #include "nct214.h"
+#include "ina238.h"
 #include "ast_tach.h"
 #include <logging/log.h>
 
@@ -37,10 +38,18 @@ sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
 	   access check, arg0, arg1, sample_count, cache, cache_status, mux_address, mux_offset,
 	   pre_sensor_read_fn, pre_sensor_read_args, post_sensor_read_fn, post_sensor_read_args  */
+	// test
+	{ SENSOR_NUM_FB_1_FAN_TACH_RPM, sensor_dev_ina238, I2C_BUS1, FB_NCT7363_ADDR,
+	  INA238_VSHUNT_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT,
+	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, 0,
+	  0, 0, NULL, &ina238_init_args[0] },
+	/*
 	{ SENSOR_NUM_FB_1_FAN_TACH_RPM, sensor_dev_nct7363, I2C_BUS1, FB_NCT7363_ADDR,
 	  NCT7363_FAN_SPEED_OFFSET, stby_access, NCT7363_15_PORT, 0, SAMPLE_COUNT_DEFAULT,
 	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
 	  &bus_1_PCA9546A_configs[0], post_PCA9546A_read, NULL, &nct7363_init_args[0] },
+	*/
+	
 	{ SENSOR_NUM_FB_2_FAN_TACH_RPM, sensor_dev_nct7363, I2C_BUS1, FB_NCT7363_ADDR,
 	  NCT7363_FAN_SPEED_OFFSET, stby_access, NCT7363_15_PORT, 0, SAMPLE_COUNT_DEFAULT,
 	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
