@@ -750,11 +750,6 @@ typedef struct _xdp710_init_arg {
 	float r_sense;
 } xdp710_init_arg;
 
-typedef struct _nct214_init_arg {
-	bool is_init;
-	uint8_t configuration_register;
-} nct214_init_arg;
-
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;
 // Mapping sensor number to sensor config index

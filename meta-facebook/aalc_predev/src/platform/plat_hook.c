@@ -24,6 +24,7 @@
 #include "ina238.h"
 #include "plat_i2c.h"
 #include "sensor.h"
+#include "nct214.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -158,6 +159,12 @@ ina238_init_arg ina238_init_args[] = {
 		.adc_range = INA238_ADC_RANGE_PN_163, 
 		.alert_latch = INA238_ALERT_LATCH_ENABLE,
 		.i_max = 0.1,
+	},
+};
+
+nct214_init_arg nct214_init_args[] = {
+	[0] = { 
+		.is_init = false, 
 	},
 };
 

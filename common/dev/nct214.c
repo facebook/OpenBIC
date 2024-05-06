@@ -21,6 +21,9 @@
 #include <logging/log.h>
 #include "nct214.h"
 
+#define TEMPERATURE_RANGE 64
+#define TEMPERATURE_REMOTE_FRACTION 0.25
+
 LOG_MODULE_REGISTER(nct214);
 
 uint8_t nct214_read(sensor_cfg *cfg, int *reading)
@@ -38,56 +41,63 @@ uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
 	uint8_t offset = cfg->offset;
-	uint8_t local_temperature_offset = LOCAL_TEMP_REG;
-	uint8_t external_temperature_upper_byte_offset = EXTERNAL_TEMP_UPPER_BYTE_REG;
-	uint8_t external_temperature_lower_byte_offset = EXTERNAL_TEMP_LOWER_BYTE_REG;
 	sensor_val *sval = (sensor_val *)reading;
 	msg.rx_len = 1;
 	msg.tx_len = 1;
-	msg.data[0] = CONFIG_REG_READ;
+	msg.data[0] = CONFIG_READ_REG;
 	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("NCT214 read CONFIG_READ_REG reg error");
 		return SENSOR_FAIL_TO_ACCESS;
 	}
-	uint8_t temperature_range_select = (msg.data[0] >> 2) & 1;
+
+	uint8_t temperature_range_select = (msg.data[0] >> 2) & 1; // read bit2 to check temperature range
+
 	switch (offset) {
 	case NCT214_LOCAL_TEMPERATRUE:
 
 		msg.rx_len = 1;
 		msg.tx_len = 1;
-		msg.data[0] = local_temperature_offset;
+		msg.data[0] = LOCAL_TEMP_REG;
 		if (i2c_master_read(&msg, retry)) {
+			LOG_ERR("NCT214_LOCAL_TEMPERATRUE read reg error");
 			return SENSOR_FAIL_TO_ACCESS;
 		}
+
 		uint8_t val_local_temp = msg.data[0];
 		if (temperature_range_select == 1) {
-			sval->integer = (int16_t)((float)val_local_temp - (float)64);
+			sval->integer = (int16_t)((float)val_local_temp - (float)TEMPERATURE_RANGE);
 		} else {
 			sval->integer = (int16_t)val_local_temp;
 		}
+
 		sval->fraction = 0;
 		return SENSOR_READ_SUCCESS;
 
 	case NCT214_REMOTE_TEMPERATRUE:
 		msg.rx_len = 1;
 		msg.tx_len = 1;
-		msg.data[0] = external_temperature_lower_byte_offset;
+		msg.data[0] = EXTERNAL_TEMP_LOWER_BYTE_REG;
 		if (i2c_master_read(&msg, retry)) {
+			LOG_ERR("NCT214_REMOTE_TEMPERATRUE read lower byte reg error");
 			return SENSOR_FAIL_TO_ACCESS;
 		}
+
 		uint8_t val_external_temp_lower_byte = msg.data[0];
 		val_external_temp_lower_byte = val_external_temp_lower_byte >> 6; // get two MSBs
-		msg.data[0] = external_temperature_upper_byte_offset;
+		msg.data[0] = EXTERNAL_TEMP_UPPER_BYTE_REG;
 		if (i2c_master_read(&msg, retry)) {
+			LOG_ERR("NCT214_REMOTE_TEMPERATRUE read upper byte reg error");
 			return SENSOR_FAIL_TO_ACCESS;
 		}
-		uint8_t val_external_temp_upper_byte = msg.data[0];
 
+		uint8_t val_external_temp_upper_byte = msg.data[0];
 		if (temperature_range_select == 1) {
-			sval->integer = (int16_t)((float)val_external_temp_upper_byte - (float)64);
+			sval->integer = (int16_t)((float)val_external_temp_upper_byte - (float)TEMPERATURE_RANGE);
 		} else {
 			sval->integer = (int16_t)val_external_temp_upper_byte;
 		}
-		sval->fraction = (float)val_external_temp_lower_byte * 0.25;
+
+		sval->fraction = (float)val_external_temp_lower_byte * TEMPERATURE_REMOTE_FRACTION * 100; // sval->fraction is integer
 		return SENSOR_READ_SUCCESS;
 	default:
 		LOG_ERR("Unknown register offset(%d)", offset);
@@ -102,8 +112,14 @@ uint8_t nct214_init(sensor_cfg *cfg)
 	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
+
 	nct214_init_arg *nct214_init_arg_data = (nct214_init_arg *)cfg->init_args;
+	if (nct214_init_arg_data->is_init)
+		goto skip_init;
+
 	nct214_init_arg_data->is_init = true;
-	cfg->read = nct214_read;
-	return SENSOR_INIT_SUCCESS;
+
+	skip_init:
+		cfg->read = nct214_read;
+		return SENSOR_INIT_SUCCESS;
 }
