@@ -20,6 +20,16 @@
 #include <stdint.h>
 #include "sensor.h"
 
+typedef struct _ina238_init_arg {
+	bool is_init;
+	double r_shunt; /* Shunt resistor value. Unit: Ohm. */
+	double cur_lsb;
+	uint8_t adc_range; /* IN+ and IN–, 0:±163.84 mV, 1:±40.96 mV */
+	uint8_t alert_latch; /*alert_latch, 0:Disable, 1:Enable */
+	double i_max; /* Expected maximum current */
+	uint16_t conf;
+} ina238_init_arg;
+
 enum INA238_OFFSET {
 	INA238_CFG_OFFSET = 0x00,
 	INA238_ADC_CFG_OFFSET = 0x01,

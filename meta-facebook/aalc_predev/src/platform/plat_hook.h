@@ -21,6 +21,7 @@
 #include "sensor.h"
 #include "common_i2c_mux.h"
 #include "i2c-mux-pca954x.h"
+#include "ina238.h"
 
 /**************************************************************************************************
  * INIT ARGS
