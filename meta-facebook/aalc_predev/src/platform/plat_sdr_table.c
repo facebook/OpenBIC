@@ -9788,7 +9788,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"BPB_RACK_COOLANT_LEAKAGE_VOLT_V",
 	},
 	{ 
-		// SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_1
+		// SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_1_VOLT_V
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -9797,7 +9797,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_1, // sensor number
+		SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_1_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -9849,7 +9849,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"SB_TTV_COOLANT_LEAKAGE_1",
 	},
 	{ 
-		// SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_2
+		// SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_2_VOLT_V
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -9858,7 +9858,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_2, // sensor number
+		SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_2_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -9910,7 +9910,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"SB_TTV_COOLANT_LEAKAGE_2",
 	},
 	{ 
-		// SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_3
+		// SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_3_VOLT_V
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -9919,7 +9919,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_3, // sensor number
+		SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_3_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance

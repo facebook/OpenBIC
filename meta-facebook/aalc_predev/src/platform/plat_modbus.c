@@ -34,6 +34,8 @@
 #include "plat_fw_update.h"
 #include <modbus_internal.h>
 #include "plat_modbus_i2c_master_w_r.h"
+#include "libutil.h"
+#include "plat_pwm.h"
 
 LOG_MODULE_REGISTER(plat_modbus);
 
@@ -448,9 +450,9 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_FB_13_HUM_PCT_RH, 1, 0, 1 },
 	{ MODBUS_FB_14_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_FB_14_HUM_PCT_RH, 1, 0, 1 },
-	{ MODBUS_BPB_HEX_WATER_INLET_TEMP_C_ADDR, NULL, modbus_get_senser_reading,
-	  SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C, 1, 0, 1 },
+	// LEAKAGE
 	{ MODBUS_LEAKAGE_STATUS_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_SB_TTV_COOLANT_LEAKAGE_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
 	// PUMP SETTING
 	{ MODBUS_PUMP_SETTING_ADDR, modbus_pump_setting, NULL, 0, 0, 0, 1 },
 	//FW UPDATE
@@ -523,10 +525,23 @@ static int coil_wr(uint16_t addr, bool state)
 	if (addr < plat_gpio_cfg_size()) { //GPIO number
 		gpio_set((uint8_t)addr, (uint8_t)state);
 		return MODBUS_EXC_NONE;
-	} else if (addr == 0x0C30) { // FW update: Set RPU Stop/Run
+	} else if (addr == MODBUS_RPU_RUN_ADDR) { // FW update: Set RPU Stop/Run
+		if (!state) { //Set RPU Stop
+			if (ctl_all_pwm_dev(100))
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+				
+			disable_sensor_poll();
+		}
+		// return success for Setting RPU RUN
 		return MODBUS_EXC_NONE;
-	} else if (addr == 0x0C31) { // FW update: Synax Check
-		return MODBUS_EXC_NONE;
+	} else if (addr == MODBUS_SYNAX_CHECK_ADDR) { // FW update: Synax Check
+		if (state) {
+			if (get_sensor_poll_enable_flag())
+				return MODBUS_EXC_NONE;
+			else
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
 	} else {
 		return MODBUS_EXC_ILLEGAL_DATA_ADDR;
 	}
