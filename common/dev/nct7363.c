@@ -114,9 +114,9 @@ bool nct7363_set_duty(sensor_cfg *cfg, uint8_t duty, uint8_t port)
 		LOG_ERR("set NCT7363_FAN_CTRL_SET_DUTY fail");
 		return false;
 	}
-
 	return true;
 }
+
 static bool nct7363_write(sensor_cfg *cfg, uint8_t offset, uint8_t val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
