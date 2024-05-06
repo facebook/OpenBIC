@@ -169,6 +169,7 @@ uint8_t ina238_init(sensor_cfg *cfg)
 	if (init_args->is_init)
 		goto skip_init;
 
+	
 	I2C_MSG msg = { 0 };
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
@@ -178,28 +179,47 @@ uint8_t ina238_init(sensor_cfg *cfg)
 	msg.tx_len = 1;
 	msg.rx_len = 2;
 	msg.data[0] = INA238_CFG_OFFSET;
-	config_val = msg.data[1] << 8 | msg.data[0];
+	config_val = msg.data[0] << 8 | msg.data[1];
 	if (i2c_master_read(&msg, I2C_RETRY)) {
 		LOG_ERR("Failed to read config from INA238 ");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
 	/* Configure the chip using default values */
-	if (init_args->adc_range)
+	if (init_args->adc_range) {
 		WRITE_BIT(config_val, 4, 1);
+		msg.tx_len = 3;
+		msg.data[0] = INA238_CFG_OFFSET;
+		msg.data[1] = config_val >> 8;
+		msg.data[2] = config_val & BIT_MASK(8);
+		if (i2c_master_write(&msg, I2C_RETRY)) {
+			LOG_ERR("Failed to init INA238 ");
+			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		}
+	}
+	/* read alert reg */
+	uint16_t alert_val = 0x0000;
+	msg.tx_len = 1;
+	msg.rx_len = 2;
+	msg.data[0] = INA238_DIAG_ALRT_OFFSET;
+	alert_val = msg.data[0] << 8 | msg.data[1];
+	if (i2c_master_read(&msg, I2C_RETRY)) {
+		LOG_ERR("Failed to read alert from INA238 ");
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
 
 	/* enable alert latch */
-	if(init_args->alert_latch)
-		WRITE_BIT(config_val, 15, 1);
-
-	msg.tx_len = 3;
-	msg.data[0] = INA238_DIAG_ALRT_OFFSET;
-	msg.data[1] = config_val >> 8;
-	msg.data[2] = config_val & BIT_MASK(8);
-	if (i2c_master_write(&msg, I2C_RETRY)) {
-		LOG_ERR("Failed to enable alert latch in INA238 ");
-		return SENSOR_INIT_UNSPECIFIED_ERROR;
-	}	
+	if(init_args->alert_latch) {
+		WRITE_BIT(alert_val, 15, 1);
+		msg.tx_len = 3;
+		msg.data[0] = INA238_DIAG_ALRT_OFFSET;
+		msg.data[1] = alert_val >> 8;
+		msg.data[2] = alert_val & BIT_MASK(8);
+		if (i2c_master_write(&msg, I2C_RETRY)) {
+			LOG_ERR("Failed to enable alert latch in INA238 ");
+			return SENSOR_INIT_UNSPECIFIED_ERROR;
+		}
+	}
 
 	/* calculate Current_LSB */
 	//Current_LSB = Maximum Expected Current/(2^15)
