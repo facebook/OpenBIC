@@ -97,7 +97,7 @@ uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 			sval->integer = (int16_t)val_external_temp_upper_byte;
 		}
 
-		sval->fraction = (float)val_external_temp_lower_byte * TEMPERATURE_REMOTE_FRACTION;
+		sval->fraction = (float)val_external_temp_lower_byte * TEMPERATURE_REMOTE_FRACTION * 100; // sval->fraction is integer
 		return SENSOR_READ_SUCCESS;
 	default:
 		LOG_ERR("Unknown register offset(%d)", offset);
