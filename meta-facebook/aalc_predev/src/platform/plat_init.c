@@ -14,19 +14,38 @@
  * limitations under the License.
  */
 
-#ifndef ADM1272_H
-#define ADM1272_H
+#include <stdio.h>
+#include "hal_gpio.h"
+#include "plat_pwm.h"
+#include <logging/log.h>
+#include "plat_class.h"
+#include "plat_modbus.h"
 
-enum ADM1272_IRANGE {
-	IRANGE_0MV_TO_15MV = 0x0,
-	IRANGE_0MV_TO_30MV = 0x1,
-};
+LOG_MODULE_REGISTER(plat_init);
 
-enum ADM1272_VRANGE {
-	VRANGE_0V_TO_60V = 0x0,
-	VRANGE_0V_TO_100V = 0x1,
-};
+#define DEF_PROJ_GPIO_PRIORITY 78
 
-bool enable_adm1272_hsc(uint8_t bus,uint8_t addr, bool enable_flag);
+void pal_pre_init()
+{
+	init_aalc_config();
+}
 
-#endif
+void pal_post_init()
+{
+	init_pwm_dev();
+	init_custom_modbus_server();
+	init_modbus_command_table();
+}
+
+void pal_device_init()
+{
+	return;
+}
+
+void pal_set_sys_status()
+{
+	return;
+}
+
+DEVICE_DEFINE(PRE_DEF_PROJ_GPIO, "PRE_DEF_PROJ_GPIO_NAME", &gpio_init, NULL, NULL, NULL,
+	      POST_KERNEL, DEF_PROJ_GPIO_PRIORITY, NULL);

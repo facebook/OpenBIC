@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,19 +14,31 @@
  * limitations under the License.
  */
 
-#ifndef ADM1272_H
-#define ADM1272_H
+#ifndef TACH_H
+#define TACH_H
 
-enum ADM1272_IRANGE {
-	IRANGE_0MV_TO_15MV = 0x0,
-	IRANGE_0MV_TO_30MV = 0x1,
+enum {
+	AST_TACH_RPM = 0,
 };
 
-enum ADM1272_VRANGE {
-	VRANGE_0V_TO_60V = 0x0,
-	VRANGE_0V_TO_100V = 0x1,
+enum {
+	TACH_PORT0 = 0,
+	TACH_PORT1,
+	TACH_PORT2,
+	TACH_PORT3,
+	TACH_PORT4,
+	TACH_PORT5,
+	TACH_PORT6,
+	TACH_PORT7,
+	TACH_PORT8,
+	TACH_PORT9,
+	TACH_PORT10,
+	TACH_PORT11,
+	TACH_PORT12,
+	TACH_PORT13,
+	TACH_PORT14,
+	TACH_PORT15,
+	TACH_MAX_NUM,
 };
 
-bool enable_adm1272_hsc(uint8_t bus,uint8_t addr, bool enable_flag);
-
-#endif
+#endif //TACH_H

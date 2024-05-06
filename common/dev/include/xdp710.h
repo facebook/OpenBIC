@@ -17,16 +17,11 @@
 #ifndef ADM1272_H
 #define ADM1272_H
 
-enum ADM1272_IRANGE {
-	IRANGE_0MV_TO_15MV = 0x0,
-	IRANGE_0MV_TO_30MV = 0x1,
+enum XDP710_VSNS_CS {
+	VSNS_CS_12_5,
+	VSNS_CS_25,
+	VSNS_CS_50,
+	VSNS_CS_100,
 };
-
-enum ADM1272_VRANGE {
-	VRANGE_0V_TO_60V = 0x0,
-	VRANGE_0V_TO_100V = 0x1,
-};
-
-bool enable_adm1272_hsc(uint8_t bus,uint8_t addr, bool enable_flag);
 
 #endif

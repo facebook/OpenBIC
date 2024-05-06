@@ -28,6 +28,7 @@ enum FRU_DEV_TYPE {
 	PUYA_P24C128F,
 	ST_M24C64_W,
 	ST_M24128_BW,
+	ST_M24512_RDW,
 };
 
 enum {

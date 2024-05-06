@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,19 +14,16 @@
  * limitations under the License.
  */
 
-#ifndef ADM1272_H
-#define ADM1272_H
+#ifndef PLAT_IPMB_H
+#define PLAT_IPMB_H
 
-enum ADM1272_IRANGE {
-	IRANGE_0MV_TO_15MV = 0x0,
-	IRANGE_0MV_TO_30MV = 0x1,
+#include "plat_i2c.h"
+
+#define MAX_IPMB_IDX 0
+#define SELF_I2C_ADDRESS 0x20
+
+enum {
+	RESERVE_IPMB_IDX,
 };
-
-enum ADM1272_VRANGE {
-	VRANGE_0V_TO_60V = 0x0,
-	VRANGE_0V_TO_100V = 0x1,
-};
-
-bool enable_adm1272_hsc(uint8_t bus,uint8_t addr, bool enable_flag);
 
 #endif
