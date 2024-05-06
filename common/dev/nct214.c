@@ -44,9 +44,9 @@ uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 	sensor_val *sval = (sensor_val *)reading;
 	msg.rx_len = 1;
 	msg.tx_len = 1;
-	msg.data[0] = CONFIG_REG_READ;
+	msg.data[0] = CONFIG_READ_REG;
 	if (i2c_master_read(&msg, retry)) {
-		LOG_ERR("NCT214 read CONFIG_REG_READ reg error");
+		LOG_ERR("NCT214 read CONFIG_READ_REG reg error");
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 

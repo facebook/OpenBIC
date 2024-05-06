@@ -20,8 +20,8 @@
 #define LOCAL_TEMP_REG 0x00
 #define EXTERNAL_TEMP_UPPER_BYTE_REG 0x01
 #define EXTERNAL_TEMP_LOWER_BYTE_REG 0x10
-#define CONFIG_REG_READ 0x03
-#define CONFIG_REG_WRITE 0x09
+#define CONFIG_READ_REG 0x03
+#define CONFIG_WRITE_REG 0x09
 
 typedef struct _nct214_init_arg {
 	bool is_init;
