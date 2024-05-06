@@ -71,7 +71,6 @@ uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 		}
 
 		sval->fraction = 0;
-		printf("val_local_temp = %d\n", val_local_temp);
 		return SENSOR_READ_SUCCESS;
 
 	case NCT214_REMOTE_TEMPERATRUE:
@@ -84,7 +83,6 @@ uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 		}
 
 		uint8_t val_external_temp_lower_byte = msg.data[0];
-		val_external_temp_lower_byte = 0xff;
 		val_external_temp_lower_byte = val_external_temp_lower_byte >> 6; // get two MSBs
 		msg.data[0] = external_temperature_upper_byte_offset;
 		if (i2c_master_read(&msg, retry)) {
@@ -93,7 +91,6 @@ uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 		}
 
 		uint8_t val_external_temp_upper_byte = msg.data[0];
-		val_external_temp_upper_byte = 0x1c;
 		if (temperature_range_select == 1) {
 			sval->integer = (int16_t)((float)val_external_temp_upper_byte - (float)64);
 		} else {
