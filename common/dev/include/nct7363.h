@@ -79,15 +79,17 @@ enum nct7363_port {
 
 #define NCT7363_WDT_REG_OFFSET 0x2A
 
-struct nct7363_data {
-	uint16_t has_fan; /* Enable fan 0-15 */
-	uint16_t fan_speed[16]; /* Register value combine */
-
-	uint16_t has_pwm; /* Enable pwm 0-15 */
-	uint16_t pwm[16]; /* Register value combine */
-
-	char valid;
-};
+typedef struct _nct7363_init_arg {
+	bool is_init;
+	uint8_t value;
+	// According to the pin position on the right side of the component, from top to bottom, there are 16 pins in total.
+	uint8_t pin_type[16];
+	uint8_t fan_poles;
+	float fan_frequency[16];
+	uint8_t duty;
+	uint16_t threshold[16];
+	uint8_t wdt_cfg;
+} nct7363_init_arg;
 
 enum nct7363_sensor_offset {
 	NCT7363_FAN_SPEED_OFFSET,
