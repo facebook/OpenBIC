@@ -33,6 +33,7 @@
 #include "plat_hook.h"
 #include "plat_led.h"
 #include "util_spi.h"
+#include "pldm_firmware_update.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
@@ -209,6 +210,7 @@ void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 	uint32_t offset =
 		((msg->data[4] << 24) | (msg->data[3] << 16) | (msg->data[2] << 8) | msg->data[1]);
 	uint16_t length = ((msg->data[6] << 8) | msg->data[5]);
+	I2C_MSG i2c_msg;
 
 	if ((length == 0) || (length != msg->data_len - 7)) {
 		msg->completion_code = CC_INVALID_LENGTH;
@@ -244,7 +246,7 @@ void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 			msg->completion_code = CC_PARAM_OUT_OF_RANGE;
 			return;
 		}
-		I2C_MSG i2c_msg;
+
 		i2c_msg.bus = I2C_BUS4;
 		i2c_msg.target_addr = EXPA_RETIMER_ADDR;
 
@@ -261,6 +263,31 @@ void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 			LOG_ERR("firmware update unknown pcie retimer type");
 			break;
 		}
+		break;
+	case OL2_COMPNT_RETIMER_RECOVERY:
+	case (OL2_COMPNT_RETIMER_RECOVERY | IS_SECTOR_END_MASK):
+		if (!get_DC_status()) {
+			msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+			return;
+		}
+
+		if (card_type != CARD_TYPE_OPA) {
+			msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+			return;
+		}
+
+		if (offset > PCIE_RETIMER_UPDATE_MAX_OFFSET) {
+			msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+			return;
+		}
+
+		i2c_msg.bus = I2C_BUS8;
+		i2c_msg.target_addr = EXPA_RETIMER_EEPROM_ADDR;
+
+		pre_retimer_eeprom_recover();
+		status = fw_recovery_eeprom(&i2c_msg, offset, length, &msg->data[7],
+					    (target & IS_SECTOR_END_MASK));
+		post_retimer_eeprom_recover();
 		break;
 	default:
 		msg->completion_code = CC_INVALID_DATA_FIELD;

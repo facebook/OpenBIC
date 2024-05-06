@@ -50,5 +50,7 @@ const static uint8_t e1s_mux_channel_opb[] = { I2C_HUB_CHANNEL_4, I2C_HUB_CHANNE
 bool pre_i2c_bus_read(sensor_cfg *cfg, void *args);
 bool post_i2c_bus_read(sensor_cfg *cfg, void *args, int *reading);
 bool pre_retimer_read(sensor_cfg *cfg, void *args);
+void pre_retimer_eeprom_recover();
+void post_retimer_eeprom_recover();
 
 #endif

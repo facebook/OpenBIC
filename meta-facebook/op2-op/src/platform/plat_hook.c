@@ -27,6 +27,7 @@
 #include "plat_i2c.h"
 #include "plat_hook.h"
 #include "plat_sensor_table.h"
+#include "plat_gpio.h"
 
 #define RETIMER_INIT_RETRY_COUNT 3
 
@@ -312,4 +313,24 @@ bool pre_retimer_read(sensor_cfg *cfg, void *args)
 	}
 
 	return ret;
+}
+
+void pre_retimer_eeprom_recover()
+{
+	if (gpio_get(OPA_SMB_PCIE_EXP1_ALERT_N) == GPIO_HIGH) {
+		gpio_set(OPA_SMB_PCIE_EXP1_ALERT_N, GPIO_LOW);
+	}
+	if (gpio_get(OPA_LED_E1S_2_ATTN_R) == GPIO_LOW) {
+		gpio_set(OPA_LED_E1S_2_ATTN_R, GPIO_HIGH);
+	}
+}
+
+void post_retimer_eeprom_recover()
+{
+	if (gpio_get(OPA_SMB_PCIE_EXP1_ALERT_N) == GPIO_LOW) {
+		gpio_set(OPA_SMB_PCIE_EXP1_ALERT_N, GPIO_HIGH);
+	}
+	if (gpio_get(OPA_LED_E1S_2_ATTN_R) == GPIO_HIGH) {
+		gpio_set(OPA_LED_E1S_2_ATTN_R, GPIO_LOW);
+	}
 }
