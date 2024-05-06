@@ -23,6 +23,10 @@
 #define CONFIG_REG_READ 0x03
 #define CONFIG_REG_WRITE 0x09
 
+typedef struct _nct214_init_arg {
+	bool is_init;
+} nct214_init_arg;
+
 enum NCT214_CHANNELS {
 	NCT214_LOCAL_TEMPERATRUE,
 	NCT214_REMOTE_TEMPERATRUE,

@@ -750,11 +750,6 @@ typedef struct _xdp710_init_arg {
 	float r_sense;
 } xdp710_init_arg;
 
-typedef struct _nct214_init_arg {
-	bool is_init;
-	uint8_t configuration_register;
-} nct214_init_arg;
-
 typedef struct _ina238_init_arg {
 	bool is_init;
 	double r_shunt; /* Shunt resistor value. Unit: Ohm. */
