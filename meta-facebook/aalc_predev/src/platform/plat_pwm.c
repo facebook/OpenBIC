@@ -25,6 +25,7 @@
 LOG_MODULE_REGISTER(plat_pwm);
 
 #define MAX_FAN_DUTY_VALUE 100
+#define PWM_PERIOD 40 // 25kHz
 
 static const struct device *pwm_dev;
 
@@ -109,7 +110,7 @@ int ast_pwm_set(int duty)
 		LOG_ERR("PWM dev not found!");
 		return 1;
 	}
-	return pwm_pin_set_cycles(pwm_dev, PWM_PORT0, MAX_FAN_DUTY_VALUE, (uint32_t)duty, 0);
+	return pwm_pin_set_usec(pwm_dev, PWM_PORT0, PWM_PERIOD, (PWM_PERIOD * duty / 100), 0);
 }
 
 uint8_t plat_pwm_ctrl(enum PWM_DEVICE_E dev, uint8_t duty)
