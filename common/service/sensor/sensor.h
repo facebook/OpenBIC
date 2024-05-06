@@ -168,7 +168,8 @@ enum SENSOR_DEV {
 	sensor_dev_hdc1080 = 0x33,
 	sensor_dev_ast_tach = 0x34,
 	sensor_dev_xdp710 = 0x35,
-  sensor_dev_nct214 = 0x36,
+	sensor_dev_nct214 = 0x36,
+	sensor_dev_ina238 = 0x37,
 	sensor_dev_max
 };
 
@@ -754,6 +755,15 @@ typedef struct _nct214_init_arg {
 	uint8_t configuration_register;
 } nct214_init_arg;
 
+typedef struct _ina238_init_arg {
+	bool is_init;
+	double r_shunt; /* Shunt resistor value. Unit: Ohm. */
+	double cur_lsb;
+	uint8_t adc_range; /* IN+ and IN–, 0:±163.84 mV, 1:±40.96 mV */
+	double i_max; /* Expected maximum current */
+	uint16_t conf;
+} ina238_init_arg;
+
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;
 // Mapping sensor number to sensor config index
@@ -793,5 +803,6 @@ void plat_fill_monitor_sensor_table();
 sensor_cfg *find_sensor_cfg_via_sensor_num(sensor_cfg *cfg_table, uint8_t cfg_count,
 					   uint8_t sensor_num);
 bool get_sensor_init_done_flag();
+sensor_cfg *get_common_sensor_cfg_info(uint8_t sensor_num);
 
 #endif

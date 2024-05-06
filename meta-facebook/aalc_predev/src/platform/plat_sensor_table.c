@@ -33,9 +33,6 @@
 
 LOG_MODULE_REGISTER(plat_sensor_table);
 
-static void load_hsc_sensor_table(void);
-static void load_temperature_sensor_table(void);
-
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
 	   access check, arg0, arg1, sample_count, cache, cache_status, mux_address, mux_offset,
@@ -349,18 +346,19 @@ sensor_cfg plat_sensor_config[] = {
 	  BPB_ADS112C_3_ADDR, ADS112C_LEAKAGE_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT,
 	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  NULL },
-	{ SENSOR_NUM_SB_LEAKAGE_1_VOLT_V, sensor_dev_ads112c, I2C_BUS9, SB_ADS112C_2_ADDR,
+	{ SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_1_VOLT_V, sensor_dev_ads112c, I2C_BUS9, SB_ADS112C_2_ADDR,
 	  ADS112C_LEAKAGE_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
 	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
-	{ SENSOR_NUM_SB_LEAKAGE_2_VOLT_V, sensor_dev_ads112c, I2C_BUS9, SB_ADS112C_2_ADDR,
+	{ SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_2_VOLT_V, sensor_dev_ads112c, I2C_BUS9, SB_ADS112C_2_ADDR,
 	  ADS112C_LEAKAGE_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
 	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
-	{ SENSOR_NUM_SB_LEAKAGE_3_VOLT_V, sensor_dev_ads112c, I2C_BUS9, SB_ADS112C_3_ADDR,
+	{ SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_3_VOLT_V, sensor_dev_ads112c, I2C_BUS9, SB_ADS112C_3_ADDR,
 	  ADS112C_LEAKAGE_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
 	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
+
 	// ADC
 	{ SENSOR_NUM_V_12_AUX, sensor_dev_ast_adc, ADC_PORT0, NONE, NONE, dc_access, 676, 100,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
@@ -377,7 +375,6 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_V_5_USB, sensor_dev_ast_adc, ADC_PORT4, NONE, NONE, dc_access, 711, 200,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
-
 };
 
 sensor_cfg adm1272_sensor_config_table[] = {
@@ -690,15 +687,15 @@ sensor_cfg adm1272_sensor_config_table[] = {
 	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &adm1272_init_args[1] },
-	{ SENSOR_NUM_BB_HSC_P51V_VIN_VOLT_V, sensor_dev_adm1272, I2C_BUS4, BB_ADM1272_ADDR,
+	{ SENSOR_NUM_BB_HSC_P48V_VIN_VOLT_V, sensor_dev_adm1272, I2C_BUS4, BB_ADM1272_ADDR,
 	  PMBUS_READ_VIN, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &adm1272_init_args[1] },
-	{ SENSOR_NUM_BB_HSC_P51V_IOUT_CURR_A, sensor_dev_adm1272, I2C_BUS4, BB_ADM1272_ADDR,
+	{ SENSOR_NUM_BB_HSC_P48V_IOUT_CURR_A, sensor_dev_adm1272, I2C_BUS4, BB_ADM1272_ADDR,
 	  PMBUS_READ_IOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, post_adm1272_read, NULL,
 	  &adm1272_init_args[1] },
-	{ SENSOR_NUM_BB_HSC_P51V_PIN_PWR_W, sensor_dev_adm1272, I2C_BUS4, BB_ADM1272_ADDR,
+	{ SENSOR_NUM_BB_HSC_P48V_PIN_PWR_W, sensor_dev_adm1272, I2C_BUS4, BB_ADM1272_ADDR,
 	  PMBUS_READ_PIN, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, post_adm1272_read, NULL,
 	  &adm1272_init_args[1] },
@@ -706,15 +703,15 @@ sensor_cfg adm1272_sensor_config_table[] = {
 	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &adm1272_init_args[1] },
-	{ SENSOR_NUM_BPB_HSC_P51V_VIN_VOLT_V, sensor_dev_adm1272, I2C_BUS4, BPB_ADM1272_ADDR,
+	{ SENSOR_NUM_BPB_HSC_P48V_VIN_VOLT_V, sensor_dev_adm1272, I2C_BUS4, BPB_ADM1272_ADDR,
 	  PMBUS_READ_VIN, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &adm1272_init_args[1] },
-	{ SENSOR_NUM_BPB_HSC_P51V_IOUT_CURR_A, sensor_dev_adm1272, I2C_BUS4, BPB_ADM1272_ADDR,
+	{ SENSOR_NUM_BPB_HSC_P48V_IOUT_CURR_A, sensor_dev_adm1272, I2C_BUS4, BPB_ADM1272_ADDR,
 	  PMBUS_READ_IOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, post_adm1272_read, NULL,
 	  &adm1272_init_args[1] },
-	{ SENSOR_NUM_BPB_HSC_P51V_PIN_PWR_W, sensor_dev_adm1272, I2C_BUS4, BPB_ADM1272_ADDR,
+	{ SENSOR_NUM_BPB_HSC_P48V_PIN_PWR_W, sensor_dev_adm1272, I2C_BUS4, BPB_ADM1272_ADDR,
 	  PMBUS_READ_PIN, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, post_adm1272_read, NULL,
 	  &adm1272_init_args[1] },
@@ -763,77 +760,61 @@ sensor_cfg xdp710_sensor_config_table[] = {
 	  &bus_1_PCA9546A_configs[0], post_PCA9546A_read, NULL, &adm1272_init_args[1] },
 };
 
-const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
+// total config size = plat_sensor_config + sensor(main/second sensor) config table
+const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) +
+			       ARRAY_SIZE(adm1272_sensor_config_table) +
+			       ARRAY_SIZE(tmp461_config_table);
+
+void load_hsc_sensor_config()
+{
+	uint8_t index = 0;
+	uint8_t hsc_module = get_hsc_module();
+
+	switch (hsc_module) {
+	case HSC_MODULE_ADM1272:
+		for (index = 0; index < ARRAY_SIZE(adm1272_sensor_config_table); index++)
+			add_sensor_config(adm1272_sensor_config_table[index]);
+
+		break;
+	case HSC_MODULE_XDP710:
+		for (index = 0; index < ARRAY_SIZE(xdp710_sensor_config_table); index++)
+			add_sensor_config(xdp710_sensor_config_table[index]);
+
+		break;
+	default:
+		LOG_ERR("Unknown HSC type(%d), load HSC sensor table failed", hsc_module);
+		break;
+	}
+}
+
+void load_sb_temp_sensor_config()
+{
+	uint8_t index = 0;
+	uint8_t temp_module = get_temp_module();
+
+	switch (temp_module) {
+	case SB_TMP461:
+		for (index = 0; index < ARRAY_SIZE(tmp461_config_table); index++)
+			add_sensor_config(tmp461_config_table[index]);
+
+		break;
+	case SB_NCT214:
+		for (index = 0; index < ARRAY_SIZE(nct214_config_table); index++)
+			add_sensor_config(nct214_config_table[index]);
+
+		break;
+	default:
+		LOG_ERR("Unknown temperature type(%d), load temperature sensor table failed",
+			temp_module);
+		break;
+	}
+}
+
 void load_sensor_config(void)
 {
 	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
 	sensor_config_count = ARRAY_SIZE(plat_sensor_config);
-	pal_extend_sensor_config();
-}
 
-void pal_extend_sensor_config()
-{
-	load_hsc_sensor_table();
-	load_temperature_sensor_table();
-}
-
-static void load_hsc_sensor_table()
-{
-	uint8_t module = get_hsc_module();
-
-	switch (module) {
-	case HSC_MODULE_ADM1272:
-		memcpy(&sensor_config[sensor_config_count], adm1272_sensor_config_table,
-		       ARRAY_SIZE(adm1272_sensor_config_table) * sizeof(sensor_cfg));
-		sensor_config_count += ARRAY_SIZE(adm1272_sensor_config_table);
-		break;
-	case HSC_MODULE_XDP710:
-		memcpy(&sensor_config[sensor_config_count], xdp710_sensor_config_table,
-		       ARRAY_SIZE(xdp710_sensor_config_table) * sizeof(sensor_cfg));
-		sensor_config_count += ARRAY_SIZE(xdp710_sensor_config_table);
-		break;
-	case HSC_MODULE_UNKNOWN:
-	default:
-		LOG_ERR("Unknown HSC type(%d), load HSC sensor table failed", module);
-		break;
-	}
-	return;
-}
-
-static void load_temperature_sensor_table()
-{
-	uint8_t module = get_temp_module();
-
-	switch (module) {
-	case SB_TMP461:
-		memcpy(&sensor_config[sensor_config_count], tmp461_config_table,
-		       ARRAY_SIZE(tmp461_config_table) * sizeof(sensor_cfg));
-		sensor_config_count += ARRAY_SIZE(tmp461_config_table);
-		break;
-	case SB_NCT214:
-		memcpy(&sensor_config[sensor_config_count], nct214_config_table,
-		       ARRAY_SIZE(nct214_config_table) * sizeof(sensor_cfg));
-		sensor_config_count += ARRAY_SIZE(nct214_config_table);
-		break;
-	case TEMP_MODULE_UNKNOWN:
-	default:
-		LOG_ERR("Unknown temperature type(%d), load temperature sensor table failed",
-			module);
-		break;
-	}
-	return;
-}
-
-uint8_t pal_get_extend_sensor_config()
-{
-	uint8_t extend_sensor_config_size = 0;
-	uint8_t stage = get_hsc_module();
-	switch (stage) {
-	case HSC_MODULE_ADM1272:
-		extend_sensor_config_size += ARRAY_SIZE(adm1272_sensor_config_table);
-	default:
-		LOG_ERR("Unsupport stage: (%d).", stage);
-		break;
-	}
-	return extend_sensor_config_size;
+	load_hsc_sensor_config();
+	load_sb_temp_sensor_config();
 }
