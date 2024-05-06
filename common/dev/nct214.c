@@ -23,6 +23,7 @@
 
 #define TEMPERATURE_RANGE 64
 #define TEMPERATURE_REMOTE_FRACTION 0.25
+#define TEMPERATURE_RANGE_SELECT_MASK BIT(2)
 
 LOG_MODULE_REGISTER(nct214);
 
@@ -50,7 +51,7 @@ uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
-	uint8_t temperature_range_select = (msg.data[0] >> 2) & 1; // read bit2 to check temperature range
+	uint8_t temperature_range_select = (msg.data[0] & TEMPERATURE_RANGE_SELECT_MASK) >> 2; // read bit2 to check temperature range
 
 	switch (offset) {
 	case NCT214_LOCAL_TEMPERATRUE:
