@@ -329,6 +329,11 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 
 	nct7363_init_arg *nct7363_init_arg_data = (nct7363_init_arg *)cfg->init_args;
 
+	if (nct7363_init_arg_data->fan_poles < 0) {
+		LOG_ERR("Invalid, fan_poles is setting");
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+	
 	if (nct7363_init_arg_data->is_init)
 		goto skip_init;
 
