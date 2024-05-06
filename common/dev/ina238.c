@@ -27,6 +27,7 @@
 #define SHUNT_CAL_MAX_VAL 0x7FFF
 #define INTERNAL_FIXED_VALUE 819200000
 #define ADCRANGE_1S_1 0x10
+#define MAX_CURRENT_LSB 0x80
 #define ADCRANGE_0_CONVERSION_FACTOR 0.000005 // 5uV/LSB
 #define ADCRANGE_1_CONVERSION_FACTOR 0.00000125 // 1.25uV/LSB
 #define VBUS_CONVERSION_FACTOR 0.000003125 // 3.125mV/LSB
@@ -171,36 +172,39 @@ uint8_t ina238_init(sensor_cfg *cfg)
 	I2C_MSG msg = { 0 };
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
-	/* Configure the chip using default values */
-	if (init_args->adc_range) {
-		msg.tx_len = 3;
-		msg.data[0] = INA238_CFG_OFFSET;
-		msg.data[1] = 0x00;
-		msg.data[2] = ADCRANGE_SET_TO_1;
-		if (i2c_master_write(&msg, I2C_RETRY)) {
-			LOG_ERR("Failed to init INA238 ");
-			return SENSOR_INIT_UNSPECIFIED_ERROR;
-		}
+
+	/* read config reg */
+	uint16_t config_val = 0x0000;
+	msg.tx_len = 1;
+	msg.rx_len = 2;
+	msg.data[0] = INA238_CFG_OFFSET;
+	config_val = msg.data[1] << 8 | msg.data[0];
+	if (i2c_master_read(&msg, I2C_RETRY)) {
+		LOG_ERR("Failed to read config from INA238 ");
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
+	/* Configure the chip using default values */
+	if (init_args->adc_range)
+		WRITE_BIT(config_val, 4, 1);
+
 	/* enable alert latch */
-	if(init_args->alert_latch) {
-		uint16_t alert_latch_val = 0x0001; // default value
-		WRITE_BIT(alert_latch_val, 15, 1);
-		msg.tx_len = 3;
-		msg.data[0] = INA238_DIAG_ALRT_OFFSET;
-		msg.data[1] = alert_latch_val >> 8;
-		msg.data[2] = alert_latch_val & BIT_MASK(8);
-		if (i2c_master_write(&msg, I2C_RETRY)) {
-			LOG_ERR("Failed to enable alert latch in INA238 ");
-			return SENSOR_INIT_UNSPECIFIED_ERROR;
-		}
-	}
+	if(init_args->alert_latch)
+		WRITE_BIT(config_val, 15, 1);
+
+	msg.tx_len = 3;
+	msg.data[0] = INA238_DIAG_ALRT_OFFSET;
+	msg.data[1] = config_val >> 8;
+	msg.data[2] = config_val & BIT_MASK(8);
+	if (i2c_master_write(&msg, I2C_RETRY)) {
+		LOG_ERR("Failed to enable alert latch in INA238 ");
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}	
 
 	/* calculate Current_LSB */
 	//Current_LSB = Maximum Expected Current/(2^15)
 	init_args->cur_lsb = init_args->i_max / 32768.0;
-	if (init_args->cur_lsb > 0x80) // cur_lsb max = 0x80
+	if (init_args->cur_lsb > MAX_CURRENT_LSB)
 	{
 		LOG_ERR("Current LSB is out of range");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
