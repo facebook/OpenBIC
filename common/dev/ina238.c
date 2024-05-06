@@ -47,7 +47,6 @@ static uint16_t twoscomplement_to_decimal(uint16_t twoscomplement_val)
 
 uint8_t ina238_read(sensor_cfg *cfg, int *reading)
 {
-	LOG_WRN("ina238 read");
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_INIT_UNSPECIFIED_ERROR);
@@ -157,7 +156,6 @@ uint8_t ina238_read(sensor_cfg *cfg, int *reading)
 
 uint8_t ina238_init(sensor_cfg *cfg)
 {	
-	LOG_WRN("ina238 init");
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_INIT_UNSPECIFIED_ERROR);
 
