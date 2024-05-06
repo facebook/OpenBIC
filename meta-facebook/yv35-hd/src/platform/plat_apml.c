@@ -66,6 +66,11 @@ void set_tsi_threshold()
 	is_threshold_set = true;
 }
 
+uint8_t pal_get_apml_bus()
+{
+	return APML_BUS;
+}
+
 static void read_cpuid_callback(apml_msg *msg)
 {
 	CHECK_NULL_ARG(msg);

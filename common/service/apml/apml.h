@@ -29,6 +29,8 @@
 #define SBRMI_CMD_CODE_LEN_TWO_BYTE 2
 #define SBRMI_REV_BRTH 0x21
 
+#define APML_BUS_UNKNOWN 0xFF
+
 enum APML_MSG_TYPE {
 	APML_MSG_TYPE_MAILBOX,
 	APML_MSG_TYPE_CPUID,
@@ -142,6 +144,8 @@ void apml_init();
 void fatal_error_happened();
 void apml_recovery();
 int pal_check_sbrmi_command_code_length();
+uint8_t pal_get_apml_bus();
+uint8_t apml_get_bus();
 int set_sbrmi_command_code_len(uint8_t value);
 
 #endif

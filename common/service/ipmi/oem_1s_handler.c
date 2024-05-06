@@ -1835,10 +1835,12 @@ __weak void OEM_1S_APML_READ(ipmi_msg *msg)
 		return;
 	}
 
+	uint8_t apml_bus = apml_get_bus();
+
 	uint8_t read_data;
 	switch (msg->data[0]) {
 	case 0x00: /* RMI */
-		if (apml_read_byte(APML_BUS, SB_RMI_ADDR, msg->data[1], &read_data)) {
+		if (apml_read_byte(apml_bus, SB_RMI_ADDR, msg->data[1], &read_data)) {
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 		} else {
 			msg->data[0] = read_data;
@@ -1847,7 +1849,7 @@ __weak void OEM_1S_APML_READ(ipmi_msg *msg)
 		}
 		break;
 	case 0x01: /* TSI */
-		if (apml_read_byte(APML_BUS, SB_TSI_ADDR, msg->data[1], &read_data)) {
+		if (apml_read_byte(apml_bus, SB_TSI_ADDR, msg->data[1], &read_data)) {
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 		} else {
 			msg->data[0] = read_data;
@@ -1871,16 +1873,18 @@ __weak void OEM_1S_APML_WRITE(ipmi_msg *msg)
 		return;
 	}
 
+	uint8_t apml_bus = apml_get_bus();
+
 	switch (msg->data[0]) {
 	case 0x00: /* RMI */
-		if (apml_write_byte(APML_BUS, SB_RMI_ADDR, msg->data[1], msg->data[2])) {
+		if (apml_write_byte(apml_bus, SB_RMI_ADDR, msg->data[1], msg->data[2])) {
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 		} else {
 			msg->completion_code = CC_SUCCESS;
 		}
 		break;
 	case 0x01: /* TSI */
-		if (apml_write_byte(APML_BUS, SB_TSI_ADDR, msg->data[1], msg->data[2])) {
+		if (apml_write_byte(apml_bus, SB_TSI_ADDR, msg->data[1], msg->data[2])) {
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 		} else {
 			msg->completion_code = CC_SUCCESS;
@@ -1904,6 +1908,7 @@ __weak void OEM_1S_SEND_APML_REQUEST(ipmi_msg *msg)
 	}
 
 	static uint8_t index = 0;
+	uint8_t apml_bus = apml_get_bus();
 	apml_msg apml_data = { 0 };
 
 	switch (msg->data[0]) {
@@ -1933,7 +1938,7 @@ __weak void OEM_1S_SEND_APML_REQUEST(ipmi_msg *msg)
 		return;
 	}
 	apml_data.msg_type = msg->data[0];
-	apml_data.bus = APML_BUS;
+	apml_data.bus = apml_bus;
 	apml_data.target_addr = SB_RMI_ADDR;
 	apml_data.cb_fn = apml_request_callback;
 	apml_data.ui32_arg = index;
