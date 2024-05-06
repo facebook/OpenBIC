@@ -28,6 +28,7 @@
 #include "hdc1080.h"
 #include "nct7363.h"
 #include "nct214.h"
+#include "ina238.h"
 #include "ast_tach.h"
 #include <logging/log.h>
 

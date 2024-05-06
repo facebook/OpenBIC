@@ -217,6 +217,7 @@
 #define SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_1_VOLT_V 0xA4
 #define SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_2_VOLT_V 0xA5
 #define SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_3_VOLT_V 0xA6
+
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
 
