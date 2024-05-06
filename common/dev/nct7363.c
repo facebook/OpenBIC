@@ -96,7 +96,7 @@ bool nct7363_set_duty(sensor_cfg *cfg, uint8_t duty, uint8_t port)
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
 	uint8_t retry = 5;
-	uint8_t port_offset = cfg->arg0; // nct7363 pin
+	uint8_t port_offset = port; // nct7363 pin
 	uint8_t duty_offset = NCT7363_REG_PWM_BASE_OFFSET + port_offset * 2;
 	float duty_in_255 = 0;
 	// set duty
