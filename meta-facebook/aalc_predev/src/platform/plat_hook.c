@@ -70,13 +70,15 @@ nct7363_init_arg nct7363_init_args[] = {
         .pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
         .pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
         .pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
-        .fan_poles = 0,
         .wdt_cfg = WDT_7_5_SEC,
+        .fan_poles = 2,
+        .fan_frequency[NCT7363_17_PORT] = 5000, 
+        .threshold[NCT7363_15_PORT] = 50,
     },	
     // Management BD(no used)
     [1] = { 
         .is_init = false,
-        .fan_poles = 0,
+        .fan_poles = 2,
         .wdt_cfg = WDT_7_5_SEC,
     },
     //Backplane BD
@@ -94,7 +96,7 @@ nct7363_init_arg nct7363_init_args[] = {
         .pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
         .pin_type[NCT7363_16_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
         .pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .fan_poles = 0,
+        .fan_poles = 2,
         .wdt_cfg = WDT_7_5_SEC,
     },
     //Pump BD
@@ -107,7 +109,7 @@ nct7363_init_arg nct7363_init_args[] = {
         .pin_type[NCT7363_7_PORT] = NCT7363_PIN_TPYE_FANIN,
         .pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
         .pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .fan_poles = 0,
+        .fan_poles = 2,
         .wdt_cfg = WDT_7_5_SEC,
     },
 };
@@ -155,6 +157,7 @@ ina238_init_arg ina238_init_args[] = {
 		.is_init = false, 
 		.r_shunt = 0.1, 
 		.adc_range = INA238_ADC_RANGE_PN_163, 
+		.alert_latch = INA238_ALERT_LATCH_ENABLE,
 		.i_max = 0.1,
 	},
 };
