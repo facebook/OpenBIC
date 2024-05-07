@@ -158,6 +158,7 @@ enum SENSOR_DEV {
 	sensor_dev_vistara = 0x2F,
 	sensor_dev_max11617 = 0x30,
 	sensor_dev_nv_satmc = 0x31,
+	sensor_dev_hdc1080 = 0x32,
 	sensor_dev_max
 };
 
@@ -710,6 +711,10 @@ typedef struct _nv_satmc_init_arg {
 	pldm_sensor_pdr_parm parm; //only used for numeric sensor
 } nv_satmc_init_arg;
 
+typedef struct _hdc1080_init_arg {
+	bool is_init;
+} hdc1080_init_arg;
+
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;
 // Mapping sensor number to sensor config index
@@ -749,5 +754,6 @@ void plat_fill_monitor_sensor_table();
 sensor_cfg *find_sensor_cfg_via_sensor_num(sensor_cfg *cfg_table, uint8_t cfg_count,
 					   uint8_t sensor_num);
 bool get_sensor_init_done_flag();
+sensor_cfg *get_common_sensor_cfg_info(uint8_t sensor_num);
 
 #endif
