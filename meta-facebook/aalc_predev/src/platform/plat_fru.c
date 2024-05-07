@@ -23,6 +23,7 @@
 #include <logging/log.h>
 #include "fru.h"
 #include "plat_fru.h"
+#include "plat_util.h"
 
 LOG_MODULE_REGISTER(plat_fru);
 
@@ -306,6 +307,9 @@ uint8_t modbus_read_fruid_data(modbus_command_mapping *cmd)
 		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 
 	memcpy(cmd->data, &fru_entry.data[0], fru_entry.data_len);
+
+	regs_reverse(cmd->data_len, cmd->data);
+
 	return MODBUS_EXC_NONE;
 }
 
@@ -319,6 +323,8 @@ uint8_t modbus_write_fruid_data(modbus_command_mapping *cmd)
 	fru_entry.config.dev_id = cmd->arg0; //fru id
 	fru_entry.offset = (cmd->start_addr - cmd->addr) * 2;
 	fru_entry.data_len = (cmd->data_len) * 2;
+
+	regs_reverse(cmd->data_len, cmd->data);
 
 	memcpy(&fru_entry.data[0], cmd->data, fru_entry.data_len);
 	status = FRU_write(&fru_entry);

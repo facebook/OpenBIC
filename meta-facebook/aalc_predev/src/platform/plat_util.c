@@ -13,22 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include <stdlib.h>
-#include <sys/util.h>
-#include <modbus/modbus.h>
-#include "modbus_server.h"
-#include "hal_i2c.h"
-#include <logging/log.h>
-#include "libutil.h"
 #include "plat_modbus.h"
-#include "plat_modbus_i2c_master_w_r.h"
+#include "plat_util.h"
+#include "modbus_server.h"
+#include <logging/log.h>
+#include "util_spi.h"
+#include "libutil.h"
 
 #define I2C_MASTER_READ_BACK_MAX_SIZE 16 // 16 registers
 
 static uint16_t temp_read_length;
 static uint16_t temp_read_data[I2C_MASTER_READ_BACK_MAX_SIZE]; 
 
-LOG_MODULE_REGISTER(plat_modbus_i2c_write_read);
+LOG_MODULE_REGISTER(plat_util);
 
 uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 {
@@ -82,4 +81,10 @@ uint8_t modbus_command_i2c_master_write_read_response(modbus_command_mapping *cm
 	memcpy(cmd->data, temp_read_data, sizeof(uint16_t) * temp_read_length);
 
 	return MODBUS_EXC_NONE;
+}
+
+void regs_reverse(uint16_t reg_len, uint16_t *data)
+{
+    for (uint16_t i = 0; i < reg_len; i++)
+		data[i] = sys_be16_to_cpu(data[i]);
 }

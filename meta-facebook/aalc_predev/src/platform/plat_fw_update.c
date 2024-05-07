@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "plat_version.h"
 #include "plat_modbus.h"
+#include "plat_util.h"
 #include "modbus_server.h"
 #include <logging/log.h>
 #include "util_spi.h"
@@ -34,11 +35,7 @@ uint8_t modbus_fw_download(modbus_command_mapping *cmd)
 	if (msg_len != ((cmd->data_len - UPADTE_FW_DATA_LENGTH_MIN) * 2))
 		return MODBUS_EXC_ILLEGAL_DATA_VAL;
 
-	uint16_t swap_data[cmd->data_len - UPADTE_FW_DATA_LENGTH_MIN];
-	for (uint16_t i = UPADTE_FW_DATA_LENGTH_MIN; i < (cmd->data_len); i++) {
-		swap_data[i - UPADTE_FW_DATA_LENGTH_MIN] =
-			(cmd->data[i] << 8) | (cmd->data[i] >> 8);
-	}
+    regs_reverse(cmd->data_len, cmd->data);
 
-	return fw_update(offset, msg_len, (uint8_t *)&swap_data[0], flag, DEVSPI_FMC_CS0);
+	return fw_update(offset, msg_len, (uint8_t *) &cmd->data[UPADTE_FW_DATA_LENGTH_MIN], flag, DEVSPI_FMC_CS0);
 }

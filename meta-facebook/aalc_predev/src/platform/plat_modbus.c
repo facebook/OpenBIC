@@ -33,7 +33,7 @@
 #include "plat_gpio.h"
 #include "plat_fw_update.h"
 #include <modbus_internal.h>
-#include "plat_modbus_i2c_master_w_r.h"
+#include "plat_util.h"
 #include "libutil.h"
 #include "plat_pwm.h"
 
