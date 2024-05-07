@@ -58,7 +58,9 @@ descriptor_type_name_length = {
     0x0102: ["PCI Subsystem ID", 2],
     0x0103: ["PCI Revision ID", 1],
     0x0104: ["PnP Product Identifier", 4],
-    0x0105: ["ACPI Product Identifier", 4]}
+    0x0105: ["ACPI Product Identifier", 4],
+    0x0106: ["ASCII Model Number (Long String)", 40],
+    0x0107: ["ASCII Model Number (Short String)", 10]}
 
 
 def check_string_length(string):
@@ -266,7 +268,7 @@ def prepare_record_descriptors(descriptors):
                     descriptor_type_name_length.get(descriptor_type)[1]:
                 err_string = "ERROR: Descriptor type - " + \
                     descriptor_type_name_length.get(descriptor_type)[0] + \
-                    " length is incorrect"
+                    " length is incorrect, data: " + descriptor_data
                 sys.exit(err_string)
             format_string = '<HH'
             record_descriptors.extend(struct.pack(

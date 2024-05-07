@@ -43,6 +43,7 @@ LOG_MODULE_REGISTER(plat_hook);
 
 #define PEX_SWITCH_INIT_RETRY_COUNT 20
 #define ACCL_SENSOR_COUNT 6
+#define NVME_ERROR_RETRY_COUNT 3
 
 struct k_mutex xdpe15284_mutex;
 
@@ -957,6 +958,7 @@ bool pre_pex89000_read(sensor_cfg *cfg, void *args)
 
 bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 {
+	uint8_t static error_count[ASIC_CARD_COUNT] = { 0 };
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
@@ -977,6 +979,7 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 	case ACCL_ARTEMIS_MODULE_1_ADDR:
 		if (asic_card_info[card_id].asic_1_status != ASIC_CARD_DEVICE_PRESENT) {
 			cfg->cache_status = SENSOR_NOT_PRESENT;
+			error_count[card_id] = 0;
 			return true;
 		}
 		break;
@@ -984,6 +987,7 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 	case ACCL_ARTEMIS_MODULE_2_ADDR:
 		if (asic_card_info[card_id].asic_2_status != ASIC_CARD_DEVICE_PRESENT) {
 			cfg->cache_status = SENSOR_NOT_PRESENT;
+			error_count[card_id] = 0;
 			return true;
 		}
 		break;
@@ -1000,6 +1004,7 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 		cfg->cache_status = SENSOR_POLLING_DISABLE;
 		accl_sensor_info_args[card_id].is_sensor_init = false;
 		clear_freya_cache_flag(card_id);
+		error_count[card_id] = 0;
 		return true;
 	}
 
@@ -1099,6 +1104,7 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 		}
 
 		k_mutex_unlock(mutex);
+		error_count[card_id] = 0;
 		return true;
 	}
 
@@ -1112,6 +1118,7 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 				plat_asic_nvme_status_event(card_id, PCIE_DEVICE_ID1,
 							    PLDM_STATE_SET_OEM_DEVICE_NVME_READY);
 				accl_freya->is_cache_freya1_info = true;
+				error_count[card_id] = 0;
 				return true;
 			}
 		}
@@ -1125,6 +1132,7 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 				plat_asic_nvme_status_event(card_id, PCIE_DEVICE_ID2,
 							    PLDM_STATE_SET_OEM_DEVICE_NVME_READY);
 				accl_freya->is_cache_freya2_info = true;
+				error_count[card_id] = 0;
 				return true;
 			}
 		}
@@ -1141,10 +1149,40 @@ bool pre_accl_nvme_read(sensor_cfg *cfg, void *args)
 		}
 		goto error_exit;
 	}
-
+	error_count[card_id] = 0;
 	return true;
 
 error_exit:
+	error_count[card_id]++;
+	if (error_count[card_id] >= NVME_ERROR_RETRY_COUNT) {
+		switch (cfg->target_addr) {
+		case ACCL_FREYA_1_ADDR:
+		case ACCL_ARTEMIS_MODULE_1_ADDR:
+			if (accl_freya->is_cache_freya1_info != false) {
+				plat_asic_nvme_status_event(
+					card_id, PCIE_DEVICE_ID1,
+					PLDM_STATE_SET_OEM_DEVICE_NVME_NOT_READY);
+			}
+			accl_freya->is_cache_freya1_info = false;
+			memset(&accl_freya->freya1_fw_info, 0, FREYA_FW_VERSION_LENGTH);
+			accl_freya->freya1_fw_info.is_freya_ready = FREYA_NOT_READY;
+			break;
+		case ACCL_FREYA_2_ADDR:
+		case ACCL_ARTEMIS_MODULE_2_ADDR:
+			if (accl_freya->is_cache_freya2_info != false) {
+				plat_asic_nvme_status_event(
+					card_id, PCIE_DEVICE_ID2,
+					PLDM_STATE_SET_OEM_DEVICE_NVME_NOT_READY);
+			}
+			accl_freya->is_cache_freya2_info = false;
+			memset(&accl_freya->freya2_fw_info, 0, FREYA_FW_VERSION_LENGTH);
+			accl_freya->freya2_fw_info.is_freya_ready = FREYA_NOT_READY;
+			break;
+		default:
+			break;
+		}
+		error_count[card_id] = 0;
+	}
 	k_mutex_unlock(mutex);
 	return false;
 }

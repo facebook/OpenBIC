@@ -1,0 +1,34 @@
+From 12c55bf68437610e95089a5c8ea51e1358dba832 Mon Sep 17 00:00:00 2001
+From: Dylan Hung <dylan_hung@aspeedtech.com>
+Date: Fri, 6 Oct 2023 18:08:43 +0800
+Subject: [PATCH] i3c: aspeed: Reduce the size of DAT related variables
+
+The number of the entries of the hardware DAT is 8 on either AST1030 or
+AST2600. So there is no need to reserve 32x dev_desc and dev_addr_tbl.
+Reduce their size to 8x to improve the memory footprint.
+
+Signed-off-by: Dylan Hung <dylan_hung@aspeedtech.com>
+Change-Id: Ib90663e1cd7f9a5ea799d230680f844944338f90
+---
+ drivers/i3c/i3c_aspeed.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index 1984e09fed..5d768538b9 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -559,9 +559,9 @@ struct i3c_aspeed_obj {
+ 
+ 	union i3c_dev_addr_tbl_ptr_s hw_dat;
+ 	uint32_t hw_dat_free_pos;
+-	uint8_t dev_addr_tbl[32];
++	uint8_t dev_addr_tbl[8];
+ 
+-	struct i3c_dev_desc *dev_descs[32];
++	struct i3c_dev_desc *dev_descs[8];
+ 
+ 	/* slave mode data */
+ 	struct i3c_slave_setup slave_data;
+-- 
+2.25.1
+

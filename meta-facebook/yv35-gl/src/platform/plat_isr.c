@@ -74,7 +74,7 @@ static void SLP3_handler()
 		msg.target_addr = SB_CPLD_ADDR;
 		msg.tx_len = 1;
 		msg.rx_len = 1;
-		msg.data[0] = SB_CPLD_REG_SLP3_PLD_N;
+		msg.data[0] = SB_CPLD_REG_POWER_SEQ;
 		ipmb_error status = i2c_master_read(&msg, retry);
 		if (status) {
 			LOG_ERR("%s() failed to get cpld register, ret %d", __func__, status);
@@ -402,11 +402,28 @@ void ISR_HSC_OC()
 	}
 }
 
-void ISR_CPU_MEMHOT()
+
+static void cpu_memory_hot_handler()
 {
-	common_addsel_msg_t sel_msg;
-	if ((gpio_get(IRQ_PVCCD_CPU0_VRHOT_LVC3_N) == GPIO_LOW) &&
-	    (gpio_get(PWRGD_CPU_LVC3) == GPIO_HIGH)) {
+	I2C_MSG i2c_msg = { 0 };
+	int ret = 0, retry = 3;
+
+	i2c_msg.bus = SB_CPLD_BUS;
+    i2c_msg.target_addr = SB_CPLD_ADDR;
+    i2c_msg.tx_len = 1;
+    i2c_msg.rx_len = 1;
+    i2c_msg.data[0] = SB_CPLD_REG_POWER_SEQ;
+    ret = i2c_master_read(&i2c_msg, retry);
+    if (ret != 0) {
+		LOG_ERR("%s() failed to get cpld register, ret %d", __func__, ret);
+		return;
+    }
+
+    uint8_t rst_pltrst_pld_n_val = GETBIT(i2c_msg.data[0], 2);
+
+    if (rst_pltrst_pld_n_val == GPIO_HIGH) {
+		common_addsel_msg_t sel_msg;
+
 		if (gpio_get(H_CPU_MEMHOT_OUT_LVC3_N) == GPIO_HIGH) {
 			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		} else {
@@ -422,6 +439,14 @@ void ISR_CPU_MEMHOT()
 		if (!common_add_sel_evt_record(&sel_msg)) {
 			LOG_ERR("Failed to add CPU MEM HOT SEL");
 		}
+    }
+}
+
+K_WORK_DEFINE(cpu_memory_hot_work, cpu_memory_hot_handler);
+void ISR_CPU_MEMHOT()
+{
+	if(gpio_get(PWRGD_CPU_LVC3) == GPIO_HIGH) {
+		k_work_submit(&cpu_memory_hot_work);
 	}
 }
 

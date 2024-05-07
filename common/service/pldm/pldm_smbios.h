@@ -104,6 +104,8 @@ uint8_t pldm_smbios_get_text_strings_size(char *text_strings);
 
 int pldm_smbios_set_bios_information(smbios_bios_information *new_bios_information);
 
+const char *pldm_smbios_get_bios_version();
+
 #ifdef __cplusplus
 }
 #endif

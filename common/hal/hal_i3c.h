@@ -106,7 +106,7 @@ typedef struct _I3C_MSG_ {
 	uint8_t bus;
 	uint8_t target_addr;
 	uint8_t tx_len;
-	uint8_t rx_len;
+	int rx_len;
 	uint8_t data[I3C_MAX_DATA_SIZE];
 } I3C_MSG;
 

@@ -24,7 +24,9 @@ extern "C" {
 #include "pldm.h"
 #include "plat_def.h"
 
+#ifndef MAX_FWUPDATE_RSP_BUF_SIZE
 #define MAX_FWUPDATE_RSP_BUF_SIZE 256
+#endif
 #define MAX_IMAGE_MALLOC_SIZE (1024 * 64)
 
 #define KEYWORD_VR_ISL69259 "isl69259"
@@ -36,6 +38,11 @@ extern "C" {
 #define KEYWORD_VR_MP2985 "mp2985"
 #define KEYWORD_VR_RAA229620 "raa229620"
 #define KEYWORD_VR_RAA229621 "raa229621"
+#define KEYWORD_VR_MPQ8746 "mpq8746"
+#define KEYWORD_VR_MP2898 "mp2898"
+#define KEYWORD_VR_MP2894 "mp2894"
+#define KEYWORD_VR_TPS53685 "tps53685"
+#define KEYWORD_VR_TPS536C5 "tps536c5"
 
 #ifndef KEYWORD_CPLD_LATTICE
 #define KEYWORD_CPLD_LATTICE "LCMXO3-9400C"
@@ -68,7 +75,9 @@ enum pldm_firmware_update_commands {
 	/* inventory commands */
 	PLDM_FW_UPDATE_CMD_CODE_QUERY_DEVICE_IDENTIFIERS = 0x01,
 	PLDM_FW_UPDATE_CMD_CODE_GET_FIRMWARE_PARAMETERS = 0x02,
+	PLDM_FW_UPDATE_CMD_CODE_QUERY_DOWNSTREAM_DEVICES = 0x03,
 	PLDM_FW_UPDATE_CMD_CODE_QUERY_DOWNSTREAM_IDENTIFIERS = 0x04,
+	PLDM_FW_UPDATE_CMD_CODE_GET_DOWNSTREAM_FW_PARAMETERS = 0x05,
 
 	/* update commands */
 	PLDM_FW_UPDATE_CMD_CODE_REQUEST_UPDATE = 0x10,
@@ -123,6 +132,14 @@ enum pldm_firmware_update_string_type {
 };
 
 /**
+ * Table 15 - QueryDeviceIdentifiers command format in DSP0267 1.1.0
+ */
+enum pldm_firmware_update_support_downstream_devices {
+	PLDM_FW_UPDATE_NOT_SUPPORT_DOWNSTREAM_DEVICES = 0x00,
+	PLDM_FW_UPDATE_SUPPORT_DOWNSTREAM_DEVICES = 0x01,
+};
+
+/**
  * PLDM Frimware update state
  */
 enum pldm_firmware_update_state {
@@ -148,22 +165,23 @@ enum pldm_firmware_update_aux_state {
 /**
  * PLDM component classification
  */
-enum { COMP_CLASS_TYPE_UNKNOWN = 0x0000,
-       COMP_CLASS_TYPE_OTHER,
-       COMP_CLASS_TYPE_DRIVER,
-       COMP_CLASS_TYPE_CFG_SW,
-       COMP_CLASS_TYPE_APP_SW,
-       COMP_CLASS_TYPE_INSTR,
-       COMP_CLASS_TYPE_FW_BIOS,
-       COMP_CLASS_TYPE_DIAG_SW,
-       COMP_CLASS_TYPE_OS,
-       COMP_CLASS_TYPE_MW,
-       COMP_CLASS_TYPE_FW,
-       COMP_CLASS_TYPE_BIOS_FC,
-       COMP_CLASS_TYPE_SP_SV_P,
-       COMP_CLASS_TYPE_SW_BUNDLE,
-       COMP_CLASS_TYPE_DOWNSTREAM = 0xFFFF,
-       COMP_CLASS_TYPE_MAX = 0x10000,
+enum {
+	COMP_CLASS_TYPE_UNKNOWN = 0x0000,
+	COMP_CLASS_TYPE_OTHER,
+	COMP_CLASS_TYPE_DRIVER,
+	COMP_CLASS_TYPE_CFG_SW,
+	COMP_CLASS_TYPE_APP_SW,
+	COMP_CLASS_TYPE_INSTR,
+	COMP_CLASS_TYPE_FW_BIOS,
+	COMP_CLASS_TYPE_DIAG_SW,
+	COMP_CLASS_TYPE_OS,
+	COMP_CLASS_TYPE_MW,
+	COMP_CLASS_TYPE_FW,
+	COMP_CLASS_TYPE_BIOS_FC,
+	COMP_CLASS_TYPE_SP_SV_P,
+	COMP_CLASS_TYPE_SW_BUNDLE,
+	COMP_CLASS_TYPE_DOWNSTREAM = 0xFFFF,
+	COMP_CLASS_TYPE_MAX = 0x10000,
 };
 
 /**
@@ -198,6 +216,10 @@ enum pldm_firmware_update_verify_result_values {
  */
 enum pldm_firmware_update_apply_result_values {
 	PLDM_FW_UPDATE_APPLY_SUCCESS = 0x00,
+	PLDM_FW_UPDATE_APPLY_SUCCESS_HAS_MODIFY_ACTIVATE_METHOD,
+	PLDM_FW_UPDATE_APPLY_FAIL_WITH_MEMORY_WRITE_ISSUE,
+	PLDM_FW_UPDATE_APPLY_TIMEOUT_OCCURRED = 0x09,
+	PLDM_FW_UPDATE_APPLY_GENERIC_ERROR_OCCURRED,
 	/* Other values that are not currently used, and will be defined if they are
   used in the future. */
 };
@@ -544,6 +566,24 @@ struct component_parameter_table {
 	uint32_t capabilities_during_update;
 } __attribute__((packed));
 
+/* Table 15 - QueryDownstreamDevices command format
+ * defined in DSP0267 1.1.0
+ */
+struct pldm_query_downstream_devices_resp {
+	uint8_t completion_code;
+	uint8_t downstream_device_update_supported;
+	uint16_t number_of_downstream_devices;
+	uint16_t max_number_of_downstream_devices;
+	struct capabilities {
+		uint8_t dynamically_attached : 1;
+		uint8_t dynamically_removed : 1;
+		uint8_t support_update_simultaneously : 1;
+		/* Bit [31:3] reserved */
+		uint16_t : 13;
+		uint16_t : 16;
+	} capabilities;
+} __attribute__((packed));
+
 struct pldm_query_downstream_identifier_req {
 	uint32_t datatransferhandle;
 	uint8_t transferoperationflag;
@@ -555,14 +595,44 @@ struct pldm_query_downstream_identifier_resp {
 	uint8_t transferflag;
 	uint32_t downstreamdevicelength;
 	uint16_t numbwerofdownstreamdevice;
+} __attribute__((packed));
+
+struct pldm_downstream_device {
 	uint16_t downstreamdeviceindex;
 	uint8_t downstreamdescriptorcount;
+	uint8_t downstreamdescriptors[0];
 } __attribute__((packed));
 
 struct pldm_downstream_identifier_table {
 	struct pldm_descriptor_string *descriptor;
 	uint8_t descriptor_count;
-};
+} __attribute__((packed));
+
+struct pldm_get_downstream_firmware_parameters_req {
+	uint32_t data_transfer_handle;
+	uint8_t transfer_operation_flag;
+} __attribute__((packed));
+
+struct pldm_get_downstream_firmware_parameters_resp {
+	uint8_t completion_code;
+	uint32_t next_data_transfer_handle;
+	uint8_t transfer_flag;
+	union {
+		struct {
+			uint8_t fail_recovery : 1;
+			uint8_t fail_retry : 1;
+			uint8_t func_during_update : 1;
+			uint8_t : 1; // reserved
+			uint8_t update_mode_restrict : 4;
+			uint8_t downgrade_restrictions : 1;
+			/* Bit [31:9] reserved */
+			uint8_t : 7;
+			uint16_t : 16;
+		};
+		uint32_t fdp_capabilities_during_update;
+	};
+	uint16_t downstream_device_count;
+} __attribute__((packed));
 
 uint8_t pldm_fw_update_handler_query(uint8_t code, void **ret_fn);
 uint16_t pldm_fw_update_read(void *mctp_p, enum pldm_firmware_update_commands cmd, uint8_t *req,
@@ -574,6 +644,8 @@ uint8_t pldm_retimer_update(void *fw_update_param);
 uint8_t pldm_bic_activate(void *arg);
 
 uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uint8_t *resp,
+					   uint16_t *resp_len);
+uint8_t plat_pldm_query_downstream_devices(const uint8_t *buf, uint16_t len, uint8_t *resp,
 					   uint16_t *resp_len);
 uint8_t plat_pldm_query_downstream_identifiers(const uint8_t *buf, uint16_t len, uint8_t *resp,
 					       uint16_t *resp_len);

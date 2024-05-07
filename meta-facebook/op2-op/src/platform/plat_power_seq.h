@@ -92,6 +92,7 @@ extern e1s_power_control_gpio opb_e1s_power_control_gpio[];
 
 bool get_e1s_present(uint8_t index);
 bool get_e1s_power_good(uint8_t index);
+bool get_edge_power_good();
 uint8_t get_e1s_pcie_reset_status(uint8_t index);
 void init_sequence_status();
 void set_sequence_status(uint8_t index, bool status);

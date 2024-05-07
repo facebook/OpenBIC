@@ -19,4 +19,34 @@
 
 #include <stdint.h>
 
+void ISR_E1S_ALERT();
+void ISR_RTC_ALERT();
+void ISR_GPIOA5();
+void ISR_GPIOA6();
+void ISR_GPIOB0();
+void ISR_GPIOB7();
+void ISR_HSC_OC();
+void ISR_GPIOC1();
+void ISR_GPIOC3();
+void ISR_GPIOC4();
+void ISR_GPIOD0();
+void ISR_PWRGD_CPU();
+void ISR_GPIOE2();
+void ISR_HSC_THROTTLE();
+void ISR_GPIOE4();
+void ISR_GPIOE5();
+void ISR_GPIOE6();
+void ISR_GPIOE7();
+void ISR_CPU_HIGHTEMP();
+void ISR_CPU_FAULT_ALERT();
+void ISR_GPIOF3();
+void ISR_GPIOF4();
+void ISR_GPIOF6();
+void ISR_GPIOF7();
+void ISR_MB_THROTTLE();
+void ISR_CPU_OVERTEMP();
+void ISR_GPIOH0();
+void ISR_GPIOH1();
+void ISR_SYS_THROTTLE();
+
 #endif

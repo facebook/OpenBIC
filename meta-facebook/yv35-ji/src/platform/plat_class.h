@@ -23,7 +23,6 @@
 #define SYS_CLASS_1 1
 #define SYS_CLASS_2 2
 
-#define CPLD_ADDR 0x21 // 7-bit address
 #define CPLD_CLASS_TYPE_REG 0x05
 #define CPLD_2OU_EXPANSION_CARD_REG 0x06
 #define CPLD_BOARD_REV_ID_REG 0x08
@@ -84,11 +83,21 @@ enum ADC_CHANNEL {
 };
 
 enum HSC_MODULE {
-	HSC_MODULE_ADM1278,
-	HSC_MODULE_LTC4282,
 	HSC_MODULE_MP5990,
-	HSC_MODULE_LTC4286 = 0x04,
+	HSC_MODULE_RS31380R,
 	HSC_MODULE_UNKNOWN = 0xFF,
+};
+
+enum RETIMER_MODULE {
+	RETIMER_MODULE_PT4080L,
+	RETIMER_MODULE_DS160PT801,
+	RETIMER_MODULE_UNKNOWN = 0xFF,
+};
+
+enum OTHER_MODULE {
+	OTH_MODULE_PRIMARY,
+	OTH_MODULE_SECOND,
+	OTH_MODULE_UNKNOWN = 0xFF,
 };
 
 enum BIC_CARD_PRESENT {
@@ -96,11 +105,22 @@ enum BIC_CARD_PRESENT {
 	CARD_PRESENT = true,
 };
 
+enum FIRMWARE_COMPONENT_ID {
+	JI_COMPNT_CPLD,
+	JI_COMPNT_BIC = 2,
+	JI_COMPNT_CPUDVDD,
+	JI_COMPNT_CPUVDD,
+	JI_COMPNT_SOCVDD,
+	JI_COMPNT_MAX,
+};
+
 uint8_t get_system_class();
 CARD_STATUS get_1ou_status();
 CARD_STATUS get_2ou_status();
 uint8_t get_board_revision();
 uint8_t get_hsc_module();
+uint8_t get_retimer_module();
+uint8_t get_oth_module();
 bool get_adc_voltage(int channel, float *voltage);
 void init_hsc_module(uint8_t board_revision);
 void init_platform_config();

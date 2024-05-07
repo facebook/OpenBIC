@@ -135,6 +135,42 @@ int pldm_smbios_set_bios_information(smbios_bios_information *new_bios_informati
 	return 0;
 }
 
+static const char *get_text_string_by_index(char *text_strings, uint8_t target_string_num)
+{
+	char *iter = text_strings;
+	const uint16_t MAXIMUM_COUNT = MAXIMUM_STRUCTURE_SIZE; /*Prevent infinite loop*/
+	uint8_t count = 0, i = 0;
+
+	if (!text_strings && *iter == '\0') {
+		return NULL;
+	}
+
+	while (count < target_string_num - 1 /*to 0 base*/) {
+		uint8_t len = strlen(iter);
+		count++;
+		if (*(iter + len) == '\0' && *(iter + len + 1) == '\0') {
+			break;
+		}
+
+		iter = iter + len + 1;
+		if (++i > MAXIMUM_COUNT) {
+			return NULL;
+		}
+	}
+
+	if (count == target_string_num - 1) {
+		return iter;
+	} else {
+		return NULL;
+	}
+}
+
+const char *pldm_smbios_get_bios_version()
+{
+	return get_text_string_by_index(bios_information.text_strings,
+					bios_information.bios_version);
+}
+
 static uint8_t filterStructureDataByType(uint8_t type, smbios_structure_header **result)
 {
 	uint8_t filtered_structure_data_count = 0;

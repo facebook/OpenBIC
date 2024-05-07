@@ -25,6 +25,7 @@
 #include "util_worker.h"
 #include "plat_pldm_monitor.h"
 #include "plat_dev.h"
+#include "plat_pldm_fw_update.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value

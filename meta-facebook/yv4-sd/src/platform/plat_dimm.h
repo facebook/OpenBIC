@@ -26,6 +26,13 @@
 #define DIMM_SPD_E_K_ADDR (0xA8 >> 1)
 #define DIMM_SPD_F_L_ADDR (0xAA >> 1)
 
+#define DIMM_PMIC_A_G_ADDR 0x48
+#define DIMM_PMIC_B_H_ADDR 0x49
+#define DIMM_PMIC_C_I_ADDR 0x4A
+#define DIMM_PMIC_D_J_ADDR 0x4B
+#define DIMM_PMIC_E_K_ADDR 0x4C
+#define DIMM_PMIC_F_L_ADDR 0x4D
+
 #define CPLD_ADDR 0x21
 
 #define MAX_LEN_I3C_GET_PMIC_PWR 1
@@ -39,11 +46,13 @@
 #define I3C_DIMM_MUTEX_TIMEOUT_MS 1000
 #define GET_DIMM_INFO_TIME_MS 1000
 #define GET_DIMM_INFO_STACK_SIZE 2304
+#define I3C_TRANSFER_DELAY_TIME_MS 200
 
 typedef struct dimm_info {
 	uint8_t is_present;
 	bool is_ready_monitor;
 	uint8_t spd_temp_data[MAX_LEN_I3C_GET_SPD_TEMP];
+	uint8_t pmic_pwr_data[MAX_LEN_I3C_GET_PMIC_PWR];
 } dimm_info;
 
 enum NUMBER_DIMM_TEMP {
@@ -59,6 +68,21 @@ enum NUMBER_DIMM_TEMP {
 	NUM_DIMM_J_TEMP,
 	NUM_DIMM_K_TEMP,
 	NUM_DIMM_L_TEMP,
+};
+
+enum NUMBER_DIMM_PMIC_PWR {
+	NUM_DIMM_A_PMIC_PWR = 0x0056,
+	NUM_DIMM_B_PMIC_PWR,
+	NUM_DIMM_C_PMIC_PWR,
+	NUM_DIMM_D_PMIC_PWR,
+	NUM_DIMM_E_PMIC_PWR,
+	NUM_DIMM_F_PMIC_PWR,
+	NUM_DIMM_G_PMIC_PWR,
+	NUM_DIMM_H_PMIC_PWR,
+	NUM_DIMM_I_PMIC_PWR,
+	NUM_DIMM_J_PMIC_PWR,
+	NUM_DIMM_K_PMIC_PWR,
+	NUM_DIMM_L_PMIC_PWR,
 };
 
 enum DIMM_ID {
@@ -86,12 +110,12 @@ enum DIMM_PRSNT_STATUS {
 void start_get_dimm_info_thread();
 void get_dimm_info_handler();
 uint8_t sensor_num_map_dimm_id(uint8_t sensor_num);
-void get_spd_temp_raw_data(int dimm_index, uint8_t *data);
 int pal_get_spd_temp(uint8_t sensor_num, uint8_t *data);
+int pal_get_pmic_pwr(uint8_t sensor_num, uint8_t *data);
 void clear_unaccessible_dimm_data(uint8_t dimm_id);
-int switch_i3c_dimm_mux(uint8_t i3c_mux_switch_data);
+int switch_i3c_dimm_mux(uint8_t i3c_ctrl_mux_data);
 int all_brocast_ccc(I3C_MSG *i3c_msg);
-void init_dimm_prsnt_status();
+int init_dimm_prsnt_status();
 uint8_t get_dimm_present(uint8_t dimm_id);
 
 #endif

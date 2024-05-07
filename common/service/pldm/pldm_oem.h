@@ -34,6 +34,7 @@ extern "C" {
 
 enum cmd_type {
 	POST_CODE = 0x00,
+	BIOS_VERSION = 0x01,
 };
 
 struct _cmd_echo_req {

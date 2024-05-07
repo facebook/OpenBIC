@@ -26,8 +26,13 @@
 #include "plat_power_seq.h"
 #include "plat_hook.h"
 #include "plat_pldm_sensor.h"
+#include "plat_isr.h"
 
 LOG_MODULE_REGISTER(plat_pldm_sensor);
+
+#define VR_DEVICE_UNKNOWN 0xFF
+
+void plat_pldm_sensor_change_vr_dev();
 
 static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = {
 	// thread id, thread name
@@ -167,7 +172,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x00, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -1405,7 +1410,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -1481,7 +1486,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -1557,7 +1562,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -1627,7 +1632,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1857,7 +1862,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -1934,7 +1939,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2011,7 +2016,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x00, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2088,7 +2093,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2168,7 +2173,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2188,7 +2193,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS8,
 			.target_addr = ADDR_VR_P0V8_ASIC1,
 			.offset = PMBUS_READ_TEMPERATURE_1,
-			.access_checker = vr_access,
+			.access_checker = cxl1_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -2246,7 +2251,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2266,7 +2271,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS8,
 			.target_addr = ADDR_VR_PVDDQ_CD_ASIC1,
 			.offset = PMBUS_READ_TEMPERATURE_1,
-			.access_checker = vr_access,
+			.access_checker = cxl1_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -2324,7 +2329,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2344,7 +2349,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS8,
 			.target_addr = ADDR_VR_P0V85_ASIC1,
 			.offset = PMBUS_READ_TEMPERATURE_1,
-			.access_checker = vr_access,
+			.access_checker = cxl1_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -2402,7 +2407,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2422,7 +2427,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS8,
 			.target_addr = ADDR_VR_PVDDQ_AB_ASIC1,
 			.offset = PMBUS_READ_TEMPERATURE_1,
-			.access_checker = vr_access,
+			.access_checker = cxl1_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -2480,7 +2485,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2500,7 +2505,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS3,
 			.target_addr = ADDR_VR_P0V8_ASIC2,
 			.offset = PMBUS_READ_TEMPERATURE_1,
-			.access_checker = vr_access,
+			.access_checker = cxl2_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -2558,7 +2563,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2578,7 +2583,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS3,
 			.target_addr = ADDR_VR_PVDDQ_CD_ASIC2,
 			.offset = PMBUS_READ_TEMPERATURE_1,
-			.access_checker = vr_access,
+			.access_checker = cxl2_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -2636,7 +2641,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2656,7 +2661,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS3,
 			.target_addr = ADDR_VR_P0V85_ASIC2,
 			.offset = PMBUS_READ_TEMPERATURE_1,
-			.access_checker = vr_access,
+			.access_checker = cxl2_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -2714,7 +2719,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2734,7 +2739,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS3,
 			.target_addr = ADDR_VR_PVDDQ_AB_ASIC2,
 			.offset = PMBUS_READ_TEMPERATURE_1,
-			.access_checker = vr_access,
+			.access_checker = cxl2_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -2812,7 +2817,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS8,
 			.target_addr = ADDR_VR_P0V8_ASIC1,
 			.offset = PMBUS_READ_VOUT,
-			.access_checker = vr_access,
+			.access_checker = cxl1_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -2890,7 +2895,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS8,
 			.target_addr = ADDR_VR_PVDDQ_CD_ASIC1,
 			.offset = PMBUS_READ_VOUT,
-			.access_checker = vr_access,
+			.access_checker = cxl1_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -2968,12 +2973,13 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS8,
 			.target_addr = ADDR_VR_P0V85_ASIC1,
 			.offset = PMBUS_READ_VOUT,
-			.access_checker = vr_access,
+			.access_checker = cxl1_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
 			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.post_sensor_read_hook = post_p085v_voltage_read,
 		},
 	},
 	{
@@ -3046,7 +3052,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS8,
 			.target_addr = ADDR_VR_PVDDQ_AB_ASIC1,
 			.offset = PMBUS_READ_VOUT,
-			.access_checker = vr_access,
+			.access_checker = cxl1_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -3124,7 +3130,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS3,
 			.target_addr = ADDR_VR_P0V8_ASIC2,
 			.offset = PMBUS_READ_VOUT,
-			.access_checker = vr_access,
+			.access_checker = cxl2_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -3202,7 +3208,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS3,
 			.target_addr = ADDR_VR_PVDDQ_CD_ASIC2,
 			.offset = PMBUS_READ_VOUT,
-			.access_checker = vr_access,
+			.access_checker = cxl2_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -3280,12 +3286,13 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS3,
 			.target_addr = ADDR_VR_P0V85_ASIC2,
 			.offset = PMBUS_READ_VOUT,
-			.access_checker = vr_access,
+			.access_checker = cxl2_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
 			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.post_sensor_read_hook = post_p085v_voltage_read,
 		},
 	},
 	{
@@ -3358,7 +3365,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS3,
 			.target_addr = ADDR_VR_PVDDQ_AB_ASIC2,
 			.offset = PMBUS_READ_VOUT,
-			.access_checker = vr_access,
+			.access_checker = cxl2_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -3416,7 +3423,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -3436,7 +3443,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS8,
 			.target_addr = ADDR_VR_P0V8_ASIC1,
 			.offset = PMBUS_READ_IOUT,
-			.access_checker = vr_access,
+			.access_checker = cxl1_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -3494,7 +3501,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -3514,7 +3521,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS8,
 			.target_addr = ADDR_VR_PVDDQ_CD_ASIC1,
 			.offset = PMBUS_READ_IOUT,
-			.access_checker = vr_access,
+			.access_checker = cxl1_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -3572,7 +3579,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -3592,7 +3599,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS8,
 			.target_addr = ADDR_VR_P0V85_ASIC1,
 			.offset = PMBUS_READ_IOUT,
-			.access_checker = vr_access,
+			.access_checker = cxl1_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -3650,7 +3657,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -3670,7 +3677,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS8,
 			.target_addr = ADDR_VR_PVDDQ_AB_ASIC1,
 			.offset = PMBUS_READ_IOUT,
-			.access_checker = vr_access,
+			.access_checker = cxl1_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -3728,7 +3735,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -3748,7 +3755,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS3,
 			.target_addr = ADDR_VR_P0V8_ASIC2,
 			.offset = PMBUS_READ_IOUT,
-			.access_checker = vr_access,
+			.access_checker = cxl2_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -3806,7 +3813,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -3826,7 +3833,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS3,
 			.target_addr = ADDR_VR_PVDDQ_CD_ASIC2,
 			.offset = PMBUS_READ_IOUT,
-			.access_checker = vr_access,
+			.access_checker = cxl2_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -3884,7 +3891,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -3904,7 +3911,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS3,
 			.target_addr = ADDR_VR_P0V85_ASIC2,
 			.offset = PMBUS_READ_IOUT,
-			.access_checker = vr_access,
+			.access_checker = cxl2_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -3962,7 +3969,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -3982,7 +3989,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS3,
 			.target_addr = ADDR_VR_PVDDQ_AB_ASIC2,
 			.offset = PMBUS_READ_IOUT,
-			.access_checker = vr_access,
+			.access_checker = cxl2_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -4040,7 +4047,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -4060,7 +4067,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS8,
 			.target_addr = ADDR_VR_P0V8_ASIC1,
 			.offset = PMBUS_READ_POUT,
-			.access_checker = vr_access,
+			.access_checker = cxl1_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -4118,7 +4125,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -4138,7 +4145,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS8,
 			.target_addr = ADDR_VR_PVDDQ_CD_ASIC1,
 			.offset = PMBUS_READ_POUT,
-			.access_checker = vr_access,
+			.access_checker = cxl1_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -4196,7 +4203,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -4216,7 +4223,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS8,
 			.target_addr = ADDR_VR_P0V85_ASIC1,
 			.offset = PMBUS_READ_POUT,
-			.access_checker = vr_access,
+			.access_checker = cxl1_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -4274,7 +4281,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -4294,7 +4301,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS8,
 			.target_addr = ADDR_VR_PVDDQ_AB_ASIC1,
 			.offset = PMBUS_READ_POUT,
-			.access_checker = vr_access,
+			.access_checker = cxl1_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -4352,7 +4359,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -4372,7 +4379,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS3,
 			.target_addr = ADDR_VR_P0V8_ASIC2,
 			.offset = PMBUS_READ_POUT,
-			.access_checker = vr_access,
+			.access_checker = cxl2_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -4430,7 +4437,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -4450,7 +4457,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS3,
 			.target_addr = ADDR_VR_PVDDQ_CD_ASIC2,
 			.offset = PMBUS_READ_POUT,
-			.access_checker = vr_access,
+			.access_checker = cxl2_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -4508,7 +4515,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -4528,7 +4535,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS3,
 			.target_addr = ADDR_VR_P0V85_ASIC2,
 			.offset = PMBUS_READ_POUT,
-			.access_checker = vr_access,
+			.access_checker = cxl2_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -4586,7 +4593,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -4606,7 +4613,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS3,
 			.target_addr = ADDR_VR_PVDDQ_AB_ASIC2,
 			.offset = PMBUS_READ_POUT,
-			.access_checker = vr_access,
+			.access_checker = cxl2_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -4661,7 +4668,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x3E, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4675,9 +4682,9 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 		.update_time = 0,
 		{
 			.type = sensor_dev_vistara,
-			.port = CXL_ID_0,
+			.port = CXL_ID_1,
 			.target_addr = DIMMA_ID,
-			.access_checker = cxl_ready_access,
+			.access_checker = cxl1_ready_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -4727,7 +4734,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x3E, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4741,9 +4748,9 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 		.update_time = 0,
 		{
 			.type = sensor_dev_vistara,
-			.port = CXL_ID_0,
+			.port = CXL_ID_1,
 			.target_addr = DIMMB_ID,
-			.access_checker = cxl_ready_access,
+			.access_checker = cxl1_ready_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -4793,7 +4800,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x3E, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4807,9 +4814,9 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 		.update_time = 0,
 		{
 			.type = sensor_dev_vistara,
-			.port = CXL_ID_0,
+			.port = CXL_ID_1,
 			.target_addr = DIMMC_ID,
-			.access_checker = cxl_ready_access,
+			.access_checker = cxl1_ready_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -4859,7 +4866,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x3E, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4873,9 +4880,9 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 		.update_time = 0,
 		{
 			.type = sensor_dev_vistara,
-			.port = CXL_ID_0,
+			.port = CXL_ID_1,
 			.target_addr = DIMMD_ID,
-			.access_checker = cxl_ready_access,
+			.access_checker = cxl1_ready_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -4925,7 +4932,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x3E, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4939,9 +4946,9 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 		.update_time = 0,
 		{
 			.type = sensor_dev_vistara,
-			.port = CXL_ID_1,
+			.port = CXL_ID_2,
 			.target_addr = DIMMA_ID,
-			.access_checker = cxl_ready_access,
+			.access_checker = cxl2_ready_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -4991,7 +4998,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x3E, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -5005,9 +5012,9 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 		.update_time = 0,
 		{
 			.type = sensor_dev_vistara,
-			.port = CXL_ID_1,
+			.port = CXL_ID_2,
 			.target_addr = DIMMB_ID,
-			.access_checker = cxl_ready_access,
+			.access_checker = cxl2_ready_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -5057,7 +5064,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x3E, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -5071,9 +5078,9 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 		.update_time = 0,
 		{
 			.type = sensor_dev_vistara,
-			.port = CXL_ID_1,
+			.port = CXL_ID_2,
 			.target_addr = DIMMC_ID,
-			.access_checker = cxl_ready_access,
+			.access_checker = cxl2_ready_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -5123,7 +5130,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x3E, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -5137,9 +5144,9 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 		.update_time = 0,
 		{
 			.type = sensor_dev_vistara,
-			.port = CXL_ID_1,
+			.port = CXL_ID_2,
 			.target_addr = DIMMD_ID,
-			.access_checker = cxl_ready_access,
+			.access_checker = cxl2_ready_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -6325,6 +6332,7 @@ pldm_sensor_info *plat_pldm_sensor_load(int thread_id)
 	case INA233_SENSOR_THREAD_ID:
 		return plat_pldm_sensor_ina233_table;
 	case VR_SENSOR_THREAD_ID:
+		plat_pldm_sensor_change_vr_dev();
 		return plat_pldm_sensor_vr_table;
 	case DIMM_SENSOR_THREAD_ID:
 		return plat_pldm_sensor_dimm_table;
@@ -6427,4 +6435,42 @@ void plat_load_aux_sensor_names_pdr_table(PDR_sensor_auxiliary_names *aux_sensor
 {
 	memcpy(aux_sensor_name_table, &plat_pdr_sensor_aux_names_table,
 	       sizeof(plat_pdr_sensor_aux_names_table));
+}
+
+void plat_pldm_sensor_change_vr_dev()
+{
+	uint8_t vr_dev = VR_DEVICE_UNKNOWN;
+	if (plat_pldm_sensor_get_vr_dev(&vr_dev) != GET_VR_DEV_SUCCESS) {
+		LOG_ERR("Unable to change the VR device due to its unknown status.");
+		return;
+	}
+
+	for (int index = 0; index < plat_pldm_sensor_get_sensor_count(VR_SENSOR_THREAD_ID);
+	     index++) {
+		plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type = vr_dev;
+	}
+}
+
+uint8_t plat_pldm_sensor_get_vr_dev(uint8_t *vr_dev)
+{
+	/*
+	 * Get VR type from IOE3 P14
+	 * High - MPS
+	 * Low - IFX
+	 */
+
+	uint8_t reg = 0;
+	if (get_ioe_value(ADDR_IOE3, TCA9555_INPUT_PORT_REG_1, &reg) == -1) {
+		LOG_ERR("Failed to get the VR type.");
+		*vr_dev = VR_DEVICE_UNKNOWN;
+		return GET_VR_DEV_FAILED;
+	}
+
+	if (GETBIT(reg, IOE_P14)) {
+		*vr_dev = sensor_dev_mp2971;
+	} else {
+		*vr_dev = sensor_dev_xdpe12284c;
+	}
+
+	return GET_VR_DEV_SUCCESS;
 }

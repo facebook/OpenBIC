@@ -26,5 +26,6 @@
 
 void load_pldmupdate_comp_config(void);
 void clear_pending_version(uint8_t activate_method);
+void init_pldm_fw_update_table();
 
 #endif /* _PLAT_FWUPDATE_H_ */

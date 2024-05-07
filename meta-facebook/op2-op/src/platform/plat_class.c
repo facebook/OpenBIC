@@ -187,3 +187,25 @@ void init_i3c_hub_type(void)
 		return;
 	}
 }
+
+void set_clock_buffer_bypass_mode()
+{
+	//for Expansion board A
+	if (get_card_type() == CARD_TYPE_OPA) { //check Expansion board type
+		uint8_t retry = 3;
+		I2C_MSG msg = { 0 };
+
+		msg.bus = I2C_BUS4; //bus 3
+		msg.target_addr = CLOCK_BUFFER_ADDR; //clock buffer address
+		msg.tx_len = 3;
+		msg.rx_len = 0;
+		msg.data[0] = CLOCK_BUFFER_REG_LOC; //clock buffer register location
+		msg.data[1] = CLOCK_BUFFER_BYPASS_DATA_1; //clock buffer bypass data value 1
+		msg.data[2] = CLOCK_BUFFER_BYPASS_DATA_2; //clock buffer bypass data value 2
+
+		if (i2c_master_write(&msg, retry) != 0) {
+			LOG_ERR("Failed to set Exp A clock buffer to bypass mode!");
+			return;
+		}
+	}
+}

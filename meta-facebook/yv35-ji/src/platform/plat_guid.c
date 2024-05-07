@@ -17,10 +17,11 @@
 #include <stdio.h>
 #include "guid.h"
 #include "plat_guid.h"
+#include "plat_i2c.h"
 #include "fru.h"
 #include <string.h>
 
-#define MB_GUID_PORT 0x0A
+#define MB_GUID_PORT I2C_BUS10
 #define MB_GUID_ADDR 0x50
 
 const EEPROM_CFG guid_config[] = {

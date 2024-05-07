@@ -77,6 +77,23 @@ uint8_t get_slot_id()
 	return slot_id;
 }
 
+bool get_blade_config(uint8_t *blade_config)
+{
+	float voltage = 0.0f;
+
+	if (get_adc_voltage(ADC_CHANNEL_12, &voltage) == false) {
+		*blade_config = BLADE_CONFIG_UNKNOWN;
+		return false;
+	}
+
+	if (voltage <= 1.02f && voltage >= 0.98f) {
+		*blade_config = BLADE_CONFIG_T1C;
+	} else {
+		*blade_config = BLADE_CONFIG_T1M;
+	}
+	return true;
+}
+
 bool get_board_rev(uint8_t *board_rev)
 {
 	int retry = 5;
@@ -160,10 +177,10 @@ void init_platform_config()
 
 	i3c_msg.bus = 0;
 
-	bool success = get_adc_voltage(CHANNEL_13, &voltage);
+	bool success = get_adc_voltage(ADC_CHANNEL_13, &voltage);
 
 	if (success) {
-		success = get_adc_voltage(CHANNEL_2, &p3v3_stby_voltage);
+		success = get_adc_voltage(ADC_CHANNEL_2, &p3v3_stby_voltage);
 		p3v3_stby_voltage *= 2; // voltage division is 0.5
 		if (!success) {
 			LOG_ERR("Fail to get 3v3 standby voltage. Set to default value.");

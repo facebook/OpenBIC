@@ -21,14 +21,14 @@
 
 #define PLATFORM_NAME "Yosemite V3.5"
 #define PROJECT_NAME "Java Island"
-#define PROJECT_STAGE POC
+#define PROJECT_STAGE EVT
 
 #define BOARD_ID 0x0A /* same with sign tool table */
 #define DEVICE_ID 0x00
 #define DEVICE_REVISION 0x80
 
 #define FIRMWARE_REVISION_1 GET_FW_VERSION1(BOARD_ID, PROJECT_STAGE)
-#define FIRMWARE_REVISION_2 0x01
+#define FIRMWARE_REVISION_2 0x03
 
 #define IPMI_VERSION 0x02
 #define ADDITIONAL_DEVICE_SUPPORT 0xBF
@@ -37,8 +37,8 @@
 
 #define BIC_FW_YEAR_MSB 0x20
 #define BIC_FW_YEAR_LSB 0x24
-#define BIC_FW_WEEK 0x00
-#define BIC_FW_VER 0x00
+#define BIC_FW_WEEK 0x16
+#define BIC_FW_VER 0x01
 #define BIC_FW_platform_0 0x6A // char: j
 #define BIC_FW_platform_1 0x69 // char: i
 #define BIC_FW_platform_2 0x00 // char: '\0'

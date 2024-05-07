@@ -42,4 +42,20 @@ enum _i2c_bus_num {
 #define SSIF_I2C_BUS I2C_BUS6
 #define SSIF_I2C_ADDR 0x20 //8bit
 
+#define CPLD_I2C_ADDR 0x42 //8bit
+
+#define MCTP_I2C_BIC_ADDR 0x20 //8bit
+
+#define MCTP_I2C_SATMC_BUS I2C_BUS4
+#define MCTP_I2C_SATMC_ADDR 0x80 //8bit
+
+#define CPUDVDD_I2C_BUS I2C_BUS3
+#define CPUDVDD_I2C_ADDR 0x32 //8bit
+
+#define CPUVDD_I2C_BUS I2C_BUS3
+#define CPUVDD_I2C_ADDR 0x4A //8bit
+
+#define SOCVDD_I2C_BUS I2C_BUS3
+#define SOCVDD_I2C_ADDR 0x4C //8bit
+
 #endif

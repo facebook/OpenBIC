@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <zephyr.h>
+#include <soc.h>
 #include "hal_gpio.h"
 #include "hal_peci.h"
 #include "power_status.h"
@@ -46,7 +48,7 @@ SCU_CFG scu_cfg[] = {
 void pal_pre_init()
 {
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
-	apml_init();
+	aspeed_print_sysrst_info();
 
 	/* init i2c target */
 	for (int index = 0; index < MAX_TARGET_NUM; index++) {
@@ -103,6 +105,9 @@ void pal_set_sys_status()
 	set_DC_on_delayed_status();
 	set_post_status(FM_BIOS_POST_CMPLT_BIC_N);
 	sync_bmc_ready_pin();
+	set_sys_ready_pin(BIC_READY_R);
+	reset_usb_hub();
+	apml_init();
 
 	if (get_post_status()) {
 		apml_recovery();

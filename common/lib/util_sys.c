@@ -145,6 +145,11 @@ __weak int pal_get_set_add_debug_sel_mode_status(uint8_t options, uint8_t *statu
 	return -1;
 }
 
+__weak uint8_t pal_get_bmc_interface()
+{
+	return BMC_INTERFACE_I2C;
+}
+
 /* The byte-2 of ME response for "Get Self-Test Result" command */
 enum GET_SELF_TEST_RESULT_RESPONSE {
 	NO_ERROR = 0x55,

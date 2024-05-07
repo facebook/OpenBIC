@@ -20,6 +20,7 @@
 #include "pldm.h"
 #include "libutil.h"
 #include "plat_pldm_monitor.h"
+#include "plat_power_seq.h"
 
 LOG_MODULE_REGISTER(plat_pldm_monitor);
 
@@ -39,6 +40,10 @@ struct pldm_state_effecter_info plat_state_effecter_table[] = {
 	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_MAX + 3] = {
 		.entity_type = PLDM_ENTITY_DEVICE_DRIVER,
 		.effecter_id = PLAT_PLDM_EFFECTER_ID_SPI2_REINIT,
+	},
+	[PLDM_PLATFORM_OEM_AST1030_GPIO_PIN_NUM_MAX + 4] = {
+		.entity_type = PLDM_ENTITY_IO_CONTROLLER,
+		.effecter_id = PLAT_PLDM_EFFECTER_ID_CXL_READY,
 	},
 };
 
@@ -178,6 +183,32 @@ uint8_t plat_pldm_set_state_effecter_state_handler(const uint8_t *buf, uint16_t 
 	return PLDM_SUCCESS;
 }
 
+static void plat_get_cxl_ready_state(const uint8_t *buf, uint16_t len, uint8_t *resp,
+					      uint16_t *resp_len)
+{
+	CHECK_NULL_ARG(buf);
+	CHECK_NULL_ARG(resp);
+	CHECK_NULL_ARG(resp_len);
+
+	struct pldm_get_state_effecter_states_resp *res_p =
+		(struct pldm_get_state_effecter_states_resp *)resp;
+
+	get_effecter_state_field_t *cxl1_state = &res_p->field[0];
+	get_effecter_state_field_t *cxl2_state = &res_p->field[1];
+
+	cxl1_state->effecter_op_state = PLDM_EFFECTER_ENABLED_NOUPDATEPENDING;
+	cxl1_state->present_state = cxl1_state->pending_state = (get_cxl_ready_status(CXL_ID_1) ? 1 : 0);
+	cxl2_state->effecter_op_state = PLDM_EFFECTER_ENABLED_NOUPDATEPENDING;
+	cxl2_state->present_state = cxl2_state->pending_state = (get_cxl_ready_status(CXL_ID_2) ? 1 : 0);
+
+	*resp_len = PLDM_GET_STATE_EFFECTER_RESP_NO_STATE_FIELD_BYTES +
+		    (sizeof(get_effecter_state_field_t) * 2);
+	res_p->composite_effecter_count = 2;
+	res_p->completion_code = PLDM_SUCCESS;
+
+	return;
+}
+
 uint8_t plat_pldm_get_state_effecter_state_handler(const uint8_t *buf, uint16_t len, uint8_t *resp,
 						   uint16_t *resp_len,
 						   struct pldm_state_effecter_info *info_p)
@@ -192,6 +223,10 @@ uint8_t plat_pldm_get_state_effecter_state_handler(const uint8_t *buf, uint16_t 
 
 	switch (info_p->entity_type) {
 	case PLDM_ENTITY_IO_CONTROLLER:
+		if (info_p->effecter_id == PLAT_PLDM_EFFECTER_ID_CXL_READY) {
+			plat_get_cxl_ready_state(buf, len, resp, resp_len);
+			break;
+		}
 		get_effecter_state_gpio_handler(buf, len, resp, resp_len,
 						(uint8_t)(info_p->effecter_id & GENMASK(7, 0)));
 		break;

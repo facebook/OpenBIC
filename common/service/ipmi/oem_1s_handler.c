@@ -49,6 +49,9 @@
 #ifdef ENABLE_MPRO
 #include "mpro.h"
 #endif
+#ifdef ENABLE_SBMR
+#include "sbmr.h"
+#endif
 #include "pcc.h"
 #include "hal_wdt.h"
 #include "pldm.h"
@@ -65,6 +68,10 @@
 #define POST_CODE_BUF_SIZE 240
 #else
 #define POST_CODE_BUF_SIZE SNOOP_MAX_LEN
+#endif
+
+#ifdef ENABLE_SBMR
+#define SBMR_POST_CODE_PAGE_SIZE 26
 #endif
 
 LOG_MODULE_DECLARE(ipmi);
@@ -765,6 +772,23 @@ __weak void OEM_1S_GET_4BYTE_POST_CODE(ipmi_msg *msg)
 	}
 	start_idx = page * FOUR_BYTE_POST_CODE_PAGE_SIZE;
 	read_len = copy_mpro_read_buffer(start_idx, FOUR_BYTE_POST_CODE_PAGE_SIZE, msg->data,
+					 IPMI_MSG_MAX_LENGTH);
+	msg->data_len = read_len & 0xFF;
+	msg->completion_code = CC_SUCCESS;
+#elif defined(ENABLE_SBMR)
+	uint16_t read_len, start_idx;
+	if (msg->data_len != 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t page = msg->data[0];
+	if ((page > 17)) {
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		return;
+	}
+	start_idx = page * SBMR_POST_CODE_PAGE_SIZE;
+	read_len = copy_sbmr_read_buffer(start_idx, SBMR_POST_CODE_PAGE_SIZE, msg->data,
 					 IPMI_MSG_MAX_LENGTH);
 	msg->data_len = read_len & 0xFF;
 	msg->completion_code = CC_SUCCESS;

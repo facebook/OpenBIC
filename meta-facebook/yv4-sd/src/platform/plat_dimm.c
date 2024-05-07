@@ -41,6 +41,9 @@ bool is_dimm_checked_presnt = false;
 uint8_t spd_i3c_addr_list[] = { DIMM_SPD_A_G_ADDR, DIMM_SPD_B_H_ADDR, DIMM_SPD_C_I_ADDR,
 				DIMM_SPD_D_J_ADDR, DIMM_SPD_E_K_ADDR, DIMM_SPD_F_L_ADDR };
 
+uint8_t pmic_i3c_addr_list[] = { DIMM_PMIC_A_G_ADDR, DIMM_PMIC_B_H_ADDR, DIMM_PMIC_C_I_ADDR,
+				 DIMM_PMIC_D_J_ADDR, DIMM_PMIC_E_K_ADDR, DIMM_PMIC_F_L_ADDR };
+
 void start_get_dimm_info_thread()
 {
 	LOG_INF("Start thread to get dimm information");
@@ -55,6 +58,7 @@ void start_get_dimm_info_thread()
 void get_dimm_info_handler()
 {
 	I3C_MSG i3c_msg = { 0 };
+	i3c_msg.bus = I3C_BUS3;
 
 	// Init mutex
 	if (k_mutex_init(&i3c_dimm_mutex)) {
@@ -72,7 +76,10 @@ void get_dimm_info_handler()
 		}
 
 		if (is_dimm_checked_presnt == false) {
-			init_dimm_prsnt_status();
+			if (init_dimm_prsnt_status() < 0){
+				k_msleep(GET_DIMM_INFO_TIME_MS);
+				continue;
+			}
 		}
 
 		if (k_mutex_lock(&i3c_dimm_mutex, K_MSEC(I3C_DIMM_MUTEX_TIMEOUT_MS))) {
@@ -130,6 +137,40 @@ void get_dimm_info_handler()
 				       sizeof(dimm_data[dimm_id].spd_temp_data));
 			}
 			i3c_detach(&i3c_msg);
+
+			memset(&i3c_msg, 0, sizeof(I3C_MSG));
+
+			i3c_msg.bus = I3C_BUS3;
+			i3c_msg.target_addr = pmic_i3c_addr_list[dimm_id % (DIMM_ID_MAX / 2)];
+			i3c_attach(&i3c_msg);
+
+			ret = all_brocast_ccc(&i3c_msg);
+			if (ret != 0) {
+				clear_unaccessible_dimm_data(dimm_id);
+				i3c_detach(&i3c_msg);
+				continue;
+			}
+
+			if (!get_post_status()) {
+				i3c_detach(&i3c_msg);
+				break;
+			}
+
+			i3c_msg.tx_len = 1;
+			i3c_msg.rx_len = MAX_LEN_I3C_GET_PMIC_PWR;
+			i3c_msg.data[0] = DIMM_PMIC_SWA_PWR;
+
+			ret = i3c_transfer(&i3c_msg);
+			if (ret != 0) {
+				clear_unaccessible_dimm_data(dimm_id);
+				LOG_ERR("Failed to read DIMM %d PMIC power via I3C, ret= %d",
+					dimm_id, ret);
+				continue;
+			} else {
+				memcpy(&dimm_data[dimm_id].pmic_pwr_data, &i3c_msg.data,
+				       sizeof(dimm_data[dimm_id].pmic_pwr_data));
+			}
+			i3c_detach(&i3c_msg);
 		}
 
 		if (k_mutex_unlock(&i3c_dimm_mutex)) {
@@ -146,43 +187,54 @@ uint8_t sensor_num_map_dimm_id(uint8_t sensor_num)
 
 	switch (sensor_num) {
 	case NUM_DIMM_A_TEMP:
+	case NUM_DIMM_A_PMIC_PWR:
 		dimm_id = DIMM_ID_A;
 		break;
 	case NUM_DIMM_B_TEMP:
+	case NUM_DIMM_B_PMIC_PWR:
 		dimm_id = DIMM_ID_B;
 		break;
 	case NUM_DIMM_C_TEMP:
+	case NUM_DIMM_C_PMIC_PWR:
 		dimm_id = DIMM_ID_C;
 		break;
 	case NUM_DIMM_D_TEMP:
+	case NUM_DIMM_D_PMIC_PWR:
 		dimm_id = DIMM_ID_D;
 		break;
 	case NUM_DIMM_E_TEMP:
+	case NUM_DIMM_E_PMIC_PWR:
 		dimm_id = DIMM_ID_E;
 		break;
 	case NUM_DIMM_F_TEMP:
+	case NUM_DIMM_F_PMIC_PWR:
 		dimm_id = DIMM_ID_F;
 		break;
 	case NUM_DIMM_G_TEMP:
+	case NUM_DIMM_G_PMIC_PWR:
 		dimm_id = DIMM_ID_G;
 		break;
 	case NUM_DIMM_H_TEMP:
+	case NUM_DIMM_H_PMIC_PWR:
 		dimm_id = DIMM_ID_H;
 		break;
 	case NUM_DIMM_I_TEMP:
+	case NUM_DIMM_I_PMIC_PWR:
 		dimm_id = DIMM_ID_I;
 		break;
 	case NUM_DIMM_J_TEMP:
+	case NUM_DIMM_J_PMIC_PWR:
 		dimm_id = DIMM_ID_J;
 		break;
 	case NUM_DIMM_K_TEMP:
+	case NUM_DIMM_K_PMIC_PWR:
 		dimm_id = DIMM_ID_K;
 		break;
 	case NUM_DIMM_L_TEMP:
+	case NUM_DIMM_L_PMIC_PWR:
 		dimm_id = DIMM_ID_L;
 		break;
 	default:
-		dimm_id = DIMM_ID_UNKNOWN;
 		break;
 	}
 
@@ -218,10 +270,41 @@ int pal_get_spd_temp(uint8_t sensor_num, uint8_t *data)
 	return 0;
 }
 
+void get_pmic_power_raw_data(int dimm_index, uint8_t *data)
+{
+	CHECK_NULL_ARG(data);
+
+	memcpy(data, &dimm_data[dimm_index].pmic_pwr_data,
+	       sizeof(dimm_data[dimm_index].pmic_pwr_data));
+}
+
+int pal_get_pmic_pwr(uint8_t sensor_num, uint8_t *data)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, -1);
+
+	uint8_t dimm_id = DIMM_ID_UNKNOWN;
+
+	dimm_id = sensor_num_map_dimm_id(sensor_num);
+	if (dimm_id == DIMM_ID_UNKNOWN) {
+		return -1;
+	}
+
+	get_pmic_power_raw_data(dimm_id, (uint8_t *)data);
+
+	// If sensor data is SENSOR_FAIL, return failed
+	if (data[0] == SENSOR_FAIL) {
+		return -1;
+	}
+
+	return 0;
+}
+
 void clear_unaccessible_dimm_data(uint8_t dimm_id)
 {
 	memset(dimm_data[dimm_id].spd_temp_data, SENSOR_FAIL,
 	       sizeof(dimm_data[dimm_id].spd_temp_data));
+	memset(dimm_data[dimm_id].pmic_pwr_data, SENSOR_FAIL,
+	       sizeof(dimm_data[dimm_id].pmic_pwr_data));
 }
 
 int switch_i3c_dimm_mux(uint8_t i3c_ctrl_mux_data)
@@ -264,13 +347,18 @@ int all_brocast_ccc(I3C_MSG *i3c_msg)
 	return ret;
 }
 
-void init_dimm_prsnt_status()
+int init_dimm_prsnt_status()
 {
 	I3C_MSG i3c_msg = { 0 };
 	int ret = 0;
 
 	// Clear DIMM data
 	memset(dimm_data, 0, sizeof(dimm_data));
+
+	if (k_mutex_lock(&i3c_dimm_mutex, K_MSEC(I3C_DIMM_MUTEX_TIMEOUT_MS))) {
+		LOG_ERR("Failed to lock I3C dimm MUX");
+		return -1;
+	}
 
 	// Init DIMM present status
 	for (uint8_t dimm_id = 0; dimm_id < DIMM_ID_MAX; dimm_id++) {
@@ -286,6 +374,7 @@ void init_dimm_prsnt_status()
 			continue;
 		}
 
+		k_msleep(I3C_TRANSFER_DELAY_TIME_MS);
 		i3c_msg.bus = I3C_BUS3;
 		i3c_msg.target_addr = spd_i3c_addr_list[dimm_id % (DIMM_ID_MAX / 2)];
 		i3c_attach(&i3c_msg);
@@ -299,6 +388,7 @@ void init_dimm_prsnt_status()
 			continue;
 		}
 
+		k_msleep(I3C_TRANSFER_DELAY_TIME_MS);
 		// Read SPD vender to check dimm present
 		i3c_msg.tx_len = 1;
 		i3c_msg.rx_len = 1;
@@ -314,9 +404,15 @@ void init_dimm_prsnt_status()
 			dimm_data[dimm_id].is_present = DIMM_PRSNT;
 		}
 		i3c_detach(&i3c_msg);
+		k_msleep(I3C_TRANSFER_DELAY_TIME_MS);
+	}
+
+	if (k_mutex_unlock(&i3c_dimm_mutex)) {
+		LOG_ERR("Failed to unlock I3C dimm MUX");
 	}
 
 	is_dimm_checked_presnt = true;
+	return 0;
 }
 
 uint8_t get_dimm_present(uint8_t dimm_id)

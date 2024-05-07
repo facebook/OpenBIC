@@ -156,7 +156,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x0C, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -292,7 +292,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x000084D0, //uint32_t max_readable;
 			0x00006F54, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x0F, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -362,7 +362,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x0C, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -634,7 +634,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00003138, //uint32_t max_readable;
 			0x00002C88, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x0F, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -770,7 +770,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -838,7 +838,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x0C, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -906,7 +906,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -977,7 +977,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1046,7 +1046,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1115,7 +1115,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1184,7 +1184,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1253,7 +1253,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1322,7 +1322,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x0C, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1391,7 +1391,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x0C, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1460,7 +1460,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x0C, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1529,7 +1529,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x0C, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1598,7 +1598,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x0C, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1667,7 +1667,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1736,7 +1736,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1805,7 +1805,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1874,7 +1874,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1943,7 +1943,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2012,7 +2012,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2081,7 +2081,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2150,7 +2150,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2219,7 +2219,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2288,7 +2288,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2360,7 +2360,7 @@ pldm_sensor_info plat_pldm_sensor_mb_temp_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2427,7 +2427,7 @@ pldm_sensor_info plat_pldm_sensor_mb_temp_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2494,7 +2494,7 @@ pldm_sensor_info plat_pldm_sensor_mb_temp_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2561,7 +2561,7 @@ pldm_sensor_info plat_pldm_sensor_mb_temp_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2628,7 +2628,7 @@ pldm_sensor_info plat_pldm_sensor_mb_temp_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2699,7 +2699,7 @@ pldm_sensor_info plat_pldm_sensor_cpu_table[] = {
 			0x00030D40, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2767,7 +2767,7 @@ pldm_sensor_info plat_pldm_sensor_cpu_table[] = {
 			0x000FFFFF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2840,7 +2840,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x05, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2909,7 +2909,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x05, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -2978,7 +2978,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3047,7 +3047,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3252,7 +3252,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3320,7 +3320,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3388,7 +3388,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3456,7 +3456,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3524,7 +3524,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3593,7 +3593,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x14, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3665,7 +3665,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3734,7 +3734,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3803,7 +3803,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3872,7 +3872,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -3941,7 +3941,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4010,7 +4010,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4079,7 +4079,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4148,7 +4148,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4217,7 +4217,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4286,7 +4286,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4355,7 +4355,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4424,7 +4424,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x000000FF, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0xFF, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -4449,8 +4449,834 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			.pre_sensor_read_hook = pre_dimm_i3c_read,
 		},
 	},
+	{
+		{
+			// DIMMA_PMIC_PWR_W
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
 
-	// TODO: support DIMM PMIC PWR
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			NUM_DIMM_A_PMIC_PWR, //uint16_t sensor_id;
+			0x8E, //uint16_t entity_type;
+			0x000D, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init;
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x07, //uint8_t base_unit;
+			-2, //int8_t unit_modifier;
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x4, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			0xFF, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x0000639C, //uint32_t max_readable;
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_support;
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0x00000C1A, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00000C37, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.num = NUM_DIMM_A_PMIC_PWR,
+			.type = sensor_dev_i3c_dimm,
+			.port = I3C_BUS3,
+			.target_addr = DIMM_PMIC_A_G_ADDR,
+			.offset = DIMM_PMIC_SWA_PWR,
+			.access_checker = post_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.pre_sensor_read_hook = pre_dimm_i3c_read,
+		},
+	},
+	{
+		{
+			// DIMMB_PMIC_PWR_W
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			NUM_DIMM_B_PMIC_PWR, //uint16_t sensor_id;
+			0x8E, //uint16_t entity_type;
+			0x000E, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init;
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x07, //uint8_t base_unit;
+			-2, //int8_t unit_modifier;
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x4, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			0xFF, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x0000639C, //uint32_t max_readable;
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_support;
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0x00000C1A, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00000C37, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.num = NUM_DIMM_B_PMIC_PWR,
+			.type = sensor_dev_i3c_dimm,
+			.port = I3C_BUS3,
+			.target_addr = DIMM_PMIC_B_H_ADDR,
+			.offset = DIMM_PMIC_SWA_PWR,
+			.access_checker = post_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.pre_sensor_read_hook = pre_dimm_i3c_read,
+		},
+	},
+	{
+		{
+			// DIMMC_PMIC_PWR_W
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			NUM_DIMM_C_PMIC_PWR, //uint16_t sensor_id;
+			0x8E, //uint16_t entity_type;
+			0x000F, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init;
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x07, //uint8_t base_unit;
+			-2, //int8_t unit_modifier;
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x4, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			0xFF, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x0000639C, //uint32_t max_readable;
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_support;
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0x00000C1A, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00000C37, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.num = NUM_DIMM_C_PMIC_PWR,
+			.type = sensor_dev_i3c_dimm,
+			.port = I3C_BUS3,
+			.target_addr = DIMM_PMIC_C_I_ADDR,
+			.offset = DIMM_PMIC_SWA_PWR,
+			.access_checker = post_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.pre_sensor_read_hook = pre_dimm_i3c_read,
+		},
+	},
+	{
+		{
+			// DIMMD_PMIC_PWR_W
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			NUM_DIMM_D_PMIC_PWR, //uint16_t sensor_id;
+			0x8E, //uint16_t entity_type;
+			0x0010, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init;
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x07, //uint8_t base_unit;
+			-2, //int8_t unit_modifier;
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x4, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			0xFF, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x0000639C, //uint32_t max_readable;
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_support;
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0x00000C1A, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00000C37, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.num = NUM_DIMM_D_PMIC_PWR,
+			.type = sensor_dev_i3c_dimm,
+			.port = I3C_BUS3,
+			.target_addr = DIMM_PMIC_D_J_ADDR,
+			.offset = DIMM_PMIC_SWA_PWR,
+			.access_checker = post_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.pre_sensor_read_hook = pre_dimm_i3c_read,
+		},
+	},
+	{
+		{
+			// DIMME_PMIC_PWR_W
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			NUM_DIMM_E_PMIC_PWR, //uint16_t sensor_id;
+			0x8E, //uint16_t entity_type;
+			0x0011, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init;
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x07, //uint8_t base_unit;
+			-2, //int8_t unit_modifier;
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x4, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			0xFF, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x0000639C, //uint32_t max_readable;
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_support;
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0x00000C1A, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00000C37, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.num = NUM_DIMM_E_PMIC_PWR,
+			.type = sensor_dev_i3c_dimm,
+			.port = I3C_BUS3,
+			.target_addr = DIMM_PMIC_E_K_ADDR,
+			.offset = DIMM_PMIC_SWA_PWR,
+			.access_checker = post_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.pre_sensor_read_hook = pre_dimm_i3c_read,
+		},
+	},
+	{
+		{
+			// DIMMF_PMIC_PWR_W
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			NUM_DIMM_F_PMIC_PWR, //uint16_t sensor_id;
+			0x8E, //uint16_t entity_type;
+			0x0012, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init;
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x07, //uint8_t base_unit;
+			-2, //int8_t unit_modifier;
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x4, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			0xFF, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x0000639C, //uint32_t max_readable;
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_support;
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0x00000C1A, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00000C37, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.num = NUM_DIMM_F_PMIC_PWR,
+			.type = sensor_dev_i3c_dimm,
+			.port = I3C_BUS3,
+			.target_addr = DIMM_PMIC_F_L_ADDR,
+			.offset = DIMM_PMIC_SWA_PWR,
+			.access_checker = post_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.pre_sensor_read_hook = pre_dimm_i3c_read,
+		},
+	},
+	{
+		{
+			// DIMMG_PMIC_PWR_W
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			NUM_DIMM_G_PMIC_PWR, //uint16_t sensor_id;
+			0x8E, //uint16_t entity_type;
+			0x0013, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init;
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x07, //uint8_t base_unit;
+			-2, //int8_t unit_modifier;
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x4, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			0xFF, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x0000639C, //uint32_t max_readable;
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_support;
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0x00000C1A, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00000C37, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.num = NUM_DIMM_G_PMIC_PWR,
+			.type = sensor_dev_i3c_dimm,
+			.port = I3C_BUS3,
+			.target_addr = DIMM_PMIC_A_G_ADDR,
+			.offset = DIMM_PMIC_SWA_PWR,
+			.access_checker = post_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.pre_sensor_read_hook = pre_dimm_i3c_read,
+		},
+	},
+	{
+		{
+			// DIMMH_PMIC_PWR_W
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			NUM_DIMM_H_PMIC_PWR, //uint16_t sensor_id;
+			0x8E, //uint16_t entity_type;
+			0x0014, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init;
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x07, //uint8_t base_unit;
+			-2, //int8_t unit_modifier;
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x4, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			0xFF, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x0000639C, //uint32_t max_readable;
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_support;
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0x00000C1A, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00000C37, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.num = NUM_DIMM_H_PMIC_PWR,
+			.type = sensor_dev_i3c_dimm,
+			.port = I3C_BUS3,
+			.target_addr = DIMM_PMIC_B_H_ADDR,
+			.offset = DIMM_PMIC_SWA_PWR,
+			.access_checker = post_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.pre_sensor_read_hook = pre_dimm_i3c_read,
+		},
+	},
+	{
+		{
+			// DIMMI_PMIC_PWR_W
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			NUM_DIMM_I_PMIC_PWR, //uint16_t sensor_id;
+			0x8E, //uint16_t entity_type;
+			0x0015, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init;
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x07, //uint8_t base_unit;
+			-2, //int8_t unit_modifier;
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x4, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			0xFF, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x0000639C, //uint32_t max_readable;
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_support;
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0x00000C1A, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00000C37, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.num = NUM_DIMM_I_PMIC_PWR,
+			.type = sensor_dev_i3c_dimm,
+			.port = I3C_BUS3,
+			.target_addr = DIMM_PMIC_C_I_ADDR,
+			.offset = DIMM_PMIC_SWA_PWR,
+			.access_checker = post_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.pre_sensor_read_hook = pre_dimm_i3c_read,
+		},
+	},
+	{
+		{
+			// DIMMJ_PMIC_PWR_W
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			NUM_DIMM_J_PMIC_PWR, //uint16_t sensor_id;
+			0x8E, //uint16_t entity_type;
+			0x0016, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init;
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x07, //uint8_t base_unit;
+			-2, //int8_t unit_modifier;
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x4, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			0xFF, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x0000639C, //uint32_t max_readable;
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_support;
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0x00000C1A, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00000C37, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.num = NUM_DIMM_J_PMIC_PWR,
+			.type = sensor_dev_i3c_dimm,
+			.port = I3C_BUS3,
+			.target_addr = DIMM_PMIC_D_J_ADDR,
+			.offset = DIMM_PMIC_SWA_PWR,
+			.access_checker = post_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.pre_sensor_read_hook = pre_dimm_i3c_read,
+		},
+	},
+	{
+		{
+			// DIMMK_PMIC_PWR_W
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			NUM_DIMM_K_PMIC_PWR, //uint16_t sensor_id;
+			0x8E, //uint16_t entity_type;
+			0x0017, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init;
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x07, //uint8_t base_unit;
+			-2, //int8_t unit_modifier;
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x4, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			0xFF, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x0000639C, //uint32_t max_readable;
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_support;
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0x00000C1A, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00000C37, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.num = NUM_DIMM_K_PMIC_PWR,
+			.type = sensor_dev_i3c_dimm,
+			.port = I3C_BUS3,
+			.target_addr = DIMM_PMIC_E_K_ADDR,
+			.offset = DIMM_PMIC_SWA_PWR,
+			.access_checker = post_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.pre_sensor_read_hook = pre_dimm_i3c_read,
+		},
+	},
+	{
+		{
+			// DIMML_PMIC_PWR_W
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			NUM_DIMM_L_PMIC_PWR, //uint16_t sensor_id;
+			0x8E, //uint16_t entity_type;
+			0x0018, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init;
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x07, //uint8_t base_unit;
+			-2, //int8_t unit_modifier;
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x4, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			0xFF, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x0000639C, //uint32_t max_readable;
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_support;
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0x00000C1A, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00000C37, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.num = NUM_DIMM_L_PMIC_PWR,
+			.type = sensor_dev_i3c_dimm,
+			.port = I3C_BUS3,
+			.target_addr = DIMM_PMIC_F_L_ADDR,
+			.offset = DIMM_PMIC_SWA_PWR,
+			.access_checker = post_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.pre_sensor_read_hook = pre_dimm_i3c_read,
+		},
+	},
 };
 
 PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
@@ -4533,7 +5359,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0005,
+		.sensor_id = NUM_DIMM_A_TEMP,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -4550,7 +5376,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0006,
+		.sensor_id = NUM_DIMM_B_TEMP,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -4567,7 +5393,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0007,
+		.sensor_id = NUM_DIMM_C_TEMP,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -4584,7 +5410,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0008,
+		.sensor_id = NUM_DIMM_D_TEMP,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -4601,7 +5427,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0009,
+		.sensor_id = NUM_DIMM_E_TEMP,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -4618,7 +5444,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x000A,
+		.sensor_id = NUM_DIMM_F_TEMP,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -4635,7 +5461,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x000B,
+		.sensor_id = NUM_DIMM_G_TEMP,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -4652,7 +5478,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x000C,
+		.sensor_id = NUM_DIMM_H_TEMP,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -4669,7 +5495,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x000D,
+		.sensor_id = NUM_DIMM_I_TEMP,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -4686,7 +5512,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x000E,
+		.sensor_id = NUM_DIMM_J_TEMP,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -4703,7 +5529,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x000F,
+		.sensor_id = NUM_DIMM_K_TEMP,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -4720,7 +5546,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0010,
+		.sensor_id = NUM_DIMM_L_TEMP,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -5485,7 +6311,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0056,
+		.sensor_id = NUM_DIMM_A_PMIC_PWR,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -5502,7 +6328,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0057,
+		.sensor_id = NUM_DIMM_B_PMIC_PWR,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -5519,7 +6345,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0058,
+		.sensor_id = NUM_DIMM_C_PMIC_PWR,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -5536,7 +6362,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0059,
+		.sensor_id = NUM_DIMM_D_PMIC_PWR,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -5553,7 +6379,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x005A,
+		.sensor_id = NUM_DIMM_E_PMIC_PWR,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -5570,7 +6396,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x005B,
+		.sensor_id = NUM_DIMM_F_PMIC_PWR,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -5587,7 +6413,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x005C,
+		.sensor_id = NUM_DIMM_G_PMIC_PWR,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -5604,7 +6430,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x005D,
+		.sensor_id = NUM_DIMM_H_PMIC_PWR,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -5621,7 +6447,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x005E,
+		.sensor_id = NUM_DIMM_I_PMIC_PWR,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -5638,7 +6464,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x005F,
+		.sensor_id = NUM_DIMM_J_PMIC_PWR,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -5655,7 +6481,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0060,
+		.sensor_id = NUM_DIMM_K_PMIC_PWR,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -5672,7 +6498,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0061,
+		.sensor_id = NUM_DIMM_L_PMIC_PWR,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",

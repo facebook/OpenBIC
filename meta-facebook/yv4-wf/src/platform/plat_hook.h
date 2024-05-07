@@ -28,5 +28,6 @@ extern vr_pre_read_arg vr_pre_read_args[];
 extern max11617_init_arg max11617_init_args[];
 
 bool pre_vr_read(sensor_cfg *cfg, void *args);
+bool post_p085v_voltage_read(sensor_cfg *cfg, void *args, int *reading);
 
 #endif

@@ -26,9 +26,11 @@
 #include "plat_pldm_sensor.h"
 #include "plat_isr.h"
 #include "plat_gpio.h"
+#include "plat_power_seq.h"
 #include "power_status.h"
 #include "mctp_ctrl.h"
 #include "xdpe12284c.h"
+#include "mp2971.h"
 #include "ioexp_tca9555.h"
 #include "util_spi.h"
 
@@ -50,6 +52,12 @@ enum FIRMWARE_COMPONENT {
 	WF_COMPNT_VR_PVDDQ_CD_ASIC2,
 	WF_COMPNT_CXL1,
 	WF_COMPNT_CXL2,
+};
+
+enum VR_TYPE {
+	VR_TYPE_UNKNOWN,
+	VR_TYPE_INF,
+	VR_TYPE_MPS,
 };
 
 /* PLDM FW update table */
@@ -294,7 +302,7 @@ static uint8_t plat_pldm_pre_vr_update(void *fw_update_param)
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 
 	/* Stop sensor polling */
-	set_vr_monitor_status(false);
+	set_cxl_vr_access(MAX_CXL_ID, false);
 
 	plat_pldm_vr_i2c_info_get(p->comp_id, &p->bus, &p->addr);
 
@@ -305,7 +313,7 @@ static uint8_t plat_pldm_post_vr_update(void *fw_update_param)
 {
 	ARG_UNUSED(fw_update_param);
 
-	set_vr_monitor_status(true);
+	set_cxl_vr_access(MAX_CXL_ID, true);
 
 	return 0;
 }
@@ -321,27 +329,55 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	bool ret = false;
 	uint8_t bus = 0;
 	uint8_t addr = 0;
+	uint8_t dev_id = 0;
+	uint8_t vr_type = VR_TYPE_UNKNOWN;
 	uint32_t version;
 	uint16_t remain = 0xFFFF;
 
 	plat_pldm_vr_i2c_info_get(p->comp_identifier, &bus, &addr);
 
-	set_vr_monitor_status(false);
-	if (!xdpe12284c_get_checksum(bus, addr, (uint8_t *)&version)) {
-		LOG_ERR("The VR XDPE12284 version reading failed");
+	get_ioe_value(ADDR_IOE3, TCA9555_INPUT_PORT_REG_1, &dev_id);
+	if ((dev_id & 0x10) == GPIO_LOW) {
+		vr_type = VR_TYPE_INF;
+	} else {
+		vr_type = VR_TYPE_MPS;
+	}
+
+	const char *vr_name[] = {
+		[VR_TYPE_UNKNOWN] = NULL,
+		[VR_TYPE_INF] = "Infineon ",
+		[VR_TYPE_MPS] = "MPS ",
+	};
+
+	const uint8_t *vr_name_p = vr_name[vr_type];
+	set_cxl_vr_access(MAX_CXL_ID, false);
+	switch (vr_type) {
+	case VR_TYPE_INF:
+		if (!xdpe12284c_get_checksum(bus, addr, (uint8_t *)&version)) {
+			LOG_ERR("The VR XDPE12284 version reading failed");
+			return ret;
+		}
+
+		if (!xdpe12284c_get_remaining_write(bus, addr, &remain)) {
+			LOG_ERR("The VR XDPE12284 remaining reading failed");
+			return ret;
+		}
+		break;
+	case VR_TYPE_MPS:
+		if (!mp2971_get_checksum(bus, addr, &version)) {
+			LOG_ERR("Read VR checksum failed");
+			return ret;
+		}
+		break;
+	default:
+		LOG_ERR("Unknown VR device");
 		return ret;
 	}
 
-	if (!xdpe12284c_get_remaining_write(bus, addr, &remain)) {
-		LOG_ERR("The VR XDPE12284 remaining reading failed");
-		return ret;
-	}
-
-	set_vr_monitor_status(true);
+	set_cxl_vr_access(MAX_CXL_ID, true);
 
 	const char *remain_str_p = ", Remaining Write: ";
 	uint8_t *buf_p = buf;
-	const uint8_t *vr_name_p = INF_CRC_PREFIX;
 	if (!vr_name_p) {
 		LOG_ERR("The pointer of VR string name is NULL");
 		return ret;

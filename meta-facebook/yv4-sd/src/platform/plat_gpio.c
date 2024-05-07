@@ -25,6 +25,8 @@
 #include "plat_isr.h"
 #include "plat_class.h"
 
+LOG_MODULE_REGISTER(plat_gpio);
+
 #define gpio_name_to_num(x) #x,
 char *gpio_name[] = {
 	name_gpioA name_gpioB name_gpioC name_gpioD name_gpioE name_gpioF name_gpioG name_gpioH
@@ -54,7 +56,7 @@ GPIO_CFG plat_gpio_cfg[] = {
 	{ CHIP_GPIO, 4, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, OPEN_DRAIN, GPIO_INT_DISABLE, NULL },
 	{ CHIP_GPIO, 5, ENABLE, DISABLE, GPIO_OUTPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
 	{ CHIP_GPIO, 6, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, OPEN_DRAIN, GPIO_INT_DISABLE, NULL },
-	{ CHIP_GPIO, 7, ENABLE, DISABLE, GPIO_OUTPUT, GPIO_HIGH, OPEN_DRAIN, GPIO_INT_DISABLE, NULL },
+	{ CHIP_GPIO, 7, ENABLE, DISABLE, GPIO_OUTPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
 
 	/** Group B: 08-15 **/
 	{ CHIP_GPIO, 8, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, OPEN_DRAIN, GPIO_INT_DISABLE, NULL },
@@ -288,6 +290,8 @@ bool pal_load_gpio_config(void)
 		plat_gpio_cfg[EVT_MEDUSA_HSC_R_PG].is_init = ENABLE;
 		gpio_name[EVT_MEDUSA_HSC_R_PG] = "MEDUSA_HSC_R_PG";
 		plat_gpio_cfg[EVT_Reserve_GPIOM3].is_init = DISABLE;
+		plat_gpio_cfg[EVT_BIC_READY_FRONT_EXP].is_init = ENABLE;
+		gpio_name[EVT_BIC_READY_FRONT_EXP] = "BIC_READY_FRONT_EXP";
 	}
 
 	memcpy(&gpio_cfg[0], &plat_gpio_cfg[0], sizeof(plat_gpio_cfg));
@@ -298,4 +302,14 @@ void sync_bmc_ready_pin()
 {
 	uint8_t gpio_val = gpio_get(FM_CPLD_BMC_BIC_READY);
 	gpio_set(BMC_READY, gpio_val);
+}
+
+void reset_usb_hub()
+{
+	if (gpio_get(BIC_READY_R) == HIGH_ACTIVE) {
+		gpio_set(RST_USB_HUB_R_N, HIGH_ACTIVE);
+		LOG_INF("Reset USB Hub");
+	} else {
+		LOG_ERR("Failed to reset USB Hub because BIC_READY_R is not active");
+	}
 }
