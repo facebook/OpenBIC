@@ -40,29 +40,8 @@ LOG_MODULE_REGISTER(plat_ipmi);
 
 bool pal_request_msg_to_BIC_from_HOST(uint8_t netfn, uint8_t cmd)
 {
-	if (netfn == NETFN_APP_REQ) {
-		if ((cmd == CMD_APP_SET_ACPI_POWER) || (cmd == CMD_APP_GET_DEVICE_GUID) ||
-		    (cmd == CMD_APP_GET_BMC_GLOBAL_ENABLES) ||
-		    (cmd == CMD_APP_CLEAR_MESSAGE_FLAGS) || (cmd == CMD_APP_GET_CAHNNEL_INFO) ||
-		    (cmd == CMD_APP_GET_DEVICE_ID) || (cmd == CMD_APP_GET_SELFTEST_RESULTS) ||
-		    (cmd == CMD_APP_COLD_RESET)) {
-			return true;
-		}
-	} else if (netfn == NETFN_DCMI_REQ) {
-		if (cmd == CMD_DCMI_GET_PICMG_PROPERTIES) {
-			return true;
-		}
-	} else if (netfn == NETFN_OEM_REQ) {
-		if (cmd == CMD_OEM_GET_CHASSIS_POSITION) {
-			return true;
-		}
-	}
-
-	else {
-		return false;
-	}
-
-	return false;
+	// In YV4, all IPMI commands are all sent to BIC
+	return true;
 }
 
 void APP_GET_BMC_GLOBAL_ENABLES(ipmi_msg *msg)
