@@ -15,15 +15,14 @@
  */
 
 #include <string.h>
-#include "fru.h"
-#include "plat_fru.h"
 #include "plat_i2c.h"
-#include "plat_modbus.h"
 #include "i2c-mux-pca954x.h"
 #include "modbus_server.h"
 #include <libutil.h>
 #include <stdlib.h>
 #include <logging/log.h>
+#include "fru.h"
+#include "plat_fru.h"
 
 LOG_MODULE_REGISTER(plat_fru);
 
@@ -291,81 +290,42 @@ const EEPROM_CFG plat_fru_config[] = {
 	},
 };
 
-modbus_fru_cfg modbus_FRUs[] = {
-	/* fru id, fru offset, fru field size(register),  modbus data addr  */
-	{ MB_FRU_ID, 0, 8, FRU_FB_PART_ADDR },
-	{ MB_FRU_ID, 8, 8, FRU_MFR_MODEL_ADDR },
-	{ MB_FRU_ID, 16, 4, FRU_MFR_DATE_ADDR },
-	{ MB_FRU_ID, 20, 8, FRU_MFR_SERIEL_ADDR },
-	{ MB_FRU_ID, 28, 4, FRU_WORKORDER_ADDR },
-	{ MB_FRU_ID, 32, 4, FRU_HW_REVISION_ADDR },
-	{ MB_FRU_ID, 36, 4, MODBUS_FW_REVISION_ADDR },
-	{ MB_FRU_ID, 40, 2, FRU_TOTAL_UP_TIME_ADDR },
-	{ MB_FRU_ID, 42, 2, FRU_LAST_ON_TIME_ADDR },
-	{ MB_FRU_ID, 44, 4, FRU_HMI_REVISION_ADDR },
-	{ MB_FRU_ID, 48, 4, FRU_NOAH_ARK_CONFIG_ADDR },
-	{ MB_FRU_ID, 52, 4, FRU_HEATEXCHANGER_CONTROLBOX_FPBN_ADDR },
-	{ MB_FRU_ID, 56, 4, FRU_QUANTA_FB_PART_ADDR },
-};
-
-uint8_t modbus_read_fruid_data(uint16_t *data, uint16_t addr, uint16_t reg_qty)
+uint8_t modbus_read_fruid_data(modbus_command_mapping *cmd)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
 	uint8_t status;
 	EEPROM_ENTRY fru_entry;
 
-	uint8_t fru_length = ARRAY_SIZE(modbus_FRUs);
-	for (uint8_t index = 0; index < fru_length; index++) {
-		if (modbus_FRUs[index].field_addr == addr) {
-			if (modbus_FRUs[index].field_size != reg_qty) {
-				return FRU_FAIL_TO_ACCESS;
-			}
-			fru_entry.config.dev_id = modbus_FRUs[index].fru_id;
-			fru_entry.offset = modbus_FRUs[index].field_offset * 2;
-			fru_entry.data_len = modbus_FRUs[index].field_size * 2;
+	fru_entry.config.dev_id = cmd->arg0; //fru id
+	fru_entry.offset = (cmd->start_addr - cmd->addr) * 2;
+	fru_entry.data_len = (cmd->data_len) * 2;
 
-			status = FRU_read(&fru_entry);
-			memcpy(data, &fru_entry.data[0], fru_entry.data_len);
+	status = FRU_read(&fru_entry);
+	if (status != FRU_READ_SUCCESS)
+		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 
-			return status;
-		}
-	}
-
-	return FRU_OUT_OF_RANGE;
+	memcpy(cmd->data, &fru_entry.data[0], fru_entry.data_len);
+	return MODBUS_EXC_NONE;
 }
 
-uint8_t modbus_write_fruid_data(uint16_t *data, uint16_t addr, uint16_t reg_qty)
+uint8_t modbus_write_fruid_data(modbus_command_mapping *cmd)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
 	uint8_t status;
 	EEPROM_ENTRY fru_entry;
 
-	uint8_t fru_length = ARRAY_SIZE(modbus_FRUs);
-	for (uint8_t index = 0; index < fru_length; index++) {
-		if (modbus_FRUs[index].field_addr == addr) {
-			if (modbus_FRUs[index].field_size != reg_qty) {
-				return FRU_FAIL_TO_ACCESS;
-			}
-			fru_entry.config.dev_id = modbus_FRUs[index].fru_id;
-			fru_entry.offset = modbus_FRUs[index].field_offset * 2;
-			fru_entry.data_len = modbus_FRUs[index].field_size * 2;
-			
-			memcpy(&fru_entry.data[0], data, fru_entry.data_len);
-			status = FRU_write(&fru_entry);
+	fru_entry.config.dev_id = cmd->arg0; //fru id
+	fru_entry.offset = (cmd->start_addr - cmd->addr) * 2;
+	fru_entry.data_len = (cmd->data_len) * 2;
 
-			return status;
-		}
-	}
-	return FRU_OUT_OF_RANGE;
-}
+	memcpy(&fru_entry.data[0], cmd->data, fru_entry.data_len);
+	status = FRU_write(&fru_entry);
+	if (status != FRU_WRITE_SUCCESS)
+		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 
-uint8_t fru_field_datasize(uint16_t addr)
-{
-	uint8_t fru_length = ARRAY_SIZE(modbus_FRUs);
-	for (uint8_t index = 0; index < fru_length; index++) {
-		if (modbus_FRUs[index].field_addr == addr) {
-			return modbus_FRUs[index].field_size;
-		}
-	}
-	return 0;
+	return MODBUS_EXC_NONE;
 }
 
 void pal_load_fru_config(void)
