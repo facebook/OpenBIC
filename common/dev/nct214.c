@@ -117,10 +117,35 @@ uint8_t nct214_init(sensor_cfg *cfg)
 	nct214_init_arg *nct214_init_arg_data = (nct214_init_arg *)cfg->init_args;
 	if (nct214_init_arg_data->is_init)
 		goto skip_init;
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.rx_len = 1;
+	msg.tx_len = 1;
+	msg.data[0] = CONFIG_READ_REG;
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("NCT214 read CONFIG_READ_REG reg error");
+		return SENSOR_FAIL_TO_ACCESS;
+	}
+
+	uint8_t config_val = msg.data[0];
+	
+	if (nct214_init_arg_data->temperature_range){
+		msg.tx_len = 2;
+		msg.data[0] = CONFIG_WRITE_REG;
+		WRITE_BIT(config_val, 2, 1);
+		msg.data[1] = config_val;
+
+		if (i2c_master_read(&msg, retry)) {
+			LOG_ERR("NCT214 write CONFIG_WRITE reg error");
+			return SENSOR_FAIL_TO_ACCESS;
+		}
+	}
 
 	nct214_init_arg_data->is_init = true;
 
-	skip_init:
+skip_init:
 		cfg->read = nct214_read;
 		return SENSOR_INIT_SUCCESS;
 }

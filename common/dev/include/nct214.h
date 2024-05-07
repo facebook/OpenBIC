@@ -25,6 +25,7 @@
 
 typedef struct _nct214_init_arg {
 	bool is_init;
+	uint8_t temperature_range;
 } nct214_init_arg;
 
 enum NCT214_CHANNELS {
@@ -32,4 +33,8 @@ enum NCT214_CHANNELS {
 	NCT214_REMOTE_TEMPERATRUE,
 };
 
+enum NCT_214_TEMPERATURE_RANGE {
+	NCT_214_TEMPERATURE_RANGE_0_TO_127,
+	NCT_214_TEMPERATURE_RANGE_EXTENDED,
+};
 #endif
