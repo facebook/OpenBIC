@@ -459,31 +459,55 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_FW_REVISION_ADDR, NULL, modbus_get_fw_reversion, 0, 0, 0, 1 },
 	{ MODBUS_FW_DOWNLOAD_ADDR, modbus_fw_download, NULL, 0, 0, 0, 103 },
 	// i2c master write read
-	{ MODBUS_MASTER_I2C_WRITE_READ_ADDR, modbus_command_i2c_master_write_read, NULL, 0, 0, 0, 16},
-	{ MODBUS_MASTER_I2C_WRITE_READ_RESPONSE_ADDR, NULL, modbus_command_i2c_master_write_read_response, 0, 0, 0, 16},
+	{ MODBUS_MASTER_I2C_WRITE_READ_ADDR, modbus_command_i2c_master_write_read, NULL, 0, 0, 0,
+	  16 },
+	{ MODBUS_MASTER_I2C_WRITE_READ_RESPONSE_ADDR, NULL,
+	  modbus_command_i2c_master_write_read_response, 0, 0, 0, 16 },
 	// FRU write read
-	{ MODBUS_MB_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, MB_FRU_ID, 0, 0, 256},
-	{ MODBUS_BB_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, BB_FRU_ID, 0, 0, 256},
-	{ MODBUS_BPB_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, BPB_FRU_ID, 0, 0, 256},
-	{ MODBUS_PDB_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, PDB_FRU_ID, 0, 0, 256},
-	{ MODBUS_SB_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, SB_FRU_ID, 0, 0, 256},
-	{ MODBUS_PB_1_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, PB_1_FRU_ID, 0, 0, 256},
-	{ MODBUS_PB_2_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, PB_2_FRU_ID, 0, 0, 256},
-	{ MODBUS_PB_3_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, PB_3_FRU_ID, 0, 0, 256},
-	{ MODBUS_FB_1_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_1_FRU_ID, 0, 0, 256},
-	{ MODBUS_FB_2_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_2_FRU_ID, 0, 0, 256},
-	{ MODBUS_FB_3_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_3_FRU_ID, 0, 0, 256},
-	{ MODBUS_FB_4_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_4_FRU_ID, 0, 0, 256},
-	{ MODBUS_FB_5_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_5_FRU_ID, 0, 0, 256},
-	{ MODBUS_FB_6_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_6_FRU_ID, 0, 0, 256},
-	{ MODBUS_FB_7_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_7_FRU_ID, 0, 0, 256},
-	{ MODBUS_FB_8_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_8_FRU_ID, 0, 0, 256},
-	{ MODBUS_FB_9_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_9_FRU_ID, 0, 0, 256},
-	{ MODBUS_FB_10_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_10_FRU_ID, 0, 0, 256},
-	{ MODBUS_FB_11_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_11_FRU_ID, 0, 0, 256},
-	{ MODBUS_FB_12_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_12_FRU_ID, 0, 0, 256},
-	{ MODBUS_FB_13_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_13_FRU_ID, 0, 0, 256},
-	{ MODBUS_FB_14_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_14_FRU_ID, 0, 0, 256},
+	{ MODBUS_MB_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, MB_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_BB_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, BB_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_BPB_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, BPB_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_PDB_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, PDB_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_SB_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, SB_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_PB_1_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, PB_1_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_PB_2_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, PB_2_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_PB_3_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, PB_3_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_FB_1_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_1_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_FB_2_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_2_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_FB_3_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_3_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_FB_4_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_4_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_FB_5_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_5_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_FB_6_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_6_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_FB_7_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_7_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_FB_8_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_8_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_FB_9_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_9_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_FB_10_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_10_FRU_ID, 0,
+	  0, 256 },
+	{ MODBUS_FB_11_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_11_FRU_ID, 0,
+	  0, 256 },
+	{ MODBUS_FB_12_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_12_FRU_ID, 0,
+	  0, 256 },
+	{ MODBUS_FB_13_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_13_FRU_ID, 0,
+	  0, 256 },
+	{ MODBUS_FB_14_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_14_FRU_ID, 0,
+	  0, 256 },
 };
 
 static modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)
@@ -550,7 +574,7 @@ static int coil_wr(uint16_t addr, bool state)
 		if (!state) { //Set RPU Stop
 			if (ctl_all_pwm_dev(100))
 				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-				
+
 			disable_sensor_poll();
 		}
 		// return success for Setting RPU RUN
@@ -630,7 +654,8 @@ const static struct modbus_iface_param server_param = {
 	.serial = {
 		.baud = MODBUS_UART_BAUDRATE_LOW,
 		.parity = MODBUS_UART_PARITY,
-	},
+		.parity_none_1_stop_bit = true,
+	}
 };
 
 static bool custom_handler_fc64(const int iface, const struct modbus_adu *rx_adu,
