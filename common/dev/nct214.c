@@ -31,7 +31,7 @@ uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
-	
+
 	if (cfg->num > SENSOR_NUM_MAX) {
 		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
@@ -51,7 +51,8 @@ uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
-	uint8_t temperature_range_select = (msg.data[0] & TEMPERATURE_RANGE_SELECT_MASK) >> 2; // read bit2 to check temperature range
+	// read bit2 to check temperature range
+	uint8_t temperature_range_select = (msg.data[0] & TEMPERATURE_RANGE_SELECT_MASK) >> 2;
 
 	switch (offset) {
 	case NCT214_LOCAL_TEMPERATRUE:
@@ -93,12 +94,15 @@ uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 
 		uint8_t val_external_temp_upper_byte = msg.data[0];
 		if (temperature_range_select == 1) {
-			sval->integer = (int16_t)((float)val_external_temp_upper_byte - (float)TEMPERATURE_RANGE);
+			sval->integer = (int16_t)((float)val_external_temp_upper_byte -
+						  (float)TEMPERATURE_RANGE);
 		} else {
 			sval->integer = (int16_t)val_external_temp_upper_byte;
 		}
 
-		sval->fraction = (float)val_external_temp_lower_byte * TEMPERATURE_REMOTE_FRACTION * 100; // sval->fraction is integer
+		// sval->fraction is integer
+		sval->fraction =
+			(float)val_external_temp_lower_byte * TEMPERATURE_REMOTE_FRACTION * 100;
 		return SENSOR_READ_SUCCESS;
 	default:
 		LOG_ERR("Unknown register offset(%d)", offset);
@@ -117,6 +121,7 @@ uint8_t nct214_init(sensor_cfg *cfg)
 	nct214_init_arg *nct214_init_arg_data = (nct214_init_arg *)cfg->init_args;
 	if (nct214_init_arg_data->is_init)
 		goto skip_init;
+
 	uint8_t retry = 5;
 	I2C_MSG msg = { 0 };
 	msg.bus = cfg->port;
@@ -130,8 +135,8 @@ uint8_t nct214_init(sensor_cfg *cfg)
 	}
 
 	uint8_t config_val = msg.data[0];
-	
-	if (nct214_init_arg_data->temperature_range == NCT_214_TEMPERATURE_RANGE_EXTENDED){
+
+	if (nct214_init_arg_data->temperature_range == NCT_214_TEMPERATURE_RANGE_EXTENDED) {
 		msg.tx_len = 2;
 		msg.data[0] = CONFIG_WRITE_REG;
 		WRITE_BIT(config_val, 2, 1);
@@ -146,6 +151,6 @@ uint8_t nct214_init(sensor_cfg *cfg)
 	nct214_init_arg_data->is_init = true;
 
 skip_init:
-		cfg->read = nct214_read;
-		return SENSOR_INIT_SUCCESS;
+	cfg->read = nct214_read;
+	return SENSOR_INIT_SUCCESS;
 }
