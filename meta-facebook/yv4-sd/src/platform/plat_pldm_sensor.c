@@ -32,9 +32,6 @@
 
 LOG_MODULE_REGISTER(plat_pldm_sensor);
 
-void plat_pldm_sensor_change_vr_dev();
-void plat_pldm_sensor_change_cpu_bus();
-
 static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = {
 	// thread id, thread name
 	{ ADC_SENSOR_THREAD_ID, "ADC_PLDM_SENSOR_THREAD" },
@@ -6615,6 +6612,7 @@ pldm_sensor_info *plat_pldm_sensor_load(int thread_id)
 		plat_pldm_sensor_change_cpu_bus();
 		return plat_pldm_sensor_cpu_table;
 	case INA233_SENSOR_THREAD_ID:
+		plat_pldm_sensor_change_retimer_dev();
 		return plat_pldm_sensor_ina233_table;
 	case DIMM_SENSOR_THREAD_ID:
 		return plat_pldm_sensor_dimm_table;
@@ -6748,6 +6746,41 @@ void plat_pldm_sensor_change_cpu_bus()
 	}
 
 	return;
+}
+
+void plat_pldm_sensor_change_retimer_dev()
+{
+	uint8_t retimer_type = get_retimer_type();
+
+	for (int index = 0; index < plat_pldm_sensor_get_sensor_count(INA233_SENSOR_THREAD_ID);
+	     index++) {
+		if (plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.type ==
+		    sensor_dev_pt5161l) {
+			switch (retimer_type) {
+			case RETIMER_TYPE_ASTERALABS:
+				// Default setting in pldm sensor table
+				return;
+			case RETIMER_TYPE_NO_RETIMER:
+				// No need to get sensor reading from retimer
+				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.cache_status =
+					PLDM_SENSOR_DISABLED;
+				break;
+			case RETIMER_TYPE_KANDOU:
+				// TODO: Currently, disable sensor reading until support kandou
+				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.cache_status =
+					PLDM_SENSOR_DISABLED;
+				break;
+			case RETIMER_TYPE_BROADCOM:
+				// TODO: Currently, disable sensor reading until support broadcom
+				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.cache_status =
+					PLDM_SENSOR_DISABLED;
+				break;
+			default:
+				LOG_ERR("Failed to change the Retimer device due to unknown vendor.");
+				break;
+			}
+		}
+	}
 }
 
 uint8_t plat_pldm_sensor_get_vr_dev(uint8_t *vr_dev)
