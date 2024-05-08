@@ -1,21 +1,21 @@
-From 234f676b1df184f52775d95cd29d541506c3d1dc Mon Sep 17 00:00:00 2001
+From aef69c1c3f6f09b42e170acefee89ec33f16a02f Mon Sep 17 00:00:00 2001
 From: Hung-Yi <hung-yi.li@quantatw.com>
 Date: Mon, 29 Apr 2024 16:27:26 +0800
 Subject: [PATCH] modbus: aspeed: add/fix modbus server
 
 1. add user define fc
 2. add modbus multiple write/read cb function
-3. fix uart parity none stop bit from 2 to 1
+3. add param to set uart parity none stop bit to 1
 ---
- include/modbus/modbus.h         |  76 ++++++++++++++
+ include/modbus/modbus.h         |  77 ++++++++++++++
  subsys/modbus/modbus_core.c     |  36 +++++++
  subsys/modbus/modbus_internal.h |   2 +
- subsys/modbus/modbus_serial.c   |   2 +-
+ subsys/modbus/modbus_serial.c   |   5 +-
  subsys/modbus/modbus_server.c   | 174 ++++++++++++++++++++++----------
- 5 files changed, 238 insertions(+), 52 deletions(-)
+ 5 files changed, 241 insertions(+), 53 deletions(-)
 
 diff --git a/include/modbus/modbus.h b/include/modbus/modbus.h
-index 400dc8b9d9..2bcd43e196 100644
+index 400dc8b9d9..1803994526 100644
 --- a/include/modbus/modbus.h
 +++ b/include/modbus/modbus.h
 @@ -31,6 +31,7 @@
@@ -100,7 +100,15 @@ index 400dc8b9d9..2bcd43e196 100644
  /**
   * @brief Modbus interface mode
   */
-@@ -525,6 +583,24 @@ void modbus_raw_set_server_failure(struct modbus_adu *adu);
+@@ -406,6 +464,7 @@ struct modbus_serial_param {
+ 	 *    UART_CFG_PARITY_ODD
+ 	 */
+ 	enum uart_config_parity parity;
++	bool parity_none_1_stop_bit;
+ };
+ 
+ /**
+@@ -525,6 +584,24 @@ void modbus_raw_set_server_failure(struct modbus_adu *adu);
   */
  int modbus_raw_backend_txn(const int iface, struct modbus_adu *adu);
  
@@ -200,20 +208,30 @@ index a916d21f38..533a4c7103 100644
  	uint8_t unit_id;
  
 diff --git a/subsys/modbus/modbus_serial.c b/subsys/modbus/modbus_serial.c
-index 06e44bd241..06a3679804 100644
+index 06e44bd241..1085ccf90e 100644
 --- a/subsys/modbus/modbus_serial.c
 +++ b/subsys/modbus/modbus_serial.c
-@@ -565,7 +565,7 @@ int modbus_serial_init(struct modbus_context *ctx,
+@@ -565,7 +565,8 @@ int modbus_serial_init(struct modbus_context *ctx,
  	case UART_CFG_PARITY_NONE:
  		/* Use of no parity requires 2 stop bits */
  		uart_cfg.parity = param.serial.parity;
 -		uart_cfg.stop_bits = UART_CFG_STOP_BITS_2;
-+		uart_cfg.stop_bits = UART_CFG_STOP_BITS_1;
++		uart_cfg.stop_bits = (param.serial.parity_none_1_stop_bit) ?
++			UART_CFG_STOP_BITS_1 : UART_CFG_STOP_BITS_2;
  		break;
  	default:
  		return -EINVAL;
+@@ -577,7 +578,7 @@ int modbus_serial_init(struct modbus_context *ctx,
+ 	}
+ 
+ 	if (param.serial.baud <= 38400) {
+-		cfg->rtu_timeout = (numof_bits * if_delay_max) /
++		cfg->rtu_timeout = (numof_bits * if_delay_max) * 4 /
+ 				   param.serial.baud;
+ 	} else {
+ 		cfg->rtu_timeout = (numof_bits * if_delay_max) / 38400;
 diff --git a/subsys/modbus/modbus_server.c b/subsys/modbus/modbus_server.c
-index bd0addac35..630ab07b2d 100644
+index bd0addac35..929eb73982 100644
 --- a/subsys/modbus/modbus_server.c
 +++ b/subsys/modbus/modbus_server.c
 @@ -325,7 +325,8 @@ static bool mbs_fc03_hreg_read(struct modbus_context *ctx)
@@ -256,7 +274,7 @@ index bd0addac35..630ab07b2d 100644
 -		}
 +	/* call the multiple register read if the function exist */
 +	if (ctx->mbs_user_cb->holding_reg_multi_rd) {
-+		err = ctx->mbs_user_cb->holding_reg_multi_rd(ctx->iface_name, reg_addr,
++		err = ctx->mbs_user_cb->holding_reg_multi_rd((char *)ctx->iface_name, reg_addr,
 +							     (uint16_t *)presp, reg_qty);
  
  		if (err != 0) {
@@ -328,7 +346,7 @@ index bd0addac35..630ab07b2d 100644
 -	err = ctx->mbs_user_cb->holding_reg_wr(reg_addr, reg_val);
 +	/* call the multiple register write if the function exist */
 +	if (ctx->mbs_user_cb->holding_reg_multi_wr)
-+		err = ctx->mbs_user_cb->holding_reg_multi_wr(ctx->iface_name, reg_addr, &reg_val,
++		err = ctx->mbs_user_cb->holding_reg_multi_wr((char *)ctx->iface_name, reg_addr, &reg_val,
 +							     1);
 +	else
 +		err = ctx->mbs_user_cb->holding_reg_wr(reg_addr, reg_val);
@@ -373,7 +391,7 @@ index bd0addac35..630ab07b2d 100644
 +			sys_put_be16(*p, prx_data + (i * sizeof(uint16_t)));
  		}
  
-+		err = ctx->mbs_user_cb->holding_reg_multi_wr(ctx->iface_name, reg_addr,
++		err = ctx->mbs_user_cb->holding_reg_multi_wr((char *)ctx->iface_name, reg_addr,
 +							     (uint16_t *)prx_data, reg_qty);
 +
  		if (err != 0) {
@@ -463,3 +481,4 @@ index bd0addac35..630ab07b2d 100644
  	if (addr == 0) {
 -- 
 2.17.1
+
