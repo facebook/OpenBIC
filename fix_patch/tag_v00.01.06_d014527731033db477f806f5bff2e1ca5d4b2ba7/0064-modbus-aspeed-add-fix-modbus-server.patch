@@ -212,19 +212,6 @@ index 06e44bd241..06a3679804 100644
  		break;
  	default:
  		return -EINVAL;
-	}
-
-	if (uart_configure(cfg->dev, &uart_cfg) != 0) {
-		LOG_ERR("Failed to configure UART");
-		return -EINVAL;
-	}
-
-	if (param.serial.baud <= 38400) {
--		cfg->rtu_timeout = (numof_bits * if_delay_max) /
-+		cfg->rtu_timeout = (numof_bits * if_delay_max) * 4 /
-				   param.serial.baud;
-	} else {
-		cfg->rtu_timeout = (numof_bits * if_delay_max) / 38400;
 diff --git a/subsys/modbus/modbus_server.c b/subsys/modbus/modbus_server.c
 index bd0addac35..630ab07b2d 100644
 --- a/subsys/modbus/modbus_server.c
@@ -476,4 +463,3 @@ index bd0addac35..630ab07b2d 100644
  	if (addr == 0) {
 -- 
 2.17.1
-
