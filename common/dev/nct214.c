@@ -131,13 +131,13 @@ uint8_t nct214_init(sensor_cfg *cfg)
 
 	uint8_t config_val = msg.data[0];
 	
-	if (nct214_init_arg_data->temperature_range){
+	if (nct214_init_arg_data->temperature_range == NCT_214_TEMPERATURE_RANGE_EXTENDED){
 		msg.tx_len = 2;
 		msg.data[0] = CONFIG_WRITE_REG;
 		WRITE_BIT(config_val, 2, 1);
 		msg.data[1] = config_val;
 
-		if (i2c_master_read(&msg, retry)) {
+		if (i2c_master_write(&msg, retry)) {
 			LOG_ERR("NCT214 write CONFIG_WRITE reg error");
 			return SENSOR_FAIL_TO_ACCESS;
 		}
