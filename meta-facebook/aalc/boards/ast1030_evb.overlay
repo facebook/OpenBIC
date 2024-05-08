@@ -1,0 +1,167 @@
+&adc0 {
+	status = "okay";
+	pinctrl-0 = <&pinctrl_adc0_default &pinctrl_adc1_default
+			&pinctrl_adc2_default &pinctrl_adc3_default 
+			&pinctrl_adc4_default>;
+			aspeed,adc-channels-used = <0x1F>;
+};
+
+&i2c0 {
+	pinctrl-0 = <&pinctrl_i2c1_default>;
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c1 {
+	pinctrl-0 = <&pinctrl_i2c1_default>;
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c2 {
+	pinctrl-0 = <&pinctrl_i2c2_default>;
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c3 {
+	pinctrl-0 = <&pinctrl_i2c3_default>;
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c4 {
+	pinctrl-0 = <&pinctrl_i2c4_default>;
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c5 {
+	pinctrl-0 = <&pinctrl_i2c5_default>;
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c6 {
+	pinctrl-0 = <&pinctrl_i2c5_default>;
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c7 {
+	pinctrl-0 = <&pinctrl_i2c5_default>;
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c8 {
+	pinctrl-0 = <&pinctrl_i2c5_default>;
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c9 {
+	pinctrl-0 = <&pinctrl_i2c5_default>;
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&fmc {
+	status = "okay";
+};
+
+&fmc_cs0 {
+	status = "okay";
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		boot_partition: partition@0 {
+			label = "image-0";
+			reg = <0x0 0x100000>;
+		};
+		dfu_partition: partition@1 {
+			label = "image-1";
+			reg = <0x0 0x100000>;
+		};
+	};
+};
+
+&uart1 {
+	status = "okay";
+	modbus0 {
+		compatible = "zephyr,modbus-serial";
+		label = "MODBUS0";
+		status = "okay";
+	};
+};
+
+&uart2 {
+	status = "okay";
+	modbus1 {
+		compatible = "zephyr,modbus-serial";
+		label = "MODBUS1";
+		status = "okay";
+	};
+};
+
+&uart5 {
+	current-speed = <57600>;
+};
+
+&wdt0 {
+	status = "okay";
+};
+
+&wdt1 {
+	status = "okay";
+};
+
+&wdt2 {
+	status = "okay";
+};
+
+&wdt3 {
+	status = "okay";
+};
+
+&sram0 {
+	reg = <0 DT_SIZE_K(608)>, <0x98000 DT_SIZE_K(160)>;
+};
+
+&udc {
+	status = "okay";
+};
+
+&pwm {
+	status = "okay";
+	pinctrl-0 = <&pinctrl_pwm0_default>;
+};
+
+&tach {
+	status = "okay";
+	pinctrl-0 = <&pinctrl_tach0_default &pinctrl_tach1_default>;
+
+	fan@0 {
+		reg = <0>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN0";
+	};
+
+	fan@1 {
+		reg = <1>;
+		pulse-pr = <2>;
+		min-rpm = <1000>;
+		tach-div = <5>;
+		label = "FAN1";
+	};
+};
+
+&gpio0_q_t {
+       gpio-reserved = <0xf9f360>;
+};
