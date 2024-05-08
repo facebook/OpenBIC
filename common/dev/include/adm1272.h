@@ -27,4 +27,11 @@ enum ADM1272_VRANGE {
 	VRANGE_0V_TO_100V = 0x1,
 };
 
+enum ADM1272_HSC {
+	HSC_DISABLE = 0x0,
+	HSC_ENABLE = 0x1,
+};
+
+bool enable_adm1272_hsc(uint8_t bus,uint8_t addr, uint8_t enable_flag);
+
 #endif
