@@ -80,7 +80,7 @@ uint8_t ina238_read(sensor_cfg *cfg, int *reading)
 		}
 
 		vshunt_val = (msg.data[0] << 8) | msg.data[1];
-		if (init_args->adc_range) 
+		if (init_args->adc_range)
 			val = twoscomplement_to_decimal(vshunt_val) * ADCRANGE_1_CONVERSION_FACTOR;
 		else
 			val = twoscomplement_to_decimal(vshunt_val) * ADCRANGE_0_CONVERSION_FACTOR;
@@ -169,7 +169,6 @@ uint8_t ina238_init(sensor_cfg *cfg)
 	if (init_args->is_init)
 		goto skip_init;
 
-	
 	I2C_MSG msg = { 0 };
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
@@ -209,7 +208,7 @@ uint8_t ina238_init(sensor_cfg *cfg)
 	}
 
 	/* enable alert latch */
-	if(init_args->alert_latch) {
+	if (init_args->alert_latch) {
 		WRITE_BIT(alert_val, 15, 1);
 		msg.tx_len = 3;
 		msg.data[0] = INA238_DIAG_ALRT_OFFSET;
@@ -224,8 +223,7 @@ uint8_t ina238_init(sensor_cfg *cfg)
 	/* calculate Current_LSB */
 	//Current_LSB = Maximum Expected Current/(2^15)
 	init_args->cur_lsb = init_args->i_max / 32768.0;
-	if (init_args->cur_lsb > MAX_CURRENT_LSB)
-	{
+	if (init_args->cur_lsb > MAX_CURRENT_LSB) {
 		LOG_ERR("Current LSB is out of range");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
