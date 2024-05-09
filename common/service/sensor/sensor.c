@@ -128,6 +128,7 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(max11617)
 	sensor_name_to_num(nv_satmc)
 	sensor_name_to_num(nct7363)
+	sensor_name_to_num(ina238)
 };
 // clang-format on
 
@@ -191,6 +192,7 @@ SENSOR_DRIVE_INIT_DECLARE(max11617);
 SENSOR_DRIVE_INIT_DECLARE(nv_satmc);
 #endif
 SENSOR_DRIVE_INIT_DECLARE(nct7363);
+SENSOR_DRIVE_INIT_DECLARE(ina238);
 
 // The sequence needs to same with SENSOR_DEV ID
 sensor_drive_api sensor_drive_tbl[] = {
@@ -247,7 +249,7 @@ sensor_drive_api sensor_drive_tbl[] = {
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(nv_satmc),
 #endif
-	SENSOR_DRIVE_TYPE_INIT_MAP(nct7363)
+	SENSOR_DRIVE_TYPE_INIT_MAP(nct7363),	SENSOR_DRIVE_TYPE_INIT_MAP(ina238),
 };
 
 static void init_sensor_num(void)
