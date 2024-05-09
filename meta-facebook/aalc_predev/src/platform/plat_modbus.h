@@ -49,7 +49,7 @@ typedef struct _modbus_command_mapping {
 	uint16_t start_addr; // first addr for multiple register write/read
 	uint16_t *data;
 	uint8_t data_len;
-}	modbus_command_mapping;
+} modbus_command_mapping;
 
 /* define modbus data address */
 #define MODBUS_TEMP_BB_TMP75_ADDR 0x0101
@@ -128,6 +128,8 @@ typedef struct _modbus_command_mapping {
 #define MODBUS_PB_1_HUM_PCT_RH_ADDR 0xA026
 #define MODBUS_PB_2_HUM_PCT_RH_ADDR 0xA027
 #define MODBUS_PB_3_HUM_PCT_RH_ADDR 0xA028
+#define MODBUS_RPU_PDB_48V_SENSE_DIFF_POS_VOLT_V_ADDR 0xA029
+#define MODBUS_RPU_PDB_48V_SENSE_DIFF_NEG_VOLT_V_ADDR 0xA02A
 #define MODBUS_HEX_FAN_PWM_TACH_PCT_ADDR 0x9100
 #define MODBUS_HEX_PWR_W_ADDR 0x9101
 #define MODBUS_HEX_INPUT_VOLT_V_ADDR 0x9102

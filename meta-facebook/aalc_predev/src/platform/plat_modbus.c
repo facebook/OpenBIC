@@ -463,6 +463,10 @@ modbus_command_mapping modbus_command_table[] = {
 	  16 },
 	{ MODBUS_MASTER_I2C_WRITE_READ_RESPONSE_ADDR, NULL,
 	  modbus_command_i2c_master_write_read_response, 0, 0, 0, 16 },
+	{ MODBUS_RPU_PDB_48V_SENSE_DIFF_POS_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PDB_48V_SENSE_DIFF_POS_VOLT_V, 1, -2, 1 },
+	{ MODBUS_RPU_PDB_48V_SENSE_DIFF_NEG_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PDB_48V_SENSE_DIFF_NEG_VOLT_V, 1, -2, 1 },
 	// FRU write read
 	{ MODBUS_MB_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, MB_FRU_ID, 0, 0,
 	  256 },
