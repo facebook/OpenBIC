@@ -165,6 +165,7 @@ ina238_init_arg ina238_init_args[] = {
 nct214_init_arg nct214_init_args[] = {
 	[0] = { 
 		.is_init = false, 
+		.temperature_range = NCT_214_TEMPERATURE_RANGE_EXTENDED,
 	},
 };
 

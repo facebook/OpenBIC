@@ -739,19 +739,19 @@ sensor_cfg nct214_config_table[] = {
 	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_1_TEMP_C, sensor_dev_nct214, I2C_BUS9, SB_NCT214_1_ADDR,
 	  NCT214_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
-	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
+	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, &nct214_init_args[0] },
 	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_2_TEMP_C, sensor_dev_nct214, I2C_BUS9, SB_NCT214_2_ADDR,
 	  NCT214_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
-	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
+	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, &nct214_init_args[0] },
 	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_3_TEMP_C, sensor_dev_nct214, I2C_BUS9, SB_NCT214_3_ADDR,
 	  NCT214_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
-	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
+	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, &nct214_init_args[0] },
 	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_4_TEMP_C, sensor_dev_nct214, I2C_BUS9, SB_NCT214_4_ADDR,
 	  NCT214_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
-	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
+	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, &nct214_init_args[0] },
 };
 sensor_cfg xdp710_sensor_config_table[] = {
 	// need to fix

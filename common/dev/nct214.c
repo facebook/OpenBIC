@@ -21,8 +21,9 @@
 #include <logging/log.h>
 #include "nct214.h"
 
-#define TEMPERATURE_RANGE 64
+#define TEMPERATURE_RANGE_EXTENDED_VALUE 64
 #define TEMPERATURE_REMOTE_FRACTION 0.25
+#define TEMPERATURE_REMOTE_FRACTION_FOR_SENSOR_READ_FRACTION (TEMPERATURE_REMOTE_FRACTION * 1000)
 #define TEMPERATURE_RANGE_SELECT_MASK BIT(2)
 
 LOG_MODULE_REGISTER(nct214);
@@ -66,8 +67,9 @@ uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 		}
 
 		uint8_t val_local_temp = msg.data[0];
-		if (temperature_range_select == 1) {
-			sval->integer = (int16_t)((float)val_local_temp - (float)TEMPERATURE_RANGE);
+		if (temperature_range_select == NCT_214_TEMPERATURE_RANGE_EXTENDED) {
+			sval->integer =
+				(int16_t)(val_local_temp - TEMPERATURE_RANGE_EXTENDED_VALUE);
 		} else {
 			sval->integer = (int16_t)val_local_temp;
 		}
@@ -93,16 +95,18 @@ uint8_t nct214_read(sensor_cfg *cfg, int *reading)
 		}
 
 		uint8_t val_external_temp_upper_byte = msg.data[0];
-		if (temperature_range_select == 1) {
-			sval->integer = (int16_t)((float)val_external_temp_upper_byte -
-						  (float)TEMPERATURE_RANGE);
+		sval->fraction = val_external_temp_lower_byte *
+				 TEMPERATURE_REMOTE_FRACTION_FOR_SENSOR_READ_FRACTION;
+		if (temperature_range_select == NCT_214_TEMPERATURE_RANGE_EXTENDED) {
+			sval->integer = (int16_t)(val_external_temp_upper_byte -
+						  TEMPERATURE_RANGE_EXTENDED_VALUE);
+			if (sval->integer < 0)
+				sval->fraction *= (-1);
+
 		} else {
 			sval->integer = (int16_t)val_external_temp_upper_byte;
 		}
 
-		// sval->fraction is integer
-		sval->fraction =
-			(float)val_external_temp_lower_byte * TEMPERATURE_REMOTE_FRACTION * 100;
 		return SENSOR_READ_SUCCESS;
 	default:
 		LOG_ERR("Unknown register offset(%d)", offset);
