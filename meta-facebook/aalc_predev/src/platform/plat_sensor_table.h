@@ -46,6 +46,10 @@
 #define SB_NCT214_4_ADDR (0x32 >> 1)
 #define FB_ADM1272_ADDR (0x22 >> 1)
 #define PB_ADM1272_ADDR (0x24 >> 1)
+#define PDB_INA238_U14_ADDR (0x8A >> 1)
+#define PDB_INA238_U15_ADDR (0x82 >> 1)
+#define PDB_MAX11617_U99_ADDR (0x6A >> 1) // U15 2nd src
+#define PDB_ADS1015_U101_ADDR (0x90 >> 1) //U15 2nd src
 
 /* define sensors offset */
 #define TMP75_TEMP_OFFSET 0x00
@@ -217,6 +221,8 @@
 #define SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_1_VOLT_V 0xA4
 #define SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_2_VOLT_V 0xA5
 #define SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_3_VOLT_V 0xA6
+#define SENSOR_NUM_PDB_48V_SENSE_DIFF_POS_VOLT_V 0xA7
+#define SENSOR_NUM_PDB_48V_SENSE_DIFF_NEG_VOLT_V 0xA8
 
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
