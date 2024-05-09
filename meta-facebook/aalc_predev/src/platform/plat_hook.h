@@ -23,6 +23,7 @@
 #include "i2c-mux-pca954x.h"
 #include "ina238.h"
 #include "nct7363.h"
+#include "nct214.h"
 
 /**************************************************************************************************
  * INIT ARGS
@@ -32,6 +33,7 @@ extern nct7363_init_arg nct7363_init_args[];
 extern ads112c_init_arg ads112c_init_args[];
 extern adc_asd_init_arg adc_asd_init_args[];
 extern ina238_init_arg ina238_init_args[];
+extern nct214_init_arg nct214_init_args[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
