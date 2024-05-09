@@ -158,6 +158,7 @@ enum SENSOR_DEV {
 	sensor_dev_vistara = 0x2F,
 	sensor_dev_max11617 = 0x30,
 	sensor_dev_nv_satmc = 0x31,
+	sensor_dev_nct214 = 0x32,
 	sensor_dev_max
 };
 
