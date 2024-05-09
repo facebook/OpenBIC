@@ -164,7 +164,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0x00, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -1402,7 +1402,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC6, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -1478,7 +1478,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -1554,7 +1554,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -1625,7 +1625,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
@@ -1638,7 +1638,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0x00000000, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x00000046, //uint32_t critical_high;
+			0x0000004B, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
 			0x00000000, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
@@ -1854,7 +1854,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC7, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -1931,7 +1931,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC7, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -2008,7 +2008,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0x00, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -2085,7 +2085,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC7, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -2165,7 +2165,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -2181,7 +2181,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 
 			0x00000000, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x00000055, //uint32_t critical_high;
+			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
 			0x00000000, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
@@ -2243,7 +2243,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -2259,7 +2259,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 
 			0x00000000, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x00000055, //uint32_t critical_high;
+			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
 			0x00000000, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
@@ -2321,7 +2321,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -2337,7 +2337,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 
 			0x00000000, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x00000055, //uint32_t critical_high;
+			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
 			0x00000000, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
@@ -2399,7 +2399,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -2415,7 +2415,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 
 			0x00000000, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x00000055, //uint32_t critical_high;
+			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
 			0x00000000, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
@@ -2477,7 +2477,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -2493,7 +2493,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 
 			0x00000000, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x00000055, //uint32_t critical_high;
+			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
 			0x00000000, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
@@ -2555,7 +2555,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -2571,7 +2571,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 
 			0x00000000, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x00000055, //uint32_t critical_high;
+			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
 			0x00000000, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
@@ -2633,7 +2633,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -2649,7 +2649,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 
 			0x00000000, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x00000055, //uint32_t critical_high;
+			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
 			0x00000000, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
@@ -2711,7 +2711,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -2727,7 +2727,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 
 			0x00000000, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x00000055, //uint32_t critical_high;
+			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
 			0x00000000, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
@@ -3415,7 +3415,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC7, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -3493,7 +3493,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC7, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -3571,7 +3571,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC7, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -3649,7 +3649,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC7, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -3727,7 +3727,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC7, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -3805,7 +3805,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC7, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -3883,7 +3883,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC7, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -3961,7 +3961,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC7, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -4039,7 +4039,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC7, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -4117,7 +4117,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC7, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -4195,7 +4195,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC7, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -4273,7 +4273,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC7, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -4351,7 +4351,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC7, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -4429,7 +4429,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC7, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -4507,7 +4507,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC7, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -4585,7 +4585,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC7, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -4661,23 +4661,23 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_3S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
-			0x3E, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 			0x00000000, //int32_t warning_high;
-			0x00001D4C, //int32_t warning_low;
-			0x0000251C, //int32_t critical_high;
-			0x00000FA0, //int32_t critical_low;
-			0x000030D4, //int32_t fatal_high;
-			-0x000007D0, //int32_t fatal_low;
+			0x00000000, //int32_t warning_low;
+			0x00002134, //int32_t critical_high;
+			0x00000000, //int32_t critical_low;
+			0x00000000, //int32_t fatal_high;
+			0x00000000, //int32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -4727,23 +4727,23 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_3S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
-			0x3E, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 			0x00000000, //int32_t warning_high;
-			0x00001D4C, //int32_t warning_low;
-			0x0000251C, //int32_t critical_high;
-			0x00000FA0, //int32_t critical_low;
-			0x000030D4, //int32_t fatal_high;
-			-0x000007D0, //int32_t fatal_low;
+			0x00000000, //int32_t warning_low;
+			0x00002134, //int32_t critical_high;
+			0x00000000, //int32_t critical_low;
+			0x00000000, //int32_t fatal_high;
+			0x00000000, //int32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -4793,23 +4793,23 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_3S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
-			0x3E, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 			0x00000000, //int32_t warning_high;
-			0x00001D4C, //int32_t warning_low;
-			0x0000251C, //int32_t critical_high;
-			0x00000FA0, //int32_t critical_low;
-			0x000030D4, //int32_t fatal_high;
-			-0x000007D0, //int32_t fatal_low;
+			0x00000000, //int32_t warning_low;
+			0x00002134, //int32_t critical_high;
+			0x00000000, //int32_t critical_low;
+			0x00000000, //int32_t fatal_high;
+			0x00000000, //int32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -4859,23 +4859,23 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_3S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
-			0x3E, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 			0x00000000, //int32_t warning_high;
-			0x00001D4C, //int32_t warning_low;
-			0x0000251C, //int32_t critical_high;
-			0x00000FA0, //int32_t critical_low;
-			0x000030D4, //int32_t fatal_high;
-			-0x000007D0, //int32_t fatal_low;
+			0x00000000, //int32_t warning_low;
+			0x00002134, //int32_t critical_high;
+			0x00000000, //int32_t critical_low;
+			0x00000000, //int32_t fatal_high;
+			0x00000000, //int32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -4925,23 +4925,23 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_3S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
-			0x3E, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 			0x00000000, //int32_t warning_high;
-			0x00001D4C, //int32_t warning_low;
-			0x0000251C, //int32_t critical_high;
-			0x00000FA0, //int32_t critical_low;
-			0x000030D4, //int32_t fatal_high;
-			-0x000007D0, //int32_t fatal_low;
+			0x00000000, //int32_t warning_low;
+			0x00002134, //int32_t critical_high;
+			0x00000000, //int32_t critical_low;
+			0x00000000, //int32_t fatal_high;
+			0x00000000, //int32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -4991,23 +4991,23 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_3S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
-			0x3E, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 			0x00000000, //int32_t warning_high;
-			0x00001D4C, //int32_t warning_low;
-			0x0000251C, //int32_t critical_high;
-			0x00000FA0, //int32_t critical_low;
-			0x000030D4, //int32_t fatal_high;
-			-0x000007D0, //int32_t fatal_low;
+			0x00000000, //int32_t warning_low;
+			0x00002134, //int32_t critical_high;
+			0x00000000, //int32_t critical_low;
+			0x00000000, //int32_t fatal_high;
+			0x00000000, //int32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -5057,23 +5057,23 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_3S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
-			0x3E, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 			0x00000000, //int32_t warning_high;
-			0x00001D4C, //int32_t warning_low;
-			0x0000251C, //int32_t critical_high;
-			0x00000FA0, //int32_t critical_low;
-			0x000030D4, //int32_t fatal_high;
-			-0x000007D0, //int32_t fatal_low;
+			0x00000000, //int32_t warning_low;
+			0x00002134, //int32_t critical_high;
+			0x00000000, //int32_t critical_low;
+			0x00000000, //int32_t fatal_high;
+			0x00000000, //int32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -5123,23 +5123,23 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xFF, //uint8_t supported_thresholds;
+			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_3S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
-			0x3E, //uint8_t range_field_support;
+			0x04, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 			0x00000000, //int32_t warning_high;
-			0x00001D4C, //int32_t warning_low;
-			0x0000251C, //int32_t critical_high;
-			0x00000FA0, //int32_t critical_low;
-			0x000030D4, //int32_t fatal_high;
-			-0x000007D0, //int32_t fatal_low;
+			0x00000000, //int32_t warning_low;
+			0x00002134, //int32_t critical_high;
+			0x00000000, //int32_t critical_low;
+			0x00000000, //int32_t fatal_high;
+			0x00000000, //int32_t fatal_low;
 		},
 		.update_time = 0,
 		{
