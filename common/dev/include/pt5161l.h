@@ -68,7 +68,7 @@
 extern uint8_t PT5161L_VENDOR_ID[7];
 
 bool pt5161l_get_vendor_id(I2C_MSG *msg);
-bool get_retimer_fw_version(I2C_MSG *msg, uint8_t *version);
+bool pt5161l_get_fw_version(I2C_MSG *msg, uint8_t *version);
 uint8_t pcie_retimer_fw_update(I2C_MSG *msg, uint32_t offset, uint16_t msg_len, uint8_t *msg_buf,
 			       uint8_t flag);
 
