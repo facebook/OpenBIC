@@ -25,6 +25,9 @@
 #include "nct7363.h"
 #include "nct214.h"
 #include "ads112c.h"
+#include "tmp461.h"
+#include "hdc1080.h"
+#include "ast_tach.h"
 
 /**************************************************************************************************
  * INIT ARGS
