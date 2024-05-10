@@ -143,7 +143,7 @@ void cache_pcie_retimer_version(void)
 
 	switch (retimer_type) {
 	case RETIMER_TYPE_PT5161L:
-		if (get_retimer_fw_version(i2c_msg, data)) {
+		if (pt5161l_get_fw_version(i2c_msg, data)) {
 			convert_uint8_t_pointer_to_uint32_t(&pcie_retimer_version, data, 4,
 							    BIG_ENDIAN);
 		} else {

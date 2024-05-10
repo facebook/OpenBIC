@@ -37,6 +37,8 @@
 
 LOG_MODULE_REGISTER(plat_hook);
 
+#define RETIMER_INIT_RETRY_COUNT 3
+
 /**************************************************************************************************
  * INIT ARGS
 **************************************************************************************************/
@@ -67,6 +69,11 @@ ina230_init_arg ina230_init_args[] = {
 		.alert_value = 13.2, // Unit: Watt, // Unit: Watt
 		.i_max = 16.384 },
 };
+
+pt5161l_init_arg pt5161l_init_args[] = { [0] = { .is_init = false,
+						 .temp_cal_code_pma_a = { 0, 0, 0, 0 },
+						 .temp_cal_code_pma_b = { 0, 0, 0, 0 },
+						 .temp_cal_code_avg = 0 } };
 
 #ifdef ENABLE_NVIDIA
 nv_satmc_init_arg satmc_init_args[] = {
@@ -209,4 +216,29 @@ bool pre_tmp75_read(sensor_cfg *cfg, void *args)
 	}
 
 	return false;
+}
+
+bool pre_retimer_read(sensor_cfg *cfg, void *args)
+{
+	ARG_UNUSED(args);
+
+	pt5161l_init_arg *init_arg = (pt5161l_init_arg *)cfg->init_args;
+	static uint8_t check_init_count = 0;
+	bool ret = true;
+
+	if (init_arg->is_init == false) {
+		if (check_init_count >= RETIMER_INIT_RETRY_COUNT) {
+			LOG_ERR("retimer initial fail reach max retry");
+			return false;
+		}
+
+		check_init_count += 1;
+		ret = init_drive_type_delayed(cfg);
+		if (ret == false) {
+			LOG_ERR("retimer initial fail");
+			return ret;
+		}
+	}
+
+	return ret;
 }
