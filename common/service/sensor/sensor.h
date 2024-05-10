@@ -106,6 +106,13 @@ enum DIMM_RELATED_OFFSET {
 	DIMM_SPD_TEMP = 0x31,
 };
 
+enum ADS112C_OFFSET {
+	ADS112C_MUX_1_CON = 0x80, //AINP = AIN0, AINN = AVSS
+	ADS112C_MUX_2_CON = 0x90, //AINP = AIN1, AINN = AVSS
+	ADS112C_MUX_3_CON = 0xA0, //AINP = AIN2, AINN = AVSS
+	ADS112C_MUX_4_CON = 0xA1, //AINP = AIN3, AINN = AVSS
+};
+
 // The sequence needs to same with table sensor_drive_tbl
 enum SENSOR_DEV {
 	sensor_dev_tmp75 = 0,
@@ -158,7 +165,10 @@ enum SENSOR_DEV {
 	sensor_dev_vistara = 0x2F,
 	sensor_dev_max11617 = 0x30,
 	sensor_dev_nv_satmc = 0x31,
-	sensor_dev_nct7363= 0x32,
+	sensor_dev_nct7363 = 0x32,
+	sensor_dev_ads112c = 0x33,
+	sensor_dev_hdc1080 = 0x34,
+	sensor_dev_ina238 = 0x35,
 	sensor_dev_max
 };
 
@@ -711,6 +721,17 @@ typedef struct _nv_satmc_init_arg {
 	pldm_sensor_pdr_parm parm; //only used for numeric sensor
 } nv_satmc_init_arg;
 
+typedef struct _ads112c_init_arg {
+	uint8_t reg0_input;
+	uint8_t reg0_gain;
+	uint8_t reg0_pga;
+	uint8_t reg1_conversion;
+	uint8_t reg1_vol_refer;
+} ads112c_init_arg;
+typedef struct _hdc1080_init_arg {
+	bool is_init;
+} hdc1080_init_arg;
+
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;
 // Mapping sensor number to sensor config index
@@ -750,5 +771,6 @@ void plat_fill_monitor_sensor_table();
 sensor_cfg *find_sensor_cfg_via_sensor_num(sensor_cfg *cfg_table, uint8_t cfg_count,
 					   uint8_t sensor_num);
 bool get_sensor_init_done_flag();
+sensor_cfg *get_common_sensor_cfg_info(uint8_t sensor_num);
 
 #endif

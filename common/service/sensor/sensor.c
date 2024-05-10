@@ -128,6 +128,9 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(max11617)
 	sensor_name_to_num(nv_satmc)
 	sensor_name_to_num(nct7363)
+	sensor_name_to_num(ads112c)
+	sensor_name_to_num(hdc1080)
+  	sensor_name_to_num(ina238)
 };
 // clang-format on
 
@@ -191,6 +194,9 @@ SENSOR_DRIVE_INIT_DECLARE(max11617);
 SENSOR_DRIVE_INIT_DECLARE(nv_satmc);
 #endif
 SENSOR_DRIVE_INIT_DECLARE(nct7363);
+SENSOR_DRIVE_INIT_DECLARE(ads112c);
+SENSOR_DRIVE_INIT_DECLARE(hdc1080);
+SENSOR_DRIVE_INIT_DECLARE(ina238);
 
 // The sequence needs to same with SENSOR_DEV ID
 sensor_drive_api sensor_drive_tbl[] = {
@@ -247,7 +253,8 @@ sensor_drive_api sensor_drive_tbl[] = {
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(nv_satmc),
 #endif
-	SENSOR_DRIVE_TYPE_INIT_MAP(nct7363)
+	SENSOR_DRIVE_TYPE_INIT_MAP(nct7363),	SENSOR_DRIVE_TYPE_INIT_MAP(ads112c),
+	SENSOR_DRIVE_TYPE_INIT_MAP(hdc1080),	SENSOR_DRIVE_TYPE_INIT_MAP(ina238),
 };
 
 static void init_sensor_num(void)
@@ -285,6 +292,21 @@ void map_sensor_num_to_sdr_cfg(void)
 		}
 	}
 	return;
+}
+
+__weak sensor_cfg *get_common_sensor_cfg_info(uint8_t sensor_num)
+{
+	if (!sensor_monitor_table)
+		return NULL;
+
+	uint8_t cfg_count = sensor_monitor_table[0].cfg_count;
+	sensor_cfg *cfg_table = sensor_monitor_table[0].monitor_sensor_cfg;
+
+	if (cfg_table != NULL) {
+		return find_sensor_cfg_via_sensor_num(cfg_table, cfg_count, sensor_num);
+	}
+
+	return NULL;
 }
 
 sensor_cfg *find_sensor_cfg_via_sensor_num(sensor_cfg *cfg_table, uint8_t cfg_count,
