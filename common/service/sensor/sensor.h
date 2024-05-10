@@ -169,6 +169,7 @@ enum SENSOR_DEV {
 	sensor_dev_ads112c = 0x33,
 	sensor_dev_hdc1080 = 0x34,
 	sensor_dev_ina238 = 0x35,
+	sensor_dev_nct214 = 0x36,
 	sensor_dev_max
 };
 
