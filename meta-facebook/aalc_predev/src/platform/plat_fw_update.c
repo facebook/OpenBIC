@@ -16,8 +16,8 @@ uint8_t modbus_get_fw_reversion(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
-	uint32_t byte_val = BIC_FW_YEAR_MSB << 24 | BIC_FW_YEAR_LSB << 16 | BIC_FW_WEEK << 8 | BIC_FW_VER;
-	memcpy(cmd->data, &byte_val, sizeof(uint16_t) * cmd->cmd_size);
+	uint16_t byte_val[4]  = {BIC_FW_YEAR_MSB_ASCII, BIC_FW_YEAR_LSB_ASCII, BIC_FW_WEEK_ASCII, BIC_FW_VER_ASCII}; 
+	memcpy(cmd->data, &byte_val[0], sizeof(uint16_t) * cmd->cmd_size);
 	
 	regs_reverse(cmd->data_len, cmd->data);
 	

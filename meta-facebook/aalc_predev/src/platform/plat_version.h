@@ -48,4 +48,8 @@
 #define BIC_FW_platform_1 0x61 // char: a
 #define BIC_FW_platform_2 0x00 // char: '\0'
 
+#define BIC_FW_YEAR_MSB_ASCII 0x3230 // char: 20
+#define BIC_FW_YEAR_LSB_ASCII 0x3234 // char: 24
+#define BIC_FW_WEEK_ASCII 0x3230 // char: 20
+#define BIC_FW_VER_ASCII 0x3031 //char: 01
 #endif
