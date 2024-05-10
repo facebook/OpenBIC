@@ -60,58 +60,74 @@ adm1272_init_arg adm1272_init_args[] = {
 };
 
 nct7363_init_arg nct7363_init_args[] = {
-    // GPIO setting: Reserved=11, FANINx=10, PWMx=01, GPIOXX=00
-    // gpio_dir == 1 : input(default), gpio_dir == 0 : output
-    // Fan BD
-    [0] = { 
-        .is_init = false, 
-        .pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
-        .pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
-        .wdt_cfg = WDT_7_5_SEC,
-        .fan_poles = 2,
-        .fan_frequency[NCT7363_17_PORT] = 5000, 
-        .threshold[NCT7363_15_PORT] = 50,
-    },	
-    // Management BD(no used)
-    [1] = { 
-        .is_init = false,
-        .fan_poles = 2,
-        .wdt_cfg = WDT_7_5_SEC,
-    },
-    //Backplane BD
-    [2] = { 
-        .is_init = false,
-        .pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_PWM,
-        .pin_type[NCT7363_2_PORT] = NCT7363_PIN_TPYE_PWM,
-        .pin_type[NCT7363_3_PORT] = NCT7363_PIN_TPYE_PWM,
-        .pin_type[NCT7363_4_PORT] = NCT7363_PIN_TPYE_FANIN,
-        .pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .pin_type[NCT7363_12_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .pin_type[NCT7363_13_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .pin_type[NCT7363_14_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .pin_type[NCT7363_16_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .fan_poles = 2,
-        .wdt_cfg = WDT_7_5_SEC,
-    },
-    //Pump BD
-    [3] = { 
-        .is_init = false,
-        .pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_PWM,
-        .pin_type[NCT7363_2_PORT] = NCT7363_PIN_TPYE_PWM,
-        .pin_type[NCT7363_5_PORT] = NCT7363_PIN_TPYE_FANIN,
-        .pin_type[NCT7363_6_PORT] = NCT7363_PIN_TPYE_FANIN,
-        .pin_type[NCT7363_7_PORT] = NCT7363_PIN_TPYE_FANIN,
-        .pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-        .fan_poles = 2,
-        .wdt_cfg = WDT_7_5_SEC,
-    },
+	// GPIO setting: Reserved=11, FANINx=10, PWMx=01, GPIOXX=00
+	// gpio_dir == 1 : input(default), gpio_dir == 0 : output
+	// Fan BD
+	[0] = { 
+		.is_init = false, 
+		.wdt_cfg = WDT_7_5_SEC,
+		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
+		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
+		// pwm setting
+		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
+		// fanin setting
+		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
+		.fan_poles[NCT7363_15_PORT] = 4, // TO DO wait to check
+	},	
+	// Management BD(no used)
+	[1] = { 
+		.is_init = false,
+		.wdt_cfg = WDT_7_5_SEC,
+	},
+	//Backplane BD
+	[2] = { 
+		.is_init = false,
+		.wdt_cfg = WDT_7_5_SEC,
+		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_PWM, // flow1 pwm
+		.pin_type[NCT7363_2_PORT] = NCT7363_PIN_TPYE_PWM, // flow2 pwm
+		.pin_type[NCT7363_3_PORT] = NCT7363_PIN_TPYE_PWM, // PUMP_ADD_WATER_PWM
+		.pin_type[NCT7363_4_PORT] = NCT7363_PIN_TPYE_FANIN, // PUMP_ADD_WATER fanin
+		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_12_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_13_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_14_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_16_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		// pwm setting
+		.fan_frequency[NCT7363_1_PORT] = 500, // TO DO wait to check
+		.fan_frequency[NCT7363_2_PORT] = 500, // TO DO wait to check
+		.fan_frequency[NCT7363_3_PORT] = 500, // TO DO wait to check
+		// fanin setting
+		.fan_poles[NCT7363_4_PORT] = 12, // TO DO wait to check
+		.threshold[NCT7363_4_PORT] = 50, // TO DO wait to check
+	},
+	//Pump BD
+	[3] = { 
+		.is_init = false,
+		.wdt_cfg = WDT_7_5_SEC,
+		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_PWM, // pump pwm
+		.pin_type[NCT7363_2_PORT] = NCT7363_PIN_TPYE_PWM, // fan pwm
+		.pin_type[NCT7363_5_PORT] = NCT7363_PIN_TPYE_FANIN, // pump fanin
+		.pin_type[NCT7363_6_PORT] = NCT7363_PIN_TPYE_FANIN, // fan fanin
+		.pin_type[NCT7363_7_PORT] = NCT7363_PIN_TPYE_FANIN, // fan fanin
+		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		// pwm setting
+		.fan_frequency[NCT7363_1_PORT] = 500, // TO DO wait to check
+		.fan_frequency[NCT7363_2_PORT] = 500, // TO DO wait to check
+		// fanin setting
+		.fan_poles[NCT7363_5_PORT] = 12, // TO DO wait to check
+		.fan_poles[NCT7363_6_PORT] = 4, // TO DO wait to check
+		.fan_poles[NCT7363_7_PORT] = 4, // TO DO wait to check
+		.threshold[NCT7363_5_PORT] = 50, // TO DO wait to check
+		.threshold[NCT7363_6_PORT] = 50, // TO DO wait to check
+		.threshold[NCT7363_7_PORT] = 50, // TO DO wait to check
+	},
 };
 
 ads112c_init_arg ads112c_init_args[] = {
@@ -155,17 +171,17 @@ ina238_init_arg ina238_init_args[] = {
 	// PDB board
 	[0] = { 
 		.is_init = false, 
-		.r_shunt = 0.1, 
-		.adc_range = INA238_ADC_RANGE_PN_163, 
+		.r_shunt = 0.1, // TO DO wait to check
+		.adc_range = INA238_ADC_RANGE_PN_163, // TO DO wait to check
 		.alert_latch = INA238_ALERT_LATCH_ENABLE,
-		.i_max = 0.1,
+		.i_max = 0.1, // TO DO wait to check
 	},
 };
 
 nct214_init_arg nct214_init_args[] = {
 	[0] = { 
 		.is_init = false, 
-		.temperature_range = NCT_214_TEMPERATURE_RANGE_EXTENDED,
+		.temperature_range = NCT_214_TEMPERATURE_RANGE_EXTENDED, // TO DO wait to check
 	},
 };
 
