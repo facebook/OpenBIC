@@ -103,6 +103,13 @@ typedef struct _cpuid_WrData_ {
 	uint8_t ecx_value;
 } cpuid_WrData;
 
+/* RMI Rev 2.1 use 2 bytes thread */
+typedef struct _cpuid_WrData_TwoPOne_ {
+	uint8_t thread[2];
+	uint8_t cpuid_func[4];
+	uint8_t ecx_value;
+} cpuid_WrData_TwoPOne;
+
 typedef struct _cpuid_RdData_ {
 	uint8_t status;
 	uint8_t data_out[8];
@@ -112,6 +119,12 @@ typedef struct _mca_WrData_ {
 	uint8_t thread;
 	uint8_t register_addr[4];
 } mca_WrData;
+
+/* RMI Rev 2.1 use 2 bytes thread */
+typedef struct _mca_WrData_TwoPOne {
+	uint8_t thread[2];
+	uint8_t register_addr[4];
+} mca_WrData_TwoPOne;
 
 typedef struct _mca_RdData_ {
 	uint8_t status;
@@ -147,5 +160,6 @@ int pal_check_sbrmi_command_code_length();
 uint8_t pal_get_apml_bus();
 uint8_t apml_get_bus();
 int set_sbrmi_command_code_len(uint8_t value);
+int get_sbrmi_command_code_len();
 
 #endif
