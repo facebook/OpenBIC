@@ -25,7 +25,7 @@
 #define I2C_MASTER_READ_BACK_MAX_SIZE 16 // 16 registers
 
 static uint16_t temp_read_length;
-static uint16_t temp_read_data[I2C_MASTER_READ_BACK_MAX_SIZE]; 
+static uint16_t temp_read_data[I2C_MASTER_READ_BACK_MAX_SIZE];
 
 LOG_MODULE_REGISTER(plat_util);
 
@@ -85,6 +85,7 @@ uint8_t modbus_command_i2c_master_write_read_response(modbus_command_mapping *cm
 
 void regs_reverse(uint16_t reg_len, uint16_t *data)
 {
-    for (uint16_t i = 0; i < reg_len; i++)
+	CHECK_NULL_ARG(data);
+	for (uint16_t i = 0; i < reg_len; i++)
 		data[i] = sys_be16_to_cpu(data[i]);
 }

@@ -14,14 +14,32 @@
  * limitations under the License.
  */
 
-#ifndef ADM1272_H
-#define ADM1272_H
+#ifndef XDP710_H
+#define XDP710_H
+
+#include <stdint.h>
+
+enum XDP710_VTLM_RNG {
+	VTLM_RNG_88,
+	VTLM_RNG_44,
+	VTLM_RNG_22,
+	VTLM_RNG_RESERVED,
+};
 
 enum XDP710_VSNS_CS {
 	VSNS_CS_12_5,
 	VSNS_CS_25,
 	VSNS_CS_50,
 	VSNS_CS_100,
+	VSNS_CS_MAX,
 };
 
-#endif
+typedef struct {
+	bool mbr_init;
+	uint16_t m;
+	uint16_t b;
+	uint16_t r; /* multiples of 10, r = -2 -> val = 100 */
+	float r_sense; /* mohm */
+} xdp710_priv;
+
+#endif // XDP710_H

@@ -744,7 +744,6 @@ typedef struct _ast_tach_init_arg {
 } ast_tach_init_arg;
 
 typedef struct _xdp710_init_arg {
-	bool is_init;
 	float r_sense;
 } xdp710_init_arg;
 
