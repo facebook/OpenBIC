@@ -24,12 +24,6 @@
 #include "ast_adc.h"
 #include "plat_hook.h"
 #include "plat_class.h"
-#include "tmp461.h"
-#include "hdc1080.h"
-#include "nct7363.h"
-#include "nct214.h"
-#include "ina238.h"
-#include "ast_tach.h"
 #include <logging/log.h>
 
 LOG_MODULE_REGISTER(plat_sensor_table);

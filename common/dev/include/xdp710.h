@@ -42,4 +42,8 @@ typedef struct {
 	float r_sense; /* mohm */
 } xdp710_priv;
 
+typedef struct _xdp710_init_arg {
+	float r_sense;
+} xdp710_init_arg;
+
 #endif // XDP710_H
