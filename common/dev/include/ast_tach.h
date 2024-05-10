@@ -41,4 +41,8 @@ enum {
 	TACH_MAX_NUM,
 };
 
+typedef struct _ast_tach_init_arg {
+	bool is_init;
+} ast_tach_init_arg;
+
 #endif //TACH_H

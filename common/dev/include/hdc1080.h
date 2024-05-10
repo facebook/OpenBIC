@@ -41,6 +41,13 @@ typedef struct {
 	sys_snode_t node; // linked list node
 } hdc1080_data;
 
+typedef struct _hdc1080_init_arg {
+	uint8_t idx;
+	uint8_t mode;
+	uint8_t tres; // Temperature Measurement Resolution
+	uint8_t hres; //Humidity Measurement Resolution
+} hdc1080_init_arg;
+
 #define HDC1080_TEMP_OFFSET 0x00
 #define HDC1080_HUM_OFFSET 0x01
 #define HDC1080_CONFIGURE_OFFSET 0x02

@@ -20,7 +20,6 @@
 #include "plat_hook.h"
 #include "plat_class.h"
 #include "nct7363.h"
-#include "ads112c.h"
 #include "ina238.h"
 #include "plat_i2c.h"
 #include "sensor.h"
