@@ -724,17 +724,6 @@ typedef struct _nv_satmc_init_arg {
 	pldm_sensor_pdr_parm parm; //only used for numeric sensor
 } nv_satmc_init_arg;
 
-typedef struct _ads112c_init_arg {
-	uint8_t reg0_input;
-	uint8_t reg0_gain;
-	uint8_t reg0_pga;
-	uint8_t reg1_conversion;
-	uint8_t reg1_vol_refer;
-} ads112c_init_arg;
-typedef struct _hdc1080_init_arg {
-	bool is_init;
-} hdc1080_init_arg;
-
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;
 // Mapping sensor number to sensor config index
