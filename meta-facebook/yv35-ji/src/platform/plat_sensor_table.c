@@ -185,14 +185,15 @@ sensor_cfg mp5990_temp_sensor_config_table[] = {
 sensor_cfg pt4080l_sensor_config_table[] = {
 	{ SENSOR_NUM_TEMP_RETIMER, sensor_dev_pt5161l, I2C_BUS2, AL_RETIMER_ADDR,
 	  PT5161L_TEMP_OFFSET, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_retimer_read, NULL, NULL, NULL,
-	  &pt5161l_init_args[0] },
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_pt4080l_read, &mux_conf_addr_0xe2[1],
+	  NULL, NULL, &pt5161l_init_args[0] },
 };
 
 sensor_cfg ds160pt801_sensor_config_table[] = {
 	{ SENSOR_NUM_TEMP_RETIMER, sensor_dev_ds160pt801, I2C_BUS2, TI_RETIMER_ADDR,
 	  DS160PT801_READ_TEMP, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  DISABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	  DISABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ds160pt801_read,
+	  &mux_conf_addr_0xe2[1], NULL, NULL, NULL },
 };
 
 static sensor_cfg *change_retimer_sensor_cfg(uint8_t module)
@@ -222,7 +223,21 @@ static sensor_cfg *change_retimer_sensor_cfg(uint8_t module)
 
 bool modify_sensor_cfg()
 {
-	sensor_cfg *retimer_cfg = NULL;
+	/* Need to switch channel after EVT2 */
+	if (get_board_revision() >= SYS_BOARD_EVT2) {
+		I2C_MSG msg = { 0 };
+		msg.bus = I2C_BUS2;
+		msg.target_addr = (0xE2 >> 1); //switch address
+		msg.data[0] = 0x02; //channel2
+		msg.tx_len = 1;
+		msg.rx_len = 0;
+
+		if (i2c_master_write(&msg, 3)) {
+			LOG_ERR("Failed to switch channel for retimer");
+			return false;
+		}
+	}
+
 	uint8_t addr_list[10] = { 0 };
 	uint8_t addr_len = 0;
 	uint8_t retimer_module = RETIMER_MODULE_UNKNOWN;
@@ -249,6 +264,7 @@ bool modify_sensor_cfg()
 
 	set_retimer_module(retimer_module);
 
+	sensor_cfg *retimer_cfg = NULL;
 	retimer_cfg = change_retimer_sensor_cfg(retimer_module);
 	if (!retimer_cfg) {
 		LOG_ERR("Retimer sensor config not found!!");

@@ -18,6 +18,7 @@
 #include <string.h>
 #include "sensor.h"
 #include "plat_def.h"
+#include "plat_class.h"
 #include "plat_i2c.h"
 #include "plat_gpio.h"
 #include "plat_hook.h"
@@ -218,9 +219,25 @@ bool pre_tmp75_read(sensor_cfg *cfg, void *args)
 	return false;
 }
 
-bool pre_retimer_read(sensor_cfg *cfg, void *args)
+bool pre_pt4080l_read(sensor_cfg *cfg, void *args)
 {
-	ARG_UNUSED(args);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
+
+	/* Need to switch channel after EVT2 */
+	if (get_board_revision() >= SYS_BOARD_EVT2) {
+		int retry = 200; // workaround for poc board
+		int i = 0;
+		for (i = 0; i < retry; i++) {
+			if (tca9548_select_chan(cfg, (struct tca9548 *)args))
+				break;
+		}
+
+		if (i == 200) {
+			LOG_ERR("Channel switch failed!");
+			return false;
+		}
+	}
 
 	pt5161l_init_arg *init_arg = (pt5161l_init_arg *)cfg->init_args;
 	static uint8_t check_init_count = 0;
@@ -241,4 +258,27 @@ bool pre_retimer_read(sensor_cfg *cfg, void *args)
 	}
 
 	return ret;
+}
+
+bool pre_ds160pt801_read(sensor_cfg *cfg, void *args)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
+
+	/* Need to switch channel after EVT2 */
+	if (get_board_revision() >= SYS_BOARD_EVT2) {
+		int retry = 200; // workaround for poc board
+		int i = 0;
+		for (i = 0; i < retry; i++) {
+			if (tca9548_select_chan(cfg, (struct tca9548 *)args))
+				break;
+		}
+
+		if (i == 200) {
+			LOG_ERR("Channel switch failed!");
+			return false;
+		}
+	}
+
+	return true;
 }
