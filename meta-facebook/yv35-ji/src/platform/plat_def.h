@@ -27,5 +27,6 @@
 #define ENABLE_NVIDIA
 
 #define MAX_FWUPDATE_RSP_BUF_SIZE 200 // for pldm fw update max transfer size
+#define BIC_UPDATE_MAX_OFFSET 0x60000
 
 #endif
