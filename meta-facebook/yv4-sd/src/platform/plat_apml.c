@@ -182,8 +182,13 @@ void read_cpuid()
 	apml_data.cb_fn = read_cpuid_callback;
 	apml_data.error_cb_fn = read_cpuid_error_callback;
 	apml_data.ui32_arg = 0x00;
-	cpuid_WrData *wrdata = (cpuid_WrData *)&apml_data.WrData;
-	wrdata->ecx_value = 0x00;
+	if (get_sbrmi_command_code_len() == SBRMI_CMD_CODE_LEN_TWO_BYTE) {
+		cpuid_WrData_TwoPOne *wrdata = (cpuid_WrData_TwoPOne *)&apml_data.WrData;
+		wrdata->ecx_value = 0x00;
+	} else {
+		cpuid_WrData *wrdata = (cpuid_WrData *)&apml_data.WrData;
+		wrdata->ecx_value = 0x00;
+	}
 	apml_read(&apml_data);
 
 	// read ecx&edx
@@ -194,7 +199,12 @@ void read_cpuid()
 	apml_data.cb_fn = read_cpuid_callback;
 	apml_data.error_cb_fn = read_cpuid_error_callback;
 	apml_data.ui32_arg = 0x01;
-	wrdata = (cpuid_WrData *)&apml_data.WrData;
-	wrdata->ecx_value = 0x01;
+	if (get_sbrmi_command_code_len() == SBRMI_CMD_CODE_LEN_TWO_BYTE) {
+		cpuid_WrData_TwoPOne *wrdata = (cpuid_WrData_TwoPOne *)&apml_data.WrData;
+		wrdata->ecx_value = 0x01;
+	} else {
+		cpuid_WrData *wrdata = (cpuid_WrData *)&apml_data.WrData;
+		wrdata->ecx_value = 0x01;
+	}
 	apml_read(&apml_data);
 }
