@@ -57,6 +57,15 @@
 			"Device": "mp2894",
 			"CheckSum": "y",
 			"pkg_suffix": ".pldm"
+		},
+		{
+			"CompID": [
+				6
+			],
+			"Vendor": "al",
+			"Device": "pt4080l",
+			"CheckSum": "n",
+			"pkg_suffix": ".pldm"
 		}
 	]
 }
