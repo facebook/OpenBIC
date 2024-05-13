@@ -67,6 +67,8 @@ struct _SLOT_EID_MAPPING_TABLE _slot_eid_mapping_table[] = {
 uint8_t slot_eid = 0;
 uint8_t slot_id = 0;
 
+static uint8_t retimer_type = RETIMER_TYPE_ASTERALABS;
+
 uint8_t get_slot_eid()
 {
 	return slot_eid;
@@ -222,4 +224,57 @@ void init_platform_config()
 
 	LOG_INF("Slot EID = %d, Slot ID = %d", slot_eid, slot_id);
 	i3c_set_pid(&i3c_msg, slot_pid);
+
+	init_retimer_type();
+}
+
+uint8_t get_retimer_type()
+{
+	return retimer_type;
+}
+
+void init_retimer_type()
+{
+	uint8_t board_rev = 0;
+	get_board_rev(&board_rev);
+
+	uint8_t rtm_0 = 0, rtm_1 = 0;
+
+	// Using GPIO to check retimer type
+	if (board_rev <= BOARD_REV_EVT) {
+		retimer_type = RETIMER_TYPE_ASTERALABS;
+	} else {
+		rtm_0 = gpio_get(RTM_TYPE_0);
+		rtm_1 = gpio_get(RTM_TYPE_1);
+		// retimer type [1:0]
+		// 00: asteralabs 01: no retimer
+		// 10: kandou 11: broadcom
+		if ((rtm_1 == GPIO_LOW) && (rtm_0 == GPIO_LOW)) {
+			retimer_type = RETIMER_TYPE_ASTERALABS;
+		} else if ((rtm_1 == GPIO_LOW) && (rtm_0 == GPIO_HIGH)) {
+			retimer_type = RETIMER_TYPE_NO_RETIMER;
+		} else if ((rtm_1 == GPIO_HIGH) && (rtm_0 == GPIO_LOW)) {
+			retimer_type = RETIMER_TYPE_KANDOU;
+		} else if ((rtm_1 == GPIO_HIGH) && (rtm_0 == GPIO_HIGH)) {
+			retimer_type = RETIMER_TYPE_BROADCOM;
+		}
+	}
+
+	LOG_INF("Retimer type: 0x%x", retimer_type);
+
+	int retry = 3;
+	uint8_t write_byte = (rtm_1 << 1) | rtm_0;
+
+	// Write the result to CPLD register
+	I2C_MSG i2c_msg = { 0 };
+	i2c_msg.bus = CPLD_IO_I2C_BUS;
+	i2c_msg.target_addr = CPLD_IO_I2C_ADDR;
+	i2c_msg.tx_len = 2;
+	i2c_msg.data[0] = CPLD_REG_RETIMER_TYPE;
+	i2c_msg.data[1] = write_byte;
+	if (i2c_master_write(&i2c_msg, retry) != 0) {
+		LOG_ERR("Failed to write retimer type to cpld");
+	}
+
+	return;
 }
