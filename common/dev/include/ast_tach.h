@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,15 +14,35 @@
  * limitations under the License.
  */
 
-#ifndef HDC1080_H
-#define HDC1080_H
+#ifndef TACH_H
+#define TACH_H
 
-#define HDC1080_TEMP_OFFSET 0x00
-#define HDC1080_HUM_OFFSET 0x01
-#define HDC1080_CONFIGURE_OFFSET 0x02
+enum {
+	AST_TACH_RPM = 0,
+};
 
-typedef struct _hdc1080_init_arg {
+enum {
+	TACH_PORT0 = 0,
+	TACH_PORT1,
+	TACH_PORT2,
+	TACH_PORT3,
+	TACH_PORT4,
+	TACH_PORT5,
+	TACH_PORT6,
+	TACH_PORT7,
+	TACH_PORT8,
+	TACH_PORT9,
+	TACH_PORT10,
+	TACH_PORT11,
+	TACH_PORT12,
+	TACH_PORT13,
+	TACH_PORT14,
+	TACH_PORT15,
+	TACH_MAX_NUM,
+};
+
+typedef struct _ast_tach_init_arg {
 	bool is_init;
-} hdc1080_init_arg;
+} ast_tach_init_arg;
 
-#endif //HDC1080_H
+#endif //TACH_H

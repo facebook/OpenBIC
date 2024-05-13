@@ -14,15 +14,36 @@
  * limitations under the License.
  */
 
-#ifndef HDC1080_H
-#define HDC1080_H
+#ifndef XDP710_H
+#define XDP710_H
 
-#define HDC1080_TEMP_OFFSET 0x00
-#define HDC1080_HUM_OFFSET 0x01
-#define HDC1080_CONFIGURE_OFFSET 0x02
+#include <stdint.h>
 
-typedef struct _hdc1080_init_arg {
-	bool is_init;
-} hdc1080_init_arg;
+enum XDP710_VTLM_RNG {
+	VTLM_RNG_88,
+	VTLM_RNG_44,
+	VTLM_RNG_22,
+	VTLM_RNG_RESERVED,
+};
 
-#endif //HDC1080_H
+enum XDP710_VSNS_CS {
+	VSNS_CS_12_5,
+	VSNS_CS_25,
+	VSNS_CS_50,
+	VSNS_CS_100,
+	VSNS_CS_MAX,
+};
+
+typedef struct {
+	bool mbr_init;
+	uint16_t m;
+	uint16_t b;
+	uint16_t r; /* multiples of 10, r = -2 -> val = 100 */
+	float r_sense; /* mohm */
+} xdp710_priv;
+
+typedef struct _xdp710_init_arg {
+	float r_sense;
+} xdp710_init_arg;
+
+#endif // XDP710_H
