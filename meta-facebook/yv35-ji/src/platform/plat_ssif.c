@@ -20,6 +20,8 @@
 #include "plat_i2c.h"
 #include "plat_gpio.h"
 #include "plat_mctp.h"
+#include "plat_sensor_table.h"
+#include "plat_class.h"
 #include "power_status.h"
 #include "ssif.h"
 
@@ -52,4 +54,12 @@ void pal_bios_post_complete()
 	/* Pull low virtual bios complete pin */
 	gpio_set(VIRTUAL_BIOS_POST_COMPLETE_L, GPIO_LOW);
 	set_post_status(VIRTUAL_BIOS_POST_COMPLETE_L);
+
+	/* work around */
+	if (get_board_revision() < SYS_BOARD_EVT)
+		return;
+
+	if (modify_sensor_cfg() == false) {
+		LOG_ERR("Failed to modify sensor cfg!");
+	}
 }

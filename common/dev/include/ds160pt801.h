@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_SDR_TABLE_H
-#define PLAT_SDR_TABLE_H
+#ifndef DS160PT801_H
+#define DS160PT801_H
 
-#include <stdint.h>
+#include "hal_i2c.h"
 
-#define MAX_SENSOR_SIZE 60
+enum {
+	DS160PT801_READ_TEMP,
+};
 
-uint8_t plat_get_sdr_size();
-void load_sdr_table(void);
-void pal_extend_full_sdr_table();
-uint8_t pal_get_extend_sdr();
+bool ds160pt801_get_fw_version(I2C_MSG *i2c_msg, uint8_t *version);
 
 #endif
