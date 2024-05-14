@@ -36,6 +36,7 @@
 #include "plat_util.h"
 #include "libutil.h"
 #include "plat_pwm.h"
+#include "util_sys.h"
 
 LOG_MODULE_REGISTER(plat_modbus);
 
@@ -580,6 +581,17 @@ static int coil_wr(uint16_t addr, bool state)
 				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 
 			disable_sensor_poll();
+
+			/* disable modbus except MODBUS0(BMC) */
+			for (uint8_t i = 0; i < ARRAY_SIZE(modbus_server_config); i++) {
+				if (strcmp(modbus_server_config[i].iface_name, "MODBUS0") != 0) {
+					int server_iface = modbus_iface_get_by_name(
+						modbus_server_config[i].iface_name);
+					modbus_disable(server_iface);
+				}
+			}
+		} else {
+			submit_bic_warm_reset();
 		}
 		// return success for Setting RPU RUN
 		return MODBUS_EXC_NONE;
