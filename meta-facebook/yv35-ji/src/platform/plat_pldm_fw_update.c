@@ -44,6 +44,7 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param);
 static uint8_t pldm_post_vr_update(void *fw_update_param);
 static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 static uint8_t pldm_pre_retimer_update(void *fw_update_param);
+static uint8_t pldm_post_retimer_update(void *fw_update_param);
 static bool get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 
 /* PLDM FW update table */
@@ -115,7 +116,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.comp_classification_index = 0x00,
 		.pre_update_func = pldm_pre_retimer_update,
 		.update_func = pldm_retimer_update,
-		.pos_update_func = NULL,
+		.pos_update_func = pldm_post_retimer_update,
 		.inf = COMP_UPDATE_VIA_I2C,
 		.activate_method = COMP_ACT_AC_PWR_CYCLE,
 		.self_act_func = NULL,
@@ -313,10 +314,35 @@ post_hook_and_ret:
 static uint8_t pldm_pre_retimer_update(void *fw_update_param)
 {
 	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	if (get_board_revision() < SYS_BOARD_EVT) {
+		LOG_WRN("Not support retimer relative function before EVT");
+		return 1;
+	}
+
 	if (get_post_status() == false) {
 		LOG_WRN("Not in POST COMPLETE state, skip retimer update");
 		return 1;
 	}
+
+	/* Stop sensor polling */
+	disable_sensor_poll();
+
+	/* Need to switch channel after EVT2 */
+	if (get_board_revision() >= SYS_BOARD_EVT2) {
+		I2C_MSG msg = { 0 };
+		msg.bus = I2C_BUS2;
+		msg.target_addr = (0xE2 >> 1); //switch address
+		msg.data[0] = 0x02; //channel2
+		msg.tx_len = 1;
+		msg.rx_len = 0;
+
+		if (i2c_master_write(&msg, 3)) {
+			LOG_ERR("Failed to switch channel for retimer");
+			return 1;
+		}
+	}
+
 	uint8_t retimer_module = get_retimer_module();
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 	p->bus = I2C_BUS2;
@@ -334,11 +360,22 @@ static uint8_t pldm_pre_retimer_update(void *fw_update_param)
 	return 0;
 }
 
+static uint8_t pldm_post_retimer_update(void *fw_update_param)
+{
+	ARG_UNUSED(fw_update_param);
+
+	/* Start sensor polling */
+	enable_sensor_poll();
+
+	return 0;
+}
+
 static bool get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 {
 	CHECK_NULL_ARG_WITH_RETURN(info_p, false);
 	CHECK_NULL_ARG_WITH_RETURN(buf, false);
 	CHECK_NULL_ARG_WITH_RETURN(len, false);
+
 	if (get_board_revision() < SYS_BOARD_EVT) {
 		LOG_WRN("Not support retimer relative function before EVT");
 		return false;
@@ -347,6 +384,27 @@ static bool get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		LOG_WRN("Not in POST COMPLETE state, skip retimer fw version get");
 		return false;
 	}
+
+	bool ret = false;
+
+	/* Stop sensor polling */
+	disable_sensor_poll();
+
+	/* Need to switch channel after EVT2 */
+	if (get_board_revision() >= SYS_BOARD_EVT2) {
+		I2C_MSG msg = { 0 };
+		msg.bus = I2C_BUS2;
+		msg.target_addr = (0xE2 >> 1); //switch address
+		msg.data[0] = 0x02; //channel2
+		msg.tx_len = 1;
+		msg.rx_len = 0;
+
+		if (i2c_master_write(&msg, 3)) {
+			LOG_ERR("Failed to switch channel for retimer");
+			goto exit;
+		}
+	}
+
 	uint8_t retimer_module = get_retimer_module();
 	uint8_t version[RETIMER_PT5161L_FW_VER_LEN];
 	uint16_t ver_len = 0;
@@ -357,16 +415,16 @@ static bool get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		i2c_msg.target_addr = AL_RETIMER_ADDR;
 		if (pt5161l_get_fw_version(&i2c_msg, version) == false) {
 			LOG_ERR("Failed to get PT4080L retimer version");
-			return false;
+			goto exit;
 		}
 		ver_len = RETIMER_PT5161L_FW_VER_LEN;
 		break;
 	case RETIMER_MODULE_DS160PT801:
 		LOG_WRN("DS160PT801 retimer update not support yet");
-		return false;
+		goto exit;
 	default:
 		LOG_ERR("Unsupport retimer module %d", retimer_module);
-		return false;
+		goto exit;
 	}
 
 	const char *vr_name[] = {
@@ -377,7 +435,7 @@ static bool get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 	if (!vr_name_p) {
 		LOG_ERR("The pointer of VR string name is NULL");
-		return false;
+		goto exit;
 	}
 
 	uint8_t *buf_p = buf;
@@ -390,7 +448,12 @@ static bool get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 	LOG_HEXDUMP_INF(buf, *len, "Retimer version string");
 
-	return true;
+	ret = true;
+exit:
+	/* Start sensor polling */
+	enable_sensor_poll();
+
+	return ret;
 }
 
 void clear_pending_version(uint8_t activate_method)
