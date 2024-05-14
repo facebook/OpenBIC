@@ -58,7 +58,7 @@
 #define name_gpioD \
 	gpio_name_to_num(PWRBTN_L) \
 	gpio_name_to_num(RST_BMC_L) \
-	gpio_name_to_num(Reserve_GPIOD2) \
+	gpio_name_to_num(FM_BIOS_MRC_DEBUG_DIS_L) \
 	gpio_name_to_num(BMC_READY) \
 	gpio_name_to_num(BIC_READY) \
 	gpio_name_to_num(PWR_BRAKE_CPU1) \

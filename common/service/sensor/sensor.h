@@ -169,7 +169,10 @@ enum SENSOR_DEV {
 	sensor_dev_ads112c = 0x33,
 	sensor_dev_hdc1080 = 0x34,
 	sensor_dev_ina238 = 0x35,
-	sensor_dev_ds160pt801 = 0x36,
+	sensor_dev_nct214 = 0x36,
+	sensor_dev_ast_tach = 0x37,
+	sensor_dev_xdp710 = 0x38,
+	sensor_dev_ds160pt801 = 0x39,
 	sensor_dev_max
 };
 
@@ -721,17 +724,6 @@ typedef struct _nv_satmc_init_arg {
 	uint8_t state_sensor_idx; //only used for state sensor
 	pldm_sensor_pdr_parm parm; //only used for numeric sensor
 } nv_satmc_init_arg;
-
-typedef struct _ads112c_init_arg {
-	uint8_t reg0_input;
-	uint8_t reg0_gain;
-	uint8_t reg0_pga;
-	uint8_t reg1_conversion;
-	uint8_t reg1_vol_refer;
-} ads112c_init_arg;
-typedef struct _hdc1080_init_arg {
-	bool is_init;
-} hdc1080_init_arg;
 
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;

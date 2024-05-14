@@ -177,11 +177,11 @@ bool nct7363_set_frequency(sensor_cfg *cfg, float frequency)
 	if (!convert_result)
 		return false;
 
-	if (!nct7363_write(cfg, freq_offset, output_freq)){
+	if (!nct7363_write(cfg, freq_offset, output_freq)) {
 		LOG_ERR("Set frequency error");
 		return false;
 	}
-		
+
 	return true;
 }
 
@@ -203,7 +203,6 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 	int gpio_result = 0;
 	uint8_t offset = cfg->offset;
 	uint8_t port_offset = cfg->arg0;
-	uint8_t fan_poles = nct7363_init_arg_data->fan_poles;
 	uint8_t fan_count_high_byte_offset = 0;
 	uint8_t fan_count_low_byte_offset = 0;
 	if (port_offset > NCT7363_8_PORT) {
@@ -241,6 +240,7 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 		uint8_t fan_count_low_byte = msg.data[0];
 		uint16_t fan_count_value =
 			(fan_count_high_byte << 5) | (fan_count_low_byte & NCT7363_FAN_LSB_MASK);
+		uint8_t fan_poles = nct7363_init_arg_data->fan_poles[port_offset];
 		/* count result */
 		rpm = 1350000 / ((float)fan_count_value * ((float)fan_poles / 4)); // RPM
 		/* return result */
@@ -329,11 +329,6 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 
 	nct7363_init_arg *nct7363_init_arg_data = (nct7363_init_arg *)cfg->init_args;
 
-	if (nct7363_init_arg_data->fan_poles == 0) {
-		LOG_ERR("Invalid fan_poles is setting");
-		return SENSOR_INIT_UNSPECIFIED_ERROR;
-	}
-	
 	if (nct7363_init_arg_data->is_init)
 		goto skip_init;
 
@@ -413,6 +408,11 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 	for (int i = 0; i < NCT7363_PIN_NUMBER; i++) {
 		/* set init threshold  */
 		if (nct7363_init_arg_data->pin_type[i] == NCT7363_PIN_TPYE_FANIN) {
+			if (nct7363_init_arg_data->fan_poles[i] == 0) {
+				LOG_ERR("Invalid fan_poles is setting");
+				return SENSOR_INIT_UNSPECIFIED_ERROR;
+			}
+
 			bool set_threshold =
 				nct7363_set_threshold(cfg, nct7363_init_arg_data->threshold[i]);
 			if (!set_threshold) {

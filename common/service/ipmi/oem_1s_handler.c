@@ -1910,6 +1910,7 @@ __weak void OEM_1S_SEND_APML_REQUEST(ipmi_msg *msg)
 	static uint8_t index = 0;
 	uint8_t apml_bus = apml_get_bus();
 	apml_msg apml_data = { 0 };
+	uint8_t wr_len = 0;
 
 	switch (msg->data[0]) {
 	case APML_MSG_TYPE_MAILBOX: /* Mailbox */
@@ -1920,18 +1921,24 @@ __weak void OEM_1S_SEND_APML_REQUEST(ipmi_msg *msg)
 		memcpy(apml_data.WrData, &msg->data[1], sizeof(mailbox_WrData));
 		break;
 	case APML_MSG_TYPE_CPUID: /* CPUID */
-		if (msg->data_len != 1 + sizeof(cpuid_WrData)) {
+		wr_len = (get_sbrmi_command_code_len() == SBRMI_CMD_CODE_LEN_TWO_BYTE) ?
+				 sizeof(cpuid_WrData_TwoPOne) :
+				 sizeof(cpuid_WrData);
+		if (msg->data_len != 1 + wr_len) {
 			msg->completion_code = CC_INVALID_LENGTH;
 			return;
 		}
-		memcpy(apml_data.WrData, &msg->data[1], sizeof(cpuid_WrData));
+		memcpy(apml_data.WrData, &msg->data[1], wr_len);
 		break;
 	case APML_MSG_TYPE_MCA: /* MCA */
-		if (msg->data_len != 1 + sizeof(mca_WrData)) {
+		wr_len = (get_sbrmi_command_code_len() == SBRMI_CMD_CODE_LEN_TWO_BYTE) ?
+				 sizeof(mca_WrData_TwoPOne) :
+				 sizeof(mca_WrData);
+		if (msg->data_len != 1 + wr_len) {
 			msg->completion_code = CC_INVALID_LENGTH;
 			return;
 		}
-		memcpy(apml_data.WrData, &msg->data[1], sizeof(mca_WrData));
+		memcpy(apml_data.WrData, &msg->data[1], wr_len);
 		break;
 	default:
 		msg->completion_code = CC_UNSPECIFIED_ERROR;

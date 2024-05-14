@@ -29,11 +29,13 @@
 LOG_MODULE_REGISTER(apml);
 
 #define RETRY_MAX 3
+#define CPUID_MCA_WAIT_MAX 10
 #define MAILBOX_COMPLETE_RETRY_MAX 200
 #define APML_RESP_BUFFER_SIZE 10
 #define APML_HANDLER_STACK_SIZE 2048
 #define APML_MSGQ_LEN 32
 #define WAIT_TIME_MS 10
+#define WAIT_CPUID_MCA_RESP_TIME_MS 50
 #define RECOVERY_SBRMI_RETRY_MAX 5
 
 struct k_msgq apml_msgq;
@@ -123,13 +125,13 @@ static uint8_t write_MCA_request(apml_msg *msg)
 
 	if ((command_code_len == SBRMI_CMD_CODE_LEN_TWO_BYTE) &&
 	    (msg->target_addr == SB_RMI_ADDR)) {
-		i2c_msg.tx_len = 10;
+		i2c_msg.tx_len = 11;
 		i2c_msg.data[0] = 0x73;
 		i2c_msg.data[1] = 0x00;
-		i2c_msg.data[2] = 0x07;
+		i2c_msg.data[2] = 0x08;
 		i2c_msg.data[3] = 0x08;
 		i2c_msg.data[4] = 0x86;
-		memcpy(&i2c_msg.data[5], msg->WrData, sizeof(mca_WrData));
+		memcpy(&i2c_msg.data[5], msg->WrData, sizeof(mca_WrData_TwoPOne));
 	} else {
 		i2c_msg.tx_len = 9;
 		i2c_msg.data[0] = 0x73;
@@ -169,12 +171,7 @@ static uint8_t read_MCA_response(apml_msg *msg)
 		return APML_ERROR;
 	}
 
-	if ((command_code_len == SBRMI_CMD_CODE_LEN_TWO_BYTE) &&
-	    (msg->target_addr == SB_RMI_ADDR)) {
-		memcpy(msg->RdData, &i2c_msg.data[2], sizeof(mca_RdData));
-	} else {
-		memcpy(msg->RdData, &i2c_msg.data[1], sizeof(mca_RdData));
-	}
+	memcpy(msg->RdData, &i2c_msg.data[1], sizeof(mca_RdData));
 	return APML_SUCCESS;
 }
 
@@ -186,11 +183,13 @@ static uint8_t access_MCA(apml_msg *msg)
 		return APML_ERROR;
 	}
 
-	if (!wait_HwAlert_set(msg, RETRY_MAX)) {
-		LOG_ERR("HwAlert not be set, retry %d times.", RETRY_MAX);
+	if (!wait_HwAlert_set(msg, CPUID_MCA_WAIT_MAX)) {
+		LOG_ERR("HwAlert not be set, retry %d times.", CPUID_MCA_WAIT_MAX);
 		return APML_ERROR;
 	}
 
+	/* wait for CPU to fill out registers */
+	k_msleep(WAIT_CPUID_MCA_RESP_TIME_MS);
 	if (read_MCA_response(msg)) {
 		LOG_ERR("Read response failed.");
 		return APML_ERROR;
@@ -215,20 +214,20 @@ static uint8_t write_CPUID_request(apml_msg *msg)
 
 	if ((command_code_len == SBRMI_CMD_CODE_LEN_TWO_BYTE) &&
 	    (msg->target_addr == SB_RMI_ADDR)) {
-		i2c_msg.tx_len = 10;
+		i2c_msg.tx_len = 12;
 		i2c_msg.data[0] = 0x73;
 		i2c_msg.data[1] = 0x00;
-		i2c_msg.data[2] = 0x08;
+		i2c_msg.data[2] = 0x09;
 		i2c_msg.data[3] = 0x08;
 		i2c_msg.data[4] = 0x91;
-		memcpy(&i2c_msg.data[5], msg->WrData, sizeof(mca_WrData));
+		memcpy(&i2c_msg.data[5], msg->WrData, sizeof(cpuid_WrData_TwoPOne));
 	} else {
-		i2c_msg.tx_len = 9;
+		i2c_msg.tx_len = 10;
 		i2c_msg.data[0] = 0x73;
 		i2c_msg.data[1] = 0x08;
 		i2c_msg.data[2] = 0x08;
 		i2c_msg.data[3] = 0x91;
-		memcpy(&i2c_msg.data[4], msg->WrData, sizeof(mca_WrData));
+		memcpy(&i2c_msg.data[4], msg->WrData, sizeof(cpuid_WrData));
 	}
 
 	if (i2c_master_write(&i2c_msg, retry)) {
@@ -260,12 +259,7 @@ static uint8_t read_CPUID_response(apml_msg *msg)
 		return APML_ERROR;
 	}
 
-	if ((command_code_len == SBRMI_CMD_CODE_LEN_TWO_BYTE) &&
-	    (msg->target_addr == SB_RMI_ADDR)) {
-		memcpy(msg->RdData, &i2c_msg.data[2], sizeof(cpuid_RdData));
-	} else {
-		memcpy(msg->RdData, &i2c_msg.data[1], sizeof(cpuid_RdData));
-	}
+	memcpy(msg->RdData, &i2c_msg.data[1], sizeof(cpuid_RdData));
 	return APML_SUCCESS;
 }
 
@@ -277,11 +271,13 @@ static uint8_t access_CPUID(apml_msg *msg)
 		return APML_ERROR;
 	}
 
-	if (!wait_HwAlert_set(msg, RETRY_MAX)) {
-		LOG_ERR("HwAlert not be set, retry %d times.", RETRY_MAX);
+	if (!wait_HwAlert_set(msg, CPUID_MCA_WAIT_MAX)) {
+		LOG_ERR("HwAlert not be set, retry %d times.", CPUID_MCA_WAIT_MAX);
 		return APML_ERROR;
 	}
 
+	/* wait for CPU to fill out registers */
+	k_msleep(WAIT_CPUID_MCA_RESP_TIME_MS);
 	if (read_CPUID_response(msg)) {
 		LOG_ERR("Read CPUID response failed.");
 		return APML_ERROR;
@@ -464,6 +460,11 @@ int set_sbrmi_command_code_len(uint8_t value)
 {
 	command_code_len = value;
 	return 0;
+}
+
+int get_sbrmi_command_code_len()
+{
+	return command_code_len;
 }
 
 static void apml_handler(void *arvg0, void *arvg1, void *arvg2)

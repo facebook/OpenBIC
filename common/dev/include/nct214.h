@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,15 +14,27 @@
  * limitations under the License.
  */
 
-#ifndef HDC1080_H
-#define HDC1080_H
+#ifndef NCT214_H
+#define NCT214_H
 
-#define HDC1080_TEMP_OFFSET 0x00
-#define HDC1080_HUM_OFFSET 0x01
-#define HDC1080_CONFIGURE_OFFSET 0x02
+#define LOCAL_TEMP_REG 0x00
+#define EXTERNAL_TEMP_UPPER_BYTE_REG 0x01
+#define EXTERNAL_TEMP_LOWER_BYTE_REG 0x10
+#define CONFIG_READ_REG 0x03
+#define CONFIG_WRITE_REG 0x09
 
-typedef struct _hdc1080_init_arg {
+typedef struct _nct214_init_arg {
 	bool is_init;
-} hdc1080_init_arg;
+	uint8_t temperature_range;
+} nct214_init_arg;
 
-#endif //HDC1080_H
+enum NCT214_CHANNELS {
+	NCT214_LOCAL_TEMPERATRUE,
+	NCT214_REMOTE_TEMPERATRUE,
+};
+
+enum NCT_214_TEMPERATURE_RANGE {
+	NCT_214_TEMPERATURE_RANGE_0_TO_127,
+	NCT_214_TEMPERATURE_RANGE_EXTENDED, // −64°C to +191°C
+};
+#endif

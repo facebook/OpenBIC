@@ -165,8 +165,8 @@
 	gpio_name_to_num(RTM_TYPE_0)
 
 #define name_gpioM \
+	gpio_name_to_num(Reserve_GPIOM0) \
 	gpio_name_to_num(RTM_TYPE_1) \
-	gpio_name_to_num(Reserve_GPIOM1) \
 	gpio_name_to_num(Reserve_GPIOM2) \
 	gpio_name_to_num(BIC_ESPI_SELECT) \
 	gpio_name_to_num(Reserve_GPIOM4) \
