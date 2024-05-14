@@ -14,16 +14,35 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_SDR_TABLE_H
-#define PLAT_SDR_TABLE_H
+#ifndef TACH_H
+#define TACH_H
 
-#include <stdint.h>
+enum {
+	AST_TACH_RPM = 0,
+};
 
-#define MAX_SENSOR_SIZE 60
+enum {
+	TACH_PORT0 = 0,
+	TACH_PORT1,
+	TACH_PORT2,
+	TACH_PORT3,
+	TACH_PORT4,
+	TACH_PORT5,
+	TACH_PORT6,
+	TACH_PORT7,
+	TACH_PORT8,
+	TACH_PORT9,
+	TACH_PORT10,
+	TACH_PORT11,
+	TACH_PORT12,
+	TACH_PORT13,
+	TACH_PORT14,
+	TACH_PORT15,
+	TACH_MAX_NUM,
+};
 
-uint8_t plat_get_sdr_size();
-void load_sdr_table(void);
-void pal_extend_full_sdr_table();
-uint8_t pal_get_extend_sdr();
+typedef struct _ast_tach_init_arg {
+	bool is_init;
+} ast_tach_init_arg;
 
-#endif
+#endif //TACH_H

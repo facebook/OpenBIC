@@ -133,7 +133,7 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 				switch (retimer_type) {
 				case RETIMER_TYPE_PT5161L:
 					if (retimer_version == RETIMER_UNKNOWN_VERSION) {
-						if (get_retimer_fw_version(i2c_msg, msg->data)) {
+						if (pt5161l_get_fw_version(i2c_msg, msg->data)) {
 							msg->data_len = 4;
 							msg->completion_code = CC_SUCCESS;
 						} else {

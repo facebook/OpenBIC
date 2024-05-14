@@ -21,4 +21,8 @@
 #define HDC1080_HUM_OFFSET 0x01
 #define HDC1080_CONFIGURE_OFFSET 0x02
 
+typedef struct _hdc1080_init_arg {
+	bool is_init;
+} hdc1080_init_arg;
+
 #endif //HDC1080_H

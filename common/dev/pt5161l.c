@@ -918,7 +918,7 @@ uint8_t pcie_retimer_fw_update(I2C_MSG *msg, uint32_t offset, uint16_t msg_len, 
 	return FWUPDATE_SUCCESS;
 }
 
-bool get_retimer_fw_version(I2C_MSG *msg, uint8_t *version)
+bool pt5161l_get_fw_version(I2C_MSG *msg, uint8_t *version)
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg, false);
 	CHECK_NULL_ARG_WITH_RETURN(version, false);
@@ -1200,23 +1200,29 @@ uint8_t pt5161l_read(sensor_cfg *cfg, int *reading)
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	pt5161l_init_arg *init_arg = (pt5161l_init_arg *)cfg->init_args;
-
-	if (!init_arg->is_init) {
-		LOG_ERR("device isn't initialized");
-		return SENSOR_UNSPECIFIED_ERROR;
-	}
-
 	if (is_update_ongoing) {
 		return SENSOR_NOT_ACCESSIBLE;
 	}
 
-	double val = 0;
 	I2C_MSG msg = { 0 };
-	uint8_t ret;
 
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
+
+	pt5161l_init_arg *init_arg = (pt5161l_init_arg *)cfg->init_args;
+
+	if (!init_arg->is_init) {
+		LOG_WRN("Device wasn't initialized, try to initialize!");
+		// Get temp caliberation codes
+		if (!get_temp_calibration_codes(&msg, init_arg)) {
+			LOG_ERR("Initialize failed!");
+			return SENSOR_UNSPECIFIED_ERROR;
+		}
+		init_arg->is_init = true;
+	}
+
+	double val = 0;
+	uint8_t ret;
 
 	switch (cfg->offset) {
 	case PT5161L_TEMP_OFFSET:
@@ -1260,7 +1266,8 @@ uint8_t pt5161l_init(sensor_cfg *cfg)
 
 	// Get temp caliberation codes
 	if (!get_temp_calibration_codes(&msg, init_args)) {
-		goto error;
+		LOG_WRN("Retimer not init yet!");
+		goto exit;
 	}
 
 	init_args->is_init = true;
@@ -1268,7 +1275,4 @@ uint8_t pt5161l_init(sensor_cfg *cfg)
 exit:
 	cfg->read = pt5161l_read;
 	return SENSOR_INIT_SUCCESS;
-
-error:
-	return SENSOR_INIT_UNSPECIFIED_ERROR;
 }

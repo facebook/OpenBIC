@@ -39,16 +39,10 @@ enum BIC_BOARD_REVISION {
 	SYS_BOARD_POC = 0x0,
 	SYS_BOARD_EVT,
 	SYS_BOARD_EVT2,
-	SYS_BOARD_EVT3_HOTSWAP,
-	SYS_BOARD_EVT3_EFUSE,
-	SYS_BOARD_DVT_HOTSWAP,
-	SYS_BOARD_DVT_EFUSE,
-	SYS_BOARD_PVT_HOTSWAP,
-	SYS_BOARD_PVT_EFUSE,
-	SYS_BOARD_MP_HOTSWAP,
-	SYS_BOARD_MP_EFUSE,
-	SYS_BOARD_MP_2_HOTSWAP,
-	SYS_BOARD_MP_2_EFUSE,
+	SYS_BOARD_DVT,
+	SYS_BOARD_DVT2,
+	SYS_BOARD_PVT,
+	SYS_BOARD_PVT2,
 };
 
 typedef struct _CARD_STATUS_ {
@@ -121,6 +115,7 @@ CARD_STATUS get_2ou_status();
 uint8_t get_board_revision();
 uint8_t get_hsc_module();
 uint8_t get_retimer_module();
+void set_retimer_module(uint8_t module);
 uint8_t get_oth_module();
 bool get_adc_voltage(int channel, float *voltage);
 void init_hsc_module(uint8_t board_revision);

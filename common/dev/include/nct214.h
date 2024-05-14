@@ -14,16 +14,27 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_SDR_TABLE_H
-#define PLAT_SDR_TABLE_H
+#ifndef NCT214_H
+#define NCT214_H
 
-#include <stdint.h>
+#define LOCAL_TEMP_REG 0x00
+#define EXTERNAL_TEMP_UPPER_BYTE_REG 0x01
+#define EXTERNAL_TEMP_LOWER_BYTE_REG 0x10
+#define CONFIG_READ_REG 0x03
+#define CONFIG_WRITE_REG 0x09
 
-#define MAX_SENSOR_SIZE 60
+typedef struct _nct214_init_arg {
+	bool is_init;
+	uint8_t temperature_range;
+} nct214_init_arg;
 
-uint8_t plat_get_sdr_size();
-void load_sdr_table(void);
-void pal_extend_full_sdr_table();
-uint8_t pal_get_extend_sdr();
+enum NCT214_CHANNELS {
+	NCT214_LOCAL_TEMPERATRUE,
+	NCT214_REMOTE_TEMPERATRUE,
+};
 
+enum NCT_214_TEMPERATURE_RANGE {
+	NCT_214_TEMPERATURE_RANGE_0_TO_127,
+	NCT_214_TEMPERATURE_RANGE_EXTENDED, // −64°C to +191°C
+};
 #endif

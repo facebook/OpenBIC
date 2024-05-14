@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,16 +14,36 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_SDR_TABLE_H
-#define PLAT_SDR_TABLE_H
+#ifndef XDP710_H
+#define XDP710_H
 
 #include <stdint.h>
 
-#define MAX_SENSOR_SIZE 60
+enum XDP710_VTLM_RNG {
+	VTLM_RNG_88,
+	VTLM_RNG_44,
+	VTLM_RNG_22,
+	VTLM_RNG_RESERVED,
+};
 
-uint8_t plat_get_sdr_size();
-void load_sdr_table(void);
-void pal_extend_full_sdr_table();
-uint8_t pal_get_extend_sdr();
+enum XDP710_VSNS_CS {
+	VSNS_CS_12_5,
+	VSNS_CS_25,
+	VSNS_CS_50,
+	VSNS_CS_100,
+	VSNS_CS_MAX,
+};
 
-#endif
+typedef struct {
+	bool mbr_init;
+	uint16_t m;
+	uint16_t b;
+	uint16_t r; /* multiples of 10, r = -2 -> val = 100 */
+	float r_sense; /* mohm */
+} xdp710_priv;
+
+typedef struct _xdp710_init_arg {
+	float r_sense;
+} xdp710_init_arg;
+
+#endif // XDP710_H

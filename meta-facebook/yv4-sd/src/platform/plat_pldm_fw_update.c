@@ -673,11 +673,17 @@ static bool plat_get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len
 		return ret;
 	}
 
-	uint8_t *buf_p = buf;
-	ret = get_retimer_fw_version(&i2c_msg, version);
-	memcpy(buf_p, version, RETIMER_PT5161L_FW_VER_LEN);
-	*len += bin2hex(version, 4, buf_p, 8);
-	buf_p += 8;
+	uint8_t retimer_type = get_retimer_type();
+
+	if (retimer_type == RETIMER_TYPE_ASTERALABS) {
+		uint8_t *buf_p = buf;
+		ret = pt5161l_get_fw_version(&i2c_msg, version);
+		memcpy(buf_p, version, RETIMER_PT5161L_FW_VER_LEN);
+		*len += bin2hex(version, 4, buf_p, 8);
+		buf_p += 8;
+	} else {
+		// TODO: Support other vendor
+	}
 
 	return ret;
 }
