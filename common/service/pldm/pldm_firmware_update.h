@@ -51,6 +51,7 @@ extern "C" {
 #endif
 
 #define KEYWORD_RETIMER_PT5161L "pt5161l"
+#define KEYWORD_RETIMER_PT4080L "pt4080l"
 #define RETIMER_PT5161L_FW_VER_LEN 4
 
 static const char hex_to_ascii[] = { '0', '1', '2', '3', '4', '5', '6', '7',

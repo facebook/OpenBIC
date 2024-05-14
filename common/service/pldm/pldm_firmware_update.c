@@ -43,7 +43,7 @@ LOG_MODULE_DECLARE(pldm);
 #define PLDM_NO_SUPPORT_PROGRESS_PERCENT 0x65
 
 #define GET_EEPROM_SLAVE_MASK(offset) (((offset) >> 16) & 0xF)
-#define GET_EERPOM_OFFSET(offset) ((offset)&0xFFFF)
+#define GET_EERPOM_OFFSET(offset) ((offset) & 0xFFFF)
 
 pldm_fw_update_info_t *comp_config = NULL;
 uint8_t comp_config_count = 0;
@@ -335,7 +335,9 @@ uint8_t pldm_retimer_update(void *fw_update_param)
 	}
 
 	if (!strncmp(p->comp_version_str, KEYWORD_RETIMER_PT5161L,
-		     ARRAY_SIZE(KEYWORD_RETIMER_PT5161L) - 1)) {
+		     ARRAY_SIZE(KEYWORD_RETIMER_PT5161L) - 1) ||
+	    !strncmp(p->comp_version_str, KEYWORD_RETIMER_PT4080L,
+		     ARRAY_SIZE(KEYWORD_RETIMER_PT4080L) - 1)) {
 		ret = pcie_retimer_fw_update(&i2c_msg, p->data_ofs, p->data_len, p->data,
 					     update_flag);
 	} else {

@@ -32,15 +32,20 @@
 #include "plat_i2c.h"
 #include "plat_sensor_table.h"
 #include "plat_class.h"
+#include "power_status.h"
 
 #include "mpq8746.h"
 #include "mp289x.h"
+#include "pt5161l.h"
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
 static uint8_t pldm_pre_vr_update(void *fw_update_param);
 static uint8_t pldm_post_vr_update(void *fw_update_param);
 static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
+static uint8_t pldm_pre_retimer_update(void *fw_update_param);
+static uint8_t pldm_post_retimer_update(void *fw_update_param);
+static bool get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 
 /* PLDM FW update table */
 pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
@@ -101,6 +106,21 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.activate_method = COMP_ACT_AC_PWR_CYCLE,
 		.self_act_func = NULL,
 		.get_fw_version_fn = get_vr_fw_version,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = JI_COMPNT_RETIMER,
+		.comp_classification_index = 0x00,
+		.pre_update_func = pldm_pre_retimer_update,
+		.update_func = pldm_retimer_update,
+		.pos_update_func = pldm_post_retimer_update,
+		.inf = COMP_UPDATE_VIA_I2C,
+		.activate_method = COMP_ACT_AC_PWR_CYCLE,
+		.self_act_func = NULL,
+		.get_fw_version_fn = get_retimer_fw_version,
 		.self_apply_work_func = NULL,
 		.comp_version_str = NULL,
 	},
@@ -287,6 +307,151 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 post_hook_and_ret:
 	gpio_set(BIC_CPLD_VRD_MUX_SEL, GPIO_HIGH);
+
+	return ret;
+}
+
+static uint8_t pldm_pre_retimer_update(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	if (get_board_revision() < SYS_BOARD_EVT) {
+		LOG_WRN("Not support retimer relative function before EVT");
+		return 1;
+	}
+
+	if (get_post_status() == false) {
+		LOG_WRN("Not in POST COMPLETE state, skip retimer update");
+		return 1;
+	}
+
+	/* Stop sensor polling */
+	disable_sensor_poll();
+
+	/* Need to switch channel after EVT2 */
+	if (get_board_revision() >= SYS_BOARD_EVT2) {
+		I2C_MSG msg = { 0 };
+		msg.bus = I2C_BUS2;
+		msg.target_addr = (0xE2 >> 1); //switch address
+		msg.data[0] = 0x02; //channel2
+		msg.tx_len = 1;
+		msg.rx_len = 0;
+
+		if (i2c_master_write(&msg, 3)) {
+			LOG_ERR("Failed to switch channel for retimer");
+			return 1;
+		}
+	}
+
+	uint8_t retimer_module = get_retimer_module();
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+	p->bus = I2C_BUS2;
+	switch (retimer_module) {
+	case RETIMER_MODULE_PT4080L:
+		p->addr = AL_RETIMER_ADDR;
+		break;
+	case RETIMER_MODULE_DS160PT801:
+		LOG_WRN("DS160PT801 retimer update not support yet");
+		return 1;
+	default:
+		LOG_ERR("Unsupport retimer module %d", retimer_module);
+		return 1;
+	}
+	return 0;
+}
+
+static uint8_t pldm_post_retimer_update(void *fw_update_param)
+{
+	ARG_UNUSED(fw_update_param);
+
+	/* Start sensor polling */
+	enable_sensor_poll();
+
+	return 0;
+}
+
+static bool get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(info_p, false);
+	CHECK_NULL_ARG_WITH_RETURN(buf, false);
+	CHECK_NULL_ARG_WITH_RETURN(len, false);
+
+	if (get_board_revision() < SYS_BOARD_EVT) {
+		LOG_WRN("Not support retimer relative function before EVT");
+		return false;
+	}
+	if (get_post_status() == false) {
+		LOG_WRN("Not in POST COMPLETE state, skip retimer fw version get");
+		return false;
+	}
+
+	bool ret = false;
+
+	/* Stop sensor polling */
+	disable_sensor_poll();
+
+	/* Need to switch channel after EVT2 */
+	if (get_board_revision() >= SYS_BOARD_EVT2) {
+		I2C_MSG msg = { 0 };
+		msg.bus = I2C_BUS2;
+		msg.target_addr = (0xE2 >> 1); //switch address
+		msg.data[0] = 0x02; //channel2
+		msg.tx_len = 1;
+		msg.rx_len = 0;
+
+		if (i2c_master_write(&msg, 3)) {
+			LOG_ERR("Failed to switch channel for retimer");
+			goto exit;
+		}
+	}
+
+	uint8_t retimer_module = get_retimer_module();
+	uint8_t version[RETIMER_PT5161L_FW_VER_LEN];
+	uint16_t ver_len = 0;
+	I2C_MSG i2c_msg;
+	i2c_msg.bus = I2C_BUS2;
+	switch (retimer_module) {
+	case RETIMER_MODULE_PT4080L:
+		i2c_msg.target_addr = AL_RETIMER_ADDR;
+		if (pt5161l_get_fw_version(&i2c_msg, version) == false) {
+			LOG_ERR("Failed to get PT4080L retimer version");
+			goto exit;
+		}
+		ver_len = RETIMER_PT5161L_FW_VER_LEN;
+		break;
+	case RETIMER_MODULE_DS160PT801:
+		LOG_WRN("DS160PT801 retimer update not support yet");
+		goto exit;
+	default:
+		LOG_ERR("Unsupport retimer module %d", retimer_module);
+		goto exit;
+	}
+
+	const char *vr_name[] = {
+		[RETIMER_MODULE_PT4080L] = "AL ",
+		[RETIMER_MODULE_DS160PT801] = "TI ",
+	};
+	const uint8_t *vr_name_p = vr_name[retimer_module];
+
+	if (!vr_name_p) {
+		LOG_ERR("The pointer of VR string name is NULL");
+		goto exit;
+	}
+
+	uint8_t *buf_p = buf;
+	memcpy(buf_p, vr_name_p, strlen(vr_name_p));
+	buf_p += strlen(vr_name_p);
+
+	memcpy(buf_p, version, ver_len);
+	*len += bin2hex(version, ver_len, buf_p, ver_len * 2);
+	buf_p += (ver_len * 2);
+
+	LOG_HEXDUMP_INF(buf, *len, "Retimer version string");
+
+	ret = true;
+exit:
+	/* Start sensor polling */
+	enable_sensor_poll();
 
 	return ret;
 }
