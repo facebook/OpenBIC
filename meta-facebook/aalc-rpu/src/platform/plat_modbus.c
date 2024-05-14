@@ -1,0 +1,733 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include <stdlib.h>
+#include <sys/util.h>
+#include <sys/byteorder.h>
+#include <drivers/gpio.h>
+#include <modbus/modbus.h>
+#include <time.h>
+#include <logging/log.h>
+#include "sensor.h"
+#include "modbus_server.h"
+#include "fru.h"
+#include "eeprom.h"
+#include "libutil.h"
+#include "plat_modbus.h"
+#include "plat_sensor_table.h"
+#include "plat_control.h"
+#include "plat_fru.h"
+#include "hal_gpio.h"
+#include "plat_gpio.h"
+#include "plat_fw_update.h"
+#include <modbus_internal.h>
+#include "plat_util.h"
+#include "libutil.h"
+#include "plat_pwm.h"
+#include "util_sys.h"
+
+LOG_MODULE_REGISTER(plat_modbus);
+
+#define FW_UPDATE_SWITCH_FC 0x64
+#define FW_UPDATE_SWITCH_ADDR 0x0119
+#define FW_UPDATE_ENABLE_DATA 0x0101
+#define FW_UPDATE_DISABLE_DATA 0x0100
+
+//{ DT_PROP(DT_INST(0, zephyr_modbus_serial), label) }
+
+typedef struct {
+	char *iface_name;
+	bool is_custom_fc64;
+} modbus_server;
+modbus_server modbus_server_config[] = {
+	// iface_name, is_custom_fc64
+	{ "MODBUS0", true },
+	{ "MODBUS1", false },
+};
+
+static float pow_of_10(int8_t exp)
+{
+	float ret = 1.0;
+	int i;
+
+	if (exp < 0) {
+		for (i = 0; i > exp; i--) {
+			ret /= 10.0;
+		}
+	} else if (exp > 0) {
+		for (i = 0; i < exp; i++) {
+			ret *= 10.0;
+		}
+	}
+
+	return ret;
+}
+
+/*
+	arg0: sensor number
+	arg1: m
+	arg2: r
+
+	actual_val =  raw_val * m * (10 ^ r)
+*/
+
+static uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	int reading = 0;
+	uint8_t status = get_sensor_reading(sensor_config, sensor_config_count, cmd->arg0, &reading,
+					    GET_FROM_CACHE);
+
+	if (status == SENSOR_READ_SUCCESS) {
+		sensor_val *sval = (sensor_val *)&reading;
+		float val = (sval->integer * 1000 + sval->fraction) / 1000;
+		float r = pow_of_10(cmd->arg2);
+		uint16_t byte_val = val / cmd->arg1 / r; // scale
+		memcpy(cmd->data, &byte_val, sizeof(uint16_t) * cmd->cmd_size);
+		return MODBUS_EXC_NONE;
+	}
+
+	return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+}
+
+static uint8_t modbus_to_do(modbus_command_mapping *cmd)
+{
+	// wait to do
+	return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+}
+modbus_command_mapping modbus_command_table[] = {
+	// addr, write_fn, read_fn, arg0, arg1, arg2, size
+	{ MODBUS_BPB_RPU_COOLANT_FLOW_RATE_LPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, 1, 0, 1 },
+	{ MODBUS_BPB_RPU_COOLANT_OUTLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C, 1, -2, 1 },
+	{ MODBUS_BPB_RPU_COOLANT_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BPB_RPU_COOLANT_INLET_TEMP_C, 1, -2, 1 },
+	{ MODBUS_BPB_RPU_COOLANT_OUTLET_P_KPA_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA, 1, 1, 1 },
+	{ MODBUS_BPB_RPU_COOLANT_INLET_P_KPA_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA, 1, 1, 1 },
+	{ MODBUS_RPU_PWR_W_ADDR, NULL, modbus_get_senser_reading, 0, 1, -2, 1 },
+	{ MODBUS_AALC_TOTAL_PWR_W_ADDR, NULL, modbus_get_senser_reading, 0, 1, -2, 1 },
+	{ MODBUS_RPU_INPUT_VOLT_V_ADDR, NULL, modbus_get_senser_reading, 0, 1, -2, 1 },
+	{ MODBUS_MB_RPU_AIR_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C, 1, -2, 1 },
+	{ MODBUS_RPU_PUMP_PWM_TACH_PCT_ADDR, NULL, modbus_get_senser_reading, 0, 1, 0, 1 },
+	{ MODBUS_PB_1_PUMP_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_1_PUMP_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_PB_2_PUMP_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_2_PUMP_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_PB_3_PUMP_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_3_PUMP_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_RPU_FAN1_STATUS_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_RPU_FAN2_STATUS_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_MB_FAN1_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_MB_FAN1_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_MB_FAN2_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_MB_FAN2_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_AALC_COOLING_CAPACITY_W_ADDR, NULL, modbus_get_senser_reading, 0, 1, -2, 1 },
+	{ MODBUS_RPU_PUMP1_STATUS_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_RPU_PUMP2_STATUS_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_RPU_PUMP3_STATUS_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_RPU_RESERVOIR_STATUS_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_RPU_LED_RESERVOIR_STATUS_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_RPU_LED_LEAKAGE_STATUS_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_RPU_LED_FAULT_STATUS_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_RPU_LED_POWER_STATUS_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_RPU_PUMP_STATUS_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_RPU_INTERNAL_FAN_STATUS_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_BB_TMP75_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_BB_TMP75_TEMP_C, 1,
+	  -2, 1 },
+	{ MODBUS_BPB_RPU_OUTLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BPB_RPU_OUTLET_TEMP_C, 1, -2, 1 },
+	{ MODBUS_PDB_HDC1080DMBR_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PDB_HDC1080DMBR_TEMP_C, 1, -2, 1 },
+	{ MODBUS_BB_HSC_P48V_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BB_HSC_P48V_TEMP_C, 1, -2, 1 },
+	{ MODBUS_BPB_HSC_P48V_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BPB_HSC_P48V_TEMP_C, 1, -2, 1 },
+	{ MODBUS_PB_1_HDC1080DMBR_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_1_HDC1080DMBR_TEMP_C, 1, -2, 1 },
+	{ MODBUS_PB_2_HDC1080DMBR_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_2_HDC1080DMBR_TEMP_C, 1, -2, 1 },
+	{ MODBUS_PB_3_HDC1080DMBR_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_3_HDC1080DMBR_TEMP_C, 1, -2, 1 },
+	{ MODBUS_PB_1_HSC_P48V_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_1_HSC_P48V_TEMP_C, 1, -2, 1 },
+	{ MODBUS_PB_2_HSC_P48V_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_2_HSC_P48V_TEMP_C, 1, -2, 1 },
+	{ MODBUS_PB_3_HSC_P48V_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_3_HSC_P48V_TEMP_C, 1, -2, 1 },
+	{ MODBUS_PB_1_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_1_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
+	{ MODBUS_PB_2_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_2_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
+	{ MODBUS_PB_3_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_3_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
+	{ MODBUS_BB_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BB_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
+	{ MODBUS_BPB_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BPB_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
+	{ MODBUS_BB_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BB_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
+	{ MODBUS_BPB_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BPB_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
+	{ MODBUS_PB_1_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_1_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
+	{ MODBUS_PB_2_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_2_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
+	{ MODBUS_PB_3_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_3_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
+	{ MODBUS_BB_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BB_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
+	{ MODBUS_PUMP_1_RUNNING_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_PUMP_2_RUNNING_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_PUMP_3_RUNNING_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_BPB_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BPB_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
+	{ MODBUS_PB_1_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
+	{ MODBUS_PB_2_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
+	{ MODBUS_PB_3_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
+	{ MODBUS_PB_1_FAN_1_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_1_FAN_1_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_PB_1_FAN_2_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_1_FAN_2_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_PB_2_FAN_1_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_2_FAN_1_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_PB_2_FAN_2_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_2_FAN_2_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_PB_3_FAN_1_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_3_FAN_1_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_PB_3_FAN_2_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PB_3_FAN_2_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_BPB_RACK_PRESSURE_3_P_KPA_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BPB_RACK_PRESSURE_3_P_KPA, 1, 1, 1 },
+	{ MODBUS_BPB_RACK_PRESSURE_4_P_KPA_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BPB_RACK_PRESSURE_4_P_KPA, 1, 1, 1 },
+	{ MODBUS_BPB_RACK_LEVEL_1_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BPB_RACK_LEVEL_1, 1, 0, 1 },
+	{ MODBUS_BPB_RACK_LEVEL_2_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BPB_RACK_LEVEL_2, 1, 0, 1 },
+	{ MODBUS_MB_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_MB_HUM_PCT_RH, 1,
+	  0, 1 },
+	{ MODBUS_PDB_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_PDB_HUM_PCT_RH, 1,
+	  0, 1 },
+	{ MODBUS_PB_1_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_PB_1_HUM_PCT_RH,
+	  1, 0, 1 },
+	{ MODBUS_PB_2_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_PB_2_HUM_PCT_RH,
+	  1, 0, 1 },
+	{ MODBUS_PB_3_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_PB_3_HUM_PCT_RH,
+	  1, 0, 1 },
+	{ MODBUS_HEX_FAN_PWM_TACH_PCT_ADDR, NULL, modbus_get_senser_reading, 0, 1, 0, 1 },
+	{ MODBUS_HEX_PWR_W_ADDR, NULL, modbus_get_senser_reading, 0, 1, -2, 1 },
+	{ MODBUS_HEX_INPUT_VOLT_V_ADDR, NULL, modbus_get_senser_reading, 0, 1, -2, 1 },
+	{ MODBUS_HEX_INPUT_CURRENT_V_ADDR, NULL, modbus_get_senser_reading, 0, 1, -2, 1 },
+	{ MODBUS_FB_1_FAN_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_1_FAN_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_FB_2_FAN_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_2_FAN_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_FB_3_FAN_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_3_FAN_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_FB_4_FAN_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_4_FAN_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_FB_5_FAN_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_5_FAN_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_FB_6_FAN_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_6_FAN_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_FB_7_FAN_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_7_FAN_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_FB_8_FAN_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_8_FAN_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_FB_9_FAN_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_9_FAN_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_FB_10_FAN_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_10_FAN_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_SB_HEX_AIR_OUTLET_1_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_SB_HEX_AIR_OUTLET_1_TEMP_C, 1, -2, 1 },
+	{ MODBUS_SB_HEX_AIR_OUTLET_2_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_SB_HEX_AIR_OUTLET_2_TEMP_C, 1, -2, 1 },
+	{ MODBUS_FB_1_HEX_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_1_HEX_INLET_TEMP_C, 1, -2, 1 },
+	{ MODBUS_FB_2_HEX_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_2_HEX_INLET_TEMP_C, 1, -2, 1 },
+	{ MODBUS_HEX_WATER_INLET_TEMP_C_ADDR, NULL, modbus_get_senser_reading, 0, 1, -2, 1 },
+	{ MODBUS_HEX_BLADDER_LEVEL_STATUS_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_HEX_EXTERNAL_Y_FILTER_PRESSURE_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_HEX_STATIC_PRESSURE_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_HEX_VERTICAL_BLADDER_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_SB_HEX_AIR_OUTLET_3_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_SB_HEX_AIR_OUTLET_3_TEMP_C, 1, -2, 1 },
+	{ MODBUS_SB_HEX_AIR_OUTLET_4_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_SB_HEX_AIR_OUTLET_4_TEMP_C, 1, -2, 1 },
+	{ MODBUS_FB_3_HEX_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_3_HEX_INLET_TEMP_C, 1, -2, 1 },
+	{ MODBUS_FB_4_HEX_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_4_HEX_INLET_TEMP_C, 1, -2, 1 },
+	{ MODBUS_FB_5_HEX_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_5_HEX_INLET_TEMP_C, 1, -2, 1 },
+	{ MODBUS_FB_6_HEX_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_6_HEX_INLET_TEMP_C, 1, -2, 1 },
+	{ MODBUS_FB_7_HEX_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_7_HEX_INLET_TEMP_C, 1, -2, 1 },
+	{ MODBUS_FB_8_HEX_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_8_HEX_INLET_TEMP_C, 1, -2, 1 },
+	{ MODBUS_FB_9_HEX_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_9_HEX_INLET_TEMP_C, 1, -2, 1 },
+	{ MODBUS_FB_10_HEX_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_10_HEX_INLET_TEMP_C, 1, -2, 1 },
+	{ MODBUS_FB_11_HEX_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_11_HEX_INLET_TEMP_C, 1, -2, 1 },
+	{ MODBUS_FB_12_HEX_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_12_HEX_INLET_TEMP_C, 1, -2, 1 },
+	{ MODBUS_FB_13_HEX_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_13_HEX_INLET_TEMP_C, 1, -2, 1 },
+	{ MODBUS_FB_14_HEX_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_14_HEX_INLET_TEMP_C, 1, -2, 1 },
+	{ MODBUS_FB_1_HSC_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_1_HSC_TEMP_C, 1,
+	  -2, 1 },
+	{ MODBUS_FB_2_HSC_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_2_HSC_TEMP_C, 1,
+	  -2, 1 },
+	{ MODBUS_FB_3_HSC_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_3_HSC_TEMP_C, 1,
+	  -2, 1 },
+	{ MODBUS_FB_4_HSC_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_4_HSC_TEMP_C, 1,
+	  -2, 1 },
+	{ MODBUS_FB_5_HSC_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_5_HSC_TEMP_C, 1,
+	  -2, 1 },
+	{ MODBUS_FB_6_HSC_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_6_HSC_TEMP_C, 1,
+	  -2, 1 },
+	{ MODBUS_FB_7_HSC_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_7_HSC_TEMP_C, 1,
+	  -2, 1 },
+	{ MODBUS_FB_8_HSC_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_8_HSC_TEMP_C, 1,
+	  -2, 1 },
+	{ MODBUS_FB_9_HSC_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_9_HSC_TEMP_C, 1,
+	  -2, 1 },
+	{ MODBUS_FB_10_HSC_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_10_HSC_TEMP_C,
+	  1, -2, 1 },
+	{ MODBUS_FB_11_HSC_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_11_HSC_TEMP_C,
+	  1, -2, 1 },
+	{ MODBUS_FB_12_HSC_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_12_HSC_TEMP_C,
+	  1, -2, 1 },
+	{ MODBUS_FB_13_HSC_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_13_HSC_TEMP_C,
+	  1, -2, 1 },
+	{ MODBUS_FB_14_HSC_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_14_HSC_TEMP_C,
+	  1, -2, 1 },
+	{ MODBUS_FB_1_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_1_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
+	{ MODBUS_FB_2_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_2_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
+	{ MODBUS_FB_3_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_3_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
+	{ MODBUS_FB_4_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_4_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
+	{ MODBUS_FB_5_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_5_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
+	{ MODBUS_FB_6_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_6_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
+	{ MODBUS_FB_7_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_7_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
+	{ MODBUS_FB_8_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_8_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
+	{ MODBUS_FB_9_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_9_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
+	{ MODBUS_FB_10_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_10_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
+	{ MODBUS_FB_11_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_11_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
+	{ MODBUS_FB_12_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_12_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
+	{ MODBUS_FB_13_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_13_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
+	{ MODBUS_FB_14_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_14_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
+	{ MODBUS_FB_1_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_1_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
+	{ MODBUS_FB_2_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_2_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
+	{ MODBUS_FB_3_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_3_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
+	{ MODBUS_FB_4_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_4_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
+	{ MODBUS_FB_5_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_5_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
+	{ MODBUS_FB_6_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_6_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
+	{ MODBUS_FB_7_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_7_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
+	{ MODBUS_FB_8_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_8_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
+	{ MODBUS_FB_9_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_9_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
+	{ MODBUS_FB_10_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_10_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
+	{ MODBUS_FB_11_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_11_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
+	{ MODBUS_FB_12_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_12_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
+	{ MODBUS_FB_13_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_13_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
+	{ MODBUS_FB_14_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_14_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
+	{ MODBUS_FB_1_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_1_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
+	{ MODBUS_FB_2_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_2_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
+	{ MODBUS_FB_3_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_3_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
+	{ MODBUS_FB_4_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_4_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
+	{ MODBUS_FB_5_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_5_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
+	{ MODBUS_FB_6_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_6_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
+	{ MODBUS_FB_7_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_7_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
+	{ MODBUS_FB_8_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_8_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
+	{ MODBUS_FB_9_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_9_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
+	{ MODBUS_FB_10_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_10_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
+	{ MODBUS_FB_11_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_11_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
+	{ MODBUS_FB_12_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_12_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
+	{ MODBUS_FB_13_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_13_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
+	{ MODBUS_FB_14_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_14_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
+	{ MODBUS_FB_11_FAN_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_11_FAN_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_FB_12_FAN_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_12_FAN_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_FB_13_FAN_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_13_FAN_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_FB_14_FAN_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_14_FAN_TACH_RPM, 1, 0, 1 },
+	{ MODBUS_SB_HEX_PRESSURE_1_P_KPA_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_SB_HEX_PRESSURE_1_P_KPA, 1, 2, 1 },
+	{ MODBUS_SB_HEX_PRESSURE_2_P_KPA_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_SB_HEX_PRESSURE_2_P_KPA, 1, 2, 1 },
+	{ MODBUS_FB_1_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_1_HUM_PCT_RH,
+	  1, 0, 1 },
+	{ MODBUS_FB_2_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_2_HUM_PCT_RH,
+	  1, 0, 1 },
+	{ MODBUS_FB_3_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_3_HUM_PCT_RH,
+	  1, 0, 1 },
+	{ MODBUS_FB_4_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_4_HUM_PCT_RH,
+	  1, 0, 1 },
+	{ MODBUS_FB_5_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_5_HUM_PCT_RH,
+	  1, 0, 1 },
+	{ MODBUS_FB_6_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_6_HUM_PCT_RH,
+	  1, 0, 1 },
+	{ MODBUS_FB_7_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_7_HUM_PCT_RH,
+	  1, 0, 1 },
+	{ MODBUS_FB_8_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_8_HUM_PCT_RH,
+	  1, 0, 1 },
+	{ MODBUS_FB_9_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_9_HUM_PCT_RH,
+	  1, 0, 1 },
+	{ MODBUS_FB_10_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_10_HUM_PCT_RH, 1, 0, 1 },
+	{ MODBUS_FB_11_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_11_HUM_PCT_RH, 1, 0, 1 },
+	{ MODBUS_FB_12_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_12_HUM_PCT_RH, 1, 0, 1 },
+	{ MODBUS_FB_13_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_13_HUM_PCT_RH, 1, 0, 1 },
+	{ MODBUS_FB_14_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_14_HUM_PCT_RH, 1, 0, 1 },
+	// LEAKAGE
+	{ MODBUS_LEAKAGE_STATUS_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_SB_TTV_COOLANT_LEAKAGE_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	// PUMP SETTING
+	{ MODBUS_PUMP_SETTING_ADDR, modbus_pump_setting, NULL, 0, 0, 0, 1 },
+	//FW UPDATE
+	{ MODBUS_FW_REVISION_ADDR, NULL, modbus_get_fw_reversion, 0, 0, 0, 4 },
+	{ MODBUS_FW_DOWNLOAD_ADDR, modbus_fw_download, NULL, 0, 0, 0, 103 },
+	// i2c master write read
+	{ MODBUS_MASTER_I2C_WRITE_READ_ADDR, modbus_command_i2c_master_write_read, NULL, 0, 0, 0,
+	  16 },
+	{ MODBUS_MASTER_I2C_WRITE_READ_RESPONSE_ADDR, NULL,
+	  modbus_command_i2c_master_write_read_response, 0, 0, 0, 16 },
+	{ MODBUS_RPU_PDB_48V_SENSE_DIFF_POS_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PDB_48V_SENSE_DIFF_POS_VOLT_V, 1, -2, 1 },
+	{ MODBUS_RPU_PDB_48V_SENSE_DIFF_NEG_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PDB_48V_SENSE_DIFF_NEG_VOLT_V, 1, -2, 1 },
+	// FRU write read
+	{ MODBUS_MB_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, MB_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_BB_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, BB_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_BPB_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, BPB_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_PDB_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, PDB_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_SB_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, SB_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_PB_1_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, PB_1_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_PB_2_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, PB_2_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_PB_3_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, PB_3_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_FB_1_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_1_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_FB_2_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_2_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_FB_3_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_3_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_FB_4_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_4_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_FB_5_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_5_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_FB_6_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_6_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_FB_7_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_7_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_FB_8_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_8_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_FB_9_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_9_FRU_ID, 0, 0,
+	  256 },
+	{ MODBUS_FB_10_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_10_FRU_ID, 0,
+	  0, 256 },
+	{ MODBUS_FB_11_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_11_FRU_ID, 0,
+	  0, 256 },
+	{ MODBUS_FB_12_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_12_FRU_ID, 0,
+	  0, 256 },
+	{ MODBUS_FB_13_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_13_FRU_ID, 0,
+	  0, 256 },
+	{ MODBUS_FB_14_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_14_FRU_ID, 0,
+	  0, 256 },
+};
+
+static modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)
+{
+	for (uint16_t i = 0; i < ARRAY_SIZE(modbus_command_table); i++) {
+		if ((addr >= modbus_command_table[i].addr) &&
+		    (addr < (modbus_command_table[i].addr + modbus_command_table[i].cmd_size)))
+			return &modbus_command_table[i];
+	}
+
+	return NULL;
+}
+
+static void free_modbus_command_table_memory(void)
+{
+	for (uint16_t i = 0; i < ARRAY_SIZE(modbus_command_table); i++)
+		if (modbus_command_table[i].data)
+			SAFE_FREE(modbus_command_table[i].data);
+}
+
+void init_modbus_command_table(void)
+{
+	for (uint16_t i = 0; i < ARRAY_SIZE(modbus_command_table); i++) {
+		if (modbus_command_table[i].data)
+			SAFE_FREE(modbus_command_table[i].data);
+
+		modbus_command_table[i].data =
+			(uint16_t *)malloc(modbus_command_table[i].cmd_size * sizeof(uint16_t));
+		if (modbus_command_table[i].data == NULL) {
+			LOG_ERR("modbus_command_mapping[%i] malloc fail", i);
+			goto init_fail;
+		}
+	}
+
+	return;
+
+init_fail:
+	free_modbus_command_table_memory();
+}
+
+static int coil_rd(uint16_t addr, bool *state)
+{
+	CHECK_NULL_ARG_WITH_RETURN(state, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	if (addr < plat_gpio_cfg_size()) { //GPIO number
+		int val = gpio_get((uint8_t)addr);
+		if (val == 0 || val == 1)
+			*state = (bool)val;
+		else
+			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+	} else {
+		return MODBUS_EXC_ILLEGAL_DATA_ADDR;
+	}
+
+	return MODBUS_EXC_NONE;
+}
+
+static int coil_wr(uint16_t addr, bool state)
+{
+	if (addr < plat_gpio_cfg_size()) { //GPIO number
+		gpio_set((uint8_t)addr, (uint8_t)state);
+		return MODBUS_EXC_NONE;
+	} else if (addr == MODBUS_RPU_RUN_ADDR) { // FW update: Set RPU Stop/Run
+		if (!state) { //Set RPU Stop
+			if (ctl_all_pwm_dev(100))
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+
+			disable_sensor_poll();
+
+			/* disable modbus except MODBUS0(BMC) */
+			for (uint8_t i = 0; i < ARRAY_SIZE(modbus_server_config); i++) {
+				if (strcmp(modbus_server_config[i].iface_name, "MODBUS0") != 0) {
+					int server_iface = modbus_iface_get_by_name(
+						modbus_server_config[i].iface_name);
+					modbus_disable(server_iface);
+				}
+			}
+		} else {
+			submit_bic_warm_reset();
+		}
+		// return success for Setting RPU RUN
+		return MODBUS_EXC_NONE;
+	} else if (addr == MODBUS_SYNAX_CHECK_ADDR) { // FW update: Synax Check
+		if (state) {
+			if (get_sensor_poll_enable_flag())
+				return MODBUS_EXC_NONE;
+			else
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+	} else {
+		return MODBUS_EXC_ILLEGAL_DATA_ADDR;
+	}
+}
+
+static int holding_reg_multi_wr(char *iface_name, uint16_t addr, uint16_t *reg, uint16_t num_regs)
+{
+	modbus_command_mapping *ptr = ptr_to_modbus_table(addr);
+	if (!ptr) {
+		LOG_ERR("modbus write command 0x%x not find!\n", addr);
+		return MODBUS_EXC_ILLEGAL_DATA_ADDR;
+	}
+
+	if (!ptr->wr_fn) {
+		LOG_ERR("modbus write function 0x%x not set!\n", addr);
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+	}
+
+	ptr->start_addr = addr;
+	ptr->data_len = num_regs;
+	memcpy(ptr->data, reg, sizeof(uint16_t) * ptr->data_len);
+
+	return ptr->wr_fn(ptr);
+}
+
+static int holding_reg_multi_rd(char *iface_name, uint16_t addr, uint16_t *reg, uint16_t num_regs)
+{
+	CHECK_NULL_ARG_WITH_RETURN(reg, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	modbus_command_mapping *ptr = ptr_to_modbus_table(addr);
+	if (!ptr) {
+		LOG_ERR("modbus read command 0x%x not find!\n", addr);
+		return MODBUS_EXC_ILLEGAL_DATA_ADDR;
+	}
+
+	if (!ptr->rd_fn) {
+		LOG_ERR("modbus read function 0x%x not set!\n", addr);
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+	}
+
+	int ret = MODBUS_EXC_NONE;
+	ptr->start_addr = addr;
+	ptr->data_len = num_regs;
+
+	ret = ptr->rd_fn(ptr);
+
+	memcpy(reg, ptr->data, sizeof(uint16_t) * ptr->data_len);
+
+	return ret;
+}
+
+static struct modbus_user_callbacks mbs_cbs = {
+	.coil_rd = coil_rd,
+	.coil_wr = coil_wr,
+	.holding_reg_multi_rd = holding_reg_multi_rd,
+	.holding_reg_multi_wr = holding_reg_multi_wr,
+};
+
+const static struct modbus_iface_param server_param = {
+	.mode = MODBUS_MODE_RTU,
+	.server = {
+		.user_cb = &mbs_cbs,
+		.unit_id = MODBUS_UART_NODE_ADDR,
+	},
+	.serial = {
+		.baud = MODBUS_UART_BAUDRATE_LOW,
+		.parity = MODBUS_UART_PARITY,
+		.parity_none_1_stop_bit = true,
+	}
+};
+
+static bool custom_handler_fc64(const int iface, const struct modbus_adu *rx_adu,
+				struct modbus_adu *tx_adu, uint8_t *const excep_code,
+				void *const user_data)
+{
+	static uint8_t req_len = 4;
+	static uint8_t res_len = 4;
+
+	if (rx_adu->length != req_len) {
+		*excep_code = MODBUS_EXC_ILLEGAL_DATA_VAL;
+		return true;
+	}
+	uint16_t addr = (rx_adu->data[0] << 8) | rx_adu->data[1];
+	if (addr == FW_UPDATE_SWITCH_ADDR) {
+		uint16_t data = (rx_adu->data[2] << 8) | rx_adu->data[3];
+		if (data == FW_UPDATE_ENABLE_DATA || data == FW_UPDATE_DISABLE_DATA) {
+			memcpy(&tx_adu->data, &rx_adu->data, req_len);
+			tx_adu->length = res_len;
+		} else {
+			*excep_code = MODBUS_EXC_ILLEGAL_DATA_VAL;
+		}
+	} else {
+		*excep_code = MODBUS_EXC_ILLEGAL_DATA_ADDR;
+	}
+	return true;
+}
+
+MODBUS_CUSTOM_FC_DEFINE(custom_fc64, custom_handler_fc64, FW_UPDATE_SWITCH_FC, NULL);
+
+int init_custom_modbus_server(void)
+{
+	LOG_ERR("init_custom_modbus_server");
+	int server_iface;
+	int ret = 0; // 0: success
+	for (uint8_t i = 0; i < ARRAY_SIZE(modbus_server_config); i++) {
+		server_iface = modbus_iface_get_by_name(modbus_server_config[i].iface_name);
+
+		if (server_iface < 0) {
+			LOG_ERR("Failed to get iface index for %s",
+				modbus_server_config[i].iface_name);
+			return -ENODEV;
+		}
+		int err = modbus_init_server(server_iface, server_param);
+
+		if (err < 0) {
+			return err;
+			LOG_ERR("modbus_init_server fail %d\n", i);
+		}
+
+		if (modbus_server_config[i].is_custom_fc64) {
+			ret = modbus_register_user_fc(server_iface, &modbus_cfg_custom_fc64);
+			if (ret)
+				return ret;
+		}
+	}
+
+	return ret;
+}
