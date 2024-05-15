@@ -35,7 +35,7 @@ SCU_CFG scu_cfg[] = {
 	/* Set GPIOJ/K/L internal pull-up/down after gpio init */
 	{ 0x7e6e2618, 0xC6000000 },
 	/* Set GPIOM/N/O/P internal pull-up/down after gpio init */
-	{ 0x7e6e261c, 0x0000003A },
+	{ 0x7e6e261c, 0x0000007A },
 	/* Set GPIOQ/R/S/T internal pull-up/down after gpio init */
 	{ 0x7e6e2630, 0xFF000000 },
 	/* Set GPIOU/V/X internal pull-up/down after gpio init */
