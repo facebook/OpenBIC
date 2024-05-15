@@ -28,6 +28,8 @@
 
 LOG_MODULE_REGISTER(plat_sensor_table);
 
+#define I2C_MAX_RETRY 3
+
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
 	   access check, arg0, arg1, sample_count, cache, cache_status, mux_address, mux_offset,
@@ -383,7 +385,7 @@ sensor_cfg plat_sensor_config[] = {
 	  &bus_9_PCA9546A_configs[1], post_PCA9546A_read, NULL, NULL },
 };
 
-sensor_cfg adm1272_sensor_config_table[] = {
+sensor_cfg hsc_sensor_config_table[] = {
 	{ SENSOR_NUM_FB_1_HSC_TEMP_C, sensor_dev_adm1272, I2C_BUS1, FB_ADM1272_ADDR,
 	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
@@ -767,11 +769,9 @@ sensor_cfg xdp710_sensor_config_table[] = {
 };
 
 // total config size = plat_sensor_config + sensor(main/second sensor) config table
-const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) +
-			       ARRAY_SIZE(adm1272_sensor_config_table) +
-			       ARRAY_SIZE(tmp461_config_table);
+const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) + ARRAY_SIZE(hsc_sensor_config_table) + ARRAY_SIZE(tmp461_config_table);
 
-void load_hsc_sensor_config()
+static uint32_t get_pmbus_mfr_id(uint8_t bus, uint8_t addr)
 {
 	uint8_t index = 0;
 	uint8_t hsc_module = get_hsc_module();
