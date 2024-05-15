@@ -28,6 +28,7 @@
 #include "tmp461.h"
 #include "hdc1080.h"
 #include "ast_tach.h"
+#include "xdp710.h"
 
 /**************************************************************************************************
  * INIT ARGS
@@ -38,6 +39,7 @@ extern ads112c_init_arg ads112c_init_args[];
 extern adc_asd_init_arg adc_asd_init_args[];
 extern ina238_init_arg ina238_init_args[];
 extern nct214_init_arg nct214_init_args[];
+extern xdp710_init_arg xdp710_init_args[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
