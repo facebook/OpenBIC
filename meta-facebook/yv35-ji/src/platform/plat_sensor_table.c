@@ -192,8 +192,8 @@ sensor_cfg pt4080l_sensor_config_table[] = {
 sensor_cfg ds160pt801_sensor_config_table[] = {
 	{ SENSOR_NUM_TEMP_RETIMER, sensor_dev_ds160pt801, I2C_BUS2, TI_RETIMER_ADDR,
 	  DS160PT801_READ_TEMP, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  DISABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ds160pt801_read,
-	  &mux_conf_addr_0xe2[1], NULL, NULL, NULL },
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ds160pt801_read, &mux_conf_addr_0xe2[1],
+	  NULL, NULL, NULL },
 };
 
 static sensor_cfg *change_retimer_sensor_cfg(uint8_t module)
