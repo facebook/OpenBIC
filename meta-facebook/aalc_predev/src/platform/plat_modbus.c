@@ -502,7 +502,7 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_STRICKY_SB_TTV_COOLANT_LEAKAGE_3_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0, 1 },
 	// Error Log
 	{ MODBUS_ERROR_LOG_COUNT_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
-	{ MODBUS_EVENT_1_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_EVENT_1_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
 	{ MODBUS_EVENT_2_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
 	{ MODBUS_EVENT_3_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
 	{ MODBUS_EVENT_4_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
