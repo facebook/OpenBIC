@@ -226,5 +226,6 @@
 
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
+float get_sensor_reading_to_real_val(uint8_t sensor_num);
 
 #endif
