@@ -769,11 +769,13 @@ sensor_cfg xdp710_sensor_config_table[] = {
 };
 
 // total config size = plat_sensor_config + sensor(main/second sensor) config table
-const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) + ARRAY_SIZE(hsc_sensor_config_table) + ARRAY_SIZE(tmp461_config_table);
+const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) +
+			       ARRAY_SIZE(hsc_sensor_config_table) +
+			       ARRAY_SIZE(tmp461_config_table);
 
 static uint32_t get_pmbus_mfr_id(uint8_t bus, uint8_t addr)
- {
-	I2C_MSG msg = {0};
+{
+	I2C_MSG msg = { 0 };
 	msg.bus = bus;
 	msg.target_addr = addr;
 	msg.rx_len = 3;
@@ -787,7 +789,7 @@ static uint32_t get_pmbus_mfr_id(uint8_t bus, uint8_t addr)
 	return (msg.data[2] << 16) | (msg.data[1] << 8) | msg.data[0];
 }
 
-#define HSC_CONFIG_FB  0x00
+#define HSC_CONFIG_FB 0x00
 #define HSC_CONFIG_BPB 0x01
 
 static void fb_bpb_hsc_config(uint8_t type)
@@ -804,90 +806,86 @@ static void fb_bpb_hsc_config(uint8_t type)
 #define XDP710_FB_ADDR_DVT 0x2A
 #define XDP710_BPB_ADDR_DVT 0x28
 
-	uint8_t fb_sen_tbl [] = {
-		SENSOR_NUM_FB_1_HSC_TEMP_C,
-		SENSOR_NUM_FB_1_HSC_P48V_VIN_VOLT_V,
-		SENSOR_NUM_FB_1_HSC_P48V_IOUT_CURR_A,
-		SENSOR_NUM_FB_1_HSC_P48V_PIN_PWR_W,
-		SENSOR_NUM_FB_2_HSC_TEMP_C,
-		SENSOR_NUM_FB_2_HSC_P48V_VIN_VOLT_V,
-		SENSOR_NUM_FB_2_HSC_P48V_IOUT_CURR_A,
-		SENSOR_NUM_FB_2_HSC_P48V_PIN_PWR_W,
-		SENSOR_NUM_FB_3_HSC_TEMP_C,
-		SENSOR_NUM_FB_3_HSC_P48V_VIN_VOLT_V,
-		SENSOR_NUM_FB_3_HSC_P48V_IOUT_CURR_A,
-		SENSOR_NUM_FB_3_HSC_P48V_PIN_PWR_W,
-		SENSOR_NUM_FB_4_HSC_TEMP_C,
-		SENSOR_NUM_FB_4_HSC_P48V_VIN_VOLT_V,
-		SENSOR_NUM_FB_4_HSC_P48V_IOUT_CURR_A,
-		SENSOR_NUM_FB_4_HSC_P48V_PIN_PWR_W,
-		SENSOR_NUM_FB_5_HSC_TEMP_C,
-		SENSOR_NUM_FB_5_HSC_P48V_VIN_VOLT_V,
-		SENSOR_NUM_FB_5_HSC_P48V_IOUT_CURR_A,
-		SENSOR_NUM_FB_5_HSC_P48V_PIN_PWR_W,
-		SENSOR_NUM_FB_6_HSC_TEMP_C,
-		SENSOR_NUM_FB_6_HSC_P48V_VIN_VOLT_V,
-		SENSOR_NUM_FB_6_HSC_P48V_IOUT_CURR_A,
-		SENSOR_NUM_FB_6_HSC_P48V_PIN_PWR_W,
-		SENSOR_NUM_FB_7_HSC_TEMP_C,
-		SENSOR_NUM_FB_7_HSC_P48V_VIN_VOLT_V,
-		SENSOR_NUM_FB_7_HSC_P48V_IOUT_CURR_A,
-		SENSOR_NUM_FB_7_HSC_P48V_PIN_PWR_W,
-		SENSOR_NUM_FB_8_HSC_TEMP_C,
-		SENSOR_NUM_FB_8_HSC_P48V_VIN_VOLT_V,
-		SENSOR_NUM_FB_8_HSC_P48V_IOUT_CURR_A,
-		SENSOR_NUM_FB_8_HSC_P48V_PIN_PWR_W,
-		SENSOR_NUM_FB_9_HSC_TEMP_C,
-		SENSOR_NUM_FB_9_HSC_P48V_VIN_VOLT_V,
-		SENSOR_NUM_FB_9_HSC_P48V_IOUT_CURR_A,
-		SENSOR_NUM_FB_9_HSC_P48V_PIN_PWR_W,
-		SENSOR_NUM_FB_10_HSC_TEMP_C,
-		SENSOR_NUM_FB_10_HSC_P48V_VIN_VOLT_V,
-		SENSOR_NUM_FB_10_HSC_P48V_IOUT_CURR_A,
-		SENSOR_NUM_FB_10_HSC_P48V_PIN_PWR_W,
-		SENSOR_NUM_FB_11_HSC_TEMP_C,
-		SENSOR_NUM_FB_11_HSC_P48V_VIN_VOLT_V,
-		SENSOR_NUM_FB_11_HSC_P48V_IOUT_CURR_A,
-		SENSOR_NUM_FB_11_HSC_P48V_PIN_PWR_W,
-		SENSOR_NUM_FB_12_HSC_TEMP_C,
-		SENSOR_NUM_FB_12_HSC_P48V_VIN_VOLT_V,
-		SENSOR_NUM_FB_12_HSC_P48V_IOUT_CURR_A,
-		SENSOR_NUM_FB_12_HSC_P48V_PIN_PWR_W,
-		SENSOR_NUM_FB_13_HSC_TEMP_C,
-		SENSOR_NUM_FB_13_HSC_P48V_VIN_VOLT_V,
-		SENSOR_NUM_FB_13_HSC_P48V_IOUT_CURR_A,
-		SENSOR_NUM_FB_13_HSC_P48V_PIN_PWR_W,
-		SENSOR_NUM_FB_14_HSC_TEMP_C,
-		SENSOR_NUM_FB_14_HSC_P48V_VIN_VOLT_V,
-		SENSOR_NUM_FB_14_HSC_P48V_IOUT_CURR_A,
-		SENSOR_NUM_FB_14_HSC_P48V_PIN_PWR_W
-	};
+	uint8_t fb_sen_tbl[] = { SENSOR_NUM_FB_1_HSC_TEMP_C,
+				 SENSOR_NUM_FB_1_HSC_P48V_VIN_VOLT_V,
+				 SENSOR_NUM_FB_1_HSC_P48V_IOUT_CURR_A,
+				 SENSOR_NUM_FB_1_HSC_P48V_PIN_PWR_W,
+				 SENSOR_NUM_FB_2_HSC_TEMP_C,
+				 SENSOR_NUM_FB_2_HSC_P48V_VIN_VOLT_V,
+				 SENSOR_NUM_FB_2_HSC_P48V_IOUT_CURR_A,
+				 SENSOR_NUM_FB_2_HSC_P48V_PIN_PWR_W,
+				 SENSOR_NUM_FB_3_HSC_TEMP_C,
+				 SENSOR_NUM_FB_3_HSC_P48V_VIN_VOLT_V,
+				 SENSOR_NUM_FB_3_HSC_P48V_IOUT_CURR_A,
+				 SENSOR_NUM_FB_3_HSC_P48V_PIN_PWR_W,
+				 SENSOR_NUM_FB_4_HSC_TEMP_C,
+				 SENSOR_NUM_FB_4_HSC_P48V_VIN_VOLT_V,
+				 SENSOR_NUM_FB_4_HSC_P48V_IOUT_CURR_A,
+				 SENSOR_NUM_FB_4_HSC_P48V_PIN_PWR_W,
+				 SENSOR_NUM_FB_5_HSC_TEMP_C,
+				 SENSOR_NUM_FB_5_HSC_P48V_VIN_VOLT_V,
+				 SENSOR_NUM_FB_5_HSC_P48V_IOUT_CURR_A,
+				 SENSOR_NUM_FB_5_HSC_P48V_PIN_PWR_W,
+				 SENSOR_NUM_FB_6_HSC_TEMP_C,
+				 SENSOR_NUM_FB_6_HSC_P48V_VIN_VOLT_V,
+				 SENSOR_NUM_FB_6_HSC_P48V_IOUT_CURR_A,
+				 SENSOR_NUM_FB_6_HSC_P48V_PIN_PWR_W,
+				 SENSOR_NUM_FB_7_HSC_TEMP_C,
+				 SENSOR_NUM_FB_7_HSC_P48V_VIN_VOLT_V,
+				 SENSOR_NUM_FB_7_HSC_P48V_IOUT_CURR_A,
+				 SENSOR_NUM_FB_7_HSC_P48V_PIN_PWR_W,
+				 SENSOR_NUM_FB_8_HSC_TEMP_C,
+				 SENSOR_NUM_FB_8_HSC_P48V_VIN_VOLT_V,
+				 SENSOR_NUM_FB_8_HSC_P48V_IOUT_CURR_A,
+				 SENSOR_NUM_FB_8_HSC_P48V_PIN_PWR_W,
+				 SENSOR_NUM_FB_9_HSC_TEMP_C,
+				 SENSOR_NUM_FB_9_HSC_P48V_VIN_VOLT_V,
+				 SENSOR_NUM_FB_9_HSC_P48V_IOUT_CURR_A,
+				 SENSOR_NUM_FB_9_HSC_P48V_PIN_PWR_W,
+				 SENSOR_NUM_FB_10_HSC_TEMP_C,
+				 SENSOR_NUM_FB_10_HSC_P48V_VIN_VOLT_V,
+				 SENSOR_NUM_FB_10_HSC_P48V_IOUT_CURR_A,
+				 SENSOR_NUM_FB_10_HSC_P48V_PIN_PWR_W,
+				 SENSOR_NUM_FB_11_HSC_TEMP_C,
+				 SENSOR_NUM_FB_11_HSC_P48V_VIN_VOLT_V,
+				 SENSOR_NUM_FB_11_HSC_P48V_IOUT_CURR_A,
+				 SENSOR_NUM_FB_11_HSC_P48V_PIN_PWR_W,
+				 SENSOR_NUM_FB_12_HSC_TEMP_C,
+				 SENSOR_NUM_FB_12_HSC_P48V_VIN_VOLT_V,
+				 SENSOR_NUM_FB_12_HSC_P48V_IOUT_CURR_A,
+				 SENSOR_NUM_FB_12_HSC_P48V_PIN_PWR_W,
+				 SENSOR_NUM_FB_13_HSC_TEMP_C,
+				 SENSOR_NUM_FB_13_HSC_P48V_VIN_VOLT_V,
+				 SENSOR_NUM_FB_13_HSC_P48V_IOUT_CURR_A,
+				 SENSOR_NUM_FB_13_HSC_P48V_PIN_PWR_W,
+				 SENSOR_NUM_FB_14_HSC_TEMP_C,
+				 SENSOR_NUM_FB_14_HSC_P48V_VIN_VOLT_V,
+				 SENSOR_NUM_FB_14_HSC_P48V_IOUT_CURR_A,
+				 SENSOR_NUM_FB_14_HSC_P48V_PIN_PWR_W };
 
-	uint8_t bpb_sen_tbl [] = {
-		SENSOR_NUM_BPB_HSC_P48V_TEMP_C,
-		SENSOR_NUM_BPB_HSC_P48V_VIN_VOLT_V,
-		SENSOR_NUM_BPB_HSC_P48V_IOUT_CURR_A,
-		SENSOR_NUM_BPB_HSC_P48V_PIN_PWR_W
-	};
+	uint8_t bpb_sen_tbl[] = { SENSOR_NUM_BPB_HSC_P48V_TEMP_C,
+				  SENSOR_NUM_BPB_HSC_P48V_VIN_VOLT_V,
+				  SENSOR_NUM_BPB_HSC_P48V_IOUT_CURR_A,
+				  SENSOR_NUM_BPB_HSC_P48V_PIN_PWR_W };
 
 	uint16_t sen_nums = 0;
 	uint8_t *sen_tbl = NULL;
 	uint8_t dvt_xdp_addr = 0;
- 
+
 	switch (type) {
 	case HSC_CONFIG_FB:
 		sen_nums = ARRAY_SIZE(fb_sen_tbl);
 		sen_tbl = fb_sen_tbl;
 		dvt_xdp_addr = XDP710_FB_ADDR_DVT;
- 		break;
+		break;
 
 	case HSC_CONFIG_BPB:
 		sen_nums = ARRAY_SIZE(bpb_sen_tbl);
 		sen_tbl = bpb_sen_tbl;
 		dvt_xdp_addr = XDP710_BPB_ADDR_DVT;
- 		break;
+		break;
 
- 	default:
+	default:
 		LOG_ERR("Unknown HSC module type(%d)", type);
 		return;
 	}
@@ -900,7 +898,7 @@ static void fb_bpb_hsc_config(uint8_t type)
 		for (uint8_t j = 0; j < sen_nums; j++) {
 			if (p->num != *(sen_tbl + j))
 				continue;
-			
+
 			// use default address to identify the HSC module
 			const uint32_t mfr_id = get_pmbus_mfr_id(p->port, p->target_addr);
 			LOG_INF("Sensor %x's HSC module MFR_ID: 0x%06x", p->num, mfr_id);
@@ -938,19 +936,13 @@ void pb_hsc_config(void)
 	/* default sensor config is adm1272 (addr: 0x24)
 	 * xdp710 addr: 0x22
 	 */
-	uint8_t sen_tbl [] = {
-		SENSOR_NUM_PB_1_HSC_P48V_TEMP_C,
-		SENSOR_NUM_PB_1_HSC_P48V_VIN_VOLT_V,
-		SENSOR_NUM_PB_1_HSC_P48V_IOUT_CURR_A,
-		SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W,
-		SENSOR_NUM_PB_2_HSC_P48V_TEMP_C,
-		SENSOR_NUM_PB_2_HSC_P48V_VIN_VOLT_V,
-		SENSOR_NUM_PB_2_HSC_P48V_IOUT_CURR_A,
-		SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W,
-		SENSOR_NUM_PB_3_HSC_P48V_TEMP_C,
-		SENSOR_NUM_PB_3_HSC_P48V_VIN_VOLT_V,
-		SENSOR_NUM_PB_3_HSC_P48V_IOUT_CURR_A,
-		SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W
+	uint8_t sen_tbl[] = {
+		SENSOR_NUM_PB_1_HSC_P48V_TEMP_C,      SENSOR_NUM_PB_1_HSC_P48V_VIN_VOLT_V,
+		SENSOR_NUM_PB_1_HSC_P48V_IOUT_CURR_A, SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W,
+		SENSOR_NUM_PB_2_HSC_P48V_TEMP_C,      SENSOR_NUM_PB_2_HSC_P48V_VIN_VOLT_V,
+		SENSOR_NUM_PB_2_HSC_P48V_IOUT_CURR_A, SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W,
+		SENSOR_NUM_PB_3_HSC_P48V_TEMP_C,      SENSOR_NUM_PB_3_HSC_P48V_VIN_VOLT_V,
+		SENSOR_NUM_PB_3_HSC_P48V_IOUT_CURR_A, SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W
 	};
 
 #define XDP710_PB_ADDR 0x22
@@ -961,7 +953,7 @@ void pb_hsc_config(void)
 		for (uint8_t j = 0; j < ARRAY_SIZE(sen_tbl); j++) {
 			if (p->num != sen_tbl[j])
 				continue;
-			
+
 			// use default address to identify the HSC module
 			const uint32_t mfr_id = get_pmbus_mfr_id(p->port, p->target_addr);
 			LOG_INF("Sensor %x's HSC module MFR_ID: 0x%06x", p->num, mfr_id);
@@ -976,10 +968,9 @@ void pb_hsc_config(void)
 
 			if (p->type == sensor_dev_xdp710)
 				p->init_args = &xdp710_init_args[0];
-
 		}
- 	}
- }
+	}
+}
 
 void load_hsc_sensor_config()
 {
@@ -1022,6 +1013,27 @@ void load_sensor_config(void)
 
 	load_hsc_sensor_config();
 	load_sb_temp_sensor_config();
+}
+
+/*
+	get real float val from sensor cache
+	if fail, return 0
+*/
+float get_sensor_reading_to_real_val(uint8_t sensor_num)
+{
+	int reading = 0;
+	uint8_t status = get_sensor_reading(sensor_config, sensor_config_count, sensor_num,
+					    &reading, GET_FROM_CACHE);
+
+	if (status != SENSOR_READ_SUCCESS) {
+		LOG_ERR("0x%02x get sensor cache fail", sensor_num);
+		return 0;
+	}
+
+	int16_t integer = reading & 0xFFFF;
+	float fraction = (reading >> 16) * 0.001f;
+
+	return (integer > 0) ? (integer + fraction) : (integer - fraction);
 }
 
 static uint8_t plat_def_sensor_read(sensor_cfg *cfg, int *reading)
