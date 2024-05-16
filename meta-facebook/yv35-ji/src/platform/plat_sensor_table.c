@@ -213,10 +213,8 @@ static sensor_cfg *change_retimer_sensor_cfg(uint8_t module)
 		}
 	}
 
-	if (i == sensor_config_count) {
-		LOG_ERR("Can't find Retimer %d in sensor config", module);
+	if (i == sensor_config_count)
 		return NULL;
-	}
 
 	return &sensor_config[i];
 }
@@ -267,7 +265,7 @@ bool modify_sensor_cfg()
 	sensor_cfg *retimer_cfg = NULL;
 	retimer_cfg = change_retimer_sensor_cfg(retimer_module);
 	if (!retimer_cfg) {
-		LOG_ERR("Retimer sensor config not found!!");
+		LOG_WRN("Retimer sensor config not found!!");
 		return false;
 	}
 

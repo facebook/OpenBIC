@@ -196,10 +196,9 @@ void init_platform_config()
 	}
 
 	/* work around */
-	if (get_post_status() == true) {
-		if (modify_sensor_cfg() == false)
-			LOG_ERR("Failed to modify sensor cfg!");
-	}
+	set_post_status(VIRTUAL_BIOS_POST_COMPLETE_L);
+	if (get_post_status() == true)
+		modify_sensor_cfg();
 
 	LOG_INF("Board revision: %d", board_revision);
 	LOG_INF("Retimer module: %d, OTH module: %d, HSC module: %d", retimer_module, oth_module,
