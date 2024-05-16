@@ -24,6 +24,7 @@
 #include "plat_ipmi.h"
 #include "plat_sys.h"
 #include "plat_class.h"
+#include "plat_isr.h"
 
 enum THREAD_STATUS {
 	THREAD_SUCCESS = 0,
@@ -175,5 +176,19 @@ void APP_GET_SELFTEST_RESULTS(ipmi_msg *msg)
 	msg->data_len = 2;
 	msg->completion_code = CC_SUCCESS;
 
+	return;
+}
+
+void OEM_1S_DEBUG_GET_HW_SIGNAL(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	memcpy(&msg->data[0], &hw_event_register[0], sizeof(hw_event_register));
+
+	//clear cache register after bmc read.
+	memset(hw_event_register, 0, sizeof(hw_event_register));
+
+	msg->data_len = sizeof(hw_event_register);
+	msg->completion_code = CC_SUCCESS;
 	return;
 }
