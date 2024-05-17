@@ -1087,24 +1087,28 @@ uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd)
 }
 
 /*
-	get real float val from sensor cache
-	if fail, return 0
+  get real float val from sensor cache
+  return sensor status
 */
-float get_sensor_reading_to_real_val(uint8_t sensor_num)
+uint8_t get_sensor_reading_to_real_val(uint8_t sensor_num, float *val)
 {
+	CHECK_NULL_ARG_WITH_RETURN(val, SENSOR_PARAMETER_NOT_VALID);
+
 	int reading = 0;
 	uint8_t status = get_sensor_reading(sensor_config, sensor_config_count, sensor_num,
 					    &reading, GET_FROM_CACHE);
 
 	if (status != SENSOR_READ_SUCCESS) {
 		LOG_ERR("0x%02x get sensor cache fail", sensor_num);
-		return 0;
+		return status;
 	}
 
 	int16_t integer = reading & 0xFFFF;
 	float fraction = (reading >> 16) * 0.001f;
 
-	return (integer > 0) ? (integer + fraction) : (integer - fraction);
+	*val = (integer > 0) ? (integer + fraction) : (integer - fraction);
+
+	return status;
 }
 
 /* platform def sensor */
@@ -1136,9 +1140,14 @@ static uint8_t plat_sensor_hex_curr[] = {
 /* Sum the values in the sensor cache in the array */
 static float calculate_total_val(uint8_t arr[], uint8_t size)
 {
+	CHECK_NULL_ARG_WITH_RETURN(arr, 0);
+
 	float total = 0;
-	for (uint8_t i = 0; i < size; i++)
-		total += get_sensor_reading_to_real_val(arr[i]);
+	for (uint8_t i = 0; i < size; i++) {
+		float tmp = 0;
+		if (get_sensor_reading_to_real_val(arr[i], &tmp) == SENSOR_READ_SUCCESS)
+			total += tmp;
+	}
 
 	return total;
 }

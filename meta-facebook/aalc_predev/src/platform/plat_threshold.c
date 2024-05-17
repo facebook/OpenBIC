@@ -69,7 +69,11 @@ void threshold_poll_handler(void *arug0, void *arug1, void *arug2)
 		}
 
 		for (uint8_t i = 0; i < ARRAY_SIZE(threshold_tbl); i++) {
-			float val = get_sensor_reading_to_real_val(threshold_tbl[i].sensor_num);
+			float val = 0;
+			if (get_sensor_reading_to_real_val(threshold_tbl[i].sensor_num, &val) !=
+			    SENSOR_READ_SUCCESS)
+				continue;
+
 			if (val < threshold_tbl[i].lcr)
 				printf("0x%02x lcr %f/%f\n", threshold_tbl[i].sensor_num, val,
 				       threshold_tbl[i].lcr);
