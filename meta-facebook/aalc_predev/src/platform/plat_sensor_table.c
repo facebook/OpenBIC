@@ -1060,33 +1060,6 @@ static float pow_of_10(int8_t exp)
 }
 
 /*
-	arg0: sensor number
-	arg1: m
-	arg2: r
-
-	actual_val =  raw_val * m * (10 ^ r)
-*/
-uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd)
-{
-	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-
-	int reading = 0;
-	uint8_t status = get_sensor_reading(sensor_config, sensor_config_count, cmd->arg0, &reading,
-					    GET_FROM_CACHE);
-
-	if (status == SENSOR_READ_SUCCESS) {
-		sensor_val *sval = (sensor_val *)&reading;
-		float val = (sval->integer * 1000 + sval->fraction) / 1000;
-		float r = pow_of_10(cmd->arg2);
-		uint16_t byte_val = val / cmd->arg1 / r; // scale
-		memcpy(cmd->data, &byte_val, sizeof(uint16_t) * cmd->cmd_size);
-		return MODBUS_EXC_NONE;
-	}
-
-	return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-}
-
-/*
   get real float val from sensor cache
   return sensor status
 */
@@ -1103,12 +1076,32 @@ uint8_t get_sensor_reading_to_real_val(uint8_t sensor_num, float *val)
 		return status;
 	}
 
-	int16_t integer = reading & 0xFFFF;
-	float fraction = (reading >> 16) * 0.001f;
-
-	*val = (integer > 0) ? (integer + fraction) : (integer - fraction);
+	sensor_val *sval = (sensor_val *)&reading;
+	*val = (sval->integer * 1000 + sval->fraction) / 1000;
 
 	return status;
+}
+
+/*
+	arg0: sensor number
+	arg1: m
+	arg2: r
+
+	actual_val =  raw_val * m * (10 ^ r)
+*/
+uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	float val = 0;
+	if (get_sensor_reading_to_real_val(cmd->arg0, &val) == SENSOR_READ_SUCCESS) {
+		float r = pow_of_10(cmd->arg2);
+		uint16_t byte_val = val / cmd->arg1 / r; // scale
+		memcpy(cmd->data, &byte_val, sizeof(uint16_t) * cmd->cmd_size);
+		return MODBUS_EXC_NONE;
+	}
+
+	return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 }
 
 /* platform def sensor */
