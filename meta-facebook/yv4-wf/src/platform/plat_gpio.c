@@ -361,8 +361,8 @@ void init_ioe_config()
 				LOG_ERR("Failed to get E1S present from IOE4");
 				continue;
 			}
-			// Reserve the bit 4&5's last state.
-			ioe_reg_value = (ioe_cfg[i].output_val & 0xCF) | (ioe_reg_value & 0x30);
+			// Reserve the bit 4&5&6's last state.
+			ioe_reg_value = (ioe_cfg[i].output_val & 0x8F) | (ioe_reg_value & 0x70);
 
 		} else if ((ioe_cfg[i].addr == ADDR_IOE2) &&
 			   (ioe_cfg[i].output_reg == TCA9555_OUTPUT_PORT_REG_0) &&
