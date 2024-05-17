@@ -288,6 +288,8 @@ void pal_extend_sensor_config()
 		LOG_INF("HSC vendor: MP5990");
 		sensor_count = ARRAY_SIZE(mp5990_sensor_config_table);
 		for (int index = 0; index < sensor_count; index++) {
+			if (get_board_revision() >= SYS_BOARD_EVT2)
+				mp5990_sensor_config_table[index].target_addr = MP5990_ADDR_1;
 			add_sensor_config(mp5990_sensor_config_table[index]);
 		}
 		/* MP5990 can read HSC temperature */
