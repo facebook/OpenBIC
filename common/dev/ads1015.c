@@ -21,7 +21,24 @@
 #include "sensor.h"
 #include "ads1015.h"
 
+#define MSB_MASK BIT(15)
+#define CONVERSION_VAL_MASK GENMASK(15, 4)
+#define DEFAULT_CONFIG_VAL 0x8583
+#define VALUE_MSB_MASK GENMASK(15, 8)
+#define VALUE_LSB_MASK GENMASK(7, 0)
+
 LOG_MODULE_REGISTER(dev_ads1015);
+
+static uint16_t twoscomplement_to_decimal(uint16_t twoscomplement_val)
+{
+	if (twoscomplement_val & MSB_MASK) { // Check if MSB is 1 (negative number)
+		twoscomplement_val =
+			~twoscomplement_val + 1; // Two's complement operation for negative numbers
+		return -twoscomplement_val; // Return negative number
+	}
+
+	return twoscomplement_val; // Return positive number as is
+}
 
 uint8_t ads1015_read(sensor_cfg *cfg, int *reading)
 {
@@ -33,95 +50,68 @@ uint8_t ads1015_read(sensor_cfg *cfg, int *reading)
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	if (temperature_range == TEMP_RANGE_NO_INIT) {
-		if (tmp461_get_temp_range(cfg) != 0) {
-			return SENSOR_UNSPECIFIED_ERROR;
-		}
-	}
-
-	uint8_t retry = 5, temperature_high_byte = 0xFF, temperature_low_byte = 0xFF;
+	uint8_t retry = 5;
 	I2C_MSG msg = { 0 };
 
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
-	msg.rx_len = 1;
-	uint8_t offset = cfg->offset;
+	msg.rx_len = 2;
+	msg.data[0] = CONVERSION_REG;
 
-	switch (offset) {
-	case TMP461_LOCAL_TEMPERATRUE:
-		msg.data[0] = OFFSET_LOCAL_TEMPERATURE_HIGH_BYTE;
-		if (i2c_master_read(&msg, retry)) {
-			return SENSOR_FAIL_TO_ACCESS;
-		}
-		temperature_high_byte = msg.data[0];
-
-		msg.data[0] = OFFSET_LOCAL_TEMPERATURE_LOW_BYTE;
-		if (i2c_master_read(&msg, retry)) {
-			return SENSOR_FAIL_TO_ACCESS;
-		}
-		temperature_low_byte = msg.data[0];
-		break;
-	case TMP461_REMOTE_TEMPERATRUE:
-		msg.data[0] = OFFSET_REMOTE_TEMPERATURE_HIGH_BYTE;
-		if (i2c_master_read(&msg, retry)) {
-			return SENSOR_FAIL_TO_ACCESS;
-		}
-		temperature_high_byte = msg.data[0];
-
-		msg.data[0] = OFFSET_REMOTE_TEMPERATURE_LOW_BYTE;
-		if (i2c_master_read(&msg, retry)) {
-			return SENSOR_FAIL_TO_ACCESS;
-		}
-		temperature_low_byte = msg.data[0];
-		break;
-	default:
-		LOG_ERR("Unknown register offset(%d)", offset);
-		break;
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Failed to read ads1015 conversion register.");
+		return SENSOR_FAIL_TO_ACCESS;
 	}
 
-	float val = 0;
-	switch (temperature_range) {
-	case TEMP_RANGE_M40_127:
-		// Negative numbers are represented in twos complement format
-		if (GETBIT(temperature_high_byte, 7)) {
-			temperature_high_byte = ~temperature_high_byte + 1;
-			val = -temperature_high_byte - ((temperature_low_byte >> 4) * 0.0625);
-		} else {
-			val = temperature_high_byte + ((temperature_low_byte >> 4) * 0.0625);
-		}
-		break;
-	case TEMP_RANGE_M64_191:
-		// All values are unsigned with a –64°C offset
-		val = (temperature_high_byte - 64) + ((temperature_low_byte >> 4) * 0.0625);
-		break;
-	default:
-		LOG_ERR("Unknown temperature range(%d)", temperature_range);
-		return SENSOR_UNSPECIFIED_ERROR;
-	}
+	uint16_t read_val =
+		twoscomplement_to_decimal(msg.data[0] << 4 | msg.data[1]) & CONVERSION_VAL_MASK;
 
 	sensor_val *sval = (sensor_val *)reading;
-	sval->integer = (int32_t)val;
-	sval->fraction = (int32_t)(val * 1000) % 1000;
+	sval->integer = (int)read_val & 0xFFFF;
+	sval->fraction = (read_val - sval->integer) * 1000;
+
 	return SENSOR_READ_SUCCESS;
 }
 
 uint8_t ads1015_init(sensor_cfg *cfg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_INIT_UNSPECIFIED_ERROR);
 
 	if (cfg->num > SENSOR_NUM_MAX) {
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
+	ina238_init_arg *init_args = (ina238_init_arg *)cfg->init_args;
+
+	if (init_args->is_init)
+		goto skip_init;
+
+	uint16_t config_val = DEFAULT_CONFIG_VAL;
+	if (init_args->device_operation_mode == CONTINUOUS_MODE)
+		WRITE_BIT(config_val, 8, 0);
+
+	if (init_args->alert_latch == ENABLE_LATCH)
+		WRITE_BIT(config_val, 2, 1);
+
 	uint8_t retry = 5;
 	I2C_MSG msg;
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
-	msg.tx_len = 1;
+	// set config reg
+	msg.tx_len = 3;
 	msg.data[0] = CONFIG_REG;
+	msg.data[1] = config_val & VALUE_MSB_MASK;
+	msg.data[2] = config_val & VALUE_LSB_MASK;
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("Failed to write ads1015 config register.");
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
 
+	init_args->is_init = true;
 
+skip_init:
 	cfg->read = ads1015_read;
 	return SENSOR_INIT_SUCCESS;
 }

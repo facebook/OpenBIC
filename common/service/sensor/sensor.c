@@ -133,7 +133,8 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(ast_tach)
 	sensor_name_to_num(xdp710)
 	sensor_name_to_num(nct214)
-	sensor_name_to_num(ina238)    
+	sensor_name_to_num(ina238)
+	sensor_name_to_num(ads1015)
 	sensor_name_to_num(plat_def_sensor)
 };
 // clang-format on
@@ -204,6 +205,7 @@ SENSOR_DRIVE_INIT_DECLARE(ast_tach);
 SENSOR_DRIVE_INIT_DECLARE(xdp710);
 SENSOR_DRIVE_INIT_DECLARE(nct214);
 SENSOR_DRIVE_INIT_DECLARE(ina238);
+SENSOR_DRIVE_INIT_DECLARE(ads1015);
 #ifdef ENABLE_PLAT_DEF_SENSOR
 SENSOR_DRIVE_INIT_DECLARE(plat_def_sensor);
 #endif
@@ -267,6 +269,7 @@ sensor_drive_api sensor_drive_tbl[] = {
 	SENSOR_DRIVE_TYPE_INIT_MAP(max11617),	SENSOR_DRIVE_TYPE_INIT_MAP(nct7363),
 	SENSOR_DRIVE_TYPE_INIT_MAP(xdp710), SENSOR_DRIVE_TYPE_INIT_MAP(ast_tach),
         SENSOR_DRIVE_TYPE_INIT_MAP(nct214), SENSOR_DRIVE_TYPE_INIT_MAP(ina238),
+	SENSOR_DRIVE_TYPE_INIT_MAP(ads1015),
 #ifdef ENABLE_PLAT_DEF_SENSOR
 	SENSOR_DRIVE_TYPE_INIT_MAP(plat_def_sensor),
 #else

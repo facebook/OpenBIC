@@ -24,4 +24,21 @@ enum ADS1015_REG_MAP {
 	HI_THRESH_REG,
 };
 
+enum DEVICE_OPERATION_MODE {
+	CONTINUOUS_MODE,
+	SINGLE_SHOT_MODE,
+}; // operating mode
+
+enum LATCH_COMPARATOR {
+	DISABLE_LATCH,
+	ENABLE_LATCH,
+}; // matching comparator
+
+typedef struct _ina238_init_arg {
+	bool is_init;
+	// user defined
+	uint8_t device_operation_mode;
+	uint8_t alert_latch;
+} ina238_init_arg;
+
 #endif
