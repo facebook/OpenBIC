@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#ifndef PLAT_UTIL_H
+#define PLAT_UTIL_H
+
 #include <stdlib.h>
 #include "plat_modbus.h"
 #include "plat_util.h"
@@ -89,3 +92,5 @@ void regs_reverse(uint16_t reg_len, uint16_t *data)
 	for (uint16_t i = 0; i < reg_len; i++)
 		data[i] = sys_be16_to_cpu(data[i]);
 }
+
+#endif // PLAT_UTIL_H

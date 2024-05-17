@@ -57,57 +57,12 @@ modbus_server modbus_server_config[] = {
 	{ "MODBUS1", false },
 };
 
-static float pow_of_10(int8_t exp)
-{
-	float ret = 1.0;
-	int i;
-
-	if (exp < 0) {
-		for (i = 0; i > exp; i--) {
-			ret /= 10.0;
-		}
-	} else if (exp > 0) {
-		for (i = 0; i < exp; i++) {
-			ret *= 10.0;
-		}
-	}
-
-	return ret;
-}
-
-/*
-	arg0: sensor number
-	arg1: m
-	arg2: r
-
-	actual_val =  raw_val * m * (10 ^ r)
-*/
-
-static uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd)
-{
-	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-
-	int reading = 0;
-	uint8_t status = get_sensor_reading(sensor_config, sensor_config_count, cmd->arg0, &reading,
-					    GET_FROM_CACHE);
-
-	if (status == SENSOR_READ_SUCCESS) {
-		sensor_val *sval = (sensor_val *)&reading;
-		float val = (sval->integer * 1000 + sval->fraction) / 1000;
-		float r = pow_of_10(cmd->arg2);
-		uint16_t byte_val = val / cmd->arg1 / r; // scale
-		memcpy(cmd->data, &byte_val, sizeof(uint16_t) * cmd->cmd_size);
-		return MODBUS_EXC_NONE;
-	}
-
-	return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-}
-
 static uint8_t modbus_to_do(modbus_command_mapping *cmd)
 {
 	// wait to do
 	return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 }
+
 modbus_command_mapping modbus_command_table[] = {
 	// addr, write_fn, read_fn, arg0, arg1, arg2, size
 	{ MODBUS_BPB_RPU_COOLANT_FLOW_RATE_LPM_ADDR, NULL, modbus_get_senser_reading,
@@ -120,9 +75,11 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA, 1, 1, 1 },
 	{ MODBUS_BPB_RPU_COOLANT_INLET_P_KPA_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA, 1, 1, 1 },
-	{ MODBUS_RPU_PWR_W_ADDR, NULL, modbus_get_senser_reading, 0, 1, -2, 1 },
-	{ MODBUS_AALC_TOTAL_PWR_W_ADDR, NULL, modbus_get_senser_reading, 0, 1, -2, 1 },
-	{ MODBUS_RPU_INPUT_VOLT_V_ADDR, NULL, modbus_get_senser_reading, 0, 1, -2, 1 },
+	{ MODBUS_RPU_PWR_W_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_RPU_PWR_W, 1, 0, 1 },
+	{ MODBUS_AALC_TOTAL_PWR_W_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_AALC_TOTAL_PWR_W, 1, 0, 1 },
+	{ MODBUS_RPU_INPUT_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BPB_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
 	{ MODBUS_MB_RPU_AIR_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C, 1, -2, 1 },
 	{ MODBUS_RPU_PUMP_PWM_TACH_PCT_ADDR, NULL, modbus_get_senser_reading, 0, 1, 0, 1 },
@@ -235,9 +192,11 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_PB_3_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_PB_3_HUM_PCT_RH,
 	  1, 0, 1 },
 	{ MODBUS_HEX_FAN_PWM_TACH_PCT_ADDR, NULL, modbus_get_senser_reading, 0, 1, 0, 1 },
-	{ MODBUS_HEX_PWR_W_ADDR, NULL, modbus_get_senser_reading, 0, 1, -2, 1 },
-	{ MODBUS_HEX_INPUT_VOLT_V_ADDR, NULL, modbus_get_senser_reading, 0, 1, -2, 1 },
-	{ MODBUS_HEX_INPUT_CURRENT_V_ADDR, NULL, modbus_get_senser_reading, 0, 1, -2, 1 },
+	{ MODBUS_HEX_PWR_W_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_HEX_PWR_W, 1, 0, 1 },
+	{ MODBUS_HEX_INPUT_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_1_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
+	{ MODBUS_HEX_INPUT_CURRENT_A_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_HEX_CURR_A,
+	  1, 0, 1 },
 	{ MODBUS_FB_1_FAN_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_FB_1_FAN_TACH_RPM, 1, 0, 1 },
 	{ MODBUS_FB_2_FAN_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,

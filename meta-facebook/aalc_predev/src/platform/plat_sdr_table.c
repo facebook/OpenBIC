@@ -10034,6 +10034,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 	{}, //SENSOR_NUM_V_3_3_AUX
 	{}, //SENSOR_NUM_V_1_2_AUX
 	{}, //SENSOR_NUM_V_1_2_AUX
+	{}, //SENSOR_NUM_RPU_PWR_W
+	{}, //SENSOR_NUM_HEX_PWR_W
+	{}, //SENSOR_NUM_AALC_TOTAL_PWR_W
+	{}, //SENSOR_NUM_HEX_CURR_A
 };
 
 const int SDR_TABLE_SIZE = ARRAY_SIZE(plat_sdr_table);

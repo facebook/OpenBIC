@@ -24,6 +24,8 @@
 #include "ast_adc.h"
 #include "plat_hook.h"
 #include "plat_class.h"
+#include "plat_modbus.h"
+#include "modbus_server.h"
 #include <logging/log.h>
 
 LOG_MODULE_REGISTER(plat_sensor_table);
@@ -768,10 +770,25 @@ sensor_cfg xdp710_sensor_config_table[] = {
 	  &bus_1_PCA9546A_configs[0], post_PCA9546A_read, NULL, &adm1272_init_args[1] },
 };
 
+sensor_cfg plat_def_sensor_config[] = {
+	{ SENSOR_NUM_RPU_PWR_W, sensor_dev_plat_def_sensor, 0, 0, PLAT_DEF_SENSOR_RPU_PWR,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_HEX_PWR_W, sensor_dev_plat_def_sensor, 0, 0, PLAT_DEF_SENSOR_HEX_PWR,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_AALC_TOTAL_PWR_W, sensor_dev_plat_def_sensor, 0, 0, PLAT_DEF_SENSOR_TOTAL_PWR,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_HEX_CURR_A, sensor_dev_plat_def_sensor, 0, 0, PLAT_DEF_SENSOR_HEX_CURR,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+};
+
 // total config size = plat_sensor_config + sensor(main/second sensor) config table
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) +
 			       ARRAY_SIZE(hsc_sensor_config_table) +
-			       ARRAY_SIZE(tmp461_config_table);
+			       ARRAY_SIZE(tmp461_config_table) + ARRAY_SIZE(plat_def_sensor_config);
 
 static uint32_t get_pmbus_mfr_id(uint8_t bus, uint8_t addr)
 {
@@ -1006,6 +1023,14 @@ void load_sb_temp_sensor_config()
 	}
 }
 
+void load_plat_def_sensor_config()
+{
+	uint8_t index = 0;
+
+	for (index = 0; index < ARRAY_SIZE(plat_def_sensor_config); index++)
+		add_sensor_config(plat_def_sensor_config[index]);
+}
+
 void load_sensor_config(void)
 {
 	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
@@ -1013,6 +1038,52 @@ void load_sensor_config(void)
 
 	load_hsc_sensor_config();
 	load_sb_temp_sensor_config();
+	load_plat_def_sensor_config();
+}
+
+static float pow_of_10(int8_t exp)
+{
+	float ret = 1.0;
+	int i;
+
+	if (exp < 0) {
+		for (i = 0; i > exp; i--) {
+			ret /= 10.0;
+		}
+	} else if (exp > 0) {
+		for (i = 0; i < exp; i++) {
+			ret *= 10.0;
+		}
+	}
+
+	return ret;
+}
+
+/*
+	arg0: sensor number
+	arg1: m
+	arg2: r
+
+	actual_val =  raw_val * m * (10 ^ r)
+*/
+uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	int reading = 0;
+	uint8_t status = get_sensor_reading(sensor_config, sensor_config_count, cmd->arg0, &reading,
+					    GET_FROM_CACHE);
+
+	if (status == SENSOR_READ_SUCCESS) {
+		sensor_val *sval = (sensor_val *)&reading;
+		float val = (sval->integer * 1000 + sval->fraction) / 1000;
+		float r = pow_of_10(cmd->arg2);
+		uint16_t byte_val = val / cmd->arg1 / r; // scale
+		memcpy(cmd->data, &byte_val, sizeof(uint16_t) * cmd->cmd_size);
+		return MODBUS_EXC_NONE;
+	}
+
+	return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 }
 
 /*
@@ -1036,18 +1107,78 @@ float get_sensor_reading_to_real_val(uint8_t sensor_num)
 	return (integer > 0) ? (integer + fraction) : (integer - fraction);
 }
 
+/* platform def sensor */
+static uint8_t plat_sensor_rpu_pwr[] = {
+	SENSOR_NUM_BB_HSC_P48V_PIN_PWR_W,
+	SENSOR_NUM_BPB_HSC_P48V_PIN_PWR_W,
+};
+
+static uint8_t plat_sensor_hex_pwr[] = {
+	SENSOR_NUM_FB_1_HSC_P48V_PIN_PWR_W,  SENSOR_NUM_FB_2_HSC_P48V_PIN_PWR_W,
+	SENSOR_NUM_FB_3_HSC_P48V_PIN_PWR_W,  SENSOR_NUM_FB_4_HSC_P48V_PIN_PWR_W,
+	SENSOR_NUM_FB_5_HSC_P48V_PIN_PWR_W,  SENSOR_NUM_FB_6_HSC_P48V_PIN_PWR_W,
+	SENSOR_NUM_FB_7_HSC_P48V_PIN_PWR_W,  SENSOR_NUM_FB_8_HSC_P48V_PIN_PWR_W,
+	SENSOR_NUM_FB_9_HSC_P48V_PIN_PWR_W,  SENSOR_NUM_FB_10_HSC_P48V_PIN_PWR_W,
+	SENSOR_NUM_FB_11_HSC_P48V_PIN_PWR_W, SENSOR_NUM_FB_12_HSC_P48V_PIN_PWR_W,
+	SENSOR_NUM_FB_13_HSC_P48V_PIN_PWR_W, SENSOR_NUM_FB_14_HSC_P48V_PIN_PWR_W,
+};
+
+static uint8_t plat_sensor_hex_curr[] = {
+	SENSOR_NUM_FB_1_HSC_P48V_IOUT_CURR_A,  SENSOR_NUM_FB_2_HSC_P48V_IOUT_CURR_A,
+	SENSOR_NUM_FB_3_HSC_P48V_IOUT_CURR_A,  SENSOR_NUM_FB_4_HSC_P48V_IOUT_CURR_A,
+	SENSOR_NUM_FB_5_HSC_P48V_IOUT_CURR_A,  SENSOR_NUM_FB_6_HSC_P48V_IOUT_CURR_A,
+	SENSOR_NUM_FB_7_HSC_P48V_IOUT_CURR_A,  SENSOR_NUM_FB_8_HSC_P48V_IOUT_CURR_A,
+	SENSOR_NUM_FB_9_HSC_P48V_IOUT_CURR_A,  SENSOR_NUM_FB_10_HSC_P48V_IOUT_CURR_A,
+	SENSOR_NUM_FB_11_HSC_P48V_IOUT_CURR_A, SENSOR_NUM_FB_12_HSC_P48V_IOUT_CURR_A,
+	SENSOR_NUM_FB_13_HSC_P48V_IOUT_CURR_A, SENSOR_NUM_FB_14_HSC_P48V_IOUT_CURR_A,
+};
+
+/* Sum the values in the sensor cache in the array */
+static float calculate_total_val(uint8_t arr[], uint8_t size)
+{
+	float total = 0;
+	for (uint8_t i = 0; i < size; i++)
+		total += get_sensor_reading_to_real_val(arr[i]);
+
+	return total;
+}
+
 static uint8_t plat_def_sensor_read(sensor_cfg *cfg, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
 
-	return SENSOR_INIT_SUCCESS;
+	uint8_t type = cfg->offset;
+
+	float val = 0;
+	switch (type) {
+	case PLAT_DEF_SENSOR_RPU_PWR:
+		val = calculate_total_val(plat_sensor_rpu_pwr, ARRAY_SIZE(plat_sensor_rpu_pwr));
+		break;
+	case PLAT_DEF_SENSOR_HEX_PWR:
+		val = calculate_total_val(plat_sensor_hex_pwr, ARRAY_SIZE(plat_sensor_hex_pwr));
+		break;
+	case PLAT_DEF_SENSOR_TOTAL_PWR:
+		val = calculate_total_val(plat_sensor_rpu_pwr, ARRAY_SIZE(plat_sensor_rpu_pwr));
+		val += calculate_total_val(plat_sensor_hex_pwr, ARRAY_SIZE(plat_sensor_hex_pwr));
+		break;
+	case PLAT_DEF_SENSOR_HEX_CURR:
+		val = calculate_total_val(plat_sensor_hex_curr, ARRAY_SIZE(plat_sensor_hex_curr));
+		break;
+	default:
+		LOG_ERR("0x%02x unknow plat sensor type %d", cfg->num, type);
+		return SENSOR_PARAMETER_NOT_VALID;
+	}
+
+	sensor_val *sval = (sensor_val *)reading;
+	sval->integer = (int)val & 0xFFFF;
+	sval->fraction = (val - sval->integer) * 1000;
+	return SENSOR_READ_SUCCESS;
 }
 
 uint8_t plat_def_sensor_init(sensor_cfg *cfg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
-	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_INIT_UNSPECIFIED_ERROR);
 
 	cfg->read = plat_def_sensor_read;
 	return SENSOR_INIT_SUCCESS;
