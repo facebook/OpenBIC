@@ -148,30 +148,53 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param)
 {
 	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
 
+	uint8_t oth_module = get_oth_module();
+	if (oth_module != OTH_MODULE_PRIMARY) {
+		LOG_WRN("Given source %d is not supported yet", oth_module);
+		return 1;
+	}
+
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 
 	/* Stop sensor polling */
 	disable_sensor_poll();
 
+	const uint8_t *device_name_p = NULL;
+	const char *device_name[3][2] = {
+		[0][OTH_MODULE_PRIMARY] = KEYWORD_VR_MPQ8746,
+		[1][OTH_MODULE_PRIMARY] = KEYWORD_VR_MP2898,
+		[2][OTH_MODULE_PRIMARY] = KEYWORD_VR_MP2894,
+	};
+
 	/* Get bus and target address by sensor number in sensor configuration */
 	switch (p->comp_id) {
 	case JI_COMPNT_CPUDVDD:
+		device_name_p = device_name[0][oth_module];
 		p->bus = CPUDVDD_I2C_BUS;
 		p->addr = CPUDVDD_I2C_ADDR >> 1;
 		break;
 
 	case JI_COMPNT_CPUVDD:
+		device_name_p = device_name[1][oth_module];
 		p->bus = CPUVDD_I2C_BUS;
 		p->addr = CPUVDD_I2C_ADDR >> 1;
 		break;
 
 	case JI_COMPNT_SOCVDD:
+		device_name_p = device_name[2][oth_module];
 		p->bus = SOCVDD_I2C_BUS;
 		p->addr = SOCVDD_I2C_ADDR >> 1;
 		break;
 
 	default:
 		LOG_ERR("Unsupport component ID %d while update VR device", p->comp_id);
+		return 1;
+	}
+
+	/* Check whether fw image's vendor not mach with on board device */
+	if (strncmp(p->comp_version_str, device_name_p, strlen(device_name_p) - 1)) {
+		LOG_ERR("Given fw's device %s not mach with on board device %s",
+			p->comp_version_str, device_name_p);
 		return 1;
 	}
 
@@ -357,6 +380,19 @@ static uint8_t pldm_pre_retimer_update(void *fw_update_param)
 		LOG_ERR("Unsupport retimer module %d", retimer_module);
 		return 1;
 	}
+
+	/* Check whether fw image's vendor not mach with on board device */
+	const char *device_name[] = {
+		[RETIMER_MODULE_PT4080L] = KEYWORD_RETIMER_PT4080L,
+	};
+	const uint8_t *device_name_p = device_name[retimer_module];
+
+	if (strncmp(p->comp_version_str, device_name_p, strlen(device_name_p) - 1)) {
+		LOG_ERR("Given fw's device %s not mach with on board device %s",
+			p->comp_version_str, device_name_p);
+		return 1;
+	}
+
 	return 0;
 }
 
@@ -406,7 +442,7 @@ static bool get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	}
 
 	uint8_t retimer_module = get_retimer_module();
-	uint8_t version[RETIMER_PT5161L_FW_VER_LEN];
+	uint8_t version[10];
 	uint16_t ver_len = 0;
 	I2C_MSG i2c_msg;
 	i2c_msg.bus = I2C_BUS2;
@@ -417,7 +453,7 @@ static bool get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 			LOG_ERR("Failed to get PT4080L retimer version");
 			goto exit;
 		}
-		ver_len = RETIMER_PT5161L_FW_VER_LEN;
+		ver_len = 3;
 		break;
 	case RETIMER_MODULE_DS160PT801:
 		LOG_WRN("DS160PT801 retimer update not support yet");
@@ -441,6 +477,7 @@ static bool get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	uint8_t *buf_p = buf;
 	memcpy(buf_p, vr_name_p, strlen(vr_name_p));
 	buf_p += strlen(vr_name_p);
+	*len += strlen(vr_name_p);
 
 	memcpy(buf_p, version, ver_len);
 	*len += bin2hex(version, ver_len, buf_p, ver_len * 2);
