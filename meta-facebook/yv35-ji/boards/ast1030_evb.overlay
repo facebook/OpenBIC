@@ -104,7 +104,11 @@
 };
 
 &gpio0_a_d {
-	aspeed,persist-maps = <0x08000000>;
+  aspeed,persist-maps = <0x28000000>;
+};
+
+&gpio0_m_p {
+  aspeed,persist-maps = <0x00000100>;
 };
 
 &fmc {
