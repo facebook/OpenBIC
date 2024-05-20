@@ -357,8 +357,6 @@ static bool ssif_data_handle(ssif_dev *ssif_inst, ssif_action_t action, uint8_t 
 					ssif_inst->current_ipmi_msg.buffer.data[0] = 0x00;
 					ssif_inst->current_ipmi_msg.buffer.data[1] = 0x00;
 				}
-				ssif_inst->current_ipmi_msg.buffer.netfn =
-					(ssif_inst->current_ipmi_msg.buffer.netfn + 1) << 2;
 
 				if (ssif_set_data(ssif_inst->index, &ssif_inst->current_ipmi_msg) ==
 				    false) {
