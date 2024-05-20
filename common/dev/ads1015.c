@@ -29,7 +29,7 @@
 
 LOG_MODULE_REGISTER(dev_ads1015);
 
-static uint16_t twoscomplement_to_decimal(uint16_t twoscomplement_val)
+static int16_t twoscomplement_to_decimal(uint16_t twoscomplement_val)
 {
 	if (twoscomplement_val & MSB_MASK) { // Check if MSB is 1 (negative number)
 		twoscomplement_val =
