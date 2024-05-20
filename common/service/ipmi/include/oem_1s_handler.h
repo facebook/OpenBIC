@@ -121,6 +121,7 @@ void OEM_1S_SET_DEVICE_ACTIVE(ipmi_msg *msg);
 void OEM_1S_SET_ADD_DEBUG_SEL_MODE(ipmi_msg *msg);
 void OEM_1S_GET_4BYTE_POST_CODE(ipmi_msg *msg);
 void OEM_1S_GET_PCIE_RETIMER_TYPE(ipmi_msg *msg);
+void OEM_1S_DEBUG_GET_HW_SIGNAL(ipmi_msg *msg);
 
 #ifdef CONFIG_SNOOP_ASPEED
 void OEM_1S_GET_POST_CODE(ipmi_msg *msg);

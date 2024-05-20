@@ -2261,6 +2261,15 @@ __weak void OEM_1S_SET_DEVICE_ACTIVE(ipmi_msg *msg)
 	return;
 }
 
+__weak void OEM_1S_DEBUG_GET_HW_SIGNAL(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+	return;
+}
+
 void IPMI_OEM_1S_handler(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -2542,6 +2551,10 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_GET_PCIE_RETIMER_TYPE:
 		LOG_DBG("Received GET PCIE RETIMER TYPE command");
 		OEM_1S_GET_PCIE_RETIMER_TYPE(msg);
+		break;
+	case CMD_OEM_1S_DEBUG_GET_HW_SIGNAL:
+		LOG_DBG("Received DEBUG GET HW SIGNAL command");
+		OEM_1S_DEBUG_GET_HW_SIGNAL(msg);
 		break;
 	default:
 		LOG_ERR("Invalid OEM message, netfn(0x%x) cmd(0x%x)", msg->netfn, msg->cmd);
