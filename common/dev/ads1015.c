@@ -62,7 +62,7 @@ uint8_t ads1015_read(sensor_cfg *cfg, int *reading)
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
-	uint16_t read_val =
+	int16_t read_val =
 		twoscomplement_to_decimal(msg.data[0] << 4 | msg.data[1]) & CONVERSION_VAL_MASK;
 
 	sensor_val *sval = (sensor_val *)reading;
