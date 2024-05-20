@@ -772,6 +772,21 @@ sensor_cfg xdp710_sensor_config_table[] = {
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) +
 			       ARRAY_SIZE(hsc_sensor_config_table) +
 			       ARRAY_SIZE(tmp461_config_table);
+static uint8_t get_temp_sensor_mfr_id(uint8_t bus, uint8_t addr, uint8_t mfr_id_offset)
+{
+	I2C_MSG msg = { 0 };
+	msg.bus = bus;
+	msg.target_addr = addr;
+	msg.rx_len = 1;
+	msg.tx_len = 1;
+	msg.data[0] = mfr_id_offset;
+	if (i2c_master_read(&msg, I2C_MAX_RETRY)) {
+		LOG_ERR("Failed to read TEMP module MFR_ID");
+		return 0;
+	}
+
+	return msg.data[0];
+}
 
 static uint32_t get_pmbus_mfr_id(uint8_t bus, uint8_t addr)
 {
@@ -985,24 +1000,36 @@ void load_hsc_sensor_config()
 
 void load_sb_temp_sensor_config()
 {
-	uint8_t index = 0;
-	uint8_t temp_module = get_temp_module();
+	/* default sensor config is tmp461
+	 * 1st and 2nd source have different i2c addr, identify by i2c addr
+	*/
+#define TMP461_MFR_ID_OFFSET 0xFE
+#define NCT214_MFR_ID_OFFSET 0xFE
+#define TMP461_MFR_ID 0x55
+#define NCT214_MFR_ID 0x41
 
-	switch (temp_module) {
-	case SB_TMP461:
-		for (index = 0; index < ARRAY_SIZE(tmp461_config_table); index++)
-			add_sensor_config(tmp461_config_table[index]);
+	uint8_t tmp461_tbl[] = { SB_TMP461_1_ADDR, SB_TMP461_2_ADDR, SB_TMP461_3_ADDR,
+				 SB_TMP461_4_ADDR };
 
-		break;
-	case SB_NCT214:
-		for (index = 0; index < ARRAY_SIZE(nct214_config_table); index++)
-			add_sensor_config(nct214_config_table[index]);
+	uint8_t nct214_tbl[] = { SB_NCT214_1_ADDR, SB_NCT214_2_ADDR, SB_NCT214_3_ADDR,
+				 SB_NCT214_4_ADDR };
 
-		break;
-	default:
-		LOG_ERR("Unknown temperature type(%d), load temperature sensor table failed",
-			temp_module);
-		break;
+	uint8_t temp_mfr_id = 0;
+	for (uint8_t i = 0; i < ARRAY_SIZE(tmp461_config_table); i++) {
+		temp_mfr_id = get_temp_sensor_mfr_id(I2C_BUS9, tmp461_tbl[i], TMP461_MFR_ID_OFFSET);
+		if (temp_mfr_id == TMP461_MFR_ID)
+			add_sensor_config(tmp461_config_table[i]);
+		else
+			LOG_INF("Can't read MFR_ID from 0x%x TMP461 , try to read NCT214_MFR_ID",
+				tmp461_tbl[i]);
+
+		temp_mfr_id = get_temp_sensor_mfr_id(I2C_BUS9, nct214_tbl[i], NCT214_MFR_ID_OFFSET);
+
+		if (temp_mfr_id == NCT214_MFR_ID)
+			add_sensor_config(nct214_config_table[i]);
+		else
+			LOG_INF("Can't read read MFR_ID from 0x%x NCT214, load temperature sensor on sensor board failed",
+				nct214_tbl[i]);
 	}
 }
 
