@@ -29,6 +29,7 @@
 #define FPGA_ADDR (0xC0 >> 1)
 #define TEMP_HSC_ADDR (0x98 >> 1)
 #define MP5990_ADDR (0xA0 >> 1)
+#define MP5990_ADDR_1 (0xC0 >> 1) // for board >= EVT2
 #define INA230_ADDR (0x8A >> 1)
 #define INA3221_ADDR (0x80 >> 1)
 #define TMP451_ADDR (0x98 >> 1)

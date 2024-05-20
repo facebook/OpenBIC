@@ -192,8 +192,8 @@ sensor_cfg pt4080l_sensor_config_table[] = {
 sensor_cfg ds160pt801_sensor_config_table[] = {
 	{ SENSOR_NUM_TEMP_RETIMER, sensor_dev_ds160pt801, I2C_BUS2, TI_RETIMER_ADDR,
 	  DS160PT801_READ_TEMP, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  DISABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ds160pt801_read,
-	  &mux_conf_addr_0xe2[1], NULL, NULL, NULL },
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ds160pt801_read, &mux_conf_addr_0xe2[1],
+	  NULL, NULL, NULL },
 };
 
 static sensor_cfg *change_retimer_sensor_cfg(uint8_t module)
@@ -213,10 +213,8 @@ static sensor_cfg *change_retimer_sensor_cfg(uint8_t module)
 		}
 	}
 
-	if (i == sensor_config_count) {
-		LOG_ERR("Can't find Retimer %d in sensor config", module);
+	if (i == sensor_config_count)
 		return NULL;
-	}
 
 	return &sensor_config[i];
 }
@@ -267,7 +265,7 @@ bool modify_sensor_cfg()
 	sensor_cfg *retimer_cfg = NULL;
 	retimer_cfg = change_retimer_sensor_cfg(retimer_module);
 	if (!retimer_cfg) {
-		LOG_ERR("Retimer sensor config not found!!");
+		LOG_WRN("Retimer sensor config not found!!");
 		return false;
 	}
 
@@ -290,6 +288,8 @@ void pal_extend_sensor_config()
 		LOG_INF("HSC vendor: MP5990");
 		sensor_count = ARRAY_SIZE(mp5990_sensor_config_table);
 		for (int index = 0; index < sensor_count; index++) {
+			if (get_board_revision() >= SYS_BOARD_EVT2)
+				mp5990_sensor_config_table[index].target_addr = MP5990_ADDR_1;
 			add_sensor_config(mp5990_sensor_config_table[index]);
 		}
 		/* MP5990 can read HSC temperature */

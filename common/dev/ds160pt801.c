@@ -24,6 +24,15 @@ LOG_MODULE_REGISTER(dev_ds160pt801);
 
 K_MUTEX_DEFINE(ds106pt801_mutex);
 
+/* ADDR MODE SWITCH */
+#define ADDR_MODE_16_TO_8 0x0168
+#define ADDR_MODE_8_TO_16 0xF9
+
+enum {
+	FROM_16_TO_8 = 0, //default
+	FROM_8_TO_16 = 1,
+};
+
 /* --------- GLOBAL ---------- */
 #define GLOBAL_REG_DEV_REV 0xF0
 #define GLOBAL_REG_BLOCK_SEL 0xFF
@@ -34,6 +43,35 @@ K_MUTEX_DEFINE(ds106pt801_mutex);
 #define SHARE_REG_TEMP_NOM 0x7E
 
 static bool is_update_ongoing = false;
+
+static bool ds160pt801_switch_addr_mode(I2C_MSG *i2c_msg, uint8_t mode)
+{
+	CHECK_NULL_ARG_WITH_RETURN(i2c_msg, false);
+
+	switch (mode) {
+	case FROM_16_TO_8:
+		i2c_msg->data[0] = ADDR_MODE_16_TO_8 & 0xFF;
+		i2c_msg->data[1] = (ADDR_MODE_16_TO_8 >> 8) & 0xFF;
+		i2c_msg->tx_len = 3;
+		break;
+
+	case FROM_8_TO_16:
+		i2c_msg->data[0] = ADDR_MODE_8_TO_16;
+		i2c_msg->data[1] = 0x01;
+		i2c_msg->tx_len = 2;
+		break;
+
+	default:
+		break;
+	}
+
+	if (i2c_master_write(i2c_msg, 3)) {
+		LOG_ERR("Failed to switch ADDR mode %d", mode);
+		return false;
+	}
+
+	return true;
+}
 
 bool ds160pt801_get_fw_version(I2C_MSG *i2c_msg, uint8_t *version)
 {
@@ -92,7 +130,6 @@ bool ds160pt801_read_junction_temp(I2C_MSG *i2c_msg, double *avg_temperature)
 		goto unlock_exit;
 	}
 	tmp_byte = i2c_msg->data[0];
-	LOG_INF("1 temp: 0x%x", tmp_byte);
 
 	tmp_byte |= BIT(6);
 	i2c_msg->data[0] = GLOBAL_REG_BLOCK_SEL;
@@ -115,7 +152,6 @@ bool ds160pt801_read_junction_temp(I2C_MSG *i2c_msg, double *avg_temperature)
 		goto unlock_exit;
 	}
 	tmp_byte = i2c_msg->data[0];
-	LOG_INF("2 temp: 0x%x", tmp_byte);
 
 	tmp_byte &= ~BIT(1);
 	i2c_msg->data[0] = SHARE_REG_TEMP_CTL;
@@ -226,6 +262,11 @@ uint8_t ds160pt801_read(sensor_cfg *cfg, int *reading)
 	I2C_MSG msg = { 0 };
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
+
+	if (ds160pt801_switch_addr_mode(&msg, FROM_16_TO_8) == false) {
+		LOG_ERR("Failed to switch ADDR mode from 16bit to 8bit");
+		return SENSOR_FAIL_TO_ACCESS;
+	}
 
 	double val = 0;
 
