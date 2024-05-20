@@ -771,7 +771,7 @@ sensor_cfg xdp710_sensor_config_table[] = {
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) +
 			       ARRAY_SIZE(hsc_sensor_config_table) +
 			       ARRAY_SIZE(tmp461_config_table);
-				   
+
 static uint8_t get_temp_sensor_mfr_id(uint8_t bus, uint8_t addr, uint8_t mfr_id_offset)
 {
 	I2C_MSG msg = { 0 };
@@ -1008,39 +1008,32 @@ void load_sb_temp_sensor_config()
 #define TMP461_MFR_ID 0x55
 #define NCT214_MFR_ID 0x41
 
-	uint8_t tmp461_tbl[] = { SB_TMP461_1_ADDR, SB_TMP461_2_ADDR, SB_TMP461_3_ADDR,
-				 SB_TMP461_4_ADDR };
-
-	uint8_t nct214_tbl[] = { SB_NCT214_1_ADDR, SB_NCT214_2_ADDR, SB_NCT214_3_ADDR,
-				 SB_NCT214_4_ADDR };
-
-	uint8_t temp_mfr_id = 0, temp_addrress = 0;
+	uint8_t temp_mfr_id = 0;
 	for (uint8_t i = 0; i < ARRAY_SIZE(tmp461_config_table); i++) {
-		temp_mfr_id = get_temp_sensor_mfr_id(I2C_BUS9, tmp461_tbl[i], TMP461_MFR_ID_OFFSET);
+		temp_mfr_id = get_temp_sensor_mfr_id(tmp461_config_table[i].port,
+						     tmp461_config_table[i].target_addr,
+						     TMP461_MFR_ID_OFFSET);
 		if (temp_mfr_id == TMP461_MFR_ID) {
 			add_sensor_config(tmp461_config_table[i]);
-			temp_addrress = tmp461_config_table[i].target_addr;
-			goto tmp_set_ok;
+			LOG_INF("Add tmp461 %d address on sensorboard ok: 0x%x", i,
+				tmp461_config_table[i].target_addr);
+			continue;
 		} else {
 			LOG_INF("Can't read MFR_ID from 0x%x TMP461 , try to read NCT214_MFR_ID",
-				tmp461_tbl[i]);
+				tmp461_config_table[i].target_addr);
+			temp_mfr_id = get_temp_sensor_mfr_id(nct214_config_table[i].port,
+							     nct214_config_table[i].target_addr,
+							     NCT214_MFR_ID_OFFSET);
 		}
-
-		temp_mfr_id = get_temp_sensor_mfr_id(I2C_BUS9, nct214_tbl[i], NCT214_MFR_ID_OFFSET);
 
 		if (temp_mfr_id == NCT214_MFR_ID) {
 			add_sensor_config(nct214_config_table[i]);
-			temp_addrress = tmp461_config_table[i].target_addr;
-			goto tmp_set_ok;
+			LOG_INF("Add nct214 %d address on sensorboard ok: 0x%x", i,
+				nct214_config_table[i].target_addr);
 		} else {
-			goto tmp_set_fail;
+			LOG_ERR("Can't read MFR_ID from 0x%x NCT214, load temperature sensor on sensor board failed",
+				nct214_config_table[i].target_addr);
 		}
-
-	tmp_set_ok:
-		LOG_INF("Add sensor address ok: 0x%x", temp_addrress);
-	tmp_set_fail:
-		LOG_ERR("Can't read MFR_ID from 0x%x NCT214, load temperature sensor on sensor board failed",
-			nct214_tbl[i]);
 	}
 }
 
