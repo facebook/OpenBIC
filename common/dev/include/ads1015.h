@@ -34,11 +34,11 @@ enum LATCH_COMPARATOR {
 	ENABLE_LATCH,
 }; // matching comparator
 
-typedef struct _ina238_init_arg {
+typedef struct _ads1015_init_arg {
 	bool is_init;
 	// user defined
 	uint8_t device_operation_mode;
 	uint8_t alert_latch;
-} ina238_init_arg;
+} ads1015_init_arg;
 
 #endif

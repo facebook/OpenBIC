@@ -52,13 +52,11 @@ uint8_t ads1015_read(sensor_cfg *cfg, int *reading)
 
 	uint8_t retry = 5;
 	I2C_MSG msg = { 0 };
-
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.rx_len = 2;
 	msg.data[0] = CONVERSION_REG;
-
 	if (i2c_master_read(&msg, retry)) {
 		LOG_ERR("Failed to read ads1015 conversion register.");
 		return SENSOR_FAIL_TO_ACCESS;
@@ -83,7 +81,7 @@ uint8_t ads1015_init(sensor_cfg *cfg)
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	ina238_init_arg *init_args = (ina238_init_arg *)cfg->init_args;
+	ads1015_init_arg *init_args = (ads1015_init_arg *)cfg->init_args;
 
 	if (init_args->is_init)
 		goto skip_init;
