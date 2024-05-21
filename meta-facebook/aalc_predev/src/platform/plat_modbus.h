@@ -34,6 +34,9 @@
 #define MODBUS_MASTER_I2C_WRITE_READ_ADDR 0x1050
 #define MODBUS_MASTER_I2C_WRITE_READ_RESPONSE_ADDR 0x1060
 
+#define MODBUS_SET_SENSOR_POLL_EN_ADDR 0x1070
+#define MODBUS_GET_SENSOR_POLL_EN_ADDR 0x1071
+
 int init_custom_modbus_server(void);
 void init_modbus_command_table(void);
 typedef struct _modbus_command_mapping {

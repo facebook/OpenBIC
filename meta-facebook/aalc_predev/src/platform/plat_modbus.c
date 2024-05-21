@@ -472,6 +472,11 @@ modbus_command_mapping modbus_command_table[] = {
 	  0, 256 },
 	{ MODBUS_FB_14_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_14_FRU_ID, 0,
 	  0, 256 },
+	{ MODBUS_FB_14_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_14_FRU_ID, 0,
+	  0, 256 },
+	// sensor poll
+	{ MODBUS_SET_SENSOR_POLL_EN_ADDR, modbus_sensor_poll_en, NULL, 0, 0, 0, 1 },
+	{ MODBUS_GET_SENSOR_POLL_EN_ADDR, NULL, modbus_sensor_poll_en, 1, 0, 0, 1 },
 };
 
 static modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)

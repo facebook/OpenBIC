@@ -1060,8 +1060,8 @@ static float pow_of_10(int8_t exp)
 }
 
 /*
-  get real float val from sensor cache
-  return sensor status
+	get real float val from sensor cache
+	return sensor status
 */
 uint8_t get_sensor_reading_to_real_val(uint8_t sensor_num, float *val)
 {
