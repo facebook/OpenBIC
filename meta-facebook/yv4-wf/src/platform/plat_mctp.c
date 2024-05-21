@@ -125,39 +125,61 @@ static void set_endpoint_resp_timeout(void *args)
 
 static void set_dev_endpoint(void)
 {
-	// We only need to set CXL EID.
-	for (uint8_t i = 0; i < ARRAY_SIZE(plat_mctp_route_tbl); i++) {
-		mctp_route_entry *p = plat_mctp_route_tbl + i;
-		if (!p->set_endpoint)
-			continue;
-
-		for (uint8_t j = 0; j < ARRAY_SIZE(plat_mctp_port); j++) {
-			if (p->bus != plat_mctp_port[j].conf.smbus_conf.bus)
+	bool set_eid[MAX_CXL_ID] = { false, false };
+	// The CXL FW is unstable and its booting up time is random now.
+	// Temporary add retry mechanism for it.
+	for (int attempt = 0; attempt < 10; attempt++) {
+		// We only need to set CXL EID.
+		for (uint8_t i = 0; i < ARRAY_SIZE(plat_mctp_route_tbl); i++) {
+			mctp_route_entry *p = plat_mctp_route_tbl + i;
+			if (!p->set_endpoint)
 				continue;
 
-			struct _set_eid_req req = { 0 };
-			req.op = SET_EID_REQ_OP_SET_EID;
-			req.eid = p->endpoint;
+			for (uint8_t j = 0; j < ARRAY_SIZE(plat_mctp_port); j++) {
+				if (p->bus != plat_mctp_port[j].conf.smbus_conf.bus)
+					continue;
 
-			mctp_ctrl_msg msg;
-			memset(&msg, 0, sizeof(msg));
-			msg.ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
-			msg.ext_params.smbus_ext_params.addr = p->addr;
+				struct _set_eid_req req = { 0 };
+				req.op = SET_EID_REQ_OP_SET_EID;
+				req.eid = p->endpoint;
 
-			msg.hdr.cmd = MCTP_CTRL_CMD_SET_ENDPOINT_ID;
-			msg.hdr.rq = 1;
+				mctp_ctrl_msg msg;
+				memset(&msg, 0, sizeof(msg));
+				msg.ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
+				msg.ext_params.smbus_ext_params.addr = p->addr;
 
-			msg.cmd_data = (uint8_t *)&req;
-			msg.cmd_data_len = sizeof(req);
+				msg.hdr.cmd = MCTP_CTRL_CMD_SET_ENDPOINT_ID;
+				msg.hdr.rq = 1;
 
-			msg.recv_resp_cb_fn = set_endpoint_resp_handler;
-			msg.timeout_cb_fn = set_endpoint_resp_timeout;
-			msg.timeout_cb_fn_args = p;
+				msg.cmd_data = (uint8_t *)&req;
+				msg.cmd_data_len = sizeof(req);
 
-			uint8_t rc = mctp_ctrl_send_msg(find_mctp_by_bus(p->bus), &msg);
-			if (rc)
-				LOG_ERR("Fail to set endpoint %d", p->endpoint);
+				msg.recv_resp_cb_fn = set_endpoint_resp_handler;
+				msg.timeout_cb_fn = set_endpoint_resp_timeout;
+				msg.timeout_cb_fn_args = p;
+
+				uint8_t rc = mctp_ctrl_send_msg(find_mctp_by_bus(p->bus), &msg);
+				if (!rc) {
+					switch(p->bus) {
+						case I2C_BUS_CXL1: {
+							set_eid[CXL_ID_1] = true;
+							break;
+						}
+						case I2C_BUS_CXL2: {
+							set_eid[CXL_ID_2] = true;
+							break;
+						}
+					}
+				} else {
+					LOG_ERR("Fail to set endpoint %d", p->endpoint);
+				}
+			}
 		}
+		// break if set both CXL EID success
+		if (set_eid[CXL_ID_1] == true && set_eid[CXL_ID_2] == true)
+			break;
+		// Delay for 10 seconds before the next attempt
+		k_sleep(K_SECONDS(10));
 	}
 }
 
