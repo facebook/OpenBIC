@@ -1033,6 +1033,8 @@ void load_sb_temp_sensor_config()
 		} else {
 			LOG_ERR("Can't read MFR_ID from 0x%x NCT214, load temperature sensor on sensor board failed",
 				nct214_config_table[i].target_addr);
+			// still add sensor config to keep SENSOR_CONFIG_SIZE correct
+			add_sensor_config(tmp461_config_table[i]);
 		}
 	}
 }
