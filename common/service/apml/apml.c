@@ -382,20 +382,36 @@ static uint8_t access_RMI_mailbox(apml_msg *msg)
 	/* wait for SwAlertSts to be set */
 	uint8_t status;
 	for (i = 0; i < MAILBOX_COMPLETE_RETRY_MAX; i++) {
-		if (apml_read_byte(msg->bus, msg->target_addr, SBRMI_STATUS, &status)) {
-			LOG_ERR("Read SwAlertSts failed.");
-			return APML_ERROR;
+		/* For TURIN, wait for SoftwareInterrupt */
+		if (command_code_len == SBRMI_CMD_CODE_LEN_TWO_BYTE) {
+			if (apml_read_byte(msg->bus, msg->target_addr, SBRMI_SOFTWARE_INTERRUPT, &status)) {
+				LOG_ERR("Read SoftwareInterrupt failed.");
+				return APML_ERROR;
+			}
+			if ((status & 0x01) == 0) {
+				break;
+			}
+		} else {
+			if (apml_read_byte(msg->bus, msg->target_addr, SBRMI_STATUS, &status)) {
+				LOG_ERR("Read SwAlertSts failed.");
+				return APML_ERROR;
+			}
+			if (status & 0x02) {
+				break;
+			}
 		}
-		if (status & 0x02) {
-			break;
-		}
+
 		k_msleep(WAIT_TIME_MS);
 		if (!get_post_status()) {
 			return APML_ERROR;
 		}
 	}
 	if (i == MAILBOX_COMPLETE_RETRY_MAX) {
-		LOG_ERR("SwAlertSts not be set, retry %d times.", MAILBOX_COMPLETE_RETRY_MAX);
+		if (command_code_len == SBRMI_CMD_CODE_LEN_TWO_BYTE) {
+			LOG_ERR("SoftwareInterrupt not be set, retry %d times.", MAILBOX_COMPLETE_RETRY_MAX);
+		} else {
+			LOG_ERR("SwAlertSts not be set, retry %d times.", MAILBOX_COMPLETE_RETRY_MAX);
+		}
 		return APML_ERROR;
 	}
 
@@ -410,9 +426,11 @@ static uint8_t access_RMI_mailbox(apml_msg *msg)
 	}
 
 	/* clear SwAlertSts */
-	if (apml_write_byte(msg->bus, msg->target_addr, SBRMI_STATUS, 0x02)) {
-		LOG_ERR("Clear SwAlertSts failed.");
-		return APML_ERROR;
+	if (command_code_len != SBRMI_CMD_CODE_LEN_TWO_BYTE) {
+		if (apml_write_byte(msg->bus, msg->target_addr, SBRMI_STATUS, 0x02)) {
+			LOG_ERR("Clear SwAlertSts failed.");
+			return APML_ERROR;
+		}
 	}
 	return APML_SUCCESS;
 }
@@ -579,6 +597,28 @@ void apml_recovery()
 		}
 	}
 	return;
+}
+
+void disable_mailbox_completion_alert()
+{
+	uint8_t reg;
+	/* Set MbCmplSwAlertEnable to 0 for TURIN CPU. It will allow us to poll */
+	/* SoftwareInterrupt for mailbox completion instead of SwAlertSts.      */
+	if (command_code_len == SBRMI_CMD_CODE_LEN_TWO_BYTE) {
+		if (apml_read_byte(apml_bus, SB_RMI_ADDR, SBRMI_CONTROL, &reg)) {
+			LOG_ERR("Failed to read SBRMI control.");
+			return;
+		} else {
+			LOG_INF("SBRMI_CONTROL read");
+		}
+		reg &= ~(1 << 5); // write 0 to bit5 MbCmplSwAlertEnable
+		if (apml_write_byte(apml_bus, SB_RMI_ADDR, SBRMI_CONTROL, reg)) {
+			LOG_ERR("Failed to write SBRMI control.");
+			return;
+		} else {
+			LOG_INF("SBRMI_CONTROL written");
+		}
+	}
 }
 
 __weak uint8_t pal_get_apml_bus()

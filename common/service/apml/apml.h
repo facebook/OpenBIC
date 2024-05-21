@@ -65,6 +65,7 @@ enum SBRMI_MAILBOX_ERR_CODE {
 
 enum SBRMI_REGISTER {
 	SBRMI_REVISION = 0x00,
+	SBRMI_CONTROL = 0x01,
 	SBRMI_STATUS = 0x02,
 	SBRMI_OUTBANDMSG_INST0 = 0x30,
 	SBRMI_OUTBANDMSG_INST1 = 0x31,
@@ -161,5 +162,6 @@ uint8_t pal_get_apml_bus();
 uint8_t apml_get_bus();
 int set_sbrmi_command_code_len(uint8_t value);
 int get_sbrmi_command_code_len();
+void disable_mailbox_completion_alert();
 
 #endif
