@@ -34,6 +34,9 @@
 #define MODBUS_MASTER_I2C_WRITE_READ_ADDR 0x1050
 #define MODBUS_MASTER_I2C_WRITE_READ_RESPONSE_ADDR 0x1060
 
+#define MODBUS_SET_SENSOR_POLL_EN_ADDR 0x1070
+#define MODBUS_GET_SENSOR_POLL_EN_ADDR 0x1071
+
 int init_custom_modbus_server(void);
 void init_modbus_command_table(void);
 typedef struct _modbus_command_mapping {
@@ -133,7 +136,7 @@ typedef struct _modbus_command_mapping {
 #define MODBUS_HEX_FAN_PWM_TACH_PCT_ADDR 0x9100
 #define MODBUS_HEX_PWR_W_ADDR 0x9101
 #define MODBUS_HEX_INPUT_VOLT_V_ADDR 0x9102
-#define MODBUS_HEX_INPUT_CURRENT_V_ADDR 0x9103
+#define MODBUS_HEX_INPUT_CURRENT_A_ADDR 0x9103
 #define MODBUS_FB_1_FAN_TACH_RPM_ADDR 0x9104
 #define MODBUS_FB_2_FAN_TACH_RPM_ADDR 0x9105
 #define MODBUS_FB_3_FAN_TACH_RPM_ADDR 0x9106
