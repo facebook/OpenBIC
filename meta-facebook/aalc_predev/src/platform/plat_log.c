@@ -35,6 +35,7 @@ static uint8_t err_sensor_caches[19]; // amount of LOG_ERROR_CODE
 
 #define AALC_FRU_LOG_START 0x4000 //log offset:16KB
 #define AALC_FRU_LOG_SIZE 0x0C8
+#define LOG_BEGIN_MODBUS_ADDR 0x1A29 //Event 1 Error log Modbus Addr
 
 const err_sensor_mapping sensor_err_codes[] = {
 	{ LEAK_RPU_INT, SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V },
@@ -115,7 +116,7 @@ uint8_t modbus_error_log_event(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
-	uint16_t order = 1 + ((cmd->start_addr - MODBUS_ERR_LOG_1) / cmd->cmd_size);
+	uint16_t order = 1 + ((cmd->start_addr - LOG_BEGIN_MODBUS_ADDR) / cmd->cmd_size);
 
 	memcpy(cmd->data, &err_log_data[newest_log_event_count(order)],
 	       sizeof(uint16_t) * cmd->cmd_size);
