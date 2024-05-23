@@ -26,7 +26,7 @@
 #include "modbus_server.h"
 #include "plat_control.h"
 #include "adm1272.h"
-//#include "log.h"
+//#include "plat_log.h"
 
 LOG_MODULE_REGISTER(plat_modbus_funtion);
 
