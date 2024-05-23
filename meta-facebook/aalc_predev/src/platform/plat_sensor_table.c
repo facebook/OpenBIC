@@ -1059,6 +1059,22 @@ static float pow_of_10(int8_t exp)
 	return ret;
 }
 
+uint16_t get_sensor_reading_to_modbus_val(uint8_t sensor_num, int8_t exp, int8_t scale)
+{
+	int reading = 0;
+	uint8_t status = get_sensor_reading(sensor_config, sensor_config_count, sensor_num, &reading,
+					    GET_FROM_CACHE);
+
+	if (status != SENSOR_READ_SUCCESS) {
+		LOG_ERR("0x%02x get sensor cache fail", sensor_num);
+		return 0;
+	}
+	sensor_val *sval = (sensor_val *)&reading;
+	float val = (sval->integer * 1000 + sval->fraction) / 1000;
+	float r = pow_of_10(exp);
+	return val / scale / r; // scale
+}
+
 /*
 	get real float val from sensor cache
 	return sensor status
