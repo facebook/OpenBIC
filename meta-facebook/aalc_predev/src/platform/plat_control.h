@@ -29,9 +29,5 @@ enum pump_state {
 	PUMP_3_RESET = 14,
 };
 
-enum check_bit_status {
-	BIT_LOW = 0,
-	BIT_HIGH = 1
-};
 bool pump_reset(uint8_t sensor_num);
 uint8_t modbus_pump_setting(modbus_command_mapping *cmd);

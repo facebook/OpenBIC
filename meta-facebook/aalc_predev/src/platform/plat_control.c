@@ -73,7 +73,7 @@ uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 {
 		CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 		// PUMP_REDUNDENT_SWITCHED
-		if (cmd->data[0] & BIT(PUMP_REDUNDENT_SWITCHED)){
+		if (cmd->data[0] & BIT(PUMP_REDUNDENT_SWITCHED)){ // if bit0 != 0
 			//if (<PUMP_REDUNDENT_SWITCHED function>)
 				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 		}
