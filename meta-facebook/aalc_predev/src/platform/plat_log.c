@@ -29,13 +29,13 @@
 
 LOG_MODULE_REGISTER(plat_log);
 
-static const uint8_t log_data_lengh = 20;
-static modbus_err_log_mapping err_log_data[20]; // total log amount: 20
-static uint8_t err_sensor_caches[19]; // amount of LOG_ERROR_CODE
-
 #define AALC_FRU_LOG_START 0x4000 //log offset:16KB
-#define AALC_FRU_LOG_SIZE 0x0C8
+#define AALC_FRU_LOG_SIZE 400 // 20 logs(1 log = 20 bytes)
 #define LOG_BEGIN_MODBUS_ADDR 0x1A29 //Event 1 Error log Modbus Addr
+#define LOG_DATA_LENGTH 20
+
+static modbus_err_log_mapping err_log_data[LOG_DATA_LENGTH]; // total log amount: 20
+static uint8_t err_sensor_caches[32];
 
 const err_sensor_mapping sensor_err_codes[] = {
 	{ LEAK_RPU_INT, SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V },
@@ -55,11 +55,11 @@ const err_sensor_mapping sensor_normal_codes[] = {
 static uint16_t error_log_count(void)
 {
 	uint16_t count;
-	for (count = 0; count < ARRAY_SIZE(err_log_data); count++) {
+	for (count = 0; count < LOG_DATA_LENGTH; count++) {
 		if (!err_log_data[count].index)
 			return count;
 	}
-	return (uint16_t)ARRAY_SIZE(err_log_data);
+	return (uint16_t)LOG_DATA_LENGTH;
 }
 
 uint8_t modbus_error_log_count(modbus_command_mapping *cmd)
@@ -72,14 +72,14 @@ uint8_t modbus_error_log_count(modbus_command_mapping *cmd)
 
 static uint16_t newest_log_event_count(uint8_t order)
 {
-	if (order > ARRAY_SIZE(err_log_data)) {
+	if (order > LOG_DATA_LENGTH) {
 		LOG_ERR("Invalid LOG count  %d", order);
 		return 0;
 	}
 
 	uint16_t newest_count = 0;
 	bool is_reset = false;
-	for (uint16_t count = 0; count < ARRAY_SIZE(err_log_data); count++) {
+	for (uint16_t count = 0; count < LOG_DATA_LENGTH; count++) {
 		if (err_log_data[count].index == 0XFFFF) {
 			is_reset = true;
 			newest_count = count;
@@ -88,18 +88,18 @@ static uint16_t newest_log_event_count(uint8_t order)
 	}
 
 	if (is_reset) {
-		for (uint16_t count = 0; count < ARRAY_SIZE(err_log_data) - 1; count++) {
-			if (err_log_data[count].index <= ARRAY_SIZE(err_log_data)) {
+		for (uint16_t count = 0; count < LOG_DATA_LENGTH - 1; count++) {
+			if (err_log_data[count].index <= LOG_DATA_LENGTH) {
 				newest_count = count;
 				if (err_log_data[count].index < err_log_data[count + 1].index &&
-				    err_log_data[count + 1].index <= ARRAY_SIZE(err_log_data))
+				    err_log_data[count + 1].index <= LOG_DATA_LENGTH)
 					newest_count = count + 1;
 				else
 					break;
 			}
 		}
 	} else {
-		for (uint16_t count = 0; count < ARRAY_SIZE(err_log_data) - 1; count++) {
+		for (uint16_t count = 0; count < LOG_DATA_LENGTH - 1; count++) {
 			if (err_log_data[count].index < err_log_data[count + 1].index)
 				newest_count = count + 1;
 			else {
@@ -109,7 +109,7 @@ static uint16_t newest_log_event_count(uint8_t order)
 		}
 	}
 
-	return (newest_count + ARRAY_SIZE(err_log_data) - (order - 1)) % ARRAY_SIZE(err_log_data);
+	return (newest_count + LOG_DATA_LENGTH - (order - 1)) % LOG_DATA_LENGTH;
 }
 
 uint8_t modbus_error_log_event(modbus_command_mapping *cmd)
@@ -193,7 +193,7 @@ void error_log_event(uint8_t sensor_num, bool val_normal)
 		uint16_t newest_count = newest_log_event_count(1);
 		uint16_t fru_count = (err_log_data[newest_count].index == 0) ?
 					     newest_count :
-					     ((newest_count + 1) % ARRAY_SIZE(err_log_data));
+					     ((newest_count + 1) % LOG_DATA_LENGTH);
 
 		err_log_data[fru_count].index = (err_log_data[newest_count].index == 0xFFFF) ?
 							1 :
@@ -215,8 +215,8 @@ void error_log_event(uint8_t sensor_num, bool val_normal)
 		EEPROM_ENTRY fru_entry;
 
 		fru_entry.config.dev_id = MB_FRU_ID; //fru id
-		fru_entry.offset = AALC_FRU_LOG_START + fru_count * log_data_lengh;
-		fru_entry.data_len = log_data_lengh;
+		fru_entry.offset = AALC_FRU_LOG_START + fru_count * LOG_DATA_LENGTH;
+		fru_entry.data_len = LOG_DATA_LENGTH;
 
 		memcpy(&fru_entry.data[0], &err_log_data[fru_count], fru_entry.data_len);
 		if (FRU_write(&fru_entry))
@@ -237,7 +237,7 @@ void init_load_eeprom_log(void)
 		memcpy(&err_log_data[0], &fru_entry.data[0], fru_entry.data_len);
 
 	bool is_empty = true;
-	for (uint16_t i = 0; i < log_data_lengh; i++) {
+	for (uint16_t i = 0; i < LOG_DATA_LENGTH; i++) {
 		if (err_log_data[i].index != 0XFFFF) {
 			is_empty = false;
 			break;
