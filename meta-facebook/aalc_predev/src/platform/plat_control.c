@@ -26,6 +26,7 @@
 #include "modbus_server.h"
 #include "plat_control.h"
 #include "adm1272.h"
+//#include "log.h"
 
 LOG_MODULE_REGISTER(plat_modbus_funtion);
 
@@ -67,37 +68,131 @@ bool pump_reset(uint8_t sensor_num)
 		return false;
 	}
 }
+
+uint8_t check_bit_func(uint16_t send_data, uint8_t bit_num)
+{
+	if (send_data & BIT(bit_num) >> bit_num) // to check the bit of bit number is high
+		return BIT_HIGH;
+	return BIT_LOW;
+}
+
 uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 {
 		CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-
-		switch (cmd->data[0]) {
-		case PUMP_REDUNDENT_SWITCHED:
-		case MANUAL_CONTROL_PUMP:
-		case MANUAL_CONTROL_FAN:
-		case AUTOTUNE_FLOW_CONTROL:
-		case AUTOTUNE_PRESSURE_BALANCE_CONTROL:
-		case SYSTEM_STOP:
-		case RPU_REMOTE_POWER_CYCLE:
-		case MANUAL_CONTROL:
-		case CLEAR_PUMP_RUNNING_TIME:
-		case CLEAR_LOG:
-		case PUMP_1_RESET:
-			if (pump_reset(SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W))
-				break;
-			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		case PUMP_2_RESET:
-			if (pump_reset(SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W))
-				break;
-			return MODBUS_EXC_SERVER_DEVICE_FAILURE;	
-		case PUMP_3_RESET:
-			if (pump_reset(SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W))
-				break;
-			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		default:
-			LOG_ERR("invalid pump setting");
-			return MODBUS_EXC_ILLEGAL_DATA_VAL;
+		// PUMP_REDUNDENT_SWITCHED
+		if (check_bit_func(cmd->data[0], PUMP_REDUNDENT_SWITCHED) == BIT_HIGH){
+			//if (<PUMP_REDUNDENT_SWITCHED function>)
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 		}
+		else {
+			//if (<PUMP_REDUNDENT_SWITCHED function>)
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+
+		// MANUAL_CONTROL_PUMP:
+		if (check_bit_func(cmd->data[0], MANUAL_CONTROL_PUMP) == BIT_HIGH){
+			//if (<MANUAL_CONTROL_PUMP function>)
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+		else {
+			//if (<MANUAL_CONTROL_PUMP function>)
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+
+		// MANUAL_CONTROL_FAN:
+		if (check_bit_func(cmd->data[0], MANUAL_CONTROL_FAN) == BIT_HIGH){
+			//if (<MANUAL_CONTROL_FAN function>)
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+		else {
+			//if (<MANUAL_CONTROL_FAN function>)
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+
+		// AUTOTUNE_FLOW_CONTROL:
+		if (check_bit_func(cmd->data[0], AUTOTUNE_FLOW_CONTROL) == BIT_HIGH){
+			//if (<AUTOTUNE_FLOW_CONTROL function>)
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+		else {
+			//if (<AUTOTUNE_FLOW_CONTROL function>)
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+
+		// AUTOTUNE_PRESSURE_BALANCE_CONTROL:
+		if (check_bit_func(cmd->data[0], AUTOTUNE_PRESSURE_BALANCE_CONTROL) == BIT_HIGH){
+			//if (<AUTOTUNE_PRESSURE_BALANCE_CONTROL function>)
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+		else {
+			//if (<AUTOTUNE_PRESSURE_BALANCE_CONTROL function>)
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+
+		// SYSTEM_STOP:
+		if (check_bit_func(cmd->data[0], SYSTEM_STOP) == BIT_HIGH){
+			//if (<SYSTEM_STOP function>)
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+		else {
+			//if (<SYSTEM_STOP function>)
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+
+		// RPU_REMOTE_POWER_CYCLE:
+		if (check_bit_func(cmd->data[0], RPU_REMOTE_POWER_CYCLE) == BIT_HIGH){
+			//if (<RPU_REMOTE_POWER_CYCLE function>)
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+		else {
+			//if (<RPU_REMOTE_POWER_CYCLE function>)
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+
+		// MANUAL_CONTROL:
+		if (check_bit_func(cmd->data[0], MANUAL_CONTROL) == BIT_HIGH){
+			//if (<MANUAL_CONTROL function>)
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+		else {
+			//if (<MANUAL_CONTROL function>)
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+
+		// CLEAR_PUMP_RUNNING_TIME:
+		if (check_bit_func(cmd->data[0], CLEAR_PUMP_RUNNING_TIME) == BIT_HIGH){
+			//if (<CLEAR_PUMP_RUNNING_TIME function>)
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+		else {
+			//if (<CLEAR_PUMP_RUNNING_TIME function>)
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+
+		// CLEAR_LOG:
+		if (check_bit_func(cmd->data[0], CLEAR_LOG) == BIT_HIGH){
+			//if (!modbus_clear_log())
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+
+		// PUMP_1_RESET
+		if (check_bit_func(cmd->data[0], PUMP_1_RESET) == BIT_HIGH){
+			if (!pump_reset(SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W))
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;	
+		}
+			
+		// PUMP_2_RESET
+		if (check_bit_func(cmd->data[0], PUMP_2_RESET) == BIT_HIGH){
+			if (!pump_reset(SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W))
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+
+		// PUMP_3_RESET
+		if (check_bit_func(cmd->data[0], PUMP_3_RESET) == BIT_HIGH){
+			if (!pump_reset(SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W))
+				return MODBUS_EXC_SERVER_DEVICE_FAILURE;	
+		}
+
 		return MODBUS_EXC_NONE;
 }
 
