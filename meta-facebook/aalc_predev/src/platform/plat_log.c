@@ -29,12 +29,14 @@
 
 LOG_MODULE_REGISTER(plat_log);
 
-#define AALC_FRU_LOG_START 0x4000 //log offset:16KB
-#define AALC_FRU_LOG_SIZE 400 // 20 logs(1 log = 20 bytes)
 #define LOG_BEGIN_MODBUS_ADDR 0x1A29 //Event 1 Error log Modbus Addr
-#define LOG_DATA_LENGTH 20
+#define LOG_MAX_INDEX 0x0FFF //recount when log index > 0x0FFF
+#define LOG_MAX_NUM 20 // total log amount: 20
+#define AALC_FRU_LOG_START 0x4000 //log offset: 16KB
+#define AALC_FRU_LOG_SIZE                                                                          \
+	(LOG_MAX_NUM * sizeof(modbus_err_log_mapping)) // 20 logs(1 log = 20 bytes)
 
-static modbus_err_log_mapping err_log_data[LOG_DATA_LENGTH]; // total log amount: 20
+static modbus_err_log_mapping err_log_data[LOG_MAX_NUM];
 static uint8_t err_sensor_caches[32];
 
 const err_sensor_mapping sensor_err_codes[] = {
@@ -54,12 +56,12 @@ const err_sensor_mapping sensor_normal_codes[] = {
 
 static uint16_t error_log_count(void)
 {
-	uint16_t count;
-	for (count = 0; count < LOG_DATA_LENGTH; count++) {
-		if (!err_log_data[count].index)
-			return count;
+	uint16_t i;
+	for (i = 0; i < LOG_MAX_NUM; i++) {
+		if (!err_log_data[i].index)
+			return i;
 	}
-	return (uint16_t)LOG_DATA_LENGTH;
+	return (uint16_t)LOG_MAX_NUM;
 }
 
 uint8_t modbus_error_log_count(modbus_command_mapping *cmd)
@@ -70,46 +72,32 @@ uint8_t modbus_error_log_count(modbus_command_mapping *cmd)
 	return MODBUS_EXC_NONE;
 }
 
-static uint16_t newest_log_event_count(uint8_t order)
+/* 
+(order = N of "the Nth newest event")
+input order to get the position in log array(err_log_data)
+*/
+static uint16_t get_log_position_by_time_order(uint8_t order)
 {
-	if (order > LOG_DATA_LENGTH) {
+	if (order > LOG_MAX_NUM) {
 		LOG_ERR("Invalid LOG count  %d", order);
 		return 0;
 	}
 
-	uint16_t newest_count = 0;
-	bool is_reset = false;
-	for (uint16_t count = 0; count < LOG_DATA_LENGTH; count++) {
-		if (err_log_data[count].index == 0XFFFF) {
-			is_reset = true;
-			newest_count = count;
-			break;
-		}
+	uint16_t i = 0;
+
+	for (i = 0; i < LOG_MAX_NUM - 1; i++) {
+		/* the index is continuous */
+		if (err_log_data[i + 1].index == (err_log_data[i].index + 1))
+			continue;
+
+		/* reset the index after LOG_MAX_INDEX */
+		if (err_log_data[i + 1].index == 1 && err_log_data[i].index == LOG_MAX_INDEX)
+			continue;
+
+		break;
 	}
 
-	if (is_reset) {
-		for (uint16_t count = 0; count < LOG_DATA_LENGTH - 1; count++) {
-			if (err_log_data[count].index <= LOG_DATA_LENGTH) {
-				newest_count = count;
-				if (err_log_data[count].index < err_log_data[count + 1].index &&
-				    err_log_data[count + 1].index <= LOG_DATA_LENGTH)
-					newest_count = count + 1;
-				else
-					break;
-			}
-		}
-	} else {
-		for (uint16_t count = 0; count < LOG_DATA_LENGTH - 1; count++) {
-			if (err_log_data[count].index < err_log_data[count + 1].index)
-				newest_count = count + 1;
-			else {
-				newest_count = count;
-				break;
-			}
-		}
-	}
-
-	return (newest_count + LOG_DATA_LENGTH - (order - 1)) % LOG_DATA_LENGTH;
+	return i;
 }
 
 uint8_t modbus_error_log_event(modbus_command_mapping *cmd)
@@ -118,7 +106,7 @@ uint8_t modbus_error_log_event(modbus_command_mapping *cmd)
 
 	uint16_t order = 1 + ((cmd->start_addr - LOG_BEGIN_MODBUS_ADDR) / cmd->cmd_size);
 
-	memcpy(cmd->data, &err_log_data[newest_log_event_count(order)],
+	memcpy(cmd->data, &err_log_data[get_log_position_by_time_order(order)],
 	       sizeof(uint16_t) * cmd->cmd_size);
 
 	regs_reverse(cmd->data_len, cmd->data);
@@ -129,17 +117,17 @@ bool modbus_clear_log(void)
 {
 	memset(err_log_data, 0, sizeof(err_log_data));
 	memset(err_sensor_caches, 0, sizeof(err_sensor_caches));
-	EEPROM_ENTRY fru_entry;
+	static EEPROM_ENTRY fru_entry;
 
 	fru_entry.config.dev_id = MB_FRU_ID; //fru id
 	fru_entry.offset = AALC_FRU_LOG_START;
 	fru_entry.data_len = AALC_FRU_LOG_SIZE;
-	
+
 	if (FRU_write(&fru_entry)) {
 		LOG_ERR("Clear EEPROM Log failed");
 		return false;
-	}	
-		
+	}
+
 	return true;
 }
 
@@ -190,14 +178,15 @@ void error_log_event(uint8_t sensor_num, bool val_normal)
 	}
 
 	if (log_todo) {
-		uint16_t newest_count = newest_log_event_count(1);
+		uint16_t newest_count = get_log_position_by_time_order(1);
 		uint16_t fru_count = (err_log_data[newest_count].index == 0) ?
 					     newest_count :
-					     ((newest_count + 1) % LOG_DATA_LENGTH);
+					     ((newest_count + 1) % LOG_MAX_NUM);
 
-		err_log_data[fru_count].index = (err_log_data[newest_count].index == 0xFFFF) ?
-							1 :
-							(err_log_data[newest_count].index + 1);
+		err_log_data[fru_count].index =
+			(err_log_data[newest_count].index == LOG_MAX_INDEX) ?
+				1 :
+				(err_log_data[newest_count].index + 1);
 		err_log_data[fru_count].err_code = err_code;
 		err_log_data[fru_count].sys_time = systime_reverse_regs();
 		err_log_data[fru_count].pump_duty = (uint16_t)pump_pwm_dev_duty_setting();
@@ -212,11 +201,11 @@ void error_log_event(uint8_t sensor_num, bool val_normal)
 		err_log_data[fru_count].volt =
 			get_sensor_reading_to_modbus_val(SENSOR_NUM_BPB_HSC_P48V_VIN_VOLT_V, -2, 1);
 
-		EEPROM_ENTRY fru_entry;
+		static EEPROM_ENTRY fru_entry;
 
 		fru_entry.config.dev_id = MB_FRU_ID; //fru id
-		fru_entry.offset = AALC_FRU_LOG_START + fru_count * LOG_DATA_LENGTH;
-		fru_entry.data_len = LOG_DATA_LENGTH;
+		fru_entry.offset = AALC_FRU_LOG_START + fru_count * LOG_MAX_NUM;
+		fru_entry.data_len = LOG_MAX_NUM;
 
 		memcpy(&fru_entry.data[0], &err_log_data[fru_count], fru_entry.data_len);
 		if (FRU_write(&fru_entry))
@@ -226,7 +215,7 @@ void error_log_event(uint8_t sensor_num, bool val_normal)
 
 void init_load_eeprom_log(void)
 {
-	EEPROM_ENTRY fru_entry;
+	static EEPROM_ENTRY fru_entry;
 
 	fru_entry.config.dev_id = MB_FRU_ID; //fru id
 	fru_entry.offset = AALC_FRU_LOG_START;
@@ -235,16 +224,4 @@ void init_load_eeprom_log(void)
 		LOG_ERR("READ Log failed from EEPROM");
 	else
 		memcpy(&err_log_data[0], &fru_entry.data[0], fru_entry.data_len);
-
-	bool is_empty = true;
-	for (uint16_t i = 0; i < LOG_DATA_LENGTH; i++) {
-		if (err_log_data[i].index != 0XFFFF) {
-			is_empty = false;
-			break;
-		}
-	}
-
-	if(is_empty)
-		modbus_clear_log();
-
 }
