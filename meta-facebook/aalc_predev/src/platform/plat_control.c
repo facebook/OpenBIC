@@ -26,7 +26,7 @@
 #include "modbus_server.h"
 #include "plat_control.h"
 #include "adm1272.h"
-//#include "plat_log.h"
+#include "plat_log.h"
 
 LOG_MODULE_REGISTER(plat_modbus_funtion);
 
@@ -164,7 +164,7 @@ uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 
 		// CLEAR_LOG:
 		if (cmd->data[0] & BIT(CLEAR_LOG)){
-			//if (!modbus_clear_log())
+			if (!modbus_clear_log())
 				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 		}
 
