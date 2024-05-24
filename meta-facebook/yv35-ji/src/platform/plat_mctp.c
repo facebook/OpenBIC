@@ -30,8 +30,8 @@ mctp_port plat_mctp_port[] = {
 	{ .channel_target = PLDM,
 	  .medium_type = MCTP_MEDIUM_TYPE_TARGET_I3C,
 	  .conf.i3c_conf.bus = MCTP_I3C_BMC_BUS,
-	  .conf.i3c_conf.addr = MCTP_I3C_BMC_ADDR },
-	{ .channel_target = PLDM,
+	  .conf.i3c_conf.addr = MCTP_I2C_BIC_ADDR },
+	{ .channel_target = SATMC_PLDM,
 	  .medium_type = MCTP_MEDIUM_TYPE_SMBUS,
 	  .conf.smbus_conf.bus = MCTP_I2C_SATMC_BUS,
 	  .conf.smbus_conf.addr = MCTP_I2C_BIC_ADDR },
@@ -181,9 +181,6 @@ bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg)
 	pldm_msg msg = { 0 };
 	struct mctp_to_ipmi_sel_req req = { 0 };
 
-	msg.ext_params.type = MCTP_MEDIUM_TYPE_TARGET_I3C;
-	msg.ext_params.i3c_ext_params.addr = MCTP_I3C_BMC_BUS;
-
 	msg.hdr.pldm_type = PLDM_TYPE_OEM;
 	msg.hdr.cmd = PLDM_OEM_IPMI_BRIDGE;
 	msg.hdr.rq = 1;
@@ -205,11 +202,17 @@ bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg)
 	memcpy(&req.req_data.event.sensor_type, &sel_msg->sensor_type,
 	       sizeof(common_addsel_msg_t) - sizeof(uint8_t));
 
+	mctp *mctp_inst = NULL;
+	if (get_mctp_info_by_eid(MCTP_EID_BMC, &mctp_inst, &msg.ext_params) == false) {
+		LOG_ERR("Failed to get mctp info by eid 0x%x", MCTP_EID_BMC);
+		return false;
+	}
+
 	uint8_t resp_len = sizeof(struct mctp_to_ipmi_sel_resp);
 	uint8_t rbuf[resp_len];
 
 	memset(&rbuf, 0, resp_len);
-	if (!mctp_pldm_read(pal_find_mctp_by_bus(MCTP_I3C_BMC_BUS), &msg, rbuf, resp_len)) {
+	if (!mctp_pldm_read(mctp_inst, &msg, rbuf, resp_len)) {
 		LOG_ERR("mctp_pldm_read fail");
 		return false;
 	}
