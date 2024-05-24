@@ -101,7 +101,7 @@ void ISR_E1S_ALERT()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-			LOG_ERR("System Throttle addsel fail");
+			LOG_ERR("Failed to add E1S alert sel.");
 		}
 	}
 }
@@ -285,8 +285,8 @@ void ISR_CPU_HIGHTEMP()
 {
 	isr_dbg_print(THERM_WARN_CPU1_L_3V3);
 
-	common_addsel_msg_t sel_msg;
 	if (gpio_get(RUN_POWER_PG) == GPIO_HIGH) {
+		common_addsel_msg_t sel_msg;
 		if (gpio_get(THERM_WARN_CPU1_L_3V3) == GPIO_HIGH) {
 			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		} else {
@@ -300,7 +300,7 @@ void ISR_CPU_HIGHTEMP()
 		sel_msg.event_data2 = 0xFF;
 		sel_msg.event_data3 = 0xFF;
 		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-			LOG_ERR("System Throttle addsel fail");
+			LOG_ERR("Failed to add FM throttle sel.");
 		}
 	}
 }
@@ -309,28 +309,30 @@ void ISR_CPU_OVERTEMP()
 {
 	isr_dbg_print(THERM_OVERT_CPU1_L_3V3);
 
-	common_addsel_msg_t sel_msg;
-	static bool is_thermal_trip_assert = 0;
-	if (gpio_get(THERM_OVERT_CPU1_L_3V3) == GPIO_LOW) {
-		if ((get_post_status() == true) && (is_thermal_trip_assert == false)) {
-			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
-			is_thermal_trip_assert = true;
+	if (gpio_get(RUN_POWER_PG) == GPIO_HIGH) {
+		common_addsel_msg_t sel_msg;
+		static bool is_thermal_trip_assert = 0;
+		if (gpio_get(THERM_OVERT_CPU1_L_3V3) == GPIO_LOW) {
+			if ((get_post_status() == true) && (is_thermal_trip_assert == false)) {
+				sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+				is_thermal_trip_assert = true;
+			}
+		} else if (gpio_get(THERM_OVERT_CPU1_L_3V3) && (is_thermal_trip_assert == true)) {
+			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
+			is_thermal_trip_assert = false;
+		} else {
+			return;
 		}
-	} else if (gpio_get(THERM_OVERT_CPU1_L_3V3) && (is_thermal_trip_assert == true)) {
-		sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
-		is_thermal_trip_assert = false;
-	} else {
-		return;
-	}
 
-	sel_msg.InF_target = PLDM;
-	sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
-	sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
-	sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_THERMAL_TRIP;
-	sel_msg.event_data2 = 0xFF;
-	sel_msg.event_data3 = 0xFF;
-	if (!mctp_add_sel_to_ipmi(&sel_msg)) {
-		LOG_ERR("Thermal trip addsel fail");
+		sel_msg.InF_target = PLDM;
+		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_THERMAL_TRIP;
+		sel_msg.event_data2 = 0xFF;
+		sel_msg.event_data3 = 0xFF;
+		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
+			LOG_ERR("Thermal trip addsel fail");
+		}
 	}
 }
 
