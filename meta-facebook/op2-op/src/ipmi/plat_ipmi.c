@@ -281,7 +281,7 @@ void OEM_1S_FW_UPDATE(ipmi_msg *msg)
 			return;
 		}
 
-		i2c_msg.bus = I2C_BUS8;
+		i2c_msg.bus = I2C_BUS9;
 		i2c_msg.target_addr = EXPA_RETIMER_EEPROM_ADDR;
 
 		pre_retimer_eeprom_recover();
