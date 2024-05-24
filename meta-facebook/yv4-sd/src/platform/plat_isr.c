@@ -113,9 +113,10 @@ void ISR_POST_COMPLETE()
 	if (get_post_status()) {
 		set_tsi_threshold();
 		read_cpuid();
+		disable_mailbox_completion_alert();
+		enable_alert_signal();
 		//todo : add sel to bmc for assert
 		hw_event_register[12]++;
-		disable_mailbox_completion_alert();
 	} else {
 		if (get_DC_status()) { // Host is reset
 			k_work_submit(&switch_i3c_dimm_work);
