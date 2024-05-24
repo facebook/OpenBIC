@@ -32,6 +32,7 @@
 #include "plat_i2c.h"
 #include "hal_i2c_target.h"
 #include "hal_gpio.h"
+#include "util_worker.h"
 
 #ifdef ENABLE_SBMR
 #include "sbmr.h"
@@ -312,6 +313,54 @@ error:
 	return false;
 }
 
+static void send_cmd_work_handler(void *arg1, uint32_t arg2)
+{
+	CHECK_NULL_ARG(arg1);
+	ARG_UNUSED(arg2);
+
+	ssif_dev *ssif_inst = (ssif_dev *)arg1;
+	int ret = 0;
+
+	do {
+		uint8_t seq_source = 0xFF;
+		ipmi_msg msg = { 0 };
+		msg = construct_ipmi_message(seq_source, ssif_inst->current_ipmi_msg.buffer.netfn,
+					     ssif_inst->current_ipmi_msg.buffer.cmd, SELF, BMC_IPMB,
+					     ssif_inst->current_ipmi_msg.buffer.data_len,
+					     ssif_inst->current_ipmi_msg.buffer.data);
+
+#if MAX_IPMB_IDX
+		// Check BMC communication interface if use IPMB or not
+		if (!pal_is_interface_use_ipmb(IPMB_inf_index_map[BMC_IPMB])) {
+			msg.InF_target = PLDM;
+			// Send request to MCTP/PLDM thread to ask BMC
+			ret = pldm_send_ipmi_request(&msg);
+			if (ret < 0) {
+				LOG_ERR("SSIF[%d] Failed to send SSIF msg to BMC via PLDM with ret: 0x%x",
+					ssif_inst->index, ret);
+				break;
+			}
+		} else {
+			ipmb_error ipmb_ret = ipmb_read(&msg, IPMB_inf_index_map[msg.InF_target]);
+			if (ipmb_ret != IPMB_ERROR_SUCCESS) {
+				LOG_ERR("SSIF[%d] Failed to send SSIF msg to BMC via IPMB with ret: 0x%x",
+					ssif_inst->index, ipmb_ret);
+				break;
+			}
+		}
+#else
+		msg.InF_target = PLDM;
+		// Send request to MCTP/PLDM thread to ask BMC
+		ret = pldm_send_ipmi_request(&msg);
+		if (ret < 0) {
+			LOG_ERR("SSIF[%d] Failed to send SSIF msg to BMC via PLDM with ret: 0x%x",
+				ssif_inst->index, ret);
+			break;
+		}
+#endif
+	} while (0);
+}
+
 static bool ssif_data_handle(ssif_dev *ssif_inst, ssif_action_t action, uint8_t smb_cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(ssif_inst, false);
@@ -347,21 +396,34 @@ static bool ssif_data_handle(ssif_dev *ssif_inst, ssif_action_t action, uint8_t 
 			if (pal_immediate_respond_from_HOST(
 				    ssif_inst->current_ipmi_msg.buffer.netfn,
 				    ssif_inst->current_ipmi_msg.buffer.cmd)) {
-				ssif_inst->current_ipmi_msg.buffer.data_len = 0;
-				ssif_inst->current_ipmi_msg.buffer.completion_code = CC_SUCCESS;
+				ipmi_msg_cfg ipmi_req = { 0 };
+				ipmi_req = ssif_inst->current_ipmi_msg;
+
+				ipmi_req.buffer.data_len = 0;
+				ipmi_req.buffer.completion_code = CC_SUCCESS;
 				if (((ssif_inst->current_ipmi_msg.buffer.netfn ==
 				      NETFN_STORAGE_REQ) &&
 				     (ssif_inst->current_ipmi_msg.buffer.cmd ==
 				      CMD_STORAGE_ADD_SEL))) {
-					ssif_inst->current_ipmi_msg.buffer.data_len += 2;
-					ssif_inst->current_ipmi_msg.buffer.data[0] = 0x00;
-					ssif_inst->current_ipmi_msg.buffer.data[1] = 0x00;
+					ipmi_req.buffer.data_len = 2;
+					ipmi_req.buffer.data[0] = 0x00;
+					ipmi_req.buffer.data[1] = 0x00;
 				}
 
-				if (ssif_set_data(ssif_inst->index, &ssif_inst->current_ipmi_msg) ==
-				    false) {
+				ipmi_req.buffer.netfn =
+					(ssif_inst->current_ipmi_msg.buffer.netfn + 1) << 2;
+
+				if (ssif_set_data(ssif_inst->index, &ipmi_req) == false) {
 					LOG_ERR("Failed to write ssif response data");
 				}
+
+				worker_job job = { 0 };
+				job.delay_ms = 0;
+				job.fn = send_cmd_work_handler;
+				job.ptr_arg = ssif_inst;
+				add_work(&job);
+
+				goto exit;
 			}
 
 			if ((ssif_inst->current_ipmi_msg.buffer.netfn == NETFN_APP_REQ) &&
