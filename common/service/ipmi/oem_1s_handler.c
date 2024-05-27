@@ -605,6 +605,20 @@ __weak void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 	return;
 }
 
+__weak void OEM_1S_INFORM_BMC_TO_CONTROL_POWER(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	msg->completion_code = CC_INVALID_CMD;
+	msg->data_len = 0;
+	return;
+}
+
 __weak void OEM_1S_RESET_BMC(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -2308,6 +2322,10 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_GET_FW_VERSION:
 		LOG_DBG("Received 1S Get Firmware Version command");
 		OEM_1S_GET_FW_VERSION(msg);
+		break;
+	case CMD_OEM_1S_INFORM_BMC_TO_CONTROL_POWER:
+		LOG_DBG("Receiced 1S Inform BMC to control power command");
+		OEM_1S_INFORM_BMC_TO_CONTROL_POWER(msg);
 		break;
 	case CMD_OEM_1S_RESET_BMC:
 		LOG_DBG("Received 1S BMC Reset command");

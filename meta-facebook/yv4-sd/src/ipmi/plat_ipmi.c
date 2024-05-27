@@ -25,6 +25,10 @@
 #include "plat_sys.h"
 #include "plat_class.h"
 #include "plat_isr.h"
+#include "util_sys.h"
+#include "pldm_oem.h"
+#include "plat_mctp.h"
+#include "pldm.h"
 
 enum THREAD_STATUS {
 	THREAD_SUCCESS = 0,
@@ -187,4 +191,87 @@ void OEM_1S_DEBUG_GET_HW_SIGNAL(ipmi_msg *msg)
 	msg->data_len = sizeof(hw_event_register);
 	msg->completion_code = CC_SUCCESS;
 	return;
+}
+
+void OEM_1S_INFORM_BMC_TO_CONTROL_POWER(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	pldm_msg translated_msg = { 0 };
+	uint8_t bmc_bus = I2C_BUS_BMC;
+	uint8_t bmc_interface = pal_get_bmc_interface();
+	uint8_t completion_code = CC_UNSPECIFIED_ERROR;
+	translated_msg.ext_params.ep = MCTP_EID_BMC;
+
+	switch (bmc_interface) {
+	case BMC_INTERFACE_I3C:
+		bmc_bus = I3C_BUS_BMC;
+		translated_msg.ext_params.type = MCTP_MEDIUM_TYPE_TARGET_I3C;
+		translated_msg.ext_params.i3c_ext_params.addr = I3C_STATIC_ADDR_BMC;
+		break;
+	case BMC_INTERFACE_I2C:
+		bmc_bus = I2C_BUS_BMC;
+		translated_msg.ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
+		translated_msg.ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
+		break;
+	default:
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	translated_msg.hdr.pldm_type = PLDM_TYPE_OEM;
+	translated_msg.hdr.cmd = PLDM_OEM_WRITE_FILE_IO;
+	translated_msg.hdr.rq = 1;
+
+	uint8_t power_option = msg->data[0];
+	if (power_option != SLED_CYCLE && power_option != SLOT_12V_CYCLE &&
+	    power_option != SLOT_DC_CYCLE) {
+		msg->completion_code = CC_INVALID_PARAM;
+		return;
+	}
+
+	struct pldm_oem_write_file_io_req *ptr = (struct pldm_oem_write_file_io_req *)malloc(
+		sizeof(struct pldm_oem_write_file_io_req) +
+		sizeof(uint8_t) /* Minimum requried length */);
+
+	if (!ptr) {
+		LOG_ERR("Failed to allocate memory.");
+		msg->completion_code = CC_OUT_OF_SPACE;
+		msg->data_len = 0;
+		return;
+	}
+
+	ptr->cmd_code = POWER_CONTROL;
+	ptr->data_length = POWER_CONTROL_LEN;
+	ptr->messages[0] = power_option;
+
+	translated_msg.buf = (uint8_t *)ptr;
+	translated_msg.len = sizeof(struct pldm_oem_write_file_io_req) + sizeof(uint8_t);
+
+	uint8_t resp_len = sizeof(struct pldm_oem_write_file_io_resp);
+	uint8_t rbuf[resp_len];
+
+	if (!mctp_pldm_read(find_mctp_by_bus(bmc_bus), &translated_msg, rbuf, resp_len)) {
+		LOG_ERR("mctp_pldm_read fail");
+		completion_code = CC_CAN_NOT_RESPOND;
+		goto exit;
+	}
+
+	struct pldm_oem_write_file_io_resp *resp = (struct pldm_oem_write_file_io_resp *)rbuf;
+	if (resp->completion_code != PLDM_SUCCESS) {
+		LOG_ERR("Check reponse completion code fail %x", resp->completion_code);
+		completion_code = resp->completion_code;
+		goto exit;
+	}
+
+	completion_code = CC_SUCCESS;
+exit:
+	SAFE_FREE(ptr);
+	msg->completion_code = completion_code;
+	msg->data_len = 0;
 }

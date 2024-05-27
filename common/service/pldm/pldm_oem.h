@@ -32,10 +32,19 @@ extern "C" {
 #define PLDM_OEM_WRITE_FILE_IO 0x02
 #define PLDM_OEM_READ_FILE_IO 0x03
 
+#define POWER_CONTROL_LEN 0x01
+
 enum cmd_type {
 	POST_CODE = 0x00,
 	BIOS_VERSION = 0x01,
+	POWER_CONTROL = 0x02,
 	APML_ALERT = 0x04,
+};
+
+enum POWER_CONTROL_OPTION {
+	SLED_CYCLE = 0x00,
+	SLOT_12V_CYCLE = 0x01,
+	SLOT_DC_CYCLE = 0x02,
 };
 
 struct _cmd_echo_req {
