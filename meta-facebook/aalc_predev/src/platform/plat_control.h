@@ -34,8 +34,7 @@ enum pump_state {
 
 typedef struct _pump_reset_struct {
 	uint8_t function_index;
-	uint8_t bit_value;
-	bool (*fn)(struct _pump_reset_struct *);
+	bool (*fn)(struct _pump_reset_struct *, uint8_t bit_value);
 	uint8_t senser_num;
 } pump_reset_struct;
 
