@@ -26,10 +26,9 @@
 #include "modbus_server.h"
 #include "plat_control.h"
 #include "adm1272.h"
-#include "plat_log.h"
+//#include "plat_log.h"
 
 LOG_MODULE_REGISTER(plat_modbus_funtion);
-
 
 static sensor_cfg *get_sensor_config_data(uint8_t sensor_num)
 {
@@ -56,10 +55,9 @@ bool pump_reset(uint8_t sensor_num)
 		// check pump is already enable
 		k_msleep(500);
 		// enable pump
-		if (enable_adm1272_hsc(bus, addr, true)){
+		if (enable_adm1272_hsc(bus, addr, true)) {
 			return true;
-		}
-		else{
+		} else {
 			LOG_ERR("Fail when start the pump.");
 			return false;
 		}
@@ -69,123 +67,209 @@ bool pump_reset(uint8_t sensor_num)
 	}
 }
 
-uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
-{
-		CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-		// PUMP_REDUNDENT_SWITCHED
-		if (cmd->data[0] & BIT(PUMP_REDUNDENT_SWITCHED)){ // if bit0 != 0
-			//if (<PUMP_REDUNDENT_SWITCHED function>)
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
-		else {
-			//if (<PUMP_REDUNDENT_SWITCHED function>)
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
-
-		// MANUAL_CONTROL_PUMP:
-		if (cmd->data[0] & BIT(MANUAL_CONTROL_PUMP)){
-			//if (<MANUAL_CONTROL_PUMP function>)
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
-		else {
-			//if (<MANUAL_CONTROL_PUMP function>)
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
-
-		// MANUAL_CONTROL_FAN:
-		if (cmd->data[0] & BIT(MANUAL_CONTROL_FAN)){
-			//if (<MANUAL_CONTROL_FAN function>)
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
-		else {
-			//if (<MANUAL_CONTROL_FAN function>)
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
-
-		// AUTOTUNE_FLOW_CONTROL:
-		if (cmd->data[0] & BIT(AUTOTUNE_FLOW_CONTROL)){
-			//if (<AUTOTUNE_FLOW_CONTROL function>)
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
-		else {
-			//if (<AUTOTUNE_FLOW_CONTROL function>)
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
-
-		// AUTOTUNE_PRESSURE_BALANCE_CONTROL:
-		if (cmd->data[0] & BIT(AUTOTUNE_PRESSURE_BALANCE_CONTROL)){
-			//if (<AUTOTUNE_PRESSURE_BALANCE_CONTROL function>)
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
-		else {
-			//if (<AUTOTUNE_PRESSURE_BALANCE_CONTROL function>)
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
-
-		// SYSTEM_STOP:
-		if (cmd->data[0] & BIT(SYSTEM_STOP)){
-			//if (<SYSTEM_STOP function>)
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
-		else {
-			//if (<SYSTEM_STOP function>)
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
-
-		// RPU_REMOTE_POWER_CYCLE:
-		if (cmd->data[0] & BIT(RPU_REMOTE_POWER_CYCLE)){
-			//if (<RPU_REMOTE_POWER_CYCLE function>)
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
-		else {
-			//if (<RPU_REMOTE_POWER_CYCLE function>)
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
-
-		// MANUAL_CONTROL:
-		if (cmd->data[0] & BIT(MANUAL_CONTROL)){
-			//if (<MANUAL_CONTROL function>)
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
-		else {
-			//if (<MANUAL_CONTROL function>)
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
-
-		// CLEAR_PUMP_RUNNING_TIME:
-		if (cmd->data[0] & BIT(CLEAR_PUMP_RUNNING_TIME)){
-			//if (<CLEAR_PUMP_RUNNING_TIME function>)
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
-		else {
-			//if (<CLEAR_PUMP_RUNNING_TIME function>)
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
-
-		// CLEAR_LOG:
-		if (cmd->data[0] & BIT(CLEAR_LOG)){
-			if (!modbus_clear_log())
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
-
-		// PUMP_1_RESET
-		if (cmd->data[0] & BIT(PUMP_1_RESET)){
-			if (!pump_reset(SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W))
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;	
-		}
-			
-		// PUMP_2_RESET
-		if (cmd->data[0] & BIT(PUMP_2_RESET)){
-			if (!pump_reset(SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W))
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
-
-		// PUMP_3_RESET
-		if (cmd->data[0] & BIT(PUMP_3_RESET)){
-			if (!pump_reset(SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W))
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;	
-		}
-
-		return MODBUS_EXC_NONE;
+/*
+bool pump_setting_reserved(uint8_t check_bit_data){
+	return true;
 }
 
+typedef struct _modbus_pump_setting_struct {
+	uint8_t bit_offset;
+	uint8_t on_flag;
+	uint8_t off_flag;
+	bool (*fn)(void *init_arg);
+} modbus_pump_setting_struct;
+
+modbus_pump_setting_struct modbus_pump_setting_call_back_array[] ={
+    {0, pump_setting_reserved}, //{0,<PUMP_REDUNDENT_SWITCHED function>},
+    {1, pump_setting_reserved}, //{1,<MANUAL_CONTROL_PUMP function>},
+	{2, pump_setting_reserved}, //{2,<MANUAL_CONTROL_FAN function>},
+	{3, pump_setting_reserved}, //{3,<AUTOTUNE_FLOW_CONTROL function>},
+	{4, pump_setting_reserved}, //{4,<AUTOTUNE_PRESSURE_BALANCE_CONTROL function>},
+	{5, pump_setting_reserved}, //{5,<SYSTEM_STOP function>},
+	{6, pump_setting_reserved}, //{6,<RPU_REMOTE_POWER_CYCLE function>},
+	{7, pump_setting_reserved}, 
+	{8, pump_setting_reserved}, 
+	{9, pump_setting_reserved}, //{9,<MANUAL_CONTROL function>},
+	{10, pump_setting_reserved}, //{10,<CLEAR_PUMP_RUNNING_TIME function>},
+	{11, pump_setting_reserved}, //modbus_clear_log
+	{12,pump_reset(SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W), NULL},
+	{13,pump_reset(SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W), NULL},
+	{14,pump_reset(SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W), NULL},
+	{15, NULL, pump_setting_reserved}
+};
+*/
+
+uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+	uint16_t check_error_flag = 0;
+	printf("modbus_pump_setting.............................\n");
+	//printf("size_of_pumpsetting_array = %ld \n", ARRAY_SIZE(modbus_pump_setting_call_back_array));
+	/*
+	for (int i = 0; i < ARRAY_SIZE(modbus_pump_setting_call_back_array); i++){
+		uint8_t check_bit = cmd->data[0] >> modbus_pump_setting_call_back_array[i].bit_offset;
+		
+		if (!(modbus_pump_setting_call_back_array[i].fn(check_bit & 1))){
+			LOG_ERR("modebus 0x9410 setting %d-bit error\n", i);
+			WRITE_BIT(check_error_flag, i, 1);
+		}
+		else{
+			LOG_ERR("Error function setting in call_bacl_array !");
+		}
+	}
+	*/
+	// PUMP_REDUNDENT_SWITCHED
+	if (cmd->data[0] & BIT(PUMP_REDUNDENT_SWITCHED)) { // if bit0 != 0
+		//if (<PUMP_REDUNDENT_SWITCHED function>){
+		LOG_ERR("modebus 0x9410 setting %d-bit error\n", PUMP_REDUNDENT_SWITCHED);
+		WRITE_BIT(check_error_flag, PUMP_REDUNDENT_SWITCHED, 1);
+		//}
+	} else {
+		//if (<PUMP_REDUNDENT_SWITCHED function>){
+		LOG_ERR("modebus 0x9410 setting %d-bit error\n", PUMP_REDUNDENT_SWITCHED);
+		WRITE_BIT(check_error_flag, PUMP_REDUNDENT_SWITCHED, 1);
+		//}
+	}
+
+	// MANUAL_CONTROL_PUMP:
+	if (cmd->data[0] & BIT(MANUAL_CONTROL_PUMP)) {
+		//if (<MANUAL_CONTROL_PUMP function>){
+		LOG_ERR("modebus 0x9410 setting %d-bit error\n", MANUAL_CONTROL_PUMP);
+		WRITE_BIT(check_error_flag, MANUAL_CONTROL_PUMP, 1);
+		//}
+	} else {
+		//if (<MANUAL_CONTROL_PUMP function>){
+		LOG_ERR("modebus 0x9410 setting %d-bit error\n", MANUAL_CONTROL_PUMP);
+		WRITE_BIT(check_error_flag, MANUAL_CONTROL_PUMP, 1);
+		//}
+	}
+
+	// MANUAL_CONTROL_FAN:
+	if (cmd->data[0] & BIT(MANUAL_CONTROL_FAN)) {
+		//if (<MANUAL_CONTROL_FAN function>){
+		LOG_ERR("modebus 0x9410 setting %d-bit error\n", MANUAL_CONTROL_FAN);
+		WRITE_BIT(check_error_flag, MANUAL_CONTROL_FAN, 1);
+		//}
+	} else {
+		//if (<MANUAL_CONTROL_FAN function>){
+		LOG_ERR("modebus 0x9410 setting %d-bit error\n", MANUAL_CONTROL_FAN);
+		WRITE_BIT(check_error_flag, MANUAL_CONTROL_FAN, 1);
+		//}
+	}
+
+	// AUTOTUNE_FLOW_CONTROL:
+	if (cmd->data[0] & BIT(AUTOTUNE_FLOW_CONTROL)) {
+		//if (<AUTOTUNE_FLOW_CONTROL function>){
+		LOG_ERR("modebus 0x9410 setting %d-bit error\n", AUTOTUNE_FLOW_CONTROL);
+		WRITE_BIT(check_error_flag, AUTOTUNE_FLOW_CONTROL, 1);
+		//}
+	} else {
+		//if (<AUTOTUNE_FLOW_CONTROL function>){
+		LOG_ERR("modebus 0x9410 setting %d-bit error\n", AUTOTUNE_FLOW_CONTROL);
+		WRITE_BIT(check_error_flag, AUTOTUNE_FLOW_CONTROL, 1);
+		//}
+	}
+
+	// AUTOTUNE_PRESSURE_BALANCE_CONTROL:
+	if (cmd->data[0] & BIT(AUTOTUNE_PRESSURE_BALANCE_CONTROL)) {
+		//if (<AUTOTUNE_PRESSURE_BALANCE_CONTROL function>){
+		LOG_ERR("modebus 0x9410 setting %d-bit error\n", AUTOTUNE_PRESSURE_BALANCE_CONTROL);
+		WRITE_BIT(check_error_flag, AUTOTUNE_PRESSURE_BALANCE_CONTROL, 1);
+		//}
+	} else {
+		//if (<AUTOTUNE_PRESSURE_BALANCE_CONTROL function>){
+		LOG_ERR("modebus 0x9410 setting %d-bit error\n", AUTOTUNE_PRESSURE_BALANCE_CONTROL);
+		WRITE_BIT(check_error_flag, AUTOTUNE_PRESSURE_BALANCE_CONTROL, 1);
+		//}
+	}
+
+	// SYSTEM_STOP:
+	if (cmd->data[0] & BIT(SYSTEM_STOP)) {
+		//if (<SYSTEM_STOP function>){
+		LOG_ERR("modebus 0x9410 setting %d-bit error\n", SYSTEM_STOP);
+		WRITE_BIT(check_error_flag, SYSTEM_STOP, 1);
+		//}
+	} else {
+		//if (<SYSTEM_STOP function>){
+		LOG_ERR("modebus 0x9410 setting %d-bit error\n", SYSTEM_STOP);
+		WRITE_BIT(check_error_flag, SYSTEM_STOP, 1);
+		//}
+	}
+
+	// RPU_REMOTE_POWER_CYCLE:
+	if (cmd->data[0] & BIT(RPU_REMOTE_POWER_CYCLE)) {
+		//if (<RPU_REMOTE_POWER_CYCLE function>){
+		LOG_ERR("modebus 0x9410 setting %d-bit error\n", RPU_REMOTE_POWER_CYCLE);
+		WRITE_BIT(check_error_flag, RPU_REMOTE_POWER_CYCLE, 1);
+		//}
+	} else {
+		//if (<RPU_REMOTE_POWER_CYCLE function>){
+		LOG_ERR("modebus 0x9410 setting %d-bit error\n", RPU_REMOTE_POWER_CYCLE);
+		WRITE_BIT(check_error_flag, RPU_REMOTE_POWER_CYCLE, 1);
+		//}
+	}
+
+	// MANUAL_CONTROL:
+	if (cmd->data[0] & BIT(MANUAL_CONTROL)) {
+		//if (<MANUAL_CONTROL function>){
+		LOG_ERR("modebus 0x9410 setting %d-bit error\n", MANUAL_CONTROL);
+		WRITE_BIT(check_error_flag, MANUAL_CONTROL, 1);
+		//}
+	} else {
+		//if (<MANUAL_CONTROL function>){
+		LOG_ERR("modebus 0x9410 setting %d-bit error\n", MANUAL_CONTROL);
+		WRITE_BIT(check_error_flag, MANUAL_CONTROL, 1);
+		//}
+	}
+
+	// CLEAR_PUMP_RUNNING_TIME:
+	if (cmd->data[0] & BIT(CLEAR_PUMP_RUNNING_TIME)) {
+		//if (<CLEAR_PUMP_RUNNING_TIME function>){
+		LOG_ERR("modebus 0x9410 setting %d-bit error\n", CLEAR_PUMP_RUNNING_TIME);
+		WRITE_BIT(check_error_flag, CLEAR_PUMP_RUNNING_TIME, 1);
+		//}
+	} else {
+		//if (<CLEAR_PUMP_RUNNING_TIME function>){
+		LOG_ERR("modebus 0x9410 setting %d-bit error\n", CLEAR_PUMP_RUNNING_TIME);
+		WRITE_BIT(check_error_flag, CLEAR_PUMP_RUNNING_TIME, 1);
+		//}
+	}
+
+	// CLEAR_LOG:
+	if (cmd->data[0] & BIT(CLEAR_LOG)) {
+		//if (!modbus_clear_log())
+		LOG_ERR("modebus 0x9410 setting %d-bit error\n", CLEAR_LOG);
+		WRITE_BIT(check_error_flag, CLEAR_LOG, 1);
+	}
+
+	// PUMP_1_RESET
+	if (cmd->data[0] & BIT(PUMP_1_RESET)) {
+		if (!pump_reset(SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W)) {
+			LOG_ERR("modebus 0x9410 setting %d-bit error\n", PUMP_1_RESET);
+			WRITE_BIT(check_error_flag, PUMP_1_RESET, 1);
+		}
+	}
+
+	// PUMP_2_RESET
+	if (cmd->data[0] & BIT(PUMP_2_RESET)) {
+		if (!pump_reset(SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W)) {
+			LOG_ERR("modebus 0x9410 setting %d-bit error\n", PUMP_2_RESET);
+			WRITE_BIT(check_error_flag, PUMP_2_RESET, 1);
+		}
+	}
+
+	// PUMP_3_RESET
+	if (cmd->data[0] & BIT(PUMP_3_RESET)) {
+		if (!pump_reset(SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W)) {
+			LOG_ERR("modebus 0x9410 setting %d-bit error\n", PUMP_3_RESET);
+			WRITE_BIT(check_error_flag, PUMP_3_RESET, 1);
+		}
+	}
+
+	if (check_error_flag) {
+		LOG_ERR("modebus 0x9410 setting error flag: 0x%x\n", check_error_flag);
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+	} else {
+		return MODBUS_EXC_NONE;
+	}
+}

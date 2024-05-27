@@ -29,5 +29,9 @@ enum pump_state {
 	PUMP_3_RESET = 14,
 };
 
+typedef struct _pump_reset_struct {
+	uint8_t senser_num;
+} pump_reset_struct;
+
 bool pump_reset(uint8_t sensor_num);
 uint8_t modbus_pump_setting(modbus_command_mapping *cmd);
