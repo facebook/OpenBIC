@@ -25,6 +25,7 @@
 #include "plat_hook.h"
 #include "plat_class.h"
 #include "plat_modbus.h"
+#include "plat_util.h"
 #include "modbus_server.h"
 #include <logging/log.h>
 
@@ -1039,6 +1040,22 @@ void load_sensor_config(void)
 	load_hsc_sensor_config();
 	load_sb_temp_sensor_config();
 	load_plat_def_sensor_config();
+}
+
+uint16_t get_sensor_reading_to_modbus_val(uint8_t sensor_num, int8_t exp, int8_t scale)
+{
+	int reading = 0;
+	uint8_t status = get_sensor_reading(sensor_config, sensor_config_count, sensor_num, &reading,
+					    GET_FROM_CACHE);
+
+	if (status != SENSOR_READ_SUCCESS) {
+		LOG_ERR("0x%02x get sensor cache fail", sensor_num);
+		return 0;
+	}
+	sensor_val *sval = (sensor_val *)&reading;
+	float val = (sval->integer * 1000 + sval->fraction) / 1000;
+	float r = pow_of_10(exp);
+	return val / scale / r; // scale
 }
 
 /*

@@ -23,6 +23,7 @@
 #include "plat_util.h"
 #include "hal_gpio.h"
 #include "plat_threshold.h"
+#include "plat_log.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -41,6 +42,7 @@ void pal_pre_init()
 
 void pal_post_init()
 {
+	init_load_eeprom_log();
 	init_pwm_dev();
 	init_custom_modbus_server();
 	init_modbus_command_table();
