@@ -56,9 +56,8 @@ const err_sensor_mapping sensor_normal_codes[] = {
 
 static uint16_t error_log_count(void)
 {
-	uint16_t i;
-	for (i = 0; i < LOG_MAX_NUM; i++) {
-		if (!err_log_data[i].index)
+	for (uint16_t i = 0; i < LOG_MAX_NUM; i++) {
+		if (err_log_data[i].index == 0xFFFF)
 			return i;
 	}
 	return (uint16_t)LOG_MAX_NUM;
@@ -97,7 +96,7 @@ static uint16_t get_log_position_by_time_order(uint8_t order)
 		break;
 	}
 
-	return i;
+	return (i + LOG_MAX_NUM - (order - 1)) % LOG_MAX_NUM;
 }
 
 uint8_t modbus_error_log_event(modbus_command_mapping *cmd)
@@ -115,13 +114,15 @@ uint8_t modbus_error_log_event(modbus_command_mapping *cmd)
 
 bool modbus_clear_log(void)
 {
-	memset(err_log_data, 0, sizeof(err_log_data));
+	memset(err_log_data, 0xFF, sizeof(err_log_data));
 	memset(err_sensor_caches, 0, sizeof(err_sensor_caches));
+
 	static EEPROM_ENTRY fru_entry;
 
 	fru_entry.config.dev_id = MB_FRU_ID; //fru id
 	fru_entry.offset = AALC_FRU_LOG_START;
 	fru_entry.data_len = AALC_FRU_LOG_SIZE;
+	memcpy(&fru_entry.data[0], &err_log_data[0], fru_entry.data_len);
 
 	if (FRU_write(&fru_entry)) {
 		LOG_ERR("Clear EEPROM Log failed");
@@ -179,12 +180,13 @@ void error_log_event(uint8_t sensor_num, bool val_normal)
 
 	if (log_todo) {
 		uint16_t newest_count = get_log_position_by_time_order(1);
-		uint16_t fru_count = (err_log_data[newest_count].index == 0) ?
+		uint16_t fru_count = (err_log_data[newest_count].index == 0xFFFF) ?
 					     newest_count :
 					     ((newest_count + 1) % LOG_MAX_NUM);
 
 		err_log_data[fru_count].index =
-			(err_log_data[newest_count].index == LOG_MAX_INDEX) ?
+			(err_log_data[newest_count].index == LOG_MAX_INDEX ||
+			 err_log_data[newest_count].index == 0xFFFF) ?
 				1 :
 				(err_log_data[newest_count].index + 1);
 		err_log_data[fru_count].err_code = err_code;
@@ -205,7 +207,7 @@ void error_log_event(uint8_t sensor_num, bool val_normal)
 
 		fru_entry.config.dev_id = MB_FRU_ID; //fru id
 		fru_entry.offset = AALC_FRU_LOG_START + fru_count * LOG_MAX_NUM;
-		fru_entry.data_len = LOG_MAX_NUM;
+		fru_entry.data_len = sizeof(modbus_err_log_mapping);
 
 		memcpy(&fru_entry.data[0], &err_log_data[fru_count], fru_entry.data_len);
 		if (FRU_write(&fru_entry))
