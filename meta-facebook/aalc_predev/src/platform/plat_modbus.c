@@ -176,6 +176,48 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 	return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 }
 
+uint8_t modbus_write_hmi_version(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint8_t pre_version[EEPROM_HMI_VERSION_SIZE + 1] = { 0 }; // ending char '\0'
+	if (!plat_eeprom_read(EEPROM_HMI_VERSION_OFFSET, pre_version, EEPROM_HMI_VERSION_SIZE)) {
+		LOG_ERR("read hmi version fail!");
+		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+	}
+
+	regs_reverse(cmd->data_len, cmd->data);
+	if (!memcmp(pre_version, cmd->data, EEPROM_HMI_VERSION_SIZE)) {
+		if (!plat_eeprom_write(EEPROM_HMI_VERSION_OFFSET, (uint8_t *)cmd->data,
+				       EEPROM_HMI_VERSION_SIZE)) {
+			LOG_ERR("write hmi version fail!");
+			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		} else {
+			uint8_t tmp[EEPROM_HMI_VERSION_SIZE + 1] = { 0 };
+			memcpy(tmp, cmd->data, EEPROM_HMI_VERSION_SIZE);
+			LOG_INF("write hmi version from %s to to %s", pre_version, tmp);
+		}
+	}
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_read_hmi_version(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint8_t version[EEPROM_HMI_VERSION_SIZE] = { 0 };
+	if (!plat_eeprom_read(EEPROM_HMI_VERSION_OFFSET, version, EEPROM_HMI_VERSION_SIZE)) {
+		LOG_ERR("read hmi version fail!");
+		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+	}
+
+	memcpy(cmd->data, version, EEPROM_HMI_VERSION_SIZE);
+	regs_reverse(cmd->data_len, cmd->data);
+
+	return MODBUS_EXC_NONE;
+}
+
 static uint8_t modbus_to_do(modbus_command_mapping *cmd)
 {
 	// wait to do

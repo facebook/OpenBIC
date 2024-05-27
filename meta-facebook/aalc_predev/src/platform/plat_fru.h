@@ -21,11 +21,11 @@ enum FRU_ID {
 	MB_FRU_ID = 0x00,
 	BB_FRU_ID,
 	BPB_FRU_ID,
-	PDB_FRU_ID,	
+	PDB_FRU_ID,
 	SB_FRU_ID,
 	PB_1_FRU_ID,
 	PB_2_FRU_ID,
-	PB_3_FRU_ID,				
+	PB_3_FRU_ID,
 	FB_1_FRU_ID,
 	FB_2_FRU_ID,
 	FB_3_FRU_ID,
@@ -39,7 +39,7 @@ enum FRU_ID {
 	FB_11_FRU_ID,
 	FB_12_FRU_ID,
 	FB_13_FRU_ID,
-	FB_14_FRU_ID,	
+	FB_14_FRU_ID,
 	MAX_FRU_ID,
 };
 
@@ -59,5 +59,14 @@ enum FRU_ID {
 #define FB_13_14_MUX_ADDR 0xE6
 #define PB_MUX_ADDR 0xE8
 #define SB_MUX_ADDR 0xE8
+
+// plat eeprom save in rpu eeprom
+
+#define PLAT_EEPROM_OFFSET 0x2000 // 8kb
+#define EEPROM_HMI_VERSION_OFFSET PLAT_EEPROM_OFFSET
+#define EEPROM_HMI_VERSION_SIZE 8
+
+bool plat_eeprom_write(uint32_t offset, uint8_t *data, uint16_t data_len);
+bool plat_eeprom_read(uint32_t offset, uint8_t *data, uint16_t data_len);
 
 #endif
