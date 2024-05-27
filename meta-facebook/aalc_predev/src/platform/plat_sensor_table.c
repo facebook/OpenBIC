@@ -25,6 +25,7 @@
 #include "plat_hook.h"
 #include "plat_class.h"
 #include "plat_modbus.h"
+#include "plat_util.h"
 #include "modbus_server.h"
 #include <logging/log.h>
 
