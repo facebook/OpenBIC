@@ -35,5 +35,10 @@ typedef struct _pump_reset_struct {
 	uint8_t senser_num;
 } pump_reset_struct;
 
+enum BIT_VALUE {
+	BIT_LOW = 0,
+	BIT_HIGH = 1,
+};
+
 bool pump_reset(pump_reset_struct *data, uint8_t bit_val);
 uint8_t modbus_pump_setting(modbus_command_mapping *cmd);

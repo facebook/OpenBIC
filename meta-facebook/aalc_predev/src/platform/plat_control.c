@@ -55,7 +55,7 @@ bool clear_log_for_modbus_pump_setting(pump_reset_struct *data, uint8_t bit_val)
 		return true;
 
 	bool clear_log_status = modbus_clear_log();
-	
+
 	return clear_log_status;
 }
 
@@ -114,7 +114,7 @@ uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 	for (int i = 0; i < ARRAY_SIZE(modbus_pump_setting_table); i++) {
 		// check bit value is 0 or 1
 		uint8_t input_bit_value =
-			(cmd->data[0] & BIT(modbus_pump_setting_table[i].function_index)) ? 1 : 0;
+			(cmd->data[0] & BIT(modbus_pump_setting_table[i].function_index)) ? BIT_HIGH : BIT_LOW;
 		bool result_status = modbus_pump_setting_table[i].fn(&modbus_pump_setting_table[i],
 								     input_bit_value);
 		if (!result_status) {
