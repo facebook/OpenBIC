@@ -1041,24 +1041,6 @@ void load_sensor_config(void)
 	load_plat_def_sensor_config();
 }
 
-static float pow_of_10(int8_t exp)
-{
-	float ret = 1.0;
-	int i;
-
-	if (exp < 0) {
-		for (i = 0; i > exp; i--) {
-			ret /= 10.0;
-		}
-	} else if (exp > 0) {
-		for (i = 0; i < exp; i++) {
-			ret *= 10.0;
-		}
-	}
-
-	return ret;
-}
-
 uint16_t get_sensor_reading_to_modbus_val(uint8_t sensor_num, int8_t exp, int8_t scale)
 {
 	int reading = 0;
@@ -1096,28 +1078,6 @@ uint8_t get_sensor_reading_to_real_val(uint8_t sensor_num, float *val)
 	*val = (sval->integer * 1000 + sval->fraction) / 1000;
 
 	return status;
-}
-
-/*
-	arg0: sensor number
-	arg1: m
-	arg2: r
-
-	actual_val =  raw_val * m * (10 ^ r)
-*/
-uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd)
-{
-	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-
-	float val = 0;
-	if (get_sensor_reading_to_real_val(cmd->arg0, &val) == SENSOR_READ_SUCCESS) {
-		float r = pow_of_10(cmd->arg2);
-		uint16_t byte_val = val / cmd->arg1 / r; // scale
-		memcpy(cmd->data, &byte_val, sizeof(uint16_t) * cmd->cmd_size);
-		return MODBUS_EXC_NONE;
-	}
-
-	return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 }
 
 /* platform def sensor */

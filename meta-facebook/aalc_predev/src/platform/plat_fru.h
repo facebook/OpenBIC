@@ -17,11 +17,6 @@
 #ifndef PLAT_FRU_H
 #define PLAT_FRU_H
 
-#include "plat_modbus.h"
-
-uint8_t modbus_read_fruid_data(modbus_command_mapping *cmd);
-uint8_t modbus_write_fruid_data(modbus_command_mapping *cmd);
-
 enum FRU_ID {
 	MB_FRU_ID = 0x00,
 	BB_FRU_ID,
