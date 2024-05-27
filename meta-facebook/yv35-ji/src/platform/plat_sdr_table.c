@@ -741,7 +741,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_VOL, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x13, // [7:0] M bits
+		0x06, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -754,10 +754,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x12, // UCT
+		0x39, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
-		0x10, // LCT
+		0x34, // LCT
 		0x00, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
