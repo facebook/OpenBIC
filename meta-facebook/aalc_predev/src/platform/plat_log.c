@@ -180,15 +180,22 @@ void error_log_event(uint8_t sensor_num, bool val_normal)
 		err_log_data[fru_count].volt =
 			get_sensor_reading_to_modbus_val(SENSOR_NUM_BPB_HSC_P48V_VIN_VOLT_V, -2, 1);
 
-		if (!plat_eeprom_write((AALC_FRU_LOG_START + fru_count * sizeof(modbus_err_log_mapping)),
-				       (uint8_t *)&err_log_data[fru_count],
-				       sizeof(modbus_err_log_mapping)))
+		if (!plat_eeprom_write(
+			    (AALC_FRU_LOG_START + fru_count * sizeof(modbus_err_log_mapping)),
+			    (uint8_t *)&err_log_data[fru_count], sizeof(modbus_err_log_mapping)))
 			LOG_ERR("Write Log failed with Error code: %02x", err_code);
 	}
 }
 
 void init_load_eeprom_log(void)
 {
-	if (!plat_eeprom_read(AALC_FRU_LOG_START, (uint8_t *)err_log_data, AALC_FRU_LOG_SIZE))
-		LOG_ERR("READ Log failed from EEPROM");
+	// read/write data length has to be less EEPROM_WRITE_SIZE(32)
+	memset(err_log_data, 0xFF, sizeof(err_log_data));
+	uint16_t log_len = sizeof(modbus_err_log_mapping);
+	for (uint8_t i = 0; i < LOG_MAX_NUM; i++) {
+		if (!plat_eeprom_read(AALC_FRU_LOG_START + i * log_len, (uint8_t *)&err_log_data[i],
+				      log_len)) {
+			LOG_ERR("READ Event %d failed from EEPROM", i + 1);
+		}
+	}
 }
