@@ -27,6 +27,7 @@
 
 LOG_MODULE_REGISTER(hal_i2c);
 
+#if defined(CONFIG_I2C_ASPEED)
 #define AST_1030_I2C_BASE 0x7e7b0080
 #define AST_1030_I2C_REG_LEN 0x80
 #define AST_1030_SLAVE_EN BIT(1)
@@ -34,6 +35,17 @@ LOG_MODULE_REGISTER(hal_i2c);
 /* 0x40 : Slave Device Address Register */
 #define AST_I2CS_ADDR_CTRL 0x40
 #define AST_I2CS_ADDR1_MASK 0x7F
+
+#elif (CONFIG_I2C_NPCM4XX)
+#define NPCM4XX_I2C_BASE 0x40006000
+#define NPCM4XX_I2C_REG_LEN 0x200
+
+#define NPCM4XX_SMBnADDR1 0x08
+#define NPCM4XX_I2CS_ADDR1_MASK 0x7F
+#define NPCM4XX_SMBnADDR_SAEN BIT(7)
+
+#else /* defined(CONFIG_I2C_ASPEED) */
+#endif /* defined(CONFIG_I2C_ASPEED) */
 
 static const struct device *dev_i2c[I2C_BUS_MAX_NUM];
 
@@ -55,8 +67,15 @@ int i2c_freq_set(uint8_t i2c_bus, uint8_t i2c_speed_mode, uint8_t en_slave)
 	}
 
 	if (en_slave) {
+#if defined(CONFIG_I2C_ASPEED)
 		uint32_t *addr = (uint32_t *)(AST_1030_I2C_BASE + (i2c_bus * AST_1030_I2C_REG_LEN));
 		*addr |= AST_1030_SLAVE_EN;
+#elif (CONFIG_I2C_NPCM4XX)
+		uint8_t *addr = (uint8_t *)(NPCM4XX_I2C_BASE + NPCM4XX_SMBnADDR1 +
+					    (i2c_bus * NPCM4XX_I2C_REG_LEN));
+		*addr |= NPCM4XX_SMBnADDR_SAEN;
+#else /* defined(CONFIG_I2C_ASPEED) */
+#endif /* defined(CONFIG_I2C_ASPEED) */
 	}
 
 	return 0;
@@ -71,9 +90,23 @@ int i2c_addr_set(uint8_t i2c_bus, uint8_t i2c_addr)
 
 	i2c_addr = i2c_addr >> 1; // to 7-bit target address
 
+#if defined(CONFIG_I2C_ASPEED)
 	uint32_t base = AST_1030_I2C_BASE + (i2c_bus * AST_1030_I2C_REG_LEN);
 	sys_write32(i2c_addr | (sys_read32(base + AST_I2CS_ADDR_CTRL) & ~AST_I2CS_ADDR1_MASK),
 		    base + AST_I2CS_ADDR_CTRL);
+#elif (CONFIG_I2C_NPCM4XX)
+	uint32_t base = NPCM4XX_I2C_BASE + (i2c_bus * NPCM4XX_I2C_REG_LEN);
+
+	//i2c bus index is 0 based.
+	if ((i2c_addr == 0)) {
+		sys_write8((sys_read8(base + NPCM4XX_SMBnADDR1) & ~NPCM4XX_SMBnADDR_SAEN),
+			   base + NPCM4XX_SMBnADDR1);
+	} else if ((i2c_addr != 0)) {
+		/* set slave addr 1 */
+		sys_write8((i2c_addr | NPCM4XX_SMBnADDR_SAEN), base + NPCM4XX_SMBnADDR1);
+	}
+#else /* defined(CONFIG_I2C_ASPEED) */
+#endif /* defined(CONFIG_I2C_ASPEED) */
 
 	return 0;
 }
@@ -418,6 +451,7 @@ void util_init_I2C(void)
 	if (status)
 		LOG_ERR("i2c11 mutex init fail");
 #endif
+#if defined(CONFIG_I2C_ASPEED)
 #ifdef DEV_I2C_12
 	dev_i2c[12] = device_get_binding("I2C_12");
 	status = k_mutex_init(&i2c_mutex[12]);
@@ -442,6 +476,7 @@ void util_init_I2C(void)
 	if (status)
 		LOG_ERR("i2c15 mutex init fail");
 #endif
+#endif /* CONFIG_I2C_ASPEED */
 }
 
 int check_i2c_bus_valid(uint8_t bus)
