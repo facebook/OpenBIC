@@ -48,10 +48,14 @@ bool modbus_pump_setting_unsupport_function(pump_reset_struct *data, uint8_t bit
 
 bool clear_log_for_modbus_pump_setting(pump_reset_struct *data, uint8_t bit_val)
 {
+	if (data == NULL)
+		return false;
+
 	if (bit_val == 0) // do nothing
 		return true;
 
 	bool clear_log_status = modbus_clear_log();
+	
 	return clear_log_status;
 }
 
