@@ -37,6 +37,7 @@
 #include "mpq8746.h"
 #include "mp289x.h"
 #include "pt5161l.h"
+#include "ds160pt801.h"
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
@@ -374,8 +375,8 @@ static uint8_t pldm_pre_retimer_update(void *fw_update_param)
 		p->addr = AL_RETIMER_ADDR;
 		break;
 	case RETIMER_MODULE_DS160PT801:
-		LOG_WRN("DS160PT801 retimer update not support yet");
-		return 1;
+		p->addr = TI_RETIMER_ADDR;
+		break;
 	default:
 		LOG_ERR("Unsupport retimer module %d", retimer_module);
 		return 1;
@@ -384,6 +385,7 @@ static uint8_t pldm_pre_retimer_update(void *fw_update_param)
 	/* Check whether fw image's vendor not mach with on board device */
 	const char *device_name[] = {
 		[RETIMER_MODULE_PT4080L] = KEYWORD_RETIMER_PT4080L,
+		[RETIMER_MODULE_DS160PT801] = KEYWORD_RETIMER_DS160PT801,
 	};
 	const uint8_t *device_name_p = device_name[retimer_module];
 
@@ -456,8 +458,13 @@ static bool get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		ver_len = 3;
 		break;
 	case RETIMER_MODULE_DS160PT801:
-		LOG_WRN("DS160PT801 retimer update not support yet");
-		goto exit;
+		i2c_msg.target_addr = TI_RETIMER_ADDR;
+		if (ds160pt801_get_fw_version(&i2c_msg, version) == false) {
+			LOG_ERR("Failed to get DS160PT801 retimer version");
+			goto exit;
+		}
+		ver_len = 1;
+		break;
 	default:
 		LOG_ERR("Unsupport retimer module %d", retimer_module);
 		goto exit;
