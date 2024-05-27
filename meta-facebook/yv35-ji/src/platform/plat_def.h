@@ -25,6 +25,7 @@
 #define ENABLE_SSIF_RSP_PEC
 #define ENABLE_SBMR
 #define ENABLE_NVIDIA
+#define ENABLE_DS160PT801
 
 #define MAX_FWUPDATE_RSP_BUF_SIZE 200 // for pldm fw update max transfer size
 #define BIC_UPDATE_MAX_OFFSET 0x60000
