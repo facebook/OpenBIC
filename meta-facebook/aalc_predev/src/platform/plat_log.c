@@ -180,7 +180,7 @@ void error_log_event(uint8_t sensor_num, bool val_normal)
 		err_log_data[fru_count].volt =
 			get_sensor_reading_to_modbus_val(SENSOR_NUM_BPB_HSC_P48V_VIN_VOLT_V, -2, 1);
 
-		if (!plat_eeprom_write((AALC_FRU_LOG_START + fru_count * LOG_MAX_NUM),
+		if (!plat_eeprom_write((AALC_FRU_LOG_START + fru_count * sizeof(modbus_err_log_mapping)),
 				       (uint8_t *)&err_log_data[fru_count],
 				       sizeof(modbus_err_log_mapping)))
 			LOG_ERR("Write Log failed with Error code: %02x", err_code);
