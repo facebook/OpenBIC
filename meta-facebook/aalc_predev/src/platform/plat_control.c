@@ -26,7 +26,7 @@
 #include "modbus_server.h"
 #include "plat_control.h"
 #include "adm1272.h"
-//#include "plat_log.h"
+#include "plat_log.h"
 
 LOG_MODULE_REGISTER(plat_modbus_funtion);
 
@@ -51,10 +51,8 @@ bool clear_log_for_modbus_pump_setting(pump_reset_struct *data, uint8_t bit_val)
 	if (bit_val == 0) // do nothing
 		return true;
 
-	//bool clear_log_status = modbus_clear_log();
-	//return clear_log_status;
-
-	return false;
+	bool clear_log_status = modbus_clear_log();
+	return clear_log_status;
 }
 
 bool pump_reset(pump_reset_struct *data, uint8_t bit_val)
@@ -90,7 +88,7 @@ bool pump_reset(pump_reset_struct *data, uint8_t bit_val)
 }
 
 pump_reset_struct modbus_pump_setting_table[] = {
-	{ PUMP_REDUNDENT_SWITCHED, 0, 0 },
+	{ PUMP_REDUNDENT_SWITCHED, modbus_pump_setting_unsupport_function, 0 },
 	{ MANUAL_CONTROL_PUMP, modbus_pump_setting_unsupport_function, 0 },
 	{ MANUAL_CONTROL_FAN, modbus_pump_setting_unsupport_function, 0 },
 	{ AUTOTUNE_FLOW_CONTROL, modbus_pump_setting_unsupport_function, 0 },
@@ -109,11 +107,13 @@ uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 	uint16_t check_error_flag = 0;
-	for (int i = 0; i < MAX_STATE; i++) {
-		uint8_t input_bit_value = cmd->data[0] & BIT(modbus_pump_setting_table[i].function_index);
-		
-		bool result_status = modbus_pump_setting_table[i].fn(&modbus_pump_setting_table[i], input_bit_value);
-		if (result_status == false) {
+	for (int i = 0; i < ARRAY_SIZE(modbus_pump_setting_table); i++) {
+		// check bit value is 0 or 1
+		uint8_t input_bit_value =
+			(cmd->data[0] & BIT(modbus_pump_setting_table[i].function_index)) ? 1 : 0;
+		bool result_status = modbus_pump_setting_table[i].fn(&modbus_pump_setting_table[i],
+								     input_bit_value);
+		if (!result_status) {
 			LOG_ERR("modebus 0x9410 setting %d-bit error\n",
 				modbus_pump_setting_table[i].function_index);
 			WRITE_BIT(check_error_flag, modbus_pump_setting_table[i].function_index, 1);

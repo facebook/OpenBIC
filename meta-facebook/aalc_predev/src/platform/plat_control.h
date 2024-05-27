@@ -21,15 +21,12 @@ enum pump_state {
 	AUTOTUNE_PRESSURE_BALANCE_CONTROL = 4,
 	SYSTEM_STOP = 5,
 	RPU_REMOTE_POWER_CYCLE = 6,
-	RESERVED_0 = 7,
-	RESERVED_1 = 8,
 	MANUAL_CONTROL = 9,
 	CLEAR_PUMP_RUNNING_TIME = 10,
 	CLEAR_LOG = 11,
 	PUMP_1_RESET = 12,
 	PUMP_2_RESET = 13,
 	PUMP_3_RESET = 14,
-	MAX_STATE,
 };
 
 typedef struct _pump_reset_struct {
@@ -38,5 +35,5 @@ typedef struct _pump_reset_struct {
 	uint8_t senser_num;
 } pump_reset_struct;
 
-bool pump_reset(pump_reset_struct *data);
+bool pump_reset(pump_reset_struct *data, uint8_t bit_val);
 uint8_t modbus_pump_setting(modbus_command_mapping *cmd);
