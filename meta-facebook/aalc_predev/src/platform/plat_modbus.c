@@ -31,12 +31,13 @@
 #include "plat_fru.h"
 #include "hal_gpio.h"
 #include "plat_gpio.h"
-#include "plat_fw_update.h"
 #include <modbus_internal.h>
 #include "plat_util.h"
 #include "libutil.h"
 #include "plat_pwm.h"
 #include "util_sys.h"
+#include "util_spi.h"
+#include "plat_version.h"
 
 LOG_MODULE_REGISTER(plat_modbus);
 
@@ -44,6 +45,8 @@ LOG_MODULE_REGISTER(plat_modbus);
 #define FW_UPDATE_SWITCH_ADDR 0x0119
 #define FW_UPDATE_ENABLE_DATA 0x0101
 #define FW_UPDATE_DISABLE_DATA 0x0100
+
+#define UPADTE_FW_DATA_LENGTH_MIN 3 // contain 2 regs(offeset)+ 1 reg(length) at least
 
 //{ DT_PROP(DT_INST(0, zephyr_modbus_serial), label) }
 
@@ -56,6 +59,164 @@ modbus_server modbus_server_config[] = {
 	{ "MODBUS0", true },
 	{ "MODBUS1", false },
 };
+
+/*
+	arg0: sensor number
+	arg1: m
+	arg2: r
+
+	actual_val =  raw_val * m * (10 ^ r)
+*/
+uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	float val = 0;
+	if (get_sensor_reading_to_real_val(cmd->arg0, &val) == SENSOR_READ_SUCCESS) {
+		float r = pow_of_10(cmd->arg2);
+		uint16_t byte_val = val / cmd->arg1 / r; // scale
+		memcpy(cmd->data, &byte_val, sizeof(uint16_t) * cmd->cmd_size);
+		return MODBUS_EXC_NONE;
+	}
+
+	return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+}
+
+uint8_t modbus_read_fruid_data(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint8_t status;
+	EEPROM_ENTRY fru_entry;
+
+	fru_entry.config.dev_id = cmd->arg0; //fru id
+	fru_entry.offset = (cmd->start_addr - cmd->addr) * 2;
+	fru_entry.data_len = (cmd->data_len) * 2;
+
+	status = FRU_read(&fru_entry);
+	if (status != FRU_READ_SUCCESS)
+		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+
+	memcpy(cmd->data, &fru_entry.data[0], fru_entry.data_len);
+
+	regs_reverse(cmd->data_len, cmd->data);
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_write_fruid_data(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint8_t status;
+	EEPROM_ENTRY fru_entry;
+
+	fru_entry.config.dev_id = cmd->arg0; //fru id
+	fru_entry.offset = (cmd->start_addr - cmd->addr) * 2;
+	fru_entry.data_len = (cmd->data_len) * 2;
+
+	regs_reverse(cmd->data_len, cmd->data);
+
+	memcpy(&fru_entry.data[0], cmd->data, fru_entry.data_len);
+	status = FRU_write(&fru_entry);
+	if (status != FRU_WRITE_SUCCESS)
+		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_get_fw_reversion(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint16_t byte_val[4] = { BIC_FW_YEAR_MSB_ASCII, BIC_FW_YEAR_LSB_ASCII, BIC_FW_WEEK_ASCII,
+				 BIC_FW_VER_ASCII };
+	memcpy(cmd->data, &byte_val[0], sizeof(uint16_t) * cmd->cmd_size);
+
+	regs_reverse(cmd->data_len, cmd->data);
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_fw_download(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint32_t offset = cmd->data[0] << 16 | cmd->data[1]; // offset
+	uint16_t msg_len = cmd->data[2] & 0x7FFF; // length
+	uint8_t flag = (cmd->data[2] & BIT(15)) ? (SECTOR_END_FLAG | NO_RESET_FLAG) : 0;
+
+	if (cmd->data_len <= UPADTE_FW_DATA_LENGTH_MIN)
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+
+	if (msg_len != ((cmd->data_len - UPADTE_FW_DATA_LENGTH_MIN) * 2))
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+
+	regs_reverse(cmd->data_len, cmd->data);
+
+	return fw_update(offset, msg_len, (uint8_t *)&cmd->data[UPADTE_FW_DATA_LENGTH_MIN], flag,
+			 DEVSPI_FMC_CS0);
+}
+
+uint8_t modbus_command_i2c_master_write_read_response(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	modbus_i2c_master_write_read_response(cmd->data);
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	if (!modbus_i2c_master_write_read(cmd->data, cmd->data_len))
+		return MODBUS_EXC_NONE;
+	return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+}
+
+uint8_t modbus_write_hmi_version(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint8_t pre_version[EEPROM_HMI_VERSION_SIZE + 1] = { 0 }; // ending char '\0'
+	if (!plat_eeprom_read(EEPROM_HMI_VERSION_OFFSET, pre_version, EEPROM_HMI_VERSION_SIZE)) {
+		LOG_ERR("read hmi version fail!");
+		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+	}
+
+	regs_reverse(cmd->data_len, cmd->data);
+	if (!memcmp(pre_version, cmd->data, EEPROM_HMI_VERSION_SIZE)) {
+		if (!plat_eeprom_write(EEPROM_HMI_VERSION_OFFSET, (uint8_t *)cmd->data,
+				       EEPROM_HMI_VERSION_SIZE)) {
+			LOG_ERR("write hmi version fail!");
+			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		} else {
+			uint8_t tmp[EEPROM_HMI_VERSION_SIZE + 1] = { 0 };
+			memcpy(tmp, cmd->data, EEPROM_HMI_VERSION_SIZE);
+			LOG_INF("write hmi version from %s to to %s", pre_version, tmp);
+		}
+	}
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_read_hmi_version(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint8_t version[EEPROM_HMI_VERSION_SIZE] = { 0 };
+	if (!plat_eeprom_read(EEPROM_HMI_VERSION_OFFSET, version, EEPROM_HMI_VERSION_SIZE)) {
+		LOG_ERR("read hmi version fail!");
+		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+	}
+
+	memcpy(cmd->data, version, EEPROM_HMI_VERSION_SIZE);
+	regs_reverse(cmd->data_len, cmd->data);
+
+	return MODBUS_EXC_NONE;
+}
 
 static uint8_t modbus_to_do(modbus_command_mapping *cmd)
 {
@@ -410,11 +571,6 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_FB_13_HUM_PCT_RH, 1, 0, 1 },
 	{ MODBUS_FB_14_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_FB_14_HUM_PCT_RH, 1, 0, 1 },
-	// LEAKAGE
-	{ MODBUS_LEAKAGE_STATUS_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
-	{ MODBUS_SB_TTV_COOLANT_LEAKAGE_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
-	// PUMP SETTING
-	{ MODBUS_PUMP_SETTING_ADDR, modbus_pump_setting, NULL, 0, 0, 0, 1 },
 	//FW UPDATE
 	{ MODBUS_FW_REVISION_ADDR, NULL, modbus_get_fw_reversion, 0, 0, 0, 4 },
 	{ MODBUS_FW_DOWNLOAD_ADDR, modbus_fw_download, NULL, 0, 0, 0, 103 },
@@ -427,6 +583,65 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_PDB_48V_SENSE_DIFF_POS_VOLT_V, 1, -2, 1 },
 	{ MODBUS_RPU_PDB_48V_SENSE_DIFF_NEG_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_PDB_48V_SENSE_DIFF_NEG_VOLT_V, 1, -2, 1 },
+	// System Alarm
+	{ MODBUS_SB_TTV_COOLANT_LEAKAGE_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_AALC_SENSOR_ALARM_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_Y_FILTER_SENSOR_STATUS_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_AALC_STATUS_ALARM_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_LEAKAGE_STATUS_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_HEX_FAN_ALARM_1_ADDR, NULL, NULL, 0, 0, 0, 1 },
+	{ MODBUS_HEX_FAN_ALARM_2_ADDR, NULL, NULL, 0, 0, 0, 1 },
+	// Control
+	{ MODBUS_AUTO_TUNE_COOLANT_FLOW_RATE_TARGET_SET_ADDR, modbus_to_do, NULL, 0, 0, 0, 1 },
+	{ MODBUS_AUTO_TUNE_COOLANT_OUTLET_TEMPERATURE_TARGET_SET_ADDR, modbus_to_do, NULL, 0, 0, 0,
+	  1 },
+	{ MODBUS_PUMP_REDUNDANT_SWITCHED_INTERVAL_ADDR, modbus_to_do, NULL, 0, 0, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_PUMP_DUTY_SET_ADDR, modbus_to_do, NULL, 0, 0, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_FAN_DUTY_SET_ADDR, modbus_to_do, NULL, 0, 0, 0, 1 },
+	{ MODBUS_PUMP_SETTING_ADDR, modbus_pump_setting, NULL, 0, 0, 0, 1 },
+	{ MODBUS_LEAKAGE_SETTING_ON_ADDR, modbus_to_do, NULL, 0, 0, 0, 1 },
+	// Leakage Black Box
+	{ MODBUS_STICKY_ITRACK_CHASSIS0_LEAKAGE_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_STICKY_ITRACK_CHASSIS1_LEAKAGE_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_STICKY_ITRACK_CHASSIS2_LEAKAGE_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_STICKY_ITRACK_CHASSIS3_LEAKAGE_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_STICKY_RPU_INTERNAL_LEAKAGE_ABNORMAL_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0,
+	  1 },
+	{ MODBUS_STICKY_RPU_EXTERNAL_LEAKAGE_ABNORMAL_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0,
+	  1 },
+	{ MODBUS_STICKY_RPU_OPT_EXTERNAL_LEAKAGE1_ABNORMAL_ADDR, modbus_to_do, modbus_to_do, 0, 0,
+	  0, 1 },
+	{ MODBUS_STICKY_RPU_OPT_EXTERNAL_LEAKAGE2_ABNORMAL_ADDR, modbus_to_do, modbus_to_do, 0, 0,
+	  0, 1 },
+	{ MODBUS_STICKY_HEX_RACK_PAN_LEAKAGE_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_STICKY_HEX_RACK_FLOOR_LEAKAGE_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_STICKY_HEX_RACK_PAN_LEAKAGE_RELAY_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_STICKY_HEX_RACK_FLOOR_LEAKAGE_RELAY_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_STRICKY_SB_TTV_COOLANT_LEAKAGE_1_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_STRICKY_SB_TTV_COOLANT_LEAKAGE_2_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_STRICKY_SB_TTV_COOLANT_LEAKAGE_3_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0, 1 },
+	// Error Log
+	{ MODBUS_ERROR_LOG_COUNT_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_EVENT_1_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_2_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_3_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_4_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_5_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_6_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_7_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_8_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_9_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_10_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_11_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_12_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_13_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_14_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_15_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_16_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_17_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_18_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_19_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_20_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
 	// FRU write read
 	{ MODBUS_MB_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, MB_FRU_ID, 0, 0,
 	  256 },
