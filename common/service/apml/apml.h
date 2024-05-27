@@ -163,5 +163,6 @@ uint8_t apml_get_bus();
 int set_sbrmi_command_code_len(uint8_t value);
 int get_sbrmi_command_code_len();
 void disable_mailbox_completion_alert();
+void enable_alert_signal();
 
 #endif

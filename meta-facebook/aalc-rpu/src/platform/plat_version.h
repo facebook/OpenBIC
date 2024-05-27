@@ -19,33 +19,37 @@
 
 #include "version.h"
 
-#define PLATFORM_NAME "Artemis"
-#define PROJECT_NAME "Moose Creek (MEB)"
-#define PROJECT_STAGE POC
+#define PLATFORM_NAME "AALC"
+#define PROJECT_NAME "AALC"
+#define PROJECT_STAGE EVT
 
-/**
- * 0x00 cpu board
- * 0x01 memory expansion board
- * 0x02 asic carrier board
+/*
+ * 0xFF AALC TBD
  */
-#define BOARD_ID 0x01
+#define BOARD_ID 0x00
 #define DEVICE_ID 0x00
 #define DEVICE_REVISION 0x80
 
 #define FIRMWARE_REVISION_1 GET_FW_VERSION1(BOARD_ID, PROJECT_STAGE)
-#define FIRMWARE_REVISION_2 0x29
+#define FIRMWARE_REVISION_2 0x00
 
 #define IPMI_VERSION 0x02
 #define ADDITIONAL_DEVICE_SUPPORT 0xBF
 #define PRODUCT_ID 0x0000
 #define AUXILIARY_FW_REVISION 0x00000000
+#define IANA_ID 0x009C9C // same as TI BIC
+#define IANA_ID2 0x00A015 // for OEM 1S command supports YV3.5
 
 #define BIC_FW_YEAR_MSB 0x20
 #define BIC_FW_YEAR_LSB 0x24
-#define BIC_FW_WEEK 0x21
+#define BIC_FW_WEEK 0x20
 #define BIC_FW_VER 0x01
-#define BIC_FW_platform_0 0x6d // char: m
-#define BIC_FW_platform_1 0x63 // char: c
+#define BIC_FW_platform_0 0x61 // char: a
+#define BIC_FW_platform_1 0x61 // char: a
 #define BIC_FW_platform_2 0x00 // char: '\0'
 
+#define BIC_FW_YEAR_MSB_ASCII 0x3230 // char: 20
+#define BIC_FW_YEAR_LSB_ASCII 0x3234 // char: 24
+#define BIC_FW_WEEK_ASCII 0x3230 // char: 20
+#define BIC_FW_VER_ASCII 0x3031 //char: 01
 #endif

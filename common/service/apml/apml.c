@@ -621,6 +621,27 @@ void disable_mailbox_completion_alert()
 	}
 }
 
+void enable_alert_signal()
+{
+	uint8_t reg;
+
+	if (command_code_len == SBRMI_CMD_CODE_LEN_TWO_BYTE) {
+		if (apml_read_byte(apml_bus, SB_RMI_ADDR, SBRMI_CONTROL, &reg)) {
+			LOG_ERR("Failed to read SBRMI control.");
+			return;
+		} else {
+			LOG_INF("SBRMI_CONTROL read");
+		}
+		reg &= ~(1 << 0); // write 0 to bit0 AlertMask
+		if (apml_write_byte(apml_bus, SB_RMI_ADDR, SBRMI_CONTROL, reg)) {
+			LOG_ERR("Failed to write SBRMI control.");
+			return;
+		} else {
+			LOG_INF("SBRMI_CONTROL written");
+		}
+	}
+}
+
 __weak uint8_t pal_get_apml_bus()
 {
 	return APML_BUS_UNKNOWN;
