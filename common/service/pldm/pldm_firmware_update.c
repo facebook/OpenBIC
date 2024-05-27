@@ -34,6 +34,7 @@
 #include "mpq8746.h"
 #include "mp289x.h"
 #include "tps53689.h"
+#include "ds160pt801.h"
 
 LOG_MODULE_DECLARE(pldm);
 
@@ -340,6 +341,13 @@ uint8_t pldm_retimer_update(void *fw_update_param)
 		     ARRAY_SIZE(KEYWORD_RETIMER_PT4080L) - 1)) {
 		ret = pcie_retimer_fw_update(&i2c_msg, p->data_ofs, p->data_len, p->data,
 					     update_flag);
+	} else if (!strncmp(p->comp_version_str, KEYWORD_RETIMER_DS160PT801,
+			    ARRAY_SIZE(KEYWORD_RETIMER_DS160PT801) - 1)) {
+		ret = ds160pt801_fw_update(&i2c_msg, &p->data_ofs, &p->data_len, p->data,
+					   update_flag);
+		/* Fix next request data offset and length */
+		p->next_ofs = p->data_ofs;
+		p->next_len = p->data_len;
 	} else {
 		LOG_ERR("Non-support retimer detected with component string %s!",
 			log_strdup(p->comp_version_str));
