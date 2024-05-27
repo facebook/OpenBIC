@@ -17,6 +17,9 @@
 #ifndef DS160PT801_H
 #define DS160PT801_H
 
+#include "plat_def.h"
+#ifdef ENABLE_DS160PT801
+
 #include "hal_i2c.h"
 
 enum {
@@ -27,5 +30,7 @@ bool ds160pt801_get_fw_version(I2C_MSG *i2c_msg, uint8_t *version);
 uint8_t ds160pt801_fw_update(I2C_MSG *msg, uint32_t *offset, uint32_t *msg_len, uint8_t *msg_buf,
 			     uint8_t flag);
 bool ds160pt801_read_data(I2C_MSG *msg, uint16_t offset, uint8_t *rxbuf, uint16_t length);
+
+#endif
 
 #endif

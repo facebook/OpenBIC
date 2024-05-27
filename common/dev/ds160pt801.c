@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "plat_def.h"
+#ifdef ENABLE_DS160PT801
+
 #include <stdlib.h>
 #include <logging/log.h>
 #include "ds160pt801.h"
@@ -895,3 +898,5 @@ uint8_t ds160pt801_init(sensor_cfg *cfg)
 	cfg->read = ds160pt801_read;
 	return SENSOR_INIT_SUCCESS;
 }
+
+#endif
