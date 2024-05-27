@@ -117,14 +117,7 @@ bool modbus_clear_log(void)
 	memset(err_log_data, 0xFF, sizeof(err_log_data));
 	memset(err_sensor_caches, 0, sizeof(err_sensor_caches));
 
-	static EEPROM_ENTRY fru_entry;
-
-	fru_entry.config.dev_id = MB_FRU_ID; //fru id
-	fru_entry.offset = AALC_FRU_LOG_START;
-	fru_entry.data_len = AALC_FRU_LOG_SIZE;
-	memcpy(&fru_entry.data[0], &err_log_data[0], fru_entry.data_len);
-
-	if (FRU_write(&fru_entry)) {
+	if (!plat_eeprom_write(AALC_FRU_LOG_START, (uint8_t *)err_log_data, AALC_FRU_LOG_SIZE)) {
 		LOG_ERR("Clear EEPROM Log failed");
 		return false;
 	}
@@ -203,27 +196,15 @@ void error_log_event(uint8_t sensor_num, bool val_normal)
 		err_log_data[fru_count].volt =
 			get_sensor_reading_to_modbus_val(SENSOR_NUM_BPB_HSC_P48V_VIN_VOLT_V, -2, 1);
 
-		static EEPROM_ENTRY fru_entry;
-
-		fru_entry.config.dev_id = MB_FRU_ID; //fru id
-		fru_entry.offset = AALC_FRU_LOG_START + fru_count * LOG_MAX_NUM;
-		fru_entry.data_len = sizeof(modbus_err_log_mapping);
-
-		memcpy(&fru_entry.data[0], &err_log_data[fru_count], fru_entry.data_len);
-		if (FRU_write(&fru_entry))
+		if (!plat_eeprom_write((AALC_FRU_LOG_START + fru_count * LOG_MAX_NUM),
+				       (uint8_t *)&err_log_data[fru_count],
+				       sizeof(modbus_err_log_mapping)))
 			LOG_ERR("Write Log failed with Error code: %02x", err_code);
 	}
 }
 
 void init_load_eeprom_log(void)
 {
-	static EEPROM_ENTRY fru_entry;
-
-	fru_entry.config.dev_id = MB_FRU_ID; //fru id
-	fru_entry.offset = AALC_FRU_LOG_START;
-	fru_entry.data_len = AALC_FRU_LOG_SIZE;
-	if (FRU_read(&fru_entry) != FRU_READ_SUCCESS)
+	if (!plat_eeprom_read(AALC_FRU_LOG_START, (uint8_t *)err_log_data, AALC_FRU_LOG_SIZE))
 		LOG_ERR("READ Log failed from EEPROM");
-	else
-		memcpy(&err_log_data[0], &fru_entry.data[0], fru_entry.data_len);
 }
