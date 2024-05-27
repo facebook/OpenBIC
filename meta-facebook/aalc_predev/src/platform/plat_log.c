@@ -29,7 +29,6 @@
 
 LOG_MODULE_REGISTER(plat_log);
 
-#define LOG_BEGIN_MODBUS_ADDR 0x1A29 //Event 1 Error log Modbus Addr
 #define LOG_MAX_INDEX 0x0FFF //recount when log index > 0x0FFF
 #define LOG_MAX_NUM 20 // total log amount: 20
 #define AALC_FRU_LOG_START 0x4000 //log offset: 16KB
@@ -54,21 +53,13 @@ const err_sensor_mapping sensor_normal_codes[] = {
 	{ PUMP_3_SPEED_RECOVER, SENSOR_NUM_PB_3_PUMP_TACH_RPM },
 };
 
-static uint16_t error_log_count(void)
+uint16_t error_log_count(void)
 {
 	for (uint16_t i = 0; i < LOG_MAX_NUM; i++) {
 		if (err_log_data[i].index == 0xFFFF)
 			return i;
 	}
 	return (uint16_t)LOG_MAX_NUM;
-}
-
-uint8_t modbus_error_log_count(modbus_command_mapping *cmd)
-{
-	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-
-	cmd->data[0] = error_log_count();
-	return MODBUS_EXC_NONE;
 }
 
 /* 
@@ -99,17 +90,10 @@ static uint16_t get_log_position_by_time_order(uint8_t order)
 	return (i + LOG_MAX_NUM - (order - 1)) % LOG_MAX_NUM;
 }
 
-uint8_t modbus_error_log_event(modbus_command_mapping *cmd)
+void log_transfer_to_modbus_data(uint16_t *modbus_data, uint8_t cmd_size, uint16_t order)
 {
-	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-
-	uint16_t order = 1 + ((cmd->start_addr - LOG_BEGIN_MODBUS_ADDR) / cmd->cmd_size);
-
-	memcpy(cmd->data, &err_log_data[get_log_position_by_time_order(order)],
-	       sizeof(uint16_t) * cmd->cmd_size);
-
-	regs_reverse(cmd->data_len, cmd->data);
-	return MODBUS_EXC_NONE;
+	memcpy(modbus_data, &err_log_data[get_log_position_by_time_order(order)],
+	       sizeof(uint16_t) * cmd_size);
 }
 
 bool modbus_clear_log(void)
