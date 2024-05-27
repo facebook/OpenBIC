@@ -31,12 +31,13 @@
 #include "plat_fru.h"
 #include "hal_gpio.h"
 #include "plat_gpio.h"
-#include "plat_fw_update.h"
 #include <modbus_internal.h>
 #include "plat_util.h"
 #include "libutil.h"
 #include "plat_pwm.h"
 #include "util_sys.h"
+#include "util_spi.h"
+#include "plat_version.h"
 
 LOG_MODULE_REGISTER(plat_modbus);
 
@@ -44,6 +45,8 @@ LOG_MODULE_REGISTER(plat_modbus);
 #define FW_UPDATE_SWITCH_ADDR 0x0119
 #define FW_UPDATE_ENABLE_DATA 0x0101
 #define FW_UPDATE_DISABLE_DATA 0x0100
+
+#define UPADTE_FW_DATA_LENGTH_MIN 3 // contain 2 regs(offeset)+ 1 reg(length) at least
 
 //{ DT_PROP(DT_INST(0, zephyr_modbus_serial), label) }
 
@@ -56,6 +59,122 @@ modbus_server modbus_server_config[] = {
 	{ "MODBUS0", true },
 	{ "MODBUS1", false },
 };
+
+/*
+	arg0: sensor number
+	arg1: m
+	arg2: r
+
+	actual_val =  raw_val * m * (10 ^ r)
+*/
+uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	float val = 0;
+	if (get_sensor_reading_to_real_val(cmd->arg0, &val) == SENSOR_READ_SUCCESS) {
+		float r = pow_of_10(cmd->arg2);
+		uint16_t byte_val = val / cmd->arg1 / r; // scale
+		memcpy(cmd->data, &byte_val, sizeof(uint16_t) * cmd->cmd_size);
+		return MODBUS_EXC_NONE;
+	}
+
+	return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+}
+
+uint8_t modbus_read_fruid_data(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint8_t status;
+	EEPROM_ENTRY fru_entry;
+
+	fru_entry.config.dev_id = cmd->arg0; //fru id
+	fru_entry.offset = (cmd->start_addr - cmd->addr) * 2;
+	fru_entry.data_len = (cmd->data_len) * 2;
+
+	status = FRU_read(&fru_entry);
+	if (status != FRU_READ_SUCCESS)
+		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+
+	memcpy(cmd->data, &fru_entry.data[0], fru_entry.data_len);
+
+	regs_reverse(cmd->data_len, cmd->data);
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_write_fruid_data(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint8_t status;
+	EEPROM_ENTRY fru_entry;
+
+	fru_entry.config.dev_id = cmd->arg0; //fru id
+	fru_entry.offset = (cmd->start_addr - cmd->addr) * 2;
+	fru_entry.data_len = (cmd->data_len) * 2;
+
+	regs_reverse(cmd->data_len, cmd->data);
+
+	memcpy(&fru_entry.data[0], cmd->data, fru_entry.data_len);
+	status = FRU_write(&fru_entry);
+	if (status != FRU_WRITE_SUCCESS)
+		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_get_fw_reversion(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint16_t byte_val[4] = { BIC_FW_YEAR_MSB_ASCII, BIC_FW_YEAR_LSB_ASCII, BIC_FW_WEEK_ASCII,
+				 BIC_FW_VER_ASCII };
+	memcpy(cmd->data, &byte_val[0], sizeof(uint16_t) * cmd->cmd_size);
+
+	regs_reverse(cmd->data_len, cmd->data);
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_fw_download(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint32_t offset = cmd->data[0] << 16 | cmd->data[1]; // offset
+	uint16_t msg_len = cmd->data[2] & 0x7FFF; // length
+	uint8_t flag = (cmd->data[2] & BIT(15)) ? (SECTOR_END_FLAG | NO_RESET_FLAG) : 0;
+
+	if (cmd->data_len <= UPADTE_FW_DATA_LENGTH_MIN)
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+
+	if (msg_len != ((cmd->data_len - UPADTE_FW_DATA_LENGTH_MIN) * 2))
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+
+	regs_reverse(cmd->data_len, cmd->data);
+
+	return fw_update(offset, msg_len, (uint8_t *)&cmd->data[UPADTE_FW_DATA_LENGTH_MIN], flag,
+			 DEVSPI_FMC_CS0);
+}
+
+uint8_t modbus_command_i2c_master_write_read_response(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	modbus_i2c_master_write_read_response(cmd->data);
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	if (!modbus_i2c_master_write_read(cmd->data, cmd->data_len))
+		return MODBUS_EXC_NONE;
+	return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+}
 
 static uint8_t modbus_to_do(modbus_command_mapping *cmd)
 {
