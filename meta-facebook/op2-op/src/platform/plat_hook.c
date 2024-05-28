@@ -365,20 +365,20 @@ bool pre_retimer_read(sensor_cfg *cfg, void *args)
 
 void pre_retimer_eeprom_recover()
 {
-	if (gpio_get(OPA_SMB_PCIE_EXP1_ALERT_N) == GPIO_HIGH) {
-		gpio_set(OPA_SMB_PCIE_EXP1_ALERT_N, GPIO_LOW);
+	if (gpio_get(SELECT_SMB_MUX_N) == GPIO_LOW) {
+		gpio_set(SELECT_SMB_MUX_N, GPIO_HIGH);
 	}
-	if (gpio_get(OPA_LED_E1S_2_ATTN_R) == GPIO_LOW) {
-		gpio_set(OPA_LED_E1S_2_ATTN_R, GPIO_HIGH);
+	if (gpio_get(SMB_LS_MUX_EN) == GPIO_LOW) {
+		gpio_set(SMB_LS_MUX_EN, GPIO_HIGH);
 	}
 }
 
 void post_retimer_eeprom_recover()
 {
-	if (gpio_get(OPA_SMB_PCIE_EXP1_ALERT_N) == GPIO_LOW) {
-		gpio_set(OPA_SMB_PCIE_EXP1_ALERT_N, GPIO_HIGH);
+	if (gpio_get(SELECT_SMB_MUX_N) == GPIO_HIGH) {
+		gpio_set(SELECT_SMB_MUX_N, GPIO_LOW);
 	}
-	if (gpio_get(OPA_LED_E1S_2_ATTN_R) == GPIO_HIGH) {
-		gpio_set(OPA_LED_E1S_2_ATTN_R, GPIO_LOW);
+	if (gpio_get(SMB_LS_MUX_EN) == GPIO_HIGH) {
+		gpio_set(SMB_LS_MUX_EN, GPIO_LOW);
 	}
 }
