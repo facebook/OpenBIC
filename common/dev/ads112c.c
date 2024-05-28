@@ -41,8 +41,10 @@ uint8_t ads112c_read(sensor_cfg *cfg, int *reading)
 		msg.bus = cfg->port;
 		msg.target_addr = cfg->target_addr;
 		msg.tx_len = 1;
-    
-		msg.data[0] = CMD_RREG | CFG_REG_OFFSET2; //RREG command: 0010 rrxx (rr register address = 10 (0x02), DRDY -> Conversion result ready flag.)
+
+		msg.data[0] =
+			CMD_RREG |
+			CFG_REG_OFFSET2; //RREG command: 0010 rrxx (rr register address = 10 (0x02), DRDY -> Conversion result ready flag.)
 		msg.rx_len = 1;
 
 		int ret = i2c_master_read(&msg, i2c_retry);
