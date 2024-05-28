@@ -14,19 +14,31 @@
  * limitations under the License.
  */
 
-#ifndef ADM1272_H
-#define ADM1272_H
+#ifndef ADS1015_H
+#define ADS1015_H
 
-enum ADM1272_IRANGE {
-	IRANGE_0MV_TO_15MV = 0x0,
-	IRANGE_0MV_TO_30MV = 0x1,
+enum ADS1015_REG_MAP {
+	CONVERSION_REG,
+	CONFIG_REG,
+	LO_THRESH_REG,
+	HI_THRESH_REG,
 };
 
-enum ADM1272_VRANGE {
-	VRANGE_0V_TO_60V = 0x0,
-	VRANGE_0V_TO_100V = 0x1,
-};
+enum DEVICE_OPERATION_MODE {
+	CONTINUOUS_MODE,
+	SINGLE_SHOT_MODE,
+}; // operating mode
 
-bool enable_adm1272_hsc(uint8_t bus,uint8_t addr, bool enable_flag);
+enum LATCH_COMPARATOR {
+	DISABLE_LATCH,
+	ENABLE_LATCH,
+}; // matching comparator
+
+typedef struct _ads1015_init_arg {
+	bool is_init;
+	// user defined
+	uint8_t device_operation_mode;
+	uint8_t alert_latch;
+} ads1015_init_arg;
 
 #endif

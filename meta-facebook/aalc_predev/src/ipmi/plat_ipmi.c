@@ -14,19 +14,12 @@
  * limitations under the License.
  */
 
-#ifndef ADM1272_H
-#define ADM1272_H
+#include <stdio.h>
+#include <stdlib.h>
 
-enum ADM1272_IRANGE {
-	IRANGE_0MV_TO_15MV = 0x0,
-	IRANGE_0MV_TO_30MV = 0x1,
-};
+#include "ipmi.h"
+#include "libutil.h"
 
-enum ADM1272_VRANGE {
-	VRANGE_0V_TO_60V = 0x0,
-	VRANGE_0V_TO_100V = 0x1,
-};
+#include <logging/log.h>
 
-bool enable_adm1272_hsc(uint8_t bus,uint8_t addr, bool enable_flag);
-
-#endif
+LOG_MODULE_REGISTER(plat_ipmi);

@@ -130,11 +130,13 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(nct7363)
 	sensor_name_to_num(ads112c)
 	sensor_name_to_num(hdc1080)
-  	sensor_name_to_num(ina238)
+  sensor_name_to_num(ina238)
 	sensor_name_to_num(nct214)
 	sensor_name_to_num(ast_tach)
 	sensor_name_to_num(xdp710)
 	sensor_name_to_num(ds160pt801)
+ 	sensor_name_to_num(ads1015)
+ 	sensor_name_to_num(plat_def_sensor)
 };
 // clang-format on
 
@@ -205,6 +207,10 @@ SENSOR_DRIVE_INIT_DECLARE(nct214);
 SENSOR_DRIVE_INIT_DECLARE(ast_tach);
 SENSOR_DRIVE_INIT_DECLARE(xdp710);
 SENSOR_DRIVE_INIT_DECLARE(ds160pt801);
+SENSOR_DRIVE_INIT_DECLARE(ads1015);
+#ifdef ENABLE_PLAT_DEF_SENSOR
+SENSOR_DRIVE_INIT_DECLARE(plat_def_sensor);
+#endif
 
 // The sequence needs to same with SENSOR_DEV ID
 sensor_drive_api sensor_drive_tbl[] = {
@@ -250,6 +256,7 @@ sensor_drive_api sensor_drive_tbl[] = {
 	SENSOR_DRIVE_TYPE_UNUSE(mpro),
 #endif
 	SENSOR_DRIVE_TYPE_INIT_MAP(bmr351),	SENSOR_DRIVE_TYPE_INIT_MAP(cx7),
+	SENSOR_DRIVE_TYPE_INIT_MAP(ads112c),	SENSOR_DRIVE_TYPE_INIT_MAP(hdc1080),
 #ifdef ENABLE_VISTARA
 	SENSOR_DRIVE_TYPE_INIT_MAP(vistara),
 #else
@@ -265,6 +272,12 @@ sensor_drive_api sensor_drive_tbl[] = {
 	SENSOR_DRIVE_TYPE_INIT_MAP(hdc1080),	SENSOR_DRIVE_TYPE_INIT_MAP(ina238),
 	SENSOR_DRIVE_TYPE_INIT_MAP(nct214),	SENSOR_DRIVE_TYPE_INIT_MAP(ast_tach),
 	SENSOR_DRIVE_TYPE_INIT_MAP(xdp710), SENSOR_DRIVE_TYPE_INIT_MAP(ds160pt801),
+ 	SENSOR_DRIVE_TYPE_INIT_MAP(ads1015),
+#ifdef ENABLE_PLAT_DEF_SENSOR
+	SENSOR_DRIVE_TYPE_INIT_MAP(plat_def_sensor),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(plat_def_sensor),
+#endif
 };
 
 static void init_sensor_num(void)

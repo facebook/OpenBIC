@@ -21,6 +21,7 @@
 #include "hal_i2c.h"
 #include "pmbus.h"
 #include "adm1272.h"
+#include <sys/util.h>
 
 LOG_MODULE_REGISTER(dev_adm1272);
 
@@ -29,9 +30,8 @@ LOG_MODULE_REGISTER(dev_adm1272);
 #define ADM1272_EIN_SAMPLE_CNT_MAX 0x1000000
 #define ADM1272_EIN_ENERGY_CNT_MAX 0x8000
 #define OPERATION_REGISTER 0x01;
-#define HSC_ENABLE_BIT BIT(7)
 
-bool enable_adm1272_hsc(uint8_t bus, uint8_t addr, uint8_t enable_flag)
+bool enable_adm1272_hsc(uint8_t bus, uint8_t addr, bool enable_flag)
 {
 	uint8_t retry = 5;
 	int ret = -1;
@@ -40,16 +40,17 @@ bool enable_adm1272_hsc(uint8_t bus, uint8_t addr, uint8_t enable_flag)
 	msg.target_addr = addr;
 	msg.tx_len = 2;
 	msg.data[0] = OPERATION_REGISTER;
-	msg.data[1] = HSC_DISABLE;
-	if (enable_flag == HSC_ENABLE)
-		msg.data[1] = HSC_ENABLE_BIT;
+	if (enable_flag == 1) {
+		msg.data[1] = BIT(7); // enable hsc
+	}
 
 	ret = i2c_master_write(&msg, retry);
 	if (ret != 0) {
 		LOG_ERR("Set enable hsc fail");
 		return false;
 	}
-
+  
+	LOG_INF("Set enable hsc success");
 	return true;
 }
 
