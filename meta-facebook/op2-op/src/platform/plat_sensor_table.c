@@ -27,12 +27,15 @@
 #include "plat_hook.h"
 #include "plat_class.h"
 #include "plat_power_seq.h"
+#include "ipmi.h"
+#include "libipmi.h"
 
 LOG_MODULE_REGISTER(plat_sensor);
 
 bool e1s_access(uint8_t sensor_num);
 bool retimer_access(uint8_t sensor_num);
 bool edge_access(uint8_t sensor_num);
+bool is_pwr_mnt_first_read[] = { false, false, false, false, false };
 
 sensor_cfg plat_sensor_config[] = {
 	/*  number,
@@ -634,7 +637,28 @@ bool e1s_access(uint8_t sensor_num)
 		LOG_ERR("Unsupported sensor device for e1s checking.");
 		break;
 	}
-	return get_e1s_present(e1s_index) && get_e1s_power_good(e1s_index);
+
+	bool is_ready = get_e1s_present(e1s_index) && get_e1s_power_good(e1s_index);
+
+	switch (sensor_cfgs->type) {
+	case sensor_dev_ina233:
+	case sensor_dev_sq52205:
+		if (is_ready) {
+			if (!is_pwr_mnt_first_read[e1s_index]) {
+				is_pwr_mnt_first_read[e1s_index] = true;
+				// Skip read data of first time
+				return false;
+			}
+		} else {
+			is_pwr_mnt_first_read[e1s_index] = false;
+		}
+
+		break;
+	default:
+		break;
+	}
+
+	return is_ready;
 }
 
 bool edge_access(uint8_t sensor_num)
