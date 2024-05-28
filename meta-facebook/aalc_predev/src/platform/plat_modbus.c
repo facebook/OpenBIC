@@ -49,8 +49,8 @@ LOG_MODULE_REGISTER(plat_modbus);
 
 #define UPADTE_FW_DATA_LENGTH_MIN 3 // contain 2 regs(offeset)+ 1 reg(length) at least
 
-#define BIT_LOW  0
-#define	BIT_HIGH  1
+#define BIT_LOW 0
+#define BIT_HIGH 1
 
 //{ DT_PROP(DT_INST(0, zephyr_modbus_serial), label) }
 
@@ -294,7 +294,9 @@ uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 	for (int i = 0; i < ARRAY_SIZE(modbus_pump_setting_table); i++) {
 		// check bit value is 0 or 1
 		uint8_t input_bit_value =
-			(cmd->data[0] & BIT(modbus_pump_setting_table[i].function_index)) ? BIT_HIGH : BIT_LOW;
+			(cmd->data[0] & BIT(modbus_pump_setting_table[i].function_index)) ?
+				BIT_HIGH :
+				BIT_LOW;
 		bool result_status = modbus_pump_setting_table[i].fn(&modbus_pump_setting_table[i],
 								     input_bit_value);
 		if (!result_status) {
@@ -307,9 +309,9 @@ uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 	if (check_error_flag) {
 		LOG_ERR("modebus 0x9410 setting error flag: 0x%x\n", check_error_flag);
 		return MODBUS_EXC_ILLEGAL_DATA_VAL;
-	} else {
-		return MODBUS_EXC_NONE;
 	}
+
+	return MODBUS_EXC_NONE;
 }
 
 static uint8_t modbus_to_do(modbus_command_mapping *cmd)
