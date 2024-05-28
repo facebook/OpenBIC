@@ -37,7 +37,7 @@
 #include "util_sys.h"
 #include "util_spi.h"
 #include "plat_version.h"
-#include "adm1272.h"
+#include "plat_hwm.h"
 #include "plat_log.h"
 
 LOG_MODULE_REGISTER(plat_modbus);
@@ -220,55 +220,6 @@ uint8_t modbus_read_hmi_version(modbus_command_mapping *cmd)
 	regs_reverse(cmd->data_len, cmd->data);
 
 	return MODBUS_EXC_NONE;
-}
-
-bool modbus_pump_setting_unsupport_function(pump_reset_struct *data, uint8_t bit_val)
-{
-	CHECK_NULL_ARG_WITH_RETURN(data, false);
-	return true;
-}
-
-bool clear_log_for_modbus_pump_setting(pump_reset_struct *data, uint8_t bit_val)
-{
-	CHECK_NULL_ARG_WITH_RETURN(data, false);
-
-	if (bit_val == 0) // do nothing
-		return true;
-
-	bool clear_log_status = modbus_clear_log();
-
-	return clear_log_status;
-}
-
-bool pump_reset(pump_reset_struct *data, uint8_t bit_val)
-{
-	CHECK_NULL_ARG_WITH_RETURN(data, false);
-
-	if (bit_val == 0) // do nothing
-		return true;
-
-	// Check sensor information in sensor config table
-	sensor_cfg *cfg = get_common_sensor_cfg_info(data->senser_num);
-	if (cfg == NULL)
-		return false;
-	//uint8_t bus,uint8_t addr, bool enable_flag
-	uint8_t bus = cfg->port;
-	uint8_t addr = cfg->target_addr;
-	// 1 enable, 0 disable, stop pump first
-	if (enable_adm1272_hsc(bus, addr, false)) {
-		// check pump is already enable
-		k_msleep(500);
-		// enable pump
-		if (enable_adm1272_hsc(bus, addr, true)) {
-			return true;
-		} else {
-			LOG_ERR("Fail when start the pump.");
-			return false;
-		}
-	} else {
-		LOG_ERR("Fail when stop the pump.");
-		return false;
-	}
 }
 
 pump_reset_struct modbus_pump_setting_table[] = {
