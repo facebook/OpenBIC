@@ -49,7 +49,7 @@ bool enable_adm1272_hsc(uint8_t bus, uint8_t addr, bool enable_flag)
 		LOG_ERR("Set enable hsc fail");
 		return false;
 	}
-  
+
 	LOG_INF("Set enable hsc success");
 	return true;
 }
