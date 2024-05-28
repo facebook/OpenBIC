@@ -29,7 +29,6 @@
 
 LOG_MODULE_REGISTER(plat_log);
 
-#define LOG_BEGIN_MODBUS_ADDR 0x1A29 //Event 1 Error log Modbus Addr
 #define LOG_MAX_INDEX 0x0FFF //recount when log index > 0x0FFF
 #define LOG_MAX_NUM 20 // total log amount: 20
 #define AALC_FRU_LOG_START 0x4000 //log offset: 16KB
@@ -54,21 +53,13 @@ const err_sensor_mapping sensor_normal_codes[] = {
 	{ PUMP_3_SPEED_RECOVER, SENSOR_NUM_PB_3_PUMP_TACH_RPM },
 };
 
-static uint16_t error_log_count(void)
+uint16_t error_log_count(void)
 {
 	for (uint16_t i = 0; i < LOG_MAX_NUM; i++) {
 		if (err_log_data[i].index == 0xFFFF)
 			return i;
 	}
 	return (uint16_t)LOG_MAX_NUM;
-}
-
-uint8_t modbus_error_log_count(modbus_command_mapping *cmd)
-{
-	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-
-	cmd->data[0] = error_log_count();
-	return MODBUS_EXC_NONE;
 }
 
 /* 
@@ -99,17 +90,10 @@ static uint16_t get_log_position_by_time_order(uint8_t order)
 	return (i + LOG_MAX_NUM - (order - 1)) % LOG_MAX_NUM;
 }
 
-uint8_t modbus_error_log_event(modbus_command_mapping *cmd)
+void log_transfer_to_modbus_data(uint16_t *modbus_data, uint8_t cmd_size, uint16_t order)
 {
-	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-
-	uint16_t order = 1 + ((cmd->start_addr - LOG_BEGIN_MODBUS_ADDR) / cmd->cmd_size);
-
-	memcpy(cmd->data, &err_log_data[get_log_position_by_time_order(order)],
-	       sizeof(uint16_t) * cmd->cmd_size);
-
-	regs_reverse(cmd->data_len, cmd->data);
-	return MODBUS_EXC_NONE;
+	memcpy(modbus_data, &err_log_data[get_log_position_by_time_order(order)],
+	       sizeof(uint16_t) * cmd_size);
 }
 
 bool modbus_clear_log(void)
@@ -196,15 +180,22 @@ void error_log_event(uint8_t sensor_num, bool val_normal)
 		err_log_data[fru_count].volt =
 			get_sensor_reading_to_modbus_val(SENSOR_NUM_BPB_HSC_P48V_VIN_VOLT_V, -2, 1);
 
-		if (!plat_eeprom_write((AALC_FRU_LOG_START + fru_count * LOG_MAX_NUM),
-				       (uint8_t *)&err_log_data[fru_count],
-				       sizeof(modbus_err_log_mapping)))
+		if (!plat_eeprom_write(
+			    (AALC_FRU_LOG_START + fru_count * sizeof(modbus_err_log_mapping)),
+			    (uint8_t *)&err_log_data[fru_count], sizeof(modbus_err_log_mapping)))
 			LOG_ERR("Write Log failed with Error code: %02x", err_code);
 	}
 }
 
 void init_load_eeprom_log(void)
 {
-	if (!plat_eeprom_read(AALC_FRU_LOG_START, (uint8_t *)err_log_data, AALC_FRU_LOG_SIZE))
-		LOG_ERR("READ Log failed from EEPROM");
+	// read/write data length has to be less EEPROM_WRITE_SIZE(32)
+	memset(err_log_data, 0xFF, sizeof(err_log_data));
+	uint16_t log_len = sizeof(modbus_err_log_mapping);
+	for (uint8_t i = 0; i < LOG_MAX_NUM; i++) {
+		if (!plat_eeprom_read(AALC_FRU_LOG_START + i * log_len, (uint8_t *)&err_log_data[i],
+				      log_len)) {
+			LOG_ERR("READ Event %d failed from EEPROM", i + 1);
+		}
+	}
 }

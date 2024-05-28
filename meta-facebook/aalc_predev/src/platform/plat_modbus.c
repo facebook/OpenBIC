@@ -38,6 +38,7 @@
 #include "util_sys.h"
 #include "util_spi.h"
 #include "plat_version.h"
+#include "plat_log.h"
 
 LOG_MODULE_REGISTER(plat_modbus);
 
@@ -47,6 +48,7 @@ LOG_MODULE_REGISTER(plat_modbus);
 #define FW_UPDATE_DISABLE_DATA 0x0100
 
 #define UPADTE_FW_DATA_LENGTH_MIN 3 // contain 2 regs(offeset)+ 1 reg(length) at least
+#define LOG_BEGIN_MODBUS_ADDR MODBUS_EVENT_1_ERROR_LOG_ADDR //Event 1 Error log Modbus Addr
 
 //{ DT_PROP(DT_INST(0, zephyr_modbus_serial), label) }
 
@@ -215,6 +217,26 @@ uint8_t modbus_read_hmi_version(modbus_command_mapping *cmd)
 	memcpy(cmd->data, version, EEPROM_HMI_VERSION_SIZE);
 	regs_reverse(cmd->data_len, cmd->data);
 
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_error_log_count(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	cmd->data[0] = error_log_count();
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_error_log_event(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint16_t order = 1 + ((cmd->start_addr - LOG_BEGIN_MODBUS_ADDR) / cmd->cmd_size);
+
+	log_transfer_to_modbus_data(cmd->data, cmd->cmd_size, order);
+
+	regs_reverse(cmd->data_len, cmd->data);
 	return MODBUS_EXC_NONE;
 }
 
@@ -621,27 +643,27 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_STRICKY_SB_TTV_COOLANT_LEAKAGE_2_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0, 1 },
 	{ MODBUS_STRICKY_SB_TTV_COOLANT_LEAKAGE_3_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0, 1 },
 	// Error Log
-	{ MODBUS_ERROR_LOG_COUNT_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
-	{ MODBUS_EVENT_1_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
-	{ MODBUS_EVENT_2_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
-	{ MODBUS_EVENT_3_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
-	{ MODBUS_EVENT_4_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
-	{ MODBUS_EVENT_5_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
-	{ MODBUS_EVENT_6_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
-	{ MODBUS_EVENT_7_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
-	{ MODBUS_EVENT_8_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
-	{ MODBUS_EVENT_9_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
-	{ MODBUS_EVENT_10_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
-	{ MODBUS_EVENT_11_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
-	{ MODBUS_EVENT_12_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
-	{ MODBUS_EVENT_13_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
-	{ MODBUS_EVENT_14_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
-	{ MODBUS_EVENT_15_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
-	{ MODBUS_EVENT_16_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
-	{ MODBUS_EVENT_17_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
-	{ MODBUS_EVENT_18_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
-	{ MODBUS_EVENT_19_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
-	{ MODBUS_EVENT_20_ERROR_LOG_ADDR, NULL, modbus_to_do, 0, 0, 0, 10 },
+	{ MODBUS_ERROR_LOG_COUNT_ADDR, NULL, modbus_error_log_count, 0, 0, 0, 1 },
+	{ MODBUS_EVENT_1_ERROR_LOG_ADDR, NULL, modbus_error_log_event, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_2_ERROR_LOG_ADDR, NULL, modbus_error_log_event, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_3_ERROR_LOG_ADDR, NULL, modbus_error_log_event, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_4_ERROR_LOG_ADDR, NULL, modbus_error_log_event, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_5_ERROR_LOG_ADDR, NULL, modbus_error_log_event, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_6_ERROR_LOG_ADDR, NULL, modbus_error_log_event, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_7_ERROR_LOG_ADDR, NULL, modbus_error_log_event, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_8_ERROR_LOG_ADDR, NULL, modbus_error_log_event, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_9_ERROR_LOG_ADDR, NULL, modbus_error_log_event, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_10_ERROR_LOG_ADDR, NULL, modbus_error_log_event, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_11_ERROR_LOG_ADDR, NULL, modbus_error_log_event, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_12_ERROR_LOG_ADDR, NULL, modbus_error_log_event, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_13_ERROR_LOG_ADDR, NULL, modbus_error_log_event, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_14_ERROR_LOG_ADDR, NULL, modbus_error_log_event, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_15_ERROR_LOG_ADDR, NULL, modbus_error_log_event, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_16_ERROR_LOG_ADDR, NULL, modbus_error_log_event, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_17_ERROR_LOG_ADDR, NULL, modbus_error_log_event, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_18_ERROR_LOG_ADDR, NULL, modbus_error_log_event, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_19_ERROR_LOG_ADDR, NULL, modbus_error_log_event, 0, 0, 0, 10 },
+	{ MODBUS_EVENT_20_ERROR_LOG_ADDR, NULL, modbus_error_log_event, 0, 0, 0, 10 },
 	// FRU write read
 	{ MODBUS_MB_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, MB_FRU_ID, 0, 0,
 	  256 },

@@ -15,8 +15,8 @@
  */
 #include "plat_modbus.h"
 
-uint8_t modbus_error_log_count(modbus_command_mapping *cmd);
-uint8_t modbus_error_log_event(modbus_command_mapping *cmd);
+uint16_t error_log_count(void);
+void log_transfer_to_modbus_data(uint16_t *modbus_data, uint8_t cmd_size, uint16_t order);
 void error_log_event(uint8_t sensor_num, bool val_normal);
 void init_load_eeprom_log(void);
 bool modbus_clear_log(void);

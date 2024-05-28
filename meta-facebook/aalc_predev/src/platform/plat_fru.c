@@ -324,6 +324,8 @@ bool plat_eeprom_read(uint32_t offset, uint8_t *data, uint16_t data_len)
 	entry.data_len = data_len;
 
 	memcpy(&entry.config, &fru_config[MB_FRU_ID], sizeof(fru_config[MB_FRU_ID]));
+	memset(entry.data, 0xFF, sizeof(entry.data));
+
 	if (!eeprom_read(&entry)) {
 		LOG_ERR("read eeprom 0x%x fail", offset);
 		return false;
