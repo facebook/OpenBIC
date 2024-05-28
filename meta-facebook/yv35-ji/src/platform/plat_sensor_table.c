@@ -25,6 +25,8 @@
 #include "pmbus.h"
 #include "plat_def.h"
 #include "tmp461.h"
+#include "pt5161l.h"
+#include "ds160pt801.h"
 #include "plat_class.h"
 #include "plat_hook.h"
 #include "plat_i2c.h"
@@ -54,72 +56,70 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_VOL_ADC0_P12V_STBY, sensor_dev_ast_adc, ADC_PORT0, NONE, NONE, stby_access, 66,
 	  10, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &ast_adc_init_args[0] },
-	{ SENSOR_NUM_VOL_ADC1_VDD_1V8, sensor_dev_ast_adc, ADC_PORT1, NONE, NONE, stby_access, 1, 1,
+	{ SENSOR_NUM_VOL_ADC1_VDD_1V8, sensor_dev_ast_adc, ADC_PORT1, NONE, NONE, dc_access, 1, 1,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &ast_adc_init_args[0] },
 	{ SENSOR_NUM_VOL_ADC2_P3V3_STBY, sensor_dev_ast_adc, ADC_PORT2, NONE, NONE, stby_access, 2,
 	  1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &ast_adc_init_args[0] },
-	{ SENSOR_NUM_VOL_ADC3_SOCVDD, sensor_dev_ast_adc, ADC_PORT3, NONE, NONE, stby_access, 1, 1,
+	{ SENSOR_NUM_VOL_ADC3_SOCVDD, sensor_dev_ast_adc, ADC_PORT3, NONE, NONE, dc_access, 1, 1,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &ast_adc_init_args[0] },
 	{ SENSOR_NUM_VOL_ADC4_P3V_BAT, sensor_dev_ast_adc, ADC_PORT4, NONE, NONE, stby_access, 301,
 	  100, SAMPLE_COUNT_DEFAULT, POLL_TIME_BAT3V, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  pre_vol_bat3v_read, NULL, post_vol_bat3v_read, NULL, &ast_adc_init_args[0] },
-	{ SENSOR_NUM_VOL_ADC5_CPUVDD, sensor_dev_ast_adc, ADC_PORT5, NONE, NONE, stby_access, 1, 1,
+	{ SENSOR_NUM_VOL_ADC5_CPUVDD, sensor_dev_ast_adc, ADC_PORT5, NONE, NONE, dc_access, 1, 1,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &ast_adc_init_args[0] },
-	{ SENSOR_NUM_VOL_ADC6_FPGA_VCC_AO, sensor_dev_ast_adc, ADC_PORT6, NONE, NONE, stby_access,
-	  1, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &ast_adc_init_args[0] },
-	{ SENSOR_NUM_VOL_ADC7_1V2, sensor_dev_ast_adc, ADC_PORT7, NONE, NONE, stby_access, 1, 1,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  NULL, NULL, NULL, NULL, &ast_adc_init_args[0] },
-	{ SENSOR_NUM_VOL_ADC9_VDD_M2, sensor_dev_ast_adc, ADC_PORT9, NONE, NONE, stby_access, 2, 1,
+	{ SENSOR_NUM_VOL_ADC7_1V2, sensor_dev_ast_adc, ADC_PORT7, NONE, NONE, dc_access, 1, 1,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &ast_adc_init_args[0] },
 	{ SENSOR_NUM_VOL_ADC10_P1V2_STBY, sensor_dev_ast_adc, ADC_PORT10, NONE, NONE, stby_access,
 	  1, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &ast_adc_init_args[0] },
-	{ SENSOR_NUM_VOL_ADC11_FBVDDQ, sensor_dev_ast_adc, ADC_PORT11, NONE, NONE, stby_access, 1,
-	  1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	{ SENSOR_NUM_VOL_ADC11_FBVDDQ, sensor_dev_ast_adc, ADC_PORT11, NONE, NONE, dc_access, 1, 1,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &ast_adc_init_args[0] },
-	{ SENSOR_NUM_VOL_ADC12_FBVDDP2, sensor_dev_ast_adc, ADC_PORT12, NONE, NONE, stby_access, 1,
-	  1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	{ SENSOR_NUM_VOL_ADC12_FBVDDP2, sensor_dev_ast_adc, ADC_PORT12, NONE, NONE, dc_access, 1, 1,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &ast_adc_init_args[0] },
-	{ SENSOR_NUM_VOL_ADC13_FBVDD1, sensor_dev_ast_adc, ADC_PORT13, NONE, NONE, stby_access, 1,
-	  1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	{ SENSOR_NUM_VOL_ADC13_FBVDD1, sensor_dev_ast_adc, ADC_PORT13, NONE, NONE, dc_access, 1, 1,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &ast_adc_init_args[0] },
 	{ SENSOR_NUM_VOL_ADC14_P5V_STBY, sensor_dev_ast_adc, ADC_PORT14, NONE, NONE, stby_access,
 	  711, 200, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &ast_adc_init_args[0] },
-	{ SENSOR_NUM_VOL_ADC15_CPU_DVDD, sensor_dev_ast_adc, ADC_PORT15, NONE, NONE, stby_access, 1,
+	{ SENSOR_NUM_VOL_ADC15_CPU_DVDD, sensor_dev_ast_adc, ADC_PORT15, NONE, NONE, dc_access, 1,
 	  1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &ast_adc_init_args[0] },
 
 	// INA230
 	{ SENSOR_NUM_PWR_E1S, sensor_dev_ina230, I2C_BUS2, INA230_ADDR, INA230_PWR_OFFSET,
-	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &ina230_init_args[0] },
 	{ SENSOR_NUM_CUR_E1S, sensor_dev_ina230, I2C_BUS2, INA230_ADDR, INA230_CUR_OFFSET,
-	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &ina230_init_args[0] },
 	{ SENSOR_NUM_VOL_E1S, sensor_dev_ina230, I2C_BUS2, INA230_ADDR, INA230_BUS_VOL_OFFSET,
-	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &ina230_init_args[0] },
 
 	// TMP
 	{ SENSOR_NUM_TEMP_TMP451_IN, sensor_dev_tmp461, I2C_BUS12, TMP451_ADDR,
 	  TMP461_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_tmp451_read, &mux_conf_addr_0xe0[0],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_tmp451_read, &mux_conf_addr_0xe0[1],
 	  NULL, NULL, NULL },
 	{ SENSOR_NUM_TEMP_TMP451_OUT, sensor_dev_tmp461, I2C_BUS12, TMP451_ADDR,
 	  TMP461_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_tmp451_read, &mux_conf_addr_0xe0[1],
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_tmp451_read, &mux_conf_addr_0xe0[0],
 	  NULL, NULL, NULL },
-	{ SENSOR_NUM_TEMP_FPGA, sensor_dev_tmp461, I2C_BUS12, TMP451_ADDR,
-	  TMP461_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_TEMP_LPDDR5_UP, sensor_dev_tmp461, I2C_BUS12, TMP451_ADDR,
+	  TMP461_LOCAL_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_tmp451_read, &mux_conf_addr_0xe0[2],
+	  NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_LPDDR5_DOWN, sensor_dev_tmp461, I2C_BUS12, TMP451_ADDR,
+	  TMP461_LOCAL_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_tmp451_read, &mux_conf_addr_0xe0[3],
 	  NULL, NULL, NULL },
 	{ SENSOR_NUM_TEMP_TMP75_FIO, sensor_dev_tmp75, I2C_BUS2, TMP75_ADDR, TMP75_TEMP_OFFSET,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
@@ -182,6 +182,101 @@ sensor_cfg mp5990_temp_sensor_config_table[] = {
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
 };
 
+sensor_cfg pt4080l_sensor_config_table[] = {
+	{ SENSOR_NUM_TEMP_RETIMER, sensor_dev_pt5161l, I2C_BUS2, AL_RETIMER_ADDR,
+	  PT5161L_TEMP_OFFSET, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_pt4080l_read, &mux_conf_addr_0xe2[1],
+	  NULL, NULL, &pt5161l_init_args[0] },
+};
+
+sensor_cfg ds160pt801_sensor_config_table[] = {
+	{ SENSOR_NUM_TEMP_RETIMER, sensor_dev_ds160pt801, I2C_BUS2, TI_RETIMER_ADDR,
+	  DS160PT801_READ_TEMP, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ds160pt801_read, &mux_conf_addr_0xe2[1],
+	  NULL, NULL, NULL },
+};
+
+static sensor_cfg *change_retimer_sensor_cfg(uint8_t module)
+{
+	int i = 0;
+	for (i = 0; i < sensor_config_count; i++) {
+		if (sensor_config[i].num == SENSOR_NUM_TEMP_RETIMER) {
+			if (module == RETIMER_MODULE_PT4080L)
+				sensor_config[i] = pt4080l_sensor_config_table[0];
+			else if (module == RETIMER_MODULE_DS160PT801)
+				sensor_config[i] = ds160pt801_sensor_config_table[0];
+			else {
+				LOG_ERR("Unsupported Retimer module, Retimer module: 0x%x", module);
+				return NULL;
+			}
+			break;
+		}
+	}
+
+	if (i == sensor_config_count)
+		return NULL;
+
+	return &sensor_config[i];
+}
+
+bool modify_sensor_cfg()
+{
+	/* Need to switch channel after EVT2 */
+	if (get_board_revision() >= SYS_BOARD_EVT2) {
+		I2C_MSG msg = { 0 };
+		msg.bus = I2C_BUS2;
+		msg.target_addr = (0xE2 >> 1); //switch address
+		msg.data[0] = 0x02; //channel2
+		msg.tx_len = 1;
+		msg.rx_len = 0;
+
+		if (i2c_master_write(&msg, 3)) {
+			LOG_ERR("Failed to switch channel for retimer");
+			return false;
+		}
+	}
+
+	uint8_t addr_list[10] = { 0 };
+	uint8_t addr_len = 0;
+	uint8_t retimer_module = RETIMER_MODULE_UNKNOWN;
+
+	i2c_scan(I2C_BUS2, addr_list, &addr_len);
+
+	int i = 0;
+	for (i = 0; i < addr_len; i++) {
+		if (addr_list[i] == (AL_RETIMER_ADDR << 1)) {
+			LOG_WRN("Found AL retimer device at 0x40");
+			retimer_module = RETIMER_MODULE_PT4080L;
+			break;
+		} else if (addr_list[i] == (TI_RETIMER_ADDR << 1)) {
+			LOG_WRN("Found TI retimer device at 0x20");
+			retimer_module = RETIMER_MODULE_DS160PT801;
+			break;
+		}
+	}
+
+	if (i == ARRAY_SIZE(addr_list)) {
+		LOG_WRN("No retimer device found!!");
+		return false;
+	}
+
+	set_retimer_module(retimer_module);
+
+	sensor_cfg *retimer_cfg = NULL;
+	retimer_cfg = change_retimer_sensor_cfg(retimer_module);
+	if (!retimer_cfg) {
+		LOG_WRN("Retimer sensor config not found!!");
+		return false;
+	}
+
+	if (init_drive_type_delayed(retimer_cfg) == false) {
+		LOG_ERR("Retimer initial fail");
+		return false;
+	}
+
+	return true;
+}
+
 void pal_extend_sensor_config()
 {
 	uint8_t sensor_count = 0;
@@ -193,6 +288,8 @@ void pal_extend_sensor_config()
 		LOG_INF("HSC vendor: MP5990");
 		sensor_count = ARRAY_SIZE(mp5990_sensor_config_table);
 		for (int index = 0; index < sensor_count; index++) {
+			if (get_board_revision() >= SYS_BOARD_EVT2)
+				mp5990_sensor_config_table[index].target_addr = MP5990_ADDR_1;
 			add_sensor_config(mp5990_sensor_config_table[index]);
 		}
 		/* MP5990 can read HSC temperature */
@@ -205,6 +302,26 @@ void pal_extend_sensor_config()
 	default:
 		LOG_ERR("Unsupported HSC module, HSC module: 0x%x", hsc_module);
 		break;
+	}
+
+	uint8_t board_revision = get_board_revision();
+	if (board_revision != SYS_BOARD_POC) {
+		uint8_t retimer_module = get_retimer_module();
+
+		/* Determine which Retimer module is used */
+		switch (retimer_module) {
+		case RETIMER_MODULE_PT4080L:
+			LOG_INF("Retimer vendor: PT4080L");
+			add_sensor_config(pt4080l_sensor_config_table[0]);
+			break;
+		case RETIMER_MODULE_DS160PT801:
+			LOG_INF("Retimer vendor: DS160PT801");
+			add_sensor_config(ds160pt801_sensor_config_table[0]);
+			break;
+		default:
+			LOG_ERR("Unsupported Retimer module, Retimer module: 0x%x", retimer_module);
+			break;
+		}
 	}
 
 	if (sensor_config_count != sdr_count) {
@@ -231,6 +348,24 @@ uint8_t pal_get_extend_sensor_config()
 	default:
 		LOG_ERR("Unsupported HSC module, HSC module: 0x%x", hsc_module);
 		break;
+	}
+
+	uint8_t board_revision = get_board_revision();
+	if (board_revision != SYS_BOARD_POC) {
+		uint8_t retimer_module = get_retimer_module();
+		switch (retimer_module) {
+		case RETIMER_MODULE_PT4080L:
+			LOG_INF("Retimer vendor: PT4080L");
+			extend_sensor_config_size += ARRAY_SIZE(pt4080l_sensor_config_table);
+			break;
+		case RETIMER_MODULE_DS160PT801:
+			LOG_INF("Retimer vendor: DS160PT801");
+			extend_sensor_config_size += ARRAY_SIZE(ds160pt801_sensor_config_table);
+			break;
+		default:
+			LOG_ERR("Unsupported Retimer module, Retimer module: 0x%x", retimer_module);
+			break;
+		}
 	}
 
 	return extend_sensor_config_size;

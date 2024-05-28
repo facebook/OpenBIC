@@ -29,11 +29,13 @@
 LOG_MODULE_REGISTER(apml);
 
 #define RETRY_MAX 3
+#define CPUID_MCA_WAIT_MAX 10
 #define MAILBOX_COMPLETE_RETRY_MAX 200
 #define APML_RESP_BUFFER_SIZE 10
 #define APML_HANDLER_STACK_SIZE 2048
 #define APML_MSGQ_LEN 32
 #define WAIT_TIME_MS 10
+#define WAIT_CPUID_MCA_RESP_TIME_MS 50
 #define RECOVERY_SBRMI_RETRY_MAX 5
 
 struct k_msgq apml_msgq;
@@ -43,6 +45,7 @@ K_THREAD_STACK_DEFINE(apml_handler_stack, APML_HANDLER_STACK_SIZE);
 apml_buffer apml_resp_buffer[APML_RESP_BUFFER_SIZE];
 static bool is_fatal_error_happened;
 static int command_code_len = SBRMI_CMD_CODE_LEN_DEFAULT;
+static int apml_bus = APML_BUS_UNKNOWN;
 
 uint8_t apml_read_byte(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t *read_data)
 {
@@ -122,13 +125,13 @@ static uint8_t write_MCA_request(apml_msg *msg)
 
 	if ((command_code_len == SBRMI_CMD_CODE_LEN_TWO_BYTE) &&
 	    (msg->target_addr == SB_RMI_ADDR)) {
-		i2c_msg.tx_len = 10;
+		i2c_msg.tx_len = 11;
 		i2c_msg.data[0] = 0x73;
 		i2c_msg.data[1] = 0x00;
-		i2c_msg.data[2] = 0x07;
+		i2c_msg.data[2] = 0x08;
 		i2c_msg.data[3] = 0x08;
 		i2c_msg.data[4] = 0x86;
-		memcpy(&i2c_msg.data[5], msg->WrData, sizeof(mca_WrData));
+		memcpy(&i2c_msg.data[5], msg->WrData, sizeof(mca_WrData_TwoPOne));
 	} else {
 		i2c_msg.tx_len = 9;
 		i2c_msg.data[0] = 0x73;
@@ -168,12 +171,7 @@ static uint8_t read_MCA_response(apml_msg *msg)
 		return APML_ERROR;
 	}
 
-	if ((command_code_len == SBRMI_CMD_CODE_LEN_TWO_BYTE) &&
-	    (msg->target_addr == SB_RMI_ADDR)) {
-		memcpy(msg->RdData, &i2c_msg.data[2], sizeof(mca_RdData));
-	} else {
-		memcpy(msg->RdData, &i2c_msg.data[1], sizeof(mca_RdData));
-	}
+	memcpy(msg->RdData, &i2c_msg.data[1], sizeof(mca_RdData));
 	return APML_SUCCESS;
 }
 
@@ -185,11 +183,13 @@ static uint8_t access_MCA(apml_msg *msg)
 		return APML_ERROR;
 	}
 
-	if (!wait_HwAlert_set(msg, RETRY_MAX)) {
-		LOG_ERR("HwAlert not be set, retry %d times.", RETRY_MAX);
+	if (!wait_HwAlert_set(msg, CPUID_MCA_WAIT_MAX)) {
+		LOG_ERR("HwAlert not be set, retry %d times.", CPUID_MCA_WAIT_MAX);
 		return APML_ERROR;
 	}
 
+	/* wait for CPU to fill out registers */
+	k_msleep(WAIT_CPUID_MCA_RESP_TIME_MS);
 	if (read_MCA_response(msg)) {
 		LOG_ERR("Read response failed.");
 		return APML_ERROR;
@@ -214,20 +214,20 @@ static uint8_t write_CPUID_request(apml_msg *msg)
 
 	if ((command_code_len == SBRMI_CMD_CODE_LEN_TWO_BYTE) &&
 	    (msg->target_addr == SB_RMI_ADDR)) {
-		i2c_msg.tx_len = 10;
+		i2c_msg.tx_len = 12;
 		i2c_msg.data[0] = 0x73;
 		i2c_msg.data[1] = 0x00;
-		i2c_msg.data[2] = 0x08;
+		i2c_msg.data[2] = 0x09;
 		i2c_msg.data[3] = 0x08;
 		i2c_msg.data[4] = 0x91;
-		memcpy(&i2c_msg.data[5], msg->WrData, sizeof(mca_WrData));
+		memcpy(&i2c_msg.data[5], msg->WrData, sizeof(cpuid_WrData_TwoPOne));
 	} else {
-		i2c_msg.tx_len = 9;
+		i2c_msg.tx_len = 10;
 		i2c_msg.data[0] = 0x73;
 		i2c_msg.data[1] = 0x08;
 		i2c_msg.data[2] = 0x08;
 		i2c_msg.data[3] = 0x91;
-		memcpy(&i2c_msg.data[4], msg->WrData, sizeof(mca_WrData));
+		memcpy(&i2c_msg.data[4], msg->WrData, sizeof(cpuid_WrData));
 	}
 
 	if (i2c_master_write(&i2c_msg, retry)) {
@@ -259,12 +259,7 @@ static uint8_t read_CPUID_response(apml_msg *msg)
 		return APML_ERROR;
 	}
 
-	if ((command_code_len == SBRMI_CMD_CODE_LEN_TWO_BYTE) &&
-	    (msg->target_addr == SB_RMI_ADDR)) {
-		memcpy(msg->RdData, &i2c_msg.data[2], sizeof(cpuid_RdData));
-	} else {
-		memcpy(msg->RdData, &i2c_msg.data[1], sizeof(cpuid_RdData));
-	}
+	memcpy(msg->RdData, &i2c_msg.data[1], sizeof(cpuid_RdData));
 	return APML_SUCCESS;
 }
 
@@ -276,11 +271,13 @@ static uint8_t access_CPUID(apml_msg *msg)
 		return APML_ERROR;
 	}
 
-	if (!wait_HwAlert_set(msg, RETRY_MAX)) {
-		LOG_ERR("HwAlert not be set, retry %d times.", RETRY_MAX);
+	if (!wait_HwAlert_set(msg, CPUID_MCA_WAIT_MAX)) {
+		LOG_ERR("HwAlert not be set, retry %d times.", CPUID_MCA_WAIT_MAX);
 		return APML_ERROR;
 	}
 
+	/* wait for CPU to fill out registers */
+	k_msleep(WAIT_CPUID_MCA_RESP_TIME_MS);
 	if (read_CPUID_response(msg)) {
 		LOG_ERR("Read CPUID response failed.");
 		return APML_ERROR;
@@ -385,20 +382,36 @@ static uint8_t access_RMI_mailbox(apml_msg *msg)
 	/* wait for SwAlertSts to be set */
 	uint8_t status;
 	for (i = 0; i < MAILBOX_COMPLETE_RETRY_MAX; i++) {
-		if (apml_read_byte(msg->bus, msg->target_addr, SBRMI_STATUS, &status)) {
-			LOG_ERR("Read SwAlertSts failed.");
-			return APML_ERROR;
+		/* For TURIN, wait for SoftwareInterrupt */
+		if (command_code_len == SBRMI_CMD_CODE_LEN_TWO_BYTE) {
+			if (apml_read_byte(msg->bus, msg->target_addr, SBRMI_SOFTWARE_INTERRUPT, &status)) {
+				LOG_ERR("Read SoftwareInterrupt failed.");
+				return APML_ERROR;
+			}
+			if ((status & 0x01) == 0) {
+				break;
+			}
+		} else {
+			if (apml_read_byte(msg->bus, msg->target_addr, SBRMI_STATUS, &status)) {
+				LOG_ERR("Read SwAlertSts failed.");
+				return APML_ERROR;
+			}
+			if (status & 0x02) {
+				break;
+			}
 		}
-		if (status & 0x02) {
-			break;
-		}
+
 		k_msleep(WAIT_TIME_MS);
 		if (!get_post_status()) {
 			return APML_ERROR;
 		}
 	}
 	if (i == MAILBOX_COMPLETE_RETRY_MAX) {
-		LOG_ERR("SwAlertSts not be set, retry %d times.", MAILBOX_COMPLETE_RETRY_MAX);
+		if (command_code_len == SBRMI_CMD_CODE_LEN_TWO_BYTE) {
+			LOG_ERR("SoftwareInterrupt not be set, retry %d times.", MAILBOX_COMPLETE_RETRY_MAX);
+		} else {
+			LOG_ERR("SwAlertSts not be set, retry %d times.", MAILBOX_COMPLETE_RETRY_MAX);
+		}
 		return APML_ERROR;
 	}
 
@@ -413,9 +426,11 @@ static uint8_t access_RMI_mailbox(apml_msg *msg)
 	}
 
 	/* clear SwAlertSts */
-	if (apml_write_byte(msg->bus, msg->target_addr, SBRMI_STATUS, 0x02)) {
-		LOG_ERR("Clear SwAlertSts failed.");
-		return APML_ERROR;
+	if (command_code_len != SBRMI_CMD_CODE_LEN_TWO_BYTE) {
+		if (apml_write_byte(msg->bus, msg->target_addr, SBRMI_STATUS, 0x02)) {
+			LOG_ERR("Clear SwAlertSts failed.");
+			return APML_ERROR;
+		}
 	}
 	return APML_SUCCESS;
 }
@@ -463,6 +478,11 @@ int set_sbrmi_command_code_len(uint8_t value)
 {
 	command_code_len = value;
 	return 0;
+}
+
+int get_sbrmi_command_code_len()
+{
+	return command_code_len;
 }
 
 static void apml_handler(void *arvg0, void *arvg1, void *arvg2)
@@ -514,6 +534,11 @@ static void apml_handler(void *arvg0, void *arvg1, void *arvg2)
 void apml_init()
 {
 	LOG_DBG("apml_init");
+	apml_bus = pal_get_apml_bus();
+	if (apml_bus == APML_BUS_UNKNOWN) {
+		LOG_ERR("Failed to set APML bus");
+		return;
+	}
 
 	pal_check_sbrmi_command_code_length();
 
@@ -533,7 +558,7 @@ void fatal_error_happened()
 void apml_recovery()
 {
 	uint8_t ret, read_data = 0x00;
-	ret = apml_read_byte(APML_BUS, SB_RMI_ADDR, SBRMI_REVISION, &read_data);
+	ret = apml_read_byte(apml_bus, SB_RMI_ADDR, SBRMI_REVISION, &read_data);
 
 	if (ret) {
 		LOG_ERR("Failed to read SBRMI revision.");
@@ -542,12 +567,12 @@ void apml_recovery()
 	if ((ret || ((read_data != PLAT_SBRMI_REVISION) && (read_data != SBRMI_REV_BRTH))) &&
 	    get_post_status()) {
 		LOG_INF("Recovery SBRMI.");
-		if (apml_read_byte(APML_BUS, SB_TSI_ADDR, SBTSI_CONFIG, &read_data)) {
+		if (apml_read_byte(apml_bus, SB_TSI_ADDR, SBTSI_CONFIG, &read_data)) {
 			LOG_ERR("Failed to read SBTSI config.");
 			return;
 		}
 
-		if (apml_write_byte(APML_BUS, SB_TSI_ADDR, SBTSI_CONFIG_WRITE,
+		if (apml_write_byte(apml_bus, SB_TSI_ADDR, SBTSI_CONFIG_WRITE,
 				    read_data | RMI_SOFT_RESET_BIT)) {
 			LOG_ERR("Failed to write SBTSI config.");
 			return;
@@ -556,7 +581,7 @@ void apml_recovery()
 		uint8_t i = 0;
 		for (; i < RECOVERY_SBRMI_RETRY_MAX; i++) {
 			read_data = 0;
-			if (apml_read_byte(APML_BUS, SB_TSI_ADDR, SBTSI_CONFIG, &read_data)) {
+			if (apml_read_byte(apml_bus, SB_TSI_ADDR, SBTSI_CONFIG, &read_data)) {
 				LOG_ERR("Failed to read SBTSI config.");
 				return;
 			}
@@ -572,6 +597,59 @@ void apml_recovery()
 		}
 	}
 	return;
+}
+
+void disable_mailbox_completion_alert()
+{
+	uint8_t reg;
+	/* Set MbCmplSwAlertEnable to 0 for TURIN CPU. It will allow us to poll */
+	/* SoftwareInterrupt for mailbox completion instead of SwAlertSts.      */
+	if (command_code_len == SBRMI_CMD_CODE_LEN_TWO_BYTE) {
+		if (apml_read_byte(apml_bus, SB_RMI_ADDR, SBRMI_CONTROL, &reg)) {
+			LOG_ERR("Failed to read SBRMI control.");
+			return;
+		} else {
+			LOG_INF("SBRMI_CONTROL read");
+		}
+		reg &= ~(1 << 5); // write 0 to bit5 MbCmplSwAlertEnable
+		if (apml_write_byte(apml_bus, SB_RMI_ADDR, SBRMI_CONTROL, reg)) {
+			LOG_ERR("Failed to write SBRMI control.");
+			return;
+		} else {
+			LOG_INF("SBRMI_CONTROL written");
+		}
+	}
+}
+
+void enable_alert_signal()
+{
+	uint8_t reg;
+
+	if (command_code_len == SBRMI_CMD_CODE_LEN_TWO_BYTE) {
+		if (apml_read_byte(apml_bus, SB_RMI_ADDR, SBRMI_CONTROL, &reg)) {
+			LOG_ERR("Failed to read SBRMI control.");
+			return;
+		} else {
+			LOG_INF("SBRMI_CONTROL read");
+		}
+		reg &= ~(1 << 0); // write 0 to bit0 AlertMask
+		if (apml_write_byte(apml_bus, SB_RMI_ADDR, SBRMI_CONTROL, reg)) {
+			LOG_ERR("Failed to write SBRMI control.");
+			return;
+		} else {
+			LOG_INF("SBRMI_CONTROL written");
+		}
+	}
+}
+
+__weak uint8_t pal_get_apml_bus()
+{
+	return APML_BUS_UNKNOWN;
+}
+
+uint8_t apml_get_bus()
+{
+	return apml_bus;
 }
 
 #endif

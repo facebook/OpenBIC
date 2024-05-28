@@ -20,7 +20,6 @@
 #include "apml.h"
 #include "plat_i2c.h"
 
-#define APML_BUS I2C_BUS14
 #define TSI_HIGH_TEMP_THRESHOLD 0x5F
 #define TSI_TEMP_ALERT_UPDATE_RATE 0x0A
 #define PLAT_SBRMI_REVISION 0x20

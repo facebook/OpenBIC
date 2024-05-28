@@ -94,6 +94,23 @@ int pal_check_sbrmi_command_code_length()
 	return ret;
 }
 
+uint8_t pal_get_apml_bus()
+{
+	uint8_t board_rev = APML_BUS_UNKNOWN;
+
+	if (get_board_rev(&board_rev) == false) {
+		LOG_ERR("Failed to get board revision");
+		return APML_BUS_UNKNOWN;
+	}
+
+	if (board_rev <= BOARD_REV_EVT) {
+		return I2C_BUS14;
+	} else {
+		// For DVT and later, the hardware design was changed to I2C_BUS10
+		return I2C_BUS10;
+	}
+}
+
 bool get_tsi_status()
 {
 	return is_threshold_set;
@@ -107,13 +124,14 @@ void reset_tsi_status()
 void set_tsi_threshold()
 {
 	uint8_t read_data;
+	uint8_t apml_bus = apml_get_bus();
 	// Set high temperature threshold
-	if (apml_read_byte(APML_BUS, SB_TSI_ADDR, SBTSI_HIGH_TEMP_INTEGER_THRESHOLD, &read_data)) {
+	if (apml_read_byte(apml_bus, SB_TSI_ADDR, SBTSI_HIGH_TEMP_INTEGER_THRESHOLD, &read_data)) {
 		LOG_ERR("Failed to read high temperature threshold.");
 		return;
 	}
 	if (read_data != TSI_HIGH_TEMP_THRESHOLD) {
-		if (apml_write_byte(APML_BUS, SB_TSI_ADDR, SBTSI_HIGH_TEMP_INTEGER_THRESHOLD,
+		if (apml_write_byte(apml_bus, SB_TSI_ADDR, SBTSI_HIGH_TEMP_INTEGER_THRESHOLD,
 				    TSI_HIGH_TEMP_THRESHOLD)) {
 			LOG_ERR("Failed to set TSI temperature threshold.");
 			return;
@@ -121,12 +139,12 @@ void set_tsi_threshold()
 	}
 
 	// Set the frequency of the high/low temperature comparison to 64 Hz
-	if (apml_read_byte(APML_BUS, SB_TSI_ADDR, SBTSI_UPDATE_RATE, &read_data)) {
+	if (apml_read_byte(apml_bus, SB_TSI_ADDR, SBTSI_UPDATE_RATE, &read_data)) {
 		LOG_ERR("Failed to read alert config.");
 		return;
 	}
 	if (read_data != TSI_TEMP_ALERT_UPDATE_RATE) {
-		if (apml_write_byte(APML_BUS, SB_TSI_ADDR, SBTSI_UPDATE_RATE,
+		if (apml_write_byte(apml_bus, SB_TSI_ADDR, SBTSI_UPDATE_RATE,
 				    TSI_TEMP_ALERT_UPDATE_RATE)) {
 			LOG_ERR("Failed to set alert config.");
 			return;
@@ -152,29 +170,41 @@ static void read_cpuid_error_callback(apml_msg *msg)
 
 void read_cpuid()
 {
+	uint8_t apml_bus = apml_get_bus();
+
 	memset(cpuid, 0, sizeof(cpuid));
 
 	// read eax&ebx
 	apml_msg apml_data = { 0 };
 	apml_data.msg_type = APML_MSG_TYPE_CPUID;
-	apml_data.bus = APML_BUS;
+	apml_data.bus = apml_bus;
 	apml_data.target_addr = SB_RMI_ADDR;
 	apml_data.cb_fn = read_cpuid_callback;
 	apml_data.error_cb_fn = read_cpuid_error_callback;
 	apml_data.ui32_arg = 0x00;
-	cpuid_WrData *wrdata = (cpuid_WrData *)&apml_data.WrData;
-	wrdata->ecx_value = 0x00;
+	if (get_sbrmi_command_code_len() == SBRMI_CMD_CODE_LEN_TWO_BYTE) {
+		cpuid_WrData_TwoPOne *wrdata = (cpuid_WrData_TwoPOne *)&apml_data.WrData;
+		wrdata->ecx_value = 0x00;
+	} else {
+		cpuid_WrData *wrdata = (cpuid_WrData *)&apml_data.WrData;
+		wrdata->ecx_value = 0x00;
+	}
 	apml_read(&apml_data);
 
 	// read ecx&edx
 	memset(&apml_data, 0x00, sizeof(apml_msg));
 	apml_data.msg_type = APML_MSG_TYPE_CPUID;
-	apml_data.bus = APML_BUS;
+	apml_data.bus = apml_bus;
 	apml_data.target_addr = SB_RMI_ADDR;
 	apml_data.cb_fn = read_cpuid_callback;
 	apml_data.error_cb_fn = read_cpuid_error_callback;
 	apml_data.ui32_arg = 0x01;
-	wrdata = (cpuid_WrData *)&apml_data.WrData;
-	wrdata->ecx_value = 0x01;
+	if (get_sbrmi_command_code_len() == SBRMI_CMD_CODE_LEN_TWO_BYTE) {
+		cpuid_WrData_TwoPOne *wrdata = (cpuid_WrData_TwoPOne *)&apml_data.WrData;
+		wrdata->ecx_value = 0x01;
+	} else {
+		cpuid_WrData *wrdata = (cpuid_WrData *)&apml_data.WrData;
+		wrdata->ecx_value = 0x01;
+	}
 	apml_read(&apml_data);
 }

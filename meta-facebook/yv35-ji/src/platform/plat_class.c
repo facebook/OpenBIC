@@ -26,6 +26,7 @@
 #include "plat_gpio.h"
 #include "plat_i2c.h"
 #include "plat_sensor_table.h"
+#include "power_status.h"
 
 #include <logging/log.h>
 
@@ -72,6 +73,11 @@ uint8_t get_oth_module()
 uint8_t get_retimer_module()
 {
 	return retimer_module;
+}
+
+void set_retimer_module(uint8_t module)
+{
+	retimer_module = module;
 }
 
 /* ADC information for each channel
@@ -167,10 +173,34 @@ bool get_adc_voltage(int channel, float *voltage)
 
 void init_platform_config()
 {
-	retimer_module = gpio_get(BOARD_ID4);
-	oth_module = gpio_get(BOARD_ID5);
 	hsc_module = gpio_get(HSC_TYPE_0);
 
+	I2C_MSG msg = { 0 };
+	uint8_t tbuf[1] = { 0 };
+
+	tbuf[0] = CPLD_BOARD_REV_ID_REG;
+	msg = construct_i2c_message(I2C_BUS1, (CPLD_I2C_ADDR >> 1), 1, tbuf, 1);
+	int ret = i2c_master_read(&msg, 10);
+	if (ret) {
+		LOG_ERR("Failed to read board revision from cpld, ret: %d", ret);
+	} else {
+		retimer_module = ((msg.data[0] & BIT(4)) == 0) ? RETIMER_MODULE_PT4080L :
+								 RETIMER_MODULE_DS160PT801;
+		oth_module = ((msg.data[0] & BIT(5)) == 0) ? OTH_MODULE_PRIMARY : OTH_MODULE_SECOND;
+		board_revision = msg.data[0] & 0x0F;
+	}
+
+	/* Not support retimer relative function before EVT2 */
+	if (board_revision < SYS_BOARD_EVT) {
+		retimer_module = RETIMER_MODULE_UNKNOWN;
+	}
+
+	/* work around */
+	set_post_status(VIRTUAL_BIOS_POST_COMPLETE_L);
+	if (get_post_status() == true)
+		modify_sensor_cfg();
+
+	LOG_INF("Board revision: %d", board_revision);
 	LOG_INF("Retimer module: %d, OTH module: %d, HSC module: %d", retimer_module, oth_module,
 		hsc_module);
 }

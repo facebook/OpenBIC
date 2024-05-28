@@ -29,10 +29,13 @@
 #define FPGA_ADDR (0xC0 >> 1)
 #define TEMP_HSC_ADDR (0x98 >> 1)
 #define MP5990_ADDR (0xA0 >> 1)
+#define MP5990_ADDR_1 (0xC0 >> 1) // for board >= EVT2
 #define INA230_ADDR (0x8A >> 1)
 #define INA3221_ADDR (0x80 >> 1)
 #define TMP451_ADDR (0x98 >> 1)
 #define TMP75_ADDR (0x90 >> 1)
+#define AL_RETIMER_ADDR (0x40 >> 1)
+#define TI_RETIMER_ADDR (0x20 >> 1)
 
 /* SENSOR OFFSET */
 #define SSD_TEMP_OFFSET 0x00
@@ -49,6 +52,9 @@
 #define SENSOR_NUM_TEMP_CPUDVDD 0x8
 #define SENSOR_NUM_TEMP_CPUVDD 0x9
 #define SENSOR_NUM_TEMP_SOCVDD 0xA
+#define SENSOR_NUM_TEMP_RETIMER 0xB
+#define SENSOR_NUM_TEMP_LPDDR5_UP 0xC
+#define SENSOR_NUM_TEMP_LPDDR5_DOWN 0xD
 
 /* SENSOR NUMBER(1 based) - voltage */
 #define SENSOR_NUM_VOL_HSCIN 0x10
@@ -102,5 +108,6 @@
 
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
+bool modify_sensor_cfg();
 
 #endif

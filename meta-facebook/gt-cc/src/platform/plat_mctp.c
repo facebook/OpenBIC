@@ -28,11 +28,13 @@
 #include "mctp.h"
 #include "mctp_ctrl.h"
 #include "pldm.h"
+#include "ncsi.h"
 #include "ipmi.h"
 #include "sensor.h"
 #include "plat_hook.h"
 #include "plat_mctp.h"
 #include "plat_gpio.h"
+#include "plat_ncsi.h"
 
 LOG_MODULE_REGISTER(plat_mctp);
 
@@ -323,8 +325,12 @@ static uint8_t mctp_msg_recv(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_
 		mctp_pldm_cmd_handler(mctp_p, buf, len, ext_params);
 		break;
 
+	case MCTP_MSG_TYPE_NCSI:
+		mctp_ncsi_cmd_handler(mctp_p, buf, len, ext_params);
+		break;
+
 	default:
-		LOG_WRN("Cannot find message receive function!!");
+		LOG_WRN("Cannot find message receive function!! msg_type = %d", msg_type);
 		return MCTP_ERROR;
 	}
 
@@ -356,10 +362,36 @@ static uint8_t get_mctp_route_info(uint8_t dest_endpoint, void **mctp_inst,
 	return rc;
 }
 
+static void mellanox_cx7_ncsi_init(void)
+{
+	for (uint8_t i = 0; i < ARRAY_SIZE(mctp_route_tbl); i++) {
+		mctp_route_entry *p = mctp_route_tbl + i;
+
+		/* skip BMC */
+		if (p->bus == I2C_BUS_BMC && p->addr == I2C_ADDR_BMC)
+			continue;
+
+		if (gpio_get(p->dev_present_pin))
+			continue;
+
+		if (mellanox_cx7_set_self_recovery_setting(p->endpoint) == true) {
+			LOG_INF("Set mellanox cx7 self recovery setting success eid = 0x%x",
+				p->endpoint);
+		} else {
+			LOG_ERR("Set mellanox cx7 self recovery setting fail eid = 0x%x",
+				p->endpoint);
+		}
+	}
+}
+
 void send_cmd_to_dev_handler(struct k_work *work)
 {
 	/* init the device endpoint */
 	set_dev_endpoint();
+
+	/* init mellanox cx7 ncsi */
+	mellanox_cx7_ncsi_init();
+
 	/* get device parameters */
 	get_dev_firmware_parameters();
 }

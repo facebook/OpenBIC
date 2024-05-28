@@ -29,6 +29,8 @@
 #define SBRMI_CMD_CODE_LEN_TWO_BYTE 2
 #define SBRMI_REV_BRTH 0x21
 
+#define APML_BUS_UNKNOWN 0xFF
+
 enum APML_MSG_TYPE {
 	APML_MSG_TYPE_MAILBOX,
 	APML_MSG_TYPE_CPUID,
@@ -63,6 +65,7 @@ enum SBRMI_MAILBOX_ERR_CODE {
 
 enum SBRMI_REGISTER {
 	SBRMI_REVISION = 0x00,
+	SBRMI_CONTROL = 0x01,
 	SBRMI_STATUS = 0x02,
 	SBRMI_OUTBANDMSG_INST0 = 0x30,
 	SBRMI_OUTBANDMSG_INST1 = 0x31,
@@ -101,6 +104,13 @@ typedef struct _cpuid_WrData_ {
 	uint8_t ecx_value;
 } cpuid_WrData;
 
+/* RMI Rev 2.1 use 2 bytes thread */
+typedef struct _cpuid_WrData_TwoPOne_ {
+	uint8_t thread[2];
+	uint8_t cpuid_func[4];
+	uint8_t ecx_value;
+} cpuid_WrData_TwoPOne;
+
 typedef struct _cpuid_RdData_ {
 	uint8_t status;
 	uint8_t data_out[8];
@@ -110,6 +120,12 @@ typedef struct _mca_WrData_ {
 	uint8_t thread;
 	uint8_t register_addr[4];
 } mca_WrData;
+
+/* RMI Rev 2.1 use 2 bytes thread */
+typedef struct _mca_WrData_TwoPOne {
+	uint8_t thread[2];
+	uint8_t register_addr[4];
+} mca_WrData_TwoPOne;
 
 typedef struct _mca_RdData_ {
 	uint8_t status;
@@ -142,6 +158,11 @@ void apml_init();
 void fatal_error_happened();
 void apml_recovery();
 int pal_check_sbrmi_command_code_length();
+uint8_t pal_get_apml_bus();
+uint8_t apml_get_bus();
 int set_sbrmi_command_code_len(uint8_t value);
+int get_sbrmi_command_code_len();
+void disable_mailbox_completion_alert();
+void enable_alert_signal();
 
 #endif

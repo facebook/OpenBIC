@@ -101,7 +101,7 @@ mctp *find_mctp_by_addr(uint8_t addr)
 			if (addr == p->conf.smbus_conf.addr) {
 				return p->mctp_inst;
 			}
-		} else if (p->medium_type == MCTP_MEDIUM_TYPE_CONTROLLER_I3C) {
+		} else if (p->medium_type == MCTP_MEDIUM_TYPE_CONTROLLER_I3C || p->medium_type == MCTP_MEDIUM_TYPE_TARGET_I3C) {
 			if (addr == p->conf.i3c_conf.addr) {
 				return p->mctp_inst;
 			}
@@ -363,9 +363,9 @@ void plat_set_eid_by_slot()
 void set_routing_table_eid()
 {
 	// skip bmc
-	for (uint8_t i = 2; i < ARRAY_SIZE(plat_mctp_route_tbl); i++) {
+	for (uint8_t i = 2, j = 1; i < ARRAY_SIZE(plat_mctp_route_tbl); i++, j++) {
 		mctp_route_entry *p = plat_mctp_route_tbl + i;
-		p->endpoint = plat_eid + i;
+		p->endpoint = plat_eid + j;
 	}
 }
 

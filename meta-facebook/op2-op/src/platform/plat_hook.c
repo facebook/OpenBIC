@@ -27,6 +27,7 @@
 #include "plat_i2c.h"
 #include "plat_hook.h"
 #include "plat_sensor_table.h"
+#include "plat_gpio.h"
 
 #define RETIMER_INIT_RETRY_COUNT 3
 
@@ -75,36 +76,84 @@ ina233_init_arg ina233_init_args[] = {
 		.r_shunt = 0.002,
 		.is_need_mfr_device_config_init = false,
 		.is_need_set_alert_threshold = false,
+		.mfr_config_init = true,
+		.mfr_config = {
+			.operating_mode = 0b111,
+			.shunt_volt_time = 0b100,
+			.bus_volt_time = 0b100,
+			.aver_mode = 0b011, //set 64 average times
+			.rsvd = 0b0000,
+		},
 	},
 	[1] = { .is_init = false,
 		.current_lsb = 0.001,
 		.r_shunt = 0.002,
 		.is_need_mfr_device_config_init = false,
 		.is_need_set_alert_threshold = false,
+		.mfr_config_init = true,
+		.mfr_config = {
+			.operating_mode = 0b111,
+			.shunt_volt_time = 0b100,
+			.bus_volt_time = 0b100,
+			.aver_mode = 0b011, //set 64 average times
+			.rsvd = 0b0000,
+		},
 	},
 	[2] = { .is_init = false,
 		.current_lsb = 0.001,
 		.r_shunt = 0.002,
 		.is_need_mfr_device_config_init = false,
 		.is_need_set_alert_threshold = false,
+		.mfr_config_init = true,
+		.mfr_config = {
+			.operating_mode = 0b111,
+			.shunt_volt_time = 0b100,
+			.bus_volt_time = 0b100,
+			.aver_mode = 0b011, //set 64 average times
+			.rsvd = 0b0000,
+		},
 	},
 	[3] = { .is_init = false,
 		.current_lsb = 0.001,
 		.r_shunt = 0.002,
 		.is_need_mfr_device_config_init = false,
 		.is_need_set_alert_threshold = false,
+		.mfr_config_init = true,
+		.mfr_config = {
+			.operating_mode = 0b111,
+			.shunt_volt_time = 0b100,
+			.bus_volt_time = 0b100,
+			.aver_mode = 0b011, //set 64 average times
+			.rsvd = 0b0000,
+		},
 	},
 	[4] = { .is_init = false,
 		.current_lsb = 0.001,
 		.r_shunt = 0.002,
 		.is_need_mfr_device_config_init = false,
 		.is_need_set_alert_threshold = false,
+		.mfr_config_init = true,
+		.mfr_config = {
+			.operating_mode = 0b111,
+			.shunt_volt_time = 0b100,
+			.bus_volt_time = 0b100,
+			.aver_mode = 0b011, //set 64 average times
+			.rsvd = 0b0000,
+		},
 	},
 	[5] = { .is_init = false,
 		.current_lsb = 0.001,
 		.r_shunt = 0.002,
 		.is_need_mfr_device_config_init = false,
 		.is_need_set_alert_threshold = false,
+		.mfr_config_init = true,
+		.mfr_config = {
+			.operating_mode = 0b111,
+			.shunt_volt_time = 0b100,
+			.bus_volt_time = 0b100,
+			.aver_mode = 0b011, //set 64 average times
+			.rsvd = 0b0000,
+		},
 	},
 };
 
@@ -114,7 +163,7 @@ sq52205_init_arg sq52205_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b000,
 		.reset_bit = 0b0,
 	},
@@ -126,7 +175,7 @@ sq52205_init_arg sq52205_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b000,
 		.reset_bit = 0b0,
 	},
@@ -138,7 +187,7 @@ sq52205_init_arg sq52205_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b000,
 		.reset_bit = 0b0,
 	},
@@ -150,7 +199,7 @@ sq52205_init_arg sq52205_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b000,
 		.reset_bit = 0b0,
 	},
@@ -162,7 +211,7 @@ sq52205_init_arg sq52205_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b000,
 		.reset_bit = 0b0,
 	},
@@ -174,7 +223,7 @@ sq52205_init_arg sq52205_init_args[] = {
 		.operating_mode =0b111,
 		.shunt_volt_time = 0b100,
 		.bus_volt_time = 0b100,
-		.aver_mode = 0b111, //set 1024 average times
+		.aver_mode = 0b011, //set 64 average times
 		.rsvd = 0b000,
 		.reset_bit = 0b0,
 	},
@@ -312,4 +361,24 @@ bool pre_retimer_read(sensor_cfg *cfg, void *args)
 	}
 
 	return ret;
+}
+
+void pre_retimer_eeprom_recover()
+{
+	if (gpio_get(OPA_SMB_PCIE_EXP1_ALERT_N) == GPIO_HIGH) {
+		gpio_set(OPA_SMB_PCIE_EXP1_ALERT_N, GPIO_LOW);
+	}
+	if (gpio_get(OPA_LED_E1S_2_ATTN_R) == GPIO_LOW) {
+		gpio_set(OPA_LED_E1S_2_ATTN_R, GPIO_HIGH);
+	}
+}
+
+void post_retimer_eeprom_recover()
+{
+	if (gpio_get(OPA_SMB_PCIE_EXP1_ALERT_N) == GPIO_LOW) {
+		gpio_set(OPA_SMB_PCIE_EXP1_ALERT_N, GPIO_HIGH);
+	}
+	if (gpio_get(OPA_LED_E1S_2_ATTN_R) == GPIO_HIGH) {
+		gpio_set(OPA_LED_E1S_2_ATTN_R, GPIO_LOW);
+	}
 }

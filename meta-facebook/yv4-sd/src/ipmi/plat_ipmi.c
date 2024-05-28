@@ -24,6 +24,7 @@
 #include "plat_ipmi.h"
 #include "plat_sys.h"
 #include "plat_class.h"
+#include "plat_isr.h"
 
 enum THREAD_STATUS {
 	THREAD_SUCCESS = 0,
@@ -40,29 +41,8 @@ LOG_MODULE_REGISTER(plat_ipmi);
 
 bool pal_request_msg_to_BIC_from_HOST(uint8_t netfn, uint8_t cmd)
 {
-	if (netfn == NETFN_APP_REQ) {
-		if ((cmd == CMD_APP_SET_ACPI_POWER) || (cmd == CMD_APP_GET_DEVICE_GUID) ||
-		    (cmd == CMD_APP_GET_BMC_GLOBAL_ENABLES) ||
-		    (cmd == CMD_APP_CLEAR_MESSAGE_FLAGS) || (cmd == CMD_APP_GET_CAHNNEL_INFO) ||
-		    (cmd == CMD_APP_GET_DEVICE_ID) || (cmd == CMD_APP_GET_SELFTEST_RESULTS) ||
-		    (cmd == CMD_APP_COLD_RESET)) {
-			return true;
-		}
-	} else if (netfn == NETFN_DCMI_REQ) {
-		if (cmd == CMD_DCMI_GET_PICMG_PROPERTIES) {
-			return true;
-		}
-	} else if (netfn == NETFN_OEM_REQ) {
-		if (cmd == CMD_OEM_GET_CHASSIS_POSITION) {
-			return true;
-		}
-	}
-
-	else {
-		return false;
-	}
-
-	return false;
+	// In YV4, all IPMI commands are all sent to BIC
+	return true;
 }
 
 void APP_GET_BMC_GLOBAL_ENABLES(ipmi_msg *msg)
@@ -175,5 +155,19 @@ void APP_GET_SELFTEST_RESULTS(ipmi_msg *msg)
 	msg->data_len = 2;
 	msg->completion_code = CC_SUCCESS;
 
+	return;
+}
+
+void OEM_1S_DEBUG_GET_HW_SIGNAL(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	memcpy(&msg->data[0], &hw_event_register[0], sizeof(hw_event_register));
+
+	//clear cache register after bmc read.
+	memset(hw_event_register, 0, sizeof(hw_event_register));
+
+	msg->data_len = sizeof(hw_event_register);
+	msg->completion_code = CC_SUCCESS;
 	return;
 }

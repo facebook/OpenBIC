@@ -39,6 +39,8 @@
 
 LOG_MODULE_REGISTER(plat_isr, LOG_LEVEL_DBG);
 
+uint8_t hw_event_register[13] = { 0 };
+
 /*
  *	TODO: I3C hub is supplied by DC power currently. When DC off, it can't be initialized.
  *  	  Therefore, BIC needs to implement a workaround to reinitialize the I3C hub during DC on.
@@ -111,6 +113,10 @@ void ISR_POST_COMPLETE()
 	if (get_post_status()) {
 		set_tsi_threshold();
 		read_cpuid();
+		disable_mailbox_completion_alert();
+		enable_alert_signal();
+		//todo : add sel to bmc for assert
+		hw_event_register[12]++;
 	} else {
 		if (get_DC_status()) { // Host is reset
 			k_work_submit(&switch_i3c_dimm_work);
@@ -121,4 +127,152 @@ void ISR_POST_COMPLETE()
 void ISR_BMC_READY()
 {
 	sync_bmc_ready_pin();
+}
+
+static void SLP3_handler()
+{
+	if ((gpio_get(FM_CPU_BIC_SLP_S3_N) == GPIO_HIGH) &&
+	    (gpio_get(PWRGD_CPU_LVC3) == GPIO_LOW)) {
+		//todo : add sel to bmc
+		hw_event_register[0]++;
+	}
+}
+
+K_WORK_DELAYABLE_DEFINE(SLP3_work, SLP3_handler);
+#define DETECT_VR_WDT_DELAY_S 10
+void ISR_SLP3()
+{
+	if (gpio_get(FM_CPU_BIC_SLP_S3_N) == GPIO_HIGH) {
+		LOG_INF("slp3");
+		k_work_schedule_for_queue(&plat_work_q, &SLP3_work,
+					  K_SECONDS(DETECT_VR_WDT_DELAY_S));
+		return;
+	} else {
+		if (k_work_cancel_delayable(&SLP3_work) != 0) {
+			LOG_ERR("Failed to cancel delayable work.");
+		}
+	}
+}
+
+void ISR_DBP_PRSNT()
+{
+	if ((gpio_get(FM_DBP_PRESENT_N) == GPIO_HIGH)) {
+		//todo : add sel to bmc for deassert
+	} else {
+		//todo : add sel to bmc for assert
+		hw_event_register[1]++;
+	}
+}
+
+void ISR_MB_THROTTLE()
+{
+	/* FAST_PROCHOT_N glitch workaround
+	 * FAST_PROCHOT_N has a glitch and causes BIC to record MB_throttle deassertion SEL.
+	 * Ignore this by checking whether MB_throttle is asserted before recording the deassertion.
+	 */
+	static bool is_mb_throttle_assert = false;
+	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH && get_DC_status()) {
+		if ((gpio_get(FAST_PROCHOT_N) == GPIO_HIGH) && (is_mb_throttle_assert == true)) {
+			//todo : add sel to bmc for deassert
+			is_mb_throttle_assert = false;
+		} else if ((gpio_get(FAST_PROCHOT_N) == GPIO_LOW) &&
+			   (is_mb_throttle_assert == false)) {
+			//todo : add sel to bmc for assert
+			hw_event_register[2]++;
+			is_mb_throttle_assert = true;
+		} else {
+			return;
+		}
+	}
+}
+
+void ISR_SOC_THMALTRIP()
+{
+	if (gpio_get(RST_CPU_RESET_BIC_N) == GPIO_HIGH) {
+		//todo : add sel to bmc for assert
+		hw_event_register[3]++;
+	}
+}
+
+void ISR_SYS_THROTTLE()
+{
+	/* Same as MB_THROTTLE, glitch of FAST_PROCHOT_N will affect FM_CPU_BIC_PROCHOT_LVT3_N.
+	 * Ignore the fake event by checking whether SYS_throttle is asserted before recording the deassertion.
+	 */
+	static bool is_sys_throttle_assert = false;
+	if ((gpio_get(RST_CPU_RESET_BIC_N) == GPIO_HIGH) &&
+	    (gpio_get(PWRGD_CPU_LVC3) == GPIO_HIGH)) {
+		if ((gpio_get(FM_CPU_BIC_PROCHOT_LVT3_N) == GPIO_HIGH) &&
+		    (is_sys_throttle_assert == true)) {
+			//todo : add sel to bmc for deassert
+			is_sys_throttle_assert = false;
+		} else if ((gpio_get(FM_CPU_BIC_PROCHOT_LVT3_N) == GPIO_LOW) &&
+			   (is_sys_throttle_assert == false)) {
+			//todo : add sel to bmc for assert
+			hw_event_register[4]++;
+			is_sys_throttle_assert = true;
+		} else {
+			return;
+		}
+	}
+}
+
+void ISR_HSC_OC()
+{
+	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
+		if (gpio_get(FM_HSC_TIMER_ALT_N) == GPIO_LOW) {
+			//todo : add sel to bmc for deassert
+		} else {
+			//todo : add sel to bmc for assert
+			hw_event_register[5]++;
+		}
+	}
+}
+
+void ISR_PVDDCR_CPU0_OCP()
+{
+	if (get_DC_status() == true) {
+		//todo : add sel to bmc for assert
+		hw_event_register[7]++;
+	}
+}
+
+void ISR_PVDDCR_CPU1_OCP()
+{
+	if (get_DC_status() == true) {
+		//todo : add sel to bmc for assert
+		hw_event_register[6]++;
+	}
+}
+
+void ISR_PVDD11_S3_OCP()
+{
+	if (get_DC_status() == true) {
+		//todo : add sel to bmc for assert
+		hw_event_register[8]++;
+	}
+}
+
+void ISR_UV_DETECT()
+{
+	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
+		if (gpio_get(IRQ_UV_DETECT_N) == GPIO_HIGH) {
+			//todo : add sel to bmc for deassert
+		} else {
+			//todo : add sel to bmc for assert
+			hw_event_register[9]++;
+		}
+	}
+}
+
+void IST_PLTRST()
+{
+	//todo : add sel to bmc for assert
+	hw_event_register[10]++;
+}
+
+void ISR_APML_ALERT()
+{
+	//todo : add sel to bmc for assert
+	hw_event_register[11]++;
 }

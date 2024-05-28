@@ -43,11 +43,13 @@ bool enable_adm1272_hsc(uint8_t bus, uint8_t addr, bool enable_flag)
 	if (enable_flag == 1) {
 		msg.data[1] = BIT(7); // enable hsc
 	}
+
 	ret = i2c_master_write(&msg, retry);
 	if (ret != 0) {
 		LOG_ERR("Set enable hsc fail");
 		return false;
 	}
+  
 	LOG_INF("Set enable hsc success");
 	return true;
 }

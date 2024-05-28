@@ -300,7 +300,7 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 			    (req->cmd == CMD_STORAGE_ADD_SEL)) {
 				// Send SEL to BMC via PLDM over MCTP
 				mctp_ext_params ext_params = {0};
-				uint8_t pldm_event_length = rc - 5; // exclude netfn, cmd, record_id, record_type
+				uint8_t pldm_event_length = rc - 4; // exclude netfn, cmd, record_id
 				uint8_t bmc_bus = I2C_BUS_BMC;
 
 				if (bmc_interface == BMC_INTERFACE_I3C) {
@@ -315,7 +315,7 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 					ext_params.ep = MCTP_EID_BMC;
 				}
 				pldm_platform_event_message_req(
-					find_mctp_by_bus(bmc_bus), ext_params, 0xFB, &ibuf[5], pldm_event_length);
+					find_mctp_by_bus(bmc_bus), ext_params, 0xFB, &ibuf[4], pldm_event_length);
 			}
 #endif
 #endif

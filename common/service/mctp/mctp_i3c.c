@@ -55,13 +55,19 @@ static uint16_t mctp_i3c_read(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext
 	LOG_HEXDUMP_DBG(&i3c_msg.data[0], i3c_msg.rx_len, "mctp_i3c_read_smq msg dump");
 
 	if (MCTP_I3C_PEC_ENABLE) {
+		uint8_t pec = 0x0, dynamic_addr = 0x0;
+
 		/** pec byte use 7-degree polynomial with 0 init value and false reverse **/
-		uint8_t pec = crc8(&i3c_msg.data[0], i3c_msg.rx_len - 1, 0x07, 0x00, false);
+		dynamic_addr = i3c_msg.target_addr << 1 | 1;
+		pec = crc8(&dynamic_addr, 1, 0x07, 0x00, false);
+		pec = crc8(&i3c_msg.data[0], i3c_msg.rx_len - 1, 0x07, pec, false);
 		if (pec != i3c_msg.data[i3c_msg.rx_len - 1]) {
 			LOG_ERR("mctp i3c pec error: crc8 should be 0x%02x, but got 0x%02x", pec,
 				i3c_msg.data[i3c_msg.rx_len - 1]);
 			return 0;
 		}
+		/** Remove pec byte if it is valid **/
+		i3c_msg.rx_len--;
 	}
 
 	extra_data->type = MCTP_MEDIUM_TYPE_CONTROLLER_I3C;
@@ -87,13 +93,23 @@ static uint16_t mctp_i3c_write(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ex
 	i3c_msg.target_addr = mctp_instance->medium_conf.i3c_conf.addr;
 
 	/** mctp package **/
-	memcpy(&i3c_msg.data[0], buf, len);
+	if (len < I3C_MAX_DATA_SIZE) {
+		memcpy(&i3c_msg.data[0], buf, len);
+	} else {
+		LOG_ERR("Write failed because I3C data length exceed %d bytes", I3C_MAX_DATA_SIZE);
+		return MCTP_ERROR;
+	}
 
 	/** +1 pec; default no pec **/
 	if (MCTP_I3C_PEC_ENABLE) {
+		uint8_t pec = 0x0, dynamic_addr = 0x0;
+
 		i3c_msg.tx_len = len + 1;
 		/** pec byte use 7-degree polynomial with 0 init value and false reverse **/
-		i3c_msg.data[len + 1] = crc8(&i3c_msg.data[0], len, 0x07, 0x00, false);
+		dynamic_addr = i3c_msg.target_addr << 1;
+		pec = crc8(&dynamic_addr, 1, 0x07, 0x00, false);
+		pec = crc8(&i3c_msg.data[0], len, 0x07, pec, false);
+		i3c_msg.data[len] = pec;
 	} else {
 		i3c_msg.tx_len = len;
 	}
@@ -130,13 +146,25 @@ static uint16_t mctp_i3c_read_smq(void *mctp_p, uint8_t *buf, uint32_t len,
 	LOG_HEXDUMP_DBG(&i3c_msg.data[0], i3c_msg.rx_len, "mctp_i3c_read_smq msg dump");
 
 	if (MCTP_I3C_PEC_ENABLE) {
+		uint8_t pec = 0x0, dynamic_addr = 0x0;
+
+		ret = i3c_target_get_dynamic_address(&i3c_msg, &dynamic_addr);
+		if (ret != 0) {
+			LOG_ERR("Failed to get dynamic address for I3C bus: %x", i3c_msg.bus);
+			return MCTP_ERROR;
+		}
 		/** pec byte use 7-degree polynomial with 0 init value and false reverse **/
-		uint8_t pec = crc8(&i3c_msg.data[0], i3c_msg.rx_len - 1, 0x07, 0x00, false);
+		dynamic_addr = dynamic_addr << 1;
+		pec = crc8(&dynamic_addr, 1, 0x07, 0x00, false);
+		pec = crc8(&i3c_msg.data[0], i3c_msg.rx_len - 1, 0x07, pec, false);
 		if (pec != i3c_msg.data[i3c_msg.rx_len - 1]) {
 			LOG_ERR("mctp i3c pec error: crc8 should be 0x%02x, but got 0x%02x", pec,
 				i3c_msg.data[i3c_msg.rx_len - 1]);
 			return 0;
 		}
+
+		/** Remove pec byte if it is valid **/
+		i3c_msg.rx_len--;
 	}
 
 	extra_data->type = MCTP_MEDIUM_TYPE_TARGET_I3C;
@@ -160,12 +188,28 @@ static uint16_t mctp_i3c_write_smq(void *mctp_p, uint8_t *buf, uint32_t len,
 	mctp *mctp_instance = (mctp *)mctp_p;
 	i3c_msg.bus = mctp_instance->medium_conf.i3c_conf.bus;
 	/** mctp package **/
-	memcpy(&i3c_msg.data[0], buf, len);
+	if (len < I3C_MAX_DATA_SIZE) {
+		memcpy(&i3c_msg.data[0], buf, len);
+	} else {
+		LOG_ERR("Write failed because I3C data length exceed %d bytes", I3C_MAX_DATA_SIZE);
+		return MCTP_ERROR;
+	}
+
 	/** +1 pec; default no pec **/
 	if (MCTP_I3C_PEC_ENABLE) {
+		uint8_t pec = 0x0, dynamic_addr = 0x0;
+
+		ret = i3c_target_get_dynamic_address(&i3c_msg, &dynamic_addr);
+		if (ret != 0) {
+			LOG_ERR("Failed to get dynamic address for I3C bus: %x", i3c_msg.bus);
+			return MCTP_ERROR;
+		}
 		i3c_msg.tx_len = len + 1;
 		/** pec byte use 7-degree polynomial with 0 init value and false reverse **/
-		i3c_msg.data[len + 1] = crc8(&i3c_msg.data[0], len, 0x07, 0x00, false);
+		dynamic_addr = dynamic_addr << 1 | 1;
+		pec = crc8(&dynamic_addr, 1, 0x07, 0x00, false);
+		pec = crc8(&i3c_msg.data[0], len, 0x07, pec, false);
+		i3c_msg.data[len] = pec;
 	} else {
 		i3c_msg.tx_len = len;
 	}

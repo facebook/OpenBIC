@@ -192,6 +192,11 @@ typedef struct _mctp {
 
 	/* for cci_msg_tag */
 	uint8_t cci_msg_tag;
+
+	/* for ncsi instance id */
+	uint8_t ncsi_inst_id;
+	uint32_t ncsi_inst_table[8]; // 256 bits field for instance id
+
 } mctp;
 
 typedef struct _mctp_smbus_port {

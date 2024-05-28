@@ -76,7 +76,7 @@ void get_dimm_info_handler()
 		}
 
 		if (is_dimm_checked_presnt == false) {
-			if (init_dimm_prsnt_status() < 0){
+			if (init_dimm_prsnt_status() < 0) {
 				k_msleep(GET_DIMM_INFO_TIME_MS);
 				continue;
 			}
@@ -101,6 +101,12 @@ void get_dimm_info_handler()
 			if (ret != 0) {
 				clear_unaccessible_dimm_data(dimm_id);
 				continue;
+			}
+
+			// When OS reboot, we need to switch it back to CPU
+			if (!get_post_status()) {
+				switch_i3c_dimm_mux(I3C_MUX_CPU_TO_DIMM);
+				break;
 			}
 
 			memset(&i3c_msg, 0, sizeof(I3C_MSG));

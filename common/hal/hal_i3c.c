@@ -607,3 +607,21 @@ int i3c_target_set_address(I3C_MSG *msg)
 
 	return 0;
 }
+
+int i3c_target_get_dynamic_address(I3C_MSG *msg, uint8_t *dynamic_addr)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, -EINVAL);
+	CHECK_NULL_ARG_WITH_RETURN(dynamic_addr, -EINVAL);
+
+	if (!dev_i3c[msg->bus]) {
+		return -ENODEV;
+	}
+
+	int ret = i3c_slave_get_dynamic_addr(dev_i3c[msg->bus], dynamic_addr);
+	if (ret != 0) {
+		LOG_ERR("Failed to get address for I3C bus: %x, ret: %d", msg->bus, ret);
+		return -1;
+	}
+
+	return 0;
+}

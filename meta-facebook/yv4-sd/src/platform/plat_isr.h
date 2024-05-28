@@ -19,10 +19,24 @@
 
 #include <stdint.h>
 
+extern uint8_t hw_event_register[13];
+
 void ISR_DC_ON();
 void ISR_POST_COMPLETE();
 void ISR_BMC_READY();
 void sync_bmc_ready_pin();
 void reinit_i3c_hub();
+void ISR_SLP3();
+void ISR_DBP_PRSNT();
+void ISR_MB_THROTTLE();
+void ISR_SOC_THMALTRIP();
+void ISR_SYS_THROTTLE();
+void ISR_HSC_OC();
+void ISR_PVDDCR_CPU1_OCP();
+void ISR_PVDDCR_CPU0_OCP();
+void ISR_PVDD11_S3_OCP();
+void ISR_UV_DETECT();
+void IST_PLTRST();
+void ISR_APML_ALERT();
 
 #endif
