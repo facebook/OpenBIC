@@ -45,6 +45,8 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 static uint8_t plat_pldm_pre_retimer_update(void *fw_update_param);
 static bool plat_get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 static bool plat_get_bios_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
+static uint8_t plat_pldm_pre_retimer_recovery(void *fw_update_param);
+static uint8_t plat_pldm_post_retimer_recovery(void *fw_update_param);
 
 enum FIRMWARE_COMPONENT {
 	SD_COMPNT_BIC,
@@ -54,6 +56,8 @@ enum FIRMWARE_COMPONENT {
 	SD_COMPNT_X16_RETIMER,
 	SD_COMPNT_X8_RETIMER,
 	SD_COMPNT_BIOS,
+	SD_COMPNT_X16_RETIMER_RECOVERY,
+	SD_COMPNT_X8_RETIMER_RECOVERY,
 };
 
 uint8_t MCTP_SUPPORTED_MESSAGES_TYPES[] = {
@@ -64,6 +68,10 @@ uint8_t MCTP_SUPPORTED_MESSAGES_TYPES[] = {
 enum RETIMER_ADDR {
 	X16_RETIMER_ADDR = 0x20,
 	X8_RETIMER_ADDR = 0x23,
+};
+
+enum RETIMER_EEPROM_ADDR {
+	RETIMER_EEPROM_ADDR = 0x50,
 };
 
 enum VR_TYPE {
@@ -178,6 +186,36 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.activate_method = COMP_ACT_SYS_REBOOT,
 		.self_act_func = NULL,
 		.get_fw_version_fn = plat_get_bios_fw_version,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = SD_COMPNT_X16_RETIMER_RECOVERY,
+		.comp_classification_index = 0x00,
+		.pre_update_func = plat_pldm_pre_retimer_recovery,
+		.update_func = pldm_retimer_recovery,
+		.pos_update_func = plat_pldm_post_retimer_recovery,
+		.inf = COMP_UPDATE_VIA_I2C,
+		.activate_method = COMP_ACT_AC_PWR_CYCLE,
+		.self_act_func = NULL,
+		.get_fw_version_fn = NULL,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = SD_COMPNT_X8_RETIMER_RECOVERY,
+		.comp_classification_index = 0x00,
+		.pre_update_func = plat_pldm_pre_retimer_recovery,
+		.update_func = pldm_retimer_recovery,
+		.pos_update_func = plat_pldm_post_retimer_recovery,
+		.inf = COMP_UPDATE_VIA_I2C,
+		.activate_method = COMP_ACT_AC_PWR_CYCLE,
+		.self_act_func = NULL,
+		.get_fw_version_fn = NULL,
 		.self_apply_work_func = NULL,
 		.comp_version_str = NULL,
 	},
@@ -707,4 +745,57 @@ static bool plat_get_bios_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	*len = strlen(bios_version);
 
 	return ret;
+}
+
+static uint8_t plat_pldm_pre_retimer_recovery(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+
+	// Set reocvery i2c config
+	if (p->comp_id == SD_COMPNT_X16_RETIMER_RECOVERY) {
+		p->bus = I2C_BUS8;
+		p->addr = RETIMER_EEPROM_ADDR;
+	} else {
+		p->bus = I2C_BUS7;
+		p->addr = RETIMER_EEPROM_ADDR;
+	}
+
+	// Write CPLD register to switch I2C MUX before EEPROM to BIC
+	int retry = 0;
+	I2C_MSG i2c_msg;
+	i2c_msg.bus = CPLD_IO_I2C_BUS;
+	i2c_msg.target_addr = CPLD_IO_I2C_ADDR;
+	i2c_msg.tx_len = 2;
+	i2c_msg.data[0] = 0x11;
+	i2c_msg.data[1] = 0x01;
+
+	if (i2c_master_write(&i2c_msg, retry)) {
+		LOG_ERR("Fail to switch I2C MUX of retimer EEPROM to BIC");
+		return 1;
+	}
+
+	return 0;
+}
+
+static uint8_t plat_pldm_post_retimer_recovery(void *fw_update_param)
+{
+	ARG_UNUSED(fw_update_param);
+
+	// Write CPLD register to switch I2C MUX before EEPROM to retimer
+	int retry = 0;
+	I2C_MSG i2c_msg;
+	i2c_msg.bus = CPLD_IO_I2C_BUS;
+	i2c_msg.target_addr = CPLD_IO_I2C_ADDR;
+	i2c_msg.tx_len = 2;
+	i2c_msg.data[0] = 0x11;
+	i2c_msg.data[1] = 0x00;
+
+	if (i2c_master_write(&i2c_msg, retry)) {
+		LOG_ERR("Fail to switch I2C MUX of retimer EEPROM to retimer");
+		return 1;
+	}
+
+	return 0;
 }
