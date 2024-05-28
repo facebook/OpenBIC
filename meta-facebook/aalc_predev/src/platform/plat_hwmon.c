@@ -24,7 +24,7 @@
 #include "plat_sensor_table.h"
 #include "plat_modbus.h"
 #include "modbus_server.h"
-#include "plat_hwm.h"
+#include "plat_hwmon.h"
 #include "adm1272.h"
 #include "plat_log.h"
 
