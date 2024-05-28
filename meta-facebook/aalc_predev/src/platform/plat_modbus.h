@@ -31,14 +31,15 @@
 //from zephyr/samples/subsys/modbus/rtu_client, client_param: rx_timeout = 1000000(default 50000)
 
 /* MODBUS Command for i2c w/r */
-#define MODBUS_MASTER_I2C_WRITE_READ_ADDR 0x1050
-#define MODBUS_MASTER_I2C_WRITE_READ_RESPONSE_ADDR 0x1060
+#define MODBUS_MASTER_I2C_WRITE_READ_ADDR 0xF000
+#define MODBUS_MASTER_I2C_WRITE_READ_RESPONSE_ADDR 0xF010
 
 #define MODBUS_SET_SENSOR_POLL_EN_ADDR 0x1070
 #define MODBUS_GET_SENSOR_POLL_EN_ADDR 0x1071
 
 int init_custom_modbus_server(void);
 void init_modbus_command_table(void);
+
 typedef struct _modbus_command_mapping {
 	uint16_t addr;
 	uint8_t (*wr_fn)(struct _modbus_command_mapping *);

@@ -27,7 +27,6 @@
 #include "libutil.h"
 #include "plat_modbus.h"
 #include "plat_sensor_table.h"
-#include "plat_control.h"
 #include "plat_fru.h"
 #include "hal_gpio.h"
 #include "plat_gpio.h"
@@ -38,6 +37,7 @@
 #include "util_sys.h"
 #include "util_spi.h"
 #include "plat_version.h"
+#include "plat_hwmon.h"
 #include "plat_log.h"
 
 LOG_MODULE_REGISTER(plat_modbus);
@@ -220,6 +220,46 @@ uint8_t modbus_read_hmi_version(modbus_command_mapping *cmd)
 	return MODBUS_EXC_NONE;
 }
 
+pump_reset_struct modbus_pump_setting_table[] = {
+	{ PUMP_REDUNDENT_SWITCHED, modbus_pump_setting_unsupport_function, 0 },
+	{ MANUAL_CONTROL_PUMP, modbus_pump_setting_unsupport_function, 0 },
+	{ MANUAL_CONTROL_FAN, modbus_pump_setting_unsupport_function, 0 },
+	{ AUTOTUNE_FLOW_CONTROL, modbus_pump_setting_unsupport_function, 0 },
+	{ AUTOTUNE_PRESSURE_BALANCE_CONTROL, modbus_pump_setting_unsupport_function, 0 },
+	{ SYSTEM_STOP, modbus_pump_setting_unsupport_function, 0 },
+	{ RPU_REMOTE_POWER_CYCLE, modbus_pump_setting_unsupport_function, 0 },
+	{ MANUAL_CONTROL, modbus_pump_setting_unsupport_function, 0 },
+	{ CLEAR_PUMP_RUNNING_TIME, modbus_pump_setting_unsupport_function, 0 },
+	{ CLEAR_LOG, clear_log_for_modbus_pump_setting, 0 },
+	{ PUMP_1_RESET, pump_reset, SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W },
+	{ PUMP_2_RESET, pump_reset, SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W },
+	{ PUMP_3_RESET, pump_reset, SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W },
+};
+
+uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+	uint16_t check_error_flag = 0;
+	for (int i = 0; i < ARRAY_SIZE(modbus_pump_setting_table); i++) {
+		// check bit value is 0 or 1
+		uint8_t input_bit_value =
+			(cmd->data[0] & BIT(modbus_pump_setting_table[i].function_index)) ? 1 : 0;
+		bool result_status = modbus_pump_setting_table[i].fn(&modbus_pump_setting_table[i],
+								     input_bit_value);
+		if (!result_status) {
+			LOG_ERR("modebus 0x9410 setting %d-bit error\n",
+				modbus_pump_setting_table[i].function_index);
+			WRITE_BIT(check_error_flag, modbus_pump_setting_table[i].function_index, 1);
+		}
+	}
+
+	if (check_error_flag) {
+		LOG_ERR("modebus 0x9410 setting error flag: 0x%x\n", check_error_flag);
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+	}
+	return MODBUS_EXC_NONE;
+}
+
 uint8_t modbus_error_log_count(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
@@ -237,6 +277,7 @@ uint8_t modbus_error_log_event(modbus_command_mapping *cmd)
 	log_transfer_to_modbus_data(cmd->data, cmd->cmd_size, order);
 
 	regs_reverse(cmd->data_len, cmd->data);
+
 	return MODBUS_EXC_NONE;
 }
 

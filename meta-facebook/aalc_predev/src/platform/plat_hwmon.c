@@ -24,11 +24,11 @@
 #include "plat_sensor_table.h"
 #include "plat_modbus.h"
 #include "modbus_server.h"
-#include "plat_control.h"
+#include "plat_hwmon.h"
 #include "adm1272.h"
+#include "plat_log.h"
 
 LOG_MODULE_REGISTER(plat_modbus_funtion);
-
 
 static sensor_cfg *get_sensor_config_data(uint8_t sensor_num)
 {
@@ -41,10 +41,33 @@ static sensor_cfg *get_sensor_config_data(uint8_t sensor_num)
 	return cfg;
 }
 
-bool pump_reset(uint8_t sensor_num)
+bool modbus_pump_setting_unsupport_function(pump_reset_struct *data, uint8_t bit_val)
 {
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+	return true;
+}
+
+bool clear_log_for_modbus_pump_setting(pump_reset_struct *data, uint8_t bit_val)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+
+	if (bit_val == 0) // do nothing
+		return true;
+
+	bool clear_log_status = modbus_clear_log();
+
+	return clear_log_status;
+}
+
+bool pump_reset(pump_reset_struct *data, uint8_t bit_val)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+
+	if (bit_val == 0) // do nothing
+		return true;
+
 	// Check sensor information in sensor config table
-	sensor_cfg *cfg = get_sensor_config_data(sensor_num);
+	sensor_cfg *cfg = get_sensor_config_data(data->senser_num);
 	if (cfg == NULL)
 		return false;
 	//uint8_t bus,uint8_t addr, bool enable_flag
@@ -55,10 +78,9 @@ bool pump_reset(uint8_t sensor_num)
 		// check pump is already enable
 		k_msleep(500);
 		// enable pump
-		if (enable_adm1272_hsc(bus, addr, true)){
+		if (enable_adm1272_hsc(bus, addr, true)) {
 			return true;
-		}
-		else{
+		} else {
 			LOG_ERR("Fail when start the pump.");
 			return false;
 		}
@@ -67,37 +89,3 @@ bool pump_reset(uint8_t sensor_num)
 		return false;
 	}
 }
-uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
-{
-		CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-
-		switch (cmd->data[0]) {
-		case PUMP_REDUNDENT_SWITCHED:
-		case MANUAL_CONTROL_PUMP:
-		case MANUAL_CONTROL_FAN:
-		case AUTOTUNE_FLOW_CONTROL:
-		case AUTOTUNE_PRESSURE_BALANCE_CONTROL:
-		case SYSTEM_STOP:
-		case RPU_REMOTE_POWER_CYCLE:
-		case MANUAL_CONTROL:
-		case CLEAR_PUMP_RUNNING_TIME:
-		case CLEAR_LOG:
-		case PUMP_1_RESET:
-			if (pump_reset(SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W))
-				break;
-			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		case PUMP_2_RESET:
-			if (pump_reset(SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W))
-				break;
-			return MODBUS_EXC_SERVER_DEVICE_FAILURE;	
-		case PUMP_3_RESET:
-			if (pump_reset(SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W))
-				break;
-			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		default:
-			LOG_ERR("invalid pump setting");
-			return MODBUS_EXC_ILLEGAL_DATA_VAL;
-		}
-		return MODBUS_EXC_NONE;
-}
-
