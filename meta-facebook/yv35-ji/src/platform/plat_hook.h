@@ -25,6 +25,7 @@
 **************************************************************************************************/
 extern adc_asd_init_arg ast_adc_init_args[];
 extern mp5990_init_arg mp5990_init_args[];
+extern rs31380r_init_arg rs31380r_init_args[];
 extern ina230_init_arg ina230_init_args[];
 extern pt5161l_init_arg pt5161l_init_args[];
 #ifdef ENABLE_NVIDIA
@@ -45,6 +46,8 @@ bool pre_vol_bat3v_read(sensor_cfg *cfg, void *args);
 bool post_vol_bat3v_read(sensor_cfg *cfg, void *args, int *reading);
 bool post_mp5990_cur_read(sensor_cfg *cfg, void *args, int *reading);
 bool post_mp5990_pwr_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_rs31380r_cur_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_rs31380r_pwr_read(sensor_cfg *cfg, void *args, int *reading);
 bool pre_tmp451_read(sensor_cfg *cfg, void *args);
 bool pre_tmp75_read(sensor_cfg *cfg, void *args);
 bool pre_pt4080l_read(sensor_cfg *cfg, void *args);
