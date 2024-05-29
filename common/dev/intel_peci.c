@@ -462,12 +462,27 @@ static bool get_cpu_margin(uint8_t addr, int *reading)
 
 	const uint16_t param = 0xFF;
 	const uint8_t rlen = 0x05;
+	int i = 0, retry = 3;
 	uint8_t rbuf[rlen];
 	memset(rbuf, 0, sizeof(rbuf));
 
-	int ret = peci_read(PECI_CMD_RD_PKG_CFG0, addr, RDPKG_IDX_PKG_TEMP, param, rlen, rbuf);
-	if (ret != 0) {
-		LOG_ERR("PECI read error");
+	for (i = 0; i < retry; i++) {
+		int ret = peci_read(PECI_CMD_RD_PKG_CFG0, addr, RDPKG_IDX_PKG_TEMP, param, rlen,
+				    rbuf);
+		if (ret != 0) {
+			LOG_ERR("PECI read error");
+			return false;
+		}
+
+		if (rbuf[0] == PECI_CC_SUCCESS) {
+			break;
+		}
+
+		LOG_DBG("cc 0x%x data0x%x 0x%x", rbuf[0], rbuf[1], rbuf[2]);
+		k_msleep(10);
+	}
+
+	if (i >= retry) {
 		return false;
 	}
 
