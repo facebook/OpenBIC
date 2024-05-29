@@ -135,6 +135,13 @@ static void set_dev_endpoint(void)
 			if (!p->set_endpoint)
 				continue;
 
+			// Check CXLs ready status before setting EID
+			if (p->bus == I2C_BUS_CXL1 && !get_cxl_ready_status(CXL_ID_1))
+				continue;
+
+			if (p->bus == I2C_BUS_CXL2 && !get_cxl_ready_status(CXL_ID_2))
+				continue;
+
 			for (uint8_t j = 0; j < ARRAY_SIZE(plat_mctp_port); j++) {
 				if (p->bus != plat_mctp_port[j].conf.smbus_conf.bus)
 					continue;
