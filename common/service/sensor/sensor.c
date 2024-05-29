@@ -135,6 +135,7 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(ast_tach)
 	sensor_name_to_num(xdp710)
 	sensor_name_to_num(ds160pt801)
+	sensor_name_to_num(rs31380r)
 };
 // clang-format on
 
@@ -207,6 +208,9 @@ SENSOR_DRIVE_INIT_DECLARE(xdp710);
 #ifdef ENABLE_DS160PT801
 SENSOR_DRIVE_INIT_DECLARE(ds160pt801);
 #endif
+#ifdef ENABLE_RS31380R
+SENSOR_DRIVE_INIT_DECLARE(rs31380r);
+#endif
 
 // The sequence needs to same with SENSOR_DEV ID
 sensor_drive_api sensor_drive_tbl[] = {
@@ -271,6 +275,11 @@ sensor_drive_api sensor_drive_tbl[] = {
 	SENSOR_DRIVE_TYPE_INIT_MAP(ds160pt801),
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(ds160pt801),
+#endif
+#ifdef ENABLE_RS31380R
+	SENSOR_DRIVE_TYPE_INIT_MAP(rs31380r),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(rs31380r),
 #endif
 };
 

@@ -1,0 +1,251 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include "plat_def.h"
+#ifdef ENABLE_RS31380R
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "sensor.h"
+#include "hal_i2c.h"
+#include "libutil.h"
+#include "pmbus.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(rs31380r);
+
+#define I2C_DATA_SIZE 5
+
+#define RS31380R_OCW_SC_REF_OFFSET 0xC5
+
+#define RS31380R_EIN_ROLLOVER_CNT_MAX 0x100
+#define RS31380R_EIN_SAMPLE_CNT_MAX 0x1000000
+#define RS31380R_EIN_ENERGY_CNT_MAX 0x8000
+
+int rs31380r_read_ein(double *val, sensor_cfg *cfg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(val, -1);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		return -1;
+	}
+
+	I2C_MSG msg;
+	uint8_t retry = 5;
+	uint32_t energy = 0, rollover = 0, sample = 0;
+	uint32_t pre_energy = 0, pre_rollover = 0, pre_sample = 0;
+	uint32_t sample_diff = 0;
+	double energy_diff = 0;
+	static uint32_t last_energy = 0, last_rollover = 0, last_sample = 0;
+	static bool pre_ein = false;
+
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 1;
+	msg.data[0] = cfg->offset;
+	msg.rx_len = 7;
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_WRN("i2c read failed.");
+		return SENSOR_FAIL_TO_ACCESS;
+	}
+
+	//record the previous data
+	pre_energy = last_energy;
+	pre_rollover = last_rollover;
+	pre_sample = last_sample;
+
+	//record the current data
+	last_energy = energy = (msg.data[2] << 8) | msg.data[1];
+	last_rollover = rollover = msg.data[3];
+	last_sample = sample = (msg.data[6] << 16) | (msg.data[5] << 8) | msg.data[4];
+
+	//return since data isn't enough
+	if (pre_ein == false) {
+		pre_ein = true;
+		return -1;
+	}
+
+	if ((pre_rollover > rollover) || ((pre_rollover == rollover) && (pre_energy > energy))) {
+		rollover += RS31380R_EIN_ROLLOVER_CNT_MAX;
+	}
+
+	if (pre_sample > sample) {
+		sample += RS31380R_EIN_SAMPLE_CNT_MAX;
+	}
+
+	energy_diff = (double)(rollover - pre_rollover) * RS31380R_EIN_ENERGY_CNT_MAX +
+		      (double)energy - (double)pre_energy;
+	if (energy_diff < 0) {
+		LOG_DBG("Energy difference is less than zero.");
+		return -1;
+	}
+
+	sample_diff = sample - pre_sample;
+	if (sample_diff == 0) {
+		LOG_DBG("Sample difference is less than zero.");
+		return -1;
+	}
+
+	*val = (double)(energy_diff / sample_diff);
+
+	return 0;
+}
+
+uint8_t rs31380r_read(sensor_cfg *cfg, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		return SENSOR_UNSPECIFIED_ERROR;
+	}
+
+	rs31380r_init_arg *init_arg = (rs31380r_init_arg *)cfg->init_args;
+	if (init_arg->is_init == false) {
+		LOG_ERR("Device isn't initialized");
+		return SENSOR_UNSPECIFIED_ERROR;
+	}
+
+	uint8_t retry = 5;
+	double val;
+	I2C_MSG msg = { 0 };
+	int ret = 0;
+
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 2;
+	msg.data[0] = cfg->offset;
+
+	if (i2c_master_read(&msg, retry))
+		return SENSOR_FAIL_TO_ACCESS;
+
+	switch (cfg->offset) {
+	case PMBUS_READ_EIN:
+		ret = rs31380r_read_ein(&val, cfg);
+		if (ret != 0) {
+			return SENSOR_UNSPECIFIED_ERROR;
+		}
+		break;
+	case PMBUS_READ_VIN:
+	case PMBUS_READ_VOUT:
+		/* 31.25 mv/LSB */
+		val = ((msg.data[1] << 8) | msg.data[0]) * 31.25 / 1000;
+		break;
+	case PMBUS_READ_IOUT:
+		/* 62.5 mA/LSB */
+		val = ((msg.data[1] << 8) | msg.data[0]) * 62.5 / 1000;
+		break;
+	case PMBUS_READ_TEMPERATURE_1:
+		/* 1 degree c/LSB */
+		val = msg.data[0];
+		break;
+	case PMBUS_READ_POUT:
+	case PMBUS_READ_PIN:
+		/* 1 W/LSB */
+		val = ((msg.data[1] << 8) | msg.data[0]);
+		break;
+	default:
+		return SENSOR_NOT_FOUND;
+	}
+
+	sensor_val *sval = (sensor_val *)reading;
+	memset(sval, 0, sizeof(*sval));
+
+	sval->integer = (int32_t)val;
+	sval->fraction = (int32_t)(val * 1000) % 1000;
+
+	return SENSOR_READ_SUCCESS;
+}
+
+uint8_t rs31380r_init(sensor_cfg *cfg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_INIT_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+
+	rs31380r_init_arg *init_args = (rs31380r_init_arg *)cfg->init_args;
+	if (init_args->is_init)
+		goto skip_init;
+
+	uint8_t retry = 5;
+	I2C_MSG msg;
+	char *data = (uint8_t *)malloc(I2C_DATA_SIZE * sizeof(uint8_t));
+	if (data == NULL) {
+		LOG_ERR("memory allocation failed!");
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+	}
+	uint8_t bus = cfg->port;
+	uint8_t target_addr = cfg->target_addr;
+	uint8_t tx_len, rx_len;
+
+	/* Skip setting iout_cal_gain if given 0xFFFF */
+	if ((init_args->iout_cal_gain & 0xFFFF) != 0xFFFF) {
+		tx_len = 3;
+		rx_len = 0;
+		data[0] = PMBUS_IOUT_CAL_GAIN;
+		data[1] = init_args->iout_cal_gain & 0xFF;
+		data[2] = (init_args->iout_cal_gain >> 8) & 0xFF;
+		msg = construct_i2c_message(bus, target_addr, tx_len, data, rx_len);
+		if (i2c_master_write(&msg, retry) != 0) {
+			LOG_ERR("Failed to write RS31380R register(0x%x)", data[0]);
+			goto cleanup;
+		}
+	}
+
+	/* Skip setting iout_oc_fault_limit if given 0xFFFF */
+	if ((init_args->iout_oc_fault_limit & 0xFFFF) != 0xFFFF) {
+		tx_len = 3;
+		rx_len = 0;
+		data[0] = PMBUS_IOUT_OC_FAULT_LIMIT;
+		data[1] = init_args->iout_oc_fault_limit & 0xFF;
+		data[2] = (init_args->iout_oc_fault_limit >> 8) & 0xFF;
+		msg = construct_i2c_message(bus, target_addr, tx_len, data, rx_len);
+		if (i2c_master_write(&msg, retry) != 0) {
+			LOG_ERR("Failed to write RS31380R register(0x%x)", data[0]);
+			goto cleanup;
+		}
+	}
+
+	/* Skip setting ocw_sc_ref if given 0xFFFF */
+	if ((init_args->ocw_sc_ref & 0xFFFF) != 0xFFFF) {
+		tx_len = 3;
+		rx_len = 0;
+		data[0] = RS31380R_OCW_SC_REF_OFFSET;
+		data[1] = init_args->ocw_sc_ref & 0xFF;
+		data[2] = (init_args->ocw_sc_ref >> 8) & 0xFF;
+		msg = construct_i2c_message(bus, target_addr, tx_len, data, rx_len);
+		if (i2c_master_write(&msg, retry) != 0) {
+			LOG_ERR("Failed to write RS31380R register(0x%x)", data[0]);
+			goto cleanup;
+		}
+	}
+	init_args->is_init = true;
+
+cleanup:
+	SAFE_FREE(data);
+
+skip_init:
+	cfg->read = rs31380r_read;
+	return SENSOR_INIT_SUCCESS;
+}
+
+#endif
