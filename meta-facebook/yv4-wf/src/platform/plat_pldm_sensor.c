@@ -33,6 +33,7 @@ LOG_MODULE_REGISTER(plat_pldm_sensor);
 #define VR_DEVICE_UNKNOWN 0xFF
 
 void plat_pldm_sensor_change_vr_dev();
+void plat_pldm_sensor_change_adc_monitor_dev();
 
 static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = {
 	// thread id, thread name
@@ -6337,6 +6338,7 @@ pldm_sensor_info *plat_pldm_sensor_load(int thread_id)
 	case DIMM_SENSOR_THREAD_ID:
 		return plat_pldm_sensor_dimm_table;
 	case ADC_MONITOR_SENSOR_THREAD_ID:
+		plat_pldm_sensor_change_adc_monitor_dev();
 		return plat_pldm_sensor_adc_monitor_table;
 	default:
 		LOG_ERR("Unknow pldm sensor thread id %d", thread_id);
@@ -6473,4 +6475,35 @@ uint8_t plat_pldm_sensor_get_vr_dev(uint8_t *vr_dev)
 	}
 
 	return GET_VR_DEV_SUCCESS;
+}
+
+void plat_pldm_sensor_change_adc_monitor_dev()
+{
+	uint8_t reg = 0;
+
+	/*
+	 * Get ADC type from IOE3 P15
+	 * Low - MAXIM (main source)
+	 * High - TI (2nd source)
+	 */
+
+	if (get_ioe_value(ADDR_IOE3, TCA9555_INPUT_PORT_REG_1, &reg) == -1) {
+		LOG_ERR("Failed to get the ADC type.");
+		return;
+	}
+
+	if (GETBIT(reg, IOE_P15)) {
+		for (int index = 0;
+		     index < plat_pldm_sensor_get_sensor_count(ADC_MONITOR_SENSOR_THREAD_ID);
+		     index++) {
+			plat_pldm_sensor_adc_monitor_table[index].pldm_sensor_cfg.target_addr =
+				ADDR_ADC128D818;
+			plat_pldm_sensor_adc_monitor_table[index].pldm_sensor_cfg.type =
+				sensor_dev_adc128d818;
+			plat_pldm_sensor_adc_monitor_table[index].pldm_sensor_cfg.init_args =
+				&adc128d818_init_args[0];
+			plat_pldm_sensor_adc_monitor_table[index]
+				.pldm_sensor_cfg.post_sensor_read_hook = post_adc128d818_read;
+		}
+	}
 }

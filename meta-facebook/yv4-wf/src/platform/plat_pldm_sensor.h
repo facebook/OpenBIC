@@ -34,6 +34,7 @@
 #define ADDR_VR_PVDDQ_CD_ASIC2 (0xE4 >> 1)
 #define ADDR_NVME (0xD4 >> 1)
 #define ADDR_MAX11617 (0x6A >> 1)
+#define ADDR_ADC128D818 (0x3A >> 1)
 
 #define OFFSET_TMP75_TEMP 0x00
 #define OFFSET_TMP461_TEMP 0x00
