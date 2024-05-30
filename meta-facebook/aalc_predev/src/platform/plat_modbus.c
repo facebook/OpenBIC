@@ -60,6 +60,7 @@ modbus_server modbus_server_config[] = {
 	// iface_name, is_custom_fc64
 	{ "MODBUS0", true },
 	{ "MODBUS1", false },
+	{ "MODBUS2", false },
 };
 
 /*
