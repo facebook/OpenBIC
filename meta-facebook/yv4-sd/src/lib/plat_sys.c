@@ -58,5 +58,6 @@ uint8_t pal_get_bmc_interface()
 
 	bmc_interface = (msg.data[0] & BMC_INTERFACE_PRSNT_BIT) >> 4;
 
-	return bmc_interface;
+	// return bmc_interface;
+	return BMC_INTERFACE_I3C;
 }
