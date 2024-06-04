@@ -1133,6 +1133,7 @@ __weak void OEM_1S_GET_SET_GPIO(ipmi_msg *msg)
 		if (msg->data_len == 3) {
 			msg->data[0] = gpio_num;
 			gpio_set(gpio_num, msg->data[2]);
+			OEM_1S_RECORD_DAM_PIN_STATUS(gpio_num, msg->data[2]);
 			msg->data[1] = gpio_get(gpio_num);
 			completion_code = CC_SUCCESS;
 		}
@@ -2562,5 +2563,10 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 		msg->completion_code = CC_INVALID_CMD;
 		break;
 	}
+	return;
+}
+
+__weak void OEM_1S_RECORD_DAM_PIN_STATUS(uint8_t gpio_num, uint8_t status)
+{
 	return;
 }

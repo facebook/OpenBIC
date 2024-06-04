@@ -122,6 +122,7 @@ void OEM_1S_SET_ADD_DEBUG_SEL_MODE(ipmi_msg *msg);
 void OEM_1S_GET_4BYTE_POST_CODE(ipmi_msg *msg);
 void OEM_1S_GET_PCIE_RETIMER_TYPE(ipmi_msg *msg);
 void OEM_1S_DEBUG_GET_HW_SIGNAL(ipmi_msg *msg);
+void OEM_1S_RECORD_DAM_PIN_STATUS(uint8_t gpio_num, uint8_t status);
 
 #ifdef CONFIG_SNOOP_ASPEED
 void OEM_1S_GET_POST_CODE(ipmi_msg *msg);
