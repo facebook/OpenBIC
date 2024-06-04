@@ -130,24 +130,29 @@ nct7363_init_arg nct7363_init_args[] = {
 };
 
 ads112c_init_arg ads112c_init_args[] = {
+	// init_args below need to check correct init value
+	// fan board
 	[0] = { .reg0_input = ADS112C_REG0_INPUT_AIN0AIN1,
 		.reg0_gain = ADS112C_REG0_GAIN1,
 		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
 	},    
+	// pump board
 	[1] = { .reg0_input = ADS112C_REG0_INPUT_AIN0AVSS,
 		.reg0_gain = ADS112C_REG0_GAIN1,
 		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
 	},
+	// bridge board
 	[2] = { .reg0_input = ADS112C_REG0_INPUT_AIN1AVSS,
 		.reg0_gain = ADS112C_REG0_GAIN1,
 		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
 	},    
+	// backplane board p48v
 	[3] = { .reg0_input = ADS112C_REG0_INPUT_AIN2AVSS,
 		.reg0_gain = ADS112C_REG0_GAIN1,
 		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
@@ -185,7 +190,21 @@ nct214_init_arg nct214_init_args[] = {
 };
 
 xdp710_init_arg xdp710_init_args[] = {
+	// init_args below need to check correct init value
+	// fan board
 	[0] = { 
+		.r_sense = 1, // TO DO wait to check
+	},
+	// pump board
+	[1] = { 
+		.r_sense = 1, // TO DO wait to check
+	},
+	// bridge board
+	[2] = { 
+		.r_sense = 1, // TO DO wait to check
+	},
+	// backplane board
+	[3] = { 
 		.r_sense = 1, // TO DO wait to check
 	},
 };
