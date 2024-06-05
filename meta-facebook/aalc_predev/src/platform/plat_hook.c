@@ -586,7 +586,23 @@ ina238_init_arg ina238_init_args[] = {
 };
 
 nct214_init_arg nct214_init_args[] = {
+	// sensor box temp 1
 	[0] = { 
+		.is_init = false, 
+		.temperature_range = NCT_214_TEMPERATURE_RANGE_EXTENDED, // TO DO wait to check
+	},
+	// sensor box temp 2
+	[1] = { 
+		.is_init = false, 
+		.temperature_range = NCT_214_TEMPERATURE_RANGE_EXTENDED, // TO DO wait to check
+	},
+	// sensor box temp 3
+	[2] = { 
+		.is_init = false, 
+		.temperature_range = NCT_214_TEMPERATURE_RANGE_EXTENDED, // TO DO wait to check
+	},
+	// sensor box temp 4
+	[3] = { 
 		.is_init = false, 
 		.temperature_range = NCT_214_TEMPERATURE_RANGE_EXTENDED, // TO DO wait to check
 	},
