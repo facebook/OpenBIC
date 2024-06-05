@@ -36,6 +36,17 @@ enum ADS112C_REG1_CONFIG {
 	//Voltage reference selection. (Bit 2:1)
 	ADS112C_REG1_INTERNALV = 0x00,
 	ADS112C_REG1_EXTERNALV = 0x02,
+	//Temperature sensor mode. (Bit 0)
+	ADS112C_REG1_TEMPMODE_DISABLE = 0x00,
+	ADS112C_REG1_TEMPMODE_ENABLE = 0x01,
+};
+
+enum ADS112C_SENSOR_OFFSET {
+	ADS112C_FLOW_OFFSET = 0x00,
+	ADS112C_PRESS_OFFSET = 0x01,
+	ADS112C_TEMP_OFFSET = 0x02,
+	ADS112C_OTHER_OFFSET = 0x03,
+	ADS112C_LEAKAGE_OFFSET = 0x04,
 };
 
 // Command Byte to control device
@@ -58,7 +69,8 @@ typedef struct _ads112c_init_arg {
 	uint8_t reg0_pga;
 	uint8_t reg1_conversion;
 	uint8_t reg1_vol_refer;
-	double ext_vol;
+	double input_vol;
+	uint8_t reg1_temp_mode;
 } ads112c_init_arg;
 
 #endif //ADS112C_H
