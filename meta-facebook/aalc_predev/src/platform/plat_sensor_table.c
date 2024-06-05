@@ -963,24 +963,19 @@ static void hsc_config(uint8_t type)
 				if (get_pmbus_mfr_id(p->port, dvt_xdp_addr)) {
 					p->type = sensor_dev_xdp710;
 					p->target_addr = dvt_xdp_addr;
+					p->init_args = xdp_init_arr;
 				}
 
 				break;
-
+				
 			case XDP710_MFR_ID:
 				p->type = sensor_dev_xdp710;
+				p->init_args = xdp_init_arr;
 				break;
 
 			default:
 				break;
 			}
-
-			if (p->type == sensor_dev_xdp710) {
-				//init_arg
-				p->init_args = xdp_init_arr;
-			}
-
-			break;
 		}
 	}
 }
