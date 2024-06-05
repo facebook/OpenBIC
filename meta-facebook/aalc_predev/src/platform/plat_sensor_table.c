@@ -914,38 +914,36 @@ static void hsc_config(uint8_t type)
 	uint16_t sen_nums = 0;
 	uint8_t *sen_tbl = NULL;
 	uint8_t dvt_xdp_addr = 0;
-	xdp710_init_arg xdp_init_arr = { 0 };
-
+	xdp710_init_arg *xdp_init_arr = NULL;
 	switch (type) {
 	case HSC_CONFIG_FB:
 		sen_nums = ARRAY_SIZE(fb_sen_tbl);
 		sen_tbl = fb_sen_tbl;
 		dvt_xdp_addr = XDP710_FB_ADDR_DVT;
-		xdp_init_arr = xdp710_init_args[0];
+		xdp_init_arr =  &xdp710_init_args[0];
 		break;
 	case HSC_CONFIG_BPB:
 		sen_nums = ARRAY_SIZE(bpb_sen_tbl);
 		sen_tbl = bpb_sen_tbl;
 		dvt_xdp_addr = XDP710_BPB_ADDR_DVT;
-		xdp_init_arr = xdp710_init_args[3];
+		xdp_init_arr =  &xdp710_init_args[3];
 		break;
 	case HSC_CONFIG_PB:
 		sen_nums = ARRAY_SIZE(pb_sen_tbl);
 		sen_tbl = pb_sen_tbl;
 		dvt_xdp_addr = XDP710_PB_ADDR;
-		xdp_init_arr = xdp710_init_args[1];
+		xdp_init_arr =  &xdp710_init_args[1];
 		break;
 	case HSC_CONFIG_BB:
 		sen_nums = ARRAY_SIZE(bb_tbl);
 		sen_tbl = bb_tbl;
 		dvt_xdp_addr = XDP710_BB_ADDR;
-		xdp_init_arr = xdp710_init_args[2];
+		xdp_init_arr =  &xdp710_init_args[2];
 		break;
 	default:
 		LOG_ERR("Unknown HSC module type(%d)", type);
 		return;
 	}
-
 	LOG_INF("sen_nums = %d", sen_nums);
 
 	for (uint8_t i = 0; i < ARRAY_SIZE(hsc_sensor_config_table); i++) {
@@ -979,7 +977,7 @@ static void hsc_config(uint8_t type)
 
 			if (p->type == sensor_dev_xdp710) {
 				//init_arg
-				p->init_args = &xdp_init_arr;
+				p->init_args = xdp_init_arr;
 			}
 
 			break;
