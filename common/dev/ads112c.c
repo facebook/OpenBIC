@@ -77,8 +77,20 @@ uint8_t ads112c_read(sensor_cfg *cfg, int *reading)
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
-	*reading = (msg.data[1] << 8) | msg.data[0];
+	*reading = (msg.data[0] << 8) | msg.data[1];
 
+	//double ads112c_default_vol = 5;
+	ads112c_init_arg *init_arg = (ads112c_init_arg *)cfg->init_args;
+	double gainValue = power(2, (init_arg->reg0_gain) >> 1);
+	double default_vol = init_arg->ext_vol;
+
+	double val = (*reading) * default_vol / (32768 * gainValue); //(2 · VREF / Gain) / (2^16)
+	//printf("sensor_cfg num: %x\n", cfg->num);
+	//printf("vol:%f\n", vol);
+
+	sensor_val *sval = (sensor_val *)reading;
+	sval->integer = (int16_t)val & 0xFFFF;
+	sval->fraction = (val - sval->integer) * 1000;
 	return SENSOR_READ_SUCCESS;
 }
 

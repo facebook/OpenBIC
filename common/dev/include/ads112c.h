@@ -58,6 +58,7 @@ typedef struct _ads112c_init_arg {
 	uint8_t reg0_pga;
 	uint8_t reg1_conversion;
 	uint8_t reg1_vol_refer;
+	double ext_vol;
 } ads112c_init_arg;
 
 #endif //ADS112C_H

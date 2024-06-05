@@ -24,6 +24,8 @@
 #include "plat_i2c.h"
 #include "sensor.h"
 #include "nct214.h"
+#include "libutil.h"
+//#include "plat_util.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -340,15 +342,24 @@ bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
 bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
-	CHECK_NULL_ARG_WITH_RETURN(args, false);
 	CHECK_NULL_ARG_WITH_RETURN(reading, false);
-	short int read16Bits = (short int)*reading;
-	double ads112c_default_vol = 5;
-	ads112c_init_arg *init_arg = (ads112c_init_arg *)cfg->init_args;
-	double gainValue = 1 << (init_arg->reg0_gain >> 1);
-
-	double rawValue = (double)read16Bits * ads112c_default_vol /
-			  (32768 * gainValue); //(2 · VREF / Gain) / (2^16)
+	//short int read16Bits = (short int)*reading;
+	//double ads112c_default_vol = 5;
+	//ads112c_init_arg *init_arg = (ads112c_init_arg *)cfg->init_args;
+	//double gainValue = 1;
+	// double rawValue = (double)read16Bits * ads112c_default_vol /
+	// 		  (32768 * gainValue); //(2 · VREF / Gain) / (2^16)
+	//double rawValue = (*reading) * ads112c_default_vol /
+	//		  (32768 * gainValue); //(2 · VREF / Gain) / (2^16)			  
+	//LOG_ERR("sensor_cfg num: %x", cfg->num);
+	// LOG_ERR("*reading: %d", *reading);
+	// LOG_ERR("read16Bits: %d", read16Bits);
+	// LOG_ERR("reg0_gain: %d", init_arg->reg0_gain);
+	// LOG_ERR("gainValue2: %f", power2(2, (init_arg->reg0_gain) >> 1));
+	// LOG_ERR("gainValue: %f", power(2, (init_arg->reg0_gain) >> 1));
+	// LOG_ERR("v-value: %f", rawValue);
+	// LOG_ERR("v-value2: %f", rawValue);
+	int	rawValue = *reading;
 
 	double val;
 	double v_val, flow_Pmax = 400, flow_Pmin = 10, press_Pmax = 50, press_Pmin = 0;
@@ -356,17 +367,14 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 	switch (cfg->offset) {
 	case ADS112C_FLOW_OFFSET: //Flow_Rate_LPM
 		v_val = 5 - ((32767 - rawValue) * 0.000153);
-		val = ((flow_Pmax - flow_Pmin) * (2 * v_val - 1) / 8) + 10;
-		//val = (((v_val / 5) - 0.1) / (0.8 / (flow_Pmax - flow_Pmin))) + 10;
-		val = (val - 7.56494) * 0.294524;
-		val = 1.2385 * ((2.5147 * val) - 2.4892);
-		val = (1.7571 * val) - 0.8855;
+		val = (((v_val / 5) - 0.1) / (0.8 / (flow_Pmax - flow_Pmin))) + 10;
+		val = (val - 7.56494) * 1.076921;
+		val = (2.5412 * val) - 25.285;
 		break;
 
 	case ADS112C_PRESS_OFFSET: //Filter_P/Outlet_P/Inlet_P
 		v_val = 5 - ((32767 - rawValue) * 0.000153);
-		val = ((press_Pmax - press_Pmin) * (2 * v_val - 1) / 8) + 10;
-		//val = (((v_val / 5) - 0.1) / (0.8 / (press_Pmax - press_Pmin))) + 10;
+		val = (((v_val / 5) - 0.1) / (0.8 / (press_Pmax - press_Pmin))) + 10;
 		val = ((0.9828 * val) - 9.9724) * 6.894759;
 		break;
 
@@ -376,7 +384,7 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 		break;
 
 	default:
-		val = rawValue * 1.0;
+		val = rawValue * 0.0001007;
 		break;
 	}
 

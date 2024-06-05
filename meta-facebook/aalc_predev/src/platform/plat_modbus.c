@@ -32,7 +32,6 @@
 #include "plat_gpio.h"
 #include <modbus_internal.h>
 #include "plat_util.h"
-#include "libutil.h"
 #include "plat_pwm.h"
 #include "util_sys.h"
 #include "util_spi.h"
