@@ -967,12 +967,12 @@ static void hsc_config(uint8_t type)
 				}
 
 				break;
-				
 			case XDP710_MFR_ID:
 				p->type = sensor_dev_xdp710;
+				p->target_addr = dvt_xdp_addr;
 				p->init_args = xdp_init_arr;
-				break;
 
+				break;
 			default:
 				break;
 			}
