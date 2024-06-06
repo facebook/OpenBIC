@@ -66,6 +66,15 @@
 			"Device": "pt4080l",
 			"CheckSum": "n",
 			"pkg_suffix": ".pldm"
+		},
+		{
+			"CompID": [
+				6
+			],
+			"Vendor": "ti",
+			"Device": "ds160pt801",
+			"CheckSum": "n",
+			"pkg_suffix": ".pldm"
 		}
 	]
 }

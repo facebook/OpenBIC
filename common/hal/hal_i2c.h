@@ -20,6 +20,7 @@
 #include <drivers/i2c.h>
 #include <drivers/i2c/slave/ipmb.h>
 
+#if defined(CONFIG_I2C_ASPEED)
 #if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c0), okay)
 #define DEV_I2C_0
 #endif
@@ -83,6 +84,70 @@
 #if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c15), okay)
 #define DEV_I2C_15
 #endif
+
+#elif (CONFIG_I2C_NPCM4XX)
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c1a), okay)
+#define DEV_I2C_0
+#endif
+
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c1b), okay)
+#define DEV_I2C_0
+#endif
+
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c2a), okay)
+#define DEV_I2C_1
+#endif
+
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c3a), okay)
+#define DEV_I2C_2
+#endif
+
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c4a), okay)
+#define DEV_I2C_3
+#endif
+
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c4b), okay)
+#define DEV_I2C_3
+#endif
+
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c5a), okay)
+#define DEV_I2C_4
+#endif
+
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c6a), okay)
+#define DEV_I2C_5
+#endif
+
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c6b), okay)
+#define DEV_I2C_5
+#endif
+
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c7a), okay)
+#define DEV_I2C_6
+#endif
+
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c8a), okay)
+#define DEV_I2C_7
+#endif
+
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c9a), okay)
+#define DEV_I2C_8
+#endif
+
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c10a), okay)
+#define DEV_I2C_9
+#endif
+
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c11a), okay)
+#define DEV_I2C_10
+#endif
+
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c12a), okay)
+#define DEV_I2C_11
+#endif
+
+#else /* defined(CONFIG_GPIO_ASPEED) */
+#endif /* defined(CONFIG_GPIO_ASPEED) */
 
 #define DEV_I2C(n) DEV_I2C_##n
 

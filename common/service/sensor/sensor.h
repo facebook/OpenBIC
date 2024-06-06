@@ -173,8 +173,9 @@ enum SENSOR_DEV {
 	sensor_dev_ast_tach = 0x37,
 	sensor_dev_xdp710 = 0x38,
 	sensor_dev_ds160pt801 = 0x39,
-	sensor_dev_ads1015 = 0x39,
-	sensor_dev_plat_def_sensor = 0x3A,  
+	sensor_dev_rs31380r = 0x3A,
+	sensor_dev_ads1015 = 0x3B,
+	sensor_dev_plat_def_sensor = 0x3C,  
 	sensor_dev_max
 };
 
@@ -442,6 +443,19 @@ typedef struct _mp5990_init_arg {
 	bool is_init;
 
 } mp5990_init_arg;
+
+typedef struct _rs31380r_init_arg {
+	/* value to sets the gain for output current reporting */
+	uint16_t iout_cal_gain;
+	/* value to sets the IMON based total over current fault limit */
+	uint16_t iout_oc_fault_limit;
+	/* value to sets the SCREF and OCWREF voltage level. */
+	uint16_t ocw_sc_ref;
+
+	/* Initialize function will set following arguments, no need to give value */
+	bool is_init;
+
+} rs31380r_init_arg;
 
 typedef struct _pmic_init_arg {
 	bool is_init;

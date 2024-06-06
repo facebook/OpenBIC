@@ -35,6 +35,8 @@
 
 #define ADJUST_MP5990_CURRENT(x) (x * 1) // temporary set
 #define ADJUST_MP5990_POWER(x) (x * 1) // temporary set
+#define ADJUST_RS31380R_CURRENT(x) (x * 1) // temporary set
+#define ADJUST_RS31380R_POWER(x) (x * 1) // temporary set
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -46,6 +48,13 @@ LOG_MODULE_REGISTER(plat_hook);
 adc_asd_init_arg ast_adc_init_args[] = { [0] = { .is_init = false } };
 
 mp5990_init_arg mp5990_init_args[] = {
+	[0] = { .is_init = false,
+		.iout_cal_gain = 0xFFFF,
+		.iout_oc_fault_limit = 0xFFFF,
+		.ocw_sc_ref = 0xFFFF },
+};
+
+rs31380r_init_arg rs31380r_init_args[] = {
 	[0] = { .is_init = false,
 		.iout_cal_gain = 0xFFFF,
 		.iout_oc_fault_limit = 0xFFFF,
@@ -183,6 +192,40 @@ bool post_mp5990_pwr_read(sensor_cfg *cfg, void *args, int *reading)
 	sensor_val *sval = (sensor_val *)reading;
 	float val = sval->integer + (sval->fraction * 0.001);
 	val = ADJUST_MP5990_POWER(val);
+	sval->integer = (int16_t)val;
+	sval->fraction = (val - sval->integer) * 1000;
+
+	return true;
+}
+
+bool post_rs31380r_cur_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	ARG_UNUSED(args);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	if (!reading) {
+		return check_reading_pointer_null_is_allowed(cfg);
+	}
+
+	sensor_val *sval = (sensor_val *)reading;
+	float val = sval->integer + (sval->fraction * 0.001);
+	val = ADJUST_RS31380R_CURRENT(val);
+	sval->integer = (int16_t)val;
+	sval->fraction = (val - sval->integer) * 1000;
+
+	return true;
+}
+
+bool post_rs31380r_pwr_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	ARG_UNUSED(args);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	if (!reading) {
+		return check_reading_pointer_null_is_allowed(cfg);
+	}
+
+	sensor_val *sval = (sensor_val *)reading;
+	float val = sval->integer + (sval->fraction * 0.001);
+	val = ADJUST_RS31380R_POWER(val);
 	sval->integer = (int16_t)val;
 	sval->fraction = (val - sval->integer) * 1000;
 

@@ -74,6 +74,9 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_VOL_ADC7_1V2, sensor_dev_ast_adc, ADC_PORT7, NONE, NONE, dc_access, 1, 1,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &ast_adc_init_args[0] },
+	{ SENSOR_NUM_VOL_ADC9_VDD_3V3, sensor_dev_ast_adc, ADC_PORT9, NONE, NONE, dc_access, 2, 1,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  NULL, NULL, NULL, NULL, &ast_adc_init_args[0] },
 	{ SENSOR_NUM_VOL_ADC10_P1V2_STBY, sensor_dev_ast_adc, ADC_PORT10, NONE, NONE, stby_access,
 	  1, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &ast_adc_init_args[0] },
@@ -180,6 +183,25 @@ sensor_cfg mp5990_temp_sensor_config_table[] = {
 	{ SENSOR_NUM_TEMP_HSC, sensor_dev_mp5990, I2C_BUS2, MP5990_ADDR, PMBUS_READ_TEMPERATURE_1,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
+};
+
+sensor_cfg rs31380r_sensor_config_table[] = {
+	{ SENSOR_NUM_VOL_HSCIN, sensor_dev_rs31380r, I2C_BUS2, RS31380R_ADDR, PMBUS_READ_VIN,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &rs31380r_init_args[0] },
+	{ SENSOR_NUM_CUR_HSCOUT, sensor_dev_rs31380r, I2C_BUS2, RS31380R_ADDR, PMBUS_READ_IOUT,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, post_rs31380r_cur_read, NULL, &rs31380r_init_args[0] },
+	{ SENSOR_NUM_PWR_HSCIN, sensor_dev_rs31380r, I2C_BUS2, RS31380R_ADDR, PMBUS_READ_PIN,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, post_rs31380r_pwr_read, NULL, &rs31380r_init_args[0] },
+};
+
+sensor_cfg rs31380r_temp_sensor_config_table[] = {
+	{ SENSOR_NUM_TEMP_HSC, sensor_dev_rs31380r, I2C_BUS2, RS31380R_ADDR,
+	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &rs31380r_init_args[0] },
 };
 
 sensor_cfg pt4080l_sensor_config_table[] = {
@@ -297,7 +319,12 @@ void pal_extend_sensor_config()
 		break;
 	case HSC_MODULE_RS31380R:
 		LOG_INF("HSC vendor: RS31380R");
-		LOG_WRN("RS31380R HSC module is not supported yet");
+		sensor_count = ARRAY_SIZE(rs31380r_sensor_config_table);
+		for (int index = 0; index < sensor_count; index++) {
+			add_sensor_config(rs31380r_sensor_config_table[index]);
+		}
+		/* RS31380R can read HSC temperature */
+		add_sensor_config(rs31380r_temp_sensor_config_table[0]);
 		break;
 	default:
 		LOG_ERR("Unsupported HSC module, HSC module: 0x%x", hsc_module);
@@ -343,7 +370,9 @@ uint8_t pal_get_extend_sensor_config()
 		break;
 	case HSC_MODULE_RS31380R:
 		LOG_INF("HSC vendor: RS31380R");
-		LOG_WRN("RS31380R HSC module is not supported yet");
+		extend_sensor_config_size += ARRAY_SIZE(rs31380r_sensor_config_table);
+		/* RS31380R can read HSC temperature */
+		extend_sensor_config_size += ARRAY_SIZE(rs31380r_temp_sensor_config_table);
 		break;
 	default:
 		LOG_ERR("Unsupported HSC module, HSC module: 0x%x", hsc_module);

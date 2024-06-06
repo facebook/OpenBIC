@@ -41,6 +41,17 @@ LOG_MODULE_REGISTER(plat_ipmi);
 
 bool pal_request_msg_to_BIC_from_HOST(uint8_t netfn, uint8_t cmd)
 {
+	if (netfn == NETFN_STORAGE_REQ) {
+		if (cmd == CMD_STORAGE_ADD_SEL) {
+			return false;
+		}
+	}
+
+	if (netfn == NETFN_APP_REQ) {
+		if (cmd == CMD_APP_SET_SYS_INFO_PARAMS) {
+			return false;
+		}
+	}
 	// In YV4, all IPMI commands are all sent to BIC
 	return true;
 }

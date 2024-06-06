@@ -32,7 +32,7 @@
 
 int num_of_pin_in_one_group_lst[GPIO_GROUP_NUM] = { 32, 32, 32, 32, 32, 16 };
 char GPIO_GROUP_NAME_LST[GPIO_GROUP_NUM][10] = { "GPIO0_A_D", "GPIO0_E_H", "GPIO0_I_L",
-					       "GPIO0_M_P", "GPIO0_Q_T", "GPIO0_U_V" };
+						 "GPIO0_M_P", "GPIO0_Q_T", "GPIO0_U_V" };
 enum GPIO_ACCESS { GPIO_READ, GPIO_WRITE };
 
 gpio_flags_t int_type_table[] = { GPIO_INT_DISABLE,   GPIO_INT_EDGE_RISING, GPIO_INT_EDGE_FALLING,
@@ -331,7 +331,18 @@ void cmd_gpio_muti_fn_ctl_list(const struct shell *shell, size_t argc, char **ar
 
 	printf("[   REG    ]  hi                                      lo\n");
 	for (int lst_idx = 0; lst_idx < GPIO_MULTI_FUNC_CFG_SIZE; lst_idx++) {
+#if defined(CONFIG_GPIO_ASPEED)
 		uint32_t cur_status = sys_read32(GPIO_MULTI_FUNC_PIN_CTL_REG_ACCESS[lst_idx]);
+#elif (CONFIG_GPIO_NPCM4XX)
+		//combine 4byte to 1word
+		uint32_t cur_status =
+			(uint32_t)sys_read8(GPIO_MULTI_FUNC_PIN_CTL_REG_ACCESS[lst_idx]) |
+			(uint32_t)sys_read8(GPIO_MULTI_FUNC_PIN_CTL_REG_ACCESS[lst_idx] + 1) << 8 |
+			(uint32_t)sys_read8(GPIO_MULTI_FUNC_PIN_CTL_REG_ACCESS[lst_idx] + 2) << 16 |
+			(uint32_t)sys_read8(GPIO_MULTI_FUNC_PIN_CTL_REG_ACCESS[lst_idx] + 3) << 24;
+#else /* defined(CONFIG_GPIO_ASPEED) */
+#endif /* defined(CONFIG_GPIO_ASPEED) */
+
 		printf("[0x%x]", GPIO_MULTI_FUNC_PIN_CTL_REG_ACCESS[lst_idx]);
 		for (int i = 32; i > 0; i--) {
 			if (!(i % 4)) {
