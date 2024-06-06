@@ -629,8 +629,44 @@ xdp710_init_arg xdp710_init_args[] = {
 };
 
 hdc1080_init_arg hdc1080_init_args[] = {
+	// fan BD 1	
 	[0] = { .is_init = false,},
-	[1] = { .is_init = true,},
+	// fan BD 2	
+	[1] = { .is_init = false,},
+	// fan BD 3	
+	[2] = { .is_init = false,},	
+	// fan BD 4	
+	[3] = { .is_init = false,},
+	// fan BD 5	
+	[4] = { .is_init = false,},
+	// fan BD 6	
+	[5] = { .is_init = false,},
+	// fan BD 7	
+	[6] = { .is_init = false,},
+	// fan BD 8	
+	[7] = { .is_init = false,},
+	// fan BD 9	
+	[8] = { .is_init = false,},
+	// fan BD 10	
+	[9] = { .is_init = false,},
+	// fan BD 11	
+	[10] = { .is_init = false,},
+	// fan BD 12	
+	[11] = { .is_init = false,},	
+	// fan BD 13	
+	[12] = { .is_init = false,},
+	// fan BD 14	
+	[13] = { .is_init = false,},
+	// Pumb BD 1
+	[14] = { .is_init = false,},
+	// Pumb BD 2	
+	[15] = { .is_init = false,},
+	// Pumb BD 3	
+	[16] = { .is_init = false,},
+	// Manager BD	
+	[17] = { .is_init = false,},
+	// PDB BD	
+	[18] = { .is_init = false,},			
 };
 
 /**************************************************************************************************
