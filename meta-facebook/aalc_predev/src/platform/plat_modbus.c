@@ -59,6 +59,7 @@ modbus_server modbus_server_config[] = {
 	// iface_name, is_custom_fc64
 	{ "MODBUS0", true },
 	{ "MODBUS1", false },
+	{ "MODBUS2", false },
 };
 
 /*
@@ -819,7 +820,8 @@ static int coil_wr(uint16_t addr, bool state)
 	} else if (addr == MODBUS_RPU_RUN_ADDR) { // FW update: Set RPU Stop/Run
 		if (!state) { //Set RPU Stop
 			if (ctl_all_pwm_dev(100))
-				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+				LOG_ERR("Set full status failed for all pumps.");
+				//return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 
 			disable_sensor_poll();
 

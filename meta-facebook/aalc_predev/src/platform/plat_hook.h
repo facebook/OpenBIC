@@ -40,6 +40,7 @@ extern adc_asd_init_arg adc_asd_init_args[];
 extern ina238_init_arg ina238_init_args[];
 extern nct214_init_arg nct214_init_args[];
 extern xdp710_init_arg xdp710_init_args[];
+extern hdc1080_init_arg hdc1080_init_args[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
