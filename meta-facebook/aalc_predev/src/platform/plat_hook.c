@@ -24,6 +24,8 @@
 #include "plat_i2c.h"
 #include "sensor.h"
 #include "nct214.h"
+#include "libutil.h"
+//#include "plat_util.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -543,31 +545,57 @@ ads112c_init_arg ads112c_init_args[] = {
 		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
+		.vol_refer_val = 3.3,
+		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,		
 	},    
 	[1] = { .reg0_input = ADS112C_REG0_INPUT_AIN0AVSS,
 		.reg0_gain = ADS112C_REG0_GAIN1,
 		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
+		.vol_refer_val = 5,
+		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,				
 	},
 	[2] = { .reg0_input = ADS112C_REG0_INPUT_AIN1AVSS,
 		.reg0_gain = ADS112C_REG0_GAIN1,
 		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
+		.vol_refer_val = 5,
+		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,				
 	},    
 	[3] = { .reg0_input = ADS112C_REG0_INPUT_AIN2AVSS,
 		.reg0_gain = ADS112C_REG0_GAIN1,
 		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
+		.vol_refer_val = 5,
+		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,				
 	},
 	[4] = { .reg0_input = ADS112C_REG0_INPUT_AIN3AVSS,
 		.reg0_gain = ADS112C_REG0_GAIN1,
 		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
+		.vol_refer_val = 5,
+		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,				
 	},
+	[5] = { .reg0_input = ADS112C_REG0_INPUT_AIN0AVSS,
+		.reg0_gain = ADS112C_REG0_GAIN1,
+		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
+		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
+		.reg1_vol_refer = ADS112C_REG1_INTERNALV,
+		.vol_refer_val = 2.048,
+		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,
+	},
+	[6] = { .reg0_input = ADS112C_REG0_INPUT_AIN0AIN1,
+		.reg0_gain = ADS112C_REG0_GAIN1,
+		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
+		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
+		.reg1_vol_refer = ADS112C_REG1_INTERNALV,
+		.vol_refer_val = 2.048,
+		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_ENABLE,
+	},		
 };
 
 adc_asd_init_arg adc_asd_init_args[] = {
@@ -819,15 +847,10 @@ bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
 bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
-	CHECK_NULL_ARG_WITH_RETURN(args, false);
 	CHECK_NULL_ARG_WITH_RETURN(reading, false);
-	short int read16Bits = (short int)*reading;
-	double ads112c_default_vol = 5;
-	ads112c_init_arg *init_arg = (ads112c_init_arg *)cfg->init_args;
-	double gainValue = 1 << (init_arg->reg0_gain >> 1);
 
-	double rawValue = (double)read16Bits * ads112c_default_vol /
-			  (32768 * gainValue); //(2 · VREF / Gain) / (2^16)
+	sensor_val *oval = (sensor_val *)reading;
+	double rawValue = ((float)oval->integer + (oval->fraction / 1000.0));
 
 	double val;
 	double v_val, flow_Pmax = 400, flow_Pmin = 10, press_Pmax = 50, press_Pmin = 0;
@@ -835,17 +858,14 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 	switch (cfg->offset) {
 	case ADS112C_FLOW_OFFSET: //Flow_Rate_LPM
 		v_val = 5 - ((32767 - rawValue) * 0.000153);
-		val = ((flow_Pmax - flow_Pmin) * (2 * v_val - 1) / 8) + 10;
-		//val = (((v_val / 5) - 0.1) / (0.8 / (flow_Pmax - flow_Pmin))) + 10;
-		val = (val - 7.56494) * 0.294524;
-		val = 1.2385 * ((2.5147 * val) - 2.4892);
-		val = (1.7571 * val) - 0.8855;
+		val = (((v_val / 5) - 0.1) / (0.8 / (flow_Pmax - flow_Pmin))) + 10;
+		val = (val - 7.56494) * 1.076921;
+		val = (2.5412 * val) - 25.285;
 		break;
 
 	case ADS112C_PRESS_OFFSET: //Filter_P/Outlet_P/Inlet_P
 		v_val = 5 - ((32767 - rawValue) * 0.000153);
-		val = ((press_Pmax - press_Pmin) * (2 * v_val - 1) / 8) + 10;
-		//val = (((v_val / 5) - 0.1) / (0.8 / (press_Pmax - press_Pmin))) + 10;
+		val = (((v_val / 5) - 0.1) / (0.8 / (press_Pmax - press_Pmin))) + 10;
 		val = ((0.9828 * val) - 9.9724) * 6.894759;
 		break;
 
@@ -855,7 +875,7 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 		break;
 
 	default:
-		val = rawValue * 1.0;
+		val = rawValue * 0.0001007;
 		break;
 	}
 

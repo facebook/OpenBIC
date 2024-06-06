@@ -45,20 +45,20 @@ enum FRU_ID {
 
 #define FRU_CFG_NUM MAX_FRU_ID
 
-#define MB_FRU_ADDR 0xA6
-#define BB_FRU_ADDR 0xA4
-#define BPB_FRU_ADDR 0xA6
-#define SB_FRU_ADDR 0xA6
-#define PDB_FRU_ADDR 0XAA
-#define PB_FRU_ADDR 0xA6
-#define FB_FRU_ADDR 0xA6
+#define MB_FRU_ADDR (0xA6 >> 1)
+#define BB_FRU_ADDR (0xA4 >> 1)
+#define BPB_FRU_ADDR (0xA6 >> 1)
+#define SB_FRU_ADDR (0xA6 >> 1)
+#define PDB_FRU_ADDR (0xAA >> 1)
+#define PB_FRU_ADDR (0xA6 >> 1)
+#define FB_FRU_ADDR (0xA6 >> 1)
 
-#define FB_1_4_MUX_ADDR 0xE0
-#define FB_5_8_MUX_ADDR 0xE2
-#define FB_9_12_MUX_ADDR 0xE4
-#define FB_13_14_MUX_ADDR 0xE6
-#define PB_MUX_ADDR 0xE8
-#define SB_MUX_ADDR 0xE8
+#define FB_1_4_MUX_ADDR (0xE0 >> 1)
+#define FB_5_8_MUX_ADDR (0xE2 >> 1)
+#define FB_9_12_MUX_ADDR (0xE4 >> 1)
+#define FB_13_14_MUX_ADDR (0xE6 >> 1)
+#define PB_MUX_ADDR (0xE8 >> 1)
+#define SB_MUX_ADDR (0xE8 >> 1)
 
 // plat eeprom save in rpu eeprom
 

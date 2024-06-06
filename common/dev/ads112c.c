@@ -77,8 +77,20 @@ uint8_t ads112c_read(sensor_cfg *cfg, int *reading)
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
-	*reading = (msg.data[1] << 8) | msg.data[0];
+	*reading = (msg.data[0] << 8) | msg.data[1];
 
+	ads112c_init_arg *init_arg = (ads112c_init_arg *)cfg->init_args;
+	double gainValue = 1 << ((init_arg->reg0_gain) >> 1);
+
+	double val = (*reading) * (init_arg->vol_refer_val) /
+		     (32768 * gainValue); //LSB = (2 · VREF / Gain) / (2^16)
+
+	if (init_arg->reg1_temp_mode == ADS112C_REG1_TEMPMODE_ENABLE)
+		val = (*reading) * 0.03125; //One 14-bit LSB equals 0.03125°C.
+
+	sensor_val *sval = (sensor_val *)reading;
+	sval->integer = (int16_t)val & 0xFFFF;
+	sval->fraction = (val - sval->integer) * 1000;
 	return SENSOR_READ_SUCCESS;
 }
 
@@ -119,8 +131,7 @@ uint8_t ads112c_init(sensor_cfg *cfg)
 		CMD_WREG |
 		CFG_REG_OFFSET1; //WREG command: 0100 rrxx (rr register address = 01)(spec sample is 0x42)
 	msg.data[3] =
-		init_arg->reg1_conversion |
-		init_arg->reg1_vol_refer; //Configuration Register 1: continuous conversion mode.
+		init_arg->reg1_conversion | init_arg->reg1_vol_refer | init_arg->reg1_temp_mode;
 
 	if (i2c_master_write(&msg, i2c_retry)) {
 		LOG_ERR("Write the respective register configurations failed");

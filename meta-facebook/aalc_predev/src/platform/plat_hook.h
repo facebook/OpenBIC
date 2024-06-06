@@ -52,6 +52,11 @@ extern mux_config bus_7_PCA9546A_configs[];
 extern mux_config bus_8_PCA9546A_configs[];
 extern mux_config bus_9_PCA9546A_configs[];
 
+bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading);
+bool pre_PCA9546A_read(sensor_cfg *cfg, void *args);
+bool post_PCA9546A_read(sensor_cfg *cfg, void *args, int *reading);
+
 enum ADS112C_SENSOR_OFFSET {
 	ADS112C_FLOW_OFFSET = 0x00,
 	ADS112C_PRESS_OFFSET = 0x01,
@@ -60,8 +65,4 @@ enum ADS112C_SENSOR_OFFSET {
 	ADS112C_LEAKAGE_OFFSET = 0x04,
 };
 
-bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading);
-bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading);
-bool pre_PCA9546A_read(sensor_cfg *cfg, void *args);
-bool post_PCA9546A_read(sensor_cfg *cfg, void *args, int *reading);
 #endif
