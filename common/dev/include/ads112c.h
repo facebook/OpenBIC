@@ -41,14 +41,6 @@ enum ADS112C_REG1_CONFIG {
 	ADS112C_REG1_TEMPMODE_ENABLE = 0x01,
 };
 
-enum ADS112C_SENSOR_OFFSET {
-	ADS112C_FLOW_OFFSET = 0x00,
-	ADS112C_PRESS_OFFSET = 0x01,
-	ADS112C_TEMP_OFFSET = 0x02,
-	ADS112C_OTHER_OFFSET = 0x03,
-	ADS112C_LEAKAGE_OFFSET = 0x04,
-};
-
 // Command Byte to control device
 #define CMD_RESET 0x06 //000 011x(06h)
 #define CMD_START_SYNC 0x08 //000 100x(08h)
@@ -69,7 +61,7 @@ typedef struct _ads112c_init_arg {
 	uint8_t reg0_pga;
 	uint8_t reg1_conversion;
 	uint8_t reg1_vol_refer;
-	double input_vol;
+	double vol_refer_val;
 	uint8_t reg1_temp_mode;
 } ads112c_init_arg;
 

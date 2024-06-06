@@ -137,7 +137,7 @@ ads112c_init_arg ads112c_init_args[] = {
 		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
-		.input_vol = 3.3,
+		.vol_refer_val = 3.3,
 		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,		
 	},    
 	[1] = { .reg0_input = ADS112C_REG0_INPUT_AIN0AVSS,
@@ -145,7 +145,7 @@ ads112c_init_arg ads112c_init_args[] = {
 		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
-		.input_vol = 5,
+		.vol_refer_val = 5,
 		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,				
 	},
 	[2] = { .reg0_input = ADS112C_REG0_INPUT_AIN1AVSS,
@@ -153,7 +153,7 @@ ads112c_init_arg ads112c_init_args[] = {
 		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
-		.input_vol = 5,
+		.vol_refer_val = 5,
 		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,				
 	},    
 	[3] = { .reg0_input = ADS112C_REG0_INPUT_AIN2AVSS,
@@ -161,7 +161,7 @@ ads112c_init_arg ads112c_init_args[] = {
 		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
-		.input_vol = 5,
+		.vol_refer_val = 5,
 		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,				
 	},
 	[4] = { .reg0_input = ADS112C_REG0_INPUT_AIN3AVSS,
@@ -169,7 +169,7 @@ ads112c_init_arg ads112c_init_args[] = {
 		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
-		.input_vol = 5,
+		.vol_refer_val = 5,
 		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,				
 	},
 	[5] = { .reg0_input = ADS112C_REG0_INPUT_AIN0AVSS,
@@ -177,7 +177,7 @@ ads112c_init_arg ads112c_init_args[] = {
 		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_INTERNALV,
-		.input_vol = 2.048,
+		.vol_refer_val = 2.048,
 		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,
 	},
 	[6] = { .reg0_input = ADS112C_REG0_INPUT_AIN0AIN1,
@@ -185,7 +185,7 @@ ads112c_init_arg ads112c_init_args[] = {
 		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_INTERNALV,
-		.input_vol = 2.048,
+		.vol_refer_val = 2.048,
 		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_ENABLE,
 	},		
 };
@@ -369,23 +369,9 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(reading, false);
-	//short int read16Bits = (short int)*reading;
-	//double ads112c_default_vol = 5;
-	//ads112c_init_arg *init_arg = (ads112c_init_arg *)cfg->init_args;
-	//double gainValue = 1;
-	// double rawValue = (double)read16Bits * ads112c_default_vol /
-	// 		  (32768 * gainValue); //(2 · VREF / Gain) / (2^16)
-	//double rawValue = (*reading) * ads112c_default_vol /
-	//		  (32768 * gainValue); //(2 · VREF / Gain) / (2^16)			  
-	//LOG_ERR("sensor_cfg num: %x", cfg->num);
-	// LOG_ERR("*reading: %d", *reading);
-	// LOG_ERR("read16Bits: %d", read16Bits);
-	// LOG_ERR("reg0_gain: %d", init_arg->reg0_gain);
-	// LOG_ERR("gainValue2: %f", power2(2, (init_arg->reg0_gain) >> 1));
-	// LOG_ERR("gainValue: %f", power(2, (init_arg->reg0_gain) >> 1));
-	// LOG_ERR("v-value: %f", rawValue);
-	// LOG_ERR("v-value2: %f", rawValue);
-	int	rawValue = *reading;
+
+	sensor_val *oval = (sensor_val *)reading;
+	double rawValue = ((float)oval->integer + (oval->fraction / 1000.0));
 
 	double val;
 	double v_val, flow_Pmax = 400, flow_Pmin = 10, press_Pmax = 50, press_Pmin = 0;

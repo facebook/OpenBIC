@@ -80,14 +80,13 @@ uint8_t ads112c_read(sensor_cfg *cfg, int *reading)
 	*reading = (msg.data[0] << 8) | msg.data[1];
 
 	ads112c_init_arg *init_arg = (ads112c_init_arg *)cfg->init_args;
-	double gainValue = power(2, (init_arg->reg0_gain) >> 1);
-	double default_vol = init_arg->input_vol;
+	double gainValue = 1 << ((init_arg->reg0_gain) >> 1);
 
-	double val =
-		(*reading) * default_vol / (32768 * gainValue); //LSB = (2 · VREF / Gain) / (2^16)
+	double val = (*reading) * (init_arg->vol_refer_val) /
+		     (32768 * gainValue); //LSB = (2 · VREF / Gain) / (2^16)
 
-	if (cfg->offset == ADS112C_TEMP_OFFSET)
-		val = val * 0.03125; //One 14-bit LSB equals 0.03125°C.
+	if (init_arg->reg1_temp_mode == ADS112C_REG1_TEMPMODE_ENABLE)
+		val = (*reading) * 0.03125; //One 14-bit LSB equals 0.03125°C.
 
 	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = (int16_t)val & 0xFFFF;
