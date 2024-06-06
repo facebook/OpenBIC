@@ -1,3 +1,6 @@
+#ifndef ADS112C_H
+#define ADS112C_H
+
 enum ADS112C_REG0_CONFIG {
 	//Input multiplexer configuration(Bit 7:4)
 	ADS112C_REG0_INPUT_AIN0AIN1 = 0x00, //AINP = AIN0, AINN = AIN1(default)
@@ -56,3 +59,5 @@ typedef struct _ads112c_init_arg {
 	uint8_t reg1_conversion;
 	uint8_t reg1_vol_refer;
 } ads112c_init_arg;
+
+#endif //ADS112C_H

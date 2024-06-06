@@ -14,19 +14,25 @@
  * limitations under the License.
  */
 
-#ifndef ADM1272_H
-#define ADM1272_H
+#include <stdio.h>
 
-enum ADM1272_IRANGE {
-	IRANGE_0MV_TO_15MV = 0x0,
-	IRANGE_0MV_TO_30MV = 0x1,
-};
+#include "plat_class.h"
+#include <logging/log.h>
 
-enum ADM1272_VRANGE {
-	VRANGE_0V_TO_60V = 0x0,
-	VRANGE_0V_TO_100V = 0x1,
-};
+static uint8_t hsc_module = 0;
+static uint8_t temp_module = 0;
+void init_aalc_config()
+{
+	hsc_module = HSC_MODULE_ADM1272; // user can change hsc module here
+	temp_module = SB_TMP461; // user can change temp module here
+}
+uint8_t get_hsc_module()
+{
+	return hsc_module;
+}
 
-bool enable_adm1272_hsc(uint8_t bus, uint8_t addr, bool enable_flag);
-
-#endif
+uint8_t get_temp_module()
+{
+	return temp_module;
+}
+LOG_MODULE_REGISTER(plat_class);
