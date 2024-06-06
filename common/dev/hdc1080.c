@@ -82,6 +82,7 @@ uint8_t hdc1080_read(sensor_cfg *cfg, int *reading)
 		LOG_ERR("sensor 0x%02x read 0x%02x fail!", cfg->num, cfg->offset);
 		return SENSOR_FAIL_TO_ACCESS;
 	}
+
 	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = (int)val & 0xFFFF;
 	sval->fraction = (val - sval->integer) * 1000;

@@ -41,7 +41,6 @@ uint8_t ads112c_read(sensor_cfg *cfg, int *reading)
 		msg.bus = cfg->port;
 		msg.target_addr = cfg->target_addr;
 		msg.tx_len = 1;
-
 		msg.data[0] =
 			CMD_RREG |
 			CFG_REG_OFFSET2; //RREG command: 0010 rrxx (rr register address = 10 (0x02), DRDY -> Conversion result ready flag.)
@@ -78,7 +77,6 @@ uint8_t ads112c_read(sensor_cfg *cfg, int *reading)
 	}
 
 	*reading = (msg.data[1] << 8) | msg.data[0];
-
 	return SENSOR_READ_SUCCESS;
 }
 
@@ -110,18 +108,16 @@ uint8_t ads112c_init(sensor_cfg *cfg)
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 4;
-
 	msg.data[0] =
 		CMD_WREG | CFG_REG_OFFSET0; //WREG command: 0100 rrxx (rr register address = 00)
 	msg.data[1] = init_arg->reg0_input | init_arg->reg0_gain |
 		      init_arg->reg0_pga; //Configuration Register 0
-	msg.data[2] =
+	msg.data[0] =
 		CMD_WREG |
 		CFG_REG_OFFSET1; //WREG command: 0100 rrxx (rr register address = 01)(spec sample is 0x42)
-	msg.data[3] =
+	msg.data[1] =
 		init_arg->reg1_conversion |
 		init_arg->reg1_vol_refer; //Configuration Register 1: continuous conversion mode.
-
 	if (i2c_master_write(&msg, i2c_retry)) {
 		LOG_ERR("Write the respective register configurations failed");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
