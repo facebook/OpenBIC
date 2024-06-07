@@ -21,5 +21,6 @@
 
 #define ADC_CALIBRATION 1
 #define MORE_THAN_ONE_ADM1272
+#define ENABLE_PLAT_DEF_SENSOR
 
 #endif
