@@ -126,9 +126,9 @@ void error_log_event(uint8_t sensor_num, bool val_normal)
 			if (sensor_num == err_sensor_caches[i]) {
 				log_todo = true;
 				err_sensor_caches[i] = 0;
-				for (uint8_t i = 0; i < ARRAY_SIZE(sensor_normal_codes); i++) {
-					if (sensor_num == sensor_normal_codes[i].sen_num)
-						err_code = sensor_normal_codes[i].err_code;
+				for (uint8_t j = 0; j < ARRAY_SIZE(sensor_normal_codes); j++) {
+					if (sensor_num == sensor_normal_codes[j].sen_num)
+						err_code = sensor_normal_codes[j].err_code;
 				}
 				break;
 			}
@@ -145,9 +145,9 @@ void error_log_event(uint8_t sensor_num, bool val_normal)
 			for (uint8_t i = 0; i < ARRAY_SIZE(err_sensor_caches); i++) {
 				if (err_sensor_caches[i] == 0) {
 					err_sensor_caches[i] = sensor_num;
-					for (uint8_t i = 0; i < ARRAY_SIZE(sensor_err_codes); i++) {
-						if (sensor_num == sensor_err_codes[i].sen_num)
-							err_code = sensor_err_codes[i].err_code;
+					for (uint8_t j = 0; j < ARRAY_SIZE(sensor_err_codes); j++) {
+						if (sensor_num == sensor_err_codes[j].sen_num)
+							err_code = sensor_err_codes[j].err_code;
 					}
 					break;
 				}

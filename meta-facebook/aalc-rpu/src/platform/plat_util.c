@@ -34,7 +34,7 @@ static uint16_t temp_read_data[I2C_MASTER_READ_BACK_MAX_SIZE];
 
 LOG_MODULE_REGISTER(plat_util);
 
-bool modbus_i2c_master_write_read(uint16_t *modbus_data, uint8_t data_len)
+bool modbus_i2c_master_write_read(const uint16_t *modbus_data, uint8_t data_len)
 {
 	// write data: bus(2Bytes), addr(2Bytes), read length(2Bytes), data(26Bytes)
 
