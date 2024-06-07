@@ -136,8 +136,8 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(xdp710)
 	sensor_name_to_num(ds160pt801)
 	sensor_name_to_num(rs31380r)
- 	sensor_name_to_num(ads1015)
- 	sensor_name_to_num(plat_def_sensor)
+	sensor_name_to_num(ads1015)
+	sensor_name_to_num(plat_def_sensor)
 };
 // clang-format on
 

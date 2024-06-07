@@ -17,7 +17,6 @@
 #include "plat_sensor_table.h"
 #include <stdio.h>
 #include <string.h>
-
 #include "plat_i2c.h"
 #include "sensor.h"
 #include "ast_adc.h"
@@ -258,7 +257,8 @@ sensor_cfg plat_sensor_config[] = {
 	  &ads112c_init_args[6] },
 	{ SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C, sensor_dev_hdc1080, I2C_BUS10, HDC1080_ADDR,
 	  HDC1080_TEMP_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &hdc1080_init_args[17] },
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &hdc1080_init_args[17] },
 	{ SENSOR_NUM_PDB_HDC1080DMBR_TEMP_C, sensor_dev_hdc1080, I2C_BUS9, HDC1080_ADDR,
 	  HDC1080_TEMP_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
@@ -920,25 +920,25 @@ static void hsc_config(uint8_t type)
 		sen_nums = ARRAY_SIZE(fb_sen_tbl);
 		sen_tbl = fb_sen_tbl;
 		dvt_xdp_addr = XDP710_FB_ADDR_DVT;
-		xdp_init_arr =  &xdp710_init_args[0];
+		xdp_init_arr = &xdp710_init_args[0];
 		break;
 	case HSC_CONFIG_BPB:
 		sen_nums = ARRAY_SIZE(bpb_sen_tbl);
 		sen_tbl = bpb_sen_tbl;
 		dvt_xdp_addr = XDP710_BPB_ADDR_DVT;
-		xdp_init_arr =  &xdp710_init_args[3];
+		xdp_init_arr = &xdp710_init_args[3];
 		break;
 	case HSC_CONFIG_PB:
 		sen_nums = ARRAY_SIZE(pb_sen_tbl);
 		sen_tbl = pb_sen_tbl;
 		dvt_xdp_addr = XDP710_PB_ADDR;
-		xdp_init_arr =  &xdp710_init_args[1];
+		xdp_init_arr = &xdp710_init_args[1];
 		break;
 	case HSC_CONFIG_BB:
 		sen_nums = ARRAY_SIZE(bb_tbl);
 		sen_tbl = bb_tbl;
 		dvt_xdp_addr = XDP710_BB_ADDR;
-		xdp_init_arr =  &xdp710_init_args[2];
+		xdp_init_arr = &xdp710_init_args[2];
 		break;
 	default:
 		LOG_ERR("Unknown HSC module type(%d)", type);
