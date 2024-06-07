@@ -240,7 +240,6 @@ enum PLAT_DEF_SENSOR_E {
 
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
-uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd);
 uint8_t get_sensor_reading_to_real_val(uint8_t sensor_num, float *val);
 uint16_t get_sensor_reading_to_modbus_val(uint8_t sensor_num, int8_t exp, int8_t scale);
 

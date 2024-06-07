@@ -961,8 +961,8 @@ int init_custom_modbus_server(void)
 		int err = modbus_init_server(server_iface, server_param);
 
 		if (err < 0) {
-			return err;
 			LOG_ERR("modbus_init_server fail %d\n", i);
+			return err;			
 		}
 
 		if (modbus_server_config[i].is_custom_fc64) {
