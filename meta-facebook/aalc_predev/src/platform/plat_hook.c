@@ -25,7 +25,6 @@
 #include "sensor.h"
 #include "nct214.h"
 #include "libutil.h"
-//#include "plat_util.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
