@@ -57,7 +57,7 @@ modbus_server modbus_server_config[] = {
 	{ "MODBUS1", false },
 };
 
-static float pow_of_10(int8_t exp)
+float pow_of_10(int8_t exp)
 {
 	float ret = 1.0;
 	int i;
