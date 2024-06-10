@@ -396,31 +396,37 @@ void sw_heartbeat_read()
 
 		// Check ACCL power fault
 		for (index = 0; index < ASIC_CARD_COUNT; ++index) {
-			if (accl_cable_power_fault[index] != true) {
-				ret = is_accl_cable_power_good_fault(index);
-				if (ret != false) {
-					plat_accl_cable_power_good_fail_event(
-						index, PLDM_STATE_SET_OEM_DEVICE_POWER_GOOD_FAULT);
-					accl_cable_power_fault[index] = true;
-					continue;
-				}
-
-				result = get_cpld_register(asic_card_info[index].power_fault_reg,
-							   &val);
-				if (ret != 0) {
-					LOG_ERR("Failed to get power fault register, card id: 0x%x, reg: 0x%x",
-						index, asic_card_info[index].power_fault_reg);
-					continue;
-				}
-
-				for (pwr_fault_index = 0;
-				     pwr_fault_index < ARRAY_SIZE(power_fault_info);
-				     ++pwr_fault_index) {
-					if (val & power_fault_info[pwr_fault_index].check_bit) {
-						plat_accl_power_good_fail_event(
-							index, power_fault_info[pwr_fault_index]
-								       .power_fault_state);
+			if (asic_card_info[index].card_status == ASIC_CARD_PRESENT) {
+				if (accl_cable_power_fault[index] != true) {
+					ret = is_accl_cable_power_good_fault(index);
+					if (ret != false) {
+						plat_accl_cable_power_good_fail_event(
+							index,
+							PLDM_STATE_SET_OEM_DEVICE_POWER_GOOD_FAULT);
 						accl_cable_power_fault[index] = true;
+						continue;
+					}
+
+					result = get_cpld_register(
+						asic_card_info[index].power_fault_reg, &val);
+					if (ret != 0) {
+						LOG_ERR("Failed to get power fault register, card id: 0x%x, reg: 0x%x",
+							index,
+							asic_card_info[index].power_fault_reg);
+						continue;
+					}
+
+					for (pwr_fault_index = 0;
+					     pwr_fault_index < ARRAY_SIZE(power_fault_info);
+					     ++pwr_fault_index) {
+						if (val &
+						    power_fault_info[pwr_fault_index].check_bit) {
+							plat_accl_power_good_fail_event(
+								index,
+								power_fault_info[pwr_fault_index]
+									.power_fault_state);
+							accl_cable_power_fault[index] = true;
+						}
 					}
 				}
 			}
