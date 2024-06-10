@@ -37,6 +37,7 @@
 #define ADJUST_MP5990_POWER(x) (x * 1) // temporary set
 #define ADJUST_RS31380R_CURRENT(x) (x * 1) // temporary set
 #define ADJUST_RS31380R_POWER(x) (x * 1) // temporary set
+#define ADJUST_TMP75_TEMP(x) (x + 1.6)
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -260,6 +261,23 @@ bool pre_tmp75_read(sensor_cfg *cfg, void *args)
 	}
 
 	return false;
+}
+
+bool post_tmp75_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	ARG_UNUSED(args);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	if (!reading) {
+		return check_reading_pointer_null_is_allowed(cfg);
+	}
+
+	sensor_val *sval = (sensor_val *)reading;
+	float val = sval->integer + (sval->fraction * 0.001);
+	val = ADJUST_TMP75_TEMP(val);
+	sval->integer = (int16_t)val;
+	sval->fraction = (val - sval->integer) * 1000;
+
+	return true;
 }
 
 bool pre_pt4080l_read(sensor_cfg *cfg, void *args)
