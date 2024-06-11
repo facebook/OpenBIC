@@ -17,20 +17,15 @@
 #ifndef PLAT_FRU_H
 #define PLAT_FRU_H
 
-#include "plat_modbus.h"
-
-uint8_t modbus_read_fruid_data(modbus_command_mapping *cmd);
-uint8_t modbus_write_fruid_data(modbus_command_mapping *cmd);
-
 enum FRU_ID {
 	MB_FRU_ID = 0x00,
 	BB_FRU_ID,
 	BPB_FRU_ID,
-	PDB_FRU_ID,	
+	PDB_FRU_ID,
 	SB_FRU_ID,
 	PB_1_FRU_ID,
 	PB_2_FRU_ID,
-	PB_3_FRU_ID,				
+	PB_3_FRU_ID,
 	FB_1_FRU_ID,
 	FB_2_FRU_ID,
 	FB_3_FRU_ID,
@@ -44,25 +39,34 @@ enum FRU_ID {
 	FB_11_FRU_ID,
 	FB_12_FRU_ID,
 	FB_13_FRU_ID,
-	FB_14_FRU_ID,	
+	FB_14_FRU_ID,
 	MAX_FRU_ID,
 };
 
 #define FRU_CFG_NUM MAX_FRU_ID
 
-#define MB_FRU_ADDR 0xA6
-#define BB_FRU_ADDR 0xA4
-#define BPB_FRU_ADDR 0xA6
-#define SB_FRU_ADDR 0xA6
-#define PDB_FRU_ADDR 0XAA
-#define PB_FRU_ADDR 0xA6
-#define FB_FRU_ADDR 0xA6
+#define MB_FRU_ADDR (0xA6 >> 1)
+#define BB_FRU_ADDR (0xA4 >> 1)
+#define BPB_FRU_ADDR (0xA6 >> 1)
+#define SB_FRU_ADDR (0xA6 >> 1)
+#define PDB_FRU_ADDR (0xAA >> 1)
+#define PB_FRU_ADDR (0xA6 >> 1)
+#define FB_FRU_ADDR (0xA6 >> 1)
 
-#define FB_1_4_MUX_ADDR 0xE0
-#define FB_5_8_MUX_ADDR 0xE2
-#define FB_9_12_MUX_ADDR 0xE4
-#define FB_13_14_MUX_ADDR 0xE6
-#define PB_MUX_ADDR 0xE8
-#define SB_MUX_ADDR 0xE8
+#define FB_1_4_MUX_ADDR (0xE0 >> 1)
+#define FB_5_8_MUX_ADDR (0xE2 >> 1)
+#define FB_9_12_MUX_ADDR (0xE4 >> 1)
+#define FB_13_14_MUX_ADDR (0xE6 >> 1)
+#define PB_MUX_ADDR (0xE8 >> 1)
+#define SB_MUX_ADDR (0xE8 >> 1)
+
+// plat eeprom save in rpu eeprom
+
+#define PLAT_EEPROM_OFFSET 0x2000 // 8kb
+#define EEPROM_HMI_VERSION_OFFSET PLAT_EEPROM_OFFSET
+#define EEPROM_HMI_VERSION_SIZE 8 // 8 bytes
+
+bool plat_eeprom_write(uint32_t offset, uint8_t *data, uint16_t data_len);
+bool plat_eeprom_read(uint32_t offset, uint8_t *data, uint16_t data_len);
 
 #endif

@@ -45,3 +45,7 @@ void init_pwm_dev(void);
 int ast_pwm_set(int duty);
 uint8_t plat_pwm_ctrl(enum PWM_DEVICE_E dev, uint8_t duty);
 uint8_t ctl_all_pwm_dev(uint8_t duty);
+uint8_t ctl_hex_fan_pwm_dev(uint8_t duty);
+uint8_t ctl_pump_pwm_dev(uint8_t duty);
+uint8_t fan_pwm_dev_duty_setting(void);
+uint8_t pump_pwm_dev_duty_setting(void);

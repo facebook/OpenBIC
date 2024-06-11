@@ -139,6 +139,10 @@ static uint16_t mctp_smbus_read(void *mctp_p, uint8_t *buf, uint32_t len,
 		LOG_ERR("i2c_target_read fail, ret %d", ret);
 		return 0;
 	}
+	if (rlen < sizeof(smbus_hdr)) {
+		LOG_ERR("recv invalid len %d", rlen);
+		return 0;
+	}
 
 	/**
    * Since the i2c driver provided by ASPEED may read redundant duplicates data,

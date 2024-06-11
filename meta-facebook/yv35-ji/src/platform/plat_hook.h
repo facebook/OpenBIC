@@ -50,6 +50,7 @@ bool post_rs31380r_cur_read(sensor_cfg *cfg, void *args, int *reading);
 bool post_rs31380r_pwr_read(sensor_cfg *cfg, void *args, int *reading);
 bool pre_tmp451_read(sensor_cfg *cfg, void *args);
 bool pre_tmp75_read(sensor_cfg *cfg, void *args);
+bool post_tmp75_read(sensor_cfg *cfg, void *args, int *reading);
 bool pre_pt4080l_read(sensor_cfg *cfg, void *args);
 bool pre_ds160pt801_read(sensor_cfg *cfg, void *args);
 

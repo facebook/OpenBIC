@@ -28,6 +28,7 @@
 #include "plat_hook.h"
 #include "plat_sensor_table.h"
 #include "plat_gpio.h"
+#include "plat_isr.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -98,6 +99,20 @@ max11617_init_arg max11617_init_args[] = {
 	},
 };
 
+adc128d818_init_arg adc128d818_init_args[] = {
+	[0] = {
+		.is_init = false,
+		.external_vref = false,
+		.scalefactor[0] = 2,
+		.scalefactor[1] = 2,
+		.scalefactor[2] = 1,
+		.scalefactor[3] = 1,
+		.scalefactor[4] = 1,
+		.scalefactor[5] = 1,
+		.scalefactor[6] = 1,
+	},
+};
+
 bool pre_vr_read(sensor_cfg *cfg, void *args)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
@@ -131,5 +146,22 @@ bool post_p085v_voltage_read(sensor_cfg *cfg, void *args, int *reading)
 	val = ADJUST_P0V85_VOLTAGE(val);
 	sval->integer = (int)val & 0xFFFF;
 	sval->fraction = (val - sval->integer) * 1000;
+	return true;
+}
+
+bool post_adc128d818_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	ARG_UNUSED(cfg);
+	ARG_UNUSED(args);
+	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+
+	// TODO: return false if ADC128D818 is abnormal
+	// Read INT_ADC_2_TI_R_N from IOE4 P17
+	// 1: sensor normal
+	// 0: sensor abnormal
+
+	// The external pull-up for INT_ADC_2_TI_R_N is not on the board currently.
+	// Will check the INT_ADC_2_TI_R_N if the external pull-up is ready.
+
 	return true;
 }

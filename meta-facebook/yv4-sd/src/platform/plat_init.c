@@ -47,6 +47,7 @@ SCU_CFG scu_cfg[] = {
 
 void pal_pre_init()
 {
+	gpio_init(NULL);
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
 	aspeed_print_sysrst_info();
 
@@ -118,7 +119,3 @@ void pal_set_sys_status()
 	}
 }
 
-#define DEF_PROJ_GPIO_PRIORITY 78
-
-DEVICE_DEFINE(PRE_DEF_PROJ_GPIO, "PRE_DEF_PROJ_GPIO_NAME", &gpio_init, NULL, NULL, NULL,
-	      POST_KERNEL, DEF_PROJ_GPIO_PRIORITY, NULL);
