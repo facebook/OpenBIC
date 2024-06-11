@@ -36,8 +36,10 @@
 
 #include "mpq8746.h"
 #include "mp289x.h"
+#include "mp2988.h"
 #include "pt5161l.h"
 #include "ds160pt801.h"
+#include "tda38741.h"
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
@@ -125,6 +127,36 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.self_apply_work_func = NULL,
 		.comp_version_str = NULL,
 	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = JI_COMPNT_FBVDDP2,
+		.comp_classification_index = 0x00,
+		.pre_update_func = pldm_pre_vr_update,
+		.update_func = pldm_vr_update,
+		.pos_update_func = pldm_post_vr_update,
+		.inf = COMP_UPDATE_VIA_I2C,
+		.activate_method = COMP_ACT_AC_PWR_CYCLE,
+		.self_act_func = NULL,
+		.get_fw_version_fn = get_vr_fw_version,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = JI_COMPNT_1V2,
+		.comp_classification_index = 0x00,
+		.pre_update_func = pldm_pre_vr_update,
+		.update_func = pldm_vr_update,
+		.pos_update_func = pldm_post_vr_update,
+		.inf = COMP_UPDATE_VIA_I2C,
+		.activate_method = COMP_ACT_AC_PWR_CYCLE,
+		.self_act_func = NULL,
+		.get_fw_version_fn = get_vr_fw_version,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
+	},
 };
 
 void load_pldmupdate_comp_config(void)
@@ -149,11 +181,7 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param)
 {
 	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
 
-	uint8_t oth_module = get_oth_module();
-	if (oth_module != OTH_MODULE_PRIMARY) {
-		LOG_WRN("Given source %d is not supported yet", oth_module);
-		return 1;
-	}
+	uint8_t vr_module = get_oth_module();
 
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 
@@ -161,30 +189,66 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param)
 	disable_sensor_poll();
 
 	const uint8_t *device_name_p = NULL;
-	const char *device_name[3][2] = {
+	const char *device_name[5][2] = {
 		[0][OTH_MODULE_PRIMARY] = KEYWORD_VR_MPQ8746,
+		[0][OTH_MODULE_SECOND] = KEYWORD_VR_TDA38741,
 		[1][OTH_MODULE_PRIMARY] = KEYWORD_VR_MP2898,
 		[2][OTH_MODULE_PRIMARY] = KEYWORD_VR_MP2894,
+		[3][OTH_MODULE_SECOND] = KEYWORD_VR_MP2988,
+		[4][OTH_MODULE_SECOND] = KEYWORD_VR_MP2988,
 	};
 
 	/* Get bus and target address by sensor number in sensor configuration */
 	switch (p->comp_id) {
 	case JI_COMPNT_CPUDVDD:
-		device_name_p = device_name[0][oth_module];
-		p->bus = CPUDVDD_I2C_BUS;
-		p->addr = CPUDVDD_I2C_ADDR >> 1;
+		device_name_p = device_name[0][vr_module];
+		if (vr_module == OTH_MODULE_SECOND) {
+			p->bus = CPUDVDD_I2C_BUS;
+			p->addr = TDA38741_PROGRAM_I2C_ADDR >> 1;
+		} else {
+			p->bus = CPUDVDD_I2C_BUS;
+			p->addr = CPUDVDD_I2C_ADDR >> 1;
+		}
 		break;
 
 	case JI_COMPNT_CPUVDD:
-		device_name_p = device_name[1][oth_module];
+		if (vr_module == OTH_MODULE_SECOND) {
+			LOG_WRN("CPUVDD 2nd source not support fw update!");
+			return 1;
+		}
+		device_name_p = device_name[1][vr_module];
 		p->bus = CPUVDD_I2C_BUS;
 		p->addr = CPUVDD_I2C_ADDR >> 1;
 		break;
 
 	case JI_COMPNT_SOCVDD:
-		device_name_p = device_name[2][oth_module];
+		if (vr_module == OTH_MODULE_SECOND) {
+			LOG_WRN("SOCVDD 2nd source not support fw update!");
+			return 1;
+		}
+		device_name_p = device_name[2][vr_module];
 		p->bus = SOCVDD_I2C_BUS;
 		p->addr = SOCVDD_I2C_ADDR >> 1;
+		break;
+
+	case JI_COMPNT_FBVDDP2:
+		if (vr_module == OTH_MODULE_PRIMARY) {
+			LOG_WRN("FBVDDP2 main source not support fw update!");
+			return 1;
+		}
+		device_name_p = device_name[3][vr_module];
+		p->bus = FBVDDP2_I2C_BUS;
+		p->addr = FBVDDP2_I2C_ADDR >> 1;
+		break;
+
+	case JI_COMPNT_1V2:
+		if (vr_module == OTH_MODULE_PRIMARY) {
+			LOG_WRN("1V2 main source not support fw update!");
+			return 1;
+		}
+		device_name_p = device_name[4][vr_module];
+		p->bus = VR_1V2_I2C_BUS;
+		p->addr = VR_1V2_I2C_ADDR >> 1;
 		break;
 
 	default:
@@ -221,8 +285,8 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 	pldm_fw_update_info_t *p = (pldm_fw_update_info_t *)info_p;
 
-	if ((p->comp_identifier < JI_COMPNT_CPUDVDD) || (p->comp_identifier > JI_COMPNT_SOCVDD)) {
-		LOG_ERR("Unsupport VR component ID(%d)", p->comp_identifier);
+	if (get_post_status() == false) {
+		LOG_WRN("Not in POST COMPLETE state, skip vr version read!");
 		return false;
 	}
 
@@ -232,38 +296,75 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 	uint8_t version[15] = { 0 };
 	uint16_t tmp_crc_16 = 0;
+	uint32_t tmp_crc_32 = 0;
 	uint16_t ver_len = 0;
 	uint16_t remain = 0xFFFF;
 	uint8_t bus = 0;
 	uint8_t addr = 0;
 
-	uint8_t source = get_oth_module();
-	if (source != OTH_MODULE_PRIMARY) {
-		LOG_WRN("Given source %d is not supported yet", source);
+	uint8_t vr_module = get_oth_module();
+	if (vr_module == OTH_MODULE_UNKNOWN) {
+		LOG_ERR("Given unknown source");
 		goto post_hook_and_ret;
 	}
 
+	const uint8_t *vendor_name_p = NULL;
+	const char *vender_name[5][2] = {
+		[0][OTH_MODULE_PRIMARY] = "MPS ", [0][OTH_MODULE_SECOND] = "INF ",
+		[1][OTH_MODULE_PRIMARY] = "MPS ", [2][OTH_MODULE_PRIMARY] = "MPS ",
+		[3][OTH_MODULE_SECOND] = "MPS ",  [4][OTH_MODULE_SECOND] = "MPS ",
+	};
+
 	switch (p->comp_identifier) {
 	case JI_COMPNT_CPUDVDD:
-		bus = CPUDVDD_I2C_BUS;
-		addr = CPUDVDD_I2C_ADDR >> 1;
-		if (!mpq8746_get_checksum(bus, addr, &tmp_crc_16)) {
-			LOG_ERR("Component %d version reading failed", p->comp_identifier);
-			goto post_hook_and_ret;
+		vendor_name_p = vender_name[0][vr_module];
+		if (vr_module == OTH_MODULE_PRIMARY) {
+			bus = CPUDVDD_I2C_BUS;
+			addr = CPUDVDD_I2C_ADDR >> 1;
+			if (!mpq8746_get_checksum(bus, addr, &tmp_crc_16)) {
+				LOG_ERR("Component %d version reading failed", p->comp_identifier);
+				goto post_hook_and_ret;
+			}
+			tmp_crc_16 = sys_cpu_to_be16(tmp_crc_16);
+			memcpy(version, &tmp_crc_16, sizeof(tmp_crc_16));
+			ver_len = 2;
+		} else {
+			bus = CPUDVDD_I2C_BUS;
+			addr = TDA38741_PROGRAM_I2C_ADDR >> 1;
+			if (!tda38741_get_checksum(bus, addr, &tmp_crc_32)) {
+				LOG_ERR("Component %d version reading failed", p->comp_identifier);
+				goto post_hook_and_ret;
+			}
+			tmp_crc_32 = sys_cpu_to_be32(tmp_crc_32);
+			memcpy(version, &tmp_crc_32, sizeof(tmp_crc_32));
+			ver_len = 4;
+
+			uint8_t cfg_remain = 0;
+			if (!tda38741_get_remaining_wr(bus, addr, (uint8_t *)&remain,
+						       &cfg_remain)) {
+				LOG_ERR("Component %d version reading failed", p->comp_identifier);
+				goto post_hook_and_ret;
+			}
 		}
-		tmp_crc_16 = sys_cpu_to_be16(tmp_crc_16);
-		memcpy(version, &tmp_crc_16, sizeof(tmp_crc_16));
-		ver_len = 2;
 		break;
+
 	case JI_COMPNT_CPUVDD:
 	case JI_COMPNT_SOCVDD:
+		if (vr_module == OTH_MODULE_SECOND) {
+			LOG_WRN("CPUVDD/SOCVDD 2nd source not support fw version read!");
+			goto post_hook_and_ret;
+		}
+
 		if (p->comp_identifier == JI_COMPNT_CPUVDD) {
+			vendor_name_p = vender_name[1][vr_module];
 			bus = CPUVDD_I2C_BUS;
 			addr = CPUVDD_I2C_ADDR >> 1;
 		} else {
+			vendor_name_p = vender_name[2][vr_module];
 			bus = SOCVDD_I2C_BUS;
 			addr = SOCVDD_I2C_ADDR >> 1;
 		}
+
 		if (!mp289x_crc_get(bus, addr, MODE_USR, &tmp_crc_16)) {
 			LOG_ERR("Component %d version reading failed", p->comp_identifier);
 			goto post_hook_and_ret;
@@ -296,6 +397,33 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		memcpy(&version[ver_len], &tmp_crc_16, sizeof(tmp_crc_16));
 		ver_len += 2;
 		break;
+
+	case JI_COMPNT_FBVDDP2:
+	case JI_COMPNT_1V2:
+		if (vr_module == OTH_MODULE_PRIMARY) {
+			LOG_WRN("CPUVDD/SOCVDD main source not support fw version read!");
+			goto post_hook_and_ret;
+		}
+
+		if (p->comp_identifier == JI_COMPNT_FBVDDP2) {
+			bus = FBVDDP2_I2C_BUS;
+			addr = FBVDDP2_I2C_ADDR >> 1;
+			vendor_name_p = vender_name[3][vr_module];
+		} else {
+			bus = VR_1V2_I2C_BUS;
+			addr = VR_1V2_I2C_ADDR >> 1;
+			vendor_name_p = vender_name[4][vr_module];
+		}
+
+		if (!mp2988_crc_get(bus, addr, &tmp_crc_16)) {
+			LOG_ERR("Component %d version reading failed", p->comp_identifier);
+			goto post_hook_and_ret;
+		}
+		tmp_crc_16 = sys_cpu_to_be16(tmp_crc_16);
+		memcpy(&version[ver_len], &tmp_crc_16, sizeof(tmp_crc_16));
+		ver_len += 1;
+		break;
+
 	default:
 		LOG_ERR("Unsupport Component id(%d)", p->comp_identifier);
 		goto post_hook_and_ret;
@@ -303,18 +431,17 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 	const char *remain_str_p = ", Remaining Write: ";
 	uint8_t *buf_p = buf;
-	const uint8_t *vr_name_p = "MPS ";
 	*len = 0;
 
-	if (!vr_name_p) {
+	if (!vendor_name_p) {
 		LOG_ERR("The pointer of VR string name is NULL");
 		goto post_hook_and_ret;
 	}
 
-	memcpy(buf_p, vr_name_p, strlen(vr_name_p));
-	buf_p += strlen(vr_name_p);
+	memcpy(buf_p, vendor_name_p, strlen(vendor_name_p));
+	buf_p += strlen(vendor_name_p);
 
-	*len += bin2hex((uint8_t *)&version, ver_len, buf_p, ver_len * 2) + strlen(vr_name_p);
+	*len += bin2hex((uint8_t *)&version, ver_len, buf_p, ver_len * 2) + strlen(vendor_name_p);
 	buf_p += ver_len * 2;
 
 	if (remain != 0xFFFF) {
