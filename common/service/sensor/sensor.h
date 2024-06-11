@@ -174,8 +174,9 @@ enum SENSOR_DEV {
 	sensor_dev_xdp710 = 0x38,
 	sensor_dev_ds160pt801 = 0x39,
 	sensor_dev_rs31380r = 0x3A,
-	sensor_dev_ads1015 = 0x3B,
-	sensor_dev_plat_def_sensor = 0x3C,
+	sensor_dev_adc128d818 = 0x3B,
+	sensor_dev_ads1015 = 0x3C,
+	sensor_dev_plat_def_sensor = 0x3D,
 	sensor_dev_max
 };
 
@@ -740,6 +741,13 @@ typedef struct _nv_satmc_init_arg {
 	uint8_t state_sensor_idx; //only used for state sensor
 	pldm_sensor_pdr_parm parm; //only used for numeric sensor
 } nv_satmc_init_arg;
+
+typedef struct _adc128d818_init_arg {
+	bool is_init;
+	bool external_vref;
+	float vref;
+	float scalefactor[8];
+} adc128d818_init_arg;
 
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;

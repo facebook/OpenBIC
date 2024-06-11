@@ -591,6 +591,8 @@ void cxl1_ready_handler()
 	}
 	LOG_ERR("Failed to read %s due to sensor_sample_fetch failed, ret: %d",
 		CXL1_HEART_BEAT_LABEL, heartbeat_status);
+	switch_mux_to_bic(IOE_SWITCH_CXL1_VR_TO_BIC);
+	set_cxl_vr_access(CXL_ID_1, true);
 	return;
 }
 
@@ -622,6 +624,8 @@ void cxl2_ready_handler()
 	}
 	LOG_ERR("Failed to read %s due to sensor_sample_fetch failed, ret: %d",
 		CXL2_HEART_BEAT_LABEL, heartbeat_status);
+	switch_mux_to_bic(IOE_SWITCH_CXL2_VR_TO_BIC);
+	set_cxl_vr_access(CXL_ID_2, true);
 	return;
 }
 

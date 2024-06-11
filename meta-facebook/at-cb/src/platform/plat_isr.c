@@ -430,6 +430,10 @@ void check_accl_card_pwr_good_work_handler()
 	};
 
 	for (card_id = 0; card_id < ARRAY_SIZE(asic_card_info); ++card_id) {
+		if (asic_card_info[card_id].card_status == ASIC_CARD_NOT_PRESENT) {
+			continue;
+		}
+
 		if (is_accl_cable_power_good_timeout(card_id)) {
 			plat_accl_cable_power_good_fail_event(
 				card_id, PLDM_STATE_SET_OEM_DEVICE_NO_POWER_GOOD);

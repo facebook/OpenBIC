@@ -23,7 +23,6 @@
 #include <logging/log.h>
 #include "fru.h"
 #include "plat_fru.h"
-#include "plat_util.h"
 
 LOG_MODULE_REGISTER(plat_fru);
 
@@ -291,50 +290,48 @@ const EEPROM_CFG plat_fru_config[] = {
 	},
 };
 
-uint8_t modbus_read_fruid_data(modbus_command_mapping *cmd)
-{
-	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-
-	uint8_t status;
-	EEPROM_ENTRY fru_entry;
-
-	fru_entry.config.dev_id = cmd->arg0; //fru id
-	fru_entry.offset = (cmd->start_addr - cmd->addr) * 2;
-	fru_entry.data_len = (cmd->data_len) * 2;
-
-	status = FRU_read(&fru_entry);
-	if (status != FRU_READ_SUCCESS)
-		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-
-	memcpy(cmd->data, &fru_entry.data[0], fru_entry.data_len);
-
-	regs_reverse(cmd->data_len, cmd->data);
-
-	return MODBUS_EXC_NONE;
-}
-
-uint8_t modbus_write_fruid_data(modbus_command_mapping *cmd)
-{
-	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-
-	uint8_t status;
-	EEPROM_ENTRY fru_entry;
-
-	fru_entry.config.dev_id = cmd->arg0; //fru id
-	fru_entry.offset = (cmd->start_addr - cmd->addr) * 2;
-	fru_entry.data_len = (cmd->data_len) * 2;
-
-	regs_reverse(cmd->data_len, cmd->data);
-
-	memcpy(&fru_entry.data[0], cmd->data, fru_entry.data_len);
-	status = FRU_write(&fru_entry);
-	if (status != FRU_WRITE_SUCCESS)
-		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-
-	return MODBUS_EXC_NONE;
-}
-
 void pal_load_fru_config(void)
 {
 	memcpy(&fru_config, &plat_fru_config, sizeof(plat_fru_config));
+}
+
+// plat data save in EEPROM
+bool plat_eeprom_write(uint32_t offset, uint8_t *data, uint16_t data_len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+	EEPROM_ENTRY entry;
+
+	entry.offset = offset;
+	entry.data_len = data_len;
+
+	memcpy(entry.data, data, data_len);
+	memcpy(&entry.config, &fru_config[MB_FRU_ID], sizeof(fru_config[MB_FRU_ID]));
+
+	if (!eeprom_write(&entry)) {
+		LOG_ERR("write eeprom 0x%x fail", offset);
+		return false;
+	}
+
+	return true;
+}
+
+bool plat_eeprom_read(uint32_t offset, uint8_t *data, uint16_t data_len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+	EEPROM_ENTRY entry;
+
+	entry.offset = offset;
+	entry.data_len = data_len;
+
+	memcpy(&entry.config, &fru_config[MB_FRU_ID], sizeof(fru_config[MB_FRU_ID]));
+	memset(entry.data, 0xFF, sizeof(entry.data));
+
+	if (!eeprom_read(&entry)) {
+		LOG_ERR("read eeprom 0x%x fail", offset);
+		return false;
+	}
+
+	memcpy(data, entry.data, data_len);
+
+	return true;
 }
