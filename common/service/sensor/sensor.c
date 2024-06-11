@@ -320,7 +320,7 @@ SENSOR_DRIVE_INIT_DECLARE(plat_def_sensor);
 
 // The sequence needs to same with SENSOR_DEV ID
 sensor_drive_api sensor_drive_tbl[] = {
-#ifndef DISABLE_TMP75 
+#ifndef DISABLE_TMP75
 	SENSOR_DRIVE_TYPE_INIT_MAP(tmp75),
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(tmp75),
@@ -330,7 +330,7 @@ sensor_drive_api sensor_drive_tbl[] = {
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(ast_adc),
 #endif
-SENSOR_DRIVE_TYPE_INIT_MAP(intel_peci),
+	SENSOR_DRIVE_TYPE_INIT_MAP(intel_peci),
 #ifndef DISABLE_ISL69259
 	SENSOR_DRIVE_TYPE_INIT_MAP(isl69259),
 #else
