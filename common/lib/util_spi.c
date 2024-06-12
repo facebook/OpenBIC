@@ -282,6 +282,7 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, uint8_t f
 	if (offset == 0) {
 		// Set default fw update retry count at first package
 		fw_update_retry = default_retry_count;
+		is_init = 0;
 	}
 
 	if (!is_init) {

@@ -43,6 +43,7 @@ LOG_MODULE_DECLARE(pldm);
 #define UPDATE_THREAD_DELAY_SECOND 1
 #define MIN_FW_UPDATE_BASELINE_TRANS_SIZE 32
 #define PLDM_NO_SUPPORT_PROGRESS_PERCENT 0x65
+#define PLDM_FW_UPDATE_MODE_TIMEOUT 60
 
 #define GET_EEPROM_SLAVE_MASK(offset) (((offset) >> 16) & 0xF)
 #define GET_EERPOM_OFFSET(offset) ((offset) & 0xFFFF)
@@ -56,6 +57,8 @@ K_KERNEL_STACK_MEMBER(pldm_fw_update_stack, PLDM_FW_UPDATE_STACK_SIZE);
 
 struct pldm_fw_update_cfg fw_update_cfg = { .image_size = 0,
 					    .max_buff_size = MIN_FW_UPDATE_BASELINE_TRANS_SIZE };
+
+K_TIMER_DEFINE(update_mode_timer, NULL, NULL);
 
 static enum pldm_firmware_update_aux_state cur_aux_state = STATE_AUX_NOT_IN_UPDATE;
 static enum pldm_firmware_update_state current_state = STATE_IDLE;
@@ -544,6 +547,11 @@ static void state_update(uint8_t state)
 
 	previous_state = current_state;
 	current_state = state;
+	if (state == STATE_IDLE) {
+		k_timer_stop(&update_mode_timer);
+	} else {
+		k_timer_start(&update_mode_timer, K_SECONDS(PLDM_FW_UPDATE_MODE_TIMEOUT), K_NO_WAIT);
+	}
 }
 
 static void pldm_status_reset()
@@ -555,6 +563,11 @@ static void pldm_status_reset()
 	rcv_comp_cnt = 0;
 	memcpy(cur_update_comp_str, "unknown", 8);
 	keep_update_flag = false;
+}
+
+static void exit_update_mode() {
+	printk("PLDM update mode timeout, exiting update mode...\n");
+	pldm_status_reset();
 }
 
 uint16_t pldm_fw_update_read(void *mctp_p, enum pldm_firmware_update_commands cmd, uint8_t *req,
@@ -805,6 +818,7 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 
 		req.offset = update_param.next_ofs;
 		req.length = update_param.next_len;
+		k_timer_start(&update_mode_timer, K_SECONDS(PLDM_FW_UPDATE_MODE_TIMEOUT), K_NO_WAIT);
 
 	} while (1);
 
@@ -911,6 +925,7 @@ static uint8_t request_update(void *mctp_inst, uint8_t *buf, uint16_t len, uint8
 	*resp_len = sizeof(struct pldm_request_update_resp);
 	resp_p->completion_code = PLDM_SUCCESS;
 
+	k_timer_init(&update_mode_timer, exit_update_mode, NULL);
 	state_update(STATE_LEARN_COMP);
 	keep_update_flag = true;
 
