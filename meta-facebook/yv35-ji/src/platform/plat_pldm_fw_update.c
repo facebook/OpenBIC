@@ -321,7 +321,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		if (vr_module == OTH_MODULE_PRIMARY) {
 			bus = CPUDVDD_I2C_BUS;
 			addr = CPUDVDD_I2C_ADDR >> 1;
-			if (!mpq8746_get_checksum(bus, addr, &tmp_crc_16)) {
+			if (!mpq8746_get_rev(bus, addr, &tmp_crc_16)) {
 				LOG_ERR("Component %d version reading failed", p->comp_identifier);
 				goto post_hook_and_ret;
 			}
@@ -365,34 +365,11 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 			addr = SOCVDD_I2C_ADDR >> 1;
 		}
 
-		if (!mp289x_crc_get(bus, addr, MODE_USR, &tmp_crc_16)) {
+		if (!mp289x_rev_get(bus, addr, &tmp_crc_16)) {
 			LOG_ERR("Component %d version reading failed", p->comp_identifier);
 			goto post_hook_and_ret;
 		}
-		tmp_crc_16 = sys_cpu_to_be16(tmp_crc_16);
-		memcpy(version, &tmp_crc_16, sizeof(tmp_crc_16));
-		ver_len += 2;
 
-		if (!mp289x_crc_get(bus, addr, MODE_MULTI_CFG_12, &tmp_crc_16)) {
-			LOG_ERR("Component %d version reading failed", p->comp_identifier);
-			goto post_hook_and_ret;
-		}
-		tmp_crc_16 = sys_cpu_to_be16(tmp_crc_16);
-		memcpy(&version[ver_len], &tmp_crc_16, sizeof(tmp_crc_16));
-		ver_len += 2;
-
-		if (!mp289x_crc_get(bus, addr, MODE_MULTI_CFG_34, &tmp_crc_16)) {
-			LOG_ERR("Component %d version reading failed", p->comp_identifier);
-			goto post_hook_and_ret;
-		}
-		tmp_crc_16 = sys_cpu_to_be16(tmp_crc_16);
-		memcpy(&version[ver_len], &tmp_crc_16, sizeof(tmp_crc_16));
-		ver_len += 2;
-
-		if (!mp289x_crc_get(bus, addr, MODE_MULTI_CFG_56, &tmp_crc_16)) {
-			LOG_ERR("Component %d version reading failed", p->comp_identifier);
-			goto post_hook_and_ret;
-		}
 		tmp_crc_16 = sys_cpu_to_be16(tmp_crc_16);
 		memcpy(&version[ver_len], &tmp_crc_16, sizeof(tmp_crc_16));
 		ver_len += 2;
@@ -401,7 +378,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	case JI_COMPNT_FBVDDP2:
 	case JI_COMPNT_1V2:
 		if (vr_module == OTH_MODULE_PRIMARY) {
-			LOG_WRN("CPUVDD/SOCVDD main source not support fw version read!");
+			LOG_WRN("FBVDDP2/1V2 main source not support fw version read!");
 			goto post_hook_and_ret;
 		}
 

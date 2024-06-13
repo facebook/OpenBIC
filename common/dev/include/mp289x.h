@@ -18,15 +18,7 @@
 
 #include "stdint.h"
 
-enum {
-	MODE_USR,
-	MODE_MULTI_CFG_12,
-	MODE_MULTI_CFG_34,
-	MODE_MULTI_CFG_56,
-	MODE_MULTI_CFG_ALL,
-};
-
 bool mp289x_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_size);
-bool mp289x_crc_get(uint8_t bus, uint8_t addr, uint8_t mode, uint16_t *crc);
+bool mp289x_rev_get(uint8_t bus, uint8_t addr, uint16_t *rev);
 
 #endif

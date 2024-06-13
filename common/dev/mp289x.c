@@ -25,6 +25,14 @@
 
 LOG_MODULE_REGISTER(mp289x);
 
+#define USR_END_KEY "END"
+#define CRC_CHECK_START_KEY "CRC_CHECK_START"
+#define CRC_CHECK_STOP_KEY "CRC_CHECK_STOP"
+#define CRC_USR_KEY "CRC_P0P1"
+#define CRC_GP12_KEY "CRC_M1M2"
+#define CRC_GP34_KEY "CRC_M3M4"
+#define CRC_GP56_KEY "CRC_M5M6"
+
 /* --------- PAGE0 ---------- */
 #define VR_REG_STAT_PMBUS 0x8A
 #define VR_REG_EN_WR_PROT 0x0F
@@ -32,6 +40,7 @@ LOG_MODULE_REGISTER(mp289x);
 #define VR_REG_STAT_CML 0x7E
 #define VR_REG_FAULT_CLR 0x03
 #define VR_REG_MTP_FAULT_CLR 0xFF
+#define VR_REG_CFG_REV 0x47
 
 //multi-cfg: 6 groups store with same data from page4
 #define VR_REG_STORE_CFG_ALL 0x15
@@ -92,6 +101,14 @@ enum {
 	ATE_COL_MAX,
 };
 
+enum {
+	MODE_USR,
+	MODE_MULTI_CFG_12,
+	MODE_MULTI_CFG_34,
+	MODE_MULTI_CFG_56,
+	MODE_MULTI_CFG_ALL,
+};
+
 struct mp289x_data {
 	uint16_t cfg_id;
 	uint8_t page;
@@ -105,6 +122,11 @@ struct mp289x_config {
 	uint16_t cfg_id;
 	uint16_t wr_cnt;
 	uint16_t product_id_exp;
+	uint8_t cfg_rev;
+	uint16_t crc_usr;
+	uint16_t crc_gp12;
+	uint16_t crc_gp34;
+	uint16_t crc_gp56;
 	struct mp289x_data *pdata;
 };
 
@@ -180,7 +202,34 @@ static uint8_t mp289x_check_err_status(uint8_t bus, uint8_t addr)
 	return i2c_msg.data[0];
 }
 
-bool mp289x_crc_get(uint8_t bus, uint8_t addr, uint8_t mode, uint16_t *crc)
+bool mp289x_rev_get(uint8_t bus, uint8_t addr, uint16_t *rev)
+{
+	CHECK_NULL_ARG_WITH_RETURN(rev, false);
+
+	if (mp289x_set_page(bus, addr, VR_MPS_PAGE_0) == false) {
+		LOG_ERR("Failed to set page before reading config revision");
+		return false;
+	}
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 3;
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 2;
+	i2c_msg.data[0] = VR_REG_CFG_REV;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("Failed to read config revision");
+		return false;
+	}
+
+	*rev = (i2c_msg.data[1] << 8) | i2c_msg.data[0];
+
+	return true;
+}
+
+static bool mp289x_crc_get(uint8_t bus, uint8_t addr, uint8_t mode, uint16_t *crc)
 {
 	CHECK_NULL_ARG_WITH_RETURN(crc, false);
 
@@ -454,6 +503,50 @@ static bool mp289x_pre_update(uint8_t bus, uint8_t addr)
 	return true;
 }
 
+static bool mp289x_post_update(uint8_t bus, uint8_t addr, struct mp289x_config *dev_cfg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(dev_cfg, false);
+
+	uint16_t checksum = 0;
+	if (mp289x_crc_get(bus, addr, MODE_USR, &checksum) == false)
+		return false;
+
+	if (dev_cfg->crc_usr && checksum != dev_cfg->crc_usr) {
+		LOG_ERR("User checksum mismatch! (0x%x != 0x%x)", checksum, dev_cfg->crc_usr);
+		return false;
+	}
+	LOG_INF("User checksum: 0x%x", checksum);
+
+	if (mp289x_crc_get(bus, addr, MODE_MULTI_CFG_12, &checksum) == false)
+		return false;
+
+	if (dev_cfg->crc_gp12 && checksum != dev_cfg->crc_gp12) {
+		LOG_ERR("Group1&2 checksum mismatch! (0x%x != 0x%x)", checksum, dev_cfg->crc_gp12);
+		return false;
+	}
+	LOG_INF("GROUP1&2 checksum: 0x%x", checksum);
+
+	if (mp289x_crc_get(bus, addr, MODE_MULTI_CFG_34, &checksum) == false)
+		return false;
+
+	if (dev_cfg->crc_gp34 && checksum != dev_cfg->crc_gp34) {
+		LOG_ERR("Group3&4 checksum mismatch! (0x%x != 0x%x)", checksum, dev_cfg->crc_gp34);
+		return false;
+	}
+	LOG_INF("GROUP3&4 checksum: 0x%x", checksum);
+
+	if (mp289x_crc_get(bus, addr, MODE_MULTI_CFG_56, &checksum) == false)
+		return false;
+
+	if (dev_cfg->crc_gp56 && checksum != dev_cfg->crc_gp56) {
+		LOG_ERR("Group5&6 checksum mismatch! (0x%x != 0x%x)", checksum, dev_cfg->crc_gp56);
+		return false;
+	}
+	LOG_INF("GROUP5&6 checksum: 0x%x", checksum);
+
+	return true;
+}
+
 static bool parsing_image(uint8_t *img_buff, uint32_t img_size, struct mp289x_config *dev_cfg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(img_buff, false);
@@ -473,6 +566,10 @@ static bool parsing_image(uint8_t *img_buff, uint32_t img_size, struct mp289x_co
 	uint8_t cur_ele_idx = 0;
 	uint32_t data_store = 0;
 	uint8_t data_idx = 0;
+	int val = -1;
+	bool is_crc = false;
+	bool is_data = true;
+	uint8_t cur_crc_mode = 0xFF;
 	dev_cfg->wr_cnt = 0;
 	for (int i = 0; i < img_size; i++) {
 		/* check valid */
@@ -481,15 +578,102 @@ static bool parsing_image(uint8_t *img_buff, uint32_t img_size, struct mp289x_co
 			goto exit;
 		}
 
-		if ((cur_ele_idx == ATE_CONF_ID) && (i + 2 < img_size)) {
-			if (!strncmp(&img_buff[i], "END", 3)) {
-				break;
+		if (is_crc == true) {
+			if (cur_ele_idx == ATE_CONF_ID) {
+				if ((i + (strlen(CRC_CHECK_STOP_KEY) - 1)) < img_size) {
+					if (!strncmp(&img_buff[i], CRC_CHECK_STOP_KEY,
+						     strlen(CRC_CHECK_STOP_KEY))) {
+						is_crc = false;
+						break;
+					}
+				}
+			}
+
+			if (img_buff[i] == 0x09) {
+				if ((cur_ele_idx + 1) == ATE_REG_NAME) {
+					if (!strncmp(&img_buff[i + 1], CRC_USR_KEY,
+						     strlen(CRC_USR_KEY))) {
+						cur_crc_mode = MODE_USR;
+						i += (strlen(CRC_USR_KEY) + 1);
+						cur_ele_idx++;
+					} else if (!strncmp(&img_buff[i + 1], CRC_GP12_KEY,
+							    strlen(CRC_GP12_KEY))) {
+						cur_crc_mode = MODE_MULTI_CFG_12;
+						i += (strlen(CRC_GP12_KEY) + 1);
+						cur_ele_idx++;
+					} else if (!strncmp(&img_buff[i + 1], CRC_GP34_KEY,
+							    strlen(CRC_GP34_KEY))) {
+						cur_crc_mode = MODE_MULTI_CFG_34;
+						i += (strlen(CRC_GP34_KEY) + 1);
+						cur_ele_idx++;
+					} else if (!strncmp(&img_buff[i + 1], CRC_GP56_KEY,
+							    strlen(CRC_GP56_KEY))) {
+						cur_crc_mode = MODE_MULTI_CFG_56;
+						i += (strlen(CRC_GP56_KEY) + 1);
+						cur_ele_idx++;
+					}
+				} else if (cur_ele_idx == ATE_REG_DATA_HEX) {
+					switch (cur_crc_mode) {
+					case MODE_USR:
+						dev_cfg->crc_usr = (uint16_t)data_store;
+						break;
+					case MODE_MULTI_CFG_12:
+						dev_cfg->crc_gp12 = (uint16_t)data_store;
+						break;
+					case MODE_MULTI_CFG_34:
+						dev_cfg->crc_gp34 = (uint16_t)data_store;
+						break;
+					case MODE_MULTI_CFG_56:
+						dev_cfg->crc_gp56 = (uint16_t)data_store;
+						break;
+					default:
+						LOG_ERR("Got unknow crc mode %d", cur_crc_mode);
+						goto exit;
+					}
+				}
+
+				data_store = 0;
+				cur_ele_idx++;
+				continue;
+			} else if (img_buff[i] == 0x0d) {
+				i++; //skip 'a'
+				cur_ele_idx = ATE_CONF_ID;
+				continue;
+			} else {
+				val = ascii_to_val(img_buff[i]);
+				if (val == -1)
+					continue;
+
+				data_store = (data_store << 4) | val;
+				continue;
 			}
 		}
 
+		if ((cur_ele_idx == ATE_CONF_ID)) {
+			if ((i + (strlen(USR_END_KEY) - 1)) < img_size) {
+				if (!strncmp(&img_buff[i], USR_END_KEY, strlen(USR_END_KEY))) {
+					i += (strlen(USR_END_KEY) + 1); //pass 'END' + '\n'
+					is_data = false;
+					continue;
+				}
+			}
+			if ((i + (strlen(CRC_CHECK_START_KEY) - 1)) < img_size) {
+				if (!strncmp(&img_buff[i], CRC_CHECK_START_KEY,
+					     strlen(CRC_CHECK_START_KEY))) {
+					is_crc = true;
+					i += (strlen(CRC_CHECK_START_KEY) -
+					      1); //pass 'CRC_CHECK_START'
+					continue;
+				}
+			}
+		}
+
+		if (is_data == false)
+			continue;
+
 		if (((img_buff[i] != 0x09) && img_buff[i] != 0x0d)) {
 			// pass non hex charactor
-			int val = ascii_to_val(img_buff[i]);
+			val = ascii_to_val(img_buff[i]);
 			if (val == -1)
 				continue;
 
@@ -578,6 +762,11 @@ bool mp289x_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_
 		LOG_ERR("Failed to parsing image!");
 		goto exit;
 	}
+
+	LOG_INF("* crc user: 0x%x", dev_cfg.crc_usr);
+	LOG_INF("* crc group12: 0x%x", dev_cfg.crc_gp12);
+	LOG_INF("* crc group34: 0x%x", dev_cfg.crc_gp34);
+	LOG_INF("* crc group56: 0x%x", dev_cfg.crc_gp56);
 
 	/* Step3. Firmware update */
 	uint8_t last_page = 0xFF;
@@ -716,26 +905,10 @@ bool mp289x_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_
 		goto exit;
 	}
 
-	uint16_t checksum = 0;
-	if (mp289x_crc_get(bus, addr, MODE_USR, &checksum) == false)
-		return false;
-
-	LOG_INF("User checksum: 0x%x", checksum);
-
-	if (mp289x_crc_get(bus, addr, MODE_MULTI_CFG_12, &checksum) == false)
-		return false;
-
-	LOG_INF("GROUP1&2 checksum: 0x%x", checksum);
-
-	if (mp289x_crc_get(bus, addr, MODE_MULTI_CFG_34, &checksum) == false)
-		return false;
-
-	LOG_INF("GROUP3&4 checksum: 0x%x", checksum);
-
-	if (mp289x_crc_get(bus, addr, MODE_MULTI_CFG_56, &checksum) == false)
-		return false;
-
-	LOG_INF("GROUP5&6 checksum: 0x%x", checksum);
+	if (mp289x_post_update(bus, addr, &dev_cfg) == false) {
+		LOG_ERR("Post update failed!");
+		goto exit;
+	}
 
 	ret = true;
 exit:

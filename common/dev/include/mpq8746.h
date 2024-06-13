@@ -19,6 +19,6 @@
 #include "stdint.h"
 
 bool mpq8746_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_size);
-bool mpq8746_get_checksum(uint8_t bus, uint8_t addr, uint16_t *checksum);
+bool mpq8746_get_rev(uint8_t bus, uint8_t addr, uint16_t *rev);
 
 #endif
