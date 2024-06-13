@@ -169,7 +169,7 @@ static bool mp2988_check_crc_fault(uint8_t bus, uint8_t addr, bool clear_fault)
 
 	if (i2c_master_read(&i2c_msg, retry)) {
 		LOG_ERR("Failed to read error status");
-		return 0xFF;
+		return false;
 	}
 
 	if (i2c_msg.data[0] & BIT(4)) {
