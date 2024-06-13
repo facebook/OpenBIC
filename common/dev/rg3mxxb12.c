@@ -275,7 +275,8 @@ bool rg3mxxb12_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt)
 out:
 	memcpy(i3c_msg->data, cmd_protect, 2);
 	if (!i3c_controller_write(i3c_msg)) {
-		goto out;
+		LOG_ERR("Failed to set protect. offset = 0x%02x, value = 0x%02x", cmd_protect[0],
+			cmd_protect[1]);
 	}
 
 	return ret;
@@ -314,7 +315,8 @@ out:
 	i3c_msg.tx_len = 2;
 	memcpy(&i3c_msg.data, cmd_protect, 2);
 	if (!i3c_controller_write(&i3c_msg)) {
-		goto out;
+		LOG_ERR("Failed to set protect. offset = 0x%02x, value = 0x%02x", cmd_protect[0],
+			cmd_protect[1]);
 	}
 
 	return ret;
