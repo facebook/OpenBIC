@@ -44,7 +44,7 @@ uint16_t plat_gpio_cfg_size(void);
 	gpio_name_to_num(PWRGD_P24V_RS485_3) \
 	gpio_name_to_num(PWRGD_P24V_VALVE_2) \
 	gpio_name_to_num(PWRGD_P12V_AUX_R1) \
-	gpio_name_to_num(FM_BP_RS485_DE)
+	gpio_name_to_num(Reserve_GPIOB7)
 #define name_gpioC	\
 	gpio_name_to_num(PUMP1_PRSNT_BUF_N) \
 	gpio_name_to_num(PUMP2_PRSNT_BUF_N) \

@@ -15,6 +15,14 @@
 #include <plat_sensor_table.h>
 #include "power_status.h"
 #include "hal_vw_gpio.h"
+#include "fru.h"
+#include "plat_fru.h"
+#include "eeprom.h"
+#include "hal_gpio.h"
+#include "plat_gpio.h"
+
+#define DAM_PIN_DISABLE 0
+#define DAM_PIN_ENABLE 1
 
 LOG_MODULE_REGISTER(plat_cpu);
 
@@ -263,4 +271,95 @@ void monitor_smiout_handler()
 			return;
 		}
 	}
+}
+
+int pal_get_set_dam_status(uint8_t options, uint8_t *status)
+{
+	CHECK_NULL_ARG_WITH_RETURN(status, -1);
+
+	uint8_t ret;
+	EEPROM_ENTRY fru_entry = { 0 };
+
+	fru_entry.config.dev_id = SYS_DAM_ID;
+	fru_entry.offset = BIC_CONFIG_START + SYS_DAM_OFFSET;
+	fru_entry.data_len = 1;
+
+	uint8_t fru_index = 0;
+	bool is_id_find = find_FRU_ID(fru_entry.config.dev_id, &fru_index);
+	if (is_id_find == false) {
+		LOG_ERR("find fru write config fail via fru id: 0x%x", fru_entry.config.dev_id);
+		return FRU_INVALID_ID;
+	}
+	memcpy(&fru_entry.config, &fru_config[fru_index], sizeof(fru_config[fru_index]));
+
+	switch (options) {
+		case GET_STATUS:
+			ret = eeprom_read(&fru_entry);
+			*status = fru_entry.data[0];
+			break;
+		case SET_STATUS:
+			fru_entry.data[0] = *status;
+			ret = eeprom_write(&fru_entry);
+			break;
+		default:
+			LOG_ERR("Debug sel mode options unkown %d", options);
+			return -1;
+	}
+
+	if (ret != FRU_READ_SUCCESS) {
+		return -1;
+	}
+
+	return 0;
+}
+
+// Use in BIC initial, set DAM pin status from eeprom data
+void set_dam_pin()
+{
+	int dam_pin_status = 0;
+	uint8_t dam_eeprom_status = 0;
+
+	if (pal_get_set_dam_status(GET_STATUS, &dam_eeprom_status) != 0) {
+		LOG_ERR("cannot get DAM eeprom data!");
+		return;
+	}
+
+	dam_pin_status = gpio_get(DAM_BIC_R_EN); // get DAM pin status
+
+	// if dam status record in eeprom date not same as DAM pin status, set DAM pin status
+	if (dam_eeprom_status != dam_pin_status) {
+		if (dam_eeprom_status == DAM_PIN_ENABLE) {
+			gpio_set(DAM_BIC_R_EN, GPIO_HIGH);
+			LOG_INF("BIC set DAM pin HIGH");
+		} else {
+			gpio_set(DAM_BIC_R_EN, GPIO_LOW);
+			LOG_INF("BIC set DAM pin LOW");
+		}
+	} else {
+		LOG_INF("BIC check DAM pin not change");
+	}
+
+	return;
+}
+
+// if BMC use IPMI command let BIC set DAM pin, record status to eeprom
+void OEM_1S_RECORD_DAM_PIN_STATUS(uint8_t gpio_num, uint8_t status)
+{
+	uint8_t dam_eeprom_status = 0;
+	if (gpio_num == DAM_BIC_R_EN) {
+		if(status == DAM_PIN_ENABLE) {
+			dam_eeprom_status = DAM_PIN_ENABLE;
+			LOG_INF("BIC receive BMC set DAM pin high");
+		} else {
+			dam_eeprom_status = DAM_PIN_DISABLE;
+			LOG_INF("BIC receive BMC set DAM pin low");
+		}
+
+		if (pal_get_set_dam_status(SET_STATUS, &dam_eeprom_status) != 0) {
+			LOG_ERR("cannot set DAM eeprom data!");
+		}
+		LOG_INF("BIC set DAM status in eeprom data");
+	}
+
+	return;
 }
