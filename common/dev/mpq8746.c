@@ -140,7 +140,7 @@ static bool mpq8746_store(uint8_t bus, uint8_t addr)
 	return true;
 }
 
-bool mpq8746_get_rev(uint8_t bus, uint8_t addr, uint16_t *rev)
+bool mpq8746_get_fw_version(uint8_t bus, uint8_t addr, uint16_t *rev)
 {
 	CHECK_NULL_ARG_WITH_RETURN(rev, false);
 
@@ -227,7 +227,7 @@ static bool mpq8746_pre_update(uint8_t bus, uint8_t addr, struct mpq8746_config 
 	}
 
 	uint16_t cfg_code_rev = 0;
-	if (mpq8746_get_rev(bus, addr, &cfg_code_rev) == false) {
+	if (mpq8746_get_fw_version(bus, addr, &cfg_code_rev) == false) {
 		LOG_ERR("Failed to get product id");
 		return false;
 	}

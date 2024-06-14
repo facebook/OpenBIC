@@ -321,7 +321,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		if (vr_module == OTH_MODULE_PRIMARY) {
 			bus = CPUDVDD_I2C_BUS;
 			addr = CPUDVDD_I2C_ADDR >> 1;
-			if (!mpq8746_get_rev(bus, addr, &tmp_crc_16)) {
+			if (!mpq8746_get_fw_version(bus, addr, &tmp_crc_16)) {
 				LOG_ERR("Component %d version reading failed", p->comp_identifier);
 				goto post_hook_and_ret;
 			}
@@ -365,7 +365,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 			addr = SOCVDD_I2C_ADDR >> 1;
 		}
 
-		if (!mp289x_rev_get(bus, addr, &tmp_crc_16)) {
+		if (!mp289x_get_fw_version(bus, addr, &tmp_crc_16)) {
 			LOG_ERR("Component %d version reading failed", p->comp_identifier);
 			goto post_hook_and_ret;
 		}
@@ -392,7 +392,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 			vendor_name_p = vender_name[4][vr_module];
 		}
 
-		if (!mp2988_crc_get(bus, addr, &tmp_crc_16)) {
+		if (!mp2988_get_checksum(bus, addr, &tmp_crc_16)) {
 			LOG_ERR("Component %d version reading failed", p->comp_identifier);
 			goto post_hook_and_ret;
 		}

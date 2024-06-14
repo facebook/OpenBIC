@@ -202,7 +202,7 @@ static uint8_t mp289x_check_err_status(uint8_t bus, uint8_t addr)
 	return i2c_msg.data[0];
 }
 
-bool mp289x_rev_get(uint8_t bus, uint8_t addr, uint16_t *rev)
+bool mp289x_get_fw_version(uint8_t bus, uint8_t addr, uint16_t *rev)
 {
 	CHECK_NULL_ARG_WITH_RETURN(rev, false);
 

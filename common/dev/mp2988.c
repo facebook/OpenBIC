@@ -196,7 +196,7 @@ static bool mp2988_check_crc_fault(uint8_t bus, uint8_t addr, bool clear_fault)
 	return true;
 }
 
-bool mp2988_crc_get(uint8_t bus, uint8_t addr, uint16_t *crc)
+bool mp2988_get_checksum(uint8_t bus, uint8_t addr, uint16_t *crc)
 {
 	CHECK_NULL_ARG_WITH_RETURN(crc, false);
 
@@ -496,7 +496,7 @@ bool mp2988_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_
 	}
 
 	uint16_t checksum = 0;
-	if (mp2988_crc_get(bus, addr, &checksum) == false)
+	if (mp2988_get_checksum(bus, addr, &checksum) == false)
 		return false;
 
 	LOG_INF("User checksum: 0x%x", checksum);
