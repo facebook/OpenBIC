@@ -26,6 +26,8 @@
 #include "rg3mxxb12.h"
 #include "p3h284x.h"
 #include "m88rt51632.h"
+#include "plat_util.h"
+#include "libipmi.h"
 
 LOG_MODULE_REGISTER(plat_class);
 
@@ -205,7 +207,12 @@ void set_clock_buffer_bypass_mode()
 
 		if (i2c_master_write(&msg, retry) != 0) {
 			LOG_ERR("Failed to set Exp A clock buffer to bypass mode!");
+			// send event log to BMC
+			send_system_status_event(IPMI_OEM_EVENT_TYPE_NOTIFY,IPMI_EVENT_OFFSET_SYS_EXPA_CLOCK_BUFFER,0);
+
 			return;
 		}
 	}
+
+	return;
 }
