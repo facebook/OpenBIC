@@ -175,6 +175,8 @@ enum SENSOR_DEV {
 	sensor_dev_ds160pt801 = 0x39,
 	sensor_dev_rs31380r = 0x3A,
 	sensor_dev_adc128d818 = 0x3B,
+	sensor_dev_ads1015 = 0x3C,
+	sensor_dev_plat_def_sensor = 0x3D,
 	sensor_dev_max
 };
 
@@ -218,23 +220,22 @@ static inline float convert_MBR_to_reading(uint8_t sensor_num, uint8_t val)
 	return (val - round_add(sensor_num, val)) * SDR_M(sensor_num) / SDR_Rexp(sensor_num);
 }
 
-enum {
-	SENSOR_READ_SUCCESS,
-	SENSOR_READ_ACUR_SUCCESS,
-	SENSOR_NOT_FOUND,
-	SENSOR_NOT_ACCESSIBLE, // Only use to check sensor access fail
-	SENSOR_FAIL_TO_ACCESS,
-	SENSOR_INIT_STATUS,
-	SENSOR_UNSPECIFIED_ERROR,
-	SENSOR_POLLING_DISABLE,
-	SENSOR_PRE_READ_ERROR,
-	SENSOR_POST_READ_ERROR,
-	SENSOR_READ_API_UNREGISTER,
-	SENSOR_READ_4BYTE_ACUR_SUCCESS,
-	SENSOR_NOT_PRESENT,
-	SENSOR_PEC_ERROR,
-	SENSOR_PARAMETER_NOT_VALID,
-	SENSOR_UNAVAILABLE,
+enum { SENSOR_READ_SUCCESS,
+       SENSOR_READ_ACUR_SUCCESS,
+       SENSOR_NOT_FOUND,
+       SENSOR_NOT_ACCESSIBLE, // Only use to check sensor access fail
+       SENSOR_FAIL_TO_ACCESS,
+       SENSOR_INIT_STATUS,
+       SENSOR_UNSPECIFIED_ERROR,
+       SENSOR_POLLING_DISABLE,
+       SENSOR_PRE_READ_ERROR,
+       SENSOR_POST_READ_ERROR,
+       SENSOR_READ_API_UNREGISTER,
+       SENSOR_READ_4BYTE_ACUR_SUCCESS,
+       SENSOR_NOT_PRESENT,
+       SENSOR_PEC_ERROR,
+       SENSOR_PARAMETER_NOT_VALID,
+       SENSOR_UNAVAILABLE,
 };
 
 enum { SENSOR_INIT_SUCCESS, SENSOR_INIT_UNSPECIFIED_ERROR };

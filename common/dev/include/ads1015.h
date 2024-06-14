@@ -14,23 +14,31 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_DEF_H
-#define PLAT_DEF_H
+#ifndef ADS1015_H
+#define ADS1015_H
 
-#define BMC_USB_PORT "CDC_ACM_0"
+enum ADS1015_REG_MAP {
+	CONVERSION_REG,
+	CONFIG_REG,
+	LO_THRESH_REG,
+	HI_THRESH_REG,
+};
 
-#define WORKER_STACK_SIZE 4096
-#define ENABLE_MCTP_I3C
-#define ENABLE_SSIF
-#define ENABLE_SSIF_RSP_PEC
-#define ENABLE_SBMR
-#define ENABLE_NVIDIA
-#define ENABLE_DS160PT801
-#define ENABLE_RS31380R
+enum DEVICE_OPERATION_MODE {
+	CONTINUOUS_MODE,
+	SINGLE_SHOT_MODE,
+}; // operating mode
 
-#define MAX_FWUPDATE_RSP_BUF_SIZE 200 // for pldm fw update max transfer size
-#define BIC_UPDATE_MAX_OFFSET 0x60000
+enum LATCH_COMPARATOR {
+	DISABLE_LATCH,
+	ENABLE_LATCH,
+}; // matching comparator
 
-#define SSIF_TIMEOUT_MS 1000
+typedef struct _ads1015_init_arg {
+	bool is_init;
+	// user defined
+	uint8_t device_operation_mode;
+	uint8_t alert_latch;
+} ads1015_init_arg;
 
 #endif

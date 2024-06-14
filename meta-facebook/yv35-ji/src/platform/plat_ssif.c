@@ -107,8 +107,7 @@ static void set_rt8848c_config()
 }
 
 K_TIMER_DEFINE(send_cmd_timer, send_cmd_to_dev, NULL);
-
-void pal_bios_post_complete()
+void handle_post_end_handler(struct k_work *work)
 {
 	k_timer_start(&send_cmd_timer, K_MSEC(3000), K_NO_WAIT);
 
@@ -129,4 +128,10 @@ void pal_bios_post_complete()
 	if (modify_sensor_cfg() == false) {
 		LOG_ERR("Failed to modify sensor cfg!");
 	}
+}
+
+K_WORK_DEFINE(handle_post_end_work, handle_post_end_handler);
+void pal_bios_post_complete()
+{
+	k_work_submit(&handle_post_end_work);
 }

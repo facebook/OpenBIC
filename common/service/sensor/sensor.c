@@ -130,13 +130,15 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(nct7363)
 	sensor_name_to_num(ads112c)
 	sensor_name_to_num(hdc1080)
-  	sensor_name_to_num(ina238)
+	sensor_name_to_num(ina238)
 	sensor_name_to_num(nct214)
 	sensor_name_to_num(ast_tach)
 	sensor_name_to_num(xdp710)
 	sensor_name_to_num(ds160pt801)
 	sensor_name_to_num(rs31380r)
 	sensor_name_to_num(adc128d818)
+	sensor_name_to_num(ads1015)
+	sensor_name_to_num(plat_def_sensor)
 };
 // clang-format on
 
@@ -311,10 +313,16 @@ SENSOR_DRIVE_INIT_DECLARE(ds160pt801);
 SENSOR_DRIVE_INIT_DECLARE(rs31380r);
 #endif
 SENSOR_DRIVE_INIT_DECLARE(adc128d818);
+#ifdef ENABLE_ADS1015
+SENSOR_DRIVE_INIT_DECLARE(ads1015);
+#endif
+#ifdef ENABLE_PLAT_DEF_SENSOR
+SENSOR_DRIVE_INIT_DECLARE(plat_def_sensor);
+#endif
 
 // The sequence needs to same with SENSOR_DEV ID
 sensor_drive_api sensor_drive_tbl[] = {
-#ifndef DISABLE_TMP75 
+#ifndef DISABLE_TMP75
 	SENSOR_DRIVE_TYPE_INIT_MAP(tmp75),
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(tmp75),
@@ -324,7 +332,7 @@ sensor_drive_api sensor_drive_tbl[] = {
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(ast_adc),
 #endif
-SENSOR_DRIVE_TYPE_INIT_MAP(intel_peci),
+	SENSOR_DRIVE_TYPE_INIT_MAP(intel_peci),
 #ifndef DISABLE_ISL69259
 	SENSOR_DRIVE_TYPE_INIT_MAP(isl69259),
 #else
@@ -431,9 +439,11 @@ SENSOR_DRIVE_TYPE_INIT_MAP(intel_peci),
 	SENSOR_DRIVE_TYPE_UNUSE(ltc4286),
 #endif
 #ifdef ENABLE_APML
-	SENSOR_DRIVE_TYPE_INIT_MAP(amd_tsi),	SENSOR_DRIVE_TYPE_INIT_MAP(apml_mailbox),
+	SENSOR_DRIVE_TYPE_INIT_MAP(amd_tsi),
+	SENSOR_DRIVE_TYPE_INIT_MAP(apml_mailbox),
 #else
-	SENSOR_DRIVE_TYPE_UNUSE(amd_tsi),	SENSOR_DRIVE_TYPE_UNUSE(apml_mailbox),
+	SENSOR_DRIVE_TYPE_UNUSE(amd_tsi),
+	SENSOR_DRIVE_TYPE_UNUSE(apml_mailbox),
 #endif
 #ifndef DISABLE_XDPE19283B
 	SENSOR_DRIVE_TYPE_INIT_MAP(xdpe19283b),
@@ -601,6 +611,16 @@ SENSOR_DRIVE_TYPE_INIT_MAP(intel_peci),
 	SENSOR_DRIVE_TYPE_UNUSE(rs31380r),
 #endif
 	SENSOR_DRIVE_TYPE_INIT_MAP(adc128d818),
+#ifdef ENABLE_ADS1015
+	SENSOR_DRIVE_TYPE_INIT_MAP(ads1015),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(ads1015),
+#endif
+#ifdef ENABLE_PLAT_DEF_SENSOR
+	SENSOR_DRIVE_TYPE_INIT_MAP(plat_def_sensor),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(plat_def_sensor),
+#endif
 };
 
 static void init_sensor_num(void)
