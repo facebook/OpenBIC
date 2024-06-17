@@ -27,6 +27,8 @@
 #define I2C_BUS4 3
 #define I2C_BUS5 4
 #define I2C_BUS6 5
+#define I2C_BUS7 6
+#define I2C_BUS8 7
 #define I2C_BUS10 9
 #define I2C_BUS14 13
 
