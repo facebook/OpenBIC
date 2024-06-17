@@ -37,6 +37,8 @@
 #define MODBUS_SET_SENSOR_POLL_EN_ADDR 0x1070
 #define MODBUS_GET_SENSOR_POLL_EN_ADDR 0x1071
 
+#define MODBUS_GET_SET_HMI_VER_ADDR 0x19F2
+
 int init_custom_modbus_server(void);
 void init_modbus_command_table(void);
 
