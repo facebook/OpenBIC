@@ -16,6 +16,7 @@
 
 #include <string.h>
 #include <logging/log.h>
+#include "util_sys.h"
 #include "plat_isr.h"
 #include "plat_class.h"
 #include "plat_gpio.h"
@@ -352,6 +353,18 @@ void init_ioe_config()
 				ioe_cfg[i].addr, ioe_cfg[i].conf_reg);
 		}
 
+		uint8_t init_val_mask, init_dir_mask;
+		// If BIC AC off, need init E1S_PERSET
+		if (is_ac_lost()) {
+			// Reserve the bit 4&5's last state
+			init_val_mask = 0xCF;
+			init_dir_mask = 0x30;
+		} else {
+			// Reserve the bit 4&5&6's last state
+			init_val_mask = 0x8F;
+			init_dir_mask = 0x70;
+		}
+
 		if ((ioe_cfg[i].addr == ADDR_IOE4) &&
 		    (ioe_cfg[i].output_reg == TCA9555_OUTPUT_PORT_REG_1)) {
 			// Get the last state before initializing.
@@ -361,8 +374,7 @@ void init_ioe_config()
 				LOG_ERR("Failed to get E1S present from IOE4");
 				continue;
 			}
-			// Reserve the bit 4&5&6's last state.
-			ioe_reg_value = (ioe_cfg[i].output_val & 0x8F) | (ioe_reg_value & 0x70);
+			ioe_reg_value = (ioe_cfg[i].output_val & init_val_mask) | (ioe_reg_value & init_dir_mask);
 
 		} else if ((ioe_cfg[i].addr == ADDR_IOE2) &&
 			   (ioe_cfg[i].output_reg == TCA9555_OUTPUT_PORT_REG_0) &&
