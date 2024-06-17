@@ -41,6 +41,30 @@ enum ADS112C_REG1_CONFIG {
 	ADS112C_REG1_TEMPMODE_ENABLE = 0x01,
 };
 
+enum ADS112C_REG2_CONFIG {
+	//IDAC current setting (Bit 2:0)
+	ADS112C_REG2_IDAC_OFF = 0x00,
+	ADS112C_REG2_IDAC_10UA = 0x01,
+	ADS112C_REG2_IDAC_50UA = 0x02,
+	ADS112C_REG2_IDAC_100UA = 0x03,
+	ADS112C_REG2_IDAC_250UA = 0x04,
+	ADS112C_REG2_IDAC_500UA = 0x05,
+	ADS112C_REG2_IDAC_1000UA = 0x06,
+	ADS112C_REG2_IDAC_1500UA = 0x07,
+};
+
+enum ADS112C_REG3_CONFIG {
+	//IDAC1 routing configuration (Bit 7:5)
+	ADS112C_REG3_IDAC1_DISABLED = 0x00,
+	ADS112C_REG3_IDAC1_AIN0 = 0x20,
+	ADS112C_REG3_IDAC1_AIN1 = 0x40,
+	ADS112C_REG3_IDAC1_AIN2 = 0x60,
+	ADS112C_REG3_IDAC1_AIN3 = 0x80,
+	ADS112C_REG3_IDAC1_REFP = 0xA0,
+	ADS112C_REG3_IDAC1_REFN = 0xC0,
+	ADS112C_REG3_IDAC1_RESERVED = 0xE0,
+};
+
 // Command Byte to control device
 #define CMD_RESET 0x06 //000 011x(06h)
 #define CMD_START_SYNC 0x08 //000 100x(08h)
@@ -55,6 +79,10 @@ enum ADS112C_REG1_CONFIG {
 #define CFG_REG_OFFSET2 0x08
 #define CFG_REG_OFFSET3 0x0C
 
+#define ADS112C_REG2_DRDY_READY 0x80
+#define ENABLE_RESET_CFG_REG 1
+#define DISABLE_RESET_CFG_REG 0
+
 typedef struct _ads112c_init_arg {
 	uint8_t reg0_input;
 	uint8_t reg0_gain;
@@ -63,6 +91,14 @@ typedef struct _ads112c_init_arg {
 	uint8_t reg1_vol_refer;
 	double vol_refer_val;
 	uint8_t reg1_temp_mode;
+	uint8_t reg2_idac;
+	uint8_t reg3_idac1_cfg;
 } ads112c_init_arg;
+
+enum ADS112C_READ_OUTPUT_OFFSET {
+	ADS112C_READ_OUTPUT_RAW = 0x00,
+	ADS112C_READ_OUTPUT_VOLT = 0x01,
+	ADS112C_READ_OUTPUT_TEMP = 0x02,
+};
 
 #endif //ADS112C_H
