@@ -34,6 +34,7 @@ LOG_MODULE_REGISTER(dev_nct7363);
 #define FREQUENCY_DIVEL_1_RANGE_MAX 244.14
 #define FREQUENCY_DIVEL_1_RANGE_MIN 1.907
 #define NCT7363_FAN_LSB_MASK BIT_MASK(5)
+#define NCT7363_GPIO_LSB_MASK BIT_MASK(8)
 #define MAX_THRESHOLD_VAL 0x1FFF
 
 bool nct7363_set_threshold(sensor_cfg *cfg, uint16_t threshold)
@@ -281,9 +282,23 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 		msg.rx_len = 1;
 		msg.tx_len = 1;
 		if (port_offset >= 0 && port_offset <= NCT7363_8_PORT) {
-			msg.data[0] = NCT7363_GPIO0x_OUTPUT_PORT_REG_OFFSET;
+			// read gpio is input or output
+			msg.data[0] = GPIO0X_IO_CONF_REG;
 			if (i2c_master_read(&msg, retry) != 0) {
-				LOG_ERR("Read NCT7363_GPIO0x_OUTPUT_PORT_REG_OFFSET fail");
+				LOG_ERR("Read NCT7363_GPIO0x_PORT_CONF_REG_OFFSET fail");
+				return SENSOR_FAIL_TO_ACCESS;
+			}
+
+			if (msg.data[0] & BIT(port_offset)) {
+				// pin is input
+				msg.data[0] = NCT7363_GPIO0x_INPUT_PORT_REG_OFFSET;
+			} else {
+				// pin is output
+				msg.data[0] = NCT7363_GPIO0x_OUTPUT_PORT_REG_OFFSET;
+			}
+
+			if (i2c_master_read(&msg, retry) != 0) {
+				LOG_ERR("Read NCT7363_GPIO0x_VAL_REG_OFFSET fail");
 				return SENSOR_FAIL_TO_ACCESS;
 			}
 
@@ -296,7 +311,25 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 			return SENSOR_READ_SUCCESS;
 
 		} else if (port_offset >= NCT7363_10_PORT && port_offset <= NCT7363_17_PORT) {
-			msg.data[0] = NCT7363_GPIO1x_OUTPUT_PORT_REG_OFFSET;
+			msg.data[0] = GPIO1X_IO_CONF_REG;
+			if (i2c_master_read(&msg, retry) != 0) {
+				LOG_ERR("Read NCT7363_GPIO1x_PORT_CONF_REG_OFFSET fail");
+				return SENSOR_FAIL_TO_ACCESS;
+			}
+
+			if (msg.data[0] & BIT(port_offset)) {
+				// pin is input
+				msg.data[0] = NCT7363_GPIO1x_INPUT_PORT_REG_OFFSET;
+			} else {
+				// pin is output
+				msg.data[0] = NCT7363_GPIO1x_OUTPUT_PORT_REG_OFFSET;
+			}
+
+			if (i2c_master_read(&msg, retry) != 0) {
+				LOG_ERR("Read NCT7363_GPIO1x_VAL_REG_OFFSET fail");
+				return SENSOR_FAIL_TO_ACCESS;
+			}
+
 			if (i2c_master_read(&msg, retry) != 0) {
 				LOG_ERR("Read NCT7363_GPIO1x_OUTPUT_PORT_REG_OFFSET fail");
 				return SENSOR_FAIL_TO_ACCESS;
@@ -366,6 +399,7 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 	uint8_t val_gpio0x = 0xff, val_gpio1x = 0xff;
 
 	for (uint8_t i = 0; i < NCT7363_PIN_NUMBER; i++) {
+		/* init gpio input/output */
 		if (nct7363_init_arg_data->pin_type[i] == NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT) {
 			if (i < NCT7363_REG_SIZE)
 				WRITE_BIT(val_gpio0x, i, 0);
@@ -374,6 +408,16 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 		}
 	}
 
+	/* set default gpio output value */
+	if (!nct7363_write(cfg, NCT7363_GPIO0x_OUTPUT_PORT_REG_OFFSET,
+			   (nct7363_init_arg_data->gpio_out_default_val) & NCT7363_GPIO_LSB_MASK))
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+
+	if (!nct7363_write(cfg, NCT7363_GPIO1x_OUTPUT_PORT_REG_OFFSET,
+			   (nct7363_init_arg_data->gpio_out_default_val) >> 8))
+		return SENSOR_INIT_UNSPECIFIED_ERROR;
+
+	/* set gpio input/output */
 	if (!nct7363_write(cfg, GPIO0X_IO_CONF_REG, val_gpio0x))
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 
