@@ -39,7 +39,7 @@ bool modbus_i2c_master_write_read(const uint16_t *modbus_data, uint8_t data_len)
 	// write data: bus(2Bytes), addr(2Bytes), read length(2Bytes), data(26Bytes)
 
 	if (data_len <= 3) // check bus,addr,read length is not null
-		return true;
+		return false;
 
 	const uint8_t target_bus = modbus_data[0] & BIT_MASK(8); // get 7:0 bit data
 	const uint8_t target_addr = modbus_data[1] & BIT_MASK(8);

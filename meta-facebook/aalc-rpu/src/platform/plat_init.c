@@ -31,7 +31,15 @@ LOG_MODULE_REGISTER(plat_init);
 
 SCU_CFG scu_cfg[] = {
 	//register    value
-	{ 0x7e789108, 0x00000500 },
+	{ 0x7e789108, 0x00000500 }, // uart1,2 RS485 DE/nRE
+	{ 0x7e6e24b0, 0x00008000 }, // uart2 NRTS2
+	{ 0x7e6e24bc, 0x00000001 }, // uart1 NRTS1
+	// disable internal PD
+	{ 0x7e6e2610, 0x0FFFBFFF },
+	{ 0x7e6e2614, 0x018F0100 },
+	{ 0x7e6e2618, 0x0F00FF00 },
+	{ 0x7e6e261C, 0xFE300005 },
+	{ 0x7e6e2630, 0x00000002 },
 };
 
 void pal_pre_init()

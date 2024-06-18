@@ -24,7 +24,7 @@
 
 LOG_MODULE_REGISTER(plat_isr);
 
-void enable_e1s_pe_reset()
+void set_e1s_pe_reset()
 {
 	if (check_ioe4_e1s_prsnt_pin() == 0) {
 		uint8_t ioe_reg_value = 0;
@@ -36,7 +36,12 @@ void enable_e1s_pe_reset()
 			LOG_ERR("Failed to enable E1S PE reset while reading IOE4 register");
 		}
 
-		ioe_reg_value = (ioe_reg_value | E1S_PE_RESET_BIT);
+		// The value of E1S_PE_RESET needs to be the same as RST_PCIE_MB_EXP_N
+		if (gpio_get(RST_PCIE_MB_EXP_N) == GPIO_HIGH) {
+			ioe_reg_value = (ioe_reg_value | E1S_PE_RESET_BIT);
+		} else {
+			ioe_reg_value = (ioe_reg_value & (~E1S_PE_RESET_BIT));
+		}
 
 		ret = set_ioe_value(ADDR_IOE4, TCA9555_OUTPUT_PORT_REG_1, ioe_reg_value);
 
@@ -98,16 +103,14 @@ void ISR_MB_DC_STAGUS_CHAGNE()
 	}
 }
 
-K_WORK_DEFINE(_enable_e1s_pe_reset, enable_e1s_pe_reset);
+K_WORK_DEFINE(set_e1s_pe_reset_work, set_e1s_pe_reset);
 
 void ISR_MB_PCIE_RST()
 {
 	gpio_set(PERST_ASIC1_N_R, gpio_get(RST_PCIE_MB_EXP_N));
 	gpio_set(PERST_ASIC2_N_R, gpio_get(RST_PCIE_MB_EXP_N));
 
-	if (gpio_get(RST_PCIE_MB_EXP_N) == GPIO_HIGH) {
-		k_work_submit(&_enable_e1s_pe_reset);
-	}
+	k_work_submit(&set_e1s_pe_reset_work);
 }
 
 K_WORK_DEFINE(e1s_pwr_on_work, set_asic_and_e1s_clk_handler);
