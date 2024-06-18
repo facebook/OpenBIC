@@ -269,6 +269,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -285,6 +286,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -301,6 +303,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -317,6 +320,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -333,6 +337,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -349,6 +354,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -365,6 +371,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -381,6 +388,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -397,6 +405,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -413,6 +422,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -429,6 +439,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -445,6 +456,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -461,6 +473,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
