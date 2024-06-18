@@ -489,7 +489,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.pin_type[NCT7363_6_PORT] = NCT7363_PIN_TPYE_FANIN, // fan fanin
 		.pin_type[NCT7363_7_PORT] = NCT7363_PIN_TPYE_FANIN, // fan fanin
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_PWM,
+		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		// pwm setting
 		.fan_frequency[NCT7363_1_PORT] = 500, // TO DO wait to check
 		.fan_frequency[NCT7363_2_PORT] = 500, // TO DO wait to check
@@ -511,7 +511,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.pin_type[NCT7363_6_PORT] = NCT7363_PIN_TPYE_FANIN, // fan fanin
 		.pin_type[NCT7363_7_PORT] = NCT7363_PIN_TPYE_FANIN, // fan fanin
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_PWM,
+		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		// pwm setting
 		.fan_frequency[NCT7363_1_PORT] = 500, // TO DO wait to check
 		.fan_frequency[NCT7363_2_PORT] = 500, // TO DO wait to check
@@ -533,7 +533,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.pin_type[NCT7363_6_PORT] = NCT7363_PIN_TPYE_FANIN, // fan fanin
 		.pin_type[NCT7363_7_PORT] = NCT7363_PIN_TPYE_FANIN, // fan fanin
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_PWM,
+		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		// pwm setting
 		.fan_frequency[NCT7363_1_PORT] = 500, // TO DO wait to check
 		.fan_frequency[NCT7363_2_PORT] = 500, // TO DO wait to check
@@ -554,7 +554,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.pin_type[NCT7363_3_PORT] = NCT7363_PIN_TPYE_PWM, // PUMP_ADD_WATER_PWM
 		.pin_type[NCT7363_4_PORT] = NCT7363_PIN_TPYE_FANIN, // PUMP_ADD_WATER fanin
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_PWM,
+		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.pin_type[NCT7363_12_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.pin_type[NCT7363_13_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.pin_type[NCT7363_14_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
