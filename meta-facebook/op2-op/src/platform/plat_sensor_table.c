@@ -121,7 +121,7 @@ sensor_cfg plat_expansion_A_sensor_config[] = {
 	  e1s_access, 2, 1, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &adc_expa_asd_init_args[0] },
 
-	{ SENSOR_NUM_1OU_P1V8_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT6, NONE, NONE, dc_access, 1, 1,
+	{ SENSOR_NUM_1OU_P1V8_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT6, NONE, NONE, stby_access, 1, 1,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &adc_expa_asd_init_args[0] },
 
@@ -129,7 +129,7 @@ sensor_cfg plat_expansion_A_sensor_config[] = {
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &adc_expa_asd_init_args[0] },
 
-	{ SENSOR_NUM_1OU_P1V2_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT8, NONE, NONE, dc_access, 1, 1,
+	{ SENSOR_NUM_1OU_P1V2_ADC_VOLT, sensor_dev_ast_adc, ADC_PORT8, NONE, NONE, stby_access, 1, 1,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &adc_expa_asd_init_args[1] },
 

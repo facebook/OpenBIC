@@ -33,6 +33,15 @@ const EEPROM_CFG plat_fru_config[] = {
 		FRU_START,
 		FRU_SIZE,
 	},
+	{
+		NV_ATMEL_24C128,
+		SYS_DAM_ID,
+		MB_FRU_PORT,
+		MB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		BIC_CONFIG_START,
+		BIC_CONFIG_SIZE,
+	},
 };
 
 void pal_load_fru_config(void)

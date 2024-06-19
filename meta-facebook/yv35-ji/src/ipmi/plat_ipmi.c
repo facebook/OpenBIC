@@ -50,6 +50,22 @@ bool pal_request_msg_to_BIC_from_HOST(uint8_t netfn, uint8_t cmd)
 	return false;
 }
 
+bool pal_immediate_respond_from_HOST(uint8_t netfn, uint8_t cmd)
+{
+	if (netfn == NETFN_STORAGE_REQ) {
+		if (cmd == CMD_STORAGE_ADD_SEL)
+			return true;
+	} else if (netfn == NETFN_SENSOR_REQ) {
+		if (cmd == CMD_SENSOR_PLATFORM_EVENT)
+			return true;
+	} else if (netfn == NETFN_OEM_REQ) {
+		if (cmd == CMD_OEM_POST_END)
+			return true;
+	}
+
+	return false;
+}
+
 int pal_record_bios_fw_version(uint8_t *buf, uint8_t size)
 {
 	CHECK_NULL_ARG_WITH_RETURN(buf, -1);

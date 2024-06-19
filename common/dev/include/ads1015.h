@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,13 +14,31 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_DEF_H
-#define PLAT_DEF_H
+#ifndef ADS1015_H
+#define ADS1015_H
 
-#define BMC_USB_PORT "CDC_ACM_0"
+enum ADS1015_REG_MAP {
+	CONVERSION_REG,
+	CONFIG_REG,
+	LO_THRESH_REG,
+	HI_THRESH_REG,
+};
 
-#define ADC_CALIBRATION 1
-#define MORE_THAN_ONE_ADM1272
-#define ENABLE_PLAT_DEF_SENSOR
+enum DEVICE_OPERATION_MODE {
+	CONTINUOUS_MODE,
+	SINGLE_SHOT_MODE,
+}; // operating mode
+
+enum LATCH_COMPARATOR {
+	DISABLE_LATCH,
+	ENABLE_LATCH,
+}; // matching comparator
+
+typedef struct _ads1015_init_arg {
+	bool is_init;
+	// user defined
+	uint8_t device_operation_mode;
+	uint8_t alert_latch;
+} ads1015_init_arg;
 
 #endif

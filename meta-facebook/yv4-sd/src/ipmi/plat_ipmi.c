@@ -120,6 +120,11 @@ void OEM_GET_CHASSIS_POSITION(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
 
+	if (msg->data_len != 0) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
 	msg->completion_code = CC_SUCCESS;
 	msg->data_len = 1;
 
@@ -128,6 +133,7 @@ void OEM_GET_CHASSIS_POSITION(ipmi_msg *msg)
 	uint8_t blade_config = BLADE_CONFIG_UNKNOWN;
 	if (get_blade_config(&blade_config) == false) {
 		LOG_ERR("Failed to get the blade configuration");
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
 		return;
 	}
 

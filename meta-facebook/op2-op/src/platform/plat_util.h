@@ -24,6 +24,7 @@
 #define IPMI_EVENT_OFFSET_SYS_E1S_P12V_FAULT 0x83
 #define IPMI_EVENT_OFFSET_SYS_E1S_P3V3_FAULT 0x84
 #define IPMI_EVENT_OFFSET_SYS_INA233_ALERT 0x86
+#define IPMI_EVENT_OFFSET_SYS_EXPA_CLOCK_BUFFER 0x88
 
 void send_system_status_event(uint8_t event_type, uint8_t error_type, uint8_t device_index);
 

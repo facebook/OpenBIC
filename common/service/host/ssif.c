@@ -43,7 +43,10 @@ LOG_MODULE_REGISTER(ssif);
 #define SSIF_TARGET_MSGQ_SIZE 0x0A
 
 #define SSIF_STATUS_CHECK_PER_MS 100
+
+#ifndef SSIF_TIMEOUT_MS
 #define SSIF_TIMEOUT_MS 5000 // i2c bus drop off maximum time
+#endif
 
 ssif_dev *ssif;
 static uint8_t ssif_channel_cnt = 0;
@@ -408,6 +411,12 @@ static bool ssif_data_handle(ssif_dev *ssif_inst, ssif_action_t action, uint8_t 
 					ipmi_req.buffer.data_len = 2;
 					ipmi_req.buffer.data[0] = 0x00;
 					ipmi_req.buffer.data[1] = 0x00;
+				} else if (((ssif_inst->current_ipmi_msg.buffer.netfn ==
+					     NETFN_OEM_REQ) &&
+					    (ssif_inst->current_ipmi_msg.buffer.cmd ==
+					     CMD_OEM_POST_END))) {
+					pal_bios_post_complete();
+					ipmi_req.buffer.data_len = 0;
 				}
 
 				ipmi_req.buffer.netfn =
@@ -441,11 +450,6 @@ static bool ssif_data_handle(ssif_dev *ssif_inst, ssif_action_t action, uint8_t 
 				if (ret == -1) {
 					LOG_ERR("Record bios fw version fail");
 				}
-			}
-
-			if ((ssif_inst->current_ipmi_msg.buffer.netfn == NETFN_OEM_REQ) &&
-			    (ssif_inst->current_ipmi_msg.buffer.cmd == CMD_OEM_POST_END)) {
-				pal_bios_post_complete();
 			}
 
 			do {

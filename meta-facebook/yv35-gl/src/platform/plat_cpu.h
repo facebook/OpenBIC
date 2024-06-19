@@ -17,6 +17,8 @@
 #ifndef PLAT_CPU_H
 #define PLAT_CPU_H
 
+#include <stdint.h>
+
 #define CPU_TIME_UNIT 100000000
 
 #define MONITOR_CPU_STACK_SIZE 600
@@ -35,5 +37,12 @@ void monitor_cpu_handler();
 void start_monitor_cpu_thread();
 void monitor_smiout_handler();
 void start_monitor_smi_thread();
+void set_dam_pin();
+int pal_get_set_dam_status(uint8_t options, uint8_t *status);
+
+enum GET_SET_STATUS_OPTION {
+	GET_STATUS,
+	SET_STATUS,
+};
 
 #endif

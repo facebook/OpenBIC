@@ -19,6 +19,14 @@
 
 #include <stdint.h>
 #include <pmbus.h>
+#include "plat_modbus.h"
+
+enum PLAT_DEF_SENSOR_E {
+	PLAT_DEF_SENSOR_RPU_PWR,
+	PLAT_DEF_SENSOR_HEX_PWR,
+	PLAT_DEF_SENSOR_TOTAL_PWR,
+	PLAT_DEF_SENSOR_HEX_CURR,
+};
 
 /* define sensors address(7 bit) */
 #define BB_TMP75_ADDR (0x9E >> 1)
@@ -224,7 +232,15 @@
 #define SENSOR_NUM_PDB_48V_SENSE_DIFF_POS_VOLT_V 0xA7
 #define SENSOR_NUM_PDB_48V_SENSE_DIFF_NEG_VOLT_V 0xA8
 
+// plat def sensor
+#define SENSOR_NUM_RPU_PWR_W 0xC0
+#define SENSOR_NUM_HEX_PWR_W 0xC1
+#define SENSOR_NUM_AALC_TOTAL_PWR_W 0xC2
+#define SENSOR_NUM_HEX_CURR_A 0xC3
+
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
+uint8_t get_sensor_reading_to_real_val(uint8_t sensor_num, float *val);
+uint16_t get_sensor_reading_to_modbus_val(uint8_t sensor_num, int8_t exp, int8_t scale);
 
 #endif
