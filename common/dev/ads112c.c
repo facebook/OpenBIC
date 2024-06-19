@@ -63,7 +63,7 @@ uint8_t ads112c_read(sensor_cfg *cfg, int *reading)
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	uint8_t retry = 5;
+	uint8_t retry = 3;
 	uint8_t i2c_retry = 3;
 	I2C_MSG msg;
 
@@ -83,16 +83,13 @@ uint8_t ads112c_read(sensor_cfg *cfg, int *reading)
 			CFG_REG_OFFSET2; //RREG command: 0010 rrxx (rr register address = 10 (0x02), DRDY -> Conversion result ready flag.)
 		msg.rx_len = 1;
 		int ret = i2c_master_read(&msg, i2c_retry);
-		if (ret != 0) {
-			LOG_ERR("Read register on ads112c failed");
-			return SENSOR_UNSPECIFIED_ERROR;
-		}
 
-		if (msg.data[0] &
-		    ADS112C_REG2_DRDY_READY) { //the 7th (DRDY) bit in Configuration Register 2
+		if (ret == 0 &&
+		    (msg.data[0] &
+		     ADS112C_REG2_DRDY_READY)) { //the 7th (DRDY) bit in Configuration Register 2
 			break;
 		} else {
-			k_msleep(10);
+			k_msleep(30);
 			memset(&msg, 0, sizeof(msg));
 			if (i == (retry - 1)) {
 				LOG_ERR("Read register on ads112c failed");

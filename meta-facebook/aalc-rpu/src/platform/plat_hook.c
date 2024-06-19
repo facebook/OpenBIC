@@ -566,8 +566,8 @@ ads112c_init_arg ads112c_init_args[] = {
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
 		.vol_refer_val = 5,
 		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,
-		.reg2_idac = ADS112C_REG2_IDAC_1000UA,
-		.reg3_idac1_cfg = ADS112C_REG3_IDAC1_AIN3,						
+		.reg2_idac = ADS112C_REG2_IDAC_OFF,
+		.reg3_idac1_cfg = ADS112C_REG3_IDAC1_DISABLED,						
 	},    
 	[3] = { .reg0_input = ADS112C_REG0_INPUT_AIN2AVSS,
 		.reg0_gain = ADS112C_REG0_GAIN1,
@@ -599,7 +599,7 @@ ads112c_init_arg ads112c_init_args[] = {
 		.reg2_idac = ADS112C_REG2_IDAC_OFF,
 		.reg3_idac1_cfg = ADS112C_REG3_IDAC1_DISABLED,
 	},
-	[6] = { .reg0_input = ADS112C_REG0_INPUT_AIN0AIN1,
+	[6] = { .reg0_input = ADS112C_REG0_INPUT_AIN1AIN0,
 		.reg0_gain = ADS112C_REG0_GAIN1,
 		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
@@ -608,22 +608,12 @@ ads112c_init_arg ads112c_init_args[] = {
 		.vol_refer_val = 2.048,
 		//.reg1_temp_mode = ADS112C_REG1_TEMPMODE_ENABLE,
 		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,
-		.reg2_idac = ADS112C_REG2_IDAC_OFF,
-		.reg3_idac1_cfg = ADS112C_REG3_IDAC1_DISABLED,
+		.reg2_idac = ADS112C_REG2_IDAC_1000UA,
+		.reg3_idac1_cfg = ADS112C_REG3_IDAC1_AIN3,
 	},
-	[7] = { .reg0_input = ADS112C_REG0_INPUT_AIN0AVSS,
+	[7] = { .reg0_input = ADS112C_REG0_INPUT_AIN2AIN3,
 		.reg0_gain = ADS112C_REG0_GAIN1,
-		.reg0_pga = ADS112C_REG0_PGA_DISABLE,
-		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
-		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
-		.vol_refer_val = 3.3,
-		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,
-		.reg2_idac = ADS112C_REG2_IDAC_OFF,
-		.reg3_idac1_cfg = ADS112C_REG3_IDAC1_DISABLED,				
-	},
-	[8] = { .reg0_input = ADS112C_REG0_INPUT_AIN1AVSS,
-		.reg0_gain = ADS112C_REG0_GAIN1,
-		.reg0_pga = ADS112C_REG0_PGA_DISABLE,
+		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
 		.vol_refer_val = 3.3,
@@ -893,7 +883,7 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 	CHECK_NULL_ARG_WITH_RETURN(reading, false);
 
 	sensor_val *oval = (sensor_val *)reading;
-	double rawValue = ((float)oval->integer + (oval->fraction / 1000.0));
+	double rawValue = ((uint16_t)oval->integer + (oval->fraction / 1000.0));
 
 	double val;
 	double v_val, flow_Pmax = 400, flow_Pmin = 10, press_Pmax = 50, press_Pmin = 0;
