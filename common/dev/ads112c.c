@@ -120,8 +120,10 @@ uint8_t ads112c_read(sensor_cfg *cfg, int *reading)
 	case ADS112C_READ_OUTPUT_VOLT:
 		val = (*reading) * (init_arg->vol_refer_val) /
 		      (32768 * gainValue); //LSB = (2 · VREF / Gain) / (2^16)
+		break;
 	case ADS112C_READ_OUTPUT_TEMP:
 		val = (*reading) * 0.03125; //One 14-bit LSB equals 0.03125°C.
+		break;
 	case ADS112C_READ_OUTPUT_RAW:
 	default:
 		val = (*reading);
