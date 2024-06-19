@@ -23,8 +23,9 @@
 
 LOG_MODULE_REGISTER(dev_ads112c);
 
-bool ads112c_config_reg_set(I2C_MSG msg, uint8_t i2c_retry, sensor_cfg *cfg)
+bool ads112c_config_reg_set(uint8_t i2c_retry, sensor_cfg *cfg)
 {
+	I2C_MSG msg;
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 8;
@@ -68,7 +69,7 @@ uint8_t ads112c_read(sensor_cfg *cfg, int *reading)
 	I2C_MSG msg;
 
 	if (cfg->arg0 == ENABLE_RESET_CFG_REG) {
-		if (!ads112c_config_reg_set(msg, i2c_retry, cfg))
+		if (!ads112c_config_reg_set(i2c_retry, cfg))
 			return SENSOR_UNSPECIFIED_ERROR;
 	}
 
@@ -159,7 +160,7 @@ uint8_t ads112c_init(sensor_cfg *cfg)
 
 	memset(&msg, 0, sizeof(msg));
 
-	if (!ads112c_config_reg_set(msg, i2c_retry, cfg))
+	if (!ads112c_config_reg_set(i2c_retry, cfg))
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 
 	msg.bus = cfg->port;
