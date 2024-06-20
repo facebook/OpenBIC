@@ -30,6 +30,18 @@
 #include "ast_tach.h"
 #include "xdp710.h"
 
+typedef struct _ads112c_post_arg {
+	uint8_t plat_sensor_type;
+} ads112c_post_arg;
+
+enum PLATFORM_ADS112C_SENSOR_TYPE {
+	PLATFORM_ADS112C_FLOW = 0x00,
+	PLATFORM_ADS112C_PRESS = 0x01,
+	PLATFORM_ADS112C_TEMP = 0x02,
+	PLATFORM_ADS112C_OTHER = 0x03,
+	PLATFORM_ADS112C_LEAKAGE = 0x04,
+};
+
 /**************************************************************************************************
  * INIT ARGS
 **************************************************************************************************/
@@ -41,6 +53,11 @@ extern ina238_init_arg ina238_init_args[];
 extern nct214_init_arg nct214_init_args[];
 extern xdp710_init_arg xdp710_init_args[];
 extern hdc1080_init_arg hdc1080_init_args[];
+
+/**************************************************************************************************
+ * POST ARGS
+**************************************************************************************************/
+extern ads112c_post_arg ads112c_post_args[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
@@ -56,13 +73,5 @@ bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading);
 bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading);
 bool pre_PCA9546A_read(sensor_cfg *cfg, void *args);
 bool post_PCA9546A_read(sensor_cfg *cfg, void *args, int *reading);
-
-enum ADS112C_SENSOR_OFFSET {
-	ADS112C_FLOW_OFFSET = 0x00,
-	ADS112C_PRESS_OFFSET = 0x01,
-	ADS112C_TEMP_OFFSET = 0x02,
-	ADS112C_OTHER_OFFSET = 0x03,
-	ADS112C_LEAKAGE_OFFSET = 0x04,
-};
 
 #endif
