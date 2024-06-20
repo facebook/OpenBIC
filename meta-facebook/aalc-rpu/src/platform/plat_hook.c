@@ -545,56 +545,90 @@ ads112c_init_arg ads112c_init_args[] = {
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
 		.vol_refer_val = 3.3,
-		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,		
+		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,
+		.reg2_idac = ADS112C_REG2_IDAC_OFF,
+		.reg3_idac1_cfg = ADS112C_REG3_IDAC1_DISABLED,	
 	},    
 	[1] = { .reg0_input = ADS112C_REG0_INPUT_AIN0AVSS,
 		.reg0_gain = ADS112C_REG0_GAIN1,
-		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
+		.reg0_pga = ADS112C_REG0_PGA_DISABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
 		.vol_refer_val = 5,
-		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,				
+		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,
+		.reg2_idac = ADS112C_REG2_IDAC_OFF,
+		.reg3_idac1_cfg = ADS112C_REG3_IDAC1_DISABLED,						
 	},
 	[2] = { .reg0_input = ADS112C_REG0_INPUT_AIN1AVSS,
 		.reg0_gain = ADS112C_REG0_GAIN1,
-		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
+		.reg0_pga = ADS112C_REG0_PGA_DISABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
 		.vol_refer_val = 5,
-		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,				
+		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,
+		.reg2_idac = ADS112C_REG2_IDAC_OFF,
+		.reg3_idac1_cfg = ADS112C_REG3_IDAC1_DISABLED,						
 	},    
 	[3] = { .reg0_input = ADS112C_REG0_INPUT_AIN2AVSS,
 		.reg0_gain = ADS112C_REG0_GAIN1,
-		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
+		.reg0_pga = ADS112C_REG0_PGA_DISABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
 		.vol_refer_val = 5,
-		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,				
+		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,
+		.reg2_idac = ADS112C_REG2_IDAC_OFF,
+		.reg3_idac1_cfg = ADS112C_REG3_IDAC1_DISABLED,						
 	},
 	[4] = { .reg0_input = ADS112C_REG0_INPUT_AIN3AVSS,
 		.reg0_gain = ADS112C_REG0_GAIN1,
-		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
+		.reg0_pga = ADS112C_REG0_PGA_DISABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
 		.vol_refer_val = 5,
-		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,				
+		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,
+		.reg2_idac = ADS112C_REG2_IDAC_OFF,
+		.reg3_idac1_cfg = ADS112C_REG3_IDAC1_DISABLED,						
 	},
 	[5] = { .reg0_input = ADS112C_REG0_INPUT_AIN0AVSS,
 		.reg0_gain = ADS112C_REG0_GAIN1,
-		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
+		.reg0_pga = ADS112C_REG0_PGA_DISABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_INTERNALV,
 		.vol_refer_val = 2.048,
 		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,
+		.reg2_idac = ADS112C_REG2_IDAC_OFF,
+		.reg3_idac1_cfg = ADS112C_REG3_IDAC1_DISABLED,
 	},
-	[6] = { .reg0_input = ADS112C_REG0_INPUT_AIN0AIN1,
+	[6] = { .reg0_input = ADS112C_REG0_INPUT_AIN1AIN0,
 		.reg0_gain = ADS112C_REG0_GAIN1,
 		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
-		.reg1_vol_refer = ADS112C_REG1_INTERNALV,
+		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
+		//.reg1_vol_refer = ADS112C_REG1_INTERNALV,
 		.vol_refer_val = 2.048,
-		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_ENABLE,
-	},		
+		//.reg1_temp_mode = ADS112C_REG1_TEMPMODE_ENABLE,
+		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,
+		.reg2_idac = ADS112C_REG2_IDAC_1000UA,
+		.reg3_idac1_cfg = ADS112C_REG3_IDAC1_AIN3,
+	},
+	[7] = { .reg0_input = ADS112C_REG0_INPUT_AIN2AIN3,
+		.reg0_gain = ADS112C_REG0_GAIN1,
+		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
+		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
+		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
+		.vol_refer_val = 3.3,
+		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,
+		.reg2_idac = ADS112C_REG2_IDAC_OFF,
+		.reg3_idac1_cfg = ADS112C_REG3_IDAC1_DISABLED,				
+	},			
+};
+
+ads112c_post_arg ads112c_post_args[] = {
+	[0] = { .plat_sensor_type = PLATFORM_ADS112C_FLOW,}, 
+	[1] = { .plat_sensor_type = PLATFORM_ADS112C_PRESS,}, 
+	[2] = { .plat_sensor_type = PLATFORM_ADS112C_TEMP,}, 
+	[3] = { .plat_sensor_type = PLATFORM_ADS112C_OTHER,}, 
+	[4] = { .plat_sensor_type = PLATFORM_ADS112C_LEAKAGE,}, 
 };
 
 adc_asd_init_arg adc_asd_init_args[] = {
@@ -849,26 +883,27 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 	CHECK_NULL_ARG_WITH_RETURN(reading, false);
 
 	sensor_val *oval = (sensor_val *)reading;
-	double rawValue = ((float)oval->integer + (oval->fraction / 1000.0));
+	double rawValue = ((uint16_t)oval->integer + (oval->fraction / 1000.0));
 
 	double val;
 	double v_val, flow_Pmax = 400, flow_Pmin = 10, press_Pmax = 50, press_Pmin = 0;
 
-	switch (cfg->offset) {
-	case ADS112C_FLOW_OFFSET: //Flow_Rate_LPM
+	ads112c_post_arg *post_args = (ads112c_post_arg *)args;
+	switch (post_args->plat_sensor_type) {
+	case PLATFORM_ADS112C_FLOW: //Flow_Rate_LPM
 		v_val = 5 - ((32767 - rawValue) * 0.000153);
 		val = (((v_val / 5) - 0.1) / (0.8 / (flow_Pmax - flow_Pmin))) + 10;
 		val = (val - 7.56494) * 1.076921;
 		val = (2.5412 * val) - 25.285;
 		break;
 
-	case ADS112C_PRESS_OFFSET: //Filter_P/Outlet_P/Inlet_P
+	case PLATFORM_ADS112C_PRESS: //Filter_P/Outlet_P/Inlet_P
 		v_val = 5 - ((32767 - rawValue) * 0.000153);
 		val = (((v_val / 5) - 0.1) / (0.8 / (press_Pmax - press_Pmin))) + 10;
 		val = ((0.9828 * val) - 9.9724) * 6.894759;
 		break;
 
-	case ADS112C_TEMP_OFFSET: //RDHx_Hot_Liq_T/CDU_Inlet_Liq_T
+	case PLATFORM_ADS112C_TEMP: //RDHx_Hot_Liq_T/CDU_Inlet_Liq_T
 		val = (rawValue - 15888) * 0.015873;
 		val = (1.1685 * val) - 4.5991;
 		break;
@@ -881,6 +916,7 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = (int)val & 0xFFFF;
 	sval->fraction = (val - sval->integer) * 1000;
+
 	//according to pre_sensor_read_fn(pre_PCA9546A_read), determinies if apply post_PCA9546A_read
 	if (cfg->pre_sensor_read_hook != NULL) {
 		post_PCA9546A_read(cfg, args, reading);
