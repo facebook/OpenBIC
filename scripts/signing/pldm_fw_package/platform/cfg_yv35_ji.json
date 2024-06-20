@@ -42,6 +42,15 @@
 		},
 		{
 			"CompID": [
+				3
+			],
+			"Vendor": "inf",
+			"Device": "tda38741",
+			"CheckSum": "y",
+			"pkg_suffix": ".pldm"
+		},
+		{
+			"CompID": [
 				4
 			],
 			"Vendor": "mps",
@@ -73,6 +82,16 @@
 			],
 			"Vendor": "ti",
 			"Device": "ds160pt801",
+			"CheckSum": "n",
+			"pkg_suffix": ".pldm"
+		},
+		{
+			"CompID": [
+				7,
+				8
+			],
+			"Vendor": "mps",
+			"Device": "mp2988",
 			"CheckSum": "n",
 			"pkg_suffix": ".pldm"
 		}

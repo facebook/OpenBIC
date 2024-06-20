@@ -118,6 +118,7 @@ static bool ds160pt801_switch_addr_mode(I2C_MSG *i2c_msg, uint8_t mode)
 	case FROM_16_TO_8:
 		i2c_msg->data[0] = ADDR_MODE_16_TO_8 & 0xFF;
 		i2c_msg->data[1] = (ADDR_MODE_16_TO_8 >> 8) & 0xFF;
+		i2c_msg->data[2] = 0x00;
 		i2c_msg->tx_len = 3;
 		break;
 

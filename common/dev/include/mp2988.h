@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef MPQ8746_H
-#define MPQ8746_H
+#ifndef MP2988_H
+#define MP2988_H
 
 #include "stdint.h"
 
-bool mpq8746_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_size);
-bool mpq8746_get_fw_version(uint8_t bus, uint8_t addr, uint16_t *rev);
+bool mp2988_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_size);
+bool mp2988_get_checksum(uint8_t bus, uint8_t addr, uint16_t *crc);
 
 #endif
