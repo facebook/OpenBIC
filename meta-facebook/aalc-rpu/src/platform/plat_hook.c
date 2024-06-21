@@ -733,11 +733,6 @@ xdp710_init_arg xdp710_init_args[] = {
 	},
 };
 
-ast_tach_init_arg ast_tach_init_args[] = {
-	[0] = { .is_init = false,},
-	[1] = { .is_init = false,},
-};
-
 hdc1080_init_arg hdc1080_init_args[] = {
 	// fan BD 1	
 	[0] = { .is_init = false,},
