@@ -28,12 +28,12 @@
 
 LOG_MODULE_REGISTER(plat_hook);
 
-struct k_mutex i2c_1_PCA9546a_mutex;
-struct k_mutex i2c_2_PCA9546a_mutex;
-struct k_mutex i2c_6_pca9546a_mutex;
-struct k_mutex i2c_7_PCA9546a_mutex;
-struct k_mutex i2c_8_PCA9546a_mutex;
-struct k_mutex i2c_9_PCA9546a_mutex;
+K_MUTEX_DEFINE(i2c_1_PCA9546a_mutex);
+K_MUTEX_DEFINE(i2c_2_PCA9546a_mutex);
+K_MUTEX_DEFINE(i2c_6_pca9546a_mutex);
+K_MUTEX_DEFINE(i2c_7_PCA9546a_mutex);
+K_MUTEX_DEFINE(i2c_8_PCA9546a_mutex);
+K_MUTEX_DEFINE(i2c_9_PCA9546a_mutex);
 
 #define BUS_1_MUX_ADDR 0xE0 >> 1
 #define BUS_2_MUX_ADDR 0xE2 >> 1
@@ -554,6 +554,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.pin_type[NCT7363_3_PORT] = NCT7363_PIN_TPYE_PWM, // PUMP_ADD_WATER_PWM
 		.pin_type[NCT7363_4_PORT] = NCT7363_PIN_TPYE_FANIN, // PUMP_ADD_WATER fanin
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.gpio_10 = 1,
 		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.pin_type[NCT7363_12_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.pin_type[NCT7363_13_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
@@ -900,9 +901,17 @@ bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 
-	if (reading == NULL)
+	if (reading == NULL){
+		// if pre_sensor_read_hook is not null, unlock PCA9546A mutex
+		if (cfg->pre_sensor_read_hook != NULL) {
+			if (!post_PCA9546A_read(cfg, args, reading)) {
+				LOG_ERR("adm1272 in post read unlock PCA9546A mutex fail");
+				return false;
+			}
+		}
 		return check_reading_pointer_null_is_allowed(cfg);
-
+	}
+		
 	ARG_UNUSED(args);
 
 	sensor_val *sval = (sensor_val *)reading;

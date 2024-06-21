@@ -24,6 +24,7 @@
 #include "hal_gpio.h"
 #include "plat_threshold.h"
 #include "plat_log.h"
+#include "plat_gpio.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -46,6 +47,7 @@ void pal_pre_init()
 {
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
 	init_aalc_config();
+	gpio_set(FM_BIC_READY_R_N, 0); //MM4 for bus3 power up
 }
 
 void pal_post_init()
