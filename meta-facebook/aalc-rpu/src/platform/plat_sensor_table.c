@@ -752,7 +752,7 @@ sensor_cfg plat_def_sensor_config[] = {
 // total config size = plat_sensor_config + sensor(main/second sensor) config table
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) +
 			       ARRAY_SIZE(hsc_sensor_config_table) +
-			       ARRAY_SIZE(tmp461_config_table) + ARRAY_SIZE(plat_def_sensor_config);
+			       ARRAY_SIZE(tmp461_config_table); //+ ARRAY_SIZE(plat_def_sensor_config);
 
 static uint8_t get_temp_sensor_mfr_id(uint8_t bus, uint8_t addr, uint8_t mfr_id_offset)
 {
@@ -1020,7 +1020,7 @@ void load_sensor_config(void)
 
 	load_hsc_sensor_config();
 	load_sb_temp_sensor_config();
-	load_plat_def_sensor_config();
+	//load_plat_def_sensor_config();
 }
 
 uint16_t get_sensor_reading_to_modbus_val(uint8_t sensor_num, int8_t exp, int8_t scale)
