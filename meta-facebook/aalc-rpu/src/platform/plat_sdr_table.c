@@ -10334,10 +10334,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"PDB_48V_SENSE_DIFF_NEG_VOLT_V",
 	},
-	{}, //SENSOR_NUM_RPU_PWR_W
-	{}, //SENSOR_NUM_HEX_PWR_W
-	{}, //SENSOR_NUM_AALC_TOTAL_PWR_W
-	{}, //SENSOR_NUM_HEX_CURR_A
+	//{}, //SENSOR_NUM_RPU_PWR_W
+	//{}, //SENSOR_NUM_HEX_PWR_W
+	//{}, //SENSOR_NUM_AALC_TOTAL_PWR_W
+	//{}, //SENSOR_NUM_HEX_CURR_A
 };
 
 const int SDR_TABLE_SIZE = ARRAY_SIZE(plat_sdr_table);
