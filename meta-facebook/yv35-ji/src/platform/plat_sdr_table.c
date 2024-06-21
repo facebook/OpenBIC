@@ -940,7 +940,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x7E, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
-		0x4B, // LCT
+		0x48, // LCT
 		0x00, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
@@ -1551,7 +1551,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x7E, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
-		0x4B, // LCT
+		0x48, // LCT
 		0x00, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
@@ -1673,7 +1673,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x0F, // UCT
+		0x17, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
@@ -1784,12 +1784,12 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x01, // [7:0] M bits
+		0x7D, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
 		0x00, // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
-		0x00, // Rexp, Bexp
+		0xF0, // Rexp, Bexp
 		0x00, // analog characteristic
 		0x00, // nominal reading
 		0x00, // normal maximum
@@ -1797,7 +1797,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0xC8, // UCT
+		0x17, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
