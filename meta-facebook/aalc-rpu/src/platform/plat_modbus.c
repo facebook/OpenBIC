@@ -74,7 +74,16 @@ uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd)
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
 	float val = 0;
-	if (get_sensor_reading_to_real_val(cmd->arg0, &val) == SENSOR_READ_4BYTE_ACUR_SUCCESS) {
+	uint8_t status = get_sensor_reading_to_real_val(cmd->arg0, &val);
+
+	/* bic update workaround */
+	if (cmd->addr == MODBUS_BPB_RPU_COOLANT_FLOW_RATE_LPM_ADDR &&
+	    status == SENSOR_UNSPECIFIED_ERROR) {
+		cmd->data[0] = 0xFFFF; // error
+		return MODBUS_EXC_NONE;
+	}
+
+	if (status == SENSOR_READ_4BYTE_ACUR_SUCCESS) {
 		float r = pow_of_10(cmd->arg2);
 		uint16_t byte_val = val / cmd->arg1 / r; // scale
 		memcpy(cmd->data, &byte_val, sizeof(uint16_t) * cmd->cmd_size);
@@ -275,6 +284,28 @@ uint8_t modbus_error_log_event(modbus_command_mapping *cmd)
 	log_transfer_to_modbus_data(cmd->data, cmd->cmd_size, order);
 
 	regs_reverse(cmd->data_len, cmd->data);
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_get_pwm(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint8_t grup = cmd->arg0;
+	cmd->data[0] = (uint16_t)get_pwm_cache(grup);
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_set_pwm(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint8_t grup = cmd->arg0;
+	uint8_t duty = (uint8_t)cmd->data[0];
+
+	set_pwm_grup(grup, duty);
 
 	return MODBUS_EXC_NONE;
 }
@@ -657,8 +688,10 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_AUTO_TUNE_COOLANT_OUTLET_TEMPERATURE_TARGET_SET_ADDR, modbus_to_do, NULL, 0, 0, 0,
 	  1 },
 	{ MODBUS_PUMP_REDUNDANT_SWITCHED_INTERVAL_ADDR, modbus_to_do, NULL, 0, 0, 0, 1 },
-	{ MODBUS_MANUAL_CONTROL_PUMP_DUTY_SET_ADDR, modbus_to_do, NULL, 0, 0, 0, 1 },
-	{ MODBUS_MANUAL_CONTROL_FAN_DUTY_SET_ADDR, modbus_to_do, NULL, 0, 0, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_PUMP_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, PWM_GRUP_E_PUMP,
+	  0, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_FAN_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm,
+	  PWM_GRUP_E_HEX_FAN, 0, 0, 1 },
 	{ MODBUS_PUMP_SETTING_ADDR, modbus_pump_setting, NULL, 0, 0, 0, 1 },
 	{ MODBUS_LEAKAGE_SETTING_ON_ADDR, modbus_to_do, NULL, 0, 0, 0, 1 },
 	// Leakage Black Box
@@ -842,7 +875,7 @@ static int coil_wr(uint16_t addr, bool state)
 		return MODBUS_EXC_NONE;
 	} else if (addr == MODBUS_SYNAX_CHECK_ADDR) { // FW update: Synax Check
 		if (state) {
-			if (get_sensor_poll_enable_flag())
+			if (!get_sensor_poll_enable_flag())
 				return MODBUS_EXC_NONE;
 			else
 				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
