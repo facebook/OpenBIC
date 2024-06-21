@@ -54,6 +54,7 @@ enum _i2c_bus_num {
 
 #define CPUVDD_I2C_BUS I2C_BUS3
 #define CPUVDD_I2C_ADDR 0x4A //8bit
+#define RT8848C_I2C_ADDR 0x94 //8bit
 
 #define SOCVDD_I2C_BUS I2C_BUS3
 #define SOCVDD_I2C_ADDR 0x4C //8bit
