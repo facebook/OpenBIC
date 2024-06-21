@@ -1,0 +1,212 @@
+From 45aef0cbd9c296c3226e0c9564e35c410c205b1b Mon Sep 17 00:00:00 2001
+From: Dylan Hung <dylan_hung@aspeedtech.com>
+Date: Wed, 12 Jun 2024 17:33:22 +0800
+Subject: [PATCH 10/11] i3c: Export set_pid_extra_info API
+
+Refactor set_pid_extra_info and export it to allow applications to
+configure the PID[11:0]. Add "wait-pid-extra-info" to the DTS node
+to inform the driver to initialize the hardware but not enable target
+mode at boot time. The application will later configure the PID using
+the set_pid_extra_info API, which will also enable the hardware.
+
+Besides, remove the gpio-extra-info related code as the PID extra
+information comes from the application layer now.
+
+Change-Id: I8ed81a932f0563bdba23f37609f3ecae58e3b203
+Signed-off-by: Dylan Hung <dylan_hung@aspeedtech.com>
+---
+ drivers/i3c/i3c_aspeed.c         | 60 +++++++-------------------------
+ dts/bindings/i3c/aspeed,i3c.yaml | 14 +++++---
+ include/drivers/i3c/i3c.h        |  6 ++--
+ 3 files changed, 24 insertions(+), 56 deletions(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index 541acd55f9..cc80ea90e9 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -485,7 +485,7 @@ struct i3c_aspeed_config {
+ 	uint32_t core_period;
+ 	uint32_t i3c_scl_hz;
+ 	uint32_t i2c_scl_hz;
+-	uint16_t pid_extra_info;
++	int wait_pid_extra_info;
+ 	int secondary;
+ 	int assigned_addr;
+ 	int dcr;
+@@ -1305,7 +1305,6 @@ static void i3c_aspeed_init_pid(struct i3c_aspeed_obj *obj)
+ 	i3c_register->slave_pid_hi.value = slave_pid_hi.value;
+ 
+ 	slave_pid_lo.value = 0;
+-	slave_pid_lo.fields.extra_info = config->pid_extra_info;
+ 	slave_pid_lo.fields.part_id = rev_id;
+ 	slave_pid_lo.fields.inst_id = config->inst_id;
+ 	i3c_register->slave_pid_lo.value = slave_pid_lo.value;
+@@ -1881,25 +1880,10 @@ int i3c_aspeed_slave_send_sir(const struct device *dev, struct i3c_ibi_payload *
+ 	return 0;
+ }
+ 
+-int i3c_aspeed_slave_set_static_addr(const struct device *dev, uint8_t static_addr)
+-{
+-	struct i3c_aspeed_config *config = DEV_CFG(dev);
+-	struct i3c_register_s *i3c_register = config->base;
+-	union i3c_device_addr_s device_addr;
+-
+-	config->assigned_addr = static_addr;
+-
+-	device_addr.value = i3c_register->device_addr.value;
+-	device_addr.fields.static_addr = static_addr;
+-	device_addr.fields.static_addr_valid = static_addr ? 1 : 0;
+-	i3c_register->device_addr.value = device_addr.value;
+-
+-	return 0;
+-}
+-
+ int i3c_aspeed_set_pid_extra_info(const struct device *dev, uint16_t extra_info)
+ {
+ 	struct i3c_aspeed_config *config = DEV_CFG(dev);
++	struct i3c_aspeed_obj *obj = DEV_DATA(dev);
+ 	struct i3c_register_s *i3c_register = config->base;
+ 	union i3c_slave_pid_lo_s slave_pid_lo;
+ 
+@@ -1910,7 +1894,7 @@ int i3c_aspeed_set_pid_extra_info(const struct device *dev, uint16_t extra_info)
+ 	slave_pid_lo.fields.extra_info = extra_info;
+ 	i3c_register->slave_pid_lo.value = slave_pid_lo.value;
+ 
+-	return 0;
++	return i3c_aspeed_enable(obj);
+ }
+ 
+ int i3c_aspeed_slave_get_dynamic_addr(const struct device *dev, uint8_t *dynamic_addr)
+@@ -2031,34 +2015,6 @@ static void sir_allowed_worker(struct k_work *work)
+ 	obj->sir_allowed_by_sw = 1;
+ }
+ 
+-static uint16_t parse_extra_gpio(const struct extra_gpio *extra_gpios, int size)
+-{
+-	const struct device *gpio_dev;
+-	int i, ret;
+-	uint16_t result = 0;
+-
+-	for (i = 0; i < size; i++) {
+-		gpio_dev = device_get_binding(extra_gpios[i].port);
+-		ret = gpio_pin_configure(gpio_dev, extra_gpios[i].pin, extra_gpios[i].flags | GPIO_INPUT);
+-		if (ret < 0) {
+-			LOG_ERR("pin %s:%d:%d configure failed %d", extra_gpios[i].port,
+-				extra_gpios[i].pin, extra_gpios[i].flags | GPIO_INPUT, ret);
+-			result = 0;
+-			break;
+-		}
+-		ret = gpio_pin_get(gpio_dev, extra_gpios[i].pin);
+-		if (ret < 0) {
+-			LOG_ERR("pin %s:%d get value failed %d", extra_gpios[i].port,
+-				extra_gpios[i].pin, ret);
+-			result = 0;
+-			break;
+-		}
+-		result |= ret << i;
+-	}
+-	LOG_DBG("extra val = %x", result);
+-	return result;
+-}
+-
+ int i3c_aspeed_master_send_entdaa(struct i3c_dev_desc *i3cdev)
+ {
+ 	struct i3c_aspeed_obj *obj = DEV_DATA(i3cdev->bus);
+@@ -2200,6 +2156,14 @@ static int i3c_aspeed_init(const struct device *dev)
+ 	/* Reject SIR by default */
+ 	i3c_register->sir_reject = GENMASK(31, 0);
+ 
++	if (config->secondary && config->wait_pid_extra_info) {
++		/*
++		 * i3c target mode initialized but not enabled yet, waiting for the PID extra-info
++		 * provided by the application.
++		 */
++		return 0;
++	}
++
+ 	ret = i3c_aspeed_enable(obj);
+ 	if (ret)
+ 		return ret;
+@@ -2223,7 +2187,7 @@ static int i3c_aspeed_init(const struct device *dev)
+ 		.ibi_append_pec = DT_INST_PROP_OR(n, ibi_append_pec, 0),                           \
+ 		.priv_xfer_pec = DT_INST_PROP_OR(n, priv_xfer_pec, 0),                             \
+ 		.sda_tx_hold_ns = DT_INST_PROP_OR(n, sda_tx_hold_ns, 0),                           \
+-		.pid_extra_info = DT_INST_PROP_OR(n, pid_extra_info, 0),                           \
++		.wait_pid_extra_info = DT_INST_PROP_OR(n, wait_pid_extra_info, 0),                 \
+ 		.i3c_pp_scl_hi_period_ns = DT_INST_PROP_OR(n, i3c_pp_scl_hi_period_ns, 0),         \
+ 		.i3c_pp_scl_lo_period_ns = DT_INST_PROP_OR(n, i3c_pp_scl_lo_period_ns, 0),         \
+ 		.i3c_od_scl_hi_period_ns = DT_INST_PROP_OR(n, i3c_od_scl_hi_period_ns, 0),         \
+diff --git a/dts/bindings/i3c/aspeed,i3c.yaml b/dts/bindings/i3c/aspeed,i3c.yaml
+index 83cc0cddf3..dcb15c4ac0 100644
+--- a/dts/bindings/i3c/aspeed,i3c.yaml
++++ b/dts/bindings/i3c/aspeed,i3c.yaml
+@@ -16,13 +16,14 @@ properties:
+   assigned-address:
+     required: false
+     type: int
+-    description: Dynamic address when playing the role as the main master. Static address when playing the role as the slave.
++    description: |
++      Dynamic address when playing the role as the main master. Static address when playing the role as the slave.
+ 
+   dcr:
+     required: false
+     type: int
+     description: Device Characteristic Register (DCR).
+-                 See https://www.mipi.org/mipi_i3c_device_characteristics_register for detail.
++      See https://www.mipi.org/mipi_i3c_device_characteristics_register for detail.
+ 
+   instance-id:
+     required: true
+@@ -42,10 +43,13 @@ properties:
+       The PEC will auto append to the tail of the data when doing private transfer and verify
+       the PEC when receiving the data from master.
+ 
+-  pid-extra-info:
++  wait-pid-extra-info:
+     required: false
+-    type: int
+-    description: Extra information of the PID Bits[11:0]. Use to identify the different BIC.
++    type: boolean
++    description: |
++      In target mode, the driver will hold the I3c controller until the pid-extra-info is set by
++      the user application through the API i3c_set_pid_extra_info. This ensures that the PID is set
++      before ENTDAA.
+ 
+   i3c-pp-scl-hi-period-ns:
+     required: false
+diff --git a/include/drivers/i3c/i3c.h b/include/drivers/i3c/i3c.h
+index 0dc8e8df1a..74a55c7400 100644
+--- a/include/drivers/i3c/i3c.h
++++ b/include/drivers/i3c/i3c.h
+@@ -204,7 +204,6 @@ int i3c_aspeed_slave_send_sir(const struct device *dev, struct i3c_ibi_payload *
+ 
+ /**
+  * @brief slave device prepares the data for master private read transfer
+- *
+  * @param dev the I3C controller in slave mode
+  * @param data pointer to the data structure to be read
+  * @param ibi_notify pointer to the IBI notification structure (optional)
+@@ -222,9 +221,10 @@ int i3c_aspeed_slave_put_read_data(const struct device *dev, struct i3c_slave_pa
+ 
+ /**
+  * @brief set the pid extra info of the i3c controller
++ *
+  * @param dev the I3C controller
+  * @param extra_info the extra info of the pid bits[11:0]
+- * @return int 0 = success
++ * @return
+  */
+ int i3c_aspeed_set_pid_extra_info(const struct device *dev, uint16_t extra_info);
+ 
+@@ -251,7 +251,7 @@ int i3c_master_send_getbcr(const struct device *master, uint8_t addr, uint8_t *b
+ #define i3c_slave_put_read_data		i3c_aspeed_slave_put_read_data
+ #define i3c_slave_get_dynamic_addr	i3c_aspeed_slave_get_dynamic_addr
+ #define i3c_slave_get_event_enabling	i3c_aspeed_slave_get_event_enabling
+-#define i3c_set_pid_extra_info		i3c_aspeed_set_pid_extra_info
++#define i3c_set_pid_extra_info          i3c_aspeed_set_pid_extra_info
+ 
+ int i3c_jesd403_read(struct i3c_dev_desc *slave, uint8_t *addr, int addr_size, uint8_t *data,
+ 		     int data_size);
+-- 
+2.25.1
+

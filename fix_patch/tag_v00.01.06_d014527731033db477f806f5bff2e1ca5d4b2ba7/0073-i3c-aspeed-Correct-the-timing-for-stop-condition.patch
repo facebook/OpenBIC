@@ -1,0 +1,29 @@
+From 8efe4ab58362873f2042f2e0ce59b052e2d3d618 Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Wed, 12 Jun 2024 17:07:11 +0800
+Subject: [PATCH 09/11] i3c: aspeed: Correct the timing for stop condition
+
+Before setting the enable bit, a stop condition is needed to clear the
+busy flag in the hardware internally.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I76191bdac56c395286fec89a58296bb61b600150
+---
+ drivers/i3c/i3c_aspeed.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index b5699ae5ce..541acd55f9 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -1368,6 +1368,7 @@ static int i3c_aspeed_enable(struct i3c_aspeed_obj *obj)
+ 	if (config->secondary) {
+ 		reg.fields.slave_auto_mode_adapt = 0;
+ 		i3c_aspeed_isolate_scl_sda(config->inst_id, true);
++		i3c_aspeed_gen_stop_to_internal(config->inst_id);
+ 	}
+ 	i3c_register->device_ctrl.value = reg.value;
+ 	if (config->secondary) {
+-- 
+2.25.1
+

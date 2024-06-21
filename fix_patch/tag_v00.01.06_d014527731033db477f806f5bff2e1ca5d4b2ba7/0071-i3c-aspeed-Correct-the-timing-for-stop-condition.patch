@@ -1,0 +1,42 @@
+From aeabe251baec5b3aedaef59903e624b18837195a Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Fri, 7 Jun 2024 16:52:46 +0800
+Subject: [PATCH 07/11] i3c: aspeed: Correct the timing for stop condition
+
+The stop condition, meant to clear the internal hardware busy flag, should
+be generated before setting the enable bit of the i3c controller. This is
+necessary for both enable and disable operations.
+Additionally, the waiting time for controller enable should use the
+maximum value between bus available/idle times.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: Icc701f9f9655b78e82feda0177ff861387f00646
+---
+ drivers/i3c/i3c_aspeed.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index aa0a1fc9cb..9f46386770 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -1392,13 +1392,14 @@ static int i3c_aspeed_disable(struct i3c_aspeed_obj *obj)
+ 	struct i3c_aspeed_config *config = obj->config;
+ 	struct i3c_register_s *i3c_register = config->base;
+ 
+-	if (config->secondary)
++	if (config->secondary) {
+ 		i3c_aspeed_isolate_scl_sda(config->inst_id, true);
++		/* Clear the internal busy status */
++		i3c_aspeed_gen_stop_to_internal(config->inst_id);
++	}
+ 	i3c_register->device_ctrl.fields.enable = 0;
+ 	if (config->secondary) {
+ 		i3c_aspeed_toggle_scl_in(config->inst_id, 8);
+-		/* Clear the internal busy status */
+-		i3c_aspeed_gen_stop_to_internal(config->inst_id);
+ 		if (i3c_register->device_ctrl.fields.enable) {
+ 			LOG_WRN("Failed to disable controller");
+ 			i3c_aspeed_isolate_scl_sda(config->inst_id, false);
+-- 
+2.25.1
+

@@ -1,0 +1,36 @@
+From 776d61a33331050cb9af8d97a7a83f74bd539a27 Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Thu, 31 Aug 2023 16:59:28 +0800
+Subject: [PATCH 01/11] i3c: aspeed: Fix the step of the stop condition.
+
+The stop condition for the i3c protocol requires both the SCL and SDA
+lines to be low before the transition from low to high on the SDA line
+with the SCL line remains high.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: Id21c5504ac73211b97216da4955416c012c78d37
+---
+ drivers/i3c/i3c_aspeed.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index c4131176a2..714f72bb40 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -648,10 +648,12 @@ void i3c_aspeed_gen_stop_to_internal(int inst_id)
+ 	uint32_t value;
+ 
+ 	value = sys_read32(i3c_gr + I3CG_REG1(inst_id));
+-	value |= SCL_IN_SW_MODE_VAL;
++	value &= ~SCL_IN_SW_MODE_VAL;
+ 	sys_write32(value, i3c_gr + I3CG_REG1(inst_id));
+ 	value &= ~SDA_IN_SW_MODE_VAL;
+ 	sys_write32(value, i3c_gr + I3CG_REG1(inst_id));
++	value |= SCL_IN_SW_MODE_VAL;
++	sys_write32(value, i3c_gr + I3CG_REG1(inst_id));
+ 	value |= SDA_IN_SW_MODE_VAL;
+ 	sys_write32(value, i3c_gr + I3CG_REG1(inst_id));
+ }
+-- 
+2.25.1
+
