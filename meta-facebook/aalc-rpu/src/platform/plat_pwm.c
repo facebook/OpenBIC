@@ -26,14 +26,9 @@ LOG_MODULE_REGISTER(plat_pwm);
 
 #define MAX_FAN_DUTY_VALUE 100
 #define PWM_PERIOD 40 // 25kHz
-#define PWM_DEVICE_E_FAN_START PWM_DEVICE_E_FB_FAN_1
-#define PWM_DEVICE_E_FAN_END PWM_DEVICE_E_FB_FAN_14
-#define PWM_DEVICE_E_PUMB_START PWM_DEVICE_E_PB_PUMB_1
-#define PWM_DEVICE_E_PUMB_END PWM_DEVICE_E_PB_PUMB_FAN_3
 
 static const struct device *pwm_dev;
-static uint8_t fan_duty_setting;
-static uint8_t pumb_duty_setting;
+static uint8_t fan_duty_cache[PWM_GRUP_E_MAX];
 
 struct nct_dev_info {
 	enum PWM_DEVICE_E dev;
@@ -197,54 +192,44 @@ static uint8_t ctl_pwm_dev(uint8_t index_start, uint8_t index_end, uint8_t duty)
 
 uint8_t ctl_all_pwm_dev(uint8_t duty)
 {
-	// Hex Fan & RPU Pump Setting
-	if (ctl_hex_fan_pwm_dev(duty) || ctl_pump_pwm_dev(duty))
-		return 1;
-
-	// other PWM setting
-	if (plat_pwm_ctrl(PWM_DEVICE_E_BB_FAN, duty))
-		return 1;
-	return 0;
-}
-
-uint8_t ctl_hex_fan_pwm_dev(uint8_t duty)
-{
-	if (!ctl_pwm_dev(PWM_DEVICE_E_FAN_START, PWM_DEVICE_E_FAN_END, duty))
-		fan_duty_setting = duty;
-	else
+	// Hex Fan & Pump & RPU FAN Setting
+	if (set_pwm_grup(PWM_GRUP_E_HEX_FAN, duty) || set_pwm_grup(PWM_GRUP_E_PUMP, duty) ||
+	    set_pwm_grup(PWM_GRUP_E_RPU_FAN, duty))
 		return 1;
 
 	return 0;
 }
 
-uint8_t ctl_pump_pwm_dev(uint8_t duty)
+uint8_t set_pwm_grup(uint8_t grup, uint8_t duty)
 {
-	if (!ctl_pwm_dev(PWM_DEVICE_E_PUMB_START, PWM_DEVICE_E_PUMB_END, duty))
-		pumb_duty_setting = duty;
-	else
-		return 1;
+	uint8_t ret = 1;
 
-	return 0;
+	fan_duty_cache[grup] = duty;
+
+	switch (grup) {
+	case PWM_GRUP_E_HEX_FAN:
+		if (!ctl_pwm_dev(PWM_DEVICE_E_FB_FAN_1, PWM_DEVICE_E_FB_FAN_14, duty))
+			ret = 0;
+		break;
+	case PWM_GRUP_E_PUMP:
+		if (!ctl_pwm_dev(PWM_DEVICE_E_PB_PUMB_1, PWM_DEVICE_E_PB_PUMB_FAN_3, duty))
+			ret = 0;
+		break;
+	case PWM_GRUP_E_RPU_FAN:
+		if (!ctl_pwm_dev(PWM_DEVICE_E_PB_PUMB_FAN_1, PWM_DEVICE_E_BB_FAN, duty))
+			ret = 0;
+		break;
+	};
+
+	return ret;
 }
 
-uint8_t ctl_other_pwm_dev(uint8_t duty)
+uint8_t get_pwm_cache(uint8_t grup)
 {
-	if (!ctl_pwm_dev(PWM_DEVICE_E_PUMB_START, PWM_DEVICE_E_PUMB_END, duty))
-		pumb_duty_setting = duty;
-	else
-		return 1;
+	if (grup >= PWM_GRUP_E_MAX)
+		return 0xFF;
 
-	return 0;
-}
-
-uint8_t fan_pwm_dev_duty_setting(void)
-{
-	return fan_duty_setting;
-}
-
-uint8_t pump_pwm_dev_duty_setting(void)
-{
-	return pumb_duty_setting;
+	return fan_duty_cache[grup];
 }
 
 void init_pwm_dev(void)
