@@ -1205,6 +1205,30 @@ static void drive_init(void)
 					table_index, cfg->num, cfg->type);
 				cfg->read = NULL;
 			}
+			uint8_t retry = 3;
+			I2C_MSG msg = { 0 };
+
+
+			msg.bus = 8;
+			msg.target_addr = 0xe8 >> 1;
+			msg.tx_len = 1;
+			msg.rx_len = 0;
+			msg.data[0] = 0x02;
+
+			if (i2c_master_write(&msg, retry)){
+				printk("set mux failed\n");
+			}
+
+			memset(&msg, 0, sizeof(msg));
+
+			msg.bus = 8;
+			msg.target_addr = 0x30 >> 1;
+			msg.tx_len = 1;
+			msg.rx_len = 1;
+			msg.data[0] = 0x03;
+
+			if (!i2c_master_read(&msg, retry))
+				printk("when 0x%x access sensorboard nct214 okkkkkkkkkkk \n",cfg->num);
 		}
 	}
 }

@@ -25,6 +25,7 @@
 #include "plat_threshold.h"
 #include "plat_log.h"
 #include "plat_gpio.h"
+#include "hal_i2c.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -58,6 +59,29 @@ void pal_post_init()
 	init_modbus_command_table();
 	//threshold_poll_init();
 	set_rpu_ready();
+	uint8_t retry = 3;
+	I2C_MSG msg = { 0 };
+
+	msg.bus = 8;
+	msg.target_addr = 0xe8 >> 1;
+	msg.tx_len = 1;
+	msg.rx_len = 0;
+	msg.data[0] = 0x02;
+
+	if (i2c_master_write(&msg, retry)){
+		printk("set mux failed\n");
+	}
+
+	memset(&msg, 0, sizeof(msg));
+
+	msg.bus = 8;
+	msg.target_addr = 0x30 >> 1;
+	msg.tx_len = 1;
+	msg.rx_len = 1;
+	msg.data[0] = 0x03;
+
+	if (!i2c_master_read(&msg, retry))
+		printk("post init when access sensorboard nct214 ok \n");
 }
 
 void pal_device_init()
