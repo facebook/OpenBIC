@@ -26,6 +26,10 @@
 #include "plat_log.h"
 #include "plat_gpio.h"
 #include "hal_i2c.h"
+#include "nct7363.h"
+#include "plat_i2c.h"
+#include "plat_hook.h"
+#include "plat_sensor_table.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -49,6 +53,17 @@ void pal_pre_init()
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
 	init_aalc_config();
 	gpio_set(FM_BIC_READY_R_N, 0); //MM4 for bus3 power up
+	k_msleep(10);
+	LOG_WRN("pull bpb nct7363 sensor box power high 11");
+	sensor_cfg plat_sensor_config[] = {
+	{ SENSOR_NUM_BPB_RACK_LEVEL_1, sensor_dev_nct7363, I2C_BUS5, BPB_NCT7363_ADDR,
+	  NCT7363_GPIO_READ_OFFSET, stby_access, NCT7363_5_PORT, 0, SAMPLE_COUNT_DEFAULT,
+	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &nct7363_init_args[17] }
+	};
+	uint8_t ret = nct7363_init(&plat_sensor_config[0]);
+	printf("init result :0x%x", ret);
+	k_msleep(1000);
 }
 
 void pal_post_init()
@@ -81,7 +96,8 @@ void pal_post_init()
 	msg.data[0] = 0x03;
 
 	if (!i2c_master_read(&msg, retry))
-		printk("post init when access sensorboard nct214 ok \n");
+		printk("post init when access sensorboard nct214 ok 74 \n");
+	
 }
 
 void pal_device_init()

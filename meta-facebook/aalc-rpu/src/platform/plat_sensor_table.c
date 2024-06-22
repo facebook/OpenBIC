@@ -190,7 +190,7 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_FB_5_HEX_INLET_TEMP_C, sensor_dev_hdc1080, I2C_BUS2, HDC1080_ADDR,
 	  HDC1080_TEMP_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
-	  &bus_2_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
+	  &bus_2_PCA9546A_configs[0], post_PCA9546A_read, NULL, &hdc1080_init_args[4] },
 	{ SENSOR_NUM_FB_6_HEX_INLET_TEMP_C, sensor_dev_hdc1080, I2C_BUS2, HDC1080_ADDR,
 	  HDC1080_TEMP_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
@@ -284,7 +284,7 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_FB_5_HUM_PCT_RH, sensor_dev_hdc1080, I2C_BUS2, HDC1080_ADDR,
 	  HDC1080_HUM_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
-	  &bus_2_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
+	  &bus_2_PCA9546A_configs[0], post_PCA9546A_read, NULL, &hdc1080_init_args[4] },
 	{ SENSOR_NUM_FB_6_HUM_PCT_RH, sensor_dev_hdc1080, I2C_BUS2, HDC1080_ADDR,
 	  HDC1080_HUM_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
@@ -750,9 +750,8 @@ sensor_cfg plat_def_sensor_config[] = {
 };
 
 // total config size = plat_sensor_config + sensor(main/second sensor) config table
-const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) +
-			       ARRAY_SIZE(hsc_sensor_config_table) +
-			       ARRAY_SIZE(tmp461_config_table); //+ ARRAY_SIZE(plat_def_sensor_config);
+const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) + ARRAY_SIZE(hsc_sensor_config_table) + ARRAY_SIZE(nct214_config_table);
+			        //+ ARRAY_SIZE(plat_def_sensor_config);
 
 static uint8_t get_temp_sensor_mfr_id(uint8_t bus, uint8_t addr, uint8_t mfr_id_offset)
 {
@@ -924,10 +923,15 @@ static void hsc_config(uint8_t type)
 		for (uint8_t j = 0; j < sen_nums; j++) {
 			if (p->num != *(sen_tbl + j))
 				continue;
+			if (!pre_PCA9546A_read(p , p->pre_sensor_read_args))
+				LOG_ERR("pre lock mutex fail !");
 
 			// use default address to identify the HSC module
 			const uint32_t mfr_id = get_pmbus_mfr_id(p->port, p->target_addr);
 			LOG_INF("Sensor %x's HSC module MFR_ID: 0x%06x", p->num, mfr_id);
+			
+			if (!post_PCA9546A_read(p, p->pre_sensor_read_args,0))
+				LOG_ERR("pro unlock mutex fail !");
 
 			switch (mfr_id) {
 			case 0:
@@ -964,7 +968,7 @@ void load_hsc_sensor_config()
 		add_sensor_config(hsc_sensor_config_table[i]);
 }
 
-void load_sb_temp_sensor_config()
+void load_sb_temp_sensor_with_main_and_2nd_config()
 {
 	/* default sensor config is tmp461
 	 * 1st and 2nd source have different i2c addr, identify by i2c addr
@@ -1004,7 +1008,21 @@ void load_sb_temp_sensor_config()
 		}
 	}
 }
+void load_sb_temp_sensor_config()
+{
+	uint8_t index = 0;
+	
+	if (!pre_PCA9546A_read(&nct214_config_table[0], &bus_9_PCA9546A_configs[0]))
+		LOG_ERR("pre lock mutex fail !");
+	
+	for (index = 0; index < ARRAY_SIZE(nct214_config_table); index++)
+		add_sensor_config(nct214_config_table[index]);
 
+	if (!post_PCA9546A_read(&nct214_config_table[0], &bus_9_PCA9546A_configs[0],0))
+		LOG_ERR("pro unlock mutex fail !");
+	
+		
+}
 void load_plat_def_sensor_config()
 {
 	uint8_t index = 0;
