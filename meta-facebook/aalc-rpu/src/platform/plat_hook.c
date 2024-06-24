@@ -30,7 +30,7 @@ LOG_MODULE_REGISTER(plat_hook);
 
 struct k_mutex i2c_1_PCA9546a_mutex;
 struct k_mutex i2c_2_PCA9546a_mutex;
-struct k_mutex i2c_6_pca9546a_mutex;
+struct k_mutex i2c_6_PCA9546a_mutex;
 struct k_mutex i2c_7_PCA9546a_mutex;
 struct k_mutex i2c_8_PCA9546a_mutex;
 struct k_mutex i2c_9_PCA9546a_mutex;
@@ -781,7 +781,7 @@ struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus)
 		mutex = &i2c_2_PCA9546a_mutex;
 		break;
 	case I2C_BUS6:
-		mutex = &i2c_6_pca9546a_mutex;
+		mutex = &i2c_6_PCA9546a_mutex;
 		break;
 	case I2C_BUS7:
 		mutex = &i2c_7_PCA9546a_mutex;

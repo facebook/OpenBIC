@@ -38,6 +38,7 @@
 #include "plat_version.h"
 #include "plat_hwmon.h"
 #include "plat_log.h"
+#include "plat_i2c.h"
 
 LOG_MODULE_REGISTER(plat_modbus);
 
@@ -74,7 +75,16 @@ uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd)
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
 	float val = 0;
-	if (get_sensor_reading_to_real_val(cmd->arg0, &val) == SENSOR_READ_4BYTE_ACUR_SUCCESS) {
+	uint8_t status = get_sensor_reading_to_real_val(cmd->arg0, &val);
+
+	/* bic update workaround */
+	if (cmd->addr == MODBUS_BPB_RPU_COOLANT_FLOW_RATE_LPM_ADDR &&
+	    status == SENSOR_UNSPECIFIED_ERROR) {
+		cmd->data[0] = 0xFFFF; // error
+		return MODBUS_EXC_NONE;
+	}
+
+	if (status == SENSOR_READ_4BYTE_ACUR_SUCCESS) {
 		float r = pow_of_10(cmd->arg2);
 		uint16_t byte_val = val / cmd->arg1 / r; // scale
 		memcpy(cmd->data, &byte_val, sizeof(uint16_t) * cmd->cmd_size);
@@ -176,6 +186,32 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 	if (!modbus_i2c_master_write_read(cmd->data, cmd->data_len))
 		return MODBUS_EXC_NONE;
 	return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+}
+
+static uint8_t i2c_scan_bus = 0;
+uint8_t modbus_command_i2c_scan_bus_set(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	if (cmd->data[0] >= I2C_BUS_MAX_NUM)
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+
+	i2c_scan_bus = (uint8_t)cmd->data[0];
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_command_i2c_scan(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint8_t addr[cmd->data_len], len;
+	i2c_scan(i2c_scan_bus, addr, &len);
+
+	memset(cmd->data, 0xFFFF, sizeof(uint16_t) * cmd->data_len);
+	for (uint8_t i = 0; i < len; i++)
+		cmd->data[i] = addr[i];
+
+	return MODBUS_EXC_NONE;
 }
 
 uint8_t modbus_write_hmi_version(modbus_command_mapping *cmd)
@@ -632,6 +668,10 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_FB_13_HUM_PCT_RH, 1, 0, 1 },
 	{ MODBUS_FB_14_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_FB_14_HUM_PCT_RH, 1, 0, 1 },
+	{ MODBUS_RPU_PDB_48V_SENSE_DIFF_POS_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PDB_48V_SENSE_DIFF_POS_VOLT_V, 1, -2, 1 },
+	{ MODBUS_RPU_PDB_48V_SENSE_DIFF_NEG_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PDB_48V_SENSE_DIFF_NEG_VOLT_V, 1, -2, 1 },
 	//FW UPDATE
 	{ MODBUS_FW_REVISION_ADDR, NULL, modbus_get_fw_reversion, 0, 0, 0, 4 },
 	{ MODBUS_FW_DOWNLOAD_ADDR, modbus_fw_download, NULL, 0, 0, 0, 103 },
@@ -640,10 +680,9 @@ modbus_command_mapping modbus_command_table[] = {
 	  16 },
 	{ MODBUS_MASTER_I2C_WRITE_READ_RESPONSE_ADDR, NULL,
 	  modbus_command_i2c_master_write_read_response, 0, 0, 0, 16 },
-	{ MODBUS_RPU_PDB_48V_SENSE_DIFF_POS_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
-	  SENSOR_NUM_PDB_48V_SENSE_DIFF_POS_VOLT_V, 1, -2, 1 },
-	{ MODBUS_RPU_PDB_48V_SENSE_DIFF_NEG_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
-	  SENSOR_NUM_PDB_48V_SENSE_DIFF_NEG_VOLT_V, 1, -2, 1 },
+	{ MODBUS_MASTER_I2C_SCAN_BUS_SET_ADDR, modbus_command_i2c_scan_bus_set, NULL, 0, 0, 0, 1 },
+	{ MODBUS_MASTER_I2C_SCAN_ADDR, NULL, modbus_command_i2c_scan, 0, 0, 0, 31 },
+
 	// System Alarm
 	{ MODBUS_SB_TTV_COOLANT_LEAKAGE_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
 	{ MODBUS_AALC_SENSOR_ALARM_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
@@ -842,7 +881,7 @@ static int coil_wr(uint16_t addr, bool state)
 		return MODBUS_EXC_NONE;
 	} else if (addr == MODBUS_SYNAX_CHECK_ADDR) { // FW update: Synax Check
 		if (state) {
-			if (get_sensor_poll_enable_flag())
+			if (!get_sensor_poll_enable_flag())
 				return MODBUS_EXC_NONE;
 			else
 				return MODBUS_EXC_SERVER_DEVICE_FAILURE;
@@ -855,6 +894,7 @@ static int coil_wr(uint16_t addr, bool state)
 
 static int holding_reg_multi_wr(char *iface_name, uint16_t addr, uint16_t *reg, uint16_t num_regs)
 {
+
 	modbus_command_mapping *ptr = ptr_to_modbus_table(addr);
 	if (!ptr) {
 		LOG_ERR("modbus write command 0x%x not find!\n", addr);

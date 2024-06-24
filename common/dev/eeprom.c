@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include "eeprom.h"
+#include "fru.h"
 #include "hal_i2c.h"
 #include <string.h>
 #include <logging/log.h>
@@ -39,6 +40,19 @@ bool eeprom_mux_check(EEPROM_ENTRY *entry)
 	} else {
 		return true;
 	}
+}
+
+static bool eeprom_one_btye_addr_check(uint8_t dev_type)
+{
+	uint8_t ret = false;
+
+	switch (dev_type) {
+	case NV_ATMEL_24C02:
+		ret = true;
+		break;
+	}
+
+	return ret;
 }
 
 bool eeprom_write(EEPROM_ENTRY *entry)
@@ -65,11 +79,19 @@ bool eeprom_write(EEPROM_ENTRY *entry)
 
 		msg.bus = entry->config.port;
 		msg.target_addr = entry->config.target_addr;
-		msg.tx_len = entry->data_len + 2; // write 2 byte offset to EEPROM
-		msg.data[0] =
-			((entry->config.start_offset + entry->offset) >> 8) & 0xFF; // offset msb
-		msg.data[1] = (entry->config.start_offset + entry->offset) & 0xFF; // offset lsb
-		memcpy(&msg.data[2], &entry->data[0], entry->data_len);
+		msg.tx_len = eeprom_one_btye_addr_check(entry->config.dev_type) ?
+				     entry->data_len + 1 : // write 1 byte offset to EEPROM
+				     entry->data_len + 2; // write 2 byte offset to EEPROM
+		if (eeprom_one_btye_addr_check(entry->config.dev_type)) {
+			msg.data[0] = (entry->config.start_offset + entry->offset) & 0xFF;
+			memcpy(&msg.data[1], &entry->data[0], entry->data_len);
+		} else {
+			msg.data[0] = ((entry->config.start_offset + entry->offset) >> 8) &
+				      0xFF; // offset msb
+			msg.data[1] =
+				(entry->config.start_offset + entry->offset) & 0xFF; // offset lsb
+			memcpy(&msg.data[2], &entry->data[0], entry->data_len);
+		}
 
 		if (i2c_master_write(&msg, retry) == 0)
 			break;
@@ -108,11 +130,18 @@ bool eeprom_read(EEPROM_ENTRY *entry)
 
 		msg.bus = entry->config.port;
 		msg.target_addr = entry->config.target_addr;
-		msg.tx_len = 2; // write 2 byte offset to EEPROM
+		msg.tx_len = eeprom_one_btye_addr_check(entry->config.dev_type) ?
+				     1 : // // write 1 byte offset to EEPROM
+				     2; // write 2 byte offset to EEPROM
 		msg.rx_len = entry->data_len;
-		msg.data[0] =
-			((entry->config.start_offset + entry->offset) >> 8) & 0xFF; // offset msb
-		msg.data[1] = (entry->config.start_offset + entry->offset) & 0xFF; // offset lsb
+		if (eeprom_one_btye_addr_check(entry->config.dev_type)) {
+			msg.data[0] = (entry->config.start_offset + entry->offset) & 0xFF;
+		} else {
+			msg.data[0] = ((entry->config.start_offset + entry->offset) >> 8) &
+				      0xFF; // offset msb
+			msg.data[1] =
+				(entry->config.start_offset + entry->offset) & 0xFF; // offset lsb
+		}
 
 		if (i2c_master_read(&msg, retry) == 0) {
 			entry->data_len = msg.rx_len;
