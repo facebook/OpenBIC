@@ -32,6 +32,13 @@ LOG_MODULE_REGISTER(plat_fru);
 #define FRU_ADDR_MIN FRU_FB_PART_ADDR
 #define FRU_ADDR_MAX FRU_MFR_SERIEL_ADDR
 
+extern struct k_mutex i2c_1_PCA9546a_mutex;
+extern struct k_mutex i2c_2_PCA9546a_mutex;
+extern struct k_mutex i2c_6_PCA9546a_mutex;
+extern struct k_mutex i2c_7_PCA9546a_mutex;
+extern struct k_mutex i2c_8_PCA9546a_mutex;
+extern struct k_mutex i2c_9_PCA9546a_mutex;
+
 const EEPROM_CFG plat_fru_config[] = {
 	{
 		ST_M24512_RDW,
@@ -70,7 +77,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		AALC_FRU_SIZE,
 		true,
 		SB_MUX_ADDR,
-		PCA9546A_CHANNEL_1,
+		MUX_CHANNEL_1,
+		&i2c_9_PCA9546a_mutex,
 	},
 	{
 		NV_ATMEL_24C02,
@@ -82,7 +90,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		AALC_FRU_SIZE,
 		true,
 		SB_MUX_ADDR,
-		PCA9546A_CHANNEL_2,
+		MUX_CHANNEL_2,
+		&i2c_9_PCA9546a_mutex,
 	},
 	{
 		NV_ATMEL_24C02,
@@ -94,7 +103,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		AALC_FRU_SIZE,
 		true,
 		PB_MUX_ADDR,
-		PCA9546A_CHANNEL_0,
+		MUX_CHANNEL_0,
+		&i2c_8_PCA9546a_mutex,
 	},
 	{
 		NV_ATMEL_24C02,
@@ -106,7 +116,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		AALC_FRU_SIZE,
 		true,
 		PB_MUX_ADDR,
-		PCA9546A_CHANNEL_1,
+		MUX_CHANNEL_1,
+		&i2c_8_PCA9546a_mutex,
 	},
 	{
 		NV_ATMEL_24C02,
@@ -118,7 +129,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		AALC_FRU_SIZE,
 		true,
 		PB_MUX_ADDR,
-		PCA9546A_CHANNEL_2,
+		MUX_CHANNEL_2,
+		&i2c_8_PCA9546a_mutex,
 	},
 	{
 		NV_ATMEL_24C02,
@@ -130,7 +142,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		AALC_FRU_SIZE,
 		true,
 		FB_1_4_MUX_ADDR,
-		PCA9546A_CHANNEL_0,
+		MUX_CHANNEL_0,
+		&i2c_1_PCA9546a_mutex,
 	},
 	{
 		NV_ATMEL_24C02,
@@ -142,7 +155,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		AALC_FRU_SIZE,
 		true,
 		FB_1_4_MUX_ADDR,
-		PCA9546A_CHANNEL_1,
+		MUX_CHANNEL_1,
+		&i2c_1_PCA9546a_mutex,
 	},
 	{
 		NV_ATMEL_24C02,
@@ -154,7 +168,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		AALC_FRU_SIZE,
 		true,
 		FB_1_4_MUX_ADDR,
-		PCA9546A_CHANNEL_2,
+		MUX_CHANNEL_2,
+		&i2c_1_PCA9546a_mutex,
 	},
 	{
 		NV_ATMEL_24C02,
@@ -166,7 +181,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		AALC_FRU_SIZE,
 		true,
 		FB_1_4_MUX_ADDR,
-		PCA9546A_CHANNEL_3,
+		MUX_CHANNEL_3,
+		&i2c_1_PCA9546a_mutex,
 	},
 	{
 		NV_ATMEL_24C02,
@@ -178,7 +194,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		AALC_FRU_SIZE,
 		true,
 		FB_5_8_MUX_ADDR,
-		PCA9546A_CHANNEL_0,
+		MUX_CHANNEL_0,
+		&i2c_2_PCA9546a_mutex,
 	},
 	{
 		NV_ATMEL_24C02,
@@ -190,7 +207,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		AALC_FRU_SIZE,
 		true,
 		FB_5_8_MUX_ADDR,
-		PCA9546A_CHANNEL_1,
+		MUX_CHANNEL_1,
+		&i2c_2_PCA9546a_mutex,
 	},
 	{
 		NV_ATMEL_24C02,
@@ -202,7 +220,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		AALC_FRU_SIZE,
 		true,
 		FB_5_8_MUX_ADDR,
-		PCA9546A_CHANNEL_2,
+		MUX_CHANNEL_2,
+		&i2c_2_PCA9546a_mutex,
 	},
 	{
 		NV_ATMEL_24C02,
@@ -214,7 +233,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		AALC_FRU_SIZE,
 		true,
 		FB_5_8_MUX_ADDR,
-		PCA9546A_CHANNEL_3,
+		MUX_CHANNEL_3,
+		&i2c_2_PCA9546a_mutex,
 	},
 	{
 		NV_ATMEL_24C02,
@@ -226,7 +246,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		AALC_FRU_SIZE,
 		true,
 		FB_9_12_MUX_ADDR,
-		PCA9546A_CHANNEL_0,
+		MUX_CHANNEL_0,
+		&i2c_6_PCA9546a_mutex,
 	},
 	{
 		NV_ATMEL_24C02,
@@ -238,7 +259,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		AALC_FRU_SIZE,
 		true,
 		FB_9_12_MUX_ADDR,
-		PCA9546A_CHANNEL_1,
+		MUX_CHANNEL_1,
+		&i2c_6_PCA9546a_mutex,
 	},
 	{
 		NV_ATMEL_24C02,
@@ -250,7 +272,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		AALC_FRU_SIZE,
 		true,
 		FB_9_12_MUX_ADDR,
-		PCA9546A_CHANNEL_2,
+		MUX_CHANNEL_2,
+		&i2c_6_PCA9546a_mutex,
 	},
 	{
 		NV_ATMEL_24C02,
@@ -262,7 +285,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		AALC_FRU_SIZE,
 		true,
 		FB_9_12_MUX_ADDR,
-		PCA9546A_CHANNEL_3,
+		MUX_CHANNEL_3,
+		&i2c_6_PCA9546a_mutex,
 	},
 	{
 		NV_ATMEL_24C02,
@@ -274,7 +298,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		AALC_FRU_SIZE,
 		true,
 		FB_13_14_MUX_ADDR,
-		PCA9546A_CHANNEL_0,
+		MUX_CHANNEL_0,
+		&i2c_7_PCA9546a_mutex,
 	},
 	{
 		NV_ATMEL_24C02,
@@ -286,7 +311,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		AALC_FRU_SIZE,
 		true,
 		FB_13_14_MUX_ADDR,
-		PCA9546A_CHANNEL_1,
+		MUX_CHANNEL_1,
+		&i2c_7_PCA9546a_mutex,
 	},
 };
 

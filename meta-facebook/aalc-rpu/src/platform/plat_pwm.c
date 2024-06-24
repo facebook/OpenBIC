@@ -192,10 +192,9 @@ static uint8_t ctl_pwm_dev(uint8_t index_start, uint8_t index_end, uint8_t duty)
 
 uint8_t ctl_all_pwm_dev(uint8_t duty)
 {
-	// Hex Fan & Pump & RPU FAN Setting
-	if (set_pwm_grup(PWM_GRUP_E_HEX_FAN, duty) || set_pwm_grup(PWM_GRUP_E_PUMP, duty) ||
-	    set_pwm_grup(PWM_GRUP_E_RPU_FAN, duty))
-		return 1;
+	set_pwm_grup(PWM_GRUP_E_HEX_FAN, duty);
+	set_pwm_grup(PWM_GRUP_E_PUMP, duty);
+	set_pwm_grup(PWM_GRUP_E_RPU_FAN, duty);
 
 	return 0;
 }

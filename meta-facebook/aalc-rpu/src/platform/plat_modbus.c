@@ -38,6 +38,7 @@
 #include "plat_version.h"
 #include "plat_hwmon.h"
 #include "plat_log.h"
+#include "plat_i2c.h"
 
 LOG_MODULE_REGISTER(plat_modbus);
 
@@ -187,6 +188,32 @@ uint8_t modbus_command_i2c_master_write_read(modbus_command_mapping *cmd)
 	return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 }
 
+static uint8_t i2c_scan_bus = 0;
+uint8_t modbus_command_i2c_scan_bus_set(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	if (cmd->data[0] >= I2C_BUS_MAX_NUM)
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+
+	i2c_scan_bus = (uint8_t)cmd->data[0];
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_command_i2c_scan(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint8_t addr[cmd->data_len], len;
+	i2c_scan(i2c_scan_bus, addr, &len);
+
+	memset(cmd->data, 0xFFFF, sizeof(uint16_t) * cmd->data_len);
+	for (uint8_t i = 0; i < len; i++)
+		cmd->data[i] = addr[i];
+
+	return MODBUS_EXC_NONE;
+}
+
 uint8_t modbus_write_hmi_version(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
@@ -315,7 +342,6 @@ static uint8_t modbus_to_do(modbus_command_mapping *cmd)
 	// wait to do
 	return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 }
-
 
 modbus_command_mapping modbus_command_table[] = {
 	// addr, write_fn, read_fn, arg0, arg1, arg2, size
@@ -664,6 +690,10 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_FB_13_HUM_PCT_RH, 1, 0, 1 },
 	{ MODBUS_FB_14_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_FB_14_HUM_PCT_RH, 1, 0, 1 },
+	{ MODBUS_RPU_PDB_48V_SENSE_DIFF_POS_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PDB_48V_SENSE_DIFF_POS_VOLT_V, 1, -2, 1 },
+	{ MODBUS_RPU_PDB_48V_SENSE_DIFF_NEG_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_PDB_48V_SENSE_DIFF_NEG_VOLT_V, 1, -2, 1 },
 	//FW UPDATE
 	{ MODBUS_FW_REVISION_ADDR, NULL, modbus_get_fw_reversion, 0, 0, 0, 4 },
 	{ MODBUS_FW_DOWNLOAD_ADDR, modbus_fw_download, NULL, 0, 0, 0, 103 },
@@ -672,10 +702,9 @@ modbus_command_mapping modbus_command_table[] = {
 	  16 },
 	{ MODBUS_MASTER_I2C_WRITE_READ_RESPONSE_ADDR, NULL,
 	  modbus_command_i2c_master_write_read_response, 0, 0, 0, 16 },
-	{ MODBUS_RPU_PDB_48V_SENSE_DIFF_POS_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
-	  SENSOR_NUM_PDB_48V_SENSE_DIFF_POS_VOLT_V, 1, -2, 1 },
-	{ MODBUS_RPU_PDB_48V_SENSE_DIFF_NEG_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
-	  SENSOR_NUM_PDB_48V_SENSE_DIFF_NEG_VOLT_V, 1, -2, 1 },
+	{ MODBUS_MASTER_I2C_SCAN_BUS_SET_ADDR, modbus_command_i2c_scan_bus_set, NULL, 0, 0, 0, 1 },
+	{ MODBUS_MASTER_I2C_SCAN_ADDR, NULL, modbus_command_i2c_scan, 0, 0, 0, 31 },
+
 	// System Alarm
 	{ MODBUS_SB_TTV_COOLANT_LEAKAGE_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
 	{ MODBUS_AALC_SENSOR_ALARM_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
@@ -693,6 +722,8 @@ modbus_command_mapping modbus_command_table[] = {
 	  0, 0, 1 },
 	{ MODBUS_MANUAL_CONTROL_FAN_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm,
 	  PWM_GRUP_E_HEX_FAN, 0, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_RPU_FAN_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm,
+	  PWM_GRUP_E_RPU_FAN, 0, 0, 1 },
 	{ MODBUS_PUMP_SETTING_ADDR, modbus_pump_setting, NULL, 0, 0, 0, 1 },
 	{ MODBUS_LEAKAGE_SETTING_ON_ADDR, modbus_to_do, NULL, 0, 0, 0, 1 },
 	// Leakage Black Box
@@ -712,9 +743,12 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_STICKY_HEX_RACK_FLOOR_LEAKAGE_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0, 1 },
 	{ MODBUS_STICKY_HEX_RACK_PAN_LEAKAGE_RELAY_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0, 1 },
 	{ MODBUS_STICKY_HEX_RACK_FLOOR_LEAKAGE_RELAY_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0, 1 },
-	{ MODBUS_STRICKY_SB_TTV_COOLANT_LEAKAGE_1_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0, 1 },
-	{ MODBUS_STRICKY_SB_TTV_COOLANT_LEAKAGE_2_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0, 1 },
-	{ MODBUS_STRICKY_SB_TTV_COOLANT_LEAKAGE_3_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_STRICKY_SB_TTV_COOLANT_LEAKAGE_1_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_1_VOLT_V, 1, 0, 1 },
+	{ MODBUS_STRICKY_SB_TTV_COOLANT_LEAKAGE_2_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_2_VOLT_V, 1, 0, 1 },
+	{ MODBUS_STRICKY_SB_TTV_COOLANT_LEAKAGE_3_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_3_VOLT_V, 1, 0, 1 },
 	// Error Log
 	{ MODBUS_ERROR_LOG_COUNT_ADDR, NULL, modbus_error_log_count, 0, 0, 0, 1 },
 	{ MODBUS_EVENT_1_ERROR_LOG_ADDR, NULL, modbus_error_log_event, 0, 0, 0, 10 },

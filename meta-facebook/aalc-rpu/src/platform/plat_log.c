@@ -89,11 +89,16 @@ static uint16_t get_log_position_by_time_order(uint8_t order)
 
 	return (i + LOG_MAX_NUM - (order - 1)) % LOG_MAX_NUM;
 }
-
 void log_transfer_to_modbus_data(uint16_t *modbus_data, uint8_t cmd_size, uint16_t order)
 {
+	CHECK_NULL_ARG(modbus_data);
+
 	memcpy(modbus_data, &err_log_data[get_log_position_by_time_order(order)],
 	       sizeof(uint16_t) * cmd_size);
+
+	modbus_err_log_mapping *p = (modbus_err_log_mapping *)modbus_data;
+	if (p->index == 0xffff)
+		memset(modbus_data, 0x00, sizeof(uint16_t) * cmd_size);
 }
 
 bool modbus_clear_log(void)
@@ -101,9 +106,13 @@ bool modbus_clear_log(void)
 	memset(err_log_data, 0xFF, sizeof(err_log_data));
 	memset(err_sensor_caches, 0, sizeof(err_sensor_caches));
 
-	if (!plat_eeprom_write(AALC_FRU_LOG_START, (uint8_t *)err_log_data, AALC_FRU_LOG_SIZE)) {
-		LOG_ERR("Clear EEPROM Log failed");
-		return false;
+	for (uint8_t i = 0; i < LOG_MAX_NUM; i++) {
+		if (!plat_eeprom_write(AALC_FRU_LOG_START + sizeof(modbus_err_log_mapping) * i,
+				       (uint8_t *)err_log_data, sizeof(modbus_err_log_mapping))) {
+			LOG_ERR("Clear EEPROM Log failed");
+			return false;
+		}
+		k_msleep(10); // the eeprom max write time is 10 ms
 	}
 
 	return true;
