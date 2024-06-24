@@ -56,14 +56,14 @@ void pal_pre_init()
 	k_msleep(10);
 	// pull bpb nct7363 sensor box power high first;
 	sensor_cfg plat_sensor_config[] = {
-	{ SENSOR_NUM_BPB_RACK_LEVEL_1, sensor_dev_nct7363, I2C_BUS5, BPB_NCT7363_ADDR,
-	  NCT7363_GPIO_READ_OFFSET, stby_access, NCT7363_5_PORT, 0, SAMPLE_COUNT_DEFAULT,
-	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
-	  &nct7363_init_args[17] }
+		{ SENSOR_NUM_BPB_RACK_LEVEL_1, sensor_dev_nct7363, I2C_BUS5, BPB_NCT7363_ADDR,
+		  NCT7363_GPIO_READ_OFFSET, stby_access, NCT7363_5_PORT, 0, SAMPLE_COUNT_DEFAULT,
+		  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL,
+		  NULL, &nct7363_init_args[17] }
 	};
 	uint8_t ret = nct7363_init(&plat_sensor_config[0]);
 
-	if(ret)
+	if (ret)
 		LOG_ERR("init result fail:0x%x", ret);
 
 	k_msleep(1000);
