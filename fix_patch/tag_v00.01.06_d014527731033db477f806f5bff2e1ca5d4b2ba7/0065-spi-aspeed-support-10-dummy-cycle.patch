@@ -1,0 +1,91 @@
+From 10b0e2c185c9a5cd0d0815e28f2212857d0c220c Mon Sep 17 00:00:00 2001
+From: MouchenHung <Mouchen.Hung@quantatw.com>
+Date: Mon, 3 Jun 2024 17:38:16 +0800
+Subject: [PATCH] spi-aspeed-support-10-dummy-cycle
+
+---
+ drivers/spi/spi_aspeed.c                    | 26 +++++++++++++++++----
+ dts/bindings/spi/aspeed,spi-controller.yaml |  5 ++++
+ 2 files changed, 27 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/spi/spi_aspeed.c b/drivers/spi/spi_aspeed.c
+index 36b529fd5e..6d0d9f5b75 100644
+--- a/drivers/spi/spi_aspeed.c
++++ b/drivers/spi/spi_aspeed.c
+@@ -132,6 +132,7 @@ struct aspeed_spi_config {
+ 	uint32_t irq_num;
+ 	uint32_t irq_priority;
+ 	struct aspeed_spim_internal_mux_ctrl mux_ctrl;
++	bool pure_spi_mode_only;
+ };
+ 
+ uint32_t ast2600_segment_addr_start(uint32_t reg_val)
+@@ -352,6 +353,7 @@ static void aspeed_spi_nor_transceive_user(const struct device *dev,
+ 	struct spi_context *ctx = &data->ctx;
+ 	uint32_t cs = ctx->config->slave;
+ 	uint8_t dummy[12] = {0};
++	uint32_t data_len;
+ 
+ #ifdef CONFIG_SPI_MONITOR_ASPEED
+ 	/* change internal MUX */
+@@ -389,9 +391,20 @@ static void aspeed_spi_nor_transceive_user(const struct device *dev,
+ 		(const uint8_t *)&op_info.addr, op_info.addr_len);
+ 
+ 	/* dummy */
+-	aspeed_spi_write_data(data->decode_addr[cs].start,
+-		(const uint8_t *)&dummy,
+-		(op_info.dummy_cycle / (8 / JESD216_GET_ADDR_BUSWIDTH(op_info.mode))));
++	if (op_info.dummy_cycle % 2 != 0) {
++		LOG_ERR("Invalid dummy cycle (%d)\n", op_info.dummy_cycle);
++	} else if (op_info.dummy_cycle % 8 != 0) {
++		sys_write32(data->cmd_mode[cs].user | aspeed_spi_io_mode_user(4),
++			    config->ctrl_base + SPI10_CE0_CTRL + cs * 4);
++		data_len = op_info.dummy_cycle / 2;
++		aspeed_spi_write_data(data->decode_addr[cs].start,
++				      (const uint8_t *)&dummy, data_len);
++	} else {
++		data_len = op_info.dummy_cycle / 8;
++		data_len *= JESD216_GET_ADDR_BUSWIDTH(op_info.mode);
++		aspeed_spi_write_data(data->decode_addr[cs].start,
++				      (const uint8_t *)&dummy, data_len);
++	}
+ 
+ 	/* data */
+ 	sys_write32(data->cmd_mode[cs].user |
+@@ -1008,7 +1021,7 @@ static int aspeed_spi_nor_read_init(const struct device *dev,
+ 		ctx->config->frequency);
+ 
+ 	/* If internal MUX is used, don't reinit decoded address. */
+-	if (config->mux_ctrl.master_idx == 0) {
++	if (config->mux_ctrl.master_idx == 0 && !config->pure_spi_mode_only) {
+ 		ret = aspeed_spi_decode_range_reinit(dev, op_info.data_len);
+ 		if (ret != 0)
+ 			goto end;
+@@ -1146,6 +1159,11 @@ void aspeed_decode_range_pre_init(
+ 		unit_sz = ASPEED_SPI_SZ_256M;
+ 	}
+ 
++	if (config->pure_spi_mode_only) {
++		unit_sz = ASPEED_SPI_SZ_256M / config->max_cs;
++		unit_sz &= ~(ASPEED_SPI_SZ_2M - 1);
++	}
++
+ 	for (cs = 0; cs < max_cs; cs++) {
+ 		if (cs == 0)
+ 			start_addr = config->spi_mmap_base;
+diff --git a/dts/bindings/spi/aspeed,spi-controller.yaml b/dts/bindings/spi/aspeed,spi-controller.yaml
+index 5d0207de28..0f25e39a49 100644
+--- a/dts/bindings/spi/aspeed,spi-controller.yaml
++++ b/dts/bindings/spi/aspeed,spi-controller.yaml
+@@ -87,3 +87,8 @@ properties:
+       phandle to SPI monitor common device node which
+       includes general control register.
+ 
++  pure-spi-mode-only:
++    type: boolean
++    required: false
++    description: |
++      Use pure SPI mode to access SPI flash.
+-- 
+2.17.1
+

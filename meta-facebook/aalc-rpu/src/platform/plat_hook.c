@@ -41,6 +41,7 @@ K_MUTEX_DEFINE(i2c_9_PCA9546a_mutex);
 #define BUS_7_MUX_ADDR 0xE6 >> 1
 #define BUS_8_MUX_ADDR 0xE8 >> 1
 #define BUS_9_MUX_ADDR 0xE8 >> 1
+
 /**************************************************************************************************
  * INIT ARGS
 **************************************************************************************************/
@@ -830,7 +831,7 @@ struct k_mutex *get_i2c_mux_mutex(uint8_t i2c_bus)
 		mutex = &i2c_2_PCA9546a_mutex;
 		break;
 	case I2C_BUS6:
-		mutex = &i2c_6_pca9546a_mutex;
+		mutex = &i2c_6_PCA9546a_mutex;
 		break;
 	case I2C_BUS7:
 		mutex = &i2c_7_PCA9546a_mutex;
