@@ -896,7 +896,7 @@ bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 
-	if (reading == NULL){
+	if (reading == NULL) {
 		// if pre_sensor_read_hook is not null, unlock PCA9546A mutex
 		if (cfg->pre_sensor_read_hook != NULL) {
 			if (!post_PCA9546A_read(cfg, args, reading)) {
@@ -906,7 +906,7 @@ bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
 		}
 		return check_reading_pointer_null_is_allowed(cfg);
 	}
-		
+
 	ARG_UNUSED(args);
 
 	sensor_val *sval = (sensor_val *)reading;
@@ -941,7 +941,7 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 
-	if (reading == NULL){
+	if (reading == NULL) {
 		// if pre_sensor_read_hook is not null, unlock PCA9546A mutex
 		if (cfg->pre_sensor_read_hook != NULL) {
 			if (!post_PCA9546A_read(cfg, args, reading)) {
@@ -951,7 +951,6 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 		}
 		return check_reading_pointer_null_is_allowed(cfg);
 	}
-		
 
 	sensor_val *oval = (sensor_val *)reading;
 	double rawValue = ((uint16_t)oval->integer + (oval->fraction / 1000.0));
