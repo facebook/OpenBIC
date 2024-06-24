@@ -64,7 +64,7 @@ void pal_pre_init()
 	uint8_t ret = nct7363_init(&plat_sensor_config[0]);
 
 	if(ret)
-		LOG_ERR("init result :0x%x", ret);
+		LOG_ERR("init result fail:0x%x", ret);
 
 	k_msleep(1000);
 }
