@@ -60,6 +60,11 @@ enum FRU_ID {
 #define PB_MUX_ADDR (0xE8 >> 1)
 #define SB_MUX_ADDR (0xE8 >> 1)
 
+#define MUX_CHANNEL_0 0
+#define MUX_CHANNEL_1 1
+#define MUX_CHANNEL_2 2
+#define MUX_CHANNEL_3 3
+
 // plat eeprom save in rpu eeprom
 
 #define PLAT_EEPROM_OFFSET 0x2000 // 8kb
