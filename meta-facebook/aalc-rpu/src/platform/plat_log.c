@@ -177,8 +177,8 @@ void error_log_event(uint8_t sensor_num, bool val_normal)
 				(err_log_data[newest_count].index + 1);
 		err_log_data[fru_count].err_code = err_code;
 		err_log_data[fru_count].sys_time = systime_reverse_regs();
-		err_log_data[fru_count].pump_duty = (uint16_t)pump_pwm_dev_duty_setting();
-		err_log_data[fru_count].fan_duty = (uint16_t)fan_pwm_dev_duty_setting();
+		err_log_data[fru_count].pump_duty = (uint16_t)get_pwm_cache(PWM_GRUP_E_PUMP);
+		err_log_data[fru_count].fan_duty = (uint16_t)get_pwm_cache(PWM_GRUP_E_HEX_FAN);
 
 		err_log_data[fru_count].outlet_temp = get_sensor_reading_to_modbus_val(
 			SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C, -2, 1);

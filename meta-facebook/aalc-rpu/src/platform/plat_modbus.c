@@ -315,11 +315,34 @@ uint8_t modbus_error_log_event(modbus_command_mapping *cmd)
 	return MODBUS_EXC_NONE;
 }
 
+uint8_t modbus_get_pwm(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint8_t grup = cmd->arg0;
+	cmd->data[0] = (uint16_t)get_pwm_cache(grup);
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_set_pwm(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint8_t grup = cmd->arg0;
+	uint8_t duty = (uint8_t)cmd->data[0];
+
+	set_pwm_grup(grup, duty);
+
+	return MODBUS_EXC_NONE;
+}
+
 static uint8_t modbus_to_do(modbus_command_mapping *cmd)
 {
 	// wait to do
 	return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 }
+
 
 modbus_command_mapping modbus_command_table[] = {
 	// addr, write_fn, read_fn, arg0, arg1, arg2, size
@@ -696,8 +719,10 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_AUTO_TUNE_COOLANT_OUTLET_TEMPERATURE_TARGET_SET_ADDR, modbus_to_do, NULL, 0, 0, 0,
 	  1 },
 	{ MODBUS_PUMP_REDUNDANT_SWITCHED_INTERVAL_ADDR, modbus_to_do, NULL, 0, 0, 0, 1 },
-	{ MODBUS_MANUAL_CONTROL_PUMP_DUTY_SET_ADDR, modbus_to_do, NULL, 0, 0, 0, 1 },
-	{ MODBUS_MANUAL_CONTROL_FAN_DUTY_SET_ADDR, modbus_to_do, NULL, 0, 0, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_PUMP_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, PWM_GRUP_E_PUMP,
+	  0, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_FAN_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm,
+	  PWM_GRUP_E_HEX_FAN, 0, 0, 1 },
 	{ MODBUS_PUMP_SETTING_ADDR, modbus_pump_setting, NULL, 0, 0, 0, 1 },
 	{ MODBUS_LEAKAGE_SETTING_ON_ADDR, modbus_to_do, NULL, 0, 0, 0, 1 },
 	// Leakage Black Box

@@ -120,7 +120,6 @@ void set_rpu_ready()
 	gpio_set(BIC_RPU_READY1, 1);
 	gpio_set(BIC_RPU_READY2, 1);
 	gpio_set(BIC_RPU_READY3, 1);
-	gpio_set(FM_BIC_READY_R_N, 0);
 }
 
 float pow_of_10(int8_t exp)
