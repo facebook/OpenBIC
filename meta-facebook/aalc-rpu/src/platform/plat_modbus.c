@@ -923,6 +923,7 @@ static int coil_wr(uint16_t addr, bool state)
 
 static int holding_reg_multi_wr(char *iface_name, uint16_t addr, uint16_t *reg, uint16_t num_regs)
 {
+
 	modbus_command_mapping *ptr = ptr_to_modbus_table(addr);
 	if (!ptr) {
 		LOG_ERR("modbus write command 0x%x not find!\n", addr);
