@@ -143,6 +143,7 @@
 
 &spi1 {
 	status = "okay";
+	pure-spi-mode-only;
 };
 
 &spi1_cs0 {
