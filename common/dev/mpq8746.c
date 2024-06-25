@@ -140,6 +140,64 @@ static bool mpq8746_store(uint8_t bus, uint8_t addr)
 	return true;
 }
 
+bool mpq8746_get_fw_version(uint8_t bus, uint8_t addr, uint16_t *rev)
+{
+	CHECK_NULL_ARG_WITH_RETURN(rev, false);
+
+	if (mpq8746_set_page(bus, addr, VR_MPS_PAGE_0) == false) {
+		LOG_ERR("Failed to set page before reading config code revision");
+		return false;
+	}
+
+	*rev = 0;
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 3;
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 2;
+	i2c_msg.data[0] = VR_REG_MFR_CFG_CODE_REV;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("Failed to read config code revision");
+		return false;
+	}
+
+	*rev = (i2c_msg.data[1] << 8) | i2c_msg.data[0];
+
+	return true;
+}
+
+static bool mpq8746_get_checksum(uint8_t bus, uint8_t addr, uint16_t *checksum)
+{
+	CHECK_NULL_ARG_WITH_RETURN(checksum, false);
+
+	if (mpq8746_set_page(bus, addr, VR_MPS_PAGE_0) == false) {
+		LOG_ERR("Failed to set page before reading user crc");
+		return false;
+	}
+
+	*checksum = 0;
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 3;
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 2;
+	i2c_msg.data[0] = VR_REG_CRC_USR;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("Failed to read user crc");
+		return false;
+	}
+
+	*checksum = (i2c_msg.data[1] << 8) | i2c_msg.data[0];
+
+	return true;
+}
+
 static bool mpq8746_pre_update(uint8_t bus, uint8_t addr, struct mpq8746_config *dev_cfg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(dev_cfg, false);
@@ -168,17 +226,13 @@ static bool mpq8746_pre_update(uint8_t bus, uint8_t addr, struct mpq8746_config 
 		return false;
 	}
 
-	i2c_msg.tx_len = 1;
-	i2c_msg.rx_len = 2;
-	i2c_msg.data[0] = VR_REG_MFR_CFG_CODE_REV;
-
-	if (i2c_master_read(&i2c_msg, retry)) {
-		LOG_ERR("Failed to read device id");
+	uint16_t cfg_code_rev = 0;
+	if (mpq8746_get_fw_version(bus, addr, &cfg_code_rev) == false) {
+		LOG_ERR("Failed to get product id");
 		return false;
 	}
 
-	uint8_t dev_id =
-		((i2c_msg.data[0] | (i2c_msg.data[1] << 8)) >> 13) & BIT_MASK(3); // C1[15:13]
+	uint8_t dev_id = (cfg_code_rev >> 13) & BIT_MASK(3); // C1[15:13]
 
 	if (dev_cfg->dev_id != dev_id) {
 		LOG_ERR("Invalid device id 0x%x from image, should be 0x%x", dev_cfg->dev_id,
@@ -388,35 +442,6 @@ bool mpq8746_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img
 exit:
 	SAFE_FREE(dev_cfg.pdata);
 	return ret;
-}
-
-bool mpq8746_get_checksum(uint8_t bus, uint8_t addr, uint16_t *checksum)
-{
-	CHECK_NULL_ARG_WITH_RETURN(checksum, false);
-
-	if (mpq8746_set_page(bus, addr, VR_MPS_PAGE_0) == false) {
-		LOG_ERR("Failed to set page before reading user crc");
-		return false;
-	}
-
-	*checksum = 0;
-
-	I2C_MSG i2c_msg = { 0 };
-	uint8_t retry = 3;
-	i2c_msg.bus = bus;
-	i2c_msg.target_addr = addr;
-	i2c_msg.tx_len = 1;
-	i2c_msg.rx_len = 2;
-	i2c_msg.data[0] = VR_REG_CRC_USR;
-
-	if (i2c_master_read(&i2c_msg, retry)) {
-		LOG_ERR("Failed to read user crc");
-		return false;
-	}
-
-	*checksum = (i2c_msg.data[1] << 8) | i2c_msg.data[0];
-
-	return true;
 }
 
 uint8_t mpq8746_read(sensor_cfg *cfg, int *reading)

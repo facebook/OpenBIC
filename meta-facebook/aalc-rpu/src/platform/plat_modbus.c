@@ -74,7 +74,7 @@ uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd)
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
 	float val = 0;
-	if (get_sensor_reading_to_real_val(cmd->arg0, &val) == SENSOR_READ_SUCCESS) {
+	if (get_sensor_reading_to_real_val(cmd->arg0, &val) == SENSOR_READ_4BYTE_ACUR_SUCCESS) {
 		float r = pow_of_10(cmd->arg2);
 		uint16_t byte_val = val / cmd->arg1 / r; // scale
 		memcpy(cmd->data, &byte_val, sizeof(uint16_t) * cmd->cmd_size);
@@ -949,7 +949,7 @@ MODBUS_CUSTOM_FC_DEFINE(custom_fc64, custom_handler_fc64, FW_UPDATE_SWITCH_FC, N
 
 int init_custom_modbus_server(void)
 {
-	LOG_ERR("init_custom_modbus_server");
+	LOG_INF("init_custom_modbus_server");
 	int server_iface;
 	int ret = 0; // 0: success
 	for (uint8_t i = 0; i < ARRAY_SIZE(modbus_server_config); i++) {
