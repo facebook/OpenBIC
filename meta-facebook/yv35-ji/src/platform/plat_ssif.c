@@ -53,7 +53,7 @@ static void set_rt8848c_config()
 	I2C_MSG i2c_msg = { 0 };
 	uint8_t retry = 3;
 	i2c_msg.bus = CPUVDD_I2C_BUS;
-	i2c_msg.target_addr = (CPUVDD_I2C_ADDR >> 1);
+	i2c_msg.target_addr = (RT8848C_I2C_ADDR >> 1);
 
 	/* unlock register 0x01~0x5F */
 	i2c_msg.tx_len = 2;
@@ -109,7 +109,7 @@ static void set_rt8848c_config()
 K_TIMER_DEFINE(send_cmd_timer, send_cmd_to_dev, NULL);
 void handle_post_end_handler(struct k_work *work)
 {
-	k_timer_start(&send_cmd_timer, K_MSEC(3000), K_NO_WAIT);
+	k_timer_start(&send_cmd_timer, K_NO_WAIT, K_NO_WAIT);
 
 	/* Pull low virtual bios complete pin */
 	gpio_set(VIRTUAL_BIOS_POST_COMPLETE_L, GPIO_LOW);
