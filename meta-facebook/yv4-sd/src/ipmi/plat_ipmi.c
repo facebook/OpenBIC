@@ -232,8 +232,7 @@ void OEM_1S_INFORM_BMC_TO_CONTROL_POWER(ipmi_msg *msg)
 	translated_msg.hdr.rq = 1;
 
 	uint8_t power_option = msg->data[0];
-	if (power_option != SLED_CYCLE && power_option != SLOT_12V_CYCLE &&
-	    power_option != SLOT_DC_CYCLE) {
+	if (power_option >= MAX_POWER_OPTION) {
 		msg->completion_code = CC_INVALID_PARAM;
 		return;
 	}
