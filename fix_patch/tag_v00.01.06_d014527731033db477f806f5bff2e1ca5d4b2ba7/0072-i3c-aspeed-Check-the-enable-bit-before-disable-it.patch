@@ -1,0 +1,32 @@
+From b2c32016ce549986117a03f0493b2d35e54206e2 Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Wed, 12 Jun 2024 16:41:47 +0800
+Subject: [PATCH 08/11] i3c: aspeed: Check the enable bit before disable it
+
+Add a check for the setting of the enable bit to prevent the driver from
+generating the dummy waveform when the controller remains in disabled
+status.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I4430bf2a9f0236c5841a2e88e991b75e376e2a37
+---
+ drivers/i3c/i3c_aspeed.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index 9f46386770..b5699ae5ce 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -1392,6 +1392,9 @@ static int i3c_aspeed_disable(struct i3c_aspeed_obj *obj)
+ 	struct i3c_aspeed_config *config = obj->config;
+ 	struct i3c_register_s *i3c_register = config->base;
+ 
++	if (!i3c_register->device_ctrl.fields.enable)
++		return 0;
++
+ 	if (config->secondary) {
+ 		i3c_aspeed_isolate_scl_sda(config->inst_id, true);
+ 		/* Clear the internal busy status */
+-- 
+2.25.1
+

@@ -1,0 +1,115 @@
+From 8ab4f9b2038ede772c56b7d7d4704a687d3855d4 Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Thu, 31 Aug 2023 18:39:02 +0800
+Subject: [PATCH 02/11] i3c: aspeed: Check the fail of i3c slave enable.
+
+Toggling the 8 SCL_IN signals to the i3c slave can ensure the success of
+the enable procedure, rather than using a while loop that might lead to
+the CPU becoming stuck indefinitely.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I61fa249615f9999e26c637529d8d084b5ed38434
+---
+ drivers/i3c/i3c_aspeed.c | 41 ++++++++++++++++++++++------------------
+ 1 file changed, 23 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index 714f72bb40..63770cb850 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -612,19 +612,19 @@ void i3c_aspeed_gen_tbits_low(struct i3c_aspeed_obj *obj)
+ 		LOG_ERR("Failed to recovery the i3c fsm from %x to idle: %d",
+ 			i3c_register->present_state.fields.cm_tfr_sts, ret);
+ }
+-void i3c_aspeed_toggle_scl_in(int inst_id)
++
++void i3c_aspeed_toggle_scl_in(int inst_id, uint32_t times)
+ {
+ 	uint32_t i3c_gr = DT_REG_ADDR(DT_NODELABEL(i3c_gr));
+ 	uint32_t value;
+ 
+ 	value = sys_read32(i3c_gr + I3CG_REG1(inst_id));
+-	value |= SCL_IN_SW_MODE_VAL;
+-	sys_write32(value, i3c_gr + I3CG_REG1(inst_id));
+-
+-	value &= ~SCL_IN_SW_MODE_VAL;
+-	sys_write32(value, i3c_gr + I3CG_REG1(inst_id));
+-	value |= SCL_IN_SW_MODE_VAL;
+-	sys_write32(value, i3c_gr + I3CG_REG1(inst_id));
++	for (; times; times--) {
++		value &= ~SCL_IN_SW_MODE_VAL;
++		sys_write32(value, i3c_gr + I3CG_REG1(inst_id));
++		value |= SCL_IN_SW_MODE_VAL;
++		sys_write32(value, i3c_gr + I3CG_REG1(inst_id));
++	}
+ }
+ 
+ void i3c_aspeed_gen_start_to_internal(int inst_id)
+@@ -1238,7 +1238,7 @@ static void i3c_aspeed_init_queues(struct i3c_aspeed_obj *obj)
+ 	i3c_register->data_buff_ctrl.value = data_buff_ctrl.value;
+ }
+ 
+-static void i3c_aspeed_enable(struct i3c_aspeed_obj *obj)
++static int i3c_aspeed_enable(struct i3c_aspeed_obj *obj)
+ {
+ 	struct i3c_aspeed_config *config = obj->config;
+ 	struct i3c_register_s *i3c_register = config->base;
+@@ -1257,11 +1257,17 @@ static void i3c_aspeed_enable(struct i3c_aspeed_obj *obj)
+ 		k_busy_wait(DIV_ROUND_UP(config->core_period *
+ 						 i3c_register->bus_free_timing.fields.i3c_ibi_free,
+ 					 NSEC_PER_USEC));
+-		while (!i3c_register->device_ctrl.fields.enable)
+-			i3c_aspeed_toggle_scl_in(config->inst_id);
+-		i3c_aspeed_gen_stop_to_internal(config->inst_id);
++		i3c_aspeed_toggle_scl_in(config->inst_id, 8);
++		if (!i3c_register->device_ctrl.fields.enable) {
++			LOG_WRN("Failed to enable controller");
++			i3c_aspeed_isolate_scl_sda(config->inst_id, false);
++			return -EACCES;
++		}
++		if (!config->assigned_addr)
++			i3c_aspeed_gen_stop_to_internal(config->inst_id);
+ 		i3c_aspeed_isolate_scl_sda(config->inst_id, false);
+ 	}
++	return 0;
+ }
+ 
+ static void i3c_aspeed_wr_tx_fifo(struct i3c_aspeed_obj *obj, uint8_t *bytes, int nbytes)
+@@ -1558,12 +1564,10 @@ static void i3c_aspeed_slave_reset_queue(const struct device *dev)
+ 	struct i3c_aspeed_config *config = DEV_CFG(dev);
+ 	struct i3c_register_s *i3c_register = config->base;
+ 	union i3c_reset_ctrl_s reset_ctrl;
+-	int i;
+ 
+ 	i3c_aspeed_isolate_scl_sda(config->inst_id, true);
+ 	i3c_register->device_ctrl.fields.enable = 0;
+-	for (i = 0; i < 8; i++)
+-		i3c_aspeed_toggle_scl_in(config->inst_id);
++	i3c_aspeed_toggle_scl_in(config->inst_id, 8);
+ 	if (i3c_register->device_ctrl.fields.enable) {
+ 		LOG_ERR("failed to disable controller: reset i3c controller\n");
+ 		i3c_aspeed_isolate_scl_sda(config->inst_id, false);
+@@ -1581,8 +1585,7 @@ static void i3c_aspeed_slave_reset_queue(const struct device *dev)
+ 	k_busy_wait(DIV_ROUND_UP(config->core_period *
+ 					 i3c_register->bus_free_timing.fields.i3c_ibi_free,
+ 				 NSEC_PER_USEC));
+-	for (i = 0; i < 8; i++)
+-		i3c_aspeed_toggle_scl_in(config->inst_id);
++	i3c_aspeed_toggle_scl_in(config->inst_id, 8);
+ 	if (!i3c_register->device_ctrl.fields.enable) {
+ 		LOG_ERR("failed to enable controller: reset i3c controller\n");
+ 		i3c_aspeed_isolate_scl_sda(config->inst_id, false);
+@@ -1982,7 +1985,9 @@ static int i3c_aspeed_init(const struct device *dev)
+ 	/* Reject SIR by default */
+ 	i3c_register->sir_reject = GENMASK(31, 0);
+ 
+-	i3c_aspeed_enable(obj);
++	ret = i3c_aspeed_enable(obj);
++	if (ret)
++		return ret;
+ 
+ 	return 0;
+ }
+-- 
+2.25.1
+

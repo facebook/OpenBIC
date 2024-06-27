@@ -1,0 +1,124 @@
+From 2b06ee07fed13a6c0fdd1a44a0b96b3f8578cbd3 Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Thu, 31 Aug 2023 19:28:10 +0800
+Subject: [PATCH 03/11] i3c: aspeed: Generate the stop condition when slave
+ disable.
+
+The i3c slave requires a stop condition to clear the internal hardware
+flag. This prevents subsequent enable operations from failing due to this
+flag. This patch also organize the disable procedure as one api to enhance
+maintainability.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I0b3ab5a229dded97b884951c6837b2296de684a2
+---
+ drivers/i3c/i3c_aspeed.c | 60 ++++++++++++++++++++++++----------------
+ 1 file changed, 36 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index 63770cb850..3c7d9964c8 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -1270,6 +1270,28 @@ static int i3c_aspeed_enable(struct i3c_aspeed_obj *obj)
+ 	return 0;
+ }
+ 
++static int i3c_aspeed_disable(struct i3c_aspeed_obj *obj)
++{
++	struct i3c_aspeed_config *config = obj->config;
++	struct i3c_register_s *i3c_register = config->base;
++
++	if (config->secondary)
++		i3c_aspeed_isolate_scl_sda(config->inst_id, true);
++	i3c_register->device_ctrl.fields.enable = 0;
++	if (config->secondary) {
++		i3c_aspeed_toggle_scl_in(config->inst_id, 8);
++		/* Clear the internal busy status */
++		i3c_aspeed_gen_stop_to_internal(config->inst_id);
++		if (i3c_register->device_ctrl.fields.enable) {
++			LOG_WRN("Failed to disable controller");
++			i3c_aspeed_isolate_scl_sda(config->inst_id, false);
++			return -EACCES;
++		}
++		i3c_aspeed_isolate_scl_sda(config->inst_id, false);
++	}
++	return 0;
++}
++
+ static void i3c_aspeed_wr_tx_fifo(struct i3c_aspeed_obj *obj, uint8_t *bytes, int nbytes)
+ {
+ 	struct i3c_register_s *i3c_register = obj->config->base;
+@@ -1559,21 +1581,17 @@ int i3c_aspeed_slave_register(const struct device *dev, struct i3c_slave_setup *
+ 	return 0;
+ }
+ 
+-static void i3c_aspeed_slave_reset_queue(const struct device *dev)
++static int i3c_aspeed_slave_reset_queue(const struct device *dev)
+ {
+ 	struct i3c_aspeed_config *config = DEV_CFG(dev);
++	struct i3c_aspeed_obj *obj = DEV_DATA(dev);
+ 	struct i3c_register_s *i3c_register = config->base;
+ 	union i3c_reset_ctrl_s reset_ctrl;
++	int ret;
+ 
+-	i3c_aspeed_isolate_scl_sda(config->inst_id, true);
+-	i3c_register->device_ctrl.fields.enable = 0;
+-	i3c_aspeed_toggle_scl_in(config->inst_id, 8);
+-	if (i3c_register->device_ctrl.fields.enable) {
+-		LOG_ERR("failed to disable controller: reset i3c controller\n");
+-		i3c_aspeed_isolate_scl_sda(config->inst_id, false);
+-		i3c_aspeed_init(dev);
+-		return;
+-	}
++	ret = i3c_aspeed_disable(obj);
++	if (ret)
++		return ret;
+ 	reset_ctrl.value = 0;
+ 	reset_ctrl.fields.tx_queue_reset = 1;
+ 	reset_ctrl.fields.rx_queue_reset = 1;
+@@ -1581,18 +1599,11 @@ static void i3c_aspeed_slave_reset_queue(const struct device *dev)
+ 	reset_ctrl.fields.cmd_queue_reset = 1;
+ 	reset_ctrl.fields.resp_queue_reset = 1;
+ 	i3c_register->reset_ctrl.value = reset_ctrl.value;
+-	i3c_register->device_ctrl.fields.enable = 1;
+-	k_busy_wait(DIV_ROUND_UP(config->core_period *
+-					 i3c_register->bus_free_timing.fields.i3c_ibi_free,
+-				 NSEC_PER_USEC));
+-	i3c_aspeed_toggle_scl_in(config->inst_id, 8);
+-	if (!i3c_register->device_ctrl.fields.enable) {
+-		LOG_ERR("failed to enable controller: reset i3c controller\n");
+-		i3c_aspeed_isolate_scl_sda(config->inst_id, false);
+-		i3c_aspeed_init(dev);
+-		return;
+-	}
+-	i3c_aspeed_isolate_scl_sda(config->inst_id, false);
++
++	ret = i3c_aspeed_enable(obj);
++	if (ret)
++		return ret;
++	return 0;
+ }
+ 
+ static uint32_t i3c_aspeed_slave_wait_data_consume(const struct device *dev)
+@@ -1687,8 +1698,7 @@ int i3c_aspeed_slave_put_read_data(const struct device *dev, struct i3c_slave_pa
+ 				    K_SECONDS(3).ticks);
+ 	if (flag_ret & osFlagsError) {
+ 		LOG_WRN("Wait master read timeout: reset queue\n");
+-		i3c_aspeed_slave_reset_queue(dev);
+-		ret = -EIO;
++		ret = i3c_aspeed_slave_reset_queue(dev);
+ 	}
+ ibi_err:
+ 	return ret;
+@@ -1905,6 +1915,8 @@ static int i3c_aspeed_init(const struct device *dev)
+ 	clock_control_on(config->clock_dev, config->clock_id);
+ 	reset_control_deassert(reset_dev, config->reset_id);
+ 
++	ret = i3c_aspeed_disable(obj);
++
+ 	reset_ctrl.value = 0;
+ 	reset_ctrl.fields.core_reset = 1;
+ 	reset_ctrl.fields.tx_queue_reset = 1;
+-- 
+2.25.1
+
