@@ -113,9 +113,9 @@ void pal_set_sys_status()
 	if (get_post_status()) {
 		apml_recovery();
 		set_tsi_threshold();
-		read_cpuid();
 		disable_mailbox_completion_alert();
 		enable_alert_signal();
+		read_cpuid();
 	}
 }
 
