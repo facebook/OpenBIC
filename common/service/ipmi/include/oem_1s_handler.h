@@ -123,6 +123,7 @@ void OEM_1S_GET_4BYTE_POST_CODE(ipmi_msg *msg);
 void OEM_1S_GET_PCIE_RETIMER_TYPE(ipmi_msg *msg);
 void OEM_1S_DEBUG_GET_HW_SIGNAL(ipmi_msg *msg);
 void OEM_1S_RECORD_DAM_PIN_STATUS(uint8_t gpio_num, uint8_t status);
+void OEM_1S_INFORM_BMC_TO_CONTROL_POWER(ipmi_msg *msg);
 
 #ifdef CONFIG_SNOOP_ASPEED
 void OEM_1S_GET_POST_CODE(ipmi_msg *msg);
