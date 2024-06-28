@@ -19,6 +19,8 @@
 #include "plat_gpio.h"
 #include "plat_sensor_table.h"
 #include "plat_mctp.h"
+#include "plat_class.h"
+#include "plat_power_status.h"
 #include "power_status.h"
 #include "ipmi.h"
 #include "pldm.h"
@@ -111,9 +113,17 @@ void ISR_RTC_ALERT()
 	isr_dbg_print(I2C_2_CPU_ALERT_R_L);
 }
 
-void ISR_GPIOB7()
+void ISR_POST_COMPLETE()
 {
-	isr_dbg_print(FPGA_CPU_BOOT_DONE);
+	isr_dbg_print(FPGA_CPU_BOOT_DONE_L);
+
+	if (get_board_revision() >= SYS_BOARD_PVT) {
+		handle_post_status(GPIO_LOW, false);
+
+		if (get_post_status()) {
+			handle_post_action();
+		}
+	}
 }
 
 void ISR_GPIOA5()
@@ -209,8 +219,9 @@ void ISR_PWRGD_CPU()
 					  K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
 	} else {
 		/* Pull high virtual bios complete pin */
-		gpio_set(VIRTUAL_BIOS_POST_COMPLETE_L, GPIO_HIGH);
-		set_post_status(VIRTUAL_BIOS_POST_COMPLETE_L);
+		handle_post_status(GPIO_HIGH, true);
+		reset_post_end_work_status();
+		handle_tda38741_work_around();
 		if (k_work_cancel_delayable(&PROC_FAIL_work) != 0) {
 			LOG_ERR("Failed to cancel proc_fail delay work.");
 		}

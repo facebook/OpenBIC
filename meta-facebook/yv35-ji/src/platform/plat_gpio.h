@@ -43,7 +43,7 @@
 	gpio_name_to_num(BIC_EROT_LVSFT_EN) \
 	gpio_name_to_num(RTC_CLR_L) \
 	gpio_name_to_num(I2C_SSIF_ALERT_L) \
-	gpio_name_to_num(FPGA_CPU_BOOT_DONE)
+	gpio_name_to_num(FPGA_CPU_BOOT_DONE_L)
 
 #define name_gpioC \
 	gpio_name_to_num(FM_HSC_TIMER) \
