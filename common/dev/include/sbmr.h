@@ -70,6 +70,7 @@ void sbmr_postcode_insert(sbmr_boot_progress_code_t boot_progress_code);
 void reset_sbmr_postcode_buffer();
 bool sbmr_get_9byte_postcode_ok();
 void sbmr_reset_9byte_postcode_ok();
+bool sbmr_get_uefi_status();
 bool smbr_cmd_handler(ipmi_msg *msg);
 
 #endif /* ENABLE_SBMR */
