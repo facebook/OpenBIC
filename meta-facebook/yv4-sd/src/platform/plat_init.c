@@ -99,6 +99,7 @@ void pal_post_init()
 	pldm_assign_gpio_effecter_id(PLAT_EFFECTER_ID_GPIO_HIGH_BYTE);
 	start_get_dimm_info_thread();
 	set_sys_ready_pin(BIC_READY_R);
+	reset_usb_hub();
 }
 
 void pal_set_sys_status()
@@ -107,7 +108,6 @@ void pal_set_sys_status()
 	set_DC_on_delayed_status();
 	set_post_status(FM_BIOS_POST_CMPLT_BIC_N);
 	sync_bmc_ready_pin();
-	reset_usb_hub();
 	apml_init();
 
 	if (get_post_status()) {
