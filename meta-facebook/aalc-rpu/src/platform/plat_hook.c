@@ -28,13 +28,19 @@
 
 LOG_MODULE_REGISTER(plat_hook);
 
-struct k_mutex i2c_1_PCA9546a_mutex;
-struct k_mutex i2c_2_PCA9546a_mutex;
-struct k_mutex i2c_6_pca9546a_mutex;
-struct k_mutex i2c_7_PCA9546a_mutex;
-struct k_mutex i2c_8_PCA9546a_mutex;
-struct k_mutex i2c_9_PCA9546a_mutex;
+K_MUTEX_DEFINE(i2c_1_PCA9546a_mutex);
+K_MUTEX_DEFINE(i2c_2_PCA9546a_mutex);
+K_MUTEX_DEFINE(i2c_6_pca9546a_mutex);
+K_MUTEX_DEFINE(i2c_7_PCA9546a_mutex);
+K_MUTEX_DEFINE(i2c_8_PCA9546a_mutex);
+K_MUTEX_DEFINE(i2c_9_PCA9546a_mutex);
 
+#define BUS_1_MUX_ADDR 0xE0 >> 1
+#define BUS_2_MUX_ADDR 0xE2 >> 1
+#define BUS_6_MUX_ADDR 0xE4 >> 1
+#define BUS_7_MUX_ADDR 0xE6 >> 1
+#define BUS_8_MUX_ADDR 0xE8 >> 1
+#define BUS_9_MUX_ADDR 0xE8 >> 1
 /**************************************************************************************************
  * INIT ARGS
 **************************************************************************************************/
@@ -240,11 +246,13 @@ nct7363_init_arg nct7363_init_args[] = {
 		.is_init = false, 
 		.wdt_cfg = WDT_7_5_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_PWM,
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -255,11 +263,13 @@ nct7363_init_arg nct7363_init_args[] = {
 		.is_init = false, 
 		.wdt_cfg = WDT_7_5_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_PWM,
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -270,11 +280,13 @@ nct7363_init_arg nct7363_init_args[] = {
 		.is_init = false, 
 		.wdt_cfg = WDT_7_5_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_PWM,
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -285,11 +297,13 @@ nct7363_init_arg nct7363_init_args[] = {
 		.is_init = false, 
 		.wdt_cfg = WDT_7_5_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_PWM,
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -300,11 +314,13 @@ nct7363_init_arg nct7363_init_args[] = {
 		.is_init = false, 
 		.wdt_cfg = WDT_7_5_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_PWM,
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -315,11 +331,13 @@ nct7363_init_arg nct7363_init_args[] = {
 		.is_init = false, 
 		.wdt_cfg = WDT_7_5_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_PWM,
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -330,11 +348,13 @@ nct7363_init_arg nct7363_init_args[] = {
 		.is_init = false, 
 		.wdt_cfg = WDT_7_5_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_PWM,
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -345,11 +365,13 @@ nct7363_init_arg nct7363_init_args[] = {
 		.is_init = false, 
 		.wdt_cfg = WDT_7_5_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_PWM,
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -360,11 +382,13 @@ nct7363_init_arg nct7363_init_args[] = {
 		.is_init = false, 
 		.wdt_cfg = WDT_7_5_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_PWM,
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -375,11 +399,13 @@ nct7363_init_arg nct7363_init_args[] = {
 		.is_init = false, 
 		.wdt_cfg = WDT_7_5_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_PWM,
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -390,11 +416,13 @@ nct7363_init_arg nct7363_init_args[] = {
 		.is_init = false, 
 		.wdt_cfg = WDT_7_5_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_PWM,
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -405,11 +433,13 @@ nct7363_init_arg nct7363_init_args[] = {
 		.is_init = false, 
 		.wdt_cfg = WDT_7_5_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_PWM,
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -420,11 +450,13 @@ nct7363_init_arg nct7363_init_args[] = {
 		.is_init = false, 
 		.wdt_cfg = WDT_7_5_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_PWM,
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -435,11 +467,13 @@ nct7363_init_arg nct7363_init_args[] = {
 		.is_init = false, 
 		.wdt_cfg = WDT_7_5_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
-		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_PWM,
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_FANIN,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_PWM,
 		// pwm setting
+		.fan_frequency[NCT7363_11_PORT] = 2, // TO DO wait to check
 		.fan_frequency[NCT7363_17_PORT] = 25000, // TO DO wait to check
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
@@ -520,11 +554,13 @@ nct7363_init_arg nct7363_init_args[] = {
 		.pin_type[NCT7363_3_PORT] = NCT7363_PIN_TPYE_PWM, // PUMP_ADD_WATER_PWM
 		.pin_type[NCT7363_4_PORT] = NCT7363_PIN_TPYE_FANIN, // PUMP_ADD_WATER fanin
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.gpio_10 = 1,
 		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.pin_type[NCT7363_12_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.pin_type[NCT7363_13_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.pin_type[NCT7363_14_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.pin_type[NCT7363_15_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
+		.gpio_15 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_16_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.pin_type[NCT7363_17_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		// pwm setting
@@ -636,8 +672,16 @@ adc_asd_init_arg adc_asd_init_args[] = {
 };
 
 ina238_init_arg ina238_init_args[] = {
-	// PDB board
+	// PDB board positive
 	[0] = { 
+		.is_init = false, 
+		.r_shunt = 0.1, // TO DO wait to check
+		.adc_range = INA238_ADC_RANGE_PN_163, // TO DO wait to check
+		.alert_latch = INA238_ALERT_LATCH_ENABLE,
+		.i_max = 0.1, // TO DO wait to check
+	},
+	// PDB board negative
+	[1] = { 
 		.is_init = false, 
 		.r_shunt = 0.1, // TO DO wait to check
 		.adc_range = INA238_ADC_RANGE_PN_163, // TO DO wait to check
@@ -739,37 +783,37 @@ ast_tach_init_arg ast_tach_init_args[] = {
  *  PRE-HOOK/POST-HOOK ARGS
  **************************************************************************************************/
 mux_config bus_1_PCA9546A_configs[] = {
-	[0] = { .target_addr = 0xE0, .channel = PCA9546A_CHANNEL_0 },
-	[1] = { .target_addr = 0xE0, .channel = PCA9546A_CHANNEL_1 },
-	[2] = { .target_addr = 0xE0, .channel = PCA9546A_CHANNEL_2 },
-	[3] = { .target_addr = 0xE0, .channel = PCA9546A_CHANNEL_3 },
+	[0] = { .target_addr = BUS_1_MUX_ADDR, .channel = PCA9546A_CHANNEL_0 },
+	[1] = { .target_addr = BUS_1_MUX_ADDR, .channel = PCA9546A_CHANNEL_1 },
+	[2] = { .target_addr = BUS_1_MUX_ADDR, .channel = PCA9546A_CHANNEL_2 },
+	[3] = { .target_addr = BUS_1_MUX_ADDR, .channel = PCA9546A_CHANNEL_3 },
 };
 mux_config bus_2_PCA9546A_configs[] = {
-	[0] = { .target_addr = 0xE2, .channel = PCA9546A_CHANNEL_0 },
-	[1] = { .target_addr = 0xE2, .channel = PCA9546A_CHANNEL_1 },
-	[2] = { .target_addr = 0xE2, .channel = PCA9546A_CHANNEL_2 },
-	[3] = { .target_addr = 0xE2, .channel = PCA9546A_CHANNEL_3 },
+	[0] = { .target_addr = BUS_2_MUX_ADDR, .channel = PCA9546A_CHANNEL_0 },
+	[1] = { .target_addr = BUS_2_MUX_ADDR, .channel = PCA9546A_CHANNEL_1 },
+	[2] = { .target_addr = BUS_2_MUX_ADDR, .channel = PCA9546A_CHANNEL_2 },
+	[3] = { .target_addr = BUS_2_MUX_ADDR, .channel = PCA9546A_CHANNEL_3 },
 };
 mux_config bus_6_PCA9546A_configs[] = {
-	[0] = { .target_addr = 0xE4, .channel = PCA9546A_CHANNEL_0 },
-	[1] = { .target_addr = 0xE4, .channel = PCA9546A_CHANNEL_1 },
-	[2] = { .target_addr = 0xE4, .channel = PCA9546A_CHANNEL_2 },
-	[3] = { .target_addr = 0xE4, .channel = PCA9546A_CHANNEL_3 },
+	[0] = { .target_addr = BUS_6_MUX_ADDR, .channel = PCA9546A_CHANNEL_0 },
+	[1] = { .target_addr = BUS_6_MUX_ADDR, .channel = PCA9546A_CHANNEL_1 },
+	[2] = { .target_addr = BUS_6_MUX_ADDR, .channel = PCA9546A_CHANNEL_2 },
+	[3] = { .target_addr = BUS_6_MUX_ADDR, .channel = PCA9546A_CHANNEL_3 },
 };
 mux_config bus_7_PCA9546A_configs[] = {
-	[0] = { .target_addr = 0xE6, .channel = PCA9546A_CHANNEL_0 },
-	[1] = { .target_addr = 0xE6, .channel = PCA9546A_CHANNEL_1 },
-	[2] = { .target_addr = 0xE6, .channel = PCA9546A_CHANNEL_2 },
-	[3] = { .target_addr = 0xE6, .channel = PCA9546A_CHANNEL_3 },
+	[0] = { .target_addr = BUS_7_MUX_ADDR, .channel = PCA9546A_CHANNEL_0 },
+	[1] = { .target_addr = BUS_7_MUX_ADDR, .channel = PCA9546A_CHANNEL_1 },
+	[2] = { .target_addr = BUS_7_MUX_ADDR, .channel = PCA9546A_CHANNEL_2 },
+	[3] = { .target_addr = BUS_7_MUX_ADDR, .channel = PCA9546A_CHANNEL_3 },
 };
 mux_config bus_8_PCA9546A_configs[] = {
-	[0] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_0 },
-	[1] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_1 },
-	[2] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_2 },
+	[0] = { .target_addr = BUS_8_MUX_ADDR, .channel = PCA9546A_CHANNEL_0 },
+	[1] = { .target_addr = BUS_8_MUX_ADDR, .channel = PCA9546A_CHANNEL_1 },
+	[2] = { .target_addr = BUS_8_MUX_ADDR, .channel = PCA9546A_CHANNEL_2 },
 };
 mux_config bus_9_PCA9546A_configs[] = {
-	[0] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_1 }, // sensor box
-	[1] = { .target_addr = 0xE8, .channel = PCA9546A_CHANNEL_2 }, // PDB
+	[0] = { .target_addr = BUS_9_MUX_ADDR, .channel = PCA9546A_CHANNEL_1 }, // sensor box
+	[1] = { .target_addr = BUS_9_MUX_ADDR, .channel = PCA9546A_CHANNEL_2 }, // PDB
 };
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
@@ -825,6 +869,7 @@ bool pre_PCA9546A_read(sensor_cfg *cfg, void *args)
 
 	ret = set_mux_channel(*pre_args, MUTEX_LOCK_ENABLE);
 	if (ret != true) {
+		LOG_ERR("change channel fail, unlock mutex");
 		k_mutex_unlock(mutex);
 	}
 
@@ -855,12 +900,19 @@ bool post_PCA9546A_read(sensor_cfg *cfg, void *args, int *reading)
 bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
-	CHECK_NULL_ARG_WITH_RETURN(reading, false);
-	ARG_UNUSED(args);
 
 	if (reading == NULL) {
+		// if pre_sensor_read_hook is not null, unlock PCA9546A mutex
+		if (cfg->pre_sensor_read_hook != NULL) {
+			if (!post_PCA9546A_read(cfg, args, reading)) {
+				LOG_ERR("adm1272 in post read unlock PCA9546A mutex fail");
+				return false;
+			}
+		}
 		return check_reading_pointer_null_is_allowed(cfg);
 	}
+
+	ARG_UNUSED(args);
 
 	sensor_val *sval = (sensor_val *)reading;
 	if (cfg->offset == PMBUS_READ_IOUT || cfg->offset == PMBUS_READ_IIN) {
@@ -879,13 +931,31 @@ bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
 		sval->fraction = (val - sval->integer) * 1000;
 	}
 
+	// if pre_sensor_read_hook is not null, unlock PCA9546A mutex
+	if (cfg->pre_sensor_read_hook != NULL) {
+		if (!post_PCA9546A_read(cfg, args, reading)) {
+			LOG_ERR("adm1272 in post read unlock PCA9546A mutex fail");
+			return false;
+		}
+	}
+
 	return true;
 }
 
 bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
-	CHECK_NULL_ARG_WITH_RETURN(reading, false);
+
+	if (reading == NULL) {
+		// if pre_sensor_read_hook is not null, unlock PCA9546A mutex
+		if (cfg->pre_sensor_read_hook != NULL) {
+			if (!post_PCA9546A_read(cfg, args, reading)) {
+				LOG_ERR("adm1272 in post read unlock PCA9546A mutex fail");
+				return false;
+			}
+		}
+		return check_reading_pointer_null_is_allowed(cfg);
+	}
 
 	sensor_val *oval = (sensor_val *)reading;
 	double rawValue = ((uint16_t)oval->integer + (oval->fraction / 1000.0));
