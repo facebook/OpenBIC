@@ -36,7 +36,7 @@ bool pal_request_msg_to_BIC_from_HOST(uint8_t netfn, uint8_t cmd)
 	if (netfn == NETFN_OEM_1S_REQ) {
 		if ((cmd == CMD_OEM_1S_FW_UPDATE) || (cmd == CMD_OEM_1S_RESET_BMC) ||
 		    (cmd == CMD_OEM_1S_GET_BIC_STATUS) || (cmd == CMD_OEM_1S_RESET_BIC) ||
-		    (cmd == CMD_OEM_1S_GET_BIC_FW_INFO))
+		    (cmd == CMD_OEM_1S_GET_BIC_FW_INFO || cmd == CMD_OEM_1S_SEND_MCTP_PLDM_COMMAND))
 			return true;
 	} else if (netfn == NETFN_APP_REQ) {
 		if (cmd == CMD_APP_GET_SYSTEM_GUID)

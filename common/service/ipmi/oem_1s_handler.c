@@ -2285,6 +2285,64 @@ __weak void OEM_1S_DEBUG_GET_HW_SIGNAL(ipmi_msg *msg)
 	return;
 }
 
+__weak void OEM_1S_SEND_MCTP_PLDM_COMMAND(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	/***************************************************
+	Request:
+	Data 0 - mctp dest eid
+	Data 1 - pldm type
+	Data 2 - pldm command
+	Data 3:N - pldm request data
+
+	Response:
+	Data 0 - pldm completion code
+	Data 1:N - pldm response data
+	***************************************************/
+
+	if (msg->data_len < 3) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t resp_buf[PLDM_MAX_DATA_SIZE] = { 0 };
+	pldm_msg pmsg = { 0 };
+	pmsg.hdr.msg_type = MCTP_MSG_TYPE_PLDM;
+	pmsg.hdr.pldm_type = msg->data[1];
+	pmsg.hdr.cmd = msg->data[2];
+	pmsg.hdr.rq = PLDM_REQUEST;
+	pmsg.len = msg->data_len - 3;
+	memcpy(pmsg.buf, &msg->data[3], pmsg.len);
+
+	mctp *mctp_inst = NULL;
+	if (get_mctp_info_by_eid(msg->data[0], &mctp_inst, &pmsg.ext_params) == false) {
+		LOG_ERR("Failed to get mctp info by eid 0x%x", msg->data[0]);
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	LOG_DBG("* Request: mctp addr: 0x%x eid: 0x%x msg_type: 0x%x",
+		pmsg.ext_params.smbus_ext_params.addr, msg->data[0], MCTP_MSG_TYPE_PLDM);
+	LOG_DBG("  pldm_type: 0x%x pldm cmd: 0x%x", pmsg.hdr.pldm_type, pmsg.hdr.cmd);
+	LOG_HEXDUMP_DBG(pmsg.buf, pmsg.len, "  pldm data");
+
+	uint16_t resp_len = mctp_pldm_read(mctp_inst, &pmsg, resp_buf, sizeof(resp_buf));
+	if (resp_len == 0) {
+		LOG_ERR("Failed to get mctp-pldm response");
+		msg->completion_code = CC_CAN_NOT_RESPOND;
+		return;
+	}
+
+	LOG_HEXDUMP_DBG(resp_buf, resp_len, "* response:");
+
+	memcpy(msg->data, resp_buf, resp_len);
+	msg->data_len = resp_len;
+	msg->completion_code = CC_SUCCESS;
+
+	return;
+}
+
 void IPMI_OEM_1S_handler(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -2574,6 +2632,10 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_DEBUG_GET_HW_SIGNAL:
 		LOG_DBG("Received DEBUG GET HW SIGNAL command");
 		OEM_1S_DEBUG_GET_HW_SIGNAL(msg);
+		break;
+	case CMD_OEM_1S_SEND_MCTP_PLDM_COMMAND:
+		LOG_DBG("Received MCTP-PLDM command");
+		OEM_1S_SEND_MCTP_PLDM_COMMAND(msg);
 		break;
 	default:
 		LOG_ERR("Invalid OEM message, netfn(0x%x) cmd(0x%x)", msg->netfn, msg->cmd);
