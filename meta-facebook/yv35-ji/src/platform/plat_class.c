@@ -194,13 +194,4 @@ void init_platform_config()
 	if (board_revision < SYS_BOARD_EVT) {
 		retimer_module = RETIMER_MODULE_UNKNOWN;
 	}
-
-	/* work around */
-	set_post_status(VIRTUAL_BIOS_POST_COMPLETE_L);
-	if (get_post_status() == true)
-		modify_sensor_cfg();
-
-	LOG_INF("Board revision: %d", board_revision);
-	LOG_INF("Retimer module: %d, OTH module: %d, HSC module: %d", retimer_module, oth_module,
-		hsc_module);
 }

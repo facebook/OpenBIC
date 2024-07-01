@@ -62,6 +62,7 @@
 #define DISABLE_NCT214
 #define DISABLE_AST_TACH
 #define DISABLE_XDP710
+#define DISABLE_ADC128D818
 
 #define HOST_KCS_PORT kcs3
 #define BMC_USB_PORT "CDC_ACM_0"

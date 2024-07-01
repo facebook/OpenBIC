@@ -15,6 +15,7 @@
  */
 
 #include <logging/log.h>
+#include <stdlib.h>
 #include "libipmi.h"
 #include "kcs.h"
 #include "rg3mxxb12.h"
@@ -112,9 +113,9 @@ void ISR_POST_COMPLETE()
 
 	if (get_post_status()) {
 		set_tsi_threshold();
-		read_cpuid();
 		disable_mailbox_completion_alert();
 		enable_alert_signal();
+		read_cpuid();
 		//todo : add sel to bmc for assert
 		hw_event_register[12]++;
 	} else {
@@ -275,4 +276,66 @@ void ISR_APML_ALERT()
 {
 	//todo : add sel to bmc for assert
 	hw_event_register[11]++;
+	LOG_INF("APML_ALERT detected");
+	uint8_t status;
+	if (apml_read_byte(apml_get_bus(), SB_RMI_ADDR, SBRMI_STATUS, &status))
+		LOG_ERR("Failed to read RMI status.");
+
+	if ((status & 0x02) && (apml_write_byte(apml_get_bus(), SB_RMI_ADDR, SBRMI_STATUS, 0x02)))
+		LOG_ERR("Failed to clear SwAlertSts.");
+
+	pldm_msg translated_msg = { 0 };
+	uint8_t bmc_bus = I2C_BUS_BMC;
+	uint8_t bmc_interface = pal_get_bmc_interface();
+
+	if (bmc_interface == BMC_INTERFACE_I3C) {
+		bmc_bus = I3C_BUS_BMC;
+		translated_msg.ext_params.type = MCTP_MEDIUM_TYPE_TARGET_I3C;
+		translated_msg.ext_params.i3c_ext_params.addr = I3C_STATIC_ADDR_BMC;
+		translated_msg.ext_params.ep = MCTP_EID_BMC;
+	} else {
+		bmc_bus = I2C_BUS_BMC;
+		translated_msg.ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
+		translated_msg.ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
+		translated_msg.ext_params.ep = MCTP_EID_BMC;
+	}
+
+	translated_msg.hdr.pldm_type = PLDM_TYPE_OEM;
+	translated_msg.hdr.cmd = PLDM_OEM_WRITE_FILE_IO;
+	translated_msg.hdr.rq = 1;
+
+	struct pldm_oem_write_file_io_req *ptr = (struct pldm_oem_write_file_io_req *)malloc(
+		sizeof(struct pldm_oem_write_file_io_req) + CPUID_SIZE);
+
+	if (!ptr) {
+		LOG_ERR("Failed to allocate memory.");
+		return;
+	}
+
+	ptr->cmd_code = APML_ALERT;
+	ptr->data_length = CPUID_SIZE;
+	const uint8_t* cpuid_ptr = get_cpuid();
+	memcpy(ptr->messages, cpuid_ptr, CPUID_SIZE);
+
+	translated_msg.buf = (uint8_t *)ptr;
+	translated_msg.len = sizeof(struct pldm_oem_write_file_io_req) + CPUID_SIZE;
+
+	uint8_t resp_len = sizeof(struct pldm_oem_write_file_io_resp);
+	uint8_t rbuf[resp_len];
+
+	if (!mctp_pldm_read(find_mctp_by_bus(bmc_bus), &translated_msg, rbuf, resp_len)) {
+		LOG_ERR("mctp_pldm_read fail");
+		goto exit;
+	}
+
+	struct pldm_oem_write_file_io_resp *resp = (struct pldm_oem_write_file_io_resp *)rbuf;
+	if (resp->completion_code != PLDM_SUCCESS) {
+		LOG_ERR("Check reponse completion code fail %x", resp->completion_code);
+		goto exit;
+	}
+
+exit:
+	SAFE_FREE(ptr);
+
+	return;
 }

@@ -208,3 +208,8 @@ void read_cpuid()
 	}
 	apml_read(&apml_data);
 }
+
+const uint8_t* get_cpuid()
+{
+    return cpuid;
+}

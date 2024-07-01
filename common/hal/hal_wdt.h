@@ -17,7 +17,13 @@
 #ifndef HAL_WDT_H
 #define HAL_WDT_H
 
+#if defined(CONFIG_WDT_ASPEED)
 #define WDT_DEVICE_NAME "wdt2"
+#elif (CONFIG_WDT_NPCM4XX)
+#define WDT_DEVICE_NAME "TWD_0"
+#else /* defined(CONFIG_WDT_ASPEED) */
+#endif /* defined(CONFIG_WDT_ASPEED) */
+
 #define WDT_TIMEOUT (15 * 1000) // 15s
 #define WDT_FEED_DELAY_MS (10 * 1000) // 10s
 

@@ -20,11 +20,16 @@
 #include "plat_gpio.h"
 #include "plat_mctp.h"
 #include "plat_ssif.h"
+#include "plat_sensor_table.h"
+#include "plat_power_status.h"
 #include "util_worker.h"
 #include "power_status.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "libutil.h"
+
+#include <logging/log.h>
+LOG_MODULE_REGISTER(plat_init);
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -52,12 +57,20 @@ void pal_pre_init()
 
 void pal_post_init()
 {
+	if (get_post_status() == true)
+		modify_sensor_cfg();
+
+	LOG_INF("Board revision: %d", get_board_revision());
+	LOG_INF("Retimer module: %d, OTH module: %d, HSC module: %d", get_retimer_module(),
+		get_oth_module(), get_hsc_module());
+
 	plat_mctp_init();
 	ssif_init();
 }
 
 void pal_device_init()
 {
+	handle_tda38741_work_around();
 }
 
 void pal_set_sys_status()
@@ -67,7 +80,7 @@ void pal_set_sys_status()
 
 	set_sys_ready_pin(BIC_READY);
 	set_CPU_power_status(RUN_POWER_PG);
-	set_post_status(VIRTUAL_BIOS_POST_COMPLETE_L);
+	handle_post_status(NULL, false);
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78

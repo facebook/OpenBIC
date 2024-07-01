@@ -46,7 +46,6 @@
 #define I3C_DIMM_MUTEX_TIMEOUT_MS 1000
 #define GET_DIMM_INFO_TIME_MS 1000
 #define GET_DIMM_INFO_STACK_SIZE 2304
-#define I3C_TRANSFER_DELAY_TIME_MS 200
 
 typedef struct dimm_info {
 	uint8_t is_present;

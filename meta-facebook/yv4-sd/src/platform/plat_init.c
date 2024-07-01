@@ -98,6 +98,7 @@ void pal_post_init()
 	pldm_load_state_effecter_table(PLAT_PLDM_MAX_STATE_EFFECTER_IDX);
 	pldm_assign_gpio_effecter_id(PLAT_EFFECTER_ID_GPIO_HIGH_BYTE);
 	start_get_dimm_info_thread();
+	set_sys_ready_pin(BIC_READY_R);
 }
 
 void pal_set_sys_status()
@@ -106,16 +107,15 @@ void pal_set_sys_status()
 	set_DC_on_delayed_status();
 	set_post_status(FM_BIOS_POST_CMPLT_BIC_N);
 	sync_bmc_ready_pin();
-	set_sys_ready_pin(BIC_READY_R);
 	reset_usb_hub();
 	apml_init();
 
 	if (get_post_status()) {
 		apml_recovery();
 		set_tsi_threshold();
-		read_cpuid();
 		disable_mailbox_completion_alert();
 		enable_alert_signal();
+		read_cpuid();
 	}
 }
 

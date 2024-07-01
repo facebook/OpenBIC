@@ -315,6 +315,8 @@ void pal_extend_sensor_config()
 			add_sensor_config(mp5990_sensor_config_table[index]);
 		}
 		/* MP5990 can read HSC temperature */
+		if (get_board_revision() >= SYS_BOARD_EVT2)
+			mp5990_temp_sensor_config_table[0].target_addr = MP5990_ADDR_1;
 		add_sensor_config(mp5990_temp_sensor_config_table[0]);
 		break;
 	case HSC_MODULE_RS31380R:
