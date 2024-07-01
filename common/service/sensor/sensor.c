@@ -1157,7 +1157,6 @@ static void drive_init(void)
 
 	for (table_index = 0; table_index < sensor_monitor_count; ++table_index) {
 		sensor_monitor_table_info *table_info = &sensor_monitor_table[table_index];
-
 		if (table_info->access_checker != NULL) {
 			if (table_info->access_checker(table_info->access_checker_arg) != true) {
 				LOG_WRN("[%s] table: 0x%x can't access, skip init drive", __func__,
@@ -1171,7 +1170,6 @@ static void drive_init(void)
 			LOG_ERR("Table index: 0x%x is NULL, skip to initialize drive", table_index);
 			continue;
 		}
-
 		for (sensor_index = 0; sensor_index < sensor_monitor_table[table_index].cfg_count;
 		     ++sensor_index) {
 			sensor_cfg *cfg = &cfg_table[sensor_index];

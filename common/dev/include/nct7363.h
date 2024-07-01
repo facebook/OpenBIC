@@ -136,3 +136,4 @@ enum nct7363_wdt_sec { WDT_15_SEC, WDT_3_75_SEC, WDT_7_5_SEC, WDT_30_SEC, WDT_DI
 
 bool nct7363_set_duty(sensor_cfg *cfg, uint8_t duty, uint8_t port);
 #endif
+uint8_t nct7363_init(sensor_cfg *cfg);
