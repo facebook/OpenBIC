@@ -120,8 +120,12 @@ void ISR_POST_COMPLETE()
 	if (get_board_revision() >= SYS_BOARD_PVT) {
 		handle_post_status(GPIO_LOW, false);
 
-		if (get_post_status()) {
+		if (get_post_status())
 			handle_post_action();
+		else {
+			reset_post_end_work_status();
+			sbmr_reset_9byte_postcode_ok();
+			reset_ssif_ok();
 		}
 	}
 }
@@ -186,7 +190,7 @@ void ISR_GPIOD0()
 static void PROC_FAIL_handler(struct k_work *work)
 {
 	/* if have not received ssif and post code, add FRB3 event log. */
-	if ((get_ssif_ok() == false) && (sbmr_get_9byte_postcode_ok() == false)) {
+	if ((get_ssif_ok() == false) || (sbmr_get_uefi_status() == false)) {
 		common_addsel_msg_t sel_msg;
 		sel_msg.InF_target = PLDM;
 		sel_msg.sensor_type = IPMI_SENSOR_TYPE_PROCESSOR;
