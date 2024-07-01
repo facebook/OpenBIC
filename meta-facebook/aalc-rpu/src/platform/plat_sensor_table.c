@@ -749,7 +749,6 @@ sensor_cfg plat_def_sensor_config[] = {
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 };
 
-// total config size = plat_sensor_config + sensor(main/second sensor) config table
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) +
 			       ARRAY_SIZE(hsc_sensor_config_table) +
 			       ARRAY_SIZE(nct214_config_table);
