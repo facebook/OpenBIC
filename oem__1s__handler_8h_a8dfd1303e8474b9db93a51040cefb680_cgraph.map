@@ -1,0 +1,5 @@
+<map id="OEM_1S_INFORM_PEER_SLED_CYCLE" name="OEM_1S_INFORM_PEER_SLED_CYCLE">
+<area shape="rect" id="node1" title=" " alt="" coords="5,5,180,47"/>
+<area shape="rect" id="node2" href="$ipmi_8c.html#a40681786f36bd1836cdb473b7050dda1" title=" " alt="" coords="228,5,377,47"/>
+<area shape="rect" id="node3" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="425,13,508,39"/>
+</map>

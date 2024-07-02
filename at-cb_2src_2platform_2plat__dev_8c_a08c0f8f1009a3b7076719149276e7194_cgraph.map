@@ -1,0 +1,6 @@
+<map id="sb_cmd_fw_update_bit_operation" name="sb_cmd_fw_update_bit_operation">
+<area shape="rect" id="node1" title=" " alt="" coords="5,23,161,65"/>
+<area shape="rect" id="node2" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="211,5,329,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="209,56,331,83"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="379,31,521,57"/>
+</map>

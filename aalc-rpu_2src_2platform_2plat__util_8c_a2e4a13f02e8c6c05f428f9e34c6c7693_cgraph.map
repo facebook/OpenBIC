@@ -1,0 +1,6 @@
+<map id="modbus_sensor_poll_en" name="modbus_sensor_poll_en">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,168,83"/>
+<area shape="rect" id="node2" href="$sensor_8c.html#a254481b5d30d7b182e368c57ff208184" title=" " alt="" coords="241,5,377,32"/>
+<area shape="rect" id="node3" href="$sensor_8c.html#a943433215e208bf552a04105d8d7b320" title=" " alt="" coords="242,56,375,83"/>
+<area shape="rect" id="node4" href="$sensor_8c.html#ab9a824489ded146dddedddfb3d2b5a5c" title=" " alt="" coords="216,107,401,133"/>
+</map>

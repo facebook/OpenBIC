@@ -1,0 +1,10 @@
+<map id="modbus_write_fruid_data" name="modbus_write_fruid_data">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,172,83"/>
+<area shape="rect" id="node2" href="$fru_8c.html#a3eee59c9f2ec835dd526b36d36057ce8" title=" " alt="" coords="227,31,311,57"/>
+<area shape="rect" id="node8" href="$aalc-rpu_2src_2platform_2plat__util_8c.html#a383cacd3f2189eb8dc6810aed2442919" title=" " alt="" coords="220,81,317,108"/>
+<area shape="rect" id="node3" href="$eeprom_8c.html#ab838e3d27c232117306d8611e48be202" title=" " alt="" coords="365,5,465,32"/>
+<area shape="rect" id="node7" href="$fru_8c.html#a4694b8ef2f5e4e98917fc28fe989a2d9" title=" " alt="" coords="367,56,463,83"/>
+<area shape="rect" id="node4" href="$eeprom_8c.html#ac470cc411f066d8f6bc2c1d7a74c8a5a" title=" " alt="" coords="513,5,652,32"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="700,5,821,32"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="869,5,1012,32"/>
+</map>

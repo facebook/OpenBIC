@@ -1,0 +1,9 @@
+<map id="init_platform_config" name="init_platform_config">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,140,83"/>
+<area shape="rect" id="node2" href="$gt-cc_2src_2platform_2plat__class_8c.html#afe186fac51a057492906d49592f2046c" title=" " alt="" coords="188,5,305,32"/>
+<area shape="rect" id="node3" href="$hal__i3c_8c.html#a9109d576b735f5979b1ad239b3983f46" title=" " alt="" coords="203,56,291,83"/>
+<area shape="rect" id="node4" href="$yv4-sd_2src_2platform_2plat__class_8c.html#a83c9c6bff8d192c6c273d4ff343dca2e" title=" " alt="" coords="188,107,305,133"/>
+<area shape="rect" id="node5" href="$yv4-sd_2src_2platform_2plat__class_8c.html#a77fab2f8167a9eb32f8d848d1bb1ef53" title=" " alt="" coords="353,107,457,133"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="505,107,624,133"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="672,107,815,133"/>
+</map>

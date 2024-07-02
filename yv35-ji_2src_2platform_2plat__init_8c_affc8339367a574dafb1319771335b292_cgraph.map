@@ -1,0 +1,9 @@
+<map id="pal_device_init" name="pal_device_init">
+<area shape="rect" id="node1" title=" " alt="" coords="5,81,113,108"/>
+<area shape="rect" id="node2" href="$yv35-ji_2src_2platform_2plat__power__status_8c.html#a3598b15d4128f8baea3f3dfe5edd11bc" title=" " alt="" coords="161,74,316,115"/>
+<area shape="rect" id="node3" href="$power__status_8c.html#a647e7f9c1247d6a1785d9b9502e7fd29" title=" " alt="" coords="369,5,477,32"/>
+<area shape="rect" id="node4" href="$yv35-ji_2src_2platform_2plat__class_8c.html#af0eaae1944a1114d0ecdb4f48b1a7ab3" title=" " alt="" coords="366,56,481,83"/>
+<area shape="rect" id="node5" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="388,107,459,133"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="364,157,483,184"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="531,157,673,184"/>
+</map>

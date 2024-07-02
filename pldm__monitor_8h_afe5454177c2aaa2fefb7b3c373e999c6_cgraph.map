@@ -1,0 +1,19 @@
+<map id="plat_pldm_set_state_effecter_state_handler" name="plat_pldm_set_state_effecter_state_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,162,163,203"/>
+<area shape="rect" id="node2" href="$yv4-ff_2src_2platform_2plat__pldm__monitor_8c.html#aee1ab0eb294bd49d3b375ee5109dbf73" title=" " alt="" coords="227,17,373,58"/>
+<area shape="rect" id="node4" href="$yv4-sd_2src_2platform_2plat__pldm__monitor_8c.html#a32b426d6038d5a18f72e680d0c021df0" title=" " alt="" coords="211,97,389,138"/>
+<area shape="rect" id="node7" href="$yv4-sd_2src_2platform_2plat__pldm__monitor_8c.html#a0b6589f2aaea34e4a5b475d71f887a9f" title=" " alt="" coords="223,162,377,203"/>
+<area shape="rect" id="node14" href="$yv4-ff_2src_2platform_2plat__pldm__monitor_8c.html#a809e887d19aeb0042f411e79859a471b" title=" " alt="" coords="224,228,376,255"/>
+<area shape="rect" id="node16" href="$pldm__monitor_8c.html#a3b6724011912229ed39f7a1a977eb672" title=" " alt="" coords="237,279,363,321"/>
+<area shape="rect" id="node3" href="$pldm__monitor_8c.html#ab85d03057a1b4169198ec766cc8355b9" title=" " alt="" coords="459,5,569,32"/>
+<area shape="rect" id="node5" href="$power__status_8c.html#a647e7f9c1247d6a1785d9b9502e7fd29" title=" " alt="" coords="460,56,568,83"/>
+<area shape="rect" id="node6" href="$yv4-sd_2src_2platform_2plat__pldm__monitor_8c.html#a989684b5d8cbd274d16f1c62c638f95c" title=" " alt="" coords="437,107,591,149"/>
+<area shape="rect" id="node8" href="$yv4-sd_2src_2platform_2plat__isr_8c.html#aad00a91ead7bec22c9ce5787eb27d7cb" title=" " alt="" coords="463,173,565,200"/>
+<area shape="rect" id="node9" href="$hal__i3c_8c.html#af83165cbbc94536c7af28d58bc801a29" title=" " alt="" coords="686,93,769,120"/>
+<area shape="rect" id="node10" href="$hal__i3c_8c.html#a01fe6ef0e2b4d9c968e30b198af67b50" title=" " alt="" coords="669,144,786,171"/>
+<area shape="rect" id="node11" href="$rg3mxxb12_8c.html#abefd08506a46912cd3bfb282363882d0" title=" " alt="" coords="654,195,801,237"/>
+<area shape="rect" id="node13" href="$gt-cc_2src_2platform_2plat__mctp_8c.html#abcdc2cd650f273fb1a35cca665f92e18" title=" " alt="" coords="639,261,816,288"/>
+<area shape="rect" id="node12" href="$hal__i3c_8c.html#a482444f318fbe78022bcca984a2aa8d8" title=" " alt="" coords="864,203,999,229"/>
+<area shape="rect" id="node15" href="$libutil_8c.html#ab05451501bb8acbc50e74bdd58082e10" title=" " alt="" coords="475,228,553,255"/>
+<area shape="rect" id="node17" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="479,287,549,313"/>
+</map>

@@ -1,0 +1,7 @@
+<map id="ISR_PCH_THMALTRIP" name="ISR_PCH_THMALTRIP">
+<area shape="rect" id="node1" title=" " alt="" coords="5,71,168,98"/>
+<area shape="rect" id="node2" href="$ipmi_8c.html#a40681786f36bd1836cdb473b7050dda1" title=" " alt="" coords="216,5,365,47"/>
+<area shape="rect" id="node4" href="$power__status_8c.html#abeff55e3cd2e8563760154b81f37f286" title=" " alt="" coords="233,71,348,98"/>
+<area shape="rect" id="node5" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="255,122,326,149"/>
+<area shape="rect" id="node3" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="413,13,496,39"/>
+</map>

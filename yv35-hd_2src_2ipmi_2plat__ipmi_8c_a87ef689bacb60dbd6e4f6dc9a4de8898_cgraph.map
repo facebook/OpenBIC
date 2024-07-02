@@ -1,0 +1,10 @@
+<map id="pal_record_bios_fw_version" name="pal_record_bios_fw_version">
+<area shape="rect" id="node1" title=" " alt="" coords="5,23,140,65"/>
+<area shape="rect" id="node2" href="$wc-mb_2src_2platform_2plat__fru_8c.html#a4f20f9a7aa558245839e5bf64de393fc" title=" " alt="" coords="188,5,308,32"/>
+<area shape="rect" id="node7" href="$wc-mb_2src_2platform_2plat__fru_8c.html#afc25e1748ce228d781960cc72f294ab7" title=" " alt="" coords="188,56,308,83"/>
+<area shape="rect" id="node3" href="$eeprom_8c.html#af84d506534770494cca55b2db24730ba" title=" " alt="" coords="357,5,455,32"/>
+<area shape="rect" id="node4" href="$eeprom_8c.html#ac470cc411f066d8f6bc2c1d7a74c8a5a" title=" " alt="" coords="504,31,643,57"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="691,31,812,57"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="860,31,1003,57"/>
+<area shape="rect" id="node8" href="$eeprom_8c.html#ab838e3d27c232117306d8611e48be202" title=" " alt="" coords="356,56,456,83"/>
+</map>

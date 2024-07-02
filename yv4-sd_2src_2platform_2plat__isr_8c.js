@@ -1,0 +1,28 @@
+var yv4_sd_2src_2platform_2plat__isr_8c =
+[
+    [ "DC_ON_5_SECOND", "yv4-sd_2src_2platform_2plat__isr_8c.html#a79299267aeed0a7114b186ce964d1574", null ],
+    [ "DETECT_VR_WDT_DELAY_S", "yv4-sd_2src_2platform_2plat__isr_8c.html#afe23dacd12345cc8f9b2df4f2e720722", null ],
+    [ "ISR_APML_ALERT", "yv4-sd_2src_2platform_2plat__isr_8c.html#a7e369996ca3b9c4988955d6f8e1ea06e", null ],
+    [ "ISR_BMC_READY", "yv4-sd_2src_2platform_2plat__isr_8c.html#ad5ed425ae95a34038ab3555b65bcf126", null ],
+    [ "ISR_DBP_PRSNT", "yv4-sd_2src_2platform_2plat__isr_8c.html#ae1883587140dfecc17af0074749a166d", null ],
+    [ "ISR_DC_ON", "yv4-sd_2src_2platform_2plat__isr_8c.html#a64f573d22e883344d62284d81c71ace4", null ],
+    [ "ISR_HSC_OC", "yv4-sd_2src_2platform_2plat__isr_8c.html#a2c321679e9fdcf4dcdf8c0d97114f3e2", null ],
+    [ "ISR_MB_THROTTLE", "yv4-sd_2src_2platform_2plat__isr_8c.html#a345eca05dd7c546ceab13f768addbac4", null ],
+    [ "ISR_POST_COMPLETE", "yv4-sd_2src_2platform_2plat__isr_8c.html#a677d4ebf0617647e5b6578d3d3278c30", null ],
+    [ "ISR_PVDD11_S3_OCP", "yv4-sd_2src_2platform_2plat__isr_8c.html#aa824bb1bd992ea87fd40966217a45b5c", null ],
+    [ "ISR_PVDDCR_CPU0_OCP", "yv4-sd_2src_2platform_2plat__isr_8c.html#af9b9c16a3a60460ccb6813277243fc32", null ],
+    [ "ISR_PVDDCR_CPU1_OCP", "yv4-sd_2src_2platform_2plat__isr_8c.html#a59384d3bb84d715ef1096599b397013f", null ],
+    [ "ISR_SLP3", "yv4-sd_2src_2platform_2plat__isr_8c.html#afffb29da14e2b11de96379874d74040f", null ],
+    [ "ISR_SOC_THMALTRIP", "yv4-sd_2src_2platform_2plat__isr_8c.html#a90dc216da36c3742872e181dbe2f58eb", null ],
+    [ "ISR_SYS_THROTTLE", "yv4-sd_2src_2platform_2plat__isr_8c.html#a10c7652402a8a35a19eb3cbe913f507c", null ],
+    [ "ISR_UV_DETECT", "yv4-sd_2src_2platform_2plat__isr_8c.html#a925c2e177f37b8f5517a6bdbc8e23fc0", null ],
+    [ "IST_PLTRST", "yv4-sd_2src_2platform_2plat__isr_8c.html#a71a48f2bac403511b3fb7392942e2a88", null ],
+    [ "K_WORK_DEFINE", "yv4-sd_2src_2platform_2plat__isr_8c.html#a65c975e410f93d1f5f8274827cf04ccd", null ],
+    [ "K_WORK_DEFINE", "yv4-sd_2src_2platform_2plat__isr_8c.html#a94b84100271b45953eb2995053aa1c95", null ],
+    [ "K_WORK_DELAYABLE_DEFINE", "yv4-sd_2src_2platform_2plat__isr_8c.html#a13747c02feff0dc4da793343a0a36d0d", null ],
+    [ "K_WORK_DELAYABLE_DEFINE", "yv4-sd_2src_2platform_2plat__isr_8c.html#ad73db1708c9168ae504058e129c1da8e", null ],
+    [ "LOG_MODULE_REGISTER", "yv4-sd_2src_2platform_2plat__isr_8c.html#ab27cc4cd800314e1714c6cff08bb981c", null ],
+    [ "reinit_i3c_hub", "yv4-sd_2src_2platform_2plat__isr_8c.html#aad00a91ead7bec22c9ce5787eb27d7cb", null ],
+    [ "switch_i3c_dimm_mux_to_cpu", "yv4-sd_2src_2platform_2plat__isr_8c.html#a3a38f9b69de179f09db8931882667e9f", null ],
+    [ "hw_event_register", "yv4-sd_2src_2platform_2plat__isr_8c.html#a8303a3b8998d8f14caa338c5aa035e4a", null ]
+];

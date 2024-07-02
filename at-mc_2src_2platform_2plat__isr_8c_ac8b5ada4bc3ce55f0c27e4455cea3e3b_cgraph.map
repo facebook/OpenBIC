@@ -1,0 +1,6 @@
+<map id="cxl_pe_reset_control" name="cxl_pe_reset_control">
+<area shape="rect" id="node1" title=" " alt="" coords="5,46,147,73"/>
+<area shape="rect" id="node2" href="$hal__i2c_8c.html#a989ab3529d6f424e3e11df5e9d720875" title=" " alt="" coords="197,5,363,47"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#ae12ca95f786ad6cc2dfe16be7d73f862" title=" " alt="" coords="195,71,365,112"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="413,46,556,73"/>
+</map>

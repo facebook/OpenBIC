@@ -1,0 +1,8 @@
+<map id="switch_mux_to_bic" name="switch_mux_to_bic">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,139,57"/>
+<area shape="rect" id="node2" href="$yv4-wf_2src_2platform_2plat__gpio_8c.html#a49fcac8a9cff9b16dbba2845722cf9ec" title=" " alt="" coords="187,5,289,32"/>
+<area shape="rect" id="node5" href="$yv4-wf_2src_2platform_2plat__gpio_8c.html#a43019cd492c200adbe11065b5b69a4d5" title=" " alt="" coords="187,56,289,83"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="339,5,457,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="507,31,649,57"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="337,56,459,83"/>
+</map>
