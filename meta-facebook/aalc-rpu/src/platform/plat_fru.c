@@ -314,6 +314,19 @@ const EEPROM_CFG plat_fru_config[] = {
 		MUX_CHANNEL_1,
 		&i2c_7_PCA9546a_mutex,
 	},
+	{
+		NV_ATMEL_24C02,
+		FB_15_FRU_ID,
+		I2C_BUS7,
+		FB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+		true,
+		FB_13_14_MUX_ADDR,
+		MUX_CHANNEL_2,
+		&i2c_7_PCA9546a_mutex,
+	},
 };
 
 void pal_load_fru_config(void)

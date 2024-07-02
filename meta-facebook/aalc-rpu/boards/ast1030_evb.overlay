@@ -173,3 +173,6 @@
 	};
 };
 
+&gpio0_m_p {
+	aspeed,persist-maps = <0x80000000>;
+};

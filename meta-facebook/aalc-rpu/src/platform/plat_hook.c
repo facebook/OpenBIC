@@ -25,6 +25,7 @@
 #include "sensor.h"
 #include "nct214.h"
 #include "libutil.h"
+#include "plat_sensor_table.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -361,7 +362,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
 		.fan_poles[NCT7363_15_PORT] = 4, // TO DO wait to check
 	},
-	// fan BD 8
+	// fan BD 15
 	[7] = { 
 		.is_init = false, 
 		.wdt_cfg = WDT_7_5_SEC,
@@ -749,7 +750,7 @@ hdc1080_init_arg hdc1080_init_args[] = {
 	[5] = { .is_init = false,},
 	// fan BD 7	
 	[6] = { .is_init = false,},
-	// fan BD 8	
+	// fan BD 15
 	[7] = { .is_init = false,},
 	// fan BD 9	
 	[8] = { .is_init = false,},
@@ -999,4 +1000,108 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 	}
 
 	return true;
+}
+
+static bool update_fb_present_status(uint16_t *fb_present_status)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fb_present_status, false);
+
+	/* worst case assume all fan boards present */
+	*fb_present_status = 0xffff;
+
+	/**
+	 * since the fan board present status is in the pdb io expander,
+	 * use pdb's sensor to switch mutex and i2c mux
+	 */
+	sensor_cfg *cfg = get_common_sensor_cfg_info(SENSOR_NUM_PDB_HDC1080DMBR_TEMP_C);
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config info in update_fb_present_status");
+		return false;
+	}
+
+	if (pre_PCA9546A_read(cfg, bus_9_PCA9546A_configs + 1) == false) {
+		LOG_ERR("Failed to set mux channel in update_fb_present_status");
+		return false;
+	}
+
+	bool ret = true;
+
+	/* read the fan board present status */
+	const uint8_t i2c_retry = 3;
+	uint8_t input_reg = 0;
+	I2C_MSG msg =
+		construct_i2c_message(I2C_BUS9, 0x25, 1, &input_reg, 1); // read 1 - 8 io expander
+	if (i2c_master_read(&msg, i2c_retry)) {
+		LOG_ERR("Failed to read pdb io expander");
+		ret = false;
+		goto exit;
+	}
+
+	*fb_present_status &= ~msg.data[0];
+
+	msg = construct_i2c_message(I2C_BUS9, 0x27, 1, &input_reg, 1); // read 9 - 16 io expander
+	if (i2c_master_read(&msg, i2c_retry)) {
+		LOG_ERR("Failed to read pdb io expander");
+		ret = false;
+		goto exit;
+	}
+
+	*fb_present_status &= ~(msg.data[0] << 8);
+
+exit:
+	if (post_PCA9546A_read(cfg, bus_9_PCA9546A_configs + 1, NULL) == false) {
+		LOG_ERR("Failed to set mux channel in update_fb_present_status");
+		ret = false;
+	}
+
+	return ret;
+}
+
+static uint8_t get_fb_index(uint8_t sen_num)
+{
+	sensor_cfg *cfg = get_common_sensor_cfg_info(sen_num);
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config info in update_fb_present_status");
+		return 0xff;
+	}
+
+	/* mapping the fan board index by i2c mux info */
+	uint8_t index = (cfg->pre_sensor_read_args == bus_1_PCA9546A_configs)	    ? 0 :
+			(cfg->pre_sensor_read_args == (bus_1_PCA9546A_configs + 1)) ? 1 :
+			(cfg->pre_sensor_read_args == (bus_1_PCA9546A_configs + 2)) ? 2 :
+			(cfg->pre_sensor_read_args == (bus_1_PCA9546A_configs + 3)) ? 3 :
+			(cfg->pre_sensor_read_args == bus_2_PCA9546A_configs)	    ? 4 :
+			(cfg->pre_sensor_read_args == (bus_2_PCA9546A_configs + 1)) ? 5 :
+			(cfg->pre_sensor_read_args == (bus_2_PCA9546A_configs + 2)) ? 6 :
+			(cfg->pre_sensor_read_args == (bus_2_PCA9546A_configs + 3)) ? 7 :
+			(cfg->pre_sensor_read_args == bus_6_PCA9546A_configs)	    ? 8 :
+			(cfg->pre_sensor_read_args == (bus_6_PCA9546A_configs + 1)) ? 9 :
+			(cfg->pre_sensor_read_args == (bus_6_PCA9546A_configs + 2)) ? 10 :
+			(cfg->pre_sensor_read_args == (bus_6_PCA9546A_configs + 3)) ? 11 :
+			(cfg->pre_sensor_read_args == bus_7_PCA9546A_configs)	    ? 12 :
+			(cfg->pre_sensor_read_args == (bus_7_PCA9546A_configs + 1)) ? 13 :
+			(cfg->pre_sensor_read_args == (bus_7_PCA9546A_configs + 2)) ? 14 :
+			(cfg->pre_sensor_read_args == (bus_7_PCA9546A_configs + 3)) ? 15 :
+										      0xff;
+
+	return index;
+}
+
+bool is_fb_prsnt(uint8_t sen_num)
+{
+	static uint16_t fb_present_status = 0;
+
+	/* first polling sensor, update the fan present status */
+	if (sen_num == SENSOR_NUM_FB_1_FAN_TACH_RPM) {
+		update_fb_present_status(&fb_present_status);
+		LOG_INF("fb_present_status = %x", fb_present_status);
+	}
+
+	const uint8_t fb_idx = get_fb_index(sen_num);
+	if (fb_idx == 0xff) {
+		LOG_ERR("Failed to get fb index in is_fb_prsnt");
+		return false;
+	}
+
+	return (fb_present_status & (1 << fb_idx)) ? true : false;
 }
