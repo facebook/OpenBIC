@@ -141,11 +141,13 @@ uint8_t modbus_get_fw_reversion(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
-	uint16_t byte_val[4] = { BIC_FW_YEAR_MSB_ASCII, BIC_FW_YEAR_LSB_ASCII, BIC_FW_WEEK_ASCII,
-				 BIC_FW_VER_ASCII };
-	memcpy(cmd->data, &byte_val[0], sizeof(uint16_t) * cmd->cmd_size);
+	uint8_t ver[4] = { BIC_FW_YEAR_MSB, BIC_FW_YEAR_LSB, BIC_FW_WEEK, BIC_FW_VER };
 
-	regs_reverse(cmd->data_len, cmd->data);
+	for (uint8_t i = 0; i < cmd->cmd_size; i++) {
+		char tmp[3] = { 0 };
+		sprintf(tmp, "%02x", ver[i]);
+		cmd->data[i] = tmp[1] << 8 | tmp[0];
+	}
 
 	return MODBUS_EXC_NONE;
 }
@@ -923,7 +925,6 @@ static int coil_wr(uint16_t addr, bool state)
 
 static int holding_reg_multi_wr(char *iface_name, uint16_t addr, uint16_t *reg, uint16_t num_regs)
 {
-
 	modbus_command_mapping *ptr = ptr_to_modbus_table(addr);
 	if (!ptr) {
 		LOG_ERR("modbus write command 0x%x not find!\n", addr);
