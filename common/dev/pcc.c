@@ -206,6 +206,52 @@ void check_ABL_error(uint32_t postcode)
 		LOG_ERR("Failed to record ABL SEL, post code 0x%08x, ret %d", postcode, status);
 	}
 	SAFE_FREE(msg);
+#else
+	// record Unified SEL
+	uint8_t bmc_bus = I2C_BUS_BMC;
+	mctp_ext_params ext_params = { 0 };
+	uint8_t data[16] = { 0 };
+
+	data[0] = 0x00; // Record id byte 0, lsb
+	data[1] = 0x00; // Record id byte 1
+	data[2] = 0xFB; // Record Type: Unified SEL
+	data[4] = 0x00; // Timestamp
+	data[5] = 0x00; // Timestamp
+	data[6] = 0x00; // Timestamp
+	data[7] = 0x00; // Timestamp
+	data[9] = 0xFF; // DIMM Channel
+	data[10] = 0xFF; // DIMM Slot
+	data[11] = 0xFF; // Reserved
+
+	if (error_code == 0xE310) {
+		data[3] = 0x2A; // General Information
+		data[8] = 0xFF; // DIMM Socket
+		data[12] = 0x07; // DIMM Error Type
+		data[13] = 0xFF; // Major code
+		data[14] = 0xFF; // Minor code
+		data[15] = 0xFF; // Minor code
+	} else {
+		data[3] = 0x28; // General Information
+		data[8] = 0xFA; // Failure Event Type
+		data[12] = 0xFF; // Failure Event Detail byte 3
+		data[13] = 0xFF; // Failure Event Detail byte 4
+		data[14] = error_code & 0xFF; // Failure Code byte 0
+		data[15] = (error_code >> 8) & 0xFF; // Failure Code byte 1
+	}
+
+	if (bmc_interface == BMC_INTERFACE_I3C) {
+		bmc_bus = I3C_BUS_BMC;
+		ext_params.type = MCTP_MEDIUM_TYPE_TARGET_I3C;
+		ext_params.i3c_ext_params.addr = I3C_STATIC_ADDR_BMC;
+		ext_params.ep = MCTP_EID_BMC;
+	} else {
+		bmc_bus = I2C_BUS_BMC;
+		ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
+		ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
+		ext_params.ep = MCTP_EID_BMC;
+	}
+
+	pldm_platform_event_message_req(find_mctp_by_bus(bmc_bus), ext_params, 0xFB, &data[2], 14);
 #endif
 }
 
