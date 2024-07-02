@@ -251,7 +251,7 @@ void check_ABL_error(uint32_t postcode)
 		ext_params.ep = MCTP_EID_BMC;
 	}
 
-	pldm_platform_event_message_req(find_mctp_by_bus(bmc_bus), ext_params, 0xFB, &data[2], 16);
+	pldm_platform_event_message_req(find_mctp_by_bus(bmc_bus), ext_params, 0xFB, &data[2], 14);
 #endif
 }
 
