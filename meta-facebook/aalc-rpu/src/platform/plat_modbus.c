@@ -209,7 +209,7 @@ uint8_t modbus_command_i2c_scan(modbus_command_mapping *cmd)
 	uint8_t addr[cmd->data_len], len;
 	i2c_scan(i2c_scan_bus, addr, &len);
 
-	memset(cmd->data, 0xFFFF, sizeof(uint16_t) * cmd->data_len);
+	memset(cmd->data, 0xFF, sizeof(uint16_t) * cmd->data_len);
 	for (uint8_t i = 0; i < len; i++)
 		cmd->data[i] = addr[i];
 
@@ -308,12 +308,12 @@ uint8_t modbus_error_log_event(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
-	uint16_t order = 1 + ((cmd->start_addr - LOG_BEGIN_MODBUS_ADDR) / cmd->cmd_size);
+	uint16_t order = 1 + ((cmd->start_addr - cmd->addr) / cmd->cmd_size);
 
 	log_transfer_to_modbus_data(cmd->data, cmd->cmd_size, order);
 
-	regs_reverse(cmd->data_len, cmd->data);
-
+	memmove(cmd->data, cmd->data + cmd->start_addr - cmd->addr,
+		cmd->data_len * sizeof(uint16_t));
 	return MODBUS_EXC_NONE;
 }
 
@@ -493,8 +493,6 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_FB_6_FAN_TACH_RPM, 1, 0, 1 },
 	{ MODBUS_FB_7_FAN_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_FB_7_FAN_TACH_RPM, 1, 0, 1 },
-	{ MODBUS_FB_8_FAN_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
-	  SENSOR_NUM_FB_8_FAN_TACH_RPM, 1, 0, 1 },
 	{ MODBUS_FB_9_FAN_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_FB_9_FAN_TACH_RPM, 1, 0, 1 },
 	{ MODBUS_FB_10_FAN_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
@@ -526,8 +524,6 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_FB_6_HEX_INLET_TEMP_C, 1, -2, 1 },
 	{ MODBUS_FB_7_HEX_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_FB_7_HEX_INLET_TEMP_C, 1, -2, 1 },
-	{ MODBUS_FB_8_HEX_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
-	  SENSOR_NUM_FB_8_HEX_INLET_TEMP_C, 1, -2, 1 },
 	{ MODBUS_FB_9_HEX_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_FB_9_HEX_INLET_TEMP_C, 1, -2, 1 },
 	{ MODBUS_FB_10_HEX_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
@@ -540,6 +536,10 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_FB_13_HEX_INLET_TEMP_C, 1, -2, 1 },
 	{ MODBUS_FB_14_HEX_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_FB_14_HEX_INLET_TEMP_C, 1, -2, 1 },
+	{ MODBUS_FB_15_HEX_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_15_HEX_INLET_TEMP_C, 1, -2, 1 },
+	{ MODBUS_FB_15_FAN_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_15_FAN_TACH_RPM, 1, 0, 1 },
 	{ MODBUS_FB_1_HSC_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_1_HSC_TEMP_C, 1,
 	  -2, 1 },
 	{ MODBUS_FB_2_HSC_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_2_HSC_TEMP_C, 1,
@@ -554,8 +554,8 @@ modbus_command_mapping modbus_command_table[] = {
 	  -2, 1 },
 	{ MODBUS_FB_7_HSC_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_7_HSC_TEMP_C, 1,
 	  -2, 1 },
-	{ MODBUS_FB_8_HSC_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_8_HSC_TEMP_C, 1,
-	  -2, 1 },
+	{ MODBUS_FB_15_HSC_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_15_HSC_TEMP_C,
+	  1, -2, 1 },
 	{ MODBUS_FB_9_HSC_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_9_HSC_TEMP_C, 1,
 	  -2, 1 },
 	{ MODBUS_FB_10_HSC_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_10_HSC_TEMP_C,
@@ -582,8 +582,8 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_FB_6_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
 	{ MODBUS_FB_7_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_FB_7_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
-	{ MODBUS_FB_8_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
-	  SENSOR_NUM_FB_8_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
+	{ MODBUS_FB_15_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_15_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
 	{ MODBUS_FB_9_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_FB_9_HSC_P48V_VIN_VOLT_V, 1, -2, 1 },
 	{ MODBUS_FB_10_HSC_P48V_VIN_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
@@ -610,8 +610,8 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_FB_6_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
 	{ MODBUS_FB_7_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_FB_7_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
-	{ MODBUS_FB_8_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
-	  SENSOR_NUM_FB_8_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
+	{ MODBUS_FB_15_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_15_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
 	{ MODBUS_FB_9_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_FB_9_HSC_P48V_IOUT_CURR_A, 1, -2, 1 },
 	{ MODBUS_FB_10_HSC_P48V_IOUT_CURR_A_ADDR, NULL, modbus_get_senser_reading,
@@ -638,8 +638,8 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_FB_6_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
 	{ MODBUS_FB_7_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_FB_7_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
-	{ MODBUS_FB_8_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
-	  SENSOR_NUM_FB_8_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
+	{ MODBUS_FB_15_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_15_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
 	{ MODBUS_FB_9_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_FB_9_HSC_P48V_PIN_PWR_W, 1, -2, 1 },
 	{ MODBUS_FB_10_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
@@ -678,8 +678,8 @@ modbus_command_mapping modbus_command_table[] = {
 	  1, 0, 1 },
 	{ MODBUS_FB_7_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_7_HUM_PCT_RH,
 	  1, 0, 1 },
-	{ MODBUS_FB_8_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_8_HUM_PCT_RH,
-	  1, 0, 1 },
+	{ MODBUS_FB_15_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_FB_15_HUM_PCT_RH, 1, 0, 1 },
 	{ MODBUS_FB_9_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_9_HUM_PCT_RH,
 	  1, 0, 1 },
 	{ MODBUS_FB_10_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading,
@@ -818,7 +818,7 @@ modbus_command_mapping modbus_command_table[] = {
 	  0, 256 },
 	{ MODBUS_FB_14_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_14_FRU_ID, 0,
 	  0, 256 },
-	{ MODBUS_FB_14_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_14_FRU_ID, 0,
+	{ MODBUS_FB_15_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_15_FRU_ID, 0,
 	  0, 256 },
 	// sensor poll
 	{ MODBUS_SET_SENSOR_POLL_EN_ADDR, modbus_sensor_poll_en, NULL, 0, 0, 0, 1 },

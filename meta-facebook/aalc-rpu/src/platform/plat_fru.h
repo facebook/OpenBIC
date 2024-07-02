@@ -40,6 +40,7 @@ enum FRU_ID {
 	FB_12_FRU_ID,
 	FB_13_FRU_ID,
 	FB_14_FRU_ID,
+	FB_15_FRU_ID,
 	MAX_FRU_ID,
 };
 
