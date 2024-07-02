@@ -676,18 +676,18 @@ ina238_init_arg ina238_init_args[] = {
 	// PDB board positive
 	[0] = { 
 		.is_init = false, 
-		.r_shunt = 0.1, // TO DO wait to check
+		.r_shunt = 0.0005, // TO DO wait to check
 		.adc_range = INA238_ADC_RANGE_PN_163, // TO DO wait to check
 		.alert_latch = INA238_ALERT_LATCH_ENABLE,
-		.i_max = 0.1, // TO DO wait to check
+		.i_max = 175, // TO DO wait to check
 	},
 	// PDB board negative
 	[1] = { 
 		.is_init = false, 
-		.r_shunt = 0.1, // TO DO wait to check
+		.r_shunt = 0.0005, // TO DO wait to check
 		.adc_range = INA238_ADC_RANGE_PN_163, // TO DO wait to check
 		.alert_latch = INA238_ALERT_LATCH_ENABLE,
-		.i_max = 0.1, // TO DO wait to check
+		.i_max = 175, // TO DO wait to check
 	},
 };
 
