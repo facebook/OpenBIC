@@ -103,6 +103,50 @@ static uint8_t nct_pwm_ctl(enum PWM_DEVICE_E dev, uint8_t duty)
 
 	return (ret == true) ? 0 : 1;
 }
+uint8_t nct7363_wdt_all_disable()
+{	
+	for (uint8_t i = 0; i < ARRAY_SIZE(nct_dev_tbl); i++) {
+		sensor_cfg *cfg = get_common_sensor_cfg_info(nct_dev_tbl[i].tach_sen_num);
+
+		if (!pre_PCA9546A_read(cfg, cfg->pre_sensor_read_args))
+			LOG_ERR("pre lock mutex fail !");
+
+		if (cfg == NULL) {
+			LOG_ERR("Failed to get sensor config for wdt disable");
+			return false;
+		}
+
+		nct7363_setting_wdt(cfg, WDT_DISABLE);
+
+		if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
+			LOG_ERR("pro unlock mutex fail !");
+
+	}
+
+	return true;
+}
+
+uint8_t nct7363_wdt_all_enable()
+{	
+	for (uint8_t i = 0; i < ARRAY_SIZE(nct_dev_tbl); i++) {
+		sensor_cfg *cfg = get_common_sensor_cfg_info(nct_dev_tbl[i].tach_sen_num);
+
+		if (!pre_PCA9546A_read(cfg, cfg->pre_sensor_read_args))
+			LOG_ERR("pre lock mutex fail !");
+
+		if (cfg == NULL) {
+			LOG_ERR("Failed to get sensor config for wdt setting");
+			return false;
+		}
+		nct7363_setting_wdt(cfg, nct7363_init_args[i].wdt_cfg);
+		
+		if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
+			LOG_ERR("pro unlock mutex fail !");
+
+	}
+
+	return true;
+}
 
 int ast_pwm_set(int duty)
 {

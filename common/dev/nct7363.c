@@ -137,6 +137,29 @@ static bool nct7363_write(sensor_cfg *cfg, uint8_t offset, uint8_t val)
 
 	return true;
 }
+
+bool nct7363_setting_wdt(sensor_cfg *cfg, uint8_t wdt)
+{
+	/* set wdt  */
+	uint8_t offset;
+	offset = NCT7363_WDT_REG_OFFSET;
+	uint8_t val_wdt = 0;
+	uint8_t wdt_setting = wdt;
+	if (wdt > WDT_DISABLE) {
+		LOG_ERR("WDT setting fail !");
+		return false;
+	}
+
+	if (wdt_setting < WDT_DISABLE) {
+		val_wdt = BIT(7) | (wdt_setting << 2);
+	} 
+
+	if (!nct7363_write(cfg, offset, val_wdt))
+		return false;
+
+	return true;
+}
+
 static bool fan_frequency_convert(float frequency, uint8_t *output_freqency)
 {
 	int val_reg = 0;
