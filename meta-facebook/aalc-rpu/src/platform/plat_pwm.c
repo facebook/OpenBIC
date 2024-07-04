@@ -28,7 +28,8 @@ LOG_MODULE_REGISTER(plat_pwm);
 #define PWM_PERIOD 40 // 25kHz
 
 static const struct device *pwm_dev;
-static uint8_t fan_duty_cache[PWM_GRUP_E_MAX];
+static uint8_t fan_group_duty_cache[PWM_GROUP_E_MAX];
+static uint8_t fan_duty_cache[PWM_DEVICE_E_MAX];
 
 struct nct_dev_info {
 	enum PWM_DEVICE_E dev;
@@ -127,6 +128,7 @@ uint8_t plat_pwm_ctrl(enum PWM_DEVICE_E dev, uint8_t duty)
 	}
 
 	LOG_DBG("Set PWM device %d duty %d", dev, duty);
+	fan_duty_cache[dev] = duty;
 
 	uint8_t ret = 0;
 	switch (dev) {
@@ -192,29 +194,29 @@ static uint8_t ctl_pwm_dev(uint8_t index_start, uint8_t index_end, uint8_t duty)
 
 uint8_t ctl_all_pwm_dev(uint8_t duty)
 {
-	set_pwm_grup(PWM_GRUP_E_HEX_FAN, duty);
-	set_pwm_grup(PWM_GRUP_E_PUMP, duty);
-	set_pwm_grup(PWM_GRUP_E_RPU_FAN, duty);
+	set_pwm_group(PWM_GROUP_E_HEX_FAN, duty);
+	set_pwm_group(PWM_GROUP_E_PUMP, duty);
+	set_pwm_group(PWM_GROUP_E_RPU_FAN, duty);
 
 	return 0;
 }
 
-uint8_t set_pwm_grup(uint8_t grup, uint8_t duty)
+uint8_t set_pwm_group(uint8_t group, uint8_t duty)
 {
 	uint8_t ret = 1;
 
-	fan_duty_cache[grup] = duty;
+	fan_group_duty_cache[group] = duty;
 
-	switch (grup) {
-	case PWM_GRUP_E_HEX_FAN:
+	switch (group) {
+	case PWM_GROUP_E_HEX_FAN:
 		if (!ctl_pwm_dev(PWM_DEVICE_E_FB_FAN_1, PWM_DEVICE_E_FB_FAN_14, duty))
 			ret = 0;
 		break;
-	case PWM_GRUP_E_PUMP:
-		if (!ctl_pwm_dev(PWM_DEVICE_E_PB_PUMB_1, PWM_DEVICE_E_PB_PUMB_FAN_3, duty))
+	case PWM_GROUP_E_PUMP:
+		if (!ctl_pwm_dev(PWM_DEVICE_E_PB_PUMB_1, PWM_DEVICE_E_PB_PUMB_3, duty))
 			ret = 0;
 		break;
-	case PWM_GRUP_E_RPU_FAN:
+	case PWM_GROUP_E_RPU_FAN:
 		if (!ctl_pwm_dev(PWM_DEVICE_E_PB_PUMB_FAN_1, PWM_DEVICE_E_BB_FAN, duty))
 			ret = 0;
 		break;
@@ -223,12 +225,20 @@ uint8_t set_pwm_grup(uint8_t grup, uint8_t duty)
 	return ret;
 }
 
-uint8_t get_pwm_cache(uint8_t grup)
+uint8_t get_pwm_group_cache(uint8_t group)
 {
-	if (grup >= PWM_GRUP_E_MAX)
+	if (group >= PWM_GROUP_E_MAX)
 		return 0xFF;
 
-	return fan_duty_cache[grup];
+	return fan_group_duty_cache[group];
+}
+
+uint8_t get_pwm_cache(uint8_t idx)
+{
+	if (idx >= PWM_DEVICE_E_MAX)
+		return 0xFF;
+
+	return fan_duty_cache[idx];
 }
 
 void init_pwm_dev(void)

@@ -18,7 +18,7 @@
 #include "plat_sensor_table.h"
 #include <logging/log.h>
 
-#define THRESHOLD_POLL_STACK_SIZE 1024
+#define THRESHOLD_POLL_STACK_SIZE 2048
 
 struct k_thread threshold_poll;
 K_KERNEL_STACK_MEMBER(threshold_poll_stack, THRESHOLD_POLL_STACK_SIZE);
@@ -289,6 +289,10 @@ void threshold_poll_handler(void *arug0, void *arug1, void *arug2)
 
 		for (uint8_t i = 0; i < ARRAY_SIZE(threshold_tbl); i++) {
 			float val = 0;
+			sensor_cfg *cfg = get_common_sensor_cfg_info(threshold_tbl[i].sensor_num);
+			if (cfg->cache_status != SENSOR_READ_4BYTE_ACUR_SUCCESS)
+				continue;
+
 			if (get_sensor_reading_to_real_val(threshold_tbl[i].sensor_num, &val) !=
 			    SENSOR_READ_4BYTE_ACUR_SUCCESS)
 				continue;

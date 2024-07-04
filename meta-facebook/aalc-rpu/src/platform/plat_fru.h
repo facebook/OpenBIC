@@ -54,9 +54,9 @@ enum FRU_ID {
 #define FB_FRU_ADDR (0xA6 >> 1)
 
 #define FB_1_4_MUX_ADDR (0xE0 >> 1)
-#define FB_5_8_MUX_ADDR (0xE2 >> 1)
-#define FB_9_12_MUX_ADDR (0xE4 >> 1)
-#define FB_13_14_MUX_ADDR (0xE6 >> 1)
+#define FB_5_7_MUX_ADDR (0xE2 >> 1)
+#define FB_8_11_MUX_ADDR (0xE4 >> 1)
+#define FB_12_14_MUX_ADDR (0xE6 >> 1)
 #define PB_MUX_ADDR (0xE8 >> 1)
 #define SB_MUX_ADDR (0xE8 >> 1)
 
