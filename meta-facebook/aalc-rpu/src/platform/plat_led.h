@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,22 +14,27 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
 #include <stdint.h>
 
-#ifndef ADM1272_H
-#define ADM1272_H
+#define LED_TURN_OFF 0x00
+#define LED_TURN_ON 0x01
+#define LED_START_BLINK 0x02
+#define LED_STOP_BLINK 0x03
 
-enum ADM1272_IRANGE {
-	IRANGE_0MV_TO_15MV = 0x0,
-	IRANGE_0MV_TO_30MV = 0x1,
+enum LED_IDX_E {
+	LED_IDX_E_POWER = 0,
+	LED_IDX_E_FAULT,
+	LED_IDX_E_LEAK,
+	LED_IDX_E_COOLANT,
+	LED_IDX_E_MAX,
 };
 
-enum ADM1272_VRANGE {
-	VRANGE_0V_TO_60V = 0x0,
-	VRANGE_0V_TO_100V = 0x1,
-};
+// FM_LED_FP_4_EN //coolant led
+// FM_LED_FP_3_EN //leak led
+// FM_LED_FP_2_EN //fault led
+// FM_LED_FP_1_EN //pwr led
 
-bool enable_adm1272_hsc(uint8_t bus, uint8_t addr, bool enable_flag);
-
-#endif
+void led_set(uint8_t idx, uint8_t behaviour);
+void led_ctrl(uint8_t idx, uint8_t ctrl);
+uint8_t get_led_status(uint8_t idx);
+//void SSDLEDInit(void);
