@@ -140,6 +140,7 @@ static bool nct7363_write(sensor_cfg *cfg, uint8_t offset, uint8_t val)
 
 bool nct7363_setting_wdt(sensor_cfg *cfg, uint8_t wdt)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
 	/* set wdt  */
 	uint8_t offset;
 	offset = NCT7363_WDT_REG_OFFSET;
