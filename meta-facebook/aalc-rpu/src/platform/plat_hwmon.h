@@ -39,3 +39,4 @@ typedef struct _pump_reset_struct {
 bool clear_log_for_modbus_pump_setting(pump_reset_struct *data, uint8_t bit_val);
 bool pump_reset(pump_reset_struct *data, uint8_t bit_val);
 bool modbus_pump_setting_unsupport_function(pump_reset_struct *data, uint8_t bit_val);
+bool rpu_remote_power_cycle_function(pump_reset_struct *data, uint8_t bit_val);

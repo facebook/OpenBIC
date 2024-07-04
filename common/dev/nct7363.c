@@ -39,7 +39,7 @@ LOG_MODULE_REGISTER(dev_nct7363);
 
 bool nct7363_set_threshold(sensor_cfg *cfg, uint16_t threshold)
 {
-	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 
 	if (threshold > MAX_THRESHOLD_VAL) {
 		LOG_ERR("Threshold value is too large");
@@ -93,9 +93,9 @@ bool nct7363_set_threshold(sensor_cfg *cfg, uint16_t threshold)
 
 bool nct7363_set_duty(sensor_cfg *cfg, uint8_t duty, uint8_t port)
 {
-	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 
-	if (duty > 100 || duty < 0) {
+	if (duty > 100) {
 		LOG_ERR("Set invalid duty: %d", duty);
 		return false;
 	}
@@ -120,7 +120,7 @@ bool nct7363_set_duty(sensor_cfg *cfg, uint8_t duty, uint8_t port)
 
 static bool nct7363_write(sensor_cfg *cfg, uint8_t offset, uint8_t val)
 {
-	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	I2C_MSG msg = { 0 };
 	uint8_t retry = 5;
 	msg.bus = cfg->port;
@@ -140,6 +140,7 @@ static bool nct7363_write(sensor_cfg *cfg, uint8_t offset, uint8_t val)
 
 bool nct7363_setting_wdt(sensor_cfg *cfg, uint8_t wdt)
 {
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	/* set wdt  */
 	uint8_t offset;
 	offset = NCT7363_WDT_REG_OFFSET;
@@ -152,7 +153,7 @@ bool nct7363_setting_wdt(sensor_cfg *cfg, uint8_t wdt)
 
 	if (wdt_setting < WDT_DISABLE) {
 		val_wdt = BIT(7) | (wdt_setting << 2);
-	} 
+	}
 
 	if (!nct7363_write(cfg, offset, val_wdt))
 		return false;
@@ -188,7 +189,7 @@ static bool fan_frequency_convert(float frequency, uint8_t *output_freqency)
 
 bool nct7363_set_frequency(sensor_cfg *cfg, float frequency)
 {
-	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	I2C_MSG msg = { 0 };
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
@@ -225,6 +226,7 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 	msg.target_addr = cfg->target_addr;
 	float rpm = 0;
 	int gpio_result = 0;
+	sensor_val *sval = (sensor_val *)reading;
 	uint8_t offset = cfg->offset;
 	uint8_t port_offset = cfg->arg0;
 	uint8_t fan_count_high_byte_offset = 0;
@@ -268,7 +270,6 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 		/* count result */
 		rpm = 1350000 / ((float)fan_count_value * ((float)fan_poles / 4)); // RPM
 		/* return result */
-		sensor_val *sval = (sensor_val *)reading;
 		sval->integer = (int16_t)rpm;
 		sval->fraction = 0;
 
@@ -304,7 +305,7 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 	case NCT7363_GPIO_READ_OFFSET:
 		msg.rx_len = 1;
 		msg.tx_len = 1;
-		if (port_offset >= 0 && port_offset <= NCT7363_8_PORT) {
+		if (port_offset <= NCT7363_8_PORT) {
 			// read gpio is input or output
 			msg.data[0] = GPIO0X_IO_CONF_REG;
 			if (i2c_master_read(&msg, retry) != 0) {
@@ -327,12 +328,6 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 
 			/* get port offset gpio data*/
 			gpio_result = (msg.data[0] >> port_offset) & 1;
-			/* return result */
-			sensor_val *sval = (sensor_val *)reading;
-			sval->integer = (int16_t)gpio_result;
-
-			return SENSOR_READ_SUCCESS;
-
 		} else if (port_offset >= NCT7363_10_PORT && port_offset <= NCT7363_17_PORT) {
 			msg.data[0] = GPIO1X_IO_CONF_REG;
 			if (i2c_master_read(&msg, retry) != 0) {
@@ -360,15 +355,15 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 
 			/* get port offset gpio data*/
 			gpio_result = (msg.data[0] >> (port_offset - 8)) & 1;
-			/* return result */
-			sensor_val *sval = (sensor_val *)reading;
-			sval->integer = (int16_t)gpio_result;
-
-			return SENSOR_READ_SUCCESS;
 		} else {
 			LOG_ERR("Read GPIO port %d error!", port_offset);
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
+
+		/* return result */
+		sval->integer = (int16_t)gpio_result;
+
+		return SENSOR_READ_SUCCESS;
 	default:
 		LOG_ERR("Unknown register offset(%d)", offset);
 		return SENSOR_UNSPECIFIED_ERROR;
