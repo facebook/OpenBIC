@@ -1073,7 +1073,7 @@ uint8_t get_sensor_reading_to_real_val(uint8_t sensor_num, float *val)
 	}
 
 	sensor_val *sval = (sensor_val *)&reading;
-	*val = (sval->integer * 1000 + sval->fraction) / 1000;
+	*val = (sval->integer * 1000 + sval->fraction) / 1000.0;
 
 	return status;
 }
