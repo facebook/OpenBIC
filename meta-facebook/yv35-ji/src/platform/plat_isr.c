@@ -21,6 +21,7 @@
 #include "plat_mctp.h"
 #include "plat_class.h"
 #include "plat_power_status.h"
+#include "plat_i2c.h"
 #include "power_status.h"
 #include "ipmi.h"
 #include "pldm.h"
@@ -205,6 +206,49 @@ static void PROC_FAIL_handler(struct k_work *work)
 	}
 }
 
+#define CPLD_CPU_POWER_SEQ_STATE 0x11
+#define CPU_SHDN_STATE 0x07
+
+#define IPMI_SYS_EVENT_OFFSET_CPU_THERM_TRIP_OR_VR_HOT 0x16
+
+static void read_cpu_power_seq_status(struct k_work *work)
+{
+	if (CPU_power_good() == true)
+		return;
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 3;
+	i2c_msg.bus = I2C_BUS1;
+	i2c_msg.target_addr = (CPLD_I2C_ADDR >> 1);
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = CPLD_CPU_POWER_SEQ_STATE;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("Failed to read CPU power seq state from CPLD.");
+		return;
+	}
+
+	LOG_WRN("CPU power seq state: 0x%x", i2c_msg.data[0]);
+
+	/* if cpu abnormal off, add SEL, it might trigger from CPU or VR. */
+	if (i2c_msg.data[0] == CPU_SHDN_STATE) {
+		LOG_WRN("CPU abnormal off, add CPU thermal trip or VR hot sel.");
+		common_addsel_msg_t sel_msg;
+		sel_msg.InF_target = PLDM;
+		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+		sel_msg.event_data1 = IPMI_SYS_EVENT_OFFSET_CPU_THERM_TRIP_OR_VR_HOT;
+		sel_msg.event_data2 = 0xFF;
+		sel_msg.event_data3 = 0xFF;
+		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
+			LOG_ERR("Failed to add CPU thermal trip or VR hot sel.");
+		}
+	}
+}
+
+K_WORK_DELAYABLE_DEFINE(read_cpu_power_seq_status_work, read_cpu_power_seq_status);
 K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_delayed_status);
 K_WORK_DELAYABLE_DEFINE(PROC_FAIL_work, PROC_FAIL_handler);
 #define DC_ON_5_SECOND 5
@@ -236,6 +280,7 @@ void ISR_PWRGD_CPU()
 			LOG_ERR("Failed to cancel set dc on delay work.");
 		}
 		set_DC_on_delayed_status();
+		k_work_schedule(&read_cpu_power_seq_status_work, K_MSEC(500));
 	}
 }
 
