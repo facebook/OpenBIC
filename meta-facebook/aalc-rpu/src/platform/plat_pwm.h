@@ -54,3 +54,5 @@ uint8_t plat_pwm_ctrl(enum PWM_DEVICE_E dev, uint8_t duty);
 uint8_t ctl_all_pwm_dev(uint8_t duty);
 uint8_t set_pwm_grup(uint8_t grup, uint8_t duty);
 uint8_t get_pwm_cache(uint8_t grup);
+uint8_t nct7363_wdt_all_disable();
+uint8_t nct7363_wdt_all_enable();

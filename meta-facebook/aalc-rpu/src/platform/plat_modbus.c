@@ -263,7 +263,7 @@ pump_reset_struct modbus_pump_setting_table[] = {
 	{ AUTOTUNE_FLOW_CONTROL, modbus_pump_setting_unsupport_function, 0 },
 	{ AUTOTUNE_PRESSURE_BALANCE_CONTROL, modbus_pump_setting_unsupport_function, 0 },
 	{ SYSTEM_STOP, modbus_pump_setting_unsupport_function, 0 },
-	{ RPU_REMOTE_POWER_CYCLE, modbus_pump_setting_unsupport_function, 0 },
+	{ RPU_REMOTE_POWER_CYCLE, rpu_remote_power_cycle_function, 0 },
 	{ MANUAL_CONTROL, modbus_pump_setting_unsupport_function, 0 },
 	{ CLEAR_PUMP_RUNNING_TIME, modbus_pump_setting_unsupport_function, 0 },
 	{ CLEAR_LOG, clear_log_for_modbus_pump_setting, 0 },
