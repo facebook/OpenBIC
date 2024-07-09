@@ -64,13 +64,14 @@ void pal_post_init()
 	LOG_INF("Retimer module: %d, OTH module: %d, HSC module: %d", get_retimer_module(),
 		get_oth_module(), get_hsc_module());
 
+	handle_tda38741_work_around();
+
 	plat_mctp_init();
 	ssif_init();
 }
 
 void pal_device_init()
 {
-	handle_tda38741_work_around();
 	power_status_monitor();
 }
 
