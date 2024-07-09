@@ -24,5 +24,6 @@ void handle_post_status(bool status, bool need_change);
 void handle_post_action();
 void reset_post_end_work_status();
 void handle_tda38741_work_around();
+void power_status_monitor();
 
 #endif
