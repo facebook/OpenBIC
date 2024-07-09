@@ -209,7 +209,7 @@ uint8_t modbus_command_i2c_scan(modbus_command_mapping *cmd)
 	uint8_t addr[cmd->data_len], len;
 	i2c_scan(i2c_scan_bus, addr, &len);
 
-	memset(cmd->data, 0xFFFF, sizeof(uint16_t) * cmd->data_len);
+	memset(cmd->data, 0xFF, sizeof(uint16_t) * cmd->data_len);
 	for (uint8_t i = 0; i < len; i++)
 		cmd->data[i] = addr[i];
 
@@ -308,11 +308,12 @@ uint8_t modbus_error_log_event(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
-	uint16_t order = 1 + ((cmd->start_addr - LOG_BEGIN_MODBUS_ADDR) / cmd->cmd_size);
+	uint16_t order = 1 + ((cmd->start_addr - MODBUS_EVENT_1_ERROR_LOG_ADDR) / cmd->cmd_size);
 
 	log_transfer_to_modbus_data(cmd->data, cmd->cmd_size, order);
 
-	regs_reverse(cmd->data_len, cmd->data);
+	memmove(cmd->data, cmd->data + cmd->start_addr - cmd->addr,
+		cmd->data_len * sizeof(uint16_t));
 
 	return MODBUS_EXC_NONE;
 }
@@ -321,8 +322,13 @@ uint8_t modbus_get_pwm(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
-	uint8_t grup = cmd->arg0;
-	cmd->data[0] = (uint16_t)get_pwm_cache(grup);
+	uint8_t is_group = cmd->arg0;
+	uint8_t idx = cmd->arg1;
+
+	if (is_group)
+		cmd->data[0] = (uint16_t)get_pwm_group_cache(idx);
+	else
+		cmd->data[0] = (uint16_t)get_pwm_cache(idx);
 
 	return MODBUS_EXC_NONE;
 }
@@ -331,10 +337,14 @@ uint8_t modbus_set_pwm(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
-	uint8_t grup = cmd->arg0;
+	uint8_t is_group = cmd->arg0;
+	uint8_t idx = cmd->arg1;
 	uint8_t duty = (uint8_t)cmd->data[0];
 
-	set_pwm_grup(grup, duty);
+	if (is_group)
+		set_pwm_group(idx, duty);
+	else
+		plat_pwm_ctrl(idx, duty);
 
 	return MODBUS_EXC_NONE;
 }
@@ -507,7 +517,8 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_FB_1_HEX_INLET_TEMP_C, 1, -2, 1 },
 	{ MODBUS_FB_2_HEX_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_FB_2_HEX_INLET_TEMP_C, 1, -2, 1 },
-	{ MODBUS_HEX_WATER_INLET_TEMP_C_ADDR, NULL, modbus_get_senser_reading, 0, 1, -2, 1 },
+	{ MODBUS_HEX_WATER_INLET_TEMP_C_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C, 1, -2, 1 },
 	{ MODBUS_HEX_BLADDER_LEVEL_STATUS_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
 	{ MODBUS_HEX_EXTERNAL_Y_FILTER_PRESSURE_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
 	{ MODBUS_HEX_STATIC_PRESSURE_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
@@ -696,6 +707,16 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_PDB_48V_SENSE_DIFF_POS_VOLT_V, 1, -2, 1 },
 	{ MODBUS_RPU_PDB_48V_SENSE_DIFF_NEG_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_PDB_48V_SENSE_DIFF_NEG_VOLT_V, 1, -2, 1 },
+	{ MODBUS_BPB_CDU_COOLANT_LEAKAGE_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V, 1, -2, 1 },
+	{ MODBUS_BPB_RACK_COOLANT_LEAKAGE_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_VOLT_V, 1, -2, 1 },
+	// ADC
+	{ MODBUS_V_12_AUX_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_V_12_AUX, 1, -2, 1 },
+	{ MODBUS_V_5_AUX_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_V_5_AUX, 1, -2, 1 },
+	{ MODBUS_V_3_3_AUX_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_V_3_3_AUX, 1, -2, 1 },
+	{ MODBUS_V_1_2_AUX_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_V_1_2_AUX, 1, -2, 1 },
+	{ MODBUS_V_5_USB_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_V_5_USB, 1, -2, 1 },
 	//FW UPDATE
 	{ MODBUS_FW_REVISION_ADDR, NULL, modbus_get_fw_reversion, 0, 0, 0, 4 },
 	{ MODBUS_FW_DOWNLOAD_ADDR, modbus_fw_download, NULL, 0, 0, 0, 103 },
@@ -720,12 +741,18 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_AUTO_TUNE_COOLANT_OUTLET_TEMPERATURE_TARGET_SET_ADDR, modbus_to_do, NULL, 0, 0, 0,
 	  1 },
 	{ MODBUS_PUMP_REDUNDANT_SWITCHED_INTERVAL_ADDR, modbus_to_do, NULL, 0, 0, 0, 1 },
-	{ MODBUS_MANUAL_CONTROL_PUMP_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, PWM_GRUP_E_PUMP,
-	  0, 0, 1 },
-	{ MODBUS_MANUAL_CONTROL_FAN_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm,
-	  PWM_GRUP_E_HEX_FAN, 0, 0, 1 },
-	{ MODBUS_MANUAL_CONTROL_RPU_FAN_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm,
-	  PWM_GRUP_E_RPU_FAN, 0, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_PUMP_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 1,
+	  PWM_GROUP_E_PUMP, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_FAN_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 1,
+	  PWM_GROUP_E_HEX_FAN, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_RPU_FAN_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 1,
+	  PWM_GROUP_E_RPU_FAN, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_PUMP1_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 0,
+	  PWM_DEVICE_E_PB_PUMB_1, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_PUMP2_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 0,
+	  PWM_DEVICE_E_PB_PUMB_2, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_PUMP3_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 0,
+	  PWM_DEVICE_E_PB_PUMB_3, 0, 1 },
 	{ MODBUS_PUMP_SETTING_ADDR, modbus_pump_setting, NULL, 0, 0, 0, 1 },
 	{ MODBUS_LEAKAGE_SETTING_ON_ADDR, modbus_to_do, NULL, 0, 0, 0, 1 },
 	// Leakage Black Box
@@ -746,11 +773,11 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_STICKY_HEX_RACK_PAN_LEAKAGE_RELAY_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0, 1 },
 	{ MODBUS_STICKY_HEX_RACK_FLOOR_LEAKAGE_RELAY_ADDR, modbus_to_do, modbus_to_do, 0, 0, 0, 1 },
 	{ MODBUS_STRICKY_SB_TTV_COOLANT_LEAKAGE_1_ADDR, NULL, modbus_get_senser_reading,
-	  SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_1_VOLT_V, 1, 0, 1 },
+	  SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_1_VOLT_V, 1, -2, 1 },
 	{ MODBUS_STRICKY_SB_TTV_COOLANT_LEAKAGE_2_ADDR, NULL, modbus_get_senser_reading,
-	  SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_2_VOLT_V, 1, 0, 1 },
+	  SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_2_VOLT_V, 1, -2, 1 },
 	{ MODBUS_STRICKY_SB_TTV_COOLANT_LEAKAGE_3_ADDR, NULL, modbus_get_senser_reading,
-	  SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_3_VOLT_V, 1, 0, 1 },
+	  SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_3_VOLT_V, 1, -2, 1 },
 	// Error Log
 	{ MODBUS_ERROR_LOG_COUNT_ADDR, NULL, modbus_error_log_count, 0, 0, 0, 1 },
 	{ MODBUS_EVENT_1_ERROR_LOG_ADDR, NULL, modbus_error_log_event, 0, 0, 0, 10 },
