@@ -126,7 +126,7 @@ sensor_cfg plat_sensor_config[] = {
 	  NULL, NULL, NULL },
 	{ SENSOR_NUM_TEMP_TMP75_FIO, sensor_dev_tmp75, I2C_BUS2, TMP75_ADDR, TMP75_TEMP_OFFSET,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
-	  SENSOR_INIT_STATUS, pre_tmp75_read, &mux_conf_addr_0xe2[0], post_tmp75_read, NULL, NULL },
+	  SENSOR_INIT_STATUS, pre_tmp75_read, &mux_conf_addr_0xe2[0], NULL, NULL, NULL },
 
 #ifdef ENABLE_NVIDIA
 	/* SatMC */

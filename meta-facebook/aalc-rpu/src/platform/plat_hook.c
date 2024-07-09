@@ -36,13 +36,6 @@ K_MUTEX_DEFINE(i2c_7_PCA9546a_mutex);
 K_MUTEX_DEFINE(i2c_8_PCA9546a_mutex);
 K_MUTEX_DEFINE(i2c_9_PCA9546a_mutex);
 
-#define BUS_1_MUX_ADDR 0xE0 >> 1
-#define BUS_2_MUX_ADDR 0xE2 >> 1
-#define BUS_6_MUX_ADDR 0xE4 >> 1
-#define BUS_7_MUX_ADDR 0xE6 >> 1
-#define BUS_8_MUX_ADDR 0xE8 >> 1
-#define BUS_9_MUX_ADDR 0xE8 >> 1
-
 /**************************************************************************************************
  * INIT ARGS
 **************************************************************************************************/

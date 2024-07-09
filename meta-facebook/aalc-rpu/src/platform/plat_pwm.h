@@ -55,3 +55,5 @@ uint8_t ctl_all_pwm_dev(uint8_t duty);
 uint8_t set_pwm_group(uint8_t group, uint8_t duty);
 uint8_t get_pwm_group_cache(uint8_t group);
 uint8_t get_pwm_cache(uint8_t idx);
+uint8_t nct7363_wdt_all_disable();
+uint8_t nct7363_wdt_all_enable();
