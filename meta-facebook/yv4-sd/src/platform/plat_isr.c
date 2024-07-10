@@ -16,6 +16,7 @@
 
 #include <logging/log.h>
 #include <stdlib.h>
+#include <pmbus.h>
 #include "libipmi.h"
 #include "kcs.h"
 #include "rg3mxxb12.h"
@@ -30,6 +31,7 @@
 #include "util_worker.h"
 #include "plat_gpio.h"
 #include "plat_class.h"
+#include "plat_pldm_sensor.h"
 #include "plat_sensor_table.h"
 #include "plat_i2c.h"
 #include "plat_mctp.h"
@@ -46,6 +48,44 @@
 LOG_MODULE_REGISTER(plat_isr, LOG_LEVEL_DBG);
 
 uint8_t hw_event_register[13] = { 0 };
+
+add_vr_sel_info vr_event_work_item[] = {
+	{
+		.is_init = false,
+		.gpio_num = PVDDCR_CPU0_OCP_N,
+		.vr_addr = ADDR_VR_CPU0,
+		.page_cnt = 2,
+		.is_asserted = 0,
+	},
+	{
+		.is_init = false,
+		.gpio_num = PVDDCR_CPU1_OCP_N,
+		.vr_addr = ADDR_VR_CPU1,
+		.page_cnt = 2,
+		.is_asserted = 0,
+	},
+	{
+		.is_init = false,
+		.gpio_num = PVDDCR_CPU0_PMALERT_N,
+		.vr_addr = ADDR_VR_CPU0,
+		.page_cnt = 2,
+		.is_asserted = 0,
+	},
+	{
+		.is_init = false,
+		.gpio_num = PVDDCR_CPU1_PMALERT_N,
+		.vr_addr = ADDR_VR_CPU1,
+		.page_cnt = 2,
+		.is_asserted = 0,
+	},
+	{
+		.is_init = false,
+		.gpio_num = PVDD11_S3_PMALERT_N,
+		.vr_addr = ADDR_VR_PVDD11,
+		.page_cnt = 1,
+		.is_asserted = 0,
+	},
+};
 
 /*
  *	TODO: I3C hub is supplied by DC power currently. When DC off, it can't be initialized.
@@ -95,7 +135,10 @@ static void PROC_FAIL_handler()
 	/* if have not received kcs and post code, add FRB3 event log. */
 	if ((get_kcs_ok() == false) && (get_4byte_postcode_ok() == false)) {
 		LOG_ERR("FRB3 event assert");
-		if (PLDM_SUCCESS != send_event_log_to_bmc(FRB3_TIMER_EXPIRE, EVENT_ASSERTED)) {
+		struct pldm_addsel_data msg = { 0 };
+		msg.event_type = FRB3_TIMER_EXPIRE;
+		msg.assert_type = EVENT_ASSERTED;
+		if (PLDM_SUCCESS != send_event_log_to_bmc(msg)) {
 			LOG_ERR("Failed to assert FRE3 event log.");
 		};
 	} else {
@@ -111,6 +154,7 @@ K_WORK_DELAYABLE_DEFINE(PROC_FAIL_work, PROC_FAIL_handler);
 
 #define DC_ON_5_SECOND 5
 #define PROC_FAIL_START_DELAY_SECOND 10
+#define VR_EVENT_DELAY_MS 10
 void ISR_DC_ON()
 {
 	set_DC_status(PWRGD_CPU_LVC3);
@@ -258,10 +302,142 @@ void ISR_HSC_OC()
 	}
 }
 
+void init_vr_event_work()
+{
+	for (int index = 0; index < ARRAY_SIZE(vr_event_work_item); ++index) {
+		if (vr_event_work_item[index].is_init != true) {
+			k_work_init_delayable(&vr_event_work_item[index].add_sel_work,
+					      process_vr_pmalert_ocp_sel);
+
+			vr_event_work_item[index].is_init = true;
+		}
+	}
+}
+
+void process_vr_pmalert_ocp_sel(struct k_work *work_item)
+{
+	int ret = -1;
+	uint8_t retry = 5;
+
+	struct k_work_delayable *dwork = k_work_delayable_from_work(work_item);
+	add_vr_sel_info *work_info = CONTAINER_OF(dwork, add_vr_sel_info, add_sel_work);
+
+	I2C_MSG msg = { 0 };
+	msg.bus = I2C_BUS4;
+	msg.target_addr = work_info->vr_addr;
+
+	for (int page = 0; page < work_info->page_cnt; ++page) {
+		/* set page for power rail */
+		msg.tx_len = 2;
+		msg.data[0] = PMBUS_PAGE;
+		msg.data[1] = page;
+		if (i2c_master_write(&msg, retry)) {
+			LOG_ERR("process_vr_pmalert_ocp_sel, set page fail");
+			continue;
+		}
+
+		/* read STATUS_WORD */
+		msg.tx_len = 1;
+		msg.rx_len = 2;
+		msg.data[0] = PMBUS_STATUS_WORD;
+		ret = i2c_master_read(&msg, retry);
+		if (ret != 0) {
+			LOG_ERR("Get vr status word fail, bus: 0x%x, addr: 0x%x", msg.bus,
+				msg.target_addr);
+			continue;
+		}
+
+		uint8_t status_word_lsb = msg.data[0];
+		uint8_t status_word_msb = msg.data[1];
+
+		/* add a filter to avoid false alert from TI VR */
+		uint8_t vr_dev = VR_DEVICE_UNKNOWN;
+		if (plat_pldm_sensor_get_vr_dev(&vr_dev) != GET_VR_DEV_SUCCESS) {
+			LOG_ERR("Unable to change the VR device due to its unknown status.");
+			continue;
+		}
+
+		if (vr_dev == sensor_dev_tps53689) {
+			/* 1. check if trigger reason is IOUT fault */
+			if (((status_word_msb & VR_IOUT_FAULT_MASK) >> 6) == 1) {
+				/* 2. IOUT fault, check if OC Warning is set */
+				msg.tx_len = 1;
+				msg.rx_len = 1;
+				msg.data[0] = PMBUS_STATUS_IOUT;
+				ret = i2c_master_read(&msg, retry);
+				if (ret != 0) {
+					LOG_ERR("Get vr status iout fail, bus: 0x%x, addr: 0x%x",
+						msg.bus, msg.target_addr);
+					continue;
+				}
+				if (((msg.data[0] & VR_TPS_OCW_MASK) >> 5) == 1) {
+					/* only OC Warn is triggered, skip to prevent false event */
+					continue;
+				}
+			}
+		}
+
+		struct pldm_addsel_data sel_msg = { 0 };
+
+		switch (work_info->gpio_num) {
+		case PVDDCR_CPU0_OCP_N:
+			sel_msg.event_type = VR_FAULT;
+			sel_msg.event_data_1 = PVDDCR_CPU0 + page;
+			break;
+		case PVDDCR_CPU1_OCP_N:
+			sel_msg.event_type = VR_FAULT;
+			sel_msg.event_data_1 = PVDDCR_CPU1 + page;
+			break;
+		case PVDDCR_CPU0_PMALERT_N:
+			sel_msg.event_type = PMALERT_ASSERT;
+			sel_msg.event_data_1 = PVDDCR_CPU0 + page;
+			break;
+		case PVDDCR_CPU1_PMALERT_N:
+			sel_msg.event_type = PMALERT_ASSERT;
+			sel_msg.event_data_1 = PVDDCR_CPU1 + page;
+			break;
+		case PVDD11_S3_PMALERT_N:
+			sel_msg.event_type = PMALERT_ASSERT;
+			sel_msg.event_data_1 = PVDD11_S3;
+			break;
+		default:
+			break;
+		}
+
+		if (gpio_get(work_info->gpio_num) == GPIO_HIGH) {
+			if (work_info->is_asserted & BIT(page)) {
+				sel_msg.assert_type = EVENT_DEASSERTED;
+				work_info->is_asserted &= ~BIT(page);
+			} else {
+				/* It's not asserted in previous status */
+				continue;
+			}
+		} else {
+			sel_msg.assert_type = EVENT_ASSERTED;
+
+			if (((status_word_lsb & VR_FAULT_STATUS_LSB_MASK) == 0) &&
+			    ((status_word_msb & VR_FAULT_STATUS_MSB_MASK) == 0)) {
+				/* No OV/OC/UV/OT event happened, check next rail */
+				continue;
+			} else {
+				work_info->is_asserted |= BIT(page);
+			}
+		}
+
+		sel_msg.event_data_2 = status_word_msb;
+		sel_msg.event_data_3 = status_word_lsb;
+
+		if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
+			LOG_ERR("Failed to assert VR event log.");
+		};
+	}
+}
+
 void ISR_PVDDCR_CPU0_OCP()
 {
 	if (get_DC_status() == true) {
-		//todo : add sel to bmc for assert
+		LOG_ERR("PVDDCR CPU0 OCP event triggered");
+		k_work_schedule(&vr_event_work_item[0].add_sel_work, K_MSEC(VR_EVENT_DELAY_MS));
 		hw_event_register[7]++;
 	}
 }
@@ -269,15 +445,17 @@ void ISR_PVDDCR_CPU0_OCP()
 void ISR_PVDDCR_CPU1_OCP()
 {
 	if (get_DC_status() == true) {
-		//todo : add sel to bmc for assert
+		LOG_ERR("PVDDCR CPU1 OCP event triggered");
+		k_work_schedule(&vr_event_work_item[1].add_sel_work, K_MSEC(VR_EVENT_DELAY_MS));
 		hw_event_register[6]++;
 	}
 }
 
-void ISR_PVDD11_S3_OCP()
+void ISR_PVDD11_S3_PMALERT()
 {
 	if (get_DC_status() == true) {
-		//todo : add sel to bmc for assert
+		LOG_ERR("PVDD11 S3 PMALERT event triggered");
+		k_work_schedule(&vr_event_work_item[4].add_sel_work, K_MSEC(VR_EVENT_DELAY_MS));
 		hw_event_register[8]++;
 	}
 }
@@ -342,7 +520,7 @@ void ISR_APML_ALERT()
 
 	ptr->cmd_code = APML_ALERT;
 	ptr->data_length = CPUID_SIZE;
-	const uint8_t* cpuid_ptr = get_cpuid();
+	const uint8_t *cpuid_ptr = get_cpuid();
 	memcpy(ptr->messages, cpuid_ptr, CPUID_SIZE);
 
 	translated_msg.buf = (uint8_t *)ptr;
@@ -366,4 +544,20 @@ exit:
 	SAFE_FREE(ptr);
 
 	return;
+}
+
+void ISR_PVDDCR_CPU0_PMALERT()
+{
+	if (get_DC_status() == true) {
+		LOG_ERR("PVDDCR CPU0 PMALERT event triggered");
+		k_work_schedule(&vr_event_work_item[2].add_sel_work, K_MSEC(VR_EVENT_DELAY_MS));
+	}
+}
+
+void ISR_PVDDCR_CPU1_PMALERT()
+{
+	if (get_DC_status() == true) {
+		LOG_ERR("PVDDCR CPU1 PMALERT event triggered");
+		k_work_schedule(&vr_event_work_item[3].add_sel_work, K_MSEC(VR_EVENT_DELAY_MS));
+	}
 }
