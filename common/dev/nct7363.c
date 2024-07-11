@@ -485,7 +485,8 @@ uint8_t nct7363_init(sensor_cfg *cfg)
 
 		/*  set init fan duty */
 		if (nct7363_init_arg_data->pin_type[i] == NCT7363_PIN_TPYE_PWM) {
-			bool set_duty = nct7363_set_duty(cfg, 40, i); // 40% duty for init
+			bool set_duty = nct7363_set_duty(cfg, nct7363_init_arg_data->duty[i],
+							 i); // set duty for init
 			if (!set_duty) {
 				LOG_ERR("set init duty error");
 				return SENSOR_INIT_UNSPECIFIED_ERROR;
