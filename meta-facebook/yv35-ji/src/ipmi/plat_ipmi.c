@@ -31,8 +31,8 @@ LOG_MODULE_REGISTER(plat_ipmi);
 #define WORK_AROUND_BIOS_DEBUG_PIN_IDX 62
 #define WORK_AROUND_BIOS_DEBUG_PIN_IDX_REAL 23
 
-#define WORK_AROUND_V_E1S_PRSNT_PIN_IDX 63
-#define WORK_AROUND_V_E1S_PRSNT_PIN_IDX_REAL 55
+#define VIRTUAL_E1S_PRSNT_PIN_IDX 63
+#define VIRTUAL_E1S_PRSNT_PIN_IDX_REAL 55
 
 bool pal_request_msg_to_BIC_from_HOST(uint8_t netfn, uint8_t cmd)
 {
@@ -170,15 +170,14 @@ void OEM_1S_GET_GPIO(ipmi_msg *msg)
 
 	int tmp_gpio_idx = 0;
 	for (uint8_t i = 0; i < gpio_cnt; i++) {
-		if (i == WORK_AROUND_V_E1S_PRSNT_PIN_IDX)
-			tmp_gpio_idx = WORK_AROUND_V_E1S_PRSNT_PIN_IDX_REAL;
+		if (i == VIRTUAL_E1S_PRSNT_PIN_IDX)
+			tmp_gpio_idx = VIRTUAL_E1S_PRSNT_PIN_IDX_REAL;
 		else if (i == WORK_AROUND_BIOS_DEBUG_PIN_IDX)
 			tmp_gpio_idx = WORK_AROUND_BIOS_DEBUG_PIN_IDX_REAL;
 		else if (i >= WORK_AROUND_BIOS_DEBUG_PIN_IDX_REAL &&
-			 i < WORK_AROUND_V_E1S_PRSNT_PIN_IDX_REAL)
+			 i < VIRTUAL_E1S_PRSNT_PIN_IDX_REAL)
 			tmp_gpio_idx = i + 1;
-		else if (i >= WORK_AROUND_V_E1S_PRSNT_PIN_IDX_REAL &&
-			 i < WORK_AROUND_BIOS_DEBUG_PIN_IDX)
+		else if (i >= VIRTUAL_E1S_PRSNT_PIN_IDX_REAL && i < WORK_AROUND_BIOS_DEBUG_PIN_IDX)
 			tmp_gpio_idx = i + 2;
 		else
 			tmp_gpio_idx = i;
@@ -234,14 +233,14 @@ uint8_t gpio_idx_exchange(ipmi_msg *msg)
 	}
 
 	if (need_change) {
-		if (msg->data[1] == WORK_AROUND_V_E1S_PRSNT_PIN_IDX)
-			msg->data[1] = WORK_AROUND_V_E1S_PRSNT_PIN_IDX_REAL;
+		if (msg->data[1] == VIRTUAL_E1S_PRSNT_PIN_IDX)
+			msg->data[1] = VIRTUAL_E1S_PRSNT_PIN_IDX_REAL;
 		else if (msg->data[1] == WORK_AROUND_BIOS_DEBUG_PIN_IDX)
 			msg->data[1] = WORK_AROUND_BIOS_DEBUG_PIN_IDX_REAL;
 		else if (msg->data[1] >= WORK_AROUND_BIOS_DEBUG_PIN_IDX_REAL &&
-			 msg->data[1] < WORK_AROUND_V_E1S_PRSNT_PIN_IDX_REAL)
+			 msg->data[1] < VIRTUAL_E1S_PRSNT_PIN_IDX_REAL)
 			msg->data[1]++;
-		else if (msg->data[1] >= WORK_AROUND_V_E1S_PRSNT_PIN_IDX_REAL &&
+		else if (msg->data[1] >= VIRTUAL_E1S_PRSNT_PIN_IDX_REAL &&
 			 msg->data[1] < WORK_AROUND_BIOS_DEBUG_PIN_IDX)
 			msg->data[1] += 2;
 
