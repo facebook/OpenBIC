@@ -15,6 +15,9 @@
  */
 #include "plat_modbus.h"
 
+#define IS_NORMAL_VAL true
+#define IS_ABNORMAL_VAL false 
+
 uint16_t error_log_count(void);
 void log_transfer_to_modbus_data(uint16_t *modbus_data, uint8_t cmd_size, uint16_t order);
 void error_log_event(uint8_t sensor_num, bool val_normal);

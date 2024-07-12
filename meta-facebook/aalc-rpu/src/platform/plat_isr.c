@@ -10,10 +10,10 @@
 
 void deassert_all_rpu_ready_pin(void)
 {
-	gpio_set(BIC_RPU_READY0, 1);
-	gpio_set(BIC_RPU_READY1, 1);
-	gpio_set(BIC_RPU_READY2, 1);
-	gpio_set(BIC_RPU_READY3, 1);
+	gpio_set(BIC_RPU_READY0, 0);
+	gpio_set(BIC_RPU_READY1, 0);
+	gpio_set(BIC_RPU_READY2, 0);
+	gpio_set(BIC_RPU_READY3, 0);
 }
 
 /* TO DO: 
@@ -35,28 +35,15 @@ IT_LEAK_ALERT_HANDLER(3);
 
 void fault_leak_action()
 {
-	set_all_pump_power(false);
-	ctl_all_pwm_dev(0);
+	//set_all_pump_power(false);
+	//ctl_all_pwm_dev(0);
 	deassert_all_rpu_ready_pin();
 	gpio_set(RPU_LEAK_ALERT_N, 0);
 }
 
-// void emergency_pwr_off_action()
-// {
-// 	fault_leak_action();
-// 	disable_sensor_poll();
-// }
-
-// K_WORK_DEFINE(emergency_pwr_off_work, emergency_pwr_off_action);
-
-// void ISR_EMER_PWR_OFF()
-// {
-// 	k_work_submit(&emergency_pwr_off_work);
-// }
-
 void it_leak_action()
 {
-	//fault_leak_action();
+	fault_leak_action();
 	led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
 	if (get_led_status(LED_IDX_E_LEAK) != LED_START_BLINK)
 		led_ctrl(LED_IDX_E_LEAK, LED_START_BLINK);

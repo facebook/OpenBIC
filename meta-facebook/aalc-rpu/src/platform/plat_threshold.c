@@ -65,13 +65,13 @@ void pump_failure_do(uint8_t arg0, uint8_t status)
 {
 	if (status == THRESHOLD_STATUS_LCR) {
 		//assert pump fault status bit
-		//deassert_all_rpu_ready_pin();
+		deassert_all_rpu_ready_pin();
 		//auto control for Hex Fan
-		error_log_event(arg0, 0);
+		error_log_event(arg0, IS_ABNORMAL_VAL);
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
 		//wait 30 secs to shut down
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
-		error_log_event(arg0, 1);
+		error_log_event(arg0, IS_NORMAL_VAL);
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 	} else
 		LOG_WRN("Unexpected threshold warning");
@@ -81,7 +81,7 @@ void rpu_internal_fan_failure_do(uint8_t arg0, uint8_t status)
 {
 	if (status == THRESHOLD_STATUS_LCR) {
 		//assert internal fan fault status bit
-		//deassert_all_rpu_ready_pin();
+		deassert_all_rpu_ready_pin();
 		//set_all_pump_power(false);
 		//auto control for Hex Fan
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
@@ -107,8 +107,8 @@ void hex_fan_failure_do(uint8_t arg0, uint8_t status)
 void aalc_leak_detect_do(uint8_t arg0, uint8_t status)
 {
 	if (status == THRESHOLD_STATUS_LCR) {
-		//fault_leak_action();
-		error_log_event(arg0, 0);
+		fault_leak_action();
+		error_log_event(arg0, IS_ABNORMAL_VAL);
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
 		if (get_led_status(LED_IDX_E_LEAK) != LED_START_BLINK)
 			led_ctrl(LED_IDX_E_LEAK, LED_START_BLINK);
@@ -125,7 +125,7 @@ void high_press_do(uint8_t arg0, uint8_t status)
 	if (status == THRESHOLD_STATUS_UCR) {
 		//set_all_pump_power(false);
 		//auto control for hex fan
-		//deassert_all_rpu_ready_pin();
+		deassert_all_rpu_ready_pin();
 		//relief valve open
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
 	} else if (status == THRESHOLD_STATUS_NORMAL)
@@ -139,8 +139,8 @@ void low_level_do(uint8_t arg0, uint8_t status)
 	if (status == THRESHOLD_STATUS_LCR) {
 		//assert fluid level sensor status bit
 		//set_all_pump_power(false);
-		//deassert_all_rpu_ready_pin();
-		error_log_event(SENSOR_NUM_BPB_RACK_LEVEL_2, 0);
+		deassert_all_rpu_ready_pin();
+		error_log_event(arg0, IS_ABNORMAL_VAL);
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
 		led_ctrl(LED_IDX_E_COOLANT, LED_STOP_BLINK);
 		led_ctrl(LED_IDX_E_COOLANT, LED_TURN_OFF);
@@ -178,7 +178,7 @@ void high_coolant_temp_do(uint8_t arg0, uint8_t status)
 {
 	if (status == THRESHOLD_STATUS_UCR) {
 		//ctl_all_pwm_dev(100);
-		//deassert_all_rpu_ready_pin();
+		deassert_all_rpu_ready_pin();
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
 	} else if (status == THRESHOLD_STATUS_NORMAL)
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
@@ -189,7 +189,7 @@ void high_coolant_temp_do(uint8_t arg0, uint8_t status)
 void flow_trigger_do(uint8_t arg0, uint8_t status)
 {
 	if (status == THRESHOLD_STATUS_UCR) {
-		//deassert_all_rpu_ready_pin();
+		deassert_all_rpu_ready_pin();
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
 	} else if (status == THRESHOLD_STATUS_NORMAL)
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
@@ -356,7 +356,7 @@ sensor_threshold threshold_tbl[] = {
 	{ SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, THRESHOLD_ENABLE_UCR, 1, 0, flow_trigger_do,
 	  0 },
 	{ SENSOR_NUM_BPB_RACK_LEVEL_1, THRESHOLD_ENABLE_LCR, 1, 0, high_level_do, 0 },
-	{ SENSOR_NUM_BPB_RACK_LEVEL_2, THRESHOLD_ENABLE_LCR, 1, 0, low_level_do, 0 },
+	{ SENSOR_NUM_BPB_RACK_LEVEL_2, THRESHOLD_ENABLE_LCR, 1, 0, low_level_do, SENSOR_NUM_BPB_RACK_LEVEL_2 },
 	//	{ SENSOR_NUM_MB_HUM_PCT_RH, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_PDB_HUM_PCT_RH, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_PB_1_HUM_PCT_RH, None, None, None, NULL, 0 },
