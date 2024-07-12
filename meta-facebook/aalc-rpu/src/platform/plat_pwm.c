@@ -28,7 +28,8 @@ LOG_MODULE_REGISTER(plat_pwm);
 #define PWM_PERIOD 40 // 25kHz
 
 static const struct device *pwm_dev;
-static uint8_t fan_duty_cache[PWM_GRUP_E_MAX];
+static uint8_t fan_group_duty_cache[PWM_GROUP_E_MAX];
+static uint8_t fan_duty_cache[PWM_DEVICE_E_MAX];
 
 struct nct_dev_info {
 	enum PWM_DEVICE_E dev;
@@ -103,6 +104,51 @@ static uint8_t nct_pwm_ctl(enum PWM_DEVICE_E dev, uint8_t duty)
 
 	return (ret == true) ? 0 : 1;
 }
+uint8_t nct7363_wdt_all_disable()
+{
+	for (uint8_t i = 0; i < ARRAY_SIZE(nct_dev_tbl); i++) {
+		sensor_cfg *cfg = get_common_sensor_cfg_info(nct_dev_tbl[i].tach_sen_num);
+
+		if (cfg == NULL) {
+			LOG_ERR("Failed to get sensor config for wdt disable 0x%x",
+				nct_dev_tbl[i].tach_sen_num);
+			continue;
+		}
+
+		if (!pre_PCA9546A_read(cfg, cfg->pre_sensor_read_args))
+			LOG_ERR("pre lock mutex fail !");
+
+		nct7363_setting_wdt(cfg, WDT_DISABLE);
+
+		if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
+			LOG_ERR("post unlock mutex fail !");
+	}
+
+	return true;
+}
+
+uint8_t nct7363_wdt_all_enable()
+{
+	for (uint8_t i = 0; i < ARRAY_SIZE(nct_dev_tbl); i++) {
+		sensor_cfg *cfg = get_common_sensor_cfg_info(nct_dev_tbl[i].tach_sen_num);
+
+		if (cfg == NULL) {
+			LOG_ERR("Failed to get sensor config for wdt enable 0x%x",
+				nct_dev_tbl[i].tach_sen_num);
+			continue;
+		}
+
+		if (!pre_PCA9546A_read(cfg, cfg->pre_sensor_read_args))
+			LOG_ERR("pre lock mutex fail !");
+
+		nct7363_setting_wdt(cfg, nct7363_init_args[i].wdt_cfg);
+
+		if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
+			LOG_ERR("post unlock mutex fail !");
+	}
+
+	return true;
+}
 
 int ast_pwm_set(int duty)
 {
@@ -127,6 +173,7 @@ uint8_t plat_pwm_ctrl(enum PWM_DEVICE_E dev, uint8_t duty)
 	}
 
 	LOG_DBG("Set PWM device %d duty %d", dev, duty);
+	fan_duty_cache[dev] = duty;
 
 	uint8_t ret = 0;
 	switch (dev) {
@@ -192,29 +239,29 @@ static uint8_t ctl_pwm_dev(uint8_t index_start, uint8_t index_end, uint8_t duty)
 
 uint8_t ctl_all_pwm_dev(uint8_t duty)
 {
-	set_pwm_grup(PWM_GRUP_E_HEX_FAN, duty);
-	set_pwm_grup(PWM_GRUP_E_PUMP, duty);
-	set_pwm_grup(PWM_GRUP_E_RPU_FAN, duty);
+	set_pwm_group(PWM_GROUP_E_HEX_FAN, duty);
+	set_pwm_group(PWM_GROUP_E_PUMP, duty);
+	set_pwm_group(PWM_GROUP_E_RPU_FAN, duty);
 
 	return 0;
 }
 
-uint8_t set_pwm_grup(uint8_t grup, uint8_t duty)
+uint8_t set_pwm_group(uint8_t group, uint8_t duty)
 {
 	uint8_t ret = 1;
 
-	fan_duty_cache[grup] = duty;
+	fan_group_duty_cache[group] = duty;
 
-	switch (grup) {
-	case PWM_GRUP_E_HEX_FAN:
+	switch (group) {
+	case PWM_GROUP_E_HEX_FAN:
 		if (!ctl_pwm_dev(PWM_DEVICE_E_FB_FAN_1, PWM_DEVICE_E_FB_FAN_14, duty))
 			ret = 0;
 		break;
-	case PWM_GRUP_E_PUMP:
-		if (!ctl_pwm_dev(PWM_DEVICE_E_PB_PUMB_1, PWM_DEVICE_E_PB_PUMB_FAN_3, duty))
+	case PWM_GROUP_E_PUMP:
+		if (!ctl_pwm_dev(PWM_DEVICE_E_PB_PUMB_1, PWM_DEVICE_E_PB_PUMB_3, duty))
 			ret = 0;
 		break;
-	case PWM_GRUP_E_RPU_FAN:
+	case PWM_GROUP_E_RPU_FAN:
 		if (!ctl_pwm_dev(PWM_DEVICE_E_PB_PUMB_FAN_1, PWM_DEVICE_E_BB_FAN, duty))
 			ret = 0;
 		break;
@@ -223,12 +270,20 @@ uint8_t set_pwm_grup(uint8_t grup, uint8_t duty)
 	return ret;
 }
 
-uint8_t get_pwm_cache(uint8_t grup)
+uint8_t get_pwm_group_cache(uint8_t group)
 {
-	if (grup >= PWM_GRUP_E_MAX)
+	if (group >= PWM_GROUP_E_MAX)
 		return 0xFF;
 
-	return fan_duty_cache[grup];
+	return fan_group_duty_cache[group];
+}
+
+uint8_t get_pwm_cache(uint8_t idx)
+{
+	if (idx >= PWM_DEVICE_E_MAX)
+		return 0xFF;
+
+	return fan_duty_cache[idx];
 }
 
 void init_pwm_dev(void)
