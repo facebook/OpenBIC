@@ -631,7 +631,7 @@ ads112c_init_arg ads112c_init_args[] = {
 		.reg3_idac1_cfg = ADS112C_REG3_IDAC1_DISABLED,
 	},
 	[6] = { .reg0_input = ADS112C_REG0_INPUT_AIN1AIN0,
-		.reg0_gain = ADS112C_REG0_GAIN1,
+		.reg0_gain = ADS112C_REG0_GAIN8,
 		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
 		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
 		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
@@ -1059,23 +1059,38 @@ static uint8_t get_fb_index(uint8_t sen_num)
 	}
 
 	/* mapping the fan board index by i2c mux info */
-	uint8_t index = (cfg->pre_sensor_read_args == bus_1_PCA9546A_configs)	    ? 0 :
-			(cfg->pre_sensor_read_args == (bus_1_PCA9546A_configs + 1)) ? 1 :
-			(cfg->pre_sensor_read_args == (bus_1_PCA9546A_configs + 2)) ? 2 :
-			(cfg->pre_sensor_read_args == (bus_1_PCA9546A_configs + 3)) ? 3 :
-			(cfg->pre_sensor_read_args == bus_2_PCA9546A_configs)	    ? 4 :
-			(cfg->pre_sensor_read_args == (bus_2_PCA9546A_configs + 1)) ? 5 :
-			(cfg->pre_sensor_read_args == (bus_2_PCA9546A_configs + 2)) ? 6 :
-			(cfg->pre_sensor_read_args == (bus_2_PCA9546A_configs + 3)) ? 7 :
-			(cfg->pre_sensor_read_args == bus_6_PCA9546A_configs)	    ? 8 :
-			(cfg->pre_sensor_read_args == (bus_6_PCA9546A_configs + 1)) ? 9 :
-			(cfg->pre_sensor_read_args == (bus_6_PCA9546A_configs + 2)) ? 10 :
-			(cfg->pre_sensor_read_args == (bus_6_PCA9546A_configs + 3)) ? 11 :
-			(cfg->pre_sensor_read_args == bus_7_PCA9546A_configs)	    ? 12 :
-			(cfg->pre_sensor_read_args == (bus_7_PCA9546A_configs + 1)) ? 13 :
-			(cfg->pre_sensor_read_args == (bus_7_PCA9546A_configs + 2)) ? 14 :
-			(cfg->pre_sensor_read_args == (bus_7_PCA9546A_configs + 3)) ? 15 :
-										      0xff;
+	uint8_t index =
+		(cfg->pre_sensor_read_args == bus_1_PCA9546A_configs) ?
+			0 :
+			(cfg->pre_sensor_read_args == (bus_1_PCA9546A_configs + 1)) ?
+			1 :
+			(cfg->pre_sensor_read_args == (bus_1_PCA9546A_configs + 2)) ?
+			2 :
+			(cfg->pre_sensor_read_args == (bus_1_PCA9546A_configs + 3)) ?
+			3 :
+			(cfg->pre_sensor_read_args == bus_2_PCA9546A_configs) ?
+			4 :
+			(cfg->pre_sensor_read_args == (bus_2_PCA9546A_configs + 1)) ?
+			5 :
+			(cfg->pre_sensor_read_args == (bus_2_PCA9546A_configs + 2)) ?
+			6 :
+			(cfg->pre_sensor_read_args == (bus_2_PCA9546A_configs + 3)) ?
+			7 :
+			(cfg->pre_sensor_read_args == bus_6_PCA9546A_configs) ?
+			8 :
+			(cfg->pre_sensor_read_args == (bus_6_PCA9546A_configs + 1)) ?
+			9 :
+			(cfg->pre_sensor_read_args == (bus_6_PCA9546A_configs + 2)) ?
+			10 :
+			(cfg->pre_sensor_read_args == (bus_6_PCA9546A_configs + 3)) ?
+			11 :
+			(cfg->pre_sensor_read_args == bus_7_PCA9546A_configs) ?
+			12 :
+			(cfg->pre_sensor_read_args == (bus_7_PCA9546A_configs + 1)) ?
+			13 :
+			(cfg->pre_sensor_read_args == (bus_7_PCA9546A_configs + 2)) ?
+			14 :
+			(cfg->pre_sensor_read_args == (bus_7_PCA9546A_configs + 3)) ? 15 : 0xff;
 
 	return index;
 }

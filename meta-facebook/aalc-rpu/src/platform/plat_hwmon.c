@@ -213,4 +213,3 @@ bool rpu_remote_power_cycle_function(pump_reset_struct *data, uint8_t bit_val)
 	k_work_submit(&rpu_pwr_cycle_work);
 	return true;
 }
-
