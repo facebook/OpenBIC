@@ -17,6 +17,7 @@
 #include "sensor.h"
 #include "plat_sensor_table.h"
 #include <logging/log.h>
+#include <plat_threshold.h>
 
 #define THRESHOLD_POLL_STACK_SIZE 2048
 
@@ -218,6 +219,13 @@ sensor_threshold threshold_tbl[] = {
 	//	{ SENSOR_NUM_FB_13_HUM_PCT_RH, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_FB_14_HUM_PCT_RH, None, None, None, NULL, 0 },
 };
+
+uint16_t sensor_status_cache[MAX_NUM_OF_AALC_STATUS] = { 0 };
+
+uint16_t read_sensor_status(uint8_t sensor_status_num)
+{
+	return sensor_status_cache[sensor_status_num];
+}
 
 void set_threshold_poll_enable_flag(bool flag)
 {
