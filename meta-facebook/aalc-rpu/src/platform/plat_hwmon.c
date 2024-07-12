@@ -95,6 +95,23 @@ bool pump_reset(pump_reset_struct *data, uint8_t bit_val)
 	}
 }
 
+bool set_all_pump_power(bool switch_val)
+{
+	static uint8_t pump_sensor_nums[] = { SENSOR_NUM_PB_1_PUMP_TACH_RPM,
+					      SENSOR_NUM_PB_2_PUMP_TACH_RPM,
+					      SENSOR_NUM_PB_3_PUMP_TACH_RPM };
+	bool val = true;
+	for (uint8_t i = 0; i < ARRAY_SIZE(pump_sensor_nums); i++) {
+		sensor_cfg *cfg = get_common_sensor_cfg_info(pump_sensor_nums[i]);
+		if (!enable_adm1272_hsc(cfg->port, cfg->target_addr, switch_val)) {
+			val = false;
+			LOG_ERR("set pump power failed for sensor number %d", pump_sensor_nums[i]);
+		}
+	}
+
+	return val;
+}
+
 uint8_t hsc_pwe_cycle_tbl[] = {
 	//fan board (cycle)
 	SENSOR_NUM_FB_1_HSC_P48V_VIN_VOLT_V, SENSOR_NUM_FB_2_HSC_P48V_VIN_VOLT_V,

@@ -75,7 +75,7 @@ void pal_post_init()
 	init_pwm_dev();
 	init_custom_modbus_server();
 	init_modbus_command_table();
-	//threshold_poll_init();
+	threshold_poll_init();
 	ctl_all_pwm_dev(60);
 	set_rpu_ready();
 }
