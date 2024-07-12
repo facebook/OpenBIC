@@ -38,7 +38,7 @@ SCU_CFG scu_cfg[] = {
 	/* Set GPIOF/G/H internal pull-up/down after gpio init */
 	{ 0x7e6e2614, 0xFFFFFFFF },
 	/* Set GPIOJ/K/L internal pull-up/down after gpio init */
-	{ 0x7e6e2618, 0xC6000000 },
+	{ 0x7e6e2618, 0xC7000000 },
 	/* Set GPIOM/N/O/P internal pull-up/down after gpio init */
 	{ 0x7e6e261c, 0x0000007A },
 	/* Set GPIOQ/R/S/T internal pull-up/down after gpio init */
@@ -64,13 +64,15 @@ void pal_post_init()
 	LOG_INF("Retimer module: %d, OTH module: %d, HSC module: %d", get_retimer_module(),
 		get_oth_module(), get_hsc_module());
 
+	handle_tda38741_work_around();
+
 	plat_mctp_init();
 	ssif_init();
 }
 
 void pal_device_init()
 {
-	handle_tda38741_work_around();
+	power_status_monitor();
 }
 
 void pal_set_sys_status()

@@ -136,7 +136,7 @@
 	gpio_name_to_num(Reserve_GPIOK7)
 
 #define name_gpioL \
-	gpio_name_to_num(Reserve_GPIOL0) \
+	gpio_name_to_num(VIRTUAL_E1S_PRSNT_L) \
 	gpio_name_to_num(CPLD_JTAG_MUX_SEL) \
 	gpio_name_to_num(JTAG_FPGA_MUX_SEL) \
 	gpio_name_to_num(Reserve_GPIOL3) \

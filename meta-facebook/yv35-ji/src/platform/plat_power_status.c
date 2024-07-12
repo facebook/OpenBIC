@@ -100,7 +100,7 @@ void handle_post_work(struct k_work *work)
 		return;
 	}
 
-	if (is_post_end_work_done)
+	if ((get_board_revision() >= SYS_BOARD_PVT) && is_post_end_work_done)
 		goto exit;
 
 	k_timer_start(&send_cmd_timer, K_NO_WAIT, K_NO_WAIT);
@@ -166,4 +166,49 @@ void handle_tda38741_work_around()
 		/* switch VR bus to CPU */
 		gpio_set(BIC_CPLD_VRD_MUX_SEL, GPIO_HIGH);
 	}
+}
+
+#define CPLD_REG_E1S_PRSNT_STATE 0x12
+#define PWR_STAT_MON_THREAD_STACK_SIZE 1024
+
+struct k_thread power_status_monitor_thread;
+K_KERNEL_STACK_MEMBER(power_status_monitor_stack, PWR_STAT_MON_THREAD_STACK_SIZE);
+
+void power_status_monitor_handler(void *arug0, void *arug1, void *arug2)
+{
+	static uint8_t last_e1s_prsnt_state = 0xFF;
+
+	while (1) {
+		uint8_t retry = 3;
+		I2C_MSG msg = { 0 };
+
+		msg.bus = I2C_BUS1;
+		msg.target_addr = CPLD_I2C_ADDR >> 1;
+		msg.tx_len = 1;
+		msg.rx_len = 1;
+		msg.data[0] = CPLD_REG_E1S_PRSNT_STATE;
+
+		if (i2c_master_read(&msg, retry))
+			goto sleep;
+
+		uint8_t e1s_prsnt_state = msg.data[0] & 0x01;
+
+		if (last_e1s_prsnt_state != e1s_prsnt_state) {
+			LOG_INF("E1S presence state: %d", e1s_prsnt_state);
+			gpio_set(VIRTUAL_E1S_PRSNT_L, e1s_prsnt_state);
+			last_e1s_prsnt_state = e1s_prsnt_state;
+		}
+
+	sleep:
+		k_sleep(K_MSEC(3000));
+	}
+}
+
+void power_status_monitor()
+{
+	k_thread_create(&power_status_monitor_thread, power_status_monitor_stack,
+			K_THREAD_STACK_SIZEOF(power_status_monitor_stack),
+			power_status_monitor_handler, NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY,
+			0, K_NO_WAIT);
+	k_thread_name_set(&power_status_monitor_thread, "power_monitor_thread");
 }
