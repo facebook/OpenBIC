@@ -18,7 +18,10 @@
 #include "ipmi.h"
 #include "ipmb.h"
 #include "libutil.h"
+#include "plat_mctp.h"
+#include "util_sys.h"
 #include <logging/log.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/printk.h>
 #include <sys/slist.h>
@@ -26,6 +29,8 @@
 #include <zephyr.h>
 
 LOG_MODULE_DECLARE(pldm, LOG_LEVEL_DBG);
+
+static uint8_t bmc_interface = 0;
 
 uint8_t check_iana(const uint8_t *iana)
 {
@@ -140,6 +145,63 @@ static uint8_t ipmi_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t ins
 	notify_ipmi_client(&msg);
 
 	return PLDM_LATER_RESP;
+}
+
+uint8_t send_event_log_to_bmc(uint8_t event_type, uint8_t assertion)
+{
+	pldm_msg msg = { 0 };
+	uint8_t bmc_bus = I2C_BUS_BMC;
+
+	if (bmc_interface == BMC_INTERFACE_I3C) {
+		bmc_bus = I3C_BUS_BMC;
+		msg.ext_params.type = MCTP_MEDIUM_TYPE_TARGET_I3C;
+		msg.ext_params.i3c_ext_params.addr = I3C_STATIC_ADDR_BMC;
+		msg.ext_params.ep = MCTP_EID_BMC;
+	} else {
+		bmc_bus = I2C_BUS_BMC;
+		msg.ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
+		msg.ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
+		msg.ext_params.ep = MCTP_EID_BMC;
+	}
+
+	msg.hdr.pldm_type = PLDM_TYPE_OEM;
+	msg.hdr.cmd = PLDM_OEM_WRITE_FILE_IO;
+	msg.hdr.rq = 1;
+
+	struct pldm_oem_write_file_io_req *ptr = (struct pldm_oem_write_file_io_req *)malloc(
+		sizeof(struct pldm_oem_write_file_io_req) + (sizeof(uint8_t) * OEM_EVENT_LEN));
+
+	if (!ptr) {
+		LOG_ERR("Failed to allocate memory.");
+		return PLDM_ERROR;
+	}
+
+	ptr->cmd_code = EVENT_LOG;
+	ptr->data_length = OEM_EVENT_LEN;
+	uint8_t msg_data[2] = {event_type, assertion};
+	memcpy(ptr->messages, msg_data, OEM_EVENT_LEN);
+
+	msg.buf = (uint8_t *)ptr;
+	msg.len = sizeof(struct pldm_oem_write_file_io_req) + OEM_EVENT_LEN;
+
+	uint8_t resp_len = sizeof(struct pldm_oem_write_file_io_resp);
+	uint8_t rbuf[resp_len];
+
+	if (!mctp_pldm_read(find_mctp_by_bus(bmc_bus), &msg, rbuf, resp_len)) {
+		SAFE_FREE(ptr);
+		LOG_ERR("mctp_pldm_read fail");
+		return PLDM_ERROR;
+	}
+
+	struct pldm_oem_write_file_io_resp *resp = (struct pldm_oem_write_file_io_resp *)rbuf;
+	if (resp->completion_code != PLDM_SUCCESS) {
+		SAFE_FREE(ptr);
+		LOG_ERR("Check reponse completion code fail %x", resp->completion_code);
+		return resp->completion_code;
+	}
+
+	SAFE_FREE(ptr);
+	return PLDM_SUCCESS;
 }
 
 static pldm_cmd_handler pldm_oem_cmd_tbl[] = { { PLDM_OEM_CMD_ECHO, cmd_echo },

@@ -37,6 +37,11 @@
 #include "plat_i3c.h"
 #include "plat_isr.h"
 #include "plat_dimm.h"
+#include "pcc.h"
+
+#ifdef ENABLE_PLDM
+#include "pldm_oem.h"
+#endif
 
 LOG_MODULE_REGISTER(plat_isr, LOG_LEVEL_DBG);
 
@@ -85,11 +90,27 @@ void switch_i3c_dimm_mux_to_cpu()
 	switch_i3c_dimm_mux(I3C_MUX_CPU_TO_DIMM);
 }
 
+static void PROC_FAIL_handler()
+{
+	/* if have not received kcs and post code, add FRB3 event log. */
+	if ((get_kcs_ok() == false) && (get_4byte_postcode_ok() == false)) {
+		LOG_ERR("FRB3 event assert");
+		if (PLDM_SUCCESS != send_event_log_to_bmc(FRB3_TIMER_EXPIRE, EVENT_ASSERTED)) {
+			LOG_ERR("Failed to assert FRE3 event log.");
+		};
+	} else {
+		/* Notification */
+		LOG_INF("FRB3 checked pass");
+	}
+}
+
 K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_delayed_status);
 K_WORK_DEFINE(reinit_i3c_work, reinit_i3c_hub);
 K_WORK_DEFINE(switch_i3c_dimm_work, switch_i3c_dimm_mux_to_cpu);
+K_WORK_DELAYABLE_DEFINE(PROC_FAIL_work, PROC_FAIL_handler);
 
 #define DC_ON_5_SECOND 5
+#define PROC_FAIL_START_DELAY_SECOND 10
 void ISR_DC_ON()
 {
 	set_DC_status(PWRGD_CPU_LVC3);
@@ -100,7 +121,14 @@ void ISR_DC_ON()
 		k_work_schedule(&set_DC_on_5s_work, K_SECONDS(DC_ON_5_SECOND));
 		k_work_submit(&reinit_i3c_work);
 		k_work_submit(&switch_i3c_dimm_work);
+		k_work_schedule(&PROC_FAIL_work, K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
 	} else {
+		if (k_work_cancel_delayable(&PROC_FAIL_work) != 0) {
+			LOG_ERR("Failed to cancel proc_fail delay work.");
+		}
+		reset_kcs_ok();
+		reset_4byte_postcode_ok();
+
 		set_DC_on_delayed_status();
 	}
 }
@@ -140,6 +168,7 @@ static void SLP3_handler()
 }
 
 K_WORK_DELAYABLE_DEFINE(SLP3_work, SLP3_handler);
+
 #define DETECT_VR_WDT_DELAY_S 10
 void ISR_SLP3()
 {
@@ -147,7 +176,6 @@ void ISR_SLP3()
 		LOG_INF("slp3");
 		k_work_schedule_for_queue(&plat_work_q, &SLP3_work,
 					  K_SECONDS(DETECT_VR_WDT_DELAY_S));
-		return;
 	} else {
 		if (k_work_cancel_delayable(&SLP3_work) != 0) {
 			LOG_ERR("Failed to cancel delayable work.");
@@ -221,7 +249,7 @@ void ISR_SYS_THROTTLE()
 void ISR_HSC_OC()
 {
 	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
-		if (gpio_get(FM_HSC_TIMER_ALT_N) == GPIO_LOW) {
+		if (gpio_get(FM_HSC_TIMER_ALT_N) == GPIO_HIGH) {
 			//todo : add sel to bmc for deassert
 		} else {
 			//todo : add sel to bmc for assert
