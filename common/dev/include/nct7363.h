@@ -110,7 +110,7 @@ typedef struct _nct7363_init_arg {
 		uint16_t gpio_out_default_val;
 	};
 	float fan_frequency[16];
-	uint8_t duty;
+	uint8_t duty[16];
 	uint16_t threshold[16];
 	uint8_t wdt_cfg;
 } nct7363_init_arg;
