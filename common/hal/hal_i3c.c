@@ -344,6 +344,12 @@ int i3c_set_pid(I3C_MSG *msg, uint16_t slot_pid)
 		return false;
 	}
 
+	ret = i3c_slave_hj_req(target);
+	if (ret != 0) {
+		LOG_ERR("Failed to sends Hot-join request,ret: %d", ret);
+		return false;
+	}
+
 	return true;
 }
 
