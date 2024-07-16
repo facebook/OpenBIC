@@ -438,6 +438,11 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		goto post_hook_and_ret;
 	}
 
+	if (!vendor_name_p) {
+		LOG_ERR("The pointer of VR string name is NULL");
+		goto post_hook_and_ret;
+	}
+
 	/* Get vr remain wr count if using non-INF chip */
 	if (strncmp(vendor_name_p, "INF ", 4)) {
 		EEPROM_ENTRY vr_rm_cnt_entry = { 0 };
@@ -451,11 +456,6 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	const char *remain_str_p = ", Remaining Write: ";
 	uint8_t *buf_p = buf;
 	*len = 0;
-
-	if (!vendor_name_p) {
-		LOG_ERR("The pointer of VR string name is NULL");
-		goto post_hook_and_ret;
-	}
 
 	memcpy(buf_p, vendor_name_p, strlen(vendor_name_p));
 	buf_p += strlen(vendor_name_p);
