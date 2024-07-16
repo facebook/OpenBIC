@@ -6607,6 +6607,7 @@ pldm_sensor_info *plat_pldm_sensor_load(int thread_id)
 		plat_pldm_sensor_change_vr_dev();
 		return plat_pldm_sensor_vr_table;
 	case MB_TEMP_SENSOR_THREAD_ID:
+		plat_pldm_sensor_change_ssd_dev();
 		return plat_pldm_sensor_mb_temp_table;
 	case CPU_SENSOR_THREAD_ID:
 		plat_pldm_sensor_change_cpu_bus();
@@ -6728,7 +6729,28 @@ void plat_pldm_sensor_change_vr_dev()
 		plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type = vr_dev;
 	}
 }
+void plat_pldm_sensor_change_ssd_dev()
+{
+	uint8_t blade_conf = BLADE_CONFIG_UNKNOWN;
+	if (get_blade_config(&blade_conf) == false) {
+		LOG_ERR("Unable to change the ssd device due to its unknown blade config.");
+		return;
+	}
 
+	// T1C system doesn't have E1.S data drive and WF, and only have 10 DIMMs.
+	if (blade_conf == BLADE_CONFIG_T1C) {
+		for (int index = 0;
+		     index < plat_pldm_sensor_get_sensor_count(MB_TEMP_SENSOR_THREAD_ID); index++) {
+			if (plat_pldm_sensor_mb_temp_table[index].pldm_sensor_cfg.port ==
+				    I2C_BUS6 &&
+			    plat_pldm_sensor_mb_temp_table[index].pldm_sensor_cfg.target_addr ==
+				    ADDR_NVME) {
+				plat_pldm_sensor_mb_temp_table[index].pldm_sensor_cfg.cache_status =
+					PLDM_SENSOR_DISABLED;
+			}
+		}
+	}
+}
 void plat_pldm_sensor_change_cpu_bus()
 {
 	uint8_t board_rev = BOARD_REV_EVT;
