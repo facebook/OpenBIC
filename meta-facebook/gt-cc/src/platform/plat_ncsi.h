@@ -44,6 +44,9 @@ struct mellanox_set_self_recovery_setting_resp {
 } __attribute__((packed));
 
 uint8_t mellanox_cx7_set_self_recovery_setting(uint8_t mctp_dest_eid);
+uint8_t mellanox_cx7_clear_initial_state(uint8_t mctp_dest_eid);
+uint8_t mellanox_cx7_get_infiniband_link_status(uint8_t mctp_dest_eid, uint8_t *link_type,
+						uint16_t *response_code, uint16_t *reason_code);
 
 #ifdef __cplusplus
 }
