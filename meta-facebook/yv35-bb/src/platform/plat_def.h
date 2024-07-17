@@ -16,8 +16,12 @@
 
 #ifndef PLAT_DEF_H
 #define PLAT_DEF_H
-
-#define ENABLE_FAN
+/* TODO: Enabling this causes build failures in
+ * common/service/sensor/sensor.c:389:29: error: 'ast_fan_init' undeclared here
+ * We might need to create initialization to support this. Till we have
+ * it, disable the feature.
+ * #define ENABLE_FAN
+ */
 
 #define BMC_USB_PORT "CDC_ACM_0"
 #define HSC_DEVICE_READY_DELAY_MS 2000
