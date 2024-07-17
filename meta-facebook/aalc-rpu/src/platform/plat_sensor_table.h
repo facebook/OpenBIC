@@ -238,6 +238,12 @@ enum PLAT_DEF_SENSOR_E {
 #define SENSOR_NUM_AALC_TOTAL_PWR_W 0xC2
 #define SENSOR_NUM_HEX_CURR_A 0xC3
 
+//plat def sensor- IT_LEAK
+#define SENSOR_NUM_IT_LEAK_0_GPIO 0XD0
+#define SENSOR_NUM_IT_LEAK_1_GPIO 0XD1
+#define SENSOR_NUM_IT_LEAK_2_GPIO 0XD2
+#define SENSOR_NUM_IT_LEAK_3_GPIO 0XD3
+
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
 uint8_t get_sensor_reading_to_real_val(uint8_t sensor_num, float *val);
