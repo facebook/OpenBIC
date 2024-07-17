@@ -41,8 +41,6 @@ LOG_MODULE_REGISTER(plat_mctp);
 K_TIMER_DEFINE(send_cmd_timer, send_cmd_to_dev, NULL);
 K_WORK_DEFINE(send_cmd_work, send_cmd_to_dev_handler);
 
-static uint8_t bmc_interface = BMC_INTERFACE_I2C;
-
 static mctp_port plat_mctp_port[] = {
 	{ .conf.smbus_conf.addr = I2C_ADDR_BIC,
 	  .conf.smbus_conf.bus = I2C_BUS_BMC,
@@ -203,11 +201,13 @@ static uint8_t get_mctp_route_info(uint8_t dest_endpoint, void **mctp_inst,
 	uint8_t rc = MCTP_ERROR;
 	uint8_t bmc_bus = I2C_BUS_BMC;
 	uint32_t i;
+	uint8_t bmc_interface = BMC_INTERFACE_I2C;
 
 	for (i = 0; i < ARRAY_SIZE(plat_mctp_route_tbl); i++) {
 		mctp_route_entry *p = plat_mctp_route_tbl + i;
 		if (p->endpoint == dest_endpoint) {
-			if (dest_endpoint == MCTP_EID_BMC) {
+			if (p->endpoint == MCTP_EID_BMC) {
+				bmc_interface = pal_get_bmc_interface();
 				if (bmc_interface == BMC_INTERFACE_I3C) {
 					bmc_bus = I3C_BUS_BMC;
 					ext_params->type = MCTP_MEDIUM_TYPE_TARGET_I3C;
@@ -253,6 +253,7 @@ bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg)
 	struct mctp_to_ipmi_sel_req req = { 0 };
 	uint8_t bmc_bus = I2C_BUS_BMC;
 	uint8_t bmc_addr = I2C_ADDR_BMC;
+	uint8_t bmc_interface = pal_get_bmc_interface();
 
 	if (bmc_interface == BMC_INTERFACE_I3C) {
 		bmc_bus = I3C_BUS_BMC;
@@ -379,32 +380,9 @@ void plat_mctp_init(void)
 	int ret = 0;
 	plat_set_eid_by_slot();
 	set_routing_table_eid();
-	bmc_interface = pal_get_bmc_interface();
 	/* init the mctp/pldm instance */
 	for (uint8_t i = 0; i < ARRAY_SIZE(plat_mctp_port); i++) {
 		mctp_port *p = plat_mctp_port + i;
-
-		switch (p->medium_type) {
-			case MCTP_MEDIUM_TYPE_SMBUS:
-				if (bmc_interface == BMC_INTERFACE_I2C) {
-					LOG_INF("Using I2C interface to communicate with BMC");
-				} else {
-					// Ignore to initialize BMC mctp I2C if bmc interface is I3C.
-					continue;
-				}
-				break;
-			case MCTP_MEDIUM_TYPE_TARGET_I3C:
-				if (bmc_interface == BMC_INTERFACE_I3C) {
-					LOG_INF("Using I3C interface to communicate with BMC");
-				} else {
-					// Ignore to initialize BMC mctp I3C if bmc interface is I2C.
-					continue;
-				}
-				break;
-			default:
-				break;
-		}
-
 		p->mctp_inst = mctp_init();
 		if (!p->mctp_inst) {
 			LOG_ERR("mctp_init failed!!");
