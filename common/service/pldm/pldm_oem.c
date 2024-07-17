@@ -18,7 +18,6 @@
 #include "ipmi.h"
 #include "ipmb.h"
 #include "libutil.h"
-#include "plat_mctp.h"
 #include "util_sys.h"
 #include <logging/log.h>
 #include <stdlib.h>
@@ -28,9 +27,17 @@
 #include <sys/util.h>
 #include <zephyr.h>
 
+#ifdef ENABLE_EVENT_TO_BMC
+#include "plat_mctp.h"
+#endif
+
 LOG_MODULE_DECLARE(pldm, LOG_LEVEL_DBG);
 
+#ifdef ENABLE_PLDM
+#ifdef ENABLE_EVENT_TO_BMC
 static uint8_t bmc_interface = 0;
+#endif
+#endif
 
 uint8_t check_iana(const uint8_t *iana)
 {
@@ -147,6 +154,8 @@ static uint8_t ipmi_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t ins
 	return PLDM_LATER_RESP;
 }
 
+#ifdef ENABLE_PLDM
+#ifdef ENABLE_EVENT_TO_BMC
 uint8_t send_event_log_to_bmc(uint8_t event_type, uint8_t assertion)
 {
 	pldm_msg msg = { 0 };
@@ -178,7 +187,7 @@ uint8_t send_event_log_to_bmc(uint8_t event_type, uint8_t assertion)
 
 	ptr->cmd_code = EVENT_LOG;
 	ptr->data_length = OEM_EVENT_LEN;
-	uint8_t msg_data[2] = {event_type, assertion};
+	uint8_t msg_data[2] = { event_type, assertion };
 	memcpy(ptr->messages, msg_data, OEM_EVENT_LEN);
 
 	msg.buf = (uint8_t *)ptr;
@@ -203,6 +212,8 @@ uint8_t send_event_log_to_bmc(uint8_t event_type, uint8_t assertion)
 	SAFE_FREE(ptr);
 	return PLDM_SUCCESS;
 }
+#endif
+#endif
 
 static pldm_cmd_handler pldm_oem_cmd_tbl[] = { { PLDM_OEM_CMD_ECHO, cmd_echo },
 					       { PLDM_OEM_IPMI_BRIDGE, ipmi_cmd } };
