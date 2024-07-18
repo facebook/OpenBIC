@@ -271,7 +271,7 @@ void high_press_do(uint8_t arg0, uint8_t status)
 }
 
 void low_level_do(uint8_t arg0, uint8_t status)
-{
+{	printf("1-status:%d\n", status);
 	if (status == THRESHOLD_STATUS_LCR) {
 		//assert fluid level sensor status bit
 		//set_all_pump_power(false);
@@ -506,8 +506,7 @@ sensor_threshold threshold_tbl[] = {
 	{ SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, THRESHOLD_ENABLE_UCR, 1, 0, flow_trigger_do,
 	  0 },
 	{ SENSOR_NUM_BPB_RACK_LEVEL_1, THRESHOLD_ENABLE_LCR, 1, 0, high_level_do, 0 },
-	{ SENSOR_NUM_BPB_RACK_LEVEL_2, THRESHOLD_ENABLE_LCR, 1, 0, low_level_do,
-	  SENSOR_NUM_BPB_RACK_LEVEL_2 },
+	{ SENSOR_NUM_BPB_RACK_LEVEL_2, THRESHOLD_ENABLE_LCR, 1, 0, low_level_do, SENSOR_NUM_BPB_RACK_LEVEL_2 },
 	//	{ SENSOR_NUM_MB_HUM_PCT_RH, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_PDB_HUM_PCT_RH, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_PB_1_HUM_PCT_RH, None, None, None, NULL, 0 },
@@ -556,12 +555,20 @@ static bool set_threshold_status(sensor_threshold *threshold_tbl, float val)
 
 	/* check device is exist */
 	// to determine if tach value is 0, set status to DEVICE_NOT_EXIST status
-	if (val == 0.0) {
-		threshold_tbl->last_status = DEVICE_NOT_PRESENT;
-		LOG_ERR("sensor 0x%x not exist", threshold_tbl->sensor_num);
-		return true;
+	for (int i = 0; i < ARRAY_SIZE(fan_pump_sensor_array); i++) 
+	{
+		if (threshold_tbl->sensor_num == fan_pump_sensor_array[i])
+		{
+			if (val == 0.0) 
+			{
+				threshold_tbl->last_status = DEVICE_NOT_PRESENT;
+				LOG_ERR("sensor 0x%x not exist", threshold_tbl->sensor_num);
+				return true;
+			}
+		}
+			
 	}
-
+	
 	switch (threshold_tbl->type) {
 	case THRESHOLD_ENABLE_LCR:
 		if (val < threshold_tbl->lcr)
@@ -628,7 +635,7 @@ void threshold_poll_handler(void *arug0, void *arug1, void *arug2)
 			/* check whether the status has changed */
 			if (!set_threshold_status(&threshold_tbl[i], val))
 				continue;
-
+			printf("00000-status:%d\n", threshold_tbl[i].last_status);
 			if (threshold_tbl[i].fn)
 				threshold_tbl[i].fn(threshold_tbl[i].arg,
 						    threshold_tbl[i].last_status);
