@@ -421,6 +421,8 @@ uint8_t modbus_get_aalc_cooling_capacity(modbus_command_mapping *cmd)
 		return MODBUS_EXC_ILLEGAL_DATA_VAL;
 
 	cmd->data[0] = (uint16_t)(67.21 * flow_rate_val * (tout_val - tin_val));
+
+	return MODBUS_EXC_NONE;
 }
 
 uint8_t modbus_get_fsc_enable_flag(modbus_command_mapping *cmd)
