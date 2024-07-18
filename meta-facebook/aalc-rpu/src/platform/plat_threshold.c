@@ -217,7 +217,7 @@ void rpu_internal_fan_failure_do(uint8_t arg0, uint8_t status)
 	if (status == THRESHOLD_STATUS_LCR) {
 		//assert internal fan fault status bit
 		deassert_all_rpu_ready_pin();
-		//set_all_pump_power(false);
+		set_pwm_group(PWM_GROUP_E_PUMP, 0); //turn off pump
 		//auto control for Hex Fan
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
@@ -259,7 +259,7 @@ void aalc_leak_detect_do(uint8_t arg0, uint8_t status)
 void high_press_do(uint8_t arg0, uint8_t status)
 {
 	if (status == THRESHOLD_STATUS_UCR) {
-		//set_all_pump_power(false);
+		//set_pwm_group(PWM_GROUP_E_PUMP, 0);//turn off pump
 		//auto control for hex fan
 		deassert_all_rpu_ready_pin();
 		//relief valve open
@@ -274,7 +274,7 @@ void low_level_do(uint8_t arg0, uint8_t status)
 {	
 	if (status == THRESHOLD_STATUS_LCR) {
 		//assert fluid level sensor status bit
-		//set_all_pump_power(false);
+		set_pwm_group(PWM_GROUP_E_PUMP, 0);//turn off pump
 		deassert_all_rpu_ready_pin();
 		error_log_event(arg0, IS_ABNORMAL_VAL);
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
@@ -343,26 +343,26 @@ sensor_threshold threshold_tbl[] = {
 	{ SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 65, 0, NULL, 0 },
 	{ SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
 	//	{ SENSOR_NUM_PDB_HDC1080DMBR_TEMP_C, None, None, None, NULL, 0 },
-	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_1_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 60, high_air_temp_do, 0 },
-	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_2_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 60, high_air_temp_do, 0 },
-	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_3_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 60, high_air_temp_do, 0 },
-	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_4_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 60, high_air_temp_do, 0 },
+	{ SENSOR_NUM_SB_HEX_AIR_INLET_1_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 40, high_air_temp_do, 0 },
+	{ SENSOR_NUM_SB_HEX_AIR_INLET_2_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 40, high_air_temp_do, 0 },
+	{ SENSOR_NUM_SB_HEX_AIR_INLET_3_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 40, high_air_temp_do, 0 },
+	{ SENSOR_NUM_SB_HEX_AIR_INLET_4_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 40, high_air_temp_do, 0 },
 	//	{ SENSOR_NUM_BB_HSC_P48V_TEMP_C, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_BPB_HSC_P48V_TEMP_C, None, None, None, NULL, 0 },
-	{ SENSOR_NUM_FB_1_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_2_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_3_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_4_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_5_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_6_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_7_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_8_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_9_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_10_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_11_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_12_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_13_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_14_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
+	{ SENSOR_NUM_FB_1_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do, 0 },
+	{ SENSOR_NUM_FB_2_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do, 0 },
+	{ SENSOR_NUM_FB_3_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do, 0 },
+	{ SENSOR_NUM_FB_4_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do, 0 },
+	{ SENSOR_NUM_FB_5_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do, 0 },
+	{ SENSOR_NUM_FB_6_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do, 0 },
+	{ SENSOR_NUM_FB_7_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do, 0 },
+	{ SENSOR_NUM_FB_8_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do, 0 },
+	{ SENSOR_NUM_FB_9_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do, 0 },
+	{ SENSOR_NUM_FB_10_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do, 0 },
+	{ SENSOR_NUM_FB_11_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do, 0 },
+	{ SENSOR_NUM_FB_12_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do, 0 },
+	{ SENSOR_NUM_FB_13_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do, 0 },
+	{ SENSOR_NUM_FB_14_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do, 0 },
 	//	{ SENSOR_NUM_PB_1_HDC1080DMBR_TEMP_C, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_PB_2_HDC1080DMBR_TEMP_C, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_PB_3_HDC1080DMBR_TEMP_C, None, None, None, NULL, 0 },
