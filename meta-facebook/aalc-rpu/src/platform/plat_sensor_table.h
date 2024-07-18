@@ -242,5 +242,6 @@ uint8_t plat_get_config_size();
 void load_sensor_config(void);
 uint8_t get_sensor_reading_to_real_val(uint8_t sensor_num, float *val);
 uint16_t get_sensor_reading_to_modbus_val(uint8_t sensor_num, int8_t exp, int8_t scale);
+void quick_sensor_poll_init();
 
 #endif
