@@ -271,7 +271,7 @@ void high_press_do(uint8_t arg0, uint8_t status)
 }
 
 void low_level_do(uint8_t arg0, uint8_t status)
-{	printf("1-status:%d\n", status);
+{	
 	if (status == THRESHOLD_STATUS_LCR) {
 		//assert fluid level sensor status bit
 		//set_all_pump_power(false);
@@ -635,7 +635,6 @@ void threshold_poll_handler(void *arug0, void *arug1, void *arug2)
 			/* check whether the status has changed */
 			if (!set_threshold_status(&threshold_tbl[i], val))
 				continue;
-			printf("00000-status:%d\n", threshold_tbl[i].last_status);
 			if (threshold_tbl[i].fn)
 				threshold_tbl[i].fn(threshold_tbl[i].arg,
 						    threshold_tbl[i].last_status);

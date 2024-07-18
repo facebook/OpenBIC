@@ -146,7 +146,7 @@ void pal_post_init()
 	threshold_poll_init();
 	ctl_all_pwm_dev(60);
 	set_rpu_ready();
-	//fan_pump_pwrgd();
+	fan_pump_pwrgd();
 }
 
 void pal_device_init()
