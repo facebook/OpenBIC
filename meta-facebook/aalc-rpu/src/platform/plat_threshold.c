@@ -24,14 +24,30 @@
 #include "plat_log.h"
 #include <logging/log.h>
 #include <plat_threshold.h>
+#include <hal_i2c.h>
+#include <nct7363.h>
+#include <plat_hook.h>
+#include "libutil.h"
 
 #define THRESHOLD_POLL_STACK_SIZE 2048
+#define FAN_PUMP_PWRGD_STACK_SIZE 2048
 
 #define ENABLE_REDUNDANCY 1
 #define DISABLE_REDUNDANCY 0
 
+#define READ_ERROR -1
+#define FAN_BOARD_FAULT_PWM_OFFSET 0xA2
+#define FAN_BOARD_FAULT_PWM_DUTY_1 0x00
+#define FAN_BOARD_FAULT_PWM_DUTY_50 0x7F
+#define FAN_BOARD_FAULT_PWM_DUTY_100 0xFF
+
+#define FAN_PUMP_TRACKING_STATUS 0xFF
+
 struct k_thread threshold_poll;
 K_KERNEL_STACK_MEMBER(threshold_poll_stack, THRESHOLD_POLL_STACK_SIZE);
+
+struct k_thread fan_pump_pwrgd_thread;
+K_KERNEL_STACK_MEMBER(fan_pump_pwrgd_stack, FAN_PUMP_PWRGD_STACK_SIZE);
 
 LOG_MODULE_REGISTER(plat_threshold);
 
@@ -48,6 +64,7 @@ enum THRESHOLD_STATUS {
 	THRESHOLD_STATUS_NORMAL,
 	THRESHOLD_STATUS_LCR,
 	THRESHOLD_STATUS_UCR,
+	DEVICE_NOT_PRESENT,
 };
 
 typedef struct {
@@ -62,8 +79,124 @@ typedef struct {
 	uint8_t last_status; // record the last status
 } sensor_threshold;
 
+uint8_t fan_pump_sensor_array[] = {
+	//fan board
+	SENSOR_NUM_FB_1_FAN_TACH_RPM,
+	SENSOR_NUM_FB_2_FAN_TACH_RPM,
+	SENSOR_NUM_FB_3_FAN_TACH_RPM,
+	SENSOR_NUM_FB_4_FAN_TACH_RPM,
+	SENSOR_NUM_FB_5_FAN_TACH_RPM,
+	SENSOR_NUM_FB_6_FAN_TACH_RPM,
+	SENSOR_NUM_FB_7_FAN_TACH_RPM,
+	SENSOR_NUM_FB_8_FAN_TACH_RPM,
+	SENSOR_NUM_FB_9_FAN_TACH_RPM,
+	SENSOR_NUM_FB_10_FAN_TACH_RPM,
+	SENSOR_NUM_FB_11_FAN_TACH_RPM,
+	SENSOR_NUM_FB_12_FAN_TACH_RPM,
+	SENSOR_NUM_FB_13_FAN_TACH_RPM,
+	SENSOR_NUM_FB_14_FAN_TACH_RPM,
+	// pump
+	SENSOR_NUM_PB_1_PUMP_TACH_RPM,
+	SENSOR_NUM_PB_2_PUMP_TACH_RPM,
+	SENSOR_NUM_PB_3_PUMP_TACH_RPM,
+	// pump fan
+	SENSOR_NUM_PB_1_FAN_1_TACH_RPM,
+	SENSOR_NUM_PB_1_FAN_2_TACH_RPM,
+	SENSOR_NUM_PB_2_FAN_1_TACH_RPM,
+	SENSOR_NUM_PB_2_FAN_2_TACH_RPM,
+	SENSOR_NUM_PB_3_FAN_1_TACH_RPM,
+	SENSOR_NUM_PB_3_FAN_2_TACH_RPM,
+};
+
+void fan_board_tach_status_handler(uint8_t sensor_num, uint8_t status)
+{
+	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
+
+	uint8_t pwrgd_read_back_val, read_fan_gok;
+	// read back data from reg
+	pwrgd_read_back_val = nct7363_read_back_data(cfg, NCT7363_GPIO1x_OUTPUT_PORT_REG_OFFSET);
+	if (pwrgd_read_back_val == READ_ERROR) {
+		LOG_ERR("Read fan_board_pwrgd fail, read_back_val: %d", pwrgd_read_back_val);
+		return;
+	}
+
+	read_fan_gok = nct7363_read_back_data(cfg, NCT7363_GPIO0x_INPUT_PORT_REG_OFFSET);
+	if (read_fan_gok == READ_ERROR) {
+		LOG_ERR("Read pump_board_pwrgd gpio fail, read_back_val: %d", read_fan_gok);
+		return;
+	}
+
+	if ((read_fan_gok & BIT(2)) == 0) {
+		LOG_DBG("fan gok is low");
+		status = DEVICE_NOT_PRESENT;
+	}
+
+	// fault
+	if (status == THRESHOLD_STATUS_LCR) {
+		LOG_DBG("fan THRESHOLD_STATUS_LCR");
+		WRITE_BIT(pwrgd_read_back_val, 0, 0);
+		if (!nct7363_write(cfg, FAN_BOARD_FAULT_PWM_OFFSET, FAN_BOARD_FAULT_PWM_DUTY_50))
+			LOG_ERR("Write fan_board_fault pwm fail");
+	} else if (status == THRESHOLD_STATUS_NORMAL) {
+		LOG_DBG("fan THRESHOLD_STATUS_NORMAL");
+		WRITE_BIT(pwrgd_read_back_val, 0, 1);
+		if (!nct7363_write(cfg, FAN_BOARD_FAULT_PWM_OFFSET, FAN_BOARD_FAULT_PWM_DUTY_1))
+			LOG_ERR("Write fan_board_fault pwm fail");
+	} else if (status == DEVICE_NOT_PRESENT) {
+		LOG_DBG("fan DEVICE_NOT_PRESENT");
+		WRITE_BIT(pwrgd_read_back_val, 0, 0);
+		if (!nct7363_write(cfg, FAN_BOARD_FAULT_PWM_OFFSET, FAN_BOARD_FAULT_PWM_DUTY_100))
+			LOG_ERR("Write fan_board_fault pwm fail");
+	} else {
+		LOG_ERR("Unexpected fan_board_tach_status");
+	}
+
+	LOG_WRN("LCR pwrgd_write_in_val: %d", pwrgd_read_back_val);
+	if (!nct7363_write(cfg, NCT7363_GPIO1x_OUTPUT_PORT_REG_OFFSET, pwrgd_read_back_val))
+		LOG_ERR("Write fan_board_pwrgd gpio fail");
+}
+
+void pump_board_tach_status_handler(uint8_t sensor_num, uint8_t status)
+{
+	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
+
+	uint8_t read_back_val, read_pump_gok;
+	// read back data from reg to write fault gpio
+	read_back_val = nct7363_read_back_data(cfg, NCT7363_GPIO1x_OUTPUT_PORT_REG_OFFSET);
+	if (read_back_val == READ_ERROR && status != FAN_PUMP_TRACKING_STATUS) {
+		LOG_ERR("Read pump_board_pwrgd gpio fail, read_back_val: %d", read_back_val);
+		return;
+	}
+
+	// read gok input value
+	read_pump_gok = nct7363_read_back_data(cfg, NCT7363_GPIO0x_INPUT_PORT_REG_OFFSET);
+	if (read_pump_gok == READ_ERROR && status != FAN_PUMP_TRACKING_STATUS) {
+		LOG_ERR("Read pump_board_pwrgd gpio fail, read_back_val: %d", read_pump_gok);
+		return;
+	}
+
+	LOG_DBG("pump gok value: %ld", read_pump_gok & BIT(2));
+	if (read_pump_gok & BIT(2))
+		WRITE_BIT(read_back_val, 0, 1);
+	else
+		WRITE_BIT(read_back_val, 0, 0);
+
+	if (status == THRESHOLD_STATUS_LCR)
+		WRITE_BIT(read_back_val, 1, 1);
+	else if (status == THRESHOLD_STATUS_NORMAL)
+		WRITE_BIT(read_back_val, 1, 0);
+	else if (status == DEVICE_NOT_PRESENT)
+		WRITE_BIT(read_back_val, 1, 1);
+	else
+		LOG_ERR("Unexpected pump_board_tach_status");
+
+	if (!nct7363_write(cfg, NCT7363_GPIO1x_OUTPUT_PORT_REG_OFFSET, read_back_val))
+		LOG_ERR("Write pump_board_pwrgd gpio fail");
+}
+
 void pump_failure_do(uint8_t arg0, uint8_t status)
 {
+	pump_board_tach_status_handler(arg0, status);
 	if (status == THRESHOLD_STATUS_LCR) {
 		//assert pump fault status bit
 		deassert_all_rpu_ready_pin();
@@ -80,6 +213,7 @@ void pump_failure_do(uint8_t arg0, uint8_t status)
 
 void rpu_internal_fan_failure_do(uint8_t arg0, uint8_t status)
 {
+	pump_board_tach_status_handler(arg0, status);
 	if (status == THRESHOLD_STATUS_LCR) {
 		//assert internal fan fault status bit
 		deassert_all_rpu_ready_pin();
@@ -94,6 +228,7 @@ void rpu_internal_fan_failure_do(uint8_t arg0, uint8_t status)
 
 void hex_fan_failure_do(uint8_t arg0, uint8_t status)
 {
+	fan_board_tach_status_handler(arg0, status);
 	if (status == THRESHOLD_STATUS_LCR) {
 		//assert hex fan fault status bit
 		//set_pwm_grup(PWM_GRUP_E_PUMP, 80); //increase pump speed
@@ -314,20 +449,34 @@ sensor_threshold threshold_tbl[] = {
 	//	{ SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W, None, None, None, NULL, 0 },
-	{ SENSOR_NUM_FB_1_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
-	{ SENSOR_NUM_FB_2_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
-	{ SENSOR_NUM_FB_3_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
-	{ SENSOR_NUM_FB_4_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
-	{ SENSOR_NUM_FB_5_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
-	{ SENSOR_NUM_FB_6_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
-	{ SENSOR_NUM_FB_7_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
-	{ SENSOR_NUM_FB_8_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
-	{ SENSOR_NUM_FB_9_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
-	{ SENSOR_NUM_FB_10_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
-	{ SENSOR_NUM_FB_11_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
-	{ SENSOR_NUM_FB_12_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
-	{ SENSOR_NUM_FB_13_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
-	{ SENSOR_NUM_FB_14_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
+	{ SENSOR_NUM_FB_1_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do,
+	  SENSOR_NUM_FB_1_FAN_TACH_RPM },
+	{ SENSOR_NUM_FB_2_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do,
+	  SENSOR_NUM_FB_2_FAN_TACH_RPM },
+	{ SENSOR_NUM_FB_3_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do,
+	  SENSOR_NUM_FB_3_FAN_TACH_RPM },
+	{ SENSOR_NUM_FB_4_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do,
+	  SENSOR_NUM_FB_4_FAN_TACH_RPM },
+	{ SENSOR_NUM_FB_5_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do,
+	  SENSOR_NUM_FB_5_FAN_TACH_RPM },
+	{ SENSOR_NUM_FB_6_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do,
+	  SENSOR_NUM_FB_6_FAN_TACH_RPM },
+	{ SENSOR_NUM_FB_7_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do,
+	  SENSOR_NUM_FB_7_FAN_TACH_RPM },
+	{ SENSOR_NUM_FB_8_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do,
+	  SENSOR_NUM_FB_8_FAN_TACH_RPM },
+	{ SENSOR_NUM_FB_9_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do,
+	  SENSOR_NUM_FB_9_FAN_TACH_RPM },
+	{ SENSOR_NUM_FB_10_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do,
+	  SENSOR_NUM_FB_10_FAN_TACH_RPM },
+	{ SENSOR_NUM_FB_11_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do,
+	  SENSOR_NUM_FB_11_FAN_TACH_RPM },
+	{ SENSOR_NUM_FB_12_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do,
+	  SENSOR_NUM_FB_12_FAN_TACH_RPM },
+	{ SENSOR_NUM_FB_13_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do,
+	  SENSOR_NUM_FB_13_FAN_TACH_RPM },
+	{ SENSOR_NUM_FB_14_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do,
+	  SENSOR_NUM_FB_14_FAN_TACH_RPM },
 	{ SENSOR_NUM_PB_1_PUMP_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, pump_failure_do,
 	  SENSOR_NUM_PB_1_PUMP_TACH_RPM },
 	{ SENSOR_NUM_PB_2_PUMP_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, pump_failure_do,
@@ -335,17 +484,17 @@ sensor_threshold threshold_tbl[] = {
 	{ SENSOR_NUM_PB_3_PUMP_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, pump_failure_do,
 	  SENSOR_NUM_PB_3_PUMP_TACH_RPM },
 	{ SENSOR_NUM_PB_1_FAN_1_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0,
-	  rpu_internal_fan_failure_do, 0 },
+	  rpu_internal_fan_failure_do, SENSOR_NUM_PB_1_FAN_1_TACH_RPM },
 	{ SENSOR_NUM_PB_1_FAN_2_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0,
-	  rpu_internal_fan_failure_do, 0 },
+	  rpu_internal_fan_failure_do, SENSOR_NUM_PB_1_FAN_2_TACH_RPM },
 	{ SENSOR_NUM_PB_2_FAN_1_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0,
-	  rpu_internal_fan_failure_do, 0 },
+	  rpu_internal_fan_failure_do, SENSOR_NUM_PB_2_FAN_1_TACH_RPM },
 	{ SENSOR_NUM_PB_2_FAN_2_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0,
-	  rpu_internal_fan_failure_do, 0 },
+	  rpu_internal_fan_failure_do, SENSOR_NUM_PB_2_FAN_2_TACH_RPM },
 	{ SENSOR_NUM_PB_3_FAN_1_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0,
-	  rpu_internal_fan_failure_do, 0 },
+	  rpu_internal_fan_failure_do, SENSOR_NUM_PB_3_FAN_1_TACH_RPM },
 	{ SENSOR_NUM_PB_3_FAN_2_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0,
-	  rpu_internal_fan_failure_do, 0 },
+	  rpu_internal_fan_failure_do, SENSOR_NUM_PB_3_FAN_2_TACH_RPM },
 	{ SENSOR_NUM_MB_FAN1_TACH_RPM, THRESHOLD_ENABLE_UCR, 0, 500, NULL, 0 },
 	{ SENSOR_NUM_MB_FAN2_TACH_RPM, THRESHOLD_ENABLE_UCR, 0, 500, NULL, 0 },
 	//	{ SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA, None, None, None, NULL, 0 },
@@ -404,6 +553,15 @@ bool get_threshold_poll_enable_flag()
 static bool set_threshold_status(sensor_threshold *threshold_tbl, float val)
 {
 	uint8_t status = THRESHOLD_STATUS_NORMAL;
+
+	/* check device is exist */
+	// to determine if tach value is 0, set status to DEVICE_NOT_EXIST status
+	if (val == 0.0) {
+		threshold_tbl->last_status = DEVICE_NOT_PRESENT;
+		LOG_ERR("sensor 0x%x not exist", threshold_tbl->sensor_num);
+		return true;
+	}
+
 	switch (threshold_tbl->type) {
 	case THRESHOLD_ENABLE_LCR:
 		if (val < threshold_tbl->lcr)
@@ -484,6 +642,51 @@ void threshold_poll_init()
 {
 	k_thread_create(&threshold_poll, threshold_poll_stack,
 			K_THREAD_STACK_SIZEOF(threshold_poll_stack), threshold_poll_handler, NULL,
+			NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+	k_thread_name_set(&threshold_poll, "threshold_poll");
+	return;
+}
+
+void fan_pump_pwrgd_handler(void *arug0, void *arug1, void *arug2)
+{
+	ARG_UNUSED(arug0);
+	ARG_UNUSED(arug1);
+	ARG_UNUSED(arug2);
+
+	while (1) {
+		for (uint8_t i = 0; i < ARRAY_SIZE(fan_pump_sensor_array); i++) {
+			// read gok data
+			sensor_cfg *cfg = get_common_sensor_cfg_info(fan_pump_sensor_array[i]);
+			uint8_t read_gok =
+				nct7363_read_back_data(cfg, NCT7363_GPIO0x_INPUT_PORT_REG_OFFSET);
+			if (read_gok == READ_ERROR)
+				LOG_ERR("Read pump_board_pwrgd gpio fail, read_back_val: %d",
+					read_gok);
+
+			uint8_t pwrgd_read_back_val =
+				nct7363_read_back_data(cfg, NCT7363_GPIO1x_OUTPUT_PORT_REG_OFFSET);
+			if (pwrgd_read_back_val == READ_ERROR)
+				LOG_ERR("Thread read val: %d", pwrgd_read_back_val);
+
+			if (!(read_gok & BIT(2))) {
+				WRITE_BIT(pwrgd_read_back_val, 0, 0);
+				if (!nct7363_write(cfg, FAN_BOARD_FAULT_PWM_OFFSET,
+						   FAN_BOARD_FAULT_PWM_DUTY_100))
+					LOG_ERR("Write fan_board_fault pwm fail");
+			}
+
+			if (!nct7363_write(cfg, NCT7363_GPIO1x_OUTPUT_PORT_REG_OFFSET,
+					   pwrgd_read_back_val))
+				LOG_ERR("Write pump_board_pwrgd gpio fail");
+		}
+		k_msleep(1000);
+	}
+}
+
+void fan_pump_pwrgd()
+{
+	k_thread_create(&fan_pump_pwrgd_thread, fan_pump_pwrgd_stack,
+			K_THREAD_STACK_SIZEOF(fan_pump_pwrgd_stack), fan_pump_pwrgd_handler, NULL,
 			NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
 	k_thread_name_set(&threshold_poll, "threshold_poll");
 	return;

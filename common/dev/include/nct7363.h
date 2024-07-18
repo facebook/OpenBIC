@@ -138,3 +138,5 @@ bool nct7363_set_duty(sensor_cfg *cfg, uint8_t duty, uint8_t port);
 #endif
 uint8_t nct7363_init(sensor_cfg *cfg);
 bool nct7363_setting_wdt(sensor_cfg *cfg, uint8_t wdt);
+uint8_t nct7363_read_back_data(sensor_cfg *cfg, uint8_t reading_offset);
+bool nct7363_write(sensor_cfg *cfg, uint8_t offset, uint8_t val);

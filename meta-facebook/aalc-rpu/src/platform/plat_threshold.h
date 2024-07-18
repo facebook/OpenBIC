@@ -67,4 +67,5 @@ enum AALC_SENSOR_STATUS_E {
 void set_threshold_poll_enable_flag(bool flag);
 bool get_threshold_poll_enable_flag();
 void threshold_poll_init();
+void fan_pump_pwrgd();
 uint16_t read_sensor_status(uint8_t sensor_status_num);
