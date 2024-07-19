@@ -391,6 +391,38 @@ uint8_t modbus_get_sensor_status(modbus_command_mapping *cmd)
 	return MODBUS_EXC_NONE;
 }
 
+uint8_t modbus_get_aalc_cooling_capacity(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+	/*
+	*	AALC_Cooling_Capacity_W  = 67.21*Flow rate*(Tout-Tin)
+	*	Flow Rate = Flow sensor reading (LPM)
+	*	Tout = Rack Coolant temperature sensor reading (°C)
+	*	Tin = RPU Coolant outlet temperature sensor reading(°C)
+	*/
+
+	uint8_t rack_coolant_temperature_sensor_reading = SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C;
+	float flow_rate_val, tout_val, tin_val;
+
+	uint8_t flow_rate_status = get_sensor_reading_to_real_val(
+		SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, &flow_rate_val);
+	uint8_t tout_status =
+		get_sensor_reading_to_real_val(rack_coolant_temperature_sensor_reading, &tout_val);
+	uint8_t tin_status =
+		get_sensor_reading_to_real_val(SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C, &tin_val);
+
+	if (flow_rate_status != SENSOR_READ_4BYTE_ACUR_SUCCESS)
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+
+	if (tout_status != SENSOR_READ_4BYTE_ACUR_SUCCESS)
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+
+	if (tin_status != SENSOR_READ_4BYTE_ACUR_SUCCESS)
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+
+	cmd->data[0] = (uint16_t)(67.21 * flow_rate_val * (tout_val - tin_val));
+}
+
 uint8_t modbus_get_fsc_enable_flag(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
@@ -484,7 +516,8 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_MB_FAN1_TACH_RPM, 1, 0, 1 },
 	{ MODBUS_MB_FAN2_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_MB_FAN2_TACH_RPM, 1, 0, 1 },
-	{ MODBUS_AALC_COOLING_CAPACITY_W_ADDR, NULL, modbus_get_senser_reading, 0, 1, -1, 1 },
+	{ MODBUS_AALC_COOLING_CAPACITY_W_ADDR, NULL, modbus_get_aalc_cooling_capacity, 0, 1, -1,
+	  1 },
 	{ MODBUS_RPU_PUMP1_STATUS_ADDR, NULL, modbus_get_sensor_status, RPU_PUMP1_STATUS, 0, 0, 1 },
 	{ MODBUS_RPU_PUMP2_STATUS_ADDR, NULL, modbus_get_sensor_status, RPU_PUMP2_STATUS, 0, 0, 1 },
 	{ MODBUS_RPU_PUMP3_STATUS_ADDR, NULL, modbus_get_sensor_status, RPU_PUMP3_STATUS, 0, 0, 1 },
@@ -620,7 +653,8 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_FB_1_HEX_INLET_TEMP_C, 1, -1, 1 },
 	{ MODBUS_FB_2_HEX_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_FB_2_HEX_INLET_TEMP_C, 1, -1, 1 },
-	{ MODBUS_HEX_WATER_INLET_TEMP_C_ADDR, NULL, modbus_get_senser_reading, 0, 1, -1, 1 },
+	{ MODBUS_HEX_WATER_INLET_TEMP_C_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C, 1, -1, 1 },
 	{ MODBUS_HEX_BLADDER_LEVEL_STATUS_ADDR, NULL, modbus_get_sensor_status,
 	  HEX_BLADDER_LEVEL_STATUS, 0, 0, 1 },
 	{ MODBUS_HEX_EXTERNAL_Y_FILTER_PRESSURE_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
