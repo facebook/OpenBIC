@@ -183,14 +183,21 @@ void pump_board_tach_status_handler(uint8_t sensor_num, uint8_t status)
 	else
 		WRITE_BIT(read_back_val, 0, 0);
 
-	if (status == THRESHOLD_STATUS_LCR)
+	LOG_WRN("pump led status : %d", status);
+	if (status == THRESHOLD_STATUS_LCR){
+		LOG_DBG("pump THRESHOLD_STATUS_LCR");
 		WRITE_BIT(read_back_val, 1, 1);
-	else if (status == THRESHOLD_STATUS_NORMAL)
+	}
+	else if (status == THRESHOLD_STATUS_NORMAL){
+		LOG_DBG("pump THRESHOLD_STATUS_NORMAL");
 		WRITE_BIT(read_back_val, 1, 0);
-	else if (status == DEVICE_NOT_PRESENT)
+	}
+	else if (status == DEVICE_NOT_PRESENT){
+		LOG_DBG("pump DEVICE_NOT_PRESENT");
 		WRITE_BIT(read_back_val, 1, 1);
+	}
 	else
-		LOG_ERR("Unexpected pump_board_tach_status");
+		LOG_WRN("Unexpected pump_board_tach_status");
 
 	if (!nct7363_write(cfg, NCT7363_GPIO1x_OUTPUT_PORT_REG_OFFSET, read_back_val))
 		LOG_ERR("Write pump_board_pwrgd gpio fail");
@@ -296,15 +303,9 @@ void hex_fan_failure_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 void aalc_leak_detect_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 {
 	if (status == THRESHOLD_STATUS_LCR) {
-		fault_leak_action();
-		error_log_event(arg0, IS_ABNORMAL_VAL);
-		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
-		if (get_led_status(LED_IDX_E_LEAK) != LED_START_BLINK)
-			led_ctrl(LED_IDX_E_LEAK, LED_START_BLINK);
+		aalc_leak_behavior(arg0, true);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
-		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
-		led_ctrl(LED_IDX_E_LEAK, LED_STOP_BLINK);
-		led_ctrl(LED_IDX_E_LEAK, LED_TURN_OFF);
+		aalc_leak_behavior(arg0, false);
 	} else
 		LOG_WRN("Unexpected threshold warning");
 }
@@ -738,6 +739,7 @@ void threshold_poll_handler(void *arug0, void *arug1, void *arug2)
 	int threshold_poll_interval_ms = 1000; // interval 1s
 
 	k_msleep(15000); // wait 15s for sensor ready
+	ctl_all_pwm_dev(60);
 
 	while (1) {
 		if (!get_sensor_init_done_flag()) {

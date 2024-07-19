@@ -25,6 +25,7 @@
 #include "plat_modbus.h"
 #include "plat_util.h"
 #include "modbus_server.h"
+#include "plat_isr.h"
 #include <logging/log.h>
 
 LOG_MODULE_REGISTER(plat_sensor_table);
@@ -83,8 +84,13 @@ bool post_quick_sensor_read(sensor_cfg *cfg, void *args, int *reading)
 
 	if (ret) {
 		float val = 0;
-		sensor_val *sval = (sensor_val *)&reading;
+		sensor_val *sval = (sensor_val *)reading;
 		val = (sval->integer * 1000 + sval->fraction) / 1000.0;
+
+		if (val < 3.1)
+			aalc_leak_behavior(cfg->num, true);
+		else
+			aalc_leak_behavior(cfg->num, false);
 	}
 
 	return ret;
@@ -315,7 +321,7 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C, sensor_dev_ads112c, I2C_BUS3, BPB_ADS112C_3_ADDR,
 	  ADS112C_READ_OUTPUT_RAW, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, post_ads112c_read,
-	  &ads112c_post_args[2], &ads112c_init_args[6] },
+	  &ads112c_post_args[5], &ads112c_init_args[6] },
 	{ SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C, sensor_dev_hdc1080, I2C_BUS10, HDC1080_ADDR,
 	  HDC1080_TEMP_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,

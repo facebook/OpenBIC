@@ -64,3 +64,19 @@ IT_LEAK_ALERT_HANDLER(0);
 IT_LEAK_ALERT_HANDLER(1);
 IT_LEAK_ALERT_HANDLER(2);
 IT_LEAK_ALERT_HANDLER(3);
+
+void aalc_leak_behavior(uint8_t sensor_num, bool is_leak)
+{
+	if (is_leak) {
+		fault_leak_action();
+		error_log_event(sensor_num, IS_ABNORMAL_VAL);
+		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
+		if (get_led_status(LED_IDX_E_LEAK) != LED_START_BLINK)
+			led_ctrl(LED_IDX_E_LEAK, LED_START_BLINK);
+		gpio_set(RPU_LEAK_ALERT_N, 0);
+	} else {
+		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
+		led_ctrl(LED_IDX_E_LEAK, LED_STOP_BLINK);
+		led_ctrl(LED_IDX_E_LEAK, LED_TURN_OFF);
+	}
+}

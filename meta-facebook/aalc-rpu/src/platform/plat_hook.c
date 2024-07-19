@@ -714,9 +714,10 @@ ads112c_init_arg ads112c_init_args[] = {
 ads112c_post_arg ads112c_post_args[] = {
 	[0] = { .plat_sensor_type = PLATFORM_ADS112C_FLOW,}, 
 	[1] = { .plat_sensor_type = PLATFORM_ADS112C_PRESS,}, 
-	[2] = { .plat_sensor_type = PLATFORM_ADS112C_TEMP,}, 
+	[2] = { .plat_sensor_type = PLATFORM_ADS112C_TEMP_RPU,}, 
 	[3] = { .plat_sensor_type = PLATFORM_ADS112C_OTHER,}, 
-	[4] = { .plat_sensor_type = PLATFORM_ADS112C_LEAKAGE,}, 
+	[4] = { .plat_sensor_type = PLATFORM_ADS112C_LEAKAGE,},
+	[5] = { .plat_sensor_type = PLATFORM_ADS112C_TEMP_RACK,},	
 };
 
 adc_asd_init_arg adc_asd_init_args[] = {
@@ -1024,6 +1025,7 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 		val = (((v_val / 5) - 0.1) / (0.8 / (flow_Pmax - flow_Pmin))) + 10;
 		val = (val - 7.56494) * 1.076921;
 		val = (2.5412 * val) - 25.285;
+		val = (0.7262 * val) + 3.1433;
 		break;
 
 	case PLATFORM_ADS112C_PRESS: //Filter_P/Outlet_P/Inlet_P
@@ -1032,9 +1034,16 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 		val = ((0.9828 * val) - 9.9724) * 6.894759;
 		break;
 
-	case PLATFORM_ADS112C_TEMP: //RDHx_Hot_Liq_T/CDU_Inlet_Liq_T
+	case PLATFORM_ADS112C_TEMP_RACK:
 		val = (rawValue - 15888) * 0.015873;
-		val = (1.1685 * val) - 4.5991;
+		//val = (1.1685 * val) - 4.5991;
+		val = ((1.1685 * val) - 4.5991) * 0.8793 + 2.42;
+		break;
+		
+	case PLATFORM_ADS112C_TEMP_RPU: //CDU_Inlet_Liq_T
+		val = (rawValue - 16140) * 0.015873;
+		//val = (1.1685 * val) - 4.5991;
+		val = ((1.1685 * val) - 4.5991) * 0.8793 + 2.42;
 		break;
 
 	default:

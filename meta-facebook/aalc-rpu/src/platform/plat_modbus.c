@@ -311,6 +311,13 @@ pump_reset_struct modbus_pump_setting_table[] = {
 	{ PUMP_3_RESET, pump_reset, SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W },
 };
 
+static uint16_t pump_setting;
+uint8_t modbus_pump_setting_get(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+    cmd->data[0] = pump_setting;
+    return MODBUS_EXC_NONE;
+}
 uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
@@ -332,6 +339,9 @@ uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 		LOG_ERR("modebus 0x9410 setting error flag: 0x%x\n", check_error_flag);
 		return MODBUS_EXC_ILLEGAL_DATA_VAL;
 	}
+
+	pump_setting = cmd->data[0] & 0x23F;
+
 	return MODBUS_EXC_NONE;
 }
 
@@ -388,6 +398,35 @@ uint8_t modbus_set_pwm(modbus_command_mapping *cmd)
 	else
 		plat_pwm_ctrl(idx, duty);
 
+	return MODBUS_EXC_NONE;
+}
+
+static uint8_t manual_pwm_cache[PWM_GROUP_E_MAX];
+uint8_t modbus_get_manual_pwm(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+ 
+	uint8_t idx = cmd->arg0;
+ 
+	cmd->data[0] = manual_pwm_cache[idx];
+ 
+	return MODBUS_EXC_NONE;
+}
+ 
+uint8_t modbus_set_manual_pwm(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+ 
+	if (get_fsc_enable_flag())
+		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+ 
+	uint8_t idx = cmd->arg0;
+	uint8_t duty = (uint8_t)cmd->data[0];
+ 
+	manual_pwm_cache[idx] = duty;
+ 
+	set_pwm_group(idx, duty);
+ 
 	return MODBUS_EXC_NONE;
 }
 
@@ -900,19 +939,19 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_AUTO_TUNE_COOLANT_OUTLET_TEMPERATURE_TARGET_SET_ADDR, modbus_to_do, NULL, 0, 0, 0,
 	  1 },
 	{ MODBUS_PUMP_REDUNDANT_SWITCHED_INTERVAL_ADDR, modbus_to_do, NULL, 0, 0, 0, 1 },
-	{ MODBUS_MANUAL_CONTROL_PUMP_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 1,
-	  PWM_GROUP_E_PUMP, 0, 1 },
-	{ MODBUS_MANUAL_CONTROL_FAN_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 1,
-	  PWM_GROUP_E_HEX_FAN, 0, 1 },
-	{ MODBUS_MANUAL_CONTROL_RPU_FAN_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 1,
-	  PWM_GROUP_E_RPU_FAN, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_PUMP_DUTY_SET_ADDR, modbus_set_manual_pwm, modbus_get_manual_pwm,
+	  PWM_GROUP_E_PUMP, 0, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_FAN_DUTY_SET_ADDR, modbus_set_manual_pwm, modbus_get_manual_pwm,
+	  PWM_GROUP_E_HEX_FAN, 0, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_RPU_FAN_DUTY_SET_ADDR, modbus_set_manual_pwm, modbus_get_manual_pwm,
+	  PWM_GROUP_E_RPU_FAN, 0, 0, 1 },
 	{ MODBUS_MANUAL_CONTROL_PUMP1_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 0,
 	  PWM_DEVICE_E_PB_PUMB_1, 0, 1 },
 	{ MODBUS_MANUAL_CONTROL_PUMP2_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 0,
 	  PWM_DEVICE_E_PB_PUMB_2, 0, 1 },
 	{ MODBUS_MANUAL_CONTROL_PUMP3_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 0,
 	  PWM_DEVICE_E_PB_PUMB_3, 0, 1 },
-	{ MODBUS_PUMP_SETTING_ADDR, modbus_pump_setting, NULL, 0, 0, 0, 1 },
+	{ MODBUS_PUMP_SETTING_ADDR, modbus_pump_setting, modbus_pump_setting_get, 0, 0, 0, 1 },
 	{ MODBUS_LEAKAGE_SETTING_ON_ADDR, modbus_to_do, NULL, 0, 0, 0, 1 },
 	// Leakage Black Box
 	{ MODBUS_STICKY_ITRACK_CHASSIS0_LEAKAGE_ADDR, NULL, modbus_get_sensor_status,
