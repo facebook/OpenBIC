@@ -358,11 +358,11 @@ void high_level_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 	if (status == THRESHOLD_ENABLE_LCR) {
 		if (get_led_status(LED_IDX_E_COOLANT) != LED_START_BLINK)
 			led_ctrl(LED_IDX_E_COOLANT, LED_START_BLINK);
-		set_sensor_status(RPU_RESERVOIR_STATUS, LEVEL1_STATUS, 1);
+		set_sensor_status(RPU_RESERVOIR_STATUS, LEVEL1_STATUS, 0);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
 		led_ctrl(LED_IDX_E_COOLANT, LED_STOP_BLINK);
 		led_ctrl(LED_IDX_E_COOLANT, LED_TURN_ON);
-		set_sensor_status(RPU_RESERVOIR_STATUS, LEVEL1_STATUS, 0);
+		set_sensor_status(RPU_RESERVOIR_STATUS, LEVEL1_STATUS, 1);
 	} else
 		LOG_WRN("Unexpected threshold warning");
 }
