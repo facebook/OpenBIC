@@ -36,6 +36,47 @@ LOG_MODULE_REGISTER(dev_nct7363);
 #define NCT7363_FAN_LSB_MASK BIT_MASK(5)
 #define NCT7363_GPIO_LSB_MASK BIT_MASK(8)
 #define MAX_THRESHOLD_VAL 0x1FFF
+#define FAN_COUNT_DEFAULT_VAL 0x1FFF
+#define FAN_COUNT_NULL_VAL 0xFFFF
+#define READ_ERROR -1
+
+uint8_t nct7363_read_back_data(sensor_cfg *cfg, uint8_t reading_offset)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, READ_ERROR);
+
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 5;
+	uint8_t return_data = 0;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 1;
+	msg.data[0] = reading_offset;
+	if ((cfg->pre_sensor_read_hook)) {
+		if ((cfg->pre_sensor_read_hook)(cfg, cfg->pre_sensor_read_args) == false) {
+			LOG_DBG("read value pre lock mutex fail !");
+			return READ_ERROR;
+		}
+	}
+
+	int ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		LOG_DBG("Fail to access device, bus: 0x%x, addr: 0x%x, ret: %d", cfg->port,
+			cfg->target_addr, ret);
+		return_data = READ_ERROR;
+	}
+
+	return_data = msg.data[0];
+
+	if ((cfg->post_sensor_read_hook)) {
+		if ((cfg->post_sensor_read_hook)(cfg, cfg->post_sensor_read_args, 0) == false) {
+			LOG_DBG("read value post lock mutex fail !");
+			return_data = READ_ERROR;
+		}
+	}
+
+	return return_data;
+}
 
 bool nct7363_set_threshold(sensor_cfg *cfg, uint16_t threshold)
 {
@@ -118,7 +159,7 @@ bool nct7363_set_duty(sensor_cfg *cfg, uint8_t duty, uint8_t port)
 	return true;
 }
 
-static bool nct7363_write(sensor_cfg *cfg, uint8_t offset, uint8_t val)
+bool nct7363_write(sensor_cfg *cfg, uint8_t offset, uint8_t val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	I2C_MSG msg = { 0 };
@@ -126,14 +167,31 @@ static bool nct7363_write(sensor_cfg *cfg, uint8_t offset, uint8_t val)
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 2;
-
+	uint8_t return_data;
 	msg.data[0] = offset;
 	msg.data[1] = val;
 
-	if (i2c_master_write(&msg, retry) != 0) {
-		LOG_ERR("nct7363 write offset 0x%02x, val 0x%02x fail", offset, val);
-		return false;
+	if ((cfg->pre_sensor_read_hook)) {
+		if ((cfg->pre_sensor_read_hook)(cfg, cfg->pre_sensor_read_args) == false) {
+			LOG_DBG("read value pre lock mutex fail !");
+			return_data = READ_ERROR;
+		}
 	}
+
+	if (i2c_master_write(&msg, retry) != 0) {
+		LOG_DBG("nct7363 write offset 0x%02x, val 0x%02x fail", offset, val);
+		return_data = READ_ERROR;
+	}
+
+	if ((cfg->post_sensor_read_hook)) {
+		if ((cfg->post_sensor_read_hook)(cfg, cfg->post_sensor_read_args, 0) == false) {
+			LOG_DBG("read value post lock mutex fail !");
+			return_data = READ_ERROR;
+		}
+	}
+
+	if (return_data == READ_ERROR)
+		return false;
 
 	return true;
 }
@@ -267,8 +325,14 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 		uint16_t fan_count_value =
 			(fan_count_high_byte << 5) | (fan_count_low_byte & NCT7363_FAN_LSB_MASK);
 		uint8_t fan_poles = nct7363_init_arg_data->fan_poles[port_offset];
-		/* count result */
-		rpm = 1350000 / ((float)fan_count_value * ((float)fan_poles / 4)); // RPM
+		if (fan_count_value == FAN_COUNT_DEFAULT_VAL)
+			rpm = 0;
+		else if (fan_count_value == 0)
+			rpm = FAN_COUNT_NULL_VAL;
+		else
+			/* count result */
+			rpm = 1350000 / ((float)fan_count_value * ((float)fan_poles / 4)); // RPM
+
 		/* return result */
 		sval->integer = (int16_t)rpm;
 		sval->fraction = 0;
