@@ -153,7 +153,7 @@ void fan_board_tach_status_handler(uint8_t sensor_num, uint8_t status)
 		LOG_ERR("Unexpected fan_board_tach_status");
 	}
 
-	LOG_WRN("LCR pwrgd_write_in_val: %d", pwrgd_read_back_val);
+	LOG_DBG("LCR pwrgd_write_in_val: %d", pwrgd_read_back_val);
 	if (!nct7363_write(cfg, NCT7363_GPIO1x_OUTPUT_PORT_REG_OFFSET, pwrgd_read_back_val))
 		LOG_ERR("Write fan_board_pwrgd gpio fail");
 }
@@ -183,7 +183,7 @@ void pump_board_tach_status_handler(uint8_t sensor_num, uint8_t status)
 	else
 		WRITE_BIT(read_back_val, 0, 0);
 
-	LOG_WRN("pump led status : %d", status);
+	LOG_DBG("pump led status : %d", status);
 	if (status == THRESHOLD_STATUS_LCR){
 		LOG_DBG("pump THRESHOLD_STATUS_LCR");
 		WRITE_BIT(read_back_val, 1, 1);
@@ -197,7 +197,7 @@ void pump_board_tach_status_handler(uint8_t sensor_num, uint8_t status)
 		WRITE_BIT(read_back_val, 1, 1);
 	}
 	else
-		LOG_WRN("Unexpected pump_board_tach_status");
+		LOG_DBG("Unexpected pump_board_tach_status");
 
 	if (!nct7363_write(cfg, NCT7363_GPIO1x_OUTPUT_PORT_REG_OFFSET, read_back_val))
 		LOG_ERR("Write pump_board_pwrgd gpio fail");
@@ -235,7 +235,7 @@ void threshold_set_sensor_status(uint8_t arg0, uint8_t arg1, uint8_t status)
 	else if (status == THRESHOLD_STATUS_NORMAL)
 		set_sensor_status(arg0, arg1, 0);
 	else
-		LOG_WRN("Unexpected threshold warning");
+		LOG_DBG("Unexpected threshold warning");
 }
 
 void threshold_set_pump_sensor_status(uint8_t pump_status, uint8_t status)
@@ -246,7 +246,7 @@ void threshold_set_pump_sensor_status(uint8_t pump_status, uint8_t status)
 	else if (status == THRESHOLD_STATUS_NORMAL)
 		set_sensor_status(pump_status, TWO_BYTES_SENSOR_STATUS, 2);
 	else
-		LOG_WRN("Unexpected threshold warning");
+		LOG_DBG("Unexpected threshold warning");
 }
 
 void pump_failure_do(uint8_t arg0, uint8_t arg1, uint8_t status)
@@ -266,7 +266,7 @@ void pump_failure_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 		threshold_set_pump_sensor_status(arg1, status);
 	} else
-		LOG_WRN("Unexpected threshold warning");
+		LOG_DBG("Unexpected threshold warning");
 }
 
 void rpu_internal_fan_failure_do(uint8_t arg0, uint8_t arg1, uint8_t status)
@@ -283,7 +283,7 @@ void rpu_internal_fan_failure_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 		set_sensor_status(arg0, arg1, 0);
 	} else
-		LOG_WRN("Unexpected threshold warning");
+		LOG_DBG("Unexpected threshold warning");
 }
 
 void hex_fan_failure_do(uint8_t arg0, uint8_t arg1, uint8_t status)
@@ -297,7 +297,7 @@ void hex_fan_failure_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 	} else
-		LOG_WRN("Unexpected threshold warning");
+		LOG_DBG("Unexpected threshold warning");
 }
 
 void aalc_leak_detect_do(uint8_t arg0, uint8_t arg1, uint8_t status)
@@ -307,7 +307,7 @@ void aalc_leak_detect_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
 		aalc_leak_behavior(arg0, false);
 	} else
-		LOG_WRN("Unexpected threshold warning");
+		LOG_DBG("Unexpected threshold warning");
 }
 
 void high_press_do(uint8_t arg0, uint8_t arg1, uint8_t status)
@@ -323,7 +323,7 @@ void high_press_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 		set_sensor_status(arg0, arg1, 0);
 	} else {
-		LOG_WRN("Unexpected threshold warning");
+		LOG_DBG("Unexpected threshold warning");
 	}
 }
 
@@ -351,7 +351,7 @@ void low_level_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 		set_sensor_status(AALC_SENSOR_ALARM, BLADDER_LEVEL_SENSOR_STATUS, 0);
 		set_sensor_status(RPU_RESERVOIR_STATUS, LEVEL2_STATUS, 1);
 	} else
-		LOG_WRN("Unexpected threshold warning");
+		LOG_DBG("Unexpected threshold warning");
 }
 
 void high_level_do(uint8_t arg0, uint8_t arg1, uint8_t status)
@@ -365,7 +365,7 @@ void high_level_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 		led_ctrl(LED_IDX_E_COOLANT, LED_TURN_ON);
 		set_sensor_status(RPU_RESERVOIR_STATUS, LEVEL1_STATUS, 1);
 	} else
-		LOG_WRN("Unexpected threshold warning");
+		LOG_DBG("Unexpected threshold warning");
 }
 
 void high_air_temp_do(uint8_t arg0, uint8_t arg1, uint8_t status)
@@ -378,7 +378,7 @@ void high_air_temp_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 		set_sensor_status(arg0, arg1, 0);
 	} else {
-		LOG_WRN("Unexpected threshold warning");
+		LOG_DBG("Unexpected threshold warning");
 	}
 }
 
@@ -393,7 +393,7 @@ void high_coolant_temp_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 		set_sensor_status(arg0, arg1, 0);
 	} else {
-		LOG_WRN("Unexpected threshold warning");
+		LOG_DBG("Unexpected threshold warning");
 	}
 }
 
@@ -407,7 +407,7 @@ void flow_trigger_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 		set_sensor_status(arg0, arg1, 0);
 	} else {
-		LOG_WRN("Unexpected threshold warning");
+		LOG_DBG("Unexpected threshold warning");
 	}
 }
 
@@ -696,7 +696,7 @@ static bool set_threshold_status(sensor_threshold *threshold_tbl, float val)
 			if (val == 0.0) 
 			{
 				threshold_tbl->last_status = DEVICE_NOT_PRESENT;
-				LOG_ERR("sensor 0x%x not exist", threshold_tbl->sensor_num);
+				LOG_DBG("sensor 0x%x not exist", threshold_tbl->sensor_num);
 				return true;
 			}
 		}
