@@ -259,11 +259,13 @@ void pump_failure_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 		//auto control for Hex Fan
 		error_log_event(arg0, IS_ABNORMAL_VAL);
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
+		set_sensor_status(LED_FAULT, LED_FAULT_PUMP, 1);
 		//wait 30 secs to shut down
 		threshold_set_pump_sensor_status(arg1, status);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
 		error_log_event(arg0, IS_NORMAL_VAL);
-		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
+		if(!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+			led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 		threshold_set_pump_sensor_status(arg1, status);
 	} else
 		LOG_DBG("Unexpected threshold warning");
@@ -278,9 +280,11 @@ void rpu_internal_fan_failure_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 		set_pwm_group(PWM_GROUP_E_PUMP, 0); //turn off pump
 		//auto control for Hex Fan
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
+		set_sensor_status(LED_FAULT, LED_FAULT_RPU_FAN, 1);
 		set_sensor_status(arg0, arg1, 1);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
-		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
+		if(!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+			led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 		set_sensor_status(arg0, arg1, 0);
 	} else
 		LOG_DBG("Unexpected threshold warning");
@@ -294,8 +298,10 @@ void hex_fan_failure_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 		//set_pwm_grup(PWM_GRUP_E_PUMP, 80); //increase pump speed
 		//set_pwm_grup(PWM_GRUP_E_HEX_FAN, 100);
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
+		set_sensor_status(LED_FAULT, LED_FAULT_HEX_FAN, 1);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
-		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
+		if(!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+			led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 	} else
 		LOG_DBG("Unexpected threshold warning");
 }
@@ -318,9 +324,11 @@ void high_press_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 		deassert_all_rpu_ready_pin();
 		//relief valve open
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
+		set_sensor_status(LED_FAULT, LED_FAULT_HIGH_PRESS, 1);
 		set_sensor_status(arg0, arg1, 1);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
-		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
+		if(!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+			led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 		set_sensor_status(arg0, arg1, 0);
 	} else {
 		LOG_DBG("Unexpected threshold warning");
@@ -341,6 +349,7 @@ void low_level_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 		deassert_all_rpu_ready_pin();
 		error_log_event(arg0, IS_ABNORMAL_VAL);
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
+		set_sensor_status(LED_FAULT, LED_FAULT_LOW_LEVEL, 1);
 		led_ctrl(LED_IDX_E_COOLANT, LED_STOP_BLINK);
 		led_ctrl(LED_IDX_E_COOLANT, LED_TURN_OFF);
 		set_sensor_status(AALC_SENSOR_ALARM, BLADDER_LEVEL_SENSOR_STATUS, 1);
@@ -373,9 +382,11 @@ void high_air_temp_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 	if (status == THRESHOLD_STATUS_UCR) {
 		//ctl_all_pwm_dev(100);
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
+		set_sensor_status(LED_FAULT, LED_FAULT_HIGH_AIR_TEMP, 1);
 		set_sensor_status(arg0, arg1, 1);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
-		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
+		if(!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+			led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 		set_sensor_status(arg0, arg1, 0);
 	} else {
 		LOG_DBG("Unexpected threshold warning");
@@ -388,9 +399,11 @@ void high_coolant_temp_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 		//ctl_all_pwm_dev(100);
 		deassert_all_rpu_ready_pin();
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
+		set_sensor_status(LED_FAULT, LED_FAULT_HIGH_COOLANT_TEMP, 1);
 		set_sensor_status(arg0, arg1, 1);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
-		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
+		if(!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+			led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 		set_sensor_status(arg0, arg1, 0);
 	} else {
 		LOG_DBG("Unexpected threshold warning");
@@ -402,9 +415,11 @@ void flow_trigger_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 	if (status == THRESHOLD_STATUS_LCR) {
 		deassert_all_rpu_ready_pin();
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
+		set_sensor_status(LED_FAULT, LED_FAULT_FLOW_TRIGGER, 1);
 		set_sensor_status(arg0, arg1, 1);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
-		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
+		if(!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+			led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 		set_sensor_status(arg0, arg1, 0);
 	} else {
 		LOG_DBG("Unexpected threshold warning");
@@ -499,10 +514,6 @@ sensor_threshold threshold_tbl[] = {
 	//	{ SENSOR_NUM_PB_3_HSC_P48V_VIN_VOLT_V, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_BB_HSC_P48V_VIN_VOLT_V, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_BPB_HSC_P48V_VIN_VOLT_V, None, None, None, NULL, 0 },
-	{ SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V, THRESHOLD_ENABLE_LCR, 3.1, 0,
-	  aalc_leak_detect_do, SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V },
-	{ SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_VOLT_V, THRESHOLD_ENABLE_LCR, 3.1, 0,
-	  aalc_leak_detect_do, SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_VOLT_V },
 	//	{ SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_1_VOLT_V, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_2_VOLT_V, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_3_VOLT_V, None, None, None, NULL, 0 },

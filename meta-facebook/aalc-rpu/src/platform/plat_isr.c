@@ -8,6 +8,7 @@
 #include "plat_sensor_table.h"
 #include "plat_led.h"
 #include "plat_log.h"
+#include "plat_threshold.h"
 
 void deassert_all_rpu_ready_pin(void)
 {
@@ -44,6 +45,7 @@ void it_leak_handler(uint8_t idx)
 	error_log_event(sen_num, IS_ABNORMAL_VAL);
 
 	led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
+	set_sensor_status(LED_FAULT, LED_FAULT_IT_LEAK, 1);
 	if (get_led_status(LED_IDX_E_LEAK) == LED_START_BLINK)
 		led_ctrl(LED_IDX_E_LEAK, LED_STOP_BLINK);
 	led_ctrl(LED_IDX_E_LEAK, LED_TURN_OFF);
@@ -71,12 +73,14 @@ void aalc_leak_behavior(uint8_t sensor_num, bool is_leak)
 		fault_leak_action();
 		error_log_event(sensor_num, IS_ABNORMAL_VAL);
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
+		set_sensor_status(LED_FAULT, (sensor_num == SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V) ? LED_FAULT_CDU_LEAKAGE:LED_FAULT_RACK_LEAKAGE, 1);
 		if (get_led_status(LED_IDX_E_LEAK) != LED_START_BLINK)
 			led_ctrl(LED_IDX_E_LEAK, LED_START_BLINK);
 		gpio_set(RPU_LEAK_ALERT_N, 0);
 	} else {
-		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
-		led_ctrl(LED_IDX_E_LEAK, LED_STOP_BLINK);
-		led_ctrl(LED_IDX_E_LEAK, LED_TURN_OFF);
+		if(!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+			led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
+		// led_ctrl(LED_IDX_E_LEAK, LED_STOP_BLINK);
+		// led_ctrl(LED_IDX_E_LEAK, LED_TURN_OFF);
 	}
 }
