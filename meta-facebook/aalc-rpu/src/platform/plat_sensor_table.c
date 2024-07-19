@@ -31,6 +31,65 @@ LOG_MODULE_REGISTER(plat_sensor_table);
 
 #define I2C_MAX_RETRY 3
 
+struct k_thread quick_sensor_poll;
+K_KERNEL_STACK_MEMBER(quick_sensor_poll_stack, 1024);
+k_tid_t quick_sensor_tid;
+
+uint8_t quick_sensor[] = { SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V,
+			   SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_VOLT_V };
+
+/* quick sensor */
+void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
+{
+	k_msleep(1000); // delay 1 second to wait for drivers ready before start sensor polling
+
+	while (1) {
+		for (uint8_t i = 0; i < ARRAY_SIZE(quick_sensor); i++) {
+			int reading = 0;
+			uint8_t status;
+
+			status = get_sensor_reading(sensor_config, sensor_config_count,
+						    quick_sensor[i], &reading, GET_FROM_SENSOR);
+		}
+
+		k_msleep(100);
+	}
+}
+
+void quick_sensor_poll_init()
+{
+	quick_sensor_tid = k_thread_create(&quick_sensor_poll, quick_sensor_poll_stack,
+					   K_THREAD_STACK_SIZEOF(quick_sensor_poll_stack),
+					   quick_sensor_poll_handler, NULL, NULL, NULL,
+					   CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+	k_thread_name_set(&quick_sensor_poll, "quick_sensor_poll");
+	return;
+}
+
+extern struct k_thread sensor_poll;
+bool pre_quick_sensor_read(sensor_cfg *cfg, void *args)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+
+	k_tid_t id = &sensor_poll;
+	return (k_current_get() == id ? false : true);
+}
+
+bool post_quick_sensor_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	bool ret = post_ads112c_read(cfg, args, reading);
+
+	if (ret) {
+		float val = 0;
+		sensor_val *sval = (sensor_val *)&reading;
+		val = (sval->integer * 1000 + sval->fraction) / 1000.0;
+	}
+
+	return ret;
+}
+
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
 	   access check, arg0, arg1, sample_count, cache, cache_status, mux_address, mux_offset,
@@ -342,12 +401,12 @@ sensor_cfg plat_sensor_config[] = {
 	  &bus_8_PCA9546A_configs[2], post_PCA9546A_read, NULL, &hdc1080_init_args[16] },
 	{ SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V, sensor_dev_ads112c, I2C_BUS5,
 	  BPB_ADS112C_1_ADDR, ADS112C_READ_OUTPUT_RAW, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT,
-	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL,
-	  post_ads112c_read, &ads112c_post_args[3], &ads112c_init_args[0] },
+	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_quick_sensor_read,
+	  NULL, post_quick_sensor_read, &ads112c_post_args[3], &ads112c_init_args[0] },
 	{ SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_VOLT_V, sensor_dev_ads112c, I2C_BUS5,
 	  BPB_ADS112C_3_ADDR, ADS112C_READ_OUTPUT_RAW, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT,
-	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL,
-	  post_ads112c_read, &ads112c_post_args[3], &ads112c_init_args[0] },
+	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_quick_sensor_read,
+	  NULL, post_quick_sensor_read, &ads112c_post_args[3], &ads112c_init_args[0] },
 	{ SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_1_VOLT_V, sensor_dev_ads112c, I2C_BUS9,
 	  SB_ADS112C_2_ADDR, ADS112C_READ_OUTPUT_RAW, stby_access, ENABLE_RESET_CFG_REG, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,

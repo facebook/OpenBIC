@@ -36,13 +36,13 @@
 #define MODBUS_MASTER_I2C_SCAN_BUS_SET_ADDR 0xF020 // 1 byte
 #define MODBUS_MASTER_I2C_SCAN_ADDR 0xF021 // 31 bytes
 
-#define MODBUS_SET_SENSOR_POLL_EN_ADDR 0xF080
-#define MODBUS_GET_SENSOR_POLL_EN_ADDR 0xF081
+#define MODBUS_GET_SET_SENSOR_POLL_ADDR 0xF080
 
 #define MODBUS_GET_SET_HMI_VER_ADDR 0x19F2
 
 int init_custom_modbus_server(void);
 void init_modbus_command_table(void);
+int change_modbus_slave_addr(uint8_t idx, uint8_t addr);
 
 typedef struct _modbus_command_mapping {
 	uint16_t addr;
@@ -253,11 +253,6 @@ typedef struct _modbus_command_mapping {
 #define MODBUS_FB_12_HUM_PCT_RH_ADDR 0xA157
 #define MODBUS_FB_13_HUM_PCT_RH_ADDR 0xA158
 #define MODBUS_FB_14_HUM_PCT_RH_ADDR 0xA159
-#define MODBUS_V_12_AUX_ADDR 0xA15A
-#define MODBUS_V_5_AUX_ADDR 0xA15B
-#define MODBUS_V_3_3_AUX_ADDR 0xA15C
-#define MODBUS_V_1_2_AUX_ADDR 0xA15D
-#define MODBUS_V_5_USB_ADDR 0xA15E
 
 #define MODBUS_LEAKAGE_STATUS_ADDR 0x9202
 #define MODBUS_SB_TTV_COOLANT_LEAKAGE_ADDR 0xA200
@@ -295,6 +290,11 @@ typedef struct _modbus_command_mapping {
 #define MODBUS_PUMP_FAN_STATUS_ADDR 0xA080
 #define MODBUS_HEX_AIR_THERMOMETER_STATUS_ADDR 0xA202
 #define MODBUS_AALC_TOTAL_PWR_EXT_W_ADDR 0xA02D
+#define MODBUS_V_12_AUX_ADDR 0xA02E
+#define MODBUS_V_5_AUX_ADDR 0xA02F
+#define MODBUS_V_3_3_AUX_ADDR 0xA030
+#define MODBUS_V_1_2_AUX_ADDR 0xA031
+#define MODBUS_V_5_USB_ADDR 0xA032
 #define MODBUS_MODBUS_ADDR_PATH_WITH_WEDGE400_ADDR 0xA401
 #define MODBUS_MANUAL_CONTROL_RPU_FAN_ON_OFF_ADDR 0xA480
 #define MODBUS_ERROR_LOG_COUNT_ADDR 0x1A28

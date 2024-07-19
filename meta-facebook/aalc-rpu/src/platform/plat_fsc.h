@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -13,10 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-bool modbus_i2c_master_write_read(const uint16_t *modbus_data, uint8_t data_len);
-void modbus_i2c_master_write_read_response(uint16_t *modbus_data);
-void regs_reverse(uint16_t reg_len, uint16_t *data);
-void plat_enable_sensor_poll();
-void plat_disable_sensor_poll();
-void set_rpu_ready();
-float pow_of_10(int8_t exp);
+
+#ifndef PLAT_FSC_H
+#define PLAT_FSC_H
+#include "stdio.h"
+#include "stdint.h"
+
+uint8_t get_fsc_enable_flag(void);
+void set_fsc_enable_flag(uint8_t flag);
+
+#endif

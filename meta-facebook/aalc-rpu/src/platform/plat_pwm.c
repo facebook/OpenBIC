@@ -20,6 +20,7 @@
 #include "nct7363.h"
 #include "plat_sensor_table.h"
 #include "plat_hook.h"
+#include "plat_fsc.h"
 #include "plat_pwm.h"
 
 LOG_MODULE_REGISTER(plat_pwm);

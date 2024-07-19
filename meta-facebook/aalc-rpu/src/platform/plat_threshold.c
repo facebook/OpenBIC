@@ -439,6 +439,8 @@ void threshold_poll_handler(void *arug0, void *arug1, void *arug2)
 
 	int threshold_poll_interval_ms = 1000; // interval 1s
 
+	k_msleep(15000); // wait 15s for sensor ready
+
 	while (1) {
 		if (!get_sensor_init_done_flag()) {
 			k_msleep(threshold_poll_interval_ms);
