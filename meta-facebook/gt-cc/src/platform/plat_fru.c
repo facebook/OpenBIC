@@ -191,31 +191,41 @@ static bool find_nic_product_name(uint8_t dev_id, uint8_t *part_number_p)
 	// Get board part number offset
 	buf_ofs += 1;
 
-	memcpy(part_number_p, &board_data[buf_ofs], 4);
+	memcpy(part_number_p, &board_data[buf_ofs], 18);
+	LOG_HEXDUMP_INF(part_number_p, 18, "NIC product name");
 	return true;
 }
 
 uint8_t check_nic_type_by_fru()
 {
 	uint8_t config = 0x00; // 0: default is CX7, 1: unknown or FRU read failed
+	bool is_ib_nic = false;
 
 	for (uint8_t i = 0; i < NIC_MAX_NUMBER; i++) {
 		if (gpio_get(nic_prsnt_pin[i]))
 			continue;
 
-		uint8_t part_number_data[4];
+		uint8_t part_number_data[18];
 		bool ret = find_nic_product_name(NIC0_FRU_ID + i, part_number_data);
 
-		if (ret && !strncmp(part_number_data, "MCX7", 4)) {
+		/* MCX75343AMC-NEAC andCX75343AMC-NEAC_FB are both CX7 IB NIC */
+		/* CX71343DAC-WEAF_FB is CX7 NIC */
+		if ((ret && !strncmp(part_number_data, "MCX75343AMC-NEAC", 16)) ||
+		    (ret && !strncmp(part_number_data, "CX75343AMC-NEAC_FB", 18))) {
 			LOG_INF("NIC%d is CX7 IB NIC", i);
-			return NIC_CONFIG_IB_CX7;
-		} else if (ret && !strncmp(part_number_data, "CX7", 3)) {
+			is_ib_nic = true;
+			continue;
+		} else if (ret && !strncmp(part_number_data, "CX71343DAC-WEAF_FB", 18)) {
 			LOG_INF("NIC%d is CX7 NIC", i);
 			continue;
 		} else {
 			LOG_WRN("NIC%d is UNKNOWN NIC", i);
 			config |= 1 << i;
 		}
+	}
+
+	if (is_ib_nic) {
+		return NIC_CONFIG_IB_CX7;
 	}
 
 	return (config ? NIC_CONFIG_UNKNOWN : NIC_CONFIG_CX7);

@@ -35,6 +35,7 @@
 #include "plat_mctp.h"
 #include "plat_gpio.h"
 #include "plat_ncsi.h"
+#include "plat_fru.h"
 
 LOG_MODULE_REGISTER(plat_mctp);
 
@@ -63,6 +64,8 @@ LOG_MODULE_REGISTER(plat_mctp);
 #define MCTP_EID_NIC_5 0x15
 #define MCTP_EID_NIC_6 0x16
 #define MCTP_EID_NIC_7 0x17
+
+static uint8_t nic_config = NIC_CONFIG_UNKNOWN;
 
 K_TIMER_DEFINE(send_cmd_timer, send_cmd_to_dev, NULL);
 K_WORK_DEFINE(send_cmd_work, send_cmd_to_dev_handler);
@@ -384,6 +387,78 @@ static void mellanox_cx7_ncsi_init(void)
 	}
 }
 
+uint8_t mellanox_cx7_ncsi_get_link_type(void)
+{
+	uint8_t config = NIC_CONFIG_UNKNOWN;
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(mctp_route_tbl); i++) {
+		mctp_route_entry *p = mctp_route_tbl + i;
+
+		/* skip BMC */
+		if (p->bus == I2C_BUS_BMC && p->addr == I2C_ADDR_BMC)
+			continue;
+
+		if (gpio_get(p->dev_present_pin))
+			continue;
+
+		if (mellanox_cx7_clear_initial_state(p->endpoint) == true) {
+			LOG_INF("Clear initial state success eid = 0x%x", p->endpoint);
+		} else {
+			LOG_ERR("Clear initial state fail eid = 0x%x", p->endpoint);
+		}
+
+		uint8_t link_type = NCSI_IB_LINK_TYPE_UNKNOWN;
+		uint16_t response_code = 0xffff;
+		uint16_t reason_code = 0xffff;
+		if (mellanox_cx7_get_infiniband_link_status(p->endpoint, &link_type, &response_code,
+							    &reason_code) == true) {
+			LOG_INF("get link status success eid = 0x%x , link_type = 0x%x, response_code = 0x%x, reason_code = 0x%x",
+				p->endpoint, link_type, response_code, reason_code);
+		} else {
+			LOG_ERR("get mellanox cx7 infiniband link status fail eid = 0x%x",
+				p->endpoint);
+		}
+
+		/* Only IB_CX7 NIC supports the "Get InfiniBand Link Status" command.
+		 * Set NIC configuration to IB_CX7 if there is any InfiniBand NIC.
+		 */
+		if ((link_type == NCSI_IB_LINK_TYPE_INFINIBAND) ||
+		    (link_type == NCSI_IB_LINK_TYPE_ETHERNET)) {
+			config = NIC_CONFIG_IB_CX7;
+			LOG_INF("eid 0x%x NIC is IB_CX7 NIC", p->endpoint);
+		}
+
+		/* CX7 NIC does not support the "Get InfiniBand Link Status" command */
+		if (response_code == NCSI_COMMAND_UNSUPPORTED) {
+			LOG_INF("eid 0x%x NIC is CX7 NIC", p->endpoint);
+			if (config != NIC_CONFIG_IB_CX7) {
+				config = NIC_CONFIG_CX7;
+			}
+		}
+	}
+
+	return config;
+}
+
+void check_nic_config_by_ncsi(void)
+{
+	uint8_t config = mellanox_cx7_ncsi_get_link_type();
+
+	/* Double check by fru if config is not IB_CX7 */
+	if (config == NIC_CONFIG_CX7 || config == NIC_CONFIG_UNKNOWN) {
+		LOG_INF("Double check nic type by fru");
+		config = check_nic_type_by_fru();
+	}
+
+	nic_config = config;
+	LOG_INF("NIC config is %d, 0: UNKNOWN, 1: CX7, 2: IB_CX7", nic_config);
+}
+
+uint8_t get_nic_config(void)
+{
+	return nic_config;
+}
+
 void send_cmd_to_dev_handler(struct k_work *work)
 {
 	/* init the device endpoint */
@@ -394,6 +469,9 @@ void send_cmd_to_dev_handler(struct k_work *work)
 
 	/* get device parameters */
 	get_dev_firmware_parameters();
+
+	/* check nic config by ncsi */
+	check_nic_config_by_ncsi();
 }
 void send_cmd_to_dev(struct k_timer *timer)
 {
@@ -427,7 +505,6 @@ void plat_mctp_init(void)
 		mctp_start(p->mctp_inst);
 	}
 
-	/* Only send command to device when DC on */
-	if (is_mb_dc_on())
-		k_timer_start(&send_cmd_timer, K_MSEC(3000), K_NO_WAIT);
+	/* The NIC can be ready for access within 1050ms. Setting the timer to 3000ms to ensure reliability. */
+	k_timer_start(&send_cmd_timer, K_MSEC(3000), K_NO_WAIT);
 }

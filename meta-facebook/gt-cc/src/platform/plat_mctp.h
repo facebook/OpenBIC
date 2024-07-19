@@ -51,6 +51,7 @@ void plat_mctp_init(void);
 void send_cmd_to_dev(struct k_timer *timer);
 void send_cmd_to_dev_handler(struct k_work *work);
 bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg);
+uint8_t get_nic_config(void);
 
 extern struct pldm_variable_field nic_vesion[];
 

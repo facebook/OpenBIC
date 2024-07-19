@@ -25,6 +25,7 @@
 #include "plat_pldm_monitor.h"
 #include "plat_class.h"
 #include "plat_led.h"
+#include "plat_mctp.h"
 
 LOG_MODULE_REGISTER(plat_pldm_monitor);
 
@@ -843,7 +844,7 @@ static void plat_get_effecter_nic_type_handler(const uint8_t *buf, uint16_t len,
 		return;
 	}
 
-	uint8_t type = check_nic_type_by_fru();
+	uint8_t type = get_nic_config();
 
 	switch (type) {
 	case NIC_CONFIG_UNKNOWN:
