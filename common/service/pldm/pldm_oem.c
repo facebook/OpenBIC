@@ -156,7 +156,7 @@ static uint8_t ipmi_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t ins
 
 #ifdef ENABLE_PLDM
 #ifdef ENABLE_EVENT_TO_BMC
-uint8_t send_event_log_to_bmc(uint8_t event_type, uint8_t assertion)
+uint8_t send_event_log_to_bmc(struct pldm_addsel_data sel_msg)
 {
 	pldm_msg msg = { 0 };
 	uint8_t bmc_bus = I2C_BUS_BMC;
@@ -178,7 +178,7 @@ uint8_t send_event_log_to_bmc(uint8_t event_type, uint8_t assertion)
 	msg.hdr.rq = 1;
 
 	struct pldm_oem_write_file_io_req *ptr = (struct pldm_oem_write_file_io_req *)malloc(
-		sizeof(struct pldm_oem_write_file_io_req) + (sizeof(uint8_t) * OEM_EVENT_LEN));
+		sizeof(struct pldm_oem_write_file_io_req) + (sizeof(struct pldm_addsel_data)));
 
 	if (!ptr) {
 		LOG_ERR("Failed to allocate memory.");
@@ -187,11 +187,10 @@ uint8_t send_event_log_to_bmc(uint8_t event_type, uint8_t assertion)
 
 	ptr->cmd_code = EVENT_LOG;
 	ptr->data_length = OEM_EVENT_LEN;
-	uint8_t msg_data[2] = { event_type, assertion };
-	memcpy(ptr->messages, msg_data, OEM_EVENT_LEN);
+	memcpy(ptr->messages, &sel_msg, sizeof(struct pldm_addsel_data));
 
 	msg.buf = (uint8_t *)ptr;
-	msg.len = sizeof(struct pldm_oem_write_file_io_req) + OEM_EVENT_LEN;
+	msg.len = sizeof(struct pldm_oem_write_file_io_req) + sizeof(struct pldm_addsel_data);
 
 	uint8_t resp_len = sizeof(struct pldm_oem_write_file_io_resp);
 	uint8_t rbuf[resp_len];

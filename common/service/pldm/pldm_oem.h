@@ -26,7 +26,7 @@ extern "C" {
 
 #define IANA_LEN 0x03
 /* define for pldm oem event */
-#define OEM_EVENT_LEN 0x02
+#define OEM_EVENT_LEN 0x05
 #define EVENT_ASSERTED 0x01
 #define EVENT_DEASSERTED 0x00
 
@@ -88,6 +88,14 @@ enum oem_event_type {
 	APML_ALERT_ASSERT,
 };
 
+enum vr_event_source {
+	PVDDCR_CPU0 = 0x00,
+	PVDDCR_SOC,
+	PVDDCR_CPU1,
+	PVDDIO,
+	PVDD11_S3,
+};
+
 struct _cmd_echo_req {
 	uint8_t iana[IANA_LEN];
 	uint8_t first_data;
@@ -142,9 +150,17 @@ struct pldm_oem_read_file_io_resp {
 	uint8_t messages[];
 } __attribute__((packed));
 
+struct pldm_addsel_data {
+	uint8_t event_type;
+	uint8_t assert_type;
+	uint8_t event_data_1;
+	uint8_t event_data_2;
+	uint8_t event_data_3;
+} __attribute__((packed));
+
 uint8_t check_iana(const uint8_t *iana);
 uint8_t set_iana(uint8_t *buf, uint8_t buf_len);
-uint8_t send_event_log_to_bmc(uint8_t event_type, uint8_t assertion);
+uint8_t send_event_log_to_bmc(struct pldm_addsel_data msg);
 
 uint8_t pldm_oem_handler_query(uint8_t code, void **ret_fn);
 
