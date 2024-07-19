@@ -39,7 +39,8 @@
 #include "plat_hwmon.h"
 #include "plat_log.h"
 #include "plat_i2c.h"
-#include <plat_threshold.h>
+#include "plat_threshold.h"
+#include "plat_fsc.h"
 
 LOG_MODULE_REGISTER(plat_modbus);
 
@@ -56,6 +57,7 @@ LOG_MODULE_REGISTER(plat_modbus);
 typedef struct {
 	char *iface_name;
 	bool is_custom_fc64;
+	uint8_t addr;
 } modbus_server;
 modbus_server modbus_server_config[] = {
 	// iface_name, is_custom_fc64
@@ -364,6 +366,9 @@ uint8_t modbus_set_pwm(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
+	if (get_fsc_enable_flag())
+		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+
 	uint8_t is_group = cmd->arg0;
 	uint8_t idx = cmd->arg1;
 	uint8_t duty = (uint8_t)cmd->data[0];
@@ -416,6 +421,59 @@ uint8_t modbus_get_aalc_cooling_capacity(modbus_command_mapping *cmd)
 		return MODBUS_EXC_ILLEGAL_DATA_VAL;
 
 	cmd->data[0] = (uint16_t)(67.21 * flow_rate_val * (tout_val - tin_val));
+}
+
+uint8_t modbus_get_fsc_enable_flag(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	cmd->data[0] = get_fsc_enable_flag();
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_set_fsc_enable_flag(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	set_fsc_enable_flag((uint8_t)cmd->data[0]);
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_sensor_poll_get(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	cmd->data[0] = get_sensor_poll_enable_flag() ? 1 : 0;
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_sensor_poll_set(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	cmd->data[0] ? plat_enable_sensor_poll() : plat_disable_sensor_poll();
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_get_rpu_addr(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	cmd->data[0] = modbus_server_config[0].addr;
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_set_rpu_addr(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint8_t addr = (uint8_t)cmd->data[0];
+
+	if (change_modbus_slave_addr(0, addr))
+		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 
 	return MODBUS_EXC_NONE;
 }
@@ -445,7 +503,7 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_BPB_HSC_P48V_VIN_VOLT_V, 1, -1, 1 },
 	{ MODBUS_MB_RPU_AIR_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C, 1, -1, 1 },
-	{ MODBUS_RPU_PUMP_PWM_TACH_PCT_ADDR, NULL, modbus_get_senser_reading, 0, 1, 0, 1 },
+	{ MODBUS_RPU_PUMP_PWM_TACH_PCT_ADDR, NULL, modbus_get_pwm, 1, PWM_GROUP_E_PUMP, 0, 1 },
 	{ MODBUS_PB_1_PUMP_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_PB_1_PUMP_TACH_RPM, 1, 0, 1 },
 	{ MODBUS_PB_2_PUMP_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
@@ -561,7 +619,7 @@ modbus_command_mapping modbus_command_table[] = {
 	  1, 0, 1 },
 	{ MODBUS_PB_3_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_PB_3_HUM_PCT_RH,
 	  1, 0, 1 },
-	{ MODBUS_HEX_FAN_PWM_TACH_PCT_ADDR, NULL, modbus_get_senser_reading, 0, 1, 0, 1 },
+	{ MODBUS_HEX_FAN_PWM_TACH_PCT_ADDR, NULL, modbus_get_pwm, 1, PWM_GROUP_E_HEX_FAN, 0, 1 },
 	{ MODBUS_HEX_PWR_W_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_HEX_PWR_W, 1, -1, 1 },
 	{ MODBUS_HEX_INPUT_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_FB_1_HSC_P48V_VIN_VOLT_V, 1, 0, 1 },
@@ -823,8 +881,10 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_HEX_FAN_ALARM_1_ADDR, NULL, modbus_get_sensor_status, HEX_FAN_ALARM_1, 0, 0, 1 },
 	{ MODBUS_HEX_FAN_ALARM_2_ADDR, NULL, modbus_get_sensor_status, HEX_FAN_ALARM_2, 0, 0, 1 },
 	{ MODBUS_AALC_TOTAL_PWR_EXT_W_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
-	{ MODBUS_MODBUS_ADDR_PATH_WITH_WEDGE400_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
-	{ MODBUS_MANUAL_CONTROL_RPU_FAN_ON_OFF_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
+	{ MODBUS_MODBUS_ADDR_PATH_WITH_WEDGE400_ADDR, modbus_set_rpu_addr, modbus_get_rpu_addr, 0,
+	  0, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_RPU_FAN_ON_OFF_ADDR, modbus_set_fsc_enable_flag,
+	  modbus_get_fsc_enable_flag, 0, 0, 0, 1 },
 	// Control
 	{ MODBUS_AUTO_TUNE_COOLANT_FLOW_RATE_TARGET_SET_ADDR, modbus_to_do, NULL, 0, 0, 0, 1 },
 	{ MODBUS_AUTO_TUNE_COOLANT_OUTLET_TEMPERATURE_TARGET_SET_ADDR, modbus_to_do, NULL, 0, 0, 0,
@@ -945,8 +1005,8 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_FB_14_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_14_FRU_ID, 0,
 	  0, 256 },
 	// sensor poll
-	{ MODBUS_SET_SENSOR_POLL_EN_ADDR, modbus_sensor_poll_en, NULL, 0, 0, 0, 1 },
-	{ MODBUS_GET_SENSOR_POLL_EN_ADDR, NULL, modbus_sensor_poll_en, 1, 0, 0, 1 },
+	{ MODBUS_GET_SET_SENSOR_POLL_ADDR, modbus_sensor_poll_set, modbus_sensor_poll_get, 0, 0, 0,
+	  1 },
 	// eeprom related
 	{ MODBUS_GET_SET_HMI_VER_ADDR, modbus_write_hmi_version, modbus_read_hmi_version, 0, 0, 0,
 	  8 },
@@ -1100,7 +1160,7 @@ static struct modbus_user_callbacks mbs_cbs = {
 	.holding_reg_multi_wr = holding_reg_multi_wr,
 };
 
-const static struct modbus_iface_param server_param = {
+static struct modbus_iface_param server_param = {
 	.mode = MODBUS_MODE_RTU,
 	.server = {
 		.user_cb = &mbs_cbs,
@@ -1154,6 +1214,7 @@ int init_custom_modbus_server(void)
 				modbus_server_config[i].iface_name);
 			return -ENODEV;
 		}
+
 		int err = modbus_init_server(server_iface, server_param);
 
 		if (err < 0) {
@@ -1166,7 +1227,40 @@ int init_custom_modbus_server(void)
 			if (ret)
 				return ret;
 		}
+
+		modbus_server_config[i].addr = server_param.server.unit_id;
 	}
+
+	return ret;
+}
+
+int change_modbus_slave_addr(uint8_t idx, uint8_t addr)
+{
+	server_param.server.unit_id = addr;
+
+	int server_iface = modbus_iface_get_by_name(modbus_server_config[idx].iface_name);
+	modbus_disable(server_iface);
+
+	if (server_iface < 0) {
+		LOG_ERR("Failed to get iface index for %s", modbus_server_config[idx].iface_name);
+		return -ENODEV;
+	}
+
+	int err = modbus_init_server(server_iface, server_param);
+	int ret = 0;
+
+	if (err < 0) {
+		LOG_ERR("modbus_init_server fail %d\n", idx);
+		return err;
+	}
+
+	if (modbus_server_config[idx].is_custom_fc64) {
+		ret = modbus_register_user_fc(server_iface, &modbus_cfg_custom_fc64);
+		if (ret)
+			return ret;
+	}
+
+	modbus_server_config[idx].addr = addr;
 
 	return ret;
 }

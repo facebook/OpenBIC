@@ -37,8 +37,17 @@ enum {
 #define BIOS_FW_VERSION_SECOND_BLOCK_OFFSET 17
 #define BIOS_FW_VERSION_BLOCK_MAX_SIZE 17
 
+#define VR_RM_CNT_MAX_SIZE 2
+#define VR_MPS_CPUDVDD_RM_CNT_START 0x0B00
+#define VR_MPS_CPUVDD_RM_CNT_START (VR_MPS_CPUDVDD_RM_CNT_START + VR_RM_CNT_MAX_SIZE)
+#define VR_MPS_SOCVDD_RM_CNT_START (VR_MPS_CPUDVDD_RM_CNT_START + (VR_RM_CNT_MAX_SIZE * 2))
+#define VR_MPS_FBVDDP2_RM_CNT_START (VR_MPS_CPUDVDD_RM_CNT_START + (VR_RM_CNT_MAX_SIZE * 3))
+#define VR_MPS_1V2_RM_CNT_START (VR_MPS_CPUDVDD_RM_CNT_START + (VR_RM_CNT_MAX_SIZE * 4))
+#define VR_MPS_MAX_RM_CNT 1000 //Approximate number from MPS vendor
+
 bool get_bios_version_area_config(EEPROM_CFG *config);
 int set_bios_version(EEPROM_ENTRY *entry, uint8_t block_index);
 int get_bios_version(EEPROM_ENTRY *entry, uint8_t block_index);
+bool access_vr_remain_cnt(EEPROM_ENTRY *entry, uint8_t comp_id, bool update_flag);
 
 #endif

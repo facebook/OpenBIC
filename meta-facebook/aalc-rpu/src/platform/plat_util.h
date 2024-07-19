@@ -16,6 +16,7 @@
 bool modbus_i2c_master_write_read(const uint16_t *modbus_data, uint8_t data_len);
 void modbus_i2c_master_write_read_response(uint16_t *modbus_data);
 void regs_reverse(uint16_t reg_len, uint16_t *data);
-uint8_t modbus_sensor_poll_en(modbus_command_mapping *cmd);
+void plat_enable_sensor_poll();
+void plat_disable_sensor_poll();
 void set_rpu_ready();
 float pow_of_10(int8_t exp);

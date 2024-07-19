@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,21 +14,12 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_DEF_H
-#define PLAT_DEF_H
+#ifndef PLAT_FSC_H
+#define PLAT_FSC_H
+#include "stdio.h"
+#include "stdint.h"
 
-#define BMC_USB_PORT "CDC_ACM_0"
-#define ADC_CALIBRATION 1
-#define ENABLE_NCSI
-
-#define DISABLE_MAX11617
-#define DISABLE_NCT7363
-#define DISABLE_ADS112C
-#define DISABLE_HDC1080
-#define DISABLE_INA238
-#define DISABLE_NCT214
-#define DISABLE_AST_TACH
-#define DISABLE_XDP710
-#define DISABLE_ADC128D818
+uint8_t get_fsc_enable_flag(void);
+void set_fsc_enable_flag(uint8_t flag);
 
 #endif

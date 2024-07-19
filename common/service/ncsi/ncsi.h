@@ -28,6 +28,8 @@ extern "C" {
 #define NCSI_PAYLOAD_LENGTH_MAX 0xFFF
 #define NCSI_PAYLOAD_LENGTH_LOW_MASK 0xFF
 #define NCSI_PAYLOAD_LENGTH_HIGH_MASK 0xF00
+#define NCSI_CHECHSUM_LENGTH 4
+
 typedef enum {
 	NCSI_OEM = 0x50,
 } NCSI_CMD;
@@ -64,6 +66,12 @@ enum ncsi_command_codes {
 enum ncsi_command_rq {
 	NCSI_COMMAND_REQUEST = 0x00,
 	NCSI_COMMAND_RESPONSE = 0x01,
+};
+
+enum infiniband_link_status_link_type {
+	NCSI_IB_LINK_TYPE_ETHERNET = 0x00,
+	NCSI_IB_LINK_TYPE_INFINIBAND = 0x01,
+	NCSI_IB_LINK_TYPE_UNKNOWN = 0xFF,
 };
 
 typedef struct __attribute__((packed)) {
@@ -119,6 +127,35 @@ typedef struct _ncsi {
 	uint8_t user_idx; /* the alias index for this ncsi instance from application
                        layer */
 } ncsi_t;
+
+struct clear_initial_state_req {
+	uint32_t checksum;
+} __attribute__((packed));
+
+struct clear_initial_state_resp {
+	uint16_t response_code;
+	uint16_t reason_code;
+	uint32_t checksum;
+} __attribute__((packed));
+
+struct get_infiniband_link_status_req {
+	uint32_t checksum;
+} __attribute__((packed));
+
+struct get_infiniband_link_status_resp {
+	uint16_t response_code;
+	uint16_t reason_code;
+	uint8_t ib_link_active_width;
+	uint8_t ib_link_supported_width;
+	uint8_t link_type;
+	uint8_t log_state : 4;
+	uint8_t phys_state : 4;
+	uint8_t reserved1;
+	uint8_t ib_link_active_speed;
+	uint8_t reserved2;
+	uint8_t ib_link_supported_speed;
+	uint32_t checksum;
+} __attribute__((packed));
 
 /* send the ncsi command message through mctp */
 uint8_t mctp_ncsi_send_msg(void *mctp_p, ncsi_msg *msg);
