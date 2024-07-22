@@ -34,6 +34,7 @@ typedef struct _modbus_err_log_mapping {
 	uint16_t outlet_press;
 	uint16_t flow_rate;
 	uint16_t volt;
+	uint8_t reserved[12];
 } modbus_err_log_mapping;
 
 enum LOG_ERROR_CODE {

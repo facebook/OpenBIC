@@ -49,9 +49,10 @@ typedef struct _ads112c_post_arg {
 enum PLATFORM_ADS112C_SENSOR_TYPE {
 	PLATFORM_ADS112C_FLOW = 0x00,
 	PLATFORM_ADS112C_PRESS = 0x01,
-	PLATFORM_ADS112C_TEMP = 0x02,
-	PLATFORM_ADS112C_OTHER = 0x03,
-	PLATFORM_ADS112C_LEAKAGE = 0x04,
+	PLATFORM_ADS112C_TEMP_RPU = 0x02,
+	PLATFORM_ADS112C_TEMP_RACK = 0x03,
+	PLATFORM_ADS112C_OTHER = 0x04,
+	PLATFORM_ADS112C_LEAKAGE = 0x05,
 };
 
 /**************************************************************************************************

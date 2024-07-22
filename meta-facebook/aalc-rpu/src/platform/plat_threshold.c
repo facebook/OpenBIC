@@ -72,8 +72,9 @@ typedef struct {
 	uint8_t type;
 	float lcr;
 	float ucr;
-	void (*fn)(uint8_t, uint8_t); // para: arg, status
-	uint8_t arg;
+	void (*fn)(uint8_t, uint8_t, uint8_t); // para: arg, status
+	uint8_t arg0;
+	uint8_t arg1;
 
 	// priv data
 	uint8_t last_status; // record the last status
@@ -151,7 +152,7 @@ void fan_board_tach_status_handler(uint8_t sensor_num, uint8_t status)
 		LOG_ERR("Unexpected fan_board_tach_status");
 	}
 
-	LOG_WRN("LCR pwrgd_write_in_val: %d", pwrgd_read_back_val);
+	LOG_DBG("LCR pwrgd_write_in_val: %d", pwrgd_read_back_val);
 	if (!nct7363_write(cfg, NCT7363_GPIO1x_OUTPUT_PORT_REG_OFFSET, pwrgd_read_back_val))
 		LOG_ERR("Write fan_board_pwrgd gpio fail");
 }
@@ -181,20 +182,68 @@ void pump_board_tach_status_handler(uint8_t sensor_num, uint8_t status)
 	else
 		WRITE_BIT(read_back_val, 0, 0);
 
-	if (status == THRESHOLD_STATUS_LCR)
+	LOG_DBG("pump led status : %d", status);
+	if (status == THRESHOLD_STATUS_LCR) {
+		LOG_DBG("pump THRESHOLD_STATUS_LCR");
 		WRITE_BIT(read_back_val, 1, 1);
-	else if (status == THRESHOLD_STATUS_NORMAL)
+	} else if (status == THRESHOLD_STATUS_NORMAL) {
+		LOG_DBG("pump THRESHOLD_STATUS_NORMAL");
 		WRITE_BIT(read_back_val, 1, 0);
-	else if (status == DEVICE_NOT_PRESENT)
+	} else if (status == DEVICE_NOT_PRESENT) {
+		LOG_DBG("pump DEVICE_NOT_PRESENT");
 		WRITE_BIT(read_back_val, 1, 1);
-	else
-		LOG_ERR("Unexpected pump_board_tach_status");
+	} else
+		LOG_DBG("Unexpected pump_board_tach_status");
 
 	if (!nct7363_write(cfg, NCT7363_GPIO1x_OUTPUT_PORT_REG_OFFSET, read_back_val))
 		LOG_ERR("Write pump_board_pwrgd gpio fail");
 }
 
-void pump_failure_do(uint8_t arg0, uint8_t status)
+uint16_t sensor_status_cache[MAX_NUM_OF_AALC_STATUS] = { 0 };
+uint16_t get_sensor_status(uint8_t sensor_status_num, uint8_t bit)
+{
+	if (sensor_status_num >= MAX_NUM_OF_AALC_STATUS)
+		return 0;
+
+	return (bit < 16) ? (sensor_status_cache[sensor_status_num] >> bit) & 1 :
+			    sensor_status_cache[sensor_status_num];
+}
+
+bool set_sensor_status(uint8_t sensor_status_num, uint8_t bit, uint16_t val)
+{
+	if (sensor_status_num >= MAX_NUM_OF_AALC_STATUS)
+		return false;
+
+	if (bit < 16)
+		WRITE_BIT(sensor_status_cache[sensor_status_num], bit, val);
+	else
+		sensor_status_cache[sensor_status_num] = val;
+
+	return true;
+}
+
+void threshold_set_sensor_status(uint8_t arg0, uint8_t arg1, uint8_t status)
+{
+	if (status == THRESHOLD_STATUS_LCR || status == THRESHOLD_STATUS_UCR)
+		set_sensor_status(arg0, arg1, 1);
+	else if (status == THRESHOLD_STATUS_NORMAL)
+		set_sensor_status(arg0, arg1, 0);
+	else
+		LOG_DBG("Unexpected threshold warning");
+}
+
+void threshold_set_pump_sensor_status(uint8_t pump_status, uint8_t status)
+{
+	if (status == THRESHOLD_STATUS_LCR || status == THRESHOLD_STATUS_UCR)
+		// uint16 status: (0:Disable, 1:Redaundant, 2:Enable, 3:Maintain,  4:Abnormal)
+		set_sensor_status(pump_status, TWO_BYTES_SENSOR_STATUS, 4);
+	else if (status == THRESHOLD_STATUS_NORMAL)
+		set_sensor_status(pump_status, TWO_BYTES_SENSOR_STATUS, 2);
+	else
+		LOG_DBG("Unexpected threshold warning");
+}
+
+void pump_failure_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 {
 	pump_board_tach_status_handler(arg0, status);
 	if (status == THRESHOLD_STATUS_LCR) {
@@ -203,30 +252,38 @@ void pump_failure_do(uint8_t arg0, uint8_t status)
 		//auto control for Hex Fan
 		error_log_event(arg0, IS_ABNORMAL_VAL);
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
+		set_sensor_status(LED_FAULT, LED_FAULT_PUMP, 1);
 		//wait 30 secs to shut down
+		threshold_set_pump_sensor_status(arg1, status);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
 		error_log_event(arg0, IS_NORMAL_VAL);
-		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
+		if (!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+			led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
+		threshold_set_pump_sensor_status(arg1, status);
 	} else
-		LOG_WRN("Unexpected threshold warning");
+		LOG_DBG("Unexpected threshold warning");
 }
 
-void rpu_internal_fan_failure_do(uint8_t arg0, uint8_t status)
+void rpu_internal_fan_failure_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 {
 	pump_board_tach_status_handler(arg0, status);
 	if (status == THRESHOLD_STATUS_LCR) {
 		//assert internal fan fault status bit
 		deassert_all_rpu_ready_pin();
-		//set_all_pump_power(false);
+		set_pwm_group(PWM_GROUP_E_PUMP, 0); //turn off pump
 		//auto control for Hex Fan
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
+		set_sensor_status(LED_FAULT, LED_FAULT_RPU_FAN, 1);
+		set_sensor_status(arg0, arg1, 1);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
-		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
+		if (!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+			led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
+		set_sensor_status(arg0, arg1, 0);
 	} else
-		LOG_WRN("Unexpected threshold warning");
+		LOG_DBG("Unexpected threshold warning");
 }
 
-void hex_fan_failure_do(uint8_t arg0, uint8_t status)
+void hex_fan_failure_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 {
 	fan_board_tach_status_handler(arg0, status);
 	if (status == THRESHOLD_STATUS_LCR) {
@@ -234,135 +291,177 @@ void hex_fan_failure_do(uint8_t arg0, uint8_t status)
 		//set_pwm_grup(PWM_GRUP_E_PUMP, 80); //increase pump speed
 		//set_pwm_grup(PWM_GRUP_E_HEX_FAN, 100);
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
+		set_sensor_status(LED_FAULT, LED_FAULT_HEX_FAN, 1);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
-		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
+		if (!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+			led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 	} else
-		LOG_WRN("Unexpected threshold warning");
+		LOG_DBG("Unexpected threshold warning");
 }
 
-void aalc_leak_detect_do(uint8_t arg0, uint8_t status)
+void aalc_leak_detect_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 {
 	if (status == THRESHOLD_STATUS_LCR) {
-		fault_leak_action();
-		error_log_event(arg0, IS_ABNORMAL_VAL);
-		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
-		if (get_led_status(LED_IDX_E_LEAK) != LED_START_BLINK)
-			led_ctrl(LED_IDX_E_LEAK, LED_START_BLINK);
+		aalc_leak_behavior(arg0, true);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
-		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
-		led_ctrl(LED_IDX_E_LEAK, LED_STOP_BLINK);
-		led_ctrl(LED_IDX_E_LEAK, LED_TURN_OFF);
+		aalc_leak_behavior(arg0, false);
 	} else
-		LOG_WRN("Unexpected threshold warning");
+		LOG_DBG("Unexpected threshold warning");
 }
 
-void high_press_do(uint8_t arg0, uint8_t status)
+void high_press_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 {
 	if (status == THRESHOLD_STATUS_UCR) {
-		//set_all_pump_power(false);
+		//set_pwm_group(PWM_GROUP_E_PUMP, 0);//turn off pump
 		//auto control for hex fan
 		deassert_all_rpu_ready_pin();
 		//relief valve open
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
-	} else if (status == THRESHOLD_STATUS_NORMAL)
-		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
-	else
-		LOG_WRN("Unexpected threshold warning");
+		set_sensor_status(LED_FAULT, LED_FAULT_HIGH_PRESS, 1);
+		set_sensor_status(arg0, arg1, 1);
+	} else if (status == THRESHOLD_STATUS_NORMAL) {
+		if (!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+			led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
+		set_sensor_status(arg0, arg1, 0);
+	} else {
+		LOG_DBG("Unexpected threshold warning");
+	}
 }
 
-void low_level_do(uint8_t arg0, uint8_t status)
+void low_level_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 {
-	if (status == THRESHOLD_STATUS_LCR) {
+	if (status == THRESHOLD_ENABLE_LCR) {
 		//assert fluid level sensor status bit
-		//set_all_pump_power(false);
+		set_pwm_group(PWM_GROUP_E_PUMP, 0); //turn off pump
 		deassert_all_rpu_ready_pin();
 		error_log_event(arg0, IS_ABNORMAL_VAL);
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
+		set_sensor_status(LED_FAULT, LED_FAULT_LOW_LEVEL, 1);
 		led_ctrl(LED_IDX_E_COOLANT, LED_STOP_BLINK);
 		led_ctrl(LED_IDX_E_COOLANT, LED_TURN_OFF);
+		set_sensor_status(AALC_SENSOR_ALARM, BLADDER_LEVEL_SENSOR_STATUS, 1);
+		set_sensor_status(RPU_RESERVOIR_STATUS, LEVEL2_STATUS, 0);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
 		if (get_led_status(LED_IDX_E_COOLANT) != LED_START_BLINK)
 			led_ctrl(LED_IDX_E_COOLANT, LED_START_BLINK);
+		set_sensor_status(AALC_SENSOR_ALARM, BLADDER_LEVEL_SENSOR_STATUS, 0);
+		set_sensor_status(RPU_RESERVOIR_STATUS, LEVEL2_STATUS, 1);
 	} else
-		LOG_WRN("Unexpected threshold warning");
+		LOG_DBG("Unexpected threshold warning");
 }
 
-void high_level_do(uint8_t arg0, uint8_t status)
+void high_level_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 {
-	if (status == THRESHOLD_STATUS_LCR) {
+	if (status == THRESHOLD_ENABLE_LCR) {
 		if (get_led_status(LED_IDX_E_COOLANT) != LED_START_BLINK)
 			led_ctrl(LED_IDX_E_COOLANT, LED_START_BLINK);
+		set_sensor_status(RPU_RESERVOIR_STATUS, LEVEL1_STATUS, 0);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
 		led_ctrl(LED_IDX_E_COOLANT, LED_STOP_BLINK);
 		led_ctrl(LED_IDX_E_COOLANT, LED_TURN_ON);
+		set_sensor_status(RPU_RESERVOIR_STATUS, LEVEL1_STATUS, 1);
 	} else
-		LOG_WRN("Unexpected threshold warning");
+		LOG_DBG("Unexpected threshold warning");
 }
 
-void high_air_temp_do(uint8_t arg0, uint8_t status)
+void high_air_temp_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 {
 	if (status == THRESHOLD_STATUS_UCR) {
 		//ctl_all_pwm_dev(100);
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
-	} else if (status == THRESHOLD_STATUS_NORMAL)
-		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
-	else
-		LOG_WRN("Unexpected threshold warning");
+		set_sensor_status(LED_FAULT, LED_FAULT_HIGH_AIR_TEMP, 1);
+		set_sensor_status(arg0, arg1, 1);
+	} else if (status == THRESHOLD_STATUS_NORMAL) {
+		if (!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+			led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
+		set_sensor_status(arg0, arg1, 0);
+	} else {
+		LOG_DBG("Unexpected threshold warning");
+	}
 }
 
-void high_coolant_temp_do(uint8_t arg0, uint8_t status)
+void high_coolant_temp_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 {
 	if (status == THRESHOLD_STATUS_UCR) {
 		//ctl_all_pwm_dev(100);
 		deassert_all_rpu_ready_pin();
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
-	} else if (status == THRESHOLD_STATUS_NORMAL)
-		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
-	else
-		LOG_WRN("Unexpected threshold warning");
+		set_sensor_status(LED_FAULT, LED_FAULT_HIGH_COOLANT_TEMP, 1);
+		set_sensor_status(arg0, arg1, 1);
+	} else if (status == THRESHOLD_STATUS_NORMAL) {
+		if (!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+			led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
+		set_sensor_status(arg0, arg1, 0);
+	} else {
+		LOG_DBG("Unexpected threshold warning");
+	}
 }
 
-void flow_trigger_do(uint8_t arg0, uint8_t status)
+void flow_trigger_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 {
-	if (status == THRESHOLD_STATUS_UCR) {
+	if (status == THRESHOLD_STATUS_LCR) {
 		deassert_all_rpu_ready_pin();
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
-	} else if (status == THRESHOLD_STATUS_NORMAL)
-		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
-	else
-		LOG_WRN("Unexpected threshold warning");
+		set_sensor_status(LED_FAULT, LED_FAULT_FLOW_TRIGGER, 1);
+		set_sensor_status(arg0, arg1, 1);
+	} else if (status == THRESHOLD_STATUS_NORMAL) {
+		if (!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+			led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
+		set_sensor_status(arg0, arg1, 0);
+	} else {
+		LOG_DBG("Unexpected threshold warning");
+	}
 }
 
 sensor_threshold threshold_tbl[] = {
 	{ SENSOR_NUM_BB_TMP75_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
 	{ SENSOR_NUM_BPB_RPU_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, NULL, 0 },
 	{ SENSOR_NUM_BPB_RPU_COOLANT_INLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 65,
-	  high_coolant_temp_do, 0 },
+	  high_coolant_temp_do, AALC_SENSOR_ALARM, RPU_COOLANT_INLET_THERMOMETER_STATUS },
 	{ SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 65,
-	  high_coolant_temp_do, 0 },
-	{ SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 65, 0, NULL, 0 },
-	{ SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
+	  high_coolant_temp_do, AALC_SENSOR_ALARM, RPU_COOLANT_OUTLET_THERMOMETER_STATUS },
+	{ SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 65,
+	  threshold_set_sensor_status, AALC_SENSOR_ALARM, HX_WATER_INLET_THERMOMETER_STATUS },
+	{ SENSOR_NUM_RPU_PWR_W, THRESHOLD_ENABLE_UCR, 0, 40, NULL, 0, 0 },
 	//	{ SENSOR_NUM_PDB_HDC1080DMBR_TEMP_C, None, None, None, NULL, 0 },
-	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_1_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 60, high_air_temp_do, 0 },
-	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_2_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 60, high_air_temp_do, 0 },
-	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_3_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 60, high_air_temp_do, 0 },
-	{ SENSOR_NUM_SB_HEX_AIR_OUTLET_4_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 60, high_air_temp_do, 0 },
+	{ SENSOR_NUM_SB_HEX_AIR_INLET_1_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 40, high_air_temp_do,
+	  AALC_SENSOR_ALARM, HEX_AIR_INLET1_THERMOMETER_STATUS },
+	{ SENSOR_NUM_SB_HEX_AIR_INLET_2_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 40, high_air_temp_do,
+	  AALC_SENSOR_ALARM, HEX_AIR_INLET2_THERMOMETER_STATUS },
+	{ SENSOR_NUM_SB_HEX_AIR_INLET_3_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 40, high_air_temp_do,
+	  HEX_AIR_THERMOMETER_STATUS, HEX_AIR_INLET3_THERMOMETER_STATUS },
+	{ SENSOR_NUM_SB_HEX_AIR_INLET_4_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 40, high_air_temp_do,
+	  HEX_AIR_THERMOMETER_STATUS, HEX_AIR_INLET4_THERMOMETER_STATUS },
 	//	{ SENSOR_NUM_BB_HSC_P48V_TEMP_C, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_BPB_HSC_P48V_TEMP_C, None, None, None, NULL, 0 },
-	{ SENSOR_NUM_FB_1_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_2_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_3_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_4_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_5_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_6_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_7_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_8_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_9_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_10_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_11_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_12_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_13_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
-	{ SENSOR_NUM_FB_14_HEX_INLET_TEMP_C, THRESHOLD_ENABLE_LCR, 40, 0, NULL, 0 },
+	{ SENSOR_NUM_FB_1_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do,
+	  AALC_SENSOR_ALARM, HEX_AIR_OUTLET1_THERMOMETER_STATUS },
+	{ SENSOR_NUM_FB_2_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do,
+	  AALC_SENSOR_ALARM, HEX_AIR_OUTLET2_THERMOMETER_STATUS },
+	{ SENSOR_NUM_FB_3_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do,
+	  HEX_AIR_THERMOMETER_STATUS, HEX_AIR_OUTLET3_THERMOMETER_STATUS },
+	{ SENSOR_NUM_FB_4_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do,
+	  HEX_AIR_THERMOMETER_STATUS, HEX_AIR_OUTLET4_THERMOMETER_STATUS },
+	{ SENSOR_NUM_FB_5_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do,
+	  HEX_AIR_THERMOMETER_STATUS, HEX_AIR_OUTLET5_THERMOMETER_STATUS },
+	{ SENSOR_NUM_FB_6_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do,
+	  HEX_AIR_THERMOMETER_STATUS, HEX_AIR_OUTLET6_THERMOMETER_STATUS },
+	{ SENSOR_NUM_FB_7_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do,
+	  HEX_AIR_THERMOMETER_STATUS, HEX_AIR_OUTLET7_THERMOMETER_STATUS },
+	{ SENSOR_NUM_FB_8_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do,
+	  HEX_AIR_THERMOMETER_STATUS, HEX_AIR_OUTLET8_THERMOMETER_STATUS },
+	{ SENSOR_NUM_FB_9_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do,
+	  HEX_AIR_THERMOMETER_STATUS, HEX_AIR_OUTLET9_THERMOMETER_STATUS },
+	{ SENSOR_NUM_FB_10_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do,
+	  HEX_AIR_THERMOMETER_STATUS, HEX_AIR_OUTLET10_THERMOMETER_STATUS },
+	{ SENSOR_NUM_FB_11_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do,
+	  HEX_AIR_THERMOMETER_STATUS, HEX_AIR_OUTLET11_THERMOMETER_STATUS },
+	{ SENSOR_NUM_FB_12_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do,
+	  HEX_AIR_THERMOMETER_STATUS, HEX_AIR_OUTLET12_THERMOMETER_STATUS },
+	{ SENSOR_NUM_FB_13_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do,
+	  HEX_AIR_THERMOMETER_STATUS, HEX_AIR_OUTLET13_THERMOMETER_STATUS },
+	{ SENSOR_NUM_FB_14_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_LCR, 60, 0, high_air_temp_do,
+	  HEX_AIR_THERMOMETER_STATUS, HEX_AIR_OUTLET14_THERMOMETER_STATUS },
 	//	{ SENSOR_NUM_PB_1_HDC1080DMBR_TEMP_C, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_PB_2_HDC1080DMBR_TEMP_C, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_PB_3_HDC1080DMBR_TEMP_C, None, None, None, NULL, 0 },
@@ -402,10 +501,6 @@ sensor_threshold threshold_tbl[] = {
 	//	{ SENSOR_NUM_PB_3_HSC_P48V_VIN_VOLT_V, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_BB_HSC_P48V_VIN_VOLT_V, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_BPB_HSC_P48V_VIN_VOLT_V, None, None, None, NULL, 0 },
-	{ SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V, THRESHOLD_ENABLE_LCR, 3.1, 0,
-	  aalc_leak_detect_do, SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V },
-	{ SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_VOLT_V, THRESHOLD_ENABLE_LCR, 3.1, 0,
-	  aalc_leak_detect_do, SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_VOLT_V },
 	//	{ SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_1_VOLT_V, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_2_VOLT_V, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_3_VOLT_V, None, None, None, NULL, 0 },
@@ -495,18 +590,56 @@ sensor_threshold threshold_tbl[] = {
 	  rpu_internal_fan_failure_do, SENSOR_NUM_PB_3_FAN_1_TACH_RPM },
 	{ SENSOR_NUM_PB_3_FAN_2_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0,
 	  rpu_internal_fan_failure_do, SENSOR_NUM_PB_3_FAN_2_TACH_RPM },
+	{ SENSOR_NUM_FB_1_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
+	{ SENSOR_NUM_FB_2_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
+	{ SENSOR_NUM_FB_3_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
+	{ SENSOR_NUM_FB_4_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
+	{ SENSOR_NUM_FB_5_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
+	{ SENSOR_NUM_FB_6_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
+	{ SENSOR_NUM_FB_7_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
+	{ SENSOR_NUM_FB_8_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
+	{ SENSOR_NUM_FB_9_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
+	{ SENSOR_NUM_FB_10_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
+	{ SENSOR_NUM_FB_11_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
+	{ SENSOR_NUM_FB_12_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
+	{ SENSOR_NUM_FB_13_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
+	{ SENSOR_NUM_FB_14_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
+	{ SENSOR_NUM_PB_1_PUMP_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, pump_failure_do,
+	  SENSOR_NUM_PB_1_PUMP_TACH_RPM, RPU_PUMP1_STATUS },
+	{ SENSOR_NUM_PB_2_PUMP_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, pump_failure_do,
+	  SENSOR_NUM_PB_2_PUMP_TACH_RPM, RPU_PUMP2_STATUS },
+	{ SENSOR_NUM_PB_3_PUMP_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, pump_failure_do,
+	  SENSOR_NUM_PB_3_PUMP_TACH_RPM, RPU_PUMP3_STATUS },
+	{ SENSOR_NUM_PB_1_FAN_1_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, rpu_internal_fan_failure_do,
+	  PUMP_FAN_STATUS, 0 },
+	{ SENSOR_NUM_PB_1_FAN_2_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, rpu_internal_fan_failure_do,
+	  PUMP_FAN_STATUS, 1 },
+	{ SENSOR_NUM_PB_2_FAN_1_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, rpu_internal_fan_failure_do,
+	  PUMP_FAN_STATUS, 2 },
+	{ SENSOR_NUM_PB_2_FAN_2_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, rpu_internal_fan_failure_do,
+	  PUMP_FAN_STATUS, 3 },
+	{ SENSOR_NUM_PB_3_FAN_1_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, rpu_internal_fan_failure_do,
+	  PUMP_FAN_STATUS, 4 },
+	{ SENSOR_NUM_PB_3_FAN_2_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, rpu_internal_fan_failure_do,
+	  PUMP_FAN_STATUS, 5 },
 	{ SENSOR_NUM_MB_FAN1_TACH_RPM, THRESHOLD_ENABLE_UCR, 0, 500, NULL, 0 },
 	{ SENSOR_NUM_MB_FAN2_TACH_RPM, THRESHOLD_ENABLE_UCR, 0, 500, NULL, 0 },
-	//	{ SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA, None, None, None, NULL, 0 },
-	{ SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA, THRESHOLD_ENABLE_UCR, 0, 200, high_press_do, 0 },
+	{ SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA, THRESHOLD_ENABLE_LCR, -20, 0, high_press_do,
+	  AALC_SENSOR_ALARM, RPU_COOLANT_INLET_GAUGE_STATUS },
+	{ SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA, THRESHOLD_ENABLE_UCR, 0, 200, high_press_do,
+	  AALC_SENSOR_ALARM, RPU_COOLANT_OUTLET_GAUGE_STATUS },
 	{ SENSOR_NUM_BPB_RACK_PRESSURE_3_P_KPA, THRESHOLD_ENABLE_UCR, 0, 200, high_press_do, 0 },
 	{ SENSOR_NUM_BPB_RACK_PRESSURE_4_P_KPA, THRESHOLD_ENABLE_UCR, 0, 200, high_press_do, 0 },
 	{ SENSOR_NUM_SB_HEX_PRESSURE_1_P_KPA, THRESHOLD_ENABLE_UCR, 0, 200, high_press_do, 0 },
 	{ SENSOR_NUM_SB_HEX_PRESSURE_2_P_KPA, THRESHOLD_ENABLE_UCR, 0, 200, high_press_do, 0 },
-	{ SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, THRESHOLD_ENABLE_UCR, 1, 0, flow_trigger_do,
+	{ SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, THRESHOLD_ENABLE_LCR, 10, 0, flow_trigger_do,
 	  0 },
 	{ SENSOR_NUM_BPB_RACK_LEVEL_1, THRESHOLD_ENABLE_LCR, 1, 0, high_level_do, 0 },
 	{ SENSOR_NUM_BPB_RACK_LEVEL_2, THRESHOLD_ENABLE_LCR, 1, 0, low_level_do,
+	  SENSOR_NUM_BPB_RACK_LEVEL_2 },
+	{ SENSOR_NUM_BPB_RACK_LEVEL_1, THRESHOLD_ENABLE_LCR, 0.5, 0, high_level_do,
+	  SENSOR_NUM_BPB_RACK_LEVEL_1 },
+	{ SENSOR_NUM_BPB_RACK_LEVEL_2, THRESHOLD_ENABLE_LCR, 0.5, 0, low_level_do,
 	  SENSOR_NUM_BPB_RACK_LEVEL_2 },
 	//	{ SENSOR_NUM_MB_HUM_PCT_RH, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_PDB_HUM_PCT_RH, None, None, None, NULL, 0 },
@@ -529,13 +662,6 @@ sensor_threshold threshold_tbl[] = {
 	//	{ SENSOR_NUM_FB_14_HUM_PCT_RH, None, None, None, NULL, 0 },
 };
 
-uint16_t sensor_status_cache[MAX_NUM_OF_AALC_STATUS] = { 0 };
-
-uint16_t read_sensor_status(uint8_t sensor_status_num)
-{
-	return sensor_status_cache[sensor_status_num];
-}
-
 void set_threshold_poll_enable_flag(bool flag)
 {
 	threshold_poll_enable_flag = flag;
@@ -556,10 +682,14 @@ static bool set_threshold_status(sensor_threshold *threshold_tbl, float val)
 
 	/* check device is exist */
 	// to determine if tach value is 0, set status to DEVICE_NOT_EXIST status
-	if (val == 0.0) {
-		threshold_tbl->last_status = DEVICE_NOT_PRESENT;
-		LOG_ERR("sensor 0x%x not exist", threshold_tbl->sensor_num);
-		return true;
+	for (int i = 0; i < ARRAY_SIZE(fan_pump_sensor_array); i++) {
+		if (threshold_tbl->sensor_num == fan_pump_sensor_array[i]) {
+			if (val == 0.0) {
+				threshold_tbl->last_status = DEVICE_NOT_PRESENT;
+				LOG_DBG("sensor 0x%x not exist", threshold_tbl->sensor_num);
+				return true;
+			}
+		}
 	}
 
 	switch (threshold_tbl->type) {
@@ -598,6 +728,7 @@ void threshold_poll_handler(void *arug0, void *arug1, void *arug2)
 	int threshold_poll_interval_ms = 1000; // interval 1s
 
 	k_msleep(15000); // wait 15s for sensor ready
+	ctl_all_pwm_dev(60);
 
 	while (1) {
 		if (!get_sensor_init_done_flag()) {
@@ -628,9 +759,8 @@ void threshold_poll_handler(void *arug0, void *arug1, void *arug2)
 			/* check whether the status has changed */
 			if (!set_threshold_status(&threshold_tbl[i], val))
 				continue;
-
 			if (threshold_tbl[i].fn)
-				threshold_tbl[i].fn(threshold_tbl[i].arg,
+				threshold_tbl[i].fn(threshold_tbl[i].arg0, threshold_tbl[i].arg1,
 						    threshold_tbl[i].last_status);
 		}
 
