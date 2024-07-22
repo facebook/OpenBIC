@@ -263,13 +263,13 @@ uint8_t modbus_leakage_status_read(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
-	int leakage_status_table[] = { IT_LEAK_ALERT0_R, IT_LEAK_ALERT1_R, IT_LEAK_ALERT2_R,
-				       IT_LEAK_ALERT3_R };
+	uint8_t leakage_status_table[] = { IT_LEAK_ALERT0_R, IT_LEAK_ALERT1_R, IT_LEAK_ALERT2_R,
+					   IT_LEAK_ALERT3_R };
 
 	uint16_t state = 0;
 
 	for (uint8_t i = 0; i < ARRAY_SIZE(leakage_status_table); i++) {
-		int leakage_val = gpio_get((uint8_t)leakage_status_table[i]);
+		int leakage_val = gpio_get(leakage_status_table[i]);
 
 		if (leakage_val == 0 || leakage_val == 1) {
 			WRITE_BIT(state, i, (bool)leakage_val);
@@ -279,6 +279,16 @@ uint8_t modbus_leakage_status_read(modbus_command_mapping *cmd)
 			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 		}
 	}
+
+	float val = 0.0;
+	uint8_t status =
+		get_sensor_reading_to_real_val(SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V, &val);
+	if (status == SENSOR_READ_4BYTE_ACUR_SUCCESS)
+		WRITE_BIT(state, 4, ((val < (-0.01)) || (val > 3.465)) ? 1 : 0);
+	val = 0.0;
+	status = get_sensor_reading_to_real_val(SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_VOLT_V, &val);
+	if (status == SENSOR_READ_4BYTE_ACUR_SUCCESS)
+		WRITE_BIT(state, 8, ((val < (-0.01)) || (val > 3.465)) ? 1 : 0);
 
 	cmd->data[0] = state;
 
@@ -386,8 +396,9 @@ uint8_t modbus_get_sensor_status(modbus_command_mapping *cmd)
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
 	uint8_t status_num = cmd->arg0;
-	cmd->data[0] = read_sensor_status(status_num);
-
+	uint8_t bit = cmd->arg1;
+	cmd->data[0] = get_sensor_status(status_num, bit);
+	
 	return MODBUS_EXC_NONE;
 }
 
@@ -512,27 +523,26 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_PB_2_PUMP_TACH_RPM, 1, 0, 1 },
 	{ MODBUS_PB_3_PUMP_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_PB_3_PUMP_TACH_RPM, 1, 0, 1 },
-	{ MODBUS_RPU_FAN1_STATUS_ADDR, NULL, modbus_get_sensor_status, RPU_FAN1_STATUS, 0, 0, 1 },
-	{ MODBUS_RPU_FAN2_STATUS_ADDR, NULL, modbus_get_sensor_status, RPU_FAN2_STATUS, 0, 0, 1 },
+	{ MODBUS_RPU_FAN_STATUS_ADDR, NULL, modbus_get_sensor_status, RPU_FAN_STATUS,
+	  TWO_BYTES_SENSOR_STATUS, 0, 1 },
 	{ MODBUS_MB_FAN1_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_MB_FAN1_TACH_RPM, 1, 0, 1 },
 	{ MODBUS_MB_FAN2_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_MB_FAN2_TACH_RPM, 1, 0, 1 },
 	{ MODBUS_AALC_COOLING_CAPACITY_W_ADDR, NULL, modbus_get_aalc_cooling_capacity, 0, 1, -1,
 	  1 },
-	{ MODBUS_RPU_PUMP1_STATUS_ADDR, NULL, modbus_get_sensor_status, RPU_PUMP1_STATUS, 0, 0, 1 },
-	{ MODBUS_RPU_PUMP2_STATUS_ADDR, NULL, modbus_get_sensor_status, RPU_PUMP2_STATUS, 0, 0, 1 },
-	{ MODBUS_RPU_PUMP3_STATUS_ADDR, NULL, modbus_get_sensor_status, RPU_PUMP3_STATUS, 0, 0, 1 },
-	{ MODBUS_RPU_RESERVOIR_STATUS_ADDR, NULL, modbus_get_sensor_status, RPU_RESERVOIR_STATUS, 0,
-	  0, 1 },
-	{ MODBUS_RPU_LED_RESERVOIR_STATUS_ADDR, NULL, modbus_get_sensor_status,
-	  RPU_LED_RESERVOIR_STATUS, 0, 0, 1 },
-	{ MODBUS_RPU_LED_LEAKAGE_STATUS_ADDR, NULL, modbus_get_sensor_status,
-	  RPU_LED_LEAKAGE_STATUS, 0, 0, 1 },
-	{ MODBUS_RPU_LED_FAULT_STATUS_ADDR, NULL, modbus_get_sensor_status, RPU_LED_FAULT_STATUS, 0,
-	  0, 1 },
-	{ MODBUS_RPU_LED_POWER_STATUS_ADDR, NULL, modbus_get_sensor_status, RPU_LED_POWER_STATUS, 0,
-	  0, 1 },
+	{ MODBUS_RPU_PUMP1_STATUS_ADDR, NULL, modbus_get_sensor_status, RPU_PUMP1_STATUS,
+	  TWO_BYTES_SENSOR_STATUS, 0, 1 },
+	{ MODBUS_RPU_PUMP2_STATUS_ADDR, NULL, modbus_get_sensor_status, RPU_PUMP2_STATUS,
+	  TWO_BYTES_SENSOR_STATUS, 0, 1 },
+	{ MODBUS_RPU_PUMP3_STATUS_ADDR, NULL, modbus_get_sensor_status, RPU_PUMP3_STATUS,
+	  TWO_BYTES_SENSOR_STATUS, 0, 1 },
+	{ MODBUS_RPU_RESERVOIR_STATUS_ADDR, NULL, modbus_get_sensor_status, RPU_RESERVOIR_STATUS,
+	  TWO_BYTES_SENSOR_STATUS, 0, 1 },
+	{ MODBUS_RPU_LED_RESERVOIR_STATUS_ADDR, NULL, modbus_get_sensor_status, 0, 0, 0, 1 },
+	{ MODBUS_RPU_LED_LEAKAGE_STATUS_ADDR, NULL, modbus_get_sensor_status, 0, 0, 0, 1 },
+	{ MODBUS_RPU_LED_FAULT_STATUS_ADDR, NULL, modbus_get_sensor_status, 0, 0, 0, 1 },
+	{ MODBUS_RPU_LED_POWER_STATUS_ADDR, NULL, modbus_get_sensor_status, 0, 0, 0, 1 },
 	{ MODBUS_RPU_PUMP_STATUS_ADDR, NULL, modbus_get_sensor_status, RPU_PUMP_STATUS, 0, 0, 1 },
 	{ MODBUS_RPU_INTERNAL_FAN_STATUS_ADDR, NULL, modbus_get_sensor_status,
 	  RPU_INTERNAL_FAN_STATUS, 0, 0, 1 },
@@ -875,8 +885,6 @@ modbus_command_mapping modbus_command_table[] = {
 	  SB_TTV_COOLANT_LEAKAGE, 0, 0, 1 },
 	{ MODBUS_AALC_SENSOR_ALARM_ADDR, NULL, modbus_get_sensor_status, AALC_SENSOR_ALARM, 0, 0,
 	  1 },
-	{ MODBUS_Y_FILTER_SENSOR_STATUS_ADDR, NULL, modbus_get_sensor_status,
-	  Y_FILTER_SENSOR_STATUS, 0, 0, 1 },
 	{ MODBUS_AALC_STATUS_ALARM_ADDR, NULL, modbus_get_sensor_status, AALC_STATUS_ALARM, 0, 0,
 	  1 },
 	{ MODBUS_LEAKAGE_STATUS_ADDR, NULL, modbus_leakage_status_read, 0, 0, 0, 1 },
