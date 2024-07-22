@@ -80,7 +80,6 @@ typedef struct {
 	uint8_t last_status; // record the last status
 } sensor_threshold;
 
-<<<<<<< HEAD
 uint8_t fan_pump_sensor_array[] = {
 	//fan board
 	SENSOR_NUM_FB_1_FAN_TACH_RPM,
@@ -203,8 +202,6 @@ void pump_board_tach_status_handler(uint8_t sensor_num, uint8_t status)
 		LOG_ERR("Write pump_board_pwrgd gpio fail");
 }
 
-void pump_failure_do(uint8_t arg0, uint8_t status)
-=======
 uint16_t sensor_status_cache[MAX_NUM_OF_AALC_STATUS] = { 0 };
 uint16_t get_sensor_status(uint8_t sensor_status_num, uint8_t bit)
 {
@@ -250,7 +247,6 @@ void threshold_set_pump_sensor_status(uint8_t pump_status, uint8_t status)
 }
 
 void pump_failure_do(uint8_t arg0, uint8_t arg1, uint8_t status)
->>>>>>> tmp1
 {
 	pump_board_tach_status_handler(arg0, status);
 	if (status == THRESHOLD_STATUS_LCR) {
@@ -335,15 +331,9 @@ void high_press_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 	}
 }
 
-<<<<<<< HEAD
-void low_level_do(uint8_t arg0, uint8_t status)
-{	
-	if (status == THRESHOLD_STATUS_LCR) {
-=======
 void low_level_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 {
 	if (status == THRESHOLD_ENABLE_LCR) {
->>>>>>> tmp1
 		//assert fluid level sensor status bit
 		set_pwm_group(PWM_GROUP_E_PUMP, 0); //turn off pump
 		deassert_all_rpu_ready_pin();
@@ -557,7 +547,6 @@ sensor_threshold threshold_tbl[] = {
 	//	{ SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W, None, None, None, NULL, 0 },
-<<<<<<< HEAD
 	{ SENSOR_NUM_FB_1_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do,
 	  SENSOR_NUM_FB_1_FAN_TACH_RPM },
 	{ SENSOR_NUM_FB_2_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do,
@@ -604,7 +593,6 @@ sensor_threshold threshold_tbl[] = {
 	  rpu_internal_fan_failure_do, SENSOR_NUM_PB_3_FAN_1_TACH_RPM },
 	{ SENSOR_NUM_PB_3_FAN_2_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0,
 	  rpu_internal_fan_failure_do, SENSOR_NUM_PB_3_FAN_2_TACH_RPM },
-=======
 	{ SENSOR_NUM_FB_1_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
 	{ SENSOR_NUM_FB_2_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
 	{ SENSOR_NUM_FB_3_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 1000, 0, hex_fan_failure_do, 0 },
@@ -637,7 +625,6 @@ sensor_threshold threshold_tbl[] = {
 	  PUMP_FAN_STATUS, 4 },
 	{ SENSOR_NUM_PB_3_FAN_2_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, rpu_internal_fan_failure_do,
 	  PUMP_FAN_STATUS, 5 },
->>>>>>> tmp1
 	{ SENSOR_NUM_MB_FAN1_TACH_RPM, THRESHOLD_ENABLE_UCR, 0, 500, NULL, 0 },
 	{ SENSOR_NUM_MB_FAN2_TACH_RPM, THRESHOLD_ENABLE_UCR, 0, 500, NULL, 0 },
 	{ SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA, THRESHOLD_ENABLE_LCR, -20, 0, high_press_do,
@@ -650,15 +637,12 @@ sensor_threshold threshold_tbl[] = {
 	{ SENSOR_NUM_SB_HEX_PRESSURE_2_P_KPA, THRESHOLD_ENABLE_UCR, 0, 200, high_press_do, 0 },
 	{ SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, THRESHOLD_ENABLE_LCR, 10, 0, flow_trigger_do,
 	  0 },
-<<<<<<< HEAD
 	{ SENSOR_NUM_BPB_RACK_LEVEL_1, THRESHOLD_ENABLE_LCR, 1, 0, high_level_do, 0 },
 	{ SENSOR_NUM_BPB_RACK_LEVEL_2, THRESHOLD_ENABLE_LCR, 1, 0, low_level_do, SENSOR_NUM_BPB_RACK_LEVEL_2 },
-=======
 	{ SENSOR_NUM_BPB_RACK_LEVEL_1, THRESHOLD_ENABLE_LCR, 0.5, 0, high_level_do,
 	  SENSOR_NUM_BPB_RACK_LEVEL_1 },
 	{ SENSOR_NUM_BPB_RACK_LEVEL_2, THRESHOLD_ENABLE_LCR, 0.5, 0, low_level_do,
 	  SENSOR_NUM_BPB_RACK_LEVEL_2 },
->>>>>>> tmp1
 	//	{ SENSOR_NUM_MB_HUM_PCT_RH, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_PDB_HUM_PCT_RH, None, None, None, NULL, 0 },
 	//	{ SENSOR_NUM_PB_1_HUM_PCT_RH, None, None, None, NULL, 0 },

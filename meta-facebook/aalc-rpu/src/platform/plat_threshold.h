@@ -120,10 +120,7 @@ enum LED_FAULT_E {
 void set_threshold_poll_enable_flag(bool flag);
 bool get_threshold_poll_enable_flag();
 void threshold_poll_init();
-<<<<<<< HEAD
 void fan_pump_pwrgd();
-uint16_t read_sensor_status(uint8_t sensor_status_num);
-=======
 uint16_t get_sensor_status(uint8_t sensor_status_num, uint8_t bit);
 bool set_sensor_status(uint8_t sensor_status_num, uint8_t bit, uint16_t val);
->>>>>>> tmp1
+uint16_t read_sensor_status(uint8_t sensor_status_num);
