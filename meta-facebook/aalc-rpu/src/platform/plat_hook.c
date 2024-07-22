@@ -1039,7 +1039,7 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 		//val = (1.1685 * val) - 4.5991;
 		val = ((1.1685 * val) - 4.5991) * 0.8793 + 2.42;
 		break;
-		
+
 	case PLATFORM_ADS112C_TEMP_RPU: //CDU_Inlet_Liq_T
 		val = (rawValue - 16140) * 0.015873;
 		//val = (1.1685 * val) - 4.5991;

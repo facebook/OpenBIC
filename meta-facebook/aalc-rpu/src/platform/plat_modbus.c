@@ -315,8 +315,8 @@ static uint16_t pump_setting;
 uint8_t modbus_pump_setting_get(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-    cmd->data[0] = pump_setting;
-    return MODBUS_EXC_NONE;
+	cmd->data[0] = pump_setting;
+	return MODBUS_EXC_NONE;
 }
 uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 {
@@ -405,28 +405,28 @@ static uint8_t manual_pwm_cache[PWM_GROUP_E_MAX];
 uint8_t modbus_get_manual_pwm(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
- 
+
 	uint8_t idx = cmd->arg0;
- 
+
 	cmd->data[0] = manual_pwm_cache[idx];
- 
+
 	return MODBUS_EXC_NONE;
 }
- 
+
 uint8_t modbus_set_manual_pwm(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
- 
+
 	if (get_fsc_enable_flag())
 		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
- 
+
 	uint8_t idx = cmd->arg0;
 	uint8_t duty = (uint8_t)cmd->data[0];
- 
+
 	manual_pwm_cache[idx] = duty;
- 
+
 	set_pwm_group(idx, duty);
- 
+
 	return MODBUS_EXC_NONE;
 }
 
@@ -437,7 +437,7 @@ uint8_t modbus_get_sensor_status(modbus_command_mapping *cmd)
 	uint8_t status_num = cmd->arg0;
 	uint8_t bit = cmd->arg1;
 	cmd->data[0] = get_sensor_status(status_num, bit);
-	
+
 	return MODBUS_EXC_NONE;
 }
 

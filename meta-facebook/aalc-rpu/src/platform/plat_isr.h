@@ -1,8 +1,9 @@
 
-enum { IT_LEAK_E_0,
-       IT_LEAK_E_1,
-       IT_LEAK_E_2,
-       IT_LEAK_E_3,
+enum {
+	IT_LEAK_E_0,
+	IT_LEAK_E_1,
+	IT_LEAK_E_2,
+	IT_LEAK_E_3,
 };
 
 void it_leak_action_0();

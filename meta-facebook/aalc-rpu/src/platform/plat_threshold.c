@@ -183,19 +183,16 @@ void pump_board_tach_status_handler(uint8_t sensor_num, uint8_t status)
 		WRITE_BIT(read_back_val, 0, 0);
 
 	LOG_DBG("pump led status : %d", status);
-	if (status == THRESHOLD_STATUS_LCR){
+	if (status == THRESHOLD_STATUS_LCR) {
 		LOG_DBG("pump THRESHOLD_STATUS_LCR");
 		WRITE_BIT(read_back_val, 1, 1);
-	}
-	else if (status == THRESHOLD_STATUS_NORMAL){
+	} else if (status == THRESHOLD_STATUS_NORMAL) {
 		LOG_DBG("pump THRESHOLD_STATUS_NORMAL");
 		WRITE_BIT(read_back_val, 1, 0);
-	}
-	else if (status == DEVICE_NOT_PRESENT){
+	} else if (status == DEVICE_NOT_PRESENT) {
 		LOG_DBG("pump DEVICE_NOT_PRESENT");
 		WRITE_BIT(read_back_val, 1, 1);
-	}
-	else
+	} else
 		LOG_DBG("Unexpected pump_board_tach_status");
 
 	if (!nct7363_write(cfg, NCT7363_GPIO1x_OUTPUT_PORT_REG_OFFSET, read_back_val))
@@ -260,7 +257,7 @@ void pump_failure_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 		threshold_set_pump_sensor_status(arg1, status);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
 		error_log_event(arg0, IS_NORMAL_VAL);
-		if(!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+		if (!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
 			led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 		threshold_set_pump_sensor_status(arg1, status);
 	} else
@@ -279,7 +276,7 @@ void rpu_internal_fan_failure_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 		set_sensor_status(LED_FAULT, LED_FAULT_RPU_FAN, 1);
 		set_sensor_status(arg0, arg1, 1);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
-		if(!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+		if (!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
 			led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 		set_sensor_status(arg0, arg1, 0);
 	} else
@@ -296,7 +293,7 @@ void hex_fan_failure_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
 		set_sensor_status(LED_FAULT, LED_FAULT_HEX_FAN, 1);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
-		if(!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+		if (!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
 			led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 	} else
 		LOG_DBG("Unexpected threshold warning");
@@ -323,7 +320,7 @@ void high_press_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 		set_sensor_status(LED_FAULT, LED_FAULT_HIGH_PRESS, 1);
 		set_sensor_status(arg0, arg1, 1);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
-		if(!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+		if (!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
 			led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 		set_sensor_status(arg0, arg1, 0);
 	} else {
@@ -375,7 +372,7 @@ void high_air_temp_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 		set_sensor_status(LED_FAULT, LED_FAULT_HIGH_AIR_TEMP, 1);
 		set_sensor_status(arg0, arg1, 1);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
-		if(!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+		if (!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
 			led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 		set_sensor_status(arg0, arg1, 0);
 	} else {
@@ -392,7 +389,7 @@ void high_coolant_temp_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 		set_sensor_status(LED_FAULT, LED_FAULT_HIGH_COOLANT_TEMP, 1);
 		set_sensor_status(arg0, arg1, 1);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
-		if(!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+		if (!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
 			led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 		set_sensor_status(arg0, arg1, 0);
 	} else {
@@ -408,7 +405,7 @@ void flow_trigger_do(uint8_t arg0, uint8_t arg1, uint8_t status)
 		set_sensor_status(LED_FAULT, LED_FAULT_FLOW_TRIGGER, 1);
 		set_sensor_status(arg0, arg1, 1);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
-		if(!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+		if (!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
 			led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 		set_sensor_status(arg0, arg1, 0);
 	} else {
@@ -638,7 +635,8 @@ sensor_threshold threshold_tbl[] = {
 	{ SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, THRESHOLD_ENABLE_LCR, 10, 0, flow_trigger_do,
 	  0 },
 	{ SENSOR_NUM_BPB_RACK_LEVEL_1, THRESHOLD_ENABLE_LCR, 1, 0, high_level_do, 0 },
-	{ SENSOR_NUM_BPB_RACK_LEVEL_2, THRESHOLD_ENABLE_LCR, 1, 0, low_level_do, SENSOR_NUM_BPB_RACK_LEVEL_2 },
+	{ SENSOR_NUM_BPB_RACK_LEVEL_2, THRESHOLD_ENABLE_LCR, 1, 0, low_level_do,
+	  SENSOR_NUM_BPB_RACK_LEVEL_2 },
 	{ SENSOR_NUM_BPB_RACK_LEVEL_1, THRESHOLD_ENABLE_LCR, 0.5, 0, high_level_do,
 	  SENSOR_NUM_BPB_RACK_LEVEL_1 },
 	{ SENSOR_NUM_BPB_RACK_LEVEL_2, THRESHOLD_ENABLE_LCR, 0.5, 0, low_level_do,
@@ -684,20 +682,16 @@ static bool set_threshold_status(sensor_threshold *threshold_tbl, float val)
 
 	/* check device is exist */
 	// to determine if tach value is 0, set status to DEVICE_NOT_EXIST status
-	for (int i = 0; i < ARRAY_SIZE(fan_pump_sensor_array); i++) 
-	{
-		if (threshold_tbl->sensor_num == fan_pump_sensor_array[i])
-		{
-			if (val == 0.0) 
-			{
+	for (int i = 0; i < ARRAY_SIZE(fan_pump_sensor_array); i++) {
+		if (threshold_tbl->sensor_num == fan_pump_sensor_array[i]) {
+			if (val == 0.0) {
 				threshold_tbl->last_status = DEVICE_NOT_PRESENT;
 				LOG_DBG("sensor 0x%x not exist", threshold_tbl->sensor_num);
 				return true;
 			}
 		}
-			
 	}
-	
+
 	switch (threshold_tbl->type) {
 	case THRESHOLD_ENABLE_LCR:
 		if (val < threshold_tbl->lcr)
