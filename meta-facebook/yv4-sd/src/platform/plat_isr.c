@@ -188,7 +188,15 @@ void ISR_POST_COMPLETE()
 		disable_mailbox_completion_alert();
 		enable_alert_signal();
 		read_cpuid();
-		//todo : add sel to bmc for assert
+		// add sel to bmc for assert
+		LOG_INF("Post complete event assert");
+		struct pldm_addsel_data msg = { 0 };
+		msg.event_type = POST_COMPLETED;
+		msg.assert_type = EVENT_ASSERTED;
+		if (PLDM_SUCCESS != send_event_log_to_bmc(msg)) {
+			LOG_ERR("Failed to assert post complete event log.");
+		};
+
 		hw_event_register[12]++;
 	} else {
 		if (get_DC_status()) { // Host is reset
