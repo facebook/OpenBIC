@@ -100,6 +100,15 @@ void APP_COLD_RESET(ipmi_msg *msg)
 		return;
 	}
 
+	// BMC COLD RESET event assert
+	LOG_ERR("BMC COLD RESET event assert");
+	struct pldm_addsel_data event_msg = { 0 };
+	event_msg.event_type = BMC_COMES_OUT_COLD_RESET;
+	event_msg.assert_type = EVENT_ASSERTED;
+	if (PLDM_SUCCESS != send_event_log_to_bmc(event_msg)) {
+		LOG_ERR("Failed to assert BMC COLD RESET event log.");
+	};
+
 	switch (pal_submit_bmc_cold_reset()) {
 	case -EBUSY:
 		msg->completion_code = CC_NODE_BUSY;
