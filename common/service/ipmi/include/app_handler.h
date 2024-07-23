@@ -25,6 +25,7 @@
 #endif
 
 #define GET_TEST_RESULT 0
+#define FRB2_WDT_DELAY_MS (10 * 1000) // 10s
 
 typedef struct SELF_TEST_RESULT_STRUCT {
 	uint8_t status;
