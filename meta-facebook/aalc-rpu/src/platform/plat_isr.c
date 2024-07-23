@@ -18,6 +18,14 @@ void deassert_all_rpu_ready_pin(void)
 	gpio_set(BIC_RPU_READY3, 0);
 }
 
+void set_all_rpu_ready_pin_normal(void)
+{
+	gpio_set(BIC_RPU_READY0, 1);
+	gpio_set(BIC_RPU_READY1, 1);
+	gpio_set(BIC_RPU_READY2, 1);
+	gpio_set(BIC_RPU_READY3, 1);
+}
+
 /* TO DO: 
 	1. turn off pump
 	2. change hx fan to min speed

@@ -763,6 +763,9 @@ void threshold_poll_handler(void *arug0, void *arug1, void *arug2)
 				threshold_tbl[i].fn(threshold_tbl[i].arg0, threshold_tbl[i].arg1,
 						    threshold_tbl[i].last_status);
 		}
+		// check fault status
+		if (!get_sensor_status(LED_FAULT, TWO_BYTES_SENSOR_STATUS))
+			set_all_rpu_ready_pin_normal();
 
 		k_msleep(threshold_poll_interval_ms);
 	}
@@ -785,7 +788,19 @@ void fan_pump_pwrgd_handler(void *arug0, void *arug1, void *arug2)
 	ARG_UNUSED(arug1);
 	ARG_UNUSED(arug2);
 
+	int fan_pump_pwrgd_handler_interval_ms = 1000; // interval 1s
+
 	while (1) {
+		if (!get_sensor_init_done_flag()) {
+			k_msleep(fan_pump_pwrgd_handler_interval_ms);
+			continue;
+		}
+
+		if (!get_sensor_poll_enable_flag()) {
+			k_msleep(fan_pump_pwrgd_handler_interval_ms);
+			continue;
+		}
+
 		for (uint8_t i = 0; i < ARRAY_SIZE(fan_pump_sensor_array); i++) {
 			// read gok data
 			sensor_cfg *cfg = get_common_sensor_cfg_info(fan_pump_sensor_array[i]);
