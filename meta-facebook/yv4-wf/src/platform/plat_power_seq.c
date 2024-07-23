@@ -193,20 +193,11 @@ int power_on_handler(int cxl_id, int power_stage)
 	int ctrl_stage = 0;
 
 	for (ctrl_stage = power_stage; ctrl_stage < MAX_POWER_ON_STAGES; ctrl_stage++) {
-		int retry_times = 5;
-
 		// Set power enable pin to enable power
 		enable_powers(cxl_id, ctrl_stage);
 
-		for (int i = 0; i < retry_times; i++) {
-			k_msleep(CHK_PWR_DELAY_MSEC);
-			// Get power good pin to check power
-			ret = check_powers_enabled(cxl_id, ctrl_stage);
-			if (ret == 0) {
-				break;
-			}
-		}
-
+		// Get power good pin to check power
+		ret = check_powers_enabled(cxl_id, ctrl_stage);
 		if (ret < 0) {
 			break;
 		}
@@ -336,14 +327,24 @@ int check_powers_enabled(int cxl_id, int pwr_stage)
 
 bool is_power_controlled(int cxl_id, int power_pin, uint8_t check_power_status, char *power_name)
 {
-	if (gpio_get(power_pin) == check_power_status) {
-		return true;
-	} else {
+	int retry_times = 5, i = 0;
+	for (i = 0; i < retry_times; i++) {
+		k_msleep(CHK_PWR_DELAY_MSEC);
+		// Get power good pin to check power
+		if (gpio_get(power_pin) == check_power_status) {
+			break;
+		}
+	}
+
+	if (i >= retry_times) {
 		// TODO: Add event to BMC
 		LOG_ERR("Failed to power %s CXL %d %s (gpio num %d)",
 			check_power_status ? "on" : "off", cxl_id + 1, power_name, power_pin);
 		return false;
+	} else {
+		return true;
 	}
+
 }
 
 void execute_power_off_sequence()
