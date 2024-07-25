@@ -9,6 +9,7 @@
 #include "plat_led.h"
 #include "plat_log.h"
 #include "plat_threshold.h"
+#include "plat_util.h"
 
 void deassert_all_rpu_ready_pin(void)
 {
@@ -16,6 +17,14 @@ void deassert_all_rpu_ready_pin(void)
 	gpio_set(BIC_RPU_READY1, 0);
 	gpio_set(BIC_RPU_READY2, 0);
 	gpio_set(BIC_RPU_READY3, 0);
+}
+
+void assert_all_rpu_ready_pin(void)
+{
+	gpio_set(BIC_RPU_READY0, 1);
+	gpio_set(BIC_RPU_READY1, 1);
+	gpio_set(BIC_RPU_READY2, 1);
+	gpio_set(BIC_RPU_READY3, 1);
 }
 
 /* TO DO: 
@@ -33,19 +42,36 @@ void fault_leak_action()
 
 void it_leak_handler(uint8_t idx)
 {
-	uint8_t sen_num = (idx == IT_LEAK_E_0) ? SENSOR_NUM_IT_LEAK_0_GPIO :
-			  (idx == IT_LEAK_E_1) ? SENSOR_NUM_IT_LEAK_1_GPIO :
-			  (idx == IT_LEAK_E_2) ? SENSOR_NUM_IT_LEAK_2_GPIO :
-			  (idx == IT_LEAK_E_3) ? SENSOR_NUM_IT_LEAK_3_GPIO :
-						 0xFF;
+	uint8_t sen_num = (idx == IT_LEAK_E_0) ?
+				  SENSOR_NUM_IT_LEAK_0_GPIO :
+				  (idx == IT_LEAK_E_1) ?
+				  SENSOR_NUM_IT_LEAK_1_GPIO :
+				  (idx == IT_LEAK_E_2) ?
+				  SENSOR_NUM_IT_LEAK_2_GPIO :
+				  (idx == IT_LEAK_E_3) ? SENSOR_NUM_IT_LEAK_3_GPIO : 0xFF;
 
 	fault_leak_action();
 	error_log_event(sen_num, IS_ABNORMAL_VAL);
 
 	led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
-	set_sensor_status(LED_FAULT, LED_FAULT_IT_LEAK, 1);
+
+	switch (idx) {
+	case IT_LEAK_E_0:
+		set_sticky_sensor_status(STICKY_ITRACK_CHASSIS0_LEAKAGE, 1);
+		break;
+	case IT_LEAK_E_1:
+		set_sticky_sensor_status(STICKY_ITRACK_CHASSIS1_LEAKAGE, 1);
+		break;
+	case IT_LEAK_E_2:
+		set_sticky_sensor_status(STICKY_ITRACK_CHASSIS2_LEAKAGE, 1);
+		break;
+	case IT_LEAK_E_3:
+		set_sticky_sensor_status(STICKY_ITRACK_CHASSIS3_LEAKAGE, 1);
+		break;
+	}
 	if (get_led_status(LED_IDX_E_LEAK) == LED_START_BLINK)
 		led_ctrl(LED_IDX_E_LEAK, LED_STOP_BLINK);
+	set_sensor_status(LED_FAULT, LED_FAULT_IT_LEAK, 1);
 	led_ctrl(LED_IDX_E_LEAK, LED_TURN_OFF);
 }
 
@@ -76,6 +102,10 @@ void aalc_leak_behavior(uint8_t sensor_num, bool is_leak)
 					  LED_FAULT_CDU_LEAKAGE :
 					  LED_FAULT_RACK_LEAKAGE,
 				  1);
+		set_sticky_sensor_status((sensor_num == SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V) ?
+						 STICKY_RPU_INTERNAL_LEAKAGE_ABNORMAL :
+						 STICKY_HEX_RACK_PAN_LEAKAGE,
+					 1);
 		if (get_led_status(LED_IDX_E_LEAK) != LED_START_BLINK)
 			led_ctrl(LED_IDX_E_LEAK, LED_START_BLINK);
 		gpio_set(RPU_LEAK_ALERT_N, 0);
