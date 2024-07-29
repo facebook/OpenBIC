@@ -13,4 +13,4 @@ void it_leak_action_3();
 void fault_leak_action();
 void deassert_all_rpu_ready_pin();
 void assert_all_rpu_ready_pin();
-void aalc_leak_behavior(uint8_t sensor_num, bool is_leak);
+void aalc_leak_behavior(uint8_t sensor_num);
