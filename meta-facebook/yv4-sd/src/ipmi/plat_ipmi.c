@@ -292,42 +292,35 @@ void OEM_GET_HTTP_BOOT_DATA(ipmi_msg *msg)
 	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 3) {
+		LOG_ERR("Failed to get OEM http boot data because of invalid length: 0x%x",
+			msg->data_len);
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
 	}
 
-	uint8_t *httpBootData = (uint8_t *)malloc(sizeof(uint8_t) * HTTP_BOOT_DATA_MAXIMUM);
-	if (httpBootData == NULL) {
+	uint8_t ret = 0;
+	uint8_t length = msg->data[2];
+	uint16_t offset = (uint16_t)(msg->data[1] << 8) | msg->data[0];
+
+	uint8_t *httpbootdata = (uint8_t *)malloc(sizeof(uint8_t) * length);
+	if (httpbootdata == NULL) {
 		LOG_ERR("Failed to allocate http boot data buffer");
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
 		return;
 	}
 
-	uint8_t ret = 0;
-	uint16_t httpBootDataLen = 0;
-	ret = plat_pldm_get_http_boot_data(httpBootData, &httpBootDataLen);
+	ret = plat_pldm_get_http_boot_data(offset, &length, msg->data[2], httpbootdata);
 	if (ret != PLDM_SUCCESS) {
 		LOG_ERR("Failed to get http boot data, ret: 0x%x", ret);
+		SAFE_FREE(httpbootdata);
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
-		free(httpBootData);
-		return;
-	}
-
-	uint16_t offset = (uint16_t)(msg->data[1] << 8) | msg->data[0];
-	uint16_t length = (uint16_t)msg->data[2];
-
-	if (offset + length > httpBootDataLen) {
-		LOG_ERR("Failed to get OEM HTTP BOOT DATA because of invalid offset or length");
-		msg->completion_code = CC_INVALID_PARAM;
-		free(httpBootData);
 		return;
 	}
 
 	msg->data_len = 1 + length; // 1 byte length + length bytes Data
 	msg->data[0] = (uint8_t)length;
-	memcpy(&msg->data[1], &httpBootData[offset], length);
-
-	free(httpBootData);
+	memcpy(&msg->data[1], httpbootdata, length);
+	SAFE_FREE(httpbootdata);
 	msg->completion_code = CC_SUCCESS;
 	return;
 }
@@ -337,59 +330,46 @@ void OEM_GET_HTTP_BOOT_ATTR(ipmi_msg *msg)
 	CHECK_NULL_ARG(msg);
 
 	if (msg->data_len != 1) {
-		LOG_ERR("Failed to get OEM HTTP BOOT DATA because of invalid length");
+		LOG_ERR("Failed to get OEM http boot attribute because of invalid length: 0x%x",
+			msg->data_len);
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
 	}
 
 	uint8_t attr = msg->data[0];
 	if (attr >= GET_HTTP_BOOT_MAX) {
-		LOG_ERR("Failed to get OEM HTTP BOOT DATA because of invalid command");
+		LOG_ERR("Failed to get OEM http boot attribute because of invalid command: 0x%x",
+			attr);
 		msg->completion_code = CC_INVALID_CMD;
-		return;
-	}
-
-	uint8_t *httpBootData = (uint8_t *)malloc(sizeof(uint8_t) * HTTP_BOOT_DATA_MAXIMUM);
-	if (httpBootData == NULL) {
-		LOG_ERR("Failed to allocate http boot data buffer");
-		msg->completion_code = CC_UNSPECIFIED_ERROR;
 		return;
 	}
 
 	uint8_t ret = 0;
-	uint16_t httpBootDataLen = 0;
-	ret = plat_pldm_get_http_boot_data(httpBootData, &httpBootDataLen);
+	struct pldm_oem_read_file_attr_info info = { 0 };
+
+	ret = plat_pldm_get_http_boot_attr(sizeof(struct pldm_oem_read_file_attr_info),
+					   (uint8_t *)&info);
 	if (ret != PLDM_SUCCESS) {
-		LOG_ERR("Failed to get http boot data, ret: 0x%x", ret);
+		LOG_ERR("Failed to get http boot attributes, ret: 0x%x", ret);
 		msg->completion_code = CC_UNSPECIFIED_ERROR;
-		free(httpBootData);
 		return;
 	}
-
-	uint32_t crc32_value = 0;
 
 	switch (attr) {
 	case GET_HTTP_BOOT_SIZE:
 		msg->data_len = 2;
-		msg->data[0] = httpBootDataLen & 0xFF;
-		msg->data[1] = (httpBootDataLen >> 8) & 0xFF;
+		msg->data[0] = info.size_lsb;
+		msg->data[1] = info.size_msb;
 		break;
 	case GET_HTTP_BOOT_CRC32:
-		crc32_value = crc32_ieee(httpBootData, httpBootDataLen);
-
 		msg->data_len = 4;
-		msg->data[0] = crc32_value & 0xFF;
-		msg->data[1] = (crc32_value >> 8) & 0xFF;
-		msg->data[2] = (crc32_value >> 16) & 0xFF;
-		msg->data[3] = (crc32_value >> 24) & 0xFF;
+		memcpy(&msg->data[0], &info.crc32, sizeof(uint32_t));
 		break;
 	default:
 		msg->completion_code = CC_INVALID_CMD;
-		free(httpBootData);
 		return;
 	}
 
-	free(httpBootData);
 	msg->completion_code = CC_SUCCESS;
 	return;
 }
