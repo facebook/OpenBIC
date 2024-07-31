@@ -631,21 +631,7 @@ static bool get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		goto exit;
 	}
 
-	const char *vr_name[] = {
-		[RETIMER_MODULE_PT4080L] = "AL ",
-		[RETIMER_MODULE_DS160PT801] = "TI ",
-	};
-	const uint8_t *vr_name_p = vr_name[retimer_module];
-
-	if (!vr_name_p) {
-		LOG_ERR("The pointer of VR string name is NULL");
-		goto exit;
-	}
-
 	uint8_t *buf_p = buf;
-	memcpy(buf_p, vr_name_p, strlen(vr_name_p));
-	buf_p += strlen(vr_name_p);
-	*len += strlen(vr_name_p);
 
 	memcpy(buf_p, version, ver_len);
 	*len += bin2hex(version, ver_len, buf_p, ver_len * 2);
