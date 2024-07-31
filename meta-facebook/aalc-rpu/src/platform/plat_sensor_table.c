@@ -100,7 +100,7 @@ bool post_quick_sensor_read(sensor_cfg *cfg, void *args, int *reading)
 		val = (sval->integer * 1000 + sval->fraction) / 1000.0;
 
 		if (val < 3.1)
-			aalc_leak_behavior(cfg->num, true);
+			aalc_leak_behavior(cfg->num);
 	}
 
 	return ret;
