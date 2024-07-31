@@ -113,5 +113,6 @@ bool cxl2_ready_access(uint8_t sensor_num);
 void set_cxl_vr_access(uint8_t cxl_id, bool value);
 bool cxl1_vr_access(uint8_t sensor_num);
 bool cxl2_vr_access(uint8_t sensor_num);
+void create_check_cxl_ready_thread();
 
 #endif

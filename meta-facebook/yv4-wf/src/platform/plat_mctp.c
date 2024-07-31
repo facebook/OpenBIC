@@ -167,15 +167,15 @@ static void set_dev_endpoint(void)
 
 				uint8_t rc = mctp_ctrl_send_msg(find_mctp_by_bus(p->bus), &msg);
 				if (!rc) {
-					switch(p->bus) {
-						case I2C_BUS_CXL1: {
-							set_eid[CXL_ID_1] = true;
-							break;
-						}
-						case I2C_BUS_CXL2: {
-							set_eid[CXL_ID_2] = true;
-							break;
-						}
+					switch (p->bus) {
+					case I2C_BUS_CXL1: {
+						set_eid[CXL_ID_1] = true;
+						break;
+					}
+					case I2C_BUS_CXL2: {
+						set_eid[CXL_ID_2] = true;
+						break;
+					}
 					}
 				} else {
 					LOG_ERR("Fail to set endpoint %d", p->endpoint);
@@ -282,6 +282,7 @@ void send_cmd_to_dev_handler(struct k_work *work)
 
 void send_cmd_to_dev(struct k_timer *timer)
 {
+	LOG_INF("Send set EID command to CXL");
 	k_work_submit(&send_cmd_work);
 }
 

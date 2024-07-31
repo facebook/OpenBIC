@@ -18,11 +18,15 @@
 #include "util_worker.h"
 #include "hal_gpio.h"
 #include "hal_i2c.h"
+#include "power_status.h"
 #include "plat_gpio.h"
 #include "plat_power_seq.h"
+#include "plat_mctp.h"
 #include "plat_isr.h"
 
 LOG_MODULE_REGISTER(plat_isr);
+
+K_TIMER_DEFINE(set_eid_timer, send_cmd_to_dev, NULL);
 
 void set_e1s_pe_reset()
 {
@@ -95,10 +99,8 @@ void ISR_MB_DC_STAGUS_CHAGNE()
 	set_mb_dc_status(FM_POWER_EN_R);
 
 	if (gpio_get(FM_POWER_EN_R) == POWER_ON) {
-		//init_power_on_thread(CLK_POWER_ON_STAGE);
 		k_work_submit(&cxl_power_on_work);
 	} else {
-		//init_power_off_thread(DIMM_POWER_OFF_STAGE_1);
 		k_work_submit(&cxl_power_off_work);
 	}
 }
@@ -111,6 +113,18 @@ void ISR_MB_PCIE_RST()
 	gpio_set(PERST_ASIC2_N_R, gpio_get(RST_PCIE_MB_EXP_N));
 
 	k_work_submit(&set_e1s_pe_reset_work);
+
+	// Monitor CXL ready and set CXL EID again
+	if (gpio_get(RST_PCIE_MB_EXP_N) == GPIO_HIGH) {
+		create_check_cxl_ready_thread();
+		k_timer_start(&set_eid_timer, K_MSEC(10000), K_NO_WAIT);
+	} else {
+		// host reset, cxl also reset
+		if (get_DC_status()) {
+			set_cxl_ready_status(CXL_ID_1, false);
+			set_cxl_ready_status(CXL_ID_2, false);
+		}
+	}
 }
 
 K_WORK_DEFINE(e1s_pwr_on_work, set_asic_and_e1s_clk_handler);
