@@ -23,6 +23,7 @@
 #define TSI_HIGH_TEMP_THRESHOLD 0x5F
 #define TSI_TEMP_ALERT_UPDATE_RATE 0x0A
 #define PLAT_SBRMI_REVISION 0x20
+#define CPUID_SIZE 16
 
 typedef struct _addc_trigger_info {
 	uint8_t event_version;
@@ -36,5 +37,6 @@ bool get_tsi_status();
 void reset_tsi_status();
 void set_tsi_threshold();
 void read_cpuid();
+const uint8_t* get_cpuid();
 
 #endif

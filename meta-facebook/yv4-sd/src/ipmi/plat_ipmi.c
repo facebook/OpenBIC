@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <logging/log.h>
+#include <sys/crc.h>
 
 #include "libutil.h"
 #include "ipmb.h"
@@ -25,6 +26,12 @@
 #include "plat_sys.h"
 #include "plat_class.h"
 #include "plat_isr.h"
+#include "util_sys.h"
+#include "pldm_oem.h"
+#include "plat_mctp.h"
+#include "pldm.h"
+#include "plat_pldm.h"
+#include "pldm_base.h"
 
 enum THREAD_STATUS {
 	THREAD_SUCCESS = 0,
@@ -92,6 +99,15 @@ void APP_COLD_RESET(ipmi_msg *msg)
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
 	}
+
+	// BMC COLD RESET event assert
+	LOG_ERR("BMC COLD RESET event assert");
+	struct pldm_addsel_data event_msg = { 0 };
+	event_msg.event_type = BMC_COMES_OUT_COLD_RESET;
+	event_msg.assert_type = EVENT_ASSERTED;
+	if (PLDM_SUCCESS != send_event_log_to_bmc(event_msg)) {
+		LOG_ERR("Failed to assert BMC COLD RESET event log.");
+	};
 
 	switch (pal_submit_bmc_cold_reset()) {
 	case -EBUSY:
@@ -185,6 +201,195 @@ void OEM_1S_DEBUG_GET_HW_SIGNAL(ipmi_msg *msg)
 	memset(hw_event_register, 0, sizeof(hw_event_register));
 
 	msg->data_len = sizeof(hw_event_register);
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
+void OEM_1S_INFORM_BMC_TO_CONTROL_POWER(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	pldm_msg translated_msg = { 0 };
+	uint8_t bmc_bus = I2C_BUS_BMC;
+	uint8_t bmc_interface = pal_get_bmc_interface();
+	uint8_t completion_code = CC_UNSPECIFIED_ERROR;
+	translated_msg.ext_params.ep = MCTP_EID_BMC;
+
+	switch (bmc_interface) {
+	case BMC_INTERFACE_I3C:
+		bmc_bus = I3C_BUS_BMC;
+		translated_msg.ext_params.type = MCTP_MEDIUM_TYPE_TARGET_I3C;
+		translated_msg.ext_params.i3c_ext_params.addr = I3C_STATIC_ADDR_BMC;
+		break;
+	case BMC_INTERFACE_I2C:
+		bmc_bus = I2C_BUS_BMC;
+		translated_msg.ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
+		translated_msg.ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
+		break;
+	default:
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	translated_msg.hdr.pldm_type = PLDM_TYPE_OEM;
+	translated_msg.hdr.cmd = PLDM_OEM_WRITE_FILE_IO;
+	translated_msg.hdr.rq = 1;
+
+	uint8_t power_option = msg->data[0];
+	if (power_option >= MAX_POWER_OPTION) {
+		msg->completion_code = CC_INVALID_PARAM;
+		return;
+	}
+
+	struct pldm_oem_write_file_io_req *ptr = (struct pldm_oem_write_file_io_req *)malloc(
+		sizeof(struct pldm_oem_write_file_io_req) +
+		sizeof(uint8_t) /* Minimum requried length */);
+
+	if (!ptr) {
+		LOG_ERR("Failed to allocate memory.");
+		msg->completion_code = CC_OUT_OF_SPACE;
+		msg->data_len = 0;
+		return;
+	}
+
+	ptr->cmd_code = POWER_CONTROL;
+	ptr->data_length = POWER_CONTROL_LEN;
+	ptr->messages[0] = power_option;
+
+	translated_msg.buf = (uint8_t *)ptr;
+	translated_msg.len = sizeof(struct pldm_oem_write_file_io_req) + sizeof(uint8_t);
+
+	uint8_t resp_len = sizeof(struct pldm_oem_write_file_io_resp);
+	uint8_t rbuf[resp_len];
+
+	if (!mctp_pldm_read(find_mctp_by_bus(bmc_bus), &translated_msg, rbuf, resp_len)) {
+		LOG_ERR("mctp_pldm_read fail");
+		completion_code = CC_CAN_NOT_RESPOND;
+		goto exit;
+	}
+
+	struct pldm_oem_write_file_io_resp *resp = (struct pldm_oem_write_file_io_resp *)rbuf;
+	if (resp->completion_code != PLDM_SUCCESS) {
+		LOG_ERR("Check reponse completion code fail %x", resp->completion_code);
+		completion_code = resp->completion_code;
+		goto exit;
+	}
+
+	completion_code = CC_SUCCESS;
+exit:
+	SAFE_FREE(ptr);
+	msg->completion_code = completion_code;
+	msg->data_len = 0;
+}
+
+void OEM_GET_HTTP_BOOT_DATA(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 3) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t *httpBootData = (uint8_t *)malloc(sizeof(uint8_t) * HTTP_BOOT_DATA_MAXIMUM);
+	if (httpBootData == NULL) {
+		LOG_ERR("Failed to allocate http boot data buffer");
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	uint8_t ret = 0;
+	uint16_t httpBootDataLen = 0;
+	ret = plat_pldm_get_http_boot_data(httpBootData, &httpBootDataLen);
+	if (ret != PLDM_SUCCESS) {
+		LOG_ERR("Failed to get http boot data, ret: 0x%x", ret);
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		free(httpBootData);
+		return;
+	}
+
+	uint16_t offset = (uint16_t)(msg->data[1] << 8) | msg->data[0];
+	uint16_t length = (uint16_t)msg->data[2];
+
+	if (offset + length > httpBootDataLen) {
+		LOG_ERR("Failed to get OEM HTTP BOOT DATA because of invalid offset or length");
+		msg->completion_code = CC_INVALID_PARAM;
+		free(httpBootData);
+		return;
+	}
+
+	msg->data_len = 1 + length; // 1 byte length + length bytes Data
+	msg->data[0] = (uint8_t)length;
+	memcpy(&msg->data[1], &httpBootData[offset], length);
+
+	free(httpBootData);
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
+void OEM_GET_HTTP_BOOT_ATTR(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 1) {
+		LOG_ERR("Failed to get OEM HTTP BOOT DATA because of invalid length");
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t attr = msg->data[0];
+	if (attr >= GET_HTTP_BOOT_MAX) {
+		LOG_ERR("Failed to get OEM HTTP BOOT DATA because of invalid command");
+		msg->completion_code = CC_INVALID_CMD;
+		return;
+	}
+
+	uint8_t *httpBootData = (uint8_t *)malloc(sizeof(uint8_t) * HTTP_BOOT_DATA_MAXIMUM);
+	if (httpBootData == NULL) {
+		LOG_ERR("Failed to allocate http boot data buffer");
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	uint8_t ret = 0;
+	uint16_t httpBootDataLen = 0;
+	ret = plat_pldm_get_http_boot_data(httpBootData, &httpBootDataLen);
+	if (ret != PLDM_SUCCESS) {
+		LOG_ERR("Failed to get http boot data, ret: 0x%x", ret);
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		free(httpBootData);
+		return;
+	}
+
+	uint32_t crc32_value = 0;
+
+	switch (attr) {
+	case GET_HTTP_BOOT_SIZE:
+		msg->data_len = 2;
+		msg->data[0] = httpBootDataLen & 0xFF;
+		msg->data[1] = (httpBootDataLen >> 8) & 0xFF;
+		break;
+	case GET_HTTP_BOOT_CRC32:
+		crc32_value = crc32_ieee(httpBootData, httpBootDataLen);
+
+		msg->data_len = 4;
+		msg->data[0] = crc32_value & 0xFF;
+		msg->data[1] = (crc32_value >> 8) & 0xFF;
+		msg->data[2] = (crc32_value >> 16) & 0xFF;
+		msg->data[3] = (crc32_value >> 24) & 0xFF;
+		break;
+	default:
+		msg->completion_code = CC_INVALID_CMD;
+		free(httpBootData);
+		return;
+	}
+
+	free(httpBootData);
 	msg->completion_code = CC_SUCCESS;
 	return;
 }

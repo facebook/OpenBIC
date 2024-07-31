@@ -26,6 +26,7 @@
 #include "libutil.h"
 #include "sensor.h"
 #include "plat_gpio.h"
+#include "plat_pwm.h"
 
 #define I2C_MASTER_READ_BACK_MAX_SIZE 16 // 16 registers
 
@@ -42,7 +43,7 @@ bool modbus_i2c_master_write_read(const uint16_t *modbus_data, uint8_t data_len)
 		return false;
 
 	const uint8_t target_bus = modbus_data[0] & BIT_MASK(8); // get 7:0 bit data
-	const uint8_t target_addr = modbus_data[1] & BIT_MASK(8);
+	const uint8_t target_addr = (modbus_data[1] & BIT_MASK(8)) >> 1; //8-bit to 7-bit
 	const uint8_t target_read_length = modbus_data[2] & BIT_MASK(8);
 	I2C_MSG msg = { 0 };
 	uint8_t retry = 5;
@@ -90,28 +91,16 @@ void regs_reverse(uint16_t reg_len, uint16_t *data)
 		data[i] = sys_be16_to_cpu(data[i]);
 }
 
-uint8_t modbus_sensor_poll_en(modbus_command_mapping *cmd)
+void plat_enable_sensor_poll(void)
 {
-	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+	enable_sensor_poll();
+	nct7363_wdt_all_enable();
+}
 
-	uint8_t op = cmd->arg0;
-
-#define SET_SENSOR_POLL 0
-#define GET_SENSOR_POLL 1
-
-	switch (op) {
-	case SET_SENSOR_POLL:
-		// if data[0] != 0, enable
-		cmd->data[0] ? enable_sensor_poll() : disable_sensor_poll();
-		break;
-	case GET_SENSOR_POLL:
-		cmd->data[0] = get_sensor_poll_enable_flag() ? 1 : 0;
-		break;
-	default:
-		LOG_ERR("Unknow sensor poll arg0 %d", op);
-	}
-
-	return MODBUS_EXC_NONE;
+void plat_disable_sensor_poll(void)
+{
+	nct7363_wdt_all_disable();
+	disable_sensor_poll();
 }
 
 void set_rpu_ready()
@@ -120,7 +109,6 @@ void set_rpu_ready()
 	gpio_set(BIC_RPU_READY1, 1);
 	gpio_set(BIC_RPU_READY2, 1);
 	gpio_set(BIC_RPU_READY3, 1);
-	gpio_set(FM_BIC_READY_R_N, 0);
 }
 
 float pow_of_10(int8_t exp)

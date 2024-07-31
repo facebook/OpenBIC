@@ -32,6 +32,7 @@
 #include "plat_i2c.h"
 #include "plat_sensor_table.h"
 #include "plat_class.h"
+#include "plat_fru.h"
 #include "power_status.h"
 
 #include "mpq8746.h"
@@ -269,12 +270,43 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param)
 /* pldm post-update func */
 static uint8_t pldm_post_vr_update(void *fw_update_param)
 {
-	ARG_UNUSED(fw_update_param);
+	/* Update VR remaining write count */
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 
+	uint8_t vr_module = get_oth_module();
+
+	/* skip update INF vr remaining write count */
+	if (vr_module == OTH_MODULE_SECOND && p->comp_id == JI_COMPNT_CPUDVDD)
+		goto exit;
+
+	EEPROM_ENTRY vr_rm_cnt_entry = { 0 };
+	if (access_vr_remain_cnt(&vr_rm_cnt_entry, p->comp_id, true) == false) {
+		LOG_ERR("Failed to update VR %d remaining count", p->comp_id);
+	}
+
+exit:
 	/* Start sensor polling */
 	enable_sensor_poll();
 
 	return 0;
+}
+
+static int hex_display_dec(uint16_t number, uint16_t *num_hex)
+{
+	uint16_t remainder = 0;
+	uint16_t quotient = number;
+	int i = 0;
+
+	*num_hex = 0;
+
+	while (quotient != 0) {
+		remainder = quotient % 10;
+		quotient = quotient / 10;
+		*num_hex |= (remainder << (4 * i));
+		i++;
+	}
+
+	return i;
 }
 
 static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
@@ -340,6 +372,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 			ver_len = 4;
 
 			uint8_t cfg_remain = 0;
+			remain = 0;
 			if (!tda38741_get_remaining_wr(bus, addr, (uint8_t *)&remain,
 						       &cfg_remain)) {
 				LOG_ERR("Component %d version reading failed", p->comp_identifier);
@@ -396,8 +429,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 			LOG_ERR("Component %d version reading failed", p->comp_identifier);
 			goto post_hook_and_ret;
 		}
-		tmp_crc_16 = sys_cpu_to_be16(tmp_crc_16);
-		memcpy(&version[ver_len], &tmp_crc_16, sizeof(tmp_crc_16));
+		version[ver_len] = (uint8_t)tmp_crc_16;
 		ver_len += 1;
 		break;
 
@@ -406,14 +438,24 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		goto post_hook_and_ret;
 	}
 
-	const char *remain_str_p = ", Remaining Write: ";
-	uint8_t *buf_p = buf;
-	*len = 0;
-
 	if (!vendor_name_p) {
 		LOG_ERR("The pointer of VR string name is NULL");
 		goto post_hook_and_ret;
 	}
+
+	/* Get vr remain wr count if using non-INF chip */
+	if (strncmp(vendor_name_p, "INF ", 4)) {
+		EEPROM_ENTRY vr_rm_cnt_entry = { 0 };
+		if (access_vr_remain_cnt(&vr_rm_cnt_entry, p->comp_identifier, false) == false) {
+			LOG_ERR("Failed to get VR %d remaining count", p->comp_identifier);
+			goto post_hook_and_ret;
+		}
+		remain = (vr_rm_cnt_entry.data[0] << 8) | vr_rm_cnt_entry.data[1];
+	}
+
+	const char *remain_str_p = ", Remaining Write: ";
+	uint8_t *buf_p = buf;
+	*len = 0;
 
 	memcpy(buf_p, vendor_name_p, strlen(vendor_name_p));
 	buf_p += strlen(vendor_name_p);
@@ -424,9 +466,24 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	if (remain != 0xFFFF) {
 		memcpy(buf_p, remain_str_p, strlen(remain_str_p));
 		buf_p += strlen(remain_str_p);
-		remain = (uint8_t)((remain % 10) | (remain / 10 << 4));
-		*len += bin2hex((uint8_t *)&remain, 1, buf_p, 2) + strlen(remain_str_p);
-		buf_p += 2;
+
+		uint16_t remain_hex = 0;
+		hex_display_dec(remain, &remain_hex);
+		remain_hex = sys_cpu_to_be16(remain_hex);
+
+		uint8_t remain_ascii[4] = { 0 };
+		bin2hex((uint8_t *)&remain_hex, 2, remain_ascii, 4);
+
+		bool got_valid_num = false;
+		for (int i = 0; i < 4; i++) {
+			if (remain_ascii[i] == '0' && !got_valid_num)
+				continue;
+			*buf_p = remain_ascii[i];
+			buf_p++;
+			*len += 1;
+			got_valid_num = true;
+		}
+		*len += strlen(remain_str_p);
 	}
 
 	LOG_HEXDUMP_INF(buf, *len, "VR version string");

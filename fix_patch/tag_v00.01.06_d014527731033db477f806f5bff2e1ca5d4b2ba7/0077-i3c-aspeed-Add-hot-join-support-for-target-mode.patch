@@ -1,0 +1,152 @@
+From 5e8c05d3892368678a745e65b67dd9160006276d Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Tue, 18 Jun 2024 17:36:24 +0800
+Subject: [PATCH 1/2] i3c: aspeed: Add hot-join support for target mode
+
+Implement the hj_req functions for target operation.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: Id15098306c7252cc7aa756030d2c1453b6b8a7f1
+---
+ drivers/i3c/i3c_aspeed.c  | 43 ++++++++++++++++++++++++++++++++++++++-
+ drivers/i3c/i3c_shell.c   | 14 +++++++++++++
+ include/drivers/i3c/i3c.h |  9 ++++++++
+ 3 files changed, 65 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index f3e31bda74..6b57dc5646 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -70,6 +70,21 @@ union i3c_device_addr_s {
+ 	} fields;
+ }; /* offset 0x04 */
+ 
++union i3c_hw_cap_s {
++	volatile uint32_t value;
++	struct {
++		volatile uint32_t role : 3;			/* bit[2:0] */
++		volatile uint32_t hdr_ddr : 1;			/* bit[3] */
++		volatile uint32_t hdr_ts : 1;			/* bit[4] */
++		volatile uint32_t clk_period : 6;		/* bit[10:5] */
++		volatile uint32_t hdr_tx_clk_period : 6;	/* bit[16:11] */
++		volatile uint32_t dma_en : 1;			/* bit[17] */
++		volatile uint32_t slv_hj_cap : 1;		/* bit[18] */
++		volatile uint32_t slv_ibi_cap : 1;		/* bit[19] */
++		volatile uint32_t reserved0 : 12;		/* bit[31:20] */
++	} fields;
++}; /* offset 0x08 */
++
+ union i3c_device_cmd_queue_port_s {
+ 	volatile uint32_t value;
+ 
+@@ -435,7 +450,7 @@ union i3c_dev_addr_tbl_s {
+ struct i3c_register_s {
+ 	union i3c_device_ctrl_s device_ctrl;			/* 0x0 */
+ 	union i3c_device_addr_s device_addr;			/* 0x4 */
+-	uint32_t hw_capability;					/* 0x8 */
++	union i3c_hw_cap_s hw_capability;			/* 0x8 */
+ 	union i3c_device_cmd_queue_port_s cmd_queue_port;	/* 0xc */
+ 	union i3c_device_resp_queue_port_s resp_queue_port;	/* 0x10 */
+ 	uint32_t rx_tx_data_port;				/* 0x14 */
+@@ -1365,6 +1380,7 @@ static int i3c_aspeed_enable(struct i3c_aspeed_obj *obj)
+ 	reg.fields.hj_ack_ctrl = 1;
+ 	reg.fields.slave_ibi_payload_en = 1;
+ 	if (config->secondary) {
++		i3c_register->slave_event_ctrl.fields.hj_allowed = 0;
+ 		reg.fields.slave_auto_mode_adapt = 0;
+ 		i3c_aspeed_isolate_scl_sda(config->inst_id, true);
+ 		i3c_aspeed_gen_stop_to_internal(config->inst_id);
+@@ -1880,6 +1896,31 @@ int i3c_aspeed_slave_send_sir(const struct device *dev, struct i3c_ibi_payload *
+ 	return 0;
+ }
+ 
++int i3c_aspeed_slave_hj_req(const struct device *dev)
++{
++	struct i3c_aspeed_config *config = DEV_CFG(dev);
++	struct i3c_register_s *i3c_register = config->base;
++
++	if (!config->secondary) {
++		LOG_ERR("%s: HJ requeset not supported", dev->name);
++		return -ENOTSUP;
++	}
++
++	if (!(i3c_register->hw_capability.fields.slv_hj_cap)) {
++		LOG_ERR("%s: HJ not supported", dev->name);
++		return -ENOTSUP;
++	}
++
++	if (i3c_register->device_addr.fields.dynamic_addr_valid) {
++		LOG_ERR("%s: DA already assigned", dev->name);
++		return -EACCES;
++	}
++
++	i3c_register->slave_event_ctrl.fields.hj_allowed = 1;
++
++	return 0;
++}
++
+ int i3c_aspeed_set_pid_extra_info(const struct device *dev, uint16_t extra_info)
+ {
+ 	struct i3c_aspeed_config *config = DEV_CFG(dev);
+diff --git a/drivers/i3c/i3c_shell.c b/drivers/i3c/i3c_shell.c
+index a976bfe963..3d6afa6cff 100644
+--- a/drivers/i3c/i3c_shell.c
++++ b/drivers/i3c/i3c_shell.c
+@@ -63,6 +63,19 @@ static uint32_t args_to_wdata(char *arg, uint8_t *buf)
+ 	return len;
+ }
+ 
++static const char hj_req_helper[] = "i3c hj_req <dev>";
++static int cmd_hj_req(const struct shell *shell, size_t argc, char **argv)
++{
++	const struct device *dev;
++
++	dev = device_get_binding(argv[1]);
++	if (!dev) {
++		shell_error(shell, "I3C: Device %s not found.", argv[1]);
++		return -ENODEV;
++	}
++	return i3c_slave_hj_req(dev);
++}
++
+ static const char priv_xfer_helper[] = "i3c xfer <dev> -a <addr> -w <wdata> -r <read length>";
+ static int cmd_priv_xfer(const struct shell *shell, size_t argc, char **argv)
+ {
+@@ -339,6 +352,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_i3c_cmds,
+ 	SHELL_CMD(attach, &dsub_device_name, attach_helper, cmd_attach),
+ 	SHELL_CMD(ccc, &dsub_device_name, send_ccc_helper, cmd_send_ccc),
+ 	SHELL_CMD(xfer, &dsub_device_name, priv_xfer_helper, cmd_priv_xfer),
++	SHELL_CMD(hj_req, &dsub_device_name, hj_req_helper, cmd_hj_req),
+ #ifdef CONFIG_I3C_SLAVE_MQUEUE
+ 	SHELL_CMD(smq, &dsub_device_name, smq_xfer_helper, cmd_smq_xfer),
+ #endif
+diff --git a/include/drivers/i3c/i3c.h b/include/drivers/i3c/i3c.h
+index ae6aa7dc70..716440a6a0 100644
+--- a/include/drivers/i3c/i3c.h
++++ b/include/drivers/i3c/i3c.h
+@@ -202,6 +202,14 @@ int i3c_aspeed_slave_get_event_enabling(const struct device *dev, uint32_t *even
+  */
+ int i3c_aspeed_slave_send_sir(const struct device *dev, struct i3c_ibi_payload *payload);
+ 
++/**
++ * @brief slave device sends Hot-join request
++ *
++ * @param dev the I3C controller in slave mode
++ * @return int 0 = success
++ */
++int i3c_aspeed_slave_hj_req(const struct device *dev);
++
+ /**
+  * @brief slave device prepares the data for master private read transfer
+  * @param dev the I3C controller in slave mode
+@@ -248,6 +256,7 @@ int i3c_master_send_getbcr(const struct device *master, uint8_t addr, uint8_t *b
+ #define i3c_slave_register		i3c_aspeed_slave_register
+ #define i3c_slave_set_static_addr	i3c_aspeed_slave_set_static_addr
+ #define i3c_slave_send_sir		i3c_aspeed_slave_send_sir
++#define i3c_slave_hj_req		i3c_aspeed_slave_hj_req
+ #define i3c_slave_put_read_data		i3c_aspeed_slave_put_read_data
+ #define i3c_slave_get_dynamic_addr	i3c_aspeed_slave_get_dynamic_addr
+ #define i3c_slave_get_event_enabling	i3c_aspeed_slave_get_event_enabling
+-- 
+2.25.1
+

@@ -35,6 +35,7 @@
 #include "plat_pldm_monitor.h"
 #include "plat_class.h"
 #include "plat_i3c.h"
+#include "plat_isr.h"
 #include "plat_dimm.h"
 #include "pcc.h"
 #include "plat_kcs.h"
@@ -88,6 +89,8 @@ void pal_pre_init()
 	if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, LDO_VOLT)) {
 		printk("failed to initialize 1ou rg3mxxb12\n");
 	}
+
+	init_vr_event_work();
 }
 
 void pal_post_init()
@@ -98,6 +101,8 @@ void pal_post_init()
 	pldm_load_state_effecter_table(PLAT_PLDM_MAX_STATE_EFFECTER_IDX);
 	pldm_assign_gpio_effecter_id(PLAT_EFFECTER_ID_GPIO_HIGH_BYTE);
 	start_get_dimm_info_thread();
+	set_sys_ready_pin(BIC_READY_R);
+	reset_usb_hub();
 }
 
 void pal_set_sys_status()
@@ -106,16 +111,14 @@ void pal_set_sys_status()
 	set_DC_on_delayed_status();
 	set_post_status(FM_BIOS_POST_CMPLT_BIC_N);
 	sync_bmc_ready_pin();
-	set_sys_ready_pin(BIC_READY_R);
-	reset_usb_hub();
 	apml_init();
 
 	if (get_post_status()) {
 		apml_recovery();
 		set_tsi_threshold();
-		read_cpuid();
 		disable_mailbox_completion_alert();
 		enable_alert_signal();
+		read_cpuid();
 	}
 }
 

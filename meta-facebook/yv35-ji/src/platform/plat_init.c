@@ -20,11 +20,16 @@
 #include "plat_gpio.h"
 #include "plat_mctp.h"
 #include "plat_ssif.h"
+#include "plat_sensor_table.h"
+#include "plat_power_status.h"
 #include "util_worker.h"
 #include "power_status.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "libutil.h"
+
+#include <logging/log.h>
+LOG_MODULE_REGISTER(plat_init);
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -33,7 +38,7 @@ SCU_CFG scu_cfg[] = {
 	/* Set GPIOF/G/H internal pull-up/down after gpio init */
 	{ 0x7e6e2614, 0xFFFFFFFF },
 	/* Set GPIOJ/K/L internal pull-up/down after gpio init */
-	{ 0x7e6e2618, 0xC6000000 },
+	{ 0x7e6e2618, 0xC7000000 },
 	/* Set GPIOM/N/O/P internal pull-up/down after gpio init */
 	{ 0x7e6e261c, 0x0000007A },
 	/* Set GPIOQ/R/S/T internal pull-up/down after gpio init */
@@ -52,12 +57,22 @@ void pal_pre_init()
 
 void pal_post_init()
 {
+	if (get_post_status() == true)
+		modify_sensor_cfg();
+
+	LOG_INF("Board revision: %d", get_board_revision());
+	LOG_INF("Retimer module: %d, OTH module: %d, HSC module: %d", get_retimer_module(),
+		get_oth_module(), get_hsc_module());
+
+	handle_tda38741_work_around();
+
 	plat_mctp_init();
 	ssif_init();
 }
 
 void pal_device_init()
 {
+	power_status_monitor();
 }
 
 void pal_set_sys_status()
@@ -67,7 +82,7 @@ void pal_set_sys_status()
 
 	set_sys_ready_pin(BIC_READY);
 	set_CPU_power_status(RUN_POWER_PG);
-	set_post_status(VIRTUAL_BIOS_POST_COMPLETE_L);
+	handle_post_status(NULL, false);
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78

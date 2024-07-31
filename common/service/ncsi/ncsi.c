@@ -376,7 +376,9 @@ uint8_t mctp_ncsi_send_msg(void *mctp_p, ncsi_msg *msg)
 		msg->ext_params.tag_owner = 1;
 	}
 
-	uint16_t payload_length = (msg->hdr.payload_length_high << 8) | msg->hdr.payload_length_low;
+	uint16_t payload_length =
+		((msg->hdr.payload_length_high << 8) | msg->hdr.payload_length_low) +
+		NCSI_CHECHSUM_LENGTH;
 
 	uint16_t len = sizeof(msg->hdr) + payload_length;
 	uint8_t buf[len];

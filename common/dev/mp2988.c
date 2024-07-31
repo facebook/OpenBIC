@@ -257,6 +257,8 @@ static bool mp2988_store(uint8_t bus, uint8_t addr, uint8_t page, uint8_t mode)
 		return false;
 	}
 
+	k_msleep(200);
+
 	int wait_time = 10;
 	while (wait_time) {
 		if (mp2988_set_page(bus, addr, VR_MPS_PAGE_3) == false) {

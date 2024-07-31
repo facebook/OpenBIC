@@ -24,10 +24,19 @@
 #include "hal_gpio.h"
 #include "plat_threshold.h"
 #include "plat_log.h"
+#include "plat_gpio.h"
+#include "hal_i2c.h"
+#include "nct7363.h"
+#include "plat_i2c.h"
+#include "plat_hook.h"
+#include "plat_sensor_table.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
 #define DEF_PROJ_GPIO_PRIORITY 78
+
+static void pump_board_init(struct k_work *work);
+K_WORK_DELAYABLE_DEFINE(up_15sec_handler, pump_board_init);
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -42,10 +51,89 @@ SCU_CFG scu_cfg[] = {
 	{ 0x7e6e2630, 0x00000002 },
 };
 
+uint8_t pump_board_init_tbl[] = {
+	// pump board 1
+	SENSOR_NUM_PB_1_FAN_1_TACH_RPM, SENSOR_NUM_PB_1_FAN_1_TACH_RPM,
+	SENSOR_NUM_PB_1_FAN_2_TACH_RPM, SENSOR_NUM_PB_1_HDC1080DMBR_TEMP_C,
+	SENSOR_NUM_PB_1_HUM_PCT_RH, SENSOR_NUM_PB_1_HSC_P48V_TEMP_C,
+	SENSOR_NUM_PB_1_HSC_P48V_VIN_VOLT_V, SENSOR_NUM_PB_1_HSC_P48V_IOUT_CURR_A,
+	SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W,
+	// pump board 2
+	SENSOR_NUM_PB_2_PUMP_TACH_RPM, SENSOR_NUM_PB_2_FAN_1_TACH_RPM,
+	SENSOR_NUM_PB_2_FAN_2_TACH_RPM, SENSOR_NUM_PB_2_HDC1080DMBR_TEMP_C,
+	SENSOR_NUM_PB_2_HUM_PCT_RH, SENSOR_NUM_PB_2_HSC_P48V_TEMP_C,
+	SENSOR_NUM_PB_2_HSC_P48V_VIN_VOLT_V, SENSOR_NUM_PB_2_HSC_P48V_IOUT_CURR_A,
+	SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W,
+	// pump board 3
+	SENSOR_NUM_PB_3_PUMP_TACH_RPM, SENSOR_NUM_PB_3_FAN_1_TACH_RPM,
+	SENSOR_NUM_PB_3_FAN_2_TACH_RPM, SENSOR_NUM_PB_3_HDC1080DMBR_TEMP_C,
+	SENSOR_NUM_PB_3_HUM_PCT_RH, SENSOR_NUM_PB_3_HSC_P48V_TEMP_C,
+	SENSOR_NUM_PB_3_HSC_P48V_VIN_VOLT_V, SENSOR_NUM_PB_3_HSC_P48V_IOUT_CURR_A,
+	SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W
+};
+
+void pump_board_init(struct k_work *work)
+{
+	if (work == NULL) {
+		LOG_ERR("pump_board_init get NULL work handler!");
+		return;
+	}
+
+	// init pump board 1, 2 and 3
+	LOG_WRN("pump board start init");
+	for (uint8_t i = 0; i < ARRAY_SIZE(pump_board_init_tbl); i++) {
+		sensor_cfg *cfg = get_common_sensor_cfg_info(pump_board_init_tbl[i]);
+		if (cfg->pre_sensor_read_hook) {
+			if (cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args) != true) {
+				LOG_ERR("init pump board pre-read fail, sensor num: 0x%x",
+					cfg->num);
+			}
+		}
+
+		bool ret = init_drive_type_delayed(cfg);
+
+		if (ret != true)
+			LOG_ERR("init drive type fail, sensor num: 0x%x", cfg->num);
+
+		if (cfg->post_sensor_read_hook) {
+			cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL);
+		}
+	}
+}
+
 void pal_pre_init()
 {
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
 	init_aalc_config();
+	gpio_set(FM_BIC_READY_R_N, 0); //MM4 for bus3 power up
+	k_msleep(10);
+	// pull bpb nct7363 sensor box power high first;
+	sensor_cfg plat_sensor_config = { SENSOR_NUM_BPB_RACK_LEVEL_1,
+					  sensor_dev_nct7363,
+					  I2C_BUS5,
+					  BPB_NCT7363_ADDR,
+					  NCT7363_GPIO_READ_OFFSET,
+					  stby_access,
+					  NCT7363_5_PORT,
+					  0,
+					  SAMPLE_COUNT_DEFAULT,
+					  POLL_TIME_DEFAULT,
+					  ENABLE_SENSOR_POLLING,
+					  0,
+					  SENSOR_INIT_STATUS,
+					  NULL,
+					  NULL,
+					  NULL,
+					  NULL,
+					  &nct7363_init_args[17] };
+
+	uint8_t ret = nct7363_init(&plat_sensor_config);
+
+	if (ret)
+		LOG_ERR("init result fail:0x%x", ret);
+
+	k_msleep(1000);
+	k_work_schedule(&up_15sec_handler, K_SECONDS(15));
 }
 
 void pal_post_init()
@@ -54,8 +142,11 @@ void pal_post_init()
 	init_pwm_dev();
 	init_custom_modbus_server();
 	init_modbus_command_table();
-	//threshold_poll_init();
+	quick_sensor_poll_init();
+	threshold_poll_init();
+	ctl_all_pwm_dev(60);
 	set_rpu_ready();
+	fan_pump_pwrgd();
 }
 
 void pal_device_init()

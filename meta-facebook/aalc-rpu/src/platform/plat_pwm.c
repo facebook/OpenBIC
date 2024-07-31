@@ -20,20 +20,17 @@
 #include "nct7363.h"
 #include "plat_sensor_table.h"
 #include "plat_hook.h"
+#include "plat_fsc.h"
 #include "plat_pwm.h"
 
 LOG_MODULE_REGISTER(plat_pwm);
 
 #define MAX_FAN_DUTY_VALUE 100
 #define PWM_PERIOD 40 // 25kHz
-#define PWM_DEVICE_E_FAN_START PWM_DEVICE_E_FB_FAN_1
-#define PWM_DEVICE_E_FAN_END PWM_DEVICE_E_FB_FAN_14
-#define PWM_DEVICE_E_PUMB_START PWM_DEVICE_E_PB_PUMB_1
-#define PWM_DEVICE_E_PUMB_END PWM_DEVICE_E_PB_PUMB_FAN_3
 
 static const struct device *pwm_dev;
-static uint8_t fan_duty_setting;
-static uint8_t pumb_duty_setting;
+static uint8_t fan_group_duty_cache[PWM_GROUP_E_MAX];
+static uint8_t fan_duty_cache[PWM_DEVICE_E_MAX];
 
 struct nct_dev_info {
 	enum PWM_DEVICE_E dev;
@@ -108,6 +105,51 @@ static uint8_t nct_pwm_ctl(enum PWM_DEVICE_E dev, uint8_t duty)
 
 	return (ret == true) ? 0 : 1;
 }
+uint8_t nct7363_wdt_all_disable()
+{
+	for (uint8_t i = 0; i < ARRAY_SIZE(nct_dev_tbl); i++) {
+		sensor_cfg *cfg = get_common_sensor_cfg_info(nct_dev_tbl[i].tach_sen_num);
+
+		if (cfg == NULL) {
+			LOG_ERR("Failed to get sensor config for wdt disable 0x%x",
+				nct_dev_tbl[i].tach_sen_num);
+			continue;
+		}
+
+		if (!pre_PCA9546A_read(cfg, cfg->pre_sensor_read_args))
+			LOG_ERR("pre lock mutex fail !");
+
+		nct7363_setting_wdt(cfg, WDT_DISABLE);
+
+		if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
+			LOG_ERR("post unlock mutex fail !");
+	}
+
+	return true;
+}
+
+uint8_t nct7363_wdt_all_enable()
+{
+	for (uint8_t i = 0; i < ARRAY_SIZE(nct_dev_tbl); i++) {
+		sensor_cfg *cfg = get_common_sensor_cfg_info(nct_dev_tbl[i].tach_sen_num);
+
+		if (cfg == NULL) {
+			LOG_ERR("Failed to get sensor config for wdt enable 0x%x",
+				nct_dev_tbl[i].tach_sen_num);
+			continue;
+		}
+
+		if (!pre_PCA9546A_read(cfg, cfg->pre_sensor_read_args))
+			LOG_ERR("pre lock mutex fail !");
+
+		nct7363_setting_wdt(cfg, nct7363_init_args[i].wdt_cfg);
+
+		if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
+			LOG_ERR("post unlock mutex fail !");
+	}
+
+	return true;
+}
 
 int ast_pwm_set(int duty)
 {
@@ -132,6 +174,7 @@ uint8_t plat_pwm_ctrl(enum PWM_DEVICE_E dev, uint8_t duty)
 	}
 
 	LOG_DBG("Set PWM device %d duty %d", dev, duty);
+	fan_duty_cache[dev] = duty;
 
 	uint8_t ret = 0;
 	switch (dev) {
@@ -197,54 +240,51 @@ static uint8_t ctl_pwm_dev(uint8_t index_start, uint8_t index_end, uint8_t duty)
 
 uint8_t ctl_all_pwm_dev(uint8_t duty)
 {
-	// Hex Fan & RPU Pump Setting
-	if (ctl_hex_fan_pwm_dev(duty) || ctl_pump_pwm_dev(duty))
-		return 1;
-
-	// other PWM setting
-	if (plat_pwm_ctrl(PWM_DEVICE_E_BB_FAN, duty))
-		return 1;
-	return 0;
-}
-
-uint8_t ctl_hex_fan_pwm_dev(uint8_t duty)
-{
-	if (!ctl_pwm_dev(PWM_DEVICE_E_FAN_START, PWM_DEVICE_E_FAN_END, duty))
-		fan_duty_setting = duty;
-	else
-		return 1;
+	set_pwm_group(PWM_GROUP_E_HEX_FAN, duty);
+	set_pwm_group(PWM_GROUP_E_PUMP, duty);
+	set_pwm_group(PWM_GROUP_E_RPU_FAN, duty);
 
 	return 0;
 }
 
-uint8_t ctl_pump_pwm_dev(uint8_t duty)
+uint8_t set_pwm_group(uint8_t group, uint8_t duty)
 {
-	if (!ctl_pwm_dev(PWM_DEVICE_E_PUMB_START, PWM_DEVICE_E_PUMB_END, duty))
-		pumb_duty_setting = duty;
-	else
-		return 1;
+	uint8_t ret = 1;
 
-	return 0;
+	fan_group_duty_cache[group] = duty;
+
+	switch (group) {
+	case PWM_GROUP_E_HEX_FAN:
+		if (!ctl_pwm_dev(PWM_DEVICE_E_FB_FAN_1, PWM_DEVICE_E_FB_FAN_14, duty))
+			ret = 0;
+		break;
+	case PWM_GROUP_E_PUMP:
+		if (!ctl_pwm_dev(PWM_DEVICE_E_PB_PUMB_1, PWM_DEVICE_E_PB_PUMB_3, duty))
+			ret = 0;
+		break;
+	case PWM_GROUP_E_RPU_FAN:
+		if (!ctl_pwm_dev(PWM_DEVICE_E_PB_PUMB_FAN_1, PWM_DEVICE_E_BB_FAN, duty))
+			ret = 0;
+		break;
+	};
+
+	return ret;
 }
 
-uint8_t ctl_other_pwm_dev(uint8_t duty)
+uint8_t get_pwm_group_cache(uint8_t group)
 {
-	if (!ctl_pwm_dev(PWM_DEVICE_E_PUMB_START, PWM_DEVICE_E_PUMB_END, duty))
-		pumb_duty_setting = duty;
-	else
-		return 1;
+	if (group >= PWM_GROUP_E_MAX)
+		return 0xFF;
 
-	return 0;
+	return fan_group_duty_cache[group];
 }
 
-uint8_t fan_pwm_dev_duty_setting(void)
+uint8_t get_pwm_cache(uint8_t idx)
 {
-	return fan_duty_setting;
-}
+	if (idx >= PWM_DEVICE_E_MAX)
+		return 0xFF;
 
-uint8_t pump_pwm_dev_duty_setting(void)
-{
-	return pumb_duty_setting;
+	return fan_duty_cache[idx];
 }
 
 void init_pwm_dev(void)

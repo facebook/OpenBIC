@@ -39,6 +39,10 @@ static modbus_err_log_mapping err_log_data[LOG_MAX_NUM];
 static uint8_t err_sensor_caches[32];
 
 const err_sensor_mapping sensor_err_codes[] = {
+	{ LEAK_CHASSIS_0, SENSOR_NUM_IT_LEAK_0_GPIO },
+	{ LEAK_CHASSIS_1, SENSOR_NUM_IT_LEAK_1_GPIO },
+	{ LEAK_CHASSIS_2, SENSOR_NUM_IT_LEAK_2_GPIO },
+	{ LEAK_CHASSIS_3, SENSOR_NUM_IT_LEAK_3_GPIO },
 	{ LEAK_RPU_INT, SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V },
 	{ LEAK_MAN_PAN_GPO, SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_VOLT_V },
 	{ LOW_WATER_LEVEL, SENSOR_NUM_BPB_RACK_LEVEL_2 },
@@ -89,11 +93,16 @@ static uint16_t get_log_position_by_time_order(uint8_t order)
 
 	return (i + LOG_MAX_NUM - (order - 1)) % LOG_MAX_NUM;
 }
-
 void log_transfer_to_modbus_data(uint16_t *modbus_data, uint8_t cmd_size, uint16_t order)
 {
+	CHECK_NULL_ARG(modbus_data);
+
 	memcpy(modbus_data, &err_log_data[get_log_position_by_time_order(order)],
 	       sizeof(uint16_t) * cmd_size);
+
+	modbus_err_log_mapping *p = (modbus_err_log_mapping *)modbus_data;
+	if (p->index == 0xffff)
+		memset(modbus_data, 0x00, sizeof(uint16_t) * cmd_size);
 }
 
 bool modbus_clear_log(void)
@@ -101,19 +110,21 @@ bool modbus_clear_log(void)
 	memset(err_log_data, 0xFF, sizeof(err_log_data));
 	memset(err_sensor_caches, 0, sizeof(err_sensor_caches));
 
-	if (!plat_eeprom_write(AALC_FRU_LOG_START, (uint8_t *)err_log_data, AALC_FRU_LOG_SIZE)) {
-		LOG_ERR("Clear EEPROM Log failed");
-		return false;
+	for (uint8_t i = 0; i < LOG_MAX_NUM; i++) {
+		if (!plat_eeprom_write(AALC_FRU_LOG_START + sizeof(modbus_err_log_mapping) * i,
+				       (uint8_t *)err_log_data, sizeof(modbus_err_log_mapping))) {
+			LOG_ERR("Clear EEPROM Log failed");
+			return false;
+		}
+		k_msleep(10); // the eeprom max write time is 10 ms
 	}
 
 	return true;
 }
 
-//systime format(uint32_t) consists of 2 regs, modbus response will revert the order of regs
-uint32_t systime_reverse_regs(void)
+uint32_t get_uptime_secs(void)
 {
-	uint32_t sys_time = (uint32_t)((k_uptime_get() / 1000) % INT32_MAX);
-	return ((sys_time >> 16) & 0xFFFF) | ((sys_time << 16) & 0xFFFF0000);
+	return (uint32_t)((k_uptime_get() / 1000) % INT32_MAX);
 }
 
 void error_log_event(uint8_t sensor_num, bool val_normal)
@@ -167,9 +178,10 @@ void error_log_event(uint8_t sensor_num, bool val_normal)
 				1 :
 				(err_log_data[newest_count].index + 1);
 		err_log_data[fru_count].err_code = err_code;
-		err_log_data[fru_count].sys_time = systime_reverse_regs();
-		err_log_data[fru_count].pump_duty = (uint16_t)pump_pwm_dev_duty_setting();
-		err_log_data[fru_count].fan_duty = (uint16_t)fan_pwm_dev_duty_setting();
+		err_log_data[fru_count].sys_time = get_uptime_secs();
+		err_log_data[fru_count].pump_duty = (uint16_t)get_pwm_group_cache(PWM_GROUP_E_PUMP);
+		err_log_data[fru_count].fan_duty =
+			(uint16_t)get_pwm_group_cache(PWM_GROUP_E_HEX_FAN);
 
 		err_log_data[fru_count].outlet_temp = get_sensor_reading_to_modbus_val(
 			SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C, -2, 1);

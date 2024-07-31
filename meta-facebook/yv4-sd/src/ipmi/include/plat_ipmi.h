@@ -17,4 +17,10 @@
 #ifndef PLAT_IPMI_H
 #define PLAT_IPMI_H
 
+enum GET_HTTP_BOOT_ATTR {
+	GET_HTTP_BOOT_SIZE = 0x00,
+	GET_HTTP_BOOT_CRC32 = 0x01,
+	GET_HTTP_BOOT_MAX = 0x02,
+};
+
 #endif

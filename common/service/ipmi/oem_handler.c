@@ -286,6 +286,26 @@ __weak void OEM_GET_CHASSIS_POSITION(ipmi_msg *msg)
 	return;
 }
 
+__weak void OEM_GET_HTTP_BOOT_DATA(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	msg->data_len = 0;
+	msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+	LOG_WRN("OEM_HTTP_BOOT_DATA not supported");
+	return;
+}
+
+__weak void OEM_GET_HTTP_BOOT_ATTR(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	msg->data_len = 0;
+	msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+	LOG_WRN("OEM_HTTP_BOOT_ATTR not supported");
+	return;
+}
+
 void IPMI_OEM_handler(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -322,6 +342,14 @@ void IPMI_OEM_handler(ipmi_msg *msg)
 	case CMD_OEM_GET_CHASSIS_POSITION:
 		LOG_DBG("Received Get Chassis Position command");
 		OEM_GET_CHASSIS_POSITION(msg);
+		break;
+	case CMD_OEM_GET_HTTP_BOOT_DATA:
+		LOG_DBG("Received Get Http boot data command");
+		OEM_GET_HTTP_BOOT_DATA(msg);
+		break;
+	case CMD_OEM_GET_HTTP_BOOT_ATTR:
+		LOG_DBG("Received Get Http boot attribute command");
+		OEM_GET_HTTP_BOOT_ATTR(msg);
 		break;
 	default:
 		LOG_ERR("invalid OEM msg netfn: %x, cmd: %x", msg->netfn, msg->cmd);

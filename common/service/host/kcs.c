@@ -64,7 +64,7 @@ void reset_kcs_ok()
 }
 
 #ifdef ENABLE_PLDM
-
+#ifndef ENABLE_OEM_PLDM
 enum cmd_app_get_sys_info_params {
 	LENGTH_INDEX = 0x05, // skip netfun, cmd code, paramter selctor, set selctor, encoding
 	VERIONS_START_INDEX = 0x06,
@@ -157,8 +157,6 @@ exit:
 	return rc;
 }
 
-#ifndef ENABLE_OEM_PLDM
-
 static int send_bios_version_to_bmc(char *bios_version, uint8_t bios_version_len)
 {
 	pldm_msg msg = { 0 };
@@ -223,7 +221,7 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 {
 	int rc = 0;
 	uint8_t ibuf[KCS_BUFF_SIZE];
-#ifndef ENABLE_PLDM
+#if (!defined(ENABLE_PLDM) || defined(ENABLE_OEM_PLDM))
 	ipmi_msg bridge_msg;
 	ipmb_error status;
 #endif
@@ -299,7 +297,7 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 			if ((req->netfn == NETFN_STORAGE_REQ) &&
 			    (req->cmd == CMD_STORAGE_ADD_SEL)) {
 				// Send SEL to BMC via PLDM over MCTP
-				mctp_ext_params ext_params = {0};
+				mctp_ext_params ext_params = { 0 };
 				uint8_t pldm_event_length = rc - 4; // exclude netfn, cmd, record_id
 				uint8_t bmc_bus = I2C_BUS_BMC;
 
@@ -314,8 +312,9 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 					ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
 					ext_params.ep = MCTP_EID_BMC;
 				}
-				pldm_platform_event_message_req(
-					find_mctp_by_bus(bmc_bus), ext_params, 0xFB, &ibuf[4], pldm_event_length);
+				pldm_platform_event_message_req(find_mctp_by_bus(bmc_bus),
+								ext_params, 0xFB, &ibuf[4],
+								pldm_event_length);
 			}
 #endif
 #endif
@@ -327,13 +326,14 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 					LOG_ERR("Record bios fw version fail");
 				}
 #ifdef ENABLE_PLDM
+#ifndef ENABLE_OEM_PLDM
 				char *bios_version = ibuf + VERIONS_START_INDEX;
 				uint8_t length = ibuf[LENGTH_INDEX];
 				ret = update_bios_information(bios_version, length);
 				if (ret < 0) {
 					LOG_ERR("Failed to update bios information, rc = %d", ret);
 				}
-#ifndef ENABLE_OEM_PLDM
+
 				ret = send_bios_version_to_bmc(bios_version, length);
 				if (ret < 0) {
 					LOG_ERR("Failed to send bios version to bmc, rc = %d", ret);
@@ -349,7 +349,7 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 					LOG_ERR("Set dimm presence status fail");
 				}
 			}
-#ifndef ENABLE_PLDM
+#if (!defined(ENABLE_PLDM) || defined(ENABLE_OEM_PLDM))
 			bridge_msg.data_len = rc - 2; // exclude netfn, cmd
 			bridge_msg.seq_source = 0xff; // No seq for KCS
 			bridge_msg.InF_source = HOST_KCS_1 + kcs_inst->index;

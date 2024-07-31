@@ -79,7 +79,7 @@ west update
 Install the toolchain:
 ```
 cd ~
-wget https://github.com/zephyrproject-rtos/sdkng/releases/download/v0.12.4/zephyr-sdk-0.12.4-x86_64-linux-setup.run
+wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.12.4/zephyr-sdk-0.12.4-x86_64-linux-setup.run
 ```
 Run the installer, installing the SDK in ~/zephyr-sdk-0.12.4:
 ```

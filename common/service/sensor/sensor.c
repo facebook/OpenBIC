@@ -139,6 +139,7 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(adc128d818)
 	sensor_name_to_num(ads1015)
 	sensor_name_to_num(plat_def_sensor)
+	sensor_name_to_num(e50sn12051)
 };
 // clang-format on
 
@@ -312,12 +313,17 @@ SENSOR_DRIVE_INIT_DECLARE(ds160pt801);
 #ifdef ENABLE_RS31380R
 SENSOR_DRIVE_INIT_DECLARE(rs31380r);
 #endif
+#ifndef DISABLE_ADC128D818
 SENSOR_DRIVE_INIT_DECLARE(adc128d818);
+#endif
 #ifdef ENABLE_ADS1015
 SENSOR_DRIVE_INIT_DECLARE(ads1015);
 #endif
 #ifdef ENABLE_PLAT_DEF_SENSOR
 SENSOR_DRIVE_INIT_DECLARE(plat_def_sensor);
+#endif
+#ifdef ENABLE_PLAT_DEF_SENSOR
+SENSOR_DRIVE_INIT_DECLARE(e50sn12051);
 #endif
 
 // The sequence needs to same with SENSOR_DEV ID
@@ -610,7 +616,11 @@ sensor_drive_api sensor_drive_tbl[] = {
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(rs31380r),
 #endif
+#ifndef DISABLE_ADC128D818
 	SENSOR_DRIVE_TYPE_INIT_MAP(adc128d818),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(adc128d818),
+#endif
 #ifdef ENABLE_ADS1015
 	SENSOR_DRIVE_TYPE_INIT_MAP(ads1015),
 #else
@@ -620,6 +630,11 @@ sensor_drive_api sensor_drive_tbl[] = {
 	SENSOR_DRIVE_TYPE_INIT_MAP(plat_def_sensor),
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(plat_def_sensor),
+#endif
+#ifdef ENABLE_PLAT_DEF_SENSOR
+	SENSOR_DRIVE_TYPE_INIT_MAP(e50sn12051),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(e50sn12051),
 #endif
 };
 
@@ -1151,7 +1166,6 @@ static void drive_init(void)
 
 	for (table_index = 0; table_index < sensor_monitor_count; ++table_index) {
 		sensor_monitor_table_info *table_info = &sensor_monitor_table[table_index];
-
 		if (table_info->access_checker != NULL) {
 			if (table_info->access_checker(table_info->access_checker_arg) != true) {
 				LOG_WRN("[%s] table: 0x%x can't access, skip init drive", __func__,
@@ -1165,7 +1179,6 @@ static void drive_init(void)
 			LOG_ERR("Table index: 0x%x is NULL, skip to initialize drive", table_index);
 			continue;
 		}
-
 		for (sensor_index = 0; sensor_index < sensor_monitor_table[table_index].cfg_count;
 		     ++sensor_index) {
 			sensor_cfg *cfg = &cfg_table[sensor_index];

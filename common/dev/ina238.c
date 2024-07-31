@@ -35,7 +35,7 @@
 
 LOG_MODULE_REGISTER(dev_ina238);
 
-static uint16_t twoscomplement_to_decimal(uint16_t twoscomplement_val)
+static int16_t twoscomplement_to_decimal(uint16_t twoscomplement_val)
 {
 	if (twoscomplement_val & MSB_MASK) { // Check if MSB is 1 (negative number)
 		twoscomplement_val =
@@ -84,7 +84,6 @@ uint8_t ina238_read(sensor_cfg *cfg, int *reading)
 			val = twoscomplement_to_decimal(vshunt_val) * ADCRANGE_1_CONVERSION_FACTOR;
 		else
 			val = twoscomplement_to_decimal(vshunt_val) * ADCRANGE_0_CONVERSION_FACTOR;
-
 		break;
 	case INA238_VBUS_OFFSET:
 		/* Read bus voltage */

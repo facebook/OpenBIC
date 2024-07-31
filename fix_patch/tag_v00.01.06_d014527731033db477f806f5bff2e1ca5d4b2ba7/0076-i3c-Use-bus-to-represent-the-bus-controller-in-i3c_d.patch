@@ -1,0 +1,142 @@
+From 9ddcd28b71b80fd2c4a0d98ddc6978cef238eaff Mon Sep 17 00:00:00 2001
+From: Dylan Hung <dylan_hung@aspeedtech.com>
+Date: Mon, 27 Mar 2023 17:07:31 +0800
+Subject: [PATCH 11/11] i3c: Use "bus" to represent the bus controller in
+ i3c_dev_desc
+
+Replace "master_dev" by "bus" to represent the bus that the target
+device attached.
+
+Signed-off-by: Dylan Hung <dylan_hung@aspeedtech.com>
+Change-Id: I2c85c40c02f9abf3b94d0b5e95ea05915155355d
+---
+ drivers/i3c/i3c_aspeed.c  | 10 +++++-----
+ drivers/i3c/i3c_common.c  |  8 ++++----
+ drivers/i3c/i3c_shell.c   |  2 +-
+ include/drivers/i3c/i3c.h |  4 ++--
+ 4 files changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index cc80ea90e9..f3e31bda74 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -1467,7 +1467,7 @@ static void i3c_aspeed_start_xfer(struct i3c_aspeed_obj *obj, struct i3c_aspeed_
+ int i3c_aspeed_master_priv_xfer(struct i3c_dev_desc *i3cdev, struct i3c_priv_xfer *xfers,
+ 				int nxfers)
+ {
+-	struct i3c_aspeed_obj *obj = DEV_DATA(i3cdev->master_dev);
++	struct i3c_aspeed_obj *obj = DEV_DATA(i3cdev->bus);
+ 	struct i3c_aspeed_dev_priv *priv = DESC_PRIV(i3cdev);
+ 	struct i3c_aspeed_xfer xfer;
+ 	struct i3c_aspeed_cmd *cmds, *cmd;
+@@ -1579,7 +1579,7 @@ int i3c_aspeed_master_attach_device(const struct device *dev, struct i3c_dev_des
+ 	uint32_t dat_addr;
+ 	int i, pos;
+ 
+-	slave->master_dev = dev;
++	slave->bus = dev;
+ 
+ 	for (i = 0; i < obj->hw_dat.fields.depth; i++) {
+ 		if (obj->hw_dat_free_pos & BIT(i)) {
+@@ -1642,7 +1642,7 @@ int i3c_aspeed_master_request_ibi(struct i3c_dev_desc *i3cdev, struct i3c_ibi_ca
+ 
+ int i3c_aspeed_master_enable_ibi(struct i3c_dev_desc *i3cdev)
+ {
+-	struct i3c_aspeed_obj *obj = DEV_DATA(i3cdev->master_dev);
++	struct i3c_aspeed_obj *obj = DEV_DATA(i3cdev->bus);
+ 	struct i3c_register_s *i3c_register = obj->config->base;
+ 	struct i3c_aspeed_dev_priv *priv = DESC_PRIV(i3cdev);
+ 	union i3c_dev_addr_tbl_s dat;
+@@ -1680,7 +1680,7 @@ int i3c_aspeed_master_enable_ibi(struct i3c_dev_desc *i3cdev)
+ 		 * Therefore, the last argument of i3c_master_send_setmrl is set to
+ 		 * "CONFIG_I3C_ASPEED_MAX_IBI_PAYLOAD - 1"
+ 		 */
+-		ret = i3c_master_send_setmrl(i3cdev->master_dev, i3cdev->info.dynamic_addr, 256,
++		ret = i3c_master_send_setmrl(i3cdev->bus, i3cdev->info.dynamic_addr, 256,
+ 					     CONFIG_I3C_ASPEED_MAX_IBI_PAYLOAD - 1);
+ 		__ASSERT(!ret, "failed to send SETMRL\n");
+ 	}
+@@ -1693,7 +1693,7 @@ int i3c_aspeed_master_enable_ibi(struct i3c_dev_desc *i3cdev)
+ 	intr_reg.fields.ibi_thld = 1;
+ 	i3c_register->intr_signal_en.value = intr_reg.value;
+ 
+-	return i3c_master_send_enec(i3cdev->master_dev, i3cdev->info.dynamic_addr, I3C_CCC_EVT_SIR);
++	return i3c_master_send_enec(i3cdev->bus, i3cdev->info.dynamic_addr, I3C_CCC_EVT_SIR);
+ }
+ 
+ int i3c_aspeed_slave_register(const struct device *dev, struct i3c_slave_setup *slave_data)
+diff --git a/drivers/i3c/i3c_common.c b/drivers/i3c/i3c_common.c
+index 400a572f1e..ddd9a386c7 100644
+--- a/drivers/i3c/i3c_common.c
++++ b/drivers/i3c/i3c_common.c
+@@ -169,7 +169,7 @@ int i3c_jesd403_read(struct i3c_dev_desc *slave, uint8_t *addr, int addr_size, u
+ {
+ 	struct i3c_priv_xfer xfer[2];
+ 
+-	__ASSERT(slave->master_dev, "Unregistered device\n");
++	__ASSERT(slave->bus, "Unregistered device\n");
+ 	__ASSERT(!slave->info.i2c_mode, "Not I3C device\n\n");
+ 
+ 	xfer[0].rnw = 0;
+@@ -199,7 +199,7 @@ int i3c_jesd403_write(struct i3c_dev_desc *slave, uint8_t *addr, int addr_size,
+ 	uint8_t *out;
+ 	int ret;
+ 
+-	__ASSERT(slave->master_dev, "Unregistered device\n");
++	__ASSERT(slave->bus, "Unregistered device\n");
+ 	__ASSERT(!slave->info.i2c_mode, "Not I3C device\n\n");
+ 
+ 	out = k_calloc(sizeof(uint8_t), addr_size + data_size);
+@@ -230,7 +230,7 @@ int i3c_i2c_read(struct i3c_dev_desc *slave, uint8_t addr, uint8_t *buf, int len
+ 	uint8_t mode_reg = addr;
+ 	int ret;
+ 
+-	__ASSERT(slave->master_dev, "Unregistered device\n");
++	__ASSERT(slave->bus, "Unregistered device\n");
+ 	__ASSERT(slave->info.i2c_mode, "Not I2C device\n\n");
+ 
+ 	xfer.rnw = 0;
+@@ -261,7 +261,7 @@ int i3c_i2c_write(struct i3c_dev_desc *slave, uint8_t addr, uint8_t *buf, int le
+ 	uint8_t *out;
+ 	int ret;
+ 
+-	__ASSERT(slave->master_dev, "Unregistered device\n");
++	__ASSERT(slave->bus, "Unregistered device\n");
+ 	__ASSERT(slave->info.i2c_mode, "Not I2C device\n\n");
+ 
+ 	out = k_calloc(sizeof(uint8_t), length + 1);
+diff --git a/drivers/i3c/i3c_shell.c b/drivers/i3c/i3c_shell.c
+index b38d7a0f2c..a976bfe963 100644
+--- a/drivers/i3c/i3c_shell.c
++++ b/drivers/i3c/i3c_shell.c
+@@ -35,7 +35,7 @@ static struct i3c_dev_desc *find_matching_desc(const struct device *dev, uint8_t
+ 	int i;
+ 
+ 	for (i = 0; i < I3C_SHELL_MAX_DESC_NUM; i++) {
+-		if (i3c_shell_desc_tbl[i].master_dev == dev &&
++		if (i3c_shell_desc_tbl[i].bus == dev &&
+ 		    i3c_shell_desc_tbl[i].info.dynamic_addr == desc_addr) {
+ 			desc = &i3c_shell_desc_tbl[i];
+ 			break;
+diff --git a/include/drivers/i3c/i3c.h b/include/drivers/i3c/i3c.h
+index 74a55c7400..ae6aa7dc70 100644
+--- a/include/drivers/i3c/i3c.h
++++ b/include/drivers/i3c/i3c.h
+@@ -89,12 +89,12 @@ struct i3c_device_info {
+ 
+ /**
+  * @brief descriptor of the i3c device attached to the bus
+- * @param master_dev the master device which hosts the bus
++ * @param bus the bus controller which hosts the bus
+  * @param priv_data pointer to the low level driver private data
+  * @param info the device information
+  */
+ struct i3c_dev_desc {
+-	const struct device *master_dev;
++	const struct device *bus;
+ 	struct i3c_device_info info;
+ 	void *priv_data;
+ };
+-- 
+2.25.1
+

@@ -29,6 +29,19 @@
 #include "hdc1080.h"
 #include "ast_tach.h"
 #include "xdp710.h"
+#include "e50sn12051.h"
+
+#define BUS_1_MUX_ADDR 0xE0 >> 1
+#define BUS_2_MUX_ADDR 0xE2 >> 1
+#define BUS_6_MUX_ADDR 0xE4 >> 1
+#define BUS_7_MUX_ADDR 0xE6 >> 1
+#define BUS_8_MUX_ADDR 0xE8 >> 1
+#define BUS_9_MUX_ADDR 0xE8 >> 1
+
+#define MUX_CHANNEL_0 1
+#define MUX_CHANNEL_1 2
+#define MUX_CHANNEL_2 4
+#define MUX_CHANNEL_3 8
 
 typedef struct _ads112c_post_arg {
 	uint8_t plat_sensor_type;
@@ -37,9 +50,10 @@ typedef struct _ads112c_post_arg {
 enum PLATFORM_ADS112C_SENSOR_TYPE {
 	PLATFORM_ADS112C_FLOW = 0x00,
 	PLATFORM_ADS112C_PRESS = 0x01,
-	PLATFORM_ADS112C_TEMP = 0x02,
-	PLATFORM_ADS112C_OTHER = 0x03,
-	PLATFORM_ADS112C_LEAKAGE = 0x04,
+	PLATFORM_ADS112C_TEMP_RPU = 0x02,
+	PLATFORM_ADS112C_TEMP_RACK = 0x03,
+	PLATFORM_ADS112C_OTHER = 0x04,
+	PLATFORM_ADS112C_LEAKAGE = 0x05,
 };
 
 /**************************************************************************************************
@@ -53,6 +67,8 @@ extern ina238_init_arg ina238_init_args[];
 extern nct214_init_arg nct214_init_args[];
 extern xdp710_init_arg xdp710_init_args[];
 extern hdc1080_init_arg hdc1080_init_args[];
+extern ast_tach_init_arg ast_tach_init_args[];
+extern e50sn12051_init_arg e50sn12051_init_args[];
 
 /**************************************************************************************************
  * POST ARGS
@@ -73,5 +89,6 @@ bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading);
 bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading);
 bool pre_PCA9546A_read(sensor_cfg *cfg, void *args);
 bool post_PCA9546A_read(sensor_cfg *cfg, void *args, int *reading);
+bool is_fb_prsnt(uint8_t sen_num);
 
 #endif

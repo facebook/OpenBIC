@@ -16,6 +16,7 @@
 
 #include "fru.h"
 #include "plat_fru.h"
+#include "plat_class.h"
 #include <string.h>
 #include <logging/log.h>
 #include "libutil.h"
@@ -44,6 +45,54 @@ const EEPROM_CFG plat_bios_version_area_config = {
 	FRU_DEV_ACCESS_BYTE,
 	BIOS_FW_VERSION_START,
 	BIOS_FW_VERSION_MAX_SIZE,
+};
+
+const EEPROM_CFG plat_vr_remain_cnt_area_config[] = {
+	{
+		NV_ATMEL_24C128,
+		MB_FRU_ID,
+		MB_FRU_PORT,
+		MB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		VR_MPS_CPUDVDD_RM_CNT_START,
+		VR_RM_CNT_MAX_SIZE,
+	},
+	{
+		NV_ATMEL_24C128,
+		MB_FRU_ID,
+		MB_FRU_PORT,
+		MB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		VR_MPS_CPUVDD_RM_CNT_START,
+		VR_RM_CNT_MAX_SIZE,
+	},
+	{
+		NV_ATMEL_24C128,
+		MB_FRU_ID,
+		MB_FRU_PORT,
+		MB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		VR_MPS_SOCVDD_RM_CNT_START,
+		VR_RM_CNT_MAX_SIZE,
+	},
+	{
+		NV_ATMEL_24C128,
+		MB_FRU_ID,
+		MB_FRU_PORT,
+		MB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		VR_MPS_FBVDDP2_RM_CNT_START,
+		VR_RM_CNT_MAX_SIZE,
+	},
+	{
+		NV_ATMEL_24C128,
+		MB_FRU_ID,
+		MB_FRU_PORT,
+		MB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		VR_MPS_1V2_RM_CNT_START,
+		VR_RM_CNT_MAX_SIZE,
+	},
 };
 
 void pal_load_fru_config(void)
@@ -93,4 +142,73 @@ int get_bios_version(EEPROM_ENTRY *entry, uint8_t block_index)
 	}
 
 	return 0;
+}
+
+bool access_vr_remain_cnt(EEPROM_ENTRY *entry, uint8_t comp_id, bool update_flag)
+{
+	CHECK_NULL_ARG_WITH_RETURN(entry, false);
+
+	int idx = 0;
+
+	switch (comp_id) {
+	case JI_COMPNT_CPUDVDD:
+	case JI_COMPNT_CPUVDD:
+	case JI_COMPNT_SOCVDD:
+		idx = comp_id - JI_COMPNT_CPUDVDD;
+		break;
+
+	case JI_COMPNT_FBVDDP2:
+	case JI_COMPNT_1V2:
+		idx = comp_id - JI_COMPNT_FBVDDP2 + 3;
+		break;
+
+	default:
+		LOG_ERR("Unsupported component id");
+		return false;
+	}
+
+	entry->config = plat_vr_remain_cnt_area_config[idx];
+	entry->data_len = 2;
+
+	/* check whether VR remain count has been write before */
+	if (eeprom_read(entry) == false) {
+		LOG_ERR("eeprom_read fail");
+		return false;
+	}
+
+	uint16_t cur_rm_cnt = (entry->data[0] << 8) | entry->data[1];
+
+	if (cur_rm_cnt == 0xFFFF) {
+		LOG_WRN("VR comp_id %d remain count area first access, set %d to default.", comp_id,
+			VR_MPS_MAX_RM_CNT);
+		cur_rm_cnt = VR_MPS_MAX_RM_CNT;
+		entry->data[0] = (cur_rm_cnt >> 8) & 0xFF;
+		entry->data[1] = cur_rm_cnt & 0xFF;
+
+		if (eeprom_write(entry) == false) {
+			LOG_ERR("Failed to write default remain write count");
+			return false;
+		}
+	}
+
+	if (update_flag == false)
+		return true;
+
+	if (cur_rm_cnt == 0) {
+		LOG_WRN("VR comp_id %d remain count area is 0, no need to update.", comp_id);
+		return true;
+	}
+
+	cur_rm_cnt--;
+	entry->data[0] = (cur_rm_cnt >> 8) & 0xFF;
+	entry->data[1] = cur_rm_cnt & 0xFF;
+
+	if (eeprom_write(entry) == false) {
+		LOG_ERR("eeprom_write fail");
+		return false;
+	}
+
+	LOG_INF("VR comp_id %d remain count has beem updated to %d", comp_id, cur_rm_cnt);
+
+	return true;
 }

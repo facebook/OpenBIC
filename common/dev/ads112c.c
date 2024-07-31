@@ -28,7 +28,7 @@ bool ads112c_config_reg_set(uint8_t i2c_retry, sensor_cfg *cfg)
 	I2C_MSG msg;
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
-	msg.tx_len = 8;
+	msg.tx_len = 2;
 
 	ads112c_init_arg *init_arg = (ads112c_init_arg *)cfg->init_args;
 
@@ -36,18 +36,40 @@ bool ads112c_config_reg_set(uint8_t i2c_retry, sensor_cfg *cfg)
 		CMD_WREG | CFG_REG_OFFSET0; //WREG command: 0100 rrxx (rr register address = 00)
 	msg.data[1] = init_arg->reg0_input | init_arg->reg0_gain |
 		      init_arg->reg0_pga; //Configuration Register 0
-	msg.data[2] =
+	if (i2c_master_write(&msg, i2c_retry)) {
+		LOG_ERR("Write the respective register 0 configurations failed");
+		return false;
+	}
+
+	msg.data[0] =
 		CMD_WREG |
 		CFG_REG_OFFSET1; //WREG command: 0100 rrxx (rr register address = 01)(spec sample is 0x42)
-	msg.data[3] =
+	msg.data[1] =
 		init_arg->reg1_conversion | init_arg->reg1_vol_refer | init_arg->reg1_temp_mode;
-	msg.data[4] = CMD_WREG | CFG_REG_OFFSET2;
-	msg.data[5] = init_arg->reg2_idac;
-	msg.data[6] = CMD_WREG | CFG_REG_OFFSET3;
-	msg.data[7] = init_arg->reg3_idac1_cfg;
+	if (i2c_master_write(&msg, i2c_retry)) {
+		LOG_ERR("Write the respective register 1 configurations failed");
+		return false;
+	}
+
+	msg.data[0] = CMD_WREG | CFG_REG_OFFSET2;
+	msg.data[1] = init_arg->reg2_idac;
+	if (i2c_master_write(&msg, i2c_retry)) {
+		LOG_ERR("Write the respective register 2 configurations failed");
+		return false;
+	}
+
+	msg.data[0] = CMD_WREG | CFG_REG_OFFSET3;
+	msg.data[1] = init_arg->reg3_idac1_cfg;
 
 	if (i2c_master_write(&msg, i2c_retry)) {
-		LOG_ERR("Write the respective register configurations failed");
+		LOG_ERR("Write the respective register 3 configurations failed");
+		return false;
+	}
+
+	msg.tx_len = 1;
+	msg.data[0] = CMD_START_SYNC;
+	if (i2c_master_write(&msg, i2c_retry)) {
+		LOG_ERR("Write 0x08 to the configurations failed");
 		return false;
 	}
 

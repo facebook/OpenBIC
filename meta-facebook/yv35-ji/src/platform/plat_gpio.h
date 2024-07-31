@@ -43,7 +43,7 @@
 	gpio_name_to_num(BIC_EROT_LVSFT_EN) \
 	gpio_name_to_num(RTC_CLR_L) \
 	gpio_name_to_num(I2C_SSIF_ALERT_L) \
-	gpio_name_to_num(FPGA_CPU_BOOT_DONE)
+	gpio_name_to_num(FPGA_CPU_BOOT_DONE_L)
 
 #define name_gpioC \
 	gpio_name_to_num(FM_HSC_TIMER) \
@@ -136,7 +136,7 @@
 	gpio_name_to_num(Reserve_GPIOK7)
 
 #define name_gpioL \
-	gpio_name_to_num(Reserve_GPIOL0) \
+	gpio_name_to_num(VIRTUAL_E1S_PRSNT_L) \
 	gpio_name_to_num(CPLD_JTAG_MUX_SEL) \
 	gpio_name_to_num(JTAG_FPGA_MUX_SEL) \
 	gpio_name_to_num(Reserve_GPIOL3) \

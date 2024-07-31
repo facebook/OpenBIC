@@ -74,8 +74,11 @@ enum nct7363_port {
 #define NCT7363_FAN_COUNT_THRESHOLD_REG_HIGH_BYTE_BASE_OFFSET 0x6C
 #define NCT7363_FAN_COUNT_THRESHOLD_REG_LOW_BYTE_BASE_OFFSET 0x6D
 
+#define NCT7363_GPIO0x_INPUT_PORT_REG_OFFSET 0x00
+#define NCT7363_GPIO1x_INPUT_PORT_REG_OFFSET 0x10
+
 #define NCT7363_GPIO0x_OUTPUT_PORT_REG_OFFSET 0x01
-#define NCT7363_GPIO1x_OUTPUT_PORT_REG_OFFSET 0x10
+#define NCT7363_GPIO1x_OUTPUT_PORT_REG_OFFSET 0x11
 
 #define NCT7363_WDT_REG_OFFSET 0x2A
 
@@ -85,8 +88,29 @@ typedef struct _nct7363_init_arg {
 	// According to the pin position on the right side of the component, from top to bottom, there are 16 pins in total.
 	uint8_t pin_type[16];
 	uint8_t fan_poles[16];
+	union {
+		struct {
+			uint8_t gpio_00 : 1;
+			uint8_t gpio_01 : 1;
+			uint8_t gpio_02 : 1;
+			uint8_t gpio_03 : 1;
+			uint8_t gpio_04 : 1;
+			uint8_t gpio_05 : 1;
+			uint8_t gpio_06 : 1;
+			uint8_t gpio_07 : 1;
+			uint8_t gpio_10 : 1;
+			uint8_t gpio_11 : 1;
+			uint8_t gpio_12 : 1;
+			uint8_t gpio_13 : 1;
+			uint8_t gpio_14 : 1;
+			uint8_t gpio_15 : 1;
+			uint8_t gpio_16 : 1;
+			uint8_t gpio_17 : 1;
+		};
+		uint16_t gpio_out_default_val;
+	};
 	float fan_frequency[16];
-	uint8_t duty;
+	uint8_t duty[16];
 	uint16_t threshold[16];
 	uint8_t wdt_cfg;
 } nct7363_init_arg;
@@ -112,3 +136,7 @@ enum nct7363_wdt_sec { WDT_15_SEC, WDT_3_75_SEC, WDT_7_5_SEC, WDT_30_SEC, WDT_DI
 
 bool nct7363_set_duty(sensor_cfg *cfg, uint8_t duty, uint8_t port);
 #endif
+uint8_t nct7363_init(sensor_cfg *cfg);
+bool nct7363_setting_wdt(sensor_cfg *cfg, uint8_t wdt);
+uint8_t nct7363_read_back_data(sensor_cfg *cfg, uint8_t reading_offset);
+bool nct7363_write(sensor_cfg *cfg, uint8_t offset, uint8_t val);
