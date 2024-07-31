@@ -169,6 +169,7 @@ void handle_tda38741_work_around()
 }
 
 #define CPLD_REG_E1S_PRSNT_STATE 0x12
+#define CPLD_REG_RETIMER_PRSNT_STATE 0x13
 #define PWR_STAT_MON_THREAD_STACK_SIZE 1024
 
 struct k_thread power_status_monitor_thread;
@@ -177,6 +178,7 @@ K_KERNEL_STACK_MEMBER(power_status_monitor_stack, PWR_STAT_MON_THREAD_STACK_SIZE
 void power_status_monitor_handler(void *arug0, void *arug1, void *arug2)
 {
 	static uint8_t last_e1s_prsnt_state = 0xFF;
+	static uint8_t last_retimer_prsnt_state = 0xFF;
 
 	while (1) {
 		uint8_t retry = 3;
@@ -188,18 +190,30 @@ void power_status_monitor_handler(void *arug0, void *arug1, void *arug2)
 		msg.rx_len = 1;
 		msg.data[0] = CPLD_REG_E1S_PRSNT_STATE;
 
-		if (i2c_master_read(&msg, retry))
-			goto sleep;
+		if (i2c_master_read(&msg, retry) == 0) {
+			uint8_t e1s_prsnt_state = msg.data[0] & 0x01;
 
-		uint8_t e1s_prsnt_state = msg.data[0] & 0x01;
-
-		if (last_e1s_prsnt_state != e1s_prsnt_state) {
-			LOG_INF("E1S presence state: %d", e1s_prsnt_state);
-			gpio_set(VIRTUAL_E1S_PRSNT_L, e1s_prsnt_state);
-			last_e1s_prsnt_state = e1s_prsnt_state;
+			if (last_e1s_prsnt_state != e1s_prsnt_state) {
+				LOG_INF("E1S presence state: %d", e1s_prsnt_state);
+				gpio_set(VIRTUAL_E1S_PRSNT_L, e1s_prsnt_state);
+				last_e1s_prsnt_state = e1s_prsnt_state;
+			}
 		}
 
-	sleep:
+		msg.tx_len = 1;
+		msg.rx_len = 1;
+		msg.data[0] = CPLD_REG_RETIMER_PRSNT_STATE;
+
+		if (i2c_master_read(&msg, retry) == 0) {
+			uint8_t retimer_prsnt_state = msg.data[0] & 0x01;
+
+			if (last_retimer_prsnt_state != retimer_prsnt_state) {
+				LOG_INF("RETIMER presence state: %d", retimer_prsnt_state);
+				gpio_set(VIRTUAL_RETIMER_PG, retimer_prsnt_state);
+				last_retimer_prsnt_state = retimer_prsnt_state;
+			}
+		}
+
 		k_sleep(K_MSEC(3000));
 	}
 }
