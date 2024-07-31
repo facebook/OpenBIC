@@ -336,7 +336,7 @@ static void mctp_tx_task(void *arg, void *dummy0, void *dummy1)
 		}
 
 		/* Setup MCTP header and send to destination endpoint */
-		static uint8_t msg_tag;
+		uint8_t msg_tag = mctp_inst->msg_tag;
 		uint16_t max_msg_size = mctp_inst->max_msg_size;
 		uint8_t i;
 		uint8_t split_pkt_num =
@@ -396,7 +396,7 @@ static void mctp_tx_task(void *arg, void *dummy0, void *dummy1)
 
 		/* Only request mctp message needs to increase msg_tag */
 		if (mctp_msg.ext_params.tag_owner)
-			msg_tag++;
+			mctp_inst->msg_tag++;
 	}
 }
 
