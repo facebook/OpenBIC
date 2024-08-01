@@ -353,6 +353,8 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, uint8_t f
 			uint8_t rc = 0;
 			rc = spi_nor_re_init(flash_dev);
 			if (rc != 0) {
+				SAFE_FREE(txbuf);
+				is_init = 0;
 				return rc;
 			}
 			flash_device_list[flash_position].isinit = true;
