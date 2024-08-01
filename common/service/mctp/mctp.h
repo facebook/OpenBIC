@@ -197,6 +197,8 @@ typedef struct _mctp {
 	uint8_t ncsi_inst_id;
 	uint32_t ncsi_inst_table[8]; // 256 bits field for instance id
 
+	/* for MCTP msg tag */
+	uint8_t msg_tag;
 } mctp;
 
 typedef struct _mctp_smbus_port {
