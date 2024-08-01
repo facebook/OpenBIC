@@ -45,13 +45,11 @@ LED_BLINK_INIT(COOLANT); // LED_IDX_E_COOLANT
 
 uint8_t get_led_pin(uint8_t idx)
 {
-	const uint8_t pin = (idx == LED_IDX_E_POWER) ?
-				    FM_LED_FP_1_EN :
-				    (idx == LED_IDX_E_FAULT) ?
-				    FM_LED_FP_2_EN :
-				    (idx == LED_IDX_E_LEAK) ?
-				    FM_LED_FP_3_EN :
-				    (idx == LED_IDX_E_COOLANT) ? FM_LED_FP_4_EN : 0xFF;
+	const uint8_t pin = (idx == LED_IDX_E_POWER)   ? FM_LED_FP_1_EN :
+			    (idx == LED_IDX_E_FAULT)   ? FM_LED_FP_2_EN :
+			    (idx == LED_IDX_E_LEAK)    ? FM_LED_FP_3_EN :
+			    (idx == LED_IDX_E_COOLANT) ? FM_LED_FP_4_EN :
+							 0xFF;
 	return pin;
 }
 
@@ -62,12 +60,11 @@ uint8_t get_led_pin(uint8_t idx)
 
 struct k_timer *idx_to_led_timer(uint8_t idx)
 {
-	return (idx == LED_IDX_E_POWER) ? &led_blink_POWER :
-					  (idx == LED_IDX_E_FAULT) ?
-					  &led_blink_FAULT :
-					  (idx == LED_IDX_E_LEAK) ?
-					  &led_blink_LEAK :
-					  (idx == LED_IDX_E_COOLANT) ? &led_blink_COOLANT : NULL;
+	return (idx == LED_IDX_E_POWER)	  ? &led_blink_POWER :
+	       (idx == LED_IDX_E_FAULT)	  ? &led_blink_FAULT :
+	       (idx == LED_IDX_E_LEAK)	  ? &led_blink_LEAK :
+	       (idx == LED_IDX_E_COOLANT) ? &led_blink_COOLANT :
+					    NULL;
 }
 
 void led_set(uint8_t idx, uint8_t behaviour)
@@ -114,7 +111,7 @@ void led_ctrl(uint8_t idx, uint8_t ctrl)
 		led_set(idx, ctrl);
 		break;
 	case LED_START_BLINK:
-		k_timer_start(idx_to_led_timer(idx), K_MSEC(1000), K_MSEC(1000));
+		k_timer_start(idx_to_led_timer(idx), K_NO_WAIT, K_MSEC(1000));
 		break;
 	case LED_STOP_BLINK:
 		stop_blink_timer(idx);

@@ -27,11 +27,17 @@
 #include "sensor.h"
 #include "plat_gpio.h"
 #include "plat_pwm.h"
+#include "fru.h"
+#include "plat_fru.h"
+#include "plat_threshold.h"
 
 #define I2C_MASTER_READ_BACK_MAX_SIZE 16 // 16 registers
 
 static uint16_t temp_read_length;
 static uint16_t temp_read_data[I2C_MASTER_READ_BACK_MAX_SIZE];
+
+#define AALC_STICKY_STATUS_START 0x6000 //log offset: 24KB
+#define STICKY_STATUS_SIZE 2 // 1 register
 
 LOG_MODULE_REGISTER(plat_util);
 
@@ -127,6 +133,44 @@ float pow_of_10(int8_t exp)
 	}
 
 	return ret;
+}
+
+uint16_t get_sticky_sensor_status(uint8_t idx)
+{
+	uint16_t val;
+
+	if (idx < STICKY_ITRACK_CHASSIS0_LEAKAGE || idx > STICKY_HEX_RACK_FLOOR_LEAKAGE_RELAY) {
+		LOG_ERR("get Sticky status failed");
+		return 0;
+	}
+
+	if (!plat_eeprom_read(AALC_STICKY_STATUS_START +
+				      ((idx - STICKY_ITRACK_CHASSIS0_LEAKAGE) * STICKY_STATUS_SIZE),
+			      (uint8_t *)&val, STICKY_STATUS_SIZE))
+		LOG_ERR("get Sticky status failed");
+
+	return (val == 0xFFFF) ? 0 : val;
+}
+
+bool set_sticky_sensor_status(uint8_t idx, uint16_t val)
+{
+	if (idx < STICKY_ITRACK_CHASSIS0_LEAKAGE || idx > STICKY_HEX_RACK_FLOOR_LEAKAGE_RELAY) {
+		LOG_ERR("Set Sticky status failed");
+		return false;
+	}
+	uint16_t eeprom_val = (val == 0) ? 0xFFFF : val;
+
+	uint16_t sticky_status = get_sticky_sensor_status(idx);
+	if (sticky_status != val) {
+		if (!plat_eeprom_write(
+			    AALC_STICKY_STATUS_START +
+				    ((idx - STICKY_ITRACK_CHASSIS0_LEAKAGE) * STICKY_STATUS_SIZE),
+			    (uint8_t *)&eeprom_val, STICKY_STATUS_SIZE)) {
+			LOG_ERR("Write Sticky status failed");
+			return false;
+		}
+	}
+	return true;
 }
 
 #endif // PLAT_UTIL_H

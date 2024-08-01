@@ -20,3 +20,5 @@ void plat_enable_sensor_poll();
 void plat_disable_sensor_poll();
 void set_rpu_ready();
 float pow_of_10(int8_t exp);
+bool set_sticky_sensor_status(uint8_t idx, uint16_t val);
+uint16_t get_sticky_sensor_status(uint8_t idx);
