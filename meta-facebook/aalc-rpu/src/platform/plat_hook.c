@@ -530,8 +530,8 @@ nct7363_init_arg nct7363_init_args[] = {
 		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.gpio_11 = 0,
 		// pwm setting
-		.fan_frequency[NCT7363_1_PORT] = 500, // TO DO wait to check
-		.fan_frequency[NCT7363_2_PORT] = 500, // TO DO wait to check
+		.fan_frequency[NCT7363_1_PORT] = 20000, // TO DO wait to check
+		.fan_frequency[NCT7363_2_PORT] = 25000, // TO DO wait to check
 		.duty[NCT7363_1_PORT] = 60,
 		.duty[NCT7363_2_PORT] = 60,
 		// fanin setting
@@ -556,8 +556,8 @@ nct7363_init_arg nct7363_init_args[] = {
 		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.gpio_11 = 0,
 		// pwm setting
-		.fan_frequency[NCT7363_1_PORT] = 500, // TO DO wait to check
-		.fan_frequency[NCT7363_2_PORT] = 500, // TO DO wait to check
+		.fan_frequency[NCT7363_1_PORT] = 20000, // TO DO wait to check
+		.fan_frequency[NCT7363_2_PORT] = 25000, // TO DO wait to check
 		.duty[NCT7363_1_PORT] = 60,
 		.duty[NCT7363_2_PORT] = 60,
 		// fanin setting
@@ -582,8 +582,8 @@ nct7363_init_arg nct7363_init_args[] = {
 		.pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.gpio_11 = 0,
 		// pwm setting
-		.fan_frequency[NCT7363_1_PORT] = 500, // TO DO wait to check
-		.fan_frequency[NCT7363_2_PORT] = 500, // TO DO wait to check
+		.fan_frequency[NCT7363_1_PORT] = 20000, // TO DO wait to check
+		.fan_frequency[NCT7363_2_PORT] = 25000, // TO DO wait to check
 		.duty[NCT7363_1_PORT] = 60,
 		.duty[NCT7363_2_PORT] = 60,
 		// fanin setting
@@ -1026,30 +1026,19 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 	switch (post_args->plat_sensor_type) {
 	case PLATFORM_ADS112C_FLOW: //Flow_Rate_LPM
 		v_val = 5 - ((32767 - rawValue) * 0.000153);
-		val = (((v_val / 5) - 0.1) / (0.8 / (flow_Pmax - flow_Pmin))) + 10;
+		val = (((v_val / 5.0) - 0.1) * (flow_Pmax - flow_Pmin) / 0.8);
 		val = (val - 7.56494) * 1.076921;
-		val = (2.5412 * val) - 25.285;
-		val = (0.7262 * val) + 3.1433;
 		break;
-
 	case PLATFORM_ADS112C_PRESS: //Filter_P/Outlet_P/Inlet_P
 		v_val = 5 - ((32767 - rawValue) * 0.000153);
-		val = (((v_val / 5) - 0.1) / (0.8 / (press_Pmax - press_Pmin))) + 10;
-		val = ((0.9828 * val) - 9.9724) * 6.894759;
+		val = (((v_val / 5.0) - 0.1) * (press_Pmax - press_Pmin) / 0.8);
 		break;
-
 	case PLATFORM_ADS112C_TEMP_RACK:
 		val = (rawValue - 15888) * 0.015873;
-		//val = (1.1685 * val) - 4.5991;
-		val = ((1.1685 * val) - 4.5991) * 0.8793 + 2.42;
 		break;
-
 	case PLATFORM_ADS112C_TEMP_RPU: //CDU_Inlet_Liq_T
 		val = (rawValue - 16140) * 0.015873;
-		//val = (1.1685 * val) - 4.5991;
-		val = ((1.1685 * val) - 4.5991) * 0.8793 + 2.42;
 		break;
-
 	default:
 		val = rawValue * 0.0001007;
 		break;
