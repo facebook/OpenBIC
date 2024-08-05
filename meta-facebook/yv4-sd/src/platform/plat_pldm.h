@@ -18,8 +18,8 @@
 #define PLAT_PLDM_H
 
 #define BMC_PLDM_DATA_MAXIMUM 150
-#define HTTP_BOOT_DATA_MAXIMUM 2200 //The current estimated maximum value of the BIOS
 
-uint8_t plat_pldm_get_http_boot_data(uint8_t *httpBootData, uint16_t *httpBootDataLen);
-
+uint8_t plat_pldm_get_http_boot_attr(uint8_t length, uint8_t *httpBootattr);
+uint8_t plat_pldm_get_http_boot_data(uint16_t offset, uint8_t *read_length, uint8_t buffer_length,
+				     uint8_t *httpBootData);
 #endif

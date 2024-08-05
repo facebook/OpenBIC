@@ -96,6 +96,8 @@ enum vr_event_source {
 	PVDD11_S3,
 };
 
+enum READ_FILE_OPTION { READ_FILE_ATTR, READ_FILE_DATA };
+
 struct _cmd_echo_req {
 	uint8_t iana[IANA_LEN];
 	uint8_t first_data;
@@ -135,19 +137,29 @@ struct pldm_oem_write_file_io_resp {
 
 struct pldm_oem_read_file_io_req {
 	uint8_t cmd_code;
-	uint8_t data_length;
-	uint8_t transfer_flag;
-	uint8_t highOffset;
-	uint8_t lowOffset;
+	uint8_t read_option;
+	uint8_t read_info_length;
+	uint8_t read_info[];
 } __attribute__((packed));
 
 struct pldm_oem_read_file_io_resp {
 	uint8_t completion_code;
+	uint8_t read_option;
+	uint8_t read_info_length;
+	uint8_t read_info[];
+} __attribute__((packed));
+
+struct pldm_oem_read_file_attr_info {
+	uint8_t size_lsb;
+	uint8_t size_msb;
+	uint32_t crc32;
+} __attribute__((packed));
+
+struct pldm_oem_read_file_data_info {
 	uint8_t data_length;
 	uint8_t transfer_flag;
 	uint8_t highOffset;
 	uint8_t lowOffset;
-	uint8_t messages[];
 } __attribute__((packed));
 
 struct pldm_addsel_data {
