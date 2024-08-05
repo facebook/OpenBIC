@@ -26,4 +26,7 @@
 #define ENABLE_PLDM_SENSOR
 #define ENABLE_CCI
 #define ENABLE_VISTARA
+
+#define BIC_UPDATE_MAX_OFFSET 0xC0000
+
 #endif
