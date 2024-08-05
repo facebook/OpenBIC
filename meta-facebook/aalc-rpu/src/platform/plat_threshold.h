@@ -16,6 +16,19 @@
 
 #define TWO_BYTES_SENSOR_STATUS 0xFF
 
+typedef struct {
+	uint8_t sensor_num;
+	uint8_t type;
+	float lcr;
+	float ucr;
+	void (*fn)(uint8_t, uint8_t, uint8_t); // para: arg, status
+	uint8_t arg0;
+	uint8_t arg1;
+
+	// priv data
+	uint8_t last_status; // record the last status
+} sensor_threshold;
+
 enum AALC_SENSOR_STATUS_E {
 	// RPU FAN STATUS
 	RPU_FAN_STATUS,
