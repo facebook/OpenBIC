@@ -37,7 +37,6 @@ LOG_MODULE_REGISTER(dev_nct7363);
 #define NCT7363_GPIO_LSB_MASK BIT_MASK(8)
 #define MAX_THRESHOLD_VAL 0x1FFF
 #define FAN_COUNT_DEFAULT_VAL 0x1FFF
-#define FAN_COUNT_NULL_VAL 0xFFFF
 #define READ_ERROR -1
 
 uint8_t nct7363_read_back_data(sensor_cfg *cfg, uint8_t reading_offset)
@@ -328,7 +327,7 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 		if (fan_count_value == FAN_COUNT_DEFAULT_VAL)
 			rpm = 0;
 		else if (fan_count_value == 0)
-			rpm = FAN_COUNT_NULL_VAL;
+			return SENSOR_UNSPECIFIED_ERROR;
 		else
 			/* count result */
 			rpm = 1350000 / ((float)fan_count_value * ((float)fan_poles / 4)); // RPM
