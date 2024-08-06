@@ -69,4 +69,6 @@
 #define BMC_USB_PORT "CDC_ACM_0"
 #define MCTP_I3C_PEC_ENABLE 1
 
+#define BIC_UPDATE_MAX_OFFSET 0xC0000
+
 #endif

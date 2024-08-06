@@ -36,5 +36,6 @@ enum LED_IDX_E {
 
 void led_set(uint8_t idx, uint8_t behaviour);
 void led_ctrl(uint8_t idx, uint8_t ctrl);
+uint8_t get_led_pin(uint8_t idx);
 uint8_t get_led_status(uint8_t idx);
 //void SSDLEDInit(void);

@@ -26,6 +26,7 @@
 #include "plat_util.h"
 #include "modbus_server.h"
 #include "plat_isr.h"
+#include "plat_threshold.h"
 #include <logging/log.h>
 
 LOG_MODULE_REGISTER(plat_sensor_table);
@@ -43,8 +44,19 @@ uint8_t quick_sensor[] = { SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V,
 void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 {
 	k_msleep(1000); // delay 1 second to wait for drivers ready before start sensor polling
+	int quick_sensor_poll_interval_ms = 100;
 
 	while (1) {
+		if (!get_sensor_init_done_flag()) {
+			k_msleep(quick_sensor_poll_interval_ms);
+			continue;
+		}
+
+		if (!get_sensor_poll_enable_flag()) {
+			k_msleep(quick_sensor_poll_interval_ms);
+			continue;
+		}
+
 		for (uint8_t i = 0; i < ARRAY_SIZE(quick_sensor); i++) {
 			int reading = 0;
 			uint8_t status;
@@ -53,7 +65,7 @@ void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 						    quick_sensor[i], &reading, GET_FROM_SENSOR);
 		}
 
-		k_msleep(100);
+		k_msleep(quick_sensor_poll_interval_ms);
 	}
 }
 
@@ -88,9 +100,7 @@ bool post_quick_sensor_read(sensor_cfg *cfg, void *args, int *reading)
 		val = (sval->integer * 1000 + sval->fraction) / 1000.0;
 
 		if (val < 3.1)
-			aalc_leak_behavior(cfg->num, true);
-		else
-			aalc_leak_behavior(cfg->num, false);
+			aalc_leak_behavior(cfg->num);
 	}
 
 	return ret;
@@ -644,7 +654,7 @@ sensor_cfg hsc_sensor_config_table[] = {
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
 	  &bus_6_PCA9546A_configs[3], post_adm1272_read, NULL, &adm1272_init_args[10] },
 	{ SENSOR_NUM_FB_11_HSC_P48V_IOUT_CURR_A, sensor_dev_adm1272, I2C_BUS6, FB_ADM1272_ADDR,
-	  PMBUS_READ_VOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_IOUT, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
 	  &bus_6_PCA9546A_configs[3], post_adm1272_read, NULL, &adm1272_init_args[10] },
 	{ SENSOR_NUM_FB_11_HSC_P48V_PIN_PWR_W, sensor_dev_adm1272, I2C_BUS6, FB_ADM1272_ADDR,

@@ -48,6 +48,9 @@ static bool is_cxl_power_on[MAX_CXL_ID] = { false, false };
 static bool is_cxl_ready[MAX_CXL_ID] = { false, false };
 static bool is_cxl_vr_accessible[MAX_CXL_ID] = { false, false };
 
+static k_tid_t cxl1_tid = NULL;
+static k_tid_t cxl2_tid = NULL;
+
 cxl_power_control_gpio cxl_power_ctrl_pin[MAX_CXL_ID] = {
 	[0] = {
 	.enclk_100m_osc = EN_CLK_100M_ASIC1_OSC,
@@ -169,20 +172,33 @@ void execute_power_on_sequence()
 		set_DC_status(PG_CARD_OK);
 		k_work_schedule(&set_dc_on_5s_work, K_SECONDS(DC_ON_DELAY5_SEC));
 
-		k_tid_t cxl1_tid = k_thread_create(&cxl1_thread_data, cxl1_stack_area,
-                                        K_THREAD_STACK_SIZEOF(cxl1_stack_area),
-                                        cxl1_ready_handler, NULL, NULL, NULL,
-                                        CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+		create_check_cxl_ready_thread();
+	}
+}
 
-		k_tid_t cxl2_tid = k_thread_create(&cxl2_thread_data, cxl2_stack_area,
-                                        K_THREAD_STACK_SIZEOF(cxl2_stack_area),
-                                        cxl2_ready_handler, NULL, NULL, NULL,
-                                        CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
-
+void create_check_cxl_ready_thread()
+{
+	if ((cxl1_tid != NULL) && ((strcmp(k_thread_state_str(cxl1_tid), "dead") != 0) &&
+				   (strcmp(k_thread_state_str(cxl1_tid), "unknown") != 0))) {
+		;
+	} else {
+		cxl1_tid = k_thread_create(&cxl1_thread_data, cxl1_stack_area,
+					   K_THREAD_STACK_SIZEOF(cxl1_stack_area),
+					   cxl1_ready_handler, NULL, NULL, NULL,
+					   CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
 		k_thread_name_set(cxl1_tid, "cxl1_ready_thread");
-		k_thread_name_set(cxl2_tid, "cxl2_ready_thread");
-
 		k_thread_start(cxl1_tid);
+	}
+
+	if ((cxl2_tid != NULL) && ((strcmp(k_thread_state_str(cxl2_tid), "dead") != 0) &&
+				   (strcmp(k_thread_state_str(cxl2_tid), "unknown") != 0))) {
+		;
+	} else {
+		cxl2_tid = k_thread_create(&cxl2_thread_data, cxl2_stack_area,
+					   K_THREAD_STACK_SIZEOF(cxl2_stack_area),
+					   cxl2_ready_handler, NULL, NULL, NULL,
+					   CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+		k_thread_name_set(cxl2_tid, "cxl2_ready_thread");
 		k_thread_start(cxl2_tid);
 	}
 }
@@ -193,20 +209,11 @@ int power_on_handler(int cxl_id, int power_stage)
 	int ctrl_stage = 0;
 
 	for (ctrl_stage = power_stage; ctrl_stage < MAX_POWER_ON_STAGES; ctrl_stage++) {
-		int retry_times = 5;
-
 		// Set power enable pin to enable power
 		enable_powers(cxl_id, ctrl_stage);
 
-		for (int i = 0; i < retry_times; i++) {
-			k_msleep(CHK_PWR_DELAY_MSEC);
-			// Get power good pin to check power
-			ret = check_powers_enabled(cxl_id, ctrl_stage);
-			if (ret == 0) {
-				break;
-			}
-		}
-
+		// Get power good pin to check power
+		ret = check_powers_enabled(cxl_id, ctrl_stage);
 		if (ret < 0) {
 			break;
 		}
@@ -336,13 +343,22 @@ int check_powers_enabled(int cxl_id, int pwr_stage)
 
 bool is_power_controlled(int cxl_id, int power_pin, uint8_t check_power_status, char *power_name)
 {
-	if (gpio_get(power_pin) == check_power_status) {
-		return true;
-	} else {
+	int retry_times = 5, i = 0;
+	for (i = 0; i < retry_times; i++) {
+		k_msleep(CHK_PWR_DELAY_MSEC);
+		// Get power good pin to check power
+		if (gpio_get(power_pin) == check_power_status) {
+			break;
+		}
+	}
+
+	if (i >= retry_times) {
 		// TODO: Add event to BMC
 		LOG_ERR("Failed to power %s CXL %d %s (gpio num %d)",
 			check_power_status ? "on" : "off", cxl_id + 1, power_name, power_pin);
 		return false;
+	} else {
+		return true;
 	}
 }
 
@@ -550,7 +566,6 @@ int check_powers_disabled(int cxl_id, int pwr_stage)
 
 void switch_mux_to_bic(uint8_t value_to_write)
 {
-
 	uint8_t value = 0x0;
 
 	k_mutex_lock(&switch_ioe_mux_mutex, K_SECONDS(SWITCH_IOE_MUX_TIMEOUT_SECONDS));

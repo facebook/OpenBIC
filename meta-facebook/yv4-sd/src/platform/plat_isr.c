@@ -130,7 +130,7 @@ void switch_i3c_dimm_mux_to_cpu()
 	switch_i3c_dimm_mux(I3C_MUX_CPU_TO_DIMM);
 }
 
-static void PROC_FAIL_handler()
+static void PROC_FAIL_handler(struct k_work *work)
 {
 	/* if have not received kcs and post code, add FRB3 event log. */
 	if ((get_kcs_ok() == false) && (get_4byte_postcode_ok() == false)) {
@@ -214,7 +214,13 @@ static void SLP3_handler()
 {
 	if ((gpio_get(FM_CPU_BIC_SLP_S3_N) == GPIO_HIGH) &&
 	    (gpio_get(PWRGD_CPU_LVC3) == GPIO_LOW)) {
-		//todo : add sel to bmc
+		// add sel to bmc
+		struct pldm_addsel_data msg = { 0 };
+		msg.event_type = POWER_ON_SEQUENCE_FAIL;
+		msg.assert_type = EVENT_ASSERTED;
+		if (PLDM_SUCCESS != send_event_log_to_bmc(msg)) {
+			LOG_ERR("Failed to send blade fail power-on sequence assert event log.");
+		};
 		hw_event_register[0]++;
 	}
 }
@@ -226,8 +232,7 @@ void ISR_SLP3()
 {
 	if (gpio_get(FM_CPU_BIC_SLP_S3_N) == GPIO_HIGH) {
 		LOG_INF("slp3");
-		k_work_schedule_for_queue(&plat_work_q, &SLP3_work,
-					  K_SECONDS(DETECT_VR_WDT_DELAY_S));
+		k_work_schedule(&SLP3_work, K_SECONDS(DETECT_VR_WDT_DELAY_S));
 	} else {
 		if (k_work_cancel_delayable(&SLP3_work) != 0) {
 			LOG_ERR("Failed to cancel delayable work.");
@@ -237,11 +242,31 @@ void ISR_SLP3()
 
 void ISR_DBP_PRSNT()
 {
-	if ((gpio_get(FM_DBP_PRESENT_N) == GPIO_HIGH)) {
-		//todo : add sel to bmc for deassert
-	} else {
-		//todo : add sel to bmc for assert
-		hw_event_register[1]++;
+	/* HDT_PRSENT_N --> Event trigger and save log when signal falling and also
+    check RST_RSMRST_BMC_N / normal power. */
+	if ((gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) && (get_DC_status())) {
+		if ((gpio_get(FM_DBP_PRESENT_N) == GPIO_HIGH)) {
+			LOG_INF("ISR_DBP_PRSNT deassert");
+			// add sel to bmc for deassert
+			struct pldm_addsel_data msg = { 0 };
+			msg.event_type = HDT_PRSNT_ASSERT;
+			msg.assert_type = EVENT_DEASSERTED;
+			if (PLDM_SUCCESS !=
+			    send_event_log_to_bmc(msg)) {
+				LOG_ERR("Failed to send HDT PRSNT deassert event log.");
+			};
+		} else {
+			LOG_INF("ISR_DBP_PRSNT assert");
+			// add sel to bmc for assert
+			struct pldm_addsel_data msg = { 0 };
+			msg.event_type = HDT_PRSNT_ASSERT;
+			msg.assert_type = EVENT_ASSERTED;
+			if (PLDM_SUCCESS !=
+			    send_event_log_to_bmc(msg)) {
+				LOG_ERR("Failed to send HDT PRSNT assert event log.");
+			};
+			hw_event_register[1]++;
+		}
 	}
 }
 
@@ -254,15 +279,29 @@ void ISR_MB_THROTTLE()
 	static bool is_mb_throttle_assert = false;
 	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH && get_DC_status()) {
 		if ((gpio_get(FAST_PROCHOT_N) == GPIO_HIGH) && (is_mb_throttle_assert == true)) {
-			//todo : add sel to bmc for deassert
+			LOG_INF("ISR_MB_THROTTLE deassert");
+			// add sel to bmc for deassert
+			struct pldm_addsel_data msg = { 0 };
+			msg.event_type = FAST_PROCHOT_ASSERT;
+			msg.assert_type = EVENT_DEASSERTED;
+			if (PLDM_SUCCESS !=
+			    send_event_log_to_bmc(msg)) {
+				LOG_ERR("Failed to send Fast PROCHOT deassert event log.");
+			};
 			is_mb_throttle_assert = false;
 		} else if ((gpio_get(FAST_PROCHOT_N) == GPIO_LOW) &&
 			   (is_mb_throttle_assert == false)) {
-			//todo : add sel to bmc for assert
+			LOG_INF("ISR_MB_THROTTLE assert");
+			// add sel to bmc for assert
+			struct pldm_addsel_data msg = { 0 };
+			msg.event_type = FAST_PROCHOT_ASSERT;
+			msg.assert_type = EVENT_ASSERTED;
+			if (PLDM_SUCCESS !=
+			    send_event_log_to_bmc(msg)) {
+				LOG_ERR("Failed to send Fast PROCHOT assert event log.");
+			};
 			hw_event_register[2]++;
 			is_mb_throttle_assert = true;
-		} else {
-			return;
 		}
 	}
 }
@@ -270,7 +309,14 @@ void ISR_MB_THROTTLE()
 void ISR_SOC_THMALTRIP()
 {
 	if (gpio_get(RST_CPU_RESET_BIC_N) == GPIO_HIGH) {
-		//todo : add sel to bmc for assert
+		LOG_INF("ISR_SOC_THMALTRIP assert");
+		// add sel to bmc for assert
+		struct pldm_addsel_data msg = { 0 };
+		msg.event_type = CPU_THERMAL_TRIP;
+		msg.assert_type = EVENT_ASSERTED;
+		if (PLDM_SUCCESS != send_event_log_to_bmc(msg)) {
+			LOG_ERR("Failed to send CPU Thermal Trip assert event log.");
+		};
 		hw_event_register[3]++;
 	}
 }
@@ -285,15 +331,27 @@ void ISR_SYS_THROTTLE()
 	    (gpio_get(PWRGD_CPU_LVC3) == GPIO_HIGH)) {
 		if ((gpio_get(FM_CPU_BIC_PROCHOT_LVT3_N) == GPIO_HIGH) &&
 		    (is_sys_throttle_assert == true)) {
-			//todo : add sel to bmc for deassert
+			LOG_INF("ISR_SYS_THROTTLE deassert");
+			// add sel to bmc for deassert
+			struct pldm_addsel_data msg = { 0 };
+			msg.event_type = SYS_THROTTLE;
+			msg.assert_type = EVENT_DEASSERTED;
+			if (PLDM_SUCCESS != send_event_log_to_bmc(msg)) {
+				LOG_ERR("Failed to send SYS throttle deassert event log.");
+			};
 			is_sys_throttle_assert = false;
 		} else if ((gpio_get(FM_CPU_BIC_PROCHOT_LVT3_N) == GPIO_LOW) &&
 			   (is_sys_throttle_assert == false)) {
-			//todo : add sel to bmc for assert
+			LOG_INF("ISR_SYS_THROTTLE assert");
+			// add sel to bmc for assert
+			struct pldm_addsel_data msg = { 0 };
+			msg.event_type = SYS_THROTTLE;
+			msg.assert_type = EVENT_ASSERTED;
+			if (PLDM_SUCCESS != send_event_log_to_bmc(msg)) {
+				LOG_ERR("Failed to send SYS throttle assert event log.");
+			};
 			hw_event_register[4]++;
 			is_sys_throttle_assert = true;
-		} else {
-			return;
 		}
 	}
 }
@@ -302,9 +360,23 @@ void ISR_HSC_OC()
 {
 	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
 		if (gpio_get(FM_HSC_TIMER_ALT_N) == GPIO_HIGH) {
-			//todo : add sel to bmc for deassert
+			LOG_INF("ISR_HSC_OC deassert");
+			// add sel to bmc for deassert
+			struct pldm_addsel_data msg = { 0 };
+			msg.event_type = HSC_OCP;
+			msg.assert_type = EVENT_DEASSERTED;
+			if (PLDM_SUCCESS != send_event_log_to_bmc(msg)) {
+				LOG_ERR("Failed to send HSC OCP deassert event log.");
+			};
 		} else {
-			//todo : add sel to bmc for assert
+			LOG_INF("ISR_HSC_OC assert");
+			// add sel to bmc for assert
+			struct pldm_addsel_data msg = { 0 };
+			msg.event_type = HSC_OCP;
+			msg.assert_type = EVENT_ASSERTED;
+			if (PLDM_SUCCESS != send_event_log_to_bmc(msg)) {
+				LOG_ERR("Failed to send HSC OCP assert event log.");
+			};
 			hw_event_register[5]++;
 		}
 	}
@@ -472,9 +544,23 @@ void ISR_UV_DETECT()
 {
 	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
 		if (gpio_get(IRQ_UV_DETECT_N) == GPIO_HIGH) {
-			//todo : add sel to bmc for deassert
+			LOG_INF("ISR_UV_DETECT deassert");
+			// add sel to bmc for deassert
+			struct pldm_addsel_data msg = { 0 };
+			msg.event_type = P12V_STBY_UV;
+			msg.assert_type = EVENT_DEASSERTED;
+			if (PLDM_SUCCESS != send_event_log_to_bmc(msg)) {
+				LOG_ERR("Failed to send P12V_STBY UV deassert event log.");
+			};
 		} else {
-			//todo : add sel to bmc for assert
+			LOG_INF("ISR_UV_DETECT assert");
+			// add sel to bmc for assert
+			struct pldm_addsel_data msg = { 0 };
+			msg.event_type = P12V_STBY_UV;
+			msg.assert_type = EVENT_ASSERTED;
+			if (PLDM_SUCCESS != send_event_log_to_bmc(msg)) {
+				LOG_ERR("Failed to send P12V_STBY UV deassert event log.");
+			};
 			hw_event_register[9]++;
 		}
 	}
@@ -482,13 +568,19 @@ void ISR_UV_DETECT()
 
 void IST_PLTRST()
 {
-	//todo : add sel to bmc for assert
+	LOG_INF("IST_PLTRST assert");
+	// add sel to bmc for assert
+	struct pldm_addsel_data msg = { 0 };
+	msg.event_type = PLTRST_ASSERT;
+	msg.assert_type = EVENT_ASSERTED;
+	if (PLDM_SUCCESS != send_event_log_to_bmc(msg)) {
+		LOG_ERR("Failed to send PLTRST assert event log.");
+	};
 	hw_event_register[10]++;
 }
 
 void ISR_APML_ALERT()
 {
-	//todo : add sel to bmc for assert
 	hw_event_register[11]++;
 	LOG_INF("APML_ALERT detected");
 	uint8_t status;

@@ -1,0 +1,59 @@
+From 2612b7258797dc7c44f57ee6dfc82dc596e00aae Mon Sep 17 00:00:00 2001
+From: Hung-Yi <hung-yi.li@quantatw.com>
+Date: Mon, 5 Aug 2024 14:10:35 +0800
+Subject: [PATCH] modbus: aspeed: modify uart aspeed configure
+
+1. modify uart interrupt at 4th byte
+2. modify modbus buffer size to 2048
+3. adjust rtu timeout at low speed
+---
+ drivers/serial/uart_aspeed.c  | 4 ++--
+ subsys/modbus/Kconfig         | 2 +-
+ subsys/modbus/modbus_serial.c | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/serial/uart_aspeed.c b/drivers/serial/uart_aspeed.c
+index 41363ac534..ace6b0cca0 100644
+--- a/drivers/serial/uart_aspeed.c
++++ b/drivers/serial/uart_aspeed.c
+@@ -329,9 +329,9 @@ static int uart_aspeed_configure(const struct device *dev,
+ 	sys_write32(reg, dev_cfg->base + UART_LCR);
+ 
+ 	/*
+-	 * enable FIFO, generate the interrupt at 8th byte
++	 * enable FIFO, generate the interrupt at 4th byte
+ 	 */
+-	reg = ((0x2 << UART_FCR_TRIG_SHIFT) & UART_FCR_TRIG_MASK) |
++	reg = ((0x1 << UART_FCR_TRIG_SHIFT) & UART_FCR_TRIG_MASK) |
+ 	      UART_FCR_TX_RST |
+ 	      UART_FCR_RX_RST |
+ 	      UART_FCR_EN;
+diff --git a/subsys/modbus/Kconfig b/subsys/modbus/Kconfig
+index 58ab15798d..f61212ea50 100644
+--- a/subsys/modbus/Kconfig
++++ b/subsys/modbus/Kconfig
+@@ -11,7 +11,7 @@ if MODBUS
+ config MODBUS_BUFFER_SIZE
+ 	int "Modbus buffer size"
+ 	default 256
+-	range 64 256
++	range 64 2048
+ 	help
+ 	  Modbus buffer size.
+ 
+diff --git a/subsys/modbus/modbus_serial.c b/subsys/modbus/modbus_serial.c
+index 1085ccf90e..3b2986ff99 100644
+--- a/subsys/modbus/modbus_serial.c
++++ b/subsys/modbus/modbus_serial.c
+@@ -578,7 +578,7 @@ int modbus_serial_init(struct modbus_context *ctx,
+ 	}
+ 
+ 	if (param.serial.baud <= 38400) {
+-		cfg->rtu_timeout = (numof_bits * if_delay_max) * 4 /
++		cfg->rtu_timeout = (numof_bits * if_delay_max) * 2 /
+ 				   param.serial.baud;
+ 	} else {
+ 		cfg->rtu_timeout = (numof_bits * if_delay_max) / 38400;
+-- 
+2.17.1
+

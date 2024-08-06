@@ -139,7 +139,7 @@
 	gpio_name_to_num(VIRTUAL_E1S_PRSNT_L) \
 	gpio_name_to_num(CPLD_JTAG_MUX_SEL) \
 	gpio_name_to_num(JTAG_FPGA_MUX_SEL) \
-	gpio_name_to_num(Reserve_GPIOL3) \
+	gpio_name_to_num(VIRTUAL_RETIMER_PG) \
 	gpio_name_to_num(Reserve_GPIOL4) \
 	gpio_name_to_num(Reserve_GPIOL5) \
 	gpio_name_to_num(BOARD_ID0) \
