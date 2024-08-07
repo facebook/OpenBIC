@@ -617,19 +617,7 @@ uint8_t get_threshold_status(uint8_t sensor_num)
 static bool set_threshold_status(sensor_threshold *threshold_tbl, float val)
 {
 	uint8_t status = THRESHOLD_STATUS_NORMAL;
-
-	/* check device is exist */
-	// to determine if tach value is 0, set status to DEVICE_NOT_EXIST status
-	for (int i = 0; i < ARRAY_SIZE(fan_pump_sensor_array); i++) {
-		if (threshold_tbl->sensor_num == fan_pump_sensor_array[i]) {
-			if (val == 0.0) {
-				threshold_tbl->last_status = THRESHOLD_STATUS_NOT_ACCESS;
-				LOG_DBG("sensor 0x%x not exist", threshold_tbl->sensor_num);
-				return true;
-			}
-		}
-	}
-
+	
 	switch (threshold_tbl->type) {
 	case THRESHOLD_ENABLE_LCR:
 		if (val < threshold_tbl->lcr)
@@ -742,7 +730,7 @@ void fan_pump_pwrgd_handler(void *arug0, void *arug1, void *arug2)
 			continue;
 		}
 
-		for (uint8_t i = 0; i < ARRAY_SIZE(fan_pump_sensor_array); i++) {
+		for (uint8_t i = 0; i < ARRAY_SIZE(fan_pump_sensor_array)-6; i++) {
 			// read gok data
 			sensor_cfg *cfg = get_common_sensor_cfg_info(fan_pump_sensor_array[i]);
 			uint8_t read_gok =
