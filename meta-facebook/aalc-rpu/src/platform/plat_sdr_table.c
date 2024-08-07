@@ -10354,6 +10354,11 @@ SDR_Full_sensor plat_sdr_table[] = {
 		.sensor_num = SENSOR_NUM_HEX_CURR_A,
 		.ID_str = "HEX_CURR_A",
 	},
+	// SENSOR_NUM_HEX_EXTERNAL_Y_FILTER
+	{
+		.sensor_num = SENSOR_NUM_HEX_EXTERNAL_Y_FILTER,
+		.ID_str = "HEX_EXTERNAL_Y_FILTER",
+	},
 	{
 		// SENSOR_NUM_BPB_BRICK_12V_VIN_VOLT_V
 		0x00,

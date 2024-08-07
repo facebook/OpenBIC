@@ -79,16 +79,6 @@ void quick_sensor_poll_init()
 	return;
 }
 
-extern struct k_thread sensor_poll;
-bool pre_quick_sensor_read(sensor_cfg *cfg, void *args)
-{
-	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
-	ARG_UNUSED(args);
-
-	k_tid_t id = &sensor_poll;
-	return (k_current_get() == id ? false : true);
-}
-
 bool post_quick_sensor_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
@@ -417,12 +407,12 @@ sensor_cfg plat_sensor_config[] = {
 	  &bus_8_PCA9546A_configs[2], post_PCA9546A_read, NULL, &hdc1080_init_args[16] },
 	{ SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V, sensor_dev_ads112c, I2C_BUS5,
 	  BPB_ADS112C_1_ADDR, ADS112C_READ_OUTPUT_RAW, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT,
-	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_quick_sensor_read,
-	  NULL, post_quick_sensor_read, &ads112c_post_args[3], &ads112c_init_args[0] },
+	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL,
+	  post_quick_sensor_read, &ads112c_post_args[3], &ads112c_init_args[0] },
 	{ SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_VOLT_V, sensor_dev_ads112c, I2C_BUS5,
 	  BPB_ADS112C_3_ADDR, ADS112C_READ_OUTPUT_RAW, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT,
-	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_quick_sensor_read,
-	  NULL, post_quick_sensor_read, &ads112c_post_args[3], &ads112c_init_args[0] },
+	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL,
+	  post_quick_sensor_read, &ads112c_post_args[3], &ads112c_init_args[0] },
 	{ SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_1_VOLT_V, sensor_dev_ads112c, I2C_BUS9,
 	  SB_ADS112C_2_ADDR, ADS112C_READ_OUTPUT_RAW, stby_access, ENABLE_RESET_CFG_REG, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
@@ -840,6 +830,10 @@ sensor_cfg plat_def_sensor_config[] = {
 	{ SENSOR_NUM_HEX_CURR_A, sensor_dev_plat_def_sensor, 0, 0, PLAT_DEF_SENSOR_HEX_CURR,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_HEX_EXTERNAL_Y_FILTER, sensor_dev_plat_def_sensor, 0, 0,
+	  PLAT_DEF_SENSOR_HEX_EXTERNAL_Y_FILTER, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT,
+	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  NULL },
 };
 
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) +
@@ -1215,6 +1209,25 @@ static float calculate_total_val(uint8_t arr[], uint8_t size)
 	return total;
 }
 
+/* pressure difference  */
+static float pressure_difference_val(uint8_t high_press, uint8_t low_press)
+{
+	float val = 0;
+	float tmp = 0;
+
+	if (get_sensor_reading_to_real_val(high_press, &tmp) == SENSOR_READ_4BYTE_ACUR_SUCCESS)
+		val = tmp;
+	else
+		return 0;
+
+	if (get_sensor_reading_to_real_val(low_press, &tmp) == SENSOR_READ_4BYTE_ACUR_SUCCESS)
+		val -= tmp;
+	else
+		return 0;
+
+	return val;
+}
+
 static uint8_t plat_def_sensor_read(sensor_cfg *cfg, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
@@ -1237,6 +1250,10 @@ static uint8_t plat_def_sensor_read(sensor_cfg *cfg, int *reading)
 	case PLAT_DEF_SENSOR_HEX_CURR:
 		val = calculate_total_val(plat_sensor_hex_curr, ARRAY_SIZE(plat_sensor_hex_curr));
 		break;
+	case PLAT_DEF_SENSOR_HEX_EXTERNAL_Y_FILTER:
+		val = pressure_difference_val(SENSOR_NUM_BPB_RACK_PRESSURE_3_P_KPA,
+					      SENSOR_NUM_BPB_RACK_PRESSURE_4_P_KPA);
+		break;
 	default:
 		LOG_ERR("0x%02x unknow plat sensor type %d", cfg->num, type);
 		return SENSOR_PARAMETER_NOT_VALID;
@@ -1245,6 +1262,7 @@ static uint8_t plat_def_sensor_read(sensor_cfg *cfg, int *reading)
 	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = (int)val & 0xFFFF;
 	sval->fraction = (val - sval->integer) * 1000;
+
 	return SENSOR_READ_SUCCESS;
 }
 

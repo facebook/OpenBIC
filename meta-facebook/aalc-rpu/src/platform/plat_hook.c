@@ -999,15 +999,13 @@ bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
 	return true;
 }
 
-extern bool pre_quick_sensor_read(sensor_cfg *cfg, void *args);
 bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 
 	if (reading == NULL) {
 		// if pre_sensor_read_hook is not null, unlock PCA9546A mutex
-		if (cfg->pre_sensor_read_hook != NULL &&
-		    cfg->pre_sensor_read_hook != pre_quick_sensor_read) {
+		if (cfg->pre_sensor_read_hook != NULL) {
 			if (!post_PCA9546A_read(cfg, args, reading)) {
 				LOG_ERR("adm1272 in post read unlock PCA9546A mutex fail");
 				return false;
@@ -1049,8 +1047,7 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 	sval->fraction = (val - sval->integer) * 1000;
 
 	//according to pre_sensor_read_fn(pre_PCA9546A_read), determinies if apply post_PCA9546A_read
-	if (cfg->pre_sensor_read_hook != NULL &&
-	    cfg->pre_sensor_read_hook != pre_quick_sensor_read) {
+	if (cfg->pre_sensor_read_hook != NULL) {
 		post_PCA9546A_read(cfg, args, reading);
 	}
 
