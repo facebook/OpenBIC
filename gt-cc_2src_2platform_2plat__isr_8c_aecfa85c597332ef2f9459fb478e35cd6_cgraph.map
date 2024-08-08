@@ -1,0 +1,12 @@
+<map id="ISR_VR_PMBUS_ALERT" name="ISR_VR_PMBUS_ALERT">
+<area shape="rect" id="node1" title=" " alt="" coords="5,107,179,133"/>
+<area shape="rect" id="node2" href="$gt-cc_2src_2platform_2plat__class_8c.html#ac47c03a45a44ebb43a20b6a0db9c639b" title=" " alt="" coords="254,5,343,32"/>
+<area shape="rect" id="node3" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="453,53,523,80"/>
+<area shape="rect" id="node4" href="$gt-cc_2src_2platform_2plat__led_8c.html#adb64af9674fd383801c8e05fa1e6d1ce" title=" " alt="" coords="227,107,371,133"/>
+<area shape="rect" id="node7" href="$pldm__monitor_8c.html#aee425d655113020d7d424cc5b86d756c" title=" " alt="" coords="419,206,557,247"/>
+<area shape="rect" id="node8" href="$gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#aa57a8ad64778cfe7500d2bfb89868475" title=" " alt="" coords="245,213,352,240"/>
+<area shape="rect" id="node5" href="$gt-cc_2src_2platform_2plat__led_8c.html#ab750c76e998c3063226c65e1a199df48" title=" " alt="" coords="429,104,547,131"/>
+<area shape="rect" id="node6" href="$gt-cc_2src_2platform_2plat__class_8c.html#a9ac69a581f2e3ab84919e4724ba7ce9b" title=" " alt="" coords="439,155,537,181"/>
+<area shape="rect" id="node9" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="429,272,547,299"/>
+<area shape="rect" id="node10" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="605,272,748,299"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="ISR_SOC_THMALTRIP" name="ISR_SOC_THMALTRIP">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,168,57"/>
+<area shape="rect" id="node2" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="262,5,333,32"/>
+<area shape="rect" id="node3" href="$pldm__oem_8h.html#abfa67ccc03b5a09b8503f95d5f8e5c5f" title=" " alt="" coords="216,56,379,83"/>
+</map>

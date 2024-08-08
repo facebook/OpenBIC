@@ -1,0 +1,18 @@
+<map id="pump_failure_do" name="pump_failure_do">
+<area shape="rect" id="node1" title=" " alt="" coords="5,157,123,184"/>
+<area shape="rect" id="node2" href="$aalc-rpu_2src_2platform_2plat__isr_8c.html#a5a965074cd1c8d1c7d45ed046d56ba0d" title=" " alt="" coords="171,5,349,32"/>
+<area shape="rect" id="node4" href="$plat__log_8c.html#a103e33f69b37672107c44bcf36accc6b" title=" " alt="" coords="205,56,315,83"/>
+<area shape="rect" id="node5" href="$plat__threshold_8c.html#ac6230de7239ed5f84e19038a20516593" title=" " alt="" coords="195,107,325,133"/>
+<area shape="rect" id="node6" href="$aalc-rpu_2src_2platform_2plat__led_8c.html#a551af46446cb05b55f2f8e089d53ff85" title=" " alt="" coords="228,157,292,184"/>
+<area shape="rect" id="node7" href="$plat__threshold_8c.html#a4fcfdad132d701547f2597000a2e65c1" title=" " alt="" coords="176,209,344,250"/>
+<area shape="rect" id="node15" href="$plat__threshold_8c.html#a44531f4e75f731bfcd2e454322b79e24" title=" " alt="" coords="431,325,560,352"/>
+<area shape="rect" id="node16" href="$plat__threshold_8c.html#a761dc53c21d556e803b87fa25742a1c1" title=" " alt="" coords="191,326,329,367"/>
+<area shape="rect" id="node3" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="460,5,531,32"/>
+<area shape="rect" id="node8" href="$sensor_8c.html#a52fcbd96358bec7eff3e368a4da4a292" title=" " alt="" coords="397,161,593,188"/>
+<area shape="rect" id="node10" href="$nct7363_8c.html#a6ae0d9f1cb23d431c17dfdf0acc29d91" title=" " alt="" coords="412,216,579,243"/>
+<area shape="rect" id="node13" href="$nct7363_8c.html#a7c0e5ebf512357e06f24c3b5f6aa2fde" title=" " alt="" coords="444,267,547,293"/>
+<area shape="rect" id="node9" href="$sensor_8c.html#ae224ad26413eb100f2abef7a1907a547" title=" " alt="" coords="641,150,779,191"/>
+<area shape="rect" id="node11" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="651,216,769,243"/>
+<area shape="rect" id="node12" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="827,241,969,268"/>
+<area shape="rect" id="node14" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="649,267,771,293"/>
+</map>

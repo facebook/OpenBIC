@@ -1,0 +1,14 @@
+<map id="pal_pre_init" name="pal_pre_init">
+<area shape="rect" id="node1" title=" " alt="" coords="5,107,93,133"/>
+<area shape="rect" id="node2" href="$yv35-hda1_2src_2platform_2plat__power__status_8c.html#a293d12f52bd0273863d2a43f4dc3039e" title=" " alt="" coords="169,5,299,32"/>
+<area shape="rect" id="node5" href="$util__worker_8c.html#ab5b7ddc1793db860d999343b3e6ce3b1" title=" " alt="" coords="177,56,291,83"/>
+<area shape="rect" id="node6" href="$expansion__board_8c.html#afd6ec665cec55b4f32cd118da224a25a" title=" " alt="" coords="167,107,301,133"/>
+<area shape="rect" id="node9" href="$yv35-hda1_2src_2platform_2plat__power__status_8c.html#a24b59e1959875113ecb726658770c856" title=" " alt="" coords="141,157,327,184"/>
+<area shape="rect" id="node12" href="$hal__gpio_8c.html#a1db4534c169d95721a020915d2e5fccf" title=" " alt="" coords="201,208,267,235"/>
+<area shape="rect" id="node3" href="$yv35-hda1_2src_2platform_2plat__power__status_8c.html#a91e68f0d1ef43569cf092c359b07e66f" title=" " alt="" coords="381,5,491,32"/>
+<area shape="rect" id="node4" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="569,5,640,32"/>
+<area shape="rect" id="node7" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="401,56,471,83"/>
+<area shape="rect" id="node8" href="$expansion__board_8c.html#af66fedc722e9e8c84c7563940e2ef678" title=" " alt="" coords="375,107,497,133"/>
+<area shape="rect" id="node10" href="$yv35-hda1_2src_2platform_2plat__power__status_8c.html#ae8921ad26eec348834e7eec2c92e5ea2" title=" " alt="" coords="375,157,497,184"/>
+<area shape="rect" id="node11" href="$yv35-hda1_2src_2platform_2plat__power__status_8c.html#a782280fc57af94c4aee7bad2b95d4e90" title=" " alt="" coords="545,157,664,184"/>
+</map>

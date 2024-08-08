@@ -1,0 +1,37 @@
+var yv35_hda1_2src_2platform_2plat__i2c_8h =
+[
+    [ "SSIF_I2C_ADDR", "yv35-hda1_2src_2platform_2plat__i2c_8h.html#ae6d289e2743cc9392ca0125616ab7215", null ],
+    [ "SSIF_I2C_BUS", "yv35-hda1_2src_2platform_2plat__i2c_8h.html#acfc2f093b111f9f6a09ba9a956082416", null ],
+    [ "_i2c_bus_num", "yv35-hda1_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdb", [
+      [ "I2C_BUS1", "yv35-hda1_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdbad6d819d29d9c5987f0f31dfe44998c58", null ],
+      [ "I2C_BUS2", "yv35-hda1_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdba16917eda7212187e7f9b04934a308a4e", null ],
+      [ "I2C_BUS3", "yv35-hda1_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdba53e0e23df2fdb9e65e99d99c5f5e88b8", null ],
+      [ "I2C_BUS4", "yv35-hda1_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdba7a9de638032357798eb6f9db57945a89", null ],
+      [ "I2C_BUS5", "yv35-hda1_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdba102b79ba02b6cd2f37f362badfef72b0", null ],
+      [ "I2C_BUS6", "yv35-hda1_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdba77ff4b65c3bf766c8cce524a10ba4397", null ],
+      [ "I2C_BUS7", "yv35-hda1_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdba0468f37c516825dfd8b9e90ee3361c4e", null ],
+      [ "I2C_BUS8", "yv35-hda1_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdba58ff758be16ed201ad0300e65409505e", null ],
+      [ "I2C_BUS9", "yv35-hda1_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdbac077ba27d069390046edd29ef9395dbe", null ],
+      [ "I2C_BUS10", "yv35-hda1_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdba02f9004255a11e4baa172ce968c0b698", null ],
+      [ "I2C_BUS11", "yv35-hda1_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdbacd6d1489b306b022d9187f24ae137355", null ],
+      [ "I2C_BUS12", "yv35-hda1_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdbada93e86a052a6817edf54b757a17d259", null ],
+      [ "I2C_BUS13", "yv35-hda1_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdbad01d3a5d52bd7b4b8d71495a03128547", null ],
+      [ "I2C_BUS14", "yv35-hda1_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdbac3628b5f6628a7e5124a61de599612ca", null ],
+      [ "I2C_BUS_MAX_NUM", "yv35-hda1_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdba92e5e398ade39b2cf36da4b9b5a60da3", null ],
+      [ "I2C_BUS1", "yv35-ji_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdbad6d819d29d9c5987f0f31dfe44998c58", null ],
+      [ "I2C_BUS2", "yv35-ji_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdba16917eda7212187e7f9b04934a308a4e", null ],
+      [ "I2C_BUS3", "yv35-ji_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdba53e0e23df2fdb9e65e99d99c5f5e88b8", null ],
+      [ "I2C_BUS4", "yv35-ji_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdba7a9de638032357798eb6f9db57945a89", null ],
+      [ "I2C_BUS5", "yv35-ji_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdba102b79ba02b6cd2f37f362badfef72b0", null ],
+      [ "I2C_BUS6", "yv35-ji_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdba77ff4b65c3bf766c8cce524a10ba4397", null ],
+      [ "I2C_BUS7", "yv35-ji_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdba0468f37c516825dfd8b9e90ee3361c4e", null ],
+      [ "I2C_BUS8", "yv35-ji_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdba58ff758be16ed201ad0300e65409505e", null ],
+      [ "I2C_BUS9", "yv35-ji_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdbac077ba27d069390046edd29ef9395dbe", null ],
+      [ "I2C_BUS10", "yv35-ji_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdba02f9004255a11e4baa172ce968c0b698", null ],
+      [ "I2C_BUS11", "yv35-ji_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdbacd6d1489b306b022d9187f24ae137355", null ],
+      [ "I2C_BUS12", "yv35-ji_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdbada93e86a052a6817edf54b757a17d259", null ],
+      [ "I2C_BUS13", "yv35-ji_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdbad01d3a5d52bd7b4b8d71495a03128547", null ],
+      [ "I2C_BUS14", "yv35-ji_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdbac3628b5f6628a7e5124a61de599612ca", null ],
+      [ "I2C_BUS_MAX_NUM", "yv35-ji_2src_2platform_2plat__i2c_8h.html#accc507626a5d9feba3f062f793a5cfdba92e5e398ade39b2cf36da4b9b5a60da3", null ]
+    ] ]
+];

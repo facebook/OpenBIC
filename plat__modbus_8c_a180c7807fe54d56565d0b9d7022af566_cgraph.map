@@ -1,0 +1,4 @@
+<map id="modbus_get_rpu_fan_status" name="modbus_get_rpu_fan_status">
+<area shape="rect" id="node1" title=" " alt="" coords="5,5,148,47"/>
+<area shape="rect" id="node2" href="$plat__threshold_8c.html#ac6230de7239ed5f84e19038a20516593" title=" " alt="" coords="196,13,325,39"/>
+</map>

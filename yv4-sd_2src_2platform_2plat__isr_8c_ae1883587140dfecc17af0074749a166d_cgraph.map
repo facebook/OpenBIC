@@ -1,0 +1,6 @@
+<map id="ISR_DBP_PRSNT" name="ISR_DBP_PRSNT">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,136,83"/>
+<area shape="rect" id="node2" href="$power__status_8c.html#a647e7f9c1247d6a1785d9b9502e7fd29" title=" " alt="" coords="211,5,319,32"/>
+<area shape="rect" id="node3" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="230,56,301,83"/>
+<area shape="rect" id="node4" href="$pldm__oem_8h.html#abfa67ccc03b5a09b8503f95d5f8e5c5f" title=" " alt="" coords="184,107,347,133"/>
+</map>

@@ -1,0 +1,12 @@
+<map id="plat_pldm_sensor_load" name="plat_pldm_sensor_load">
+<area shape="rect" id="node1" title=" " alt="" coords="5,89,160,116"/>
+<area shape="rect" id="node2" href="$yv4-wf_2src_2platform_2plat__pldm__sensor_8c.html#a18defa859dab0759a96c7ae33b7f5ae6" title=" " alt="" coords="208,49,381,90"/>
+<area shape="rect" id="node8" href="$yv4-sd_2src_2platform_2plat__pldm__sensor_8c.html#ac71d31036cd1cc538a7d1bbe1c1882de" title=" " alt="" coords="208,114,381,155"/>
+<area shape="rect" id="node3" href="$yv4-wf_2src_2platform_2plat__gpio_8c.html#a49fcac8a9cff9b16dbba2845722cf9ec" title=" " alt="" coords="456,5,559,32"/>
+<area shape="rect" id="node6" href="$yv4-ff_2src_2platform_2plat__pldm__sensor_8c.html#a18272dc8dce4f373b85555817c2cc6f3" title=" " alt="" coords="433,107,582,149"/>
+<area shape="rect" id="node7" href="$yv4-wf_2src_2platform_2plat__hook_8c.html#ae1bf0cb8335c2dfc83b2a295646368c3" title=" " alt="" coords="429,56,585,83"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="633,5,752,32"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="800,5,943,32"/>
+<area shape="rect" id="node9" href="$yv4-sd_2src_2platform_2plat__pldm__sensor_8c.html#af4281c23c804342282b5f9f19ed5d929" title=" " alt="" coords="433,173,582,214"/>
+<area shape="rect" id="node10" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="657,180,728,207"/>
+</map>

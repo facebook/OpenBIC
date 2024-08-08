@@ -1,0 +1,14 @@
+<map id="hex_fan_failure_do" name="hex_fan_failure_do">
+<area shape="rect" id="node1" title=" " alt="" coords="5,155,136,182"/>
+<area shape="rect" id="node2" href="$plat__threshold_8c.html#a44b1d728373d663d62eb5060ef080340" title=" " alt="" coords="184,64,339,105"/>
+<area shape="rect" id="node10" href="$plat__threshold_8c.html#ac6230de7239ed5f84e19038a20516593" title=" " alt="" coords="197,130,326,157"/>
+<area shape="rect" id="node11" href="$aalc-rpu_2src_2platform_2plat__led_8c.html#a551af46446cb05b55f2f8e089d53ff85" title=" " alt="" coords="229,181,293,207"/>
+<area shape="rect" id="node12" href="$plat__threshold_8c.html#a44531f4e75f731bfcd2e454322b79e24" title=" " alt="" coords="197,231,326,258"/>
+<area shape="rect" id="node3" href="$sensor_8c.html#a52fcbd96358bec7eff3e368a4da4a292" title=" " alt="" coords="387,17,583,43"/>
+<area shape="rect" id="node5" href="$nct7363_8c.html#a6ae0d9f1cb23d431c17dfdf0acc29d91" title=" " alt="" coords="401,71,568,98"/>
+<area shape="rect" id="node8" href="$nct7363_8c.html#a7c0e5ebf512357e06f24c3b5f6aa2fde" title=" " alt="" coords="433,122,536,149"/>
+<area shape="rect" id="node4" href="$sensor_8c.html#ae224ad26413eb100f2abef7a1907a547" title=" " alt="" coords="631,5,768,47"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="640,71,759,98"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="816,97,959,123"/>
+<area shape="rect" id="node9" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="639,122,760,149"/>
+</map>

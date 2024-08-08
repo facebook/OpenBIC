@@ -1,0 +1,8 @@
+<map id="check_Renesas_VR_VCCIO_UV_fault" name="check_Renesas_VR_VCCIO_UV_fault">
+<area shape="rect" id="node1" title=" " alt="" coords="5,27,193,69"/>
+<area shape="rect" id="node2" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="281,8,400,35"/>
+<area shape="rect" id="node4" href="$yv3-dl_2src_2lib_2plat__sys_8c.html#a97bd48caa8648c30b4ca6fdd7ab21f93" title=" " alt="" coords="241,60,440,87"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="491,5,634,32"/>
+<area shape="rect" id="node5" href="$ipmi_8c.html#a40681786f36bd1836cdb473b7050dda1" title=" " alt="" coords="488,57,637,98"/>
+<area shape="rect" id="node6" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="685,64,768,91"/>
+</map>

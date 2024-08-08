@@ -1,0 +1,11 @@
+<map id="common/dev/include/ads112c.h" name="common/dev/include/ads112c.h">
+<area shape="rect" id="node1" title=" " alt="" coords="345,5,488,47"/>
+<area shape="rect" id="node2" href="$ads112c_8c.html" title=" " alt="" coords="249,109,409,136"/>
+<area shape="rect" id="node3" href="$aalc-rpu_2src_2platform_2plat__hook_8h.html" title=" " alt="" coords="433,95,576,151"/>
+<area shape="rect" id="node4" href="$aalc-rpu_2src_2platform_2plat__hook_8c.html" title=" " alt="" coords="5,199,148,255"/>
+<area shape="rect" id="node5" href="$aalc-rpu_2src_2platform_2plat__hwmon_8c.html" title=" " alt="" coords="172,199,315,255"/>
+<area shape="rect" id="node6" href="$aalc-rpu_2src_2platform_2plat__init_8c.html" title=" " alt="" coords="339,199,481,255"/>
+<area shape="rect" id="node7" href="$plat__pwm_8c.html" title=" " alt="" coords="506,206,693,247"/>
+<area shape="rect" id="node8" href="$aalc-rpu_2src_2platform_2plat__sensor__table_8c.html" title=" " alt="" coords="717,199,860,255"/>
+<area shape="rect" id="node9" href="$plat__threshold_8c.html" title=" " alt="" coords="884,199,1027,255"/>
+</map>

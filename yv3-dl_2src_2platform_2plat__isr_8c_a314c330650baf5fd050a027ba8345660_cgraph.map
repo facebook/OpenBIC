@@ -1,0 +1,7 @@
+<map id="init_smi_thread" name="init_smi_thread">
+<area shape="rect" id="node1" title=" " alt="" coords="5,42,116,69"/>
+<area shape="rect" id="node2" href="$yv3-dl_2src_2platform_2plat__isr_8c.html#abca5ce09acdadb9b073d601051423ddf" title=" " alt="" coords="164,42,256,69"/>
+<area shape="rect" id="node3" href="$ipmi_8c.html#a40681786f36bd1836cdb473b7050dda1" title=" " alt="" coords="304,5,453,47"/>
+<area shape="rect" id="node5" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="343,71,414,98"/>
+<area shape="rect" id="node4" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="501,13,584,39"/>
+</map>

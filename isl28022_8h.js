@@ -1,0 +1,14 @@
+var isl28022_8h =
+[
+    [ "ISL28022_AUX_CONTROL_REG", "isl28022_8h.html#af4532691ff27ef282331ca08405a1119", null ],
+    [ "ISL28022_BUS_VOLTAGE_REG", "isl28022_8h.html#ac037f3f2957ef3ceb138344d6b202af6", null ],
+    [ "ISL28022_BUS_VOLTAGE_THRESHOLD_LSB", "isl28022_8h.html#aeb7a5216b8b171aec18306773bd92a68", null ],
+    [ "ISL28022_BUS_VOLTAGE_THRESHOLD_REG", "isl28022_8h.html#aa40d58270afd778bf34b31b2e2a26cc8", null ],
+    [ "ISL28022_CALIBRATION_REG", "isl28022_8h.html#a82b9d9e1b68df75c7f440f1bff793b55", null ],
+    [ "ISL28022_CONFIG_REG", "isl28022_8h.html#ad7c7efe4aec2504699d5c17a757e8fd5", null ],
+    [ "ISL28022_CURRENT_REG", "isl28022_8h.html#a8268880f944c265d6126621ee345a986", null ],
+    [ "ISL28022_DCS_INTERRUPT_STATUS_REG", "isl28022_8h.html#a3ac62b81668120ec9d9452ddc3e5c89c", null ],
+    [ "ISL28022_POWER_REG", "isl28022_8h.html#ad008ac67c32cad2ddb4020030c458910", null ],
+    [ "ISL28022_SHUNT_VOLTAGE_REG", "isl28022_8h.html#a79bda63209789aa9b00ab06cda9e6bf6", null ],
+    [ "ISL28022_SHUNT_VOLTAGE_THRESHOLD_REG", "isl28022_8h.html#a405616f51fe706d65290dd54eb45eb7f", null ]
+];

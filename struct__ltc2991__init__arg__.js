@@ -1,0 +1,25 @@
+var struct__ltc2991__init__arg__ =
+[
+    [ "fields", "struct__ltc2991__init__arg__.html#a156a1ed70a903405d84d5a0d5ac95337", null ],
+    [ "fields", "struct__ltc2991__init__arg__.html#a8c37ef7a2953d89f004087fd9dea218e", null ],
+    [ "is_init", "struct__ltc2991__init__arg__.html#a170dcc197c5230010c67bef3394c6dca", null ],
+    [ "T1_KELVIN", "struct__ltc2991__init__arg__.html#a9b7ec0dcb61ff2cfbca6134d05b81671", null ],
+    [ "T2_KELVIN", "struct__ltc2991__init__arg__.html#ade75aca7ffcc88100e437d39e7bb454b", null ],
+    [ "T3_KELVIN", "struct__ltc2991__init__arg__.html#ac1221cf66608651972bfa31ca1621033", null ],
+    [ "T4_KELVIN", "struct__ltc2991__init__arg__.html#a7b61831f277fe49c461baf11569d0192", null ],
+    [ "V1_V2_DIFFERENTIAL", "struct__ltc2991__init__arg__.html#a8a843f01e1923c5ea04ed8d20cad2e59", null ],
+    [ "V1_V2_FILT", "struct__ltc2991__init__arg__.html#af38daea580728fce3e4a9ddcbd1062f9", null ],
+    [ "V1_V2_TEMPERATURE", "struct__ltc2991__init__arg__.html#acdceb41d3bae8fed00a36356b1be5e90", null ],
+    [ "v1_v4_control_operation", "struct__ltc2991__init__arg__.html#a40bdf58ac737f0f4d952e69ffc1c97a6", null ],
+    [ "V3_V4_DIFFERENTIAL", "struct__ltc2991__init__arg__.html#a80715cf3f496e323c8cca76c570e8df9", null ],
+    [ "V3_V4_FILT", "struct__ltc2991__init__arg__.html#adae7714cfd4d7dad007b79aae12c8e6a", null ],
+    [ "V3_V4_TEMPERATURE", "struct__ltc2991__init__arg__.html#aa9a60405452466522f53ddb5f7baebdb", null ],
+    [ "V5_V6_DIFFERENTIAL", "struct__ltc2991__init__arg__.html#a2c152cf2fbdd8517693a21d066e1484b", null ],
+    [ "V5_V6_FILT", "struct__ltc2991__init__arg__.html#a928df72e57247a18ad9827868b7eff04", null ],
+    [ "V5_V6_TEMPERATURE", "struct__ltc2991__init__arg__.html#a03fd57e3c65277b10792987ee41ca55e", null ],
+    [ "v5_v8_control_operation", "struct__ltc2991__init__arg__.html#a63e1218ab958cd588f9f55772968c709", null ],
+    [ "V7_V8_DIFFERENTIAL", "struct__ltc2991__init__arg__.html#ad2998ac48881eb2e55200c52f44c4e5e", null ],
+    [ "V7_V8_FILT", "struct__ltc2991__init__arg__.html#ae404270feafa768a2c6b1f2d8fb74c69", null ],
+    [ "V7_V8_TEMPERATURE", "struct__ltc2991__init__arg__.html#a68cb7a2bea7d2c0c60aabfcedc4aede5", null ],
+    [ "value", "struct__ltc2991__init__arg__.html#ad344775852f1c2b9601e38bd5d45b289", null ]
+];

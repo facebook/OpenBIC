@@ -1,0 +1,4 @@
+<map id="cmd_get_rpu_fan_duty" name="cmd_get_rpu_fan_duty">
+<area shape="rect" id="node1" title=" " alt="" coords="5,5,159,32"/>
+<area shape="rect" id="node2" href="$plat__pwm_8c.html#a4993fa784927a23996ef095aee3c6786" title=" " alt="" coords="207,5,363,32"/>
+</map>
