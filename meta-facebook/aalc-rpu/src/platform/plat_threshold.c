@@ -81,13 +81,6 @@ uint8_t fan_pump_sensor_array[] = {
 	SENSOR_NUM_PB_1_PUMP_TACH_RPM,
 	SENSOR_NUM_PB_2_PUMP_TACH_RPM,
 	SENSOR_NUM_PB_3_PUMP_TACH_RPM,
-	// pump fan
-	SENSOR_NUM_PB_1_FAN_1_TACH_RPM,
-	SENSOR_NUM_PB_1_FAN_2_TACH_RPM,
-	SENSOR_NUM_PB_2_FAN_1_TACH_RPM,
-	SENSOR_NUM_PB_2_FAN_2_TACH_RPM,
-	SENSOR_NUM_PB_3_FAN_1_TACH_RPM,
-	SENSOR_NUM_PB_3_FAN_2_TACH_RPM,
 };
 
 bool is_pump_stop_for_two_fault()
@@ -730,7 +723,7 @@ void fan_pump_pwrgd_handler(void *arug0, void *arug1, void *arug2)
 			continue;
 		}
 
-		for (uint8_t i = 0; i < ARRAY_SIZE(fan_pump_sensor_array)-6; i++) {
+		for (uint8_t i = 0; i < ARRAY_SIZE(fan_pump_sensor_array); i++) {
 			// read gok data
 			sensor_cfg *cfg = get_common_sensor_cfg_info(fan_pump_sensor_array[i]);
 			uint8_t read_gok =
