@@ -22,6 +22,7 @@
 #include "plat_class.h"
 #include "plat_power_status.h"
 #include "plat_i2c.h"
+#include "plat_fru.h"
 #include "power_status.h"
 #include "ipmi.h"
 #include "pldm.h"
@@ -144,6 +145,14 @@ void ISR_GPIOA6()
 void ISR_GPIOB0()
 {
 	isr_dbg_print(FPGA_WATCH_DOG_TIMER2_L);
+}
+
+void ISR_RTC_CLR()
+{
+	isr_dbg_print(RTC_CLR_L);
+
+	LOG_INF("RTC clear triggered, record to EEPROM");
+	access_rtc_clr_flag(RTC_CLR_ASSERT);
 }
 
 void ISR_HSC_OC()

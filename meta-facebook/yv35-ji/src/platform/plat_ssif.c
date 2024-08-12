@@ -20,8 +20,10 @@
 #include "plat_gpio.h"
 #include "plat_mctp.h"
 #include "plat_power_status.h"
+#include "plat_fru.h"
 #include "power_status.h"
 #include "ssif.h"
+#include "libutil.h"
 
 #include <logging/log.h>
 LOG_MODULE_REGISTER(plat_ssif);
@@ -49,4 +51,24 @@ void pal_bios_post_complete()
 	/* Pull low virtual bios complete pin */
 	handle_post_status(GPIO_LOW, true);
 	handle_post_action();
+}
+
+const uint8_t clear_cmos_sel_data[] = { 0x00, 0x00, 0xfb, 0x28, 0x00, 0x00, 0x00, 0x00,
+					0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+const uint16_t clear_cmos_sel_size = ARRAY_SIZE(clear_cmos_sel_data);
+
+void pal_add_sel_handler(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != clear_cmos_sel_size)
+		return;
+
+	if (!memcmp(msg->data, clear_cmos_sel_data, clear_cmos_sel_size)) {
+		/* check whether need to clear fake rtc clear flag */
+		LOG_WRN("Clear CMOS SEL event received, clear CMOS CLR flag");
+		access_rtc_clr_flag(RTC_CLR_DEASSERT);
+	}
+
+	return;
 }
