@@ -85,6 +85,9 @@ void pal_pre_init()
 
 	i3c_attach(&i3c_msg);
 
+	// Create a thread to keep sending AASA
+	start_setaasa();
+
 	// Initialize I3C HUB
 	if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, LDO_VOLT)) {
 		printk("failed to initialize 1ou rg3mxxb12\n");
@@ -121,4 +124,3 @@ void pal_set_sys_status()
 		read_cpuid();
 	}
 }
-
