@@ -241,14 +241,6 @@ void rpu_internal_fan_failure_do(uint8_t sensor_num, uint8_t status)
 	}
 }
 
-void aalc_leak_detect_do(uint8_t arg0, uint8_t arg1, uint8_t status)
-{
-	if (status == THRESHOLD_STATUS_LCR)
-		aalc_leak_behavior(arg0);
-	else if (status != THRESHOLD_STATUS_NORMAL)
-		LOG_DBG("Unexpected threshold warning");
-}
-
 void abnormal_press_do(uint8_t unused, uint8_t status)
 {
 	if (status == THRESHOLD_STATUS_UCR) {

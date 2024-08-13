@@ -72,7 +72,7 @@ enum AALC_STATUS_LEAK_E {
 	AALC_STATUS_LEAK_E_MAX,
 };
 
-uint32_t get_leak_status();
+uint8_t get_leak_status();
 void set_leak_status(uint8_t idx, uint8_t val);
 uint16_t get_sticky_sensor_status(uint8_t idx);
 bool set_sticky_sensor_status(uint8_t idx, uint16_t val);

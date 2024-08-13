@@ -70,8 +70,6 @@ void it_leak_handler(uint8_t idx)
 		break;
 	}
 
-	if (get_led_status(LED_IDX_E_LEAK) == LED_START_BLINK)
-		led_ctrl(LED_IDX_E_LEAK, LED_STOP_BLINK);
 	fault_led_control();
 }
 
