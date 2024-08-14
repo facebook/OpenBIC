@@ -64,8 +64,9 @@ uint8_t nct7363_read_back_data(sensor_cfg *cfg, uint8_t reading_offset)
 			cfg->target_addr, ret);
 		return_data = READ_ERROR;
 	}
-
-	return_data = msg.data[0];
+	else{
+		return_data = msg.data[0];
+	}
 
 	if ((cfg->post_sensor_read_hook)) {
 		if ((cfg->post_sensor_read_hook)(cfg, cfg->post_sensor_read_args, 0) == false) {
