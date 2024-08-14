@@ -1,0 +1,26 @@
+From 581b924fdae8507f388321a3243d5eded5ca7276 Mon Sep 17 00:00:00 2001
+From: Sara Lin <sara_sy_lin@wiwynn.com>
+Date: Wed, 14 Aug 2024 14:24:29 +0800
+Subject: [PATCH] i3c: aspeed: Enable include broadcast address
+
+i3c controller will be reset when the I3C bus is too busy
+to send the IBI. Enable IBA to resolve.
+---
+ drivers/i3c/i3c_aspeed.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index bec586019f..6900effd21 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -1379,6 +1379,7 @@ static int i3c_aspeed_enable(struct i3c_aspeed_obj *obj)
+ 	reg.fields.enable = 1;
+ 	reg.fields.hj_ack_ctrl = 1;
+ 	reg.fields.slave_ibi_payload_en = 1;
++	reg.fields.boradcast_addr_inc = 1;
+ 	if (config->secondary) {
+ 		i3c_register->slave_event_ctrl.fields.hj_allowed = 0;
+ 		reg.fields.slave_auto_mode_adapt = 0;
+-- 
+2.25.1
+
