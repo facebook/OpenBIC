@@ -401,7 +401,7 @@ uint8_t get_threshold_status(uint8_t sensor_num)
 static bool set_threshold_status(sensor_threshold *threshold_tbl, float val)
 {
 	uint8_t status = THRESHOLD_STATUS_NORMAL;
-	
+
 	switch (threshold_tbl->type) {
 	case THRESHOLD_ENABLE_LCR:
 		if (val < threshold_tbl->lcr)
