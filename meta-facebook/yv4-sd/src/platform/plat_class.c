@@ -88,10 +88,13 @@ bool get_blade_config(uint8_t *blade_config)
 		return false;
 	}
 
-	if (voltage <= 1.05f && voltage >= 0.95f) {
+	if (voltage >= 0.0f && voltage <= 1.05f) {
 		*blade_config = BLADE_CONFIG_T1C;
-	} else {
+	} else if (voltage >= 1.2f && voltage <= 1.7f) {
 		*blade_config = BLADE_CONFIG_T1M;
+	} else {
+		*blade_config = BLADE_CONFIG_UNKNOWN;
+		return false;
 	}
 	return true;
 }
