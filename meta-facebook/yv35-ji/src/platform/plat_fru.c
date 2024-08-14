@@ -21,6 +21,7 @@
 #include <logging/log.h>
 #include "libutil.h"
 #include "eeprom.h"
+#include "util_sys.h"
 
 LOG_MODULE_REGISTER(plat_fru);
 
@@ -93,6 +94,11 @@ const EEPROM_CFG plat_vr_remain_cnt_area_config[] = {
 		VR_MPS_1V2_RM_CNT_START,
 		VR_RM_CNT_MAX_SIZE,
 	},
+};
+
+const EEPROM_CFG plat_rtc_clr_record_area_config = {
+	NV_ATMEL_24C128,     MB_FRU_ID,		MB_FRU_PORT,	      MB_FRU_ADDR,
+	FRU_DEV_ACCESS_BYTE, RTC_CLR_REC_START, RTC_CLR_REC_MAX_SIZE,
 };
 
 void pal_load_fru_config(void)
@@ -211,4 +217,75 @@ bool access_vr_remain_cnt(EEPROM_ENTRY *entry, uint8_t comp_id, bool update_flag
 	LOG_INF("VR comp_id %d remain count has beem updated to %d", comp_id, cur_rm_cnt);
 
 	return true;
+}
+
+bool access_rtc_clr_flag(uint8_t val)
+{
+	if (get_board_revision() >= SYS_BOARD_PVT2)
+		return true;
+
+	EEPROM_ENTRY entry = { 0 };
+	entry.config = plat_rtc_clr_record_area_config;
+	entry.data_len = 1;
+
+	entry.data[0] = val;
+	if (eeprom_write(&entry) == false) {
+		LOG_ERR("eeprom_write fail");
+		return false;
+	}
+
+	return true;
+}
+
+#define REG_RTC_STATUS 0x0B
+void handle_rtc_clr_flag()
+{
+	if (get_board_revision() >= SYS_BOARD_PVT2)
+		return;
+
+	if (is_ac_lost() == false) {
+		LOG_INF("Not AC on, skip RTC_CLR flag check");
+		return;
+	}
+
+	EEPROM_ENTRY entry = { 0 };
+	entry.config = plat_rtc_clr_record_area_config;
+	entry.data_len = 1;
+
+	/* check whether rtc_clr has been cleared by BIC */
+	if (eeprom_read(&entry) == false) {
+		LOG_ERR("eeprom_read fail");
+		return;
+	}
+
+	/* While DC on, clear RTC_CLR status, if RTC_CLR triggered last time */
+	if (entry.data[0] != 0x00) {
+		uint8_t retry = 3;
+		I2C_MSG msg = { 0 };
+
+		msg.bus = I2C_BUS10;
+		msg.target_addr = RTC_I2C_ADDR >> 1;
+		msg.tx_len = 1;
+		msg.rx_len = 1;
+		msg.data[0] = REG_RTC_STATUS;
+
+		if (i2c_master_read(&msg, retry)) {
+			LOG_ERR("Failed to read rtc status");
+			return;
+		}
+
+		/* Clear fake rtc_clr trigger */
+		if (msg.data[0] & BIT(4)) {
+			LOG_WRN("Clear RTC fake status");
+			msg.tx_len = 2;
+			msg.data[1] = msg.data[0] & ~BIT(4);
+			msg.data[0] = REG_RTC_STATUS;
+			if (i2c_master_write(&msg, retry)) {
+				LOG_ERR("Failed to clear rtc status");
+				return;
+			}
+		}
+	} else {
+		LOG_INF("RTC_CLR flag has been triggered by user");
+	}
 }

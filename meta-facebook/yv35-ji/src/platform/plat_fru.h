@@ -45,9 +45,17 @@ enum {
 #define VR_MPS_1V2_RM_CNT_START (VR_MPS_CPUDVDD_RM_CNT_START + (VR_RM_CNT_MAX_SIZE * 4))
 #define VR_MPS_MAX_RM_CNT 1000 //Approximate number from MPS vendor
 
+#define RTC_CLR_REC_MAX_SIZE 1
+#define RTC_CLR_REC_START 0x0C00
+
+#define RTC_CLR_ASSERT 0x00
+#define RTC_CLR_DEASSERT 0xFF
+
 bool get_bios_version_area_config(EEPROM_CFG *config);
 int set_bios_version(EEPROM_ENTRY *entry, uint8_t block_index);
 int get_bios_version(EEPROM_ENTRY *entry, uint8_t block_index);
 bool access_vr_remain_cnt(EEPROM_ENTRY *entry, uint8_t comp_id, bool update_flag);
+bool access_rtc_clr_flag(uint8_t val);
+void handle_rtc_clr_flag();
 
 #endif

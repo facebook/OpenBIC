@@ -145,6 +145,11 @@ __weak void pal_bios_post_complete()
 	return;
 }
 
+__weak void pal_add_sel_handler(ipmi_msg *msg)
+{
+	return;
+}
+
 static bool ssif_lock_ctl(ssif_dev *ssif_inst, bool lck_flag)
 {
 	CHECK_NULL_ARG_WITH_RETURN(ssif_inst, false);
@@ -408,6 +413,7 @@ static bool ssif_data_handle(ssif_dev *ssif_inst, ssif_action_t action, uint8_t 
 				      NETFN_STORAGE_REQ) &&
 				     (ssif_inst->current_ipmi_msg.buffer.cmd ==
 				      CMD_STORAGE_ADD_SEL))) {
+					pal_add_sel_handler(&ssif_inst->current_ipmi_msg.buffer);
 					ipmi_req.buffer.data_len = 2;
 					ipmi_req.buffer.data[0] = 0x00;
 					ipmi_req.buffer.data[1] = 0x00;

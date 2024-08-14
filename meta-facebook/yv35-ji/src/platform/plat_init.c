@@ -22,6 +22,7 @@
 #include "plat_ssif.h"
 #include "plat_sensor_table.h"
 #include "plat_power_status.h"
+#include "plat_fru.h"
 #include "util_worker.h"
 #include "power_status.h"
 #include <stdio.h>
@@ -73,6 +74,8 @@ void pal_post_init()
 void pal_device_init()
 {
 	power_status_monitor();
+
+	handle_rtc_clr_flag();
 }
 
 void pal_set_sys_status()

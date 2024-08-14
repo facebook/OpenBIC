@@ -159,6 +159,7 @@ void ssif_error_record(uint8_t channel, ssif_err_status_t errcode);
 ssif_dev *ssif_inst_get_by_bus(uint8_t bus);
 void pal_ssif_alert_trigger(uint8_t status);
 void pal_bios_post_complete();
+void pal_add_sel_handler(ipmi_msg *msg);
 bool get_ssif_ok();
 void reset_ssif_ok();
 
