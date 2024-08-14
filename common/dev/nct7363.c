@@ -63,8 +63,7 @@ uint8_t nct7363_read_back_data(sensor_cfg *cfg, uint8_t reading_offset)
 		LOG_DBG("Fail to access device, bus: 0x%x, addr: 0x%x, ret: %d", cfg->port,
 			cfg->target_addr, ret);
 		return_data = READ_ERROR;
-	}
-	else{
+	} else {
 		return_data = msg.data[0];
 	}
 
