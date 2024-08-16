@@ -136,4 +136,6 @@ int i3c_controller_write(I3C_MSG *msg);
 int i3c_target_set_address(I3C_MSG *msg);
 int i3c_target_get_dynamic_address(I3C_MSG *msg, uint8_t *dynamic_addr);
 
+__weak bool pal_get_slot_pid(uint16_t *pid);
+
 #endif

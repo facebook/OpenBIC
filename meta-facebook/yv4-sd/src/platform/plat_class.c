@@ -66,6 +66,7 @@ struct _SLOT_EID_MAPPING_TABLE _slot_eid_mapping_table[] = {
 
 uint8_t slot_eid = 0;
 uint8_t slot_id = 0;
+uint16_t slot_pid = 0;
 
 static uint8_t retimer_type = RETIMER_TYPE_ASTERALABS;
 
@@ -77,6 +78,12 @@ uint8_t get_slot_eid()
 uint8_t get_slot_id()
 {
 	return slot_id;
+}
+
+bool pal_get_slot_pid(uint16_t *pid)
+{
+	*pid = slot_pid;
+	return true;
 }
 
 bool get_blade_config(uint8_t *blade_config)
@@ -178,7 +185,6 @@ void init_platform_config()
 	I3C_MSG i3c_msg;
 	float voltage;
 	float p3v3_stby_voltage;
-	uint16_t slot_pid = 0;
 
 	i3c_msg.bus = 0;
 

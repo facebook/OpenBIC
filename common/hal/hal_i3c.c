@@ -115,6 +115,14 @@ int i3c_smq_write(I3C_MSG *msg)
 	ret = i3c_slave_mqueue_write(dev_i3c_smq[msg->bus], &msg->data[0], msg->tx_len);
 	if (ret < 0) {
 		LOG_ERR("I3C wrtie failed, ret = %d", ret);
+		if (ret == -EIO) {
+			// SIR timeout, reset I3C PID
+			uint16_t slot_pid = 0;
+			if (pal_get_slot_pid(&slot_pid) == true) {
+				LOG_WRN("Reset PID = %x for Bus %u due to SIR timeout", slot_pid, msg->bus);
+				i3c_set_pid(msg, slot_pid);
+			}
+		}
 	}
 	k_mutex_unlock(&mutex_write[msg->bus]);
 
@@ -642,4 +650,8 @@ int i3c_target_get_dynamic_address(I3C_MSG *msg, uint8_t *dynamic_addr)
 	}
 
 	return 0;
+}
+
+__weak bool pal_get_slot_pid(uint16_t *pid) {
+	return false;
 }
