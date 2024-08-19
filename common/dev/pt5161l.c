@@ -1175,6 +1175,11 @@ uint8_t pt5161l_read_avg_temp(I2C_MSG *i2c_msg, uint8_t temp_cal_code_avg, doubl
 		LOG_INF("Avg Temperature is not ready");
 		ret = SENSOR_NOT_ACCESSIBLE;
 		goto unlock_exit;
+	} else if (adc_code == 0xFFFFFFFF) {
+		/* From Aries Errata - Known issue */
+		LOG_WRN("Some I2C transactions occured during temperature reading");
+		ret = SENSOR_NOT_ACCESSIBLE;
+		goto unlock_exit;
 	}
 
 	*avg_temperature = 110 - ((adc_code - (temp_cal_code_avg + 250)) * 0.32);
