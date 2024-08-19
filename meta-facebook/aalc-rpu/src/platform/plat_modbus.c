@@ -42,6 +42,7 @@
 #include "plat_threshold.h"
 #include "plat_fsc.h"
 #include "plat_led.h"
+#include "plat_status.h"
 
 LOG_MODULE_REGISTER(plat_modbus);
 
@@ -280,19 +281,8 @@ uint8_t modbus_leakage_status_read(modbus_command_mapping *cmd)
 		}
 	}
 
-	float val = 0.0;
-	uint8_t status =
-		get_sensor_reading_to_real_val(SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V, &val);
-	if (status == SENSOR_READ_4BYTE_ACUR_SUCCESS)
-		WRITE_BIT(state, 4, (val < 3.1) ? 1 : 0);
-	else
-		WRITE_BIT(state, 4, 1);
-	val = 0.0;
-	status = get_sensor_reading_to_real_val(SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_VOLT_V, &val);
-	if (status == SENSOR_READ_4BYTE_ACUR_SUCCESS)
-		WRITE_BIT(state, 12, (val < 3.1) ? 1 : 0);
-	else
-		WRITE_BIT(state, 12, 1);
+	WRITE_BIT(state, 4, (get_leak_status() >> AALC_STATUS_CDU_LEAKAGE) & 0x01);
+	WRITE_BIT(state, 12, (get_leak_status() >> AALC_STATUS_RACK_LEAKAGE) & 0x01);
 
 	cmd->data[0] = state;
 
@@ -428,22 +418,6 @@ uint8_t modbus_set_manual_pwm(modbus_command_mapping *cmd)
 	return MODBUS_EXC_NONE;
 }
 
-uint8_t modbus_get_sensor_status(modbus_command_mapping *cmd)
-{
-	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-
-	uint8_t status_num = cmd->arg0;
-	uint8_t bit = cmd->arg1;
-	uint8_t reverse = cmd->arg2;
-
-	if (!reverse)
-		cmd->data[0] = get_sensor_status(status_num, bit);
-	else
-		cmd->data[0] = (!get_sensor_status(status_num, bit));
-
-	return MODBUS_EXC_NONE;
-}
-
 uint8_t modbus_set_sticky_sensor_status(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
@@ -524,6 +498,15 @@ uint8_t modbus_set_manual_control_enable_flag(modbus_command_mapping *cmd)
 	return MODBUS_EXC_NONE;
 }
 
+uint8_t modbus_get_aalc_sensor_status(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	cmd->data[0] = get_sensor_status_for_modbus_cmd(cmd->arg0);
+
+	return MODBUS_EXC_NONE;
+}
+
 uint8_t modbus_get_led_status(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
@@ -535,90 +518,10 @@ uint8_t modbus_get_led_status(modbus_command_mapping *cmd)
 	      (get_led_status(LED_IDX_E_COOLANT) == LED_START_BLINK) ? 3 :
 								       0;
 	WRITE_BIT(val, 2, (get_led_status(LED_IDX_E_LEAK) == LED_TURN_OFF) ? 0 : 1);
-	WRITE_BIT(val, 5, get_led_pin(LED_IDX_E_FAULT));
-	WRITE_BIT(val, 4, get_led_pin(LED_IDX_E_POWER));
+	WRITE_BIT(val, 5, gpio_get(get_led_pin(LED_IDX_E_FAULT)));
+	WRITE_BIT(val, 4, gpio_get(get_led_pin(LED_IDX_E_POWER)));
 
 	cmd->data[0] = val;
-
-	return MODBUS_EXC_NONE;
-}
-
-uint8_t modbus_get_pump_status(modbus_command_mapping *cmd)
-{
-	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-
-	uint16_t abnormal = 3;
-	for (uint8_t i = RPU_PUMP1_STATUS; i <= RPU_PUMP3_STATUS; i++)
-		if (get_sensor_status(i, TWO_BYTES_SENSOR_STATUS) == PUMP_STATUS_ABNORMAL)
-			abnormal--;
-
-	cmd->data[0] = abnormal;
-
-	return MODBUS_EXC_NONE;
-}
-
-uint8_t modbus_get_rpu_fan_status(modbus_command_mapping *cmd)
-{
-	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-
-	uint16_t abnormal = 2;
-
-	for (uint8_t i = 0; i < 2; i++)
-		if (get_sensor_status(RPU_FAN_STATUS, i))
-			abnormal--;
-
-	cmd->data[0] = abnormal;
-
-	return MODBUS_EXC_NONE;
-}
-
-uint8_t modbus_get_coolant_level_status(modbus_command_mapping *cmd)
-{
-	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-
-	float level1 = 0, level2 = 0;
-	uint16_t val = 0;
-	get_sensor_reading_to_real_val(SENSOR_NUM_BPB_RACK_LEVEL_1, &level1);
-	get_sensor_reading_to_real_val(SENSOR_NUM_BPB_RACK_LEVEL_2, &level2);
-	if (cmd->arg0 == 0) {
-		WRITE_BIT(val, 0, level2 ? 1 : 0);
-		WRITE_BIT(val, 1, level1 ? 1 : 0);
-		cmd->data[0] = val;
-	} else if (cmd->arg0 == 1) {
-		cmd->data[0] = (uint16_t)(level1 ? 1 : 0);
-	} else if (cmd->arg0 == 2) {
-		cmd->data[0] = (uint16_t)(level2 ? 1 : 0);
-	}
-
-	return MODBUS_EXC_NONE;
-}
-
-uint8_t modbus_get_one_pump_status(modbus_command_mapping *cmd)
-{
-	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-
-	uint8_t sensor_num = (cmd->arg0 == 1) ? SENSOR_NUM_PB_1_PUMP_TACH_RPM :
-			     (cmd->arg0 == 2) ? SENSOR_NUM_PB_2_PUMP_TACH_RPM :
-			     (cmd->arg0 == 3) ? SENSOR_NUM_PB_3_PUMP_TACH_RPM :
-						0xFF;
-
-	if (sensor_num == 0xFF)
-		return MODBUS_EXC_ILLEGAL_DATA_VAL;
-
-	static uint16_t fault = 0;
-
-	float rpm = 0.0;
-	get_sensor_reading_to_real_val(sensor_num, &rpm);
-	if (rpm < 500) {
-		cmd->data[0] = PUMP_STATUS_ABNORMAL;
-		WRITE_BIT(fault, cmd->arg0, 1);
-		set_sensor_status(AALC_STATUS_ALARM, AALC_PUMP_STATUS_ABNORMAL, 1);
-	} else {
-		cmd->data[0] = PUMP_STATUS_ENABLE;
-		WRITE_BIT(fault, cmd->arg0, 0);
-		if (!fault)
-			set_sensor_status(AALC_STATUS_ALARM, AALC_PUMP_STATUS_ABNORMAL, 0);
-	}
 
 	return MODBUS_EXC_NONE;
 }
@@ -702,21 +605,27 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_PB_2_PUMP_TACH_RPM, 1, 0, 1 },
 	{ MODBUS_PB_3_PUMP_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_PB_3_PUMP_TACH_RPM, 1, 0, 1 },
-	{ MODBUS_RPU_FAN_STATUS_ADDR, NULL, modbus_get_sensor_status, RPU_FAN_STATUS,
-	  TWO_BYTES_SENSOR_STATUS, 0, 1 },
+	{ MODBUS_RPU_FAN_STATUS_ADDR, NULL, modbus_get_aalc_sensor_status, RPU_FAN_STATUS, 0, 0,
+	  1 },
 	{ MODBUS_MB_FAN1_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_MB_FAN1_TACH_RPM, 1, 0, 1 },
 	{ MODBUS_MB_FAN2_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_MB_FAN2_TACH_RPM, 1, 0, 1 },
 	{ MODBUS_AALC_COOLING_CAPACITY_W_ADDR, NULL, modbus_get_aalc_cooling_capacity, 0, 1, -1,
 	  1 },
-	{ MODBUS_RPU_PUMP1_STATUS_ADDR, NULL, modbus_get_one_pump_status, 1, 0, 0, 1 },
-	{ MODBUS_RPU_PUMP2_STATUS_ADDR, NULL, modbus_get_one_pump_status, 2, 0, 0, 1 },
-	{ MODBUS_RPU_PUMP3_STATUS_ADDR, NULL, modbus_get_one_pump_status, 3, 0, 0, 1 },
-	{ MODBUS_RPU_RESERVOIR_STATUS_ADDR, NULL, modbus_get_coolant_level_status, 0, 0, 0, 1 },
+	{ MODBUS_RPU_PUMP1_STATUS_ADDR, NULL, modbus_get_aalc_sensor_status, RPU_PUMP1_STATUS, 0, 0,
+	  1 },
+	{ MODBUS_RPU_PUMP2_STATUS_ADDR, NULL, modbus_get_aalc_sensor_status, RPU_PUMP2_STATUS, 0, 0,
+	  1 },
+	{ MODBUS_RPU_PUMP3_STATUS_ADDR, NULL, modbus_get_aalc_sensor_status, RPU_PUMP3_STATUS, 0, 0,
+	  1 },
+	{ MODBUS_RPU_RESERVOIR_STATUS_ADDR, NULL, modbus_get_aalc_sensor_status,
+	  RPU_RESERVOIR_STATUS, 0, 0, 1 },
 	{ MODBUS_RPU_LED_STATUS_ADDR, NULL, modbus_get_led_status, 0, 0, 0, 1 },
-	{ MODBUS_RPU_PUMP_STATUS_ADDR, NULL, modbus_get_pump_status, 0, 0, 0, 1 },
-	{ MODBUS_RPU_INTERNAL_FAN_STATUS_ADDR, NULL, modbus_get_rpu_fan_status, 0, 0, 0, 1 },
+	{ MODBUS_RPU_PUMP_STATUS_ADDR, NULL, modbus_get_aalc_sensor_status, ALL_PUMP_STATUS, 0, 0,
+	  1 },
+	{ MODBUS_RPU_INTERNAL_FAN_STATUS_ADDR, NULL, modbus_get_aalc_sensor_status,
+	  ALL_RPU_INTERNAL_FAN_STATUS, 0, 0, 1 },
 	{ MODBUS_BB_TMP75_TEMP_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_BB_TMP75_TEMP_C, 1,
 	  0, 1 },
 	{ MODBUS_BPB_RPU_OUTLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
@@ -772,21 +681,21 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W, 1, -1, 1 },
 	{ MODBUS_PB_3_HSC_P48V_PIN_PWR_W_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W, 1, -1, 1 },
-	{ MODBUS_PB_1_FAN_1_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	{ MODBUS_PB_1_FAN_OUTLET_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_PB_1_FAN_1_TACH_RPM, 1, 0, 1 },
-	{ MODBUS_PB_1_FAN_2_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	{ MODBUS_PB_1_FAN_INLET_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_PB_1_FAN_2_TACH_RPM, 1, 0, 1 },
-	{ MODBUS_PB_2_FAN_1_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	{ MODBUS_PB_2_FAN_OUTLET_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_PB_2_FAN_1_TACH_RPM, 1, 0, 1 },
-	{ MODBUS_PB_2_FAN_2_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	{ MODBUS_PB_2_FAN_INLET_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_PB_2_FAN_2_TACH_RPM, 1, 0, 1 },
-	{ MODBUS_PB_3_FAN_1_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	{ MODBUS_PB_3_FAN_OUTLET_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_PB_3_FAN_1_TACH_RPM, 1, 0, 1 },
-	{ MODBUS_PB_3_FAN_2_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
+	{ MODBUS_PB_3_FAN_INLET_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_PB_3_FAN_2_TACH_RPM, 1, 0, 1 },
-	{ MODBUS_BPB_RACK_PRESSURE_3_P_KPA_ADDR, NULL, modbus_get_senser_reading,
+	{ MODBUS_BPB_RACK_FILTER_INLET_PRESSURE_P_KPA_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_BPB_RACK_PRESSURE_3_P_KPA, 1, -1, 1 },
-	{ MODBUS_BPB_RACK_PRESSURE_4_P_KPA_ADDR, NULL, modbus_get_senser_reading,
+	{ MODBUS_BPB_RACK_FILTER_OUTLET_PRESSURE_P_KPA_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_BPB_RACK_PRESSURE_4_P_KPA, 1, -1, 1 },
 	{ MODBUS_BPB_RACK_LEVEL_1_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_BPB_RACK_LEVEL_1, 1, 0, 1 },
@@ -838,7 +747,8 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_FB_2_HEX_OUTLET_TEMP_C, 1, -1, 1 },
 	{ MODBUS_HEX_WATER_INLET_TEMP_C_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C, 1, -1, 1 },
-	{ MODBUS_HEX_BLADDER_LEVEL_STATUS_ADDR, NULL, modbus_get_coolant_level_status, 2, 0, 0, 1 },
+	{ MODBUS_HEX_BLADDER_LEVEL_STATUS_ADDR, NULL, modbus_get_aalc_sensor_status,
+	  HEX_BLADDER_LEVEL_STATUS, 0, 0, 1 },
 	{ MODBUS_HEX_EXTERNAL_Y_FILTER_PRESSURE_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_HEX_EXTERNAL_Y_FILTER, 1, -1, 1 },
 	//{ MODBUS_HEX_STATIC_PRESSURE_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
@@ -991,9 +901,9 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_FB_13_FAN_TACH_RPM, 1, 0, 1 },
 	{ MODBUS_FB_14_FAN_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_FB_14_FAN_TACH_RPM, 1, 0, 1 },
-	{ MODBUS_SB_HEX_PRESSURE_1_P_KPA_ADDR, NULL, modbus_get_senser_reading,
+	{ MODBUS_SB_HEX_INLET_PRESSURE_P_KPA_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_SB_HEX_PRESSURE_1_P_KPA, 1, -1, 1 },
-	{ MODBUS_SB_HEX_PRESSURE_2_P_KPA_ADDR, NULL, modbus_get_senser_reading,
+	{ MODBUS_SB_HEX_OUTLET_PRESSURE_P_KPA_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_SB_HEX_PRESSURE_2_P_KPA, 1, -1, 1 },
 	{ MODBUS_FB_1_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_FB_1_HUM_PCT_RH,
 	  1, 0, 1 },
@@ -1033,10 +943,10 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_VOLT_V, 1, -2, 1 },
 	{ MODBUS_AALC_TOTAL_PWR_EXT_W_ADDR, NULL, modbus_get_senser_reading,
 	  PLAT_DEF_SENSOR_TOTAL_PWR, 1, 0, 1 },
-	{ MODBUS_PUMP_FAN_STATUS_ADDR, NULL, modbus_get_sensor_status, PUMP_FAN_STATUS,
-	  TWO_BYTES_SENSOR_STATUS, 0, 1 },
-	{ MODBUS_HEX_AIR_THERMOMETER_STATUS_ADDR, NULL, modbus_get_sensor_status,
-	  HEX_AIR_THERMOMETER_STATUS, TWO_BYTES_SENSOR_STATUS, 0, 1 },
+	{ MODBUS_PUMP_FAN_STATUS_ADDR, NULL, modbus_get_aalc_sensor_status, PUMP_FAN_STATUS, 0, 0,
+	  1 },
+	{ MODBUS_HEX_AIR_THERMOMETER_STATUS_ADDR, NULL, modbus_get_aalc_sensor_status,
+	  HEX_AIR_THERMOMETER_STATUS, 0, 0, 1 },
 	// ADC
 	{ MODBUS_V_12_AUX_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_V_12_AUX, 1, -2, 1 },
 	{ MODBUS_V_5_AUX_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_V_5_AUX, 1, -2, 1 },
@@ -1055,15 +965,15 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_MASTER_I2C_SCAN_ADDR, NULL, modbus_command_i2c_scan, 0, 0, 0, 31 },
 
 	// System Alarm
-	{ MODBUS_AALC_SENSOR_ALARM_ADDR, NULL, modbus_get_sensor_status, AALC_SENSOR_ALARM,
-	  TWO_BYTES_SENSOR_STATUS, 0, 1 },
-	{ MODBUS_AALC_STATUS_ALARM_ADDR, NULL, modbus_get_sensor_status, AALC_STATUS_ALARM,
-	  TWO_BYTES_SENSOR_STATUS, 0, 1 },
+	{ MODBUS_AALC_SENSOR_ALARM_ADDR, NULL, modbus_get_aalc_sensor_status, AALC_SENSOR_ALARM, 0,
+	  0, 1 },
+	{ MODBUS_AALC_STATUS_ALARM_ADDR, NULL, modbus_get_aalc_sensor_status, AALC_STATUS_ALARM, 0,
+	  0, 1 },
 	{ MODBUS_LEAKAGE_STATUS_ADDR, NULL, modbus_leakage_status_read, 0, 0, 0, 1 },
-	{ MODBUS_HEX_FAN_ALARM_1_ADDR, NULL, modbus_get_sensor_status, HEX_FAN_ALARM_1,
-	  TWO_BYTES_SENSOR_STATUS, 0, 1 },
-	{ MODBUS_HEX_FAN_ALARM_2_ADDR, NULL, modbus_get_sensor_status, HEX_FAN_ALARM_2,
-	  TWO_BYTES_SENSOR_STATUS, 0, 1 },
+	{ MODBUS_HEX_FAN_ALARM_1_ADDR, NULL, modbus_get_aalc_sensor_status, HEX_FAN_ALARM_1, 0, 0,
+	  1 },
+	{ MODBUS_HEX_FAN_ALARM_2_ADDR, NULL, modbus_get_aalc_sensor_status, HEX_FAN_ALARM_2, 0, 0,
+	  1 },
 	{ MODBUS_MODBUS_ADDR_PATH_WITH_WEDGE400_ADDR, modbus_set_rpu_addr, modbus_get_rpu_addr, 0,
 	  0, 0, 1 },
 	{ MODBUS_MANUAL_CONTROL_RPU_FAN_ON_OFF_ADDR, modbus_set_manual_control_enable_flag,

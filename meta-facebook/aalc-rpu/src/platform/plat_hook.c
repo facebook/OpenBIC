@@ -1026,16 +1026,23 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 		v_val = 5 - ((32767 - rawValue) * 0.000153);
 		val = (((v_val / 5.0) - 0.1) * (flow_Pmax - flow_Pmin) / 0.8);
 		val = (val - 7.56494) * 1.076921;
+		val = 2.745 * val + 20.49;
+		val = 1.0018 * val + 5.2047;
 		break;
 	case PLATFORM_ADS112C_PRESS: //Filter_P/Outlet_P/Inlet_P
 		v_val = 5 - ((32767 - rawValue) * 0.000153);
 		val = (((v_val / 5.0) - 0.1) * (press_Pmax - press_Pmin) / 0.8);
+		val = 6.89475729 * val;
 		break;
 	case PLATFORM_ADS112C_TEMP_RACK:
-		val = (rawValue - 15888) * 0.015873;
+		val = (rawValue - 317746.6) * 0.015873;
+		val = 1.0678 * val - 5.8373;
+		val = 1.0031 * val + 0.1566;
 		break;
 	case PLATFORM_ADS112C_TEMP_RPU: //CDU_Inlet_Liq_T
-		val = (rawValue - 16140) * 0.015873;
+		val = (rawValue - 317746.6) * 0.015873;
+		val = 1.0678 * val - 5.8373;
+		val = 1.0031 * val + 0.1566;
 		break;
 	default:
 		val = rawValue * 0.0001007;
