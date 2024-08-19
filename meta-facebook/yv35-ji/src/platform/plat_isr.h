@@ -24,6 +24,7 @@ void ISR_RTC_ALERT();
 void ISR_GPIOA5();
 void ISR_GPIOA6();
 void ISR_GPIOB0();
+void ISR_RTC_CLR();
 void ISR_POST_COMPLETE();
 void ISR_HSC_OC();
 void ISR_GPIOC1();

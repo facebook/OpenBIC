@@ -44,6 +44,8 @@ enum _i2c_bus_num {
 
 #define CPLD_I2C_ADDR 0x42 //8bit
 
+#define RTC_I2C_ADDR 0xDE //8bit
+
 #define MCTP_I2C_BIC_ADDR 0x20 //8bit
 
 #define MCTP_I2C_SATMC_BUS I2C_BUS4

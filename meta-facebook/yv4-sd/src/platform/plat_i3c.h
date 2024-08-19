@@ -21,8 +21,14 @@
 
 #define I3C_BUS3 2
 
+#define SEND_SETAASA_STACK_SIZE 1024
+#define SEND_SETAASA_TIME_MS 5000
+
 #define LDO_VOLT                                                                                   \
 	V_LDO_SETTING(rg3mxxb12_ldo_1_2_volt, rg3mxxb12_ldo_1_2_volt, rg3mxxb12_ldo_1_2_volt,      \
 		      rg3mxxb12_ldo_1_2_volt)
+
+void start_setaasa();
+void send_setaasa();
 
 #endif

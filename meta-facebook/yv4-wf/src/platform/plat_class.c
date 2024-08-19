@@ -29,6 +29,7 @@ struct adc_info adc[NUMBER_OF_ADC_CHANNEL] = {
 struct board_rev_mappting_table board_rev_table[] = {
 	{ 1.25, 0.05, BOARD_POC }, // range: +-5%
 	{ 1.5, 0.05, BOARD_EVT }, // range: +-5%
+	{ 0.5, 0.05, BOARD_PVT }, // range: +-5%
 };
 
 static uint8_t board_revision = UNKNOWN;

@@ -61,13 +61,6 @@ enum THRESHOLD_TYPE {
 	THRESHOLD_ENABLE_BOTH,
 };
 
-enum THRESHOLD_STATUS {
-	THRESHOLD_STATUS_NORMAL,
-	THRESHOLD_STATUS_LCR,
-	THRESHOLD_STATUS_UCR,
-	DEVICE_NOT_PRESENT,
-};
-
 uint8_t fan_pump_sensor_array[] = {
 	//fan board
 	SENSOR_NUM_FB_1_FAN_TACH_RPM,
@@ -135,7 +128,7 @@ void fan_board_tach_status_handler(uint8_t sensor_num, uint8_t status)
 
 	if ((read_fan_gok & BIT(2)) == 0) {
 		LOG_DBG("fan gok is low");
-		status = DEVICE_NOT_PRESENT;
+		status = THRESHOLD_STATUS_NOT_ACCESS;
 	}
 
 	// fault
@@ -149,8 +142,8 @@ void fan_board_tach_status_handler(uint8_t sensor_num, uint8_t status)
 		WRITE_BIT(pwrgd_read_back_val, 0, 1);
 		if (!nct7363_write(cfg, FAN_BOARD_FAULT_PWM_OFFSET, FAN_BOARD_FAULT_PWM_DUTY_1))
 			LOG_ERR("Write fan_board_fault pwm fail");
-	} else if (status == DEVICE_NOT_PRESENT) {
-		LOG_DBG("fan DEVICE_NOT_PRESENT");
+	} else if (status == THRESHOLD_STATUS_NOT_ACCESS) {
+		LOG_DBG("fan THRESHOLD_STATUS_NOT_ACCESS");
 		WRITE_BIT(pwrgd_read_back_val, 0, 0);
 		if (!nct7363_write(cfg, FAN_BOARD_FAULT_PWM_OFFSET, FAN_BOARD_FAULT_PWM_DUTY_100))
 			LOG_ERR("Write fan_board_fault pwm fail");
@@ -195,8 +188,8 @@ void pump_board_tach_status_handler(uint8_t sensor_num, uint8_t status)
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
 		LOG_DBG("pump THRESHOLD_STATUS_NORMAL");
 		WRITE_BIT(read_back_val, 1, 0);
-	} else if (status == DEVICE_NOT_PRESENT) {
-		LOG_DBG("pump DEVICE_NOT_PRESENT");
+	} else if (status == THRESHOLD_STATUS_NOT_ACCESS) {
+		LOG_DBG("pump THRESHOLD_STATUS_NOT_ACCESS");
 		WRITE_BIT(read_back_val, 1, 1);
 	} else
 		LOG_DBG("Unexpected pump_board_tach_status");
@@ -608,6 +601,15 @@ bool get_threshold_poll_enable_flag()
 	return threshold_poll_enable_flag;
 }
 
+uint8_t get_threshold_status(uint8_t sensor_num)
+{
+	for (uint8_t i = 0; i < ARRAY_SIZE(threshold_tbl); i++)
+		if (threshold_tbl[i].sensor_num == sensor_num)
+			return threshold_tbl[i].last_status;
+
+	return THRESHOLD_STATUS_UNKNOWN;
+}
+
 /*
 	check whether the status has changed
 	If type is LCR, and UCR occurs, the status will still be normal.
@@ -621,7 +623,7 @@ static bool set_threshold_status(sensor_threshold *threshold_tbl, float val)
 	for (int i = 0; i < ARRAY_SIZE(fan_pump_sensor_array); i++) {
 		if (threshold_tbl->sensor_num == fan_pump_sensor_array[i]) {
 			if (val == 0.0) {
-				threshold_tbl->last_status = DEVICE_NOT_PRESENT;
+				threshold_tbl->last_status = THRESHOLD_STATUS_NOT_ACCESS;
 				LOG_DBG("sensor 0x%x not exist", threshold_tbl->sensor_num);
 				return true;
 			}
@@ -689,8 +691,10 @@ void threshold_poll_handler(void *arug0, void *arug1, void *arug2)
 				continue;
 
 			if (get_sensor_reading_to_real_val(threshold_tbl[i].sensor_num, &val) !=
-			    SENSOR_READ_4BYTE_ACUR_SUCCESS)
+			    SENSOR_READ_4BYTE_ACUR_SUCCESS) {
+				threshold_tbl[i].last_status = THRESHOLD_STATUS_NOT_ACCESS;
 				continue;
+			}
 
 			/* check whether the status has changed */
 			if (!set_threshold_status(&threshold_tbl[i], val))

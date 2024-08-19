@@ -27,6 +27,7 @@
 #include "plat_hook.h"
 #include "plat_pldm_sensor.h"
 #include "plat_isr.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_pldm_sensor);
 
@@ -34,6 +35,7 @@ LOG_MODULE_REGISTER(plat_pldm_sensor);
 
 void plat_pldm_sensor_change_vr_dev();
 void plat_pldm_sensor_change_adc_monitor_dev();
+void plat_pldm_sensor_change_asic_tmp_dev();
 
 static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = {
 	// thread id, thread name
@@ -1581,7 +1583,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 		{
 			.type = sensor_dev_tmp461,
 			.port = I2C_BUS4,
-			.target_addr = ADDR_TMP461_CXL2,
+			.target_addr = ADDR_TMP461_CXL1,
 			.offset = OFFSET_TMP461_TEMP,
 			.access_checker = dc_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
@@ -6329,6 +6331,7 @@ pldm_sensor_info *plat_pldm_sensor_load(int thread_id)
 	case ADC_SENSOR_THREAD_ID:
 		return plat_pldm_sensor_adc_table;
 	case TMP_SENSOR_THREAD_ID:
+		plat_pldm_sensor_change_asic_tmp_dev();
 		return plat_pldm_sensor_tmp_table;
 	case INA233_SENSOR_THREAD_ID:
 		return plat_pldm_sensor_ina233_table;
@@ -6504,6 +6507,22 @@ void plat_pldm_sensor_change_adc_monitor_dev()
 				&adc128d818_init_args[0];
 			plat_pldm_sensor_adc_monitor_table[index]
 				.pldm_sensor_cfg.post_sensor_read_hook = post_adc128d818_read;
+		}
+	}
+}
+
+void plat_pldm_sensor_change_asic_tmp_dev()
+{
+	if (get_board_revision() < BOARD_PVT) {
+		for (int index = 0; index < plat_pldm_sensor_get_sensor_count(TMP_SENSOR_THREAD_ID);
+		     index++) {
+			if (plat_pldm_sensor_tmp_table[index].pldm_sensor_cfg.type ==
+				    sensor_dev_tmp461 &&
+			    plat_pldm_sensor_tmp_table[index].pldm_sensor_cfg.port == I2C_BUS4) {
+				plat_pldm_sensor_tmp_table[index].pldm_sensor_cfg.target_addr =
+					ADDR_TMP461_CXL2;
+				break;
+			}
 		}
 	}
 }

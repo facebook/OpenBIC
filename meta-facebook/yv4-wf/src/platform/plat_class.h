@@ -32,6 +32,7 @@ enum ADC_CHANNEL_NUM {
 enum BOARD_REV_ID {
 	BOARD_POC = 0,
 	BOARD_EVT,
+	BOARD_PVT,
 	UNKNOWN,
 };
 
