@@ -140,6 +140,7 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(ads1015)
 	sensor_name_to_num(plat_def_sensor)
 	sensor_name_to_num(e50sn12051)
+	sensor_name_to_num(u50su4p180pmdafc)
 };
 // clang-format on
 
@@ -324,6 +325,9 @@ SENSOR_DRIVE_INIT_DECLARE(plat_def_sensor);
 #endif
 #ifdef ENABLE_PLAT_DEF_SENSOR
 SENSOR_DRIVE_INIT_DECLARE(e50sn12051);
+#endif
+#ifdef ENABLE_U50SU4P180PMDAFC
+SENSOR_DRIVE_INIT_DECLARE(u50su4p180pmdafc);
 #endif
 
 // The sequence needs to same with SENSOR_DEV ID
@@ -635,6 +639,11 @@ sensor_drive_api sensor_drive_tbl[] = {
 	SENSOR_DRIVE_TYPE_INIT_MAP(e50sn12051),
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(e50sn12051),
+#endif
+#ifdef ENABLE_U50SU4P180PMDAFC
+	SENSOR_DRIVE_TYPE_INIT_MAP(u50su4p180pmdafc),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(u50su4p180pmdafc),
 #endif
 };
 
