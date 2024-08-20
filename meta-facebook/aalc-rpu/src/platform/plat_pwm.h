@@ -48,6 +48,22 @@ enum PWM_GROUP_E {
 	PWM_GROUP_E_MAX,
 };
 
+enum MANUAL_PWM_E {
+	// group pwm dev
+	MANUAL_PWM_E_HEX_FAN = 0,
+	MANUAL_PWM_E_PUMP,
+	MANUAL_PWM_E_RPU_FAN,
+	// single pwm dev
+	MANUAL_PWM_E_PUMP_1,
+	MANUAL_PWM_E_PUMP_2,
+	MANUAL_PWM_E_PUMP_3,
+	MANUAL_PWM_E_PUMP_FAN_1,
+	MANUAL_PWM_E_PUMP_FAN_2,
+	MANUAL_PWM_E_PUMP_FAN_3,
+	MANUAL_PWM_E_RPU_PCB_FAN,
+	MANUAL_PWM_E_MAX,
+};
+
 void init_pwm_dev(void);
 int ast_pwm_set(int duty);
 uint8_t plat_pwm_ctrl(enum PWM_DEVICE_E dev, uint8_t duty);
@@ -55,5 +71,8 @@ uint8_t ctl_all_pwm_dev(uint8_t duty);
 uint8_t set_pwm_group(uint8_t group, uint8_t duty);
 uint8_t get_pwm_group_cache(uint8_t group);
 uint8_t get_pwm_cache(uint8_t idx);
+uint8_t manual_pwm_idx_to_pwm_idx(uint8_t idx);
+uint8_t get_manual_pwm_cache(uint8_t idx);
+void set_manual_pwm_cache(uint8_t idx, uint8_t duty);
 uint8_t nct7363_wdt_all_disable();
 uint8_t nct7363_wdt_all_enable();
