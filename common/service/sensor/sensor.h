@@ -180,6 +180,7 @@ enum SENSOR_DEV {
 	sensor_dev_e50sn12051 = 0x3E,
 	sensor_dev_u50su4p180pmdafc = 0x3F,
 	sensor_dev_bmr313 = 0x40,
+	sensor_dev_mp2891 = 0x41,
 	sensor_dev_max
 };
 

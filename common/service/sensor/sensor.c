@@ -142,6 +142,7 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(e50sn12051)
 	sensor_name_to_num(u50su4p180pmdafc)
 	sensor_name_to_num(bmr313)
+	sensor_name_to_num(mp2891)
 };
 // clang-format on
 
@@ -332,6 +333,9 @@ SENSOR_DRIVE_INIT_DECLARE(u50su4p180pmdafc);
 #endif
 #ifdef ENABLE_BMR313
 SENSOR_DRIVE_INIT_DECLARE(bmr313);
+#endif
+#ifdef ENABLE_MP2891
+SENSOR_DRIVE_INIT_DECLARE(mp2891);
 #endif
 
 // The sequence needs to same with SENSOR_DEV ID
@@ -653,6 +657,11 @@ sensor_drive_api sensor_drive_tbl[] = {
 	SENSOR_DRIVE_TYPE_INIT_MAP(bmr313),
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(bmr313),
+#endif
+#ifdef ENABLE_MP2891
+	SENSOR_DRIVE_TYPE_INIT_MAP(mp2891),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(mp2891),
 #endif
 };
 
