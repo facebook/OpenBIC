@@ -182,6 +182,7 @@ enum SENSOR_DEV {
 	sensor_dev_bmr313 = 0x40,
 	sensor_dev_mp2891 = 0x41,
 	sensor_dev_raa228238 = 0x42,
+	sensor_dev_mpc12109 = 0x43,
 	sensor_dev_max
 };
 
