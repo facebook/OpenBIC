@@ -1,0 +1,69 @@
+From 92ffabed2871d93689712ae0ef0614b18ebb66fb Mon Sep 17 00:00:00 2001
+From: Tyrone Ting <kfting@nuvoton.com>
+Date: Mon, 29 Jul 2024 13:28:12 +0800
+Subject: [PATCH] drivers: i3c: add i3c_slave_hj_req support in i3c npcm4xx
+ driver
+
+Support i3c_slave_hj_req.
+
+Signed-off-by: James Chiang <cpchiang1@nuvoton.com>
+Signed-off-by: Tyrone Ting <kfting@nuvoton.com>
+---
+ drivers/i3c/i3c_npcm4xx.c | 13 +++++++++++++
+ include/drivers/i3c/i3c.h |  9 +++++++++
+ 2 files changed, 22 insertions(+)
+
+diff --git a/drivers/i3c/i3c_npcm4xx.c b/drivers/i3c/i3c_npcm4xx.c
+index 8f9ddb29dbf..c2ead249519 100644
+--- a/drivers/i3c/i3c_npcm4xx.c
++++ b/drivers/i3c/i3c_npcm4xx.c
+@@ -2603,6 +2603,19 @@ int i3c_npcm4xx_slave_send_sir(const struct device *dev, struct i3c_ibi_payload
+ 	return -ENOSYS;
+ }
+ 
++int i3c_npcm4xx_slave_hj_req(const struct device *dev)
++{
++	struct i3c_npcm4xx_config *config = DEV_CFG(dev);
++	I3C_PORT_Enum port;
++
++	port = config->inst_id;
++	I3C_Slave_Insert_Task_HotJoin(port);
++
++	k_work_submit_to_queue(&npcm4xx_i3c_work_q[port], &work_send_ibi[port]);
++
++	return 0;
++}
++
+ int i3c_npcm4xx_slave_get_dynamic_addr(const struct device *dev, uint8_t *dynamic_addr)
+ {
+ 	struct i3c_npcm4xx_config *config = DEV_CFG(dev);
+diff --git a/include/drivers/i3c/i3c.h b/include/drivers/i3c/i3c.h
+index 490dbb926cd..a998424b5ea 100644
+--- a/include/drivers/i3c/i3c.h
++++ b/include/drivers/i3c/i3c.h
+@@ -210,6 +210,14 @@ int i3c_npcm4xx_slave_get_event_enabling(const struct device *dev, uint32_t *eve
+ int i3c_aspeed_slave_send_sir(const struct device *dev, struct i3c_ibi_payload *payload);
+ int i3c_npcm4xx_slave_send_sir(const struct device *dev, struct i3c_ibi_payload *payload);
+ 
++/**
++ * @brief slave device sends Hot-join request
++ *
++ * @param dev the I3C controller in slave mode
++ * @return int 0 = success
++ */
++int i3c_npcm4xx_slave_hj_req(const struct device *dev);
++
+ /**
+  * @brief set the static address of the i3c controller in slave mode
+  * @param dev the I3C controller in slave mode
+@@ -284,6 +292,7 @@ int i3c_master_send_getbcr(const struct device *master, uint8_t addr, uint8_t *b
+ #define i3c_slave_register		i3c_npcm4xx_slave_register
+ #define i3c_slave_set_static_addr	i3c_npcm4xx_slave_set_static_addr
+ #define i3c_slave_send_sir		i3c_npcm4xx_slave_send_sir
++#define i3c_slave_hj_req		i3c_npcm4xx_slave_hj_req
+ #define i3c_slave_put_read_data		i3c_npcm4xx_slave_put_read_data
+ #define i3c_slave_get_dynamic_addr	i3c_npcm4xx_slave_get_dynamic_addr
+ #define i3c_slave_get_event_enabling	i3c_npcm4xx_slave_get_event_enabling
+-- 
+2.17.1
+

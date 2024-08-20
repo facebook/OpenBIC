@@ -1,0 +1,23 @@
+From 208d705da104e20e438d9d6fb3df8b44d118a4cb Mon Sep 17 00:00:00 2001
+From: victor <Victor.Jhong@quantatw.com>
+Date: Mon, 8 Jul 2024 15:15:50 +0800
+Subject: [PATCH] soc: npcm4xx: add c11 to CMake list
+
+1. add c11 to CMake list
+---
+ boards/arm/npcm400f_evb/CMakeLists.txt | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/boards/arm/npcm400f_evb/CMakeLists.txt b/boards/arm/npcm400f_evb/CMakeLists.txt
+index 3279ec6eab..182005a6c9 100644
+--- a/boards/arm/npcm400f_evb/CMakeLists.txt
++++ b/boards/arm/npcm400f_evb/CMakeLists.txt
+@@ -4,3 +4,5 @@
+ if(CONFIG_PINMUX_NPCM4XX)
+     zephyr_include_directories(.)
+ endif()
++
++set_property(GLOBAL PROPERTY CSTD c11)
+-- 
+2.25.1
+

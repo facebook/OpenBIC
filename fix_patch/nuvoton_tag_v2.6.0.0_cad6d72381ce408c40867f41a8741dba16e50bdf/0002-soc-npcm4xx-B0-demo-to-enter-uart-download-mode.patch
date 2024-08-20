@@ -1,0 +1,87 @@
+From 50fe2b52539c4bac3699a605b03b29c670bd3b70 Mon Sep 17 00:00:00 2001
+From: Tyrone Ting <kfting@nuvoton.com>
+Date: Tue, 4 Jun 2024 09:41:11 +0800
+Subject: [PATCH] soc: npcm4xx: B0 demo to enter uart download mode
+
+1. Use gpio B0 to enter uart download mode
+2. Restore pull setting for GPIO B0 just before leaving the hook function
+
+Signed-off-by: Tyrone Ting <kfting@nuvoton.com>
+---
+ .../common/ImageGenerator/ImageGenerator.py   |  5 ++-
+ soc/arm/npcm4xx/common/header.c               | 36 ++++++++++++++++++-
+ 2 files changed, 37 insertions(+), 4 deletions(-)
+
+diff --git a/soc/arm/npcm4xx/common/ImageGenerator/ImageGenerator.py b/soc/arm/npcm4xx/common/ImageGenerator/ImageGenerator.py
+index 370e3ace26..ed4a9f6863 100644
+--- a/soc/arm/npcm4xx/common/ImageGenerator/ImageGenerator.py
++++ b/soc/arm/npcm4xx/common/ImageGenerator/ImageGenerator.py
+@@ -274,9 +274,8 @@ def GenFWHeader():
+         ListFWHeaderCol_Sign.append(bytearray([0]*4))
+ 
+         # # hHook2Ptr
+-        # data = (int(Dict_FW_H['hHook2Ptr'], 0).to_bytes(4, byteorder='little')) if (
+-        #     Dict_FW_H['hHook2Ptr'] is not None) else Fn.getFilePoint(Dict_File['FirmwareImage'], 1204, 4)
+-        ListFWHeaderCol_Sign.append(bytearray([0]*4))
++        data = Fn.getFilePoint(Dict_File['FirmwareImage'], 1204, 4)
++        ListFWHeaderCol_Sign.append(data)
+ 
+         # hHook3Ptr
+         # data = (int(Dict_FW_H['hHook3Ptr'], 0).to_bytes(4, byteorder='little')) if (
+diff --git a/soc/arm/npcm4xx/common/header.c b/soc/arm/npcm4xx/common/header.c
+index a289fa068f..5a7adb7a0a 100644
+--- a/soc/arm/npcm4xx/common/header.c
++++ b/soc/arm/npcm4xx/common/header.c
+@@ -13,6 +13,40 @@ extern unsigned long __main_fw_seg_size__;
+ #endif
+ extern unsigned long __main_fw_seg_end__;
+ 
++void Rom_hook2(void)
++{
++#define adr_FIU_FwInfo_status	0x100c59d4
++#define bit_auth_pass		0x02
++#define M8(addr) (*((volatile uint8_t *) (addr)))
++#define M32(addr) (*((volatile unsigned long *) (addr)))
++#define DEVALT5		0x400c3015
++#define EMC_CTL		0x400c304d
++#define GPIOB0_DEVALT	6
++#define RMII_EN		0
++#define GPIOB_IN	0x40097001
++#define GPIOB_DIR	0x40097002
++#define GPIOB_PULL	0x40097003
++#define GPIOB_PUD	0x40097004
++#define GPIOB0_BIT	0
++#define BIT(x)		(1<<(x))
++
++    M8(DEVALT5) &= ~BIT(GPIOB0_DEVALT);
++    M8(EMC_CTL) &= ~BIT(RMII_EN);
++    M8(GPIOB_DIR) &= ~BIT(GPIOB0_BIT);
++    M8(GPIOB_PULL) |= BIT(GPIOB0_BIT);
++    M8(GPIOB_PUD) &= ~BIT(GPIOB0_BIT);
++
++    if(M32(adr_FIU_FwInfo_status) & bit_auth_pass)
++    {
++	if (0 == (M8(GPIOB_IN) & BIT(GPIOB0_BIT)))
++        {
++            M32(adr_FIU_FwInfo_status) &= ~bit_auth_pass;
++        }
++    }
++
++    M8(GPIOB_PULL) &= ~BIT(GPIOB0_BIT);
++}
++
+ __attribute__((section(".header"))) struct FIRMWARE_HEDAER_TYPE fw_header = {
+ 	.hUserFWEntryPoint = (uint32_t)(&_vector_table),
+ 	.hUserFWRamCodeFlashStart = CONFIG_FLASH_BASE_ADDRESS +
+@@ -29,7 +63,7 @@ __attribute__((section(".header"))) struct FIRMWARE_HEDAER_TYPE fw_header = {
+ #endif
+ 
+ 	.hRomHook1Ptr = 0, /* Hook 1 muse be flash code */
+-	.hRomHook2Ptr = 0,
++	.hRomHook2Ptr = Rom_hook2,
+ 	.hRomHook3Ptr = 0,
+ 	.hRomHook4Ptr = 0,
+ 
+-- 
+2.25.1
+
