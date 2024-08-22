@@ -19,6 +19,7 @@
 
 #include <stdint.h>
 #include <pmbus.h>
+#include "sensor.h"
 #include "plat_modbus.h"
 
 enum PLAT_DEF_SENSOR_E {
@@ -255,6 +256,7 @@ uint8_t plat_get_config_size();
 void load_sensor_config(void);
 uint8_t get_sensor_reading_to_real_val(uint8_t sensor_num, float *val);
 uint16_t get_sensor_reading_to_modbus_val(uint8_t sensor_num, int8_t exp, int8_t scale);
+bool switch_sensor_mux(sensor_cfg *cfg);
 void quick_sensor_poll_init();
 
 #endif
