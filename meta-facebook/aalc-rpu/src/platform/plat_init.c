@@ -35,7 +35,7 @@ LOG_MODULE_REGISTER(plat_init);
 
 #define DEF_PROJ_GPIO_PRIORITY 78
 
-static void pump_board_init(struct k_work *work);
+static void pump_board_init();
 K_WORK_DELAYABLE_DEFINE(up_15sec_handler, pump_board_init);
 
 SCU_CFG scu_cfg[] = {
@@ -53,7 +53,7 @@ SCU_CFG scu_cfg[] = {
 
 uint8_t pump_board_init_tbl[] = {
 	// pump board 1
-	SENSOR_NUM_PB_1_FAN_1_TACH_RPM, SENSOR_NUM_PB_1_FAN_1_TACH_RPM,
+	SENSOR_NUM_PB_1_PUMP_TACH_RPM, SENSOR_NUM_PB_1_FAN_1_TACH_RPM,
 	SENSOR_NUM_PB_1_FAN_2_TACH_RPM, SENSOR_NUM_PB_1_HDC1080DMBR_TEMP_C,
 	SENSOR_NUM_PB_1_HUM_PCT_RH, SENSOR_NUM_PB_1_HSC_P48V_TEMP_C,
 	SENSOR_NUM_PB_1_HSC_P48V_VIN_VOLT_V, SENSOR_NUM_PB_1_HSC_P48V_IOUT_CURR_A,
@@ -72,13 +72,8 @@ uint8_t pump_board_init_tbl[] = {
 	SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W
 };
 
-void pump_board_init(struct k_work *work)
+void pump_board_init()
 {
-	if (work == NULL) {
-		LOG_ERR("pump_board_init get NULL work handler!");
-		return;
-	}
-
 	// init pump board 1, 2 and 3
 	LOG_WRN("pump board start init");
 	for (uint8_t i = 0; i < ARRAY_SIZE(pump_board_init_tbl); i++) {

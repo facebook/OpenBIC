@@ -84,17 +84,17 @@ uint16_t plat_gpio_cfg_size(void);
 #define name_gpioG	\
 	gpio_name_to_num(Reserve_GPIOG0) \
 	gpio_name_to_num(Reserve_GPIOG1) \
-	gpio_name_to_num(BIC_RPU_READY0) \
-	gpio_name_to_num(IT_LEAK_ALERT0_R) \
-	gpio_name_to_num(RJ45_CONN0_GPIO0_R) \
-	gpio_name_to_num(RJ45_CONN0_GPIO1_R) \
-	gpio_name_to_num(RJ45_CONN0_GPIO2_R) \
-	gpio_name_to_num(BIC_RPU_READY1)
+	gpio_name_to_num(BIC_RPU_READY2) \
+	gpio_name_to_num(IT_LEAK_ALERT2_R) \
+	gpio_name_to_num(RJ45_CONN2_GPIO0_R) \
+	gpio_name_to_num(RJ45_CONN2_GPIO1_R) \
+	gpio_name_to_num(RJ45_CONN2_GPIO2_R) \
+	gpio_name_to_num(BIC_RPU_READY3)
 #define name_gpioH	\
-	gpio_name_to_num(IT_LEAK_ALERT1_R) \
-	gpio_name_to_num(RJ45_CONN1_GPIO0_R) \
-	gpio_name_to_num(RJ45_CONN1_GPIO1_R) \
-	gpio_name_to_num(RJ45_CONN1_GPIO2_R) \
+	gpio_name_to_num(IT_LEAK_ALERT3_R) \
+	gpio_name_to_num(RJ45_CONN3_GPIO0_R) \
+	gpio_name_to_num(RJ45_CONN3_GPIO1_R) \
+	gpio_name_to_num(RJ45_CONN3_GPIO2_R) \
 	gpio_name_to_num(Reserve_GPIOH4) \
 	gpio_name_to_num(Reserve_GPIOH5) \
 	gpio_name_to_num(Reserve_GPIOH6) \
@@ -159,12 +159,12 @@ uint16_t plat_gpio_cfg_size(void);
 	gpio_name_to_num(Reserve_GPIOO1) \
 	gpio_name_to_num(Reserve_GPIOO2) \
 	gpio_name_to_num(Reserve_GPIOO3) \
-	gpio_name_to_num(BIC_RPU_READY2) \
-	gpio_name_to_num(IT_LEAK_ALERT2_R) \
-	gpio_name_to_num(RJ45_CONN2_GPIO0_R) \
-	gpio_name_to_num(RJ45_CONN2_GPIO1_R)
+	gpio_name_to_num(BIC_RPU_READY0) \
+	gpio_name_to_num(IT_LEAK_ALERT0_R) \
+	gpio_name_to_num(RJ45_CONN0_GPIO0_R) \
+	gpio_name_to_num(RJ45_CONN0_GPIO1_R)
 #define name_gpioP	\
-	gpio_name_to_num(RJ45_CONN2_GPIO2_R) \
+	gpio_name_to_num(RJ45_CONN0_GPIO2_R) \
 	gpio_name_to_num(Reserve_GPIOP1) \
 	gpio_name_to_num(Reserve_GPIOP2) \
 	gpio_name_to_num(Reserve_GPIOP3) \
@@ -174,11 +174,11 @@ uint16_t plat_gpio_cfg_size(void);
 	gpio_name_to_num(FM_BIC_READY_R_N)
 // GPIOQ5 hardware not define
 #define name_gpioQ	\
-	gpio_name_to_num(BIC_RPU_READY3) \
-	gpio_name_to_num(IT_LEAK_ALERT3_R) \
-	gpio_name_to_num(RJ45_CONN3_GPIO0_R) \
-	gpio_name_to_num(RJ45_CONN3_GPIO1_R) \
-	gpio_name_to_num(RJ45_CONN3_GPIO2_R) \
+	gpio_name_to_num(BIC_RPU_READY1) \
+	gpio_name_to_num(IT_LEAK_ALERT1_R) \
+	gpio_name_to_num(RJ45_CONN1_GPIO0_R) \
+	gpio_name_to_num(RJ45_CONN1_GPIO1_R) \
+	gpio_name_to_num(RJ45_CONN1_GPIO2_R) \
 	gpio_name_to_num(Reserve_GPIOQ5) \
 	gpio_name_to_num(Reserve_GPIOQ6) \
 	gpio_name_to_num(Reserve_GPIOQ7)

@@ -184,13 +184,13 @@ void error_log_event(uint8_t sensor_num, bool val_normal)
 			(uint16_t)get_pwm_group_cache(PWM_GROUP_E_HEX_FAN);
 
 		err_log_data[fru_count].outlet_temp = get_sensor_reading_to_modbus_val(
-			SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C, -2, 1);
+			SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C, -1, 1);
 		err_log_data[fru_count].outlet_press = get_sensor_reading_to_modbus_val(
-			SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA, 1, 1);
+			SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA, -1, 1);
 		err_log_data[fru_count].flow_rate = get_sensor_reading_to_modbus_val(
-			SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, 0, 1);
+			SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, -1, 1);
 		err_log_data[fru_count].volt =
-			get_sensor_reading_to_modbus_val(SENSOR_NUM_BPB_HSC_P48V_VIN_VOLT_V, -2, 1);
+			get_sensor_reading_to_modbus_val(SENSOR_NUM_BPB_HSC_P48V_VIN_VOLT_V, -1, 1);
 
 		if (!plat_eeprom_write(
 			    (AALC_FRU_LOG_START + fru_count * sizeof(modbus_err_log_mapping)),

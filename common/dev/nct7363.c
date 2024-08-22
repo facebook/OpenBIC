@@ -37,7 +37,6 @@ LOG_MODULE_REGISTER(dev_nct7363);
 #define NCT7363_GPIO_LSB_MASK BIT_MASK(8)
 #define MAX_THRESHOLD_VAL 0x1FFF
 #define FAN_COUNT_DEFAULT_VAL 0x1FFF
-#define FAN_COUNT_NULL_VAL 0xFFFF
 #define READ_ERROR -1
 
 uint8_t nct7363_read_back_data(sensor_cfg *cfg, uint8_t reading_offset)
@@ -64,9 +63,9 @@ uint8_t nct7363_read_back_data(sensor_cfg *cfg, uint8_t reading_offset)
 		LOG_DBG("Fail to access device, bus: 0x%x, addr: 0x%x, ret: %d", cfg->port,
 			cfg->target_addr, ret);
 		return_data = READ_ERROR;
+	} else {
+		return_data = msg.data[0];
 	}
-
-	return_data = msg.data[0];
 
 	if ((cfg->post_sensor_read_hook)) {
 		if ((cfg->post_sensor_read_hook)(cfg, cfg->post_sensor_read_args, 0) == false) {
@@ -328,7 +327,7 @@ static uint8_t nct7363_read(sensor_cfg *cfg, int *reading)
 		if (fan_count_value == FAN_COUNT_DEFAULT_VAL)
 			rpm = 0;
 		else if (fan_count_value == 0)
-			rpm = FAN_COUNT_NULL_VAL;
+			return SENSOR_UNSPECIFIED_ERROR;
 		else
 			/* count result */
 			rpm = 1350000 / ((float)fan_count_value * ((float)fan_poles / 4)); // RPM
