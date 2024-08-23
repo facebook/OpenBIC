@@ -18,7 +18,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "plat_i2c.h"
-#include "sensor.h"
 #include "ast_adc.h"
 #include "plat_hook.h"
 #include "plat_class.h"
@@ -1163,6 +1162,28 @@ uint8_t get_sensor_reading_to_real_val(uint8_t sensor_num, float *val)
 	*val = (sval->integer * 1000 + sval->fraction) / 1000.0;
 
 	return status;
+}
+
+/* switch mux from sensor cfg*/
+bool switch_sensor_mux(sensor_cfg *cfg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+
+	if ((cfg->pre_sensor_read_hook)) {
+		if ((cfg->pre_sensor_read_hook)(cfg, cfg->pre_sensor_read_args) == false) {
+			LOG_DBG("read value pre lock mutex fail !");
+			return false;
+		}
+	}
+
+	if ((cfg->post_sensor_read_hook)) {
+		if ((cfg->post_sensor_read_hook)(cfg, cfg->post_sensor_read_args, 0) == false) {
+			LOG_DBG("read value post lock mutex fail !");
+			return false;
+		}
+	}
+
+	return true;
 }
 
 /* platform def sensor */

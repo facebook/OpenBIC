@@ -28,8 +28,11 @@ struct adc_info adc[NUMBER_OF_ADC_CHANNEL] = {
 
 struct board_rev_mappting_table board_rev_table[] = {
 	{ 1.25, 0.05, BOARD_POC }, // range: +-5%
+	{ 0.75, 0.05, BOARD_POC2 }, // range: +-5%
 	{ 1.5, 0.05, BOARD_EVT }, // range: +-5%
+	{ 1.0, 0.1, BOARD_DVT }, // range: +-10%
 	{ 0.5, 0.05, BOARD_PVT }, // range: +-5%
+	{ 0.0, 0.05, BOARD_MP }, // range: +-5%
 };
 
 static uint8_t board_revision = UNKNOWN;
@@ -102,6 +105,7 @@ int init_platform_config()
 		if ((voltage <= typical_voltage * (1 + range_val)) &&
 		    (voltage >= typical_voltage * (1 - range_val))) {
 			board_revision = board_rev_table[cnt].board_rev;
+			LOG_INF("Board stage %d", board_revision);
 			break;
 		}
 	}

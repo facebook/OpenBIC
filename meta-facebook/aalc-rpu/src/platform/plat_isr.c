@@ -34,8 +34,7 @@ void set_all_rpu_ready_pin_normal(void)
 */
 void fault_leak_action()
 {
-	set_pwm_group(PWM_GROUP_E_PUMP, 0);
-	//ctl_all_pwm_dev(0);
+	ctl_all_pwm_dev(0);
 	deassert_all_rpu_ready_pin();
 	gpio_set(RPU_LEAK_ALERT_N, 0);
 }

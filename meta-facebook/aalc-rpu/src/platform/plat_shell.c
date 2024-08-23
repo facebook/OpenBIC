@@ -21,6 +21,8 @@
 #include "sensor.h"
 #include "plat_sensor_table.h"
 #include "plat_util.h"
+#include "common_i2c_mux.h"
+#include "nct7363.h"
 
 LOG_MODULE_REGISTER(plat_shell);
 
@@ -95,6 +97,102 @@ void cmd_set_fan_duty(const struct shell *shell, size_t argc, char **argv)
 	plat_pwm_ctrl(idx, duty);
 }
 
+// mux
+void cmd_switch_fb_mux(const struct shell *shell, size_t argc, char **argv)
+{
+	uint8_t idx = strtoul(argv[1], NULL, 10);
+	if ((idx < 1) || (idx > 14)) {
+		shell_warn(shell, "wrong fb idx(1-14)");
+		return;
+	}
+
+	uint8_t sensor_num = SENSOR_NUM_FB_1_FAN_TACH_RPM + idx - 1; // 1 base
+	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
+	mux_config *pre_args = (mux_config *)cfg->pre_sensor_read_args;
+
+	switch_sensor_mux(cfg);
+	shell_warn(shell, "switch fb %d, bus: %d, mux_addr: 0x%02x, port: %d", idx, cfg->port,
+		   (pre_args->target_addr << 1), pre_args->channel);
+}
+void cmd_switch_pb_mux(const struct shell *shell, size_t argc, char **argv)
+{
+	uint8_t idx = strtoul(argv[1], NULL, 10);
+	if ((idx < 1) || (idx > 3)) {
+		shell_warn(shell, "wrong pb idx(1-3)");
+		return;
+	}
+
+	uint8_t sensor_num = (idx == 1) ? SENSOR_NUM_PB_1_PUMP_TACH_RPM :
+			     (idx == 2) ? SENSOR_NUM_PB_2_PUMP_TACH_RPM :
+			     (idx == 3) ? SENSOR_NUM_PB_3_PUMP_TACH_RPM :
+					  0xFF; // 1 base
+	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
+	mux_config *pre_args = (mux_config *)cfg->pre_sensor_read_args;
+
+	switch_sensor_mux(cfg);
+	shell_warn(shell, "switch fb %d, bus: %d, mux_addr: 0x%02x, port: %d", idx, cfg->port,
+		   (pre_args->target_addr << 1), pre_args->channel);
+}
+void cmd_switch_sb_mux(const struct shell *shell, size_t argc, char **argv)
+{
+	sensor_cfg *cfg = get_common_sensor_cfg_info(SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_1_VOLT_V);
+	mux_config *pre_args = (mux_config *)cfg->pre_sensor_read_args;
+
+	switch_sensor_mux(cfg);
+	shell_warn(shell, "switch sb, bus: %d, mux_addr: 0x%02x, port: %d", cfg->port,
+		   (pre_args->target_addr << 1), pre_args->channel);
+}
+void cmd_switch_pdb_mux(const struct shell *shell, size_t argc, char **argv)
+{
+	sensor_cfg *cfg = get_common_sensor_cfg_info(SENSOR_NUM_PDB_HDC1080DMBR_TEMP_C);
+	mux_config *pre_args = (mux_config *)cfg->pre_sensor_read_args;
+
+	switch_sensor_mux(cfg);
+	shell_warn(shell, "switch pdb, bus: %d, mux_addr: 0x%02x, port: %d", cfg->port,
+		   (pre_args->target_addr << 1), pre_args->channel);
+}
+
+// nct7363
+void cmd_nct7363_fb(const struct shell *shell, size_t argc, char **argv)
+{
+	uint8_t idx = strtoul(argv[1], NULL, 10);
+	uint8_t offset = strtoul(argv[2], NULL, 16);
+	uint8_t data = 0;
+
+	if ((idx < 1) || (idx > 14)) {
+		shell_warn(shell, "wrong fb idx(1-14)");
+		return;
+	}
+
+	uint8_t sensor_num = SENSOR_NUM_FB_1_FAN_TACH_RPM + idx - 1; // 1 base
+	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
+	data = nct7363_read_back_data(cfg, offset);
+
+	shell_warn(shell, "nct7363 debug fb %d, bus: %d, addr: 0x%02x, val: 0x%02x", idx, cfg->port,
+		   (cfg->target_addr << 1), data);
+}
+void cmd_nct7363_pb(const struct shell *shell, size_t argc, char **argv)
+{
+	uint8_t idx = strtoul(argv[1], NULL, 10);
+	uint8_t offset = strtoul(argv[2], NULL, 16);
+	uint8_t data = 0;
+
+	if ((idx < 1) || (idx > 3)) {
+		shell_warn(shell, "wrong pb idx(1-3)");
+		return;
+	}
+
+	uint8_t sensor_num = (idx == 1) ? SENSOR_NUM_PB_1_PUMP_TACH_RPM :
+			     (idx == 2) ? SENSOR_NUM_PB_2_PUMP_TACH_RPM :
+			     (idx == 3) ? SENSOR_NUM_PB_3_PUMP_TACH_RPM :
+					  0xFF; // 1 base
+	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
+	data = nct7363_read_back_data(cfg, offset);
+
+	shell_warn(shell, "nct7363 debug pb %d, bus: %d, addr: 0x%02x, val: 0x%02x", idx, cfg->port,
+		   (cfg->target_addr << 1), data);
+}
+
 // test command
 void cmd_test(const struct shell *shell, size_t argc, char **argv)
 {
@@ -119,11 +217,26 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_set_pwm_cmd,
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_pwm_cmd, SHELL_CMD(get, &sub_get_pwm_cmd, "get duty", NULL),
 			       SHELL_CMD(set, &sub_set_pwm_cmd, "set duty", NULL),
 			       SHELL_SUBCMD_SET_END);
+// mux
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_mux_cmd,
+			       SHELL_CMD(fb, NULL, "switch fan board mux", cmd_switch_fb_mux),
+			       SHELL_CMD(pb, NULL, "switch pump board mux", cmd_switch_pb_mux),
+			       SHELL_CMD(sb, NULL, "switch sensor board mux", cmd_switch_sb_mux),
+			       SHELL_CMD(pdb, NULL, "switch pdb mux", cmd_switch_pdb_mux),
+			       SHELL_SUBCMD_SET_END);
+
+// nct7363
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_nct7363_cmd,
+			       SHELL_CMD(fb, NULL, "nct7363 debug for fan board", cmd_nct7363_fb),
+			       SHELL_CMD(pb, NULL, "nct7363 debug for pump board", cmd_nct7363_pb),
+			       SHELL_SUBCMD_SET_END);
 
 /* Sub-command Level 1 of command test */
 SHELL_STATIC_SUBCMD_SET_CREATE(
 	sub_test_cmds, SHELL_CMD(pwm, &sub_pwm_cmd, "set/get pwm command", NULL),
 	SHELL_CMD(poll, NULL, "enable/disable sensor polling", cmd_sensor_polling),
+	SHELL_CMD(mux, &sub_mux_cmd, "switch mux from sensor cfg", NULL),
+	SHELL_CMD(nct7363, &sub_nct7363_cmd, "nct7363 debug command", NULL),
 	SHELL_CMD(test, NULL, "test command", cmd_test), SHELL_SUBCMD_SET_END);
 
 /* Root of command test */

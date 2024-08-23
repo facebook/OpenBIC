@@ -22,6 +22,7 @@
 #include "plat_hook.h"
 #include "plat_fsc.h"
 #include "plat_pwm.h"
+#include "nct7363.h"
 
 LOG_MODULE_REGISTER(plat_pwm);
 
@@ -31,6 +32,7 @@ LOG_MODULE_REGISTER(plat_pwm);
 static const struct device *pwm_dev;
 static uint8_t fan_group_duty_cache[PWM_GROUP_E_MAX];
 static uint8_t fan_duty_cache[PWM_DEVICE_E_MAX];
+static uint8_t manual_pwm_cache[MANUAL_PWM_E_MAX];
 
 struct nct_dev_info {
 	enum PWM_DEVICE_E dev;
@@ -132,9 +134,15 @@ uint8_t nct7363_wdt_all_enable()
 {
 	for (uint8_t i = 0; i < ARRAY_SIZE(nct_dev_tbl); i++) {
 		sensor_cfg *cfg = get_common_sensor_cfg_info(nct_dev_tbl[i].tach_sen_num);
-
 		if (cfg == NULL) {
 			LOG_ERR("Failed to get sensor config for wdt enable 0x%x",
+				nct_dev_tbl[i].tach_sen_num);
+			continue;
+		}
+
+		nct7363_init_arg *init_arg = (nct7363_init_arg *)cfg->init_args;
+		if (init_arg == NULL) {
+			LOG_ERR("Failed to get sensor init_arg for wdt enable 0x%x",
 				nct_dev_tbl[i].tach_sen_num);
 			continue;
 		}
@@ -142,7 +150,7 @@ uint8_t nct7363_wdt_all_enable()
 		if (!pre_PCA9546A_read(cfg, cfg->pre_sensor_read_args))
 			LOG_ERR("pre lock mutex fail !");
 
-		nct7363_setting_wdt(cfg, nct7363_init_args[i].wdt_cfg);
+		nct7363_setting_wdt(cfg, init_arg->wdt_cfg);
 
 		if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
 			LOG_ERR("post unlock mutex fail !");
@@ -285,6 +293,34 @@ uint8_t get_pwm_cache(uint8_t idx)
 		return 0xFF;
 
 	return fan_duty_cache[idx];
+}
+
+uint8_t manual_pwm_idx_to_pwm_idx(uint8_t idx)
+{
+	return (idx == MANUAL_PWM_E_PUMP_1)	 ? PWM_DEVICE_E_PB_PUMB_1 :
+	       (idx == MANUAL_PWM_E_PUMP_2)	 ? PWM_DEVICE_E_PB_PUMB_2 :
+	       (idx == MANUAL_PWM_E_PUMP_3)	 ? PWM_DEVICE_E_PB_PUMB_3 :
+	       (idx == MANUAL_PWM_E_PUMP_FAN_1)	 ? PWM_DEVICE_E_PB_PUMB_FAN_1 :
+	       (idx == MANUAL_PWM_E_PUMP_FAN_2)	 ? PWM_DEVICE_E_PB_PUMB_FAN_2 :
+	       (idx == MANUAL_PWM_E_PUMP_FAN_3)	 ? PWM_DEVICE_E_PB_PUMB_FAN_3 :
+	       (idx == MANUAL_PWM_E_RPU_PCB_FAN) ? PWM_DEVICE_E_BB_FAN :
+						   PWM_DEVICE_E_MAX;
+}
+
+uint8_t get_manual_pwm_cache(uint8_t idx)
+{
+	if (idx >= MANUAL_PWM_E_MAX)
+		return 0xFF;
+
+	return manual_pwm_cache[idx];
+}
+
+void set_manual_pwm_cache(uint8_t idx, uint8_t duty)
+{
+	if (idx >= MANUAL_PWM_E_MAX)
+		return;
+
+	manual_pwm_cache[idx] = duty;
 }
 
 void init_pwm_dev(void)

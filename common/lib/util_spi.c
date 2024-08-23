@@ -46,9 +46,31 @@ static struct {
 	char *name;
 	bool isinit;
 } flash_device_list[] = {
+#if defined(CONFIG_SPI_ASPEED)
 	[DEVSPI_FMC_CS0] = { "fmc_cs0", true },	   [DEVSPI_FMC_CS1] = { "fmc_cs1", false },
 	[DEVSPI_SPI1_CS0] = { "spi1_cs0", false }, [DEVSPI_SPI1_CS1] = { "spi1_cs1", false },
 	[DEVSPI_SPI2_CS0] = { "spi2_cs0", false }, [DEVSPI_SPI2_CS1] = { "spi2_cs1", false },
+
+#elif defined(CONFIG_SPI_NPCM4XX_SPIM) || defined(CONFIG_SPI_NPCM4XX_FIU) ||                       \
+	defined(CONFIG_SPIP_NPCM4XX)
+#if defined(CONFIG_SPI_NPCM4XX_SPIM)
+	[DEVSPI_FMC_CS0] = { "spi_spim0_cs0", true },
+#endif /* defined(CONFIG_SPI_NPCM4XX_SPIM) */
+
+#if defined(CONFIG_SPI_NPCM4XX_FIU)
+	[DEVSPI_SPI1_CS0] = { "spi_fiu0_cs0", false },
+	[DEVSPI_SPI1_CS1] = { "spi_fiu0_cs1", false },
+#endif /* defined(CONFIG_SPI_NPCM4XX_FIU) */
+
+#if defined(CONFIG_SPIP_NPCM4XX)
+	[DEVSPI_SPI2_CS0] = { "spi_spip1_cs0", false },
+	[DEVSPI_SPI2_CS1] = { "spi_spip1_cs1", false },
+#endif /* defined(CONFIG_SPIP_NPCM4XX) */
+
+#else /* defined(CONFIG_SPI_ASPEED) */
+	[DEVSPI_FMC_CS0] = { "config_spi_not_set", true },
+#endif /* defined(CONFIG_SPI_ASPEED) */
+
 };
 
 static int do_erase_write_verify(const struct device *flash_device, uint32_t op_addr,

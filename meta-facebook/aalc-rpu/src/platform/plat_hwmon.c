@@ -32,17 +32,6 @@
 
 LOG_MODULE_REGISTER(plat_modbus_funtion);
 
-static sensor_cfg *get_sensor_config_data(uint8_t sensor_num)
-{
-	// Check sensor information in sensor config table
-	sensor_cfg *cfg = NULL;
-	cfg = find_sensor_cfg_via_sensor_num(sensor_config, sensor_config_count, sensor_num);
-	if (cfg == NULL)
-		LOG_ERR("Fail to find sensor info in config table, sensor_num: 0x%x, cfg count: 0x%x",
-			sensor_num, sensor_config_count);
-	return cfg;
-}
-
 bool modbus_pump_setting_unsupport_function(pump_reset_struct *data, uint8_t bit_val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
@@ -69,7 +58,7 @@ bool pump_reset(pump_reset_struct *data, uint8_t bit_val)
 		return true;
 
 	// Check sensor information in sensor config table
-	sensor_cfg *cfg = get_sensor_config_data(data->senser_num);
+	sensor_cfg *cfg = get_common_sensor_cfg_info(data->senser_num);
 	if (cfg == NULL) {
 		LOG_ERR("Fail when getting pump sensor config, 0x%x", data->senser_num);
 		return false;
