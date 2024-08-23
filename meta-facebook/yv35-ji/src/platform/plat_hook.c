@@ -45,7 +45,28 @@ LOG_MODULE_REGISTER(plat_hook);
 /**************************************************************************************************
  * INIT ARGS
 **************************************************************************************************/
-adc_asd_init_arg ast_adc_init_args[] = { [0] = { .is_init = false } };
+adc_asd_init_arg ast_adc_init_args[] = {
+	[0] = {
+		.is_init = false,
+		.deglitch[0] = { .deglitch_en = true, .upper_bound = 0x333, .lower_bound = 0x29F },
+		.deglitch[1] = { .deglitch_en = true, .upper_bound = 0x32B, .lower_bound = 0x290 },
+		.deglitch[2] = { .deglitch_en = true, .upper_bound = 0x2BC, .lower_bound = 0x27F },
+		.deglitch[3] = { .deglitch_en = true, .upper_bound = 0x1DB, .lower_bound = 0x138 },
+		.deglitch[4] = { .deglitch_en = true, .upper_bound = 0x1E9, .lower_bound = 0x170 },
+		.deglitch[5] = { .deglitch_en = true, .upper_bound = 0x204, .lower_bound = 0x127 },
+		.deglitch[7] = { .deglitch_en = true, .upper_bound = 0x208, .lower_bound = 0x1CF },
+	},
+	[1] = {
+		.is_init = false,
+		.deglitch[1] = { .deglitch_en = true, .upper_bound = 0x2BC, .lower_bound = 0x27F },
+		.deglitch[2] = { .deglitch_en = true, .upper_bound = 0x208, .lower_bound = 0x1CF },
+		.deglitch[3] = { .deglitch_en = true, .upper_bound = 0x0ED, .lower_bound = 0x0BD },
+		.deglitch[4] = { .deglitch_en = true, .upper_bound = 0x1CE, .lower_bound = 0x19A },
+		.deglitch[5] = { .deglitch_en = true, .upper_bound = 0x322, .lower_bound = 0x2B5 },
+		.deglitch[6] = { .deglitch_en = true, .upper_bound = 0x25C, .lower_bound = 0x224 },
+		.deglitch[7] = { .deglitch_en = true, .upper_bound = 0x189, .lower_bound = 0x159 },
+	}
+};
 
 mp5990_init_arg mp5990_init_args[] = {
 	[0] = { .is_init = false,

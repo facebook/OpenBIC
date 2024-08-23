@@ -5,6 +5,7 @@
 		&pinctrl_adc2_default &pinctrl_adc3_default
 		&pinctrl_adc4_default &pinctrl_adc5_default
 		&pinctrl_adc6_default &pinctrl_adc7_default>;
+	aspeed,adc-channels-used = <0xBF>;
 };
 
 &adc1 {
@@ -13,6 +14,7 @@
 		&pinctrl_adc10_default &pinctrl_adc11_default
 		&pinctrl_adc12_default &pinctrl_adc13_default
 		&pinctrl_adc14_default &pinctrl_adc15_default>;
+	aspeed,adc-channels-used = <0xFE>;
 };
 
 &jtag1{
