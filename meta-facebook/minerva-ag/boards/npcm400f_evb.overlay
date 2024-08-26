@@ -1,0 +1,127 @@
+&twd0 {
+	status = "okay";
+};
+
+&adc0 {
+    status = "disabled";
+};
+
+&uart0 {
+	status = "okay";
+	current-speed = <57600>;
+};
+
+&i2c1a {
+	clock-frequency = <I2C_BITRATE_STANDARD>;
+	status = "okay";
+};
+
+&i2c1b {
+    status = "disabled";
+};
+
+&i2c2a {
+	clock-frequency = <I2C_BITRATE_STANDARD>;
+	status = "okay";
+};
+
+&i2c3a {
+	clock-frequency = <I2C_BITRATE_STANDARD>;
+	status = "okay";
+};
+
+&i2c4a {
+    status = "disabled";
+};
+
+&i2c4b {
+	clock-frequency = <I2C_BITRATE_STANDARD>;
+	status = "okay";
+};
+
+&i2c5a {
+	clock-frequency = <I2C_BITRATE_STANDARD>;
+	status = "okay";
+};
+
+&i2c6a {
+	clock-frequency = <I2C_BITRATE_STANDARD>;
+	status = "okay";
+};
+
+&i2c6b {
+    status = "disabled";
+};
+
+&i2c7a {
+	clock-frequency = <I2C_BITRATE_STANDARD>;
+	status = "okay";
+};
+
+&i2c8a {
+    status = "disabled";
+};
+
+&i2c9a {
+    status = "disabled";
+};
+
+&i2c10a {
+    status = "disabled";
+};
+
+&i2c11a {
+    status = "disabled";
+};
+
+&i2c12a {
+    status = "disabled";
+};
+
+&spip1 {
+    status = "disabled";
+};
+
+&usbd0 {
+    status = "disabled";
+};
+
+&jtag1 {
+    status = "disabled";
+};
+
+&i3c4 {
+    status = "disabled";
+};
+
+&i3c5 {
+    status = "disabled";
+};
+
+&peci0 {
+    status = "disabled";
+};
+
+&espi0 {
+    status = "disabled";
+};
+
+&kcs1 {
+    status = "disabled";
+};
+
+&kcs2 {
+    status = "disabled";
+};
+
+&kcs3 {
+    status = "disabled";
+};
+
+&kcs4 {
+    status = "disabled";
+};
+
+&spi_fiu0 {
+    status = "disabled";
+};
