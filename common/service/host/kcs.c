@@ -81,11 +81,14 @@ static uint8_t init_text_string_value(const char *new_text_string, char **text_s
 		new_text_string_start_idx = 0;
 	}
 
-	*text_strings = realloc(*text_strings, original_size + new_text_string_len + NULL_BYTE);
-	if (!(*text_strings)) {
+	char *temp_ptr = realloc(*text_strings, original_size + new_text_string_len + NULL_BYTE);
+	if (!(temp_ptr)) {
 		LOG_ERR("%s:%s:%d: Failed to allocate memory.", __FILE__, __func__, __LINE__);
 		return 0;
 	}
+
+	*text_strings = temp_ptr;
+
 	memcpy(((*text_strings) + new_text_string_start_idx), new_text_string, new_text_string_len);
 
 	*((*text_strings) + new_text_string_start_idx + new_text_string_len) = '\0';
