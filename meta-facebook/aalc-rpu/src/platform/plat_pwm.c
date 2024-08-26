@@ -32,7 +32,7 @@ LOG_MODULE_REGISTER(plat_pwm);
 static const struct device *pwm_dev;
 static uint8_t fan_group_duty_cache[PWM_GROUP_E_MAX];
 static uint8_t fan_duty_cache[PWM_DEVICE_E_MAX];
-static uint8_t manual_pwm_flag[PWM_GROUP_E_MAX];
+static uint8_t manual_pwm_flag[MANUAL_PWM_E_MAX];
 static uint8_t manual_pwm_cache[MANUAL_PWM_E_MAX];
 
 struct nct_dev_info {

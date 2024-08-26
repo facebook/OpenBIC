@@ -38,9 +38,15 @@ LOG_MODULE_REGISTER(sensor);
 
 #define SENSOR_DRIVE_INIT_DECLARE(name) uint8_t name##_init(sensor_cfg *cfg)
 
-#define SENSOR_DRIVE_TYPE_INIT_MAP(name) { sensor_dev_##name, name##_init }
+#define SENSOR_DRIVE_TYPE_INIT_MAP(name)                                                           \
+	{                                                                                          \
+		sensor_dev_##name, name##_init                                                     \
+	}
 
-#define SENSOR_DRIVE_TYPE_UNUSE(name) { sensor_dev_##name, NULL }
+#define SENSOR_DRIVE_TYPE_UNUSE(name)                                                              \
+	{                                                                                          \
+		sensor_dev_##name, NULL                                                            \
+	}
 
 #define SENSOR_READ_RETRY_MAX 3
 
@@ -1091,28 +1097,26 @@ void init_sensor_monitor_table()
 	uint8_t plat_monitor_sensor_count = pal_get_monitor_sensor_count();
 	sensor_monitor_count += plat_monitor_sensor_count;
 
-	if (sensor_monitor_count != 0) {
-		sensor_monitor_table = (sensor_monitor_table_info *)malloc(
-			sensor_monitor_count * sizeof(sensor_monitor_table_info));
-		if (sensor_monitor_table == NULL) {
-			LOG_ERR("Fail to allocate memory to store sensor monitor table");
-			return;
-		}
+	sensor_monitor_table = (sensor_monitor_table_info *)malloc(
+		sensor_monitor_count * sizeof(sensor_monitor_table_info));
+	if (sensor_monitor_table == NULL) {
+		LOG_ERR("Fail to allocate memory to store sensor monitor table");
+		return;
+	}
 
-		if (sensor_config != NULL) {
-			sensor_monitor_table[0].monitor_sensor_cfg = sensor_config;
-			sensor_monitor_table[0].cfg_count = sensor_config_count;
-			sensor_monitor_table[0].access_checker = NULL;
-			sensor_monitor_table[0].pre_monitor = NULL;
-			sensor_monitor_table[0].post_monitor = NULL;
-			snprintf(sensor_monitor_table[0].table_name,
-				 sizeof(sensor_monitor_table[0].table_name), "%s",
-				 common_sensor_table_name);
-		}
+	if (sensor_config != NULL) {
+		sensor_monitor_table[0].monitor_sensor_cfg = sensor_config;
+		sensor_monitor_table[0].cfg_count = sensor_config_count;
+		sensor_monitor_table[0].access_checker = NULL;
+		sensor_monitor_table[0].pre_monitor = NULL;
+		sensor_monitor_table[0].post_monitor = NULL;
+		snprintf(sensor_monitor_table[0].table_name,
+			 sizeof(sensor_monitor_table[0].table_name), "%s",
+			 common_sensor_table_name);
+	}
 
-		if (plat_monitor_sensor_count != 0) {
-			plat_fill_monitor_sensor_table();
-		}
+	if (plat_monitor_sensor_count != 0) {
+		plat_fill_monitor_sensor_table();
 	}
 }
 

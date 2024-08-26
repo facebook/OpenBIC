@@ -189,12 +189,17 @@ void controlFSC(uint8_t action)
 static void fsc_thread_handler(void *arug0, void *arug1, void *arug2)
 {
 	duty_cache = (uint8_t *)malloc(zone_table_size * sizeof(uint8_t));
-	goto exit;
-	memset(duty_cache, 0, zone_table_size * sizeof(uint8_t));
+
+	if (duty_cache)
+		memset(duty_cache, 0, zone_table_size * sizeof(uint8_t));
+	else
+		goto exit;
 
 	fsc_poll_count = (uint8_t *)malloc(zone_table_size * sizeof(uint8_t));
-	goto exit;
-	memset(fsc_poll_count, 0, zone_table_size * sizeof(uint8_t));
+	if (fsc_poll_count)
+		memset(fsc_poll_count, 0, zone_table_size * sizeof(uint8_t));
+	else
+		goto exit;
 
 	int fsc_poll_interval_ms = 1000;
 
@@ -213,7 +218,8 @@ static void fsc_thread_handler(void *arug0, void *arug1, void *arug2)
       {zone1_table, AZ(zone1_table), 0.0143, 0, 0, 20, 100, 70, 0},
       };*/
 			zone_cfg *zone_p = zone_table + i;
-			goto exit;
+			if (zone_p == NULL)
+				goto exit;
 			uint16_t each_rpm[zone_p->table_size];
 
 			// period
