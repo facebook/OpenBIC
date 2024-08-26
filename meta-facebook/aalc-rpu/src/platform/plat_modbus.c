@@ -392,14 +392,13 @@ uint8_t modbus_set_pwm(modbus_command_mapping *cmd)
 	return MODBUS_EXC_NONE;
 }
 
-static uint8_t manual_pwm_cache[PWM_GROUP_E_MAX];
 uint8_t modbus_get_manual_pwm(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
 	uint8_t idx = cmd->arg0;
 
-	cmd->data[0] = manual_pwm_cache[idx];
+	cmd->data[0] = get_manual_pwm_cache(idx);
 
 	return MODBUS_EXC_NONE;
 }
@@ -411,9 +410,7 @@ uint8_t modbus_set_manual_pwm(modbus_command_mapping *cmd)
 	uint8_t idx = cmd->arg0;
 	uint8_t duty = (uint8_t)cmd->data[0];
 
-	manual_pwm_cache[idx] = duty;
-
-	set_pwm_group(idx, duty);
+	set_manual_pwm_cache(idx, duty);
 
 	return MODBUS_EXC_NONE;
 }
@@ -474,26 +471,25 @@ uint8_t modbus_get_aalc_cooling_capacity(modbus_command_mapping *cmd)
 	return MODBUS_EXC_NONE;
 }
 
-uint8_t modbus_get_manual_control_enable_flag(modbus_command_mapping *cmd)
+uint8_t modbus_get_manual_flag(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
-	cmd->data[0] = (!get_fsc_enable_flag());
+	uint8_t idx = cmd->arg0;
+
+	cmd->data[0] = get_manual_pwm_flag(idx);
 
 	return MODBUS_EXC_NONE;
 }
 
-uint8_t modbus_set_manual_control_enable_flag(modbus_command_mapping *cmd)
+uint8_t modbus_set_manual_flag(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
-	// if (cmd->data[0]) {
-	// 	set_pwm_group(PWM_GROUP_E_PUMP, manual_pwm_cache[PWM_GROUP_E_PUMP]);
-	// 	set_pwm_group(PWM_GROUP_E_HEX_FAN, manual_pwm_cache[PWM_GROUP_E_HEX_FAN]);
-	// 	set_pwm_group(PWM_GROUP_E_RPU_FAN, manual_pwm_cache[PWM_GROUP_E_RPU_FAN]);
-	// }
+	uint8_t idx = cmd->arg0;
+	uint8_t val = cmd->data[0];
 
-	set_fsc_enable_flag((uint8_t)(!cmd->data[0]));
+	set_manual_pwm_flag(idx, val);
 
 	return MODBUS_EXC_NONE;
 }
@@ -976,8 +972,8 @@ modbus_command_mapping modbus_command_table[] = {
 	  1 },
 	{ MODBUS_MODBUS_ADDR_PATH_WITH_WEDGE400_ADDR, modbus_set_rpu_addr, modbus_get_rpu_addr, 0,
 	  0, 0, 1 },
-	{ MODBUS_MANUAL_CONTROL_RPU_FAN_ON_OFF_ADDR, modbus_set_manual_control_enable_flag,
-	  modbus_get_manual_control_enable_flag, 0, 0, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_RPU_FAN_ON_OFF_ADDR, modbus_set_manual_flag, modbus_get_manual_flag,
+	  MANUAL_PWM_E_RPU_FAN, 0, 0, 1 },
 	// Control
 	{ MODBUS_AUTO_TUNE_COOLANT_FLOW_RATE_TARGET_SET_ADDR, modbus_to_do_set, modbus_to_do_get, 0,
 	  0, 0, 1 },
@@ -986,11 +982,11 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_PUMP_REDUNDANT_SWITCHED_INTERVAL_ADDR, modbus_to_do_set, modbus_to_do_get, 0, 0, 0,
 	  1 },
 	{ MODBUS_MANUAL_CONTROL_PUMP_DUTY_SET_ADDR, modbus_set_manual_pwm, modbus_get_manual_pwm,
-	  PWM_GROUP_E_PUMP, 0, 0, 1 },
+	  MANUAL_PWM_E_PUMP, 0, 0, 1 },
 	{ MODBUS_MANUAL_CONTROL_FAN_DUTY_SET_ADDR, modbus_set_manual_pwm, modbus_get_manual_pwm,
-	  PWM_GROUP_E_HEX_FAN, 0, 0, 1 },
+	  MANUAL_PWM_E_HEX_FAN, 0, 0, 1 },
 	{ MODBUS_MANUAL_CONTROL_RPU_FAN_DUTY_SET_ADDR, modbus_set_manual_pwm, modbus_get_manual_pwm,
-	  PWM_GROUP_E_RPU_FAN, 0, 0, 1 },
+	  MANUAL_PWM_E_RPU_FAN, 0, 0, 1 },
 	{ MODBUS_MANUAL_CONTROL_PUMP1_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 0,
 	  PWM_DEVICE_E_PB_PUMB_1, 0, 1 },
 	{ MODBUS_MANUAL_CONTROL_PUMP2_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 0,

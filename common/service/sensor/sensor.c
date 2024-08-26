@@ -38,15 +38,9 @@ LOG_MODULE_REGISTER(sensor);
 
 #define SENSOR_DRIVE_INIT_DECLARE(name) uint8_t name##_init(sensor_cfg *cfg)
 
-#define SENSOR_DRIVE_TYPE_INIT_MAP(name)                                                           \
-	{                                                                                          \
-		sensor_dev_##name, name##_init                                                     \
-	}
+#define SENSOR_DRIVE_TYPE_INIT_MAP(name) { sensor_dev_##name, name##_init }
 
-#define SENSOR_DRIVE_TYPE_UNUSE(name)                                                              \
-	{                                                                                          \
-		sensor_dev_##name, NULL                                                            \
-	}
+#define SENSOR_DRIVE_TYPE_UNUSE(name) { sensor_dev_##name, NULL }
 
 #define SENSOR_READ_RETRY_MAX 3
 
@@ -1153,6 +1147,32 @@ static inline bool init_drive_type(sensor_cfg *p, uint16_t current_drive)
 	}
 
 	return true;
+}
+
+uint8_t common_tbl_sen_reinit(uint8_t sen_num)
+{
+	sensor_cfg *cfg = get_common_sensor_cfg_info(sen_num);
+	if (!cfg) {
+		LOG_ERR("Fail to get sensor config info, sensor number: 0x%x", sen_num);
+		return SENSOR_NOT_FOUND;
+	}
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(sensor_drive_tbl); i++) {
+		if (cfg->type != sensor_drive_tbl[i].dev)
+			continue;
+
+		if (init_drive_type(cfg, i) == false) {
+			LOG_ERR("reinit drive type fail, sensor num: 0x%x, type: 0x%x", cfg->num,
+				cfg->type);
+			return SENSOR_NOT_FOUND;
+		}
+
+		LOG_DBG("Reinit sensor num: 0x%x, type: 0x%x success", cfg->num, cfg->type);
+
+		break;
+	}
+
+	return 0;
 }
 
 static void drive_init(void)

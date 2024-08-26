@@ -30,6 +30,7 @@
 #include "plat_i2c.h"
 #include "plat_hook.h"
 #include "plat_sensor_table.h"
+#include "plat_fsc.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -75,7 +76,8 @@ uint8_t pump_board_init_tbl[] = {
 void pump_board_init()
 {
 	// init pump board 1, 2 and 3
-	LOG_WRN("pump board start init");
+	static uint8_t count = 0;
+	LOG_WRN("pump board start init: %d", count);
 	for (uint8_t i = 0; i < ARRAY_SIZE(pump_board_init_tbl); i++) {
 		sensor_cfg *cfg = get_common_sensor_cfg_info(pump_board_init_tbl[i]);
 		if (cfg->pre_sensor_read_hook) {
@@ -93,6 +95,11 @@ void pump_board_init()
 		if (cfg->post_sensor_read_hook) {
 			cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL);
 		}
+	}
+
+	if (count < 15) {
+		k_work_schedule(&up_15sec_handler, K_SECONDS(1));
+		count++;
 	}
 }
 
@@ -127,8 +134,7 @@ void pal_pre_init()
 	if (ret)
 		LOG_ERR("init result fail:0x%x", ret);
 
-	k_msleep(1000);
-	k_work_schedule(&up_15sec_handler, K_SECONDS(15));
+	k_work_schedule(&up_15sec_handler, K_SECONDS(1));
 }
 
 void pal_post_init()
@@ -140,6 +146,7 @@ void pal_post_init()
 	quick_sensor_poll_init();
 	threshold_poll_init();
 	ctl_all_pwm_dev(60);
+	//fsc_init();
 	set_rpu_ready();
 	fan_pump_pwrgd();
 }

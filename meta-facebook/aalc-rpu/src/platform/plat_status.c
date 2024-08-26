@@ -201,6 +201,7 @@ uint16_t get_sensor_status_for_modbus_cmd(uint8_t status)
 			   (get_threshold_status(SENSOR_NUM_PB_3_PUMP_TACH_RPM))) ?
 				  1 :
 				  0);
+		WRITE_BIT(val, 9, (get_rpu_ready_pin_status()) ? 1 : 0);
 		break;
 	case HEX_FAN_ALARM_1:
 		WRITE_BIT(val, 0, (get_threshold_status(SENSOR_NUM_FB_1_FAN_TACH_RPM)) ? 1 : 0);

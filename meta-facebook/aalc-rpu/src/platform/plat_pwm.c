@@ -32,6 +32,7 @@ LOG_MODULE_REGISTER(plat_pwm);
 static const struct device *pwm_dev;
 static uint8_t fan_group_duty_cache[PWM_GROUP_E_MAX];
 static uint8_t fan_duty_cache[PWM_DEVICE_E_MAX];
+static uint8_t manual_pwm_flag[PWM_GROUP_E_MAX];
 static uint8_t manual_pwm_cache[MANUAL_PWM_E_MAX];
 
 struct nct_dev_info {
@@ -307,6 +308,22 @@ uint8_t manual_pwm_idx_to_pwm_idx(uint8_t idx)
 						   PWM_DEVICE_E_MAX;
 }
 
+uint8_t get_manual_pwm_flag(uint8_t idx)
+{
+	if (idx >= MANUAL_PWM_E_MAX)
+		return 0xFF;
+
+	return manual_pwm_flag[idx];
+}
+
+void set_manual_pwm_flag(uint8_t idx, uint8_t flag)
+{
+	if (idx >= MANUAL_PWM_E_MAX)
+		return;
+
+	manual_pwm_flag[idx] = flag;
+}
+
 uint8_t get_manual_pwm_cache(uint8_t idx)
 {
 	if (idx >= MANUAL_PWM_E_MAX)
@@ -321,6 +338,18 @@ void set_manual_pwm_cache(uint8_t idx, uint8_t duty)
 		return;
 
 	manual_pwm_cache[idx] = duty;
+}
+
+/* must set manual pwm flag/cache before setting duty */
+bool set_manual_pwm(uint8_t idx)
+{
+	if (!get_manual_pwm_flag(idx))
+		return false;
+
+	if (set_pwm_group(idx, get_manual_pwm_cache(idx)))
+		return false;
+
+	return true;
 }
 
 void init_pwm_dev(void)
