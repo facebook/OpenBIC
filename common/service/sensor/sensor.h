@@ -750,6 +750,15 @@ typedef struct _adc128d818_init_arg {
 	float scalefactor[8];
 } adc128d818_init_arg;
 
+typedef struct mp2971_init_args {
+	bool vout_scale_enable;
+} mp2971_init_arg;
+
+typedef struct isl69259_init_args {
+	bool vout_scale_enable;
+	float vout_scale;
+} isl69259_init_arg;
+
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;
 // Mapping sensor number to sensor config index
