@@ -1115,9 +1115,7 @@ void init_sensor_monitor_table()
 			 common_sensor_table_name);
 	}
 
-	if (plat_monitor_sensor_count != 0) {
-		plat_fill_monitor_sensor_table();
-	}
+	plat_fill_monitor_sensor_table();
 }
 
 static inline bool init_drive_type(sensor_cfg *p, uint16_t current_drive)
