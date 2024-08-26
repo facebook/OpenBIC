@@ -111,6 +111,15 @@ void set_rpu_ready()
 	gpio_set(BIC_RPU_READY3, 1);
 }
 
+uint8_t get_rpu_ready_pin_status()
+{
+	if (gpio_get(BIC_RPU_READY0) && gpio_get(BIC_RPU_READY1) && gpio_get(BIC_RPU_READY2) &&
+	    gpio_get(BIC_RPU_READY3))
+		return 0;
+	else
+		return 1;
+}
+
 float pow_of_10(int8_t exp)
 {
 	float ret = 1.0;

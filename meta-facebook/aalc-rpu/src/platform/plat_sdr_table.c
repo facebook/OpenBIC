@@ -10603,6 +10603,11 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"BPB_BRICK_12V_TEMP_C",
 	},
+	// SENSOR_NUM_FAN_PRSNT
+	{
+		.sensor_num = SENSOR_NUM_FAN_PRSNT,
+		.ID_str = "FAN_BOARD_PRESENT_STATUS",
+	},
 };
 
 const int SDR_TABLE_SIZE = ARRAY_SIZE(plat_sdr_table);

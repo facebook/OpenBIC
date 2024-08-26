@@ -32,6 +32,22 @@ void set_all_rpu_ready_pin_normal(void)
 	2. change hx fan to min speed
 	3. store to non volatile memory
 */
+void emergency_button_action()
+{
+	if (gpio_get(CDU_PWR_BTN)) {
+		// pump recovery
+		if (pump_status_recovery())
+			set_pwm_group(PWM_GROUP_E_PUMP, 60);
+	} else {
+		ctl_all_pwm_dev(0);
+	}
+
+	if (rpu_ready_recovery())
+		set_all_rpu_ready_pin_normal();
+	else
+		deassert_all_rpu_ready_pin();
+}
+
 void fault_leak_action()
 {
 	ctl_all_pwm_dev(0);

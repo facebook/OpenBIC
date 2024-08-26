@@ -46,6 +46,8 @@
 
 #define FAN_PUMP_TRACKING_STATUS 0xFF
 
+#define THRESHOLD_ARG0_TABLE_INDEX 0xFFFFFFFF
+
 struct k_thread threshold_poll;
 K_KERNEL_STACK_MEMBER(threshold_poll_stack, THRESHOLD_POLL_STACK_SIZE);
 
@@ -61,6 +63,7 @@ enum THRESHOLD_TYPE {
 	THRESHOLD_ENABLE_LCR,
 	THRESHOLD_ENABLE_UCR,
 	THRESHOLD_ENABLE_BOTH,
+	THRESHOLD_ENABLE_DISCRETE,
 };
 
 uint8_t fan_pump_sensor_array[] = {
@@ -85,6 +88,8 @@ uint8_t fan_pump_sensor_array[] = {
 	SENSOR_NUM_PB_3_PUMP_TACH_RPM,
 };
 
+static void fb_prsnt_handle(uint32_t thres_tbl_idx, uint32_t changed_status);
+
 /* if leak or some threshold fault, return false */
 bool pump_status_recovery()
 {
@@ -95,10 +100,11 @@ bool pump_status_recovery()
 	}
 
 	uint8_t check_fault[] = {
-		SENSOR_NUM_PB_1_FAN_1_TACH_RPM,		 SENSOR_NUM_PB_1_FAN_2_TACH_RPM,
-		SENSOR_NUM_PB_2_FAN_1_TACH_RPM,		 SENSOR_NUM_PB_2_FAN_2_TACH_RPM,
-		SENSOR_NUM_PB_3_FAN_1_TACH_RPM,		 SENSOR_NUM_PB_3_FAN_2_TACH_RPM,
-		SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA, SENSOR_NUM_BPB_RACK_LEVEL_2
+		SENSOR_NUM_PB_1_FAN_1_TACH_RPM,		  SENSOR_NUM_PB_1_FAN_2_TACH_RPM,
+		SENSOR_NUM_PB_2_FAN_1_TACH_RPM,		  SENSOR_NUM_PB_2_FAN_2_TACH_RPM,
+		SENSOR_NUM_PB_3_FAN_1_TACH_RPM,		  SENSOR_NUM_PB_3_FAN_2_TACH_RPM,
+		SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA,  SENSOR_NUM_BPB_RACK_LEVEL_2,
+		SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM,
 	};
 
 	for (uint8_t i = 0; i < ARRAY_SIZE(check_fault); i++)
@@ -146,7 +152,7 @@ bool rpu_ready_recovery()
 	return true;
 }
 
-void fan_board_tach_status_handler(uint8_t sensor_num, uint8_t status)
+void fan_board_tach_status_handler(uint32_t sensor_num, uint32_t status)
 {
 	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
 
@@ -236,30 +242,61 @@ void pump_board_tach_status_handler(uint8_t sensor_num, uint8_t status)
 		LOG_ERR("Write pump_board_pwrgd gpio fail");
 }
 
-static bool pump_fail_ctrl(uint8_t sensor_num)
+static bool close_pump_hsc(uint8_t sensor_num)
 {
 	bool ret = true;
 	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
+	if ((cfg->pre_sensor_read_hook)) {
+		if ((cfg->pre_sensor_read_hook)(cfg, cfg->pre_sensor_read_args) == false) {
+			LOG_DBG("read value pre lock mutex fail !");
+			return false;
+		}
+	}
+
+	if (!enable_adm1272_hsc(cfg->port, cfg->target_addr, false))
+		ret = false;
+
+	if ((cfg->post_sensor_read_hook)) {
+		if ((cfg->post_sensor_read_hook)(cfg, cfg->post_sensor_read_args, 0) == false) {
+			LOG_DBG("read value post lock mutex fail !");
+			return false;
+		}
+	}
+
+	return ret;
+}
+
+static bool pump_fail_ctrl(uint8_t sensor_num)
+{
+	bool ret = true;
 	uint8_t pwm_dev =
 		(sensor_num == SENSOR_NUM_PB_1_PUMP_TACH_RPM) ? PWM_DEVICE_E_PB_PUMB_FAN_1 :
 		(sensor_num == SENSOR_NUM_PB_2_PUMP_TACH_RPM) ? PWM_DEVICE_E_PB_PUMB_FAN_2 :
 		(sensor_num == SENSOR_NUM_PB_3_PUMP_TACH_RPM) ? PWM_DEVICE_E_PB_PUMB_FAN_3 :
 								PWM_DEVICE_E_MAX;
+	uint8_t hsc_sensor =
+		(sensor_num == SENSOR_NUM_PB_1_PUMP_TACH_RPM) ? SENSOR_NUM_PB_1_HSC_P48V_TEMP_C :
+		(sensor_num == SENSOR_NUM_PB_2_PUMP_TACH_RPM) ? SENSOR_NUM_PB_2_HSC_P48V_TEMP_C :
+		(sensor_num == SENSOR_NUM_PB_3_PUMP_TACH_RPM) ? SENSOR_NUM_PB_3_HSC_P48V_TEMP_C :
+								0xFF;
 
 	if (pwm_dev == PWM_DEVICE_E_MAX)
+		return false;
+
+	if (hsc_sensor == 0xFF)
 		return false;
 
 	if (get_threshold_status(sensor_num)) {
 		if (plat_pwm_ctrl(pwm_dev, 0))
 			ret = false;
-		if (!enable_adm1272_hsc(cfg->port, cfg->target_addr, false))
+		if (!close_pump_hsc(hsc_sensor))
 			ret = false;
 	}
 
 	return ret;
 }
 
-void pump_failure_do(uint8_t sensor_num, uint8_t status)
+void pump_failure_do(uint32_t sensor_num, uint32_t status)
 {
 	pump_board_tach_status_handler(sensor_num, status);
 	if (status == THRESHOLD_STATUS_LCR) {
@@ -300,7 +337,7 @@ static bool pump_fan_fail_ctrl()
 	return ret;
 }
 
-void rpu_internal_fan_failure_do(uint8_t sensor_num, uint8_t status)
+void rpu_internal_fan_failure_do(uint32_t sensor_num, uint32_t status)
 {
 	pump_board_tach_status_handler(sensor_num, status);
 	if (status == THRESHOLD_STATUS_LCR) {
@@ -311,7 +348,7 @@ void rpu_internal_fan_failure_do(uint8_t sensor_num, uint8_t status)
 	}
 }
 
-void abnormal_press_do(uint8_t unused, uint8_t status)
+void abnormal_press_do(uint32_t unused, uint32_t status)
 {
 	if (status == THRESHOLD_STATUS_UCR) {
 		ctl_all_pwm_dev(0);
@@ -320,7 +357,16 @@ void abnormal_press_do(uint8_t unused, uint8_t status)
 	}
 }
 
-void level_sensor_do(uint8_t unused, uint8_t status)
+void abnormal_flow_do(uint32_t unused, uint32_t status)
+{
+	if (status == THRESHOLD_STATUS_LCR) {
+		ctl_all_pwm_dev(0);
+	} else {
+		LOG_DBG("Unexpected threshold warning");
+	}
+}
+
+void level_sensor_do(uint32_t unused, uint32_t status)
 {
 	if (get_threshold_status(SENSOR_NUM_BPB_RACK_LEVEL_2)) {
 		ctl_all_pwm_dev(0);
@@ -413,10 +459,107 @@ sensor_threshold threshold_tbl[] = {
 	{ SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA, THRESHOLD_ENABLE_LCR, -20, 0, NULL, 0 },
 	{ SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA, THRESHOLD_ENABLE_UCR, 0, 300, abnormal_press_do,
 	  0 },
-	{ SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, THRESHOLD_ENABLE_LCR, 10, 0, NULL, 0 },
+	{ SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, THRESHOLD_ENABLE_LCR, 10, 0, abnormal_flow_do,
+	  0 },
 	{ SENSOR_NUM_BPB_RACK_LEVEL_1, THRESHOLD_ENABLE_LCR, 0.1, 0, level_sensor_do, 0 },
 	{ SENSOR_NUM_BPB_RACK_LEVEL_2, THRESHOLD_ENABLE_LCR, 0.1, 0, level_sensor_do, 0 },
+	{ SENSOR_NUM_FAN_PRSNT, THRESHOLD_ENABLE_DISCRETE, 0, 0, fb_prsnt_handle,
+	  THRESHOLD_ARG0_TABLE_INDEX, 0 },
 };
+
+#define SENSOR_NUM(type, index) SENSOR_NUM_FB_##index##_##type
+#define FB_SEN_ENTRY(index)                                                                        \
+	{                                                                                          \
+		{                                                                                  \
+			SENSOR_NUM(FAN_TACH_RPM, index), SENSOR_NUM(HSC_TEMP_C, index),            \
+				SENSOR_NUM(HEX_OUTLET_TEMP_C, index)                               \
+		}                                                                                  \
+	}
+
+#define FB_REINIT_SEN_COUNT 3
+struct fb_sen_entry {
+	uint8_t sen_num[FB_REINIT_SEN_COUNT];
+} fb_sen_tbl[] = { FB_SEN_ENTRY(1),  FB_SEN_ENTRY(2),  FB_SEN_ENTRY(3),	 FB_SEN_ENTRY(4),
+		   FB_SEN_ENTRY(5),  FB_SEN_ENTRY(6),  FB_SEN_ENTRY(7),	 FB_SEN_ENTRY(8),
+		   FB_SEN_ENTRY(9),  FB_SEN_ENTRY(10), FB_SEN_ENTRY(11), FB_SEN_ENTRY(12),
+		   FB_SEN_ENTRY(13), FB_SEN_ENTRY(14) };
+
+static uint8_t fb_uninit(uint8_t idx)
+{
+	LOG_ERR("fb_uninit %d", idx + 1);
+
+	if (idx >= HEX_FAN_NUM)
+		return 1;
+
+	for (uint8_t i = 0; i < FB_REINIT_SEN_COUNT; i++) {
+		sensor_cfg *cfg = get_common_sensor_cfg_info(fb_sen_tbl[idx].sen_num[i]);
+		if (!cfg)
+			continue;
+
+		switch (cfg->type) {
+		case sensor_dev_adm1272: {
+			adm1272_init_arg *arg_p = (adm1272_init_arg *)cfg->init_args;
+			arg_p->is_init = false;
+			break;
+		}
+		case sensor_dev_nct7363: {
+			nct7363_init_arg *arg_p = (nct7363_init_arg *)cfg->init_args;
+			arg_p->is_init = false;
+			break;
+		}
+		case sensor_dev_hdc1080: {
+			hdc1080_init_arg *arg_p = (hdc1080_init_arg *)cfg->init_args;
+			arg_p->is_init = false;
+			break;
+		}
+		default:
+			LOG_ERR("fb_uninit unsupport sensor type %d", cfg->type);
+			break;
+		}
+	}
+
+	return 0;
+}
+
+static uint8_t fb_reinit(uint8_t idx)
+{
+	LOG_ERR("fb_reinit %d", idx + 1);
+
+	if (idx >= HEX_FAN_NUM)
+		return 1;
+
+	for (uint8_t i = 0; i < FB_REINIT_SEN_COUNT; i++) {
+		if (common_tbl_sen_reinit(fb_sen_tbl[idx].sen_num[i]))
+			LOG_ERR("Reinit sensor %d fail", fb_sen_tbl[idx].sen_num[i]);
+	}
+
+	return 0;
+}
+
+static void fb_prsnt_handle(uint32_t thres_tbl_idx, uint32_t changed_status)
+{
+	LOG_ERR("thres_tbl_idx %d, fb_prsnt_handle %x", thres_tbl_idx, changed_status);
+
+	if (thres_tbl_idx >= ARRAY_SIZE(threshold_tbl))
+		return;
+
+	sensor_threshold *thres_p = &threshold_tbl[thres_tbl_idx];
+
+	for (uint8_t i = 0; i < HEX_FAN_NUM; i++) {
+		if (!(changed_status & BIT(i)))
+			continue;
+
+		if (!(thres_p->last_value & BIT(i))) {
+			LOG_ERR("Fan board %d is not present", i + 1);
+			fb_uninit(i);
+			thres_p->last_status = THRESHOLD_STATUS_NORMAL;
+			continue;
+		}
+
+		LOG_ERR("Fan board %d is present", i + 1);
+		fb_reinit(i);
+	}
+}
 
 void set_threshold_poll_enable_flag(bool flag)
 {
@@ -428,7 +571,7 @@ bool get_threshold_poll_enable_flag()
 	return threshold_poll_enable_flag;
 }
 
-uint8_t get_threshold_status(uint8_t sensor_num)
+uint32_t get_threshold_status(uint8_t sensor_num)
 {
 	for (uint8_t i = 0; i < ARRAY_SIZE(threshold_tbl); i++)
 		if (threshold_tbl[i].sensor_num == sensor_num)
@@ -443,7 +586,7 @@ uint8_t get_threshold_status(uint8_t sensor_num)
  */
 static bool set_threshold_status(sensor_threshold *threshold_tbl, float val)
 {
-	uint8_t status = THRESHOLD_STATUS_NORMAL;
+	uint32_t status = THRESHOLD_STATUS_NORMAL;
 
 	switch (threshold_tbl->type) {
 	case THRESHOLD_ENABLE_LCR:
@@ -501,19 +644,45 @@ void threshold_poll_handler(void *arug0, void *arug1, void *arug2)
 
 		for (uint8_t i = 0; i < ARRAY_SIZE(threshold_tbl); i++) {
 			float val = 0;
-			sensor_cfg *cfg = get_common_sensor_cfg_info(threshold_tbl[i].sensor_num);
-			if (cfg->cache_status != SENSOR_READ_4BYTE_ACUR_SUCCESS)
-				continue;
 
-			if (get_sensor_reading_to_real_val(threshold_tbl[i].sensor_num, &val) !=
-			    SENSOR_READ_4BYTE_ACUR_SUCCESS) {
-				threshold_tbl[i].last_status = THRESHOLD_STATUS_NOT_ACCESS;
-				continue;
+			if (threshold_tbl[i].type == THRESHOLD_ENABLE_DISCRETE) {
+				/* check the discrete sensor has value changed */
+				/* do not need to convert the sensor reading value */
+
+				int reading = 0;
+				uint8_t status =
+					get_sensor_reading(sensor_config, sensor_config_count,
+							   threshold_tbl[i].sensor_num, &reading,
+							   GET_FROM_CACHE);
+
+				if (status != SENSOR_READ_4BYTE_ACUR_SUCCESS) {
+					LOG_ERR("0x%02x get sensor cache fail",
+						threshold_tbl[i].sensor_num);
+					continue;
+				}
+
+				LOG_ERR("threshold_tbl[i].last_value = %x, reading = %x",
+					threshold_tbl[i].last_value, reading);
+				if (threshold_tbl[i].last_value == reading)
+					continue;
+
+				/* use the last_status to carry change bits */
+				threshold_tbl[i].last_status =
+					threshold_tbl[i].last_value ^ reading;
+				threshold_tbl[i].last_value = reading;
+
+			} else {
+				if (get_sensor_reading_to_real_val(threshold_tbl[i].sensor_num,
+								   &val) !=
+				    SENSOR_READ_4BYTE_ACUR_SUCCESS)
+					threshold_tbl[i].last_status = THRESHOLD_STATUS_NOT_ACCESS;
+				else if (!set_threshold_status(&threshold_tbl[i], val))
+					continue;
+
+				/* check whether the status has changed */
+				if (!set_threshold_status(&threshold_tbl[i], val))
+					continue;
 			}
-
-			/* check whether the status has changed */
-			if (!set_threshold_status(&threshold_tbl[i], val))
-				continue;
 
 			if (threshold_tbl[i].fn)
 				threshold_tbl[i].fn(threshold_tbl[i].arg0,

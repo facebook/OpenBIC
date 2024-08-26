@@ -1097,29 +1097,25 @@ void init_sensor_monitor_table()
 	uint8_t plat_monitor_sensor_count = pal_get_monitor_sensor_count();
 	sensor_monitor_count += plat_monitor_sensor_count;
 
-	if (sensor_monitor_count != 0) {
-		sensor_monitor_table = (sensor_monitor_table_info *)malloc(
-			sensor_monitor_count * sizeof(sensor_monitor_table_info));
-		if (sensor_monitor_table == NULL) {
-			LOG_ERR("Fail to allocate memory to store sensor monitor table");
-			return;
-		}
-
-		if (sensor_config != NULL) {
-			sensor_monitor_table[0].monitor_sensor_cfg = sensor_config;
-			sensor_monitor_table[0].cfg_count = sensor_config_count;
-			sensor_monitor_table[0].access_checker = NULL;
-			sensor_monitor_table[0].pre_monitor = NULL;
-			sensor_monitor_table[0].post_monitor = NULL;
-			snprintf(sensor_monitor_table[0].table_name,
-				 sizeof(sensor_monitor_table[0].table_name), "%s",
-				 common_sensor_table_name);
-		}
-
-		if (plat_monitor_sensor_count != 0) {
-			plat_fill_monitor_sensor_table();
-		}
+	sensor_monitor_table = (sensor_monitor_table_info *)malloc(
+		sensor_monitor_count * sizeof(sensor_monitor_table_info));
+	if (sensor_monitor_table == NULL) {
+		LOG_ERR("Fail to allocate memory to store sensor monitor table");
+		return;
 	}
+
+	if (sensor_config != NULL) {
+		sensor_monitor_table[0].monitor_sensor_cfg = sensor_config;
+		sensor_monitor_table[0].cfg_count = sensor_config_count;
+		sensor_monitor_table[0].access_checker = NULL;
+		sensor_monitor_table[0].pre_monitor = NULL;
+		sensor_monitor_table[0].post_monitor = NULL;
+		snprintf(sensor_monitor_table[0].table_name,
+			 sizeof(sensor_monitor_table[0].table_name), "%s",
+			 common_sensor_table_name);
+	}
+
+	plat_fill_monitor_sensor_table();
 }
 
 static inline bool init_drive_type(sensor_cfg *p, uint16_t current_drive)
@@ -1153,6 +1149,32 @@ static inline bool init_drive_type(sensor_cfg *p, uint16_t current_drive)
 	}
 
 	return true;
+}
+
+uint8_t common_tbl_sen_reinit(uint8_t sen_num)
+{
+	sensor_cfg *cfg = get_common_sensor_cfg_info(sen_num);
+	if (!cfg) {
+		LOG_ERR("Fail to get sensor config info, sensor number: 0x%x", sen_num);
+		return SENSOR_NOT_FOUND;
+	}
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(sensor_drive_tbl); i++) {
+		if (cfg->type != sensor_drive_tbl[i].dev)
+			continue;
+
+		if (init_drive_type(cfg, i) == false) {
+			LOG_ERR("reinit drive type fail, sensor num: 0x%x, type: 0x%x", cfg->num,
+				cfg->type);
+			return SENSOR_NOT_FOUND;
+		}
+
+		LOG_DBG("Reinit sensor num: 0x%x, type: 0x%x success", cfg->num, cfg->type);
+
+		break;
+	}
+
+	return 0;
 }
 
 static void drive_init(void)

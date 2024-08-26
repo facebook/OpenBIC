@@ -226,11 +226,11 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA, sensor_dev_ads112c, I2C_BUS3, BPB_ADS112C_4_ADDR,
 	  ADS112C_READ_OUTPUT_RAW, stby_access, ENABLE_RESET_CFG_REG, 0, SAMPLE_COUNT_DEFAULT,
 	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL,
-	  post_ads112c_read, &ads112c_post_args[1], &ads112c_init_args[1] },
+	  post_ads112c_read, &ads112c_post_args[1], &ads112c_init_args[2] },
 	{ SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA, sensor_dev_ads112c, I2C_BUS3, BPB_ADS112C_4_ADDR,
 	  ADS112C_READ_OUTPUT_RAW, stby_access, ENABLE_RESET_CFG_REG, 0, SAMPLE_COUNT_DEFAULT,
 	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL,
-	  post_ads112c_read, &ads112c_post_args[1], &ads112c_init_args[2] },
+	  post_ads112c_read, &ads112c_post_args[1], &ads112c_init_args[1] },
 	{ SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, sensor_dev_ads112c, I2C_BUS5,
 	  BPB_ADS112C_4_ADDR, ADS112C_READ_OUTPUT_RAW, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT,
 	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL,
@@ -833,6 +833,9 @@ sensor_cfg plat_def_sensor_config[] = {
 	  PLAT_DEF_SENSOR_HEX_EXTERNAL_Y_FILTER, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT,
 	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  NULL },
+	{ SENSOR_NUM_FAN_PRSNT, sensor_dev_plat_def_sensor, 0, 0, PLAT_DEF_SENSOR_FAN_PRSNT,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 };
 
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) +
@@ -1275,6 +1278,14 @@ static uint8_t plat_def_sensor_read(sensor_cfg *cfg, int *reading)
 		val = pressure_difference_val(SENSOR_NUM_BPB_RACK_PRESSURE_3_P_KPA,
 					      SENSOR_NUM_BPB_RACK_PRESSURE_4_P_KPA);
 		break;
+	case PLAT_DEF_SENSOR_FAN_PRSNT: {
+		uint16_t tmp_prsnt = 0;
+		get_fb_present_status(&tmp_prsnt);
+
+		sensor_val *sval = (sensor_val *)reading;
+		sval->integer = tmp_prsnt;
+		return SENSOR_READ_SUCCESS;
+	}
 	default:
 		LOG_ERR("0x%02x unknow plat sensor type %d", cfg->num, type);
 		return SENSOR_PARAMETER_NOT_VALID;
