@@ -37,6 +37,9 @@ LOG_MODULE_REGISTER(plat_ipmi);
 #define VIRTUAL_RETIMER_PRSNT_PIN_IDX 64
 #define VIRTUAL_RETIMER_PRSNT_PIN_IDX_REAL 58
 
+#define VIRTUAL_SATMC_READY_PIN_IDX 65
+#define VIRTUAL_SATMC_READY_PIN_IDX_REAL 59
+
 bool pal_request_msg_to_BIC_from_HOST(uint8_t netfn, uint8_t cmd)
 {
 	if (netfn == NETFN_OEM_1S_REQ) {
@@ -179,6 +182,8 @@ void OEM_1S_GET_GPIO(ipmi_msg *msg)
 			tmp_gpio_idx = VIRTUAL_E1S_PRSNT_PIN_IDX_REAL;
 		else if (i == WORK_AROUND_BIOS_DEBUG_PIN_IDX)
 			tmp_gpio_idx = WORK_AROUND_BIOS_DEBUG_PIN_IDX_REAL;
+		else if (i == VIRTUAL_SATMC_READY_PIN_IDX)
+			tmp_gpio_idx = VIRTUAL_SATMC_READY_PIN_IDX_REAL;
 		else if (i >= WORK_AROUND_BIOS_DEBUG_PIN_IDX_REAL &&
 			 i < (VIRTUAL_E1S_PRSNT_PIN_IDX_REAL - 1))
 			tmp_gpio_idx = i + 1;
@@ -187,7 +192,7 @@ void OEM_1S_GET_GPIO(ipmi_msg *msg)
 			tmp_gpio_idx = i + 2;
 		else if (i >= (VIRTUAL_RETIMER_PRSNT_PIN_IDX_REAL - 2) &&
 			 i < WORK_AROUND_BIOS_DEBUG_PIN_IDX)
-			tmp_gpio_idx = i + 3;
+			tmp_gpio_idx = i + 4;
 		else
 			tmp_gpio_idx = i;
 
@@ -248,6 +253,8 @@ uint8_t gpio_idx_exchange(ipmi_msg *msg)
 			msg->data[1] = VIRTUAL_E1S_PRSNT_PIN_IDX_REAL;
 		else if (msg->data[1] == WORK_AROUND_BIOS_DEBUG_PIN_IDX)
 			msg->data[1] = WORK_AROUND_BIOS_DEBUG_PIN_IDX_REAL;
+		else if (msg->data[1] == VIRTUAL_SATMC_READY_PIN_IDX)
+			msg->data[1] = VIRTUAL_SATMC_READY_PIN_IDX_REAL;
 		else if (msg->data[1] >= WORK_AROUND_BIOS_DEBUG_PIN_IDX_REAL &&
 			 msg->data[1] < (VIRTUAL_E1S_PRSNT_PIN_IDX_REAL - 1))
 			msg->data[1]++;
@@ -256,7 +263,7 @@ uint8_t gpio_idx_exchange(ipmi_msg *msg)
 			msg->data[1] += 2;
 		else if (msg->data[1] >= (VIRTUAL_RETIMER_PRSNT_PIN_IDX_REAL - 2) &&
 			 msg->data[1] < WORK_AROUND_BIOS_DEBUG_PIN_IDX)
-			msg->data[1] += 3;
+			msg->data[1] += 4;
 
 		msg->data[1] = gpio_ind_to_num_table[msg->data[1]];
 	}
