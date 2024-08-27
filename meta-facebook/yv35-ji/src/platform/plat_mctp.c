@@ -21,6 +21,7 @@
 #include "plat_i2c.h"
 #include "hal_i3c.h"
 #include "hal_i2c_target.h"
+#include "plat_power_status.h"
 
 LOG_MODULE_REGISTER(plat_mctp);
 
@@ -46,6 +47,8 @@ static void set_endpoint_resp_handler(void *args, uint8_t *buf, uint16_t len)
 {
 	ARG_UNUSED(args);
 	CHECK_NULL_ARG(buf);
+
+	set_satmc_status(true);
 
 	LOG_HEXDUMP_INF(buf, len, __func__);
 }
@@ -93,6 +96,11 @@ static void set_dev_endpoint(void)
 			mctp_ctrl_send_msg(pal_find_mctp_by_bus(p->bus), &msg);
 		}
 	}
+}
+
+void set_dev_endpoint_global()
+{
+	set_dev_endpoint();
 }
 
 uint8_t get_mctp_info(uint8_t dest_endpoint, mctp **mctp_inst, mctp_ext_params *ext_params)

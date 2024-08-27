@@ -40,5 +40,6 @@ void send_cmd_to_dev_handler(struct k_work *work);
 bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg);
 uint8_t plat_get_mctp_port_count();
 mctp_port *plat_get_mctp_port(uint8_t index);
+void set_dev_endpoint_global();
 
 #endif /* _PLAT_MCTP_h */
