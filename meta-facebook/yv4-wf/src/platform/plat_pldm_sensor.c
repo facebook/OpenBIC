@@ -3432,11 +3432,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 
-			0x00000091, //uint32_t warning_high;
+			0x00000096, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x00000097, //uint32_t critical_high;
+			0x000000C8, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x000000C8, //uint32_t fatal_high;
+			0x00000258, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -3588,11 +3588,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 
-			0x000002EC, //uint32_t warning_high;
+			0x000002EE, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x00000310, //uint32_t critical_high;
+			0x00000320, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x000004B0, //uint32_t fatal_high;
+			0x000005DC, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -3744,11 +3744,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 
-			0x00000091, //uint32_t warning_high;
+			0x00000096, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x00000097, //uint32_t critical_high;
+			0x000000C8, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x000000C8, //uint32_t fatal_high;
+			0x00000258, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -3900,11 +3900,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 
-			0x000002EC, //uint32_t warning_high;
+			0x000002EE, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x00000310, //uint32_t critical_high;
+			0x00000320, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x000004B0, //uint32_t fatal_high;
+			0x000005DC, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
