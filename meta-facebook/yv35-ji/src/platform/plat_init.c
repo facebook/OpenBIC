@@ -39,7 +39,7 @@ SCU_CFG scu_cfg[] = {
 	/* Set GPIOF/G/H internal pull-up/down after gpio init */
 	{ 0x7e6e2614, 0xFFFFFFFF },
 	/* Set GPIOJ/K/L internal pull-up/down after gpio init */
-	{ 0x7e6e2618, 0xCF000000 },
+	{ 0x7e6e2618, 0xDF000000 },
 	/* Set GPIOM/N/O/P internal pull-up/down after gpio init */
 	{ 0x7e6e261c, 0x0000007A },
 	/* Set GPIOQ/R/S/T internal pull-up/down after gpio init */
@@ -69,6 +69,11 @@ void pal_post_init()
 
 	plat_mctp_init();
 	ssif_init();
+
+	if (get_DC_status() == true) {
+		LOG_INF("Try to set satmc eid");
+		set_dev_endpoint_global();
+	}
 }
 
 void pal_device_init()

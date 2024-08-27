@@ -25,5 +25,8 @@ void handle_post_action();
 void reset_post_end_work_status();
 void handle_tda38741_work_around();
 void power_status_monitor();
+bool satmc_access(uint8_t sensor_num);
+void set_satmc_status(bool status);
+bool get_satmc_status();
 
 #endif
