@@ -128,6 +128,86 @@ PDR_INFO *get_pdr_info()
 	return pdr_info;
 }
 
+// Function to convert char16_t string to UTF-8
+void char16_to_char(const char16_t *src, char *dest, size_t max_length)
+{
+	CHECK_NULL_ARG(src);
+	CHECK_NULL_ARG(dest);
+
+	size_t dest_index = 0;
+
+	while (*src && dest_index < max_length - 1) { // Leave space for null terminator
+		uint32_t src_data = *src++;
+
+		if (src_data < 0x80) {
+			// Single-byte character (ASCII)
+			dest[dest_index++] = (char)src_data;
+		} else if (src_data < 0x800) {
+			// Two-byte character
+			if (dest_index + 1 >= max_length - 1)
+				break;
+			dest[dest_index++] = (char)(0xC0 | (src_data >> 6));
+			dest[dest_index++] = (char)(0x80 | (src_data & 0x3F));
+		} else if (src_data < 0x10000) {
+			// Three-byte character
+			if (dest_index + 2 >= max_length - 1)
+				break;
+			dest[dest_index++] = (char)(0xE0 | (src_data >> 12));
+			dest[dest_index++] = (char)(0x80 | ((src_data >> 6) & 0x3F));
+			dest[dest_index++] = (char)(0x80 | (src_data & 0x3F));
+		} else {
+			// Four-byte character
+			if (dest_index + 3 >= max_length - 1)
+				break;
+			dest[dest_index++] = (char)(0xF0 | (src_data >> 18));
+			dest[dest_index++] = (char)(0x80 | ((src_data >> 12) & 0x3F));
+			dest[dest_index++] = (char)(0x80 | ((src_data >> 6) & 0x3F));
+			dest[dest_index++] = (char)(0x80 | (src_data & 0x3F));
+		}
+	}
+
+	dest[dest_index] = '\0'; // Null-terminate the destination string
+}
+
+int pldm_get_sensor_name_via_sensor_id(uint16_t sensor_id, char *sensor_name, size_t max_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(sensor_name, -1);
+
+	for (size_t i = 0; i < plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR); i++) {
+		if (sensor_auxiliary_names_table[i].sensor_id == sensor_id) {
+			PDR_sensor_auxiliary_names *temp_table =
+				(PDR_sensor_auxiliary_names *)malloc(
+					sizeof(*sensor_auxiliary_names_table) *
+					plat_get_pdr_size(PLDM_SENSOR_AUXILIARY_NAMES_PDR));
+			if (!temp_table) {
+				LOG_ERR("temp_table malloc failed!");
+				return -1;
+			}
+			memcpy(temp_table, sensor_auxiliary_names_table,
+			       sizeof(*sensor_auxiliary_names_table) *
+				       plat_get_pdr_size(PLDM_SENSOR_AUXILIARY_NAMES_PDR));
+
+			LOG_HEXDUMP_DBG(temp_table, sizeof(*temp_table), "temp_table");
+
+			uint32_t pdr_count = plat_get_pdr_size(PLDM_SENSOR_AUXILIARY_NAMES_PDR);
+			for (uint32_t i = 0; i < pdr_count; i++) {
+				// Convert sensor name to UTF16-LE
+				for (int j = 0; temp_table[i].sensorName[j] != 0x0000; j++) {
+					temp_table[i].sensorName[j] =
+						sys_cpu_to_be16(temp_table[i].sensorName[j]);
+				}
+			}
+
+			// Convert the char16_t string to UTF-8
+			char16_to_char(temp_table[i].sensorName, sensor_name, max_length);
+
+			free(temp_table);
+			return 0;
+		}
+	}
+	return -1;
+}
+
 int get_pdr_table_via_record_handle(uint8_t *record_data, uint32_t record_handle)
 {
 	uint32_t numeric_sensor_pdr_count = 0, aux_sensor_name_pdr_count = 0,

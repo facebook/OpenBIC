@@ -147,6 +147,7 @@ uint32_t plat_get_pdr_size(uint8_t pdr_type);
 void plat_load_numeric_sensor_pdr_table(PDR_numeric_sensor *numeric_sensor_table);
 void plat_load_aux_sensor_names_pdr_table(PDR_sensor_auxiliary_names *aux_sensor_name_table);
 void plat_load_entity_aux_names_pdr_table(PDR_entity_auxiliary_names *entity_aux_name_table);
+int pldm_get_sensor_name_via_sensor_id(uint16_t sensor_id, char *sensor_name, size_t max_length);
 int get_pdr_table_via_record_handle(uint8_t *record_data, uint32_t record_handle);
 void plat_init_entity_aux_names_pdr_table();
 uint16_t plat_get_pdr_entity_aux_names_size();
