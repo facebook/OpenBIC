@@ -29,6 +29,13 @@
 
 LOG_MODULE_REGISTER(plat_hook);
 
+#define FB_PRSNT_NUM_PER_IOEXP 7
+
+#define FB_PWR_PRSNT_ADDR_EVEN 0x4A // 8 bit address (2, 4, 6, 8, 10, 12, 14)
+#define FB_PWR_PRSNT_ADDR_ODD 0x4E // 8 bit address (1, 3, 5, 7, 9, 11, 13)
+#define FB_SIG_PRSNT_ADDR_EVEN 0x4A // 8 bit address (2, 4, 6, 8, 10, 12, 14)
+#define FB_SIG_PRSNT_ADDR_ODD 0x4E // 8 bit address (1, 3, 5, 7, 9, 11, 13)
+
 K_MUTEX_DEFINE(i2c_1_PCA9546a_mutex);
 K_MUTEX_DEFINE(i2c_2_PCA9546a_mutex);
 K_MUTEX_DEFINE(i2c_6_PCA9546a_mutex);
@@ -532,7 +539,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		// pwm setting
 		.fan_frequency[NCT7363_1_PORT] = 20000, // TO DO wait to check
 		.fan_frequency[NCT7363_2_PORT] = 25000, // TO DO wait to check
-		.duty[NCT7363_1_PORT] = 60,
+		.duty[NCT7363_1_PORT] = 0,
 		.duty[NCT7363_2_PORT] = 60,
 		// fanin setting
 		.fan_poles[NCT7363_5_PORT] = 12, // TO DO wait to check
@@ -558,7 +565,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		// pwm setting
 		.fan_frequency[NCT7363_1_PORT] = 20000, // TO DO wait to check
 		.fan_frequency[NCT7363_2_PORT] = 25000, // TO DO wait to check
-		.duty[NCT7363_1_PORT] = 60,
+		.duty[NCT7363_1_PORT] = 0,
 		.duty[NCT7363_2_PORT] = 60,
 		// fanin setting
 		.fan_poles[NCT7363_5_PORT] = 12, // TO DO wait to check
@@ -584,7 +591,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		// pwm setting
 		.fan_frequency[NCT7363_1_PORT] = 20000, // TO DO wait to check
 		.fan_frequency[NCT7363_2_PORT] = 25000, // TO DO wait to check
-		.duty[NCT7363_1_PORT] = 60,
+		.duty[NCT7363_1_PORT] = 0,
 		.duty[NCT7363_2_PORT] = 60,
 		// fanin setting
 		.fan_poles[NCT7363_5_PORT] = 12, // TO DO wait to check
@@ -1061,12 +1068,14 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 	return true;
 }
 
-static bool update_fb_present_status(uint16_t *fb_present_status)
+/**
+ * return fan board power cable present status
+ * 1: present, 0: not present
+ */
+static uint16_t get_fb_pwr_prsnt(void)
 {
-	CHECK_NULL_ARG_WITH_RETURN(fb_present_status, false);
-
 	/* worst case assume all fan boards present */
-	*fb_present_status = 0xffff;
+	uint16_t prsnt = 0x3fff;
 
 	/**
 	 * since the fan board present status is in the pdb io expander,
@@ -1074,48 +1083,100 @@ static bool update_fb_present_status(uint16_t *fb_present_status)
 	 */
 	sensor_cfg *cfg = get_common_sensor_cfg_info(SENSOR_NUM_PDB_HDC1080DMBR_TEMP_C);
 	if (cfg == NULL) {
-		LOG_ERR("Failed to get sensor config info in update_fb_present_status");
-		return false;
+		LOG_ERR("Failed to get sensor config info in get_fb_pwr_prsnt");
+		return prsnt;
 	}
 
-	if (pre_PCA9546A_read(cfg, bus_9_PCA9546A_configs + 1) == false) {
-		LOG_ERR("Failed to set mux channel in update_fb_present_status");
-		return false;
+	if (pre_PCA9546A_read(cfg, cfg->pre_sensor_read_args) == false) {
+		LOG_ERR("Failed to set mux channel in get_fb_pwr_prsnt");
+		return prsnt;
 	}
-
-	bool ret = true;
 
 	/* read the fan board present status */
 	const uint8_t i2c_retry = 3;
 	uint8_t input_reg = 0;
-	I2C_MSG msg =
-		construct_i2c_message(I2C_BUS9, 0x25, 1, &input_reg, 1); // read 1 - 8 io expander
+	I2C_MSG msg = construct_i2c_message(I2C_BUS9, FB_PWR_PRSNT_ADDR_EVEN >> 1, 1, &input_reg,
+					    1); // read even io expander
 	if (i2c_master_read(&msg, i2c_retry)) {
-		LOG_ERR("Failed to read pdb io expander");
-		ret = false;
+		LOG_ERR("Failed to read pdb io expander %x", FB_PWR_PRSNT_ADDR_EVEN);
 		goto exit;
 	}
 
-	*fb_present_status &= ~msg.data[0];
+	for (uint8_t i = 0; i < FB_PRSNT_NUM_PER_IOEXP; i++)
+		WRITE_BIT(prsnt, i * 2 + 1, !((msg.data[0] >> i) & 0x01));
 
-	msg = construct_i2c_message(I2C_BUS9, 0x27, 1, &input_reg, 1); // read 9 - 16 io expander
+	msg = construct_i2c_message(I2C_BUS9, FB_PWR_PRSNT_ADDR_ODD >> 1, 1, &input_reg,
+				    1); // read odd io expander
 	if (i2c_master_read(&msg, i2c_retry)) {
-		LOG_ERR("Failed to read pdb io expander");
-		ret = false;
+		LOG_ERR("Failed to read pdb io expander %x", FB_PWR_PRSNT_ADDR_ODD);
 		goto exit;
 	}
 
-	*fb_present_status &= ~(msg.data[0] << 8);
+	for (uint8_t i = 0; i < FB_PRSNT_NUM_PER_IOEXP; i++)
+		WRITE_BIT(prsnt, i * 2, !((msg.data[0] >> i) & 0x01));
+
+	LOG_INF("pwr prsnt = %x", prsnt);
 
 exit:
-	if (post_PCA9546A_read(cfg, bus_9_PCA9546A_configs + 1, NULL) == false) {
-		LOG_ERR("Failed to set mux channel in update_fb_present_status");
-		ret = false;
-	}
+	if (post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, NULL) == false)
+		LOG_ERR("Failed to set mux channel in get_fb_pwr_prsnt");
 
-	return ret;
+	return prsnt;
 }
 
+/*
+ * return fan board signal cable present status
+ * 1: present, 0: not present
+ */
+static uint16_t get_fb_sig_prsnt(void)
+{
+	/* worst case assume all fan boards present */
+	uint16_t prsnt = 0x3fff;
+
+	/* read the fan board present status */
+	const uint8_t i2c_retry = 3;
+	uint8_t input_reg = 0;
+	I2C_MSG msg = construct_i2c_message(I2C_BUS4, FB_SIG_PRSNT_ADDR_EVEN >> 1, 1, &input_reg,
+					    1); // read even io expander
+	if (i2c_master_read(&msg, i2c_retry)) {
+		LOG_ERR("Failed to read backplane io expander %x", FB_SIG_PRSNT_ADDR_EVEN);
+		goto exit;
+	}
+
+	for (uint8_t i = 0; i < FB_PRSNT_NUM_PER_IOEXP; i++)
+		WRITE_BIT(prsnt, i * 2 + 1, !((msg.data[0] >> i) & 0x01));
+
+	msg = construct_i2c_message(I2C_BUS4, FB_SIG_PRSNT_ADDR_ODD >> 1, 1, &input_reg,
+				    1); // read odd io expander
+	if (i2c_master_read(&msg, i2c_retry)) {
+		LOG_ERR("Failed to read backplane io expander %x", FB_SIG_PRSNT_ADDR_ODD);
+		goto exit;
+	}
+
+	for (uint8_t i = 0; i < FB_PRSNT_NUM_PER_IOEXP; i++)
+		WRITE_BIT(prsnt, i * 2, !((msg.data[0] >> i) & 0x01));
+
+	LOG_INF("sig prsnt = %x", prsnt);
+
+exit:
+	return prsnt;
+}
+
+bool get_fb_present_status(uint16_t *fb_present_status)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fb_present_status, false);
+
+	const uint16_t pwr_prsnt = get_fb_pwr_prsnt();
+	const uint16_t sig_prsnt = get_fb_sig_prsnt();
+
+	*fb_present_status = pwr_prsnt & sig_prsnt;
+	LOG_INF("pwr_prsnt = %x, sig_prsnt = %x, fb_present_status = %x", pwr_prsnt, sig_prsnt,
+		*fb_present_status);
+
+	return true;
+}
+
+#if 0
 static uint8_t get_fb_index(uint8_t sen_num)
 {
 	sensor_cfg *cfg = get_common_sensor_cfg_info(sen_num);
@@ -1145,22 +1206,4 @@ static uint8_t get_fb_index(uint8_t sen_num)
 
 	return index;
 }
-
-bool is_fb_prsnt(uint8_t sen_num)
-{
-	static uint16_t fb_present_status = 0;
-
-	/* first polling sensor, update the fan present status */
-	if (sen_num == SENSOR_NUM_FB_1_FAN_TACH_RPM) {
-		update_fb_present_status(&fb_present_status);
-		LOG_INF("fb_present_status = %x", fb_present_status);
-	}
-
-	const uint8_t fb_idx = get_fb_index(sen_num);
-	if (fb_idx == 0xff) {
-		LOG_ERR("Failed to get fb index in is_fb_prsnt");
-		return false;
-	}
-
-	return (fb_present_status & (1 << fb_idx)) ? true : false;
-}
+#endif

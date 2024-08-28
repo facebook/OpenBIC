@@ -51,6 +51,8 @@ LOG_MODULE_REGISTER(isl69259);
 #define VR_RAA_REG_GEN2_REMAIN_WR 0xC2
 #define VR_RAA_REG_GEN2_PROG_STATUS 0x07
 
+#define ISL69259_READ_VOUT_RESOLUTION 0.001
+
 enum {
 	RAA_GEN2,
 	RAA_GEN3_LEGACY,
@@ -530,6 +532,16 @@ uint8_t isl69259_read(sensor_cfg *cfg, int *reading)
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
+	bool vout_scale_enable = false;
+	float vout_scale = 1.0;
+
+	if (cfg->init_args != NULL) {
+		isl69259_init_arg *init_arg = (isl69259_init_arg *)cfg->init_args;
+		vout_scale_enable = init_arg->vout_scale_enable;
+		if (vout_scale_enable)
+			vout_scale = init_arg->vout_scale;
+	}
+
 	bool ret = false;
 	uint8_t retry = 5;
 	int val = 0;
@@ -551,12 +563,15 @@ uint8_t isl69259_read(sensor_cfg *cfg, int *reading)
 
 	uint8_t offset = cfg->offset;
 	val = (msg.data[1] << 8) | msg.data[0];
+	float vout_val;
 
 	switch (offset) {
 	case PMBUS_READ_VOUT:
 		/* 1 mV/LSB, unsigned integer */
-		sval->integer = val / 1000;
-		sval->fraction = val % 1000;
+		vout_val = ((float)val * ISL69259_READ_VOUT_RESOLUTION) / vout_scale;
+
+		sval->integer = vout_val;
+		sval->fraction = (vout_val - sval->integer) * 1000;
 		break;
 	case PMBUS_READ_IOUT:
 		/* 0.1 A/LSB, 2's complement */

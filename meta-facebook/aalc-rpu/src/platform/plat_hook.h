@@ -31,6 +31,8 @@
 #include "xdp710.h"
 #include "e50sn12051.h"
 
+#define HEX_FAN_NUM 14
+
 #define BUS_1_MUX_ADDR 0xE0 >> 1
 #define BUS_2_MUX_ADDR 0xE2 >> 1
 #define BUS_6_MUX_ADDR 0xE4 >> 1
@@ -89,6 +91,6 @@ bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading);
 bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading);
 bool pre_PCA9546A_read(sensor_cfg *cfg, void *args);
 bool post_PCA9546A_read(sensor_cfg *cfg, void *args, int *reading);
-bool is_fb_prsnt(uint8_t sen_num);
+bool get_fb_present_status(uint16_t *fb_present_status);
 
 #endif

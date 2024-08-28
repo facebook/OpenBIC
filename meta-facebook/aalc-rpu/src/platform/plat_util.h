@@ -19,4 +19,5 @@ void regs_reverse(uint16_t reg_len, uint16_t *data);
 void plat_enable_sensor_poll();
 void plat_disable_sensor_poll();
 void set_rpu_ready();
+uint8_t get_rpu_ready_pin_status();
 float pow_of_10(int8_t exp);

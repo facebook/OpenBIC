@@ -115,6 +115,42 @@ void ISR_RTC_ALERT()
 	isr_dbg_print(I2C_2_CPU_ALERT_R_L);
 }
 
+#define SATMC_POLL_INTERVAL 8000 // ms
+K_MUTEX_DEFINE(satmc_access_poll_mutex);
+void satmc_access_poll_handler(struct k_work *work)
+{
+	if (k_mutex_lock(&satmc_access_poll_mutex, K_MSEC(1000))) {
+		LOG_ERR("Mutex lock failed");
+		return;
+	}
+
+	while (1) {
+		if (CPU_power_good() == false)
+			break;
+		if (get_satmc_status() == true)
+			break;
+		LOG_INF("Try to set eid to SatMC...");
+		set_dev_endpoint_global();
+		k_msleep(SATMC_POLL_INTERVAL);
+	}
+
+	if (k_mutex_unlock(&satmc_access_poll_mutex)) {
+		LOG_ERR("Mutex unlock failed");
+	}
+}
+
+K_WORK_DEFINE(set_eid_work, satmc_access_poll_handler);
+
+void check_host_reboot_status()
+{
+	if (get_DC_status() == true) {
+		LOG_WRN("Host reboot detected!");
+		k_work_submit(&set_eid_work);
+	}
+}
+
+#define POST_DOWN_2_SECOND 2
+K_WORK_DELAYABLE_DEFINE(check_host_reboot_work, check_host_reboot_status);
 void ISR_POST_COMPLETE()
 {
 	isr_dbg_print(FPGA_CPU_BOOT_DONE_L);
@@ -128,6 +164,8 @@ void ISR_POST_COMPLETE()
 			reset_post_end_work_status();
 			sbmr_reset_9byte_postcode_ok();
 			reset_ssif_ok();
+			set_satmc_status(false);
+			k_work_schedule(&check_host_reboot_work, K_SECONDS(POST_DOWN_2_SECOND));
 		}
 	}
 }
@@ -238,7 +276,7 @@ static void read_cpu_power_seq_status(struct k_work *work)
 		return;
 	}
 
-	LOG_WRN("CPU power seq state: 0x%x", i2c_msg.data[0]);
+	LOG_INF("CPU power seq state: 0x%x", i2c_msg.data[0]);
 
 	/* if cpu abnormal off, add SEL, it might trigger from CPU or VR. */
 	if (i2c_msg.data[0] == CPU_SHDN_STATE) {
@@ -257,6 +295,13 @@ static void read_cpu_power_seq_status(struct k_work *work)
 	}
 }
 
+void satmc_access_polling(struct k_timer *timer)
+{
+	k_work_submit(&set_eid_work);
+}
+
+K_TIMER_DEFINE(try_to_access_satmc, satmc_access_polling, NULL);
+
 K_WORK_DELAYABLE_DEFINE(read_cpu_power_seq_status_work, read_cpu_power_seq_status);
 K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_delayed_status);
 K_WORK_DELAYABLE_DEFINE(PROC_FAIL_work, PROC_FAIL_handler);
@@ -274,7 +319,10 @@ void ISR_PWRGD_CPU()
 		k_work_schedule(&set_DC_on_5s_work, K_SECONDS(DC_ON_5_SECOND));
 		k_work_schedule_for_queue(&plat_work_q, &PROC_FAIL_work,
 					  K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
+		k_timer_start(&try_to_access_satmc, K_NO_WAIT, K_NO_WAIT);
 	} else {
+		set_satmc_status(false);
+
 		/* Pull high virtual bios complete pin */
 		handle_post_status(GPIO_HIGH, true);
 		reset_post_end_work_status();

@@ -1,0 +1,111 @@
+From 5b8d464326ef0b22f544d522d0234a08cf03fcfd Mon Sep 17 00:00:00 2001
+From: cpchiang <cpchiang1@nuvoton.com>
+Date: Mon, 8 Jul 2024 01:50:49 -0700
+Subject: [PATCH] Revert "drivers: i3c: modify i3c_dev_desc for OpenBic
+ compatibility"
+
+This reverts commit 25b970b88bc5ae2d1147da49559ab1bf046ecfde.
+---
+ drivers/i3c/i3c_npcm4xx.c | 16 ++++++++--------
+ drivers/i3c/i3c_shell.c   |  2 +-
+ include/drivers/i3c/i3c.h |  2 +-
+ 3 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/i3c/i3c_npcm4xx.c b/drivers/i3c/i3c_npcm4xx.c
+index 09a8de2ca3..8f9ddb29db 100644
+--- a/drivers/i3c/i3c_npcm4xx.c
++++ b/drivers/i3c/i3c_npcm4xx.c
+@@ -2182,7 +2182,7 @@ int i3c_npcm4xx_master_attach_device(const struct device *dev, struct i3c_dev_de
+ 		pBus = pDevice->pOwner;
+ 
+ 		/* assign dev as slave's bus controller */
+-		slave->master_dev = dev;
++		slave->bus = dev;
+ 
+ 		/* find a free position from master's hw_dat_free_pos */
+ 		for (i = 0; i < DEVICE_COUNT_MAX; i++) {
+@@ -2232,13 +2232,13 @@ int i3c_npcm4xx_master_attach_device(const struct device *dev, struct i3c_dev_de
+ 		pBus = pDeviceSlv->pOwner;
+ 
+ 		/* bus owner outside the devicetree */
+-		slave->master_dev = NULL;
++		slave->bus = NULL;
+ 	}
+ 
+ 	if (pBus == NULL)
+ 		return -ENXIO;
+ 
+-	if (slave->master_dev == NULL)
++	if (slave->bus == NULL)
+ 		return 0;
+ 
+ 	if ((slave->info.static_addr == 0x6A) || (slave->info.static_addr == 0x6B)) {
+@@ -2368,7 +2368,7 @@ int i3c_npcm4xx_master_request_ibi(struct i3c_dev_desc *i3cdev, struct i3c_ibi_c
+ 
+ int i3c_npcm4xx_master_enable_ibi(struct i3c_dev_desc *i3cdev)
+ {
+-	struct i3c_npcm4xx_obj *obj = DEV_DATA(i3cdev->master_dev);
++	struct i3c_npcm4xx_obj *obj = DEV_DATA(i3cdev->bus);
+ 	/* struct i3c_register_s *i3c_register = obj->config->base; */
+ 	struct i3c_npcm4xx_dev_priv *priv = DESC_PRIV(i3cdev);
+ 	/* union i3c_dev_addr_tbl_s dat; */
+@@ -2447,7 +2447,7 @@ int i3c_npcm4xx_master_enable_ibi(struct i3c_dev_desc *i3cdev)
+ 	 * i3c_register->intr_signal_en.value = intr_reg.value;
+ 	 */
+ 
+-	return i3c_master_send_enec(i3cdev->master_dev, i3cdev->info.dynamic_addr, I3C_CCC_EVT_SIR);
++	return i3c_master_send_enec(i3cdev->bus, i3cdev->info.dynamic_addr, I3C_CCC_EVT_SIR);
+ }
+ 
+ int i3c_npcm4xx_slave_register(const struct device *dev, struct i3c_slave_setup *slave_data)
+@@ -2999,7 +2999,7 @@ int i3c_npcm4xx_master_send_ccc(const struct device *dev, struct i3c_ccc_cmd *cc
+ int i3c_npcm4xx_master_priv_xfer(struct i3c_dev_desc *i3cdev, struct i3c_priv_xfer *xfers,
+ 	int nxfers)
+ {
+-	struct i3c_npcm4xx_obj *obj = DEV_DATA(i3cdev->master_dev);
++	struct i3c_npcm4xx_obj *obj = DEV_DATA(i3cdev->bus);
+ 	struct i3c_npcm4xx_dev_priv *priv = DESC_PRIV(i3cdev);
+ 	struct i3c_npcm4xx_xfer xfer;
+ 	struct i3c_npcm4xx_cmd *cmds, *cmd;
+@@ -3156,10 +3156,10 @@ int i3c_npcm4xx_master_send_entdaa(struct i3c_dev_desc *i3cdev)
+ 	uint16_t rxlen = 63;
+ 	uint8_t RxBuf_expected[63];
+ 
+-	config = DEV_CFG(i3cdev->master_dev);
++	config = DEV_CFG(i3cdev->bus);
+ 	port = config->inst_id;
+ 
+-	struct i3c_npcm4xx_obj *obj = DEV_DATA(i3cdev->master_dev);
++	struct i3c_npcm4xx_obj *obj = DEV_DATA(i3cdev->bus);
+ 	struct i3c_npcm4xx_dev_priv *priv = DESC_PRIV(i3cdev);
+ 	struct i3c_npcm4xx_xfer xfer;
+ 	struct i3c_npcm4xx_cmd cmd;
+diff --git a/drivers/i3c/i3c_shell.c b/drivers/i3c/i3c_shell.c
+index 8c5cbb3875..af6620a29b 100644
+--- a/drivers/i3c/i3c_shell.c
++++ b/drivers/i3c/i3c_shell.c
+@@ -35,7 +35,7 @@ static struct i3c_dev_desc *find_matching_desc(const struct device *dev, uint8_t
+ 	int i;
+ 
+ 	for (i = 0; i < I3C_SHELL_MAX_DESC_NUM; i++) {
+-		if (i3c_shell_desc_tbl[i].master_dev == dev &&
++		if (i3c_shell_desc_tbl[i].bus == dev &&
+ 		    i3c_shell_desc_tbl[i].info.dynamic_addr == desc_addr) {
+ 			desc = &i3c_shell_desc_tbl[i];
+ 			break;
+diff --git a/include/drivers/i3c/i3c.h b/include/drivers/i3c/i3c.h
+index e407c79e84..490dbb926c 100644
+--- a/include/drivers/i3c/i3c.h
++++ b/include/drivers/i3c/i3c.h
+@@ -95,7 +95,7 @@ struct i3c_device_info {
+  * @param info the device information
+  */
+ struct i3c_dev_desc {
+-	const struct device *master_dev;
++	const struct device *bus;
+ 	struct i3c_device_info info;
+ 	void *priv_data;
+ };
+-- 
+2.25.1
+
