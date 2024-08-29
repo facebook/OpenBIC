@@ -51,7 +51,8 @@ enum DEV_ID_LINE_OFFSET {
 	CRC2_OFFSET = 10,
 };
 
-uint8_t tps536c5_dev_id[] = { 0x54, 0x49, 0x53, 0x6C, 0x50, 0x00 };
+uint8_t tps536c5_dev_id[] = { 0x54, 0x49, 0x53, 0x6C, 0x50, 0x00 }; // CPU0, CPU1
+uint8_t tps53685_dev_id[] = { 0x54, 0x49, 0x53, 0x68, 0x50, 0x00 }; // S3
 
 /*
  * VR image format:
@@ -179,7 +180,8 @@ bool tps536xx_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t im
 	}
 
 	for (int index = 0; index < sizeof(tps536c5_dev_id); index++) {
-		if (config.devid[index] != tps536c5_dev_id[index]) {
+		if (config.devid[index] != tps536c5_dev_id[index] &&
+		    config.devid[index] != tps53685_dev_id[index]) {
 			LOG_ERR("Failed to update firmware, device ID is not matched!");
 			return false;
 		}
@@ -194,8 +196,8 @@ bool tps536xx_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t im
 	if (tps536xx_get_crc(bus, addr, &dev_crc) == true) {
 		uint32_t img_crc = (config.crc[1] << 8) | config.crc[0];
 		if (dev_crc == img_crc) {
-			LOG_ERR("Failed to update firmware becasue CRC is matched!");
-			return false;
+			LOG_WRN("Skipped update firmware becasue CRC is matched! (The revision of image and device is the same.)");
+			return true;
 		}
 	}
 
