@@ -38,8 +38,26 @@ struct sel_event_record {
 	uint8_t event_data[3];
 } __attribute__((__packed__));
 
+struct oem_sel_event_record {
+	uint16_t record_id;
+	uint8_t record_type;
+	uint8_t general_info;
+	uint32_t timestamp;
+	uint8_t failure_event_type;
+	uint8_t rsv_1;
+	uint8_t rsv_2;
+	uint8_t rsv_3;
+	uint8_t failure_event_details;
+	uint8_t pxe_http_fail_type;
+	uint8_t pxe_http_error_code;
+	uint8_t rsv_4;
+} __attribute__((__packed__));
+
 struct ipmi_storage_add_sel_req {
-	struct sel_event_record event;
+	union {
+		struct sel_event_record event;
+		struct oem_sel_event_record oem_event;
+	};
 } __attribute__((__packed__));
 
 struct ipmi_storage_add_sel_resp {

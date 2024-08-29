@@ -179,12 +179,9 @@ void send_cmd_to_dev(struct k_timer *timer)
 	k_work_submit(&send_cmd_work);
 }
 
-bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg)
+bool mctp_add_sel_to_ipmi(struct ipmi_storage_add_sel_req *sel_msg, uint8_t sel_type)
 {
 	CHECK_NULL_ARG_WITH_RETURN(sel_msg, false);
-
-	uint8_t system_event_record = 0x02;
-	uint8_t evt_msg_version = 0x04;
 
 	pldm_msg msg = { 0 };
 	struct mctp_to_ipmi_sel_req req = { 0 };
@@ -192,7 +189,6 @@ bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg)
 	msg.hdr.pldm_type = PLDM_TYPE_OEM;
 	msg.hdr.cmd = PLDM_OEM_IPMI_BRIDGE;
 	msg.hdr.rq = 1;
-
 	msg.buf = (uint8_t *)&req;
 	msg.len = sizeof(struct mctp_to_ipmi_sel_req);
 
@@ -200,15 +196,33 @@ bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg)
 		LOG_ERR("Set IANA fail");
 		return false;
 	}
-
 	req.header.netfn_lun = (NETFN_STORAGE_REQ << 2);
 	req.header.ipmi_cmd = CMD_STORAGE_ADD_SEL;
-	req.req_data.event.record_type = system_event_record;
-	req.req_data.event.gen_id[0] = (MCTP_I3C_BIC_ADDR << 1);
-	req.req_data.event.evm_rev = evt_msg_version;
+	req.req_data = *sel_msg;
 
-	memcpy(&req.req_data.event.sensor_type, &sel_msg->sensor_type,
-	       sizeof(common_addsel_msg_t) - sizeof(uint8_t));
+	switch (sel_type) {
+	case ADD_COMMON_SEL:
+		req.req_data.event.record_type = 0x02; // System Event
+		req.req_data.event.gen_id[0] = (MCTP_I3C_BIC_ADDR << 1);
+		req.req_data.event.evm_rev = 0x04;
+		break;
+
+	case ADD_OEM_SEL:
+		req.req_data.oem_event.record_type = 0xFB; // Unified SEL
+		req.req_data.oem_event.record_id = 0x0000;
+		req.req_data.oem_event.timestamp = 0x00000000;
+		req.req_data.oem_event.rsv_1 = 0xFF;
+		req.req_data.oem_event.rsv_2 = 0xFF;
+		req.req_data.oem_event.rsv_3 = 0xFF;
+		req.req_data.oem_event.failure_event_details = 0xFF;
+		req.req_data.oem_event.pxe_http_fail_type = 0xFF;
+		req.req_data.oem_event.pxe_http_error_code = 0xFF;
+		req.req_data.oem_event.rsv_4 = 0xFF;
+		break;
+
+	default:
+		break;
+	}
 
 	mctp *mctp_inst = NULL;
 	if (get_mctp_info_by_eid(MCTP_EID_BMC, &mctp_inst, &msg.ext_params) == false) {
