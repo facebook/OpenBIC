@@ -50,6 +50,39 @@ struct nv_satmc_sensor_parm satmc_sensor_cfg_list[] = {
 
 const int SATMC_SENSOR_CFG_LIST_SIZE = ARRAY_SIZE(satmc_sensor_cfg_list);
 
+#ifdef ENABLE_SBMR
+#include "sbmr.h"
+sbmr_boot_progress_code_t nv_sbmr_postcode[] = {
+	/* POSTCODE: EFI_NV_FW_BOOT_PC_MB1_START */
+	[0] = {	.type = NV_STATUS_CODE_TYPE_PROG_CODE,
+		.rsvd = 0x0000,
+		.severity = 0x00,
+		.operation = 0x0005,
+		.sub_class = 0x01,
+		.class = 0xC1,
+		.inst = 0x00,
+	},
+	/* ERRORCODE: EFI_NV_HW_DRAM_EC_CHANNEL_LOW_COUNT */
+	[1] = {	.type = NV_STATUS_CODE_TYPE_ERROR_CODE,
+		.rsvd = 0x0000,
+		.severity = 0x90,
+		.operation = 0x0001,
+		.sub_class = 0x05,
+		.class = 0xC0,
+		.inst = 0x00,
+	},
+	/* DEBUGCODE: EFI_NV_HW_DRAM_EC_RETIRED_PAGE_OVERFLOW */
+	[2] = {	.type = NV_STATUS_CODE_TYPE_DEBUG_CODE,
+		.rsvd = 0x0000,
+		.severity = 0x01,
+		.operation = 0x0004,
+		.sub_class = 0x05,
+		.class = 0xC0,
+		.inst = 0x00,
+	},
+};
+#endif
+
 pldm_sensor_pdr_parm *find_sensor_parm_by_id(uint16_t sensor_id)
 {
 	for (int i = 0; i < SATMC_SENSOR_CFG_LIST_SIZE; i++) {

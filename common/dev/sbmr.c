@@ -34,14 +34,15 @@ LOG_MODULE_REGISTER(sbmr);
 #define SMBR_CC_ERR 0x80
 #define SMBR_GROUP_DEF_BODE_CODE 0xAE
 
-#ifndef SMBR_UEFI_BOOT_START_POST_CODE
-#define SMBR_UEFI_BOOT_START_POST_CODE 0xc1010005
-#endif
-
 static sbmr_boot_progress_code_t sbmr_read_buffer[SBMR_POSTCODE_LEN];
 static uint16_t sbmr_read_len = 0, sbmr_read_index = 0;
 static bool sbmr_proc_9byte_postcode_ok = false;
-static bool sbmr_uefi_postcode_ok = false;
+bool sbmr_frb3_flag_clr = false;
+
+__weak void pal_sbmr_postcode_handler(sbmr_boot_progress_code_t boot_progress_code)
+{
+	return;
+}
 
 uint16_t copy_sbmr_read_buffer(uint16_t start, uint16_t length, uint8_t *buffer,
 			       uint16_t buffer_len)
@@ -82,8 +83,7 @@ void sbmr_postcode_insert(sbmr_boot_progress_code_t boot_progress_code)
 
 	sbmr_read_buffer[sbmr_read_index] = boot_progress_code;
 
-	if (boot_progress_code.efi_status_code == SMBR_UEFI_BOOT_START_POST_CODE)
-		sbmr_uefi_postcode_ok = true;
+	pal_sbmr_postcode_handler(boot_progress_code);
 
 	if (sbmr_read_len < SBMR_POSTCODE_LEN)
 		sbmr_read_len++;
@@ -107,12 +107,12 @@ bool sbmr_get_9byte_postcode_ok()
 void sbmr_reset_9byte_postcode_ok()
 {
 	sbmr_proc_9byte_postcode_ok = false;
-	sbmr_uefi_postcode_ok = false;
+	sbmr_frb3_flag_clr = false;
 }
 
 bool sbmr_get_uefi_status()
 {
-	return sbmr_uefi_postcode_ok;
+	return sbmr_frb3_flag_clr;
 }
 
 __weak bool SBMR_SEND_BOOT_PROGRESS_CODE(ipmi_msg *msg)

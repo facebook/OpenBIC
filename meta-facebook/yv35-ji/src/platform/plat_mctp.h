@@ -23,6 +23,11 @@ struct mctp_to_ipmi_header_resp {
 } __attribute__((__packed__));
 ;
 
+enum {
+	ADD_COMMON_SEL = 0x01,
+	ADD_OEM_SEL = 0x02,
+};
+
 struct mctp_to_ipmi_sel_req {
 	struct mctp_to_ipmi_header_req header;
 	struct ipmi_storage_add_sel_req req_data;
@@ -37,7 +42,7 @@ struct mctp_to_ipmi_sel_resp {
 void plat_mctp_init(void);
 void send_cmd_to_dev(struct k_timer *timer);
 void send_cmd_to_dev_handler(struct k_work *work);
-bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg);
+bool mctp_add_sel_to_ipmi(struct ipmi_storage_add_sel_req *sel_msg, uint8_t sel_type);
 uint8_t plat_get_mctp_port_count();
 mctp_port *plat_get_mctp_port(uint8_t index);
 void set_dev_endpoint_global();

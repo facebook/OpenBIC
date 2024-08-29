@@ -47,6 +47,12 @@ enum nv_satmc_sensor_num_table {
 	NV_SATMC_SENSOR_NUM_SPARE_CH_PRESENCE = 0x0250,
 };
 
+#ifdef ENABLE_SBMR
+#define NV_STATUS_CODE_TYPE_PROG_CODE 0x1
+#define NV_STATUS_CODE_TYPE_ERROR_CODE 0x2
+#define NV_STATUS_CODE_TYPE_DEBUG_CODE 0x3
+#endif
+
 /* Y = (mX + b) * 10^r */
 struct nv_satmc_sensor_parm {
 	uint16_t nv_satmc_sensor_id;
