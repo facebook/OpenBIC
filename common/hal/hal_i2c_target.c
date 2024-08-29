@@ -332,6 +332,8 @@ uint8_t i2c_target_read(uint8_t bus_num, uint8_t *buff, uint16_t buff_len, uint1
 	}
 
 	if (buff_len < local_buf.msg_length) {
+		LOG_WRN("Given buff_len is not enough for read-back data, given %d, need %d",
+			buff_len, local_buf.msg_length);
 		memcpy(buff, &(local_buf.msg), buff_len);
 		*msg_len = buff_len;
 	} else {
