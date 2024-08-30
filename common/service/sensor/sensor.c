@@ -140,6 +140,11 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(ads1015)
 	sensor_name_to_num(plat_def_sensor)
 	sensor_name_to_num(e50sn12051)
+	sensor_name_to_num(u50su4p180pmdafc)
+	sensor_name_to_num(bmr313)
+	sensor_name_to_num(mp2891)
+	sensor_name_to_num(raa228238)
+	sensor_name_to_num(mpc12109)
 };
 // clang-format on
 
@@ -324,6 +329,21 @@ SENSOR_DRIVE_INIT_DECLARE(plat_def_sensor);
 #endif
 #ifdef ENABLE_PLAT_DEF_SENSOR
 SENSOR_DRIVE_INIT_DECLARE(e50sn12051);
+#endif
+#ifdef ENABLE_U50SU4P180PMDAFC
+SENSOR_DRIVE_INIT_DECLARE(u50su4p180pmdafc);
+#endif
+#ifdef ENABLE_BMR313
+SENSOR_DRIVE_INIT_DECLARE(bmr313);
+#endif
+#ifdef ENABLE_MP2891
+SENSOR_DRIVE_INIT_DECLARE(mp2891);
+#endif
+#ifdef ENABLE_RAA228238
+SENSOR_DRIVE_INIT_DECLARE(raa228238);
+#endif
+#ifdef ENABLE_MPC12109
+SENSOR_DRIVE_INIT_DECLARE(mpc12109);
 #endif
 
 // The sequence needs to same with SENSOR_DEV ID
@@ -635,6 +655,31 @@ sensor_drive_api sensor_drive_tbl[] = {
 	SENSOR_DRIVE_TYPE_INIT_MAP(e50sn12051),
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(e50sn12051),
+#endif
+#ifdef ENABLE_U50SU4P180PMDAFC
+	SENSOR_DRIVE_TYPE_INIT_MAP(u50su4p180pmdafc),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(u50su4p180pmdafc),
+#endif
+#ifdef ENABLE_BMR313
+	SENSOR_DRIVE_TYPE_INIT_MAP(bmr313),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(bmr313),
+#endif
+#ifdef ENABLE_MP2891
+	SENSOR_DRIVE_TYPE_INIT_MAP(mp2891),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(mp2891),
+#endif
+#ifdef ENABLE_RAA228238
+	SENSOR_DRIVE_TYPE_INIT_MAP(raa228238),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(raa228238),
+#endif
+#ifdef ENABLE_MPC12109
+	SENSOR_DRIVE_TYPE_INIT_MAP(mpc12109),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(mpc12109),
 #endif
 };
 
