@@ -295,7 +295,7 @@ pump_reset_struct modbus_pump_setting_table[] = {
 	{ MANUAL_CONTROL_FAN, modbus_pump_setting_unsupport_function, 0 },
 	{ AUTOTUNE_FLOW_CONTROL, modbus_pump_setting_unsupport_function, 0 },
 	{ AUTOTUNE_PRESSURE_BALANCE_CONTROL, modbus_pump_setting_unsupport_function, 0 },
-	{ SYSTEM_STOP, modbus_pump_setting_unsupport_function, 0 },
+	{ SYSTEM_STOP, close_pump, 0 },
 	{ RPU_REMOTE_POWER_CYCLE, rpu_remote_power_cycle_function, 0 },
 	{ MANUAL_CONTROL, modbus_pump_setting_unsupport_function, 0 },
 	{ CLEAR_PUMP_RUNNING_TIME, modbus_pump_setting_unsupport_function, 0 },
@@ -408,9 +408,11 @@ uint8_t modbus_set_manual_pwm(modbus_command_mapping *cmd)
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
 	uint8_t idx = cmd->arg0;
+	uint8_t group = cmd->arg1; // temporary function
 	uint8_t duty = (uint8_t)cmd->data[0];
 
 	set_manual_pwm_cache(idx, duty);
+	set_pwm_group(group, duty); // temporary function
 
 	return MODBUS_EXC_NONE;
 }
@@ -553,8 +555,22 @@ uint8_t modbus_set_rpu_addr(modbus_command_mapping *cmd)
 
 	uint8_t addr = (uint8_t)cmd->data[0];
 
-	if (change_modbus_slave_addr(0, addr))
+	uint8_t pre_addr = MODBUS_UART_NODE_ADDR;
+	if (!plat_eeprom_read(EEPROM_RPU_ADDR_OFFSET, &pre_addr, EEPROM_RPU_ADDR_VERSION_SIZE)) {
+		LOG_ERR("read rpu addr fail!");
 		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+	}
+
+	if (memcmp(&pre_addr, &addr, EEPROM_RPU_ADDR_VERSION_SIZE)) {
+		if (!plat_eeprom_write(EEPROM_RPU_ADDR_OFFSET, &addr,
+				       EEPROM_RPU_ADDR_VERSION_SIZE)) {
+			LOG_ERR("write rpu addr fail!");
+			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+
+		if (change_modbus_slave_addr(0, addr))
+			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+	}
 
 	return MODBUS_EXC_NONE;
 }
@@ -970,6 +986,16 @@ modbus_command_mapping modbus_command_table[] = {
 	  1 },
 	{ MODBUS_HEX_FAN_ALARM_2_ADDR, NULL, modbus_get_aalc_sensor_status, HEX_FAN_ALARM_2, 0, 0,
 	  1 },
+	{ MODBUS_HEX_FAN_COMMS_ALARM_ADDR, NULL, modbus_get_aalc_sensor_status, HEX_FAN_COMMS_ALARM,
+	  0, 0, 1 },
+	{ MODBUS_HSC_POWER_STATUS_ADDR, NULL, modbus_get_aalc_sensor_status, HSC_POWER_STATUS, 0, 0,
+	  1 },
+	{ MODBUS_FB_HSC_POWER_STATUS_ADDR, NULL, modbus_get_aalc_sensor_status, FB_HSC_POWER_STATUS,
+	  0, 0, 1 },
+	{ MODBUS_HSC_COMMS_STATUS_ADDR, NULL, modbus_get_aalc_sensor_status, HSC_COMMS_STATUS, 0, 0,
+	  1 },
+	{ MODBUS_FB_HSC_COMMS_STATUS_ADDR, NULL, modbus_get_aalc_sensor_status, FB_HSC_COMMS_STATUS,
+	  0, 0, 1 },
 	{ MODBUS_MODBUS_ADDR_PATH_WITH_WEDGE400_ADDR, modbus_set_rpu_addr, modbus_get_rpu_addr, 0,
 	  0, 0, 1 },
 	{ MODBUS_MANUAL_CONTROL_RPU_FAN_ON_OFF_ADDR, modbus_set_manual_flag, modbus_get_manual_flag,
@@ -982,17 +1008,25 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_PUMP_REDUNDANT_SWITCHED_INTERVAL_ADDR, modbus_to_do_set, modbus_to_do_get, 0, 0, 0,
 	  1 },
 	{ MODBUS_MANUAL_CONTROL_PUMP_DUTY_SET_ADDR, modbus_set_manual_pwm, modbus_get_manual_pwm,
-	  MANUAL_PWM_E_PUMP, 0, 0, 1 },
+	  MANUAL_PWM_E_PUMP, PWM_GROUP_E_PUMP, 0, 1 },
 	{ MODBUS_MANUAL_CONTROL_FAN_DUTY_SET_ADDR, modbus_set_manual_pwm, modbus_get_manual_pwm,
-	  MANUAL_PWM_E_HEX_FAN, 0, 0, 1 },
+	  MANUAL_PWM_E_HEX_FAN, PWM_GROUP_E_HEX_FAN, 0, 1 },
 	{ MODBUS_MANUAL_CONTROL_RPU_FAN_DUTY_SET_ADDR, modbus_set_manual_pwm, modbus_get_manual_pwm,
-	  MANUAL_PWM_E_RPU_FAN, 0, 0, 1 },
+	  MANUAL_PWM_E_RPU_FAN, PWM_GROUP_E_RPU_FAN, 0, 1 },
 	{ MODBUS_MANUAL_CONTROL_PUMP1_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 0,
 	  PWM_DEVICE_E_PB_PUMB_1, 0, 1 },
 	{ MODBUS_MANUAL_CONTROL_PUMP2_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 0,
 	  PWM_DEVICE_E_PB_PUMB_2, 0, 1 },
 	{ MODBUS_MANUAL_CONTROL_PUMP3_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 0,
 	  PWM_DEVICE_E_PB_PUMB_3, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_PUMP_FAN_1_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 0,
+	  PWM_DEVICE_E_PB_PUMB_FAN_1, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_PUMP_FAN_2_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 0,
+	  PWM_DEVICE_E_PB_PUMB_FAN_2, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_PUMP_FAN_3_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 0,
+	  PWM_DEVICE_E_PB_PUMB_FAN_3, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_RPU_PCB_FAN_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 0,
+	  PWM_DEVICE_E_BB_FAN, 0, 1 },
 	{ MODBUS_PUMP_SETTING_ADDR, modbus_pump_setting, modbus_pump_setting_get, 0, 0, 0, 1 },
 	{ MODBUS_LEAKAGE_SETTING_ON_ADDR, modbus_to_do_set, modbus_to_do_get, 0, 0, 0, 1 },
 	// Leakage Black Box
@@ -1292,6 +1326,22 @@ int init_custom_modbus_server(void)
 	int server_iface;
 	int ret = 0; // 0: success
 	for (uint8_t i = 0; i < ARRAY_SIZE(modbus_server_config); i++) {
+		uint8_t addr = MODBUS_UART_NODE_ADDR;
+		// modbus 0 read addr from eeprom
+		if (i == 0) {
+			if (!plat_eeprom_read(EEPROM_RPU_ADDR_OFFSET, &addr,
+					      EEPROM_HMI_VERSION_SIZE)) {
+				LOG_ERR("read modbus0 addr fail!");
+				return -ENODEV;
+			}
+
+			// default eeprom val
+			if (addr == 0xFF)
+				addr = MODBUS_UART_NODE_ADDR;
+		}
+
+		server_param.server.unit_id = addr;
+
 		server_iface = modbus_iface_get_by_name(modbus_server_config[i].iface_name);
 
 		if (server_iface < 0) {

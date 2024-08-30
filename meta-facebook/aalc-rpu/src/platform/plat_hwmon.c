@@ -84,6 +84,17 @@ bool pump_reset(pump_reset_struct *data, uint8_t bit_val)
 	}
 }
 
+bool close_pump(pump_reset_struct *data, uint8_t bit_val)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+
+	if (bit_val == 0) // do nothing
+		return true;
+
+	set_pwm_group(PWM_GROUP_E_PUMP, 0);
+	return true;
+}
+
 bool set_all_pump_power(bool switch_val)
 {
 	static uint8_t pump_sensor_nums[] = { SENSOR_NUM_PB_1_PUMP_TACH_RPM,

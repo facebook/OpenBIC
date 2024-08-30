@@ -36,16 +36,14 @@ void emergency_button_action()
 {
 	if (gpio_get(CDU_PWR_BTN)) {
 		// pump recovery
-		if (pump_status_recovery())
-			set_pwm_group(PWM_GROUP_E_PUMP, 60);
+		if (system_failure_recovery())
+			ctl_all_pwm_dev(60);
+		if (rpu_ready_recovery())
+			set_all_rpu_ready_pin_normal();
 	} else {
 		ctl_all_pwm_dev(0);
-	}
-
-	if (rpu_ready_recovery())
-		set_all_rpu_ready_pin_normal();
-	else
 		deassert_all_rpu_ready_pin();
+	}
 }
 
 void fault_leak_action()
