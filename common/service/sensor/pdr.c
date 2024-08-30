@@ -15,6 +15,7 @@ uint32_t total_record_count = 0;
 PDR_INFO *pdr_info = NULL;
 PDR_numeric_sensor *numeric_sensor_table = NULL;
 PDR_sensor_auxiliary_names *sensor_auxiliary_names_table = NULL;
+PDR_entity_auxiliary_names *entity_auxiliary_names_table = NULL;
 
 int pdr_init(void)
 {
@@ -77,6 +78,39 @@ int pdr_init(void)
 		}
 	}
 
+	pdr_count = plat_get_pdr_size(PLDM_ENTITY_AUXILIARY_NAMES_PDR);
+	if (pdr_count != 0) {
+		plat_init_entity_aux_names_pdr_table();
+		total_record_count += pdr_count;
+		entity_auxiliary_names_table = (PDR_entity_auxiliary_names *)malloc(
+			pdr_count * plat_get_pdr_entity_aux_names_size());
+		plat_load_entity_aux_names_pdr_table(entity_auxiliary_names_table);
+		if (entity_auxiliary_names_table == NULL) {
+			LOG_ERR("Failed to malloc entity auxiliary names PDR table");
+			return -1;
+		}
+		pdr_info->repository_size += pdr_count * plat_get_pdr_entity_aux_names_size();
+
+		for (uint32_t i = 0; i < pdr_count; i++) {
+			entity_auxiliary_names_table[i].pdr_common_header.record_handle =
+				record_handle;
+			entity_auxiliary_names_table[i].pdr_common_header.data_length +=
+				(plat_get_pdr_entity_aux_names_size() - sizeof(PDR_common_header));
+			// Convert entity name to UTF16-BE
+			for (int j = 0; entity_auxiliary_names_table[i].entityName[j] != 0x0000;
+			     j++) {
+				entity_auxiliary_names_table[i].entityName[j] = sys_cpu_to_be16(
+					entity_auxiliary_names_table[i].entityName[j]);
+			}
+
+			record_handle++;
+		}
+
+		if (largest_record_size < sizeof(PDR_entity_auxiliary_names)) {
+			largest_record_size = sizeof(PDR_entity_auxiliary_names);
+		}
+	}
+
 	pdr_info = (PDR_INFO *)malloc(sizeof(PDR_INFO));
 	if (pdr_info == NULL) {
 		LOG_ERR("Failed to malloc PDR info");
@@ -96,10 +130,12 @@ PDR_INFO *get_pdr_info()
 
 int get_pdr_table_via_record_handle(uint8_t *record_data, uint32_t record_handle)
 {
-	uint32_t numeric_sensor_pdr_count = 0, aux_sensor_name_pdr_count = 0;
+	uint32_t numeric_sensor_pdr_count = 0, aux_sensor_name_pdr_count = 0,
+		 entity_aux_name_pdr_count = 0;
 
 	numeric_sensor_pdr_count = plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR);
 	aux_sensor_name_pdr_count = plat_get_pdr_size(PLDM_SENSOR_AUXILIARY_NAMES_PDR);
+	entity_aux_name_pdr_count = plat_get_pdr_size(PLDM_ENTITY_AUXILIARY_NAMES_PDR);
 
 	if (record_handle < numeric_sensor_pdr_count) {
 		for (int i = 0; i < numeric_sensor_pdr_count; i++) {
@@ -117,6 +153,16 @@ int get_pdr_table_via_record_handle(uint8_t *record_data, uint32_t record_handle
 				memcpy(record_data, &sensor_auxiliary_names_table[i],
 				       sizeof(PDR_sensor_auxiliary_names));
 				return sizeof(PDR_sensor_auxiliary_names);
+			}
+		}
+	} else if (record_handle < numeric_sensor_pdr_count + aux_sensor_name_pdr_count +
+					   entity_aux_name_pdr_count) {
+		for (int i = 0; i < entity_aux_name_pdr_count; i++) {
+			if (entity_auxiliary_names_table[i].pdr_common_header.record_handle ==
+			    record_handle) {
+				memcpy(record_data, &entity_auxiliary_names_table[i],
+				       plat_get_pdr_entity_aux_names_size());
+				return plat_get_pdr_entity_aux_names_size();
 			}
 		}
 	} else {
@@ -148,4 +194,27 @@ __weak void plat_load_aux_sensor_names_pdr_table(PDR_sensor_auxiliary_names *aux
 {
 	//implement in platform layer
 	aux_sensor_name_table = NULL;
+}
+
+__weak void plat_init_entity_aux_names_pdr_table()
+{
+	//implement in platform layer
+}
+
+__weak void plat_load_entity_aux_names_pdr_table(PDR_entity_auxiliary_names *entity_aux_name_table)
+{
+	//implement in platform layer
+	entity_aux_name_table = NULL;
+}
+
+__weak uint16_t plat_get_pdr_entity_aux_names_size()
+{
+	//implement in platform layer
+	return 0;
+}
+
+// Function to get a pointer to the entity_auxiliary_names_table
+PDR_entity_auxiliary_names *get_entity_auxiliary_names_table()
+{
+	return entity_auxiliary_names_table;
 }

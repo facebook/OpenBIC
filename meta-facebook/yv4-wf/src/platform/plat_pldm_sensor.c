@@ -6299,6 +6299,23 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensorName = u"WF_ASIC2_DIMM_D_TEMP_C",
 	},
 };
+
+PDR_entity_auxiliary_names plat_pdr_entity_aux_names_table[] = { {
+	{
+		.record_handle = 0x00000000,
+		.PDR_header_version = 0x01,
+		.PDR_type = PLDM_ENTITY_AUXILIARY_NAMES_PDR,
+		.record_change_number = 0x0000,
+		.data_length = 0x0000,
+	},
+	.entity_type = 0x0000,
+	.entity_instance_number = 0x0001,
+	.container_id = 0x0000,
+	.shared_name_count = 0x0,
+	.nameStringCount = 0x1,
+	.nameLanguageTag = "en",
+} };
+
 // clang-format on
 uint32_t plat_get_pdr_size(uint8_t pdr_type)
 {
@@ -6312,6 +6329,9 @@ uint32_t plat_get_pdr_size(uint8_t pdr_type)
 		break;
 	case PLDM_SENSOR_AUXILIARY_NAMES_PDR:
 		total_size = ARRAY_SIZE(plat_pdr_sensor_aux_names_table);
+		break;
+	case PLDM_ENTITY_AUXILIARY_NAMES_PDR:
+		total_size = ARRAY_SIZE(plat_pdr_entity_aux_names_table);
 		break;
 	default:
 		break;
@@ -6440,6 +6460,87 @@ void plat_load_aux_sensor_names_pdr_table(PDR_sensor_auxiliary_names *aux_sensor
 {
 	memcpy(aux_sensor_name_table, &plat_pdr_sensor_aux_names_table,
 	       sizeof(plat_pdr_sensor_aux_names_table));
+}
+
+uint16_t plat_pdr_entity_aux_names_table_size = 0;
+
+// Custom function to calculate the length of a char16_t string
+size_t char16_strlen(const char16_t *str)
+{
+	const char16_t *s = str;
+	while (*s)
+		++s;
+	return s - str;
+}
+
+// Custom function to copy a char16_t string
+char16_t *char16_strcpy(char16_t *dest, const char16_t *src)
+{
+	char16_t *d = dest;
+	while ((*d++ = *src++))
+		;
+	return dest;
+}
+
+void plat_init_entity_aux_names_pdr_table()
+{
+	// Base name
+	const char16_t base_name[] = u"Wailua_Falls_Slot_";
+
+	// Calculate the length of the base name
+	size_t base_len = char16_strlen(base_name);
+
+	// Copy the base name to the entityName field
+	char16_strcpy(plat_pdr_entity_aux_names_table[0].entityName, base_name);
+
+	plat_pdr_entity_aux_names_table_size =
+		sizeof(PDR_entity_auxiliary_names) + (base_len * sizeof(char16_t));
+}
+
+void plat_load_entity_aux_names_pdr_table(PDR_entity_auxiliary_names *entity_aux_name_table)
+{
+	memcpy(entity_aux_name_table, &plat_pdr_entity_aux_names_table,
+	       plat_pdr_entity_aux_names_table_size);
+}
+
+void update_entity_name_with_eid(uint8_t eid)
+{
+	PDR_entity_auxiliary_names *table = get_entity_auxiliary_names_table();
+
+	if (table == NULL) {
+		return; // Handle the error case if the table is not initialized
+	}
+
+	// EID is 10-based
+	uint8_t slot_id = eid / 10;
+	// Create the base entity name
+	char16_t base_name[] = u"Wailua_Falls_Slot_";
+
+	// Calculate the length of the base name and the eid
+	size_t base_name_len =
+		sizeof(base_name) / sizeof(char16_t) - 1; // -1 to exclude the null terminator
+	size_t total_len = base_name_len + 2; // +2 for the slot ID digit and null terminator
+	size_t slot_id_len = 1; // Assuming slot_id is a single digit
+
+	// Copy the base name into the entity name field
+	memcpy(table[0].entityName, base_name, base_name_len * sizeof(char16_t));
+
+	// Append the eid to the entity name
+	table[0].entityName[base_name_len] = (char16_t)(u'0' + slot_id); // Assuming slot_id is 0-9
+	table[0].entityName[base_name_len + slot_id_len] = u'\0'; // Null-terminate the string
+
+	plat_pdr_entity_aux_names_table_size =
+		sizeof(PDR_entity_auxiliary_names) + (total_len * sizeof(char16_t));
+
+	// Convert entity name to UTF16-BE
+	for (int i = 0; table[0].entityName[i] != 0x0000; i++) {
+		table[0].entityName[i] = sys_cpu_to_be16(table[0].entityName[i]);
+	}
+}
+
+uint16_t plat_get_pdr_entity_aux_names_size()
+{
+	return plat_pdr_entity_aux_names_table_size;
 }
 
 void plat_pldm_sensor_change_vr_dev()
