@@ -26,7 +26,6 @@ extern uint8_t hw_event_register[13];
 #define VR_IOUT_FAULT_MASK 0x40
 #define VR_TPS_OCW_MASK 0x20
 
-
 typedef struct _add_vr_sel_info {
 	bool is_init;
 	uint8_t gpio_num;
@@ -35,6 +34,14 @@ typedef struct _add_vr_sel_info {
 	uint8_t is_asserted;
 	struct k_work_delayable add_sel_work;
 } add_vr_sel_info;
+
+typedef struct _add_sel_info {
+	bool is_init;
+	uint8_t gpio_num;
+	uint8_t event_type;
+	uint8_t assert_type;
+	struct k_work_delayable add_sel_work;
+} add_sel_info;
 
 void ISR_DC_ON();
 void ISR_POST_COMPLETE();
@@ -58,5 +65,7 @@ void ISR_APML_ALERT();
 
 void init_vr_event_work();
 void process_vr_pmalert_ocp_sel(struct k_work *work_item);
+void init_event_work();
+void addsel_work_handler(struct k_work *work_item);
 
 #endif

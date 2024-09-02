@@ -70,5 +70,6 @@
 #define MCTP_I3C_PEC_ENABLE 1
 
 #define BIC_UPDATE_MAX_OFFSET 0xC0000
+#define WORKER_STACK_SIZE 2048
 
 #endif
