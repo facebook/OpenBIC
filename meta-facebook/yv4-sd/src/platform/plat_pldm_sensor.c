@@ -18,7 +18,9 @@
 #include "pmbus.h"
 #include "ast_adc.h"
 #include "pdr.h"
+#include "ina233.h"
 #include "pt5161l.h"
+#include "rtq6056.h"
 #include "sensor.h"
 #include "pldm_sensor.h"
 #include "pldm_monitor.h"
@@ -6633,6 +6635,7 @@ pldm_sensor_info *plat_pldm_sensor_load(int thread_id)
 		return plat_pldm_sensor_cpu_table;
 	case INA233_SENSOR_THREAD_ID:
 		plat_pldm_sensor_change_retimer_dev();
+		plat_pldm_sensor_change_ina_dev();
 		return plat_pldm_sensor_ina233_table;
 	case DIMM_SENSOR_THREAD_ID:
 		return plat_pldm_sensor_dimm_table;
@@ -6901,6 +6904,34 @@ void plat_pldm_sensor_change_retimer_dev()
 	}
 }
 
+void plat_pldm_sensor_change_ina_dev()
+{
+	if (plat_pldm_sensor_get_ina_dev() == sensor_dev_rtq6056) {
+		for (int index = 0;
+		     index < plat_pldm_sensor_get_sensor_count(INA233_SENSOR_THREAD_ID); index++) {
+			// boot drive
+			if ((plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.port ==
+			     I2C_BUS1) &&
+			    (plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.target_addr ==
+			     ADDR_E1S_BOOT_INA233)) {
+				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.type =
+					sensor_dev_rtq6056;
+				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.init_args =
+					&rtq6056_init_args[2];
+				// data drive
+			} else if ((plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.port ==
+				    I2C_BUS6) &&
+				   (plat_pldm_sensor_ina233_table[index]
+					    .pldm_sensor_cfg.target_addr == ADDR_E1S_DATA_INA233)) {
+				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.type =
+					sensor_dev_rtq6056;
+				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.init_args =
+					&rtq6056_init_args[3];
+			}
+		}
+	}
+}
+
 uint8_t plat_pldm_sensor_get_vr_dev(uint8_t *vr_dev)
 {
 	/*
@@ -6942,4 +6973,43 @@ error_exit:
 		low_byte);
 	*vr_dev = VR_DEVICE_UNKNOWN;
 	return GET_VR_DEV_FAILED;
+}
+
+uint8_t plat_pldm_sensor_get_ina_dev()
+{
+	int retry = 5;
+	I2C_MSG msg = { 0 };
+
+	// read boot drive to check
+	// check INA233 device
+	msg.bus = I2C_BUS1;
+	msg.target_addr = ADDR_E1S_BOOT_INA233;
+	msg.tx_len = 1;
+	msg.rx_len = 3;
+	msg.data[0] = PMBUS_MFR_ID;
+	if (i2c_master_read(&msg, retry) != 0) {
+		LOG_ERR("Failed to get MFR ID from boot INA233");
+	} else {
+		if (memcmp(msg.data, INA233_DEVICE_ID, sizeof(INA233_DEVICE_ID)) == 0) {
+			LOG_INF("use INA233");
+			return sensor_dev_ina233;
+		}
+	}
+
+	// check RTQ6056 device
+	msg.bus = I2C_BUS1;
+	msg.target_addr = ADDR_E1S_BOOT_INA233;
+	msg.tx_len = 1;
+	msg.rx_len = 2;
+	msg.data[0] = RTQ6056_MFR_ID_REG;
+	if (i2c_master_read(&msg, retry) != 0) {
+		LOG_ERR("Failed to get MFR ID from boot RTQ6056");
+	} else {
+		if (memcmp(msg.data, RTQ6056_DEVICE_ID, sizeof(RTQ6056_DEVICE_ID)) == 0) {
+			LOG_INF("use RQT6056");
+			return sensor_dev_rtq6056;
+		}
+	}
+
+	return sensor_dev_ina233;
 }
