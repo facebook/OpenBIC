@@ -5769,7 +5769,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ADC_PVPP_AB_ASIC2_VOLT_V ",
+		.sensorName = u"WF_ADC_PVPP_AB_ASIC2_VOLT_V",
 	},
 	{
 		// WF_ADC_PVPP_CD_ASIC2_VOLT_V
@@ -5786,7 +5786,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ADC_PVPP_CD_ASIC2_VOLT_V ",
+		.sensorName = u"WF_ADC_PVPP_CD_ASIC2_VOLT_V",
 	},
 	{
 		// WF_ADC_PVTT_AB_ASIC2_VOLT_V
@@ -5803,7 +5803,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ADC_PVTT_AB_ASIC2_VOLT_V ",
+		.sensorName = u"WF_ADC_PVTT_AB_ASIC2_VOLT_V",
 	},
 	{
 		// WF_ADC_PVTT_CD_ASIC2_VOLT_V
@@ -5820,7 +5820,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ADC_PVTT_CD_ASIC2_VOLT_V ",
+		.sensorName = u"WF_ADC_PVTT_CD_ASIC2_VOLT_V",
 	},
 	{
 		// WF_INA233_P12V_STBY_CURR_A
