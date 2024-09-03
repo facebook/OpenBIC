@@ -70,6 +70,51 @@ bool pldm_sensor_is_interval_ready(pldm_sensor_info *pldm_sensor_list)
 	return true;
 }
 
+int pldm_sensor_get_info_via_sensor_thread_and_sensor_pdr_index(
+	int thread_id, int sensor_pdr_index, uint16_t *sensor_id, real32_t *resolution,
+	real32_t *offset, int8_t *unit_modifier, real32_t *poll_time, uint32_t *update_time,
+	uint8_t *type, int *cache, uint8_t *cache_status, char *check_access)
+{
+	CHECK_NULL_ARG_WITH_RETURN(sensor_id, -1);
+	CHECK_NULL_ARG_WITH_RETURN(resolution, -1);
+	CHECK_NULL_ARG_WITH_RETURN(offset, -1);
+	CHECK_NULL_ARG_WITH_RETURN(unit_modifier, -1);
+	CHECK_NULL_ARG_WITH_RETURN(poll_time, -1);
+	CHECK_NULL_ARG_WITH_RETURN(type, -1);
+	CHECK_NULL_ARG_WITH_RETURN(cache, -1);
+	CHECK_NULL_ARG_WITH_RETURN(cache_status, -1);
+	CHECK_NULL_ARG_WITH_RETURN(check_access, -1);
+
+	int pldm_sensor_count = plat_pldm_sensor_get_sensor_count(thread_id);
+	if (sensor_pdr_index >= pldm_sensor_count) {
+		return -1;
+	}
+
+	// Get from numeric sensor PDR
+	*sensor_id = pldm_sensor_list[thread_id][sensor_pdr_index].pdr_numeric_sensor.sensor_id;
+	*resolution = pldm_sensor_list[thread_id][sensor_pdr_index].pdr_numeric_sensor.resolution;
+	*offset = pldm_sensor_list[thread_id][sensor_pdr_index].pdr_numeric_sensor.offset;
+	*unit_modifier =
+		pldm_sensor_list[thread_id][sensor_pdr_index].pdr_numeric_sensor.unit_modifier;
+	*poll_time =
+		pldm_sensor_list[thread_id][sensor_pdr_index].pdr_numeric_sensor.update_interval;
+
+	// Get from update time
+	*update_time = pldm_sensor_list[thread_id][sensor_pdr_index].update_time;
+
+	// Get from sensor config
+	*type = pldm_sensor_list[thread_id][sensor_pdr_index].pldm_sensor_cfg.type;
+	*cache = pldm_sensor_list[thread_id][sensor_pdr_index].pldm_sensor_cfg.cache;
+	*cache_status = pldm_sensor_list[thread_id][sensor_pdr_index].pldm_sensor_cfg.cache_status;
+	*check_access =
+		(pldm_sensor_list[thread_id][sensor_pdr_index].pldm_sensor_cfg.access_checker(
+			 *sensor_id) ?
+			 'O' :
+			 'X');
+
+	return 0;
+}
+
 int pldm_sensor_get_info_via_sensor_id(uint16_t sensor_id, float *resolution, float *offset,
 				       int8_t *unit_modifier, int *cache,
 				       uint8_t *sensor_operational_state)

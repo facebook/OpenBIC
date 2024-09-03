@@ -44,6 +44,10 @@ void pldm_sensor_get_reading(sensor_cfg *pldm_sensor_cfg, uint32_t *update_time,
 uint8_t pldm_sensor_get_reading_from_cache(uint16_t sensor_id, int *reading,
 					   uint8_t *sensor_operational_state);
 bool pldm_sensor_is_interval_ready(pldm_sensor_info *pldm_sensor_list);
+int pldm_sensor_get_info_via_sensor_thread_and_sensor_pdr_index(
+	int thread_id, int sensor_pdr_index, uint16_t *sensor_id, real32_t *resolution,
+	real32_t *offset, int8_t *unit_modifier, real32_t *poll_time, uint32_t *update_time,
+	uint8_t *type, int *cache, uint8_t *cache_status, char *check_access);
 pldm_sensor_thread *plat_pldm_sensor_load_thread();
 pldm_sensor_info *plat_pldm_sensor_load(int thread_id);
 int plat_pldm_sensor_get_sensor_count(int thread_id);
