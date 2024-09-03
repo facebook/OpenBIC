@@ -31,8 +31,6 @@
 #include "xdp710.h"
 #include "e50sn12051.h"
 
-#define HEX_FAN_NUM 14
-
 #define BUS_1_MUX_ADDR 0xE0 >> 1
 #define BUS_2_MUX_ADDR 0xE2 >> 1
 #define BUS_6_MUX_ADDR 0xE4 >> 1

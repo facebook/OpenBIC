@@ -88,7 +88,7 @@ bool post_quick_sensor_read(sensor_cfg *cfg, void *args, int *reading)
 		sensor_val *sval = (sensor_val *)reading;
 		val = (sval->integer * 1000 + sval->fraction) / 1000.0;
 
-		if (val < 3.1)
+		if ((val > 0) && (val < 3.1))
 			aalc_leak_behavior(cfg->num);
 	}
 
@@ -309,12 +309,12 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_BPB_RPU_OUTLET_TEMP_C, sensor_dev_tmp75, I2C_BUS4, BPB_TMP75_ADDR,
 	  TMP75_TEMP_OFFSET, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-	{ SENSOR_NUM_BPB_RPU_COOLANT_INLET_TEMP_C, sensor_dev_ads112c, I2C_BUS3, BPB_ADS112C_1_ADDR,
+	{ SENSOR_NUM_BPB_RPU_COOLANT_INLET_TEMP_C, sensor_dev_ads112c, I2C_BUS3, BPB_ADS112C_2_ADDR,
 	  ADS112C_READ_OUTPUT_RAW, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, post_ads112c_read,
 	  &ads112c_post_args[2], &ads112c_init_args[6] },
 	{ SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C, sensor_dev_ads112c, I2C_BUS3,
-	  BPB_ADS112C_2_ADDR, ADS112C_READ_OUTPUT_RAW, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT,
+	  BPB_ADS112C_1_ADDR, ADS112C_READ_OUTPUT_RAW, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT,
 	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL,
 	  post_ads112c_read, &ads112c_post_args[2], &ads112c_init_args[6] },
 	{ SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C, sensor_dev_ads112c, I2C_BUS3, BPB_ADS112C_3_ADDR,

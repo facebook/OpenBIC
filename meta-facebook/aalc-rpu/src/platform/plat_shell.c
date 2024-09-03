@@ -166,7 +166,7 @@ void cmd_nct7363_fb(const struct shell *shell, size_t argc, char **argv)
 
 	uint8_t sensor_num = SENSOR_NUM_FB_1_FAN_TACH_RPM + idx - 1; // 1 base
 	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
-	data = nct7363_read_back_data(cfg, offset);
+	nct7363_read_back_data(cfg, offset, &data);
 
 	shell_warn(shell, "nct7363 debug fb %d, bus: %d, addr: 0x%02x, val: 0x%02x", idx, cfg->port,
 		   (cfg->target_addr << 1), data);
@@ -187,10 +187,46 @@ void cmd_nct7363_pb(const struct shell *shell, size_t argc, char **argv)
 			     (idx == 3) ? SENSOR_NUM_PB_3_PUMP_TACH_RPM :
 					  0xFF; // 1 base
 	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
-	data = nct7363_read_back_data(cfg, offset);
+	nct7363_read_back_data(cfg, offset, &data);
 
 	shell_warn(shell, "nct7363 debug pb %d, bus: %d, addr: 0x%02x, val: 0x%02x", idx, cfg->port,
 		   (cfg->target_addr << 1), data);
+}
+
+// threshold
+void cmd_threshold_tbl_get(const struct shell *shell, size_t argc, char **argv)
+{
+	uint8_t sensor_num = strtoul(argv[1], NULL, 16);
+
+	sensor_threshold *p = find_threshold_tbl_entry(sensor_num);
+	if (p)
+		shell_warn(
+			shell,
+			"threshold entry 0x%02x, type: %d, lcr: %02f, ucr: %02f, last_status: %d, last_val: %d",
+			p->sensor_num, p->type, p->lcr, p->ucr, p->last_status, p->last_value);
+	else
+		shell_warn(shell, "threshold entry 0x%02x not found!", sensor_num);
+}
+
+void cmd_threshold_tbl_set(const struct shell *shell, size_t argc, char **argv)
+{
+	uint8_t sensor_num = strtoul(argv[1], NULL, 16);
+	uint8_t type = strtoul(argv[2], NULL, 10);
+	uint8_t lcr = strtoul(argv[3], NULL, 10);
+	uint8_t ucr = strtoul(argv[4], NULL, 10);
+
+	sensor_threshold *p = find_threshold_tbl_entry(sensor_num);
+	if (p)
+		shell_warn(
+			shell,
+			"threshold entry 0x%02x, type: %d, lcr: %02f, ucr: %02f, last_status: %d, last_val: %d",
+			p->sensor_num, p->type, p->lcr, p->ucr, p->last_status, p->last_value);
+	else
+		shell_warn(shell, "threshold entry 0x%02x not found!", sensor_num);
+
+	p->type = type;
+	p->lcr = lcr;
+	p->ucr = ucr;
 }
 
 // test command
@@ -231,12 +267,19 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_nct7363_cmd,
 			       SHELL_CMD(pb, NULL, "nct7363 debug for pump board", cmd_nct7363_pb),
 			       SHELL_SUBCMD_SET_END);
 
+// threshold
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_threshold_cmd,
+			       SHELL_CMD(get, NULL, "get threshold table", cmd_threshold_tbl_get),
+			       SHELL_CMD(set, NULL, "set threshold table", cmd_threshold_tbl_set),
+			       SHELL_SUBCMD_SET_END);
+
 /* Sub-command Level 1 of command test */
 SHELL_STATIC_SUBCMD_SET_CREATE(
 	sub_test_cmds, SHELL_CMD(pwm, &sub_pwm_cmd, "set/get pwm command", NULL),
 	SHELL_CMD(poll, NULL, "enable/disable sensor polling", cmd_sensor_polling),
 	SHELL_CMD(mux, &sub_mux_cmd, "switch mux from sensor cfg", NULL),
 	SHELL_CMD(nct7363, &sub_nct7363_cmd, "nct7363 debug command", NULL),
+	SHELL_CMD(threshold, &sub_threshold_cmd, "threshold test command", NULL),
 	SHELL_CMD(test, NULL, "test command", cmd_test), SHELL_SUBCMD_SET_END);
 
 /* Root of command test */

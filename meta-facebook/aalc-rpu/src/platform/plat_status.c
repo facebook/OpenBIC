@@ -19,6 +19,7 @@
 #include "plat_status.h"
 #include "plat_sensor_table.h"
 #include "plat_fru.h"
+#include "plat_gpio.h"
 
 #define AALC_STICKY_STATUS_START 0x6000 //log offset: 24KB
 #define STICKY_STATUS_SIZE 2 // 1 register
@@ -127,26 +128,65 @@ uint16_t get_sensor_status_for_modbus_cmd(uint8_t status)
 		break;
 	case AALC_SENSOR_ALARM:
 		WRITE_BIT(val, 0,
-			  (get_threshold_status(SENSOR_NUM_BPB_RPU_COOLANT_INLET_TEMP_C)) ? 1 : 0);
+			  (get_threshold_status(SENSOR_NUM_BPB_RPU_COOLANT_INLET_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
 		WRITE_BIT(val, 1,
-			  (get_threshold_status(SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C)) ? 1 : 0);
+			  (get_threshold_status(SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
 		WRITE_BIT(val, 2,
-			  (get_threshold_status(SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA)) ? 1 : 0);
+			  (get_threshold_status(SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
 		WRITE_BIT(val, 3,
-			  (get_threshold_status(SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA)) ? 1 : 0);
+			  (get_threshold_status(SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
 		WRITE_BIT(val, 4,
-			  (get_threshold_status(SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM)) ? 1 : 0);
+			  (get_threshold_status(SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
 		WRITE_BIT(val, 5,
-			  (get_threshold_status(SENSOR_NUM_FB_1_HEX_OUTLET_TEMP_C)) ? 1 : 0);
+			  (get_threshold_status(SENSOR_NUM_FB_1_HEX_OUTLET_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
 		WRITE_BIT(val, 6,
-			  (get_threshold_status(SENSOR_NUM_FB_2_HEX_OUTLET_TEMP_C)) ? 1 : 0);
+			  (get_threshold_status(SENSOR_NUM_FB_2_HEX_OUTLET_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
 		WRITE_BIT(val, 7,
-			  (get_threshold_status(SENSOR_NUM_SB_HEX_AIR_INLET_1_TEMP_C)) ? 1 : 0);
+			  (get_threshold_status(SENSOR_NUM_SB_HEX_AIR_INLET_1_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
 		WRITE_BIT(val, 8,
-			  (get_threshold_status(SENSOR_NUM_SB_HEX_AIR_INLET_2_TEMP_C)) ? 1 : 0);
+			  (get_threshold_status(SENSOR_NUM_SB_HEX_AIR_INLET_2_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
 		WRITE_BIT(val, 9,
-			  (get_threshold_status(SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C)) ? 1 : 0);
-		WRITE_BIT(val, 15, (get_threshold_status(SENSOR_NUM_BPB_RACK_LEVEL_2)) ? 1 : 0);
+			  (get_threshold_status(SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 10,
+			  (get_threshold_status(SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 15,
+			  (get_threshold_status(SENSOR_NUM_BPB_RACK_LEVEL_2) &&
+			   (!get_threshold_status(SENSOR_NUM_BPB_RACK_LEVEL_1))) ?
+				  1 :
+				  0);
 		break;
 	case HEX_AIR_THERMOMETER_STATUS:
 		WRITE_BIT(val, 0,
@@ -201,7 +241,12 @@ uint16_t get_sensor_status_for_modbus_cmd(uint8_t status)
 			   (get_threshold_status(SENSOR_NUM_PB_3_PUMP_TACH_RPM))) ?
 				  1 :
 				  0);
+		WRITE_BIT(val, 7,
+			  (get_threshold_status(SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM)) ? 1 : 0);
+		WRITE_BIT(val, 8, (!gpio_get(CDU_PWR_BTN)) ? 1 : 0);
 		WRITE_BIT(val, 9, (get_rpu_ready_pin_status()) ? 1 : 0);
+		WRITE_BIT(val, 10,
+			  (get_threshold_status(SENSOR_NUM_HEX_EXTERNAL_Y_FILTER)) ? 1 : 0);
 		break;
 	case HEX_FAN_ALARM_1:
 		WRITE_BIT(val, 0, (get_threshold_status(SENSOR_NUM_FB_1_FAN_TACH_RPM)) ? 1 : 0);
@@ -220,6 +265,187 @@ uint16_t get_sensor_status_for_modbus_cmd(uint8_t status)
 		WRITE_BIT(val, 1, (get_threshold_status(SENSOR_NUM_FB_12_FAN_TACH_RPM)) ? 1 : 0);
 		WRITE_BIT(val, 2, (get_threshold_status(SENSOR_NUM_FB_13_FAN_TACH_RPM)) ? 1 : 0);
 		WRITE_BIT(val, 3, (get_threshold_status(SENSOR_NUM_FB_14_FAN_TACH_RPM)) ? 1 : 0);
+		break;
+	case HEX_FAN_COMMS_ALARM:
+		WRITE_BIT(val, 0,
+			  (get_threshold_status(SENSOR_NUM_FB_1_FAN_TACH_RPM) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 1,
+			  (get_threshold_status(SENSOR_NUM_FB_2_FAN_TACH_RPM) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 2,
+			  (get_threshold_status(SENSOR_NUM_FB_3_FAN_TACH_RPM) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 3,
+			  (get_threshold_status(SENSOR_NUM_FB_4_FAN_TACH_RPM) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 4,
+			  (get_threshold_status(SENSOR_NUM_FB_5_FAN_TACH_RPM) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 5,
+			  (get_threshold_status(SENSOR_NUM_FB_6_FAN_TACH_RPM) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 6,
+			  (get_threshold_status(SENSOR_NUM_FB_7_FAN_TACH_RPM) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 7,
+			  (get_threshold_status(SENSOR_NUM_FB_8_FAN_TACH_RPM) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 8,
+			  (get_threshold_status(SENSOR_NUM_FB_9_FAN_TACH_RPM) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 9,
+			  (get_threshold_status(SENSOR_NUM_FB_10_FAN_TACH_RPM) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 10,
+			  (get_threshold_status(SENSOR_NUM_FB_11_FAN_TACH_RPM) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 11,
+			  (get_threshold_status(SENSOR_NUM_FB_12_FAN_TACH_RPM) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 12,
+			  (get_threshold_status(SENSOR_NUM_FB_13_FAN_TACH_RPM) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 13,
+			  (get_threshold_status(SENSOR_NUM_FB_14_FAN_TACH_RPM) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		break;
+	case HSC_POWER_STATUS:
+		WRITE_BIT(val, 0, (gpio_get(PWRGD_P48V_HSC_LF_R) ? 0 : 1));
+		WRITE_BIT(val, 2, (gpio_get(PUMP1_PRSNT_BUF_N) ? 1 : 0));
+		WRITE_BIT(val, 3, (gpio_get(PUMP2_PRSNT_BUF_N) ? 1 : 0));
+		WRITE_BIT(val, 4, (gpio_get(PUMP3_PRSNT_BUF_N) ? 1 : 0));
+		break;
+	case FB_HSC_POWER_STATUS:
+		for (uint8_t i = 0; i < 14; i++)
+			WRITE_BIT(val, i, fb_hsc_status(i));
+		break;
+	case HSC_COMMS_STATUS:
+		WRITE_BIT(val, 0,
+			  (get_threshold_status(SENSOR_NUM_BPB_HSC_P48V_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 1,
+			  (get_threshold_status(SENSOR_NUM_BB_HSC_P48V_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 2,
+			  (get_threshold_status(SENSOR_NUM_PB_1_HSC_P48V_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 3,
+			  (get_threshold_status(SENSOR_NUM_PB_2_HSC_P48V_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 4,
+			  (get_threshold_status(SENSOR_NUM_PB_3_HSC_P48V_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		break;
+	case FB_HSC_COMMS_STATUS:
+		WRITE_BIT(val, 0,
+			  (get_threshold_status(SENSOR_NUM_FB_1_HSC_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 1,
+			  (get_threshold_status(SENSOR_NUM_FB_2_HSC_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 2,
+			  (get_threshold_status(SENSOR_NUM_FB_3_HSC_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 3,
+			  (get_threshold_status(SENSOR_NUM_FB_4_HSC_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 4,
+			  (get_threshold_status(SENSOR_NUM_FB_5_HSC_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 5,
+			  (get_threshold_status(SENSOR_NUM_FB_6_HSC_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 6,
+			  (get_threshold_status(SENSOR_NUM_FB_7_HSC_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 7,
+			  (get_threshold_status(SENSOR_NUM_FB_8_HSC_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 8,
+			  (get_threshold_status(SENSOR_NUM_FB_9_HSC_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 9,
+			  (get_threshold_status(SENSOR_NUM_FB_10_HSC_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 10,
+			  (get_threshold_status(SENSOR_NUM_FB_11_HSC_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 11,
+			  (get_threshold_status(SENSOR_NUM_FB_12_HSC_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 12,
+			  (get_threshold_status(SENSOR_NUM_FB_13_HSC_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
+		WRITE_BIT(val, 13,
+			  (get_threshold_status(SENSOR_NUM_FB_14_HSC_TEMP_C) ==
+			   THRESHOLD_STATUS_NOT_ACCESS) ?
+				  1 :
+				  0);
 		break;
 	};
 

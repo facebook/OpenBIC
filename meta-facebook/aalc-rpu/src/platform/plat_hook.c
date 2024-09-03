@@ -1035,6 +1035,7 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 		val = (val - 7.56494) * 1.076921;
 		val = 2.745 * val + 20.49;
 		val = 1.0018 * val + 5.2047;
+		val = (val < 0) ? 0 : val;
 		break;
 	case PLATFORM_ADS112C_PRESS: //Filter_P/Outlet_P/Inlet_P
 		v_val = 5 - ((32767 - rawValue) * 0.000153);
@@ -1115,8 +1116,6 @@ static uint16_t get_fb_pwr_prsnt(void)
 	for (uint8_t i = 0; i < FB_PRSNT_NUM_PER_IOEXP; i++)
 		WRITE_BIT(prsnt, i * 2, !((msg.data[0] >> i) & 0x01));
 
-	LOG_INF("pwr prsnt = %x", prsnt);
-
 exit:
 	if (post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, NULL) == false)
 		LOG_ERR("Failed to set mux channel in get_fb_pwr_prsnt");
@@ -1156,8 +1155,6 @@ static uint16_t get_fb_sig_prsnt(void)
 	for (uint8_t i = 0; i < FB_PRSNT_NUM_PER_IOEXP; i++)
 		WRITE_BIT(prsnt, i * 2, !((msg.data[0] >> i) & 0x01));
 
-	LOG_INF("sig prsnt = %x", prsnt);
-
 exit:
 	return prsnt;
 }
@@ -1170,8 +1167,6 @@ bool get_fb_present_status(uint16_t *fb_present_status)
 	const uint16_t sig_prsnt = get_fb_sig_prsnt();
 
 	*fb_present_status = pwr_prsnt & sig_prsnt;
-	LOG_INF("pwr_prsnt = %x, sig_prsnt = %x, fb_present_status = %x", pwr_prsnt, sig_prsnt,
-		*fb_present_status);
 
 	return true;
 }

@@ -45,8 +45,13 @@ void set_threshold_poll_enable_flag(bool flag);
 bool get_threshold_poll_enable_flag();
 void threshold_poll_init();
 void fan_pump_pwrgd();
+sensor_threshold *find_threshold_tbl_entry(uint8_t sensor_num);
+uint8_t fb_hsc_status(uint8_t idx);
 uint32_t get_threshold_status(uint8_t sensor_num);
-bool pump_status_recovery();
+bool pump_fail_check();
+bool hex_fan_fail_check();
+bool hsc_communicate_check();
+bool system_failure_recovery();
 bool rpu_ready_recovery();
 
 #endif // PLAT_THRESHOLD_H
