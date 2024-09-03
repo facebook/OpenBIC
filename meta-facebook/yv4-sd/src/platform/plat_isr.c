@@ -87,6 +87,94 @@ add_vr_sel_info vr_event_work_item[] = {
 	},
 };
 
+add_sel_info event_work_items[] = {
+	{
+		.is_init = false,
+		.gpio_num = RST_PLTRST_BIC_N,
+		.event_type = PLTRST_ASSERT,
+		.assert_type = EVENT_ASSERTED,
+	},
+	{
+		.is_init = false,
+		.gpio_num = FM_BIOS_POST_CMPLT_BIC_N,
+		.event_type = POST_COMPLETED,
+		.assert_type = EVENT_ASSERTED,
+	},
+	{
+		.is_init = false,
+		.gpio_num = FM_DBP_PRESENT_N,
+		.event_type = HDT_PRSNT_ASSERT,
+		.assert_type = EVENT_ASSERTED,
+	},
+	{
+		.is_init = false,
+		.gpio_num = FAST_PROCHOT_N,
+		.event_type = FAST_PROCHOT_ASSERT,
+		.assert_type = EVENT_ASSERTED,
+	},
+	{
+		.is_init = false,
+		.gpio_num = FM_CPU_BIC_THERMTRIP_N,
+		.event_type = CPU_THERMAL_TRIP,
+		.assert_type = EVENT_ASSERTED,
+	},
+	{
+		.is_init = false,
+		.gpio_num = FM_CPU_BIC_PROCHOT_LVT3_N,
+		.event_type = SYS_THROTTLE,
+		.assert_type = EVENT_ASSERTED,
+	},
+	{
+		.is_init = false,
+		.gpio_num = FM_HSC_TIMER_ALT_N,
+		.event_type = HSC_OCP,
+		.assert_type = EVENT_ASSERTED,
+	},
+	{
+		.is_init = false,
+		.gpio_num = IRQ_UV_DETECT_N,
+		.event_type = P12V_STBY_UV,
+		.assert_type = EVENT_ASSERTED,
+	},
+};
+
+void init_event_work()
+{
+	for (int index = 0; index < ARRAY_SIZE(event_work_items); ++index) {
+		if (event_work_items[index].is_init != true) {
+			k_work_init_delayable(&event_work_items[index].add_sel_work,
+					      addsel_work_handler);
+
+			event_work_items[index].is_init = true;
+		}
+	}
+}
+
+void addsel_work_handler(struct k_work *work_item)
+{
+	struct k_work_delayable *dwork = k_work_delayable_from_work(work_item);
+	add_sel_info *work_info = CONTAINER_OF(dwork, add_sel_info, add_sel_work);
+	struct pldm_addsel_data msg = { 0 };
+	msg.event_type = work_info->event_type;
+	msg.assert_type = work_info->assert_type;
+
+	if (send_event_log_to_bmc(msg) != PLDM_SUCCESS) {
+		LOG_ERR("Failed to send event log, event type: 0x%x, assert type: 0x%x",
+			work_info->event_type, work_info->assert_type);
+	};
+}
+
+static add_sel_info *find_event_work_items(uint8_t gpio_num)
+{
+	for (int index = 0; index < ARRAY_SIZE(event_work_items); ++index) {
+		if (event_work_items[index].gpio_num == gpio_num) {
+			return &event_work_items[index];
+		}
+	}
+
+	return NULL;
+}
+
 /*
  *	TODO: I3C hub is supplied by DC power currently. When DC off, it can't be initialized.
  *  	  Therefore, BIC needs to implement a workaround to reinitialize the I3C hub during DC on.
@@ -165,7 +253,8 @@ void ISR_DC_ON()
 		k_work_schedule(&set_DC_on_5s_work, K_SECONDS(DC_ON_5_SECOND));
 		k_work_submit(&reinit_i3c_work);
 		k_work_submit(&switch_i3c_dimm_work);
-		k_work_schedule(&PROC_FAIL_work, K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
+		k_work_schedule_for_queue(&plat_work_q, &PROC_FAIL_work,
+					  K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
 	} else {
 		if (k_work_cancel_delayable(&PROC_FAIL_work) != 0) {
 			LOG_ERR("Failed to cancel proc_fail delay work.");
@@ -188,16 +277,17 @@ void ISR_POST_COMPLETE()
 		disable_mailbox_completion_alert();
 		enable_alert_signal();
 		read_cpuid();
-		// add sel to bmc for assert
 		LOG_INF("Post complete event assert");
-		struct pldm_addsel_data msg = { 0 };
-		msg.event_type = POST_COMPLETED;
-		msg.assert_type = EVENT_ASSERTED;
-		if (PLDM_SUCCESS != send_event_log_to_bmc(msg)) {
-			LOG_ERR("Failed to assert post complete event log.");
-		};
-
 		hw_event_register[12]++;
+
+		add_sel_info *event_item = find_event_work_items(FM_BIOS_POST_CMPLT_BIC_N);
+		if (event_item == NULL) {
+			LOG_ERR("Fail to find event items, gpio num: 0x%x",
+				FM_BIOS_POST_CMPLT_BIC_N);
+			return;
+		}
+
+		k_work_schedule_for_queue(&plat_work_q, &event_item->add_sel_work, K_NO_WAIT);
 	} else {
 		if (get_DC_status()) { // Host is reset
 			k_work_submit(&switch_i3c_dimm_work);
@@ -232,7 +322,8 @@ void ISR_SLP3()
 {
 	if (gpio_get(FM_CPU_BIC_SLP_S3_N) == GPIO_HIGH) {
 		LOG_INF("slp3");
-		k_work_schedule(&SLP3_work, K_SECONDS(DETECT_VR_WDT_DELAY_S));
+		k_work_schedule_for_queue(&plat_work_q, &SLP3_work,
+					  K_SECONDS(DETECT_VR_WDT_DELAY_S));
 	} else {
 		if (k_work_cancel_delayable(&SLP3_work) != 0) {
 			LOG_ERR("Failed to cancel delayable work.");
@@ -245,28 +336,23 @@ void ISR_DBP_PRSNT()
 	/* HDT_PRSENT_N --> Event trigger and save log when signal falling and also
     check RST_RSMRST_BMC_N / normal power. */
 	if ((gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) && (get_DC_status())) {
+		add_sel_info *event_item = find_event_work_items(FM_DBP_PRESENT_N);
+		if (event_item == NULL) {
+			LOG_ERR("Fail to find event items, gpio num: 0x%x, gpio status: 0x%x",
+				FM_DBP_PRESENT_N, gpio_get(FM_DBP_PRESENT_N));
+			return;
+		}
+
 		if ((gpio_get(FM_DBP_PRESENT_N) == GPIO_HIGH)) {
 			LOG_INF("ISR_DBP_PRSNT deassert");
-			// add sel to bmc for deassert
-			struct pldm_addsel_data msg = { 0 };
-			msg.event_type = HDT_PRSNT_ASSERT;
-			msg.assert_type = EVENT_DEASSERTED;
-			if (PLDM_SUCCESS !=
-			    send_event_log_to_bmc(msg)) {
-				LOG_ERR("Failed to send HDT PRSNT deassert event log.");
-			};
+			event_item->assert_type = EVENT_DEASSERTED;
 		} else {
 			LOG_INF("ISR_DBP_PRSNT assert");
-			// add sel to bmc for assert
-			struct pldm_addsel_data msg = { 0 };
-			msg.event_type = HDT_PRSNT_ASSERT;
-			msg.assert_type = EVENT_ASSERTED;
-			if (PLDM_SUCCESS !=
-			    send_event_log_to_bmc(msg)) {
-				LOG_ERR("Failed to send HDT PRSNT assert event log.");
-			};
 			hw_event_register[1]++;
+			event_item->assert_type = EVENT_ASSERTED;
 		}
+
+		k_work_schedule_for_queue(&plat_work_q, &event_item->add_sel_work, K_NO_WAIT);
 	}
 }
 
@@ -278,30 +364,27 @@ void ISR_MB_THROTTLE()
 	 */
 	static bool is_mb_throttle_assert = false;
 	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH && get_DC_status()) {
+		add_sel_info *event_item = find_event_work_items(FAST_PROCHOT_N);
+		if (event_item == NULL) {
+			LOG_ERR("Fail to find event items, gpio num: 0x%x, gpio status: 0x%x",
+				FAST_PROCHOT_N, gpio_get(FAST_PROCHOT_N));
+			return;
+		}
+
 		if ((gpio_get(FAST_PROCHOT_N) == GPIO_HIGH) && (is_mb_throttle_assert == true)) {
 			LOG_INF("ISR_MB_THROTTLE deassert");
-			// add sel to bmc for deassert
-			struct pldm_addsel_data msg = { 0 };
-			msg.event_type = FAST_PROCHOT_ASSERT;
-			msg.assert_type = EVENT_DEASSERTED;
-			if (PLDM_SUCCESS !=
-			    send_event_log_to_bmc(msg)) {
-				LOG_ERR("Failed to send Fast PROCHOT deassert event log.");
-			};
 			is_mb_throttle_assert = false;
+			event_item->assert_type = EVENT_DEASSERTED;
+			k_work_schedule_for_queue(&plat_work_q, &event_item->add_sel_work,
+						  K_NO_WAIT);
 		} else if ((gpio_get(FAST_PROCHOT_N) == GPIO_LOW) &&
 			   (is_mb_throttle_assert == false)) {
 			LOG_INF("ISR_MB_THROTTLE assert");
-			// add sel to bmc for assert
-			struct pldm_addsel_data msg = { 0 };
-			msg.event_type = FAST_PROCHOT_ASSERT;
-			msg.assert_type = EVENT_ASSERTED;
-			if (PLDM_SUCCESS !=
-			    send_event_log_to_bmc(msg)) {
-				LOG_ERR("Failed to send Fast PROCHOT assert event log.");
-			};
 			hw_event_register[2]++;
 			is_mb_throttle_assert = true;
+			event_item->assert_type = EVENT_ASSERTED;
+			k_work_schedule_for_queue(&plat_work_q, &event_item->add_sel_work,
+						  K_NO_WAIT);
 		}
 	}
 }
@@ -310,14 +393,14 @@ void ISR_SOC_THMALTRIP()
 {
 	if (gpio_get(RST_CPU_RESET_BIC_N) == GPIO_HIGH) {
 		LOG_INF("ISR_SOC_THMALTRIP assert");
-		// add sel to bmc for assert
-		struct pldm_addsel_data msg = { 0 };
-		msg.event_type = CPU_THERMAL_TRIP;
-		msg.assert_type = EVENT_ASSERTED;
-		if (PLDM_SUCCESS != send_event_log_to_bmc(msg)) {
-			LOG_ERR("Failed to send CPU Thermal Trip assert event log.");
-		};
 		hw_event_register[3]++;
+		add_sel_info *event_item = find_event_work_items(FM_CPU_BIC_THERMTRIP_N);
+		if (event_item == NULL) {
+			LOG_ERR("Fail to find event items, gpio num: 0x%x", FM_CPU_BIC_THERMTRIP_N);
+			return;
+		}
+
+		k_work_schedule_for_queue(&plat_work_q, &event_item->add_sel_work, K_NO_WAIT);
 	}
 }
 
@@ -329,29 +412,28 @@ void ISR_SYS_THROTTLE()
 	static bool is_sys_throttle_assert = false;
 	if ((gpio_get(RST_CPU_RESET_BIC_N) == GPIO_HIGH) &&
 	    (gpio_get(PWRGD_CPU_LVC3) == GPIO_HIGH)) {
+		add_sel_info *event_item = find_event_work_items(FM_CPU_BIC_PROCHOT_LVT3_N);
+		if (event_item == NULL) {
+			LOG_ERR("Fail to find event items, gpio num: 0x%x, gpio status: 0x%x",
+				FM_CPU_BIC_PROCHOT_LVT3_N, gpio_get(FM_CPU_BIC_PROCHOT_LVT3_N));
+			return;
+		}
+
 		if ((gpio_get(FM_CPU_BIC_PROCHOT_LVT3_N) == GPIO_HIGH) &&
 		    (is_sys_throttle_assert == true)) {
 			LOG_INF("ISR_SYS_THROTTLE deassert");
-			// add sel to bmc for deassert
-			struct pldm_addsel_data msg = { 0 };
-			msg.event_type = SYS_THROTTLE;
-			msg.assert_type = EVENT_DEASSERTED;
-			if (PLDM_SUCCESS != send_event_log_to_bmc(msg)) {
-				LOG_ERR("Failed to send SYS throttle deassert event log.");
-			};
 			is_sys_throttle_assert = false;
+			event_item->assert_type = EVENT_DEASSERTED;
+			k_work_schedule_for_queue(&plat_work_q, &event_item->add_sel_work,
+						  K_NO_WAIT);
 		} else if ((gpio_get(FM_CPU_BIC_PROCHOT_LVT3_N) == GPIO_LOW) &&
 			   (is_sys_throttle_assert == false)) {
 			LOG_INF("ISR_SYS_THROTTLE assert");
-			// add sel to bmc for assert
-			struct pldm_addsel_data msg = { 0 };
-			msg.event_type = SYS_THROTTLE;
-			msg.assert_type = EVENT_ASSERTED;
-			if (PLDM_SUCCESS != send_event_log_to_bmc(msg)) {
-				LOG_ERR("Failed to send SYS throttle assert event log.");
-			};
 			hw_event_register[4]++;
 			is_sys_throttle_assert = true;
+			event_item->assert_type = EVENT_ASSERTED;
+			k_work_schedule_for_queue(&plat_work_q, &event_item->add_sel_work,
+						  K_NO_WAIT);
 		}
 	}
 }
@@ -359,26 +441,23 @@ void ISR_SYS_THROTTLE()
 void ISR_HSC_OC()
 {
 	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
+		add_sel_info *event_item = find_event_work_items(FM_HSC_TIMER_ALT_N);
+		if (event_item == NULL) {
+			LOG_ERR("Fail to find event items, gpio num: 0x%x, gpio status: 0x%x",
+				FM_HSC_TIMER_ALT_N, gpio_get(FM_HSC_TIMER_ALT_N));
+			return;
+		}
+
 		if (gpio_get(FM_HSC_TIMER_ALT_N) == GPIO_HIGH) {
 			LOG_INF("ISR_HSC_OC deassert");
-			// add sel to bmc for deassert
-			struct pldm_addsel_data msg = { 0 };
-			msg.event_type = HSC_OCP;
-			msg.assert_type = EVENT_DEASSERTED;
-			if (PLDM_SUCCESS != send_event_log_to_bmc(msg)) {
-				LOG_ERR("Failed to send HSC OCP deassert event log.");
-			};
+			event_item->assert_type = EVENT_DEASSERTED;
 		} else {
 			LOG_INF("ISR_HSC_OC assert");
-			// add sel to bmc for assert
-			struct pldm_addsel_data msg = { 0 };
-			msg.event_type = HSC_OCP;
-			msg.assert_type = EVENT_ASSERTED;
-			if (PLDM_SUCCESS != send_event_log_to_bmc(msg)) {
-				LOG_ERR("Failed to send HSC OCP assert event log.");
-			};
 			hw_event_register[5]++;
+			event_item->assert_type = EVENT_ASSERTED;
 		}
+
+		k_work_schedule_for_queue(&plat_work_q, &event_item->add_sel_work, K_NO_WAIT);
 	}
 }
 
@@ -517,8 +596,9 @@ void ISR_PVDDCR_CPU0_OCP()
 {
 	if (get_DC_status() == true) {
 		LOG_ERR("PVDDCR CPU0 OCP event triggered");
-		k_work_schedule(&vr_event_work_item[0].add_sel_work, K_MSEC(VR_EVENT_DELAY_MS));
 		hw_event_register[7]++;
+		k_work_schedule_for_queue(&plat_work_q, &vr_event_work_item[0].add_sel_work,
+					  K_MSEC(VR_EVENT_DELAY_MS));
 	}
 }
 
@@ -526,8 +606,9 @@ void ISR_PVDDCR_CPU1_OCP()
 {
 	if (get_DC_status() == true) {
 		LOG_ERR("PVDDCR CPU1 OCP event triggered");
-		k_work_schedule(&vr_event_work_item[1].add_sel_work, K_MSEC(VR_EVENT_DELAY_MS));
 		hw_event_register[6]++;
+		k_work_schedule_for_queue(&plat_work_q, &vr_event_work_item[1].add_sel_work,
+					  K_MSEC(VR_EVENT_DELAY_MS));
 	}
 }
 
@@ -535,55 +616,52 @@ void ISR_PVDD11_S3_PMALERT()
 {
 	if (get_DC_status() == true) {
 		LOG_ERR("PVDD11 S3 PMALERT event triggered");
-		k_work_schedule(&vr_event_work_item[4].add_sel_work, K_MSEC(VR_EVENT_DELAY_MS));
 		hw_event_register[8]++;
+		k_work_schedule_for_queue(&plat_work_q, &vr_event_work_item[4].add_sel_work,
+					  K_MSEC(VR_EVENT_DELAY_MS));
 	}
 }
 
 void ISR_UV_DETECT()
 {
 	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
+		add_sel_info *event_item = find_event_work_items(IRQ_UV_DETECT_N);
+		if (event_item == NULL) {
+			LOG_ERR("Fail to find event items, gpio num: 0x%x, gpio status: 0x%x",
+				IRQ_UV_DETECT_N, gpio_get(IRQ_UV_DETECT_N));
+			return;
+		}
+
 		if (gpio_get(IRQ_UV_DETECT_N) == GPIO_HIGH) {
 			LOG_INF("ISR_UV_DETECT deassert");
-			// add sel to bmc for deassert
-			struct pldm_addsel_data msg = { 0 };
-			msg.event_type = P12V_STBY_UV;
-			msg.assert_type = EVENT_DEASSERTED;
-			if (PLDM_SUCCESS != send_event_log_to_bmc(msg)) {
-				LOG_ERR("Failed to send P12V_STBY UV deassert event log.");
-			};
+			event_item->assert_type = EVENT_DEASSERTED;
 		} else {
 			LOG_INF("ISR_UV_DETECT assert");
-			// add sel to bmc for assert
-			struct pldm_addsel_data msg = { 0 };
-			msg.event_type = P12V_STBY_UV;
-			msg.assert_type = EVENT_ASSERTED;
-			if (PLDM_SUCCESS != send_event_log_to_bmc(msg)) {
-				LOG_ERR("Failed to send P12V_STBY UV deassert event log.");
-			};
 			hw_event_register[9]++;
+			event_item->assert_type = EVENT_ASSERTED;
 		}
+
+		k_work_schedule_for_queue(&plat_work_q, &event_item->add_sel_work, K_NO_WAIT);
 	}
 }
 
 void IST_PLTRST()
 {
 	LOG_INF("IST_PLTRST assert");
-	// add sel to bmc for assert
-	struct pldm_addsel_data msg = { 0 };
-	msg.event_type = PLTRST_ASSERT;
-	msg.assert_type = EVENT_ASSERTED;
-	if (PLDM_SUCCESS != send_event_log_to_bmc(msg)) {
-		LOG_ERR("Failed to send PLTRST assert event log.");
-	};
 	hw_event_register[10]++;
+
+	add_sel_info *event_item = find_event_work_items(RST_PLTRST_BIC_N);
+	if (event_item == NULL) {
+		LOG_ERR("Fail to find event items, gpio num: 0x%x", RST_PLTRST_BIC_N);
+		return;
+	}
+
+	k_work_schedule_for_queue(&plat_work_q, &event_item->add_sel_work, K_NO_WAIT);
 }
 
-void ISR_APML_ALERT()
+static void APML_ALERT_handler(struct k_work *work)
 {
-	hw_event_register[11]++;
-	LOG_INF("APML_ALERT detected");
-	uint8_t status;
+	uint8_t status = 0;
 	if (apml_read_byte(apml_get_bus(), SB_RMI_ADDR, SBRMI_STATUS, &status))
 		LOG_ERR("Failed to read RMI status.");
 
@@ -614,7 +692,7 @@ void ISR_APML_ALERT()
 		sizeof(struct pldm_oem_write_file_io_req) + CPUID_SIZE);
 
 	if (!ptr) {
-		LOG_ERR("Failed to allocate memory.");
+		LOG_ERR("Failed to allocate memory for APML alert event.");
 		return;
 	}
 
@@ -630,7 +708,7 @@ void ISR_APML_ALERT()
 	uint8_t rbuf[resp_len];
 
 	if (!mctp_pldm_read(find_mctp_by_bus(bmc_bus), &translated_msg, rbuf, resp_len)) {
-		LOG_ERR("mctp_pldm_read fail");
+		LOG_ERR("APML alert mctp_pldm_read fail");
 		goto exit;
 	}
 
@@ -646,11 +724,20 @@ exit:
 	return;
 }
 
+K_WORK_DELAYABLE_DEFINE(APML_ALERT_work, APML_ALERT_handler);
+void ISR_APML_ALERT()
+{
+	hw_event_register[11]++;
+	LOG_INF("APML_ALERT detected");
+	k_work_schedule_for_queue(&plat_work_q, &APML_ALERT_work, K_NO_WAIT);
+}
+
 void ISR_PVDDCR_CPU0_PMALERT()
 {
 	if (get_DC_status() == true) {
 		LOG_ERR("PVDDCR CPU0 PMALERT event triggered");
-		k_work_schedule(&vr_event_work_item[2].add_sel_work, K_MSEC(VR_EVENT_DELAY_MS));
+		k_work_schedule_for_queue(&plat_work_q, &vr_event_work_item[2].add_sel_work,
+					  K_MSEC(VR_EVENT_DELAY_MS));
 	}
 }
 
@@ -658,6 +745,7 @@ void ISR_PVDDCR_CPU1_PMALERT()
 {
 	if (get_DC_status() == true) {
 		LOG_ERR("PVDDCR CPU1 PMALERT event triggered");
-		k_work_schedule(&vr_event_work_item[3].add_sel_work, K_MSEC(VR_EVENT_DELAY_MS));
+		k_work_schedule_for_queue(&plat_work_q, &vr_event_work_item[3].add_sel_work,
+					  K_MSEC(VR_EVENT_DELAY_MS));
 	}
 }
