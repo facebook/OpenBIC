@@ -65,25 +65,30 @@ uint8_t cx7_read(sensor_cfg *cfg, int *reading)
 
 	struct pldm_get_sensor_reading_resp *res = (struct pldm_get_sensor_reading_resp *)resp_buf;
 
-	if ((res->completion_code != PLDM_SUCCESS) ||
-	    (res->sensor_data_size != PLDM_SENSOR_DATA_SIZE_SINT16)) {
-		LOG_ERR("Failed to get get sensor reading, completion_code = 0x%x, sensor_data_size = 0x%x",
-			res->completion_code, res->sensor_data_size);
+	if ((res->completion_code != PLDM_SUCCESS)) {
+		LOG_ERR("Failed to get get sensor reading, completion_code = 0x%x",
+			res->completion_code);
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
+	sensor_val *sval = (sensor_val *)reading;
 	if (res->sensor_operational_state == PLDM_SENSOR_ENABLED) {
-		sensor_val *sval = (sensor_val *)reading;
-		sval->integer = (res->present_reading[1] << 8) | res->present_reading[0];
-		sval->fraction = 0;
-		return SENSOR_READ_SUCCESS;
+		if (res->sensor_data_size != PLDM_SENSOR_DATA_SIZE_SINT16) {
+			sval->integer = (res->present_reading[1] << 8) | res->present_reading[0];
+			sval->fraction = 0;
+			return SENSOR_READ_SUCCESS;
+		} else if (res->sensor_data_size != PLDM_SENSOR_DATA_SIZE_SINT8) {
+			sval->integer = res->present_reading[0];
+			sval->fraction = 0;
+			return SENSOR_READ_SUCCESS;
+		}
 	} else if (res->sensor_operational_state == PLDM_SENSOR_UNAVAILABLE) {
 		return SENSOR_UNAVAILABLE;
-	} else {
-		LOG_ERR("CX7 Failed to get get sensor reading, sensor operational state=0x%x",
-			res->sensor_operational_state);
-		return SENSOR_FAIL_TO_ACCESS;
 	}
+
+	LOG_ERR("CX7 Failed to get get sensor reading, sensor operational state=0x%x",
+		res->sensor_operational_state);
+	return SENSOR_FAIL_TO_ACCESS;
 }
 
 uint8_t cx7_init(sensor_cfg *cfg)
