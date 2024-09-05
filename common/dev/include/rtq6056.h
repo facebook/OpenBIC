@@ -14,29 +14,15 @@
  * limitations under the License.
  */
 
-#include <stdint.h>
+#ifndef __RTQ6056__
+#define __RTQ6056__
 
-#define LED_TURN_OFF 0x00
-#define LED_TURN_ON 0x01
-#define LED_START_BLINK 0x02
-#define LED_STOP_BLINK 0x03
+#define RTQ6056_BUS_VOL_OFFSET 0x02
+#define RTQ6056_PWR_OFFSET 0x03
+#define RTQ6056_CUR_OFFSET 0x04
+#define RTQ6056_CALIBRATION_OFFSET 0x05
+#define RTQ6056_MFR_ID_REG 0xFE
 
-enum LED_IDX_E {
-	LED_IDX_E_POWER = 0,
-	LED_IDX_E_FAULT,
-	LED_IDX_E_LEAK,
-	LED_IDX_E_COOLANT,
-	LED_IDX_E_MAX,
-};
+extern uint8_t RTQ6056_DEVICE_ID[2];
 
-// FM_LED_FP_4_EN //coolant led
-// FM_LED_FP_3_EN //leak led
-// FM_LED_FP_2_EN //fault led
-// FM_LED_FP_1_EN //pwr led
-
-void led_set(uint8_t idx, uint8_t behaviour);
-void led_ctrl(uint8_t idx, uint8_t ctrl);
-uint8_t get_led_pin(uint8_t idx);
-uint8_t get_led_status(uint8_t idx);
-//void SSDLEDInit(void);
-bool fault_led_control(void);
+#endif

@@ -20,6 +20,7 @@
 #include "cci.h"
 #include "plat_ipmb.h"
 #include "plat_power_seq.h"
+#include "plat_pldm_sensor.h"
 
 #include "hal_i2c.h"
 
@@ -368,6 +369,8 @@ void plat_update_mctp_routing_table(uint8_t eid)
 	// update cxl2 eid
 	p = plat_mctp_route_tbl + 3;
 	p->endpoint = eid + 3;
+
+	update_entity_name_with_eid(eid);
 
 	// send set eid to cxl
 	k_timer_start(&send_cmd_timer, K_MSEC(30000), K_NO_WAIT);

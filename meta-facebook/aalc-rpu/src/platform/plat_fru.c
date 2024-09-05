@@ -330,8 +330,14 @@ bool plat_eeprom_write(uint32_t offset, uint8_t *data, uint16_t data_len)
 	entry.offset = offset;
 	entry.data_len = data_len;
 
+	uint8_t fru_index = 0;
+	if (!find_FRU_ID(MB_FRU_ID, &fru_index)) {
+		LOG_ERR("find_FRU_ID fail when write eeprom 0x%x ", offset);
+		return false;
+	}
+
 	memcpy(entry.data, data, data_len);
-	memcpy(&entry.config, &fru_config[MB_FRU_ID], sizeof(fru_config[MB_FRU_ID]));
+	memcpy(&entry.config, &fru_config[fru_index], sizeof(fru_config[fru_index]));
 
 	if (!eeprom_write(&entry)) {
 		LOG_ERR("write eeprom 0x%x fail", offset);
@@ -349,7 +355,13 @@ bool plat_eeprom_read(uint32_t offset, uint8_t *data, uint16_t data_len)
 	entry.offset = offset;
 	entry.data_len = data_len;
 
-	memcpy(&entry.config, &fru_config[MB_FRU_ID], sizeof(fru_config[MB_FRU_ID]));
+	uint8_t fru_index = 0;
+	if (!find_FRU_ID(MB_FRU_ID, &fru_index)) {
+		LOG_ERR("find_FRU_ID fail when read eeprom 0x%x ", offset);
+		return false;
+	}
+
+	memcpy(&entry.config, &fru_config[fru_index], sizeof(fru_config[fru_index]));
 	memset(entry.data, 0xFF, sizeof(entry.data));
 
 	if (!eeprom_read(&entry)) {

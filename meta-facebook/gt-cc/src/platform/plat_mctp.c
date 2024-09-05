@@ -444,11 +444,12 @@ void check_nic_config_by_ncsi(void)
 {
 	uint8_t config = mellanox_cx7_ncsi_get_link_type();
 
+	/* Remove this process for short term fix, will add back to support BMC get thor 2 type in the future */
 	/* Double check by fru if config is not IB_CX7 */
-	if (config == NIC_CONFIG_CX7 || config == NIC_CONFIG_UNKNOWN) {
-		LOG_INF("Double check nic type by fru");
-		config = check_nic_type_by_fru();
-	}
+	// if (config == NIC_CONFIG_CX7 || config == NIC_CONFIG_UNKNOWN) {
+	// 	LOG_INF("Double check nic type by fru");
+	// 	config = check_nic_type_by_fru();
+	// }
 
 	nic_config = config;
 	LOG_INF("NIC config is %d, 0: UNKNOWN, 1: CX7, 2: IB_CX7", nic_config);

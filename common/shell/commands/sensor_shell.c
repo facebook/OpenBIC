@@ -22,6 +22,13 @@
 #include <string.h>
 #include <logging/log.h>
 
+#ifdef ENABLE_PLDM_SENSOR
+#include "plat_pldm_sensor.h"
+#include "pldm_sensor.h"
+#include "pldm_monitor.h"
+#include "pdr.h"
+#endif
+
 /*
  * Constants
  *
@@ -53,6 +60,19 @@ const char *const sensor_status_name[] = {
 	sensor_name_to_num(pec_error)
 	sensor_name_to_num(parameter_not_valid)
 };
+
+#ifdef ENABLE_PLDM_SENSOR
+const char *const pldm_sensor_status_name[] = {
+	sensor_name_to_num(sensor_enabled)
+	sensor_name_to_num(sensor_disabled)
+	sensor_name_to_num(sensor_unavailable)
+	sensor_name_to_num(sensor_statusunknown) 
+	sensor_name_to_num(sensor_failed)
+	sensor_name_to_num(sensor_initializing)
+	sensor_name_to_num(sensor_shuttingdown)
+	sensor_name_to_num(sensor_intest)
+};
+#endif
 // clang-format on
 
 /*
@@ -108,6 +128,82 @@ static int get_sdr_index_by_sensor_num(uint8_t sensor_num)
 static int sensor_access(const struct shell *shell, uint16_t table_idx, sensor_cfg *cfg,
 			 enum SENSOR_ACCESS mode)
 {
+#ifdef ENABLE_PLDM_SENSOR
+	if (shell == NULL) {
+		return -1;
+	}
+
+	int t_id = 0, s_id = 0, pldm_sensor_count = 0;
+
+	for (t_id = 0; t_id < MAX_SENSOR_THREAD_ID; t_id++) {
+		pldm_sensor_count = plat_pldm_sensor_get_sensor_count(t_id);
+		for (s_id = 0; s_id < pldm_sensor_count; s_id++) {
+			uint16_t sensor_id;
+			real32_t resolution, offset, poll_time;
+			int8_t unit_modifier;
+			uint8_t type, cache_status;
+			int cache;
+			char check_access;
+			uint32_t update_time;
+			uint32_t current_time = 0, diff_time = 0;
+
+			int ret = pldm_sensor_get_info_via_sensor_thread_and_sensor_pdr_index(
+				t_id, s_id, &sensor_id, &resolution, &offset, &unit_modifier,
+				&poll_time, &update_time, &type, &cache, &cache_status,
+				&check_access);
+
+			if (ret != 0)
+				continue;
+
+			char sensor_name[MAX_AUX_SENSOR_NAME_LEN] = { 0 };
+			pldm_get_sensor_name_via_sensor_id(sensor_id, sensor_name,
+							   sizeof(sensor_name));
+			char sign = ' ';
+
+			current_time = k_uptime_get_32() / 1000;
+			diff_time = current_time - update_time;
+			if (diff_time < 1)
+				diff_time = 1;
+
+			if ((check_access == 'O') && (cache_status == PLDM_SENSOR_ENABLED)) {
+				sensor_val cache_reading;
+				cache_reading.integer = (int16_t)(cache & 0xFFFF);
+				cache_reading.fraction = (int16_t)((cache >> 16) & 0xFFFF);
+
+				if (cache_reading.fraction < 0) {
+					cache_reading.fraction = -cache_reading.fraction;
+					if (cache_reading.integer == 0) {
+						sign = '-';
+					}
+				}
+				if (cache_reading.integer < 0) {
+					cache_reading.integer = -cache_reading.integer;
+					sign = '-';
+				}
+
+				shell_print(
+					shell,
+					"[0x%-2x] %-40s: %-18s | access[%c] | poll %4d(%2d) sec | %-21s | %c%5d.%03d",
+					sensor_id, sensor_name, sensor_type_name[type],
+					check_access, diff_time, (int)poll_time,
+					pldm_sensor_status_name[cfg->cache_status], sign,
+					cache_reading.integer, cache_reading.fraction);
+
+				continue;
+			}
+
+			shell_print(
+				shell,
+				"[0x%-2x] %-40s: %-18s | access[%c] | poll %4d(%2d) sec | %-21s | na",
+				sensor_id, sensor_name, sensor_type_name[type], check_access,
+				diff_time, (int)poll_time,
+				pldm_sensor_status_name[cfg->cache_status]);
+			continue;
+		}
+	}
+
+#else
+
 	if (shell == NULL || cfg == NULL) {
 		return -1;
 	}
@@ -178,6 +274,7 @@ static int sensor_access(const struct shell *shell, uint16_t table_idx, sensor_c
 		break;
 	}
 
+#endif
 	return 0;
 }
 
@@ -224,6 +321,9 @@ void cmd_sensor_cfg_list_all_sensor(const struct shell *shell, size_t argc, char
 		return;
 	}
 
+#ifdef ENABLE_PLDM_SENSOR
+	sensor_access(shell, 0, 0, SENSOR_READ);
+#else
 	int sdr_index = -1;
 	uint16_t table_idx = 0;
 	uint8_t sensor_idx = 0;
@@ -284,6 +384,7 @@ void cmd_sensor_cfg_list_all_sensor(const struct shell *shell, size_t argc, char
 			shell,
 			"---------------------------------------------------------------------------------");
 	}
+#endif
 }
 
 void cmd_sensor_cfg_get_table_all_sensor(const struct shell *shell, size_t argc, char **argv)

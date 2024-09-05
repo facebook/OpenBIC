@@ -90,6 +90,29 @@ ina233_init_arg ina233_init_args[] = {
 	},
 };
 
+rtq6056_init_arg rtq6056_init_args[] = {
+	[0] = {
+		.is_init = false,
+		.current_lsb = 0.001,
+		.r_shunt = 0.002,
+	},
+	[1] = {
+		.is_init = false,
+		.current_lsb = 0.001,
+		.r_shunt = 0.002,
+	},
+	[2] = {
+		.is_init = false,
+		.current_lsb = 0.001,
+		.r_shunt = 0.002,
+	},
+	[3] = {
+		.is_init = false,
+		.current_lsb = 0.001,
+		.r_shunt = 0.002,
+	},
+};
+
 pt5161l_init_arg pt5161l_init_args[] = { [0] = { .is_init = false,
 						 .temp_cal_code_pma_a = { 0, 0, 0, 0 },
 						 .temp_cal_code_pma_b = { 0, 0, 0, 0 },

@@ -90,21 +90,20 @@ void ISR_E1S_ALERT()
 {
 	isr_dbg_print(INA230_E1S_ALERT_L);
 
-	common_addsel_msg_t sel_msg;
+	struct ipmi_storage_add_sel_req add_sel_msg = { 0 };
 	if (gpio_get(RUN_POWER_PG) == GPIO_HIGH) {
 		if (gpio_get(INA230_E1S_ALERT_L) == GPIO_HIGH) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
+			add_sel_msg.event.event_dir_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		} else {
-			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+			add_sel_msg.event.event_dir_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}
 
-		sel_msg.InF_target = PLDM;
-		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_OEM;
-		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
-		sel_msg.event_data1 = IPMI_EVENT_OFFSET_SYS_E1S_ALERT;
-		sel_msg.event_data2 = 0xFF;
-		sel_msg.event_data3 = 0xFF;
-		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
+		add_sel_msg.event.sensor_type = IPMI_OEM_SENSOR_TYPE_OEM;
+		add_sel_msg.event.sensor_num = SENSOR_NUM_SYSTEM_STATUS;
+		add_sel_msg.event.event_data[0] = IPMI_EVENT_OFFSET_SYS_E1S_ALERT;
+		add_sel_msg.event.event_data[1] = 0xFF;
+		add_sel_msg.event.event_data[2] = 0xFF;
+		if (!mctp_add_sel_to_ipmi(&add_sel_msg, ADD_COMMON_SEL)) {
 			LOG_ERR("Failed to add E1S alert sel.");
 		}
 	}
@@ -197,20 +196,19 @@ void ISR_HSC_OC()
 {
 	isr_dbg_print(FM_HSC_TIMER);
 
-	common_addsel_msg_t sel_msg;
+	struct ipmi_storage_add_sel_req add_sel_msg = { 0 };
 	if (gpio_get(FM_HSC_TIMER) == GPIO_HIGH) {
-		sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
+		add_sel_msg.event.event_dir_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 	} else {
-		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+		add_sel_msg.event.event_dir_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 	}
 
-	sel_msg.InF_target = PLDM;
-	sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
-	sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
-	sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_HSCTIMER;
-	sel_msg.event_data2 = 0xFF;
-	sel_msg.event_data3 = 0xFF;
-	if (!mctp_add_sel_to_ipmi(&sel_msg)) {
+	add_sel_msg.event.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+	add_sel_msg.event.sensor_num = SENSOR_NUM_SYSTEM_STATUS;
+	add_sel_msg.event.event_data[0] = IPMI_OEM_EVENT_OFFSET_SYS_HSCTIMER;
+	add_sel_msg.event.event_data[1] = 0xFF;
+	add_sel_msg.event.event_data[2] = 0xFF;
+	if (!mctp_add_sel_to_ipmi(&add_sel_msg, ADD_COMMON_SEL)) {
 		LOG_ERR("HSC OC addsel fail");
 	}
 }
@@ -239,15 +237,14 @@ static void PROC_FAIL_handler(struct k_work *work)
 {
 	/* if have not received ssif and post code, add FRB3 event log. */
 	if ((get_ssif_ok() == false) || (sbmr_get_uefi_status() == false)) {
-		common_addsel_msg_t sel_msg;
-		sel_msg.InF_target = PLDM;
-		sel_msg.sensor_type = IPMI_SENSOR_TYPE_PROCESSOR;
-		sel_msg.sensor_number = SENSOR_NUM_PROC_FAIL;
-		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
-		sel_msg.event_data1 = IPMI_EVENT_OFFSET_PROCESSOR_FRB3;
-		sel_msg.event_data2 = 0xFF;
-		sel_msg.event_data3 = 0xFF;
-		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
+		struct ipmi_storage_add_sel_req add_sel_msg = { 0 };
+		add_sel_msg.event.sensor_type = IPMI_SENSOR_TYPE_PROCESSOR;
+		add_sel_msg.event.sensor_num = SENSOR_NUM_PROC_FAIL;
+		add_sel_msg.event.event_dir_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+		add_sel_msg.event.event_data[0] = IPMI_EVENT_OFFSET_PROCESSOR_FRB3;
+		add_sel_msg.event.event_data[1] = 0xFF;
+		add_sel_msg.event.event_data[2] = 0xFF;
+		if (!mctp_add_sel_to_ipmi(&add_sel_msg, ADD_COMMON_SEL)) {
 			LOG_ERR("Failed to assert FRE3 event log.");
 		}
 	}
@@ -281,15 +278,14 @@ static void read_cpu_power_seq_status(struct k_work *work)
 	/* if cpu abnormal off, add SEL, it might trigger from CPU or VR. */
 	if (i2c_msg.data[0] == CPU_SHDN_STATE) {
 		LOG_WRN("CPU abnormal off, add CPU thermal trip or VR hot sel.");
-		common_addsel_msg_t sel_msg;
-		sel_msg.InF_target = PLDM;
-		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
-		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
-		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
-		sel_msg.event_data1 = IPMI_SYS_EVENT_OFFSET_CPU_THERM_TRIP_OR_VR_HOT;
-		sel_msg.event_data2 = 0xFF;
-		sel_msg.event_data3 = 0xFF;
-		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
+		struct ipmi_storage_add_sel_req add_sel_msg = { 0 };
+		add_sel_msg.event.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+		add_sel_msg.event.sensor_num = SENSOR_NUM_SYSTEM_STATUS;
+		add_sel_msg.event.event_dir_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+		add_sel_msg.event.event_data[0] = IPMI_SYS_EVENT_OFFSET_CPU_THERM_TRIP_OR_VR_HOT;
+		add_sel_msg.event.event_data[1] = 0xFF;
+		add_sel_msg.event.event_data[2] = 0xFF;
+		if (!mctp_add_sel_to_ipmi(&add_sel_msg, ADD_COMMON_SEL)) {
 			LOG_ERR("Failed to add CPU thermal trip or VR hot sel.");
 		}
 	}
@@ -350,29 +346,28 @@ void ISR_HSC_THROTTLE()
 {
 	isr_dbg_print(IRQ_HSC_ALERT1_L);
 
-	common_addsel_msg_t sel_msg;
+	struct ipmi_storage_add_sel_req add_sel_msg = { 0 };
 	static bool is_hsc_throttle_assert = false; // Flag for filt out fake alert
 	if (gpio_get(RUN_POWER_PG) == GPIO_LOW) {
 		return;
 	} else {
 		if ((gpio_get(IRQ_HSC_ALERT1_L) == GPIO_HIGH) && (is_hsc_throttle_assert == true)) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
+			add_sel_msg.event.event_dir_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 			is_hsc_throttle_assert = false;
 		} else if ((gpio_get(IRQ_HSC_ALERT1_L) == GPIO_LOW) &&
 			   (is_hsc_throttle_assert == false)) {
-			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+			add_sel_msg.event.event_dir_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 			is_hsc_throttle_assert = true;
 		} else { // Fake alert
 			return;
 		}
 
-		sel_msg.InF_target = PLDM;
-		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
-		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
-		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_PMBUSALERT;
-		sel_msg.event_data2 = 0xFF;
-		sel_msg.event_data3 = 0xFF;
-		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
+		add_sel_msg.event.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+		add_sel_msg.event.sensor_num = SENSOR_NUM_SYSTEM_STATUS;
+		add_sel_msg.event.event_data[0] = IPMI_OEM_EVENT_OFFSET_SYS_PMBUSALERT;
+		add_sel_msg.event.event_data[1] = 0xFF;
+		add_sel_msg.event.event_data[2] = 0xFF;
+		if (!mctp_add_sel_to_ipmi(&add_sel_msg, ADD_COMMON_SEL)) {
 			LOG_ERR("Failed to add HSC Throttle sel.");
 		}
 	}
@@ -403,20 +398,19 @@ void ISR_CPU_HIGHTEMP()
 	isr_dbg_print(THERM_WARN_CPU1_L_3V3);
 
 	if (gpio_get(RUN_POWER_PG) == GPIO_HIGH) {
-		common_addsel_msg_t sel_msg;
+		struct ipmi_storage_add_sel_req add_sel_msg = { 0 };
 		if (gpio_get(THERM_WARN_CPU1_L_3V3) == GPIO_HIGH) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
+			add_sel_msg.event.event_dir_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 		} else {
-			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+			add_sel_msg.event.event_dir_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 		}
 
-		sel_msg.InF_target = PLDM;
-		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
-		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
-		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_FMTHROTTLE;
-		sel_msg.event_data2 = 0xFF;
-		sel_msg.event_data3 = 0xFF;
-		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
+		add_sel_msg.event.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+		add_sel_msg.event.sensor_num = SENSOR_NUM_SYSTEM_STATUS;
+		add_sel_msg.event.event_data[0] = IPMI_OEM_EVENT_OFFSET_SYS_FMTHROTTLE;
+		add_sel_msg.event.event_data[1] = 0xFF;
+		add_sel_msg.event.event_data[2] = 0xFF;
+		if (!mctp_add_sel_to_ipmi(&add_sel_msg, ADD_COMMON_SEL)) {
 			LOG_ERR("Failed to add FM throttle sel.");
 		}
 	}
@@ -427,27 +421,26 @@ void ISR_CPU_OVERTEMP()
 	isr_dbg_print(THERM_OVERT_CPU1_L_3V3);
 
 	if (gpio_get(RUN_POWER_PG) == GPIO_HIGH) {
-		common_addsel_msg_t sel_msg;
+		struct ipmi_storage_add_sel_req add_sel_msg = { 0 };
 		static bool is_thermal_trip_assert = 0;
 		if (gpio_get(THERM_OVERT_CPU1_L_3V3) == GPIO_LOW) {
 			if ((get_post_status() == true) && (is_thermal_trip_assert == false)) {
-				sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+				add_sel_msg.event.event_dir_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 				is_thermal_trip_assert = true;
 			}
 		} else if (gpio_get(THERM_OVERT_CPU1_L_3V3) && (is_thermal_trip_assert == true)) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
+			add_sel_msg.event.event_dir_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 			is_thermal_trip_assert = false;
 		} else {
 			return;
 		}
 
-		sel_msg.InF_target = PLDM;
-		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
-		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
-		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_THERMAL_TRIP;
-		sel_msg.event_data2 = 0xFF;
-		sel_msg.event_data3 = 0xFF;
-		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
+		add_sel_msg.event.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+		add_sel_msg.event.sensor_num = SENSOR_NUM_SYSTEM_STATUS;
+		add_sel_msg.event.event_data[0] = IPMI_OEM_EVENT_OFFSET_SYS_THERMAL_TRIP;
+		add_sel_msg.event.event_data[1] = 0xFF;
+		add_sel_msg.event.event_data[2] = 0xFF;
+		if (!mctp_add_sel_to_ipmi(&add_sel_msg, ADD_COMMON_SEL)) {
 			LOG_ERR("Thermal trip addsel fail");
 		}
 	}
@@ -458,16 +451,15 @@ void ISR_CPU_FAULT_ALERT()
 	isr_dbg_print(RUN_POWER_FAULT_L);
 	send_gpio_interrupt(RUN_POWER_FAULT_L);
 
-	common_addsel_msg_t sel_msg;
+	struct ipmi_storage_add_sel_req add_sel_msg = { 0 };
 	if (gpio_get(RUN_POWER_PG) == GPIO_HIGH) {
-		sel_msg.InF_target = PLDM;
-		sel_msg.sensor_type = IPMI_SENSOR_TYPE_PROCESSOR;
-		sel_msg.sensor_number = SENSOR_NUM_CPU_FAULT;
-		sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
-		sel_msg.event_data1 = 0xFF;
-		sel_msg.event_data2 = 0xFF;
-		sel_msg.event_data3 = 0xFF;
-		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
+		add_sel_msg.event.sensor_type = IPMI_SENSOR_TYPE_PROCESSOR;
+		add_sel_msg.event.sensor_num = SENSOR_NUM_CPU_FAULT;
+		add_sel_msg.event.event_dir_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+		add_sel_msg.event.event_data[0] = 0xFF;
+		add_sel_msg.event.event_data[1] = 0xFF;
+		add_sel_msg.event.event_data[2] = 0xFF;
+		if (!mctp_add_sel_to_ipmi(&add_sel_msg, ADD_COMMON_SEL)) {
 			LOG_ERR("CPU fault addsel fail");
 		}
 	}
@@ -502,25 +494,24 @@ void ISR_MB_THROTTLE()
 	 * Ignore this by checking whether MB_throttle is asserted before recording the deassertion.
 	 */
 	static bool is_mb_throttle_assert = false;
-	common_addsel_msg_t sel_msg;
+	struct ipmi_storage_add_sel_req add_sel_msg = { 0 };
 	if (get_DC_status()) {
 		if ((gpio_get(FAST_PROCHOT_L) == GPIO_HIGH) && (is_mb_throttle_assert == true)) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
+			add_sel_msg.event.event_dir_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 			is_mb_throttle_assert = false;
 		} else if ((gpio_get(FAST_PROCHOT_L) == GPIO_LOW) &&
 			   (is_mb_throttle_assert == false)) {
-			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+			add_sel_msg.event.event_dir_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 			is_mb_throttle_assert = true;
 		} else {
 			return;
 		}
-		sel_msg.InF_target = PLDM;
-		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
-		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
-		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_FIRMWAREASSERT;
-		sel_msg.event_data2 = 0xFF;
-		sel_msg.event_data3 = 0xFF;
-		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
+		add_sel_msg.event.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+		add_sel_msg.event.sensor_num = SENSOR_NUM_SYSTEM_STATUS;
+		add_sel_msg.event.event_data[0] = IPMI_OEM_EVENT_OFFSET_SYS_FIRMWAREASSERT;
+		add_sel_msg.event.event_data[1] = 0xFF;
+		add_sel_msg.event.event_data[2] = 0xFF;
+		if (!mctp_add_sel_to_ipmi(&add_sel_msg, ADD_COMMON_SEL)) {
 			LOG_ERR("Failed to add MB Throttle sel.");
 		}
 	}
@@ -544,26 +535,25 @@ void ISR_SYS_THROTTLE()
 	 * Ignore the fake event by checking whether SYS_throttle is asserted before recording the deassertion.
 	 */
 	static bool is_sys_throttle_assert = false;
-	common_addsel_msg_t sel_msg;
+	struct ipmi_storage_add_sel_req add_sel_msg = { 0 };
 	if (gpio_get(RUN_POWER_PG) == GPIO_HIGH) {
 		if ((gpio_get(CPU_BIC_PROCHOT_L) == GPIO_HIGH) &&
 		    (is_sys_throttle_assert == true)) {
-			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
+			add_sel_msg.event.event_dir_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
 			is_sys_throttle_assert = false;
 		} else if ((gpio_get(CPU_BIC_PROCHOT_L) == GPIO_LOW) &&
 			   (is_sys_throttle_assert == false)) {
-			sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+			add_sel_msg.event.event_dir_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
 			is_sys_throttle_assert = true;
 		} else {
 			return;
 		}
-		sel_msg.InF_target = PLDM;
-		sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
-		sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
-		sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_THROTTLE;
-		sel_msg.event_data2 = 0xFF;
-		sel_msg.event_data3 = 0xFF;
-		if (!mctp_add_sel_to_ipmi(&sel_msg)) {
+		add_sel_msg.event.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+		add_sel_msg.event.sensor_num = SENSOR_NUM_SYSTEM_STATUS;
+		add_sel_msg.event.event_data[0] = IPMI_OEM_EVENT_OFFSET_SYS_THROTTLE;
+		add_sel_msg.event.event_data[1] = 0xFF;
+		add_sel_msg.event.event_data[2] = 0xFF;
+		if (!mctp_add_sel_to_ipmi(&add_sel_msg, ADD_COMMON_SEL)) {
 			LOG_ERR("Failed to add System Throttle sel.");
 		}
 	}

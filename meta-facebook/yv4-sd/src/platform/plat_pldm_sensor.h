@@ -66,9 +66,11 @@ int plat_pldm_sensor_get_sensor_count(int thread_id);
 void plat_pldm_sensor_get_pdr_numeric_sensor(int thread_id, int sensor_num,
 					     PDR_numeric_sensor *numeric_sensor_table);
 uint8_t plat_pldm_sensor_get_vr_dev(uint8_t *vr_dev);
+uint8_t plat_pldm_sensor_get_ina_dev();
 void plat_pldm_sensor_change_vr_dev();
 void plat_pldm_sensor_change_ssd_dev();
 void plat_pldm_sensor_change_cpu_bus();
 void plat_pldm_sensor_change_retimer_dev();
+void plat_pldm_sensor_change_ina_dev();
 
 #endif

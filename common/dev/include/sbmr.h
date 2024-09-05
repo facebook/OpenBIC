@@ -44,6 +44,16 @@ typedef struct __attribute__((packed)) {
 
 #define SBMR_POSTCODE_SIZE sizeof(sbmr_boot_progress_code_t)
 
+#ifndef SMBR_UEFI_BOOT_START_POST_CODE
+#define SMBR_UEFI_BOOT_START_POST_CODE 0xc1010005
+#endif
+
+extern bool sbmr_frb3_flag_clr;
+
+#ifdef ENABLE_NVIDIA
+extern sbmr_boot_progress_code_t nv_sbmr_postcode[];
+#endif
+
 struct sbmr_cmd_send_boot_progress_code_req {
 	uint8_t group_ext_def_body;
 	sbmr_boot_progress_code_t code;

@@ -178,6 +178,12 @@ enum SENSOR_DEV {
 	sensor_dev_ads1015 = 0x3C,
 	sensor_dev_plat_def_sensor = 0x3D,
 	sensor_dev_e50sn12051 = 0x3E,
+	sensor_dev_u50su4p180pmdafc = 0x3F,
+	sensor_dev_bmr313 = 0x40,
+	sensor_dev_mp2891 = 0x41,
+	sensor_dev_raa228238 = 0x42,
+	sensor_dev_mpc12109 = 0x43,
+	sensor_dev_rtq6056 = 0x44,
 	sensor_dev_max
 };
 
@@ -464,6 +470,12 @@ typedef struct _pmic_init_arg {
 	uint8_t smbus_bus_identifier;
 	uint8_t smbus_addr;
 } pmic_init_arg;
+
+typedef struct _rtq6056_init_arg_ {
+	bool is_init;
+	float current_lsb;
+	float r_shunt;
+} rtq6056_init_arg;
 
 typedef struct _ina233_init_arg_ {
 	bool is_init;
