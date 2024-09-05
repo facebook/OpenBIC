@@ -36,6 +36,7 @@ LOG_MODULE_REGISTER(plat_pldm_sensor);
 void plat_pldm_sensor_change_vr_dev();
 void plat_pldm_sensor_change_adc_monitor_dev();
 void plat_pldm_sensor_change_asic_tmp_dev();
+void plat_pldm_sensor_change_ina233_dev();
 
 static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = {
 	// thread id, thread name
@@ -6354,6 +6355,7 @@ pldm_sensor_info *plat_pldm_sensor_load(int thread_id)
 		plat_pldm_sensor_change_asic_tmp_dev();
 		return plat_pldm_sensor_tmp_table;
 	case INA233_SENSOR_THREAD_ID:
+		plat_pldm_sensor_change_ina233_dev();
 		return plat_pldm_sensor_ina233_table;
 	case VR_SENSOR_THREAD_ID:
 		plat_pldm_sensor_change_vr_dev();
@@ -6623,6 +6625,42 @@ void plat_pldm_sensor_change_asic_tmp_dev()
 				plat_pldm_sensor_tmp_table[index].pldm_sensor_cfg.target_addr =
 					ADDR_TMP461_CXL2;
 				break;
+			}
+		}
+	}
+}
+
+void plat_pldm_sensor_change_ina233_dev()
+{
+	uint8_t reg = 0;
+
+	/*
+	 * Get remote sensor type from BOARD_ID2 (IOE3 P16)
+	 * Low - INA233 (main source)
+	 * High - RTQ6056 (2nd source)
+	 */
+
+	if (get_ioe_value(ADDR_IOE3, TCA9555_INPUT_PORT_REG_1, &reg) == -1) {
+		LOG_ERR("Failed to get the remote sensor type from BOARD_ID2");
+		return;
+	}
+
+	if (GETBIT(reg, IOE_P16)) {
+		for (int index = 0;
+		     index < plat_pldm_sensor_get_sensor_count(INA233_SENSOR_THREAD_ID); index++) {
+			if (plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.type ==
+			    sensor_dev_ina233) {
+				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.type =
+					sensor_dev_rtq6056;
+
+				if (plat_pldm_sensor_ina233_table[index]
+					    .pldm_sensor_cfg.target_addr == ADDR_INA233_P12V_STBY) {
+					plat_pldm_sensor_ina233_table[index]
+						.pldm_sensor_cfg.init_args = &rtq6056_init_args[0];
+				} else {
+					plat_pldm_sensor_ina233_table[index]
+						.pldm_sensor_cfg.init_args = &rtq6056_init_args[1];
+				}
 			}
 		}
 	}

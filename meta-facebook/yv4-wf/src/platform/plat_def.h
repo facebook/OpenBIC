@@ -27,6 +27,8 @@
 #define ENABLE_CCI
 #define ENABLE_VISTARA
 
+#define ENABLE_RTQ6056
+
 #define BIC_UPDATE_MAX_OFFSET 0xC0000
 
 #endif
