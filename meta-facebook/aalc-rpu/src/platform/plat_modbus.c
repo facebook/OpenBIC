@@ -622,6 +622,20 @@ static uint8_t modbus_to_do_set(modbus_command_mapping *cmd)
 	return MODBUS_EXC_NONE;
 }
 
+static uint8_t fru_data_write_to_do(modbus_command_mapping *cmd)
+{
+	// wait to do
+
+	return MODBUS_EXC_NONE;
+}
+
+static uint8_t fru_data_read_to_do(modbus_command_mapping *cmd)
+{
+	// wait to do
+
+	return MODBUS_EXC_NONE;
+}
+
 modbus_command_mapping modbus_command_table[] = {
 	// addr, write_fn, read_fn, arg0, arg1, arg2, size
 	{ MODBUS_BPB_RPU_COOLANT_FLOW_RATE_LPM_ADDR, NULL, modbus_get_senser_reading,
@@ -1165,7 +1179,28 @@ modbus_command_mapping modbus_command_table[] = {
 	// eeprom related
 	{ MODBUS_GET_SET_HMI_VER_ADDR, modbus_write_hmi_version, modbus_read_hmi_version, 0, 0, 0,
 	  8 },
-
+	// RPU FRU
+	{ MODBUS_RPU_FBPN_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 1, 1, 8 },
+	{ MODBUS_RPU_MFR_MODEL_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 1, 1, 8 },
+	{ MODBUS_RPU_MFR_DATE_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 1, 1, 4 },
+	{ MODBUS_RPU_MFR_SERIAL_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 1, 1, 8 },
+	{ MODBUS_RPU_WORKORDER_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 1, 1, 4 },
+	{ MODBUS_RPU_HW_REVISION_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 1, 1, 4 },
+	{ MODBUS_RPU_PLC_FW_REVISION_ADDR, NULL, fru_data_read_to_do, 0, 1, 1, 4 },
+	{ MODBUS_TOTAL_UP_TIME_ADDR, NULL, fru_data_read_to_do, 0, 1, 1, 2 },
+	{ MODBUS_TIME_SINCE_LAST_ON_ADDR, NULL, fru_data_read_to_do, 0, 1, 1, 2 },
+	{ MODBUS_RPU_HMI_FW_REVISION_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 1, 1, 4 },
+	{ MODBUS_RPU_HEX_FW_REVISION_ADDR, NULL, fru_data_read_to_do, 0, 1, 1, 2 },
+	{ MODBUS_RPU_NOAHS_ARK_CONFIGURATION_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 1,
+	  1, 4 },
+	{ MODBUS_RPU_RESERVIOR_AND_PUMPING_UNIT_FBPN_ADDR, fru_data_write_to_do,
+	  fru_data_read_to_do, 0, 1, 1, 4 },
+	{ MODBUS_HEAT_EXCHANGER_CONTROL_BOX_FBPN_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0,
+	  1, 1, 4 },
+	{ MODBUS_HEAT_EXCHANGER_FANS_FBPN_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 1, 1,
+	  4 },
+	{ MODBUS_HEAT_EXCHANGER_FAN_CONTROL_BOX_FBPN_ADDR, fru_data_write_to_do,
+	  fru_data_read_to_do, 0, 1, 1, 4 },
 };
 
 static modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)
