@@ -45,6 +45,6 @@ void send_cmd_to_dev_handler(struct k_work *work);
 bool mctp_add_sel_to_ipmi(struct ipmi_storage_add_sel_req *sel_msg, uint8_t sel_type);
 uint8_t plat_get_mctp_port_count();
 mctp_port *plat_get_mctp_port(uint8_t index);
-void set_dev_endpoint_global();
+void satmc_status_update();
 
 #endif /* _PLAT_MCTP_h */
