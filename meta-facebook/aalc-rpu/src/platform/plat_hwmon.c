@@ -38,6 +38,7 @@ bool modbus_pump_setting_unsupport_function(pump_reset_struct *data, uint8_t bit
 	return true;
 }
 
+K_WORK_DEFINE(clear_log_work, modbus_clear_log);
 bool clear_log_for_modbus_pump_setting(pump_reset_struct *data, uint8_t bit_val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
@@ -45,22 +46,17 @@ bool clear_log_for_modbus_pump_setting(pump_reset_struct *data, uint8_t bit_val)
 	if (bit_val == 0) // do nothing
 		return true;
 
-	bool clear_log_status = modbus_clear_log();
+	k_work_submit(&clear_log_work);
 
-	return clear_log_status;
+	return true;
 }
 
-bool pump_reset(pump_reset_struct *data, uint8_t bit_val)
+static bool hsc_reset(uint8_t sensor_num)
 {
-	CHECK_NULL_ARG_WITH_RETURN(data, false);
-
-	if (bit_val == 0) // do nothing
-		return true;
-
 	// Check sensor information in sensor config table
-	sensor_cfg *cfg = get_common_sensor_cfg_info(data->senser_num);
+	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
 	if (cfg == NULL) {
-		LOG_ERR("Fail when getting pump sensor config, 0x%x", data->senser_num);
+		LOG_ERR("Fail when getting pump sensor config, 0x%x", sensor_num);
 		return false;
 	}
 
@@ -83,6 +79,25 @@ bool pump_reset(pump_reset_struct *data, uint8_t bit_val)
 		return false;
 	}
 }
+
+#define PUMP_RESET_FUNCTIONS(num)                                                                  \
+	static void pump##num##_reset()                                                            \
+	{                                                                                          \
+		hsc_reset(SENSOR_NUM_PB_##num##_HSC_P48V_PIN_PWR_W);                               \
+	}                                                                                          \
+	K_WORK_DEFINE(pump##num##_reset_work, pump##num##_reset);                                  \
+	bool pump_setting_pump##num##_reset(pump_reset_struct *data, uint8_t bit_val)              \
+	{                                                                                          \
+		CHECK_NULL_ARG_WITH_RETURN(data, false);                                           \
+		if (bit_val == 0)                                                                  \
+			return true;                                                               \
+		k_work_submit(&pump##num##_reset_work);                                            \
+		return true;                                                                       \
+	}
+
+PUMP_RESET_FUNCTIONS(1)
+PUMP_RESET_FUNCTIONS(2)
+PUMP_RESET_FUNCTIONS(3)
 
 bool close_pump(pump_reset_struct *data, uint8_t bit_val)
 {

@@ -105,7 +105,7 @@ void log_transfer_to_modbus_data(uint16_t *modbus_data, uint8_t cmd_size, uint16
 		memset(modbus_data, 0x00, sizeof(uint16_t) * cmd_size);
 }
 
-bool modbus_clear_log(void)
+void modbus_clear_log()
 {
 	memset(err_log_data, 0xFF, sizeof(err_log_data));
 	memset(err_sensor_caches, 0, sizeof(err_sensor_caches));
@@ -114,12 +114,9 @@ bool modbus_clear_log(void)
 		if (!plat_eeprom_write(AALC_FRU_LOG_START + sizeof(modbus_err_log_mapping) * i,
 				       (uint8_t *)err_log_data, sizeof(modbus_err_log_mapping))) {
 			LOG_ERR("Clear EEPROM Log failed");
-			return false;
 		}
 		k_msleep(10); // the eeprom max write time is 10 ms
 	}
-
-	return true;
 }
 
 uint32_t get_uptime_secs(void)

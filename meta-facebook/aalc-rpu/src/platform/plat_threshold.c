@@ -307,7 +307,7 @@ void pump_board_tach_status_handler(uint8_t sensor_num, uint8_t status)
 		LOG_ERR("Write pump_board_pwrgd gpio fail");
 }
 
-static bool close_pump_hsc(uint8_t sensor_num)
+/*static bool close_pump_hsc(uint8_t sensor_num)
 {
 	bool ret = true;
 	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
@@ -329,9 +329,9 @@ static bool close_pump_hsc(uint8_t sensor_num)
 	}
 
 	return ret;
-}
+}*/
 
-static bool pump_fail_ctrl(uint8_t sensor_num)
+/*static bool pump_fail_ctrl(uint8_t sensor_num)
 {
 	bool ret = true;
 	uint8_t pwm_dev =
@@ -359,7 +359,7 @@ static bool pump_fail_ctrl(uint8_t sensor_num)
 	}
 
 	return ret;
-}
+}*/
 
 static bool pump_fan_fail_ctrl()
 {
@@ -506,11 +506,11 @@ sensor_threshold threshold_tbl[] = {
 	  SENSOR_NUM_FB_13_FAN_TACH_RPM },
 	{ SENSOR_NUM_FB_14_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, hex_fan_failure_do,
 	  SENSOR_NUM_FB_14_FAN_TACH_RPM },
-	{ SENSOR_NUM_PB_1_PUMP_TACH_RPM, THRESHOLD_ENABLE_BOTH, 500, 8000, pump_failure_do,
+	{ SENSOR_NUM_PB_1_PUMP_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 10000, pump_failure_do,
 	  THRESHOLD_ARG0_TABLE_INDEX },
-	{ SENSOR_NUM_PB_2_PUMP_TACH_RPM, THRESHOLD_ENABLE_BOTH, 500, 8000, pump_failure_do,
+	{ SENSOR_NUM_PB_2_PUMP_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 10000, pump_failure_do,
 	  THRESHOLD_ARG0_TABLE_INDEX },
-	{ SENSOR_NUM_PB_3_PUMP_TACH_RPM, THRESHOLD_ENABLE_BOTH, 500, 8000, pump_failure_do,
+	{ SENSOR_NUM_PB_3_PUMP_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 10000, pump_failure_do,
 	  THRESHOLD_ARG0_TABLE_INDEX },
 	{ SENSOR_NUM_PB_1_FAN_1_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, rpu_internal_fan_failure_do,
 	  SENSOR_NUM_PB_1_FAN_1_TACH_RPM },
@@ -593,10 +593,12 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 		}
 		//wait 30 secs to shut down
 	} else if (status == THRESHOLD_STATUS_UCR) {
-		if (!pump_fail_ctrl(sensor_num))
-			LOG_ERR("threshold 0x%02x pump failure", sensor_num);
+		//if (!pump_fail_ctrl(sensor_num))
+		ctl_all_pwm_dev(0);
+		LOG_ERR("threshold 0x%02x pump failure", sensor_num);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
 		error_log_event(sensor_num, IS_NORMAL_VAL);
+		*retry = 0;
 	} else
 		LOG_DBG("Unexpected threshold warning");
 }
@@ -764,6 +766,9 @@ static bool set_threshold_status(sensor_threshold *threshold_tbl, float val)
 
 	if (threshold_tbl->last_status == status)
 		return false;
+
+	LOG_ERR("0x%02x status change: last_status: %d, status: %d, val: %d\n",
+		threshold_tbl->sensor_num, threshold_tbl->last_status, status, (int)val);
 
 	threshold_tbl->last_status = status;
 	return true;
