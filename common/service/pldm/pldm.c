@@ -641,7 +641,7 @@ int pldm_send_ipmi_request(ipmi_msg *msg)
 	// Total data len = IANA + ipmi netfn + ipmi cmd + ipmi request data len
 	pmsg.len = sizeof(struct _ipmi_cmd_req) - 1 + msg->data_len;
 
-	uint8_t rbuf[PLDM_MAX_DATA_SIZE];
+	uint8_t rbuf[PLDM_MAX_DATA_SIZE] = { 0 };
 
 	LOG_HEXDUMP_DBG(pmsg.buf, pmsg.len, "pmsg.buf");
 	// Send request to PLDM/MCTP thread and get response
