@@ -50,12 +50,14 @@ static void set_endpoint_resp_handler(void *args, uint8_t *buf, uint16_t len)
 
 	set_satmc_status(true);
 
-	LOG_HEXDUMP_INF(buf, len, __func__);
+	LOG_HEXDUMP_DBG(buf, len, __func__);
 }
 
 static void set_endpoint_resp_timeout(void *args)
 {
 	CHECK_NULL_ARG(args);
+
+	set_satmc_status(false);
 
 	mctp_route_entry *p = (mctp_route_entry *)args;
 	LOG_ERR("Failed to set endpoint 0x%x on bus %d addr 0x%x", p->endpoint, p->bus, p->addr);
@@ -93,14 +95,75 @@ static void set_dev_endpoint(void)
 			msg.timeout_cb_fn = set_endpoint_resp_timeout;
 			msg.timeout_cb_fn_args = p;
 
-			mctp_ctrl_send_msg(pal_find_mctp_by_bus(p->bus), &msg);
+			uint8_t ret = mctp_ctrl_send_msg(pal_find_mctp_by_bus(p->bus), &msg);
+			if (ret != MCTP_SUCCESS && p->bus == MCTP_I2C_SATMC_BUS) {
+				set_satmc_status(false);
+			}
 		}
 	}
 }
 
-void set_dev_endpoint_global()
+void satmc_status_update()
 {
-	set_dev_endpoint();
+	uint8_t ret = MCTP_ERROR;
+
+	mctp_ctrl_msg msg = { 0 };
+	msg.ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
+	msg.ext_params.smbus_ext_params.addr = MCTP_I2C_SATMC_ADDR;
+	msg.hdr.rq = MCTP_REQUEST;
+
+	struct _get_eid_resp get_eid_resp = { 0 };
+
+	msg.hdr.cmd = MCTP_CTRL_CMD_GET_ENDPOINT_ID;
+
+	ret = mctp_ctrl_read(pal_find_mctp_by_bus(MCTP_I2C_SATMC_BUS), &msg,
+			     (uint8_t *)&get_eid_resp, sizeof(get_eid_resp));
+	if (ret != MCTP_SUCCESS) {
+		LOG_ERR("Fail to get eid from SatMC");
+		set_satmc_status(false);
+		return;
+	}
+
+	if (get_eid_resp.completion_code != MCTP_SUCCESS) {
+		LOG_ERR("Fail to get eid from SatMC, completion code: 0x%x",
+			get_eid_resp.completion_code);
+		set_satmc_status(false);
+		return;
+	}
+
+	if (get_eid_resp.eid == MCTP_EID_SATMC) {
+		set_satmc_status(true);
+		return;
+	}
+
+	LOG_WRN("Set SatMC EID from 0x%x to 0x%x", get_eid_resp.eid, MCTP_EID_SATMC);
+
+	struct _set_eid_req set_eid_req = { 0 };
+	set_eid_req.op = SET_EID_REQ_OP_SET_EID;
+	set_eid_req.eid = MCTP_EID_SATMC;
+
+	struct _set_eid_resp set_eid_resp = { 0 };
+
+	msg.hdr.cmd = MCTP_CTRL_CMD_SET_ENDPOINT_ID;
+	msg.cmd_data = (uint8_t *)&set_eid_req;
+	msg.cmd_data_len = sizeof(set_eid_req);
+
+	ret = mctp_ctrl_read(pal_find_mctp_by_bus(MCTP_I2C_SATMC_BUS), &msg,
+			     (uint8_t *)&set_eid_resp, sizeof(set_eid_resp));
+	if (ret != MCTP_SUCCESS) {
+		LOG_ERR("Fail to set eid to SatMC");
+		set_satmc_status(false);
+		return;
+	}
+
+	if (set_eid_resp.completion_code != MCTP_SUCCESS) {
+		LOG_ERR("Fail to set eid to SatMC, completion code: 0x%x",
+			set_eid_resp.completion_code);
+		set_satmc_status(false);
+		return;
+	}
+
+	set_satmc_status(true);
 }
 
 uint8_t get_mctp_info(uint8_t dest_endpoint, mctp **mctp_inst, mctp_ext_params *ext_params)

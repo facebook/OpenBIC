@@ -71,8 +71,8 @@ void pal_post_init()
 	ssif_init();
 
 	if (get_DC_status() == true) {
-		LOG_INF("Try to set satmc eid");
-		set_dev_endpoint_global();
+		LOG_INF("Try to access SatMC...");
+		satmc_status_update();
 	}
 }
 

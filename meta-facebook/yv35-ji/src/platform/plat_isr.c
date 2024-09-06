@@ -114,37 +114,45 @@ void ISR_RTC_ALERT()
 	isr_dbg_print(I2C_2_CPU_ALERT_R_L);
 }
 
-#define SATMC_POLL_INTERVAL 8000 // ms
-K_MUTEX_DEFINE(satmc_access_poll_mutex);
-void satmc_access_poll_handler(struct k_work *work)
+#define SATMC_POLL_INTERVAL 4000 // ms
+static bool is_satmc_poll_thread_running = false;
+static void satmc_access_poll_handler()
 {
-	if (k_mutex_lock(&satmc_access_poll_mutex, K_MSEC(1000))) {
-		LOG_ERR("Mutex lock failed");
-		return;
-	}
-
 	while (1) {
 		if (CPU_power_good() == false)
 			break;
-		if (get_satmc_status() == true)
+		/* keep polling till post end cause CPU may reset itself during boot up */
+		if (get_post_status() == true)
 			break;
-		LOG_INF("Try to set eid to SatMC...");
-		set_dev_endpoint_global();
+		LOG_INF("Patting SatMC...");
+		satmc_status_update();
 		k_msleep(SATMC_POLL_INTERVAL);
 	}
-
-	if (k_mutex_unlock(&satmc_access_poll_mutex)) {
-		LOG_ERR("Mutex unlock failed");
-	}
+	is_satmc_poll_thread_running = false;
 }
 
-K_WORK_DEFINE(set_eid_work, satmc_access_poll_handler);
+#define SATMC_POLL_THREAD_STACK_SIZE 1024
+struct k_thread satmc_poll_thread;
+K_KERNEL_STACK_MEMBER(satmc_poll_thread_stack, SATMC_POLL_THREAD_STACK_SIZE);
+void start_satmc_access_poll()
+{
+	if (is_satmc_poll_thread_running) {
+		LOG_WRN("SatMC poll thread is already running!");
+		return;
+	}
+	is_satmc_poll_thread_running = true;
+
+	k_thread_create(&satmc_poll_thread, satmc_poll_thread_stack,
+			K_THREAD_STACK_SIZEOF(satmc_poll_thread_stack), satmc_access_poll_handler,
+			NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+	k_thread_name_set(&satmc_poll_thread, "satmc_poll_thread");
+}
 
 void check_host_reboot_status()
 {
 	if (get_DC_status() == true) {
 		LOG_WRN("Host reboot detected!");
-		k_work_submit(&set_eid_work);
+		start_satmc_access_poll();
 	}
 }
 
@@ -291,13 +299,6 @@ static void read_cpu_power_seq_status(struct k_work *work)
 	}
 }
 
-void satmc_access_polling(struct k_timer *timer)
-{
-	k_work_submit(&set_eid_work);
-}
-
-K_TIMER_DEFINE(try_to_access_satmc, satmc_access_polling, NULL);
-
 K_WORK_DELAYABLE_DEFINE(read_cpu_power_seq_status_work, read_cpu_power_seq_status);
 K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_delayed_status);
 K_WORK_DELAYABLE_DEFINE(PROC_FAIL_work, PROC_FAIL_handler);
@@ -312,10 +313,11 @@ void ISR_PWRGD_CPU()
 
 	if (CPU_power_good() == true) {
 		reset_sbmr_postcode_buffer();
-		k_work_schedule(&set_DC_on_5s_work, K_SECONDS(DC_ON_5_SECOND));
+		k_work_schedule_for_queue(&plat_work_q, &set_DC_on_5s_work,
+					  K_SECONDS(DC_ON_5_SECOND));
 		k_work_schedule_for_queue(&plat_work_q, &PROC_FAIL_work,
 					  K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
-		k_timer_start(&try_to_access_satmc, K_NO_WAIT, K_NO_WAIT);
+		start_satmc_access_poll();
 	} else {
 		set_satmc_status(false);
 
