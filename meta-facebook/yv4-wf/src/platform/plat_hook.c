@@ -74,6 +74,19 @@ ina233_init_arg ina233_init_args[] = {
         },
 };
 
+rtq6056_init_arg rtq6056_init_args[] = {
+	[0] = {
+		.is_init = false,
+		.current_lsb = 0.001,
+		.r_shunt = 0.005,
+	},
+	[1] = {
+		.is_init = false,
+		.current_lsb = 0.001,
+		.r_shunt = 0.005,
+	},
+};
+
 vr_pre_read_arg vr_pre_read_args[] = {
 	[0] = { 0x0 },
 	[1] = { 0x1 },
