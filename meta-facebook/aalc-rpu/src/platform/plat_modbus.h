@@ -39,7 +39,7 @@
 #define MODBUS_GET_SET_SENSOR_POLL_ADDR 0xF080
 #define MODBUS_GET_SET_FAILURE_STATUS_ADDR 0xF081
 
-#define MODBUS_GET_SET_HMI_VER_ADDR 0x19F2
+
 
 int init_custom_modbus_server(void);
 void init_modbus_command_table(void);
@@ -328,7 +328,7 @@ typedef struct _sensor_access_mapping {
 #define MODBUS_EVENT_20_ERROR_LOG_ADDR 0x1AE7
 
 /* FW Update */
-#define MODBUS_FW_REVISION_ADDR 0x19E8
+
 #define MODBUS_FW_DOWNLOAD_ADDR 0x2000
 #define MODBUS_RPU_RUN_ADDR 0x0C30
 #define MODBUS_SYNAX_CHECK_ADDR 0x0C31
@@ -374,5 +374,8 @@ typedef struct _sensor_access_mapping {
 #define MODBUS_HEAT_EXCHANGER_CONTROL_BOX_FBPN_ADDR 0x1A00
 #define MODBUS_HEAT_EXCHANGER_FANS_FBPN_ADDR 0x1A04
 #define MODBUS_HEAT_EXCHANGER_FAN_CONTROL_BOX_FBPN_ADDR 0x1A08
+
+#define MODBUS_test_for_write_uptime_ADDR 0x1A0C
+
 
 #endif

@@ -73,6 +73,9 @@ enum FRU_ID {
 #define EEPROM_RPU_ADDR_OFFSET (EEPROM_HMI_VERSION_OFFSET + EEPROM_HMI_VERSION_SIZE)
 #define EEPROM_RPU_ADDR_VERSION_SIZE 1 // 1 bytes
 
+#define EEPROM_UPTIME_OFFSET (EEPROM_RPU_ADDR_OFFSET + EEPROM_RPU_ADDR_VERSION_SIZE)
+#define EEPROM_UPTIME_SIZE 8 // 8 bytes
+
 bool plat_eeprom_write(uint32_t offset, uint8_t *data, uint16_t data_len);
 bool plat_eeprom_read(uint32_t offset, uint8_t *data, uint16_t data_len);
 

@@ -636,6 +636,45 @@ static uint8_t fru_data_read_to_do(modbus_command_mapping *cmd)
 	return MODBUS_EXC_NONE;
 }
 
+uint8_t modbus_write_uptime(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint8_t pre_time[EEPROM_UPTIME_SIZE] = { 0 };
+	if (!plat_eeprom_read(EEPROM_UPTIME_OFFSET, pre_time, EEPROM_UPTIME_SIZE)) {
+		LOG_ERR("read hmi version fail!");
+		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+	}
+
+	LOG_HEXDUMP_INF(pre_time, EEPROM_UPTIME_SIZE, "read uptime");
+	LOG_HEXDUMP_INF(cmd->data, EEPROM_UPTIME_SIZE, "write uptime");
+
+	if (memcmp(pre_time, cmd->data, EEPROM_UPTIME_SIZE)) {
+		if (!plat_eeprom_write(EEPROM_UPTIME_OFFSET, (uint8_t *)cmd->data,
+				       EEPROM_UPTIME_SIZE)) {
+			LOG_ERR("write uptime fail!");
+			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+		}
+	}
+
+	return MODBUS_EXC_NONE;
+}
+uint8_t modbus_read_uptime(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint8_t uptime[EEPROM_UPTIME_SIZE] = { 0 };
+	if (!plat_eeprom_read(EEPROM_UPTIME_OFFSET, uptime, EEPROM_UPTIME_SIZE)) {
+		LOG_ERR("read hmi version fail!");
+		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+	}
+
+	memcpy(cmd->data, uptime, EEPROM_UPTIME_SIZE);
+	regs_reverse(cmd->data_len, cmd->data);
+
+	return MODBUS_EXC_NONE;
+}
+
 modbus_command_mapping modbus_command_table[] = {
 	// addr, write_fn, read_fn, arg0, arg1, arg2, size
 	{ MODBUS_BPB_RPU_COOLANT_FLOW_RATE_LPM_ADDR, NULL, modbus_get_senser_reading,
@@ -1013,7 +1052,6 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_V_1_2_AUX_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_V_1_2_AUX, 1, -2, 1 },
 	{ MODBUS_V_5_USB_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_V_5_USB, 1, -2, 1 },
 	//FW UPDATE
-	{ MODBUS_FW_REVISION_ADDR, NULL, modbus_get_fw_reversion, 0, 0, 0, 4 },
 	{ MODBUS_FW_DOWNLOAD_ADDR, modbus_fw_download, NULL, 0, 0, 0, 103 },
 	// i2c master write read
 	{ MODBUS_MASTER_I2C_WRITE_READ_ADDR, modbus_command_i2c_master_write_read, NULL, 0, 0, 0,
@@ -1173,12 +1211,6 @@ modbus_command_mapping modbus_command_table[] = {
 	// sensor poll
 	{ MODBUS_GET_SET_SENSOR_POLL_ADDR, modbus_sensor_poll_set, modbus_sensor_poll_get, 0, 0, 0,
 	  1 },
-	// failure status
-	{ MODBUS_GET_SET_FAILURE_STATUS_ADDR, modbus_status_flag_set, modbus_status_flag_get,
-	  STATUS_FLAG_FAILURE, 0, 0, 1 },
-	// eeprom related
-	{ MODBUS_GET_SET_HMI_VER_ADDR, modbus_write_hmi_version, modbus_read_hmi_version, 0, 0, 0,
-	  8 },
 	// RPU FRU
 	{ MODBUS_RPU_FBPN_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 0, 0, 8 },
 	{ MODBUS_RPU_MFR_MODEL_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 0, 0, 8 },
@@ -1186,10 +1218,10 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_RPU_MFR_SERIAL_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 0, 0, 8 },
 	{ MODBUS_RPU_WORKORDER_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 0, 0, 4 },
 	{ MODBUS_RPU_HW_REVISION_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 0, 0, 4 },
-	{ MODBUS_RPU_PLC_FW_REVISION_ADDR, NULL, fru_data_read_to_do, 0, 0, 0, 4 },
+	{ MODBUS_RPU_PLC_FW_REVISION_ADDR, NULL, modbus_get_fw_reversion, 0, 0, 0, 4 },
 	{ MODBUS_TOTAL_UP_TIME_ADDR, NULL, fru_data_read_to_do, 0, 0, 0, 2 },
 	{ MODBUS_TIME_SINCE_LAST_ON_ADDR, NULL, fru_data_read_to_do, 0, 0, 0, 2 },
-	{ MODBUS_RPU_HMI_FW_REVISION_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 0, 0, 4 },
+	{ MODBUS_RPU_HMI_FW_REVISION_ADDR, modbus_write_hmi_version, modbus_read_hmi_version, 0, 0, 0, 4 },
 	{ MODBUS_RPU_HEX_FW_REVISION_ADDR, NULL, fru_data_read_to_do, 0, 0, 0, 2 },
 	{ MODBUS_RPU_NOAHS_ARK_CONFIGURATION_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 0,
 	  0, 4 },
@@ -1201,6 +1233,9 @@ modbus_command_mapping modbus_command_table[] = {
 	  4 },
 	{ MODBUS_HEAT_EXCHANGER_FAN_CONTROL_BOX_FBPN_ADDR, fru_data_write_to_do,
 	  fru_data_read_to_do, 0, 0, 0, 4 },
+
+	//{ MODBUS_test_for_write_uptime_ADDR, modbus_write_uptime,
+	//  modbus_read_uptime, 0, 0, 0, 4 },  
 };
 
 static modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)
