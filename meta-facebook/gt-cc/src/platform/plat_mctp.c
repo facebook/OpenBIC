@@ -440,9 +440,79 @@ uint8_t mellanox_cx7_ncsi_get_link_type(void)
 	return config;
 }
 
+bool is_broadcom_thor2_nic_type()
+{
+	// check nic_type by accessing sensor
+
+	bool is_broadcom_thor2_nic = false;
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(mctp_route_tbl); i++) {
+		mctp_route_entry *p = mctp_route_tbl + i;
+
+		/* skip BMC */
+		if (p->bus == I2C_BUS_BMC && p->addr == I2C_ADDR_BMC)
+			continue;
+
+		if (gpio_get(p->dev_present_pin))
+			continue;
+
+		uint8_t mctp_dest_eid = p->endpoint;
+
+		mctp *mctp_inst = NULL;
+		mctp_ext_params ext_params = { 0 };
+		if (get_mctp_info_by_eid(mctp_dest_eid, &mctp_inst, &ext_params) == false) {
+			LOG_ERR("Failed to get mctp info by eid 0x%x", mctp_dest_eid);
+			continue;
+		}
+
+		uint8_t resp_buf[10] = { 0 };
+		uint8_t req_len = sizeof(struct pldm_get_sensor_reading_req);
+		struct pldm_get_sensor_reading_req req = { 0 };
+		req.sensor_id = 0x01F4;
+		req.rearm_event_state = 0;
+
+		uint16_t resp_len = pldm_platform_monitor_read(
+			mctp_inst, ext_params, PLDM_MONITOR_CMD_CODE_GET_SENSOR_READING,
+			(uint8_t *)&req, req_len, resp_buf, sizeof(resp_buf));
+
+		if (resp_len == 0) {
+			LOG_ERR("Failed to get sensor #%d reading", req.sensor_id);
+			continue;
+		}
+
+		struct pldm_get_sensor_reading_resp *res =
+			(struct pldm_get_sensor_reading_resp *)resp_buf;
+
+		if ((res->completion_code != PLDM_SUCCESS)) {
+			LOG_ERR("Failed to get get sensor reading, completion_code = 0x%x",
+				res->completion_code);
+			continue;
+		}
+
+		if (res->sensor_operational_state == PLDM_SENSOR_ENABLED) {
+			is_broadcom_thor2_nic = true;
+		} else {
+			LOG_ERR("CX7 Failed to get get sensor reading, sensor operational state=0x%x",
+				res->sensor_operational_state);
+			continue;
+		}
+	}
+
+	return is_broadcom_thor2_nic;
+}
+
 void check_nic_config_by_ncsi(void)
 {
-	uint8_t config = mellanox_cx7_ncsi_get_link_type();
+	uint8_t config = NIC_CONFIG_UNKNOWN;
+	if (is_broadcom_thor2_nic_type() == true) {
+		set_cx7_init_arg_to_thor2();
+		config = NIC_CONFIG_THOR2;
+	} else {
+		// set_cx7_init_arg_to_cx7();
+		config = mellanox_cx7_ncsi_get_link_type();
+	}
+
+	// config = mellanox_cx7_ncsi_get_link_type();
 
 	/* Remove this process for short term fix, will add back to support BMC get thor 2 type in the future */
 	/* Double check by fru if config is not IB_CX7 */
@@ -452,7 +522,7 @@ void check_nic_config_by_ncsi(void)
 	// }
 
 	nic_config = config;
-	LOG_INF("NIC config is %d, 0: UNKNOWN, 1: CX7, 2: IB_CX7", nic_config);
+	LOG_INF("NIC config is %d, 0: UNKNOWN, 1: CX7, 2: IB_CX7, 3: THOR2", nic_config);
 }
 
 uint8_t get_nic_config(void)
@@ -465,14 +535,15 @@ void send_cmd_to_dev_handler(struct k_work *work)
 	/* init the device endpoint */
 	set_dev_endpoint();
 
+	/* check nic config by ncsi */
+	check_nic_config_by_ncsi();
+
 	/* init mellanox cx7 ncsi */
-	mellanox_cx7_ncsi_init();
+	if ((nic_config == NIC_CONFIG_IB_CX7) || (nic_config == NIC_CONFIG_CX7))
+		mellanox_cx7_ncsi_init();
 
 	/* get device parameters */
 	get_dev_firmware_parameters();
-
-	/* check nic config by ncsi */
-	check_nic_config_by_ncsi();
 }
 void send_cmd_to_dev(struct k_timer *timer)
 {

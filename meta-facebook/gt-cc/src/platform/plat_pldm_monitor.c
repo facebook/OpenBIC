@@ -859,6 +859,10 @@ static void plat_get_effecter_nic_type_handler(const uint8_t *buf, uint16_t len,
 		state->effecter_op_state = PLDM_EFFECTER_ENABLED_NOUPDATEPENDING;
 		state->present_state = state->pending_state = EFFECTER_STATE_NIC_TYPE_CX7_IB;
 		break;
+	case NIC_CONFIG_THOR2:
+		state->effecter_op_state = PLDM_EFFECTER_ENABLED_NOUPDATEPENDING;
+		state->present_state = state->pending_state = EFFECTER_STATE_NIC_TYPE_THOR2;
+		break;
 	default:
 		state->effecter_op_state = PLDM_EFFECTER_STATUSUNKNOWN;
 		state->present_state = state->pending_state = EFFECTER_STATE_NIC_TYPE_UNKNOWN;

@@ -1254,3 +1254,15 @@ bool is_mb_dc_on()
    */
 	return !gpio_get(SYS_PWR_READY_N);
 }
+
+void set_cx7_init_arg_to_thor2()
+{
+	cx7_init_args[0].sensor_id = 0x01F4;
+	cx7_init_args[1].sensor_id = 0x01F4;
+	cx7_init_args[2].sensor_id = 0x01F4;
+	cx7_init_args[3].sensor_id = 0x01F4;
+	cx7_init_args[4].sensor_id = 0x01F4;
+	cx7_init_args[5].sensor_id = 0x01F4;
+	cx7_init_args[6].sensor_id = 0x01F4;
+	cx7_init_args[7].sensor_id = 0x01F4;
+}
