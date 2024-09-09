@@ -33,12 +33,6 @@
 
 LOG_MODULE_DECLARE(pldm, LOG_LEVEL_DBG);
 
-#ifdef ENABLE_PLDM
-#ifdef ENABLE_EVENT_TO_BMC
-static uint8_t bmc_interface = 0;
-#endif
-#endif
-
 uint8_t check_iana(const uint8_t *iana)
 {
 	CHECK_NULL_ARG_WITH_RETURN(iana, PLDM_ERROR);
@@ -160,7 +154,9 @@ uint8_t send_event_log_to_bmc(struct pldm_addsel_data sel_msg)
 {
 	pldm_msg msg = { 0 };
 	uint8_t bmc_bus = I2C_BUS_BMC;
+	uint8_t bmc_interface = 0;
 
+	bmc_interface = pal_get_bmc_interface();
 	if (bmc_interface == BMC_INTERFACE_I3C) {
 		bmc_bus = I3C_BUS_BMC;
 		msg.ext_params.type = MCTP_MEDIUM_TYPE_TARGET_I3C;

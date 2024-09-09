@@ -31,6 +31,7 @@ extern rtq6056_init_arg rtq6056_init_args[];
 extern pt5161l_init_arg pt5161l_init_args[];
 
 bool pre_vr_read(sensor_cfg *cfg, void *args);
+bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
 bool post_amd_tsi_read(sensor_cfg *cfg, void *args, int *const reading);
 bool pre_p3v_bat_read(sensor_cfg *cfg, void *args);
 bool post_p3v_bat_read(sensor_cfg *cfg, void *args, int *const reading);

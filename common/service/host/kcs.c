@@ -41,7 +41,6 @@ LOG_MODULE_REGISTER(kcs);
 
 kcs_dev *kcs;
 static bool proc_kcs_ok = false;
-static uint8_t bmc_interface = 0;
 
 void kcs_write(uint8_t index, uint8_t *buf, uint32_t buf_sz)
 {
@@ -160,8 +159,9 @@ exit:
 static int send_bios_version_to_bmc(char *bios_version, uint8_t bios_version_len)
 {
 	pldm_msg msg = { 0 };
-	uint8_t bmc_bus = I2C_BUS_BMC;
+	uint8_t bmc_bus = I2C_BUS_BMC, bmc_interface = BMC_INTERFACE_I2C;
 
+	bmc_interface = pal_get_bmc_interface();
 	if (bmc_interface == BMC_INTERFACE_I3C) {
 		bmc_bus = I3C_BUS_BMC;
 		msg.ext_params.type = MCTP_MEDIUM_TYPE_TARGET_I3C;
@@ -299,8 +299,9 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 				// Send SEL to BMC via PLDM over MCTP
 				mctp_ext_params ext_params = { 0 };
 				uint8_t pldm_event_length = rc - 4; // exclude netfn, cmd, record_id
-				uint8_t bmc_bus = I2C_BUS_BMC;
+				uint8_t bmc_bus = I2C_BUS_BMC,  bmc_interface = BMC_INTERFACE_I2C;
 
+				bmc_interface = pal_get_bmc_interface();
 				if (bmc_interface == BMC_INTERFACE_I3C) {
 					bmc_bus = I3C_BUS_BMC;
 					ext_params.type = MCTP_MEDIUM_TYPE_TARGET_I3C;
@@ -410,8 +411,6 @@ void kcs_device_init(char **config, uint8_t size)
 	if (!kcs)
 		return;
 	memset(kcs, 0, size * sizeof(*kcs));
-
-	bmc_interface = pal_get_bmc_interface();
 
 	/* IPMI channel target [50h-5Fh] are reserved for KCS channel.
 	 * The max channel number KCS_MAX_CHANNEL_NUM is 0xF.

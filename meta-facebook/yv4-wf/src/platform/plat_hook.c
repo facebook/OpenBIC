@@ -29,6 +29,7 @@
 #include "plat_sensor_table.h"
 #include "plat_gpio.h"
 #include "plat_isr.h"
+#include "pmbus.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -71,6 +72,19 @@ ina233_init_arg ina233_init_args[] = {
                 .is_need_mfr_device_config_init = false,
                 .is_need_set_alert_threshold = false,
         },
+};
+
+rtq6056_init_arg rtq6056_init_args[] = {
+	[0] = {
+		.is_init = false,
+		.current_lsb = 0.001,
+		.r_shunt = 0.005,
+	},
+	[1] = {
+		.is_init = false,
+		.current_lsb = 0.001,
+		.r_shunt = 0.005,
+	},
 };
 
 vr_pre_read_arg vr_pre_read_args[] = {
@@ -131,6 +145,29 @@ bool pre_vr_read(sensor_cfg *cfg, void *args)
 		LOG_ERR("Failed to set page");
 		return true;
 	}
+	return true;
+}
+
+bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+
+	if (!reading) {
+		return check_reading_pointer_null_is_allowed(cfg);
+	}
+
+	sensor_val *sval = (sensor_val *)reading;
+	if (cfg->offset == PMBUS_READ_IOUT || cfg->offset == PMBUS_READ_POUT) {
+		// Adjust negative current value to zero according to power team suggestion
+		if (((int)sval->integer < 0 || (int)sval->fraction < 0) &&
+		    (int)sval->integer > -2) {
+			sval->integer = 0;
+			sval->fraction = 0;
+			return true;
+		}
+	}
+
 	return true;
 }
 

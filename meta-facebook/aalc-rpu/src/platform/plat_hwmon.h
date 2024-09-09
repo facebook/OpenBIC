@@ -37,7 +37,9 @@ typedef struct _pump_reset_struct {
 } pump_reset_struct;
 
 bool clear_log_for_modbus_pump_setting(pump_reset_struct *data, uint8_t bit_val);
-bool pump_reset(pump_reset_struct *data, uint8_t bit_val);
+bool pump_setting_pump1_reset(pump_reset_struct *data, uint8_t bit_val);
+bool pump_setting_pump2_reset(pump_reset_struct *data, uint8_t bit_val);
+bool pump_setting_pump3_reset(pump_reset_struct *data, uint8_t bit_val);
 bool close_pump(pump_reset_struct *data, uint8_t bit_val);
 bool modbus_pump_setting_unsupport_function(pump_reset_struct *data, uint8_t bit_val);
 bool set_all_pump_power(bool switch_val);

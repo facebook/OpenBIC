@@ -27,8 +27,10 @@ extern ina233_init_arg ina233_init_args[];
 extern vr_pre_read_arg vr_pre_read_args[];
 extern max11617_init_arg max11617_init_args[];
 extern adc128d818_init_arg adc128d818_init_args[];
+extern rtq6056_init_arg rtq6056_init_args[];
 
 bool pre_vr_read(sensor_cfg *cfg, void *args);
+bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
 bool post_p085v_voltage_read(sensor_cfg *cfg, void *args, int *reading);
 bool post_adc128d818_read(sensor_cfg *cfg, void *args, int *reading);
 

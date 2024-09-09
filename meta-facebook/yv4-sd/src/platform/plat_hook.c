@@ -22,6 +22,7 @@
 #include "plat_hook.h"
 #include "plat_gpio.h"
 #include "plat_dimm.h"
+#include "pmbus.h"
 
 #define RETIMER_INIT_RETRY_COUNT 3
 
@@ -141,6 +142,29 @@ bool pre_vr_read(sensor_cfg *cfg, void *args)
 		LOG_ERR("pre_vr_read, set page fail");
 		return false;
 	}
+	return true;
+}
+
+bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+
+	if (!reading) {
+		return check_reading_pointer_null_is_allowed(cfg);
+	}
+
+	sensor_val *sval = (sensor_val *)reading;
+	if (cfg->offset == PMBUS_READ_IOUT || cfg->offset == PMBUS_READ_POUT) {
+		// Adjust negative current value to zero according to power team suggestion
+		if (((int)sval->integer < 0 || (int)sval->fraction < 0) &&
+		    (int)sval->integer > -2) {
+			sval->integer = 0;
+			sval->fraction = 0;
+			return true;
+		}
+	}
+
 	return true;
 }
 

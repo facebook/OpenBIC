@@ -300,9 +300,9 @@ pump_reset_struct modbus_pump_setting_table[] = {
 	{ MANUAL_CONTROL, modbus_pump_setting_unsupport_function, 0 },
 	{ CLEAR_PUMP_RUNNING_TIME, modbus_pump_setting_unsupport_function, 0 },
 	{ CLEAR_LOG, clear_log_for_modbus_pump_setting, 0 },
-	{ PUMP_1_RESET, pump_reset, SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W },
-	{ PUMP_2_RESET, pump_reset, SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W },
-	{ PUMP_3_RESET, pump_reset, SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W },
+	{ PUMP_1_RESET, pump_setting_pump1_reset, 0 },
+	{ PUMP_2_RESET, pump_setting_pump2_reset, 0 },
+	{ PUMP_3_RESET, pump_setting_pump3_reset, 0 },
 };
 
 static uint16_t pump_setting;

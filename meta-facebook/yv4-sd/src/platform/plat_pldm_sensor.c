@@ -1691,6 +1691,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
 			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.post_sensor_read_hook = post_vr_read,
 		},
 	},
 	{
@@ -1760,6 +1761,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
 			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.post_sensor_read_hook = post_vr_read,
 		},
 	},
 	{
@@ -1829,6 +1831,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
 			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.post_sensor_read_hook = post_vr_read,
 		},
 	},
 	{
@@ -1898,6 +1901,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
 			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.post_sensor_read_hook = post_vr_read,
 		},
 	},
 	{
@@ -1967,6 +1971,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
 			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.post_sensor_read_hook = post_vr_read,
 		},
 	},
 	{
@@ -2036,6 +2041,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
 			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.post_sensor_read_hook = post_vr_read,
 		},
 	},
 	{
@@ -2105,6 +2111,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
 			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.post_sensor_read_hook = post_vr_read,
 		},
 	},
 	{
@@ -2174,6 +2181,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
 			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.post_sensor_read_hook = post_vr_read,
 		},
 	},
 	{
@@ -2243,6 +2251,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
 			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.post_sensor_read_hook = post_vr_read,
 		},
 	},
 	{
@@ -2312,6 +2321,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
 			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.post_sensor_read_hook = post_vr_read,
 		},
 	},
 };
