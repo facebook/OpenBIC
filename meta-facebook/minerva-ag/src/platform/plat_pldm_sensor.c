@@ -8675,6 +8675,7 @@ void plat_pldm_sensor_change_vr_addr()
 	uint8_t addr;
 
 	if (vr_type == VR_RNS_ISL69260_RAA228238) {
+		LOG_INF("change vr addr for RNS_ISL69260_RAA228238");
 		for (int index = 0; index < plat_pldm_sensor_get_sensor_count(VR_SENSOR_THREAD_ID);
 		     index++) {
 			find_vr_addr_by_sensor_id(

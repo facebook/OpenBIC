@@ -67,25 +67,32 @@ void get_vr_vendor_type(void)
 	case DELTA_UBC_AND_MPS_VR:
 		ubc_type = UBC_DELTA_U50SU4P180PMDAFC;
 		vr_type = VR_MPS_MP2971_MP2891;
+		LOG_INF("VR_VENDOR_TYPE 0 UBC_TYPE = 0x%02X, VR_TYPE = 0x%02X", ubc_type, vr_type);
 		break;
 	case DELTA_UBC_AND_RNS_VR:
 		ubc_type = UBC_DELTA_U50SU4P180PMDAFC;
 		vr_type = VR_RNS_ISL69260_RAA228238;
+		LOG_INF("VR_VENDOR_TYPE 1 UBC_TYPE = 0x%02X, VR_TYPE = 0x%02X", ubc_type, vr_type);
 		break;
 	case MPS_UBC_AND_MPS_VR:
 		ubc_type = UBC_MPS_MPC12109;
 		vr_type = VR_MPS_MP2971_MP2891;
+		LOG_INF("VR_VENDOR_TYPE 2 UBC_TYPE = 0x%02X, VR_TYPE = 0x%02X", ubc_type, vr_type);
+		break;
 	case MPS_UBC_AND_RNS_VR:
 		ubc_type = UBC_MPS_MPC12109;
 		vr_type = VR_RNS_ISL69260_RAA228238;
+		LOG_INF("VR_VENDOR_TYPE 3 UBC_TYPE = 0x%02X, VR_TYPE = 0x%02X", ubc_type, vr_type);
 		break;
 	case FLEX_UBC_AND_MPS_VR:
 		ubc_type = UBC_FLEX_BMR313;
 		vr_type = VR_MPS_MP2971_MP2891;
+		LOG_INF("VR_VENDOR_TYPE 4 UBC_TYPE = 0x%02X, VR_TYPE = 0x%02X", ubc_type, vr_type);
 		break;
 	case FLEX_UBC_AND_RNS_VR:
 		ubc_type = UBC_FLEX_BMR313;
 		vr_type = VR_RNS_ISL69260_RAA228238;
+		LOG_INF("VR_VENDOR_TYPE 5 UBC_TYPE = 0x%02X, VR_TYPE = 0x%02X", ubc_type, vr_type);
 		break;
 	default:
 		LOG_WRN("vr vendor type not supported: 0x%x", vr_vender_type);
