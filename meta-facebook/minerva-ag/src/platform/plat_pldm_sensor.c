@@ -47,7 +47,8 @@ plat_sensor_vr_extend_info plat_sensor_vr_extend_table[] = {
 	{ SENSOR_NUM_OSFP_P3V3_VOLT_V, P3V3_ISL69260_ADDR, .mps_vr_init_args = &mp2971_init_args[0],
 	  .rns_vr_init_args = &isl69259_init_args[0] },
 	{ SENSOR_NUM_OSFP_P3V3_CURR_A, P3V3_ISL69260_ADDR },
-	{ SENSOR_NUM_OSFP_P3V3_PWR_W, P3V3_ISL69260_ADDR },
+	{ SENSOR_NUM_OSFP_P3V3_PWR_W, P3V3_ISL69260_ADDR, .mps_vr_init_args = &mp2971_init_args[0],
+	  .rns_vr_init_args = &isl69259_init_args[0] },
 
 	{ SENSOR_NUM_CPU_P0V85_PVDD_TEMP_C, P0V85_PVDD_RAA228238_ADDR },
 	{ SENSOR_NUM_CPU_P0V85_PVDD_VOLT_V, P0V85_PVDD_RAA228238_ADDR },
@@ -8655,8 +8656,10 @@ void plat_pldm_sensor_change_vr_init_args()
 
 	for (int index = 0; index < plat_pldm_sensor_get_sensor_count(VR_SENSOR_THREAD_ID);
 	     index++) {
-		if (plat_pldm_sensor_vr_table[index].pdr_numeric_sensor.sensor_id ==
-		    SENSOR_NUM_OSFP_P3V3_VOLT_V) {
+		if ((plat_pldm_sensor_vr_table[index].pdr_numeric_sensor.sensor_id ==
+		     SENSOR_NUM_OSFP_P3V3_VOLT_V) ||
+		    (plat_pldm_sensor_vr_table[index].pdr_numeric_sensor.sensor_id ==
+		     SENSOR_NUM_OSFP_P3V3_PWR_W)) {
 			find_init_args_by_sensor_id(
 				plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.num, &init_args);
 			plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.init_args = init_args;
