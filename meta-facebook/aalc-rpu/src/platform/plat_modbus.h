@@ -65,6 +65,15 @@ typedef struct _sensor_access_mapping {
 	uint8_t senser_num[5];
 } sensor_access_mapping;
 
+enum read_fru_data_type {
+	BOARD_MFG_DATE = 0,
+	BOARD_MFG = 1,
+	BOARD_PRODUCT = 2,
+	BOARD_SERIAL = 3,
+	BOARD_PART_NUMBER = 4,
+	BOARD_FRU_ID = 5,
+};
+
 /* define modbus data address */
 #define MODBUS_TEMP_BB_TMP75_ADDR 0x0101
 #define MODBUS_TEMP_BPB_TMP75_ADDR 0x0102

@@ -43,6 +43,7 @@
 #include "plat_fsc.h"
 #include "plat_led.h"
 #include "plat_status.h"
+#include "plat_fru_date.h"
 
 LOG_MODULE_REGISTER(plat_modbus);
 
@@ -54,6 +55,10 @@ LOG_MODULE_REGISTER(plat_modbus);
 #define UPADTE_FW_DATA_LENGTH_MIN 3 // contain 2 regs(offeset)+ 1 reg(length) at least
 #define LOG_BEGIN_MODBUS_ADDR MODBUS_EVENT_1_ERROR_LOG_ADDR //Event 1 Error log Modbus Addr
 
+#define TIMER_SINCE_LAST_ON_LENGTH 4// timer_since_last_on is 4 bytes
+#define BOARD_MFG_DATA_READ_START_OFFSET 3
+
+#define IPMI_FRU_DATA_LENGTH_MASK BIT_MASK(6)
 //{ DT_PROP(DT_INST(0, zephyr_modbus_serial), label) }
 
 typedef struct {
@@ -642,19 +647,25 @@ uint8_t modbus_write_uptime(modbus_command_mapping *cmd)
 
 	uint8_t pre_time[EEPROM_UPTIME_SIZE] = { 0 };
 	if (!plat_eeprom_read(EEPROM_UPTIME_OFFSET, pre_time, EEPROM_UPTIME_SIZE)) {
-		LOG_ERR("read hmi version fail!");
+		LOG_ERR("read uptime fail!");
 		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 	}
 
-	LOG_HEXDUMP_INF(pre_time, EEPROM_UPTIME_SIZE, "read uptime");
-	LOG_HEXDUMP_INF(cmd->data, EEPROM_UPTIME_SIZE, "write uptime");
+	uint32_t old_uptime = (pre_time[3] << 24) | (pre_time[2] << 16) | (pre_time[1] << 8) | pre_time[0];
+	LOG_INF("old uptime: %d\n", old_uptime);
 
-	if (memcmp(pre_time, cmd->data, EEPROM_UPTIME_SIZE)) {
-		if (!plat_eeprom_write(EEPROM_UPTIME_OFFSET, (uint8_t *)cmd->data,
-				       EEPROM_UPTIME_SIZE)) {
-			LOG_ERR("write uptime fail!");
-			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-		}
+	uint32_t get_uptime_mins = (k_uptime_get() / 60000); // mins(60 *1000 ms)
+	LOG_INF("uptime: %d\n", get_uptime_mins);
+
+	get_uptime_mins += old_uptime;
+
+	uint8_t temp[EEPROM_UPTIME_SIZE] = { 0 };
+	memcpy(temp, &get_uptime_mins, EEPROM_UPTIME_SIZE);
+	
+	if (!plat_eeprom_write(EEPROM_UPTIME_OFFSET, temp,
+					EEPROM_UPTIME_SIZE)) {
+		LOG_ERR("write uptime fail!");
+		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 	}
 
 	return MODBUS_EXC_NONE;
@@ -672,6 +683,215 @@ uint8_t modbus_read_uptime(modbus_command_mapping *cmd)
 	memcpy(cmd->data, uptime, EEPROM_UPTIME_SIZE);
 	regs_reverse(cmd->data_len, cmd->data);
 
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_read_time_since_last_on(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint32_t get_time_since_last_on_mins = (k_uptime_get() / 60000); // mins(60 *1000 ms)
+	LOG_INF("time_since_last_on: %d\n", get_time_since_last_on_mins);
+
+	memcpy(cmd->data, &get_time_since_last_on_mins, TIMER_SINCE_LAST_ON_LENGTH);
+
+	regs_reverse(cmd->data_len, cmd->data);
+	// swap high and low byte
+	uint8_t tmp = cmd->data[0];
+	cmd->data[0] = cmd->data[1];
+	cmd->data[1] = tmp;
+	tmp = cmd->data[2];
+	cmd->data[2] = cmd->data[3];
+	cmd->data[3] = tmp;
+	
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t get_rpu_fru_data(uint8_t read_fru_type, uint16_t *return_data)
+{
+	// get fru data board_area_size
+	
+	uint8_t get_board_area_size[] = { 0 };
+	if (!plat_eeprom_read(MANAGEMENT_BOARD_FRU_EEPROM_BOARD_AREA_SIZE, get_board_area_size, 1)) {
+		LOG_ERR("read fru data board_area_size fail!");
+		return false;
+	}
+	uint16_t board_area_size = get_board_area_size[0] * 8;
+	
+	// read rpu fru board area data 
+	
+	uint8_t read_data[board_area_size];
+	for (int i = 0; i < get_board_area_size[0]; i++) {
+		uint8_t ofs = i*8;
+		if (!plat_eeprom_read(MANAGEMENT_BOARD_FRU_EEPROM_START_OFFSET + ofs, &read_data[ofs], 8)) {
+			LOG_ERR("read fru data fail!");
+			return false;
+		}
+	}
+	
+	/*
+	Board Mfg Date        : Tue Sep 10 15:10:00 2024
+	Board Mfg             : Quanta
+	Board Product         : Management Board
+	Board Serial          : 74451132
+	Board Part Number     : 3GL05MA0010
+	Board FRU ID          : FRU Ver 0.01
+	Board Extra_1         : ---
+	Board Extra_2         : 556
+	*/
+	printf("read data: \n");
+	for (int i = 0; i < board_area_size; i++) {
+		if (i % 16 == 0) {
+			printf("\n");
+		}
+		printf("0x%02x, ", read_data[i]);
+	}
+	
+	uint8_t data_read_window = BOARD_MFG_DATA_READ_START_OFFSET;
+	// get rpu mfr date
+	uint8_t mfr_date[3] = { 0 }; // data size: 3
+	for (int i = 0; i < 3; i++) {
+		mfr_date[i] = read_data[data_read_window];
+		data_read_window += 1;
+		printf("mfr_date[%d]: 0x%02x\n", i, mfr_date[i]);
+	}
+	printf("end of date ,%d\n", data_read_window);
+	// to do mfr_date_function()
+	// get rpu mfg
+	uint8_t mfg_len = read_data[data_read_window] & IPMI_FRU_DATA_LENGTH_MASK; // get 5:0
+	data_read_window += 1;
+	printf("mfg_len: %d\n", mfg_len);
+	uint8_t mfr[mfg_len];
+	for (int i = 0; i < mfg_len; i++) {
+		mfr[i] = read_data[data_read_window];
+		data_read_window += 1;
+		printf("mfr[%d]: 0x%02x\n", i, mfr[i]);
+	}
+	// get rpu product
+	uint8_t product_len = read_data[data_read_window] & IPMI_FRU_DATA_LENGTH_MASK;
+	data_read_window += 1;
+	printf("product_len: %d\n", product_len);
+	uint8_t product[product_len];
+	for (int i = 0; i < product_len; i++) {
+		product[i] = read_data[data_read_window];
+		data_read_window += 1;
+		printf("product[%d]: 0x%02x\n", i, product[i]);
+	}
+	// get rpu serial
+	uint8_t serial_len = read_data[data_read_window] & IPMI_FRU_DATA_LENGTH_MASK;
+	data_read_window += 1;
+	printf("serial_len: %d\n", serial_len);
+	uint8_t serial[serial_len];
+	for (int i = 0; i < serial_len; i++) {
+		serial[i] = read_data[data_read_window];
+		data_read_window += 1;
+		printf("serial[%d]: 0x%02x\n", i, serial[i]);
+	}
+	// get rpu part number
+	uint8_t part_number_len = read_data[data_read_window] & IPMI_FRU_DATA_LENGTH_MASK;
+	data_read_window += 1;
+	printf("part_number_len: %d\n", part_number_len);
+	uint8_t part_number[part_number_len];
+	for (int i = 0; i < part_number_len; i++) {
+		part_number[i] = read_data[data_read_window];
+		data_read_window += 1;
+		printf("part_number[%d]: 0x%02x\n", i, part_number[i]);
+	}
+	// get rpu fru id
+	uint8_t fru_id_len = read_data[data_read_window] & IPMI_FRU_DATA_LENGTH_MASK;
+	data_read_window += 1;
+	printf("fru_id_len: %d\n", fru_id_len);
+	uint8_t fru_id[fru_id_len];
+	for (int i = 0; i < fru_id_len; i++) {
+		fru_id[i] = read_data[data_read_window];
+		data_read_window += 1;
+		printf("fru_id[%d]: 0x%02x\n", i, fru_id[i]);
+	}
+	printf("end of read data ,%d\n", data_read_window);
+	printf("read fru type: 0x%x \n", read_fru_type);
+	
+	switch (read_fru_type)
+	{
+		case BOARD_MFG_DATE:
+			memcpy(return_data, mfr_date, sizeof(mfr_date));
+			break;
+		case BOARD_MFG:
+			memcpy(return_data, mfr, sizeof(mfr));
+			break;
+		case BOARD_PRODUCT:
+			memcpy(return_data, product, sizeof(product));
+			break;
+		case BOARD_SERIAL:
+			memcpy(return_data, serial, sizeof(serial));
+			break;
+		case BOARD_PART_NUMBER:
+			printf("in part_number case \n");
+			for (int i = 0; i < part_number_len; i++) {
+				return_data[i] = part_number[i];
+				printf("0x%02x, ", return_data[i]);
+			}
+			printf("out part_number case \n");
+			break;
+		case BOARD_FRU_ID:
+			memcpy(return_data, fru_id, sizeof(fru_id));
+			break;
+		default:
+			LOG_ERR("unknown read fru type: %d", read_fru_type);
+			return false;
+	}
+	
+	printf("break\n");
+	return true;
+}
+uint8_t modbus_write_rpu_fru(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_read_rpu_fru(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_read_rpu_fbpn(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+	uint16_t read_fbpn_back[16];
+	
+	printf("get_rpu_fru_data\n");
+	
+	if(!get_rpu_fru_data(BOARD_PART_NUMBER, read_fbpn_back)) {
+		printf("get_rpu_fru_data failed\n");
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+	};
+	printf("copy read back data to cmd->data\n");
+	memcpy(cmd->data, read_fbpn_back, sizeof(read_fbpn_back));
+	printf("end copy read back data to cmd->data\n");
+	regs_reverse(cmd->data_len, cmd->data);
+	
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_read_rpu_date(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+	uint16_t* read_date_back;
+	read_date_back = malloc(200 * sizeof(uint16_t));
+	if(!get_rpu_fru_data(BOARD_MFG_DATE, read_date_back)) {
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+	};
+	printf("read_date_back: %d-%d-%d\n", read_date_back[0], read_date_back[1], read_date_back[2]);
+
+	if (!get_fru_date(read_date_back, cmd->data)) {
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+	};
+	free(read_date_back);
 	return MODBUS_EXC_NONE;
 }
 
@@ -1212,15 +1432,15 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_GET_SET_SENSOR_POLL_ADDR, modbus_sensor_poll_set, modbus_sensor_poll_get, 0, 0, 0,
 	  1 },
 	// RPU FRU
-	{ MODBUS_RPU_FBPN_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 0, 0, 8 },
+	{ MODBUS_RPU_FBPN_ADDR, fru_data_write_to_do, modbus_read_rpu_fbpn, 0, 0, 0, 8 },
 	{ MODBUS_RPU_MFR_MODEL_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 0, 0, 8 },
-	{ MODBUS_RPU_MFR_DATE_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 0, 0, 4 },
+	{ MODBUS_RPU_MFR_DATE_ADDR, fru_data_write_to_do, modbus_read_rpu_date, 0, 0, 0, 4 },
 	{ MODBUS_RPU_MFR_SERIAL_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 0, 0, 8 },
 	{ MODBUS_RPU_WORKORDER_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 0, 0, 4 },
 	{ MODBUS_RPU_HW_REVISION_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 0, 0, 4 },
 	{ MODBUS_RPU_PLC_FW_REVISION_ADDR, NULL, modbus_get_fw_reversion, 0, 0, 0, 4 },
-	{ MODBUS_TOTAL_UP_TIME_ADDR, NULL, fru_data_read_to_do, 0, 0, 0, 2 },
-	{ MODBUS_TIME_SINCE_LAST_ON_ADDR, NULL, fru_data_read_to_do, 0, 0, 0, 2 },
+	{ MODBUS_TOTAL_UP_TIME_ADDR, modbus_write_uptime, modbus_read_uptime, 0, 0, 0, 2 },
+	{ MODBUS_TIME_SINCE_LAST_ON_ADDR, NULL, modbus_read_time_since_last_on, 0, 0, 0, 2 },
 	{ MODBUS_RPU_HMI_FW_REVISION_ADDR, modbus_write_hmi_version, modbus_read_hmi_version, 0, 0, 0, 4 },
 	{ MODBUS_RPU_HEX_FW_REVISION_ADDR, NULL, fru_data_read_to_do, 0, 0, 0, 2 },
 	{ MODBUS_RPU_NOAHS_ARK_CONFIGURATION_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 0,
@@ -1232,10 +1452,7 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_HEAT_EXCHANGER_FANS_FBPN_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 0, 0,
 	  4 },
 	{ MODBUS_HEAT_EXCHANGER_FAN_CONTROL_BOX_FBPN_ADDR, fru_data_write_to_do,
-	  fru_data_read_to_do, 0, 0, 0, 4 },
-
-	//{ MODBUS_test_for_write_uptime_ADDR, modbus_write_uptime,
-	//  modbus_read_uptime, 0, 0, 0, 4 },  
+	  fru_data_read_to_do, 0, 0, 0, 4 }, 
 };
 
 static modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)
