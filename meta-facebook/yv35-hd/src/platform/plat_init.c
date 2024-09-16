@@ -27,6 +27,11 @@
 #include "plat_kcs.h"
 #include "rg3mxxb12.h"
 #include "util_worker.h"
+#include <drivers/flash.h>
+#include "util_spi.h"
+#include "hal_gpio.h"
+
+#define WINBOND_MFG_ID 0xEF
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -66,9 +71,40 @@ void pal_pre_init()
 	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY + 1); // work queue for low priority jobs
 }
 
+void config_spi_flash()
+{
+	const struct device *flash_dev;
+
+	uint8_t buf[1] = { 0 };
+	uint8_t jedec_id[3] = { 0 };
+
+	pal_switch_bios_spi_mux(GPIO_HIGH);
+
+	flash_dev = device_get_binding("spi1_cs0");
+	if (!device_is_ready(flash_dev)) {
+		printk("%s device not ready\n", __func__);
+		pal_switch_bios_spi_mux(GPIO_LOW);
+		return;
+	}
+
+	spi_nor_re_init(flash_dev);
+
+	flash_read_jedec_id(flash_dev, jedec_id);
+
+	if (jedec_id[0] == WINBOND_MFG_ID) {
+		// Set winbond flash driver strength to 75%
+		buf[0] = 0x20;
+		flash_reg_write(flash_dev, 0x11, buf, 1);
+	}
+
+	pal_switch_bios_spi_mux(GPIO_LOW);
+	return;
+}
+
 void pal_post_init()
 {
 	kcs_init();
+	config_spi_flash();
 }
 
 void pal_set_sys_status()

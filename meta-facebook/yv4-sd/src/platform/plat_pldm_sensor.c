@@ -854,7 +854,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 		{
 			.type = sensor_dev_ast_adc,
 			.port = ADC_PORT14,
-			.access_checker = stby_access,
+			.access_checker = dc_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.arg0 = 1,
 			.arg1 = 1,
