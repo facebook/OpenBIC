@@ -564,6 +564,7 @@ uint8_t isl69259_read(sensor_cfg *cfg, int *reading)
 	uint8_t offset = cfg->offset;
 	val = (msg.data[1] << 8) | msg.data[0];
 	float vout_val;
+	float pout_val;
 
 	switch (offset) {
 	case PMBUS_READ_VOUT:
@@ -601,7 +602,13 @@ uint8_t isl69259_read(sensor_cfg *cfg, int *reading)
 			return SENSOR_UNSPECIFIED_ERROR;
 		}
 
-		sval->integer = val;
+		/* If the Vout exceeds the VR's operating range, you may add a voltage divider. 
+		The VR will read the divided voltage and calculate power (P) based on this adjusted voltage, not the original Vout. 
+		So, you might need to adjust Pout to reflect the actual output power. */
+		pout_val = ((float)val) / vout_scale;
+
+		sval->integer = pout_val;
+		sval->fraction = (pout_val - sval->integer) * 1000;
 		break;
 	default:
 		LOG_ERR("Not support offset: 0x%x", offset);
