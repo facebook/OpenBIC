@@ -105,9 +105,9 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 
-			0x00057288, //uint32_t warning_high;
+			0x000566d0, //uint32_t warning_high;
 			0x0004b320, //uint32_t warning_low;
-			0x000566d0, //uint32_t critical_high;
+			0x00057288, //uint32_t critical_high;
 			0x0004a3df, //uint32_t critical_low;
 			0x000617c4, //uint32_t fatal_high;
 			0x00038658, //uint32_t fatal_low;
@@ -150,7 +150,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
 
 			0x05, //uint8_t base_unit;
-			-3, //int8_t unit_modifier;
+			-5, //int8_t unit_modifier;
 
 			0x00, //uint8_t rate_unit;
 			0x00, //uint8_t base_oem_unit_handle;
@@ -168,7 +168,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0x00, //uint8_t supported_thresholds;
+			0xFF, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -176,25 +176,25 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0x00, //uint8_t range_field_support;
+			0xFF, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 
-			0x00000000, //uint32_t warning_high;
-			0x00000000, //uint32_t warning_low;
-			0x00000000, //uint32_t critical_high;
-			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
-			0x00000000, //uint32_t fatal_low;
+			0x000566d0, //uint32_t warning_high;
+			0x0004b320, //uint32_t warning_low;
+			0x00057288, //uint32_t critical_high;
+			0x0004a3df, //uint32_t critical_low;
+			0x000617c4, //uint32_t fatal_high;
+			0x00038658, //uint32_t fatal_low;
 
 		},
 		.update_time = 0,
 		{
 			.type = sensor_dev_ast_adc,
 			.port = ADC_PORT11,
-			.access_checker = stby_access,
+			.access_checker = dc_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.arg0 = 2,
 			.arg1 = 1,
@@ -259,9 +259,9 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 
-			0x000032c8, //uint32_t warning_high;
+			0x00003200, //uint32_t warning_high;
 			0x00002ba4, //uint32_t warning_low;
-			0x00003200, //uint32_t critical_high;
+			0x000032c8, //uint32_t critical_high;
 			0x00002af8, //uint32_t critical_low;
 			0x00003660, //uint32_t fatal_high;
 			0x00002580, //uint32_t fatal_low;
@@ -336,9 +336,9 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 
-			0x000032c8, //uint32_t warning_high;
+			0x00003200, //uint32_t warning_high;
 			0x00002ba4, //uint32_t warning_low;
-			0x00003200, //uint32_t critical_high;
+			0x000032c8, //uint32_t critical_high;
 			0x00002af8, //uint32_t critical_low;
 			0x00003660, //uint32_t fatal_high;
 			0x00002580, //uint32_t fatal_low;
@@ -878,9 +878,9 @@ pldm_sensor_info plat_pldm_sensor_adc_monitor_table[] = {
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 
-			0x000032c8, //uint32_t warning_high;
+			0x00003200, //uint32_t warning_high;
 			0x00002ba4, //uint32_t warning_low;
-			0x00003200, //uint32_t critical_high;
+			0x000032c8, //uint32_t critical_high;
 			0x00002af8, //uint32_t critical_low;
 			0x00003660, //uint32_t fatal_high;
 			0x00002580, //uint32_t fatal_low;
@@ -892,7 +892,7 @@ pldm_sensor_info plat_pldm_sensor_adc_monitor_table[] = {
 			.port = I2C_BUS6,
 			.target_addr = ADDR_MAX11617,
 			.offset = ADC_PORT4,
-			.access_checker = stby_access,
+			.access_checker = dc_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -969,7 +969,7 @@ pldm_sensor_info plat_pldm_sensor_adc_monitor_table[] = {
 			.port = I2C_BUS6,
 			.target_addr = ADDR_MAX11617,
 			.offset = ADC_PORT5,
-			.access_checker = stby_access,
+			.access_checker = dc_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -1046,7 +1046,7 @@ pldm_sensor_info plat_pldm_sensor_adc_monitor_table[] = {
 			.port = I2C_BUS6,
 			.target_addr = ADDR_MAX11617,
 			.offset = ADC_PORT6,
-			.access_checker = stby_access,
+			.access_checker = dc_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -1123,7 +1123,7 @@ pldm_sensor_info plat_pldm_sensor_adc_monitor_table[] = {
 			.port = I2C_BUS6,
 			.target_addr = ADDR_MAX11617,
 			.offset = ADC_PORT0,
-			.access_checker = stby_access,
+			.access_checker = dc_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -1200,7 +1200,7 @@ pldm_sensor_info plat_pldm_sensor_adc_monitor_table[] = {
 			.port = I2C_BUS6,
 			.target_addr = ADDR_MAX11617,
 			.offset = ADC_PORT1,
-			.access_checker = stby_access,
+			.access_checker = dc_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -1277,7 +1277,7 @@ pldm_sensor_info plat_pldm_sensor_adc_monitor_table[] = {
 			.port = I2C_BUS6,
 			.target_addr = ADDR_MAX11617,
 			.offset = ADC_PORT2,
-			.access_checker = stby_access,
+			.access_checker = dc_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -1354,7 +1354,7 @@ pldm_sensor_info plat_pldm_sensor_adc_monitor_table[] = {
 			.port = I2C_BUS6,
 			.target_addr = ADDR_MAX11617,
 			.offset = ADC_PORT3,
-			.access_checker = stby_access,
+			.access_checker = dc_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -1994,7 +1994,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
 
 			0x07, //uint8_t base_unit;
-			-3, //int8_t unit_modifier;
+			-2, //int8_t unit_modifier;
 
 			0x00, //uint8_t rate_unit;
 			0x00, //uint8_t base_oem_unit_handle;
@@ -2012,7 +2012,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0x00, //uint8_t supported_thresholds;
+			0xC7, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 
@@ -2020,17 +2020,17 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0x00, //uint8_t range_field_support;
+			0x15, //uint8_t range_field_support;
 
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 
-			0x00000000, //uint32_t warning_high;
+			0x00003675, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x00000000, //uint32_t critical_high;
+			0x00003791, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x00003C5B, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
