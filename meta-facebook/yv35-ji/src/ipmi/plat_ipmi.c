@@ -21,6 +21,7 @@
 #include <logging/log.h>
 #include "libutil.h"
 #include "ipmi.h"
+#include "eeprom.h"
 #include "hal_gpio.h"
 #include "oem_1s_handler.h"
 #include "plat_fru.h"
@@ -153,6 +154,35 @@ void OEM_1S_GET_CARD_TYPE(ipmi_msg *msg)
 		msg->completion_code = CC_INVALID_DATA_FIELD;
 		break;
 	}
+
+	return;
+}
+
+void OEM_1S_GET_BIOS_VERSION(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 0) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	msg->data_len = 0;
+
+	for (uint8_t block_index = 0; block_index < BIOS_FW_VERSION_BLOCK_NUM; block_index++) {
+		EEPROM_ENTRY get_bios_ver = { 0 };
+		int ret = get_bios_version(&get_bios_ver, block_index);
+		if (ret == -1) {
+			LOG_ERR("Get version fail");
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			return;
+		}
+
+		memcpy(msg->data + msg->data_len, get_bios_ver.data, get_bios_ver.data_len);
+		msg->data_len += get_bios_ver.data_len;
+	}
+
+	msg->completion_code = CC_SUCCESS;
 
 	return;
 }
