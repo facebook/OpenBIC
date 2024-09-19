@@ -24,6 +24,7 @@
 #include "plat_sensor_table.h"
 #include "power_status.h"
 #include "plat_power_status.h"
+#include "util_worker.h"
 #include "logging/log.h"
 
 LOG_MODULE_REGISTER(plat_power_status);
@@ -243,4 +244,20 @@ void set_satmc_status(bool status)
 		gpio_set(VIRTUAL_SATMC_READY, GPIO_HIGH);
 	else
 		gpio_set(VIRTUAL_SATMC_READY, GPIO_LOW);
+}
+
+bool retimer_access(uint8_t sensor_num)
+{
+	return get_retimer_status();
+}
+
+bool get_retimer_status()
+{
+	if (get_DC_status() == false)
+		return false;
+
+	if (get_post_status() == true)
+		return true;
+
+	return gpio_get(VIRTUAL_RETIMER_PG);
 }
