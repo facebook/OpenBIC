@@ -26,6 +26,7 @@
 #define DAC_2P5MV_EN_BIT BIT(13)
 #define MFR_VID_RES_MASK GENMASK(15, 14)
 #define IOUT_SCALE_MASK GENMASK(2, 0)
+#define IOUT_MASK GENMASK(10, 0)
 
 #define MFR_SVI3_IOUT_RPT 0x65
 #define MFR_VOUT_LOOP_CTRL 0xBD
@@ -152,12 +153,12 @@ uint8_t mp2891_read(sensor_cfg *cfg, int *reading)
 		val = slinear11_to_float(read_value);
 
 	} else if (cfg->offset == PMBUS_READ_IOUT) {
-		uint16_t read_value = (msg.data[1] << 8) | msg.data[0];
+		uint16_t read_value = ((msg.data[1] << 8) | msg.data[0]) & IOUT_MASK;
 		float resolution = mp2891_get_resolution(cfg);
 		if (resolution == 0)
 			return SENSOR_FAIL_TO_ACCESS;
 
-		val = slinear11_to_float(read_value) * resolution;
+		val = (float)read_value * resolution;
 
 	} else {
 		return SENSOR_FAIL_TO_ACCESS;
