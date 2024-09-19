@@ -47,7 +47,8 @@ plat_sensor_vr_extend_info plat_sensor_vr_extend_table[] = {
 	{ SENSOR_NUM_OSFP_P3V3_VOLT_V, P3V3_ISL69260_ADDR, .mps_vr_init_args = &mp2971_init_args[0],
 	  .rns_vr_init_args = &isl69259_init_args[0] },
 	{ SENSOR_NUM_OSFP_P3V3_CURR_A, P3V3_ISL69260_ADDR },
-	{ SENSOR_NUM_OSFP_P3V3_PWR_W, P3V3_ISL69260_ADDR },
+	{ SENSOR_NUM_OSFP_P3V3_PWR_W, P3V3_ISL69260_ADDR, .mps_vr_init_args = &mp2971_init_args[0],
+	  .rns_vr_init_args = &isl69259_init_args[0] },
 
 	{ SENSOR_NUM_CPU_P0V85_PVDD_TEMP_C, P0V85_PVDD_RAA228238_ADDR },
 	{ SENSOR_NUM_CPU_P0V85_PVDD_VOLT_V, P0V85_PVDD_RAA228238_ADDR },
@@ -210,6 +211,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_UBC_1_TEMP_C,
 			.type = sensor_dev_u50su4p180pmdafc,
 			.port = I2C_BUS1,
 			.target_addr = DC_BRICK_1_ADDR,
@@ -279,6 +281,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_UBC_1_P50V_VIN_VOLT_V,
 			.type = sensor_dev_u50su4p180pmdafc,
 			.port = I2C_BUS1,
 			.target_addr = DC_BRICK_1_ADDR,
@@ -348,6 +351,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_UBC_1_P12V_VOUT_VOLT_V,
 			.type = sensor_dev_u50su4p180pmdafc,
 			.port = I2C_BUS1,
 			.target_addr = DC_BRICK_1_ADDR,
@@ -417,6 +421,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_UBC_1_P12V_CURR_A,
 			.type = sensor_dev_u50su4p180pmdafc,
 			.port = I2C_BUS1,
 			.target_addr = DC_BRICK_1_ADDR,
@@ -486,6 +491,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_UBC_1_P12V_PWR_W,
 			.type = sensor_dev_u50su4p180pmdafc,
 			.port = I2C_BUS1,
 			.target_addr = DC_BRICK_1_ADDR,
@@ -555,6 +561,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_UBC_2_TEMP_C,
 			.type = sensor_dev_u50su4p180pmdafc,
 			.port = I2C_BUS1,
 			.target_addr = DC_BRICK_2_ADDR,
@@ -624,6 +631,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_UBC_2_P50V_VIN_VOLT_V,
 			.type = sensor_dev_u50su4p180pmdafc,
 			.port = I2C_BUS1,
 			.target_addr = DC_BRICK_2_ADDR,
@@ -693,6 +701,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_UBC_2_P12V_VOUT_VOLT_V,
 			.type = sensor_dev_u50su4p180pmdafc,
 			.port = I2C_BUS1,
 			.target_addr = DC_BRICK_2_ADDR,
@@ -762,6 +771,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_UBC_2_P12V_CURR_A,
 			.type = sensor_dev_u50su4p180pmdafc,
 			.port = I2C_BUS1,
 			.target_addr = DC_BRICK_2_ADDR,
@@ -831,6 +841,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_UBC_2_P12V_PWR_W,
 			.type = sensor_dev_u50su4p180pmdafc,
 			.port = I2C_BUS1,
 			.target_addr = DC_BRICK_2_ADDR,
@@ -903,6 +914,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_OSFP_P3V3_TEMP_C,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS1,
 			.target_addr = P3V3_MP2971_ADDR,
@@ -972,6 +984,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_OSFP_P3V3_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS1,
 			.target_addr = P3V3_MP2971_ADDR,
@@ -1042,6 +1055,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_OSFP_P3V3_CURR_A,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS1,
 			.target_addr = P3V3_MP2971_ADDR,
@@ -1111,6 +1125,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_OSFP_P3V3_PWR_W,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS1,
 			.target_addr = P3V3_MP2971_ADDR,
@@ -1180,6 +1195,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V85_PVDD_TEMP_C,
 			.type = sensor_dev_mp2891,
 			.port = I2C_BUS2,
 			.target_addr = P0V85_PVDD_MP2891_ADDR,
@@ -1249,6 +1265,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V85_PVDD_VOLT_V,
 			.type = sensor_dev_mp2891,
 			.port = I2C_BUS2,
 			.target_addr = P0V85_PVDD_MP2891_ADDR,
@@ -1318,6 +1335,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V85_PVDD_CURR_A,
 			.type = sensor_dev_mp2891,
 			.port = I2C_BUS2,
 			.target_addr = P0V85_PVDD_MP2891_ADDR,
@@ -1387,6 +1405,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V85_PVDD_PWR_W,
 			.type = sensor_dev_mp2891,
 			.port = I2C_BUS2,
 			.target_addr = P0V85_PVDD_MP2891_ADDR,
@@ -1456,6 +1475,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_PVDD_CH_N_TEMP_C,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_PVDD_CH_N_MP2971_ADDR,
@@ -1525,6 +1545,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_PVDD_CH_N_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_PVDD_CH_N_MP2971_ADDR,
@@ -1594,6 +1615,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_PVDD_CH_N_CURR_A,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_PVDD_CH_N_MP2971_ADDR,
@@ -1663,6 +1685,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_PVDD_CH_N_PWR_W,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_PVDD_CH_N_MP2971_ADDR,
@@ -1732,6 +1755,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_MAX_PHY_N_TEMP_C,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_MAX_PHY_N_MP2971_ADDR,
@@ -1801,6 +1825,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_MAX_PHY_N_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_MAX_PHY_N_MP2971_ADDR,
@@ -1870,6 +1895,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_MAX_PHY_N_CURR_A,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_MAX_PHY_N_MP2971_ADDR,
@@ -1939,6 +1965,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_MAX_PHY_N_PWR_W,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_MAX_PHY_N_MP2971_ADDR,
@@ -2008,6 +2035,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_PVDD_CH_S_TEMP_C,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_PVDD_CH_S_MP2971_ADDR,
@@ -2077,6 +2105,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_PVDD_CH_S_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_PVDD_CH_S_MP2971_ADDR,
@@ -2146,6 +2175,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_PVDD_CH_S_CURR_A,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_PVDD_CH_S_MP2971_ADDR,
@@ -2215,6 +2245,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_PVDD_CH_S_PWR_W,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_PVDD_CH_S_MP2971_ADDR,
@@ -2284,6 +2315,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_MAX_PHY_S_TEMP_C,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_MAX_PHY_S_MP2971_ADDR,
@@ -2353,6 +2385,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_MAX_PHY_S_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_MAX_PHY_S_MP2971_ADDR,
@@ -2422,6 +2455,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_MAX_PHY_S_CURR_A,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_MAX_PHY_S_MP2971_ADDR,
@@ -2491,6 +2525,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_MAX_PHY_S_PWR_W,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_MAX_PHY_S_MP2971_ADDR,
@@ -2560,6 +2595,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_TRVDD_ZONEA_TEMP_C,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_TRVDD_ZONEA_MP2971_ADDR,
@@ -2629,6 +2665,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_TRVDD_ZONEA_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_TRVDD_ZONEA_MP2971_ADDR,
@@ -2698,6 +2735,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_TRVDD_ZONEA_CURR_A,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_TRVDD_ZONEA_MP2971_ADDR,
@@ -2767,6 +2805,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_TRVDD_ZONEA_PWR_W,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_TRVDD_ZONEA_MP2971_ADDR,
@@ -2836,6 +2875,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P1V8_VPP_HBM0_2_4_TEMP_C,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P1V8_VPP_HBM0_HBM2_HBM4_MP2971_ADDR,
@@ -2905,6 +2945,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P1V8_VPP_HBM0_2_4_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P1V8_VPP_HBM0_HBM2_HBM4_MP2971_ADDR,
@@ -2974,6 +3015,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P1V8_VPP_HBM0_2_4_CURR_A,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P1V8_VPP_HBM0_HBM2_HBM4_MP2971_ADDR,
@@ -3043,6 +3085,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P1V8_VPP_HBM0_2_4_PWR_W,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P1V8_VPP_HBM0_HBM2_HBM4_MP2971_ADDR,
@@ -3112,6 +3155,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_TRVDD_ZONEB_TEMP_C,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_TRVDD_ZONEB_MP2971_ADDR,
@@ -3181,6 +3225,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_TRVDD_ZONEB_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_TRVDD_ZONEB_MP2971_ADDR,
@@ -3250,6 +3295,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_TRVDD_ZONEB_CURR_A,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_TRVDD_ZONEB_MP2971_ADDR,
@@ -3319,6 +3365,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_TRVDD_ZONEB_PWR_W,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_TRVDD_ZONEB_MP2971_ADDR,
@@ -3388,6 +3435,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V4_VDDQL_HBM0_2_4_TEMP_C,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V4_VDDQL_HBM0_HBM2_HBM4_MP2971_ADDR,
@@ -3457,6 +3505,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V4_VDDQL_HBM0_2_4_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V4_VDDQL_HBM0_HBM2_HBM4_MP2971_ADDR,
@@ -3526,6 +3575,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V4_VDDQL_HBM0_2_4_CURR_A,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V4_VDDQL_HBM0_HBM2_HBM4_MP2971_ADDR,
@@ -3595,6 +3645,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V4_VDDQL_HBM0_2_4_PWR_W,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V4_VDDQL_HBM0_HBM2_HBM4_MP2971_ADDR,
@@ -3664,6 +3715,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P1V1_VDDC_HBM0_2_4_TEMP_C,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P1V1_VDDC_HBM0_HBM2_HBM4_MP2971_ADDR,
@@ -3733,6 +3785,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P1V1_VDDC_HBM0_2_4_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P1V1_VDDC_HBM0_HBM2_HBM4_MP2971_ADDR,
@@ -3802,6 +3855,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P1V1_VDDC_HBM0_2_4_CURR_A,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P1V1_VDDC_HBM0_HBM2_HBM4_MP2971_ADDR,
@@ -3871,6 +3925,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P1V1_VDDC_HBM0_2_4_PWR_W,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P1V1_VDDC_HBM0_HBM2_HBM4_MP2971_ADDR,
@@ -3940,6 +3995,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_VDDPHY_HBM0_2_4_TEMP_C,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_VDDPHY_HBM0_HBM2_HBM4_MP2971_ADDR,
@@ -4009,6 +4065,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_VDDPHY_HBM0_2_4_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_VDDPHY_HBM0_HBM2_HBM4_MP2971_ADDR,
@@ -4078,6 +4135,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_VDDPHY_HBM0_2_4_CURR_A,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_VDDPHY_HBM0_HBM2_HBM4_MP2971_ADDR,
@@ -4147,6 +4205,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_VDDPHY_HBM0_2_4_PWR_W,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
 			.target_addr = P0V75_VDDPHY_HBM0_HBM2_HBM4_MP2971_ADDR,
@@ -4216,6 +4275,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V9_TRVDD_ZONEA_TEMP_C,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P0V9_TRVDD_ZONEA_MP2971_ADDR,
@@ -4285,6 +4345,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V9_TRVDD_ZONEA_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P0V9_TRVDD_ZONEA_MP2971_ADDR,
@@ -4354,6 +4415,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V9_TRVDD_ZONEA_CURR_A,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P0V9_TRVDD_ZONEA_MP2971_ADDR,
@@ -4423,6 +4485,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V9_TRVDD_ZONEA_PWR_W,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P0V9_TRVDD_ZONEA_MP2971_ADDR,
@@ -4492,6 +4555,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P1V8_VPP_HBM1_3_5_TEMP_C,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P1V8_VPP_HBM1_HBM3_HBM5_MP2971_ADDR,
@@ -4561,6 +4625,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P1V8_VPP_HBM1_3_5_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P1V8_VPP_HBM1_HBM3_HBM5_MP2971_ADDR,
@@ -4630,6 +4695,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P1V8_VPP_HBM1_3_5_CURR_A,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P1V8_VPP_HBM1_HBM3_HBM5_MP2971_ADDR,
@@ -4699,6 +4765,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P1V8_VPP_HBM1_3_5_PWR_W,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P1V8_VPP_HBM1_HBM3_HBM5_MP2971_ADDR,
@@ -4768,6 +4835,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V9_TRVDD_ZONEB_TEMP_C,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P0V9_TRVDD_ZONEB_MP2971_ADDR,
@@ -4837,6 +4905,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V9_TRVDD_ZONEB_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P0V9_TRVDD_ZONEB_MP2971_ADDR,
@@ -4906,6 +4975,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V9_TRVDD_ZONEB_CURR_A,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P0V9_TRVDD_ZONEB_MP2971_ADDR,
@@ -4975,6 +5045,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V9_TRVDD_ZONEB_PWR_W,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P0V9_TRVDD_ZONEB_MP2971_ADDR,
@@ -5044,6 +5115,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V4_VDDQL_HBM1_3_5_TEMP_C,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P0V4_VDDQL_HBM1_HBM3_HBM5_MP2971_ADDR,
@@ -5113,6 +5185,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V4_VDDQL_HBM1_3_5_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P0V4_VDDQL_HBM1_HBM3_HBM5_MP2971_ADDR,
@@ -5182,6 +5255,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V4_VDDQL_HBM1_3_5_CURR_A,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P0V4_VDDQL_HBM1_HBM3_HBM5_MP2971_ADDR,
@@ -5251,6 +5325,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V4_VDDQL_HBM1_3_5_PWR_W,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P0V4_VDDQL_HBM1_HBM3_HBM5_MP2971_ADDR,
@@ -5320,6 +5395,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P1V1_VDDC_HBM1_3_5_TEMP_C,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P1V1_VDDC_HBM1_HBM3_HBM5_MP2971_ADDR,
@@ -5389,6 +5465,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P1V1_VDDC_HBM1_3_5_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P1V1_VDDC_HBM1_HBM3_HBM5_MP2971_ADDR,
@@ -5458,6 +5535,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P1V1_VDDC_HBM1_3_5_CURR_A,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P1V1_VDDC_HBM1_HBM3_HBM5_MP2971_ADDR,
@@ -5527,6 +5605,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P1V1_VDDC_HBM1_3_5_PWR_W,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P1V1_VDDC_HBM1_HBM3_HBM5_MP2971_ADDR,
@@ -5596,6 +5675,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_VDDPHY_HBM1_3_5_TEMP_C,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P0V75_VDDPHY_HBM1_HBM3_HBM5_MP2971_ADDR,
@@ -5665,6 +5745,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_VDDPHY_HBM1_3_5_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P0V75_VDDPHY_HBM1_HBM3_HBM5_MP2971_ADDR,
@@ -5734,6 +5815,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_VDDPHY_HBM1_3_5_CURR_A,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P0V75_VDDPHY_HBM1_HBM3_HBM5_MP2971_ADDR,
@@ -5803,6 +5885,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V75_VDDPHY_HBM1_3_5_PWR_W,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P0V75_VDDPHY_HBM1_HBM3_HBM5_MP2971_ADDR,
@@ -5872,6 +5955,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V8_VDDA_PCIE_TEMP_C,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P0V8_VDDA_PCIE_MP2971_ADDR,
@@ -5941,6 +6025,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V8_VDDA_PCIE_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P0V8_VDDA_PCIE_MP2971_ADDR,
@@ -6010,6 +6095,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V8_VDDA_PCIE_CURR_A,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P0V8_VDDA_PCIE_MP2971_ADDR,
@@ -6079,6 +6165,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P0V8_VDDA_PCIE_PWR_W,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P0V8_VDDA_PCIE_MP2971_ADDR,
@@ -6148,6 +6235,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P1V2_VDDHTX_PCIE_TEMP_C,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P1V2_VDDHTX_PCIE_MP2971_ADDR,
@@ -6217,6 +6305,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P1V2_VDDHTX_PCIE_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P1V2_VDDHTX_PCIE_MP2971_ADDR,
@@ -6286,6 +6375,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P1V2_VDDHTX_PCIE_CURR_A,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P1V2_VDDHTX_PCIE_MP2971_ADDR,
@@ -6355,6 +6445,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_CPU_P1V2_VDDHTX_PCIE_PWR_W,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
 			.target_addr = P1V2_VDDHTX_PCIE_MP2971_ADDR,
@@ -6427,6 +6518,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_TOP_INLET_TEMP_C,
 			.type = sensor_dev_tmp75,
 			.port = I2C_BUS1,
 			.target_addr = TOP_INLET_TEMP_ADDR,
@@ -6494,6 +6586,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_TOP_OUTLET_TEMP_C,
 			.type = sensor_dev_tmp75,
 			.port = I2C_BUS1,
 			.target_addr = TOP_OUTLET_TEMP_ADDR,
@@ -6561,6 +6654,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_BOT_INLET_TEMP_C,
 			.type = sensor_dev_tmp75,
 			.port = I2C_BUS1,
 			.target_addr = BOT_INLET_TEMP_ADDR,
@@ -6628,6 +6722,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_BOT_OUTLET_TEMP_C,
 			.type = sensor_dev_tmp75,
 			.port = I2C_BUS1,
 			.target_addr = BOT_OUTLET_TEMP_ADDR,
@@ -6695,6 +6790,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_ON_DIE_1_TEMP__C,
 			.type = sensor_dev_tmp431,
 			.port = I2C_BUS1,
 			.target_addr = ON_DIE_1_TEMP_ADDR,
@@ -6762,6 +6858,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		},
 		.update_time = 0,
 		{
+			.num = SENSOR_NUM_ON_DIE_2_TEMP_C,
 			.type = sensor_dev_tmp431,
 			.port = I2C_BUS1,
 			.target_addr = ON_DIE_2_TEMP_ADDR,
@@ -8655,8 +8752,10 @@ void plat_pldm_sensor_change_vr_init_args()
 
 	for (int index = 0; index < plat_pldm_sensor_get_sensor_count(VR_SENSOR_THREAD_ID);
 	     index++) {
-		if (plat_pldm_sensor_vr_table[index].pdr_numeric_sensor.sensor_id ==
-		    SENSOR_NUM_OSFP_P3V3_VOLT_V) {
+		if ((plat_pldm_sensor_vr_table[index].pdr_numeric_sensor.sensor_id ==
+		     SENSOR_NUM_OSFP_P3V3_VOLT_V) ||
+		    (plat_pldm_sensor_vr_table[index].pdr_numeric_sensor.sensor_id ==
+		     SENSOR_NUM_OSFP_P3V3_PWR_W)) {
 			find_init_args_by_sensor_id(
 				plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.num, &init_args);
 			plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.init_args = init_args;
@@ -8675,6 +8774,7 @@ void plat_pldm_sensor_change_vr_addr()
 	uint8_t addr;
 
 	if (vr_type == VR_RNS_ISL69260_RAA228238) {
+		LOG_INF("change vr addr for RNS_ISL69260_RAA228238");
 		for (int index = 0; index < plat_pldm_sensor_get_sensor_count(VR_SENSOR_THREAD_ID);
 		     index++) {
 			find_vr_addr_by_sensor_id(
