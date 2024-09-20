@@ -26,16 +26,20 @@
 
 LOG_MODULE_REGISTER(plat_status);
 
-static uint8_t leak_flag;
+static uint32_t status_flag[STATUS_FLAG_MAX];
 
-uint8_t get_leak_status()
+uint32_t get_status_flag(uint8_t idx)
 {
-	return leak_flag;
+	return status_flag[idx];
 }
 
-void set_leak_status(uint8_t idx, uint8_t val)
+void set_status_flag(uint8_t idx, uint8_t bit, uint32_t val)
 {
-	WRITE_BIT(leak_flag, idx, val);
+	// if bit >= 32, override flag
+	if (bit >= 32)
+		status_flag[idx] = val;
+	else
+		WRITE_BIT(status_flag[idx], bit, val);
 }
 
 uint16_t get_sticky_sensor_status(uint8_t idx)

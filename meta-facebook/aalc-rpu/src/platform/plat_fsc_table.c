@@ -2,6 +2,7 @@
 #include "plat_sensor_table.h"
 #include "libutil.h"
 #include "plat_pwm.h"
+#include "plat_hwmon.h"
 
 stepwise_cfg stepwise_table[] = {};
 
@@ -16,9 +17,7 @@ zone_cfg zone_table[] = {
 	  .table_size = 1,
 	  .FF_gain = 1,
 	  .interval = 1,
-	  .pre_hook = set_manual_pwm,
-	  .pre_hook_arg = MANUAL_PWM_E_HEX_FAN,
-	  .set_duty = set_pwm_group,
+	  .set_duty = pwm_control,
 	  .set_duty_arg = PWM_GROUP_E_HEX_FAN },
 	{
 		.table = (fsc_type_mapping[]){ { SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C,
@@ -26,9 +25,7 @@ zone_cfg zone_table[] = {
 		.table_size = 1,
 		.FF_gain = 1,
 		.interval = 2,
-		.pre_hook = set_manual_pwm,
-		.pre_hook_arg = MANUAL_PWM_E_PUMP,
-		.set_duty = set_pwm_group,
+		.set_duty = pwm_control,
 		.set_duty_arg = PWM_GROUP_E_PUMP,
 	},
 	{
@@ -37,9 +34,7 @@ zone_cfg zone_table[] = {
 		.table_size = 1,
 		.FF_gain = 1,
 		.interval = 1,
-		.pre_hook = set_manual_pwm,
-		.pre_hook_arg = MANUAL_PWM_E_RPU_FAN,
-		.set_duty = set_pwm_group,
+		.set_duty = pwm_control,
 		.set_duty_arg = PWM_GROUP_E_RPU_FAN,
 	},
 };

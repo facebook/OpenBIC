@@ -29,8 +29,9 @@
 #include "plat_log.h"
 #include "plat_hook.h"
 #include "plat_pwm.h"
+#include "plat_status.h"
 
-LOG_MODULE_REGISTER(plat_modbus_funtion);
+LOG_MODULE_REGISTER(plat_hwmon);
 
 bool modbus_pump_setting_unsupport_function(pump_reset_struct *data, uint8_t bit_val)
 {
@@ -103,10 +104,35 @@ bool close_pump(pump_reset_struct *data, uint8_t bit_val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
-	if (bit_val == 0) // do nothing
-		return true;
+	if (bit_val == 0) {
+		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_CLOSE_PUMP, 0);
+	} else {
+		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_CLOSE_PUMP, 1);
+	}
 
-	set_pwm_group(PWM_GROUP_E_PUMP, 0);
+	return true;
+}
+
+bool pump_setting_set_manual_flag(pump_reset_struct *data, uint8_t bit_val)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+
+	if (data->function_index == MANUAL_CONTROL_PUMP)
+		set_manual_pwm_flag(MANUAL_PWM_E_PUMP, bit_val);
+	else if (data->function_index == MANUAL_CONTROL_FAN)
+		set_manual_pwm_flag(MANUAL_PWM_E_HEX_FAN, bit_val);
+	else
+		LOG_ERR("unknow function_index for set manual flag");
+
+	return true;
+}
+
+bool pump_setting_set_auto_tune_flag(pump_reset_struct *data, uint8_t bit_val)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+
+	set_status_flag(STATUS_FLAG_AUTO_TUNE, 0, bit_val);
+
 	return true;
 }
 
@@ -227,4 +253,103 @@ bool rpu_remote_power_cycle_function(pump_reset_struct *data, uint8_t bit_val)
 
 	k_work_submit(&rpu_pwr_cycle_work);
 	return true;
+}
+
+// If a failure occurs, return true
+static bool failure_behavior(uint8_t group)
+{
+	// all 0
+	for (uint8_t i = PUMP_FAIL_EMERGENCY_BUTTON; i <= PUMP_FAIL_CLOSE_PUMP; i++) {
+		if ((get_status_flag(STATUS_FLAG_FAILURE) >> i) & 0x01) {
+			set_pwm_group(group, 0);
+			return true;
+		}
+	}
+
+	// all 100
+	for (uint8_t i = PUMP_FAIL_TWO_HEX_FAN_FAILURE; i <= PUMP_FAIL_ABNORMAL_AIR_INLET_TEMP;
+	     i++) {
+		if ((get_status_flag(STATUS_FLAG_FAILURE) >> i) & 0x01) {
+			set_pwm_group(group, 100);
+			return true;
+		}
+	}
+
+	// pump 100
+	if (group == PWM_GROUP_E_PUMP) {
+		if ((get_status_flag(STATUS_FLAG_FAILURE) >> PUMP_FAIL_FLOW_RATE_NOT_ACCESS) &
+		    0x01) {
+			set_pwm_group(group, 100);
+			return true;
+		}
+	}
+
+	// hex fan 100
+	if (group == PWM_GROUP_E_HEX_FAN) {
+		if ((get_status_flag(STATUS_FLAG_FAILURE) >>
+		     HEX_FAN_FAIL_COOLANT_OUTLET_TEMP_NOT_ACCESS) &
+		    0x01) {
+			set_pwm_group(group, 100);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+uint8_t pwm_control(uint8_t group, uint8_t duty)
+{
+	switch (group) {
+	case PWM_GROUP_E_PUMP:
+		if (get_manual_pwm_flag(MANUAL_PWM_E_PUMP)) {
+			plat_pwm_ctrl(PWM_DEVICE_E_PB_PUMB_1,
+				      get_manual_pwm_cache(MANUAL_PWM_E_PUMP_1));
+			plat_pwm_ctrl(PWM_DEVICE_E_PB_PUMB_2,
+				      get_manual_pwm_cache(MANUAL_PWM_E_PUMP_2));
+			plat_pwm_ctrl(PWM_DEVICE_E_PB_PUMB_3,
+				      get_manual_pwm_cache(MANUAL_PWM_E_PUMP_3));
+			return 0;
+		}
+		break;
+	case PWM_GROUP_E_HEX_FAN:
+		if (get_manual_pwm_flag(MANUAL_PWM_E_HEX_FAN)) {
+			set_pwm_group(group, get_manual_pwm_cache(MANUAL_PWM_E_HEX_FAN));
+			return 0;
+		}
+		break;
+	case PWM_GROUP_E_RPU_FAN:
+		if (get_manual_pwm_flag(MANUAL_PWM_E_RPU_FAN)) {
+			plat_pwm_ctrl(PWM_DEVICE_E_PB_PUMB_FAN_1,
+				      get_manual_pwm_cache(MANUAL_PWM_E_PUMP_FAN_1));
+			plat_pwm_ctrl(PWM_DEVICE_E_PB_PUMB_FAN_2,
+				      get_manual_pwm_cache(MANUAL_PWM_E_PUMP_FAN_2));
+			plat_pwm_ctrl(PWM_DEVICE_E_PB_PUMB_FAN_3,
+				      get_manual_pwm_cache(MANUAL_PWM_E_PUMP_FAN_3));
+			plat_pwm_ctrl(PWM_DEVICE_E_BB_FAN,
+				      get_manual_pwm_cache(MANUAL_PWM_E_RPU_PCB_FAN));
+			return 0;
+		}
+		break;
+	default:
+		LOG_ERR("unknow pwm_control group %d", group);
+		break;
+	}
+
+	static int64_t auto_tune_time;
+	if (!get_status_flag(STATUS_FLAG_AUTO_TUNE)) {
+		auto_tune_time = k_uptime_get();
+		ctl_all_pwm_dev(0);
+		return 0;
+	}
+
+	// 10s flow rate ready + 1s polling error
+	if ((k_uptime_get() - auto_tune_time) > 11000) {
+		if (failure_behavior(group))
+			return 0;
+	}
+
+	if (!set_pwm_group(group, duty))
+		return 0;
+
+	return 1;
 }

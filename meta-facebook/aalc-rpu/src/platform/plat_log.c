@@ -193,6 +193,8 @@ void error_log_event(uint8_t sensor_num, bool val_normal)
 			    (AALC_FRU_LOG_START + fru_count * sizeof(modbus_err_log_mapping)),
 			    (uint8_t *)&err_log_data[fru_count], sizeof(modbus_err_log_mapping)))
 			LOG_ERR("Write Log failed with Error code: %02x", err_code);
+		else
+			k_msleep(5); // wait 5ms write eeprom
 	}
 }
 

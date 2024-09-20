@@ -77,8 +77,37 @@ enum AALC_STATUS_LEAK_E {
 	AALC_STATUS_LEAK_E_MAX,
 };
 
-uint8_t get_leak_status();
-void set_leak_status(uint8_t idx, uint8_t val);
+enum STATUS_FLAG_E {
+	STATUS_FLAG_LEAK,
+	STATUS_FLAG_FAILURE,
+	STATUS_FLAG_AUTO_TUNE,
+	STATUS_FLAG_MAX,
+};
+
+enum FAILURE_STATUS_E {
+	// 0
+	PUMP_FAIL_EMERGENCY_BUTTON,
+	PUMP_FAIL_LEAK,
+	PUMP_FAIL_ABNORMAL_PRESS,
+	PUMP_FAIL_ABNORMAL_FLOW_RATE,
+	PUMP_FAIL_LOW_LEVEL,
+	PUMP_FAIL_PUMP1_UCR,
+	PUMP_FAIL_PUMP2_UCR,
+	PUMP_FAIL_PUMP3_UCR,
+	PUMP_FAIL_TWO_PUMP_LCR,
+	PUMP_FAIL_CLOSE_PUMP,
+	// 100
+	PUMP_FAIL_TWO_HEX_FAN_FAILURE,
+	PUMP_FAIL_ABNORMAL_COOLANT_INLET_TEMP,
+	PUMP_FAIL_ABNORMAL_COOLANT_OUTLET_TEMP,
+	PUMP_FAIL_ABNORMAL_AIR_INLET_TEMP,
+	PUMP_FAIL_FLOW_RATE_NOT_ACCESS, // only pump
+	HEX_FAN_FAIL_COOLANT_OUTLET_TEMP_NOT_ACCESS, // only hex fan
+	FAILURE_STATUS_MAX,
+};
+
+uint32_t get_status_flag(uint8_t idx);
+void set_status_flag(uint8_t idx, uint8_t bit, uint32_t val);
 uint16_t get_sticky_sensor_status(uint8_t idx);
 bool set_sticky_sensor_status(uint8_t idx, uint16_t val);
 uint16_t get_sensor_status_for_modbus_cmd(uint8_t status);

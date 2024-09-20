@@ -175,7 +175,7 @@ uint8_t fault_led_threshold_sensor[] = {
 //	return fault or not
 bool fault_led_control(void)
 {
-	if (get_leak_status()) {
+	if (get_status_flag(STATUS_FLAG_LEAK)) {
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
 		return true;
 	}

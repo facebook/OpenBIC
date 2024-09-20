@@ -49,6 +49,7 @@
 #define HEX_FAN_NUM 14
 static void fb_prsnt_handle(uint32_t thres_tbl_idx, uint32_t changed_status);
 void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status);
+void abnormal_flow_do(uint32_t thres_tbl_idx, uint32_t status);
 
 struct k_thread threshold_poll;
 K_KERNEL_STACK_MEMBER(threshold_poll_stack, THRESHOLD_POLL_STACK_SIZE);
@@ -155,7 +156,7 @@ bool hsc_communicate_check()
 bool system_failure_recovery()
 {
 	static uint8_t pre_status = 0; // 0: normal, 1: fault
-	if (get_leak_status()) {
+	if (get_status_flag(STATUS_FLAG_LEAK)) {
 		pre_status = 1;
 		return false;
 	}
@@ -193,7 +194,7 @@ bool system_failure_recovery()
 /* check status for rpu ready */
 bool rpu_ready_recovery()
 {
-	if (get_leak_status())
+	if (get_status_flag(STATUS_FLAG_LEAK))
 		return false;
 
 	if (pump_fail_check())
@@ -261,10 +262,25 @@ void fan_board_tach_status_handler(uint8_t sensor_num, uint8_t status)
 void hex_fan_failure_do(uint32_t sensor_num, uint32_t status)
 {
 	fan_board_tach_status_handler(sensor_num, status);
-	if (hex_fan_fail_check()) {
-		if (rpu_ready_recovery())
-			ctl_all_pwm_dev(100);
-	}
+	if (hex_fan_fail_check())
+		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_TWO_HEX_FAN_FAILURE, 1);
+	else
+		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_TWO_HEX_FAN_FAILURE, 0);
+}
+
+/* flow_rate_ready_flag is flag to wait flow rate ready*/
+static bool flow_rate_ready_flag = true;
+static void flow_rate_ready()
+{
+	flow_rate_ready_flag = true;
+}
+K_WORK_DELAYABLE_DEFINE(flow_rate_ready_worker, flow_rate_ready);
+static void reset_flow_rate_ready()
+{
+	if (!flow_rate_ready_flag)
+		return;
+	flow_rate_ready_flag = false;
+	k_work_schedule(&flow_rate_ready_worker, K_SECONDS(10));
 }
 
 void pump_board_tach_status_handler(uint8_t sensor_num, uint8_t status)
@@ -399,35 +415,36 @@ void rpu_internal_fan_failure_do(uint32_t sensor_num, uint32_t status)
 
 void abnormal_press_do(uint32_t unused, uint32_t status)
 {
-	if (status == THRESHOLD_STATUS_UCR) {
-		ctl_all_pwm_dev(0);
-	} else {
-		LOG_DBG("Unexpected threshold warning");
-	}
-}
-
-void abnormal_flow_do(uint32_t unused, uint32_t status)
-{
-	if (status == THRESHOLD_STATUS_LCR) {
-		//ctl_all_pwm_dev(0);
-	} else if (status == THRESHOLD_STATUS_NOT_ACCESS) {
-		if (rpu_ready_recovery())
-			set_pwm_group(PWM_GROUP_E_PUMP, 100);
-	} else {
-		LOG_DBG("Unexpected threshold warning");
-	}
+	if (status == THRESHOLD_STATUS_NORMAL)
+		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_ABNORMAL_PRESS, 0);
+	else
+		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_ABNORMAL_PRESS, 1);
 }
 
 void abnormal_temp_do(uint32_t sensor_num, uint32_t status)
 {
+	uint8_t failure_status = (sensor_num == SENSOR_NUM_BPB_RPU_COOLANT_INLET_TEMP_C) ?
+					 PUMP_FAIL_ABNORMAL_COOLANT_INLET_TEMP :
+				 (sensor_num == SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C) ?
+					 PUMP_FAIL_ABNORMAL_COOLANT_OUTLET_TEMP :
+				 (sensor_num == SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C) ?
+					 PUMP_FAIL_ABNORMAL_AIR_INLET_TEMP :
+					 0xFF;
+
 	if (status == THRESHOLD_STATUS_UCR) {
-		if (rpu_ready_recovery())
-			ctl_all_pwm_dev(100);
+		set_status_flag(STATUS_FLAG_FAILURE, failure_status, 1);
 	} else if (status == THRESHOLD_STATUS_NOT_ACCESS) {
 		if (sensor_num == SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C) {
-			if (rpu_ready_recovery())
-				set_pwm_group(PWM_GROUP_E_HEX_FAN, 100);
+			set_status_flag(STATUS_FLAG_FAILURE,
+					HEX_FAN_FAIL_COOLANT_OUTLET_TEMP_NOT_ACCESS, 1);
+		} else {
+			set_status_flag(STATUS_FLAG_FAILURE, failure_status, 1);
 		}
+	} else if (status == THRESHOLD_STATUS_NORMAL) {
+		set_status_flag(STATUS_FLAG_FAILURE, failure_status, 0);
+		if (sensor_num == SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C)
+			set_status_flag(STATUS_FLAG_FAILURE,
+					HEX_FAN_FAIL_COOLANT_OUTLET_TEMP_NOT_ACCESS, 0);
 	} else {
 		LOG_DBG("Unexpected threshold warning");
 	}
@@ -436,13 +453,14 @@ void abnormal_temp_do(uint32_t sensor_num, uint32_t status)
 void level_sensor_do(uint32_t unused, uint32_t status)
 {
 	if (get_threshold_status(SENSOR_NUM_BPB_RACK_LEVEL_2)) {
-		ctl_all_pwm_dev(0);
+		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_LOW_LEVEL, 1);
 		error_log_event(SENSOR_NUM_BPB_RACK_LEVEL_2, IS_ABNORMAL_VAL);
 		if (get_threshold_status(SENSOR_NUM_BPB_RACK_LEVEL_1))
 			led_ctrl(LED_IDX_E_COOLANT, LED_TURN_OFF);
 		else
 			LOG_DBG("BPB_RACK_LEVEL_1 1fail\n");
 	} else {
+		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_LOW_LEVEL, 0);
 		if (get_threshold_status(SENSOR_NUM_BPB_RACK_LEVEL_1)) {
 			led_ctrl(LED_IDX_E_COOLANT, LED_START_BLINK);
 		} else {
@@ -550,7 +568,7 @@ sensor_threshold threshold_tbl[] = {
 	{ SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA, THRESHOLD_ENABLE_UCR, 0, 300, abnormal_press_do,
 	  0 },
 	{ SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, THRESHOLD_ENABLE_LCR, 10, 0, abnormal_flow_do,
-	  0 },
+	  THRESHOLD_ARG0_TABLE_INDEX },
 	{ SENSOR_NUM_BPB_RACK_LEVEL_1, THRESHOLD_ENABLE_LCR, 0.1, 0, level_sensor_do, 0 },
 	{ SENSOR_NUM_BPB_RACK_LEVEL_2, THRESHOLD_ENABLE_LCR, 0.1, 0, level_sensor_do, 0 },
 	{ SENSOR_NUM_FAN_PRSNT, THRESHOLD_ENABLE_DISCRETE, 0, 0, fb_prsnt_handle,
@@ -578,13 +596,17 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 	uint32_t sensor_num = thres_p->sensor_num;
 	uint32_t *retry = &thres_p->last_value;
 
-	pump_board_tach_status_handler(sensor_num, status);
+	uint8_t pump_ucr = (sensor_num == SENSOR_NUM_PB_1_PUMP_TACH_RPM) ? PUMP_FAIL_PUMP1_UCR :
+			   (sensor_num == SENSOR_NUM_PB_2_PUMP_TACH_RPM) ? PUMP_FAIL_PUMP2_UCR :
+			   (sensor_num == SENSOR_NUM_PB_3_PUMP_TACH_RPM) ? PUMP_FAIL_PUMP3_UCR :
+									   FAILURE_STATUS_MAX;
+
 	if (status == THRESHOLD_STATUS_LCR) {
 		//auto control for Hex Fan
 		if (*retry >= 3) {
 			error_log_event(sensor_num, IS_ABNORMAL_VAL);
 			if (pump_fail_check())
-				ctl_all_pwm_dev(0);
+				set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_TWO_PUMP_LCR, 1);
 			*retry = 0;
 		} else {
 			(*retry)++;
@@ -594,13 +616,42 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 		//wait 30 secs to shut down
 	} else if (status == THRESHOLD_STATUS_UCR) {
 		//if (!pump_fail_ctrl(sensor_num))
-		ctl_all_pwm_dev(0);
+		set_status_flag(STATUS_FLAG_FAILURE, pump_ucr, 1);
 		LOG_ERR("threshold 0x%02x pump failure", sensor_num);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
+		reset_flow_rate_ready();
+		if (!pump_fail_check())
+			set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_TWO_PUMP_LCR, 0);
+		set_status_flag(STATUS_FLAG_FAILURE, pump_ucr, 0);
 		error_log_event(sensor_num, IS_NORMAL_VAL);
 		*retry = 0;
 	} else
 		LOG_DBG("Unexpected threshold warning");
+
+	pump_board_tach_status_handler(sensor_num, status);
+}
+
+void abnormal_flow_do(uint32_t thres_tbl_idx, uint32_t status)
+{
+	if (thres_tbl_idx >= ARRAY_SIZE(threshold_tbl))
+		return;
+
+	sensor_threshold *thres_p = &threshold_tbl[thres_tbl_idx];
+
+	if (status == THRESHOLD_STATUS_LCR) {
+		if (!flow_rate_ready_flag) {
+			thres_p->last_status = THRESHOLD_STATUS_NORMAL;
+			return;
+		}
+		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_ABNORMAL_FLOW_RATE, 1);
+	} else if (status == THRESHOLD_STATUS_NOT_ACCESS) {
+		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_FLOW_RATE_NOT_ACCESS, 1);
+	} else if (status == THRESHOLD_STATUS_NORMAL) {
+		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_ABNORMAL_FLOW_RATE, 0);
+		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_FLOW_RATE_NOT_ACCESS, 0);
+	} else {
+		LOG_DBG("Unexpected threshold warning");
+	}
 }
 
 #define SENSOR_NUM(type, index) SENSOR_NUM_FB_##index##_##type
@@ -774,114 +825,96 @@ static bool set_threshold_status(sensor_threshold *threshold_tbl, float val)
 	return true;
 }
 
-void threshold_poll_handler(void *arug0, void *arug1, void *arug2)
-{
-	ARG_UNUSED(arug0);
-	ARG_UNUSED(arug1);
-	ARG_UNUSED(arug2);
-
-	int threshold_poll_interval_ms = 1000; // interval 1s
-
-	k_msleep(20000); // wait 20s for sensor ready
-	ctl_all_pwm_dev(60);
-	// default set coolant led on
-	led_ctrl(LED_IDX_E_COOLANT, LED_TURN_ON);
-	k_msleep(2000); // wait 2s for pump run
-	LOG_ERR("threshold thread start!");
-
-	while (1) {
-		if (!get_sensor_init_done_flag()) {
-			k_msleep(threshold_poll_interval_ms);
-			continue;
-		}
-
-		if (!get_sensor_poll_enable_flag()) {
-			k_msleep(threshold_poll_interval_ms);
-			continue;
-		}
-
-		if (!get_threshold_poll_enable_flag()) {
-			k_msleep(threshold_poll_interval_ms);
-			continue;
-		}
-
-		for (uint8_t i = 0; i < ARRAY_SIZE(threshold_tbl); i++) {
-			float val = 0;
-
-			if (threshold_tbl[i].type == THRESHOLD_ENABLE_DISCRETE) {
-				/* check the discrete sensor has value changed */
-				/* do not need to convert the sensor reading value */
-
-				int reading = 0;
-				uint8_t status =
-					get_sensor_reading(sensor_config, sensor_config_count,
-							   threshold_tbl[i].sensor_num, &reading,
-							   GET_FROM_CACHE);
-
-				if (status != SENSOR_READ_4BYTE_ACUR_SUCCESS) {
-					LOG_ERR("0x%02x get sensor cache fail",
-						threshold_tbl[i].sensor_num);
-					continue;
-				}
-
-				if (threshold_tbl[i].last_value == reading)
-					continue;
-
-				LOG_ERR("threshold_tbl[i].last_value = %x, reading = %x",
-					threshold_tbl[i].last_value, reading);
-
-				/* use the last_status to carry change bits */
-				threshold_tbl[i].last_status =
-					threshold_tbl[i].last_value ^ reading;
-				threshold_tbl[i].last_value = reading;
-
-			} else {
-				if (get_sensor_reading_to_real_val(threshold_tbl[i].sensor_num,
-								   &val) !=
-				    SENSOR_READ_4BYTE_ACUR_SUCCESS)
-					threshold_tbl[i].last_status = THRESHOLD_STATUS_NOT_ACCESS;
-				/* check whether the status has changed */
-				else if (!set_threshold_status(&threshold_tbl[i], val))
-					continue;
-			}
-
-			if (threshold_tbl[i].fn) {
-				uint32_t arg0 = threshold_tbl[i].arg0;
-				if (threshold_tbl[i].arg0 == THRESHOLD_ARG0_TABLE_INDEX)
-					arg0 = i;
-
-				threshold_tbl[i].fn(arg0, threshold_tbl[i].last_status);
-			}
-		}
-
-		// control fault led
-		fault_led_control();
-
-		// when the button is pressed
-		if (gpio_get(CDU_PWR_BTN)) {
-			// system failure recovery
-			if (system_failure_recovery())
-				ctl_all_pwm_dev(60);
-
-			// rpu ready pin setting
-			if (rpu_ready_recovery())
-				set_all_rpu_ready_pin_normal();
-			else
-				deassert_all_rpu_ready_pin();
-		}
-
-		k_msleep(threshold_poll_interval_ms);
-	}
-
-	return;
-}
-
 void threshold_poll_init()
 {
-	k_thread_create(&threshold_poll, threshold_poll_stack,
-			K_THREAD_STACK_SIZEOF(threshold_poll_stack), threshold_poll_handler, NULL,
-			NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
-	k_thread_name_set(&threshold_poll, "threshold_poll");
+	static uint8_t is_init = 0;
+
+	if (!is_init) {
+		fsc_init();
+		// default set coolant led on
+		led_ctrl(LED_IDX_E_COOLANT, LED_TURN_ON);
+		k_msleep(2000); // wait 2s for pump run
+		LOG_INF("threshold thread start!");
+		is_init = 1;
+	}
+}
+
+void plat_sensor_poll_post()
+{
+	int64_t current_time = k_uptime_get();
+	// if current time less than 20s, do not poll threshold
+	if (current_time < 20000)
+		return;
+
+	threshold_poll_init();
+
+	if (!get_sensor_init_done_flag())
+		return;
+
+	if (!get_sensor_poll_enable_flag())
+		return;
+
+	if (!get_threshold_poll_enable_flag())
+		return;
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(threshold_tbl); i++) {
+		float val = 0;
+
+		if (threshold_tbl[i].type == THRESHOLD_ENABLE_DISCRETE) {
+			/* check the discrete sensor has value changed */
+			/* do not need to convert the sensor reading value */
+
+			int reading = 0;
+			uint8_t status = get_sensor_reading(sensor_config, sensor_config_count,
+							    threshold_tbl[i].sensor_num, &reading,
+							    GET_FROM_CACHE);
+
+			if (status != SENSOR_READ_4BYTE_ACUR_SUCCESS) {
+				LOG_ERR("0x%02x get sensor cache fail",
+					threshold_tbl[i].sensor_num);
+				continue;
+			}
+
+			if (threshold_tbl[i].last_value == reading)
+				continue;
+
+			LOG_ERR("threshold_tbl[i].last_value = %x, reading = %x",
+				threshold_tbl[i].last_value, reading);
+
+			/* use the last_status to carry change bits */
+			threshold_tbl[i].last_status = threshold_tbl[i].last_value ^ reading;
+			threshold_tbl[i].last_value = reading;
+
+		} else {
+			if (get_sensor_reading_to_real_val(threshold_tbl[i].sensor_num, &val) !=
+			    SENSOR_READ_4BYTE_ACUR_SUCCESS)
+				threshold_tbl[i].last_status = THRESHOLD_STATUS_NOT_ACCESS;
+			/* check whether the status has changed */
+			else if (!set_threshold_status(&threshold_tbl[i], val))
+				continue;
+		}
+
+		if (threshold_tbl[i].fn) {
+			uint32_t arg0 = threshold_tbl[i].arg0;
+			if (threshold_tbl[i].arg0 == THRESHOLD_ARG0_TABLE_INDEX)
+				arg0 = i;
+
+			threshold_tbl[i].fn(arg0, threshold_tbl[i].last_status);
+		}
+	}
+
+	// control fault led
+	fault_led_control();
+
+	// when the button is not pressed
+	if (gpio_get(CDU_PWR_BTN)) {
+		// rpu ready pin setting
+		if (rpu_ready_recovery())
+			set_all_rpu_ready_pin_normal();
+		else
+			deassert_all_rpu_ready_pin();
+	}
+
 	return;
 }
 
