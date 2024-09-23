@@ -232,6 +232,7 @@ void init_platform_config()
 	}
 
 	LOG_INF("Slot EID = %d, Slot ID = %d", slot_eid, slot_id);
+
 	i3c_set_pid(&i3c_msg, slot_pid);
 
 	init_retimer_type();

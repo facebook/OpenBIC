@@ -85,9 +85,6 @@ void pal_pre_init()
 
 	i3c_attach(&i3c_msg);
 
-	// Create a thread to keep sending AASA
-	start_setaasa();
-
 	// Initialize I3C HUB
 	if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, LDO_VOLT)) {
 		printk("failed to initialize 1ou rg3mxxb12\n");
@@ -105,6 +102,8 @@ void pal_post_init()
 	kcs_init();
 	pldm_load_state_effecter_table(PLAT_PLDM_MAX_STATE_EFFECTER_IDX);
 	pldm_assign_gpio_effecter_id(PLAT_EFFECTER_ID_GPIO_HIGH_BYTE);
+	// Create a thread to keep sending AASA
+	start_setaasa();
 	start_get_dimm_info_thread();
 	set_sys_ready_pin(BIC_READY_R);
 	reset_usb_hub();
