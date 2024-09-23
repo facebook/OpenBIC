@@ -300,6 +300,9 @@ static void read_cpu_power_seq_status(struct k_work *work)
 	}
 
 	/* CHECK2 - Try to read primary CPUVDD whether CPU shutdown by vr OCP */
+	if (get_board_revision() < SYS_BOARD_PVT) // VR run with standby power only >= PVT
+		return;
+
 	if (get_oth_module() != OTH_MODULE_PRIMARY)
 		return;
 
