@@ -188,6 +188,8 @@ void controlFSC(uint8_t action)
 
 static void fsc_thread_handler(void *arug0, void *arug1, void *arug2)
 {
+	LOG_INF("fsc start!");
+
 	duty_cache = (uint8_t *)malloc(zone_table_size * sizeof(uint8_t));
 
 	if (duty_cache)
@@ -229,10 +231,6 @@ static void fsc_thread_handler(void *arug0, void *arug1, void *arug2)
 			} else {
 				fsc_poll_count[i] = 0;
 			}
-
-			if (zone_p->pre_hook)
-				if (zone_p->pre_hook(zone_p->pre_hook_arg))
-					continue;
 
 			for (j = 0; j < zone_p->table_size; j++) {
 				/*fsc_type_mapping zone0_table[] = {
@@ -284,7 +282,7 @@ static void fsc_thread_handler(void *arug0, void *arug1, void *arug2)
 					each_rpm[j] = MAX(tmp_rpm[0], tmp_rpm[1]);
 					break;
 				case FSC_TYPE_DEFAULT:
-					each_rpm[j] = 60; // 60 duty
+					each_rpm[j] = 70; // 70 duty
 					break;
 				default:
 					LOG_ERR("FSC zone %d, idx %d type error!", i, j);
@@ -315,9 +313,6 @@ static void fsc_thread_handler(void *arug0, void *arug1, void *arug2)
 				zone_p->set_duty(zone_p->set_duty_arg, duty_cache[i]);
 			else
 				LOG_ERR("FSC zone %d set duty function is NULL", i);
-
-			if (zone_p->post_hook)
-				zone_p->pre_hook(zone_p->post_hook_arg);
 		}
 
 		//return;

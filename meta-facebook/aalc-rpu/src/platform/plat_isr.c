@@ -36,19 +36,18 @@ void emergency_button_action()
 {
 	if (gpio_get(CDU_PWR_BTN)) {
 		// pump recovery
-		if (system_failure_recovery())
-			ctl_all_pwm_dev(60);
+		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_EMERGENCY_BUTTON, 0);
 		if (rpu_ready_recovery())
 			set_all_rpu_ready_pin_normal();
 	} else {
-		ctl_all_pwm_dev(0);
+		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_EMERGENCY_BUTTON, 1);
 		deassert_all_rpu_ready_pin();
 	}
 }
 
 void fault_leak_action()
 {
-	ctl_all_pwm_dev(0);
+	set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_LEAK, 1);
 	deassert_all_rpu_ready_pin();
 	gpio_set(RPU_LEAK_ALERT_N, 0);
 }
@@ -67,19 +66,19 @@ void it_leak_handler(uint8_t idx)
 	switch (idx) {
 	case IT_LEAK_E_0:
 		set_sticky_sensor_status(STICKY_ITRACK_CHASSIS0_LEAKAGE, 1);
-		set_leak_status(AALC_STATUS_IT_LEAK_0, 1);
+		set_status_flag(STATUS_FLAG_LEAK, AALC_STATUS_IT_LEAK_0, 1);
 		break;
 	case IT_LEAK_E_1:
 		set_sticky_sensor_status(STICKY_ITRACK_CHASSIS1_LEAKAGE, 1);
-		set_leak_status(AALC_STATUS_IT_LEAK_1, 1);
+		set_status_flag(STATUS_FLAG_LEAK, AALC_STATUS_IT_LEAK_1, 1);
 		break;
 	case IT_LEAK_E_2:
 		set_sticky_sensor_status(STICKY_ITRACK_CHASSIS2_LEAKAGE, 1);
-		set_leak_status(AALC_STATUS_IT_LEAK_2, 1);
+		set_status_flag(STATUS_FLAG_LEAK, AALC_STATUS_IT_LEAK_2, 1);
 		break;
 	case IT_LEAK_E_3:
 		set_sticky_sensor_status(STICKY_ITRACK_CHASSIS3_LEAKAGE, 1);
-		set_leak_status(AALC_STATUS_IT_LEAK_3, 1);
+		set_status_flag(STATUS_FLAG_LEAK, AALC_STATUS_IT_LEAK_3, 1);
 		break;
 	}
 
@@ -112,7 +111,7 @@ void aalc_leak_behavior(uint8_t sensor_num)
 			   (sensor_num == SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_VOLT_V) ?
 				   AALC_STATUS_RACK_LEAKAGE :
 				   AALC_STATUS_LEAK_E_MAX;
-	set_leak_status(led_leak, 1);
+	set_status_flag(STATUS_FLAG_LEAK, led_leak, 1);
 	set_sticky_sensor_status((sensor_num == SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V) ?
 					 STICKY_RPU_INTERNAL_LEAKAGE_ABNORMAL :
 					 STICKY_HEX_RACK_PAN_LEAKAGE,

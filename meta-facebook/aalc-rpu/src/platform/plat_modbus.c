@@ -281,8 +281,9 @@ uint8_t modbus_leakage_status_read(modbus_command_mapping *cmd)
 		}
 	}
 
-	WRITE_BIT(state, 4, (get_leak_status() >> AALC_STATUS_CDU_LEAKAGE) & 0x01);
-	WRITE_BIT(state, 12, (get_leak_status() >> AALC_STATUS_RACK_LEAKAGE) & 0x01);
+	WRITE_BIT(state, 4, (get_status_flag(STATUS_FLAG_LEAK) >> AALC_STATUS_CDU_LEAKAGE) & 0x01);
+	WRITE_BIT(state, 12,
+		  (get_status_flag(STATUS_FLAG_LEAK) >> AALC_STATUS_RACK_LEAKAGE) & 0x01);
 
 	cmd->data[0] = state;
 
@@ -291,9 +292,9 @@ uint8_t modbus_leakage_status_read(modbus_command_mapping *cmd)
 
 pump_reset_struct modbus_pump_setting_table[] = {
 	{ PUMP_REDUNDENT_SWITCHED, modbus_pump_setting_unsupport_function, 0 },
-	{ MANUAL_CONTROL_PUMP, modbus_pump_setting_unsupport_function, 0 },
-	{ MANUAL_CONTROL_FAN, modbus_pump_setting_unsupport_function, 0 },
-	{ AUTOTUNE_FLOW_CONTROL, modbus_pump_setting_unsupport_function, 0 },
+	{ MANUAL_CONTROL_PUMP, pump_setting_set_manual_flag, 0 },
+	{ MANUAL_CONTROL_FAN, pump_setting_set_manual_flag, 0 },
+	{ AUTOTUNE_FLOW_CONTROL, pump_setting_set_auto_tune_flag, 0 },
 	{ AUTOTUNE_PRESSURE_BALANCE_CONTROL, modbus_pump_setting_unsupport_function, 0 },
 	{ SYSTEM_STOP, close_pump, 0 },
 	{ RPU_REMOTE_POWER_CYCLE, rpu_remote_power_cycle_function, 0 },
@@ -361,17 +362,14 @@ uint8_t modbus_error_log_event(modbus_command_mapping *cmd)
 	return MODBUS_EXC_NONE;
 }
 
+/*
 uint8_t modbus_get_pwm(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
-	uint8_t is_group = cmd->arg0;
-	uint8_t idx = cmd->arg1;
+	uint8_t idx = cmd->arg0;
 
-	if (is_group)
-		cmd->data[0] = (uint16_t)get_pwm_group_cache(idx);
-	else
-		cmd->data[0] = (uint16_t)get_pwm_cache(idx);
+	cmd->data[0] = (uint16_t)get_pwm_cache(idx);
 
 	return MODBUS_EXC_NONE;
 }
@@ -390,7 +388,7 @@ uint8_t modbus_set_pwm(modbus_command_mapping *cmd)
 		plat_pwm_ctrl(idx, duty);
 
 	return MODBUS_EXC_NONE;
-}
+}*/
 
 uint8_t modbus_get_manual_pwm(modbus_command_mapping *cmd)
 {
@@ -408,11 +406,23 @@ uint8_t modbus_set_manual_pwm(modbus_command_mapping *cmd)
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
 	uint8_t idx = cmd->arg0;
-	uint8_t group = cmd->arg1; // temporary function
 	uint8_t duty = (uint8_t)cmd->data[0];
 
+	switch (idx) {
+	case MANUAL_PWM_E_PUMP:
+		set_manual_pwm_cache(MANUAL_PWM_E_PUMP_1, duty);
+		set_manual_pwm_cache(MANUAL_PWM_E_PUMP_2, duty);
+		set_manual_pwm_cache(MANUAL_PWM_E_PUMP_3, duty);
+		break;
+	case MANUAL_PWM_E_RPU_FAN:
+		set_manual_pwm_cache(MANUAL_PWM_E_PUMP_FAN_1, duty);
+		set_manual_pwm_cache(MANUAL_PWM_E_PUMP_FAN_2, duty);
+		set_manual_pwm_cache(MANUAL_PWM_E_PUMP_FAN_3, duty);
+		set_manual_pwm_cache(MANUAL_PWM_E_RPU_PCB_FAN, duty);
+		break;
+	}
+
 	set_manual_pwm_cache(idx, duty);
-	set_pwm_group(group, duty); // temporary function
 
 	return MODBUS_EXC_NONE;
 }
@@ -540,6 +550,27 @@ uint8_t modbus_sensor_poll_set(modbus_command_mapping *cmd)
 	return MODBUS_EXC_NONE;
 }
 
+uint8_t modbus_status_flag_get(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+	uint8_t type = cmd->arg0;
+
+	cmd->data[0] = get_status_flag(type);
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_status_flag_set(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint8_t type = cmd->arg0;
+	uint8_t bit = (uint8_t)cmd->data[0];
+	uint8_t val = (uint8_t)cmd->data[1];
+
+	set_status_flag(type, bit, val);
+	return MODBUS_EXC_NONE;
+}
+
 uint8_t modbus_get_rpu_addr(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
@@ -610,7 +641,8 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_BPB_HSC_P48V_VIN_VOLT_V, 1, -1, 1 },
 	{ MODBUS_MB_RPU_AIR_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C, 1, -1, 1 },
-	{ MODBUS_RPU_PUMP_PWM_TACH_PCT_ADDR, NULL, modbus_get_pwm, 1, PWM_GROUP_E_PUMP, 0, 1 },
+	{ MODBUS_RPU_PUMP_PWM_TACH_PCT_ADDR, NULL, modbus_get_manual_pwm, MANUAL_PWM_E_PUMP, 0, 0,
+	  1 },
 	{ MODBUS_PB_1_PUMP_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_PB_1_PUMP_TACH_RPM, 1, 0, 1 },
 	{ MODBUS_PB_2_PUMP_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
@@ -723,7 +755,8 @@ modbus_command_mapping modbus_command_table[] = {
 	  1, 0, 1 },
 	{ MODBUS_PB_3_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_PB_3_HUM_PCT_RH,
 	  1, 0, 1 },
-	{ MODBUS_HEX_FAN_PWM_TACH_PCT_ADDR, NULL, modbus_get_pwm, 1, PWM_GROUP_E_HEX_FAN, 0, 1 },
+	{ MODBUS_HEX_FAN_PWM_TACH_PCT_ADDR, NULL, modbus_get_manual_pwm, MANUAL_PWM_E_HEX_FAN, 0, 0,
+	  1 },
 	{ MODBUS_HEX_PWR_W_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_HEX_PWR_W, 1, -1, 1 },
 	{ MODBUS_HEX_INPUT_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_FB_1_HSC_P48V_VIN_VOLT_V, 1, 0, 1 },
@@ -1008,25 +1041,25 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_PUMP_REDUNDANT_SWITCHED_INTERVAL_ADDR, modbus_to_do_set, modbus_to_do_get, 0, 0, 0,
 	  1 },
 	{ MODBUS_MANUAL_CONTROL_PUMP_DUTY_SET_ADDR, modbus_set_manual_pwm, modbus_get_manual_pwm,
-	  MANUAL_PWM_E_PUMP, PWM_GROUP_E_PUMP, 0, 1 },
+	  MANUAL_PWM_E_PUMP, 0, 0, 1 },
 	{ MODBUS_MANUAL_CONTROL_FAN_DUTY_SET_ADDR, modbus_set_manual_pwm, modbus_get_manual_pwm,
-	  MANUAL_PWM_E_HEX_FAN, PWM_GROUP_E_HEX_FAN, 0, 1 },
+	  MANUAL_PWM_E_HEX_FAN, 0, 0, 1 },
 	{ MODBUS_MANUAL_CONTROL_RPU_FAN_DUTY_SET_ADDR, modbus_set_manual_pwm, modbus_get_manual_pwm,
-	  MANUAL_PWM_E_RPU_FAN, PWM_GROUP_E_RPU_FAN, 0, 1 },
-	{ MODBUS_MANUAL_CONTROL_PUMP1_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 0,
-	  PWM_DEVICE_E_PB_PUMB_1, 0, 1 },
-	{ MODBUS_MANUAL_CONTROL_PUMP2_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 0,
-	  PWM_DEVICE_E_PB_PUMB_2, 0, 1 },
-	{ MODBUS_MANUAL_CONTROL_PUMP3_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 0,
-	  PWM_DEVICE_E_PB_PUMB_3, 0, 1 },
-	{ MODBUS_MANUAL_CONTROL_PUMP_FAN_1_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 0,
-	  PWM_DEVICE_E_PB_PUMB_FAN_1, 0, 1 },
-	{ MODBUS_MANUAL_CONTROL_PUMP_FAN_2_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 0,
-	  PWM_DEVICE_E_PB_PUMB_FAN_2, 0, 1 },
-	{ MODBUS_MANUAL_CONTROL_PUMP_FAN_3_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 0,
-	  PWM_DEVICE_E_PB_PUMB_FAN_3, 0, 1 },
-	{ MODBUS_MANUAL_CONTROL_RPU_PCB_FAN_DUTY_SET_ADDR, modbus_set_pwm, modbus_get_pwm, 0,
-	  PWM_DEVICE_E_BB_FAN, 0, 1 },
+	  MANUAL_PWM_E_RPU_FAN, 0, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_PUMP1_DUTY_SET_ADDR, modbus_set_manual_pwm, modbus_get_manual_pwm,
+	  MANUAL_PWM_E_PUMP_1, 0, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_PUMP2_DUTY_SET_ADDR, modbus_set_manual_pwm, modbus_get_manual_pwm,
+	  MANUAL_PWM_E_PUMP_2, 0, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_PUMP3_DUTY_SET_ADDR, modbus_set_manual_pwm, modbus_get_manual_pwm,
+	  MANUAL_PWM_E_PUMP_3, 0, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_PUMP_FAN_1_DUTY_SET_ADDR, modbus_set_manual_pwm,
+	  modbus_get_manual_pwm, MANUAL_PWM_E_PUMP_FAN_1, 0, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_PUMP_FAN_2_DUTY_SET_ADDR, modbus_set_manual_pwm,
+	  modbus_get_manual_pwm, MANUAL_PWM_E_PUMP_FAN_2, 0, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_PUMP_FAN_3_DUTY_SET_ADDR, modbus_set_manual_pwm,
+	  modbus_get_manual_pwm, MANUAL_PWM_E_PUMP_FAN_3, 0, 0, 1 },
+	{ MODBUS_MANUAL_CONTROL_RPU_PCB_FAN_DUTY_SET_ADDR, modbus_set_manual_pwm,
+	  modbus_get_manual_pwm, MANUAL_PWM_E_RPU_PCB_FAN, 0, 0, 1 },
 	{ MODBUS_PUMP_SETTING_ADDR, modbus_pump_setting, modbus_pump_setting_get, 0, 0, 0, 1 },
 	{ MODBUS_LEAKAGE_SETTING_ON_ADDR, modbus_to_do_set, modbus_to_do_get, 0, 0, 0, 1 },
 	// Leakage Black Box
@@ -1126,6 +1159,9 @@ modbus_command_mapping modbus_command_table[] = {
 	// sensor poll
 	{ MODBUS_GET_SET_SENSOR_POLL_ADDR, modbus_sensor_poll_set, modbus_sensor_poll_get, 0, 0, 0,
 	  1 },
+	// failure status
+	{ MODBUS_GET_SET_FAILURE_STATUS_ADDR, modbus_status_flag_set, modbus_status_flag_get,
+	  STATUS_FLAG_FAILURE, 0, 0, 1 },
 	// eeprom related
 	{ MODBUS_GET_SET_HMI_VER_ADDR, modbus_write_hmi_version, modbus_read_hmi_version, 0, 0, 0,
 	  8 },
@@ -1194,6 +1230,7 @@ static int coil_wr(uint16_t addr, bool state)
 		return MODBUS_EXC_NONE;
 	} else if (addr == MODBUS_RPU_RUN_ADDR) { // FW update: Set RPU Stop/Run
 		if (!state) { //Set RPU Stop
+			controlFSC(FSC_DISABLE);
 			if (ctl_all_pwm_dev(100))
 				LOG_ERR("Set full status failed for all pumps.");
 			//return MODBUS_EXC_SERVER_DEVICE_FAILURE;

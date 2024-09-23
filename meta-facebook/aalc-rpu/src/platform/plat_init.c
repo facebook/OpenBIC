@@ -77,7 +77,7 @@ void pump_board_init()
 {
 	// init pump board 1, 2 and 3
 	static uint8_t count = 0;
-	LOG_WRN("pump board start init: %d", count);
+	LOG_INF("pump board start init: %d", count);
 	for (uint8_t i = 0; i < ARRAY_SIZE(pump_board_init_tbl); i++) {
 		sensor_cfg *cfg = get_common_sensor_cfg_info(pump_board_init_tbl[i]);
 		if (cfg->pre_sensor_read_hook) {
@@ -144,9 +144,7 @@ void pal_post_init()
 	init_custom_modbus_server();
 	init_modbus_command_table();
 	quick_sensor_poll_init();
-	threshold_poll_init();
-	ctl_all_pwm_dev(60);
-	//fsc_init();
+	set_manual_pwm_cache_to_default();
 	set_rpu_ready();
 	fan_pump_pwrgd();
 }
