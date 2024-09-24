@@ -340,16 +340,10 @@ void set_manual_pwm_cache(uint8_t idx, uint8_t duty)
 	manual_pwm_cache[idx] = duty;
 }
 
-/* must set manual pwm flag/cache before setting duty */
-bool set_manual_pwm(uint8_t idx)
+void set_manual_pwm_cache_to_default(void)
 {
-	if (!get_manual_pwm_flag(idx))
-		return false;
-
-	if (set_pwm_group(idx, get_manual_pwm_cache(idx)))
-		return false;
-
-	return true;
+	for (uint8_t i = 0; i < MANUAL_PWM_E_MAX; i++)
+		manual_pwm_cache[i] = 70;
 }
 
 void init_pwm_dev(void)

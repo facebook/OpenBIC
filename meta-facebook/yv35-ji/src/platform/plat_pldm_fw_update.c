@@ -33,6 +33,7 @@
 #include "plat_sensor_table.h"
 #include "plat_class.h"
 #include "plat_fru.h"
+#include "plat_power_status.h"
 #include "power_status.h"
 
 #include "mpq8746.h"
@@ -505,8 +506,8 @@ static uint8_t pldm_pre_retimer_update(void *fw_update_param)
 		return 1;
 	}
 
-	if (get_post_status() == false) {
-		LOG_WRN("Not in POST COMPLETE state, skip retimer update");
+	if (get_retimer_status() == false) {
+		LOG_WRN("Not in RETIMER-PWGOOD/POST-COMPLETE state, skip retimer update");
 		return 1;
 	}
 
@@ -579,8 +580,9 @@ static bool get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		LOG_WRN("Not support retimer relative function before EVT");
 		return false;
 	}
-	if (get_post_status() == false) {
-		LOG_WRN("Not in POST COMPLETE state, skip retimer fw version get");
+
+	if (get_retimer_status() == false) {
+		LOG_WRN("Not in RETIMER-PWGOOD/POST-COMPLETE state, skip retimer fw version get");
 		return false;
 	}
 

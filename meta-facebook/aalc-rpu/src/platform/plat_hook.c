@@ -258,7 +258,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.fan_frequency[NCT7363_11_PORT] = 2, 
 		.fan_frequency[NCT7363_17_PORT] = 25000, 
 		.duty[NCT7363_11_PORT] = 0, 
-		.duty[NCT7363_17_PORT] = 60,
+		.duty[NCT7363_17_PORT] = 0,
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
 		.fan_poles[NCT7363_15_PORT] = 4, // TO DO wait to check
@@ -278,7 +278,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.fan_frequency[NCT7363_11_PORT] = 2, 
 		.fan_frequency[NCT7363_17_PORT] = 25000, 
 		.duty[NCT7363_11_PORT] = 0, 
-		.duty[NCT7363_17_PORT] = 60,
+		.duty[NCT7363_17_PORT] = 0,
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
 		.fan_poles[NCT7363_15_PORT] = 4, // TO DO wait to check
@@ -298,7 +298,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.fan_frequency[NCT7363_11_PORT] = 2, 
 		.fan_frequency[NCT7363_17_PORT] = 25000, 
 		.duty[NCT7363_11_PORT] = 0, 
-		.duty[NCT7363_17_PORT] = 60,
+		.duty[NCT7363_17_PORT] = 0,
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
 		.fan_poles[NCT7363_15_PORT] = 4, // TO DO wait to check
@@ -318,7 +318,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.fan_frequency[NCT7363_11_PORT] = 2, 
 		.fan_frequency[NCT7363_17_PORT] = 25000, 
 		.duty[NCT7363_11_PORT] = 0, 
-		.duty[NCT7363_17_PORT] = 60,
+		.duty[NCT7363_17_PORT] = 0,
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
 		.fan_poles[NCT7363_15_PORT] = 4, // TO DO wait to check
@@ -338,7 +338,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.fan_frequency[NCT7363_11_PORT] = 2, 
 		.fan_frequency[NCT7363_17_PORT] = 25000, 
 		.duty[NCT7363_11_PORT] = 0, 
-		.duty[NCT7363_17_PORT] = 60,
+		.duty[NCT7363_17_PORT] = 0,
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
 		.fan_poles[NCT7363_15_PORT] = 4, // TO DO wait to check
@@ -358,7 +358,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.fan_frequency[NCT7363_11_PORT] = 2, 
 		.fan_frequency[NCT7363_17_PORT] = 25000, 
 		.duty[NCT7363_11_PORT] = 0, 
-		.duty[NCT7363_17_PORT] = 60,
+		.duty[NCT7363_17_PORT] = 0,
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
 		.fan_poles[NCT7363_15_PORT] = 4, // TO DO wait to check
@@ -378,7 +378,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.fan_frequency[NCT7363_11_PORT] = 2, 
 		.fan_frequency[NCT7363_17_PORT] = 25000, 
 		.duty[NCT7363_11_PORT] = 0, 
-		.duty[NCT7363_17_PORT] = 60,
+		.duty[NCT7363_17_PORT] = 0,
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
 		.fan_poles[NCT7363_15_PORT] = 4, // TO DO wait to check
@@ -398,7 +398,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.fan_frequency[NCT7363_11_PORT] = 2, 
 		.fan_frequency[NCT7363_17_PORT] = 25000, 
 		.duty[NCT7363_11_PORT] = 0, 
-		.duty[NCT7363_17_PORT] = 60,
+		.duty[NCT7363_17_PORT] = 0,
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
 		.fan_poles[NCT7363_15_PORT] = 4, // TO DO wait to check
@@ -418,7 +418,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.fan_frequency[NCT7363_11_PORT] = 2, 
 		.fan_frequency[NCT7363_17_PORT] = 25000, 
 		.duty[NCT7363_11_PORT] = 0, 
-		.duty[NCT7363_17_PORT] = 60,
+		.duty[NCT7363_17_PORT] = 0,
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
 		.fan_poles[NCT7363_15_PORT] = 4, // TO DO wait to check
@@ -438,7 +438,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.fan_frequency[NCT7363_11_PORT] = 2, 
 		.fan_frequency[NCT7363_17_PORT] = 25000, 
 		.duty[NCT7363_11_PORT] = 0, 
-		.duty[NCT7363_17_PORT] = 60,
+		.duty[NCT7363_17_PORT] = 0,
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
 		.fan_poles[NCT7363_15_PORT] = 4, // TO DO wait to check
@@ -458,7 +458,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.fan_frequency[NCT7363_11_PORT] = 2, 
 		.fan_frequency[NCT7363_17_PORT] = 25000, 
 		.duty[NCT7363_11_PORT] = 0, 
-		.duty[NCT7363_17_PORT] = 60,
+		.duty[NCT7363_17_PORT] = 0,
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
 		.fan_poles[NCT7363_15_PORT] = 4, // TO DO wait to check
@@ -478,7 +478,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.fan_frequency[NCT7363_11_PORT] = 2, 
 		.fan_frequency[NCT7363_17_PORT] = 25000, 
 		.duty[NCT7363_11_PORT] = 0, 
-		.duty[NCT7363_17_PORT] = 60,
+		.duty[NCT7363_17_PORT] = 0,
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
 		.fan_poles[NCT7363_15_PORT] = 4, // TO DO wait to check
@@ -498,7 +498,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.fan_frequency[NCT7363_11_PORT] = 2, 
 		.fan_frequency[NCT7363_17_PORT] = 25000, 
 		.duty[NCT7363_11_PORT] = 0, 
-		.duty[NCT7363_17_PORT] = 60,
+		.duty[NCT7363_17_PORT] = 0,
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
 		.fan_poles[NCT7363_15_PORT] = 4, // TO DO wait to check
@@ -518,7 +518,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.fan_frequency[NCT7363_11_PORT] = 2, 
 		.fan_frequency[NCT7363_17_PORT] = 25000, 
 		.duty[NCT7363_11_PORT] = 0, 
-		.duty[NCT7363_17_PORT] = 60,
+		.duty[NCT7363_17_PORT] = 0,
 		// fanin setting
 		.threshold[NCT7363_15_PORT] = 50, // TO DO wait to check
 		.fan_poles[NCT7363_15_PORT] = 4, // TO DO wait to check
@@ -540,7 +540,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.fan_frequency[NCT7363_1_PORT] = 20000, // TO DO wait to check
 		.fan_frequency[NCT7363_2_PORT] = 25000, // TO DO wait to check
 		.duty[NCT7363_1_PORT] = 0,
-		.duty[NCT7363_2_PORT] = 60,
+		.duty[NCT7363_2_PORT] = 0,
 		// fanin setting
 		.fan_poles[NCT7363_5_PORT] = 12, // TO DO wait to check
 		.fan_poles[NCT7363_6_PORT] = 4, // TO DO wait to check
@@ -566,7 +566,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.fan_frequency[NCT7363_1_PORT] = 20000, // TO DO wait to check
 		.fan_frequency[NCT7363_2_PORT] = 25000, // TO DO wait to check
 		.duty[NCT7363_1_PORT] = 0,
-		.duty[NCT7363_2_PORT] = 60,
+		.duty[NCT7363_2_PORT] = 0,
 		// fanin setting
 		.fan_poles[NCT7363_5_PORT] = 12, // TO DO wait to check
 		.fan_poles[NCT7363_6_PORT] = 4, // TO DO wait to check
@@ -592,7 +592,7 @@ nct7363_init_arg nct7363_init_args[] = {
 		.fan_frequency[NCT7363_1_PORT] = 20000, // TO DO wait to check
 		.fan_frequency[NCT7363_2_PORT] = 25000, // TO DO wait to check
 		.duty[NCT7363_1_PORT] = 0,
-		.duty[NCT7363_2_PORT] = 60,
+		.duty[NCT7363_2_PORT] = 0,
 		// fanin setting
 		.fan_poles[NCT7363_5_PORT] = 12, // TO DO wait to check
 		.fan_poles[NCT7363_6_PORT] = 4, // TO DO wait to check
@@ -623,9 +623,9 @@ nct7363_init_arg nct7363_init_args[] = {
 		.fan_frequency[NCT7363_1_PORT] = 500, // TO DO wait to check
 		.fan_frequency[NCT7363_2_PORT] = 500, // TO DO wait to check
 		.fan_frequency[NCT7363_3_PORT] = 500, // TO DO wait to check
-		.duty[NCT7363_1_PORT] = 60,
-		.duty[NCT7363_2_PORT] = 60,
-		.duty[NCT7363_3_PORT] = 60,
+		.duty[NCT7363_1_PORT] = 0,
+		.duty[NCT7363_2_PORT] = 0,
+		.duty[NCT7363_3_PORT] = 0,
 		// fanin setting
 		.fan_poles[NCT7363_4_PORT] = 12, // TO DO wait to check
 		.threshold[NCT7363_4_PORT] = 50, // TO DO wait to check

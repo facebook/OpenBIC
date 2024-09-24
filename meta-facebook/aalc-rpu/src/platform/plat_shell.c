@@ -23,6 +23,7 @@
 #include "plat_util.h"
 #include "common_i2c_mux.h"
 #include "nct7363.h"
+#include "plat_status.h"
 
 LOG_MODULE_REGISTER(plat_shell);
 
@@ -43,20 +44,49 @@ void cmd_sensor_polling(const struct shell *shell, size_t argc, char **argv)
 void cmd_get_pump_duty(const struct shell *shell, size_t argc, char **argv)
 {
 	uint8_t duty = 0xff;
-	duty = get_pwm_group_cache(PWM_GROUP_E_PUMP);
-	shell_warn(shell, "get pump duty: %d", duty);
+
+	if (get_manual_pwm_flag(MANUAL_PWM_E_PUMP)) {
+		duty = get_manual_pwm_cache(MANUAL_PWM_E_PUMP);
+		shell_warn(shell, "get pump group duty: %d", duty);
+		duty = get_manual_pwm_cache(MANUAL_PWM_E_PUMP_1);
+		shell_warn(shell, "get pump1 duty: %d", duty);
+		duty = get_manual_pwm_cache(MANUAL_PWM_E_PUMP_2);
+		shell_warn(shell, "get pump2 duty: %d", duty);
+		duty = get_manual_pwm_cache(MANUAL_PWM_E_PUMP_3);
+		shell_warn(shell, "get pump3 duty: %d", duty);
+	} else {
+		shell_warn(shell, "pump is not in manual mode");
+	}
 }
 void cmd_get_hex_fan_duty(const struct shell *shell, size_t argc, char **argv)
 {
 	uint8_t duty = 0xff;
-	duty = get_pwm_group_cache(PWM_GROUP_E_HEX_FAN);
-	shell_warn(shell, "get hex fan duty: %d", duty);
+
+	if (get_manual_pwm_flag(MANUAL_PWM_E_HEX_FAN)) {
+		duty = get_manual_pwm_cache(MANUAL_PWM_E_HEX_FAN);
+		shell_warn(shell, "get hex fan duty: %d", duty);
+	} else {
+		shell_warn(shell, "hex fan is not in manual mode");
+	}
 }
 void cmd_get_rpu_fan_duty(const struct shell *shell, size_t argc, char **argv)
 {
 	uint8_t duty = 0xff;
-	duty = get_pwm_group_cache(PWM_GROUP_E_RPU_FAN);
-	shell_warn(shell, "get rpu fan duty: %d", duty);
+
+	if (get_manual_pwm_flag(MANUAL_PWM_E_RPU_FAN)) {
+		duty = get_manual_pwm_cache(MANUAL_PWM_E_RPU_FAN);
+		shell_warn(shell, "get rpu fan group duty: %d", duty);
+		duty = get_manual_pwm_cache(MANUAL_PWM_E_PUMP_FAN_1);
+		shell_warn(shell, "get pump fan 1 duty: %d", duty);
+		duty = get_manual_pwm_cache(MANUAL_PWM_E_PUMP_FAN_2);
+		shell_warn(shell, "get pump fan 2 duty: %d", duty);
+		duty = get_manual_pwm_cache(MANUAL_PWM_E_PUMP_FAN_3);
+		shell_warn(shell, "get pump fan 3 duty: %d", duty);
+		duty = get_manual_pwm_cache(MANUAL_PWM_E_RPU_PCB_FAN);
+		shell_warn(shell, "get rpu internal fan duty: %d", duty);
+	} else {
+		shell_warn(shell, "rpu fan is not in manual mode");
+	}
 }
 void cmd_get_fan_duty(const struct shell *shell, size_t argc, char **argv)
 {
@@ -72,21 +102,31 @@ void cmd_set_pump_duty(const struct shell *shell, size_t argc, char **argv)
 	uint8_t duty = strtoul(argv[1], NULL, 10);
 
 	shell_warn(shell, "set pump duty: %d", duty);
-	set_pwm_group(PWM_GROUP_E_PUMP, duty);
+	set_manual_pwm_flag(MANUAL_PWM_E_PUMP, 1);
+	set_manual_pwm_cache(MANUAL_PWM_E_PUMP, duty);
+	set_manual_pwm_cache(MANUAL_PWM_E_PUMP_1, duty);
+	set_manual_pwm_cache(MANUAL_PWM_E_PUMP_2, duty);
+	set_manual_pwm_cache(MANUAL_PWM_E_PUMP_3, duty);
 }
 void cmd_set_hex_fan_duty(const struct shell *shell, size_t argc, char **argv)
 {
 	uint8_t duty = strtoul(argv[1], NULL, 10);
 
 	shell_warn(shell, "set hex fan duty: %d", duty);
-	set_pwm_group(PWM_GROUP_E_HEX_FAN, duty);
+	set_manual_pwm_flag(MANUAL_PWM_E_HEX_FAN, 1);
+	set_manual_pwm_cache(MANUAL_PWM_E_HEX_FAN, duty);
 }
 void cmd_set_rpu_fan_duty(const struct shell *shell, size_t argc, char **argv)
 {
 	uint8_t duty = strtoul(argv[1], NULL, 10);
 
 	shell_warn(shell, "set rpu fan duty: %d", duty);
-	set_pwm_group(PWM_GROUP_E_RPU_FAN, duty);
+	set_manual_pwm_flag(MANUAL_PWM_E_RPU_FAN, 1);
+	set_manual_pwm_cache(MANUAL_PWM_E_RPU_FAN, duty);
+	set_manual_pwm_cache(MANUAL_PWM_E_PUMP_FAN_1, duty);
+	set_manual_pwm_cache(MANUAL_PWM_E_PUMP_FAN_2, duty);
+	set_manual_pwm_cache(MANUAL_PWM_E_PUMP_FAN_3, duty);
+	set_manual_pwm_cache(MANUAL_PWM_E_RPU_PCB_FAN, duty);
 }
 void cmd_set_fan_duty(const struct shell *shell, size_t argc, char **argv)
 {
@@ -95,6 +135,18 @@ void cmd_set_fan_duty(const struct shell *shell, size_t argc, char **argv)
 
 	shell_warn(shell, "set fan %d duty: %d", idx, duty);
 	plat_pwm_ctrl(idx, duty);
+}
+
+void cmd_set_pwm_manual_mode(const struct shell *shell, size_t argc, char **argv)
+{
+	uint8_t onoff = strtoul(argv[1], NULL, 10);
+
+	shell_warn(shell, "%s all pwm device manual mode", onoff ? "enable" : "disable");
+	shell_warn(shell, "set all pwm device manual duty to default");
+	for (uint8_t i = MANUAL_PWM_E_HEX_FAN; i < MANUAL_PWM_E_MAX; i++)
+		set_manual_pwm_flag(i, (onoff ? 1 : 0));
+
+	set_manual_pwm_cache_to_default();
 }
 
 // mux
@@ -212,8 +264,8 @@ void cmd_threshold_tbl_set(const struct shell *shell, size_t argc, char **argv)
 {
 	uint8_t sensor_num = strtoul(argv[1], NULL, 16);
 	uint8_t type = strtoul(argv[2], NULL, 10);
-	uint8_t lcr = strtoul(argv[3], NULL, 10);
-	uint8_t ucr = strtoul(argv[4], NULL, 10);
+	uint16_t lcr = strtoul(argv[3], NULL, 10);
+	uint16_t ucr = strtoul(argv[4], NULL, 10);
 
 	sensor_threshold *p = find_threshold_tbl_entry(sensor_num);
 	if (p)
@@ -227,6 +279,59 @@ void cmd_threshold_tbl_set(const struct shell *shell, size_t argc, char **argv)
 	p->type = type;
 	p->lcr = lcr;
 	p->ucr = ucr;
+}
+
+// status
+void cmd_status_leak_get(const struct shell *shell, size_t argc, char **argv)
+{
+	shell_warn(shell, "get leak status flag: %x", get_status_flag(STATUS_FLAG_LEAK));
+}
+void cmd_status_leak_set(const struct shell *shell, size_t argc, char **argv)
+{
+	if (argc != 3) {
+		shell_warn(shell, "test status set leak [bit] [val]");
+		return;
+	}
+
+	uint8_t bit = strtoul(argv[1], NULL, 10);
+	uint8_t val = strtoul(argv[2], NULL, 10);
+
+	set_status_flag(STATUS_FLAG_LEAK, bit, val);
+	shell_warn(shell, "set leak status flag bit %d to %d", bit, val);
+}
+void cmd_status_failure_get(const struct shell *shell, size_t argc, char **argv)
+{
+	shell_warn(shell, "get failure status flag: %x", get_status_flag(STATUS_FLAG_FAILURE));
+}
+void cmd_status_failure_set(const struct shell *shell, size_t argc, char **argv)
+{
+	if (argc != 3) {
+		shell_warn(shell, "test status set failure [bit] [val]");
+		return;
+	}
+
+	uint8_t bit = strtoul(argv[1], NULL, 10);
+	uint8_t val = strtoul(argv[2], NULL, 10);
+
+	set_status_flag(STATUS_FLAG_FAILURE, bit, val);
+	shell_warn(shell, "set failure status flag bit %d to %d", bit, val);
+}
+void cmd_status_auto_tune_get(const struct shell *shell, size_t argc, char **argv)
+{
+	shell_warn(shell, "get auto tune flag: %x", get_status_flag(STATUS_FLAG_AUTO_TUNE));
+}
+void cmd_status_auto_tune_set(const struct shell *shell, size_t argc, char **argv)
+{
+	if (argc != 2) {
+		shell_warn(shell, "test status set auto_tune [val]");
+		return;
+	}
+
+	uint8_t val = strtoul(argv[1], NULL, 10);
+
+	set_status_flag(STATUS_FLAG_AUTO_TUNE, 0, val);
+
+	shell_warn(shell, "set auto tune flag to %d", val);
 }
 
 // test command
@@ -247,7 +352,19 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_set_pwm_cmd,
 			       SHELL_CMD(hex_fan, NULL, "set hex fan duty", cmd_set_hex_fan_duty),
 			       SHELL_CMD(rpu_fan, NULL, "set rpu fan duty", cmd_set_rpu_fan_duty),
 			       SHELL_CMD(single, NULL, "set fan device duty", cmd_set_fan_duty),
+			       SHELL_CMD(manual, NULL, "set pwm device manual mode",
+					 cmd_set_pwm_manual_mode),
 			       SHELL_SUBCMD_SET_END);
+SHELL_STATIC_SUBCMD_SET_CREATE(
+	sub_get_status_cmd, SHELL_CMD(leak, NULL, "get leak status flag", cmd_status_leak_get),
+	SHELL_CMD(failure, NULL, "get failure status flag", cmd_status_failure_get),
+	SHELL_CMD(auto_tune, NULL, "get auto tune flag", cmd_status_auto_tune_get),
+	SHELL_SUBCMD_SET_END);
+SHELL_STATIC_SUBCMD_SET_CREATE(
+	sub_set_status_cmd, SHELL_CMD(leak, NULL, "set leak status flag", cmd_status_leak_set),
+	SHELL_CMD(failure, NULL, "set failure status flag", cmd_status_failure_set),
+	SHELL_CMD(auto_tune, NULL, "set auto tune flag", cmd_status_auto_tune_set),
+	SHELL_SUBCMD_SET_END);
 
 /* Sub-command Level 2 of command test */
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_pwm_cmd, SHELL_CMD(get, &sub_get_pwm_cmd, "get duty", NULL),
@@ -273,6 +390,12 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_threshold_cmd,
 			       SHELL_CMD(set, NULL, "set threshold table", cmd_threshold_tbl_set),
 			       SHELL_SUBCMD_SET_END);
 
+// status
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_status_cmd,
+			       SHELL_CMD(get, &sub_get_status_cmd, "get status flag", NULL),
+			       SHELL_CMD(set, &sub_set_status_cmd, "set status flag", NULL),
+			       SHELL_SUBCMD_SET_END);
+
 /* Sub-command Level 1 of command test */
 SHELL_STATIC_SUBCMD_SET_CREATE(
 	sub_test_cmds, SHELL_CMD(pwm, &sub_pwm_cmd, "set/get pwm command", NULL),
@@ -280,6 +403,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 	SHELL_CMD(mux, &sub_mux_cmd, "switch mux from sensor cfg", NULL),
 	SHELL_CMD(nct7363, &sub_nct7363_cmd, "nct7363 debug command", NULL),
 	SHELL_CMD(threshold, &sub_threshold_cmd, "threshold test command", NULL),
+	SHELL_CMD(status, &sub_status_cmd, "status test command", NULL),
 	SHELL_CMD(test, NULL, "test command", cmd_test), SHELL_SUBCMD_SET_END);
 
 /* Root of command test */

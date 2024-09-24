@@ -101,10 +101,6 @@ typedef struct {
 	uint16_t slew_pos; // RPM
 	uint8_t interval; // sec
 
-	bool (*pre_hook)(uint8_t); // pre_hook function
-	uint8_t pre_hook_arg; //  pre_hook arg
-	bool (*post_hook)(uint8_t); // post_hook function
-	uint8_t post_hook_arg; //  post_hook arg
 	uint8_t (*set_duty)(uint8_t, uint8_t); // set duty function
 	uint8_t set_duty_arg; //  set_duty arg
 
@@ -115,5 +111,6 @@ typedef struct {
 uint8_t get_fsc_enable_flag(void);
 void set_fsc_enable_flag(uint8_t flag);
 void fsc_init(void);
+void controlFSC(uint8_t action);
 
 #endif

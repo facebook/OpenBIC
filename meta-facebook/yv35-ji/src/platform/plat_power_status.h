@@ -28,5 +28,7 @@ void power_status_monitor();
 bool satmc_access(uint8_t sensor_num);
 void set_satmc_status(bool status);
 bool get_satmc_status();
+bool retimer_access(uint8_t sensor_num);
+bool get_retimer_status();
 
 #endif

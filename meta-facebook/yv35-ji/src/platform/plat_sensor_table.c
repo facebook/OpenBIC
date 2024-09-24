@@ -211,14 +211,14 @@ sensor_cfg rs31380r_temp_sensor_config_table[] = {
 
 sensor_cfg pt4080l_sensor_config_table[] = {
 	{ SENSOR_NUM_TEMP_RETIMER, sensor_dev_pt5161l, I2C_BUS2, AL_RETIMER_ADDR,
-	  PT5161L_TEMP_OFFSET, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PT5161L_TEMP_OFFSET, retimer_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_pt4080l_read, &mux_conf_addr_0xe2[1],
 	  NULL, NULL, &pt5161l_init_args[0] },
 };
 
 sensor_cfg ds160pt801_sensor_config_table[] = {
 	{ SENSOR_NUM_TEMP_RETIMER, sensor_dev_ds160pt801, I2C_BUS2, TI_RETIMER_ADDR,
-	  DS160PT801_READ_TEMP, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  DS160PT801_READ_TEMP, retimer_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_ds160pt801_read, &mux_conf_addr_0xe2[1],
 	  NULL, NULL, NULL },
 };

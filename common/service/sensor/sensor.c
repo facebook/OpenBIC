@@ -926,6 +926,11 @@ bool get_sensor_poll_enable_flag()
 	return sensor_poll_enable_flag;
 }
 
+__weak void plat_sensor_poll_post()
+{
+	return;
+}
+
 void sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 {
 	uint16_t table_index = 0;
@@ -1012,6 +1017,7 @@ void sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 		}
 
 		is_sensor_ready_flag = true;
+		plat_sensor_poll_post();
 		k_msleep(sensor_poll_interval_ms);
 	}
 }
