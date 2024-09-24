@@ -30,6 +30,7 @@
 #include "plat_hook.h"
 #include "plat_pwm.h"
 #include "plat_status.h"
+#include "plat_isr.h"
 
 LOG_MODULE_REGISTER(plat_hwmon);
 
@@ -206,8 +207,12 @@ void hsc_adm1272_pwr_ctrl(sensor_cfg *cfg, uint8_t adm1272_reg, uint8_t state)
 
 void rpu_remote_power_cycle()
 {
+	printk("rpu_remote_power_cycle\n");
 	// disable sensor poll
 	disable_sensor_poll();
+	// save uptime
+	shutdown_save_uptime_action(); 
+
 	if (!nct7363_wdt_all_disable()) {
 		LOG_ERR("nct7363 wdt all disable fail when power cycle!");
 	}

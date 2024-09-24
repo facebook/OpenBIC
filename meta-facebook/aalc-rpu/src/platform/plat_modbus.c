@@ -44,6 +44,7 @@
 #include "plat_led.h"
 #include "plat_status.h"
 #include "plat_fru_date.h"
+#include "plat_isr.h"
 
 LOG_MODULE_REGISTER(plat_modbus);
 
@@ -55,7 +56,7 @@ LOG_MODULE_REGISTER(plat_modbus);
 #define UPADTE_FW_DATA_LENGTH_MIN 3 // contain 2 regs(offeset)+ 1 reg(length) at least
 #define LOG_BEGIN_MODBUS_ADDR MODBUS_EVENT_1_ERROR_LOG_ADDR //Event 1 Error log Modbus Addr
 
-#define TIMER_SINCE_LAST_ON_LENGTH 4// timer_since_last_on is 4 bytes
+#define TIMER_SINCE_LAST_ON_LENGTH 4 // timer_since_last_on is 4 bytes
 #define BOARD_MFG_DATA_READ_START_OFFSET 3
 
 #define IPMI_FRU_DATA_LENGTH_MASK BIT_MASK(6)
@@ -627,13 +628,6 @@ static uint8_t modbus_to_do_set(modbus_command_mapping *cmd)
 	return MODBUS_EXC_NONE;
 }
 
-static uint8_t fru_data_write_to_do(modbus_command_mapping *cmd)
-{
-	// wait to do
-
-	return MODBUS_EXC_NONE;
-}
-
 static uint8_t fru_data_read_to_do(modbus_command_mapping *cmd)
 {
 	// wait to do
@@ -641,47 +635,22 @@ static uint8_t fru_data_read_to_do(modbus_command_mapping *cmd)
 	return MODBUS_EXC_NONE;
 }
 
-uint8_t modbus_write_uptime(modbus_command_mapping *cmd)
-{
-	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-
-	uint8_t pre_time[EEPROM_UPTIME_SIZE] = { 0 };
-	if (!plat_eeprom_read(EEPROM_UPTIME_OFFSET, pre_time, EEPROM_UPTIME_SIZE)) {
-		LOG_ERR("read uptime fail!");
-		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-	}
-
-	uint32_t old_uptime = (pre_time[3] << 24) | (pre_time[2] << 16) | (pre_time[1] << 8) | pre_time[0];
-	LOG_INF("old uptime: %d\n", old_uptime);
-
-	uint32_t get_uptime_mins = (k_uptime_get() / 60000); // mins(60 *1000 ms)
-	LOG_INF("uptime: %d\n", get_uptime_mins);
-
-	get_uptime_mins += old_uptime;
-
-	uint8_t temp[EEPROM_UPTIME_SIZE] = { 0 };
-	memcpy(temp, &get_uptime_mins, EEPROM_UPTIME_SIZE);
-	
-	if (!plat_eeprom_write(EEPROM_UPTIME_OFFSET, temp,
-					EEPROM_UPTIME_SIZE)) {
-		LOG_ERR("write uptime fail!");
-		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
-	}
-
-	return MODBUS_EXC_NONE;
-}
 uint8_t modbus_read_uptime(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
 	uint8_t uptime[EEPROM_UPTIME_SIZE] = { 0 };
 	if (!plat_eeprom_read(EEPROM_UPTIME_OFFSET, uptime, EEPROM_UPTIME_SIZE)) {
-		LOG_ERR("read hmi version fail!");
+		LOG_ERR("read uptime fail!");
 		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 	}
 
 	memcpy(cmd->data, uptime, EEPROM_UPTIME_SIZE);
 	regs_reverse(cmd->data_len, cmd->data);
+	printf("total uptime: \n");
+	for (int i = 0; i < cmd->data_len; i++) {
+		printf("0x%02x, ", cmd->data[i]);
+	}
 
 	return MODBUS_EXC_NONE;
 }
@@ -690,45 +659,45 @@ uint8_t modbus_read_time_since_last_on(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
-	uint32_t get_time_since_last_on_mins = (k_uptime_get() / 60000); // mins(60 *1000 ms)
-	LOG_INF("time_since_last_on: %d\n", get_time_since_last_on_mins);
+	uint32_t get_time_since_last_on_mins =
+		(uint32_t)(k_uptime_get_32() / 60000); // mins(60 *1000 ms)
 
-	memcpy(cmd->data, &get_time_since_last_on_mins, TIMER_SINCE_LAST_ON_LENGTH);
+	printf("type: %d\n, value type: %d", k_uptime_get_32(), get_time_since_last_on_mins);
 
-	regs_reverse(cmd->data_len, cmd->data);
 	// swap high and low byte
-	uint8_t tmp = cmd->data[0];
-	cmd->data[0] = cmd->data[1];
-	cmd->data[1] = tmp;
-	tmp = cmd->data[2];
-	cmd->data[2] = cmd->data[3];
-	cmd->data[3] = tmp;
-	
+
+	cmd->data[0] = get_time_since_last_on_mins >> 16;
+	cmd->data[1] = get_time_since_last_on_mins & 0xffff;
+
+	printf("time_since_last_on return: %d\n", *(uint32_t *)cmd->data);
+
 	return MODBUS_EXC_NONE;
 }
 
 uint8_t get_rpu_fru_data(uint8_t read_fru_type, uint16_t *return_data)
 {
 	// get fru data board_area_size
-	
+
 	uint8_t get_board_area_size[] = { 0 };
-	if (!plat_eeprom_read(MANAGEMENT_BOARD_FRU_EEPROM_BOARD_AREA_SIZE, get_board_area_size, 1)) {
+	if (!plat_eeprom_read(MANAGEMENT_BOARD_FRU_EEPROM_BOARD_AREA_SIZE, get_board_area_size,
+			      1)) {
 		LOG_ERR("read fru data board_area_size fail!");
 		return false;
 	}
 	uint16_t board_area_size = get_board_area_size[0] * 8;
-	
-	// read rpu fru board area data 
-	
+
+	// read rpu fru board area data
+
 	uint8_t read_data[board_area_size];
 	for (int i = 0; i < get_board_area_size[0]; i++) {
-		uint8_t ofs = i*8;
-		if (!plat_eeprom_read(MANAGEMENT_BOARD_FRU_EEPROM_START_OFFSET + ofs, &read_data[ofs], 8)) {
+		uint8_t ofs = i * 8;
+		if (!plat_eeprom_read(MANAGEMENT_BOARD_FRU_EEPROM_START_OFFSET + ofs,
+				      &read_data[ofs], 8)) {
 			LOG_ERR("read fru data fail!");
 			return false;
 		}
 	}
-	
+
 	/*
 	Board Mfg Date        : Tue Sep 10 15:10:00 2024
 	Board Mfg             : Quanta
@@ -746,7 +715,7 @@ uint8_t get_rpu_fru_data(uint8_t read_fru_type, uint16_t *return_data)
 		}
 		printf("0x%02x, ", read_data[i]);
 	}
-	
+
 	uint8_t data_read_window = BOARD_MFG_DATA_READ_START_OFFSET;
 	// get rpu mfr date
 	uint8_t mfr_date[3] = { 0 }; // data size: 3
@@ -809,44 +778,54 @@ uint8_t get_rpu_fru_data(uint8_t read_fru_type, uint16_t *return_data)
 	}
 	printf("end of read data ,%d\n", data_read_window);
 	printf("read fru type: 0x%x \n", read_fru_type);
-	
-	switch (read_fru_type)
-	{
-		case BOARD_MFG_DATE:
-			memcpy(return_data, mfr_date, sizeof(mfr_date));
-			break;
-		case BOARD_MFG:
-			memcpy(return_data, mfr, sizeof(mfr));
-			break;
-		case BOARD_PRODUCT:
-			memcpy(return_data, product, sizeof(product));
-			break;
-		case BOARD_SERIAL:
-			memcpy(return_data, serial, sizeof(serial));
-			break;
-		case BOARD_PART_NUMBER:
-			printf("in part_number case \n");
-			for (int i = 0; i < part_number_len; i++) {
-				return_data[i] = part_number[i];
-				printf("0x%02x, ", return_data[i]);
-			}
-			printf("out part_number case \n");
-			break;
-		case BOARD_FRU_ID:
-			memcpy(return_data, fru_id, sizeof(fru_id));
-			break;
-		default:
-			LOG_ERR("unknown read fru type: %d", read_fru_type);
-			return false;
+
+	switch (read_fru_type) {
+	case BOARD_MFG_DATE:
+		for (int i = 0; i < 3; i++) {
+			return_data[i] = mfr_date[i];
+		}
+
+		break;
+	case BOARD_MFG:
+		for (int i = 0; i < mfg_len; i++) {
+			return_data[i] = mfr[i];
+		}
+
+		break;
+	case BOARD_PRODUCT:
+		for (int i = 0; i < product_len; i++) {
+			return_data[i] = product[i];
+		}
+
+		break;
+	case BOARD_SERIAL:
+		for (int i = 0; i < serial_len; i++) {
+			return_data[i] = serial[i];
+		}
+
+		break;
+	case BOARD_PART_NUMBER:
+		for (int i = 0; i < part_number_len; i++) {
+			return_data[i] = part_number[i];
+		}
+
+		break;
+	case BOARD_FRU_ID:
+		for (int i = 0; i < fru_id_len; i++) {
+			return_data[i] = fru_id[i];
+		}
+
+		break;
+	default:
+		LOG_ERR("unknown read fru type: %d", read_fru_type);
+		return false;
 	}
-	
-	printf("break\n");
+
 	return true;
 }
 uint8_t modbus_write_rpu_fru(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-
 
 	return MODBUS_EXC_NONE;
 }
@@ -855,46 +834,72 @@ uint8_t modbus_read_rpu_fru(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
-
 	return MODBUS_EXC_NONE;
 }
 
-uint8_t modbus_read_rpu_fbpn(modbus_command_mapping *cmd)
+uint8_t modbus_read_rpu_data(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-	uint16_t read_fbpn_back[16];
-	
-	printf("get_rpu_fru_data\n");
-	
-	if(!get_rpu_fru_data(BOARD_PART_NUMBER, read_fbpn_back)) {
-		printf("get_rpu_fru_data failed\n");
+	uint16_t read_fru_back[16] = { 0 };
+
+	if (!get_rpu_fru_data(cmd->arg0, read_fru_back)) {
+		LOG_ERR("get fbpn failed");
 		return MODBUS_EXC_ILLEGAL_DATA_VAL;
-	};
-	printf("copy read back data to cmd->data\n");
-	memcpy(cmd->data, read_fbpn_back, sizeof(read_fbpn_back));
-	printf("end copy read back data to cmd->data\n");
-	regs_reverse(cmd->data_len, cmd->data);
-	
+	}
+
+	for (int i = 0; i < 16; i++) {
+		printf("0x%02x, \n", read_fru_back[i]);
+	}
+
+	for (int i = 0; i < 8; i++) {
+		// combine 2 8bit to 1 16bit
+		printf("read back fru data: 0x%02x, 0x%02x\n", read_fru_back[2 * i],
+		       read_fru_back[2 * i + 1]);
+		cmd->data[i] = (read_fru_back[2 * i] << 8) | (read_fru_back[2 * i + 1]);
+		;
+		printf("cmd->data[%d]: 0x%02x, \n", i, cmd->data[i]);
+	}
+
+	//regs_reverse(cmd->data_len, cmd->data);
+	printf("fbpn data : \n");
+	for (int i = 0; i < 8; i++) {
+		printf("0x%02x, ", cmd->data[i]);
+	}
+
 	return MODBUS_EXC_NONE;
 }
 
 uint8_t modbus_read_rpu_date(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-	uint16_t* read_date_back;
-	read_date_back = malloc(200 * sizeof(uint16_t));
-	if(!get_rpu_fru_data(BOARD_MFG_DATE, read_date_back)) {
+	uint16_t *read_date_back;
+	read_date_back = malloc(3 * sizeof(uint16_t));
+	if (!get_rpu_fru_data(BOARD_MFG_DATE, read_date_back)) {
 		return MODBUS_EXC_ILLEGAL_DATA_VAL;
-	};
-	printf("read_date_back: %d-%d-%d\n", read_date_back[0], read_date_back[1], read_date_back[2]);
+	}
+
+	printf("read_date_back: %d-%d-%d\n", read_date_back[0], read_date_back[1],
+	       read_date_back[2]);
 
 	if (!get_fru_date(read_date_back, cmd->data)) {
+		LOG_ERR("get fru date failed");
 		return MODBUS_EXC_ILLEGAL_DATA_VAL;
-	};
+	}
+
+	regs_reverse(cmd->data_len, cmd->data);
+
 	free(read_date_back);
+
 	return MODBUS_EXC_NONE;
 }
-
+uint8_t modbus_write_total_uptime (modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+	printk("write total uptime \n");
+	shutdown_save_uptime_action();
+	printk("write total uptime done \n");
+	return MODBUS_EXC_NONE;
+}
 modbus_command_mapping modbus_command_table[] = {
 	// addr, write_fn, read_fn, arg0, arg1, arg2, size
 	{ MODBUS_BPB_RPU_COOLANT_FLOW_RATE_LPM_ADDR, NULL, modbus_get_senser_reading,
@@ -1432,27 +1437,23 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_GET_SET_SENSOR_POLL_ADDR, modbus_sensor_poll_set, modbus_sensor_poll_get, 0, 0, 0,
 	  1 },
 	// RPU FRU
-	{ MODBUS_RPU_FBPN_ADDR, fru_data_write_to_do, modbus_read_rpu_fbpn, 0, 0, 0, 8 },
-	{ MODBUS_RPU_MFR_MODEL_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 0, 0, 8 },
-	{ MODBUS_RPU_MFR_DATE_ADDR, fru_data_write_to_do, modbus_read_rpu_date, 0, 0, 0, 4 },
-	{ MODBUS_RPU_MFR_SERIAL_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 0, 0, 8 },
-	{ MODBUS_RPU_WORKORDER_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 0, 0, 4 },
-	{ MODBUS_RPU_HW_REVISION_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 0, 0, 4 },
+	{ MODBUS_RPU_FBPN_ADDR, NULL, modbus_read_rpu_data, BOARD_PART_NUMBER, 0, 0, 8 },
+	{ MODBUS_RPU_MFR_MODEL_ADDR, NULL, modbus_read_rpu_data, BOARD_MFG, 0, 0, 8 },
+	{ MODBUS_RPU_MFR_DATE_ADDR, NULL, modbus_read_rpu_date, 0, 0, 0, 4 },
+	{ MODBUS_RPU_MFR_SERIAL_ADDR, NULL, modbus_read_rpu_data, BOARD_SERIAL, 0, 0, 8 },
+	{ MODBUS_RPU_WORKORDER_ADDR, NULL, modbus_read_rpu_data, BOARD_FRU_ID, 0, 0, 4 },
+	{ MODBUS_RPU_HW_REVISION_ADDR, NULL, fru_data_read_to_do, 0, 0, 0, 4 },
 	{ MODBUS_RPU_PLC_FW_REVISION_ADDR, NULL, modbus_get_fw_reversion, 0, 0, 0, 4 },
-	{ MODBUS_TOTAL_UP_TIME_ADDR, modbus_write_uptime, modbus_read_uptime, 0, 0, 0, 2 },
+	{ MODBUS_TOTAL_UP_TIME_ADDR, modbus_write_total_uptime, modbus_read_uptime, 0, 0, 0, 2 },
 	{ MODBUS_TIME_SINCE_LAST_ON_ADDR, NULL, modbus_read_time_since_last_on, 0, 0, 0, 2 },
-	{ MODBUS_RPU_HMI_FW_REVISION_ADDR, modbus_write_hmi_version, modbus_read_hmi_version, 0, 0, 0, 4 },
-	{ MODBUS_RPU_HEX_FW_REVISION_ADDR, NULL, fru_data_read_to_do, 0, 0, 0, 2 },
-	{ MODBUS_RPU_NOAHS_ARK_CONFIGURATION_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 0,
+	{ MODBUS_RPU_HMI_FW_REVISION_ADDR, modbus_write_hmi_version, modbus_read_hmi_version, 0, 0,
 	  0, 4 },
-	{ MODBUS_RPU_RESERVIOR_AND_PUMPING_UNIT_FBPN_ADDR, fru_data_write_to_do,
-	  fru_data_read_to_do, 0, 0, 0, 4 },
-	{ MODBUS_HEAT_EXCHANGER_CONTROL_BOX_FBPN_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0,
-	  0, 0, 4 },
-	{ MODBUS_HEAT_EXCHANGER_FANS_FBPN_ADDR, fru_data_write_to_do, fru_data_read_to_do, 0, 0, 0,
-	  4 },
-	{ MODBUS_HEAT_EXCHANGER_FAN_CONTROL_BOX_FBPN_ADDR, fru_data_write_to_do,
-	  fru_data_read_to_do, 0, 0, 0, 4 }, 
+	{ MODBUS_RPU_HEX_FW_REVISION_ADDR, NULL, fru_data_read_to_do, 0, 0, 0, 2 },
+	{ MODBUS_RPU_NOAHS_ARK_CONFIGURATION_ADDR, NULL, fru_data_read_to_do, 0, 0, 0, 4 },
+	{ MODBUS_RPU_RESERVIOR_AND_PUMPING_UNIT_FBPN_ADDR, NULL, fru_data_read_to_do, 0, 0, 0, 4 },
+	{ MODBUS_HEAT_EXCHANGER_CONTROL_BOX_FBPN_ADDR, NULL, fru_data_read_to_do, 0, 0, 0, 4 },
+	{ MODBUS_HEAT_EXCHANGER_FANS_FBPN_ADDR, NULL, fru_data_read_to_do, 0, 0, 0, 4 },
+	{ MODBUS_HEAT_EXCHANGER_FAN_CONTROL_BOX_FBPN_ADDR, NULL, fru_data_read_to_do, 0, 0, 0, 4 },
 };
 
 static modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)
