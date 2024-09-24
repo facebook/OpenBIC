@@ -20,6 +20,7 @@
 #include "plat_gpio.h"
 
 #define DC_ON_DELAY5_SEC 5
+#define VR_READY_DELAY_SEC 7
 #define CXL_READY_SECONDS 30
 #define CXL_READY_RETRY_TIMES 10
 #define CXL1_HEART_BEAT_LABEL "HB0"
@@ -111,6 +112,8 @@ bool get_cxl_ready_status(uint8_t cxl_id);
 bool cxl1_ready_access(uint8_t sensor_num);
 bool cxl2_ready_access(uint8_t sensor_num);
 void set_cxl_vr_access(uint8_t cxl_id, bool value);
+void set_cxl1_vr_access_delayed_status();
+void set_cxl2_vr_access_delayed_status();
 bool cxl1_vr_access(uint8_t sensor_num);
 bool cxl2_vr_access(uint8_t sensor_num);
 void create_check_cxl_ready_thread();

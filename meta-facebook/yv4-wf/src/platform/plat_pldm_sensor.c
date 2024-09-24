@@ -1809,7 +1809,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			.port = I2C_BUS6,
 			.target_addr = ADDR_INA233_E1S,
 			.offset = PMBUS_READ_VOUT,
-			.access_checker = stby_access,
+			.access_checker = dc_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -3433,9 +3433,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 
-			0x000000C8, //uint32_t warning_high;
+			0x0000012C, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x0000015E, //uint32_t critical_high;
+			0x00000190, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
 			0x000001F4, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
@@ -3749,9 +3749,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 
-			0x000000C8, //uint32_t warning_high;
+			0x0000012C, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x0000015E, //uint32_t critical_high;
+			0x00000190, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
 			0x000001F4, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
@@ -4065,9 +4065,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 
-			0x000007D0, //uint32_t warning_high;
+			0x00000BB8, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x00000DAC, //uint32_t critical_high;
+			0x00000FA0, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
 			0x00001388, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
@@ -4381,9 +4381,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 
-			0x000007D0, //uint32_t warning_high;
+			0x00000BB8, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x00000DAC, //uint32_t critical_high;
+			0x00000FA0, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
 			0x00001388, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
