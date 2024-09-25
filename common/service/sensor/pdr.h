@@ -151,6 +151,7 @@ int pldm_get_sensor_name_via_sensor_id(uint16_t sensor_id, char *sensor_name, si
 int get_pdr_table_via_record_handle(uint8_t *record_data, uint32_t record_handle);
 void plat_init_entity_aux_names_pdr_table();
 uint16_t plat_get_pdr_entity_aux_names_size();
+uint16_t plat_get_disabled_sensor_count();
 PDR_entity_auxiliary_names *get_entity_auxiliary_names_table();
 
 #endif

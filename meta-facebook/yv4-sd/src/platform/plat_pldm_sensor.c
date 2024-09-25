@@ -2819,7 +2819,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			0x0045, //uint16_t sensor_id;
+			SENSOR_NUM_MB_INA233_X8_RTM_CURR_A, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
 			0x0001, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
@@ -2878,75 +2878,6 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 	},
 	{
 		{
-			// MB_INA233_x16_RTM_CURR_A
-			/*** PDR common header***/
-			{
-				0x00000000, //uint32_t record_handle
-				0x01, //uint8_t PDR_header_version
-				0x02, //uint8_t PDR_type
-				0x0000, //uint16_t record_change_number
-				0x0000, //uint16_t data_length
-			},
-
-			/***numeric sensor format***/
-			0x0000, //uint16_t PLDM_terminus_handle;
-			0x0046, //uint16_t sensor_id;
-			0x0000, //uint16_t entity_type; //Need to check
-			0x0002, //uint16_t entity_instance_number;
-			0x0000, //uint16_t container_id;
-			PDR_SENSOR_USEINIT_PDR, //uint8_t sensor_init;
-			0x01, //uint8_t sensor_auxiliary_names_pdr;
-			0x06, //uint8_t base_unit;
-			-4, //int8_t unit_modifier;
-			0x00, //uint8_t rate_unit;
-			0x00, //uint8_t base_oem_unit_handle;
-			0x00, //uint8_t aux_unit;
-			0x00, //int8_t aux_unit_modifier;
-			0x00, //uint8_t auxrate_unit;
-			0x00, //uint8_t rel;
-			0x00, //uint8_t aux_oem_unit_handle;
-			0x00, //uint8_t is_linear;
-			0x04, //uint8_t sensor_data_size;
-			1, //int32_t resolution;
-			0, //int32_t offset;
-			0x0000, //uint16_t accuracy;
-			0x00, //uint8_t plus_tolerance;
-			0x00, //uint8_t minus_tolerance;
-			0x00000000, //uint32_t hysteresis;
-			0xC3, //uint8_t supported_thresholds;
-			0x00, //uint8_t threshold_and_hysteresis_volatility;
-			0, //real32_t state_transition_interval;
-			UPDATE_INTERVAL_1S, //int32_t update_interval;
-			0x00000000, //uint32_t max_readable;
-			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
-			0x05, //uint8_t range_field_support;
-			0x00000000, //uint32_t nominal_value;
-			0x00000000, //uint32_t normal_max;
-			0x00000000, //uint32_t normal_min;
-			0x00004383, //uint32_t warning_high;
-			0x00000000, //uint32_t warning_low;
-			0x000046BA, //uint32_t critical_high;
-			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
-			0x00000000, //uint32_t fatal_low;
-
-		},
-		.update_time = 0,
-		{
-			.type = sensor_dev_ina233,
-			.port = I2C_BUS6,
-			.target_addr = ADDR_X16_INA233,
-			.offset = PMBUS_READ_IOUT,
-			.access_checker = stby_access,
-			.sample_count = SAMPLE_COUNT_DEFAULT,
-			.cache = 0,
-			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.init_args = &ina233_init_args[1],
-		},
-	},
-	{
-		{
 			// MB_INA233_x8_RTM_PWR_W
 			/*** PDR common header***/
 			{
@@ -2959,7 +2890,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			0x0062, //uint16_t sensor_id;
+			SENSOR_NUM_MB_INA233_X8_RTM_PWR_W, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
 			0x0003, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
@@ -3012,74 +2943,6 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.init_args = &ina233_init_args[0],
-		},
-	},
-	{
-		{
-			// MB_INA233_x16_RTM_PWR_W
-			/*** PDR common header***/
-			{
-				0x00000000, //uint32_t record_handle
-				0x01, //uint8_t PDR_header_version
-				0x02, //uint8_t PDR_type
-				0x0000, //uint16_t record_change_number
-				0x0000, //uint16_t data_length
-			},
-
-			/***numeric sensor format***/
-			0x0000, //uint16_t PLDM_terminus_handle;
-			0x0063, //uint16_t sensor_id;
-			0x0000, //uint16_t entity_type; //Need to check
-			0x0004, //uint16_t entity_instance_number;
-			0x0000, //uint16_t container_id;
-			PDR_SENSOR_USEINIT_PDR, //uint8_t sensor_init;
-			0x01, //uint8_t sensor_auxiliary_names_pdr;
-			0x07, //uint8_t base_unit;
-			-5, //int8_t unit_modifier;
-			0x00, //uint8_t rate_unit;
-			0x00, //uint8_t base_oem_unit_handle;
-			0x00, //uint8_t aux_unit;
-			0x00, //int8_t aux_unit_modifier;
-			0x00, //uint8_t auxrate_unit;
-			0x00, //uint8_t rel;
-			0x00, //uint8_t aux_oem_unit_handle;
-			0x00, //uint8_t is_linear;
-			0x04, //uint8_t sensor_data_size;
-			1, //int32_t resolution;
-			0, //int32_t offset;
-			0x0000, //uint16_t accuracy;
-			0x00, //uint8_t plus_tolerance;
-			0x00, //uint8_t minus_tolerance;
-			0x00000000, //uint32_t hysteresis;
-			0xC7, //uint8_t supported_thresholds;
-			0x00, //uint8_t threshold_and_hysteresis_volatility;
-			0, //real32_t state_transition_interval;
-			UPDATE_INTERVAL_1S, //int32_t update_interval;
-			0x00000000, //uint32_t max_readable;
-			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
-			0x15, //uint8_t range_field_support;
-			0x00000000, //uint32_t nominal_value;
-			0x00000000, //uint32_t normal_max;
-			0x00000000, //uint32_t normal_min;
-			0x001BADD0, //uint32_t warning_high;
-			0x00000000, //uint32_t warning_low;
-			0x001BF348, //uint32_t critical_high;
-			0x00000000, //uint32_t critical_low;
-			0x001C38C0, //uint32_t fatal_high;
-			0x00000000, //uint32_t fatal_low;
-		},
-		.update_time = 0,
-		{
-			.type = sensor_dev_ina233,
-			.port = I2C_BUS6,
-			.target_addr = ADDR_X16_INA233,
-			.offset = PMBUS_READ_POUT,
-			.access_checker = stby_access,
-			.sample_count = SAMPLE_COUNT_DEFAULT,
-			.cache = 0,
-			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.init_args = &ina233_init_args[1],
 		},
 	},
 	{
@@ -3558,75 +3421,6 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_retimer_read,
 			.init_args = &pt5161l_init_args[0],
-		},
-	},
-	{
-		{
-			// x16 retimer Temperature
-			/*** PDR common header***/
-			{
-				0x00000000, //uint32_t record_handle
-				0x01, //uint8_t PDR_header_version
-				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
-				0x0000, //uint16_t record_change_number
-				0x0000, //uint16_t data_length
-			},
-
-			/***numeric sensor format***/
-			0x0000, //uint16_t PLDM_terminus_handle;
-			0x0019, //uint16_t sensor_id;
-			0x0089, //uint16_t entity_type;
-			0x0007, //uint16_t entity_instance_number;
-			0x0000, //uint16_t container_id;
-			0x00, //uint8_t sensor_init;
-			0x01, //uint8_t sensor_auxiliary_names_pdr;
-			0x02, //uint8_t base_unit;
-			0, //int8_t unit_modifier;
-			0x00, //uint8_t rate_unit;
-			0x00, //uint8_t base_oem_unit_handle;
-			0x00, //uint8_t aux_unit;
-			0x00, //int8_t aux_unit_modifier;
-			0x00, //uint8_t auxrate_unit;
-			0x00, //uint8_t rel;
-			0x00, //uint8_t aux_oem_unit_handle;
-			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
-			1, //real32_t resolution;
-			0, //real32_t offset;
-			0x0000, //uint16_t accuracy;
-			0x00, //uint8_t plus_tolerance;
-			0x00, //uint8_t minus_tolerance;
-			0x00000000, //uint32_t hysteresis;
-			0xC6, //uint8_t supported_thresholds;
-			0x00, //uint8_t threshold_and_hysteresis_volatility;
-			0, //real32_t state_transition_interval;
-			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
-			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
-			0x14, //uint8_t range_field_support;
-			0x00000000, //uint32_t nominal_value;
-			0x00000000, //uint32_t normal_max;
-			0x00000000, //uint32_t normal_min;
-			0x00000000, //uint32_t warning_high;
-			0x00000000, //uint32_t warning_low;
-			0x00000064, //uint32_t critical_high;
-			0x00000000, //uint32_t critical_low;
-			0x0000007D, //uint32_t fatal_high;
-			0x00000000, //uint32_t fatal_low;
-		},
-		.update_time = 0,
-		{
-			.type = sensor_dev_pt5161l,
-			.port = I2C_BUS6,
-			.target_addr = ADDR_X16_RETIMER,
-			.offset = PT5161L_TEMP_OFFSET,
-			.access_checker = post_access,
-			.sample_count = SAMPLE_COUNT_DEFAULT,
-			.cache = 0,
-			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.pre_sensor_read_hook = pre_retimer_read,
-			.init_args = &pt5161l_init_args[1],
 		},
 	},
 };
@@ -5700,23 +5494,6 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensorName = u"MB_X8_RETIMER_TEMP_C",
 	},
 	{
-		// MB_X16_RETIMER_TEMP_C
-		/*** PDR common header***/
-		{
-			.record_handle = 0x00000000,
-			.PDR_header_version = 0x01,
-			.PDR_type = PLDM_SENSOR_AUXILIARY_NAMES_PDR,
-			.record_change_number = 0x0000,
-			.data_length = 0x0000,
-		},
-		.terminus_handle = 0x0000,
-		.sensor_id = 0x0019,
-		.sensor_count = 0x1,
-		.nameStringCount = 0x1,
-		.nameLanguageTag = "en",
-		.sensorName = u"MB_X16_RETIMER_TEMP_C",
-	},
-	{
 		// MB_ADC_P12V_STBY_VOLT_V
 		/*** PDR common header***/
 		{
@@ -6159,23 +5936,6 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensorName = u"MB_INA233_X8_RTM_CURR_A",
 	},
 	{
-		// MB_INA233_x16_RTM_CURR_A
-		/*** PDR common header***/
-		{
-			.record_handle = 0x00000000,
-			.PDR_header_version = 0x01,
-			.PDR_type = PLDM_SENSOR_AUXILIARY_NAMES_PDR,
-			.record_change_number = 0x0000,
-			.data_length = 0x0000,
-		},
-		.terminus_handle = 0x0000,
-		.sensor_id = 0x0046,
-		.sensor_count = 0x1,
-		.nameStringCount = 0x1,
-		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_X16_RTM_CURR_A",
-	},
-	{
 		// MB_INA233_E1S_Boot_CURR_A
 		/*** PDR common header***/
 		{
@@ -6533,23 +6293,6 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensorName = u"MB_INA233_X8_RTM_PWR_W",
 	},
 	{
-		// MB_INA233_x16_RTM_PWR_W
-		/*** PDR common header***/
-		{
-			.record_handle = 0x00000000,
-			.PDR_header_version = 0x01,
-			.PDR_type = PLDM_SENSOR_AUXILIARY_NAMES_PDR,
-			.record_change_number = 0x0000,
-			.data_length = 0x0000,
-		},
-		.terminus_handle = 0x0000,
-		.sensor_id = 0x0063,
-		.sensor_count = 0x1,
-		.nameStringCount = 0x1,
-		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_X16_RTM_PWR_W",
-	},
-	{
 		// MB_INA233_E1S_Boot_PWR_W
 		/*** PDR common header***/
 		{
@@ -6601,6 +6344,90 @@ PDR_entity_auxiliary_names plat_pdr_entity_aux_names_table[] = { {
 	.nameLanguageTag = "en",
 } };
 
+uint16_t total_disable_sensors_count = 0;
+
+uint16_t *disable_sensors_id_table = NULL;
+
+void plat_init_pldm_sensor_table()
+{
+	// Disable/Change sensors according to different config
+	plat_pldm_sensor_change_ssd_dev();
+	plat_pldm_sensor_change_retimer_dev();
+	plat_pldm_sensor_change_vr_dev();
+	plat_pldm_sensor_change_cpu_bus();
+	plat_pldm_sensor_change_ina_dev();
+	plat_pldm_sensor_change_dimm_dev();
+
+	// Initialize sensors that needs to be disabled
+	plat_init_pldm_disabled_sensors();
+}
+
+void plat_pldm_disable_sensor(sensor_cfg *cfg)
+{
+	CHECK_NULL_ARG(cfg);
+
+	cfg->cache_status = PLDM_SENSOR_DISABLED;
+	total_disable_sensors_count++;
+}
+
+void plat_init_pldm_disabled_sensors()
+{
+	int count = 0;
+	uint16_t thread_id = 0;
+	uint16_t sensor_id = 0;
+	uint16_t current_sensor_count = 0;
+	pldm_sensor_info *pldm_sensor_table = NULL;
+
+	if (total_disable_sensors_count == 0) {
+		return;
+	}
+
+	disable_sensors_id_table =
+		(uint16_t *)malloc(total_disable_sensors_count * sizeof(uint16_t));
+	if (disable_sensors_id_table == NULL) {
+		total_disable_sensors_count = 0;
+		LOG_ERR("Failed to allocate disable_sensors_id_table, revise sensors count to 0");
+		return;
+	}
+
+	for (thread_id = 0; thread_id < MAX_SENSOR_THREAD_ID; ++thread_id) {
+		pldm_sensor_table = plat_pldm_sensor_load(thread_id);
+		if (pldm_sensor_table == NULL) {
+			LOG_ERR("Failed to get pldm sensor table, thread id: 0x%x", thread_id);
+			continue;
+		}
+
+		count = plat_pldm_sensor_get_sensor_count(thread_id);
+		if (count < 0) {
+			LOG_ERR("Failed to get pldm sensor table count, thread id: 0x%x",
+				thread_id);
+			continue;
+		}
+
+		for (sensor_id = 0; sensor_id < count; ++sensor_id) {
+			if (pldm_sensor_table[sensor_id].pldm_sensor_cfg.cache_status ==
+			    PLDM_SENSOR_DISABLED) {
+				if (current_sensor_count >= total_disable_sensors_count) {
+					LOG_ERR("Record disabled sensor id exceeded table size, total size: 0x%x, current thread id: 0x%x, sensor id: 0x%x",
+						total_disable_sensors_count, thread_id,
+						pldm_sensor_table[sensor_id]
+							.pdr_numeric_sensor.sensor_id);
+					continue;
+				}
+
+				disable_sensors_id_table[current_sensor_count] =
+					pldm_sensor_table[sensor_id].pdr_numeric_sensor.sensor_id;
+				current_sensor_count++;
+			}
+		}
+	}
+}
+
+uint16_t plat_get_disabled_sensor_count()
+{
+	return total_disable_sensors_count;
+}
+
 uint32_t plat_get_pdr_size(uint8_t pdr_type)
 {
 	int total_size = 0, i = 0;
@@ -6610,9 +6437,11 @@ uint32_t plat_get_pdr_size(uint8_t pdr_type)
 		for (i = 0; i < MAX_SENSOR_THREAD_ID; i++) {
 			total_size += plat_pldm_sensor_get_sensor_count(i);
 		}
+		total_size -= total_disable_sensors_count;
 		break;
 	case PLDM_SENSOR_AUXILIARY_NAMES_PDR:
 		total_size = ARRAY_SIZE(plat_pdr_sensor_aux_names_table);
+		total_size -= total_disable_sensors_count;
 		break;
 	case PLDM_ENTITY_AUXILIARY_NAMES_PDR:
 		total_size = ARRAY_SIZE(plat_pdr_entity_aux_names_table);
@@ -6635,17 +6464,12 @@ pldm_sensor_info *plat_pldm_sensor_load(int thread_id)
 	case ADC_SENSOR_THREAD_ID:
 		return plat_pldm_sensor_adc_table;
 	case VR_SENSOR_THREAD_ID:
-		plat_pldm_sensor_change_vr_dev();
 		return plat_pldm_sensor_vr_table;
 	case MB_TEMP_SENSOR_THREAD_ID:
-		plat_pldm_sensor_change_ssd_dev();
 		return plat_pldm_sensor_mb_temp_table;
 	case CPU_SENSOR_THREAD_ID:
-		plat_pldm_sensor_change_cpu_bus();
 		return plat_pldm_sensor_cpu_table;
 	case INA233_SENSOR_THREAD_ID:
-		plat_pldm_sensor_change_retimer_dev();
-		plat_pldm_sensor_change_ina_dev();
 		return plat_pldm_sensor_ina233_table;
 	case DIMM_SENSOR_THREAD_ID:
 		return plat_pldm_sensor_dimm_table;
@@ -6687,65 +6511,76 @@ int plat_pldm_sensor_get_sensor_count(int thread_id)
 	return count;
 }
 
-void plat_pldm_sensor_get_pdr_numeric_sensor(int thread_id, int sensor_num,
-					     PDR_numeric_sensor *numeric_sensor_table)
-{
-	switch (thread_id) {
-	case ADC_SENSOR_THREAD_ID:
-		memcpy(numeric_sensor_table,
-		       &plat_pldm_sensor_adc_table[sensor_num].pdr_numeric_sensor,
-		       sizeof(PDR_numeric_sensor));
-		break;
-	case VR_SENSOR_THREAD_ID:
-		memcpy(numeric_sensor_table,
-		       &plat_pldm_sensor_vr_table[sensor_num].pdr_numeric_sensor,
-		       sizeof(PDR_numeric_sensor));
-		break;
-	case MB_TEMP_SENSOR_THREAD_ID:
-		memcpy(numeric_sensor_table,
-		       &plat_pldm_sensor_mb_temp_table[sensor_num].pdr_numeric_sensor,
-		       sizeof(PDR_numeric_sensor));
-		break;
-	case CPU_SENSOR_THREAD_ID:
-		memcpy(numeric_sensor_table,
-		       &plat_pldm_sensor_cpu_table[sensor_num].pdr_numeric_sensor,
-		       sizeof(PDR_numeric_sensor));
-		break;
-	case INA233_SENSOR_THREAD_ID:
-		memcpy(numeric_sensor_table,
-		       &plat_pldm_sensor_ina233_table[sensor_num].pdr_numeric_sensor,
-		       sizeof(PDR_numeric_sensor));
-		break;
-	case DIMM_SENSOR_THREAD_ID:
-		memcpy(numeric_sensor_table,
-		       &plat_pldm_sensor_dimm_table[sensor_num].pdr_numeric_sensor,
-		       sizeof(PDR_numeric_sensor));
-		break;
-	default:
-		LOG_ERR("Unknow pldm sensor thread id %d", thread_id);
-		break;
-	}
-}
-
 void plat_load_numeric_sensor_pdr_table(PDR_numeric_sensor *numeric_sensor_table)
 {
 	int thread_id = 0, sensor_num = 0;
 	int max_sensor_num = 0, current_sensor_size = 0;
+	uint32_t total_size = plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR);
+	pldm_sensor_info *pdr_table = NULL;
 
 	for (thread_id = 0; thread_id < MAX_SENSOR_THREAD_ID; thread_id++) {
+		pdr_table = plat_pldm_sensor_load(thread_id);
+		if (pdr_table == NULL) {
+			LOG_ERR("Failed to get pdr table, thread id: 0x%x", thread_id);
+			continue;
+		}
+
 		max_sensor_num = plat_pldm_sensor_get_sensor_count(thread_id);
+		if (max_sensor_num < 0) {
+			LOG_ERR("Failed to get sensor count, thread id: 0x%x", thread_id);
+			continue;
+		}
+
 		for (sensor_num = 0; sensor_num < max_sensor_num; sensor_num++) {
-			plat_pldm_sensor_get_pdr_numeric_sensor(
-				thread_id, sensor_num, &numeric_sensor_table[current_sensor_size]);
-			current_sensor_size++;
+			if (pdr_table[sensor_num].pldm_sensor_cfg.cache_status !=
+			    PLDM_SENSOR_DISABLED) {
+				if (current_sensor_size >= total_size) {
+					LOG_ERR("Load numeric sensor pdr exceeded table size, total size: 0x%x, current thread: 0x%x, sensor id: 0x%x",
+						total_size, thread_id,
+						pdr_table[sensor_num].pdr_numeric_sensor.sensor_id);
+					continue;
+				}
+
+				memcpy(&numeric_sensor_table[current_sensor_size],
+				       &pdr_table[sensor_num].pdr_numeric_sensor,
+				       sizeof(PDR_numeric_sensor));
+				current_sensor_size++;
+			}
 		}
 	}
 }
 
 void plat_load_aux_sensor_names_pdr_table(PDR_sensor_auxiliary_names *aux_sensor_name_table)
 {
-	memcpy(aux_sensor_name_table, &plat_pdr_sensor_aux_names_table,
-	       sizeof(plat_pdr_sensor_aux_names_table));
+	int index = 0;
+	int disable_sensor_id = 0;
+	int current_sensor_size = 0;
+	uint32_t total_size = plat_get_pdr_size(PLDM_SENSOR_AUXILIARY_NAMES_PDR);
+
+	for (index = 0; index < ARRAY_SIZE(plat_pdr_sensor_aux_names_table); ++index) {
+		for (disable_sensor_id = 0; disable_sensor_id < total_disable_sensors_count;
+		     ++disable_sensor_id) {
+			if (plat_pdr_sensor_aux_names_table[index].sensor_id ==
+			    disable_sensors_id_table[disable_sensor_id]) {
+				break;
+			}
+		}
+
+		if (disable_sensor_id >= total_disable_sensors_count) {
+			// AUX sensor name isn't disabled sensor
+			if (current_sensor_size >= total_size) {
+				LOG_ERR("Load aux sensor names exceeded table size, current sensors size: 0x%x, sensor id: 0x%x",
+					current_sensor_size,
+					plat_pdr_sensor_aux_names_table[index].sensor_id);
+				continue;
+			}
+
+			memcpy(&aux_sensor_name_table[current_sensor_size],
+			       &plat_pdr_sensor_aux_names_table[index],
+			       sizeof(PDR_sensor_auxiliary_names));
+			current_sensor_size++;
+		}
+	}
 }
 
 uint16_t plat_pdr_entity_aux_names_table_size = 0;
@@ -6854,8 +6689,8 @@ void plat_pldm_sensor_change_ssd_dev()
 				    I2C_BUS6 &&
 			    plat_pldm_sensor_mb_temp_table[index].pldm_sensor_cfg.target_addr ==
 				    ADDR_NVME) {
-				plat_pldm_sensor_mb_temp_table[index].pldm_sensor_cfg.cache_status =
-					PLDM_SENSOR_DISABLED;
+				plat_pldm_disable_sensor(
+					&plat_pldm_sensor_mb_temp_table[index].pldm_sensor_cfg);
 			}
 		}
 	}
@@ -6879,6 +6714,31 @@ void plat_pldm_sensor_change_cpu_bus()
 	return;
 }
 
+void plat_pldm_disable_ina233_sensor_with_no_retimer()
+{
+	int index = 0;
+	int disable_id = 0;
+	int max_sensor_count = plat_pldm_sensor_get_sensor_count(INA233_SENSOR_THREAD_ID);
+	uint16_t disable_ina233_sensors_id[] = { SENSOR_NUM_MB_INA233_X8_RTM_CURR_A,
+						 SENSOR_NUM_MB_INA233_X8_RTM_PWR_W };
+
+	if (max_sensor_count < 0) {
+		LOG_ERR("Failed to get ina233 sensors count");
+		return;
+	}
+
+	for (disable_id = 0; disable_id < ARRAY_SIZE(disable_ina233_sensors_id); ++disable_id) {
+		for (index = 0; index < max_sensor_count; ++index) {
+			if (disable_ina233_sensors_id[disable_id] ==
+			    plat_pldm_sensor_ina233_table[index].pdr_numeric_sensor.sensor_id) {
+				plat_pldm_disable_sensor(
+					&plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg);
+				break;
+			}
+		}
+	}
+}
+
 void plat_pldm_sensor_change_retimer_dev()
 {
 	uint8_t retimer_type = get_retimer_type();
@@ -6893,24 +6753,28 @@ void plat_pldm_sensor_change_retimer_dev()
 				return;
 			case RETIMER_TYPE_NO_RETIMER:
 				// No need to get sensor reading from retimer
-				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.cache_status =
-					PLDM_SENSOR_DISABLED;
+				plat_pldm_disable_sensor(
+					&plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg);
 				break;
 			case RETIMER_TYPE_KANDOU:
 				// TODO: Currently, disable sensor reading until support kandou
-				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.cache_status =
-					PLDM_SENSOR_DISABLED;
+				plat_pldm_disable_sensor(
+					&plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg);
 				break;
 			case RETIMER_TYPE_BROADCOM:
 				// TODO: Currently, disable sensor reading until support broadcom
-				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.cache_status =
-					PLDM_SENSOR_DISABLED;
+				plat_pldm_disable_sensor(
+					&plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg);
 				break;
 			default:
 				LOG_ERR("Failed to change the Retimer device due to unknown vendor.");
 				break;
 			}
 		}
+	}
+
+	if (retimer_type == RETIMER_TYPE_NO_RETIMER) {
+		plat_pldm_disable_ina233_sensor_with_no_retimer();
 	}
 }
 
@@ -6937,6 +6801,41 @@ void plat_pldm_sensor_change_ina_dev()
 					sensor_dev_rtq6056;
 				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.init_args =
 					&rtq6056_init_args[3];
+			}
+		}
+	}
+}
+
+void plat_pldm_sensor_change_dimm_dev()
+{
+	int index = 0;
+	int disable_id = 0;
+	int max_sensor_count = plat_pldm_sensor_get_sensor_count(DIMM_SENSOR_THREAD_ID);
+	if (max_sensor_count < 0) {
+		LOG_ERR("Failed to get dimm sensors count");
+		return;
+	}
+
+	uint8_t blade_conf = BLADE_CONFIG_UNKNOWN;
+	uint16_t t1c_disable_dimm_sensors_id[] = { NUM_DIMM_F_TEMP, NUM_DIMM_L_TEMP,
+						   NUM_DIMM_F_PMIC_PWR, NUM_DIMM_L_PMIC_PWR };
+
+	if (get_blade_config(&blade_conf) == false) {
+		LOG_ERR("Unable to change the ssd device due to its unknown blade config.");
+		return;
+	}
+
+	// T1C system doesn't have E1.S data drive and WF, and only have 10 DIMMs.
+	if (blade_conf == BLADE_CONFIG_T1C) {
+		for (disable_id = 0; disable_id < ARRAY_SIZE(t1c_disable_dimm_sensors_id);
+		     ++disable_id) {
+			for (index = 0; index < max_sensor_count; ++index) {
+				if (t1c_disable_dimm_sensors_id[disable_id] ==
+				    plat_pldm_sensor_dimm_table[index].pdr_numeric_sensor.sensor_id) {
+					plat_pldm_disable_sensor(
+						&plat_pldm_sensor_dimm_table[index].pldm_sensor_cfg);
+					break;
+				}
 			}
 		}
 	}
