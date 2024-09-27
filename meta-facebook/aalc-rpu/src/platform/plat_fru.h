@@ -66,7 +66,7 @@ enum FRU_ID {
 #define MUX_CHANNEL_3 3
 
 // plat eeprom save in rpu eeprom
-#define MANAGEMENT_BOARD_FRU_EEPROM_OFFSET 0x0000 
+#define MANAGEMENT_BOARD_FRU_EEPROM_OFFSET 0x0000
 #define MANAGEMENT_BOARD_FRU_EEPROM_START_OFFSET 0x0008
 #define MANAGEMENT_BOARD_FRU_EEPROM_BOARD_AREA_SIZE 0x0009
 #define PLAT_EEPROM_OFFSET 0x2000 // 8kb
@@ -77,7 +77,6 @@ enum FRU_ID {
 
 #define EEPROM_UPTIME_OFFSET (EEPROM_RPU_ADDR_OFFSET + EEPROM_RPU_ADDR_VERSION_SIZE)
 #define EEPROM_UPTIME_SIZE 4 // 4 bytes
-
 
 bool plat_eeprom_write(uint32_t offset, uint8_t *data, uint16_t data_len);
 bool plat_eeprom_read(uint32_t offset, uint8_t *data, uint16_t data_len);

@@ -39,8 +39,6 @@
 #define MODBUS_GET_SET_SENSOR_POLL_ADDR 0xF080
 #define MODBUS_GET_SET_FAILURE_STATUS_ADDR 0xF081
 
-
-
 int init_custom_modbus_server(void);
 void init_modbus_command_table(void);
 int change_modbus_slave_addr(uint8_t idx, uint8_t addr);
@@ -385,6 +383,5 @@ enum read_fru_data_type {
 #define MODBUS_HEAT_EXCHANGER_FAN_CONTROL_BOX_FBPN_ADDR 0x1A08
 
 #define MODBUS_test_for_write_uptime_ADDR 0x1A0C
-
 
 #endif

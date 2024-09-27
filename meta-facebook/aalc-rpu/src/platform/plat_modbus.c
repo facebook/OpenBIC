@@ -640,10 +640,6 @@ uint8_t modbus_read_uptime(modbus_command_mapping *cmd)
 
 	memcpy(cmd->data, uptime, EEPROM_UPTIME_SIZE);
 	regs_reverse(cmd->data_len, cmd->data);
-	printf("total uptime: \n");
-	for (int i = 0; i < cmd->data_len; i++) {
-		printf("0x%02x, ", cmd->data[i]);
-	}
 
 	return MODBUS_EXC_NONE;
 }
@@ -655,14 +651,10 @@ uint8_t modbus_read_time_since_last_on(modbus_command_mapping *cmd)
 	uint32_t get_time_since_last_on_mins =
 		(uint32_t)(k_uptime_get_32() / 60000); // mins(60 *1000 ms)
 
-	printf("type: %d\n, value type: %d", k_uptime_get_32(), get_time_since_last_on_mins);
-
 	// swap high and low byte
 
 	cmd->data[0] = get_time_since_last_on_mins >> 16;
 	cmd->data[1] = get_time_since_last_on_mins & 0xffff;
-
-	printf("time_since_last_on return: %d\n", *(uint32_t *)cmd->data);
 
 	return MODBUS_EXC_NONE;
 }

@@ -21,7 +21,7 @@ int is_leap_year(int year)
 // Get the number of days in a specific month of a given year
 int days_in_month(int year, int month)
 {
-	int days[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+	const int days[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 	if (month == 2 && is_leap_year(year)) {
 		return 29;
 	}
