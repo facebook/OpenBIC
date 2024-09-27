@@ -125,17 +125,6 @@ void aalc_leak_behavior(uint8_t sensor_num)
 	gpio_set(RPU_LEAK_ALERT_N, 0);
 }
 
-bool plat_gpio_immediate_int_cb(uint8_t gpio_num)
-{
-	bool ret = false;
-
-	if (gpio_num == PWRGD_P48V_BRI) {
-		ret = true;
-	}
-
-	return ret;
-}
-
 void shutdown_save_uptime_action()
 {
 	uint8_t pre_time[EEPROM_UPTIME_SIZE] = { 0 };
@@ -143,16 +132,19 @@ void shutdown_save_uptime_action()
 		LOG_ERR("read uptime fail!");
 
 	uint32_t old_uptime =
-		(pre_time[3] << 24) | (pre_time[2] << 16) | (pre_time[1] << 8) | pre_time[0];
-	//LOG_INF("old uptime: %d\n", old_uptime);
+		(pre_time[0] << 24) | (pre_time[1] << 16) | (pre_time[2] << 8) | pre_time[3];
+	LOG_DBG("old uptime: %d\n", old_uptime);
 
 	uint32_t get_uptime_mins = (k_uptime_get() / 60000); // mins(60 *1000 ms)
-	//LOG_INF("uptime: %d\n", get_uptime_mins);
+	LOG_DBG("uptime: %d\n", get_uptime_mins);
 
 	get_uptime_mins += old_uptime;
 
 	uint8_t temp[EEPROM_UPTIME_SIZE] = { 0 };
-	memcpy(temp, &get_uptime_mins, EEPROM_UPTIME_SIZE);
+	temp[0] = get_uptime_mins >> 24;
+	temp[1] = get_uptime_mins >> 16;
+	temp[2] = get_uptime_mins >> 8;
+	temp[3] = get_uptime_mins;
 
 	if (!plat_eeprom_write(EEPROM_UPTIME_OFFSET, temp, EEPROM_UPTIME_SIZE))
 		LOG_ERR("write uptime fail!");

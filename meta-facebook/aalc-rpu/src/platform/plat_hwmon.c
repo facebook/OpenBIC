@@ -210,8 +210,6 @@ void rpu_remote_power_cycle()
 	printk("rpu_remote_power_cycle\n");
 	// disable sensor poll
 	disable_sensor_poll();
-	// save uptime
-	shutdown_save_uptime_action(); 
 
 	if (!nct7363_wdt_all_disable()) {
 		LOG_ERR("nct7363 wdt all disable fail when power cycle!");
