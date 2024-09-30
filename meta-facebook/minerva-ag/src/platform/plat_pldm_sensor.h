@@ -227,5 +227,16 @@ void plat_pldm_sensor_change_vr_dev();
 void plat_pldm_sensor_change_cpu_bus();
 void plat_pldm_sensor_change_retimer_dev();
 bool is_dc_access(uint8_t sensor_num);
+void set_plat_sensor_polling_enable_flag(bool value);
+void set_plat_sensor_ubc_polling_enable_flag(bool value);
+void set_plat_sensor_temp_polling_enable_flag(bool value);
+void set_plat_sensor_vr_polling_enable_flag(bool value);
+bool get_plat_sensor_polling_enable_flag();
+bool get_plat_sensor_ubc_polling_enable_flag();
+bool get_plat_sensor_temp_polling_enable_flag();
+bool get_plat_sensor_vr_polling_enable_flag();
+bool is_ubc_access(uint8_t sensor_num);
+bool is_temp_access(uint8_t sensor_num);
+bool is_vr_access(uint8_t sensor_num);
 
 #endif
