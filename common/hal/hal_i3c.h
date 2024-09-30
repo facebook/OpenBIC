@@ -117,6 +117,8 @@ typedef struct _i3c_ibi_dev {
 } i3c_ibi_dev;
 
 void util_init_i3c(void);
+int i3c_mutex_lock(int bus);
+int i3c_mutex_unlock(int bus);
 int i3c_smq_read(I3C_MSG *msg);
 int i3c_smq_write(I3C_MSG *msg);
 int i3c_slave_mqueue_read(const struct device *dev, uint8_t *dest, int budget);
