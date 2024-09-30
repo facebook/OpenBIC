@@ -29,6 +29,8 @@
 LOG_MODULE_REGISTER(plat_power_seq);
 
 K_WORK_DELAYABLE_DEFINE(set_dc_on_5s_work, set_DC_on_delayed_status);
+K_WORK_DELAYABLE_DEFINE(set_cxl1_vr_ready_work, set_cxl1_vr_access_delayed_status);
+K_WORK_DELAYABLE_DEFINE(set_cxl2_vr_ready_work, set_cxl2_vr_access_delayed_status);
 K_WORK_DELAYABLE_DEFINE(cxl1_ready_thread, cxl1_ready_handler);
 K_WORK_DELAYABLE_DEFINE(cxl2_ready_thread, cxl2_ready_handler);
 K_WORK_DELAYABLE_DEFINE(enable_asic1_rst_work, enable_asic1_rst);
@@ -600,7 +602,7 @@ void cxl1_ready_handler()
 		LOG_INF("CXL1 is ready");
 		/* Switch muxs to BIC*/
 		switch_mux_to_bic(IOE_SWITCH_CXL1_VR_TO_BIC);
-		set_cxl_vr_access(CXL_ID_1, true);
+		k_work_schedule(&set_cxl1_vr_ready_work, K_SECONDS(VR_READY_DELAY_SEC));
 
 		return;
 	}
@@ -633,7 +635,7 @@ void cxl2_ready_handler()
 		LOG_INF("CXL2 is ready");
 		/* Switch muxs to BIC*/
 		switch_mux_to_bic(IOE_SWITCH_CXL2_VR_TO_BIC);
-		set_cxl_vr_access(CXL_ID_2, true);
+		k_work_schedule(&set_cxl2_vr_ready_work, K_SECONDS(VR_READY_DELAY_SEC));
 
 		return;
 	}
@@ -654,6 +656,16 @@ void set_cxl_vr_access(uint8_t cxl_id, bool value)
 	}
 	is_cxl_vr_accessible[cxl_id] = value;
 	return;
+}
+
+void set_cxl1_vr_access_delayed_status()
+{
+	set_cxl_vr_access(CXL_ID_1, true);
+}
+
+void set_cxl2_vr_access_delayed_status()
+{
+	set_cxl_vr_access(CXL_ID_2, true);
 }
 
 bool cxl1_vr_access(uint8_t sensor_num)
