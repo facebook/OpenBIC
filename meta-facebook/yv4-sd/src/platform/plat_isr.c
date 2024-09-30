@@ -139,7 +139,7 @@ add_sel_info event_work_items[] = {
 	{
 		.is_init = false,
 		.gpio_num = CPU_SMERR_BIC_N,
-		.event_type = SYS_MANAMENT_ERROR,
+		.event_type = SYS_MANAGEMENT_ERROR,
 		.assert_type = EVENT_ASSERTED,
 	},
 };
