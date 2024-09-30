@@ -136,6 +136,12 @@ add_sel_info event_work_items[] = {
 		.event_type = P12V_STBY_UV,
 		.assert_type = EVENT_ASSERTED,
 	},
+	{
+		.is_init = false,
+		.gpio_num = CPU_SMERR_BIC_N,
+		.event_type = SYS_MANAMENT_ERROR,
+		.assert_type = EVENT_ASSERTED,
+	},
 };
 
 void init_event_work()
@@ -747,5 +753,22 @@ void ISR_PVDDCR_CPU1_PMALERT()
 		LOG_ERR("PVDDCR CPU1 PMALERT event triggered");
 		k_work_schedule_for_queue(&plat_work_q, &vr_event_work_item[3].add_sel_work,
 					  K_MSEC(VR_EVENT_DELAY_MS));
+	}
+}
+
+void ISR_CPU_SMERR_BIC()
+{
+	if (get_DC_status() == true) {
+		add_sel_info *event_item = find_event_work_items(CPU_SMERR_BIC_N);
+		if (event_item == NULL) {
+			LOG_ERR("Fail to find event items, gpio num: 0x%x", CPU_SMERR_BIC_N);
+			return;
+		}
+
+		if ((gpio_get(CPU_SMERR_BIC_N) == GPIO_LOW)) {
+			LOG_INF("ISR_CPU_SMERR_BIC assert");
+			event_item->assert_type = EVENT_ASSERTED;
+		}
+		k_work_schedule_for_queue(&plat_work_q, &event_item->add_sel_work, K_NO_WAIT);
 	}
 }

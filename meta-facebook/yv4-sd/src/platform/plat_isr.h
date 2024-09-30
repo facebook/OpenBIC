@@ -62,6 +62,7 @@ void ISR_PVDDCR_CPU1_PMALERT();
 void ISR_UV_DETECT();
 void IST_PLTRST();
 void ISR_APML_ALERT();
+void ISR_CPU_SMERR_BIC();
 
 void init_vr_event_work();
 void process_vr_pmalert_ocp_sel(struct k_work *work_item);
