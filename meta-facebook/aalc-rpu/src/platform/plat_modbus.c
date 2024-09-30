@@ -43,6 +43,8 @@
 #include "plat_fsc.h"
 #include "plat_led.h"
 #include "plat_status.h"
+#include "plat_fru_date.h"
+#include "plat_isr.h"
 
 LOG_MODULE_REGISTER(plat_modbus);
 
@@ -54,6 +56,10 @@ LOG_MODULE_REGISTER(plat_modbus);
 #define UPADTE_FW_DATA_LENGTH_MIN 3 // contain 2 regs(offeset)+ 1 reg(length) at least
 #define LOG_BEGIN_MODBUS_ADDR MODBUS_EVENT_1_ERROR_LOG_ADDR //Event 1 Error log Modbus Addr
 
+#define TIMER_SINCE_LAST_ON_LENGTH 4 // timer_since_last_on is 4 bytes
+#define BOARD_MFG_DATA_READ_START_OFFSET 3
+
+#define IPMI_FRU_DATA_LENGTH_MASK BIT_MASK(6)
 //{ DT_PROP(DT_INST(0, zephyr_modbus_serial), label) }
 
 typedef struct {
@@ -622,6 +628,37 @@ static uint8_t modbus_to_do_set(modbus_command_mapping *cmd)
 	return MODBUS_EXC_NONE;
 }
 
+uint8_t modbus_read_uptime(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint8_t uptime[EEPROM_UPTIME_SIZE] = { 0 };
+	if (!plat_eeprom_read(EEPROM_UPTIME_OFFSET, uptime, EEPROM_UPTIME_SIZE)) {
+		LOG_ERR("read uptime fail!");
+		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
+	}
+
+	memcpy(cmd->data, uptime, EEPROM_UPTIME_SIZE);
+	regs_reverse(cmd->data_len, cmd->data);
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_read_time_since_last_on(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint32_t get_time_since_last_on_mins =
+		(uint32_t)(k_uptime_get_32() / 60000); // mins(60 *1000 ms)
+
+	// swap high and low byte
+
+	cmd->data[0] = get_time_since_last_on_mins >> 16;
+	cmd->data[1] = get_time_since_last_on_mins & 0xffff;
+
+	return MODBUS_EXC_NONE;
+}
+
 modbus_command_mapping modbus_command_table[] = {
 	// addr, write_fn, read_fn, arg0, arg1, arg2, size
 	{ MODBUS_BPB_RPU_COOLANT_FLOW_RATE_LPM_ADDR, NULL, modbus_get_senser_reading,
@@ -999,7 +1036,6 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_V_1_2_AUX_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_V_1_2_AUX, 1, -2, 1 },
 	{ MODBUS_V_5_USB_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_V_5_USB, 1, -2, 1 },
 	//FW UPDATE
-	{ MODBUS_FW_REVISION_ADDR, NULL, modbus_get_fw_reversion, 0, 0, 0, 4 },
 	{ MODBUS_FW_DOWNLOAD_ADDR, modbus_fw_download, NULL, 0, 0, 0, 103 },
 	// i2c master write read
 	{ MODBUS_MASTER_I2C_WRITE_READ_ADDR, modbus_command_i2c_master_write_read, NULL, 0, 0, 0,
@@ -1159,13 +1195,24 @@ modbus_command_mapping modbus_command_table[] = {
 	// sensor poll
 	{ MODBUS_GET_SET_SENSOR_POLL_ADDR, modbus_sensor_poll_set, modbus_sensor_poll_get, 0, 0, 0,
 	  1 },
-	// failure status
-	{ MODBUS_GET_SET_FAILURE_STATUS_ADDR, modbus_status_flag_set, modbus_status_flag_get,
-	  STATUS_FLAG_FAILURE, 0, 0, 1 },
-	// eeprom related
-	{ MODBUS_GET_SET_HMI_VER_ADDR, modbus_write_hmi_version, modbus_read_hmi_version, 0, 0, 0,
-	  8 },
-
+	// RPU FRU
+	{ MODBUS_RPU_FBPN_ADDR, NULL, NULL, 0, 0, 0, 8 },
+	{ MODBUS_RPU_MFR_MODEL_ADDR, NULL, NULL, 0, 0, 0, 8 },
+	{ MODBUS_RPU_MFR_DATE_ADDR, NULL, NULL, 0, 0, 0, 4 },
+	{ MODBUS_RPU_MFR_SERIAL_ADDR, NULL, NULL, 0, 0, 0, 8 },
+	{ MODBUS_RPU_WORKORDER_ADDR, NULL, NULL, 0, 0, 0, 4 },
+	{ MODBUS_RPU_HW_REVISION_ADDR, NULL, NULL, 0, 0, 0, 4 },
+	{ MODBUS_RPU_PLC_FW_REVISION_ADDR, NULL, modbus_get_fw_reversion, 0, 0, 0, 4 },
+	{ MODBUS_TOTAL_UP_TIME_ADDR, NULL, modbus_read_uptime, 0, 0, 0, 2 },
+	{ MODBUS_TIME_SINCE_LAST_ON_ADDR, NULL, modbus_read_time_since_last_on, 0, 0, 0, 2 },
+	{ MODBUS_RPU_HMI_FW_REVISION_ADDR, modbus_write_hmi_version, modbus_read_hmi_version, 0, 0,
+	  0, 4 },
+	{ MODBUS_RPU_HEX_FW_REVISION_ADDR, NULL, NULL, 0, 0, 0, 2 },
+	{ MODBUS_RPU_NOAHS_ARK_CONFIGURATION_ADDR, NULL, NULL, 0, 0, 0, 4 },
+	{ MODBUS_RPU_RESERVIOR_AND_PUMPING_UNIT_FBPN_ADDR, NULL, NULL, 0, 0, 0, 4 },
+	{ MODBUS_HEAT_EXCHANGER_CONTROL_BOX_FBPN_ADDR, NULL, NULL, 0, 0, 0, 4 },
+	{ MODBUS_HEAT_EXCHANGER_FANS_FBPN_ADDR, NULL, NULL, 0, 0, 0, 4 },
+	{ MODBUS_HEAT_EXCHANGER_FAN_CONTROL_BOX_FBPN_ADDR, NULL, NULL, 0, 0, 0, 4 },
 };
 
 static modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)
@@ -1246,6 +1293,7 @@ static int coil_wr(uint16_t addr, bool state)
 				}
 			}
 		} else {
+			shutdown_save_uptime_action();
 			submit_bic_warm_reset();
 		}
 		// return success for Setting RPU RUN

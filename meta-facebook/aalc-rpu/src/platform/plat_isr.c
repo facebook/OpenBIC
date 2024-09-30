@@ -10,6 +10,9 @@
 #include "plat_log.h"
 #include "plat_threshold.h"
 #include "plat_status.h"
+#include "plat_fru.h"
+
+LOG_MODULE_REGISTER(plat_isr);
 
 void deassert_all_rpu_ready_pin(void)
 {
@@ -120,4 +123,29 @@ void aalc_leak_behavior(uint8_t sensor_num)
 		led_ctrl(LED_IDX_E_LEAK, LED_START_BLINK);
 	fault_led_control();
 	gpio_set(RPU_LEAK_ALERT_N, 0);
+}
+
+void shutdown_save_uptime_action()
+{
+	uint8_t pre_time[EEPROM_UPTIME_SIZE] = { 0 };
+	if (!plat_eeprom_read(EEPROM_UPTIME_OFFSET, pre_time, EEPROM_UPTIME_SIZE))
+		LOG_ERR("read uptime fail!");
+
+	uint32_t old_uptime =
+		(pre_time[0] << 24) | (pre_time[1] << 16) | (pre_time[2] << 8) | pre_time[3];
+	LOG_DBG("old uptime: %d\n", old_uptime);
+
+	uint32_t get_uptime_mins = (k_uptime_get() / 60000); // mins(60 *1000 ms)
+	LOG_DBG("uptime: %d\n", get_uptime_mins);
+
+	get_uptime_mins += old_uptime;
+
+	uint8_t temp[EEPROM_UPTIME_SIZE] = { 0 };
+	temp[0] = get_uptime_mins >> 24;
+	temp[1] = get_uptime_mins >> 16;
+	temp[2] = get_uptime_mins >> 8;
+	temp[3] = get_uptime_mins;
+
+	if (!plat_eeprom_write(EEPROM_UPTIME_OFFSET, temp, EEPROM_UPTIME_SIZE))
+		LOG_ERR("write uptime fail!");
 }
