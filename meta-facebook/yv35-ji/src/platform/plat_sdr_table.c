@@ -201,7 +201,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x28, // UCT
+		0x2D, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
 		0x05, // LCT
@@ -632,10 +632,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x8F, // UNRT
-		0x85, // UCT
+		0x88, // UCT
 		0x84, // UNCT
 		0x65, // LNRT
-		0x6B, // LCT
+		0x69, // LCT
 		0x6C, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
@@ -696,7 +696,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0xC6, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
-		0xA0, // LCT
+		0x9e, // LCT
 		0x00, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
@@ -741,7 +741,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_VOL, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x06, // [7:0] M bits
+		0x02, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -754,10 +754,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x3A, // UCT
+		0xb1, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
-		0x34, // LCT
+		0x9a, // LCT
 		0x00, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
@@ -807,7 +807,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
 		0x00, // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
-		0xE0, // Rexp, Bexp
+		0x00, // Rexp, Bexp
 		0x00, // analog characteristic
 		0x00, // nominal reading
 		0x00, // normal maximum
@@ -815,10 +815,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x6C, // UCT
+		0x00, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
-		0x4A, // LCT
+		0x00, // LCT
 		0x00, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
@@ -863,12 +863,12 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_VOL, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x01, // [7:0] M bits
+		0x05, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
 		0x00, // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
-		0xF0, // Rexp, Bexp
+		0xE0, // Rexp, Bexp
 		0x00, // analog characteristic
 		0x00, // nominal reading
 		0x00, // normal maximum
@@ -876,10 +876,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x24, // UCT
+		0x43, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
-		0x1B, // LCT
+		0x35, // LCT
 		0x00, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
@@ -929,7 +929,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
 		0x00, // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
-		0xE0, // Rexp, Bexp
+		0x00, // Rexp, Bexp
 		0x00, // analog characteristic
 		0x00, // nominal reading
 		0x00, // normal maximum
@@ -937,10 +937,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x7E, // UCT
+		0x00, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
-		0x45, // LCT
+		0x00, // LCT
 		0x00, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
@@ -998,10 +998,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x84, // UCT
+		0x81, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
-		0x6C, // LCT
+		0x6f, // LCT
 		0x00, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
@@ -1046,7 +1046,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_VOL, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x06, // [7:0] M bits
+		0x02, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -1059,10 +1059,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x3A, // UCT
+		0xb1, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
-		0x34, // LCT
+		0x9a, // LCT
 		0x00, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
@@ -1120,10 +1120,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x7F, // UCT
+		0x81, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
-		0x71, // LCT
+		0x6f, // LCT
 		0x00, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
@@ -1181,7 +1181,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x3A, // UCT
+		0x3b, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
 		0x2E, // LCT
@@ -1242,10 +1242,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x71, // UCT
+		0x73, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
-		0x64, // LCT
+		0x62, // LCT
 		0x00, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
@@ -1303,10 +1303,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0xC4, // UCT
+		0xC7, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
-		0xA9, // LCT
+		0xa6, // LCT
 		0x00, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
@@ -1351,7 +1351,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_VOL, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x19, // [7:0] M bits
+		0x05, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -1364,10 +1364,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x15, // UCT
+		0x6b, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
-		0x13, // LCT
+		0x5d, // LCT
 		0x00, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
@@ -1428,7 +1428,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x66, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
-		0x4F, // LCT
+		0x4e, // LCT
 		0x00, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
@@ -1548,10 +1548,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x7E, // UCT
+		0x77, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
-		0x45, // LCT
+		0x42, // LCT
 		0x00, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
@@ -1609,10 +1609,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x6C, // UCT
+		0x71, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
-		0x4A, // LCT
+		0x44, // LCT
 		0x00, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
