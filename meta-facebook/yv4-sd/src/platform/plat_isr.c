@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <pmbus.h>
 #include "libipmi.h"
+#include "app_handler.h"
 #include "kcs.h"
 #include "rg3mxxb12.h"
 #include "power_status.h"
@@ -245,6 +246,7 @@ K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_delayed_status);
 K_WORK_DEFINE(reinit_i3c_work, reinit_i3c_hub);
 K_WORK_DEFINE(switch_i3c_dimm_work, switch_i3c_dimm_mux_to_cpu);
 K_WORK_DELAYABLE_DEFINE(PROC_FAIL_work, PROC_FAIL_handler);
+K_WORK_DELAYABLE_DEFINE(ABORT_FRB2_WDT_THREAD, abort_frb2_wdt_thread);
 
 #define DC_ON_5_SECOND 5
 #define PROC_FAIL_START_DELAY_SECOND 10
@@ -661,6 +663,9 @@ void IST_PLTRST()
 		LOG_ERR("Fail to find event items, gpio num: 0x%x", RST_PLTRST_BIC_N);
 		return;
 	}
+
+	// Reset WDT
+	k_work_schedule_for_queue(&plat_work_q, &ABORT_FRB2_WDT_THREAD, K_NO_WAIT);
 
 	k_work_schedule_for_queue(&plat_work_q, &event_item->add_sel_work, K_NO_WAIT);
 }
