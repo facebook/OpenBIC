@@ -28,6 +28,7 @@
 #include "pldm.h"
 #include "ssif.h"
 #include "sbmr.h"
+#include "pmbus.h"
 #include "util_worker.h"
 #include "libutil.h"
 #include "libipmi.h"
@@ -268,6 +269,7 @@ static void read_cpu_power_seq_status(struct k_work *work)
 	if (CPU_power_good() == true)
 		return;
 
+	/* CHECK1 - If cpu abnormal off, add SEL, it might trigger from CPU or VR. */
 	I2C_MSG i2c_msg = { 0 };
 	uint8_t retry = 3;
 	i2c_msg.bus = I2C_BUS1;
@@ -282,21 +284,76 @@ static void read_cpu_power_seq_status(struct k_work *work)
 	}
 
 	LOG_INF("CPU power seq state: 0x%x", i2c_msg.data[0]);
+	if (i2c_msg.data[0] != CPU_SHDN_STATE)
+		return;
 
-	/* if cpu abnormal off, add SEL, it might trigger from CPU or VR. */
-	if (i2c_msg.data[0] == CPU_SHDN_STATE) {
-		LOG_WRN("CPU abnormal off, add CPU thermal trip or VR hot sel.");
-		struct ipmi_storage_add_sel_req add_sel_msg = { 0 };
-		add_sel_msg.event.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
-		add_sel_msg.event.sensor_num = SENSOR_NUM_SYSTEM_STATUS;
-		add_sel_msg.event.event_dir_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
-		add_sel_msg.event.event_data[0] = IPMI_SYS_EVENT_OFFSET_CPU_THERM_TRIP_OR_VR_HOT;
-		add_sel_msg.event.event_data[1] = 0xFF;
-		add_sel_msg.event.event_data[2] = 0xFF;
-		if (!mctp_add_sel_to_ipmi(&add_sel_msg, ADD_COMMON_SEL)) {
-			LOG_ERR("Failed to add CPU thermal trip or VR hot sel.");
+	LOG_WRN("CPU abnormal off, add CPU thermal trip or VR hot sel.");
+	struct ipmi_storage_add_sel_req add_sel_msg = { 0 };
+	add_sel_msg.event.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+	add_sel_msg.event.sensor_num = SENSOR_NUM_SYSTEM_STATUS;
+	add_sel_msg.event.event_dir_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+	add_sel_msg.event.event_data[0] = IPMI_SYS_EVENT_OFFSET_CPU_THERM_TRIP_OR_VR_HOT;
+	add_sel_msg.event.event_data[1] = 0xFF;
+	add_sel_msg.event.event_data[2] = 0xFF;
+	if (!mctp_add_sel_to_ipmi(&add_sel_msg, ADD_COMMON_SEL)) {
+		LOG_ERR("Failed to add CPU thermal trip or VR hot sel.");
+	}
+
+	/* CHECK2 - Try to read primary CPUVDD whether CPU shutdown by vr OCP */
+	if (get_board_revision() < SYS_BOARD_PVT) // VR run with standby power only >= PVT
+		return;
+
+	if (get_oth_module() != OTH_MODULE_PRIMARY)
+		return;
+
+	gpio_set(FM_VR_FW_PROGRAM_L, GPIO_LOW); // In case of CPU suddenly turns on
+	gpio_set(BIC_CPLD_VRD_MUX_SEL, GPIO_LOW);
+
+	i2c_msg.bus = I2C_BUS3;
+	i2c_msg.target_addr = (CPUVDD_I2C_ADDR >> 1);
+	i2c_msg.tx_len = 2;
+	i2c_msg.data[0] = PMBUS_PAGE;
+	i2c_msg.data[1] = PMBUS_PAGE_0;
+	if (i2c_master_write(&i2c_msg, retry)) {
+		LOG_ERR("Failed to switch CPUVDD page to 0.");
+		goto exit;
+	}
+
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = PMBUS_STATUS_BYTE;
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("Failed to read CPUVDD status byte.");
+		goto exit;
+	}
+
+	LOG_INF("CPUVDD byte status: 0x%x", i2c_msg.data[0]);
+	if (!(i2c_msg.data[0] & BIT(4)))
+		goto exit;
+
+	LOG_WRN("CPUVDD OCP, add OCP sel.");
+	memset(&add_sel_msg, 0, sizeof(add_sel_msg));
+	add_sel_msg.event.sensor_type = IPMI_OEM_SENSOR_TYPE_VR;
+	add_sel_msg.event.sensor_num = SENSOR_NUM_VR_OCP;
+	add_sel_msg.event.event_dir_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+	add_sel_msg.event.event_data[0] = IPMI_EVENT_CPUVDD_OCP_ASSERT;
+	add_sel_msg.event.event_data[1] = 0xFF;
+	add_sel_msg.event.event_data[2] = 0xFF;
+	if (!mctp_add_sel_to_ipmi(&add_sel_msg, ADD_COMMON_SEL)) {
+		LOG_ERR("Failed to add OCP sel.");
+		goto exit;
+	} else {
+		i2c_msg.tx_len = 1;
+		i2c_msg.data[0] = PMBUS_CLEAR_FAULTS;
+		if (i2c_master_write(&i2c_msg, retry)) {
+			LOG_ERR("Failed to clear CPUVDD fault.");
+			goto exit;
 		}
 	}
+
+exit:
+	gpio_set(BIC_CPLD_VRD_MUX_SEL, GPIO_HIGH);
+	gpio_set(FM_VR_FW_PROGRAM_L, GPIO_HIGH);
 }
 
 K_WORK_DELAYABLE_DEFINE(read_cpu_power_seq_status_work, read_cpu_power_seq_status);
