@@ -371,11 +371,11 @@ int i3c_controller_write(I3C_MSG *msg)
 		LOG_ERR("Failed to write messages to bus 0x%d addr 0x%x, ret: %d", msg->bus,
 			msg->target_addr, ret);
 		k_mutex_unlock(&mutex_dev[msg->bus]);
-		return -1;
+		return false;
 	}
 
 	k_mutex_unlock(&mutex_dev[msg->bus]);
-	return 0;
+	return true;
 }
 
 int i3c_set_pid(I3C_MSG *msg, uint16_t slot_pid)
