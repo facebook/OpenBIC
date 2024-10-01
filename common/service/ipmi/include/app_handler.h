@@ -54,4 +54,6 @@ void APP_GET_SYSTEM_GUID(ipmi_msg *msg);
 
 void IPMI_APP_handler(ipmi_msg *msg);
 
+void abort_frb2_wdt_thread();
+
 #endif
