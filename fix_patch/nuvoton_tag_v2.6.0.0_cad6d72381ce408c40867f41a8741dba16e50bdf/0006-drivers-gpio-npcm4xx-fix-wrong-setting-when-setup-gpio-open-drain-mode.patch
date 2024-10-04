@@ -1,0 +1,42 @@
+From fe2f34495842f21dd79505cf9a4847158b29bb84 Mon Sep 17 00:00:00 2001
+From: James Chiang <cpchiang1@nuvoton.com>
+Date: Wed, 18 Sep 2024 18:29:47 -0700
+Subject: [PATCH] drivers: gpio: npcm4xx: fix wrong setting when setup gpio
+ open drain mode
+
+fix wrong setting when setup gpio open drain mode.
+
+only output open drain mode with pull-up setting need enable DEVALTCX bit.
+
+Signed-off-by: James Chiang <cpchiang1@nuvoton.com>
+---
+ drivers/gpio/gpio_npcm4xx.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/gpio/gpio_npcm4xx.c b/drivers/gpio/gpio_npcm4xx.c
+index 70970dcfef..0d9e4a6358 100644
+--- a/drivers/gpio/gpio_npcm4xx.c
++++ b/drivers/gpio/gpio_npcm4xx.c
+@@ -146,13 +146,14 @@ static int gpio_npcm4xx_config(const struct device *dev,
+ 	else
+ 		inst->PTYPE &= ~mask;
+ 
+-	/* Select opend drain with pull up need enable GPIO_PULL_EN */
+-	if (((flags & GPIO_OPEN_DRAIN) != 0) &&
+-	    ((flags & GPIO_PULL_UP) != 0)) {
+-		inst_scfg->DEVALTCX |= BIT(NPCM4XX_DEVALTCX_GPIO_PULL_EN);
++	/* Open drain output mode want to enable internal pull up/down */
++	if ((flags & GPIO_OPEN_DRAIN) && (flags & GPIO_OUTPUT)) {
++		if ((flags & GPIO_PULL_UP)) {
++			inst_scfg->DEVALTCX |= BIT(NPCM4XX_DEVALTCX_GPIO_PULL_EN);
++		}
+ 	}
+ 
+-	/* Select pull-up/down of GPIO 0:pull-up 1:pull-down */
++	/* Enable and select pull-up/down of GPIO 0:pull-up 1:pull-down */
+ 	if ((flags & GPIO_PULL_UP) != 0) {
+ 		inst->PPUD  &= ~mask;
+ 		inst->PPULL |= mask;
+-- 
+2.25.1
+
