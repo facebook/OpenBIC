@@ -6037,7 +6037,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_E1S_Boot_VOLT_V",
+		.sensorName = u"MB_INA233_E1S_BOOT_VOLT_V",
 	},
 	{
 		// MB_INA233_E1S_Data_VOLT_V
@@ -6054,7 +6054,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_E1S_Data_VOLT_V",
+		.sensorName = u"MB_INA233_E1S_DATA_VOLT_V",
 	},
 	{
 		// MB_VR_CPU0_CURR_A
@@ -6156,7 +6156,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_x8_RTM_CURR_A",
+		.sensorName = u"MB_INA233_X8_RTM_CURR_A",
 	},
 	{
 		// MB_INA233_x16_RTM_CURR_A
@@ -6173,7 +6173,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_x16_RTM_CURR_A",
+		.sensorName = u"MB_INA233_X16_RTM_CURR_A",
 	},
 	{
 		// MB_INA233_E1S_Boot_CURR_A
@@ -6190,7 +6190,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_E1S_Boot_CURR_A",
+		.sensorName = u"MB_INA233_E1S_BOOT_CURR_A",
 	},
 	{
 		// MB_INA233_E1S_Data_CURR_A
@@ -6207,7 +6207,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_E1S_Data_CURR_A",
+		.sensorName = u"MB_INA233_E1S_DATA_CURR_A",
 	},
 	{
 		// MB_VR_CPU0_PWR_W
@@ -6530,7 +6530,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_x8_RTM_PWR_W",
+		.sensorName = u"MB_INA233_X8_RTM_PWR_W",
 	},
 	{
 		// MB_INA233_x16_RTM_PWR_W
@@ -6547,7 +6547,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_x16_RTM_PWR_W",
+		.sensorName = u"MB_INA233_X16_RTM_PWR_W",
 	},
 	{
 		// MB_INA233_E1S_Boot_PWR_W
@@ -6564,7 +6564,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_E1S_Boot_PWR_W",
+		.sensorName = u"MB_INA233_E1S_BOOT_PWR_W",
 	},
 	{
 		// MB_INA233_E1S_Data_PWR_W
@@ -6581,7 +6581,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_E1S_Data_PWR_W",
+		.sensorName = u"MB_INA233_E1S_DATA_PWR_W",
 	}
 };
 
