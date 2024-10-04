@@ -2511,7 +2511,7 @@ pldm_sensor_info plat_pldm_sensor_mb_temp_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0x00000000, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x00000028, //uint32_t critical_high;
+			0x0000002D, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
 			0x00000096, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
@@ -2703,7 +2703,7 @@ pldm_sensor_info plat_pldm_sensor_cpu_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xC2, //uint8_t supported_thresholds;
+			0xC6, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //int32_t state_transition_interval;
 			5, //int32_t update_interval;
@@ -2718,7 +2718,7 @@ pldm_sensor_info plat_pldm_sensor_cpu_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x00015F90, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x00017318, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 		},
 		.update_time = 0,
