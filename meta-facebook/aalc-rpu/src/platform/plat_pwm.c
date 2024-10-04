@@ -23,6 +23,7 @@
 #include "plat_fsc.h"
 #include "plat_pwm.h"
 #include "nct7363.h"
+#include "plat_status.h"
 
 LOG_MODULE_REGISTER(plat_pwm);
 
@@ -235,12 +236,26 @@ static uint8_t ctl_pwm_dev(uint8_t index_start, uint8_t index_end, uint8_t duty)
 	}
 
 	uint8_t ret = 0;
+	uint32_t redundant_mode = get_status_flag(STATUS_FLAG_PUMP_REDUNDANT);
+	uint8_t redundant_dev = (redundant_mode == PUMP_REDUNDANT_12) ? PWM_DEVICE_E_PB_PUMB_3 :
+				(redundant_mode == PUMP_REDUNDANT_13) ? PWM_DEVICE_E_PB_PUMB_2 :
+				(redundant_mode == PUMP_REDUNDANT_23) ? PWM_DEVICE_E_PB_PUMB_1 :
+									PWM_DEVICE_E_MAX;
 
 	for (uint8_t i = index_start; i <= index_end; i++) {
-		if (plat_pwm_ctrl(i, duty)) {
-			LOG_ERR("Failed to set PWM device %d duty %d", i, duty);
-			ret = 1;
-			//break;
+		if (i == redundant_dev) {
+			// redundant duty 30
+			if (plat_pwm_ctrl(i, 30)) {
+				LOG_DBG("Failed to set PWM device %d redundant duty %d", i, duty);
+				ret = 1;
+				//break;
+			}
+		} else {
+			if (plat_pwm_ctrl(i, duty)) {
+				LOG_DBG("Failed to set PWM device %d duty %d", i, duty);
+				ret = 1;
+				//break;
+			}
 		}
 	}
 

@@ -137,6 +137,15 @@ bool pump_setting_set_auto_tune_flag(pump_reset_struct *data, uint8_t bit_val)
 	return true;
 }
 
+bool pump_setting_set_pump_redundant(pump_reset_struct *data, uint8_t bit_val)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+
+	pump_redundant_enable(bit_val);
+
+	return true;
+}
+
 bool set_all_pump_power(bool switch_val)
 {
 	static uint8_t pump_sensor_nums[] = { SENSOR_NUM_PB_1_PUMP_TACH_RPM,
@@ -245,7 +254,6 @@ void rpu_remote_power_cycle()
 }
 
 K_WORK_DEFINE(rpu_pwr_cycle_work, rpu_remote_power_cycle);
-
 bool rpu_remote_power_cycle_function(pump_reset_struct *data, uint8_t bit_val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
@@ -255,6 +263,42 @@ bool rpu_remote_power_cycle_function(pump_reset_struct *data, uint8_t bit_val)
 
 	k_work_submit(&rpu_pwr_cycle_work);
 	return true;
+}
+
+// pump redundant
+void pump_redundant_handler(struct k_timer *timer)
+{
+	uint32_t current_state = get_status_flag(STATUS_FLAG_PUMP_REDUNDANT);
+
+	current_state++;
+	if (current_state == PUMP_REDUNDANT_MAX)
+		current_state = PUMP_REDUNDANT_12;
+	set_status_flag(STATUS_FLAG_PUMP_REDUNDANT, 0xFF, current_state);
+}
+void pump_redundant_handler_disable(struct k_timer *timer)
+{
+	set_status_flag(STATUS_FLAG_PUMP_REDUNDANT, 0xFF, PUMP_REDUNDANT_DISABLE);
+}
+K_TIMER_DEFINE(pump_redundant_timer, pump_redundant_handler, pump_redundant_handler_disable);
+
+static uint8_t pump_redundant_switch_time = 7;
+uint8_t get_pump_redundant_switch_time()
+{
+	return pump_redundant_switch_time;
+}
+void set_pump_redundant_switch_time(uint8_t day)
+{
+	pump_redundant_switch_time = day;
+}
+void pump_redundant_enable(uint8_t onoff)
+{
+	if (onoff) {
+		if (get_status_flag(STATUS_FLAG_PUMP_REDUNDANT) == PUMP_REDUNDANT_DISABLE)
+			k_timer_start(&pump_redundant_timer, K_NO_WAIT,
+				      K_HOURS(pump_redundant_switch_time * 24)); // how many days
+	} else {
+		k_timer_stop(&pump_redundant_timer);
+	}
 }
 
 // If a failure occurs, return true

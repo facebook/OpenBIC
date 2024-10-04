@@ -415,10 +415,12 @@ void rpu_internal_fan_failure_do(uint32_t sensor_num, uint32_t status)
 
 void abnormal_press_do(uint32_t unused, uint32_t status)
 {
-	if (status == THRESHOLD_STATUS_NORMAL)
+	if (status == THRESHOLD_STATUS_NORMAL) {
 		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_ABNORMAL_PRESS, 0);
-	else
+	} else {
 		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_ABNORMAL_PRESS, 1);
+		error_log_event(SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA, IS_ABNORMAL_VAL);
+	}
 }
 
 void abnormal_temp_do(uint32_t sensor_num, uint32_t status)
@@ -644,6 +646,7 @@ void abnormal_flow_do(uint32_t thres_tbl_idx, uint32_t status)
 			return;
 		}
 		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_ABNORMAL_FLOW_RATE, 1);
+		error_log_event(SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, IS_ABNORMAL_VAL);
 	} else if (status == THRESHOLD_STATUS_NOT_ACCESS) {
 		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_FLOW_RATE_NOT_ACCESS, 1);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {

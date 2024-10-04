@@ -10608,6 +10608,11 @@ SDR_Full_sensor plat_sdr_table[] = {
 		.sensor_num = SENSOR_NUM_FAN_PRSNT,
 		.ID_str = "FAN_BOARD_PRESENT_STATUS",
 	},
+	// SENSOR_NUM_SB_HEX_AIR_INLET_AVG_TEMP_C
+	{
+		.sensor_num = SENSOR_NUM_SB_HEX_AIR_INLET_AVG_TEMP_C,
+		.ID_str = "SB_HEX_AIR_INLET_AVG_TEMP_C",
+	},
 };
 
 const int SDR_TABLE_SIZE = ARRAY_SIZE(plat_sdr_table);
