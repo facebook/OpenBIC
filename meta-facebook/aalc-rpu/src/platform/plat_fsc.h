@@ -20,11 +20,13 @@
 #include "stdint.h"
 #include "stdbool.h"
 
-#define FSC_TEMP_INVALID 0xFF
+#define FSC_TEMP_INVALID 0x8000
 #define FSC_RPM_INVALID 0xFFFF
 
 #define FSC_ENABLE 1
 #define FSC_DISABLE 0
+
+#define SENSOR_STEPWISE_STEPS_MAX 16
 
 enum FSC_ERROR {
 	FSC_ERROR_NONE = 0, // OK status
@@ -44,43 +46,44 @@ enum FSC_TYPE {
 	FSC_TYPE_DEFAULT,
 };
 
+enum SETPOINT_TYPE {
+	SETPOINT_AIR_INTEL_AVG_C = 0,
+	SETPOINT_FLOW_RATE_LPM,
+};
+
 /* stepwise */
 typedef struct {
 	uint8_t temp;
-	uint16_t rpm;
+	uint8_t duty;
 } stepwise_dict;
 
 typedef struct {
 	uint8_t sensor_num;
-	stepwise_dict *step;
-	uint8_t step_len; // len of stepwise_dict
+	stepwise_dict step[SENSOR_STEPWISE_STEPS_MAX];
 	uint8_t pos_hyst; // positive_hysteresis
 	uint8_t neg_hyst; // negative_hysteresis
 
 	// calculate use
-	int last_temp;
+	int16_t last_temp;
 } stepwise_cfg;
 
 /* pid */
 typedef struct {
 	uint8_t sensor_num;
 	int setpoint;
-	uint16_t kp;
-	uint8_t ki;
-	uint8_t kd;
+	uint8_t setpoint_type;
+	float kp;
+	float ki;
+	float kd;
 	uint16_t i_limit_min; // RPM
 	uint16_t i_limit_max; // RPM
-	uint16_t out_limit_min; // RPM
-	uint16_t out_limit_max; // RPM
-	uint16_t slew_neg; // RPM/s
-	uint16_t slew_pos; // RPM/s
 	uint8_t pos_hyst; // positive_hysteresis
 	uint8_t neg_hyst; // negative_hysteresis
 
 	// calculate use
-	int integral;
+	float integral;
 	int last_error; //for kd
-	uint16_t last_rpm;
+	int16_t last_temp;
 } pid_cfg;
 
 /* zone control */
@@ -90,11 +93,12 @@ typedef struct {
 } fsc_type_mapping;
 
 typedef struct {
-	fsc_type_mapping *table;
-	uint8_t table_size;
-	float FF_gain; // Duty/RPM
-	uint8_t i_limit_min; // Duty
-	uint8_t i_limit_max; // Duty
+	stepwise_cfg *sw_tbl;
+	uint8_t sw_tbl_num;
+
+	pid_cfg *pid_tbl;
+	uint8_t pid_tbl_num;
+
 	uint8_t out_limit_min; // Duty
 	uint8_t out_limit_max; // Duty
 	uint16_t slew_neg; // RPM
@@ -105,12 +109,16 @@ typedef struct {
 	uint8_t set_duty_arg; //  set_duty arg
 
 	// calculate use
-	uint16_t last_rpm;
+	uint16_t fsc_poll_count;
+	uint8_t last_duty;
+	uint8_t is_init;
 } zone_cfg;
 
 uint8_t get_fsc_enable_flag(void);
 void set_fsc_enable_flag(uint8_t flag);
 void fsc_init(void);
 void controlFSC(uint8_t action);
+uint8_t fsc_debug_set(uint8_t enable);
+uint8_t fsc_debug_get(void);
 
 #endif

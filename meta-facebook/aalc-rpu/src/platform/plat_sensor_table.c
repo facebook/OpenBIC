@@ -836,6 +836,10 @@ sensor_cfg plat_def_sensor_config[] = {
 	{ SENSOR_NUM_FAN_PRSNT, sensor_dev_plat_def_sensor, 0, 0, PLAT_DEF_SENSOR_FAN_PRSNT,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
+	{ SENSOR_NUM_SB_HEX_AIR_INLET_AVG_TEMP_C, sensor_dev_plat_def_sensor, 0, 0,
+	  PLAT_DEF_SENSOR_SB_HEX_AIR_INLET_AVG_TEMP, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT,
+	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  NULL },
 };
 
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) +
@@ -1215,6 +1219,13 @@ static uint8_t plat_sensor_hex_curr[] = {
 	SENSOR_NUM_FB_13_HSC_P48V_IOUT_CURR_A, SENSOR_NUM_FB_14_HSC_P48V_IOUT_CURR_A,
 };
 
+static uint8_t plat_sensor_sb_hex_air_inlet_temp[] = {
+	SENSOR_NUM_SB_HEX_AIR_INLET_1_TEMP_C,
+	SENSOR_NUM_SB_HEX_AIR_INLET_2_TEMP_C,
+	SENSOR_NUM_SB_HEX_AIR_INLET_3_TEMP_C,
+	SENSOR_NUM_SB_HEX_AIR_INLET_4_TEMP_C,
+};
+
 /* Sum the values in the sensor cache in the array */
 static float calculate_total_val(uint8_t arr[], uint8_t size)
 {
@@ -1252,6 +1263,25 @@ static float pressure_difference_val(uint8_t high_press, uint8_t low_press)
 	return val;
 }
 
+static uint8_t sb_hex_air_inlet_temp_avg(void)
+{
+	uint8_t number = 0;
+	float total = 0;
+	for (uint8_t i = 0; i < ARRAY_SIZE(plat_sensor_sb_hex_air_inlet_temp); i++) {
+		float tmp = 0;
+		if (get_sensor_reading_to_real_val(plat_sensor_sb_hex_air_inlet_temp[i], &tmp) ==
+		    SENSOR_READ_4BYTE_ACUR_SUCCESS) {
+			/* only calculate values without exceptions */
+			if ((tmp > -20) && (tmp < 100)) {
+				total += tmp;
+				number++;
+			}
+		}
+	}
+
+	return (number ? (total / number) : 0);
+}
+
 static uint8_t plat_def_sensor_read(sensor_cfg *cfg, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
@@ -1285,6 +1315,10 @@ static uint8_t plat_def_sensor_read(sensor_cfg *cfg, int *reading)
 		sensor_val *sval = (sensor_val *)reading;
 		sval->integer = tmp_prsnt;
 		return SENSOR_READ_SUCCESS;
+	}
+	case PLAT_DEF_SENSOR_SB_HEX_AIR_INLET_AVG_TEMP: {
+		val = sb_hex_air_inlet_temp_avg();
+		break;
 	}
 	default:
 		LOG_ERR("0x%02x unknow plat sensor type %d", cfg->num, type);

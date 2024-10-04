@@ -24,6 +24,8 @@
 #include "common_i2c_mux.h"
 #include "nct7363.h"
 #include "plat_status.h"
+#include "plat_fsc.h"
+#include "plat_hwmon.h"
 
 LOG_MODULE_REGISTER(plat_shell);
 
@@ -46,6 +48,7 @@ void cmd_get_pump_duty(const struct shell *shell, size_t argc, char **argv)
 	uint8_t duty = 0xff;
 
 	if (get_manual_pwm_flag(MANUAL_PWM_E_PUMP)) {
+		shell_warn(shell, "pump is in manual mode");
 		duty = get_manual_pwm_cache(MANUAL_PWM_E_PUMP);
 		shell_warn(shell, "get pump group duty: %d", duty);
 		duty = get_manual_pwm_cache(MANUAL_PWM_E_PUMP_1);
@@ -55,7 +58,9 @@ void cmd_get_pump_duty(const struct shell *shell, size_t argc, char **argv)
 		duty = get_manual_pwm_cache(MANUAL_PWM_E_PUMP_3);
 		shell_warn(shell, "get pump3 duty: %d", duty);
 	} else {
-		shell_warn(shell, "pump is not in manual mode");
+		shell_warn(shell, "pump is in auto mode");
+		duty = get_pwm_group_cache(PWM_GROUP_E_PUMP);
+		shell_warn(shell, "get pump group duty: %d", duty);
 	}
 }
 void cmd_get_hex_fan_duty(const struct shell *shell, size_t argc, char **argv)
@@ -63,10 +68,13 @@ void cmd_get_hex_fan_duty(const struct shell *shell, size_t argc, char **argv)
 	uint8_t duty = 0xff;
 
 	if (get_manual_pwm_flag(MANUAL_PWM_E_HEX_FAN)) {
+		shell_warn(shell, "hex fan is in manual mode");
 		duty = get_manual_pwm_cache(MANUAL_PWM_E_HEX_FAN);
 		shell_warn(shell, "get hex fan duty: %d", duty);
 	} else {
 		shell_warn(shell, "hex fan is not in manual mode");
+		duty = get_pwm_group_cache(PWM_GROUP_E_HEX_FAN);
+		shell_warn(shell, "get hex fan duty: %d", duty);
 	}
 }
 void cmd_get_rpu_fan_duty(const struct shell *shell, size_t argc, char **argv)
@@ -74,6 +82,7 @@ void cmd_get_rpu_fan_duty(const struct shell *shell, size_t argc, char **argv)
 	uint8_t duty = 0xff;
 
 	if (get_manual_pwm_flag(MANUAL_PWM_E_RPU_FAN)) {
+		shell_warn(shell, "rpu fan is in manual mode");
 		duty = get_manual_pwm_cache(MANUAL_PWM_E_RPU_FAN);
 		shell_warn(shell, "get rpu fan group duty: %d", duty);
 		duty = get_manual_pwm_cache(MANUAL_PWM_E_PUMP_FAN_1);
@@ -85,7 +94,9 @@ void cmd_get_rpu_fan_duty(const struct shell *shell, size_t argc, char **argv)
 		duty = get_manual_pwm_cache(MANUAL_PWM_E_RPU_PCB_FAN);
 		shell_warn(shell, "get rpu internal fan duty: %d", duty);
 	} else {
-		shell_warn(shell, "rpu fan is not in manual mode");
+		shell_warn(shell, "rpu fan is in auto mode");
+		duty = get_pwm_group_cache(PWM_GROUP_E_RPU_FAN);
+		shell_warn(shell, "get rpu fan group duty: %d", duty);
 	}
 }
 void cmd_get_fan_duty(const struct shell *shell, size_t argc, char **argv)
@@ -333,6 +344,53 @@ void cmd_status_auto_tune_set(const struct shell *shell, size_t argc, char **arg
 
 	shell_warn(shell, "set auto tune flag to %d", val);
 }
+void cmd_status_pump_redundant_get(const struct shell *shell, size_t argc, char **argv)
+{
+	shell_warn(shell, "get pump redundant flag: %x",
+		   get_status_flag(STATUS_FLAG_PUMP_REDUNDANT));
+}
+void cmd_status_pump_redundant_set(const struct shell *shell, size_t argc, char **argv)
+{
+	if (argc != 2) {
+		shell_warn(shell, "test status set pump_redundant [val]");
+		return;
+	}
+
+	uint8_t val = strtoul(argv[1], NULL, 10);
+
+	set_status_flag(STATUS_FLAG_PUMP_REDUNDANT, 0xFF, val);
+
+	shell_warn(shell, "set pump redundant flag to %d", val);
+}
+
+// fsc
+static void cmd_fsc_debug_enable(const struct shell *shell, size_t argc, char **argv)
+{
+	ARG_UNUSED(shell);
+	ARG_UNUSED(argc);
+	ARG_UNUSED(argv);
+
+	const uint8_t enable = strtoul(argv[1], NULL, 16);
+	shell_warn(shell, "fsc debug enable: %d", enable);
+
+	fsc_debug_set(enable);
+}
+
+// pump_redandunt
+static void cmd_pump_redandunt_enable(const struct shell *shell, size_t argc, char **argv)
+{
+	uint8_t enable = strtoul(argv[1], NULL, 10);
+	shell_warn(shell, "pump redandunt enable: %d", enable);
+
+	pump_redundant_enable(enable);
+}
+static void cmd_pump_redandunt_switch_day_set(const struct shell *shell, size_t argc, char **argv)
+{
+	uint8_t day = strtoul(argv[1], NULL, 10);
+
+	set_pump_redundant_switch_time(day);
+	shell_warn(shell, "set pump redandunt to %d day", day);
+}
 
 // test command
 void cmd_test(const struct shell *shell, size_t argc, char **argv)
@@ -359,11 +417,13 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 	sub_get_status_cmd, SHELL_CMD(leak, NULL, "get leak status flag", cmd_status_leak_get),
 	SHELL_CMD(failure, NULL, "get failure status flag", cmd_status_failure_get),
 	SHELL_CMD(auto_tune, NULL, "get auto tune flag", cmd_status_auto_tune_get),
+	SHELL_CMD(pump_redundant, NULL, "get pump redundant flag", cmd_status_pump_redundant_get),
 	SHELL_SUBCMD_SET_END);
 SHELL_STATIC_SUBCMD_SET_CREATE(
 	sub_set_status_cmd, SHELL_CMD(leak, NULL, "set leak status flag", cmd_status_leak_set),
 	SHELL_CMD(failure, NULL, "set failure status flag", cmd_status_failure_set),
 	SHELL_CMD(auto_tune, NULL, "set auto tune flag", cmd_status_auto_tune_set),
+	SHELL_CMD(pump_redundant, NULL, "set pump redundant flag", cmd_status_pump_redundant_set),
 	SHELL_SUBCMD_SET_END);
 
 /* Sub-command Level 2 of command test */
@@ -396,6 +456,19 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_status_cmd,
 			       SHELL_CMD(set, &sub_set_status_cmd, "set status flag", NULL),
 			       SHELL_SUBCMD_SET_END);
 
+// fsc
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_fsc_cmd,
+			       SHELL_CMD(debug, NULL, "fsc debug message", cmd_fsc_debug_enable),
+			       SHELL_SUBCMD_SET_END);
+
+// pump redandunt
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_pump_redandunt_cmd,
+			       SHELL_CMD(enable, NULL, "pump redandunt enable/disable",
+					 cmd_pump_redandunt_enable),
+			       SHELL_CMD(switch_time, NULL, "set pump redandunt days",
+					 cmd_pump_redandunt_switch_day_set),
+			       SHELL_SUBCMD_SET_END);
+
 /* Sub-command Level 1 of command test */
 SHELL_STATIC_SUBCMD_SET_CREATE(
 	sub_test_cmds, SHELL_CMD(pwm, &sub_pwm_cmd, "set/get pwm command", NULL),
@@ -404,6 +477,8 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 	SHELL_CMD(nct7363, &sub_nct7363_cmd, "nct7363 debug command", NULL),
 	SHELL_CMD(threshold, &sub_threshold_cmd, "threshold test command", NULL),
 	SHELL_CMD(status, &sub_status_cmd, "status test command", NULL),
+	SHELL_CMD(fsc, &sub_fsc_cmd, "fan speed control command", NULL),
+	SHELL_CMD(pump_redandunt, &sub_pump_redandunt_cmd, "pump redandunt command", NULL),
 	SHELL_CMD(test, NULL, "test command", cmd_test), SHELL_SUBCMD_SET_END);
 
 /* Root of command test */
