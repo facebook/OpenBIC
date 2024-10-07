@@ -583,7 +583,8 @@ void switch_mux_to_bic(uint8_t value_to_write)
 void cxl1_ready_handler()
 {
 	const struct device *heartbeat = NULL;
-	int heartbeat_status = 0;
+	struct sensor_value hb_val;
+	int ret = 0;
 
 	heartbeat = device_get_binding(CXL1_HEART_BEAT_LABEL);
 	if (heartbeat == NULL) {
@@ -592,8 +593,19 @@ void cxl1_ready_handler()
 	}
 
 	for (int times = 0; times < CXL_READY_RETRY_TIMES; times++) {
-		heartbeat_status = sensor_sample_fetch(heartbeat);
-		if (heartbeat_status < 0) {
+		ret = sensor_sample_fetch(heartbeat);
+		if (ret < 0) {
+			k_sleep(K_SECONDS(CXL_READY_INTERVAL_SECONDS));
+			continue;
+		}
+
+		ret = sensor_channel_get(heartbeat, SENSOR_CHAN_RPM, &hb_val);
+		if (ret < 0) {
+			k_sleep(K_SECONDS(CXL_READY_INTERVAL_SECONDS));
+			continue;
+		}
+
+		if (hb_val.val1 <= 0) {
 			k_sleep(K_SECONDS(CXL_READY_INTERVAL_SECONDS));
 			continue;
 		}
@@ -607,7 +619,7 @@ void cxl1_ready_handler()
 		return;
 	}
 	LOG_ERR("Failed to read %s due to sensor_sample_fetch failed, ret: %d",
-		CXL1_HEART_BEAT_LABEL, heartbeat_status);
+		CXL1_HEART_BEAT_LABEL, ret);
 	switch_mux_to_bic(IOE_SWITCH_CXL1_VR_TO_BIC);
 	set_cxl_vr_access(CXL_ID_1, true);
 	return;
@@ -616,7 +628,8 @@ void cxl1_ready_handler()
 void cxl2_ready_handler()
 {
 	const struct device *heartbeat = NULL;
-	int heartbeat_status = 0;
+	struct sensor_value hb_val;
+	int ret = 0;
 
 	heartbeat = device_get_binding(CXL2_HEART_BEAT_LABEL);
 	if (heartbeat == NULL) {
@@ -625,8 +638,19 @@ void cxl2_ready_handler()
 	}
 
 	for (int times = 0; times < CXL_READY_RETRY_TIMES; times++) {
-		heartbeat_status = sensor_sample_fetch(heartbeat);
-		if (heartbeat_status < 0) {
+		ret = sensor_sample_fetch(heartbeat);
+		if (ret < 0) {
+			k_sleep(K_SECONDS(CXL_READY_INTERVAL_SECONDS));
+			continue;
+		}
+
+		ret = sensor_channel_get(heartbeat, SENSOR_CHAN_RPM, &hb_val);
+		if (ret < 0) {
+			k_sleep(K_SECONDS(CXL_READY_INTERVAL_SECONDS));
+			continue;
+		}
+
+		if (hb_val.val1 <= 0) {
 			k_sleep(K_SECONDS(CXL_READY_INTERVAL_SECONDS));
 			continue;
 		}
@@ -640,7 +664,7 @@ void cxl2_ready_handler()
 		return;
 	}
 	LOG_ERR("Failed to read %s due to sensor_sample_fetch failed, ret: %d",
-		CXL2_HEART_BEAT_LABEL, heartbeat_status);
+		CXL2_HEART_BEAT_LABEL, ret);
 	switch_mux_to_bic(IOE_SWITCH_CXL2_VR_TO_BIC);
 	set_cxl_vr_access(CXL_ID_2, true);
 	return;

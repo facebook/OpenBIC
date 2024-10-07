@@ -27,6 +27,16 @@ static K_MUTEX_DEFINE(wait_recv_resp_mutex);
 
 static sys_slist_t wait_recv_resp_list = SYS_SLIST_STATIC_INIT(&wait_recv_resp_list);
 
+__weak int pal_get_cci_internal_ms()
+{
+	return 0;
+}
+
+__weak int pal_get_cci_timeout_ms()
+{
+	return DEFAULT_WAIT_TO_MS;
+}
+
 static uint8_t mctp_cci_msg_timeout_check(sys_slist_t *list, struct k_mutex *mutex)
 {
 	CHECK_NULL_ARG_WITH_RETURN(list, MCTP_ERROR);
@@ -232,16 +242,20 @@ uint16_t mctp_cci_read(void *mctp_p, mctp_cci_msg *msg, uint8_t *rbuf, uint16_t 
 	recv_arg_p->rbuf_len = rbuf_len;
 	recv_arg_p->return_len = 0;
 
+	int internal_ms = pal_get_cci_internal_ms();
+	int timeout_ms = pal_get_cci_timeout_ms();
+
 	msg->recv_resp_cb_fn = cci_read_resp_handler;
 	msg->recv_resp_cb_args = (void *)recv_arg_p;
 	msg->timeout_cb_fn = cci_read_timeout_handler;
 	msg->timeout_cb_fn_args = (void *)event_msgq_p;
-	msg->timeout_ms = CCI_MSG_TIMEOUT_MS;
+	msg->timeout_ms = timeout_ms;
 
 	for (uint8_t retry_count = 0; retry_count < CCI_MSG_MAX_RETRY; retry_count++) {
 		uint8_t event = 0;
 		if (mctp_cci_send_msg(mctp_p, msg) == CCI_ERROR) {
 			LOG_WRN("send msg failed!");
+			k_sleep(K_SECONDS(internal_ms));
 			continue;
 		}
 		if (k_msgq_get(event_msgq_p, &event, K_FOREVER)) {
