@@ -6740,7 +6740,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 	},
 	{
 		{
-			// AEGIS_ON_DIE_1_TEMP__C
+			// AEGIS_ON_DIE_1_TEMP_C
 			/*** PDR common header***/
 			{
 				0x00000000, //uint32_t record_handle
@@ -6752,7 +6752,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_ON_DIE_1_TEMP__C, //uint16_t sensor_id;
+			SENSOR_NUM_ON_DIE_1_TEMP_C, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
 			0x0005, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
@@ -6795,7 +6795,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_ON_DIE_1_TEMP__C,
+			.num = SENSOR_NUM_ON_DIE_1_TEMP_C,
 			.type = sensor_dev_tmp431,
 			.port = I2C_BUS1,
 			.target_addr = ON_DIE_1_TEMP_ADDR,
@@ -7131,7 +7131,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 	},
 	{
 
-		// AEGIS_ON_DIE_1_TEMP__C
+		// AEGIS_ON_DIE_1_TEMP_C
 		/*** PDR common header***/
 		{
 			.record_handle = 0x00000000,
@@ -7141,11 +7141,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_ON_DIE_1_TEMP__C,
+		.sensor_id = SENSOR_NUM_ON_DIE_1_TEMP_C,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"ON_DIE_1_TEMP__C",
+		.sensorName = u"ON_DIE_1_TEMP_C",
 	},
 	{
 
