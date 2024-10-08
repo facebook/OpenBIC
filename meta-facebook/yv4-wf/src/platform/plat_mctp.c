@@ -170,10 +170,12 @@ static void set_dev_endpoint(void)
 				if (!rc) {
 					switch (p->bus) {
 					case I2C_BUS_CXL1: {
+						LOG_INF("Send set EID command to CXL1");
 						set_eid[CXL_ID_1] = true;
 						break;
 					}
 					case I2C_BUS_CXL2: {
+						LOG_INF("Send set EID command to CXL2");
 						set_eid[CXL_ID_2] = true;
 						break;
 					}
@@ -283,7 +285,6 @@ void send_cmd_to_dev_handler(struct k_work *work)
 
 void send_cmd_to_dev(struct k_timer *timer)
 {
-	LOG_INF("Send set EID command to CXL");
 	k_work_submit(&send_cmd_work);
 }
 
@@ -400,4 +401,16 @@ uint8_t plat_get_cxl_eid(uint8_t cxl_id)
 	default:
 		return UNKNOWN_CXL_EID;
 	}
+}
+
+int pal_get_cci_internal_ms()
+{
+	// 1 seconds
+	return 1000;
+}
+
+int pal_get_cci_timeout_ms()
+{
+	// 5 seconds
+	return 5000;
 }

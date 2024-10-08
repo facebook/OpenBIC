@@ -117,6 +117,8 @@ void cci_read_resp_handler(void *args, uint8_t *rbuf, uint16_t rlen, uint16_t re
 bool cci_get_chip_temp(void *mctp_p, mctp_ext_params ext_params, int16_t *chip_temp);
 bool cci_get_chip_fw_version(void *mctp_p, mctp_ext_params ext_params, uint8_t *fw_version,
 			     uint8_t *return_len);
+int pal_get_cci_internal_ms();
+int pal_get_cci_timeout_ms();
 
 /* send CCI command message through mctp */
 uint8_t mctp_cci_send_msg(void *mctp_p, mctp_cci_msg *msg);
