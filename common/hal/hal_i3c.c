@@ -30,8 +30,7 @@ static const struct device *dev_i3c_smq[I3C_MAX_NUM];
 static struct i3c_dev_desc i3c_desc_table[I3C_MAX_NUM];
 static i3c_ibi_dev i3c_ibi_dev_table[I3C_MAX_NUM];
 static int i3c_desc_count = 0;
-static struct k_mutex mutex_write[I3C_MAX_NUM];
-static struct k_mutex mutex_read[I3C_MAX_NUM];
+static struct k_mutex mutex_dev[I3C_MAX_NUM];
 
 int i3c_slave_mqueue_read(const struct device *dev, uint8_t *dest, int budget);
 int i3c_slave_mqueue_write(const struct device *dev, uint8_t *src, int size);
@@ -72,20 +71,20 @@ int i3c_smq_read(I3C_MSG *msg)
 		return -ENODEV;
 	}
 
-	int ret = k_mutex_lock(&mutex_read[msg->bus], K_FOREVER);
+	int ret = k_mutex_lock(&mutex_dev[msg->bus], K_MSEC(2000));
 	if (ret) {
-		LOG_ERR("Failed to lock the mutex(%d)", ret);
+		LOG_ERR("Failed to lock the mutex(%d), %s", ret, __func__);
 		return -1;
 	}
 
 	msg->rx_len =
 		i3c_slave_mqueue_read(dev_i3c_smq[msg->bus], &msg->data[0], I3C_MAX_DATA_SIZE);
 	if (msg->rx_len == 0) {
-		k_mutex_unlock(&mutex_read[msg->bus]);
+		k_mutex_unlock(&mutex_dev[msg->bus]);
 		return -ENODATA;
 	}
 
-	k_mutex_unlock(&mutex_read[msg->bus]);
+	k_mutex_unlock(&mutex_dev[msg->bus]);
 	return msg->rx_len;
 }
 
@@ -99,32 +98,32 @@ int i3c_smq_write(I3C_MSG *msg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg, -EINVAL);
 
-	int ret;
-	ret = k_mutex_lock(&mutex_write[msg->bus], K_FOREVER);
-	if (ret) {
-		LOG_ERR("Failed to lock the mutex(%d)", ret);
-		return -1;
-	}
-
 	if (!dev_i3c[msg->bus]) {
 		LOG_ERR("Bus %u is not defined", msg->bus);
-		k_mutex_unlock(&mutex_write[msg->bus]);
 		return -ENODEV;
 	}
 
+	int ret;
+	ret = k_mutex_lock(&mutex_dev[msg->bus], K_MSEC(2000));
+	if (ret) {
+		LOG_ERR("Failed to lock the mutex(%d), %s", ret, __func__);
+		return -1;
+	}
 	ret = i3c_slave_mqueue_write(dev_i3c_smq[msg->bus], &msg->data[0], msg->tx_len);
+	k_mutex_unlock(&mutex_dev[msg->bus]);
+
 	if (ret < 0) {
 		LOG_ERR("I3C wrtie failed, ret = %d", ret);
 		if (ret == -EIO) {
 			// SIR timeout, reset I3C PID
 			uint16_t slot_pid = 0;
 			if (pal_get_slot_pid(&slot_pid) == true) {
-				LOG_WRN("Reset PID = %x for Bus %u due to SIR timeout", slot_pid, msg->bus);
+				LOG_WRN("Reset PID = %x for Bus %u due to SIR timeout", slot_pid,
+					msg->bus);
 				i3c_set_pid(msg, slot_pid);
 			}
 		}
 	}
-	k_mutex_unlock(&mutex_write[msg->bus]);
 
 	return ret;
 }
@@ -142,9 +141,16 @@ int i3c_attach(I3C_MSG *msg)
 		return -ENODEV;
 	}
 
+	ret = k_mutex_lock(&mutex_dev[msg->bus], K_MSEC(2000));
+	if (ret) {
+		LOG_ERR("Failed to lock the mutex(%d), %s", ret, __func__);
+		return -1;
+	}
+
 	desc = find_matching_desc(dev_i3c[msg->bus], msg->target_addr, &pos);
 	if (desc != NULL) {
 		LOG_INF("addr 0x%x already attach", msg->target_addr);
+		k_mutex_unlock(&mutex_dev[msg->bus]);
 		return -ret;
 	}
 
@@ -160,6 +166,7 @@ int i3c_attach(I3C_MSG *msg)
 		LOG_ERR("Failed to attach address 0x%x, ret: %d", msg->target_addr, ret);
 	}
 
+	k_mutex_unlock(&mutex_dev[msg->bus]);
 	return -ret;
 }
 
@@ -176,15 +183,23 @@ int i3c_detach(I3C_MSG *msg)
 		return -ENODEV;
 	}
 
+	ret = k_mutex_lock(&mutex_dev[msg->bus], K_MSEC(2000));
+	if (ret) {
+		LOG_ERR("Failed to lock the mutex(%d), %s", ret, __func__);
+		return -1;
+	}
+
 	desc = find_matching_desc(dev_i3c[msg->bus], msg->target_addr, &pos);
 	if (desc == NULL) {
 		LOG_ERR("Failed to detach address 0x%x due to unknown address", msg->target_addr);
+		k_mutex_unlock(&mutex_dev[msg->bus]);
 		return -ENODEV;
 	}
 
 	ret = i3c_master_detach_device(dev_i3c[msg->bus], desc);
 	if (ret != 0) {
 		LOG_ERR("Failed to detach address 0x%x, ret: %d", msg->target_addr, ret);
+		k_mutex_unlock(&mutex_dev[msg->bus]);
 		return -ret;
 	}
 
@@ -193,6 +208,7 @@ int i3c_detach(I3C_MSG *msg)
 	}
 	i3c_desc_count--;
 
+	k_mutex_unlock(&mutex_dev[msg->bus]);
 	return -ret;
 }
 
@@ -207,6 +223,12 @@ int i3c_brocast_ccc(I3C_MSG *msg, uint8_t ccc_id, uint8_t ccc_addr)
 	}
 
 	int ret = 0;
+	ret = k_mutex_lock(&mutex_dev[msg->bus], K_MSEC(2000));
+	if (ret) {
+		LOG_ERR("Failed to lock the mutex(%d), %s", ret, __func__);
+		return -1;
+	}
+
 	struct i3c_ccc_cmd ccc;
 
 	memset(&ccc, 0, sizeof(struct i3c_ccc_cmd));
@@ -218,10 +240,11 @@ int i3c_brocast_ccc(I3C_MSG *msg, uint8_t ccc_id, uint8_t ccc_addr)
 
 	ret = i3c_master_send_ccc(dev_i3c[msg->bus], &ccc);
 	if (ret != 0) {
-		LOG_ERR("Failed to broadcast ccc 0x%x to addresses 0x%x bus%u, ret%d",
-                       ccc_id, ccc_addr, msg->bus, ret);
+		LOG_ERR("Failed to broadcast ccc 0x%x to addresses 0x%x bus%u, ret%d", ccc_id,
+			ccc_addr, msg->bus, ret);
 	}
 
+	k_mutex_unlock(&mutex_dev[msg->bus]);
 	return -ret;
 }
 
@@ -239,10 +262,17 @@ int i3c_transfer(I3C_MSG *msg)
 	struct i3c_dev_desc *desc;
 	struct i3c_priv_xfer xfer_data[I3C_MAX_BUFFER_COUNT];
 
+	ret = k_mutex_lock(&mutex_dev[msg->bus], K_MSEC(2000));
+	if (ret) {
+		LOG_ERR("Failed to lock the mutex(%d), %s", ret, __func__);
+		return -1;
+	}
+
 	desc = find_matching_desc(dev_i3c[msg->bus], msg->target_addr, pos);
 	if (desc == NULL) {
 		LOG_ERR("Failed to transfer messages to address 0x%x due to unknown address",
 			msg->target_addr);
+		k_mutex_unlock(&mutex_dev[msg->bus]);
 		return -ENODEV;
 	}
 
@@ -259,6 +289,7 @@ int i3c_transfer(I3C_MSG *msg)
 		LOG_ERR("Failed to transfer messages to addr 0x%x, ret: %d", msg->target_addr, ret);
 	}
 
+	k_mutex_unlock(&mutex_dev[msg->bus]);
 	return -ret;
 }
 
@@ -285,10 +316,17 @@ int i3c_spd_reg_read(I3C_MSG *msg, bool is_nvm)
 	}
 	uint8_t offset[2] = { offset0, offset1 };
 
+	ret = k_mutex_lock(&mutex_dev[msg->bus], K_MSEC(2000));
+	if (ret) {
+		LOG_ERR("Failed to lock the mutex(%d), %s", ret, __func__);
+		return -1;
+	}
+
 	desc = find_matching_desc(dev_i3c[msg->bus], msg->target_addr, pos);
 	if (desc == NULL) {
 		LOG_ERR("Failed to transfer messages to address 0x%x due to unknown address",
 			msg->target_addr);
+		k_mutex_unlock(&mutex_dev[msg->bus]);
 		return -ENODEV;
 	}
 
@@ -298,6 +336,7 @@ int i3c_spd_reg_read(I3C_MSG *msg, bool is_nvm)
 			msg->target_addr, offset[1], offset[0], ret);
 	}
 
+	k_mutex_unlock(&mutex_dev[msg->bus]);
 	return ret;
 }
 
@@ -305,12 +344,19 @@ int i3c_controller_write(I3C_MSG *msg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg, -EINVAL);
 
+	int ret = k_mutex_lock(&mutex_dev[msg->bus], K_MSEC(2000));
+	if (ret) {
+		LOG_ERR("Failed to lock the mutex(%d), %s", ret, __func__);
+		return -1;
+	}
+
 	int *pos = NULL;
 	struct i3c_dev_desc *target;
 	target = find_matching_desc(dev_i3c[msg->bus], msg->target_addr, pos);
 	if (target == NULL) {
 		LOG_ERR("Failed to write messages to address 0x%x due to unknown address",
 			msg->target_addr);
+		k_mutex_unlock(&mutex_dev[msg->bus]);
 		return -ENODEV;
 	}
 
@@ -320,14 +366,16 @@ int i3c_controller_write(I3C_MSG *msg)
 	xfer[0].len = msg->tx_len;
 	xfer[0].data.out = &msg->data;
 
-	int ret = i3c_master_priv_xfer(target, xfer, 1);
+	ret = i3c_master_priv_xfer(target, xfer, 1);
 	if (ret != 0) {
 		LOG_ERR("Failed to write messages to bus 0x%d addr 0x%x, ret: %d", msg->bus,
 			msg->target_addr, ret);
-		return false;
+		k_mutex_unlock(&mutex_dev[msg->bus]);
+		return -1;
 	}
 
-	return true;
+	k_mutex_unlock(&mutex_dev[msg->bus]);
+	return 0;
 }
 
 int i3c_set_pid(I3C_MSG *msg, uint16_t slot_pid)
@@ -346,18 +394,27 @@ int i3c_set_pid(I3C_MSG *msg, uint16_t slot_pid)
 		return false;
 	}
 
-	int ret = i3c_set_pid_extra_info(target, slot_pid);
+	int ret = k_mutex_lock(&mutex_dev[msg->bus], K_MSEC(2000));
+	if (ret) {
+		LOG_ERR("Failed to lock the mutex(%d), %s", ret, __func__);
+		return false;
+	}
+
+	ret = i3c_set_pid_extra_info(target, slot_pid);
 	if (ret != 0) {
 		LOG_ERR("Failed to set pid to bus 0x%d, ret: %d", msg->bus, ret);
+		k_mutex_unlock(&mutex_dev[msg->bus]);
 		return false;
 	}
 
 	ret = i3c_slave_hj_req(target);
 	if (ret != 0) {
 		LOG_ERR("Failed to sends Hot-join request,ret: %d", ret);
+		k_mutex_unlock(&mutex_dev[msg->bus]);
 		return false;
 	}
 
+	k_mutex_unlock(&mutex_dev[msg->bus]);
 	return true;
 }
 
@@ -413,10 +470,7 @@ void util_init_i3c(void)
 	dev_i3c_smq[7] = device_get_binding("I3C_SMQ_7");
 #endif
 	for (int i = 0; i <= I3C_MAX_NUM; ++i) {
-		if (k_mutex_init(&mutex_read[i])) {
-			LOG_ERR("Mutex %d init error.", i);
-		}
-		if (k_mutex_init(&mutex_write[i])) {
+		if (k_mutex_init(&mutex_dev[i])) {
 			LOG_ERR("Mutex %d init error.", i);
 		}
 	}
@@ -509,15 +563,20 @@ int i3c_controller_ibi_init(I3C_MSG *msg)
 		return -ENODEV;
 	}
 
+	int ret = k_mutex_lock(&mutex_dev[msg->bus], K_MSEC(2000));
+	if (ret) {
+		LOG_ERR("Failed to lock the mutex(%d), %s", ret, __func__);
+		return -1;
+	}
+
 	struct i3c_dev_desc *target;
 	target = find_matching_desc(dev_i3c[msg->bus], msg->target_addr, NULL);
 	if (target == NULL) {
 		LOG_ERR("Failed to reveive messages to address 0x%x due to unknown address",
 			msg->target_addr);
+		k_mutex_unlock(&mutex_dev[msg->bus]);
 		return -ENODEV;
 	}
-
-	int ret = 0;
 
 	int idx = find_dev_i3c_idx(target);
 	if (idx < 0) {
@@ -563,6 +622,8 @@ int i3c_controller_ibi_init(I3C_MSG *msg)
 		LOG_ERR("Failed to enable SIR, bus = %x, addr = %u", msg->target_addr, msg->bus);
 	}
 
+	k_mutex_unlock(&mutex_dev[msg->bus]);
+
 	return -ret;
 }
 
@@ -595,8 +656,6 @@ int i3c_controller_ibi_read(I3C_MSG *msg)
 	/* init the flag for the next loop */
 	k_sem_init(&i3c_ibi_dev_table[idx].ibi_complete, 0, 1);
 
-	int ret = 0;
-
 	/* check result: first byte (MDB) shall match the DT property mandatory-data-byte */
 	if (IS_MDB_PENDING_READ_NOTIFY(i3c_ibi_dev_table[idx].data_rx[0])) {
 		struct i3c_priv_xfer xfer;
@@ -606,12 +665,18 @@ int i3c_controller_ibi_read(I3C_MSG *msg)
 		xfer.len = IBI_PAYLOAD_SIZE;
 		xfer.data.in = i3c_ibi_dev_table[idx].data_rx;
 		k_yield();
+		int ret = k_mutex_lock(&mutex_dev[msg->bus], K_MSEC(2000));
+		if (ret) {
+			LOG_ERR("Failed to lock the mutex(%d), %s", ret, __func__);
+			return -1;
+		}
 		ret = i3c_master_priv_xfer(target, &xfer, 1);
 		if (ret) {
 			LOG_ERR("ibi read failed. ret = %d", ret);
 		}
 		msg->rx_len = xfer.len;
 		memcpy(msg->data, i3c_ibi_dev_table[idx].data_rx, IBI_PAYLOAD_SIZE);
+		k_mutex_unlock(&mutex_dev[msg->bus]);
 	}
 
 	return msg->rx_len;
@@ -625,12 +690,20 @@ int i3c_target_set_address(I3C_MSG *msg)
 		return -ENODEV;
 	}
 
-	int ret = i3c_slave_set_static_addr(dev_i3c[msg->bus], msg->target_addr);
+	int ret = k_mutex_lock(&mutex_dev[msg->bus], K_MSEC(2000));
+	if (ret) {
+		LOG_ERR("Failed to lock the mutex(%d), %s", ret, __func__);
+		return -1;
+	}
+
+	ret = i3c_slave_set_static_addr(dev_i3c[msg->bus], msg->target_addr);
 	if (ret != 0) {
+		k_mutex_unlock(&mutex_dev[msg->bus]);
 		LOG_ERR("Failed to set address 0x%x, ret: %d", msg->target_addr, ret);
 		return -1;
 	}
 
+	k_mutex_unlock(&mutex_dev[msg->bus]);
 	return 0;
 }
 
@@ -643,15 +716,45 @@ int i3c_target_get_dynamic_address(I3C_MSG *msg, uint8_t *dynamic_addr)
 		return -ENODEV;
 	}
 
-	int ret = i3c_slave_get_dynamic_addr(dev_i3c[msg->bus], dynamic_addr);
+	int ret = k_mutex_lock(&mutex_dev[msg->bus], K_MSEC(2000));
+	if (ret) {
+		LOG_ERR("Failed to lock the mutex(%d), %s", ret, __func__);
+		return -1;
+	}
+
+	ret = i3c_slave_get_dynamic_addr(dev_i3c[msg->bus], dynamic_addr);
 	if (ret != 0) {
 		LOG_ERR("Failed to get address for I3C bus: %x, ret: %d", msg->bus, ret);
+		k_mutex_unlock(&mutex_dev[msg->bus]);
+		return -1;
+	}
+
+	k_mutex_unlock(&mutex_dev[msg->bus]);
+	return 0;
+}
+
+__weak bool pal_get_slot_pid(uint16_t *pid)
+{
+	return false;
+}
+
+int i3c_mutex_lock(int bus)
+{
+	if (!dev_i3c[bus]) {
+		return -ENODEV;
+	}
+
+	int ret = k_mutex_lock(&mutex_dev[bus], K_MSEC(2000));
+	if (ret) {
+		LOG_ERR("Failed to lock the mutex(%d), %s", ret, __func__);
 		return -1;
 	}
 
 	return 0;
 }
 
-__weak bool pal_get_slot_pid(uint16_t *pid) {
-	return false;
+int i3c_mutex_unlock(int bus)
+{
+	k_mutex_unlock(&mutex_dev[bus]);
+	return 0;
 }

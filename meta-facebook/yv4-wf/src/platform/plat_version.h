@@ -23,7 +23,7 @@
 #define PROJECT_NAME "Wailua Falls"
 #define PROJECT_STAGE PVT
 
-#define BOARD_ID 0x04
+#define BOARD_ID 0x05
 #define DEVICE_ID 0x00
 #define DEVICE_REVISION 0x80
 
@@ -37,7 +37,7 @@
 
 #define BIC_FW_YEAR_MSB 0x20
 #define BIC_FW_YEAR_LSB 0x24
-#define BIC_FW_WEEK 0x37
+#define BIC_FW_WEEK 0x40
 #define BIC_FW_VER 0x01
 #define BIC_FW_platform_0 0x77 // char: w
 #define BIC_FW_platform_1 0x66 // char: f

@@ -39,8 +39,6 @@
 #define MODBUS_GET_SET_SENSOR_POLL_ADDR 0xF080
 #define MODBUS_GET_SET_FAILURE_STATUS_ADDR 0xF081
 
-#define MODBUS_GET_SET_HMI_VER_ADDR 0x19F2
-
 int init_custom_modbus_server(void);
 void init_modbus_command_table(void);
 int change_modbus_slave_addr(uint8_t idx, uint8_t addr);
@@ -64,6 +62,15 @@ typedef struct _sensor_access_mapping {
 	uint8_t function_index;
 	uint8_t senser_num[5];
 } sensor_access_mapping;
+
+enum read_fru_data_type {
+	BOARD_MFG_DATE = 0,
+	BOARD_MFG = 1,
+	BOARD_PRODUCT = 2,
+	BOARD_SERIAL = 3,
+	BOARD_PART_NUMBER = 4,
+	BOARD_FRU_ID = 5,
+};
 
 /* define modbus data address */
 #define MODBUS_TEMP_BB_TMP75_ADDR 0x0101
@@ -328,7 +335,7 @@ typedef struct _sensor_access_mapping {
 #define MODBUS_EVENT_20_ERROR_LOG_ADDR 0x1AE7
 
 /* FW Update */
-#define MODBUS_FW_REVISION_ADDR 0x19E8
+
 #define MODBUS_FW_DOWNLOAD_ADDR 0x2000
 #define MODBUS_RPU_RUN_ADDR 0x0C30
 #define MODBUS_SYNAX_CHECK_ADDR 0x0C31
@@ -356,5 +363,25 @@ typedef struct _sensor_access_mapping {
 #define MODBUS_FB_12_FRU_ADDR 0xC300
 #define MODBUS_FB_13_FRU_ADDR 0xC400
 #define MODBUS_FB_14_FRU_ADDR 0xC500
+
+// RPU FRU
+#define MODBUS_RPU_FBPN_ADDR 0x19C4
+#define MODBUS_RPU_MFR_MODEL_ADDR 0x19CC
+#define MODBUS_RPU_MFR_DATE_ADDR 0x19D4
+#define MODBUS_RPU_MFR_SERIAL_ADDR 0x19D8
+#define MODBUS_RPU_WORKORDER_ADDR 0x19E0
+#define MODBUS_RPU_HW_REVISION_ADDR 0x19E4
+#define MODBUS_RPU_PLC_FW_REVISION_ADDR 0x19E8
+#define MODBUS_TOTAL_UP_TIME_ADDR 0x19EC
+#define MODBUS_TIME_SINCE_LAST_ON_ADDR 0x19EF
+#define MODBUS_RPU_HMI_FW_REVISION_ADDR 0x19F2
+#define MODBUS_RPU_HEX_FW_REVISION_ADDR 0x19F6
+#define MODBUS_RPU_NOAHS_ARK_CONFIGURATION_ADDR 0x19F8
+#define MODBUS_RPU_RESERVIOR_AND_PUMPING_UNIT_FBPN_ADDR 0x19FC
+#define MODBUS_HEAT_EXCHANGER_CONTROL_BOX_FBPN_ADDR 0x1A00
+#define MODBUS_HEAT_EXCHANGER_FANS_FBPN_ADDR 0x1A04
+#define MODBUS_HEAT_EXCHANGER_FAN_CONTROL_BOX_FBPN_ADDR 0x1A08
+
+#define MODBUS_test_for_write_uptime_ADDR 0x1A0C
 
 #endif

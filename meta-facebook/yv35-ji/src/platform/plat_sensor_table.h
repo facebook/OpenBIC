@@ -104,9 +104,11 @@
 #define SENSOR_NUM_SYSTEM_STATUS 0x10
 #define SENSOR_NUM_POWER_ERROR 0x56
 #define SENSOR_NUM_PROC_FAIL 0x65
+#define SENSOR_NUM_VR_OCP 0x71
 #define SENSOR_NUM_CPU_FAULT 0xC0
 
 #define IPMI_EVENT_OFFSET_SYS_E1S_ALERT 0x86
+#define IPMI_EVENT_CPUVDD_OCP_ASSERT 0x06
 
 uint8_t plat_get_config_size();
 void load_sensor_config(void);

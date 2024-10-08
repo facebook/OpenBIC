@@ -120,10 +120,10 @@ void ISR_MB_PCIE_RST()
 		k_timer_start(&set_eid_timer, K_MSEC(10000), K_NO_WAIT);
 	} else {
 		// host reset, cxl also reset
-		if (get_DC_status()) {
-			set_cxl_ready_status(CXL_ID_1, false);
-			set_cxl_ready_status(CXL_ID_2, false);
-		}
+		set_cxl_ready_status(CXL_ID_1, false);
+		set_cxl_ready_status(CXL_ID_2, false);
+		set_cxl_vr_access(CXL_ID_1, false);
+		set_cxl_vr_access(CXL_ID_2, false);
 	}
 }
 

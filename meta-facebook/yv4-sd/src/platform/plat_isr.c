@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <pmbus.h>
 #include "libipmi.h"
+#include "app_handler.h"
 #include "kcs.h"
 #include "rg3mxxb12.h"
 #include "power_status.h"
@@ -136,6 +137,12 @@ add_sel_info event_work_items[] = {
 		.event_type = P12V_STBY_UV,
 		.assert_type = EVENT_ASSERTED,
 	},
+	{
+		.is_init = false,
+		.gpio_num = CPU_SMERR_BIC_N,
+		.event_type = SYS_MANAGEMENT_ERROR,
+		.assert_type = EVENT_ASSERTED,
+	},
 };
 
 void init_event_work()
@@ -239,6 +246,7 @@ K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_delayed_status);
 K_WORK_DEFINE(reinit_i3c_work, reinit_i3c_hub);
 K_WORK_DEFINE(switch_i3c_dimm_work, switch_i3c_dimm_mux_to_cpu);
 K_WORK_DELAYABLE_DEFINE(PROC_FAIL_work, PROC_FAIL_handler);
+K_WORK_DELAYABLE_DEFINE(ABORT_FRB2_WDT_THREAD, abort_frb2_wdt_thread);
 
 #define DC_ON_5_SECOND 5
 #define PROC_FAIL_START_DELAY_SECOND 10
@@ -656,6 +664,9 @@ void IST_PLTRST()
 		return;
 	}
 
+	// Reset WDT
+	k_work_schedule_for_queue(&plat_work_q, &ABORT_FRB2_WDT_THREAD, K_NO_WAIT);
+
 	k_work_schedule_for_queue(&plat_work_q, &event_item->add_sel_work, K_NO_WAIT);
 }
 
@@ -747,5 +758,22 @@ void ISR_PVDDCR_CPU1_PMALERT()
 		LOG_ERR("PVDDCR CPU1 PMALERT event triggered");
 		k_work_schedule_for_queue(&plat_work_q, &vr_event_work_item[3].add_sel_work,
 					  K_MSEC(VR_EVENT_DELAY_MS));
+	}
+}
+
+void ISR_CPU_SMERR_BIC()
+{
+	if (get_DC_status() == true) {
+		add_sel_info *event_item = find_event_work_items(CPU_SMERR_BIC_N);
+		if (event_item == NULL) {
+			LOG_ERR("Fail to find event items, gpio num: 0x%x", CPU_SMERR_BIC_N);
+			return;
+		}
+
+		if ((gpio_get(CPU_SMERR_BIC_N) == GPIO_LOW)) {
+			LOG_INF("ISR_CPU_SMERR_BIC assert");
+			event_item->assert_type = EVENT_ASSERTED;
+		}
+		k_work_schedule_for_queue(&plat_work_q, &event_item->add_sel_work, K_NO_WAIT);
 	}
 }

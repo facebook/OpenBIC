@@ -358,8 +358,8 @@ void OEM_GET_HTTP_BOOT_ATTR(ipmi_msg *msg)
 	switch (attr) {
 	case GET_HTTP_BOOT_SIZE:
 		msg->data_len = 2;
-		msg->data[0] = info.size_lsb;
-		msg->data[1] = info.size_msb;
+		msg->data[0] = info.size & 0xFF;
+		msg->data[1] = (info.size >> 8) & 0xFF;
 		break;
 	case GET_HTTP_BOOT_CRC32:
 		msg->data_len = 4;

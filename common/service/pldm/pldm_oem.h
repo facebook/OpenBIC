@@ -80,7 +80,7 @@ enum oem_event_type {
 	HSC_FAULT,
 	SYS_THROTTLE,
 	VR_FAULT,
-	SYS_MANAMENT_ERROR,
+	SYS_MANAGEMENT_ERROR,
 	POST_COMPLETED,
 	FAN_ERROR,
 	HDT_PRSNT_ASSERT,
@@ -135,31 +135,45 @@ struct pldm_oem_write_file_io_resp {
 	uint8_t completion_code;
 } __attribute__((packed));
 
-struct pldm_oem_read_file_io_req {
-	uint8_t cmd_code;
-	uint8_t read_option;
-	uint8_t read_info_length;
-	uint8_t read_info[];
-} __attribute__((packed));
-
-struct pldm_oem_read_file_io_resp {
-	uint8_t completion_code;
-	uint8_t read_option;
-	uint8_t read_info_length;
-	uint8_t read_info[];
+struct pldm_oem_read_file_data_info {
+	uint8_t transfer_flag;
+	uint16_t offset;
 } __attribute__((packed));
 
 struct pldm_oem_read_file_attr_info {
-	uint8_t size_lsb;
-	uint8_t size_msb;
+	uint16_t size;
 	uint32_t crc32;
 } __attribute__((packed));
 
-struct pldm_oem_read_file_data_info {
-	uint8_t data_length;
-	uint8_t transfer_flag;
-	uint8_t highOffset;
-	uint8_t lowOffset;
+struct pldm_oem_read_file_io_attr_req {
+	uint8_t cmd_code;
+	uint8_t read_option;
+	uint8_t read_info_length;
+} __attribute__((packed));
+
+struct pldm_oem_read_file_io_data_req {
+	uint8_t cmd_code;
+	uint8_t read_option;
+	uint8_t read_info_length;
+	struct pldm_oem_read_file_data_info data;
+} __attribute__((packed));
+
+struct pldm_oem_read_file_io_attr_resp {
+	uint8_t completion_code;
+	uint8_t cmd_code;
+	uint8_t read_option;
+	uint8_t read_info_length;
+	struct pldm_oem_read_file_attr_info attr;
+	uint8_t read_info[];
+} __attribute__((packed));
+
+struct pldm_oem_read_file_io_data_resp {
+	uint8_t completion_code;
+	uint8_t cmd_code;
+	uint8_t read_option;
+	uint8_t read_info_length;
+	struct pldm_oem_read_file_data_info data;
+	uint8_t read_info[];
 } __attribute__((packed));
 
 struct pldm_addsel_data {

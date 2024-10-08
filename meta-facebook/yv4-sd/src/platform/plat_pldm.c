@@ -46,9 +46,9 @@ uint8_t plat_pldm_get_http_boot_attr(uint8_t length, uint8_t *httpBootattr)
 	pmsg.hdr.pldm_type = PLDM_TYPE_OEM;
 	pmsg.hdr.cmd = PLDM_OEM_READ_FILE_IO;
 
-	struct pldm_oem_read_file_io_req *ptr = (struct pldm_oem_read_file_io_req *)malloc(
-		sizeof(struct pldm_oem_read_file_io_req) +
-		sizeof(uint8_t) /* Minimum requried length */);
+	struct pldm_oem_read_file_io_attr_req *ptr =
+		(struct pldm_oem_read_file_io_attr_req *)malloc(
+			sizeof(struct pldm_oem_read_file_io_attr_req));
 	if (ptr == NULL) {
 		LOG_ERR("Fail to allocate ptr for reading file IO request: get http attr");
 		return PLDM_ERROR;
@@ -56,14 +56,13 @@ uint8_t plat_pldm_get_http_boot_attr(uint8_t length, uint8_t *httpBootattr)
 
 	ptr->cmd_code = HTTP_BOOT;
 	ptr->read_option = READ_FILE_ATTR;
-	ptr->read_info_length = 1;
-	ptr->read_info[0] = 0x00;
+	ptr->read_info_length = 0;
 
 	pmsg.buf = (uint8_t *)ptr;
-	pmsg.len = sizeof(struct pldm_oem_read_file_io_req) + sizeof(uint8_t);
+	pmsg.len = sizeof(struct pldm_oem_read_file_io_attr_req);
 	uint16_t resp_len = BMC_PLDM_DATA_MAXIMUM;
-	struct pldm_oem_read_file_io_resp *rbuf =
-		(struct pldm_oem_read_file_io_resp *)malloc(sizeof(uint8_t) * resp_len);
+	struct pldm_oem_read_file_io_attr_resp *rbuf =
+		(struct pldm_oem_read_file_io_attr_resp *)malloc(sizeof(uint8_t) * resp_len);
 	if (rbuf == NULL) {
 		LOG_ERR("Fail to allocate rbuf for getting http boot attribute");
 		SAFE_FREE(ptr);
@@ -92,7 +91,7 @@ uint8_t plat_pldm_get_http_boot_attr(uint8_t length, uint8_t *httpBootattr)
 		return PLDM_ERROR_INVALID_DATA;
 	}
 
-	memcpy(httpBootattr, rbuf->read_info, rbuf->read_info_length);
+	memcpy(httpBootattr, &rbuf->attr, length);
 	SAFE_FREE(rbuf);
 	return PLDM_SUCCESS;
 }
@@ -112,7 +111,7 @@ uint8_t plat_pldm_get_http_boot_data(uint16_t offset, uint8_t *read_length, uint
 	pldm_msg pmsg = { 0 };
 	uint8_t bmc_bus = I2C_BUS_BMC;
 	uint8_t bmc_interface = pal_get_bmc_interface();
-	uint8_t hdr_req_len = sizeof(pldm_hdr) + sizeof(struct pldm_oem_read_file_io_req);
+	uint8_t hdr_req_len = sizeof(pldm_hdr) + sizeof(struct pldm_oem_read_file_io_data_req);
 	pmsg.ext_params.ep = MCTP_EID_BMC;
 
 	switch (bmc_interface) {
@@ -134,9 +133,9 @@ uint8_t plat_pldm_get_http_boot_data(uint16_t offset, uint8_t *read_length, uint
 	pmsg.hdr.pldm_type = PLDM_TYPE_OEM;
 	pmsg.hdr.cmd = PLDM_OEM_READ_FILE_IO;
 
-	struct pldm_oem_read_file_io_req *ptr = (struct pldm_oem_read_file_io_req *)malloc(
-		sizeof(struct pldm_oem_read_file_io_req) +
-		sizeof(struct pldm_oem_read_file_data_info));
+	struct pldm_oem_read_file_io_data_req *ptr =
+		(struct pldm_oem_read_file_io_data_req *)malloc(
+			sizeof(struct pldm_oem_read_file_io_data_req));
 	if (ptr == NULL) {
 		LOG_ERR("Fail to allocate ptr for reading file IO request: get http data");
 		return PLDM_ERROR;
@@ -144,23 +143,17 @@ uint8_t plat_pldm_get_http_boot_data(uint16_t offset, uint8_t *read_length, uint
 
 	ptr->cmd_code = HTTP_BOOT;
 	ptr->read_option = READ_FILE_DATA;
-	ptr->read_info_length = sizeof(struct pldm_oem_read_file_data_info);
-
-	struct pldm_oem_read_file_data_info data_info = { 0 };
-	data_info.data_length = (*read_length > (BMC_PLDM_DATA_MAXIMUM - hdr_req_len) ?
+	ptr->data.transfer_flag = PLDM_START;
+	ptr->data.offset = offset;
+	ptr->read_info_length = (*read_length > (BMC_PLDM_DATA_MAXIMUM - hdr_req_len) ?
 					 (BMC_PLDM_DATA_MAXIMUM - hdr_req_len) :
 					 *read_length);
-	data_info.transfer_flag = PLDM_START;
-	data_info.highOffset = (offset >> 8) & 0xFF;
-	data_info.lowOffset = offset & 0xFF;
-	memcpy(ptr->read_info, &data_info, sizeof(struct pldm_oem_read_file_data_info));
 
 	pmsg.buf = (uint8_t *)ptr;
-	pmsg.len = sizeof(struct pldm_oem_read_file_io_req) +
-		   sizeof(struct pldm_oem_read_file_data_info);
+	pmsg.len = sizeof(struct pldm_oem_read_file_io_data_req);
 	uint16_t resp_len = BMC_PLDM_DATA_MAXIMUM;
-	struct pldm_oem_read_file_io_resp *rbuf =
-		(struct pldm_oem_read_file_io_resp *)malloc(sizeof(uint8_t) * resp_len);
+	struct pldm_oem_read_file_io_data_resp *rbuf =
+		(struct pldm_oem_read_file_io_data_resp *)malloc(sizeof(uint8_t) * resp_len);
 	if (rbuf == NULL) {
 		LOG_ERR("Fail to allocate rbuf for getting http boot data");
 		SAFE_FREE(ptr);
@@ -185,35 +178,33 @@ uint8_t plat_pldm_get_http_boot_data(uint16_t offset, uint8_t *read_length, uint
 			return PLDM_ERROR;
 		}
 
-		memcpy(&data_info, rbuf->read_info, sizeof(struct pldm_oem_read_file_data_info));
-		if ((total_length + data_info.data_length) > buffer_length) {
+		if ((total_length + rbuf->read_info_length) > buffer_length) {
 			LOG_ERR("Total data length exceeded buffer length, total length: 0x%x, buffer length: 0x%x",
-				total_length + data_info.data_length, buffer_length);
+				total_length + rbuf->read_info_length, buffer_length);
 			SAFE_FREE(ptr);
 			SAFE_FREE(rbuf);
 			return PLDM_ERROR_INVALID_DATA;
 		}
 
-		memcpy(httpBootData + total_length,
-		       &rbuf->read_info[sizeof(struct pldm_oem_read_file_data_info)],
-		       data_info.data_length);
-		total_length += data_info.data_length;
+		memcpy(httpBootData + total_length, &rbuf->read_info[0], rbuf->read_info_length);
+		total_length += rbuf->read_info_length;
 
-		if (total_length >= *read_length || data_info.transfer_flag == PLDM_END ||
-		    data_info.transfer_flag == PLDM_START_AND_END) {
+		if (total_length >= *read_length || rbuf->data.transfer_flag == PLDM_END ||
+		    rbuf->data.transfer_flag == PLDM_START_AND_END) {
 			// Correct read_length
 			*read_length = total_length;
 			break;
 		}
 
-		data_info.data_length =
+		ptr->data.transfer_flag = rbuf->data.transfer_flag;
+		ptr->data.offset = rbuf->data.offset;
+		ptr->read_info_length =
 			((*read_length - total_length) > (BMC_PLDM_DATA_MAXIMUM - hdr_req_len) ?
 				 (BMC_PLDM_DATA_MAXIMUM - hdr_req_len) :
 				 (*read_length - total_length));
-		memcpy(ptr->read_info, &data_info, sizeof(struct pldm_oem_read_file_data_info));
+
 		pmsg.buf = (uint8_t *)ptr;
-		pmsg.len = sizeof(struct pldm_oem_read_file_io_req) +
-			   sizeof(struct pldm_oem_read_file_data_info);
+		pmsg.len = sizeof(struct pldm_oem_read_file_io_data_req);
 	}
 
 	SAFE_FREE(ptr);
