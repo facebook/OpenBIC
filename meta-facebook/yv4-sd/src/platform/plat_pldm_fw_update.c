@@ -702,6 +702,10 @@ static bool plat_get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len
 
 	i2c_msg.bus = I2C_BUS6;
 
+	if (!get_post_status()) {
+		return ret;
+	}
+
 	if (p->comp_identifier == SD_COMPNT_X16_RETIMER) {
 		i2c_msg.target_addr = X16_RETIMER_ADDR;
 	} else if (p->comp_identifier == SD_COMPNT_X8_RETIMER) {
