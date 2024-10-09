@@ -1,0 +1,23 @@
+<map id="common/service/pldm/pldm_smbios.h" name="common/service/pldm/pldm_smbios.h">
+<area shape="rect" id="node1" title=" " alt="" coords="340,5,491,47"/>
+<area shape="rect" id="node2" href="$pldm_8h.html" title=" " alt="" coords="385,95,445,121"/>
+<area shape="rect" id="node3" href="$mctp_8h.html" title=" " alt="" coords="38,169,99,196"/>
+<area shape="rect" id="node7" href="$pldm__base_8h.html" title=" " alt="" coords="125,169,220,196"/>
+<area shape="rect" id="node8" href="$pldm__oem_8h.html" title=" " alt="" coords="244,169,336,196"/>
+<area shape="rect" id="node9" href="$pldm__monitor_8h.html" title=" " alt="" coords="360,169,471,196"/>
+<area shape="rect" id="node13" href="$pldm__firmware__update_8h.html" title=" " alt="" coords="495,169,658,196"/>
+<area shape="rect" id="node18" href="$pldm__state__set_8h.html" title=" " alt="" coords="683,169,804,196"/>
+<area shape="rect" id="node19" href="$ipmb_8h.html" title=" " alt="" coords="828,169,888,196"/>
+<area shape="rect" id="node4" title=" " alt="" coords="235,319,299,345"/>
+<area shape="rect" id="node5" title=" " alt="" coords="23,244,111,271"/>
+<area shape="rect" id="node6" title=" " alt="" coords="135,244,205,271"/>
+<area shape="rect" id="node10" href="$pdr_8h.html" title=" " alt="" coords="377,244,427,271"/>
+<area shape="rect" id="node11" title=" " alt="" coords="350,319,425,345"/>
+<area shape="rect" id="node12" title=" " alt="" coords="449,319,558,345"/>
+<area shape="rect" id="node14" title=" " alt="" coords="525,244,604,271"/>
+<area shape="rect" id="node15" href="$hal__i2c_8h.html" title=" " alt="" coords="628,244,701,271"/>
+<area shape="rect" id="node16" title=" " alt="" coords="607,319,699,345"/>
+<area shape="rect" id="node17" title=" " alt="" coords="723,319,881,345"/>
+<area shape="rect" id="node20" title=" " alt="" coords="763,244,855,271"/>
+<area shape="rect" id="node21" title=" " alt="" coords="879,244,939,271"/>
+</map>

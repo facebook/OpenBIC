@@ -1,0 +1,35 @@
+var aalc_rpu_2src_2platform_2plat__hwmon_8h =
+[
+    [ "_pump_reset_struct", "struct__pump__reset__struct.html", "struct__pump__reset__struct" ],
+    [ "pump_reset_struct", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#a3d120944ef9abf62fc9cb695dcdfbb50", null ],
+    [ "PUMP_STATE", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#aa3eaeee7376272db8e46d5fbe5441ebb", [
+      [ "PUMP_REDUNDENT_SWITCHED", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#aa3eaeee7376272db8e46d5fbe5441ebba7dcdcf1451964d25a4f077133ed5ac1c", null ],
+      [ "MANUAL_CONTROL_PUMP", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#aa3eaeee7376272db8e46d5fbe5441ebba49d743c24703d27ab9a617bee85cfb3e", null ],
+      [ "MANUAL_CONTROL_FAN", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#aa3eaeee7376272db8e46d5fbe5441ebba5a9e4e2f0040e97c6fe070b8cc527875", null ],
+      [ "AUTOTUNE_FLOW_CONTROL", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#aa3eaeee7376272db8e46d5fbe5441ebbacd0bc5eb236fdcf3c591b24ccc04f779", null ],
+      [ "AUTOTUNE_PRESSURE_BALANCE_CONTROL", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#aa3eaeee7376272db8e46d5fbe5441ebba8bdb0b05d42bfbda19802dbf34f04f84", null ],
+      [ "SYSTEM_STOP", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#aa3eaeee7376272db8e46d5fbe5441ebba93310602246bd9792b8c8481e8b3cb4c", null ],
+      [ "RPU_REMOTE_POWER_CYCLE", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#aa3eaeee7376272db8e46d5fbe5441ebbadd6f2ad1b057ced3570a093416f85100", null ],
+      [ "MANUAL_CONTROL", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#aa3eaeee7376272db8e46d5fbe5441ebbac802c21394e930e587b1b35bafc4725c", null ],
+      [ "CLEAR_PUMP_RUNNING_TIME", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#aa3eaeee7376272db8e46d5fbe5441ebba550e1b13da397f74e680c29c64f3d4f8", null ],
+      [ "CLEAR_LOG", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#aa3eaeee7376272db8e46d5fbe5441ebba3d8d1a82b995e1a0cd1fabef039e8349", null ],
+      [ "PUMP_1_RESET", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#aa3eaeee7376272db8e46d5fbe5441ebbab484660736c0e2d1975d966460602c57", null ],
+      [ "PUMP_2_RESET", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#aa3eaeee7376272db8e46d5fbe5441ebba9d5a880f2e70d7b08ceba49a82db5bda", null ],
+      [ "PUMP_3_RESET", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#aa3eaeee7376272db8e46d5fbe5441ebbabc94d1754e11878e5ab3943de06fb0a0", null ]
+    ] ],
+    [ "clear_log_for_modbus_pump_setting", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#a8c46c6bd263736a33c078f06b202facf", null ],
+    [ "close_pump", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#aa16ac47ed4ba379be0d924d658653893", null ],
+    [ "get_pump_redundant_switch_time", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#abe1c8472ba5fc2f15b35ab49606784b4", null ],
+    [ "modbus_pump_setting_unsupport_function", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#a2a545c9df26b3f0c2b716484c14ae5e0", null ],
+    [ "pump_redundant_enable", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#a0b8fdbf748ee3baf337eb469854d1afb", null ],
+    [ "pump_setting_pump1_reset", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#a66198908afc88653d7ac7a2a89fe02d0", null ],
+    [ "pump_setting_pump2_reset", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#a33ffed469a186818e4e46788c04090c3", null ],
+    [ "pump_setting_pump3_reset", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#a3744ed3ec441cc125130e4ee61b3e593", null ],
+    [ "pump_setting_set_auto_tune_flag", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#aa51835d26598c16b2acfbd18a03b01bc", null ],
+    [ "pump_setting_set_manual_flag", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#aa25f5667f29c39a98e4f99528739a1eb", null ],
+    [ "pump_setting_set_pump_redundant", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#aefb059233daa163ea2ab5f3cf52a3150", null ],
+    [ "pwm_control", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#a8a82dd620cc215785b48d6646040fed4", null ],
+    [ "rpu_remote_power_cycle_function", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#a261a2db1280ad64766a334a4391ddb93", null ],
+    [ "set_all_pump_power", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#a124d5677bb569cb0dd45d05b34945ef9", null ],
+    [ "set_pump_redundant_switch_time", "aalc-rpu_2src_2platform_2plat__hwmon_8h.html#a558bf4506487fa2432de8871b94bf25d", null ]
+];
