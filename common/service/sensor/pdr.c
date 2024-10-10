@@ -21,6 +21,8 @@ int pdr_init(void)
 {
 	uint32_t pdr_count = 0, record_handle = 0x0, largest_record_size = 0;
 
+	LOG_INF("pldm disable sensors count: 0x%x", plat_get_disabled_sensor_count());
+
 	pdr_count = plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR);
 	if (pdr_count != 0) {
 		total_record_count += pdr_count;
@@ -173,38 +175,22 @@ int pldm_get_sensor_name_via_sensor_id(uint16_t sensor_id, char *sensor_name, si
 {
 	CHECK_NULL_ARG_WITH_RETURN(sensor_name, -1);
 
+	const char16_t default_name[] = u"UNKNOWN SENSOR NAME";
+
 	for (size_t i = 0; i < plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR); i++) {
 		if (sensor_auxiliary_names_table[i].sensor_id == sensor_id) {
-			PDR_sensor_auxiliary_names *temp_table =
-				(PDR_sensor_auxiliary_names *)malloc(
-					sizeof(*sensor_auxiliary_names_table) *
-					plat_get_pdr_size(PLDM_SENSOR_AUXILIARY_NAMES_PDR));
-			if (!temp_table) {
-				LOG_ERR("temp_table malloc failed!");
-				return -1;
-			}
-			memcpy(temp_table, sensor_auxiliary_names_table,
-			       sizeof(*sensor_auxiliary_names_table) *
-				       plat_get_pdr_size(PLDM_SENSOR_AUXILIARY_NAMES_PDR));
-
-			LOG_HEXDUMP_DBG(temp_table, sizeof(*temp_table), "temp_table");
-
-			uint32_t pdr_count = plat_get_pdr_size(PLDM_SENSOR_AUXILIARY_NAMES_PDR);
-			for (uint32_t i = 0; i < pdr_count; i++) {
-				// Convert sensor name to UTF16-LE
-				for (int j = 0; temp_table[i].sensorName[j] != 0x0000; j++) {
-					temp_table[i].sensorName[j] =
-						sys_cpu_to_be16(temp_table[i].sensorName[j]);
-				}
+			PDR_sensor_auxiliary_names temp_cfg = sensor_auxiliary_names_table[i];
+			for (int j = 0; temp_cfg.sensorName[j] != 0x0000; j++) {
+				temp_cfg.sensorName[j] = sys_cpu_to_be16(temp_cfg.sensorName[j]);
 			}
 
 			// Convert the char16_t string to UTF-8
-			char16_to_char(temp_table[i].sensorName, sensor_name, max_length);
-
-			free(temp_table);
+			char16_to_char(temp_cfg.sensorName, sensor_name, max_length);
 			return 0;
 		}
 	}
+
+	char16_to_char(default_name, sensor_name, max_length);
 	return -1;
 }
 
@@ -288,6 +274,12 @@ __weak void plat_load_entity_aux_names_pdr_table(PDR_entity_auxiliary_names *ent
 }
 
 __weak uint16_t plat_get_pdr_entity_aux_names_size()
+{
+	//implement in platform layer
+	return 0;
+}
+
+__weak uint16_t plat_get_disabled_sensor_count()
 {
 	//implement in platform layer
 	return 0;
