@@ -17,6 +17,8 @@
 #ifndef PLAT_SENSOR_POLLING_SHELL_H
 #define PLAT_SENSOR_POLLING_SHELL_H
 
+#include <shell/shell.h>
+
 void cmd_set_plat_sensor_polling_all(const struct shell *shell, size_t argc, char **argv);
 void cmd_set_plat_sensor_polling_ubc(const struct shell *shell, size_t argc, char **argv);
 void cmd_set_plat_sensor_polling_vr(const struct shell *shell, size_t argc, char **argv);
@@ -25,5 +27,27 @@ void cmd_get_plat_sensor_polling_all(const struct shell *shell, size_t argc, cha
 void cmd_get_plat_sensor_polling_ubc(const struct shell *shell, size_t argc, char **argv);
 void cmd_get_plat_sensor_polling_vr(const struct shell *shell, size_t argc, char **argv);
 void cmd_get_plat_sensor_polling_temp(const struct shell *shell, size_t argc, char **argv);
+
+/* Sub-command Level 3 of command test */
+SHELL_STATIC_SUBCMD_SET_CREATE(
+	cmd_set_plat_sensor_polling,
+	SHELL_CMD(all, NULL, "set platform sensor polling all", cmd_set_plat_sensor_polling_all),
+	SHELL_CMD(ubc, NULL, "set platform sensor polling ubc", cmd_set_plat_sensor_polling_ubc),
+	SHELL_CMD(vr, NULL, "set platform sensor polling vr", cmd_set_plat_sensor_polling_vr),
+	SHELL_CMD(temp, NULL, "set platform sensor polling temp", cmd_set_plat_sensor_polling_temp),
+	SHELL_SUBCMD_SET_END);
+
+SHELL_STATIC_SUBCMD_SET_CREATE(cmd_get_plat_sensor_polling,
+			       SHELL_CMD(all, NULL, "get platform sensor polling all",
+					 cmd_get_plat_sensor_polling_all),
+			       SHELL_SUBCMD_SET_END);
+
+/* Sub-command Level 2 of command test */
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_plat_sensor_polling_cmd,
+			       SHELL_CMD(set_sensor_polling, &cmd_set_plat_sensor_polling,
+					 "set platform sensor polling", NULL),
+			       SHELL_CMD(get_sensor_polling, &cmd_get_plat_sensor_polling,
+					 "get platform sensor polling", NULL),
+			       SHELL_SUBCMD_SET_END);
 
 #endif
