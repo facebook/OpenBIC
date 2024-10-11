@@ -40,12 +40,14 @@ enum FRU_ID {
 	FB_12_FRU_ID,
 	FB_13_FRU_ID,
 	FB_14_FRU_ID,
+	FIO_FRU_ID,
 	MAX_FRU_ID,
 };
 
 #define FRU_CFG_NUM MAX_FRU_ID
 
 #define MB_FRU_ADDR (0xA6 >> 1)
+#define FIO_FRU_ADDR (0xA4 >> 1)
 #define BB_FRU_ADDR (0xA4 >> 1)
 #define BPB_FRU_ADDR (0xA6 >> 1)
 #define SB_FRU_ADDR (0xA6 >> 1)
