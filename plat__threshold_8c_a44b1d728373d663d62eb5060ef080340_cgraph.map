@@ -1,0 +1,10 @@
+<map id="fan_board_tach_status_handler" name="fan_board_tach_status_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,64,160,105"/>
+<area shape="rect" id="node2" href="$sensor_8c.html#a52fcbd96358bec7eff3e368a4da4a292" title=" " alt="" coords="208,17,404,43"/>
+<area shape="rect" id="node4" href="$nct7363_8c.html#a33d1b854149a2acac4ef2e214fa60bf5" title=" " alt="" coords="223,71,389,98"/>
+<area shape="rect" id="node7" href="$nct7363_8c.html#a7c0e5ebf512357e06f24c3b5f6aa2fde" title=" " alt="" coords="255,122,357,149"/>
+<area shape="rect" id="node3" href="$sensor_8c.html#ae224ad26413eb100f2abef7a1907a547" title=" " alt="" coords="452,5,589,47"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="461,71,580,98"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="637,97,780,123"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="460,122,581,149"/>
+</map>
