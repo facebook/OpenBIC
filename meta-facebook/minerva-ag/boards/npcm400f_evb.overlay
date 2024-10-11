@@ -45,12 +45,12 @@
 };
 
 &i2c6a {
-	clock-frequency = <I2C_BITRATE_STANDARD>;
-	status = "okay";
+    status = "disabled";
 };
 
 &i2c6b {
-    status = "disabled";
+	clock-frequency = <I2C_BITRATE_STANDARD>;
+	status = "okay";
 };
 
 &i2c7a {
