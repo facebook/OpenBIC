@@ -324,15 +324,21 @@ uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 	uint16_t check_error_flag = 0;
 	for (int i = 0; i < ARRAY_SIZE(modbus_pump_setting_table); i++) {
+		uint8_t func_idx = modbus_pump_setting_table[i].function_index;
 		// check bit value is 0 or 1
-		uint8_t input_bit_value =
-			(cmd->data[0] & BIT(modbus_pump_setting_table[i].function_index)) ? 1 : 0;
+		uint8_t input_bit_value = (cmd->data[0] & BIT(func_idx)) ? 1 : 0;
+		// check auto tune enable
+		if (input_bit_value) {
+			if (func_idx == MANUAL_CONTROL_PUMP || func_idx == MANUAL_CONTROL_FAN) {
+				if (cmd->data[0] & 0x08) // check auto tune enable
+					input_bit_value = 2; // error input val
+			}
+		}
 		bool result_status = modbus_pump_setting_table[i].fn(&modbus_pump_setting_table[i],
 								     input_bit_value);
 		if (!result_status) {
-			LOG_ERR("modebus 0x9410 setting %d-bit error\n",
-				modbus_pump_setting_table[i].function_index);
-			WRITE_BIT(check_error_flag, modbus_pump_setting_table[i].function_index, 1);
+			LOG_ERR("modebus 0x9410 setting %d-bit error\n", func_idx);
+			WRITE_BIT(check_error_flag, func_idx, 1);
 		}
 	}
 
@@ -502,6 +508,11 @@ uint8_t modbus_set_manual_flag(modbus_command_mapping *cmd)
 
 	uint8_t idx = cmd->arg0;
 	uint8_t val = cmd->data[0];
+
+	if (val) {
+		if (get_status_flag(STATUS_FLAG_AUTO_TUNE))
+			return MODBUS_EXC_SERVER_DEVICE_BUSY;
+	}
 
 	set_manual_pwm_flag(idx, val);
 
@@ -1029,6 +1040,13 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_V_3_3_AUX_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_V_3_3_AUX, 1, -2, 1 },
 	{ MODBUS_V_1_2_AUX_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_V_1_2_AUX, 1, -2, 1 },
 	{ MODBUS_V_5_USB_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_V_5_USB, 1, -2, 1 },
+	// TTV
+	{ MODBUS_SB_TTV_COOLANT_LEAKAGE_1_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_1_VOLT_V, 1, -2, 1 },
+	{ MODBUS_SB_TTV_COOLANT_LEAKAGE_2_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_2_VOLT_V, 1, -2, 1 },
+	{ MODBUS_SB_TTV_COOLANT_LEAKAGE_3_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_3_VOLT_V, 1, -2, 1 },
 	//FW UPDATE
 	{ MODBUS_FW_DOWNLOAD_ADDR, modbus_fw_download, NULL, 0, 0, 0, 103 },
 	// i2c master write read
@@ -1184,8 +1202,8 @@ modbus_command_mapping modbus_command_table[] = {
 	  0, 256 },
 	{ MODBUS_FB_14_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_14_FRU_ID, 0,
 	  0, 256 },
-	{ MODBUS_FB_14_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FB_14_FRU_ID, 0,
-	  0, 256 },
+	{ MODBUS_FIO_FRU_ADDR, modbus_write_fruid_data, modbus_read_fruid_data, FIO_FRU_ID, 0, 0,
+	  256 },
 	// sensor poll
 	{ MODBUS_GET_SET_SENSOR_POLL_ADDR, modbus_sensor_poll_set, modbus_sensor_poll_get, 0, 0, 0,
 	  1 },

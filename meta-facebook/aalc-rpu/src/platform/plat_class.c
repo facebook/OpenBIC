@@ -17,6 +17,7 @@
 #include <stdio.h>
 
 #include "plat_class.h"
+#include "plat_gpio.h"
 #include <logging/log.h>
 
 static uint8_t hsc_module = 0;
@@ -35,4 +36,17 @@ uint8_t get_temp_module()
 {
 	return temp_module;
 }
+
+uint8_t get_board_stage()
+{
+	uint8_t stage = ((gpio_get(REV_ID2) << 2) | (gpio_get(REV_ID1) << 1) | gpio_get(REV_ID0));
+
+	return (stage ? BOARD_STAGE_DVT : BOARD_STAGE_EVT);
+}
+
+bool evt_access(uint8_t sensor_num)
+{
+	return ((get_board_stage() == BOARD_STAGE_EVT) ? true : false);
+}
+
 LOG_MODULE_REGISTER(plat_class);
