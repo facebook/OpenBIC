@@ -252,14 +252,14 @@ bool p3h284x_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt)
 	int initial_cmd_size = sizeof(cmd_initial) / sizeof(cmd_initial[0]);
 
 	// Unlock protected regsiter
-	if (!i3c_controller_write(i3c_msg)) {
+	if (i3c_controller_write(i3c_msg) != 0) {
 		goto out;
 	}
 
 	for (int cmd = 0; cmd < initial_cmd_size; cmd++) {
 		i3c_msg->tx_len = 2;
 		memcpy(i3c_msg->data, cmd_initial[cmd], 2);
-		if (!i3c_controller_write(i3c_msg)) {
+		if (i3c_controller_write(i3c_msg) != 0) {
 			LOG_ERR("Failed to initial i3c mode. offset = 0x%02x, value = 0x%02x",
 				cmd_initial[cmd][0], cmd_initial[cmd][1]);
 			goto out;
@@ -270,7 +270,7 @@ bool p3h284x_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt)
 	ret = true;
 out:
 	memcpy(i3c_msg->data, cmd_protect, 2);
-	if (!i3c_controller_write(i3c_msg)) {
+	if (i3c_controller_write(i3c_msg) != 0) {
 		goto out;
 	}
 
@@ -288,7 +288,7 @@ bool p3h284x_set_slave_port(uint8_t bus, uint8_t addr, uint8_t setting)
 	i3c_msg.target_addr = addr;
 	i3c_msg.tx_len = 2;
 	memcpy(&i3c_msg.data, cmd_unprotect, 2);
-	if (!i3c_controller_write(&i3c_msg)) {
+	if (i3c_controller_write(&i3c_msg) != 0) {
 		LOG_ERR("Failed to unprotect slave port register");
 		ret = false;
 		goto out;
@@ -298,7 +298,7 @@ bool p3h284x_set_slave_port(uint8_t bus, uint8_t addr, uint8_t setting)
 	i3c_msg.tx_len = 2;
 	i3c_msg.data[0] = P3H284X_TARGET_PORT_ENABLE;
 	i3c_msg.data[1] = setting;
-	if (!i3c_controller_write(&i3c_msg)) {
+	if (i3c_controller_write(&i3c_msg) != 0) {
 		LOG_ERR("Failed to set slave port settings");
 		ret = false;
 		goto out;
@@ -309,7 +309,7 @@ out:
 	memset(&i3c_msg.data, 0, 2);
 	i3c_msg.tx_len = 2;
 	memcpy(&i3c_msg.data, cmd_protect, 2);
-	if (!i3c_controller_write(&i3c_msg)) {
+	if (i3c_controller_write(&i3c_msg) != 0) {
 		goto out;
 	}
 
