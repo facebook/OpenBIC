@@ -1,0 +1,81 @@
+From 4a4b539912d2197a460b0f9e84943a231eb41b15 Mon Sep 17 00:00:00 2001
+From: victor <Victor.Jhong@quantatw.com>
+Date: Fri, 4 Oct 2024 10:12:16 +0800
+Subject: [PATCH] drivers: i2c: add force_scan shell command to support
+ scanning over 0x77
+
+---
+ drivers/i2c/i2c_shell.c | 50 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
+
+diff --git a/drivers/i2c/i2c_shell.c b/drivers/i2c/i2c_shell.c
+index 5242467cd3..a9c8f01fc5 100644
+--- a/drivers/i2c/i2c_shell.c
++++ b/drivers/i2c/i2c_shell.c
+@@ -80,6 +80,54 @@ static int cmd_i2c_scan(const struct shell *shell,
+ 	return 0;
+ }
+ 
++static int cmd_i2c_force_scan(const struct shell *shell,
++			size_t argc, char **argv)
++{
++	const struct device *dev;
++	uint8_t cnt = 0, first = 0x04, last = 0x7f;
++
++	dev = device_get_binding(argv[1]);
++
++	if (!dev) {
++		shell_error(shell, "I2C: Device driver %s not found.",
++			    argv[1]);
++		return -ENODEV;
++	}
++
++	shell_print(shell,
++		    "     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f");
++	for (uint8_t i = 0; i <= last; i += 16) {
++		shell_fprintf(shell, SHELL_NORMAL, "%02x: ", i);
++		for (uint8_t j = 0; j < 16; j++) {
++			if (i + j < first || i + j > last) {
++				shell_fprintf(shell, SHELL_NORMAL, "   ");
++				continue;
++			}
++
++			struct i2c_msg msgs[1];
++			uint8_t dst;
++
++			/* Send the address to read from */
++			msgs[0].buf = &dst;
++			msgs[0].len = 0U;
++			msgs[0].flags = I2C_MSG_WRITE | I2C_MSG_STOP;
++			if (i2c_transfer(dev, &msgs[0], 1, i + j) == 0) {
++				shell_fprintf(shell, SHELL_NORMAL,
++					      "%02x ", i + j);
++				++cnt;
++			} else {
++				shell_fprintf(shell, SHELL_NORMAL, "-- ");
++			}
++		}
++		shell_print(shell, "");
++	}
++
++	shell_print(shell, "%u devices found on %s",
++		    cnt, argv[1]);
++
++	return 0;
++}
++
+ static int cmd_i2c_recover(const struct shell *shell,
+ 			   size_t argc, char **argv)
+ {
+@@ -245,6 +293,8 @@ static void device_name_get(size_t idx, struct shell_static_entry *entry)
+ SHELL_STATIC_SUBCMD_SET_CREATE(sub_i2c_cmds,
+ 			       SHELL_CMD(scan, &dsub_device_name,
+ 					 "Scan I2C devices", cmd_i2c_scan),
++					SHELL_CMD(force_scan, &dsub_device_name,
++					 "Scan I2C devices", cmd_i2c_force_scan),
+ 			       SHELL_CMD(recover, &dsub_device_name,
+ 					 "Recover I2C bus", cmd_i2c_recover),
+ 			       SHELL_CMD_ARG(read, &dsub_device_name,
+-- 
+2.25.1
+

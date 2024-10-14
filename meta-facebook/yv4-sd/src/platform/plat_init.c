@@ -39,6 +39,7 @@
 #include "plat_dimm.h"
 #include "pcc.h"
 #include "plat_kcs.h"
+#include "plat_pldm_sensor.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -93,6 +94,8 @@ void pal_pre_init()
 	init_vr_event_work();
 	init_event_work();
 	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY + 1); // work queue for low priority jobs
+
+	plat_init_pldm_sensor_table();
 }
 
 void pal_post_init()

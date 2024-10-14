@@ -186,7 +186,7 @@ static int sensor_access(const struct shell *shell, uint16_t table_idx, sensor_c
 					"[0x%-2x] %-40s: %-18s | access[%c] | poll %4d(%2d) sec | %-21s | %c%5d.%03d",
 					sensor_id, sensor_name, sensor_type_name[type],
 					check_access, diff_time, (int)poll_time,
-					pldm_sensor_status_name[cfg->cache_status], sign,
+					pldm_sensor_status_name[cache_status], sign,
 					cache_reading.integer, cache_reading.fraction);
 
 				continue;
@@ -196,8 +196,7 @@ static int sensor_access(const struct shell *shell, uint16_t table_idx, sensor_c
 				shell,
 				"[0x%-2x] %-40s: %-18s | access[%c] | poll %4d(%2d) sec | %-21s | na",
 				sensor_id, sensor_name, sensor_type_name[type], check_access,
-				diff_time, (int)poll_time,
-				pldm_sensor_status_name[cfg->cache_status]);
+				diff_time, (int)poll_time, pldm_sensor_status_name[cache_status]);
 			continue;
 		}
 	}

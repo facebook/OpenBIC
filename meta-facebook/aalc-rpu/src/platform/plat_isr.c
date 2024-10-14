@@ -45,6 +45,7 @@ void emergency_button_action()
 	} else {
 		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_EMERGENCY_BUTTON, 1);
 		deassert_all_rpu_ready_pin();
+		error_log_event(SENSOR_NUM_EMERGENCY_BUTTON_TRIGGERED, IS_ABNORMAL_VAL);
 	}
 }
 
