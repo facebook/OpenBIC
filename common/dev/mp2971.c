@@ -735,7 +735,6 @@ float get_resolution(sensor_cfg *cfg)
 	case PMBUS_READ_VOUT:
 		if (vout_scale_enable == true) {
 			if (get_vout_scale(cfg, &vout_scale) == false) {
-				vout_scale = 0;
 				LOG_WRN("get vout scale failed");
 			}
 		}
@@ -752,6 +751,17 @@ float get_resolution(sensor_cfg *cfg)
 		return temp_reso;
 		break;
 	case PMBUS_READ_POUT:
+		if (vout_scale_enable == true) {
+			if (get_vout_scale(cfg, &vout_scale) == false) {
+				LOG_WRN("get vout scale failed");
+			}
+		}
+
+		/* If the Vout exceeds the VR's operating range, you may add a voltage divider. 
+		The VR will read the divided voltage and calculate power (P) based on this adjusted voltage, not the original Vout. 
+		So, you might need to adjust Pout to reflect the actual output power. */
+
+		pout_reso = pout_reso / vout_scale;
 		return pout_reso;
 		break;
 	default:
