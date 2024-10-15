@@ -62,13 +62,25 @@ uint8_t tmp431_read(sensor_cfg *cfg, int *reading)
 			return SENSOR_FAIL_TO_ACCESS;
 		}
 		temperature_low_byte = msg.data[0];
-	} else if (offset == TMP431_REMOTE_TEMPERATRUE) {
+	} else if ((offset == TMP431_REMOTE_TEMPERATRUE) ||
+		   (offset == TMP432_REMOTE_TEMPERATRUE_1)) {
 		msg.data[0] = REMOTE_TEMPERATURE_HIGH_BYTE;
 		if (i2c_master_read(&msg, retry)) {
 			return SENSOR_FAIL_TO_ACCESS;
 		}
 		temperature_high_byte = msg.data[0];
 		msg.data[0] = REMOTE_TEMPERATURE_LOW_BYTE;
+		if (i2c_master_read(&msg, retry)) {
+			return SENSOR_FAIL_TO_ACCESS;
+		}
+		temperature_low_byte = msg.data[0];
+	} else if (offset == TMP432_REMOTE_TEMPERATRUE_2) {
+		msg.data[0] = REMOTE_TEMPERATURE_2_HIGH_BYTE;
+		if (i2c_master_read(&msg, retry)) {
+			return SENSOR_FAIL_TO_ACCESS;
+		}
+		temperature_high_byte = msg.data[0];
+		msg.data[0] = REMOTE_TEMPERATURE_2_LOW_BYTE;
 		if (i2c_master_read(&msg, retry)) {
 			return SENSOR_FAIL_TO_ACCESS;
 		}

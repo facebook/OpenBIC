@@ -6799,7 +6799,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.type = sensor_dev_tmp431,
 			.port = I2C_BUS1,
 			.target_addr = ON_DIE_1_TEMP_ADDR,
-			.offset = TMP431_LOCAL_TEMPERATRUE,
+			.offset = TMP432_REMOTE_TEMPERATRUE_1,
 			.access_checker = is_temp_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
@@ -6867,7 +6867,143 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.type = sensor_dev_tmp431,
 			.port = I2C_BUS1,
 			.target_addr = ON_DIE_2_TEMP_ADDR,
-			.offset = TMP431_LOCAL_TEMPERATRUE,
+			.offset = TMP432_REMOTE_TEMPERATRUE_2,
+			.access_checker = is_temp_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+		},
+	},
+	{
+		{
+			// AEGIS_ON_DIE_3_TEMP_C
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			SENSOR_NUM_ON_DIE_3_TEMP_C, //uint16_t sensor_id;
+			0x0000, //uint16_t entity_type; //Need to check
+			0x0005, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init; //Need to check
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x02, //uint8_t base_unit;  //unit
+			0, //int8_t unit_modifier; //Need to check
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x4, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			0x00, //uint8_t supported_thresholds; //Need to check
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0x00, //uint8_t range_field_support; //Need to check
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0x00000000, //uint32_t warning_high; //Need to check
+			0x00000000, //uint32_t warning_low; //Need to check
+			0x00000000, //uint32_t critical_high; //Need to check
+			0x00000000, //uint32_t critical_low; //Need to check
+			0x00000000, //uint32_t fatal_high; //Need to check
+			0x00000000, //uint32_t fatal_low; //Need to check
+		},
+		.update_time = 0,
+		{
+			.num = SENSOR_NUM_ON_DIE_3_TEMP_C,
+			.type = sensor_dev_tmp431,
+			.port = I2C_BUS1,
+			.target_addr = ON_DIE_3_TEMP_ADDR,
+			.offset = TMP432_REMOTE_TEMPERATRUE_1,
+			.access_checker = is_temp_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+		},
+	},
+	{
+		{
+			// AEGIS_ON_DIE_4_TEMP_C
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			SENSOR_NUM_ON_DIE_4_TEMP_C, //uint16_t sensor_id;
+			0x0000, //uint16_t entity_type; //Need to check
+			0x0006, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init; //Need to check
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x02, //uint8_t base_unit;  //unit
+			0, //int8_t unit_modifier; //Need to check
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x4, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			0x00, //uint8_t supported_thresholds; //Need to check
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0x00, //uint8_t range_field_support; //Need to check
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0x00000000, //uint32_t warning_high; //Need to check
+			0x00000000, //uint32_t warning_low; //Need to check
+			0x00000000, //uint32_t critical_high; //Need to check
+			0x00000000, //uint32_t critical_low; //Need to check
+			0x00000000, //uint32_t fatal_high; //Need to check
+			0x00000000, //uint32_t fatal_low; //Need to check
+		},
+		.update_time = 0,
+		{
+			.num = SENSOR_NUM_ON_DIE_4_TEMP_C,
+			.type = sensor_dev_tmp431,
+			.port = I2C_BUS1,
+			.target_addr = ON_DIE_4_TEMP_ADDR,
+			.offset = TMP432_REMOTE_TEMPERATRUE_2,
 			.access_checker = is_temp_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
@@ -7164,6 +7300,42 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
 		.sensorName = u"ON_DIE_2_TEMP_C",
+	},
+	{
+
+		// AEGIS_ON_DIE_3_TEMP_C
+		/*** PDR common header***/
+		{
+			.record_handle = 0x00000000,
+			.PDR_header_version = 0x01,
+			.PDR_type = PLDM_SENSOR_AUXILIARY_NAMES_PDR,
+			.record_change_number = 0x0000,
+			.data_length = 0x0000,
+		},
+		.terminus_handle = 0x0000,
+		.sensor_id = SENSOR_NUM_ON_DIE_3_TEMP_C,
+		.sensor_count = 0x1,
+		.nameStringCount = 0x1,
+		.nameLanguageTag = "en",
+		.sensorName = u"ON_DIE_3_TEMP_C",
+	},
+	{
+
+		// AEGIS_ON_DIE_4_TEMP_C
+		/*** PDR common header***/
+		{
+			.record_handle = 0x00000000,
+			.PDR_header_version = 0x01,
+			.PDR_type = PLDM_SENSOR_AUXILIARY_NAMES_PDR,
+			.record_change_number = 0x0000,
+			.data_length = 0x0000,
+		},
+		.terminus_handle = 0x0000,
+		.sensor_id = SENSOR_NUM_ON_DIE_4_TEMP_C,
+		.sensor_count = 0x1,
+		.nameStringCount = 0x1,
+		.nameLanguageTag = "en",
+		.sensorName = u"ON_DIE_4_TEMP_C",
 	},
 	{
 
