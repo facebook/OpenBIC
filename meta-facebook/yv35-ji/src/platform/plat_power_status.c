@@ -246,6 +246,54 @@ void set_satmc_status(bool status)
 		gpio_set(VIRTUAL_SATMC_READY, GPIO_LOW);
 }
 
+bool retimer_addr_get = false;
+void retimer_addr_loss()
+{
+	retimer_addr_get = false;
+}
+uint8_t scan_retimer_addr()
+{
+	static uint8_t retimer_addr = 0xFF;
+	if (retimer_addr_get == true)
+		return retimer_addr;
+	uint8_t addr_list[10] = { 0 };
+	uint8_t addr_len = 0;
+	uint8_t retimer_module = RETIMER_MODULE_UNKNOWN;
+	uint8_t retry = 3;
+	I2C_MSG msg = { 0 };
+	msg.bus = I2C_BUS2;
+	msg.target_addr = 0xE2 >> 1;
+	msg.tx_len = 1;
+	msg.rx_len = 0;
+	msg.data[0] = 0x02; // Switch bus to retimer
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("Failed to write to I2C bus 2");
+		return retimer_addr;
+	}
+	i2c_scan(I2C_BUS2, addr_list, &addr_len);
+	int i = 0;
+	for (i = 0; i < addr_len; i++) {
+		if (addr_list[i] == (AL_RETIMER_ADDR << 1)) {
+			LOG_WRN("Found AL retimer device at 0x%x", AL_RETIMER_ADDR);
+			retimer_module = RETIMER_MODULE_PT4080L;
+			retimer_addr = AL_RETIMER_ADDR;
+			break;
+		} else if (addr_list[i] == (TI_RETIMER_ADDR << 1)) {
+			LOG_WRN("Found TI retimer device at 0x%x", TI_RETIMER_ADDR);
+			retimer_module = RETIMER_MODULE_DS160PT801;
+			retimer_addr = TI_RETIMER_ADDR;
+			break;
+		}
+	}
+	if (i == addr_len) {
+		LOG_DBG("No retimer device found!!");
+		return 0xFF;
+	}
+	set_retimer_module(retimer_module);
+	retimer_addr_get = true;
+	return retimer_addr;
+}
+
 bool retimer_access(uint8_t sensor_num)
 {
 	return get_retimer_status();
@@ -259,5 +307,14 @@ bool get_retimer_status()
 	if (get_post_status() == true)
 		return true;
 
-	return gpio_get(VIRTUAL_RETIMER_PG);
+	if (gpio_get(VIRTUAL_RETIMER_PG) == GPIO_LOW)
+		return false;
+
+	if (retimer_addr_get == true)
+		return true;
+
+	if (scan_retimer_addr() == 0xFF)
+		return false;
+
+	return true;
 }
