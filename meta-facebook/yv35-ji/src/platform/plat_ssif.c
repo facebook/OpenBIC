@@ -43,7 +43,7 @@ void ssif_init(void)
 	ssif_device_init(ssif_cfg_table, ARRAY_SIZE(ssif_cfg_table));
 
 	if (ssif_inst_get_by_bus(SSIF_I2C_BUS))
-		LOG_WRN("SSIF ready!");
+		LOG_INF("SSIF ready!");
 }
 
 void pal_bios_post_complete()

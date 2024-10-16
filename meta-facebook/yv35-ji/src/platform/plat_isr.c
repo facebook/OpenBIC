@@ -154,6 +154,7 @@ void check_host_reboot_status()
 	if (get_DC_status() == true) {
 		LOG_WRN("Host reboot detected!");
 		start_satmc_access_poll();
+		retimer_addr_loss();
 	}
 }
 
@@ -377,6 +378,7 @@ void ISR_PWRGD_CPU()
 		start_satmc_access_poll();
 	} else {
 		set_satmc_status(false);
+		retimer_addr_loss();
 
 		/* Pull high virtual bios complete pin */
 		handle_post_status(GPIO_HIGH, true);

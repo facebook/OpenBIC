@@ -30,5 +30,7 @@ void set_satmc_status(bool status);
 bool get_satmc_status();
 bool retimer_access(uint8_t sensor_num);
 bool get_retimer_status();
+uint8_t scan_retimer_addr();
+void retimer_addr_loss();
 
 #endif
