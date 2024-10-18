@@ -5491,7 +5491,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_X8_RETIMER_TEMP_C",
+		.sensorName = u"MB_X8_RTM_TEMP_C",
 	},
 	{
 		// MB_ADC_P12V_STBY_VOLT_V
@@ -5610,7 +5610,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_ADC_P12V_DIMM_0_VOLT_V",
+		.sensorName = u"MB_ADC_DIMM0_P12V_VOLT_V",
 	},
 	{
 		// MB_ADC_P12V_DIMM_1_VOLT_V
@@ -5627,7 +5627,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_ADC_P12V_DIMM_1_VOLT_V",
+		.sensorName = u"MB_ADC_DIMM1_P12V_VOLT_V",
 	},
 	{
 		// MB_ADC_P1V2_STBY_VOLT_V
@@ -5814,7 +5814,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_E1S_BOOT_VOLT_V",
+		.sensorName = u"MB_PMON_E1S_BOOT_VOLT_V",
 	},
 	{
 		// MB_INA233_E1S_Data_VOLT_V
@@ -5831,7 +5831,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_E1S_DATA_VOLT_V",
+		.sensorName = u"MB_PMON_E1S_DATA_VOLT_V",
 	},
 	{
 		// MB_VR_CPU0_CURR_A
@@ -5933,7 +5933,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_X8_RTM_CURR_A",
+		.sensorName = u"MB_PMON_X8_RTM_CURR_A",
 	},
 	{
 		// MB_INA233_E1S_Boot_CURR_A
@@ -5950,7 +5950,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_E1S_BOOT_CURR_A",
+		.sensorName = u"MB_PMON_E1S_BOOT_CURR_A",
 	},
 	{
 		// MB_INA233_E1S_Data_CURR_A
@@ -5967,7 +5967,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_E1S_DATA_CURR_A",
+		.sensorName = u"MB_PMON_E1S_DATA_CURR_A",
 	},
 	{
 		// MB_VR_CPU0_PWR_W
@@ -6290,7 +6290,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_X8_RTM_PWR_W",
+		.sensorName = u"MB_PMON_X8_RTM_PWR_W",
 	},
 	{
 		// MB_INA233_E1S_Boot_PWR_W
@@ -6307,7 +6307,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_E1S_BOOT_PWR_W",
+		.sensorName = u"MB_PMON_E1S_BOOT_PWR_W",
 	},
 	{
 		// MB_INA233_E1S_Data_PWR_W
@@ -6324,7 +6324,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_E1S_DATA_PWR_W",
+		.sensorName = u"MB_PMON_E1S_DATA_PWR_W",
 	}
 };
 
@@ -6615,7 +6615,7 @@ char16_t *char16_strcat_char(char16_t *dest, char16_t ch)
 void plat_init_entity_aux_names_pdr_table()
 {
 	// Base name
-	const char16_t base_name[] = u"Sentinel_Dome_Slot_";
+	const char16_t base_name[] = u"SENTINEL_DOME_SLOT_";
 
 	// Get slot ID
 	uint8_t slot_id = get_slot_id();
