@@ -19,8 +19,6 @@
 #include <shell/shell.h>
 #include "plat_pldm_sensor.h"
 
-LOG_MODULE_REGISTER(plat_sensor_polling_shell);
-
 void cmd_set_plat_sensor_polling_all(const struct shell *shell, size_t argc, char **argv)
 {
 	if (argc != 2) {

@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-#include "plat_sensor_polling_shell.h"
-#include "cpld_shell.h"
+#ifndef CPLD_SHELL_H
+#define CPLD_SHELL_H
 
-/* Sub-command Level 1 of command test */
-SHELL_STATIC_SUBCMD_SET_CREATE(sub_test_cmds,
-			       SHELL_CMD(sensor, &sub_plat_sensor_polling_cmd,
-					 "set/get platform sensor polling command", NULL),
-			       SHELL_CMD(cpld, &sub_cpld_cmd, "cpld command", NULL),
+#include <shell/shell.h>
+
+void cmd_cpld_dump(const struct shell *shell, size_t argc, char **argv);
+
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_cpld_cmd, SHELL_CMD(dump, NULL, "cpld dump", cmd_cpld_dump),
 			       SHELL_SUBCMD_SET_END);
 
-/* Root of command test */
-SHELL_CMD_REGISTER(test, &sub_test_cmds, "Test commands for AG", NULL);
+#endif
