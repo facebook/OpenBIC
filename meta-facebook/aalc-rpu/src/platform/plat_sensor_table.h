@@ -63,6 +63,7 @@ enum PLAT_DEF_SENSOR_E {
 #define PDB_INA238_U15_ADDR (0x82 >> 1)
 #define PDB_MAX11617_U99_ADDR (0x6A >> 1) // U15 2nd src
 #define PDB_ADS1015_U101_ADDR (0x90 >> 1) //U15 2nd src
+#define FIO_TMP75_ADDR (0x96 >> 1)
 
 /* define sensors offset */
 #define TMP75_TEMP_OFFSET 0x00

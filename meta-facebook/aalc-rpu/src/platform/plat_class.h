@@ -30,7 +30,14 @@ enum TEMP_MODULE {
 	SB_NCT214,
 	TEMP_MODULE_UNKNOWN,
 };
+enum BOARD_STAGE {
+	BOARD_STAGE_EVT,
+	BOARD_STAGE_DVT,
+	BOARD_STAGE_UNKNOWN,
+};
 void init_aalc_config();
 uint8_t get_hsc_module();
 uint8_t get_temp_module();
+uint8_t get_board_stage();
+bool evt_access(uint8_t sensor_num);
 #endif

@@ -386,7 +386,7 @@ sensor_cfg plat_sensor_config[] = {
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
 	  &bus_2_PCA9546A_configs[2], post_PCA9546A_read, NULL, &hdc1080_init_args[13] },
 	{ SENSOR_NUM_MB_HUM_PCT_RH, sensor_dev_hdc1080, I2C_BUS10, HDC1080_ADDR, HDC1080_HUM_OFFSET,
-	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  evt_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &hdc1080_init_args[17] },
 	{ SENSOR_NUM_PDB_HUM_PCT_RH, sensor_dev_hdc1080, I2C_BUS9, HDC1080_ADDR, HDC1080_HUM_OFFSET,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
@@ -1122,8 +1122,26 @@ void load_plat_def_sensor_config()
 		add_sensor_config(plat_def_sensor_config[index]);
 }
 
+static void change_mb_temp_sensor_config()
+{
+	if (get_board_stage() == BOARD_STAGE_EVT)
+		return;
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(plat_sensor_config); i++) {
+		sensor_cfg *p = plat_sensor_config + i;
+		if (p->num == SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C) {
+			p->type = sensor_dev_tmp75;
+			p->offset = TMP75_TEMP_OFFSET;
+			p->target_addr = FIO_TMP75_ADDR;
+			p->init_args = NULL;
+			break;
+		}
+	}
+}
+
 void load_sensor_config(void)
 {
+	change_mb_temp_sensor_config();
 	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
 	sensor_config_count = ARRAY_SIZE(plat_sensor_config);
 
