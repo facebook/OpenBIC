@@ -31,8 +31,17 @@
 #include "plat_pwm.h"
 #include "plat_status.h"
 #include "plat_isr.h"
+#include "plat_fru.h"
 
 LOG_MODULE_REGISTER(plat_hwmon);
+
+static uint32_t pump1_last_switch_time = 0;
+static uint32_t pump2_last_switch_time = 0;
+static uint32_t pump3_last_switch_time = 0;
+static uint32_t pump1_current_boot_unrunning_time = 0;
+static uint32_t pump2_current_boot_unrunning_time = 0;
+static uint32_t pump3_current_boot_unrunning_time = 0;
+static uint32_t last_auto_tune_flag = 0;
 
 bool modbus_pump_setting_unsupport_function(pump_reset_struct *data, uint8_t bit_val)
 {
@@ -144,6 +153,11 @@ bool pump_setting_set_auto_tune_flag(pump_reset_struct *data, uint8_t bit_val)
 	}
 
 	set_status_flag(STATUS_FLAG_AUTO_TUNE, 0, bit_val);
+	if (bit_val != last_auto_tune_flag) {
+		set_pump_uptime_secs(true, true, true);
+
+		last_auto_tune_flag = bit_val;
+	}
 
 	return true;
 }
@@ -415,4 +429,174 @@ uint8_t pwm_control(uint8_t group, uint8_t duty)
 		return 0;
 
 	return 1;
+}
+
+bool get_pump_last_switch_time(uint8_t pump_num, uint32_t *return_uptime)
+{
+	switch (pump_num) {
+	case PUMP_1_UPTIME:
+		*return_uptime = pump1_last_switch_time;
+
+		break;
+	case PUMP_2_UPTIME:
+		*return_uptime = pump2_last_switch_time;
+
+		break;
+	case PUMP_3_UPTIME:
+		*return_uptime = pump3_last_switch_time;
+
+		break;
+	default:
+		LOG_ERR("unknow pump_num %d when get pump last switch time", pump_num);
+		return false;
+	}
+
+	return true;
+}
+
+bool get_pump_current_boot_unrunning_time(uint8_t pump_num, uint32_t *return_uptime)
+{
+	switch (pump_num) {
+	case PUMP_1_UPTIME:
+		*return_uptime = pump1_current_boot_unrunning_time;
+
+		break;
+	case PUMP_2_UPTIME:
+		*return_uptime = pump2_current_boot_unrunning_time;
+
+		break;
+	case PUMP_3_UPTIME:
+		*return_uptime = pump3_current_boot_unrunning_time;
+
+		break;
+	default:
+		LOG_ERR("unknow pump_num %d when get pump current boot unrunning time", pump_num);
+		return false;
+	}
+
+	return true;
+}
+
+pump_running_time pump_running_time_info[] = {
+	{ PUMP_1_UPTIME, EEPROM_PUMP1_UPTIME_SIZE, EEPROM_PUMP1_UPTIME_OFFSET },
+	{ PUMP_2_UPTIME, EEPROM_PUMP2_UPTIME_SIZE, EEPROM_PUMP2_UPTIME_OFFSET },
+	{ PUMP_3_UPTIME, EEPROM_PUMP3_UPTIME_SIZE, EEPROM_PUMP3_UPTIME_OFFSET },
+};
+
+bool read_pump_running_time_data_from_eeprom(uint8_t pump_num, uint32_t *return_data)
+{
+	if (pump_num > PUMP_MAX_NUM || pump_num < 0) {
+		LOG_ERR("unknow pump_num when read data from eeprom %d", pump_num);
+		return false;
+	}
+
+	// read from eeprom
+	uint8_t tmp_read_data[4] = { 0 }; // 4 bytes
+	uint16_t offset = 0;
+
+	offset = pump_running_time_info[pump_num].eeprom_offset;
+
+	if (!plat_eeprom_read(offset, tmp_read_data, pump_running_time_info->size)) {
+		LOG_ERR("read %d uptime fail!, ", pump_num);
+		return false;
+	}
+
+	*return_data = (tmp_read_data[0] << 24) | (tmp_read_data[1] << 16) |
+		       (tmp_read_data[2] << 8) | tmp_read_data[3];
+
+	return true;
+}
+
+bool get_pump_uptime_secs(uint8_t pump_num, uint32_t *return_uptime)
+{
+	CHECK_NULL_ARG_WITH_RETURN(return_uptime, false);
+
+	if (pump_num > PUMP_MAX_NUM) {
+		LOG_ERR("unknow pump_num when read pump uptime secs %d", pump_num);
+		return false;
+	}
+
+	// get pump running time from eeprom
+	uint32_t tmp_uptime = 0;
+	if (!read_pump_running_time_data_from_eeprom(pump_num, &tmp_uptime))
+		return false;
+
+	uint32_t tmp_last_switch_time = 0;
+	if (!get_pump_last_switch_time(pump_num, &tmp_last_switch_time))
+		return false;
+
+	uint32_t tmp_current_boot_unrunning_time = 0;
+	if (!get_pump_current_boot_unrunning_time(pump_num, &tmp_current_boot_unrunning_time))
+		return false;
+
+	// if auto tune is on
+	if (get_status_flag(STATUS_FLAG_AUTO_TUNE))
+		*return_uptime =
+			tmp_uptime + (k_uptime_get_32() / 1000) - tmp_current_boot_unrunning_time;
+	else
+		*return_uptime =
+			tmp_uptime + (tmp_last_switch_time - tmp_current_boot_unrunning_time);
+	return true;
+}
+
+bool set_pump_uptime_secs(uint8_t pump_1_set, uint8_t pump_2_set, uint8_t pump_3_set)
+{
+	bool auto_tune_flag = get_status_flag(STATUS_FLAG_AUTO_TUNE);
+
+	if (auto_tune_flag == last_auto_tune_flag)
+		return true;
+
+	if (pump_1_set) {
+		if (auto_tune_flag)
+			pump1_current_boot_unrunning_time +=
+				(k_uptime_get_32() / 1000 - pump1_last_switch_time);
+
+		pump1_last_switch_time = k_uptime_get_32() / 1000;
+	}
+
+	if (pump_2_set) {
+		if (auto_tune_flag)
+			pump2_current_boot_unrunning_time +=
+				(k_uptime_get_32() / 1000 - pump2_last_switch_time);
+
+		pump2_last_switch_time = k_uptime_get_32() / 1000;
+	}
+
+	if (pump_3_set) {
+		if (auto_tune_flag)
+			pump3_current_boot_unrunning_time +=
+				(k_uptime_get_32() / 1000 - pump3_last_switch_time);
+
+		pump3_last_switch_time = k_uptime_get_32() / 1000;
+	}
+
+	last_auto_tune_flag = auto_tune_flag;
+
+	return true;
+}
+
+bool modbus_clear_pump_running_time_function(pump_reset_struct *data, uint8_t bit_val)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+	if (bit_val == 0) // do nothing
+		return true;
+
+	// clear eeprom
+	uint8_t total_size =
+		EEPROM_PUMP1_UPTIME_SIZE + EEPROM_PUMP2_UPTIME_SIZE + EEPROM_PUMP3_UPTIME_SIZE;
+	uint8_t clear_data[12] = { 0 };
+
+	if (!plat_eeprom_write(EEPROM_PUMP1_UPTIME_OFFSET, clear_data, total_size)) {
+		LOG_ERR("clear pump running time fail!");
+		return false;
+	}
+
+	pump1_last_switch_time = k_uptime_get_32() / 1000;
+	pump2_last_switch_time = k_uptime_get_32() / 1000;
+	pump3_last_switch_time = k_uptime_get_32() / 1000;
+	pump1_current_boot_unrunning_time = k_uptime_get_32() / 1000;
+	pump2_current_boot_unrunning_time = k_uptime_get_32() / 1000;
+	pump3_current_boot_unrunning_time = k_uptime_get_32() / 1000;
+
+	return true;
 }
