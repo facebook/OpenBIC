@@ -787,6 +787,7 @@ uint8_t get_sensor_reading(sensor_cfg *cfg_table, uint8_t cfg_count, uint8_t sen
 void pal_set_sensor_poll_interval(int *interval_ms);
 bool stby_access(uint8_t sensor_num);
 bool dc_access(uint8_t sensor_num);
+bool e1s_pwrgd_access(uint8_t sensor_num);
 bool post_access(uint8_t sensor_num);
 bool me_access(uint8_t sensor_num);
 bool vr_access(uint8_t sensor_num);
