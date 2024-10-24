@@ -27,6 +27,7 @@
 #include "sensor.h"
 #include "plat_gpio.h"
 #include "plat_pwm.h"
+#include "plat_fsc.h"
 
 #define I2C_MASTER_READ_BACK_MAX_SIZE 16 // 16 registers
 
@@ -95,12 +96,14 @@ void plat_enable_sensor_poll(void)
 {
 	enable_sensor_poll();
 	nct7363_wdt_all_enable();
+	controlFSC(FSC_ENABLE);
 }
 
 void plat_disable_sensor_poll(void)
 {
 	nct7363_wdt_all_disable();
 	disable_sensor_poll();
+	controlFSC(FSC_DISABLE);
 }
 
 void set_rpu_ready()
