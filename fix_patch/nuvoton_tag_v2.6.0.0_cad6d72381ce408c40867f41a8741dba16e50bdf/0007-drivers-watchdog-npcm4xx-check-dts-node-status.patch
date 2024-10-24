@@ -1,0 +1,52 @@
+From ebfda96b6f128602b694691ea1baa877317b7e50 Mon Sep 17 00:00:00 2001
+From: James Chiang <cpchiang1@nuvoton.com>
+Date: Sun, 20 Oct 2024 18:17:32 -0700
+Subject: [PATCH] drivers: watchdog: npcm4xx: check dts node status
+
+check dts node status.
+
+Signed-off-by: James Chiang <cpchiang1@nuvoton.com>
+---
+ boards/arm/npcm400f_evb/npcm400f_evb.dts |  4 ++++
+ drivers/watchdog/wdt_npcm4xx.c           | 13 ++++++++-----
+ 2 files changed, 12 insertions(+), 5 deletions(-)
+
+diff --git a/boards/arm/npcm400f_evb/npcm400f_evb.dts b/boards/arm/npcm400f_evb/npcm400f_evb.dts
+index 406d841bba..614ae23f8a 100644
+--- a/boards/arm/npcm400f_evb/npcm400f_evb.dts
++++ b/boards/arm/npcm400f_evb/npcm400f_evb.dts
+@@ -65,6 +65,10 @@
+ 	current-speed = <115200>;
+ };
+ 
++&twd0 {
++	status = "okay";
++};
++
+ &peci0 {
+ 	status = "okay";
+ 	pinctrl-0 = <&pinctrl_peci0_default>;
+diff --git a/drivers/watchdog/wdt_npcm4xx.c b/drivers/watchdog/wdt_npcm4xx.c
+index cfed19012c..208d3ed68a 100644
+--- a/drivers/watchdog/wdt_npcm4xx.c
++++ b/drivers/watchdog/wdt_npcm4xx.c
+@@ -359,8 +359,11 @@ static const struct wdt_driver_api wdt_npcm4xx_driver_api = {
+ 	.feed = wdt_npcm4xx_feed,
+ };
+ 
+-DEVICE_DT_INST_DEFINE(0, wdt_npcm4xx_init, NULL,
+-		      &wdt_npcm4xx_data_0, &wdt_npcm4xx_cfg_0,
+-		      PRE_KERNEL_1,
+-		      CONFIG_KERNEL_INIT_PRIORITY_DEFAULT,
+-		      &wdt_npcm4xx_driver_api);
++#define NPCM4XX_WDT_INIT(inst)							\
++	DEVICE_DT_INST_DEFINE(inst, wdt_npcm4xx_init, NULL, 			\
++			&wdt_npcm4xx_data_##inst, &wdt_npcm4xx_cfg_##inst, 	\
++			PRE_KERNEL_1, 						\
++			CONFIG_KERNEL_INIT_PRIORITY_DEFAULT, 			\
++			&wdt_npcm4xx_driver_api);
++
++DT_INST_FOREACH_STATUS_OKAY(NPCM4XX_WDT_INIT)
+-- 
+2.25.1
+
