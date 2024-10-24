@@ -1043,7 +1043,7 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 		val = 6.89475729 * val;
 		break;
 	case PLATFORM_ADS112C_TEMP_RACK:
-		val = (rawValue - 16140) * 0.015873;
+		val = (rawValue - 15664) * 0.015873;
 		val = 1.0678 * val - 5.8373;
 		val = 1.0031 * val + 0.1566;
 		break;
