@@ -340,6 +340,15 @@ void cmd_status_auto_tune_set(const struct shell *shell, size_t argc, char **arg
 
 	uint8_t val = strtoul(argv[1], NULL, 10);
 
+	if (val) {
+		for (uint8_t i = MANUAL_PWM_E_HEX_FAN; i <= MANUAL_PWM_E_RPU_FAN; i++) {
+			if (get_manual_pwm_flag(i)) {
+				shell_warn(shell, "turn off manual pwm control %d", i);
+				set_manual_pwm_flag(i, 0);
+			}
+		}
+	}
+
 	set_status_flag(STATUS_FLAG_AUTO_TUNE, 0, val);
 
 	shell_warn(shell, "set auto tune flag to %d", val);
@@ -386,10 +395,12 @@ static void cmd_pump_redundant_enable(const struct shell *shell, size_t argc, ch
 }
 static void cmd_pump_redundant_switch_day_set(const struct shell *shell, size_t argc, char **argv)
 {
-	uint8_t day = strtoul(argv[1], NULL, 10);
+	uint8_t type = strtoul(argv[1], NULL, 10);
+	uint8_t time = strtoul(argv[2], NULL, 10);
 
-	set_pump_redundant_switch_time(day);
-	shell_warn(shell, "set pump redundant to %d day", day);
+	set_pump_redundant_switch_time_type(type);
+	set_pump_redundant_switch_time(time);
+	shell_warn(shell, "set pump redundant to %d %s", time, (type ? "hours" : "day"));
 }
 
 // test command

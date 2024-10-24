@@ -118,6 +118,10 @@ bool pump_setting_set_manual_flag(pump_reset_struct *data, uint8_t bit_val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
+	/* error bit val, turn on auto tune at the same time */
+	if (bit_val == 2)
+		return false;
+
 	if (data->function_index == MANUAL_CONTROL_PUMP)
 		set_manual_pwm_flag(MANUAL_PWM_E_PUMP, bit_val);
 	else if (data->function_index == MANUAL_CONTROL_FAN)
@@ -131,6 +135,13 @@ bool pump_setting_set_manual_flag(pump_reset_struct *data, uint8_t bit_val)
 bool pump_setting_set_auto_tune_flag(pump_reset_struct *data, uint8_t bit_val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
+
+	if (bit_val) {
+		for (uint8_t i = MANUAL_PWM_E_HEX_FAN; i <= MANUAL_PWM_E_RPU_FAN; i++) {
+			if (get_manual_pwm_flag(i))
+				return false;
+		}
+	}
 
 	set_status_flag(STATUS_FLAG_AUTO_TUNE, 0, bit_val);
 
@@ -282,20 +293,26 @@ void pump_redundant_handler_disable(struct k_timer *timer)
 K_TIMER_DEFINE(pump_redundant_timer, pump_redundant_handler, pump_redundant_handler_disable);
 
 static uint8_t pump_redundant_switch_time = 7;
+static uint8_t pump_redundant_switch_time_type = 0; /* for test, 0: day, 1: hours */
 uint8_t get_pump_redundant_switch_time()
 {
 	return pump_redundant_switch_time;
 }
-void set_pump_redundant_switch_time(uint8_t day)
+void set_pump_redundant_switch_time(uint8_t time)
 {
-	pump_redundant_switch_time = day;
+	pump_redundant_switch_time = time;
+}
+void set_pump_redundant_switch_time_type(uint8_t type)
+{
+	pump_redundant_switch_time_type = type;
 }
 void pump_redundant_enable(uint8_t onoff)
 {
 	if (onoff) {
 		if (get_status_flag(STATUS_FLAG_PUMP_REDUNDANT) == PUMP_REDUNDANT_DISABLE)
 			k_timer_start(&pump_redundant_timer, K_NO_WAIT,
-				      K_HOURS(pump_redundant_switch_time * 24)); // how many days
+				      K_HOURS(pump_redundant_switch_time *
+					      (pump_redundant_switch_time_type ? 1 : 24)));
 	} else {
 		k_timer_stop(&pump_redundant_timer);
 	}
@@ -384,7 +401,7 @@ uint8_t pwm_control(uint8_t group, uint8_t duty)
 	static int64_t auto_tune_time;
 	if (!get_status_flag(STATUS_FLAG_AUTO_TUNE)) {
 		auto_tune_time = k_uptime_get();
-		ctl_all_pwm_dev(0);
+		set_pwm_group(group, 0);
 		return 0;
 	}
 
