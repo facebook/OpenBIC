@@ -263,34 +263,10 @@ bool modify_sensor_cfg()
 		}
 	}
 
-	uint8_t addr_list[10] = { 0 };
-	uint8_t addr_len = 0;
-	uint8_t retimer_module = RETIMER_MODULE_UNKNOWN;
-
-	i2c_scan(I2C_BUS2, addr_list, &addr_len);
-
-	int i = 0;
-	for (i = 0; i < addr_len; i++) {
-		if (addr_list[i] == (AL_RETIMER_ADDR << 1)) {
-			LOG_WRN("Found AL retimer device at 0x40");
-			retimer_module = RETIMER_MODULE_PT4080L;
-			break;
-		} else if (addr_list[i] == (TI_RETIMER_ADDR << 1)) {
-			LOG_WRN("Found TI retimer device at 0x20");
-			retimer_module = RETIMER_MODULE_DS160PT801;
-			break;
-		}
-	}
-
-	if (i == ARRAY_SIZE(addr_list)) {
-		LOG_WRN("No retimer device found!!");
-		return false;
-	}
-
-	set_retimer_module(retimer_module);
+	scan_retimer_addr();
 
 	sensor_cfg *retimer_cfg = NULL;
-	retimer_cfg = change_retimer_sensor_cfg(retimer_module);
+	retimer_cfg = change_retimer_sensor_cfg(get_retimer_module());
 	if (!retimer_cfg) {
 		LOG_WRN("Retimer sensor config not found!!");
 		return false;

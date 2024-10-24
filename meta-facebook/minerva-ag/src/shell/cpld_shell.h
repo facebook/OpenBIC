@@ -14,23 +14,14 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_POWER_STATUS_H
-#define PLAT_POWER_STATUS_H
+#ifndef CPLD_SHELL_H
+#define CPLD_SHELL_H
 
-#include <stdint.h>
-#include <stdlib.h>
+#include <shell/shell.h>
 
-void handle_post_status(bool status, bool need_change);
-void handle_post_action();
-void reset_post_end_work_status();
-void handle_tda38741_work_around();
-void power_status_monitor();
-bool satmc_access(uint8_t sensor_num);
-void set_satmc_status(bool status);
-bool get_satmc_status();
-bool retimer_access(uint8_t sensor_num);
-bool get_retimer_status();
-uint8_t scan_retimer_addr();
-void retimer_addr_loss();
+void cmd_cpld_dump(const struct shell *shell, size_t argc, char **argv);
+
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_cpld_cmd, SHELL_CMD(dump, NULL, "cpld dump", cmd_cpld_dump),
+			       SHELL_SUBCMD_SET_END);
 
 #endif
