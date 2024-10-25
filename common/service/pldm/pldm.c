@@ -192,7 +192,11 @@ uint16_t mctp_pldm_read(void *mctp_p, pldm_msg *msg, uint8_t *rbuf, uint16_t rbu
 	msg->recv_resp_cb_args = (void *)recv_arg_p;
 	msg->timeout_cb_fn = pldm_read_timeout_handler;
 	msg->timeout_cb_fn_args = (void *)event_msgq_p;
+#ifndef PLAT_PLDM_MSG_TIMEOUT_MS
 	msg->timeout_ms = PLDM_MSG_TIMEOUT_MS;
+#else
+	msg->timeout_ms = PLAT_PLDM_MSG_TIMEOUT_MS;
+#endif
 
 	for (uint8_t retry_count = 0; retry_count < PLDM_MSG_MAX_RETRY; retry_count++) {
 		uint8_t event = 0;
@@ -452,8 +456,13 @@ uint8_t mctp_pldm_send_msg(void *mctp_p, pldm_msg *msg)
 		memset(p, 0, sizeof(*p));
 		p->mctp_inst = mctp_inst;
 		p->msg = *msg;
+#ifndef PLAT_PLDM_MSG_TIMEOUT_MS
 		p->exp_to_ms =
 			k_uptime_get() + (msg->timeout_ms ? msg->timeout_ms : PLDM_MSG_TIMEOUT_MS);
+#else
+		p->exp_to_ms = k_uptime_get() +
+			       (msg->timeout_ms ? msg->timeout_ms : PLAT_PLDM_MSG_TIMEOUT_MS);
+#endif
 
 		k_mutex_lock(&wait_recv_resp_mutex, K_FOREVER);
 		sys_slist_append(&wait_recv_resp_list, &p->node);
