@@ -23,6 +23,7 @@
 #include "plat_sensor_table.h"
 #include "plat_power_status.h"
 #include "plat_fru.h"
+#include "plat_spi.h"
 #include "util_worker.h"
 #include "power_status.h"
 #include <stdio.h>
@@ -74,6 +75,8 @@ void pal_post_init()
 		LOG_INF("Try to access SatMC...");
 		satmc_status_update();
 	}
+
+	switch_spi_freq();
 }
 
 void pal_device_init()
