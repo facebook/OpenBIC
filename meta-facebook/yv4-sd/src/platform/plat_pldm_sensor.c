@@ -3027,7 +3027,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			0x0033, //uint16_t sensor_id;
+			SENSOR_NUM_MB_INA233_E1S_DATA_VOLT_V, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
 			0x0006, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
@@ -3164,7 +3164,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			0x0048, //uint16_t sensor_id;
+			SENSOR_NUM_MB_INA233_E1S_DATA_CURR_A, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
 			0x0008, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
@@ -3300,7 +3300,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			0x0065, //uint16_t sensor_id;
+			SENSOR_NUM_MB_INA233_E1S_DATA_PWR_W, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
 			0x000A, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
@@ -5827,7 +5827,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0033,
+		.sensor_id = SENSOR_NUM_MB_INA233_E1S_DATA_VOLT_V,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -5963,7 +5963,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0048,
+		.sensor_id = SENSOR_NUM_MB_INA233_E1S_DATA_CURR_A,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -6320,7 +6320,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0065,
+		.sensor_id = SENSOR_NUM_MB_INA233_E1S_DATA_PWR_W,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -6675,6 +6675,9 @@ void plat_pldm_sensor_change_vr_dev()
 }
 void plat_pldm_sensor_change_ssd_dev()
 {
+	uint16_t disable_ina233_sensors_id[] = { SENSOR_NUM_MB_INA233_E1S_DATA_VOLT_V,
+						 SENSOR_NUM_MB_INA233_E1S_DATA_CURR_A,
+						 SENSOR_NUM_MB_INA233_E1S_DATA_PWR_W };
 	uint8_t blade_conf = BLADE_CONFIG_UNKNOWN;
 	if (get_blade_config(&blade_conf) == false) {
 		LOG_ERR("Unable to change the ssd device due to its unknown blade config.");
@@ -6691,6 +6694,22 @@ void plat_pldm_sensor_change_ssd_dev()
 				    ADDR_NVME) {
 				plat_pldm_disable_sensor(
 					&plat_pldm_sensor_mb_temp_table[index].pldm_sensor_cfg);
+			}
+		}
+
+		for (int disable_id = 0; disable_id < ARRAY_SIZE(disable_ina233_sensors_id);
+		     ++disable_id) {
+			for (int index = 0;
+			     index < plat_pldm_sensor_get_sensor_count(INA233_SENSOR_THREAD_ID);
+			     index++) {
+				if (disable_ina233_sensors_id[disable_id] ==
+				    plat_pldm_sensor_ina233_table[index]
+					    .pdr_numeric_sensor.sensor_id) {
+					plat_pldm_disable_sensor(
+						&plat_pldm_sensor_ina233_table[index]
+							 .pldm_sensor_cfg);
+					break;
+				}
 			}
 		}
 	}
