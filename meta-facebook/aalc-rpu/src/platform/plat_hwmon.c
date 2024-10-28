@@ -485,7 +485,7 @@ pump_running_time pump_running_time_info[] = {
 
 bool read_pump_running_time_data_from_eeprom(uint8_t pump_num, uint32_t *return_data)
 {
-	if (pump_num > PUMP_MAX_NUM || pump_num < 0) {
+	if (pump_num >= PUMP_MAX_NUM) {
 		LOG_ERR("unknow pump_num when read data from eeprom %d", pump_num);
 		return false;
 	}
