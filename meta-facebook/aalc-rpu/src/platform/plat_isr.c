@@ -12,6 +12,10 @@
 #include "plat_status.h"
 #include "plat_fru.h"
 
+#define SURPRISE_SHUTDOWN_TOTAL_TIME_LENGTH                                                        \
+	(EEPROM_UPTIME_SIZE + EEPROM_PUMP1_UPTIME_SIZE + EEPROM_PUMP2_UPTIME_SIZE +                \
+	 EEPROM_PUMP3_UPTIME_SIZE)
+
 LOG_MODULE_REGISTER(plat_isr);
 
 void deassert_all_rpu_ready_pin(void)
@@ -128,6 +132,7 @@ void aalc_leak_behavior(uint8_t sensor_num)
 
 void shutdown_save_uptime_action()
 {
+	// get total uptime
 	uint8_t pre_time[EEPROM_UPTIME_SIZE] = { 0 };
 	if (!plat_eeprom_read(EEPROM_UPTIME_OFFSET, pre_time, EEPROM_UPTIME_SIZE))
 		LOG_ERR("read uptime fail!");
@@ -141,12 +146,24 @@ void shutdown_save_uptime_action()
 
 	get_uptime_mins += old_uptime;
 
-	uint8_t temp[EEPROM_UPTIME_SIZE] = { 0 };
+	uint8_t temp[SURPRISE_SHUTDOWN_TOTAL_TIME_LENGTH] = { 0 };
 	temp[0] = get_uptime_mins >> 24;
 	temp[1] = get_uptime_mins >> 16;
 	temp[2] = get_uptime_mins >> 8;
 	temp[3] = get_uptime_mins;
 
-	if (!plat_eeprom_write(EEPROM_UPTIME_OFFSET, temp, EEPROM_UPTIME_SIZE))
+	// get pump uptime
+	uint32_t pump_uptime_secs = 0;
+	for (int i = 0; i < PUMP_MAX_NUM; i++) {
+		if (get_pump_uptime_secs(i, &pump_uptime_secs)) {
+			temp[4 + i * 4] = (pump_uptime_secs >> 24);
+			temp[5 + i * 4] = (pump_uptime_secs >> 16);
+			temp[6 + i * 4] = (pump_uptime_secs >> 8);
+			temp[7 + i * 4] = (pump_uptime_secs);
+		}
+	}
+
+	// write total uptime
+	if (!plat_eeprom_write(EEPROM_UPTIME_OFFSET, temp, SURPRISE_SHUTDOWN_TOTAL_TIME_LENGTH))
 		LOG_ERR("write uptime fail!");
 }

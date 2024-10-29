@@ -38,11 +38,6 @@
 #define BUS_8_MUX_ADDR 0xE8 >> 1
 #define BUS_9_MUX_ADDR 0xE8 >> 1
 
-#define MUX_CHANNEL_0 1
-#define MUX_CHANNEL_1 2
-#define MUX_CHANNEL_2 4
-#define MUX_CHANNEL_3 8
-
 typedef struct _ads112c_post_arg {
 	uint8_t plat_sensor_type;
 } ads112c_post_arg;
