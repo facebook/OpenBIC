@@ -5191,7 +5191,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_1OU_BOARD_INLET_TEMP_C",
+		.sensorName = u"WF_INLET_TEMP_C",
 	},
 	{
 		// WF_CXL1_CNTR_TEMP_C
@@ -5242,7 +5242,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_P0V8_ASIC1_TEMP_C",
+		.sensorName = u"WF_VR_ASIC1_P0V8_TEMP_C",
 	},
 	{
 		// WF_VR_PVDDQ_CD_ASIC1_TEMP_C
@@ -5259,7 +5259,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_PVDDQ_CD_ASIC1_TEMP_C",
+		.sensorName = u"WF_VR_ASIC1_PVDDQ_CD_TEMP_C",
 	},
 	{
 		// WF_VR_P0V85_ASIC1_TEMP_C
@@ -5276,7 +5276,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_P0V85_ASIC1_TEMP_C",
+		.sensorName = u"WF_VR_ASIC1_P0V85_TEMP_C",
 	},
 	{
 		// WF_VR_PVDDQ_AB_ASIC1_TEMP_C
@@ -5293,7 +5293,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_PVDDQ_AB_ASIC1_TEMP_C",
+		.sensorName = u"WF_VR_ASIC1_PVDDQ_AB_TEMP_C",
 	},
 	{
 		// WF_VR_P0V8_ASIC2_TEMP_C
@@ -5310,7 +5310,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_P0V8_ASIC2_TEMP_C",
+		.sensorName = u"WF_VR_ASIC2_P0V8_TEMP_C",
 	},
 	{
 		// WF_VR_PVDDQ_CD_ASIC2_TEMP_C
@@ -5327,7 +5327,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_PVDDQ_CD_ASIC2_TEMP_C",
+		.sensorName = u"WF_VR_ASIC2_PVDDQ_CD_TEMP_C",
 	},
 	{
 		// WF_VR_P0V85_ASIC2_TEMP_C
@@ -5344,7 +5344,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_P0V85_ASIC2_TEMP_C",
+		.sensorName = u"WF_VR_ASIC2_P0V85_TEMP_C",
 	},
 	{
 		// WF_VR_PVDDQ_AB_ASIC2_TEMP_C
@@ -5361,7 +5361,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_PVDDQ_AB_ASIC2_TEMP_C",
+		.sensorName = u"WF_VR_ASIC2_PVDDQ_AB_TEMP_C",
 	},
 	{
 		// WF_E1S_TEMP_C
@@ -5395,7 +5395,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_INA233_P12V_STBY_VOLT_V",
+		.sensorName = u"WF_PMON_P12V_STBY_VOLT_V",
 	},
 	{
 		// WF_INA233_P12V_E1S_0_L_VOLT_V
@@ -5412,7 +5412,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_INA233_P12V_E1S_0_L_VOLT_V",
+		.sensorName = u"WF_PMON_E1S0_P12V_VOLT_V",
 	},
 	{
 		// WF_ADC_P3V3_STBY_VOLT_V
@@ -5446,7 +5446,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ADC_P3V3_E1S_0_VOLT_V",
+		.sensorName = u"WF_ADC_E1S0_P3V3_VOLT_V",
 	},
 	{
 		// WF_ADC_P1V2_STBY_VOLT_V
@@ -5480,7 +5480,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ADC_P1V2_ASIC1_VOLT_V",
+		.sensorName = u"WF_ADC_ASIC1_P1V2_VOLT_V",
 	},
 	{
 		// WF_ADC_P1V8_ASIC1_VOLT_V
@@ -5497,7 +5497,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ADC_P1V8_ASIC1_VOLT_V",
+		.sensorName = u"WF_ADC_ASIC1_P1V8_VOLT_V",
 	},
 	{
 		// WF_VR_P0V8_ASIC1_VOLT_V
@@ -5514,7 +5514,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_P0V8_ASIC1_VOLT_V",
+		.sensorName = u"WF_VR_ASIC1_P0V8_VOLT_V",
 	},
 	{
 		// WF_VR_PVDDQ_CD_ASIC1_VOLT_V
@@ -5531,7 +5531,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_PVDDQ_CD_ASIC1_VOLT_V",
+		.sensorName = u"WF_VR_ASIC1_PVDDQ_CD_VOLT_V",
 	},
 	{
 		// WF_VR_P0V85_ASIC1_VOLT_V
@@ -5548,7 +5548,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_P0V85_ASIC1_VOLT_V",
+		.sensorName = u"WF_VR_ASIC1_P0V85_VOLT_V",
 	},
 	{
 		// WF_VR_PVDDQ_AB_ASIC1_VOLT_V
@@ -5565,7 +5565,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_PVDDQ_AB_ASIC1_VOLT_V",
+		.sensorName = u"WF_VR_ASIC1_PVDDQ_AB_VOLT_V",
 	},
 	{
 		// WF_ADC_P0V75_ASIC1_VOLT_V
@@ -5582,7 +5582,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ADC_P0V75_ASIC1_VOLT_V",
+		.sensorName = u"WF_ADC_ASIC1_P0V75_VOLT_V",
 	},
 	{
 		// WF_ADC_PVPP_AB_ASIC1_VOLT_V
@@ -5599,7 +5599,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ADC_PVPP_AB_ASIC1_VOLT_V",
+		.sensorName = u"WF_ADC_ASIC1_PVPP_AB_VOLT_V",
 	},
 	{
 		// WF_ADC_PVPP_CD_ASIC1_VOLT_V
@@ -5616,7 +5616,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ADC_PVPP_CD_ASIC1_VOLT_V",
+		.sensorName = u"WF_ADC_ASIC1_PVPP_CD_VOLT_V",
 	},
 	{
 		// WF_ADC_PVTT_AB_ASIC1_VOLT_V
@@ -5633,7 +5633,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ADC_PVTT_AB_ASIC1_VOLT_V",
+		.sensorName = u"WF_ADC_ASIC1_PVTT_AB_VOLT_V",
 	},
 	{
 		// WF_ADC_PVTT_CD_ASIC1_VOLT_V
@@ -5650,7 +5650,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ADC_PVTT_CD_ASIC1_VOLT_V",
+		.sensorName = u"WF_ADC_ASIC1_PVTT_CD_VOLT_V",
 	},
 	{
 		// WF_ADC_P1V2_ASIC2_VOLT_V
@@ -5667,7 +5667,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ADC_P1V2_ASIC2_VOLT_V",
+		.sensorName = u"WF_ADC_ASIC2_P1V2_VOLT_V",
 	},
 	{
 		// WF_ADC_P1V8_ASIC2_VOLT_V
@@ -5684,7 +5684,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ADC_P1V8_ASIC2_VOLT_V",
+		.sensorName = u"WF_ADC_ASIC2_P1V8_VOLT_V",
 	},
 	{
 		// WF_VR_P0V8_ASIC2_VOLT_V
@@ -5701,7 +5701,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_P0V8_ASIC2_VOLT_V",
+		.sensorName = u"WF_VR_ASIC2_P0V8_VOLT_V",
 	},
 	{
 		// WF_VR_PVDDQ_CD_ASIC2_VOLT_V
@@ -5718,7 +5718,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_PVDDQ_CD_ASIC2_VOLT_V",
+		.sensorName = u"WF_VR_ASIC2_PVDDQ_CD_VOLT_V",
 	},
 	{
 		// WF_VR_P0V85_ASIC2_VOLT_V
@@ -5735,7 +5735,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_P0V85_ASIC2_VOLT_V",
+		.sensorName = u"WF_VR_ASIC2_P0V85_VOLT_V",
 	},
 	{
 		// WF_VR_PVDDQ_AB_ASIC2_VOLT_V
@@ -5752,7 +5752,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_PVDDQ_AB_ASIC2_VOLT_V",
+		.sensorName = u"WF_VR_ASIC2_PVDDQ_AB_VOLT_V",
 	},
 	{
 		// WF_ADC_P0V75_ASIC2_VOLT_V
@@ -5769,7 +5769,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ADC_P0V75_ASIC2_VOLT_V",
+		.sensorName = u"WF_ADC_ASIC2_P0V75_VOLT_V",
 	},
 	{
 		// WF_ADC_PVPP_AB_ASIC2_VOLT_V
@@ -5786,7 +5786,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ADC_PVPP_AB_ASIC2_VOLT_V",
+		.sensorName = u"WF_ADC_ASIC2_PVPP_AB_VOLT_V",
 	},
 	{
 		// WF_ADC_PVPP_CD_ASIC2_VOLT_V
@@ -5803,7 +5803,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ADC_PVPP_CD_ASIC2_VOLT_V",
+		.sensorName = u"WF_ADC_ASIC2_PVPP_CD_VOLT_V",
 	},
 	{
 		// WF_ADC_PVTT_AB_ASIC2_VOLT_V
@@ -5820,7 +5820,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ADC_PVTT_AB_ASIC2_VOLT_V",
+		.sensorName = u"WF_ADC_ASIC2_PVTT_AB_VOLT_V",
 	},
 	{
 		// WF_ADC_PVTT_CD_ASIC2_VOLT_V
@@ -5837,7 +5837,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ADC_PVTT_CD_ASIC2_VOLT_V",
+		.sensorName = u"WF_ADC_ASIC2_PVTT_CD_VOLT_V",
 	},
 	{
 		// WF_INA233_P12V_STBY_CURR_A
@@ -5854,7 +5854,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_INA233_P12V_STBY_CURR_A",
+		.sensorName = u"WF_PMON_P12V_STBY_CURR_A",
 	},
 	{
 		// WF_INA233_P12V_E1S_0_L_CURR_A
@@ -5871,7 +5871,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_INA233_P12V_E1S_0_L_CURR_A",
+		.sensorName = u"WF_PMON_E1S0_P12V_CURR_A",
 	},
 	{
 		// WF_VR_P0V8_ASIC1_CURR_A
@@ -5888,7 +5888,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_P0V8_ASIC1_CURR_A",
+		.sensorName = u"WF_VR_ASIC1_P0V8_CURR_A",
 	},
 	{
 		// WF_VR_PVDDQ_CD_ASIC1_CURR_A
@@ -5905,7 +5905,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_PVDDQ_CD_ASIC1_CURR_A",
+		.sensorName = u"WF_VR_ASIC1_PVDDQ_CD_CURR_A",
 	},
 	{
 		// WF_VR_P0V85_ASIC1_CURR_A
@@ -5922,7 +5922,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_P0V85_ASIC1_CURR_A",
+		.sensorName = u"WF_VR_ASIC1_P0V85_CURR_A",
 	},
 	{
 		// WF_VR_PVDDQ_AB_ASIC1_CURR_A
@@ -5939,7 +5939,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_PVDDQ_AB_ASIC1_CURR_A",
+		.sensorName = u"WF_VR_ASIC1_PVDDQ_AB_CURR_A",
 	},
 	{
 		// WF_VR_P0V8_ASIC2_CURR_A
@@ -5956,7 +5956,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_P0V8_ASIC2_CURR_A",
+		.sensorName = u"WF_VR_ASIC2_P0V8_CURR_A",
 	},
 	{
 		// WF_VR_PVDDQ_CD_ASIC2_CURR_A
@@ -5973,7 +5973,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_PVDDQ_CD_ASIC2_CURR_A",
+		.sensorName = u"WF_VR_ASIC2_PVDDQ_CD_CURR_A",
 	},
 	{
 		// WF_VR_P0V85_ASIC2_CURR_A
@@ -5990,7 +5990,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_P0V85_ASIC2_CURR_A",
+		.sensorName = u"WF_VR_ASIC2_P0V85_CURR_A",
 	},
 	{
 		// WF_VR_PVDDQ_AB_ASIC2_CURR_A
@@ -6007,7 +6007,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_PVDDQ_AB_ASIC2_CURR_A",
+		.sensorName = u"WF_VR_ASIC2_PVDDQ_AB_CURR_A",
 	},
 	{
 		// WF_INA233_P12V_STBY_PWR_W
@@ -6024,7 +6024,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_INA233_P12V_STBY_PWR_W",
+		.sensorName = u"WF_PMON_P12V_STBY_PWR_W",
 	},
 	{
 		// WF_INA233_P12V_E1S_0_L_PWR_W
@@ -6041,7 +6041,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_INA233_P12V_E1S_0_L_PWR_W",
+		.sensorName = u"WF_PMON_E1S0_P12V_PWR_W",
 	},
 	{
 		// WF_VR_P0V8_ASIC1_PWR_W
@@ -6058,7 +6058,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_P0V8_ASIC1_PWR_W",
+		.sensorName = u"WF_VR_ASIC1_P0V8_PWR_W",
 	},
 	{
 		// WF_VR_PVDDQ_CD_ASIC1_PWR_W
@@ -6075,7 +6075,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_PVDDQ_CD_ASIC1_PWR_W",
+		.sensorName = u"WF_VR_ASIC1_PVDDQ_CD_PWR_W",
 	},
 	{
 		// WF_VR_P0V85_ASIC1_PWR_W
@@ -6092,7 +6092,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_P0V85_ASIC1_PWR_W",
+		.sensorName = u"WF_VR_ASIC1_P0V85_PWR_W",
 	},
 	{
 		// WF_VR_PVDDQ_AB_ASIC1_PWR_W
@@ -6109,7 +6109,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_PVDDQ_AB_ASIC1_PWR_W",
+		.sensorName = u"WF_VR_ASIC1_PVDDQ_AB_PWR_W",
 	},
 	{
 		// WF_VR_P0V8_ASIC2_PWR_W
@@ -6126,7 +6126,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_P0V8_ASIC2_PWR_W",
+		.sensorName = u"WF_VR_ASIC2_P0V8_PWR_W",
 	},
 	{
 		// WF_VR_PVDDQ_CD_ASIC2_PWR_W
@@ -6143,7 +6143,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_PVDDQ_CD_ASIC2_PWR_W",
+		.sensorName = u"WF_VR_ASIC2_PVDDQ_CD_PWR_W",
 	},
 	{
 		// WF_VR_P0V85_ASIC2_PWR_W
@@ -6160,7 +6160,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_P0V85_ASIC2_PWR_W",
+		.sensorName = u"WF_VR_ASIC2_P0V85_PWR_W",
 	},
 	{
 		// WF_VR_PVDDQ_AB_ASIC2_PWR_W
@@ -6177,7 +6177,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_VR_PVDDQ_AB_ASIC2_PWR_W",
+		.sensorName = u"WF_VR_ASIC2_PVDDQ_AB_PWR_W",
 	},
 	{
 		// WF_ASIC1_DIMM_A_TEMP_C 
@@ -6503,7 +6503,7 @@ char16_t *char16_strcpy(char16_t *dest, const char16_t *src)
 void plat_init_entity_aux_names_pdr_table()
 {
 	// Base name
-	const char16_t base_name[] = u"Wailua_Falls_Slot_";
+	const char16_t base_name[] = u"WAILUA_FALLS_SLOT_";
 
 	// Calculate the length of the base name
 	size_t base_len = char16_strlen(base_name);
@@ -6532,7 +6532,7 @@ void update_entity_name_with_eid(uint8_t eid)
 	// EID is 10-based
 	uint8_t slot_id = eid / 10;
 	// Create the base entity name
-	char16_t base_name[] = u"Wailua_Falls_Slot_";
+	char16_t base_name[] = u"WAILUA_FALLS_SLOT_";
 
 	// Calculate the length of the base name and the eid
 	size_t base_name_len =
