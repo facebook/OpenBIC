@@ -99,7 +99,7 @@ GPIO_CFG plat_gpio_cfg[] = {
 	{ CHIP_GPIO, 40, ENABLE, DISABLE, GPIO_INPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
 	{ CHIP_GPIO, 41, ENABLE, DISABLE, GPIO_INPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
 	{ CHIP_GPIO, 42, ENABLE, ENABLE, GPIO_OUTPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
-	{ CHIP_GPIO, 43, ENABLE, DISABLE, GPIO_INPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_EDGE_RISING, ISR_E1S_PWR_ON },
+	{ CHIP_GPIO, 43, ENABLE, DISABLE, GPIO_INPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_EDGE_BOTH, ISR_E1S_PWR_CHANGE },
 	{ CHIP_GPIO, 44, ENABLE, ENABLE, GPIO_OUTPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
 	{ CHIP_GPIO, 45, ENABLE, DISABLE, GPIO_INPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
 	{ CHIP_GPIO, 46, ENABLE, ENABLE, GPIO_OUTPUT, GPIO_LOW, PUSH_PULL, GPIO_INT_DISABLE, NULL },
@@ -271,8 +271,8 @@ bool pal_load_gpio_config(void)
 		plat_gpio_cfg[POC_EN_P3V3_E1S_0_R].direction = GPIO_OUTPUT;
 		gpio_name[POC_EN_P3V3_E1S_0_R] = "EN_P3V3_E1S_0_R";
 
-		plat_gpio_cfg[POC_PWRGD_P3V3_E1S_0_R].int_type = GPIO_INT_EDGE_RISING;
-		plat_gpio_cfg[POC_PWRGD_P3V3_E1S_0_R].int_cb = ISR_E1S_PWR_ON;
+		plat_gpio_cfg[POC_PWRGD_P3V3_E1S_0_R].int_type = GPIO_INT_EDGE_BOTH;
+		plat_gpio_cfg[POC_PWRGD_P3V3_E1S_0_R].int_cb = ISR_E1S_PWR_CHANGE;
 		gpio_name[POC_PWRGD_P3V3_E1S_0_R] = "PWRGD_P3V3_E1S_0_R";
 	}
 
@@ -374,7 +374,8 @@ void init_ioe_config()
 				LOG_ERR("Failed to get E1S present from IOE4");
 				continue;
 			}
-			ioe_reg_value = (ioe_cfg[i].output_val & init_val_mask) | (ioe_reg_value & init_dir_mask);
+			ioe_reg_value = (ioe_cfg[i].output_val & init_val_mask) |
+					(ioe_reg_value & init_dir_mask);
 
 		} else if ((ioe_cfg[i].addr == ADDR_IOE2) &&
 			   (ioe_cfg[i].output_reg == TCA9555_OUTPUT_PORT_REG_0) &&

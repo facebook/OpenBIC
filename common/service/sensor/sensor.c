@@ -1088,6 +1088,11 @@ bool dc_access(uint8_t sensor_num)
 	return get_DC_on_delayed_status();
 }
 
+bool e1s_pwrgd_access(uint8_t sensor_num)
+{
+	return P3V3_E1S_power_good() && P12V_E1S_power_good();
+}
+
 bool post_access(uint8_t sensor_num)
 {
 	return get_post_status();
