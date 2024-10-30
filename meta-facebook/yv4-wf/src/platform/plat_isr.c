@@ -23,6 +23,7 @@
 #include "plat_power_seq.h"
 #include "plat_mctp.h"
 #include "plat_isr.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -129,9 +130,18 @@ void ISR_MB_PCIE_RST()
 
 K_WORK_DEFINE(e1s_pwr_on_work, set_asic_and_e1s_clk_handler);
 
-void ISR_E1S_PWR_ON()
+void ISR_E1S_PWR_CHANGE()
 {
-	k_work_submit(&e1s_pwr_on_work);
+	if (gpio_get(POC_EN_P3V3_E1S_0_R) == GPIO_HIGH || gpio_get(EN_P3V3_E1S_0_R) == GPIO_HIGH ||
+	    gpio_get(EN_P12V_E1S_0_R) == GPIO_HIGH) {
+		k_work_submit(&e1s_pwr_on_work);
+	}
+	if (get_board_revision() == BOARD_POC) {
+		set_P3V3_E1S_power_status(POC_PWRGD_P3V3_E1S_0_R);
+	} else {
+		set_P3V3_E1S_power_status(PWRGD_P3V3_E1S_0_R);
+	}
+	set_P12V_E1S_power_status(PWRGD_P12V_E1S_0_R);
 }
 
 K_WORK_DEFINE(_set_cxl_led, set_cxl_led);

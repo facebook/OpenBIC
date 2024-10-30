@@ -146,10 +146,13 @@ void execute_power_on_sequence()
 	// TODO: check E1S present
 	if (get_board_revision() == BOARD_POC) {
 		gpio_set(POC_EN_P3V3_E1S_0_R, POWER_ON);
+		set_P3V3_E1S_power_status(POC_PWRGD_P3V3_E1S_0_R);
 	} else {
 		gpio_set(EN_P3V3_E1S_0_R, POWER_ON);
+		set_P3V3_E1S_power_status(PWRGD_P3V3_E1S_0_R);
 	}
 	gpio_set(EN_P12V_E1S_0_R, POWER_ON);
+	set_P12V_E1S_power_status(PWRGD_P12V_E1S_0_R);
 
 	ret = power_on_handler(CXL_ID_1, ASIC_POWER_ON_STAGE_1);
 	if (ret == 0) {
@@ -377,10 +380,13 @@ void execute_power_off_sequence()
 	// TODO: check E1S present
 	if (get_board_revision() == BOARD_POC) {
 		gpio_set(POC_EN_P3V3_E1S_0_R, POWER_OFF);
+		set_P3V3_E1S_power_status(POC_PWRGD_P3V3_E1S_0_R);
 	} else {
 		gpio_set(EN_P3V3_E1S_0_R, POWER_OFF);
+		set_P3V3_E1S_power_status(PWRGD_P3V3_E1S_0_R);
 	}
 	gpio_set(EN_P12V_E1S_0_R, POWER_OFF);
+	set_P12V_E1S_power_status(PWRGD_P12V_E1S_0_R);
 
 	is_cxl_ready[CXL_ID_1] = false;
 	is_cxl_ready[CXL_ID_2] = false;

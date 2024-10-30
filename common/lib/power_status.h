@@ -35,5 +35,9 @@ bool CPU_power_good();
 void set_post_thread();
 void set_vr_monitor_status(bool value);
 bool get_vr_monitor_status();
+void set_P3V3_E1S_power_status(uint8_t gpio_num);
+bool P3V3_E1S_power_good();
+void set_P12V_E1S_power_status(uint8_t gpio_num);
+bool P12V_E1S_power_good();
 
 #endif
