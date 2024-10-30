@@ -14,23 +14,9 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_I3C_H
-#define PLAT_I3C_H
+#ifndef PLAT_SPI_H
+#define PLAT_SPI_H
 
-#include "hal_i3c.h"
-
-#define I3C_BUS1 0
-#define I3C_BUS2 1
-#define I3C_BUS3 2
-
-#define I3C_BUS1_PID 0x0 // 12-bit PID
-
-#define MCTP_I3C_BIC_ADDR 0x40 //8-bit addr
-
-#define MCTP_I3C_BMC_BUS I3C_BUS1
-#define MCTP_I3C_BMC_ADDR 0x12 //8-bit addr
-
-#define PLDM_I3C_1OU I3C_BUS2
-#define PLDM_I3C_2OU I3C_BUS3
+void switch_spi_freq();
 
 #endif

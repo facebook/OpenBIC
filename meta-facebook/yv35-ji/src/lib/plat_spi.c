@@ -18,6 +18,7 @@
 #include "hal_i2c.h"
 #include "plat_gpio.h"
 #include "plat_i2c.h"
+#include "plat_class.h"
 #include "util_spi.h"
 #include <logging/log.h>
 
@@ -48,4 +49,21 @@ bool pal_switch_bios_spi_mux(int gpio_status)
 	}
 
 	return true;
+}
+
+#define BIOS_SPI_DRIVER "spi1_cs0"
+#define SPI_FREQ_50M 50000000
+void switch_spi_freq()
+{
+	const struct device *flash_dev;
+	flash_dev = device_get_binding(BIOS_SPI_DRIVER);
+	if (!flash_dev) {
+		LOG_ERR("Can't find any binding device with label %s", BIOS_SPI_DRIVER);
+	}
+	if (get_board_revision() != SYS_BOARD_PVT2) {
+		spi_nor_set_freq(flash_dev, SPI_FREQ_50M);
+		LOG_INF("Try to set SPI frequency to 50MHz");
+	} else {
+		LOG_INF("Use default SPI frequency 5MHz");
+	}
 }

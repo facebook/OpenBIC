@@ -245,14 +245,14 @@ uint8_t get_fsc_poll_count(uint8_t zone, uint8_t *count)
 /* set the zone_cfg stored data to default */
 static void zone_init(void)
 {
-	for (int i = 0; i < zone_table_size; i++) {
+	for (uint8_t i = 0; i < zone_table_size; i++) {
 		zone_cfg *zone_p = zone_table + i;
 
 		zone_p->is_init = false;
 
 		// init stepwise last temp
-		for (int j = 0; j < zone_p->sw_tbl_num; j++) {
-			stepwise_cfg *p = zone_p->sw_tbl + i;
+		for (uint8_t j = 0; j < zone_p->sw_tbl_num; j++) {
+			stepwise_cfg *p = zone_p->sw_tbl + j;
 			if (p)
 				p->last_temp = FSC_TEMP_INVALID;
 		}

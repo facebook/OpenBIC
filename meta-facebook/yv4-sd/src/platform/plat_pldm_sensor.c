@@ -3006,7 +3006,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			.port = I2C_BUS1,
 			.target_addr = ADDR_E1S_BOOT_INA233,
 			.offset = PMBUS_READ_VOUT,
-			.access_checker = dc_access,
+			.access_checker = post_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -3027,7 +3027,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			0x0033, //uint16_t sensor_id;
+			SENSOR_NUM_MB_INA233_E1S_DATA_VOLT_V, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
 			0x0006, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
@@ -3075,7 +3075,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			.port = I2C_BUS6,
 			.target_addr = ADDR_E1S_DATA_INA233,
 			.offset = PMBUS_READ_VOUT,
-			.access_checker = dc_access,
+			.access_checker = post_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -3143,7 +3143,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			.port = I2C_BUS1,
 			.target_addr = ADDR_E1S_BOOT_INA233,
 			.offset = PMBUS_READ_IOUT,
-			.access_checker = dc_access,
+			.access_checker = post_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -3164,7 +3164,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			0x0048, //uint16_t sensor_id;
+			SENSOR_NUM_MB_INA233_E1S_DATA_CURR_A, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
 			0x0008, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
@@ -3211,7 +3211,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			.port = I2C_BUS6,
 			.target_addr = ADDR_E1S_DATA_INA233,
 			.offset = PMBUS_READ_IOUT,
-			.access_checker = dc_access,
+			.access_checker = post_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -3279,7 +3279,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			.port = I2C_BUS1,
 			.target_addr = ADDR_E1S_BOOT_INA233,
 			.offset = PMBUS_READ_POUT,
-			.access_checker = dc_access,
+			.access_checker = post_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -3300,7 +3300,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			0x0065, //uint16_t sensor_id;
+			SENSOR_NUM_MB_INA233_E1S_DATA_PWR_W, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
 			0x000A, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
@@ -3347,7 +3347,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			.port = I2C_BUS6,
 			.target_addr = ADDR_E1S_DATA_INA233,
 			.offset = PMBUS_READ_POUT,
-			.access_checker = dc_access,
+			.access_checker = post_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -5491,7 +5491,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_X8_RETIMER_TEMP_C",
+		.sensorName = u"MB_X8_RTM_TEMP_C",
 	},
 	{
 		// MB_ADC_P12V_STBY_VOLT_V
@@ -5610,7 +5610,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_ADC_P12V_DIMM_0_VOLT_V",
+		.sensorName = u"MB_ADC_DIMM0_P12V_VOLT_V",
 	},
 	{
 		// MB_ADC_P12V_DIMM_1_VOLT_V
@@ -5627,7 +5627,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_ADC_P12V_DIMM_1_VOLT_V",
+		.sensorName = u"MB_ADC_DIMM1_P12V_VOLT_V",
 	},
 	{
 		// MB_ADC_P1V2_STBY_VOLT_V
@@ -5814,7 +5814,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_E1S_BOOT_VOLT_V",
+		.sensorName = u"MB_PMON_E1S_BOOT_VOLT_V",
 	},
 	{
 		// MB_INA233_E1S_Data_VOLT_V
@@ -5827,11 +5827,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0033,
+		.sensor_id = SENSOR_NUM_MB_INA233_E1S_DATA_VOLT_V,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_E1S_DATA_VOLT_V",
+		.sensorName = u"MB_PMON_E1S_DATA_VOLT_V",
 	},
 	{
 		// MB_VR_CPU0_CURR_A
@@ -5933,7 +5933,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_X8_RTM_CURR_A",
+		.sensorName = u"MB_PMON_X8_RTM_CURR_A",
 	},
 	{
 		// MB_INA233_E1S_Boot_CURR_A
@@ -5950,7 +5950,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_E1S_BOOT_CURR_A",
+		.sensorName = u"MB_PMON_E1S_BOOT_CURR_A",
 	},
 	{
 		// MB_INA233_E1S_Data_CURR_A
@@ -5963,11 +5963,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0048,
+		.sensor_id = SENSOR_NUM_MB_INA233_E1S_DATA_CURR_A,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_E1S_DATA_CURR_A",
+		.sensorName = u"MB_PMON_E1S_DATA_CURR_A",
 	},
 	{
 		// MB_VR_CPU0_PWR_W
@@ -6290,7 +6290,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_X8_RTM_PWR_W",
+		.sensorName = u"MB_PMON_X8_RTM_PWR_W",
 	},
 	{
 		// MB_INA233_E1S_Boot_PWR_W
@@ -6307,7 +6307,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_E1S_BOOT_PWR_W",
+		.sensorName = u"MB_PMON_E1S_BOOT_PWR_W",
 	},
 	{
 		// MB_INA233_E1S_Data_PWR_W
@@ -6320,11 +6320,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = 0x0065,
+		.sensor_id = SENSOR_NUM_MB_INA233_E1S_DATA_PWR_W,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_INA233_E1S_DATA_PWR_W",
+		.sensorName = u"MB_PMON_E1S_DATA_PWR_W",
 	}
 };
 
@@ -6615,7 +6615,7 @@ char16_t *char16_strcat_char(char16_t *dest, char16_t ch)
 void plat_init_entity_aux_names_pdr_table()
 {
 	// Base name
-	const char16_t base_name[] = u"Sentinel_Dome_Slot_";
+	const char16_t base_name[] = u"SENTINEL_DOME_SLOT_";
 
 	// Get slot ID
 	uint8_t slot_id = get_slot_id();
@@ -6675,6 +6675,9 @@ void plat_pldm_sensor_change_vr_dev()
 }
 void plat_pldm_sensor_change_ssd_dev()
 {
+	uint16_t disable_ina233_sensors_id[] = { SENSOR_NUM_MB_INA233_E1S_DATA_VOLT_V,
+						 SENSOR_NUM_MB_INA233_E1S_DATA_CURR_A,
+						 SENSOR_NUM_MB_INA233_E1S_DATA_PWR_W };
 	uint8_t blade_conf = BLADE_CONFIG_UNKNOWN;
 	if (get_blade_config(&blade_conf) == false) {
 		LOG_ERR("Unable to change the ssd device due to its unknown blade config.");
@@ -6691,6 +6694,22 @@ void plat_pldm_sensor_change_ssd_dev()
 				    ADDR_NVME) {
 				plat_pldm_disable_sensor(
 					&plat_pldm_sensor_mb_temp_table[index].pldm_sensor_cfg);
+			}
+		}
+
+		for (int disable_id = 0; disable_id < ARRAY_SIZE(disable_ina233_sensors_id);
+		     ++disable_id) {
+			for (int index = 0;
+			     index < plat_pldm_sensor_get_sensor_count(INA233_SENSOR_THREAD_ID);
+			     index++) {
+				if (disable_ina233_sensors_id[disable_id] ==
+				    plat_pldm_sensor_ina233_table[index]
+					    .pdr_numeric_sensor.sensor_id) {
+					plat_pldm_disable_sensor(
+						&plat_pldm_sensor_ina233_table[index]
+							 .pldm_sensor_cfg);
+					break;
+				}
 			}
 		}
 	}

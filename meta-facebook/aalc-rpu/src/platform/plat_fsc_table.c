@@ -4,10 +4,7 @@
 #include "plat_pwm.h"
 #include "plat_hwmon.h"
 
-#define FAN_TABLE_TBD 0
-
 pid_cfg hex_fan_pid_table[] = {
-#if FAN_TABLE_TBD
 	{
 		.sensor_num = SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C,
 		.setpoint_type = SETPOINT_AIR_INTEL_AVG_C,
@@ -19,11 +16,9 @@ pid_cfg hex_fan_pid_table[] = {
 		.pos_hyst = 1,
 		.neg_hyst = 1,
 	},
-#endif
 };
 
 stepwise_cfg hex_fan_stepwise_table[] = {
-#if FAN_TABLE_TBD
 	{
 		.sensor_num = SENSOR_NUM_SB_HEX_AIR_INLET_AVG_TEMP_C,
 		.step = {
@@ -66,11 +61,9 @@ stepwise_cfg hex_fan_stepwise_table[] = {
 			{40, 30},
 		},
 	},
-#endif
 };
 
 pid_cfg pump_pid_table[] = {
-#if FAN_TABLE_TBD
 	{
 		.sensor_num = SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C,
 		.setpoint_type = SETPOINT_FLOW_RATE_LPM,
@@ -82,11 +75,9 @@ pid_cfg pump_pid_table[] = {
 		.pos_hyst = 1,
 		.neg_hyst = 1,
 	},
-#endif
 };
 
 stepwise_cfg pump_stepwise_table[] = {
-#if FAN_TABLE_TBD
 	{
 		.sensor_num = SENSOR_NUM_SB_HEX_AIR_INLET_AVG_TEMP_C,
 		.step = {
@@ -129,11 +120,9 @@ stepwise_cfg pump_stepwise_table[] = {
 			{45, 35},
 		},
 	},
-#endif
 };
 
 stepwise_cfg rpu_fan_stepwise_table[] = {
-#if FAN_TABLE_TBD
 	{
 		.sensor_num = SENSOR_NUM_SB_HEX_AIR_INLET_AVG_TEMP_C,
 		.step = {
@@ -155,7 +144,6 @@ stepwise_cfg rpu_fan_stepwise_table[] = {
 			{40, 40},
 		},
 	},
-#endif
 };
 
 zone_cfg zone_table[] = {

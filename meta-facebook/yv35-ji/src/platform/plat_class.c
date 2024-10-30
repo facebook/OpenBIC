@@ -22,9 +22,11 @@
 
 #include "hal_gpio.h"
 #include "hal_i2c.h"
+#include "hal_i3c.h"
 #include "libutil.h"
 #include "plat_gpio.h"
 #include "plat_i2c.h"
+#include "plat_i3c.h"
 #include "plat_sensor_table.h"
 #include "power_status.h"
 
@@ -194,4 +196,8 @@ void init_platform_config()
 	if (board_revision < SYS_BOARD_EVT) {
 		retimer_module = RETIMER_MODULE_UNKNOWN;
 	}
+
+	I3C_MSG i3c_msg;
+	i3c_msg.bus = I3C_BUS1;
+	i3c_set_pid(&i3c_msg, I3C_BUS1_PID);
 }
