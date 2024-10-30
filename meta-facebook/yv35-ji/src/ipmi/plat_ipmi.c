@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <logging/log.h>
+#include <drivers/flash.h>
 #include "libutil.h"
 #include "ipmi.h"
 #include "eeprom.h"
@@ -26,6 +27,8 @@
 #include "oem_1s_handler.h"
 #include "plat_fru.h"
 #include "plat_class.h"
+#include "plat_spi.h"
+#include "util_spi.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
@@ -40,6 +43,11 @@ LOG_MODULE_REGISTER(plat_ipmi);
 
 #define VIRTUAL_SATMC_READY_PIN_IDX 65
 #define VIRTUAL_SATMC_READY_PIN_IDX_REAL 59
+
+#define CMET_INFO_OFFSET_1 0xc0000
+#define CMET_INFO_OFFSET_2 0xd0000
+#define CLEAR_BYTE_START_OFFSET_NUM 2
+#define CLEAR_BYTE_TOTAL_NUM 4
 
 bool pal_request_msg_to_BIC_from_HOST(uint8_t netfn, uint8_t cmd)
 {
@@ -299,4 +307,126 @@ uint8_t gpio_idx_exchange(ipmi_msg *msg)
 	}
 
 	return 0;
+}
+
+void OEM_1S_CLEAR_CMET(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 0) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	const struct device *flash_dev;
+	uint8_t loop_index = 0, loop_index2 = 0;
+	uint8_t *op_buf = NULL, *read_back_buf = NULL;
+	int32_t ret = 0;
+	uint32_t start_offset = 0;
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+
+	//Need to switch mux first(Bios->read write flash)
+	ret = switch_bios_read_write_flash_mux(SWITCH_MUX_TO_READ_WRITE_FLASH);
+	if (ret != 0) {
+		LOG_ERR("Failed to switch mux, ret %d.", ret);
+		return;
+	}
+
+	//Need to reinit flash if flash not init before
+	flash_dev = device_get_binding("spi1_cs0");
+	if (flash_dev == NULL) {
+		LOG_ERR("Failed to get device.");
+		goto end;
+	}
+	ret = ckeck_flash_device_isinit(flash_dev, DEVSPI_SPI1_CS0);
+	if (ret != 0) {
+		LOG_ERR("Failed to re-init flash, ret %d.", ret);
+		goto end;
+	}
+
+	//Clear CMET offset C0000/D0000 first 4 bytes to 0xff
+	uint32_t flash_sz = flash_get_flash_size(flash_dev);
+	uint32_t sector_sz = flash_get_write_block_size(flash_dev);
+
+	op_buf = (uint8_t *)malloc(sector_sz);
+	if (op_buf == NULL) {
+		LOG_ERR("Failed to allocate op_buf.");
+		goto end;
+	}
+
+	read_back_buf = (uint8_t *)malloc(sector_sz);
+	if (read_back_buf == NULL) {
+		LOG_ERR("Failed to allocate read_back_buf.");
+		goto end;
+	}
+
+	for (loop_index = 0; loop_index < CLEAR_BYTE_START_OFFSET_NUM; loop_index++) {
+		if (loop_index == 0) {
+			start_offset = CMET_INFO_OFFSET_1;
+		} else if (loop_index == 1) {
+			start_offset = CMET_INFO_OFFSET_2;
+		}
+
+		if (flash_sz < start_offset + sector_sz) {
+			LOG_ERR("Update boundary exceeds flash size. (%u, %u, %u)", flash_sz,
+				start_offset, sector_sz);
+			goto end;
+		}
+
+		//Read data back from flash
+		ret = flash_read(flash_dev, start_offset, read_back_buf, sector_sz);
+		if (ret != 0) {
+			LOG_ERR("Failed to read %u.", start_offset);
+			goto end;
+		}
+
+		//Set first 4 byte to 0xff
+		for (loop_index2 = 0; loop_index2 < CLEAR_BYTE_TOTAL_NUM; loop_index2++) {
+			read_back_buf[loop_index2] = 0xff;
+		}
+
+		memcpy(op_buf, read_back_buf, sector_sz);
+		memset(read_back_buf, 0, sector_sz);
+
+		//do erase write and verify
+		ret = flash_erase(flash_dev, start_offset, sector_sz);
+		if (ret != 0) {
+			LOG_ERR("Failed to erase %u.", start_offset);
+			goto end;
+		}
+
+		ret = flash_write(flash_dev, start_offset, op_buf, sector_sz);
+		if (ret != 0) {
+			LOG_ERR("Failed to write %u.", start_offset);
+			goto end;
+		}
+
+		ret = flash_read(flash_dev, start_offset, read_back_buf, sector_sz);
+		if (ret != 0) {
+			LOG_ERR("Failed to read %u.", start_offset);
+			goto end;
+		}
+
+		if (memcmp(op_buf, read_back_buf, sector_sz) != 0) {
+			LOG_ERR("Failed to write flash at 0x%x.", start_offset);
+			LOG_HEXDUMP_ERR(op_buf, sector_sz, "to be written:");
+			LOG_HEXDUMP_ERR(read_back_buf, sector_sz, "readback:");
+			goto end;
+		}
+
+		memset(op_buf, 0, sector_sz);
+		memset(read_back_buf, 0, sector_sz);
+	}
+
+	msg->completion_code = CC_SUCCESS;
+
+end:
+	SAFE_FREE(op_buf);
+	SAFE_FREE(read_back_buf);
+	ret = switch_bios_read_write_flash_mux(SWITCH_MUX_TO_BIOS);
+	if (ret != 0) {
+		LOG_ERR("Failed to switch mux, ret %d.", ret);
+	}
+
+	return;
 }

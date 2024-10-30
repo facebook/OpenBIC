@@ -2343,6 +2343,16 @@ __weak void OEM_1S_SEND_MCTP_PLDM_COMMAND(ipmi_msg *msg)
 	return;
 }
 
+__weak void OEM_1S_CLEAR_CMET(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+
+	return;
+}
+
 void IPMI_OEM_1S_handler(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -2636,6 +2646,10 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_SEND_MCTP_PLDM_COMMAND:
 		LOG_DBG("Received MCTP-PLDM command");
 		OEM_1S_SEND_MCTP_PLDM_COMMAND(msg);
+		break;
+	case CMD_OEM_1S_CLEAR_CMET:
+		LOG_DBG("Received CLEAR CMET command");
+		OEM_1S_CLEAR_CMET(msg);
 		break;
 	default:
 		LOG_ERR("Invalid OEM message, netfn(0x%x) cmd(0x%x)", msg->netfn, msg->cmd);

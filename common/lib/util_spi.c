@@ -108,6 +108,22 @@ end:
 	return ret;
 }
 
+int ckeck_flash_device_isinit(const struct device *flash_device, uint8_t flash_position)
+{
+	CHECK_NULL_ARG_WITH_RETURN(flash_device, -1);
+
+	if (!flash_device_list[flash_position].isinit) {
+		int rc = 0;
+		rc = spi_nor_re_init(flash_device);
+		if (rc == 0) {
+			flash_device_list[flash_position].isinit = true;
+		} else {
+			return rc;
+		}
+	}
+	return 0;
+}
+
 int do_update(const struct device *flash_device, off_t offset, uint8_t *buf, size_t len)
 {
 	int ret = 0;
@@ -229,15 +245,19 @@ uint8_t get_fw_sha256(uint8_t *msg_buf, uint32_t offset, uint32_t length, uint8_
 	}
 
 	flash_dev = device_get_binding(flash_device_list[flash_position].name);
-	if (!flash_device_list[flash_position].isinit) {
-		ret = spi_nor_re_init(flash_dev);
-		if (ret != 0) {
-			LOG_ERR("Failed to re-init flash, ret %d.", ret);
-			ret = CC_UNSPECIFIED_ERROR;
-			goto end;
-		}
-		flash_device_list[flash_position].isinit = true;
+	if (flash_dev == NULL) {
+		LOG_ERR("Failed to get device.");
+		ret = CC_UNSPECIFIED_ERROR;
+		goto end;
 	}
+
+	ret = ckeck_flash_device_isinit(flash_dev, flash_position);
+	if (ret != 0) {
+		LOG_ERR("Failed to re-init flash, ret %d.", ret);
+		ret = CC_UNSPECIFIED_ERROR;
+		goto end;
+	}
+
 	ret = flash_read(flash_dev, offset, buf, length);
 	if (ret != 0) {
 		LOG_ERR("Failed to read flash, ret %d.", ret);
@@ -371,15 +391,17 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, uint8_t f
 	// Update fmc while collect 64k bytes data or BMC signal last image package with target | 0x80
 	if ((buf_offset == SECTOR_SZ_64K) || (flag & SECTOR_END_FLAG)) {
 		flash_dev = device_get_binding(flash_device_list[flash_position].name);
-		if (!flash_device_list[flash_position].isinit) {
-			uint8_t rc = 0;
-			rc = spi_nor_re_init(flash_dev);
-			if (rc != 0) {
-				SAFE_FREE(txbuf);
-				is_init = 0;
-				return rc;
-			}
-			flash_device_list[flash_position].isinit = true;
+		if (flash_dev == NULL) {
+			LOG_ERR("Failed to get device.");
+			ret = CC_UNSPECIFIED_ERROR;
+			return ret;
+		}
+
+		ret = ckeck_flash_device_isinit(flash_dev, flash_position);
+		if (ret != 0) {
+			SAFE_FREE(txbuf);
+			is_init = 0;
+			return ret;
 		}
 
 		if (start_offset == 0) {
@@ -421,18 +443,20 @@ int read_fw_image(uint32_t offset, uint8_t msg_len, uint8_t *msg_buf, uint8_t fl
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg_buf, -EINVAL);
 
+	int rc = 0;
 	const struct device *flash_dev;
 	flash_dev = device_get_binding(flash_device_list[flash_position].name);
-
-	if (!flash_device_list[flash_position].isinit) {
-		int rc = 0;
-		rc = spi_nor_re_init(flash_dev);
-		if (rc != 0) {
-			LOG_ERR("Failed to re-init flash, ret %d.", rc);
-			return rc;
-		}
-		flash_device_list[flash_position].isinit = true;
+	if (flash_dev == NULL) {
+		LOG_ERR("Failed to get device.");
+		return -EINVAL;
 	}
+
+	rc = ckeck_flash_device_isinit(flash_dev, flash_position);
+	if (rc != 0) {
+		LOG_ERR("Failed to re-init flash, ret %d.", rc);
+		return rc;
+	}
+
 	uint32_t flash_sz = flash_get_flash_size(flash_dev);
 	if (flash_sz < offset + msg_len) {
 		LOG_ERR("Read boundary 0x%x exceeds flash size 0x%x.", offset + msg_len, flash_sz);

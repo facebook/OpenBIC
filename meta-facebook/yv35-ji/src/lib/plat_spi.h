@@ -17,6 +17,10 @@
 #ifndef PLAT_SPI_H
 #define PLAT_SPI_H
 
+#define SWITCH_MUX_TO_READ_WRITE_FLASH 0
+#define SWITCH_MUX_TO_BIOS 1
+
+bool switch_bios_read_write_flash_mux(int switch_mux);
 void switch_spi_freq();
 
 #endif
