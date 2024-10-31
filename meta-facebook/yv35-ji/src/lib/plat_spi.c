@@ -19,12 +19,14 @@
 #include "plat_gpio.h"
 #include "plat_i2c.h"
 #include "plat_class.h"
+#include "plat_spi.h"
 #include "util_spi.h"
 #include <logging/log.h>
 
 LOG_MODULE_REGISTER(plat_spi);
 
 #define CPLD_REG_SPI_MUX 0x0B
+#define BIOS_READ_WRITE_FLASH_REG_MUX 0x10
 
 int pal_get_bios_flash_position()
 {
@@ -66,4 +68,24 @@ void switch_spi_freq()
 	} else {
 		LOG_INF("Use default SPI frequency 5MHz");
 	}
+}
+
+bool switch_bios_read_write_flash_mux(int switch_mux)
+{
+	I2C_MSG msg = { 0 };
+	int retry = 3;
+
+	msg.bus = I2C_BUS1;
+	msg.target_addr = (CPLD_I2C_ADDR >> 1);
+	msg.tx_len = 2;
+	msg.data[0] = BIOS_READ_WRITE_FLASH_REG_MUX;
+	msg.data[1] = (switch_mux == SWITCH_MUX_TO_BIOS) ? 1 : 0;
+
+	int ret = i2c_master_write(&msg, retry);
+	if (ret) {
+		LOG_ERR("Failed to switch bios read write flash mux, ret: %d", ret);
+		return false;
+	}
+
+	return true;
 }
