@@ -28,7 +28,7 @@ typedef struct {
 	uint32_t arg0;
 
 	// priv data
-	uint8_t last_status; // record the last status
+	uint32_t last_status; // record the last status
 	uint32_t last_value; // record the last value
 } sensor_threshold;
 

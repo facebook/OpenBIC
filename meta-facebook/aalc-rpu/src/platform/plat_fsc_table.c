@@ -7,7 +7,7 @@
 pid_cfg hex_fan_pid_table[] = {
 	{
 		.sensor_num = SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C,
-		.setpoint_type = SETPOINT_AIR_INTEL_AVG_C,
+		.setpoint = 40,
 		.kp = -7,
 		.ki = -0.1,
 		.kd = -3,
@@ -63,6 +63,7 @@ stepwise_cfg hex_fan_stepwise_table[] = {
 	},
 };
 
+/*
 pid_cfg pump_pid_table[] = {
 	{
 		.sensor_num = SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C,
@@ -120,6 +121,18 @@ stepwise_cfg pump_stepwise_table[] = {
 			{45, 35},
 		},
 	},
+};*/
+
+stepwise_cfg pump_stepwise_table[] = {
+	{
+		.sensor_num = SENSOR_NUM_COOLING_CAPACITY,
+		.step = {
+			{30, 45},
+			{45, 55},
+			{60, 65},
+			{61, 100},
+		},
+	},
 };
 
 stepwise_cfg rpu_fan_stepwise_table[] = {
@@ -163,8 +176,9 @@ zone_cfg zone_table[] = {
 		// zone 2 - pump
 		.sw_tbl = pump_stepwise_table,
 		.sw_tbl_num = ARRAY_SIZE(pump_stepwise_table),
+		/*
 		.pid_tbl = pump_pid_table,
-		.pid_tbl_num = ARRAY_SIZE(pump_pid_table),
+		.pid_tbl_num = ARRAY_SIZE(pump_pid_table),*/
 		.interval = 1,
 		.set_duty = pwm_control,
 		.set_duty_arg = PWM_GROUP_E_PUMP,

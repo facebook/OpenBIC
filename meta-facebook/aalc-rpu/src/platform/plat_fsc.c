@@ -22,6 +22,7 @@ static uint8_t fsc_poll_flag = 1;
 extern zone_cfg zone_table[];
 extern uint32_t zone_table_size;
 
+/*
 static int get_flow_rate_setpoint(void)
 {
 	const int worst_case = 200; // TODO: TBD
@@ -49,7 +50,7 @@ static int get_flow_rate_setpoint(void)
 	FSC_PRINTF("1.00815 * flow_rate_val * (tout_val - tin_val) = %f\n",
 		   1.00815 * flow_rate_val * (tout_val - tin_val));
 	return (int)(1.00815 * flow_rate_val * (tout_val - tin_val));
-}
+}*/
 
 uint8_t fsc_debug_set(uint8_t enable)
 {
@@ -159,6 +160,7 @@ static uint8_t calculatePID(zone_cfg *zone_p, uint8_t *duty)
 
 		int16_t temp = (int16_t)tmp;
 
+		/*
 		tmp = 0.0;
 		if (p->setpoint_type == SETPOINT_AIR_INTEL_AVG_C) {
 			if (get_sensor_reading_to_real_val(SENSOR_NUM_SB_HEX_AIR_INLET_AVG_TEMP_C,
@@ -170,7 +172,7 @@ static uint8_t calculatePID(zone_cfg *zone_p, uint8_t *duty)
 			p->setpoint = (int16_t)tmp + 10;
 		} else if (p->setpoint_type == SETPOINT_FLOW_RATE_LPM) {
 			p->setpoint = get_flow_rate_setpoint();
-		}
+		}*/
 
 		FSC_PRINTF("\t\t----- sensor_num %x, temp = %d, p->setpoint %d\n", p->sensor_num,
 			   temp, p->setpoint);

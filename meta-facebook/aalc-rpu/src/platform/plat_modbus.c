@@ -97,7 +97,18 @@ uint8_t modbus_get_senser_reading(modbus_command_mapping *cmd)
 
 	if (status == SENSOR_READ_4BYTE_ACUR_SUCCESS) {
 		float r = pow_of_10(cmd->arg2);
-		int16_t byte_val = val / cmd->arg1 / r; // scale
+		int16_t byte_val = 0;
+		// capacity scale kW to W
+		if (cmd->addr == MODBUS_AALC_COOLING_CAPACITY_W_ADDR) {
+			int32_t scaled_val = (int32_t)(val * 1000 / cmd->arg1 / r);
+			byte_val = scaled_val & 0xFFFF;
+		} else if (cmd->addr == MODBUS_AALC_COOLING_CAPACITY_W_EXT_ADDR) {
+			int32_t scaled_val = (int32_t)(val * 1000 / cmd->arg1 / r);
+			byte_val = (scaled_val >> 16) & 0xFFFF;
+		} else {
+			byte_val = val / cmd->arg1 / r; // scale
+		}
+
 		memcpy(cmd->data, &byte_val, sizeof(uint16_t) * cmd->cmd_size);
 		return MODBUS_EXC_NONE;
 	}
@@ -458,39 +469,6 @@ uint8_t modbus_get_sticky_sensor_status(modbus_command_mapping *cmd)
 	return MODBUS_EXC_NONE;
 }
 
-uint8_t modbus_get_aalc_cooling_capacity(modbus_command_mapping *cmd)
-{
-	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-	/*
-	*	AALC_Cooling_Capacity_W  = 67.21*Flow rate*(Tout-Tin)
-	*	Flow Rate = Flow sensor reading (LPM)
-	*	Tout = Rack Coolant temperature sensor reading (°C)
-	*	Tin = RPU Coolant outlet temperature sensor reading(°C)
-	*/
-
-	float flow_rate_val, tout_val, tin_val;
-
-	uint8_t flow_rate_status = get_sensor_reading_to_real_val(
-		SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, &flow_rate_val);
-	uint8_t tout_status =
-		get_sensor_reading_to_real_val(SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C, &tout_val);
-	uint8_t tin_status =
-		get_sensor_reading_to_real_val(SENSOR_NUM_BPB_RPU_COOLANT_INLET_TEMP_C, &tin_val);
-
-	if (flow_rate_status != SENSOR_READ_4BYTE_ACUR_SUCCESS)
-		return MODBUS_EXC_ILLEGAL_DATA_VAL;
-
-	if (tout_status != SENSOR_READ_4BYTE_ACUR_SUCCESS)
-		return MODBUS_EXC_ILLEGAL_DATA_VAL;
-
-	if (tin_status != SENSOR_READ_4BYTE_ACUR_SUCCESS)
-		return MODBUS_EXC_ILLEGAL_DATA_VAL;
-
-	cmd->data[0] = (uint16_t)(67.21 * flow_rate_val * (tout_val - tin_val));
-
-	return MODBUS_EXC_NONE;
-}
-
 uint8_t modbus_get_manual_flag(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
@@ -713,8 +691,10 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_MB_FAN1_TACH_RPM, 1, 0, 1 },
 	{ MODBUS_MB_FAN2_TACH_RPM_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_MB_FAN2_TACH_RPM, 1, 0, 1 },
-	{ MODBUS_AALC_COOLING_CAPACITY_W_ADDR, NULL, modbus_get_aalc_cooling_capacity, 0, 1, -1,
-	  1 },
+	{ MODBUS_AALC_COOLING_CAPACITY_W_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_COOLING_CAPACITY, 1, -1, 1 },
+	{ MODBUS_AALC_COOLING_CAPACITY_W_EXT_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_COOLING_CAPACITY, 1, -1, 1 },
 	{ MODBUS_RPU_PUMP1_STATUS_ADDR, NULL, modbus_get_aalc_sensor_status, RPU_PUMP1_STATUS, 0, 0,
 	  1 },
 	{ MODBUS_RPU_PUMP2_STATUS_ADDR, NULL, modbus_get_aalc_sensor_status, RPU_PUMP2_STATUS, 0, 0,
@@ -803,6 +783,8 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_BPB_RACK_LEVEL_1, 1, 0, 1 },
 	{ MODBUS_BPB_RACK_LEVEL_2_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_BPB_RACK_LEVEL_2, 1, 0, 1 },
+	{ MODBUS_BPB_RACK_LEVEL_3_ADDR, NULL, modbus_get_senser_reading,
+	  SENSOR_NUM_BPB_RACK_LEVEL_3, 1, 0, 1 },
 	{ MODBUS_MB_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_MB_HUM_PCT_RH, 1,
 	  0, 1 },
 	{ MODBUS_PDB_HUM_PCT_RH_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_PDB_HUM_PCT_RH, 1,
@@ -1242,7 +1224,7 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_HEAT_EXCHANGER_FAN_CONTROL_BOX_FBPN_ADDR, NULL, NULL, 0, 0, 0, 4 },
 };
 
-static modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)
+modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)
 {
 	for (uint16_t i = 0; i < ARRAY_SIZE(modbus_command_table); i++) {
 		if ((addr >= modbus_command_table[i].addr) &&

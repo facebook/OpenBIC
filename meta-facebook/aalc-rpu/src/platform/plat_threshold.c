@@ -266,6 +266,13 @@ void hex_fan_failure_do(uint32_t sensor_num, uint32_t status)
 		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_TWO_HEX_FAN_FAILURE, 1);
 	else
 		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_TWO_HEX_FAN_FAILURE, 0);
+
+	if (status == THRESHOLD_STATUS_NORMAL)
+		error_log_event(sensor_num, IS_NORMAL_VAL);
+	else if (status == THRESHOLD_STATUS_LCR)
+		error_log_event(sensor_num, IS_ABNORMAL_VAL);
+	else if (status == THRESHOLD_STATUS_UCR)
+		error_log_event(sensor_num, IS_ABNORMAL_VAL);
 }
 
 /* flow_rate_ready_flag is flag to wait flow rate ready*/
@@ -433,7 +440,13 @@ void abnormal_temp_do(uint32_t sensor_num, uint32_t status)
 					 PUMP_FAIL_ABNORMAL_AIR_INLET_TEMP :
 					 0xFF;
 
+	bool save_log = (sensor_num == SENSOR_NUM_BPB_RPU_COOLANT_INLET_TEMP_C)	 ? true :
+			(sensor_num == SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C) ? true :
+										   false;
+
 	if (status == THRESHOLD_STATUS_UCR) {
+		if (save_log)
+			error_log_event(sensor_num, IS_ABNORMAL_VAL);
 		set_status_flag(STATUS_FLAG_FAILURE, failure_status, 1);
 	} else if (status == THRESHOLD_STATUS_NOT_ACCESS) {
 		if (sensor_num == SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C) {
@@ -443,6 +456,8 @@ void abnormal_temp_do(uint32_t sensor_num, uint32_t status)
 			set_status_flag(STATUS_FLAG_FAILURE, failure_status, 1);
 		}
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
+		if (save_log)
+			error_log_event(sensor_num, IS_NORMAL_VAL);
 		set_status_flag(STATUS_FLAG_FAILURE, failure_status, 0);
 		if (sensor_num == SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C)
 			set_status_flag(STATUS_FLAG_FAILURE,
@@ -471,6 +486,16 @@ void level_sensor_do(uint32_t unused, uint32_t status)
 	}
 }
 
+void sensor_log(uint32_t sensor_num, uint32_t status)
+{
+	if (status == THRESHOLD_STATUS_NORMAL)
+		error_log_event(sensor_num, IS_NORMAL_VAL);
+	else if (status == THRESHOLD_STATUS_LCR)
+		error_log_event(sensor_num, IS_ABNORMAL_VAL);
+	else if (status == THRESHOLD_STATUS_UCR)
+		error_log_event(sensor_num, IS_ABNORMAL_VAL);
+}
+
 sensor_threshold threshold_tbl[] = {
 	{ SENSOR_NUM_BPB_RPU_COOLANT_INLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 55, abnormal_temp_do,
 	  SENSOR_NUM_BPB_RPU_COOLANT_INLET_TEMP_C },
@@ -478,7 +503,8 @@ sensor_threshold threshold_tbl[] = {
 	  SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C },
 	{ SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 42, abnormal_temp_do,
 	  SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C },
-	{ SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 65, NULL, 0 },
+	{ SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 65, sensor_log,
+	  SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C },
 	{ SENSOR_NUM_SB_HEX_AIR_INLET_1_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 60, NULL, 0 },
 	{ SENSOR_NUM_SB_HEX_AIR_INLET_2_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 60, NULL, 0 },
 	{ SENSOR_NUM_SB_HEX_AIR_INLET_3_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 60, NULL, 0 },
@@ -566,7 +592,8 @@ sensor_threshold threshold_tbl[] = {
 	{ SENSOR_NUM_FB_12_HSC_TEMP_C, THRESHOLD_DISABLE, 0, 0, NULL, 0 },
 	{ SENSOR_NUM_FB_13_HSC_TEMP_C, THRESHOLD_DISABLE, 0, 0, NULL, 0 },
 	{ SENSOR_NUM_FB_14_HSC_TEMP_C, THRESHOLD_DISABLE, 0, 0, NULL, 0 },
-	{ SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA, THRESHOLD_ENABLE_LCR, -20, 0, NULL, 0 },
+	{ SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA, THRESHOLD_ENABLE_LCR, -20, 0, sensor_log,
+	  SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA },
 	{ SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA, THRESHOLD_ENABLE_UCR, 0, 300, abnormal_press_do,
 	  0 },
 	{ SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, THRESHOLD_ENABLE_LCR, 10, 0, abnormal_flow_do,
@@ -574,8 +601,20 @@ sensor_threshold threshold_tbl[] = {
 	{ SENSOR_NUM_BPB_RACK_LEVEL_1, THRESHOLD_ENABLE_LCR, 0.1, 0, level_sensor_do, 0 },
 	{ SENSOR_NUM_BPB_RACK_LEVEL_2, THRESHOLD_ENABLE_LCR, 0.1, 0, level_sensor_do, 0 },
 	{ SENSOR_NUM_FAN_PRSNT, THRESHOLD_ENABLE_DISCRETE, 0, 0, fb_prsnt_handle,
-	  THRESHOLD_ARG0_TABLE_INDEX, 0 },
-	{ SENSOR_NUM_HEX_EXTERNAL_Y_FILTER, THRESHOLD_ENABLE_BOTH, -150, 150, NULL, 0 },
+	  THRESHOLD_ARG0_TABLE_INDEX },
+	{ SENSOR_NUM_HEX_EXTERNAL_Y_FILTER, THRESHOLD_ENABLE_UCR, 0, 30, sensor_log,
+	  SENSOR_NUM_HEX_EXTERNAL_Y_FILTER },
+	{ SENSOR_NUM_BPB_RACK_PRESSURE_3_P_KPA, THRESHOLD_ENABLE_UCR, 0, 200, sensor_log,
+	  SENSOR_NUM_BPB_RACK_PRESSURE_3_P_KPA },
+	{ SENSOR_NUM_BPB_RACK_PRESSURE_4_P_KPA, THRESHOLD_ENABLE_UCR, 0, 200, sensor_log,
+	  SENSOR_NUM_BPB_RACK_PRESSURE_4_P_KPA },
+	{ SENSOR_NUM_SB_HEX_PRESSURE_1_P_KPA, THRESHOLD_ENABLE_UCR, 0, 200, sensor_log,
+	  SENSOR_NUM_SB_HEX_PRESSURE_1_P_KPA },
+	{ SENSOR_NUM_SB_HEX_PRESSURE_2_P_KPA, THRESHOLD_ENABLE_UCR, 0, 200, sensor_log,
+	  SENSOR_NUM_SB_HEX_PRESSURE_2_P_KPA },
+	{ SENSOR_NUM_SB_HEX_AIR_INLET_AVG_TEMP_C, THRESHOLD_ENABLE_BOTH, -20, 100, sensor_log,
+	  SENSOR_NUM_SB_HEX_AIR_INLET_AVG_TEMP_C },
+
 };
 
 sensor_threshold *find_threshold_tbl_entry(uint8_t sensor_num)
@@ -839,7 +878,24 @@ void threshold_poll_init()
 		k_msleep(2000); // wait 2s for pump run
 		LOG_INF("threshold thread start!");
 		is_init = 1;
+		set_status_flag(STATUS_FLAG_SYSTEM_READY, 0, 1);
 	}
+}
+
+void change_threshold()
+{
+	float val = 0.0;
+	if (get_sensor_reading_to_real_val(SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, &val) !=
+	    SENSOR_READ_4BYTE_ACUR_SUCCESS)
+		return;
+
+	sensor_threshold *p = find_threshold_tbl_entry(SENSOR_NUM_HEX_EXTERNAL_Y_FILTER);
+	if (p == NULL)
+		return;
+	if (val >= 60)
+		p->ucr = 30;
+	else
+		p->ucr = 20;
 }
 
 void plat_sensor_poll_post()
@@ -859,6 +915,8 @@ void plat_sensor_poll_post()
 
 	if (!get_threshold_poll_enable_flag())
 		return;
+
+	change_threshold();
 
 	for (uint8_t i = 0; i < ARRAY_SIZE(threshold_tbl); i++) {
 		float val = 0;
