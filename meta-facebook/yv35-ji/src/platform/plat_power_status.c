@@ -318,3 +318,17 @@ bool get_retimer_status()
 
 	return true;
 }
+
+bool e1s_access(uint8_t sensor_num)
+{
+	if (get_DC_status() == false)
+		return false;
+
+	if (gpio_get(VIRTUAL_E1S_PRSNT_L) == GPIO_HIGH)
+		return false;
+
+	if ((sensor_num == SENSOR_NUM_TEMP_E1S_SSD) && (get_post_status() == false))
+		return false;
+
+	return true;
+}
