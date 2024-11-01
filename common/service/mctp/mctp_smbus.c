@@ -24,6 +24,11 @@
 #include <sys/printk.h>
 #include <zephyr.h>
 #include "libutil.h"
+#include "plat_def.h"
+
+#ifndef MCTP_SMBUS_WRITE_MAX_RETRY
+#define MCTP_SMBUS_WRITE_MAX_RETRY 1
+#endif
 
 LOG_MODULE_DECLARE(mctp, LOG_LEVEL_DBG);
 
@@ -210,13 +215,18 @@ static uint16_t mctp_smbus_write(void *mctp_p, uint8_t *buf, uint32_t len,
 	i2c_msg.target_addr = extra_data.smbus_ext_params.addr >> 1;
 	i2c_msg.tx_len = send_len;
 	memcpy(&i2c_msg.data[0], send_buf, send_len);
-	status = i2c_master_write(&i2c_msg, 5);
-	if (status) {
-		LOG_ERR("i2c_master_write failed, ret %d", status);
-		return MCTP_ERROR;
+
+	for (int attempt = 0; attempt < (MCTP_SMBUS_WRITE_MAX_RETRY + 1); attempt++) {
+		status = i2c_master_write(&i2c_msg, 5);
+		if (status == 0) {
+			return MCTP_SUCCESS;
+		}
+		LOG_WRN("i2c_master_write attempt %d failed, ret %d", attempt + 1, status);
+		k_msleep(10);
 	}
 
-	return MCTP_SUCCESS;
+	LOG_ERR("i2c_master_write failed after %d retries", MCTP_SMBUS_WRITE_MAX_RETRY);
+	return MCTP_ERROR;
 }
 
 uint8_t mctp_smbus_init(mctp *mctp_inst, mctp_medium_conf medium_conf)
