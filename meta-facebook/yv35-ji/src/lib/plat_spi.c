@@ -70,7 +70,7 @@ void switch_spi_freq()
 	}
 }
 
-bool switch_bios_read_write_flash_mux(int switch_mux)
+int switch_bios_read_write_flash_mux(int switch_mux)
 {
 	I2C_MSG msg = { 0 };
 	int retry = 3;
@@ -84,8 +84,8 @@ bool switch_bios_read_write_flash_mux(int switch_mux)
 	int ret = i2c_master_write(&msg, retry);
 	if (ret) {
 		LOG_ERR("Failed to switch bios read write flash mux, ret: %d", ret);
-		return false;
+		return -1;
 	}
 
-	return true;
+	return 0;
 }
