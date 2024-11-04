@@ -25,9 +25,9 @@
 #define DC_BRICK_2_ADDR (0x34 >> 1)
 
 #define TOP_INLET_TEMP_ADDR (0x92 >> 1)
-#define TOP_OUTLET_TEMP_ADDR (0x94 >> 1)
-#define BOT_INLET_TEMP_ADDR (0x96 >> 1)
-#define BOT_OUTLET_TEMP_ADDR (0X9E >> 1)
+#define TOP_OUTLET_TEMP_ADDR (0x9E >> 1)
+#define BOT_INLET_TEMP_ADDR (0x94 >> 1)
+#define BOT_OUTLET_TEMP_ADDR (0X96 >> 1)
 #define ON_DIE_1_TEMP_ADDR (0X98 >> 1)
 #define ON_DIE_2_TEMP_ADDR (0X98 >> 1)
 #define ON_DIE_3_TEMP_ADDR (0X9A >> 1)
