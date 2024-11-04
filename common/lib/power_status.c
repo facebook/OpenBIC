@@ -30,6 +30,8 @@ static bool is_DC_off_delayed = false;
 static bool is_CPU_power_good = false;
 static bool is_post_complete = false;
 static bool vr_monitor_status = true;
+static bool is_P3V3_E1S_power_good = false;
+static bool is_P12V_E1S_power_good = false;
 
 void set_DC_status(uint8_t gpio_num)
 {
@@ -113,4 +115,26 @@ void set_vr_monitor_status(bool value)
 bool get_vr_monitor_status()
 {
 	return vr_monitor_status;
+}
+
+void set_P3V3_E1S_power_status(uint8_t gpio_num)
+{
+	is_P3V3_E1S_power_good = gpio_get(gpio_num);
+	LOG_WRN("P3V3_E1S_PWR_GOOD: %s", (is_P3V3_E1S_power_good) ? "yes" : "no");
+}
+
+bool P3V3_E1S_power_good()
+{
+	return is_P3V3_E1S_power_good;
+}
+
+void set_P12V_E1S_power_status(uint8_t gpio_num)
+{
+	is_P12V_E1S_power_good = gpio_get(gpio_num);
+	LOG_WRN("P12V_E1S_PWR_GOOD: %s", (is_P12V_E1S_power_good) ? "yes" : "no");
+}
+
+bool P12V_E1S_power_good()
+{
+	return is_P12V_E1S_power_good;
 }
