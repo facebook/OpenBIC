@@ -32,5 +32,6 @@ bool retimer_access(uint8_t sensor_num);
 bool get_retimer_status();
 uint8_t scan_retimer_addr();
 void retimer_addr_loss();
+bool e1s_access(uint8_t sensor_num);
 
 #endif
