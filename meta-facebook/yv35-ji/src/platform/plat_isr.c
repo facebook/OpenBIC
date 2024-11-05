@@ -154,7 +154,6 @@ void check_host_reboot_status()
 	if (get_DC_status() == true) {
 		LOG_WRN("Host reboot detected!");
 		start_satmc_access_poll();
-		retimer_addr_loss();
 	}
 }
 
@@ -174,6 +173,7 @@ void ISR_POST_COMPLETE()
 			sbmr_reset_9byte_postcode_ok();
 			reset_ssif_ok();
 			set_satmc_status(false);
+			retimer_addr_loss();
 			k_work_schedule(&check_host_reboot_work, K_SECONDS(POST_DOWN_2_SECOND));
 		}
 	}
