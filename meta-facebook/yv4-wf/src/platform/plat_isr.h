@@ -52,7 +52,8 @@ typedef struct {
 
 void ISR_MB_DC_STAGUS_CHAGNE();
 void ISR_MB_PCIE_RST();
-void ISR_E1S_PWR_CHANGE();
+void ISR_P3V3_E1S_PWR_CHANGE();
+void ISR_P12V_E1S_PWR_CHANGE();
 void ISR_CXL_PG_ON();
 void ISR_SET_CXL_LED();
 
