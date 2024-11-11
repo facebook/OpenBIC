@@ -14,18 +14,14 @@
  * limitations under the License.
  */
 
-#include "plat_sensor_polling_shell.h"
-#include "cpld_shell.h"
-#include "plat_pldm_fw_version_shell.h"
+#ifndef PLAT_PLDM_FW_VERSION_SHELL_H
+#define PLAT_PLDM_FW_VERSION_SHELL_H
 
-/* Sub-command Level 1 of command test */
-SHELL_STATIC_SUBCMD_SET_CREATE(sub_test_cmds,
-			       SHELL_CMD(sensor, &sub_plat_sensor_polling_cmd,
-					 "set/get platform sensor polling command", NULL),
-			       SHELL_CMD(cpld, &sub_cpld_cmd, "cpld command", NULL),
-			       SHELL_CMD(get_fw_version, &sub_get_fw_version_cmd,
-					 "get fw version command", NULL),
+#include <shell/shell.h>
+
+void cmd_get_fw_version_vr(const struct shell *shell, size_t argc, char **argv);
+
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_get_fw_version_cmd,
+			       SHELL_CMD(vr, NULL, "get fw version vr", cmd_get_fw_version_vr),
 			       SHELL_SUBCMD_SET_END);
-
-/* Root of command test */
-SHELL_CMD_REGISTER(test, &sub_test_cmds, "Test commands for AG", NULL);
+#endif
