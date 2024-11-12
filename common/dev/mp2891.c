@@ -23,6 +23,8 @@
 #include "pmbus.h"
 #include "util_pmbus.h"
 
+LOG_MODULE_REGISTER(mp2891);
+
 #define DAC_2P5MV_EN_BIT BIT(13)
 #define MFR_VID_RES_MASK GENMASK(15, 14)
 #define IOUT_SCALE_MASK GENMASK(2, 0)
@@ -31,7 +33,70 @@
 #define MFR_SVI3_IOUT_RPT 0x65
 #define MFR_VOUT_LOOP_CTRL 0xBD
 
-LOG_MODULE_REGISTER(mp2891);
+#define VR_MPS_PAGE_1 0x01
+
+/* --------- PAGE1 ---------- */
+#define VR_REG_EXPECTED_USER_CRC 0xF0
+
+enum {
+	ATE_CONF_ID = 0,
+	ATE_PAGE_NUM,
+	ATE_REG_ADDR_HEX,
+	ATE_REG_ADDR_DEC,
+	ATE_REG_NAME,
+	ATE_REG_DATA_HEX,
+	ATE_REG_DATA_DEC,
+	ATE_COL_MAX,
+};
+
+static bool mp2891_set_page(uint8_t bus, uint8_t addr, uint8_t page)
+{
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 3;
+
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+
+	i2c_msg.tx_len = 2;
+	i2c_msg.data[0] = PMBUS_PAGE;
+	i2c_msg.data[1] = page;
+
+	if (i2c_master_write(&i2c_msg, retry)) {
+		LOG_ERR("Failed to set page to 0x%02X", page);
+		return false;
+	}
+
+	k_msleep(100);
+
+	return true;
+}
+
+bool mp2891_get_fw_version(uint8_t bus, uint8_t addr, uint32_t *rev)
+{
+	CHECK_NULL_ARG_WITH_RETURN(rev, false);
+
+	if (mp2891_set_page(bus, addr, VR_MPS_PAGE_1) == false) {
+		LOG_ERR("Failed to set page before reading config revision");
+		return false;
+	}
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 3;
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 2;
+	i2c_msg.data[0] = VR_REG_EXPECTED_USER_CRC;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_INF("Failed to read config revision");
+		return false;
+	}
+
+	*rev = (i2c_msg.data[1] << 8) | i2c_msg.data[0];
+
+	return true;
+}
 
 float mp2891_get_resolution(sensor_cfg *cfg)
 {

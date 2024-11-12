@@ -23,5 +23,8 @@
 
 void load_pldmupdate_comp_config(void);
 void clear_pending_version(uint8_t activate_method);
+void find_sensor_id_and_name_by_firmware_comp_id(uint8_t comp_identifier, uint8_t *sensor_id,
+						 char *sensor_name);
+int get_aegis_compnt_mapping_sensor_table_count(void);
 
 #endif /* _PLAT_FWUPDATE_H_ */

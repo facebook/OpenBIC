@@ -75,7 +75,7 @@
 };
 
 &i2c12a {
-    status = "disabled";
+    status = "okay";
 };
 
 &spip1 {
