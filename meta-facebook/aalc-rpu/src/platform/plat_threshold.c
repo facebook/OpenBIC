@@ -330,60 +330,6 @@ void pump_board_tach_status_handler(uint8_t sensor_num, uint8_t status)
 		LOG_ERR("Write pump_board_pwrgd gpio fail");
 }
 
-/*static bool close_pump_hsc(uint8_t sensor_num)
-{
-	bool ret = true;
-	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
-	if ((cfg->pre_sensor_read_hook)) {
-		if ((cfg->pre_sensor_read_hook)(cfg, cfg->pre_sensor_read_args) == false) {
-			LOG_DBG("read value pre lock mutex fail !");
-			return false;
-		}
-	}
-
-	if (!enable_adm1272_hsc(cfg->port, cfg->target_addr, false))
-		ret = false;
-
-	if ((cfg->post_sensor_read_hook)) {
-		if ((cfg->post_sensor_read_hook)(cfg, cfg->post_sensor_read_args, 0) == false) {
-			LOG_DBG("read value post lock mutex fail !");
-			return false;
-		}
-	}
-
-	return ret;
-}*/
-
-/*static bool pump_fail_ctrl(uint8_t sensor_num)
-{
-	bool ret = true;
-	uint8_t pwm_dev =
-		(sensor_num == SENSOR_NUM_PB_1_PUMP_TACH_RPM) ? PWM_DEVICE_E_PB_PUMB_FAN_1 :
-		(sensor_num == SENSOR_NUM_PB_2_PUMP_TACH_RPM) ? PWM_DEVICE_E_PB_PUMB_FAN_2 :
-		(sensor_num == SENSOR_NUM_PB_3_PUMP_TACH_RPM) ? PWM_DEVICE_E_PB_PUMB_FAN_3 :
-								PWM_DEVICE_E_MAX;
-	uint8_t hsc_sensor =
-		(sensor_num == SENSOR_NUM_PB_1_PUMP_TACH_RPM) ? SENSOR_NUM_PB_1_HSC_P48V_TEMP_C :
-		(sensor_num == SENSOR_NUM_PB_2_PUMP_TACH_RPM) ? SENSOR_NUM_PB_2_HSC_P48V_TEMP_C :
-		(sensor_num == SENSOR_NUM_PB_3_PUMP_TACH_RPM) ? SENSOR_NUM_PB_3_HSC_P48V_TEMP_C :
-								0xFF;
-
-	if (pwm_dev == PWM_DEVICE_E_MAX)
-		return false;
-
-	if (hsc_sensor == 0xFF)
-		return false;
-
-	if (get_threshold_status(sensor_num)) {
-		if (plat_pwm_ctrl(pwm_dev, 0))
-			ret = false;
-		if (!close_pump_hsc(hsc_sensor))
-			ret = false;
-	}
-
-	return ret;
-}*/
-
 static bool pump_fan_fail_ctrl()
 {
 	bool ret = true;

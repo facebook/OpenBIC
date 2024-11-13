@@ -46,12 +46,6 @@ enum FSC_TYPE {
 	FSC_TYPE_DEFAULT,
 };
 
-/*
-enum SETPOINT_TYPE {
-	SETPOINT_AIR_INTEL_AVG_C = 0,
-	SETPOINT_FLOW_RATE_LPM,
-};*/
-
 /* stepwise */
 typedef struct {
 	uint8_t temp;
