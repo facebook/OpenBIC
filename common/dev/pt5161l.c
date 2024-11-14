@@ -56,7 +56,9 @@ bool pt5161l_get_vendor_id(I2C_MSG *msg)
 	return true;
 }
 
-//Write multiple data bytes to retimer over I2C
+/*
+ * Write multiple data bytes to retimer over I2C
+ */
 bool pt5161l_write_block_data(I2C_MSG *msg, uint32_t address, uint8_t num_bytes, uint8_t *values)
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg, false);
@@ -70,16 +72,18 @@ bool pt5161l_write_block_data(I2C_MSG *msg, uint32_t address, uint8_t num_bytes,
 	uint8_t lower_addr;
 	uint8_t retry = 3;
 
-	// If Address more than 16 bit, return with an error code
-	// Intel format only allows for 16 bit address
+	/* If Address more than 16 bit, return with an error code
+	 * Intel format only allows for 16 bit address
+	 */
 	if (address > 0xffff) {
 		LOG_ERR("Address cannot be more than 16 bits in Intel format");
 		return false;
 	}
 
-	// If byte count is greater than 4, perform multiple iterations
-	// Hence keep track of remaining bytes each time we perform a
-	// transaction
+	/* If byte count is greater than 4, perform multiple iterations
+	 * Hence keep track of remaining bytes each time we perform a
+	 * transaction
+	 */
 	uint8_t curr_bytes = 0;
 	uint8_t remaining_bytes = num_bytes;
 	while (remaining_bytes > 0) {
@@ -96,7 +100,7 @@ bool pt5161l_write_block_data(I2C_MSG *msg, uint32_t address, uint8_t num_bytes,
 		start = 1;
 		end = 1;
 
-		// Construct Command code
+		/* Construct Command code */
 		cmd_code = (rsvd << 5) + (func_code << 2) + (start << 1) + (end << 0);
 		upper_addr = (address & 0xff00) >> 8; // Get bits 16:8
 		lower_addr = address & 0xff; // Get bits 7:0
@@ -126,7 +130,7 @@ bool pt5161l_write_block_data(I2C_MSG *msg, uint32_t address, uint8_t num_bytes,
 			return false;
 		}
 
-		// Increment iteration count
+		/* Increment iteration count */
 		values += curr_bytes;
 		address += curr_bytes;
 	}
@@ -152,8 +156,9 @@ bool pt5161l_read_block_data(I2C_MSG *msg, uint32_t address, uint8_t num_bytes, 
 
 	uint8_t retry = 3;
 
-	// If Address more than 16 bit, return with an error code
-	// Intel format only allows for 16 bit address
+	/* If Address more than 16 bit, return with an error code
+	 * Intel format only allows for 16 bit address
+	 */
 	if (address > 0xffff) {
 		LOG_ERR("Address cannot be more than 16 bits in Intel format");
 		return false;
@@ -192,10 +197,11 @@ bool pt5161l_read_block_data(I2C_MSG *msg, uint32_t address, uint8_t num_bytes, 
 		LOG_DBG("msg->data[2] = 0x%02x", msg->data[2]);
 		LOG_DBG("msg->data[3] = 0x%02x", msg->data[3]);
 
-		// read buffer is 3 + data bytes always
-		// First byte is num.bytes read
-		// Second and third bytes are address
-		// Bytes 4 onwards is data (4 bytes)
+		/* read buffer is 3 + data bytes always
+		 * First byte is num.bytes read
+		 * Second and third bytes are address
+		 * Bytes 4 onwards is data (4 bytes)
+		 */
 		uint8_t read_buf_len = 3 + 4;
 
 		if (i2c_master_write(msg, retry)) {
@@ -221,10 +227,10 @@ bool pt5161l_read_block_data(I2C_MSG *msg, uint32_t address, uint8_t num_bytes, 
 			return false;
 		}
 
-		// Fill up user given array
+		/* Fill up user given array */
 		memcpy(values, &(msg->data[3]), curr_bytes);
 
-		// Increment iteration count
+		/* Increment iteration count */
 		values += curr_bytes;
 		address += curr_bytes;
 	}
@@ -250,9 +256,9 @@ bool pt5161l_read_block_data_to_sram(I2C_MSG *msg, uint32_t micro_ind_struct_oft
 		return false;
 	}
 
-	// No multi-byte indirect support here. Hence read a byte at a time
+	/* No multi-byte indirect support here. Hence read a byte at a time */
 	for (byte_index = 0; byte_index < num_bytes; byte_index++) {
-		// Write eeprom addr
+		/* Write eeprom addr */
 		uint8_t eeprom_addr_bytes[3];
 		int eeprom_acc_addr = eeprom_offset - PT5161L_MAIN_SRAM_DMEM_OFFSET + byte_index;
 		eeprom_addr_bytes[0] = (eeprom_acc_addr) & 0xff;
@@ -264,7 +270,7 @@ bool pt5161l_read_block_data_to_sram(I2C_MSG *msg, uint32_t micro_ind_struct_oft
 			goto error_exit;
 		}
 
-		// Write eeprom cmd
+		/* Write eeprom cmd */
 		uint8_t eeprom_cmd_byte = PT5161L_TG_RD_LOC_IND_SRAM;
 		ret = pt5161l_write_block_data(msg, (micro_ind_struct_oft + 4), 1,
 					       &eeprom_cmd_byte);
@@ -273,7 +279,7 @@ bool pt5161l_read_block_data_to_sram(I2C_MSG *msg, uint32_t micro_ind_struct_oft
 			goto error_exit;
 		}
 
-		// Test successfull access
+		/* Test successfull access */
 		for (count = 0; count < MAX_RETRY; ++count) {
 			ret = pt5161l_read_block_data(msg, (micro_ind_struct_oft + 4), 1, &rdata);
 			if (ret == false) {
@@ -315,7 +321,7 @@ bool pt5161l_i2c_master_soft_reset(I2C_MSG *msg)
 	uint8_t data_byte;
 	uint8_t i2c_init_ctrl;
 
-	// Enable Bit bang mode
+	/* Enable Bit bang mode */
 	data_byte = 3;
 	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_BB_OUTPUT_ADDRESS, 1, &data_byte);
 	if (!ret) {
@@ -336,8 +342,9 @@ bool pt5161l_i2c_master_soft_reset(I2C_MSG *msg)
 		goto exit;
 	}
 
-	// Start Sequence
-	// SDA = 1, SCL = 1
+	/* Start Sequence
+	 * SDA = 1, SCL = 1
+	 */
 	data_byte = 3;
 	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_BB_OUTPUT_ADDRESS, 1, &data_byte);
 	if (!ret) {
@@ -345,7 +352,7 @@ bool pt5161l_i2c_master_soft_reset(I2C_MSG *msg)
 		goto exit;
 	}
 
-	// SDA = 0, SCL = 1
+	/* SDA = 0, SCL = 1 */
 	data_byte = 1;
 	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_BB_OUTPUT_ADDRESS, 1, &data_byte);
 	if (!ret) {
@@ -353,7 +360,7 @@ bool pt5161l_i2c_master_soft_reset(I2C_MSG *msg)
 		goto exit;
 	}
 
-	// SDA = 0, SCL = 0
+	/* SDA = 0, SCL = 0 */
 	data_byte = 0;
 	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_BB_OUTPUT_ADDRESS, 1, &data_byte);
 	if (!ret) {
@@ -361,7 +368,7 @@ bool pt5161l_i2c_master_soft_reset(I2C_MSG *msg)
 		goto exit;
 	}
 
-	// SDA = 1, SCL = 0
+	/* SDA = 1, SCL = 0 */
 	data_byte = 2;
 	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_BB_OUTPUT_ADDRESS, 1, &data_byte);
 	if (!ret) {
@@ -371,7 +378,7 @@ bool pt5161l_i2c_master_soft_reset(I2C_MSG *msg)
 
 	int i = 0;
 	for (i = 0; i < 9; i++) {
-		// SDA = 1, SCL = 1
+		/* SDA = 1, SCL = 1 */
 		data_byte = 3;
 		ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_BB_OUTPUT_ADDRESS, 1,
 					       &data_byte);
@@ -380,7 +387,7 @@ bool pt5161l_i2c_master_soft_reset(I2C_MSG *msg)
 			goto exit;
 		}
 
-		// SDA = 1 SCL = 0
+		/* SDA = 1 SCL = 0 */
 		data_byte = 2;
 		ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_BB_OUTPUT_ADDRESS, 1,
 					       &data_byte);
@@ -390,8 +397,9 @@ bool pt5161l_i2c_master_soft_reset(I2C_MSG *msg)
 		}
 	}
 
-	// Stop Sequence
-	// SDA = 0, SCL = 0
+	/* Stop Sequence
+	 * SDA = 0, SCL = 0
+	 */
 	data_byte = 0;
 	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_BB_OUTPUT_ADDRESS, 1, &data_byte);
 	if (!ret) {
@@ -399,14 +407,14 @@ bool pt5161l_i2c_master_soft_reset(I2C_MSG *msg)
 		goto exit;
 	}
 
-	// SDA = 0, SCL = 1
+	/* SDA = 0, SCL = 1 */
 	data_byte = 1;
 	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_BB_OUTPUT_ADDRESS, 1, &data_byte);
 	if (!ret) {
 		LOG_ERR("pt5161l stop sequence set I2C master SDA = 0, SCL = 1 failed");
 		goto exit;
 	}
-	// SDA = 1, SCL = 1
+	/* SDA = 1, SCL = 1 */
 	data_byte = 3;
 	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_BB_OUTPUT_ADDRESS, 1, &data_byte);
 	if (!ret) {
@@ -414,7 +422,7 @@ bool pt5161l_i2c_master_soft_reset(I2C_MSG *msg)
 		goto exit;
 	}
 
-	// Disable BB mode
+	/* Disable BB mode */
 	i2c_init_ctrl = PT5161L_I2C_MST_INIT_CTRL_BIT_BANG_MODE_EN_MODIFY(i2c_init_ctrl, 0);
 	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_INIT_CTRL_ADDRESS, 1, &i2c_init_ctrl);
 	if (!ret) {
@@ -464,7 +472,9 @@ exit:
 	return ret;
 }
 
-// I2C Master init for EEPROM Write-Thru
+/*
+ * I2C Master init for EEPROM Write-Thru
+ */
 bool pt5161l_i2c_master_init(I2C_MSG *msg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg, false);
@@ -518,7 +528,9 @@ exit:
 	return ret;
 }
 
-//Set Page address in I2C Master
+/*
+ * Set Page address in I2C Master
+ */
 bool pt5161l_i2c_master_set_page(I2C_MSG *msg, int page)
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg, false);
@@ -526,7 +538,7 @@ bool pt5161l_i2c_master_set_page(I2C_MSG *msg, int page)
 	uint8_t data;
 	bool ret;
 
-	// Power-on default value is 0x50
+	/* Power-on default value is 0x50 */
 	target = 0x50 | (page & 3);
 
 	data = 0;
@@ -551,19 +563,21 @@ exit:
 	return ret;
 }
 
-//Write multiple bytes to the I2C Master via Main Micro
+/*
+ * Write multiple bytes to the I2C Master via Main Micro
+ */
 bool pt5161l_i2c_master_multi_block_write(I2C_MSG *msg, uint16_t offset, int num_bytes,
 					  uint8_t *values)
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg, false);
 	CHECK_NULL_ARG_WITH_RETURN(values, false);
-	// Data is arranged in four-byte chunks
+	/* Data is arranged in four-byte chunks */
 	uint8_t data_bytes[4];
 	uint8_t upper_oft;
 	uint8_t lower_oft;
 	bool ret;
 
-	// IC Data command
+	/* IC Data command */
 	data_bytes[0] = 0x10;
 	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_IC_CMD_ADDR, 1, &(data_bytes[0]));
 	if (!ret) {
@@ -571,7 +585,7 @@ bool pt5161l_i2c_master_multi_block_write(I2C_MSG *msg, uint16_t offset, int num
 		return ret;
 	}
 
-	// Prepare Flag Byte
+	/* Prepare Flag Byte */
 	data_bytes[0] = 0;
 	ret = pt5161l_write_block_data(msg, PT5161L_I2C_MST_DATA1_ADDR, 1, &(data_bytes[0]));
 	if (!ret) {
@@ -579,7 +593,7 @@ bool pt5161l_i2c_master_multi_block_write(I2C_MSG *msg, uint16_t offset, int num
 		return ret;
 	}
 
-	// Send offset
+	/* Send offset */
 	upper_oft = (offset >> 8) & 0xff;
 	lower_oft = offset & 0xff;
 	data_bytes[0] = upper_oft;
@@ -621,17 +635,17 @@ bool pt5161l_i2c_master_multi_block_write(I2C_MSG *msg, uint16_t offset, int num
 	bool is_busy = false;
 
 	for (iter_idx = 0; iter_idx < num_iters; iter_idx++) {
-		// determine MM-assist command
+		/* determine MM-assist command */
 		cmd = PT5161L_MM_EEPROM_WRITE_REG_CODE;
 		if (iter_idx == (num_iters - 1)) {
 			cmd = PT5161L_MM_EEPROM_WRITE_END_CODE;
 		}
 		cmd = cmd | PT5161L_EEPROM_BLOCK_CMD_MODIFIER;
 
-		// Write data
+		/* Write data */
 		for (block_idx = 0; block_idx < num_blocks; block_idx++) {
 			memcpy(data_bytes, &(values[(oft + block_idx * 4)]), 4);
-			// write the data to Retimer holding registers
+			/* write the data to Retimer holding registers */
 			ret = pt5161l_write_block_data(
 				msg, PT5161L_EEPROM_BLOCK_BASE_ADDR + 4 * block_idx, 4, data_bytes);
 			if (!ret) {
@@ -640,7 +654,7 @@ bool pt5161l_i2c_master_multi_block_write(I2C_MSG *msg, uint16_t offset, int num
 			}
 		}
 
-		// Write cmd
+		/* Write cmd */
 		data_bytes[0] = cmd;
 		ret = pt5161l_write_block_data(msg, PT5161L_MM_EEPROM_ASSIST_CMD_ADDR, 1,
 					       &(data_bytes[0]));
@@ -649,7 +663,7 @@ bool pt5161l_i2c_master_multi_block_write(I2C_MSG *msg, uint16_t offset, int num
 			return ret;
 		}
 
-		// Verify Command returned back to zero
+		/* Verify Command returned back to zero */
 		is_busy = true;
 		for (try = 0; try < max_tries; try++) {
 			ret = pt5161l_read_block_data(msg, PT5161L_MM_EEPROM_ASSIST_CMD_ADDR, 1,
@@ -666,7 +680,7 @@ bool pt5161l_i2c_master_multi_block_write(I2C_MSG *msg, uint16_t offset, int num
 			k_msleep(PT5161L_MM_STATUS_TIME_5MS);
 		}
 
-		// If status not reset to 0, return BUSY error
+		/* If status not reset to 0, return BUSY error */
 		if (is_busy) {
 			LOG_ERR("Main Micro busy writing data block to EEPROM. Did not commit write");
 			return false;
@@ -682,7 +696,7 @@ bool pt5161l_pre_update(I2C_MSG *msg)
 {
 	bool ret;
 
-	// Deassert HW and SW resets
+	/* Deassert HW and SW resets */
 	uint8_t tmp_data[2];
 	tmp_data[0] = 0;
 	tmp_data[1] = 0;
@@ -720,7 +734,7 @@ bool pt5161l_pre_update(I2C_MSG *msg)
 	}
 	k_msleep(PT5161L_MM_STATUS_TIME_5MS);
 
-	// Init I2C Master
+	/* Init I2C Master */
 	ret = pt5161l_i2c_master_init(msg);
 	if (!ret) {
 		LOG_ERR("pt5161l i2c master init failed");
@@ -747,11 +761,11 @@ bool pt5161l_write_eeprom_image(I2C_MSG *msg, uint32_t offset, uint8_t *txbuf, u
 		return ret;
 	}
 
-	// Set MSB and local addresses for this page
+	/* Set MSB and local addresses for this page */
 	oft_msb = offset / SECTOR_SZ_64K;
 	oft_i2c = offset % SECTOR_SZ_64K;
 
-	// Set Page address
+	/* Set Page address */
 	ret = pt5161l_i2c_master_set_page(msg, oft_msb);
 	if (!ret) {
 		LOG_ERR("pt5161l i2c master set page %x failed", oft_msb);
@@ -768,7 +782,7 @@ bool pt5161l_write_eeprom_image(I2C_MSG *msg, uint32_t offset, uint8_t *txbuf, u
 		amend_len = 0;
 	}
 
-	// Send a block of bytes to the EEPROM starting at address
+	/* Send a block of bytes to the EEPROM starting at address */
 	ret = pt5161l_i2c_master_multi_block_write(msg, oft_i2c, length + amend_len, data);
 	if (!ret) {
 		LOG_ERR("pt5161l Send a block of bytes to the EEPROM starting at address %x failed",
@@ -787,7 +801,7 @@ bool pt5161l_post_update(I2C_MSG *msg)
 	bool ret = false;
 	uint8_t tmp_data[2] = { 0 };
 
-	// Assert HW resets for I2C master interface
+	/* Assert HW resets for I2C master interface */
 	tmp_data[0] = 0x00;
 	tmp_data[1] = 0x02;
 	ret = pt5161l_write_block_data(msg, 0x600, 2, tmp_data); // hw_rst
@@ -813,7 +827,7 @@ uint8_t pt5161l_do_update(I2C_MSG *msg, uint32_t update_offset, uint8_t *txbuf, 
 	CHECK_NULL_ARG_WITH_RETURN(txbuf, FWUPDATE_UPDATE_FAIL);
 
 	if (update_offset == 0) {
-		// Update device FW update progress state
+		/* Update device FW update progress state */
 		is_update_ongoing = true;
 		if (!pt5161l_pre_update(msg)) {
 			return FWUPDATE_UPDATE_FAIL;
@@ -830,7 +844,7 @@ uint8_t pt5161l_do_update(I2C_MSG *msg, uint32_t update_offset, uint8_t *txbuf, 
 			LOG_ERR("Failed to reset retimer");
 			return FWUPDATE_UPDATE_FAIL;
 		}
-		// Update device FW update progress state
+		/* Update device FW update progress state */
 		is_update_ongoing = false;
 	}
 
@@ -956,7 +970,9 @@ bool pt5161l_get_fw_version(I2C_MSG *msg, uint8_t *version)
 	return ret;
 }
 
-//Get temp caliberation codes
+/*
+ * Get temp caliberation codes
+ */
 bool get_temp_calibration_codes(I2C_MSG *msg, pt5161l_init_arg *init_args)
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg, false);
@@ -974,71 +990,76 @@ bool get_temp_calibration_codes(I2C_MSG *msg, pt5161l_init_arg *init_args)
 		return ret;
 	}
 
-	// eFuse read procedure
-	// 1. Switch to refclk/8 clock for TCK
-	// self.csr.misc.efuse_cntl.sms_clk_sel = 1
+	/* eFuse read procedure
+	 * 1. Switch to refclk/8 clock for TCK
+	 * self.csr.misc.efuse_cntl.sms_clk_sel = 1
+	 */
 	ret = pt5161l_read_block_data(msg, 0x8ec, 5, data_bytes5);
 	if (!ret) {
 		LOG_ERR("Read refclk clock for TCK failed");
 		goto unlock_exit;
 	}
-	// Assert bit 25
+	/* Assert bit 25 */
 	data_bytes5[3] = SETBIT(data_bytes5[3], 1);
 	ret = pt5161l_write_block_data(msg, 0x8ec, 5, data_bytes5);
 	if (!ret) {
 		LOG_ERR("Set refclk clock for TCK failed");
 		goto unlock_exit;
 	}
-	// 2. Assert efuse_load
-	// self.csr.misc.sms_efuse_cntl.sms_efuse_load = 1
+	/* 2. Assert efuse_load
+	 * self.csr.misc.sms_efuse_cntl.sms_efuse_load = 1
+	 */
 	ret = pt5161l_read_block_data(msg, 0x8f6, 1, data_byte);
 	if (!ret) {
 		LOG_ERR("Read assert efuse_load failed");
 		goto unlock_exit;
 	}
-	// Assert bit 7
+	/* Assert bit 7 */
 	data_byte[0] = SETBIT(data_byte[0], 7);
 	ret = pt5161l_write_block_data(msg, 0x8f6, 1, data_byte);
 	if (!ret) {
 		LOG_ERR("Set assert efuse_load failed");
 		goto unlock_exit;
 	}
-	// 3. Assert smart_test
-	// self.csr.misc.efuse_cntl.smart_test = 1
+	/* 3. Assert smart_test
+	 * self.csr.misc.efuse_cntl.smart_test = 1
+	 */
 	ret = pt5161l_read_block_data(msg, 0x8ec, 5, data_bytes5);
 	if (!ret) {
 		LOG_ERR("Read assert smart_test failed");
 		goto unlock_exit;
 	}
-	// Assert bit 24
+	/* Assert bit 24 */
 	data_bytes5[3] = SETBIT(data_bytes5[3], 0);
 	ret = pt5161l_write_block_data(msg, 0x8ec, 5, data_bytes5);
 	if (!ret) {
 		LOG_ERR("Set assert smart_test failed");
 		goto unlock_exit;
 	}
-	// 4. De-assert smart_test
-	// self.csr.misc.efuse_cntl.smart_test = 0
+	/* 4. De-assert smart_test
+	 * self.csr.misc.efuse_cntl.smart_test = 0
+	 */
 	ret = pt5161l_read_block_data(msg, 0x8ec, 5, data_bytes5);
 	if (!ret) {
 		LOG_ERR("Read De-assert smart_test failed");
 		goto unlock_exit;
 	}
-	// De-assert bit 24
+	/* De-assert bit 24 */
 	data_bytes5[3] = CLEARBIT(data_bytes5[3], 0);
 	ret = pt5161l_write_block_data(msg, 0x8ec, 5, data_bytes5);
 	if (!ret) {
 		LOG_ERR("Set De-assert smart_test failed");
 		goto unlock_exit;
 	}
-	// 5. De-assert efuse_load
-	// self.csr.misc.sms_efuse_cntl.sms_efuse_load = 0
+	/* 5. De-assert efuse_load
+	 * self.csr.misc.sms_efuse_cntl.sms_efuse_load = 0
+	 */
 	ret = pt5161l_read_block_data(msg, 0x8f6, 1, data_byte);
 	if (!ret) {
 		LOG_ERR("Read De-assert efuse_load failed");
 		goto unlock_exit;
 	}
-	// De-assert bit 7
+	/* De-assert bit 7 */
 	data_byte[0] = CLEARBIT(data_byte[0], 7);
 	ret = pt5161l_write_block_data(msg, 0x8f6, 1, data_byte);
 	if (!ret) {
@@ -1046,15 +1067,16 @@ bool get_temp_calibration_codes(I2C_MSG *msg, pt5161l_init_arg *init_args)
 		goto unlock_exit;
 	}
 
-	// Read eFuse “primary page invalid” bit and adjust offset accordingly
-	// Set address
+	/* Read eFuse “primary page invalid” bit and adjust offset accordingly
+	 * Set address
+	 */
 	data_byte[0] = 63;
 	ret = pt5161l_write_block_data(msg, 0x8f6, 1, data_byte);
 	if (!ret) {
 		LOG_ERR("Set eFuse primary page invalid bit failed");
 		goto unlock_exit;
 	}
-	// Read data
+	/* Read data */
 	ret = pt5161l_read_block_data(msg, 0x8f7, 1, data_byte);
 	if (!ret) {
 		LOG_ERR("Read eFuse primary page invalid bit failed");
@@ -1068,15 +1090,16 @@ bool get_temp_calibration_codes(I2C_MSG *msg, pt5161l_init_arg *init_args)
 		offset = 0;
 	}
 
-	// Determine calibration codes
-	// Set address
+	/* Determine calibration codes
+	 * Set address
+	 */
 	data_byte[0] = 48 + offset;
 	ret = pt5161l_write_block_data(msg, 0x8f6, 1, data_byte);
 	if (!ret) {
 		LOG_ERR("Set Determine calibration codes failed");
 		goto unlock_exit;
 	}
-	// Read data
+	/* Read data */
 	ret = pt5161l_read_block_data(msg, 0x8f7, 1, data_byte);
 	if (!ret) {
 		LOG_ERR("Read Determine calibration codes failed");
@@ -1084,7 +1107,7 @@ bool get_temp_calibration_codes(I2C_MSG *msg, pt5161l_init_arg *init_args)
 	}
 	flag = data_byte[0];
 
-	// Compute PMA A calibration codes
+	/* Compute PMA A calibration codes */
 	int i;
 	for (i = 0; i < 4; i++) {
 		if (flag & 0x4) {
@@ -1109,7 +1132,7 @@ bool get_temp_calibration_codes(I2C_MSG *msg, pt5161l_init_arg *init_args)
 		init_args->temp_cal_code_pma_a[i] = cal_code;
 	}
 
-	// Compute PMA B calibration codes
+	/* Compute PMA B calibration codes */
 	for (i = 0; i < 4; i++) {
 		if (flag & 0x04) {
 			data_byte[0] = 32 + (i * 4) + offset;
@@ -1133,7 +1156,7 @@ bool get_temp_calibration_codes(I2C_MSG *msg, pt5161l_init_arg *init_args)
 		init_args->temp_cal_code_pma_b[i] = cal_code;
 	}
 
-	// Calcualte the average PMA calibration code
+	/* Calcualte the average PMA calibration code */
 	init_args->temp_cal_code_avg =
 		(init_args->temp_cal_code_pma_a[0] + init_args->temp_cal_code_pma_a[1] +
 		 init_args->temp_cal_code_pma_a[2] + init_args->temp_cal_code_pma_a[3] +
@@ -1178,7 +1201,7 @@ uint8_t pt5161l_read_avg_temp(I2C_MSG *i2c_msg, uint8_t temp_cal_code_avg, doubl
 	sort_bubble(adc_code_record, ARRAY_SIZE(adc_code_record));
 	adc_code = adc_code_record[1];
 
-	// return 0 or >= 0x3FF means temperature is not ready
+	/* return 0 or >= 0x3FF means temperature is not ready */
 	if (adc_code == 0 || adc_code >= 0x3FF) {
 		LOG_INF("Avg Temperature is not ready");
 		ret = SENSOR_NOT_ACCESSIBLE;
@@ -1226,7 +1249,7 @@ uint8_t pt5161l_read(sensor_cfg *cfg, int *reading)
 
 	if (!init_arg->is_init) {
 		LOG_WRN("Device wasn't initialized, try to initialize!");
-		// Get temp caliberation codes
+		/* Get temp caliberation codes */
 		if (!get_temp_calibration_codes(&msg, init_arg)) {
 			LOG_ERR("Initialize failed!");
 			return SENSOR_UNSPECIFIED_ERROR;
@@ -1277,7 +1300,7 @@ uint8_t pt5161l_init(sensor_cfg *cfg)
 		goto exit;
 	}
 
-	// Get temp caliberation codes
+	/* Get temp caliberation codes */
 	if (!get_temp_calibration_codes(&msg, init_args)) {
 		LOG_WRN("Retimer not init yet!");
 		goto exit;
