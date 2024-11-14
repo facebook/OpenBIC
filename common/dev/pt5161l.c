@@ -1201,14 +1201,14 @@ uint8_t pt5161l_read_avg_temp(I2C_MSG *i2c_msg, uint8_t temp_cal_code_avg, doubl
 	sort_bubble(adc_code_record, ARRAY_SIZE(adc_code_record));
 	adc_code = adc_code_record[1];
 
-	/* return 0 or >= 0x3FF means temperature is not ready */
-	if (adc_code == 0 || adc_code >= 0x3FF) {
-		LOG_INF("Avg Temperature is not ready");
+	if (adc_code == 0xFFFFFFFF) {
+		/* From Aries Errata Known issue */
+		LOG_WRN("Some I2C transactions occured during temperature reading");
 		ret = SENSOR_NOT_ACCESSIBLE;
 		goto unlock_exit;
-	} else if (adc_code == 0xFFFFFFFF) {
-		/* From Aries Errata - Known issue */
-		LOG_WRN("Some I2C transactions occured during temperature reading");
+	} else if (adc_code == 0 || adc_code >= 0x3FF) {
+		/* Means temperature is not ready */
+		LOG_INF("Avg Temperature is not ready");
 		ret = SENSOR_NOT_ACCESSIBLE;
 		goto unlock_exit;
 	}
