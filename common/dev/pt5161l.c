@@ -1162,17 +1162,30 @@ uint8_t pt5161l_read_avg_temp(I2C_MSG *i2c_msg, uint8_t temp_cal_code_avg, doubl
 		return ret;
 	}
 
-	if (!pt5161l_read_block_data(i2c_msg, PT5161L_TEMP_OFFSET, 4, data_bytes)) {
-		LOG_ERR("Read Avg Temperature failed");
-		goto unlock_exit;
+	/* Read 3 time and take medium value */
+	int adc_code_record[3] = { 0 };
+	for (int i = 0; i < 3; i++) {
+		if (!pt5161l_read_block_data(i2c_msg, PT5161L_TEMP_OFFSET, 4, data_bytes)) {
+			LOG_ERR("Read Avg Temperature failed");
+			goto unlock_exit;
+		}
+
+		adc_code = (data_bytes[3] << 24) + (data_bytes[2] << 16) + (data_bytes[1] << 8) +
+			   data_bytes[0];
+		adc_code_record[i] = adc_code;
 	}
 
-	adc_code = (data_bytes[3] << 24) + (data_bytes[2] << 16) + (data_bytes[1] << 8) +
-		   data_bytes[0];
+	sort_bubble(adc_code_record, ARRAY_SIZE(adc_code_record));
+	adc_code = adc_code_record[1];
 
-	//return 0 or >= 0x3FF means temperature is not ready
+	// return 0 or >= 0x3FF means temperature is not ready
 	if (adc_code == 0 || adc_code >= 0x3FF) {
 		LOG_INF("Avg Temperature is not ready");
+		ret = SENSOR_NOT_ACCESSIBLE;
+		goto unlock_exit;
+	} else if (adc_code == 0xFFFFFFFF) {
+		/* From Aries Errata - Known issue */
+		LOG_WRN("Some I2C transactions occured during temperature reading");
 		ret = SENSOR_NOT_ACCESSIBLE;
 		goto unlock_exit;
 	}

@@ -204,3 +204,18 @@ void clear_bits(uint32_t *value, int start_bit, int end_bit)
 		*value = CLEARBIT(*value, index);
 	}
 }
+
+void sort_bubble(int *array, int len)
+{
+	CHECK_NULL_ARG(array);
+
+	for (int i = 0; i < len - 1; i++) {
+		for (int j = 0; j < len - i - 1; j++) {
+			if (array[j] > array[j + 1]) {
+				int temp = array[j];
+				array[j] = array[j + 1];
+				array[j + 1] = temp;
+			}
+		}
+	}
+}
