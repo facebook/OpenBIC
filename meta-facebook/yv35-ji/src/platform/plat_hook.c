@@ -262,6 +262,7 @@ bool pre_tmp451_read(sensor_cfg *cfg, void *args)
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
 	gpio_set(BIC_TMP_LVSFT_EN, GPIO_HIGH);
+	k_msleep(100);
 
 	int retry = 200; // workaround for poc board
 	for (int i = 0; i < retry; i++) {
