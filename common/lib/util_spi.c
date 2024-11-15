@@ -124,6 +124,11 @@ int ckeck_flash_device_isinit(const struct device *flash_device, uint8_t flash_p
 	return 0;
 }
 
+char *get_flash_device_string_by_index(uint8_t flash_index)
+{
+	return flash_device_list[flash_index].name;
+}
+
 int do_update(const struct device *flash_device, off_t offset, uint8_t *buf, size_t len)
 {
 	int ret = 0;
