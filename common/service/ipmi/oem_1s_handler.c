@@ -17,6 +17,7 @@
 #include "oem_1s_handler.h"
 #include <stdlib.h>
 #include <drivers/peci.h>
+#include <drivers/flash.h>
 #include "libutil.h"
 #include "ipmb.h"
 #include "sensor.h"
@@ -2357,9 +2358,60 @@ __weak void OEM_1S_SPI_REGISTER_READ(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
 
-	msg->data_len = 0;
-	msg->completion_code = CC_INVALID_CMD;
+	uint8_t *buf = NULL;
 
+	if (msg->data_len != 3) { //0:spi_index 1:opcode 2:need to read data length
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	msg->completion_code = CC_UNSPECIFIED_ERROR;
+
+	uint8_t spi_index = msg->data[0];
+	uint8_t opcode = msg->data[1];
+	uint8_t read_data_len = msg->data[2];
+
+	if (read_data_len > 128) {
+		LOG_ERR("Read length exceeded.");
+		msg->completion_code = CC_LENGTH_EXCEEDED;
+		goto end;
+	}
+
+	const struct device *flash_dev;
+	int32_t ret = 0;
+
+	flash_dev = device_get_binding(get_flash_device_string_by_index(spi_index));
+	if (flash_dev == NULL) {
+		LOG_ERR("Failed to get device.");
+		msg->completion_code = CC_INVALID_PARAM;
+		goto end;
+	}
+
+	ret = ckeck_flash_device_isinit(flash_dev, spi_index);
+	if (ret != 0) {
+		LOG_ERR("Failed to re-init flash, ret %d.", ret);
+		goto end;
+	}
+
+	buf = (uint8_t *)malloc(read_data_len);
+	if (buf == NULL) {
+		LOG_ERR("Failed to allocate buf.");
+		goto end;
+	}
+
+	ret = flash_reg_read(flash_dev, opcode, buf, read_data_len);
+	if (ret != 0) {
+		LOG_ERR("Failed to access flash with opcode 0x%x, ret %d.", opcode, ret);
+		goto end;
+	}
+
+	msg->data_len = read_data_len;
+	memcpy(&msg->data[0], buf, msg->data_len);
+
+	msg->completion_code = CC_SUCCESS;
+
+end:
+	SAFE_FREE(buf);
 	return;
 }
 
