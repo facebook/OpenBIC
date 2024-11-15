@@ -17,7 +17,26 @@
 #ifndef PLAT_HOOK_H
 #define PLAT_HOOK_H
 
+#define VR_MAX_NUM 11
+#define VR_MUTEX_LOCK_TIMEOUT_MS 1000
+
+enum VR_INDEX_E {
+	VR_INDEX_E_OSFP_P3V3 = 0,
+	VR_INDEX_E_P0V85,
+	VR_INDEX_E_P0V75_CH_N,
+	VR_INDEX_E_P0V75_CH_S,
+	VR_INDEX_E_P0V75_TRVDD_ZONEA,
+	VR_INDEX_E_P0V75_TRVDD_ZONEB,
+	VR_INDEX_E_P1V1_VDDC_HBM0_HBM2_HBM4,
+	VR_INDEX_E_P0V9_TRVDD_ZONEA,
+	VR_INDEX_E_P0V9_TRVDD_ZONEB,
+	VR_INDEX_E_P1V1_VDDC_HBM1_HBM3_HBM5,
+	VR_INDEX_E_VDDA_PCIE,
+	VR_INDEX_MAX,
+};
+
 typedef struct _vr_pre_proc_arg {
+	void *mutex;
 	uint8_t vr_page;
 } vr_pre_proc_arg;
 
@@ -26,6 +45,9 @@ extern mp2971_init_arg mp2971_init_args[];
 extern isl69259_init_arg isl69259_init_args[];
 
 bool pre_vr_read(sensor_cfg *cfg, void *args);
+bool post_vr_read(sensor_cfg *cfg, void *args, int *reading);
 bool is_mb_dc_on();
+void *vr_mutex_get(enum VR_INDEX_E vr_index);
+void vr_mutex_init(void);
 
 #endif

@@ -38,6 +38,8 @@
 #include "ds160pt801.h"
 #include "tda38741.h"
 #include "mp2988.h"
+#include "mp29816a.h"
+#include "raa228249.h"
 
 LOG_MODULE_DECLARE(pldm);
 
@@ -239,7 +241,9 @@ uint8_t pldm_vr_update(void *fw_update_param)
 	} else if ((!strncmp(p->comp_version_str, KEYWORD_VR_RAA229620,
 			     ARRAY_SIZE(KEYWORD_VR_RAA229620) - 1)) ||
 		   (!strncmp(p->comp_version_str, KEYWORD_VR_RAA229621,
-			     ARRAY_SIZE(KEYWORD_VR_RAA229621) - 1))) {
+			     ARRAY_SIZE(KEYWORD_VR_RAA229621) - 1)) ||
+		   (!strncmp(p->comp_version_str, KEYWORD_VR_ISL69260,
+			     ARRAY_SIZE(KEYWORD_VR_ISL69260) - 1))) {
 		if (raa229621_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) ==
 		    false)
 			goto exit;
@@ -266,6 +270,15 @@ uint8_t pldm_vr_update(void *fw_update_param)
 	} else if (!strncmp(p->comp_version_str, KEYWORD_VR_MP2988,
 			    ARRAY_SIZE(KEYWORD_VR_MP2988) - 1)) {
 		if (mp2988_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) == false)
+			goto exit;
+	} else if (!strncmp(p->comp_version_str, KEYWORD_VR_MP29816A,
+			    ARRAY_SIZE(KEYWORD_VR_MP29816A) - 1)) {
+		if (mp29816a_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) == false)
+			goto exit;
+	} else if (!strncmp(p->comp_version_str, KEYWORD_VR_RAA228249,
+			    ARRAY_SIZE(KEYWORD_VR_RAA228249) - 1)) {
+		if (raa228249_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) ==
+		    false)
 			goto exit;
 	} else {
 		LOG_ERR("Non-support VR detected with component string %s!",
@@ -584,7 +597,8 @@ static void state_update(uint8_t state)
 	if (state == STATE_IDLE) {
 		k_timer_stop(&update_mode_timer);
 	} else {
-		k_timer_start(&update_mode_timer, K_SECONDS(PLDM_FW_UPDATE_MODE_TIMEOUT), K_NO_WAIT);
+		k_timer_start(&update_mode_timer, K_SECONDS(PLDM_FW_UPDATE_MODE_TIMEOUT),
+			      K_NO_WAIT);
 	}
 }
 
@@ -599,7 +613,8 @@ static void pldm_status_reset()
 	keep_update_flag = false;
 }
 
-static void exit_update_mode() {
+static void exit_update_mode()
+{
 	printk("PLDM update mode timeout, exiting update mode...\n");
 	pldm_status_reset();
 }
@@ -851,7 +866,8 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 
 		req.offset = update_param.next_ofs;
 		req.length = update_param.next_len;
-		k_timer_start(&update_mode_timer, K_SECONDS(PLDM_FW_UPDATE_MODE_TIMEOUT), K_NO_WAIT);
+		k_timer_start(&update_mode_timer, K_SECONDS(PLDM_FW_UPDATE_MODE_TIMEOUT),
+			      K_NO_WAIT);
 
 	} while (1);
 

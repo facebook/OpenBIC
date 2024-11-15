@@ -146,6 +146,8 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(raa228238)
 	sensor_name_to_num(mpc12109)
 	sensor_name_to_num(rtq6056)
+	sensor_name_to_num(mp29816a)
+	sensor_name_to_num(raa228249)
 };
 // clang-format on
 
@@ -348,6 +350,12 @@ SENSOR_DRIVE_INIT_DECLARE(mpc12109);
 #endif
 #ifdef ENABLE_RTQ6056
 SENSOR_DRIVE_INIT_DECLARE(rtq6056);
+#endif
+#ifdef ENABLE_MP29816A
+SENSOR_DRIVE_INIT_DECLARE(mp29816a);
+#endif
+#ifdef ENABLE_RAA228249
+SENSOR_DRIVE_INIT_DECLARE(raa228249);
 #endif
 
 // The sequence needs to same with SENSOR_DEV ID
@@ -689,6 +697,16 @@ sensor_drive_api sensor_drive_tbl[] = {
 	SENSOR_DRIVE_TYPE_INIT_MAP(rtq6056),
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(rtq6056),
+#endif
+#ifdef ENABLE_MP29816A
+	SENSOR_DRIVE_TYPE_INIT_MAP(mp29816a),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(mp29816a),
+#endif
+#ifdef ENABLE_RAA228249
+	SENSOR_DRIVE_TYPE_INIT_MAP(raa228249),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(raa228249),
 #endif
 
 };
