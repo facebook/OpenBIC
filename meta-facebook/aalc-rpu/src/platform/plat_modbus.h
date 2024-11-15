@@ -313,6 +313,8 @@ enum read_fru_data_type {
 #define MODBUS_V_3_3_AUX_ADDR 0xA030
 #define MODBUS_V_1_2_AUX_ADDR 0xA031
 #define MODBUS_V_5_USB_ADDR 0xA032
+#define MODBUS_BPB_RACK_LEVEL_3_ADDR 0xA033
+#define MODBUS_AALC_COOLING_CAPACITY_W_EXT_ADDR 0xA034
 #define MODBUS_MODBUS_ADDR_PATH_WITH_WEDGE400_ADDR 0xA401
 #define MODBUS_MANUAL_CONTROL_RPU_FAN_ON_OFF_ADDR 0xA480
 #define MODBUS_ERROR_LOG_COUNT_ADDR 0x1A28
@@ -387,5 +389,7 @@ enum read_fru_data_type {
 #define MODBUS_HEAT_EXCHANGER_FAN_CONTROL_BOX_FBPN_ADDR 0x1A08
 
 #define MODBUS_test_for_write_uptime_ADDR 0x1A0C
+
+modbus_command_mapping *ptr_to_modbus_table(uint16_t addr);
 
 #endif

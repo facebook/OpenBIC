@@ -205,6 +205,10 @@ sensor_cfg plat_sensor_config[] = {
 	  NCT7363_GPIO_READ_OFFSET, stby_access, NCT7363_6_PORT, 0, SAMPLE_COUNT_DEFAULT,
 	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &nct7363_init_args[17] },
+	{ SENSOR_NUM_BPB_RACK_LEVEL_3, sensor_dev_nct7363, I2C_BUS5, BPB_NCT7363_ADDR,
+	  NCT7363_GPIO_READ_OFFSET, stby_access, NCT7363_7_PORT, 0, SAMPLE_COUNT_DEFAULT,
+	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &nct7363_init_args[17] },
 	{ SENSOR_NUM_SB_HEX_PRESSURE_1_P_KPA, sensor_dev_ads112c, I2C_BUS9, SB_ADS112C_1_ADDR,
 	  ADS112C_READ_OUTPUT_RAW, stby_access, ENABLE_RESET_CFG_REG, 0, SAMPLE_COUNT_DEFAULT,
 	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
@@ -840,6 +844,10 @@ sensor_cfg plat_def_sensor_config[] = {
 	  PLAT_DEF_SENSOR_SB_HEX_AIR_INLET_AVG_TEMP, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT,
 	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  NULL },
+	{ SENSOR_NUM_COOLING_CAPACITY, sensor_dev_plat_def_sensor, 0, 0,
+	  PLAT_DEF_SENSOR_COOLING_CAPACITY, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT,
+	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  NULL },
 };
 
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config) +
@@ -1300,6 +1308,40 @@ static uint8_t sb_hex_air_inlet_temp_avg(void)
 	return (number ? (total / number) : 0);
 }
 
+static bool aalc_cooling_capacity(float *val)
+{
+	/*
+	*	AALC_Cooling_Capacity_kW  = 67.21*Flow rate*(Tout-Tin)
+	*	Flow Rate = Flow sensor reading (LPM)
+	*	Tout = Rack Coolant temperature sensor reading (°C)
+	*	Tin = RPU Coolant outlet temperature sensor reading(°C)
+	*/
+
+	float flow_rate_val, tout_val, tin_val;
+
+	uint8_t flow_rate_status = get_sensor_reading_to_real_val(
+		SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, &flow_rate_val);
+	uint8_t tout_status =
+		get_sensor_reading_to_real_val(SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C, &tout_val);
+	uint8_t tin_status =
+		get_sensor_reading_to_real_val(SENSOR_NUM_BPB_RPU_COOLANT_INLET_TEMP_C, &tin_val);
+
+	if (flow_rate_status != SENSOR_READ_4BYTE_ACUR_SUCCESS)
+		return false;
+
+	if (tout_status != SENSOR_READ_4BYTE_ACUR_SUCCESS)
+		return false;
+
+	if (tin_status != SENSOR_READ_4BYTE_ACUR_SUCCESS)
+		return false;
+
+	*val = 0.06721 * flow_rate_val * (tout_val - tin_val);
+	if (*val < 0)
+		*val = 0;
+
+	return true;
+}
+
 static uint8_t plat_def_sensor_read(sensor_cfg *cfg, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
@@ -1336,6 +1378,11 @@ static uint8_t plat_def_sensor_read(sensor_cfg *cfg, int *reading)
 	}
 	case PLAT_DEF_SENSOR_SB_HEX_AIR_INLET_AVG_TEMP: {
 		val = sb_hex_air_inlet_temp_avg();
+		break;
+	}
+	case PLAT_DEF_SENSOR_COOLING_CAPACITY: {
+		if (!aalc_cooling_capacity(&val))
+			return SENSOR_FAIL_TO_ACCESS;
 		break;
 	}
 	default:

@@ -46,11 +46,6 @@ enum FSC_TYPE {
 	FSC_TYPE_DEFAULT,
 };
 
-enum SETPOINT_TYPE {
-	SETPOINT_AIR_INTEL_AVG_C = 0,
-	SETPOINT_FLOW_RATE_LPM,
-};
-
 /* stepwise */
 typedef struct {
 	uint8_t temp;
@@ -71,7 +66,7 @@ typedef struct {
 typedef struct {
 	uint8_t sensor_num;
 	int setpoint;
-	uint8_t setpoint_type;
+	/*uint8_t setpoint_type;*/
 	float kp;
 	float ki;
 	float kd;

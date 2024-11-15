@@ -403,6 +403,68 @@ static void cmd_pump_redundant_switch_day_set(const struct shell *shell, size_t 
 	shell_warn(shell, "set pump redundant to %d %s", time, (type ? "hours" : "day"));
 }
 
+// modbus
+static void cmd_modbus_write(const struct shell *shell, size_t argc, char **argv)
+{
+	uint16_t addr = strtoul(argv[1], NULL, 16);
+	modbus_command_mapping *p = ptr_to_modbus_table(addr);
+	if (!p) {
+		shell_warn(shell, "cannot find modbus command 0x%04x", addr);
+		return;
+	}
+	if (!p->wr_fn) {
+		shell_warn(shell, "modbus command 0x%04x without write function", addr);
+		return;
+	}
+
+	uint8_t num = strtoul(argv[2], NULL, 10);
+	if (num > p->cmd_size) {
+		shell_warn(shell, "modbus write command 0x%04x out of size %d", addr, num);
+		return;
+	}
+	if (!num)
+		num = 1;
+
+	uint16_t data[num];
+	for (uint16_t i = 0; i < num; i++)
+		data[i] = strtoul(argv[3 + i], NULL, 10);
+
+	p->start_addr = addr;
+	p->data_len = num;
+	memcpy(p->data, data, sizeof(uint16_t) * p->data_len);
+
+	p->wr_fn(p);
+}
+static void cmd_modbus_read(const struct shell *shell, size_t argc, char **argv)
+{
+	uint16_t addr = strtoul(argv[1], NULL, 16);
+	modbus_command_mapping *p = ptr_to_modbus_table(addr);
+	if (!p) {
+		shell_warn(shell, "cannot find modbus command 0x%04x", addr);
+		return;
+	}
+	if (!p->rd_fn) {
+		shell_warn(shell, "modbus command 0x%04x without read function", addr);
+		return;
+	}
+
+	uint8_t num = strtoul(argv[2], NULL, 10);
+	if (num > p->cmd_size) {
+		shell_warn(shell, "modbus command read 0x%04x out of size %d", addr, num);
+		return;
+	}
+	if (!num)
+		num = 1;
+
+	p->start_addr = addr;
+	p->data_len = num;
+
+	p->rd_fn(p);
+
+	for (uint16_t i = 0; i < num; i++)
+		shell_warn(shell, " 0x%04x", p->data[i]);
+}
+
 // test command
 void cmd_test(const struct shell *shell, size_t argc, char **argv)
 {
@@ -480,6 +542,12 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_pump_redundant_cmd,
 					 cmd_pump_redundant_switch_day_set),
 			       SHELL_SUBCMD_SET_END);
 
+// modbus
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_modbus_cmd,
+			       SHELL_CMD(write, NULL, "modbus write command", cmd_modbus_write),
+			       SHELL_CMD(read, NULL, "modbus read command", cmd_modbus_read),
+			       SHELL_SUBCMD_SET_END);
+
 /* Sub-command Level 1 of command test */
 SHELL_STATIC_SUBCMD_SET_CREATE(
 	sub_test_cmds, SHELL_CMD(pwm, &sub_pwm_cmd, "set/get pwm command", NULL),
@@ -490,6 +558,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 	SHELL_CMD(status, &sub_status_cmd, "status test command", NULL),
 	SHELL_CMD(fsc, &sub_fsc_cmd, "fan speed control command", NULL),
 	SHELL_CMD(pump_redundant, &sub_pump_redundant_cmd, "pump redundant command", NULL),
+	SHELL_CMD(modbus, &sub_modbus_cmd, "modbus test command", NULL),
 	SHELL_CMD(test, NULL, "test command", cmd_test), SHELL_SUBCMD_SET_END);
 
 /* Root of command test */

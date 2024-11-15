@@ -145,6 +145,9 @@ bool pump_setting_set_auto_tune_flag(pump_reset_struct *data, uint8_t bit_val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
+	if (!get_status_flag(STATUS_FLAG_SYSTEM_READY))
+		return false;
+
 	if (bit_val) {
 		for (uint8_t i = MANUAL_PWM_E_HEX_FAN; i <= MANUAL_PWM_E_RPU_FAN; i++) {
 			if (get_manual_pwm_flag(i))
@@ -415,7 +418,13 @@ uint8_t pwm_control(uint8_t group, uint8_t duty)
 	static int64_t auto_tune_time;
 	if (!get_status_flag(STATUS_FLAG_AUTO_TUNE)) {
 		auto_tune_time = k_uptime_get();
-		set_pwm_group(group, 0);
+		return 0;
+	}
+
+	// keep 0 duty when first enabling auto tune
+	static bool is_init = false;
+	if (!is_init) {
+		is_init = true;
 		return 0;
 	}
 
