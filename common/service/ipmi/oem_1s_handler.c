@@ -2356,11 +2356,19 @@ __weak void OEM_1S_CLEAR_CMET(ipmi_msg *msg)
 
 __weak void OEM_1S_SPI_REGISTER_READ(ipmi_msg *msg)
 {
+	/*********************************
+	* Request Data
+	*
+	* Byte   0: spi index
+	* Byte   1: opcode
+	* Byte   2: read length
+	***********************************/
+
 	CHECK_NULL_ARG(msg);
 
 	uint8_t *buf = NULL;
 
-	if (msg->data_len != 3) { //0:spi_index 1:opcode 2:need to read data length
+	if (msg->data_len != 3) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
 	}
