@@ -24,6 +24,7 @@
 #include "plat_pwm.h"
 #include "nct7363.h"
 #include "plat_status.h"
+#include "plat_threshold.h"
 
 LOG_MODULE_REGISTER(plat_pwm);
 
@@ -171,6 +172,16 @@ int ast_pwm_set(int duty)
 	return pwm_pin_set_usec(pwm_dev, PWM_PORT0, PWM_PERIOD, (PWM_PERIOD * duty / 100), 0);
 }
 
+static void set_pump_threshold(enum PWM_DEVICE_E dev, uint8_t duty)
+{
+	for (uint8_t i = 0; i < ARRAY_SIZE(nct_dev_tbl); i++) {
+		if (nct_dev_tbl[i].dev == dev) {
+			pump_change_threshold(nct_dev_tbl[i].tach_sen_num, duty);
+			break;
+		}
+	}
+}
+
 uint8_t plat_pwm_ctrl(enum PWM_DEVICE_E dev, uint8_t duty)
 {
 	if (dev >= PWM_DEVICE_E_MAX) {
@@ -206,15 +217,17 @@ uint8_t plat_pwm_ctrl(enum PWM_DEVICE_E dev, uint8_t duty)
 	case PWM_DEVICE_E_FB_FAN_12:
 	case PWM_DEVICE_E_FB_FAN_13:
 	case PWM_DEVICE_E_FB_FAN_14:
-	case PWM_DEVICE_E_PB_PUMB_1:
-	case PWM_DEVICE_E_PB_PUMB_2:
-	case PWM_DEVICE_E_PB_PUMB_3:
 	case PWM_DEVICE_E_PB_PUMB_FAN_1:
 	case PWM_DEVICE_E_PB_PUMB_FAN_2:
 	case PWM_DEVICE_E_PB_PUMB_FAN_3:
 		ret = nct_pwm_ctl(dev, duty);
 		break;
-
+	case PWM_DEVICE_E_PB_PUMB_1:
+	case PWM_DEVICE_E_PB_PUMB_2:
+	case PWM_DEVICE_E_PB_PUMB_3:
+		ret = nct_pwm_ctl(dev, duty);
+		set_pump_threshold(dev, duty);
+		break;
 	default:
 		ret = 1;
 		break;

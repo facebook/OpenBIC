@@ -70,8 +70,8 @@ typedef struct {
 	float kp;
 	float ki;
 	float kd;
-	uint16_t i_limit_min; // RPM
-	uint16_t i_limit_max; // RPM
+	int16_t i_limit_min; // RPM
+	int16_t i_limit_max; // RPM
 	uint8_t pos_hyst; // positive_hysteresis
 	uint8_t neg_hyst; // negative_hysteresis
 
@@ -111,6 +111,7 @@ typedef struct {
 
 uint8_t get_fsc_enable_flag(void);
 void set_fsc_enable_flag(uint8_t flag);
+void set_fsc_tbl_enable(uint8_t flag);
 void fsc_init(void);
 void controlFSC(uint8_t action);
 uint8_t fsc_debug_set(uint8_t enable);
