@@ -2385,6 +2385,7 @@ __weak void OEM_1S_SPI_REGISTER_READ(ipmi_msg *msg)
 		goto end;
 	}
 
+#ifdef CONFIG_SPI_ASPEED
 	const struct device *flash_dev;
 	int32_t ret = 0;
 
@@ -2417,6 +2418,10 @@ __weak void OEM_1S_SPI_REGISTER_READ(ipmi_msg *msg)
 	memcpy(&msg->data[0], buf, msg->data_len);
 
 	msg->completion_code = CC_SUCCESS;
+#else
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+#endif
 
 end:
 	SAFE_FREE(buf);
