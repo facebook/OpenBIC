@@ -58,6 +58,7 @@ int pal_get_cxl_flash_position();
 int do_update(const struct device *flash_device, off_t offset, uint8_t *buf, size_t len);
 void set_default_retry_count(int count);
 int ckeck_flash_device_isinit(const struct device *flash_device, uint8_t flash_position);
+char *get_flash_device_string_by_index(uint8_t flash_index);
 
 enum FIRMWARE_UPDATE_RETURN_CODE {
 	FWUPDATE_SUCCESS,
