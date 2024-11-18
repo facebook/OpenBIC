@@ -384,6 +384,17 @@ static void cmd_fsc_debug_enable(const struct shell *shell, size_t argc, char **
 
 	fsc_debug_set(enable);
 }
+static void cmd_fsc_tbl_enable(const struct shell *shell, size_t argc, char **argv)
+{
+	ARG_UNUSED(shell);
+	ARG_UNUSED(argc);
+	ARG_UNUSED(argv);
+
+	const uint8_t enable = strtoul(argv[1], NULL, 10);
+	shell_warn(shell, "fsc table enable: %d", enable);
+
+	set_fsc_tbl_enable(enable);
+}
 
 // pump_redundant
 static void cmd_pump_redundant_enable(const struct shell *shell, size_t argc, char **argv)
@@ -532,6 +543,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_status_cmd,
 // fsc
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_fsc_cmd,
 			       SHELL_CMD(debug, NULL, "fsc debug message", cmd_fsc_debug_enable),
+			       SHELL_CMD(table, NULL, "fsc table enable", cmd_fsc_tbl_enable),
 			       SHELL_SUBCMD_SET_END);
 
 // pump redundant

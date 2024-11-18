@@ -19,6 +19,7 @@ struct k_thread fsc_thread;
 K_KERNEL_STACK_MEMBER(fsc_thread_stack, 2048);
 
 static uint8_t fsc_poll_flag = 1;
+static bool fsc_tbl_enable = false;
 extern zone_cfg zone_table[];
 extern uint32_t zone_table_size;
 
@@ -41,6 +42,15 @@ uint8_t get_fsc_enable_flag(void)
 void set_fsc_enable_flag(uint8_t flag)
 {
 	fsc_poll_flag = flag;
+}
+
+uint8_t get_fsc_tbl_enable(void)
+{
+	return fsc_tbl_enable;
+}
+void set_fsc_tbl_enable(uint8_t flag)
+{
+	fsc_tbl_enable = flag;
 }
 
 /* get the maximum duty of all stepwise sensor */
@@ -190,14 +200,20 @@ uint8_t get_fsc_duty_cache(uint8_t zone, uint8_t *cache)
 	return FSC_ERROR_NONE;
 }
 
-uint8_t get_fsc_poll_count(uint8_t zone, uint8_t *count)
+bool get_fsc_poll_count(uint8_t zone, uint8_t *count)
 {
-	CHECK_NULL_ARG_WITH_RETURN(count, FSC_ERROR_NULL_ARG);
+	CHECK_NULL_ARG_WITH_RETURN(count, false);
 	if (zone >= zone_table_size)
-		return FSC_ERROR_OUT_OF_RANGE;
+		return false;
 
 	*count = zone_table[zone].fsc_poll_count;
-	return FSC_ERROR_NONE;
+	return true;
+}
+
+static void init_fsc_poll_count()
+{
+	for (int i = 0; i < zone_table_size; i++)
+		zone_table[i].fsc_poll_count = 0;
 }
 
 /* set the zone_cfg stored data to default */
@@ -239,6 +255,8 @@ static void zone_init(void)
 void controlFSC(uint8_t action)
 {
 	fsc_poll_flag = (action == FSC_DISABLE) ? 0 : 1;
+	if (action == FSC_DISABLE)
+		init_fsc_poll_count();
 }
 
 static void fsc_thread_handler(void *arug0, void *arug1, void *arug2)
@@ -268,6 +286,13 @@ static void fsc_thread_handler(void *arug0, void *arug1, void *arug2)
 			FSC_PRINTF("---------- fsc zone %d\n", i);
 			zone_cfg *zone_p = zone_table + i;
 			if (zone_p == NULL)
+				continue;
+
+			// poll interval
+			(zone_p->fsc_poll_count)++;
+			if (zone_p->fsc_poll_count >= zone_p->interval)
+				zone_p->fsc_poll_count = 0;
+			else
 				continue;
 
 			if (zone_p->sw_tbl) {
@@ -306,7 +331,8 @@ static void fsc_thread_handler(void *arug0, void *arug1, void *arug2)
 
 			// set_duty
 			if (zone_p->set_duty)
-				zone_p->set_duty(zone_p->set_duty_arg, 70);
+				zone_p->set_duty(zone_p->set_duty_arg,
+						 (fsc_tbl_enable ? duty : 70));
 			else
 				LOG_ERR("FSC zone %d set duty function is NULL", i);
 		}
