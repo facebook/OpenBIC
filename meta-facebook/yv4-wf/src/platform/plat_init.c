@@ -16,6 +16,7 @@
 
 #include "hal_gpio.h"
 #include "util_sys.h"
+#include "util_worker.h"
 #include "pldm_monitor.h"
 #include "power_status.h"
 #include "plat_gpio.h"
@@ -77,6 +78,8 @@ void pal_pre_init()
 		}
 	}
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
+
+	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY + 1); // work queue for low priority jobs
 }
 
 void pal_post_init()
