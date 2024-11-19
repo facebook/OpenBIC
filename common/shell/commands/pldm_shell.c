@@ -16,6 +16,7 @@
 
 #include "pldm.h"
 #include "pldm_shell.h"
+#include "libutil.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -44,19 +45,24 @@ void cmd_pldm_send_req(const struct shell *shell, size_t argc, char **argv)
 	pmsg.hdr.cmd = pldm_cmd;
 	pmsg.hdr.rq = PLDM_REQUEST;
 	pmsg.len = pldm_data_len;
+	pmsg.buf = (uint8_t *)malloc(pmsg.len);
+	if (!pmsg.buf) {
+		shell_error(shell, "Failed to allocate memory for pldm data");
+		return;
+	}
 	for (int i = 0; i < pmsg.len; i++)
 		pmsg.buf[i] = strtol(argv[4 + i], NULL, 16);
 
 	mctp *mctp_inst = NULL;
 	if (get_mctp_info_by_eid(mctp_dest_eid, &mctp_inst, &pmsg.ext_params) == false) {
 		shell_error(shell, "Failed to get mctp info by eid 0x%x", mctp_dest_eid);
-		return;
+		goto exit;
 	}
 
 	uint16_t resp_len = mctp_pldm_read(mctp_inst, &pmsg, resp_buf, sizeof(resp_buf));
 	if (resp_len == 0) {
 		shell_error(shell, "Failed to get mctp response");
-		return;
+		goto exit;
 	}
 
 	shell_print(shell, "* mctp: 0x%x addr: 0x%x eid: 0x%x msg_type: 0x%x", mctp_inst,
@@ -70,4 +76,7 @@ void cmd_pldm_send_req(const struct shell *shell, size_t argc, char **argv)
 		shell_hexdump(shell, resp_buf, resp_len);
 		shell_print(shell, "");
 	}
+
+exit:
+	SAFE_FREE(pmsg.buf);
 }
