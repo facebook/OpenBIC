@@ -2314,7 +2314,7 @@ __weak void OEM_1S_SEND_MCTP_PLDM_COMMAND(ipmi_msg *msg)
 	pmsg.hdr.cmd = msg->data[2];
 	pmsg.hdr.rq = PLDM_REQUEST;
 	pmsg.len = msg->data_len - 3;
-	memcpy(pmsg.buf, &msg->data[3], pmsg.len);
+	pmsg.buf = (uint8_t *)&msg->data[3];
 
 	mctp *mctp_inst = NULL;
 	if (get_mctp_info_by_eid(msg->data[0], &mctp_inst, &pmsg.ext_params) == false) {
