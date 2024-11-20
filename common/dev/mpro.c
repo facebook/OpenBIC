@@ -177,8 +177,7 @@ bool check_dimm_status(void *mctp_p, uint8_t index, mctp_ext_params ext_params)
 	req.sensor_id = mpro_sensor_num;
 	req.rearm_event_state = 0;
 	pmsg.len = sizeof(req);
-	memcpy(pmsg.buf, (uint8_t *)&req, pmsg.len);
-
+	pmsg.buf = (uint8_t *)&req;
 	pmsg.ext_params = ext_params;
 
 	uint8_t resp_buf[PLDM_MAX_DATA_SIZE] = { 0 };
@@ -266,8 +265,7 @@ uint8_t mpro_read(sensor_cfg *cfg, int *reading)
 	req.sensor_id = mpro_sensor_num;
 	req.rearm_event_state = 0;
 	pmsg.len = sizeof(req);
-	memcpy(pmsg.buf, (uint8_t *)&req, pmsg.len);
-
+	pmsg.buf = (uint8_t *)&req;
 	pmsg.ext_params = ext_params;
 
 	uint8_t resp_buf[PLDM_MAX_DATA_SIZE] = { 0 };

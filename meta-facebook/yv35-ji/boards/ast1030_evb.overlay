@@ -54,7 +54,9 @@
 &i2c5 {
 	pinctrl-0 = <&pinctrl_i2c5_default>;
 	status = "okay";
-	clock-frequency = <I2C_BITRATE_FAST>;
+	smbus-timeout = < 0x0 >;
+	clock-frequency = <I2C_BITRATE_FAST_PLUS>;
+	xfer-mode = "BYTE";
 };
 
 &i2c9 {

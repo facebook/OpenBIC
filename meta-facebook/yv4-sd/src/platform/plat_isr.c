@@ -41,6 +41,7 @@
 #include "plat_isr.h"
 #include "plat_dimm.h"
 #include "pcc.h"
+#include "plat_pmic.h"
 
 #ifdef ENABLE_PLDM
 #include "pldm_oem.h"
@@ -247,10 +248,13 @@ K_WORK_DEFINE(reinit_i3c_work, reinit_i3c_hub);
 K_WORK_DEFINE(switch_i3c_dimm_work, switch_i3c_dimm_mux_to_cpu);
 K_WORK_DELAYABLE_DEFINE(PROC_FAIL_work, PROC_FAIL_handler);
 K_WORK_DELAYABLE_DEFINE(ABORT_FRB2_WDT_THREAD, abort_frb2_wdt_thread);
+K_WORK_DELAYABLE_DEFINE(read_pmic_critical_work, read_pmic_error_when_dc_off);
 
 #define DC_ON_5_SECOND 5
 #define PROC_FAIL_START_DELAY_SECOND 10
 #define VR_EVENT_DELAY_MS 10
+// The PMIC needs a total of 200ms from CAMP signal assertion to complete the write operation
+#define READ_PMIC_CRITICAL_ERROR_MS 200
 void ISR_DC_ON()
 {
 	set_DC_status(PWRGD_CPU_LVC3);
@@ -271,6 +275,8 @@ void ISR_DC_ON()
 		reset_4byte_postcode_ok();
 
 		set_DC_on_delayed_status();
+		// Read PMIC error when DC off
+		k_work_schedule(&read_pmic_critical_work, K_MSEC(READ_PMIC_CRITICAL_ERROR_MS));
 	}
 }
 

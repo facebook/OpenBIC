@@ -30,13 +30,12 @@
 LOG_MODULE_REGISTER(plat_log);
 
 #define LOG_MAX_INDEX 0x0FFF //recount when log index > 0x0FFF
-#define LOG_MAX_NUM 20 // total log amount: 20
+#define LOG_MAX_NUM 30 // total log amount: 30
 #define AALC_FRU_LOG_START 0x4000 //log offset: 16KB
 #define AALC_FRU_LOG_SIZE                                                                          \
-	(LOG_MAX_NUM * sizeof(modbus_err_log_mapping)) // 20 logs(1 log = 20 bytes)
+	(LOG_MAX_NUM * sizeof(modbus_err_log_mapping)) // 30 logs(1 log = 20 bytes)
 
 static modbus_err_log_mapping err_log_data[LOG_MAX_NUM];
-static uint8_t err_sensor_caches[32];
 
 const err_sensor_mapping sensor_err_codes[] = {
 	{ LEAK_CHASSIS_0, SENSOR_NUM_IT_LEAK_0_GPIO },
@@ -135,7 +134,6 @@ void log_transfer_to_modbus_data(uint16_t *modbus_data, uint8_t cmd_size, uint16
 void modbus_clear_log()
 {
 	memset(err_log_data, 0xFF, sizeof(err_log_data));
-	memset(err_sensor_caches, 0, sizeof(err_sensor_caches));
 
 	for (uint8_t i = 0; i < LOG_MAX_NUM; i++) {
 		if (!plat_eeprom_write(AALC_FRU_LOG_START + sizeof(modbus_err_log_mapping) * i,
@@ -153,76 +151,52 @@ uint32_t get_uptime_secs(void)
 
 void error_log_event(uint8_t sensor_num, bool val_normal)
 {
-	bool log_todo = false;
 	uint16_t err_code = 0;
 
 	if (val_normal) {
-		for (uint8_t i = 0; i < ARRAY_SIZE(err_sensor_caches); i++) {
-			if (sensor_num == err_sensor_caches[i]) {
-				log_todo = true;
-				err_sensor_caches[i] = 0;
-				for (uint8_t j = 0; j < ARRAY_SIZE(sensor_normal_codes); j++) {
-					if (sensor_num == sensor_normal_codes[j].sen_num)
-						err_code = sensor_normal_codes[j].err_code;
-				}
+		for (uint8_t j = 0; j < ARRAY_SIZE(sensor_normal_codes); j++) {
+			if (sensor_num == sensor_normal_codes[j].sen_num) {
+				err_code = sensor_normal_codes[j].err_code;
 				break;
 			}
 		}
 	} else {
-		log_todo = true;
-		for (uint8_t i = 0; i < ARRAY_SIZE(err_sensor_caches); i++) {
-			if (sensor_num == err_sensor_caches[i]) {
-				log_todo = false;
+		for (uint8_t j = 0; j < ARRAY_SIZE(sensor_err_codes); j++) {
+			if (sensor_num == sensor_err_codes[j].sen_num) {
+				err_code = sensor_err_codes[j].err_code;
 				break;
 			}
 		}
-		if (log_todo) {
-			for (uint8_t i = 0; i < ARRAY_SIZE(err_sensor_caches); i++) {
-				if (err_sensor_caches[i] == 0) {
-					err_sensor_caches[i] = sensor_num;
-					for (uint8_t j = 0; j < ARRAY_SIZE(sensor_err_codes); j++) {
-						if (sensor_num == sensor_err_codes[j].sen_num)
-							err_code = sensor_err_codes[j].err_code;
-					}
-					break;
-				}
-			}
-		}
 	}
 
-	if (log_todo) {
-		uint16_t newest_count = get_log_position_by_time_order(1);
-		uint16_t fru_count = (err_log_data[newest_count].index == 0xFFFF) ?
-					     newest_count :
-					     ((newest_count + 1) % LOG_MAX_NUM);
+	uint16_t newest_count = get_log_position_by_time_order(1);
+	uint16_t fru_count = (err_log_data[newest_count].index == 0xFFFF) ?
+				     newest_count :
+				     ((newest_count + 1) % LOG_MAX_NUM);
 
-		err_log_data[fru_count].index =
-			(err_log_data[newest_count].index == LOG_MAX_INDEX ||
-			 err_log_data[newest_count].index == 0xFFFF) ?
-				1 :
-				(err_log_data[newest_count].index + 1);
-		err_log_data[fru_count].err_code = err_code;
-		err_log_data[fru_count].sys_time = get_uptime_secs();
-		err_log_data[fru_count].pump_duty = (uint16_t)get_pwm_group_cache(PWM_GROUP_E_PUMP);
-		err_log_data[fru_count].fan_duty =
-			(uint16_t)get_pwm_group_cache(PWM_GROUP_E_HEX_FAN);
+	err_log_data[fru_count].index = (err_log_data[newest_count].index == LOG_MAX_INDEX ||
+					 err_log_data[newest_count].index == 0xFFFF) ?
+						1 :
+						(err_log_data[newest_count].index + 1);
+	err_log_data[fru_count].err_code = err_code;
+	err_log_data[fru_count].sys_time = get_uptime_secs();
+	err_log_data[fru_count].pump_duty = (uint16_t)get_pwm_group_cache(PWM_GROUP_E_PUMP);
+	err_log_data[fru_count].fan_duty = (uint16_t)get_pwm_group_cache(PWM_GROUP_E_HEX_FAN);
 
-		err_log_data[fru_count].outlet_temp = get_sensor_reading_to_modbus_val(
-			SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C, -1, 1);
-		err_log_data[fru_count].outlet_press = get_sensor_reading_to_modbus_val(
-			SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA, -1, 1);
-		err_log_data[fru_count].flow_rate = get_sensor_reading_to_modbus_val(
-			SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, -1, 1);
-		err_log_data[fru_count].volt =
-			get_sensor_reading_to_modbus_val(SENSOR_NUM_BPB_HSC_P48V_VIN_VOLT_V, -1, 1);
+	err_log_data[fru_count].outlet_temp =
+		get_sensor_reading_to_modbus_val(SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C, -1, 1);
+	err_log_data[fru_count].outlet_press =
+		get_sensor_reading_to_modbus_val(SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA, -1, 1);
+	err_log_data[fru_count].flow_rate =
+		get_sensor_reading_to_modbus_val(SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, -1, 1);
+	err_log_data[fru_count].volt =
+		get_sensor_reading_to_modbus_val(SENSOR_NUM_BPB_HSC_P48V_VIN_VOLT_V, -1, 1);
 
-		if (!plat_eeprom_write(
-			    (AALC_FRU_LOG_START + fru_count * sizeof(modbus_err_log_mapping)),
-			    (uint8_t *)&err_log_data[fru_count], sizeof(modbus_err_log_mapping)))
-			LOG_ERR("Write Log failed with Error code: %02x", err_code);
-		else
-			k_msleep(5); // wait 5ms write eeprom
-	}
+	if (!plat_eeprom_write((AALC_FRU_LOG_START + fru_count * sizeof(modbus_err_log_mapping)),
+			       (uint8_t *)&err_log_data[fru_count], sizeof(modbus_err_log_mapping)))
+		LOG_ERR("Write Log failed with Error code: %02x", err_code);
+	else
+		k_msleep(5); // wait 5ms write eeprom
 }
 
 void init_load_eeprom_log(void)

@@ -179,7 +179,7 @@ zone_cfg zone_table[] = {
 		/*
 		.pid_tbl = pump_pid_table,
 		.pid_tbl_num = ARRAY_SIZE(pump_pid_table),*/
-		.interval = 1,
+		.interval = 5,
 		.set_duty = pwm_control,
 		.set_duty_arg = PWM_GROUP_E_PUMP,
 		.out_limit_min = 20,

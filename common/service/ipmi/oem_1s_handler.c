@@ -2314,7 +2314,7 @@ __weak void OEM_1S_SEND_MCTP_PLDM_COMMAND(ipmi_msg *msg)
 	pmsg.hdr.cmd = msg->data[2];
 	pmsg.hdr.rq = PLDM_REQUEST;
 	pmsg.len = msg->data_len - 3;
-	memcpy(pmsg.buf, &msg->data[3], pmsg.len);
+	pmsg.buf = (uint8_t *)&msg->data[3];
 
 	mctp *mctp_inst = NULL;
 	if (get_mctp_info_by_eid(msg->data[0], &mctp_inst, &pmsg.ext_params) == false) {
@@ -2354,6 +2354,7 @@ __weak void OEM_1S_CLEAR_CMET(ipmi_msg *msg)
 	return;
 }
 
+#ifdef CONFIG_SPI_ASPEED
 __weak void OEM_1S_SPI_REGISTER_READ(ipmi_msg *msg)
 {
 	/*********************************
@@ -2422,6 +2423,7 @@ end:
 	SAFE_FREE(buf);
 	return;
 }
+#endif
 
 void IPMI_OEM_1S_handler(ipmi_msg *msg)
 {
@@ -2721,10 +2723,12 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 		LOG_DBG("Received CLEAR CMET command");
 		OEM_1S_CLEAR_CMET(msg);
 		break;
+#ifdef CONFIG_SPI_ASPEED
 	case CMD_OEM_1S_SPI_REGISTER_READ:
 		LOG_DBG("Received SPI REGISTER READ command");
 		OEM_1S_SPI_REGISTER_READ(msg);
 		break;
+#endif
 	default:
 		LOG_ERR("Invalid OEM message, netfn(0x%x) cmd(0x%x)", msg->netfn, msg->cmd);
 		msg->data_len = 0;
