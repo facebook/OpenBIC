@@ -169,6 +169,10 @@ void error_log_event(uint8_t sensor_num, bool val_normal)
 		}
 	}
 
+	// do nothing, if not found
+	if (!err_code)
+		return;
+
 	uint16_t newest_count = get_log_position_by_time_order(1);
 	uint16_t fru_count = (err_log_data[newest_count].index == 0xFFFF) ?
 				     newest_count :
