@@ -36,6 +36,8 @@
 
 LOG_MODULE_REGISTER(plat_isr);
 
+static bool is_retimer_fault_assert = false;
+
 static void isr_dbg_print(uint8_t gpio_num)
 {
 	switch (gpio_cfg[gpio_num].int_type) {
@@ -395,6 +397,7 @@ void ISR_PWRGD_CPU()
 		}
 		set_DC_on_delayed_status();
 		k_work_schedule(&read_cpu_power_seq_status_work, K_MSEC(500));
+		is_retimer_fault_assert = false;
 	}
 }
 
@@ -616,6 +619,34 @@ void ISR_SYS_THROTTLE()
 		add_sel_msg.event.event_data[2] = 0xFF;
 		if (!mctp_add_sel_to_ipmi(&add_sel_msg, ADD_COMMON_SEL)) {
 			LOG_ERR("Failed to add System Throttle sel.");
+		}
+	}
+}
+
+#define IPMI_SYS_EVENT_OFFSET_RETIMER_FAULT 0x17
+
+void ISR_RETIMER_FAULT()
+{
+	struct ipmi_storage_add_sel_req add_sel_msg = { 0 };
+	if (CPU_power_good()) {
+		if ((gpio_get(VIRTUAL_RETIMER_PG) == GPIO_HIGH) &&
+		    (is_retimer_fault_assert == true)) {
+			add_sel_msg.event.event_dir_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
+			is_retimer_fault_assert = false;
+		} else if ((gpio_get(VIRTUAL_RETIMER_PG) == GPIO_LOW) &&
+			   (is_retimer_fault_assert == false)) {
+			add_sel_msg.event.event_dir_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+			is_retimer_fault_assert = true;
+		} else {
+			return;
+		}
+		add_sel_msg.event.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+		add_sel_msg.event.sensor_num = SENSOR_NUM_SYSTEM_STATUS;
+		add_sel_msg.event.event_data[0] = IPMI_SYS_EVENT_OFFSET_RETIMER_FAULT;
+		add_sel_msg.event.event_data[1] = 0xFF;
+		add_sel_msg.event.event_data[2] = 0xFF;
+		if (!mctp_add_sel_to_ipmi(&add_sel_msg, ADD_COMMON_SEL)) {
+			LOG_ERR("Failed to add Retimer Fault sel.");
 		}
 	}
 }
