@@ -19,7 +19,7 @@ struct k_thread fsc_thread;
 K_KERNEL_STACK_MEMBER(fsc_thread_stack, 2048);
 
 static uint8_t fsc_poll_flag = 1;
-static bool fsc_tbl_enable = false;
+static bool fsc_tbl_enable = true;
 extern zone_cfg zone_table[];
 extern uint32_t zone_table_size;
 

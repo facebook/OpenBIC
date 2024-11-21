@@ -68,6 +68,20 @@ void it_leak_handler(uint8_t idx)
 			  (idx == IT_LEAK_E_3) ? SENSOR_NUM_IT_LEAK_3_GPIO :
 						 0xFF;
 
+	uint8_t gpio = (idx == IT_LEAK_E_0) ? IT_LEAK_ALERT0_R :
+		       (idx == IT_LEAK_E_1) ? IT_LEAK_ALERT1_R :
+		       (idx == IT_LEAK_E_2) ? IT_LEAK_ALERT2_R :
+		       (idx == IT_LEAK_E_3) ? IT_LEAK_ALERT3_R :
+					      0xFF;
+
+	if (!gpio_get(gpio)) {
+		LOG_WRN("IT_LEAK_ALERT%d_R is low, the high level time is less than 1s, ignore it",
+			idx);
+		return;
+	}
+
+	LOG_WRN("detect IT_LEAK_ALERT%d_R", idx);
+
 	fault_leak_action();
 	error_log_event(sen_num, IS_ABNORMAL_VAL);
 
@@ -98,10 +112,10 @@ void it_leak_handler(uint8_t idx)
 	{                                                                                          \
 		it_leak_handler(IT_LEAK_E_##idx);                                                  \
 	}                                                                                          \
-	K_WORK_DEFINE(it_leak_work_##idx, it_leak_handle_##idx);                                   \
+	K_WORK_DELAYABLE_DEFINE(it_leak_work_##idx, it_leak_handle_##idx);                         \
 	void it_leak_action_##idx(void)                                                            \
 	{                                                                                          \
-		k_work_submit(&it_leak_work_##idx);                                                \
+		k_work_schedule(&it_leak_work_##idx, K_MSEC(1000));                                \
 	}
 
 IT_LEAK_ALERT_HANDLER(0);

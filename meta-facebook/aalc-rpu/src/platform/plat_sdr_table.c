@@ -10618,10 +10618,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		.sensor_num = SENSOR_NUM_COOLING_CAPACITY,
 		.ID_str = "COOLING_CAPACITY",
 	},
-	// SENSOR_NUM_BPB_RACK_LEVEL_3
+	// SENSOR_NUM_BPB_RPU_LEVEL
 	{
-		.sensor_num = SENSOR_NUM_BPB_RACK_LEVEL_3,
-		.ID_str = "BPB_RACK_LEVEL_3",
+		.sensor_num = SENSOR_NUM_BPB_RPU_LEVEL,
+		.ID_str = "BPB_RPU_LEVEL",
 	},
 };
 
