@@ -92,15 +92,42 @@ void set_cxl_led()
 	set_ioe_value(ADDR_IOE3, TCA9555_OUTPUT_PORT_REG_1, ioe_reg_value);
 }
 
+static void set_clk_buf_bypass_handler(struct k_work *work)
+{
+	uint8_t retry = 3;
+	I2C_MSG msg = { 0 };
+	msg.bus = CLK_BUFFER_BUS;
+	msg.target_addr = CLK_BUFFER_ADDR;
+	msg.tx_len = 1;
+	msg.rx_len = 3;
+	msg.data[0] = PLL_OPERATING_OFFSET;
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Failed to set clock buffer.");
+		return;
+	}
+
+	msg.tx_len = 4;
+	msg.rx_len = 0;
+	msg.data[3] = msg.data[2] | 0x2E;
+	msg.data[2] = msg.data[1];
+	msg.data[1] = msg.data[0];
+	msg.data[0] = PLL_OPERATING_OFFSET;
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("Failed to set clock buffer.");
+	}
+}
+
 K_WORK_DEFINE(cxl_power_on_work, execute_power_on_sequence);
 K_WORK_DEFINE(cxl_power_off_work, execute_power_off_sequence);
-
+K_WORK_DELAYABLE_DEFINE(set_clk_buf_bypass_work, set_clk_buf_bypass_handler);
 void ISR_MB_DC_STAGUS_CHAGNE()
 {
 	set_mb_dc_status(FM_POWER_EN_R);
 
 	if (gpio_get(FM_POWER_EN_R) == POWER_ON) {
 		k_work_submit(&cxl_power_on_work);
+		k_work_schedule_for_queue(&plat_work_q, &set_clk_buf_bypass_work,
+					  K_MSEC(SET_CLK_BUF_DELAY_MS));
 	} else {
 		k_work_submit(&cxl_power_off_work);
 	}

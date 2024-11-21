@@ -16,6 +16,7 @@
 
 #include <kernel.h>
 #include "ioexp_tca9555.h"
+#include "plat_i2c.h"
 
 #ifndef PLAT_ISR_H
 #define PLAT_ISR_H
@@ -24,6 +25,10 @@
 #define ADDR_IOE2 (0x42 >> 1)
 #define ADDR_IOE3 (0x44 >> 1)
 #define ADDR_IOE4 (0x46 >> 1)
+
+#define CLK_BUFFER_ADDR 0x6B
+#define CLK_BUFFER_BUS I2C_BUS6
+#define PLL_OPERATING_OFFSET 0x00
 
 #define E1S_PRESENT_BIT BIT(2)
 #define ASIC_CLK_BIT BIT(4)
@@ -36,6 +41,8 @@
 #define IOE_SWITCH_CXL2_VR_TO_BIC 0x04
 
 #define IOE_READY_MSEC 1000
+
+#define SET_CLK_BUF_DELAY_MS 100
 
 enum set_ioe4_cmd {
 	SET_CLK = 0,
