@@ -27,9 +27,18 @@
 
 LOG_MODULE_REGISTER(plat_hook);
 
+static struct k_mutex vr_mutex[VR_MAX_NUM];
+
+#define VR_PRE_READ_ARG(idx)                                                                       \
+	{ .mutex = vr_mutex + idx, .vr_page = 0x0 },                                               \
+	{                                                                                          \
+		.mutex = vr_mutex + idx, .vr_page = 0x1                                            \
+	}
+
 vr_pre_proc_arg vr_pre_read_args[] = {
-	[0] = { 0x0 },
-	[1] = { 0x1 },
+	// mutex, vr_page
+
+	FOR_EACH (VR_PRE_READ_ARG, (, ), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 };
 
 mp2971_init_arg mp2971_init_args[] = {
@@ -40,6 +49,16 @@ isl69259_init_arg isl69259_init_args[] = {
 	[0] = { .vout_scale_enable = true, .vout_scale = (499 / 798.8) },
 };
 
+void *vr_mutex_get(enum VR_INDEX_E vr_index)
+{
+	if (vr_index >= VR_INDEX_MAX) {
+		LOG_ERR("vr_mutex_get, invalid vr_index %d", vr_index);
+		return NULL;
+	}
+
+	return vr_mutex + vr_index;
+}
+
 bool pre_vr_read(sensor_cfg *cfg, void *args)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
@@ -49,6 +68,15 @@ bool pre_vr_read(sensor_cfg *cfg, void *args)
 	uint8_t retry = 5;
 	I2C_MSG msg;
 
+	/* mutex lock */
+	if (pre_proc_args->mutex) {
+		LOG_DBG("%x l %p", cfg->num, pre_proc_args->mutex);
+		if (k_mutex_lock(pre_proc_args->mutex, K_MSEC(VR_MUTEX_LOCK_TIMEOUT_MS))) {
+			LOG_ERR("pre_vr_read, mutex lock fail");
+			return false;
+		}
+	}
+
 	/* set page */
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
@@ -56,9 +84,30 @@ bool pre_vr_read(sensor_cfg *cfg, void *args)
 	msg.data[0] = 0x00;
 	msg.data[1] = pre_proc_args->vr_page;
 	if (i2c_master_write(&msg, retry)) {
+		k_mutex_unlock(pre_proc_args->mutex);
 		LOG_ERR("pre_vr_read, set page fail");
 		return false;
 	}
+	return true;
+}
+
+bool post_vr_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
+	ARG_UNUSED(reading);
+
+	vr_pre_proc_arg *pre_proc_args = (vr_pre_proc_arg *)args;
+
+	/* mutex unlock */
+	if (pre_proc_args->mutex) {
+		LOG_DBG("%x u %p", cfg->num, pre_proc_args->mutex);
+		if (k_mutex_unlock(pre_proc_args->mutex)) {
+			LOG_ERR("post_vr_read, mutex unlock fail");
+			return false;
+		}
+	}
+
 	return true;
 }
 
@@ -69,4 +118,18 @@ bool is_mb_dc_on()
    * 0 -> power off
    */
 	return gpio_get(RST_ATH_PWR_ON_PLD_R1_N);
+}
+
+void vr_mutex_init(void)
+{
+	for (uint8_t i = 0; i < ARRAY_SIZE(vr_mutex); i++) {
+		k_mutex_init(vr_mutex + i);
+		LOG_DBG("vr_mutex[%d] %p init", i, vr_mutex + i);
+	}
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(vr_pre_read_args); i++) {
+		vr_pre_proc_arg *pre_proc_args = vr_pre_read_args + i;
+		LOG_DBG("vr_pre_read_args[%d] mutex %p, page %d", i, pre_proc_args->mutex,
+			pre_proc_args->vr_page);
+	}
 }

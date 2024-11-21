@@ -20,40 +20,33 @@
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "pmbus.h"
-
+#include "raa228249.h"
 #include <logging/log.h>
 
-LOG_MODULE_REGISTER(raa229621);
+LOG_MODULE_REGISTER(raa228249);
 
-// RAA GEN3_
+#define raa228249_READ_VOUT_RESOLUTION 0.001
+#define raa228249_READ_IOUT_RESOLUTION 0.1
+
+// RAA GEN3p5
 #define VR_RAA_REG_REMAIN_WR 0x35
 #define VR_RAA_REG_DMA_ADDR 0xC7
 #define VR_RAA_REG_DMA_DATA 0xC5
-#define VR_RAA_REG_PROG_STATUS 0x7E
-#define VR_RAA_REG_CRC 0x94
+#define VR_RAA_REG_PROG_STATUS 0x83
+#define VR_RAA_REG_CRC 0xF8
 #define VR_RAA_REG_DEVID 0xAD
-
-#define VR_RAA_REG_HEX_MODE_CFG0 0x87
-#define VR_RAA_REG_HEX_MODE_CFG1 0xBD
-
-#define VR_RAA_GEN3_SW_REV_MIN 0x06
 
 #define VR_RAA_DEV_ID_LEN 4
 #define VR_RAA_DEV_REV_LEN 4
 #define VR_RAA_CHECKSUM_LEN 4
 
 #define VR_RAA_CFG_ID (7)
-#define VR_RAA_GEN3_FILE_HEAD (5)
-#define VR_RAA_GEN3_LEGACY_CRC (276 - VR_RAA_GEN3_FILE_HEAD)
-#define VR_RAA_GEN3_PRODUCTION_CRC (290 - VR_RAA_GEN3_FILE_HEAD)
+#define VR_RAA_GEN3P5_FILE_HEAD (5)
+#define VR_RAA_GEN3P5_CRC (336 - VR_RAA_GEN3P5_FILE_HEAD)
 
 #define VR_WARN_REMAIN_WR 3
 
-#ifdef RAA229621_MAX_CMD_LINE
-#define MAX_CMD_LINE RAA229621_MAX_CMD_LINE
-#else
-#define MAX_CMD_LINE 1024
-#endif
+#define MAX_CMD_LINE 1500
 
 struct raa_data {
 	union {
@@ -67,7 +60,7 @@ struct raa_data {
 	uint8_t len;
 };
 
-struct raa229621_config {
+struct raa228249_config {
 	uint8_t addr;
 	uint8_t mode;
 	uint8_t cfg_id;
@@ -80,11 +73,6 @@ struct raa229621_config {
 };
 
 enum {
-	RAA_GEN3_LEGACY,
-	RAA_GEN3_PRODUCTION,
-};
-
-enum {
 	LINE_NEW,
 	LINE_PARSING,
 };
@@ -93,94 +81,6 @@ static uint8_t ascii_to_byte(uint8_t *ascii_buf)
 {
 	CHECK_NULL_ARG_WITH_RETURN(ascii_buf, SENSOR_UNSPECIFIED_ERROR);
 	return ascii_to_val(ascii_buf[0]) << 4 | ascii_to_val(ascii_buf[1]);
-}
-
-static bool adjust_of_twos_complement(uint8_t offset, int *val)
-{
-	if (val == NULL) {
-		LOG_ERR("Input value is NULL");
-		return false;
-	}
-
-	if ((offset == PMBUS_READ_IOUT) || (offset == PMBUS_READ_POUT)) {
-		bool is_negative_val = ((*val & BIT(15)) == 0 ? false : true);
-		if (is_negative_val) {
-			*val = 0;
-		}
-		return true;
-	}
-	return false;
-}
-
-uint8_t raa229621_read(sensor_cfg *cfg, int *reading)
-{
-	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
-	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
-
-	if (cfg->num > SENSOR_NUM_MAX) {
-		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
-		return SENSOR_UNSPECIFIED_ERROR;
-	}
-
-	uint8_t retry = 5;
-	uint8_t offset = cfg->offset;
-
-	I2C_MSG msg;
-
-	msg.bus = cfg->port;
-	msg.target_addr = cfg->target_addr;
-	msg.tx_len = 1;
-	msg.rx_len = 2;
-	msg.data[0] = offset;
-
-	if (i2c_master_read(&msg, retry)) {
-		return SENSOR_FAIL_TO_ACCESS;
-	}
-
-	sensor_val *sval = (sensor_val *)reading;
-	memset(sval, 0, sizeof(sensor_val));
-	bool ret = false;
-	int val = 0;
-	val = (msg.data[1] << 8) | msg.data[0];
-
-	switch (offset) {
-	case PMBUS_READ_VOUT:
-		/* 1 mV/LSB, unsigned integer */
-		sval->integer = val / 1000;
-		sval->fraction = val % 1000;
-		break;
-	case PMBUS_READ_IOUT:
-		/* 0.1 A/LSB, 2's complement */
-		ret = adjust_of_twos_complement(offset, &val);
-		if (ret == false) {
-			LOG_ERR("Adjust reading IOUT value failed - sensor number: 0x%x", cfg->num);
-			return SENSOR_UNSPECIFIED_ERROR;
-		}
-		sval->integer = (int16_t)val / 10;
-		sval->fraction = ((int16_t)val - (sval->integer * 10)) * 100;
-		break;
-	case PMBUS_READ_TEMPERATURE_1:
-		/* 1 Degree C/LSB, 2's complement */
-		sval->integer = val;
-		sval->fraction = 0;
-		break;
-	case PMBUS_READ_POUT:
-		/* 1 Watt/LSB, 2's complement */
-		ret = adjust_of_twos_complement(offset, &val);
-		if (ret == false) {
-			LOG_ERR("Adjust reading POUT value failed - sensor number: 0x%x", cfg->num);
-			return SENSOR_UNSPECIFIED_ERROR;
-		}
-		sval->integer = val;
-		sval->fraction = 0;
-		break;
-	default:
-		LOG_ERR("Not support offset: 0x%x", offset);
-		return SENSOR_FAIL_TO_ACCESS;
-		break;
-	}
-
-	return SENSOR_READ_SUCCESS;
 }
 
 static int raa_dma_rd(uint8_t bus, uint8_t addr, uint8_t *reg, uint8_t *resp)
@@ -214,26 +114,9 @@ static int raa_dma_rd(uint8_t bus, uint8_t addr, uint8_t *reg, uint8_t *resp)
 	return 0;
 }
 
-int raa229621_get_hex_mode(uint8_t bus, uint8_t addr, uint8_t *mode)
+int raa228249_get_remaining_wr(uint8_t bus, uint8_t addr, uint8_t *remain)
 {
-	CHECK_NULL_ARG_WITH_RETURN(mode, SENSOR_UNSPECIFIED_ERROR);
-	uint8_t tbuf[2], rbuf[4];
-
-	tbuf[0] = VR_RAA_REG_HEX_MODE_CFG0;
-	tbuf[1] = VR_RAA_REG_HEX_MODE_CFG1;
-	if (raa_dma_rd(bus, addr, tbuf, rbuf) < 0) {
-		LOG_ERR("Read HEX mode failed from dev: 0x%x", addr);
-		return -1;
-	}
-
-	*mode = (rbuf[0] == 0) ? RAA_GEN3_LEGACY : RAA_GEN3_PRODUCTION;
-
-	return 0;
-}
-
-int raa229621_get_remaining_wr(uint8_t bus, uint8_t addr, uint8_t *remain)
-{
-	CHECK_NULL_ARG_WITH_RETURN(remain, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(remain, false);
 	uint8_t tbuf[2], rbuf[4];
 
 	tbuf[0] = VR_RAA_REG_REMAIN_WR;
@@ -299,7 +182,7 @@ static int get_raa_polling_status(uint8_t bus, uint8_t addr)
 	return 0;
 }
 
-bool raa229621_get_crc(uint8_t bus, uint8_t addr, uint32_t *crc)
+bool raa228249_get_crc(uint8_t bus, uint8_t addr, uint32_t *crc)
 {
 	CHECK_NULL_ARG_WITH_RETURN(crc, false);
 	uint8_t tbuf[2], rbuf[4];
@@ -317,7 +200,7 @@ bool raa229621_get_crc(uint8_t bus, uint8_t addr, uint32_t *crc)
 	return true;
 }
 
-static bool parsing_image(uint8_t *img_buff, uint32_t img_size, struct raa229621_config *dev_cfg)
+static bool parsing_image(uint8_t *img_buff, uint32_t img_size, struct raa228249_config *dev_cfg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(img_buff, false);
 	CHECK_NULL_ARG_WITH_RETURN(dev_cfg, false);
@@ -355,12 +238,6 @@ static bool parsing_image(uint8_t *img_buff, uint32_t img_size, struct raa229621
 					((uint8_t *)&dev_cfg->rev_exp)[j] =
 						ascii_to_byte(&img_buff[i + 8 + (2 * j)]);
 				}
-
-				if ((dev_cfg->rev_exp & 0xFF) < VR_RAA_GEN3_SW_REV_MIN) {
-					dev_cfg->mode = RAA_GEN3_LEGACY;
-				} else {
-					dev_cfg->mode = RAA_GEN3_PRODUCTION;
-				}
 			} else {
 				continue;
 			}
@@ -380,20 +257,10 @@ static bool parsing_image(uint8_t *img_buff, uint32_t img_size, struct raa229621
 				// set Configuration ID
 				dev_cfg->cfg_id = ascii_to_byte(&img_buff[i + 8]) & 0x0F;
 				break;
-			case VR_RAA_GEN3_LEGACY_CRC:
-				if (dev_cfg->mode == RAA_GEN3_LEGACY) {
-					for (int j = 0; j < VR_RAA_CHECKSUM_LEN; j++) {
-						((uint8_t *)&dev_cfg->crc_exp)[j] =
-							ascii_to_byte(&img_buff[i + 8 + 2 * j]);
-					}
-				}
-				break;
-			case VR_RAA_GEN3_PRODUCTION_CRC:
-				if (dev_cfg->mode == RAA_GEN3_PRODUCTION) {
-					for (int j = 0; j < VR_RAA_CHECKSUM_LEN; j++) {
-						((uint8_t *)&dev_cfg->crc_exp)[j] =
-							ascii_to_byte(&img_buff[i + 8 + 2 * j]);
-					}
+			case VR_RAA_GEN3P5_CRC:
+				for (int j = 0; j < VR_RAA_CHECKSUM_LEN; j++) {
+					((uint8_t *)&dev_cfg->crc_exp)[j] =
+						ascii_to_byte(&img_buff[i + 8 + 2 * j]);
 				}
 				break;
 			}
@@ -414,21 +281,16 @@ exit:
 	return ret;
 }
 
-bool raa229621_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_size)
+bool raa228249_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_size)
 {
 	CHECK_NULL_ARG_WITH_RETURN(img_buff, false);
 
 	uint8_t ret = false;
-	uint8_t remain = 0, mode = 0xff;
+	uint8_t remain = 0;
 	uint32_t devid = 0;
 
-	// check mode
-	if (raa229621_get_hex_mode(bus, addr, &mode)) {
-		return false;
-	}
-
 	// check remaining writes
-	if (raa229621_get_remaining_wr(bus, addr, &remain) < 0) {
+	if (raa228249_get_remaining_wr(bus, addr, &remain) < 0) {
 		return false;
 	}
 
@@ -442,7 +304,7 @@ bool raa229621_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t i
 	}
 
 	/* Step1. Image parsing */
-	struct raa229621_config dev_cfg = { 0 };
+	struct raa228249_config dev_cfg = { 0 };
 	if (parsing_image(img_buff, img_size, &dev_cfg) == false) {
 		LOG_ERR("Failed to parsing image!");
 		goto exit;
@@ -455,12 +317,6 @@ bool raa229621_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t i
 
 	if (devid != dev_cfg.devid_exp) {
 		LOG_ERR("device id 0x%08X mismatch, expect 0x%08X", devid, dev_cfg.devid_exp);
-		goto exit;
-	}
-
-	// check mode
-	if (mode != dev_cfg.mode) {
-		LOG_ERR("HEX mode %u mismatch, expect %u", mode, dev_cfg.mode);
 		goto exit;
 	}
 
@@ -494,7 +350,59 @@ exit:
 	return ret;
 }
 
-uint8_t raa229621_init(sensor_cfg *cfg)
+uint8_t raa228249_read(sensor_cfg *cfg, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
+		return SENSOR_UNSPECIFIED_ERROR;
+	}
+
+	uint8_t retry = 5;
+	sensor_val *sval = (sensor_val *)reading;
+	I2C_MSG msg;
+	memset(sval, 0, sizeof(sensor_val));
+
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 2;
+	msg.data[0] = cfg->offset;
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_WRN("I2C read failed");
+		return SENSOR_FAIL_TO_ACCESS;
+	}
+
+	float val;
+	if (cfg->offset == PMBUS_READ_VOUT) {
+		/* Unsigned integer */
+		uint16_t read_value = (msg.data[1] << 8) | msg.data[0];
+		val = read_value * raa228249_READ_VOUT_RESOLUTION;
+
+	} else if (cfg->offset == PMBUS_READ_TEMPERATURE_1 || cfg->offset == PMBUS_READ_POUT) {
+		/* 2's complement */
+		int16_t read_value = (msg.data[1] << 8) | msg.data[0];
+		val = read_value;
+
+	} else if (cfg->offset == PMBUS_READ_IOUT) {
+		/* 2's complement */
+		int16_t read_value = (msg.data[1] << 8) | msg.data[0];
+		val = read_value * raa228249_READ_IOUT_RESOLUTION;
+
+	} else {
+		return SENSOR_FAIL_TO_ACCESS;
+	}
+
+	sval->integer = (int)val;
+	sval->fraction = (val - sval->integer) * 1000;
+
+	return SENSOR_READ_SUCCESS;
+}
+
+uint8_t raa228249_init(sensor_cfg *cfg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_INIT_UNSPECIFIED_ERROR);
 
@@ -502,6 +410,6 @@ uint8_t raa229621_init(sensor_cfg *cfg)
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
 
-	cfg->read = raa229621_read;
+	cfg->read = raa228249_read;
 	return SENSOR_INIT_SUCCESS;
 }

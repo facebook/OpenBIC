@@ -32,6 +32,7 @@
 #include "plat_i2c_target.h"
 #include "plat_mctp.h"
 #include "plat_pldm_monitor.h"
+#include "plat_hook.h"
 #include <logging/log.h>
 
 LOG_MODULE_REGISTER(plat_init);
@@ -48,6 +49,7 @@ void pal_pre_init()
 
 	init_platform_config();
 	plat_led_init();
+	vr_mutex_init();
 }
 
 void pal_set_sys_status()
