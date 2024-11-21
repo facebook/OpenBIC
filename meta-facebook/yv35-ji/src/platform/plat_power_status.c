@@ -215,7 +215,7 @@ void power_status_monitor_handler(void *arug0, void *arug1, void *arug2)
 			}
 		}
 
-		k_sleep(K_MSEC(3000));
+		k_sleep(K_MSEC(500));
 	}
 }
 
