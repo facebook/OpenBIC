@@ -1213,10 +1213,50 @@ static void change_mb_temp_sensor_config()
 	}
 }
 
+static void change_brick_sensor_config()
+{
+	#define E50SN12051_MFR_ID 0x0644
+	#define BMR4922302_803_MFR_ID 0x0c46
+	 
+	uint8_t retry = 5;
+	I2C_MSG msg;
+	msg.bus = I2C_BUS4;
+	msg.target_addr = BPB_BRICK_12V_ADDR;
+	msg.tx_len = 1;
+	msg.rx_len = 4;
+	uint16_t mfr_id;
+	msg.data[0] = PMBUS_MFR_ID;
+
+	if (i2c_master_read(&msg, retry))
+	{
+		LOG_ERR("Failed to read Brick module MFR_ID");
+		return;
+	}
+		
+	mfr_id = (msg.data[0] << 8) | msg.data[1];
+	printf("Brick module mfr_id: %x\n", mfr_id);
+
+	if (mfr_id == E50SN12051_MFR_ID)
+		return;
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(plat_sensor_config); i++) {
+		sensor_cfg *p = plat_sensor_config + i;
+		if (p->num == SENSOR_NUM_BPB_BRICK_12V_VIN_VOLT_V ||
+		    p->num == SENSOR_NUM_BPB_BRICK_12V_VOUT_VOLT_V ||
+		    p->num == SENSOR_NUM_BPB_BRICK_12V_IOUT_CURR_A ||
+		    p->num == SENSOR_NUM_BPB_BRICK_12V_TEMP_C) 
+		{
+			p->type = sensor_dev_bmr4922302_803;
+			p->init_args = &bmr4922302_803_init_args[0];
+		}
+	}
+}
+
 void load_sensor_config(void)
 {
 	change_mb_temp_sensor_config();
 	change_dvt_sensor_config();
+	change_brick_sensor_config();
 	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
 	sensor_config_count = ARRAY_SIZE(plat_sensor_config);
 
