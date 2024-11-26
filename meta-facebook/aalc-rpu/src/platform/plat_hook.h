@@ -30,6 +30,7 @@
 #include "ast_tach.h"
 #include "xdp710.h"
 #include "e50sn12051.h"
+#include "bmr4922302_803.h"
 
 #define BUS_1_MUX_ADDR 0xE0 >> 1
 #define BUS_2_MUX_ADDR 0xE2 >> 1
@@ -64,7 +65,7 @@ extern xdp710_init_arg xdp710_init_args[];
 extern hdc1080_init_arg hdc1080_init_args[];
 extern ast_tach_init_arg ast_tach_init_args[];
 extern e50sn12051_init_arg e50sn12051_init_args[];
-
+extern bmr4922302_803_init_arg bmr4922302_803_init_args[];
 /**************************************************************************************************
  * POST ARGS
 **************************************************************************************************/

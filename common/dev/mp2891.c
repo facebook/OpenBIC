@@ -118,7 +118,7 @@ float mp2891_get_resolution(sensor_cfg *cfg)
 
 		if (i2c_master_read(&msg, i2c_max_retry)) {
 			LOG_WRN("I2C read failed");
-			return SENSOR_FAIL_TO_ACCESS;
+			return reso;
 		}
 		uint16_t mfr_vout_loop_ctrl = (msg.data[1] << 8) | msg.data[0];
 
@@ -130,7 +130,7 @@ float mp2891_get_resolution(sensor_cfg *cfg)
 			reso = 0.002;
 		} else {
 			LOG_WRN("vout_reso_set not supported: 0x%x", mfr_vout_loop_ctrl);
-			return SENSOR_FAIL_TO_ACCESS;
+			return reso;
 		}
 		return reso;
 	case PMBUS_READ_IOUT:
@@ -138,7 +138,7 @@ float mp2891_get_resolution(sensor_cfg *cfg)
 
 		if (i2c_master_read(&msg, i2c_max_retry)) {
 			LOG_WRN("I2C read failed");
-			return SENSOR_FAIL_TO_ACCESS;
+			return reso;
 		}
 		uint16_t mfr_svi3_iout_prt_data = (msg.data[1] << 8) | msg.data[0];
 
@@ -169,12 +169,12 @@ float mp2891_get_resolution(sensor_cfg *cfg)
 			break;
 		default:
 			LOG_WRN("iout_reso_set not supported: 0x%x", mfr_svi3_iout_prt_data);
-			return SENSOR_FAIL_TO_ACCESS;
+			return reso;
 		}
 		return reso;
 	default:
 		LOG_WRN("offset not supported: 0x%x", offset);
-		return SENSOR_FAIL_TO_ACCESS;
+		return reso;
 	}
 }
 

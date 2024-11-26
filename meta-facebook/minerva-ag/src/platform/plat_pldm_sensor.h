@@ -28,10 +28,16 @@
 #define TOP_OUTLET_TEMP_ADDR (0x9E >> 1)
 #define BOT_INLET_TEMP_ADDR (0x94 >> 1)
 #define BOT_OUTLET_TEMP_ADDR (0X96 >> 1)
-#define ON_DIE_1_TEMP_ADDR (0X98 >> 1)
-#define ON_DIE_2_TEMP_ADDR (0X98 >> 1)
-#define ON_DIE_3_TEMP_ADDR (0X9A >> 1)
-#define ON_DIE_4_TEMP_ADDR (0X9A >> 1)
+
+#define ON_DIE_1_TEMP_TMP432_ADDR (0X98 >> 1)
+#define ON_DIE_2_TEMP_TMP432_ADDR (0X98 >> 1)
+#define ON_DIE_3_TEMP_TMP432_ADDR (0X9A >> 1)
+#define ON_DIE_4_TEMP_TMP432_ADDR (0X9A >> 1)
+
+#define ON_DIE_1_TEMP_EMC1413_ADDR (0XB8 >> 1)
+#define ON_DIE_2_TEMP_EMC1413_ADDR (0XB8 >> 1)
+#define ON_DIE_3_TEMP_EMC1413_ADDR (0X38 >> 1)
+#define ON_DIE_4_TEMP_EMC1413_ADDR (0X38 >> 1)
 
 #define P3V3_MP2971_ADDR (0xF6 >> 1)
 #define P3V3_ISL69260_ADDR (0xC0 >> 1)
@@ -240,9 +246,10 @@ bool get_plat_sensor_ubc_polling_enable_flag();
 bool get_plat_sensor_temp_polling_enable_flag();
 bool get_plat_sensor_vr_polling_enable_flag();
 bool is_ubc_access(uint8_t sensor_num);
-bool is_temp_access(uint8_t sensor_num);
+bool is_temp_access(uint8_t cfg_idx);
 bool is_vr_access(uint8_t sensor_num);
 void find_vr_addr_and_bus_and_sensor_dev_by_sensor_id(uint8_t sensor_id, uint8_t *vr_bus,
 						      uint8_t *vr_addr, uint8_t *sensor_dev);
+bool is_osfp_3v3_access(uint8_t sensor_num);
 
 #endif

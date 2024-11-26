@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-bool modbus_i2c_master_write_read(const uint16_t *modbus_data, uint8_t data_len);
-void modbus_i2c_master_write_read_response(uint16_t *modbus_data);
-void regs_reverse(uint16_t reg_len, uint16_t *data);
-void plat_enable_sensor_poll();
-void plat_disable_sensor_poll();
-uint8_t get_rpu_ready_pin_status();
-float pow_of_10(int8_t exp);
+
+#ifndef BMR4922302_803H
+#define BMR4922302_803H
+
+typedef struct _bmr4922302_803_init_arg {
+	bool is_init;
+} bmr4922302_803_init_arg;
+
+#endif

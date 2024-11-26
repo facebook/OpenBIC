@@ -31,6 +31,7 @@
 #include "plat_hook.h"
 #include "plat_sensor_table.h"
 #include "plat_fsc.h"
+#include "plat_isr.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -145,7 +146,7 @@ void pal_post_init()
 	init_modbus_command_table();
 	quick_sensor_poll_init();
 	set_manual_pwm_cache_to_default();
-	set_rpu_ready();
+	deassert_all_rpu_ready_pin();
 	fan_pump_pwrgd();
 }
 

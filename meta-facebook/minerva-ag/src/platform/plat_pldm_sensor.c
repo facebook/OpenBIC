@@ -39,6 +39,7 @@ void plat_pldm_sensor_change_ubc_dev();
 void plat_pldm_sensor_change_vr_dev();
 void plat_pldm_sensor_change_vr_addr();
 void plat_pldm_sensor_change_vr_init_args();
+void plat_pldm_sensor_change_temp_addr();
 void find_vr_addr_by_sensor_id(uint8_t sensor_id, uint8_t *vr_addr);
 typedef struct plat_sensor_vr_extend_info {
 	uint16_t sensor_id;
@@ -46,6 +47,11 @@ typedef struct plat_sensor_vr_extend_info {
 	void *mps_vr_init_args;
 	void *rns_vr_init_args;
 } plat_sensor_vr_extend_info;
+
+typedef struct plat_sensor_tmp_extend_info {
+	uint16_t sensor_id;
+	uint8_t target_emc1413_addr;
+} plat_sensor_tmp_extend_info;
 
 plat_sensor_vr_extend_info plat_sensor_vr_extend_table[] = {
 	{ SENSOR_NUM_OSFP_P3V3_TEMP_C, P3V3_ISL69260_ADDR },
@@ -151,6 +157,13 @@ plat_sensor_vr_extend_info plat_sensor_vr_extend_table[] = {
 	{ SENSOR_NUM_CPU_P1V2_VDDHTX_PCIE_PWR_W, P1V2_VDDHTX_PCIE_ISL69260_ADDR },
 };
 
+plat_sensor_tmp_extend_info plat_sensor_tmp_extend_table[] = {
+	{ SENSOR_NUM_ON_DIE_1_TEMP_C, ON_DIE_1_TEMP_EMC1413_ADDR },
+	{ SENSOR_NUM_ON_DIE_2_TEMP_C, ON_DIE_2_TEMP_EMC1413_ADDR },
+	{ SENSOR_NUM_ON_DIE_3_TEMP_C, ON_DIE_3_TEMP_EMC1413_ADDR },
+	{ SENSOR_NUM_ON_DIE_4_TEMP_C, ON_DIE_4_TEMP_EMC1413_ADDR },
+};
+
 static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = {
 	// thread id, thread name
 	{ UBC_SENSOR_THREAD_ID, "UBC_PLDM_SENSOR_THREAD" },
@@ -225,8 +238,6 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
 		},
 	},
 	{
@@ -295,8 +306,6 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
 		},
 	},
 	{
@@ -365,8 +374,6 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
 		},
 	},
 	{
@@ -435,8 +442,6 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
 		},
 	},
 	{
@@ -505,8 +510,6 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
 		},
 	},
 	{
@@ -575,8 +578,6 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
 		},
 	},
 	{
@@ -645,8 +646,6 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
 		},
 	},
 	{
@@ -715,8 +714,6 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
 		},
 	},
 	{
@@ -785,8 +782,6 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
 		},
 	},
 	{
@@ -855,8 +850,6 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
 		},
 	},
 };
@@ -924,12 +917,14 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS1,
 			.target_addr = P3V3_MP2971_ADDR,
 			.offset = PMBUS_READ_TEMPERATURE_1,
-			.access_checker = is_vr_access,
+			.access_checker = is_osfp_3v3_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_OSFP_P3V3 * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_OSFP_P3V3 * 2],
 		},
 	},
 	{
@@ -994,13 +989,14 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS1,
 			.target_addr = P3V3_MP2971_ADDR,
 			.offset = PMBUS_READ_VOUT,
-			.access_checker = is_vr_access,
+			.access_checker = is_osfp_3v3_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
-			.init_args = NULL,
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_OSFP_P3V3 * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_OSFP_P3V3 * 2],
 		},
 	},
 	{
@@ -1065,12 +1061,14 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS1,
 			.target_addr = P3V3_MP2971_ADDR,
 			.offset = PMBUS_READ_IOUT,
-			.access_checker = is_vr_access,
+			.access_checker = is_osfp_3v3_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_OSFP_P3V3 * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_OSFP_P3V3 * 2],
 		},
 	},
 	{
@@ -1135,12 +1133,14 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS1,
 			.target_addr = P3V3_MP2971_ADDR,
 			.offset = PMBUS_READ_POUT,
-			.access_checker = is_vr_access,
+			.access_checker = is_osfp_3v3_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_OSFP_P3V3 * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_OSFP_P3V3 * 2],
 		},
 	},
 	{
@@ -1210,7 +1210,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V85 * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V85 * 2],
 		},
 	},
 	{
@@ -1280,7 +1282,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V85 * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V85 * 2],
 		},
 	},
 	{
@@ -1350,7 +1354,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V85 * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V85 * 2],
 		},
 	},
 	{
@@ -1420,7 +1426,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V85 * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V85 * 2],
 		},
 	},
 	{
@@ -1490,7 +1498,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_N * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_N * 2],
 		},
 	},
 	{
@@ -1560,7 +1570,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_N * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_N * 2],
 		},
 	},
 	{
@@ -1630,7 +1642,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_N * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_N * 2],
 		},
 	},
 	{
@@ -1700,7 +1714,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_N * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_N * 2],
 		},
 	},
 	{
@@ -1770,7 +1786,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_N * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_N * 2 + 1],
 		},
 	},
 	{
@@ -1840,7 +1858,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_N * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_N * 2 + 1],
 		},
 	},
 	{
@@ -1910,7 +1930,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_N * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_N * 2 + 1],
 		},
 	},
 	{
@@ -1980,7 +2002,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_N * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_N * 2 + 1],
 		},
 	},
 	{
@@ -2050,7 +2074,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_S * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_S * 2],
 		},
 	},
 	{
@@ -2120,7 +2146,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_S * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_S * 2],
 		},
 	},
 	{
@@ -2190,7 +2218,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_S * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_S * 2],
 		},
 	},
 	{
@@ -2260,7 +2290,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_S * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_S * 2],
 		},
 	},
 	{
@@ -2330,7 +2362,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_S * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_S * 2 + 1],
 		},
 	},
 	{
@@ -2400,7 +2434,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_S * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_S * 2 + 1],
 		},
 	},
 	{
@@ -2470,7 +2506,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_S * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_S * 2 + 1],
 		},
 	},
 	{
@@ -2540,7 +2578,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_S * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_CH_S * 2 + 1],
 		},
 	},
 	{
@@ -2610,7 +2650,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEA * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEA * 2],
 		},
 	},
 	{
@@ -2680,7 +2723,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEA * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEA * 2],
 		},
 	},
 	{
@@ -2750,7 +2796,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEA * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEA * 2],
 		},
 	},
 	{
@@ -2820,7 +2869,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEA * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEA * 2],
 		},
 	},
 	{
@@ -2890,7 +2942,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEA * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEA * 2 + 1],
 		},
 	},
 	{
@@ -2960,7 +3016,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEA * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEA * 2 + 1],
 		},
 	},
 	{
@@ -3030,7 +3090,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEA * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEA * 2 + 1],
 		},
 	},
 	{
@@ -3100,7 +3164,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEA * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEA * 2 + 1],
 		},
 	},
 	{
@@ -3170,7 +3238,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEB * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEB * 2],
 		},
 	},
 	{
@@ -3240,7 +3311,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEB * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEB * 2],
 		},
 	},
 	{
@@ -3310,7 +3384,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEB * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEB * 2],
 		},
 	},
 	{
@@ -3380,7 +3457,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEB * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEB * 2],
 		},
 	},
 	{
@@ -3450,7 +3530,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEB * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEB * 2 + 1],
 		},
 	},
 	{
@@ -3520,7 +3604,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEB * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEB * 2 + 1],
 		},
 	},
 	{
@@ -3590,7 +3678,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEB * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEB * 2 + 1],
 		},
 	},
 	{
@@ -3660,7 +3752,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEB * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V75_TRVDD_ZONEB * 2 + 1],
 		},
 	},
 	{
@@ -3730,7 +3826,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM0_HBM2_HBM4 * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM0_HBM2_HBM4 * 2],
 		},
 	},
 	{
@@ -3800,7 +3900,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM0_HBM2_HBM4 * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM0_HBM2_HBM4 * 2],
 		},
 	},
 	{
@@ -3870,7 +3974,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM0_HBM2_HBM4 * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM0_HBM2_HBM4 * 2],
 		},
 	},
 	{
@@ -3940,7 +4048,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM0_HBM2_HBM4 * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM0_HBM2_HBM4 * 2],
 		},
 	},
 	{
@@ -4010,7 +4122,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM0_HBM2_HBM4 * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM0_HBM2_HBM4 * 2 + 1],
 		},
 	},
 	{
@@ -4080,7 +4196,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM0_HBM2_HBM4 * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM0_HBM2_HBM4 * 2 + 1],
 		},
 	},
 	{
@@ -4150,7 +4270,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM0_HBM2_HBM4 * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM0_HBM2_HBM4 * 2 + 1],
 		},
 	},
 	{
@@ -4220,7 +4344,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM0_HBM2_HBM4 * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM0_HBM2_HBM4 * 2 + 1],
 		},
 	},
 	{
@@ -4290,7 +4418,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEA * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEA * 2],
 		},
 	},
 	{
@@ -4360,7 +4490,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEA * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEA * 2],
 		},
 	},
 	{
@@ -4430,7 +4562,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEA * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEA * 2],
 		},
 	},
 	{
@@ -4500,7 +4634,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEA * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEA * 2],
 		},
 	},
 	{
@@ -4570,7 +4706,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEA * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEA * 2 + 1],
 		},
 	},
 	{
@@ -4640,7 +4780,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEA * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEA * 2 + 1],
 		},
 	},
 	{
@@ -4710,7 +4854,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEA * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEA * 2 + 1],
 		},
 	},
 	{
@@ -4780,7 +4928,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEA * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEA * 2 + 1],
 		},
 	},
 	{
@@ -4850,7 +5002,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEB * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEB * 2],
 		},
 	},
 	{
@@ -4920,7 +5074,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEB * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEB * 2],
 		},
 	},
 	{
@@ -4990,7 +5146,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEB * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEB * 2],
 		},
 	},
 	{
@@ -5060,7 +5218,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEB * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEB * 2],
 		},
 	},
 	{
@@ -5130,7 +5290,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEB * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEB * 2 + 1],
 		},
 	},
 	{
@@ -5200,7 +5364,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEB * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEB * 2 + 1],
 		},
 	},
 	{
@@ -5270,7 +5438,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEB * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEB * 2 + 1],
 		},
 	},
 	{
@@ -5340,7 +5512,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEB * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P0V9_TRVDD_ZONEB * 2 + 1],
 		},
 	},
 	{
@@ -5410,7 +5586,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM1_HBM3_HBM5 * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM1_HBM3_HBM5 * 2],
 		},
 	},
 	{
@@ -5480,7 +5660,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM1_HBM3_HBM5 * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM1_HBM3_HBM5 * 2],
 		},
 	},
 	{
@@ -5550,7 +5734,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM1_HBM3_HBM5 * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM1_HBM3_HBM5 * 2],
 		},
 	},
 	{
@@ -5620,7 +5808,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM1_HBM3_HBM5 * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM1_HBM3_HBM5 * 2],
 		},
 	},
 	{
@@ -5690,7 +5882,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM1_HBM3_HBM5 * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM1_HBM3_HBM5 * 2 + 1],
 		},
 	},
 	{
@@ -5760,7 +5956,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM1_HBM3_HBM5 * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM1_HBM3_HBM5 * 2 + 1],
 		},
 	},
 	{
@@ -5830,7 +6030,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM1_HBM3_HBM5 * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM1_HBM3_HBM5 * 2 + 1],
 		},
 	},
 	{
@@ -5900,7 +6104,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM1_HBM3_HBM5 * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args =
+				&vr_pre_read_args[VR_INDEX_E_P1V1_VDDC_HBM1_HBM3_HBM5 * 2 + 1],
 		},
 	},
 	{
@@ -5970,7 +6178,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_VDDA_PCIE * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_VDDA_PCIE * 2],
 		},
 	},
 	{
@@ -6040,7 +6250,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_VDDA_PCIE * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_VDDA_PCIE * 2],
 		},
 	},
 	{
@@ -6110,7 +6322,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_VDDA_PCIE * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_VDDA_PCIE * 2],
 		},
 	},
 	{
@@ -6180,7 +6394,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[0],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_VDDA_PCIE * 2],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_VDDA_PCIE * 2],
 		},
 	},
 	{
@@ -6250,7 +6466,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_VDDA_PCIE * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_VDDA_PCIE * 2 + 1],
 		},
 	},
 	{
@@ -6320,7 +6538,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_VDDA_PCIE * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_VDDA_PCIE * 2 + 1],
 		},
 	},
 	{
@@ -6390,7 +6610,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_VDDA_PCIE * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_VDDA_PCIE * 2 + 1],
 		},
 	},
 	{
@@ -6460,7 +6682,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[1],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_VDDA_PCIE * 2 + 1],
+			.post_sensor_read_hook = post_vr_read,
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_VDDA_PCIE * 2 + 1],
 		},
 	},
 };
@@ -6798,7 +7022,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.num = SENSOR_NUM_ON_DIE_1_TEMP_C,
 			.type = sensor_dev_tmp431,
 			.port = I2C_BUS1,
-			.target_addr = ON_DIE_1_TEMP_ADDR,
+			.target_addr = ON_DIE_1_TEMP_TMP432_ADDR,
 			.offset = TMP432_REMOTE_TEMPERATRUE_1,
 			.access_checker = is_temp_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
@@ -6866,7 +7090,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.num = SENSOR_NUM_ON_DIE_2_TEMP_C,
 			.type = sensor_dev_tmp431,
 			.port = I2C_BUS1,
-			.target_addr = ON_DIE_2_TEMP_ADDR,
+			.target_addr = ON_DIE_2_TEMP_TMP432_ADDR,
 			.offset = TMP432_REMOTE_TEMPERATRUE_2,
 			.access_checker = is_temp_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
@@ -6934,7 +7158,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.num = SENSOR_NUM_ON_DIE_3_TEMP_C,
 			.type = sensor_dev_tmp431,
 			.port = I2C_BUS1,
-			.target_addr = ON_DIE_3_TEMP_ADDR,
+			.target_addr = ON_DIE_3_TEMP_TMP432_ADDR,
 			.offset = TMP432_REMOTE_TEMPERATRUE_1,
 			.access_checker = is_temp_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
@@ -7002,7 +7226,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.num = SENSOR_NUM_ON_DIE_4_TEMP_C,
 			.type = sensor_dev_tmp431,
 			.port = I2C_BUS1,
-			.target_addr = ON_DIE_4_TEMP_ADDR,
+			.target_addr = ON_DIE_4_TEMP_TMP432_ADDR,
 			.offset = TMP432_REMOTE_TEMPERATRUE_2,
 			.access_checker = is_temp_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
@@ -8835,6 +9059,7 @@ pldm_sensor_info *plat_pldm_sensor_load(int thread_id)
 		plat_pldm_sensor_change_vr_init_args();
 		return plat_pldm_sensor_vr_table;
 	case TEMP_SENSOR_THREAD_ID:
+		plat_pldm_sensor_change_temp_addr();
 		return plat_pldm_sensor_temp_table;
 	default:
 		LOG_ERR("Unknow pldm sensor thread id %d", thread_id);
@@ -8994,6 +9219,16 @@ void find_vr_addr_by_sensor_id(uint8_t sensor_id, uint8_t *vr_addr)
 	}
 }
 
+void find_tmp_addr_by_sensor_id(uint8_t sensor_id, uint8_t *tmp_addr)
+{
+	for (int index = 0; index < ARRAY_SIZE(plat_sensor_tmp_extend_table); index++) {
+		if (plat_sensor_tmp_extend_table[index].sensor_id == sensor_id) {
+			*tmp_addr = plat_sensor_tmp_extend_table[index].target_emc1413_addr;
+			return;
+		}
+	}
+}
+
 void find_init_args_by_sensor_id(uint16_t sensor_id, void **init_args)
 {
 	uint8_t vr_type = get_vr_type();
@@ -9002,11 +9237,13 @@ void find_init_args_by_sensor_id(uint16_t sensor_id, void **init_args)
 	     index++) {
 		if (plat_pldm_sensor_vr_table[index].pdr_numeric_sensor.sensor_id ==
 		    SENSOR_NUM_OSFP_P3V3_VOLT_V) {
-			if (vr_type == VR_MPS_MP2971_MP2891) {
-				LOG_INF("change vr init args for MPS_MP2971_MP2891");
+			if ((vr_type == VR_MPS_MP2971_MP2891) ||
+			    (vr_type == VR_MPS_MP2971_MP29816A)) {
+				LOG_INF("change vr init args for MPS");
 				*init_args = plat_sensor_vr_extend_table[index].mps_vr_init_args;
-			} else if (vr_type == VR_RNS_ISL69260_RAA228238) {
-				LOG_INF("change vr init args for RNS_ISL69260_RAA228238");
+			} else if ((vr_type == VR_RNS_ISL69260_RAA228238) ||
+				   (vr_type == VR_RNS_ISL69260_RAA228249)) {
+				LOG_INF("change vr init args for RNS");
 				*init_args = plat_sensor_vr_extend_table[index].rns_vr_init_args;
 			} else {
 				*init_args = NULL;
@@ -9042,7 +9279,7 @@ void plat_pldm_sensor_change_vr_addr()
 
 	uint8_t addr;
 
-	if (vr_type == VR_RNS_ISL69260_RAA228238) {
+	if ((vr_type == VR_RNS_ISL69260_RAA228238) || (vr_type == VR_RNS_ISL69260_RAA228249)) {
 		LOG_INF("change vr addr for RNS_ISL69260_RAA228238");
 		for (int index = 0; index < plat_pldm_sensor_get_sensor_count(VR_SENSOR_THREAD_ID);
 		     index++) {
@@ -9050,7 +9287,7 @@ void plat_pldm_sensor_change_vr_addr()
 				plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.num, &addr);
 			plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.target_addr = addr;
 		}
-	} else if (vr_type != VR_MPS_MP2971_MP2891) {
+	} else if ((vr_type != VR_MPS_MP2971_MP2891) && (vr_type != VR_MPS_MP2971_MP29816A)) {
 		LOG_ERR("Unable to change the VR device due to its unknown status.");
 	}
 }
@@ -9063,7 +9300,15 @@ void plat_pldm_sensor_change_vr_dev()
 		return;
 	}
 
-	if (vr_type == VR_RNS_ISL69260_RAA228238) {
+	if (vr_type == VR_MPS_MP2971_MP29816A) {
+		for (int index = 0; index < plat_pldm_sensor_get_sensor_count(VR_SENSOR_THREAD_ID);
+		     index++) {
+			if (plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type ==
+			    sensor_dev_mp2891)
+				plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type =
+					sensor_dev_mp29816a;
+		}
+	} else if (vr_type == VR_RNS_ISL69260_RAA228238) {
 		for (int index = 0; index < plat_pldm_sensor_get_sensor_count(VR_SENSOR_THREAD_ID);
 		     index++) {
 			if (plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type ==
@@ -9075,8 +9320,44 @@ void plat_pldm_sensor_change_vr_dev()
 				plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type =
 					sensor_dev_raa228238;
 		}
+	} else if (vr_type == VR_RNS_ISL69260_RAA228249) {
+		for (int index = 0; index < plat_pldm_sensor_get_sensor_count(VR_SENSOR_THREAD_ID);
+		     index++) {
+			if (plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type ==
+			    sensor_dev_mp2971)
+				plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type =
+					sensor_dev_isl69259;
+			else if (plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type ==
+				 sensor_dev_mp2891)
+				plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type =
+					sensor_dev_raa228249;
+		}
 	} else if (vr_type != VR_MPS_MP2971_MP2891) {
 		LOG_ERR("Unable to change the VR device due to its unknown status.");
+	}
+}
+
+void plat_pldm_sensor_change_temp_addr()
+{
+	uint8_t temp_type = get_tmp_type();
+
+	if (temp_type == TMP_TYPE_UNKNOWN) {
+		LOG_ERR("Unable to change the temp device due to its unknown status.");
+		return;
+	}
+
+	uint8_t addr;
+
+	if (temp_type == TMP_EMC1413) {
+		LOG_INF("change temp addr for EMC1413");
+		for (int index = 0;
+		     index < plat_pldm_sensor_get_sensor_count(TEMP_SENSOR_THREAD_ID); index++) {
+			find_tmp_addr_by_sensor_id(
+				plat_pldm_sensor_temp_table[index].pldm_sensor_cfg.num, &addr);
+			plat_pldm_sensor_temp_table[index].pldm_sensor_cfg.target_addr = addr;
+		}
+	} else if (temp_type != TMP_TMP432) {
+		LOG_ERR("Unable to change the temp device due to its unknown status.");
 	}
 }
 
@@ -9084,7 +9365,7 @@ void plat_pldm_sensor_change_ubc_dev()
 {
 	uint8_t ubc_type = get_ubc_type();
 	if (ubc_type == UBC_UNKNOWN) {
-		LOG_ERR("Unable to change the VR device due to its unknown status.");
+		LOG_ERR("Unable to change the UBC device due to its unknown status.");
 		return;
 	}
 
@@ -9156,8 +9437,17 @@ bool is_ubc_access(uint8_t sensor_num)
 		get_plat_sensor_polling_enable_flag());
 }
 
-bool is_temp_access(uint8_t sensor_num)
+bool is_temp_access(uint8_t cfg_idx)
 {
+	for (int index = 0; index < plat_pldm_sensor_get_sensor_count(TEMP_SENSOR_THREAD_ID);
+	     index++) {
+		if (plat_pldm_sensor_temp_table[index].pldm_sensor_cfg.type == sensor_dev_tmp431) {
+			if (get_tmp_type() == TMP_EMC1413) {
+				return false; // EMC1413 not yet supported
+			}
+		}
+	}
+
 	return (get_plat_sensor_temp_polling_enable_flag() &&
 		get_plat_sensor_polling_enable_flag());
 }
@@ -9173,7 +9463,6 @@ void find_vr_addr_and_bus_and_sensor_dev_by_sensor_id(uint8_t sensor_id, uint8_t
 {
 	int pldm_sensor_count = 0;
 	pldm_sensor_count = plat_pldm_sensor_get_sensor_count(VR_SENSOR_THREAD_ID);
-	//pldm_sensor_info *plat_pldm_sensor_vr_table = plat_pldm_sensor_load(VR_SENSOR_THREAD_ID);
 	for (int index = 0; index < pldm_sensor_count; index++) {
 		if (plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.num == sensor_id) {
 			*vr_addr = plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.target_addr;
@@ -9182,4 +9471,10 @@ void find_vr_addr_and_bus_and_sensor_dev_by_sensor_id(uint8_t sensor_id, uint8_t
 			return;
 		}
 	}
+}
+
+bool is_osfp_3v3_access(uint8_t sensor_num)
+{
+	/* OSFP 3V3 is only accessible on EVB */
+	return (get_board_type() == MINERVA_AEGIS_BD) ? false : is_vr_access(sensor_num);
 }

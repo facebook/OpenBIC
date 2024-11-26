@@ -106,14 +106,6 @@ void plat_disable_sensor_poll(void)
 	controlFSC(FSC_DISABLE);
 }
 
-void set_rpu_ready()
-{
-	gpio_set(BIC_RPU_READY0, 1);
-	gpio_set(BIC_RPU_READY1, 1);
-	gpio_set(BIC_RPU_READY2, 1);
-	gpio_set(BIC_RPU_READY3, 1);
-}
-
 uint8_t get_rpu_ready_pin_status()
 {
 	if (gpio_get(BIC_RPU_READY0) && gpio_get(BIC_RPU_READY1) && gpio_get(BIC_RPU_READY2) &&

@@ -49,5 +49,6 @@ void ISR_CPU_OVERTEMP();
 void ISR_GPIOH0();
 void ISR_GPIOH1();
 void ISR_SYS_THROTTLE();
+void ISR_RETIMER_FAULT();
 
 #endif

@@ -27,10 +27,12 @@
 #include "plat_isr.h"
 #include "plat_threshold.h"
 #include <logging/log.h>
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_sensor_table);
 
 #define I2C_MAX_RETRY 3
+#define SIZEOF_NCT7363_INIT_ARGS 18
 
 struct k_thread quick_sensor_poll;
 K_KERNEL_STACK_MEMBER(quick_sensor_poll_stack, 1024);
@@ -205,7 +207,7 @@ sensor_cfg plat_sensor_config[] = {
 	  NCT7363_GPIO_READ_OFFSET, stby_access, NCT7363_6_PORT, 0, SAMPLE_COUNT_DEFAULT,
 	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &nct7363_init_args[17] },
-	{ SENSOR_NUM_BPB_RACK_LEVEL_3, sensor_dev_nct7363, I2C_BUS5, BPB_NCT7363_ADDR,
+	{ SENSOR_NUM_BPB_RPU_LEVEL, sensor_dev_nct7363, I2C_BUS5, BPB_NCT7363_ADDR,
 	  NCT7363_GPIO_READ_OFFSET, stby_access, NCT7363_7_PORT, 0, SAMPLE_COUNT_DEFAULT,
 	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &nct7363_init_args[17] },
@@ -1130,6 +1132,70 @@ void load_plat_def_sensor_config()
 		add_sensor_config(plat_def_sensor_config[index]);
 }
 
+static void change_dvt_sensor_config()
+{
+	uint8_t stage = 0;
+	stage = get_board_stage();
+	LOG_WRN("board stage: %d", stage);
+
+	if (stage == BOARD_STAGE_EVT)
+		return;
+
+	for (uint8_t i = 0; i < SIZEOF_NCT7363_INIT_ARGS; i++) {
+		nct7363_init_arg *f = nct7363_init_args + i;
+		/*
+			change fan board hook config 
+			Modify :
+				pwrgd_fan from port10 to port04, 
+				fault_fan from port11 to port08
+			Add :
+				tach2 in port16
+		*/
+		if (i < 14) {
+			// gpio out
+			f->pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO;
+			f->pin_type[NCT7363_11_PORT] = NCT7363_PIN_TPYE_GPIO;
+			f->gpio_10 = 0;
+
+			//pwrgd pin type
+			f->pin_type[NCT7363_4_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT;
+			f->gpio_03 = 1; //gpio out default value (active low)
+
+			// fanin pin type
+			f->pin_type[NCT7363_16_PORT] = NCT7363_PIN_TPYE_FANIN;
+			// fanin setting
+			f->threshold[NCT7363_16_PORT] = 50;
+			f->fan_poles[NCT7363_16_PORT] = 4;
+
+			// fault pin type
+			f->pin_type[NCT7363_8_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT;
+			f->gpio_07 = 0;
+		}
+		/*
+			change pump board hook config
+			Modify: 
+				pwrgd_pump from port10 to port08
+				fault_pump from port11 to port13
+		*/
+		else if (i < 17) {
+			f->pin_type[NCT7363_10_PORT] = 0;
+			f->gpio_10 = 0;
+			f->pin_type[NCT7363_8_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT;
+			f->gpio_07 = 1;
+
+			f->pin_type[NCT7363_11_PORT] = 0;
+			f->gpio_11 = 0;
+			f->pin_type[NCT7363_13_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT;
+			f->gpio_13 = 0;
+		}
+		// backplane add level sensor 3
+		else {
+			//do nothing because pin type default is gpio input
+			LOG_INF("level sensor 3 config ok, no need to changed");
+		}
+	}
+}
+
 static void change_mb_temp_sensor_config()
 {
 	if (get_board_stage() == BOARD_STAGE_EVT)
@@ -1147,9 +1213,48 @@ static void change_mb_temp_sensor_config()
 	}
 }
 
+static void change_brick_sensor_config()
+{
+#define E50SN12051_MFR_ID 0x0644
+#define BMR4922302_803_MFR_ID 0x0c46
+
+	uint8_t retry = 5;
+	I2C_MSG msg;
+	msg.bus = I2C_BUS4;
+	msg.target_addr = BPB_BRICK_12V_ADDR;
+	msg.tx_len = 1;
+	msg.rx_len = 4;
+	uint16_t mfr_id;
+	msg.data[0] = PMBUS_MFR_ID;
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Failed to read Brick module MFR_ID");
+		return;
+	}
+
+	mfr_id = (msg.data[0] << 8) | msg.data[1];
+	printf("Brick module mfr_id: %x\n", mfr_id);
+
+	if (mfr_id == E50SN12051_MFR_ID)
+		return;
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(plat_sensor_config); i++) {
+		sensor_cfg *p = plat_sensor_config + i;
+		if (p->num == SENSOR_NUM_BPB_BRICK_12V_VIN_VOLT_V ||
+		    p->num == SENSOR_NUM_BPB_BRICK_12V_VOUT_VOLT_V ||
+		    p->num == SENSOR_NUM_BPB_BRICK_12V_IOUT_CURR_A ||
+		    p->num == SENSOR_NUM_BPB_BRICK_12V_TEMP_C) {
+			p->type = sensor_dev_bmr4922302_803;
+			p->init_args = &bmr4922302_803_init_args[0];
+		}
+	}
+}
+
 void load_sensor_config(void)
 {
 	change_mb_temp_sensor_config();
+	change_dvt_sensor_config();
+	change_brick_sensor_config();
 	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
 	sensor_config_count = ARRAY_SIZE(plat_sensor_config);
 

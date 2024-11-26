@@ -108,9 +108,7 @@ uint16_t get_sensor_status_for_modbus_cmd(uint8_t status)
 			      PUMP_STATUS_ENABLE;
 		break;
 	case RPU_RESERVOIR_STATUS:
-		// 0: low, 1: intermediate, 3: high
-		WRITE_BIT(val, 0, (get_threshold_status(SENSOR_NUM_BPB_RACK_LEVEL_2)) ? 0 : 1);
-		WRITE_BIT(val, 1, (get_threshold_status(SENSOR_NUM_BPB_RACK_LEVEL_1)) ? 0 : 1);
+		WRITE_BIT(val, 0, (get_threshold_status(SENSOR_NUM_BPB_RPU_LEVEL)) ? 1 : 0);
 		break;
 	case ALL_PUMP_STATUS:
 		val = 3;
@@ -232,7 +230,7 @@ uint16_t get_sensor_status_for_modbus_cmd(uint8_t status)
 			  (get_threshold_status(SENSOR_NUM_SB_HEX_AIR_INLET_4_TEMP_C)) ? 1 : 0);
 		break;
 	case AALC_STATUS_ALARM:
-		WRITE_BIT(val, 0, (get_threshold_status(SENSOR_NUM_BPB_RACK_LEVEL_2)) ? 1 : 0);
+		WRITE_BIT(val, 0, (get_threshold_status(SENSOR_NUM_BPB_RPU_LEVEL)) ? 1 : 0);
 		WRITE_BIT(val, 1,
 			  (get_threshold_status(SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C)) ? 1 : 0);
 		WRITE_BIT(val, 2,

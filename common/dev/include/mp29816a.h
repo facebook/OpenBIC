@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-bool modbus_i2c_master_write_read(const uint16_t *modbus_data, uint8_t data_len);
-void modbus_i2c_master_write_read_response(uint16_t *modbus_data);
-void regs_reverse(uint16_t reg_len, uint16_t *data);
-void plat_enable_sensor_poll();
-void plat_disable_sensor_poll();
-uint8_t get_rpu_ready_pin_status();
-float pow_of_10(int8_t exp);
+#ifndef MP29816A_H
+#define MP29816A_H
+
+#include "stdint.h"
+
+bool mp29816a_get_fw_version(uint8_t bus, uint8_t addr, uint32_t *rev);
+bool mp29816a_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_size);
+
+#endif

@@ -36,6 +36,10 @@
 
 LOG_MODULE_REGISTER(plat_isr);
 
+#define IPMI_SYS_EVENT_OFFSET_RETIMER_FAULT 0x17
+
+static bool is_retimer_fault_assert = false;
+
 static void isr_dbg_print(uint8_t gpio_num)
 {
 	switch (gpio_cfg[gpio_num].int_type) {
@@ -357,9 +361,29 @@ exit:
 	gpio_set(FM_VR_FW_PROGRAM_L, GPIO_HIGH);
 }
 
+static void check_retimer_status(struct k_work *work)
+{
+	if (CPU_power_good() == true) {
+		if (gpio_get(VIRTUAL_RETIMER_PG) == GPIO_LOW) {
+			struct ipmi_storage_add_sel_req add_sel_msg = { 0 };
+			add_sel_msg.event.event_dir_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+			add_sel_msg.event.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+			add_sel_msg.event.sensor_num = SENSOR_NUM_SYSTEM_STATUS;
+			add_sel_msg.event.event_data[0] = IPMI_SYS_EVENT_OFFSET_RETIMER_FAULT;
+			add_sel_msg.event.event_data[1] = 0xFF;
+			add_sel_msg.event.event_data[2] = 0xFF;
+			if (!mctp_add_sel_to_ipmi(&add_sel_msg, ADD_COMMON_SEL)) {
+				LOG_ERR("Failed to add Retimer Fault sel.");
+			}
+			is_retimer_fault_assert = true;
+		}
+	}
+}
+
 K_WORK_DELAYABLE_DEFINE(read_cpu_power_seq_status_work, read_cpu_power_seq_status);
 K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_delayed_status);
 K_WORK_DELAYABLE_DEFINE(PROC_FAIL_work, PROC_FAIL_handler);
+K_WORK_DELAYABLE_DEFINE(check_retimer_status_work, check_retimer_status);
 #define DC_ON_5_SECOND 5
 #define PROC_FAIL_START_DELAY_SECOND 10
 void ISR_PWRGD_CPU()
@@ -376,6 +400,7 @@ void ISR_PWRGD_CPU()
 		k_work_schedule_for_queue(&plat_work_q, &PROC_FAIL_work,
 					  K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
 		start_satmc_access_poll();
+		k_work_schedule(&check_retimer_status_work, K_MSEC(2000));
 	} else {
 		set_satmc_status(false);
 		retimer_addr_loss();
@@ -395,6 +420,7 @@ void ISR_PWRGD_CPU()
 		}
 		set_DC_on_delayed_status();
 		k_work_schedule(&read_cpu_power_seq_status_work, K_MSEC(500));
+		is_retimer_fault_assert = false;
 	}
 }
 
@@ -616,6 +642,52 @@ void ISR_SYS_THROTTLE()
 		add_sel_msg.event.event_data[2] = 0xFF;
 		if (!mctp_add_sel_to_ipmi(&add_sel_msg, ADD_COMMON_SEL)) {
 			LOG_ERR("Failed to add System Throttle sel.");
+		}
+	}
+}
+
+static void check_cpu_status(struct k_work *work)
+{
+	if (CPU_power_good() == true) {
+		struct ipmi_storage_add_sel_req add_sel_msg = { 0 };
+		add_sel_msg.event.event_dir_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+		add_sel_msg.event.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+		add_sel_msg.event.sensor_num = SENSOR_NUM_SYSTEM_STATUS;
+		add_sel_msg.event.event_data[0] = IPMI_SYS_EVENT_OFFSET_RETIMER_FAULT;
+		add_sel_msg.event.event_data[1] = 0xFF;
+		add_sel_msg.event.event_data[2] = 0xFF;
+		if (!mctp_add_sel_to_ipmi(&add_sel_msg, ADD_COMMON_SEL)) {
+			LOG_ERR("Failed to add Retimer Fault sel.");
+		}
+		is_retimer_fault_assert = true;
+	} else {
+		LOG_DBG("Normal Case");
+	}
+}
+
+K_WORK_DELAYABLE_DEFINE(check_cpu_status_work, check_cpu_status);
+
+void ISR_RETIMER_FAULT()
+{
+	if (CPU_power_good()) {
+		if ((gpio_get(VIRTUAL_RETIMER_PG) == GPIO_HIGH) &&
+		    (is_retimer_fault_assert == true)) {
+			struct ipmi_storage_add_sel_req add_sel_msg = { 0 };
+			add_sel_msg.event.event_dir_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
+			add_sel_msg.event.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+			add_sel_msg.event.sensor_num = SENSOR_NUM_SYSTEM_STATUS;
+			add_sel_msg.event.event_data[0] = IPMI_SYS_EVENT_OFFSET_RETIMER_FAULT;
+			add_sel_msg.event.event_data[1] = 0xFF;
+			add_sel_msg.event.event_data[2] = 0xFF;
+			if (!mctp_add_sel_to_ipmi(&add_sel_msg, ADD_COMMON_SEL)) {
+				LOG_ERR("Failed to add Retimer Fault sel.");
+			}
+			is_retimer_fault_assert = false;
+		} else if ((gpio_get(VIRTUAL_RETIMER_PG) == GPIO_LOW) &&
+			   (is_retimer_fault_assert == false)) {
+			k_work_schedule(&check_cpu_status_work, K_MSEC(2000));
+		} else {
+			return;
 		}
 	}
 }
