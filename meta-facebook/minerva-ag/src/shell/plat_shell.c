@@ -14,10 +14,53 @@
  * limitations under the License.
  */
 
+#include <stdlib.h>
 #include "plat_sensor_polling_shell.h"
 #include "log_shell.h"
 #include "cpld_shell.h"
 #include "plat_pldm_fw_version_shell.h"
+#include "mctp.h"
+#include "pldm.h"
+
+void pldm_cmd(const struct shell *shell, size_t argc, char **argv)
+{
+	if (argc < 4) {
+		shell_warn(shell, "Help: pldm <eid> <pldm_type> <pldm_cmd> <pldm_data>");
+		return;
+	}
+
+	const uint8_t eid = strtol(argv[1], NULL, 16);
+
+	uint8_t resp_buf[PLDM_MAX_DATA_SIZE] = { 0 };
+	pldm_msg pmsg = { 0 };
+	pmsg.hdr.msg_type = MCTP_MSG_TYPE_PLDM;
+	pmsg.hdr.pldm_type = strtol(argv[2], NULL, 16);
+	pmsg.hdr.cmd = strtol(argv[3], NULL, 16);
+	pmsg.hdr.rq = PLDM_REQUEST;
+	pmsg.len = argc - 4;
+	uint8_t req_buf[pmsg.len];
+	pmsg.buf = req_buf;
+
+	for (int i = 0; i < pmsg.len; i++)
+		pmsg.buf[i] = strtol(argv[i + 4], NULL, 16);
+
+	mctp *mctp_inst = NULL;
+	if (get_mctp_info_by_eid(eid, &mctp_inst, &pmsg.ext_params) == false) {
+		shell_print(shell, "Failed to get mctp info by eid 0x%x", eid);
+		return;
+	}
+
+	uint16_t resp_len = mctp_pldm_read(mctp_inst, &pmsg, resp_buf, sizeof(resp_buf));
+	if (resp_len == 0) {
+		shell_print(shell, "Failed to get mctp-pldm response");
+		return;
+	}
+
+	shell_print(shell, "RESP");
+	shell_hexdump(shell, resp_buf, resp_len);
+
+	return;
+}
 
 /* Sub-command Level 1 of command test */
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_test_cmds,
@@ -27,6 +70,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_test_cmds,
 			       SHELL_CMD(cpld, &sub_cpld_cmd, "cpld command", NULL),
 			       SHELL_CMD(get_fw_version, &sub_get_fw_version_cmd,
 					 "get fw version command", NULL),
+			       SHELL_CMD(pldm, NULL, "send pldm to bmc", pldm_cmd),
 			       SHELL_SUBCMD_SET_END);
 
 /* Root of command test */
