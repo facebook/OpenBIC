@@ -16,8 +16,9 @@
 
 #include <zephyr.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <logging/log.h>
-
+#include "libutil.h"
 #include "libipmi.h"
 #include "power_status.h"
 #include "sensor.h"
@@ -27,10 +28,13 @@
 #include "plat_class.h"
 #include "plat_isr.h"
 #include "plat_hwmon.h"
+#include "plat_event.h"
 
 extern uint8_t ina230_init(sensor_cfg *cfg);
 
 LOG_MODULE_REGISTER(plat_isr);
+
+K_TIMER_DEFINE(check_ubc_delayed_timer, check_ubc_delayed, NULL);
 
 void ISR_GPIO_FM_ASIC_0_THERMTRIP_R_N()
 {
@@ -82,4 +86,7 @@ void ISR_GPIO_FM_PLD_UBC_EN_R()
 {
 	LOG_INF("gpio_%d_isr called, val=%d , dir= %d", FM_PLD_UBC_EN_R, gpio_get(FM_PLD_UBC_EN_R),
 		gpio_get_direction(FM_PLD_UBC_EN_R));
+
+	k_timer_start(&check_ubc_delayed_timer, K_MSEC(3000), K_NO_WAIT);
+	set_dc_status_changing_status(true);
 }

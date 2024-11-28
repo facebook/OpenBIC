@@ -18,9 +18,14 @@
 #define PLAT_FRU_H
 
 #define FRU_CFG_NUM MAX_FRU_ID
+#define LOG_EEPROM_ADDR (0xA0 >> 1)
 
-enum {
+enum FRU_ID {
+	LOG_EEPROM_ID = 0x00,
 	MAX_FRU_ID,
 };
+
+bool plat_eeprom_write(uint32_t offset, uint8_t *data, uint16_t data_len);
+bool plat_eeprom_read(uint32_t offset, uint8_t *data, uint16_t data_len);
 
 #endif

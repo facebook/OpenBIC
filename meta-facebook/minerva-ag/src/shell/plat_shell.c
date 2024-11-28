@@ -15,6 +15,7 @@
  */
 
 #include "plat_sensor_polling_shell.h"
+#include "log_shell.h"
 #include "cpld_shell.h"
 #include "plat_pldm_fw_version_shell.h"
 
@@ -22,6 +23,7 @@
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_test_cmds,
 			       SHELL_CMD(sensor, &sub_plat_sensor_polling_cmd,
 					 "set/get platform sensor polling command", NULL),
+			       SHELL_CMD(log, &sub_plat_log_cmd, "platform log command", NULL),
 			       SHELL_CMD(cpld, &sub_cpld_cmd, "cpld command", NULL),
 			       SHELL_CMD(get_fw_version, &sub_get_fw_version_cmd,
 					 "get fw version command", NULL),

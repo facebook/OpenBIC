@@ -248,8 +248,8 @@ bool get_plat_sensor_vr_polling_enable_flag();
 bool is_ubc_access(uint8_t sensor_num);
 bool is_temp_access(uint8_t cfg_idx);
 bool is_vr_access(uint8_t sensor_num);
-void find_vr_addr_and_bus_and_sensor_dev_by_sensor_id(uint8_t sensor_id, uint8_t *vr_bus,
-						      uint8_t *vr_addr, uint8_t *sensor_dev);
+bool get_sensor_info_by_sensor_id(uint8_t sensor_id, uint8_t *vr_bus, uint8_t *vr_addr,
+				  uint8_t *sensor_dev);
 bool is_osfp_3v3_access(uint8_t sensor_num);
 
 #endif
