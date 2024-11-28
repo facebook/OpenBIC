@@ -17,6 +17,8 @@
 #ifndef PLAT_HOOK_H
 #define PLAT_HOOK_H
 
+#include "sensor.h"
+
 #define VR_MAX_NUM 11
 #define VR_MUTEX_LOCK_TIMEOUT_MS 1000
 

@@ -19,8 +19,11 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "plat_def.h"
 
+#ifndef EEPROM_WRITE_SIZE
 #define EEPROM_WRITE_SIZE 0x20
+#endif
 
 // define offset, size and order for EEPROM write/read
 #define FRU_START 0x0000 // start at 0x000
