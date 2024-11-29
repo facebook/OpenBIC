@@ -321,22 +321,28 @@ void error_log_event(uint16_t error_code, bool log_status)
 	uint8_t dump_data[AEGIS_CPLD_REGISTER_MAX_OFFSET - AEGIS_CPLD_REGISTER_START_OFFSET + 1];
 
 	// Check if the error_code is already logged
-	for (uint8_t i = 0; i < ARRAY_SIZE(err_code_caches); i++) {
+	for (uint8_t i = 1; i < ARRAY_SIZE(err_code_caches); i++) {
 		if (err_code_caches[i] == error_code) {
+			LOG_INF("Duplicate error_code: 0x%x, log_status: %d ", error_code,
+				log_status);
 			if (log_status == LOG_ASSERT) {
 				log_todo = false; // Duplicate error, no need to log again
-				break;
+				LOG_INF("Duplicate error_code: 0x%x, log_status: %d ,return",
+					error_code, log_status);
+				return;
 			} else if (log_status == LOG_DEASSERT) {
 				log_todo = true; // The error needs to be cleared
 				err_code_caches[i] = 0; // Remove the error code from the cache
-				break;
+				LOG_INF("Duplicate error_code: 0x%x, log_status: %d ,return",
+					error_code, log_status);
+				return;
 			}
 		}
 	}
 
 	// If the error_code is new and it's a LOG_ASSERT, add it to the cache
 	if (!log_todo && (log_status == LOG_ASSERT)) {
-		for (uint8_t i = 0; i < ARRAY_SIZE(err_code_caches); i++) {
+		for (uint8_t i = 1; i < ARRAY_SIZE(err_code_caches); i++) {
 			if (err_code_caches[i] == 0) {
 				err_code_caches[i] =
 					error_code; // Add the new error code to the cache
@@ -352,53 +358,48 @@ void error_log_event(uint16_t error_code, bool log_status)
 		return;
 	}
 
-	// Record error log if necessary
-	if (log_todo) {
-		uint16_t fru_count = next_log_position;
+	uint16_t fru_count = next_log_position;
 
-		// Update the log entry's index
-		err_log_data[fru_count].index = next_index;
-		next_index = (next_index % LOG_MAX_INDEX) + 1;
+	// Update the log entry's index
+	err_log_data[fru_count].index = next_index;
+	next_index = (next_index % LOG_MAX_INDEX) + 1;
 
-		// Update log error code and timestamp
-		err_log_data[fru_count].err_code = error_code;
-		err_log_data[fru_count].sys_time = k_uptime_get();
+	// Update log error code and timestamp
+	err_log_data[fru_count].err_code = error_code;
+	err_log_data[fru_count].sys_time = k_uptime_get();
 
-		if (!get_error_data(error_code, err_log_data[fru_count].error_data)) {
-			// Clear error data if no valid data is found
-			memset(err_log_data[fru_count].error_data, 0,
-			       sizeof(err_log_data[fru_count].error_data));
-		}
-
-		// Dump CPLD data and store it in cpld_dump
-		if (plat_dump_cpld(
-			    AEGIS_CPLD_REGISTER_START_OFFSET,
-			    (AEGIS_CPLD_REGISTER_MAX_OFFSET - AEGIS_CPLD_REGISTER_START_OFFSET + 1),
-			    dump_data)) {
-			memcpy(err_log_data[fru_count].cpld_dump, dump_data, sizeof(dump_data));
-		} else {
-			LOG_ERR("Failed to dump CPLD data");
-		}
-
-		//dump err_log_data for debug
-		LOG_HEXDUMP_DBG(&err_log_data[fru_count], sizeof(plat_err_log_mapping),
-				"err_log_data");
-
-		// 1 base fru_count, write_address is 0 base
-		uint16_t write_address =
-			AEGIS_FRU_LOG_START + (fru_count - 1) * sizeof(plat_err_log_mapping);
-
-		// Write log to EEPROM with error handling
-		if (!plat_eeprom_write(write_address, (uint8_t *)&err_log_data[fru_count],
-				       sizeof(plat_err_log_mapping))) {
-			LOG_ERR("Write Log failed with Error code: %02x", error_code);
-		} else {
-			k_msleep(EEPROM_MAX_WRITE_TIME); // wait 5ms to write EEPROM
-		}
-
-		// Update the next log position
-		next_log_position = (fru_count % LOG_MAX_NUM) + 1;
+	if (!get_error_data(error_code, err_log_data[fru_count].error_data)) {
+		// Clear error data if no valid data is found
+		memset(err_log_data[fru_count].error_data, 0,
+		       sizeof(err_log_data[fru_count].error_data));
 	}
+
+	// Dump CPLD data and store it in cpld_dump
+	if (plat_dump_cpld(AEGIS_CPLD_REGISTER_START_OFFSET,
+			   (AEGIS_CPLD_REGISTER_MAX_OFFSET - AEGIS_CPLD_REGISTER_START_OFFSET + 1),
+			   dump_data)) {
+		memcpy(err_log_data[fru_count].cpld_dump, dump_data, sizeof(dump_data));
+	} else {
+		LOG_ERR("Failed to dump CPLD data");
+	}
+
+	//dump err_log_data for debug
+	LOG_HEXDUMP_DBG(&err_log_data[fru_count], sizeof(plat_err_log_mapping), "err_log_data");
+
+	// 1 base fru_count, write_address is 0 base
+	uint16_t write_address =
+		AEGIS_FRU_LOG_START + (fru_count - 1) * sizeof(plat_err_log_mapping);
+
+	// Write log to EEPROM with error handling
+	if (!plat_eeprom_write(write_address, (uint8_t *)&err_log_data[fru_count],
+			       sizeof(plat_err_log_mapping))) {
+		LOG_ERR("Write Log failed with Error code: %02x", error_code);
+	} else {
+		k_msleep(EEPROM_MAX_WRITE_TIME); // wait 5ms to write EEPROM
+	}
+
+	// Update the next log position
+	next_log_position = (fru_count % LOG_MAX_NUM) + 1;
 }
 
 void find_last_log_position()
