@@ -125,6 +125,7 @@ static int get_sdr_index_by_sensor_num(uint8_t sensor_num)
 	return -1;
 }
 
+#ifdef ENABLE_PLDM_SENSOR
 static int pldm_sensor_access(const struct shell *shell, uint16_t thread_id,
 			      uint16_t sensor_pdr_index, char *keyword)
 {
@@ -192,6 +193,7 @@ static int pldm_sensor_access(const struct shell *shell, uint16_t thread_id,
 	}
 	return 0;
 }
+#endif
 
 static int sensor_access(const struct shell *shell, uint16_t table_idx, sensor_cfg *cfg,
 			 enum SENSOR_ACCESS mode)

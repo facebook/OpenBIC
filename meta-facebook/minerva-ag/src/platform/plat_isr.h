@@ -26,4 +26,7 @@ void ISR_GPIO_ALL_VR_PM_ALERT_R_N();
 void ISR_GPIO_ATH_SMB_ALERT_NPCM_LVC33_R_N();
 void ISR_GPIO_FM_PLD_UBC_EN_R();
 
+void plat_clock_init();
+void plat_eusb_init();
+
 #endif

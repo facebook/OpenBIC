@@ -335,7 +335,7 @@ void error_log_event(uint16_t error_code, bool log_status)
 	}
 
 	// If the error_code is new and it's a LOG_ASSERT, add it to the cache
-	if (!log_todo && log_status == LOG_ASSERT) {
+	if (!log_todo && (log_status == LOG_ASSERT)) {
 		for (uint8_t i = 0; i < ARRAY_SIZE(err_code_caches); i++) {
 			if (err_code_caches[i] == 0) {
 				err_code_caches[i] =

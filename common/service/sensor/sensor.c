@@ -38,9 +38,15 @@ LOG_MODULE_REGISTER(sensor);
 
 #define SENSOR_DRIVE_INIT_DECLARE(name) uint8_t name##_init(sensor_cfg *cfg)
 
-#define SENSOR_DRIVE_TYPE_INIT_MAP(name) { sensor_dev_##name, name##_init }
+#define SENSOR_DRIVE_TYPE_INIT_MAP(name)                                                           \
+	{                                                                                          \
+		sensor_dev_##name, name##_init                                                     \
+	}
 
-#define SENSOR_DRIVE_TYPE_UNUSE(name) { sensor_dev_##name, NULL }
+#define SENSOR_DRIVE_TYPE_UNUSE(name)                                                              \
+	{                                                                                          \
+		sensor_dev_##name, NULL                                                            \
+	}
 
 #define SENSOR_READ_RETRY_MAX 3
 
