@@ -25,7 +25,7 @@ uint16_t error_log_count(void);
 void init_load_eeprom_log(void);
 
 void plat_log_read(uint8_t *log_data, uint8_t cmd_size, uint16_t order);
-void error_log_event(uint16_t error_code, bool val_normal);
+void error_log_event(uint16_t error_code, bool log_status);
 void plat_clear_log();
 
 typedef struct __attribute__((packed)) _plat_err_log_mapping {
