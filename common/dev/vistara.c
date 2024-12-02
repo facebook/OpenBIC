@@ -30,6 +30,16 @@ __weak uint8_t plat_get_cxl_eid(uint8_t cxl_id)
 	return 0;
 }
 
+__weak void plat_set_dimm_cache(uint8_t *resp_buf, uint8_t cxl_id, uint8_t status)
+{
+	return;
+}
+
+__weak float plat_get_dimm_cache(uint8_t cxl_id, uint8_t dimm_id)
+{
+	return 0;
+}
+
 bool vistara_read_ddr_temp(uint8_t cxl_eid, uint8_t *resp)
 {
 	CHECK_NULL_ARG_WITH_RETURN(resp, false);
@@ -78,6 +88,7 @@ uint8_t vistara_read(sensor_cfg *cfg, int *reading)
 	uint8_t cxl_eid = plat_get_cxl_eid(cxl_id);
 	uint8_t dimm_id = cfg->target_addr;
 	uint8_t sensor_type = cfg->arg0;
+	vistara_init_arg *init_arg = (vistara_init_arg *)cfg->init_args;
 
 	sensor_val *sval = (sensor_val *)reading;
 	float f_val = 0;
@@ -85,13 +96,31 @@ uint8_t vistara_read(sensor_cfg *cfg, int *reading)
 	switch (sensor_type) {
 	case DDR_TEMP: {
 		uint8_t resp_buf[READ_DDR_TEMP_RESP_LEN];
-		if (!vistara_read_ddr_temp(cxl_eid, resp_buf)) {
-			return SENSOR_FAIL_TO_ACCESS;
+		if (init_arg->is_cached) {
+			if (dimm_id == DIMMA_ID) {
+				if (!vistara_read_ddr_temp(cxl_eid, resp_buf)) {
+					plat_set_dimm_cache(resp_buf, cxl_id,
+							    SENSOR_FAIL_TO_ACCESS);
+					return SENSOR_FAIL_TO_ACCESS;
+				} else {
+					plat_set_dimm_cache(resp_buf, cxl_id, SENSOR_READ_SUCCESS);
+				}
+			}
+
+			f_val = plat_get_dimm_cache(cxl_id, dimm_id);
+			if (f_val < 0) {
+				return SENSOR_FAIL_TO_ACCESS;
+			}
+
 		} else {
-			read_ddr_temp_resp *ddr_temp =
-				(read_ddr_temp_resp *)(resp_buf + dimm_id * 8);
-			f_val = *((float *)&ddr_temp->dimm_temp);
-			LOG_HEXDUMP_DBG(ddr_temp->dimm_temp, sizeof(float), "ddr temp");
+			if (!vistara_read_ddr_temp(cxl_eid, resp_buf)) {
+				return SENSOR_FAIL_TO_ACCESS;
+			} else {
+				read_ddr_temp_resp *ddr_temp =
+					(read_ddr_temp_resp *)(resp_buf + dimm_id * 8);
+				f_val = *((float *)&ddr_temp->dimm_temp);
+				LOG_HEXDUMP_INF(ddr_temp->dimm_temp, sizeof(float), "ddr temp");
+			}
 		}
 	} break;
 	default:

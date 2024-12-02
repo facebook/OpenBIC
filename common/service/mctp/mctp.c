@@ -43,6 +43,16 @@ typedef struct __attribute__((packed)) {
 	};
 } mctp_hdr;
 
+__weak bool pal_is_need_mctp_interval(mctp *mctp_inst)
+{
+	return false;
+}
+
+__weak int pal_get_mctp_interval_ms(mctp *mctp_inst)
+{
+	return 0;
+}
+
 /* set thread name */
 static uint8_t set_thread_name(mctp *mctp_inst)
 {
@@ -332,6 +342,9 @@ static void mctp_tx_task(void *arg, void *dummy0, void *dummy1)
 						    mctp_msg.ext_params);
 			free(mctp_msg.buf);
 			mctp_tx_task_response(mctp_msg.evt_msgq, ret);
+			if (pal_is_need_mctp_interval(mctp_inst)) {
+				k_msleep(pal_get_mctp_interval_ms(mctp_inst));
+			}
 			continue;
 		}
 
@@ -394,6 +407,9 @@ static void mctp_tx_task(void *arg, void *dummy0, void *dummy1)
 		mctp_tx_task_response(mctp_msg.evt_msgq,
 				      (i == split_pkt_num) ? MCTP_SUCCESS : MCTP_ERROR);
 
+		if (pal_is_need_mctp_interval(mctp_inst)) {
+			k_msleep(pal_get_mctp_interval_ms(mctp_inst));
+		}
 		/* Only request mctp message needs to increase msg_tag */
 		if (mctp_msg.ext_params.tag_owner)
 			mctp_inst->msg_tag++;
