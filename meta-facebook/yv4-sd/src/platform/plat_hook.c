@@ -91,6 +91,57 @@ ina233_init_arg ina233_init_args[] = {
 	},
 };
 
+sq52205_init_arg sq52205_init_args[] = {
+	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.002,
+	.config = {
+			.operating_mode =0b111,
+			.shunt_volt_time = 0b100,
+			.bus_volt_time = 0b100,
+			.aver_mode = 0b011, //set 64 average times
+			.rsvd = 0b000,
+			.reset_bit = 0b0,
+	},
+	.is_need_accum_config_init = false,
+	.is_need_set_alert_threshold = false,
+	},
+	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.002,
+	.config = {
+			.operating_mode =0b111,
+			.shunt_volt_time = 0b100,
+			.bus_volt_time = 0b100,
+			.aver_mode = 0b011, //set 64 average times
+			.rsvd = 0b000,
+			.reset_bit = 0b0,
+	},
+	.is_need_accum_config_init = false,
+	.is_need_set_alert_threshold = false,
+	},
+	[2] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.002,
+	.config = {
+			.operating_mode =0b111,
+			.shunt_volt_time = 0b100,
+			.bus_volt_time = 0b100,
+			.aver_mode = 0b011, //set 64 average times
+			.rsvd = 0b000,
+			.reset_bit = 0b0,
+	},
+	.is_need_accum_config_init = false,
+	.is_need_set_alert_threshold = false,
+	},
+	[3] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.002,
+	.config = {
+			.operating_mode =0b111,
+			.shunt_volt_time = 0b100,
+			.bus_volt_time = 0b100,
+			.aver_mode = 0b011, //set 64 average times
+			.rsvd = 0b000,
+			.reset_bit = 0b0,
+	},
+	.is_need_accum_config_init = false,
+	.is_need_set_alert_threshold = false,
+	},
+};
+
 rtq6056_init_arg rtq6056_init_args[] = {
 	[0] = {
 		.is_init = false,

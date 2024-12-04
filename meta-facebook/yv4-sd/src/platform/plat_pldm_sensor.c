@@ -19,6 +19,7 @@
 #include "ast_adc.h"
 #include "pdr.h"
 #include "ina233.h"
+#include "sq52205.h"
 #include "pt5161l.h"
 #include "rtq6056.h"
 #include "sensor.h"
@@ -6799,27 +6800,47 @@ void plat_pldm_sensor_change_retimer_dev()
 
 void plat_pldm_sensor_change_ina_dev()
 {
-	if (plat_pldm_sensor_get_ina_dev() == sensor_dev_rtq6056) {
-		for (int index = 0;
-		     index < plat_pldm_sensor_get_sensor_count(INA233_SENSOR_THREAD_ID); index++) {
-			// boot drive
-			if ((plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.port ==
-			     I2C_BUS1) &&
-			    (plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.target_addr ==
-			     ADDR_E1S_BOOT_INA233)) {
-				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.type =
-					sensor_dev_rtq6056;
-				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.init_args =
-					&rtq6056_init_args[2];
-				// data drive
-			} else if ((plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.port ==
-				    I2C_BUS6) &&
-				   (plat_pldm_sensor_ina233_table[index]
-					    .pldm_sensor_cfg.target_addr == ADDR_E1S_DATA_INA233)) {
-				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.type =
-					sensor_dev_rtq6056;
-				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.init_args =
-					&rtq6056_init_args[3];
+	uint8_t ina_dev = plat_pldm_sensor_get_ina_dev();
+	for (int index = 0; index < plat_pldm_sensor_get_sensor_count(INA233_SENSOR_THREAD_ID); index++) {
+		sensor_cfg *cfg = &plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg;
+		if (cfg->port == I2C_BUS6 && cfg->target_addr == ADDR_X8_INA233) {
+			cfg->type = ina_dev;
+			if (ina_dev == sensor_dev_rtq6056) {
+				cfg->init_args = &rtq6056_init_args[0];
+			} else if(ina_dev == sensor_dev_sq52205) {
+				cfg->init_args = &sq52205_init_args[0];
+			}
+		} else if (cfg->port == I2C_BUS1 && cfg->target_addr == ADDR_E1S_BOOT_INA233) {
+			cfg->type = ina_dev;
+			if (ina_dev == sensor_dev_rtq6056) {
+				cfg->init_args = &rtq6056_init_args[2];
+			} else if(ina_dev == sensor_dev_sq52205) {
+				cfg->init_args = &sq52205_init_args[2];
+			}
+		} else if (cfg->port == I2C_BUS6 && cfg->target_addr == ADDR_E1S_DATA_INA233) {
+			cfg->type = ina_dev;
+			if (ina_dev == sensor_dev_rtq6056) {
+				cfg->init_args = &rtq6056_init_args[3];
+			} else if(ina_dev == sensor_dev_sq52205) {
+				cfg->init_args = &sq52205_init_args[3];
+			}
+		}
+
+		if (ina_dev == sensor_dev_sq52205) {
+			switch (cfg->offset) {
+			case PMBUS_READ_VOUT:
+				cfg->offset = SQ52205_READ_VOL_OFFSET;
+				break;
+			case PMBUS_READ_IOUT:
+				cfg->offset = SQ52205_READ_CUR_OFFSET;
+				break;
+			case PMBUS_READ_POUT:
+				cfg->offset = SQ52205_READ_PWR_OFFSET;
+				break;
+			default:
+				LOG_ERR("UNKNOWN power monitor offset %x change table failed",
+					cfg->offset);
+				continue;
 			}
 		}
 	}
@@ -6971,5 +6992,7 @@ uint8_t plat_pldm_sensor_get_ina_dev()
 		}
 	}
 
-	return sensor_dev_ina233;
+	// since sq52205 does not support MFR_ID, we set it as default
+	LOG_INF("use SQ52205");
+	return sensor_dev_sq52205;
 }
