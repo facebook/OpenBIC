@@ -112,6 +112,15 @@ void pal_post_init()
 	start_get_dimm_info_thread();
 	set_sys_ready_pin(BIC_READY_R);
 	reset_usb_hub();
+
+	if (is_ac_lost()) {
+		// Clear VR_CPU0 fault bit
+		plat_pldm_sensor_clear_vr_fault(ADDR_VR_CPU0, I2C_BUS4, 2);
+		// Clear VR_CPU1 fault bit
+		plat_pldm_sensor_clear_vr_fault(ADDR_VR_CPU1, I2C_BUS4, 2);
+		// Clear VR_PVDD11 fault bit
+		plat_pldm_sensor_clear_vr_fault(ADDR_VR_PVDD11, I2C_BUS4, 1);
+	}
 }
 
 void pal_set_sys_status()
