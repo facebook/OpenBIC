@@ -1,0 +1,78 @@
+From dbbf86894076d196dd0d7378c4cd6d4c6bb4695e Mon Sep 17 00:00:00 2001
+From: Tyrone Ting <kfting@nuvoton.com>
+Date: Fri, 29 Nov 2024 16:54:32 +0800
+Subject: [PATCH] drivers: i2c: customization for time to wait for the bus to
+ be idle
+
+1. Set the property "wait_free_time" and its value in the i2c node in the dts file.
+For example:
+&i2c1a {
+        clock-frequency = <I2C_BITRATE_STANDARD>;
+        wait_free_time = <500>;
+        status = "okay";
+};
+
+2. The time unit is in microsecond.
+
+Signed-off-by: Tyrone Ting <kfting@nuvoton.com>
+---
+ drivers/i2c/i2c_npcm4xx.c                 | 6 +++++-
+ dts/bindings/i2c/nuvoton,npcm4xx-i2c.yaml | 6 +++++-
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/i2c/i2c_npcm4xx.c b/drivers/i2c/i2c_npcm4xx.c
+index 57a8abd141a..69dfd816209 100644
+--- a/drivers/i2c/i2c_npcm4xx.c
++++ b/drivers/i2c/i2c_npcm4xx.c
+@@ -57,6 +57,7 @@ struct i2c_npcm4xx_config {
+ 	struct npcm4xx_clk_cfg clk_cfg; /* clock configuration */
+ 	uint32_t default_bitrate;
+ 	uint8_t irq;                    /* i2c controller irq */
++	uint32_t wait_free_time;
+ };
+ 
+ /*rx_buf and tx_buf address must 4-align for DMA */
+@@ -857,6 +858,7 @@ static int i2c_npcm4xx_transfer(const struct device *dev, struct i2c_msg *msgs,
+ 	uint8_t value, i;
+ 	bool bus_busy;
+ 	struct i2c_reg *const inst = I2C_INSTANCE(dev);
++	const struct i2c_npcm4xx_config *const config = I2C_DRV_CONFIG(dev);
+ 
+ #if (CONFIG_MASTER_HW_TIMEOUT_EN == 'Y')
+ 	struct i2c_reg *const inst = I2C_INSTANCE(dev);
+@@ -876,7 +878,7 @@ static int i2c_npcm4xx_transfer(const struct device *dev, struct i2c_msg *msgs,
+ 			inst->SMBnADDR1 = value;
+ 			break;
+ 		}
+-		k_busy_wait(I2C_WAITING_FREE_TIME);
++		k_busy_wait(config->wait_free_time);
+ 	}
+ 
+ 	if (bus_busy) {
+@@ -985,6 +987,8 @@ static const struct i2c_driver_api i2c_npcm4xx_driver_api = {
+ 		.clk_cfg = NPCM4XX_DT_CLK_CFG_ITEM(inst),			 \
+ 		.default_bitrate = DT_INST_PROP(inst, clock_frequency),		 \
+ 		.irq = DT_INST_IRQN(inst),					 \
++		.wait_free_time = DT_INST_PROP_OR(inst, wait_free_time,		 \
++				  I2C_WAITING_FREE_TIME),	 		 \
+ 	};									 \
+ 										 \
+ 	static struct i2c_npcm4xx_data i2c_npcm4xx_data_##inst;			 \
+diff --git a/dts/bindings/i2c/nuvoton,npcm4xx-i2c.yaml b/dts/bindings/i2c/nuvoton,npcm4xx-i2c.yaml
+index 2fbd8c15995..3d53901d372 100644
+--- a/dts/bindings/i2c/nuvoton,npcm4xx-i2c.yaml
++++ b/dts/bindings/i2c/nuvoton,npcm4xx-i2c.yaml
+@@ -13,4 +13,8 @@ properties:
+     clocks:
+         required: true
+     label:
+-        required: true
+\ No newline at end of file
++        required: true
++    wait_free_time:
++        type: int
++        required: false
++        description: time in unit of ms to wait for the bus to be idle
+-- 
+2.25.1
+

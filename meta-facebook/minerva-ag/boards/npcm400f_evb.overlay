@@ -36,6 +36,7 @@
 
 &i2c4b {
 	clock-frequency = <I2C_BITRATE_STANDARD>;
+    wait_free_time = <1000>;
 	status = "okay";
 };
 
