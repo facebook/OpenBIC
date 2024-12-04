@@ -1411,7 +1411,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0, //real32_t state_transition_interval;
 
 			UPDATE_INTERVAL_1S, //int32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x14, //uint8_t range_field_support;
@@ -1487,7 +1487,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0, //real32_t state_transition_interval;
 
 			UPDATE_INTERVAL_1S, //int32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x04, //uint8_t range_field_support;
@@ -1500,7 +1500,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x00000055, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x0000006E, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -1563,7 +1563,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0, //real32_t state_transition_interval;
 
 			UPDATE_INTERVAL_1S, //int32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x04, //uint8_t range_field_support;
@@ -1576,7 +1576,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x00000055, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x0000006E, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -1633,7 +1633,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x04, //uint8_t range_field_support;
@@ -1644,7 +1644,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x0000004B, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x00000055, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 		},
 		.update_time = 0,
@@ -1876,7 +1876,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x0000042C, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000433, //uint32_t fatal_high;
+			0x00000436, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -2187,7 +2187,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x0000007D, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -2265,7 +2265,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x0000007D, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -2343,7 +2343,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x0000007D, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -2421,7 +2421,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x0000007D, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -2499,7 +2499,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x0000007D, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -2577,7 +2577,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x0000007D, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -2655,7 +2655,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x0000007D, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -2733,7 +2733,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x0000007D, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -3033,7 +3033,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0, //real32_t state_transition_interval;
 
 			UPDATE_INTERVAL_1S, //int32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0xFF, //uint8_t range_field_support;
@@ -3346,7 +3346,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0, //real32_t state_transition_interval;
 
 			UPDATE_INTERVAL_1S, //int32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0xFF, //uint8_t range_field_support;
