@@ -36,6 +36,7 @@ enum VISTARA_DIMM_ID {
 	DIMMB_ID,
 	DIMMC_ID,
 	DIMMD_ID,
+	MAX_DIMM_ID,
 };
 
 typedef struct {
@@ -47,6 +48,8 @@ typedef struct {
 } read_ddr_temp_resp;
 
 uint8_t plat_get_cxl_eid(uint8_t cxl_id);
+void plat_set_dimm_cache(uint8_t *resp_buf, uint8_t cxl_id, uint8_t status);
+float plat_get_dimm_cache(uint8_t cxl_id, uint8_t dimm_id);
 bool vistara_cci_command(uint8_t cxl_eid, mctp_cci_msg cci_msg, uint8_t *resp, uint8_t resp_len);
 bool vistara_read_ddr_temp(uint8_t cxl_eid, uint8_t *resp);
 

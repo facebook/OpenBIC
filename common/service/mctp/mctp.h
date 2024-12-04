@@ -273,6 +273,9 @@ int pal_find_bus_in_mctp_port(mctp_port *p);
 mctp *pal_find_mctp_by_bus(uint8_t bus);
 mctp_port *pal_find_mctp_port_by_channel_target(uint8_t target);
 
+bool pal_is_need_mctp_interval(mctp *mctp_inst);
+int pal_get_mctp_interval_ms(mctp *mctp_inst);
+
 #ifdef __cplusplus
 }
 #endif

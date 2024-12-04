@@ -127,6 +127,10 @@ adc128d818_init_arg adc128d818_init_args[] = {
 	},
 };
 
+vistara_init_arg vistara_init_args[] = {
+	[0] = {true,},
+};
+
 bool pre_vr_read(sensor_cfg *cfg, void *args)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);

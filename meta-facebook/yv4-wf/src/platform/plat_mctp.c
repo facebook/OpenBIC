@@ -403,14 +403,47 @@ uint8_t plat_get_cxl_eid(uint8_t cxl_id)
 	}
 }
 
-int pal_get_cci_internal_ms()
-{
-	// 1 seconds
-	return 1000;
-}
-
 int pal_get_cci_timeout_ms()
 {
 	// 5 seconds
 	return 5000;
+}
+
+bool pal_is_need_mctp_interval(mctp *mctp_inst)
+{
+	switch (mctp_inst->medium_type) {
+	case MCTP_MEDIUM_TYPE_SMBUS: {
+		mctp_smbus_conf *smbus_conf = (mctp_smbus_conf *)&mctp_inst->medium_conf;
+		if ((smbus_conf->bus == I2C_BUS_CXL1) || (smbus_conf->bus == I2C_BUS_CXL2)) {
+			return true;
+		}
+		break;
+	}
+	case MCTP_MEDIUM_TYPE_CONTROLLER_I3C:
+	case MCTP_MEDIUM_TYPE_TARGET_I3C:
+	default:
+		break;
+	}
+
+	return false;
+}
+
+int pal_get_mctp_interval_ms(mctp *mctp_inst)
+{
+	switch (mctp_inst->medium_type) {
+	case MCTP_MEDIUM_TYPE_SMBUS: {
+		mctp_smbus_conf *smbus_conf = (mctp_smbus_conf *)&mctp_inst->medium_conf;
+		if ((smbus_conf->bus == I2C_BUS_CXL1) || (smbus_conf->bus == I2C_BUS_CXL2)) {
+			// 40ms
+			return 40;
+		}
+		break;
+	}
+	case MCTP_MEDIUM_TYPE_CONTROLLER_I3C:
+	case MCTP_MEDIUM_TYPE_TARGET_I3C:
+	default:
+		break;
+	}
+
+	return 0;
 }

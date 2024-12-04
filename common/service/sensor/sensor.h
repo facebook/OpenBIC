@@ -480,6 +480,10 @@ typedef struct _rtq6056_init_arg_ {
 	float r_shunt;
 } rtq6056_init_arg;
 
+typedef struct _vistara_init_arg_ {
+	bool is_cached;
+} vistara_init_arg;
+
 typedef struct _ina233_init_arg_ {
 	bool is_init;
 	float current_lsb;
