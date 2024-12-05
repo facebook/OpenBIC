@@ -194,6 +194,11 @@ void monitor_pmic_error_via_i3c_handler()
 	while (1) {
 		k_msleep(MONITOR_PMIC_ERROR_TIME_MS);
 
+		// Check sensor poll enable
+		if (get_sensor_poll_enable_flag() == false) {
+			continue;
+		}
+
 		// Check which PMIC is error
 		if (k_mutex_lock(&i3c_dimm_mutex, K_MSEC(I3C_DIMM_MUTEX_TIMEOUT_MS))) {
 			LOG_ERR("Failed to lock I3C dimm MUX");

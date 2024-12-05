@@ -19,6 +19,7 @@
 #include "libutil.h"
 #include "pldm_monitor.h"
 #include "plat_def.h"
+#include "sensor.h"
 
 #ifdef ENABLE_PLDM_SENSOR
 #include "plat_pldm_sensor.h"
@@ -365,6 +366,12 @@ void pldm_sensor_polling_handler(void *arug0, void *arug1, void *arug2)
 	}
 
 	while (1) {
+		// Check sensor poll enable
+		if (get_sensor_poll_enable_flag() == false) {
+			k_msleep(PLDM_SENSOR_POLL_TIME_DEFAULT_MS);
+			continue;
+		}
+
 		for (sensor_num = 0; sensor_num < pldm_sensor_count; sensor_num++) {
 			if (pldm_polling_sensor_reading(&pldm_sensor_list[thread_id][sensor_num],
 							pldm_sensor_count, thread_id,

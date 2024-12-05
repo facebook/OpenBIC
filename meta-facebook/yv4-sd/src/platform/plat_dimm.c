@@ -69,6 +69,12 @@ void get_dimm_info_handler()
 		int ret = 0;
 		uint8_t dimm_id;
 
+		// Check sensor poll enable
+		if (get_sensor_poll_enable_flag() == false) {
+			k_msleep(GET_DIMM_INFO_TIME_MS);
+			continue;
+		}
+
 		// Avoid to get wrong thus only monitor after post complete
 		if (!get_post_status()) {
 			k_msleep(GET_DIMM_INFO_TIME_MS);
