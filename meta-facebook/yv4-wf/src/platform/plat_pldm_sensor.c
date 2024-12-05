@@ -32,11 +32,14 @@
 LOG_MODULE_REGISTER(plat_pldm_sensor);
 
 #define VR_DEVICE_UNKNOWN 0xFF
+static K_MUTEX_DEFINE(cxl_dimm_mutex);
 
 void plat_pldm_sensor_change_vr_dev();
 void plat_pldm_sensor_change_adc_monitor_dev();
 void plat_pldm_sensor_change_asic_tmp_dev();
 void plat_pldm_sensor_change_ina233_dev();
+
+float cxl_dimm_temp[MAX_CXL_ID][MAX_DIMM_ID] = { { -1, -1, -1, -1 }, { -1, -1, -1, -1 } };
 
 static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = {
 	// thread id, thread name
@@ -1411,7 +1414,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0, //real32_t state_transition_interval;
 
 			UPDATE_INTERVAL_1S, //int32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x14, //uint8_t range_field_support;
@@ -1487,7 +1490,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0, //real32_t state_transition_interval;
 
 			UPDATE_INTERVAL_1S, //int32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x04, //uint8_t range_field_support;
@@ -1500,7 +1503,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x00000055, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x0000006E, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -1563,7 +1566,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0, //real32_t state_transition_interval;
 
 			UPDATE_INTERVAL_1S, //int32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x04, //uint8_t range_field_support;
@@ -1576,7 +1579,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x00000055, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x0000006E, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -1633,7 +1636,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x04, //uint8_t range_field_support;
@@ -1644,7 +1647,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x0000004B, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x00000055, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 		},
 		.update_time = 0,
@@ -1876,7 +1879,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x0000042C, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000433, //uint32_t fatal_high;
+			0x00000436, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -2187,7 +2190,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x0000007D, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -2265,7 +2268,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x0000007D, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -2343,7 +2346,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x0000007D, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -2421,7 +2424,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x0000007D, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -2499,7 +2502,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x0000007D, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -2577,7 +2580,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x0000007D, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -2655,7 +2658,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x0000007D, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -2733,7 +2736,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t warning_low;
 			0x00000064, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000000, //uint32_t fatal_high;
+			0x0000007D, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -3033,7 +3036,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0, //real32_t state_transition_interval;
 
 			UPDATE_INTERVAL_1S, //int32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0xFF, //uint8_t range_field_support;
@@ -3346,7 +3349,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0, //real32_t state_transition_interval;
 
 			UPDATE_INTERVAL_1S, //int32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0xFF, //uint8_t range_field_support;
@@ -4684,7 +4687,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
-			UPDATE_INTERVAL_3S, //int32_t update_interval;
+			UPDATE_INTERVAL_10S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
@@ -4708,6 +4711,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.init_args = &vistara_init_args[0],
 		},
 	},
 	{
@@ -4750,7 +4754,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
-			UPDATE_INTERVAL_3S, //int32_t update_interval;
+			UPDATE_INTERVAL_10S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
@@ -4774,6 +4778,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.init_args = &vistara_init_args[0],
 		},
 	},
 	{
@@ -4816,7 +4821,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
-			UPDATE_INTERVAL_3S, //int32_t update_interval;
+			UPDATE_INTERVAL_10S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
@@ -4840,6 +4845,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.init_args = &vistara_init_args[0],
 		},
 	},
 	{
@@ -4882,7 +4888,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
-			UPDATE_INTERVAL_3S, //int32_t update_interval;
+			UPDATE_INTERVAL_10S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
@@ -4906,6 +4912,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.init_args = &vistara_init_args[0],
 		},
 	},
 	{
@@ -4948,7 +4955,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
-			UPDATE_INTERVAL_3S, //int32_t update_interval;
+			UPDATE_INTERVAL_10S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
@@ -4972,6 +4979,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.init_args = &vistara_init_args[0],
 		},
 	},
 	{
@@ -5014,7 +5022,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
-			UPDATE_INTERVAL_3S, //int32_t update_interval;
+			UPDATE_INTERVAL_10S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
@@ -5038,6 +5046,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.init_args = &vistara_init_args[0],
 		},
 	},
 	{
@@ -5080,7 +5089,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
-			UPDATE_INTERVAL_3S, //int32_t update_interval;
+			UPDATE_INTERVAL_10S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
@@ -5104,6 +5113,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.init_args = &vistara_init_args[0],
 		},
 	},
 	{
@@ -5146,7 +5156,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0xC2, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
-			UPDATE_INTERVAL_3S, //int32_t update_interval;
+			UPDATE_INTERVAL_10S, //int32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x05, //uint8_t range_field_format;
@@ -5170,6 +5180,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.init_args = &vistara_init_args[0],
 		},
 	},
 };
@@ -6680,4 +6691,41 @@ void plat_pldm_sensor_change_ina233_dev()
 			}
 		}
 	}
+}
+
+float plat_get_dimm_cache(uint8_t cxl_id, uint8_t dimm_id)
+{
+	float result = -1.0;
+	if (k_mutex_lock(&cxl_dimm_mutex, K_MSEC(CXL_DIMM_MUTEX_WAITING_TIME_MS))) {
+		return result;
+	}
+
+	result = cxl_dimm_temp[cxl_id][dimm_id];
+
+	k_mutex_unlock(&cxl_dimm_mutex);
+
+	return result;
+}
+
+void plat_set_dimm_cache(uint8_t *resp_buf, uint8_t cxl_id, uint8_t status)
+{
+	if (k_mutex_lock(&cxl_dimm_mutex, K_MSEC(CXL_DIMM_MUTEX_WAITING_TIME_MS))) {
+		cxl_dimm_temp[cxl_id][DIMMA_ID] = -1;
+		cxl_dimm_temp[cxl_id][DIMMB_ID] = -1;
+		cxl_dimm_temp[cxl_id][DIMMC_ID] = -1;
+		cxl_dimm_temp[cxl_id][DIMMD_ID] = -1;
+		return;
+	}
+
+	for (int i = 0; i < MAX_DIMM_ID; i++) {
+		if (status == SENSOR_READ_SUCCESS) {
+			read_ddr_temp_resp *ddr_temp = (read_ddr_temp_resp *)(resp_buf + i * 8);
+			cxl_dimm_temp[cxl_id][i] = *((float *)&ddr_temp->dimm_temp);
+			LOG_HEXDUMP_DBG(ddr_temp->dimm_temp, sizeof(float), "ddr temp");
+		} else {
+			cxl_dimm_temp[cxl_id][i] = -1;
+		}
+	}
+
+	k_mutex_unlock(&cxl_dimm_mutex);
 }

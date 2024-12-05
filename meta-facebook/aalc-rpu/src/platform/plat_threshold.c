@@ -1029,6 +1029,23 @@ void threshold_poll_init()
 	static uint8_t is_init = 0;
 
 	if (!is_init) {
+		uint8_t stage = 0;
+		stage = get_board_stage();
+		LOG_INF("threshold_poll_init read board stage %d", stage);
+
+		// check board stage and set threshold
+		for (uint8_t i = 0; i < ARRAY_SIZE(threshold_tbl); i++) {
+			if (stage == BOARD_STAGE_EVT) {
+				// level3 sensor disable
+				if (threshold_tbl[i].sensor_num == SENSOR_NUM_BPB_RPU_LEVEL)
+					threshold_tbl[i].type = THRESHOLD_DISABLE;
+			} else if (stage == BOARD_STAGE_DVT) {
+				LOG_DBG("DVT board stage %d", stage);
+			} else {
+				LOG_ERR("unknown board stage %d", stage);
+			}
+		}
+
 		fsc_init();
 		// default set coolant led on
 		led_ctrl(LED_IDX_E_COOLANT, LED_TURN_ON);

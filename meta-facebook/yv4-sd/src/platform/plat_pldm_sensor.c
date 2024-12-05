@@ -19,6 +19,7 @@
 #include "ast_adc.h"
 #include "pdr.h"
 #include "ina233.h"
+#include "sq52205.h"
 #include "pt5161l.h"
 #include "rtq6056.h"
 #include "sensor.h"
@@ -154,8 +155,8 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable;
-			0x00000000, //uint32_t min_readable;
+			0x000000B8, //uint32_t max_readable;
+			0x000000B0, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x0C, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
@@ -360,8 +361,8 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable;
-			0x00000000, //uint32_t min_readable;
+			0x0000015A, //uint32_t max_readable;
+			0x00000139, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x0C, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
@@ -428,7 +429,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x0000D6D8, //uint32_t max_readable;
+			0x0000CD14, //uint32_t max_readable;
 			0x0000B98C, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0xFF, //uint8_t range_field_support;
@@ -496,8 +497,8 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000035E8, //uint32_t max_readable;
-			0x000027D8, //uint32_t min_readable;
+			0x00000510, //uint32_t max_readable;
+			0x00000450, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0xFF, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
@@ -564,8 +565,8 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000035E8, //uint32_t max_readable;
-			0x000027D8, //uint32_t min_readable;
+			0x00000510, //uint32_t max_readable;
+			0x00000450, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0xFF, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
@@ -644,7 +645,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x000032B2, //uint32_t critical_high;
 			0x00002B32, //uint32_t critical_low;
 			0x00000000, //uint32_t fatal_high;
-			0x00000000, //uint32_t fatal_low;
+			0x00002580, //uint32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -700,8 +701,8 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000049D4, //uint32_t max_readable;
-			0x000042CC, //uint32_t min_readable;
+			0x0002D7BC, //uint32_t max_readable;
+			0x0002A300, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0xFF, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
@@ -836,8 +837,8 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable;
-			0x00000000, //uint32_t min_readable;
+			0x00000074, //uint32_t max_readable;
+			0x00000069, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x0C, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
@@ -975,7 +976,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x14, //uint8_t range_field_support;
@@ -1044,7 +1045,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x14, //uint8_t range_field_support;
@@ -1113,7 +1114,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x14, //uint8_t range_field_support;
@@ -1182,7 +1183,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x14, //uint8_t range_field_support;
@@ -1251,7 +1252,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x14, //uint8_t range_field_support;
@@ -2368,7 +2369,7 @@ pldm_sensor_info plat_pldm_sensor_mb_temp_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x14, //uint8_t range_field_support;
@@ -2435,7 +2436,7 @@ pldm_sensor_info plat_pldm_sensor_mb_temp_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x14, //uint8_t range_field_support;
@@ -2502,7 +2503,7 @@ pldm_sensor_info plat_pldm_sensor_mb_temp_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x14, //uint8_t range_field_support;
@@ -2511,7 +2512,7 @@ pldm_sensor_info plat_pldm_sensor_mb_temp_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0x00000000, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x0000002D, //uint32_t critical_high;
+			0x00000028, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
 			0x00000096, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
@@ -2569,7 +2570,7 @@ pldm_sensor_info plat_pldm_sensor_mb_temp_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x14, //uint8_t range_field_support;
@@ -2636,7 +2637,7 @@ pldm_sensor_info plat_pldm_sensor_mb_temp_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x14, //uint8_t range_field_support;
@@ -2707,7 +2708,7 @@ pldm_sensor_info plat_pldm_sensor_cpu_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //int32_t state_transition_interval;
 			5, //int32_t update_interval;
-			0x00030D40, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x04, //uint8_t range_field_support;
@@ -2775,7 +2776,7 @@ pldm_sensor_info plat_pldm_sensor_cpu_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //int32_t state_transition_interval;
 			5, //int32_t update_interval;
-			0x000FFFFF, //uint32_t max_readable;
+			0x00000BDC, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support;
@@ -2848,7 +2849,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0, //real32_t state_transition_interval;
 
 			UPDATE_INTERVAL_1S, //int32_t update_interval;
-			0x00000000, //uint32_t max_readable;
+			0x0001750C, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x05, //uint8_t range_field_support;
@@ -2917,7 +2918,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //int32_t update_interval;
-			0x00000000, //uint32_t max_readable;
+			0x000FBCE8, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x15, //uint8_t range_field_support;
@@ -2986,8 +2987,8 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
-			0x00000000, //uint32_t min_readable;
+			0x00003390, //uint32_t max_readable;
+			0x00002A30, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0xFF, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
@@ -3054,8 +3055,8 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
-			0x00000000, //uint32_t min_readable;
+			0x00003390, //uint32_t max_readable;
+			0x00002A30, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0xFF, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
@@ -3123,7 +3124,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x0000413C, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x15, //uint8_t range_field_support;
@@ -3191,7 +3192,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000014, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x15, //uint8_t range_field_support;
@@ -3259,8 +3260,8 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
-			0x00000000, //uint32_t min_readable;
+			0x00000000, //uint32_t max_readable;
+			0x000000C8, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x15, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
@@ -3327,7 +3328,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x000009C4, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x15, //uint8_t range_field_support;
@@ -3395,7 +3396,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x14, //uint8_t range_field_support;
@@ -3467,7 +3468,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x04, //uint8_t range_field_support;
@@ -3536,7 +3537,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x04, //uint8_t range_field_support;
@@ -3605,7 +3606,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x04, //uint8_t range_field_support;
@@ -3674,7 +3675,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x04, //uint8_t range_field_support;
@@ -3743,7 +3744,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x04, //uint8_t range_field_support;
@@ -3812,7 +3813,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x04, //uint8_t range_field_support;
@@ -3881,7 +3882,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x04, //uint8_t range_field_support;
@@ -3950,7 +3951,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x04, //uint8_t range_field_support;
@@ -4019,7 +4020,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x04, //uint8_t range_field_support;
@@ -4088,7 +4089,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x04, //uint8_t range_field_support;
@@ -4157,7 +4158,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x04, //uint8_t range_field_support;
@@ -4226,7 +4227,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x000000FF, //uint32_t max_readable;
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x04, //uint8_t range_field_support;
@@ -4295,7 +4296,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x0000639C, //uint32_t max_readable;
+			0x00000BDC, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x05, //uint8_t range_field_support;
@@ -4364,7 +4365,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x0000639C, //uint32_t max_readable;
+			0x00000BDC, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x05, //uint8_t range_field_support;
@@ -4433,7 +4434,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x0000639C, //uint32_t max_readable;
+			0x00000BDC, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x05, //uint8_t range_field_support;
@@ -4502,7 +4503,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x0000639C, //uint32_t max_readable;
+			0x00000BDC, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x05, //uint8_t range_field_support;
@@ -4571,7 +4572,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x0000639C, //uint32_t max_readable;
+			0x00000BDC, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x05, //uint8_t range_field_support;
@@ -4640,7 +4641,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x0000639C, //uint32_t max_readable;
+			0x00000BDC, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x05, //uint8_t range_field_support;
@@ -4709,7 +4710,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x0000639C, //uint32_t max_readable;
+			0x00000BDC, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x05, //uint8_t range_field_support;
@@ -4778,7 +4779,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x0000639C, //uint32_t max_readable;
+			0x00000BDC, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x05, //uint8_t range_field_support;
@@ -4847,7 +4848,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x0000639C, //uint32_t max_readable;
+			0x00000BDC, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x05, //uint8_t range_field_support;
@@ -4916,7 +4917,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x0000639C, //uint32_t max_readable;
+			0x00000BDC, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x05, //uint8_t range_field_support;
@@ -4985,7 +4986,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x0000639C, //uint32_t max_readable;
+			0x00000BDC, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x05, //uint8_t range_field_support;
@@ -5054,7 +5055,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x0000639C, //uint32_t max_readable;
+			0x00000BDC, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
 			0x05, //uint8_t range_field_support;
@@ -6799,27 +6800,47 @@ void plat_pldm_sensor_change_retimer_dev()
 
 void plat_pldm_sensor_change_ina_dev()
 {
-	if (plat_pldm_sensor_get_ina_dev() == sensor_dev_rtq6056) {
-		for (int index = 0;
-		     index < plat_pldm_sensor_get_sensor_count(INA233_SENSOR_THREAD_ID); index++) {
-			// boot drive
-			if ((plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.port ==
-			     I2C_BUS1) &&
-			    (plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.target_addr ==
-			     ADDR_E1S_BOOT_INA233)) {
-				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.type =
-					sensor_dev_rtq6056;
-				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.init_args =
-					&rtq6056_init_args[2];
-				// data drive
-			} else if ((plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.port ==
-				    I2C_BUS6) &&
-				   (plat_pldm_sensor_ina233_table[index]
-					    .pldm_sensor_cfg.target_addr == ADDR_E1S_DATA_INA233)) {
-				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.type =
-					sensor_dev_rtq6056;
-				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.init_args =
-					&rtq6056_init_args[3];
+	uint8_t ina_dev = plat_pldm_sensor_get_ina_dev();
+	for (int index = 0; index < plat_pldm_sensor_get_sensor_count(INA233_SENSOR_THREAD_ID); index++) {
+		sensor_cfg *cfg = &plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg;
+		if (cfg->port == I2C_BUS6 && cfg->target_addr == ADDR_X8_INA233) {
+			cfg->type = ina_dev;
+			if (ina_dev == sensor_dev_rtq6056) {
+				cfg->init_args = &rtq6056_init_args[0];
+			} else if(ina_dev == sensor_dev_sq52205) {
+				cfg->init_args = &sq52205_init_args[0];
+			}
+		} else if (cfg->port == I2C_BUS1 && cfg->target_addr == ADDR_E1S_BOOT_INA233) {
+			cfg->type = ina_dev;
+			if (ina_dev == sensor_dev_rtq6056) {
+				cfg->init_args = &rtq6056_init_args[2];
+			} else if(ina_dev == sensor_dev_sq52205) {
+				cfg->init_args = &sq52205_init_args[2];
+			}
+		} else if (cfg->port == I2C_BUS6 && cfg->target_addr == ADDR_E1S_DATA_INA233) {
+			cfg->type = ina_dev;
+			if (ina_dev == sensor_dev_rtq6056) {
+				cfg->init_args = &rtq6056_init_args[3];
+			} else if(ina_dev == sensor_dev_sq52205) {
+				cfg->init_args = &sq52205_init_args[3];
+			}
+		}
+
+		if (ina_dev == sensor_dev_sq52205) {
+			switch (cfg->offset) {
+			case PMBUS_READ_VOUT:
+				cfg->offset = SQ52205_READ_VOL_OFFSET;
+				break;
+			case PMBUS_READ_IOUT:
+				cfg->offset = SQ52205_READ_CUR_OFFSET;
+				break;
+			case PMBUS_READ_POUT:
+				cfg->offset = SQ52205_READ_PWR_OFFSET;
+				break;
+			default:
+				LOG_ERR("UNKNOWN power monitor offset %x change table failed",
+					cfg->offset);
+				continue;
 			}
 		}
 	}
@@ -6903,6 +6924,38 @@ error_exit:
 	return GET_VR_DEV_FAILED;
 }
 
+void plat_pldm_sensor_clear_vr_fault(uint8_t vr_addr, uint8_t vr_bus, uint8_t page_cnt)
+{
+	// Clear VR fault by command code 03h - CLEAR_FAULTS
+	uint8_t retry = 5;
+	int ret = 0;
+	I2C_MSG msg = { 0 };
+	msg.bus = vr_bus;
+	msg.target_addr = vr_addr;
+
+	for (int page = 0; page < page_cnt; ++page) {
+		/* set page for power rail */
+		msg.tx_len = 2;
+		msg.data[0] = PMBUS_PAGE;
+		msg.data[1] = page;
+		if (i2c_master_write(&msg, retry)) {
+			LOG_ERR("Set page failed, bus: 0x%x, addr: 0x%x, page: %d", msg.bus,
+				msg.target_addr, page);
+			continue;
+		}
+
+		/* write CLEAR_FAULTS */
+		msg.tx_len = 1;
+		msg.data[0] = PMBUS_CLEAR_FAULTS;
+		ret = i2c_master_write(&msg, retry);
+		if (ret != 0) {
+			LOG_ERR("Clear faults failed, bus: 0x%x, addr: 0x%x", msg.bus,
+				msg.target_addr);
+			continue;
+		}
+	}
+}
+
 uint8_t plat_pldm_sensor_get_ina_dev()
 {
 	int retry = 5;
@@ -6939,5 +6992,7 @@ uint8_t plat_pldm_sensor_get_ina_dev()
 		}
 	}
 
-	return sensor_dev_ina233;
+	// since sq52205 does not support MFR_ID, we set it as default
+	LOG_INF("use SQ52205");
+	return sensor_dev_sq52205;
 }

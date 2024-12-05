@@ -22,6 +22,7 @@
 #include "plat_gpio.h"
 #include "plat_power_seq.h"
 #include "plat_pldm_monitor.h"
+#include "plat_pldm_sensor.h"
 #include "plat_isr.h"
 #include "plat_mctp.h"
 #include "plat_i2c_target.h"
@@ -46,6 +47,9 @@ DEVICE_DEFINE(PRE_DEF_PROJ_GPIO, "PRE_DEF_PROJ_GPIO_NAME", &gpio_init, NULL, NUL
 
 K_WORK_DELAYABLE_DEFINE(cxl1_ready_check, cxl1_ready_handler);
 K_WORK_DELAYABLE_DEFINE(cxl2_ready_check, cxl2_ready_handler);
+
+static K_MUTEX_DEFINE(cxl_dimm_mutex);
+
 void pal_set_sys_status()
 {
 	set_mb_dc_status(FM_POWER_EN_R);

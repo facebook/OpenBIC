@@ -79,5 +79,6 @@ void plat_pldm_sensor_change_ina_dev();
 void plat_init_pldm_sensor_table();
 void plat_init_pldm_disabled_sensors();
 void plat_pldm_sensor_change_dimm_dev();
+void plat_pldm_sensor_clear_vr_fault(uint8_t vr_addr, uint8_t vr_bus, uint8_t page_cnt);
 
 #endif
