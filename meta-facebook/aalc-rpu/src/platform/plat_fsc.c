@@ -3,6 +3,7 @@
 #include <libutil.h>
 #include "sensor.h"
 #include "plat_sensor_table.h"
+#include "plat_status.h"
 #include <logging/log.h>
 
 LOG_MODULE_REGISTER(plat_fsc);
@@ -22,6 +23,11 @@ static uint8_t fsc_poll_flag = 1;
 static bool fsc_tbl_enable = true;
 extern zone_cfg zone_table[];
 extern uint32_t zone_table_size;
+extern pid_cfg pump_pid_table[];
+extern stepwise_cfg pump_stepwise_auto_mode_table[];
+extern stepwise_cfg pump_stepwise_auto_tune_table[];
+
+static uint8_t setpoint[SETPOINT_FLAG_MAX] = { 0, 40 };
 
 uint8_t fsc_debug_set(uint8_t enable)
 {
@@ -51,6 +57,20 @@ uint8_t get_fsc_tbl_enable(void)
 void set_fsc_tbl_enable(uint8_t flag)
 {
 	fsc_tbl_enable = flag;
+}
+
+uint8_t get_fsc_setpoint(uint8_t idx)
+{
+	if (idx >= SETPOINT_FLAG_MAX) {
+		return 0xFF;
+	}
+	return setpoint[idx];
+}
+void set_fsc_setpoint(uint8_t idx, uint8_t val)
+{
+	if (idx < SETPOINT_FLAG_MAX) {
+		setpoint[idx] = val;
+	}
 }
 
 /* get the maximum duty of all stepwise sensor */
@@ -94,8 +114,16 @@ static uint8_t calculateStepwise(zone_cfg *zone_p, uint8_t *duty)
 		}
 
 		// find duty by temp
-		uint8_t tmp_duty = p->step[ARRAY_SIZE(p->step) - 1].duty;
+		uint8_t tmp_duty = 100.0;
 		for (int j = 0; j < ARRAY_SIZE(p->step); j++) {
+			// 0 is a step that does not exist
+			if (p->step[j].temp == 0) {
+				if (j > 0) {
+					tmp_duty = p->step[j - 1].duty;
+				}
+				break;
+			}
+
 			FSC_PRINTF("\t\t\ttemp %d, duty %d\n", p->step[j].temp, p->step[j].duty);
 			if (p->last_temp <= p->step[j].temp) {
 				tmp_duty = p->step[j].duty;
@@ -210,12 +238,6 @@ bool get_fsc_poll_count(uint8_t zone, uint8_t *count)
 	return true;
 }
 
-static void init_fsc_poll_count()
-{
-	for (int i = 0; i < zone_table_size; i++)
-		zone_table[i].fsc_poll_count = 0;
-}
-
 /* set the zone_cfg stored data to default */
 static void zone_init(void)
 {
@@ -247,6 +269,31 @@ static void zone_init(void)
 	}
 }
 
+void change_lpm_setpoint(uint8_t onoff)
+{
+	if (onoff) {
+		zone_table[1].pid_tbl = pump_pid_table;
+		zone_table[1].pid_tbl->setpoint = get_fsc_setpoint(SETPOINT_FLAG_LPM);
+		zone_table[1].sw_tbl = pump_stepwise_auto_tune_table;
+	} else {
+		if (zone_table[1].pid_tbl) {
+			zone_table[1].pid_tbl->integral = 0;
+			zone_table[1].pid_tbl->last_error = 0;
+			zone_table[1].pid_tbl->last_temp = FSC_TEMP_INVALID;
+		}
+		zone_table[1].pid_tbl = NULL;
+		zone_table[1].sw_tbl = pump_stepwise_auto_mode_table;
+	}
+}
+
+void change_temp_setpoint(uint8_t onoff)
+{
+	zone_table[0].pid_tbl->integral = 0;
+	zone_table[0].pid_tbl->last_error = 0;
+	zone_table[0].pid_tbl->last_temp = FSC_TEMP_INVALID;
+	zone_table[0].pid_tbl->setpoint = onoff ? get_fsc_setpoint(SETPOINT_FLAG_OUTLET_TEMP) : 40;
+}
+
 /**
  * @brief Function to control the FSC thread.
  *
@@ -255,8 +302,8 @@ static void zone_init(void)
 void controlFSC(uint8_t action)
 {
 	fsc_poll_flag = (action == FSC_DISABLE) ? 0 : 1;
-	if (action == FSC_DISABLE)
-		init_fsc_poll_count();
+	if (action == FSC_ENABLE)
+		zone_init();
 }
 
 static void fsc_thread_handler(void *arug0, void *arug1, void *arug2)

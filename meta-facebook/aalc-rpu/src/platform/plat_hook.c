@@ -715,7 +715,19 @@ ads112c_init_arg ads112c_init_args[] = {
 		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,
 		.reg2_idac = ADS112C_REG2_IDAC_OFF,
 		.reg3_idac1_cfg = ADS112C_REG3_IDAC1_DISABLED,				
-	},			
+	},
+	// leakage sensor, 1000 sps
+	[8] = { .reg0_input = ADS112C_REG0_INPUT_AIN0AIN1,
+		.reg0_gain = ADS112C_REG0_GAIN1,
+		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
+		.reg1_dr = ADS112C_REG1_DR_1000_SPS,
+		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
+		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
+		.vol_refer_val = 3.3,
+		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,
+		.reg2_idac = ADS112C_REG2_IDAC_OFF,
+		.reg3_idac1_cfg = ADS112C_REG3_IDAC1_DISABLED,
+	},
 };
 
 ads112c_post_arg ads112c_post_args[] = {

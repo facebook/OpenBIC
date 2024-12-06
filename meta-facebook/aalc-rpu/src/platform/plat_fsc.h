@@ -116,5 +116,9 @@ void fsc_init(void);
 void controlFSC(uint8_t action);
 uint8_t fsc_debug_set(uint8_t enable);
 uint8_t fsc_debug_get(void);
+uint8_t get_fsc_setpoint(uint8_t idx);
+void set_fsc_setpoint(uint8_t idx, uint8_t val);
+void change_lpm_setpoint(uint8_t onoff);
+void change_temp_setpoint(uint8_t onoff);
 
 #endif

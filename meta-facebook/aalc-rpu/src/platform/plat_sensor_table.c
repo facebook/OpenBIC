@@ -45,7 +45,7 @@ uint8_t quick_sensor[] = { SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V,
 void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 {
 	k_msleep(1000); // delay 1 second to wait for drivers ready before start sensor polling
-	int quick_sensor_poll_interval_ms = 100;
+	int quick_sensor_poll_interval_ms = 30;
 
 	while (1) {
 		if (!get_sensor_init_done_flag()) {
@@ -413,11 +413,11 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V, sensor_dev_ads112c, I2C_BUS5,
 	  BPB_ADS112C_1_ADDR, ADS112C_READ_OUTPUT_RAW, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT,
 	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL,
-	  post_quick_sensor_read, &ads112c_post_args[3], &ads112c_init_args[0] },
+	  post_quick_sensor_read, &ads112c_post_args[3], &ads112c_init_args[8] },
 	{ SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_VOLT_V, sensor_dev_ads112c, I2C_BUS5,
 	  BPB_ADS112C_3_ADDR, ADS112C_READ_OUTPUT_RAW, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT,
 	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL,
-	  post_quick_sensor_read, &ads112c_post_args[3], &ads112c_init_args[0] },
+	  post_quick_sensor_read, &ads112c_post_args[3], &ads112c_init_args[8] },
 	{ SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_1_VOLT_V, sensor_dev_ads112c, I2C_BUS9,
 	  SB_ADS112C_1_ADDR, ADS112C_READ_OUTPUT_RAW, stby_access, ENABLE_RESET_CFG_REG, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
@@ -1141,6 +1141,34 @@ static void change_dvt_sensor_config()
 	if (stage == BOARD_STAGE_EVT)
 		return;
 
+	for (uint8_t i = 0; i < ARRAY_SIZE(plat_sensor_config); i++) {
+		sensor_cfg *p = plat_sensor_config + i;
+		switch (p->num) {
+		case SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C:
+			p->type = sensor_dev_tmp75;
+			p->offset = TMP75_TEMP_OFFSET;
+			p->target_addr = FIO_TMP75_ADDR;
+			p->init_args = NULL;
+			break;
+		case SENSOR_NUM_FB_1_FAN_TACH_RPM:
+		case SENSOR_NUM_FB_2_FAN_TACH_RPM:
+		case SENSOR_NUM_FB_3_FAN_TACH_RPM:
+		case SENSOR_NUM_FB_4_FAN_TACH_RPM:
+		case SENSOR_NUM_FB_5_FAN_TACH_RPM:
+		case SENSOR_NUM_FB_6_FAN_TACH_RPM:
+		case SENSOR_NUM_FB_7_FAN_TACH_RPM:
+		case SENSOR_NUM_FB_8_FAN_TACH_RPM:
+		case SENSOR_NUM_FB_9_FAN_TACH_RPM:
+		case SENSOR_NUM_FB_10_FAN_TACH_RPM:
+		case SENSOR_NUM_FB_11_FAN_TACH_RPM:
+		case SENSOR_NUM_FB_12_FAN_TACH_RPM:
+		case SENSOR_NUM_FB_13_FAN_TACH_RPM:
+		case SENSOR_NUM_FB_14_FAN_TACH_RPM:
+			p->arg0 = NCT7363_16_PORT;
+			break;
+		}
+	}
+
 	for (uint8_t i = 0; i < SIZEOF_NCT7363_INIT_ARGS; i++) {
 		nct7363_init_arg *f = nct7363_init_args + i;
 		/*
@@ -1196,23 +1224,6 @@ static void change_dvt_sensor_config()
 	}
 }
 
-static void change_mb_temp_sensor_config()
-{
-	if (get_board_stage() == BOARD_STAGE_EVT)
-		return;
-
-	for (uint8_t i = 0; i < ARRAY_SIZE(plat_sensor_config); i++) {
-		sensor_cfg *p = plat_sensor_config + i;
-		if (p->num == SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C) {
-			p->type = sensor_dev_tmp75;
-			p->offset = TMP75_TEMP_OFFSET;
-			p->target_addr = FIO_TMP75_ADDR;
-			p->init_args = NULL;
-			break;
-		}
-	}
-}
-
 static void change_brick_sensor_config()
 {
 #define E50SN12051_MFR_ID 0x0644
@@ -1252,7 +1263,6 @@ static void change_brick_sensor_config()
 
 void load_sensor_config(void)
 {
-	change_mb_temp_sensor_config();
 	change_dvt_sensor_config();
 	change_brick_sensor_config();
 	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));

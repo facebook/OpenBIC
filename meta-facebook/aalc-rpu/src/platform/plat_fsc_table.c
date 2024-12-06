@@ -54,95 +54,38 @@ stepwise_cfg hex_fan_stepwise_table[] = {
 			{33, 23},
 			{34, 24},
 			{35, 25},
-			{35, 25},
-			{35, 25},
-			{35, 25},
-			{35, 25},
-			{35, 25},
 		},
 	},
 };
 
-/*
 pid_cfg pump_pid_table[] = {
 	{
-		.sensor_num = SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C,
-		.setpoint_type = SETPOINT_FLOW_RATE_LPM,
-		.kp = -7,
-		.ki = -0.1,
-		.kd = -3,
-		.i_limit_min = 0,
-		.i_limit_max = 0,
+		.sensor_num = SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM,
+		.setpoint = 40,
+		.kp = 0.5,
+		.ki = 0.1,
+		.kd = 0.5,
+		.i_limit_min = -15,
+		.i_limit_max = 65,
 		.pos_hyst = 1,
 		.neg_hyst = 1,
 	},
 };
 
-stepwise_cfg pump_stepwise_table[] = {
-	{
-		.sensor_num = SENSOR_NUM_SB_HEX_AIR_INLET_AVG_TEMP_C,
-		.step = {
-			{25, 30},
-			{26, 32},
-			{27, 34},
-			{28, 36},
-			{29, 38},
-			{30, 40},
-			{31, 42},
-			{32, 44},
-			{33, 46},
-			{34, 48},
-			{35, 50},
-			{36, 52},
-			{37, 54},
-			{38, 56},
-			{39, 58},
-			{40, 60},
-		},
-	},
-	{
-		.sensor_num = SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C,
-		.step = {
-			{30, 20},
-			{31, 21},
-			{32, 22},
-			{33, 23},
-			{34, 24},
-			{35, 25},
-			{36, 26},
-			{37, 27},
-			{38, 28},
-			{39, 29},
-			{40, 30},
-			{41, 31},
-			{42, 32},
-			{43, 33},
-			{44, 34},
-			{45, 35},
-		},
-	},
-};*/
-
-stepwise_cfg pump_stepwise_table[] = {
+stepwise_cfg pump_stepwise_auto_mode_table[] = {
 	{
 		.sensor_num = SENSOR_NUM_COOLING_CAPACITY,
 		.step = {
-			{10, 50},
-			{20, 55},
-			{30, 60},
-			{40, 65},
-			{50, 70},
-			{51, 100},
-			{51, 100},
-			{51, 100},
-			{51, 100},
-			{51, 100},
-			{51, 100},
-			{51, 100},
-			{51, 100},
-			{51, 100},
-			{51, 100},
-			{51, 100},
+			{1, 100},
+		},
+	},
+};
+
+stepwise_cfg pump_stepwise_auto_tune_table[] = {
+	{
+		.sensor_num = SENSOR_NUM_COOLING_CAPACITY,
+		.step = {
+			{1, 10},
 		},
 	},
 };
@@ -186,11 +129,10 @@ zone_cfg zone_table[] = {
 	},
 	{
 		// zone 2 - pump
-		.sw_tbl = pump_stepwise_table,
-		.sw_tbl_num = ARRAY_SIZE(pump_stepwise_table),
-		/*
-		.pid_tbl = pump_pid_table,
-		.pid_tbl_num = ARRAY_SIZE(pump_pid_table),*/
+		.sw_tbl = pump_stepwise_auto_mode_table,
+		.sw_tbl_num = ARRAY_SIZE(pump_stepwise_auto_mode_table),
+		.pid_tbl = NULL,
+		.pid_tbl_num = ARRAY_SIZE(pump_pid_table),
 		.interval = 5,
 		.set_duty = pwm_control,
 		.set_duty_arg = PWM_GROUP_E_PUMP,
