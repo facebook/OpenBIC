@@ -1,0 +1,8 @@
+<map id="access_rtc_clr_flag" name="access_rtc_clr_flag">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,140,57"/>
+<area shape="rect" id="node2" href="$eeprom_8c.html#ab838e3d27c232117306d8611e48be202" title=" " alt="" coords="203,5,303,32"/>
+<area shape="rect" id="node6" href="$at-cb_2src_2platform_2plat__class_8c.html#a177b22525ca1657da5ced816317de219" title=" " alt="" coords="188,56,319,83"/>
+<area shape="rect" id="node3" href="$eeprom_8c.html#ac470cc411f066d8f6bc2c1d7a74c8a5a" title=" " alt="" coords="367,5,505,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="553,5,675,32"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="723,5,865,32"/>
+</map>
