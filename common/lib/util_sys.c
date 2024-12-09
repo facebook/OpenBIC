@@ -26,6 +26,10 @@
 #include "libutil.h"
 #include "sensor.h"
 
+#ifdef CONFIG_SOC_NPCM400F
+#include "soc_common.h"
+#endif
+
 #include <logging/log.h>
 
 LOG_MODULE_REGISTER(util_sys);
@@ -60,7 +64,11 @@ void check_ac_lost()
 
 bool is_ac_lost()
 {
+#ifdef CONFIG_SOC_NPCM400F
+	return ((npcm4xx_get_reset_reason() == 0) ? true : false);
+#else
 	return ac_lost;
+#endif
 }
 
 /* bic warm reset work */
