@@ -1,0 +1,10 @@
+<map id="ISR_POWER_STATUS_CHANGE" name="ISR_POWER_STATUS_CHANGE">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,228,83"/>
+<area shape="rect" id="node2" href="$at-cb_2src_2platform_2plat__class_8c.html#ab792e5ab34dd1dbfd3988dbe68b3716e" title=" " alt="" coords="276,5,448,32"/>
+<area shape="rect" id="node3" href="$at-cb_2src_2platform_2plat__class_8c.html#a2f2cd33d9b8735a424a77494156450d4" title=" " alt="" coords="285,56,439,83"/>
+<area shape="rect" id="node7" href="$at-cb_2src_2platform_2plat__dev_8c.html#a47cf319bbc2f893a1e54bb2f25aad38d" title=" " alt="" coords="496,105,675,146"/>
+<area shape="rect" id="node4" href="$at-cb_2src_2platform_2plat__class_8c.html#a6a54497033563f8d0666943817d1e92a" title=" " alt="" coords="525,53,646,80"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="724,61,843,88"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="892,87,1035,113"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="723,112,844,139"/>
+</map>

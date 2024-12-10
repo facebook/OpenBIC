@@ -1,0 +1,8 @@
+<map id="OEM_1S_GET_BIOS_VERSION" name="OEM_1S_GET_BIOS_VERSION">
+<area shape="rect" id="node1" title=" " alt="" coords="5,5,217,32"/>
+<area shape="rect" id="node2" href="$wc-mb_2src_2platform_2plat__fru_8c.html#a4f20f9a7aa558245839e5bf64de393fc" title=" " alt="" coords="265,5,385,32"/>
+<area shape="rect" id="node3" href="$eeprom_8c.html#af84d506534770494cca55b2db24730ba" title=" " alt="" coords="433,5,531,32"/>
+<area shape="rect" id="node4" href="$eeprom_8c.html#ac470cc411f066d8f6bc2c1d7a74c8a5a" title=" " alt="" coords="579,5,717,32"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="765,5,887,32"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="935,5,1077,32"/>
+</map>
