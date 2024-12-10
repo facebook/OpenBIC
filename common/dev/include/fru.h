@@ -29,6 +29,7 @@ enum FRU_DEV_TYPE {
 	ST_M24C64_W,
 	ST_M24128_BW,
 	ST_M24512_RDW,
+	ROHM_BR24G512,
 };
 
 enum {

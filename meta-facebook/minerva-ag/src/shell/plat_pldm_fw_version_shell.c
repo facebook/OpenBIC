@@ -43,7 +43,7 @@ void cmd_get_fw_version_vr(const struct shell *shell, size_t argc, char **argv)
 
 	shell_print(shell, "comp_id |              sensor_name               |version |remain");
 	for (int i = 0; i < get_aegis_vr_compnt_mapping_sensor_table_count(); i++) {
-		if ((get_board_stage() == MINERVA_AEGIS_BD) && (i == 0))
+		if ((get_board_type() == MINERVA_AEGIS_BD) && (i == 0))
 			continue; // skip osfp p3v3 on AEGIS BD
 		uint8_t comp_identifier = i + 1;
 		uint8_t bus = 0;
@@ -51,10 +51,17 @@ void cmd_get_fw_version_vr(const struct shell *shell, size_t argc, char **argv)
 		uint8_t sensor_id = 0;
 		uint8_t sensor_dev = 0;
 		char sensor_name[MAX_AUX_SENSOR_NAME_LEN] = { 0 };
-		find_sensor_id_and_name_by_firmware_comp_id(comp_identifier, &sensor_id,
-							    sensor_name);
-		find_vr_addr_and_bus_and_sensor_dev_by_sensor_id(sensor_id, &bus, &addr,
-								 &sensor_dev);
+		if (!find_sensor_id_and_name_by_firmware_comp_id(comp_identifier, &sensor_id,
+								 sensor_name)) {
+			shell_print(shell, "Can't find sensor id and name by comp id: 0x%x",
+				    comp_identifier);
+			continue;
+		}
+		if (!get_sensor_info_by_sensor_id(sensor_id, &bus, &addr, &sensor_dev)) {
+			shell_print(shell, "Can't find vr addr and bus by sensor id: 0x%x",
+				    sensor_id);
+			continue;
+		}
 		uint8_t type = get_vr_type();
 		uint32_t version = 0;
 		uint16_t remain = 0xFFFF;

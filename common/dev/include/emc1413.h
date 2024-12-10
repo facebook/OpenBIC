@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,19 +14,22 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_ISR_H
-#define PLAT_ISR_H
+#ifndef EMC1413_H
+#define EMC1413_H
 
-void ISR_GPIO_FM_ASIC_0_THERMTRIP_R_N();
-void ISR_GPIO_RST_ATH_PWR_ON_PLD_R1_N();
-void ISR_GPIO_ATH_CURRENT_SENSE_0_NPCM_R();
-void ISR_GPIO_ATH_CURRENT_SENSE_1_NPCM_R();
-void ISR_GPIO_FM_ATH_HBM3_CATTRIP_ALARM_LV33_R();
-void ISR_GPIO_ALL_VR_PM_ALERT_R_N();
-void ISR_GPIO_ATH_SMB_ALERT_NPCM_LVC33_R_N();
-void ISR_GPIO_FM_PLD_UBC_EN_R();
+enum EMC1413_CHANNELS {
+	EMC1413_LOCAL_TEMPERATRUE,
+	EMC1413_REMOTE_TEMPERATRUE_1,
+	EMC1413_REMOTE_TEMPERATRUE_2,
+};
 
-void plat_clock_init();
-void plat_eusb_init();
+enum EMC1413_REIGSTER_MAP {
+	INTERNAL_DIODE_HIGH_BYTE = 0x00,
+	EXTERNAL_DIODE_1_HIGH_BYTE = 0x01,
+	EXTERNAL_DIODE_2_HIGH_BYTE = 0x23,
+	INTERNAL_DIODE_LOW_BYTE = 0x29,
+	EXTERNAL_DIODE_1_LOW_BYTE = 0x10,
+	EXTERNAL_DIODE_2_LOW_BYTE = 0x24,
+};
 
 #endif
