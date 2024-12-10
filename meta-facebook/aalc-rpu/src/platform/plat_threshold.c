@@ -455,6 +455,9 @@ void pump_board_tach_status_handler(uint8_t sensor_num, uint8_t status)
 	if (status == THRESHOLD_STATUS_LCR) {
 		LOG_DBG("pump THRESHOLD_STATUS_LCR");
 		WRITE_BIT(fault_read_val, set_fault_bit_location, 1);
+	} else if (status == THRESHOLD_STATUS_UCR) {
+		LOG_DBG("pump THRESHOLD_STATUS_UCR");
+		WRITE_BIT(fault_read_val, set_fault_bit_location, 1);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
 		LOG_DBG("pump THRESHOLD_STATUS_NORMAL");
 		WRITE_BIT(fault_read_val, set_fault_bit_location, 0);
@@ -623,48 +626,48 @@ sensor_threshold threshold_tbl[] = {
 	{ SENSOR_NUM_SB_HEX_AIR_INLET_2_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 60, NULL, 0 },
 	{ SENSOR_NUM_SB_HEX_AIR_INLET_3_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 60, NULL, 0 },
 	{ SENSOR_NUM_SB_HEX_AIR_INLET_4_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 60, NULL, 0 },
-	{ SENSOR_NUM_FB_1_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 40, NULL, 0 },
-	{ SENSOR_NUM_FB_2_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 40, NULL, 0 },
-	{ SENSOR_NUM_FB_3_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 40, NULL, 0 },
-	{ SENSOR_NUM_FB_4_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 40, NULL, 0 },
-	{ SENSOR_NUM_FB_5_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 40, NULL, 0 },
-	{ SENSOR_NUM_FB_6_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 40, NULL, 0 },
-	{ SENSOR_NUM_FB_7_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 40, NULL, 0 },
-	{ SENSOR_NUM_FB_8_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 40, NULL, 0 },
-	{ SENSOR_NUM_FB_9_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 40, NULL, 0 },
-	{ SENSOR_NUM_FB_10_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 40, NULL, 0 },
-	{ SENSOR_NUM_FB_11_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 40, NULL, 0 },
-	{ SENSOR_NUM_FB_12_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 40, NULL, 0 },
-	{ SENSOR_NUM_FB_13_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 40, NULL, 0 },
-	{ SENSOR_NUM_FB_14_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 40, NULL, 0 },
+	{ SENSOR_NUM_FB_1_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 70, NULL, 0 },
+	{ SENSOR_NUM_FB_2_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 70, NULL, 0 },
+	{ SENSOR_NUM_FB_3_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 70, NULL, 0 },
+	{ SENSOR_NUM_FB_4_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 70, NULL, 0 },
+	{ SENSOR_NUM_FB_5_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 70, NULL, 0 },
+	{ SENSOR_NUM_FB_6_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 70, NULL, 0 },
+	{ SENSOR_NUM_FB_7_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 70, NULL, 0 },
+	{ SENSOR_NUM_FB_8_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 70, NULL, 0 },
+	{ SENSOR_NUM_FB_9_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 70, NULL, 0 },
+	{ SENSOR_NUM_FB_10_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 70, NULL, 0 },
+	{ SENSOR_NUM_FB_11_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 70, NULL, 0 },
+	{ SENSOR_NUM_FB_12_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 70, NULL, 0 },
+	{ SENSOR_NUM_FB_13_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 70, NULL, 0 },
+	{ SENSOR_NUM_FB_14_HEX_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 70, NULL, 0 },
 	// pwm device
-	{ SENSOR_NUM_FB_1_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, hex_fan_failure_do,
+	{ SENSOR_NUM_FB_1_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 200, 0, hex_fan_failure_do,
 	  SENSOR_NUM_FB_1_FAN_TACH_RPM },
-	{ SENSOR_NUM_FB_2_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, hex_fan_failure_do,
+	{ SENSOR_NUM_FB_2_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 200, 0, hex_fan_failure_do,
 	  SENSOR_NUM_FB_2_FAN_TACH_RPM },
-	{ SENSOR_NUM_FB_3_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, hex_fan_failure_do,
+	{ SENSOR_NUM_FB_3_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 200, 0, hex_fan_failure_do,
 	  SENSOR_NUM_FB_3_FAN_TACH_RPM },
-	{ SENSOR_NUM_FB_4_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, hex_fan_failure_do,
+	{ SENSOR_NUM_FB_4_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 200, 0, hex_fan_failure_do,
 	  SENSOR_NUM_FB_4_FAN_TACH_RPM },
-	{ SENSOR_NUM_FB_5_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, hex_fan_failure_do,
+	{ SENSOR_NUM_FB_5_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 200, 0, hex_fan_failure_do,
 	  SENSOR_NUM_FB_5_FAN_TACH_RPM },
-	{ SENSOR_NUM_FB_6_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, hex_fan_failure_do,
+	{ SENSOR_NUM_FB_6_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 200, 0, hex_fan_failure_do,
 	  SENSOR_NUM_FB_6_FAN_TACH_RPM },
-	{ SENSOR_NUM_FB_7_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, hex_fan_failure_do,
+	{ SENSOR_NUM_FB_7_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 200, 0, hex_fan_failure_do,
 	  SENSOR_NUM_FB_7_FAN_TACH_RPM },
-	{ SENSOR_NUM_FB_8_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, hex_fan_failure_do,
+	{ SENSOR_NUM_FB_8_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 200, 0, hex_fan_failure_do,
 	  SENSOR_NUM_FB_8_FAN_TACH_RPM },
-	{ SENSOR_NUM_FB_9_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, hex_fan_failure_do,
+	{ SENSOR_NUM_FB_9_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 200, 0, hex_fan_failure_do,
 	  SENSOR_NUM_FB_9_FAN_TACH_RPM },
-	{ SENSOR_NUM_FB_10_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, hex_fan_failure_do,
+	{ SENSOR_NUM_FB_10_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 200, 0, hex_fan_failure_do,
 	  SENSOR_NUM_FB_10_FAN_TACH_RPM },
-	{ SENSOR_NUM_FB_11_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, hex_fan_failure_do,
+	{ SENSOR_NUM_FB_11_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 200, 0, hex_fan_failure_do,
 	  SENSOR_NUM_FB_11_FAN_TACH_RPM },
-	{ SENSOR_NUM_FB_12_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, hex_fan_failure_do,
+	{ SENSOR_NUM_FB_12_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 200, 0, hex_fan_failure_do,
 	  SENSOR_NUM_FB_12_FAN_TACH_RPM },
-	{ SENSOR_NUM_FB_13_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, hex_fan_failure_do,
+	{ SENSOR_NUM_FB_13_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 200, 0, hex_fan_failure_do,
 	  SENSOR_NUM_FB_13_FAN_TACH_RPM },
-	{ SENSOR_NUM_FB_14_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, hex_fan_failure_do,
+	{ SENSOR_NUM_FB_14_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 200, 0, hex_fan_failure_do,
 	  SENSOR_NUM_FB_14_FAN_TACH_RPM },
 	{ SENSOR_NUM_PB_1_PUMP_TACH_RPM, THRESHOLD_ENABLE_BOTH, 0, 0, pump_failure_do,
 	  THRESHOLD_ARG0_TABLE_INDEX },
@@ -706,7 +709,7 @@ sensor_threshold threshold_tbl[] = {
 	{ SENSOR_NUM_FB_12_HSC_TEMP_C, THRESHOLD_DISABLE, 0, 0, NULL, 0 },
 	{ SENSOR_NUM_FB_13_HSC_TEMP_C, THRESHOLD_DISABLE, 0, 0, NULL, 0 },
 	{ SENSOR_NUM_FB_14_HSC_TEMP_C, THRESHOLD_DISABLE, 0, 0, NULL, 0 },
-	{ SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA, THRESHOLD_ENABLE_LCR, -20, 0, sensor_log,
+	{ SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA, THRESHOLD_ENABLE_LCR, -50, 0, sensor_log,
 	  SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA },
 	{ SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA, THRESHOLD_ENABLE_UCR, 0, 300, abnormal_press_do,
 	  0 },
@@ -750,8 +753,6 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 
 	sensor_threshold *thres_p = &threshold_tbl[thres_tbl_idx];
 	uint32_t sensor_num = thres_p->sensor_num;
-	/* retry[0] for lcr, retry[1] for ucr */
-	uint16_t *retry = (uint16_t *)&thres_p->last_value;
 
 	uint8_t pump_ucr = (sensor_num == SENSOR_NUM_PB_1_PUMP_TACH_RPM) ? PUMP_FAIL_PUMP1_UCR :
 			   (sensor_num == SENSOR_NUM_PB_2_PUMP_TACH_RPM) ? PUMP_FAIL_PUMP2_UCR :
@@ -760,28 +761,14 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 
 	switch (status) {
 	case THRESHOLD_STATUS_LCR:
-		if (retry[0] >= 3) {
-			error_log_event(sensor_num, IS_ABNORMAL_VAL);
-			if (pump_fail_check())
-				set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_TWO_PUMP_LCR, 1);
-			retry[0] = 0;
-		} else {
-			retry[0]++;
-			thres_p->last_status = THRESHOLD_STATUS_NORMAL;
-			return;
-		}
+		error_log_event(sensor_num, IS_ABNORMAL_VAL);
+		if (pump_fail_check())
+			set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_TWO_PUMP_LCR, 1);
 		break;
 	case THRESHOLD_STATUS_UCR:
-		if (retry[1] >= 3) {
-			// if (!pump_fail_ctrl(sensor_num))
-			set_status_flag(STATUS_FLAG_FAILURE, pump_ucr, 1);
-			LOG_ERR("threshold 0x%02x pump failure", sensor_num);
-			retry[1] = 0;
-		} else {
-			retry[1]++;
-			thres_p->last_status = THRESHOLD_STATUS_NORMAL;
-			return;
-		}
+		set_status_flag(STATUS_FLAG_FAILURE, pump_ucr, 1);
+		LOG_ERR("threshold 0x%02x pump ucr failure", sensor_num);
+		error_log_event(sensor_num, IS_ABNORMAL_VAL);
 		break;
 	case THRESHOLD_STATUS_NORMAL:
 		reset_flow_rate_ready();
@@ -789,7 +776,6 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 			set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_TWO_PUMP_LCR, 0);
 		set_status_flag(STATUS_FLAG_FAILURE, pump_ucr, 0);
 		error_log_event(sensor_num, IS_NORMAL_VAL);
-		thres_p->last_value = 0; // set retry to 0
 		break;
 	default:
 		LOG_DBG("Unexpected threshold warning");
@@ -823,6 +809,50 @@ static bool check_pump_tach_too_low()
 
 	memset(retry, 0, 3);
 	return false;
+}
+
+/*
+ *	return true means:
+ *		pump: real LCR/UCR status
+ *		other sensor: last status
+ */
+static bool pump_threshold_retry(uint8_t sensor_num)
+{
+	static uint8_t retry[3] = { 0 };
+	static uint8_t fail[3] = { 0 };
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(pump_sensor_array); i++) {
+		if (sensor_num != pump_sensor_array[i]) {
+			continue;
+		}
+
+		sensor_threshold *p = find_threshold_tbl_entry(pump_sensor_array[i]);
+		switch (p->last_status) {
+		case THRESHOLD_STATUS_LCR:
+		case THRESHOLD_STATUS_UCR:
+			/*
+				sensor polling: about 2s
+				wait > 10s => 2 * 6
+			*/
+			if (++retry[i] >= 6) {
+				retry[i] = 0;
+				fail[i] = 1;
+				return true;
+			}
+			return false;
+		case THRESHOLD_STATUS_NORMAL:
+			if (fail[i]) {
+				retry[i] = 0;
+				fail[i] = 0;
+				return true;
+			}
+			return false;
+		default:
+			break;
+		}
+	}
+
+	return true;
 }
 
 void abnormal_flow_do(uint32_t thres_tbl_idx, uint32_t status)
@@ -1104,6 +1134,12 @@ void pump_change_threshold(uint8_t sensor_num, uint8_t duty)
 	if (p == NULL)
 		return;
 
+	// don't change when failure causes 0 tach
+	for (uint8_t i = PUMP_FAIL_EMERGENCY_BUTTON; i <= PUMP_FAIL_CLOSE_PUMP; i++) {
+		if ((get_status_flag(STATUS_FLAG_FAILURE) >> i) & 0x01)
+			return;
+	}
+
 	uint32_t standard_val = get_pump_standard_rpm(duty);
 	p->lcr = standard_val * 0.75;
 	p->ucr = standard_val * 1.25;
@@ -1165,6 +1201,10 @@ void plat_sensor_poll_post()
 			else if (!set_threshold_status(&threshold_tbl[i], val))
 				continue;
 		}
+
+		/* pump retry */
+		if (!pump_threshold_retry(threshold_tbl[i].sensor_num))
+			continue;
 
 		if (threshold_tbl[i].fn) {
 			uint32_t arg0 = threshold_tbl[i].arg0;
