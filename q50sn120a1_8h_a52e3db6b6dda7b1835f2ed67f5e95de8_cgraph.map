@@ -1,0 +1,6 @@
+<map id="q50sn120a1_get_status_word" name="q50sn120a1_get_status_word">
+<area shape="rect" id="node1" title=" " alt="" coords="5,5,200,32"/>
+<area shape="rect" id="node2" href="$util__pmbus_8c.html#a31a6cab55c9aa2f88ed96bc201e483dd" title=" " alt="" coords="248,5,405,32"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="453,5,572,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="620,5,763,32"/>
+</map>

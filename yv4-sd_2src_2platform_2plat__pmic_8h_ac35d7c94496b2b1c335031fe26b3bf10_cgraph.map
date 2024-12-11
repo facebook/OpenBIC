@@ -1,0 +1,12 @@
+<map id="get_pmic_fault_status" name="get_pmic_fault_status">
+<area shape="rect" id="node1" title=" " alt="" coords="5,60,156,87"/>
+<area shape="rect" id="node2" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="246,35,329,61"/>
+<area shape="rect" id="node3" href="$pldm_8c.html#a28443c6ac9b791916034e448bf6d40b7" title=" " alt="" coords="204,85,371,112"/>
+<area shape="rect" id="node4" href="$pldm_8c.html#a90114495fe7507fbfbdcd388f02911aa" title=" " alt="" coords="447,5,566,32"/>
+<area shape="rect" id="node6" href="$mctp_8c.html#a752227fc47b360aa40ef1cf681a383ca" title=" " alt="" coords="419,56,595,83"/>
+<area shape="rect" id="node7" href="$mctp_8c.html#a02a935ae8dfe5fcbcb2b0faeb6375ccd" title=" " alt="" coords="439,107,574,149"/>
+<area shape="rect" id="node10" href="$pldm__oem_8c.html#acdcd72cd46e1f10b7be19781bb1b9866" title=" " alt="" coords="471,173,542,200"/>
+<area shape="rect" id="node5" href="$pldm_8c.html#a41d615349cd666a0f5372f4f4f0c9507" title=" " alt="" coords="643,5,805,32"/>
+<area shape="rect" id="node8" href="$mctp_8c.html#a4c9ae739f05c8e45397f9d5863e504e0" title=" " alt="" coords="657,85,791,112"/>
+<area shape="rect" id="node9" href="$mctp_8c.html#a674999be3a58cb0d9b19893abb92d65f" title=" " alt="" coords="657,137,791,178"/>
+</map>
