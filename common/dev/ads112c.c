@@ -44,8 +44,8 @@ bool ads112c_config_reg_set(uint8_t i2c_retry, sensor_cfg *cfg)
 	msg.data[0] =
 		CMD_WREG |
 		CFG_REG_OFFSET1; //WREG command: 0100 rrxx (rr register address = 01)(spec sample is 0x42)
-	msg.data[1] =
-		init_arg->reg1_conversion | init_arg->reg1_vol_refer | init_arg->reg1_temp_mode;
+	msg.data[1] = init_arg->reg1_dr | init_arg->reg1_conversion | init_arg->reg1_vol_refer |
+		      init_arg->reg1_temp_mode;
 	if (i2c_master_write(&msg, i2c_retry)) {
 		LOG_ERR("Write the respective register 1 configurations failed");
 		return false;

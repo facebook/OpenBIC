@@ -164,15 +164,9 @@ uint16_t get_sensor_status_for_modbus_cmd(uint8_t status)
 				  1 :
 				  0);
 		WRITE_BIT(val, 5,
-			  (get_threshold_status(SENSOR_NUM_FB_1_HEX_OUTLET_TEMP_C) ==
-			   THRESHOLD_STATUS_NOT_ACCESS) ?
-				  1 :
-				  0);
+			  (get_threshold_status(SENSOR_NUM_FB_1_HEX_OUTLET_TEMP_C) ? 1 : 0));
 		WRITE_BIT(val, 6,
-			  (get_threshold_status(SENSOR_NUM_FB_2_HEX_OUTLET_TEMP_C) ==
-			   THRESHOLD_STATUS_NOT_ACCESS) ?
-				  1 :
-				  0);
+			  (get_threshold_status(SENSOR_NUM_FB_2_HEX_OUTLET_TEMP_C) ? 1 : 0));
 		WRITE_BIT(val, 7,
 			  (get_threshold_status(SENSOR_NUM_SB_HEX_AIR_INLET_1_TEMP_C) ==
 			   THRESHOLD_STATUS_NOT_ACCESS) ?

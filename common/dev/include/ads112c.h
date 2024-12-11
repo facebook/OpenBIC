@@ -30,6 +30,8 @@ enum ADS112C_REG0_CONFIG {
 };
 
 enum ADS112C_REG1_CONFIG {
+	//Data rate (Bit 5:7)
+	ADS112C_REG1_DR_1000_SPS = 0xC0,
 	//Conversion mode. (Bit 3)
 	ADS112C_REG1_SINGLEMODE = 0x00,
 	ADS112C_REG1_CONTINUEMODE = 0x08,
@@ -87,6 +89,7 @@ typedef struct _ads112c_init_arg {
 	uint8_t reg0_input;
 	uint8_t reg0_gain;
 	uint8_t reg0_pga;
+	uint8_t reg1_dr;
 	uint8_t reg1_conversion;
 	uint8_t reg1_vol_refer;
 	double vol_refer_val;

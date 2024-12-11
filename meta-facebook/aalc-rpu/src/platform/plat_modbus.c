@@ -328,6 +328,7 @@ uint8_t modbus_pump_setting_get(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 	cmd->data[0] = pump_setting;
+	WRITE_BIT(cmd->data[0], 1, get_manual_pwm_flag(MANUAL_PWM_E_PUMP));
 	return MODBUS_EXC_NONE;
 }
 uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
@@ -485,9 +486,10 @@ uint8_t modbus_set_manual_flag(modbus_command_mapping *cmd)
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
 	uint8_t idx = cmd->arg0;
+	uint8_t force = cmd->arg1; // 1: force setting
 	uint8_t val = cmd->data[0];
 
-	if (val) {
+	if (val && !force) {
 		if (get_status_flag(STATUS_FLAG_AUTO_TUNE))
 			return MODBUS_EXC_SERVER_DEVICE_BUSY;
 	}
@@ -541,12 +543,27 @@ uint8_t modbus_sensor_poll_set(modbus_command_mapping *cmd)
 	return MODBUS_EXC_NONE;
 }
 
+uint8_t modbus_set_status_flag_config(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint8_t idx = (uint8_t)cmd->data[0];
+	uint32_t val = ((cmd->data[1] << 16) | cmd->data[2]);
+
+	set_status_flag_config(idx, val);
+	return MODBUS_EXC_NONE;
+}
+
 uint8_t modbus_status_flag_get(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
-	uint8_t type = cmd->arg0;
+	uint8_t idx = 0;
+	uint32_t val = 0;
+	get_status_flag_config(&idx, &val);
 
-	cmd->data[0] = get_status_flag(type);
+	cmd->data[0] = (uint16_t)((get_status_flag(idx) >> 16) & 0xFFFF);
+	cmd->data[1] = (uint16_t)(get_status_flag(idx) & 0xFFFF);
+
 	return MODBUS_EXC_NONE;
 }
 
@@ -554,11 +571,11 @@ uint8_t modbus_status_flag_set(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
-	uint8_t type = cmd->arg0;
-	uint8_t bit = (uint8_t)cmd->data[0];
-	uint8_t val = (uint8_t)cmd->data[1];
+	uint8_t idx = 0;
+	uint32_t val = 0;
+	get_status_flag_config(&idx, &val);
 
-	set_status_flag(type, bit, val);
+	set_status_flag(idx, 0xFF, val);
 	return MODBUS_EXC_NONE;
 }
 
@@ -655,6 +672,82 @@ uint8_t modbus_read_pump_running_time(modbus_command_mapping *cmd)
 		LOG_ERR("read pump running time fail!");
 		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 	}
+
+	return MODBUS_EXC_NONE;
+}
+uint8_t modbus_set_log_level(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+	/*	LOG_LEVEL_NONE 0U
+		LOG_LEVEL_ERR  1U
+		LOG_LEVEL_WRN  2U
+		LOG_LEVEL_INF  3U
+		LOG_LEVEL_DBG  4U
+	*/
+	if (!set_log_level(cmd->data[0]))
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+
+	return MODBUS_EXC_NONE;
+}
+/* set point relate */
+uint8_t modbus_get_setpoint(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	cmd->data[0] = get_fsc_setpoint(cmd->arg0);
+
+	return MODBUS_EXC_NONE;
+}
+uint8_t modbus_set_setpoint(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	set_fsc_setpoint(cmd->arg0, (uint8_t)cmd->data[0]);
+	uint8_t idx = cmd->arg0;
+	set_fsc_setpoint(idx, (uint8_t)cmd->data[0]);
+	if ((get_status_flag(STATUS_FLAG_SETPOINT_FLAG) && BIT(idx))) {
+		switch (idx) {
+		case SETPOINT_FLAG_LPM:
+			change_lpm_setpoint(1);
+			break;
+		case SETPOINT_FLAG_OUTLET_TEMP:
+			change_temp_setpoint(1);
+			break;
+		default:
+			return MODBUS_EXC_ILLEGAL_DATA_VAL;
+		};
+	}
+
+	return MODBUS_EXC_NONE;
+}
+uint8_t modbus_get_setpoint_enable(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint8_t idx = cmd->arg0;
+	cmd->data[0] = (uint16_t)((get_status_flag(STATUS_FLAG_SETPOINT_FLAG) >> idx) & 0x01);
+
+	return MODBUS_EXC_NONE;
+}
+uint8_t modbus_set_setpoint_enable(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint8_t idx = cmd->arg0;
+	uint8_t enable = (uint8_t)cmd->data[0];
+
+	set_status_flag(STATUS_FLAG_SETPOINT_FLAG, idx, enable);
+
+	switch (idx) {
+	case SETPOINT_FLAG_LPM:
+		change_lpm_setpoint(enable);
+		break;
+	case SETPOINT_FLAG_OUTLET_TEMP:
+		change_temp_setpoint(enable);
+		break;
+	default:
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+	};
 
 	return MODBUS_EXC_NONE;
 }
@@ -1078,11 +1171,17 @@ modbus_command_mapping modbus_command_table[] = {
 	  0, 0, 1 },
 	{ MODBUS_MANUAL_CONTROL_RPU_FAN_ON_OFF_ADDR, modbus_set_manual_flag, modbus_get_manual_flag,
 	  MANUAL_PWM_E_RPU_FAN, 0, 0, 1 },
+	{ MODBUS_FORCE_MANUAL_CONTROL_PUMP_ADDR, modbus_set_manual_flag, modbus_get_manual_flag,
+	  MANUAL_PWM_E_PUMP, 1, 0, 1 },
+	{ MODBUS_SET_LPM_SETPOINT_ADDR, modbus_set_setpoint_enable, modbus_get_setpoint_enable,
+	  SETPOINT_FLAG_LPM, 0, 0, 1 },
+	{ MODBUS_SET_OUTLET_TEMP_SETPOINT_ADDR, modbus_set_setpoint_enable,
+	  modbus_get_setpoint_enable, SETPOINT_FLAG_OUTLET_TEMP, 0, 0, 1 },
 	// Control
-	{ MODBUS_AUTO_TUNE_COOLANT_FLOW_RATE_TARGET_SET_ADDR, modbus_to_do_set, modbus_to_do_get, 0,
-	  0, 0, 1 },
-	{ MODBUS_AUTO_TUNE_COOLANT_OUTLET_TEMPERATURE_TARGET_SET_ADDR, modbus_to_do_set,
-	  modbus_to_do_get, 0, 0, 0, 1 },
+	{ MODBUS_AUTO_TUNE_COOLANT_FLOW_RATE_TARGET_SET_ADDR, modbus_set_setpoint,
+	  modbus_get_setpoint, SETPOINT_FLAG_LPM, 0, 0, 1 },
+	{ MODBUS_AUTO_TUNE_COOLANT_OUTLET_TEMPERATURE_TARGET_SET_ADDR, modbus_set_setpoint,
+	  modbus_get_setpoint, SETPOINT_FLAG_OUTLET_TEMP, 0, 0, 1 },
 	{ MODBUS_PUMP_REDUNDANT_SWITCHED_INTERVAL_ADDR, modbus_to_do_set, modbus_to_do_get, 0, 0, 0,
 	  1 },
 	{ MODBUS_MANUAL_CONTROL_PUMP_DUTY_SET_ADDR, modbus_set_manual_pwm, modbus_get_manual_pwm,
@@ -1232,6 +1331,12 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_HEAT_EXCHANGER_CONTROL_BOX_FBPN_ADDR, NULL, NULL, 0, 0, 0, 4 },
 	{ MODBUS_HEAT_EXCHANGER_FANS_FBPN_ADDR, NULL, NULL, 0, 0, 0, 4 },
 	{ MODBUS_HEAT_EXCHANGER_FAN_CONTROL_BOX_FBPN_ADDR, NULL, NULL, 0, 0, 0, 4 },
+	// set log level
+	{ MODBUS_SET_LOG_LEVEL_ADDR, modbus_set_log_level, NULL, 0, 0, 0, 1 },
+	// failure status
+	{ MODBUS_STATUS_FALG_SET_CFG_ADDR, modbus_set_status_flag_config, NULL, 0, 0, 0, 1 },
+	{ MODBUS_GET_SET_STATUS_FALG_ADDR, modbus_status_flag_set, modbus_status_flag_get, 0, 0, 0,
+	  2 },
 };
 
 modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)
