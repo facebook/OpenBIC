@@ -25,6 +25,15 @@
 
 #define PLDM_SENSOR_POLL_TIME_DEFAULT_MS 1000
 
+enum {
+	UP_THRESHOLD_WARN = 0x01,
+	UP_THRESHOLD_CRIT = 0x02,
+	UP_THRESHOLD_FATAL = 0x04,
+	LOW_THRESHOLD_WARN = 0x08,
+	LOW_THRESHOLD_CRIT = 0x10,
+	LOW_THRESHOLD_FATAL = 0x20
+};
+
 typedef struct pldm_sensor_info {
 	PDR_numeric_sensor pdr_numeric_sensor;
 	uint32_t update_time;
