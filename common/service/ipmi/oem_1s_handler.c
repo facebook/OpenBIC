@@ -2368,7 +2368,7 @@ __weak void OEM_1S_SPI_REGISTER_READ(ipmi_msg *msg)
 	CHECK_NULL_ARG(msg);
 
 	uint8_t *buf = NULL;
-
+#ifdef CONFIG_SPI_ASPEED
 	if (msg->data_len != 3) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
@@ -2418,8 +2418,12 @@ __weak void OEM_1S_SPI_REGISTER_READ(ipmi_msg *msg)
 	memcpy(&msg->data[0], buf, msg->data_len);
 
 	msg->completion_code = CC_SUCCESS;
-
 end:
+#else
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+#endif
+
 	SAFE_FREE(buf);
 	return;
 }
