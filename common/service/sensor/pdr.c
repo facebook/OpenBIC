@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "pdr.h"
 #include "sensor.h"
+#include "libutil.h"
 #include "plat_sensor_table.h"
 #include "plat_ipmb.h"
 
@@ -289,4 +290,75 @@ __weak uint16_t plat_get_disabled_sensor_count()
 PDR_entity_auxiliary_names *get_entity_auxiliary_names_table()
 {
 	return entity_auxiliary_names_table;
+}
+
+int change_pdr_table_critical_high_with_sensor_id(uint32_t sensorID, float critical_high)
+{
+	uint32_t numeric_sensor_pdr_count = 0;
+	numeric_sensor_pdr_count = plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR);
+
+	for (int i = 0; i < numeric_sensor_pdr_count; i++) {
+		if (numeric_sensor_table[i].sensor_id == sensorID) {
+			critical_high =
+				critical_high * power(10, -numeric_sensor_table[i].unit_modifier);
+			numeric_sensor_table[i].critical_high = (int32_t)critical_high;
+			return 0;
+		}
+	}
+
+	return -1;
+}
+
+int change_pdr_table_critical_low_with_sensor_id(uint32_t sensorID, float critical_low)
+{
+	uint32_t numeric_sensor_pdr_count = 0;
+	numeric_sensor_pdr_count = plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR);
+
+	for (int i = 0; i < numeric_sensor_pdr_count; i++) {
+		if (numeric_sensor_table[i].sensor_id == sensorID) {
+			critical_low =
+				critical_low * power(10, -numeric_sensor_table[i].unit_modifier);
+			numeric_sensor_table[i].critical_low = (int32_t)critical_low;
+			return 0;
+		}
+	}
+
+	return -1;
+}
+
+int get_pdr_table_critical_high_and_low_with_sensor_id(uint32_t sensorID, float *critical_high,
+						       float *critical_low)
+{
+	uint32_t numeric_sensor_pdr_count = 0;
+	numeric_sensor_pdr_count = plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR);
+
+	for (int i = 0; i < numeric_sensor_pdr_count; i++) {
+		if (numeric_sensor_table[i].sensor_id == sensorID) {
+			*critical_high = numeric_sensor_table[i].critical_high *
+					 power(10, numeric_sensor_table[i].unit_modifier);
+			*critical_low = numeric_sensor_table[i].critical_low *
+					power(10, numeric_sensor_table[i].unit_modifier);
+			return 0;
+		}
+	}
+
+	return -1;
+}
+
+int check_supported_threshold_with_sensor_id(uint32_t sensorID)
+{
+	uint32_t numeric_sensor_pdr_count = 0;
+	numeric_sensor_pdr_count = plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR);
+
+	for (int i = 0; i < numeric_sensor_pdr_count; i++) {
+		if (numeric_sensor_table[i].sensor_id == sensorID) {
+			if (numeric_sensor_table[i].supported_thresholds != 0) {
+				return 0;
+			} else {
+				return -1;
+			}
+		}
+	}
+
+	return -1;
 }

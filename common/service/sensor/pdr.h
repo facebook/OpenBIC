@@ -153,5 +153,10 @@ void plat_init_entity_aux_names_pdr_table();
 uint16_t plat_get_pdr_entity_aux_names_size();
 uint16_t plat_get_disabled_sensor_count();
 PDR_entity_auxiliary_names *get_entity_auxiliary_names_table();
+int change_pdr_table_critical_high_with_sensor_id(uint32_t sensorID, float critical_high);
+int change_pdr_table_critical_low_with_sensor_id(uint32_t sensorID, float critical_low);
+int get_pdr_table_critical_high_and_low_with_sensor_id(uint32_t sensorID, float *critical_high,
+						       float *critical_low);
+int check_supported_threshold_with_sensor_id(uint32_t sensorID);
 
 #endif
