@@ -905,11 +905,11 @@ static void hsc_config(uint8_t type)
 	 */
 
 #define ADM1272_MFR_ID 0x494441
-#define XDP710_MFR_ID 0x004946
-#define XDP710_FB_ADDR_DVT 0x2A
-#define XDP710_BPB_ADDR_DVT 0x28
-#define XDP710_PB_ADDR 0x22
-#define XDP710_BB_ADDR 0x26
+#define XDP710_MFR_ID 0x034946
+#define XDP710_FB_ADDR_DVT (0x2A >> 1)
+#define XDP710_BPB_ADDR_DVT (0x28 >> 1)
+#define XDP710_PB_ADDR (0x2C >> 1)
+#define XDP710_BB_ADDR (0x2E >> 1)
 
 	uint8_t fb_sen_tbl[] = { SENSOR_NUM_FB_1_HSC_TEMP_C,
 				 SENSOR_NUM_FB_1_HSC_P48V_VIN_VOLT_V,
