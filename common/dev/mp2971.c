@@ -52,6 +52,12 @@ LOG_MODULE_REGISTER(mp2971);
 #define MP2856_DISABLE_WRITE_PROTECT 0x63
 #define MP2856_DISABLE_MEM_PROTECT 0x00
 
+#define VR_MPS_REG_MFR_VR_MULTI_CONFIG_R1 0x0D
+#define VR_MPS_REG_MFR_VR_MULTI_CONFIG_R2 0x1D
+
+#define MP2971_VOUT_MAX_REG 0x24
+#define MP2971_VOUT_MIN_REG 0x2B
+
 /*Page29 */
 #define VR_MPS_REG_CRC_USER 0xFF
 
@@ -79,6 +85,11 @@ enum {
 	ATE_COL_MAX,
 };
 
+enum {
+	VR_12 = 1,
+	VR_13,
+	IMPV9,
+};
 struct mp2856_data {
 	uint16_t cfg_id;
 	uint8_t page;
@@ -96,6 +107,9 @@ struct mp2856_config {
 	struct mp2856_data *pdata;
 };
 
+bool mp2971_vid_to_direct(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
+bool mp2971_direct_to_vid(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
+
 static bool mp2856_set_page(uint8_t bus, uint8_t addr, uint8_t page)
 {
 	I2C_MSG i2c_msg = { 0 };
@@ -110,6 +124,134 @@ static bool mp2856_set_page(uint8_t bus, uint8_t addr, uint8_t page)
 
 	if (i2c_master_write(&i2c_msg, retry)) {
 		LOG_ERR("Failed to set page to 0x%02X", page);
+		return false;
+	}
+
+	return true;
+}
+
+bool mp2971_i2c_read(uint8_t bus, uint8_t addr, uint8_t reg, uint8_t *data, uint8_t len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+
+	memset(data, 0, len);
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = len;
+	i2c_msg.data[0] = reg;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("Failed to read mp29816a, bus: %d, addr: 0x%x, reg: 0x%x", bus, addr, reg);
+		return false;
+	}
+
+	memcpy(data, i2c_msg.data, len);
+	return true;
+}
+
+bool mp2971_i2c_write(uint8_t bus, uint8_t addr, uint8_t reg, uint8_t *data, uint8_t len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+	i2c_msg.tx_len = len + 1;
+
+	i2c_msg.data[0] = reg;
+
+	if (len > 0)
+		memcpy(&i2c_msg.data[1], data, len);
+
+	if (i2c_master_write(&i2c_msg, retry)) {
+		LOG_ERR("Failed to write mp29816a, bus: %d, addr: 0x%x, reg: 0x%x", bus, addr, reg);
+		return false;
+	}
+
+	return true;
+}
+
+bool mp2971_get_vout_max(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	uint8_t data[2] = { 0 };
+	if (!mp2971_i2c_read(cfg->port, cfg->target_addr, MP2971_VOUT_MAX_REG, data,
+			     sizeof(data))) {
+		return false;
+	}
+
+	uint16_t val = data[0] | (data[1] << 8);
+
+	if (!mp2971_vid_to_direct(cfg, rail, &val))
+		return false;
+
+	*millivolt = val;
+
+	return true;
+}
+
+bool mp2971_get_vout_min(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	uint8_t data[2] = { 0 };
+	if (!mp2971_i2c_read(cfg->port, cfg->target_addr, MP2971_VOUT_MIN_REG, data,
+			     sizeof(data))) {
+		return false;
+	}
+
+	uint16_t val = data[0] | (data[1] << 8);
+
+	if (!mp2971_vid_to_direct(cfg, rail, &val))
+		return false;
+
+	*millivolt = val;
+
+	return true;
+}
+
+bool mp2971_set_vout_max(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	if (!mp2971_direct_to_vid(cfg, rail, millivolt))
+		return false;
+
+	uint8_t data[2] = { 0 };
+	data[0] = *millivolt & 0xFF;
+	data[1] = (*millivolt >> 8) & 0xFF;
+
+	if (!mp2971_i2c_write(cfg->port, cfg->target_addr, MP2971_VOUT_MAX_REG, data,
+			      sizeof(data))) {
+		return false;
+	}
+
+	return true;
+}
+
+bool mp2971_set_vout_min(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	if (!mp2971_direct_to_vid(cfg, rail, millivolt))
+		return false;
+
+	uint8_t data[2] = { 0 };
+	data[0] = *millivolt & 0xFF;
+	data[1] = (*millivolt >> 8) & 0xFF;
+
+	if (!mp2971_i2c_write(cfg->port, cfg->target_addr, MP2971_VOUT_MIN_REG, data,
+			      sizeof(data))) {
 		return false;
 	}
 
@@ -769,6 +911,205 @@ float get_resolution(sensor_cfg *cfg)
 		break;
 	}
 	return 0;
+}
+
+/* use millivolt units */
+bool mp2971_vid_to_direct(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	bool ret = false;
+	uint8_t page = rail;
+
+	if (mp2856_set_page(cfg->port, cfg->target_addr, VR_MPS_PAGE_2) == false) {
+		return ret;
+	}
+
+	I2C_MSG msg;
+	uint8_t i2c_max_retry = 5;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 2;
+	int vrf = 0;
+	if (page == 0) {
+		msg.data[0] = VR_MPS_REG_MFR_VR_MULTI_CONFIG_R1;
+		if (i2c_master_read(&msg, i2c_max_retry)) {
+			LOG_WRN("I2C read failed");
+			return ret;
+		}
+		uint16_t mfr_vr_multi_config = (msg.data[1] << 8) | msg.data[0];
+
+		if (mfr_vr_multi_config & BIT(14)) {
+			vrf = IMPV9;
+		} else if (mfr_vr_multi_config & BIT(4)) {
+			vrf = VR_12;
+		} else {
+			vrf = VR_13;
+		}
+	} else if (page == 1) {
+		msg.data[0] = VR_MPS_REG_MFR_VR_MULTI_CONFIG_R2;
+		if (i2c_master_read(&msg, i2c_max_retry)) {
+			LOG_WRN("I2C read failed");
+			return ret;
+		}
+		uint16_t mfr_vr_multi_config = (msg.data[1] << 8) | msg.data[0];
+
+		if (mfr_vr_multi_config & BIT(13)) {
+			vrf = IMPV9;
+		} else if (mfr_vr_multi_config & BIT(3)) {
+			vrf = VR_12;
+		} else {
+			vrf = VR_13;
+		}
+	} else {
+		LOG_WRN("Page not supported: 0x%d", page);
+		return ret;
+	}
+
+	switch (vrf) {
+	case VR_12:
+		*millivolt = 250 + (*millivolt - 1) * 5;
+		break;
+	case VR_13:
+		*millivolt = 500 + (*millivolt - 1) * 10;
+		break;
+	case IMPV9:
+		*millivolt = 200 + (*millivolt - 1) * 10;
+		break;
+	default:
+		LOG_WRN("vrf not supported: 0x%x", vrf);
+		return ret;
+	}
+
+	if (mp2856_set_page(cfg->port, cfg->target_addr, page) == false) {
+		return ret;
+	}
+	ret = true;
+	return ret;
+}
+
+/* use millivolt units */
+bool mp2971_direct_to_vid(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	bool ret = false;
+	uint8_t page = rail;
+
+	if (mp2856_set_page(cfg->port, cfg->target_addr, VR_MPS_PAGE_2) == false) {
+		return ret;
+	}
+
+	I2C_MSG msg;
+	uint8_t i2c_max_retry = 5;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 2;
+	int vrf = 0;
+	if (page == 0) {
+		msg.data[0] = VR_MPS_REG_MFR_VR_MULTI_CONFIG_R1;
+		if (i2c_master_read(&msg, i2c_max_retry)) {
+			LOG_WRN("I2C read failed");
+			return ret;
+		}
+		uint16_t mfr_vr_multi_config = (msg.data[1] << 8) | msg.data[0];
+
+		if (mfr_vr_multi_config & BIT(14)) {
+			vrf = IMPV9;
+		} else if (mfr_vr_multi_config & BIT(4)) {
+			vrf = VR_12;
+		} else {
+			vrf = VR_13;
+		}
+	} else if (page == 1) {
+		msg.data[0] = VR_MPS_REG_MFR_VR_MULTI_CONFIG_R2;
+		if (i2c_master_read(&msg, i2c_max_retry)) {
+			LOG_WRN("I2C read failed");
+			return ret;
+		}
+		uint16_t mfr_vr_multi_config = (msg.data[1] << 8) | msg.data[0];
+
+		if (mfr_vr_multi_config & BIT(13)) {
+			vrf = IMPV9;
+		} else if (mfr_vr_multi_config & BIT(3)) {
+			vrf = VR_12;
+		} else {
+			vrf = VR_13;
+		}
+	} else {
+		LOG_WRN("Page not supported: 0x%d", page);
+		return ret;
+	}
+
+	switch (vrf) {
+	case VR_12:
+		*millivolt = (*millivolt - 250) / 5 + 1;
+		break;
+	case VR_13:
+		*millivolt = (*millivolt - 500) / 10 + 1;
+		break;
+	case IMPV9:
+		*millivolt = (*millivolt - 200) / 10 + 1;
+		break;
+	default:
+		LOG_WRN("vrf not supported: 0x%x", vrf);
+		return ret;
+	}
+
+	if (mp2856_set_page(cfg->port, cfg->target_addr, page) == false) {
+		return ret;
+	}
+	ret = true;
+	return ret;
+}
+
+bool mp2971_get_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	uint8_t data[2] = { 0 };
+	if (!mp2971_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_COMMAND, data, sizeof(data))) {
+		return false;
+	}
+
+	uint16_t val = data[0] | (data[1] << 8);
+
+	if (!mp2971_vid_to_direct(cfg, rail, &val)) {
+		LOG_ERR("bus:%x addr:%x mp2971_vid_to_direct failed \n", cfg->port,
+			cfg->target_addr);
+		return false;
+	}
+
+	*millivolt = val;
+	return true;
+}
+
+bool mp2971_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	if (!mp2971_direct_to_vid(cfg, rail, millivolt)) {
+		LOG_ERR("bus:%x addr:%x mp2971_direct_to_vid failed \n", cfg->port,
+			cfg->target_addr);
+		return false;
+	}
+
+	uint8_t data[2] = { 0 };
+	data[0] = *millivolt & 0xFF;
+	data[1] = (*millivolt >> 8) & 0xFF;
+
+	if (!mp2971_i2c_write(cfg->port, cfg->target_addr, PMBUS_VOUT_COMMAND, data,
+			      sizeof(data))) {
+		return false;
+	}
+
+	return true;
 }
 
 uint8_t mp2971_read(sensor_cfg *cfg, int *reading)

@@ -18,6 +18,7 @@
 #define PLAT_PLDM_SENSOR_H
 
 #include "pdr.h"
+#include "sensor.h"
 #define ADDR_UNKNOWN (0xFF >> 1)
 
 /* Define sensors address(7 bit) */
@@ -230,6 +231,7 @@ enum GET_VR_DEV_STATUS {
 };
 
 int plat_pldm_sensor_get_sensor_count(int thread_id);
+sensor_cfg *get_sensor_cfg_by_sensor_id(uint8_t sensor_id);
 void plat_pldm_sensor_get_pdr_numeric_sensor(int thread_id, int sensor_num,
 					     PDR_numeric_sensor *numeric_sensor_table);
 uint8_t plat_pldm_sensor_get_vr_dev(uint8_t *vr_dev);

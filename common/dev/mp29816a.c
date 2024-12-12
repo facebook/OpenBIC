@@ -29,10 +29,15 @@ LOG_MODULE_REGISTER(mp29816a);
 
 #define READ_VOUT_MASK GENMASK(11, 0)
 #define MFR_VID_RES_MASK GENMASK(12, 10)
-#define MFR_VOUT_LOOP_CTRL 0x29
+#define MFR_VOUT_SCALE_LOOP 0x29
+#define MFR_VOUT_LOOP_CTRL 0x8D
+#define MFR_VDIFF_GAIN_HALF_R2_BIT BIT(10)
 
 #define VR_MPS_PAGE_0 0x00
 #define VR_MPS_PAGE_1 0x01
+
+#define MP29816A_VOUT_MAX_REG 0x24
+#define MP29816A_VOUT_MIN_REG 0x2B
 
 /* --------- PAGE1 ---------- */
 #define VR_REG_EXPECTED_USER_CRC 0xED
@@ -65,6 +70,8 @@ static int cnt_char(char *s, char c)
 	}
 	return cnt;
 }
+
+float mp29816a_get_vout_min_max_resolution(sensor_cfg *cfg);
 
 uint8_t parsing_line(char *str, uint16_t len, struct cfg_data *cfg_data)
 {
@@ -216,6 +223,98 @@ bool mp29816a_set_page(uint8_t bus, uint8_t addr, uint8_t page)
 	if (i2c_master_write(&i2c_msg, retry)) {
 		LOG_ERR("Failed to set mp29816a page, bus: %d, addr: 0x%x, page: 0x%x", bus, addr,
 			page);
+		return false;
+	}
+
+	return true;
+}
+
+bool mp29816a_get_vout_max(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	uint8_t data[2] = { 0 };
+	if (!mp29816a_i2c_read(cfg->port, cfg->target_addr, MP29816A_VOUT_MAX_REG, data,
+			       sizeof(data))) {
+		return false;
+	}
+
+	uint16_t read_value = data[0] | (data[1] << 8);
+	float resolution = mp29816a_get_vout_min_max_resolution(cfg);
+	if (resolution == 0)
+		return false;
+	float val = (float)read_value * resolution;
+	uint16_t val_int = (uint16_t)val;
+
+	*millivolt = val_int;
+
+	return true;
+}
+
+bool mp29816a_get_vout_min(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	uint8_t data[2] = { 0 };
+	if (!mp29816a_i2c_read(cfg->port, cfg->target_addr, MP29816A_VOUT_MIN_REG, data,
+			       sizeof(data))) {
+		return false;
+	}
+
+	uint16_t read_value = data[0] | (data[1] << 8);
+	float resolution = mp29816a_get_vout_min_max_resolution(cfg);
+	if (resolution == 0)
+		return false;
+	float val = (float)read_value * resolution;
+	uint16_t val_int = (uint16_t)val;
+
+	*millivolt = val_int;
+
+	return true;
+}
+
+bool mp29816a_set_vout_max(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	float resolution = mp29816a_get_vout_min_max_resolution(cfg);
+	if (resolution == 0)
+		return false;
+	float write_val = (float)*millivolt / resolution;
+	uint16_t write_val_int = (uint16_t)write_val;
+
+	uint8_t data[2] = { 0 };
+	data[0] = write_val_int & 0xFF;
+	data[1] = (write_val_int >> 8) & 0xFF;
+
+	if (!mp29816a_i2c_write(cfg->port, cfg->target_addr, MP29816A_VOUT_MAX_REG, data,
+				sizeof(data))) {
+		return false;
+	}
+
+	return true;
+}
+
+bool mp29816a_set_vout_min(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	float resolution = mp29816a_get_vout_min_max_resolution(cfg);
+	if (resolution == 0)
+		return false;
+	float write_val = (float)*millivolt / resolution;
+	uint16_t write_val_int = (uint16_t)write_val;
+
+	uint8_t data[2] = { 0 };
+	data[0] = write_val_int & 0xFF;
+	data[1] = (write_val_int >> 8) & 0xFF;
+
+	if (!mp29816a_i2c_write(cfg->port, cfg->target_addr, MP29816A_VOUT_MIN_REG, data,
+				sizeof(data))) {
 		return false;
 	}
 
@@ -412,6 +511,19 @@ bool mp29816a_get_fw_version(uint8_t bus, uint8_t addr, uint32_t *rev)
 	return true;
 }
 
+float mp29816a_get_vout_min_max_resolution(sensor_cfg *cfg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_FAIL_TO_ACCESS);
+
+	float reso = 0;
+
+	//TODO: get vout min max resolution, not support now
+
+	reso = 6.25;
+
+	return reso;
+}
+
 float mp29816a_get_resolution(sensor_cfg *cfg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_FAIL_TO_ACCESS);
@@ -428,15 +540,14 @@ float mp29816a_get_resolution(sensor_cfg *cfg)
 
 	switch (offset) {
 	case PMBUS_READ_VOUT:
-		msg.data[0] = MFR_VOUT_LOOP_CTRL;
+		msg.data[0] = MFR_VOUT_SCALE_LOOP;
 
 		if (i2c_master_read(&msg, i2c_max_retry)) {
 			LOG_WRN("I2C read failed");
 			break;
 		}
-		uint16_t mfr_vout_loop_ctrl = (msg.data[1] << 8) | msg.data[0];
-
-		switch ((mfr_vout_loop_ctrl & MFR_VID_RES_MASK) >> 10) {
+		uint16_t mfr_vout_scale_loop = (msg.data[1] << 8) | msg.data[0];
+		switch ((mfr_vout_scale_loop & MFR_VID_RES_MASK) >> 10) {
 		case 0:
 			reso = 0.00625;
 			break;
@@ -462,7 +573,7 @@ float mp29816a_get_resolution(sensor_cfg *cfg)
 			reso = 0.0009765625;
 			break;
 		default:
-			LOG_WRN("vout_reso_set not supported: 0x%x", mfr_vout_loop_ctrl);
+			LOG_WRN("vout_reso_set not supported: 0x%x", mfr_vout_scale_loop);
 			return reso;
 		}
 		return reso;
@@ -470,8 +581,51 @@ float mp29816a_get_resolution(sensor_cfg *cfg)
 		LOG_WRN("offset not supported: 0x%x", offset);
 		break;
 	}
-
 	return reso;
+}
+
+bool mp29816a_get_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	uint8_t data[2] = { 0 };
+	if (!mp29816a_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_COMMAND, data,
+			       sizeof(data))) {
+		return false;
+	}
+
+	uint16_t read_value = data[0] | (data[1] << 8);
+
+	float resolution = mp29816a_get_resolution(cfg);
+	if (resolution == 0)
+		return false;
+	float val = read_value * resolution * 1000;
+	*millivolt = (int)val;
+	return true;
+}
+
+bool mp29816a_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	float resolution = mp29816a_get_resolution(cfg);
+	if (resolution == 0)
+		return false;
+	uint16_t read_value = (*millivolt / resolution) / 1000;
+	read_value = read_value & READ_VOUT_MASK;
+
+	uint8_t data[2] = { 0 };
+	data[0] = read_value & 0xFF;
+	data[1] = (read_value >> 8) & 0xFF;
+
+	if (!mp29816a_i2c_write(cfg->port, cfg->target_addr, PMBUS_VOUT_COMMAND, data,
+				sizeof(data))) {
+		return false;
+	}
+
+	return true;
 }
 
 uint8_t mp29816a_read(sensor_cfg *cfg, int *reading)

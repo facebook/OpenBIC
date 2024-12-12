@@ -17,6 +17,7 @@
 #define ISL69259_H
 
 #include "stdint.h"
+#include "sensor.h"
 
 #define TWO_COMPLEMENT_NEGATIVE_BIT BIT(15)
 #define ADJUST_IOUT_RANGE 2
@@ -26,9 +27,15 @@ struct isl69259_config {
 	uint32_t len;
 };
 
+bool isl69260_get_vout_max(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
+bool isl69260_get_vout_min(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
+bool isl69260_set_vout_max(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
+bool isl69260_set_vout_min(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
 bool isl69259_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_size);
 bool isl69259_get_raa_hex_mode(uint8_t bus, uint8_t addr, uint8_t *mode);
 bool isl69259_get_raa_crc(uint8_t bus, uint8_t addr, uint8_t mode, uint32_t *crc);
 bool get_raa_remaining_wr(uint8_t bus, uint8_t addr, uint8_t mode, uint16_t *remain);
+bool isl69260_get_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
+bool isl69260_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
 
 #endif
