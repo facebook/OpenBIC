@@ -62,7 +62,8 @@ void cmd_set_clock(const struct shell *shell, size_t argc, char **argv)
 
 	int clock_index = 0;
 	char clock_string[20] = { 0 };
-	strncpy(clock_string, argv[1], 20);
+
+	snprintf(clock_string, sizeof(clock_string), "%s", argv[1]);
 
 	if (strcmp(clock_string, "CLKGEN_312M") == 0) {
 		clock_index = CLKGEN_312M;
@@ -94,7 +95,7 @@ void cmd_set_clock(const struct shell *shell, size_t argc, char **argv)
 	uint8_t retry = 5;
 	i2c_msg.bus = bus;
 	i2c_msg.target_addr = addr;
-	i2c_msg.tx_len = argc - 3 + 1;
+	i2c_msg.tx_len = argc - 2;
 	i2c_msg.data[0] = offset;
 
 	if (i2c_msg.tx_len > 1) {
@@ -124,7 +125,7 @@ void cmd_get_clock(const struct shell *shell, size_t argc, char **argv)
 
 	int clock_index = 0;
 	char clock_string[20] = { 0 };
-	strncpy(clock_string, argv[1], 20);
+	snprintf(clock_string, sizeof(clock_string), "%s", argv[1]);
 
 	if (strcmp(clock_string, "CLKGEN_312M") == 0) {
 		clock_index = CLKGEN_312M;
@@ -169,7 +170,7 @@ void cmd_get_clock(const struct shell *shell, size_t argc, char **argv)
 	}
 
 	for (int i = 0; i < read_len; i++) {
-		shell_print(shell, "Byte%d = 0x%x", i, i2c_msg.data[i]);
+		shell_print(shell, "Byte%d = 0x%x", i + 1, i2c_msg.data[i]);
 	}
 
 	return;
