@@ -41,9 +41,12 @@ static uint8_t timerUse = 0;
 static uint8_t timerAction = 0;
 static uint8_t preTimeoutInSec = 0;
 static uint8_t timerUseExpireFlagsClear = 0;
+static uint8_t timerUseExpireFlags = 0;
 static uint8_t initCountdownValueLsb = 0;
 static uint8_t initCountdownValueMsb = 0;
-static int16_t presentCountdownValue = 0;
+static uint16_t presentCountdownValue = 0;
+static uint16_t setCountdownValue = 0;
+static bool isWdtSet = false;
 
 __weak void APP_GET_DEVICE_ID(ipmi_msg *msg)
 {
@@ -283,12 +286,13 @@ __weak void APP_GET_CAHNNEL_INFO(ipmi_msg *msg)
 
 void frb2_wdt_handler(void *countdownValue, void *arug1, void *arug2)
 {
-	presentCountdownValue = POINTER_TO_INT(countdownValue);
+	presentCountdownValue = POINTER_TO_UINT(countdownValue);
 	while (presentCountdownValue > 0) {
 		k_sleep(K_MSEC(FRB2_WDT_DELAY_MS));
 		presentCountdownValue = (presentCountdownValue - 100);
 	}
 
+	timerUseExpireFlags |= (uint8_t)(1 << (timerUse & 0x07));
 #ifdef ENABLE_EVENT_TO_BMC
 	/* FRB2 watchdog timeout */
 	LOG_ERR("frb2 wdt timeout");
@@ -305,6 +309,8 @@ void init_frb2_wdt_thread(int16_t initCountdownValue)
 {
 	// Avoid re-create thread by checking thread status and thread id
 	if (frb2_wdt_tid != NULL && strcmp(k_thread_state_str(frb2_wdt_tid), "dead") != 0) {
+		// Restart from the initial countdown value
+		presentCountdownValue = setCountdownValue;
 		return;
 	}
 
@@ -322,16 +328,35 @@ void abort_frb2_wdt_thread()
 	if (frb2_wdt_tid != NULL && strcmp(k_thread_state_str(frb2_wdt_tid), "dead") != 0) {
 		k_thread_abort(frb2_wdt_tid);
 		frb2_wdt_tid = NULL;
+		setCountdownValue = 0;
+		presentCountdownValue = 0;
+		isWdtSet = false;
 
 		LOG_INF("frb2 wdt stop!");
 	}
 }
 
-__weak void APP_SET_WATCHDOG_TIMER(ipmi_msg *msg)
+__weak void APP_RESET_WATCHDOG_TIMER(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
 
-	int16_t initCountdownValue = 0;
+	if (isWdtSet) {
+		init_frb2_wdt_thread(setCountdownValue);
+
+		msg->data_len = 0;
+		msg->completion_code = CC_SUCCESS;
+	} else {
+		LOG_INF("set frb2 wdt is not issued!");
+		msg->data_len = 0;
+		msg->completion_code = CC_INVALID_PARAM;
+	}
+
+	return;
+}
+
+__weak void APP_SET_WATCHDOG_TIMER(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
 
 	/* Parsing Set Watchdog Timer Request data field */
 	timerUse = msg->data[0];
@@ -341,13 +366,21 @@ __weak void APP_SET_WATCHDOG_TIMER(ipmi_msg *msg)
 	initCountdownValueLsb = msg->data[4];
 	initCountdownValueMsb = msg->data[5];
 
-	initCountdownValue =
-		(int16_t)(initCountdownValueMsb) << 8 | (int16_t)(initCountdownValueLsb);
+	// Compared with Timer Use Expiration flags clear
+	timerUseExpireFlags &= ~(timerUseExpireFlagsClear);
+
+
+	setCountdownValue =
+		(uint16_t)(initCountdownValueMsb) << 8 | (uint16_t)(initCountdownValueLsb);
 
 	if (frb2_wdt_tid != NULL && strcmp(k_thread_state_str(frb2_wdt_tid), "dead") != 0) {
 		abort_frb2_wdt_thread();
-	} else {
-		init_frb2_wdt_thread(initCountdownValue);
+		isWdtSet = false;
+	}
+	else {
+		presentCountdownValue = setCountdownValue;
+		LOG_INF("frb2 wdt set!");
+		isWdtSet = true;
 	}
 
 	msg->data_len = 0;
@@ -375,7 +408,7 @@ __weak void APP_GET_WATCHDOG_TIMER(ipmi_msg *msg)
 	/* Fill data from the request of Set Watchdog Timer command */
 	msg->data[1] = timerAction;
 	msg->data[2] = preTimeoutInSec;
-	msg->data[3] = timerUseExpireFlagsClear;
+	msg->data[3] = timerUseExpireFlags;
 	msg->data[4] = initCountdownValueLsb;
 	msg->data[5] = initCountdownValueMsb;
 
@@ -423,6 +456,9 @@ void IPMI_APP_handler(ipmi_msg *msg)
 		break;
 	case CMD_APP_GET_CAHNNEL_INFO:
 		APP_GET_CAHNNEL_INFO(msg);
+		break;
+	case CMD_APP_RESET_WATCHDOG_TIMER:
+		APP_RESET_WATCHDOG_TIMER(msg);
 		break;
 	case CMD_APP_SET_WATCHDOG_TIMER:
 		APP_SET_WATCHDOG_TIMER(msg);
