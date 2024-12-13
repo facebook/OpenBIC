@@ -16,6 +16,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <zephyr.h>
 #include "sensor_threshold_shell.h"
 #include "plat_pldm_sensor.h"
@@ -49,10 +50,10 @@ void cmd_set_sensor_threshold(const struct shell *shell, size_t argc, char **arg
 	int value = 0;
 	float threshold_value = 0;
 
-	strncpy(threshold_type, argv[2], 4);
+	snprintf(threshold_type, sizeof(threshold_type), "%s", argv[2]);
 	value = strtol(argv[3], NULL, 10);
-	threshold_value =
-		value * MINERVA_THRESHOLD_UNIT; // If user want to send 3.3V, "value" will be 3300
+	threshold_value = (float)value *
+			  MINERVA_THRESHOLD_UNIT; // If user want to send 3.3V, "value" will be 3300
 
 	if (strcmp(threshold_type, "UCT") == 0) {
 		result = change_pdr_table_critical_high_with_sensor_id(sensorID, threshold_value);
@@ -87,7 +88,7 @@ void cmd_get_sensor_threshold(const struct shell *shell, size_t argc, char **arg
 	float critical_low = 0;
 	int result = 0;
 
-	strncpy(threshold_all, argv[1], 4);
+	snprintf(threshold_all, sizeof(threshold_all), "%s", argv[1]);
 
 	if (strcmp(threshold_all, "All") == 0 || strcmp(threshold_all, "all") == 0) {
 		for (int i = SENSOR_NUM_UBC_1_TEMP_C; i <= SENSOR_NUM_CPU_P1V2_VDDHTX_PCIE_PWR_W;
