@@ -16,7 +16,7 @@
 
 #include "plat_sensor_polling_shell.h"
 #include "cpld_shell.h"
-#include "plat_pldm_fw_version_shell.h"
+#include "plat_fw_version_shell.h"
 
 /* Sub-command Level 1 of command test */
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_test_cmds,
