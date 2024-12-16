@@ -44,33 +44,33 @@ char default_sensor_name[] = "Not support sensor name";
 
 // clang-format off
 const char *const sensor_status_name[] = {
-	sensor_name_to_num(read_success)
-	sensor_name_to_num(read_acur_success)
-	sensor_name_to_num(not_found)
-	sensor_name_to_num(not_accesible) 
-	sensor_name_to_num(fail_to_access)
-	sensor_name_to_num(init_status)
-	sensor_name_to_num(unspecified_err)
-	sensor_name_to_num(polling_disable)
-	sensor_name_to_num(pre_read_error)
-	sensor_name_to_num(post_read_error)
-	sensor_name_to_num(api_unregister)
-	sensor_name_to_num(4byte_acur_read_success)
-	sensor_name_to_num(sensor_not_present)
-	sensor_name_to_num(pec_error)
-	sensor_name_to_num(parameter_not_valid)
+	"read_success",
+	"read_acur_success",
+	"not_found",
+	"not_accesible)",
+	"fail_to_access",
+	"init_status",
+	"unspecified_err",
+	"polling_disable",
+	"pre_read_error",
+	"post_read_error",
+	"api_unregister",
+	"4byte_acur_read_success",
+	"sensor_not_present",
+	"pec_error",
+	"parameter_not_valid",
 };
 
 #ifdef ENABLE_PLDM_SENSOR
 const char *const pldm_sensor_status_name[] = {
-	sensor_name_to_num(sensor_enabled)
-	sensor_name_to_num(sensor_disabled)
-	sensor_name_to_num(sensor_unavailable)
-	sensor_name_to_num(sensor_statusunknown) 
-	sensor_name_to_num(sensor_failed)
-	sensor_name_to_num(sensor_initializing)
-	sensor_name_to_num(sensor_shuttingdown)
-	sensor_name_to_num(sensor_intest)
+	"sensor_enabled",
+	"sensor_disabled",
+	"sensor_unavailable",
+	"sensor_statusunknown)",
+	"sensor_failed",
+	"sensor_initializing",
+	"sensor_shuttingdown",
+	"sensor_intest",
 };
 #endif
 // clang-format on
