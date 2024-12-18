@@ -207,7 +207,6 @@ void monitor_pmic_error_via_i3c_handler()
 
 		for (dimm_id = 0; dimm_id < DIMM_ID_MAX; dimm_id++) {
 			if (!get_post_status()) {
-				switch_i3c_dimm_mux(I3C_MUX_CPU_TO_DIMM);
 				break;
 			}
 
@@ -230,7 +229,6 @@ void monitor_pmic_error_via_i3c_handler()
 			}
 		}
 
-		switch_i3c_dimm_mux(I3C_MUX_CPU_TO_DIMM);
 		if (k_mutex_unlock(&i3c_dimm_mutex)) {
 			LOG_ERR("Failed to unlock I3C dimm MUX");
 		}
@@ -324,6 +322,11 @@ int get_pmic_error_data(uint8_t dimm_id, uint8_t *buffer)
 		return ret;
 	}
 
+	if (!get_post_status()) {
+		switch_i3c_dimm_mux(I3C_MUX_CPU_TO_DIMM);
+		return -1;
+	}
+
 	i3c_msg.bus = I3C_BUS3;
 	i3c_msg.target_addr = pmic_i3c_addr_list[dimm_id % (DIMM_ID_MAX / 2)];
 
@@ -382,7 +385,6 @@ void read_pmic_error_when_dc_off()
 		}
 	}
 
-	switch_i3c_dimm_mux(I3C_MUX_CPU_TO_DIMM);
 	if (k_mutex_unlock(&i3c_dimm_mutex)) {
 		LOG_ERR("Failed to unlock I3C dimm MUX");
 	}

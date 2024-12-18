@@ -185,7 +185,6 @@ void get_dimm_info_handler()
 			i3c_detach(&i3c_msg);
 		}
 
-		switch_i3c_dimm_mux(I3C_MUX_CPU_TO_DIMM);
 		if (k_mutex_unlock(&i3c_dimm_mutex)) {
 			LOG_ERR("Failed to unlock I3C dimm MUX");
 		}
