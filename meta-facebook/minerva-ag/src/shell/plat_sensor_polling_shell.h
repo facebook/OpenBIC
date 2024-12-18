@@ -44,10 +44,14 @@ SHELL_STATIC_SUBCMD_SET_CREATE(cmd_get_plat_sensor_polling,
 
 /* Sub-command Level 2 of command test */
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_plat_sensor_polling_cmd,
-			       SHELL_CMD(set_sensor_polling, &cmd_set_plat_sensor_polling,
+			       SHELL_CMD(set, &cmd_set_plat_sensor_polling,
 					 "set platform sensor polling", NULL),
-			       SHELL_CMD(get_sensor_polling, &cmd_get_plat_sensor_polling,
+			       SHELL_CMD(get, &cmd_get_plat_sensor_polling,
 					 "get platform sensor polling", NULL),
 			       SHELL_SUBCMD_SET_END);
+
+/* Root of command test */
+SHELL_CMD_REGISTER(set_sensor_polling, &sub_plat_sensor_polling_cmd,
+		   "Disable/Enable sensor polling for group of sensors", NULL);
 
 #endif
