@@ -149,6 +149,7 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(mp29816a)
 	sensor_name_to_num(raa228249)
 	sensor_name_to_num(bmr4922302_803)
+	sensor_name_to_num(emc1413)
 };
 // clang-format on
 
@@ -360,6 +361,9 @@ SENSOR_DRIVE_INIT_DECLARE(raa228249);
 #endif
 #ifndef DISABLE_BMR4922302_803
 SENSOR_DRIVE_INIT_DECLARE(bmr4922302_803);
+#endif
+#ifndef DISABLE_EMC1413
+SENSOR_DRIVE_INIT_DECLARE(emc1413);
 #endif
 
 // The sequence needs to same with SENSOR_DEV ID
@@ -717,6 +721,12 @@ sensor_drive_api sensor_drive_tbl[] = {
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(bmr4922302_803),
 #endif
+#ifndef DISABLE_EMC1413
+	SENSOR_DRIVE_TYPE_INIT_MAP(emc1413),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(emc1413),
+#endif
+
 };
 
 static void init_sensor_num(void)
