@@ -17,6 +17,7 @@
 #define RAA229621_H
 
 #include "stdint.h"
+#include "sensor.h"
 
 bool raa229621_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_size);
 bool raa229621_get_crc(uint8_t bus, uint8_t addr, uint32_t *crc);

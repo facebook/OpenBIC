@@ -53,6 +53,9 @@ LOG_MODULE_REGISTER(isl69259);
 
 #define ISL69259_READ_VOUT_RESOLUTION 0.001
 
+#define ISL69260_VOUT_MAX_REG 0x24
+#define ISL69260_VOUT_MIN_REG 0x2B
+
 enum {
 	RAA_GEN2,
 	RAA_GEN3_LEGACY,
@@ -80,6 +83,129 @@ struct raa_data {
 	};
 	uint8_t pec;
 };
+
+bool isl69260_i2c_read(uint8_t bus, uint8_t addr, uint8_t reg, uint8_t *data, uint8_t len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+
+	memset(data, 0, len);
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = len;
+	i2c_msg.data[0] = reg;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("Failed to read mp29816a, bus: %d, addr: 0x%x, reg: 0x%x", bus, addr, reg);
+		return false;
+	}
+
+	memcpy(data, i2c_msg.data, len);
+	return true;
+}
+
+bool isl69260_i2c_write(uint8_t bus, uint8_t addr, uint8_t reg, uint8_t *data, uint8_t len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+	i2c_msg.tx_len = len + 1;
+
+	i2c_msg.data[0] = reg;
+
+	if (len > 0)
+		memcpy(&i2c_msg.data[1], data, len);
+
+	if (i2c_master_write(&i2c_msg, retry)) {
+		LOG_ERR("Failed to write mp29816a, bus: %d, addr: 0x%x, reg: 0x%x", bus, addr, reg);
+		return false;
+	}
+
+	return true;
+}
+
+bool isl69260_set_page(uint8_t bus, uint8_t addr, uint8_t page)
+{
+	if (!isl69260_i2c_write(bus, addr, PMBUS_PAGE, &page, 1)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool isl69260_get_vout_max(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	uint8_t data[2] = { 0 };
+	if (!isl69260_i2c_read(cfg->port, cfg->target_addr, ISL69260_VOUT_MAX_REG, data,
+			       sizeof(data))) {
+		return false;
+	}
+
+	uint16_t val = data[0] | (data[1] << 8);
+	*millivolt = val; // 1mV / LSB
+
+	return true;
+}
+
+bool isl69260_get_vout_min(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	uint8_t data[2] = { 0 };
+	if (!isl69260_i2c_read(cfg->port, cfg->target_addr, ISL69260_VOUT_MIN_REG, data,
+			       sizeof(data))) {
+		return false;
+	}
+
+	uint16_t val = data[0] | (data[1] << 8);
+	*millivolt = val; // 1mV / LSB
+
+	return true;
+}
+
+bool isl69260_set_vout_max(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	uint8_t data[2] = { 0 };
+	data[0] = *millivolt & 0xFF;
+	data[1] = (*millivolt >> 8) & 0xFF;
+
+	if (!isl69260_i2c_write(cfg->port, cfg->target_addr, ISL69260_VOUT_MAX_REG, data,
+				sizeof(data))) {
+		return false;
+	}
+
+	return true;
+}
+
+bool isl69260_set_vout_min(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	uint8_t data[2] = { 0 };
+	data[0] = *millivolt & 0xFF;
+	data[1] = (*millivolt >> 8) & 0xFF;
+
+	if (!isl69260_i2c_write(cfg->port, cfg->target_addr, ISL69260_VOUT_MIN_REG, data,
+				sizeof(data))) {
+		return false;
+	}
+
+	return true;
+}
 
 static bool raa_dma_rd(uint8_t bus, uint8_t addr, uint16_t reg, uint32_t *resp)
 {
@@ -486,6 +612,41 @@ bool isl69259_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t im
 exit:
 	SAFE_FREE(cfg.buff);
 	return ret;
+}
+
+bool isl69260_get_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	uint8_t data[2] = { 0 };
+	if (!isl69260_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_COMMAND, data,
+			       sizeof(data))) {
+		return false;
+	}
+
+	uint16_t val = data[0] | (data[1] << 8);
+
+	*millivolt = val;
+
+	return true;
+}
+
+bool isl69260_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	uint8_t data[2] = { 0 };
+	data[0] = *millivolt & 0xFF;
+	data[1] = (*millivolt >> 8) & 0xFF;
+
+	if (!isl69260_i2c_write(cfg->port, cfg->target_addr, PMBUS_VOUT_COMMAND, data,
+				sizeof(data))) {
+		return false;
+	}
+
+	return true;
 }
 
 bool adjust_of_twos_complement(uint8_t offset, int *val)
