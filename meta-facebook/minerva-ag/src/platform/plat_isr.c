@@ -100,7 +100,7 @@ void ISR_GPIO_FM_PLD_UBC_EN_R()
 	set_dc_status_changing_status(true);
 }
 
-bool cpld_i2c_read(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t *data, uint8_t len)
+bool plat_i2c_read(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t *data, uint8_t len)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
@@ -123,7 +123,7 @@ bool cpld_i2c_read(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t *data, uin
 	return true;
 }
 
-bool cpld_i2c_write(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t *data, uint8_t len)
+bool plat_i2c_write(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t *data, uint8_t len)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
@@ -148,7 +148,7 @@ void check_clk_handler()
 {
 	uint8_t data[4] = { 0 };
 
-	if (!cpld_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, 0x0B, data, 1)) {
+	if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, 0x0B, data, 1)) {
 		LOG_ERR("Failed to read cpld");
 		return;
 	}
@@ -157,46 +157,29 @@ void check_clk_handler()
 	if (pwrgd_p3v3_and_p1v8 == 3) {
 		memset(data, 0, sizeof(data));
 		memcpy(data, (uint8_t[]){ 0x00, 0x01, 0x00, 0x00 }, 4);
-		if (!cpld_i2c_write(I2C_BUS1, AEGIS_312M_CLK_GEN_ADDR, 0xFC, data, 4)) {
+		if (!plat_i2c_write(I2C_BUS1, AEGIS_312M_CLK_GEN_ADDR, 0xFC, data, 4)) {
 			LOG_ERR("Failed to write 312M CLK GEN");
-			return;
-		}
-		if (!cpld_i2c_read(I2C_BUS1, AEGIS_312M_CLK_GEN_ADDR, 0x04, data, 1)) {
-			LOG_ERR("Failed to read 312M CLK GEN");
 			return;
 		}
 		memset(data, 0, sizeof(data));
 		memcpy(data, (uint8_t[]){ 0x84 }, 1);
-		if (!cpld_i2c_write(I2C_BUS1, AEGIS_312M_CLK_GEN_ADDR, 0x04, data, 1)) {
+		if (!plat_i2c_write(I2C_BUS1, AEGIS_312M_CLK_GEN_ADDR, 0x04, data, 1)) {
 			LOG_ERR("Failed to write 312M CLK GEN");
-			return;
-		}
-		if (!cpld_i2c_read(I2C_BUS1, AEGIS_312M_CLK_GEN_ADDR, 0x04, data, 1)) {
-			LOG_ERR("Failed to read 312M CLK GEN");
 			return;
 		}
 		memset(data, 0, sizeof(data));
 		memcpy(data, (uint8_t[]){ 0x00, 0x01, 0x00, 0x00 }, 4);
-		if (!cpld_i2c_write(I2C_BUS1, AEGIS_312M_CLK_GEN_ADDR, 0xFC, data, 4)) {
+		if (!plat_i2c_write(I2C_BUS1, AEGIS_312M_CLK_GEN_ADDR, 0xFC, data, 4)) {
 			LOG_ERR("Failed to write 312M CLK GEN");
-			return;
-		}
-		if (!cpld_i2c_read(I2C_BUS1, AEGIS_312M_CLK_GEN_ADDR, 0x14, data, 1)) {
-			LOG_ERR("Failed to read 312M CLK GEN");
 			return;
 		}
 		memset(data, 0, sizeof(data));
 		memcpy(data, (uint8_t[]){ 0x74 }, 1);
-		if (!cpld_i2c_write(I2C_BUS1, AEGIS_312M_CLK_GEN_ADDR, 0x14, data, 1)) {
+		if (!plat_i2c_write(I2C_BUS1, AEGIS_312M_CLK_GEN_ADDR, 0x14, data, 1)) {
 			LOG_ERR("Failed to write 312M CLK GEN");
 			return;
 		}
-		if (!cpld_i2c_read(I2C_BUS1, AEGIS_312M_CLK_GEN_ADDR, 0x14, data, 1)) {
-			LOG_ERR("Failed to read 312M CLK GEN");
-			return;
-		}
-
-		LOG_INF("Init 312M CLK GEN, success");
+		LOG_INF("Init 312M CLK GEN finish");
 
 	} else {
 		LOG_ERR("pwrgd_p3v3_and_p1v8 fail= 0x%02X", pwrgd_p3v3_and_p1v8);
@@ -218,7 +201,7 @@ void plat_eusb_init(void)
 	uint8_t board_stage = get_board_stage();
 	if (board_stage == FAB2_DVT || board_stage == FAB3_PVT || board_stage == FAB4_MP) {
 		uint8_t data[1] = { 0 };
-		if (!cpld_i2c_read(I2C_BUS1, AEGIS_EUSB_REPEATER_ADDR, 0x05, data, 1)) {
+		if (!plat_i2c_read(I2C_BUS1, AEGIS_EUSB_REPEATER_ADDR, 0x05, data, 1)) {
 			LOG_ERR("Failed to read eUSB Repeater");
 			return;
 		}
@@ -227,15 +210,10 @@ void plat_eusb_init(void)
 		if (eusb_default_setting == 0x10) {
 			memset(data, 0, sizeof(data));
 			memcpy(data, (uint8_t[]){ 0x20 }, 1);
-			if (!cpld_i2c_write(I2C_BUS1, AEGIS_EUSB_REPEATER_ADDR, 0x05, data, 1)) {
+			if (!plat_i2c_write(I2C_BUS1, AEGIS_EUSB_REPEATER_ADDR, 0x05, data, 1)) {
 				LOG_ERR("Failed to write eUSB Repeater");
 				return;
 			}
-			if (!cpld_i2c_read(I2C_BUS1, AEGIS_EUSB_REPEATER_ADDR, 0x05, data, 1)) {
-				LOG_ERR("Failed to read eUSB Repeater");
-				return;
-			}
-
 			LOG_INF("Init eUSB Repeater, set offset 0x05 to 0x20, default seeting=0x%02X",
 				eusb_default_setting);
 		} else {
