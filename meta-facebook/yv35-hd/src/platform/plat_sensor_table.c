@@ -25,6 +25,7 @@
 #include "plat_i2c.h"
 #include "apml.h"
 #include "plat_class.h"
+#include "util_sys.h"
 
 LOG_MODULE_REGISTER(plat_sensor_table);
 
@@ -561,6 +562,38 @@ sensor_cfg mp5990_temp_sensor_config_table[] = {
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &mp5990_init_args[0] },
 };
 
+void plat_sensor_clear_vr_fault(uint8_t vr_addr, uint8_t vr_bus, uint8_t page_cnt)
+{
+	// Clear VR fault by command code 03h - CLEAR_FAULTS
+	uint8_t retry = 5;
+	int ret = 0;
+	I2C_MSG msg = { 0 };
+	msg.bus = vr_bus;
+	msg.target_addr = vr_addr;
+
+	for (int page = 0; page < page_cnt; ++page) {
+		/* set page for power rail */
+		msg.tx_len = 2;
+		msg.data[0] = PMBUS_PAGE;
+		msg.data[1] = page;
+		if (i2c_master_write(&msg, retry)) {
+			LOG_ERR("Set page failed, bus: 0x%x, addr: 0x%x, page: %d", msg.bus,
+				msg.target_addr, page);
+			continue;
+		}
+
+		/* write CLEAR_FAULTS */
+		msg.tx_len = 1;
+		msg.data[0] = PMBUS_CLEAR_FAULTS;
+		ret = i2c_master_write(&msg, retry);
+		if (ret != 0) {
+			LOG_ERR("Clear faults failed, bus: 0x%x, addr: 0x%x", msg.bus,
+				msg.target_addr);
+			continue;
+		}
+	}
+}
+
 void pal_extend_sensor_config()
 {
 	uint8_t sensor_count = 0;
@@ -607,6 +640,12 @@ void pal_extend_sensor_config()
 		sensor_count = ARRAY_SIZE(mp2856gut_sensor_config_table);
 		for (int index = 0; index < sensor_count; index++) {
 			add_sensor_config(mp2856gut_sensor_config_table[index]);
+		}
+		if (is_ac_lost()) {
+			// Clear VR fault bit
+			plat_sensor_clear_vr_fault(MP2856GUT_PVDDCR_CPU0_ADDR, I2C_BUS5, 2);
+			plat_sensor_clear_vr_fault(MP2856GUT_PVDDCR_CPU1_ADDR, I2C_BUS5, 2);
+			plat_sensor_clear_vr_fault(MP2856GUT_PVDD11_S3_ADDR, I2C_BUS5, 1);
 		}
 		break;
 	case VR_VENDER_TI:
