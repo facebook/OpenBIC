@@ -48,6 +48,9 @@ LOG_MODULE_REGISTER(raa228249);
 
 #define MAX_CMD_LINE 1500
 
+#define RAA228249_VOUT_MAX_REG 0x24
+#define RAA228249_VOUT_MIN_REG 0x2B
+
 struct raa_data {
 	union {
 		uint8_t raw[32];
@@ -81,6 +84,120 @@ static uint8_t ascii_to_byte(uint8_t *ascii_buf)
 {
 	CHECK_NULL_ARG_WITH_RETURN(ascii_buf, SENSOR_UNSPECIFIED_ERROR);
 	return ascii_to_val(ascii_buf[0]) << 4 | ascii_to_val(ascii_buf[1]);
+}
+
+bool raa228249_i2c_read(uint8_t bus, uint8_t addr, uint8_t reg, uint8_t *data, uint8_t len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+
+	memset(data, 0, len);
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = len;
+	i2c_msg.data[0] = reg;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("Failed to read mp29816a, bus: %d, addr: 0x%x, reg: 0x%x", bus, addr, reg);
+		return false;
+	}
+
+	memcpy(data, i2c_msg.data, len);
+	return true;
+}
+
+bool raa228249_i2c_write(uint8_t bus, uint8_t addr, uint8_t reg, uint8_t *data, uint8_t len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+	i2c_msg.tx_len = len + 1;
+
+	i2c_msg.data[0] = reg;
+
+	if (len > 0)
+		memcpy(&i2c_msg.data[1], data, len);
+
+	if (i2c_master_write(&i2c_msg, retry)) {
+		LOG_ERR("Failed to write mp29816a, bus: %d, addr: 0x%x, reg: 0x%x", bus, addr, reg);
+		return false;
+	}
+
+	return true;
+}
+
+bool raa228249_get_vout_max(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	uint8_t data[2] = { 0 };
+	if (!raa228249_i2c_read(cfg->port, cfg->target_addr, RAA228249_VOUT_MAX_REG, data,
+				sizeof(data))) {
+		return false;
+	}
+
+	uint16_t val = data[0] | (data[1] << 8);
+	*millivolt = val; // 1mV / LSB
+
+	return true;
+}
+
+bool raa228249_get_vout_min(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	uint8_t data[2] = { 0 };
+	if (!raa228249_i2c_read(cfg->port, cfg->target_addr, RAA228249_VOUT_MIN_REG, data,
+				sizeof(data))) {
+		return false;
+	}
+
+	uint16_t val = data[0] | (data[1] << 8);
+	*millivolt = val; // 1mV / LSB
+
+	return true;
+}
+
+bool raa228249_set_vout_max(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	uint8_t data[2] = { 0 };
+	data[0] = *millivolt & 0xFF;
+	data[1] = (*millivolt >> 8) & 0xFF;
+
+	if (!raa228249_i2c_write(cfg->port, cfg->target_addr, RAA228249_VOUT_MAX_REG, data,
+				 sizeof(data))) {
+		return false;
+	}
+
+	return true;
+}
+
+bool raa228249_set_vout_min(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	uint8_t data[2] = { 0 };
+	data[0] = *millivolt & 0xFF;
+	data[1] = (*millivolt >> 8) & 0xFF;
+
+	if (!raa228249_i2c_write(cfg->port, cfg->target_addr, RAA228249_VOUT_MIN_REG, data,
+				 sizeof(data))) {
+		return false;
+	}
+
+	return true;
 }
 
 static int raa_dma_rd(uint8_t bus, uint8_t addr, uint8_t *reg, uint8_t *resp)
@@ -348,6 +465,41 @@ bool raa228249_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t i
 exit:
 	SAFE_FREE(dev_cfg.pdata);
 	return ret;
+}
+
+bool raa228249_get_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	uint8_t data[2] = { 0 };
+	if (!raa228249_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_COMMAND, data,
+				sizeof(data))) {
+		return false;
+	}
+
+	uint16_t val = data[0] | (data[1] << 8);
+
+	*millivolt = val;
+
+	return true;
+}
+
+bool raa228249_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	uint8_t data[2] = { 0 };
+	data[0] = *millivolt & 0xFF;
+	data[1] = (*millivolt >> 8) & 0xFF;
+
+	if (!raa228249_i2c_write(cfg->port, cfg->target_addr, PMBUS_VOUT_COMMAND, data,
+				 sizeof(data))) {
+		return false;
+	}
+
+	return true;
 }
 
 uint8_t raa228249_read(sensor_cfg *cfg, int *reading)
