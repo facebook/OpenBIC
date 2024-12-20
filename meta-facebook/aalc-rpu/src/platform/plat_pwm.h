@@ -77,5 +77,6 @@ void set_manual_pwm_flag(uint8_t idx, uint8_t flag);
 uint8_t get_manual_pwm_cache(uint8_t idx);
 void set_manual_pwm_cache(uint8_t idx, uint8_t duty);
 void set_manual_pwm_cache_to_default(void);
+void set_manual_pwm_cache_to_zero(void);
 uint8_t nct7363_wdt_all_disable();
 uint8_t nct7363_wdt_all_enable();

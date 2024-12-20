@@ -292,6 +292,14 @@ void cmd_threshold_tbl_set(const struct shell *shell, size_t argc, char **argv)
 	p->ucr = ucr;
 }
 
+void cmd_threshold_pump_test(const struct shell *shell, size_t argc, char **argv)
+{
+	uint8_t disable_dynamic = strtoul(argv[1], NULL, 10);
+
+	set_status_flag(STATUS_FLAG_DEBUG_MODE, DEBUG_MODE_PUMP_THRESHOLD,
+			(disable_dynamic ? 1 : 0));
+}
+
 // status
 void cmd_status_leak_get(const struct shell *shell, size_t argc, char **argv)
 {
@@ -532,6 +540,8 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_nct7363_cmd,
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_threshold_cmd,
 			       SHELL_CMD(get, NULL, "get threshold table", cmd_threshold_tbl_get),
 			       SHELL_CMD(set, NULL, "set threshold table", cmd_threshold_tbl_set),
+			       SHELL_CMD(pump_test, NULL, "disable pump dynamic threshold",
+					 cmd_threshold_pump_test),
 			       SHELL_SUBCMD_SET_END);
 
 // status
