@@ -25,6 +25,7 @@
 #include "libutil.h"
 #include "plat_gpio.h"
 #include "plat_i2c.h"
+#include "plat_i3c.h"
 #include "plat_sensor_table.h"
 
 #include <logging/log.h>
@@ -442,5 +443,10 @@ void init_platform_config()
 			}
 		}
 	}
+
+	I3C_MSG i3c_msg;
+	i3c_msg.bus = I3C_BUS_BMC;
+	i3c_set_pid(&i3c_msg, I3C_BUS0_PID);
+
 	SAFE_FREE(data);
 }
