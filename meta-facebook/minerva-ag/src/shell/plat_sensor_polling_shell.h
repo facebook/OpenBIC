@@ -50,4 +50,14 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_plat_sensor_polling_cmd,
 					 "get platform sensor polling", NULL),
 			       SHELL_SUBCMD_SET_END);
 
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_set_sensor_polling_cmd,
+			       SHELL_CMD(set, &cmd_set_plat_sensor_polling,
+					 "set platform sensor polling", NULL),
+			       SHELL_CMD(get, &cmd_get_plat_sensor_polling,
+					 "get platform sensor polling", NULL),
+			       SHELL_SUBCMD_SET_END);
+
+SHELL_CMD_REGISTER(set_sensor_polling, &sub_set_sensor_polling_cmd, "Set sensor polling command",
+		   NULL);
+
 #endif
