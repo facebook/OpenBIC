@@ -20,5 +20,16 @@
 #include "hal_i3c.h"
 
 #define I3C_BUS4 3
+/* i3c 8-bit addr */
+#define I3C_STATIC_ADDR_BIC 0x40
+#define I3C_STATIC_ADDR_BMC 0x20
+
+/* i3c dev bus */
+#define I3C_BUS_BMC 0
+
+#define I3C_BUS0_PID 0
+
+/* mctp endpoint */
+#define MCTP_EID_BMC 0x01
 
 #endif

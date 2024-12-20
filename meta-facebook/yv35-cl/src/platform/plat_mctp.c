@@ -19,20 +19,9 @@
 #include "sensor.h"
 #include "plat_hook.h"
 #include "plat_ipmb.h"
-
-#include "hal_i3c.h"
+#include "plat_i3c.h"
 
 LOG_MODULE_REGISTER(plat_mctp);
-
-/* i3c 8-bit addr */
-#define I3C_STATIC_ADDR_BIC 0x40
-#define I3C_STATIC_ADDR_BMC 0x20
-
-/* i3c dev bus */
-#define I3C_BUS_BMC 0
-
-/* mctp endpoint */
-#define MCTP_EID_BMC 0x01
 
 K_TIMER_DEFINE(send_cmd_timer, send_cmd_to_dev, NULL);
 K_WORK_DEFINE(send_cmd_work, send_cmd_to_dev_handler);
