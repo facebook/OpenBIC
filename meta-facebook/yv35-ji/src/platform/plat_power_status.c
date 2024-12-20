@@ -327,8 +327,5 @@ bool e1s_access(uint8_t sensor_num)
 	if (gpio_get(VIRTUAL_E1S_PRSNT_L) == GPIO_HIGH)
 		return false;
 
-	if ((sensor_num == SENSOR_NUM_TEMP_E1S_SSD) && (get_post_status() == false))
-		return false;
-
 	return true;
 }
