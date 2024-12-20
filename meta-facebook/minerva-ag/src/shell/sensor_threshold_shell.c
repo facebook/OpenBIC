@@ -69,9 +69,11 @@ void cmd_set_sensor_threshold(const struct shell *shell, size_t argc, char **arg
 		}
 	} else {
 		shell_error(shell, "Help: Need to send <UCT/LCT>");
+		return;
 	}
 
-	shell_print(shell, "sensor_threshold set <sensor ID> <UCT/LCT> <value> success!");
+	shell_print(shell, "sensor_threshold set 0x%x %s %d success!", sensorID, threshold_type,
+		    value);
 
 	return;
 }
@@ -95,14 +97,21 @@ void cmd_get_sensor_threshold(const struct shell *shell, size_t argc, char **arg
 		     i++) {
 			result = check_supported_threshold_with_sensor_id(i);
 			if (result == 0) {
+				char sensor_name[MAX_AUX_SENSOR_NAME_LEN] = { 0 };
+
 				get_pdr_table_critical_high_and_low_with_sensor_id(
 					i, &critical_high, &critical_low);
+
+				pldm_get_sensor_name_via_sensor_id(i, sensor_name,
+								   sizeof(sensor_name));
+
 				shell_print(
 					shell,
-					"sensor ID: 0x%x  |  critical high: %10.3f  |  critical low: %10.3f",
-					i, critical_high, critical_low);
+					"sensor ID: 0x%x  |  sensor name: %-40s  |  critical high: %10.3f  |  critical low: %10.3f",
+					i, sensor_name, critical_high, critical_low);
 				critical_high = 0;
 				critical_low = 0;
+				memset(sensor_name, 0, sizeof(sensor_name));
 			}
 		}
 	} else {
@@ -125,11 +134,16 @@ void cmd_get_sensor_threshold(const struct shell *shell, size_t argc, char **arg
 			sensorID, &critical_high, &critical_low);
 		if (result != 0) {
 			shell_error(shell, "Get sensor threshold failed");
+			return;
 		}
 
-		shell_print(shell,
-			    "sensor ID: 0x%x  |  critical high: %10.3f  |  critical low: %10.3f",
-			    sensorID, critical_high, critical_low);
+		char sensor_name[MAX_AUX_SENSOR_NAME_LEN] = { 0 };
+		pldm_get_sensor_name_via_sensor_id(sensorID, sensor_name, sizeof(sensor_name));
+
+		shell_print(
+			shell,
+			"sensor ID: 0x%x  |  sensor name: %-40s  |  critical high: %10.3f  |  critical low: %10.3f",
+			sensorID, sensor_name, critical_high, critical_low);
 	}
 
 	return;
