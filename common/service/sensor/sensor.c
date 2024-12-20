@@ -38,15 +38,9 @@ LOG_MODULE_REGISTER(sensor);
 
 #define SENSOR_DRIVE_INIT_DECLARE(name) uint8_t name##_init(sensor_cfg *cfg)
 
-#define SENSOR_DRIVE_TYPE_INIT_MAP(name)                                                           \
-	{                                                                                          \
-		sensor_dev_##name, name##_init                                                     \
-	}
+#define SENSOR_DRIVE_TYPE_INIT_MAP(name) { sensor_dev_##name, name##_init }
 
-#define SENSOR_DRIVE_TYPE_UNUSE(name)                                                              \
-	{                                                                                          \
-		sensor_dev_##name, NULL                                                            \
-	}
+#define SENSOR_DRIVE_TYPE_UNUSE(name) { sensor_dev_##name, NULL }
 
 #define SENSOR_READ_RETRY_MAX 3
 
@@ -362,7 +356,7 @@ SENSOR_DRIVE_INIT_DECLARE(raa228249);
 #ifndef DISABLE_BMR4922302_803
 SENSOR_DRIVE_INIT_DECLARE(bmr4922302_803);
 #endif
-#ifndef DISABLE_EMC1413
+#ifdef ENABLE_EMC1413
 SENSOR_DRIVE_INIT_DECLARE(emc1413);
 #endif
 
@@ -721,7 +715,7 @@ sensor_drive_api sensor_drive_tbl[] = {
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(bmr4922302_803),
 #endif
-#ifndef DISABLE_EMC1413
+#ifdef ENABLE_EMC1413
 	SENSOR_DRIVE_TYPE_INIT_MAP(emc1413),
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(emc1413),
