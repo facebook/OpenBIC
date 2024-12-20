@@ -23,3 +23,4 @@ void get_status_flag_config(uint8_t *idx, uint32_t *val);
 uint8_t get_rpu_ready_pin_status();
 float pow_of_10(int8_t exp);
 bool set_log_level(uint16_t data);
+uint8_t get_fsc_mode();

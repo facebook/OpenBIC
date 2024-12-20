@@ -26,10 +26,12 @@ typedef struct {
 	float ucr;
 	void (*fn)(uint32_t, uint32_t); // para: arg, status
 	uint32_t arg0;
+	uint8_t retry;
 
 	// priv data
 	uint32_t last_status; // record the last status
 	uint32_t last_value; // record the last value
+	uint8_t retry_count; // record the last value
 } sensor_threshold;
 
 enum THRESHOLD_STATUS {

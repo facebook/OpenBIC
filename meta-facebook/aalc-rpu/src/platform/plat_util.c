@@ -182,4 +182,20 @@ bool set_log_level(uint16_t data)
 	return true;
 }
 
+uint8_t get_fsc_mode()
+{
+	uint8_t manual_hex_fan = get_manual_pwm_flag(MANUAL_PWM_E_HEX_FAN);
+	uint8_t manual_pump = get_manual_pwm_flag(MANUAL_PWM_E_PUMP);
+	uint8_t manual_rpu_fan = get_manual_pwm_flag(MANUAL_PWM_E_RPU_FAN);
+
+	if (!manual_hex_fan && !manual_pump && !manual_rpu_fan)
+		return FSC_MODE_AUTO_MODE;
+	else if (manual_hex_fan && manual_pump && manual_rpu_fan)
+		return FSC_MODE_MANUAL_MODE;
+	else if (!manual_hex_fan && manual_pump)
+		return FSC_MODE_SEMI_MODE;
+	else
+		return FSC_MODE_UNKNOW;
+}
+
 #endif // PLAT_UTIL_H

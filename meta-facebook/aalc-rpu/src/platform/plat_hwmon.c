@@ -32,6 +32,7 @@
 #include "plat_status.h"
 #include "plat_isr.h"
 #include "plat_fru.h"
+#include "plat_fsc.h"
 
 LOG_MODULE_REGISTER(plat_hwmon);
 
@@ -114,10 +115,18 @@ bool close_pump(pump_reset_struct *data, uint8_t bit_val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
+	static uint8_t is_stop;
+
 	if (bit_val == 0) {
 		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_CLOSE_PUMP, 0);
+		if (is_stop) {
+			set_manual_pwm_cache_to_default();
+			is_stop = 0;
+		}
 	} else {
 		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_CLOSE_PUMP, 1);
+		set_manual_pwm_cache_to_zero();
+		is_stop = 1;
 	}
 
 	return true;
@@ -379,15 +388,26 @@ static bool failure_behavior(uint8_t group)
 
 uint8_t pwm_control(uint8_t group, uint8_t duty)
 {
+	// suppurt redundant device in semi mode
+	uint32_t redundant_check = PUMP_REDUNDANT_DISABLE;
+	if (get_fsc_mode() == FSC_MODE_SEMI_MODE)
+		redundant_check = get_status_flag(STATUS_FLAG_PUMP_REDUNDANT);
+
 	switch (group) {
 	case PWM_GROUP_E_PUMP:
 		if (get_manual_pwm_flag(MANUAL_PWM_E_PUMP)) {
 			plat_pwm_ctrl(PWM_DEVICE_E_PB_PUMB_1,
-				      get_manual_pwm_cache(MANUAL_PWM_E_PUMP_1));
+				      (redundant_check == PUMP_REDUNDANT_23) ?
+					      0 :
+					      get_manual_pwm_cache(MANUAL_PWM_E_PUMP_1));
 			plat_pwm_ctrl(PWM_DEVICE_E_PB_PUMB_2,
-				      get_manual_pwm_cache(MANUAL_PWM_E_PUMP_2));
+				      (redundant_check == PUMP_REDUNDANT_13) ?
+					      0 :
+					      get_manual_pwm_cache(MANUAL_PWM_E_PUMP_2));
 			plat_pwm_ctrl(PWM_DEVICE_E_PB_PUMB_3,
-				      get_manual_pwm_cache(MANUAL_PWM_E_PUMP_3));
+				      (redundant_check == PUMP_REDUNDANT_12) ?
+					      0 :
+					      get_manual_pwm_cache(MANUAL_PWM_E_PUMP_3));
 			return 0;
 		}
 		break;

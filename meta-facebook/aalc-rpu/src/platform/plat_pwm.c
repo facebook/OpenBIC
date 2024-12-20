@@ -374,6 +374,12 @@ void set_manual_pwm_cache_to_default(void)
 		manual_pwm_cache[i] = 70;
 }
 
+void set_manual_pwm_cache_to_zero(void)
+{
+	for (uint8_t i = 0; i < MANUAL_PWM_E_MAX; i++)
+		manual_pwm_cache[i] = 0;
+}
+
 void init_pwm_dev(void)
 {
 	pwm_dev = device_get_binding("PWM");
