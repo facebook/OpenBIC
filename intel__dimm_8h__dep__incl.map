@@ -1,0 +1,13 @@
+<map id="common/dev/include/intel_dimm.h" name="common/dev/include/intel_dimm.h">
+<area shape="rect" id="node1" title=" " alt="" coords="865,5,1008,47"/>
+<area shape="rect" id="node2" href="$i3c__dimm_8c.html" title=" " alt="" coords="5,109,172,136"/>
+<area shape="rect" id="node3" href="$intel__peci_8c.html" title=" " alt="" coords="196,109,363,136"/>
+<area shape="rect" id="node4" href="$wc-mb_2src_2platform_2plat__hook_8c.html" title=" " alt="" coords="387,102,553,143"/>
+<area shape="rect" id="node5" href="$wc-mb_2src_2platform_2plat__pmic_8c.html" title=" " alt="" coords="577,102,742,143"/>
+<area shape="rect" id="node6" href="$yv3-dl_2src_2platform_2plat__hook_8c.html" title=" " alt="" coords="766,102,931,143"/>
+<area shape="rect" id="node7" href="$yv35-cl_2src_2platform_2plat__hook_8c.html" title=" " alt="" coords="955,95,1094,151"/>
+<area shape="rect" id="node8" href="$yv35-cl_2src_2platform_2plat__pmic_8c.html" title=" " alt="" coords="1118,95,1257,151"/>
+<area shape="rect" id="node9" href="$yv35-gl_2src_2platform_2plat__hook_8c.html" title=" " alt="" coords="1281,95,1419,151"/>
+<area shape="rect" id="node10" href="$yv4-ff_2src_2platform_2plat__hook_8c.html" title=" " alt="" coords="1443,102,1609,143"/>
+<area shape="rect" id="node11" href="$yv4-wf_2src_2platform_2plat__hook_8c.html" title=" " alt="" coords="1633,102,1798,143"/>
+</map>

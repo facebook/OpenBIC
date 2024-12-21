@@ -1,0 +1,6 @@
+<map id="pal_switch_bios_spi_mux" name="pal_switch_bios_spi_mux">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,176,57"/>
+<area shape="rect" id="node2" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="225,5,344,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="224,56,345,83"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="393,31,536,57"/>
+</map>

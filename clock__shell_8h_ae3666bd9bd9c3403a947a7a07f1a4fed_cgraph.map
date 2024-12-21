@@ -1,0 +1,6 @@
+<map id="cmd_get_clock" name="cmd_get_clock">
+<area shape="rect" id="node1" title=" " alt="" coords="5,42,116,69"/>
+<area shape="rect" id="node2" href="$clock__shell_8c.html#ab7b1bedad1cf85f39ef0b17ce1f133ac" title=" " alt="" coords="164,5,376,47"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="211,71,329,98"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="424,71,567,98"/>
+</map>

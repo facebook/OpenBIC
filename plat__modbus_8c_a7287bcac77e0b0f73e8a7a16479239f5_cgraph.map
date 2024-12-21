@@ -1,0 +1,8 @@
+<map id="modbus_set_setpoint" name="modbus_set_setpoint">
+<area shape="rect" id="node1" title=" " alt="" coords="5,81,152,108"/>
+<area shape="rect" id="node2" href="$plat__fsc_8c.html#aabfdc53d15689084481a7d1c37ba494b" title=" " alt="" coords="204,5,349,32"/>
+<area shape="rect" id="node4" href="$plat__fsc_8c.html#a09795fc0135a8b0d4b823fa2324b612a" title=" " alt="" coords="200,56,353,83"/>
+<area shape="rect" id="node5" href="$plat__status_8c.html#aa601af4f53236dc9df9b4db1735f94de" title=" " alt="" coords="221,107,332,133"/>
+<area shape="rect" id="node6" href="$plat__fsc_8c.html#a3618006bac37f262d1644b2d1a25919f" title=" " alt="" coords="217,157,336,184"/>
+<area shape="rect" id="node3" href="$plat__fsc_8c.html#a85c5ffed657d7b92e9d504870e0f942d" title=" " alt="" coords="401,31,520,57"/>
+</map>

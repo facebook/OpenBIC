@@ -1,0 +1,7 @@
+<map id="pump_failure_do" name="pump_failure_do">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,123,83"/>
+<area shape="rect" id="node2" href="$aalc-rpu_2src_2platform_2plat__log_8c.html#a103e33f69b37672107c44bcf36accc6b" title=" " alt="" coords="175,5,286,32"/>
+<area shape="rect" id="node3" href="$plat__threshold_8c.html#a763c09f1924de578af9af39758b3c633" title=" " alt="" coords="171,56,291,83"/>
+<area shape="rect" id="node5" href="$plat__status_8c.html#a6a5e5d3582c3221f9a1b3d94cff8cf6f" title=" " alt="" coords="175,107,286,133"/>
+<area shape="rect" id="node4" href="$plat__threshold_8c.html#a2ad1078224a8f4dc172eba16e307a4b6" title=" " alt="" coords="339,56,481,83"/>
+</map>
