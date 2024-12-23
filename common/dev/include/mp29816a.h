@@ -27,5 +27,8 @@ bool mp29816a_set_vout_min(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
 bool mp29816a_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_size);
 bool mp29816a_get_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
 bool mp29816a_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
+bool mp29816a_get_vr_status(sensor_cfg *cfg, uint8_t rail, uint8_t vr_status_rail,
+			    uint16_t *vr_status);
+bool mp29816a_clear_vr_status(sensor_cfg *cfg, uint8_t rail);
 
 #endif

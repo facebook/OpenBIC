@@ -63,11 +63,28 @@ enum VR_RAIL_E {
 	VR_RAIL_E_MAX,
 };
 
+enum VR_STAUS_E {
+	VR_STAUS_E_STATUS_BYTE = 0,
+	VR_STAUS_E_STATUS_WORD,
+	VR_STAUS_E_STATUS_VOUT,
+	VR_STAUS_E_STATUS_IOUT,
+	VR_STAUS_E_STATUS_INPUT,
+	VR_STAUS_E_STATUS_TEMPERATURE,
+	VR_STAUS_E_STATUS_CML,
+	VR_STAUS_E_MAX,
+};
+
 typedef struct vr_mapping_sensor {
 	uint8_t index;
 	uint8_t sensor_id;
 	uint8_t *sensor_name;
 } vr_mapping_sensor;
+
+typedef struct vr_mapping_status {
+	uint8_t index;
+	uint16_t pmbus_reg;
+	uint8_t *vr_status_name;
+} vr_mapping_status;
 
 extern vr_mapping_sensor vr_rail_table[];
 
@@ -95,5 +112,9 @@ bool vr_vout_user_settings_get(void *user_settings);
 void user_settings_init(void);
 bool plat_get_vout_command(uint8_t rail, uint16_t *millivolt);
 bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default, bool is_perm);
+bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_status);
+bool plat_clear_vr_status(uint8_t rail);
+bool vr_status_name_get(uint8_t rail, uint8_t **name);
+bool vr_status_enum_get(uint8_t *name, uint8_t *num);
 
 #endif
