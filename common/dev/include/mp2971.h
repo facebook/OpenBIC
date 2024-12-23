@@ -27,5 +27,8 @@ bool mp2971_set_vout_min(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
 bool mp2971_get_checksum(uint8_t bus, uint8_t addr, uint32_t *checksum);
 bool mp2971_get_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
 bool mp2971_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
+bool mp2971_get_vr_status(sensor_cfg *cfg, uint8_t rail, uint8_t vr_status_rail,
+			  uint16_t *vr_status);
+bool mp2971_clear_vr_status(sensor_cfg *cfg, uint8_t rail);
 
 #endif

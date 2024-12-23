@@ -37,5 +37,8 @@ bool isl69259_get_raa_crc(uint8_t bus, uint8_t addr, uint8_t mode, uint32_t *crc
 bool get_raa_remaining_wr(uint8_t bus, uint8_t addr, uint8_t mode, uint16_t *remain);
 bool isl69260_get_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
 bool isl69260_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
+bool isl69260_get_vr_status(sensor_cfg *cfg, uint8_t rail, uint8_t vr_status_rail,
+			    uint16_t *vr_status);
+bool isl69260_clear_vr_status(sensor_cfg *cfg, uint8_t rail);
 
 #endif

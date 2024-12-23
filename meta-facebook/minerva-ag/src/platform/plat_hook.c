@@ -31,6 +31,7 @@
 #include "mp29816a.h"
 #include "plat_pldm_sensor.h"
 #include "plat_class.h"
+#include "pmbus.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -191,6 +192,16 @@ vr_mapping_sensor vr_rail_table[] = {
 	  "AEGIS_CPU_P1V2_VDDHTX_PCIE" },
 };
 
+vr_mapping_status vr_status_table[] = {
+	{ VR_STAUS_E_STATUS_BYTE, PMBUS_STATUS_BYTE, "STATUS_BYTE" },
+	{ VR_STAUS_E_STATUS_WORD, PMBUS_STATUS_WORD, "STATUS_WORD" },
+	{ VR_STAUS_E_STATUS_VOUT, PMBUS_STATUS_VOUT, "STATUS_VOUT" },
+	{ VR_STAUS_E_STATUS_IOUT, PMBUS_STATUS_IOUT, "STATUS_IOUT" },
+	{ VR_STAUS_E_STATUS_INPUT, PMBUS_STATUS_INPUT, "STATUS_INPUT" },
+	{ VR_STAUS_E_STATUS_TEMPERATURE, PMBUS_STATUS_TEMPERATURE, "STATUS_TEMPERATURE" },
+	{ VR_STAUS_E_STATUS_CML, PMBUS_STATUS_CML, "STATUS_CML_PMBUS" },
+};
+
 bool vr_rail_name_get(uint8_t rail, uint8_t **name)
 {
 	CHECK_NULL_ARG_WITH_RETURN(name, false);
@@ -201,6 +212,19 @@ bool vr_rail_name_get(uint8_t rail, uint8_t **name)
 	}
 
 	*name = (uint8_t *)vr_rail_table[rail].sensor_name;
+	return true;
+}
+
+bool vr_status_name_get(uint8_t rail, uint8_t **name)
+{
+	CHECK_NULL_ARG_WITH_RETURN(name, false);
+
+	if (rail >= VR_STAUS_E_MAX) {
+		*name = NULL;
+		return false;
+	}
+
+	*name = (uint8_t *)vr_status_table[rail].vr_status_name;
 	return true;
 }
 
@@ -225,6 +249,22 @@ bool vr_rail_enum_get(uint8_t *name, uint8_t *num)
 	}
 
 	LOG_ERR("invalid rail name %s", name);
+	return false;
+}
+
+bool vr_status_enum_get(uint8_t *name, uint8_t *num)
+{
+	CHECK_NULL_ARG_WITH_RETURN(name, false);
+	CHECK_NULL_ARG_WITH_RETURN(num, false);
+
+	for (int i = 0; i < VR_STAUS_E_MAX; i++) {
+		if (strcmp(name, vr_status_table[i].vr_status_name) == 0) {
+			*num = i;
+			return true;
+		}
+	}
+
+	LOG_ERR("invalid vr status name %s", name);
 	return false;
 }
 
@@ -320,6 +360,131 @@ void user_settings_init(void)
 {
 	vr_vout_default_settings_init();
 	vr_vout_user_settings_init();
+}
+
+bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_status)
+{
+	CHECK_NULL_ARG_WITH_RETURN(vr_status, false);
+
+	bool ret = false;
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	vr_pre_proc_arg *pre_proc_args = vr_pre_read_args + rail;
+
+	if (cfg->pre_sensor_read_hook) {
+		if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
+			LOG_ERR("sensor id: 0x%x pre-read fail", sensor_id);
+			goto err;
+		}
+	}
+
+	uint16_t pmbus_reg_id = vr_status_table[vr_status_rail].pmbus_reg;
+
+	switch (cfg->type) {
+	case sensor_dev_isl69259:
+		if (!isl69260_get_vr_status(cfg, pre_proc_args->vr_page, pmbus_reg_id, vr_status)) {
+			LOG_ERR("The VR ISL69260 vr status reading failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_mp2971:
+		if (!mp2971_get_vr_status(cfg, pre_proc_args->vr_page, pmbus_reg_id, vr_status)) {
+			LOG_ERR("The VR MPS2971 vr status reading failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_mp29816a:
+		if (!mp29816a_get_vr_status(cfg, pre_proc_args->vr_page, pmbus_reg_id, vr_status)) {
+			LOG_ERR("The VR MPS29816a vr status reading failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_raa228249:
+		if (!raa228249_get_vr_status(cfg, pre_proc_args->vr_page, pmbus_reg_id,
+					     vr_status)) {
+			LOG_ERR("The VR RAA228249 vr status reading failed");
+			goto err;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport VR type(%x)", cfg->type);
+		goto err;
+	}
+
+	ret = true;
+err:
+	if (cfg->post_sensor_read_hook) {
+		if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) == false) {
+			LOG_ERR("sensor id: 0x%x post-read fail", sensor_id);
+		}
+	}
+	return ret;
+}
+
+bool plat_clear_vr_status(uint8_t rail)
+{
+	bool ret = false;
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	vr_pre_proc_arg *pre_proc_args = vr_pre_read_args + rail;
+
+	if (cfg->pre_sensor_read_hook) {
+		if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
+			LOG_ERR("sensor id: 0x%x pre-read fail", sensor_id);
+			goto err;
+		}
+	}
+
+	switch (cfg->type) {
+	case sensor_dev_isl69259:
+		if (!isl69260_clear_vr_status(cfg, pre_proc_args->vr_page)) {
+			LOG_ERR("The VR ISL69260 vr status clear failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_mp2971:
+		if (!mp2971_clear_vr_status(cfg, pre_proc_args->vr_page)) {
+			LOG_ERR("The VR MPS2971 vr status clear failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_mp29816a:
+		if (!mp29816a_clear_vr_status(cfg, pre_proc_args->vr_page)) {
+			LOG_ERR("The VR MPS29816a vr status clear failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_raa228249:
+		if (!raa228249_clear_vr_status(cfg, pre_proc_args->vr_page)) {
+			LOG_ERR("The VR RAA228249 vr status clear failed");
+			goto err;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport VR type(%x)", cfg->type);
+		goto err;
+	}
+
+	ret = true;
+err:
+	if (cfg->post_sensor_read_hook) {
+		if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) == false) {
+			LOG_ERR("sensor id: 0x%x post-read fail", sensor_id);
+		}
+	}
+	return ret;
 }
 
 bool plat_get_vout_command(uint8_t rail, uint16_t *millivolt)
