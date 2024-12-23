@@ -846,8 +846,8 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0x00000000, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x00000074, //uint32_t critical_high;
-			0x00000067, //uint32_t critical_low;
+			0x00000076, //uint32_t critical_high;
+			0x00000066, //uint32_t critical_low;
 			0x00000000, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 		},
