@@ -38,22 +38,35 @@ void cmd_set_event(const struct shell *shell, size_t argc, char **argv)
 
 void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 {
-	if (argc != 2) {
-		shell_warn(shell, "Help: test log log_dump <order>, order start from 1");
+	if (argc != 1) {
+		shell_warn(shell, "Help: test log log_dump");
 		return;
 	}
 
-	int order = strtol(argv[1], NULL, 10);
+	shell_print(shell, "Log number: %d", plat_log_get_num());
 
-	if (order < 1) {
-		shell_warn(shell, "Help: test log log_dump <order>, order start from 1");
-		return;
+	shell_print(
+		shell,
+		"=============================      LOG DUMP START      =============================");
+	for (int i = 0; i < plat_log_get_num(); i++) {
+		plat_err_log_mapping log = { 0 };
+		plat_log_read((uint8_t *)&log, AEGIS_FRU_LOG_SIZE, i + 1);
+
+		shell_print(shell, "index %d:", log.index);
+		shell_print(shell, "error_code: 0x%x", log.err_code);
+		shell_print(shell, "sys_time: %lld ms", log.sys_time);
+		shell_print(shell, "error_data:");
+		shell_hexdump(shell, log.error_data, sizeof(log.error_data));
+		shell_print(shell, "cpld register:");
+		shell_hexdump(shell, log.cpld_dump, sizeof(log.cpld_dump));
+		shell_print(
+			shell,
+			"====================================================================================");
 	}
 
-	uint8_t log_data[128] = { 0 };
-	plat_log_read(log_data, AEGIS_FRU_LOG_SIZE, order);
-
-	shell_hexdump(shell, log_data, sizeof(uint8_t) * AEGIS_FRU_LOG_SIZE);
+	shell_print(
+		shell,
+		"=============================       LOG DUMP END       =============================");
 
 	return;
 }
@@ -93,3 +106,9 @@ void cmd_log_clear(const struct shell *shell, size_t argc, char **argv)
 
 	return;
 }
+
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_blackbox_cmd, SHELL_CMD(get, NULL, "log_dump", cmd_log_dump),
+			       SHELL_CMD(clear, NULL, "log_clear", cmd_log_clear),
+			       SHELL_SUBCMD_SET_END);
+
+SHELL_CMD_REGISTER(blackbox, &sub_blackbox_cmd, "blackbox get/clear commands", NULL);

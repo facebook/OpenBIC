@@ -43,6 +43,7 @@ static plat_err_log_mapping err_log_data[LOG_MAX_NUM];
 static uint16_t err_code_caches[200]; //extend if error code types > 200
 static uint16_t next_log_position = 0; // Next position to write in the eeprom, 1-based, defaut 0
 static uint16_t next_index = 0; // Next global index to use for logs, 1-based, defaut 0
+static uint8_t log_num; // Number of logs in EEPROM
 
 enum VR_UBC_INDEX_E {
 	UBC_1 = 1,
@@ -121,7 +122,7 @@ void plat_log_read(uint8_t *log_data, uint8_t cmd_size, uint16_t order)
 	uint16_t eeprom_address =
 		AEGIS_FRU_LOG_START + zero_base_log_position * sizeof(plat_err_log_mapping);
 
-	LOG_INF("order: %d, log_position: %d, eeprom_address: 0x%X", order,
+	LOG_DBG("order: %d, log_position: %d, eeprom_address: 0x%X", order,
 		(zero_base_log_position + 1),
 		eeprom_address); //remove after all log function is ready
 
@@ -161,6 +162,7 @@ void plat_clear_log()
 		}
 		k_msleep(EEPROM_MAX_WRITE_TIME); // the eeprom max write time is 10 ms
 	}
+	log_num = 0;
 }
 
 bool plat_dump_cpld(uint8_t offset, uint8_t length, uint8_t *data)
@@ -323,18 +325,16 @@ void error_log_event(uint16_t error_code, bool log_status)
 	// Check if the error_code is already logged
 	for (uint8_t i = 1; i < ARRAY_SIZE(err_code_caches); i++) {
 		if (err_code_caches[i] == error_code) {
-			LOG_INF("Duplicate error_code: 0x%x, log_status: %d ", error_code,
-				log_status);
 			if (log_status == LOG_ASSERT) {
 				log_todo = false; // Duplicate error, no need to log again
-				LOG_INF("Duplicate error_code: 0x%x, log_status: %d ,return",
-					error_code, log_status);
+				LOG_INF("Duplicate error_code: 0x%x, log_status: %d", error_code,
+					log_status);
 				return;
 			} else if (log_status == LOG_DEASSERT) {
 				log_todo = true; // The error needs to be cleared
 				err_code_caches[i] = 0; // Remove the error code from the cache
-				LOG_INF("Duplicate error_code: 0x%x, log_status: %d ,return",
-					error_code, log_status);
+				LOG_INF("Duplicate error_code: 0x%x, log_status: %d", error_code,
+					log_status);
 				return;
 			}
 		}
@@ -400,6 +400,12 @@ void error_log_event(uint16_t error_code, bool log_status)
 
 	// Update the next log position
 	next_log_position = (fru_count % LOG_MAX_NUM) + 1;
+	log_num++;
+}
+
+uint8_t plat_log_get_num(void)
+{
+	return log_num;
 }
 
 void find_last_log_position()
@@ -422,6 +428,7 @@ void find_last_log_position()
 		// Check if the entry is valid
 		if (log_entry.index != 0xFFFF && log_entry.index <= LOG_MAX_INDEX) {
 			all_empty = false; // At least one entry is valid
+			log_num++;
 			if (log_entry.index > max_index) {
 				max_index = log_entry.index; // Update max index
 				last_position = i + 1; // Update last position, 1 base
