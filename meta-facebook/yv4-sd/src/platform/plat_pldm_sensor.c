@@ -5169,7 +5169,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_A_TEMP_C",
+		.sensorName = u"MB_DIMM_A0_TEMP_C",
 	},
 	{
 		// MB_DIMM_B_TEMP_C
@@ -5186,7 +5186,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_B_TEMP_C",
+		.sensorName = u"MB_DIMM_A1_TEMP_C",
 	},
 	{
 		// MB_DIMM_C_TEMP_C
@@ -5203,7 +5203,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_C_TEMP_C",
+		.sensorName = u"MB_DIMM_A2_TEMP_C",
 	},
 	{
 		// MB_DIMM_D_TEMP_C
@@ -5220,7 +5220,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_D_TEMP_C",
+		.sensorName = u"MB_DIMM_A3_TEMP_C",
 	},
 	{
 		// MB_DIMM_E_TEMP_C
@@ -5237,7 +5237,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_E_TEMP_C",
+		.sensorName = u"MB_DIMM_A4_TEMP_C",
 	},
 	{
 		// MB_DIMM_F_TEMP_C
@@ -5254,7 +5254,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_F_TEMP_C",
+		.sensorName = u"MB_DIMM_A5_TEMP_C",
 	},
 	{
 		// MB_DIMM_G_TEMP_C
@@ -5271,7 +5271,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_G_TEMP_C",
+		.sensorName = u"MB_DIMM_A6_TEMP_C",
 	},
 	{
 		// MB_DIMM_H_TEMP_C
@@ -5288,7 +5288,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_H_TEMP_C",
+		.sensorName = u"MB_DIMM_A7_TEMP_C",
 	},
 	{
 		// MB_DIMM_I_TEMP_C
@@ -5305,7 +5305,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_I_TEMP_C",
+		.sensorName = u"MB_DIMM_A8_TEMP_C",
 	},
 	{
 		// MB_DIMM_J_TEMP_C
@@ -5322,7 +5322,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_J_TEMP_C",
+		.sensorName = u"MB_DIMM_A9_TEMP_C",
 	},
 	{
 		// MB_DIMM_K_TEMP_C
@@ -5339,7 +5339,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_K_TEMP_C",
+		.sensorName = u"MB_DIMM_A10_TEMP_C",
 	},
 	{
 		// MB_DIMM_L_TEMP_C
@@ -5356,7 +5356,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_L_TEMP_C",
+		.sensorName = u"MB_DIMM_A11_TEMP_C",
 	},
 	{
 		// MB_SSD_BOOT_TEMP_C
@@ -6087,7 +6087,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_A_PWR_W",
+		.sensorName = u"MB_DIMM_A0_PWR_W",
 	},
 	{
 		// MB_DIMM_B_PWR_W
@@ -6104,7 +6104,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_B_PWR_W",
+		.sensorName = u"MB_DIMM_A1_PWR_W",
 	},
 	{
 		// MB_DIMM_C_PWR_W
@@ -6121,7 +6121,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_C_PWR_W",
+		.sensorName = u"MB_DIMM_A2_PWR_W",
 	},
 	{
 		// MB_DIMM_D_PWR_W
@@ -6138,7 +6138,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_D_PWR_W",
+		.sensorName = u"MB_DIMM_A3_PWR_W",
 	},
 	{
 		// MB_DIMM_E_PWR_W
@@ -6155,7 +6155,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_E_PWR_W",
+		.sensorName = u"MB_DIMM_A4_PWR_W",
 	},
 	{
 		// MB_DIMM_F_PWR_W
@@ -6172,7 +6172,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_F_PWR_W",
+		.sensorName = u"MB_DIMM_A5_PWR_W",
 	},
 	{
 		// MB_DIMM_G_PWR_W
@@ -6189,7 +6189,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_G_PWR_W",
+		.sensorName = u"MB_DIMM_A6_PWR_W",
 	},
 	{
 		// MB_DIMM_H_PWR_W
@@ -6206,7 +6206,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_H_PWR_W",
+		.sensorName = u"MB_DIMM_A7_PWR_W",
 	},
 	{
 		// MB_DIMM_I_PWR_W
@@ -6223,7 +6223,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_I_PWR_W",
+		.sensorName = u"MB_DIMM_A8_PWR_W",
 	},
 	{
 		// MB_DIMM_J_PWR_W
@@ -6240,7 +6240,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_J_PWR_W",
+		.sensorName = u"MB_DIMM_A9_PWR_W",
 	},
 	{
 		// MB_DIMM_K_PWR_W
@@ -6257,7 +6257,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_K_PWR_W",
+		.sensorName = u"MB_DIMM_A10_PWR_W",
 	},
 	{
 		// MB_DIMM_L_PWR_W
@@ -6274,7 +6274,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_L_PWR_W",
+		.sensorName = u"MB_DIMM_A11_PWR_W",
 	},
 	{
 		// MB_INA233_x8_RTM_PWR_W
