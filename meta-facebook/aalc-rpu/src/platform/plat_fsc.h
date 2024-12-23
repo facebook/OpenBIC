@@ -46,6 +46,13 @@ enum FSC_TYPE {
 	FSC_TYPE_DEFAULT,
 };
 
+enum FSC_MODE_E {
+	FSC_MODE_UNKNOW = 0,
+	FSC_MODE_AUTO_MODE, // include auto tune
+	FSC_MODE_MANUAL_MODE,
+	FSC_MODE_SEMI_MODE,
+};
+
 /* stepwise */
 typedef struct {
 	uint8_t temp;

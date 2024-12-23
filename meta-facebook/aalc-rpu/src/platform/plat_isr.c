@@ -126,13 +126,15 @@ IT_LEAK_ALERT_HANDLER(3);
 void aalc_leak_behavior(uint8_t sensor_num)
 {
 	fault_leak_action();
-	error_log_event(sensor_num, IS_ABNORMAL_VAL);
-
 	uint8_t led_leak = (sensor_num == SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V) ?
 				   AALC_STATUS_CDU_LEAKAGE :
 			   (sensor_num == SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_VOLT_V) ?
 				   AALC_STATUS_RACK_LEAKAGE :
 				   AALC_STATUS_LEAK_E_MAX;
+
+	if (!(get_status_flag(STATUS_FLAG_LEAK) & BIT(led_leak)))
+		error_log_event(sensor_num, IS_ABNORMAL_VAL);
+
 	set_status_flag(STATUS_FLAG_LEAK, led_leak, 1);
 	set_sticky_sensor_status((sensor_num == SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V) ?
 					 STICKY_RPU_INTERNAL_LEAKAGE_ABNORMAL :
