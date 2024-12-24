@@ -25,6 +25,8 @@ void ISR_GPIO_FM_ATH_HBM3_CATTRIP_ALARM_LV33_R();
 void ISR_GPIO_ALL_VR_PM_ALERT_R_N();
 void ISR_GPIO_ATH_SMB_ALERT_NPCM_LVC33_R_N();
 void ISR_GPIO_FM_PLD_UBC_EN_R();
+bool plat_i2c_read(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t *data, uint8_t len);
+bool plat_i2c_write(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t *data, uint8_t len);
 
 void plat_clock_init();
 void plat_eusb_init();

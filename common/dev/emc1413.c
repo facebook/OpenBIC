@@ -23,6 +23,11 @@
 
 LOG_MODULE_REGISTER(dev_emc1413);
 
+#define EMC1413_STATUS_REG 0x02
+#define EMC1413_EXTERNAL_DIODE_FAULT_REG 0x1B
+#define EMC1413_HIGH_LIMIT_STATUS_REG 0x35
+#define EMC1413_LOW_LIMIT_STATUS_REG 0x36
+#define EMC1413_THERM_LIMIT_STATUS_REG 0x37
 #define EMC1413_DEFAULT_RESOLUTION 0.125
 #define EMC1413_TEMP_SHIFT_BIT 5
 
@@ -323,6 +328,65 @@ uint8_t emc1413_read(sensor_cfg *cfg, int *reading)
 	sval->integer = (uint16_t)(val * EMC1413_DEFAULT_RESOLUTION);
 	sval->fraction = ((val * EMC1413_DEFAULT_RESOLUTION) - sval->integer) * 1000;
 	return SENSOR_READ_SUCCESS;
+}
+
+bool emc1413_get_temp_status(sensor_cfg *cfg, uint8_t *temp_status)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = cfg->port;
+	i2c_msg.target_addr = cfg->target_addr;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = EMC1413_STATUS_REG;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("TMP[0x%x] get status reg[0x%d] failed.", cfg->num, EMC1413_STATUS_REG);
+		return false;
+	}
+	*temp_status = i2c_msg.data[0];
+
+	return true;
+}
+
+bool emc1413_clear_temp_status(sensor_cfg *cfg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = cfg->port;
+	i2c_msg.target_addr = cfg->target_addr;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = EMC1413_EXTERNAL_DIODE_FAULT_REG;
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("TMP[0x%x] clear status reg[0x%d] failed.", cfg->num,
+			EMC1413_EXTERNAL_DIODE_FAULT_REG);
+		return false;
+	}
+	i2c_msg.data[0] = EMC1413_HIGH_LIMIT_STATUS_REG;
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("TMP[0x%x] clear status reg[0x%d] failed.", cfg->num,
+			EMC1413_HIGH_LIMIT_STATUS_REG);
+		return false;
+	}
+	i2c_msg.data[0] = EMC1413_LOW_LIMIT_STATUS_REG;
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("TMP[0x%x] clear status reg[0x%d] failed.", cfg->num,
+			EMC1413_LOW_LIMIT_STATUS_REG);
+		return false;
+	}
+	i2c_msg.data[0] = EMC1413_THERM_LIMIT_STATUS_REG;
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("TMP[0x%x] clear status reg[0x%d] failed.", cfg->num,
+			EMC1413_THERM_LIMIT_STATUS_REG);
+		return false;
+	}
+
+	return true;
 }
 
 uint8_t emc1413_init(sensor_cfg *cfg)

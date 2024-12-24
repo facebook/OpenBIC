@@ -26,6 +26,10 @@
 
 LOG_MODULE_REGISTER(dev_tmp431);
 
+#define TMP432_STATUS_REG 0x02
+#define TMP432_OPEN_STATUS_REG 0x1B
+#define TMP432_HIGH_LIMIT_STATUS_REG 0x35
+#define TMP432_LOW_LIMIT_STATUS_REG 0x36
 #define I2C_DATA_SIZE 5
 #define RANGE_0_127 0
 #define RANGE_m55_150 1
@@ -325,6 +329,59 @@ uint8_t tmp431_read(sensor_cfg *cfg, int *reading)
 	sval->integer = (int32_t)val;
 	sval->fraction = (int32_t)(val * 1000) % 1000;
 	return SENSOR_READ_SUCCESS;
+}
+
+bool tmp432_get_temp_status(sensor_cfg *cfg, uint8_t *temp_status)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = cfg->port;
+	i2c_msg.target_addr = cfg->target_addr;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = TMP432_STATUS_REG;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("TMP[0x%x] get status reg[0x%d] failed.", cfg->num, TMP432_STATUS_REG);
+		return false;
+	}
+	*temp_status = i2c_msg.data[0];
+
+	return true;
+}
+
+bool tmp432_clear_temp_status(sensor_cfg *cfg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = cfg->port;
+	i2c_msg.target_addr = cfg->target_addr;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = TMP432_OPEN_STATUS_REG;
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("TMP[0x%x] clear status reg[0x%d] failed.", cfg->num,
+			TMP432_OPEN_STATUS_REG);
+		return false;
+	}
+	i2c_msg.data[0] = TMP432_HIGH_LIMIT_STATUS_REG;
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("TMP[0x%x] clear status reg[0x%d] failed.", cfg->num,
+			TMP432_HIGH_LIMIT_STATUS_REG);
+		return false;
+	}
+	i2c_msg.data[0] = TMP432_LOW_LIMIT_STATUS_REG;
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("TMP[0x%x] clear status reg[0x%d] failed.", cfg->num,
+			TMP432_LOW_LIMIT_STATUS_REG);
+		return false;
+	}
+
+	return true;
 }
 
 uint8_t tmp431_init(sensor_cfg *cfg)

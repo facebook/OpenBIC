@@ -24,6 +24,7 @@
 #include "plat_gpio.h"
 #include "plat_sensor_table.h"
 #include "plat_hook.h"
+#include "plat_isr.h"
 #include <logging/log.h>
 #include "mp2971.h"
 #include "isl69259.h"
@@ -116,6 +117,7 @@ bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading)
 	return true;
 }
 
+#define AEGIS_CPLD_ADDR (0x4C >> 1)
 #define VR_PRE_READ_ARG(idx)                                                                       \
 	{ .mutex = vr_mutex + idx, .vr_page = 0x0 },                                               \
 	{                                                                                          \
@@ -143,6 +145,44 @@ mp2971_init_arg mp2971_init_args[] = {
 isl69259_init_arg isl69259_init_args[] = {
 	[0] = { .vout_scale_enable = true, .vout_scale = (499 / 798.8) },
 };
+
+temp_mapping_sensor temp_index_table[] = {
+	{ TEMP_INDEX_ON_DIE_1_2, SENSOR_NUM_ON_DIE_1_TEMP_C, "ON_DIE_1_TEMP" },
+	{ TEMP_INDEX_ON_DIE_3_4, SENSOR_NUM_ON_DIE_3_TEMP_C, "ON_DIE_2_TEMP" },
+	{ TEMP_INDEX_TOP_INLET, SENSOR_NUM_TOP_INLET_TEMP_C, "TOP_INLET_TEMP" },
+	{ TEMP_INDEX_BOT_INLET, SENSOR_NUM_BOT_INLET_TEMP_C, "BOT_INLET_TEMP" },
+	{ TEMP_INDEX_TOP_OUTLET, SENSOR_NUM_TOP_OUTLET_TEMP_C, "TOP_OUTLET_TEMP" },
+	{ TEMP_INDEX_BOT_OUTLET, SENSOR_NUM_BOT_OUTLET_TEMP_C, "BOT_OUTLET_TEMP" },
+};
+
+bool temp_sensor_rail_name_get(uint8_t rail, uint8_t **name)
+{
+	CHECK_NULL_ARG_WITH_RETURN(name, false);
+
+	if (rail >= TEMP_INDEX_MAX) {
+		*name = NULL;
+		return false;
+	}
+
+	*name = (uint8_t *)temp_index_table[rail].sensor_name;
+	return true;
+}
+
+bool temp_sensor_rail_enum_get(uint8_t *name, uint8_t *num)
+{
+	CHECK_NULL_ARG_WITH_RETURN(name, false);
+	CHECK_NULL_ARG_WITH_RETURN(num, false);
+
+	for (int i = 0; i < TEMP_INDEX_MAX; i++) {
+		if (strcmp(name, temp_index_table[i].sensor_name) == 0) {
+			*num = i;
+			return true;
+		}
+	}
+
+	LOG_ERR("invalid rail name %s", name);
+	return false;
+}
 
 void *vr_mutex_get(enum VR_INDEX_E vr_index)
 {
@@ -1022,6 +1062,131 @@ err:
 			LOG_ERR("sensor id: 0x%x post-read fail", sensor_id);
 		}
 	}
+	return ret;
+}
+
+bool plat_get_temp_status(uint8_t rail, uint8_t *temp_status)
+{
+	CHECK_NULL_ARG_WITH_RETURN(temp_status, false);
+
+	bool ret = false;
+	uint8_t sensor_id = temp_index_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	switch (cfg->type) {
+	case sensor_dev_tmp75: {
+		uint8_t data[1] = { 0 };
+		if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, 0x2B, data, 1)) {
+			LOG_ERR("Failed to read TEMP TMP75 from cpld");
+			goto err;
+		}
+
+		switch (rail) {
+		case TEMP_INDEX_TOP_INLET:
+			*temp_status = (data[0] & BIT(2)) >> 2;
+			break;
+		case TEMP_INDEX_TOP_OUTLET:
+			*temp_status = (data[0] & BIT(3)) >> 3;
+			break;
+		case TEMP_INDEX_BOT_INLET:
+			*temp_status = (data[0] & BIT(4)) >> 4;
+			break;
+		case TEMP_INDEX_BOT_OUTLET:
+			*temp_status = (data[0] & BIT(5)) >> 5;
+			break;
+		default:
+			LOG_ERR("Unsupport TEMP TMP75 alert pin");
+			goto err;
+		}
+	} break;
+	case sensor_dev_tmp431:
+		if (!tmp432_get_temp_status(cfg, temp_status)) {
+			LOG_ERR("The TEMP TMP432 temp status reading failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_emc1413:
+		if (!emc1413_get_temp_status(cfg, temp_status)) {
+			LOG_ERR("The TMP EMC1413 temp status reading failed");
+			goto err;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport TEMP type(%x)", cfg->type);
+		goto err;
+	}
+
+	ret = true;
+err:
+	return ret;
+}
+
+bool plat_clear_temp_status(uint8_t rail)
+{
+	bool ret = false;
+	uint8_t sensor_id = temp_index_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	switch (cfg->type) {
+	case sensor_dev_tmp75: {
+		uint8_t data[1] = { 0 };
+		if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, 0x2B, data, 1)) {
+			LOG_ERR("Failed to read TEMP TMP75 from cpld");
+			goto err;
+		}
+
+		switch (rail) {
+		case TEMP_INDEX_TOP_INLET:
+			data[0] &= ~BIT(2);
+			break;
+		case TEMP_INDEX_TOP_OUTLET:
+			data[0] &= ~BIT(3);
+			break;
+		case TEMP_INDEX_BOT_INLET:
+			data[0] &= ~BIT(4);
+			break;
+		case TEMP_INDEX_BOT_OUTLET:
+			data[0] &= ~BIT(5);
+			break;
+		default:
+			LOG_ERR("Unsupport TEMP TMP75 alert pin");
+			goto err;
+		}
+
+		if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR, 0x2B, data, 1)) {
+			LOG_ERR("Failed to clear TEMP TMP75 to cpld");
+			goto err;
+		}
+	} break;
+	case sensor_dev_tmp431:
+		if (!tmp432_clear_temp_status(cfg)) {
+			LOG_ERR("The TEMP TMP432 temp status clear failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_emc1413:
+		if (!emc1413_clear_temp_status(cfg)) {
+			LOG_ERR("The TMP EMC1413 temp status clear failed");
+			goto err;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport TEMP type(%x)", cfg->type);
+		goto err;
+	}
+
+	ret = true;
+err:
 	return ret;
 }
 

@@ -137,6 +137,12 @@ typedef struct _vr_pre_proc_arg {
 	uint8_t vr_page;
 } vr_pre_proc_arg;
 
+typedef struct temp_mapping_sensor {
+	uint8_t index;
+	uint8_t sensor_id;
+	uint8_t *sensor_name;
+} temp_mapping_sensor;
+
 extern vr_pre_proc_arg vr_pre_read_args[];
 extern mp2971_init_arg mp2971_init_args[];
 extern isl69259_init_arg isl69259_init_args[];
@@ -154,6 +160,10 @@ bool plat_get_vout_min(uint8_t rail, uint16_t *millivolt);
 bool plat_get_vout_max(uint8_t rail, uint16_t *millivolt);
 bool plat_set_vout_min(uint8_t rail, uint16_t *millivolt);
 bool plat_set_vout_max(uint8_t rail, uint16_t *millivolt);
+bool temp_sensor_rail_name_get(uint8_t rail, uint8_t **name);
+bool temp_sensor_rail_enum_get(uint8_t *name, uint8_t *num);
+bool plat_get_temp_status(uint8_t rail, uint8_t *temp_status);
+bool plat_clear_temp_status(uint8_t rail);
 bool pre_vr_read(sensor_cfg *cfg, void *args);
 bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
 bool is_mb_dc_on();
