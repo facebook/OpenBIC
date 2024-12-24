@@ -32,6 +32,227 @@ LOG_MODULE_REGISTER(dev_tmp431);
 
 static uint8_t temperature_range = 0xFF;
 
+typedef struct _temp_mapping_register {
+	uint8_t threshold_index;
+	uint8_t read_byte;
+	uint8_t write_byte;
+} temp_mapping_register;
+
+temp_mapping_register tmp432_temp_register_map[] = {
+	{ LOCAL_HIGH_LIMIT, TMP432_LOCAL_HIGH_LIMIT_HIGH_BYTE_READ_REG,
+	  TMP432_LOCAL_HIGH_LIMIT_HIGH_BYTE_WRITE_REG },
+	{ LOCAL_LOW_LIMIT, TMP432_LOCAL_LOW_LIMIT_HIGH_BYTE_READ_REG,
+	  TMP432_LOCAL_LOW_LIMIT_HIGH_BYTE_WRITE_REG },
+	{ REMOTE_1_HIGH_LIMIT, TMP432_REMOTE_1_HIGH_LIMIT_HIGH_BYTE_READ_REG,
+	  TMP432_REMOTE_1_HIGH_LIMIT_HIGH_BYTE_WRITE_REG },
+	{ REMOTE_1_LOW_LIMIT, TMP432_REMOTE_1_LOW_LIMIT_HIGH_BYTE_READ_REG,
+	  TMP432_REMOTE_1_LOW_LIMIT_HIGH_BYTE_WRITE_REG },
+	{ REMOTE_2_HIGH_LIMIT, TMP432_REMOTE_2_HIGH_LIMIT_HIGH_BYTE_READ_REG,
+	  TMP432_REMOTE_2_HIGH_LIMIT_HIGH_BYTE_WRITE_REG },
+	{ REMOTE_2_LOW_LIMIT, TMP432_REMOTE_2_LOW_LIMIT_HIGH_BYTE_READ_REG,
+	  TMP432_REMOTE_2_LOW_LIMIT_HIGH_BYTE_WRITE_REG },
+	{ LOCAL_THERM_LIMIT, TMP432_LOCAL_THERM_LIMIT_REG, TMP432_LOCAL_THERM_LIMIT_REG },
+	{ REMOTE_1_THERM_LIMIT, TMP432_REMOTE_1_THERM_LIMIT_REG, TMP432_REMOTE_1_THERM_LIMIT_REG },
+	{ REMOTE_2_THERM_LIMIT, TMP432_REMOTE_2_THERM_LIMIT_REG, TMP432_REMOTE_2_THERM_LIMIT_REG },
+};
+
+bool get_tmp432_two_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
+			       uint32_t *millidegree_celsius)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millidegree_celsius, false);
+
+	uint8_t register_high = tmp432_temp_register_map[temp_threshold_index].read_byte;
+
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 2;
+	msg.data[0] = register_high;
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Failed to write TMP431 register(0x%x)", temp_threshold_index);
+		return false;
+	}
+
+	float limit_high_byte_val = (float)msg.data[0] * 1000.0;
+	float limit_low_byte_val = (float)(msg.data[1] >> 4) * 0.0625;
+
+	*millidegree_celsius = (uint32_t)limit_high_byte_val + limit_low_byte_val;
+
+	return true;
+}
+
+bool get_tmp432_one_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
+			       uint32_t *millidegree_celsius)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millidegree_celsius, false);
+
+	uint8_t register_high = tmp432_temp_register_map[temp_threshold_index].read_byte;
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 1;
+	msg.data[0] = register_high;
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Failed to write TMP431 register(0x%x)", temp_threshold_index);
+		return false;
+	}
+
+	uint32_t limit_high_byte_val = (uint32_t)msg.data[0] * 1000;
+
+	*millidegree_celsius = limit_high_byte_val;
+
+	return true;
+}
+
+bool tmp432_get_temp_threshold(sensor_cfg *cfg, uint8_t temp_threshold_index,
+			       uint32_t *millidegree_celsius)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millidegree_celsius, false);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
+		return false;
+	}
+
+	if (temp_threshold_index >= TEMP_THRESHOLD_TYPE_E_MAX) {
+		LOG_ERR("temp_threshold_index: 0x%x is invalid", temp_threshold_index);
+		return false;
+	}
+
+	switch (temp_threshold_index) {
+	case LOCAL_HIGH_LIMIT:
+	case LOCAL_LOW_LIMIT:
+	case REMOTE_1_HIGH_LIMIT:
+	case REMOTE_1_LOW_LIMIT:
+	case REMOTE_2_HIGH_LIMIT:
+	case REMOTE_2_LOW_LIMIT:
+		if (!get_tmp432_two_byte_limit(cfg, temp_threshold_index, millidegree_celsius)) {
+			return false;
+		} else {
+			return true;
+		}
+		break;
+	case LOCAL_THERM_LIMIT:
+	case REMOTE_1_THERM_LIMIT:
+	case REMOTE_2_THERM_LIMIT:
+		if (!get_tmp432_one_byte_limit(cfg, temp_threshold_index, millidegree_celsius)) {
+			return false;
+		} else {
+			return true;
+		}
+		break;
+	default:
+		LOG_ERR("temp_threshold_index: 0x%x is invalid", temp_threshold_index);
+		return false;
+	}
+
+	return false;
+}
+
+bool set_tmp432_two_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
+			       uint32_t *millidegree_celsius)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millidegree_celsius, false);
+
+	uint8_t register_high = tmp432_temp_register_map[temp_threshold_index].write_byte;
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 3;
+	msg.data[0] = register_high;
+	msg.data[1] = (uint8_t)(*millidegree_celsius / 1000);
+
+	uint32_t remainder = *millidegree_celsius % 1000;
+	uint8_t low_byte_val = (uint8_t)((remainder * 16) / 1000);
+	msg.data[2] = (low_byte_val << 4);
+
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("Failed to write TMP431 register(0x%x)", temp_threshold_index);
+		return false;
+	}
+
+	return true;
+}
+
+bool set_tmp432_one_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
+			       uint32_t *millidegree_celsius)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millidegree_celsius, false);
+
+	uint8_t register_high = tmp432_temp_register_map[temp_threshold_index].write_byte;
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 1;
+	msg.data[0] = register_high;
+	msg.data[1] = (uint8_t)(*millidegree_celsius / 1000.0);
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("Failed to write TMP431 register(0x%x)", temp_threshold_index);
+		return false;
+	}
+
+	return true;
+}
+
+bool tmp432_set_temp_threshold(sensor_cfg *cfg, uint8_t temp_threshold_index,
+			       uint32_t *millidegree_celsius)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millidegree_celsius, false);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
+		return false;
+	}
+
+	if (temp_threshold_index >= TEMP_THRESHOLD_TYPE_E_MAX) {
+		LOG_ERR("temp_threshold_index: 0x%x is invalid", temp_threshold_index);
+		return false;
+	}
+
+	switch (temp_threshold_index) {
+	case LOCAL_HIGH_LIMIT:
+	case LOCAL_LOW_LIMIT:
+	case REMOTE_1_HIGH_LIMIT:
+	case REMOTE_1_LOW_LIMIT:
+	case REMOTE_2_HIGH_LIMIT:
+	case REMOTE_2_LOW_LIMIT:
+		if (!set_tmp432_two_byte_limit(cfg, temp_threshold_index, millidegree_celsius)) {
+			return false;
+		} else {
+			return true;
+		}
+		break;
+	case LOCAL_THERM_LIMIT:
+	case REMOTE_1_THERM_LIMIT:
+	case REMOTE_2_THERM_LIMIT:
+		if (!set_tmp432_one_byte_limit(cfg, temp_threshold_index, millidegree_celsius)) {
+			return false;
+		} else {
+			return true;
+		}
+		break;
+	default:
+		LOG_ERR("temp_threshold_index: 0x%x is invalid", temp_threshold_index);
+		return false;
+	}
+
+	return false;
+}
+
 uint8_t tmp431_read(sensor_cfg *cfg, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
