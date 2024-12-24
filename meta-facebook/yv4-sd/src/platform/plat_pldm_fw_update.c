@@ -36,6 +36,7 @@
 #include "plat_pldm_device_identifier.h"
 #include "sensor.h"
 #include "tps53689.h"
+#include "plat_pldm_monitor.h"
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
@@ -47,6 +48,8 @@ static bool plat_get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len
 static bool plat_get_bios_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 static uint8_t plat_pldm_pre_retimer_recovery(void *fw_update_param);
 static uint8_t plat_pldm_post_retimer_recovery(void *fw_update_param);
+static uint8_t plat_pldm_pre_bios_update(void *fw_update_param);
+static uint8_t plat_pldm_post_bios_update(void *fw_update_param);
 
 enum FIRMWARE_COMPONENT {
 	SD_COMPNT_BIC,
@@ -179,9 +182,9 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
 		.comp_identifier = SD_COMPNT_BIOS,
 		.comp_classification_index = 0x00,
-		.pre_update_func = NULL,
-		.update_func = NULL,
-		.pos_update_func = NULL,
+		.pre_update_func = plat_pldm_pre_bios_update,
+		.update_func = pldm_bios_update,
+		.pos_update_func = plat_pldm_post_bios_update,
 		.inf = COMP_UPDATE_VIA_SPI,
 		.activate_method = COMP_ACT_SYS_REBOOT,
 		.self_act_func = NULL,
@@ -669,6 +672,34 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	ret = true;
 
 	return ret;
+}
+
+static uint8_t plat_pldm_pre_bios_update(void *fw_update_param)
+{
+	host_power_off();
+
+	int pos = pal_get_bios_flash_position();
+	if (pos == -1) {
+		return -1;
+	}
+
+	// Switch GPIO(BIOS SPI Selection Pin) to BIC
+	bool ret = pal_switch_bios_spi_mux(GPIO_HIGH);
+	if (!ret) {
+		return -1;
+	}
+
+	return 0;
+}
+
+static uint8_t plat_pldm_post_bios_update(void *fw_update_param)
+{
+	int ret = pal_switch_bios_spi_mux(GPIO_LOW);
+	if (!ret) {
+		return -1;
+	}
+	host_power_on();
+	return 0;
 }
 
 static uint8_t plat_pldm_pre_retimer_update(void *fw_update_param)

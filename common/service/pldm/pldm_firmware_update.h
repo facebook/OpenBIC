@@ -649,6 +649,7 @@ uint16_t pldm_fw_update_read(void *mctp_p, enum pldm_firmware_update_commands cm
 uint8_t pldm_bic_update(void *fw_update_param);
 uint8_t pldm_vr_update(void *fw_update_param);
 uint8_t pldm_cpld_update(void *fw_update_param);
+uint8_t pldm_bios_update(void *fw_update_param);
 uint8_t pldm_retimer_update(void *fw_update_param);
 uint8_t pldm_retimer_recovery(void *fw_update_param);
 uint8_t fw_recovery_eeprom(I2C_MSG *msg, uint32_t offset, uint16_t msg_len, uint8_t *msg_buf,
