@@ -30,12 +30,14 @@ void cmd_set_sensor_threshold(const struct shell *shell, size_t argc, char **arg
 		return;
 	}
 
+	uint32_t sensor_max_count = 0;
+	sensor_max_count = plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR);
+
 	int sensorID = strtol(argv[1], NULL, 16);
 
-	if (sensorID < SENSOR_NUM_UBC_1_TEMP_C ||
-	    sensorID > SENSOR_NUM_CPU_P1V2_VDDHTX_PCIE_PWR_W) {
-		shell_error(shell, "Help: Sensor ID: 0x%x is higher than 0x62 or lower than 0x1",
-			    sensorID);
+	if (sensorID < SENSOR_NUM_UBC_1_TEMP_C || sensorID > sensor_max_count) {
+		shell_error(shell, "Help: Sensor ID: 0x%x is higher than 0x%x or lower than 0x1",
+			    sensorID, sensor_max_count);
 		return;
 	}
 
@@ -90,11 +92,13 @@ void cmd_get_sensor_threshold(const struct shell *shell, size_t argc, char **arg
 	float critical_low = 0;
 	int result = 0;
 
+	uint32_t sensor_max_count = 0;
+	sensor_max_count = plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR);
+
 	snprintf(threshold_all, sizeof(threshold_all), "%s", argv[1]);
 
 	if (strcmp(threshold_all, "All") == 0 || strcmp(threshold_all, "all") == 0) {
-		for (int i = SENSOR_NUM_UBC_1_TEMP_C; i <= SENSOR_NUM_CPU_P1V2_VDDHTX_PCIE_PWR_W;
-		     i++) {
+		for (int i = SENSOR_NUM_UBC_1_TEMP_C; i <= sensor_max_count; i++) {
 			result = check_supported_threshold_with_sensor_id(i);
 			if (result == 0) {
 				char sensor_name[MAX_AUX_SENSOR_NAME_LEN] = { 0 };
@@ -111,16 +115,14 @@ void cmd_get_sensor_threshold(const struct shell *shell, size_t argc, char **arg
 					i, sensor_name, critical_high, critical_low);
 				critical_high = 0;
 				critical_low = 0;
-				memset(sensor_name, 0, sizeof(sensor_name));
 			}
 		}
 	} else {
 		int sensorID = strtol(argv[1], NULL, 16);
 
-		if (sensorID < SENSOR_NUM_UBC_1_TEMP_C ||
-		    sensorID > SENSOR_NUM_CPU_P1V2_VDDHTX_PCIE_PWR_W) {
-			shell_error(shell, "Sensor ID 0x%x is higher than 0x62 or lower than 0x1",
-				    sensorID);
+		if (sensorID < SENSOR_NUM_UBC_1_TEMP_C || sensorID > sensor_max_count) {
+			shell_error(shell, "Sensor ID 0x%x is higher than 0x%x or lower than 0x1",
+				    sensorID, sensor_max_count);
 			return;
 		}
 
