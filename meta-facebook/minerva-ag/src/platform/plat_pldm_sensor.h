@@ -253,5 +253,8 @@ bool is_vr_access(uint8_t sensor_num);
 bool get_sensor_info_by_sensor_id(uint8_t sensor_id, uint8_t *vr_bus, uint8_t *vr_addr,
 				  uint8_t *sensor_dev);
 bool is_osfp_3v3_access(uint8_t sensor_num);
+size_t char16_strlen(const char16_t *str);
+char16_t *char16_strcpy(char16_t *dest, const char16_t *src);
+char16_t *char16_strcat_char(char16_t *dest);
 
 #endif

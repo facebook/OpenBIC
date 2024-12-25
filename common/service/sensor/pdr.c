@@ -6,6 +6,7 @@
 #include "libutil.h"
 #include "plat_sensor_table.h"
 #include "plat_ipmb.h"
+#include "plat_pldm_sensor.h"
 
 #include <logging/log.h>
 
@@ -185,8 +186,33 @@ int pldm_get_sensor_name_via_sensor_id(uint16_t sensor_id, char *sensor_name, si
 				temp_cfg.sensorName[j] = sys_cpu_to_be16(temp_cfg.sensorName[j]);
 			}
 
+			char temp_name[MAX_AUX_SENSOR_NAME_LEN] = { 0 };
+
 			// Convert the char16_t string to UTF-8
-			char16_to_char(temp_cfg.sensorName, sensor_name, max_length);
+			char16_to_char(temp_cfg.sensorName, temp_name, max_length);
+
+			char temp_buff[MAX_AUX_SENSOR_NAME_LEN] = { 0 };
+			char symbol[] = "_";
+
+			char16_t *temp_entity_name = (char16_t *)malloc(
+				char16_strlen(entity_auxiliary_names_table[0].entityName) *
+				(sizeof(char16_t) + 1));
+
+			char16_strcpy(temp_entity_name, entity_auxiliary_names_table[0].entityName);
+
+			char16_strcat_char(temp_entity_name);
+
+			for (int k = 0; temp_entity_name[k] != 0x0000; k++) {
+				temp_entity_name[k] = sys_cpu_to_be16(temp_entity_name[k]);
+			}
+
+			// Convert the char16_t string to UTF-8
+			char16_to_char(temp_entity_name, temp_buff, sizeof(temp_buff));
+
+			snprintf(sensor_name, max_length, "%s%s%s", temp_buff, symbol, temp_name);
+
+			SAFE_FREE(temp_entity_name);
+
 			return 0;
 		}
 	}
