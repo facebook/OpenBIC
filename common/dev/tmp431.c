@@ -81,10 +81,9 @@ bool get_tmp432_two_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
 		return false;
 	}
 
-	float limit_high_byte_val = (float)msg.data[0] * 1000.0;
-	float limit_low_byte_val = (float)(msg.data[1] >> 4) * 0.0625;
-
-	*millidegree_celsius = (uint32_t)limit_high_byte_val + limit_low_byte_val;
+	uint32_t limit_high_byte_val = (uint32_t)msg.data[0] * 1000;
+	uint32_t limit_low_byte_val = ((msg.data[1] >> 4) * 625) / 10;
+	*millidegree_celsius = limit_high_byte_val + limit_low_byte_val;
 
 	return true;
 }
@@ -202,7 +201,7 @@ bool set_tmp432_one_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
 	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 1;
 	msg.data[0] = register_high;
-	msg.data[1] = (uint8_t)(*millidegree_celsius / 1000.0);
+	msg.data[1] = (uint8_t)(*millidegree_celsius / 1000);
 	if (i2c_master_write(&msg, retry)) {
 		LOG_ERR("Failed to write TMP431 register(0x%x)", temp_threshold_index);
 		return false;
