@@ -117,6 +117,7 @@ bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading)
 	return true;
 }
 
+#define EEPROM_MAX_WRITE_TIME 5 // the BR24G512 eeprom max write time is 3.5 ms
 #define AEGIS_CPLD_ADDR (0x4C >> 1)
 #define VR_PRE_READ_ARG(idx)                                                                       \
 	{ .mutex = vr_mutex + idx, .vr_page = 0x0 },                                               \
@@ -302,11 +303,7 @@ temp_threshold_mapping_sensor temp_index_threshold_type_table[] = {
 };
 // clang-format on
 
-typedef struct temp_threshold_user_settings_struct {
-	uint32_t temperature_reg_val[PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX];
-} temp_threshold_user_settings_struct;
-
-struct temp_threshold_user_settings_struct temp_threshold_user_settings = { 0 };
+temp_threshold_user_settings_struct temp_threshold_user_settings = { 0 };
 struct temp_threshold_user_settings_struct temp_threshold_default_settings = { 0 };
 
 bool is_mb_dc_on()
@@ -410,12 +407,10 @@ bool vr_status_name_get(uint8_t rail, uint8_t **name)
 	return true;
 }
 
+#define TEMP_THRESHOLD_USER_SETTINGS_OFFSET 0x8100
 #define VR_VOUT_USER_SETTINGS_OFFSET 0x8000
-struct vr_vout_user_settings {
-	uint16_t vout[VR_RAIL_E_MAX];
-} __attribute__((packed));
 
-struct vr_vout_user_settings user_settings = { 0 };
+vr_vout_user_settings user_settings = { 0 };
 struct vr_vout_user_settings default_settings = { 0 };
 
 bool vr_rail_enum_get(uint8_t *name, uint8_t *num)
@@ -465,8 +460,8 @@ bool vr_vout_user_settings_get(void *user_settings)
 	msg.rx_len = sizeof(struct vr_vout_user_settings);
 
 	if (i2c_master_read(&msg, retry)) {
-		LOG_ERR("Failed to read eeprom, bus: %d, addr: 0x%x, reg: 0x%x", msg.bus,
-			msg.target_addr, msg.data[0]);
+		LOG_ERR("Failed to read eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x", msg.bus,
+			msg.target_addr, msg.data[0], msg.data[1]);
 		return false;
 	}
 	memcpy(user_settings, msg.data, sizeof(struct vr_vout_user_settings));
@@ -488,11 +483,15 @@ bool vr_vout_user_settings_set(void *user_settings)
 	msg.data[1] = VR_VOUT_USER_SETTINGS_OFFSET & 0xff;
 
 	memcpy(&msg.data[2], user_settings, sizeof(struct vr_vout_user_settings));
+	LOG_DBG("vout write eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x, tx_len: %d", msg.bus,
+		msg.target_addr, msg.data[0], msg.data[1], msg.tx_len);
+
 	if (i2c_master_write(&msg, retry)) {
-		LOG_ERR("Failed to write eeprom, bus: %d, addr: 0x%x, reg: 0x%x", msg.bus,
-			msg.target_addr, msg.data[0]);
+		LOG_ERR("vout Failed to write eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x, tx_len: %d",
+			msg.bus, msg.target_addr, msg.data[0], msg.data[1], msg.tx_len);
 		return false;
 	}
+	k_msleep(EEPROM_MAX_WRITE_TIME);
 
 	return true;
 }
@@ -574,11 +573,12 @@ static bool vr_vout_user_settings_init(void)
 		if (user_settings.vout[i] != 0xffff) {
 			/* write vout */
 			uint16_t millivolt = user_settings.vout[i];
-			if (!plat_set_vout_command(i, &user_settings.vout[i], false, false)) {
+			if (!plat_set_vout_command(i, &millivolt, false, false)) {
 				LOG_ERR("Can't set vout[%d]=%x by user settings", i, millivolt);
 				return false;
 			}
-			LOG_INF("set [%d]%s: %dmV", i, vr_rail_table[i].sensor_name, millivolt);
+			LOG_INF("set [%x]%s: %dmV", i, vr_rail_table[i].sensor_name,
+				user_settings.vout[i]);
 		}
 	}
 
@@ -647,8 +647,8 @@ bool temp_threshold_user_settings_get(void *temp_threshold_user_settings)
 	msg.rx_len = sizeof(struct temp_threshold_user_settings_struct);
 
 	if (i2c_master_read(&msg, retry)) {
-		LOG_ERR("Failed to read eeprom, bus: %d, addr: 0x%x, reg: 0x%x", msg.bus,
-			msg.target_addr, msg.data[0]);
+		LOG_ERR("Failed to read eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x", msg.bus,
+			msg.target_addr, msg.data[0], msg.data[1]);
 		return false;
 	}
 	memcpy(temp_threshold_user_settings, msg.data,
@@ -672,12 +672,15 @@ bool temp_threshold_user_settings_set(void *temp_threshold_user_settings)
 
 	memcpy(&msg.data[2], temp_threshold_user_settings,
 	       sizeof(struct temp_threshold_user_settings_struct));
+	LOG_DBG("temp write eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x, tx_len: %d", msg.bus,
+		msg.target_addr, msg.data[0], msg.data[1], msg.tx_len);
+
 	if (i2c_master_write(&msg, retry)) {
-		LOG_ERR("Failed to write eeprom, bus: %d, addr: 0x%x, reg: 0x%x", msg.bus,
-			msg.target_addr, msg.data[0]);
+		LOG_ERR("temp Failed to write eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x, tx_len: %d",
+			msg.bus, msg.target_addr, msg.data[0], msg.data[1], msg.tx_len);
 		return false;
 	}
-
+	k_msleep(EEPROM_MAX_WRITE_TIME);
 	return true;
 }
 
@@ -700,7 +703,7 @@ static bool temp_threshold_user_settings_init(void)
 			}
 			LOG_INF("set [%x]%s: %d", i,
 				temp_index_threshold_type_table[i].temp_threshold_name,
-				temp_threshold);
+				temp_threshold_user_settings.temperature_reg_val[i]);
 		}
 	}
 
@@ -932,6 +935,33 @@ err:
 	return ret;
 }
 
+/* If any perm parameter are added, remember to update this function accordingly.　*/
+bool perm_config_clear(void)
+{
+	/* clear all vout perm parameters */
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		user_settings.vout[i] = 0xffff;
+	}
+	memset(user_settings.vout, 0xFF, sizeof(user_settings.vout));
+	if (!vr_vout_user_settings_set(&user_settings)) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
+	/* clear all temp_threshold perm parameters */
+	for (int i = 0; i < PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX; i++) {
+		temp_threshold_user_settings.temperature_reg_val[i] = 0xffffffff;
+	}
+	memset(temp_threshold_user_settings.temperature_reg_val, 0xFF,
+	       sizeof(temp_threshold_user_settings.temperature_reg_val));
+	if (!temp_threshold_user_settings_set(&temp_threshold_user_settings)) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
+	return true;
+}
+
 bool plat_get_vout_command(uint8_t rail, uint16_t *millivolt)
 {
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
@@ -1001,6 +1031,7 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default, b
 	bool ret = false;
 	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
 	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	uint16_t setting_millivolt = *millivolt;
 
 	if (cfg == NULL) {
 		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
@@ -1018,6 +1049,7 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default, b
 
 	if (is_default) {
 		*millivolt = default_settings.vout[rail];
+		setting_millivolt = default_settings.vout[rail];
 	}
 
 	switch (cfg->type) {
@@ -1051,7 +1083,7 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default, b
 	}
 
 	if (is_perm) {
-		user_settings.vout[rail] = *millivolt;
+		user_settings.vout[rail] = setting_millivolt;
 		vr_vout_user_settings_set(&user_settings);
 	}
 
@@ -1330,6 +1362,7 @@ bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 
 	uint8_t sensor_id = temp_index_threshold_type_table[temp_index_threshold_type].sensor_id;
 	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	uint32_t setting_millidegree_celsius = *millidegree_celsius;
 
 	if (cfg == NULL) {
 		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
@@ -1339,6 +1372,9 @@ bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 	if (is_default) {
 		*millidegree_celsius = temp_threshold_default_settings
 					       .temperature_reg_val[temp_index_threshold_type];
+		setting_millidegree_celsius =
+			temp_threshold_default_settings
+				.temperature_reg_val[temp_index_threshold_type];
 	}
 
 	switch (cfg->type) {
@@ -1368,7 +1404,7 @@ bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 
 	if (is_perm) {
 		temp_threshold_user_settings.temperature_reg_val[temp_index_threshold_type] =
-			*millidegree_celsius;
+			setting_millidegree_celsius;
 		temp_threshold_user_settings_set(&temp_threshold_user_settings);
 	}
 

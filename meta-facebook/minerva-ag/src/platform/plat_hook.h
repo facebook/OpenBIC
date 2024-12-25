@@ -22,7 +22,6 @@
 #define VR_MAX_NUM 11
 #define VR_MUTEX_LOCK_TIMEOUT_MS 1000
 
-#define TEMP_THRESHOLD_USER_SETTINGS_OFFSET 0x8100
 #include "plat_pldm_sensor.h"
 
 enum VR_INDEX_E {
@@ -124,6 +123,12 @@ typedef struct vr_mapping_sensor {
 	int peak_value;
 } vr_mapping_sensor;
 
+typedef struct vr_vout_user_settings {
+	uint16_t vout[VR_RAIL_E_MAX];
+} vr_vout_user_settings;
+
+extern vr_vout_user_settings user_settings;
+
 typedef struct vr_mapping_status {
 	uint8_t index;
 	uint16_t pmbus_reg;
@@ -147,6 +152,12 @@ extern vr_pre_proc_arg vr_pre_read_args[];
 extern mp2971_init_arg mp2971_init_args[];
 extern isl69259_init_arg isl69259_init_args[];
 
+typedef struct temp_threshold_user_settings_struct {
+	uint32_t temperature_reg_val[PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX];
+} temp_threshold_user_settings_struct;
+
+extern temp_threshold_user_settings_struct temp_threshold_user_settings;
+
 typedef struct temp_threshold_mapping_sensor {
 	uint8_t temp_index_threshold_type; //PLAT_TEMP_INDEX_THRESHOLD_TYPE_E
 	uint8_t temp_threshold_type;
@@ -166,6 +177,7 @@ bool plat_get_temp_status(uint8_t rail, uint8_t *temp_status);
 bool plat_clear_temp_status(uint8_t rail);
 bool pre_vr_read(sensor_cfg *cfg, void *args);
 bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
+bool perm_config_clear();
 bool is_mb_dc_on();
 void *vr_mutex_get(enum VR_INDEX_E vr_index);
 void vr_mutex_init(void);
