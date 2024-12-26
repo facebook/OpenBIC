@@ -184,6 +184,6 @@ void init_cpld_polling(void)
 	cpld_polling_tid = k_thread_create(
 		&cpld_polling_thread, cpld_polling_stack, K_THREAD_STACK_SIZEOF(cpld_polling_stack),
 		poll_cpld_registers, NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0,
-		K_MSEC(3000)); //sleep for 3 seconds to prevent dc status changing when reboot BIC
+		K_MSEC(2000)); //sleep for 3 seconds to prevent dc status changing when reboot BIC
 	k_thread_name_set(&cpld_polling_thread, "cpld_polling_thread");
 }
