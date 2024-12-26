@@ -78,15 +78,8 @@ void check_ubc_delayed(struct k_timer *timer)
 	 * 0 -> UBC is disabled
 	 */
 	bool is_ubc_enabled = (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH);
-	bool is_dc_on = is_mb_dc_on();
 
-	if (is_ubc_enabled != is_dc_on) {
-		error_log_event(is_ubc_enabled ? DC_ON_STATUS_FAULT : DC_OFF_STATUS_FAULT,
-				LOG_ASSERT);
-		set_dc_status_changing_status(false);
-		return;
-	}
-
+	set_dc_status_changing_status(false);
 	ubc_enabled_delayed_status = is_ubc_enabled;
 }
 

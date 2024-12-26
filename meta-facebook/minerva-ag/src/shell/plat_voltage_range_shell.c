@@ -122,8 +122,8 @@ static int cmd_voltage_range_set(const struct shell *shell, size_t argc, char **
 				    voltage_set_val_mv_backup);
 			return -1;
 		}
-		shell_print(shell, "voltage_range set %s %s: %dmV , backup: %dmV", argv[1], argv[2],
-			    voltage_set_val_mv, voltage_set_val_mv_backup);
+		shell_print(shell, "voltage_range set %s %s: %dmV", argv[1], argv[2],
+			    voltage_set_val_mv);
 	} else if (!strcmp(argv[3], "max")) {
 		/*set max range*/
 		if (!plat_set_vout_max(rail, &voltage_set_val_mv)) {
@@ -131,8 +131,8 @@ static int cmd_voltage_range_set(const struct shell *shell, size_t argc, char **
 				    voltage_set_val_mv_backup);
 			return -1;
 		}
-		shell_print(shell, "voltage_range set %s %s: %dmV , backup: %dmV", argv[1], argv[2],
-			    voltage_set_val_mv, voltage_set_val_mv_backup);
+		shell_print(shell, "voltage_range set %s %s: %dmV", argv[1], argv[2],
+			    voltage_set_val_mv);
 	} else {
 		shell_error(shell, "voltage_range set <voltage-rail> <new-voltage> min|max");
 		return -1;
