@@ -19,15 +19,24 @@
 
 #include <shell/shell.h>
 
-enum CLOCK_COMPONENT { CLKGEN_312M, CLKBUF_100M_U471, CLKBUF_100M_U519, CLKGEN_100M };
+enum CLOCK_COMPONENT {
+	CLKGEN_312M,
+	CLKBUF_100M_U471,
+	CLKBUF_100M_U519,
+	CLKGEN_100M,
+	CLK_COMPONENT_MAX
+};
 
 typedef struct clock_compnt_mapping {
 	uint8_t clock_name_index;
 	uint8_t addr;
 	uint8_t bus;
+	uint8_t *clock_name;
 } clock_compnt_mapping;
 
 void cmd_set_clock(const struct shell *shell, size_t argc, char **argv);
 void cmd_get_clock(const struct shell *shell, size_t argc, char **argv);
+void cmd_get_clock_status(const struct shell *shell, size_t argc, char **argv);
+void cmd_clear_clock_status(const struct shell *shell, size_t argc, char **argv);
 
 #endif
