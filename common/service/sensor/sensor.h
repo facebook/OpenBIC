@@ -779,6 +779,19 @@ typedef struct isl69259_init_args {
 	float vout_scale;
 } isl69259_init_arg;
 
+enum TEMP_THRESHOLD_TYPE_E {
+	LOCAL_HIGH_LIMIT,
+	LOCAL_LOW_LIMIT,
+	REMOTE_1_HIGH_LIMIT,
+	REMOTE_1_LOW_LIMIT,
+	REMOTE_2_HIGH_LIMIT,
+	REMOTE_2_LOW_LIMIT,
+	LOCAL_THERM_LIMIT,
+	REMOTE_1_THERM_LIMIT,
+	REMOTE_2_THERM_LIMIT,
+	TEMP_THRESHOLD_TYPE_E_MAX,
+};
+
 extern bool enable_sensor_poll_thread;
 extern sensor_cfg *sensor_config;
 // Mapping sensor number to sensor config index

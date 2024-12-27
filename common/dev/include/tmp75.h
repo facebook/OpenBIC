@@ -14,21 +14,17 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_ISR_H
-#define PLAT_ISR_H
+#ifndef TMP75_H
+#define TMP75_H
 
-void ISR_GPIO_FM_ASIC_0_THERMTRIP_R_N();
-void ISR_GPIO_RST_ATH_PWR_ON_PLD_R1_N();
-void ISR_GPIO_ATH_CURRENT_SENSE_0_NPCM_R();
-void ISR_GPIO_ATH_CURRENT_SENSE_1_NPCM_R();
-void ISR_GPIO_FM_ATH_HBM3_CATTRIP_ALARM_LV33_R();
-void ISR_GPIO_ALL_VR_PM_ALERT_R_N();
-void ISR_GPIO_ATH_SMB_ALERT_NPCM_LVC33_R_N();
-void ISR_GPIO_FM_PLD_UBC_EN_R();
-bool plat_i2c_read(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t *data, uint8_t len);
-bool plat_i2c_write(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t *data, uint8_t len);
+enum TMP75_REIGSTER_MAP {
+	TMP75_LOCAL_HIGH_LIMIT_REG = 0x02,
+	TMP75_LOCAL_LOW_LIMIT_REG = 0x03,
+};
 
-void plat_clock_init();
-void plat_eusb_init();
+bool tmp75_get_temp_threshold(sensor_cfg *cfg, uint8_t temp_threshold_index,
+			      uint32_t *millidegree_celsius);
+bool tmp75_set_temp_threshold(sensor_cfg *cfg, uint8_t temp_threshold_index,
+			      uint32_t *millidegree_celsius);
 
 #endif
