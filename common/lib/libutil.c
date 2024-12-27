@@ -219,3 +219,29 @@ void sort_bubble(int *array, int len)
 		}
 	}
 }
+
+// Custom function to calculate the length of a char16_t string
+size_t strlen16(const char16_t *str)
+{
+	const char16_t *s = str;
+	while (*s)
+		++s;
+	return s - str;
+}
+
+// Custom function to copy a char16_t string
+char16_t *strcpy16(char16_t *dest, const char16_t *src)
+{
+	char16_t *d = dest;
+	while ((*d++ = *src++))
+		;
+	return dest;
+}
+
+// Custom function to concatenate a char16_t character to a string
+char16_t *ch16_strcat_char(char16_t *dest)
+{
+	size_t len = strlen16(dest);
+	dest[len] = u'\0';
+	return dest;
+}

@@ -4,14 +4,18 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <sys/byteorder.h>
+#include "plat_def.h"
+#include "libutil.h"
 
 #define TIMESTAMP104_SIZE 13 //A binary datetime type formatted as a series of 13 bytes
 #define NUMERIC_PDR_SIZE 108
 #define MAX_LANGUAGE_TAG_LEN 3 //name language tag: "en"
+
+#ifndef MAX_AUX_SENSOR_NAME_LEN
 #define MAX_AUX_SENSOR_NAME_LEN 40
+#endif
 
 typedef float real32_t;
-typedef uint_least16_t char16_t;
 
 int pdr_init(void);
 
