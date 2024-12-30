@@ -176,7 +176,6 @@ void plat_mctp_init(void)
 		mctp_reg_msg_rx_func(p->mctp_inst, mctp_msg_recv);
 
 		mctp_start(p->mctp_inst);
-		k_msleep(5000);
 	}
 }
 
