@@ -78,6 +78,7 @@ typedef struct vr_mapping_sensor {
 	uint8_t index;
 	uint8_t sensor_id;
 	uint8_t *sensor_name;
+	int peak_value;
 } vr_mapping_sensor;
 
 typedef struct vr_mapping_status {
@@ -102,12 +103,21 @@ bool plat_get_vout_max(uint8_t rail, uint16_t *millivolt);
 bool plat_set_vout_min(uint8_t rail, uint16_t *millivolt);
 bool plat_set_vout_max(uint8_t rail, uint16_t *millivolt);
 bool pre_vr_read(sensor_cfg *cfg, void *args);
-bool post_vr_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
 bool is_mb_dc_on();
 void *vr_mutex_get(enum VR_INDEX_E vr_index);
 void vr_mutex_init(void);
 bool vr_rail_name_get(uint8_t rail, uint8_t **name);
 bool vr_rail_enum_get(uint8_t *name, uint8_t *num);
+int power_level_send_event(int ubc1_current, int ubc2_current);
+bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading);
+void set_uart_power_event_is_enable(bool is_enable);
+void pwr_level_mutex_init(void);
+void set_alert_level_to_default_or_user_setting(bool is_default, int32_t user_setting);
+int set_user_settings_alert_level_to_eeprom(void *user_settings, uint8_t data_length);
+int get_alert_level_info(bool *is_assert, int32_t *default_value, int32_t *setting_value);
+bool vr_rail_voltage_peak_get(uint8_t *name, int *peak_value);
+bool vr_rail_voltage_peak_clear(uint8_t rail_index);
 bool vr_vout_user_settings_get(void *user_settings);
 void user_settings_init(void);
 bool plat_get_vout_command(uint8_t rail, uint16_t *millivolt);

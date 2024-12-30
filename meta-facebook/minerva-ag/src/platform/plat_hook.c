@@ -35,7 +35,83 @@
 
 LOG_MODULE_REGISTER(plat_hook);
 
+#define ALERT_LEVEL_USER_SETTINGS_OFFSET 0x8200
+
 static struct k_mutex vr_mutex[VR_MAX_NUM];
+static struct k_mutex pwrlevel_mutex;
+
+static bool uart_pwr_event_is_enable = false;
+
+int32_t alert_level_mA_default = 110000;
+int32_t alert_level_mA_user_setting = 110000;
+bool alert_level_is_assert = false;
+
+int power_level_send_event(int ubc1_current, int ubc2_current)
+{
+	//print send event to consloe
+	LOG_INF("send power level event ubc1_current=%dmA,ubc2_current=%dmA", ubc1_current,
+		ubc2_current);
+
+	if (uart_pwr_event_is_enable == true) {
+		//To Do: need to send event to BMC
+		LOG_INF("UBC1 and UBC2 over current and need to send event to BMC");
+	}
+
+	return 0;
+}
+
+bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+
+	sensor_val *reading_val = (sensor_val *)reading;
+
+	int sensor_reading = 0;
+	static int ubc1_current_mA;
+
+	if (cfg->num == SENSOR_NUM_UBC_1_P12V_CURR_A) {
+		if (reading != NULL) {
+			if (reading_val->integer >= 0) {
+				sensor_reading =
+					reading_val->integer * 1000 + reading_val->fraction;
+			} else {
+				sensor_reading =
+					reading_val->integer * 1000 - reading_val->fraction;
+			}
+
+			ubc1_current_mA = sensor_reading;
+		} else {
+			ubc1_current_mA = 0;
+		}
+	}
+
+	if (cfg->num == SENSOR_NUM_UBC_2_P12V_CURR_A) {
+		if (reading != NULL) {
+			if (reading_val->integer >= 0) {
+				sensor_reading =
+					reading_val->integer * 1000 + reading_val->fraction;
+			} else {
+				sensor_reading =
+					reading_val->integer * 1000 - reading_val->fraction;
+			}
+		} else {
+			sensor_reading = 0;
+		}
+
+		k_mutex_lock(&pwrlevel_mutex, K_MSEC(1000));
+
+		if ((ubc1_current_mA + sensor_reading) > alert_level_mA_user_setting) {
+			alert_level_is_assert = true;
+			power_level_send_event(ubc1_current_mA, sensor_reading);
+		}
+		alert_level_is_assert = false;
+
+		k_mutex_unlock(&pwrlevel_mutex);
+	}
+
+	return true;
+}
 
 #define VR_PRE_READ_ARG(idx)                                                                       \
 	{ .mutex = vr_mutex + idx, .vr_page = 0x0 },                                               \
@@ -107,11 +183,30 @@ bool pre_vr_read(sensor_cfg *cfg, void *args)
 	return true;
 }
 
-bool post_vr_read(sensor_cfg *cfg, void *args, int *reading)
+bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
-	ARG_UNUSED(reading);
+
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		if (reading == NULL) {
+			break;
+		}
+
+		if ((get_board_type() == MINERVA_AEGIS_BD) && (i == 0))
+			continue; // skip osfp p3v3 on AEGIS BD
+
+		if (cfg->num == vr_rail_table[i].sensor_id) {
+			if (vr_rail_table[i].peak_value == 0xffffffff) {
+				vr_rail_table[i].peak_value = *reading;
+			} else {
+				if (vr_rail_table[i].peak_value < *reading) {
+					vr_rail_table[i].peak_value = *reading;
+				}
+			}
+			break;
+		}
+	}
 
 	vr_pre_proc_arg *pre_proc_args = (vr_pre_proc_arg *)args;
 
@@ -152,44 +247,44 @@ void vr_mutex_init(void)
 
 /* the order is following enum VR_RAIL_E */
 vr_mapping_sensor vr_rail_table[] = {
-	{ VR_RAIL_E_OSFP_P3V3, SENSOR_NUM_OSFP_P3V3_VOLT_V, "AEGIS_OSFP_P3V3" },
-	{ VR_RAIL_E_P0V85, SENSOR_NUM_CPU_P0V85_PVDD_VOLT_V, "AEGIS_CPU_P0V85_PVDD" },
-	{ VR_RAIL_E_P0V75_PVDD_CH_N, SENSOR_NUM_CPU_P0V75_PVDD_CH_N_VOLT_V,
-	  "AEGIS_CPU_P0V75_PVDD_CH_N" },
-	{ VR_RAIL_E_P0V75_MAX_PHY_N, SENSOR_NUM_CPU_P0V75_MAX_PHY_N_VOLT_V,
-	  "AEGIS_CPU_P0V75_MAX_PHY_N" },
-	{ VR_RAIL_E_P0V75_PVDD_CH_S, SENSOR_NUM_CPU_P0V75_PVDD_CH_S_VOLT_V,
-	  "AEGIS_CPU_P0V75_PVDD_CH_S" },
-	{ VR_RAIL_E_P0V75_MAX_PHY_S, SENSOR_NUM_CPU_P0V75_MAX_PHY_S_VOLT_V,
-	  "AEGIS_CPU_P0V75_MAX_PHY_S" },
+	{ VR_RAIL_E_OSFP_P3V3, SENSOR_NUM_OSFP_P3V3_VOLT_V, "AEGIS_P3V3", 0xffffffff },
+	{ VR_RAIL_E_P0V85, SENSOR_NUM_CPU_P0V85_PVDD_VOLT_V, "AEGIS_P0V85_PVDD", 0xffffffff },
+	{ VR_RAIL_E_P0V75_PVDD_CH_N, SENSOR_NUM_CPU_P0V75_PVDD_CH_N_VOLT_V, "AEGIS_P0V75_PVDD_CH_N",
+	  0xffffffff },
+	{ VR_RAIL_E_P0V75_MAX_PHY_N, SENSOR_NUM_CPU_P0V75_MAX_PHY_N_VOLT_V, "AEGIS_P0V75_MAX_PHY_N",
+	  0xffffffff },
+	{ VR_RAIL_E_P0V75_PVDD_CH_S, SENSOR_NUM_CPU_P0V75_PVDD_CH_S_VOLT_V, "AEGIS_P0V75_PVDD_CH_S",
+	  0xffffffff },
+	{ VR_RAIL_E_P0V75_MAX_PHY_S, SENSOR_NUM_CPU_P0V75_MAX_PHY_S_VOLT_V, "AEGIS_P0V75_MAX_PHY_S",
+	  0xffffffff },
 	{ VR_RAIL_E_P0V75_TRVDD_ZONEA, SENSOR_NUM_CPU_P0V75_TRVDD_ZONEA_VOLT_V,
-	  "AEGIS_CPU_P0V75_TRVDD_ZONEA" },
+	  "AEGIS_P0V75_TRVDD_ZONEA", 0xffffffff },
 	{ VR_RAIL_E_P1V8_VPP_HBM0_2_4, SENSOR_NUM_CPU_P1V8_VPP_HBM0_2_4_VOLT_V,
-	  "AEGIS_CPU_P1V8_VPP_HBM0_2_4" },
+	  "AEGIS_VPP_HBM0_HBM2_HBM4", 0xffffffff },
 	{ VR_RAIL_E_P0V75_TRVDD_ZONEB, SENSOR_NUM_CPU_P0V75_TRVDD_ZONEB_VOLT_V,
-	  "AEGIS_CPU_P0V75_TRVDD_ZONEB" },
+	  "AEGIS_P0V75_TRVDD_ZONEB", 0xffffffff },
 	{ VR_RAIL_E_P0V4_VDDQL_HBM0_2_4, SENSOR_NUM_CPU_P0V4_VDDQL_HBM0_2_4_VOLT_V,
-	  "AEGIS_CPU_P0V4_VDDQL_HBM0_2_4" },
+	  "AEGIS_VDDQL_HBM0_HBM2_HBM4", 0xffffffff },
 	{ VR_RAIL_E_P1V1_VDDC_HBM0_2_4, SENSOR_NUM_CPU_P1V1_VDDC_HBM0_2_4_VOLT_V,
-	  "AEGIS_CPU_P1V1_VDDC_HBM0_2_4" },
+	  "AEGIS_P1V1_VDDC_HBM0_HBM2_HBM4", 0xffffffff },
 	{ VR_RAIL_E_P0V75_VDDPHY_HBM0_2_4, SENSOR_NUM_CPU_P0V75_VDDPHY_HBM0_2_4_VOLT_V,
-	  "AEGIS_CPU_P0V75_VDDPHY_HBM0_2_4" },
+	  "AEGIS_P0V75_VDDPHY_HBM0_HBM2_HBM4", 0xffffffff },
 	{ VR_RAIL_E_P0V9_TRVDD_ZONEA, SENSOR_NUM_CPU_P0V9_TRVDD_ZONEA_VOLT_V,
-	  "AEGIS_CPU_P0V9_TRVDD_ZONEA" },
+	  "AEGIS_P0V9_TRVDD_ZONEA", 0xffffffff },
 	{ VR_RAIL_E_P1V8_VPP_HBM1_3_5, SENSOR_NUM_CPU_P1V8_VPP_HBM1_3_5_VOLT_V,
-	  "AEGIS_CPU_P1V8_VPP_HBM1_3_5" },
+	  "AEGIS_VPP_HBM1_HBM3_HBM5", 0xffffffff },
 	{ VR_RAIL_E_P0V9_TRVDD_ZONEB, SENSOR_NUM_CPU_P0V9_TRVDD_ZONEB_VOLT_V,
-	  "AEGIS_CPU_P0V9_TRVDD_ZONEB" },
+	  "AEGIS_P0V9_TRVDD_ZONEB", 0xffffffff },
 	{ VR_RAIL_E_P0V4_VDDQL_HBM1_3_5, SENSOR_NUM_CPU_P0V4_VDDQL_HBM1_3_5_VOLT_V,
-	  "AEGIS_CPU_P0V4_VDDQL_HBM1_3_5" },
+	  "AEGIS_VDDQL_HBM1_HBM3_HBM5", 0xffffffff },
 	{ VR_RAIL_E_P1V1_VDDC_HBM1_3_5, SENSOR_NUM_CPU_P1V1_VDDC_HBM1_3_5_VOLT_V,
-	  "AEGIS_CPU_P1V1_VDDC_HBM1_3_5" },
+	  "AEGIS_P1V1_VDDC_HBM1_HBM3_HBM5", 0xffffffff },
 	{ VR_RAIL_E_P0V75_VDDPHY_HBM1_3_5, SENSOR_NUM_CPU_P0V75_VDDPHY_HBM1_3_5_VOLT_V,
-	  "AEGIS_CPU_P0V75_VDDPHY_HBM1_3_5" },
-	{ VR_RAIL_E_P0V8_VDDA_PCIE, SENSOR_NUM_CPU_P0V8_VDDA_PCIE_VOLT_V,
-	  "AEGIS_CPU_P0V8_VDDA_PCIE" },
-	{ VR_RAIL_E_P1V2_VDDHTX_PCIE, SENSOR_NUM_CPU_P1V2_VDDHTX_PCIE_VOLT_V,
-	  "AEGIS_CPU_P1V2_VDDHTX_PCIE" },
+	  "AEGIS_P0V75_VDDPHY_HBM1_HBM3_HBM5", 0xffffffff },
+	{ VR_RAIL_E_P0V8_VDDA_PCIE, SENSOR_NUM_CPU_P0V8_VDDA_PCIE_VOLT_V, "AEGIS_VDDA_PCIE",
+	  0xffffffff },
+	{ VR_RAIL_E_P1V2_VDDHTX_PCIE, SENSOR_NUM_CPU_P1V2_VDDHTX_PCIE_VOLT_V, "AEGIS_VDDHTX_PCIE",
+	  0xffffffff },
 };
 
 vr_mapping_status vr_status_table[] = {
@@ -315,6 +410,72 @@ bool vr_vout_user_settings_set(void *user_settings)
 	return true;
 }
 
+int set_user_settings_alert_level_to_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, -1);
+
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 5;
+	msg.bus = I2C_BUS12;
+	msg.target_addr = 0xA0 >> 1;
+	msg.tx_len = data_length + 2;
+	msg.data[0] = ALERT_LEVEL_USER_SETTINGS_OFFSET >> 8;
+	msg.data[1] = ALERT_LEVEL_USER_SETTINGS_OFFSET & 0xff;
+
+	memcpy(&msg.data[2], user_settings, data_length);
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("Failed to write eeprom, bus: %d, addr: 0x%x, reg: 0x%x%x", msg.bus,
+			msg.target_addr, msg.data[0], msg.data[1]);
+		return -1;
+	}
+
+	return 0;
+}
+
+int get_user_settings_alert_level_from_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, -1);
+
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 5;
+	msg.bus = I2C_BUS12;
+	msg.target_addr = 0xA0 >> 1;
+	msg.tx_len = 2;
+	msg.data[0] = ALERT_LEVEL_USER_SETTINGS_OFFSET >> 8;
+	msg.data[1] = ALERT_LEVEL_USER_SETTINGS_OFFSET & 0xff;
+	msg.rx_len = data_length;
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Failed to read eeprom, bus: %d, addr: 0x%x, reg: 0x%x%x", msg.bus,
+			msg.target_addr, msg.data[0], msg.data[1]);
+		return -1;
+	}
+	memcpy(user_settings, msg.data, data_length);
+
+	return 0;
+}
+
+static int alert_level_user_settings_init(void)
+{
+	char setting_data[4] = { 0 };
+
+	if (get_user_settings_alert_level_from_eeprom(setting_data, sizeof(setting_data)) == -1) {
+		LOG_ERR("get alert level user settings failed");
+		return -1;
+	}
+
+	int32_t alert_level_value = ((setting_data[3] << 24) | (setting_data[2] << 16) |
+				     (setting_data[1] << 8) | setting_data[0]);
+
+	if (alert_level_value != 0xffffffff) {
+		alert_level_mA_user_setting = alert_level_value;
+	} else {
+		alert_level_mA_user_setting = alert_level_mA_default;
+	}
+
+	return 0;
+}
+
 static bool vr_vout_user_settings_init(void)
 {
 	if (vr_vout_user_settings_get(&user_settings) == false) {
@@ -358,8 +519,85 @@ static bool vr_vout_default_settings_init(void)
 /* init the user & default settings value by shell command */
 void user_settings_init(void)
 {
+	alert_level_user_settings_init();
 	vr_vout_default_settings_init();
 	vr_vout_user_settings_init();
+}
+
+void set_uart_power_event_is_enable(bool is_enable)
+{
+	if (is_enable == true) {
+		uart_pwr_event_is_enable = true;
+	} else {
+		uart_pwr_event_is_enable = false;
+	}
+
+	return;
+}
+
+void pwr_level_mutex_init(void)
+{
+	k_mutex_init(&pwrlevel_mutex);
+
+	return;
+}
+
+void set_alert_level_to_default_or_user_setting(bool is_default, int32_t user_setting)
+{
+	k_mutex_lock(&pwrlevel_mutex, K_MSEC(1000));
+
+	if (is_default == true) {
+		alert_level_mA_user_setting = alert_level_mA_default;
+	} else {
+		alert_level_mA_user_setting = user_setting;
+	}
+
+	k_mutex_unlock(&pwrlevel_mutex);
+
+	return;
+}
+
+int get_alert_level_info(bool *is_assert, int32_t *default_value, int32_t *setting_value)
+{
+	CHECK_NULL_ARG_WITH_RETURN(is_assert, -1);
+	CHECK_NULL_ARG_WITH_RETURN(default_value, -1);
+	CHECK_NULL_ARG_WITH_RETURN(setting_value, -1);
+
+	k_mutex_lock(&pwrlevel_mutex, K_MSEC(1000));
+
+	*is_assert = alert_level_is_assert;
+	*default_value = alert_level_mA_default;
+	*setting_value = alert_level_mA_user_setting;
+
+	k_mutex_unlock(&pwrlevel_mutex);
+
+	return 0;
+}
+
+bool vr_rail_voltage_peak_get(uint8_t *name, int *peak_value)
+{
+	CHECK_NULL_ARG_WITH_RETURN(name, false);
+	CHECK_NULL_ARG_WITH_RETURN(peak_value, false);
+
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		if (strcmp(name, vr_rail_table[i].sensor_name) == 0) {
+			*peak_value = vr_rail_table[i].peak_value;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool vr_rail_voltage_peak_clear(uint8_t rail_index)
+{
+	if (rail_index >= VR_RAIL_E_MAX) {
+		return false;
+	}
+
+	vr_rail_table[rail_index].peak_value = 0xffffffff;
+
+	return true;
 }
 
 bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_status)

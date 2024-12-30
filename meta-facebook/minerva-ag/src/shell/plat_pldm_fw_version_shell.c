@@ -41,7 +41,7 @@ void cmd_get_fw_version_vr(const struct shell *shell, size_t argc, char **argv)
 	/* Stop sensor polling */
 	set_plat_sensor_polling_enable_flag(false);
 
-	shell_print(shell, "comp_id |              sensor_name               |version |remain");
+	shell_print(shell, "comp_id |                rail name               |version |remain");
 	for (int i = 0; i < get_aegis_vr_compnt_mapping_sensor_table_count(); i++) {
 		if ((get_board_type() == MINERVA_AEGIS_BD) && (i == 0))
 			continue; // skip osfp p3v3 on AEGIS BD
