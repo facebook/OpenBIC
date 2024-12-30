@@ -183,7 +183,7 @@ bool pre_vr_read(sensor_cfg *cfg, void *args)
 	return true;
 }
 
-bool post_vr_read(sensor_cfg *cfg, void *args, int *reading)
+bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(args, false);

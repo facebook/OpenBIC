@@ -103,7 +103,7 @@ bool plat_get_vout_max(uint8_t rail, uint16_t *millivolt);
 bool plat_set_vout_min(uint8_t rail, uint16_t *millivolt);
 bool plat_set_vout_max(uint8_t rail, uint16_t *millivolt);
 bool pre_vr_read(sensor_cfg *cfg, void *args);
-bool post_vr_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
 bool is_mb_dc_on();
 void *vr_mutex_get(enum VR_INDEX_E vr_index);
 void vr_mutex_init(void);
