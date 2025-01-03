@@ -1261,10 +1261,47 @@ static void change_brick_sensor_config()
 	}
 }
 
+static void check_pdb_u15_2nd_src_config()
+{
+	uint8_t retry = 5;
+	I2C_MSG msg;
+	msg.bus = I2C_BUS9;
+	msg.target_addr = PDB_INA238_U15_ADDR;
+	msg.tx_len = 1;
+	msg.rx_len = 1;
+
+	sensor_cfg PDB_U15_config[] = {
+		{ SENSOR_NUM_PDB_48V_SENSE_DIFF_NEG_VOLT_V, sensor_dev_ina238, I2C_BUS9,
+		  PDB_INA238_U15_ADDR, INA238_VSHUNT_OFFSET, stby_access, 0, 0,
+		  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+		  SENSOR_INIT_STATUS, pre_PCA9546A_read, &bus_9_PCA9546A_configs[1],
+		  post_PCA9546A_read, NULL, &ina238_init_args[1] },
+	};
+
+	if (!pre_PCA9546A_read(&PDB_U15_config[0], &bus_9_PCA9546A_configs[1]))
+		LOG_ERR("pre lock mutex fail !");
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Failed to read PDB U14 ADC ina238, check 2nd src U99");
+		for (uint8_t i = 0; i < ARRAY_SIZE(plat_sensor_config); i++) {
+			sensor_cfg *p = plat_sensor_config + i;
+			if (p->num == SENSOR_NUM_PDB_48V_SENSE_DIFF_NEG_VOLT_V) {
+				p->type = sensor_dev_max11617;
+				p->target_addr = PDB_MAX11617_U99_ADDR;
+				p->offset = 0;
+				p->init_args = &max11617_init_args[0];
+			}
+		}
+	}
+
+	if (!post_PCA9546A_read(&PDB_U15_config[0], &bus_9_PCA9546A_configs[1], 0))
+		LOG_ERR("pro unlock mutex fail !");
+}
 void load_sensor_config(void)
 {
 	change_dvt_sensor_config();
 	change_brick_sensor_config();
+	check_pdb_u15_2nd_src_config();
 	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
 	sensor_config_count = ARRAY_SIZE(plat_sensor_config);
 

@@ -750,6 +750,7 @@ typedef struct _cx7_init_arg {
 
 typedef struct _max11617_init_arg {
 	bool is_init;
+	uint8_t mode;
 	uint8_t setup_byte;
 	uint8_t config_byte;
 	float scalefactor[12];
