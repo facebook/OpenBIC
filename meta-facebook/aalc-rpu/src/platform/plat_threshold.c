@@ -1095,18 +1095,16 @@ static uint32_t get_pump_standard_rpm(uint8_t duty)
 
 void pump_change_threshold(uint8_t sensor_num, uint8_t duty)
 {
-	sensor_threshold *p = find_threshold_tbl_entry(sensor_num);
-	if (p == NULL)
+	// don't change when pump failure
+	if (get_threshold_status(sensor_num))
 		return;
-
-	// don't change when pump failure causes 0 tach
-	for (uint8_t i = PUMP_FAIL_PUMP1_UCR; i <= PUMP_FAIL_TWO_PUMP_LCR; i++) {
-		if ((get_status_flag(STATUS_FLAG_FAILURE) >> i) & 0x01)
-			return;
-	}
 
 	// don't change for sit test
 	if (get_status_flag(STATUS_FLAG_DEBUG_MODE) & BIT(DEBUG_MODE_PUMP_THRESHOLD))
+		return;
+
+	sensor_threshold *p = find_threshold_tbl_entry(sensor_num);
+	if (p == NULL)
 		return;
 
 	uint32_t standard_val = get_pump_standard_rpm(duty);
