@@ -766,7 +766,7 @@ modbus_command_mapping modbus_command_table[] = {
 	  SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA, 1, -1, 1 },
 	{ MODBUS_RPU_PWR_W_ADDR, NULL, modbus_get_senser_reading, SENSOR_NUM_RPU_PWR_W, 1, -1, 1 },
 	{ MODBUS_AALC_TOTAL_PWR_W_ADDR, NULL, modbus_get_senser_reading,
-	  SENSOR_NUM_AALC_TOTAL_PWR_W, 1, -1, 1 },
+	  SENSOR_NUM_AALC_TOTAL_PWR_W, 1, 0, 1 },
 	{ MODBUS_RPU_INPUT_VOLT_V_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_BPB_HSC_P48V_VIN_VOLT_V, 1, -1, 1 },
 	{ MODBUS_MB_RPU_AIR_INLET_TEMP_ADDR, NULL, modbus_get_senser_reading,
