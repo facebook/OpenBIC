@@ -36,6 +36,8 @@ LOG_MODULE_REGISTER(plat_hook);
 #define FB_SIG_PRSNT_ADDR_EVEN 0x4A // 8 bit address (2, 4, 6, 8, 10, 12, 14)
 #define FB_SIG_PRSNT_ADDR_ODD 0x4E // 8 bit address (1, 3, 5, 7, 9, 11, 13)
 
+#define DIFFERENTIAL_MODE 0x01
+
 K_MUTEX_DEFINE(i2c_1_PCA9546a_mutex);
 K_MUTEX_DEFINE(i2c_2_PCA9546a_mutex);
 K_MUTEX_DEFINE(i2c_6_PCA9546a_mutex);
@@ -1186,6 +1188,16 @@ bool get_fb_present_status(uint16_t *fb_present_status)
 
 	return true;
 }
+
+max11617_init_arg max11617_init_args[] = {
+	[0] = {
+		.is_init = false,
+		.mode = DIFFERENTIAL_MODE,
+		.setup_byte = 0x80,
+		.config_byte = 0x66,
+		.scalefactor[0] = 1,
+	},
+};
 
 #if 0
 static uint8_t get_fb_index(uint8_t sen_num)
