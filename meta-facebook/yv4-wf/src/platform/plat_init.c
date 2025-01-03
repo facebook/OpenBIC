@@ -57,6 +57,12 @@ void pal_set_sys_status()
 	set_DC_on_delayed_status();
 	init_ioe_config();
 	if (gpio_get(PG_CARD_OK) == POWER_ON) {
+		if (get_board_revision() == BOARD_POC) {
+			set_P3V3_E1S_power_status(POC_PWRGD_P3V3_E1S_0_R);
+		} else {
+			set_P3V3_E1S_power_status(PWRGD_P3V3_E1S_0_R);
+		}
+		set_P12V_E1S_power_status(PWRGD_P12V_E1S_0_R);
 		set_cxl_ready_status(CXL_ID_1, true);
 		set_cxl_ready_status(CXL_ID_2, true);
 	}
