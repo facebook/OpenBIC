@@ -553,9 +553,9 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		LOG_ERR("Unsupport VR type(%d)", type);
 
 	const char *vr_name[] = {
-		[VR_RNS_ISL69260_RAA228238] = "Renesas ",
+		[VR_RNS_ISL69260_RAA228238] = "RNS ",
 		[VR_MPS_MP2971_MP2891] = "MPS ",
-		[VR_RNS_ISL69260_RAA228249] = "Renesas ",
+		[VR_RNS_ISL69260_RAA228249] = "RNS ",
 		[VR_MPS_MP2971_MP29816A] = "MPS ",
 	};
 
@@ -571,28 +571,28 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 	memcpy(buf_p, vr_name_p, strlen(vr_name_p));
 	buf_p += strlen(vr_name_p);
+	*len += strlen(vr_name_p);
 
 	if (sensor_dev == sensor_dev_mp2891 || sensor_dev == sensor_dev_mp29816a) {
-		*len += bin2hex((uint8_t *)&version, 2, buf_p, 4) + strlen(vr_name_p);
-		*len += 4;
+		*len += bin2hex((uint8_t *)&version, 2, buf_p, 4);
+		buf_p += 4;
 	} else if (sensor_dev == sensor_dev_isl69259 || sensor_dev == sensor_dev_raa228238 ||
-		   sensor_dev == sensor_dev_raa228249 || sensor_dev == sensor_dev_mp2971)
-		*len += bin2hex((uint8_t *)&version, 4, buf_p, 8) + strlen(vr_name_p);
-	else
+		   sensor_dev == sensor_dev_raa228249 || sensor_dev == sensor_dev_mp2971) {
+		*len += bin2hex((uint8_t *)&version, 4, buf_p, 8);
+		buf_p += 8;
+	} else
 		LOG_ERR("Unsupport VR type(%d)", type);
 
-	buf_p += 8;
+	memcpy(buf_p, remain_str_p, strlen(remain_str_p));
+	buf_p += strlen(remain_str_p);
+	*len += strlen(remain_str_p);
 
 	if (remain != 0xFFFF) {
-		memcpy(buf_p, remain_str_p, strlen(remain_str_p));
-		buf_p += strlen(remain_str_p);
 		remain = (uint8_t)((remain % 10) | (remain / 10 << 4));
-		*len += bin2hex((uint8_t *)&remain, 1, buf_p, 2) + strlen(remain_str_p);
+		*len += bin2hex((uint8_t *)&remain, 1, buf_p, 2);
 		buf_p += 2;
 	} else {
-		memcpy(buf_p, remain_str_p, strlen(remain_str_p));
-		buf_p += strlen(remain_str_p);
-		*len += bin2hex((uint8_t *)&remain, 2, buf_p, 4) + strlen(remain_str_p);
+		*len += bin2hex((uint8_t *)&remain, 2, buf_p, 4);
 		buf_p += 4;
 	}
 
