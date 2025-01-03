@@ -2499,22 +2499,22 @@ pldm_sensor_info plat_pldm_sensor_mb_temp_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xC6, //uint8_t supported_thresholds;
+			0x00, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0x14, //uint8_t range_field_support;
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 			0x00000000, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x00000028, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000096, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 		},
 		.update_time = 0,
@@ -6801,27 +6801,28 @@ void plat_pldm_sensor_change_retimer_dev()
 void plat_pldm_sensor_change_ina_dev()
 {
 	uint8_t ina_dev = plat_pldm_sensor_get_ina_dev();
-	for (int index = 0; index < plat_pldm_sensor_get_sensor_count(INA233_SENSOR_THREAD_ID); index++) {
+	for (int index = 0; index < plat_pldm_sensor_get_sensor_count(INA233_SENSOR_THREAD_ID);
+	     index++) {
 		sensor_cfg *cfg = &plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg;
 		if (cfg->port == I2C_BUS6 && cfg->target_addr == ADDR_X8_INA233) {
 			cfg->type = ina_dev;
 			if (ina_dev == sensor_dev_rtq6056) {
 				cfg->init_args = &rtq6056_init_args[0];
-			} else if(ina_dev == sensor_dev_sq52205) {
+			} else if (ina_dev == sensor_dev_sq52205) {
 				cfg->init_args = &sq52205_init_args[0];
 			}
 		} else if (cfg->port == I2C_BUS1 && cfg->target_addr == ADDR_E1S_BOOT_INA233) {
 			cfg->type = ina_dev;
 			if (ina_dev == sensor_dev_rtq6056) {
 				cfg->init_args = &rtq6056_init_args[2];
-			} else if(ina_dev == sensor_dev_sq52205) {
+			} else if (ina_dev == sensor_dev_sq52205) {
 				cfg->init_args = &sq52205_init_args[2];
 			}
 		} else if (cfg->port == I2C_BUS6 && cfg->target_addr == ADDR_E1S_DATA_INA233) {
 			cfg->type = ina_dev;
 			if (ina_dev == sensor_dev_rtq6056) {
 				cfg->init_args = &rtq6056_init_args[3];
-			} else if(ina_dev == sensor_dev_sq52205) {
+			} else if (ina_dev == sensor_dev_sq52205) {
 				cfg->init_args = &sq52205_init_args[3];
 			}
 		}
