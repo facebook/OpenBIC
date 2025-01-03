@@ -189,6 +189,7 @@ void set_uart_power_event_is_enable(bool is_enable);
 void pwr_level_mutex_init(void);
 void set_alert_level_to_default_or_user_setting(bool is_default, int32_t user_setting);
 int set_user_settings_alert_level_to_eeprom(void *user_settings, uint8_t data_length);
+int get_user_settings_alert_level_from_eeprom(void *user_settings, uint8_t data_length);
 int get_alert_level_info(bool *is_assert, int32_t *default_value, int32_t *setting_value);
 bool vr_rail_voltage_peak_get(uint8_t *name, int *peak_value);
 bool vr_rail_voltage_peak_clear(uint8_t rail_index);

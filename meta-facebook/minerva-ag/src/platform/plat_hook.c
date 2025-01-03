@@ -959,6 +959,14 @@ bool perm_config_clear(void)
 		return false;
 	}
 
+	int32_t setting_value = 0xffffffff;
+	char setting_data[4] = { 0 };
+	memcpy(setting_data, &setting_value, sizeof(setting_data));
+	if (set_user_settings_alert_level_to_eeprom(setting_data, sizeof(setting_data)) != 0) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
 	return true;
 }
 
