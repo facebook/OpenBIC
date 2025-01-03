@@ -98,8 +98,8 @@
 	gpio_name_to_num(CARD_TYPE_EXP) \
 	gpio_name_to_num(CPU_ERROR_BIC_LVC3_R_N) \
 	gpio_name_to_num(PVDD11_S3_PMALERT_N) \
+	gpio_name_to_num(SIDECAR_CABLE_PRESENT) \
 	gpio_name_to_num(BIC_READY_FRONT_EXP) \
-	gpio_name_to_num(CPU_TYPE0) \
 	gpio_name_to_num(FM_BMC_DEBUG_ENABLE_R_N) \
 	gpio_name_to_num(FM_DBP_PRESENT_N) \
 	gpio_name_to_num(FM_FAST_PROCHOT_R_EN_N)
