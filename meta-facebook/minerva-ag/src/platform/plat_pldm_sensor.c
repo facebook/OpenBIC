@@ -9240,6 +9240,7 @@ void find_tmp_addr_and_offset_by_sensor_id(uint8_t sensor_id, uint8_t *tmp_addr,
 void find_init_args_by_sensor_id(uint16_t sensor_id, void **init_args)
 {
 	uint8_t vr_type = get_vr_type();
+	uint8_t board_stage = get_board_stage();
 
 	for (int index = 0; index < plat_pldm_sensor_get_sensor_count(VR_SENSOR_THREAD_ID);
 	     index++) {
@@ -9252,6 +9253,11 @@ void find_init_args_by_sensor_id(uint16_t sensor_id, void **init_args)
 			} else if ((vr_type == VR_RNS_ISL69260_RAA228238) ||
 				   (vr_type == VR_RNS_ISL69260_RAA228249)) {
 				LOG_INF("change vr init args for RNS");
+				if (board_stage == FAB2_DVT || board_stage == FAB3_PVT ||
+				    board_stage == FAB4_MP) {
+					plat_sensor_vr_extend_table[index].rns_vr_init_args =
+						&isl69259_init_args[1];
+				}
 				*init_args = plat_sensor_vr_extend_table[index].rns_vr_init_args;
 			} else {
 				*init_args = NULL;
