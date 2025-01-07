@@ -43,55 +43,29 @@ uint8_t u50su4p180pmdafc_read(sensor_cfg *cfg, int *reading)
 	memset(sval, 0, sizeof(sensor_val));
 
 	float val;
-	if (cfg->offset == PMBUS_READ_POUT) {
-		float vout_val;
-		float iout_val;
 
-		msg.bus = cfg->port;
-		msg.target_addr = cfg->target_addr;
-		msg.tx_len = 1;
-		msg.rx_len = 2;
-		msg.data[0] = PMBUS_READ_VOUT;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 2;
+	msg.data[0] = cfg->offset;
 
-		if (i2c_master_read(&msg, retry))
-			return SENSOR_FAIL_TO_ACCESS;
+	if (i2c_master_read(&msg, retry))
+		return SENSOR_FAIL_TO_ACCESS;
 
-		uint16_t vout_read_value = (msg.data[1] << 8) | msg.data[0];
-		vout_val = vout_read_value * U50SU4P180PMDAFC_READ_VOUT_EXP_VALUE;
+	if (cfg->offset == PMBUS_READ_VOUT) {
+		uint16_t read_value = (msg.data[1] << 8) | msg.data[0];
+		val = read_value * U50SU4P180PMDAFC_READ_VOUT_EXP_VALUE;
 
-		msg.data[0] = PMBUS_READ_IOUT;
-
-		if (i2c_master_read(&msg, retry))
-			return SENSOR_FAIL_TO_ACCESS;
-
-		uint16_t iout_read_value = (msg.data[1] << 8) | msg.data[0];
-		iout_val = slinear11_to_float(iout_read_value);
-
-		val = vout_val * iout_val;
+	} else if (cfg->offset == PMBUS_READ_TEMPERATURE_1 || cfg->offset == PMBUS_READ_VIN ||
+		   cfg->offset == PMBUS_READ_IOUT || cfg->offset == PMBUS_READ_POUT) {
+		uint16_t read_value = (msg.data[1] << 8) | msg.data[0];
+		val = slinear11_to_float(read_value);
 
 	} else {
-		msg.bus = cfg->port;
-		msg.target_addr = cfg->target_addr;
-		msg.tx_len = 1;
-		msg.rx_len = 2;
-		msg.data[0] = cfg->offset;
-
-		if (i2c_master_read(&msg, retry))
-			return SENSOR_FAIL_TO_ACCESS;
-
-		if (cfg->offset == PMBUS_READ_VOUT) {
-			uint16_t read_value = (msg.data[1] << 8) | msg.data[0];
-			val = read_value * U50SU4P180PMDAFC_READ_VOUT_EXP_VALUE;
-
-		} else if (cfg->offset == PMBUS_READ_TEMPERATURE_1 ||
-			   cfg->offset == PMBUS_READ_VIN || cfg->offset == PMBUS_READ_IOUT) {
-			uint16_t read_value = (msg.data[1] << 8) | msg.data[0];
-			val = slinear11_to_float(read_value);
-
-		} else {
-			return SENSOR_FAIL_TO_ACCESS;
-		}
+		return SENSOR_FAIL_TO_ACCESS;
 	}
+
 	sval->integer = val;
 	sval->fraction = (val - sval->integer) * 1000;
 

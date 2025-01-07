@@ -18,6 +18,7 @@
 #define PLAT_PLDM_SENSOR_H
 
 #include "pdr.h"
+#include "sensor.h"
 #define ADDR_UNKNOWN (0xFF >> 1)
 
 /* Define sensors address(7 bit) */
@@ -230,6 +231,7 @@ enum GET_VR_DEV_STATUS {
 };
 
 int plat_pldm_sensor_get_sensor_count(int thread_id);
+sensor_cfg *get_sensor_cfg_by_sensor_id(uint8_t sensor_id);
 void plat_pldm_sensor_get_pdr_numeric_sensor(int thread_id, int sensor_num,
 					     PDR_numeric_sensor *numeric_sensor_table);
 uint8_t plat_pldm_sensor_get_vr_dev(uint8_t *vr_dev);
@@ -248,8 +250,11 @@ bool get_plat_sensor_vr_polling_enable_flag();
 bool is_ubc_access(uint8_t sensor_num);
 bool is_temp_access(uint8_t cfg_idx);
 bool is_vr_access(uint8_t sensor_num);
-void find_vr_addr_and_bus_and_sensor_dev_by_sensor_id(uint8_t sensor_id, uint8_t *vr_bus,
-						      uint8_t *vr_addr, uint8_t *sensor_dev);
+bool get_sensor_info_by_sensor_id(uint8_t sensor_id, uint8_t *vr_bus, uint8_t *vr_addr,
+				  uint8_t *sensor_dev);
 bool is_osfp_3v3_access(uint8_t sensor_num);
+size_t char16_strlen(const char16_t *str);
+char16_t *char16_strcpy(char16_t *dest, const char16_t *src);
+char16_t *char16_strcat_char(char16_t *dest);
 
 #endif

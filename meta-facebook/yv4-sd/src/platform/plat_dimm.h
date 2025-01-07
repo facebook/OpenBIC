@@ -44,6 +44,12 @@
 #define I3C_MUX_BIC_TO_DIMMG_TO_L 0x03
 #define I3C_MUX_CPU_TO_DIMM 0x00
 
+#define DIMM_I3C_MUX_STATUS_OFFSET 0x0D
+#define I3C_MUX_STATUS_ENABLE_FUNCTION_CHECK 7
+#define I3C_MUX_STATUS_PD_SPD_1_REMOTE_EN 6
+#define I3C_MUX_STATUS_PD_SPD_2_REMOTE_EN 5
+#define I3C_MUX_STATUS_SPD_MASK 0x60
+
 #define I3C_DIMM_MUTEX_TIMEOUT_MS 1000
 #define GET_DIMM_INFO_TIME_MS 1000
 #define GET_DIMM_INFO_STACK_SIZE 2304
@@ -123,6 +129,7 @@ int pal_get_spd_temp(uint8_t sensor_num, uint8_t *data);
 int pal_get_pmic_pwr(uint8_t sensor_num, uint8_t *data);
 void clear_unaccessible_dimm_data(uint8_t dimm_id);
 int switch_i3c_dimm_mux(uint8_t i3c_ctrl_mux_data);
+int check_i3c_dimm_mux(uint8_t *status_data);
 int all_brocast_ccc(I3C_MSG *i3c_msg);
 int init_dimm_prsnt_status();
 uint8_t get_dimm_present(uint8_t dimm_id);

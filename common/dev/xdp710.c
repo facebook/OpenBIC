@@ -206,7 +206,7 @@ uint8_t xdp710_init(sensor_cfg *cfg)
 	if (cfg->priv_data)
 		SAFE_FREE(cfg->priv_data);
 
-	xdp710_priv *priv_data = (xdp710_priv *)malloc(sizeof(priv_data));
+	xdp710_priv *priv_data = (xdp710_priv *)malloc(sizeof(xdp710_priv));
 	if (priv_data == NULL) {
 		LOG_ERR("malloc xdp710 priv_data fail!");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
@@ -214,7 +214,7 @@ uint8_t xdp710_init(sensor_cfg *cfg)
 	priv_data->mbr_init = false;
 
 	uint8_t vtlm = (xdp710_read_vsns_cfg(cfg->port, cfg->target_addr) & BIT_MASK(2));
-	uint8_t vsns = (xdp710_read_isns_cfg(cfg->port, cfg->target_addr) & GENMASK(7, 6));
+	uint8_t vsns = ((xdp710_read_isns_cfg(cfg->port, cfg->target_addr) & GENMASK(7, 6)) >> 6);
 
 	uint16_t m = 0, b = 0, r = 0;
 	if (xdp710_set_mbr(cfg->offset, vtlm, vsns, &m, &b, &r)) {

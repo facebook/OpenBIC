@@ -34,6 +34,8 @@
 #include "plat_pldm_monitor.h"
 #include "plat_hook.h"
 #include <logging/log.h>
+#include "plat_event.h"
+#include "plat_log.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -46,10 +48,12 @@ void pal_pre_init()
 				index, (struct _i2c_target_config *)&I2C_TARGET_CONFIG_TABLE[index],
 				1);
 	}
-
 	init_platform_config();
 	plat_led_init();
 	vr_mutex_init();
+	pwr_level_mutex_init();
+	plat_clock_init();
+	plat_eusb_init();
 }
 
 void pal_set_sys_status()
@@ -60,8 +64,11 @@ void pal_set_sys_status()
 void pal_post_init()
 {
 	plat_mctp_init();
+	user_settings_init();
 	pldm_load_state_effecter_table(MAX_STATE_EFFECTER_IDX);
 	pldm_assign_gpio_effecter_id(PLAT_EFFECTER_ID_GPIO_HIGH_BYTE);
+	init_load_eeprom_log();
+	init_cpld_polling();
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78

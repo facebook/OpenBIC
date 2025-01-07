@@ -257,9 +257,9 @@ static uint8_t ctl_pwm_dev(uint8_t index_start, uint8_t index_end, uint8_t duty)
 
 	for (uint8_t i = index_start; i <= index_end; i++) {
 		if (i == redundant_dev) {
-			// redundant duty 30
-			if (plat_pwm_ctrl(i, (duty ? 30 : 0))) {
-				LOG_ERR("Failed to set PWM device %d redundant duty %d", i, duty);
+			// redundant duty 0
+			if (plat_pwm_ctrl(i, 0)) {
+				LOG_ERR("Failed to set PWM device %d redundant duty 0", i);
 				ret = 1;
 				//break;
 			}
@@ -372,6 +372,12 @@ void set_manual_pwm_cache_to_default(void)
 {
 	for (uint8_t i = 0; i < MANUAL_PWM_E_MAX; i++)
 		manual_pwm_cache[i] = 70;
+}
+
+void set_manual_pwm_cache_to_zero(void)
+{
+	for (uint8_t i = 0; i < MANUAL_PWM_E_MAX; i++)
+		manual_pwm_cache[i] = 0;
 }
 
 void init_pwm_dev(void)

@@ -46,6 +46,13 @@ enum FSC_TYPE {
 	FSC_TYPE_DEFAULT,
 };
 
+enum FSC_MODE_E {
+	FSC_MODE_UNKNOW = 0,
+	FSC_MODE_AUTO_MODE, // include auto tune
+	FSC_MODE_MANUAL_MODE,
+	FSC_MODE_SEMI_MODE,
+};
+
 /* stepwise */
 typedef struct {
 	uint8_t temp;
@@ -116,5 +123,9 @@ void fsc_init(void);
 void controlFSC(uint8_t action);
 uint8_t fsc_debug_set(uint8_t enable);
 uint8_t fsc_debug_get(void);
+uint8_t get_fsc_setpoint(uint8_t idx);
+void set_fsc_setpoint(uint8_t idx, uint8_t val);
+void change_lpm_setpoint(uint8_t onoff);
+void change_temp_setpoint(uint8_t onoff);
 
 #endif

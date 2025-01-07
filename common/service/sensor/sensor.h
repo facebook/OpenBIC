@@ -187,6 +187,7 @@ enum SENSOR_DEV {
 	sensor_dev_mp29816a = 0x45,
 	sensor_dev_raa228249 = 0x46,
 	sensor_dev_bmr4922302_803 = 0x47,
+	sensor_dev_emc1413 = 0x48,
 	sensor_dev_max
 };
 
@@ -749,6 +750,7 @@ typedef struct _cx7_init_arg {
 
 typedef struct _max11617_init_arg {
 	bool is_init;
+	uint8_t mode;
 	uint8_t setup_byte;
 	uint8_t config_byte;
 	float scalefactor[12];

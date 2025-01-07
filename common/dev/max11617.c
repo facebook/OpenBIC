@@ -33,6 +33,8 @@ LOG_MODULE_REGISTER(max11617);
 
 #define MAX11617_VREF 2.048 // unit: volt(V)
 
+#define DIFFERENTIAL_MODE 0x01
+
 static int max11617_set_scan_mode(sensor_cfg *cfg, uint8_t config_byte, uint8_t mode)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
@@ -75,12 +77,31 @@ uint8_t max11617_read(sensor_cfg *cfg, int *reading)
 		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
+	if (init_arg->mode == DIFFERENTIAL_MODE) {
+		uint8_t retry = 5;
+		I2C_MSG msg;
+		memset(&msg, 0, sizeof(I2C_MSG));
 
-	// set mode to single-ended to get channels'analog input
-	uint8_t mode = (cfg->offset << 1) | MAX1363_CONFIG_SCAN_SINGLE_1 | MAX1363_CONFIG_SE;
-	if (max11617_set_scan_mode(cfg, init_arg->config_byte, mode) != 0) {
-		LOG_ERR("max11617_init failed for sensor number 0x%x  ret: %d", cfg->num, ret);
-		return SENSOR_FAIL_TO_ACCESS;
+		msg.bus = cfg->port;
+		msg.target_addr = cfg->target_addr;
+		msg.tx_len = 2;
+		msg.data[0] = init_arg->setup_byte;
+		msg.data[1] = init_arg->config_byte;
+
+		ret = i2c_master_write(&msg, retry);
+		if (ret != 0) {
+			LOG_ERR("i2c write fail, sensor number 0x%x  ret: %d", cfg->num, ret);
+			return SENSOR_FAIL_TO_ACCESS;
+		}
+	} else {
+		// set mode to single-ended to get channels'analog input
+		uint8_t mode =
+			(cfg->offset << 1) | MAX1363_CONFIG_SCAN_SINGLE_1 | MAX1363_CONFIG_SE;
+		if (max11617_set_scan_mode(cfg, init_arg->config_byte, mode) != 0) {
+			LOG_ERR("max11617_init failed for sensor number 0x%x  ret: %d", cfg->num,
+				ret);
+			return SENSOR_FAIL_TO_ACCESS;
+		}
 	}
 
 	uint8_t retry = 5;

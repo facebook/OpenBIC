@@ -36,6 +36,8 @@ LOG_MODULE_REGISTER(plat_hook);
 #define FB_SIG_PRSNT_ADDR_EVEN 0x4A // 8 bit address (2, 4, 6, 8, 10, 12, 14)
 #define FB_SIG_PRSNT_ADDR_ODD 0x4E // 8 bit address (1, 3, 5, 7, 9, 11, 13)
 
+#define DIFFERENTIAL_MODE 0x01
+
 K_MUTEX_DEFINE(i2c_1_PCA9546a_mutex);
 K_MUTEX_DEFINE(i2c_2_PCA9546a_mutex);
 K_MUTEX_DEFINE(i2c_6_PCA9546a_mutex);
@@ -715,7 +717,19 @@ ads112c_init_arg ads112c_init_args[] = {
 		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,
 		.reg2_idac = ADS112C_REG2_IDAC_OFF,
 		.reg3_idac1_cfg = ADS112C_REG3_IDAC1_DISABLED,				
-	},			
+	},
+	// leakage sensor, 1000 sps
+	[8] = { .reg0_input = ADS112C_REG0_INPUT_AIN0AIN1,
+		.reg0_gain = ADS112C_REG0_GAIN1,
+		.reg0_pga = ADS112C_REG0_PGA_ENABLE,
+		.reg1_dr = ADS112C_REG1_DR_1000_SPS,
+		.reg1_conversion = ADS112C_REG1_CONTINUEMODE,
+		.reg1_vol_refer = ADS112C_REG1_EXTERNALV,
+		.vol_refer_val = 3.3,
+		.reg1_temp_mode = ADS112C_REG1_TEMPMODE_DISABLE,
+		.reg2_idac = ADS112C_REG2_IDAC_OFF,
+		.reg3_idac1_cfg = ADS112C_REG3_IDAC1_DISABLED,
+	},
 };
 
 ads112c_post_arg ads112c_post_args[] = {
@@ -1174,6 +1188,16 @@ bool get_fb_present_status(uint16_t *fb_present_status)
 
 	return true;
 }
+
+max11617_init_arg max11617_init_args[] = {
+	[0] = {
+		.is_init = false,
+		.mode = DIFFERENTIAL_MODE,
+		.setup_byte = 0x80,
+		.config_byte = 0x66,
+		.scalefactor[0] = 1,
+	},
+};
 
 #if 0
 static uint8_t get_fb_index(uint8_t sen_num)

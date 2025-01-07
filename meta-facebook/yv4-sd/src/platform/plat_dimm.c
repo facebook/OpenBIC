@@ -37,6 +37,7 @@ k_tid_t get_dimm_info_tid;
 dimm_info dimm_data[DIMM_ID_MAX];
 
 bool is_dimm_checked_presnt = false;
+bool is_cpld_support_i3c_mux_check = false;
 
 uint8_t spd_i3c_addr_list[] = { DIMM_SPD_A_G_ADDR, DIMM_SPD_B_H_ADDR, DIMM_SPD_C_I_ADDR,
 				DIMM_SPD_D_J_ADDR, DIMM_SPD_E_K_ADDR, DIMM_SPD_F_L_ADDR };
@@ -68,11 +69,31 @@ void get_dimm_info_handler()
 	while (1) {
 		int ret = 0;
 		uint8_t dimm_id;
+		uint8_t dimm_mux_status = 0;
+
+		// Check sensor poll enable
+		if (get_sensor_poll_enable_flag() == false) {
+			k_msleep(GET_DIMM_INFO_TIME_MS);
+			continue;
+		}
 
 		// Avoid to get wrong thus only monitor after post complete
 		if (!get_post_status()) {
 			k_msleep(GET_DIMM_INFO_TIME_MS);
 			continue;
+		}
+
+		ret = check_i3c_dimm_mux(&dimm_mux_status);
+		if (ret != 0) {
+			// Failed to get i3c dimm mux status from cpld
+			continue;
+		}
+		if (dimm_mux_status & (1 << I3C_MUX_STATUS_ENABLE_FUNCTION_CHECK)){
+			is_cpld_support_i3c_mux_check = true;
+			if (!(dimm_mux_status & (1 << I3C_MUX_STATUS_PD_SPD_1_REMOTE_EN))) {
+				// spd1 mux set to cpu now
+				continue;
+			}
 		}
 
 		if (is_dimm_checked_presnt == false) {
@@ -97,10 +118,38 @@ void get_dimm_info_handler()
 							    I3C_MUX_BIC_TO_DIMMG_TO_L :
 							    I3C_MUX_BIC_TO_DIMMA_TO_F;
 
-			ret = switch_i3c_dimm_mux(i3c_ctrl_mux_data);
-			if (ret != 0) {
-				clear_unaccessible_dimm_data(dimm_id);
-				continue;
+			if (is_cpld_support_i3c_mux_check) {
+				ret = check_i3c_dimm_mux(&dimm_mux_status);
+				if (ret != 0) {
+					continue;
+				}
+				if (!(dimm_mux_status & (1 << I3C_MUX_STATUS_PD_SPD_1_REMOTE_EN))) {
+					// spd1 mux set to cpu now
+					continue;
+				} else {
+					if (((dimm_mux_status & I3C_MUX_STATUS_SPD_MASK) >> 5)
+						!= i3c_ctrl_mux_data) {
+						ret = switch_i3c_dimm_mux(i3c_ctrl_mux_data);
+						if (ret != 0) {
+							clear_unaccessible_dimm_data(dimm_id);
+							continue;
+						}
+						ret = check_i3c_dimm_mux(&dimm_mux_status);
+						if (ret != 0) {
+							continue;
+						}
+						if (((dimm_mux_status & I3C_MUX_STATUS_SPD_MASK) >> 5)
+						!= i3c_ctrl_mux_data) {
+							continue;
+						}
+					}
+				}
+			} else {
+				ret = switch_i3c_dimm_mux(i3c_ctrl_mux_data);
+				if (ret != 0) {
+					clear_unaccessible_dimm_data(dimm_id);
+					continue;
+				}
 			}
 
 			// When OS reboot, we need to switch it back to CPU
@@ -179,7 +228,6 @@ void get_dimm_info_handler()
 			i3c_detach(&i3c_msg);
 		}
 
-		switch_i3c_dimm_mux(I3C_MUX_CPU_TO_DIMM);
 		if (k_mutex_unlock(&i3c_dimm_mutex)) {
 			LOG_ERR("Failed to unlock I3C dimm MUX");
 		}
@@ -330,6 +378,29 @@ int switch_i3c_dimm_mux(uint8_t i3c_ctrl_mux_data)
 	ret = i2c_master_write(&i2c_msg, retry);
 	if (ret != 0) {
 		LOG_ERR("Failed to switch I3C MUX: 0x%x, ret= %d", i3c_ctrl_mux_data, ret);
+	}
+
+	return ret;
+}
+
+int check_i3c_dimm_mux(uint8_t *status_data)
+{
+	I2C_MSG i2c_msg = { 0 };
+	int ret = 0, retry = 3;
+	*status_data = 0;
+
+	i2c_msg.bus = I2C_BUS5;
+	i2c_msg.target_addr = CPLD_ADDR;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = DIMM_I3C_MUX_STATUS_OFFSET;
+
+	ret = i2c_master_read(&i2c_msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Failed to get I3C MUX status from CPLD: 0x%x, ret= %d",
+				DIMM_I3C_MUX_STATUS_OFFSET, ret);
+	} else {
+		*status_data = i2c_msg.data[0];
 	}
 
 	return ret;

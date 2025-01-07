@@ -184,8 +184,33 @@ int pldm_get_sensor_name_via_sensor_id(uint16_t sensor_id, char *sensor_name, si
 				temp_cfg.sensorName[j] = sys_cpu_to_be16(temp_cfg.sensorName[j]);
 			}
 
+			char temp_name[MAX_AUX_SENSOR_NAME_LEN] = { 0 };
+
 			// Convert the char16_t string to UTF-8
-			char16_to_char(temp_cfg.sensorName, sensor_name, max_length);
+			char16_to_char(temp_cfg.sensorName, temp_name, max_length);
+
+			char temp_buff[MAX_AUX_SENSOR_NAME_LEN] = { 0 };
+			char symbol[] = "_";
+
+			char16_t *temp_entity_name = (char16_t *)malloc(
+				strlen16(entity_auxiliary_names_table[0].entityName) *
+				(sizeof(char16_t) + 1));
+
+			strcpy16(temp_entity_name, entity_auxiliary_names_table[0].entityName);
+
+			ch16_strcat_char(temp_entity_name);
+
+			for (int k = 0; temp_entity_name[k] != 0x0000; k++) {
+				temp_entity_name[k] = sys_cpu_to_be16(temp_entity_name[k]);
+			}
+
+			// Convert the char16_t string to UTF-8
+			char16_to_char(temp_entity_name, temp_buff, sizeof(temp_buff));
+
+			snprintf(sensor_name, max_length, "%s%s%s", temp_buff, symbol, temp_name);
+
+			SAFE_FREE(temp_entity_name);
+
 			return 0;
 		}
 	}
@@ -289,4 +314,75 @@ __weak uint16_t plat_get_disabled_sensor_count()
 PDR_entity_auxiliary_names *get_entity_auxiliary_names_table()
 {
 	return entity_auxiliary_names_table;
+}
+
+int change_pdr_table_critical_high_with_sensor_id(uint32_t sensorID, float critical_high)
+{
+	uint32_t numeric_sensor_pdr_count = 0;
+	numeric_sensor_pdr_count = plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR);
+
+	for (int i = 0; i < numeric_sensor_pdr_count; i++) {
+		if (numeric_sensor_table[i].sensor_id == sensorID) {
+			critical_high =
+				critical_high * power(10, -numeric_sensor_table[i].unit_modifier);
+			numeric_sensor_table[i].critical_high = (int32_t)critical_high;
+			return 0;
+		}
+	}
+
+	return -1;
+}
+
+int change_pdr_table_critical_low_with_sensor_id(uint32_t sensorID, float critical_low)
+{
+	uint32_t numeric_sensor_pdr_count = 0;
+	numeric_sensor_pdr_count = plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR);
+
+	for (int i = 0; i < numeric_sensor_pdr_count; i++) {
+		if (numeric_sensor_table[i].sensor_id == sensorID) {
+			critical_low =
+				critical_low * power(10, -numeric_sensor_table[i].unit_modifier);
+			numeric_sensor_table[i].critical_low = (int32_t)critical_low;
+			return 0;
+		}
+	}
+
+	return -1;
+}
+
+int get_pdr_table_critical_high_and_low_with_sensor_id(uint32_t sensorID, float *critical_high,
+						       float *critical_low)
+{
+	uint32_t numeric_sensor_pdr_count = 0;
+	numeric_sensor_pdr_count = plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR);
+
+	for (int i = 0; i < numeric_sensor_pdr_count; i++) {
+		if (numeric_sensor_table[i].sensor_id == sensorID) {
+			*critical_high = numeric_sensor_table[i].critical_high *
+					 power(10, numeric_sensor_table[i].unit_modifier);
+			*critical_low = numeric_sensor_table[i].critical_low *
+					power(10, numeric_sensor_table[i].unit_modifier);
+			return 0;
+		}
+	}
+
+	return -1;
+}
+
+int check_supported_threshold_with_sensor_id(uint32_t sensorID)
+{
+	uint32_t numeric_sensor_pdr_count = 0;
+	numeric_sensor_pdr_count = plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR);
+
+	for (int i = 0; i < numeric_sensor_pdr_count; i++) {
+		if (numeric_sensor_table[i].sensor_id == sensorID) {
+			if (numeric_sensor_table[i].supported_thresholds != 0) {
+				return 0;
+			} else {
+				return -1;
+			}
+		}
+	}
+
+	return -1;
 }

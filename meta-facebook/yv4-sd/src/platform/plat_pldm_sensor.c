@@ -846,8 +846,8 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0x00000000, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x00000074, //uint32_t critical_high;
-			0x00000067, //uint32_t critical_low;
+			0x00000076, //uint32_t critical_high;
+			0x00000066, //uint32_t critical_low;
 			0x00000000, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 		},
@@ -2499,22 +2499,22 @@ pldm_sensor_info plat_pldm_sensor_mb_temp_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0xC6, //uint8_t supported_thresholds;
+			0x00, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0x14, //uint8_t range_field_support;
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 			0x00000000, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x00000028, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000096, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 		},
 		.update_time = 0,
@@ -5169,7 +5169,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_A_TEMP_C",
+		.sensorName = u"MB_DIMM_A0_TEMP_C",
 	},
 	{
 		// MB_DIMM_B_TEMP_C
@@ -5186,7 +5186,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_B_TEMP_C",
+		.sensorName = u"MB_DIMM_A1_TEMP_C",
 	},
 	{
 		// MB_DIMM_C_TEMP_C
@@ -5203,7 +5203,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_C_TEMP_C",
+		.sensorName = u"MB_DIMM_A2_TEMP_C",
 	},
 	{
 		// MB_DIMM_D_TEMP_C
@@ -5220,7 +5220,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_D_TEMP_C",
+		.sensorName = u"MB_DIMM_A3_TEMP_C",
 	},
 	{
 		// MB_DIMM_E_TEMP_C
@@ -5237,7 +5237,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_E_TEMP_C",
+		.sensorName = u"MB_DIMM_A4_TEMP_C",
 	},
 	{
 		// MB_DIMM_F_TEMP_C
@@ -5254,7 +5254,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_F_TEMP_C",
+		.sensorName = u"MB_DIMM_A5_TEMP_C",
 	},
 	{
 		// MB_DIMM_G_TEMP_C
@@ -5271,7 +5271,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_G_TEMP_C",
+		.sensorName = u"MB_DIMM_A6_TEMP_C",
 	},
 	{
 		// MB_DIMM_H_TEMP_C
@@ -5288,7 +5288,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_H_TEMP_C",
+		.sensorName = u"MB_DIMM_A7_TEMP_C",
 	},
 	{
 		// MB_DIMM_I_TEMP_C
@@ -5305,7 +5305,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_I_TEMP_C",
+		.sensorName = u"MB_DIMM_A8_TEMP_C",
 	},
 	{
 		// MB_DIMM_J_TEMP_C
@@ -5322,7 +5322,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_J_TEMP_C",
+		.sensorName = u"MB_DIMM_A9_TEMP_C",
 	},
 	{
 		// MB_DIMM_K_TEMP_C
@@ -5339,7 +5339,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_K_TEMP_C",
+		.sensorName = u"MB_DIMM_A10_TEMP_C",
 	},
 	{
 		// MB_DIMM_L_TEMP_C
@@ -5356,7 +5356,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_L_TEMP_C",
+		.sensorName = u"MB_DIMM_A11_TEMP_C",
 	},
 	{
 		// MB_SSD_BOOT_TEMP_C
@@ -6087,7 +6087,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_A_PWR_W",
+		.sensorName = u"MB_DIMM_A0_PWR_W",
 	},
 	{
 		// MB_DIMM_B_PWR_W
@@ -6104,7 +6104,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_B_PWR_W",
+		.sensorName = u"MB_DIMM_A1_PWR_W",
 	},
 	{
 		// MB_DIMM_C_PWR_W
@@ -6121,7 +6121,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_C_PWR_W",
+		.sensorName = u"MB_DIMM_A2_PWR_W",
 	},
 	{
 		// MB_DIMM_D_PWR_W
@@ -6138,7 +6138,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_D_PWR_W",
+		.sensorName = u"MB_DIMM_A3_PWR_W",
 	},
 	{
 		// MB_DIMM_E_PWR_W
@@ -6155,7 +6155,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_E_PWR_W",
+		.sensorName = u"MB_DIMM_A4_PWR_W",
 	},
 	{
 		// MB_DIMM_F_PWR_W
@@ -6172,7 +6172,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_F_PWR_W",
+		.sensorName = u"MB_DIMM_A5_PWR_W",
 	},
 	{
 		// MB_DIMM_G_PWR_W
@@ -6189,7 +6189,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_G_PWR_W",
+		.sensorName = u"MB_DIMM_A6_PWR_W",
 	},
 	{
 		// MB_DIMM_H_PWR_W
@@ -6206,7 +6206,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_H_PWR_W",
+		.sensorName = u"MB_DIMM_A7_PWR_W",
 	},
 	{
 		// MB_DIMM_I_PWR_W
@@ -6223,7 +6223,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_I_PWR_W",
+		.sensorName = u"MB_DIMM_A8_PWR_W",
 	},
 	{
 		// MB_DIMM_J_PWR_W
@@ -6240,7 +6240,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_J_PWR_W",
+		.sensorName = u"MB_DIMM_A9_PWR_W",
 	},
 	{
 		// MB_DIMM_K_PWR_W
@@ -6257,7 +6257,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_K_PWR_W",
+		.sensorName = u"MB_DIMM_A10_PWR_W",
 	},
 	{
 		// MB_DIMM_L_PWR_W
@@ -6274,7 +6274,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"MB_DIMM_L_PWR_W",
+		.sensorName = u"MB_DIMM_A11_PWR_W",
 	},
 	{
 		// MB_INA233_x8_RTM_PWR_W
@@ -6801,27 +6801,28 @@ void plat_pldm_sensor_change_retimer_dev()
 void plat_pldm_sensor_change_ina_dev()
 {
 	uint8_t ina_dev = plat_pldm_sensor_get_ina_dev();
-	for (int index = 0; index < plat_pldm_sensor_get_sensor_count(INA233_SENSOR_THREAD_ID); index++) {
+	for (int index = 0; index < plat_pldm_sensor_get_sensor_count(INA233_SENSOR_THREAD_ID);
+	     index++) {
 		sensor_cfg *cfg = &plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg;
 		if (cfg->port == I2C_BUS6 && cfg->target_addr == ADDR_X8_INA233) {
 			cfg->type = ina_dev;
 			if (ina_dev == sensor_dev_rtq6056) {
 				cfg->init_args = &rtq6056_init_args[0];
-			} else if(ina_dev == sensor_dev_sq52205) {
+			} else if (ina_dev == sensor_dev_sq52205) {
 				cfg->init_args = &sq52205_init_args[0];
 			}
 		} else if (cfg->port == I2C_BUS1 && cfg->target_addr == ADDR_E1S_BOOT_INA233) {
 			cfg->type = ina_dev;
 			if (ina_dev == sensor_dev_rtq6056) {
 				cfg->init_args = &rtq6056_init_args[2];
-			} else if(ina_dev == sensor_dev_sq52205) {
+			} else if (ina_dev == sensor_dev_sq52205) {
 				cfg->init_args = &sq52205_init_args[2];
 			}
 		} else if (cfg->port == I2C_BUS6 && cfg->target_addr == ADDR_E1S_DATA_INA233) {
 			cfg->type = ina_dev;
 			if (ina_dev == sensor_dev_rtq6056) {
 				cfg->init_args = &rtq6056_init_args[3];
-			} else if(ina_dev == sensor_dev_sq52205) {
+			} else if (ina_dev == sensor_dev_sq52205) {
 				cfg->init_args = &sq52205_init_args[3];
 			}
 		}

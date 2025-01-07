@@ -83,6 +83,8 @@
 		return ret_val;                                                                    \
 	}
 
+typedef uint_least16_t char16_t;
+
 enum BIT_SETTING_READING {
 	BIT_CLEAR = 0,
 	BIT_SET = 1,
@@ -118,5 +120,8 @@ int uint8_t_to_dec_ascii_pointer(uint8_t val, uint8_t *result, uint8_t len);
 int find_byte_data_in_buf(const uint8_t *buf, uint8_t byte_data, int start_index, int end_index);
 void clear_bits(uint32_t *value, int start_bit, int end_bit);
 void sort_bubble(int *array, int len);
+size_t strlen16(const char16_t *str);
+char16_t *strcpy16(char16_t *dest, const char16_t *src);
+char16_t *ch16_strcat_char(char16_t *dest);
 
 #endif

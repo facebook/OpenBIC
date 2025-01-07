@@ -43,8 +43,7 @@ LOG_MODULE_REGISTER(plat_fwupdate);
 static uint8_t pldm_pre_vr_update(void *fw_update_param);
 static uint8_t pldm_post_vr_update(void *fw_update_param);
 static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
-void find_sensor_id_and_name_by_firmware_comp_id(uint8_t comp_identifier, uint8_t *sensor_id,
-						 char *sensor_name);
+
 typedef struct aegis_compnt_mapping_sensor {
 	uint8_t firmware_comp_id;
 	uint8_t plat_pldm_sensor_id;
@@ -52,26 +51,25 @@ typedef struct aegis_compnt_mapping_sensor {
 } aegis_compnt_mapping_sensor;
 
 aegis_compnt_mapping_sensor aegis_vr_compnt_mapping_sensor_table[] = {
-	{ AG_COMPNT_OSFP_P3V3, SENSOR_NUM_OSFP_P3V3_TEMP_C, "OSFP_P3V3" },
-	{ AG_COMPNT_CPU_P0V85_PVDD, SENSOR_NUM_CPU_P0V85_PVDD_TEMP_C, "CPU_P0V85_PVDD" },
+	{ AG_COMPNT_OSFP_P3V3, SENSOR_NUM_OSFP_P3V3_TEMP_C, "AEGIS_P3V3" },
+	{ AG_COMPNT_CPU_P0V85_PVDD, SENSOR_NUM_CPU_P0V85_PVDD_TEMP_C, "AEGIS_P0V85_PVDD" },
 	{ AG_COMPNT_CPU_P0V75_PVDD_CH_N, SENSOR_NUM_CPU_P0V75_PVDD_CH_N_TEMP_C,
-	  "CPU_P0V75_PVDD_CH_N" },
+	  "AEGIS_P0V75_PVDD_CH_N" },
 	{ AG_COMPNT_CPU_P0V75_PVDD_CH_S, SENSOR_NUM_CPU_P0V75_PVDD_CH_S_TEMP_C,
-	  "CPU_P0V75_PVDD_CH_S" },
+	  "AEGIS_P0V75_PVDD_CH_S" },
 	{ AG_COMPNT_CPU_P0V75_TRVDD_ZONEA, SENSOR_NUM_CPU_P0V75_TRVDD_ZONEA_TEMP_C,
-	  "CPU_P0V75_TRVDD_ZONEA" },
+	  "AEGIS_P0V75_TRVDD_ZONEA" },
 	{ AG_COMPNT_CPU_P0V75_TRVDD_ZONEB, SENSOR_NUM_CPU_P0V75_TRVDD_ZONEB_TEMP_C,
-	  "CPU_P0V75_TRVDD_ZONEB" },
+	  "AEGIS_P0V75_TRVDD_ZONEB" },
 	{ AG_COMPNT_CPU_P1V1_VDDC_HBM0_2_4, SENSOR_NUM_CPU_P1V1_VDDC_HBM0_2_4_TEMP_C,
-	  "CPU_P1V1_VDDC_HBM0_2_4" },
+	  "AEGIS_P1V1_VDDC_HBM0_HBM2_HBM4" },
 	{ AG_COMPNT_CPU_P0V9_TRVDD_ZONEA, SENSOR_NUM_CPU_P0V9_TRVDD_ZONEA_TEMP_C,
-	  "CPU_P0V9_TRVDD_ZONEA" },
+	  "AEGIS_P0V9_TRVDD_ZONEA" },
 	{ AG_COMPNT_CPU_P0V9_TRVDD_ZONEB, SENSOR_NUM_CPU_P0V9_TRVDD_ZONEB_TEMP_C,
-	  "CPU_P0V9_TRVDD_ZONEB" },
+	  "AEGIS_P0V9_TRVDD_ZONEB" },
 	{ AG_COMPNT_CPU_P1V1_VDDC_HBM1_3_5, SENSOR_NUM_CPU_P1V1_VDDC_HBM1_3_5_TEMP_C,
-	  "CPU_P1V1_VDDC_HBM1_3_5" },
-	{ AG_COMPNT_CPU_P0V8_VDDA_PCIE, SENSOR_NUM_CPU_P0V8_VDDA_PCIE_TEMP_C,
-	  "CPU_P0V8_VDDA_PCIE" },
+	  "AEGIS_P1V1_VDDC_HBM1_HBM3_HBM5" },
+	{ AG_COMPNT_CPU_P0V8_VDDA_PCIE, SENSOR_NUM_CPU_P0V8_VDDA_PCIE_TEMP_C, "AEGIS_VDDA_PCIE" },
 };
 
 /* PLDM FW update table */
@@ -351,7 +349,7 @@ void load_pldmupdate_comp_config(void)
 	size_t filtered_count = 0;
 	for (size_t i = 0; i < comp_config_count; i++) {
 		// Skip the AG_COMPNT_OSFP_P3V3 for MINERVA_AEGIS_BD
-		if ((get_board_stage() == MINERVA_AEGIS_BD) &&
+		if ((get_board_type() == MINERVA_AEGIS_BD) &&
 		    PLDMUPDATE_FW_CONFIG_TABLE[i].comp_identifier == AG_COMPNT_OSFP_P3V3)
 			continue;
 
@@ -376,8 +374,16 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param)
 	uint8_t sensor_id = 0;
 	uint8_t sensor_dev = 0;
 	char sensor_name[MAX_AUX_SENSOR_NAME_LEN] = { 0 };
-	find_sensor_id_and_name_by_firmware_comp_id(p->comp_id, &sensor_id, sensor_name);
-	find_vr_addr_and_bus_and_sensor_dev_by_sensor_id(sensor_id, &bus, &addr, &sensor_dev);
+
+	if (!find_sensor_id_and_name_by_firmware_comp_id(p->comp_id, &sensor_id, sensor_name)) {
+		LOG_ERR("Can't find sensor id and name by comp id: 0x%x", p->comp_id);
+		return 1;
+	}
+
+	if (!get_sensor_info_by_sensor_id(sensor_id, &bus, &addr, &sensor_dev)) {
+		LOG_ERR("Can't find vr addr and bus by sensor id: 0x%x", sensor_id);
+		return 1;
+	}
 
 	/* Get bus and target address by sensor number in sensor configuration */
 	p->bus = bus;
@@ -448,9 +454,6 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	CHECK_NULL_ARG_WITH_RETURN(buf, false);
 	CHECK_NULL_ARG_WITH_RETURN(len, false);
 
-	/* Stop sensor polling */
-	set_plat_sensor_polling_enable_flag(false);
-
 	pldm_fw_update_info_t *p = (pldm_fw_update_info_t *)info_p;
 
 	bool ret = false;
@@ -459,18 +462,28 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	uint8_t sensor_id = 0;
 	uint8_t sensor_dev = 0;
 	char sensor_name[MAX_AUX_SENSOR_NAME_LEN] = { 0 };
-	find_sensor_id_and_name_by_firmware_comp_id(p->comp_identifier, &sensor_id, sensor_name);
-	find_vr_addr_and_bus_and_sensor_dev_by_sensor_id(sensor_id, &bus, &addr, &sensor_dev);
+
+	if (!find_sensor_id_and_name_by_firmware_comp_id(p->comp_identifier, &sensor_id,
+							 sensor_name)) {
+		LOG_ERR("Can't find sensor id and name by comp id: 0x%x", p->comp_identifier);
+		return ret;
+	}
+
+	if (!get_sensor_info_by_sensor_id(sensor_id, &bus, &addr, &sensor_dev)) {
+		LOG_ERR("Can't find vr addr and bus by sensor id: 0x%x", sensor_id);
+		return ret;
+	}
+
 	struct k_mutex *p_mutex = get_vr_mutex_by_comp_id(p->comp_identifier);
 
 	if (!p_mutex) {
 		LOG_ERR("vr comp id %d, mutex is NULL", p->comp_identifier);
-		return false;
+		return ret;
 	}
 
 	if (k_mutex_lock(p_mutex, K_MSEC(VR_MUTEX_LOCK_TIMEOUT_MS))) {
 		LOG_ERR("vr comp id %d, mutex %p lock fail", p->comp_identifier, p_mutex);
-		return false;
+		return ret;
 	}
 	LOG_DBG("vr comp id %d, mutex %p lock", p->comp_identifier, p_mutex);
 
@@ -481,49 +494,49 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	case sensor_dev_isl69259:
 		if (!raa229621_get_crc(bus, addr, &version)) {
 			LOG_ERR("The VR ISL69260 version reading failed");
-			return ret;
+			goto err;
 		}
 		if (raa229621_get_remaining_wr(bus, addr, (uint8_t *)&remain) < 0) {
 			LOG_ERR("The VR ISL69260 remaining reading failed");
-			return ret;
+			goto err;
 		}
 		break;
 	case sensor_dev_raa228238:
 		if (!raa229621_get_crc(bus, addr, &version)) {
 			LOG_ERR("The VR RAA228238 version reading failed");
-			return ret;
+			goto err;
 		}
 		if (raa229621_get_remaining_wr(bus, addr, (uint8_t *)&remain) < 0) {
 			LOG_ERR("The VR RAA228238 remaining reading failed");
-			return ret;
+			goto err;
 		}
 		break;
 	case sensor_dev_mp2971:
 		if (!mp2971_get_checksum(bus, addr, &version)) {
 			LOG_ERR("The VR MPS2971 version reading failed");
-			return ret;
+			goto err;
 		}
 		break;
 	case sensor_dev_mp2891:
 		if (!mp2891_get_fw_version(bus, addr, &version)) {
 			LOG_ERR("The VR MPS2891 version reading failed");
-			return ret;
+			goto err;
 		}
 		break;
 	case sensor_dev_mp29816a:
 		if (!mp29816a_get_fw_version(bus, addr, &version)) {
 			LOG_ERR("The VR MPS29816a version reading failed");
-			return ret;
+			goto err;
 		}
 		break;
 	case sensor_dev_raa228249:
 		if (!raa228249_get_crc(bus, addr, &version)) {
 			LOG_ERR("The VR RAA228249 version reading failed");
-			return ret;
+			goto err;
 		}
 		if (raa228249_get_remaining_wr(bus, addr, (uint8_t *)&remain) < 0) {
 			LOG_ERR("The VR RAA228249 remaining reading failed");
-			return ret;
+			goto err;
 		}
 		break;
 	default:
@@ -540,9 +553,9 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		LOG_ERR("Unsupport VR type(%d)", type);
 
 	const char *vr_name[] = {
-		[VR_RNS_ISL69260_RAA228238] = "Renesas ",
+		[VR_RNS_ISL69260_RAA228238] = "RNS ",
 		[VR_MPS_MP2971_MP2891] = "MPS ",
-		[VR_RNS_ISL69260_RAA228249] = "Renesas ",
+		[VR_RNS_ISL69260_RAA228249] = "RNS ",
 		[VR_MPS_MP2971_MP29816A] = "MPS ",
 	};
 
@@ -558,27 +571,30 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 	memcpy(buf_p, vr_name_p, strlen(vr_name_p));
 	buf_p += strlen(vr_name_p);
+	*len += strlen(vr_name_p);
 
-	if (sensor_dev == sensor_dev_mp2891 || sensor_dev == sensor_dev_mp29816a)
-		*len += bin2hex((uint8_t *)&version, 2, buf_p, 4) + strlen(vr_name_p);
-	else if (sensor_dev == sensor_dev_isl69259 || sensor_dev == sensor_dev_raa228238 ||
-		 sensor_dev == sensor_dev_raa228249 || sensor_dev == sensor_dev_mp2971)
-		*len += bin2hex((uint8_t *)&version, 4, buf_p, 8) + strlen(vr_name_p);
-	else
+	if (sensor_dev == sensor_dev_mp2891 || sensor_dev == sensor_dev_mp29816a) {
+		*len += bin2hex((uint8_t *)&version, 2, buf_p, 4);
+		buf_p += 4;
+	} else if (sensor_dev == sensor_dev_isl69259 || sensor_dev == sensor_dev_raa228238 ||
+		   sensor_dev == sensor_dev_raa228249 || sensor_dev == sensor_dev_mp2971) {
+		*len += bin2hex((uint8_t *)&version, 4, buf_p, 8);
+		buf_p += 8;
+	} else
 		LOG_ERR("Unsupport VR type(%d)", type);
 
-	buf_p += 8;
+	memcpy(buf_p, remain_str_p, strlen(remain_str_p));
+	buf_p += strlen(remain_str_p);
+	*len += strlen(remain_str_p);
 
 	if (remain != 0xFFFF) {
-		memcpy(buf_p, remain_str_p, strlen(remain_str_p));
-		buf_p += strlen(remain_str_p);
 		remain = (uint8_t)((remain % 10) | (remain / 10 << 4));
-		*len += bin2hex((uint8_t *)&remain, 1, buf_p, 2) + strlen(remain_str_p);
+		*len += bin2hex((uint8_t *)&remain, 1, buf_p, 2);
 		buf_p += 2;
+	} else {
+		*len += bin2hex((uint8_t *)&remain, 2, buf_p, 4);
+		buf_p += 4;
 	}
-
-	/* Start sensor polling */
-	set_plat_sensor_polling_enable_flag(true);
 
 	ret = true;
 
@@ -603,17 +619,22 @@ void clear_pending_version(uint8_t activate_method)
 	}
 }
 
-void find_sensor_id_and_name_by_firmware_comp_id(uint8_t comp_identifier, uint8_t *sensor_id,
+bool find_sensor_id_and_name_by_firmware_comp_id(uint8_t comp_identifier, uint8_t *sensor_id,
 						 char *sensor_name)
 {
+	CHECK_NULL_ARG_WITH_RETURN(sensor_id, false);
+	CHECK_NULL_ARG_WITH_RETURN(sensor_name, false);
+
 	for (uint8_t i = 0; i < ARRAY_SIZE(aegis_vr_compnt_mapping_sensor_table); i++) {
 		if (aegis_vr_compnt_mapping_sensor_table[i].firmware_comp_id == comp_identifier) {
 			*sensor_id = aegis_vr_compnt_mapping_sensor_table[i].plat_pldm_sensor_id;
 			strncpy(sensor_name, aegis_vr_compnt_mapping_sensor_table[i].sensor_name,
 				MAX_AUX_SENSOR_NAME_LEN);
+			return true;
 		}
 	}
-	return;
+
+	return false;
 }
 
 int get_aegis_vr_compnt_mapping_sensor_table_count(void)
