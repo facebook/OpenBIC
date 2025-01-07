@@ -514,6 +514,7 @@ int set_user_settings_alert_level_to_eeprom(void *user_settings, uint8_t data_le
 			msg.target_addr, msg.data[0], msg.data[1]);
 		return -1;
 	}
+	k_msleep(EEPROM_MAX_WRITE_TIME);
 
 	return 0;
 }
