@@ -722,9 +722,9 @@ sensor_threshold threshold_tbl[] = {
 	  THRESHOLD_ARG0_TABLE_INDEX, 1 },
 	{ SENSOR_NUM_HEX_EXTERNAL_Y_FILTER, THRESHOLD_ENABLE_UCR, 0, 30, sensor_log,
 	  SENSOR_NUM_HEX_EXTERNAL_Y_FILTER, 1 },
-	{ SENSOR_NUM_BPB_RACK_PRESSURE_3_P_KPA, THRESHOLD_ENABLE_UCR, 0, 200, sensor_log,
+	{ SENSOR_NUM_BPB_RACK_PRESSURE_3_P_KPA, THRESHOLD_ENABLE_UCR, 0, 300, sensor_log,
 	  SENSOR_NUM_BPB_RACK_PRESSURE_3_P_KPA, 1 },
-	{ SENSOR_NUM_BPB_RACK_PRESSURE_4_P_KPA, THRESHOLD_ENABLE_UCR, 0, 200, sensor_log,
+	{ SENSOR_NUM_BPB_RACK_PRESSURE_4_P_KPA, THRESHOLD_ENABLE_UCR, 0, 300, sensor_log,
 	  SENSOR_NUM_BPB_RACK_PRESSURE_4_P_KPA, 1 },
 	{ SENSOR_NUM_SB_HEX_PRESSURE_1_P_KPA, THRESHOLD_ENABLE_UCR, 0, 200, sensor_log,
 	  SENSOR_NUM_SB_HEX_PRESSURE_1_P_KPA, 1 },
@@ -963,6 +963,11 @@ bool get_threshold_poll_enable_flag()
 
 uint32_t get_threshold_status(uint8_t sensor_num)
 {
+	// This is for DVT work around, it will be removed after hardware design fixed
+	if (sensor_num == SENSOR_NUM_BPB_RPU_LEVEL) {
+		return 0;
+	}
+
 	for (uint8_t i = 0; i < ARRAY_SIZE(threshold_tbl); i++)
 		if (threshold_tbl[i].sensor_num == sensor_num)
 			return threshold_tbl[i].last_status;
