@@ -21,6 +21,7 @@
 #include "ina233.h"
 #include "sq52205.h"
 #include "pt5161l.h"
+#include "bcm85658.h"
 #include "rtq6056.h"
 #include "sensor.h"
 #include "pldm_sensor.h"
@@ -6782,9 +6783,12 @@ void plat_pldm_sensor_change_retimer_dev()
 					&plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg);
 				break;
 			case RETIMER_TYPE_BROADCOM:
-				// TODO: Currently, disable sensor reading until support broadcom
-				plat_pldm_disable_sensor(
-					&plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg);
+				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.type =
+					sensor_dev_bcm85658;
+				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.offset =
+					BCM85658_TEMP_OFFSET;
+				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.init_args = NULL;
+				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.pre_sensor_read_hook = NULL;
 				break;
 			default:
 				LOG_ERR("Failed to change the Retimer device due to unknown vendor.");
