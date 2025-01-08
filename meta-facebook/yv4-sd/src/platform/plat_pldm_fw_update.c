@@ -31,6 +31,7 @@
 
 #include "mp2971.h"
 #include "pt5161l.h"
+#include "bcm85658.h"
 #include "raa229621.h"
 #include "plat_class.h"
 #include "plat_pldm_device_identifier.h"
@@ -723,6 +724,12 @@ static bool plat_get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len
 		memcpy(buf_p, version, RETIMER_PT5161L_FW_VER_LEN);
 		*len += bin2hex(version, 4, buf_p, 8);
 		buf_p += 8;
+	} else if (retimer_type == RETIMER_TYPE_BROADCOM) {
+		uint8_t *buf_p = buf;
+		ret = bcm85658_get_fw_version(&i2c_msg, version);
+		memcpy(buf_p, version, RETIMER_PT5161L_FW_VER_LEN);
+		*len += bin2hex(&version[1], 3, buf_p, 6);
+		buf_p += 6;
 	} else {
 		// TODO: Support other vendor
 	}
