@@ -52,7 +52,10 @@ void pal_pre_init()
 	plat_led_init();
 	vr_mutex_init();
 	pwr_level_mutex_init();
-	plat_clock_init();
+
+	if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH)
+		plat_clock_init();
+
 	plat_eusb_init();
 }
 
