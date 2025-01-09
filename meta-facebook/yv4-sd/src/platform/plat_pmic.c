@@ -215,7 +215,7 @@ void monitor_pmic_error_via_i3c_handler()
 			}
 
 			memset(&error_data, 0, sizeof(error_data));
-			ret = get_pmic_error_data(dimm_id, error_data);
+			ret = get_pmic_error_data(dimm_id, error_data, true);
 			if (ret < 0) {
 				LOG_ERR("Fail to get PMIC error data on monitor thread, dimm: 0x%x",
 					dimm_id);
@@ -305,7 +305,7 @@ int pal_set_pmic_error_flag(uint8_t dimm_id, uint8_t error_type)
 	return SUCCESS;
 }
 
-int get_pmic_error_data(uint8_t dimm_id, uint8_t *buffer)
+int get_pmic_error_data(uint8_t dimm_id, uint8_t *buffer, uint8_t is_need_check_post_status)
 {
 	CHECK_NULL_ARG_WITH_RETURN(buffer, -1);
 	int ret = 0;
@@ -322,7 +322,7 @@ int get_pmic_error_data(uint8_t dimm_id, uint8_t *buffer)
 		return ret;
 	}
 
-	if (!get_post_status()) {
+	if ((!get_post_status()) && is_need_check_post_status) {
 		switch_i3c_dimm_mux(I3C_MUX_CPU_TO_DIMM);
 		return -1;
 	}
@@ -371,7 +371,7 @@ void read_pmic_error_when_dc_off()
 		}
 
 		memset(&error_data, 0, sizeof(error_data));
-		ret = get_pmic_error_data(dimm_id, error_data);
+		ret = get_pmic_error_data(dimm_id, error_data, false);
 		if (ret != 0) {
 			LOG_ERR("Read PMIC error data fail, dimm id: 0x%x", dimm_id);
 			continue;
