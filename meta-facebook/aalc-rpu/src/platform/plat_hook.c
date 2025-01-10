@@ -1050,9 +1050,7 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 	case PLATFORM_ADS112C_FLOW: //Flow_Rate_LPM
 		v_val = 5 - ((32767 - rawValue) * 0.000153);
 		val = (((v_val / 5.0) - 0.1) * (flow_Pmax - flow_Pmin) / 0.8);
-		val = (val - 7.56494) * 1.076921;
-		val = 2.745 * val + 20.49;
-		val = 1.0018 * val + 5.2047;
+		val = 1.3232 * val - 1.0314;
 		val = (val < 0) ? 0 : val;
 		break;
 	case PLATFORM_ADS112C_PRESS: //Filter_P/Outlet_P/Inlet_P
