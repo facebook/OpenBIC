@@ -40,7 +40,7 @@ int get_pmic_fault_status();
 void read_pmic_error_when_dc_off();
 void clear_pmic_error(uint8_t dimm_id);
 void add_pmic_error_sel(uint8_t dimm_id, uint8_t error_type);
-int get_pmic_error_data(uint8_t dimm_id, uint8_t *buffer);
+int get_pmic_error_data(uint8_t dimm_id, uint8_t *buffer, uint8_t is_need_check_post_status);
 
 void init_pmic_event_work();
 
