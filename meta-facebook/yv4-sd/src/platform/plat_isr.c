@@ -221,6 +221,12 @@ void reinit_i3c_hub()
 	send_cmd_to_dev_handler(NULL);
 }
 
+void set_ffwf_eid()
+{
+	// Set FF/WF's EID
+	send_cmd_to_dev_handler(NULL);
+}
+
 void switch_i3c_dimm_mux_to_cpu()
 {
 	switch_i3c_dimm_mux(I3C_MUX_CPU_TO_DIMM);
@@ -245,6 +251,7 @@ static void PROC_FAIL_handler(struct k_work *work)
 
 K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_delayed_status);
 K_WORK_DEFINE(reinit_i3c_work, reinit_i3c_hub);
+K_WORK_DEFINE(set_ffwf_eid_work, set_ffwf_eid);
 K_WORK_DEFINE(switch_i3c_dimm_work, switch_i3c_dimm_mux_to_cpu);
 K_WORK_DELAYABLE_DEFINE(PROC_FAIL_work, PROC_FAIL_handler);
 K_WORK_DELAYABLE_DEFINE(ABORT_FRB2_WDT_THREAD, abort_frb2_wdt_thread);
@@ -312,6 +319,11 @@ void ISR_POST_COMPLETE()
 void ISR_BMC_READY()
 {
 	sync_bmc_ready_pin();
+}
+
+void ISR_WF_BIC_READY()
+{
+	k_work_submit(&set_ffwf_eid_work);
 }
 
 static void SLP3_handler()
