@@ -41,6 +41,7 @@
 #define ON_DIE_4_TEMP_EMC1413_ADDR (0X38 >> 1)
 
 #define P3V3_MP2971_ADDR (0xF6 >> 1)
+#define P3V3_MP2971_FAB3_ADDR (0xD6 >> 1) // Change to 0xD6 at FAB3 board
 #define P3V3_ISL69260_ADDR (0xC0 >> 1)
 
 #define P0V85_PVDD_MP2891_ADDR (0x4C >> 1)
@@ -95,9 +96,11 @@
 #define P0V75_VDDPHY_HBM1_HBM3_HBM5_ISL69260_ADDR (0xC4 >> 1)
 
 #define P0V8_VDDA_PCIE_MP2971_ADDR (0xF2 >> 1)
+#define P0V8_VDDA_PCIE_MP2971_FAB3_ADDR (0xD2 >> 1) // Change to 0xD2 at FAB3 board
 #define P0V8_VDDA_PCIE_ISL69260_ADDR (0xC6 >> 1)
 
 #define P1V2_VDDHTX_PCIE_MP2971_ADDR (0xF2 >> 1)
+#define P1V2_VDDHTX_PCIE_MP2971_FAB3_ADDR (0xD2 >> 1) // Change to 0xD2 at FAB3 board
 #define P1V2_VDDHTX_PCIE_ISL69260_ADDR (0xC6 >> 1)
 
 /* Define the sensor numbers used in this platform */
