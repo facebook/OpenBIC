@@ -63,6 +63,11 @@ bool pal_request_msg_to_BIC_from_HOST(uint8_t netfn, uint8_t cmd)
 			return false;
 		}
 	}
+	if (netfn == NETFN_OEM_REQ) {
+		if (cmd == CMD_OEM_CRASH_DUMP) {
+			return false;
+		}
+	}
 	// In YV4, all IPMI commands are all sent to BIC
 	return true;
 }

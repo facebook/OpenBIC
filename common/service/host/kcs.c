@@ -216,6 +216,63 @@ static int send_bios_version_to_bmc(char *bios_version, uint8_t bios_version_len
 	return 0;
 }
 
+static int send_crashdump_to_bmc(uint8_t *data, uint8_t data_length)
+{
+	pldm_msg msg = { 0 };
+	uint8_t bmc_bus = I2C_BUS_BMC, bmc_interface = BMC_INTERFACE_I2C;
+
+	bmc_interface = pal_get_bmc_interface();
+	if (bmc_interface == BMC_INTERFACE_I3C) {
+		bmc_bus = I3C_BUS_BMC;
+		msg.ext_params.type = MCTP_MEDIUM_TYPE_TARGET_I3C;
+		msg.ext_params.i3c_ext_params.addr = I3C_STATIC_ADDR_BMC;
+		msg.ext_params.ep = MCTP_EID_BMC;
+	} else {
+		bmc_bus = I2C_BUS_BMC;
+		msg.ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
+		msg.ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
+		msg.ext_params.ep = MCTP_EID_BMC;
+	}
+
+	msg.hdr.pldm_type = PLDM_TYPE_OEM;
+	msg.hdr.cmd = PLDM_OEM_WRITE_FILE_IO;
+	msg.hdr.rq = 1;
+
+	struct pldm_oem_write_file_io_req *ptr = (struct pldm_oem_write_file_io_req *)malloc(
+		sizeof(struct pldm_oem_write_file_io_req) + (sizeof(uint8_t) * data_length));
+
+	if (!ptr) {
+		LOG_ERR("Failed to allocate memory.");
+		return 1;
+	}
+
+	ptr->cmd_code = CRASH_DUMP;
+	ptr->data_length = data_length;
+	memcpy(ptr->messages, data, data_length);
+
+	msg.buf = (uint8_t *)ptr;
+	msg.len = sizeof(struct pldm_oem_write_file_io_req) + data_length;
+
+	uint8_t resp_len = sizeof(struct pldm_oem_write_file_io_resp);
+	uint8_t rbuf[resp_len];
+
+	if (!mctp_pldm_read(find_mctp_by_bus(bmc_bus), &msg, rbuf, resp_len)) {
+		SAFE_FREE(ptr);
+		LOG_ERR("mctp_pldm_read fail");
+		return 2;
+	}
+
+	struct pldm_oem_write_file_io_resp *resp = (struct pldm_oem_write_file_io_resp *)rbuf;
+	if (resp->completion_code != PLDM_SUCCESS) {
+		SAFE_FREE(ptr);
+		LOG_ERR("Check reponse completion code fail %x", resp->completion_code);
+		return resp->completion_code;
+	}
+
+	SAFE_FREE(ptr);
+	return 0;
+}
+
 #endif
 
 #endif
@@ -319,6 +376,31 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 				pldm_platform_event_message_req(find_mctp_by_bus(bmc_bus),
 								ext_params, 0xFB, &ibuf[4],
 								pldm_event_length);
+			}
+			// IPMI OEM command for crashdump, send crashdump data to BMC
+			if ((req->netfn == NETFN_OEM_REQ ) &&
+				(req->cmd == CMD_OEM_CRASH_DUMP)) {
+				LOG_HEXDUMP_DBG(&ibuf[0], rc, "host KCS read dump data:");
+				int ret = send_crashdump_to_bmc(&ibuf[2], (rc - 2)); // exclude netfn, cmd
+				if (ret) {
+					LOG_ERR("Failed to send crashdump data to BMC, rc = %d", ret);
+				}
+				// When recieve control(0x80), get_state(0x01), BMC need to reply to BIOS
+				// With PLDM implementation, we need to it by BIC.
+				if (ibuf[6] == 0x80 && ibuf[10] == 0x01) {
+					uint8_t *kcs_buff;
+					kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
+					if (kcs_buff == NULL) {
+						LOG_ERR("Failed to malloc for kcs_buff");
+						break;
+					}
+					kcs_buff[0] = (req->netfn | BIT(0)) << 2;
+					kcs_buff[1] = req->cmd;
+					kcs_buff[2] = CC_SUCCESS;
+					kcs_buff[3] = 0x02; // state wait_data(0x02)
+					kcs_write(kcs_inst->index, kcs_buff, 4);
+					SAFE_FREE(kcs_buff);
+				}
 			}
 #endif
 #endif
