@@ -1492,12 +1492,11 @@ static uint8_t get_downstream_firmware_parameters(void *mctp_inst, uint8_t *buf,
 			return PLDM_SUCCESS;
 		}
 
-		struct component_parameter_table *comp_table_p =
-			(struct component_parameter_table *)curr_downstream_device;
-		curr_downstream_device += sizeof(struct component_parameter_table);
+		struct downstream_device_parameter_table *comp_table_p =
+			(struct downstream_device_parameter_table *)curr_downstream_device;
+		curr_downstream_device += sizeof(struct downstream_device_parameter_table);
 
-		comp_table_p->comp_identifier = comp_config[i].comp_identifier;
-		comp_table_p->comp_classification = comp_config[i].comp_classification;
+		comp_table_p->downstream_device_index = comp_config[i].comp_identifier;
 		comp_table_p->active_comp_ver_str_type = PLDM_COMP_ASCII;
 		comp_table_p->pending_comp_ver_str_type = PLDM_COMP_ASCII;
 		comp_table_p->pending_comp_ver_str_len = 0x00;
@@ -1509,7 +1508,7 @@ static uint8_t get_downstream_firmware_parameters(void *mctp_inst, uint8_t *buf,
 			memcpy(curr_downstream_device, &error_code, sizeof(error_code));
 		}
 
-		param_table_len += sizeof(struct component_parameter_table) +
+		param_table_len += sizeof(struct downstream_device_parameter_table) +
 				   comp_table_p->active_comp_ver_str_len;
 		curr_downstream_device += comp_table_p->active_comp_ver_str_len;
 
