@@ -21,6 +21,7 @@
 #include <drivers/i2c.h>
 #include "hal_i2c_target.h"
 #include "libutil.h"
+#include "plat_def.h"
 
 /* LOG SET */
 #include <logging/log.h>
@@ -49,12 +50,41 @@ static void do_something_after_wr_rcv(void *arg)
 	ARG_UNUSED(arg);
 }
 
+static struct i2c_target_data *i2c_find_slave_config(struct i2c_slave_config *config)
+{
+#ifdef ENABLE_I2C_MULTI_SLAVE
+	for (int i = 0; i < MAX_TARGET_NUM; i++) {
+		if (i2c_target_device_global[i].is_init &&
+		    i2c_target_device_global[i].is_register) {
+			if (&i2c_target_device_global[i].data.config == config) {
+				return CONTAINER_OF(config, struct i2c_target_data, config);
+			}
+			if (i2c_target_device_global[i].is_enable_sec) {
+				if (&i2c_target_device_global[i].data.config_sec == config) {
+					return CONTAINER_OF(config, struct i2c_target_data,
+							    config_sec);
+				}
+			}
+			if (i2c_target_device_global[i].is_enable_thd) {
+				if (&i2c_target_device_global[i].data.config_thd == config) {
+					return CONTAINER_OF(config, struct i2c_target_data,
+							    config_thd);
+				}
+			}
+		}
+	}
+#endif
+	return CONTAINER_OF(config, struct i2c_target_data, config);
+}
+
 static int i2c_target_write_requested(struct i2c_slave_config *config)
 {
 	CHECK_NULL_ARG_WITH_RETURN(config, 1);
 
 	struct i2c_target_data *data;
-	data = CONTAINER_OF(config, struct i2c_target_data, config);
+	data = i2c_find_slave_config(config);
+
+	data->req_address = config->address & 0xFF;
 
 	data->target_wr_msg.msg_length = 0;
 	memset(data->target_wr_msg.msg, 0x0, MAX_I2C_TARGET_BUFF);
@@ -69,7 +99,7 @@ static int i2c_target_write_received(struct i2c_slave_config *config, uint8_t va
 	CHECK_NULL_ARG_WITH_RETURN(config, 1);
 
 	struct i2c_target_data *data;
-	data = CONTAINER_OF(config, struct i2c_target_data, config);
+	data = i2c_find_slave_config(config);
 
 	if (data->wr_buffer_idx >= MAX_I2C_TARGET_BUFF) {
 		LOG_ERR("Buffer_idx over limit!");
@@ -89,7 +119,7 @@ static int i2c_target_read_requested(struct i2c_slave_config *config, uint8_t *v
 	CHECK_NULL_ARG_WITH_RETURN(val, 1);
 
 	struct i2c_target_data *data;
-	data = CONTAINER_OF(config, struct i2c_target_data, config);
+	data = i2c_find_slave_config(config);
 
 	if (data->rd_data_collect_func) {
 		if (data->rd_data_collect_func(data) == false)
@@ -113,7 +143,7 @@ static int i2c_target_read_processed(struct i2c_slave_config *config, uint8_t *v
 	CHECK_NULL_ARG_WITH_RETURN(val, 1);
 
 	struct i2c_target_data *data;
-	data = CONTAINER_OF(config, struct i2c_target_data, config);
+	data = i2c_find_slave_config(config);
 
 	if (data->target_rd_msg.msg_length - data->rd_buffer_idx == 0) {
 		LOG_DBG("No remain buffer to read!");
@@ -135,7 +165,7 @@ static int i2c_target_stop(struct i2c_slave_config *config)
 	CHECK_NULL_ARG_WITH_RETURN(config, 1);
 
 	struct i2c_target_data *data;
-	data = CONTAINER_OF(config, struct i2c_target_data, config);
+	data = i2c_find_slave_config(config);
 
 	int ret = 1;
 
@@ -165,7 +195,7 @@ static int i2c_target_stop(struct i2c_slave_config *config)
 
 	if (data->rd_buffer_idx) {
 		if (data->target_rd_msg.msg_length - data->rd_buffer_idx) {
-			LOG_WRN("Read buffer doesn't read complete");
+			LOG_DBG("Read buffer doesn't read complete");
 		}
 	}
 
@@ -479,6 +509,8 @@ static int do_i2c_target_cfg(uint8_t bus_num, struct _i2c_target_config *cfg)
 	}
 
 	/* need unregister first */
+	i2c_target_device_global[bus_num].is_enable_sec = cfg->is_enable_sec;
+	i2c_target_device_global[bus_num].is_enable_thd = cfg->is_enable_thd;
 	if (!(target_status & I2C_TARGET_NOT_REGISTER)) {
 		int status = do_i2c_target_unregister(bus_num);
 		if (status) {
@@ -526,6 +558,14 @@ static int do_i2c_target_cfg(uint8_t bus_num, struct _i2c_target_config *cfg)
 		}
 
 		data->config.callbacks = &i2c_target_cb;
+#ifdef ENABLE_I2C_MULTI_SLAVE
+		if (cfg->is_enable_sec) {
+			data->config_sec.callbacks = &i2c_target_cb;
+		}
+		if (cfg->is_enable_thd) {
+			data->config_thd.callbacks = &i2c_target_cb;
+		}
+#endif
 	}
 	/* do modify, modify config set after init */
 	else {
@@ -538,6 +578,14 @@ static int do_i2c_target_cfg(uint8_t bus_num, struct _i2c_target_config *cfg)
 
 	data->max_msg_count = cfg->i2c_msg_count;
 	data->config.address = cfg->address >> 1; // to 7-bit target address
+#ifdef ENABLE_I2C_MULTI_SLAVE
+	if (cfg->is_enable_sec) {
+		data->config_sec.address = cfg->address_sec >> 1;
+	}
+	if (cfg->is_enable_thd) {
+		data->config_thd.address = cfg->address_thd >> 1;
+	}
+#endif
 
 	if (cfg->rd_data_collect_func)
 		data->rd_data_collect_func = cfg->rd_data_collect_func;
@@ -611,6 +659,16 @@ static int do_i2c_target_register(uint8_t bus_num)
 	if (ret)
 		return ret;
 
+#ifdef ENABLE_I2C_MULTI_SLAVE
+	if (i2c_target_device_global[bus_num].is_enable_sec) {
+		ret = i2c_slave_register(data->i2c_controller, &data->config_sec);
+	}
+
+	if (i2c_target_device_global[bus_num].is_enable_thd) {
+		ret = i2c_slave_register(data->i2c_controller, &data->config_thd);
+	}
+#endif
+
 	i2c_target_device_global[bus_num].is_register = 1;
 
 	return I2C_TARGET_API_NO_ERR;
@@ -644,6 +702,16 @@ static int do_i2c_target_unregister(uint8_t bus_num)
 	}
 
 	struct i2c_target_data *data = &i2c_target_device_global[bus_num].data;
+
+#ifdef ENABLE_I2C_MULTI_SLAVE
+	if (i2c_target_device_global[bus_num].is_enable_thd) {
+		i2c_slave_unregister(data->i2c_controller, &data->config_thd);
+	}
+
+	if (i2c_target_device_global[bus_num].is_enable_sec) {
+		i2c_slave_unregister(data->i2c_controller, &data->config_sec);
+	}
+#endif
 
 	int ret = i2c_slave_unregister(data->i2c_controller, &data->config);
 	if (ret)
