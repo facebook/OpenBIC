@@ -50,22 +50,25 @@ static void do_something_after_wr_rcv(void *arg)
 	ARG_UNUSED(arg);
 }
 
-static struct i2c_target_data* i2c_find_slave_config(struct i2c_slave_config *config)
+static struct i2c_target_data *i2c_find_slave_config(struct i2c_slave_config *config)
 {
 #ifdef ENABLE_I2C_MULTI_SLAVE
-	for (int i=0; i < MAX_TARGET_NUM; i++) {
-		if (i2c_target_device_global[i].is_init && i2c_target_device_global[i].is_register) {
+	for (int i = 0; i < MAX_TARGET_NUM; i++) {
+		if (i2c_target_device_global[i].is_init &&
+		    i2c_target_device_global[i].is_register) {
 			if (&i2c_target_device_global[i].data.config == config) {
 				return CONTAINER_OF(config, struct i2c_target_data, config);
 			}
 			if (i2c_target_device_global[i].is_enable_sec) {
 				if (&i2c_target_device_global[i].data.config_sec == config) {
-					return CONTAINER_OF(config, struct i2c_target_data, config_sec);
+					return CONTAINER_OF(config, struct i2c_target_data,
+							    config_sec);
 				}
 			}
 			if (i2c_target_device_global[i].is_enable_thd) {
 				if (&i2c_target_device_global[i].data.config_thd == config) {
-					return CONTAINER_OF(config, struct i2c_target_data, config_thd);
+					return CONTAINER_OF(config, struct i2c_target_data,
+							    config_thd);
 				}
 			}
 		}
