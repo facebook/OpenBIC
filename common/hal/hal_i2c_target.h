@@ -34,6 +34,9 @@ struct i2c_target_data {
 	uint8_t i2c_bus; // i2c bus number
 	const struct device *i2c_controller; // i2c controller for one target bus
 	struct i2c_slave_config config; // i2c target relative config
+	struct i2c_slave_config config_sec; // i2c target relative config for 2nd address
+	struct i2c_slave_config config_thd; // i2c target relative config for 3rd address
+	uint8_t req_address; // current request address
 
 	/* TARGET WRITE - Support message queue for massive pending messages storage */
 	uint16_t wr_buffer_idx; // message buffer index
@@ -54,12 +57,18 @@ struct _i2c_target_config {
 	uint32_t i2c_msg_count;
 	bool (*rd_data_collect_func)(void *);
 	void (*post_wr_rcv_func)(void *);
+	uint8_t address_sec;
+	bool is_enable_sec;
+	uint8_t address_thd;
+	bool is_enable_thd;
 };
 
 struct i2c_target_device {
 	struct i2c_target_data data;
 	bool is_init;
 	bool is_register;
+	bool is_enable_sec;
+	bool is_enable_thd;
 };
 
 /* Retern value set for i2c target status */
