@@ -146,6 +146,8 @@ bool plat_i2c_write(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t *data, ui
 
 void check_clk_handler()
 {
+	static uint8_t check_clk_handler_retry_count = 0;
+	uint8_t retry_max_count = 1;
 	uint8_t data[4] = { 0 };
 
 	if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, 0x0B, data, 1)) {
@@ -179,10 +181,17 @@ void check_clk_handler()
 			LOG_ERR("Failed to write 312M CLK GEN");
 			return;
 		}
+		check_clk_handler_retry_count = 0;
 		LOG_INF("Init 312M CLK GEN finish");
-
 	} else {
-		LOG_ERR("pwrgd_p3v3_and_p1v8 fail= 0x%02X", pwrgd_p3v3_and_p1v8);
+		check_clk_handler_retry_count++;
+		if (check_clk_handler_retry_count > retry_max_count) {
+			LOG_ERR("312M CLK GEN init failed");
+			check_clk_handler_retry_count = 0;
+		} else {
+			LOG_INF("312M CLK GEN init, pwrgd not ready, retry after 100ms");
+			k_work_schedule(&check_clk_work, K_MSEC(100));
+		}
 	}
 }
 
@@ -190,9 +199,8 @@ void plat_clock_init(void)
 {
 	LOG_DBG("plat_clock_init started");
 	uint8_t board_stage = get_board_stage();
-	if (board_stage == FAB2_DVT || board_stage == FAB3_PVT || board_stage == FAB4_MP) {
-		k_work_schedule(&check_clk_work, K_MSEC(100));
-	}
+	if (board_stage == FAB2_DVT || board_stage == FAB3_PVT || board_stage == FAB4_MP)
+		k_work_schedule(&check_clk_work, K_MSEC(300));
 }
 
 void plat_eusb_init(void)
