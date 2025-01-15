@@ -139,6 +139,7 @@ mp2971_init_arg mp2971_init_args[] = {
 
 isl69259_init_arg isl69259_init_args[] = {
 	[0] = { .vout_scale_enable = true, .vout_scale = (499 / 798.8) },
+	[1] = { .vout_scale_enable = true, .vout_scale = (499 / 709.0) },
 };
 
 void *vr_mutex_get(enum VR_INDEX_E vr_index)
