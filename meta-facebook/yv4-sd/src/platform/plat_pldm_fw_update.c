@@ -525,6 +525,8 @@ static uint8_t plat_pldm_pre_vr_update(void *fw_update_param)
 
 	/* Stop sensor polling */
 	set_vr_monitor_status(false);
+	// wait 10ms for vr monitor stop
+	k_msleep(10);
 	p->bus = I2C_BUS4;
 
 	if (p->comp_id == SD_COMPNT_VR_PVDDCR_CPU1) {
@@ -605,6 +607,8 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 	const uint8_t *vr_name_p = vr_name[vr_type];
 	set_vr_monitor_status(false);
+	// wait 10ms for vr monitor stop
+	k_msleep(10);
 	switch (vr_type) {
 	case VR_TYPE_MPS:
 		if (!mp2971_get_checksum(bus, addr, &version)) {
