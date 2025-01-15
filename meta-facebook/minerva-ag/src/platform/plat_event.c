@@ -109,7 +109,8 @@ bool vr_error_callback(aegis_cpld_info *cpld_info, uint8_t *current_cpld_value)
 		}
 
 		// Dynamically generate the error code
-		uint16_t error_code = 0x8000 | (bit << 8) | cpld_info->cpld_offset;
+		uint16_t error_code = (CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE << 13) | (bit << 8) |
+				      cpld_info->cpld_offset;
 
 		LOG_ERR("Generated error code: 0x%04X (bit %d, CPLD offset 0x%02X)", error_code,
 			bit, cpld_info->cpld_offset);
