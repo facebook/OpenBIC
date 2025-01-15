@@ -1,0 +1,9 @@
+<map id="common/service/sensor/pldm_sensor.h" name="common/service/sensor/pldm_sensor.h">
+<area shape="rect" id="node1" title=" " alt="" coords="457,5,619,47"/>
+<area shape="rect" id="node2" href="$minerva-ag_2src_2platform_2plat__pldm__fw__update_8c.html" title=" " alt="" coords="5,95,164,151"/>
+<area shape="rect" id="node3" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html" title=" " alt="" coords="188,95,347,151"/>
+<area shape="rect" id="node4" href="$yv4-ff_2src_2platform_2plat__pldm__sensor_8c.html" title=" " alt="" coords="371,95,526,151"/>
+<area shape="rect" id="node5" href="$yv4-sd_2src_2platform_2plat__pldm__sensor_8c.html" title=" " alt="" coords="550,95,705,151"/>
+<area shape="rect" id="node6" href="$yv4-sd_2src_2platform_2plat__pmic_8c.html" title=" " alt="" coords="729,102,894,143"/>
+<area shape="rect" id="node7" href="$yv4-wf_2src_2platform_2plat__pldm__sensor_8c.html" title=" " alt="" coords="918,95,1073,151"/>
+</map>

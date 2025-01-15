@@ -1,0 +1,8 @@
+<map id="plat_pldm_sensor_change_adc_monitor_dev" name="plat_pldm_sensor_change_adc_monitor_dev">
+<area shape="rect" id="node1" title=" " alt="" coords="5,57,179,98"/>
+<area shape="rect" id="node2" href="$yv4-wf_2src_2platform_2plat__gpio_8c.html#a49fcac8a9cff9b16dbba2845722cf9ec" title=" " alt="" coords="253,5,356,32"/>
+<area shape="rect" id="node5" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a18272dc8dce4f373b85555817c2cc6f3" title=" " alt="" coords="230,57,379,98"/>
+<area shape="rect" id="node6" href="$yv4-wf_2src_2platform_2plat__hook_8c.html#ae1bf0cb8335c2dfc83b2a295646368c3" title=" " alt="" coords="227,123,383,149"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="431,5,549,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="597,5,740,32"/>
+</map>

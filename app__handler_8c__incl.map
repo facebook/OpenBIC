@@ -1,0 +1,27 @@
+<map id="common/service/ipmi/app_handler.c" name="common/service/ipmi/app_handler.c">
+<area shape="rect" id="node1" title=" " alt="" coords="528,5,675,47"/>
+<area shape="rect" id="node2" href="$app__handler_8h.html" title=" " alt="" coords="147,95,250,121"/>
+<area shape="rect" id="node10" href="$fru_8h.html" title=" " alt="" coords="617,95,663,121"/>
+<area shape="rect" id="node14" title=" " alt="" coords="710,244,789,271"/>
+<area shape="rect" id="node15" href="$sdr_8h.html" title=" " alt="" coords="413,169,464,196"/>
+<area shape="rect" id="node16" href="$guid_8h.html" title=" " alt="" coords="536,95,592,121"/>
+<area shape="rect" id="node17" title=" " alt="" coords="739,95,816,121"/>
+<area shape="rect" id="node18" title=" " alt="" coords="841,95,925,121"/>
+<area shape="rect" id="node19" href="$util__sys_8h.html" title=" " alt="" coords="489,169,565,196"/>
+<area shape="rect" id="node21" title=" " alt="" coords="949,95,1043,121"/>
+<area shape="rect" id="node22" href="$libutil_8h.html" title=" " alt="" coords="319,169,382,196"/>
+<area shape="rect" id="node3" href="$ipmi_8h.html" title=" " alt="" coords="171,169,227,196"/>
+<area shape="rect" id="node9" title=" " alt="" coords="72,169,147,196"/>
+<area shape="rect" id="node4" title=" " alt="" coords="5,244,69,271"/>
+<area shape="rect" id="node5" href="$ipmb_8h.html" title=" " alt="" coords="221,244,281,271"/>
+<area shape="rect" id="node8" title=" " alt="" coords="94,244,197,271"/>
+<area shape="rect" id="node6" title=" " alt="" coords="102,319,194,345"/>
+<area shape="rect" id="node7" title=" " alt="" coords="218,319,278,345"/>
+<area shape="rect" id="node11" href="$eeprom_8h.html" title=" " alt="" coords="589,169,664,196"/>
+<area shape="rect" id="node12" title=" " alt="" coords="495,244,569,271"/>
+<area shape="rect" id="node13" title=" " alt="" coords="407,244,471,271"/>
+<area shape="rect" id="node20" title=" " alt="" coords="594,244,686,271"/>
+<area shape="rect" id="node23" href="$hal__i2c_8h.html" title=" " alt="" coords="309,244,382,271"/>
+<area shape="rect" id="node24" title=" " alt="" coords="302,319,394,345"/>
+<area shape="rect" id="node25" title=" " alt="" coords="418,319,577,345"/>
+</map>
