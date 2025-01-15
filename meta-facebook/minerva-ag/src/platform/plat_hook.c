@@ -24,10 +24,14 @@
 #include "plat_gpio.h"
 #include "plat_sensor_table.h"
 #include "plat_hook.h"
+#include "plat_isr.h"
 #include <logging/log.h>
 #include "mp2971.h"
 #include "isl69259.h"
 #include "raa228249.h"
+#include "tmp75.h"
+#include "tmp431.h"
+#include "emc1413.h"
 #include "mp29816a.h"
 #include "plat_pldm_sensor.h"
 #include "plat_class.h"
@@ -113,6 +117,8 @@ bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading)
 	return true;
 }
 
+#define EEPROM_MAX_WRITE_TIME 5 // the BR24G512 eeprom max write time is 3.5 ms
+#define AEGIS_CPLD_ADDR (0x4C >> 1)
 #define VR_PRE_READ_ARG(idx)                                                                       \
 	{ .mutex = vr_mutex + idx, .vr_page = 0x0 },                                               \
 	{                                                                                          \
@@ -140,6 +146,44 @@ mp2971_init_arg mp2971_init_args[] = {
 isl69259_init_arg isl69259_init_args[] = {
 	[0] = { .vout_scale_enable = true, .vout_scale = (499 / 798.8) },
 };
+
+temp_mapping_sensor temp_index_table[] = {
+	{ TEMP_INDEX_ON_DIE_1_2, SENSOR_NUM_ON_DIE_1_TEMP_C, "ON_DIE_1_TEMP" },
+	{ TEMP_INDEX_ON_DIE_3_4, SENSOR_NUM_ON_DIE_3_TEMP_C, "ON_DIE_2_TEMP" },
+	{ TEMP_INDEX_TOP_INLET, SENSOR_NUM_TOP_INLET_TEMP_C, "TOP_INLET_TEMP" },
+	{ TEMP_INDEX_BOT_INLET, SENSOR_NUM_BOT_INLET_TEMP_C, "BOT_INLET_TEMP" },
+	{ TEMP_INDEX_TOP_OUTLET, SENSOR_NUM_TOP_OUTLET_TEMP_C, "TOP_OUTLET_TEMP" },
+	{ TEMP_INDEX_BOT_OUTLET, SENSOR_NUM_BOT_OUTLET_TEMP_C, "BOT_OUTLET_TEMP" },
+};
+
+bool temp_sensor_rail_name_get(uint8_t rail, uint8_t **name)
+{
+	CHECK_NULL_ARG_WITH_RETURN(name, false);
+
+	if (rail >= TEMP_INDEX_MAX) {
+		*name = NULL;
+		return false;
+	}
+
+	*name = (uint8_t *)temp_index_table[rail].sensor_name;
+	return true;
+}
+
+bool temp_sensor_rail_enum_get(uint8_t *name, uint8_t *num)
+{
+	CHECK_NULL_ARG_WITH_RETURN(name, false);
+	CHECK_NULL_ARG_WITH_RETURN(num, false);
+
+	for (int i = 0; i < TEMP_INDEX_MAX; i++) {
+		if (strcmp(name, temp_index_table[i].sensor_name) == 0) {
+			*num = i;
+			return true;
+		}
+	}
+
+	LOG_ERR("invalid rail name %s", name);
+	return false;
+}
 
 void *vr_mutex_get(enum VR_INDEX_E vr_index)
 {
@@ -221,6 +265,46 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 
 	return true;
 }
+
+// clang-format off
+temp_threshold_mapping_sensor temp_index_threshold_type_table[] = {
+	{ ON_DIE_1_2_LOCAL_HIGH_LIMIT, LOCAL_HIGH_LIMIT, SENSOR_NUM_ON_DIE_1_TEMP_C, "ON_DIE_1_TEMP_LOCAL_HIGH_LIM" },
+	{ ON_DIE_1_2_LOCAL_LOW_LIMIT, LOCAL_LOW_LIMIT, SENSOR_NUM_ON_DIE_1_TEMP_C, "ON_DIE_1_TEMP_LOCAL_LOW_LIM" },
+	{ ON_DIE_1_2_REMOTE_1_HIGH_LIMIT, REMOTE_1_HIGH_LIMIT, SENSOR_NUM_ON_DIE_1_TEMP_C, "ON_DIE_1_TEMP_REMOTE1_HIGH_LIM" },
+	{ ON_DIE_1_2_REMOTE_1_LOW_LIMIT, REMOTE_1_LOW_LIMIT, SENSOR_NUM_ON_DIE_1_TEMP_C, "ON_DIE_1_TEMP_REMOTE1_LOW_LIM" },
+	{ ON_DIE_1_2_REMOTE_2_HIGH_LIMIT, REMOTE_2_HIGH_LIMIT, SENSOR_NUM_ON_DIE_1_TEMP_C, "ON_DIE_1_TEMP_REMOTE2_HIGH_LIM" },
+	{ ON_DIE_1_2_REMOTE_2_LOW_LIMIT, REMOTE_2_LOW_LIMIT, SENSOR_NUM_ON_DIE_1_TEMP_C, "ON_DIE_1_TEMP_REMOTE2_LOW_LIM" },
+	{ ON_DIE_1_2_LOCAL_THERM_LIMIT, LOCAL_THERM_LIMIT, SENSOR_NUM_ON_DIE_1_TEMP_C, "ON_DIE_1_TEMP_LOCAL_LIM" },
+	{ ON_DIE_1_2_REMOTE_1_THERM_LIMIT, REMOTE_1_THERM_LIMIT, SENSOR_NUM_ON_DIE_1_TEMP_C, "ON_DIE_1_TEMP_REMOTE1_LIM" },
+	{ ON_DIE_1_2_REMOTE_2_THERM_LIMIT, REMOTE_2_THERM_LIMIT, SENSOR_NUM_ON_DIE_1_TEMP_C, "ON_DIE_1_TEMP_REMOTE2_LIM" },
+
+
+	{ ON_DIE_3_4_LOCAL_HIGH_LIMIT, LOCAL_HIGH_LIMIT, SENSOR_NUM_ON_DIE_3_TEMP_C, "ON_DIE_2_TEMP_LOCAL_HIGH_LIM" },
+	{ ON_DIE_3_4_LOCAL_LOW_LIMIT, LOCAL_LOW_LIMIT, SENSOR_NUM_ON_DIE_3_TEMP_C, "ON_DIE_2_TEMP_LOCAL_LOW_LIM" },
+	{ ON_DIE_3_4_REMOTE_1_HIGH_LIMIT, REMOTE_1_HIGH_LIMIT, SENSOR_NUM_ON_DIE_3_TEMP_C, "ON_DIE_2_TEMP_REMOTE1_HIGH_LIM" },
+	{ ON_DIE_3_4_REMOTE_1_LOW_LIMIT, REMOTE_1_LOW_LIMIT, SENSOR_NUM_ON_DIE_3_TEMP_C, "ON_DIE_2_TEMP_REMOTE1_LOW_LIM" },
+	{ ON_DIE_3_4_REMOTE_2_HIGH_LIMIT, REMOTE_2_HIGH_LIMIT, SENSOR_NUM_ON_DIE_3_TEMP_C, "ON_DIE_2_TEMP_REMOTE2_HIGH_LIM" },
+	{ ON_DIE_3_4_REMOTE_2_LOW_LIMIT, REMOTE_2_LOW_LIMIT, SENSOR_NUM_ON_DIE_3_TEMP_C, "ON_DIE_2_TEMP_REMOTE2_LOW_LIM" },
+	{ ON_DIE_3_4_LOCAL_THERM_LIMIT, LOCAL_THERM_LIMIT, SENSOR_NUM_ON_DIE_3_TEMP_C, "ON_DIE_2_TEMP_LOCAL_LIM" },
+	{ ON_DIE_3_4_REMOTE_1_THERM_LIMIT, REMOTE_1_THERM_LIMIT, SENSOR_NUM_ON_DIE_3_TEMP_C, "ON_DIE_2_TEMP_REMOTE1_LIM" },
+	{ ON_DIE_3_4_REMOTE_2_THERM_LIMIT, REMOTE_2_THERM_LIMIT, SENSOR_NUM_ON_DIE_3_TEMP_C, "ON_DIE_2_TEMP_REMOTE2_LIM" },
+	
+	{ TOP_INLET_LOW_LIMIT, LOCAL_LOW_LIMIT, SENSOR_NUM_TOP_INLET_TEMP_C, "TOP_INLET_TEMP_LOW_LIM" },
+	{ TOP_INLET_HIGH_LIMIT, LOCAL_HIGH_LIMIT, SENSOR_NUM_TOP_INLET_TEMP_C, "TOP_INLET_TEMP_HIGH_LIM" },
+
+	{ TOP_OUTLET_LOW_LIMIT, LOCAL_LOW_LIMIT, SENSOR_NUM_TOP_OUTLET_TEMP_C, "TOP_OUTLET_TEMP_LOW_LIM" },
+	{ TOP_OUTLET_HIGH_LIMIT, LOCAL_HIGH_LIMIT, SENSOR_NUM_TOP_OUTLET_TEMP_C, "TOP_OUTLET_TEMP_HIGH_LIM" },
+
+	{ BOT_INLET_LOW_LIMIT, LOCAL_LOW_LIMIT, SENSOR_NUM_BOT_OUTLET_TEMP_C, "BOT_INLET_TEMP_LOW_LIM" },
+	{ BOT_INLET_HIGH_LIMIT, LOCAL_HIGH_LIMIT, SENSOR_NUM_BOT_INLET_TEMP_C, "BOT_INLET_TEMP_HIGH_LIM" },
+
+	{ BOT_OUTLET_LOW_LIMIT, LOCAL_LOW_LIMIT, SENSOR_NUM_BOT_OUTLET_TEMP_C, "BOT_OUTLET_TEMP_LOW_LIM" },
+	{ BOT_OUTLET_HIGH_LIMIT, LOCAL_HIGH_LIMIT, SENSOR_NUM_BOT_OUTLET_TEMP_C, "BOT_OUTLET_TEMP_HIGH_LIM" },
+};
+// clang-format on
+
+temp_threshold_user_settings_struct temp_threshold_user_settings = { 0 };
+struct temp_threshold_user_settings_struct temp_threshold_default_settings = { 0 };
 
 bool is_mb_dc_on()
 {
@@ -323,12 +407,10 @@ bool vr_status_name_get(uint8_t rail, uint8_t **name)
 	return true;
 }
 
+#define TEMP_THRESHOLD_USER_SETTINGS_OFFSET 0x8100
 #define VR_VOUT_USER_SETTINGS_OFFSET 0x8000
-struct vr_vout_user_settings {
-	uint16_t vout[VR_RAIL_E_MAX];
-} __attribute__((packed));
 
-struct vr_vout_user_settings user_settings = { 0 };
+vr_vout_user_settings user_settings = { 0 };
 struct vr_vout_user_settings default_settings = { 0 };
 
 bool vr_rail_enum_get(uint8_t *name, uint8_t *num)
@@ -378,8 +460,8 @@ bool vr_vout_user_settings_get(void *user_settings)
 	msg.rx_len = sizeof(struct vr_vout_user_settings);
 
 	if (i2c_master_read(&msg, retry)) {
-		LOG_ERR("Failed to read eeprom, bus: %d, addr: 0x%x, reg: 0x%x", msg.bus,
-			msg.target_addr, msg.data[0]);
+		LOG_ERR("Failed to read eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x", msg.bus,
+			msg.target_addr, msg.data[0], msg.data[1]);
 		return false;
 	}
 	memcpy(user_settings, msg.data, sizeof(struct vr_vout_user_settings));
@@ -401,11 +483,15 @@ bool vr_vout_user_settings_set(void *user_settings)
 	msg.data[1] = VR_VOUT_USER_SETTINGS_OFFSET & 0xff;
 
 	memcpy(&msg.data[2], user_settings, sizeof(struct vr_vout_user_settings));
+	LOG_DBG("vout write eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x, tx_len: %d", msg.bus,
+		msg.target_addr, msg.data[0], msg.data[1], msg.tx_len);
+
 	if (i2c_master_write(&msg, retry)) {
-		LOG_ERR("Failed to write eeprom, bus: %d, addr: 0x%x, reg: 0x%x", msg.bus,
-			msg.target_addr, msg.data[0]);
+		LOG_ERR("vout Failed to write eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x, tx_len: %d",
+			msg.bus, msg.target_addr, msg.data[0], msg.data[1], msg.tx_len);
 		return false;
 	}
+	k_msleep(EEPROM_MAX_WRITE_TIME);
 
 	return true;
 }
@@ -428,6 +514,7 @@ int set_user_settings_alert_level_to_eeprom(void *user_settings, uint8_t data_le
 			msg.target_addr, msg.data[0], msg.data[1]);
 		return -1;
 	}
+	k_msleep(EEPROM_MAX_WRITE_TIME);
 
 	return 0;
 }
@@ -487,11 +574,12 @@ static bool vr_vout_user_settings_init(void)
 		if (user_settings.vout[i] != 0xffff) {
 			/* write vout */
 			uint16_t millivolt = user_settings.vout[i];
-			if (!plat_set_vout_command(i, &user_settings.vout[i], false, false)) {
+			if (!plat_set_vout_command(i, &millivolt, false, false)) {
 				LOG_ERR("Can't set vout[%d]=%x by user settings", i, millivolt);
 				return false;
 			}
-			LOG_INF("set [%d]%s: %dmV", i, vr_rail_table[i].sensor_name, millivolt);
+			LOG_INF("set [%x]%s: %dmV", i, vr_rail_table[i].sensor_name,
+				user_settings.vout[i]);
 		}
 	}
 
@@ -516,12 +604,135 @@ static bool vr_vout_default_settings_init(void)
 	return true;
 }
 
+bool temp_index_threshold_type_name_get(uint8_t type, uint8_t **name)
+{
+	CHECK_NULL_ARG_WITH_RETURN(name, false);
+
+	if (type >= PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX) {
+		*name = NULL;
+		return false;
+	}
+
+	*name = (uint8_t *)temp_index_threshold_type_table[type].temp_threshold_name;
+	return true;
+}
+
+bool temp_threshold_type_enum_get(uint8_t *name, uint8_t *num)
+{
+	CHECK_NULL_ARG_WITH_RETURN(name, false);
+	CHECK_NULL_ARG_WITH_RETURN(num, false);
+
+	for (int i = 0; i < PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX; i++) {
+		if (strcmp(name, temp_index_threshold_type_table[i].temp_threshold_name) == 0) {
+			*num = i;
+			return true;
+		}
+	}
+
+	LOG_ERR("invalid tmp threshold type name %s", name);
+	return false;
+}
+
+bool temp_threshold_user_settings_get(void *temp_threshold_user_settings)
+{
+	CHECK_NULL_ARG_WITH_RETURN(temp_threshold_user_settings, false);
+
+	/* TODO: read the temp_threshold_user_settings from eeprom */
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 5;
+	msg.bus = I2C_BUS12;
+	msg.target_addr = 0xA0 >> 1;
+	msg.tx_len = 2;
+	msg.data[0] = TEMP_THRESHOLD_USER_SETTINGS_OFFSET >> 8;
+	msg.data[1] = TEMP_THRESHOLD_USER_SETTINGS_OFFSET & 0xff;
+	msg.rx_len = sizeof(struct temp_threshold_user_settings_struct);
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Failed to read eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x", msg.bus,
+			msg.target_addr, msg.data[0], msg.data[1]);
+		return false;
+	}
+	memcpy(temp_threshold_user_settings, msg.data,
+	       sizeof(struct temp_threshold_user_settings_struct));
+
+	return true;
+}
+
+bool temp_threshold_user_settings_set(void *temp_threshold_user_settings)
+{
+	CHECK_NULL_ARG_WITH_RETURN(temp_threshold_user_settings, false);
+
+	/* TODO: write the temp_threshold_user_settings to eeprom */
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 5;
+	msg.bus = I2C_BUS12;
+	msg.target_addr = 0xA0 >> 1;
+	msg.tx_len = sizeof(struct temp_threshold_user_settings_struct) + 2;
+	msg.data[0] = TEMP_THRESHOLD_USER_SETTINGS_OFFSET >> 8;
+	msg.data[1] = TEMP_THRESHOLD_USER_SETTINGS_OFFSET & 0xff;
+
+	memcpy(&msg.data[2], temp_threshold_user_settings,
+	       sizeof(struct temp_threshold_user_settings_struct));
+	LOG_DBG("temp write eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x, tx_len: %d", msg.bus,
+		msg.target_addr, msg.data[0], msg.data[1], msg.tx_len);
+
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("temp Failed to write eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x, tx_len: %d",
+			msg.bus, msg.target_addr, msg.data[0], msg.data[1], msg.tx_len);
+		return false;
+	}
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+	return true;
+}
+
+static bool temp_threshold_user_settings_init(void)
+{
+	if (temp_threshold_user_settings_get(&temp_threshold_user_settings) == false) {
+		LOG_ERR("get temp_threshold user settings fail");
+		return false;
+	}
+
+	for (int i = 0; i < PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX; i++) {
+		if (temp_threshold_user_settings.temperature_reg_val[i] != 0xffffffff) {
+			/* TODO: write temp_threshold */
+			uint32_t temp_threshold =
+				temp_threshold_user_settings.temperature_reg_val[i];
+			if (!plat_set_temp_threshold(i, &temp_threshold, false, false)) {
+				LOG_ERR("Can't set temp_threshold[%x]=%x by temp_threshold user settings",
+					i, temp_threshold);
+				return false;
+			}
+			LOG_INF("set [%x]%s: %d", i,
+				temp_index_threshold_type_table[i].temp_threshold_name,
+				temp_threshold_user_settings.temperature_reg_val[i]);
+		}
+	}
+
+	return true;
+}
+
+static bool temp_threshold_default_settings_init(void)
+{
+	for (int i = 0; i < PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX; i++) {
+		uint32_t temp_threshold = 0;
+		if (!plat_get_temp_threshold(i, &temp_threshold)) {
+			LOG_ERR("Can't find temp_threshold default by type index: %x", i);
+			return false;
+		}
+		temp_threshold_default_settings.temperature_reg_val[i] = temp_threshold;
+	}
+
+	return true;
+}
+
 /* init the user & default settings value by shell command */
 void user_settings_init(void)
 {
 	alert_level_user_settings_init();
 	vr_vout_default_settings_init();
 	vr_vout_user_settings_init();
+	temp_threshold_user_settings_init();
+	temp_threshold_default_settings_init();
 }
 
 void set_uart_power_event_is_enable(bool is_enable)
@@ -725,6 +936,41 @@ err:
 	return ret;
 }
 
+/* If any perm parameter are added, remember to update this function accordingly.　*/
+bool perm_config_clear(void)
+{
+	/* clear all vout perm parameters */
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		user_settings.vout[i] = 0xffff;
+	}
+	memset(user_settings.vout, 0xFF, sizeof(user_settings.vout));
+	if (!vr_vout_user_settings_set(&user_settings)) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
+	/* clear all temp_threshold perm parameters */
+	for (int i = 0; i < PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX; i++) {
+		temp_threshold_user_settings.temperature_reg_val[i] = 0xffffffff;
+	}
+	memset(temp_threshold_user_settings.temperature_reg_val, 0xFF,
+	       sizeof(temp_threshold_user_settings.temperature_reg_val));
+	if (!temp_threshold_user_settings_set(&temp_threshold_user_settings)) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
+	int32_t setting_value = 0xffffffff;
+	char setting_data[4] = { 0 };
+	memcpy(setting_data, &setting_value, sizeof(setting_data));
+	if (set_user_settings_alert_level_to_eeprom(setting_data, sizeof(setting_data)) != 0) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
+	return true;
+}
+
 bool plat_get_vout_command(uint8_t rail, uint16_t *millivolt)
 {
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
@@ -794,6 +1040,7 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default, b
 	bool ret = false;
 	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
 	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	uint16_t setting_millivolt = *millivolt;
 
 	if (cfg == NULL) {
 		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
@@ -811,6 +1058,7 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default, b
 
 	if (is_default) {
 		*millivolt = default_settings.vout[rail];
+		setting_millivolt = default_settings.vout[rail];
 	}
 
 	switch (cfg->type) {
@@ -844,7 +1092,7 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default, b
 	}
 
 	if (is_perm) {
-		user_settings.vout[rail] = *millivolt;
+		user_settings.vout[rail] = setting_millivolt;
 		vr_vout_user_settings_set(&user_settings);
 	}
 
@@ -855,6 +1103,131 @@ err:
 			LOG_ERR("sensor id: 0x%x post-read fail", sensor_id);
 		}
 	}
+	return ret;
+}
+
+bool plat_get_temp_status(uint8_t rail, uint8_t *temp_status)
+{
+	CHECK_NULL_ARG_WITH_RETURN(temp_status, false);
+
+	bool ret = false;
+	uint8_t sensor_id = temp_index_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	switch (cfg->type) {
+	case sensor_dev_tmp75: {
+		uint8_t data[1] = { 0 };
+		if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, 0x2B, data, 1)) {
+			LOG_ERR("Failed to read TEMP TMP75 from cpld");
+			goto err;
+		}
+
+		switch (rail) {
+		case TEMP_INDEX_TOP_INLET:
+			*temp_status = (data[0] & BIT(2)) >> 2;
+			break;
+		case TEMP_INDEX_TOP_OUTLET:
+			*temp_status = (data[0] & BIT(3)) >> 3;
+			break;
+		case TEMP_INDEX_BOT_INLET:
+			*temp_status = (data[0] & BIT(4)) >> 4;
+			break;
+		case TEMP_INDEX_BOT_OUTLET:
+			*temp_status = (data[0] & BIT(5)) >> 5;
+			break;
+		default:
+			LOG_ERR("Unsupport TEMP TMP75 alert pin");
+			goto err;
+		}
+	} break;
+	case sensor_dev_tmp431:
+		if (!tmp432_get_temp_status(cfg, temp_status)) {
+			LOG_ERR("The TEMP TMP432 temp status reading failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_emc1413:
+		if (!emc1413_get_temp_status(cfg, temp_status)) {
+			LOG_ERR("The TMP EMC1413 temp status reading failed");
+			goto err;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport TEMP type(%x)", cfg->type);
+		goto err;
+	}
+
+	ret = true;
+err:
+	return ret;
+}
+
+bool plat_clear_temp_status(uint8_t rail)
+{
+	bool ret = false;
+	uint8_t sensor_id = temp_index_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	switch (cfg->type) {
+	case sensor_dev_tmp75: {
+		uint8_t data[1] = { 0 };
+		if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, 0x2B, data, 1)) {
+			LOG_ERR("Failed to read TEMP TMP75 from cpld");
+			goto err;
+		}
+
+		switch (rail) {
+		case TEMP_INDEX_TOP_INLET:
+			data[0] &= ~BIT(2);
+			break;
+		case TEMP_INDEX_TOP_OUTLET:
+			data[0] &= ~BIT(3);
+			break;
+		case TEMP_INDEX_BOT_INLET:
+			data[0] &= ~BIT(4);
+			break;
+		case TEMP_INDEX_BOT_OUTLET:
+			data[0] &= ~BIT(5);
+			break;
+		default:
+			LOG_ERR("Unsupport TEMP TMP75 alert pin");
+			goto err;
+		}
+
+		if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR, 0x2B, data, 1)) {
+			LOG_ERR("Failed to clear TEMP TMP75 to cpld");
+			goto err;
+		}
+	} break;
+	case sensor_dev_tmp431:
+		if (!tmp432_clear_temp_status(cfg)) {
+			LOG_ERR("The TEMP TMP432 temp status clear failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_emc1413:
+		if (!emc1413_clear_temp_status(cfg)) {
+			LOG_ERR("The TMP EMC1413 temp status clear failed");
+			goto err;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport TEMP type(%x)", cfg->type);
+		goto err;
+	}
+
+	ret = true;
+err:
 	return ret;
 }
 
@@ -934,3 +1307,115 @@ PLAT_VOUT_GET_SET_HANDLER(set, min);
 PLAT_VOUT_GET_SET_HANDLER(set, max);
 
 #undef PLAT_VOUT_GET_SET_HANDLER
+
+bool plat_get_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millidegree_celsius)
+{
+	CHECK_NULL_ARG_WITH_RETURN(millidegree_celsius, false);
+
+	if (temp_index_threshold_type >= PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX) {
+		LOG_ERR("Invalid temp threshold type(%x)", temp_index_threshold_type);
+		return false;
+	}
+
+	uint8_t temp_threshold_type_tmp =
+		temp_index_threshold_type_table[temp_index_threshold_type].temp_threshold_type;
+
+	uint8_t sensor_id = temp_index_threshold_type_table[temp_index_threshold_type].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	switch (cfg->type) {
+	case sensor_dev_tmp431:
+		if (!tmp432_get_temp_threshold(cfg, temp_threshold_type_tmp, millidegree_celsius)) {
+			LOG_ERR("The TMP431 temp threshold reading failed");
+			return false;
+		}
+		break;
+	case sensor_dev_emc1413:
+		if (!emc1413_get_temp_threshold(cfg, temp_threshold_type_tmp,
+						millidegree_celsius)) {
+			LOG_ERR("The EMC1413 temp threshold reading failed");
+			return false;
+		}
+		break;
+	case sensor_dev_tmp75:
+		if (!tmp75_get_temp_threshold(cfg, temp_threshold_type_tmp, millidegree_celsius)) {
+			LOG_ERR("The TMP75 temp threshold reading failed");
+			return false;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport temp type(%x)", cfg->type);
+		return false;
+	}
+
+	return true;
+}
+
+bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millidegree_celsius,
+			     bool is_default, bool is_perm)
+{
+	CHECK_NULL_ARG_WITH_RETURN(millidegree_celsius, false);
+
+	if (temp_index_threshold_type >= PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX) {
+		LOG_ERR("Invalid temp threshold type(%x)", temp_index_threshold_type);
+		return false;
+	}
+
+	uint8_t temp_threshold_type_tmp =
+		temp_index_threshold_type_table[temp_index_threshold_type].temp_threshold_type;
+
+	uint8_t sensor_id = temp_index_threshold_type_table[temp_index_threshold_type].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	uint32_t setting_millidegree_celsius = *millidegree_celsius;
+
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	if (is_default) {
+		*millidegree_celsius = temp_threshold_default_settings
+					       .temperature_reg_val[temp_index_threshold_type];
+		setting_millidegree_celsius =
+			temp_threshold_default_settings
+				.temperature_reg_val[temp_index_threshold_type];
+	}
+
+	switch (cfg->type) {
+	case sensor_dev_tmp431:
+		if (!tmp432_set_temp_threshold(cfg, temp_threshold_type_tmp, millidegree_celsius)) {
+			LOG_ERR("The TMP431 temp threshold reading failed");
+			return false;
+		}
+		break;
+	case sensor_dev_emc1413:
+		if (!emc1413_set_temp_threshold(cfg, temp_threshold_type_tmp,
+						millidegree_celsius)) {
+			LOG_ERR("The EMC1413 temp threshold reading failed");
+			return false;
+		}
+		break;
+	case sensor_dev_tmp75:
+		if (!tmp75_set_temp_threshold(cfg, temp_threshold_type_tmp, millidegree_celsius)) {
+			LOG_ERR("The TMP75 temp threshold reading failed");
+			return false;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport temp type(%x)", cfg->type);
+		return false;
+	}
+
+	if (is_perm) {
+		temp_threshold_user_settings.temperature_reg_val[temp_index_threshold_type] =
+			setting_millidegree_celsius;
+		temp_threshold_user_settings_set(&temp_threshold_user_settings);
+	}
+
+	return true;
+}
