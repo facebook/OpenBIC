@@ -19,8 +19,111 @@
 #include "hal_i2c.h"
 #include "libutil.h"
 #include <logging/log.h>
+#include "tmp75.h"
 
 LOG_MODULE_REGISTER(tmp75);
+
+bool get_tmp75_two_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
+			      uint32_t *millidegree_celsius)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millidegree_celsius, false);
+
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 2;
+	msg.data[0] = ((temp_threshold_index == LOCAL_HIGH_LIMIT) ? TMP75_LOCAL_HIGH_LIMIT_REG :
+								    TMP75_LOCAL_LOW_LIMIT_REG);
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Failed to write TMP431 register(0x%x)", temp_threshold_index);
+		return false;
+	}
+
+	float limit_byte_1_val = (float)msg.data[0] * 1000.0;
+	float limit_byte_2_val = (float)(msg.data[1] >> 4) * 0.0625;
+
+	*millidegree_celsius = (uint32_t)limit_byte_1_val + limit_byte_2_val;
+
+	return true;
+}
+
+bool tmp75_get_temp_threshold(sensor_cfg *cfg, uint8_t temp_threshold_index,
+			      uint32_t *millidegree_celsius)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millidegree_celsius, false);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
+		return false;
+	}
+
+	if ((temp_threshold_index != LOCAL_HIGH_LIMIT) &&
+	    (temp_threshold_index != LOCAL_LOW_LIMIT)) {
+		LOG_ERR("temp_threshold_index: 0x%x is invalid", temp_threshold_index);
+		return false;
+	}
+
+	if (!get_tmp75_two_byte_limit(cfg, temp_threshold_index, millidegree_celsius)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool set_tmp75_two_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
+			      uint32_t *millidegree_celsius)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millidegree_celsius, false);
+
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	msg.data[0] = ((temp_threshold_index == LOCAL_HIGH_LIMIT) ? TMP75_LOCAL_HIGH_LIMIT_REG :
+								    TMP75_LOCAL_LOW_LIMIT_REG);
+	msg.data[1] = (uint8_t)(*millidegree_celsius / 1000.0);
+	uint32_t remainder = *millidegree_celsius % 1000;
+	uint8_t low_byte_val = (uint8_t)((remainder * 16) / 1000);
+	msg.data[2] = (low_byte_val << 4);
+
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("Failed to write TMP431 register(0x%x)", temp_threshold_index);
+		return false;
+	}
+
+	return true;
+}
+
+bool tmp75_set_temp_threshold(sensor_cfg *cfg, uint8_t temp_threshold_index,
+			      uint32_t *millidegree_celsius)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(millidegree_celsius, false);
+
+	if (cfg->num > SENSOR_NUM_MAX) {
+		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
+		return false;
+	}
+
+	if ((temp_threshold_index != LOCAL_HIGH_LIMIT) &&
+	    (temp_threshold_index != LOCAL_LOW_LIMIT)) {
+		LOG_ERR("temp_threshold_index: 0x%x is invalid", temp_threshold_index);
+		return false;
+	}
+
+	if (!set_tmp75_two_byte_limit(cfg, temp_threshold_index, millidegree_celsius)) {
+		return false;
+	}
+
+	return true;
+}
 
 uint8_t tmp75_read(sensor_cfg *cfg, int *reading)
 {
