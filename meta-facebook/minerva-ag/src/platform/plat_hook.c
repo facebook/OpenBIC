@@ -50,15 +50,20 @@ int32_t alert_level_mA_default = 110000;
 int32_t alert_level_mA_user_setting = 110000;
 bool alert_level_is_assert = false;
 
-int power_level_send_event(int ubc1_current, int ubc2_current)
+int power_level_send_event(bool is_assert, int ubc1_current, int ubc2_current)
 {
-	//print send event to consloe
-	LOG_INF("send power level event ubc1_current=%dmA,ubc2_current=%dmA", ubc1_current,
-		ubc2_current);
+	if (is_assert == false) {
+		//To Do: need to send assert event to BMC
+		LOG_INF("UBC1 and UBC2 over current and need to send assert event to BMC");
+	} else {
+		//To Do: need to send deassert event to BMC
+		LOG_INF("UBC1 and UBC2 over current and need to send deassert event to BMC");
+	}
 
 	if (uart_pwr_event_is_enable == true) {
-		//To Do: need to send event to BMC
-		LOG_INF("UBC1 and UBC2 over current and need to send event to BMC");
+		//print send event to consloe
+		LOG_INF("send power level event ubc1_current=%dmA,ubc2_current=%dmA,alert_level_mA_user_setting=%dmA",
+			ubc1_current, ubc2_current, alert_level_mA_user_setting);
 	}
 
 	return 0;
@@ -106,10 +111,18 @@ bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading)
 		k_mutex_lock(&pwrlevel_mutex, K_MSEC(1000));
 
 		if ((ubc1_current_mA + sensor_reading) > alert_level_mA_user_setting) {
-			alert_level_is_assert = true;
-			power_level_send_event(ubc1_current_mA, sensor_reading);
+			if (alert_level_is_assert == false) {
+				power_level_send_event(alert_level_is_assert, ubc1_current_mA,
+						       sensor_reading);
+				alert_level_is_assert = true;
+			}
+		} else {
+			if (alert_level_is_assert == true) {
+				power_level_send_event(alert_level_is_assert, ubc1_current_mA,
+						       sensor_reading);
+				alert_level_is_assert = false;
+			}
 		}
-		alert_level_is_assert = false;
 
 		k_mutex_unlock(&pwrlevel_mutex);
 	}
