@@ -127,9 +127,7 @@ int get_device_descriptor_total_length(struct pldm_descriptor_string *table, uin
 	return length;
 }
 
-uint8_t pldm_bic_update(void *fw_update_param)
-{
-	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+uint8_t pldm_fw_update(void *fw_update_param, const int flash_position) {
 
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 
@@ -160,15 +158,33 @@ uint8_t pldm_bic_update(void *fw_update_param)
 		update_flag = (SECTOR_END_FLAG | NO_RESET_FLAG);
 	}
 
-	uint8_t ret = fw_update(p->data_ofs, p->data_len, p->data, update_flag, DEVSPI_FMC_CS0);
+	uint8_t ret = fw_update(p->data_ofs, p->data_len, p->data, update_flag, flash_position);
 
 	if (ret) {
 		LOG_ERR("Firmware update failed, offset(0x%x), length(0x%x), status(%d)",
 			p->data_ofs, p->data_len, ret);
 		return 1;
 	}
-
 	return 0;
+}
+
+uint8_t pldm_bic_update(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	return pldm_fw_update(fw_update_param, DEVSPI_FMC_CS0);
+}
+
+uint8_t pldm_bios_update(void *fw_update_param) {
+
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	int pos = pal_get_bios_flash_position();
+	if (pos == -1) {
+		return 1;
+	}
+
+	return pldm_fw_update(fw_update_param, pos);
 }
 
 uint8_t pldm_vr_update(void *fw_update_param)
