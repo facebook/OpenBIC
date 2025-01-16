@@ -919,6 +919,18 @@ bool mp2971_vid_to_direct(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
 
+	bool vout_scale_enable = false;
+	if (cfg->init_args != NULL) {
+		mp2971_init_arg *init_arg = (mp2971_init_arg *)cfg->init_args;
+		vout_scale_enable = init_arg->vout_scale_enable;
+	}
+	float vout_scale = 1.0;
+	if (vout_scale_enable == true) {
+		if (get_vout_scale(cfg, &vout_scale) == false) {
+			LOG_WRN("get vout scale failed");
+		}
+	}
+
 	bool ret = false;
 	uint8_t page = rail;
 
@@ -983,6 +995,8 @@ bool mp2971_vid_to_direct(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
 		return ret;
 	}
 
+	*millivolt = *millivolt / vout_scale;
+
 	if (mp2856_set_page(cfg->port, cfg->target_addr, page) == false) {
 		return ret;
 	}
@@ -995,6 +1009,19 @@ bool mp2971_direct_to_vid(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	bool vout_scale_enable = false;
+	if (cfg->init_args != NULL) {
+		mp2971_init_arg *init_arg = (mp2971_init_arg *)cfg->init_args;
+		vout_scale_enable = init_arg->vout_scale_enable;
+	}
+	float vout_scale = 1.0;
+	if (vout_scale_enable == true) {
+		if (get_vout_scale(cfg, &vout_scale) == false) {
+			LOG_WRN("get vout scale failed");
+		}
+	}
+	*millivolt = *millivolt * vout_scale;
 
 	bool ret = false;
 	uint8_t page = rail;

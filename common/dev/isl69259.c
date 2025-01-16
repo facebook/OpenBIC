@@ -144,13 +144,23 @@ bool isl69260_get_vout_max(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
 
+	bool vout_scale_enable = false;
+	float vout_scale = 1.0;
+
+	if (cfg->init_args != NULL) {
+		isl69259_init_arg *init_arg = (isl69259_init_arg *)cfg->init_args;
+		vout_scale_enable = init_arg->vout_scale_enable;
+		if (vout_scale_enable)
+			vout_scale = init_arg->vout_scale;
+	}
+
 	uint8_t data[2] = { 0 };
 	if (!isl69260_i2c_read(cfg->port, cfg->target_addr, ISL69260_VOUT_MAX_REG, data,
 			       sizeof(data))) {
 		return false;
 	}
 
-	uint16_t val = data[0] | (data[1] << 8);
+	uint16_t val = (data[0] | (data[1] << 8)) / vout_scale;
 	*millivolt = val; // 1mV / LSB
 
 	return true;
@@ -161,13 +171,23 @@ bool isl69260_get_vout_min(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
 
+	bool vout_scale_enable = false;
+	float vout_scale = 1.0;
+
+	if (cfg->init_args != NULL) {
+		isl69259_init_arg *init_arg = (isl69259_init_arg *)cfg->init_args;
+		vout_scale_enable = init_arg->vout_scale_enable;
+		if (vout_scale_enable)
+			vout_scale = init_arg->vout_scale;
+	}
+
 	uint8_t data[2] = { 0 };
 	if (!isl69260_i2c_read(cfg->port, cfg->target_addr, ISL69260_VOUT_MIN_REG, data,
 			       sizeof(data))) {
 		return false;
 	}
 
-	uint16_t val = data[0] | (data[1] << 8);
+	uint16_t val = (data[0] | (data[1] << 8)) / vout_scale;
 	*millivolt = val; // 1mV / LSB
 
 	return true;
@@ -178,9 +198,20 @@ bool isl69260_set_vout_max(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
 
+	bool vout_scale_enable = false;
+	float vout_scale = 1.0;
+
+	if (cfg->init_args != NULL) {
+		isl69259_init_arg *init_arg = (isl69259_init_arg *)cfg->init_args;
+		vout_scale_enable = init_arg->vout_scale_enable;
+		if (vout_scale_enable)
+			vout_scale = init_arg->vout_scale;
+	}
+
+	uint16_t val = *millivolt * vout_scale;
 	uint8_t data[2] = { 0 };
-	data[0] = *millivolt & 0xFF;
-	data[1] = (*millivolt >> 8) & 0xFF;
+	data[0] = val & 0xFF;
+	data[1] = (val >> 8) & 0xFF;
 
 	if (!isl69260_i2c_write(cfg->port, cfg->target_addr, ISL69260_VOUT_MAX_REG, data,
 				sizeof(data))) {
@@ -195,9 +226,19 @@ bool isl69260_set_vout_min(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
 
+	bool vout_scale_enable = false;
+	float vout_scale = 1.0;
+
+	if (cfg->init_args != NULL) {
+		isl69259_init_arg *init_arg = (isl69259_init_arg *)cfg->init_args;
+		vout_scale_enable = init_arg->vout_scale_enable;
+		if (vout_scale_enable)
+			vout_scale = init_arg->vout_scale;
+	}
+	uint16_t val = *millivolt * vout_scale;
 	uint8_t data[2] = { 0 };
-	data[0] = *millivolt & 0xFF;
-	data[1] = (*millivolt >> 8) & 0xFF;
+	data[0] = val & 0xFF;
+	data[1] = (val >> 8) & 0xFF;
 
 	if (!isl69260_i2c_write(cfg->port, cfg->target_addr, ISL69260_VOUT_MIN_REG, data,
 				sizeof(data))) {
@@ -619,13 +660,23 @@ bool isl69260_get_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivol
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
 
+	bool vout_scale_enable = false;
+	float vout_scale = 1.0;
+
+	if (cfg->init_args != NULL) {
+		isl69259_init_arg *init_arg = (isl69259_init_arg *)cfg->init_args;
+		vout_scale_enable = init_arg->vout_scale_enable;
+		if (vout_scale_enable)
+			vout_scale = init_arg->vout_scale;
+	}
+
 	uint8_t data[2] = { 0 };
 	if (!isl69260_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_COMMAND, data,
 			       sizeof(data))) {
 		return false;
 	}
 
-	uint16_t val = data[0] | (data[1] << 8);
+	uint16_t val = (data[0] | (data[1] << 8)) / vout_scale;
 
 	*millivolt = val;
 
@@ -637,9 +688,19 @@ bool isl69260_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivol
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
 
+	bool vout_scale_enable = false;
+	float vout_scale = 1.0;
+
+	if (cfg->init_args != NULL) {
+		isl69259_init_arg *init_arg = (isl69259_init_arg *)cfg->init_args;
+		vout_scale_enable = init_arg->vout_scale_enable;
+		if (vout_scale_enable)
+			vout_scale = init_arg->vout_scale;
+	}
+	uint16_t val = *millivolt * vout_scale;
 	uint8_t data[2] = { 0 };
-	data[0] = *millivolt & 0xFF;
-	data[1] = (*millivolt >> 8) & 0xFF;
+	data[0] = val & 0xFF;
+	data[1] = (val >> 8) & 0xFF;
 
 	if (!isl69260_i2c_write(cfg->port, cfg->target_addr, PMBUS_VOUT_COMMAND, data,
 				sizeof(data))) {
