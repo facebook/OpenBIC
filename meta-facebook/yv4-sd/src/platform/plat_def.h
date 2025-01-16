@@ -65,6 +65,7 @@
 #define DISABLE_ADC128D818
 
 #define ENABLE_RTQ6056
+#define ENABLE_BCM85658
 
 #define HOST_KCS_PORT kcs3
 #define BMC_USB_PORT "CDC_ACM_0"
