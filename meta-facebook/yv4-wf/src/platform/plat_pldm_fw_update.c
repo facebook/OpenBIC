@@ -483,6 +483,8 @@ static uint8_t plat_pldm_pre_vr_update(void *fw_update_param)
 
 	/* Stop sensor polling */
 	set_cxl_vr_access(MAX_CXL_ID, false);
+	// Wait sensor monitoring thread to stop
+	k_msleep(10);
 
 	plat_pldm_vr_i2c_info_get(p->comp_id, &p->bus, &p->addr);
 
@@ -564,6 +566,8 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 	const uint8_t *vr_name_p = vr_name[vr_type];
 	set_cxl_vr_access(MAX_CXL_ID, false);
+	// Wait sensor monitoring thread to stop
+	k_msleep(10);
 	switch (vr_type) {
 	case VR_TYPE_INF:
 		if (!xdpe12284c_get_checksum(bus, addr, (uint8_t *)&version)) {
