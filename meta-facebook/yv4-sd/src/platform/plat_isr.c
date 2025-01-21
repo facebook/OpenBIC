@@ -512,6 +512,11 @@ void process_vr_pmalert_ocp_sel(struct k_work *work_item)
 	msg.target_addr = work_info->vr_addr;
 
 	for (int page = 0; page < work_info->page_cnt; ++page) {
+
+		set_vr_monitor_status(false);
+		// wait 10ms for vr monitor stop
+		k_msleep(10);
+
 		/* set page for power rail */
 		msg.tx_len = 2;
 		msg.data[0] = PMBUS_PAGE;
@@ -561,6 +566,8 @@ void process_vr_pmalert_ocp_sel(struct k_work *work_item)
 				}
 			}
 		}
+
+		set_vr_monitor_status(true);
 
 		struct pldm_addsel_data sel_msg = { 0 };
 
