@@ -138,8 +138,8 @@ typedef __aligned(4) struct _apml_msg_ {
 	uint8_t target_addr;
 	uint8_t WrData[7];
 	uint8_t RdData[9];
-	void (*cb_fn)(struct _apml_msg_ *msg);
-	void (*error_cb_fn)(struct _apml_msg_ *msg);
+	void (*cb_fn)(const struct _apml_msg_ *msg);
+	void (*error_cb_fn)( const struct _apml_msg_ *msg);
 	void *ptr_arg;
 	uint32_t ui32_arg;
 } __packed apml_msg;
@@ -151,7 +151,7 @@ typedef struct _apml_buffer_ {
 
 uint8_t apml_read_byte(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t *read_data);
 uint8_t apml_write_byte(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t write_data);
-void apml_request_callback(apml_msg *msg);
+void apml_request_callback(const apml_msg *msg);
 uint8_t get_apml_response_by_index(apml_msg *msg, uint8_t index);
 uint8_t apml_read(apml_msg *msg);
 void apml_init();

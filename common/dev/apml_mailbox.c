@@ -32,7 +32,7 @@ typedef struct _dimm_temp_priv_data {
 	float ts0_temp;
 } dimm_temp_priv_data;
 
-void apml_read_fail_cb(apml_msg *msg)
+void apml_read_fail_cb(const apml_msg *msg)
 {
 	if ((msg == NULL) || (msg->ptr_arg == NULL)) {
 		LOG_DBG("msg passed in as NULL");
@@ -53,7 +53,7 @@ void apml_read_fail_cb(apml_msg *msg)
 	}
 }
 
-void cpu_power_write(apml_msg *msg)
+void cpu_power_write(const apml_msg *msg)
 {
 	if ((msg == NULL) || (msg->ptr_arg == NULL)) {
 		LOG_DBG("msg passed in as NULL");
@@ -88,7 +88,7 @@ void cpu_power_write(apml_msg *msg)
 #endif
 }
 
-void dimm_pwr_write(apml_msg *msg)
+void dimm_pwr_write(const apml_msg *msg)
 {
 	if ((msg == NULL) || (msg->ptr_arg == NULL)) {
 		LOG_DBG("msg passed in as NULL");
@@ -118,7 +118,7 @@ void dimm_pwr_write(apml_msg *msg)
 	cfg->cache_status = SENSOR_READ_4BYTE_ACUR_SUCCESS;
 }
 
-void dimm_temp_write(apml_msg *msg)
+void dimm_temp_write(const apml_msg *msg)
 {
 	if ((msg == NULL) || (msg->ptr_arg == NULL)) {
 		LOG_DBG("msg passed in as NULL");
@@ -186,7 +186,7 @@ uint8_t apml_mailbox_read(sensor_cfg *cfg, int *reading)
 		return SENSOR_UNSPECIFIED_ERROR;
 	}
 
-	apml_mailbox_init_arg *init_arg = (apml_mailbox_init_arg *)cfg->init_args;
+	const apml_mailbox_init_arg *init_arg = (const apml_mailbox_init_arg *)cfg->init_args;
 
 	apml_msg mailbox_msg;
 	memset(&mailbox_msg, 0, sizeof(apml_msg));
