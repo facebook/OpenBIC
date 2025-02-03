@@ -423,6 +423,7 @@ bool vr_status_name_get(uint8_t rail, uint8_t **name)
 
 #define TEMP_THRESHOLD_USER_SETTINGS_OFFSET 0x8100
 #define VR_VOUT_USER_SETTINGS_OFFSET 0x8000
+#define SOC_PCIE_PERST_USER_SETTINGS_OFFSET 0x8300
 
 vr_vout_user_settings user_settings = { 0 };
 struct vr_vout_user_settings default_settings = { 0 };
@@ -510,6 +511,55 @@ bool vr_vout_user_settings_set(void *user_settings)
 	return true;
 }
 
+bool set_user_settings_soc_pcie_perst_to_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 5;
+	msg.bus = I2C_BUS12;
+	msg.target_addr = 0xA0 >> 1;
+	msg.tx_len = data_length + 2;
+	msg.data[0] = SOC_PCIE_PERST_USER_SETTINGS_OFFSET >> 8;
+	msg.data[1] = SOC_PCIE_PERST_USER_SETTINGS_OFFSET & 0xff;
+
+	memcpy(&msg.data[2], user_settings, data_length);
+	LOG_DBG("soc_pcie_perst write eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x, tx_len: %d",
+		msg.bus, msg.target_addr, msg.data[0], msg.data[1], msg.tx_len);
+
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("soc_pcie_perst Failed to write eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x, tx_len: %d",
+			msg.bus, msg.target_addr, msg.data[0], msg.data[1], msg.tx_len);
+		return false;
+	}
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+
+bool get_user_settings_soc_pcie_perst_from_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 5;
+	msg.bus = I2C_BUS12;
+	msg.target_addr = 0xA0 >> 1;
+	msg.tx_len = 2;
+	msg.data[0] = SOC_PCIE_PERST_USER_SETTINGS_OFFSET >> 8;
+	msg.data[1] = SOC_PCIE_PERST_USER_SETTINGS_OFFSET & 0xff;
+	msg.rx_len = data_length;
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Failed to read eeprom, bus: %d, addr: 0x%x, reg: 0x%x%x", msg.bus,
+			msg.target_addr, msg.data[0], msg.data[1]);
+		return false;
+	}
+	memcpy(user_settings, msg.data, data_length);
+
+	return true;
+}
+
 int set_user_settings_alert_level_to_eeprom(void *user_settings, uint8_t data_length)
 {
 	CHECK_NULL_ARG_WITH_RETURN(user_settings, -1);
@@ -575,6 +625,25 @@ static int alert_level_user_settings_init(void)
 	}
 
 	return 0;
+}
+
+static bool soc_pcie_perst_user_settings_init(void)
+{
+	uint8_t setting_data = 0xFF;
+	if (!get_user_settings_soc_pcie_perst_from_eeprom(&setting_data, sizeof(setting_data))) {
+		LOG_ERR("get soc_pcie_perst user settings fail");
+		return false;
+	}
+
+	if (setting_data != 0xFF) {
+		if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR, 0x43, &setting_data,
+				    sizeof(setting_data))) {
+			LOG_ERR("Can't set soc_pcie_perst=%d by user settings", setting_data);
+			return false;
+		}
+	}
+
+	return true;
 }
 
 static bool vr_vout_user_settings_init(void)
@@ -747,6 +816,7 @@ void user_settings_init(void)
 	vr_vout_user_settings_init();
 	temp_threshold_user_settings_init();
 	temp_threshold_default_settings_init();
+	soc_pcie_perst_user_settings_init();
 }
 
 void set_uart_power_event_is_enable(bool is_enable)
@@ -978,6 +1048,14 @@ bool perm_config_clear(void)
 	char setting_data[4] = { 0 };
 	memcpy(setting_data, &setting_value, sizeof(setting_data));
 	if (set_user_settings_alert_level_to_eeprom(setting_data, sizeof(setting_data)) != 0) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
+	/* clear soc_pcie_perst perm parameter */
+	uint8_t setting_value_for_soc_pcie_perst = 0xFF;
+	if (!set_user_settings_soc_pcie_perst_to_eeprom(&setting_value_for_soc_pcie_perst,
+							sizeof(setting_value_for_soc_pcie_perst))) {
 		LOG_ERR("The perm_config clear failed");
 		return false;
 	}
