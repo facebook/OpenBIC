@@ -30,5 +30,6 @@ bool plat_i2c_write(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t *data, ui
 
 void plat_clock_init();
 void plat_eusb_init();
+bool plat_power_control(bool is_power_on);
 
 #endif
