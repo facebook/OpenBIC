@@ -30,7 +30,7 @@ static int cmd_temp_status_get(const struct shell *shell, size_t argc, char **ar
 		return -1;
 	}
 
-	enum VR_RAIL_E rail;
+	enum PLAT_TEMP_INDEX_E rail;
 	if (temp_sensor_rail_enum_get(argv[1], &rail) == false) {
 		shell_error(shell, "Invalid rail name: %s", argv[1]);
 		return -1;
@@ -43,7 +43,12 @@ static int cmd_temp_status_get(const struct shell *shell, size_t argc, char **ar
 		return -1;
 	}
 
-	shell_print(shell, "[%-2x]%-40s %-10s:%2x", rail, argv[1], argv[2], temp_status);
+	if (rail == TEMP_INDEX_ON_DIE_1_2 || rail == TEMP_INDEX_ON_DIE_3_4) {
+		shell_print(shell, "0x%02x", rail, argv[1],
+			    (get_tmp_type() == TMP_EMC1413) ? "EMC1413" : "TMP432", temp_status);
+	} else {
+		shell_print(shell, "0x%02x (ALERT_N)", rail, argv[1], "TMP75", temp_status);
+	}
 
 	return 0;
 }
@@ -72,7 +77,7 @@ static int cmd_temp_status_clear(const struct shell *shell, size_t argc, char **
 		shell_print(shell, "All Temp clear temp status finish");
 		return 0;
 	} else {
-		enum VR_RAIL_E rail;
+		enum PLAT_TEMP_INDEX_E rail;
 		if (temp_sensor_rail_enum_get(argv[1], &rail) == false) {
 			shell_error(shell, "Invalid rail name: %s", argv[1]);
 			return -1;
