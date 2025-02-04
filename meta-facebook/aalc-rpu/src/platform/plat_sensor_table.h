@@ -262,6 +262,7 @@ enum PLAT_DEF_SENSOR_E {
 
 // error log def sensor
 #define SENSOR_NUM_EMERGENCY_BUTTON_TRIGGERED 0xE0
+#define SENSOR_NUM_BPB_HSC_FAIL 0xE1
 
 uint8_t plat_get_config_size();
 void load_sensor_config(void);

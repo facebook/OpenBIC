@@ -75,6 +75,7 @@ const err_sensor_mapping sensor_err_codes[] = {
 	{ LOG_ERR_FB_12_FAN_TACH_RPM, SENSOR_NUM_FB_12_FAN_TACH_RPM },
 	{ LOG_ERR_FB_13_FAN_TACH_RPM, SENSOR_NUM_FB_13_FAN_TACH_RPM },
 	{ LOG_ERR_FB_14_FAN_TACH_RPM, SENSOR_NUM_FB_14_FAN_TACH_RPM },
+	{ LOG_ERR_BPB_HSC, SENSOR_NUM_BPB_HSC_FAIL },
 };
 
 const err_sensor_mapping sensor_normal_codes[] = {

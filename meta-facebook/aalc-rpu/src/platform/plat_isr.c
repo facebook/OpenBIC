@@ -41,16 +41,12 @@ void set_all_rpu_ready_pin_normal(void)
 */
 void emergency_button_action()
 {
-	if (gpio_get(CDU_PWR_BTN)) {
-		// pump recovery
-		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_EMERGENCY_BUTTON, 0);
-		if (rpu_ready_recovery())
-			set_all_rpu_ready_pin_normal();
-	} else {
-		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_EMERGENCY_BUTTON, 1);
-		deassert_all_rpu_ready_pin();
+	static bool pressed = false;
+	set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_EMERGENCY_BUTTON, 1);
+	deassert_all_rpu_ready_pin();
+	if (!pressed)
 		error_log_event(SENSOR_NUM_EMERGENCY_BUTTON_TRIGGERED, IS_ABNORMAL_VAL);
-	}
+	pressed = true;
 }
 
 void fault_leak_action()
@@ -126,6 +122,8 @@ IT_LEAK_ALERT_HANDLER(3);
 void aalc_leak_behavior(uint8_t sensor_num)
 {
 	fault_leak_action();
+	// set pwm to 0 before fsc
+	ctl_all_pwm_dev(0);
 	uint8_t led_leak = (sensor_num == SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V) ?
 				   AALC_STATUS_CDU_LEAKAGE :
 			   (sensor_num == SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_VOLT_V) ?
