@@ -37,21 +37,21 @@ LOG_MODULE_REGISTER(plat_hook);
 
 adc_asd_init_arg ast_adc_init_args[] = {
 	[0] = { .is_init = false,
-		.deglitch[0] = { .deglitch_en = false,},
-		.deglitch[1] = { .deglitch_en = false,},
-		.deglitch[2] = { .deglitch_en = false,},
-		.deglitch[3] = { .deglitch_en = false,},
-		.deglitch[4] = { .deglitch_en = false,},
-		.deglitch[5] = { .deglitch_en = false,},
-		.deglitch[6] = { .deglitch_en = false,},
-		.deglitch[7] = { .deglitch_en = false,},
+		.deglitch[0] = { .deglitch_en = true, .upper_bound = 0x2DF },
+		.deglitch[1] = { .deglitch_en = true, .upper_bound = 0x2DF },
+		.deglitch[2] = { .deglitch_en = true, .upper_bound = 0x2DF },
+		.deglitch[3] = { .deglitch_en = true, .upper_bound = 0x2DF },
+		.deglitch[4] = { .deglitch_en = true, .upper_bound = 0x2DF },
+		.deglitch[5] = { .deglitch_en = true, .upper_bound = 0x2DF },
+		.deglitch[6] = { .deglitch_en = true, .upper_bound = 0x2DF },
+		.deglitch[7] = { .deglitch_en = true, .upper_bound = 0x2DF },
 	},
 	[1] = {
 		.is_init = false,
-		.deglitch[0] = { .deglitch_en = false,},
-		.deglitch[1] = { .deglitch_en = false,},
-		.deglitch[2] = { .deglitch_en = false,},
-		.deglitch[3] = { .deglitch_en = false,},
+		.deglitch[0] = { .deglitch_en = true, .upper_bound = 0x2DF },
+		.deglitch[1] = { .deglitch_en = true, .upper_bound = 0x2DF },
+		.deglitch[2] = { .deglitch_en = true, .upper_bound = 0x2DF },
+		.deglitch[3] = { .deglitch_en = true, .upper_bound = 0x2DF },
 	}
 };
 
