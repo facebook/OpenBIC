@@ -69,6 +69,18 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 		}
 	}
 
+	uint8_t setting_data_for_soc_pcie_perst = 0xFF;
+	if (!get_user_settings_soc_pcie_perst_from_eeprom(
+		    &setting_data_for_soc_pcie_perst, sizeof(setting_data_for_soc_pcie_perst))) {
+		LOG_ERR("get soc_pcie_perst user settings failed");
+	} else {
+		if (setting_data_for_soc_pcie_perst != 0xFF) {
+			shell_print(shell, "soc_pcie_perst                            val=%d",
+				    setting_data_for_soc_pcie_perst);
+			config_count++;
+		}
+	}
+
 	if (!config_count) {
 		shell_print(shell, "no perm parameter exist");
 	}
