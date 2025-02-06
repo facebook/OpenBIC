@@ -21,22 +21,19 @@
 #include <logging/log.h>
 #include "plat_hook.h"
 #include "plat_class.h"
-#include "plat_voltage_peak_shell.h"
 
 LOG_MODULE_REGISTER(plat_voltage_peak_shell);
 
-void cmd_get_voltage_peak(const struct shell *shell, size_t argc, char **argv)
+static int cmd_get_voltage_peak(const struct shell *shell, size_t argc, char **argv)
 {
 	if (argc != 2) {
 		shell_warn(shell, "Help: get <voltage-rail>|all");
-		return;
+		return -1;
 	}
 
-	char rail_string[40] = { 0 };
 	int peak_value;
-	snprintf(rail_string, sizeof(rail_string), "%s", argv[1]);
 
-	if (strcmp(rail_string, "all") == 0) {
+	if (!strcmp(argv[1], "all")) {
 		for (int i = 0; i < VR_RAIL_E_MAX; i++) {
 			if ((get_board_type() == MINERVA_AEGIS_BD) && (i == 0))
 				continue;
@@ -53,7 +50,7 @@ void cmd_get_voltage_peak(const struct shell *shell, size_t argc, char **argv)
 			}
 
 			if (peak_value == 0xffffffff) {
-				shell_print(shell, "%-40s peak value: This is default peak value",
+				shell_print(shell, "%-50s peak value: This is default peak value",
 					    rail_name);
 			} else {
 				float sensor_reading = 0, decimal = 0;
@@ -69,19 +66,29 @@ void cmd_get_voltage_peak(const struct shell *shell, size_t argc, char **argv)
 					sensor_reading = (float)integer - decimal;
 				}
 
-				shell_print(shell, "%-40s peak value: %10.3f", rail_name,
+				shell_print(shell, "%-50s peak value: %10.3f", rail_name,
 					    sensor_reading);
 			}
 		}
 	} else {
-		if (vr_rail_voltage_peak_get(rail_string, &peak_value) == false) {
-			shell_error(shell, "Invalid rail name to get peak value: %s", rail_string);
-			return;
+		enum VR_RAIL_E rail;
+		if (vr_rail_enum_get(argv[1], &rail) == false) {
+			shell_error(shell, "Invalid rail name: %s", argv[1]);
+			return -1;
+		}
+
+		if ((get_board_type() == MINERVA_AEGIS_BD) && (rail == 0)) {
+			shell_print(shell, "There is no osfp p3v3 on AEGIS BD");
+			return 0;
+		}
+
+		if (vr_rail_voltage_peak_get(argv[1], &peak_value) == false) {
+			shell_error(shell, "Invalid rail name to get peak value: %s", argv[1]);
+			return -1;
 		}
 
 		if (peak_value == 0xffffffff) {
-			shell_print(shell, "%-40s peak value: This is default peak value",
-				    rail_string);
+			shell_print(shell, "%-50s peak value: This is default peak value", argv[1]);
 		} else {
 			float sensor_reading = 0, decimal = 0;
 			int16_t integer = 0;
@@ -96,24 +103,21 @@ void cmd_get_voltage_peak(const struct shell *shell, size_t argc, char **argv)
 				sensor_reading = (float)integer - decimal;
 			}
 
-			shell_print(shell, "%-40s peak value: %10.3f", rail_string, sensor_reading);
+			shell_print(shell, "%-50s peak value: %10.3f", argv[1], sensor_reading);
 		}
 	}
 
-	return;
+	return 0;
 }
 
-void cmd_clear_voltage_peak(const struct shell *shell, size_t argc, char **argv)
+static int cmd_clear_voltage_peak(const struct shell *shell, size_t argc, char **argv)
 {
 	if (argc != 2) {
 		shell_warn(shell, "Help: clear <voltage-rail>|all");
-		return;
+		return -1;
 	}
 
-	char rail_string[40] = { 0 };
-	snprintf(rail_string, sizeof(rail_string), "%s", argv[1]);
-
-	if (strcmp(rail_string, "all") == 0) {
+	if (!strcmp(argv[1], "all")) {
 		bool result = true;
 		for (int i = 0; i < VR_RAIL_E_MAX; i++) {
 			if ((get_board_type() == MINERVA_AEGIS_BD) && (i == 0))
@@ -127,7 +131,7 @@ void cmd_clear_voltage_peak(const struct shell *shell, size_t argc, char **argv)
 						    "Can't find vr_rail_name by rail index: %d", i);
 					continue;
 				}
-				shell_print(shell, "%-40s voltage peak clear failed", rail_name);
+				shell_print(shell, "%-50s voltage peak clear failed", rail_name);
 				continue;
 			}
 		}
@@ -136,26 +140,48 @@ void cmd_clear_voltage_peak(const struct shell *shell, size_t argc, char **argv)
 		enum VR_RAIL_E rail;
 		bool result = true;
 
-		if (vr_rail_enum_get(rail_string, &rail) == false) {
-			shell_error(shell, "Invalid rail name: %s", rail_string);
-			return;
+		if (vr_rail_enum_get(argv[1], &rail) == false) {
+			shell_error(shell, "Invalid rail name: %s", argv[1]);
+			return -1;
 		}
 
 		result = vr_rail_voltage_peak_clear((uint8_t)rail);
 		if (result != true) {
-			shell_print(shell, "%-40s voltage peak clear failed");
+			shell_print(shell, "%-50s voltage peak clear failed", argv[1]);
+			return -1;
 		}
 
-		shell_print(shell, "voltage_peak clear %s done!", rail_string);
+		shell_print(shell, "voltage_peak clear %s done!", argv[1]);
 	}
 
-	return;
+	return 0;
 }
+
+static void voltage_rname_get(size_t idx, struct shell_static_entry *entry)
+{
+	if ((get_board_type() == MINERVA_AEGIS_BD))
+		idx++;
+
+	uint8_t *name = NULL;
+	vr_rail_name_get((uint8_t)idx, &name);
+
+	if (idx == VR_RAIL_E_MAX)
+		name = (uint8_t *)"all";
+
+	entry->syntax = (name) ? (const char *)name : NULL;
+	entry->handler = NULL;
+	entry->help = NULL;
+	entry->subcmd = NULL;
+}
+
+SHELL_DYNAMIC_CMD_CREATE(voltage_rname, voltage_rname_get);
 
 /* Sub-command Level 1 of command voltage-peak */
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_voltage_peak_cmds,
-			       SHELL_CMD(get, NULL, "get_voltage_peak", cmd_get_voltage_peak),
-			       SHELL_CMD(clear, NULL, "clear_voltage_peak", cmd_clear_voltage_peak),
+			       SHELL_CMD(get, &voltage_rname, "get_voltage_peak",
+					 cmd_get_voltage_peak),
+			       SHELL_CMD(clear, &voltage_rname, "clear_voltage_peak",
+					 cmd_clear_voltage_peak),
 			       SHELL_SUBCMD_SET_END);
 
 /* Root of command voltage-peak */
