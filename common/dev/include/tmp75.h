@@ -18,8 +18,8 @@
 #define TMP75_H
 
 enum TMP75_REIGSTER_MAP {
-	TMP75_LOCAL_HIGH_LIMIT_REG = 0x02,
-	TMP75_LOCAL_LOW_LIMIT_REG = 0x03,
+	TMP75_LOCAL_HIGH_LIMIT_REG = 0x03,
+	TMP75_LOCAL_LOW_LIMIT_REG = 0x02,
 };
 
 bool tmp75_get_temp_threshold(sensor_cfg *cfg, uint8_t temp_threshold_index,
