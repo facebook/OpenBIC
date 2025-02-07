@@ -35,7 +35,7 @@ void cmd_set_sensor_threshold(const struct shell *shell, size_t argc, char **arg
 
 	int sensorID = strtol(argv[1], NULL, 16);
 
-	if (sensorID < SENSOR_NUM_UBC_1_TEMP_C || sensorID > sensor_max_count) {
+	if (sensorID < UBC1_P12V_TEMP_C || sensorID > sensor_max_count) {
 		shell_error(shell, "Help: Sensor ID: 0x%x is higher than 0x%x or lower than 0x1",
 			    sensorID, sensor_max_count);
 		return;
@@ -98,7 +98,7 @@ void cmd_get_sensor_threshold(const struct shell *shell, size_t argc, char **arg
 	snprintf(threshold_all, sizeof(threshold_all), "%s", argv[1]);
 
 	if (strcmp(threshold_all, "All") == 0 || strcmp(threshold_all, "all") == 0) {
-		for (int i = SENSOR_NUM_UBC_1_TEMP_C; i <= sensor_max_count; i++) {
+		for (int i = UBC1_P12V_TEMP_C; i <= sensor_max_count; i++) {
 			result = check_supported_threshold_with_sensor_id(i);
 			if (result == 0) {
 				char sensor_name[MAX_AUX_SENSOR_NAME_LEN] = { 0 };
@@ -111,7 +111,7 @@ void cmd_get_sensor_threshold(const struct shell *shell, size_t argc, char **arg
 
 				shell_print(
 					shell,
-					"sensor ID: 0x%x  |  sensor name: %-42s  |  critical high: %10.3f  |  critical low: %10.3f",
+					"sensor ID: 0x%x  |  sensor name: %-50s  |  critical high: %10.3f  |  critical low: %10.3f",
 					i, sensor_name, critical_high, critical_low);
 				critical_high = 0;
 				critical_low = 0;
@@ -120,7 +120,7 @@ void cmd_get_sensor_threshold(const struct shell *shell, size_t argc, char **arg
 	} else {
 		int sensorID = strtol(argv[1], NULL, 16);
 
-		if (sensorID < SENSOR_NUM_UBC_1_TEMP_C || sensorID > sensor_max_count) {
+		if (sensorID < UBC1_P12V_TEMP_C || sensorID > sensor_max_count) {
 			shell_error(shell, "Sensor ID 0x%x is higher than 0x%x or lower than 0x1",
 				    sensorID, sensor_max_count);
 			return;
@@ -144,7 +144,7 @@ void cmd_get_sensor_threshold(const struct shell *shell, size_t argc, char **arg
 
 		shell_print(
 			shell,
-			"sensor ID: 0x%x  |  sensor name: %-42s  |  critical high: %10.3f  |  critical low: %10.3f",
+			"sensor ID: 0x%x  |  sensor name: %-50s  |  critical high: %10.3f  |  critical low: %10.3f",
 			sensorID, sensor_name, critical_high, critical_low);
 	}
 

@@ -42,7 +42,7 @@ static int cmd_vr_status_get(const struct shell *shell, size_t argc, char **argv
 			}
 
 			if (!strcmp(argv[2], "all")) {
-				shell_print(shell, "[%-2x]%-40s", i, rail_name);
+				shell_print(shell, "[%-2x]%-50s", i, rail_name);
 				for (int j = 0; j < VR_STAUS_E_MAX; j++) {
 					uint8_t *vr_status_name = NULL;
 					if (!vr_status_name_get((uint8_t)j, &vr_status_name)) {
@@ -82,7 +82,7 @@ static int cmd_vr_status_get(const struct shell *shell, size_t argc, char **argv
 					return -1;
 				}
 
-				shell_print(shell, "[%-2x]%-40s %-10s:%2x", i, rail_name, argv[2],
+				shell_print(shell, "[%-2x]%-50s %-10s:%2x", i, rail_name, argv[2],
 					    vr_status);
 			}
 		}
@@ -117,7 +117,7 @@ static int cmd_vr_status_get(const struct shell *shell, size_t argc, char **argv
 					continue;
 				}
 
-				shell_print(shell, "[%-2x]%-40s %-10s:%2x", rail, argv[1],
+				shell_print(shell, "[%-2x]%-50s %-10s:%2x", rail, argv[1],
 					    vr_status_name, vr_status);
 			}
 			return 0;
@@ -136,7 +136,7 @@ static int cmd_vr_status_get(const struct shell *shell, size_t argc, char **argv
 				return -1;
 			}
 
-			shell_print(shell, "[%-2x]%-40s %-10s:%2x", rail, argv[1], argv[2],
+			shell_print(shell, "[%-2x]%-50s %-10s:%2x", rail, argv[1], argv[2],
 				    vr_status);
 
 			return 0;
@@ -185,7 +185,7 @@ static int cmd_vr_status_clear(const struct shell *shell, size_t argc, char **ar
 			shell_error(shell, "Can't clear vr status by rail index: %x", rail);
 			return -1;
 		}
-		shell_print(shell, "[%-2x]%-40s clear vr status finish", rail, argv[1]);
+		shell_print(shell, "[%-2x]%-50s clear vr status finish", rail, argv[1]);
 		return 0;
 	}
 }

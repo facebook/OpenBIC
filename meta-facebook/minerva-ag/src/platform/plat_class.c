@@ -238,7 +238,7 @@ void init_tmp_type()
 	I2C_MSG i2c_msg = { 0 };
 	uint8_t retry = 5;
 	i2c_msg.bus = I2C_BUS_TMP;
-	i2c_msg.target_addr = ON_DIE_1_TEMP_TMP432_ADDR;
+	i2c_msg.target_addr = ASIC_DIE_ATH_SENSOR_0_TEMP_TMP432_ADDR;
 	i2c_msg.tx_len = 1;
 	i2c_msg.rx_len = 1;
 	i2c_msg.data[0] = 0xFE; //MFG ID REG

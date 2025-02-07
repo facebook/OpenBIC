@@ -36,7 +36,7 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 				LOG_ERR("Can't find vr_rail_name by rail index: %x", i);
 				continue;
 			}
-			shell_print(shell, "[%2d]%-40s val=%d", i, rail_name,
+			shell_print(shell, "[%2d]%-50s val=%d", i, rail_name,
 				    user_settings.vout[i]);
 			config_count++;
 		}
@@ -49,7 +49,7 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 				LOG_ERR("Can't find vr_rail_name by rail index: %x", i);
 				continue;
 			}
-			shell_print(shell, "[%2d]%-40s val=%d", i, temp_index_threshold_name,
+			shell_print(shell, "[%2d]%-50s val=%d", i, temp_index_threshold_name,
 				    temp_threshold_user_settings.temperature_reg_val[i]);
 			config_count++;
 		}

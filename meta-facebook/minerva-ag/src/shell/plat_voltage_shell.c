@@ -43,7 +43,7 @@ static int cmd_voltage_get_all(const struct shell *shell, size_t argc, char **ar
 			continue;
 		}
 
-		shell_print(shell, "%4d|%-40s|%4d", i, rail_name, vout);
+		shell_print(shell, "%4d|%-50s|%4d", i, rail_name, vout);
 	}
 
 	return 0;
