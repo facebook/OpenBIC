@@ -24,6 +24,11 @@
 
 #define RTOS_TYPE "Zephyr"
 
+__weak void pal_show_extra_info(const struct shell *shell)
+{
+	return;
+}
+
 int cmd_info_print(const struct shell *shell, size_t argc, char **argv)
 {
 	shell_print(
@@ -43,6 +48,7 @@ int cmd_info_print(const struct shell *shell, size_t argc, char **argv)
 	shell_print(shell, "* FW DATE:       %x%x.%x.%x", BIC_FW_YEAR_MSB, BIC_FW_YEAR_LSB,
 		    BIC_FW_WEEK, BIC_FW_VER);
 	shell_print(shell, "* FW IMAGE:      %s.bin", CONFIG_KERNEL_BIN_NAME);
+	pal_show_extra_info(shell);
 	shell_print(
 		shell,
 		"========================{SHELL COMMAND INFO}========================================");
