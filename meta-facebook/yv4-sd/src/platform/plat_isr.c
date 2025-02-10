@@ -417,7 +417,7 @@ void ISR_MB_THROTTLE()
 
 void ISR_SOC_THMALTRIP()
 {
-	if (gpio_get(RST_CPU_RESET_BIC_N) == GPIO_HIGH) {
+	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
 		LOG_INF("ISR_SOC_THMALTRIP assert");
 		hw_event_register[3]++;
 		add_sel_info *event_item = find_event_work_items(FM_CPU_BIC_THERMTRIP_N);
