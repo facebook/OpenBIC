@@ -47,9 +47,9 @@ static int cmd_voltage_range_get(const struct shell *shell, size_t argc, char **
 
 				uint16_t millivolt = 0xFFFF;
 				plat_get_vout_min(i, &millivolt);
-				shell_print(shell, "%-40s vout min: %dmV", rail_name, millivolt);
+				shell_print(shell, "%-50s vout min: %dmV", rail_name, millivolt);
 				plat_get_vout_max(i, &millivolt);
-				shell_print(shell, "%-40s vout max: %dmV", rail_name, millivolt);
+				shell_print(shell, "%-50s vout max: %dmV", rail_name, millivolt);
 			}
 			return 0;
 		} else {

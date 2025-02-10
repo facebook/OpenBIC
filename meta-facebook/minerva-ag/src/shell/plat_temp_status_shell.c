@@ -87,7 +87,7 @@ static int cmd_temp_status_clear(const struct shell *shell, size_t argc, char **
 			shell_error(shell, "Can't clear temp status by rail index: %x", rail);
 			return -1;
 		}
-		shell_print(shell, "[%-2x]%-40s clear temp status finish", rail, argv[1]);
+		shell_print(shell, "[%-2x]%-50s clear temp status finish", rail, argv[1]);
 		return 0;
 	}
 }

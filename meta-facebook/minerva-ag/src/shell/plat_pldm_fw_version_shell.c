@@ -128,11 +128,11 @@ void cmd_get_fw_version_vr(const struct shell *shell, size_t argc, char **argv)
 		}
 
 		if (sensor_dev == sensor_dev_mp2891 || sensor_dev == sensor_dev_mp29816a)
-			shell_print(shell, "%-8x|%-40s|    %04x|%04x", comp_identifier, sensor_name,
+			shell_print(shell, "%-8x|%-50s|    %04x|%04x", comp_identifier, sensor_name,
 				    version, remain);
 		else if (sensor_dev == sensor_dev_isl69259 || sensor_dev == sensor_dev_raa228238 ||
 			 sensor_dev == sensor_dev_raa228249 || sensor_dev == sensor_dev_mp2971)
-			shell_print(shell, "%-8x|%-40s|%08x|%04x", comp_identifier, sensor_name,
+			shell_print(shell, "%-8x|%-50s|%08x|%04x", comp_identifier, sensor_name,
 				    version, remain);
 		else
 			shell_print(shell, "not support sensor_dev: %d", sensor_dev);

@@ -59,7 +59,7 @@ static int cmd_temp_threshold_get_all(const struct shell *shell, size_t argc, ch
 			continue;
 		}
 
-		shell_print(shell, "%4d|%-40s|%4d", i, temp_index_threshold_name, temperature);
+		shell_print(shell, "%4d|%-50s|%4d", i, temp_index_threshold_name, temperature);
 	}
 
 	return 0;

@@ -51,25 +51,23 @@ typedef struct aegis_compnt_mapping_sensor {
 } aegis_compnt_mapping_sensor;
 
 aegis_compnt_mapping_sensor aegis_vr_compnt_mapping_sensor_table[] = {
-	{ AG_COMPNT_OSFP_P3V3, SENSOR_NUM_OSFP_P3V3_TEMP_C, "AEGIS_P3V3" },
-	{ AG_COMPNT_CPU_P0V85_PVDD, SENSOR_NUM_CPU_P0V85_PVDD_TEMP_C, "AEGIS_P0V85_PVDD" },
-	{ AG_COMPNT_CPU_P0V75_PVDD_CH_N, SENSOR_NUM_CPU_P0V75_PVDD_CH_N_TEMP_C,
-	  "AEGIS_P0V75_PVDD_CH_N" },
-	{ AG_COMPNT_CPU_P0V75_PVDD_CH_S, SENSOR_NUM_CPU_P0V75_PVDD_CH_S_TEMP_C,
-	  "AEGIS_P0V75_PVDD_CH_S" },
-	{ AG_COMPNT_CPU_P0V75_TRVDD_ZONEA, SENSOR_NUM_CPU_P0V75_TRVDD_ZONEA_TEMP_C,
-	  "AEGIS_P0V75_TRVDD_ZONEA" },
-	{ AG_COMPNT_CPU_P0V75_TRVDD_ZONEB, SENSOR_NUM_CPU_P0V75_TRVDD_ZONEB_TEMP_C,
-	  "AEGIS_P0V75_TRVDD_ZONEB" },
-	{ AG_COMPNT_CPU_P1V1_VDDC_HBM0_2_4, SENSOR_NUM_CPU_P1V1_VDDC_HBM0_2_4_TEMP_C,
-	  "AEGIS_P1V1_VDDC_HBM0_HBM2_HBM4" },
-	{ AG_COMPNT_CPU_P0V9_TRVDD_ZONEA, SENSOR_NUM_CPU_P0V9_TRVDD_ZONEA_TEMP_C,
-	  "AEGIS_P0V9_TRVDD_ZONEA" },
-	{ AG_COMPNT_CPU_P0V9_TRVDD_ZONEB, SENSOR_NUM_CPU_P0V9_TRVDD_ZONEB_TEMP_C,
-	  "AEGIS_P0V9_TRVDD_ZONEB" },
-	{ AG_COMPNT_CPU_P1V1_VDDC_HBM1_3_5, SENSOR_NUM_CPU_P1V1_VDDC_HBM1_3_5_TEMP_C,
-	  "AEGIS_P1V1_VDDC_HBM1_HBM3_HBM5" },
-	{ AG_COMPNT_CPU_P0V8_VDDA_PCIE, SENSOR_NUM_CPU_P0V8_VDDA_PCIE_TEMP_C, "AEGIS_VDDA_PCIE" },
+	{ AG_COMPNT_P3V3, VR_P3V3_TEMP_C, "CB_VR_P3V3" },
+	{ AG_COMPNT_P0V85_PVDD, VR_ASIC_P0V85_PVDD_TEMP_C, "CB_VR_ASIC_P0V85_PVDD" },
+	{ AG_COMPNT_P0V75_PVDD_CH_N, VR_ASIC_P0V75_PVDD_CH_N_TEMP_C, "CB_VR_ASIC_P0V75_PVDD_CH_N" },
+	{ AG_COMPNT_P0V75_PVDD_CH_S, VR_ASIC_P0V75_PVDD_CH_S_TEMP_C, "CB_VR_ASIC_P0V75_PVDD_CH_S" },
+	{ AG_COMPNT_P0V75_TRVDD_ZONEA, VR_ASIC_P0V75_TRVDD_ZONEA_TEMP_C,
+	  "CB_VR_ASIC_P0V75_TRVDD_ZONEA" },
+	{ AG_COMPNT_P0V75_TRVDD_ZONEB, VR_ASIC_P0V75_TRVDD_ZONEB_TEMP_C,
+	  "CB_VR_ASIC_P0V75_TRVDD_ZONEB" },
+	{ AG_COMPNT_P1V1_VDDC_HBM0_HBM2_HBM4, VR_ASIC_P1V1_VDDC_HBM0_HBM2_HBM4_TEMP_C,
+	  "CB_VR_ASIC_P1V1_VDDC_HBM0_HBM2_HBM4" },
+	{ AG_COMPNT_P0V9_TRVDD_ZONEA, VR_ASIC_P0V9_TRVDD_ZONEA_TEMP_C,
+	  "CB_VR_ASIC_P0V9_TRVDD_ZONEA" },
+	{ AG_COMPNT_P0V9_TRVDD_ZONEB, VR_ASIC_P0V9_TRVDD_ZONEB_TEMP_C,
+	  "CB_VR_ASIC_P0V9_TRVDD_ZONEB" },
+	{ AG_COMPNT_P1V1_VDDC_HBM1_HBM3_HBM5, VR_ASIC_P1V1_VDDC_HBM1_HBM3_HBM5_TEMP_C,
+	  "CB_VR_ASIC_P1V1_VDDC_HBM1_HBM3_HBM5" },
+	{ AG_COMPNT_P0V8_VDDA_PCIE, VR_ASIC_P0V8_VDDA_PCIE_TEMP_C, "CB_VR_ASIC_P0V8_VDDA_PCIE" },
 };
 
 /* PLDM FW update table */
@@ -92,7 +90,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 	{
 		.enable = true,
 		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
-		.comp_identifier = AG_COMPNT_OSFP_P3V3,
+		.comp_identifier = AG_COMPNT_P3V3,
 		.comp_classification_index = 0x00,
 		.pre_update_func = pldm_pre_vr_update,
 		.update_func = pldm_vr_update,
@@ -107,7 +105,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 	{
 		.enable = true,
 		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
-		.comp_identifier = AG_COMPNT_CPU_P0V85_PVDD,
+		.comp_identifier = AG_COMPNT_P0V85_PVDD,
 		.comp_classification_index = 0x00,
 		.pre_update_func = pldm_pre_vr_update,
 		.update_func = pldm_vr_update,
@@ -122,7 +120,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 	{
 		.enable = true,
 		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
-		.comp_identifier = AG_COMPNT_CPU_P0V75_PVDD_CH_N,
+		.comp_identifier = AG_COMPNT_P0V75_PVDD_CH_N,
 		.comp_classification_index = 0x00,
 		.pre_update_func = pldm_pre_vr_update,
 		.update_func = pldm_vr_update,
@@ -137,7 +135,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 	{
 		.enable = true,
 		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
-		.comp_identifier = AG_COMPNT_CPU_P0V75_PVDD_CH_S,
+		.comp_identifier = AG_COMPNT_P0V75_PVDD_CH_S,
 		.comp_classification_index = 0x00,
 		.pre_update_func = pldm_pre_vr_update,
 		.update_func = pldm_vr_update,
@@ -152,7 +150,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 	{
 		.enable = true,
 		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
-		.comp_identifier = AG_COMPNT_CPU_P0V75_TRVDD_ZONEA,
+		.comp_identifier = AG_COMPNT_P0V75_TRVDD_ZONEA,
 		.comp_classification_index = 0x00,
 		.pre_update_func = pldm_pre_vr_update,
 		.update_func = pldm_vr_update,
@@ -167,7 +165,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 	{
 		.enable = true,
 		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
-		.comp_identifier = AG_COMPNT_CPU_P0V75_TRVDD_ZONEB,
+		.comp_identifier = AG_COMPNT_P0V75_TRVDD_ZONEB,
 		.comp_classification_index = 0x00,
 		.pre_update_func = pldm_pre_vr_update,
 		.update_func = pldm_vr_update,
@@ -182,7 +180,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 	{
 		.enable = true,
 		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
-		.comp_identifier = AG_COMPNT_CPU_P1V1_VDDC_HBM0_2_4,
+		.comp_identifier = AG_COMPNT_P1V1_VDDC_HBM0_HBM2_HBM4,
 		.comp_classification_index = 0x00,
 		.pre_update_func = pldm_pre_vr_update,
 		.update_func = pldm_vr_update,
@@ -197,7 +195,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 	{
 		.enable = true,
 		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
-		.comp_identifier = AG_COMPNT_CPU_P0V9_TRVDD_ZONEA,
+		.comp_identifier = AG_COMPNT_P0V9_TRVDD_ZONEA,
 		.comp_classification_index = 0x00,
 		.pre_update_func = pldm_pre_vr_update,
 		.update_func = pldm_vr_update,
@@ -212,7 +210,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 	{
 		.enable = true,
 		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
-		.comp_identifier = AG_COMPNT_CPU_P0V9_TRVDD_ZONEB,
+		.comp_identifier = AG_COMPNT_P0V9_TRVDD_ZONEB,
 		.comp_classification_index = 0x00,
 		.pre_update_func = pldm_pre_vr_update,
 		.update_func = pldm_vr_update,
@@ -227,7 +225,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 	{
 		.enable = true,
 		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
-		.comp_identifier = AG_COMPNT_CPU_P1V1_VDDC_HBM1_3_5,
+		.comp_identifier = AG_COMPNT_P1V1_VDDC_HBM1_HBM3_HBM5,
 		.comp_classification_index = 0x00,
 		.pre_update_func = pldm_pre_vr_update,
 		.update_func = pldm_vr_update,
@@ -242,7 +240,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 	{
 		.enable = true,
 		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
-		.comp_identifier = AG_COMPNT_CPU_P0V8_VDDA_PCIE,
+		.comp_identifier = AG_COMPNT_P0V8_VDDA_PCIE,
 		.comp_classification_index = 0x00,
 		.pre_update_func = pldm_pre_vr_update,
 		.update_func = pldm_vr_update,
@@ -348,9 +346,9 @@ void load_pldmupdate_comp_config(void)
 
 	size_t filtered_count = 0;
 	for (size_t i = 0; i < comp_config_count; i++) {
-		// Skip the AG_COMPNT_OSFP_P3V3 for MINERVA_AEGIS_BD
+		// Skip the AG_COMPNT_P3V3 for MINERVA_AEGIS_BD
 		if ((get_board_type() == MINERVA_AEGIS_BD) &&
-		    PLDMUPDATE_FW_CONFIG_TABLE[i].comp_identifier == AG_COMPNT_OSFP_P3V3)
+		    PLDMUPDATE_FW_CONFIG_TABLE[i].comp_identifier == AG_COMPNT_P3V3)
 			continue;
 
 		comp_config[filtered_count++] = PLDMUPDATE_FW_CONFIG_TABLE[i];
@@ -407,38 +405,38 @@ static struct k_mutex *get_vr_mutex_by_comp_id(uint8_t comp_id)
 	uint8_t vr_mutex_id = VR_INDEX_MAX;
 
 	switch (comp_id) {
-	case AG_COMPNT_OSFP_P3V3:
-		vr_mutex_id = VR_INDEX_E_OSFP_P3V3;
+	case AG_COMPNT_P3V3:
+		vr_mutex_id = VR_INDEX_E_P3V3;
 		break;
-	case AG_COMPNT_CPU_P0V85_PVDD:
+	case AG_COMPNT_P0V85_PVDD:
 		vr_mutex_id = VR_INDEX_E_P0V85;
 		break;
-	case AG_COMPNT_CPU_P0V75_PVDD_CH_N:
+	case AG_COMPNT_P0V75_PVDD_CH_N:
 		vr_mutex_id = VR_INDEX_E_P0V75_CH_N;
 		break;
-	case AG_COMPNT_CPU_P0V75_PVDD_CH_S:
+	case AG_COMPNT_P0V75_PVDD_CH_S:
 		vr_mutex_id = VR_INDEX_E_P0V75_CH_S;
 		break;
-	case AG_COMPNT_CPU_P0V75_TRVDD_ZONEA:
+	case AG_COMPNT_P0V75_TRVDD_ZONEA:
 		vr_mutex_id = VR_INDEX_E_P0V75_TRVDD_ZONEA;
 		break;
-	case AG_COMPNT_CPU_P0V75_TRVDD_ZONEB:
+	case AG_COMPNT_P0V75_TRVDD_ZONEB:
 		vr_mutex_id = VR_INDEX_E_P0V75_TRVDD_ZONEB;
 		break;
-	case AG_COMPNT_CPU_P1V1_VDDC_HBM0_2_4:
+	case AG_COMPNT_P1V1_VDDC_HBM0_HBM2_HBM4:
 		vr_mutex_id = VR_INDEX_E_P1V1_VDDC_HBM0_HBM2_HBM4;
 		break;
-	case AG_COMPNT_CPU_P0V9_TRVDD_ZONEA:
+	case AG_COMPNT_P0V9_TRVDD_ZONEA:
 		vr_mutex_id = VR_INDEX_E_P0V9_TRVDD_ZONEA;
 		break;
-	case AG_COMPNT_CPU_P0V9_TRVDD_ZONEB:
+	case AG_COMPNT_P0V9_TRVDD_ZONEB:
 		vr_mutex_id = VR_INDEX_E_P0V9_TRVDD_ZONEB;
 		break;
-	case AG_COMPNT_CPU_P1V1_VDDC_HBM1_3_5:
+	case AG_COMPNT_P1V1_VDDC_HBM1_HBM3_HBM5:
 		vr_mutex_id = VR_INDEX_E_P1V1_VDDC_HBM1_HBM3_HBM5;
 		break;
-	case AG_COMPNT_CPU_P0V8_VDDA_PCIE:
-		vr_mutex_id = VR_INDEX_E_VDDA_PCIE;
+	case AG_COMPNT_P0V8_VDDA_PCIE:
+		vr_mutex_id = VR_INDEX_E_P0V8_VDDA_PCIE;
 		break;
 	default:
 		LOG_ERR("Invalid component id(%d)", comp_id);
