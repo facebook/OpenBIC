@@ -62,6 +62,8 @@ static const uint8_t pmic_err_pattern[MAX_COUNT_PMIC_ERROR_TYPE][MAX_COUNT_PMIC_
 
 static bool is_pmic_error_flag[DIMM_ID_MAX][MAX_COUNT_PMIC_ERROR_TYPE];
 static uint8_t pmic_i3c_err_data_index[MAX_COUNT_PMIC_ERROR_OFFSET] = { 0, 1, 3, 4, 5, 6, 46 };
+static uint8_t pmic_i3c_err_offset[MAX_COUNT_PMIC_ERROR_OFFSET] = { 0x5, 0x6, 0x8, 0x9,
+								    0xa, 0xb, 0x33 };
 static const uint8_t pmic_critical_error_index[MAX_LEN_PMIC_CRITICAL_ERROR_INDEX] = { 0, 1,  2, 3,
 										      4, 6,  7, 8,
 										      9, 10, 16 };
@@ -215,7 +217,7 @@ void monitor_pmic_error_via_i3c_handler()
 			}
 
 			memset(&error_data, 0, sizeof(error_data));
-			ret = get_pmic_error_data(dimm_id, error_data, true);
+			ret = get_pmic_error_data_one(dimm_id, error_data, true);
 			if (ret < 0) {
 				LOG_ERR("Fail to get PMIC error data on monitor thread, dimm: 0x%x",
 					dimm_id);
@@ -305,6 +307,59 @@ int pal_set_pmic_error_flag(uint8_t dimm_id, uint8_t error_type)
 	return SUCCESS;
 }
 
+int get_pmic_error_data_one(uint8_t dimm_id, uint8_t *buffer, uint8_t is_need_check_post_status)
+{
+	CHECK_NULL_ARG_WITH_RETURN(buffer, -1);
+	I3C_MSG i3c_msg = { 0 };
+	int ret = 0;
+
+	if (get_dimm_present(dimm_id) == DIMM_NOT_PRSNT) {
+		return -1;
+	}
+
+	uint8_t i3c_ctrl_mux_data = ((dimm_id / (DIMM_ID_MAX / 2)) ? I3C_MUX_BIC_TO_DIMMG_TO_L :
+								     I3C_MUX_BIC_TO_DIMMA_TO_F);
+	ret = switch_i3c_dimm_mux(i3c_ctrl_mux_data);
+	if (ret < 0) {
+		return ret;
+	}
+
+	if ((!get_post_status()) && is_need_check_post_status) {
+		switch_i3c_dimm_mux(I3C_MUX_CPU_TO_DIMM);
+		return -1;
+	}
+
+	i3c_msg.bus = I3C_BUS3;
+	i3c_msg.target_addr = pmic_i3c_addr_list[dimm_id % (DIMM_ID_MAX / 2)];
+
+	i3c_attach(&i3c_msg);
+	ret = all_brocast_ccc(&i3c_msg);
+	if (ret != 0) {
+		LOG_ERR("Failed to brocast CCC, ret%d bus%d", ret, i3c_msg.bus);
+		i3c_detach(&i3c_msg);
+		return ret;
+	}
+
+	// Read one PMIC register at once
+	for (int i = 0; i < MAX_COUNT_PMIC_ERROR_OFFSET; i++) {
+		// Read PMIC error via I3C
+		i3c_msg.tx_len = 1;
+		i3c_msg.rx_len = 1;
+		i3c_msg.data[0] = pmic_i3c_err_offset[i];
+		ret = i3c_transfer(&i3c_msg);
+		if (ret != 0) {
+			LOG_ERR("Failed to read PMIC error via I3C");
+			break;
+		}
+
+		buffer[pmic_i3c_err_data_index[i]] = i3c_msg.data[0];
+	}
+
+	i3c_detach(&i3c_msg);
+
+	return ret;
+}
+
 int get_pmic_error_data(uint8_t dimm_id, uint8_t *buffer, uint8_t is_need_check_post_status)
 {
 	CHECK_NULL_ARG_WITH_RETURN(buffer, -1);
@@ -371,7 +426,7 @@ void read_pmic_error_when_dc_off()
 		}
 
 		memset(&error_data, 0, sizeof(error_data));
-		ret = get_pmic_error_data(dimm_id, error_data, false);
+		ret = get_pmic_error_data_one(dimm_id, error_data, false);
 		if (ret != 0) {
 			LOG_ERR("Read PMIC error data fail, dimm id: 0x%x", dimm_id);
 			continue;
