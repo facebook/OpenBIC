@@ -547,23 +547,21 @@ void process_vr_pmalert_ocp_sel(struct k_work *work_item)
 			continue;
 		}
 
-		if (vr_dev == sensor_dev_tps53689) {
-			/* 1. check if trigger reason is IOUT fault */
-			if (((status_word_msb & VR_IOUT_FAULT_MASK) >> 6) == 1) {
-				/* 2. IOUT fault, check if OC Warning is set */
-				msg.tx_len = 1;
-				msg.rx_len = 1;
-				msg.data[0] = PMBUS_STATUS_IOUT;
-				ret = i2c_master_read(&msg, retry);
-				if (ret != 0) {
-					LOG_ERR("Get vr status iout fail, bus: 0x%x, addr: 0x%x",
-						msg.bus, msg.target_addr);
-					continue;
-				}
-				if (((msg.data[0] & VR_TPS_OCW_MASK) >> 5) == 1) {
-					/* only OC Warn is triggered, skip to prevent false event */
-					continue;
-				}
+		/* 1. check if trigger reason is IOUT fault */
+		if (((status_word_msb & VR_IOUT_FAULT_MASK) >> 6) == 1) {
+			/* 2. IOUT fault, check if OC Warning is set */
+			msg.tx_len = 1;
+			msg.rx_len = 1;
+			msg.data[0] = PMBUS_STATUS_IOUT;
+			ret = i2c_master_read(&msg, retry);
+			if (ret != 0) {
+				LOG_ERR("Get vr status iout fail, bus: 0x%x, addr: 0x%x",
+					msg.bus, msg.target_addr);
+				continue;
+			}
+			if (((msg.data[0] & VR_TPS_OCW_MASK) >> 5) == 1) {
+				/* only OC Warn is triggered, skip to prevent false event */
+				continue;
 			}
 		}
 
