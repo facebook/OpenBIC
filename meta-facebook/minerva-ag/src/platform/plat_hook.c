@@ -814,8 +814,8 @@ void user_settings_init(void)
 	alert_level_user_settings_init();
 	vr_vout_default_settings_init();
 	vr_vout_user_settings_init();
-	temp_threshold_user_settings_init();
 	temp_threshold_default_settings_init();
+	temp_threshold_user_settings_init();
 	soc_pcie_perst_user_settings_init();
 }
 
