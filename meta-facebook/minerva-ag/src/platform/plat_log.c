@@ -162,6 +162,7 @@ void plat_clear_log()
 		k_msleep(EEPROM_MAX_WRITE_TIME); // the eeprom max write time is 10 ms
 	}
 	log_num = 0;
+	next_index = 0;
 }
 
 bool plat_dump_cpld(uint8_t offset, uint8_t length, uint8_t *data)
