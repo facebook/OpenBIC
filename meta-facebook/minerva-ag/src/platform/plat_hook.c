@@ -44,7 +44,7 @@ LOG_MODULE_REGISTER(plat_hook);
 static struct k_mutex vr_mutex[VR_MAX_NUM];
 static struct k_mutex pwrlevel_mutex;
 
-static bool uart_pwr_event_is_enable = false;
+static bool uart_pwr_event_is_enable = true;
 
 int32_t alert_level_mA_default = 110000;
 int32_t alert_level_mA_user_setting = 110000;
@@ -52,12 +52,10 @@ bool alert_level_is_assert = false;
 
 int power_level_send_event(bool is_assert, int ubc1_current, int ubc2_current)
 {
-	if (is_assert == false) {
+	if (is_assert == true) {
 		//To Do: need to send assert event to BMC
-		LOG_INF("UBC1 and UBC2 over current and need to send assert event to BMC");
 	} else {
 		//To Do: need to send deassert event to BMC
-		LOG_INF("UBC1 and UBC2 over current and need to send deassert event to BMC");
 	}
 
 	if (uart_pwr_event_is_enable == true) {
@@ -112,15 +110,15 @@ bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading)
 
 		if ((ubc1_current_mA + sensor_reading) > alert_level_mA_user_setting) {
 			if (alert_level_is_assert == false) {
+				alert_level_is_assert = true;
 				power_level_send_event(alert_level_is_assert, ubc1_current_mA,
 						       sensor_reading);
-				alert_level_is_assert = true;
 			}
 		} else {
 			if (alert_level_is_assert == true) {
+				alert_level_is_assert = false;
 				power_level_send_event(alert_level_is_assert, ubc1_current_mA,
 						       sensor_reading);
-				alert_level_is_assert = false;
 			}
 		}
 
