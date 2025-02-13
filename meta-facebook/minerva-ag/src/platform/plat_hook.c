@@ -197,6 +197,84 @@ bool temp_sensor_rail_enum_get(uint8_t *name, uint8_t *num)
 	return false;
 }
 
+// clang-format off
+bootstrap_mapping_register bootstrap_table[] = {
+	//  - JTAG pins - Ref 13.3.9 Athena datasheet 1.1
+	{ STRAP_INDEX_SOC_JTAG_MUX_SEL_0_3, 0x1E, "SOC_JTAG_MUX_SEL_0_3", { 4, 5, 6, 7 }, 4, 0x00, 0x00 },
+	{ STRAP_INDEX_SOC_DFT_TAP_EN_L, 0x38, "SOC_DFT_TAP_EN_L", { 1 }, 1, 0xFF, 0xFF },
+	// - TEST pins - Ref 13.3.12 Athena datasheet
+	{ STRAP_INDEX_SOC_ATPG_MODE_L, 0x38, "SOC_ATPG_MODE_L", { 2 }, 1, 0xFF, 0xFF },
+	{ STRAP_INDEX_SOC_PAD_TRI_L, 0x38, "SOC_PAD_TRI_L", { 3 }, 1, 0xFF, 0xFF },
+	{ STRAP_INDEX_SOC_CORE_TAP_CTRL_L, 0x38, "SOC_CORE_TAP_CTRL_L", { 0 }, 1, 0xFF, 0xFF },
+	// - SOC BOOT SOURCE pins - Ref 12.3 Athena datasheet
+	{ STRAP_INDEX_SOC_BOOT_SOURCE_0_4, 0x21, "SOC_BOOT_SOURCE_0_4", { 0, 1, 2, 3, 4 }, 5, 0x00, 0x00 },
+	{ STRAP_INDEX_SOC_BOOT_SOURCE_5_6, 0x21, "SOC_BOOT_SOURCE_5_6", { 5, 6 }, 2, 0x00, 0x00 },
+	{ STRAP_INDEX_SOC_BOOT_SOURCE_7, 0x21, "SOC_BOOT_SOURCE_7", { 7 }, 1, 0x00, 0x00 },
+	{ STRAP_INDEX_SOC_GPIO2, 0x3B, "SOC_GPIO2", { 0 }, 1, 0x00, 0x00 },
+	// - OWL BOOT SOURCE pins -
+	{ STRAP_INDEX_S_OWL_BOOT_SOURCE_0_7, 0x22, "S_OWL_BOOT_SOURCE_0_7", { 0, 1, 2, 3, 4, 5, 6, 7 }, 8, 0x00, 0x00 },
+	{ STRAP_INDEX_N_OWL_BOOT_SOURCE_0_7, 0x23, "N_OWL_BOOT_SOURCE_0_7", { 0, 1, 2, 3, 4, 5, 6, 7 }, 8, 0x00, 0x00 },
+	// - OWL TEST pins -
+	{ STRAP_INDEX_S_OWL_PAD_TRI_L, 0x37, "S_OWL_PAD_TRI_L", { 3 }, 1, 0xFF, 0xFF },
+	{ STRAP_INDEX_S_OWL_ATPG_MODE_L, 0x37, "S_OWL_ATPG_MODE_L", { 2 }, 1, 0xFF, 0xFF },
+	{ STRAP_INDEX_S_OWL_DFT_TAP_EN_L, 0x37, "S_OWL_DFT_TAP_EN_L", { 1 }, 1, 0xFF, 0xFF },
+	{ STRAP_INDEX_S_OWL_CORE_TAP_CTRL_L, 0x37, "S_OWL_CORE_TAP_CTRL_L", { 0 }, 1, 0xFF, 0xFF },
+	{ STRAP_INDEX_N_OWL_PAD_TRI_L, 0x36, "N_OWL_PAD_TRI_L", { 3 }, 1, 0xFF, 0xFF },
+	{ STRAP_INDEX_N_OWL_ATPG_MODE_L, 0x36, "N_OWL_ATPG_MODE_L", { 2 }, 1, 0xFF, 0xFF },
+	{ STRAP_INDEX_N_OWL_DFT_TAP_EN_L, 0x36, "N_OWL_DFT_TAP_EN_L", { 1 }, 1, 0xFF, 0xFF },
+	{ STRAP_INDEX_N_OWL_CORE_TAP_CTRL_L, 0x36, "N_OWL_CORE_TAP_CTRL_L", { 0 }, 1, 0xFF, 0xFF },
+	// - OWL JTAG pin -
+	{ STRAP_INDEX_S_OWL_JTAG_MUX_SEL_0_3, 0x1D, "S_OWL_JTAG_MUX_SEL_0_3", { 3, 2, 1, 0 }, 4, 0x00, 0x00 },
+	{ STRAP_INDEX_N_OWL_JTAG_MUX_SEL_0_3, 0x1D, "N_OWL_JTAG_MUX_SEL_0_3", { 7, 6, 5, 4 }, 4, 0x00, 0x00 },
+	// - OWL UART pin -
+	{ STRAP_INDEX_S_OWL_UART_MUX_SEL_0_2, 0x1F, "S_OWL_UART_MUX_SEL_0_2", { 4, 3, 2 }, 3, 0x00, 0x00 },
+	{ STRAP_INDEX_N_OWL_UART_MUX_SEL_0_2, 0x1F, "N_OWL_UART_MUX_SEL_0_2", { 7, 6, 5 }, 3, 0x00, 0x00 },
+};
+// clang-format on
+
+bootstrap_user_settings_struct bootstrap_user_settings = { 0 };
+
+bool strap_name_get(uint8_t rail, uint8_t **name)
+{
+	CHECK_NULL_ARG_WITH_RETURN(name, false);
+
+	if (rail >= STRAP_INDEX_MAX) {
+		*name = NULL;
+		return false;
+	}
+
+	*name = (uint8_t *)bootstrap_table[rail].strap_name;
+	return true;
+}
+
+bool strap_enum_get(uint8_t *name, uint8_t *num)
+{
+	CHECK_NULL_ARG_WITH_RETURN(name, false);
+	CHECK_NULL_ARG_WITH_RETURN(num, false);
+
+	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+		if (strcmp(name, bootstrap_table[i].strap_name) == 0) {
+			*num = i;
+			return true;
+		}
+	}
+
+	LOG_ERR("invalid rail name %s", name);
+	return false;
+}
+
+bool find_bootstrap_by_rail(uint8_t rail, bootstrap_mapping_register *result)
+{
+	CHECK_NULL_ARG_WITH_RETURN(result, false);
+
+	if (rail >= STRAP_INDEX_MAX) {
+		return false;
+	}
+
+	*result = bootstrap_table[rail];
+	return true;
+}
+
 void *vr_mutex_get(enum VR_INDEX_E vr_index)
 {
 	if (vr_index >= VR_INDEX_MAX) {
@@ -422,6 +500,7 @@ bool vr_status_name_get(uint8_t rail, uint8_t **name)
 #define TEMP_THRESHOLD_USER_SETTINGS_OFFSET 0x8100
 #define VR_VOUT_USER_SETTINGS_OFFSET 0x8000
 #define SOC_PCIE_PERST_USER_SETTINGS_OFFSET 0x8300
+#define BOOTSTRAP_USER_SETTINGS_OFFSET 0x8400
 
 vr_vout_user_settings user_settings = { 0 };
 struct vr_vout_user_settings default_settings = { 0 };
@@ -806,6 +885,100 @@ static bool temp_threshold_default_settings_init(void)
 	return true;
 }
 
+bool bootstrap_user_settings_get(void *bootstrap_user_settings)
+{
+	CHECK_NULL_ARG_WITH_RETURN(bootstrap_user_settings, false);
+
+	/* read the bootstrap_user_settings from eeprom */
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 5;
+	msg.bus = I2C_BUS12;
+	msg.target_addr = 0xA0 >> 1;
+	msg.tx_len = 2;
+	msg.data[0] = BOOTSTRAP_USER_SETTINGS_OFFSET >> 8;
+	msg.data[1] = BOOTSTRAP_USER_SETTINGS_OFFSET & 0xff;
+	msg.rx_len = sizeof(struct bootstrap_user_settings_struct);
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Failed to read eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x", msg.bus,
+			msg.target_addr, msg.data[0], msg.data[1]);
+		return false;
+	}
+	memcpy(bootstrap_user_settings, msg.data, sizeof(struct bootstrap_user_settings_struct));
+
+	return true;
+}
+
+bool bootstrap_user_settings_set(void *bootstrap_user_settings)
+{
+	CHECK_NULL_ARG_WITH_RETURN(bootstrap_user_settings, false);
+
+	/* write the bootstrap_user_settings to eeprom */
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 5;
+	msg.bus = I2C_BUS12;
+	msg.target_addr = 0xA0 >> 1;
+	msg.tx_len = sizeof(struct bootstrap_user_settings_struct) + 2;
+	msg.data[0] = BOOTSTRAP_USER_SETTINGS_OFFSET >> 8;
+	msg.data[1] = BOOTSTRAP_USER_SETTINGS_OFFSET & 0xff;
+
+	memcpy(&msg.data[2], bootstrap_user_settings,
+	       sizeof(struct bootstrap_user_settings_struct));
+	LOG_DBG("bootstrap write eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x, tx_len: %d", msg.bus,
+		msg.target_addr, msg.data[0], msg.data[1], msg.tx_len);
+
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("bootstrap Failed to write eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x, tx_len: %d",
+			msg.bus, msg.target_addr, msg.data[0], msg.data[1], msg.tx_len);
+		return false;
+	}
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+
+static bool bootstrap_user_settings_init(void)
+{
+	if (bootstrap_user_settings_get(&bootstrap_user_settings) == false) {
+		LOG_ERR("get bootstrap user settings fail");
+		return false;
+	}
+
+	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+		if ((bootstrap_user_settings.user_setting_value[i] >> 8) != 0xff) {
+			// write bootstrap_user_settings to cpld
+			uint8_t data = (uint8_t)bootstrap_user_settings.user_setting_value[i];
+			if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR,
+					    bootstrap_table[i].cpld_offsets, &data, 1)) {
+				LOG_ERR("Can't set bootstrap[%2d]=%02x by user settings", i, data);
+				return false;
+			}
+			// write bootstrap_user_settings to bootstrap_table
+			bootstrap_table[i].change_setting_value = data;
+
+			LOG_INF("set [%2d]%s: %02x", i, bootstrap_table[i].strap_name, data);
+		}
+	}
+
+	return true;
+}
+
+static bool bootstrap_default_settings_init(void)
+{
+	// write cpld_offset value to bootstrap_table
+	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+		uint8_t data = 0;
+		if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, bootstrap_table[i].cpld_offsets,
+				   &data, 1)) {
+			LOG_ERR("Can't find bootstrap default by rail index from cpld: %d", i);
+			return false;
+		}
+		bootstrap_table[i].default_setting_value = data;
+		bootstrap_table[i].change_setting_value = data;
+	}
+	return true;
+}
+
 /* init the user & default settings value by shell command */
 void user_settings_init(void)
 {
@@ -815,6 +988,100 @@ void user_settings_init(void)
 	temp_threshold_default_settings_init();
 	temp_threshold_user_settings_init();
 	soc_pcie_perst_user_settings_init();
+	bootstrap_default_settings_init();
+	bootstrap_user_settings_init();
+}
+
+bool set_bootstrap_table(uint8_t rail, uint8_t *change_setting_value, uint8_t drive_index_level,
+			 bool is_perm)
+{
+	if (rail >= STRAP_INDEX_MAX)
+		return false;
+
+	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+		if (bootstrap_table[i].index == rail) {
+			uint8_t mask = 0;
+			for (int j = 0; j < bootstrap_table[i].bit_count; j++) {
+				mask |= (1 << bootstrap_table[i].bits[j]);
+			}
+
+			// If cpld_offsets is the same, update the change_setting_value together
+			for (int k = 0; k < STRAP_INDEX_MAX; k++) {
+				if (bootstrap_table[k].cpld_offsets ==
+				    bootstrap_table[i].cpld_offsets) {
+					switch (drive_index_level) {
+					case DRIVE_INDEX_LEVEL_HIGH:
+						bootstrap_table[k].change_setting_value |=
+							mask; // set 1
+						break;
+					case DRIVE_INDEX_LEVEL_LOW:
+						bootstrap_table[k].change_setting_value &=
+							~mask; // set 0
+						break;
+					case DRIVE_INDEX_LEVEL_DEFAULT:
+						// Clear the specified bit
+						bootstrap_table[k].change_setting_value &= ~mask;
+						// Reset the specified bit to default_setting_value
+						bootstrap_table[k].change_setting_value |=
+							(bootstrap_table[k].default_setting_value &
+							 mask);
+						break;
+
+					default:
+						break;
+					}
+					/* 
+						save perm parameter to bootstrap_user_settings
+						bit 8: not perm(0); perm(1)
+						Set bit 8 and keep the lower 8 bits of change_setting_value
+					*/
+					if (is_perm) {
+						if (i == k)
+							bootstrap_user_settings
+								.user_setting_value[k] =
+								((bootstrap_table[k]
+									  .change_setting_value &
+								  0x00FF) |
+								 0x0100);
+						else
+							bootstrap_user_settings
+								.user_setting_value[k] =
+								((bootstrap_table[k]
+									  .change_setting_value &
+								  0x00FF) |
+								 0x0000);
+					}
+				}
+			}
+			// save bootstrap_user_settings to eeprom
+			if (is_perm) {
+				bootstrap_user_settings_set(&bootstrap_user_settings);
+			}
+			*change_setting_value = bootstrap_table[i].change_setting_value;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool get_drive_level(int rail, int *drive_level)
+{
+	CHECK_NULL_ARG_WITH_RETURN(drive_level, false);
+
+	bootstrap_mapping_register bootstrap_item;
+	if (!find_bootstrap_by_rail((uint8_t)rail, &bootstrap_item)) {
+		LOG_ERR("Can't find strap_item by rail index: %d", rail);
+		return false;
+	}
+	uint8_t mask = 0;
+	// Calculate mask to indicate the bits affected by the bootstrap_item
+	for (int i = 0; i < bootstrap_item.bit_count; i++) {
+		mask |= (1 << bootstrap_item.bits[i]);
+	}
+
+	*drive_level = (bootstrap_item.change_setting_value & mask) ? true : false;
+	return true;
 }
 
 void set_uart_power_event_is_enable(bool is_enable)
@@ -1022,9 +1289,6 @@ err:
 bool perm_config_clear(void)
 {
 	/* clear all vout perm parameters */
-	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
-		user_settings.vout[i] = 0xffff;
-	}
 	memset(user_settings.vout, 0xFF, sizeof(user_settings.vout));
 	if (!vr_vout_user_settings_set(&user_settings)) {
 		LOG_ERR("The perm_config clear failed");
@@ -1032,9 +1296,6 @@ bool perm_config_clear(void)
 	}
 
 	/* clear all temp_threshold perm parameters */
-	for (int i = 0; i < PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX; i++) {
-		temp_threshold_user_settings.temperature_reg_val[i] = 0xffffffff;
-	}
 	memset(temp_threshold_user_settings.temperature_reg_val, 0xFF,
 	       sizeof(temp_threshold_user_settings.temperature_reg_val));
 	if (!temp_threshold_user_settings_set(&temp_threshold_user_settings)) {
@@ -1054,6 +1315,14 @@ bool perm_config_clear(void)
 	uint8_t setting_value_for_soc_pcie_perst = 0xFF;
 	if (!set_user_settings_soc_pcie_perst_to_eeprom(&setting_value_for_soc_pcie_perst,
 							sizeof(setting_value_for_soc_pcie_perst))) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
+	/* clear all bootstrap perm parameters */
+	memset(bootstrap_user_settings.user_setting_value, 0xFF,
+	       sizeof(bootstrap_user_settings.user_setting_value));
+	if (!bootstrap_user_settings_set(&bootstrap_user_settings)) {
 		LOG_ERR("The perm_config clear failed");
 		return false;
 	}

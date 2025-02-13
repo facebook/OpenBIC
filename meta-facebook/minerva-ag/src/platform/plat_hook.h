@@ -116,6 +116,45 @@ enum PLAT_TEMP_INDEX_THRESHOLD_TYPE_E {
 	PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX,
 };
 
+enum PLAT_STRAP_INDEX_E {
+	STRAP_INDEX_SOC_JTAG_MUX_SEL_0_3,
+	STRAP_INDEX_SOC_DFT_TAP_EN_L,
+	STRAP_INDEX_SOC_ATPG_MODE_L,
+	STRAP_INDEX_SOC_PAD_TRI_L,
+	STRAP_INDEX_SOC_CORE_TAP_CTRL_L,
+	STRAP_INDEX_SOC_BOOT_SOURCE_0_4,
+	STRAP_INDEX_SOC_BOOT_SOURCE_5_6,
+	STRAP_INDEX_SOC_BOOT_SOURCE_7,
+	STRAP_INDEX_SOC_GPIO2,
+	STRAP_INDEX_S_OWL_BOOT_SOURCE_0_7,
+	STRAP_INDEX_N_OWL_BOOT_SOURCE_0_7,
+	STRAP_INDEX_S_OWL_PAD_TRI_L,
+	STRAP_INDEX_S_OWL_ATPG_MODE_L,
+	STRAP_INDEX_S_OWL_DFT_TAP_EN_L,
+	STRAP_INDEX_S_OWL_CORE_TAP_CTRL_L,
+	STRAP_INDEX_N_OWL_PAD_TRI_L,
+	STRAP_INDEX_N_OWL_ATPG_MODE_L,
+	STRAP_INDEX_N_OWL_DFT_TAP_EN_L,
+	STRAP_INDEX_N_OWL_CORE_TAP_CTRL_L,
+	STRAP_INDEX_S_OWL_JTAG_MUX_SEL_0_3,
+	STRAP_INDEX_N_OWL_JTAG_MUX_SEL_0_3,
+	STRAP_INDEX_S_OWL_UART_MUX_SEL_0_2,
+	STRAP_INDEX_N_OWL_UART_MUX_SEL_0_2,
+	STRAP_INDEX_MAX,
+};
+
+enum PLAT_DRIVE_LEVEL_INDEX_E {
+	DRIVE_INDEX_LEVEL_LOW = 1,
+	DRIVE_INDEX_LEVEL_HIGH,
+	DRIVE_INDEX_LEVEL_DEFAULT,
+};
+
+typedef struct bootstrap_user_settings_struct {
+	uint16_t user_setting_value[STRAP_INDEX_MAX];
+} bootstrap_user_settings_struct;
+
+extern bootstrap_user_settings_struct bootstrap_user_settings;
+
 typedef struct vr_mapping_sensor {
 	uint8_t index;
 	uint8_t sensor_id;
@@ -167,6 +206,16 @@ typedef struct temp_threshold_mapping_sensor {
 
 extern temp_threshold_mapping_sensor temp_threshold_table[];
 
+typedef struct bootstrap_mapping_register {
+	uint8_t index;
+	uint8_t cpld_offsets;
+	uint8_t *strap_name;
+	uint8_t bits[8];
+	uint8_t bit_count;
+	uint8_t default_setting_value;
+	uint8_t change_setting_value;
+} bootstrap_mapping_register;
+
 bool plat_get_vout_min(uint8_t rail, uint16_t *millivolt);
 bool plat_get_vout_max(uint8_t rail, uint16_t *millivolt);
 bool plat_set_vout_min(uint8_t rail, uint16_t *millivolt);
@@ -208,5 +257,11 @@ bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_statu
 bool plat_clear_vr_status(uint8_t rail);
 bool vr_status_name_get(uint8_t rail, uint8_t **name);
 bool vr_status_enum_get(uint8_t *name, uint8_t *num);
+bool strap_name_get(uint8_t rail, uint8_t **name);
+bool strap_enum_get(uint8_t *name, uint8_t *num);
+bool find_bootstrap_by_rail(uint8_t rail, bootstrap_mapping_register *result);
+bool set_bootstrap_table(uint8_t rail, uint8_t *change_setting_value, uint8_t drive_index_level,
+			 bool is_perm);
+bool get_drive_level(int rail, int *drive_level);
 
 #endif
