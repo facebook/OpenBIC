@@ -50,10 +50,10 @@ enum PLAT_DEF_SENSOR_E {
 #define FB_NCT7363_ADDR (0x42 >> 1)
 #define PB_NCT7363_ADDR (0x40 >> 1)
 #define HDC1080_ADDR (0x80 >> 1)
-#define SB_TMP461_1_ADDR (0x90 >> 1)
-#define SB_TMP461_2_ADDR (0x92 >> 1)
-#define SB_TMP461_3_ADDR (0x94 >> 1)
-#define SB_TMP461_4_ADDR (0x96 >> 1)
+#define SB_TMP421_1_ADDR (0x98 >> 1)
+#define SB_TMP421_2_ADDR (0x3C >> 1)
+#define SB_TMP421_3_ADDR (0x9A >> 1)
+#define SB_TMP421_4_ADDR (0x38 >> 1)
 #define SB_NCT214_1_ADDR (0x30 >> 1)
 #define SB_NCT214_2_ADDR (0x52 >> 1)
 #define SB_NCT214_3_ADDR (0x98 >> 1)
@@ -262,6 +262,7 @@ enum PLAT_DEF_SENSOR_E {
 
 // error log def sensor
 #define SENSOR_NUM_EMERGENCY_BUTTON_TRIGGERED 0xE0
+#define SENSOR_NUM_BPB_HSC_FAIL 0xE1
 
 uint8_t plat_get_config_size();
 void load_sensor_config(void);

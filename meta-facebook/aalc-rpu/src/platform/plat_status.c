@@ -248,7 +248,6 @@ uint16_t get_sensor_status_for_modbus_cmd(uint8_t status)
 				  0);
 		WRITE_BIT(val, 7,
 			  (get_threshold_status(SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM)) ? 1 : 0);
-		WRITE_BIT(val, 8, (!gpio_get(CDU_PWR_BTN)) ? 1 : 0);
 		WRITE_BIT(val, 9, (get_rpu_ready_pin_status()) ? 1 : 0);
 		WRITE_BIT(val, 10,
 			  (get_threshold_status(SENSOR_NUM_HEX_EXTERNAL_Y_FILTER)) ? 1 : 0);

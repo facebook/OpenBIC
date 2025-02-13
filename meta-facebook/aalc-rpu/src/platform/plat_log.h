@@ -84,6 +84,7 @@ enum LOG_ERROR_CODE {
 	LOG_ERR_FB_12_FAN_TACH_RPM = 0xB8,
 	LOG_ERR_FB_13_FAN_TACH_RPM = 0xB9,
 	LOG_ERR_FB_14_FAN_TACH_RPM = 0xBA,
+	LOG_ERR_BPB_HSC = 0xBB,
 };
 
 typedef struct _err_sensor_mapping {

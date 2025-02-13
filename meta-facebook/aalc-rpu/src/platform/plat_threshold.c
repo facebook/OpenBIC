@@ -221,20 +221,24 @@ bool rpu_ready_recovery()
 	if (get_status_flag(STATUS_FLAG_LEAK))
 		return false;
 
-	if (pump_fail_check())
-		return false;
+	bool hsc_fail = false;
+	if (!gpio_get(PWRGD_P48V_HSC_LF_R)) {
+		if (!hsc_fail) {
+			set_status_flag(STATUS_FLAG_FAILURE, GPIO_FAIL_BPB_HSC, 1);
+			error_log_event(SENSOR_NUM_BPB_HSC_FAIL, IS_ABNORMAL_VAL);
+			hsc_fail = true;
+		}
+	}
 
-	if (!gpio_get(PWRGD_P48V_HSC_LF_R))
-		return false;
+	const uint8_t rpu_recovery_table[] = {
+		PUMP_FAIL_LOW_LEVEL,	  PUMP_FAIL_LOW_RPU_LEVEL,	PUMP_FAIL_TWO_PUMP_LCR,
+		PUMP_FAIL_ABNORMAL_PRESS, PUMP_FAIL_ABNORMAL_FLOW_RATE, GPIO_FAIL_BPB_HSC,
+	};
 
-	if (get_threshold_status(SENSOR_NUM_BPB_RACK_LEVEL_2))
-		return false;
-
-	if (get_threshold_status(SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA) == THRESHOLD_STATUS_UCR)
-		return false;
-
-	if (get_threshold_status(SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM) == THRESHOLD_STATUS_LCR)
-		return false;
+	for (uint8_t i = 0; i < ARRAY_SIZE(rpu_recovery_table); i++) {
+		if ((get_status_flag(STATUS_FLAG_FAILURE) >> i) & 0x01)
+			return false;
+	}
 
 	return true;
 }
@@ -515,10 +519,7 @@ void rpu_internal_fan_failure_do(uint32_t sensor_num, uint32_t status)
 void abnormal_press_do(uint32_t unused, uint32_t status)
 {
 	static bool is_abnormal = false;
-	if (status == THRESHOLD_STATUS_NORMAL) {
-		is_abnormal = false;
-		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_ABNORMAL_PRESS, 0);
-	} else if (status == THRESHOLD_STATUS_UCR) {
+	if (status == THRESHOLD_STATUS_UCR) {
 		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_ABNORMAL_PRESS, 1);
 		if (!is_abnormal) {
 			is_abnormal = true;
@@ -574,10 +575,8 @@ void level_sensor_do(uint32_t unused, uint32_t status)
 		if (get_threshold_status(SENSOR_NUM_BPB_RACK_LEVEL_1))
 			led_ctrl(LED_IDX_E_COOLANT, LED_TURN_OFF);
 		else
-			LOG_DBG("BPB_RACK_LEVEL_1 1fail\n");
+			LOG_DBG("BPB_RACK_LEVEL_1 fail\n");
 	} else {
-		is_abnormal = false;
-		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_LOW_LEVEL, 0);
 		if (get_threshold_status(SENSOR_NUM_BPB_RACK_LEVEL_1)) {
 			led_ctrl(LED_IDX_E_COOLANT, LED_START_BLINK);
 		} else {
@@ -599,9 +598,6 @@ void rpu_level_sensor_do(uint32_t unused, uint32_t status)
 			is_abnormal = true;
 			error_log_event(SENSOR_NUM_BPB_RACK_LEVEL_2, IS_ABNORMAL_VAL);
 		}
-	} else {
-		is_abnormal = false;
-		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_LOW_RPU_LEVEL, 0);
 	}
 }
 
@@ -772,8 +768,6 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 		break;
 	case THRESHOLD_STATUS_NORMAL:
 		reset_flow_rate_ready();
-		if (!pump_fail_check())
-			set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_TWO_PUMP_LCR, 0);
 		set_status_flag(STATUS_FLAG_FAILURE, pump_ucr, 0);
 		error_log_event(sensor_num, IS_NORMAL_VAL);
 		break;
@@ -832,7 +826,6 @@ void abnormal_flow_do(uint32_t thres_tbl_idx, uint32_t status)
 	} else if (status == THRESHOLD_STATUS_NOT_ACCESS) {
 		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_FLOW_RATE_NOT_ACCESS, 1);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
-		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_ABNORMAL_FLOW_RATE, 0);
 		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_FLOW_RATE_NOT_ACCESS, 0);
 	} else {
 		LOG_DBG("Unexpected threshold warning");
@@ -1053,6 +1046,7 @@ void threshold_poll_init()
 		LOG_INF("threshold thread start!");
 		is_init = 1;
 		set_status_flag(STATUS_FLAG_SYSTEM_READY, 0, 1);
+		set_all_rpu_ready_pin_normal();
 	}
 }
 
@@ -1115,6 +1109,18 @@ void pump_change_threshold(uint8_t sensor_num, uint8_t duty)
 	uint32_t standard_val = get_pump_standard_rpm(duty);
 	p->lcr = standard_val * 0.75;
 	p->ucr = standard_val * 1.25;
+}
+
+void check_bpb_hsc_status(void)
+{
+	static bool hsc_fail = false;
+	if (!gpio_get(PWRGD_P48V_HSC_LF_R)) {
+		if (!hsc_fail) {
+			set_status_flag(STATUS_FLAG_FAILURE, GPIO_FAIL_BPB_HSC, 1);
+			error_log_event(SENSOR_NUM_BPB_HSC_FAIL, IS_ABNORMAL_VAL);
+			hsc_fail = true;
+		}
+	}
 }
 
 void plat_sensor_poll_post()
@@ -1183,17 +1189,14 @@ void plat_sensor_poll_post()
 		}
 	}
 
+	// check bpb hsc
+	check_bpb_hsc_status();
+
 	// control fault led
 	fault_led_control();
 
-	// when the button is not pressed
-	if (gpio_get(CDU_PWR_BTN)) {
-		// rpu ready pin setting
-		if (rpu_ready_recovery())
-			set_all_rpu_ready_pin_normal();
-		else
-			deassert_all_rpu_ready_pin();
-	}
+	if (!rpu_ready_recovery())
+		deassert_all_rpu_ready_pin();
 
 	return;
 }

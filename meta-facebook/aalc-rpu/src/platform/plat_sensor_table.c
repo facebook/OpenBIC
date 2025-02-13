@@ -28,6 +28,7 @@
 #include "plat_threshold.h"
 #include <logging/log.h>
 #include "plat_class.h"
+#include <tmp421.h>
 
 LOG_MODULE_REGISTER(plat_sensor_table);
 
@@ -785,21 +786,21 @@ sensor_cfg hsc_sensor_config_table[] = {
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, post_adm1272_read, NULL,
 	  &adm1272_init_args[18] },
 };
-sensor_cfg tmp461_config_table[] = {
-	{ SENSOR_NUM_SB_HEX_AIR_INLET_1_TEMP_C, sensor_dev_tmp461, I2C_BUS9, SB_TMP461_1_ADDR,
-	  TMP461_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+sensor_cfg tmp421_config_table[] = {
+	{ SENSOR_NUM_SB_HEX_AIR_INLET_1_TEMP_C, sensor_dev_tmp421, I2C_BUS9, SB_TMP421_1_ADDR,
+	  TMP421_REMOTE_TEMPERATRUE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
 	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
-	{ SENSOR_NUM_SB_HEX_AIR_INLET_2_TEMP_C, sensor_dev_tmp461, I2C_BUS9, SB_TMP461_2_ADDR,
-	  TMP461_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_SB_HEX_AIR_INLET_2_TEMP_C, sensor_dev_tmp421, I2C_BUS9, SB_TMP421_2_ADDR,
+	  TMP421_REMOTE_TEMPERATRUE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
 	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
-	{ SENSOR_NUM_SB_HEX_AIR_INLET_3_TEMP_C, sensor_dev_tmp461, I2C_BUS9, SB_TMP461_3_ADDR,
-	  TMP461_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_SB_HEX_AIR_INLET_3_TEMP_C, sensor_dev_tmp421, I2C_BUS9, SB_TMP421_3_ADDR,
+	  TMP421_REMOTE_TEMPERATRUE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
 	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
-	{ SENSOR_NUM_SB_HEX_AIR_INLET_4_TEMP_C, sensor_dev_tmp461, I2C_BUS9, SB_TMP461_4_ADDR,
-	  TMP461_REMOTE_TEMPERATRUE, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_SB_HEX_AIR_INLET_4_TEMP_C, sensor_dev_tmp421, I2C_BUS9, SB_TMP421_4_ADDR,
+	  TMP421_REMOTE_TEMPERATRUE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
 	  &bus_9_PCA9546A_configs[0], post_PCA9546A_read, NULL, NULL },
 };
@@ -1082,18 +1083,18 @@ void load_sb_temp_sensor_with_main_and_2nd_config()
 #define NCT214_MFR_ID 0x41
 
 	uint8_t temp_mfr_id = 0;
-	for (uint8_t i = 0; i < ARRAY_SIZE(tmp461_config_table); i++) {
-		temp_mfr_id = get_temp_sensor_mfr_id(tmp461_config_table[i].port,
-						     tmp461_config_table[i].target_addr,
+	for (uint8_t i = 0; i < ARRAY_SIZE(tmp421_config_table); i++) {
+		temp_mfr_id = get_temp_sensor_mfr_id(tmp421_config_table[i].port,
+						     tmp421_config_table[i].target_addr,
 						     TMP461_MFR_ID_OFFSET);
 		if (temp_mfr_id == TMP461_MFR_ID) {
-			add_sensor_config(tmp461_config_table[i]);
+			add_sensor_config(tmp421_config_table[i]);
 			LOG_INF("Add tmp461 %d address on sensorboard ok: 0x%x", i,
-				tmp461_config_table[i].target_addr);
+				tmp421_config_table[i].target_addr);
 			continue;
 		} else {
 			LOG_INF("Can't read MFR_ID from 0x%x TMP461 , try to read NCT214_MFR_ID",
-				tmp461_config_table[i].target_addr);
+				tmp421_config_table[i].target_addr);
 			temp_mfr_id = get_temp_sensor_mfr_id(nct214_config_table[i].port,
 							     nct214_config_table[i].target_addr,
 							     NCT214_MFR_ID_OFFSET);
@@ -1107,21 +1108,45 @@ void load_sb_temp_sensor_with_main_and_2nd_config()
 			LOG_ERR("Can't read MFR_ID from 0x%x NCT214, load temperature sensor on sensor board failed",
 				nct214_config_table[i].target_addr);
 			// still add sensor config to keep SENSOR_CONFIG_SIZE correct
-			add_sensor_config(tmp461_config_table[i]);
+			add_sensor_config(tmp421_config_table[i]);
 		}
 	}
 }
 void load_sb_temp_sensor_config()
 {
+#define TMP421_MFR_ID 0x55
+#define TMP421_MFR_ID_OFFSET 0xFE
+
 	uint8_t index = 0;
 
-	if (!pre_PCA9546A_read(&nct214_config_table[0], &bus_9_PCA9546A_configs[0]))
+	if (!pre_PCA9546A_read(&tmp421_config_table[0], &bus_9_PCA9546A_configs[0]))
 		LOG_ERR("pre lock mutex fail !");
 
-	for (index = 0; index < ARRAY_SIZE(nct214_config_table); index++)
-		add_sensor_config(nct214_config_table[index]);
+	for (index = 0; index < ARRAY_SIZE(tmp421_config_table); index++) {
+		uint8_t retry = 5;
+		I2C_MSG msg;
+		msg.bus = tmp421_config_table[index].port;
+		msg.target_addr = tmp421_config_table[index].target_addr;
+		msg.tx_len = 1;
+		msg.rx_len = 1;
+		uint8_t mfr_id;
+		msg.data[0] = TMP421_MFR_ID_OFFSET;
 
-	if (!post_PCA9546A_read(&nct214_config_table[0], &bus_9_PCA9546A_configs[0], 0))
+		if (i2c_master_read(&msg, retry)) {
+			LOG_ERR("Failed to read Sensor board tmp421 module MFR_ID, try to access nct214.");
+		}
+
+		mfr_id = msg.data[0];
+		printf("Sensor board temp module 0x%x mfr_id: %x\n", tmp421_config_table[index].num,
+		       mfr_id);
+
+		if (mfr_id == TMP421_MFR_ID)
+			add_sensor_config(tmp421_config_table[index]);
+		else
+			add_sensor_config(nct214_config_table[index]);
+	}
+
+	if (!post_PCA9546A_read(&tmp421_config_table[0], &bus_9_PCA9546A_configs[0], 0))
 		LOG_ERR("pro unlock mutex fail !");
 }
 void load_plat_def_sensor_config()

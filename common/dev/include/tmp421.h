@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,38 +14,26 @@
  * limitations under the License.
  */
 
-#ifndef XDP710_H
-#define XDP710_H
+#ifndef TMP421_H
+#define TMP421_H
 
-#include <stdint.h>
-
-#define XDP710_RESTART_ADDR 0xEC
-
-enum XDP710_VTLM_RNG {
-	VTLM_RNG_88,
-	VTLM_RNG_44,
-	VTLM_RNG_22,
-	VTLM_RNG_RESERVED,
+enum TMP421_TEMP_RANGE {
+	TMP421_RANGE_127 = 0x0, // -55~127°C
+	TMP421_RANGE_150 = 0x1, // -55~150°C
 };
 
-enum XDP710_VSNS_CS {
-	VSNS_CS_12_5,
-	VSNS_CS_25,
-	VSNS_CS_50,
-	VSNS_CS_100,
-	VSNS_CS_MAX,
+enum TMP421_CHANNELS {
+	TMP421_LOCAL_TEMPERATRUE,
+	TMP421_REMOTE_TEMPERATRUE_1,
 };
 
-typedef struct {
-	bool mbr_init;
-	uint16_t m;
-	uint16_t b;
-	uint16_t r; /* multiples of 10, r = -2 -> val = 100 */
-	float r_sense; /* mohm */
-} xdp710_priv;
+enum TMP421_REIGSTER_OFFSET {
+	TMP421_OFFSET_LOCAL_TEMPERATURE_HIGH_BYTE = 0x00,
+	TMP421_OFFSET_REMOTE_TEMPERATURE_HIGH_BYTE_1 = 0x01,
+	TMP421_OFFSET_CONFIGURATION_1 = 0x09,
+	TMP421_OFFSET_LOCAL_TEMPERATURE_LOW_BYTE = 0x10,
+	TMP421_OFFSET_REMOTE_TEMPERATURE_LOW_BYTE_1 = 0x11,
 
-typedef struct _xdp710_init_arg {
-	float r_sense;
-} xdp710_init_arg;
+};
 
-#endif // XDP710_H
+#endif

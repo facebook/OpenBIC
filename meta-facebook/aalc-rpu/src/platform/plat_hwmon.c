@@ -250,7 +250,31 @@ void hsc_adm1272_pwr_ctrl(sensor_cfg *cfg, uint8_t adm1272_reg, uint8_t state)
 	if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
 		LOG_ERR("pro unlock mutex fail !");
 }
+void hsc_xdp710_pwr_ctrl(sensor_cfg *cfg, uint8_t xdp710_reg, uint8_t state)
+{
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 1;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	if (!pre_PCA9546A_read(cfg, cfg->pre_sensor_read_args))
+		LOG_ERR("pre lock mutex fail !");
 
+	msg.data[0] = xdp710_reg;
+	msg.data[1] = state;
+
+	if (xdp710_reg == XDP710_RESTART_ADDR)
+		msg.tx_len = 1;
+
+	uint8_t ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Fail to access hsc xdp710 pwer ctrl, bus: 0x%x, addr: 0x%x, ret: %d",
+			cfg->port, cfg->target_addr, ret);
+	}
+
+	if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
+		LOG_ERR("pro unlock mutex fail !");
+}
 void rpu_remote_power_cycle()
 {
 	// disable sensor poll
@@ -272,20 +296,29 @@ void rpu_remote_power_cycle()
 		// cycle fan board and pump board
 		if (i < BACKPLANE_BORAD_COUNT_NUM) {
 			LOG_WRN("cycle fan board 0x%x", hsc_pwe_cycle_tbl[i]);
-			hsc_adm1272_pwr_ctrl(cfg, ADM1272_POWER_CYCLE_REG, 0);
+			if (cfg->type == sensor_dev_adm1272)
+				hsc_adm1272_pwr_ctrl(cfg, ADM1272_POWER_CYCLE_REG, 0);
+			else
+				hsc_xdp710_pwr_ctrl(cfg, XDP710_RESTART_ADDR, 0);
 		}
 
 		// cycle backplane board
 		if (i >= PUMP_BORAD_COUNT_NUM && i < BACKPLANE_BORAD_COUNT_NUM) {
 			LOG_WRN("cycle backplane board 0x%x", hsc_pwe_cycle_tbl[i]);
-			hsc_adm1272_pwr_ctrl(cfg, ADM1272_POWER_CYCLE_REG, 0);
+			if (cfg->type == sensor_dev_adm1272)
+				hsc_adm1272_pwr_ctrl(cfg, ADM1272_POWER_CYCLE_REG, 0);
+			else
+				hsc_xdp710_pwr_ctrl(cfg, XDP710_RESTART_ADDR, 0);
 		}
 
 		// cycle bridge board
 		if (i >= BACKPLANE_BORAD_COUNT_NUM && i < BRIDGE_BORAD_COUNT_NUM) {
 			k_msleep(1000);
 			LOG_WRN("cycle bridge board 0x%x", hsc_pwe_cycle_tbl[i]);
-			hsc_adm1272_pwr_ctrl(cfg, ADM1272_POWER_CYCLE_REG, 0);
+			if (cfg->type == sensor_dev_adm1272)
+				hsc_adm1272_pwr_ctrl(cfg, ADM1272_POWER_CYCLE_REG, 0);
+			else
+				hsc_xdp710_pwr_ctrl(cfg, XDP710_RESTART_ADDR, 0);
 		}
 	}
 }
