@@ -14,22 +14,14 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_FRU_H
-#define PLAT_FRU_H
+#include <shell/shell.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include "plat_fru.h"
 
-#define FRU_CFG_NUM MAX_FRU_ID
-#define LOG_EEPROM_ADDR (0xA0 >> 1)
-#define CPLD_EEPROM_ADDR (0xA0 >> 1)
+void fru_print_cmd(const struct shell *shell, size_t argc, char **argv)
+{
+	print_fru_info();
+}
 
-enum FRU_ID {
-	LOG_EEPROM_ID = 0x00,
-	CPLD_EEPROM_ID,
-	MAX_FRU_ID,
-};
-
-bool init_fru_info(void);
-void print_fru_info(void);
-bool plat_eeprom_write(uint32_t offset, uint8_t *data, uint16_t data_len);
-bool plat_eeprom_read(uint32_t offset, uint8_t *data, uint16_t data_len);
-
-#endif
+SHELL_CMD_REGISTER(fru_print, NULL, "fru_print", fru_print_cmd);
