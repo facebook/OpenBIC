@@ -937,63 +937,8 @@ bool bootstrap_user_settings_set(void *bootstrap_user_settings)
 	return true;
 }
 
-static bool bootstrap_user_settings_init(void)
-{
-	if (bootstrap_user_settings_get(&bootstrap_user_settings) == false) {
-		LOG_ERR("get bootstrap user settings fail");
-		return false;
-	}
-
-	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
-		if ((bootstrap_user_settings.user_setting_value[i] >> 8) != 0xff) {
-			// write bootstrap_user_settings to cpld
-			uint8_t data = (uint8_t)bootstrap_user_settings.user_setting_value[i];
-			if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR,
-					    bootstrap_table[i].cpld_offsets, &data, 1)) {
-				LOG_ERR("Can't set bootstrap[%2d]=%02x by user settings", i, data);
-				return false;
-			}
-			// write bootstrap_user_settings to bootstrap_table
-			bootstrap_table[i].change_setting_value = data;
-
-			LOG_INF("set [%2d]%s: %02x", i, bootstrap_table[i].strap_name, data);
-		}
-	}
-
-	return true;
-}
-
-static bool bootstrap_default_settings_init(void)
-{
-	// write cpld_offset value to bootstrap_table
-	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
-		uint8_t data = 0;
-		if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, bootstrap_table[i].cpld_offsets,
-				   &data, 1)) {
-			LOG_ERR("Can't find bootstrap default by rail index from cpld: %d", i);
-			return false;
-		}
-		bootstrap_table[i].default_setting_value = data;
-		bootstrap_table[i].change_setting_value = data;
-	}
-	return true;
-}
-
-/* init the user & default settings value by shell command */
-void user_settings_init(void)
-{
-	alert_level_user_settings_init();
-	vr_vout_default_settings_init();
-	vr_vout_user_settings_init();
-	temp_threshold_default_settings_init();
-	temp_threshold_user_settings_init();
-	soc_pcie_perst_user_settings_init();
-	bootstrap_default_settings_init();
-	bootstrap_user_settings_init();
-}
-
-bool set_bootstrap_table(uint8_t rail, uint8_t *change_setting_value, uint8_t drive_index_level,
-			 bool is_perm)
+bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting_value,
+					   uint8_t drive_index_level, bool is_perm)
 {
 	if (rail >= STRAP_INDEX_MAX)
 		return false;
@@ -1030,34 +975,26 @@ bool set_bootstrap_table(uint8_t rail, uint8_t *change_setting_value, uint8_t dr
 					default:
 						break;
 					}
-					/* 
-						save perm parameter to bootstrap_user_settings
-						bit 8: not perm(0); perm(1)
-						Set bit 8 and keep the lower 8 bits of change_setting_value
-					*/
-					if (is_perm) {
-						if (i == k)
-							bootstrap_user_settings
-								.user_setting_value[k] =
-								((bootstrap_table[k]
-									  .change_setting_value &
-								  0x00FF) |
-								 0x0100);
-						else
-							bootstrap_user_settings
-								.user_setting_value[k] =
-								((bootstrap_table[k]
-									  .change_setting_value &
-								  0x00FF) |
-								 0x0000);
-					}
 				}
 			}
-			// save bootstrap_user_settings to eeprom
+			*change_setting_value = bootstrap_table[i].change_setting_value;
+			/*
+				save perm parameter to bootstrap_user_settings
+				bit 8: not perm(ff); perm(1)
+				bit 0: get_bootstrap_change_drive_level -> low(0); high(1)
+				ex: 0x0101 -> set high perm; ex: 0x0100 -> set low perm
+			*/
 			if (is_perm) {
+				int drive_level = -1;
+				if (!get_bootstrap_change_drive_level(i, &drive_level)) {
+					LOG_ERR("Can't get_bootstrap_change_drive_level by rail index: %x",
+						i);
+					return false;
+				}
+				bootstrap_user_settings.user_setting_value[i] =
+					((drive_level & 0x00FF) | 0x0100);
 				bootstrap_user_settings_set(&bootstrap_user_settings);
 			}
-			*change_setting_value = bootstrap_table[i].change_setting_value;
 			return true;
 		}
 	}
@@ -1065,7 +1002,76 @@ bool set_bootstrap_table(uint8_t rail, uint8_t *change_setting_value, uint8_t dr
 	return false;
 }
 
-bool get_drive_level(int rail, int *drive_level)
+static bool bootstrap_user_settings_init(void)
+{
+	if (bootstrap_user_settings_get(&bootstrap_user_settings) == false) {
+		LOG_ERR("get bootstrap user settings fail");
+		return false;
+	}
+
+	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+		uint8_t is_perm = ((bootstrap_user_settings.user_setting_value[i] >> 8) != 0xff) ?
+					  true :
+					  false;
+		if (is_perm) {
+			// write bootstrap_table
+			uint8_t change_setting_value;
+			uint8_t drive_index_level =
+				((bootstrap_user_settings.user_setting_value[i] & 0xff) == 0x00) ?
+					DRIVE_INDEX_LEVEL_LOW :
+					DRIVE_INDEX_LEVEL_HIGH;
+			if (!set_bootstrap_table_and_user_settings(i, &change_setting_value,
+								   drive_index_level, false)) {
+				LOG_ERR("set bootstrap_table[%2d]:%d failed", i, drive_index_level);
+				return false;
+			}
+
+			// write cpld
+			if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR,
+					    bootstrap_table[i].cpld_offsets, &change_setting_value,
+					    1)) {
+				LOG_ERR("Can't set bootstrap[%2d]=%02x by user settings", i,
+					change_setting_value);
+				return false;
+			}
+
+			LOG_INF("set [%2d]%s: %02x", i, bootstrap_table[i].strap_name,
+				change_setting_value);
+		}
+	}
+
+	return true;
+}
+
+static bool bootstrap_default_settings_init(void)
+{
+	// read cpld value and write to bootstrap_table
+	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+		uint8_t data = 0;
+		if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, bootstrap_table[i].cpld_offsets,
+				   &data, 1)) {
+			LOG_ERR("Can't find bootstrap default by rail index from cpld: %d", i);
+			return false;
+		}
+		bootstrap_table[i].change_setting_value = data;
+	}
+	return true;
+}
+
+/* init the user & default settings value by shell command */
+void user_settings_init(void)
+{
+	alert_level_user_settings_init();
+	vr_vout_default_settings_init();
+	vr_vout_user_settings_init();
+	temp_threshold_default_settings_init();
+	temp_threshold_user_settings_init();
+	soc_pcie_perst_user_settings_init();
+	bootstrap_default_settings_init();
+	bootstrap_user_settings_init();
+}
+
+bool get_bootstrap_change_drive_level(int rail, int *drive_level)
 {
 	CHECK_NULL_ARG_WITH_RETURN(drive_level, false);
 

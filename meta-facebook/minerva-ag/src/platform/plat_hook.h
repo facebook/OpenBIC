@@ -260,8 +260,8 @@ bool vr_status_enum_get(uint8_t *name, uint8_t *num);
 bool strap_name_get(uint8_t rail, uint8_t **name);
 bool strap_enum_get(uint8_t *name, uint8_t *num);
 bool find_bootstrap_by_rail(uint8_t rail, bootstrap_mapping_register *result);
-bool set_bootstrap_table(uint8_t rail, uint8_t *change_setting_value, uint8_t drive_index_level,
-			 bool is_perm);
-bool get_drive_level(int rail, int *drive_level);
+bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting_value,
+					   uint8_t drive_index_level, bool is_perm);
+bool get_bootstrap_change_drive_level(int rail, int *drive_level);
 
 #endif
