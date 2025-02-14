@@ -36,8 +36,8 @@ static int cmd_bootstrap_get_all(const struct shell *shell, size_t argc, char **
 		}
 		int drive_level = -1;
 
-		if (!get_drive_level(i, &drive_level)) {
-			LOG_ERR("Can't get_drive_level by rail index: %x", i);
+		if (!get_bootstrap_change_drive_level(i, &drive_level)) {
+			LOG_ERR("Can't get_bootstrap_change_drive_level by rail index: %x", i);
 			continue;
 		}
 
@@ -55,15 +55,16 @@ static int bootstrap_set_all_default(const struct shell *shell)
 	bool all_success = true;
 
 	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
-		if (!set_bootstrap_table(i, &change_setting_value, drive_index_level, false)) {
+		if (!set_bootstrap_table_and_user_settings(i, &change_setting_value,
+							   drive_index_level, false)) {
 			shell_print(shell, "plat bootstrap[%2d] set failed", i);
 			all_success = false;
 		}
-		// write change_setting_value to cpld
 		if (!find_bootstrap_by_rail((uint8_t)i, &bootstrap_item)) {
 			shell_print(shell, "Can't find bootstrap_item by rail index: %d", i);
 			continue;
 		}
+		// write change_setting_value to cpld
 		if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR, bootstrap_item.cpld_offsets,
 				    &change_setting_value, 1)) {
 			shell_print(shell, "Can't write bootstrap[%2d] to cpld 0x%02x ", i,
@@ -124,15 +125,16 @@ static int cmd_bootstrap_set(const struct shell *shell, size_t argc, char **argv
 		return -1;
 	}
 
-	if (!set_bootstrap_table(rail, &change_setting_value, drive_index_level, is_perm)) {
+	if (!set_bootstrap_table_and_user_settings(rail, &change_setting_value, drive_index_level,
+						   is_perm)) {
 		shell_error(shell, "plat bootstrap set failed");
 		return -1;
 	}
-	// write change_setting_value to cpld
 	if (!find_bootstrap_by_rail((uint8_t)rail, &bootstrap_item)) {
 		shell_error(shell, "Can't find bootstrap_item by rail index: %d", rail);
 		return -1;
 	}
+	// write change_setting_value to cpld
 	if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR, bootstrap_item.cpld_offsets,
 			    &change_setting_value, 1)) {
 		shell_error(shell, "Can't write bootstrap[%2d] to cpld 0x%02x ", rail,

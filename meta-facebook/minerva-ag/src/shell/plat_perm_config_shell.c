@@ -82,18 +82,13 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 	}
 
 	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
-		// bit 8: not perm(0); perm(1)
-		if ((bootstrap_user_settings.user_setting_value[i] >> 8) == 0x01) {
+		if (bootstrap_user_settings.user_setting_value[i] != 0xffff) {
 			uint8_t *rail_name = NULL;
 			if (!strap_name_get((uint8_t)i, &rail_name)) {
 				LOG_ERR("Can't find strap_rail_name by rail index: %x", i);
 				continue;
 			}
-			int drive_level = -1;
-			if (!get_drive_level(i, &drive_level)) {
-				LOG_ERR("Can't get_drive_level by rail index: %x", i);
-				continue;
-			}
+			uint8_t drive_level = bootstrap_user_settings.user_setting_value[i] & 0xff;
 			shell_print(shell, "[%2d]%-50s val=%d", i, rail_name, drive_level);
 			config_count++;
 		}
