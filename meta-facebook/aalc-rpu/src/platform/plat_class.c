@@ -39,9 +39,9 @@ uint8_t get_temp_module()
 
 uint8_t get_board_stage()
 {
-	uint8_t stage = ((gpio_get(REV_ID2) << 2) | (gpio_get(REV_ID1) << 1) | gpio_get(REV_ID0));
+	uint8_t stage = ((gpio_get(REV_ID0) << 2) | (gpio_get(REV_ID1) << 1) | gpio_get(REV_ID2));
 
-	return (stage ? BOARD_STAGE_DVT : BOARD_STAGE_EVT);
+	return stage;
 }
 
 bool evt_access(uint8_t sensor_num)

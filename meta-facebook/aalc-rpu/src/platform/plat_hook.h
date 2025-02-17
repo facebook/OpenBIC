@@ -39,6 +39,12 @@
 #define BUS_8_MUX_ADDR 0xE8 >> 1
 #define BUS_9_MUX_ADDR 0xE8 >> 1
 
+typedef struct _flow_cache_data_mapping {
+	bool is_record;
+	bool is_newest;
+	double flow_val;
+} flow_cache_data_mapping;
+
 typedef struct _ads112c_post_arg {
 	uint8_t plat_sensor_type;
 } ads112c_post_arg;
@@ -87,5 +93,6 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading);
 bool pre_PCA9546A_read(sensor_cfg *cfg, void *args);
 bool post_PCA9546A_read(sensor_cfg *cfg, void *args, int *reading);
 bool get_fb_present_status(uint16_t *fb_present_status);
+void clean_flow_cache_data();
 
 #endif
