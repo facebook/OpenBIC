@@ -115,19 +115,7 @@ bool close_pump(pump_reset_struct *data, uint8_t bit_val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
-	static uint8_t is_stop;
-
-	if (bit_val == 0) {
-		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_CLOSE_PUMP, 0);
-		if (is_stop) {
-			set_manual_pwm_cache_to_default();
-			is_stop = 0;
-		}
-	} else {
-		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_CLOSE_PUMP, 1);
-		set_manual_pwm_cache_to_zero();
-		is_stop = 1;
-	}
+	set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_CLOSE_PUMP, bit_val);
 
 	return true;
 }
@@ -421,6 +409,12 @@ static bool failure_behavior(uint8_t group)
 
 uint8_t pwm_control(uint8_t group, uint8_t duty)
 {
+	// stop pump
+	if ((get_status_flag(STATUS_FLAG_FAILURE) >> PUMP_FAIL_CLOSE_PUMP) & 0x01) {
+		set_pwm_group(group, 0);
+		return 0;
+	}
+
 	// suppurt redundant device in semi mode
 	uint32_t redundant_check = PUMP_REDUNDANT_DISABLE;
 	if (get_fsc_mode() == FSC_MODE_SEMI_MODE)

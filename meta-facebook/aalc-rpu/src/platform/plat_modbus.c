@@ -45,6 +45,7 @@
 #include "plat_status.h"
 #include "plat_fru_date.h"
 #include "plat_isr.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_modbus);
 
@@ -346,16 +347,17 @@ uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 					input_bit_value = 2; // error input val
 			}
 		}
+
 		bool result_status = modbus_pump_setting_table[i].fn(&modbus_pump_setting_table[i],
 								     input_bit_value);
 		if (!result_status) {
-			LOG_ERR("modebus 0x9410 setting %d-bit error\n", func_idx);
+			LOG_ERR("modbus 0x9410 setting %d-bit error\n", func_idx);
 			WRITE_BIT(check_error_flag, func_idx, 1);
 		}
 	}
 
 	if (check_error_flag) {
-		LOG_ERR("modebus 0x9410 setting error flag: 0x%x\n", check_error_flag);
+		LOG_ERR("modbus 0x9410 setting error flag: 0x%x\n", check_error_flag);
 		return MODBUS_EXC_ILLEGAL_DATA_VAL;
 	}
 
@@ -748,6 +750,24 @@ uint8_t modbus_set_setpoint_enable(modbus_command_mapping *cmd)
 	default:
 		return MODBUS_EXC_ILLEGAL_DATA_VAL;
 	};
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_get_board_stage(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	cmd->data[0] = get_board_stage();
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_get_fan_table_revision(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	cmd->data[0] = FAN_TABLE_REVISION;
 
 	return MODBUS_EXC_NONE;
 }
@@ -1333,6 +1353,10 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_HEAT_EXCHANGER_FAN_CONTROL_BOX_FBPN_ADDR, NULL, NULL, 0, 0, 0, 4 },
 	// set log level
 	{ MODBUS_SET_LOG_LEVEL_ADDR, modbus_set_log_level, NULL, 0, 0, 0, 1 },
+	// get board stage
+	{ MODBUS_GET_BOARD_STAGE_ADDR, NULL, modbus_get_board_stage, 0, 0, 0, 1 },
+	// get fan table revision
+	{ MODBUS_GET_FAN_TABLE_REVISION_ADDR, NULL, modbus_get_fan_table_revision, 0, 0, 0, 1 },
 	// failure status
 	{ MODBUS_STATUS_FALG_SET_CFG_ADDR, modbus_set_status_flag_config, NULL, 0, 0, 0, 1 },
 	{ MODBUS_GET_SET_STATUS_FALG_ADDR, modbus_status_flag_set, modbus_status_flag_get, 0, 0, 0,

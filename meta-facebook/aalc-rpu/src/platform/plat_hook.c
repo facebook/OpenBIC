@@ -37,6 +37,8 @@ LOG_MODULE_REGISTER(plat_hook);
 #define FB_SIG_PRSNT_ADDR_ODD 0x4E // 8 bit address (1, 3, 5, 7, 9, 11, 13)
 
 #define DIFFERENTIAL_MODE 0x01
+#define FLOW_SENSOR_CACHE_MAX_NUM 30
+static flow_cache_data_mapping flow_cache_data[FLOW_SENSOR_CACHE_MAX_NUM];
 
 K_MUTEX_DEFINE(i2c_1_PCA9546a_mutex);
 K_MUTEX_DEFINE(i2c_2_PCA9546a_mutex);
@@ -1024,6 +1026,41 @@ bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
 	return true;
 }
 
+static double averge_flow_rate(double val)
+{
+	bool is_cache = false;
+	for (uint8_t i = 0; i < FLOW_SENSOR_CACHE_MAX_NUM; i++) {
+		if (flow_cache_data[i].is_newest && flow_cache_data[i].is_record) {
+			flow_cache_data[i].is_newest = false;
+
+			uint8_t next = ((i + 1) % FLOW_SENSOR_CACHE_MAX_NUM);
+			flow_cache_data[next].is_newest = true;
+			flow_cache_data[next].is_record = true;
+			flow_cache_data[next].flow_val = val;
+
+			is_cache = true;
+			break;
+		}
+	}
+
+	if (!is_cache) {
+		flow_cache_data[0].is_newest = true;
+		flow_cache_data[0].is_record = true;
+		flow_cache_data[0].flow_val = val;
+	}
+
+	uint8_t count_num = 0;
+	double total_val = 0;
+	for (uint8_t i = 0; i < FLOW_SENSOR_CACHE_MAX_NUM; i++) {
+		if (flow_cache_data[i].is_record) {
+			total_val = total_val + flow_cache_data[i].flow_val;
+			count_num++;
+		}
+	}
+
+	return (count_num > 0) ? (total_val / count_num) : 0.0;
+}
+
 bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
@@ -1052,6 +1089,7 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 		val = (((v_val / 5.0) - 0.1) * (flow_Pmax - flow_Pmin) / 0.8);
 		val = 1.3232 * val - 1.0314;
 		val = (val < 0) ? 0 : val;
+		val = averge_flow_rate(val);
 		break;
 	case PLATFORM_ADS112C_PRESS: //Filter_P/Outlet_P/Inlet_P
 		v_val = 5 - ((32767 - rawValue) * 0.000153);
@@ -1185,6 +1223,15 @@ bool get_fb_present_status(uint16_t *fb_present_status)
 	*fb_present_status = pwr_prsnt & sig_prsnt;
 
 	return true;
+}
+
+void clean_flow_cache_data()
+{
+	for (uint8_t i = 0; i < FLOW_SENSOR_CACHE_MAX_NUM; i++) {
+		flow_cache_data[i].is_record = false;
+		flow_cache_data[i].is_newest = false;
+		flow_cache_data[i].flow_val = 0.0;
+	}
 }
 
 max11617_init_arg max11617_init_args[] = {

@@ -33,6 +33,8 @@ enum TEMP_MODULE {
 enum BOARD_STAGE {
 	BOARD_STAGE_EVT,
 	BOARD_STAGE_DVT,
+	BOARD_STAGE_PVT, // no this stage
+	BOARD_STAGE_MP,
 	BOARD_STAGE_UNKNOWN,
 };
 void init_aalc_config();
