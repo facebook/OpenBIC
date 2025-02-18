@@ -175,3 +175,102 @@ void cmd_power_control(const struct shell *shell, size_t argc, char **argv)
 		break;
 	}
 }
+
+#ifdef SHELL_PWR_SEQ
+
+void cmd_power_sequence(const struct shell *shell, size_t argc, char **argv)
+{
+	bool is_power_on_empty = true;
+	bool is_power_off_empty = true;
+
+	if (argc != 1) {
+		shell_warn(shell, "Help: platform power sequence");
+		return;
+	}
+
+	shell_print(shell, "---------------------------------------------------");
+	shell_print(shell, "Power ON Stage Record :");
+	for (int pwr_on_data = 0; pwr_on_data < MAX_PWR_ON_RECORD; pwr_on_data++) {
+		if (power_on_stage[pwr_on_data] != SHELL_POWER_ON_NONE) {
+			is_power_on_empty = false;
+			power_on_sequence_check(shell, power_on_stage[pwr_on_data]);
+		}
+	}
+	if (is_power_on_empty) {
+		shell_print(shell, "No power on sequence recorded!");
+	}
+
+	shell_print(shell, "---------------------------------------------------");
+	shell_print(shell, "Power OFF Stage Record :");
+	for (int pwr_off_data = 0; pwr_off_data < MAX_PWR_OFF_RECORD; pwr_off_data++) {
+		if (power_off_stage[pwr_off_data] != SHELL_POWER_OFF_NONE) {
+			is_power_off_empty = false;
+			power_off_sequence_check(shell, power_off_stage[pwr_off_data]);
+		}
+	}
+	if (is_power_off_empty) {
+		shell_print(shell, "No power off sequence recorded!");
+	}
+	shell_print(shell, "---------------------------------------------------");
+}
+
+void power_on_sequence_check(const struct shell *shell, uint8_t stage)
+{
+	switch (stage) {
+	case SHELL_BOARD_POWER_ON_STAGE0:
+		shell_print(shell, "BOARD_POWER_ON_STAGE0");
+		break;
+	case SHELL_BOARD_POWER_ON_STAGE1:
+		shell_print(shell, "BOARD_POWER_ON_STAGE1");
+		break;
+	case SHELL_BOARD_POWER_ON_STAGE2:
+		shell_print(shell, "BOARD_POWER_ON_STAGE2");
+		break;
+	case SHELL_RETIMER_POWER_ON_STAGE0:
+		shell_print(shell, "RETIMER_POWER_ON_STAGE0");
+		break;
+	case SHELL_RETIMER_POWER_ON_STAGE1:
+		shell_print(shell, "RETIMER_POWER_ON_STAGE1");
+		break;
+	case SHELL_RETIMER_POWER_ON_STAGE2:
+		shell_print(shell, "RETIMER_POWER_ON_STAGE2");
+		break;
+	case SHELL_E1S_POWER_ON_STAGE0:
+		shell_print(shell, "E1S_POWER_ON_STAGE0");
+		break;
+	default:
+		shell_print(shell, "Unknown");
+		break;
+	}
+}
+
+void power_off_sequence_check(const struct shell *shell, uint8_t stage)
+{
+	switch (stage) {
+	case SHELL_E1S_POWER_OFF_STAGE0:
+		shell_print(shell, "E1S_POWER_OFF_STAGE0");
+		break;
+	case SHELL_RETIMER_POWER_OFF_STAGE0:
+		shell_print(shell, "RETIMER_POWER_OFF_STAGE0");
+		break;
+	case SHELL_RETIMER_POWER_OFF_STAGE1:
+		shell_print(shell, "RETIMER_POWER_OFF_STAGE1");
+		break;
+	case SHELL_RETIMER_POWER_OFF_STAGE2:
+		shell_print(shell, "RETIMER_POWER_OFF_STAGE2");
+		break;
+	case SHELL_BOARD_POWER_OFF_STAGE0:
+		shell_print(shell, "BOARD_POWER_OFF_STAGE0");
+		break;
+	case SHELL_BOARD_POWER_OFF_STAGE1:
+		shell_print(shell, "BOARD_POWER_OFF_STAGE1");
+		break;
+	case SHELL_BOARD_POWER_OFF_STAGE2:
+		shell_print(shell, "BOARD_POWER_OFF_STAGE2");
+		break;
+	default:
+		shell_print(shell, "Unknown");
+		break;
+	}
+}
+#endif
