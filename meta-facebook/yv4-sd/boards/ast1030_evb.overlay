@@ -85,9 +85,7 @@
 &i3c0 {
 	status = "okay";
 	pinctrl-0 = <&pinctrl_i3c0_default>;
-	i3c-scl-hz = <8000000>;
-	i3c-pp-scl-hi-period-ns = <62>;
-	i3c-pp-scl-lo-period-ns = <63>;
+	i3c-scl-hz = <12500000>;
 	secondary;
 	wait-pid-extra-info;
 	ibi-append-pec;
