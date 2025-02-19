@@ -76,6 +76,13 @@ static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 		shell_info(shell, "Set %s(%d) to default, %svolatile\n", argv[1], rail,
 			   (argc == 4) ? "non-" : "");
 	} else {
+		uint16_t vout_max_millivolt = vout_range_user_settings.change_vout_max[rail];
+		uint16_t vout_min_millivolt = vout_range_user_settings.change_vout_min[rail];
+		if (millivolt < vout_min_millivolt || millivolt > vout_max_millivolt) {
+			shell_error(shell, "vout[%d] cannot be less than %dmV or greater than %dmV",
+				    rail, vout_min_millivolt, vout_max_millivolt);
+			return -1;
+		}
 		shell_info(shell, "Set %s(%d) to %d mV, %svolatile\n", argv[1], rail, millivolt,
 			   (argc == 4) ? "non-" : "");
 	}
@@ -86,7 +93,7 @@ static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 		return 0;
 	}
 	if (!plat_set_vout_command(rail, &millivolt, is_default, is_perm)) {
-		shell_print(shell, "Can't set vout by rail index: %d", rail);
+		shell_error(shell, "Can't set vout by rail index: %d", rail);
 		return -1;
 	}
 
