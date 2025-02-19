@@ -31,6 +31,7 @@ LOG_MODULE_REGISTER(plat_event);
 
 #define CPLD_POLLING_INTERVAL_MS 1000 // 1 second polling interval
 
+K_TIMER_DEFINE(init_ubc_delayed_timer, check_ubc_delayed, NULL);
 K_THREAD_STACK_DEFINE(cpld_polling_stack, POLLING_CPLD_STACK_SIZE);
 struct k_thread cpld_polling_thread;
 k_tid_t cpld_polling_tid;
@@ -126,10 +127,6 @@ void poll_cpld_registers()
 {
 	uint8_t data = 0;
 
-	if (is_dc_status_changing == false) {
-		ubc_enabled_delayed_status = is_mb_dc_on();
-	}
-
 	while (1) {
 		/* Sleep for the polling interval */
 		k_msleep(CPLD_POLLING_INTERVAL_MS);
@@ -175,12 +172,14 @@ void poll_cpld_registers()
 
 void init_cpld_polling(void)
 {
+	k_timer_start(&init_ubc_delayed_timer, K_MSEC(3000), K_NO_WAIT);
+
 	cpld_polling_tid =
 		k_thread_create(&cpld_polling_thread, cpld_polling_stack,
 				K_THREAD_STACK_SIZEOF(cpld_polling_stack), poll_cpld_registers,
 				NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0,
-				K_MSEC(2000)); /* Start accessing CPLD 3 seconds after BIC reboot 
-                   (2-second thread start delay + 1-second CPLD_POLLING_INTERVAL_MS) 
+				K_MSEC(3000)); /* Start accessing CPLD 4 seconds after BIC reboot 
+                   (3-second thread start delay + 1-second CPLD_POLLING_INTERVAL_MS) 
                    to prevent DC status changes during BIC reboot */
 	k_thread_name_set(&cpld_polling_thread, "cpld_polling_thread");
 }
