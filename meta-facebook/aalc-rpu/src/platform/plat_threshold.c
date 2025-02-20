@@ -391,7 +391,7 @@ K_WORK_DELAYABLE_DEFINE(flow_rate_ready_worker, flow_rate_ready);
 static void reset_flow_rate_ready()
 {
 	flow_rate_ready_flag = false;
-	k_work_schedule(&flow_rate_ready_worker, K_SECONDS(10));
+	k_work_schedule(&flow_rate_ready_worker, K_SECONDS(40));
 }
 
 void pump_board_tach_status_handler(uint8_t sensor_num, uint8_t status)
@@ -665,11 +665,11 @@ sensor_threshold threshold_tbl[] = {
 	{ SENSOR_NUM_FB_14_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 200, 0, hex_fan_failure_do,
 	  SENSOR_NUM_FB_14_FAN_TACH_RPM, 1 },
 	{ SENSOR_NUM_PB_1_PUMP_TACH_RPM, THRESHOLD_ENABLE_BOTH, 0, 0, pump_failure_do,
-	  THRESHOLD_ARG0_TABLE_INDEX, 6 },
+	  THRESHOLD_ARG0_TABLE_INDEX, 10 },
 	{ SENSOR_NUM_PB_2_PUMP_TACH_RPM, THRESHOLD_ENABLE_BOTH, 0, 0, pump_failure_do,
-	  THRESHOLD_ARG0_TABLE_INDEX, 6 },
+	  THRESHOLD_ARG0_TABLE_INDEX, 10 },
 	{ SENSOR_NUM_PB_3_PUMP_TACH_RPM, THRESHOLD_ENABLE_BOTH, 0, 0, pump_failure_do,
-	  THRESHOLD_ARG0_TABLE_INDEX, 6 },
+	  THRESHOLD_ARG0_TABLE_INDEX, 10 },
 	{ SENSOR_NUM_PB_1_FAN_1_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, rpu_internal_fan_failure_do,
 	  SENSOR_NUM_PB_1_FAN_1_TACH_RPM, 1 },
 	{ SENSOR_NUM_PB_1_FAN_2_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, rpu_internal_fan_failure_do,
@@ -781,33 +781,23 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 /* return true means pump 1/2/3 not access or tach too low */
 static bool check_pump_tach_too_low()
 {
-	static uint8_t retry[3] = { 0 };
-
 	for (uint8_t i = 0; i < ARRAY_SIZE(pump_sensor_array); i++) {
 		float tmp = 0;
 		if (get_sensor_reading_to_real_val(pump_sensor_array[i], &tmp) !=
 		    SENSOR_READ_4BYTE_ACUR_SUCCESS)
 			return true;
 
-		if (tmp >= 500) {
-			if (retry[i] < 10) {
-				retry[i]++;
-				return false;
-			} else {
-				retry[i] = 0;
-				return true;
-			}
-		}
+		if (tmp >= 500)
+			return false;
 	}
 
-	memset(retry, 0, 3);
-	return false;
+	return true;
 }
 
 static void pump_tach_too_low_behavior()
 {
 	static bool is_low = true;
-	if (!check_pump_tach_too_low()) {
+	if (check_pump_tach_too_low()) {
 		flow_rate_ready_flag = false;
 		is_low = true;
 	} else if (is_low) {
