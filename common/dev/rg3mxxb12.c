@@ -230,7 +230,7 @@ out:
 	return ret;
 }
 
-bool rg3mxxb12_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt)
+bool rg3mxxb12_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt, uint8_t pullup_val)
 {
 	bool ret = false;
 
@@ -245,6 +245,7 @@ bool rg3mxxb12_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt)
 		{ RG3MXXB12_SSPORTS_AGENT_ENABLE, 0x0 },
 		{ RG3MXXB12_SSPORTS_GPIO_ENABLE, 0x0 },
 		{ RG3MXXB12_SLAVE_PORT_ENABLE, 0x0 },
+		{ RG3MXXB12_SSPORTS_PULLUP_SETTING, pullup_val},
 		{ RG3MXXB12_SSPORTS_PULLUP_ENABLE, 0xFF },
 		{ RG3MXXB12_SSPORTS_OD_ONLY, 0x0 },
 		{ RG3MXXB12_SLAVE_PORT_ENABLE, 0xFF },
