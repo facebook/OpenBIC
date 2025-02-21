@@ -170,7 +170,7 @@ void start_monitor_pmic_error_thread()
 		k_thread_create(&monitor_pmic_error_thread, monitor_pmic_error_stack,
 				K_THREAD_STACK_SIZEOF(monitor_pmic_error_stack),
 				monitor_pmic_error_via_i3c_handler, NULL, NULL, NULL,
-				CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+				K_PRIO_PREEMPT(1), 0, K_NO_WAIT);
 
 	k_thread_name_set(&monitor_pmic_error_thread, "monitor_pmic_error_thread");
 }

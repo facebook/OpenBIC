@@ -30,7 +30,7 @@ void start_setaasa()
 	LOG_INF("Start a thread to send setaasa");
 	tid = k_thread_create(&send_setaasa_thread, send_setaasa_stack,
 			      K_THREAD_STACK_SIZEOF(send_setaasa_stack), send_setaasa, NULL, NULL,
-			      NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+			      NULL, K_PRIO_PREEMPT(1), 0, K_NO_WAIT);
 	k_thread_name_set(&send_setaasa_thread, "send_setaasa_thread");
 }
 

@@ -546,7 +546,7 @@ void apml_init()
 	memset(apml_resp_buffer, 0xFF, sizeof(apml_resp_buffer));
 
 	k_thread_create(&apml_thread, apml_handler_stack, K_THREAD_STACK_SIZEOF(apml_handler_stack),
-			apml_handler, NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+			apml_handler, NULL, NULL, NULL, K_PRIO_PREEMPT(1), 0, K_NO_WAIT);
 	k_thread_name_set(&apml_thread, "APML_handler");
 }
 

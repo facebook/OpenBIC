@@ -52,7 +52,7 @@ void start_get_dimm_info_thread()
 	get_dimm_info_tid =
 		k_thread_create(&get_dimm_info_thread, get_dimm_info_stack,
 				K_THREAD_STACK_SIZEOF(get_dimm_info_stack), get_dimm_info_handler,
-				NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+				NULL, NULL, NULL, K_PRIO_PREEMPT(1), 0, K_NO_WAIT);
 	k_thread_name_set(&get_dimm_info_thread, "get_dimm_info_thread");
 }
 

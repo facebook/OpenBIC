@@ -395,7 +395,7 @@ void pldm_sensor_poll_thread_init()
 			k_thread_create(&pldm_sensor_polling_thread[i], pldm_sensor_poll_stacks[i],
 					K_THREAD_STACK_SIZEOF(pldm_sensor_poll_stacks[i]),
 					pldm_sensor_polling_handler, (void *)i, NULL, NULL,
-					CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+					K_PRIO_PREEMPT(1), 0, K_NO_WAIT);
 		k_thread_name_set(&pldm_sensor_polling_thread[i],
 				  pldm_sensor_thread_list[i].thread_name);
 

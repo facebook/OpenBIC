@@ -444,7 +444,7 @@ void pcc_init()
 
 	k_thread_create(&process_postcode_thread_handler, process_postcode_thread,
 			K_THREAD_STACK_SIZEOF(process_postcode_thread), process_postcode, NULL,
-			NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+			NULL, NULL, K_PRIO_PREEMPT(1), 0, K_NO_WAIT);
 	k_thread_name_set(&process_postcode_thread_handler, "process_postcode_thread");
 
 	return;

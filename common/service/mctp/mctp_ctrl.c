@@ -481,4 +481,4 @@ exit:
 	return ret;
 }
 
-K_THREAD_DEFINE(monitor_tid, 1024, mctp_ctrl_msg_timeout_monitor, NULL, NULL, NULL, 0, 0, 0);
+K_THREAD_DEFINE(monitor_tid, 1024, mctp_ctrl_msg_timeout_monitor, NULL, NULL, NULL, K_PRIO_PREEMPT(1), 0, 0);

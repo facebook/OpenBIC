@@ -95,7 +95,7 @@ void pal_pre_init()
 	init_vr_event_work();
 	init_event_work();
 	init_pmic_event_work();
-	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY + 1); // work queue for low priority jobs
+	init_plat_worker(K_PRIO_PREEMPT(2)); // work queue for low priority jobs
 
 	plat_init_pldm_sensor_table();
 }
