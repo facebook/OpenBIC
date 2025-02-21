@@ -213,7 +213,7 @@ void reinit_i3c_hub()
 	i3c_attach(&i3c_msg);
 
 	// Initialize I3C HUB
-	if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, LDO_VOLT)) {
+	if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, LDO_VOLT, 0xF0)) {
 		printk("failed to initialize 1ou rg3mxxb12\n");
 	}
 
@@ -270,7 +270,7 @@ void ISR_DC_ON()
 
 	if (dc_status) {
 		k_work_schedule(&set_DC_on_5s_work, K_SECONDS(DC_ON_5_SECOND));
-		k_work_submit(&reinit_i3c_work);
+		k_work_submit(&set_ffwf_eid_work);
 		k_work_submit(&switch_i3c_dimm_work);
 		k_work_schedule_for_queue(&plat_work_q, &PROC_FAIL_work,
 					  K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
