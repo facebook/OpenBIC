@@ -188,8 +188,8 @@ static void set_dev_endpoint(void)
 		// break if set both CXL EID success
 		if (set_eid[CXL_ID_1] == true && set_eid[CXL_ID_2] == true)
 			break;
-		// Delay for 10 seconds before the next attempt
-		k_sleep(K_SECONDS(10));
+		// Delay for 60 seconds before the next attempt
+		k_sleep(K_SECONDS(60));
 	}
 }
 
