@@ -199,7 +199,7 @@ bool set_tmp432_one_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
 	I2C_MSG msg = { 0 };
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
-	msg.tx_len = 1;
+	msg.tx_len = 2;
 	msg.data[0] = register_high;
 	msg.data[1] = (uint8_t)(*millidegree_celsius / 1000);
 	if (i2c_master_write(&msg, retry)) {
