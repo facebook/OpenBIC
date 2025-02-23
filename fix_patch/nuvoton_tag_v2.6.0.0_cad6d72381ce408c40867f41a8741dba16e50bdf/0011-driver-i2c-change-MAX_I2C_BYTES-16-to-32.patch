@@ -1,0 +1,25 @@
+From cbaa8d15cd7f23f056a354a8ce3a5a22c98b5869 Mon Sep 17 00:00:00 2001
+From: lisa <Lisa-Chang@quantatw.com>
+Date: Tue, 18 Feb 2025 14:03:07 +0800
+Subject: [PATCH] driver: i2c: change MAX_I2C_BYTES 16 to 32
+
+---
+ drivers/i2c/i2c_shell.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/i2c/i2c_shell.c b/drivers/i2c/i2c_shell.c
+index a9c8f01fc5..489fd10125 100644
+--- a/drivers/i2c/i2c_shell.c
++++ b/drivers/i2c/i2c_shell.c
+@@ -17,7 +17,7 @@ LOG_MODULE_REGISTER(i2c_shell, CONFIG_LOG_DEFAULT_LEVEL);
+ #define I2C_DEVICE_PREFIX "I2C_"
+ 
+ /* Maximum bytes we can write or read at once */
+-#define MAX_I2C_BYTES	16
++#define MAX_I2C_BYTES 32
+ 
+ /*
+  * This sends I2C messages without any data (i.e. stop condition after
+-- 
+2.25.1
+
