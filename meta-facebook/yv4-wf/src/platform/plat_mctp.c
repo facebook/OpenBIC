@@ -132,7 +132,7 @@ static void set_dev_endpoint(void)
 	for (int attempt = 0; attempt < 10; attempt++) {
 		// We only need to set CXL EID.
 		for (uint8_t i = 0; i < ARRAY_SIZE(plat_mctp_route_tbl); i++) {
-			mctp_route_entry *p = plat_mctp_route_tbl + i;
+			const mctp_route_entry *p = plat_mctp_route_tbl + i;
 			if (!p->set_endpoint)
 				continue;
 
@@ -164,7 +164,7 @@ static void set_dev_endpoint(void)
 
 				msg.recv_resp_cb_fn = set_endpoint_resp_handler;
 				msg.timeout_cb_fn = set_endpoint_resp_timeout;
-				msg.timeout_cb_fn_args = p;
+				msg.timeout_cb_fn_args = (void *)p;
 
 				uint8_t rc = mctp_ctrl_send_msg(find_mctp_by_bus(p->bus), &msg);
 				if (!rc) {
@@ -188,8 +188,8 @@ static void set_dev_endpoint(void)
 		// break if set both CXL EID success
 		if (set_eid[CXL_ID_1] == true && set_eid[CXL_ID_2] == true)
 			break;
-		// Delay for 10 seconds before the next attempt
-		k_sleep(K_SECONDS(10));
+		// Delay for 60 seconds before the next attempt
+		k_sleep(K_SECONDS(60));
 	}
 }
 
@@ -231,7 +231,7 @@ static uint8_t get_mctp_route_info(uint8_t dest_endpoint, void **mctp_inst,
 	uint32_t i;
 
 	for (i = 0; i < ARRAY_SIZE(plat_mctp_route_tbl); i++) {
-		mctp_route_entry *p = plat_mctp_route_tbl + i;
+		const mctp_route_entry *p = plat_mctp_route_tbl + i;
 		if (p->endpoint == dest_endpoint) {
 			*mctp_inst = find_mctp_by_bus(p->bus);
 			if (p->bus != I3C_BUS_SD_BIC) {
@@ -258,7 +258,7 @@ uint8_t get_mctp_info(uint8_t dest_endpoint, mctp **mctp_inst, mctp_ext_params *
 	uint32_t i;
 
 	for (i = 0; i < ARRAY_SIZE(plat_mctp_route_tbl); i++) {
-		mctp_route_entry *p = plat_mctp_route_tbl + i;
+		const mctp_route_entry *p = plat_mctp_route_tbl + i;
 		if (p->endpoint == dest_endpoint) {
 			*mctp_inst = find_mctp_by_bus(p->bus);
 			if (p->bus != I3C_BUS_SD_BIC) {
@@ -413,7 +413,8 @@ bool pal_is_need_mctp_interval(mctp *mctp_inst)
 {
 	switch (mctp_inst->medium_type) {
 	case MCTP_MEDIUM_TYPE_SMBUS: {
-		mctp_smbus_conf *smbus_conf = (mctp_smbus_conf *)&mctp_inst->medium_conf;
+		const mctp_smbus_conf *smbus_conf =
+			(const mctp_smbus_conf *)&mctp_inst->medium_conf;
 		if ((smbus_conf->bus == I2C_BUS_CXL1) || (smbus_conf->bus == I2C_BUS_CXL2)) {
 			return true;
 		}
@@ -432,7 +433,8 @@ int pal_get_mctp_interval_ms(mctp *mctp_inst)
 {
 	switch (mctp_inst->medium_type) {
 	case MCTP_MEDIUM_TYPE_SMBUS: {
-		mctp_smbus_conf *smbus_conf = (mctp_smbus_conf *)&mctp_inst->medium_conf;
+		const mctp_smbus_conf *smbus_conf =
+			(const mctp_smbus_conf *)&mctp_inst->medium_conf;
 		if ((smbus_conf->bus == I2C_BUS_CXL1) || (smbus_conf->bus == I2C_BUS_CXL2)) {
 			// 40ms
 			return 40;
