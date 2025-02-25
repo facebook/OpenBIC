@@ -937,6 +937,22 @@ __weak void OEM_1S_JTAG_DATA_SHIFT(ipmi_msg *msg)
 	msg->completion_code = CC_SUCCESS;
 	return;
 }
+__weak void OEM_1S_JTAG_TCK_CYCLE(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+	uint8_t cycle;
+	cycle = msg->data[0];
+	jtag_tck_cycle(cycle);
+
+	msg->data_len = 0;
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
 
 #ifdef ENABLE_ASD
 __weak void OEM_1S_ASD_INIT(ipmi_msg *msg)
@@ -2592,6 +2608,9 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 		break;
 #endif
 #ifdef CONFIG_JTAG
+	case CMD_OEM_1S_JTAG_TCK_CYCLE:
+		LOG_DBG("Received 1S JTAG TCK cycle command");
+		OEM_1S_JTAG_TCK_CYCLE(msg);
 	case CMD_OEM_1S_SET_JTAG_TAP_STA:
 		LOG_DBG("Received 1S Set JTAG Tap Status command");
 		OEM_1S_SET_JTAG_TAP_STA(msg);

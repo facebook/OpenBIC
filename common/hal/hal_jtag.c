@@ -23,6 +23,17 @@ LOG_MODULE_REGISTER(hal_jtag);
 
 static char *jtag_device = "JTAG1";
 
+void jtag_tck_cycle(uint8_t cycle)
+{
+	const struct device *dev;
+	dev = device_get_binding(jtag_device);
+	if (!dev) {
+		LOG_ERR("JTAG device not found");
+		return;
+	}
+	jtag_tck_run(dev, cycle);
+}
+
 void jtag_set_tap(uint8_t data, uint8_t bitlength)
 {
 	const struct device *dev;

@@ -21,5 +21,6 @@
 
 void jtag_set_tap(uint8_t data, uint8_t bitlength);
 void jtag_shift_data(uint16_t Wbit, uint8_t *Wdate, uint16_t Rbit, uint8_t *Rdate, uint8_t lastidx);
+void jtag_tck_cycle(uint8_t cycle);
 
 #endif

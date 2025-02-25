@@ -143,6 +143,7 @@ void OEM_1S_GET_APML_RESPONSE(ipmi_msg *msg);
 #ifdef CONFIG_JTAG
 void OEM_1S_SET_JTAG_TAP_STA(ipmi_msg *msg);
 void OEM_1S_JTAG_DATA_SHIFT(ipmi_msg *msg);
+void OEM_1S_JTAG_TCK_CYCLE(ipmi_msg *msg);
 
 #ifdef ENABLE_ASD
 void OEM_1S_ASD_INIT(ipmi_msg *msg);
