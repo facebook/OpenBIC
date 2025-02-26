@@ -1082,7 +1082,7 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 	double val;
 	double v_val, flow_Pmax = 400, flow_Pmin = 10, press_Pmax = 50, press_Pmin = 0;
 
-	ads112c_post_arg *post_args = (ads112c_post_arg *)args;
+	ads112c_post_arg const *post_args = (ads112c_post_arg *)args;
 	switch (post_args->plat_sensor_type) {
 	case PLATFORM_ADS112C_FLOW: //Flow_Rate_LPM
 		v_val = 5 - ((32767 - rawValue) * 0.000153);

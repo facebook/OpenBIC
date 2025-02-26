@@ -66,7 +66,7 @@ bool clear_log_for_modbus_pump_setting(pump_reset_struct *data, uint8_t bit_val)
 static bool hsc_reset(uint8_t sensor_num)
 {
 	// Check sensor information in sensor config table
-	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
+	sensor_cfg const *cfg = get_common_sensor_cfg_info(sensor_num);
 	if (cfg == NULL) {
 		LOG_ERR("Fail when getting pump sensor config, 0x%x", sensor_num);
 		return false;
