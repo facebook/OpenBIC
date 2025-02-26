@@ -359,7 +359,7 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 				// Send SEL to BMC via PLDM over MCTP
 				mctp_ext_params ext_params = { 0 };
 				uint8_t pldm_event_length = rc - 4; // exclude netfn, cmd, record_id
-				uint8_t bmc_bus = I2C_BUS_BMC,  bmc_interface = BMC_INTERFACE_I2C;
+				uint8_t bmc_bus = I2C_BUS_BMC, bmc_interface = BMC_INTERFACE_I2C;
 
 				bmc_interface = pal_get_bmc_interface();
 				if (bmc_interface == BMC_INTERFACE_I3C) {
@@ -378,12 +378,13 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 								pldm_event_length);
 			}
 			// IPMI OEM command for crashdump, send crashdump data to BMC
-			if ((req->netfn == NETFN_OEM_REQ ) &&
-				(req->cmd == CMD_OEM_CRASH_DUMP)) {
+			if ((req->netfn == NETFN_OEM_REQ) && (req->cmd == CMD_OEM_CRASH_DUMP)) {
 				LOG_HEXDUMP_DBG(&ibuf[0], rc, "host KCS read dump data:");
-				int ret = send_crashdump_to_bmc(&ibuf[2], (rc - 2)); // exclude netfn, cmd
+				int ret = send_crashdump_to_bmc(&ibuf[2],
+								(rc - 2)); // exclude netfn, cmd
 				if (ret) {
-					LOG_ERR("Failed to send crashdump data to BMC, rc = %d", ret);
+					LOG_ERR("Failed to send crashdump data to BMC, rc = %d",
+						ret);
 				}
 				// When recieve control(0x80), get_state(0x01), BMC need to reply to BIOS
 				// With PLDM implementation, we need to it by BIC.
@@ -424,6 +425,18 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 				if (ret < 0) {
 					LOG_ERR("Failed to send bios version to bmc, rc = %d", ret);
 				}
+
+				uint8_t *kcs_buff;
+				kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
+				if (kcs_buff == NULL) {
+					LOG_ERR("Failed to malloc for kcs_buff");
+					break;
+				}
+				kcs_buff[0] = (req->netfn | BIT(0)) << 2;
+				kcs_buff[1] = req->cmd;
+				kcs_buff[2] = CC_SUCCESS;
+				kcs_write(kcs_inst->index, kcs_buff, 3);
+				SAFE_FREE(kcs_buff);
 #endif
 #endif
 			}

@@ -293,7 +293,7 @@ bool post_mp5990_pwr_read(sensor_cfg *cfg, void *args, int *reading)
 	return true;
 }
 
-void apml_report_fail_cb(apml_msg *msg)
+void apml_report_fail_cb(const apml_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
 	CHECK_NULL_ARG(msg->ptr_arg);
@@ -302,7 +302,7 @@ void apml_report_fail_cb(apml_msg *msg)
 	LOG_ERR("Failed to report DIMM power/temperature to CPU, sensor number 0x%x.", cfg->num);
 }
 
-void apml_report_result_check(apml_msg *msg)
+void apml_report_result_check(const apml_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
 	CHECK_NULL_ARG(msg->ptr_arg);
@@ -362,13 +362,13 @@ bool post_ddr5_pwr_read(sensor_cfg *cfg, void *args, int *reading)
 	return true;
 }
 
-void set_dram_throttle_fail_cb(apml_msg *msg)
+void set_dram_throttle_fail_cb(const apml_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
 	LOG_ERR("Failed to set dram throttle to 0x%x.", msg->ui32_arg);
 }
 
-void set_dram_throttle_cb(apml_msg *msg)
+void set_dram_throttle_cb(const apml_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
 

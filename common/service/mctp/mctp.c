@@ -65,7 +65,8 @@ static uint8_t set_thread_name(mctp *mctp_inst)
 	switch (mctp_inst->medium_type) {
 	case MCTP_MEDIUM_TYPE_SMBUS:
 		LOG_DBG("medium_type: smbus");
-		mctp_smbus_conf *smbus_conf = (mctp_smbus_conf *)&mctp_inst->medium_conf;
+		const mctp_smbus_conf *smbus_conf =
+			(const mctp_smbus_conf *)&mctp_inst->medium_conf;
 		snprintf(mctp_inst->mctp_rx_task_name, sizeof(mctp_inst->mctp_rx_task_name),
 			 "mctprx_%02x_%02x_%02x", mctp_inst->medium_type, smbus_conf->bus,
 			 smbus_conf->addr);
@@ -76,7 +77,7 @@ static uint8_t set_thread_name(mctp *mctp_inst)
 	case MCTP_MEDIUM_TYPE_CONTROLLER_I3C:
 	case MCTP_MEDIUM_TYPE_TARGET_I3C:
 		LOG_DBG("medium_type: i3c");
-		mctp_i3c_conf *i3c_conf = (mctp_i3c_conf *)&mctp_inst->medium_conf;
+		const mctp_i3c_conf *i3c_conf = (const mctp_i3c_conf *)&mctp_inst->medium_conf;
 		snprintf(mctp_inst->mctp_rx_task_name, sizeof(mctp_inst->mctp_rx_task_name),
 			 "mctprx_%02x_%02x_%02x", mctp_inst->medium_type, i3c_conf->bus,
 			 i3c_conf->addr);
@@ -532,7 +533,7 @@ uint8_t mctp_start(mctp *mctp_inst)
 	mctp_inst->mctp_rx_task_tid =
 		k_thread_create(&mctp_inst->rx_task_thread_data, mctp_inst->rx_task_stack_area,
 				K_KERNEL_STACK_SIZEOF(mctp_inst->rx_task_stack_area), mctp_rx_task,
-				mctp_inst, NULL, NULL, K_PRIO_PREEMPT(0), 0, K_MSEC(1));
+				mctp_inst, NULL, NULL, K_PRIO_PREEMPT(1), 0, K_MSEC(1));
 	if (!mctp_inst->mctp_rx_task_tid)
 		goto error;
 
@@ -542,7 +543,7 @@ uint8_t mctp_start(mctp *mctp_inst)
 	mctp_inst->mctp_tx_task_tid =
 		k_thread_create(&mctp_inst->tx_task_thread_data, mctp_inst->tx_task_stack_area,
 				K_KERNEL_STACK_SIZEOF(mctp_inst->tx_task_stack_area), mctp_tx_task,
-				mctp_inst, NULL, NULL, K_PRIO_PREEMPT(0), 0, K_MSEC(1));
+				mctp_inst, NULL, NULL, K_PRIO_PREEMPT(1), 0, K_MSEC(1));
 
 	if (!mctp_inst->mctp_tx_task_tid)
 		goto error;
@@ -655,6 +656,11 @@ bool get_mctp_info_by_eid(uint8_t port, mctp **mctp_inst, mctp_ext_params *ext_p
 
 __weak int pal_find_bus_in_mctp_port(mctp_port *p)
 {
+	if (p == NULL) {
+		LOG_ERR("Input pointer 'p' is NULL");
+		return -1;
+	}
+
 	int bus = -1;
 	switch (p->medium_type) {
 	case MCTP_MEDIUM_TYPE_SMBUS:
@@ -687,6 +693,12 @@ __weak mctp *pal_find_mctp_by_bus(uint8_t bus)
 	uint8_t plat_mctp_port_count = plat_get_mctp_port_count();
 	for (uint8_t i = 0; i < plat_mctp_port_count; i++) {
 		mctp_port *p = plat_get_mctp_port(i);
+
+		if (p == NULL) {
+			LOG_WRN("plat_get_mctp_port returned NULL for index %d", i);
+			continue;
+		}
+
 		int conf_bus = pal_find_bus_in_mctp_port(p);
 		if (bus == conf_bus) {
 			return p->mctp_inst;
@@ -701,6 +713,13 @@ __weak mctp_port *pal_find_mctp_port_by_channel_target(uint8_t target)
 	uint8_t plat_mctp_port_count = plat_get_mctp_port_count();
 	for (uint8_t i = 0; i < plat_mctp_port_count; i++) {
 		mctp_port *p = plat_get_mctp_port(i);
+
+		if (p == NULL) {
+			LOG_WRN("pal_find_mctp_port_by_channel_target returned NULL for index %d",
+				i);
+			continue;
+		}
+
 		if (target == p->channel_target) {
 			return p;
 		}

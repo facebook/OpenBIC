@@ -203,7 +203,7 @@ void usb_dev_init(void)
 	uart_irq_rx_enable(dev);
 
 	k_thread_create(&usb_thread, usb_handler_stack, K_THREAD_STACK_SIZEOF(usb_handler_stack),
-			usb_handler, NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+			usb_handler, NULL, NULL, NULL, K_PRIO_PREEMPT(1), 0, K_NO_WAIT);
 	k_thread_name_set(&usb_thread, "USB_handler");
 
 	uint8_t init_sem_count = RING_BUF_SIZE / RX_BUFF_SIZE;
