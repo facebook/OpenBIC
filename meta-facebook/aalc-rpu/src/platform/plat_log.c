@@ -127,7 +127,7 @@ void log_transfer_to_modbus_data(uint16_t *modbus_data, uint8_t cmd_size, uint16
 	memcpy(modbus_data, &err_log_data[get_log_position_by_time_order(order)],
 	       sizeof(uint16_t) * cmd_size);
 
-	modbus_err_log_mapping *p = (modbus_err_log_mapping *)modbus_data;
+	modbus_err_log_mapping const *p = (modbus_err_log_mapping *)modbus_data;
 	if (p->index == 0xffff)
 		memset(modbus_data, 0x00, sizeof(uint16_t) * cmd_size);
 }

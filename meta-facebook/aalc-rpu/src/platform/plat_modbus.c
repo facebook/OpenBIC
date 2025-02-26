@@ -164,7 +164,7 @@ uint8_t modbus_get_fw_reversion(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
-	uint8_t ver[4] = { BIC_FW_YEAR_MSB, BIC_FW_YEAR_LSB, BIC_FW_WEEK, BIC_FW_VER };
+	uint8_t const ver[4] = { BIC_FW_YEAR_MSB, BIC_FW_YEAR_LSB, BIC_FW_WEEK, BIC_FW_VER };
 
 	for (uint8_t i = 0; i < cmd->cmd_size; i++) {
 		char tmp[3] = { 0 };

@@ -748,7 +748,7 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 	if (thres_tbl_idx >= ARRAY_SIZE(threshold_tbl))
 		return;
 
-	sensor_threshold *thres_p = &threshold_tbl[thres_tbl_idx];
+	sensor_threshold const *thres_p = &threshold_tbl[thres_tbl_idx];
 	uint32_t sensor_num = thres_p->sensor_num;
 
 	uint8_t pump_ucr = (sensor_num == SENSOR_NUM_PB_1_PUMP_TACH_RPM) ? PUMP_FAIL_PUMP1_UCR :
