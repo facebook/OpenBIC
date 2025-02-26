@@ -401,6 +401,10 @@ void error_log_event(uint16_t error_code, bool log_status)
 	// Update the next log position
 	next_log_position = (fru_count % LOG_MAX_NUM) + 1;
 	log_num++;
+
+	if (log_num > LOG_MAX_NUM) {
+		log_num = LOG_MAX_NUM;
+	}
 }
 
 uint8_t plat_log_get_num(void)
