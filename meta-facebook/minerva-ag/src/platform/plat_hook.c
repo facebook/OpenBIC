@@ -72,7 +72,7 @@ bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading)
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	ARG_UNUSED(args);
 
-	sensor_val *reading_val = (sensor_val *)reading;
+	const sensor_val *reading_val = (sensor_val *)reading;
 
 	int sensor_reading = 0;
 	static int ubc1_current_mA;
@@ -351,6 +351,21 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 			LOG_ERR("post_vr_read, mutex unlock fail");
 			return false;
 		}
+	}
+
+	/* set reading val to 0 if reading val is negative */
+	sensor_val tmp_reading;
+	tmp_reading.integer = (int16_t)(*reading & 0xFFFF);
+	tmp_reading.fraction = (int16_t)((*reading >> 16) & 0xFFFF);
+
+	/* sensor_value = 1000 times of true value */
+	int32_t sensor_value = tmp_reading.integer * 1000 + tmp_reading.fraction;
+
+	if (sensor_value < 0) {
+		LOG_DBG("Original sensor reading: integer = %d, fraction = %d (combined value * 1000: %d)",
+			tmp_reading.integer, tmp_reading.fraction, sensor_value);
+		*reading = 0;
+		LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
 	}
 
 	return true;
