@@ -1,0 +1,11 @@
+<map id="common/dev/include/nct214.h" name="common/dev/include/nct214.h">
+<area shape="rect" id="node1" title=" " alt="" coords="123,5,265,47"/>
+<area shape="rect" id="node2" href="$nct214_8c.html" title=" " alt="" coords="5,109,156,136"/>
+<area shape="rect" id="node3" href="$aalc-rpu_2src_2platform_2plat__hook_8c.html" title=" " alt="" coords="11,199,153,255"/>
+<area shape="rect" id="node4" href="$aalc-rpu_2src_2platform_2plat__hook_8h.html" title=" " alt="" coords="344,95,487,151"/>
+<area shape="rect" id="node5" href="$aalc-rpu_2src_2platform_2plat__hwmon_8c.html" title=" " alt="" coords="177,199,320,255"/>
+<area shape="rect" id="node6" href="$aalc-rpu_2src_2platform_2plat__init_8c.html" title=" " alt="" coords="344,199,487,255"/>
+<area shape="rect" id="node7" href="$plat__pwm_8c.html" title=" " alt="" coords="511,206,698,247"/>
+<area shape="rect" id="node8" href="$aalc-rpu_2src_2platform_2plat__sensor__table_8c.html" title=" " alt="" coords="723,199,865,255"/>
+<area shape="rect" id="node9" href="$plat__threshold_8c.html" title=" " alt="" coords="889,199,1032,255"/>
+</map>

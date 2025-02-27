@@ -1,0 +1,17 @@
+<map id="vr_status_mfr_specific_check_handler" name="vr_status_mfr_specific_check_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,175,159,217"/>
+<area shape="rect" id="node2" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="433,31,503,57"/>
+<area shape="rect" id="node3" href="$hal__gpio_8c.html#a2b84a9db16e403389f95cc959624ea43" title=" " alt="" coords="213,132,345,159"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="409,217,527,244"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="218,335,339,361"/>
+<area shape="rect" id="node7" href="$gt-cc_2src_2platform_2plat__led_8c.html#adb64af9674fd383801c8e05fa1e6d1ce" title=" " alt="" coords="207,81,351,108"/>
+<area shape="rect" id="node14" href="$pldm__monitor_8c.html#aee425d655113020d7d424cc5b86d756c" title=" " alt="" coords="399,269,537,310"/>
+<area shape="rect" id="node15" href="$gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#aa57a8ad64778cfe7500d2bfb89868475" title=" " alt="" coords="225,233,332,260"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="599,259,742,285"/>
+<area shape="rect" id="node8" href="$aalc-rpu_2src_2platform_2plat__led_8c.html#a875047296bd773029bfcdca9029bac36" title=" " alt="" coords="409,81,527,108"/>
+<area shape="rect" id="node13" href="$gt-cc_2src_2platform_2plat__class_8c.html#a9ac69a581f2e3ab84919e4724ba7ce9b" title=" " alt="" coords="419,132,517,159"/>
+<area shape="rect" id="node9" href="$plat__status_8c.html#aa601af4f53236dc9df9b4db1735f94de" title=" " alt="" coords="615,56,726,83"/>
+<area shape="rect" id="node10" href="$plat__threshold_8c.html#a2ad1078224a8f4dc172eba16e307a4b6" title=" " alt="" coords="804,132,947,159"/>
+<area shape="rect" id="node11" href="$plat__threshold_8c.html#abe65da4c3147d60647cdb1eea9cd81d2" title=" " alt="" coords="585,107,756,133"/>
+<area shape="rect" id="node12" href="$aalc-rpu_2src_2platform_2plat__led_8c.html#a551af46446cb05b55f2f8e089d53ff85" title=" " alt="" coords="639,5,703,32"/>
+</map>

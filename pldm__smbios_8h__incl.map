@@ -1,0 +1,24 @@
+<map id="common/service/pldm/pldm_smbios.h" name="common/service/pldm/pldm_smbios.h">
+<area shape="rect" id="node1" title=" " alt="" coords="316,5,467,47"/>
+<area shape="rect" id="node2" href="$pldm_8h.html" title=" " alt="" coords="361,95,421,121"/>
+<area shape="rect" id="node3" href="$mctp_8h.html" title=" " alt="" coords="250,169,311,196"/>
+<area shape="rect" id="node7" href="$pldm__base_8h.html" title=" " alt="" coords="15,169,109,196"/>
+<area shape="rect" id="node8" href="$pldm__oem_8h.html" title=" " alt="" coords="133,169,225,196"/>
+<area shape="rect" id="node9" href="$pldm__monitor_8h.html" title=" " alt="" coords="336,169,447,196"/>
+<area shape="rect" id="node15" href="$ipmb_8h.html" title=" " alt="" coords="339,393,399,420"/>
+<area shape="rect" id="node21" href="$pldm__firmware__update_8h.html" title=" " alt="" coords="570,244,733,271"/>
+<area shape="rect" id="node22" href="$pldm__state__set_8h.html" title=" " alt="" coords="645,169,767,196"/>
+<area shape="rect" id="node4" title=" " alt="" coords="55,393,119,420"/>
+<area shape="rect" id="node5" title=" " alt="" coords="242,244,330,271"/>
+<area shape="rect" id="node6" title=" " alt="" coords="149,244,218,271"/>
+<area shape="rect" id="node10" href="$pdr_8h.html" title=" " alt="" coords="362,244,413,271"/>
+<area shape="rect" id="node11" title=" " alt="" coords="397,319,471,345"/>
+<area shape="rect" id="node12" title=" " alt="" coords="175,319,285,345"/>
+<area shape="rect" id="node13" title=" " alt="" coords="496,319,575,345"/>
+<area shape="rect" id="node14" href="$libutil_8h.html" title=" " alt="" coords="309,319,372,345"/>
+<area shape="rect" id="node18" href="$hal__i2c_8h.html" title=" " alt="" coords="612,393,685,420"/>
+<area shape="rect" id="node16" title=" " alt="" coords="236,468,328,495"/>
+<area shape="rect" id="node17" title=" " alt="" coords="352,468,412,495"/>
+<area shape="rect" id="node19" title=" " alt="" coords="547,468,639,495"/>
+<area shape="rect" id="node20" title=" " alt="" coords="663,468,821,495"/>
+</map>
