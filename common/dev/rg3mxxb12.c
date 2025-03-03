@@ -230,7 +230,7 @@ out:
 	return ret;
 }
 
-bool rg3mxxb12_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt, uint8_t pullup_val)
+__weak bool rg3mxxb12_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt, uint8_t pullup_val)
 {
 	bool ret = false;
 
