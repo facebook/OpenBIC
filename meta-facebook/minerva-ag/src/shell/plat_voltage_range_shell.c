@@ -45,11 +45,14 @@ static int cmd_voltage_range_get(const struct shell *shell, size_t argc, char **
 					continue;
 				}
 
-				uint16_t millivolt = 0xFFFF;
-				plat_get_vout_min(i, &millivolt);
-				shell_print(shell, "%-50s vout min: %dmV", rail_name, millivolt);
-				plat_get_vout_max(i, &millivolt);
-				shell_print(shell, "%-50s vout max: %dmV", rail_name, millivolt);
+				uint16_t vout_max_millivolt =
+					vout_range_user_settings.change_vout_max[i];
+				uint16_t vout_min_millivolt =
+					vout_range_user_settings.change_vout_min[i];
+				shell_print(shell, "%-50s vout min: %dmV", rail_name,
+					    vout_min_millivolt);
+				shell_print(shell, "%-50s vout max: %dmV", rail_name,
+					    vout_max_millivolt);
 			}
 			return 0;
 		} else {
@@ -70,23 +73,20 @@ static int cmd_voltage_range_get(const struct shell *shell, size_t argc, char **
 		shell_print(shell, "There is no osfp p3v3 on AEGIS BD");
 		return 0;
 	}
-
-	uint16_t millivolt = 0xFFFF;
-
+	uint16_t vout_max_millivolt = vout_range_user_settings.change_vout_max[rail];
+	uint16_t vout_min_millivolt = vout_range_user_settings.change_vout_min[rail];
 	if (!strcmp(argv[2], "min")) {
-		/*get min range*/
-		plat_get_vout_min(rail, &millivolt);
+		shell_print(shell, "voltage_range get %s %s: %dmV", argv[1], argv[2],
+			    vout_min_millivolt);
 
 	} else if (!strcmp(argv[2], "max")) {
-		/*get max range*/
-		plat_get_vout_max(rail, &millivolt);
+		shell_print(shell, "voltage_range get %s %s: %dmV", argv[1], argv[2],
+			    vout_max_millivolt);
 	} else {
 		shell_error(shell, "voltage_range get all");
 		shell_error(shell, "voltage_range get <voltage-rail> min|max");
 		return -1;
 	}
-
-	shell_print(shell, "voltage_range get %s %s: %dmV", argv[1], argv[2], millivolt);
 
 	return 0;
 }
@@ -114,10 +114,18 @@ static int cmd_voltage_range_set(const struct shell *shell, size_t argc, char **
 	uint16_t voltage_set_val_mv = strtol(argv[2], NULL, 0);
 
 	uint16_t voltage_set_val_mv_backup = voltage_set_val_mv;
-
+	uint16_t voltage_UCT = vout_range_user_settings.default_vout_max[rail];
+	uint16_t voltage_LCT = vout_range_user_settings.default_vout_min[rail];
 	if (!strcmp(argv[3], "min")) {
 		/*set min range*/
-		if (!plat_set_vout_min(rail, &voltage_set_val_mv)) {
+		if (voltage_set_val_mv < voltage_LCT || voltage_set_val_mv > voltage_UCT) {
+			shell_error(
+				shell,
+				"voltage_range[%d] cannot be less than %dmV or greater than %dmV",
+				rail, voltage_LCT, voltage_UCT);
+			return -1;
+		}
+		if (!plat_set_vout_range_min(rail, &voltage_set_val_mv)) {
 			shell_error(shell, "voltage_range set %s %s: %dmV failed", argv[1], argv[2],
 				    voltage_set_val_mv_backup);
 			return -1;
@@ -126,7 +134,14 @@ static int cmd_voltage_range_set(const struct shell *shell, size_t argc, char **
 			    voltage_set_val_mv);
 	} else if (!strcmp(argv[3], "max")) {
 		/*set max range*/
-		if (!plat_set_vout_max(rail, &voltage_set_val_mv)) {
+		if (voltage_set_val_mv < voltage_LCT || voltage_set_val_mv > voltage_UCT) {
+			shell_error(
+				shell,
+				"voltage_range[%d] cannot be less than %dmV or greater than %dmV",
+				rail, voltage_LCT, voltage_UCT);
+			return -1;
+		}
+		if (!plat_set_vout_range_max(rail, &voltage_set_val_mv)) {
 			shell_error(shell, "voltage_range set %s %s: %dmV failed", argv[1], argv[2],
 				    voltage_set_val_mv_backup);
 			return -1;
