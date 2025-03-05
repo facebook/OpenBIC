@@ -74,18 +74,74 @@ uint8_t pump_board_init_tbl[] = {
 	SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W
 };
 
+uint8_t pb_sen_tbl[] = { SENSOR_NUM_PB_1_HSC_P48V_TEMP_C,      SENSOR_NUM_PB_1_HSC_P48V_VIN_VOLT_V,
+			 SENSOR_NUM_PB_1_HSC_P48V_IOUT_CURR_A, SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W,
+			 SENSOR_NUM_PB_2_HSC_P48V_TEMP_C,      SENSOR_NUM_PB_2_HSC_P48V_VIN_VOLT_V,
+			 SENSOR_NUM_PB_2_HSC_P48V_IOUT_CURR_A, SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W,
+			 SENSOR_NUM_PB_3_HSC_P48V_TEMP_C,      SENSOR_NUM_PB_3_HSC_P48V_VIN_VOLT_V,
+			 SENSOR_NUM_PB_3_HSC_P48V_IOUT_CURR_A, SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W };
+
+#define ADM1272_MFR_ID 0x494441
+#define XDP710_MFR_ID 0x004649
+#define PB_ADM1272_ADDR (0x24 >> 1)
+#define XDP710_PB_ADDR (0x2C >> 1)
 void pump_board_init()
 {
 	// init pump board 1, 2 and 3
 	static uint8_t count = 0;
+	uint16_t sen_nums = 0;
+	uint8_t *sen_tbl = NULL;
+	uint8_t dvt_xdp_addr = 0;
+	xdp710_init_arg *xdp_init_arr = NULL;
+
+	sen_nums = ARRAY_SIZE(pb_sen_tbl);
+	sen_tbl = pb_sen_tbl;
+	dvt_xdp_addr = XDP710_PB_ADDR;
+	xdp_init_arr = &xdp710_init_args[1];
 	LOG_INF("pump board start init: %d", count);
 	for (uint8_t i = 0; i < ARRAY_SIZE(pump_board_init_tbl); i++) {
 		sensor_cfg *cfg = get_common_sensor_cfg_info(pump_board_init_tbl[i]);
+
 		if (cfg->pre_sensor_read_hook) {
 			if (cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args) != true) {
 				LOG_ERR("init pump board pre-read fail, sensor num: 0x%x",
 					cfg->num);
 			}
+		}
+
+		if (cfg->num >= SENSOR_NUM_PB_1_HSC_P48V_TEMP_C &&
+		    cfg->num <= SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W) {
+			const uint32_t result_mfr_id =
+				get_pmbus_mfr_id(cfg->port, cfg->target_addr);
+			LOG_DBG("Sensor %x's HSC module MFR_ID first: 0x%06x", cfg->num,
+				result_mfr_id);
+			switch (result_mfr_id) {
+			case 0:
+				LOG_ERR("pump hsc address not access !");
+				uint32_t read_xdp710_mfrid =
+					get_pmbus_mfr_id(cfg->port, XDP710_PB_ADDR);
+				LOG_DBG("Sensor %x's HSC module MFR_ID second: 0x%06x", cfg->num,
+					read_xdp710_mfrid);
+				LOG_DBG("xdp710 mfrid match: 0x%06x", XDP710_MFR_ID);
+				if (read_xdp710_mfrid == XDP710_MFR_ID) {
+					cfg->type = sensor_dev_xdp710;
+					cfg->target_addr = dvt_xdp_addr;
+					cfg->init_args = xdp_init_arr;
+				}
+				break;
+			case XDP710_MFR_ID:
+				cfg->type = sensor_dev_xdp710;
+				cfg->target_addr = dvt_xdp_addr;
+				cfg->init_args = xdp_init_arr;
+				break;
+			case ADM1272_MFR_ID:
+				break;
+			default:
+				LOG_ERR("unknown HSC module !");
+				break;
+			}
+			LOG_DBG("num, type, addr: %x, %x, %x", cfg->num, cfg->type,
+				cfg->target_addr);
 		}
 
 		bool ret = init_drive_type_delayed(cfg);
@@ -98,7 +154,7 @@ void pump_board_init()
 		}
 	}
 
-	if (count < 15) {
+	if (count < 20) {
 		k_work_schedule(&up_15sec_handler, K_SECONDS(1));
 		count++;
 	}
