@@ -63,6 +63,57 @@ bool clear_log_for_modbus_pump_setting(pump_reset_struct *data, uint8_t bit_val)
 	return true;
 }
 
+void hsc_adm1272_pwr_ctrl(sensor_cfg *cfg, uint8_t adm1272_reg, uint8_t state)
+{
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 1;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	if (!pre_PCA9546A_read(cfg, cfg->pre_sensor_read_args))
+		LOG_ERR("pre lock mutex fail !");
+
+	msg.data[0] = adm1272_reg;
+	msg.data[1] = state;
+
+	if (adm1272_reg == ADM1272_POWER_CYCLE_REG)
+		msg.tx_len = 1;
+
+	uint8_t ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Fail to access hsc adm1272 pwer ctrl, bus: 0x%x, addr: 0x%x, ret: %d",
+			cfg->port, cfg->target_addr, ret);
+	}
+
+	if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
+		LOG_ERR("pro unlock mutex fail !");
+}
+
+void hsc_xdp710_pwr_ctrl(sensor_cfg *cfg, uint8_t xdp710_reg, uint8_t state)
+{
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 1;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	if (!pre_PCA9546A_read(cfg, cfg->pre_sensor_read_args))
+		LOG_ERR("pre lock mutex fail !");
+
+	msg.data[0] = xdp710_reg;
+	msg.data[1] = state;
+
+	if (xdp710_reg == XDP710_RESTART_ADDR)
+		msg.tx_len = 1;
+
+	uint8_t ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Fail to access hsc xdp710 pwer ctrl, bus: 0x%x, addr: 0x%x, ret: %d",
+			cfg->port, cfg->target_addr, ret);
+	}
+
+	if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
+		LOG_ERR("pro unlock mutex fail !");
+}
 static bool hsc_reset(uint8_t sensor_num)
 {
 	// Check sensor information in sensor config table
@@ -76,20 +127,23 @@ static bool hsc_reset(uint8_t sensor_num)
 	uint8_t bus = cfg->port;
 	uint8_t addr = cfg->target_addr;
 	// 1 enable, 0 disable, stop pump first
-	if (enable_adm1272_hsc(bus, addr, false)) {
-		// check pump is already enable
-		k_msleep(500);
-		// enable pump
-		if (enable_adm1272_hsc(bus, addr, true)) {
-			return true;
-		} else {
-			LOG_ERR("Fail when start the pump.");
-			return false;
+	if (cfg->type == sensor_dev_adm1272) {
+		if (enable_adm1272_hsc(bus, addr, false)) {
+			// check pump is already enable
+			k_msleep(500);
+			// enable pump
+			if (enable_adm1272_hsc(bus, addr, true)) {
+				return true;
+			} else
+				LOG_ERR("Fail when start the pump.");
 		}
+	} else if (cfg->type == sensor_dev_xdp710) {
+		hsc_xdp710_pwr_ctrl(cfg, XDP710_RESTART_ADDR, 0);
+		return true;
 	} else {
-		LOG_ERR("Fail when stop the pump.");
-		return false;
+		LOG_ERR("Unknown sensor type, Fail when stop the pump.");
 	}
+	return false;
 }
 
 #define PUMP_RESET_FUNCTIONS(num)                                                                  \
@@ -213,56 +267,6 @@ uint8_t hsc_pwe_cycle_tbl[] = {
 #define PUMP_BORAD_COUNT_NUM 17
 #define BACKPLANE_BORAD_COUNT_NUM 18
 #define BRIDGE_BORAD_COUNT_NUM 19
-void hsc_adm1272_pwr_ctrl(sensor_cfg *cfg, uint8_t adm1272_reg, uint8_t state)
-{
-	I2C_MSG msg = { 0 };
-	uint8_t retry = 1;
-	msg.bus = cfg->port;
-	msg.target_addr = cfg->target_addr;
-	msg.tx_len = 2;
-	if (!pre_PCA9546A_read(cfg, cfg->pre_sensor_read_args))
-		LOG_ERR("pre lock mutex fail !");
-
-	msg.data[0] = adm1272_reg;
-	msg.data[1] = state;
-
-	if (adm1272_reg == ADM1272_POWER_CYCLE_REG)
-		msg.tx_len = 1;
-
-	uint8_t ret = i2c_master_write(&msg, retry);
-	if (ret != 0) {
-		LOG_ERR("Fail to access hsc adm1272 pwer ctrl, bus: 0x%x, addr: 0x%x, ret: %d",
-			cfg->port, cfg->target_addr, ret);
-	}
-
-	if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
-		LOG_ERR("pro unlock mutex fail !");
-}
-void hsc_xdp710_pwr_ctrl(sensor_cfg *cfg, uint8_t xdp710_reg, uint8_t state)
-{
-	I2C_MSG msg = { 0 };
-	uint8_t retry = 1;
-	msg.bus = cfg->port;
-	msg.target_addr = cfg->target_addr;
-	msg.tx_len = 2;
-	if (!pre_PCA9546A_read(cfg, cfg->pre_sensor_read_args))
-		LOG_ERR("pre lock mutex fail !");
-
-	msg.data[0] = xdp710_reg;
-	msg.data[1] = state;
-
-	if (xdp710_reg == XDP710_RESTART_ADDR)
-		msg.tx_len = 1;
-
-	uint8_t ret = i2c_master_write(&msg, retry);
-	if (ret != 0) {
-		LOG_ERR("Fail to access hsc xdp710 pwer ctrl, bus: 0x%x, addr: 0x%x, ret: %d",
-			cfg->port, cfg->target_addr, ret);
-	}
-
-	if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
-		LOG_ERR("pro unlock mutex fail !");
-}
 void rpu_remote_power_cycle()
 {
 	// disable sensor poll
