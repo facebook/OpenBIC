@@ -20,8 +20,17 @@
 #include <shell/shell.h>
 
 void cmd_cpld_dump(const struct shell *shell, size_t argc, char **argv);
+void set_cpld_polling(const struct shell *shell, size_t argc, char **argv);
+void get_cpld_polling(const struct shell *shell, size_t argc, char **argv);
+
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_cpld_control_polling_cmds,
+			       SHELL_CMD(set, NULL, "cpld polling set", set_cpld_polling),
+			       SHELL_CMD(get, NULL, "cpld polling get", get_cpld_polling),
+			       SHELL_SUBCMD_SET_END);
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_cpld_cmd, SHELL_CMD(dump, NULL, "cpld dump", cmd_cpld_dump),
+			       SHELL_CMD(control_polling, &sub_cpld_control_polling_cmds,
+					 "cpld control polling", NULL),
 			       SHELL_SUBCMD_SET_END);
 
 #endif
