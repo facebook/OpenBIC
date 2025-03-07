@@ -187,6 +187,17 @@ typedef struct temp_mapping_sensor {
 	uint8_t *sensor_name;
 } temp_mapping_sensor;
 
+typedef struct power_sequence {
+	uint8_t index;
+	uint8_t cpld_offsets;
+	uint8_t *power_rail_name;
+} power_sequence;
+
+extern power_sequence power_sequence_on_table[];
+extern power_sequence power_sequence_off_table[];
+extern size_t power_sequence_on_table_size;
+extern size_t power_sequence_off_table_size;
+
 extern vr_pre_proc_arg vr_pre_read_args[];
 extern mp2971_init_arg mp2971_init_args[];
 extern isl69259_init_arg isl69259_init_args[];
