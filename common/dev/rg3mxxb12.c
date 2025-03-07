@@ -230,11 +230,11 @@ out:
 	return ret;
 }
 
-bool rg3mxxb12_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt, uint8_t pullup_val)
+__weak bool rg3mxxb12_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt, uint8_t pullup_val)
 {
 	bool ret = false;
 
-	uint8_t cmd_unprotect[2] = { RG3MXXB12_PROTECTION_REG, 0x69 };
+	const uint8_t cmd_unprotect[2] = { RG3MXXB12_PROTECTION_REG, 0x69 };
 	uint8_t cmd_protect[2] = { RG3MXXB12_PROTECTION_REG, 0x00 };
 	uint8_t cmd_initial[][2] = {
 		/* 
@@ -245,7 +245,7 @@ bool rg3mxxb12_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt, uint8_t pu
 		{ RG3MXXB12_SSPORTS_AGENT_ENABLE, 0x0 },
 		{ RG3MXXB12_SSPORTS_GPIO_ENABLE, 0x0 },
 		{ RG3MXXB12_SLAVE_PORT_ENABLE, 0x0 },
-		{ RG3MXXB12_SSPORTS_PULLUP_SETTING, pullup_val},
+		{ RG3MXXB12_SSPORTS_PULLUP_SETTING, pullup_val },
 		{ RG3MXXB12_SSPORTS_PULLUP_ENABLE, 0xFF },
 		{ RG3MXXB12_SSPORTS_OD_ONLY, 0x0 },
 		{ RG3MXXB12_SLAVE_PORT_ENABLE, 0xFF },
@@ -287,7 +287,7 @@ bool rg3mxxb12_set_slave_port(uint8_t bus, uint8_t addr, uint8_t setting)
 {
 	I3C_MSG i3c_msg = { 0 };
 	int ret = 0;
-	uint8_t cmd_unprotect[2] = { RG3MXXB12_PROTECTION_REG, 0x69 };
+	const uint8_t cmd_unprotect[2] = { RG3MXXB12_PROTECTION_REG, 0x69 };
 	uint8_t cmd_protect[2] = { RG3MXXB12_PROTECTION_REG, 0x00 };
 
 	i3c_msg.bus = bus;
