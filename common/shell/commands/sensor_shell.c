@@ -180,14 +180,14 @@ static int pldm_sensor_access(const struct shell *shell, uint16_t thread_id,
 
 		shell_print(
 			shell,
-			"[0x%-2x] %-40s: %-18s | access[%c] | poll %4d(%2d) sec | %-21s | %c%5d.%03d",
+			"[0x%-2x] %-45s: %-18s | access[%c] | poll %4d(%2d) sec | %-21s | %c%5d.%03d",
 			sensor_id, sensor_name, sensor_type_name[type], check_access, diff_time,
 			(int)poll_time, pldm_sensor_status_name[cache_status], sign,
 			cache_reading.integer, cache_reading.fraction);
 
 	} else {
 		shell_print(shell,
-			    "[0x%-2x] %-40s: %-18s | access[%c] | poll %4d(%2d) sec | %-21s | na",
+			    "[0x%-2x] %-45s: %-18s | access[%c] | poll %4d(%2d) sec | %-21s | na",
 			    sensor_id, sensor_name, sensor_type_name[type], check_access, diff_time,
 			    (int)poll_time, pldm_sensor_status_name[cache_status]);
 	}
