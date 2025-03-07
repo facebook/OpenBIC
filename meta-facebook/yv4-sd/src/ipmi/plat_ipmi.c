@@ -87,6 +87,7 @@ void APP_SET_ACPI_POWER(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
 
+	msg->data_len = 0;
 	msg->completion_code = CC_SUCCESS;
 	return;
 }
@@ -95,6 +96,7 @@ void APP_CLEAR_MESSAGE_FLAGS(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
 
+	msg->data_len = 0;
 	msg->completion_code = CC_SUCCESS;
 	return;
 }
