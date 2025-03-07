@@ -129,7 +129,7 @@ static void set_dev_endpoint(void)
 	bool set_eid[MAX_CXL_ID] = { false, false };
 	// The CXL FW is unstable and its booting up time is random now.
 	// Temporary add retry mechanism for it.
-	for (int attempt = 0; attempt < 10; attempt++) {
+	for (int attempt = 0; attempt < 60; attempt++) {
 		// We only need to set CXL EID.
 		for (uint8_t i = 0; i < ARRAY_SIZE(plat_mctp_route_tbl); i++) {
 			const mctp_route_entry *p = plat_mctp_route_tbl + i;
@@ -188,8 +188,8 @@ static void set_dev_endpoint(void)
 		// break if set both CXL EID success
 		if (set_eid[CXL_ID_1] == true && set_eid[CXL_ID_2] == true)
 			break;
-		// Delay for 60 seconds before the next attempt
-		k_sleep(K_SECONDS(60));
+		// Delay for 10 seconds before the next attempt
+		k_sleep(K_SECONDS(10));
 	}
 }
 
