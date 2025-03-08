@@ -234,6 +234,7 @@ bool vr_rail_name_get(uint8_t rail, uint8_t **name);
 bool vr_rail_enum_get(uint8_t *name, uint8_t *num);
 int power_level_send_event(bool is_assert, int ubc1_current, int ubc2_current);
 bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_all_sensor_read(sensor_cfg *cfg, void *args, int *reading);
 void set_uart_power_event_is_enable(bool is_enable);
 void pwr_level_mutex_init(void);
 void set_alert_level_to_default_or_user_setting(bool is_default, int32_t user_setting);
