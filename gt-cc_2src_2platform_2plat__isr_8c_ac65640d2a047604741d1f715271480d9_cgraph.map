@@ -1,0 +1,12 @@
+<map id="ISR_NIC_ADC_ALERT" name="ISR_NIC_ADC_ALERT">
+<area shape="rect" id="node1" title=" " alt="" coords="5,81,163,108"/>
+<area shape="rect" id="node2" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="426,31,497,57"/>
+<area shape="rect" id="node3" href="$gt-cc_2src_2platform_2plat__led_8c.html#adb64af9674fd383801c8e05fa1e6d1ce" title=" " alt="" coords="211,81,355,108"/>
+<area shape="rect" id="node10" href="$pldm__monitor_8c.html#aee425d655113020d7d424cc5b86d756c" title=" " alt="" coords="213,133,352,174"/>
+<area shape="rect" id="node4" href="$aalc-rpu_2src_2platform_2plat__led_8c.html#a875047296bd773029bfcdca9029bac36" title=" " alt="" coords="403,81,520,108"/>
+<area shape="rect" id="node9" href="$gt-cc_2src_2platform_2plat__class_8c.html#a9ac69a581f2e3ab84919e4724ba7ce9b" title=" " alt="" coords="412,132,511,159"/>
+<area shape="rect" id="node5" href="$plat__status_8c.html#aa601af4f53236dc9df9b4db1735f94de" title=" " alt="" coords="598,5,709,32"/>
+<area shape="rect" id="node6" href="$plat__threshold_8c.html#a2ad1078224a8f4dc172eba16e307a4b6" title=" " alt="" coords="787,81,929,108"/>
+<area shape="rect" id="node7" href="$plat__threshold_8c.html#abe65da4c3147d60647cdb1eea9cd81d2" title=" " alt="" coords="568,107,739,133"/>
+<area shape="rect" id="node8" href="$aalc-rpu_2src_2platform_2plat__led_8c.html#a551af46446cb05b55f2f8e089d53ff85" title=" " alt="" coords="621,157,685,184"/>
+</map>

@@ -1,0 +1,12 @@
+<map id="common/dev/include/nct7363.h" name="common/dev/include/nct7363.h">
+<area shape="rect" id="node1" title=" " alt="" coords="421,5,564,47"/>
+<area shape="rect" id="node2" href="$nct7363_8c.html" title=" " alt="" coords="138,109,295,136"/>
+<area shape="rect" id="node3" href="$aalc-rpu_2src_2platform_2plat__hook_8c.html" title=" " alt="" coords="5,199,148,255"/>
+<area shape="rect" id="node4" href="$aalc-rpu_2src_2platform_2plat__hook_8h.html" title=" " alt="" coords="421,95,564,151"/>
+<area shape="rect" id="node6" href="$aalc-rpu_2src_2platform_2plat__init_8c.html" title=" " alt="" coords="172,199,315,255"/>
+<area shape="rect" id="node7" href="$plat__pwm_8c.html" title=" " alt="" coords="673,206,859,247"/>
+<area shape="rect" id="node9" href="$plat__threshold_8c.html" title=" " alt="" coords="884,199,1027,255"/>
+<area shape="rect" id="node10" href="$aalc-rpu_2src_2platform_2plat__shell_8c.html" title=" " alt="" coords="691,95,833,151"/>
+<area shape="rect" id="node5" href="$aalc-rpu_2src_2platform_2plat__hwmon_8c.html" title=" " alt="" coords="339,199,481,255"/>
+<area shape="rect" id="node8" href="$aalc-rpu_2src_2platform_2plat__sensor__table_8c.html" title=" " alt="" coords="505,199,648,255"/>
+</map>
