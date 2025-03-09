@@ -58,6 +58,14 @@ dimm_pmic_mapping_cfg dimm_pmic_map_table[] = {
 	{ SENSOR_NUM_TEMP_DIMM_A7, SENSOR_NUM_PWR_DIMMA7_PMIC },
 };
 
+bool m2_access(uint8_t sensor_num)
+{
+	if (get_system_sku() == SYS_TYPE_EMR) {
+		return false;
+	}
+	return get_post_status();
+}
+
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
 	   access check arg0, arg1, sample_count, cache, cache_status, mux_ADDRess, mux_offset,
@@ -75,7 +83,7 @@ sensor_cfg plat_sensor_config[] = {
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 
 	// NVME
-	{ SENSOR_NUM_TEMP_SSD0, sensor_dev_nvme, I2C_BUS2, SSD0_ADDR, SSD0_OFFSET, post_access, 0,
+	{ SENSOR_NUM_TEMP_SSD0, sensor_dev_nvme, I2C_BUS2, SSD0_ADDR, SSD0_OFFSET, m2_access, 0,
 	  0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  pre_nvme_read, &mux_conf_addr_0xe2[1], NULL, NULL, NULL },
 
