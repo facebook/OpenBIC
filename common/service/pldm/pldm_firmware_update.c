@@ -48,6 +48,7 @@ LOG_MODULE_DECLARE(pldm);
 #define MIN_FW_UPDATE_BASELINE_TRANS_SIZE 32
 #define PLDM_NO_SUPPORT_PROGRESS_PERCENT 0x65
 #define PLDM_FW_UPDATE_MODE_TIMEOUT 60
+#define UPDATE_REQUEST_DATA_MAX_RETRY_COUNT 3
 
 #define GET_EEPROM_SLAVE_MASK(offset) (((offset) >> 16) & 0xF)
 #define GET_EERPOM_OFFSET(offset) ((offset) & 0xFFFF)
@@ -127,8 +128,8 @@ int get_device_descriptor_total_length(struct pldm_descriptor_string *table, uin
 	return length;
 }
 
-uint8_t pldm_fw_update(void *fw_update_param, const int flash_position) {
-
+uint8_t pldm_fw_update(void *fw_update_param, const int flash_position)
+{
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 
 	CHECK_NULL_ARG_WITH_RETURN(p->data, 1);
@@ -175,8 +176,8 @@ uint8_t pldm_bic_update(void *fw_update_param)
 	return pldm_fw_update(fw_update_param, DEVSPI_FMC_CS0);
 }
 
-uint8_t pldm_bios_update(void *fw_update_param) {
-
+uint8_t pldm_bios_update(void *fw_update_param)
+{
 	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
 
 	int pos = pal_get_bios_flash_position();
@@ -796,6 +797,9 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 
 	cur_aux_state = STATE_AUX_INPROGRESS;
 
+	uint32_t last_offset = 0xFFFFFFFF;
+	uint8_t retry_count = 0;
+
 	do {
 		if (keep_update_flag == false) {
 			LOG_WRN("Update has been canceled by UA(Update Agent)");
@@ -842,11 +846,26 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 			goto exit;
 		}
 
+		LOG_DBG("Request data at 0x%x, length 0x%x, received data length 0x%x", req.offset,
+			req.length, read_len - 1);
+
+		if (last_offset != req.offset)
+			retry_count = 0;
+
+		last_offset = req.offset;
+
 		if (read_len != (req.length + 1)) {
-			LOG_ERR("Request data failed at(0x%x, 0x%x), received unexpected data length 0x%x)",
-				req.offset, req.length, read_len - 1);
-			cur_aux_state = STATE_AUX_FAILED;
-			goto exit;
+			retry_count++;
+			if (retry_count > UPDATE_REQUEST_DATA_MAX_RETRY_COUNT) {
+				LOG_ERR("Request data failed at(0x%x, 0x%x), received unexpected data length 0x%x",
+					req.offset, req.length, read_len - 1);
+				cur_aux_state = STATE_AUX_FAILED;
+				goto exit;
+			}
+
+			LOG_WRN("Request data failed at(0x%x, 0x%x), received unexpected data length 0x%x, attempt %d and retry again",
+				req.offset, req.length, read_len - 1, retry_count);
+			continue;
 		}
 
 		if (resp_buf[0] != PLDM_SUCCESS) {
