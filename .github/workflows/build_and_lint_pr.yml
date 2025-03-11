@@ -74,7 +74,7 @@ jobs:
     # Sets up python and loads packages from the cache.
     - name: Try Cache
       id: python
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: |
           ./modules
@@ -83,7 +83,7 @@ jobs:
  
     - name: Cache SDK Toolchain
       id: cache-sdk
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: /home/runner/zephyr-sdk-0.12.4
         key: zephyr-sdk-0.12.4
