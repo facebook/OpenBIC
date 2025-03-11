@@ -33,6 +33,7 @@
 LOG_MODULE_REGISTER(plat_class);
 
 static uint8_t system_class = SYS_CLASS_1;
+static uint8_t system_sku = 0;
 static uint8_t board_revision = 0x0F;
 static uint8_t hsc_module = HSC_MODULE_UNKNOWN;
 static CARD_STATUS _1ou_status = { false, TYPE_1OU_UNKNOWN };
@@ -41,6 +42,11 @@ static CARD_STATUS _2ou_status = { false, TYPE_2OU_UNKNOWN };
 uint8_t get_system_class()
 {
 	return system_class;
+}
+
+uint8_t get_system_sku()
+{
+	return system_sku;
 }
 
 CARD_STATUS get_1ou_status()
@@ -328,6 +334,16 @@ void init_platform_config()
 	}
 	printk("BIC class type(class-%d), 1ou present status(%d), 2ou present status(%d), board revision(0x%x)\n",
 	       system_class, (int)_1ou_status.present, (int)_2ou_status.present, board_revision);
+
+	tx_len = 1;
+	rx_len = 1;
+	data[0] = CPLD_SYSTEM_SKU_REG;
+	i2c_msg = construct_i2c_message(I2C_BUS1, CPLD_ADDR, tx_len, data, rx_len);
+	if (i2c_master_read(&i2c_msg, retry) == 0) {
+		system_sku = i2c_msg.data[0];
+	} else {
+		LOG_ERR("Failed to read system sku from CPLD");
+	}
 
 	/* BIC judges the 1OU card type according the ADC-6(0-based) voltage.
 	 * The 1OU card type is

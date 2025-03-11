@@ -26,6 +26,7 @@
 #define CPLD_ADDR 0x21 // 7-bit address
 #define CPLD_CLASS_TYPE_REG 0x05
 #define CPLD_2OU_EXPANSION_CARD_REG 0x06
+#define CPLD_SYSTEM_SKU_REG 0x07
 #define CPLD_BOARD_REV_ID_REG 0x08
 #define CPLD_1OU_CARD_DETECTION 0x09
 #define CPLD_1OU_VPP_POWER_STATUS 0x11
@@ -96,7 +97,12 @@ enum BIC_CARD_PRESENT {
 	CARD_PRESENT = true,
 };
 
+enum SYSTEM_SKU {
+	SYS_TYPE_EMR = 6,
+};
+
 uint8_t get_system_class();
+uint8_t get_system_sku();
 CARD_STATUS get_1ou_status();
 CARD_STATUS get_2ou_status();
 uint8_t get_board_revision();
