@@ -35,11 +35,15 @@ LOG_MODULE_REGISTER(plat_isr);
 #define AEGIS_CPLD_ADDR (0x4C >> 1)
 #define AEGIS_312M_CLK_GEN_ADDR (0x12 >> 1)
 #define AEGIS_EUSB_REPEATER_ADDR (0x86 >> 1)
+#define AEGIS_100M_CLK_BUFFER_U471_ADDR (0xCE >> 1)
+#define AEGIS_100M_CLK_BUFFER_U519_ADDR (0xD8 >> 1)
 
 void check_clk_handler();
+void check_clk_buffer_handler();
 
 K_TIMER_DEFINE(check_ubc_delayed_timer, check_ubc_delayed, NULL);
 K_WORK_DELAYABLE_DEFINE(check_clk_work, check_clk_handler);
+K_WORK_DELAYABLE_DEFINE(check_clk_buffer_work, check_clk_buffer_handler);
 
 void ISR_GPIO_FM_ASIC_0_THERMTRIP_R_N()
 {
@@ -195,12 +199,66 @@ void check_clk_handler()
 	}
 }
 
+void check_clk_buffer_handler()
+{
+	static uint8_t check_clk_handler_retry_count = 0;
+	uint8_t retry_max_count = 1;
+	uint8_t data[2] = { 0 };
+
+	if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, 0x0B, data, 1)) {
+		LOG_ERR("Failed to read cpld");
+		return;
+	}
+
+	uint8_t pwrgd_p3v3_and_p1v8 = (data[0] & GENMASK(4, 3)) >> 3;
+	if (pwrgd_p3v3_and_p1v8 == 3) {
+		memset(data, 0, sizeof(data));
+		memcpy(data, (uint8_t[]){ 0x01, 0x00 }, 2);
+		if (!plat_i2c_write(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U471_ADDR, 0x14, data, 2)) {
+			LOG_ERR("Failed to write 100M CLK BUFFER U471");
+			return;
+		}
+		memset(data, 0, sizeof(data));
+		memcpy(data, (uint8_t[]){ 0x01, 0x00 }, 2);
+		if (!plat_i2c_write(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U471_ADDR, 0x15, data, 2)) {
+			LOG_ERR("Failed to write 100M CLK BUFFER U471");
+			return;
+		}
+		memset(data, 0, sizeof(data));
+		memcpy(data, (uint8_t[]){ 0x01, 0x00 }, 2);
+		if (!plat_i2c_write(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U519_ADDR, 0x14, data, 2)) {
+			LOG_ERR("Failed to write 100M CLK BUFFER U519");
+			return;
+		}
+		memset(data, 0, sizeof(data));
+		memcpy(data, (uint8_t[]){ 0x01, 0x00 }, 2);
+		if (!plat_i2c_write(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U519_ADDR, 0x15, data, 2)) {
+			LOG_ERR("Failed to write 100M CLK BUFFER U519");
+			return;
+		}
+		check_clk_handler_retry_count = 0;
+		LOG_INF("Init 100M CLK BUFFER finish");
+	} else {
+		check_clk_handler_retry_count++;
+		if (check_clk_handler_retry_count > retry_max_count) {
+			LOG_ERR("100M CLK BUFFER init failed");
+			check_clk_handler_retry_count = 0;
+		} else {
+			LOG_INF("100M CLK BUFFER init, pwrgd not ready, retry after 100ms");
+			k_work_schedule(&check_clk_work, K_MSEC(100));
+		}
+	}
+}
+
 void plat_clock_init(void)
 {
 	LOG_DBG("plat_clock_init started");
 	uint8_t board_stage = get_board_stage();
 	if (board_stage == FAB2_DVT || board_stage == FAB3_PVT || board_stage == FAB4_MP)
 		k_work_schedule(&check_clk_work, K_MSEC(300));
+
+	if (board_stage >= FAB3_PVT)
+		k_work_schedule(&check_clk_buffer_work, K_MSEC(300));
 }
 
 void plat_eusb_init(void)
