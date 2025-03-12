@@ -190,7 +190,7 @@ void create_check_cxl_ready_thread()
 
 	cxl1_tid = k_thread_create(&cxl1_thread_data, cxl1_stack_area,
 				   K_THREAD_STACK_SIZEOF(cxl1_stack_area), cxl1_ready_handler, NULL,
-				   NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+				   NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY + 1, 0, K_NO_WAIT);
 	k_thread_name_set(cxl1_tid, "cxl1_ready_thread");
 	k_thread_start(cxl1_tid);
 
@@ -201,7 +201,7 @@ void create_check_cxl_ready_thread()
 
 	cxl2_tid = k_thread_create(&cxl2_thread_data, cxl2_stack_area,
 				   K_THREAD_STACK_SIZEOF(cxl2_stack_area), cxl2_ready_handler, NULL,
-				   NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+				   NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY + 1, 0, K_NO_WAIT);
 	k_thread_name_set(cxl2_tid, "cxl2_ready_thread");
 	k_thread_start(cxl2_tid);
 }
@@ -218,6 +218,7 @@ int power_on_handler(int cxl_id, int power_stage)
 		// Get power good pin to check power
 		ret = check_powers_enabled(cxl_id, ctrl_stage);
 		if (ret < 0) {
+			LOG_ERR("CXL %d PwrOn:%d Fail", cxl_id, ctrl_stage);
 			break;
 		}
 	}
@@ -450,6 +451,7 @@ int power_off_handler(int cxl_id, int power_stage)
 		// Get power good pin to check power
 		ret = check_powers_disabled(cxl_id, ctrl_stage);
 		if (ret < 0) {
+			LOG_ERR("CXL %d PwrOff:%d Fail", cxl_id, ctrl_stage);
 			break;
 		}
 	}
@@ -627,8 +629,7 @@ void cxl1_ready_handler()
 
 		return;
 	}
-	LOG_ERR("Failed to read %s due to sensor_sample_fetch failed, ret: %d",
-		CXL1_HEART_BEAT_LABEL, ret);
+	LOG_ERR("CXL1 is not ready, check %s timeout, ret: %d", CXL1_HEART_BEAT_LABEL, ret);
 	switch_mux_to_bic(IOE_SWITCH_CXL1_VR_TO_BIC);
 	set_cxl_vr_access(CXL_ID_1, true);
 	return;
@@ -675,8 +676,7 @@ void cxl2_ready_handler()
 
 		return;
 	}
-	LOG_ERR("Failed to read %s due to sensor_sample_fetch failed, ret: %d",
-		CXL2_HEART_BEAT_LABEL, ret);
+	LOG_ERR("CXL2 is not ready, check %s timeout, ret: %d", CXL2_HEART_BEAT_LABEL, ret);
 	switch_mux_to_bic(IOE_SWITCH_CXL2_VR_TO_BIC);
 	set_cxl_vr_access(CXL_ID_2, true);
 	return;
