@@ -31,7 +31,15 @@ LOG_MODULE_REGISTER(plat_event);
 
 #define CPLD_POLLING_INTERVAL_MS 1000 // 1 second polling interval
 
-K_TIMER_DEFINE(init_ubc_delayed_timer, check_ubc_delayed, NULL);
+K_TIMER_DEFINE(init_ubc_delayed_timer, check_ubc_delayed_timer_handler, NULL);
+
+K_WORK_DEFINE(check_ubc_delayed_work, check_ubc_delayed);
+
+void check_ubc_delayed_timer_handler(struct k_timer *timer)
+{
+	k_work_submit(&check_ubc_delayed_work);
+}
+
 K_THREAD_STACK_DEFINE(cpld_polling_stack, POLLING_CPLD_STACK_SIZE);
 struct k_thread cpld_polling_thread;
 k_tid_t cpld_polling_tid;
@@ -58,15 +66,27 @@ aegis_cpld_info aegis_cpld_info_table[] = {
 };
 // clang-format on
 
-bool ubc_enabled_delayed_status = false;
-bool is_dc_status_changing = false;
+bool cpld_polling_alert_status = false; // only polling cpld when alert status is true
+bool cpld_polling_enable_flag = true;
 
-void set_dc_status_changing_status(bool status)
+void check_cpld_polling_alert_status(void)
 {
-	is_dc_status_changing = status;
+	cpld_polling_alert_status = (gpio_get(ALL_VR_PM_ALERT_R_N) == GPIO_LOW);
 }
 
-void check_ubc_delayed(struct k_timer *timer)
+void set_cpld_polling_enable_flag(bool status)
+{
+	cpld_polling_enable_flag = status;
+}
+
+bool get_cpld_polling_enable_flag(void)
+{
+	return cpld_polling_enable_flag;
+}
+
+bool ubc_enabled_delayed_status = false;
+
+void check_ubc_delayed(struct k_work *work)
 {
 	/* FM_PLD_UBC_EN_R
 	 * 1 -> UBC is enabled
@@ -74,7 +94,17 @@ void check_ubc_delayed(struct k_timer *timer)
 	 */
 	bool is_ubc_enabled = (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH);
 
-	set_dc_status_changing_status(false);
+	bool is_dc_on = is_mb_dc_on();
+
+	if (is_ubc_enabled) {
+		if (is_dc_on != is_ubc_enabled) {
+			//send event to bmc
+			uint16_t error_code = (POWER_ON_SEQUENCE_TRIGGER_CAUSE << 13);
+			error_log_event(error_code, LOG_ASSERT);
+			LOG_ERR("Generated error code: 0x%x", error_code);
+		}
+	}
+
 	ubc_enabled_delayed_status = is_ubc_enabled;
 }
 
@@ -125,9 +155,13 @@ void poll_cpld_registers()
 		/* Sleep for the polling interval */
 		k_msleep(CPLD_POLLING_INTERVAL_MS);
 
-		/* Check if any status is changing */
-		if (is_dc_status_changing)
+		LOG_DBG("cpld_polling_alert_status = %d, cpld_polling_enable_flag = %d",
+			cpld_polling_alert_status, cpld_polling_enable_flag);
+
+		if (!cpld_polling_alert_status || !cpld_polling_enable_flag)
 			continue;
+
+		LOG_DBG("Polling CPLD registers");
 
 		for (size_t i = 0; i < ARRAY_SIZE(aegis_cpld_info_table); i++) {
 			uint8_t expected_val = ubc_enabled_delayed_status ?
@@ -166,7 +200,7 @@ void poll_cpld_registers()
 
 void init_cpld_polling(void)
 {
-	k_timer_start(&init_ubc_delayed_timer, K_MSEC(3000), K_NO_WAIT);
+	check_cpld_polling_alert_status();
 
 	cpld_polling_tid =
 		k_thread_create(&cpld_polling_thread, cpld_polling_stack,
@@ -176,4 +210,6 @@ void init_cpld_polling(void)
                    (3-second thread start delay + 1-second CPLD_POLLING_INTERVAL_MS) 
                    to prevent DC status changes during BIC reboot */
 	k_thread_name_set(&cpld_polling_thread, "cpld_polling_thread");
+
+	k_timer_start(&init_ubc_delayed_timer, K_MSEC(3000), K_NO_WAIT);
 }

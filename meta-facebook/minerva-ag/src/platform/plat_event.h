@@ -164,8 +164,11 @@
 #define MTIA_QSPI_BOOT_DISABLE_REG 0x3B
 #define ATH_RSVD_GPIO_REG 0x3C
 
-void check_ubc_delayed(struct k_timer *timer);
-void set_dc_status_changing_status(bool status);
+void check_ubc_delayed_timer_handler(struct k_timer *timer);
+void check_ubc_delayed(struct k_work *work);
+void check_cpld_polling_alert_status();
+void set_cpld_polling_enable_flag(bool status);
+bool get_cpld_polling_enable_flag(void);
 void init_cpld_polling(void);
 
 typedef struct _aegis_cpld_info_ aegis_cpld_info;
