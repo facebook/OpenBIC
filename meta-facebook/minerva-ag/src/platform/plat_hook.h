@@ -149,6 +149,15 @@ enum PLAT_DRIVE_LEVEL_INDEX_E {
 	DRIVE_INDEX_LEVEL_DEFAULT,
 };
 
+typedef struct vr_vout_range_user_settings_struct {
+	uint16_t default_vout_max[STRAP_INDEX_MAX];
+	uint16_t default_vout_min[STRAP_INDEX_MAX];
+	uint16_t change_vout_max[STRAP_INDEX_MAX];
+	uint16_t change_vout_min[STRAP_INDEX_MAX];
+} vr_vout_range_user_settings_struct;
+
+extern vr_vout_range_user_settings_struct vout_range_user_settings;
+
 typedef struct bootstrap_user_settings_struct {
 	uint16_t user_setting_value[STRAP_INDEX_MAX];
 } bootstrap_user_settings_struct;
@@ -227,10 +236,9 @@ typedef struct bootstrap_mapping_register {
 	uint8_t change_setting_value;
 } bootstrap_mapping_register;
 
-bool plat_get_vout_min(uint8_t rail, uint16_t *millivolt);
-bool plat_get_vout_max(uint8_t rail, uint16_t *millivolt);
-bool plat_set_vout_min(uint8_t rail, uint16_t *millivolt);
-bool plat_set_vout_max(uint8_t rail, uint16_t *millivolt);
+bool plat_get_vout_range(uint8_t rail, uint16_t *vout_max_millivolt, uint16_t *vout_min_millivolt);
+bool plat_set_vout_range_min(uint8_t rail, uint16_t *millivolt);
+bool plat_set_vout_range_max(uint8_t rail, uint16_t *millivolt);
 bool temp_sensor_rail_name_get(uint8_t rail, uint8_t **name);
 bool temp_sensor_rail_enum_get(uint8_t *name, uint8_t *num);
 bool plat_get_temp_status(uint8_t rail, uint8_t *temp_status);
