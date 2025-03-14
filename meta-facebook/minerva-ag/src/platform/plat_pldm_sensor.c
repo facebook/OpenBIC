@@ -7332,6 +7332,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.post_sensor_read_hook = post_all_sensor_read,
 		},
 	},
 };
