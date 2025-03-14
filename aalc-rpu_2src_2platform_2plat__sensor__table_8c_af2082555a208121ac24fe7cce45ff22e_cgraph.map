@@ -1,0 +1,31 @@
+<map id="post_quick_sensor_read" name="post_quick_sensor_read">
+<area shape="rect" id="node1" title=" " alt="" coords="5,389,168,416"/>
+<area shape="rect" id="node2" href="$aalc-rpu_2src_2platform_2plat__isr_8c.html#aa56a8d6297373ac086be9bc34236fb76" title=" " alt="" coords="217,259,350,285"/>
+<area shape="rect" id="node26" href="$aalc-rpu_2src_2platform_2plat__hook_8c.html#a4b9f85fb23209e5fecd32c88f5fe36fa" title=" " alt="" coords="216,520,351,547"/>
+<area shape="rect" id="node3" href="$plat__pwm_8c.html#a7a010a00cf1f6ebb1af4eb561c2e33f4" title=" " alt="" coords="425,5,543,32"/>
+<area shape="rect" id="node5" href="$aalc-rpu_2src_2platform_2plat__log_8c.html#a103e33f69b37672107c44bcf36accc6b" title=" " alt="" coords="429,56,539,83"/>
+<area shape="rect" id="node6" href="$aalc-rpu_2src_2platform_2plat__isr_8c.html#adf24a48baf7d420ee9cccb8aec12129e" title=" " alt="" coords="424,107,544,133"/>
+<area shape="rect" id="node8" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="880,107,951,133"/>
+<area shape="rect" id="node9" href="$plat__status_8c.html#a6a5e5d3582c3221f9a1b3d94cff8cf6f" title=" " alt="" coords="651,157,762,184"/>
+<area shape="rect" id="node10" href="$aalc-rpu_2src_2platform_2plat__led_8c.html#a875047296bd773029bfcdca9029bac36" title=" " alt="" coords="425,309,543,336"/>
+<area shape="rect" id="node11" href="$plat__status_8c.html#aa601af4f53236dc9df9b4db1735f94de" title=" " alt="" coords="651,259,762,285"/>
+<area shape="rect" id="node14" href="$aalc-rpu_2src_2platform_2plat__led_8c.html#a551af46446cb05b55f2f8e089d53ff85" title=" " alt="" coords="675,411,739,437"/>
+<area shape="rect" id="node15" href="$aalc-rpu_2src_2platform_2plat__led_8c.html#a8cf7bd58d0bf5c49aa5a54f7b8811d7d" title=" " alt="" coords="431,411,537,437"/>
+<area shape="rect" id="node16" href="$plat__status_8c.html#a37c4734c062731fe838092328b859bc3" title=" " alt="" coords="399,461,569,488"/>
+<area shape="rect" id="node4" href="$plat__pwm_8c.html#a7657bf915a4099d48429505214c701ff" title=" " alt="" coords="649,5,764,32"/>
+<area shape="rect" id="node7" href="$aalc-rpu_2src_2platform_2plat__isr_8c.html#a5a965074cd1c8d1c7d45ed046d56ba0d" title=" " alt="" coords="617,56,796,83"/>
+<area shape="rect" id="node12" href="$plat__threshold_8c.html#a2ad1078224a8f4dc172eba16e307a4b6" title=" " alt="" coords="844,335,987,361"/>
+<area shape="rect" id="node13" href="$plat__threshold_8c.html#abe65da4c3147d60647cdb1eea9cd81d2" title=" " alt="" coords="621,360,792,387"/>
+<area shape="rect" id="node17" href="$plat__status_8c.html#a3ee9e48f0334992a20eada9aa76ab826" title=" " alt="" coords="621,461,792,488"/>
+<area shape="rect" id="node24" href="$aalc-rpu_2src_2platform_2plat__fru_8c.html#a8cf0c69d4e8ca149ea7daf12d1225890" title=" " alt="" coords="851,512,979,539"/>
+<area shape="rect" id="node18" href="$aalc-rpu_2src_2platform_2plat__fru_8c.html#a84caf23c50d29935801d48317ea8ace8" title=" " alt="" coords="853,461,978,488"/>
+<area shape="rect" id="node19" href="$eeprom_8c.html#af84d506534770494cca55b2db24730ba" title=" " alt="" coords="1036,436,1133,463"/>
+<area shape="rect" id="node23" href="$fru_8c.html#a4694b8ef2f5e4e98917fc28fe989a2d9" title=" " alt="" coords="1037,487,1133,513"/>
+<area shape="rect" id="node20" href="$eeprom_8c.html#ac470cc411f066d8f6bc2c1d7a74c8a5a" title=" " alt="" coords="1183,487,1321,513"/>
+<area shape="rect" id="node21" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="1369,487,1491,513"/>
+<area shape="rect" id="node22" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="1539,487,1681,513"/>
+<area shape="rect" id="node25" href="$eeprom_8c.html#ab838e3d27c232117306d8611e48be202" title=" " alt="" coords="1035,537,1135,564"/>
+<area shape="rect" id="node27" href="$sensor_8c.html#a0fe2957d8cee620a28b2c4f408c59621" title=" " alt="" coords="408,513,560,554"/>
+<area shape="rect" id="node28" href="$aalc-rpu_2src_2platform_2plat__hook_8c.html#a53e0e4851d2e8c312a4e58efdffb52b5" title=" " alt="" coords="409,579,559,605"/>
+<area shape="rect" id="node29" href="$aalc-rpu_2src_2platform_2plat__hook_8c.html#a030290ba9bdfb95ddad14883664cf46a" title=" " alt="" coords="638,579,775,605"/>
+</map>

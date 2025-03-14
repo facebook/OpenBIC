@@ -1,0 +1,7 @@
+<map id="fault_led_control" name="fault_led_control">
+<area shape="rect" id="node1" title=" " alt="" coords="5,81,123,108"/>
+<area shape="rect" id="node2" href="$plat__status_8c.html#aa601af4f53236dc9df9b4db1735f94de" title=" " alt="" coords="201,5,311,32"/>
+<area shape="rect" id="node3" href="$plat__threshold_8c.html#a2ad1078224a8f4dc172eba16e307a4b6" title=" " alt="" coords="389,81,532,108"/>
+<area shape="rect" id="node4" href="$plat__threshold_8c.html#abe65da4c3147d60647cdb1eea9cd81d2" title=" " alt="" coords="171,107,341,133"/>
+<area shape="rect" id="node5" href="$aalc-rpu_2src_2platform_2plat__led_8c.html#a551af46446cb05b55f2f8e089d53ff85" title=" " alt="" coords="224,157,288,184"/>
+</map>

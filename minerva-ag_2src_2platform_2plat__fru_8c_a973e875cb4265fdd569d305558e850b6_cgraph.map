@@ -1,0 +1,11 @@
+<map id="init_fru_info" name="init_fru_info">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,95,57"/>
+<area shape="rect" id="node2" href="$minerva-ag_2src_2platform_2plat__fru_8c.html#a809921be4dec51ee0fe2eb4338379964" title=" " alt="" coords="165,5,273,32"/>
+<area shape="rect" id="node3" href="$minerva-ag_2src_2platform_2plat__fru_8c.html#a7b418e2f6c2e5dc1d71c8e4d3bfd1e8f" title=" " alt="" coords="143,56,296,83"/>
+<area shape="rect" id="node4" href="$minerva-ag_2src_2platform_2plat__fru_8c.html#ac2e8812d7b2af391576355b2eef8f904" title=" " alt="" coords="344,56,472,83"/>
+<area shape="rect" id="node5" href="$eeprom_8c.html#af84d506534770494cca55b2db24730ba" title=" " alt="" coords="520,31,617,57"/>
+<area shape="rect" id="node9" href="$fru_8c.html#a4694b8ef2f5e4e98917fc28fe989a2d9" title=" " alt="" coords="521,81,617,108"/>
+<area shape="rect" id="node6" href="$eeprom_8c.html#ac470cc411f066d8f6bc2c1d7a74c8a5a" title=" " alt="" coords="665,31,804,57"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="852,31,973,57"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="1021,31,1164,57"/>
+</map>
