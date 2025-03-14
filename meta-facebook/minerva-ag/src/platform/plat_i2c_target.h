@@ -23,4 +23,7 @@
 #define TARGET_ENABLE 1
 #define TARGET_DISABLE 0
 
+void update_sensor_data_0_2_table(void);
+void sensor_data_table_init(void);
+
 #endif
