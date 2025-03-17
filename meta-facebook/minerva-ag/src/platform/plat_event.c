@@ -26,10 +26,18 @@
 #include "plat_log.h"
 #include "plat_event.h"
 #include "plat_hook.h"
+#include "plat_isr.h"
 
 LOG_MODULE_REGISTER(plat_event);
 
 #define CPLD_POLLING_INTERVAL_MS 1000 // 1 second polling interval
+
+#ifndef AEGIS_CPLD_ADDR
+#define AEGIS_CPLD_ADDR (0x4C >> 1)
+#endif
+
+void check_cpld_handler();
+K_WORK_DELAYABLE_DEFINE(check_cpld_work, check_cpld_handler);
 
 K_TIMER_DEFINE(init_ubc_delayed_timer, check_ubc_delayed_timer_handler, NULL);
 
@@ -198,6 +206,19 @@ void poll_cpld_registers()
 	}
 }
 
+void check_cpld_handler()
+{
+	uint8_t data[4] = { 0 };
+	uint32_t version = 0;
+	if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, 0x44, data, 4)) {
+		LOG_ERR("Failed to read cpld version from cpld");
+	}
+	version = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
+	LOG_DBG("The cpld version: %08x", version);
+
+	k_work_schedule(&check_cpld_work, K_MSEC(5000));
+}
+
 void init_cpld_polling(void)
 {
 	check_cpld_polling_alert_status();
@@ -212,4 +233,6 @@ void init_cpld_polling(void)
 	k_thread_name_set(&cpld_polling_thread, "cpld_polling_thread");
 
 	k_timer_start(&init_ubc_delayed_timer, K_MSEC(3000), K_NO_WAIT);
+
+	k_work_schedule(&check_cpld_work, K_MSEC(100));
 }
