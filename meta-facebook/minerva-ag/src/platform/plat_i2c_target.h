@@ -53,6 +53,7 @@
 #define FRU_PRODUCT_CUSTOM_DATA_2_REG 0x76
 
 void update_sensor_data_2_5_table(void);
+void update_sensor_data_8_table(void);
 void sensor_data_table_init(void);
 
 typedef struct _telemetry_info_ telemetry_info;
