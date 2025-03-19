@@ -167,6 +167,7 @@
 void check_ubc_delayed(struct k_timer *timer);
 void set_dc_status_changing_status(bool status);
 void init_cpld_polling(void);
+bool is_ubc_enabled_delayed_enabled(void);
 
 typedef struct _aegis_cpld_info_ aegis_cpld_info;
 
