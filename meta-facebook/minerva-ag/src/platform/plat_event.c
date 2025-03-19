@@ -114,6 +114,13 @@ void check_ubc_delayed(struct k_work *work)
 	}
 
 	ubc_enabled_delayed_status = is_ubc_enabled;
+
+	LOG_DBG("UBC enabled delayed status: %d", ubc_enabled_delayed_status);
+}
+
+bool is_ubc_enabled_delayed_enabled(void)
+{
+	return ubc_enabled_delayed_status;
 }
 
 bool vr_error_callback(aegis_cpld_info *cpld_info, uint8_t *current_cpld_value)

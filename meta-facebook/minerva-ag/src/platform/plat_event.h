@@ -170,6 +170,7 @@ void check_cpld_polling_alert_status();
 void set_cpld_polling_enable_flag(bool status);
 bool get_cpld_polling_enable_flag(void);
 void init_cpld_polling(void);
+bool is_ubc_enabled_delayed_enabled(void);
 
 typedef struct _aegis_cpld_info_ aegis_cpld_info;
 
