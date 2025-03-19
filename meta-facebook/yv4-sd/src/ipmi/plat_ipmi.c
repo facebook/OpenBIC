@@ -36,6 +36,17 @@
 #include "power_status.h"
 #include "plat_i3c.h"
 #include "plat_dimm.h"
+#include "util_worker.h"
+
+#define EVENT_RESEND_DELAY_MS 300000 // 5 minutes delay for resend
+#define MAX_RESEND_ATTEMPTS 3
+
+// Structure to hold event resend data
+struct event_resend_data {
+	struct pldm_addsel_data event_msg;
+	int resend_count;
+	struct k_work_delayable resend_work; // Work item with delay support
+} resend_data;
 
 enum THREAD_STATUS {
 	THREAD_SUCCESS = 0,
@@ -101,6 +112,30 @@ void APP_CLEAR_MESSAGE_FLAGS(ipmi_msg *msg)
 	return;
 }
 
+// Work handler to resend the event
+void event_resend_work_handler(struct k_work *work)
+{
+	struct event_resend_data *data = CONTAINER_OF(work, struct event_resend_data, resend_work);
+
+	if (data->resend_count >= MAX_RESEND_ATTEMPTS) {
+		LOG_ERR("Max resend attempts reached for event log");
+		return;
+	}
+
+	data->resend_count++;
+
+	if (PLDM_SUCCESS != send_event_log_to_bmc(data->event_msg)) {
+		LOG_ERR("Failed to re-send event log, attempt %d", data->resend_count);
+		// Re-schedule another attempt if retries are not complete
+		k_work_reschedule_for_queue(&plat_work_q, &data->resend_work,
+					    K_MSEC(EVENT_RESEND_DELAY_MS));
+	} else {
+		LOG_INF("Successfully re-sent event log on attempt %d", data->resend_count);
+		// Successfully sent, cancel any further retries
+		k_work_cancel_delayable(&data->resend_work);
+	}
+}
+
 // Reset BMC
 void APP_COLD_RESET(ipmi_msg *msg)
 {
@@ -109,6 +144,24 @@ void APP_COLD_RESET(ipmi_msg *msg)
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
+	}
+
+	// BMC COLD RESET event assert
+	LOG_ERR("BMC COLD RESET event assert");
+	struct pldm_addsel_data event_msg = { 0 };
+	event_msg.event_type = BMC_COMES_OUT_COLD_RESET;
+	event_msg.assert_type = EVENT_ASSERTED;
+
+	// Initialize resend data
+	memset(&resend_data, 0, sizeof(resend_data));
+	resend_data.event_msg = event_msg;
+	k_work_init_delayable(&resend_data.resend_work, event_resend_work_handler);
+
+	if (PLDM_SUCCESS != send_event_log_to_bmc(event_msg)) {
+		LOG_ERR("Failed to assert BMC COLD RESET event log, scheduling retry.");
+		resend_data.resend_count = 0;
+		k_work_reschedule_for_queue(&plat_work_q, &resend_data.resend_work,
+					    K_MSEC(EVENT_RESEND_DELAY_MS));
 	}
 
 	switch (pal_submit_bmc_cold_reset()) {
