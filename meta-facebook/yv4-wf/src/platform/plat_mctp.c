@@ -282,12 +282,11 @@ uint8_t get_mctp_info(uint8_t dest_endpoint, mctp **mctp_inst, mctp_ext_params *
 
 void set_dev_endpoint_thread(void *arg1, void *arg2, void *arg3)
 {
-	/* init the device endpoint */
-	set_dev_endpoint();
 	ARG_UNUSED(arg1);
 	ARG_UNUSED(arg2);
 	ARG_UNUSED(arg3);
 
+	/* init the device endpoint */
 	set_dev_endpoint();
 }
 
