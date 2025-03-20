@@ -43,6 +43,7 @@ static int temp_threshold_set_all_default(const struct shell *shell)
 
 static int cmd_temp_threshold_get_all(const struct shell *shell, size_t argc, char **argv)
 {
+	shell_print(shell, "This limit is retrieved from the temp chip register.");
 	shell_print(
 		shell,
 		"  id|              temp_threshold_name               |temperature(millidegree C)");
@@ -67,6 +68,7 @@ static int cmd_temp_threshold_get_all(const struct shell *shell, size_t argc, ch
 
 static int cmd_temp_threshold_set(const struct shell *shell, size_t argc, char **argv)
 {
+	shell_print(shell, "This limit is written to the temp chip register.");
 	bool is_default = false;
 	bool is_perm = false;
 
