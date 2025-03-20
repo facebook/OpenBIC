@@ -782,6 +782,11 @@ typedef struct isl69259_init_args {
 	float vout_scale;
 } isl69259_init_arg;
 
+typedef struct mpc12109_init_args {
+	float iout_lsb;
+	float pout_lsb;
+} mpc12109_init_arg;
+
 enum TEMP_THRESHOLD_TYPE_E {
 	LOCAL_HIGH_LIMIT,
 	LOCAL_LOW_LIMIT,

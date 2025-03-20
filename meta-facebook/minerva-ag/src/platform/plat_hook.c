@@ -132,10 +132,7 @@ bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading)
 #define EEPROM_MAX_WRITE_TIME 5 // the BR24G512 eeprom max write time is 3.5 ms
 #define AEGIS_CPLD_ADDR (0x4C >> 1)
 #define VR_PRE_READ_ARG(idx)                                                                       \
-	{ .mutex = vr_mutex + idx, .vr_page = 0x0 },                                               \
-	{                                                                                          \
-		.mutex = vr_mutex + idx, .vr_page = 0x1                                            \
-	}
+	{ .mutex = vr_mutex + idx, .vr_page = 0x0 }, { .mutex = vr_mutex + idx, .vr_page = 0x1 }
 
 vr_pre_proc_arg vr_pre_read_args[] = {
 	{ .mutex = vr_mutex + 0, .vr_page = 0x0 },  { .mutex = vr_mutex + 0, .vr_page = 0x1 },
@@ -158,6 +155,10 @@ mp2971_init_arg mp2971_init_args[] = {
 isl69259_init_arg isl69259_init_args[] = {
 	[0] = { .vout_scale_enable = true, .vout_scale = (499 / 798.8) },
 	[1] = { .vout_scale_enable = true, .vout_scale = (499 / 709.0) },
+};
+
+mpc12109_init_arg mpc12109_init_args[] = {
+	[0] = { .iout_lsb = 0.5, .pout_lsb = 2 },
 };
 
 temp_mapping_sensor temp_index_table[] = {

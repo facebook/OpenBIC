@@ -63,6 +63,17 @@ uint8_t mpc12109_read(sensor_cfg *cfg, int *reading)
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
+	float iout_resolution = MP2891_READ_IOUT_RESOLUTION;
+	float pout_resolution = MP2891_READ_POUT_RESOLUTION;
+
+	if ((cfg->offset == PMBUS_READ_IOUT) || (cfg->offset == PMBUS_READ_POUT)) {
+		if (cfg->init_args != NULL) {
+			mpc12109_init_arg *init_arg = (mpc12109_init_arg *)cfg->init_args;
+			iout_resolution = init_arg->iout_lsb;
+			pout_resolution = init_arg->pout_lsb;
+		}
+	}
+
 	float val;
 	if (cfg->offset == PMBUS_READ_TEMPERATURE_1) {
 		uint16_t read_value =
@@ -76,10 +87,10 @@ uint8_t mpc12109_read(sensor_cfg *cfg, int *reading)
 		val = (float)read_value * MP2891_READ_VOUT_RESOLUTION;
 	} else if (cfg->offset == PMBUS_READ_IOUT) {
 		uint16_t read_value = ((msg.data[1] << 8) | msg.data[0]) & MP2891_READ_IOUT_MASK;
-		val = (float)read_value * MP2891_READ_IOUT_RESOLUTION;
+		val = (float)read_value * iout_resolution;
 	} else if (cfg->offset == PMBUS_READ_POUT) {
 		uint16_t read_value = ((msg.data[1] << 8) | msg.data[0]) & MP2891_READ_POUT_MASK;
-		val = (float)read_value * MP2891_READ_POUT_RESOLUTION;
+		val = (float)read_value * pout_resolution;
 	} else {
 		return SENSOR_FAIL_TO_ACCESS;
 	}
