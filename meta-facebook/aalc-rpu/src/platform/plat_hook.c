@@ -38,7 +38,10 @@ LOG_MODULE_REGISTER(plat_hook);
 
 #define DIFFERENTIAL_MODE 0x01
 #define FLOW_SENSOR_CACHE_MAX_NUM 30
-static flow_cache_data_mapping flow_cache_data[FLOW_SENSOR_CACHE_MAX_NUM];
+
+static float flow_cache_data[FLOW_SENSOR_CACHE_MAX_NUM] = {};
+static uint8_t flow_cache_latest_index = 0;
+static bool flow_cache_is_full = false;
 
 K_MUTEX_DEFINE(i2c_1_PCA9546a_mutex);
 K_MUTEX_DEFINE(i2c_2_PCA9546a_mutex);
@@ -1026,39 +1029,24 @@ bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
 	return true;
 }
 
-static double averge_flow_rate(double val)
+static float averge_flow_rate(float val)
 {
-	bool is_cache = false;
-	for (uint8_t i = 0; i < FLOW_SENSOR_CACHE_MAX_NUM; i++) {
-		if (flow_cache_data[i].is_newest && flow_cache_data[i].is_record) {
-			flow_cache_data[i].is_newest = false;
+	flow_cache_data[flow_cache_latest_index] = (float)val;
+	flow_cache_latest_index = (flow_cache_latest_index + 1) % FLOW_SENSOR_CACHE_MAX_NUM;
 
-			uint8_t next = ((i + 1) % FLOW_SENSOR_CACHE_MAX_NUM);
-			flow_cache_data[next].is_newest = true;
-			flow_cache_data[next].is_record = true;
-			flow_cache_data[next].flow_val = val;
-
-			is_cache = true;
-			break;
-		}
+	if (flow_cache_latest_index == 0) {
+		flow_cache_is_full = true;
 	}
 
-	if (!is_cache) {
-		flow_cache_data[0].is_newest = true;
-		flow_cache_data[0].is_record = true;
-		flow_cache_data[0].flow_val = val;
+	uint8_t count_num =
+		flow_cache_is_full ? FLOW_SENSOR_CACHE_MAX_NUM : flow_cache_latest_index;
+	float total_val = 0.0;
+
+	for (uint8_t i = 0; i < count_num; i++) {
+		total_val += flow_cache_data[i];
 	}
 
-	uint8_t count_num = 0;
-	double total_val = 0;
-	for (uint8_t i = 0; i < FLOW_SENSOR_CACHE_MAX_NUM; i++) {
-		if (flow_cache_data[i].is_record) {
-			total_val = total_val + flow_cache_data[i].flow_val;
-			count_num++;
-		}
-	}
-
-	return (count_num > 0) ? (total_val / count_num) : 0.0;
+	return (total_val / count_num);
 }
 
 bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
@@ -1079,8 +1067,8 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 	sensor_val *oval = (sensor_val *)reading;
 	double rawValue = ((uint16_t)oval->integer + (oval->fraction / 1000.0));
 
-	double val;
-	double v_val, flow_Pmax = 400, flow_Pmin = 10, press_Pmax = 50, press_Pmin = 0;
+	float val;
+	float v_val, flow_Pmax = 400, flow_Pmin = 10, press_Pmax = 50, press_Pmin = 0;
 
 	ads112c_post_arg const *post_args = (ads112c_post_arg *)args;
 	switch (post_args->plat_sensor_type) {
@@ -1225,13 +1213,15 @@ bool get_fb_present_status(uint16_t *fb_present_status)
 	return true;
 }
 
-void clean_flow_cache_data()
+void clear_flow_cache_data()
 {
+	// clear all flow cache data
 	for (uint8_t i = 0; i < FLOW_SENSOR_CACHE_MAX_NUM; i++) {
-		flow_cache_data[i].is_record = false;
-		flow_cache_data[i].is_newest = false;
-		flow_cache_data[i].flow_val = 0.0;
+		flow_cache_data[i] = 0;
 	}
+
+	flow_cache_latest_index = 0;
+	flow_cache_is_full = false;
 }
 
 max11617_init_arg max11617_init_args[] = {

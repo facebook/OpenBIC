@@ -93,6 +93,6 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading);
 bool pre_PCA9546A_read(sensor_cfg *cfg, void *args);
 bool post_PCA9546A_read(sensor_cfg *cfg, void *args, int *reading);
 bool get_fb_present_status(uint16_t *fb_present_status);
-void clean_flow_cache_data();
+void clear_flow_cache_data();
 
 #endif

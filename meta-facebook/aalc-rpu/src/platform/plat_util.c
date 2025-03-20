@@ -104,7 +104,7 @@ void plat_enable_sensor_poll(void)
 	enable_sensor_poll();
 	nct7363_wdt_all_enable();
 	controlFSC(FSC_ENABLE);
-	clean_flow_cache_data(); // clean cache to start
+	clear_flow_cache_data(); // clear cache to start
 }
 
 void plat_disable_sensor_poll(void)
