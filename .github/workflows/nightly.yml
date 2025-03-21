@@ -31,5 +31,3 @@ jobs:
     uses: facebook/OpenBIC/.github/workflows/build_and_lint_pr.yml@main
     with:
       nightly: true # We don't want to run linters on nightly because it creates a lot of pointless noise.
-    secrets:
-      GIST_SECRET: ${{ secrets.GIST_SECRET }}
