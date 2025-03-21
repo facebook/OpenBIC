@@ -37,6 +37,11 @@ LOG_MODULE_REGISTER(plat_hook);
 #define FB_SIG_PRSNT_ADDR_ODD 0x4E // 8 bit address (1, 3, 5, 7, 9, 11, 13)
 
 #define DIFFERENTIAL_MODE 0x01
+#define FLOW_SENSOR_CACHE_MAX_NUM 30
+
+static float flow_cache_data[FLOW_SENSOR_CACHE_MAX_NUM] = {};
+static uint8_t flow_cache_latest_index = 0;
+static bool flow_cache_is_full = false;
 
 K_MUTEX_DEFINE(i2c_1_PCA9546a_mutex);
 K_MUTEX_DEFINE(i2c_2_PCA9546a_mutex);
@@ -1024,6 +1029,26 @@ bool post_adm1272_read(sensor_cfg *cfg, void *args, int *reading)
 	return true;
 }
 
+static float averge_flow_rate(float val)
+{
+	flow_cache_data[flow_cache_latest_index] = (float)val;
+	flow_cache_latest_index = (flow_cache_latest_index + 1) % FLOW_SENSOR_CACHE_MAX_NUM;
+
+	if (flow_cache_latest_index == 0) {
+		flow_cache_is_full = true;
+	}
+
+	uint8_t count_num =
+		flow_cache_is_full ? FLOW_SENSOR_CACHE_MAX_NUM : flow_cache_latest_index;
+	float total_val = 0.0;
+
+	for (uint8_t i = 0; i < count_num; i++) {
+		total_val += flow_cache_data[i];
+	}
+
+	return (total_val / count_num);
+}
+
 bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
@@ -1042,16 +1067,17 @@ bool post_ads112c_read(sensor_cfg *cfg, void *args, int *reading)
 	sensor_val *oval = (sensor_val *)reading;
 	double rawValue = ((uint16_t)oval->integer + (oval->fraction / 1000.0));
 
-	double val;
-	double v_val, flow_Pmax = 400, flow_Pmin = 10, press_Pmax = 50, press_Pmin = 0;
+	float val;
+	float v_val, flow_Pmax = 400, flow_Pmin = 10, press_Pmax = 50, press_Pmin = 0;
 
-	ads112c_post_arg *post_args = (ads112c_post_arg *)args;
+	ads112c_post_arg const *post_args = (ads112c_post_arg *)args;
 	switch (post_args->plat_sensor_type) {
 	case PLATFORM_ADS112C_FLOW: //Flow_Rate_LPM
 		v_val = 5 - ((32767 - rawValue) * 0.000153);
 		val = (((v_val / 5.0) - 0.1) * (flow_Pmax - flow_Pmin) / 0.8);
 		val = 1.3232 * val - 1.0314;
 		val = (val < 0) ? 0 : val;
+		val = averge_flow_rate(val);
 		break;
 	case PLATFORM_ADS112C_PRESS: //Filter_P/Outlet_P/Inlet_P
 		v_val = 5 - ((32767 - rawValue) * 0.000153);
@@ -1185,6 +1211,17 @@ bool get_fb_present_status(uint16_t *fb_present_status)
 	*fb_present_status = pwr_prsnt & sig_prsnt;
 
 	return true;
+}
+
+void clear_flow_cache_data()
+{
+	// clear all flow cache data
+	for (uint8_t i = 0; i < FLOW_SENSOR_CACHE_MAX_NUM; i++) {
+		flow_cache_data[i] = 0;
+	}
+
+	flow_cache_latest_index = 0;
+	flow_cache_is_full = false;
 }
 
 max11617_init_arg max11617_init_args[] = {

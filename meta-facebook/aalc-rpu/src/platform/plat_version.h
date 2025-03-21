@@ -48,4 +48,6 @@
 #define BIC_FW_platform_1 0x61 // char: a
 #define BIC_FW_platform_2 0x00 // char: '\0'
 
+#define FAN_TABLE_REVISION 2
+
 #endif

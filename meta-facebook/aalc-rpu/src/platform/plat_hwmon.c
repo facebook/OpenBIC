@@ -66,7 +66,7 @@ bool clear_log_for_modbus_pump_setting(pump_reset_struct *data, uint8_t bit_val)
 static bool hsc_reset(uint8_t sensor_num)
 {
 	// Check sensor information in sensor config table
-	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
+	sensor_cfg const *cfg = get_common_sensor_cfg_info(sensor_num);
 	if (cfg == NULL) {
 		LOG_ERR("Fail when getting pump sensor config, 0x%x", sensor_num);
 		return false;
@@ -115,19 +115,7 @@ bool close_pump(pump_reset_struct *data, uint8_t bit_val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
-	static uint8_t is_stop;
-
-	if (bit_val == 0) {
-		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_CLOSE_PUMP, 0);
-		if (is_stop) {
-			set_manual_pwm_cache_to_default();
-			is_stop = 0;
-		}
-	} else {
-		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_CLOSE_PUMP, 1);
-		set_manual_pwm_cache_to_zero();
-		is_stop = 1;
-	}
+	set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_CLOSE_PUMP, bit_val);
 
 	return true;
 }
@@ -421,6 +409,12 @@ static bool failure_behavior(uint8_t group)
 
 uint8_t pwm_control(uint8_t group, uint8_t duty)
 {
+	// stop pump
+	if ((get_status_flag(STATUS_FLAG_FAILURE) >> PUMP_FAIL_CLOSE_PUMP) & 0x01) {
+		set_pwm_group(group, 0);
+		return 0;
+	}
+
 	// suppurt redundant device in semi mode
 	uint32_t redundant_check = PUMP_REDUNDANT_DISABLE;
 	if (get_fsc_mode() == FSC_MODE_SEMI_MODE)
