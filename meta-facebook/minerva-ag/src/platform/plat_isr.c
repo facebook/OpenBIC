@@ -41,7 +41,7 @@ LOG_MODULE_REGISTER(plat_isr);
 void check_clk_handler();
 void check_clk_buffer_handler();
 
-K_TIMER_DEFINE(check_ubc_delayed_timer, check_ubc_delayed, NULL);
+K_TIMER_DEFINE(check_ubc_delayed_timer, check_ubc_delayed_timer_handler, NULL);
 K_WORK_DELAYABLE_DEFINE(check_clk_work, check_clk_handler);
 K_WORK_DELAYABLE_DEFINE(check_clk_buffer_work, check_clk_buffer_handler);
 
@@ -82,6 +82,8 @@ void ISR_GPIO_ALL_VR_PM_ALERT_R_N()
 {
 	LOG_DBG("gpio_%d_isr called, val=%d , dir= %d", ALL_VR_PM_ALERT_R_N,
 		gpio_get(ALL_VR_PM_ALERT_R_N), gpio_get_direction(ALL_VR_PM_ALERT_R_N));
+
+	check_cpld_polling_alert_status();
 }
 
 void ISR_GPIO_ATH_SMB_ALERT_NPCM_LVC33_R_N()
@@ -101,7 +103,6 @@ void ISR_GPIO_FM_PLD_UBC_EN_R()
 	}
 
 	k_timer_start(&check_ubc_delayed_timer, K_MSEC(3000), K_NO_WAIT);
-	set_dc_status_changing_status(true);
 }
 
 bool plat_i2c_read(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t *data, uint8_t len)
