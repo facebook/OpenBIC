@@ -608,6 +608,7 @@ bool vr_status_name_get(uint8_t rail, uint8_t **name)
 
 vr_vout_user_settings user_settings = { 0 };
 struct vr_vout_user_settings default_settings = { 0 };
+vr_vout_range_user_settings_struct vout_range_user_settings = { 0 };
 
 bool vr_rail_enum_get(uint8_t *name, uint8_t *num)
 {
@@ -639,6 +640,68 @@ bool vr_status_enum_get(uint8_t *name, uint8_t *num)
 
 	LOG_ERR("invalid vr status name %s", name);
 	return false;
+}
+
+bool plat_get_vout_range(uint8_t rail, uint16_t *vout_max_millivolt, uint16_t *vout_min_millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(vout_max_millivolt, false);
+	CHECK_NULL_ARG_WITH_RETURN(vout_min_millivolt, false);
+
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	if (check_supported_threshold_with_sensor_id(sensor_id) != 0) {
+		LOG_ERR("sensor id: 0x%x unsupported thresholds", sensor_id);
+		return false;
+	}
+
+	float critical_high, critical_low;
+	if (get_pdr_table_critical_high_and_low_with_sensor_id(sensor_id, &critical_high,
+							       &critical_low) != 0) {
+		LOG_ERR("sensor id: 0x%x get threshold failed", sensor_id);
+		return false;
+	}
+
+	*vout_max_millivolt = (uint16_t)(critical_high * 1000.0);
+	*vout_min_millivolt = (uint16_t)(critical_low * 1000.0);
+	return true;
+}
+
+bool plat_set_vout_range_min(uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	vout_range_user_settings.change_vout_min[rail] = *millivolt;
+	return true;
+}
+
+bool plat_set_vout_range_max(uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	vout_range_user_settings.change_vout_max[rail] = *millivolt;
+	return true;
 }
 
 bool vr_vout_user_settings_get(void *user_settings)
@@ -863,6 +926,31 @@ static bool vr_vout_default_settings_init(void)
 			return false;
 		}
 		default_settings.vout[i] = vout;
+	}
+
+	return true;
+}
+
+static bool vr_vout_range_user_settings_init(void)
+{
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		if ((get_board_type() == MINERVA_AEGIS_BD) && (i == 0)) {
+			vout_range_user_settings.default_vout_max[i] = 0xffff;
+			vout_range_user_settings.default_vout_min[i] = 0xffff;
+			vout_range_user_settings.change_vout_max[i] = 0xffff;
+			vout_range_user_settings.change_vout_min[i] = 0xffff;
+			continue; // skip osfp p3v3 on AEGIS BD
+		}
+		uint16_t vout_max = 0;
+		uint16_t vout_min = 0;
+		if (!plat_get_vout_range(i, &vout_max, &vout_min)) {
+			LOG_ERR("Can't find vout range default by rail index: %d", i);
+			return false;
+		}
+		vout_range_user_settings.default_vout_max[i] = vout_max;
+		vout_range_user_settings.default_vout_min[i] = vout_min;
+		vout_range_user_settings.change_vout_max[i] = vout_max;
+		vout_range_user_settings.change_vout_min[i] = vout_min;
 	}
 
 	return true;
@@ -1173,6 +1261,7 @@ void user_settings_init(void)
 	soc_pcie_perst_user_settings_init();
 	bootstrap_default_settings_init();
 	bootstrap_user_settings_init();
+	vr_vout_range_user_settings_init();
 }
 
 bool get_bootstrap_change_drive_level(int rail, int *drive_level)
@@ -1699,83 +1788,6 @@ bool plat_clear_temp_status(uint8_t rail)
 err:
 	return ret;
 }
-
-#define PLAT_VOUT_GET_SET_HANDLER(get_set, min_max)                                                \
-	bool plat_##get_set##_vout_##min_max(uint8_t rail, uint16_t *millivolt)                    \
-	{                                                                                          \
-		CHECK_NULL_ARG_WITH_RETURN(millivolt, false);                                      \
-                                                                                                   \
-		bool ret = false;                                                                  \
-                                                                                                   \
-		uint8_t sensor_id = vr_rail_table[rail].sensor_id;                                 \
-                                                                                                   \
-		sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);                          \
-                                                                                                   \
-		if (cfg == NULL) {                                                                 \
-			LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);         \
-			return false;                                                              \
-		}                                                                                  \
-                                                                                                   \
-		vr_pre_proc_arg *pre_proc_args = vr_pre_read_args + rail;                          \
-                                                                                                   \
-		if (cfg->pre_sensor_read_hook) {                                                   \
-			if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {          \
-				goto err;                                                          \
-			}                                                                          \
-		}                                                                                  \
-                                                                                                   \
-		switch (cfg->type) {                                                               \
-		case sensor_dev_mp2971:                                                            \
-			if (!mp2971_##get_set##_vout_##min_max(cfg, pre_proc_args->vr_page,        \
-							       millivolt)) {                       \
-				LOG_ERR("The VR MPS2971 vout reading failed");                     \
-				goto err;                                                          \
-			}                                                                          \
-			break;                                                                     \
-		case sensor_dev_mp29816a:                                                          \
-			if (!mp29816a_##get_set##_vout_##min_max(cfg, pre_proc_args->vr_page,      \
-								 millivolt)) {                     \
-				LOG_ERR("The VR MPS29816a vout reading failed");                   \
-				goto err;                                                          \
-			}                                                                          \
-			break;                                                                     \
-		case sensor_dev_isl69259:                                                          \
-			if (!isl69260_##get_set##_vout_##min_max(cfg, pre_proc_args->vr_page,      \
-								 millivolt)) {                     \
-				LOG_ERR("The VR ISL69260 vout reading failed");                    \
-				goto err;                                                          \
-			}                                                                          \
-			break;                                                                     \
-		case sensor_dev_raa228249:                                                         \
-			if (!raa228249_##get_set##_vout_##min_max(cfg, pre_proc_args->vr_page,     \
-								  millivolt)) {                    \
-				LOG_ERR("The VR RAA228249 vout reading failed");                   \
-				goto err;                                                          \
-			}                                                                          \
-			break;                                                                     \
-		default:                                                                           \
-			LOG_ERR("Unsupport VR type(%x)", cfg->type);                               \
-			goto err;                                                                  \
-		}                                                                                  \
-                                                                                                   \
-		ret = true;                                                                        \
-                                                                                                   \
-	err:                                                                                       \
-		if (cfg->post_sensor_read_hook) {                                                  \
-			if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) ==   \
-			    false) {                                                               \
-				LOG_ERR("sensor id: 0x%x post-read fail", sensor_id);              \
-			}                                                                          \
-		}                                                                                  \
-		return ret;                                                                        \
-	}
-
-PLAT_VOUT_GET_SET_HANDLER(get, min);
-PLAT_VOUT_GET_SET_HANDLER(get, max);
-PLAT_VOUT_GET_SET_HANDLER(set, min);
-PLAT_VOUT_GET_SET_HANDLER(set, max);
-
-#undef PLAT_VOUT_GET_SET_HANDLER
 
 bool plat_get_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millidegree_celsius)
 {
