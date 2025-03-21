@@ -171,6 +171,12 @@ void set_cpld_polling_enable_flag(bool status);
 bool get_cpld_polling_enable_flag(void);
 void init_cpld_polling(void);
 
+#define TEMPERATURE_IC_OVERT_FAULT_2_REG 0x97
+#define ASIC_OC_WARN_2_REG 0x98
+#define SYSTEM_ALERT_FAULT_2_REG 0x99
+#define VR_SMBUS_ALERT_3_REG 0x9A
+#define VR_SMBUS_ALERT_4_REG 0x9B
+
 typedef struct _aegis_cpld_info_ aegis_cpld_info;
 
 typedef struct _aegis_cpld_info_ {
