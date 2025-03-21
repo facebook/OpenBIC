@@ -278,5 +278,6 @@ bool find_bootstrap_by_rail(uint8_t rail, bootstrap_mapping_register *result);
 bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting_value,
 					   uint8_t drive_index_level, bool is_perm);
 bool get_bootstrap_change_drive_level(int rail, int *drive_level);
+void init_temp_limit(void);
 
 #endif

@@ -68,6 +68,7 @@ void pal_set_sys_status()
 void pal_post_init()
 {
 	plat_mctp_init();
+	init_temp_limit(); //shoulb be before temp_threshold_default_settings_init() and after pldm sensor init
 	user_settings_init();
 	pldm_load_state_effecter_table(MAX_STATE_EFFECTER_IDX);
 	pldm_assign_gpio_effecter_id(PLAT_EFFECTER_ID_GPIO_HIGH_BYTE);
