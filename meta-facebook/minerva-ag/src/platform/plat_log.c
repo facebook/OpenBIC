@@ -32,8 +32,6 @@ LOG_MODULE_REGISTER(plat_log);
 #define LOG_MAX_INDEX 0x0FFF // recount when log index > 0x0FFF
 #define LOG_MAX_NUM 100 // total log amount: 100
 #define AEGIS_FRU_LOG_START 0x0000 // log offset: 0KB
-#define AEGIS_CPLD_REGISTER_START_OFFSET 0x00
-#define AEGIS_CPLD_REGISTER_MAX_OFFSET 0x3C
 #define EEPROM_MAX_WRITE_TIME 5 // the BR24G512 eeprom max write time is 3.5 ms
 #define AEGIS_CPLD_ADDR (0x4C >> 1)
 #define I2C_BUS_CPLD I2C_BUS5
@@ -320,7 +318,6 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 void error_log_event(uint16_t error_code, bool log_status)
 {
 	bool log_todo = false;
-	uint8_t dump_data[AEGIS_CPLD_REGISTER_MAX_OFFSET - AEGIS_CPLD_REGISTER_START_OFFSET + 1];
 
 	// Check if the error_code is already logged
 	for (uint8_t i = 1; i < ARRAY_SIZE(err_code_caches); i++) {
@@ -374,13 +371,14 @@ void error_log_event(uint16_t error_code, bool log_status)
 		       sizeof(err_log_data[fru_count].error_data));
 	}
 
-	// Dump CPLD data and store it in cpld_dump
-	if (plat_dump_cpld(AEGIS_CPLD_REGISTER_START_OFFSET,
-			   (AEGIS_CPLD_REGISTER_MAX_OFFSET - AEGIS_CPLD_REGISTER_START_OFFSET + 1),
-			   dump_data)) {
-		memcpy(err_log_data[fru_count].cpld_dump, dump_data, sizeof(dump_data));
-	} else {
-		LOG_ERR("Failed to dump CPLD data");
+	if (!plat_dump_cpld(AEGIS_CPLD_REGISTER_1ST_PART_START_OFFSET, AEGIS_CPLD_REGISTER_1ST_PART_NUM, 
+				err_log_data[fru_count].cpld_dump)) {
+		LOG_ERR("Failed to dump 1st part CPLD data");
+	}
+
+	if (!plat_dump_cpld(AEGIS_CPLD_REGISTER_2ND_PART_START_OFFSET, AEGIS_CPLD_REGISTER_2ND_PART_NUM, 
+		err_log_data[fru_count].cpld_dump + AEGIS_CPLD_REGISTER_1ST_PART_NUM)) {
+		LOG_ERR("Failed to dump 2nd part CPLD data");
 	}
 
 	//dump err_log_data for debug
