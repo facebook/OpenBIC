@@ -52,38 +52,6 @@ const EEPROM_CFG plat_fru_config[] = {
 	},
 };
 
-#define CHASSIS_CUSTOM_DATA_MAX 24
-#define BOARD_CUSTOM_DATA_MAX 4
-
-typedef struct {
-	uint8_t chassis_type;
-	char chassis_part_number[32];
-	char chassis_serial_number[32];
-	char chassis_custom_data[CHASSIS_CUSTOM_DATA_MAX][32];
-} ChassisInfo;
-
-typedef struct {
-	uint8_t language;
-	char board_mfg_date[32];
-	char board_mfg[32];
-	char board_product[32];
-	char board_serial[32];
-	char board_part_number[32];
-	char board_fru_id[32];
-	char board_custom_data[BOARD_CUSTOM_DATA_MAX][32];
-} BoardInfo;
-
-typedef struct {
-	uint8_t language;
-	char product_manufacturer[32];
-	char product_name[32];
-	char product_part_number[32];
-	char product_version[32];
-	char product_serial[32];
-	char product_asset_tag[32];
-	char product_fru_id[32];
-} ProductInfo;
-
 void pal_load_fru_config(void)
 {
 	memcpy(&fru_config, &plat_fru_config, sizeof(plat_fru_config));
@@ -190,12 +158,6 @@ bool plat_get_cpld_fru_data(uint8_t *data)
 	return true;
 }
 
-typedef struct {
-	ChassisInfo chassis;
-	BoardInfo board;
-	ProductInfo product;
-} FRU_INFO;
-
 FRU_INFO *plat_fru_info = NULL;
 
 FRU_INFO *create_fru_info(void)
@@ -231,7 +193,7 @@ static void parse_board_mfg_date(const uint8_t *src, char *dest, int dest_size)
 	uint32_t minutes = src[0] | (src[1] << 8) | (src[2] << 16);
 	time_t epoch = 820454400; // Unix time for 1996-01-01 00:00:00 GMT
 	time_t t = epoch + minutes * 60;
-	struct tm *time_info = gmtime(&t);
+	const struct tm *time_info = gmtime(&t);
 
 	// Manually format date string as "YYYY-MM-DD HH:MM:SS" using snprintf
 	snprintf(dest, dest_size, "%04d-%02d-%02d %02d:%02d:%02d", time_info->tm_year + 1900,
@@ -473,6 +435,18 @@ bool init_fru_info(void)
 				offset += len;
 			}
 		}
+		/* Fields 8 ~ 15: Product Custom Data 1 ~ 8 */
+		for (int i = 0;
+		     i < PRODUCT_CUSTOM_DATA_MAX && offset < product_offset + area_len - 1; i++) {
+			uint8_t type_length = fru_data[offset++];
+			if (type_length == 0xC1)
+				break;
+			int len = type_length & 0x3F;
+			decode_field(&fru_data[offset], len,
+				     plat_fru_info->product.product_custom_data[i],
+				     sizeof(plat_fru_info->product.product_custom_data[i]));
+			offset += len;
+		}
 	} else {
 		LOG_ERR("Invalid product offset");
 		return false;
@@ -531,5 +505,16 @@ void print_fru_info(void)
 	printf("  Product Serial: %s\n", plat_fru_info->product.product_serial);
 	printf("  Product Asset Tag: %s\n", plat_fru_info->product.product_asset_tag);
 	printf("  Product FRU ID: %s\n", plat_fru_info->product.product_fru_id);
+	for (int i = 0; i < PRODUCT_CUSTOM_DATA_MAX; i++) {
+		if (strlen(plat_fru_info->product.product_custom_data[i]) > 0) {
+			printf("  Product Custom Data %d: %s\n", i + 1,
+			       plat_fru_info->product.product_custom_data[i]);
+		}
+	}
 	printf("\n");
+}
+
+FRU_INFO *get_fru_info(void)
+{
+	return plat_fru_info;
 }
