@@ -44,10 +44,10 @@ static int cmd_temp_status_get(const struct shell *shell, size_t argc, char **ar
 	}
 
 	if (rail == TEMP_INDEX_ON_DIE_1_2 || rail == TEMP_INDEX_ON_DIE_3_4) {
-		shell_print(shell, "0x%02x", rail, argv[1],
-			    (get_tmp_type() == TMP_EMC1413) ? "EMC1413" : "TMP432", temp_status);
+		shell_print(shell, "%s: 0x%02x", 
+			(get_tmp_type() == TMP_EMC1413) ? "EMC1413" : "TMP432", temp_status);
 	} else {
-		shell_print(shell, "0x%02x (ALERT_N)", rail, argv[1], "TMP75", temp_status);
+		shell_print(shell, "%s: 0x%02x (ALERT_N)", "TMP75", temp_status);
 	}
 
 	return 0;
