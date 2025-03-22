@@ -1,0 +1,14 @@
+<map id="PWRGD_CPU_ACTIVE_HANDLE" name="PWRGD_CPU_ACTIVE_HANDLE">
+<area shape="rect" id="node1" title=" " alt="" coords="5,191,227,217"/>
+<area shape="rect" id="node2" href="$yv35-gl_2src_2platform_2plat__isr_8c.html#aaf5edaa66faaf0fd4137bfe491b92a9d" title=" " alt="" coords="278,81,382,108"/>
+<area shape="rect" id="node7" href="$yv35-gl_2src_2platform_2plat__isr_8c.html#ab1b98b147089d38d484e1e8537ba3361" title=" " alt="" coords="275,275,385,301"/>
+<area shape="rect" id="node3" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="667,107,738,133"/>
+<area shape="rect" id="node4" href="$wc-mb_2src_2platform_2plat__isr_8c.html#ac81fa00f14928ed121c6ddb9a9e1cf3b" title=" " alt="" coords="456,107,591,133"/>
+<area shape="rect" id="node6" href="$power__status_8c.html#ab7fb7b949a4bf7e45e67c489dd02e8a6" title=" " alt="" coords="443,5,603,32"/>
+<area shape="rect" id="node5" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="661,245,744,272"/>
+<area shape="rect" id="node8" href="$ipmi_8c.html#a40681786f36bd1836cdb473b7050dda1" title=" " alt="" coords="449,326,598,367"/>
+<area shape="rect" id="node9" href="$power__status_8c.html#a647e7f9c1247d6a1785d9b9502e7fd29" title=" " alt="" coords="469,443,577,469"/>
+<area shape="rect" id="node10" href="$power__status_8c.html#a1a43a6cae7b7ec64b70d20ce91b82268" title=" " alt="" coords="455,209,592,250"/>
+<area shape="rect" id="node11" href="$power__status_8c.html#aa3406c25950a307fb61cec9e156605c3" title=" " alt="" coords="433,275,613,301"/>
+<area shape="rect" id="node12" href="$power__status_8c.html#a4482f69c1ee4e17e699b46c3ea5cf05e" title=" " alt="" coords="469,392,577,419"/>
+</map>

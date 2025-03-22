@@ -1,0 +1,8 @@
+<map id="OEM_1S_GET_PCIE_CARD_SENSOR_READING" name="OEM_1S_GET_PCIE_CARD_SENSOR_READING">
+<area shape="rect" id="node1" title=" " alt="" coords="5,23,192,65"/>
+<area shape="rect" id="node2" href="$at-cb_2src_2ipmi_2plat__ipmi_8c.html#ae8cc1af53f1d5dfeda4ecf37629da52e" title=" " alt="" coords="240,23,413,65"/>
+<area shape="rect" id="node3" href="$at-cb_2src_2platform_2plat__sensor__table_8c.html#a5007ecedaac2bf0eba5a3edf4c88c834" title=" " alt="" coords="461,5,632,32"/>
+<area shape="rect" id="node4" href="$sensor_8c.html#acac7def53ddb6b158196583bb8f36bb1" title=" " alt="" coords="479,56,614,83"/>
+<area shape="rect" id="node5" href="$sensor_8c.html#a5cd747a23585d471e06a129bb055b75c" title=" " alt="" coords="682,15,815,57"/>
+<area shape="rect" id="node6" href="$sensor_8c.html#ae224ad26413eb100f2abef7a1907a547" title=" " alt="" coords="680,81,817,122"/>
+</map>

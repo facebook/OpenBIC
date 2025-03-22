@@ -1,0 +1,12 @@
+<map id="get_pmic_error_data_one" name="get_pmic_error_data_one">
+<area shape="rect" id="node1" title=" " alt="" coords="5,132,173,159"/>
+<area shape="rect" id="node2" href="$yv35-cl_2src_2platform_2plat__dimm_8c.html#a232c98cb8d149335d1e22d60ae94bdc9" title=" " alt="" coords="242,5,355,32"/>
+<area shape="rect" id="node4" href="$yv4-sd_2src_2platform_2plat__dimm_8c.html#a36d60944b5529102f93ed7b4b9a30070" title=" " alt="" coords="234,56,363,83"/>
+<area shape="rect" id="node5" href="$power__status_8c.html#abeff55e3cd2e8563760154b81f37f286" title=" " alt="" coords="241,107,356,133"/>
+<area shape="rect" id="node6" href="$hal__i3c_8c.html#af83165cbbc94536c7af28d58bc801a29" title=" " alt="" coords="257,157,340,184"/>
+<area shape="rect" id="node7" href="$hal__i3c_8c.html#a5b6fa01f789faf2f2fa18d25e4eb1112" title=" " alt="" coords="256,208,341,235"/>
+<area shape="rect" id="node8" href="$yv35-cl_2src_2platform_2plat__dimm_8c.html#af33feea8a08ae270156e7128f4b3f04f" title=" " alt="" coords="221,259,376,285"/>
+<area shape="rect" id="node3" href="$hal__i3c_8c.html#a01fe6ef0e2b4d9c968e30b198af67b50" title=" " alt="" coords="426,5,543,32"/>
+<area shape="rect" id="node9" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="424,259,545,285"/>
+<area shape="rect" id="node10" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="593,259,736,285"/>
+</map>
