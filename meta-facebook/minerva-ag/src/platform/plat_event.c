@@ -52,6 +52,9 @@ K_THREAD_STACK_DEFINE(cpld_polling_stack, POLLING_CPLD_STACK_SIZE);
 struct k_thread cpld_polling_thread;
 k_tid_t cpld_polling_tid;
 
+void get_vr_vout_handler(struct k_work *work);
+K_WORK_DEFINE(vr_vout_work, get_vr_vout_handler);
+
 typedef struct _vr_error_callback_info_ {
 	uint8_t cpld_offset;
 	uint8_t vr_status_word_access_map;
@@ -114,6 +117,23 @@ void check_ubc_delayed(struct k_work *work)
 	}
 
 	ubc_enabled_delayed_status = is_ubc_enabled;
+
+	LOG_DBG("UBC enabled delayed status: %d", ubc_enabled_delayed_status);
+
+	if (is_ubc_enabled == true) {
+		k_work_submit(&vr_vout_work);
+	}
+}
+
+void get_vr_vout_handler(struct k_work *work)
+{
+	vr_vout_default_settings_init();
+	vr_vout_user_settings_init();
+}
+
+bool is_ubc_enabled_delayed_enabled(void)
+{
+	return ubc_enabled_delayed_status;
 }
 
 bool vr_error_callback(aegis_cpld_info *cpld_info, uint8_t *current_cpld_value)

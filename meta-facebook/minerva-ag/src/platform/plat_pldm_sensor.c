@@ -28,6 +28,7 @@
 #include "plat_class.h"
 #include "plat_gpio.h"
 #include "emc1413.h"
+#include "plat_event.h"
 
 LOG_MODULE_REGISTER(plat_pldm_sensor);
 
@@ -9603,8 +9604,10 @@ bool get_plat_sensor_vr_polling_enable_flag()
 
 bool is_ubc_access(uint8_t sensor_num)
 {
-	return (is_dc_access(sensor_num) && get_plat_sensor_ubc_polling_enable_flag() &&
-		get_plat_sensor_polling_enable_flag());
+	/* is_ubc_enabled_delayed_enabled() is to wait for all VR to be enabled  */
+	/* (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) is to shut down polling immediately when UBC is disabled */
+	return ((gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) && is_ubc_enabled_delayed_enabled() &&
+		get_plat_sensor_ubc_polling_enable_flag() && get_plat_sensor_polling_enable_flag());
 }
 
 bool is_temp_access(uint8_t cfg_idx)
@@ -9615,8 +9618,10 @@ bool is_temp_access(uint8_t cfg_idx)
 
 bool is_vr_access(uint8_t sensor_num)
 {
-	return (is_dc_access(sensor_num) && get_plat_sensor_vr_polling_enable_flag() &&
-		get_plat_sensor_polling_enable_flag());
+	/* is_ubc_enabled_delayed_enabled() is to wait for all VR to be enabled when UBC is enabled  */
+	/* (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) is to shut down polling immediately when UBC is disabled */
+	return ((gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) && is_ubc_enabled_delayed_enabled() &&
+		get_plat_sensor_vr_polling_enable_flag() && get_plat_sensor_polling_enable_flag());
 }
 
 bool get_sensor_info_by_sensor_id(uint8_t sensor_id, uint8_t *vr_bus, uint8_t *vr_addr,
