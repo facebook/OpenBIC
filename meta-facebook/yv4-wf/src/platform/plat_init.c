@@ -63,8 +63,7 @@ void pal_set_sys_status()
 			set_P3V3_E1S_power_status(PWRGD_P3V3_E1S_0_R);
 		}
 		set_P12V_E1S_power_status(PWRGD_P12V_E1S_0_R);
-		set_cxl_ready_status(CXL_ID_1, true);
-		set_cxl_ready_status(CXL_ID_2, true);
+		create_check_cxl_ready_thread();
 	}
 	set_sys_ready_pin(BIC_READY_R);
 }
