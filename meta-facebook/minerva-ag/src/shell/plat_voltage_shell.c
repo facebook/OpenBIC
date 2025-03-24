@@ -20,11 +20,20 @@
 #include "sensor.h"
 #include "plat_hook.h"
 #include "plat_class.h"
+#include "plat_gpio.h"
+#include "plat_event.h"
 
 LOG_MODULE_REGISTER(plat_voltage_shell, LOG_LEVEL_DBG);
 
 static int cmd_voltage_get_all(const struct shell *shell, size_t argc, char **argv)
 {
+	/* is_ubc_enabled_delayed_enabled() is to wait for all VR to be enabled  */
+	/* (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) is to shut down polling immediately when UBC is disabled */
+	if (!((gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) && is_ubc_enabled_delayed_enabled())) {
+		shell_error(shell, "Can't get voltage command because VR has no power yet.");
+		return -1;
+	}
+
 	shell_print(shell, "  id|              sensor_name               |vout(mV) ");
 	/* list all vr sensor value */
 	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
@@ -53,6 +62,13 @@ static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 {
 	bool is_default = false;
 	bool is_perm = false;
+
+	/* is_ubc_enabled_delayed_enabled() is to wait for all VR to be enabled  */
+	/* (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) is to shut down polling immediately when UBC is disabled */
+	if (!((gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) && is_ubc_enabled_delayed_enabled())) {
+		shell_error(shell, "Can't set voltage command because VR has no power yet.");
+		return -1;
+	}
 
 	if (argc == 4) {
 		if (!strcmp(argv[3], "perm")) {

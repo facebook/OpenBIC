@@ -276,6 +276,8 @@ bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_statu
 bool plat_clear_vr_status(uint8_t rail);
 bool vr_status_name_get(uint8_t rail, uint8_t **name);
 bool vr_status_enum_get(uint8_t *name, uint8_t *num);
+bool vr_vout_default_settings_init(void);
+bool vr_vout_user_settings_init(void);
 bool strap_name_get(uint8_t rail, uint8_t **name);
 bool strap_enum_get(uint8_t *name, uint8_t *num);
 bool find_bootstrap_by_rail(uint8_t rail, bootstrap_mapping_register *result);
