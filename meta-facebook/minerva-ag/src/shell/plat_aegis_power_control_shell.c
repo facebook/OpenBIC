@@ -43,6 +43,7 @@ int cmd_aegis_power_control(const struct shell *shell, size_t argc, char **argv)
 			shell_error(shell, "plat power control failed");
 			return -1;
 		}
+		k_msleep(5000);
 		if (!plat_power_control(1)) {
 			shell_error(shell, "plat power control failed");
 			return -1;
