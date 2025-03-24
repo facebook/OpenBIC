@@ -277,12 +277,12 @@ bool temp_sensor_rail_enum_get(uint8_t *name, uint8_t *num)
 
 	for (int i = 0; i < TEMP_INDEX_MAX; i++) {
 		if (strcmp(name, temp_index_table[i].sensor_name) == 0) {
-			*num = i;
+			*num = temp_index_table[i].index;
 			return true;
 		}
 	}
 
-	LOG_ERR("invalid rail name %s", name);
+	LOG_ERR("invalid rail name %s", log_strdup(name));
 	return false;
 }
 
@@ -1689,13 +1689,13 @@ bool plat_get_temp_status(uint8_t rail, uint8_t *temp_status)
 		case TEMP_INDEX_TOP_INLET:
 			*temp_status = (data[0] & BIT(2)) >> 2;
 			break;
-		case TEMP_INDEX_TOP_OUTLET:
+		case TEMP_INDEX_BOT_INLET:
 			*temp_status = (data[0] & BIT(3)) >> 3;
 			break;
-		case TEMP_INDEX_BOT_INLET:
+		case TEMP_INDEX_BOT_OUTLET:
 			*temp_status = (data[0] & BIT(4)) >> 4;
 			break;
-		case TEMP_INDEX_BOT_OUTLET:
+		case TEMP_INDEX_TOP_OUTLET:
 			*temp_status = (data[0] & BIT(5)) >> 5;
 			break;
 		default:
@@ -1748,13 +1748,13 @@ bool plat_clear_temp_status(uint8_t rail)
 		case TEMP_INDEX_TOP_INLET:
 			data[0] &= ~BIT(2);
 			break;
-		case TEMP_INDEX_TOP_OUTLET:
+		case TEMP_INDEX_BOT_INLET:
 			data[0] &= ~BIT(3);
 			break;
-		case TEMP_INDEX_BOT_INLET:
+		case TEMP_INDEX_BOT_OUTLET:
 			data[0] &= ~BIT(4);
 			break;
-		case TEMP_INDEX_BOT_OUTLET:
+		case TEMP_INDEX_TOP_OUTLET:
 			data[0] &= ~BIT(5);
 			break;
 		default:
