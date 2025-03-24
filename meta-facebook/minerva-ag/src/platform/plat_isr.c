@@ -55,6 +55,12 @@ void ISR_GPIO_RST_ATH_PWR_ON_PLD_R1_N()
 {
 	LOG_DBG("gpio_%d_isr called, val=%d , dir= %d", RST_ATH_PWR_ON_PLD_R1_N,
 		gpio_get(RST_ATH_PWR_ON_PLD_R1_N), gpio_get_direction(RST_ATH_PWR_ON_PLD_R1_N));
+
+	/* RST_ATH_PWR_ON_PLD_R1_N is low active,
+   * 1 -> power on
+   * 0 -> power off
+   */
+	LOG_INF("RST_ATH_PWR_ON_PLD_R1_N = %d", gpio_get(RST_ATH_PWR_ON_PLD_R1_N));
 }
 
 void ISR_GPIO_ATH_CURRENT_SENSE_0_NPCM_R()
@@ -97,6 +103,8 @@ void ISR_GPIO_FM_PLD_UBC_EN_R()
 {
 	LOG_DBG("gpio_%d_isr called, val=%d , dir= %d", FM_PLD_UBC_EN_R, gpio_get(FM_PLD_UBC_EN_R),
 		gpio_get_direction(FM_PLD_UBC_EN_R));
+
+	LOG_INF("FM_PLD_UBC_EN_R = %d", gpio_get(FM_PLD_UBC_EN_R));
 
 	if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) {
 		plat_clock_init();
