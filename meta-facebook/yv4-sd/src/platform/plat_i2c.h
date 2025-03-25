@@ -30,6 +30,7 @@
 #define I2C_BUS7 6
 #define I2C_BUS8 7
 #define I2C_BUS10 9
+#define I2C_BUS13 12
 #define I2C_BUS14 13
 
 #define CPLD_IO_I2C_BUS I2C_BUS5
