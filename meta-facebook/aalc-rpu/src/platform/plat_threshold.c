@@ -390,8 +390,6 @@ static void flow_rate_ready()
 K_WORK_DELAYABLE_DEFINE(flow_rate_ready_worker, flow_rate_ready);
 static void reset_flow_rate_ready()
 {
-	if (!flow_rate_ready_flag)
-		return;
 	flow_rate_ready_flag = false;
 	k_work_schedule(&flow_rate_ready_worker, K_SECONDS(10));
 }
@@ -806,6 +804,18 @@ static bool check_pump_tach_too_low()
 	return false;
 }
 
+static void pump_tach_too_low_behavior()
+{
+	static bool is_low = true;
+	if (!check_pump_tach_too_low()) {
+		flow_rate_ready_flag = false;
+		is_low = true;
+	} else if (is_low) {
+		reset_flow_rate_ready();
+		is_low = false;
+	}
+}
+
 void abnormal_flow_do(uint32_t thres_tbl_idx, uint32_t status)
 {
 	if (thres_tbl_idx >= ARRAY_SIZE(threshold_tbl))
@@ -814,11 +824,6 @@ void abnormal_flow_do(uint32_t thres_tbl_idx, uint32_t status)
 	sensor_threshold *thres_p = &threshold_tbl[thres_tbl_idx];
 
 	if (status == THRESHOLD_STATUS_LCR) {
-		if (!check_pump_tach_too_low()) {
-			thres_p->last_status = THRESHOLD_STATUS_NORMAL;
-			reset_flow_rate_ready();
-			return;
-		}
 		if (!flow_rate_ready_flag) {
 			thres_p->last_status = THRESHOLD_STATUS_NORMAL;
 			return;
@@ -1189,6 +1194,9 @@ void plat_sensor_poll_post()
 			threshold_tbl[i].fn(arg0, threshold_tbl[i].last_status);
 		}
 	}
+
+	// check pump >= 500 and countdown flow ready
+	pump_tach_too_low_behavior();
 
 	// check bpb hsc
 	check_bpb_hsc_status();
