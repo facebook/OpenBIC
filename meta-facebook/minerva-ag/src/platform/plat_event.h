@@ -17,7 +17,7 @@
 #ifndef PLAT_EVENT_H
 #define PLAT_EVENT_H
 
-#define POLLING_CPLD_STACK_SIZE 1024
+#define POLLING_CPLD_STACK_SIZE 2048
 
 // Power sequence On (0x48~0x6F)
 #define P12V_UBC_PWRGD_ON_REG 0x48

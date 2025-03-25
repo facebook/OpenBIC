@@ -147,29 +147,39 @@ bool vr_error_callback(aegis_cpld_info *cpld_info, uint8_t *current_cpld_value)
 
 	// Calculate current faults and new faults
 	uint8_t current_fault = *current_cpld_value ^ expected_val;
-	uint8_t new_fault = current_fault & ~cpld_info->is_fault_bit_map;
+	uint8_t status_changed_bit = current_fault ^ cpld_info->is_fault_bit_map;
 
-	if (!new_fault) {
+	if (!status_changed_bit)
 		return true; // No new faults, return early
-	}
 
-	LOG_DBG("CPLD register 0x%02X has fault 0x%02X", cpld_info->cpld_offset, new_fault);
+	LOG_DBG("CPLD register 0x%02X has status changed 0x%02X", cpld_info->cpld_offset,
+		status_changed_bit);
 
-	// Iterate through each bit in new_fault to handle the corresponding VR
+	// Iterate through each bit in status_changed_bit to handle the corresponding VR
 	for (uint8_t bit = 0; bit < 8; bit++) {
-		if (!(new_fault & (1 << bit))) {
-			continue; // Skip if the current bit has no new fault
-		}
+		if (!(status_changed_bit & BIT(bit)))
+			continue;
 
 		// Dynamically generate the error code
 		uint16_t error_code = (CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE << 13) | (bit << 8) |
 				      cpld_info->cpld_offset;
 
-		LOG_ERR("Generated error code: 0x%04X (bit %d, CPLD offset 0x%02X)", error_code,
-			bit, cpld_info->cpld_offset);
+		uint8_t bit_val = (*current_cpld_value & BIT(bit)) >> bit;
+		uint8_t expected_bit_val = (expected_val & BIT(bit)) >> bit;
+		LOG_DBG("cpld offset 0x%02X, bit %d, bit_val %d, expected_bit_val %d",
+			cpld_info->cpld_offset, bit, bit_val, expected_bit_val);
 
-		// Perform additional operations if needed
-		error_log_event(error_code, LOG_ASSERT);
+		if (bit_val != expected_bit_val) {
+			LOG_ERR("Generated error code: 0x%04X (bit %d, CPLD offset 0x%02X)",
+				error_code, bit, cpld_info->cpld_offset);
+
+			// Perform additional operations if needed
+			LOG_DBG("ASSERT");
+			error_log_event(error_code, LOG_ASSERT);
+		} else {
+			LOG_DBG("DEASSERT");
+			error_log_event(error_code, LOG_DEASSERT);
+		}
 	}
 
 	return true;
@@ -209,17 +219,16 @@ void poll_cpld_registers()
 			uint8_t new_fault_map = (data ^ expected_val);
 
 			// get unrecorded fault bit map
-			uint8_t unrecorded_fault_map =
-				new_fault_map & ~aegis_cpld_info_table[i].is_fault_bit_map;
+			uint8_t is_status_changed =
+				new_fault_map ^ aegis_cpld_info_table[i].is_fault_bit_map;
 
-			if (unrecorded_fault_map) {
+			if (is_status_changed) {
 				if (aegis_cpld_info_table[i].status_changed_cb) {
 					aegis_cpld_info_table[i].status_changed_cb(
 						&aegis_cpld_info_table[i], &data);
 				}
 				// update map
 				aegis_cpld_info_table[i].is_fault_bit_map = new_fault_map;
-
 				aegis_cpld_info_table[i].last_polling_value = data;
 			}
 		}
