@@ -386,22 +386,25 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 					LOG_ERR("Failed to send crashdump data to BMC, rc = %d",
 						ret);
 				}
+				
+				uint8_t *kcs_buff;
+				kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
+				if (kcs_buff == NULL) {
+					LOG_ERR("Failed to malloc for kcs_buff");
+					break;
+				}
+				kcs_buff[0] = (req->netfn | BIT(0)) << 2;
+				kcs_buff[1] = req->cmd;
+				kcs_buff[2] = CC_SUCCESS;
 				// When recieve control(0x80), get_state(0x01), BMC need to reply to BIOS
 				// With PLDM implementation, we need to it by BIC.
 				if (ibuf[6] == 0x80 && ibuf[10] == 0x01) {
-					uint8_t *kcs_buff;
-					kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
-					if (kcs_buff == NULL) {
-						LOG_ERR("Failed to malloc for kcs_buff");
-						break;
-					}
-					kcs_buff[0] = (req->netfn | BIT(0)) << 2;
-					kcs_buff[1] = req->cmd;
-					kcs_buff[2] = CC_SUCCESS;
 					kcs_buff[3] = 0x02; // state wait_data(0x02)
 					kcs_write(kcs_inst->index, kcs_buff, 4);
-					SAFE_FREE(kcs_buff);
+				} else {
+					kcs_write(kcs_inst->index, kcs_buff, 3);
 				}
+				SAFE_FREE(kcs_buff);
 			}
 #endif
 #endif
