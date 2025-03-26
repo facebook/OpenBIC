@@ -24,7 +24,7 @@ LOG_MODULE_REGISTER(plat_smbus_shell);
 
 #define I2C_DEVICE_PREFIX "I2C_"
 
-static int8_t name2idx(char *name)
+static int8_t name2idx(const char *name)
 {
 	if (name == NULL)
 		return -1;
@@ -33,6 +33,47 @@ static int8_t name2idx(char *name)
 		return -1;
 
 	return strtol(name + strlen(I2C_DEVICE_PREFIX), NULL, 10);
+}
+
+static int cmd_repeat_read(const struct shell *shell, size_t argc, char **argv)
+{
+	// read first byte from device
+	I2C_MSG msg = { 0 };
+	msg.bus = name2idx(argv[1]);
+	if (msg.bus == 0xff) {
+		shell_error(shell, "Invalid bus name: %s", argv[1]);
+		return -1;
+	}
+
+	msg.target_addr = strtol(argv[2], NULL, 16);
+	msg.tx_len = 1;
+	msg.rx_len = 1;
+	msg.data[0] = strtol(argv[3], NULL, 16); //cmd
+
+	if (i2c_master_read(&msg, 5)) {
+		shell_error(shell, "Failed to read from bus %d device: %x", msg.bus,
+			    msg.target_addr);
+		return -1;
+	}
+	int repeat_times = strtol(argv[5], NULL, 16);
+
+	for (int i = 0; i < repeat_times; i++) {
+		// read again with the length from the first byte
+		msg.tx_len = 1;
+		msg.rx_len = strtol(argv[4], NULL, 16); //read_bytes
+		msg.data[0] = strtol(argv[3], NULL, 16); //cmd
+		if (i2c_master_read(&msg, 5)) {
+			shell_error(shell, "Failed to read from bus %d device: %x", msg.bus,
+				    msg.target_addr);
+			return -1;
+		}
+
+		for (int j = 0; j < msg.rx_len; j++)
+			shell_fprintf(shell, SHELL_NORMAL, "%02x ", msg.data[j]);
+		shell_fprintf(shell, SHELL_NORMAL, "\n");
+	}
+
+	return 0;
 }
 
 static int cmd_block_read(const struct shell *shell, size_t argc, char **argv)
@@ -115,6 +156,9 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 		      5, 0),
 	SHELL_CMD_ARG(block_read, &dsub_device_name, "smbus block_read      <bus> <devaddr> <cmd> ",
 		      cmd_block_read, 4, 0),
+	SHELL_CMD_ARG(repeat_read, &dsub_device_name,
+		      "smbus cmd_block_read      <bus> <devaddr> <cmd> <read_bytes> <repeat_times>",
+		      cmd_repeat_read, 6, 0),
 	SHELL_SUBCMD_SET_END);
 
 /* Root of command test */
