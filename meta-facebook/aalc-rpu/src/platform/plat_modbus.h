@@ -407,6 +407,12 @@ enum read_fru_data_type {
 #define MODBUS_GET_BOARD_STAGE_ADDR 0x1A0E
 #define MODBUS_GET_FAN_TABLE_REVISION_ADDR 0x1A0F
 
+#define MODBUS_ENABLE_ABR_ADDR 0xD000
+#define MODBUS_GET_BOOT_SOURCE_ADDR 0xD001
+#define MODBUS_GET_SET_2ND_BOOT_UPDATE_FLAG_ADDR 0xD002
+#define MODBUS_SET_FMC_WDT_ADDR 0xD003
+#define MODBUS_DISABLE_ABR_ADDR 0xDFFF
+
 modbus_command_mapping *ptr_to_modbus_table(uint16_t addr);
 
 #endif

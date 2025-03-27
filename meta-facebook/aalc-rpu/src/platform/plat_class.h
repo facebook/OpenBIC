@@ -42,4 +42,6 @@ uint8_t get_hsc_module();
 uint8_t get_temp_module();
 uint8_t get_board_stage();
 bool evt_access(uint8_t sensor_num);
+uint8_t get_boot_source();
+void set_boot_source();
 #endif

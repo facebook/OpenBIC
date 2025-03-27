@@ -221,15 +221,6 @@ bool rpu_ready_recovery()
 	if (get_status_flag(STATUS_FLAG_LEAK))
 		return false;
 
-	bool hsc_fail = false;
-	if (!gpio_get(PWRGD_P48V_HSC_LF_R)) {
-		if (!hsc_fail) {
-			set_status_flag(STATUS_FLAG_FAILURE, GPIO_FAIL_BPB_HSC, 1);
-			error_log_event(SENSOR_NUM_BPB_HSC_FAIL, IS_ABNORMAL_VAL);
-			hsc_fail = true;
-		}
-	}
-
 	const uint8_t rpu_recovery_table[] = {
 		PUMP_FAIL_LOW_LEVEL,	  PUMP_FAIL_LOW_RPU_LEVEL,	PUMP_FAIL_TWO_PUMP_LCR,
 		PUMP_FAIL_ABNORMAL_PRESS, PUMP_FAIL_ABNORMAL_FLOW_RATE, GPIO_FAIL_BPB_HSC,
@@ -533,17 +524,10 @@ void abnormal_temp_do(uint32_t sensor_num, uint32_t status)
 					 PUMP_FAIL_ABNORMAL_COOLANT_INLET_TEMP :
 				 (sensor_num == SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C) ?
 					 PUMP_FAIL_ABNORMAL_COOLANT_OUTLET_TEMP :
-				 (sensor_num == SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C) ?
-					 PUMP_FAIL_ABNORMAL_AIR_INLET_TEMP :
 					 0xFF;
 
-	bool save_log = (sensor_num == SENSOR_NUM_BPB_RPU_COOLANT_INLET_TEMP_C)	 ? true :
-			(sensor_num == SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C) ? true :
-										   false;
-
 	if (status == THRESHOLD_STATUS_UCR) {
-		if (save_log)
-			error_log_event(sensor_num, IS_ABNORMAL_VAL);
+		error_log_event(sensor_num, IS_ABNORMAL_VAL);
 		set_status_flag(STATUS_FLAG_FAILURE, failure_status, 1);
 	} else if (status == THRESHOLD_STATUS_NOT_ACCESS) {
 		if (sensor_num == SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C) {
@@ -613,8 +597,7 @@ sensor_threshold threshold_tbl[] = {
 	  SENSOR_NUM_BPB_RPU_COOLANT_INLET_TEMP_C, 1 },
 	{ SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 55, abnormal_temp_do,
 	  SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C, 1 },
-	{ SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 42, abnormal_temp_do,
-	  SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C, 1 },
+	{ SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 42, NULL, 0, 1 },
 	{ SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 65, sensor_log,
 	  SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C, 1 },
 	{ SENSOR_NUM_SB_HEX_AIR_INLET_1_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 60, NULL, 0, 1 },
@@ -705,9 +688,9 @@ sensor_threshold threshold_tbl[] = {
 	{ SENSOR_NUM_FB_13_HSC_TEMP_C, THRESHOLD_DISABLE, 0, 0, NULL, 0, 1 },
 	{ SENSOR_NUM_FB_14_HSC_TEMP_C, THRESHOLD_DISABLE, 0, 0, NULL, 0, 1 },
 	{ SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA, THRESHOLD_ENABLE_LCR, -50, 0, sensor_log,
-	  SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA, 1 },
+	  SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA, 3 },
 	{ SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA, THRESHOLD_ENABLE_UCR, 0, 300, abnormal_press_do,
-	  0, 1 },
+	  0, 3 },
 	{ SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, THRESHOLD_ENABLE_LCR, 10, 0, abnormal_flow_do,
 	  THRESHOLD_ARG0_TABLE_INDEX, 20 },
 	{ SENSOR_NUM_BPB_RACK_LEVEL_1, THRESHOLD_ENABLE_LCR, 0.1, 0, level_sensor_do, 0, 1 },
@@ -716,15 +699,15 @@ sensor_threshold threshold_tbl[] = {
 	{ SENSOR_NUM_FAN_PRSNT, THRESHOLD_ENABLE_DISCRETE, 0, 0, fb_prsnt_handle,
 	  THRESHOLD_ARG0_TABLE_INDEX, 1 },
 	{ SENSOR_NUM_HEX_EXTERNAL_Y_FILTER, THRESHOLD_ENABLE_UCR, 0, 30, sensor_log,
-	  SENSOR_NUM_HEX_EXTERNAL_Y_FILTER, 1 },
+	  SENSOR_NUM_HEX_EXTERNAL_Y_FILTER, 3 },
 	{ SENSOR_NUM_BPB_RACK_PRESSURE_3_P_KPA, THRESHOLD_ENABLE_UCR, 0, 300, sensor_log,
-	  SENSOR_NUM_BPB_RACK_PRESSURE_3_P_KPA, 1 },
+	  SENSOR_NUM_BPB_RACK_PRESSURE_3_P_KPA, 3 },
 	{ SENSOR_NUM_BPB_RACK_PRESSURE_4_P_KPA, THRESHOLD_ENABLE_UCR, 0, 300, sensor_log,
-	  SENSOR_NUM_BPB_RACK_PRESSURE_4_P_KPA, 1 },
+	  SENSOR_NUM_BPB_RACK_PRESSURE_4_P_KPA, 3 },
 	{ SENSOR_NUM_SB_HEX_PRESSURE_1_P_KPA, THRESHOLD_ENABLE_UCR, 0, 200, sensor_log,
-	  SENSOR_NUM_SB_HEX_PRESSURE_1_P_KPA, 1 },
+	  SENSOR_NUM_SB_HEX_PRESSURE_1_P_KPA, 3 },
 	{ SENSOR_NUM_SB_HEX_PRESSURE_2_P_KPA, THRESHOLD_ENABLE_UCR, 0, 200, sensor_log,
-	  SENSOR_NUM_SB_HEX_PRESSURE_2_P_KPA, 1 },
+	  SENSOR_NUM_SB_HEX_PRESSURE_2_P_KPA, 3 },
 	{ SENSOR_NUM_SB_HEX_AIR_INLET_AVG_TEMP_C, THRESHOLD_ENABLE_BOTH, -20, 100, sensor_log,
 	  SENSOR_NUM_SB_HEX_AIR_INLET_AVG_TEMP_C, 1 },
 
@@ -1098,7 +1081,7 @@ void pump_change_threshold(uint8_t sensor_num, uint8_t duty)
 		return;
 
 	// don't change for sit test
-	if (get_status_flag(STATUS_FLAG_DEBUG_MODE) & BIT(DEBUG_MODE_PUMP_THRESHOLD))
+	if (get_status_flag(STATUS_FLAG_SPECIAL_MODE) & BIT(SPECIAL_MODE_PUMP_THRESHOLD_DEBUG))
 		return;
 
 	sensor_threshold *p = find_threshold_tbl_entry(sensor_num);

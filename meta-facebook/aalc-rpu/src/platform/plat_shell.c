@@ -296,7 +296,7 @@ void cmd_threshold_pump_test(const struct shell *shell, size_t argc, char **argv
 {
 	uint8_t disable_dynamic = strtoul(argv[1], NULL, 10);
 
-	set_status_flag(STATUS_FLAG_DEBUG_MODE, DEBUG_MODE_PUMP_THRESHOLD,
+	set_status_flag(STATUS_FLAG_SPECIAL_MODE, SPECIAL_MODE_PUMP_THRESHOLD_DEBUG,
 			(disable_dynamic ? 1 : 0));
 }
 

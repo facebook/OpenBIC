@@ -51,6 +51,8 @@ SCU_CFG scu_cfg[] = {
 	{ 0x7e6e2618, 0x0F00FF00 },
 	{ 0x7e6e261C, 0xFE300005 },
 	{ 0x7e6e2630, 0x00000002 },
+	// OTP
+	{ 0x7e620064, 0x00000000 },
 };
 
 uint8_t pump_board_init_tbl[] = {
@@ -162,6 +164,7 @@ void pump_board_init()
 
 void pal_pre_init()
 {
+	set_boot_source();
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
 	init_aalc_config();
 	gpio_set(FM_BIC_READY_R_N, 0); //MM4 for bus3 power up

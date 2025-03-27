@@ -326,7 +326,7 @@ uint8_t fw_update(uint32_t offset, uint16_t msg_len, uint8_t *msg_buf, uint8_t f
 	uint32_t ret = 0;
 	const struct device *flash_dev;
 
-	if (offset == 0) {
+	if ((offset == 0) || (flag & FORCE_INIT_FLAG)) {
 		// Set default fw update retry count at first package
 		fw_update_retry = default_retry_count;
 		is_init = 0;
