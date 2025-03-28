@@ -23,6 +23,7 @@
 LOG_MODULE_REGISTER(plat_smbus_shell);
 
 #define I2C_DEVICE_PREFIX "I2C_"
+#define MAX_I2C_BYTES 31
 
 static int8_t name2idx(const char *name)
 {
@@ -120,11 +121,17 @@ static int cmd_block_write(const struct shell *shell, size_t argc, char **argv)
 		return -1;
 	}
 
+	int num_bytes = argc - 4; //byte count
+
+	if (num_bytes > MAX_I2C_BYTES) {
+		num_bytes = MAX_I2C_BYTES;
+	}
+
 	msg.target_addr = strtol(argv[2], NULL, 16);
 	msg.tx_len = argc - 2;
 	msg.data[0] = strtol(argv[3], NULL, 16); //cmd
-	msg.data[1] = argc - 4; //byte count
-	for (int i = 0; i < msg.data[1]; i++)
+	msg.data[1] = num_bytes;
+	for (int i = 0; i < num_bytes; i++)
 		msg.data[i + 2] = strtol(argv[4 + i], NULL, 16);
 
 	if (i2c_master_write(&msg, 5)) {
@@ -153,7 +160,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 	sub_smbus_cmds,
 	SHELL_CMD_ARG(block_write, &dsub_device_name,
 		      "smbus block_write     <bus> <devaddr> <cmd> [<byte1>, ...]", cmd_block_write,
-		      5, 0),
+		      5, MAX_I2C_BYTES),
 	SHELL_CMD_ARG(block_read, &dsub_device_name, "smbus block_read      <bus> <devaddr> <cmd> ",
 		      cmd_block_read, 4, 0),
 	SHELL_CMD_ARG(repeat_read, &dsub_device_name,
