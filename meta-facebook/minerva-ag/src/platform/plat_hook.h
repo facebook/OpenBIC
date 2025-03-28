@@ -204,6 +204,7 @@ extern size_t power_sequence_off_table_size;
 extern vr_pre_proc_arg vr_pre_read_args[];
 extern mp2971_init_arg mp2971_init_args[];
 extern isl69259_init_arg isl69259_init_args[];
+extern mpc12109_init_arg mpc12109_init_args[];
 
 typedef struct temp_threshold_user_settings_struct {
 	uint32_t temperature_reg_val[PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX];
