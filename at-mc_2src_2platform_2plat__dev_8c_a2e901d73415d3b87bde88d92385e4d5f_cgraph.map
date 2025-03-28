@@ -1,0 +1,9 @@
+<map id="init_ssd_power_fault_work" name="init_ssd_power_fault_work">
+<area shape="rect" id="node1" title=" " alt="" coords="5,71,181,98"/>
+<area shape="rect" id="node2" href="$at-mc_2src_2platform_2plat__dev_8c.html#aa526d1497fe3395033c2cc643c5e26f3" title=" " alt="" coords="229,5,383,47"/>
+<area shape="rect" id="node3" href="$power__status_8c.html#a647e7f9c1247d6a1785d9b9502e7fd29" title=" " alt="" coords="252,71,360,98"/>
+<area shape="rect" id="node4" href="$at-mc_2src_2platform_2plat__dev_8c.html#aec5ae798b0b4dd41af418572c0ffbe6c" title=" " alt="" coords="235,123,377,164"/>
+<area shape="rect" id="node5" href="$at-mc_2src_2platform_2plat__dev_8c.html#a30a082b3c85f32fac00c50e18f2481de" title=" " alt="" coords="431,130,597,157"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="645,130,764,157"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="812,130,955,157"/>
+</map>

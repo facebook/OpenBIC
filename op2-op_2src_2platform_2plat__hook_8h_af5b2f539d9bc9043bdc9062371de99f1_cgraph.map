@@ -1,0 +1,6 @@
+<map id="post_i2c_bus_read" name="post_i2c_bus_read">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,136,57"/>
+<area shape="rect" id="node2" href="$gt-cc_2src_2platform_2plat__hook_8c.html#a3339d02ff8019e305bd52a9f75b1065c" title=" " alt="" coords="189,5,301,32"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="184,56,305,83"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="353,56,496,83"/>
+</map>
