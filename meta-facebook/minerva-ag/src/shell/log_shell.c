@@ -57,8 +57,10 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 		shell_print(shell, "sys_time: %lld ms", log.sys_time);
 		shell_print(shell, "error_data:");
 		shell_hexdump(shell, log.error_data, sizeof(log.error_data));
-		shell_print(shell, "cpld register:");
-		shell_hexdump(shell, log.cpld_dump, sizeof(log.cpld_dump));
+		shell_print(shell, "cpld register: start offset 0x%02x", AEGIS_CPLD_REGISTER_1ST_PART_START_OFFSET);
+		shell_hexdump(shell, log.cpld_dump, AEGIS_CPLD_REGISTER_1ST_PART_NUM);
+		shell_print(shell, "cpld register: start offset 0x%02x", AEGIS_CPLD_REGISTER_2ND_PART_START_OFFSET);
+		shell_hexdump(shell, log.cpld_dump + AEGIS_CPLD_REGISTER_1ST_PART_NUM, AEGIS_CPLD_REGISTER_2ND_PART_NUM);
 		shell_print(
 			shell,
 			"====================================================================================");
