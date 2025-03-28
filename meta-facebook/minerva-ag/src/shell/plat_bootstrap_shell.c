@@ -27,7 +27,7 @@ LOG_MODULE_REGISTER(plat_bootstrap_shell, LOG_LEVEL_DBG);
 
 static int cmd_bootstrap_get_all(const struct shell *shell, size_t argc, char **argv)
 {
-	shell_print(shell, "  id|            strap name                  |drive_level");
+	shell_print(shell, "  id|            strap name                  |hex-value");
 	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
 		uint8_t *rail_name = NULL;
 		if (!strap_name_get((uint8_t)i, &rail_name)) {
@@ -41,7 +41,7 @@ static int cmd_bootstrap_get_all(const struct shell *shell, size_t argc, char **
 			continue;
 		}
 
-		shell_print(shell, "%4d|%-40s|%d", i, rail_name, drive_level);
+		shell_print(shell, "%4d|%-40s|0x%02x", i, rail_name, drive_level);
 	}
 
 	return 0;
@@ -50,13 +50,13 @@ static int cmd_bootstrap_get_all(const struct shell *shell, size_t argc, char **
 static int bootstrap_set_all_default(const struct shell *shell)
 {
 	uint8_t change_setting_value;
-	uint8_t drive_index_level = DRIVE_INDEX_LEVEL_DEFAULT;
+	uint8_t drive_index_level = 0;
 	bootstrap_mapping_register bootstrap_item;
 	bool all_success = true;
 
 	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
 		if (!set_bootstrap_table_and_user_settings(i, &change_setting_value,
-							   drive_index_level, false)) {
+							   drive_index_level, false, true)) {
 			shell_print(shell, "plat bootstrap[%2d] set failed", i);
 			all_success = false;
 		}
@@ -112,21 +112,14 @@ static int cmd_bootstrap_set(const struct shell *shell, size_t argc, char **argv
 		return -1;
 	}
 
-	if (!strcmp(argv[2], "default")) {
-		drive_index_level = DRIVE_INDEX_LEVEL_DEFAULT;
-	} else if (!strcmp(argv[2], "0")) {
-		drive_index_level = DRIVE_INDEX_LEVEL_LOW;
-	} else if (!strcmp(argv[2], "1")) {
-		drive_index_level = DRIVE_INDEX_LEVEL_HIGH;
-	} else {
-		shell_warn(
-			shell,
-			"Help: bootstrap set <strap-name>|all <drive-level> should only accept 0 or 1 or default");
-		return -1;
-	}
+	bool is_default = false;
+	if (!strcmp(argv[2], "default"))
+		is_default = true;
+	else
+		drive_index_level = strtol(argv[2], NULL, 16);
 
 	if (!set_bootstrap_table_and_user_settings(rail, &change_setting_value, drive_index_level,
-						   is_perm)) {
+						   is_perm, is_default)) {
 		shell_error(shell, "plat bootstrap set failed");
 		return -1;
 	}
@@ -171,7 +164,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_bootstrap_get_cmds,
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_bootstrap_cmds,
 			       SHELL_CMD(get, &sub_bootstrap_get_cmds, "get all", NULL),
 			       SHELL_CMD_ARG(set, &strap_name,
-					     "set <strap-name>|all <drive-level>|default [perm]",
+					     "set <strap-name>|all <hex-value>|default [perm]",
 					     cmd_bootstrap_set, 3, 1),
 			       SHELL_SUBCMD_SET_END);
 
