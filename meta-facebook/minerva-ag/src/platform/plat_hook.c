@@ -132,10 +132,7 @@ bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading)
 #define EEPROM_MAX_WRITE_TIME 5 // the BR24G512 eeprom max write time is 3.5 ms
 #define AEGIS_CPLD_ADDR (0x4C >> 1)
 #define VR_PRE_READ_ARG(idx)                                                                       \
-	{ .mutex = vr_mutex + idx, .vr_page = 0x0 },                                               \
-	{                                                                                          \
-		.mutex = vr_mutex + idx, .vr_page = 0x1                                            \
-	}
+	{ .mutex = vr_mutex + idx, .vr_page = 0x0 }, { .mutex = vr_mutex + idx, .vr_page = 0x1 }
 
 vr_pre_proc_arg vr_pre_read_args[] = {
 	{ .mutex = vr_mutex + 0, .vr_page = 0x0 },  { .mutex = vr_mutex + 0, .vr_page = 0x1 },
@@ -1863,20 +1860,20 @@ bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 	switch (cfg->type) {
 	case sensor_dev_tmp431:
 		if (!tmp432_set_temp_threshold(cfg, temp_threshold_type_tmp, millidegree_celsius)) {
-			LOG_ERR("The TMP431 temp threshold reading failed");
+			LOG_ERR("The TMP431 temp threshold setting failed");
 			return false;
 		}
 		break;
 	case sensor_dev_emc1413:
 		if (!emc1413_set_temp_threshold(cfg, temp_threshold_type_tmp,
 						millidegree_celsius)) {
-			LOG_ERR("The EMC1413 temp threshold reading failed");
+			LOG_ERR("The EMC1413 temp threshold setting failed");
 			return false;
 		}
 		break;
 	case sensor_dev_tmp75:
 		if (!tmp75_set_temp_threshold(cfg, temp_threshold_type_tmp, millidegree_celsius)) {
-			LOG_ERR("The TMP75 temp threshold reading failed");
+			LOG_ERR("The TMP75 temp threshold setting failed");
 			return false;
 		}
 		break;
@@ -1892,4 +1889,54 @@ bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 	}
 
 	return true;
+}
+
+void init_temp_limit(void)
+{
+	uint8_t fixed_limit_temp[] = { ON_DIE_1_2_REMOTE_1_HIGH_LIMIT,
+				       ON_DIE_1_2_REMOTE_2_HIGH_LIMIT,
+				       ON_DIE_3_4_REMOTE_1_HIGH_LIMIT,
+				       ON_DIE_3_4_REMOTE_2_HIGH_LIMIT };
+
+	uint8_t followed_ucr_limit_temp[] = { TOP_INLET_HIGH_LIMIT, TOP_OUTLET_HIGH_LIMIT,
+					      BOT_INLET_HIGH_LIMIT, BOT_OUTLET_HIGH_LIMIT };
+
+	// set remote temp limit fixed
+	for (int i = 0; i < ARRAY_SIZE(fixed_limit_temp); i++) {
+		uint32_t fixed_threshold = 100 * 1000;
+		LOG_INF("set %s: %d",
+			temp_index_threshold_type_table[fixed_limit_temp[i]].temp_threshold_name,
+			fixed_threshold);
+		plat_set_temp_threshold(fixed_limit_temp[i], &fixed_threshold, false, false);
+	}
+
+	for (int i = 0; i < ARRAY_SIZE(followed_ucr_limit_temp); i++) {
+		float critical_high = 0;
+		float critical_low = 0;
+		uint8_t sensor_id =
+			temp_index_threshold_type_table[followed_ucr_limit_temp[i]].sensor_id;
+		get_pdr_table_critical_high_and_low_with_sensor_id(sensor_id, &critical_high,
+								   &critical_low);
+
+		// set low limit to high limit - 2 degree
+		// set low limit first to avoid the temp alert jump
+		uint32_t dynamic_threshold = (uint32_t)(critical_high * 1000);
+		uint32_t low_threshold = dynamic_threshold - 2000;
+		LOG_INF("set %s: %d",
+			temp_index_threshold_type_table[(followed_ucr_limit_temp[i] - 1)]
+				.temp_threshold_name,
+			low_threshold);
+		plat_set_temp_threshold((followed_ucr_limit_temp[i] - 1), &low_threshold, false,
+					false);
+
+		// set dynamic temp limit
+		LOG_INF("set %s: %d",
+			temp_index_threshold_type_table[followed_ucr_limit_temp[i]]
+				.temp_threshold_name,
+			dynamic_threshold);
+		plat_set_temp_threshold(followed_ucr_limit_temp[i], &dynamic_threshold, false,
+					false);
+	}
+
+	LOG_INF("temp limit init done");
 }
