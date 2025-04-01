@@ -51,6 +51,7 @@
 #define SENSOR_INIT_PDR_INDEX_MAX 248 // PDR indexe is on 0 base
 #define SENSOR_READING_PDR_INDEX_MAX 50
 #define PLAT_MASTER_WRITE_STACK_SIZE 1024
+#define STRAP_SET_TYPE 0x44 // 01000100
 
 static bool command_reply_data_handle(void *arg);
 void set_bootstrap_element_handler();
@@ -98,7 +99,16 @@ typedef struct __attribute__((__packed__)) {
 // size = sizeof(plat_sensor_init_data_6)
 
 typedef struct __attribute__((__packed__)) {
-	uint8_t strap_capabiltity[STRAP_INDEX_MAX];
+	uint8_t strap_set_index;
+	uint8_t strap_set_value;
+	uint8_t strap_set_type;
+	// b7 No Drive-Input, b6 PushPull-Output, b5 OpenDrain-Output, b4-b3: Reserved,
+	// b2: DriveType(0:OpenDrain,1:PushPull), b1: Direction(0:output,1:input), b0: Reserved
+} strap_entry;
+
+typedef struct __attribute__((__packed__)) {
+	uint8_t strap_data_length;
+	strap_entry strap_set_format[];
 } plat_sensor_init_data_8;
 
 typedef struct __attribute__((__packed__)) {
@@ -373,21 +383,28 @@ bool initialize_sensor_data_8(telemetry_info *telemetry_info, uint8_t *buffer_si
 	if (table_index < 0 || table_index >= DATA_TABLE_LENGTH_1)
 		return false;
 
-	size_t table_size = sizeof(plat_sensor_init_data_8);
+	int num_idx = STRAP_INDEX_MAX;
+
+	size_t table_size = sizeof(plat_sensor_init_data_8) + num_idx * sizeof(strap_entry);
 	plat_sensor_init_data_8 *sensor_data = allocate_sensor_data_table(
 		(void **)&sensor_init_data_8_table[table_index], table_size);
 	if (!sensor_data)
 		return false;
 
+	sensor_data->strap_data_length = STRAP_INDEX_MAX * 3; // strap_entry data length
 	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
-		sensor_data->strap_capabiltity[i] = 0x44; // 01000100
+		sensor_data->strap_set_format[i].strap_set_index = i;
+		sensor_data->strap_set_format[i].strap_set_type = STRAP_SET_TYPE;
 		int drive_level = 0;
 		if (!get_bootstrap_change_drive_level(i, &drive_level)) {
 			LOG_ERR("Can't get_bootstrap_change_drive_level by index: %x", i);
 			continue;
 		}
-		if (drive_level == 1)
-			sensor_data->strap_capabiltity[i] |= (1 << 0);
+		if (drive_level < 0) {
+			LOG_ERR("Invalid drive_level: %x", drive_level);
+			continue;
+		}
+		sensor_data->strap_set_format[i].strap_set_value = drive_level;
 	}
 
 	*buffer_size = (uint8_t)table_size;
@@ -485,10 +502,11 @@ void update_sensor_data_8_table()
 			LOG_ERR("Can't get_bootstrap_change_drive_level by index: %x", i);
 			continue;
 		}
-		if (drive_level == 1)
-			sensor_data->strap_capabiltity[i] |= (1 << 0);
-		else
-			sensor_data->strap_capabiltity[i] &= ~(1 << 0);
+		if (drive_level < 0) {
+			LOG_ERR("Invalid drive_level: %x", drive_level);
+			continue;
+		}
+		sensor_data->strap_set_format[i].strap_set_value = drive_level;
 	}
 }
 
