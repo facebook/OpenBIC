@@ -138,7 +138,7 @@ void execute_power_on_sequence()
 	int ret = 0;
 
 	// If CXL is on, doesn't need to power on again
-	if (get_DC_status()) {
+	if (gpio_get(PG_CARD_OK) == POWER_ON) {
 		LOG_INF("CXL DC status is ON");
 		return;
 	}
@@ -373,7 +373,7 @@ void execute_power_off_sequence()
 	int ret = 0;
 
 	// If CXL is off, doesn't need to power off again
-	if (!get_DC_status()) {
+	if (gpio_get(PG_CARD_OK) == POWER_OFF) {
 		LOG_INF("CXL DC status is OFF");
 		return;
 	}
