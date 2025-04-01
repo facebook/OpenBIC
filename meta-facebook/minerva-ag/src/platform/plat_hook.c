@@ -1893,28 +1893,45 @@ bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 
 void init_temp_limit(void)
 {
-	uint8_t fixed_limit_temp[] = { ON_DIE_1_2_REMOTE_1_HIGH_LIMIT,
-				       ON_DIE_1_2_REMOTE_2_HIGH_LIMIT,
-				       ON_DIE_3_4_REMOTE_1_HIGH_LIMIT,
-				       ON_DIE_3_4_REMOTE_2_HIGH_LIMIT };
+	uint8_t followed_ucr_lcr_limit_temp[] = { ON_DIE_1_2_REMOTE_1_HIGH_LIMIT,
+						  ON_DIE_1_2_REMOTE_2_HIGH_LIMIT,
+						  ON_DIE_3_4_REMOTE_1_HIGH_LIMIT,
+						  ON_DIE_3_4_REMOTE_2_HIGH_LIMIT };
 
-	uint8_t followed_ucr_limit_temp[] = { TOP_INLET_HIGH_LIMIT, TOP_OUTLET_HIGH_LIMIT,
-					      BOT_INLET_HIGH_LIMIT, BOT_OUTLET_HIGH_LIMIT };
+	uint8_t followed_ucr_only_limit_temp[] = { TOP_INLET_HIGH_LIMIT, TOP_OUTLET_HIGH_LIMIT,
+						   BOT_INLET_HIGH_LIMIT, BOT_OUTLET_HIGH_LIMIT };
 
-	// set remote temp limit fixed
-	for (int i = 0; i < ARRAY_SIZE(fixed_limit_temp); i++) {
-		uint32_t fixed_threshold = 100 * 1000;
-		LOG_INF("set %s: %d",
-			temp_index_threshold_type_table[fixed_limit_temp[i]].temp_threshold_name,
-			fixed_threshold);
-		plat_set_temp_threshold(fixed_limit_temp[i], &fixed_threshold, false, false);
-	}
-
-	for (int i = 0; i < ARRAY_SIZE(followed_ucr_limit_temp); i++) {
+	for (int i = 0; i < ARRAY_SIZE(followed_ucr_lcr_limit_temp); i++) {
 		float critical_high = 0;
 		float critical_low = 0;
 		uint8_t sensor_id =
-			temp_index_threshold_type_table[followed_ucr_limit_temp[i]].sensor_id;
+			temp_index_threshold_type_table[followed_ucr_lcr_limit_temp[i]].sensor_id;
+		get_pdr_table_critical_high_and_low_with_sensor_id(sensor_id, &critical_high,
+								   &critical_low);
+
+		uint32_t high_threshold = (uint32_t)(critical_high * 1000);
+		uint32_t low_threshold = (uint32_t)(critical_low * 1000);
+		LOG_INF("set %s: %d",
+			temp_index_threshold_type_table[(followed_ucr_lcr_limit_temp[i] + 1)]
+				.temp_threshold_name,
+			low_threshold);
+		// low limit enum is followed_ucr_lcr_limit_temp[i] + 1
+		plat_set_temp_threshold((followed_ucr_lcr_limit_temp[i] + 1), &low_threshold, false,
+					false);
+
+		LOG_INF("set %s: %d",
+			temp_index_threshold_type_table[followed_ucr_lcr_limit_temp[i]]
+				.temp_threshold_name,
+			high_threshold);
+		plat_set_temp_threshold(followed_ucr_lcr_limit_temp[i], &high_threshold, false,
+					false);
+	}
+
+	for (int i = 0; i < ARRAY_SIZE(followed_ucr_only_limit_temp); i++) {
+		float critical_high = 0;
+		float critical_low = 0;
+		uint8_t sensor_id =
+			temp_index_threshold_type_table[followed_ucr_only_limit_temp[i]].sensor_id;
 		get_pdr_table_critical_high_and_low_with_sensor_id(sensor_id, &critical_high,
 								   &critical_low);
 
@@ -1923,18 +1940,18 @@ void init_temp_limit(void)
 		uint32_t dynamic_threshold = (uint32_t)(critical_high * 1000);
 		uint32_t low_threshold = dynamic_threshold - 2000;
 		LOG_INF("set %s: %d",
-			temp_index_threshold_type_table[(followed_ucr_limit_temp[i] - 1)]
+			temp_index_threshold_type_table[(followed_ucr_only_limit_temp[i] - 1)]
 				.temp_threshold_name,
 			low_threshold);
-		plat_set_temp_threshold((followed_ucr_limit_temp[i] - 1), &low_threshold, false,
-					false);
+		// low limit enum is followed_ucr_only_limit_temp[i] - 1
+		plat_set_temp_threshold((followed_ucr_only_limit_temp[i] - 1), &low_threshold,
+					false, false);
 
-		// set dynamic temp limit
 		LOG_INF("set %s: %d",
-			temp_index_threshold_type_table[followed_ucr_limit_temp[i]]
+			temp_index_threshold_type_table[followed_ucr_only_limit_temp[i]]
 				.temp_threshold_name,
 			dynamic_threshold);
-		plat_set_temp_threshold(followed_ucr_limit_temp[i], &dynamic_threshold, false,
+		plat_set_temp_threshold(followed_ucr_only_limit_temp[i], &dynamic_threshold, false,
 					false);
 	}
 
