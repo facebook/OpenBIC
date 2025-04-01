@@ -256,12 +256,12 @@ void init_cpld_polling(void)
 		k_thread_create(&cpld_polling_thread, cpld_polling_stack,
 				K_THREAD_STACK_SIZEOF(cpld_polling_stack), poll_cpld_registers,
 				NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0,
-				K_MSEC(3000)); /* Start accessing CPLD 4 seconds after BIC reboot 
-                   (3-second thread start delay + 1-second CPLD_POLLING_INTERVAL_MS) 
+				K_MSEC(1000)); /* Start accessing CPLD 2 seconds after BIC reboot 
+                   (1-second thread start delay + 1-second CPLD_POLLING_INTERVAL_MS) 
                    to prevent DC status changes during BIC reboot */
 	k_thread_name_set(&cpld_polling_thread, "cpld_polling_thread");
 
-	k_timer_start(&init_ubc_delayed_timer, K_MSEC(3000), K_NO_WAIT);
+	k_timer_start(&init_ubc_delayed_timer, K_MSEC(1000), K_NO_WAIT);
 
 	k_work_schedule(&check_cpld_work, K_MSEC(100));
 }
