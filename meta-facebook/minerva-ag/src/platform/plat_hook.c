@@ -75,6 +75,7 @@ bool post_all_sensor_read(sensor_cfg *cfg, void *args, int *reading)
 	ARG_UNUSED(args);
 
 	update_sensor_data_2_5_table();
+	update_sensor_data_8_table();
 
 	return true;
 }
