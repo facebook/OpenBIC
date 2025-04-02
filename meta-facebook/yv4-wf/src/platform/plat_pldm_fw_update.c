@@ -512,9 +512,17 @@ static bool plat_get_cxl_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	uint8_t cxl_comp_id = p->comp_identifier;
 	switch (cxl_comp_id) {
 	case WF_COMPNT_CXL1:
+		if (get_cxl_ready_status(CXL_ID_1) == false) {
+			LOG_WRN("CXL1 not ready");
+			return false;
+		}
 		cxl_eid += 2;
 		break;
 	case WF_COMPNT_CXL2:
+		if (get_cxl_ready_status(CXL_ID_2) == false) {
+			LOG_WRN("CXL2 not ready");
+			return false;
+		}
 		cxl_eid += 3;
 		break;
 	default:
@@ -548,6 +556,29 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	uint8_t vr_type = VR_TYPE_UNKNOWN;
 	uint32_t version;
 	uint16_t remain = 0xFFFF;
+	uint8_t value = 0x0;
+	uint8_t vr_comp_id = p->comp_identifier;
+
+	get_ioe_value(ADDR_IOE2, TCA9555_OUTPUT_PORT_REG_0, &value);
+	switch (vr_comp_id) {
+	case WF_COMPNT_VR_PVDDQ_AB_ASIC1:
+	case WF_COMPNT_VR_PVDDQ_CD_ASIC1:
+		if ((value & IOE_SWITCH_CXL1_VR_TO_BIC) == 0) {
+			LOG_WRN("The ASIC1 VR SMBus has not yet been switched to BIC");
+			return false;
+		}
+		break;
+	case WF_COMPNT_VR_PVDDQ_AB_ASIC2:
+	case WF_COMPNT_VR_PVDDQ_CD_ASIC2:
+		if ((value & IOE_SWITCH_CXL2_VR_TO_BIC) == 0) {
+			LOG_WRN("The ASIC2 VR SMBus has not yet been switched to BIC");
+			return false;
+		}
+		break;
+	default:
+		LOG_ERR("Unknown VR component ID %d", vr_comp_id);
+		return false;
+	}
 
 	plat_pldm_vr_i2c_info_get(p->comp_identifier, &bus, &addr);
 
