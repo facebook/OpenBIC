@@ -37,6 +37,7 @@
 #include "pldm_sensor.h"
 #include "mp29816a.h"
 #include "plat_hook.h"
+#include "plat_event.h"
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
@@ -460,6 +461,17 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	uint8_t sensor_id = 0;
 	uint8_t sensor_dev = 0;
 	char sensor_name[MAX_AUX_SENSOR_NAME_LEN] = { 0 };
+
+	/* is_ubc_enabled_delayed_enabled() is to wait for all VR to be enabled when UBC is enabled  */
+	/* (gpio_get(FM_PLD_UBC_EN_R) == GPIO_LOW) is to stop VR FW accessing immediately when UBC is disabled */
+	/* is_mb_dc_on() is to start VR FW accessing when all VRs are enabled PW GD */
+	if (is_mb_dc_on() == false) {
+		if ((gpio_get(FM_PLD_UBC_EN_R) == GPIO_LOW) || !is_ubc_enabled_delayed_enabled()) {
+			LOG_ERR("Comp id %d FW version request failed due to UBC is not enabled",
+				p->comp_identifier);
+			return ret;
+		}
+	}
 
 	if (!find_sensor_id_and_name_by_firmware_comp_id(p->comp_identifier, &sensor_id,
 							 sensor_name)) {
