@@ -466,15 +466,11 @@ temp_threshold_mapping_sensor temp_index_threshold_type_table[] = {
 	{ ON_DIE_1_2_REMOTE_1_LOW_LIMIT, REMOTE_1_LOW_LIMIT, ASIC_DIE_ATH_SENSOR_0_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_0_TEMP_REMOTE1_LOW_LIM" },
 	{ ON_DIE_1_2_REMOTE_2_HIGH_LIMIT, REMOTE_2_HIGH_LIMIT, ASIC_DIE_ATH_SENSOR_1_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_1_TEMP_REMOTE2_HIGH_LIM" },
 	{ ON_DIE_1_2_REMOTE_2_LOW_LIMIT, REMOTE_2_LOW_LIMIT, ASIC_DIE_ATH_SENSOR_1_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_1_TEMP_REMOTE2_LOW_LIM" },
-	{ ON_DIE_1_2_REMOTE_1_THERM_LIMIT, REMOTE_1_THERM_LIMIT, ASIC_DIE_ATH_SENSOR_0_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_0_TEMP_REMOTE1_THERM_LIM" },
-	{ ON_DIE_1_2_REMOTE_2_THERM_LIMIT, REMOTE_2_THERM_LIMIT, ASIC_DIE_ATH_SENSOR_1_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_1_TEMP_REMOTE2_THERM_LIM" },
 
 	{ ON_DIE_3_4_REMOTE_1_HIGH_LIMIT, REMOTE_1_HIGH_LIMIT, ASIC_DIE_N_OWL_TEMP_C, "CB_ASIC_DIE_N_OWL_TEMP_REMOTE1_HIGH_LIM" },
 	{ ON_DIE_3_4_REMOTE_1_LOW_LIMIT, REMOTE_1_LOW_LIMIT, ASIC_DIE_N_OWL_TEMP_C, "CB_ASIC_DIE_N_OWL_TEMP_REMOTE1_LOW_LIM" },
 	{ ON_DIE_3_4_REMOTE_2_HIGH_LIMIT, REMOTE_2_HIGH_LIMIT, ASIC_DIE_S_OWL_TEMP_C, "CB_ASIC_DIE_S_OWL_TEMP_REMOTE2_HIGH_LIM" },
 	{ ON_DIE_3_4_REMOTE_2_LOW_LIMIT, REMOTE_2_LOW_LIMIT, ASIC_DIE_S_OWL_TEMP_C, "CB_ASIC_DIE_S_OWL_TEMP_REMOTE2_LOW_LIM" },
-	{ ON_DIE_3_4_REMOTE_1_THERM_LIMIT, REMOTE_1_THERM_LIMIT, ASIC_DIE_N_OWL_TEMP_C, "CB_ASIC_DIE_N_OWL_TEMP_REMOTE1_THERM_LIM" },
-	{ ON_DIE_3_4_REMOTE_2_THERM_LIMIT, REMOTE_2_THERM_LIMIT, ASIC_DIE_S_OWL_TEMP_C, "CB_ASIC_DIE_S_OWL_TEMP_REMOTE2_THERM_LIM" },
 	
 	{ TOP_INLET_LOW_LIMIT, LOCAL_LOW_LIMIT, TOP_INLET_TEMP_C, "CB_TOP_INLET_TEMP_LOW_LIM" },
 	{ TOP_INLET_HIGH_LIMIT, LOCAL_HIGH_LIMIT, TOP_INLET_TEMP_C, "CB_TOP_INLET_TEMP_HIGH_LIM" },
@@ -1863,20 +1859,20 @@ bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 	switch (cfg->type) {
 	case sensor_dev_tmp431:
 		if (!tmp432_set_temp_threshold(cfg, temp_threshold_type_tmp, millidegree_celsius)) {
-			LOG_ERR("The TMP431 temp threshold reading failed");
+			LOG_ERR("The TMP431 temp threshold setting failed");
 			return false;
 		}
 		break;
 	case sensor_dev_emc1413:
 		if (!emc1413_set_temp_threshold(cfg, temp_threshold_type_tmp,
 						millidegree_celsius)) {
-			LOG_ERR("The EMC1413 temp threshold reading failed");
+			LOG_ERR("The EMC1413 temp threshold setting failed");
 			return false;
 		}
 		break;
 	case sensor_dev_tmp75:
 		if (!tmp75_set_temp_threshold(cfg, temp_threshold_type_tmp, millidegree_celsius)) {
-			LOG_ERR("The TMP75 temp threshold reading failed");
+			LOG_ERR("The TMP75 temp threshold setting failed");
 			return false;
 		}
 		break;
@@ -1892,4 +1888,71 @@ bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 	}
 
 	return true;
+}
+
+void init_temp_limit(void)
+{
+	uint8_t followed_ucr_lcr_limit_temp[] = { ON_DIE_1_2_REMOTE_1_HIGH_LIMIT,
+						  ON_DIE_1_2_REMOTE_2_HIGH_LIMIT,
+						  ON_DIE_3_4_REMOTE_1_HIGH_LIMIT,
+						  ON_DIE_3_4_REMOTE_2_HIGH_LIMIT };
+
+	uint8_t followed_ucr_only_limit_temp[] = { TOP_INLET_HIGH_LIMIT, TOP_OUTLET_HIGH_LIMIT,
+						   BOT_INLET_HIGH_LIMIT, BOT_OUTLET_HIGH_LIMIT };
+
+	for (int i = 0; i < ARRAY_SIZE(followed_ucr_lcr_limit_temp); i++) {
+		float critical_high = 0;
+		float critical_low = 0;
+		uint8_t sensor_id =
+			temp_index_threshold_type_table[followed_ucr_lcr_limit_temp[i]].sensor_id;
+		get_pdr_table_critical_high_and_low_with_sensor_id(sensor_id, &critical_high,
+								   &critical_low);
+
+		uint32_t high_threshold = (uint32_t)(critical_high * 1000);
+		uint32_t low_threshold = (uint32_t)(critical_low * 1000);
+		LOG_INF("set %s: %d",
+			temp_index_threshold_type_table[(followed_ucr_lcr_limit_temp[i] + 1)]
+				.temp_threshold_name,
+			low_threshold);
+		// low limit enum is followed_ucr_lcr_limit_temp[i] + 1
+		plat_set_temp_threshold((followed_ucr_lcr_limit_temp[i] + 1), &low_threshold, false,
+					false);
+
+		LOG_INF("set %s: %d",
+			temp_index_threshold_type_table[followed_ucr_lcr_limit_temp[i]]
+				.temp_threshold_name,
+			high_threshold);
+		plat_set_temp_threshold(followed_ucr_lcr_limit_temp[i], &high_threshold, false,
+					false);
+	}
+
+	for (int i = 0; i < ARRAY_SIZE(followed_ucr_only_limit_temp); i++) {
+		float critical_high = 0;
+		float critical_low = 0;
+		uint8_t sensor_id =
+			temp_index_threshold_type_table[followed_ucr_only_limit_temp[i]].sensor_id;
+		get_pdr_table_critical_high_and_low_with_sensor_id(sensor_id, &critical_high,
+								   &critical_low);
+
+		// set low limit to high limit - 2 degree
+		// set low limit first to avoid the temp alert jump
+		uint32_t dynamic_threshold = (uint32_t)(critical_high * 1000);
+		uint32_t low_threshold = dynamic_threshold - 2000;
+		LOG_INF("set %s: %d",
+			temp_index_threshold_type_table[(followed_ucr_only_limit_temp[i] - 1)]
+				.temp_threshold_name,
+			low_threshold);
+		// low limit enum is followed_ucr_only_limit_temp[i] - 1
+		plat_set_temp_threshold((followed_ucr_only_limit_temp[i] - 1), &low_threshold,
+					false, false);
+
+		LOG_INF("set %s: %d",
+			temp_index_threshold_type_table[followed_ucr_only_limit_temp[i]]
+				.temp_threshold_name,
+			dynamic_threshold);
+		plat_set_temp_threshold(followed_ucr_only_limit_temp[i], &dynamic_threshold, false,
+					false);
+	}
+
+	LOG_INF("temp limit init done");
 }

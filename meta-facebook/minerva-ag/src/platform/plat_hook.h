@@ -89,15 +89,11 @@ enum PLAT_TEMP_INDEX_THRESHOLD_TYPE_E {
 	ON_DIE_1_2_REMOTE_1_LOW_LIMIT,
 	ON_DIE_1_2_REMOTE_2_HIGH_LIMIT,
 	ON_DIE_1_2_REMOTE_2_LOW_LIMIT,
-	ON_DIE_1_2_REMOTE_1_THERM_LIMIT,
-	ON_DIE_1_2_REMOTE_2_THERM_LIMIT,
 
 	ON_DIE_3_4_REMOTE_1_HIGH_LIMIT,
 	ON_DIE_3_4_REMOTE_1_LOW_LIMIT,
 	ON_DIE_3_4_REMOTE_2_HIGH_LIMIT,
 	ON_DIE_3_4_REMOTE_2_LOW_LIMIT,
-	ON_DIE_3_4_REMOTE_1_THERM_LIMIT,
-	ON_DIE_3_4_REMOTE_2_THERM_LIMIT,
 
 	TOP_INLET_LOW_LIMIT,
 	TOP_INLET_HIGH_LIMIT,
@@ -278,5 +274,6 @@ bool find_bootstrap_by_rail(uint8_t rail, bootstrap_mapping_register *result);
 bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting_value,
 					   uint8_t drive_index_level, bool is_perm);
 bool get_bootstrap_change_drive_level(int rail, int *drive_level);
+void init_temp_limit(void);
 
 #endif
