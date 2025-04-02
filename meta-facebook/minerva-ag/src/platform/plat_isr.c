@@ -110,7 +110,7 @@ void ISR_GPIO_FM_PLD_UBC_EN_R()
 		plat_clock_init();
 	}
 
-	k_timer_start(&check_ubc_delayed_timer, K_MSEC(3000), K_NO_WAIT);
+	k_timer_start(&check_ubc_delayed_timer, K_MSEC(1000), K_NO_WAIT);
 }
 
 bool plat_i2c_read(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t *data, uint8_t len)
