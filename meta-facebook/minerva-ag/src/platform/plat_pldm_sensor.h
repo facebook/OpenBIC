@@ -216,6 +216,8 @@
 #define VR_ASIC_P1V2_VDDHTX_PCIE_CURR_A 0x61
 #define VR_ASIC_P1V2_VDDHTX_PCIE_PWR_W 0x62
 
+#define PLAT_SENSOR_NUM_MAX 0x63 //Change if there is new sensor
+
 #define TMP75_TEMP_OFFSET 0x00
 #define UPDATE_INTERVAL_1S 1
 #define UPDATE_INTERVAL_5S 5
