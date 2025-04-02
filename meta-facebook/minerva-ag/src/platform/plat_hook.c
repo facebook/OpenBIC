@@ -160,6 +160,10 @@ isl69259_init_arg isl69259_init_args[] = {
 	[1] = { .vout_scale_enable = true, .vout_scale = (499 / 709.0) },
 };
 
+mpc12109_init_arg mpc12109_init_args[] = {
+	[0] = { .iout_lsb = 0.5, .pout_lsb = 2 },
+};
+
 temp_mapping_sensor temp_index_table[] = {
 	{ TEMP_INDEX_ON_DIE_1_2, ASIC_DIE_ATH_SENSOR_0_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_0_TEMP" },
 	{ TEMP_INDEX_ON_DIE_3_4, ASIC_DIE_N_OWL_TEMP_C, "CB_ASIC_DIE_N_OWL_TEMP" },
