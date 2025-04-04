@@ -1,0 +1,10 @@
+<map id="add_pmic_error_sel" name="add_pmic_error_sel">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,140,83"/>
+<area shape="rect" id="node2" href="$ipmi_8c.html#a40681786f36bd1836cdb473b7050dda1" title=" " alt="" coords="189,9,339,50"/>
+<area shape="rect" id="node4" href="$gt-cc_2src_2platform_2plat__mctp_8c.html#a998a1c1d667b48c6de3aef50f5dc86aa" title=" " alt="" coords="188,85,340,112"/>
+<area shape="rect" id="node3" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="419,5,501,32"/>
+<area shape="rect" id="node5" href="$at-cb_2src_2platform_2plat__mctp_8c.html#aa91b2fdee8959aa54116d3b9b3b6c031" title=" " alt="" coords="388,56,532,83"/>
+<area shape="rect" id="node6" href="$pldm_8c.html#a90114495fe7507fbfbdcd388f02911aa" title=" " alt="" coords="401,107,519,133"/>
+<area shape="rect" id="node8" href="$pldm__oem_8c.html#acdcd72cd46e1f10b7be19781bb1b9866" title=" " alt="" coords="425,157,495,184"/>
+<area shape="rect" id="node7" href="$pldm_8c.html#a41d615349cd666a0f5372f4f4f0c9507" title=" " alt="" coords="580,107,743,133"/>
+</map>

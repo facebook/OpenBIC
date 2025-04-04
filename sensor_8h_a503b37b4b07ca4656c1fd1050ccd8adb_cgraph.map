@@ -1,0 +1,14 @@
+<map id="plat_sensor_poll_post" name="plat_sensor_poll_post">
+<area shape="rect" id="node1" title=" " alt="" coords="5,85,153,112"/>
+<area shape="rect" id="node2" href="$sensor_8c.html#a76278e0d00225596fd3c4805408ff195" title=" " alt="" coords="208,5,380,32"/>
+<area shape="rect" id="node3" href="$sensor_8c.html#ab9a824489ded146dddedddfb3d2b5a5c" title=" " alt="" coords="201,56,387,83"/>
+<area shape="rect" id="node4" href="$plat__threshold_8c.html#a19895fe70819ee247f953ecd5d10f224" title=" " alt="" coords="231,107,357,149"/>
+<area shape="rect" id="node5" href="$plat__threshold_8c.html#a158d5c04b2bd512e98b73e62fe831894" title=" " alt="" coords="231,173,357,200"/>
+<area shape="rect" id="node6" href="$plat__fsc_8c.html#a161ad1ff2bbb0f14f0e7718ab966de24" title=" " alt="" coords="476,72,540,99"/>
+<area shape="rect" id="node7" href="$aalc-rpu_2src_2platform_2plat__class_8c.html#a9556923a75518229aa09ba0bbda92a48" title=" " alt="" coords="449,123,567,149"/>
+<area shape="rect" id="node9" href="$aalc-rpu_2src_2platform_2plat__led_8c.html#a551af46446cb05b55f2f8e089d53ff85" title=" " alt="" coords="476,173,540,200"/>
+<area shape="rect" id="node10" href="$aalc-rpu_2src_2platform_2plat__isr_8c.html#ae24f3e38047e259a7fa83637d50a36c4" title=" " alt="" coords="435,225,581,266"/>
+<area shape="rect" id="node12" href="$plat__status_8c.html#a6a5e5d3582c3221f9a1b3d94cff8cf6f" title=" " alt="" coords="453,291,563,317"/>
+<area shape="rect" id="node8" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="629,123,700,149"/>
+<area shape="rect" id="node11" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="629,232,700,259"/>
+</map>
