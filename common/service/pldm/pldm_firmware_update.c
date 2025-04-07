@@ -48,6 +48,7 @@ LOG_MODULE_DECLARE(pldm);
 #define MIN_FW_UPDATE_BASELINE_TRANS_SIZE 32
 #define PLDM_NO_SUPPORT_PROGRESS_PERCENT 0x65
 #define PLDM_FW_UPDATE_MODE_TIMEOUT 60
+#define UPDATE_REQUEST_DATA_MAX_RETRY_COUNT 3
 
 #define GET_EEPROM_SLAVE_MASK(offset) (((offset) >> 16) & 0xF)
 #define GET_EERPOM_OFFSET(offset) ((offset) & 0xFFFF)
@@ -127,10 +128,8 @@ int get_device_descriptor_total_length(struct pldm_descriptor_string *table, uin
 	return length;
 }
 
-uint8_t pldm_bic_update(void *fw_update_param)
+uint8_t pldm_fw_update(void *fw_update_param, const int flash_position)
 {
-	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
-
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 
 	CHECK_NULL_ARG_WITH_RETURN(p->data, 1);
@@ -160,15 +159,33 @@ uint8_t pldm_bic_update(void *fw_update_param)
 		update_flag = (SECTOR_END_FLAG | NO_RESET_FLAG);
 	}
 
-	uint8_t ret = fw_update(p->data_ofs, p->data_len, p->data, update_flag, DEVSPI_FMC_CS0);
+	uint8_t ret = fw_update(p->data_ofs, p->data_len, p->data, update_flag, flash_position);
 
 	if (ret) {
 		LOG_ERR("Firmware update failed, offset(0x%x), length(0x%x), status(%d)",
 			p->data_ofs, p->data_len, ret);
 		return 1;
 	}
-
 	return 0;
+}
+
+uint8_t pldm_bic_update(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	return pldm_fw_update(fw_update_param, DEVSPI_FMC_CS0);
+}
+
+uint8_t pldm_bios_update(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	int pos = pal_get_bios_flash_position();
+	if (pos == -1) {
+		return 1;
+	}
+
+	return pldm_fw_update(fw_update_param, pos);
 }
 
 uint8_t pldm_vr_update(void *fw_update_param)
@@ -780,6 +797,9 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 
 	cur_aux_state = STATE_AUX_INPROGRESS;
 
+	uint32_t last_offset = 0xFFFFFFFF;
+	uint8_t retry_count = 0;
+
 	do {
 		if (keep_update_flag == false) {
 			LOG_WRN("Update has been canceled by UA(Update Agent)");
@@ -826,11 +846,26 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 			goto exit;
 		}
 
+		LOG_DBG("Request data at 0x%x, length 0x%x, received data length 0x%x", req.offset,
+			req.length, read_len - 1);
+
+		if (last_offset != req.offset)
+			retry_count = 0;
+
+		last_offset = req.offset;
+
 		if (read_len != (req.length + 1)) {
-			LOG_ERR("Request data failed at(0x%x, 0x%x), received unexpected data length 0x%x)",
-				req.offset, req.length, read_len - 1);
-			cur_aux_state = STATE_AUX_FAILED;
-			goto exit;
+			retry_count++;
+			if (retry_count > UPDATE_REQUEST_DATA_MAX_RETRY_COUNT) {
+				LOG_ERR("Request data failed at(0x%x, 0x%x), received unexpected data length 0x%x",
+					req.offset, req.length, read_len - 1);
+				cur_aux_state = STATE_AUX_FAILED;
+				goto exit;
+			}
+
+			LOG_WRN("Request data failed at(0x%x, 0x%x), received unexpected data length 0x%x, attempt %d and retry again",
+				req.offset, req.length, read_len - 1, retry_count);
+			continue;
 		}
 
 		if (resp_buf[0] != PLDM_SUCCESS) {
@@ -1492,12 +1527,11 @@ static uint8_t get_downstream_firmware_parameters(void *mctp_inst, uint8_t *buf,
 			return PLDM_SUCCESS;
 		}
 
-		struct component_parameter_table *comp_table_p =
-			(struct component_parameter_table *)curr_downstream_device;
-		curr_downstream_device += sizeof(struct component_parameter_table);
+		struct downstream_device_parameter_table *comp_table_p =
+			(struct downstream_device_parameter_table *)curr_downstream_device;
+		curr_downstream_device += sizeof(struct downstream_device_parameter_table);
 
-		comp_table_p->comp_identifier = comp_config[i].comp_identifier;
-		comp_table_p->comp_classification = comp_config[i].comp_classification;
+		comp_table_p->downstream_device_index = comp_config[i].comp_identifier;
 		comp_table_p->active_comp_ver_str_type = PLDM_COMP_ASCII;
 		comp_table_p->pending_comp_ver_str_type = PLDM_COMP_ASCII;
 		comp_table_p->pending_comp_ver_str_len = 0x00;
@@ -1509,7 +1543,7 @@ static uint8_t get_downstream_firmware_parameters(void *mctp_inst, uint8_t *buf,
 			memcpy(curr_downstream_device, &error_code, sizeof(error_code));
 		}
 
-		param_table_len += sizeof(struct component_parameter_table) +
+		param_table_len += sizeof(struct downstream_device_parameter_table) +
 				   comp_table_p->active_comp_ver_str_len;
 		curr_downstream_device += comp_table_p->active_comp_ver_str_len;
 

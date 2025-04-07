@@ -36,6 +36,7 @@
 #include <logging/log.h>
 #include "plat_event.h"
 #include "plat_log.h"
+#include "plat_fru.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -52,7 +53,10 @@ void pal_pre_init()
 	plat_led_init();
 	vr_mutex_init();
 	pwr_level_mutex_init();
-	plat_clock_init();
+
+	if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH)
+		plat_clock_init();
+
 	plat_eusb_init();
 }
 
@@ -67,8 +71,11 @@ void pal_post_init()
 	user_settings_init();
 	pldm_load_state_effecter_table(MAX_STATE_EFFECTER_IDX);
 	pldm_assign_gpio_effecter_id(PLAT_EFFECTER_ID_GPIO_HIGH_BYTE);
+	init_fru_info();
 	init_load_eeprom_log();
 	init_cpld_polling();
+
+	LOG_INF("Init done");
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78

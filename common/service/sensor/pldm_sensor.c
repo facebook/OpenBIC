@@ -86,8 +86,15 @@ int pldm_sensor_get_info_via_sensor_thread_and_sensor_pdr_index(
 	CHECK_NULL_ARG_WITH_RETURN(cache_status, -1);
 	CHECK_NULL_ARG_WITH_RETURN(check_access, -1);
 
+	if (thread_id < 0) {
+		LOG_ERR("Invalid thread_id: %d", thread_id);
+		return -1;
+	}
+
 	int pldm_sensor_count = plat_pldm_sensor_get_sensor_count(thread_id);
-	if (sensor_pdr_index >= pldm_sensor_count) {
+	if ((sensor_pdr_index < 0) || (sensor_pdr_index >= pldm_sensor_count)) {
+		LOG_ERR("Invalid sensor_pdr_index: %d for thread_id: %d. Max allowed: %d",
+			sensor_pdr_index, thread_id, pldm_sensor_count);
 		return -1;
 	}
 
@@ -395,7 +402,7 @@ void pldm_sensor_poll_thread_init()
 			k_thread_create(&pldm_sensor_polling_thread[i], pldm_sensor_poll_stacks[i],
 					K_THREAD_STACK_SIZEOF(pldm_sensor_poll_stacks[i]),
 					pldm_sensor_polling_handler, (void *)i, NULL, NULL,
-					CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+					K_PRIO_PREEMPT(1), 0, K_NO_WAIT);
 		k_thread_name_set(&pldm_sensor_polling_thread[i],
 				  pldm_sensor_thread_list[i].thread_name);
 

@@ -28,6 +28,10 @@
 #include "pdr.h"
 #include "mp29816a.h"
 #include "plat_pldm_sensor.h"
+#include "plat_isr.h"
+#include "plat_i2c.h"
+
+#define AEGIS_CPLD_ADDR (0x4C >> 1)
 
 LOG_MODULE_REGISTER(plat_pldm_fw_version_shell);
 
@@ -124,11 +128,11 @@ void cmd_get_fw_version_vr(const struct shell *shell, size_t argc, char **argv)
 		}
 
 		if (sensor_dev == sensor_dev_mp2891 || sensor_dev == sensor_dev_mp29816a)
-			shell_print(shell, "%-8x|%-40s|    %04x|%04x", comp_identifier, sensor_name,
+			shell_print(shell, "%-8x|%-50s|    %04x|%04x", comp_identifier, sensor_name,
 				    version, remain);
 		else if (sensor_dev == sensor_dev_isl69259 || sensor_dev == sensor_dev_raa228238 ||
 			 sensor_dev == sensor_dev_raa228249 || sensor_dev == sensor_dev_mp2971)
-			shell_print(shell, "%-8x|%-40s|%08x|%04x", comp_identifier, sensor_name,
+			shell_print(shell, "%-8x|%-50s|%08x|%04x", comp_identifier, sensor_name,
 				    version, remain);
 		else
 			shell_print(shell, "not support sensor_dev: %d", sensor_dev);
@@ -137,5 +141,23 @@ void cmd_get_fw_version_vr(const struct shell *shell, size_t argc, char **argv)
 	/* Start sensor polling */
 	set_plat_sensor_polling_enable_flag(true);
 
+	return;
+}
+
+void cmd_get_fw_version_cpld(const struct shell *shell, size_t argc, char **argv)
+{
+	if (argc != 1) {
+		shell_warn(shell, "Help: test get_fw_version cpld");
+		return;
+	}
+
+	uint8_t data[4] = { 0 };
+	uint32_t version = 0;
+	if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, 0x44, data, 4)) {
+		LOG_ERR("Failed to read cpld version from cpld");
+		return;
+	}
+	version = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
+	shell_print(shell, "The cpld version: %08x", version);
 	return;
 }

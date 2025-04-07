@@ -12,3 +12,12 @@ ConfigurationNotChecked
 
 // assigning a variable a value before it's used isn't very important.
 unreadVariable
+
+// CPPcheck doesn't know about relative include path
+missingInclude
+
+// CPPcheck doesn't know about standard header path.
+missingIncludeSystem
+
+// Ignore checkers report message
+checkersReport

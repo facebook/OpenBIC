@@ -54,8 +54,8 @@ typedef struct _clock_default_info {
 
 clock_compnt_mapping clock_compnt_mapping_table[] = {
 	{ CLKGEN_312M, CLK_GEN_312M_ADDR, I2C_BUS1, "CLKGEN_312M" },
-	{ CLKBUF_100M_U471, CLK_BUF_U471_ADDR, I2C_BUS1, "CLKBUF_100M_U471" },
-	{ CLKBUF_100M_U519, CLK_BUF_U519_ADDR, I2C_BUS1, "CLKBUF_100M_U519" },
+	{ AEGIS_CLKBUF_100M_U471, CLK_BUF_U471_ADDR, I2C_BUS1, "AEGIS_CLKBUF_100M_U471" },
+	{ AEGIS_CLKBUF_100M_U519, CLK_BUF_U519_ADDR, I2C_BUS1, "AEGIS_CLKBUF_100M_U519" },
 	{ CLKGEN_100M, CLK_GEN_100M_ADDR, I2C_BUS1, "CLKGEN_100M" },
 };
 
@@ -438,8 +438,8 @@ void cmd_get_clock_status(const struct shell *shell, size_t argc, char **argv)
 		}
 		shell_print(shell, "ACTMON_1_STS Register = 0x%x", i2c_msg.data[0]);
 		break;
-	case CLKBUF_100M_U471:
-	case CLKBUF_100M_U519:
+	case AEGIS_CLKBUF_100M_U471:
+	case AEGIS_CLKBUF_100M_U519:
 		i2c_msg.bus = bus;
 		i2c_msg.target_addr = addr;
 		i2c_msg.tx_len = 1;
@@ -527,8 +527,8 @@ void cmd_clear_clock_status(const struct shell *shell, size_t argc, char **argv)
 
 		shell_print(shell, "clock clear %s success!", argv[1]);
 		break;
-	case CLKBUF_100M_U471:
-	case CLKBUF_100M_U519:
+	case AEGIS_CLKBUF_100M_U471:
+	case AEGIS_CLKBUF_100M_U519:
 		i2c_msg.bus = bus;
 		i2c_msg.target_addr = addr;
 		i2c_msg.tx_len = 1;

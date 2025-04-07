@@ -63,7 +63,7 @@ uint8_t mctp_ctrl_cmd_set_endpoint_id(void *mctp_inst, uint8_t *buf, uint16_t le
 	CHECK_NULL_ARG_WITH_RETURN(resp, MCTP_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(resp_len, MCTP_ERROR);
 
-	struct _set_eid_req *req = (struct _set_eid_req *)buf;
+	const struct _set_eid_req *req = (const struct _set_eid_req *)buf;
 	struct _set_eid_resp *p = (struct _set_eid_resp *)resp;
 
 	uint8_t plat_mctp_port_count = plat_get_mctp_port_count();
@@ -215,14 +215,14 @@ static uint8_t mctp_ctrl_cmd_resp_process(mctp *mctp_inst, uint8_t *buf, uint32_
 		return MCTP_ERROR;
 	}
 
-	mctp_ctrl_hdr *hdr = (mctp_ctrl_hdr *)buf;
+	const mctp_ctrl_hdr *hdr = (const mctp_ctrl_hdr *)buf;
 	sys_snode_t *node;
 	sys_snode_t *s_node;
 	sys_snode_t *pre_node = NULL;
 	sys_snode_t *found_node = NULL;
 
 	SYS_SLIST_FOR_EACH_NODE_SAFE (&wait_recv_resp_list, node, s_node) {
-		wait_msg *p = (wait_msg *)node;
+		const wait_msg *p = (const wait_msg *)node;
 		/* found the proper handler */
 		if ((p->msg.hdr.inst_id == hdr->inst_id) && (p->mctp_inst == mctp_inst) &&
 		    (p->msg.hdr.cmd == hdr->cmd)) {
@@ -481,4 +481,5 @@ exit:
 	return ret;
 }
 
-K_THREAD_DEFINE(monitor_tid, 1024, mctp_ctrl_msg_timeout_monitor, NULL, NULL, NULL, 0, 0, 0);
+K_THREAD_DEFINE(monitor_tid, 1024, mctp_ctrl_msg_timeout_monitor, NULL, NULL, NULL,
+		K_PRIO_PREEMPT(1), 0, 0);

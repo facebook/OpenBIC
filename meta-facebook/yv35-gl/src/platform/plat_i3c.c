@@ -34,7 +34,7 @@ void init_i3c_hub()
 	i3c_hub_type = get_i3c_hub_type();
 
 	if (i3c_hub_type == RG3M87B12_DEVICE_INFO) {
-		if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, LDO_VOLT)) {
+		if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, LDO_VOLT, rg3mxxb12_pullup_500_ohm)) {
 			LOG_ERR("Failed to initialize i3c hub");
 		}
 

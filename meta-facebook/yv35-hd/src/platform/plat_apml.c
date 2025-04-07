@@ -71,7 +71,7 @@ uint8_t pal_get_apml_bus()
 	return APML_BUS;
 }
 
-static void read_cpuid_callback(apml_msg *msg)
+static void read_cpuid_callback(const apml_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
 	cpuid_RdData *rd_data = (cpuid_RdData *)msg->RdData;
@@ -79,7 +79,7 @@ static void read_cpuid_callback(apml_msg *msg)
 	memcpy(&cpuid[exc_value * 8], rd_data->data_out, 8);
 }
 
-static void read_cpuid_error_callback(apml_msg *msg)
+static void read_cpuid_error_callback(const apml_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
 	uint8_t exc_value = (uint8_t)msg->ui32_arg;

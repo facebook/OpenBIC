@@ -33,9 +33,22 @@
 #include "plat_pldm.h"
 #include "pldm_base.h"
 #include "hal_i3c.h"
+#include "hal_i2c.h"
 #include "power_status.h"
 #include "plat_i3c.h"
+#include "plat_i2c.h"
 #include "plat_dimm.h"
+#include "util_worker.h"
+
+#define EVENT_RESEND_DELAY_MS 300000 // 5 minutes delay for resend
+#define MAX_RESEND_ATTEMPTS 3
+
+// Structure to hold event resend data
+struct event_resend_data {
+	struct pldm_addsel_data event_msg;
+	int resend_count;
+	struct k_work_delayable resend_work; // Work item with delay support
+} resend_data;
 
 enum THREAD_STATUS {
 	THREAD_SUCCESS = 0,
@@ -63,6 +76,11 @@ bool pal_request_msg_to_BIC_from_HOST(uint8_t netfn, uint8_t cmd)
 			return false;
 		}
 	}
+	if (netfn == NETFN_OEM_REQ) {
+		if (cmd == CMD_OEM_CRASH_DUMP) {
+			return false;
+		}
+	}
 	// In YV4, all IPMI commands are all sent to BIC
 	return true;
 }
@@ -82,6 +100,7 @@ void APP_SET_ACPI_POWER(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
 
+	msg->data_len = 0;
 	msg->completion_code = CC_SUCCESS;
 	return;
 }
@@ -90,8 +109,33 @@ void APP_CLEAR_MESSAGE_FLAGS(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
 
+	msg->data_len = 0;
 	msg->completion_code = CC_SUCCESS;
 	return;
+}
+
+// Work handler to resend the event
+void event_resend_work_handler(struct k_work *work)
+{
+	struct event_resend_data *data = CONTAINER_OF(work, struct event_resend_data, resend_work);
+
+	if (data->resend_count >= MAX_RESEND_ATTEMPTS) {
+		LOG_ERR("Max resend attempts reached for event log");
+		return;
+	}
+
+	data->resend_count++;
+
+	if (PLDM_SUCCESS != send_event_log_to_bmc(data->event_msg)) {
+		LOG_ERR("Failed to re-send event log, attempt %d", data->resend_count);
+		// Re-schedule another attempt if retries are not complete
+		k_work_reschedule_for_queue(&plat_work_q, &data->resend_work,
+					    K_MSEC(EVENT_RESEND_DELAY_MS));
+	} else {
+		LOG_INF("Successfully re-sent event log on attempt %d", data->resend_count);
+		// Successfully sent, cancel any further retries
+		k_work_cancel_delayable(&data->resend_work);
+	}
 }
 
 // Reset BMC
@@ -102,6 +146,24 @@ void APP_COLD_RESET(ipmi_msg *msg)
 	if (msg->data_len != 0) {
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
+	}
+
+	// BMC COLD RESET event assert
+	LOG_ERR("BMC COLD RESET event assert");
+	struct pldm_addsel_data event_msg = { 0 };
+	event_msg.event_type = BMC_COMES_OUT_COLD_RESET;
+	event_msg.assert_type = EVENT_ASSERTED;
+
+	// Initialize resend data
+	memset(&resend_data, 0, sizeof(resend_data));
+	resend_data.event_msg = event_msg;
+	k_work_init_delayable(&resend_data.resend_work, event_resend_work_handler);
+
+	if (PLDM_SUCCESS != send_event_log_to_bmc(event_msg)) {
+		LOG_ERR("Failed to assert BMC COLD RESET event log, scheduling retry.");
+		resend_data.resend_count = 0;
+		k_work_reschedule_for_queue(&plat_work_q, &resend_data.resend_work,
+					    K_MSEC(EVENT_RESEND_DELAY_MS));
 	}
 
 	switch (pal_submit_bmc_cold_reset()) {
@@ -411,26 +473,28 @@ void OEM_1S_WRITE_READ_DIMM(ipmi_msg *msg)
 		return;
 	}
 
-	I3C_MSG i3c_msg = { 0 };
-	i3c_msg.bus = I3C_BUS3;
-	i3c_msg.tx_len = msg->data_len - 3;
-	i3c_msg.rx_len = msg->data[2];
+	I2C_MSG i2c_msg = { 0 };
+	memset(&i2c_msg, 0, sizeof(I2C_MSG));
+	i2c_msg.bus = I2C_BUS13;
+	i2c_msg.tx_len = msg->data_len - 3;
+	i2c_msg.rx_len = msg->data[2];
+
 	// Check offset byte count: SPD_NVM has 2 bytes offset
 	if (device_type == DIMM_SPD_NVM) {
-		if (i3c_msg.tx_len < 2) {
+		if (i2c_msg.tx_len < 2) {
 			msg->completion_code = CC_INVALID_DATA_FIELD;
 			return;
 		}
 	} else {
 		// One byte offset
-		if (i3c_msg.tx_len < 1) {
+		if (i2c_msg.tx_len < 1) {
 			msg->completion_code = CC_INVALID_DATA_FIELD;
 			return;
 		}
 	}
 
-	memcpy(&i3c_msg.data[0], &msg->data[3], i3c_msg.tx_len);
-	msg->data_len = i3c_msg.rx_len;
+	memcpy(&i2c_msg.data[0], &msg->data[3], i2c_msg.tx_len);
+	msg->data_len = i2c_msg.rx_len;
 	if (k_mutex_lock(&i3c_dimm_mutex, K_MSEC(I3C_DIMM_MUTEX_TIMEOUT_MS))) {
 		LOG_ERR("Failed to lock I3C dimm mux");
 		msg->completion_code = CC_NODE_BUSY;
@@ -447,51 +511,33 @@ void OEM_1S_WRITE_READ_DIMM(ipmi_msg *msg)
 	switch (device_type) {
 	case DIMM_SPD:
 	case DIMM_SPD_NVM:
-		i3c_msg.target_addr = spd_i3c_addr_list[dimm_id % (DIMM_ID_MAX / 2)];
-		i3c_attach(&i3c_msg);
-		ret = all_brocast_ccc(&i3c_msg);
-		if (ret != 0) {
-			LOG_ERR("Failed to brocast CCC, ret: %d, bus: %d, device type: 0x%x", ret,
-				i3c_msg.bus, device_type);
-			msg->completion_code = CC_UNSPECIFIED_ERROR;
-			goto exit;
-		}
-
+		i2c_msg.target_addr = spd_i3c_addr_list[dimm_id % (DIMM_ID_MAX / 2)];
 		if (device_type == DIMM_SPD_NVM) {
-			ret = i3c_spd_reg_read(&i3c_msg, true);
+			ret = i2c_spd_reg_read(&i2c_msg, true);
 		} else {
-			ret = i3c_spd_reg_read(&i3c_msg, false);
+			ret = i2c_spd_reg_read(&i2c_msg, false);
 		}
 
 		if (ret != 0) {
 			LOG_ERR("Failed to read SPD addr0x%x offset0x%x, ret%d",
-				i3c_msg.target_addr, i3c_msg.data[0], ret);
+				i2c_msg.target_addr, i2c_msg.data[0], ret);
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 		} else {
-			memcpy(&msg->data[0], &i3c_msg.data, i3c_msg.rx_len);
-			msg->data_len = i3c_msg.rx_len;
+			memcpy(&msg->data[0], &i2c_msg.data, i2c_msg.rx_len);
+			msg->data_len = i2c_msg.rx_len;
 			msg->completion_code = CC_SUCCESS;
 		}
 		break;
 	case DIMM_PMIC:
-		i3c_msg.target_addr = pmic_i3c_addr_list[dimm_id % (DIMM_ID_MAX / 2)];
-		i3c_attach(&i3c_msg);
-		ret = all_brocast_ccc(&i3c_msg);
-		if (ret != 0) {
-			LOG_ERR("Failed to brocast CCC, ret: %d, bus: %d, device type: 0x%x", ret,
-				i3c_msg.bus, device_type);
-			msg->completion_code = CC_UNSPECIFIED_ERROR;
-			goto exit;
-		}
-
-		ret = i3c_transfer(&i3c_msg);
+		i2c_msg.target_addr = pmic_i3c_addr_list[dimm_id % (DIMM_ID_MAX / 2)];
+		ret = i2c_master_read(&i2c_msg, 3);
 		if (ret != 0) {
 			LOG_ERR("Failed to read PMIC addr0x%x offset0x%x, ret%d bus%d",
-				i3c_msg.target_addr, i3c_msg.data[0], ret, i3c_msg.bus);
+				i2c_msg.target_addr, i2c_msg.data[0], ret, i2c_msg.bus);
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 		} else {
-			memcpy(&msg->data[0], &i3c_msg.data, i3c_msg.rx_len);
-			msg->data_len = i3c_msg.rx_len;
+			memcpy(&msg->data[0], &i2c_msg.data, i2c_msg.rx_len);
+			msg->data_len = i2c_msg.rx_len;
 			msg->completion_code = CC_SUCCESS;
 		}
 		break;
@@ -500,7 +546,6 @@ void OEM_1S_WRITE_READ_DIMM(ipmi_msg *msg)
 		break;
 	}
 exit:
-	i3c_detach(&i3c_msg);
 	// Switch I3C MUX to CPU after read finish
 	switch_i3c_dimm_mux(I3C_MUX_CPU_TO_DIMM);
 	if (k_mutex_unlock(&i3c_dimm_mutex)) {

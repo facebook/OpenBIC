@@ -27,8 +27,6 @@
 
 LOG_MODULE_REGISTER(plat_isr);
 
-K_TIMER_DEFINE(set_eid_timer, send_cmd_to_dev, NULL);
-
 void set_e1s_pe_reset()
 {
 	if (check_ioe4_e1s_prsnt_pin() == 0) {
@@ -144,9 +142,14 @@ void ISR_MB_PCIE_RST()
 
 	// Monitor CXL ready and set CXL EID again
 	if (gpio_get(RST_PCIE_MB_EXP_N) == GPIO_HIGH) {
-		create_check_cxl_ready_thread();
-		k_timer_start(&set_eid_timer, K_MSEC(10000), K_NO_WAIT);
+		LOG_INF("PERST+");
+		// If CXL didn't ready, check again
+		if ((!get_cxl_ready_status(CXL_ID_1)) || (!get_cxl_ready_status(CXL_ID_2))) {
+			create_check_cxl_ready_thread();
+			create_set_dev_endpoint_thread();
+		}
 	} else {
+		LOG_INF("PERST-");
 		// host reset, cxl also reset
 		set_cxl_ready_status(CXL_ID_1, false);
 		set_cxl_ready_status(CXL_ID_2, false);

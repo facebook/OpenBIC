@@ -108,14 +108,12 @@
 	assigned-address = <0x8>;
 };
 
-&i3c2 {
+&i2c12 {
+	pinctrl-0 = <&pinctrl_i2c12_default>;
 	status = "okay";
-	pinctrl-0 = <&pinctrl_i3c2_default>;
-	i3c-scl-hz = <1000000>;
-	assigned-address = <0x11>;
-	i3c-pp-scl-hi-period-ns = <500>;
-	i3c-pp-scl-lo-period-ns = <500>;
+	clock-frequency = <I2C_BITRATE_STANDARD>;
 };
+
 
 &i2c13 {
 	pinctrl-0 = <&pinctrl_i2c13_default>;
@@ -238,7 +236,7 @@
 	* It is currently written as 24KB, and Aspeed will correct to 32KB in the next version.
 	* 0xa0000 is the starting offset of the non-cacheable area.
 	*/
-	reg = <0 DT_SIZE_K(672)>, <0xa8000 DT_SIZE_K(96)>;
+	reg = <0 DT_SIZE_K(704)>, <0xB0000 DT_SIZE_K(64)>;
 };
 
 &pcc {

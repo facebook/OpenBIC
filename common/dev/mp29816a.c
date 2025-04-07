@@ -342,15 +342,15 @@ static uint8_t mp29816a_do_update(struct cfg_data *cfg_data_list, uint32_t cfg_c
 		}
 	}
 
-	// check page2@1d is 0xa816
+	// check page2@1d is 0xa816 or 0xaa16
 	mp29816a_set_page(bus, addr, 2);
 	if (!mp29816a_i2c_read(bus, addr, 0x1d, data, 2)) {
 		LOG_ERR("Failed to read page2@1d");
 		return 1;
 	} else {
 		uint16_t read_value = data[0] | (data[1] << 8);
-		if (read_value != 0xa816) {
-			LOG_ERR("page2@1d is not 0xa816");
+		if ((read_value != 0xa816) && (read_value != 0xaa16)) {
+			LOG_ERR("page2@1d is not 0xa816 or 0xaa16");
 			return 1;
 		}
 	}

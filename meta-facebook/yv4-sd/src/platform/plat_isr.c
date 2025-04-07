@@ -183,6 +183,59 @@ static add_sel_info *find_event_work_items(uint8_t gpio_num)
 	return NULL;
 }
 
+bool rg3mxxb12_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt, uint8_t pullup_val)
+{
+	bool ret = false;
+
+	const uint8_t cmd_unprotect[2] = { RG3MXXB12_PROTECTION_REG, 0x69 };
+	uint8_t cmd_protect[2] = { RG3MXXB12_PROTECTION_REG, 0x00 };
+	uint8_t cmd_initial[][2] = {
+		/* 
+		 * Refer to RG3MxxB12 datasheet page 13, LDO voltage depends
+		 * on each project's hard design
+		 */
+		{ RG3MXXB12_SLAVE_PORT_ENABLE, 0x0 },
+		{ RG3MXXB12_VOLT_LDO_SETTING, ldo_volt },
+		{ RG3MXXB12_SSPORTS_AGENT_ENABLE, 0x0 },
+		{ RG3MXXB12_SSPORTS_GPIO_ENABLE, 0x0 },
+		{ RG3MXXB12_SSPORTS_PULLUP_SETTING, pullup_val },
+		{ RG3MXXB12_SSPORTS_PULLUP_ENABLE, 0xFF },
+		{ RG3MXXB12_SSPORTS_OD_ONLY, 0x0 },
+		{ RG3MXXB12_SSPORTS_HUB_NETWORK_CONNECTION, 0x01 },
+		{ RG3MXXB12_SLAVE_PORT_ENABLE, 0x01 },
+	};
+
+	i3c_msg->tx_len = 2;
+	memcpy(i3c_msg->data, cmd_unprotect, 2);
+	int initial_cmd_size = sizeof(cmd_initial) / sizeof(cmd_initial[0]);
+
+	// Unlock protected regsiter
+	if (i3c_controller_write(i3c_msg) != 0) {
+		goto out;
+	}
+
+	for (int cmd = 0; cmd < initial_cmd_size; cmd++) {
+		i3c_msg->tx_len = 2;
+		memcpy(i3c_msg->data, cmd_initial[cmd], 2);
+		if (i3c_controller_write(i3c_msg) != 0) {
+			LOG_ERR("Failed to initial i3c mode. offset = 0x%02x, value = 0x%02x",
+				cmd_initial[cmd][0], cmd_initial[cmd][1]);
+			goto out;
+		}
+		k_msleep(10);
+	}
+
+	ret = true;
+out:
+	memcpy(i3c_msg->data, cmd_protect, 2);
+	if (i3c_controller_write(i3c_msg) != 0) {
+		LOG_ERR("Failed to set protect. offset = 0x%02x, value = 0x%02x", cmd_protect[0],
+			cmd_protect[1]);
+	}
+
+	return ret;
+}
+
 /*
  *	TODO: I3C hub is supplied by DC power currently. When DC off, it can't be initialized.
  *  	  Therefore, BIC needs to implement a workaround to reinitialize the I3C hub during DC on.
@@ -213,10 +266,16 @@ void reinit_i3c_hub()
 	i3c_attach(&i3c_msg);
 
 	// Initialize I3C HUB
-	if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, LDO_VOLT)) {
+	if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, LDO_VOLT, 0xF0)) {
 		printk("failed to initialize 1ou rg3mxxb12\n");
 	}
 
+	// Set FF/WF's EID
+	send_cmd_to_dev_handler(NULL);
+}
+
+void set_ffwf_eid()
+{
 	// Set FF/WF's EID
 	send_cmd_to_dev_handler(NULL);
 }
@@ -245,6 +304,7 @@ static void PROC_FAIL_handler(struct k_work *work)
 
 K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_delayed_status);
 K_WORK_DEFINE(reinit_i3c_work, reinit_i3c_hub);
+K_WORK_DEFINE(set_ffwf_eid_work, set_ffwf_eid);
 K_WORK_DEFINE(switch_i3c_dimm_work, switch_i3c_dimm_mux_to_cpu);
 K_WORK_DELAYABLE_DEFINE(PROC_FAIL_work, PROC_FAIL_handler);
 K_WORK_DELAYABLE_DEFINE(ABORT_FRB2_WDT_THREAD, abort_frb2_wdt_thread);
@@ -263,7 +323,7 @@ void ISR_DC_ON()
 
 	if (dc_status) {
 		k_work_schedule(&set_DC_on_5s_work, K_SECONDS(DC_ON_5_SECOND));
-		k_work_submit(&reinit_i3c_work);
+		k_work_submit(&set_ffwf_eid_work);
 		k_work_submit(&switch_i3c_dimm_work);
 		k_work_schedule_for_queue(&plat_work_q, &PROC_FAIL_work,
 					  K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
@@ -312,6 +372,11 @@ void ISR_POST_COMPLETE()
 void ISR_BMC_READY()
 {
 	sync_bmc_ready_pin();
+}
+
+void ISR_WF_BIC_READY()
+{
+	k_work_submit(&set_ffwf_eid_work);
 }
 
 static void SLP3_handler()
@@ -405,7 +470,7 @@ void ISR_MB_THROTTLE()
 
 void ISR_SOC_THMALTRIP()
 {
-	if (gpio_get(RST_CPU_RESET_BIC_N) == GPIO_HIGH) {
+	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
 		LOG_INF("ISR_SOC_THMALTRIP assert");
 		hw_event_register[3]++;
 		add_sel_info *event_item = find_event_work_items(FM_CPU_BIC_THERMTRIP_N);
@@ -500,6 +565,10 @@ void process_vr_pmalert_ocp_sel(struct k_work *work_item)
 	msg.target_addr = work_info->vr_addr;
 
 	for (int page = 0; page < work_info->page_cnt; ++page) {
+		set_vr_monitor_status(false);
+		// wait 10ms for vr monitor stop
+		k_msleep(10);
+
 		/* set page for power rail */
 		msg.tx_len = 2;
 		msg.data[0] = PMBUS_PAGE;
@@ -530,25 +599,25 @@ void process_vr_pmalert_ocp_sel(struct k_work *work_item)
 			continue;
 		}
 
-		if (vr_dev == sensor_dev_tps53689) {
-			/* 1. check if trigger reason is IOUT fault */
-			if (((status_word_msb & VR_IOUT_FAULT_MASK) >> 6) == 1) {
-				/* 2. IOUT fault, check if OC Warning is set */
-				msg.tx_len = 1;
-				msg.rx_len = 1;
-				msg.data[0] = PMBUS_STATUS_IOUT;
-				ret = i2c_master_read(&msg, retry);
-				if (ret != 0) {
-					LOG_ERR("Get vr status iout fail, bus: 0x%x, addr: 0x%x",
-						msg.bus, msg.target_addr);
-					continue;
-				}
-				if (((msg.data[0] & VR_TPS_OCW_MASK) >> 5) == 1) {
-					/* only OC Warn is triggered, skip to prevent false event */
-					continue;
-				}
+		/* 1. check if trigger reason is IOUT fault */
+		if (((status_word_msb & VR_IOUT_FAULT_MASK) >> 6) == 1) {
+			/* 2. IOUT fault, check if OC Warning is set */
+			msg.tx_len = 1;
+			msg.rx_len = 1;
+			msg.data[0] = PMBUS_STATUS_IOUT;
+			ret = i2c_master_read(&msg, retry);
+			if (ret != 0) {
+				LOG_ERR("Get vr status iout fail, bus: 0x%x, addr: 0x%x", msg.bus,
+					msg.target_addr);
+				continue;
+			}
+			if (((msg.data[0] & VR_TPS_OCW_MASK) >> 5) == 1) {
+				/* only OC Warn is triggered, skip to prevent false event */
+				continue;
 			}
 		}
+
+		set_vr_monitor_status(true);
 
 		struct pldm_addsel_data sel_msg = { 0 };
 

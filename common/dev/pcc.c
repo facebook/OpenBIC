@@ -207,7 +207,7 @@ void check_ABL_error(uint32_t postcode)
 	SAFE_FREE(msg);
 #else
 	// record Unified SEL
-	uint8_t bmc_bus = I2C_BUS_BMC, bmc_interface = BMC_INTERFACE_I2C;;
+	uint8_t bmc_bus = I2C_BUS_BMC, bmc_interface = BMC_INTERFACE_I2C;
 	mctp_ext_params ext_params = { 0 };
 	uint8_t data[16] = { 0 };
 
@@ -444,7 +444,7 @@ void pcc_init()
 
 	k_thread_create(&process_postcode_thread_handler, process_postcode_thread,
 			K_THREAD_STACK_SIZEOF(process_postcode_thread), process_postcode, NULL,
-			NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+			NULL, NULL, K_PRIO_PREEMPT(1), 0, K_NO_WAIT);
 	k_thread_name_set(&process_postcode_thread_handler, "process_postcode_thread");
 
 	return;

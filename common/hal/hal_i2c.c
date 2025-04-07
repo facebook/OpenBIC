@@ -341,6 +341,38 @@ exit:
 	return ret;
 }
 
+int i2c_spd_reg_read(I2C_MSG *msg, bool is_nvm)
+{
+	CHECK_NULL_ARG_WITH_RETURN(msg, -1);
+
+	if (check_i2c_bus_valid(msg->bus) < 0) {
+		LOG_ERR("i2c bus %d is invalid", msg->bus);
+		return -1;
+	}
+
+	int ret = 0;
+	uint8_t addr = (msg->data[1] << 8 | msg->data[0]) % 64;
+	uint8_t block_addr = (msg->data[1] << 8 | msg->data[0]) / 64;
+	uint8_t offset0 = GETBIT(block_addr, 0) << 6 | (addr & GENMASK(5, 0));
+	uint8_t offset1 = (block_addr >> 1) & 0xF;
+	if (is_nvm) {
+		offset0 = SETBIT(offset0, 7);
+	} else {
+		offset0 = CLEARBIT(offset0, 7);
+	}
+	msg->tx_len = 2;
+	msg->data[0] = offset0;
+	msg->data[1] = offset1;
+
+	ret = i2c_master_read(msg, 3);
+	if (ret != 0) {
+		LOG_ERR("Failed to read SPD bus0x%x addr0x%x offset0x%x %x, ret: %d", msg->bus,
+			msg->target_addr, offset1, offset0, ret);
+	}
+
+	return ret;
+}
+
 void i2c_scan(uint8_t bus, uint8_t *target_addr, uint8_t *target_addr_len)
 {
 	CHECK_NULL_ARG(target_addr);

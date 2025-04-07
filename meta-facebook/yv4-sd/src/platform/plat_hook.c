@@ -208,8 +208,7 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 	sensor_val *sval = (sensor_val *)reading;
 	if (cfg->offset == PMBUS_READ_IOUT || cfg->offset == PMBUS_READ_POUT) {
 		// Adjust negative current value to zero according to power team suggestion
-		if (((int)sval->integer < 0 || (int)sval->fraction < 0) &&
-		    (int)sval->integer > -2) {
+		if ((int)sval->integer < 0 || (int)sval->fraction < 0) {
 			sval->integer = 0;
 			sval->fraction = 0;
 			return true;

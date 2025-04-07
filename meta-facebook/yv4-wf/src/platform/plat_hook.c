@@ -37,21 +37,21 @@ LOG_MODULE_REGISTER(plat_hook);
 
 adc_asd_init_arg ast_adc_init_args[] = {
 	[0] = { .is_init = false,
-		.deglitch[0] = { .deglitch_en = false,},
-		.deglitch[1] = { .deglitch_en = false,},
-		.deglitch[2] = { .deglitch_en = false,},
-		.deglitch[3] = { .deglitch_en = false,},
-		.deglitch[4] = { .deglitch_en = false,},
-		.deglitch[5] = { .deglitch_en = false,},
-		.deglitch[6] = { .deglitch_en = false,},
-		.deglitch[7] = { .deglitch_en = false,},
+		.deglitch[0] = { .deglitch_en = true, .upper_bound = 0x2DF },
+		.deglitch[1] = { .deglitch_en = true, .upper_bound = 0x2DF },
+		.deglitch[2] = { .deglitch_en = true, .upper_bound = 0x2DF },
+		.deglitch[3] = { .deglitch_en = true, .upper_bound = 0x2DF },
+		.deglitch[4] = { .deglitch_en = true, .upper_bound = 0x2DF },
+		.deglitch[5] = { .deglitch_en = true, .upper_bound = 0x2DF },
+		.deglitch[6] = { .deglitch_en = true, .upper_bound = 0x2DF },
+		.deglitch[7] = { .deglitch_en = true, .upper_bound = 0x2DF },
 	},
 	[1] = {
 		.is_init = false,
-		.deglitch[0] = { .deglitch_en = false,},
-		.deglitch[1] = { .deglitch_en = false,},
-		.deglitch[2] = { .deglitch_en = false,},
-		.deglitch[3] = { .deglitch_en = false,},
+		.deglitch[0] = { .deglitch_en = true, .upper_bound = 0x2DF },
+		.deglitch[1] = { .deglitch_en = true, .upper_bound = 0x2DF },
+		.deglitch[2] = { .deglitch_en = true, .upper_bound = 0x2DF },
+		.deglitch[3] = { .deglitch_en = true, .upper_bound = 0x2DF },
 	}
 };
 
@@ -164,8 +164,7 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 	sensor_val *sval = (sensor_val *)reading;
 	if (cfg->offset == PMBUS_READ_IOUT || cfg->offset == PMBUS_READ_POUT) {
 		// Adjust negative current value to zero according to power team suggestion
-		if (((int)sval->integer < 0 || (int)sval->fraction < 0) &&
-		    (int)sval->integer > -2) {
+		if ((int)sval->integer < 0 || (int)sval->fraction < 0) {
 			sval->integer = 0;
 			sval->fraction = 0;
 			return true;

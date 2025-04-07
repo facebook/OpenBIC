@@ -19,6 +19,8 @@
 
 #include <stdint.h>
 
+#define XDP710_RESTART_ADDR 0xEC
+
 enum XDP710_VTLM_RNG {
 	VTLM_RNG_88,
 	VTLM_RNG_44,

@@ -218,6 +218,36 @@ uint8_t plat_pldm_host_button_sequence(const uint8_t *power_sequence, uint16_t p
 	return 0;
 }
 
+void host_power_on()
+{
+	if (get_DC_status() == true) {
+		return;
+	}
+
+	if (plat_pldm_host_button_sequence(power_sequence, PLAT_PLDM_POWER_ON_BUTTON_MSEC) != 0) {
+		LOG_ERR("Failed to do host power on");
+	}
+}
+
+void host_power_off()
+{
+	if (get_DC_status() == false) {
+		return;
+	}
+
+	if (k_sem_take(&cmd_sem, K_NO_WAIT) != 0) {
+		LOG_ERR("Ignore. Previous cmd still executing.");
+	} else {
+		set_power_sequence_tid =
+			k_thread_create(&set_power_sequence_thread, set_power_sequence_stack,
+					K_THREAD_STACK_SIZEOF(set_power_sequence_stack),
+					plat_pldm_do_host_button_sequence, (void *)power_sequence,
+					UINT_TO_POINTER(PLAT_PLDM_POWER_OFF_BUTTON_MSEC), NULL,
+					CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+		k_thread_name_set(&set_power_sequence_thread, "do_power_off_thread");
+	}
+}
+
 void plat_pldm_set_effecter_state_host_power_control(const uint8_t *buf, uint16_t len,
 						     uint8_t *resp, uint16_t *resp_len)
 {
@@ -249,31 +279,10 @@ void plat_pldm_set_effecter_state_host_power_control(const uint8_t *buf, uint16_
 
 	switch (host_power_state->effecter_state) {
 	case EFFECTER_STATE_POWER_STATUS_ON:
-		if (get_DC_status() == true) {
-			break;
-		}
-
-		if (plat_pldm_host_button_sequence(power_sequence,
-						   PLAT_PLDM_POWER_ON_BUTTON_MSEC) != 0) {
-			LOG_ERR("Failed to do host power on");
-		}
+		host_power_on();
 		break;
 	case EFFECTER_STATE_POWER_STATUS_OFF:
-		if (get_DC_status() == false) {
-			break;
-		}
-
-		if (k_sem_take(&cmd_sem, K_NO_WAIT) != 0) {
-			LOG_ERR("Ignore. Previous cmd still executing.");
-		} else {
-			set_power_sequence_tid = k_thread_create(
-				&set_power_sequence_thread, set_power_sequence_stack,
-				K_THREAD_STACK_SIZEOF(set_power_sequence_stack),
-				plat_pldm_do_host_button_sequence, (void *)power_sequence,
-				UINT_TO_POINTER(PLAT_PLDM_POWER_OFF_BUTTON_MSEC), NULL,
-				CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
-			k_thread_name_set(&set_power_sequence_thread, "do_power_off_thread");
-		}
+		host_power_off();
 		break;
 	case EFFECTER_STATE_POWER_STATUS_CYCLE:
 		if (k_sem_take(&cmd_sem, K_NO_WAIT) != 0) {

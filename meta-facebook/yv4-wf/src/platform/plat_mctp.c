@@ -56,10 +56,13 @@ LOG_MODULE_REGISTER(plat_mctp);
 
 #define UNKNOWN_CXL_EID 0xFF
 
+#define SET_DEV_ENDPOINT_STACK_SIZE 1024
+
 uint8_t plat_eid = MCTP_DEFAULT_ENDPOINT;
 
-K_TIMER_DEFINE(send_cmd_timer, send_cmd_to_dev, NULL);
-K_WORK_DEFINE(send_cmd_work, send_cmd_to_dev_handler);
+K_THREAD_STACK_DEFINE(set_dev_endpoint_stack, SET_DEV_ENDPOINT_STACK_SIZE);
+struct k_thread set_dev_endpoint_thread_data;
+static k_tid_t set_dev_endpoint_tid = NULL;
 
 static mctp_port plat_mctp_port[] = {
 	{ .conf.smbus_conf.addr = I3C_ADDR_SD_BIC,
@@ -129,10 +132,10 @@ static void set_dev_endpoint(void)
 	bool set_eid[MAX_CXL_ID] = { false, false };
 	// The CXL FW is unstable and its booting up time is random now.
 	// Temporary add retry mechanism for it.
-	for (int attempt = 0; attempt < 10; attempt++) {
+	for (int attempt = 0; attempt < 60; attempt++) {
 		// We only need to set CXL EID.
 		for (uint8_t i = 0; i < ARRAY_SIZE(plat_mctp_route_tbl); i++) {
-			mctp_route_entry *p = plat_mctp_route_tbl + i;
+			const mctp_route_entry *p = plat_mctp_route_tbl + i;
 			if (!p->set_endpoint)
 				continue;
 
@@ -164,7 +167,7 @@ static void set_dev_endpoint(void)
 
 				msg.recv_resp_cb_fn = set_endpoint_resp_handler;
 				msg.timeout_cb_fn = set_endpoint_resp_timeout;
-				msg.timeout_cb_fn_args = p;
+				msg.timeout_cb_fn_args = (void *)p;
 
 				uint8_t rc = mctp_ctrl_send_msg(find_mctp_by_bus(p->bus), &msg);
 				if (!rc) {
@@ -181,7 +184,7 @@ static void set_dev_endpoint(void)
 					}
 					}
 				} else {
-					LOG_ERR("Fail to set endpoint %d", p->endpoint);
+					LOG_ERR("Fail to set EID %d", p->endpoint);
 				}
 			}
 		}
@@ -231,7 +234,7 @@ static uint8_t get_mctp_route_info(uint8_t dest_endpoint, void **mctp_inst,
 	uint32_t i;
 
 	for (i = 0; i < ARRAY_SIZE(plat_mctp_route_tbl); i++) {
-		mctp_route_entry *p = plat_mctp_route_tbl + i;
+		const mctp_route_entry *p = plat_mctp_route_tbl + i;
 		if (p->endpoint == dest_endpoint) {
 			*mctp_inst = find_mctp_by_bus(p->bus);
 			if (p->bus != I3C_BUS_SD_BIC) {
@@ -258,7 +261,7 @@ uint8_t get_mctp_info(uint8_t dest_endpoint, mctp **mctp_inst, mctp_ext_params *
 	uint32_t i;
 
 	for (i = 0; i < ARRAY_SIZE(plat_mctp_route_tbl); i++) {
-		mctp_route_entry *p = plat_mctp_route_tbl + i;
+		const mctp_route_entry *p = plat_mctp_route_tbl + i;
 		if (p->endpoint == dest_endpoint) {
 			*mctp_inst = find_mctp_by_bus(p->bus);
 			if (p->bus != I3C_BUS_SD_BIC) {
@@ -277,15 +280,33 @@ uint8_t get_mctp_info(uint8_t dest_endpoint, mctp **mctp_inst, mctp_ext_params *
 	return rc;
 }
 
-void send_cmd_to_dev_handler(struct k_work *work)
+void set_dev_endpoint_thread(void *arg1, void *arg2, void *arg3)
 {
+	ARG_UNUSED(arg1);
+	ARG_UNUSED(arg2);
+	ARG_UNUSED(arg3);
+
 	/* init the device endpoint */
 	set_dev_endpoint();
 }
 
-void send_cmd_to_dev(struct k_timer *timer)
+void create_set_dev_endpoint_thread()
 {
-	k_work_submit(&send_cmd_work);
+	if ((set_dev_endpoint_tid != NULL) &&
+	    ((strcmp(k_thread_state_str(set_dev_endpoint_tid), "dead") != 0) &&
+	     (strcmp(k_thread_state_str(set_dev_endpoint_tid), "unknown") != 0))) {
+		LOG_ERR("Delete exited thread");
+		k_thread_abort(set_dev_endpoint_tid);
+	}
+
+	set_dev_endpoint_tid =
+		k_thread_create(&set_dev_endpoint_thread_data, set_dev_endpoint_stack,
+				K_THREAD_STACK_SIZEOF(set_dev_endpoint_stack),
+				set_dev_endpoint_thread, NULL, NULL, NULL,
+				CONFIG_MAIN_THREAD_PRIORITY + 1, 0, K_SECONDS(10));
+
+	k_thread_name_set(set_dev_endpoint_tid, "set_dev_endpoint_thread");
+	k_thread_start(set_dev_endpoint_tid);
 }
 
 int pal_get_medium_type(uint8_t interface)
@@ -358,6 +379,7 @@ void plat_update_mctp_routing_table(uint8_t eid)
 {
 	// Set platform eid
 	plat_eid = eid;
+	LOG_INF("plat_eid= %d ", plat_eid);
 
 	// update sd bic eid
 	mctp_route_entry *p = plat_mctp_route_tbl + 1;
@@ -374,7 +396,7 @@ void plat_update_mctp_routing_table(uint8_t eid)
 	update_entity_name_with_eid(eid);
 
 	// send set eid to cxl
-	k_timer_start(&send_cmd_timer, K_MSEC(30000), K_NO_WAIT);
+	create_set_dev_endpoint_thread();
 
 	return;
 }
@@ -413,7 +435,8 @@ bool pal_is_need_mctp_interval(mctp *mctp_inst)
 {
 	switch (mctp_inst->medium_type) {
 	case MCTP_MEDIUM_TYPE_SMBUS: {
-		mctp_smbus_conf *smbus_conf = (mctp_smbus_conf *)&mctp_inst->medium_conf;
+		const mctp_smbus_conf *smbus_conf =
+			(const mctp_smbus_conf *)&mctp_inst->medium_conf;
 		if ((smbus_conf->bus == I2C_BUS_CXL1) || (smbus_conf->bus == I2C_BUS_CXL2)) {
 			return true;
 		}
@@ -432,7 +455,8 @@ int pal_get_mctp_interval_ms(mctp *mctp_inst)
 {
 	switch (mctp_inst->medium_type) {
 	case MCTP_MEDIUM_TYPE_SMBUS: {
-		mctp_smbus_conf *smbus_conf = (mctp_smbus_conf *)&mctp_inst->medium_conf;
+		const mctp_smbus_conf *smbus_conf =
+			(const mctp_smbus_conf *)&mctp_inst->medium_conf;
 		if ((smbus_conf->bus == I2C_BUS_CXL1) || (smbus_conf->bus == I2C_BUS_CXL2)) {
 			// 40ms
 			return 40;

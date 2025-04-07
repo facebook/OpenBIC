@@ -75,6 +75,7 @@ const err_sensor_mapping sensor_err_codes[] = {
 	{ LOG_ERR_FB_12_FAN_TACH_RPM, SENSOR_NUM_FB_12_FAN_TACH_RPM },
 	{ LOG_ERR_FB_13_FAN_TACH_RPM, SENSOR_NUM_FB_13_FAN_TACH_RPM },
 	{ LOG_ERR_FB_14_FAN_TACH_RPM, SENSOR_NUM_FB_14_FAN_TACH_RPM },
+	{ LOG_ERR_BPB_HSC, SENSOR_NUM_BPB_HSC_FAIL },
 };
 
 const err_sensor_mapping sensor_normal_codes[] = {
@@ -126,7 +127,7 @@ void log_transfer_to_modbus_data(uint16_t *modbus_data, uint8_t cmd_size, uint16
 	memcpy(modbus_data, &err_log_data[get_log_position_by_time_order(order)],
 	       sizeof(uint16_t) * cmd_size);
 
-	modbus_err_log_mapping *p = (modbus_err_log_mapping *)modbus_data;
+	modbus_err_log_mapping const *p = (modbus_err_log_mapping *)modbus_data;
 	if (p->index == 0xffff)
 		memset(modbus_data, 0x00, sizeof(uint16_t) * cmd_size);
 }
@@ -184,8 +185,14 @@ void error_log_event(uint8_t sensor_num, bool val_normal)
 						(err_log_data[newest_count].index + 1);
 	err_log_data[fru_count].err_code = err_code;
 	err_log_data[fru_count].sys_time = get_uptime_secs();
-	err_log_data[fru_count].pump_duty = (uint16_t)get_pwm_group_cache(PWM_GROUP_E_PUMP);
-	err_log_data[fru_count].fan_duty = (uint16_t)get_pwm_group_cache(PWM_GROUP_E_HEX_FAN);
+	err_log_data[fru_count].pump_duty =
+		(uint16_t)(get_manual_pwm_flag(MANUAL_PWM_E_PUMP) ?
+				   get_manual_pwm_cache(MANUAL_PWM_E_PUMP) :
+				   get_pwm_group_cache(PWM_GROUP_E_PUMP));
+	err_log_data[fru_count].fan_duty =
+		(uint16_t)(get_manual_pwm_flag(MANUAL_PWM_E_HEX_FAN) ?
+				   get_manual_pwm_cache(MANUAL_PWM_E_HEX_FAN) :
+				   get_pwm_group_cache(PWM_GROUP_E_HEX_FAN));
 
 	err_log_data[fru_count].outlet_temp =
 		get_sensor_reading_to_modbus_val(SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C, -1, 1);

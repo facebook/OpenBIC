@@ -26,14 +26,34 @@
 #include "plat_log.h"
 #include "plat_event.h"
 #include "plat_hook.h"
+#include "plat_isr.h"
 
 LOG_MODULE_REGISTER(plat_event);
 
 #define CPLD_POLLING_INTERVAL_MS 1000 // 1 second polling interval
 
+#ifndef AEGIS_CPLD_ADDR
+#define AEGIS_CPLD_ADDR (0x4C >> 1)
+#endif
+
+void check_cpld_handler();
+K_WORK_DELAYABLE_DEFINE(check_cpld_work, check_cpld_handler);
+
+K_TIMER_DEFINE(init_ubc_delayed_timer, check_ubc_delayed_timer_handler, NULL);
+
+K_WORK_DEFINE(check_ubc_delayed_work, check_ubc_delayed);
+
+void check_ubc_delayed_timer_handler(struct k_timer *timer)
+{
+	k_work_submit(&check_ubc_delayed_work);
+}
+
 K_THREAD_STACK_DEFINE(cpld_polling_stack, POLLING_CPLD_STACK_SIZE);
 struct k_thread cpld_polling_thread;
 k_tid_t cpld_polling_tid;
+
+void get_vr_vout_handler(struct k_work *work);
+K_WORK_DEFINE(vr_vout_work, get_vr_vout_handler);
 
 typedef struct _vr_error_callback_info_ {
 	uint8_t cpld_offset;
@@ -53,25 +73,31 @@ aegis_cpld_info aegis_cpld_info_table[] = {
 	{ VR_SMBUS_ALERT_1_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
 	{ VR_SMBUS_ALERT_2_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
 	{ ASIC_OC_WARN_REG, 				0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
-	{ SYSTEM_ALERT_FAULT_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
-	{ VR_HOT_FAULT_1_REG, 				0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
-	{ VR_HOT_FAULT_2_REG, 				0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
-	{ TEMPERATURE_IC_OVERT_FAULT_REG, 	0xBF, 0xBF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
-	{ VR_POWER_INPUT_FAULT_1_REG, 		0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
-	{ VR_POWER_INPUT_FAULT_2_REG, 		0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
-	{ LEAK_DETCTION_REG, 				0xDF, 0xDF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
+	{ TEMPERATURE_IC_OVERT_FAULT_REG, 	0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
 };
 // clang-format on
 
-bool ubc_enabled_delayed_status = false;
-bool is_dc_status_changing = false;
+bool cpld_polling_alert_status = false; // only polling cpld when alert status is true
+bool cpld_polling_enable_flag = true;
 
-void set_dc_status_changing_status(bool status)
+void check_cpld_polling_alert_status(void)
 {
-	is_dc_status_changing = status;
+	cpld_polling_alert_status = (gpio_get(ALL_VR_PM_ALERT_R_N) == GPIO_LOW);
 }
 
-void check_ubc_delayed(struct k_timer *timer)
+void set_cpld_polling_enable_flag(bool status)
+{
+	cpld_polling_enable_flag = status;
+}
+
+bool get_cpld_polling_enable_flag(void)
+{
+	return cpld_polling_enable_flag;
+}
+
+bool ubc_enabled_delayed_status = false;
+
+void check_ubc_delayed(struct k_work *work)
 {
 	/* FM_PLD_UBC_EN_R
 	 * 1 -> UBC is enabled
@@ -79,8 +105,35 @@ void check_ubc_delayed(struct k_timer *timer)
 	 */
 	bool is_ubc_enabled = (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH);
 
-	set_dc_status_changing_status(false);
+	bool is_dc_on = is_mb_dc_on();
+
+	if (is_ubc_enabled) {
+		if (is_dc_on != is_ubc_enabled) {
+			//send event to bmc
+			uint16_t error_code = (POWER_ON_SEQUENCE_TRIGGER_CAUSE << 13);
+			error_log_event(error_code, LOG_ASSERT);
+			LOG_ERR("Generated error code: 0x%x", error_code);
+		}
+	}
+
 	ubc_enabled_delayed_status = is_ubc_enabled;
+
+	LOG_DBG("UBC enabled delayed status: %d", ubc_enabled_delayed_status);
+
+	if (is_ubc_enabled == true) {
+		k_work_submit(&vr_vout_work);
+	}
+}
+
+void get_vr_vout_handler(struct k_work *work)
+{
+	vr_vout_default_settings_init();
+	vr_vout_user_settings_init();
+}
+
+bool is_ubc_enabled_delayed_enabled(void)
+{
+	return ubc_enabled_delayed_status;
 }
 
 bool vr_error_callback(aegis_cpld_info *cpld_info, uint8_t *current_cpld_value)
@@ -94,28 +147,39 @@ bool vr_error_callback(aegis_cpld_info *cpld_info, uint8_t *current_cpld_value)
 
 	// Calculate current faults and new faults
 	uint8_t current_fault = *current_cpld_value ^ expected_val;
-	uint8_t new_fault = current_fault & ~cpld_info->is_fault_bit_map;
+	uint8_t status_changed_bit = current_fault ^ cpld_info->is_fault_bit_map;
 
-	if (!new_fault) {
+	if (!status_changed_bit)
 		return true; // No new faults, return early
-	}
 
-	LOG_DBG("CPLD register 0x%02X has fault 0x%02X", cpld_info->cpld_offset, new_fault);
+	LOG_DBG("CPLD register 0x%02X has status changed 0x%02X", cpld_info->cpld_offset,
+		status_changed_bit);
 
-	// Iterate through each bit in new_fault to handle the corresponding VR
+	// Iterate through each bit in status_changed_bit to handle the corresponding VR
 	for (uint8_t bit = 0; bit < 8; bit++) {
-		if (!(new_fault & (1 << bit))) {
-			continue; // Skip if the current bit has no new fault
-		}
+		if (!(status_changed_bit & BIT(bit)))
+			continue;
 
 		// Dynamically generate the error code
-		uint16_t error_code = 0x8000 | (bit << 8) | cpld_info->cpld_offset;
+		uint16_t error_code = (CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE << 13) | (bit << 8) |
+				      cpld_info->cpld_offset;
 
-		LOG_ERR("Generated error code: 0x%04X (bit %d, CPLD offset 0x%02X)", error_code,
-			bit, cpld_info->cpld_offset);
+		uint8_t bit_val = (*current_cpld_value & BIT(bit)) >> bit;
+		uint8_t expected_bit_val = (expected_val & BIT(bit)) >> bit;
+		LOG_DBG("cpld offset 0x%02X, bit %d, bit_val %d, expected_bit_val %d",
+			cpld_info->cpld_offset, bit, bit_val, expected_bit_val);
 
-		// Perform additional operations if needed
-		error_log_event(error_code, LOG_ASSERT);
+		if (bit_val != expected_bit_val) {
+			LOG_ERR("Generated error code: 0x%04X (bit %d, CPLD offset 0x%02X)",
+				error_code, bit, cpld_info->cpld_offset);
+
+			// Perform additional operations if needed
+			LOG_DBG("ASSERT");
+			error_log_event(error_code, LOG_ASSERT);
+		} else {
+			LOG_DBG("DEASSERT");
+			error_log_event(error_code, LOG_DEASSERT);
+		}
 	}
 
 	return true;
@@ -125,17 +189,17 @@ void poll_cpld_registers()
 {
 	uint8_t data = 0;
 
-	if (is_dc_status_changing == false) {
-		ubc_enabled_delayed_status = is_mb_dc_on();
-	}
-
 	while (1) {
 		/* Sleep for the polling interval */
 		k_msleep(CPLD_POLLING_INTERVAL_MS);
 
-		/* Check if any status is changing */
-		if (is_dc_status_changing)
+		LOG_DBG("cpld_polling_alert_status = %d, cpld_polling_enable_flag = %d",
+			cpld_polling_alert_status, cpld_polling_enable_flag);
+
+		if (!cpld_polling_alert_status || !cpld_polling_enable_flag)
 			continue;
+
+		LOG_DBG("Polling CPLD registers");
 
 		for (size_t i = 0; i < ARRAY_SIZE(aegis_cpld_info_table); i++) {
 			uint8_t expected_val = ubc_enabled_delayed_status ?
@@ -155,31 +219,49 @@ void poll_cpld_registers()
 			uint8_t new_fault_map = (data ^ expected_val);
 
 			// get unrecorded fault bit map
-			uint8_t unrecorded_fault_map =
-				new_fault_map & ~aegis_cpld_info_table[i].is_fault_bit_map;
+			uint8_t is_status_changed =
+				new_fault_map ^ aegis_cpld_info_table[i].is_fault_bit_map;
 
-			if (unrecorded_fault_map) {
+			if (is_status_changed) {
 				if (aegis_cpld_info_table[i].status_changed_cb) {
 					aegis_cpld_info_table[i].status_changed_cb(
 						&aegis_cpld_info_table[i], &data);
 				}
 				// update map
 				aegis_cpld_info_table[i].is_fault_bit_map = new_fault_map;
-
 				aegis_cpld_info_table[i].last_polling_value = data;
 			}
 		}
 	}
 }
 
+void check_cpld_handler()
+{
+	uint8_t data[4] = { 0 };
+	uint32_t version = 0;
+	if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, 0x44, data, 4)) {
+		LOG_ERR("Failed to read cpld version from cpld");
+	}
+	version = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
+	LOG_DBG("The cpld version: %08x", version);
+
+	k_work_schedule(&check_cpld_work, K_MSEC(5000));
+}
+
 void init_cpld_polling(void)
 {
+	check_cpld_polling_alert_status();
+
 	cpld_polling_tid =
 		k_thread_create(&cpld_polling_thread, cpld_polling_stack,
 				K_THREAD_STACK_SIZEOF(cpld_polling_stack), poll_cpld_registers,
 				NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0,
-				K_MSEC(2000)); /* Start accessing CPLD 3 seconds after BIC reboot 
-                   (2-second thread start delay + 1-second CPLD_POLLING_INTERVAL_MS) 
+				K_MSEC(3000)); /* Start accessing CPLD 4 seconds after BIC reboot 
+                   (3-second thread start delay + 1-second CPLD_POLLING_INTERVAL_MS) 
                    to prevent DC status changes during BIC reboot */
 	k_thread_name_set(&cpld_polling_thread, "cpld_polling_thread");
+
+	k_timer_start(&init_ubc_delayed_timer, K_MSEC(3000), K_NO_WAIT);
+
+	k_work_schedule(&check_cpld_work, K_MSEC(100));
 }

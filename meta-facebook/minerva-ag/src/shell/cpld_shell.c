@@ -17,6 +17,7 @@
 #include <shell/shell.h>
 #include "hal_i2c.h"
 #include "plat_i2c.h"
+#include "plat_event.h"
 #include <stdlib.h>
 
 #define AEGIS_CPLD_ADDR (0x4C >> 1)
@@ -61,4 +62,31 @@ void cmd_cpld_dump(const struct shell *shell, size_t argc, char **argv)
 		shell_print(shell, "");
 	}
 	return;
+}
+
+void set_cpld_polling(const struct shell *shell, size_t argc, char **argv)
+{
+	if (argc != 2) {
+		shell_warn(shell, "Help: test cpld control_polling set <enable>");
+		return;
+	}
+
+	uint8_t polling_enable = strtol(argv[1], NULL, 10);
+
+	if (polling_enable < 0 || polling_enable > 1) {
+		shell_error(shell, "polling_enable value is out of range!");
+		return;
+	}
+
+	set_cpld_polling_enable_flag(polling_enable);
+}
+
+void get_cpld_polling(const struct shell *shell, size_t argc, char **argv)
+{
+	if (argc != 1) {
+		shell_warn(shell, "Help: test cpld control_polling get");
+		return;
+	}
+
+	shell_print(shell, "cpld polling = %d", get_cpld_polling_enable_flag());
 }

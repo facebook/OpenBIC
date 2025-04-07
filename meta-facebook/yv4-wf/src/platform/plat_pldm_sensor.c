@@ -3594,11 +3594,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 
-			0x00000320, //uint32_t warning_high;
+			0x000004E2, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x000003E8, //uint32_t critical_high;
+			0x00000546, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000578, //uint32_t fatal_high;
+			0x000005AA, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -3910,11 +3910,11 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
 
-			0x00000320, //uint32_t warning_high;
+			0x000004E2, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			0x000003E8, //uint32_t critical_high;
+			0x00000546, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
-			0x00000578, //uint32_t fatal_high;
+			0x000005AA, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 
 		},
@@ -6205,7 +6205,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ASIC1_DIMM_A1_TEMP_C",
+		.sensorName = u"WF_MCIO4_DIMM_A1_TEMP_C",
 	},
 	{
 		// WF_ASIC1_DIMM_B_TEMP_C 
@@ -6222,7 +6222,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ASIC1_DIMM_A0_TEMP_C",
+		.sensorName = u"WF_MCIO4_DIMM_A0_TEMP_C",
 	},
 	{
 		// WF_ASIC1_DIMM_C_TEMP_C 
@@ -6239,7 +6239,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ASIC1_DIMM_B0_TEMP_C",
+		.sensorName = u"WF_MCIO4_DIMM_B0_TEMP_C",
 	},
 	{
 		// WF_ASIC1_DIMM_D_TEMP_C 
@@ -6256,7 +6256,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ASIC1_DIMM_B1_TEMP_C",
+		.sensorName = u"WF_MCIO4_DIMM_B1_TEMP_C",
 	},
 	{
 		// WF_ASIC2_DIMM_A_TEMP_C 
@@ -6273,7 +6273,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ASIC2_DIMM_A1_TEMP_C",
+		.sensorName = u"WF_MCIO3_DIMM_A1_TEMP_C",
 	},
 	{
 		// WF_ASIC2_DIMM_B_TEMP_C 
@@ -6290,7 +6290,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ASIC2_DIMM_A0_TEMP_C",
+		.sensorName = u"WF_MCIO3_DIMM_A0_TEMP_C",
 	},
 	{
 		// WF_ASIC2_DIMM_C_TEMP_C 
@@ -6307,7 +6307,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ASIC2_DIMM_B0_TEMP_C",
+		.sensorName = u"WF_MCIO3_DIMM_B0_TEMP_C",
 	},
 	{
 		// WF_ASIC2_DIMM_D_TEMP_C 
@@ -6324,7 +6324,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"WF_ASIC2_DIMM_B1_TEMP_C",
+		.sensorName = u"WF_MCIO3_DIMM_B1_TEMP_C",
 	},
 };
 

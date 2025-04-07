@@ -88,14 +88,14 @@ void pal_pre_init()
 	i3c_attach(&i3c_msg);
 
 	// Initialize I3C HUB
-	if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, LDO_VOLT)) {
+	if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, LDO_VOLT, 0xF0)) {
 		printk("failed to initialize 1ou rg3mxxb12\n");
 	}
 
 	init_vr_event_work();
 	init_event_work();
 	init_pmic_event_work();
-	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY + 1); // work queue for low priority jobs
+	init_plat_worker(K_PRIO_PREEMPT(2)); // work queue for low priority jobs
 
 	plat_init_pldm_sensor_table();
 }

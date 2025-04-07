@@ -323,7 +323,7 @@ static uint8_t write_mailbox_request(apml_msg *msg)
 	}
 
 	/* write command and data */
-	mailbox_WrData *wr_data = (mailbox_WrData *)msg->WrData;
+	const mailbox_WrData *wr_data = (const mailbox_WrData *)msg->WrData;
 	if (apml_write_byte(msg->bus, msg->target_addr, SBRMI_INBANDMSG_INST0, wr_data->command)) {
 		return APML_ERROR;
 	}
@@ -384,7 +384,8 @@ static uint8_t access_RMI_mailbox(apml_msg *msg)
 	for (i = 0; i < MAILBOX_COMPLETE_RETRY_MAX; i++) {
 		/* For TURIN, wait for SoftwareInterrupt */
 		if (command_code_len == SBRMI_CMD_CODE_LEN_TWO_BYTE) {
-			if (apml_read_byte(msg->bus, msg->target_addr, SBRMI_SOFTWARE_INTERRUPT, &status)) {
+			if (apml_read_byte(msg->bus, msg->target_addr, SBRMI_SOFTWARE_INTERRUPT,
+					   &status)) {
 				LOG_ERR("Read SoftwareInterrupt failed.");
 				return APML_ERROR;
 			}
@@ -408,9 +409,11 @@ static uint8_t access_RMI_mailbox(apml_msg *msg)
 	}
 	if (i == MAILBOX_COMPLETE_RETRY_MAX) {
 		if (command_code_len == SBRMI_CMD_CODE_LEN_TWO_BYTE) {
-			LOG_ERR("SoftwareInterrupt not be set, retry %d times.", MAILBOX_COMPLETE_RETRY_MAX);
+			LOG_ERR("SoftwareInterrupt not be set, retry %d times.",
+				MAILBOX_COMPLETE_RETRY_MAX);
 		} else {
-			LOG_ERR("SwAlertSts not be set, retry %d times.", MAILBOX_COMPLETE_RETRY_MAX);
+			LOG_ERR("SwAlertSts not be set, retry %d times.",
+				MAILBOX_COMPLETE_RETRY_MAX);
 		}
 		return APML_ERROR;
 	}
@@ -435,7 +438,7 @@ static uint8_t access_RMI_mailbox(apml_msg *msg)
 	return APML_SUCCESS;
 }
 
-void apml_request_callback(apml_msg *msg)
+void apml_request_callback(const apml_msg *msg)
 {
 	static uint8_t i = 0;
 	apml_resp_buffer[i].index = msg->ui32_arg & 0xFF;
@@ -546,7 +549,7 @@ void apml_init()
 	memset(apml_resp_buffer, 0xFF, sizeof(apml_resp_buffer));
 
 	k_thread_create(&apml_thread, apml_handler_stack, K_THREAD_STACK_SIZEOF(apml_handler_stack),
-			apml_handler, NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+			apml_handler, NULL, NULL, NULL, K_PRIO_PREEMPT(1), 0, K_NO_WAIT);
 	k_thread_name_set(&apml_thread, "APML_handler");
 }
 

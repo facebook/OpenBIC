@@ -66,7 +66,7 @@ bool clear_log_for_modbus_pump_setting(pump_reset_struct *data, uint8_t bit_val)
 static bool hsc_reset(uint8_t sensor_num)
 {
 	// Check sensor information in sensor config table
-	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
+	sensor_cfg const *cfg = get_common_sensor_cfg_info(sensor_num);
 	if (cfg == NULL) {
 		LOG_ERR("Fail when getting pump sensor config, 0x%x", sensor_num);
 		return false;
@@ -115,19 +115,7 @@ bool close_pump(pump_reset_struct *data, uint8_t bit_val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
-	static uint8_t is_stop;
-
-	if (bit_val == 0) {
-		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_CLOSE_PUMP, 0);
-		if (is_stop) {
-			set_manual_pwm_cache_to_default();
-			is_stop = 0;
-		}
-	} else {
-		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_CLOSE_PUMP, 1);
-		set_manual_pwm_cache_to_zero();
-		is_stop = 1;
-	}
+	set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_CLOSE_PUMP, bit_val);
 
 	return true;
 }
@@ -250,7 +238,31 @@ void hsc_adm1272_pwr_ctrl(sensor_cfg *cfg, uint8_t adm1272_reg, uint8_t state)
 	if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
 		LOG_ERR("pro unlock mutex fail !");
 }
+void hsc_xdp710_pwr_ctrl(sensor_cfg *cfg, uint8_t xdp710_reg, uint8_t state)
+{
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 1;
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	if (!pre_PCA9546A_read(cfg, cfg->pre_sensor_read_args))
+		LOG_ERR("pre lock mutex fail !");
 
+	msg.data[0] = xdp710_reg;
+	msg.data[1] = state;
+
+	if (xdp710_reg == XDP710_RESTART_ADDR)
+		msg.tx_len = 1;
+
+	uint8_t ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Fail to access hsc xdp710 pwer ctrl, bus: 0x%x, addr: 0x%x, ret: %d",
+			cfg->port, cfg->target_addr, ret);
+	}
+
+	if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
+		LOG_ERR("pro unlock mutex fail !");
+}
 void rpu_remote_power_cycle()
 {
 	// disable sensor poll
@@ -272,20 +284,29 @@ void rpu_remote_power_cycle()
 		// cycle fan board and pump board
 		if (i < BACKPLANE_BORAD_COUNT_NUM) {
 			LOG_WRN("cycle fan board 0x%x", hsc_pwe_cycle_tbl[i]);
-			hsc_adm1272_pwr_ctrl(cfg, ADM1272_POWER_CYCLE_REG, 0);
+			if (cfg->type == sensor_dev_adm1272)
+				hsc_adm1272_pwr_ctrl(cfg, ADM1272_POWER_CYCLE_REG, 0);
+			else
+				hsc_xdp710_pwr_ctrl(cfg, XDP710_RESTART_ADDR, 0);
 		}
 
 		// cycle backplane board
 		if (i >= PUMP_BORAD_COUNT_NUM && i < BACKPLANE_BORAD_COUNT_NUM) {
 			LOG_WRN("cycle backplane board 0x%x", hsc_pwe_cycle_tbl[i]);
-			hsc_adm1272_pwr_ctrl(cfg, ADM1272_POWER_CYCLE_REG, 0);
+			if (cfg->type == sensor_dev_adm1272)
+				hsc_adm1272_pwr_ctrl(cfg, ADM1272_POWER_CYCLE_REG, 0);
+			else
+				hsc_xdp710_pwr_ctrl(cfg, XDP710_RESTART_ADDR, 0);
 		}
 
 		// cycle bridge board
 		if (i >= BACKPLANE_BORAD_COUNT_NUM && i < BRIDGE_BORAD_COUNT_NUM) {
 			k_msleep(1000);
 			LOG_WRN("cycle bridge board 0x%x", hsc_pwe_cycle_tbl[i]);
-			hsc_adm1272_pwr_ctrl(cfg, ADM1272_POWER_CYCLE_REG, 0);
+			if (cfg->type == sensor_dev_adm1272)
+				hsc_adm1272_pwr_ctrl(cfg, ADM1272_POWER_CYCLE_REG, 0);
+			else
+				hsc_xdp710_pwr_ctrl(cfg, XDP710_RESTART_ADDR, 0);
 		}
 	}
 }
@@ -388,6 +409,12 @@ static bool failure_behavior(uint8_t group)
 
 uint8_t pwm_control(uint8_t group, uint8_t duty)
 {
+	// stop pump
+	if ((get_status_flag(STATUS_FLAG_FAILURE) >> PUMP_FAIL_CLOSE_PUMP) & 0x01) {
+		set_pwm_group(group, 0);
+		return 0;
+	}
+
 	// suppurt redundant device in semi mode
 	uint32_t redundant_check = PUMP_REDUNDANT_DISABLE;
 	if (get_fsc_mode() == FSC_MODE_SEMI_MODE)

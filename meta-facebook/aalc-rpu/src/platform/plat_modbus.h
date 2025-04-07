@@ -404,6 +404,8 @@ enum read_fru_data_type {
 
 #define MODBUS_test_for_write_uptime_ADDR 0x1A0C
 #define MODBUS_SET_LOG_LEVEL_ADDR 0x1A0D
+#define MODBUS_GET_BOARD_STAGE_ADDR 0x1A0E
+#define MODBUS_GET_FAN_TABLE_REVISION_ADDR 0x1A0F
 
 modbus_command_mapping *ptr_to_modbus_table(uint16_t addr);
 

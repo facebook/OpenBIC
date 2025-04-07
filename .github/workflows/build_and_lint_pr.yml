@@ -8,9 +8,6 @@ on:
         required: false 
         type: boolean 
         default: false
-    secrets:
-      GIST_SECRET:
-        required: true
 
 jobs:
   Build-Platforms:
@@ -74,7 +71,7 @@ jobs:
     # Sets up python and loads packages from the cache.
     - name: Try Cache
       id: python
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: |
           ./modules
@@ -83,7 +80,7 @@ jobs:
  
     - name: Cache SDK Toolchain
       id: cache-sdk
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: /home/runner/zephyr-sdk-0.12.4
         key: zephyr-sdk-0.12.4
@@ -133,17 +130,6 @@ jobs:
           echo "badge_color=red" >> $GITHUB_ENV
           echo "build_return_code=1" >> $GITHUB_ENV
         fi
-
-    - name: Update Build Badges
-      if: ${{ inputs.nightly == true }}
-      uses: schneegans/dynamic-badges-action@v1.4.0
-      with:
-        auth: ${{ secrets.GIST_SECRET }}
-        gistID: 62fb115c4fa43a02acad226534e10932 
-        filename: ${{ matrix.platform }}.json 
-        label: Build
-        message: ${{ env.badge_message }}
-        color: ${{ env.badge_color }}
 
     - name: Check Build Failure
       if: ${{ env.build_return_code != '0' }} 

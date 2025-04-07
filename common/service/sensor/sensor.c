@@ -38,9 +38,15 @@ LOG_MODULE_REGISTER(sensor);
 
 #define SENSOR_DRIVE_INIT_DECLARE(name) uint8_t name##_init(sensor_cfg *cfg)
 
-#define SENSOR_DRIVE_TYPE_INIT_MAP(name) { sensor_dev_##name, name##_init }
+#define SENSOR_DRIVE_TYPE_INIT_MAP(name)                                                           \
+	{                                                                                          \
+		sensor_dev_##name, name##_init                                                     \
+	}
 
-#define SENSOR_DRIVE_TYPE_UNUSE(name) { sensor_dev_##name, NULL }
+#define SENSOR_DRIVE_TYPE_UNUSE(name)                                                              \
+	{                                                                                          \
+		sensor_dev_##name, NULL                                                            \
+	}
 
 #define SENSOR_READ_RETRY_MAX 3
 
@@ -144,6 +150,8 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(raa228249)
 	sensor_name_to_num(bmr4922302_803)
 	sensor_name_to_num(emc1413)
+	sensor_name_to_num(bcm85658)
+	sensor_name_to_num(tmp421)
 };
 // clang-format on
 
@@ -290,25 +298,25 @@ SENSOR_DRIVE_INIT_DECLARE(max11617);
 #ifdef ENABLE_NVIDIA
 SENSOR_DRIVE_INIT_DECLARE(nv_satmc);
 #endif
-#ifndef DISABLE_NCT7363
+#ifdef ENABLE_NCT7363
 SENSOR_DRIVE_INIT_DECLARE(nct7363);
 #endif
-#ifndef DISABLE_ADS112C
+#ifdef ENABLE_ADS112C
 SENSOR_DRIVE_INIT_DECLARE(ads112c);
 #endif
-#ifndef DISABLE_HDC1080
+#ifdef ENABLE_HDC1080
 SENSOR_DRIVE_INIT_DECLARE(hdc1080);
 #endif
-#ifndef DISABLE_INA238
+#ifdef ENABLE_INA238
 SENSOR_DRIVE_INIT_DECLARE(ina238);
 #endif
-#ifndef DISABLE_NCT214
+#ifdef ENABLE_NCT214
 SENSOR_DRIVE_INIT_DECLARE(nct214);
 #endif
-#ifndef DISABLE_AST_TACH
+#ifdef ENABLE_AST_TACH
 SENSOR_DRIVE_INIT_DECLARE(ast_tach);
 #endif
-#ifndef DISABLE_XDP710
+#ifdef ENABLE_XDP710
 SENSOR_DRIVE_INIT_DECLARE(xdp710);
 #endif
 #ifdef ENABLE_DS160PT801
@@ -353,11 +361,17 @@ SENSOR_DRIVE_INIT_DECLARE(mp29816a);
 #ifdef ENABLE_RAA228249
 SENSOR_DRIVE_INIT_DECLARE(raa228249);
 #endif
-#ifndef DISABLE_BMR4922302_803
+#ifdef ENABLE_BMR4922302_803
 SENSOR_DRIVE_INIT_DECLARE(bmr4922302_803);
 #endif
 #ifdef ENABLE_EMC1413
 SENSOR_DRIVE_INIT_DECLARE(emc1413);
+#endif
+#ifdef ENABLE_BCM85658
+SENSOR_DRIVE_INIT_DECLARE(bcm85658);
+#endif
+#ifdef ENABLE_TMP421
+SENSOR_DRIVE_INIT_DECLARE(tmp421);
 #endif
 
 // The sequence needs to same with SENSOR_DEV ID
@@ -605,37 +619,37 @@ sensor_drive_api sensor_drive_tbl[] = {
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(nv_satmc),
 #endif
-#ifndef DISABLE_NCT7363
+#ifdef ENABLE_NCT7363
 	SENSOR_DRIVE_TYPE_INIT_MAP(nct7363),
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(nct7363),
 #endif
-#ifndef DISABLE_ADS112C
+#ifdef ENABLE_ADS112C
 	SENSOR_DRIVE_TYPE_INIT_MAP(ads112c),
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(ads112c),
 #endif
-#ifndef DISABLE_HDC1080
+#ifdef ENABLE_HDC1080
 	SENSOR_DRIVE_TYPE_INIT_MAP(hdc1080),
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(hdc1080),
 #endif
-#ifndef DISABLE_INA238
+#ifdef ENABLE_INA238
 	SENSOR_DRIVE_TYPE_INIT_MAP(ina238),
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(ina238),
 #endif
-#ifndef DISABLE_NCT214
+#ifdef ENABLE_NCT214
 	SENSOR_DRIVE_TYPE_INIT_MAP(nct214),
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(nct214),
 #endif
-#ifndef DISABLE_AST_TACH
+#ifdef ENABLE_AST_TACH
 	SENSOR_DRIVE_TYPE_INIT_MAP(ast_tach),
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(ast_tach),
 #endif
-#ifndef DISABLE_XDP710
+#ifdef ENABLE_XDP710
 	SENSOR_DRIVE_TYPE_INIT_MAP(xdp710),
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(xdp710),
@@ -720,7 +734,17 @@ sensor_drive_api sensor_drive_tbl[] = {
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(emc1413),
 #endif
+#ifdef ENABLE_BCM85658
+	SENSOR_DRIVE_TYPE_INIT_MAP(bcm85658),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(bcm85658),
+#endif
 
+#ifdef ENABLE_TMP421
+	SENSOR_DRIVE_TYPE_INIT_MAP(tmp421),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(tmp421),
+#endif
 };
 
 static void init_sensor_num(void)

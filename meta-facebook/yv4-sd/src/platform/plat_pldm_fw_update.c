@@ -31,11 +31,13 @@
 
 #include "mp2971.h"
 #include "pt5161l.h"
+#include "bcm85658.h"
 #include "raa229621.h"
 #include "plat_class.h"
 #include "plat_pldm_device_identifier.h"
 #include "sensor.h"
 #include "tps53689.h"
+#include "plat_pldm_monitor.h"
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
@@ -47,6 +49,8 @@ static bool plat_get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len
 static bool plat_get_bios_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 static uint8_t plat_pldm_pre_retimer_recovery(void *fw_update_param);
 static uint8_t plat_pldm_post_retimer_recovery(void *fw_update_param);
+static uint8_t plat_pldm_pre_bios_update(void *fw_update_param);
+static uint8_t plat_pldm_post_bios_update(void *fw_update_param);
 
 enum FIRMWARE_COMPONENT {
 	SD_COMPNT_BIC,
@@ -179,9 +183,9 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
 		.comp_identifier = SD_COMPNT_BIOS,
 		.comp_classification_index = 0x00,
-		.pre_update_func = NULL,
-		.update_func = NULL,
-		.pos_update_func = NULL,
+		.pre_update_func = plat_pldm_pre_bios_update,
+		.update_func = pldm_bios_update,
+		.pos_update_func = plat_pldm_post_bios_update,
 		.inf = COMP_UPDATE_VIA_SPI,
 		.activate_method = COMP_ACT_SYS_REBOOT,
 		.self_act_func = NULL,
@@ -525,6 +529,8 @@ static uint8_t plat_pldm_pre_vr_update(void *fw_update_param)
 
 	/* Stop sensor polling */
 	set_vr_monitor_status(false);
+	// wait 10ms for vr monitor stop
+	k_msleep(10);
 	p->bus = I2C_BUS4;
 
 	if (p->comp_id == SD_COMPNT_VR_PVDDCR_CPU1) {
@@ -605,6 +611,8 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 	const uint8_t *vr_name_p = vr_name[vr_type];
 	set_vr_monitor_status(false);
+	// wait 10ms for vr monitor stop
+	k_msleep(10);
 	switch (vr_type) {
 	case VR_TYPE_MPS:
 		if (!mp2971_get_checksum(bus, addr, &version)) {
@@ -671,6 +679,34 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	return ret;
 }
 
+static uint8_t plat_pldm_pre_bios_update(void *fw_update_param)
+{
+	host_power_off();
+
+	int pos = pal_get_bios_flash_position();
+	if (pos == -1) {
+		return -1;
+	}
+
+	// Switch GPIO(BIOS SPI Selection Pin) to BIC
+	bool ret = pal_switch_bios_spi_mux(GPIO_HIGH);
+	if (!ret) {
+		return -1;
+	}
+
+	return 0;
+}
+
+static uint8_t plat_pldm_post_bios_update(void *fw_update_param)
+{
+	int ret = pal_switch_bios_spi_mux(GPIO_LOW);
+	if (!ret) {
+		return -1;
+	}
+	host_power_on();
+	return 0;
+}
+
 static uint8_t plat_pldm_pre_retimer_update(void *fw_update_param)
 {
 	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
@@ -723,6 +759,12 @@ static bool plat_get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len
 		memcpy(buf_p, version, RETIMER_PT5161L_FW_VER_LEN);
 		*len += bin2hex(version, 4, buf_p, 8);
 		buf_p += 8;
+	} else if (retimer_type == RETIMER_TYPE_BROADCOM) {
+		uint8_t *buf_p = buf;
+		ret = bcm85658_get_fw_version(&i2c_msg, version);
+		memcpy(buf_p, version, RETIMER_PT5161L_FW_VER_LEN);
+		*len += bin2hex(&version[1], 3, buf_p, 6);
+		buf_p += 6;
 	} else {
 		// TODO: Support other vendor
 	}

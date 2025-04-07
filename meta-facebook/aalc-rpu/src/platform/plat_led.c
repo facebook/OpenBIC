@@ -187,11 +187,6 @@ bool fault_led_control(void)
 		return true;
 	}
 
-	if (!gpio_get(CDU_PWR_BTN)) {
-		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
-		return true;
-	}
-
 	for (uint8_t i = 0; i < ARRAY_SIZE(fault_led_threshold_sensor); i++) {
 		if (get_threshold_status(fault_led_threshold_sensor[i])) {
 			led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
@@ -199,6 +194,6 @@ bool fault_led_control(void)
 		}
 	}
 
-	led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
+	//led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 	return false;
 }

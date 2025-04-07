@@ -8,8 +8,11 @@
 #include "libutil.h"
 
 #define TIMESTAMP104_SIZE 13 //A binary datetime type formatted as a series of 13 bytes
-#define NUMERIC_PDR_SIZE 108
 #define MAX_LANGUAGE_TAG_LEN 3 //name language tag: "en"
+
+#ifndef NUMERIC_PDR_SIZE
+#define NUMERIC_PDR_SIZE 108
+#endif
 
 #ifndef MAX_AUX_SENSOR_NAME_LEN
 #define MAX_AUX_SENSOR_NAME_LEN 40

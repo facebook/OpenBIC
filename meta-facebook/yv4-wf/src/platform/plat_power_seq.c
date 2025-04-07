@@ -33,8 +33,8 @@ K_WORK_DELAYABLE_DEFINE(set_cxl1_vr_ready_work, set_cxl1_vr_access_delayed_statu
 K_WORK_DELAYABLE_DEFINE(set_cxl2_vr_ready_work, set_cxl2_vr_access_delayed_status);
 K_WORK_DELAYABLE_DEFINE(cxl1_ready_thread, cxl1_ready_handler);
 K_WORK_DELAYABLE_DEFINE(cxl2_ready_thread, cxl2_ready_handler);
-K_WORK_DELAYABLE_DEFINE(enable_asic1_rst_work, enable_asic1_rst);
-K_WORK_DELAYABLE_DEFINE(enable_asic2_rst_work, enable_asic2_rst);
+K_TIMER_DEFINE(enable_asic1_rst_timer, enable_asic1_rst, NULL);
+K_TIMER_DEFINE(enable_asic2_rst_timer, enable_asic2_rst, NULL);
 
 #define CXL_READY_HANDLER_STACK_SIZE 1024
 
@@ -138,7 +138,7 @@ void execute_power_on_sequence()
 	int ret = 0;
 
 	// If CXL is on, doesn't need to power on again
-	if (get_DC_status()) {
+	if (gpio_get(PG_CARD_OK) == POWER_ON) {
 		LOG_INF("CXL DC status is ON");
 		return;
 	}
@@ -185,27 +185,25 @@ void create_check_cxl_ready_thread()
 {
 	if ((cxl1_tid != NULL) && ((strcmp(k_thread_state_str(cxl1_tid), "dead") != 0) &&
 				   (strcmp(k_thread_state_str(cxl1_tid), "unknown") != 0))) {
-		;
-	} else {
-		cxl1_tid = k_thread_create(&cxl1_thread_data, cxl1_stack_area,
-					   K_THREAD_STACK_SIZEOF(cxl1_stack_area),
-					   cxl1_ready_handler, NULL, NULL, NULL,
-					   CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
-		k_thread_name_set(cxl1_tid, "cxl1_ready_thread");
-		k_thread_start(cxl1_tid);
+		k_thread_abort(cxl1_tid);
 	}
+
+	cxl1_tid = k_thread_create(&cxl1_thread_data, cxl1_stack_area,
+				   K_THREAD_STACK_SIZEOF(cxl1_stack_area), cxl1_ready_handler, NULL,
+				   NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY + 1, 0, K_NO_WAIT);
+	k_thread_name_set(cxl1_tid, "cxl1_ready_thread");
+	k_thread_start(cxl1_tid);
 
 	if ((cxl2_tid != NULL) && ((strcmp(k_thread_state_str(cxl2_tid), "dead") != 0) &&
 				   (strcmp(k_thread_state_str(cxl2_tid), "unknown") != 0))) {
-		;
-	} else {
-		cxl2_tid = k_thread_create(&cxl2_thread_data, cxl2_stack_area,
-					   K_THREAD_STACK_SIZEOF(cxl2_stack_area),
-					   cxl2_ready_handler, NULL, NULL, NULL,
-					   CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
-		k_thread_name_set(cxl2_tid, "cxl2_ready_thread");
-		k_thread_start(cxl2_tid);
+		k_thread_abort(cxl2_tid);
 	}
+
+	cxl2_tid = k_thread_create(&cxl2_thread_data, cxl2_stack_area,
+				   K_THREAD_STACK_SIZEOF(cxl2_stack_area), cxl2_ready_handler, NULL,
+				   NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY + 1, 0, K_NO_WAIT);
+	k_thread_name_set(cxl2_tid, "cxl2_ready_thread");
+	k_thread_start(cxl2_tid);
 }
 
 int power_on_handler(int cxl_id, int power_stage)
@@ -220,6 +218,7 @@ int power_on_handler(int cxl_id, int power_stage)
 		// Get power good pin to check power
 		ret = check_powers_enabled(cxl_id, ctrl_stage);
 		if (ret < 0) {
+			LOG_ERR("CXL %d PwrOn:%d Fail", cxl_id, ctrl_stage);
 			break;
 		}
 	}
@@ -257,10 +256,12 @@ void enable_powers(int cxl_id, int pwr_stage)
 		gpio_set(cxl_power_ctrl_pin[cxl_id].pvtt_cd_dimm_en, POWER_ON);
 		switch (cxl_id) {
 		case CXL_ID_1:
-			k_work_schedule(&enable_asic1_rst_work, K_MSEC(PWR_RST_DELAY_MSEC));
+			k_timer_start(&enable_asic1_rst_timer, K_MSEC(PWR_RST_DELAY_MSEC),
+				      K_NO_WAIT);
 			break;
 		case CXL_ID_2:
-			k_work_schedule(&enable_asic2_rst_work, K_MSEC(PWR_RST_DELAY_MSEC));
+			k_timer_start(&enable_asic2_rst_timer, K_MSEC(PWR_RST_DELAY_MSEC),
+				      K_NO_WAIT);
 			break;
 		default:
 			LOG_ERR("Unknown CXL id %d to enable PWR_ON_RST", cxl_id);
@@ -372,7 +373,7 @@ void execute_power_off_sequence()
 	int ret = 0;
 
 	// If CXL is off, doesn't need to power off again
-	if (!get_DC_status()) {
+	if (gpio_get(PG_CARD_OK) == POWER_OFF) {
 		LOG_INF("CXL DC status is OFF");
 		return;
 	}
@@ -450,6 +451,7 @@ int power_off_handler(int cxl_id, int power_stage)
 		// Get power good pin to check power
 		ret = check_powers_disabled(cxl_id, ctrl_stage);
 		if (ret < 0) {
+			LOG_ERR("CXL %d PwrOff:%d Fail", cxl_id, ctrl_stage);
 			break;
 		}
 	}
@@ -592,6 +594,9 @@ void cxl1_ready_handler()
 	struct sensor_value hb_val;
 	int ret = 0;
 
+	k_msleep(30000);
+	LOG_INF("Start monitor CXL1 ready");
+
 	heartbeat = device_get_binding(CXL1_HEART_BEAT_LABEL);
 	if (heartbeat == NULL) {
 		LOG_ERR("%s device not found", CXL1_HEART_BEAT_LABEL);
@@ -624,8 +629,7 @@ void cxl1_ready_handler()
 
 		return;
 	}
-	LOG_ERR("Failed to read %s due to sensor_sample_fetch failed, ret: %d",
-		CXL1_HEART_BEAT_LABEL, ret);
+	LOG_ERR("CXL1 is not ready, check %s timeout, ret: %d", CXL1_HEART_BEAT_LABEL, ret);
 	switch_mux_to_bic(IOE_SWITCH_CXL1_VR_TO_BIC);
 	set_cxl_vr_access(CXL_ID_1, true);
 	return;
@@ -636,6 +640,9 @@ void cxl2_ready_handler()
 	const struct device *heartbeat = NULL;
 	struct sensor_value hb_val;
 	int ret = 0;
+
+	k_msleep(30000);
+	LOG_INF("Start monitor CXL2 ready");
 
 	heartbeat = device_get_binding(CXL2_HEART_BEAT_LABEL);
 	if (heartbeat == NULL) {
@@ -669,8 +676,7 @@ void cxl2_ready_handler()
 
 		return;
 	}
-	LOG_ERR("Failed to read %s due to sensor_sample_fetch failed, ret: %d",
-		CXL2_HEART_BEAT_LABEL, ret);
+	LOG_ERR("CXL2 is not ready, check %s timeout, ret: %d", CXL2_HEART_BEAT_LABEL, ret);
 	switch_mux_to_bic(IOE_SWITCH_CXL2_VR_TO_BIC);
 	set_cxl_vr_access(CXL_ID_2, true);
 	return;

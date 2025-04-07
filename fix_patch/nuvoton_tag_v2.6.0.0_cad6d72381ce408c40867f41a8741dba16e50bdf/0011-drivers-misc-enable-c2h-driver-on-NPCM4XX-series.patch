@@ -1,0 +1,342 @@
+From 2d10b1c0851b1ba434042e08323b9304c0b70d61 Mon Sep 17 00:00:00 2001
+From: Tyrone Ting <kfting@nuvoton.com>
+Date: Wed, 25 Dec 2024 16:04:02 +0800
+Subject: [PATCH] drivers: misc: enable c2h driver on NPCM4XX series
+
+Signed-off-by: Tyrone Ting <kfting@nuvoton.com>
+---
+ boards/arm/npcm400f_evb/npcm400f_evb.dts      |   4 +
+ .../arm/npcm400f_evb/npcm400f_evb_defconfig   |   3 +
+ drivers/misc/CMakeLists.txt                   |   1 +
+ drivers/misc/Kconfig                          |   2 +
+ drivers/misc/npcm/CMakeLists.txt              |   5 +
+ drivers/misc/npcm/Kconfig                     |  14 ++
+ drivers/misc/npcm/c2h_npcm.c                  | 202 ++++++++++++++++++
+ dts/arm/nuvoton/npcm400f.dtsi                 |   5 +
+ include/drivers/misc/npcm/c2h_npcm.h          |  13 ++
+ 9 files changed, 249 insertions(+)
+ create mode 100644 drivers/misc/npcm/CMakeLists.txt
+ create mode 100644 drivers/misc/npcm/Kconfig
+ create mode 100644 drivers/misc/npcm/c2h_npcm.c
+ create mode 100644 include/drivers/misc/npcm/c2h_npcm.h
+
+diff --git a/boards/arm/npcm400f_evb/npcm400f_evb.dts b/boards/arm/npcm400f_evb/npcm400f_evb.dts
+index 6bdc24b8b400..57800d9ce876 100644
+--- a/boards/arm/npcm400f_evb/npcm400f_evb.dts
++++ b/boards/arm/npcm400f_evb/npcm400f_evb.dts
+@@ -608,3 +608,7 @@
+ 		pin-offset = <120>;
+ 	};
+ };
++
++&c2h {
++	status = "okay";
++};
+diff --git a/boards/arm/npcm400f_evb/npcm400f_evb_defconfig b/boards/arm/npcm400f_evb/npcm400f_evb_defconfig
+index f20c49568920..46ba37bbd423 100644
+--- a/boards/arm/npcm400f_evb/npcm400f_evb_defconfig
++++ b/boards/arm/npcm400f_evb/npcm400f_evb_defconfig
+@@ -105,3 +105,6 @@ CONFIG_JTAG_NPCM4XX=y
+ 
+ # SGPIO Driver
+ CONFIG_SGPIO_NPCM4XX=n
++
++# C2H Driver
++CONFIG_C2H_NPCM=y
+diff --git a/drivers/misc/CMakeLists.txt b/drivers/misc/CMakeLists.txt
+index 0f01dc1af3c3..200c990c6912 100644
+--- a/drivers/misc/CMakeLists.txt
++++ b/drivers/misc/CMakeLists.txt
+@@ -2,3 +2,4 @@
+ 
+ add_subdirectory_ifdef(CONFIG_FT800 ft8xx)
+ add_subdirectory_ifdef(CONFIG_SOC_FAMILY_ASPEED aspeed)
++add_subdirectory_ifdef(CONFIG_SOC_FAMILY_NPCM4XX npcm)
+diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
+index deb25ce79ce1..bc5f3b4d0f16 100644
+--- a/drivers/misc/Kconfig
++++ b/drivers/misc/Kconfig
+@@ -9,4 +9,6 @@ source "drivers/misc/ft8xx/Kconfig"
+ 
+ source "drivers/misc/aspeed/Kconfig"
+ 
++source "drivers/misc/npcm/Kconfig"
++
+ endmenu
+diff --git a/drivers/misc/npcm/CMakeLists.txt b/drivers/misc/npcm/CMakeLists.txt
+new file mode 100644
+index 000000000000..b5b70f0fe408
+--- /dev/null
++++ b/drivers/misc/npcm/CMakeLists.txt
+@@ -0,0 +1,5 @@
++# SPDX-License-Identifier: Apache-2.0
++
++zephyr_library()
++
++zephyr_library_sources_ifdef(CONFIG_C2H_NPCM		c2h_npcm.c)
+diff --git a/drivers/misc/npcm/Kconfig b/drivers/misc/npcm/Kconfig
+new file mode 100644
+index 000000000000..90a63288cb4a
+--- /dev/null
++++ b/drivers/misc/npcm/Kconfig
+@@ -0,0 +1,14 @@
++# NPCM misc. driver options
++
++# Copyright (c) 2024 Nuvoton
++# SPDX-License-Identifier: Apache-2.0
++
++
++config C2H_NPCM
++	bool "NPCM4XX core access to host modules driver"
++	depends on SOC_FAMILY_NPCM4XX
++	help
++	  This option enables the c2h driver for NPCM
++	  SoCs.
++	  Say y if you wish to access host modules
++	  on NPCM SMC.
+diff --git a/drivers/misc/npcm/c2h_npcm.c b/drivers/misc/npcm/c2h_npcm.c
+new file mode 100644
+index 000000000000..2d15d9aea6e7
+--- /dev/null
++++ b/drivers/misc/npcm/c2h_npcm.c
+@@ -0,0 +1,202 @@
++/*
++ * Copyright (c) 2024 Nuvoton Technology Corporation.
++ *
++ * SPDX-License-Identifier: Apache-2.0
++ */
++
++#define DT_DRV_COMPAT nuvoton_npcm4xx_c2h
++
++/*
++ * NPCM4XX series enables the Core to access the Host module registers
++ * (i.e., Host Configuration, UART, Keyboard/Mouse interface, Power Management
++ * Channels 1, 2, 3 and 4, SHM and MSWC), using the Host Modules Internal
++ * Bus (HMIB = SIB).
++ *
++ * The terms "C2H" and "SIB" will be used interchangeably in this driver.
++ */
++
++#include <assert.h>
++#include <drivers/espi.h>
++#include <drivers/gpio.h>
++#include <drivers/clock_control.h>
++#include <kernel.h>
++#include <soc.h>
++#include "soc_host.h"
++#include "soc_espi.h"
++#include "soc_miwu.h"
++
++#include <logging/log.h>
++LOG_MODULE_REGISTER(c2h_npcm, CONFIG_LOG_DEFAULT_LEVEL);
++
++#define NPCM4XX_C2H_TRANSACTION_TIMEOUT_US 200
++
++struct c2h_npcm_config {
++	struct c2h_reg *const inst_c2h;
++};
++
++/* host core-to-host interface local functions */
++static void host_c2h_wait_write_done(const struct device *dev)
++{
++	struct c2h_npcm_config *cfg = (struct c2h_npcm_config *)dev->config;
++	struct c2h_reg *const inst_c2h = cfg->inst_c2h;
++	uint32_t elapsed_cycles;
++	uint32_t start_cycles = k_cycle_get_32();
++	uint32_t max_wait_cycles =
++			k_us_to_cyc_ceil32(NPCM4XX_C2H_TRANSACTION_TIMEOUT_US);
++
++	while (IS_BIT_SET(inst_c2h->SIBCTRL, NPCM4XX_SIBCTRL_CSWR)) {
++		elapsed_cycles = k_cycle_get_32() - start_cycles;
++		if (elapsed_cycles > max_wait_cycles) {
++			LOG_ERR("c2h write transaction expired!");
++			break;
++		}
++	}
++}
++
++static void host_c2h_wait_read_done(const struct device *dev)
++{
++	struct c2h_npcm_config *cfg = (struct c2h_npcm_config *)dev->config;
++	struct c2h_reg *const inst_c2h = cfg->inst_c2h;
++	uint32_t elapsed_cycles;
++	uint32_t start_cycles = k_cycle_get_32();
++	uint32_t max_wait_cycles =
++			k_us_to_cyc_ceil32(NPCM4XX_C2H_TRANSACTION_TIMEOUT_US);
++
++	while (IS_BIT_SET(inst_c2h->SIBCTRL, NPCM4XX_SIBCTRL_CSRD)) {
++		elapsed_cycles = k_cycle_get_32() - start_cycles;
++		if (elapsed_cycles > max_wait_cycles) {
++			LOG_ERR("c2h read transaction expired!");
++			break;
++		}
++	}
++}
++
++void c2h_write_io_cfg_reg(const struct device *dev, uint8_t reg_index, uint8_t reg_data)
++{
++	struct c2h_npcm_config *cfg = (struct c2h_npcm_config *)dev->config;
++	struct c2h_reg *const inst_c2h = cfg->inst_c2h;
++
++	/* Disable interrupts */
++	int key = irq_lock();
++
++	/* Lock host access EC configuration registers (0x4E/0x4F) */
++	inst_c2h->LKSIOHA |= BIT(NPCM4XX_LKSIOHA_LKCFG);
++	/* Enable Core-to-Host access CFG module */
++	inst_c2h->CRSMAE |= BIT(NPCM4XX_CRSMAE_CFGAE);
++
++	/* Verify core-to-host modules is not in progress */
++	host_c2h_wait_read_done(dev);
++	host_c2h_wait_write_done(dev);
++
++	/*
++	 * Specifying the in-direct IO address which A0 = 0 indicates the index
++	 * register is accessed. Then write index address directly and it starts
++	 * a write transaction to host sub-module on LPC/eSPI bus.
++	 */
++	inst_c2h->IHIOA = 0;
++	inst_c2h->IHD = reg_index;
++	host_c2h_wait_write_done(dev);
++
++	/*
++	 * Specifying the in-direct IO address which A0 = 1 indicates the data
++	 * register is accessed. Then write data directly and it starts a write
++	 * transaction to host sub-module on LPC/eSPI bus.
++	 */
++	inst_c2h->IHIOA = 1;
++	inst_c2h->IHD = reg_data;
++	host_c2h_wait_write_done(dev);
++
++	/* Disable Core-to-Host access CFG module */
++	inst_c2h->CRSMAE &= ~BIT(NPCM4XX_CRSMAE_CFGAE);
++	/* Unlock host access EC configuration registers (0x4E/0x4F) */
++	inst_c2h->LKSIOHA &= ~BIT(NPCM4XX_LKSIOHA_LKCFG);
++
++	/* Enable interrupts */
++	irq_unlock(key);
++}
++
++uint8_t c2h_read_io_cfg_reg(const struct device *dev, uint8_t reg_index)
++{
++	struct c2h_npcm_config *cfg = (struct c2h_npcm_config *)dev->config;
++	struct c2h_reg *const inst_c2h = cfg->inst_c2h;
++	uint8_t data_val;
++
++	/* Disable interrupts */
++	int key = irq_lock();
++
++	/* Lock host access EC configuration registers (0x4E/0x4F) */
++	inst_c2h->LKSIOHA |= BIT(NPCM4XX_LKSIOHA_LKCFG);
++	/* Enable Core-to-Host access CFG module */
++	inst_c2h->CRSMAE |= BIT(NPCM4XX_CRSMAE_CFGAE);
++
++	/* Verify core-to-host modules is not in progress */
++	host_c2h_wait_read_done(dev);
++	host_c2h_wait_write_done(dev);
++
++	/*
++	 * Specifying the in-direct IO address which A0 = 0 indicates the index
++	 * register is accessed. Then write index address directly and it starts
++	 * a write transaction to host sub-module on LPC/eSPI bus.
++	 */
++	inst_c2h->IHIOA = 0;
++	inst_c2h->IHD = reg_index;
++	host_c2h_wait_write_done(dev);
++
++	/*
++	 * Specifying the in-direct IO address which A0 = 1 indicates the data
++	 * register is accessed. Then write CSRD bit in SIBCTRL to issue a read
++	 * transaction to host sub-module on LPC/eSPI bus. Once it was done,
++	 * read data out from IHD.
++	 */
++	inst_c2h->IHIOA = 1;
++	inst_c2h->SIBCTRL |= BIT(NPCM4XX_SIBCTRL_CSRD);
++	host_c2h_wait_read_done(dev);
++	data_val = inst_c2h->IHD;
++
++	/* Disable Core-to-Host access CFG module */
++	inst_c2h->CRSMAE &= ~BIT(NPCM4XX_CRSMAE_CFGAE);
++	/* Unlock host access EC configuration registers (0x4E/0x4F) */
++	inst_c2h->LKSIOHA &= ~BIT(NPCM4XX_LKSIOHA_LKCFG);
++
++	/* Enable interrupts */
++	irq_unlock(key);
++
++	return data_val;
++}
++
++/* C2H driver registration */
++#define NPCM4XX_C2H_INIT_FUNC(inst) _CONCAT(c2h_init, inst)
++#define NPCM4XX_C2H_INIT_FUNC_DECL(inst) \
++	static int c2h_init##inst(const struct device *dev)
++
++/* C2H init function implementation */
++#define NPCM4XX_C2H_INIT_FUNC_IMPL(inst)				              \
++	static int c2h_init##inst(const struct device *dev)	                      \
++	{								              \
++		struct c2h_npcm_config *cfg = (struct c2h_npcm_config *)dev->config;  \
++		struct c2h_reg *const inst_c2h = cfg->inst_c2h;		              \
++									              \
++		/* Enable Core-to-Host access module */			              \
++		inst_c2h->SIBCTRL |= BIT(NPCM4XX_SIBCTRL_CSAE);		              \
++									              \
++		return 0;						              \
++	}								              \
++
++#define NPCM4XX_C2H_INIT(inst)						                        \
++	NPCM4XX_C2H_INIT_FUNC_DECL(inst);				                        \
++									                        \
++	static const struct c2h_npcm_config c2h_npcm_config_##inst = {	                        \
++		.inst_c2h = (struct c2h_reg *)DT_REG_ADDR_BY_NAME(DT_NODELABEL(host_sub), c2h), \
++	};								                        \
++									                        \
++	DEVICE_DT_INST_DEFINE(inst,					                        \
++			      NPCM4XX_C2H_INIT_FUNC(inst),		                        \
++			      NULL,					                        \
++			      NULL, &c2h_npcm_config_##inst,		                        \
++			      PRE_KERNEL_1,				                        \
++			      CONFIG_KERNEL_INIT_PRIORITY_OBJECTS, NULL);                       \
++									                        \
++									                        \
++	NPCM4XX_C2H_INIT_FUNC_IMPL(inst)
++
++DT_INST_FOREACH_STATUS_OKAY(NPCM4XX_C2H_INIT)
+diff --git a/dts/arm/nuvoton/npcm400f.dtsi b/dts/arm/nuvoton/npcm400f.dtsi
+index 49b08315c1b9..5a43494ab5e5 100644
+--- a/dts/arm/nuvoton/npcm400f.dtsi
++++ b/dts/arm/nuvoton/npcm400f.dtsi
+@@ -246,6 +246,11 @@
+ 			label = "USBD_0";
+ 			status = "disabled";
+ 		};
++
++		c2h: c2h {
++			compatible = "nuvoton,npcm4xx-c2h";
++			status = "disabled";
++		};
+ 	};
+ 
+ 	soc-id {
+diff --git a/include/drivers/misc/npcm/c2h_npcm.h b/include/drivers/misc/npcm/c2h_npcm.h
+new file mode 100644
+index 000000000000..6b3d42fb2436
+--- /dev/null
++++ b/include/drivers/misc/npcm/c2h_npcm.h
+@@ -0,0 +1,13 @@
++/*
++ * Copyright (c) 2024 Nuvoton Technology Corporation.
++ *
++ * SPDX-License-Identifier: Apache-2.0
++ */
++
++#ifndef ZEPHYR_INCLUDE_DRIVERS_MISC_C2H_NPCM_H_
++#define ZEPHYR_INCLUDE_DRIVERS_MISC_C2H_NPCM_H_
++
++void c2h_write_io_cfg_reg(const struct device *dev, uint8_t reg_index, uint8_t reg_data);
++uint8_t c2h_read_io_cfg_reg(const struct device *dev, uint8_t reg_index);
++
++#endif
+-- 
+2.17.1
+

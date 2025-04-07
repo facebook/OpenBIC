@@ -46,8 +46,10 @@ typedef struct _add_sel_info {
 void ISR_DC_ON();
 void ISR_POST_COMPLETE();
 void ISR_BMC_READY();
+void ISR_WF_BIC_READY();
 void sync_bmc_ready_pin();
 void reinit_i3c_hub();
+void set_ffwf_eid();
 void ISR_SLP3();
 void ISR_DBP_PRSNT();
 void ISR_MB_THROTTLE();

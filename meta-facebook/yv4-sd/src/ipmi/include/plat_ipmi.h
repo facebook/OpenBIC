@@ -23,4 +23,6 @@ enum GET_HTTP_BOOT_ATTR {
 	GET_HTTP_BOOT_MAX = 0x02,
 };
 
+void event_resend_work_handler(struct k_work *work);
+
 #endif
