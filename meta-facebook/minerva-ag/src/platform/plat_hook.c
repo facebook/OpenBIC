@@ -1669,7 +1669,7 @@ bool plat_get_temp_status(uint8_t rail, uint8_t *temp_status)
 	switch (cfg->type) {
 	case sensor_dev_tmp75: {
 		uint8_t data[1] = { 0 };
-		if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, 0x2B, data, 1)) {
+		if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, 0x97, data, 1)) {
 			LOG_ERR("Failed to read TEMP TMP75 from cpld");
 			goto err;
 		}
@@ -1727,34 +1727,7 @@ bool plat_clear_temp_status(uint8_t rail)
 
 	switch (cfg->type) {
 	case sensor_dev_tmp75: {
-		uint8_t data[1] = { 0 };
-		if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, 0x2B, data, 1)) {
-			LOG_ERR("Failed to read TEMP TMP75 from cpld");
-			goto err;
-		}
-
-		switch (rail) {
-		case TEMP_INDEX_TOP_INLET:
-			data[0] &= ~BIT(2);
-			break;
-		case TEMP_INDEX_BOT_INLET:
-			data[0] &= ~BIT(3);
-			break;
-		case TEMP_INDEX_BOT_OUTLET:
-			data[0] &= ~BIT(4);
-			break;
-		case TEMP_INDEX_TOP_OUTLET:
-			data[0] &= ~BIT(5);
-			break;
-		default:
-			LOG_ERR("Unsupport TEMP TMP75 alert pin");
-			goto err;
-		}
-
-		if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR, 0x2B, data, 1)) {
-			LOG_ERR("Failed to clear TEMP TMP75 to cpld");
-			goto err;
-		}
+		LOG_DBG("TMP75 temp_status cannot be cleared; its behavior depends on the temp_threshold settings.");
 	} break;
 	case sensor_dev_tmp431:
 		if (!tmp432_clear_temp_status(cfg)) {
