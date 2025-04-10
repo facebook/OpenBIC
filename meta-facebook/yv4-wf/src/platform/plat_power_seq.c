@@ -425,6 +425,14 @@ void execute_power_off_sequence()
 		LOG_ERR("Failed to cancel cxl2_ready_thread");
 	}
 
+	if (k_work_cancel_delayable(&set_cxl1_vr_ready_work) != 0) {
+		LOG_WRN("Failed to cancel set_cxl1_vr_ready_work");
+	}
+
+	if (k_work_cancel_delayable(&set_cxl2_vr_ready_work) != 0) {
+		LOG_WRN("Failed to cancel set_cxl2_vr_ready_work");
+	}
+
 	if (k_work_cancel_delayable(&cxl1_hb_monitor_work) != 0) {
 		LOG_ERR("Failed to cancel cxl1_hb_monitor_work");
 	}
