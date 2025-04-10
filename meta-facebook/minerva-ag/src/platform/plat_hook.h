@@ -75,8 +75,8 @@ enum VR_STAUS_E {
 };
 
 enum PLAT_TEMP_INDEX_E {
-	TEMP_INDEX_ON_DIE_1_2,
-	TEMP_INDEX_ON_DIE_3_4,
+	TEMP_INDEX_ON_DIE_ATH_0_N_OWL,
+	TEMP_INDEX_ON_DIE_ATH_1_S_OWL,
 	TEMP_INDEX_TOP_INLET,
 	TEMP_INDEX_TOP_OUTLET,
 	TEMP_INDEX_BOT_INLET,
@@ -271,6 +271,7 @@ bool vr_vout_default_settings_init(void);
 bool vr_vout_user_settings_init(void);
 bool strap_name_get(uint8_t rail, uint8_t **name);
 bool strap_enum_get(uint8_t *name, uint8_t *num);
+void init_temp_alert_mode(void);
 bool find_bootstrap_by_rail(uint8_t rail, bootstrap_mapping_register *result);
 bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting_value,
 					   uint8_t drive_index_level, bool is_perm);

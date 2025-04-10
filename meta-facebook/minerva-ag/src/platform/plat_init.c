@@ -58,6 +58,7 @@ void pal_pre_init()
 		plat_clock_init();
 
 	plat_eusb_init();
+	init_temp_alert_mode();
 }
 
 void pal_set_sys_status()
