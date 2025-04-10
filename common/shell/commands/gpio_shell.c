@@ -26,6 +26,10 @@
  * These constants are in the source file instead of the header file due to build problems 
  * with using the SHELL_STATIC_SUBCMD_SET_CREATE macro. 
  */
+#if defined(CONFIG_GPIO_NPCM4XX)
+#define REG_GPIO_PORT_DATA_IN_OFFSET 0x01
+#define REG_GPIO_PORT_DIRECTION_OFFSET 0x02
+#endif
 
 #define GET_BIT_VAL(val, n) ((val & BIT(n)) >> (n))
 #define GPIO_DEVICE_PREFIX "GPIO0_"
@@ -81,27 +85,37 @@ static int gpio_access_cfg(const struct shell *shell, int gpio_idx, enum GPIO_AC
 		return 1;
 	}
 
+	uint32_t g_val = 0;
+	uint32_t g_dir = 0;
+
 	switch (mode) {
 	case GPIO_READ:
 		if (gpio_cfg[gpio_idx].is_init == DISABLE) {
 			return 1;
 		}
 
-		uint32_t g_val = sys_read32(GPIO_GROUP_REG_ACCESS[gpio_idx / 32]);
-		uint32_t g_dir = sys_read32(GPIO_GROUP_REG_ACCESS[gpio_idx / 32] + 0x4);
+#if defined(CONFIG_GPIO_NPCM4XX)
+		g_val = sys_read8(GPIO_GROUP_REG_ACCESS[gpio_idx / GPIO_GROUP_SIZE] +
+				  REG_GPIO_PORT_DATA_IN_OFFSET);
+		g_dir = sys_read8(GPIO_GROUP_REG_ACCESS[gpio_idx / GPIO_GROUP_SIZE] +
+				  REG_DIRECTION_OFFSET);
+#else
+		g_val = sys_read32(GPIO_GROUP_REG_ACCESS[gpio_idx / GPIO_GROUP_SIZE]);
+		g_dir = sys_read32(GPIO_GROUP_REG_ACCESS[gpio_idx / GPIO_GROUP_SIZE] + 0x4);
+#endif
 
 		char *pin_prop = (gpio_cfg[gpio_idx].property == OPEN_DRAIN) ? "OD" : "PP";
 		char *pin_dir = (gpio_cfg[gpio_idx].direction == GPIO_INPUT) ? "input" : "output";
 
 		char *pin_dir_reg = "I";
-		if (g_dir & BIT(gpio_idx % 32))
+		if (g_dir & BIT(gpio_idx % GPIO_GROUP_SIZE))
 			pin_dir_reg = "O";
 
 		int val = gpio_get(gpio_idx);
 		if (val == 0 || val == 1) {
 			shell_print(shell, "[%-3d] %-35s: %-3s | %-6s(%s) | %d(%d)", gpio_idx,
 				    gpio_name[gpio_idx], pin_prop, pin_dir, pin_dir_reg, val,
-				    GET_BIT_VAL(g_val, gpio_idx % 32));
+				    GET_BIT_VAL(g_val, gpio_idx % GPIO_GROUP_SIZE));
 		} else {
 			shell_print(shell, "[%-3d] %-35s: %-3s | %-6s(%s) | %s", gpio_idx,
 				    gpio_name[gpio_idx], pin_prop, pin_dir, pin_dir_reg, "resv");
@@ -248,7 +262,7 @@ void cmd_gpio_cfg_list_all(const struct shell *shell, size_t argc, char **argv)
 		return;
 	}
 
-	char *key_word = NULL;
+	const char *key_word = NULL;
 	if (argc == 2)
 		key_word = argv[1];
 
