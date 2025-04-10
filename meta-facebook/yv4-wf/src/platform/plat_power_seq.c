@@ -407,6 +407,13 @@ void execute_power_off_sequence()
 		LOG_ERR("Failed to cancel cxl2_ready_thread");
 	}
 
+	if (k_work_cancel_delayable(&set_cxl1_vr_ready_work) != 0) {
+		LOG_WRN("Failed to cancel set_cxl1_vr_ready_work");
+	}
+	if (k_work_cancel_delayable(&set_cxl2_vr_ready_work) != 0) {
+		LOG_WRN("Failed to cancel set_cxl2_vr_ready_work");
+	}
+
 	set_DC_on_delayed_status();
 
 	ret = power_off_handler(CXL_ID_1, DIMM_POWER_OFF_STAGE_1);
