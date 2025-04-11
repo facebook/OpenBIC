@@ -37,6 +37,7 @@
 #include "plat_pldm_sensor.h"
 #include "plat_class.h"
 #include "pmbus.h"
+#include "plat_i2c_target.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -74,6 +75,16 @@ int power_level_send_event(bool is_assert, int ubc1_current, int ubc2_current)
 	}
 
 	return 0;
+}
+
+bool post_all_sensor_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+
+	update_sensor_data_2_5_table();
+
+	return true;
 }
 
 bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading)
