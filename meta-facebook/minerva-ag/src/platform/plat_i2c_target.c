@@ -52,6 +52,7 @@
 #define SENSOR_READING_PDR_INDEX_MAX 50
 #define PLAT_MASTER_WRITE_STACK_SIZE 1024
 #define STRAP_SET_TYPE 0x44 // 01000100
+#define TELEMETRY_MSG_MAX_LENGTH 32
 
 static bool command_reply_data_handle(void *arg);
 void set_bootstrap_element_handler();
@@ -116,11 +117,23 @@ typedef struct __attribute__((__packed__)) {
 	uint8_t fru_data[];
 } plat_sensor_init_data_60_76;
 
-struct ssif_init_cfg {
-	uint8_t i2c_bus;
-	uint8_t addr; // bic itself, 7bit
-	uint8_t target_msgq_cnt; // maximum msg count for target msg queue
-};
+typedef struct __attribute__((__packed__)) {
+	struct k_work work;
+	uint8_t bus; // 0 base (0,1,2,3,4,..)
+	uint8_t addr; // 7 bit addr
+	uint8_t read_len;
+	uint8_t write_len; // include data[0]
+	uint8_t data[]; // data[0]: offset
+} plat_sensor_init_data_40;
+
+typedef struct __attribute__((__packed__)) {
+	uint8_t data_status;
+} plat_sensor_init_data_41;
+
+typedef struct __attribute__((__packed__)) {
+	uint8_t data_length;
+	uint8_t response_data[];
+} plat_sensor_init_data_42;
 
 static uint8_t bootstrap_pin;
 static uint8_t user_setting_level;
@@ -155,6 +168,8 @@ plat_sensor_init_data_6 *sensor_init_data_6_table[DATA_TABLE_LENGTH_1] = { NULL 
 plat_sensor_init_data_8 *sensor_init_data_8_table[DATA_TABLE_LENGTH_1] = { NULL };
 plat_sensor_init_data_60_76 *sensor_init_data_60_66_table[DATA_TABLE_LENGTH_7] = { NULL };
 plat_sensor_init_data_60_76 *sensor_init_data_70_76_table[DATA_TABLE_LENGTH_7] = { NULL };
+plat_sensor_init_data_41 *sensor_init_data_41_table[DATA_TABLE_LENGTH_1] = { NULL };
+plat_sensor_init_data_42 *sensor_init_data_42_table[DATA_TABLE_LENGTH_1] = { NULL };
 
 void *allocate_sensor_data_table(void **buffer, size_t buffer_size)
 {
@@ -271,6 +286,58 @@ void set_bootstrap_element_handler()
 	if (!set_bootstrap_element(bootstrap_pin, user_setting_level)) {
 		LOG_ERR("set_bootstrap_element fail");
 		return;
+	}
+}
+
+void i2c_bridge_command_handler(struct k_work *work_item)
+{
+	const plat_sensor_init_data_40 *sensor_data_40 =
+		CONTAINER_OF(work_item, plat_sensor_init_data_40, work);
+
+	int response_data_len = sensor_data_40->read_len;
+
+	size_t table_size_41 = sizeof(plat_sensor_init_data_41);
+	plat_sensor_init_data_41 *sensor_data_41 =
+		allocate_sensor_data_table((void **)&sensor_init_data_41_table[0], table_size_41);
+	if (!sensor_data_41)
+		return;
+
+	size_t table_size_42 =
+		sizeof(plat_sensor_init_data_42) + response_data_len * sizeof(uint8_t);
+	plat_sensor_init_data_42 *sensor_data_42 =
+		allocate_sensor_data_table((void **)&sensor_init_data_42_table[0], table_size_42);
+	if (!sensor_data_42)
+		return;
+
+	sensor_data_41->data_status = I2C_BRIDGE_COMMAND_IN_PROCESS;
+	sensor_data_42->data_length = 0x00;
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = sensor_data_40->bus;
+	i2c_msg.target_addr = sensor_data_40->addr;
+	i2c_msg.tx_len = sensor_data_40->write_len;
+	i2c_msg.rx_len = sensor_data_40->read_len;
+	memcpy(&i2c_msg.data, sensor_data_40->data, sensor_data_40->write_len);
+	if (response_data_len == 0) {
+		if (i2c_master_write(&i2c_msg, retry)) {
+			LOG_ERR("Failed to write reg, bus: %d, addr: 0x%x, tx_len: 0x%x",
+				i2c_msg.bus, i2c_msg.target_addr, i2c_msg.tx_len);
+			sensor_data_41->data_status = I2C_BRIDGE_COMMAND_FAILURE;
+			return;
+		}
+		sensor_data_41->data_status = I2C_BRIDGE_COMMAND_SUCCESS;
+		sensor_data_42->data_length = response_data_len;
+	} else {
+		if (i2c_master_read(&i2c_msg, retry)) {
+			LOG_ERR("Failed to read reg, bus: %d, addr: 0x%x, tx_len: 0x%x",
+				i2c_msg.bus, i2c_msg.target_addr, i2c_msg.tx_len);
+			sensor_data_41->data_status = I2C_BRIDGE_COMMAND_FAILURE;
+			return;
+		}
+		sensor_data_41->data_status = I2C_BRIDGE_COMMAND_SUCCESS;
+		sensor_data_42->data_length = response_data_len;
+		memcpy(sensor_data_42->response_data, i2c_msg.data, response_data_len);
 	}
 }
 
@@ -520,6 +587,9 @@ telemetry_info telemetry_info_table[] = {
 	{ INVENTORY_IDS_REG, 0x00, .sensor_data_init = initialize_sensor_data_6 },
 	{ STRAP_CAPABILTITY_REG, 0x00, .sensor_data_init = initialize_sensor_data_8 },
 	{ WRITE_STRAP_PIN_VALUE_REG },
+	{ I2C_BRIDGE_COMMAND_REG },
+	{ I2C_BRIDGE_COMMAND_STATUS_REG },
+	{ I2C_BRIDGE_COMMAND_RESPONSE_REG },
 	{ FRU_BOARD_PART_NUMBER_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
 	{ FRU_BOARD_SERIAL_NUMBER_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
 	{ FRU_BOARD_PRODUCT_NAME_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
@@ -586,7 +656,6 @@ static bool command_reply_data_handle(void *arg)
 				memcpy(data->target_rd_msg.msg,
 				       sensor_init_data_8_table[reg_offset - STRAP_CAPABILTITY_REG],
 				       struct_size);
-
 			} break;
 			case FRU_BOARD_PART_NUMBER_REG:
 			case FRU_BOARD_SERIAL_NUMBER_REG:
@@ -600,7 +669,6 @@ static bool command_reply_data_handle(void *arg)
 				       sensor_init_data_60_66_table[reg_offset -
 								    FRU_BOARD_PART_NUMBER_REG],
 				       struct_size);
-
 			} break;
 			case FRU_PRODUCT_NAME_REG:
 			case FRU_PRODUCT_PART_NUMBER_REG:
@@ -614,7 +682,24 @@ static bool command_reply_data_handle(void *arg)
 				       sensor_init_data_70_76_table[reg_offset -
 								    FRU_PRODUCT_NAME_REG],
 				       struct_size);
-
+			} break;
+			case I2C_BRIDGE_COMMAND_STATUS_REG: {
+				data->target_rd_msg.msg_length = 1;
+				data->target_rd_msg.msg[0] =
+					sensor_init_data_41_table[0] ?
+						sensor_init_data_41_table[0]->data_status :
+						I2C_BRIDGE_COMMAND_FAILURE;
+			} break;
+			case I2C_BRIDGE_COMMAND_RESPONSE_REG: {
+				if (sensor_init_data_42_table[0]) {
+					struct_size = sensor_init_data_42_table[0]->data_length + 1;
+					data->target_rd_msg.msg_length = struct_size;
+					memcpy(data->target_rd_msg.msg,
+					       sensor_init_data_42_table[0], struct_size);
+				} else {
+					data->target_rd_msg.msg_length = 1;
+					data->target_rd_msg.msg[0] = 0xFF;
+				}
 			} break;
 			default:
 				LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
@@ -665,18 +750,49 @@ void plat_master_write_thread_handler()
 		}
 		LOG_DBG("rlen = %d", rlen);
 		LOG_HEXDUMP_DBG(rdata, rlen, "");
-		if (rlen == 3) {
-			uint8_t reg_offset = rdata[0];
-			if (reg_offset == WRITE_STRAP_PIN_VALUE_REG) {
+		if (rlen < 1) {
+			LOG_ERR("Received data too short");
+			continue;
+		}
+
+		uint8_t reg_offset = rdata[0];
+		switch (reg_offset) {
+		case WRITE_STRAP_PIN_VALUE_REG:
+			if (rlen == 3) {
 				bootstrap_pin = rdata[1];
 				user_setting_level = rdata[2];
 				k_work_submit(&set_bootstrap_element_work);
 			} else {
-				LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
+				LOG_ERR("Invalid length for strap pin write: %d", rlen);
 			}
+			break;
+		case I2C_BRIDGE_COMMAND_REG:
+			if (rlen >= 5) {
+				size_t payload_len = rlen - 4;
+				size_t struct_size = sizeof(plat_sensor_init_data_40) + payload_len;
+				plat_sensor_init_data_40 *sensor_data = malloc(struct_size);
+				if (!sensor_data) {
+					LOG_ERR("Memory allocation failed!");
+					return;
+				}
+				sensor_data->bus = rdata[1];
+				sensor_data->addr = rdata[2];
+				sensor_data->read_len = rdata[3];
+				sensor_data->write_len = payload_len;
+				memcpy(sensor_data->data, &rdata[4], payload_len);
+				k_work_init(&sensor_data->work, i2c_bridge_command_handler);
+				k_work_submit(&sensor_data->work);
+			} else {
+				LOG_ERR("Invalid length for command write: %d", rlen);
+			}
+			break;
+		default:
+			LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
+			break;
 		}
 	}
 }
+
 void plat_master_write_thread_init()
 {
 	plat_master_write_tid = k_thread_create(&plat_master_write_thread, plat_master_write_stack,
