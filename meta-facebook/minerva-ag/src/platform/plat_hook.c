@@ -1158,6 +1158,13 @@ bool bootstrap_user_settings_set(void *bootstrap_user_settings)
 	return true;
 }
 
+bool check_is_bootstrap_setting_value_valid(uint8_t rail, uint8_t value)
+{
+	int critical_value = 1 << bootstrap_table[rail].bit_count;
+
+	return value < critical_value;
+}
+
 bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting_value,
 					   uint8_t drive_index_level, bool is_perm, bool is_default)
 {
@@ -1167,9 +1174,14 @@ bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting
 	*change_setting_value = 0;
 	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
 		if (bootstrap_table[i].index == rail) {
-			bootstrap_table[i].change_setting_value =
-				(is_default) ? bootstrap_table[i].default_setting_value :
-					       drive_index_level;
+			drive_index_level = (is_default) ?
+						    bootstrap_table[i].default_setting_value :
+						    drive_index_level;
+			if (!check_is_bootstrap_setting_value_valid(rail, drive_index_level)) {
+				LOG_ERR("hex-value :0x%x is out of range", drive_index_level);
+				return false;
+			}
+			bootstrap_table[i].change_setting_value = drive_index_level;
 
 			// get whole cpld register value to set
 			for (int j = 0; j < STRAP_INDEX_MAX; j++) {
