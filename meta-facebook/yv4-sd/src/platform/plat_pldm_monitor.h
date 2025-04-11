@@ -35,4 +35,6 @@ extern struct pldm_state_effecter_info plat_state_effecter_table[];
 
 void host_power_on();
 void host_power_off();
+void host_power_cycle();
+void host_power_reset();
 #endif

@@ -23,6 +23,13 @@ enum GET_HTTP_BOOT_ATTR {
 	GET_HTTP_BOOT_MAX = 0x02,
 };
 
+enum WDT_TIMER_ACTIONS {
+	NO_ACTION = 0x00,
+	HARD_RESET = 0x01,
+	POWER_DOWN = 0x02,
+	POWER_CYCLE = 0x03,
+};
+
 void event_resend_work_handler(struct k_work *work);
 
 #endif

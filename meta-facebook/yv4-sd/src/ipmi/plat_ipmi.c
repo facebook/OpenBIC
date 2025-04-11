@@ -39,6 +39,7 @@
 #include "plat_i2c.h"
 #include "plat_dimm.h"
 #include "util_worker.h"
+#include "plat_pldm_monitor.h"
 
 #define EVENT_RESEND_DELAY_MS 300000 // 5 minutes delay for resend
 #define MAX_RESEND_ATTEMPTS 3
@@ -246,6 +247,27 @@ void APP_GET_SELFTEST_RESULTS(ipmi_msg *msg)
 	msg->completion_code = CC_SUCCESS;
 
 	return;
+}
+
+void frb2_wdt_timer_action(uint8_t action)
+{
+	switch (action & 0x03) {
+	case HARD_RESET:
+		LOG_INF("frb2 power reset");
+		host_power_reset();
+		break;
+	case POWER_DOWN:
+		LOG_INF("frb2 power down");
+		host_power_off();
+		break;
+	case POWER_CYCLE:
+		LOG_INF("frb2 power cycle");
+		host_power_cycle();
+		break;
+	default:
+		LOG_INF("frb2 no action");
+		break;
+	}
 }
 
 void OEM_1S_DEBUG_GET_HW_SIGNAL(ipmi_msg *msg)
