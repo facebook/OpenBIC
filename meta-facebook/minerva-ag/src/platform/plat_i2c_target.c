@@ -37,6 +37,8 @@
 #include "pldm_sensor.h"
 #include "plat_version.h"
 #include "plat_isr.h"
+#include "plat_hook.h"
+#include "plat_fru.h"
 
 #define DEVICE_TYPE 0x01
 #define REGISTER_LAYOUT_VERSION 0x01
@@ -48,6 +50,15 @@
 #define DATA_TABLE_LENGTH_7 7
 #define SENSOR_INIT_PDR_INDEX_MAX 248 // PDR indexe is on 0 base
 #define SENSOR_READING_PDR_INDEX_MAX 50
+#define PLAT_MASTER_WRITE_STACK_SIZE 1024
+
+static bool command_reply_data_handle(void *arg);
+void set_bootstrap_element_handler();
+K_WORK_DEFINE(set_bootstrap_element_work, set_bootstrap_element_handler);
+
+K_THREAD_STACK_DEFINE(plat_master_write_stack, PLAT_MASTER_WRITE_STACK_SIZE);
+struct k_thread plat_master_write_thread;
+k_tid_t plat_master_write_tid;
 
 typedef struct __attribute__((__packed__)) {
 	uint8_t device_type;
@@ -86,6 +97,24 @@ typedef struct __attribute__((__packed__)) {
 } plat_sensor_init_data_6;
 // size = sizeof(plat_sensor_init_data_6)
 
+typedef struct __attribute__((__packed__)) {
+	uint8_t strap_capabiltity[STRAP_INDEX_MAX];
+} plat_sensor_init_data_8;
+
+typedef struct __attribute__((__packed__)) {
+	uint8_t data_length;
+	uint8_t fru_data[];
+} plat_sensor_init_data_60_76;
+
+struct ssif_init_cfg {
+	uint8_t i2c_bus;
+	uint8_t addr; // bic itself, 7bit
+	uint8_t target_msgq_cnt; // maximum msg count for target msg queue
+};
+
+static uint8_t bootstrap_pin;
+static uint8_t user_setting_level;
+
 LOG_MODULE_REGISTER(plat_i2c_target);
 /* I2C target init-enable table */
 const bool I2C_TARGET_ENABLE_TABLE[MAX_TARGET_NUM] = {
@@ -94,9 +123,28 @@ const bool I2C_TARGET_ENABLE_TABLE[MAX_TARGET_NUM] = {
 	TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE,
 };
 
+/* I2C target init-config table */
+const struct _i2c_target_config I2C_TARGET_CONFIG_TABLE[MAX_TARGET_NUM] = {
+	{ 0xFF, 0xA },
+	{ 0xFF, 0xA },
+	{ 0xFF, 0xA },
+	{ 0x40, 0xA },
+	{ 0xFF, 0xA },
+	{ 0xFF, 0xA },
+	{ 0x40, 0xA, command_reply_data_handle },
+	{ 0xFF, 0xA },
+	{ 0xFF, 0xA },
+	{ 0xFF, 0xA },
+	{ 0xFF, 0xA },
+	{ 0xFF, 0xA },
+};
+
 plat_sensor_init_data_0_1 *sensor_init_data_0_1_table[DATA_TABLE_LENGTH_2] = { NULL };
 plat_sensor_init_data_2_5 *sensor_init_data_2_5_table[DATA_TABLE_LENGTH_4] = { NULL };
 plat_sensor_init_data_6 *sensor_init_data_6_table[DATA_TABLE_LENGTH_1] = { NULL };
+plat_sensor_init_data_8 *sensor_init_data_8_table[DATA_TABLE_LENGTH_1] = { NULL };
+plat_sensor_init_data_60_76 *sensor_init_data_60_66_table[DATA_TABLE_LENGTH_7] = { NULL };
+plat_sensor_init_data_60_76 *sensor_init_data_70_76_table[DATA_TABLE_LENGTH_7] = { NULL };
 
 void *allocate_sensor_data_table(void **buffer, size_t buffer_size)
 {
@@ -111,6 +159,114 @@ void *allocate_sensor_data_table(void **buffer, size_t buffer_size)
 		return NULL;
 	}
 	return *buffer;
+}
+
+bool get_fru_info_element(telemetry_info *telemetry_info, char **fru_element,
+			  uint8_t *fru_element_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
+
+	FRU_INFO *plat_fru_info = get_fru_info();
+	if (!plat_fru_info)
+		return false;
+
+	switch (telemetry_info->telemetry_offset) {
+	case FRU_BOARD_PART_NUMBER_REG:
+		*fru_element = plat_fru_info->board.board_part_number;
+		break;
+	case FRU_BOARD_SERIAL_NUMBER_REG:
+		*fru_element = plat_fru_info->board.board_serial;
+		break;
+	case FRU_BOARD_PRODUCT_NAME_REG:
+		*fru_element = plat_fru_info->board.board_product;
+		break;
+	case FRU_BOARD_CUSTOM_DATA_1_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[0];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_2_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[1];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_3_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[2];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_4_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[3];
+		break;
+	case FRU_PRODUCT_NAME_REG:
+		*fru_element = plat_fru_info->product.product_name;
+		break;
+	case FRU_PRODUCT_PART_NUMBER_REG:
+		*fru_element = plat_fru_info->product.product_part_number;
+		break;
+	case FRU_PRODUCT_PART_VERSION_REG:
+		*fru_element = plat_fru_info->product.product_version;
+		break;
+	case FRU_PRODUCT_SERIAL_NUMBER_REG:
+		*fru_element = plat_fru_info->product.product_serial;
+		break;
+	case FRU_PRODUCT_ASSET_TAG_REG:
+		*fru_element = plat_fru_info->product.product_asset_tag;
+		break;
+	case FRU_PRODUCT_CUSTOM_DATA_1_REG:
+		*fru_element = plat_fru_info->product.product_custom_data[0];
+		break;
+	case FRU_PRODUCT_CUSTOM_DATA_2_REG:
+		*fru_element = plat_fru_info->product.product_custom_data[1];
+		break;
+	default:
+		LOG_ERR("Unknown reg offset: 0x%02x", telemetry_info->telemetry_offset);
+		break;
+	}
+	if (*fru_element) {
+		*fru_element_size = (uint8_t)strlen(*fru_element);
+	} else {
+		*fru_element_size = 0;
+	}
+	return true;
+}
+
+bool set_bootstrap_element(uint8_t bootstrap_pin, uint8_t user_setting_level)
+{
+	uint8_t change_setting_value;
+	uint8_t drive_index_level =
+		(user_setting_level == 0x00) ? DRIVE_INDEX_LEVEL_LOW : DRIVE_INDEX_LEVEL_HIGH;
+	bootstrap_mapping_register bootstrap_item;
+	if (!set_bootstrap_table_and_user_settings(bootstrap_pin, &change_setting_value,
+						   drive_index_level, false)) {
+		LOG_ERR("set bootstrap_table[%02x]:%d failed", bootstrap_pin, drive_index_level);
+		return false;
+	}
+	if (!find_bootstrap_by_rail(bootstrap_pin, &bootstrap_item)) {
+		LOG_ERR("Can't find bootstrap_item by bootstrap_pin index: 0x%02x", bootstrap_pin);
+		return false;
+	}
+	// LOG_DBG("set bootstrap_table[%2x]=%x, cpld_offsets 0x%02x change_setting_value 0x%02x",
+	// 	bootstrap_pin, drive_index_level, bootstrap_item.cpld_offsets,
+	// 	change_setting_value);
+	if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR, bootstrap_item.cpld_offsets,
+			    &change_setting_value, 1)) {
+		LOG_ERR("Can't write bootstrap[0x%02x]=%x, cpld_offsets 0x%02x change_setting_value 0x%02x",
+			bootstrap_pin, user_setting_level, bootstrap_item.cpld_offsets,
+			change_setting_value);
+		return false;
+	}
+	return true;
+}
+
+void set_bootstrap_element_handler()
+{
+	if (bootstrap_pin >= STRAP_INDEX_MAX) {
+		LOG_ERR("bootstrap_pin[%02x] is out of range", bootstrap_pin);
+		return;
+	}
+	if (user_setting_level != 0 && user_setting_level != 1) {
+		LOG_ERR("user_setting_level[%d] is out of range", user_setting_level);
+		return;
+	}
+	if (!set_bootstrap_element(bootstrap_pin, user_setting_level)) {
+		LOG_ERR("set_bootstrap_element fail");
+		return;
+	}
 }
 
 bool initialize_sensor_data_0_1(telemetry_info *telemetry_info, uint8_t *buffer_size)
@@ -214,6 +370,89 @@ bool initialize_sensor_data_6(telemetry_info *telemetry_info, uint8_t *buffer_si
 	return true;
 }
 
+bool initialize_sensor_data_8(telemetry_info *telemetry_info, uint8_t *buffer_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
+
+	int table_index = telemetry_info->telemetry_offset - STRAP_CAPABILTITY_REG;
+	if (table_index < 0 || table_index >= DATA_TABLE_LENGTH_1)
+		return false;
+
+	size_t table_size = sizeof(plat_sensor_init_data_8);
+	plat_sensor_init_data_8 *sensor_data = allocate_sensor_data_table(
+		(void **)&sensor_init_data_8_table[table_index], table_size);
+	if (!sensor_data)
+		return false;
+
+	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+		sensor_data->strap_capabiltity[i] = 0x44; // 01000100
+		int drive_level = 0;
+		if (!get_bootstrap_change_drive_level(i, &drive_level)) {
+			LOG_ERR("Can't get_bootstrap_change_drive_level by index: %x", i);
+			continue;
+		}
+		if (drive_level == 1)
+			sensor_data->strap_capabiltity[i] |= (1 << 0);
+	}
+
+	*buffer_size = (uint8_t)table_size;
+	return true;
+}
+
+bool initialize_sensor_data_60_66(telemetry_info *telemetry_info, uint8_t *buffer_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
+
+	int table_index = telemetry_info->telemetry_offset - FRU_BOARD_PART_NUMBER_REG;
+	if (table_index < 0 || table_index >= DATA_TABLE_LENGTH_7)
+		return false;
+
+	char *fru_string = NULL;
+	uint8_t fru_length = 0;
+	if (!get_fru_info_element(telemetry_info, &fru_string, &fru_length)) {
+		LOG_ERR("Failed to retrieve FRU Element");
+	}
+
+	size_t table_size = sizeof(plat_sensor_init_data_60_76) + fru_length;
+	plat_sensor_init_data_60_76 *sensor_data = allocate_sensor_data_table(
+		(void **)&sensor_init_data_60_66_table[table_index], table_size);
+	if (!sensor_data)
+		return false;
+
+	sensor_data->data_length = fru_length;
+	memcpy(sensor_data->fru_data, fru_string, fru_length);
+
+	*buffer_size = (uint8_t)table_size;
+	return true;
+}
+
+bool initialize_sensor_data_70_76(telemetry_info *telemetry_info, uint8_t *buffer_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
+
+	int table_index = telemetry_info->telemetry_offset - FRU_PRODUCT_NAME_REG;
+	if (table_index < 0 || table_index >= DATA_TABLE_LENGTH_7)
+		return false;
+
+	char *fru_string = NULL;
+	uint8_t fru_length = 0;
+	if (!get_fru_info_element(telemetry_info, &fru_string, &fru_length)) {
+		LOG_ERR("Failed to retrieve FRU Element");
+	}
+
+	size_t table_size = sizeof(plat_sensor_init_data_60_76) + fru_length;
+	plat_sensor_init_data_60_76 *sensor_data = allocate_sensor_data_table(
+		(void **)&sensor_init_data_70_76_table[table_index], table_size);
+	if (!sensor_data)
+		return false;
+
+	sensor_data->data_length = fru_length;
+	memcpy(sensor_data->fru_data, fru_string, fru_length);
+
+	*buffer_size = (uint8_t)table_size;
+	return true;
+}
+
 void update_sensor_data_2_5_table()
 {
 	for (int table_index = 0; table_index < DATA_TABLE_LENGTH_4; table_index++) {
@@ -238,6 +477,26 @@ void update_sensor_data_2_5_table()
 	}
 }
 
+void update_sensor_data_8_table()
+{
+	if (!sensor_init_data_8_table[0])
+		return;
+
+	plat_sensor_init_data_8 *sensor_data = sensor_init_data_8_table[0];
+
+	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+		int drive_level = 0;
+		if (!get_bootstrap_change_drive_level(i, &drive_level)) {
+			LOG_ERR("Can't get_bootstrap_change_drive_level by index: %x", i);
+			continue;
+		}
+		if (drive_level == 1)
+			sensor_data->strap_capabiltity[i] |= (1 << 0);
+		else
+			sensor_data->strap_capabiltity[i] &= ~(1 << 0);
+	}
+}
+
 telemetry_info telemetry_info_table[] = {
 	{ SENSOR_INIT_DATA_0_REG, 0x00, .sensor_data_init = initialize_sensor_data_0_1 },
 	{ SENSOR_INIT_DATA_1_REG, 0x00, .sensor_data_init = initialize_sensor_data_0_1 },
@@ -246,23 +505,22 @@ telemetry_info telemetry_info_table[] = {
 	{ SENSOR_READING_2_REG, 0x00, .sensor_data_init = initialize_sensor_data_2_5 },
 	{ SENSOR_READING_3_REG, 0x00, .sensor_data_init = initialize_sensor_data_2_5 },
 	{ INVENTORY_IDS_REG, 0x00, .sensor_data_init = initialize_sensor_data_6 },
-	{ OWL_NIC_MAC_ADDRESSES_REG },
-	{ STRAP_CAPABILTITY_REG },
+	{ STRAP_CAPABILTITY_REG, 0x00, .sensor_data_init = initialize_sensor_data_8 },
 	{ WRITE_STRAP_PIN_VALUE_REG },
-	{ FRU_BOARD_PART_NUMBER_REG },
-	{ FRU_BOARD_SERIAL_NUMBER_REG },
-	{ FRU_BOARD_PRODUCT_NAME_REG },
-	{ FRU_BOARD_CUSTOM_DATA_1_REG },
-	{ FRU_BOARD_CUSTOM_DATA_2_REG },
-	{ FRU_BOARD_CUSTOM_DATA_3_REG },
-	{ FRU_BOARD_CUSTOM_DATA_4_REG },
-	{ FRU_PRODUCT_NAME_REG },
-	{ FRU_PRODUCT_PART_NUMBER_REG },
-	{ FRU_PRODUCT_PART_VERSION_REG },
-	{ FRU_PRODUCT_SERIAL_NUMBER_REG },
-	{ FRU_PRODUCT_ASSET_TAG_REG },
-	{ FRU_PRODUCT_CUSTOM_DATA_1_REG },
-	{ FRU_PRODUCT_CUSTOM_DATA_2_REG },
+	{ FRU_BOARD_PART_NUMBER_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
+	{ FRU_BOARD_SERIAL_NUMBER_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
+	{ FRU_BOARD_PRODUCT_NAME_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
+	{ FRU_BOARD_CUSTOM_DATA_1_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
+	{ FRU_BOARD_CUSTOM_DATA_2_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
+	{ FRU_BOARD_CUSTOM_DATA_3_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
+	{ FRU_BOARD_CUSTOM_DATA_4_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
+	{ FRU_PRODUCT_NAME_REG, 0x00, .sensor_data_init = initialize_sensor_data_70_76 },
+	{ FRU_PRODUCT_PART_NUMBER_REG, 0x00, .sensor_data_init = initialize_sensor_data_70_76 },
+	{ FRU_PRODUCT_PART_VERSION_REG, 0x00, .sensor_data_init = initialize_sensor_data_70_76 },
+	{ FRU_PRODUCT_SERIAL_NUMBER_REG, 0x00, .sensor_data_init = initialize_sensor_data_70_76 },
+	{ FRU_PRODUCT_ASSET_TAG_REG, 0x00, .sensor_data_init = initialize_sensor_data_70_76 },
+	{ FRU_PRODUCT_CUSTOM_DATA_1_REG, 0x00, .sensor_data_init = initialize_sensor_data_70_76 },
+	{ FRU_PRODUCT_CUSTOM_DATA_2_REG, 0x00, .sensor_data_init = initialize_sensor_data_70_76 },
 };
 
 static bool command_reply_data_handle(void *arg)
@@ -310,6 +568,41 @@ static bool command_reply_data_handle(void *arg)
 				       sensor_init_data_6_table[reg_offset - INVENTORY_IDS_REG],
 				       struct_size);
 			} break;
+			case STRAP_CAPABILTITY_REG: {
+				data->target_rd_msg.msg_length = struct_size;
+				memcpy(data->target_rd_msg.msg,
+				       sensor_init_data_8_table[reg_offset - STRAP_CAPABILTITY_REG],
+				       struct_size);
+
+			} break;
+			case FRU_BOARD_PART_NUMBER_REG:
+			case FRU_BOARD_SERIAL_NUMBER_REG:
+			case FRU_BOARD_PRODUCT_NAME_REG:
+			case FRU_BOARD_CUSTOM_DATA_1_REG:
+			case FRU_BOARD_CUSTOM_DATA_2_REG:
+			case FRU_BOARD_CUSTOM_DATA_3_REG:
+			case FRU_BOARD_CUSTOM_DATA_4_REG: {
+				data->target_rd_msg.msg_length = struct_size;
+				memcpy(data->target_rd_msg.msg,
+				       sensor_init_data_60_66_table[reg_offset -
+								    FRU_BOARD_PART_NUMBER_REG],
+				       struct_size);
+
+			} break;
+			case FRU_PRODUCT_NAME_REG:
+			case FRU_PRODUCT_PART_NUMBER_REG:
+			case FRU_PRODUCT_PART_VERSION_REG:
+			case FRU_PRODUCT_SERIAL_NUMBER_REG:
+			case FRU_PRODUCT_ASSET_TAG_REG:
+			case FRU_PRODUCT_CUSTOM_DATA_1_REG:
+			case FRU_PRODUCT_CUSTOM_DATA_2_REG: {
+				data->target_rd_msg.msg_length = struct_size;
+				memcpy(data->target_rd_msg.msg,
+				       sensor_init_data_70_76_table[reg_offset -
+								    FRU_PRODUCT_NAME_REG],
+				       struct_size);
+
+			} break;
 			default:
 				LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
 				data->target_rd_msg.msg_length = 1;
@@ -323,6 +616,40 @@ static bool command_reply_data_handle(void *arg)
 		}
 	}
 	return false;
+}
+
+void plat_master_write_thread_handler()
+{
+	int rc = 0;
+	while (1) {
+		uint8_t rdata[MAX_I2C_TARGET_BUFF] = { 0 };
+		uint16_t rlen = 0;
+		rc = i2c_target_read(I2C_BUS7, rdata, sizeof(rdata), &rlen);
+		if (rc) {
+			LOG_ERR("i2c_target_read fail, ret %d", rc);
+			return;
+		}
+		LOG_DBG("rlen = %d", rlen);
+		LOG_HEXDUMP_DBG(rdata, rlen, "");
+		if (rlen == 3) {
+			uint8_t reg_offset = rdata[0];
+			if (reg_offset == WRITE_STRAP_PIN_VALUE_REG) {
+				bootstrap_pin = rdata[1];
+				user_setting_level = rdata[2];
+				k_work_submit(&set_bootstrap_element_work);
+			} else {
+				LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
+			}
+		}
+	}
+}
+void plat_master_write_thread_init()
+{
+	plat_master_write_tid = k_thread_create(&plat_master_write_thread, plat_master_write_stack,
+						K_THREAD_STACK_SIZEOF(plat_master_write_stack),
+						plat_master_write_thread_handler, NULL, NULL, NULL,
+						CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+	k_thread_name_set(&plat_master_write_thread, "plat_master_write_thread");
 }
 
 void sensor_data_table_init(void)
@@ -339,20 +666,5 @@ void sensor_data_table_init(void)
 			telemetry_info_table[i].data_size = buffer_size;
 		}
 	}
+	plat_master_write_thread_init();
 }
-
-/* I2C target init-config table */
-const struct _i2c_target_config I2C_TARGET_CONFIG_TABLE[MAX_TARGET_NUM] = {
-	{ 0xFF, 0xA },
-	{ 0xFF, 0xA },
-	{ 0xFF, 0xA },
-	{ 0x40, 0xA },
-	{ 0xFF, 0xA },
-	{ 0xFF, 0xA },
-	{ 0x40, 0xA, command_reply_data_handle },
-	{ 0xFF, 0xA },
-	{ 0xFF, 0xA },
-	{ 0xFF, 0xA },
-	{ 0xFF, 0xA },
-	{ 0xFF, 0xA },
-};
