@@ -1,0 +1,7 @@
+<map id="rpu_ready_recovery" name="rpu_ready_recovery">
+<area shape="rect" id="node1" title=" " alt="" coords="5,81,140,108"/>
+<area shape="rect" id="node2" href="$aalc-rpu_2src_2platform_2plat__log_8c.html#a103e33f69b37672107c44bcf36accc6b" title=" " alt="" coords="188,5,299,32"/>
+<area shape="rect" id="node3" href="$plat__status_8c.html#aa601af4f53236dc9df9b4db1735f94de" title=" " alt="" coords="188,56,299,83"/>
+<area shape="rect" id="node4" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="208,107,279,133"/>
+<area shape="rect" id="node5" href="$plat__status_8c.html#a6a5e5d3582c3221f9a1b3d94cff8cf6f" title=" " alt="" coords="188,157,299,184"/>
+</map>

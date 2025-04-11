@@ -1,0 +1,12 @@
+<map id="process_vr_pmalert_ocp_sel" name="process_vr_pmalert_ocp_sel">
+<area shape="rect" id="node1" title=" " alt="" coords="5,166,141,207"/>
+<area shape="rect" id="node2" href="$yv3-vf_2src_2platform_2plat__util_8c.html#abc94f67ed170b0ae5f7e4965130e2166" title=" " alt="" coords="219,5,322,32"/>
+<area shape="rect" id="node4" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="436,85,507,112"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="211,173,330,200"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="210,224,331,251"/>
+<area shape="rect" id="node8" href="$yv4-wf_2src_2platform_2plat__pldm__sensor_8c.html#af4281c23c804342282b5f9f19ed5d929" title=" " alt="" coords="196,107,345,149"/>
+<area shape="rect" id="node9" href="$pldm__oem_8h.html#abfa67ccc03b5a09b8503f95d5f8e5c5f" title=" " alt="" coords="189,275,352,301"/>
+<area shape="rect" id="node10" href="$power__status_8c.html#aabc3ff81629af1ec305612399750fbcc" title=" " alt="" coords="195,325,346,352"/>
+<area shape="rect" id="node3" href="$yv3-vf_2src_2platform_2plat__util_8c.html#a7200b2472d3ef5cb78c82b2a0e3fe39b" title=" " alt="" coords="438,5,505,32"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="400,199,543,225"/>
+</map>
