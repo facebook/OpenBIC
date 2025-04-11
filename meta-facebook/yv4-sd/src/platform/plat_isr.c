@@ -564,6 +564,21 @@ void process_vr_pmalert_ocp_sel(struct k_work *work_item)
 	msg.bus = I2C_BUS4;
 	msg.target_addr = work_info->vr_addr;
 
+	int high_byte = gpio_get(VR_TYPE_1);
+	int low_byte = gpio_get(VR_TYPE_0);
+
+	const uint8_t registers_to_read[] = { PMBUS_STATUS_BYTE,	PMBUS_STATUS_VOUT,
+					      PMBUS_STATUS_IOUT,	PMBUS_STATUS_INPUT,
+					      PMBUS_STATUS_TEMPERATURE, PMBUS_STATUS_CML };
+	const size_t num_registers = sizeof(registers_to_read) / sizeof(registers_to_read[0]);
+	size_t status_array_size = num_registers; // main-source: MPS (Default size)
+	if (high_byte == 1 && low_byte == 0) { // 2nd-source: RNS
+		status_array_size = num_registers + 1;
+	} else if (high_byte == 1 && low_byte == 1) { // 3rd-source: TI
+		status_array_size = num_registers + 2;
+	}
+	uint8_t status_info[status_array_size];
+
 	for (int page = 0; page < work_info->page_cnt; ++page) {
 		set_vr_monitor_status(false);
 		// wait 10ms for vr monitor stop
@@ -592,6 +607,7 @@ void process_vr_pmalert_ocp_sel(struct k_work *work_item)
 		uint8_t status_word_lsb = msg.data[0];
 		uint8_t status_word_msb = msg.data[1];
 
+		LOG_WRN("STATUS_WORD MSB: 0x%x, LSB: 0x%x", status_word_msb, status_word_lsb);
 		/* add a filter to avoid false alert from TI VR */
 		uint8_t vr_dev = VR_DEVICE_UNKNOWN;
 		if (plat_pldm_sensor_get_vr_dev(&vr_dev) != GET_VR_DEV_SUCCESS) {
@@ -611,10 +627,49 @@ void process_vr_pmalert_ocp_sel(struct k_work *work_item)
 					msg.target_addr);
 				continue;
 			}
-			if (((msg.data[0] & VR_TPS_OCW_MASK) >> 5) == 1) {
+			if (msg.data[0] == VR_TPS_OCW_MASK) {
 				/* only OC Warn is triggered, skip to prevent false event */
 				continue;
 			}
+		}
+
+		/* read other STATUS registers */
+		msg.tx_len = 1;
+		msg.rx_len = 1;
+		for (size_t reg_i = 0; reg_i < num_registers; ++reg_i) {
+			msg.data[0] = registers_to_read[reg_i];
+			ret = i2c_master_read(&msg, retry);
+			if (ret != 0) {
+				LOG_ERR("Get vr status fail, pmbus_reg: 0x%x, bus: 0x%x, addr: 0x%x",
+					registers_to_read[reg_i], msg.bus, msg.target_addr);
+				continue;
+			}
+			status_info[reg_i] = msg.data[0];
+			LOG_WRN("STATUS reg: 0x%x, info: 0x%x", registers_to_read[reg_i],
+				status_info[reg_i]);
+		}
+		if (high_byte == 1 && low_byte == 1) { // 3rd-source: TI
+			msg.data[0] = PMBUS_STATUS_OTHER;
+			ret = i2c_master_read(&msg, retry);
+			if (ret != 0) {
+				LOG_ERR("Get vr status_other fail, bus: 0x%x, addr: 0x%x", msg.bus,
+					msg.target_addr);
+				continue;
+			}
+			status_info[status_array_size - 2] = msg.data[0];
+			LOG_WRN("STATUS reg: 0x%x, info: 0x%x", PMBUS_STATUS_OTHER,
+				status_info[status_array_size - 2]);
+		} else if (high_byte == 1) { // 2nd-source: RNS or 3rd-source: TI
+			msg.data[0] = PMBUS_STATUS_MFR_SPECIFIC;
+			ret = i2c_master_read(&msg, retry);
+			if (ret != 0) {
+				LOG_ERR("Get vr status_mfr_specific fail, bus: 0x%x, addr: 0x%x",
+					msg.bus, msg.target_addr);
+				continue;
+			}
+			status_info[status_array_size - 1] = msg.data[0];
+			LOG_WRN("STATUS reg: 0x%x, info: 0x%x", PMBUS_STATUS_MFR_SPECIFIC,
+				status_info[status_array_size - 1]);
 		}
 
 		set_vr_monitor_status(true);
@@ -652,18 +707,24 @@ void process_vr_pmalert_ocp_sel(struct k_work *work_item)
 				work_info->is_asserted &= ~BIT(page);
 			} else {
 				/* It's not asserted in previous status */
+				LOG_WRN("It's not asserted in previous status");
 				continue;
 			}
 		} else {
 			sel_msg.assert_type = EVENT_ASSERTED;
 
+			work_info->is_asserted |= BIT(page);
+			/* This section is designated for sending events exclusively when the status word is abnormal */
+			/*
 			if (((status_word_lsb & VR_FAULT_STATUS_LSB_MASK) == 0) &&
 			    ((status_word_msb & VR_FAULT_STATUS_MSB_MASK) == 0)) {
-				/* No OV/OC/UV/OT event happened, check next rail */
+				// No OV/OC/UV/OT event happened, check next rail 
+				LOG_WRN("No OV/OC/UV/OT event happened, check next rail");
 				continue;
 			} else {
 				work_info->is_asserted |= BIT(page);
 			}
+			*/
 		}
 
 		sel_msg.event_data_2 = status_word_msb;
@@ -672,6 +733,21 @@ void process_vr_pmalert_ocp_sel(struct k_work *work_item)
 		if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
 			LOG_ERR("Failed to assert VR event log.");
 		};
+
+		for (size_t msg_i = 0; msg_i < status_array_size; ++msg_i) {
+			if ((high_byte == 1 && low_byte == 1) && (msg_i == status_array_size - 2)) {
+				sel_msg.event_data_2 = PMBUS_STATUS_OTHER;
+			} else if ((high_byte == 1) && (msg_i == status_array_size - 1)) {
+				sel_msg.event_data_2 = PMBUS_STATUS_MFR_SPECIFIC;
+			} else {
+				sel_msg.event_data_2 = registers_to_read[msg_i];
+			}
+			sel_msg.event_data_3 = status_info[msg_i];
+
+			if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
+				LOG_ERR("Failed to assert VR event log.");
+			};
+		}
 	}
 }
 
