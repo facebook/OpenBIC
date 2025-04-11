@@ -284,11 +284,20 @@ __weak void APP_GET_CAHNNEL_INFO(ipmi_msg *msg)
 	return;
 }
 
+__weak void frb2_wdt_timer_action(uint8_t action)
+{
+	LOG_INF("frb2 timer action not implement");
+}
+
 void frb2_wdt_handler(void *countdownValue, void *arug1, void *arug2)
 {
 	presentCountdownValue = POINTER_TO_UINT(countdownValue);
 	while (presentCountdownValue > 0) {
 		k_sleep(K_MSEC(FRB2_WDT_DELAY_MS));
+		if (presentCountdownValue < 100) {
+			presentCountdownValue = 0;
+			break;
+		}
 		presentCountdownValue = (presentCountdownValue - 100);
 	}
 
@@ -303,6 +312,7 @@ void frb2_wdt_handler(void *countdownValue, void *arug1, void *arug2)
 		LOG_ERR("Failed to assert FRB2 watchdog timeout event log.");
 	};
 #endif
+	frb2_wdt_timer_action(timerAction);
 }
 
 void init_frb2_wdt_thread(int16_t initCountdownValue)
@@ -369,15 +379,13 @@ __weak void APP_SET_WATCHDOG_TIMER(ipmi_msg *msg)
 	// Compared with Timer Use Expiration flags clear
 	timerUseExpireFlags &= ~(timerUseExpireFlagsClear);
 
-
 	setCountdownValue =
 		(uint16_t)(initCountdownValueMsb) << 8 | (uint16_t)(initCountdownValueLsb);
 
 	if (frb2_wdt_tid != NULL && strcmp(k_thread_state_str(frb2_wdt_tid), "dead") != 0) {
 		abort_frb2_wdt_thread();
 		isWdtSet = false;
-	}
-	else {
+	} else {
 		presentCountdownValue = setCountdownValue;
 		LOG_INF("frb2 wdt set!");
 		isWdtSet = true;
