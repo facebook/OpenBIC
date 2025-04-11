@@ -228,11 +228,10 @@ bool get_fru_info_element(telemetry_info *telemetry_info, char **fru_element,
 bool set_bootstrap_element(uint8_t bootstrap_pin, uint8_t user_setting_level)
 {
 	uint8_t change_setting_value;
-	uint8_t drive_index_level =
-		(user_setting_level == 0x00) ? DRIVE_INDEX_LEVEL_LOW : DRIVE_INDEX_LEVEL_HIGH;
+	uint8_t drive_index_level = user_setting_level;
 	bootstrap_mapping_register bootstrap_item;
 	if (!set_bootstrap_table_and_user_settings(bootstrap_pin, &change_setting_value,
-						   drive_index_level, false)) {
+						   drive_index_level, false, false)) {
 		LOG_ERR("set bootstrap_table[%02x]:%d failed", bootstrap_pin, drive_index_level);
 		return false;
 	}
@@ -257,10 +256,6 @@ void set_bootstrap_element_handler()
 {
 	if (bootstrap_pin >= STRAP_INDEX_MAX) {
 		LOG_ERR("bootstrap_pin[%02x] is out of range", bootstrap_pin);
-		return;
-	}
-	if (user_setting_level != 0 && user_setting_level != 1) {
-		LOG_ERR("user_setting_level[%d] is out of range", user_setting_level);
 		return;
 	}
 	if (!set_bootstrap_element(bootstrap_pin, user_setting_level)) {
@@ -602,6 +597,27 @@ static bool command_reply_data_handle(void *arg)
 								    FRU_PRODUCT_NAME_REG],
 				       struct_size);
 
+			} break;
+			default:
+				LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
+				data->target_rd_msg.msg_length = 1;
+				data->target_rd_msg.msg[0] = 0xFF;
+				break;
+			}
+		} else if (data->wr_buffer_idx == 2) {
+			uint8_t reg_offset = data->target_wr_msg.msg[0];
+			switch (reg_offset) {
+			case WRITE_STRAP_PIN_VALUE_REG: {
+				int rail = data->target_wr_msg.msg[1];
+				int drive_level = -1;
+				if (!get_bootstrap_change_drive_level(rail, &drive_level)) {
+					LOG_ERR("Can't get_bootstrap_change_drive_level by rail index: %x",
+						rail);
+					data->target_rd_msg.msg[0] = 0xFF;
+				} else {
+					data->target_rd_msg.msg[0] = drive_level;
+				}
+				data->target_rd_msg.msg_length = 1;
 			} break;
 			default:
 				LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
