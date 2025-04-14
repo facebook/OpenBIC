@@ -26,6 +26,8 @@
 #include "plat_isr.h"
 #include "plat_power_seq.h"
 #include "plat_mctp.h"
+#include "plat_pldm_sensor.h"
+#include "util_sys.h"
 
 LOG_MODULE_REGISTER(plat_power_seq);
 
@@ -604,6 +606,25 @@ int check_powers_disabled(int cxl_id, int pwr_stage)
 	return 0;
 }
 
+static bool is_wf_ASIC1_vr_clear_fault_done = false;
+static bool is_wf_ASIC2_vr_clear_fault_done = false;
+
+void clear_wf_ASIC1_vr_faults()
+{
+	//Clear VR_P0V85_ASIC1 fault bit
+	plat_pldm_sensor_clear_vr_fault(ADDR_VR_P0V85_ASIC1, I2C_BUS8, 2);
+	//Clear VR_P0V8_ASIC1 fault bit
+	plat_pldm_sensor_clear_vr_fault(ADDR_VR_P0V8_ASIC1, I2C_BUS8, 2);
+}
+
+void clear_wf_ASIC2_vr_faults()
+{
+	//Clear VR_P0V85_ASIC2 fault bit
+	plat_pldm_sensor_clear_vr_fault(ADDR_VR_P0V85_ASIC2, I2C_BUS3, 2);
+	//Clear VR_P0V8_ASIC2 fault bit
+	plat_pldm_sensor_clear_vr_fault(ADDR_VR_P0V8_ASIC2, I2C_BUS3, 2);
+}
+
 void switch_mux_to_bic(uint8_t value_to_write)
 {
 	uint8_t value = 0x0;
@@ -614,6 +635,22 @@ void switch_mux_to_bic(uint8_t value_to_write)
 		set_ioe_value(ADDR_IOE2, TCA9555_OUTPUT_PORT_REG_0, value);
 	}
 	k_mutex_unlock(&switch_ioe_mux_mutex);
+
+	// Check if AC lost and ASIC1 VR fault bit not clear ,then do clear fault command
+	if (is_ac_lost() && (!is_wf_ASIC1_vr_clear_fault_done) &&
+	    value_to_write == IOE_SWITCH_CXL1_VR_TO_BIC) {
+		is_wf_ASIC1_vr_clear_fault_done = true;
+		k_msleep(1000);
+		clear_wf_ASIC1_vr_faults();
+	}
+
+	// Check if AC lost and ASIC2 VR fault bit not clear ,then do clear fault command
+	if (is_ac_lost() && (!is_wf_ASIC2_vr_clear_fault_done) &&
+	    value_to_write == IOE_SWITCH_CXL2_VR_TO_BIC) {
+		is_wf_ASIC2_vr_clear_fault_done = true;
+		k_msleep(1000);
+		clear_wf_ASIC2_vr_faults();
+	}
 
 	return;
 }
