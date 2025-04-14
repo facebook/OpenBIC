@@ -179,12 +179,12 @@ uint16_t get_sensor_status_for_modbus_cmd(uint8_t status)
 				  1 :
 				  0);
 		WRITE_BIT(val, 9,
-			  (get_threshold_status(SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C) ==
+			  (get_threshold_status(SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C) ==
 			   THRESHOLD_STATUS_NOT_ACCESS) ?
 				  1 :
 				  0);
 		WRITE_BIT(val, 10,
-			  (get_threshold_status(SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C) ==
+			  (get_threshold_status(SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C) ==
 			   THRESHOLD_STATUS_NOT_ACCESS) ?
 				  1 :
 				  0);

@@ -187,6 +187,11 @@ bool fault_led_control(void)
 		return true;
 	}
 
+	if (hsc_fail_check()) {
+		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
+		return true;
+	}
+
 	for (uint8_t i = 0; i < ARRAY_SIZE(fault_led_threshold_sensor); i++) {
 		if (get_threshold_status(fault_led_threshold_sensor[i])) {
 			led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
@@ -194,6 +199,14 @@ bool fault_led_control(void)
 		}
 	}
 
-	//led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
+	// P1 status will not recovery
+	for (uint8_t i = PUMP_FAIL_EMERGENCY_BUTTON; i <= PUMP_FAIL_CLOSE_PUMP; i++) {
+		if ((get_status_flag(STATUS_FLAG_FAILURE) >> i) & 0x01) {
+			led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
+			return true;
+		}
+	}
+
+	led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
 	return false;
 }
