@@ -200,4 +200,13 @@ typedef struct _aegis_cpld_info_ {
 
 } aegis_cpld_info;
 
+typedef struct {
+	uint8_t cpld_offset;
+	const char *reg_name;
+	const char *bit_name[8];
+} cpld_bit_name_table_t;
+
+const char *get_cpld_reg_name(uint8_t cpld_offset);
+const char *get_cpld_bit_name(uint8_t cpld_offset, uint8_t bit_pos);
+
 #endif
