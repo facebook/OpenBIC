@@ -230,10 +230,10 @@
 	gpio_name_to_num(Reserve_GPIOU1) \
 	gpio_name_to_num(Reserve_GPIOU2) \
 	gpio_name_to_num(Reserve_GPIOU3) \
-	gpio_name_to_num(Reserve_GPIOU4) \
-	gpio_name_to_num(Reserve_GPIOU5) \
-	gpio_name_to_num(Reserve_GPIOU6) \
-	gpio_name_to_num(Reserve_GPIOU7)
+	gpio_name_to_num(IOE1_INT_R_N) \
+	gpio_name_to_num(IOE2_INT_R_N) \
+	gpio_name_to_num(IOE3_INT_R_N) \
+	gpio_name_to_num(IOE4_INT_R_N)
 
 // clang-format on
 
