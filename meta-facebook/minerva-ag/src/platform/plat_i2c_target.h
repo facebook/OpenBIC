@@ -36,6 +36,10 @@
 #define STRAP_CAPABILTITY_REG 0x08
 #define WRITE_STRAP_PIN_VALUE_REG 0x09
 
+#define I2C_BRIDGE_COMMAND_REG 0x40
+#define I2C_BRIDGE_COMMAND_STATUS_REG 0x41
+#define I2C_BRIDGE_COMMAND_RESPONSE_REG 0x42
+
 #define FRU_BOARD_PART_NUMBER_REG 0x60
 #define FRU_BOARD_SERIAL_NUMBER_REG 0x61
 #define FRU_BOARD_PRODUCT_NAME_REG 0x62
@@ -51,6 +55,12 @@
 #define FRU_PRODUCT_ASSET_TAG_REG 0x74
 #define FRU_PRODUCT_CUSTOM_DATA_1_REG 0x75
 #define FRU_PRODUCT_CUSTOM_DATA_2_REG 0x76
+
+typedef enum i2c_bridge_command_error {
+	I2C_BRIDGE_COMMAND_SUCCESS = 0,
+	I2C_BRIDGE_COMMAND_IN_PROCESS,
+	I2C_BRIDGE_COMMAND_FAILURE,
+} i2c_bridge_command_error;
 
 void update_sensor_data_2_5_table(void);
 void update_sensor_data_8_table(void);
