@@ -57,11 +57,24 @@ typedef struct {
 	uint8_t output_val;
 } IOE_CFG;
 
+typedef struct _add_vr_sel_info {
+	bool is_init;
+	uint8_t vr_num;
+	uint8_t vr_i2c_bus;
+	uint8_t vr_addr;
+	uint8_t page_cnt;
+	struct k_work_delayable add_sel_work;
+} add_vr_sel_info;
+
 void ISR_MB_DC_STAGUS_CHAGNE();
 void ISR_MB_PCIE_RST();
 void ISR_P3V3_E1S_PWR_CHANGE();
 void ISR_P12V_E1S_PWR_CHANGE();
 void ISR_CXL_PG_ON();
 void ISR_SET_CXL_LED();
+void ISR_IOE1_INT();
+
+void init_vr_event_work();
+void process_vr_event_handler(struct k_work *work_item);
 
 #endif

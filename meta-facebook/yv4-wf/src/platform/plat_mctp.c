@@ -26,38 +26,6 @@
 
 LOG_MODULE_REGISTER(plat_mctp);
 
-#define MCTP_MSG_TYPE_SHIFT 0
-#define MCTP_MSG_TYPE_MASK 0x7F
-#define MCTP_IC_SHIFT 7
-#define MCTP_IC_MASK 0x80
-
-/* i2c dev bus*/
-#define I2C_BUS_CXL1 0x01
-#define I2C_BUS_CXL2 0x03
-
-// i2c dev address
-#define I2C_ADDR_BIC 0x40
-#define I2C_ADDR_CXL1 0x64
-#define I2C_ADDR_CXL2 0x64
-
-// i3c dev bus
-#define I3C_BUS_SD_BIC 0
-
-// i3c dev address
-#define I3C_ADDR_SD_BIC 0x8
-
-// mctp endpoint
-#define MCTP_EID_BMC 0x08
-
-// dynamic allocate eid
-#define MCTP_EID_SD_BIC 0
-#define MCTP_EID_CXL1 0
-#define MCTP_EID_CXL2 0
-
-#define UNKNOWN_CXL_EID 0xFF
-
-#define SET_DEV_ENDPOINT_STACK_SIZE 1024
-
 uint8_t plat_eid = MCTP_DEFAULT_ENDPOINT;
 
 K_THREAD_STACK_DEFINE(set_dev_endpoint_stack, SET_DEV_ENDPOINT_STACK_SIZE);
@@ -88,7 +56,7 @@ uint8_t MCTP_SUPPORTED_MESSAGES_TYPES[] = {
 	TYPE_PLDM,
 };
 
-static mctp *find_mctp_by_bus(uint8_t bus)
+mctp *find_mctp_by_bus(uint8_t bus)
 {
 	uint8_t i;
 	for (i = 0; i < ARRAY_SIZE(plat_mctp_port); i++) {
