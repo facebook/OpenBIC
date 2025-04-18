@@ -787,7 +787,7 @@ static bool check_pump_tach_too_low()
 		    SENSOR_READ_4BYTE_ACUR_SUCCESS)
 			return true;
 
-		if (tmp >= 500)
+		if (tmp >= 1000)
 			return false;
 	}
 
@@ -798,6 +798,9 @@ static void pump_tach_too_low_behavior()
 {
 	static bool is_low = true;
 	if (check_pump_tach_too_low()) {
+		if (k_work_cancel_delayable(&flow_rate_ready_worker) != 0) {
+			LOG_ERR("cancel flow ready delay work fail");
+		}
 		flow_rate_ready_flag = false;
 		is_low = true;
 	} else if (is_low) {
@@ -1104,7 +1107,7 @@ void pump_change_threshold(uint8_t sensor_num, uint8_t duty)
 
 	uint32_t standard_val = get_pump_standard_rpm(duty);
 	p->lcr = standard_val * 0.75;
-	p->ucr = standard_val * 1.25;
+	p->ucr = (standard_val) ? (standard_val * 1.25) : 1000;
 }
 
 void check_bpb_hsc_status(void)
