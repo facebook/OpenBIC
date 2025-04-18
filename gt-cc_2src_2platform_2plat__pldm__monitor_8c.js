@@ -1,0 +1,26 @@
+var gt_cc_2src_2platform_2plat__pldm__monitor_8c =
+[
+    [ "PLDM_OEM_ENTITY_LED", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#a3ab9b113a17dc3e4f7fc1c00c714312b", null ],
+    [ "PLDM_OEM_ENTITY_NIC_TYPE", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#ab6830a5571a39a20d393b1413e6969f0", null ],
+    [ "PLDM_OEM_ENTITY_SSD_LED", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#a38fd208a9a673d14f848086a6f110faa", null ],
+    [ "LOG_MODULE_REGISTER", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#ab600109577db3b309bf8d478928f763e", null ],
+    [ "nic_present_check", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#a2d7a050a339d78ccff5502c846b42676", null ],
+    [ "plat_pldm_get_state_effecter_state_handler", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#ac4a681ad032e3d0e1ccf586c64c26fcc", null ],
+    [ "plat_pldm_load_state_effecter_table", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#a6b06d91ebd827a3bcde31100cbdbe66b", null ],
+    [ "plat_pldm_set_state_effecter_state_handler", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#afe5454177c2aaa2fefb7b3c373e999c6", null ],
+    [ "ssd_alert_check", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#a8b3119c47402b4fe0b5213572ee872f3", null ],
+    [ "ssd_alert_check_handler", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#af2af1a4af857bc3dad645374da7eac50", null ],
+    [ "ssd_alert_check_ina230", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#a1ed1a838a6383ee49678d42a743f24d9", null ],
+    [ "ssd_alert_check_isl28022", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#a81d800f7644848f5872c28e0469b8aec", null ],
+    [ "ssd_present_check", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#ac6fcf6e049e9cf049f2440341d6eb56a", null ],
+    [ "vr_alert_check", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#aa57a8ad64778cfe7500d2bfb89868475", null ],
+    [ "vr_status_mfr_specific_check_handler", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#ac7ba29cc4e89dd8292a9da12bc00da9b", null ],
+    [ "e1s_prsnt_pin", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#a434b49d22f6484020b4330af3f4dff10", null ],
+    [ "e1s_sensor_table", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#a3b143b41837edaf864d4f2d44651a341", null ],
+    [ "nic_power_ic_sensor_table", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#abb0df1379f7a05066ce3217400cc28e9", null ],
+    [ "nic_prsnt_pin", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#a7336a454cac82560ec621a442e9e7d54", null ],
+    [ "pex_1v25_power_ic_sensor_table", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#aa01a1c1a6b09dd2c153b47d9cecc5d7e", null ],
+    [ "pex_sensor_num_table", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#a8e383c61faec0fff6c3c8c03fe17ce68", null ],
+    [ "plat_state_effecter_table", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#a1f71acac200f47dbacf87f09b53c0555", null ],
+    [ "ssd_power_ic_sensor_table", "gt-cc_2src_2platform_2plat__pldm__monitor_8c.html#a553c8227278f2d4f88877f0e8e3b0b52", null ]
+];

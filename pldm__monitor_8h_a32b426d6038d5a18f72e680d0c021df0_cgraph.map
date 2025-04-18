@@ -1,0 +1,11 @@
+<map id="plat_pldm_set_effecter_state_host_power_control" name="plat_pldm_set_effecter_state_host_power_control">
+<area shape="rect" id="node1" title=" " alt="" coords="5,99,184,141"/>
+<area shape="rect" id="node2" href="$yv4-sd_2src_2platform_2plat__pldm__monitor_8c.html#a26df8b0ca57241bf31ed8b07835522d7" title=" " alt="" coords="232,5,359,32"/>
+<area shape="rect" id="node3" href="$yv4-sd_2src_2platform_2plat__pldm__monitor_8c.html#a6e3d6f6774df39ec107b3bb78698ec02" title=" " alt="" coords="240,56,351,83"/>
+<area shape="rect" id="node5" href="$yv4-sd_2src_2platform_2plat__pldm__monitor_8c.html#a6c7b424d5bab17f24bc5218ff3ffa7ba" title=" " alt="" coords="240,107,351,133"/>
+<area shape="rect" id="node6" href="$yv4-sd_2src_2platform_2plat__pldm__monitor_8c.html#a989684b5d8cbd274d16f1c62c638f95c" title=" " alt="" coords="407,129,560,170"/>
+<area shape="rect" id="node9" href="$yv4-sd_2src_2platform_2plat__pldm__monitor_8c.html#a40cebc152430645539c7914934508b41" title=" " alt="" coords="233,208,358,235"/>
+<area shape="rect" id="node4" href="$power__status_8c.html#a647e7f9c1247d6a1785d9b9502e7fd29" title=" " alt="" coords="429,67,537,93"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="608,136,729,163"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="777,136,920,163"/>
+</map>
