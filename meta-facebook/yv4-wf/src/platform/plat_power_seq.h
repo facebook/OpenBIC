@@ -117,5 +117,6 @@ void set_cxl2_vr_access_delayed_status();
 bool cxl1_vr_access(uint8_t sensor_num);
 bool cxl2_vr_access(uint8_t sensor_num);
 void create_check_cxl_ready_thread();
+void plat_pldm_sensor_clear_vr_fault(uint8_t vr_addr, uint8_t vr_bus, uint8_t page_cnt);
 
 #endif
