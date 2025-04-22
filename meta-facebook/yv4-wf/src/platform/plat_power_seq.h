@@ -33,7 +33,7 @@
 #define P1V8_POWER_OFF_DELAY_MSEC 3500
 
 #define POWER_SEQ_CTRL_STACK_SIZE 1000
-
+#define MONITOR_INTERVAL_SECONDS 5
 typedef struct _cxl_power_control_gpio {
 	int enclk_100m_osc;
 	int p075v_asic_en;
@@ -93,6 +93,13 @@ enum POWER_OFF_STAGE {
 	MAX_POWER_OFF_STAGES,
 };
 
+typedef struct _add_sel_info {
+	bool is_init;
+	uint8_t event_type;
+	uint8_t assert_type;
+	struct k_work_delayable add_sel_work;
+} add_sel_info;
+
 void set_mb_dc_status(uint8_t gpio_num);
 void enable_asic1_rst();
 void enable_asic2_rst();
@@ -117,5 +124,7 @@ void set_cxl2_vr_access_delayed_status();
 bool cxl1_vr_access(uint8_t sensor_num);
 bool cxl2_vr_access(uint8_t sensor_num);
 void create_check_cxl_ready_thread();
+void cxl1_heartbeat_monitor_handler();
+void cxl2_heartbeat_monitor_handler();
 
 #endif
