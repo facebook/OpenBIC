@@ -2591,7 +2591,7 @@ pldm_sensor_info plat_pldm_sensor_mb_temp_table[] = {
 			.port = I2C_BUS1,
 			.target_addr = ADDR_NVME,
 			.offset = OFFSET_NVME_TEMP,
-			.access_checker = post_access,
+			.access_checker = bootdrive_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -3008,7 +3008,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			.port = I2C_BUS1,
 			.target_addr = ADDR_E1S_BOOT_INA233,
 			.offset = PMBUS_READ_VOUT,
-			.access_checker = post_access,
+			.access_checker = bootdrive_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -3145,7 +3145,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			.port = I2C_BUS1,
 			.target_addr = ADDR_E1S_BOOT_INA233,
 			.offset = PMBUS_READ_IOUT,
-			.access_checker = post_access,
+			.access_checker = bootdrive_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -3281,7 +3281,7 @@ pldm_sensor_info plat_pldm_sensor_ina233_table[] = {
 			.port = I2C_BUS1,
 			.target_addr = ADDR_E1S_BOOT_INA233,
 			.offset = PMBUS_READ_POUT,
-			.access_checker = post_access,
+			.access_checker = bootdrive_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -7002,4 +7002,36 @@ uint8_t plat_pldm_sensor_get_ina_dev()
 	// since sq52205 does not support MFR_ID, we set it as default
 	LOG_INF("use SQ52205");
 	return sensor_dev_sq52205;
+}
+
+bool bootdrive_access(uint8_t sensor_num)
+{
+	int retry = 5;
+	I2C_MSG msg = { 0 };
+	bool bootdrive_exist = false;
+
+	// read CPLD to check if bootdrive exist
+	msg.bus = I2C_BUS3;
+	msg.target_addr = ADDR_CPLD_IOE;
+	msg.tx_len = 1;
+	msg.rx_len = 1;
+	msg.data[0] = OFFSET_CARD_PRSNT;
+
+	if (i2c_master_read(&msg, retry) != 0) {
+		LOG_ERR("Failed to get BootDrive PRSNT from CPLD IOE");
+		return true;
+	} else {
+		bootdrive_exist = !(msg.data[0] & (1 << 6));
+		LOG_ERR("Return Value is %x, Bootdrive %s", msg.data[0], bootdrive_exist ? "exist" : "does not exist");
+	}
+
+	// If the bootdrice exist, wait for post_completed then start to monitor
+	if(bootdrive_exist)
+	{
+		return post_access(sensor_num);
+		//return get_post_status();
+	}
+
+	// If the bootdrive does not exist, let the sensor do not stock in init status
+	return true;
 }
