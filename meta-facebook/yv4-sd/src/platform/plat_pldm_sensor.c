@@ -7022,16 +7022,15 @@ bool bootdrive_access(uint8_t sensor_num)
 		return true;
 	} else {
 		bootdrive_exist = !(msg.data[0] & (1 << 6));
-		LOG_ERR("Return Value is %x, Bootdrive %s", msg.data[0], bootdrive_exist ? "exist" : "does not exist");
 	}
 
 	// If the bootdrice exist, wait for post_completed then start to monitor
 	if(bootdrive_exist)
 	{
 		return post_access(sensor_num);
-		//return get_post_status();
 	}
 
 	// If the bootdrive does not exist, let the sensor do not stock in init status
+	LOG_ERR("Return Value is %x, Bootdrive does not exist", msg.data[0]);
 	return true;
 }
