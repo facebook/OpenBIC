@@ -88,7 +88,7 @@ bool post_quick_sensor_read(sensor_cfg *cfg, void *args, int *reading)
 
 	if (ret) {
 		float val = 0;
-		sensor_val *sval = (sensor_val *)reading;
+		const sensor_val *sval = (sensor_val *)reading;
 		val = (sval->integer * 1000 + sval->fraction) / 1000.0;
 
 		if ((val > 0) && (val < 3.1))
@@ -1344,7 +1344,7 @@ uint16_t get_sensor_reading_to_modbus_val(uint8_t sensor_num, int8_t exp, int8_t
 		LOG_ERR("0x%02x get sensor cache fail", sensor_num);
 		return 0;
 	}
-	sensor_val *sval = (sensor_val *)&reading;
+	const sensor_val *sval = (sensor_val *)&reading;
 	float val = (sval->integer * 1000 + sval->fraction) / 1000;
 	float r = pow_of_10(exp);
 	return val / scale / r; // scale
@@ -1367,7 +1367,7 @@ uint8_t get_sensor_reading_to_real_val(uint8_t sensor_num, float *val)
 		return status;
 	}
 
-	sensor_val *sval = (sensor_val *)&reading;
+	const sensor_val *sval = (sensor_val *)&reading;
 	*val = (sval->integer * 1000 + sval->fraction) / 1000.0;
 
 	return status;
@@ -1436,7 +1436,7 @@ static float calculate_total_val(uint8_t arr[], uint8_t size)
 	float total = 0;
 	for (uint8_t i = 0; i < size; i++) {
 		float tmp = 0;
-		sensor_cfg *cfg = get_common_sensor_cfg_info(arr[i]);
+		const sensor_cfg *cfg = get_common_sensor_cfg_info(arr[i]);
 		if (cfg->cache_status != SENSOR_READ_4BYTE_ACUR_SUCCESS)
 			continue;
 		if (get_sensor_reading_to_real_val(arr[i], &tmp) == SENSOR_READ_4BYTE_ACUR_SUCCESS)

@@ -90,7 +90,7 @@ void pump_board_init()
 	// init pump board 1, 2 and 3
 	static uint8_t count = 0;
 	uint16_t sen_nums = 0;
-	uint8_t *sen_tbl = NULL;
+	const uint8_t *sen_tbl = NULL;
 	uint8_t dvt_xdp_addr = 0;
 	xdp710_init_arg *xdp_init_arr = NULL;
 

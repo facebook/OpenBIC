@@ -117,7 +117,7 @@ void hsc_xdp710_pwr_ctrl(sensor_cfg *cfg, uint8_t xdp710_reg, uint8_t state)
 static bool hsc_reset(uint8_t sensor_num)
 {
 	// Check sensor information in sensor config table
-	sensor_cfg const *cfg = get_common_sensor_cfg_info(sensor_num);
+	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
 	if (cfg == NULL) {
 		LOG_ERR("Fail when getting pump sensor config, 0x%x", sensor_num);
 		return false;
