@@ -29,6 +29,7 @@
 #include "plat_isr.h"
 #include "plat_hwmon.h"
 #include "plat_event.h"
+#include "plat_log.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -108,6 +109,11 @@ void ISR_GPIO_FM_PLD_UBC_EN_R()
 
 	if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) {
 		plat_clock_init();
+		plat_set_dc_on_log(LOG_ASSERT);
+	}
+
+	if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_LOW) {
+		plat_set_dc_on_log(LOG_DEASSERT);
 	}
 
 	k_timer_start(&check_ubc_delayed_timer, K_MSEC(1000), K_NO_WAIT);

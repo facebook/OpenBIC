@@ -50,6 +50,8 @@ typedef struct __attribute__((packed)) _plat_err_log_mapping {
 enum LOG_ERROR_TRIGGER_CAUSE {
 	CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE = 0b100,
 	POWER_ON_SEQUENCE_TRIGGER_CAUSE = 0b001,
+	AC_ON_TRIGGER_CAUSE = 0b010,
+	DC_ON_TRIGGER_CAUSE = 0b011,
 	MAX_TRIGGER_CAUSE = 0b1000, //trigger cause maxium 3 bit
 };
 

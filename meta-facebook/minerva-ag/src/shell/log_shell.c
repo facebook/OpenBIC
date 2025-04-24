@@ -53,16 +53,36 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 		plat_err_log_mapping log = { 0 };
 		plat_log_read((uint8_t *)&log, AEGIS_FRU_LOG_SIZE, i + 1);
 
+		uint8_t err_type = (log.err_code >> 13) & 0x07;
+
+		shell_print(shell, "index %d:", log.index);
+		shell_print(shell, "error_code: 0x%x", log.err_code);
+
 		uint8_t cpld_offset = log.err_code & 0xFF;
 		uint8_t bit_position = (log.err_code >> 8) & 0x07;
 
 		const char *reg_name = get_cpld_reg_name(cpld_offset);
 		const char *bit_name = get_cpld_bit_name(cpld_offset, bit_position);
 
-		shell_print(shell, "index %d:", log.index);
-		shell_print(shell, "error_code: 0x%x", log.err_code);
-		shell_print(shell, "\t%s", reg_name);
-		shell_print(shell, "\t\t%s", bit_name);
+		switch (err_type) {
+		case CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE:
+			shell_print(shell, "\t%s", reg_name);
+			shell_print(shell, "\t\t%s", bit_name);
+			break;
+		case POWER_ON_SEQUENCE_TRIGGER_CAUSE:
+			shell_print(shell, "\tPOWER_ON_SEQUENCE_TRIGGER");
+			break;
+		case AC_ON_TRIGGER_CAUSE:
+			shell_print(shell, "\tAC_ON");
+			break;
+		case DC_ON_TRIGGER_CAUSE:
+			shell_print(shell, "\tDC_ON_DETECTED");
+			break;
+		default:
+			shell_print(shell, "Unknown error type: %d", err_type);
+			break;
+		}
+
 		shell_print(shell, "sys_time: %lld ms", log.sys_time);
 		shell_print(shell, "error_data:");
 		shell_hexdump(shell, log.error_data, sizeof(log.error_data));
