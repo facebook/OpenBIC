@@ -241,7 +241,7 @@ bool system_failure_recovery()
 }
 
 /* check status for rpu ready */
-bool rpu_ready_recovery()
+bool check_rpu_ready()
 {
 	if (get_status_flag(STATUS_FLAG_LEAK))
 		return false;
@@ -253,7 +253,7 @@ bool rpu_ready_recovery()
 	};
 
 	for (uint8_t i = 0; i < ARRAY_SIZE(rpu_recovery_table); i++) {
-		if ((get_status_flag(STATUS_FLAG_FAILURE) >> i) & 0x01)
+		if ((get_status_flag(STATUS_FLAG_FAILURE) >> rpu_recovery_table[i]) & 0x01)
 			return false;
 	}
 
@@ -1063,7 +1063,6 @@ void threshold_poll_init()
 		LOG_INF("threshold thread start!");
 		is_init = 1;
 		set_status_flag(STATUS_FLAG_SYSTEM_READY, 0, 1);
-		set_all_rpu_ready_pin_normal();
 	}
 }
 
@@ -1218,8 +1217,13 @@ void plat_sensor_poll_post()
 	// control fault led
 	fault_led_control();
 
-	if (!rpu_ready_recovery())
+	// rpu ready control
+	if (!check_rpu_ready())
 		deassert_all_rpu_ready_pin();
+	else if (check_pump_tach_too_low())
+		deassert_all_rpu_ready_pin();
+	else
+		set_all_rpu_ready_pin_normal();
 
 	return;
 }
