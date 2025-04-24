@@ -140,7 +140,10 @@ bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading)
 #define EEPROM_MAX_WRITE_TIME 5 // the BR24G512 eeprom max write time is 3.5 ms
 #define AEGIS_CPLD_ADDR (0x4C >> 1)
 #define VR_PRE_READ_ARG(idx)                                                                       \
-	{ .mutex = vr_mutex + idx, .vr_page = 0x0 }, { .mutex = vr_mutex + idx, .vr_page = 0x1 }
+	{ .mutex = vr_mutex + idx, .vr_page = 0x0 },                                               \
+	{                                                                                          \
+		.mutex = vr_mutex + idx, .vr_page = 0x1                                            \
+	}
 
 vr_pre_proc_arg vr_pre_read_args[] = {
 	{ .mutex = vr_mutex + 0, .vr_page = 0x0 },  { .mutex = vr_mutex + 0, .vr_page = 0x1 },
@@ -473,15 +476,15 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 
 // clang-format off
 temp_threshold_mapping_sensor temp_index_threshold_type_table[] = {
-	{ ON_DIE_1_2_REMOTE_1_HIGH_LIMIT, REMOTE_1_HIGH_LIMIT, ASIC_DIE_ATH_SENSOR_0_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_0_TEMP_REMOTE1_HIGH_LIM" },
-	{ ON_DIE_1_2_REMOTE_1_LOW_LIMIT, REMOTE_1_LOW_LIMIT, ASIC_DIE_ATH_SENSOR_0_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_0_TEMP_REMOTE1_LOW_LIM" },
-	{ ON_DIE_1_2_REMOTE_2_HIGH_LIMIT, REMOTE_2_HIGH_LIMIT, ASIC_DIE_ATH_SENSOR_1_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_1_TEMP_REMOTE2_HIGH_LIM" },
-	{ ON_DIE_1_2_REMOTE_2_LOW_LIMIT, REMOTE_2_LOW_LIMIT, ASIC_DIE_ATH_SENSOR_1_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_1_TEMP_REMOTE2_LOW_LIM" },
+	{ DIE_ATH_0_N_OWL_REMOTE_1_HIGH_LIMIT, REMOTE_1_HIGH_LIMIT, ASIC_DIE_ATH_SENSOR_0_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_0_TEMP_HIGH_LIM" },
+	{ DIE_ATH_0_N_OWL_REMOTE_1_LOW_LIMIT, REMOTE_1_LOW_LIMIT, ASIC_DIE_ATH_SENSOR_0_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_0_TEMP_LOW_LIM" },
+	{ DIE_ATH_1_S_OWL_REMOTE_1_HIGH_LIMIT, REMOTE_1_HIGH_LIMIT, ASIC_DIE_ATH_SENSOR_1_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_1_TEMP_HIGH_LIM" },
+	{ DIE_ATH_1_S_OWL_REMOTE_1_LOW_LIMIT, REMOTE_1_LOW_LIMIT, ASIC_DIE_ATH_SENSOR_1_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_1_TEMP_LOW_LIM" },
 
-	{ ON_DIE_3_4_REMOTE_1_HIGH_LIMIT, REMOTE_1_HIGH_LIMIT, ASIC_DIE_N_OWL_TEMP_C, "CB_ASIC_DIE_N_OWL_TEMP_REMOTE1_HIGH_LIM" },
-	{ ON_DIE_3_4_REMOTE_1_LOW_LIMIT, REMOTE_1_LOW_LIMIT, ASIC_DIE_N_OWL_TEMP_C, "CB_ASIC_DIE_N_OWL_TEMP_REMOTE1_LOW_LIM" },
-	{ ON_DIE_3_4_REMOTE_2_HIGH_LIMIT, REMOTE_2_HIGH_LIMIT, ASIC_DIE_S_OWL_TEMP_C, "CB_ASIC_DIE_S_OWL_TEMP_REMOTE2_HIGH_LIM" },
-	{ ON_DIE_3_4_REMOTE_2_LOW_LIMIT, REMOTE_2_LOW_LIMIT, ASIC_DIE_S_OWL_TEMP_C, "CB_ASIC_DIE_S_OWL_TEMP_REMOTE2_LOW_LIM" },
+	{ DIE_ATH_0_N_OWL_REMOTE_2_HIGH_LIMIT, REMOTE_2_HIGH_LIMIT, ASIC_DIE_N_OWL_TEMP_C, "CB_ASIC_DIE_N_OWL_TEMP_HIGH_LIM" },
+	{ DIE_ATH_0_N_OWL_REMOTE_2_LOW_LIMIT, REMOTE_2_LOW_LIMIT, ASIC_DIE_N_OWL_TEMP_C, "CB_ASIC_DIE_N_OWL_TEMP_LOW_LIM" },
+	{ DIE_ATH_1_S_OWL_REMOTE_2_HIGH_LIMIT, REMOTE_2_HIGH_LIMIT, ASIC_DIE_S_OWL_TEMP_C, "CB_ASIC_DIE_S_OWL_TEMP_HIGH_LIM" },
+	{ DIE_ATH_1_S_OWL_REMOTE_2_LOW_LIMIT, REMOTE_2_LOW_LIMIT, ASIC_DIE_S_OWL_TEMP_C, "CB_ASIC_DIE_S_OWL_TEMP_LOW_LIM" },
 	
 	{ TOP_INLET_LOW_LIMIT, LOCAL_LOW_LIMIT, TOP_INLET_TEMP_C, "CB_TOP_INLET_TEMP_LOW_LIM" },
 	{ TOP_INLET_HIGH_LIMIT, LOCAL_HIGH_LIMIT, TOP_INLET_TEMP_C, "CB_TOP_INLET_TEMP_HIGH_LIM" },
@@ -1916,10 +1919,10 @@ void init_temp_alert_mode(void)
 
 void init_temp_limit(void)
 {
-	uint8_t followed_ucr_lcr_limit_temp[] = { ON_DIE_1_2_REMOTE_1_HIGH_LIMIT,
-						  ON_DIE_1_2_REMOTE_2_HIGH_LIMIT,
-						  ON_DIE_3_4_REMOTE_1_HIGH_LIMIT,
-						  ON_DIE_3_4_REMOTE_2_HIGH_LIMIT };
+	uint8_t followed_ucr_lcr_limit_temp[] = { DIE_ATH_0_N_OWL_REMOTE_1_HIGH_LIMIT,
+						  DIE_ATH_1_S_OWL_REMOTE_1_HIGH_LIMIT,
+						  DIE_ATH_0_N_OWL_REMOTE_2_HIGH_LIMIT,
+						  DIE_ATH_1_S_OWL_REMOTE_2_HIGH_LIMIT };
 
 	uint8_t followed_ucr_only_limit_temp[] = { TOP_INLET_HIGH_LIMIT, TOP_OUTLET_HIGH_LIMIT,
 						   BOT_INLET_HIGH_LIMIT, BOT_OUTLET_HIGH_LIMIT };
