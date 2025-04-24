@@ -1136,7 +1136,7 @@ void load_sb_temp_sensor_config()
 		}
 
 		mfr_id = msg.data[0];
-		printf("Sensor board temp module 0x%x mfr_id: %x\n", tmp421_config_table[index].num,
+		LOG_INF("Sensor board temp module 0x%x mfr_id: %x\n", tmp421_config_table[index].num,
 		       mfr_id);
 
 		if (mfr_id == TMP421_MFR_ID)
@@ -1189,6 +1189,9 @@ static void change_dvt_sensor_config()
 		case SENSOR_NUM_FB_13_FAN_TACH_RPM:
 		case SENSOR_NUM_FB_14_FAN_TACH_RPM:
 			p->arg0 = NCT7363_16_PORT;
+			// disable alert blink
+			if (!nct7363_write(p, NCT7363_GPIO03_GPIO07_ALERT_LED_REG_OFFSET, 0))
+				LOG_INF("Write fan_board_fault pwm fail\n");
 			break;
 		}
 	}
@@ -1268,7 +1271,7 @@ static void change_brick_sensor_config()
 	}
 
 	mfr_id = (msg.data[0] << 8) | msg.data[1];
-	printf("Brick module mfr_id: %x\n", mfr_id);
+	LOG_INF("Brick module mfr_id: %x\n", mfr_id);
 
 	if (mfr_id == E50SN12051_MFR_ID)
 		return;
