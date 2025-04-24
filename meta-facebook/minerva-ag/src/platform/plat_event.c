@@ -350,6 +350,25 @@ void check_ubc_delayed(struct k_work *work)
 	}
 }
 
+void plat_set_ac_on_log()
+{
+	uint16_t error_code = (AC_ON_TRIGGER_CAUSE << 13);
+	error_log_event(error_code, LOG_ASSERT);
+	LOG_ERR("Generated AC on error code: 0x%x", error_code);
+}
+
+void plat_set_dc_on_log(bool is_assert)
+{
+	uint16_t error_code = (DC_ON_TRIGGER_CAUSE << 13);
+	error_log_event(error_code, (is_assert ? LOG_ASSERT : LOG_DEASSERT));
+
+	if (is_assert == LOG_ASSERT) {
+		LOG_ERR("Generated DC on error code: 0x%x", error_code);
+	} else if (is_assert == LOG_DEASSERT) {
+		LOG_INF("DC on error code deasserted");
+	}
+}
+
 void get_vr_vout_handler(struct k_work *work)
 {
 	vr_vout_default_settings_init();

@@ -166,6 +166,8 @@
 
 void check_ubc_delayed_timer_handler(struct k_timer *timer);
 void check_ubc_delayed(struct k_work *work);
+void plat_set_ac_on_log();
+void plat_set_dc_on_log(bool is_assert);
 void check_cpld_polling_alert_status();
 void set_cpld_polling_enable_flag(bool status);
 bool get_cpld_polling_enable_flag(void);
