@@ -94,6 +94,18 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 		}
 	}
 
+	uint8_t setting_data_for_thermaltrip = 0xFF;
+	if (!get_user_settings_thermaltrip_from_eeprom(&setting_data_for_thermaltrip,
+						       sizeof(setting_data_for_thermaltrip))) {
+		LOG_ERR("get thermaltrip user settings failed");
+	} else {
+		if (setting_data_for_thermaltrip != 0xFF) {
+			shell_print(shell, "thermaltrip                            val=%s",
+				    (setting_data_for_thermaltrip ? "enable" : "disable"));
+			config_count++;
+		}
+	}
+
 	if (!config_count) {
 		shell_print(shell, "no perm parameter exist");
 	}

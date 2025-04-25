@@ -154,6 +154,12 @@ typedef struct bootstrap_user_settings_struct {
 
 extern bootstrap_user_settings_struct bootstrap_user_settings;
 
+typedef struct thermaltrip_user_settings_struct {
+	uint8_t thermaltrip_user_setting_value;
+} thermaltrip_user_settings_struct;
+
+extern thermaltrip_user_settings_struct thermaltrip_user_settings;
+
 typedef struct vr_mapping_sensor {
 	uint8_t index;
 	uint8_t sensor_id;
@@ -269,6 +275,8 @@ bool vr_status_name_get(uint8_t rail, uint8_t **name);
 bool vr_status_enum_get(uint8_t *name, uint8_t *num);
 bool vr_vout_default_settings_init(void);
 bool vr_vout_user_settings_init(void);
+bool get_user_settings_thermaltrip_from_eeprom(void *user_settings, uint8_t data_length);
+bool set_thermaltrip_user_settings(bool thermaltrip_enable, bool is_perm);
 bool strap_name_get(uint8_t rail, uint8_t **name);
 bool strap_enum_get(uint8_t *name, uint8_t *num);
 void init_temp_alert_mode(void);

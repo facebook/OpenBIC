@@ -45,45 +45,50 @@ void cmd_thermaltrip_status_get(const struct shell *shell, size_t argc, char **a
 	shell_print(shell, "thermaltrip switch %s", (msg.data[0]) ? "enable" : "disable");
 }
 
-static uint8_t switch_set(const struct shell *shell, bool is_enable)
-{
-	I2C_MSG msg = { 0 };
-
-	msg.bus = I2C_BUS_CPLD;
-	msg.target_addr = AEGIS_CPLD_ADDR;
-	msg.tx_len = 2;
-	msg.data[0] = CPLD_THERMALTRIP_SWITCH_ADDR;
-	msg.data[1] = (is_enable) ? 1 : 0;
-
-	if (i2c_master_write(&msg, 3)) {
-		shell_error(shell, "Failed to write to bus %d device: %x", msg.bus,
-			    msg.target_addr);
-		return -1;
-	}
-
-	return 0;
-}
-
 void cmd_thermaltrip_status_en(const struct shell *shell, size_t argc, char **argv)
 {
-	switch_set(shell, true);
+	bool is_perm = false;
+
+	if (argc == 2) {
+		if (!strcmp(argv[1], "perm")) {
+			is_perm = true;
+		} else {
+			shell_error(shell, "The last argument must be <perm>");
+			return;
+		}
+	}
+
+	set_thermaltrip_user_settings(true, is_perm);
 }
 
 void cmd_thermaltrip_status_dis(const struct shell *shell, size_t argc, char **argv)
 {
-	switch_set(shell, false);
+	bool is_perm = false;
+
+	if (argc == 2) {
+		if (!strcmp(argv[1], "perm")) {
+			is_perm = true;
+		} else {
+			shell_error(shell, "The last argument must be <perm>");
+			return;
+		}
+	}
+
+	set_thermaltrip_user_settings(false, is_perm);
 }
 
-SHELL_STATIC_SUBCMD_SET_CREATE(sub_thermaltrip_set_cmd,
-	SHELL_CMD(enable, NULL, "enable", cmd_thermaltrip_status_en),
-	SHELL_CMD(disable, NULL, "disable", cmd_thermaltrip_status_dis),
-	SHELL_SUBCMD_SET_END);
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_plat_thermaltrip_set_cmd,
+			       SHELL_CMD(enable, NULL, "enable", cmd_thermaltrip_status_en),
+			       SHELL_CMD(disable, NULL, "disable", cmd_thermaltrip_status_dis),
+			       SHELL_SUBCMD_SET_END);
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_thermaltrip_switch_cmds,
-	SHELL_CMD(get, NULL, "get thermaltrip switch status", cmd_thermaltrip_status_get),
-	SHELL_CMD(set, &sub_thermaltrip_set_cmd, "set thermaltrip switch status", NULL),
-	SHELL_SUBCMD_SET_END);
+			       SHELL_CMD(get, NULL, "get thermaltrip switch status",
+					 cmd_thermaltrip_status_get),
+			       SHELL_CMD(set, &sub_plat_thermaltrip_set_cmd,
+					 "set thermaltrip switch status", NULL),
+			       SHELL_SUBCMD_SET_END);
 
-	/* Root of command test */
-SHELL_CMD_REGISTER(thermaltrip_switch, &sub_thermaltrip_switch_cmds,
-	"thermal trip switch command", NULL);
+/* Root of command test */
+SHELL_CMD_REGISTER(thermaltrip_switch, &sub_thermaltrip_switch_cmds, "thermal trip switch command",
+		   NULL);
