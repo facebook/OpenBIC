@@ -447,7 +447,7 @@ void execute_power_off_sequence()
 
 	cxl2_hb_state = HB_STATE_UNKNOWN;
 
-	set_DC_on_delayed_status();
+	set_DC_on_delayed_status_with_value(false);
 
 	ret = power_off_handler(CXL_ID_1, DIMM_POWER_OFF_STAGE_1);
 	if (ret == 0) {
