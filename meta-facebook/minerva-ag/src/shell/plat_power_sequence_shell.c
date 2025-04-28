@@ -26,6 +26,34 @@
 
 LOG_MODULE_REGISTER(plat_power_sequence_shell, LOG_LEVEL_DBG);
 
+void bubble_sort_power_sequence_table(const struct shell *shell,
+				      const power_sequence *power_sequence_table, size_t size)
+{
+	power_sequence sorted_power_sequence_table[size];
+	memcpy(sorted_power_sequence_table, power_sequence_table, sizeof(power_sequence) * size);
+
+	for (int i = 0; i < size - 1; i++) {
+		for (int j = 0; j < size - 1 - i; j++) {
+			if (sorted_power_sequence_table[j].value >
+				    sorted_power_sequence_table[j + 1].value ||
+			    (sorted_power_sequence_table[j].value ==
+				     sorted_power_sequence_table[j + 1].value &&
+			     sorted_power_sequence_table[j].index >
+				     sorted_power_sequence_table[j + 1].index)) {
+				power_sequence temp = sorted_power_sequence_table[j];
+				sorted_power_sequence_table[j] = sorted_power_sequence_table[j + 1];
+				sorted_power_sequence_table[j + 1] = temp;
+			}
+		}
+	}
+
+	for (size_t i = 0; i < size; i++) {
+		shell_print(shell, "            [%2d]%-50s %d ms", i,
+			    sorted_power_sequence_table[i].power_rail_name,
+			    sorted_power_sequence_table[i].value * 2);
+	}
+}
+
 int cmd_power_sequence(const struct shell *shell, size_t argc, char **argv)
 {
 	if (argc != 1) {
@@ -47,6 +75,7 @@ int cmd_power_sequence(const struct shell *shell, size_t argc, char **argv)
 		shell_print(shell, "Unsupport power_sequence: %s", argv[0]);
 		return -1;
 	}
+
 	for (size_t i = 0; i < size; i++) {
 		uint8_t data;
 		uint8_t cpld_offset = power_sequence_table[i].cpld_offsets;
@@ -54,12 +83,11 @@ int cmd_power_sequence(const struct shell *shell, size_t argc, char **argv)
 		if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, cpld_offset, &data, 1)) {
 			LOG_ERR("Failed to read cpld register from cpld");
 			continue;
-			;
 		}
-		uint16_t during_time = data * 2;
-		shell_print(shell, "            [%2d]%-50s %d ms", power_sequence_table[i].index,
-			    power_sequence_table[i].power_rail_name, during_time);
+		power_sequence_table[i].value = data;
 	}
+
+	bubble_sort_power_sequence_table(shell, power_sequence_table, size);
 	return 0;
 }
 
