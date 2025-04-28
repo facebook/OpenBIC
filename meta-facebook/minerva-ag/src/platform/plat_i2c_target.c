@@ -135,6 +135,11 @@ typedef struct __attribute__((__packed__)) {
 	uint8_t response_data[];
 } plat_sensor_init_data_42;
 
+typedef struct __attribute__((__packed__)) {
+	struct k_work work;
+	uint8_t set_value;
+} plat_sensor_init_data_f0;
+
 static uint8_t bootstrap_pin;
 static uint8_t user_setting_level;
 
@@ -339,6 +344,19 @@ void i2c_bridge_command_handler(struct k_work *work_item)
 		sensor_data_42->data_length = response_data_len;
 		memcpy(sensor_data_42->response_data, i2c_msg.data, response_data_len);
 	}
+}
+
+void set_sensor_polling_handler(struct k_work *work_item)
+{
+	const plat_sensor_init_data_f0 *sensor_data_f0 =
+		CONTAINER_OF(work_item, plat_sensor_init_data_f0, work);
+
+	int value = sensor_data_f0->set_value;
+	if (!(value == 0 || value == 1)) {
+		LOG_ERR("set sensor_polling:%x is out of range", value);
+		return;
+	}
+	set_plat_sensor_polling_enable_flag(value);
 }
 
 bool initialize_sensor_data_0_1(telemetry_info *telemetry_info, uint8_t *buffer_size)
@@ -746,10 +764,10 @@ void plat_master_write_thread_handler()
 		rc = i2c_target_read(I2C_BUS7, rdata, sizeof(rdata), &rlen);
 		if (rc) {
 			LOG_ERR("i2c_target_read fail, ret %d", rc);
-			return;
+			continue;
 		}
-		LOG_DBG("rlen = %d", rlen);
-		LOG_HEXDUMP_DBG(rdata, rlen, "");
+		// LOG_DBG("rlen = %d", rlen);
+		// LOG_HEXDUMP_DBG(rdata, rlen, "");
 		if (rlen < 1) {
 			LOG_ERR("Received data too short");
 			continue;
@@ -757,35 +775,59 @@ void plat_master_write_thread_handler()
 
 		uint8_t reg_offset = rdata[0];
 		switch (reg_offset) {
-		case WRITE_STRAP_PIN_VALUE_REG:
-			if (rlen == 3) {
-				bootstrap_pin = rdata[1];
-				user_setting_level = rdata[2];
-				k_work_submit(&set_bootstrap_element_work);
-			} else {
-				LOG_ERR("Invalid length for strap pin write: %d", rlen);
+		case WRITE_STRAP_PIN_VALUE_REG: {
+			if (rlen != 3) {
+				LOG_ERR("Invalid length for offset: 0x%02x", reg_offset);
+				break;
 			}
-			break;
-		case I2C_BRIDGE_COMMAND_REG:
-			if (rlen >= 5) {
-				size_t payload_len = rlen - 4;
-				size_t struct_size = sizeof(plat_sensor_init_data_40) + payload_len;
-				plat_sensor_init_data_40 *sensor_data = malloc(struct_size);
-				if (!sensor_data) {
-					LOG_ERR("Memory allocation failed!");
-					return;
-				}
-				sensor_data->bus = rdata[1];
-				sensor_data->addr = rdata[2];
-				sensor_data->read_len = rdata[3];
-				sensor_data->write_len = payload_len;
-				memcpy(sensor_data->data, &rdata[4], payload_len);
-				k_work_init(&sensor_data->work, i2c_bridge_command_handler);
-				k_work_submit(&sensor_data->work);
-			} else {
-				LOG_ERR("Invalid length for command write: %d", rlen);
+			bootstrap_pin = rdata[1];
+			user_setting_level = rdata[2];
+			k_work_submit(&set_bootstrap_element_work);
+		} break;
+		case I2C_BRIDGE_COMMAND_REG: {
+			if (rlen < 5) {
+				LOG_ERR("Invalid length for offset: 0x%02x", reg_offset);
+				break;
 			}
-			break;
+			size_t payload_len = rlen - 4;
+			size_t struct_size = sizeof(plat_sensor_init_data_40) + payload_len;
+			plat_sensor_init_data_40 *sensor_data = malloc(struct_size);
+			if (!sensor_data) {
+				LOG_ERR("Memory allocation failed!");
+				break;
+			}
+			sensor_data->bus = rdata[1];
+			sensor_data->addr = rdata[2];
+			sensor_data->read_len = rdata[3];
+			sensor_data->write_len = payload_len;
+			memcpy(sensor_data->data, &rdata[4], payload_len);
+			k_work_init(&sensor_data->work, i2c_bridge_command_handler);
+			k_work_submit(&sensor_data->work);
+		} break;
+		case SET_SENSOR_POLLING_COMMAND_REG: {
+			if (rlen != 8) {
+				LOG_ERR("Invalid length for offset: 0x%02x", reg_offset);
+				break;
+			}
+			uint8_t expected_signature[] = {
+				0x4D, 0x54, 0x49, 0x41, 0x56, 0x31
+			}; // ascii to hex: "MTIAV1"
+			if (memcmp(&rdata[1], expected_signature, sizeof(expected_signature)) !=
+			    0) {
+				LOG_HEXDUMP_DBG(rdata, rlen, "rdata:");
+				LOG_ERR("Wrong command for set sensor_polling");
+				break;
+			}
+			plat_sensor_init_data_f0 *sensor_data =
+				malloc(sizeof(plat_sensor_init_data_f0));
+			if (!sensor_data) {
+				LOG_ERR("Memory allocation failed!");
+				break;
+			}
+			sensor_data->set_value = rdata[7];
+			k_work_init(&sensor_data->work, set_sensor_polling_handler);
+			k_work_submit(&sensor_data->work);
+		} break;
 		default:
 			LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
 			break;
