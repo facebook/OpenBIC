@@ -86,7 +86,7 @@ void hsc_adm1272_pwr_ctrl(sensor_cfg *cfg, uint8_t adm1272_reg, uint8_t state)
 	}
 
 	if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
-		LOG_ERR("pro unlock mutex fail !");
+		LOG_ERR("post unlock mutex fail !");
 }
 
 void hsc_xdp710_pwr_ctrl(sensor_cfg *cfg, uint8_t xdp710_reg, uint8_t state)
@@ -112,7 +112,7 @@ void hsc_xdp710_pwr_ctrl(sensor_cfg *cfg, uint8_t xdp710_reg, uint8_t state)
 	}
 
 	if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
-		LOG_ERR("pro unlock mutex fail !");
+		LOG_ERR("post unlock mutex fail !");
 }
 static bool hsc_reset(uint8_t sensor_num)
 {
