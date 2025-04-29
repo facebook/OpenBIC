@@ -262,10 +262,18 @@ void init_hsc_module(uint8_t board_revision)
 	}
 }
 
+void i3c_rst_cb(const struct device *dev)
+{
+	I3C_MSG i3c_msg;
+	i3c_msg.bus = I3C_BUS_BMC;
+	i3c_set_pid(&i3c_msg, I3C_BUS0_PID);
+}
+
 void init_platform_config()
 {
 	I2C_MSG i2c_msg;
 	uint8_t retry = 3;
+	const struct device *dev;
 
 	/* According hardware design, BIC can check the class type through GPIOs.
 	 * The board ID is "0000" if the class type is class1.
@@ -463,6 +471,9 @@ void init_platform_config()
 	I3C_MSG i3c_msg;
 	i3c_msg.bus = I3C_BUS_BMC;
 	i3c_set_pid(&i3c_msg, I3C_BUS0_PID);
+
+	dev = device_get_binding("I3C_0");
+	i3c_hook_rst_cb(dev, i3c_rst_cb);
 
 	SAFE_FREE(data);
 }
