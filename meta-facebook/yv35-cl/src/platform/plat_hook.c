@@ -35,6 +35,7 @@
 #include "libutil.h"
 #include "xdpe15284.h"
 #include "util_sys.h"
+#include "plat_class.h"
 
 #include "i2c-mux-tca9548.h"
 
@@ -42,6 +43,7 @@ LOG_MODULE_REGISTER(plat_hook);
 
 #define ADJUST_ADM1278_POWER(x) (x * 0.98)
 #define ADJUST_ADM1278_CURRENT(x) ((x * 0.98) + 0.1)
+#define ADJUST_ADM1281_CURRENT(x) ((x * 0.98) + 0.4)
 #define ADJUST_LTC4286_POWER(x) ((x * 0.99) + 1.5)
 #define ADJUST_LTC4286_CURRENT(x) ((x * 0.99) + 0.3)
 #define ADJUST_LTC4282_POWER(x) (x * 0.99)
@@ -155,7 +157,7 @@ bool pre_isl69259_read(sensor_cfg *cfg, void *args)
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
-	isl69259_pre_proc_arg *pre_proc_args = (isl69259_pre_proc_arg *)args;
+	const isl69259_pre_proc_arg *pre_proc_args = (isl69259_pre_proc_arg *)args;
 	uint8_t retry = 5;
 	I2C_MSG msg;
 
@@ -364,7 +366,11 @@ bool post_adm1278_current_read(sensor_cfg *cfg, void *args, int *reading)
 	sensor_val *sval = (sensor_val *)reading;
 	float val = (float)sval->integer + (sval->fraction / 1000.0);
 
-	val = ADJUST_ADM1278_CURRENT(val);
+	if (get_system_sku() == SYS_TYPE_EMR) {
+		val = ADJUST_ADM1281_CURRENT(val);
+	} else {
+		val = ADJUST_ADM1278_CURRENT(val);
+	}
 	sval->integer = (int)val & 0xFFFF;
 	sval->fraction = (val - sval->integer) * 1000;
 	return true;
@@ -500,8 +506,8 @@ bool post_intel_dimm_i3c_read(sensor_cfg *cfg, void *args, int *reading)
 		return true;
 	}
 
-	dimm_post_proc_arg *post_proc_args = (dimm_post_proc_arg *)args;
-	sensor_val *sval = (sensor_val *)reading;
+	const dimm_post_proc_arg *post_proc_args = (dimm_post_proc_arg *)args;
+	const sensor_val *sval = (sensor_val *)reading;
 
 	uint8_t addr = 0, write_len = 0, read_len = 0, cmd = 0, read_buf = 0;
 	uint8_t write_buf[PECI_WR_PKG_LEN_DWORD] = { 0 };

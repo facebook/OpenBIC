@@ -145,6 +145,7 @@ void plat_pldm_do_host_button_sequence(void *power_sequence, void *pressing_inte
 		i2c_msg.data[1] = ((uint8_t *)power_sequence)[i];
 		if (i2c_master_write(&i2c_msg, retry)) {
 			LOG_ERR("Fail to do i2c master write");
+			set_DC_on_delayed_status_with_value(true);
 		}
 
 		if (i == 1) {
@@ -167,10 +168,13 @@ void plat_pldm_power_cycle(void *arg1, void *arg2, void *arg3)
 	// Do power off when current power is ON
 	if (get_DC_status() == true) {
 		// Power off
+		set_DC_on_delayed_status_with_value(false);
+
 		for (int i = 0; i < PLAT_PLDM_SEQUENCE_CNT; i++) {
 			i2c_msg.data[1] = power_sequence[i];
 			if (i2c_master_write(&i2c_msg, retry)) {
 				LOG_ERR("Fail to do i2c master write");
+				set_DC_on_delayed_status_with_value(true);
 			}
 
 			if (i == 1) {
@@ -238,6 +242,8 @@ void host_power_off()
 	if (k_sem_take(&cmd_sem, K_NO_WAIT) != 0) {
 		LOG_ERR("Ignore. Previous cmd still executing.");
 	} else {
+		set_DC_on_delayed_status_with_value(false);
+
 		set_power_sequence_tid =
 			k_thread_create(&set_power_sequence_thread, set_power_sequence_stack,
 					K_THREAD_STACK_SIZEOF(set_power_sequence_stack),
@@ -245,6 +251,35 @@ void host_power_off()
 					UINT_TO_POINTER(PLAT_PLDM_POWER_OFF_BUTTON_MSEC), NULL,
 					CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
 		k_thread_name_set(&set_power_sequence_thread, "do_power_off_thread");
+	}
+}
+
+void host_power_cycle()
+{
+	if (k_sem_take(&cmd_sem, K_NO_WAIT) != 0) {
+		LOG_ERR("Ignore. Previous cmd still executing.");
+	} else {
+		set_power_sequence_tid =
+			k_thread_create(&set_power_sequence_thread, set_power_sequence_stack,
+					K_THREAD_STACK_SIZEOF(set_power_sequence_stack),
+					plat_pldm_power_cycle, NULL, NULL, NULL,
+					CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+		k_thread_name_set(&set_power_sequence_thread, "do_power_cycle_thread");
+	}
+}
+
+void host_power_reset()
+{
+	if (k_sem_take(&cmd_sem, K_NO_WAIT) != 0) {
+		LOG_ERR("Ignore. Previous cmd still executing.");
+	} else {
+		set_power_sequence_tid =
+			k_thread_create(&set_power_sequence_thread, set_power_sequence_stack,
+					K_THREAD_STACK_SIZEOF(set_power_sequence_stack),
+					plat_pldm_do_host_button_sequence, (void *)reset_sequence,
+					UINT_TO_POINTER(PLAT_PLDM_RESET_BUTTON_MSEC), NULL,
+					CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+		k_thread_name_set(&set_power_sequence_thread, "do_power_reset_thread");
 	}
 }
 
@@ -285,28 +320,18 @@ void plat_pldm_set_effecter_state_host_power_control(const uint8_t *buf, uint16_
 		host_power_off();
 		break;
 	case EFFECTER_STATE_POWER_STATUS_CYCLE:
-		if (k_sem_take(&cmd_sem, K_NO_WAIT) != 0) {
-			LOG_ERR("Ignore. Previous cmd still executing.");
-		} else {
-			set_power_sequence_tid =
-				k_thread_create(&set_power_sequence_thread,
-						set_power_sequence_stack,
-						K_THREAD_STACK_SIZEOF(set_power_sequence_stack),
-						plat_pldm_power_cycle, NULL, NULL, NULL,
-						CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
-			k_thread_name_set(&set_power_sequence_thread, "do_power_cycle_thread");
-		}
+		host_power_cycle();
 		break;
 	case EFFECTER_STATE_POWER_STATUS_RESET:
-		if (plat_pldm_host_button_sequence(reset_sequence, PLAT_PLDM_RESET_BUTTON_MSEC) !=
-		    0) {
-			LOG_ERR("Failed to do host power reset");
-		}
+		host_power_reset();
 		break;
 	case EFFECTER_STATE_POWER_STATUS_GRACEFUL_SHUTDOWN:
+		set_DC_on_delayed_status_with_value(false);
+
 		if (plat_pldm_host_button_sequence(power_sequence,
 						   PLAT_PLDM_GRACEFUL_SHUTDOWN_BUTTON_MSEC) != 0) {
 			LOG_ERR("Failed to do host graceful shutdown");
+			set_DC_on_delayed_status_with_value(true);
 		}
 		break;
 	default:

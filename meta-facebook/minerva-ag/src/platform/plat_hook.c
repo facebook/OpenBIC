@@ -42,6 +42,14 @@ LOG_MODULE_REGISTER(plat_hook);
 
 #define ALERT_LEVEL_USER_SETTINGS_OFFSET 0x8200
 
+#ifndef TMP432_CONFIG_WRITE_REG1
+#define TMP432_CONFIG_WRITE_REG1 0x09
+#endif
+
+#ifndef TMP432_CONFIG_READ_REG1
+#define TMP432_CONFIG_READ_REG1 0x03
+#endif
+
 static struct k_mutex vr_mutex[VR_MAX_NUM];
 static struct k_mutex pwrlevel_mutex;
 
@@ -160,9 +168,15 @@ isl69259_init_arg isl69259_init_args[] = {
 	[1] = { .vout_scale_enable = true, .vout_scale = (499 / 709.0) },
 };
 
+mpc12109_init_arg mpc12109_init_args[] = {
+	[0] = { .iout_lsb = 0.5, .pout_lsb = 2 },
+};
+
 temp_mapping_sensor temp_index_table[] = {
-	{ TEMP_INDEX_ON_DIE_1_2, ASIC_DIE_ATH_SENSOR_0_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_0_TEMP" },
-	{ TEMP_INDEX_ON_DIE_3_4, ASIC_DIE_N_OWL_TEMP_C, "CB_ASIC_DIE_N_OWL_TEMP" },
+	{ TEMP_INDEX_ON_DIE_ATH_0_N_OWL, ASIC_DIE_ATH_SENSOR_0_TEMP_C,
+	  "CB_ASIC_DIE_ATH_SENSOR_0_TEMP" },
+	{ TEMP_INDEX_ON_DIE_ATH_1_S_OWL, ASIC_DIE_ATH_SENSOR_1_TEMP_C,
+	  "CB_ASIC_DIE_ATH_SENSOR_1_TEMP" },
 	{ TEMP_INDEX_TOP_INLET, TOP_INLET_TEMP_C, "CB_TOP_INLET_TEMP" },
 	{ TEMP_INDEX_BOT_INLET, BOT_INLET_TEMP_C, "CB_BOT_INLET_TEMP" },
 	{ TEMP_INDEX_TOP_OUTLET, TOP_OUTLET_TEMP_C, "CB_TOP_OUTLET_TEMP" },
@@ -462,19 +476,15 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 
 // clang-format off
 temp_threshold_mapping_sensor temp_index_threshold_type_table[] = {
-	{ ON_DIE_1_2_REMOTE_1_HIGH_LIMIT, REMOTE_1_HIGH_LIMIT, ASIC_DIE_ATH_SENSOR_0_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_0_TEMP_REMOTE1_HIGH_LIM" },
-	{ ON_DIE_1_2_REMOTE_1_LOW_LIMIT, REMOTE_1_LOW_LIMIT, ASIC_DIE_ATH_SENSOR_0_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_0_TEMP_REMOTE1_LOW_LIM" },
-	{ ON_DIE_1_2_REMOTE_2_HIGH_LIMIT, REMOTE_2_HIGH_LIMIT, ASIC_DIE_ATH_SENSOR_1_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_1_TEMP_REMOTE2_HIGH_LIM" },
-	{ ON_DIE_1_2_REMOTE_2_LOW_LIMIT, REMOTE_2_LOW_LIMIT, ASIC_DIE_ATH_SENSOR_1_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_1_TEMP_REMOTE2_LOW_LIM" },
-	{ ON_DIE_1_2_REMOTE_1_THERM_LIMIT, REMOTE_1_THERM_LIMIT, ASIC_DIE_ATH_SENSOR_0_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_0_TEMP_REMOTE1_THERM_LIM" },
-	{ ON_DIE_1_2_REMOTE_2_THERM_LIMIT, REMOTE_2_THERM_LIMIT, ASIC_DIE_ATH_SENSOR_1_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_1_TEMP_REMOTE2_THERM_LIM" },
+	{ DIE_ATH_0_N_OWL_REMOTE_1_HIGH_LIMIT, REMOTE_1_HIGH_LIMIT, ASIC_DIE_ATH_SENSOR_0_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_0_TEMP_HIGH_LIM" },
+	{ DIE_ATH_0_N_OWL_REMOTE_1_LOW_LIMIT, REMOTE_1_LOW_LIMIT, ASIC_DIE_ATH_SENSOR_0_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_0_TEMP_LOW_LIM" },
+	{ DIE_ATH_1_S_OWL_REMOTE_1_HIGH_LIMIT, REMOTE_1_HIGH_LIMIT, ASIC_DIE_ATH_SENSOR_1_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_1_TEMP_HIGH_LIM" },
+	{ DIE_ATH_1_S_OWL_REMOTE_1_LOW_LIMIT, REMOTE_1_LOW_LIMIT, ASIC_DIE_ATH_SENSOR_1_TEMP_C, "CB_ASIC_DIE_ATH_SENSOR_1_TEMP_LOW_LIM" },
 
-	{ ON_DIE_3_4_REMOTE_1_HIGH_LIMIT, REMOTE_1_HIGH_LIMIT, ASIC_DIE_N_OWL_TEMP_C, "CB_ASIC_DIE_N_OWL_TEMP_REMOTE1_HIGH_LIM" },
-	{ ON_DIE_3_4_REMOTE_1_LOW_LIMIT, REMOTE_1_LOW_LIMIT, ASIC_DIE_N_OWL_TEMP_C, "CB_ASIC_DIE_N_OWL_TEMP_REMOTE1_LOW_LIM" },
-	{ ON_DIE_3_4_REMOTE_2_HIGH_LIMIT, REMOTE_2_HIGH_LIMIT, ASIC_DIE_S_OWL_TEMP_C, "CB_ASIC_DIE_S_OWL_TEMP_REMOTE2_HIGH_LIM" },
-	{ ON_DIE_3_4_REMOTE_2_LOW_LIMIT, REMOTE_2_LOW_LIMIT, ASIC_DIE_S_OWL_TEMP_C, "CB_ASIC_DIE_S_OWL_TEMP_REMOTE2_LOW_LIM" },
-	{ ON_DIE_3_4_REMOTE_1_THERM_LIMIT, REMOTE_1_THERM_LIMIT, ASIC_DIE_N_OWL_TEMP_C, "CB_ASIC_DIE_N_OWL_TEMP_REMOTE1_THERM_LIM" },
-	{ ON_DIE_3_4_REMOTE_2_THERM_LIMIT, REMOTE_2_THERM_LIMIT, ASIC_DIE_S_OWL_TEMP_C, "CB_ASIC_DIE_S_OWL_TEMP_REMOTE2_THERM_LIM" },
+	{ DIE_ATH_0_N_OWL_REMOTE_2_HIGH_LIMIT, REMOTE_2_HIGH_LIMIT, ASIC_DIE_N_OWL_TEMP_C, "CB_ASIC_DIE_N_OWL_TEMP_HIGH_LIM" },
+	{ DIE_ATH_0_N_OWL_REMOTE_2_LOW_LIMIT, REMOTE_2_LOW_LIMIT, ASIC_DIE_N_OWL_TEMP_C, "CB_ASIC_DIE_N_OWL_TEMP_LOW_LIM" },
+	{ DIE_ATH_1_S_OWL_REMOTE_2_HIGH_LIMIT, REMOTE_2_HIGH_LIMIT, ASIC_DIE_S_OWL_TEMP_C, "CB_ASIC_DIE_S_OWL_TEMP_HIGH_LIM" },
+	{ DIE_ATH_1_S_OWL_REMOTE_2_LOW_LIMIT, REMOTE_2_LOW_LIMIT, ASIC_DIE_S_OWL_TEMP_C, "CB_ASIC_DIE_S_OWL_TEMP_LOW_LIM" },
 	
 	{ TOP_INLET_LOW_LIMIT, LOCAL_LOW_LIMIT, TOP_INLET_TEMP_C, "CB_TOP_INLET_TEMP_LOW_LIM" },
 	{ TOP_INLET_HIGH_LIMIT, LOCAL_HIGH_LIMIT, TOP_INLET_TEMP_C, "CB_TOP_INLET_TEMP_HIGH_LIM" },
@@ -598,6 +608,7 @@ bool vr_status_name_get(uint8_t rail, uint8_t **name)
 #define VR_VOUT_USER_SETTINGS_OFFSET 0x8000
 #define SOC_PCIE_PERST_USER_SETTINGS_OFFSET 0x8300
 #define BOOTSTRAP_USER_SETTINGS_OFFSET 0x8400
+#define THERMALTRIP_USER_SETTINGS_OFFSET 0x8500
 
 vr_vout_user_settings user_settings = { 0 };
 struct vr_vout_user_settings default_settings = { 0 };
@@ -1122,6 +1133,89 @@ bool bootstrap_user_settings_set(void *bootstrap_user_settings)
 	return true;
 }
 
+thermaltrip_user_settings_struct thermaltrip_user_settings = { 0xFF };
+#define CPLD_THERMALTRIP_SWITCH_ADDR 0x3D
+
+bool get_user_settings_thermaltrip_from_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 5;
+	msg.bus = I2C_BUS12;
+	msg.target_addr = 0xA0 >> 1;
+	msg.tx_len = 2;
+	msg.data[0] = THERMALTRIP_USER_SETTINGS_OFFSET >> 8;
+	msg.data[1] = THERMALTRIP_USER_SETTINGS_OFFSET & 0xff;
+	msg.rx_len = data_length;
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Failed to read eeprom, bus: %d, addr: 0x%x, reg: 0x%x%x", msg.bus,
+			msg.target_addr, msg.data[0], msg.data[1]);
+		return false;
+	}
+	memcpy(user_settings, msg.data, data_length);
+
+	LOG_HEXDUMP_DBG(msg.data, data_length, "EEPROM data read thermaltrip");
+
+	return true;
+}
+
+bool set_user_settings_thermaltrip_to_eeprom(void *thermaltrip_user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(thermaltrip_user_settings, false);
+
+	/* write the thermaltrip_user_settings to eeprom */
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 5;
+	msg.bus = I2C_BUS12;
+	msg.target_addr = 0xA0 >> 1;
+	msg.tx_len = data_length + 2;
+	msg.data[0] = THERMALTRIP_USER_SETTINGS_OFFSET >> 8;
+	msg.data[1] = THERMALTRIP_USER_SETTINGS_OFFSET & 0xff;
+
+	memcpy(&msg.data[2], thermaltrip_user_settings, data_length);
+	LOG_DBG("Thermaltrip user settings write into eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x, tx_len: %d",
+		msg.bus, msg.target_addr, msg.data[0], msg.data[1], msg.tx_len);
+
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("Thermaltrip user settings failed to write into eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x, tx_len: %d",
+			msg.bus, msg.target_addr, msg.data[0], msg.data[1], msg.tx_len);
+		return false;
+	}
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+
+bool set_thermaltrip_user_settings(bool thermaltrip_enable, bool is_perm)
+{
+	I2C_MSG msg = { 0 };
+
+	msg.bus = I2C_BUS5;
+	msg.target_addr = AEGIS_CPLD_ADDR;
+	msg.tx_len = 2;
+	msg.data[0] = CPLD_THERMALTRIP_SWITCH_ADDR;
+	msg.data[1] = (thermaltrip_enable) ? 1 : 0;
+
+	if (i2c_master_write(&msg, 3)) {
+		LOG_ERR("Failed to write to bus %d device: %x", msg.bus, msg.target_addr);
+		return false;
+	}
+
+	if (is_perm) {
+		thermaltrip_user_settings.thermaltrip_user_setting_value =
+			(thermaltrip_enable ? 0x01 : 0x00);
+
+		if (!set_user_settings_thermaltrip_to_eeprom(&thermaltrip_user_settings,
+							     sizeof(thermaltrip_user_settings))) {
+			LOG_ERR("Failed to write thermaltrip to eeprom error");
+			return false;
+		}
+	}
+	return true;
+}
+
 bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting_value,
 					   uint8_t drive_index_level, bool is_perm)
 {
@@ -1185,6 +1279,25 @@ bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting
 	}
 
 	return false;
+}
+
+static bool thermaltrip_user_settings_init(void)
+{
+	uint8_t setting_data = 0xFF;
+	if (!get_user_settings_thermaltrip_from_eeprom(&setting_data, sizeof(setting_data))) {
+		LOG_ERR("get thermaltrip user settings fail");
+		return false;
+	}
+
+	if (setting_data != 0xFF) {
+		if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_THERMALTRIP_SWITCH_ADDR,
+				    &setting_data, sizeof(setting_data))) {
+			LOG_ERR("Can't set thermaltrip=%d by user settings", setting_data);
+			return false;
+		}
+	}
+
+	return true;
 }
 
 static bool bootstrap_user_settings_init(void)
@@ -1255,6 +1368,7 @@ void user_settings_init(void)
 	bootstrap_default_settings_init();
 	bootstrap_user_settings_init();
 	vr_vout_range_user_settings_init();
+	thermaltrip_user_settings_init();
 }
 
 bool get_bootstrap_change_drive_level(int rail, int *drive_level)
@@ -1519,6 +1633,14 @@ bool perm_config_clear(void)
 		return false;
 	}
 
+	/* clear thermaltrip perm parameter */
+	uint8_t setting_value_for_thermaltrip = 0xFF;
+	if (!set_user_settings_thermaltrip_to_eeprom(&setting_value_for_thermaltrip,
+						     sizeof(setting_value_for_thermaltrip))) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
 	return true;
 }
 
@@ -1673,7 +1795,7 @@ bool plat_get_temp_status(uint8_t rail, uint8_t *temp_status)
 	switch (cfg->type) {
 	case sensor_dev_tmp75: {
 		uint8_t data[1] = { 0 };
-		if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, 0x2B, data, 1)) {
+		if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, 0x97, data, 1)) {
 			LOG_ERR("Failed to read TEMP TMP75 from cpld");
 			goto err;
 		}
@@ -1731,34 +1853,7 @@ bool plat_clear_temp_status(uint8_t rail)
 
 	switch (cfg->type) {
 	case sensor_dev_tmp75: {
-		uint8_t data[1] = { 0 };
-		if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, 0x2B, data, 1)) {
-			LOG_ERR("Failed to read TEMP TMP75 from cpld");
-			goto err;
-		}
-
-		switch (rail) {
-		case TEMP_INDEX_TOP_INLET:
-			data[0] &= ~BIT(2);
-			break;
-		case TEMP_INDEX_BOT_INLET:
-			data[0] &= ~BIT(3);
-			break;
-		case TEMP_INDEX_BOT_OUTLET:
-			data[0] &= ~BIT(4);
-			break;
-		case TEMP_INDEX_TOP_OUTLET:
-			data[0] &= ~BIT(5);
-			break;
-		default:
-			LOG_ERR("Unsupport TEMP TMP75 alert pin");
-			goto err;
-		}
-
-		if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR, 0x2B, data, 1)) {
-			LOG_ERR("Failed to clear TEMP TMP75 to cpld");
-			goto err;
-		}
+		LOG_DBG("TMP75 temp_status cannot be cleared; its behavior depends on the temp_threshold settings.");
 	} break;
 	case sensor_dev_tmp431:
 		if (!tmp432_clear_temp_status(cfg)) {
@@ -1863,20 +1958,20 @@ bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 	switch (cfg->type) {
 	case sensor_dev_tmp431:
 		if (!tmp432_set_temp_threshold(cfg, temp_threshold_type_tmp, millidegree_celsius)) {
-			LOG_ERR("The TMP431 temp threshold reading failed");
+			LOG_ERR("The TMP431 temp threshold setting failed");
 			return false;
 		}
 		break;
 	case sensor_dev_emc1413:
 		if (!emc1413_set_temp_threshold(cfg, temp_threshold_type_tmp,
 						millidegree_celsius)) {
-			LOG_ERR("The EMC1413 temp threshold reading failed");
+			LOG_ERR("The EMC1413 temp threshold setting failed");
 			return false;
 		}
 		break;
 	case sensor_dev_tmp75:
 		if (!tmp75_set_temp_threshold(cfg, temp_threshold_type_tmp, millidegree_celsius)) {
-			LOG_ERR("The TMP75 temp threshold reading failed");
+			LOG_ERR("The TMP75 temp threshold setting failed");
 			return false;
 		}
 		break;
@@ -1892,4 +1987,111 @@ bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 	}
 
 	return true;
+}
+
+void init_temp_alert_mode(void)
+{
+	size_t num_of_temp = sizeof(temp_index_table) / sizeof(temp_index_table[0]);
+
+	for (size_t i = 0; i < num_of_temp; i++) {
+		uint32_t sensor_id = temp_index_table[i].sensor_id;
+		const char *name = temp_index_table[i].sensor_name;
+
+		if (sensor_id != ASIC_DIE_ATH_SENSOR_0_TEMP_C &&
+		    sensor_id != ASIC_DIE_ATH_SENSOR_1_TEMP_C) {
+			continue;
+		}
+
+		const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+		if (cfg == NULL) {
+			LOG_ERR("Failed to get sensor config for sensor %s (0x%x)", name,
+				sensor_id);
+			continue;
+		}
+
+		uint8_t data = 0;
+		if (!plat_i2c_read(cfg->port, cfg->target_addr, TMP432_CONFIG_READ_REG1, &data,
+				   1)) {
+			LOG_ERR("Failed to read TMP432 config for sensor %s (0x%x)", name,
+				sensor_id);
+			continue;
+		}
+
+		data |= BIT(5);
+		if (!plat_i2c_write(cfg->port, cfg->target_addr, TMP432_CONFIG_WRITE_REG1, &data,
+				    1)) {
+			LOG_ERR("Failed to set TMP432 to temp alert mode for sensor %s (0x%x)",
+				name, sensor_id);
+			continue;
+		}
+
+		LOG_INF("Sensor %s (0x%x) init temp alert mode successfully", name, sensor_id);
+	}
+}
+
+void init_temp_limit(void)
+{
+	uint8_t followed_ucr_lcr_limit_temp[] = { DIE_ATH_0_N_OWL_REMOTE_1_HIGH_LIMIT,
+						  DIE_ATH_1_S_OWL_REMOTE_1_HIGH_LIMIT,
+						  DIE_ATH_0_N_OWL_REMOTE_2_HIGH_LIMIT,
+						  DIE_ATH_1_S_OWL_REMOTE_2_HIGH_LIMIT };
+
+	uint8_t followed_ucr_only_limit_temp[] = { TOP_INLET_HIGH_LIMIT, TOP_OUTLET_HIGH_LIMIT,
+						   BOT_INLET_HIGH_LIMIT, BOT_OUTLET_HIGH_LIMIT };
+
+	for (int i = 0; i < ARRAY_SIZE(followed_ucr_lcr_limit_temp); i++) {
+		float critical_high = 0;
+		float critical_low = 0;
+		uint8_t sensor_id =
+			temp_index_threshold_type_table[followed_ucr_lcr_limit_temp[i]].sensor_id;
+		get_pdr_table_critical_high_and_low_with_sensor_id(sensor_id, &critical_high,
+								   &critical_low);
+
+		uint32_t high_threshold = (uint32_t)(critical_high * 1000);
+		uint32_t low_threshold = (uint32_t)(critical_low * 1000);
+		LOG_INF("set %s: %d",
+			temp_index_threshold_type_table[(followed_ucr_lcr_limit_temp[i] + 1)]
+				.temp_threshold_name,
+			low_threshold);
+		// low limit enum is followed_ucr_lcr_limit_temp[i] + 1
+		plat_set_temp_threshold((followed_ucr_lcr_limit_temp[i] + 1), &low_threshold, false,
+					false);
+
+		LOG_INF("set %s: %d",
+			temp_index_threshold_type_table[followed_ucr_lcr_limit_temp[i]]
+				.temp_threshold_name,
+			high_threshold);
+		plat_set_temp_threshold(followed_ucr_lcr_limit_temp[i], &high_threshold, false,
+					false);
+	}
+
+	for (int i = 0; i < ARRAY_SIZE(followed_ucr_only_limit_temp); i++) {
+		float critical_high = 0;
+		float critical_low = 0;
+		uint8_t sensor_id =
+			temp_index_threshold_type_table[followed_ucr_only_limit_temp[i]].sensor_id;
+		get_pdr_table_critical_high_and_low_with_sensor_id(sensor_id, &critical_high,
+								   &critical_low);
+
+		// set low limit to high limit - 2 degree
+		// set low limit first to avoid the temp alert jump
+		uint32_t dynamic_threshold = (uint32_t)(critical_high * 1000);
+		uint32_t low_threshold = dynamic_threshold - 2000;
+		LOG_INF("set %s: %d",
+			temp_index_threshold_type_table[(followed_ucr_only_limit_temp[i] - 1)]
+				.temp_threshold_name,
+			low_threshold);
+		// low limit enum is followed_ucr_only_limit_temp[i] - 1
+		plat_set_temp_threshold((followed_ucr_only_limit_temp[i] - 1), &low_threshold,
+					false, false);
+
+		LOG_INF("set %s: %d",
+			temp_index_threshold_type_table[followed_ucr_only_limit_temp[i]]
+				.temp_threshold_name,
+			dynamic_threshold);
+		plat_set_temp_threshold(followed_ucr_only_limit_temp[i], &dynamic_threshold, false,
+					false);
+	}
+
+	LOG_INF("temp limit init done");
 }

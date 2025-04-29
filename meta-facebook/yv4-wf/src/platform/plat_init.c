@@ -34,6 +34,7 @@
 
 SCU_CFG scu_cfg[] = {
 	//register    value
+	{ 0x7e6e2434, 0x00FF00F0 },
 	{ 0x7e6e2610, 0x0AAAA800 },
 	{ 0x7e6e2614, 0x0AABAB00 },
 	{ 0x7e6e2618, 0x50000000 },
@@ -88,6 +89,7 @@ void pal_pre_init()
 	}
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
 
+	init_vr_event_work();
 	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY + 1); // work queue for low priority jobs
 }
 

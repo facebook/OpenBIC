@@ -73,9 +73,234 @@ aegis_cpld_info aegis_cpld_info_table[] = {
 	{ VR_SMBUS_ALERT_1_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
 	{ VR_SMBUS_ALERT_2_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
 	{ ASIC_OC_WARN_REG, 				0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
+	{ SYSTEM_ALERT_FAULT_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
 	{ TEMPERATURE_IC_OVERT_FAULT_REG, 	0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
+	{ LEAK_DETCTION_REG, 				0xDF, 0xDF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
+
+	{ TEMPERATURE_IC_OVERT_FAULT_2_REG, 0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
+	{ ASIC_OC_WARN_2_REG, 				0xDF, 0xDF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
+	{ SYSTEM_ALERT_FAULT_2_REG, 		0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
+	{ VR_SMBUS_ALERT_3_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
+	{ VR_SMBUS_ALERT_4_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },	
 };
 // clang-format on
+
+const cpld_bit_name_table_t cpld_bit_name_table[] = {
+	{ VR_POWER_FAULT_1_REG,
+	  "VR Power Fault   (1:Power Fault, 0=Normal)",
+	  {
+		  "RSVD",
+		  "P0V75_TRVDD_ZONEA",
+		  "P0V75_TRVDD_ZONEB",
+		  "P12V_UBC2",
+		  "P12V_UBC1",
+		  "P0V75_MAX_PHY_S",
+		  "P0V75_MAX_PHY_N",
+		  "RSVD",
+	  } },
+	{ VR_POWER_FAULT_2_REG,
+	  "VR Power Fault   (1:Power Fault, 0=Normal)",
+	  {
+		  "P0V75_VDDPHY_HBM1_HBM3_HBM5",
+		  "P0V75_VDDPHY_HBM0_HBM2_HBM4",
+		  "VPP_HBM1_HBM3_HBM5",
+		  "VPP_HBM0_HBM2_HBM4",
+		  "VDDHTX_PCIE",
+		  "PLL_VDDA15_PCIE&MAX&CORE",
+		  "P0V9_TRVDD_ZONEA",
+		  "P0V9_TRVDD_ZONEB",
+	  } },
+	{ VR_POWER_FAULT_3_REG,
+	  "VR Power Fault   (1:Power Fault, 0=Normal)",
+	  {
+		  "P0V75_PVDD_CH_S",
+		  "P0V75_PVDD_CH_N",
+		  "P1V1_VDDC_HBM1_HBM3_HBM5",
+		  "P0V75_AVDD_HSCL",
+		  "P1V1_VDDC_HBM0_HBM2_HBM4",
+		  "P0V75_VDDC_CLKOBS",
+		  "VDDQL_HBM1_HBM3_HBM5",
+		  "VDDQL_HBM0_HBM2_HBM4",
+	  } },
+	{ VR_POWER_FAULT_4_REG,
+	  "VR Power Fault   (1:Power Fault, 0=Normal)",
+	  {
+		  "PLL_VDDA15_MAX&CORE_N",
+		  "PVDD1P5_S",
+		  "PVDD1P5_N",
+		  "PVDD0P9_S",
+		  "PVDD0P9_N",
+		  "PLL_VDDA15_HBM0_HBM2_HBM4",
+		  "PLL_VDDA15_HBM1_HBM3_HBM5",
+		  "P0V85_PVDD",
+	  } },
+	{ VR_POWER_FAULT_5_REG,
+	  "VR Power Fault   (1:Power Fault, 0=Normal)",
+	  {
+		  "1'b0",
+		  "P3V3_OSC",
+		  "P5V",
+		  "P3V3",
+		  "LDO_IN_1V8",
+		  "LDO_IN_1V2",
+		  "VDDA_PCIE",
+		  "PLL_VDDA15_MAX&CORE_S",
+	  } },
+	{ VR_SMBUS_ALERT_1_REG,
+	  "VR SMBUS Alert",
+	  {
+		  "P3V3_OSFP_ALERT_N (1-->0)",
+		  "P1V1_VDDC_HBM1_HBM3_HBM5_SMBALERT_R_N (1-->0)",
+		  "P1V1_VDDC_HBM0_HBM2_HBM4_SMBALERT_R_N (1-->0)",
+		  "P0V9_TRVDD_ZONEA_SMBALERT_R_N (1-->0)",
+		  "P0V9_TRVDD_ZONEB_SMBALERT_R_N (1-->0)",
+		  "P0V85_PVDD_ALERT_R_N (1-->0)",
+		  "P0V75_PVDD_CH_S_SMBALERT_R_N (1-->0)",
+		  "P0V75_PVDD_CH_N_SMBALERT_R_N (1-->0)",
+	  } },
+	{ VR_SMBUS_ALERT_2_REG,
+	  "VR SMBUS Alert",
+	  {
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "VDDA_PCIE_SMBALERT_R_N (1-->0)",
+		  "P0V75_TRVDD_ZONEA_SMBALERT_R_N (1-->0)",
+		  "P0V75_TRVDD_ZONEB_SMBALERT_R_N (1-->0)",
+		  "RSVD",
+		  "RSVD",
+	  } },
+	{ ASIC_OC_WARN_REG,
+	  "ASIC OC WARN ,HBM CATTRIP and ASIC Alert to BMC/MMC",
+	  {
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "FM_ATH_PLD_HBM3_CATTRIP_ALARM (0-->1)",
+		  "FM_CPLD_ATH_CURRENT_SENSE_1 (1-->0)",
+		  "FM_CPLD_ATH_CURRENT_SENSE_0 (1-->0)",
+	  } },
+	{ SYSTEM_ALERT_FAULT_REG,
+	  "System Alert Fault",
+	  {
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "FM_MODULE_PWRBRK_R_N (MB CPLD to Aegis CPLD) (1-->0)",
+	  } },
+	{ TEMPERATURE_IC_OVERT_FAULT_REG,
+	  "Temperature IC OVERT fault",
+	  {
+		  "RSVD",
+		  "RSVD",
+		  "IRQ_TMP75_1_ALERT_R_N (1-->0)",
+		  "IRQ_TMP75_2_ALERT_R_N (1-->0)",
+		  "IRQ_TMP75_3_ALERT_R_N (1-->0)",
+		  "IRQ_TMP75_4_ALERT_R_N (1-->0)",
+		  "TEMP_MON_OVERT_N (1-->0)",
+		  "FM_ASIC_0_THERMTRIP_N (1-->0)",
+	  } },
+	{ LEAK_DETCTION_REG,
+	  "Leak Detection",
+	  {
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "LEAK_DETECT_ALERT_CPLD_N",
+		  "RSVD",
+	  } },
+	{ TEMPERATURE_IC_OVERT_FAULT_2_REG,
+	  "Temperature IC OVERT Fault Status",
+	  {
+		  "RSVD",
+		  "RSVD",
+		  "IRQ_TMP75_1_ALERT_R_N",
+		  "IRQ_TMP75_2_ALERT_R_N",
+		  "IRQ_TMP75_3_ALERT_R_N",
+		  "IRQ_TMP75_4_ALERT_R_N",
+		  "TEMP_MON_OVERT_N",
+		  "FM_ASIC_0_THERMTRIP_N",
+	  } },
+	{ ASIC_OC_WARN_2_REG,
+	  "ASIC OC WARN ,HBM CATTRIP and ASIC Alert to BMC/MMC Status",
+	  {
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "FM_ATH_PLD_HBM3_CATTRIP_ALARM",
+		  "FM_CPLD_ATH_CURRENT_SENSE_1",
+		  "FM_CPLD_ATH_CURRENT_SENSE_0",
+	  } },
+	{ SYSTEM_ALERT_FAULT_2_REG,
+	  "System Alert Status",
+	  {
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "FM_MODULE_PWRBRK_R_N (MB CPLD to Aegis CPLD)",
+	  } },
+	{ VR_SMBUS_ALERT_3_REG,
+	  "VR SMBUS Alert Status",
+	  {
+		  "P3V3_OSFP_ALERT_N (EVB only,Aegis no support)",
+		  "P1V1_VDDC_HBM1_HBM3_HBM5_SMBALERT_R_N",
+		  "P1V1_VDDC_HBM0_HBM2_HBM4_SMBALERT_R_N",
+		  "P0V9_TRVDD_ZONEA_SMBALERT_R_N",
+		  "P0V9_TRVDD_ZONEB_SMBALERT_R_N",
+		  "P0V85_PVDD_ALERT_R_N",
+		  "P0V75_PVDD_CH_S_SMBALERT_R_N",
+		  "P0V75_PVDD_CH_N_SMBALERT_R_N",
+	  } },
+	{ VR_SMBUS_ALERT_4_REG,
+	  "VR SMBUS Alert Status",
+	  {
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "VDDA_PCIE_SMBALERT_R_N",
+		  "P0V75_TRVDD_ZONEA_SMBALERT_R_N",
+		  "P0V75_TRVDD_ZONEB_SMBALERT_R_N",
+		  "RSVD",
+		  "RSVD",
+	  } },
+};
+
+const char *get_cpld_reg_name(uint8_t cpld_offset)
+{
+	for (int i = 0; i < ARRAY_SIZE(cpld_bit_name_table); i++) {
+		if (cpld_bit_name_table[i].cpld_offset == cpld_offset) {
+			return cpld_bit_name_table[i].reg_name;
+		}
+	}
+	return "NA";
+}
+
+const char *get_cpld_bit_name(uint8_t cpld_offset, uint8_t bit_pos)
+{
+	for (int i = 0; i < ARRAY_SIZE(cpld_bit_name_table); i++) {
+		if (cpld_bit_name_table[i].cpld_offset == cpld_offset) {
+			if (bit_pos < 8 && cpld_bit_name_table[i].bit_name[bit_pos]) {
+				return cpld_bit_name_table[i].bit_name[bit_pos];
+			}
+		}
+	}
+	return "NA";
+}
 
 bool cpld_polling_alert_status = false; // only polling cpld when alert status is true
 bool cpld_polling_enable_flag = true;
@@ -122,6 +347,25 @@ void check_ubc_delayed(struct k_work *work)
 
 	if (is_ubc_enabled == true) {
 		k_work_submit(&vr_vout_work);
+	}
+}
+
+void plat_set_ac_on_log()
+{
+	uint16_t error_code = (AC_ON_TRIGGER_CAUSE << 13);
+	error_log_event(error_code, LOG_ASSERT);
+	LOG_ERR("Generated AC on error code: 0x%x", error_code);
+}
+
+void plat_set_dc_on_log(bool is_assert)
+{
+	uint16_t error_code = (DC_ON_TRIGGER_CAUSE << 13);
+	error_log_event(error_code, (is_assert ? LOG_ASSERT : LOG_DEASSERT));
+
+	if (is_assert == LOG_ASSERT) {
+		LOG_ERR("Generated DC on error code: 0x%x", error_code);
+	} else if (is_assert == LOG_DEASSERT) {
+		LOG_INF("DC on error code deasserted");
 	}
 }
 
@@ -256,12 +500,12 @@ void init_cpld_polling(void)
 		k_thread_create(&cpld_polling_thread, cpld_polling_stack,
 				K_THREAD_STACK_SIZEOF(cpld_polling_stack), poll_cpld_registers,
 				NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0,
-				K_MSEC(3000)); /* Start accessing CPLD 4 seconds after BIC reboot 
-                   (3-second thread start delay + 1-second CPLD_POLLING_INTERVAL_MS) 
+				K_MSEC(1000)); /* Start accessing CPLD 2 seconds after BIC reboot 
+                   (1-second thread start delay + 1-second CPLD_POLLING_INTERVAL_MS) 
                    to prevent DC status changes during BIC reboot */
 	k_thread_name_set(&cpld_polling_thread, "cpld_polling_thread");
 
-	k_timer_start(&init_ubc_delayed_timer, K_MSEC(3000), K_NO_WAIT);
+	k_timer_start(&init_ubc_delayed_timer, K_MSEC(1000), K_NO_WAIT);
 
 	k_work_schedule(&check_cpld_work, K_MSEC(100));
 }

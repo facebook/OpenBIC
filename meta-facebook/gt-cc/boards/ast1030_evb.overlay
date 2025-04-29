@@ -204,7 +204,7 @@
 };
 
 &sram0 {
-	reg = <0 DT_SIZE_K(738)>, <DT_SIZE_K(738) DT_SIZE_K(30)>;
+	reg = <0 DT_SIZE_K(750)>, <DT_SIZE_K(750) DT_SIZE_K(18)>;
 };
 
 &udc {

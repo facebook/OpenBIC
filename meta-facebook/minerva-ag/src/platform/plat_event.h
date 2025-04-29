@@ -166,11 +166,19 @@
 
 void check_ubc_delayed_timer_handler(struct k_timer *timer);
 void check_ubc_delayed(struct k_work *work);
+void plat_set_ac_on_log();
+void plat_set_dc_on_log(bool is_assert);
 void check_cpld_polling_alert_status();
 void set_cpld_polling_enable_flag(bool status);
 bool get_cpld_polling_enable_flag(void);
 void init_cpld_polling(void);
 bool is_ubc_enabled_delayed_enabled(void);
+
+#define TEMPERATURE_IC_OVERT_FAULT_2_REG 0x97
+#define ASIC_OC_WARN_2_REG 0x98
+#define SYSTEM_ALERT_FAULT_2_REG 0x99
+#define VR_SMBUS_ALERT_3_REG 0x9A
+#define VR_SMBUS_ALERT_4_REG 0x9B
 
 typedef struct _aegis_cpld_info_ aegis_cpld_info;
 
@@ -193,5 +201,14 @@ typedef struct _aegis_cpld_info_ {
 	bool (*status_changed_cb)(aegis_cpld_info *, uint8_t *);
 
 } aegis_cpld_info;
+
+typedef struct {
+	uint8_t cpld_offset;
+	const char *reg_name;
+	const char *bit_name[8];
+} cpld_bit_name_table_t;
+
+const char *get_cpld_reg_name(uint8_t cpld_offset);
+const char *get_cpld_bit_name(uint8_t cpld_offset, uint8_t bit_pos);
 
 #endif

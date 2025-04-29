@@ -52,6 +52,7 @@ void set_DC_on_delayed_status()
 void set_DC_on_delayed_status_with_value(bool status)
 {
 	is_DC_on_delayed = status;
+	LOG_WRN("DC_DELAYED_STATUS: %s", (is_DC_on_delayed) ? "on" : "off");
 }
 
 bool get_DC_on_delayed_status()

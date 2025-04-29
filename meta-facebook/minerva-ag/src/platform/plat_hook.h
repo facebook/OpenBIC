@@ -75,8 +75,8 @@ enum VR_STAUS_E {
 };
 
 enum PLAT_TEMP_INDEX_E {
-	TEMP_INDEX_ON_DIE_1_2,
-	TEMP_INDEX_ON_DIE_3_4,
+	TEMP_INDEX_ON_DIE_ATH_0_N_OWL,
+	TEMP_INDEX_ON_DIE_ATH_1_S_OWL,
 	TEMP_INDEX_TOP_INLET,
 	TEMP_INDEX_TOP_OUTLET,
 	TEMP_INDEX_BOT_INLET,
@@ -85,19 +85,15 @@ enum PLAT_TEMP_INDEX_E {
 };
 
 enum PLAT_TEMP_INDEX_THRESHOLD_TYPE_E {
-	ON_DIE_1_2_REMOTE_1_HIGH_LIMIT,
-	ON_DIE_1_2_REMOTE_1_LOW_LIMIT,
-	ON_DIE_1_2_REMOTE_2_HIGH_LIMIT,
-	ON_DIE_1_2_REMOTE_2_LOW_LIMIT,
-	ON_DIE_1_2_REMOTE_1_THERM_LIMIT,
-	ON_DIE_1_2_REMOTE_2_THERM_LIMIT,
+	DIE_ATH_0_N_OWL_REMOTE_1_HIGH_LIMIT,
+	DIE_ATH_0_N_OWL_REMOTE_1_LOW_LIMIT,
+	DIE_ATH_1_S_OWL_REMOTE_1_HIGH_LIMIT,
+	DIE_ATH_1_S_OWL_REMOTE_1_LOW_LIMIT,
 
-	ON_DIE_3_4_REMOTE_1_HIGH_LIMIT,
-	ON_DIE_3_4_REMOTE_1_LOW_LIMIT,
-	ON_DIE_3_4_REMOTE_2_HIGH_LIMIT,
-	ON_DIE_3_4_REMOTE_2_LOW_LIMIT,
-	ON_DIE_3_4_REMOTE_1_THERM_LIMIT,
-	ON_DIE_3_4_REMOTE_2_THERM_LIMIT,
+	DIE_ATH_0_N_OWL_REMOTE_2_HIGH_LIMIT,
+	DIE_ATH_0_N_OWL_REMOTE_2_LOW_LIMIT,
+	DIE_ATH_1_S_OWL_REMOTE_2_HIGH_LIMIT,
+	DIE_ATH_1_S_OWL_REMOTE_2_LOW_LIMIT,
 
 	TOP_INLET_LOW_LIMIT,
 	TOP_INLET_HIGH_LIMIT,
@@ -158,6 +154,12 @@ typedef struct bootstrap_user_settings_struct {
 
 extern bootstrap_user_settings_struct bootstrap_user_settings;
 
+typedef struct thermaltrip_user_settings_struct {
+	uint8_t thermaltrip_user_setting_value;
+} thermaltrip_user_settings_struct;
+
+extern thermaltrip_user_settings_struct thermaltrip_user_settings;
+
 typedef struct vr_mapping_sensor {
 	uint8_t index;
 	uint8_t sensor_id;
@@ -204,6 +206,7 @@ extern size_t power_sequence_off_table_size;
 extern vr_pre_proc_arg vr_pre_read_args[];
 extern mp2971_init_arg mp2971_init_args[];
 extern isl69259_init_arg isl69259_init_args[];
+extern mpc12109_init_arg mpc12109_init_args[];
 
 typedef struct temp_threshold_user_settings_struct {
 	uint32_t temperature_reg_val[PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX];
@@ -272,11 +275,15 @@ bool vr_status_name_get(uint8_t rail, uint8_t **name);
 bool vr_status_enum_get(uint8_t *name, uint8_t *num);
 bool vr_vout_default_settings_init(void);
 bool vr_vout_user_settings_init(void);
+bool get_user_settings_thermaltrip_from_eeprom(void *user_settings, uint8_t data_length);
+bool set_thermaltrip_user_settings(bool thermaltrip_enable, bool is_perm);
 bool strap_name_get(uint8_t rail, uint8_t **name);
 bool strap_enum_get(uint8_t *name, uint8_t *num);
+void init_temp_alert_mode(void);
 bool find_bootstrap_by_rail(uint8_t rail, bootstrap_mapping_register *result);
 bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting_value,
 					   uint8_t drive_index_level, bool is_perm);
 bool get_bootstrap_change_drive_level(int rail, int *drive_level);
+void init_temp_limit(void);
 
 #endif

@@ -38,6 +38,7 @@ static bool plat_sensor_temp_polling_enable_flag = true;
 static bool plat_sensor_vr_polling_enable_flag = true;
 
 void plat_pldm_sensor_change_ubc_dev();
+void plat_pldm_sensor_change_ubc_init_args();
 void plat_pldm_sensor_change_vr_dev();
 void plat_pldm_sensor_change_vr_addr();
 void plat_pldm_sensor_change_vr_init_args();
@@ -52,11 +53,29 @@ typedef struct plat_sensor_vr_extend_info {
 	void *rns_vr_init_args;
 } plat_sensor_vr_extend_info;
 
+typedef struct plat_sensor_ubc_extend_info {
+	uint16_t sensor_id;
+	void *mpc12109_ubc_init_arg;
+} plat_sensor_ubc_extend_info;
+
 typedef struct plat_sensor_tmp_extend_info {
 	uint16_t sensor_id;
 	uint8_t target_emc1413_addr;
 	uint16_t offset;
 } plat_sensor_tmp_extend_info;
+
+plat_sensor_ubc_extend_info plat_sensor_ubc_extend_table[] = {
+	{ UBC1_P12V_TEMP_C },
+	{ UBC1_P50V_INPUT_VOLT_V },
+	{ UBC1_P12V_OUTPUT_VOLT_V },
+	{ UBC1_P12V_CURR_A, .mpc12109_ubc_init_arg = &mpc12109_init_args[0] },
+	{ UBC1_P12V_PWR_W, .mpc12109_ubc_init_arg = &mpc12109_init_args[0] },
+	{ UBC2_P12V_TEMP_C },
+	{ UBC2_P50V_INPUT_VOLT_V },
+	{ UBC2_P12V_OUTPUT_VOLT_V },
+	{ UBC2_P12V_CURR_A, .mpc12109_ubc_init_arg = &mpc12109_init_args[0] },
+	{ UBC2_P12V_PWR_W, .mpc12109_ubc_init_arg = &mpc12109_init_args[0] },
+};
 
 plat_sensor_vr_extend_info plat_sensor_vr_extend_table[] = {
 	{ VR_P3V3_TEMP_C, VR_P3V3_ISL69260_ADDR, VR_P3V3_MP2971_FAB3_ADDR },
@@ -250,8 +269,8 @@ plat_sensor_tmp_extend_info plat_sensor_tmp_extend_table[] = {
 	{ ASIC_DIE_ATH_SENSOR_0_TEMP_C, ASIC_DIE_ATH_SENSOR_0_TEMP_EMC1413_ADDR,
 	  EMC1413_REMOTE_TEMPERATRUE_1 },
 	{ ASIC_DIE_ATH_SENSOR_1_TEMP_C, ASIC_DIE_ATH_SENSOR_1_TEMP_EMC1413_ADDR,
-	  EMC1413_REMOTE_TEMPERATRUE_2 },
-	{ ASIC_DIE_N_OWL_TEMP_C, ON_DIE_3_TEMP_EMC1413_ADDR, EMC1413_REMOTE_TEMPERATRUE_1 },
+	  EMC1413_REMOTE_TEMPERATRUE_1 },
+	{ ASIC_DIE_N_OWL_TEMP_C, ON_DIE_3_TEMP_EMC1413_ADDR, EMC1413_REMOTE_TEMPERATRUE_2 },
 	{ ASIC_DIE_S_OWL_TEMP_C, ASIC_DIE_S_OWL_TEMP_EMC1413_ADDR, EMC1413_REMOTE_TEMPERATRUE_2 },
 };
 
@@ -7113,7 +7132,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			95000, //uint32_t critical_high;
+			105000, //uint32_t critical_high;
 			5000, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
@@ -7181,7 +7200,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			95000, //uint32_t critical_high;
+			105000, //uint32_t critical_high;
 			5000, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
@@ -7249,7 +7268,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			95000, //uint32_t critical_high;
+			105000, //uint32_t critical_high;
 			5000, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
@@ -7317,7 +7336,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			95000, //uint32_t critical_high;
+			105000, //uint32_t critical_high;
 			5000, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
@@ -9153,6 +9172,7 @@ pldm_sensor_info *plat_pldm_sensor_load(int thread_id)
 	switch (thread_id) {
 	case UBC_SENSOR_THREAD_ID:
 		plat_pldm_sensor_change_ubc_dev();
+		plat_pldm_sensor_change_ubc_init_args();
 		return plat_pldm_sensor_ubc_table;
 	case VR_SENSOR_THREAD_ID:
 		plat_pldm_sensor_change_vr_dev();
@@ -9348,16 +9368,17 @@ void find_tmp_addr_and_offset_by_sensor_id(uint8_t sensor_id, uint8_t *tmp_addr,
 void find_init_args_by_sensor_id(uint16_t sensor_id, void **init_args)
 {
 	uint8_t vr_type = get_vr_type();
+	uint8_t ubc_type = get_ubc_type();
 	uint8_t board_stage = get_board_stage();
 
 	for (int index = 0; index < plat_pldm_sensor_get_sensor_count(VR_SENSOR_THREAD_ID);
 	     index++) {
-		if (plat_pldm_sensor_vr_table[index].pdr_numeric_sensor.sensor_id ==
-		    VR_P3V3_VOLT_V) {
+		if (plat_pldm_sensor_vr_table[index].pdr_numeric_sensor.sensor_id == sensor_id) {
 			if ((vr_type == VR_MPS_MP2971_MP2891) ||
 			    (vr_type == VR_MPS_MP2971_MP29816A)) {
 				LOG_INF("change vr init args for MPS");
 				*init_args = plat_sensor_vr_extend_table[index].mps_vr_init_args;
+				return;
 			} else if ((vr_type == VR_RNS_ISL69260_RAA228238) ||
 				   (vr_type == VR_RNS_ISL69260_RAA228249)) {
 				LOG_INF("change vr init args for RNS");
@@ -9367,19 +9388,56 @@ void find_init_args_by_sensor_id(uint16_t sensor_id, void **init_args)
 						&isl69259_init_args[1];
 				}
 				*init_args = plat_sensor_vr_extend_table[index].rns_vr_init_args;
+				return;
 			} else {
 				*init_args = NULL;
+				return;
 			}
+		}
+	}
+
+	for (int index = 0; index < plat_pldm_sensor_get_sensor_count(UBC_SENSOR_THREAD_ID);
+	     index++) {
+		if (plat_pldm_sensor_ubc_table[index].pdr_numeric_sensor.sensor_id == sensor_id) {
+			if (ubc_type == UBC_MPS_MPC12109) {
+				if (board_stage == FAB3_PVT || board_stage == FAB4_MP) {
+					LOG_INF("change ubc init args for MPS");
+					*init_args = plat_sensor_ubc_extend_table[index]
+							     .mpc12109_ubc_init_arg;
+					return;
+				}
+			}
+		}
+	}
+
+	*init_args = NULL;
+}
+
+void plat_pldm_sensor_change_ubc_init_args()
+{
+	for (int index = 0; index < plat_pldm_sensor_get_sensor_count(UBC_SENSOR_THREAD_ID);
+	     index++) {
+		void *init_args;
+		if ((plat_pldm_sensor_ubc_table[index].pdr_numeric_sensor.sensor_id ==
+		     UBC1_P12V_CURR_A) ||
+		    (plat_pldm_sensor_ubc_table[index].pdr_numeric_sensor.sensor_id ==
+		     UBC1_P12V_PWR_W) ||
+		    (plat_pldm_sensor_ubc_table[index].pdr_numeric_sensor.sensor_id ==
+		     UBC2_P12V_CURR_A) ||
+		    (plat_pldm_sensor_ubc_table[index].pdr_numeric_sensor.sensor_id ==
+		     UBC2_P12V_PWR_W)) {
+			find_init_args_by_sensor_id(
+				plat_pldm_sensor_ubc_table[index].pldm_sensor_cfg.num, &init_args);
+			plat_pldm_sensor_ubc_table[index].pldm_sensor_cfg.init_args = init_args;
 		}
 	}
 }
 
 void plat_pldm_sensor_change_vr_init_args()
 {
-	void *init_args;
-
 	for (int index = 0; index < plat_pldm_sensor_get_sensor_count(VR_SENSOR_THREAD_ID);
 	     index++) {
+		void *init_args;
 		if ((plat_pldm_sensor_vr_table[index].pdr_numeric_sensor.sensor_id ==
 		     VR_P3V3_VOLT_V) ||
 		    (plat_pldm_sensor_vr_table[index].pdr_numeric_sensor.sensor_id ==
