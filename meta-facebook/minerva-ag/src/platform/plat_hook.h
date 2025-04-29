@@ -196,6 +196,7 @@ typedef struct power_sequence {
 	uint8_t index;
 	uint8_t cpld_offsets;
 	uint8_t *power_rail_name;
+	uint8_t value;
 } power_sequence;
 
 extern power_sequence power_sequence_on_table[];
