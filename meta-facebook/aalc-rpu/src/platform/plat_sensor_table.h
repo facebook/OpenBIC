@@ -270,5 +270,5 @@ uint8_t get_sensor_reading_to_real_val(uint8_t sensor_num, float *val);
 uint16_t get_sensor_reading_to_modbus_val(uint8_t sensor_num, int8_t exp, int8_t scale);
 bool switch_sensor_mux(sensor_cfg *cfg);
 void quick_sensor_poll_init();
-
+uint32_t get_pmbus_mfr_id(uint8_t bus, uint8_t addr);
 #endif
