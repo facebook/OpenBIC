@@ -380,6 +380,20 @@ bool is_ubc_enabled_delayed_enabled(void)
 	return ubc_enabled_delayed_status;
 }
 
+void reset_error_log_states(uint8_t err_type)
+{
+	// Reset aegis_cpld_info_table
+	for (size_t i = 0; i < ARRAY_SIZE(aegis_cpld_info_table); i++) {
+		aegis_cpld_info_table[i].is_fault_bit_map = 0x00;
+		aegis_cpld_info_table[i].last_polling_value = 0x00;
+	}
+
+	// Remove and DEASSERT error logs with the err_type
+	reset_error_log_event(err_type);
+
+	LOG_INF("Reset error_log_states with err_type = 0x%02x", err_type);
+}
+
 bool vr_error_callback(aegis_cpld_info *cpld_info, uint8_t *current_cpld_value)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cpld_info, false);
@@ -432,6 +446,7 @@ bool vr_error_callback(aegis_cpld_info *cpld_info, uint8_t *current_cpld_value)
 void poll_cpld_registers()
 {
 	uint8_t data = 0;
+	bool prev_alert_status = false;
 
 	while (1) {
 		/* Sleep for the polling interval */
@@ -439,6 +454,16 @@ void poll_cpld_registers()
 
 		LOG_DBG("cpld_polling_alert_status = %d, cpld_polling_enable_flag = %d",
 			cpld_polling_alert_status, cpld_polling_enable_flag);
+
+		// Check for falling edge of cpld_polling_alert_status (true -> false)
+		if (prev_alert_status && !cpld_polling_alert_status) {
+			uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
+			LOG_DBG("cpld_polling_alert_status: true -> false, reset_error_log_states: %x",
+				err_type);
+			reset_error_log_states(err_type);
+		}
+		// Save current alert status for next loop comparison
+		prev_alert_status = cpld_polling_alert_status;
 
 		if (!cpld_polling_alert_status || !cpld_polling_enable_flag)
 			continue;
