@@ -1,0 +1,30 @@
+From 843f0257864006364fd3d3ce08c3666269d702aa Mon Sep 17 00:00:00 2001
+From: Tyrone Ting <kfting@nuvoton.com>
+Date: Tue, 29 Apr 2025 15:36:04 +0800
+Subject: [PATCH] drivers: i2c: clear BB (bus bus) bit correction
+
+The BB bit in SMBnCST register is write 1 clear (W1C).
+
+Use "|=" instead.
+
+Signed-off-by: Tyrone Ting <kfting@nuvoton.com>
+---
+ drivers/i2c/i2c_npcm4xx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/i2c/i2c_npcm4xx.c b/drivers/i2c/i2c_npcm4xx.c
+index b16aa2dd56e5..ccb206750f1d 100755
+--- a/drivers/i2c/i2c_npcm4xx.c
++++ b/drivers/i2c/i2c_npcm4xx.c
+@@ -925,7 +925,7 @@ static int i2c_npcm4xx_transfer(const struct device *dev, struct i2c_msg *msgs,
+ 	}
+ 
+ 	if (bus_busy) {
+-		inst->SMBnCST &= ~BIT(NPCM4XX_SMBnCST_BB);
++		inst->SMBnCST |= BIT(NPCM4XX_SMBnCST_BB);
+ 		i2c_npcm4xx_mutex_unlock(dev);
+ 		return -EAGAIN;
+ 	}
+-- 
+2.17.1
+
