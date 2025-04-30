@@ -128,6 +128,7 @@ void pal_set_sys_status()
 	set_DC_status(PWRGD_CPU_LVC3);
 	set_DC_on_delayed_status();
 	set_post_status(FM_BIOS_POST_CMPLT_BIC_N);
+	set_bootdrive_exist_status();
 	sync_bmc_ready_pin();
 	apml_init();
 
