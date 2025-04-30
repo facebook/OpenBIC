@@ -35,7 +35,6 @@
 #define ADDR_X8_RETIMER (0x46 >> 1)
 #define ADDR_X16_RETIMER (0x40 >> 1)
 #define ADDR_NVME (0xD4 >> 1)
-#define ADDR_CPLD_IOE (0x46 >> 1)
 
 #define OFFSET_TMP75_TEMP 0x00
 #define OFFSET_NVME_TEMP 0x00
@@ -83,5 +82,7 @@ void plat_init_pldm_disabled_sensors();
 void plat_pldm_sensor_change_dimm_dev();
 void plat_pldm_sensor_clear_vr_fault(uint8_t vr_addr, uint8_t vr_bus, uint8_t page_cnt);
 bool bootdrive_access(uint8_t sensor_num);
+void set_bootdrive_exist_status();
+bool get_bootdrive_exist_status();
 
 #endif

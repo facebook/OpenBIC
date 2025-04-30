@@ -35,6 +35,7 @@
 #include "plat_gpio.h"
 
 LOG_MODULE_REGISTER(plat_pldm_sensor);
+static bool bootdrive_exist = false;
 
 static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = {
 	// thread id, thread name
@@ -7004,33 +7005,40 @@ uint8_t plat_pldm_sensor_get_ina_dev()
 	return sensor_dev_sq52205;
 }
 
-bool bootdrive_access(uint8_t sensor_num)
+void set_bootdrive_exist_status()
 {
 	int retry = 5;
 	I2C_MSG msg = { 0 };
-	bool bootdrive_exist = false;
 
 	// read CPLD to check if bootdrive exist
-	msg.bus = I2C_BUS3;
-	msg.target_addr = ADDR_CPLD_IOE;
+	msg.bus = CPLD_IO_I2C_BUS;
+	msg.target_addr = CPLD_IO_I2C_ADDR;
 	msg.tx_len = 1;
 	msg.rx_len = 1;
 	msg.data[0] = OFFSET_CARD_PRSNT;
 
 	if (i2c_master_read(&msg, retry) != 0) {
 		LOG_ERR("Failed to get BootDrive PRSNT from CPLD IOE");
-		return true;
+		return;
 	} else {
 		bootdrive_exist = !(msg.data[0] & (1 << 6));
+		LOG_ERR("Return Value is %x, Bootdrive %s", msg.data[0], bootdrive_exist ? "exist" : "does not exist");
 	}
+}
 
+bool get_bootdrive_exist_status()
+{
+	return bootdrive_exist;
+}
+
+bool bootdrive_access(uint8_t sensor_num)
+{
 	// If the bootdrice exist, wait for post_completed then start to monitor
-	if(bootdrive_exist)
+	if(get_bootdrive_exist_status())
 	{
 		return post_access(sensor_num);
 	}
 
 	// If the bootdrive does not exist, let the sensor do not stock in init status
-	LOG_ERR("Return Value is %x, Bootdrive does not exist", msg.data[0]);
 	return true;
 }
