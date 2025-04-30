@@ -64,4 +64,5 @@ void OPB_ISR_E1S_2_P3V3_POWER_FAULT();
 void OPB_ISR_E1S_3_P3V3_POWER_FAULT();
 void OPB_ISR_E1S_4_P3V3_POWER_FAULT();
 
+bool get_cpu_pcie_perst_status();
 #endif
