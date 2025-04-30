@@ -36,6 +36,7 @@ LOG_MODULE_REGISTER(plat_log);
 #define AEGIS_CPLD_ADDR (0x4C >> 1)
 #define I2C_BUS_CPLD I2C_BUS5
 #define AEGIS_CPLD_VR_VENDOR_TYPE_REG 0x1C
+#define ERROR_CODE_TYPE_SHIFT 13
 
 static plat_err_log_mapping err_log_data[LOG_MAX_NUM];
 static uint16_t err_code_caches[200]; //extend if error code types > 200
@@ -403,6 +404,20 @@ void error_log_event(uint16_t error_code, bool log_status)
 
 	if (log_num > LOG_MAX_NUM) {
 		log_num = LOG_MAX_NUM;
+	}
+}
+
+void reset_error_log_event(uint8_t err_type)
+{
+	// Remove and DEASSERT error logs starting with the err_type
+	for (uint8_t i = 1; i < ARRAY_SIZE(err_code_caches); i++) {
+		uint16_t error_code = err_code_caches[i];
+		uint8_t code_type = error_code >> ERROR_CODE_TYPE_SHIFT;
+		if (code_type == err_type) {
+			LOG_DBG("DEASSERT");
+			error_log_event(error_code, LOG_DEASSERT);
+			err_code_caches[i] = 0;
+		}
 	}
 }
 
