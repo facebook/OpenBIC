@@ -22,8 +22,8 @@
 #define CPLD_EEPROM_ADDR (0xA0 >> 1)
 
 #define CHASSIS_CUSTOM_DATA_MAX 24
-#define BOARD_CUSTOM_DATA_MAX 8
-#define PRODUCT_CUSTOM_DATA_MAX 8
+#define BOARD_CUSTOM_DATA_MAX 10
+#define PRODUCT_CUSTOM_DATA_MAX 10
 
 typedef struct {
 	uint8_t chassis_type;
