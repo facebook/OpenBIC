@@ -316,11 +316,11 @@ static void fsc_thread_handler(void *arug0, void *arug1, void *arug2)
 	CHECK_NULL_ARG(arug1);
 	ARG_UNUSED(arug2);
 
-	zone_cfg *zone_table = (zone_cfg *)arug0;
-	uint32_t zone_table_size = POINTER_TO_UINT(arug1);
+	zone_cfg *fsc_zone_table = (zone_cfg *)arug0;
+	uint32_t fsc_zone_table_size = POINTER_TO_UINT(arug1);
 
-	LOG_INF("fsc_thread_handler zone_table %p, zone_table_size %d", zone_table,
-		zone_table_size);
+	LOG_INF("fsc_thread_handler fsc_zone_table %p, fsc_zone_table_size %d", fsc_zone_table,
+		fsc_zone_table_size);
 
 	const int fsc_poll_interval_ms = 1000;
 
@@ -330,12 +330,12 @@ static void fsc_thread_handler(void *arug0, void *arug1, void *arug2)
 		if (!fsc_poll_flag)
 			continue;
 
-		for (uint8_t i = 0; i < zone_table_size; i++) {
+		for (uint8_t i = 0; i < fsc_zone_table_size; i++) {
 			uint16_t duty = 0;
 			uint8_t tmp_duty = 0;
 
 			FSC_PRINTF("---------- fsc zone %d\n", i);
-			zone_cfg *zone_p = zone_table + i;
+			zone_cfg *zone_p = fsc_zone_table + i;
 			if (zone_p == NULL)
 				continue;
 
