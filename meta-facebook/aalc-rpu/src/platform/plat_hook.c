@@ -1142,7 +1142,7 @@ static uint16_t get_fb_pwr_prsnt(void)
 	}
 
 	for (uint8_t i = 0; i < FB_PRSNT_NUM_PER_IOEXP; i++)
-		WRITE_BIT(prsnt, i * 2 + 1, !((msg.data[0] >> i) & 0x01));
+		WRITE_BIT(prsnt, i * 2, !((msg.data[0] >> i) & 0x01));
 
 	msg = construct_i2c_message(I2C_BUS9, FB_PWR_PRSNT_ADDR_ODD >> 1, 1, &input_reg,
 				    1); // read odd io expander
@@ -1152,7 +1152,7 @@ static uint16_t get_fb_pwr_prsnt(void)
 	}
 
 	for (uint8_t i = 0; i < FB_PRSNT_NUM_PER_IOEXP; i++)
-		WRITE_BIT(prsnt, i * 2, !((msg.data[0] >> i) & 0x01));
+		WRITE_BIT(prsnt, i * 2 + 1, !((msg.data[0] >> i) & 0x01));
 
 exit:
 	if (post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, NULL) == false)
