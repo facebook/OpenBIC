@@ -188,7 +188,7 @@ static int i2c_target_stop(struct i2c_slave_config *config)
 
 		/* if target queue is full, unregister the bus target to prevent next message handle */
 		if (!k_msgq_num_free_get(&data->target_wr_msgq_id)) {
-			LOG_DBG("Target queue is full, unregister bus[%d]", data->i2c_bus);
+			LOG_WRN("Target queue is full, unregister bus[%d]", data->i2c_bus);
 			do_i2c_target_unregister(data->i2c_bus);
 		}
 	}

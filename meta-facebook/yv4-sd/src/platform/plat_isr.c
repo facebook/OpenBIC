@@ -580,7 +580,7 @@ void process_vr_pmalert_ocp_sel(struct k_work *work_item)
 	uint8_t status_info[status_array_size];
 
 	for (int page = 0; page < work_info->page_cnt; ++page) {
-		set_vr_monitor_status(false);
+		disable_sensor_poll();
 		// wait 10ms for vr monitor stop
 		k_msleep(10);
 
@@ -672,7 +672,7 @@ void process_vr_pmalert_ocp_sel(struct k_work *work_item)
 				status_info[status_array_size - 1]);
 		}
 
-		set_vr_monitor_status(true);
+		enable_sensor_poll();
 
 		struct pldm_addsel_data sel_msg = { 0 };
 
@@ -749,6 +749,8 @@ void process_vr_pmalert_ocp_sel(struct k_work *work_item)
 			};
 		}
 	}
+	// make sure enable polling
+	enable_sensor_poll();
 }
 
 void ISR_PVDDCR_CPU0_OCP()

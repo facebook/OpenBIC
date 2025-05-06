@@ -567,6 +567,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		[VR_MPS_MP2971_MP2891] = "MPS ",
 		[VR_RNS_ISL69260_RAA228249] = "RNS ",
 		[VR_MPS_MP2971_MP29816A] = "MPS ",
+		[VR_UNKNOWN] = NULL,
 	};
 
 	const char *remain_str_p = ", Remaining Write: ";
@@ -598,8 +599,8 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	*len += strlen(remain_str_p);
 
 	if (remain != 0xFFFF) {
-		remain = (uint8_t)((remain % 10) | (remain / 10 << 4));
-		*len += bin2hex((uint8_t *)&remain, 1, buf_p, 2);
+		uint8_t packed_remain = (uint8_t)((remain % 10) | (remain / 10 << 4));
+		*len += bin2hex(&packed_remain, 1, buf_p, 2);
 		buf_p += 2;
 	} else {
 		*len += bin2hex((uint8_t *)&remain, 2, buf_p, 4);

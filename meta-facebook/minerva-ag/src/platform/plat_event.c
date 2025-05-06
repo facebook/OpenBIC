@@ -32,6 +32,10 @@ LOG_MODULE_REGISTER(plat_event);
 
 #define CPLD_POLLING_INTERVAL_MS 1000 // 1 second polling interval
 
+#define CHECK_ALL_BITS 0xFF
+#define CHECK_BIT_7_ONLY 0x80
+#define CHECK_BIT_6_ONLY 0x40
+
 #ifndef AEGIS_CPLD_ADDR
 #define AEGIS_CPLD_ADDR (0x4C >> 1)
 #endif
@@ -65,23 +69,23 @@ bool vr_error_callback(aegis_cpld_info *cpld_info, uint8_t *current_cpld_value);
 
 // clang-format off
 aegis_cpld_info aegis_cpld_info_table[] = {
-	{ VR_POWER_FAULT_1_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
-	{ VR_POWER_FAULT_2_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
-	{ VR_POWER_FAULT_3_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
-	{ VR_POWER_FAULT_4_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
-	{ VR_POWER_FAULT_5_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
-	{ VR_SMBUS_ALERT_1_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
-	{ VR_SMBUS_ALERT_2_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
-	{ ASIC_OC_WARN_REG, 				0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
-	{ SYSTEM_ALERT_FAULT_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
-	{ TEMPERATURE_IC_OVERT_FAULT_REG, 	0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
-	{ LEAK_DETCTION_REG, 				0xDF, 0xDF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
+	{ VR_POWER_FAULT_1_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ VR_POWER_FAULT_2_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ VR_POWER_FAULT_3_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ VR_POWER_FAULT_4_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ VR_POWER_FAULT_5_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ VR_SMBUS_ALERT_1_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ VR_SMBUS_ALERT_2_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ ASIC_OC_WARN_REG, 				0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ SYSTEM_ALERT_FAULT_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BIT_7_ONLY },
+	{ TEMPERATURE_IC_OVERT_FAULT_REG, 	0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ LEAK_DETCTION_REG, 				0xDF, 0xDF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BIT_6_ONLY},
 
-	{ TEMPERATURE_IC_OVERT_FAULT_2_REG, 0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
-	{ ASIC_OC_WARN_2_REG, 				0xDF, 0xDF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
-	{ SYSTEM_ALERT_FAULT_2_REG, 		0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
-	{ VR_SMBUS_ALERT_3_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },
-	{ VR_SMBUS_ALERT_4_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback },	
+	{ TEMPERATURE_IC_OVERT_FAULT_2_REG, 0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ ASIC_OC_WARN_2_REG, 				0xDF, 0xDF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ SYSTEM_ALERT_FAULT_2_REG, 		0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BIT_7_ONLY },
+	{ VR_SMBUS_ALERT_3_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ VR_SMBUS_ALERT_4_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },	
 };
 // clang-format on
 
@@ -380,6 +384,20 @@ bool is_ubc_enabled_delayed_enabled(void)
 	return ubc_enabled_delayed_status;
 }
 
+void reset_error_log_states(uint8_t err_type)
+{
+	// Reset aegis_cpld_info_table
+	for (size_t i = 0; i < ARRAY_SIZE(aegis_cpld_info_table); i++) {
+		aegis_cpld_info_table[i].is_fault_bit_map = 0x00;
+		aegis_cpld_info_table[i].last_polling_value = 0x00;
+	}
+
+	// Remove and DEASSERT error logs with the err_type
+	reset_error_log_event(err_type);
+
+	LOG_INF("Reset error_log_states with err_type = 0x%02x", err_type);
+}
+
 bool vr_error_callback(aegis_cpld_info *cpld_info, uint8_t *current_cpld_value)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cpld_info, false);
@@ -390,7 +408,7 @@ bool vr_error_callback(aegis_cpld_info *cpld_info, uint8_t *current_cpld_value)
 		ubc_enabled_delayed_status ? cpld_info->dc_on_defaut : cpld_info->dc_off_defaut;
 
 	// Calculate current faults and new faults
-	uint8_t current_fault = *current_cpld_value ^ expected_val;
+	uint8_t current_fault = (*current_cpld_value ^ expected_val) & cpld_info->bit_check_mask;
 	uint8_t status_changed_bit = current_fault ^ cpld_info->is_fault_bit_map;
 
 	if (!status_changed_bit)
@@ -432,6 +450,7 @@ bool vr_error_callback(aegis_cpld_info *cpld_info, uint8_t *current_cpld_value)
 void poll_cpld_registers()
 {
 	uint8_t data = 0;
+	bool prev_alert_status = false;
 
 	while (1) {
 		/* Sleep for the polling interval */
@@ -439,6 +458,16 @@ void poll_cpld_registers()
 
 		LOG_DBG("cpld_polling_alert_status = %d, cpld_polling_enable_flag = %d",
 			cpld_polling_alert_status, cpld_polling_enable_flag);
+
+		// Check for falling edge of cpld_polling_alert_status (true -> false)
+		if (prev_alert_status && !cpld_polling_alert_status) {
+			uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
+			LOG_DBG("cpld_polling_alert_status: true -> false, reset_error_log_states: %x",
+				err_type);
+			reset_error_log_states(err_type);
+		}
+		// Save current alert status for next loop comparison
+		prev_alert_status = cpld_polling_alert_status;
 
 		if (!cpld_polling_alert_status || !cpld_polling_enable_flag)
 			continue;
@@ -457,10 +486,15 @@ void poll_cpld_registers()
 				continue;
 			}
 
+			LOG_DBG("Polling CPLD 0x%02X raw=0x%02X, expected=0x%02X, mask=0x%02X",
+				aegis_cpld_info_table[i].cpld_offset, data, expected_val,
+				aegis_cpld_info_table[i].bit_check_mask);
+
 			if (!aegis_cpld_info_table[i].is_fault_log)
 				continue;
 
-			uint8_t new_fault_map = (data ^ expected_val);
+			uint8_t new_fault_map =
+				(data ^ expected_val) & aegis_cpld_info_table[i].bit_check_mask;
 
 			// get unrecorded fault bit map
 			uint8_t is_status_changed =

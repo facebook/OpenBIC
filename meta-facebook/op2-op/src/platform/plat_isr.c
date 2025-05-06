@@ -40,6 +40,7 @@ K_THREAD_STACK_DEFINE(power_thread, POWER_SEQ_CTRL_STACK_SIZE);
 struct k_thread power_thread_handler;
 k_tid_t power_tid;
 
+static bool is_cpu_pcie_perst_enable = false;
 static bool is_e1s_P12V_fault_assert[MAX_E1S_IDX] = { false, false, false, false, false };
 static bool is_e1s_P3V3_fault_assert[MAX_E1S_IDX] = { false, false, false, false, false };
 
@@ -173,16 +174,27 @@ void ISR_FM_EXP_MAIN_PWR_EN()
 
 void ISR_CPU_PCIE_PERST()
 {
+	uint8_t power_status = get_power_handler_status();
 	uint8_t card_type = get_card_type();
 	uint8_t gpio_num =
 		(card_type == CARD_TYPE_OPA) ? OPA_RST_PCIE_EXP_PERST0_N : OPB_RST_CPLD_PERST1_N;
 	if (gpio_get(gpio_num) == GPIO_HIGH) {
-		abort_power_thread();
-		init_power_on_thread(RETIMER_POWER_ON_STAGE1);
+		if (power_status == POWER_ON_HANDLER) { // when power on sequence tirgger
+			is_cpu_pcie_perst_enable = true; // set flag for power on sequence
+		} else {
+			abort_power_thread();
+			init_power_on_thread(RETIMER_POWER_ON_STAGE2);
+		}
 	} else {
+		is_cpu_pcie_perst_enable = false;
 		abort_cpu_perst_low_thread();
 		cpu_perst_low_thread();
 	}
+}
+
+bool get_cpu_pcie_perst_status()
+{
+	return is_cpu_pcie_perst_enable;
 }
 
 void ISR_E1S_0_INA233_ALERT()

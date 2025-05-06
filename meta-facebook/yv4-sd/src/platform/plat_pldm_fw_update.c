@@ -564,6 +564,7 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	pldm_fw_update_info_t *p = (pldm_fw_update_info_t *)info_p;
 
 	bool ret = false;
+	bool is_read_fail = false;
 	uint32_t version;
 	uint16_t remain = 0xFFFF;
 	uint8_t bus = I2C_BUS4;
@@ -610,25 +611,25 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	};
 
 	const uint8_t *vr_name_p = vr_name[vr_type];
-	set_vr_monitor_status(false);
+	disable_sensor_poll();
 	// wait 10ms for vr monitor stop
 	k_msleep(10);
 	switch (vr_type) {
 	case VR_TYPE_MPS:
 		if (!mp2971_get_checksum(bus, addr, &version)) {
 			LOG_ERR("Read VR checksum failed");
-			return ret;
+			is_read_fail = true;
 		}
 		break;
 	case VR_TYPE_RNS:
 		if (!raa229621_get_crc(bus, addr, &version)) {
 			LOG_ERR("Read VR checksum failed");
-			return ret;
+			is_read_fail = true;
 		}
 
 		if (raa229621_get_remaining_wr(bus, addr, (uint8_t *)&remain) < 0) {
 			LOG_ERR("Read VR remaining write failed");
-			return ret;
+			is_read_fail = true;
 		}
 		break;
 	case VR_TYPE_IFX:
@@ -637,14 +638,17 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	case VR_TYPE_TI:
 		if (!tps536xx_get_crc(bus, addr, &version)) {
 			LOG_ERR("Read TI VR checksum failed");
-			return ret;
+			is_read_fail = true;
 		}
 		break;
 	default:
 		LOG_ERR("Unknown VR device");
+		is_read_fail = true;
+	}
+	enable_sensor_poll();
+	if (is_read_fail == true) {
 		return ret;
 	}
-	set_vr_monitor_status(true);
 
 	version = sys_cpu_to_be32(version);
 	const char *remain_str_p = ", Remaining Write: ";

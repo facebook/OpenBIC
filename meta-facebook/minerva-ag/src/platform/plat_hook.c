@@ -37,6 +37,7 @@
 #include "plat_pldm_sensor.h"
 #include "plat_class.h"
 #include "pmbus.h"
+#include "plat_i2c_target.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -59,6 +60,20 @@ int32_t alert_level_mA_default = 110000;
 int32_t alert_level_mA_user_setting = 110000;
 bool alert_level_is_assert = false;
 
+static uint8_t reverse_bits(uint8_t byte, uint8_t bit_cnt)
+{
+	uint8_t reversed_byte = 0;
+	for (int i = 0; i < bit_cnt; i++) {
+		if (byte & 1)
+			reversed_byte = (reversed_byte << 1) + 1;
+		else
+			reversed_byte = reversed_byte << 1;
+
+		byte = byte >> 1;
+	}
+	return reversed_byte;
+}
+
 int power_level_send_event(bool is_assert, int ubc1_current, int ubc2_current)
 {
 	if (is_assert == true) {
@@ -74,6 +89,17 @@ int power_level_send_event(bool is_assert, int ubc1_current, int ubc2_current)
 	}
 
 	return 0;
+}
+
+bool post_all_sensor_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+
+	update_sensor_data_2_5_table();
+	update_sensor_data_8_table();
+
+	return true;
 }
 
 bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading)
@@ -184,88 +210,92 @@ temp_mapping_sensor temp_index_table[] = {
 };
 
 power_sequence power_sequence_on_table[] = {
-	{ 0, P12V_UBC_PWRGD_ON_REG, "P12V_UBC_PWRGD" },
-	{ 1, PWRGD_P5V_R_ON_REG, "PWRGD_P5V_R" },
-	{ 2, PWRGD_P3V3_OSC_ON_REG, "PWRGD_P3V3_OSC" },
-	{ 3, PWRGD_P3V3_ON_REG, "PWRGD_P3V3" },
-	{ 4, PWRGD_LDO_IN_1V2_R_ON_REG, "PWRGD_LDO_IN_1V2_R" },
-	{ 5, PWRGD_P0V85_PVDD_ON_REG, "PWRGD_P0V85_PVDD" },
-	{ 6, PWRGD_P0V75_PVDD_CH_N_ON_REG, "PWRGD_P0V75_PVDD_CH_N" },
-	{ 7, PWRGD_P0V75_MAX_PHY_N_ON_REG, "PWRGD_P0V75_MAX_PHY_N" },
-	{ 8, PWRGD_P0V75_PVDD_CH_S_ON_REG, "PWRGD_P0V75_PVDD_CH_S" },
-	{ 9, PWRGD_P0V75_MAX_PHY_S_ON_REG, "PWRGD_P0V75_MAX_PHY_S" },
-	{ 10, PWRGD_P0V75_VDDPHY_HBM0_HBM2_HBM4_R_ON_REG, "PWRGD_P0V75_VDDPHY_HBM0_HBM2_HBM4_R" },
-	{ 11, PWRGD_P0V75_VDDPHY_HBM1_HBM3_HBM5_R_ON_REG, "PWRGD_P0V75_VDDPHY_HBM1_HBM3_HBM5_R" },
-	{ 12, PWRGD_P0V75_TRVDD_ZONEA_R_ON_REG, "PWRGD_P0V75_TRVDD_ZONEA_R" },
-	{ 13, PWRGD_P0V75_TRVDD_ZONEB_R_ON_REG, "PWRGD_P0V75_TRVDD_ZONEB_R" },
-	{ 14, PWRGD_P0V75_AVDD_HSCL_R_ON_REG, "PWRGD_P0V75_AVDD_HSCL_R" },
-	{ 15, PWRGD_P0V75_VDDC_CLKOBS_R_ON_REG, "PWRGD_P0V75_VDDC_CLKOBS_R" },
-	{ 16, PWRGD_LDO_IN_1V8_R_ON_REG, "PWRGD_LDO_IN_1V8_R" },
-	{ 17, PWRGD_PLL_VDDA15_MAX_CORE_N_ON_REG, "PWRGD_PLL_VDDA15_MAX_CORE_N" },
-	{ 18, PWRGD_PLL_VDDA15_MAX_CORE_S_ON_REG, "PWRGD_PLL_VDDA15_MAX_CORE_S" },
-	{ 19, PWRGD_PLL_VDDA15_PCIE_MAX_CORE_ON_REG, "PWRGD_PLL_VDDA15_PCIE_MAX_CORE" },
-	{ 20, PWRGD_PLL_VDDA15_HBM0_HBM2_HBM4_ON_REG, "PWRGD_PLL_VDDA15_HBM0_HBM2_HBM4" },
-	{ 21, PWRGD_PLL_VDDA15_HBM1_HBM3_HBM5_ON_REG, "PWRGD_PLL_VDDA15_HBM1_HBM3_HBM5" },
-	{ 22, PWRGD_VPP_HBM0_HBM2_HBM4_R_ON_REG, "PWRGD_VPP_HBM0_HBM2_HBM4_R" },
-	{ 23, PWRGD_VPP_HBM1_HBM3_HBM5_R_ON_REG, "PWRGD_VPP_HBM1_HBM3_HBM5_R" },
-	{ 24, PWRGD_P1V1_VDDC_HBM0_HBM2_HBM4_R_ON_REG, "PWRGD_P1V1_VDDC_HBM0_HBM2_HBM4_R" },
-	{ 25, PWRGD_P1V1_VDDC_HBM1_HBM3_HBM5_R_ON_REG, "PWRGD_P1V1_VDDC_HBM1_HBM3_HBM5_R" },
-	{ 26, PWRGD_VDDQL_HBM0_HBM2_HBM4_R_ON_REG, "PWRGD_VDDQL_HBM0_HBM2_HBM4_R" },
-	{ 27, PWRGD_VDDQL_HBM1_HBM3_HBM5_R_ON_REG, "PWRGD_VDDQL_HBM1_HBM3_HBM5_R" },
-	{ 28, FM_AEGIS_CLK_48MHZ_EN_ON_REG, "FM_AEGIS_CLK_48MHZ_EN" },
-	{ 29, FM_AEGIS_CLK_100MHZ_EN_N_ON_REG, "FM_AEGIS_CLK_100MHZ_EN_N" },
-	{ 30, FM_AEGIS_CLK_312MHZ_EN_ON_REG, "FM_AEGIS_CLK_312MHZ_EN" },
-	{ 31, PWRGD_VDDA_PCIE_R_ON_REG, "PWRGD_VDDA_PCIE_R" },
-	{ 32, PWRGD_P0V9_TRVDD_ZONEA_R_ON_REG, "PWRGD_P0V9_TRVDD_ZONEA_R" },
-	{ 33, PWRGD_P0V9_TRVDD_ZONEB_R_ON_REG, "PWRGD_P0V9_TRVDD_ZONEB_R" },
-	{ 34, PWRGD_PVDD0P9_N_ON_REG, "PWRGD_PVDD0P9_N" },
-	{ 35, PWRGD_PVDD0P9_S_ON_REG, "PWRGD_PVDD0P9_S" },
-	{ 36, PWRGD_PVDD1P5_N_ON_REG, "PWRGD_PVDD1P5_N" },
-	{ 37, PWRGD_PVDD1P5_S_ON_REG, "PWRGD_PVDD1P5_S" },
-	{ 38, PWRGD_VDDHTX_PCIE_R_ON_REG, "PWRGD_VDDHTX_PCIE_R" },
-	{ 39, RST_ATH_PWR_ON_PLD_N_ON_REG, "RST_ATH_PWR_ON_PLD_N" },
+	{ 0, P12V_UBC_PWRGD_ON_REG, "P12V_UBC_PWRGD", 0x00 },
+	{ 1, PWRGD_P5V_R_ON_REG, "PWRGD_P5V_R", 0x00 },
+	{ 2, PWRGD_P3V3_OSC_ON_REG, "PWRGD_P3V3_OSC", 0x00 },
+	{ 3, PWRGD_P3V3_ON_REG, "PWRGD_P3V3", 0x00 },
+	{ 4, PWRGD_LDO_IN_1V2_R_ON_REG, "PWRGD_LDO_IN_1V2_R", 0x00 },
+	{ 5, PWRGD_P0V85_PVDD_ON_REG, "PWRGD_P0V85_PVDD", 0x00 },
+	{ 6, PWRGD_P0V75_PVDD_CH_N_ON_REG, "PWRGD_P0V75_PVDD_CH_N", 0x00 },
+	{ 7, PWRGD_P0V75_MAX_PHY_N_ON_REG, "PWRGD_P0V75_MAX_PHY_N", 0x00 },
+	{ 8, PWRGD_P0V75_PVDD_CH_S_ON_REG, "PWRGD_P0V75_PVDD_CH_S", 0x00 },
+	{ 9, PWRGD_P0V75_MAX_PHY_S_ON_REG, "PWRGD_P0V75_MAX_PHY_S", 0x00 },
+	{ 10, PWRGD_P0V75_VDDPHY_HBM0_HBM2_HBM4_R_ON_REG, "PWRGD_P0V75_VDDPHY_HBM0_HBM2_HBM4_R",
+	  0x00 },
+	{ 11, PWRGD_P0V75_VDDPHY_HBM1_HBM3_HBM5_R_ON_REG, "PWRGD_P0V75_VDDPHY_HBM1_HBM3_HBM5_R",
+	  0x00 },
+	{ 12, PWRGD_P0V75_TRVDD_ZONEA_R_ON_REG, "PWRGD_P0V75_TRVDD_ZONEA_R", 0x00 },
+	{ 13, PWRGD_P0V75_TRVDD_ZONEB_R_ON_REG, "PWRGD_P0V75_TRVDD_ZONEB_R", 0x00 },
+	{ 14, PWRGD_P0V75_AVDD_HSCL_R_ON_REG, "PWRGD_P0V75_AVDD_HSCL_R", 0x00 },
+	{ 15, PWRGD_P0V75_VDDC_CLKOBS_R_ON_REG, "PWRGD_P0V75_VDDC_CLKOBS_R", 0x00 },
+	{ 16, PWRGD_LDO_IN_1V8_R_ON_REG, "PWRGD_LDO_IN_1V8_R", 0x00 },
+	{ 17, PWRGD_PLL_VDDA15_MAX_CORE_N_ON_REG, "PWRGD_PLL_VDDA15_MAX_CORE_N", 0x00 },
+	{ 18, PWRGD_PLL_VDDA15_MAX_CORE_S_ON_REG, "PWRGD_PLL_VDDA15_MAX_CORE_S", 0x00 },
+	{ 19, PWRGD_PLL_VDDA15_PCIE_MAX_CORE_ON_REG, "PWRGD_PLL_VDDA15_PCIE_MAX_CORE", 0x00 },
+	{ 20, PWRGD_PLL_VDDA15_HBM0_HBM2_HBM4_ON_REG, "PWRGD_PLL_VDDA15_HBM0_HBM2_HBM4", 0x00 },
+	{ 21, PWRGD_PLL_VDDA15_HBM1_HBM3_HBM5_ON_REG, "PWRGD_PLL_VDDA15_HBM1_HBM3_HBM5", 0x00 },
+	{ 22, PWRGD_VPP_HBM0_HBM2_HBM4_R_ON_REG, "PWRGD_VPP_HBM0_HBM2_HBM4_R", 0x00 },
+	{ 23, PWRGD_VPP_HBM1_HBM3_HBM5_R_ON_REG, "PWRGD_VPP_HBM1_HBM3_HBM5_R", 0x00 },
+	{ 24, PWRGD_P1V1_VDDC_HBM0_HBM2_HBM4_R_ON_REG, "PWRGD_P1V1_VDDC_HBM0_HBM2_HBM4_R", 0x00 },
+	{ 25, PWRGD_P1V1_VDDC_HBM1_HBM3_HBM5_R_ON_REG, "PWRGD_P1V1_VDDC_HBM1_HBM3_HBM5_R", 0x00 },
+	{ 26, PWRGD_VDDQL_HBM0_HBM2_HBM4_R_ON_REG, "PWRGD_VDDQL_HBM0_HBM2_HBM4_R", 0x00 },
+	{ 27, PWRGD_VDDQL_HBM1_HBM3_HBM5_R_ON_REG, "PWRGD_VDDQL_HBM1_HBM3_HBM5_R", 0x00 },
+	{ 28, FM_AEGIS_CLK_48MHZ_EN_ON_REG, "FM_AEGIS_CLK_48MHZ_EN", 0x00 },
+	{ 29, FM_AEGIS_CLK_100MHZ_EN_N_ON_REG, "FM_AEGIS_CLK_100MHZ_EN_N", 0x00 },
+	{ 30, FM_AEGIS_CLK_312MHZ_EN_ON_REG, "FM_AEGIS_CLK_312MHZ_EN", 0x00 },
+	{ 31, PWRGD_VDDA_PCIE_R_ON_REG, "PWRGD_VDDA_PCIE_R", 0x00 },
+	{ 32, PWRGD_P0V9_TRVDD_ZONEA_R_ON_REG, "PWRGD_P0V9_TRVDD_ZONEA_R", 0x00 },
+	{ 33, PWRGD_P0V9_TRVDD_ZONEB_R_ON_REG, "PWRGD_P0V9_TRVDD_ZONEB_R", 0x00 },
+	{ 34, PWRGD_PVDD0P9_N_ON_REG, "PWRGD_PVDD0P9_N", 0x00 },
+	{ 35, PWRGD_PVDD0P9_S_ON_REG, "PWRGD_PVDD0P9_S", 0x00 },
+	{ 36, PWRGD_PVDD1P5_N_ON_REG, "PWRGD_PVDD1P5_N", 0x00 },
+	{ 37, PWRGD_PVDD1P5_S_ON_REG, "PWRGD_PVDD1P5_S", 0x00 },
+	{ 38, PWRGD_VDDHTX_PCIE_R_ON_REG, "PWRGD_VDDHTX_PCIE_R", 0x00 },
+	{ 39, RST_ATH_PWR_ON_PLD_N_ON_REG, "RST_ATH_PWR_ON_PLD_N", 0x00 },
 };
 
 power_sequence power_sequence_off_table[] = {
-	{ 0, PWRGD_VDDHTX_PCIE_R_OFF_REG, "PWRGD_VDDHTX_PCIE_R" },
-	{ 1, PWRGD_PVDD1P5_N_OFF_REG, "PWRGD_PVDD1P5_N" },
-	{ 2, PWRGD_PVDD1P5_S_OFF_REG, "PWRGD_PVDD1P5_S" },
-	{ 3, FM_AEGIS_CLK_48MHZ_EN_OFF_REG, "FM_AEGIS_CLK_48MHZ_EN" },
-	{ 4, FM_AEGIS_CLK_100MHZ_EN_N_OFF_REG, "FM_AEGIS_CLK_100MHZ_EN_N" },
-	{ 5, FM_AEGIS_CLK_312MHZ_EN_OFF_REG, "FM_AEGIS_CLK_312MHZ_EN" },
-	{ 6, PWRGD_VDDA_PCIE_R_OFF_REG, "PWRGD_VDDA_PCIE_R" },
-	{ 7, PWRGD_P0V9_TRVDD_ZONEA_R_OFF_REG, "PWRGD_P0V9_TRVDD_ZONEA_R" },
-	{ 8, PWRGD_P0V9_TRVDD_ZONEB_R_OFF_REG, "PWRGD_P0V9_TRVDD_ZONEB_R" },
-	{ 9, PWRGD_PVDD0P9_N_OFF_REG, "PWRGD_PVDD0P9_N" },
-	{ 10, PWRGD_PVDD0P9_S_OFF_REG, "PWRGD_PVDD0P9_S" },
-	{ 11, PWRGD_VDDQL_HBM0_HBM2_HBM4_R_OFF_REG, "PWRGD_VDDQL_HBM0_HBM2_HBM4_R" },
-	{ 12, PWRGD_VDDQL_HBM1_HBM3_HBM5_R_OFF_REG, "PWRGD_VDDQL_HBM1_HBM3_HBM5_R" },
-	{ 13, PWRGD_P1V1_VDDC_HBM0_HBM2_HBM4_R_OFF_REG, "PWRGD_P1V1_VDDC_HBM0_HBM2_HBM4_R" },
-	{ 14, PWRGD_P1V1_VDDC_HBM1_HBM3_HBM5_R_OFF_REG, "PWRGD_P1V1_VDDC_HBM1_HBM3_HBM5_R" },
-	{ 15, PWRGD_VPP_HBM0_HBM2_HBM4_R_OFF_REG, "PWRGD_VPP_HBM0_HBM2_HBM4_R" },
-	{ 16, PWRGD_VPP_HBM1_HBM3_HBM5_R_OFF_REG, "PWRGD_VPP_HBM1_HBM3_HBM5_R" },
-	{ 17, PWRGD_PLL_VDDA15_MAX_CORE_N_OFF_REG, "PWRGD_PLL_VDDA15_MAX_CORE_N" },
-	{ 18, PWRGD_PLL_VDDA15_MAX_CORE_S_OFF_REG, "PWRGD_PLL_VDDA15_MAX_CORE_S" },
-	{ 19, PWRGD_PLL_VDDA15_PCIE_MAX_CORE_OFF_REG, "PWRGD_PLL_VDDA15_PCIE_MAX_CORE" },
-	{ 20, PWRGD_PLL_VDDA15_HBM0_HBM2_HBM4_OFF_REG, "PWRGD_PLL_VDDA15_HBM0_HBM2_HBM4" },
-	{ 21, PWRGD_PLL_VDDA15_HBM1_HBM3_HBM5_OFF_REG, "PWRGD_PLL_VDDA15_HBM1_HBM3_HBM5" },
-	{ 22, PWRGD_LDO_IN_1V8_R_OFF_REG, "PWRGD_LDO_IN_1V8_R" },
-	{ 23, PWRGD_P0V75_TRVDD_ZONEA_R_OFF_REG, "PWRGD_P0V75_TRVDD_ZONEA_R" },
-	{ 24, PWRGD_P0V75_TRVDD_ZONEB_R_OFF_REG, "PWRGD_P0V75_TRVDD_ZONEB_R" },
-	{ 25, PWRGD_P0V75_AVDD_HSCL_R_OFF_REG, "PWRGD_P0V75_AVDD_HSCL_R" },
-	{ 26, PWRGD_P0V75_VDDC_CLKOBS_R_OFF_REG, "PWRGD_P0V75_VDDC_CLKOBS_R" },
-	{ 27, PWRGD_P0V85_PVDD_OFF_REG, "PWRGD_P0V85_PVDD" },
-	{ 28, PWRGD_P0V75_PVDD_CH_N_OFF_REG, "PWRGD_P0V75_PVDD_CH_N" },
-	{ 29, PWRGD_P0V75_MAX_PHY_N_OFF_REG, "PWRGD_P0V75_MAX_PHY_N" },
-	{ 30, PWRGD_P0V75_PVDD_CH_S_OFF_REG, "PWRGD_P0V75_PVDD_CH_S" },
-	{ 31, PWRGD_P0V75_MAX_PHY_S_OFF_REG, "PWRGD_P0V75_MAX_PHY_S" },
-	{ 32, PWRGD_P0V75_VDDPHY_HBM0_HBM2_HBM4_R_OFF_REG, "PWRGD_P0V75_VDDPHY_HBM0_HBM2_HBM4_R" },
-	{ 33, PWRGD_P0V75_VDDPHY_HBM1_HBM3_HBM5_R_OFF_REG, "PWRGD_P0V75_VDDPHY_HBM1_HBM3_HBM5_R" },
-	{ 34, PWRGD_LDO_IN_1V2_R_OFF_REG, "PWRGD_LDO_IN_1V2_R" },
-	{ 35, PWRGD_P3V3_OFF_REG, "PWRGD_P3V3" },
-	{ 36, PWRGD_P3V3_OSC_OFF_REG, "PWRGD_P3V3_OSC" },
-	{ 37, PWRGD_P5V_R_OFF_REG, "PWRGD_P5V_R" },
-	{ 38, P12V_UBC_PWRGD_OFF_REG, "P12V_UBC_PWRGD" },
+	{ 0, PWRGD_VDDHTX_PCIE_R_OFF_REG, "PWRGD_VDDHTX_PCIE_R", 0x00 },
+	{ 1, PWRGD_PVDD1P5_N_OFF_REG, "PWRGD_PVDD1P5_N", 0x00 },
+	{ 2, PWRGD_PVDD1P5_S_OFF_REG, "PWRGD_PVDD1P5_S", 0x00 },
+	{ 3, FM_AEGIS_CLK_48MHZ_EN_OFF_REG, "FM_AEGIS_CLK_48MHZ_EN", 0x00 },
+	{ 4, FM_AEGIS_CLK_100MHZ_EN_N_OFF_REG, "FM_AEGIS_CLK_100MHZ_EN_N", 0x00 },
+	{ 5, FM_AEGIS_CLK_312MHZ_EN_OFF_REG, "FM_AEGIS_CLK_312MHZ_EN", 0x00 },
+	{ 6, PWRGD_VDDA_PCIE_R_OFF_REG, "PWRGD_VDDA_PCIE_R", 0x00 },
+	{ 7, PWRGD_P0V9_TRVDD_ZONEA_R_OFF_REG, "PWRGD_P0V9_TRVDD_ZONEA_R", 0x00 },
+	{ 8, PWRGD_P0V9_TRVDD_ZONEB_R_OFF_REG, "PWRGD_P0V9_TRVDD_ZONEB_R", 0x00 },
+	{ 9, PWRGD_PVDD0P9_N_OFF_REG, "PWRGD_PVDD0P9_N", 0x00 },
+	{ 10, PWRGD_PVDD0P9_S_OFF_REG, "PWRGD_PVDD0P9_S", 0x00 },
+	{ 11, PWRGD_VDDQL_HBM0_HBM2_HBM4_R_OFF_REG, "PWRGD_VDDQL_HBM0_HBM2_HBM4_R", 0x00 },
+	{ 12, PWRGD_VDDQL_HBM1_HBM3_HBM5_R_OFF_REG, "PWRGD_VDDQL_HBM1_HBM3_HBM5_R", 0x00 },
+	{ 13, PWRGD_P1V1_VDDC_HBM0_HBM2_HBM4_R_OFF_REG, "PWRGD_P1V1_VDDC_HBM0_HBM2_HBM4_R", 0x00 },
+	{ 14, PWRGD_P1V1_VDDC_HBM1_HBM3_HBM5_R_OFF_REG, "PWRGD_P1V1_VDDC_HBM1_HBM3_HBM5_R", 0x00 },
+	{ 15, PWRGD_VPP_HBM0_HBM2_HBM4_R_OFF_REG, "PWRGD_VPP_HBM0_HBM2_HBM4_R", 0x00 },
+	{ 16, PWRGD_VPP_HBM1_HBM3_HBM5_R_OFF_REG, "PWRGD_VPP_HBM1_HBM3_HBM5_R", 0x00 },
+	{ 17, PWRGD_PLL_VDDA15_MAX_CORE_N_OFF_REG, "PWRGD_PLL_VDDA15_MAX_CORE_N", 0x00 },
+	{ 18, PWRGD_PLL_VDDA15_MAX_CORE_S_OFF_REG, "PWRGD_PLL_VDDA15_MAX_CORE_S", 0x00 },
+	{ 19, PWRGD_PLL_VDDA15_PCIE_MAX_CORE_OFF_REG, "PWRGD_PLL_VDDA15_PCIE_MAX_CORE", 0x00 },
+	{ 20, PWRGD_PLL_VDDA15_HBM0_HBM2_HBM4_OFF_REG, "PWRGD_PLL_VDDA15_HBM0_HBM2_HBM4", 0x00 },
+	{ 21, PWRGD_PLL_VDDA15_HBM1_HBM3_HBM5_OFF_REG, "PWRGD_PLL_VDDA15_HBM1_HBM3_HBM5", 0x00 },
+	{ 22, PWRGD_LDO_IN_1V8_R_OFF_REG, "PWRGD_LDO_IN_1V8_R", 0x00 },
+	{ 23, PWRGD_P0V75_TRVDD_ZONEA_R_OFF_REG, "PWRGD_P0V75_TRVDD_ZONEA_R", 0x00 },
+	{ 24, PWRGD_P0V75_TRVDD_ZONEB_R_OFF_REG, "PWRGD_P0V75_TRVDD_ZONEB_R", 0x00 },
+	{ 25, PWRGD_P0V75_AVDD_HSCL_R_OFF_REG, "PWRGD_P0V75_AVDD_HSCL_R", 0x00 },
+	{ 26, PWRGD_P0V75_VDDC_CLKOBS_R_OFF_REG, "PWRGD_P0V75_VDDC_CLKOBS_R", 0x00 },
+	{ 27, PWRGD_P0V85_PVDD_OFF_REG, "PWRGD_P0V85_PVDD", 0x00 },
+	{ 28, PWRGD_P0V75_PVDD_CH_N_OFF_REG, "PWRGD_P0V75_PVDD_CH_N", 0x00 },
+	{ 29, PWRGD_P0V75_MAX_PHY_N_OFF_REG, "PWRGD_P0V75_MAX_PHY_N", 0x00 },
+	{ 30, PWRGD_P0V75_PVDD_CH_S_OFF_REG, "PWRGD_P0V75_PVDD_CH_S", 0x00 },
+	{ 31, PWRGD_P0V75_MAX_PHY_S_OFF_REG, "PWRGD_P0V75_MAX_PHY_S", 0x00 },
+	{ 32, PWRGD_P0V75_VDDPHY_HBM0_HBM2_HBM4_R_OFF_REG, "PWRGD_P0V75_VDDPHY_HBM0_HBM2_HBM4_R",
+	  0x00 },
+	{ 33, PWRGD_P0V75_VDDPHY_HBM1_HBM3_HBM5_R_OFF_REG, "PWRGD_P0V75_VDDPHY_HBM1_HBM3_HBM5_R",
+	  0x00 },
+	{ 34, PWRGD_LDO_IN_1V2_R_OFF_REG, "PWRGD_LDO_IN_1V2_R", 0x00 },
+	{ 35, PWRGD_P3V3_OFF_REG, "PWRGD_P3V3", 0x00 },
+	{ 36, PWRGD_P3V3_OSC_OFF_REG, "PWRGD_P3V3_OSC", 0x00 },
+	{ 37, PWRGD_P5V_R_OFF_REG, "PWRGD_P5V_R", 0x00 },
+	{ 38, P12V_UBC_PWRGD_OFF_REG, "P12V_UBC_PWRGD", 0x00 },
 };
 
 size_t power_sequence_on_table_size = ARRAY_SIZE(power_sequence_on_table);
@@ -303,35 +333,35 @@ bool temp_sensor_rail_enum_get(uint8_t *name, uint8_t *num)
 // clang-format off
 bootstrap_mapping_register bootstrap_table[] = {
 	//  - JTAG pins - Ref 13.3.9 Athena datasheet 1.1
-	{ STRAP_INDEX_SOC_JTAG_MUX_SEL_0_3, 0x1E, "SOC_JTAG_MUX_SEL_0_3", { 4, 5, 6, 7 }, 4, 0x00, 0x00 },
-	{ STRAP_INDEX_SOC_DFT_TAP_EN_L, 0x38, "SOC_DFT_TAP_EN_L", { 1 }, 1, 0xFF, 0xFF },
+	{ STRAP_INDEX_SOC_JTAG_MUX_SEL_0_3, 0x1E, "SOC_JTAG_MUX_SEL_0_3", 4, 4, 0x01, 0x01, true},
+	{ STRAP_INDEX_SOC_DFT_TAP_EN_L, 0x38, "SOC_DFT_TAP_EN_L", 1, 1, 0x01, 0x01, false},
 	// - TEST pins - Ref 13.3.12 Athena datasheet
-	{ STRAP_INDEX_SOC_ATPG_MODE_L, 0x38, "SOC_ATPG_MODE_L", { 2 }, 1, 0xFF, 0xFF },
-	{ STRAP_INDEX_SOC_PAD_TRI_L, 0x38, "SOC_PAD_TRI_L", { 3 }, 1, 0xFF, 0xFF },
-	{ STRAP_INDEX_SOC_CORE_TAP_CTRL_L, 0x38, "SOC_CORE_TAP_CTRL_L", { 0 }, 1, 0xFF, 0xFF },
+	{ STRAP_INDEX_SOC_ATPG_MODE_L, 0x38, "SOC_ATPG_MODE_L", 2, 1, 0x01, 0x01, false },
+	{ STRAP_INDEX_SOC_PAD_TRI_N, 0x38, "SOC_PAD_TRI_N", 3, 1, 0x01, 0x01, false },
+	{ STRAP_INDEX_SOC_CORE_TAP_CTRL_L, 0x38, "SOC_CORE_TAP_CTRL_L", 0, 1, 0x01, 0x01, false },
 	// - SOC BOOT SOURCE pins - Ref 12.3 Athena datasheet
-	{ STRAP_INDEX_SOC_BOOT_SOURCE_0_4, 0x21, "SOC_BOOT_SOURCE_0_4", { 0, 1, 2, 3, 4 }, 5, 0x00, 0x00 },
-	{ STRAP_INDEX_SOC_BOOT_SOURCE_5_6, 0x21, "SOC_BOOT_SOURCE_5_6", { 5, 6 }, 2, 0x00, 0x00 },
-	{ STRAP_INDEX_SOC_BOOT_SOURCE_7, 0x21, "SOC_BOOT_SOURCE_7", { 7 }, 1, 0x00, 0x00 },
-	{ STRAP_INDEX_SOC_GPIO2, 0x3B, "SOC_GPIO2", { 0 }, 1, 0x00, 0x00 },
+	{ STRAP_INDEX_SOC_BOOT_SOURCE_0_4, 0x21, "SOC_BOOT_SOURCE_0_4", 0, 5, 0x04, 0x04, false },
+	{ STRAP_INDEX_SOC_BOOT_SOURCE_5_6, 0x21, "SOC_BOOT_SOURCE_5_6", 5, 2, 0x00, 0x00, false },
+	{ STRAP_INDEX_SOC_BOOT_SOURCE_7, 0x21, "SOC_BOOT_SOURCE_7", 7, 1, 0x00, 0x00, false },
+	{ STRAP_INDEX_SOC_GPIO2, 0x3B, "SOC_GPIO2", 0, 1, 0x00, 0x00, false },
 	// - OWL BOOT SOURCE pins -
-	{ STRAP_INDEX_S_OWL_BOOT_SOURCE_0_7, 0x22, "S_OWL_BOOT_SOURCE_0_7", { 0, 1, 2, 3, 4, 5, 6, 7 }, 8, 0x00, 0x00 },
-	{ STRAP_INDEX_N_OWL_BOOT_SOURCE_0_7, 0x23, "N_OWL_BOOT_SOURCE_0_7", { 0, 1, 2, 3, 4, 5, 6, 7 }, 8, 0x00, 0x00 },
+	{ STRAP_INDEX_S_OWL_BOOT_SOURCE_0_7, 0x22, "S_OWL_BOOT_SOURCE_0_7", 0, 8, 0x04, 0x04, false },
+	{ STRAP_INDEX_N_OWL_BOOT_SOURCE_0_7, 0x23, "N_OWL_BOOT_SOURCE_0_7", 0, 8, 0x04, 0x04, false },
 	// - OWL TEST pins -
-	{ STRAP_INDEX_S_OWL_PAD_TRI_L, 0x37, "S_OWL_PAD_TRI_L", { 3 }, 1, 0xFF, 0xFF },
-	{ STRAP_INDEX_S_OWL_ATPG_MODE_L, 0x37, "S_OWL_ATPG_MODE_L", { 2 }, 1, 0xFF, 0xFF },
-	{ STRAP_INDEX_S_OWL_DFT_TAP_EN_L, 0x37, "S_OWL_DFT_TAP_EN_L", { 1 }, 1, 0xFF, 0xFF },
-	{ STRAP_INDEX_S_OWL_CORE_TAP_CTRL_L, 0x37, "S_OWL_CORE_TAP_CTRL_L", { 0 }, 1, 0xFF, 0xFF },
-	{ STRAP_INDEX_N_OWL_PAD_TRI_L, 0x36, "N_OWL_PAD_TRI_L", { 3 }, 1, 0xFF, 0xFF },
-	{ STRAP_INDEX_N_OWL_ATPG_MODE_L, 0x36, "N_OWL_ATPG_MODE_L", { 2 }, 1, 0xFF, 0xFF },
-	{ STRAP_INDEX_N_OWL_DFT_TAP_EN_L, 0x36, "N_OWL_DFT_TAP_EN_L", { 1 }, 1, 0xFF, 0xFF },
-	{ STRAP_INDEX_N_OWL_CORE_TAP_CTRL_L, 0x36, "N_OWL_CORE_TAP_CTRL_L", { 0 }, 1, 0xFF, 0xFF },
+	{ STRAP_INDEX_S_OWL_PAD_TRI_N, 0x37, "S_OWL_PAD_TRI_N", 3, 1, 0x01, 0x01, false },
+	{ STRAP_INDEX_S_OWL_ATPG_MODE_L, 0x37, "S_OWL_ATPG_MODE_L", 2, 1, 0x01, 0x01, false },
+	{ STRAP_INDEX_S_OWL_DFT_TAP_EN_L, 0x37, "S_OWL_DFT_TAP_EN_L", 1, 1, 0x01, 0x01, false },
+	{ STRAP_INDEX_S_OWL_CORE_TAP_CTRL_L, 0x37, "S_OWL_CORE_TAP_CTRL_L", 0, 1, 0x01, 0x01, false },
+	{ STRAP_INDEX_N_OWL_PAD_TRI_N, 0x36, "N_OWL_PAD_TRI_N", 3, 1, 0x01, 0x01, false },
+	{ STRAP_INDEX_N_OWL_ATPG_MODE_L, 0x36, "N_OWL_ATPG_MODE_L", 2, 1, 0x01, 0x01, false },
+	{ STRAP_INDEX_N_OWL_DFT_TAP_EN_L, 0x36, "N_OWL_DFT_TAP_EN_L", 1, 1, 0x01, 0x01, false },
+	{ STRAP_INDEX_N_OWL_CORE_TAP_CTRL_L, 0x36, "N_OWL_CORE_TAP_CTRL_L", 0, 1, 0x01, 0x01, false },
 	// - OWL JTAG pin -
-	{ STRAP_INDEX_S_OWL_JTAG_MUX_SEL_0_3, 0x1D, "S_OWL_JTAG_MUX_SEL_0_3", { 3, 2, 1, 0 }, 4, 0x00, 0x00 },
-	{ STRAP_INDEX_N_OWL_JTAG_MUX_SEL_0_3, 0x1D, "N_OWL_JTAG_MUX_SEL_0_3", { 7, 6, 5, 4 }, 4, 0x00, 0x00 },
+	{ STRAP_INDEX_S_OWL_JTAG_MUX_SEL_0_3, 0x1D, "S_OWL_JTAG_MUX_SEL_0_3", 0, 4, 0x01, 0x01, true },
+	{ STRAP_INDEX_N_OWL_JTAG_MUX_SEL_0_3, 0x1D, "N_OWL_JTAG_MUX_SEL_0_3", 4, 4, 0x01, 0x01, true },
 	// - OWL UART pin -
-	{ STRAP_INDEX_S_OWL_UART_MUX_SEL_0_2, 0x1F, "S_OWL_UART_MUX_SEL_0_2", { 4, 3, 2 }, 3, 0x00, 0x00 },
-	{ STRAP_INDEX_N_OWL_UART_MUX_SEL_0_2, 0x1F, "N_OWL_UART_MUX_SEL_0_2", { 7, 6, 5 }, 3, 0x00, 0x00 },
+	{ STRAP_INDEX_S_OWL_UART_MUX_SEL_0_2, 0x1F, "S_OWL_UART_MUX_SEL_0_2", 2, 3, 0x00, 0x00, true },
+	{ STRAP_INDEX_N_OWL_UART_MUX_SEL_0_2, 0x1F, "N_OWL_UART_MUX_SEL_0_2", 5, 3, 0x00, 0x00, true },
 };
 // clang-format on
 
@@ -1216,47 +1246,60 @@ bool set_thermaltrip_user_settings(bool thermaltrip_enable, bool is_perm)
 	return true;
 }
 
+bool check_is_bootstrap_setting_value_valid(uint8_t rail, uint8_t value)
+{
+	int critical_value = 1 << bootstrap_table[rail].bit_count;
+
+	return value < critical_value;
+}
+
 bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting_value,
-					   uint8_t drive_index_level, bool is_perm)
+					   uint8_t drive_index_level, bool is_perm, bool is_default)
 {
 	if (rail >= STRAP_INDEX_MAX)
 		return false;
 
+	*change_setting_value = 0;
 	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
 		if (bootstrap_table[i].index == rail) {
-			uint8_t mask = 0;
-			for (int j = 0; j < bootstrap_table[i].bit_count; j++) {
-				mask |= (1 << bootstrap_table[i].bits[j]);
+			drive_index_level = (is_default) ?
+						    bootstrap_table[i].default_setting_value :
+						    drive_index_level;
+			if (!check_is_bootstrap_setting_value_valid(rail, drive_index_level)) {
+				LOG_ERR("hex-value :0x%x is out of range", drive_index_level);
+				return false;
 			}
+			bootstrap_table[i].change_setting_value = drive_index_level;
 
-			// If cpld_offsets is the same, update the change_setting_value together
-			for (int k = 0; k < STRAP_INDEX_MAX; k++) {
-				if (bootstrap_table[k].cpld_offsets ==
+			// get whole cpld register value to set
+			for (int j = 0; j < STRAP_INDEX_MAX; j++) {
+				if (bootstrap_table[j].cpld_offsets ==
 				    bootstrap_table[i].cpld_offsets) {
-					switch (drive_index_level) {
-					case DRIVE_INDEX_LEVEL_HIGH:
-						bootstrap_table[k].change_setting_value |=
-							mask; // set 1
-						break;
-					case DRIVE_INDEX_LEVEL_LOW:
-						bootstrap_table[k].change_setting_value &=
-							~mask; // set 0
-						break;
-					case DRIVE_INDEX_LEVEL_DEFAULT:
-						// Clear the specified bit
-						bootstrap_table[k].change_setting_value &= ~mask;
-						// Reset the specified bit to default_setting_value
-						bootstrap_table[k].change_setting_value |=
-							(bootstrap_table[k].default_setting_value &
-							 mask);
-						break;
+					uint8_t tmp_reverse = 0;
+					if (bootstrap_table[j].reverse)
+						tmp_reverse = reverse_bits(
+							bootstrap_table[j].change_setting_value,
+							bootstrap_table[j].bit_count);
 
-					default:
-						break;
+					for (int k = 0; k < bootstrap_table[j].bit_count; k++) {
+						if (bootstrap_table[j].reverse) {
+							if (tmp_reverse & BIT(k))
+								*change_setting_value |= BIT(
+									k + bootstrap_table[j]
+										    .bit_offset);
+						} else {
+							if (bootstrap_table[j].change_setting_value &
+							    BIT(k))
+								*change_setting_value |= BIT(
+									k + bootstrap_table[j]
+										    .bit_offset);
+						}
 					}
 				}
 			}
-			*change_setting_value = bootstrap_table[i].change_setting_value;
+
+			LOG_DBG("set [%2d]%s: %02x", rail, bootstrap_table[i].strap_name,
+				*change_setting_value);
 			/*
 				save perm parameter to bootstrap_user_settings
 				bit 8: not perm(ff); perm(1)
@@ -1315,11 +1358,9 @@ static bool bootstrap_user_settings_init(void)
 			// write bootstrap_table
 			uint8_t change_setting_value;
 			uint8_t drive_index_level =
-				((bootstrap_user_settings.user_setting_value[i] & 0xff) == 0x00) ?
-					DRIVE_INDEX_LEVEL_LOW :
-					DRIVE_INDEX_LEVEL_HIGH;
-			if (!set_bootstrap_table_and_user_settings(i, &change_setting_value,
-								   drive_index_level, false)) {
+				bootstrap_user_settings.user_setting_value[i] & 0xFF;
+			if (!set_bootstrap_table_and_user_settings(
+				    i, &change_setting_value, drive_index_level, false, false)) {
 				LOG_ERR("set bootstrap_table[%2d]:%d failed", i, drive_index_level);
 				return false;
 			}
@@ -1351,7 +1392,16 @@ static bool bootstrap_default_settings_init(void)
 			LOG_ERR("Can't find bootstrap default by rail index from cpld: %d", i);
 			return false;
 		}
-		bootstrap_table[i].change_setting_value = data;
+
+		uint8_t mask =
+			GENMASK(bootstrap_table[i].bit_offset + bootstrap_table[i].bit_count - 1,
+				bootstrap_table[i].bit_offset);
+		bootstrap_table[i].change_setting_value =
+			(data & mask) >> bootstrap_table[i].bit_offset;
+		if (bootstrap_table[i].reverse)
+			bootstrap_table[i].change_setting_value =
+				reverse_bits(bootstrap_table[i].change_setting_value,
+					     bootstrap_table[i].bit_count);
 	}
 	return true;
 }
@@ -1380,13 +1430,9 @@ bool get_bootstrap_change_drive_level(int rail, int *drive_level)
 		LOG_ERR("Can't find strap_item by rail index: %d", rail);
 		return false;
 	}
-	uint8_t mask = 0;
-	// Calculate mask to indicate the bits affected by the bootstrap_item
-	for (int i = 0; i < bootstrap_item.bit_count; i++) {
-		mask |= (1 << bootstrap_item.bits[i]);
-	}
 
-	*drive_level = (bootstrap_item.change_setting_value & mask) ? true : false;
+	*drive_level = bootstrap_item.change_setting_value;
+	LOG_DBG("rail %d, drive_level = %x", rail, *drive_level);
 	return true;
 }
 

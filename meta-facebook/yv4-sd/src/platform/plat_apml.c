@@ -30,68 +30,20 @@ static uint8_t cpuid[16];
 
 int pal_check_sbrmi_command_code_length()
 {
-	int ret = 0, i = 0, retry = 5;
-	I2C_MSG i2c_msg;
-	uint8_t board_rev = 0;
-
 	if (!get_post_status()) {
 		return 0;
 	}
 
-	// Sending 1 byte address size in Turin cause unrecoverable error
-	// Before trying to switch to 1 bytes, retry.to use 2 bytes to get revision
+	// YV4 platform will only be equipped with AMD Turin CPU with SBRMI Rev 2.1.
+	// For Rev 2.1, it requires SBRMI 2-byte command code.
 
-	if (get_board_rev(&board_rev) == false) {
-		LOG_ERR("Failed to get board revision.");
-		return -1;
-	}
+	// BIC has a chance to get wrong revision and therefore
+	// set the wrong command code length (1-byte).
+	// It will cause BIC to be unable to read CPU power.
+	// Follow AMD's suggestion, hardcode SBRMI command code length to 2 bytes.
 
-	if (board_rev <= BOARD_REV_EVT) {
-		i2c_msg.bus = I2C_BUS14;
-	} else {
-		// For DVT and later, the hardware design was changed to I2C_BUS10
-		i2c_msg.bus = I2C_BUS10;
-	}
-
-	i2c_msg.target_addr = SB_RMI_ADDR;
-	i2c_msg.rx_len = 1;
-	i2c_msg.tx_len = 2;
-	i2c_msg.data[0] = SBRMI_REVISION;
-	i2c_msg.data[1] = 0x00;
-
-	for (i = 0; i < retry; i++) {
-		ret = i2c_master_read(&i2c_msg, retry);
-		if (ret < 0) {
-			continue;
-		} else {
-			if (i2c_msg.data[0] == SBRMI_REV_BRTH) {
-				set_sbrmi_command_code_len(SBRMI_CMD_CODE_LEN_TWO_BYTE);
-			} else {
-				set_sbrmi_command_code_len(SBRMI_CMD_CODE_LEN_DEFAULT);
-			}
-
-			return 0;
-		}
-	}
-
-	i2c_msg.tx_len = 1;
-	i2c_msg.data[0] = SBRMI_REVISION;
-	for (i = 0; i < retry; i++) {
-		ret = i2c_master_read(&i2c_msg, retry);
-		if (ret < 0) {
-			continue;
-		} else {
-			if (i2c_msg.data[0] == SBRMI_REV_BRTH) {
-				set_sbrmi_command_code_len(SBRMI_CMD_CODE_LEN_TWO_BYTE);
-			} else {
-				set_sbrmi_command_code_len(SBRMI_CMD_CODE_LEN_DEFAULT);
-			}
-
-			return 0;
-		}
-	}
-
-	return ret;
+	set_sbrmi_command_code_len(SBRMI_CMD_CODE_LEN_TWO_BYTE);
+	return 0;
 }
 
 uint8_t pal_get_apml_bus()
@@ -156,7 +108,7 @@ void set_tsi_threshold()
 static void read_cpuid_callback(const apml_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
-	cpuid_RdData *rd_data = (cpuid_RdData *)msg->RdData;
+	const cpuid_RdData *rd_data = (const cpuid_RdData *)msg->RdData;
 	uint8_t exc_value = (uint8_t)msg->ui32_arg;
 	memcpy(&cpuid[exc_value * 8], rd_data->data_out, 8);
 }
@@ -209,7 +161,7 @@ void read_cpuid()
 	apml_read(&apml_data);
 }
 
-const uint8_t* get_cpuid()
+const uint8_t *get_cpuid()
 {
-    return cpuid;
+	return cpuid;
 }

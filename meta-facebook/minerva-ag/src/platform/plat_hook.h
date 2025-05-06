@@ -110,7 +110,7 @@ enum PLAT_STRAP_INDEX_E {
 	STRAP_INDEX_SOC_JTAG_MUX_SEL_0_3,
 	STRAP_INDEX_SOC_DFT_TAP_EN_L,
 	STRAP_INDEX_SOC_ATPG_MODE_L,
-	STRAP_INDEX_SOC_PAD_TRI_L,
+	STRAP_INDEX_SOC_PAD_TRI_N,
 	STRAP_INDEX_SOC_CORE_TAP_CTRL_L,
 	STRAP_INDEX_SOC_BOOT_SOURCE_0_4,
 	STRAP_INDEX_SOC_BOOT_SOURCE_5_6,
@@ -118,11 +118,11 @@ enum PLAT_STRAP_INDEX_E {
 	STRAP_INDEX_SOC_GPIO2,
 	STRAP_INDEX_S_OWL_BOOT_SOURCE_0_7,
 	STRAP_INDEX_N_OWL_BOOT_SOURCE_0_7,
-	STRAP_INDEX_S_OWL_PAD_TRI_L,
+	STRAP_INDEX_S_OWL_PAD_TRI_N,
 	STRAP_INDEX_S_OWL_ATPG_MODE_L,
 	STRAP_INDEX_S_OWL_DFT_TAP_EN_L,
 	STRAP_INDEX_S_OWL_CORE_TAP_CTRL_L,
-	STRAP_INDEX_N_OWL_PAD_TRI_L,
+	STRAP_INDEX_N_OWL_PAD_TRI_N,
 	STRAP_INDEX_N_OWL_ATPG_MODE_L,
 	STRAP_INDEX_N_OWL_DFT_TAP_EN_L,
 	STRAP_INDEX_N_OWL_CORE_TAP_CTRL_L,
@@ -131,12 +131,6 @@ enum PLAT_STRAP_INDEX_E {
 	STRAP_INDEX_S_OWL_UART_MUX_SEL_0_2,
 	STRAP_INDEX_N_OWL_UART_MUX_SEL_0_2,
 	STRAP_INDEX_MAX,
-};
-
-enum PLAT_DRIVE_LEVEL_INDEX_E {
-	DRIVE_INDEX_LEVEL_LOW = 1,
-	DRIVE_INDEX_LEVEL_HIGH,
-	DRIVE_INDEX_LEVEL_DEFAULT,
 };
 
 typedef struct vr_vout_range_user_settings_struct {
@@ -196,6 +190,7 @@ typedef struct power_sequence {
 	uint8_t index;
 	uint8_t cpld_offsets;
 	uint8_t *power_rail_name;
+	uint8_t value;
 } power_sequence;
 
 extern power_sequence power_sequence_on_table[];
@@ -227,10 +222,11 @@ typedef struct bootstrap_mapping_register {
 	uint8_t index;
 	uint8_t cpld_offsets;
 	uint8_t *strap_name;
-	uint8_t bits[8];
+	uint8_t bit_offset;
 	uint8_t bit_count;
 	uint8_t default_setting_value;
 	uint8_t change_setting_value;
+	bool reverse;
 } bootstrap_mapping_register;
 
 bool plat_get_vout_range(uint8_t rail, uint16_t *vout_max_millivolt, uint16_t *vout_min_millivolt);
@@ -250,6 +246,7 @@ bool vr_rail_name_get(uint8_t rail, uint8_t **name);
 bool vr_rail_enum_get(uint8_t *name, uint8_t *num);
 int power_level_send_event(bool is_assert, int ubc1_current, int ubc2_current);
 bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_all_sensor_read(sensor_cfg *cfg, void *args, int *reading);
 void set_uart_power_event_is_enable(bool is_enable);
 void pwr_level_mutex_init(void);
 void set_alert_level_to_default_or_user_setting(bool is_default, int32_t user_setting);
@@ -282,7 +279,8 @@ bool strap_enum_get(uint8_t *name, uint8_t *num);
 void init_temp_alert_mode(void);
 bool find_bootstrap_by_rail(uint8_t rail, bootstrap_mapping_register *result);
 bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting_value,
-					   uint8_t drive_index_level, bool is_perm);
+					   uint8_t drive_index_level, bool is_perm,
+					   bool is_default);
 bool get_bootstrap_change_drive_level(int rail, int *drive_level);
 void init_temp_limit(void);
 

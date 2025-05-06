@@ -88,7 +88,7 @@ bool post_quick_sensor_read(sensor_cfg *cfg, void *args, int *reading)
 
 	if (ret) {
 		float val = 0;
-		sensor_val *sval = (sensor_val *)reading;
+		const sensor_val *sval = (sensor_val *)reading;
 		val = (sval->integer * 1000 + sval->fraction) / 1000.0;
 
 		if ((val > 0) && (val < 3.1))
@@ -873,12 +873,12 @@ static uint8_t get_temp_sensor_mfr_id(uint8_t bus, uint8_t addr, uint8_t mfr_id_
 	return msg.data[0];
 }
 
-static uint32_t get_pmbus_mfr_id(uint8_t bus, uint8_t addr)
+uint32_t get_pmbus_mfr_id(uint8_t bus, uint8_t addr)
 {
 	I2C_MSG msg = { 0 };
 	msg.bus = bus;
 	msg.target_addr = addr;
-	msg.rx_len = 3;
+	msg.rx_len = 4;
 	msg.tx_len = 1;
 	msg.data[0] = PMBUS_MFR_ID;
 	if (i2c_master_read(&msg, I2C_MAX_RETRY)) {
@@ -886,7 +886,7 @@ static uint32_t get_pmbus_mfr_id(uint8_t bus, uint8_t addr)
 		return 0;
 	}
 
-	return (msg.data[2] << 16) | (msg.data[1] << 8) | msg.data[0];
+	return (msg.data[3] << 16) | (msg.data[2] << 8) | msg.data[1];
 }
 
 #define HSC_CONFIG_FB 0x00
@@ -901,12 +901,12 @@ static void hsc_config(uint8_t type)
 	 * DVT stage: 1st and 2nd source have different i2c addr, identify by i2c addr
 	 * Fan Board EVT: 0x22, 		DVT + XDP710: 0x2A
 	 * Backplane Board EVT: 0x20, 	DVT + XDP710: 0x28
-	 * Pump Board : 0x22, 			XDP710: 0x22
-	 * Bridge Board : 0x26, 		XDP710: 0x26 
+	 * Pump Board : 0x24, 			XDP710: 0x2C
+	 * Bridge Board : 0x26, 		XDP710: 0x2E 
 	 */
 
 #define ADM1272_MFR_ID 0x494441
-#define XDP710_MFR_ID 0x034946
+#define XDP710_MFR_ID 0x004649
 #define XDP710_FB_ADDR_DVT (0x2A >> 1)
 #define XDP710_BPB_ADDR_DVT (0x28 >> 1)
 #define XDP710_PB_ADDR (0x2C >> 1)
@@ -1065,7 +1065,6 @@ void load_hsc_sensor_config()
 	/* identify hsc module */
 	hsc_config(HSC_CONFIG_FB);
 	hsc_config(HSC_CONFIG_BPB);
-	hsc_config(HSC_CONFIG_PB);
 	hsc_config(HSC_CONFIG_BB);
 
 	for (uint8_t i = 0; i < ARRAY_SIZE(hsc_sensor_config_table); i++)
@@ -1345,7 +1344,7 @@ uint16_t get_sensor_reading_to_modbus_val(uint8_t sensor_num, int8_t exp, int8_t
 		LOG_ERR("0x%02x get sensor cache fail", sensor_num);
 		return 0;
 	}
-	sensor_val *sval = (sensor_val *)&reading;
+	const sensor_val *sval = (sensor_val *)&reading;
 	float val = (sval->integer * 1000 + sval->fraction) / 1000;
 	float r = pow_of_10(exp);
 	return val / scale / r; // scale
@@ -1368,7 +1367,7 @@ uint8_t get_sensor_reading_to_real_val(uint8_t sensor_num, float *val)
 		return status;
 	}
 
-	sensor_val *sval = (sensor_val *)&reading;
+	const sensor_val *sval = (sensor_val *)&reading;
 	*val = (sval->integer * 1000 + sval->fraction) / 1000.0;
 
 	return status;
@@ -1437,7 +1436,7 @@ static float calculate_total_val(uint8_t arr[], uint8_t size)
 	float total = 0;
 	for (uint8_t i = 0; i < size; i++) {
 		float tmp = 0;
-		sensor_cfg *cfg = get_common_sensor_cfg_info(arr[i]);
+		const sensor_cfg *cfg = get_common_sensor_cfg_info(arr[i]);
 		if (cfg->cache_status != SENSOR_READ_4BYTE_ACUR_SUCCESS)
 			continue;
 		if (get_sensor_reading_to_real_val(arr[i], &tmp) == SENSOR_READ_4BYTE_ACUR_SUCCESS)

@@ -200,6 +200,9 @@ typedef struct _aegis_cpld_info_ {
 
 	bool (*status_changed_cb)(aegis_cpld_info *, uint8_t *);
 
+	//bit check mask
+	uint8_t bit_check_mask; //bit check mask
+
 } aegis_cpld_info;
 
 typedef struct {

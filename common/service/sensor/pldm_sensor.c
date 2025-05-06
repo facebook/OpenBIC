@@ -380,6 +380,9 @@ void pldm_sensor_polling_handler(void *arug0, void *arug1, void *arug2)
 		}
 
 		for (sensor_num = 0; sensor_num < pldm_sensor_count; sensor_num++) {
+			if (get_sensor_poll_enable_flag() == false) {
+				break;
+			}
 			if (pldm_polling_sensor_reading(&pldm_sensor_list[thread_id][sensor_num],
 							pldm_sensor_count, thread_id,
 							sensor_num) != 0) {
