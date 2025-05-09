@@ -21,8 +21,8 @@
 
 extern uint8_t hw_event_register[13];
 
-#define VR_FAULT_STATUS_LSB_MASK 0x3F
-#define VR_FAULT_STATUS_MSB_MASK 0xF0
+#define VR_FAULT_STATUS_LSB_MASK 0xFD
+#define VR_FAULT_STATUS_MSB_MASK 0xFF
 #define VR_IOUT_FAULT_MASK 0x40
 #define VR_TPS_OCW_MASK 0x20
 
