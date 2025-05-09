@@ -2102,6 +2102,9 @@ void init_temp_limit(void)
 	uint8_t followed_ucr_only_limit_temp[] = { TOP_INLET_HIGH_LIMIT, TOP_OUTLET_HIGH_LIMIT,
 						   BOT_INLET_HIGH_LIMIT, BOT_OUTLET_HIGH_LIMIT };
 
+	uint8_t followed_ucr_only_limit_on_die_local_temp[] = { TEMP_INDEX_ON_DIE_ATH_0_N_OWL,
+								TEMP_INDEX_ON_DIE_ATH_1_S_OWL };
+
 	for (int i = 0; i < ARRAY_SIZE(followed_ucr_lcr_limit_temp); i++) {
 		float critical_high = 0;
 		float critical_low = 0;
@@ -2154,6 +2157,28 @@ void init_temp_limit(void)
 			dynamic_threshold);
 		plat_set_temp_threshold(followed_ucr_only_limit_temp[i], &dynamic_threshold, false,
 					false);
+	}
+
+	for (int i = 0; i < ARRAY_SIZE(followed_ucr_only_limit_on_die_local_temp); i++) {
+		float critical_high = 130;
+		uint8_t sensor_id =
+			temp_index_table[followed_ucr_only_limit_on_die_local_temp[i]].sensor_id;
+		sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+
+		uint32_t high_threshold = (uint32_t)(critical_high * 1000);
+		LOG_INF("set %s %s: %d",
+			temp_index_table[followed_ucr_only_limit_on_die_local_temp[i]].sensor_name,
+			"LOCAL_HIGH_LIMIT", high_threshold);
+		switch (cfg->type) {
+		case sensor_dev_tmp431:
+			tmp432_set_temp_threshold(cfg, LOCAL_HIGH_LIMIT, &high_threshold);
+			break;
+		case sensor_dev_emc1413:
+			emc1413_set_temp_threshold(cfg, LOCAL_HIGH_LIMIT, &high_threshold);
+			break;
+		default:
+			LOG_ERR("Unsupport temp type(%x)", cfg->type);
+		}
 	}
 
 	LOG_INF("temp limit init done");
