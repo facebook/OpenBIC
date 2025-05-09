@@ -18,6 +18,7 @@
 #define PLAT_ISR_H
 
 #include <stdint.h>
+#include "pldm.h"
 
 extern uint8_t hw_event_register[13];
 
@@ -38,10 +39,15 @@ typedef struct _add_vr_sel_info {
 typedef struct _add_sel_info {
 	bool is_init;
 	uint8_t gpio_num;
-	uint8_t event_type;
-	uint8_t assert_type;
+	volatile uint8_t event_type;
+	volatile uint8_t assert_type;
 	struct k_work_delayable add_sel_work;
 } add_sel_info;
+
+typedef struct {
+	struct k_work_delayable work;
+	struct pldm_addsel_data sel_data;
+} sel_work_wrapper;
 
 void ISR_DC_ON();
 void ISR_POST_COMPLETE();
@@ -70,5 +76,7 @@ void init_vr_event_work();
 void process_vr_pmalert_ocp_sel(struct k_work *work_item);
 void init_event_work();
 void addsel_work_handler(struct k_work *work_item);
+void init_throttle_work_q();
+void init_fastprochot_work_q();
 
 #endif
