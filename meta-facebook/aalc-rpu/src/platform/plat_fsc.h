@@ -55,7 +55,7 @@ enum FSC_MODE_E {
 
 /* stepwise */
 typedef struct {
-	uint8_t temp;
+	float temp;
 	uint8_t duty;
 } stepwise_dict;
 
@@ -66,7 +66,7 @@ typedef struct {
 	uint8_t neg_hyst; // negative_hysteresis
 
 	// calculate use
-	int16_t last_temp;
+	float last_temp;
 } stepwise_cfg;
 
 /* pid */
@@ -84,8 +84,8 @@ typedef struct {
 
 	// calculate use
 	float integral;
-	int last_error; //for kd
-	int16_t last_temp;
+	float last_error; //for kd
+	float last_temp;
 } pid_cfg;
 
 /* zone control */

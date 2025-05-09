@@ -22,6 +22,7 @@
 
 static uint8_t hsc_module = 0;
 static uint8_t temp_module = 0;
+static uint8_t boot_source = 0; // 0: primary, 1: alternate
 void init_aalc_config()
 {
 	hsc_module = HSC_MODULE_ADM1272; // user can change hsc module here
@@ -47,6 +48,22 @@ uint8_t get_board_stage()
 bool evt_access(uint8_t sensor_num)
 {
 	return ((get_board_stage() == BOARD_STAGE_EVT) ? true : false);
+}
+
+uint8_t get_boot_source()
+{
+	return boot_source;
+}
+
+void set_boot_source()
+{
+	// FMC64[4]: Boot flash source select indicator
+	boot_source = (sys_read32(0x7e620064) >> 4) & 0x01;
+
+	/* if boot from alternate source,
+	   set boot from primary source  */
+	if (boot_source)
+		sys_write32(0x00ea0000, 0x7e620064);
 }
 
 LOG_MODULE_REGISTER(plat_class);

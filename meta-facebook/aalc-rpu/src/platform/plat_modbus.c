@@ -54,6 +54,8 @@ LOG_MODULE_REGISTER(plat_modbus);
 #define FW_UPDATE_ENABLE_DATA 0x0101
 #define FW_UPDATE_DISABLE_DATA 0x0100
 
+#define FW_UPDATE_2ND_BOOT_OFFSET 0x80000
+
 #define UPADTE_FW_DATA_LENGTH_MIN 3 // contain 2 regs(offeset)+ 1 reg(length) at least
 #define LOG_BEGIN_MODBUS_ADDR MODBUS_EVENT_1_ERROR_LOG_ADDR //Event 1 Error log Modbus Addr
 
@@ -143,6 +145,9 @@ uint8_t modbus_write_fruid_data(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
+	// wait other write eeprom finish
+	k_msleep(10);
+
 	uint8_t status;
 	EEPROM_ENTRY fru_entry;
 
@@ -182,6 +187,12 @@ uint8_t modbus_fw_download(modbus_command_mapping *cmd)
 	uint32_t offset = cmd->data[0] << 16 | cmd->data[1]; // offset
 	uint16_t msg_len = cmd->data[2] & 0x7FFF; // length
 	uint8_t flag = (cmd->data[2] & BIT(15)) ? (SECTOR_END_FLAG | NO_RESET_FLAG) : 0;
+
+	if (get_status_flag(STATUS_FLAG_SPECIAL_MODE) & BIT(SPECIAL_MODE_2ND_BOOT_UPDATE)) {
+		if (offset == 0)
+			flag |= FORCE_INIT_FLAG;
+		offset += FW_UPDATE_2ND_BOOT_OFFSET;
+	}
 
 	if (cmd->data_len <= UPADTE_FW_DATA_LENGTH_MIN)
 		return MODBUS_EXC_ILLEGAL_DATA_VAL;
@@ -521,7 +532,7 @@ uint8_t modbus_get_led_status(modbus_command_mapping *cmd)
 	      (get_led_status(LED_IDX_E_COOLANT) == LED_START_BLINK) ? 3 :
 								       0;
 	WRITE_BIT(val, 2, (get_led_status(LED_IDX_E_LEAK) == LED_TURN_OFF) ? 0 : 1);
-	WRITE_BIT(val, 5, gpio_get(get_led_pin(LED_IDX_E_FAULT)));
+	WRITE_BIT(val, 3, gpio_get(get_led_pin(LED_IDX_E_FAULT)));
 	WRITE_BIT(val, 4, gpio_get(get_led_pin(LED_IDX_E_POWER)));
 
 	cmd->data[0] = val;
@@ -612,22 +623,6 @@ uint8_t modbus_set_rpu_addr(modbus_command_mapping *cmd)
 		if (change_modbus_slave_addr(0, addr))
 			return MODBUS_EXC_SERVER_DEVICE_FAILURE;
 	}
-
-	return MODBUS_EXC_NONE;
-}
-
-static uint8_t modbus_to_do_get(modbus_command_mapping *cmd)
-{
-	// wait to do
-
-	memset(cmd->data, 0, sizeof(uint16_t) * cmd->cmd_size);
-
-	return MODBUS_EXC_NONE;
-}
-
-static uint8_t modbus_to_do_set(modbus_command_mapping *cmd)
-{
-	// wait to do
 
 	return MODBUS_EXC_NONE;
 }
@@ -768,6 +763,64 @@ uint8_t modbus_get_fan_table_revision(modbus_command_mapping *cmd)
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
 	cmd->data[0] = FAN_TABLE_REVISION;
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_get_abr(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	cmd->data[0] = (get_abr() ? 1 : 0);
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_set_abr(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	if (cmd->data[0])
+		set_abr(cmd->arg0);
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_get_boot_source(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	cmd->data[0] = (uint16_t)get_boot_source();
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_get_2nd_boot_update_flag(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	cmd->data[0] = (uint16_t)((get_status_flag(STATUS_FLAG_SPECIAL_MODE) >>
+				   SPECIAL_MODE_2ND_BOOT_UPDATE) &
+				  0x01);
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_set_2nd_boot_update_flag(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint32_t val = (uint32_t)cmd->data[0];
+	set_status_flag(STATUS_FLAG_SPECIAL_MODE, SPECIAL_MODE_2ND_BOOT_UPDATE, val);
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_set_fmc_wdt(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	set_fmc_wdt((uint32_t)cmd->data[0]);
 
 	return MODBUS_EXC_NONE;
 }
@@ -948,8 +1001,6 @@ modbus_command_mapping modbus_command_table[] = {
 	  HEX_BLADDER_LEVEL_STATUS, 0, 0, 1 },
 	{ MODBUS_HEX_EXTERNAL_Y_FILTER_PRESSURE_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_HEX_EXTERNAL_Y_FILTER, 1, -1, 1 },
-	//{ MODBUS_HEX_STATIC_PRESSURE_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
-	//{ MODBUS_HEX_VERTICAL_BLADDER_ADDR, NULL, modbus_to_do, 0, 0, 0, 1 },
 	{ MODBUS_SB_HEX_AIR_INLET_3_TEMP_ADDR, NULL, modbus_get_senser_reading,
 	  SENSOR_NUM_SB_HEX_AIR_INLET_3_TEMP_C, 1, 0, 1 },
 	{ MODBUS_SB_HEX_AIR_INLET_4_TEMP_ADDR, NULL, modbus_get_senser_reading,
@@ -1202,8 +1253,6 @@ modbus_command_mapping modbus_command_table[] = {
 	  modbus_get_setpoint, SETPOINT_FLAG_LPM, 0, 0, 1 },
 	{ MODBUS_AUTO_TUNE_COOLANT_OUTLET_TEMPERATURE_TARGET_SET_ADDR, modbus_set_setpoint,
 	  modbus_get_setpoint, SETPOINT_FLAG_OUTLET_TEMP, 0, 0, 1 },
-	{ MODBUS_PUMP_REDUNDANT_SWITCHED_INTERVAL_ADDR, modbus_to_do_set, modbus_to_do_get, 0, 0, 0,
-	  1 },
 	{ MODBUS_MANUAL_CONTROL_PUMP_DUTY_SET_ADDR, modbus_set_manual_pwm, modbus_get_manual_pwm,
 	  MANUAL_PWM_E_PUMP, 0, 0, 1 },
 	{ MODBUS_MANUAL_CONTROL_FAN_DUTY_SET_ADDR, modbus_set_manual_pwm, modbus_get_manual_pwm,
@@ -1225,7 +1274,6 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_MANUAL_CONTROL_RPU_PCB_FAN_DUTY_SET_ADDR, modbus_set_manual_pwm,
 	  modbus_get_manual_pwm, MANUAL_PWM_E_RPU_PCB_FAN, 0, 0, 1 },
 	{ MODBUS_PUMP_SETTING_ADDR, modbus_pump_setting, modbus_pump_setting_get, 0, 0, 0, 1 },
-	{ MODBUS_LEAKAGE_SETTING_ON_ADDR, modbus_to_do_set, modbus_to_do_get, 0, 0, 0, 1 },
 	// Leakage Black Box
 	{ MODBUS_STICKY_ITRACK_CHASSIS0_LEAKAGE_ADDR, modbus_set_sticky_sensor_status,
 	  modbus_get_sticky_sensor_status, STICKY_ITRACK_CHASSIS0_LEAKAGE, 0, 0, 1 },
@@ -1361,6 +1409,13 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_STATUS_FALG_SET_CFG_ADDR, modbus_set_status_flag_config, NULL, 0, 0, 0, 1 },
 	{ MODBUS_GET_SET_STATUS_FALG_ADDR, modbus_status_flag_set, modbus_status_flag_get, 0, 0, 0,
 	  2 },
+	// 2nd boot update
+	{ MODBUS_ENABLE_ABR_ADDR, modbus_set_abr, modbus_get_abr, 1, 0, 0, 1 },
+	{ MODBUS_GET_BOOT_SOURCE_ADDR, NULL, modbus_get_boot_source, 0, 0, 0, 1 },
+	{ MODBUS_GET_SET_2ND_BOOT_UPDATE_FLAG_ADDR, modbus_set_2nd_boot_update_flag,
+	  modbus_get_2nd_boot_update_flag, 0, 0, 0, 1 },
+	{ MODBUS_SET_FMC_WDT_ADDR, modbus_set_fmc_wdt, NULL, 0, 0, 0, 1 },
+	{ MODBUS_DISABLE_ABR_ADDR, modbus_set_abr, NULL, 0, 0, 0, 1 },
 };
 
 modbus_command_mapping *ptr_to_modbus_table(uint16_t addr)
@@ -1462,48 +1517,85 @@ static int coil_wr(uint16_t addr, bool state)
 
 static int holding_reg_multi_wr(char *iface_name, uint16_t addr, uint16_t *reg, uint16_t num_regs)
 {
-	modbus_command_mapping *ptr = ptr_to_modbus_table(addr);
-	if (!ptr) {
-		LOG_ERR("modbus write command 0x%x not find!\n", addr);
-		return MODBUS_EXC_ILLEGAL_DATA_ADDR;
+	CHECK_NULL_ARG_WITH_RETURN(reg, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	uint16_t remaining_regs = num_regs;
+	uint16_t reg_offset = 0;
+
+	while (remaining_regs > 0) {
+		modbus_command_mapping *ptr = ptr_to_modbus_table(addr);
+		uint16_t write_count = 1;
+
+		if (!ptr) {
+			LOG_ERR("modbus write command 0x%x not found!\n", addr);
+		} else if (!ptr->wr_fn) {
+			LOG_ERR("modbus write function 0x%x not set!\n", addr);
+		} else {
+			write_count =
+				(remaining_regs > ptr->cmd_size) ? ptr->cmd_size : remaining_regs;
+
+			ptr->start_addr = addr;
+			ptr->data_len = write_count;
+
+			memcpy(ptr->data, &reg[reg_offset], sizeof(uint16_t) * write_count);
+
+			int wr_ret = ptr->wr_fn(ptr);
+			if (wr_ret != MODBUS_EXC_NONE) {
+				LOG_ERR("modbus write function 0x%x failed, ret = %d!\n", addr,
+					wr_ret);
+				return wr_ret;
+			}
+		}
+
+		remaining_regs -= write_count;
+		reg_offset += write_count;
+		addr += write_count;
 	}
 
-	if (!ptr->wr_fn) {
-		LOG_ERR("modbus write function 0x%x not set!\n", addr);
-		return MODBUS_EXC_ILLEGAL_DATA_VAL;
-	}
-
-	ptr->start_addr = addr;
-	ptr->data_len = num_regs;
-	memcpy(ptr->data, reg, sizeof(uint16_t) * ptr->data_len);
-
-	return ptr->wr_fn(ptr);
+	return MODBUS_EXC_NONE;
 }
 
 static int holding_reg_multi_rd(char *iface_name, uint16_t addr, uint16_t *reg, uint16_t num_regs)
 {
 	CHECK_NULL_ARG_WITH_RETURN(reg, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
-	modbus_command_mapping *ptr = ptr_to_modbus_table(addr);
-	if (!ptr) {
-		LOG_ERR("modbus read command 0x%x not find!\n", addr);
-		return MODBUS_EXC_ILLEGAL_DATA_ADDR;
+	uint16_t remaining_regs = num_regs;
+	uint16_t reg_offset = 0;
+
+	while (remaining_regs > 0) {
+		modbus_command_mapping *ptr = ptr_to_modbus_table(addr);
+		uint16_t read_count = 1;
+
+		if (!ptr) {
+			LOG_ERR("modbus read command 0x%x not found!\n", addr);
+			reg[reg_offset] = 0;
+		} else if (!ptr->rd_fn) {
+			LOG_ERR("modbus read function 0x%x not set!\n", addr);
+			reg[reg_offset] = 0;
+		} else {
+			read_count =
+				(remaining_regs > ptr->cmd_size) ? ptr->cmd_size : remaining_regs;
+
+			ptr->start_addr = addr;
+			ptr->data_len = read_count;
+
+			int rd_ret = ptr->rd_fn(ptr);
+			if (rd_ret != MODBUS_EXC_NONE) {
+				LOG_ERR("modbus read function 0x%x failed, ret = %d!\n", addr,
+					rd_ret);
+				memset(&reg[reg_offset], 0, sizeof(uint16_t) * read_count);
+				return rd_ret;
+			} else {
+				memcpy(&reg[reg_offset], ptr->data, sizeof(uint16_t) * read_count);
+			}
+		}
+
+		remaining_regs -= read_count;
+		reg_offset += read_count;
+		addr += read_count;
 	}
 
-	if (!ptr->rd_fn) {
-		LOG_ERR("modbus read function 0x%x not set!\n", addr);
-		return MODBUS_EXC_ILLEGAL_DATA_VAL;
-	}
-
-	int ret = MODBUS_EXC_NONE;
-	ptr->start_addr = addr;
-	ptr->data_len = num_regs;
-
-	ret = ptr->rd_fn(ptr);
-
-	memcpy(reg, ptr->data, sizeof(uint16_t) * ptr->data_len);
-
-	return ret;
+	return MODBUS_EXC_NONE;
 }
 
 static struct modbus_user_callbacks mbs_cbs = {

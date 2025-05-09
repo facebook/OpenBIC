@@ -187,8 +187,8 @@ void cmd_switch_pb_mux(const struct shell *shell, size_t argc, char **argv)
 
 	uint8_t sensor_num = (idx == 1) ? SENSOR_NUM_PB_1_PUMP_TACH_RPM :
 			     (idx == 2) ? SENSOR_NUM_PB_2_PUMP_TACH_RPM :
-			     (idx == 3) ? SENSOR_NUM_PB_3_PUMP_TACH_RPM :
-					  0xFF; // 1 base
+					  SENSOR_NUM_PB_3_PUMP_TACH_RPM; // 1 base
+
 	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
 	mux_config *pre_args = (mux_config *)cfg->pre_sensor_read_args;
 
@@ -247,8 +247,8 @@ void cmd_nct7363_pb(const struct shell *shell, size_t argc, char **argv)
 
 	uint8_t sensor_num = (idx == 1) ? SENSOR_NUM_PB_1_PUMP_TACH_RPM :
 			     (idx == 2) ? SENSOR_NUM_PB_2_PUMP_TACH_RPM :
-			     (idx == 3) ? SENSOR_NUM_PB_3_PUMP_TACH_RPM :
-					  0xFF; // 1 base
+					  SENSOR_NUM_PB_3_PUMP_TACH_RPM; // 1 base
+
 	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
 	nct7363_read_back_data(cfg, offset, &data);
 
@@ -296,7 +296,7 @@ void cmd_threshold_pump_test(const struct shell *shell, size_t argc, char **argv
 {
 	uint8_t disable_dynamic = strtoul(argv[1], NULL, 10);
 
-	set_status_flag(STATUS_FLAG_DEBUG_MODE, DEBUG_MODE_PUMP_THRESHOLD,
+	set_status_flag(STATUS_FLAG_SPECIAL_MODE, SPECIAL_MODE_PUMP_THRESHOLD_DEBUG,
 			(disable_dynamic ? 1 : 0));
 }
 
@@ -445,6 +445,7 @@ static void cmd_modbus_write(const struct shell *shell, size_t argc, char **argv
 		num = 1;
 
 	uint16_t data[num];
+	memset(data, 0, num);
 	for (uint16_t i = 0; i < num; i++)
 		data[i] = strtoul(argv[3 + i], NULL, 10);
 
