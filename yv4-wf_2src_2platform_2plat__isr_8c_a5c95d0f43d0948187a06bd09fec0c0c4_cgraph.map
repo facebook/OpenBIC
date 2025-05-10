@@ -1,0 +1,11 @@
+<map id="init_vr_event_work" name="init_vr_event_work">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,136,83"/>
+<area shape="rect" id="node2" href="$yv3-vf_2src_2platform_2plat__util_8c.html#abc94f67ed170b0ae5f7e4965130e2166" title=" " alt="" coords="437,5,539,32"/>
+<area shape="rect" id="node4" href="$yv4-wf_2src_2platform_2plat__isr_8c.html#a72185c2083dd16b4d602586a035b441a" title=" " alt="" coords="184,81,359,108"/>
+<area shape="rect" id="node3" href="$yv3-vf_2src_2platform_2plat__util_8c.html#a7200b2472d3ef5cb78c82b2a0e3fe39b" title=" " alt="" coords="645,5,711,32"/>
+<area shape="rect" id="node5" href="$yv4-wf_2src_2platform_2plat__gpio_8c.html#a49fcac8a9cff9b16dbba2845722cf9ec" title=" " alt="" coords="437,56,539,83"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="619,107,737,133"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="617,157,739,184"/>
+<area shape="rect" id="node9" href="$pldm__oem_8h.html#abfa67ccc03b5a09b8503f95d5f8e5c5f" title=" " alt="" coords="407,208,569,235"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="787,132,929,159"/>
+</map>

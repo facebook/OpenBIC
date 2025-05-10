@@ -1,0 +1,7 @@
+<map id="initialize_sensor_data_6" name="initialize_sensor_data_6">
+<area shape="rect" id="node1" title=" " alt="" coords="5,42,165,69"/>
+<area shape="rect" id="node2" href="$minerva-ag_2src_2platform_2plat__i2c__target_8c.html#a697aa87fbe9e8b1422dd04b35153530c" title=" " alt="" coords="213,5,359,47"/>
+<area shape="rect" id="node3" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#ad8887b1d0c4bbc7a6f1c25870a6d9051" title=" " alt="" coords="237,71,335,98"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="407,71,525,98"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="573,71,716,98"/>
+</map>

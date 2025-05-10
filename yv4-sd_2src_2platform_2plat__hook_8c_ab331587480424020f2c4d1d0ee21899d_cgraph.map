@@ -1,0 +1,11 @@
+<map id="post_amd_tsi_read" name="post_amd_tsi_read">
+<area shape="rect" id="node1" title=" " alt="" coords="5,123,137,149"/>
+<area shape="rect" id="node2" href="$apml_8h.html#a0c42010951467bd802fc069533b1a62a" title=" " alt="" coords="205,5,318,32"/>
+<area shape="rect" id="node3" href="$sensor_8c.html#a0fe2957d8cee620a28b2c4f408c59621" title=" " alt="" coords="185,57,337,98"/>
+<area shape="rect" id="node4" href="$power__status_8c.html#abeff55e3cd2e8563760154b81f37f286" title=" " alt="" coords="204,123,319,149"/>
+<area shape="rect" id="node5" href="$yv35-hd_2src_2platform_2plat__apml_8c.html#a65b4c1679825f49a6cb3141d67a53865" title=" " alt="" coords="209,173,313,200"/>
+<area shape="rect" id="node6" href="$yv4-sd_2src_2platform_2plat__apml_8c.html#a9a8b20d95a6bbd7ee416346e51121a82" title=" " alt="" coords="198,224,325,251"/>
+<area shape="rect" id="node7" href="$yv4-sd_2src_2platform_2plat__class_8c.html#a77fab2f8167a9eb32f8d848d1bb1ef53" title=" " alt="" coords="385,224,489,251"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="537,224,656,251"/>
+<area shape="rect" id="node9" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="704,224,847,251"/>
+</map>

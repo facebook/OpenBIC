@@ -1,0 +1,8 @@
+<map id="post_all_sensor_read" name="post_all_sensor_read">
+<area shape="rect" id="node1" title=" " alt="" coords="5,46,151,73"/>
+<area shape="rect" id="node2" href="$minerva-ag_2src_2platform_2plat__i2c__target_8c.html#a3c7e747b9cbc7f62fc89d12b7a15ab47" title=" " alt="" coords="199,5,337,47"/>
+<area shape="rect" id="node4" href="$minerva-ag_2src_2platform_2plat__i2c__target_8c.html#aae4158d93ed42f8e361a890197d0025e" title=" " alt="" coords="199,71,337,112"/>
+<area shape="rect" id="node3" href="$pldm__sensor_8h.html#a17597d30b940a33d2608a54ccadd949f" title=" " alt="" coords="385,5,556,47"/>
+<area shape="rect" id="node5" href="$minerva-ag_2src_2platform_2plat__hook_8c.html#aabea0bdc5ef07d897b29e45fa6c1a72c" title=" " alt="" coords="395,71,546,112"/>
+<area shape="rect" id="node6" href="$minerva-ag_2src_2platform_2plat__hook_8c.html#a6526064e33172fb607c29185a435bc7d" title=" " alt="" coords="604,78,751,105"/>
+</map>
