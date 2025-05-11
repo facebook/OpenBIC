@@ -180,13 +180,17 @@ bool get_adc_voltage(int channel, float *voltage)
 	return true;
 }
 
-void init_platform_config()
+void i3c_rst_cb(const struct device *dev)
 {
 	I3C_MSG i3c_msg;
+	i3c_msg.bus = 0;
+	i3c_set_pid(&i3c_msg, slot_pid);
+}
+
+void init_platform_config()
+{
 	float voltage;
 	float p3v3_stby_voltage;
-
-	i3c_msg.bus = 0;
 
 	bool success = get_adc_voltage(ADC_CHANNEL_13, &voltage);
 
@@ -233,7 +237,13 @@ void init_platform_config()
 
 	LOG_INF("Slot EID = %d, Slot ID = %d", slot_eid, slot_id);
 
+	const struct device *dev;
+	I3C_MSG i3c_msg;
+	i3c_msg.bus = 0;
 	i3c_set_pid(&i3c_msg, slot_pid);
+
+	dev = device_get_binding("I3C_0");
+	i3c_hook_rst_cb(dev, i3c_rst_cb);
 
 	init_retimer_type();
 }
