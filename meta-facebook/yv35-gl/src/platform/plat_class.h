@@ -91,7 +91,8 @@ bool get_adc_voltage(int channel, float *voltage);
 uint8_t get_board_revision();
 void init_platform_config();
 uint16_t get_i3c_hub_type();
-uint16_t get_exp_i3c_hub_type();
+uint16_t get_exp_1ou_i3c_hub_type();
+uint16_t get_exp_2ou_i3c_hub_type();
 void init_i3c_hub_type();
 
 #endif

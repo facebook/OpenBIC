@@ -33,23 +33,29 @@ void init_i3c_hub()
 	init_i3c_hub_type();
 	i3c_hub_type = get_i3c_hub_type();
 
-	if (i3c_hub_type == RG3M87B12_DEVICE_INFO) {
+	switch (i3c_hub_type) {
+	case RG3M87B12_DEVICE_INFO:
 		if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, LDO_VOLT, rg3mxxb12_pullup_500_ohm)) {
-			LOG_ERR("Failed to initialize i3c hub");
+			LOG_ERR("Failed to initialize rg3mxxb12 i3c hub");
 		}
 
 		if (!rg3mxxb12_set_slave_port(I3C_BUS4, RG3MXXB12_DEFAULT_STATIC_ADDRESS,
 					      DEFAULT_SLAVE_PORT_SETTING)) {
-			LOG_ERR("Error to set slave port");
+			LOG_ERR("Error to set rg3mxxb12 i3c hub slave port");
 		}
-	} else {
-		if (!p3h284x_i3c_mode_only_init(&i3c_msg, LDO_VOLT)) {
-			LOG_ERR("Failed to initialize i3c hub");
+		break;
+	case P3H2840_DEVICE_INFO:
+		if (!p3h284x_i3c_mode_only_init(&i3c_msg, P3H2840_I3C_LDO_VOLT)) {
+			LOG_ERR("Failed to initialize p3h284x i3c hub");
 		}
 
 		if (!p3h284x_set_slave_port(I3C_BUS4, P3H284X_DEFAULT_STATIC_ADDRESS,
 					    DEFAULT_SLAVE_PORT_SETTING)) {
-			LOG_ERR("Error to set slave port");
+			LOG_ERR("Error to set p3h284x i3c hub slave port");
 		}
+		break;
+	default:
+		LOG_ERR("Get i3c hub type failed - initialize I3C HUB");
+		break;
 	}
 }
