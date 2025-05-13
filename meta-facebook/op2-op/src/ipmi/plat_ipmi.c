@@ -411,18 +411,26 @@ void OEM_1S_SAFE_WRITE_READ_M2_DATA(ipmi_msg *msg)
 	}
 
 	// Change channel
-	if (i3c_hub_type == RG3M87B12_DEVICE_INFO) {
+	switch (i3c_hub_type) {
+	case RG3M87B12_DEVICE_INFO:
 		if (!rg3mxxb12_select_slave_port_connect(i2c_msg.bus, mux_channel)) {
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			k_mutex_unlock(&i2c_hub_mutex);
+			LOG_ERR("Failed to change rg3mxxb12 I3C HUB (I2C mode) channel");
 			return;
 		}
-	} else {
+		break;
+	case P3H2840_DEVICE_INFO:
 		if (!p3h284x_select_slave_port_connect(i2c_msg.bus, mux_channel)) {
 			msg->completion_code = CC_UNSPECIFIED_ERROR;
 			k_mutex_unlock(&i2c_hub_mutex);
+			LOG_ERR("Failed to change p3h284x I3C HUB (I2C mode) channel");
 			return;
 		}
+		break;
+	default:
+		LOG_ERR("Get i3c hub type failed - change I3C HUB (I2C mode) channel");
+		return;
 	}
 
 	memcpy(&i2c_msg.data[0], &msg->data[3], i2c_msg.tx_len);
@@ -444,16 +452,22 @@ void OEM_1S_SAFE_WRITE_READ_M2_DATA(ipmi_msg *msg)
 	}
 
 	// Close all channels after write read
-	if (i3c_hub_type == RG3M87B12_DEVICE_INFO) {
+	switch (i3c_hub_type) {
+	case RG3M87B12_DEVICE_INFO:
 		if (!rg3mxxb12_select_slave_port_connect(i2c_msg.bus,
 							 RG3MXXB12_SSPORTS_ALL_DISCONNECT)) {
-			LOG_ERR("Failed to close I3C HUB (I2C mode) channel");
+			LOG_ERR("Failed to close rg3mxxb12 I3C HUB (I2C mode) channel");
 		}
-	} else {
+		break;
+	case P3H2840_DEVICE_INFO:
 		if (!p3h284x_select_slave_port_connect(i2c_msg.bus,
 						       P3H284X_SSPORTS_ALL_DISCONNECT)) {
-			LOG_ERR("Failed to close I3C HUB (I2C mode) channel");
+			LOG_ERR("Failed to close p3h284x I3C HUB (I2C mode) channel");
 		}
+		break;
+	default:
+		LOG_ERR("Get i3c hub type failed - close I3C HUB (I2C mode) channel");
+		break;
 	}
 
 	if (k_mutex_unlock(&i2c_hub_mutex)) {
