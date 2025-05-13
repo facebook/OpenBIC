@@ -147,11 +147,11 @@ void init_vr_vendor_type(void)
 			ubc_type = UBC_MPS_MPC12109;
 			vr_type = VR_RNS_ISL69260_RAA228238;
 			break;
-		case FLEX_UBC_AND_MPS_VR:
+		case FLEX_BMR313_UBC_AND_MPS_VR:
 			ubc_type = UBC_FLEX_BMR313;
 			vr_type = VR_MPS_MP2971_MP2891;
 			break;
-		case FLEX_UBC_AND_RNS_VR:
+		case FLEX_BMR313_UBC_AND_RNS_VR:
 			ubc_type = UBC_FLEX_BMR313;
 			vr_type = VR_RNS_ISL69260_RAA228238;
 			break;
@@ -180,11 +180,11 @@ void init_vr_vendor_type(void)
 			ubc_type = UBC_MPS_MPC12109;
 			vr_type = VR_RNS_ISL69260_RAA228249;
 			break;
-		case FLEX_UBC_AND_MPS_VR:
+		case FLEX_BMR313_UBC_AND_MPS_VR:
 			ubc_type = UBC_FLEX_BMR313;
 			vr_type = VR_MPS_MP2971_MP29816A;
 			break;
-		case FLEX_UBC_AND_RNS_VR:
+		case FLEX_BMR313_UBC_AND_RNS_VR:
 			ubc_type = UBC_FLEX_BMR313;
 			vr_type = VR_RNS_ISL69260_RAA228249;
 			break;
@@ -302,13 +302,13 @@ void pal_show_board_types(const struct shell *shell)
 						"not supported");
 
 	shell_print(shell, "* VR_VENDOR_TYPE:(0x%02X)%s", vr_vender_type,
-		    (vr_vender_type == DELTA_UBC_AND_MPS_VR) ? "DELTA_UBC_AND_MPS_VR" :
-		    (vr_vender_type == DELTA_UBC_AND_RNS_VR) ? "DELTA_UBC_AND_RNS_VR" :
-		    (vr_vender_type == MPS_UBC_AND_MPS_VR)   ? "MPS_UBC_AND_MPS_VR" :
-		    (vr_vender_type == MPS_UBC_AND_RNS_VR)   ? "MPS_UBC_AND_RNS_VR" :
-		    (vr_vender_type == FLEX_UBC_AND_MPS_VR)  ? "FLEX_UBC_AND_MPS_VR" :
-		    (vr_vender_type == FLEX_UBC_AND_RNS_VR)  ? "FLEX_UBC_AND_RNS_VR" :
-							       "not supported");
+		    (vr_vender_type == DELTA_UBC_AND_MPS_VR)	   ? "DELTA_UBC_AND_MPS_VR" :
+		    (vr_vender_type == DELTA_UBC_AND_RNS_VR)	   ? "DELTA_UBC_AND_RNS_VR" :
+		    (vr_vender_type == MPS_UBC_AND_MPS_VR)	   ? "MPS_UBC_AND_MPS_VR" :
+		    (vr_vender_type == MPS_UBC_AND_RNS_VR)	   ? "MPS_UBC_AND_RNS_VR" :
+		    (vr_vender_type == FLEX_BMR313_UBC_AND_MPS_VR) ? "FLEX_BMR313_UBC_AND_MPS_VR" :
+		    (vr_vender_type == FLEX_BMR313_UBC_AND_RNS_VR) ? "FLEX_BMR313_UBC_AND_RNS_VR" :
+								     "not supported");
 	shell_print(shell, "* UBC_TYPE:      (0x%02X)%s", ubc_type,
 		    (ubc_type == UBC_DELTA_U50SU4P180PMDAFC) ? "DELTA_U50SU4P180PMDAFC" :
 		    (ubc_type == UBC_MPS_MPC12109)	     ? "MPS_MPC12109" :
