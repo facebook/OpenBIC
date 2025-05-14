@@ -8,21 +8,42 @@ pid_cfg hex_fan_pid_table[] = {
 	{
 		.sensor_num = SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C,
 		.setpoint = 40,
-		.kp = -3,
-		.ki = -0.05,
+		.kp = -15,
+		.ki = -0.1,
 		.kd = -0.01,
-		.i_limit_min = -5,
+		.i_limit_min = 0,
 		.i_limit_max = 90,
-		.pos_hyst = 1,
-		.neg_hyst = 1,
+		.pos_hyst = 0,
+		.neg_hyst = 0,
 	},
 };
 
 stepwise_cfg hex_fan_stepwise_table[] = {
+		{
+		.sensor_num = SENSOR_NUM_SB_HEX_AIR_INLET_AVG_TEMP_C,
+		.step = {
+			{30.0, 5},
+			{31.0, 7},
+			{32.0, 9},
+			{33.0, 11},
+			{34.0, 13},
+			{35.0, 15},
+			{36.0, 17},
+			{40.0, 19},
+		},
+	},
 	{
 		.sensor_num = SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C,
 		.step = {
-			{25, 10},
+			{34.0, 5},
+			{35.0, 8},
+			{36.0, 11},
+			{37.0, 14},
+			{38.0, 17},
+			{41.0, 20},
+			{41.2, 25},
+			{41.5, 35},
+			{42.0, 45},
 		},
 	},
 };
@@ -37,13 +58,13 @@ pid_cfg pump_pid_table[] = {
 		.i_limit_min = -5,
 		.i_limit_max = 90,
 		.pos_hyst = 1,
-		.neg_hyst = 0,
+		.neg_hyst = 1,
 	},
 };
 
 stepwise_cfg pump_stepwise_auto_mode_table[] = {
 	{
-		.sensor_num = SENSOR_NUM_COOLING_CAPACITY,
+		.sensor_num = SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM,
 		.step = {
 			{1, 100},
 		},
@@ -52,7 +73,7 @@ stepwise_cfg pump_stepwise_auto_mode_table[] = {
 
 stepwise_cfg pump_stepwise_auto_tune_table[] = {
 	{
-		.sensor_num = SENSOR_NUM_COOLING_CAPACITY,
+		.sensor_num = SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM,
 		.step = {
 			{1, 10},
 		},
@@ -63,22 +84,22 @@ stepwise_cfg rpu_fan_stepwise_table[] = {
 	{
 		.sensor_num = SENSOR_NUM_SB_HEX_AIR_INLET_AVG_TEMP_C,
 		.step = {
-			{25, 25},
-			{26, 26},
-			{27, 27},
-			{28, 28},
-			{29, 29},
-			{30, 30},
-			{31, 31},
-			{32, 32},
-			{33, 33},
-			{34, 34},
-			{35, 35},
-			{36, 36},
-			{37, 37},
-			{38, 38},
-			{39, 39},
-			{40, 40},
+			{25.0, 25},
+			{26.0, 26},
+			{27.0, 27},
+			{28.0, 28},
+			{29.0, 29},
+			{30.0, 30},
+			{31.0, 31},
+			{32.0, 32},
+			{33.0, 33},
+			{34.0, 34},
+			{35.0, 35},
+			{36.0, 36},
+			{37.0, 37},
+			{38.0, 38},
+			{39.0, 39},
+			{40.0, 40},
 		},
 	},
 };

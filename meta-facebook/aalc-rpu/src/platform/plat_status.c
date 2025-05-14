@@ -66,6 +66,7 @@ bool set_sticky_sensor_status(uint8_t idx, uint16_t val)
 	}
 	uint16_t eeprom_val = (val == 0) ? 0xFFFF : val;
 
+	k_msleep(10);
 	uint16_t sticky_status = get_sticky_sensor_status(idx);
 	if (sticky_status != val) {
 		if (!plat_eeprom_write(AALC_STICKY_STATUS_START + (idx * STICKY_STATUS_SIZE),

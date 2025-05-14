@@ -48,6 +48,7 @@
 #define DATA_TABLE_LENGTH_2 2
 #define DATA_TABLE_LENGTH_4 4
 #define DATA_TABLE_LENGTH_7 7
+#define DATA_TABLE_LENGTH_13 13
 #define SENSOR_INIT_PDR_INDEX_MAX 248 // PDR indexe is on 0 base
 #define SENSOR_READING_PDR_INDEX_MAX 50
 #define PLAT_MASTER_WRITE_STACK_SIZE 1024
@@ -171,7 +172,7 @@ plat_sensor_init_data_0_1 *sensor_init_data_0_1_table[DATA_TABLE_LENGTH_2] = { N
 plat_sensor_init_data_2_5 *sensor_init_data_2_5_table[DATA_TABLE_LENGTH_4] = { NULL };
 plat_sensor_init_data_6 *sensor_init_data_6_table[DATA_TABLE_LENGTH_1] = { NULL };
 plat_sensor_init_data_8 *sensor_init_data_8_table[DATA_TABLE_LENGTH_1] = { NULL };
-plat_sensor_init_data_60_76 *sensor_init_data_60_66_table[DATA_TABLE_LENGTH_7] = { NULL };
+plat_sensor_init_data_60_76 *sensor_init_data_60_66_table[DATA_TABLE_LENGTH_13] = { NULL };
 plat_sensor_init_data_60_76 *sensor_init_data_70_76_table[DATA_TABLE_LENGTH_7] = { NULL };
 plat_sensor_init_data_41 *sensor_init_data_41_table[DATA_TABLE_LENGTH_1] = { NULL };
 plat_sensor_init_data_42 *sensor_init_data_42_table[DATA_TABLE_LENGTH_1] = { NULL };
@@ -221,6 +222,24 @@ bool get_fru_info_element(telemetry_info *telemetry_info, char **fru_element,
 		break;
 	case FRU_BOARD_CUSTOM_DATA_4_REG:
 		*fru_element = plat_fru_info->board.board_custom_data[3];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_5_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[4];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_6_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[5];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_7_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[6];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_8_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[7];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_9_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[8];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_10_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[9];
 		break;
 	case FRU_PRODUCT_NAME_REG:
 		*fru_element = plat_fru_info->product.product_name;
@@ -501,7 +520,7 @@ bool initialize_sensor_data_60_66(telemetry_info *telemetry_info, uint8_t *buffe
 	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
 
 	int table_index = telemetry_info->telemetry_offset - FRU_BOARD_PART_NUMBER_REG;
-	if (table_index < 0 || table_index >= DATA_TABLE_LENGTH_7)
+	if (table_index < 0 || table_index >= DATA_TABLE_LENGTH_13)
 		return false;
 
 	char *fru_string = NULL;
@@ -615,6 +634,12 @@ telemetry_info telemetry_info_table[] = {
 	{ FRU_BOARD_CUSTOM_DATA_2_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
 	{ FRU_BOARD_CUSTOM_DATA_3_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
 	{ FRU_BOARD_CUSTOM_DATA_4_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
+	{ FRU_BOARD_CUSTOM_DATA_5_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
+	{ FRU_BOARD_CUSTOM_DATA_6_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
+	{ FRU_BOARD_CUSTOM_DATA_7_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
+	{ FRU_BOARD_CUSTOM_DATA_8_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
+	{ FRU_BOARD_CUSTOM_DATA_9_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
+	{ FRU_BOARD_CUSTOM_DATA_10_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
 	{ FRU_PRODUCT_NAME_REG, 0x00, .sensor_data_init = initialize_sensor_data_70_76 },
 	{ FRU_PRODUCT_PART_NUMBER_REG, 0x00, .sensor_data_init = initialize_sensor_data_70_76 },
 	{ FRU_PRODUCT_PART_VERSION_REG, 0x00, .sensor_data_init = initialize_sensor_data_70_76 },
@@ -681,7 +706,13 @@ static bool command_reply_data_handle(void *arg)
 			case FRU_BOARD_CUSTOM_DATA_1_REG:
 			case FRU_BOARD_CUSTOM_DATA_2_REG:
 			case FRU_BOARD_CUSTOM_DATA_3_REG:
-			case FRU_BOARD_CUSTOM_DATA_4_REG: {
+			case FRU_BOARD_CUSTOM_DATA_4_REG:
+			case FRU_BOARD_CUSTOM_DATA_5_REG:
+			case FRU_BOARD_CUSTOM_DATA_6_REG:
+			case FRU_BOARD_CUSTOM_DATA_7_REG:
+			case FRU_BOARD_CUSTOM_DATA_8_REG:
+			case FRU_BOARD_CUSTOM_DATA_9_REG:
+			case FRU_BOARD_CUSTOM_DATA_10_REG: {
 				data->target_rd_msg.msg_length = struct_size;
 				memcpy(data->target_rd_msg.msg,
 				       sensor_init_data_60_66_table[reg_offset -

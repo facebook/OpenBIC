@@ -467,7 +467,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	/* is_mb_dc_on() is to start VR FW accessing when all VRs are enabled PW GD */
 	if (is_mb_dc_on() == false) {
 		if ((gpio_get(FM_PLD_UBC_EN_R) == GPIO_LOW) || !is_ubc_enabled_delayed_enabled()) {
-			LOG_ERR("Comp id %d FW version request failed due to UBC is not enabled",
+			LOG_INF("Comp id %d FW version request failed due to UBC is not enabled",
 				p->comp_identifier);
 			return ret;
 		}

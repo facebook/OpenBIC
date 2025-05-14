@@ -160,6 +160,23 @@ bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading)
 		k_mutex_unlock(&pwrlevel_mutex);
 	}
 
+	/* set reading val to 0 if reading val is negative */
+	sensor_val tmp_reading;
+	if (reading != NULL) {
+		tmp_reading.integer = (int16_t)(*reading & 0xFFFF);
+		tmp_reading.fraction = (int16_t)((*reading >> 16) & 0xFFFF);
+
+		/* sensor_value = 1000 times of true value */
+		int32_t sensor_value = tmp_reading.integer * 1000 + tmp_reading.fraction;
+
+		if (sensor_value < 0) {
+			LOG_DBG("Original sensor reading: integer = %d, fraction = %d (combined value * 1000: %d)",
+				tmp_reading.integer, tmp_reading.fraction, sensor_value);
+			*reading = 0;
+			LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
+		}
+	}
+
 	return true;
 }
 
@@ -2035,6 +2052,12 @@ bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 	return true;
 }
 
+#define PLAT_TMP432_THERM_HYSTERESIS_VAL 0x64 //100
+
+#ifndef TMP432_THERM_HYSTERESIS_REG
+#define TMP432_THERM_HYSTERESIS_REG 0x21
+#endif
+
 void init_temp_alert_mode(void)
 {
 	size_t num_of_temp = sizeof(temp_index_table) / sizeof(temp_index_table[0]);
@@ -2055,12 +2078,12 @@ void init_temp_alert_mode(void)
 			continue;
 		}
 
+		//set to temp alert mode
 		uint8_t data = 0;
 		if (!plat_i2c_read(cfg->port, cfg->target_addr, TMP432_CONFIG_READ_REG1, &data,
 				   1)) {
-			LOG_ERR("Failed to read TMP432 config for sensor %s (0x%x)", name,
-				sensor_id);
-			continue;
+			LOG_ERR("Failed to read TMP432 config for sensor %s (0x%x), set TMP432_CONFIG_WRITE_REG1 to %lx ",
+				name, sensor_id, BIT(5));
 		}
 
 		data |= BIT(5);
@@ -2068,10 +2091,22 @@ void init_temp_alert_mode(void)
 				    1)) {
 			LOG_ERR("Failed to set TMP432 to temp alert mode for sensor %s (0x%x)",
 				name, sensor_id);
+		} else {
+			LOG_INF("Sensor %s (0x%x) init temp alert mode successfully", name,
+				sensor_id);
+		}
+
+		//set therm hysteresis
+		data = PLAT_TMP432_THERM_HYSTERESIS_VAL;
+		if (!plat_i2c_write(cfg->port, cfg->target_addr, TMP432_THERM_HYSTERESIS_REG, &data,
+				    1)) {
+			LOG_ERR("Failed to set TMP432 therm hysteresis to %d for sensor %s (0x%x)",
+				PLAT_TMP432_THERM_HYSTERESIS_VAL, name, sensor_id);
 			continue;
 		}
 
-		LOG_INF("Sensor %s (0x%x) init temp alert mode successfully", name, sensor_id);
+		LOG_INF("Sensor %s (0x%x) init therm hysteresis to %d successfully", name,
+			sensor_id, PLAT_TMP432_THERM_HYSTERESIS_VAL);
 	}
 }
 
@@ -2084,6 +2119,9 @@ void init_temp_limit(void)
 
 	uint8_t followed_ucr_only_limit_temp[] = { TOP_INLET_HIGH_LIMIT, TOP_OUTLET_HIGH_LIMIT,
 						   BOT_INLET_HIGH_LIMIT, BOT_OUTLET_HIGH_LIMIT };
+
+	uint8_t followed_ucr_only_limit_on_die_local_temp[] = { TEMP_INDEX_ON_DIE_ATH_0_N_OWL,
+								TEMP_INDEX_ON_DIE_ATH_1_S_OWL };
 
 	for (int i = 0; i < ARRAY_SIZE(followed_ucr_lcr_limit_temp); i++) {
 		float critical_high = 0;
@@ -2137,6 +2175,28 @@ void init_temp_limit(void)
 			dynamic_threshold);
 		plat_set_temp_threshold(followed_ucr_only_limit_temp[i], &dynamic_threshold, false,
 					false);
+	}
+
+	for (int i = 0; i < ARRAY_SIZE(followed_ucr_only_limit_on_die_local_temp); i++) {
+		float critical_high = 130;
+		uint8_t sensor_id =
+			temp_index_table[followed_ucr_only_limit_on_die_local_temp[i]].sensor_id;
+		sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+
+		uint32_t high_threshold = (uint32_t)(critical_high * 1000);
+		LOG_INF("set %s %s: %d",
+			temp_index_table[followed_ucr_only_limit_on_die_local_temp[i]].sensor_name,
+			"LOCAL_HIGH_LIMIT", high_threshold);
+		switch (cfg->type) {
+		case sensor_dev_tmp431:
+			tmp432_set_temp_threshold(cfg, LOCAL_HIGH_LIMIT, &high_threshold);
+			break;
+		case sensor_dev_emc1413:
+			emc1413_set_temp_threshold(cfg, LOCAL_HIGH_LIMIT, &high_threshold);
+			break;
+		default:
+			LOG_ERR("Unsupport temp type(%x)", cfg->type);
+		}
 	}
 
 	LOG_INF("temp limit init done");

@@ -98,8 +98,8 @@ static uint8_t calculateStepwise(zone_cfg *zone_p, uint8_t *duty)
 			tmp = 100.0;
 		}
 
-		int16_t temp = (int16_t)tmp;
-		FSC_PRINTF("\t\t----- sensor_num %x, temp = %d\n", p->sensor_num, temp);
+		float temp = tmp;
+		FSC_PRINTF("\t\t----- sensor_num %x, temp = %f\n", p->sensor_num, temp);
 
 		// hysteresis
 		if (p->pos_hyst || p->neg_hyst) {
@@ -114,7 +114,7 @@ static uint8_t calculateStepwise(zone_cfg *zone_p, uint8_t *duty)
 		}
 
 		// find duty by temp
-		uint8_t tmp_duty = 100.0;
+		uint8_t tmp_duty = 100;
 		for (int j = 0; j < ARRAY_SIZE(p->step); j++) {
 			// 0 is a step that does not exist
 			if (p->step[j].temp == 0) {
@@ -124,7 +124,7 @@ static uint8_t calculateStepwise(zone_cfg *zone_p, uint8_t *duty)
 				break;
 			}
 
-			FSC_PRINTF("\t\t\ttemp %d, duty %d\n", p->step[j].temp, p->step[j].duty);
+			FSC_PRINTF("\t\t\ttemp %f, duty %d\n", p->step[j].temp, p->step[j].duty);
 			if (p->last_temp <= p->step[j].temp) {
 				tmp_duty = p->step[j].duty;
 				break;
@@ -138,7 +138,7 @@ static uint8_t calculateStepwise(zone_cfg *zone_p, uint8_t *duty)
 			max_duty = MAX(max_duty, tmp_duty);
 
 		FSC_PRINTF(
-			"\t\tsensor_num %x, last_temp = %d, tmp_duty = %d, max_duty = %d, amb_duty = %d\n",
+			"\t\tsensor_num %x, last_temp = %f, tmp_duty = %d, max_duty = %d, amb_duty = %d\n",
 			p->sensor_num, p->last_temp, tmp_duty, max_duty, ambient_duty);
 	}
 
@@ -166,9 +166,13 @@ static uint8_t calculatePID(zone_cfg *zone_p, uint8_t *duty)
 			tmp = 100.0;
 		}
 
-		int16_t temp = (int16_t)tmp;
+		// pump group will truncate decimals
+		float temp =
+			(zone_p->pid_tbl->sensor_num == SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM) ?
+				(int16_t)tmp :
+				tmp;
 
-		FSC_PRINTF("\t\t----- sensor_num %x, temp = %d, p->setpoint %d\n", p->sensor_num,
+		FSC_PRINTF("\t\t----- sensor_num %x, temp = %f, p->setpoint %d\n", p->sensor_num,
 			   temp, p->setpoint);
 
 		// hysteresis
@@ -184,13 +188,13 @@ static uint8_t calculatePID(zone_cfg *zone_p, uint8_t *duty)
 		}
 
 		// p term
-		int error = p->setpoint - temp;
-		float pterm = p->kp * (float)error;
-		FSC_PRINTF("\t\t\tp->kp = %f, error = %d, pterm = %f\n", p->kp, error, pterm);
+		float error = (float)p->setpoint - temp;
+		float pterm = p->kp * error;
+		FSC_PRINTF("\t\t\tp->kp = %f, error = %f, pterm = %f\n", p->kp, error, pterm);
 
 		// i term
 		float iterm = p->integral;
-		iterm += p->ki * (float)error;
+		iterm += p->ki * error;
 
 		FSC_PRINTF("\t\t\tp->ki = %f, p->integral = %f, iterm = %f\n", p->ki, p->integral,
 			   iterm);
@@ -199,7 +203,7 @@ static uint8_t calculatePID(zone_cfg *zone_p, uint8_t *duty)
 
 		// d term
 		float dterm = p->kd * (error - p->last_error);
-		FSC_PRINTF("\t\t\tp->kd = %f, p->last_error = %d, dterm = %f\n", p->kd,
+		FSC_PRINTF("\t\t\tp->kd = %f, p->last_error = %f, dterm = %f\n", p->kd,
 			   p->last_error, dterm);
 
 		// calculate duty
@@ -257,8 +261,8 @@ static void zone_init(void)
 		for (uint8_t k = 0; k < zone_p->pid_tbl_num; k++) {
 			pid_cfg *p = zone_p->pid_tbl + k;
 			if (p) {
-				p->integral = 0;
-				p->last_error = 0;
+				p->integral = 0.0;
+				p->last_error = 0.0;
 				p->last_temp = FSC_TEMP_INVALID;
 			}
 		}
@@ -273,12 +277,12 @@ void change_lpm_setpoint(uint8_t onoff)
 {
 	if (onoff) {
 		zone_table[1].pid_tbl = pump_pid_table;
-		zone_table[1].pid_tbl->setpoint = get_fsc_setpoint(SETPOINT_FLAG_LPM);
+		zone_table[1].pid_tbl->setpoint = get_fsc_setpoint(SETPOINT_FLAG_LPM) + 1;
 		zone_table[1].sw_tbl = pump_stepwise_auto_tune_table;
 	} else {
 		if (zone_table[1].pid_tbl) {
-			zone_table[1].pid_tbl->integral = 0;
-			zone_table[1].pid_tbl->last_error = 0;
+			zone_table[1].pid_tbl->integral = 0.0;
+			zone_table[1].pid_tbl->last_error = 0.0;
 			zone_table[1].pid_tbl->last_temp = FSC_TEMP_INVALID;
 		}
 		zone_table[1].pid_tbl = NULL;
@@ -288,8 +292,8 @@ void change_lpm_setpoint(uint8_t onoff)
 
 void change_temp_setpoint(uint8_t onoff)
 {
-	zone_table[0].pid_tbl->integral = 0;
-	zone_table[0].pid_tbl->last_error = 0;
+	zone_table[0].pid_tbl->integral = 0.0;
+	zone_table[0].pid_tbl->last_error = 0.0;
 	zone_table[0].pid_tbl->last_temp = FSC_TEMP_INVALID;
 	zone_table[0].pid_tbl->setpoint = onoff ? get_fsc_setpoint(SETPOINT_FLAG_OUTLET_TEMP) : 40;
 }
@@ -312,11 +316,11 @@ static void fsc_thread_handler(void *arug0, void *arug1, void *arug2)
 	CHECK_NULL_ARG(arug1);
 	ARG_UNUSED(arug2);
 
-	zone_cfg *zone_table = (zone_cfg *)arug0;
-	uint32_t zone_table_size = POINTER_TO_UINT(arug1);
+	zone_cfg *fsc_zone_table = (zone_cfg *)arug0;
+	uint32_t fsc_zone_table_size = POINTER_TO_UINT(arug1);
 
-	LOG_INF("fsc_thread_handler zone_table %p, zone_table_size %d", zone_table,
-		zone_table_size);
+	LOG_INF("fsc_thread_handler fsc_zone_table %p, fsc_zone_table_size %d", fsc_zone_table,
+		fsc_zone_table_size);
 
 	const int fsc_poll_interval_ms = 1000;
 
@@ -326,12 +330,12 @@ static void fsc_thread_handler(void *arug0, void *arug1, void *arug2)
 		if (!fsc_poll_flag)
 			continue;
 
-		for (uint8_t i = 0; i < zone_table_size; i++) {
+		for (uint8_t i = 0; i < fsc_zone_table_size; i++) {
 			uint16_t duty = 0;
 			uint8_t tmp_duty = 0;
 
 			FSC_PRINTF("---------- fsc zone %d\n", i);
-			zone_cfg *zone_p = zone_table + i;
+			zone_cfg *zone_p = fsc_zone_table + i;
 			if (zone_p == NULL)
 				continue;
 

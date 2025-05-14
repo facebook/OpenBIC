@@ -335,7 +335,7 @@ bool init_fru_info(void)
 				offset += len;
 			}
 		}
-		/* Fields 6 ~ 9: Board Custom Data 1 ~ 4 */
+		/* Fields 6 ~ 9: Board Custom Data 1 ~ 10 */
 		for (int i = 0; i < BOARD_CUSTOM_DATA_MAX && offset < board_offset + area_len - 1;
 		     i++) {
 			uint8_t type_length = fru_data[offset++];
@@ -435,7 +435,7 @@ bool init_fru_info(void)
 				offset += len;
 			}
 		}
-		/* Fields 8 ~ 15: Product Custom Data 1 ~ 8 */
+		/* Fields 8 ~ 15: Product Custom Data 1 ~ 10 */
 		for (int i = 0;
 		     i < PRODUCT_CUSTOM_DATA_MAX && offset < product_offset + area_len - 1; i++) {
 			uint8_t type_length = fru_data[offset++];
