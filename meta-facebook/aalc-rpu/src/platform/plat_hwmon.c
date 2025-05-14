@@ -381,7 +381,7 @@ static bool failure_behavior(uint8_t group)
 	}
 
 	// all 100
-	for (uint8_t i = PUMP_FAIL_TWO_HEX_FAN_FAILURE; i <= PUMP_FAIL_ABNORMAL_COOLANT_OUTLET_TEMP;
+	for (uint8_t i = PUMP_FAIL_TWO_HEX_FAN_FAILURE; i <= PUMP_FAIL_ABNORMAL_AIR_INLET_TEMP;
 	     i++) {
 		if ((get_status_flag(STATUS_FLAG_FAILURE) >> i) & 0x01) {
 			set_pwm_group(group, 100);

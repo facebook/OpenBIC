@@ -53,6 +53,7 @@ uint32_t get_threshold_status(uint8_t sensor_num);
 bool pump_fail_check();
 bool hex_fan_fail_check();
 bool hsc_communicate_check();
+bool hsc_fail_check();
 bool system_failure_recovery();
 bool rpu_ready_recovery();
 void pump_change_threshold(uint8_t sensor_num, uint8_t duty);
