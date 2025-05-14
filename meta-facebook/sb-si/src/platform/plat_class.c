@@ -1,0 +1,88 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <logging/log.h>
+
+#include "libutil.h"
+#include "plat_i2c.h"
+#include "plat_class.h"
+#include "plat_pldm_sensor.h"
+
+LOG_MODULE_REGISTER(plat_class);
+
+#define I2C_BUS_TMP I2C_BUS1
+#define TMP_EMC1413_SMSC_ID_DEFAULT 0x5D
+
+static uint8_t vr_type = VR_UNKNOWN;
+static uint8_t tmp_type = TMP_TYPE_UNKNOWN;
+
+void init_vr_vendor_type(void)
+{
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 3;
+	i2c_msg.bus = I2C_BUS1;
+	i2c_msg.target_addr = VR_ASIC_P0V895_PEX_MP2971_ADDR;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = 0x00;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		vr_type = VR_MPS_MP2971_MP2891;
+	} else {
+		vr_type = VR_RNS_ISL69260_RAA228249;
+	}
+	LOG_INF("VR_TYPE(0x%02X) ", vr_type);
+}
+
+void init_tmp_type()
+{
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = I2C_BUS_TMP;
+	i2c_msg.target_addr = THERMAL_SENSOR_1_ADDR;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = 0xFE; //MFG ID REG
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_INF("Assume TMP is EMC1413 by address check");
+		tmp_type = TMP_EMC1413;
+		return;
+	} else {
+		LOG_INF("Assume TMP is TMP432 by register check");
+		tmp_type = TMP_TMP432;
+		return;
+	}
+}
+
+uint8_t get_vr_type()
+{
+	return vr_type;
+}
+
+uint8_t get_tmp_type()
+{
+	return tmp_type;
+}
+
+void init_platform_config()
+{
+	init_vr_vendor_type();
+	init_tmp_type();
+}
