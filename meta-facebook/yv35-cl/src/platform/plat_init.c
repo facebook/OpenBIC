@@ -52,6 +52,7 @@ void pal_post_init()
 {
 	plat_mctp_init();
 	kcs_init();
+	start_monitor_vf_present();
 }
 
 void pal_device_init()
