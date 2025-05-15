@@ -58,39 +58,57 @@ SCU_CFG scu_cfg[] = {
 
 void pal_pre_init()
 {
-	uint16_t exp_i3c_hub_type = I3C_HUB_TYPE_UNKNOWN;
+	// for op2 project _1ou_status and _2ou_status means connected 1ou and 3ou
+	uint16_t exp_1ou_i3c_hub_type = I3C_HUB_TYPE_UNKNOWN;
+	uint16_t exp_2ou_i3c_hub_type = I3C_HUB_TYPE_UNKNOWN;
 	init_platform_config();
 	init_i3c_hub_type();
 	init_i3c_hub();
-	exp_i3c_hub_type = get_exp_i3c_hub_type();
+	exp_1ou_i3c_hub_type = get_exp_1ou_i3c_hub_type();
+	exp_2ou_i3c_hub_type = get_exp_2ou_i3c_hub_type();
 	CARD_STATUS _1ou_status = get_1ou_status();
 	CARD_STATUS _2ou_status = get_2ou_status();
 	if (_1ou_status.present && (_1ou_status.card_type == TYPE_1OU_OLMSTED_POINT)) {
-		if (exp_i3c_hub_type == RG3M87B12_DEVICE_INFO) {
+		switch (exp_1ou_i3c_hub_type) {
+		case RG3M87B12_DEVICE_INFO:
 			// Initialize I3C HUB (HD BIC connects to Olympic2 1ou expension-A and B)
 			if (!rg3mxxb12_i2c_mode_only_init(I2C_BUS8, BIT(2), rg3mxxb12_ldo_1_8_volt,
 							  rg3mxxb12_pullup_1k_ohm)) {
-				printk("failed to initialize 1ou rg3mxxb12\n");
+				printk("failed to initialize 1ou i3c hub rg3mxxb12\n");
 			}
-		} else {
+			break;
+		case P3H2840_DEVICE_INFO:
+			// Initialize I3C HUB (HD BIC connects to Olympic2 1ou expension-A and B)
 			if (!p3h284x_i2c_mode_only_init(I2C_BUS8, BIT(2), p3g284x_ldo_1_8_volt,
-							p3g284x_pullup_1k_ohm)) {
-				printk("failed to initialize 1ou p3h284x\n");
+							p3g284x_pullup_2k_ohm,
+							P3H2840_BYPASS_MODE)) {
+				printk("failed to initialize 1ou i3c hub p3h284x\n");
 			}
+			break;
+		default:
+			printk("Get i3c hub type failed - initialize 1ou i3c hub\n");
+			break;
 		}
 	}
 	if (_2ou_status.present && (_1ou_status.card_type == TYPE_1OU_OLMSTED_POINT)) {
 		// Initialize I3C HUB (HD BIC connects to Olympic2 3ou expension-A and B)
-		if (exp_i3c_hub_type == RG3M87B12_DEVICE_INFO) {
+		switch (exp_2ou_i3c_hub_type) {
+		case RG3M87B12_DEVICE_INFO:
 			if (!rg3mxxb12_i2c_mode_only_init(I2C_BUS9, BIT(2), rg3mxxb12_ldo_1_8_volt,
 							  rg3mxxb12_pullup_1k_ohm)) {
-				printk("failed to initialize 3ou rg3mxxb12\n");
+				printk("failed to initialize 3ou i3c hub rg3mxxb12\n");
 			}
-		} else {
+			break;
+		case P3H2840_DEVICE_INFO:
 			if (!p3h284x_i2c_mode_only_init(I2C_BUS9, BIT(2), p3g284x_ldo_1_8_volt,
-							p3g284x_pullup_1k_ohm)) {
-				printk("failed to initialize 1ou p3h284x\n");
+							p3g284x_pullup_2k_ohm,
+							P3H2840_BYPASS_MODE)) {
+				printk("failed to initialize 3ou i3c hub p3h284x\n");
 			}
+			break;
+		default:
+			printk("Get i3c hub type failed - initialize 3ou i3c hub\n");
+			break;
 		}
 	}
 	scu_init(scu_cfg, ARRAY_SIZE(scu_cfg));

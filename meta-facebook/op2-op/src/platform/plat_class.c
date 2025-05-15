@@ -182,7 +182,8 @@ void init_i3c_hub_type(void)
 	if (rg3mxxb12_get_device_info(I2C_BUS2, &i3c_hub_type) &&
 	    (i3c_hub_type == RG3M87B12_DEVICE_INFO)) {
 		LOG_INF("I3C hub type: rg3mxxb12");
-	} else if (p3h284x_get_device_info(I2C_BUS2, &i3c_hub_type)) {
+	} else if (p3h284x_get_device_info(I2C_BUS2, &i3c_hub_type) &&
+		   (i3c_hub_type == P3H2840_DEVICE_INFO)) {
 		LOG_INF("I3C hub type: p3h284x");
 	} else {
 		LOG_ERR("I3C hub get device type fail");
@@ -208,7 +209,8 @@ void set_clock_buffer_bypass_mode()
 		if (i2c_master_write(&msg, retry) != 0) {
 			LOG_ERR("Failed to set Exp A clock buffer to bypass mode!");
 			// send event log to BMC
-			send_system_status_event(IPMI_OEM_EVENT_TYPE_NOTIFY,IPMI_EVENT_OFFSET_SYS_EXPA_CLOCK_BUFFER,0);
+			send_system_status_event(IPMI_OEM_EVENT_TYPE_NOTIFY,
+						 IPMI_EVENT_OFFSET_SYS_EXPA_CLOCK_BUFFER, 0);
 
 			return;
 		}
