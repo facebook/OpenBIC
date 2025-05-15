@@ -1136,8 +1136,8 @@ void load_sb_temp_sensor_config()
 		}
 
 		mfr_id = msg.data[0];
-		LOG_INF("Sensor board temp module 0x%x mfr_id: %x\n", tmp421_config_table[index].num,
-		       mfr_id);
+		LOG_INF("Sensor board temp module 0x%x mfr_id: %x\n",
+			tmp421_config_table[index].num, mfr_id);
 
 		if (mfr_id == TMP421_MFR_ID)
 			add_sensor_config(tmp421_config_table[index]);
