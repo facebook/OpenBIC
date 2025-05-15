@@ -160,10 +160,28 @@ void init_event_work()
 
 void addsel_work_handler(struct k_work *work_item)
 {
-	sel_work_wrapper *wrap = CONTAINER_OF(work_item, sel_work_wrapper, work);
-	if (send_event_log_to_bmc(wrap->sel_data) != PLDM_SUCCESS) {
-		LOG_ERR("Failed to send SEL: event_type=0x%x, assert_type=0x%x",
-			wrap->sel_data.event_type, wrap->sel_data.assert_type);
+	struct pldm_addsel_data msg = { 0 };
+	struct k_work_delayable *dwork = k_work_delayable_from_work(work_item);
+
+	const add_sel_info *work_info = CONTAINER_OF(dwork, add_sel_info, add_sel_work);
+
+	if ((work_info->gpio_num != 0) && (work_info->event_type != 0)) {
+		msg.event_type = work_info->event_type;
+		msg.assert_type = work_info->assert_type;
+	} else {
+		// for fastprochot and sys_throttle
+		const sel_work_wrapper *wrap = CONTAINER_OF(work_item, sel_work_wrapper, work);
+		if (wrap->sel_data.event_type != 0) {
+			msg = wrap->sel_data;
+		} else {
+			LOG_ERR("Invalid work item received, skip sending SEL.");
+			return;
+		}
+	}
+
+	if (send_event_log_to_bmc(msg) != PLDM_SUCCESS) {
+		LOG_ERR("Failed to send SEL: event_type=0x%x, assert_type=0x%x", msg.event_type,
+			msg.assert_type);
 	}
 }
 
