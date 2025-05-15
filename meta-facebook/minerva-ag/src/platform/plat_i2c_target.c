@@ -73,8 +73,8 @@ typedef struct __attribute__((__packed__)) {
 	uint16_t max_pdr_idx; //Max PDR sensor index exported in total (MAX_PDRIDX)
 
 	uint8_t sensor_r_len[]; //sensor[0] reading length ~ sensor[247] reading length
-} plat_sensor_init_data_0_1;
-// size = sizeof(plat_sensor_init_data_0_1) + num_idx
+} plat_sensor_init_data;
+// size = sizeof(plat_sensor_init_data) + num_idx
 
 typedef struct __attribute__((__packed__)) {
 	uint8_t sensor_index_offset; // Sensor index offset (e.g. PDR sensor index offset)
@@ -89,16 +89,16 @@ typedef struct __attribute__((__packed__)) {
 	// The following is a flexible array of sensor entries.
 	// The number of entries is (max_sbi_off + 1)
 	sensor_entry sensor_entries[];
-} plat_sensor_init_data_2_5;
-// size = sizeof(plat_sensor_init_data_2_5) + num_sensors * sizeof(SensorEntry);
+} plat_sensor_reading;
+// size = sizeof(plat_sensor_reading) + num_sensors * sizeof(SensorEntry);
 // num_sensors = max_sbi_off + 1
 
 typedef struct __attribute__((__packed__)) {
 	uint16_t carrier_board_id; //  MTIA Gen1 - Aegis=0x00
 	uint32_t bic_fw_version;
 	uint32_t cpld_fw_version;
-} plat_sensor_init_data_6;
-// size = sizeof(plat_sensor_init_data_6)
+} plat_inventory_ids;
+// size = sizeof(plat_inventory_ids)
 
 typedef struct __attribute__((__packed__)) {
 	uint8_t strap_set_index;
@@ -111,12 +111,12 @@ typedef struct __attribute__((__packed__)) {
 typedef struct __attribute__((__packed__)) {
 	uint8_t strap_data_length;
 	strap_entry strap_set_format[];
-} plat_sensor_init_data_8;
+} plat_strap_capability;
 
 typedef struct __attribute__((__packed__)) {
 	uint8_t data_length;
 	uint8_t fru_data[];
-} plat_sensor_init_data_60_76;
+} plat_fru_data;
 
 typedef struct __attribute__((__packed__)) {
 	struct k_work work;
@@ -125,21 +125,21 @@ typedef struct __attribute__((__packed__)) {
 	uint8_t read_len;
 	uint8_t write_len; // include data[0]
 	uint8_t data[]; // data[0]: offset
-} plat_sensor_init_data_40;
+} plat_i2c_bridge_command_config;
 
 typedef struct __attribute__((__packed__)) {
 	uint8_t data_status;
-} plat_sensor_init_data_41;
+} plat_i2c_bridge_command_status;
 
 typedef struct __attribute__((__packed__)) {
 	uint8_t data_length;
 	uint8_t response_data[];
-} plat_sensor_init_data_42;
+} plat_i2c_bridge_command_response_data;
 
 typedef struct __attribute__((__packed__)) {
 	struct k_work work;
 	uint8_t set_value;
-} plat_sensor_init_data_f0;
+} plat_control_sensor_polling;
 
 static uint8_t bootstrap_pin;
 static uint8_t user_setting_level;
@@ -168,16 +168,17 @@ const struct _i2c_target_config I2C_TARGET_CONFIG_TABLE[MAX_TARGET_NUM] = {
 	{ 0xFF, 0xA },
 };
 
-plat_sensor_init_data_0_1 *sensor_init_data_0_1_table[DATA_TABLE_LENGTH_2] = { NULL };
-plat_sensor_init_data_2_5 *sensor_init_data_2_5_table[DATA_TABLE_LENGTH_4] = { NULL };
-plat_sensor_init_data_6 *sensor_init_data_6_table[DATA_TABLE_LENGTH_1] = { NULL };
-plat_sensor_init_data_8 *sensor_init_data_8_table[DATA_TABLE_LENGTH_1] = { NULL };
-plat_sensor_init_data_60_76 *sensor_init_data_60_66_table[DATA_TABLE_LENGTH_13] = { NULL };
-plat_sensor_init_data_60_76 *sensor_init_data_70_76_table[DATA_TABLE_LENGTH_7] = { NULL };
-plat_sensor_init_data_41 *sensor_init_data_41_table[DATA_TABLE_LENGTH_1] = { NULL };
-plat_sensor_init_data_42 *sensor_init_data_42_table[DATA_TABLE_LENGTH_1] = { NULL };
+plat_sensor_init_data *sensor_init_data_table[DATA_TABLE_LENGTH_2] = { NULL };
+plat_sensor_reading *sensor_reading_table[DATA_TABLE_LENGTH_4] = { NULL };
+plat_inventory_ids *inventory_ids_table[DATA_TABLE_LENGTH_1] = { NULL };
+plat_strap_capability *strap_capability_table[DATA_TABLE_LENGTH_1] = { NULL };
+plat_fru_data *fru_board_data_table[DATA_TABLE_LENGTH_13] = { NULL };
+plat_fru_data *fru_product_data_table[DATA_TABLE_LENGTH_7] = { NULL };
+plat_i2c_bridge_command_status *i2c_bridge_command_status_table[DATA_TABLE_LENGTH_1] = { NULL };
+plat_i2c_bridge_command_response_data
+	*i2c_bridge_command_response_data_table[DATA_TABLE_LENGTH_1] = { NULL };
 
-void *allocate_sensor_data_table(void **buffer, size_t buffer_size)
+void *allocate_table(void **buffer, size_t buffer_size)
 {
 	if (*buffer) {
 		free(*buffer);
@@ -315,62 +316,62 @@ void set_bootstrap_element_handler()
 
 void i2c_bridge_command_handler(struct k_work *work_item)
 {
-	const plat_sensor_init_data_40 *sensor_data_40 =
-		CONTAINER_OF(work_item, plat_sensor_init_data_40, work);
+	const plat_i2c_bridge_command_config *sensor_data_config =
+		CONTAINER_OF(work_item, plat_i2c_bridge_command_config, work);
 
-	int response_data_len = sensor_data_40->read_len;
+	int response_data_len = sensor_data_config->read_len;
 
-	size_t table_size_41 = sizeof(plat_sensor_init_data_41);
-	plat_sensor_init_data_41 *sensor_data_41 =
-		allocate_sensor_data_table((void **)&sensor_init_data_41_table[0], table_size_41);
-	if (!sensor_data_41)
+	size_t table_size_41 = sizeof(plat_i2c_bridge_command_status);
+	plat_i2c_bridge_command_status *sensor_data_status =
+		allocate_table((void **)&i2c_bridge_command_status_table[0], table_size_41);
+	if (!sensor_data_status)
 		return;
 
 	size_t table_size_42 =
-		sizeof(plat_sensor_init_data_42) + response_data_len * sizeof(uint8_t);
-	plat_sensor_init_data_42 *sensor_data_42 =
-		allocate_sensor_data_table((void **)&sensor_init_data_42_table[0], table_size_42);
-	if (!sensor_data_42)
+		sizeof(plat_i2c_bridge_command_response_data) + response_data_len * sizeof(uint8_t);
+	plat_i2c_bridge_command_response_data *sensor_data_response =
+		allocate_table((void **)&i2c_bridge_command_response_data_table[0], table_size_42);
+	if (!sensor_data_response)
 		return;
 
-	sensor_data_41->data_status = I2C_BRIDGE_COMMAND_IN_PROCESS;
-	sensor_data_42->data_length = 0x00;
+	sensor_data_status->data_status = I2C_BRIDGE_COMMAND_IN_PROCESS;
+	sensor_data_response->data_length = 0x00;
 
 	I2C_MSG i2c_msg = { 0 };
 	uint8_t retry = 5;
-	i2c_msg.bus = sensor_data_40->bus;
-	i2c_msg.target_addr = sensor_data_40->addr;
-	i2c_msg.tx_len = sensor_data_40->write_len;
-	i2c_msg.rx_len = sensor_data_40->read_len;
-	memcpy(&i2c_msg.data, sensor_data_40->data, sensor_data_40->write_len);
+	i2c_msg.bus = sensor_data_config->bus;
+	i2c_msg.target_addr = sensor_data_config->addr;
+	i2c_msg.tx_len = sensor_data_config->write_len;
+	i2c_msg.rx_len = sensor_data_config->read_len;
+	memcpy(&i2c_msg.data, sensor_data_config->data, sensor_data_config->write_len);
 	if (response_data_len == 0) {
 		if (i2c_master_write(&i2c_msg, retry)) {
 			LOG_ERR("Failed to write reg, bus: %d, addr: 0x%x, tx_len: 0x%x",
 				i2c_msg.bus, i2c_msg.target_addr, i2c_msg.tx_len);
-			sensor_data_41->data_status = I2C_BRIDGE_COMMAND_FAILURE;
+			sensor_data_status->data_status = I2C_BRIDGE_COMMAND_FAILURE;
 			return;
 		}
-		sensor_data_41->data_status = I2C_BRIDGE_COMMAND_SUCCESS;
-		sensor_data_42->data_length = response_data_len;
+		sensor_data_status->data_status = I2C_BRIDGE_COMMAND_SUCCESS;
+		sensor_data_response->data_length = response_data_len;
 	} else {
 		if (i2c_master_read(&i2c_msg, retry)) {
 			LOG_ERR("Failed to read reg, bus: %d, addr: 0x%x, tx_len: 0x%x",
 				i2c_msg.bus, i2c_msg.target_addr, i2c_msg.tx_len);
-			sensor_data_41->data_status = I2C_BRIDGE_COMMAND_FAILURE;
+			sensor_data_status->data_status = I2C_BRIDGE_COMMAND_FAILURE;
 			return;
 		}
-		sensor_data_41->data_status = I2C_BRIDGE_COMMAND_SUCCESS;
-		sensor_data_42->data_length = response_data_len;
-		memcpy(sensor_data_42->response_data, i2c_msg.data, response_data_len);
+		sensor_data_status->data_status = I2C_BRIDGE_COMMAND_SUCCESS;
+		sensor_data_response->data_length = response_data_len;
+		memcpy(sensor_data_response->response_data, i2c_msg.data, response_data_len);
 	}
 }
 
 void set_sensor_polling_handler(struct k_work *work_item)
 {
-	const plat_sensor_init_data_f0 *sensor_data_f0 =
-		CONTAINER_OF(work_item, plat_sensor_init_data_f0, work);
+	const plat_control_sensor_polling *sensor_data =
+		CONTAINER_OF(work_item, plat_control_sensor_polling, work);
 
-	int value = sensor_data_f0->set_value;
+	int value = sensor_data->set_value;
 	if (!(value == 0 || value == 1)) {
 		LOG_ERR("set sensor_polling:%x is out of range", value);
 		return;
@@ -378,7 +379,7 @@ void set_sensor_polling_handler(struct k_work *work_item)
 	set_plat_sensor_polling_enable_flag(value);
 }
 
-bool initialize_sensor_data_0_1(telemetry_info *telemetry_info, uint8_t *buffer_size)
+bool initialize_sensor_data(telemetry_info *telemetry_info, uint8_t *buffer_size)
 {
 	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
 
@@ -394,9 +395,9 @@ bool initialize_sensor_data_0_1(telemetry_info *telemetry_info, uint8_t *buffer_
 			  0;
 
 	// Calculate the memory size
-	size_t table_size = sizeof(plat_sensor_init_data_0_1) + num_idx * sizeof(uint8_t);
-	plat_sensor_init_data_0_1 *sensor_data = allocate_sensor_data_table(
-		(void **)&sensor_init_data_0_1_table[table_index], table_size);
+	size_t table_size = sizeof(plat_sensor_init_data) + num_idx * sizeof(uint8_t);
+	plat_sensor_init_data *sensor_data =
+		allocate_table((void **)&sensor_init_data_table[table_index], table_size);
 	if (!sensor_data)
 		return false;
 
@@ -412,7 +413,7 @@ bool initialize_sensor_data_0_1(telemetry_info *telemetry_info, uint8_t *buffer_
 	return true;
 }
 
-bool initialize_sensor_data_2_5(telemetry_info *telemetry_info, uint8_t *buffer_size)
+bool initialize_sensor_reading(telemetry_info *telemetry_info, uint8_t *buffer_size)
 {
 	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
 
@@ -426,9 +427,9 @@ bool initialize_sensor_data_2_5(telemetry_info *telemetry_info, uint8_t *buffer_
 								      num_idx) :
 			  0;
 
-	size_t table_size = sizeof(plat_sensor_init_data_2_5) + num_idx * sizeof(sensor_entry);
-	plat_sensor_init_data_2_5 *sensor_data = allocate_sensor_data_table(
-		(void **)&sensor_init_data_2_5_table[table_index], table_size);
+	size_t table_size = sizeof(plat_sensor_reading) + num_idx * sizeof(sensor_entry);
+	plat_sensor_reading *sensor_data =
+		allocate_table((void **)&sensor_reading_table[table_index], table_size);
 	if (!sensor_data)
 		return false;
 
@@ -446,7 +447,7 @@ bool initialize_sensor_data_2_5(telemetry_info *telemetry_info, uint8_t *buffer_
 	return true;
 }
 
-bool initialize_sensor_data_6(telemetry_info *telemetry_info, uint8_t *buffer_size)
+bool initialize_inventory_ids(telemetry_info *telemetry_info, uint8_t *buffer_size)
 {
 	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
 
@@ -454,9 +455,9 @@ bool initialize_sensor_data_6(telemetry_info *telemetry_info, uint8_t *buffer_si
 	if (table_index < 0 || table_index >= DATA_TABLE_LENGTH_1)
 		return false;
 
-	size_t table_size = sizeof(plat_sensor_init_data_6);
-	plat_sensor_init_data_6 *sensor_data = allocate_sensor_data_table(
-		(void **)&sensor_init_data_6_table[table_index], table_size);
+	size_t table_size = sizeof(plat_inventory_ids);
+	plat_inventory_ids *sensor_data =
+		allocate_table((void **)&inventory_ids_table[table_index], table_size);
 	if (!sensor_data)
 		return false;
 
@@ -479,7 +480,7 @@ bool initialize_sensor_data_6(telemetry_info *telemetry_info, uint8_t *buffer_si
 	return true;
 }
 
-bool initialize_sensor_data_8(telemetry_info *telemetry_info, uint8_t *buffer_size)
+bool initialize_strap_capability(telemetry_info *telemetry_info, uint8_t *buffer_size)
 {
 	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
 
@@ -489,9 +490,9 @@ bool initialize_sensor_data_8(telemetry_info *telemetry_info, uint8_t *buffer_si
 
 	int num_idx = STRAP_INDEX_MAX;
 
-	size_t table_size = sizeof(plat_sensor_init_data_8) + num_idx * sizeof(strap_entry);
-	plat_sensor_init_data_8 *sensor_data = allocate_sensor_data_table(
-		(void **)&sensor_init_data_8_table[table_index], table_size);
+	size_t table_size = sizeof(plat_strap_capability) + num_idx * sizeof(strap_entry);
+	plat_strap_capability *sensor_data =
+		allocate_table((void **)&strap_capability_table[table_index], table_size);
 	if (!sensor_data)
 		return false;
 
@@ -515,7 +516,7 @@ bool initialize_sensor_data_8(telemetry_info *telemetry_info, uint8_t *buffer_si
 	return true;
 }
 
-bool initialize_sensor_data_60_66(telemetry_info *telemetry_info, uint8_t *buffer_size)
+bool initialize_fru_board_data(telemetry_info *telemetry_info, uint8_t *buffer_size)
 {
 	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
 
@@ -529,9 +530,9 @@ bool initialize_sensor_data_60_66(telemetry_info *telemetry_info, uint8_t *buffe
 		LOG_ERR("Failed to retrieve FRU Element");
 	}
 
-	size_t table_size = sizeof(plat_sensor_init_data_60_76) + fru_length;
-	plat_sensor_init_data_60_76 *sensor_data = allocate_sensor_data_table(
-		(void **)&sensor_init_data_60_66_table[table_index], table_size);
+	size_t table_size = sizeof(plat_fru_data) + fru_length;
+	plat_fru_data *sensor_data =
+		allocate_table((void **)&fru_board_data_table[table_index], table_size);
 	if (!sensor_data)
 		return false;
 
@@ -542,7 +543,7 @@ bool initialize_sensor_data_60_66(telemetry_info *telemetry_info, uint8_t *buffe
 	return true;
 }
 
-bool initialize_sensor_data_70_76(telemetry_info *telemetry_info, uint8_t *buffer_size)
+bool initialize_fru_product_data(telemetry_info *telemetry_info, uint8_t *buffer_size)
 {
 	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
 
@@ -556,9 +557,9 @@ bool initialize_sensor_data_70_76(telemetry_info *telemetry_info, uint8_t *buffe
 		LOG_ERR("Failed to retrieve FRU Element");
 	}
 
-	size_t table_size = sizeof(plat_sensor_init_data_60_76) + fru_length;
-	plat_sensor_init_data_60_76 *sensor_data = allocate_sensor_data_table(
-		(void **)&sensor_init_data_70_76_table[table_index], table_size);
+	size_t table_size = sizeof(plat_fru_data) + fru_length;
+	plat_fru_data *sensor_data =
+		allocate_table((void **)&fru_product_data_table[table_index], table_size);
 	if (!sensor_data)
 		return false;
 
@@ -569,13 +570,13 @@ bool initialize_sensor_data_70_76(telemetry_info *telemetry_info, uint8_t *buffe
 	return true;
 }
 
-void update_sensor_data_2_5_table()
+void update_sensor_reading_table()
 {
 	for (int table_index = 0; table_index < DATA_TABLE_LENGTH_4; table_index++) {
-		if (!sensor_init_data_2_5_table[table_index])
+		if (!sensor_reading_table[table_index])
 			continue;
 
-		plat_sensor_init_data_2_5 *sensor_data = sensor_init_data_2_5_table[table_index];
+		plat_sensor_reading *sensor_data = sensor_reading_table[table_index];
 		int num_idx = sensor_data->max_sbi_off + 1;
 
 		for (int i = 0; i < num_idx; i++) {
@@ -593,12 +594,12 @@ void update_sensor_data_2_5_table()
 	}
 }
 
-void update_sensor_data_8_table()
+void update_strap_capability_table()
 {
-	if (!sensor_init_data_8_table[0])
+	if (!strap_capability_table[0])
 		return;
 
-	plat_sensor_init_data_8 *sensor_data = sensor_init_data_8_table[0];
+	plat_strap_capability *sensor_data = strap_capability_table[0];
 
 	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
 		int drive_level = 0;
@@ -614,40 +615,42 @@ void update_sensor_data_8_table()
 	}
 }
 
+// clang-format off
 telemetry_info telemetry_info_table[] = {
-	{ SENSOR_INIT_DATA_0_REG, 0x00, .sensor_data_init = initialize_sensor_data_0_1 },
-	{ SENSOR_INIT_DATA_1_REG, 0x00, .sensor_data_init = initialize_sensor_data_0_1 },
-	{ SENSOR_READING_0_REG, 0x00, .sensor_data_init = initialize_sensor_data_2_5 },
-	{ SENSOR_READING_1_REG, 0x00, .sensor_data_init = initialize_sensor_data_2_5 },
-	{ SENSOR_READING_2_REG, 0x00, .sensor_data_init = initialize_sensor_data_2_5 },
-	{ SENSOR_READING_3_REG, 0x00, .sensor_data_init = initialize_sensor_data_2_5 },
-	{ INVENTORY_IDS_REG, 0x00, .sensor_data_init = initialize_sensor_data_6 },
-	{ STRAP_CAPABILTITY_REG, 0x00, .sensor_data_init = initialize_sensor_data_8 },
+	{ SENSOR_INIT_DATA_0_REG, 0x00, .telemetry_table_init = initialize_sensor_data },
+	{ SENSOR_INIT_DATA_1_REG, 0x00, .telemetry_table_init = initialize_sensor_data },
+	{ SENSOR_READING_0_REG, 0x00, .telemetry_table_init = initialize_sensor_reading },
+	{ SENSOR_READING_1_REG, 0x00, .telemetry_table_init = initialize_sensor_reading },
+	{ SENSOR_READING_2_REG, 0x00, .telemetry_table_init = initialize_sensor_reading },
+	{ SENSOR_READING_3_REG, 0x00, .telemetry_table_init = initialize_sensor_reading },
+	{ INVENTORY_IDS_REG, 0x00, .telemetry_table_init = initialize_inventory_ids },
+	{ STRAP_CAPABILTITY_REG, 0x00, .telemetry_table_init = initialize_strap_capability },
 	{ WRITE_STRAP_PIN_VALUE_REG },
 	{ I2C_BRIDGE_COMMAND_REG },
 	{ I2C_BRIDGE_COMMAND_STATUS_REG },
 	{ I2C_BRIDGE_COMMAND_RESPONSE_REG },
-	{ FRU_BOARD_PART_NUMBER_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
-	{ FRU_BOARD_SERIAL_NUMBER_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
-	{ FRU_BOARD_PRODUCT_NAME_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
-	{ FRU_BOARD_CUSTOM_DATA_1_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
-	{ FRU_BOARD_CUSTOM_DATA_2_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
-	{ FRU_BOARD_CUSTOM_DATA_3_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
-	{ FRU_BOARD_CUSTOM_DATA_4_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
-	{ FRU_BOARD_CUSTOM_DATA_5_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
-	{ FRU_BOARD_CUSTOM_DATA_6_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
-	{ FRU_BOARD_CUSTOM_DATA_7_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
-	{ FRU_BOARD_CUSTOM_DATA_8_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
-	{ FRU_BOARD_CUSTOM_DATA_9_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
-	{ FRU_BOARD_CUSTOM_DATA_10_REG, 0x00, .sensor_data_init = initialize_sensor_data_60_66 },
-	{ FRU_PRODUCT_NAME_REG, 0x00, .sensor_data_init = initialize_sensor_data_70_76 },
-	{ FRU_PRODUCT_PART_NUMBER_REG, 0x00, .sensor_data_init = initialize_sensor_data_70_76 },
-	{ FRU_PRODUCT_PART_VERSION_REG, 0x00, .sensor_data_init = initialize_sensor_data_70_76 },
-	{ FRU_PRODUCT_SERIAL_NUMBER_REG, 0x00, .sensor_data_init = initialize_sensor_data_70_76 },
-	{ FRU_PRODUCT_ASSET_TAG_REG, 0x00, .sensor_data_init = initialize_sensor_data_70_76 },
-	{ FRU_PRODUCT_CUSTOM_DATA_1_REG, 0x00, .sensor_data_init = initialize_sensor_data_70_76 },
-	{ FRU_PRODUCT_CUSTOM_DATA_2_REG, 0x00, .sensor_data_init = initialize_sensor_data_70_76 },
+	{ FRU_BOARD_PART_NUMBER_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_SERIAL_NUMBER_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_PRODUCT_NAME_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_1_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_2_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_3_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_4_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_5_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_6_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_7_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_8_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_9_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_10_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_PRODUCT_NAME_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_PART_NUMBER_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_PART_VERSION_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_SERIAL_NUMBER_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_ASSET_TAG_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_CUSTOM_DATA_1_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_CUSTOM_DATA_2_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
 };
+// clang-format on
 
 static bool command_reply_data_handle(void *arg)
 {
@@ -675,8 +678,7 @@ static bool command_reply_data_handle(void *arg)
 			case SENSOR_INIT_DATA_1_REG: {
 				data->target_rd_msg.msg_length = struct_size;
 				memcpy(data->target_rd_msg.msg,
-				       sensor_init_data_0_1_table[reg_offset -
-								  SENSOR_INIT_DATA_0_REG],
+				       sensor_init_data_table[reg_offset - SENSOR_INIT_DATA_0_REG],
 				       struct_size);
 			} break;
 			case SENSOR_READING_0_REG:
@@ -685,19 +687,19 @@ static bool command_reply_data_handle(void *arg)
 			case SENSOR_READING_3_REG: {
 				data->target_rd_msg.msg_length = struct_size;
 				memcpy(data->target_rd_msg.msg,
-				       sensor_init_data_2_5_table[reg_offset - SENSOR_READING_0_REG],
+				       sensor_reading_table[reg_offset - SENSOR_READING_0_REG],
 				       struct_size);
 			} break;
 			case INVENTORY_IDS_REG: {
 				data->target_rd_msg.msg_length = struct_size;
 				memcpy(data->target_rd_msg.msg,
-				       sensor_init_data_6_table[reg_offset - INVENTORY_IDS_REG],
+				       inventory_ids_table[reg_offset - INVENTORY_IDS_REG],
 				       struct_size);
 			} break;
 			case STRAP_CAPABILTITY_REG: {
 				data->target_rd_msg.msg_length = struct_size;
 				memcpy(data->target_rd_msg.msg,
-				       sensor_init_data_8_table[reg_offset - STRAP_CAPABILTITY_REG],
+				       strap_capability_table[reg_offset - STRAP_CAPABILTITY_REG],
 				       struct_size);
 			} break;
 			case FRU_BOARD_PART_NUMBER_REG:
@@ -715,8 +717,7 @@ static bool command_reply_data_handle(void *arg)
 			case FRU_BOARD_CUSTOM_DATA_10_REG: {
 				data->target_rd_msg.msg_length = struct_size;
 				memcpy(data->target_rd_msg.msg,
-				       sensor_init_data_60_66_table[reg_offset -
-								    FRU_BOARD_PART_NUMBER_REG],
+				       fru_board_data_table[reg_offset - FRU_BOARD_PART_NUMBER_REG],
 				       struct_size);
 			} break;
 			case FRU_PRODUCT_NAME_REG:
@@ -728,23 +729,25 @@ static bool command_reply_data_handle(void *arg)
 			case FRU_PRODUCT_CUSTOM_DATA_2_REG: {
 				data->target_rd_msg.msg_length = struct_size;
 				memcpy(data->target_rd_msg.msg,
-				       sensor_init_data_70_76_table[reg_offset -
-								    FRU_PRODUCT_NAME_REG],
+				       fru_product_data_table[reg_offset - FRU_PRODUCT_NAME_REG],
 				       struct_size);
 			} break;
 			case I2C_BRIDGE_COMMAND_STATUS_REG: {
 				data->target_rd_msg.msg_length = 1;
 				data->target_rd_msg.msg[0] =
-					sensor_init_data_41_table[0] ?
-						sensor_init_data_41_table[0]->data_status :
+					i2c_bridge_command_status_table[0] ?
+						i2c_bridge_command_status_table[0]->data_status :
 						I2C_BRIDGE_COMMAND_FAILURE;
 			} break;
 			case I2C_BRIDGE_COMMAND_RESPONSE_REG: {
-				if (sensor_init_data_42_table[0]) {
-					struct_size = sensor_init_data_42_table[0]->data_length + 1;
+				if (i2c_bridge_command_response_data_table[0]) {
+					struct_size = i2c_bridge_command_response_data_table[0]
+							      ->data_length +
+						      1;
 					data->target_rd_msg.msg_length = struct_size;
 					memcpy(data->target_rd_msg.msg,
-					       sensor_init_data_42_table[0], struct_size);
+					       i2c_bridge_command_response_data_table[0],
+					       struct_size);
 				} else {
 					data->target_rd_msg.msg_length = 1;
 					data->target_rd_msg.msg[0] = 0xFF;
@@ -821,8 +824,8 @@ void plat_master_write_thread_handler()
 				break;
 			}
 			size_t payload_len = rlen - 4;
-			size_t struct_size = sizeof(plat_sensor_init_data_40) + payload_len;
-			plat_sensor_init_data_40 *sensor_data = malloc(struct_size);
+			size_t struct_size = sizeof(plat_i2c_bridge_command_config) + payload_len;
+			plat_i2c_bridge_command_config *sensor_data = malloc(struct_size);
 			if (!sensor_data) {
 				LOG_ERR("Memory allocation failed!");
 				break;
@@ -849,8 +852,8 @@ void plat_master_write_thread_handler()
 				LOG_ERR("Wrong command for set sensor_polling");
 				break;
 			}
-			plat_sensor_init_data_f0 *sensor_data =
-				malloc(sizeof(plat_sensor_init_data_f0));
+			plat_control_sensor_polling *sensor_data =
+				malloc(sizeof(plat_control_sensor_polling));
 			if (!sensor_data) {
 				LOG_ERR("Memory allocation failed!");
 				break;
@@ -875,12 +878,12 @@ void plat_master_write_thread_init()
 	k_thread_name_set(&plat_master_write_thread, "plat_master_write_thread");
 }
 
-void sensor_data_table_init(void)
+void plat_telemetry_table_init(void)
 {
 	uint8_t buffer_size = 0;
 	for (int i = 0; i < ARRAY_SIZE(telemetry_info_table); i++) {
-		if (telemetry_info_table[i].sensor_data_init) {
-			bool success = telemetry_info_table[i].sensor_data_init(
+		if (telemetry_info_table[i].telemetry_table_init) {
+			bool success = telemetry_info_table[i].telemetry_table_init(
 				&telemetry_info_table[i], &buffer_size);
 			if (!success) {
 				LOG_ERR("initialize sensor data at offset 0x%02X",
