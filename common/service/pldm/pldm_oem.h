@@ -88,7 +88,9 @@ enum oem_event_type {
 	PLTRST_ASSERT,
 	APML_ALERT_ASSERT,
 	CXL1_HB,
-	CXL2_HB
+	CXL2_HB,
+	POST_STARTED,
+	POST_ENDED
 };
 
 enum vr_event_source {
