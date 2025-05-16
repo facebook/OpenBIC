@@ -1,0 +1,16 @@
+<map id="power_off_handler" name="power_off_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,173,132,199"/>
+<area shape="rect" id="node2" href="$yv35-nf_2src_2platform_2plat__power__seq_8c.html#af13c528bc0acab15e5c04368bf544e44" title=" " alt="" coords="389,71,536,98"/>
+<area shape="rect" id="node8" href="$yv4-ff_2src_2platform_2plat__power__seq_8c.html#a6ca9b0cd33a5fa85be996b3f5c92059a" title=" " alt="" coords="180,122,341,149"/>
+<area shape="rect" id="node10" href="$yv35-nf_2src_2platform_2plat__power__seq_8c.html#ad9fc4a55a3f5cd93d02c0192c80fca78" title=" " alt="" coords="208,173,313,199"/>
+<area shape="rect" id="node12" href="$yv4-ff_2src_2platform_2plat__power__seq_8c.html#a86ebb5dde611b05ca163784f6d7e5ef3" title=" " alt="" coords="205,223,317,250"/>
+<area shape="rect" id="node14" href="$at-cb_2src_2platform_2plat__class_8c.html#a177b22525ca1657da5ced816317de219" title=" " alt="" coords="195,274,326,301"/>
+<area shape="rect" id="node3" href="$yv35-nf_2src_2platform_2plat__power__seq_8c.html#a3035a6f1f86da65f709be784198de756" title=" " alt="" coords="584,71,727,98"/>
+<area shape="rect" id="node4" href="$ipmi_8c.html#a40681786f36bd1836cdb473b7050dda1" title=" " alt="" coords="775,5,924,47"/>
+<area shape="rect" id="node6" href="$expansion__board_8c.html#a9efbe21551a2add295f83e75747cd334" title=" " alt="" coords="801,71,897,98"/>
+<area shape="rect" id="node7" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="814,122,885,149"/>
+<area shape="rect" id="node5" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="972,13,1055,39"/>
+<area shape="rect" id="node9" href="$yv4-ff_2src_2platform_2plat__power__seq_8c.html#a698a7e6b1da6a8e6e502eae49e876b5d" title=" " alt="" coords="394,122,531,149"/>
+<area shape="rect" id="node11" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="427,173,498,199"/>
+<area shape="rect" id="node13" href="$gt-cc_2src_2platform_2plat__class_8c.html#afe186fac51a057492906d49592f2046c" title=" " alt="" coords="404,223,521,250"/>
+</map>

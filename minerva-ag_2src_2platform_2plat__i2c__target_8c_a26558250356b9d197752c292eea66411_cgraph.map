@@ -1,0 +1,7 @@
+<map id="plat_telemetry_table_init" name="plat_telemetry_table_init">
+<area shape="rect" id="node1" title=" " alt="" coords="5,13,168,39"/>
+<area shape="rect" id="node2" href="$minerva-ag_2src_2platform_2plat__i2c__target_8c.html#a80eb71b74f182d94c25ada77f2f72303" title=" " alt="" coords="216,13,408,39"/>
+<area shape="rect" id="node3" href="$minerva-ag_2src_2platform_2plat__i2c__target_8c.html#a384e76deea1e761b303180c1e9f30e57" title=" " alt="" coords="456,5,624,47"/>
+<area shape="rect" id="node4" href="$hal__i2c__target_8c.html#aa4e6af227dbf072fb1a15e0920e94e99" title=" " alt="" coords="672,13,783,39"/>
+<area shape="rect" id="node5" href="$hal__i2c__target_8c.html#a2f708033f90c1afa66581d9ca8a965fb" title=" " alt="" coords="831,13,977,39"/>
+</map>
