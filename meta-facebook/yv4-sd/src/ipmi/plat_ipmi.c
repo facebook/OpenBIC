@@ -78,7 +78,8 @@ bool pal_request_msg_to_BIC_from_HOST(uint8_t netfn, uint8_t cmd)
 		}
 	}
 	if (netfn == NETFN_OEM_REQ) {
-		if (cmd == CMD_OEM_CRASH_DUMP) {
+		if (cmd == CMD_OEM_CRASH_DUMP || cmd == CMD_OEM_POST_START ||
+		    cmd == CMD_OEM_POST_END) {
 			return false;
 		}
 	}
