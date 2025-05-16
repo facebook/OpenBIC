@@ -1136,8 +1136,8 @@ void load_sb_temp_sensor_config()
 		}
 
 		mfr_id = msg.data[0];
-		printf("Sensor board temp module 0x%x mfr_id: %x\n", tmp421_config_table[index].num,
-		       mfr_id);
+		LOG_INF("Sensor board temp module 0x%x mfr_id: %x\n",
+			tmp421_config_table[index].num, mfr_id);
 
 		if (mfr_id == TMP421_MFR_ID)
 			add_sensor_config(tmp421_config_table[index]);
@@ -1189,6 +1189,9 @@ static void change_dvt_sensor_config()
 		case SENSOR_NUM_FB_13_FAN_TACH_RPM:
 		case SENSOR_NUM_FB_14_FAN_TACH_RPM:
 			p->arg0 = NCT7363_16_PORT;
+			// disable alert blink
+			if (!nct7363_write(p, NCT7363_GPIO03_GPIO07_ALERT_LED_REG_OFFSET, 0))
+				LOG_INF("Write fan_board_fault pwm fail\n");
 			break;
 		}
 	}
@@ -1268,7 +1271,7 @@ static void change_brick_sensor_config()
 	}
 
 	mfr_id = (msg.data[0] << 8) | msg.data[1];
-	printf("Brick module mfr_id: %x\n", mfr_id);
+	LOG_INF("Brick module mfr_id: %x\n", mfr_id);
 
 	if (mfr_id == E50SN12051_MFR_ID)
 		return;
@@ -1449,20 +1452,15 @@ static float calculate_total_val(uint8_t arr[], uint8_t size)
 /* pressure difference  */
 static float pressure_difference_val(uint8_t high_press, uint8_t low_press)
 {
-	float val = 0;
-	float tmp = 0;
+	float high = 0, low = 0;
 
-	if (get_sensor_reading_to_real_val(high_press, &tmp) == SENSOR_READ_4BYTE_ACUR_SUCCESS)
-		val = tmp;
-	else
+	if (get_sensor_reading_to_real_val(high_press, &high) != SENSOR_READ_4BYTE_ACUR_SUCCESS)
 		return 0;
 
-	if (get_sensor_reading_to_real_val(low_press, &tmp) == SENSOR_READ_4BYTE_ACUR_SUCCESS)
-		val -= tmp;
-	else
+	if (get_sensor_reading_to_real_val(low_press, &low) != SENSOR_READ_4BYTE_ACUR_SUCCESS)
 		return 0;
 
-	return val;
+	return (high - low);
 }
 
 static uint8_t sb_hex_air_inlet_temp_avg(void)
@@ -1543,6 +1541,11 @@ static uint8_t plat_def_sensor_read(sensor_cfg *cfg, int *reading)
 	case PLAT_DEF_SENSOR_HEX_EXTERNAL_Y_FILTER:
 		val = pressure_difference_val(SENSOR_NUM_BPB_RACK_PRESSURE_3_P_KPA,
 					      SENSOR_NUM_BPB_RACK_PRESSURE_4_P_KPA);
+		// convert to absolute value in EVT and DVT stages
+		if (((get_board_stage() == BOARD_STAGE_EVT) ||
+		     (get_board_stage() == BOARD_STAGE_DVT)) &&
+		    (val < 0))
+			val = -val;
 		break;
 	case PLAT_DEF_SENSOR_FAN_PRSNT: {
 		uint16_t tmp_prsnt = 0;

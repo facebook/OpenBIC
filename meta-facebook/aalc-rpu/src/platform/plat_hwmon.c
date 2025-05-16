@@ -421,8 +421,12 @@ uint8_t pwm_control(uint8_t group, uint8_t duty)
 
 	// suppurt redundant device in semi mode
 	uint32_t redundant_check = PUMP_REDUNDANT_DISABLE;
-	if (get_fsc_mode() == FSC_MODE_SEMI_MODE)
+	if (get_fsc_mode() == FSC_MODE_SEMI_MODE) {
+		// failure control in semi mode
+		if (failure_behavior(group))
+			return 0;
 		redundant_check = get_status_flag(STATUS_FLAG_PUMP_REDUNDANT);
+	}
 
 	switch (group) {
 	case PWM_GROUP_E_PUMP:
