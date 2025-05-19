@@ -57,8 +57,10 @@ typedef enum {
 typedef enum {
 	FAB1_EVT,
 	FAB2_DVT,
-	FAB3_PVT,
-	FAB4_MP,
+	FAB3_DVT2,
+	FAB4_DVT2,
+	FAB4_PVT,
+	TBD_MP,
 	BOARD_STAGE_UNKNOWN,
 } ag_board_stage_t;
 
