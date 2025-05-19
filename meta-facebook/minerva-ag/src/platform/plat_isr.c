@@ -275,10 +275,10 @@ void plat_clock_init(void)
 {
 	LOG_DBG("plat_clock_init started");
 	uint8_t board_stage = get_board_stage();
-	if (board_stage == FAB2_DVT || board_stage == FAB3_PVT || board_stage == FAB4_MP)
+	if (board_stage >= FAB2_DVT)
 		k_work_schedule(&check_clk_work, K_MSEC(200));
 
-	if (board_stage >= FAB3_PVT)
+	if (board_stage >= FAB3_DVT2)
 		k_work_schedule(&check_clk_buffer_work, K_MSEC(200));
 }
 
@@ -286,7 +286,7 @@ void plat_eusb_init(void)
 {
 	LOG_DBG("plat_eusb_init started");
 	uint8_t board_stage = get_board_stage();
-	if (board_stage == FAB2_DVT || board_stage == FAB3_PVT || board_stage == FAB4_MP) {
+	if (board_stage >= FAB2_DVT) {
 		uint8_t data[1] = { 0 };
 		if (!plat_i2c_read(I2C_BUS1, AEGIS_EUSB_REPEATER_ADDR, 0x05, data, 1)) {
 			LOG_ERR("Failed to read eUSB Repeater");

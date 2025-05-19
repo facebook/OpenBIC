@@ -105,12 +105,20 @@ void init_board_stage(void)
 		board_stage = FAB2_DVT;
 		LOG_INF("BOARD_STAGE(0x%02X) = DVT", board_stage);
 		break;
-	case FAB3_PVT:
-		board_stage = FAB3_PVT;
+	case FAB3_DVT2:
+		board_stage = FAB3_DVT2;
+		LOG_INF("BOARD_STAGE(0x%02X) = DVT2", board_stage);
+		break;
+	case FAB4_DVT2:
+		board_stage = FAB4_DVT2;
+		LOG_INF("BOARD_STAGE(0x%02X) = DVT2", board_stage);
+		break;
+	case FAB4_PVT:
+		board_stage = FAB4_PVT;
 		LOG_INF("BOARD_STAGE(0x%02X) = PVT", board_stage);
 		break;
-	case FAB4_MP:
-		board_stage = FAB4_MP;
+	case TBD_MP:
+		board_stage = TBD_MP;
 		LOG_INF("BOARD_STAGE(0x%02X) = MP", board_stage);
 		break;
 	default:
@@ -177,8 +185,10 @@ void init_vr_vendor_type(void)
 		}
 		break; //case FAB1_EVT
 	case FAB2_DVT:
-	case FAB3_PVT:
-	case FAB4_MP:
+	case FAB3_DVT2:
+	case FAB4_DVT2:
+	case FAB4_PVT:
+	case TBD_MP:
 		switch (vr_vender_type) {
 		case DELTA_UBC_AND_MPS_VR:
 			ubc_type = UBC_DELTA_U50SU4P180PMDAFC;
@@ -224,7 +234,7 @@ void init_vr_vendor_type(void)
 			LOG_WRN("vr vendor type not supported: 0x%x", vr_vender_type);
 			break;
 		}
-		break; //case FAB2_DVT, FAB3_PVT, FAB4_MP
+		break;
 	default:
 		LOG_WRN("board stage not supported: 0x%x", board_stage);
 		break;
@@ -333,11 +343,13 @@ void pal_show_board_types(const struct shell *shell)
 						       "not supported");
 
 	shell_print(shell, "* BOARD_STAGE:   (0x%02X)%s", board_stage,
-		    (board_stage == FAB1_EVT) ? "FAB1_EVT" :
-		    (board_stage == FAB2_DVT) ? "FAB2_DVT" :
-		    (board_stage == FAB3_PVT) ? "FAB3_PVT" :
-		    (board_stage == FAB4_MP)  ? "FAB4_MP" :
-						"not supported");
+		    (board_stage == FAB1_EVT)  ? "FAB1_EVT" :
+		    (board_stage == FAB2_DVT)  ? "FAB2_DVT" :
+		    (board_stage == FAB3_DVT2) ? "FAB3_DVT2" :
+		    (board_stage == FAB4_DVT2) ? "FAB4_DVT2" :
+		    (board_stage == FAB4_PVT)  ? "FAB4_PVT" :
+		    (board_stage == TBD_MP)    ? "TBD_MP" :
+						 "not supported");
 
 	shell_print(shell, "* VR_VENDOR_TYPE:(0x%02X)%s", vr_vender_type,
 		    (vr_vender_type == DELTA_UBC_AND_MPS_VR)	   ? "DELTA_UBC_AND_MPS_VR" :
