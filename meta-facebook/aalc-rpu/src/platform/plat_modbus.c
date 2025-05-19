@@ -767,6 +767,15 @@ uint8_t modbus_get_fan_table_revision(modbus_command_mapping *cmd)
 	return MODBUS_EXC_NONE;
 }
 
+uint8_t modbus_get_fsc_mode(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	cmd->data[0] = (uint16_t)get_fsc_mode();
+
+	return MODBUS_EXC_NONE;
+}
+
 uint8_t modbus_get_abr(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
@@ -1405,6 +1414,8 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_GET_BOARD_STAGE_ADDR, NULL, modbus_get_board_stage, 0, 0, 0, 1 },
 	// get fan table revision
 	{ MODBUS_GET_FAN_TABLE_REVISION_ADDR, NULL, modbus_get_fan_table_revision, 0, 0, 0, 1 },
+	// get fsc mode
+	{ MODBUS_GET_FSC_MODE_ADDR, NULL, modbus_get_fsc_mode, 0, 0, 0, 1 },
 	// failure status
 	{ MODBUS_STATUS_FALG_SET_CFG_ADDR, modbus_set_status_flag_config, NULL, 0, 0, 0, 1 },
 	{ MODBUS_GET_SET_STATUS_FALG_ADDR, modbus_status_flag_set, modbus_status_flag_get, 0, 0, 0,
