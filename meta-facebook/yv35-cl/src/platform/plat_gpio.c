@@ -21,6 +21,15 @@
 #include "hal_gpio.h"
 #include "plat_gpio.h"
 #include "plat_isr.h"
+#include "plat_class.h"
+#include "plat_i2c.h"
+#include "plat_mctp.h"
+#include <logging/log.h>
+#include "libipmi.h"
+#include "plat_sensor_table.h"
+#include <errno.h>
+
+LOG_MODULE_REGISTER(plat_gpio);
 
 #define gpio_name_to_num(x) #x,
 char *gpio_name[] = {
@@ -270,4 +279,59 @@ void enable_PRDY_interrupt()
 void disable_PRDY_interrupt()
 {
 	gpio_interrupt_conf(H_BMC_PRDY_BUF_N, GPIO_INT_DISABLE);
+}
+
+enum {
+	IPMI_EVENT_OFFSET_SYS_VFPRESENT = 0xA8,
+};
+
+K_THREAD_STACK_DEFINE(monitor_vf_present_stack, 2048);
+struct k_thread monitor_vf_present_thread;
+k_tid_t monitor_vf_present_tid;
+
+void vf_present_pin_monitor()
+{
+	I2C_MSG i2c_msg;
+	uint8_t retry = 3;
+	char reg = CPLD_CLASS_TYPE_REG;
+	int vf_present = -1;
+	common_addsel_msg_t sel_msg;
+	sel_msg.InF_target = PLDM;
+	sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+	sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+	sel_msg.event_data1 = IPMI_EVENT_OFFSET_SYS_VFPRESENT;
+	sel_msg.event_data2 = 0xFF;
+	sel_msg.event_data3 = 0xFF;
+
+	while (true) {
+		i2c_msg = construct_i2c_message(I2C_BUS1, CPLD_ADDR, 1, &reg, 1);
+		if (!i2c_master_read(&i2c_msg, retry)) {
+			if (vf_present != ((i2c_msg.data[0] & BIT(2)) ? 0 : 1)) {
+				vf_present = ((i2c_msg.data[0] & BIT(2)) ? 0 : 1);
+				sel_msg.event_type = vf_present ? IPMI_OEM_EVENT_TYPE_DEASSERT :
+								  IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+				if (!mctp_add_sel_to_ipmi(&sel_msg)) {
+					LOG_ERR("Fail to add VF present SEL");
+				}
+			}
+		} else {
+			LOG_ERR("Failed to read VF present from CPLD");
+		}
+		k_msleep(2000);
+	}
+}
+
+void start_monitor_vf_present()
+{
+	if (get_system_sku() != SYS_TYPE_EMR) {
+		return;
+	}
+	LOG_INF("Start to monitor VF present");
+
+	monitor_vf_present_tid =
+		k_thread_create(&monitor_vf_present_thread, monitor_vf_present_stack,
+				K_THREAD_STACK_SIZEOF(monitor_vf_present_stack),
+				vf_present_pin_monitor, NULL, NULL, NULL,
+				CONFIG_MAIN_THREAD_PRIORITY, 0, K_MSEC(5000));
+	k_thread_name_set(&monitor_vf_present_thread, "monitor_vf_present_thread");
 }
