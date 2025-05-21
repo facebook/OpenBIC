@@ -131,8 +131,8 @@ typedef struct {
 } pump_threshold_mapping;
 
 pump_threshold_mapping pump_threshold_tbl[] = {
-	{ 8, 0 },     { 10, 300 },  { 20, 1800 }, { 30, 3250 },
-	{ 40, 4450 }, { 50, 5450 }, { 60, 6050 }, { 70, 6450 },
+	{ 19, 0 },    { 20, 1800 }, { 30, 3250 }, { 40, 4450 },
+	{ 50, 5450 }, { 60, 6050 }, { 70, 6450 },
 };
 
 /* return true when pump fail >= 2 */
@@ -176,6 +176,31 @@ bool hsc_communicate_check()
 	return false;
 }
 
+void set_hsc_fail_status()
+{
+	if (!gpio_get(PWRGD_P48V_HSC_LF_R))
+		set_status_flag(STATUS_FLAG_HSC_FAIL, HSC_FAIL_BPB, 1);
+
+	if (gpio_get(PUMP1_PRSNT_BUF_N))
+		set_status_flag(STATUS_FLAG_HSC_FAIL, HSC_FAIL_PUMP_1, 1);
+
+	if (gpio_get(PUMP2_PRSNT_BUF_N))
+		set_status_flag(STATUS_FLAG_HSC_FAIL, HSC_FAIL_PUMP_2, 1);
+
+	if (gpio_get(PUMP3_PRSNT_BUF_N))
+		set_status_flag(STATUS_FLAG_HSC_FAIL, HSC_FAIL_PUMP_3, 1);
+
+	for (uint8_t i = 0; i < 14; i++) {
+		if (fb_hsc_status(i))
+			set_status_flag(STATUS_FLAG_HSC_FAIL, HSC_FAIL_FB_1 + i, 1);
+	}
+}
+
+bool hsc_fail_check()
+{
+	return get_status_flag(STATUS_FLAG_HSC_FAIL) ? true : false;
+}
+
 /* if leak or some threshold fault, return false */
 bool system_failure_recovery()
 {
@@ -216,7 +241,7 @@ bool system_failure_recovery()
 }
 
 /* check status for rpu ready */
-bool rpu_ready_recovery()
+bool check_rpu_ready()
 {
 	if (get_status_flag(STATUS_FLAG_LEAK))
 		return false;
@@ -224,10 +249,11 @@ bool rpu_ready_recovery()
 	const uint8_t rpu_recovery_table[] = {
 		PUMP_FAIL_LOW_LEVEL,	  PUMP_FAIL_LOW_RPU_LEVEL,	PUMP_FAIL_TWO_PUMP_LCR,
 		PUMP_FAIL_ABNORMAL_PRESS, PUMP_FAIL_ABNORMAL_FLOW_RATE, GPIO_FAIL_BPB_HSC,
+		PUMP_FAIL_PUMP1_UCR,	  PUMP_FAIL_PUMP2_UCR,		PUMP_FAIL_PUMP3_UCR,
 	};
 
 	for (uint8_t i = 0; i < ARRAY_SIZE(rpu_recovery_table); i++) {
-		if ((get_status_flag(STATUS_FLAG_FAILURE) >> i) & 0x01)
+		if ((get_status_flag(STATUS_FLAG_FAILURE) >> rpu_recovery_table[i]) & 0x01)
 			return false;
 	}
 
@@ -524,6 +550,8 @@ void abnormal_temp_do(uint32_t sensor_num, uint32_t status)
 					 PUMP_FAIL_ABNORMAL_COOLANT_INLET_TEMP :
 				 (sensor_num == SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C) ?
 					 PUMP_FAIL_ABNORMAL_COOLANT_OUTLET_TEMP :
+				 (sensor_num == SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C) ?
+					 PUMP_FAIL_ABNORMAL_AIR_INLET_TEMP :
 					 0xFF;
 
 	if (status == THRESHOLD_STATUS_UCR) {
@@ -597,7 +625,8 @@ sensor_threshold threshold_tbl[] = {
 	  SENSOR_NUM_BPB_RPU_COOLANT_INLET_TEMP_C, 1 },
 	{ SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 55, abnormal_temp_do,
 	  SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C, 1 },
-	{ SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 42, NULL, 0, 1 },
+	{ SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 42, abnormal_temp_do,
+	  SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C, 1 },
 	{ SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 65, sensor_log,
 	  SENSOR_NUM_BPB_HEX_WATER_INLET_TEMP_C, 1 },
 	{ SENSOR_NUM_SB_HEX_AIR_INLET_1_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 60, NULL, 0, 1 },
@@ -693,8 +722,8 @@ sensor_threshold threshold_tbl[] = {
 	  0, 3 },
 	{ SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, THRESHOLD_ENABLE_LCR, 10, 0, abnormal_flow_do,
 	  THRESHOLD_ARG0_TABLE_INDEX, 20 },
-	{ SENSOR_NUM_BPB_RACK_LEVEL_1, THRESHOLD_ENABLE_LCR, 0.1, 0, level_sensor_do, 0, 1 },
-	{ SENSOR_NUM_BPB_RACK_LEVEL_2, THRESHOLD_ENABLE_LCR, 0.1, 0, level_sensor_do, 0, 1 },
+	{ SENSOR_NUM_BPB_RACK_LEVEL_1, THRESHOLD_ENABLE_LCR, 0.1, 0, level_sensor_do, 0, 5 },
+	{ SENSOR_NUM_BPB_RACK_LEVEL_2, THRESHOLD_ENABLE_LCR, 0.1, 0, level_sensor_do, 0, 5 },
 	{ SENSOR_NUM_BPB_RPU_LEVEL, THRESHOLD_ENABLE_LCR, 0.1, 0, rpu_level_sensor_do, 0, 5 },
 	{ SENSOR_NUM_FAN_PRSNT, THRESHOLD_ENABLE_DISCRETE, 0, 0, fb_prsnt_handle,
 	  THRESHOLD_ARG0_TABLE_INDEX, 1 },
@@ -737,6 +766,12 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 			   (sensor_num == SENSOR_NUM_PB_3_PUMP_TACH_RPM) ? PUMP_FAIL_PUMP3_UCR :
 									   FAILURE_STATUS_MAX;
 
+	uint8_t sensor_num_pump_ucr =
+		(sensor_num == SENSOR_NUM_PB_1_PUMP_TACH_RPM) ? SENSOR_NUM_PB_1_PUMP_TACH_RPM_UCR :
+		(sensor_num == SENSOR_NUM_PB_2_PUMP_TACH_RPM) ? SENSOR_NUM_PB_2_PUMP_TACH_RPM_UCR :
+		(sensor_num == SENSOR_NUM_PB_3_PUMP_TACH_RPM) ? SENSOR_NUM_PB_3_PUMP_TACH_RPM_UCR :
+								0xFF;
+
 	switch (status) {
 	case THRESHOLD_STATUS_LCR:
 		error_log_event(sensor_num, IS_ABNORMAL_VAL);
@@ -746,7 +781,7 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 	case THRESHOLD_STATUS_UCR:
 		set_status_flag(STATUS_FLAG_FAILURE, pump_ucr, 1);
 		LOG_ERR("threshold 0x%02x pump ucr failure", sensor_num);
-		error_log_event(sensor_num, IS_ABNORMAL_VAL);
+		error_log_event(sensor_num_pump_ucr, IS_ABNORMAL_VAL);
 		break;
 	case THRESHOLD_STATUS_NORMAL:
 		reset_flow_rate_ready();
@@ -1028,7 +1063,6 @@ void threshold_poll_init()
 		LOG_INF("threshold thread start!");
 		is_init = 1;
 		set_status_flag(STATUS_FLAG_SYSTEM_READY, 0, 1);
-		set_all_rpu_ready_pin_normal();
 	}
 }
 
@@ -1090,7 +1124,7 @@ void pump_change_threshold(uint8_t sensor_num, uint8_t duty)
 
 	uint32_t standard_val = get_pump_standard_rpm(duty);
 	p->lcr = standard_val * 0.75;
-	p->ucr = (standard_val) ? (standard_val * 1.25) : 1000;
+	p->ucr = (standard_val) ? (standard_val * 1.25) : 1800;
 }
 
 void check_bpb_hsc_status(void)
@@ -1174,14 +1208,22 @@ void plat_sensor_poll_post()
 	// check pump >= 500 and countdown flow ready
 	pump_tach_too_low_behavior();
 
+	// set hsc fail status
+	set_hsc_fail_status();
+
 	// check bpb hsc
 	check_bpb_hsc_status();
 
 	// control fault led
 	fault_led_control();
 
-	if (!rpu_ready_recovery())
+	// rpu ready control
+	if (!check_rpu_ready())
 		deassert_all_rpu_ready_pin();
+	else if (check_pump_tach_too_low())
+		deassert_all_rpu_ready_pin();
+	else
+		set_all_rpu_ready_pin_normal();
 
 	return;
 }

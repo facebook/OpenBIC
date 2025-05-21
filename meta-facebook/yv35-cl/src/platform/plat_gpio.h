@@ -256,4 +256,5 @@ extern char *gpio_name[];
 
 void enable_PRDY_interrupt();
 void disable_PRDY_interrupt();
+void start_monitor_vf_present();
 #endif

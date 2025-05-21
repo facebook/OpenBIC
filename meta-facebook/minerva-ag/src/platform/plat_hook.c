@@ -96,8 +96,8 @@ bool post_all_sensor_read(sensor_cfg *cfg, void *args, int *reading)
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	ARG_UNUSED(args);
 
-	update_sensor_data_2_5_table();
-	update_sensor_data_8_table();
+	update_sensor_reading_table();
+	update_strap_capability_table();
 
 	return true;
 }

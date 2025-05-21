@@ -80,20 +80,26 @@ void pal_pre_init()
 		slave_port = BIT(0) | BIT(1) | BIT(2) | BIT(3) | BIT(4);
 		break;
 	default:
-		printk("No need to initialize I3C hub rg3mxxb12\n");
+		printk("No need to initialize I3C hub\n");
 		return;
 	}
 
-	if (i3c_hub_type == RG3M87B12_DEVICE_INFO) {
+	switch (i3c_hub_type) {
+	case RG3M87B12_DEVICE_INFO:
 		if (!rg3mxxb12_i2c_mode_only_init(I2C_BUS2, slave_port, rg3mxxb12_ldo_1_2_volt,
 						  rg3mxxb12_pullup_1k_ohm)) {
-			printk("failed to initialize rg3mxxb12\n");
+			printk("failed to initialize i3c hub rg3mxxb12\n");
 		}
-	} else {
-		if (!p3h284x_i2c_mode_only_init(I2C_BUS2, slave_port, p3g284x_ldo_1_2_volt,
-						p3g284x_pullup_1k_ohm)) {
-			printk("failed to initialize p3h284x\n");
+		break;
+	case P3H2840_DEVICE_INFO:
+		if (!p3h284x_i2c_mode_only_init(I2C_BUS2, slave_port, p3g284x_ldo_1_8_volt,
+						p3g284x_pullup_2k_ohm, P3H2840_I2C_MODE)) {
+			printk("failed to initialize i3c hub p3h284x\n");
 		}
+		break;
+	default:
+		printk("Get i3c hub type failed - initialize i3c hub\n");
+		return;
 	}
 }
 

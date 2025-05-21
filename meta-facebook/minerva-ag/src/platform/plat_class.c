@@ -105,12 +105,20 @@ void init_board_stage(void)
 		board_stage = FAB2_DVT;
 		LOG_INF("BOARD_STAGE(0x%02X) = DVT", board_stage);
 		break;
-	case FAB3_PVT:
-		board_stage = FAB3_PVT;
+	case FAB3_DVT2:
+		board_stage = FAB3_DVT2;
+		LOG_INF("BOARD_STAGE(0x%02X) = DVT2", board_stage);
+		break;
+	case FAB4_DVT2:
+		board_stage = FAB4_DVT2;
+		LOG_INF("BOARD_STAGE(0x%02X) = DVT2", board_stage);
+		break;
+	case FAB4_PVT:
+		board_stage = FAB4_PVT;
 		LOG_INF("BOARD_STAGE(0x%02X) = PVT", board_stage);
 		break;
-	case FAB4_MP:
-		board_stage = FAB4_MP;
+	case TBD_MP:
+		board_stage = TBD_MP;
 		LOG_INF("BOARD_STAGE(0x%02X) = MP", board_stage);
 		break;
 	default:
@@ -147,12 +155,28 @@ void init_vr_vendor_type(void)
 			ubc_type = UBC_MPS_MPC12109;
 			vr_type = VR_RNS_ISL69260_RAA228238;
 			break;
-		case FLEX_UBC_AND_MPS_VR:
+		case FLEX_BMR313_UBC_AND_MPS_VR:
 			ubc_type = UBC_FLEX_BMR313;
 			vr_type = VR_MPS_MP2971_MP2891;
 			break;
-		case FLEX_UBC_AND_RNS_VR:
+		case FLEX_BMR313_UBC_AND_RNS_VR:
 			ubc_type = UBC_FLEX_BMR313;
+			vr_type = VR_RNS_ISL69260_RAA228238;
+			break;
+		case FLEX_BMR316_UBC_AND_MPS_VR:
+			ubc_type = UBC_FLEX_BMR316;
+			vr_type = VR_MPS_MP2971_MP2891;
+			break;
+		case FLEX_BMR316_UBC_AND_RNS_VR:
+			ubc_type = UBC_FLEX_BMR316;
+			vr_type = VR_RNS_ISL69260_RAA228238;
+			break;
+		case LUXSHURE_UBC_AND_MPS_VR:
+			ubc_type = UBC_LUXSHURE_LX6301;
+			vr_type = VR_MPS_MP2971_MP2891;
+			break;
+		case LUXSHURE_UBC_AND_RNS_VR:
+			ubc_type = UBC_LUXSHURE_LX6301;
 			vr_type = VR_RNS_ISL69260_RAA228238;
 			break;
 		default:
@@ -161,8 +185,10 @@ void init_vr_vendor_type(void)
 		}
 		break; //case FAB1_EVT
 	case FAB2_DVT:
-	case FAB3_PVT:
-	case FAB4_MP:
+	case FAB3_DVT2:
+	case FAB4_DVT2:
+	case FAB4_PVT:
+	case TBD_MP:
 		switch (vr_vender_type) {
 		case DELTA_UBC_AND_MPS_VR:
 			ubc_type = UBC_DELTA_U50SU4P180PMDAFC;
@@ -180,19 +206,35 @@ void init_vr_vendor_type(void)
 			ubc_type = UBC_MPS_MPC12109;
 			vr_type = VR_RNS_ISL69260_RAA228249;
 			break;
-		case FLEX_UBC_AND_MPS_VR:
+		case FLEX_BMR313_UBC_AND_MPS_VR:
 			ubc_type = UBC_FLEX_BMR313;
 			vr_type = VR_MPS_MP2971_MP29816A;
 			break;
-		case FLEX_UBC_AND_RNS_VR:
+		case FLEX_BMR313_UBC_AND_RNS_VR:
 			ubc_type = UBC_FLEX_BMR313;
+			vr_type = VR_RNS_ISL69260_RAA228249;
+			break;
+		case FLEX_BMR316_UBC_AND_MPS_VR:
+			ubc_type = UBC_FLEX_BMR316;
+			vr_type = VR_MPS_MP2971_MP29816A;
+			break;
+		case FLEX_BMR316_UBC_AND_RNS_VR:
+			ubc_type = UBC_FLEX_BMR316;
+			vr_type = VR_RNS_ISL69260_RAA228249;
+			break;
+		case LUXSHURE_UBC_AND_MPS_VR:
+			ubc_type = UBC_LUXSHURE_LX6301;
+			vr_type = VR_MPS_MP2971_MP29816A;
+			break;
+		case LUXSHURE_UBC_AND_RNS_VR:
+			ubc_type = UBC_LUXSHURE_LX6301;
 			vr_type = VR_RNS_ISL69260_RAA228249;
 			break;
 		default:
 			LOG_WRN("vr vendor type not supported: 0x%x", vr_vender_type);
 			break;
 		}
-		break; //case FAB2_DVT, FAB3_PVT, FAB4_MP
+		break;
 	default:
 		LOG_WRN("board stage not supported: 0x%x", board_stage);
 		break;
@@ -208,6 +250,12 @@ void init_vr_vendor_type(void)
 		break;
 	case UBC_FLEX_BMR313:
 		LOG_INF("UBC_TYPE(0x%02X) = FLEX_BMR313", ubc_type);
+		break;
+	case UBC_FLEX_BMR316:
+		LOG_INF("UBC_TYPE(0x%02X) = FLEX_BMR316", ubc_type);
+		break;
+	case UBC_LUXSHURE_LX6301:
+		LOG_INF("UBC_TYPE(0x%02X) = LUXSHURE_LX6301", ubc_type);
 		break;
 	default:
 		LOG_WRN("ubc type not supported: 0x%x", ubc_type);
@@ -295,24 +343,32 @@ void pal_show_board_types(const struct shell *shell)
 						       "not supported");
 
 	shell_print(shell, "* BOARD_STAGE:   (0x%02X)%s", board_stage,
-		    (board_stage == FAB1_EVT) ? "FAB1_EVT" :
-		    (board_stage == FAB2_DVT) ? "FAB2_DVT" :
-		    (board_stage == FAB3_PVT) ? "FAB3_PVT" :
-		    (board_stage == FAB4_MP)  ? "FAB4_MP" :
-						"not supported");
+		    (board_stage == FAB1_EVT)  ? "FAB1_EVT" :
+		    (board_stage == FAB2_DVT)  ? "FAB2_DVT" :
+		    (board_stage == FAB3_DVT2) ? "FAB3_DVT2" :
+		    (board_stage == FAB4_DVT2) ? "FAB4_DVT2" :
+		    (board_stage == FAB4_PVT)  ? "FAB4_PVT" :
+		    (board_stage == TBD_MP)    ? "TBD_MP" :
+						 "not supported");
 
 	shell_print(shell, "* VR_VENDOR_TYPE:(0x%02X)%s", vr_vender_type,
-		    (vr_vender_type == DELTA_UBC_AND_MPS_VR) ? "DELTA_UBC_AND_MPS_VR" :
-		    (vr_vender_type == DELTA_UBC_AND_RNS_VR) ? "DELTA_UBC_AND_RNS_VR" :
-		    (vr_vender_type == MPS_UBC_AND_MPS_VR)   ? "MPS_UBC_AND_MPS_VR" :
-		    (vr_vender_type == MPS_UBC_AND_RNS_VR)   ? "MPS_UBC_AND_RNS_VR" :
-		    (vr_vender_type == FLEX_UBC_AND_MPS_VR)  ? "FLEX_UBC_AND_MPS_VR" :
-		    (vr_vender_type == FLEX_UBC_AND_RNS_VR)  ? "FLEX_UBC_AND_RNS_VR" :
-							       "not supported");
+		    (vr_vender_type == DELTA_UBC_AND_MPS_VR)	   ? "DELTA_UBC_AND_MPS_VR" :
+		    (vr_vender_type == DELTA_UBC_AND_RNS_VR)	   ? "DELTA_UBC_AND_RNS_VR" :
+		    (vr_vender_type == MPS_UBC_AND_MPS_VR)	   ? "MPS_UBC_AND_MPS_VR" :
+		    (vr_vender_type == MPS_UBC_AND_RNS_VR)	   ? "MPS_UBC_AND_RNS_VR" :
+		    (vr_vender_type == FLEX_BMR313_UBC_AND_MPS_VR) ? "FLEX_BMR313_UBC_AND_MPS_VR" :
+		    (vr_vender_type == FLEX_BMR313_UBC_AND_RNS_VR) ? "FLEX_BMR313_UBC_AND_RNS_VR" :
+		    (vr_vender_type == FLEX_BMR316_UBC_AND_MPS_VR) ? "FLEX_BMR316_UBC_AND_MPS_VR" :
+		    (vr_vender_type == FLEX_BMR316_UBC_AND_RNS_VR) ? "FLEX_BMR316_UBC_AND_RNS_VR" :
+		    (vr_vender_type == LUXSHURE_UBC_AND_MPS_VR)	   ? "LUXSHURE_UBC_AND_MPS_VR" :
+		    (vr_vender_type == LUXSHURE_UBC_AND_RNS_VR)	   ? "LUXSHURE_UBC_AND_RNS_VR" :
+								     "not supported");
 	shell_print(shell, "* UBC_TYPE:      (0x%02X)%s", ubc_type,
 		    (ubc_type == UBC_DELTA_U50SU4P180PMDAFC) ? "DELTA_U50SU4P180PMDAFC" :
 		    (ubc_type == UBC_MPS_MPC12109)	     ? "MPS_MPC12109" :
 		    (ubc_type == UBC_FLEX_BMR313)	     ? "FLEX_BMR313" :
+		    (ubc_type == UBC_FLEX_BMR316)	     ? "FLEX_BMR316" :
+		    (ubc_type == UBC_LUXSHURE_LX6301)	     ? "UBC_LUXSHURE_LX6301" :
 							       "not supported");
 
 	shell_print(shell, "* VR_TYPE:       (0x%02X)%s", vr_type,

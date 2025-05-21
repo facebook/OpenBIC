@@ -263,18 +263,27 @@ bool pre_i2c_bus_read(sensor_cfg *cfg, void *args)
 
 	i2c_proc_arg *pre_proc_args = (i2c_proc_arg *)args;
 
-	if (i3c_hub_type == RG3M87B12_DEVICE_INFO) {
+	switch (i3c_hub_type) {
+	case RG3M87B12_DEVICE_INFO:
 		if (!rg3mxxb12_select_slave_port_connect(pre_proc_args->bus,
 							 pre_proc_args->channel)) {
 			k_mutex_unlock(&i2c_hub_mutex);
+			LOG_ERR("Failed to change rg3mxxb12 I3C HUB (I2C mode) channel - pre hook");
 			return false;
 		}
-	} else {
+		break;
+	case P3H2840_DEVICE_INFO:
 		if (!p3h284x_select_slave_port_connect(pre_proc_args->bus,
 						       pre_proc_args->channel)) {
 			k_mutex_unlock(&i2c_hub_mutex);
+			LOG_ERR("Failed to change p3h284x I3C HUB (I2C mode) channel - pre hook");
 			return false;
 		}
+		break;
+	default:
+		LOG_ERR("Get i3c hub type failed - change I3C HUB (I2C mode) channel - pre hook");
+		k_mutex_unlock(&i2c_hub_mutex);
+		return false;
 	}
 
 	return true;
@@ -293,20 +302,26 @@ bool post_i2c_bus_read(sensor_cfg *cfg, void *args, int *reading)
        * close all channels after the sensor read to avoid conflict with 
        * other devices reading.
        */
-	if (i3c_hub_type == RG3M87B12_DEVICE_INFO) {
+	switch (i3c_hub_type) {
+	case RG3M87B12_DEVICE_INFO:
 		if (!rg3mxxb12_select_slave_port_connect(post_proc_args->bus,
 							 RG3MXXB12_SSPORTS_ALL_DISCONNECT)) {
 			k_mutex_unlock(&i2c_hub_mutex);
-			LOG_ERR("Close HUB channel failed!");
+			LOG_ERR("Close rg3mxxb12 HUB channel failed!");
 			return false;
 		}
-	} else {
+		break;
+	case P3H2840_DEVICE_INFO:
 		if (!p3h284x_select_slave_port_connect(post_proc_args->bus,
 						       P3H284X_SSPORTS_ALL_DISCONNECT)) {
 			k_mutex_unlock(&i2c_hub_mutex);
-			LOG_ERR("Close HUB channel failed!");
+			LOG_ERR("Close p3h284x HUB channel failed!");
 			return false;
 		}
+		break;
+	default:
+		LOG_ERR("Get i3c hub type failed - Close HUB channel failed!");
+		return false;
 	}
 
 	if (k_mutex_unlock(&i2c_hub_mutex)) {
@@ -323,7 +338,7 @@ bool pre_retimer_read(sensor_cfg *cfg, void *args)
 	ARG_UNUSED(args);
 	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, false);
 
-	pt5161l_init_arg *init_arg = (pt5161l_init_arg *)cfg->init_args;
+	const pt5161l_init_arg *init_arg = (const pt5161l_init_arg *)cfg->init_args;
 	static uint8_t check_init_count = 0;
 	bool ret = true;
 	uint8_t retimer_type;

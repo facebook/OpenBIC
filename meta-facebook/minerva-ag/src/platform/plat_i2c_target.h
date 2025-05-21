@@ -70,16 +70,16 @@ typedef enum i2c_bridge_command_error {
 	I2C_BRIDGE_COMMAND_FAILURE,
 } i2c_bridge_command_error;
 
-void update_sensor_data_2_5_table(void);
-void update_sensor_data_8_table(void);
-void sensor_data_table_init(void);
+void update_sensor_reading_table(void);
+void update_strap_capability_table(void);
+void plat_telemetry_table_init(void);
 
 typedef struct _telemetry_info_ telemetry_info;
 
 typedef struct _telemetry_info_ {
 	uint8_t telemetry_offset;
 	uint16_t data_size;
-	bool (*sensor_data_init)(telemetry_info *, uint8_t *);
+	bool (*telemetry_table_init)(telemetry_info *, uint8_t *);
 
 } telemetry_info;
 

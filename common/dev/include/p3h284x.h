@@ -22,6 +22,12 @@
 
 #define P3H284X_DEFAULT_STATIC_ADDRESS 0x70
 
+// P3H2840 Device setting
+#define P3H2840_DEVICE_INFO 0x1530
+#define P3H2840_I3C_LDO_VOLT 0x0A // 1.2V
+#define P3H2840_I2C_MODE 0
+#define P3H2840_BYPASS_MODE 1
+
 #define P3H284X_DEVICE_INFO0_REG 0x0
 #define P3H284X_DEVICE_INFO1_REG 0x1
 #define P3H284X_PROTECTION_REG 0x10
@@ -34,11 +40,12 @@
 #define P3H284X_TARGET_PORTS_PULLUP_SETTING 0x19
 #define P3H284X_TARGET_PORTS_GPIO_ENABLE 0x1E
 #define P3H284X_TARGET_PORTSHUB_NETWORK_CONNECTION 0x51
+#define P3H284X_BYPASS_MODE_ENABLE 0x52
 #define P3H284X_TARGET_PORTS_PULLUP_ENABLE 0x53
 
 /* 0x10 : Unlock Device Configuration Protection Code */
 #define P3H284X_PROTECTION_LOCK 0x00
-#define P3H284X_PROTECTION_UNLOCK 0x6A
+#define P3H284X_PROTECTION_UNLOCK 0x69
 
 /* 0x15 : Master Side Port Configuration */
 #define P3H284X_HUB_NETWORK_ALWAYS_I3C 5
@@ -73,7 +80,7 @@ enum p3g284x_pull_up_resistor {
 };
 
 bool p3h284x_i2c_mode_only_init(uint8_t bus, uint8_t slave_port, uint8_t ldo_volt,
-				uint8_t pullup_resistor);
+				uint8_t pullup_resistor, uint8_t mode);
 bool p3h284x_select_slave_port_connect(uint8_t bus, uint8_t slave_port);
 bool p3h284x_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt);
 bool p3h284x_set_slave_port(uint8_t bus, uint8_t addr, uint8_t setting);

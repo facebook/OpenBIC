@@ -48,7 +48,7 @@ void find_vr_addr_by_sensor_id(uint8_t sensor_id, uint8_t *vr_addr);
 typedef struct plat_sensor_vr_extend_info {
 	uint16_t sensor_id;
 	uint8_t target_rns_addr; // ISL69260 or RAA228238
-	uint8_t target_mps_fab3_addr; // Change the VR address start from FAB3_PVT
+	uint8_t target_mps_fab3_addr; // Change the VR address start from FAB3_DVT2
 	void *mps_vr_init_args;
 	void *rns_vr_init_args;
 } plat_sensor_vr_extend_info;
@@ -9336,7 +9336,7 @@ void find_vr_addr_by_sensor_id(uint8_t sensor_id, uint8_t *vr_addr)
 {
 	uint8_t board_stage = get_board_stage();
 	uint8_t vr_type = get_vr_type();
-	if (vr_type == VR_MPS_MP2971_MP29816A && board_stage >= FAB3_PVT) {
+	if (vr_type == VR_MPS_MP2971_MP29816A && board_stage >= FAB3_DVT2) {
 		for (int index = 0; index < ARRAY_SIZE(plat_sensor_vr_extend_table); index++) {
 			if (plat_sensor_vr_extend_table[index].sensor_id == sensor_id) {
 				*vr_addr = plat_sensor_vr_extend_table[index].target_mps_fab3_addr;
@@ -9383,8 +9383,7 @@ void find_init_args_by_sensor_id(uint16_t sensor_id, void **init_args)
 			} else if ((vr_type == VR_RNS_ISL69260_RAA228238) ||
 				   (vr_type == VR_RNS_ISL69260_RAA228249)) {
 				LOG_INF("change vr init args for RNS");
-				if (board_stage == FAB2_DVT || board_stage == FAB3_PVT ||
-				    board_stage == FAB4_MP) {
+				if (board_stage >= FAB2_DVT) {
 					plat_sensor_vr_extend_table[index].rns_vr_init_args =
 						&isl69259_init_args[1];
 				}
@@ -9401,7 +9400,7 @@ void find_init_args_by_sensor_id(uint16_t sensor_id, void **init_args)
 	     index++) {
 		if (plat_pldm_sensor_ubc_table[index].pdr_numeric_sensor.sensor_id == sensor_id) {
 			if (ubc_type == UBC_MPS_MPC12109) {
-				if (board_stage == FAB3_PVT || board_stage == FAB4_MP) {
+				if (board_stage >= FAB3_DVT2) {
 					LOG_INF("change ubc init args for MPS");
 					*init_args = plat_sensor_ubc_extend_table[index]
 							     .mpc12109_ubc_init_arg;
@@ -9466,9 +9465,9 @@ void plat_pldm_sensor_change_vr_addr()
 
 	uint8_t addr;
 
-	if (board_stage >= FAB3_PVT) {
+	if (board_stage >= FAB3_DVT2) {
 		if (vr_type == VR_MPS_MP2971_MP29816A) {
-			LOG_INF("change vr addr for MPS_MP2971_MP29816A FAB3_PVT");
+			LOG_INF("change vr addr for MPS_MP2971_MP29816A FAB3_DVT2");
 			for (int index = 0;
 			     index < plat_pldm_sensor_get_sensor_count(VR_SENSOR_THREAD_ID);
 			     index++) {
@@ -9582,6 +9581,7 @@ void plat_pldm_sensor_change_ubc_dev()
 		     index++) {
 			plat_pldm_sensor_ubc_table[index].pldm_sensor_cfg.type = sensor_dev_bmr313;
 		}
+		LOG_INF("UBC_FLEX_BMR313 driver loaded");
 	} else if (ubc_type == UBC_MPS_MPC12109) {
 		for (int index = 0; index < plat_pldm_sensor_get_sensor_count(UBC_SENSOR_THREAD_ID);
 		     index++) {
@@ -9589,6 +9589,18 @@ void plat_pldm_sensor_change_ubc_dev()
 				sensor_dev_mpc12109;
 		}
 		LOG_INF("UBC_MPS_MPC12109 driver loaded");
+	} else if (ubc_type == UBC_FLEX_BMR316) {
+		for (int index = 0; index < plat_pldm_sensor_get_sensor_count(UBC_SENSOR_THREAD_ID);
+		     index++) {
+			plat_pldm_sensor_ubc_table[index].pldm_sensor_cfg.type = sensor_dev_bmr316;
+		}
+		LOG_INF("UBC_FLEX_BMR316 driver loaded");
+	} else if (ubc_type == UBC_LUXSHURE_LX6301) {
+		for (int index = 0; index < plat_pldm_sensor_get_sensor_count(UBC_SENSOR_THREAD_ID);
+		     index++) {
+			plat_pldm_sensor_ubc_table[index].pldm_sensor_cfg.type = sensor_dev_lx6301;
+		}
+		LOG_INF("UBC_LUXSHURE_LX6301 driver loaded");
 	} else if (ubc_type != UBC_DELTA_U50SU4P180PMDAFC) {
 		LOG_ERR("Unable to change the UBC device due to its unknown status.");
 	}

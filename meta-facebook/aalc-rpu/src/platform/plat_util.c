@@ -29,6 +29,7 @@
 #include "plat_pwm.h"
 #include "plat_fsc.h"
 #include "plat_hook.h"
+#include "plat_status.h"
 #include <shell/shell_uart.h>
 #include <logging/log_ctrl.h>
 
@@ -190,15 +191,21 @@ uint8_t get_fsc_mode()
 	uint8_t manual_hex_fan = get_manual_pwm_flag(MANUAL_PWM_E_HEX_FAN);
 	uint8_t manual_pump = get_manual_pwm_flag(MANUAL_PWM_E_PUMP);
 	uint8_t manual_rpu_fan = get_manual_pwm_flag(MANUAL_PWM_E_RPU_FAN);
+	uint8_t auto_tune = get_status_flag(STATUS_FLAG_AUTO_TUNE);
 
-	if (!manual_hex_fan && !manual_pump && !manual_rpu_fan)
-		return FSC_MODE_AUTO_MODE;
-	else if (manual_hex_fan && manual_pump && manual_rpu_fan)
+	if (!manual_hex_fan && !manual_pump && !manual_rpu_fan) {
+		return auto_tune ? FSC_MODE_AUTO_MODE : FSC_MODE_UNKNOW;
+	}
+
+	if (manual_hex_fan && manual_pump && manual_rpu_fan) {
 		return FSC_MODE_MANUAL_MODE;
-	else if (!manual_hex_fan && manual_pump)
-		return FSC_MODE_SEMI_MODE;
-	else
-		return FSC_MODE_UNKNOW;
+	}
+
+	if (!manual_hex_fan && manual_pump) {
+		return auto_tune ? FSC_MODE_SEMI_MODE : FSC_MODE_UNKNOW;
+	}
+
+	return FSC_MODE_UNKNOW;
 }
 
 bool get_abr(void)
