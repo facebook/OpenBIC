@@ -17,6 +17,8 @@
 #ifndef PLAT_FUNC_H
 #define PLAT_FUNC_H
 
+#define VR_FAULT_STATUS_LSB_MASK 0x3C
+
 void ISR_POST_COMPLETE();
 void ISR_DC_ON();
 void ISR_SLP3();

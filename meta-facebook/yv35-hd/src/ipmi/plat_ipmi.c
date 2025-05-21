@@ -386,3 +386,47 @@ void OEM_1S_GET_HSC_STATUS(ipmi_msg *msg)
 	msg->completion_code = CC_SUCCESS;
 	return;
 }
+
+bool plat_add_oem_sel_evt_record(oem_addsel_msg_t *sel_msg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(sel_msg, false);
+
+	ipmb_error status;
+	static uint16_t record_id = 0x1;
+	uint8_t system_event_record = 0xF0;
+	ipmi_msg *msg = (ipmi_msg *)malloc(sizeof(ipmi_msg));
+	if (msg == NULL) {
+		LOG_ERR("Add sel msg malloc fail");
+		return false;
+	}
+	memset(msg, 0, sizeof(ipmi_msg));
+
+	msg->data_len = 16;
+	msg->InF_source = SELF;
+	msg->InF_target = sel_msg->InF_target;
+	msg->netfn = NETFN_STORAGE_REQ;
+	msg->cmd = CMD_STORAGE_ADD_SEL;
+	msg->data[0] = (record_id & 0xFF); // Record id byte 0, lsb
+	msg->data[1] = ((record_id >> 8) & 0xFF); // Record id byte 1
+	msg->data[2] = system_event_record; // OEM Record type
+	memcpy(&msg->data[3], &sel_msg->event_data[0], sizeof(sel_msg->event_data));
+	record_id++;
+
+	bool ipmb_flag = true;
+	status = ipmb_read(msg, IPMB_inf_index_map[msg->InF_target]);
+	switch (status) {
+	case IPMB_ERROR_FAILURE:
+		ipmb_flag = false;
+		LOG_ERR("Fail to post msg to InF_target 0x%x txqueue for addsel", msg->InF_target);
+		break;
+	case IPMB_ERROR_GET_MESSAGE_QUEUE:
+		ipmb_flag = false;
+		LOG_ERR("No response from InF_target 0x%x for addsel", msg->InF_target);
+		break;
+	default:
+		break;
+	}
+
+	SAFE_FREE(msg);
+	return ipmb_flag;
+}

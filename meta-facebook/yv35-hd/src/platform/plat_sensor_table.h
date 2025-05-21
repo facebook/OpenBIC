@@ -18,6 +18,7 @@
 #define PLAT_SENSOR_TABLE_H
 
 #include <stdint.h>
+#include <sensor.h>
 
 /* define sensors address(7 bit) */
 #define TMP75_IN_ADDR (0x94 >> 1)
@@ -128,10 +129,12 @@
 #define SENSOR_NUM_POWER_ERROR 0x56
 #define SENSOR_NUM_PROC_FAIL 0x65
 #define SENSOR_NUM_VR_OCP 0x71
+#define SENSOR_NUM_VR_ALERT 0x72
 #define SENSOR_NUM_HDT_PRESENT 0xBD
 #define SENSOR_NUM_PMIC_ERROR 0xB4
 
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
+sensor_cfg *plat_get_sensor_cfg_via_sensor_num(uint8_t sensor_num);
 
 #endif

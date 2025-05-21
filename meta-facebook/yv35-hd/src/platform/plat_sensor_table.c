@@ -731,3 +731,13 @@ void load_sensor_config(void)
 
 	pal_extend_sensor_config();
 }
+
+sensor_cfg *plat_get_sensor_cfg_via_sensor_num(uint8_t sensor_num)
+{
+	if (sensor_config != NULL) {
+		return find_sensor_cfg_via_sensor_num(sensor_config, sensor_config_count,
+						      sensor_num);
+	}
+
+	return NULL;
+}
