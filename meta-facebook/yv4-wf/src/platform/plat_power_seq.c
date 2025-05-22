@@ -62,6 +62,13 @@ enum { HB_STATE_UNKNOWN = 0, HB_STATE_OK, HB_STATE_LOW };
 uint8_t cxl1_hb_state = HB_STATE_UNKNOWN;
 uint8_t cxl2_hb_state = HB_STATE_UNKNOWN;
 
+extern struct k_work_q plat_work_q;
+void init_cxl_heartbeat_monitor_work()
+{
+	k_work_init_delayable(&cxl1_hb_monitor_work, cxl1_heartbeat_monitor_handler);
+	k_work_init_delayable(&cxl2_hb_monitor_work, cxl2_heartbeat_monitor_handler);
+}
+
 cxl_power_control_gpio cxl_power_ctrl_pin[MAX_CXL_ID] = {
 	[0] = {
 	.enclk_100m_osc = EN_CLK_100M_ASIC1_OSC,
@@ -675,8 +682,13 @@ void cxl1_heartbeat_monitor_handler()
 		return;
 	}
 
+	if (!get_DC_status()) {
+		LOG_INF("CXL1 HB monitor: DC is off");
+		return;
+	}
+
 	ret = sensor_sample_fetch(hb);
-	if (ret == 0 && sensor_channel_get(hb, SENSOR_CHAN_RPM, &hb_val) == 0) {
+	if (ret == 0 && sensor_channel_get(hb, SENSOR_CHAN_RPM, &hb_val) == 0 && get_DC_status()) {
 		if (hb_val.val1 >= 10 && cxl1_hb_state != HB_STATE_OK) {
 			sel_msg.event_type = CXL1_HB;
 			sel_msg.assert_type = EVENT_ASSERTED;
@@ -696,21 +708,11 @@ void cxl1_heartbeat_monitor_handler()
 			}
 			cxl1_hb_state = HB_STATE_LOW;
 		}
-	} else {
-		LOG_WRN("CXL1 HB monitor: fetch failed");
-		if (cxl1_hb_state == HB_STATE_UNKNOWN || cxl1_hb_state != HB_STATE_LOW) {
-			sel_msg.event_type = CXL1_HB;
-			sel_msg.assert_type = EVENT_DEASSERTED;
-			LOG_INF("Deassert: CXL1 HB fetch failed, treat as lost");
-			if (send_event_log_to_bmc(sel_msg) != PLDM_SUCCESS) {
-				LOG_ERR("Failed to send deassert event log");
-			}
-			cxl1_hb_state = HB_STATE_LOW;
-		}
 	}
 
 	// Reschedule self
-	k_work_schedule(&cxl1_hb_monitor_work, K_SECONDS(MONITOR_INTERVAL_SECONDS));
+	k_work_schedule_for_queue(&plat_work_q, &cxl1_hb_monitor_work,
+				  K_SECONDS(MONITOR_INTERVAL_SECONDS));
 }
 
 void cxl2_heartbeat_monitor_handler()
@@ -725,8 +727,13 @@ void cxl2_heartbeat_monitor_handler()
 		return;
 	}
 
+	if (!get_DC_status()) {
+		LOG_INF("CXL2 HB monitor: DC is off");
+		return;
+	}
+
 	ret = sensor_sample_fetch(hb);
-	if (ret == 0 && sensor_channel_get(hb, SENSOR_CHAN_RPM, &hb_val) == 0) {
+	if (ret == 0 && sensor_channel_get(hb, SENSOR_CHAN_RPM, &hb_val) == 0 && get_DC_status()) {
 		if (hb_val.val1 >= 10 && cxl2_hb_state != HB_STATE_OK) {
 			sel_msg.event_type = CXL2_HB;
 			sel_msg.assert_type = EVENT_ASSERTED;
@@ -747,22 +754,11 @@ void cxl2_heartbeat_monitor_handler()
 			}
 			cxl2_hb_state = HB_STATE_LOW;
 		}
-	} else {
-		LOG_WRN("CXL2 HB monitor: fetch failed");
-		if (cxl2_hb_state == HB_STATE_UNKNOWN || cxl2_hb_state != HB_STATE_LOW) {
-			sel_msg.event_type = CXL2_HB;
-			sel_msg.assert_type = EVENT_DEASSERTED;
 
-			LOG_INF("Deassert: CXL2 HB fetch failed, treat as lost");
-			if (send_event_log_to_bmc(sel_msg) != PLDM_SUCCESS) {
-				LOG_ERR("Failed to send deassert event log");
-			}
-			cxl2_hb_state = HB_STATE_LOW;
-		}
+		// Reschedule self
+		k_work_schedule_for_queue(&plat_work_q, &cxl2_hb_monitor_work,
+					  K_SECONDS(MONITOR_INTERVAL_SECONDS));
 	}
-
-	// Reschedule self
-	k_work_schedule(&cxl2_hb_monitor_work, K_SECONDS(MONITOR_INTERVAL_SECONDS));
 }
 
 void cxl1_ready_handler()
@@ -814,7 +810,7 @@ exit:
 	// Start delayable heartbeat monitor
 	if (!k_work_delayable_is_pending(&cxl1_hb_monitor_work)) {
 		LOG_INF("Start to monitor CXL1 HB");
-		k_work_schedule(&cxl1_hb_monitor_work, K_NO_WAIT);
+		k_work_schedule_for_queue(&plat_work_q, &cxl1_hb_monitor_work, K_NO_WAIT);
 	} else {
 		LOG_INF("CXL1 HB monitor already scheduled");
 	}
@@ -870,7 +866,7 @@ exit:
 	// Start delayable heartbeat monitor
 	if (!k_work_delayable_is_pending(&cxl2_hb_monitor_work)) {
 		LOG_INF("Start to monitor CXL2 HB");
-		k_work_schedule(&cxl2_hb_monitor_work, K_NO_WAIT);
+		k_work_schedule_for_queue(&plat_work_q, &cxl2_hb_monitor_work, K_NO_WAIT);
 	} else {
 		LOG_INF("CXL2 HB monitor already scheduled");
 	}
