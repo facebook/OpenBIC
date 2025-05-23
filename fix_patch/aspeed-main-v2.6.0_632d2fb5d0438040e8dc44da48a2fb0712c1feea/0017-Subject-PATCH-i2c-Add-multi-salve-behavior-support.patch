@@ -1,0 +1,60 @@
+From 668845a8029ca644913ee9121b982a78af9f504a Mon Sep 17 00:00:00 2001
+From: Zane Li <zane.li.wiwynn@gmail.com>
+Date: Thu, 6 Mar 2025 13:12:04 +0800
+Subject: [PATCH] Subject: [PATCH] i2c: Add multi-salve behavior support
+
+---
+ drivers/i2c/i2c_aspeed.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/i2c/i2c_aspeed.c b/drivers/i2c/i2c_aspeed.c
+index 94b7a4ff8c6..95c66ecadf3 100644
+--- a/drivers/i2c/i2c_aspeed.c
++++ b/drivers/i2c/i2c_aspeed.c
+@@ -1476,14 +1476,14 @@ void aspeed_i2c_slave_packet_irq(const struct device *dev, uint32_t i2c_base, ui
+ 	case AST_I2CS_SLAVE_MATCH | AST_I2CS_RX_DONE | AST_I2CS_Wait_RX_DMA | AST_I2CS_STOP | AST_I2CS_TX_NAK:
+ 		LOG_DBG("S: AST_I2CS_TX_NAK\n");
+ 		if (slave_cb->stop) {
+-			slave_cb->stop(data->slave_cfg);
++			slave_cb->stop(slave_cfg);
+ 		}
+ 		if (sys_read32(i2c_base + AST_I2CM_ISR)) {
+ 			LOG_DBG("S : Sw|D - Wait normal\n");
+ 		} else {
+ 			LOG_DBG("S : Sw|D - Issue rx dma\n");
+ 			if (slave_cb->write_requested) {
+-				slave_cb->write_requested(data->slave_cfg);
++				slave_cb->write_requested(slave_cfg);
+ 			}
+ 
+ 			if (config->mode == DMA_MODE) {
+@@ -1497,7 +1497,7 @@ void aspeed_i2c_slave_packet_irq(const struct device *dev, uint32_t i2c_base, ui
+ 				if (slave_cb->write_received) {
+ 					for (i = 0; i < slave_rx_len; i++) {
+ 						LOG_DBG("[%02x] ", data->slave_dma_buf[i]);
+-						slave_cb->write_received(data->slave_cfg
++						slave_cb->write_received(slave_cfg
+ 						, data->slave_dma_buf[i]);
+ 					}
+ 				}
+@@ -1508,7 +1508,7 @@ void aspeed_i2c_slave_packet_irq(const struct device *dev, uint32_t i2c_base, ui
+ 
+ 				if (slave_cb->write_received) {
+ 					for (i = 0; i < slave_rx_len ; i++) {
+-						slave_cb->write_received(data->slave_cfg
++						slave_cb->write_received(slave_cfg
+ 						, sys_read8(config->buf_base + i));
+ 					}
+ 				}
+@@ -1517,7 +1517,7 @@ void aspeed_i2c_slave_packet_irq(const struct device *dev, uint32_t i2c_base, ui
+ 				AST_I2CC_GET_RX_BUFF(sys_read32(i2c_base + AST_I2CC_STS_AND_BUFF));
+ 				LOG_DBG("[%02x]", byte_data);
+ 				if (slave_cb->write_received) {
+-					slave_cb->write_received(data->slave_cfg, byte_data);
++					slave_cb->write_received(slave_cfg, byte_data);
+ 				}
+ 			}
+ 			aspeed_i2c_trigger_package_cmd(i2c_base, config->mode);
+-- 
+2.25.1
+

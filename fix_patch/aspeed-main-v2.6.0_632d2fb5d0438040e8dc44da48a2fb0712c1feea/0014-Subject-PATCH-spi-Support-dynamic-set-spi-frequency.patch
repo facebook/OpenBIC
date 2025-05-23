@@ -1,0 +1,44 @@
+From e936a9568b0524079ddd0e58d067ecb0339d78a5 Mon Sep 17 00:00:00 2001
+From: Zane Li <zane.li.wiwynn@gmail.com>
+Date: Thu, 6 Mar 2025 10:53:36 +0800
+Subject: [PATCH] Subject: [PATCH] spi: Support dynamic set spi frequency
+
+---
+ drivers/flash/spi_nor_multi_dev.c | 8 ++++++++
+ include/drivers/spi_nor.h         | 1 +
+ 2 files changed, 9 insertions(+)
+
+diff --git a/drivers/flash/spi_nor_multi_dev.c b/drivers/flash/spi_nor_multi_dev.c
+index 7273d1f0b53..0db59b3e7ae 100644
+--- a/drivers/flash/spi_nor_multi_dev.c
++++ b/drivers/flash/spi_nor_multi_dev.c
+@@ -1905,6 +1905,14 @@ int spi_nor_re_init(const struct device *dev)
+ 	return spi_nor_configure(dev);
+ }
+ 
++int spi_nor_set_freq(const struct device *dev, uint32_t freq)
++{
++	struct spi_nor_data *data = dev->data;
++	data->spi_cfg.frequency = freq;
++
++	return 0;
++}
++
+ /**
+  * @brief Initialize and configure the flash
+  *
+diff --git a/include/drivers/spi_nor.h b/include/drivers/spi_nor.h
+index fe2653452f2..59f239dd39f 100644
+--- a/include/drivers/spi_nor.h
++++ b/include/drivers/spi_nor.h
+@@ -146,6 +146,7 @@ struct spi_nor_op_info {
+ 
+ int spi_nor_config_4byte_mode(const struct device *dev, bool en4b);
+ int spi_nor_re_init(const struct device *dev);
++int spi_nor_set_freq(const struct device *dev, uint32_t freq);
+ int spi_nor_erase_by_cmd(const struct device *dev, off_t addr,
+ 			 size_t size, uint8_t cmd);
+ int spi_nor_get_erase_sz(const struct device *dev, uint8_t cmd);
+-- 
+2.25.1
+

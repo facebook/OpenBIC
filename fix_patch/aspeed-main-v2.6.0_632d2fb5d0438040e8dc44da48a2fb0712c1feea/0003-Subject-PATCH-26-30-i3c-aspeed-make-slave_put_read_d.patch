@@ -1,0 +1,44 @@
+From 9b8e26ea2e003b2a36f97bbbf69edb22daae1302 Mon Sep 17 00:00:00 2001
+From: Zane Li <zane.li.wiwynn@gmail.com>
+Date: Wed, 5 Mar 2025 09:54:56 +0800
+Subject: [PATCH] Subject: [PATCH 26/30] i3c: aspeed: make slave_put_read_data
+ be a blocking  function
+
+In slave mode, the pending read data was put to the TX FIFO then
+returned directly. The application needed to call another API to know if
+the data is consumed.  This commit makes the slave_put_read_data wait
+for the data consumed so that the application needn't to know the data
+status after it calls this function.
+
+Signed-off-by: Dylan Hung <dylan_hung@aspeedtech.com>
+Change-Id: I39be9d4612caa463126534b91f08fdf68b790beb
+---
+ drivers/i3c/i3c_aspeed.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index a6406b97496..c27f83dfcb9 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -1754,6 +1754,18 @@ static int i3c_aspeed_slave_reset_queue(const struct device *dev)
+ 	return 0;
+ }
+ 
++static int i3c_aspeed_slave_wait_data_consume(const struct device *dev)
++{
++	struct i3c_aspeed_obj *obj = DEV_DATA(dev);
++	union i3c_intr_s events;
++
++	events.value = 0;
++	events.fields.resp_q_ready = 1;
++	osEventFlagsWait(obj->event_id, events.value, osFlagsWaitAny, osWaitForever);
++
++	return 0;
++}
++
+ int i3c_aspeed_slave_put_read_data(const struct device *dev, struct i3c_slave_payload *data,
+ 				   struct i3c_ibi_payload *ibi_notify)
+ {
+-- 
+2.25.1
+

@@ -1,0 +1,24 @@
+From 81dbc4a874611553ee97d1bdb09cc6a61149f951 Mon Sep 17 00:00:00 2001
+From: Zane Li <zane.li.wiwynn@gmail.com>
+Date: Wed, 5 Mar 2025 15:12:27 +0800
+Subject: [PATCH] Subject: [PATCH] board: ast1030 evb: compile with C11
+
+Compile the project of ast1030 evb with C11.
+---
+ boards/arm/ast1030_evb/CMakeLists.txt | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/boards/arm/ast1030_evb/CMakeLists.txt b/boards/arm/ast1030_evb/CMakeLists.txt
+index fcc0e1ee2db..af588c017c9 100644
+--- a/boards/arm/ast1030_evb/CMakeLists.txt
++++ b/boards/arm/ast1030_evb/CMakeLists.txt
+@@ -4,3 +4,5 @@
+ if(CONFIG_PINMUX_ASPEED)
+     zephyr_include_directories(.)
+ endif()
++
++set_property(GLOBAL PROPERTY CSTD c11)
+\ No newline at end of file
+-- 
+2.25.1
+

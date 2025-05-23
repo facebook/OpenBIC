@@ -32,11 +32,16 @@
 LOG_MODULE_REGISTER(dev_snoop);
 
 const struct device *snoop_dev;
-uint8_t snoop_data;
+struct snoop_context {
+	intptr_t reserved;
+	uint32_t byte;
+};
+struct k_fifo snoop_fifo[SNOOP_CHANNEL_NUM];
 static uint8_t *snoop_read_buffer;
 int snoop_read_num = 0;
 int send_postcode_start_position = 0;
 static bool proc_postcode_ok = false;
+static bool snoop_rx_registered = false;
 
 K_THREAD_STACK_DEFINE(snoop_thread, SNOOP_STACK_SIZE);
 struct k_thread snoop_thread_handler;
@@ -48,6 +53,38 @@ k_tid_t send_postcode_tid;
 
 struct k_mutex snoop_mutex;
 
+int snoop_fifo_read(uint32_t ch, uint8_t *out, bool blocking)
+{
+	struct snoop_context *node;
+
+	if (ch >= SNOOP_CHANNEL_NUM)
+		return -EINVAL;
+
+	node = k_fifo_get(&snoop_fifo[ch], (blocking) ? K_FOREVER : K_NO_WAIT);
+	if (!node)
+		return -ENODATA;
+
+	*out = (uint8_t)node->byte;
+
+	k_free(node);
+
+	return 0;
+}
+
+void snoop_rx_callback(const uint8_t *snoop0, const uint8_t *snoop1)
+{
+	if (snoop0) {
+		struct snoop_context *node;
+		node = k_malloc(sizeof(struct snoop_context));
+		if (node) {
+			node->byte = *snoop0;
+			k_fifo_put(&snoop_fifo[0], node);
+		} else {
+			LOG_ERR("failed to allocate node0, drop data\n");
+		}
+	}
+}
+
 void snoop_init()
 {
 	snoop_dev = device_get_binding(DT_LABEL(DT_NODELABEL(snoop)));
@@ -55,6 +92,21 @@ void snoop_init()
 		LOG_ERR("No snoop device found");
 		return;
 	}
+
+	for (int i = 0; i < SNOOP_CHANNEL_NUM; ++i) {
+		k_fifo_init(&snoop_fifo[i]);
+	}
+
+	if (!snoop_rx_registered) {
+		int rc;
+		rc = snoop_aspeed_register_rx_callback(snoop_dev, snoop_rx_callback);
+		if (rc) {
+			LOG_ERR("snoop register rx callback fail");
+			return;
+		}
+		snoop_rx_registered = true;
+	}
+
 	return;
 }
 
@@ -111,8 +163,9 @@ void snoop_read()
 		return;
 	}
 
+	uint8_t snoop_data;
 	while (1) {
-		rc = snoop_aspeed_read(snoop_dev, 0, &snoop_data, true);
+		rc = snoop_fifo_read(0, &snoop_data, true);
 		if (rc == 0) {
 			proc_postcode_ok = true;
 			if (!k_mutex_lock(&snoop_mutex, K_MSEC(1000))) {

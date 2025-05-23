@@ -1,0 +1,27 @@
+From eea46eccbd665ca52f77c3d19c27492011715e41 Mon Sep 17 00:00:00 2001
+From: Zane Li <zane.li.wiwynn@gmail.com>
+Date: Thu, 6 Mar 2025 10:37:34 +0800
+Subject: [PATCH] Subject: [PATCH] modbus: aspeed: disable interrupts during
+ init
+
+---
+ drivers/serial/uart_aspeed.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/serial/uart_aspeed.c b/drivers/serial/uart_aspeed.c
+index ace6b0cca0d..6403e8b5699 100644
+--- a/drivers/serial/uart_aspeed.c
++++ b/drivers/serial/uart_aspeed.c
+@@ -887,6 +887,9 @@ static int uart_aspeed_init(const struct device *dev)
+ 
+ 	rc = uart_aspeed_configure(dev, uart_cfg);
+ 
++	uart_aspeed_irq_tx_disable(dev);
++	uart_aspeed_irq_rx_disable(dev);
++
+ 	dev_cfg->irq_config_func(dev);
+ 
+ 	return rc;
+-- 
+2.25.1
+

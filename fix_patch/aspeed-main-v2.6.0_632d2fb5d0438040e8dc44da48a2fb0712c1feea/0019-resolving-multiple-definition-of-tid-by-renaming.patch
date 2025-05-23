@@ -1,0 +1,77 @@
+From e908e22798456fdb3a7a44c66343b7418923e80c Mon Sep 17 00:00:00 2001
+From: Zane Li <zane.li.wiwynn@gmail.com>
+Date: Thu, 6 Mar 2025 13:36:14 +0800
+Subject: [PATCH] resolving multiple definition of 'tid' by renaming
+
+---
+ drivers/i3c/i3c_shell.c | 22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/i3c/i3c_shell.c b/drivers/i3c/i3c_shell.c
+index 46f790ed772..ea3823996e6 100644
+--- a/drivers/i3c/i3c_shell.c
++++ b/drivers/i3c/i3c_shell.c
+@@ -405,7 +405,7 @@ static int cmd_smq_xfer(const struct shell *shell, size_t argc, char **argv)
+ K_KERNEL_STACK_MEMBER(stack0, I3C_SHELL_STACK0_SIZE);
+ K_KERNEL_STACK_MEMBER(stack1, I3C_SHELL_STACK1_SIZE);
+ 
+-k_tid_t tid[2];
++k_tid_t i3c_tid[2];
+ struct k_thread thread[2];
+ #define STRESS_DATA_LEN	64
+ static const char do_stress_helper[] = "i3c stress <dev> -l <loop count>";
+@@ -564,12 +564,12 @@ static void i3c_stress_main_thread(void *arg0, void *arg1, void *arg2)
+ 	i3c_master_request_ibi(desc, &i3c_ibi_def_callbacks);
+ 	i3c_master_enable_ibi(desc);
+ 
+-	tid[1] = k_thread_create(&thread[1], stack1, I3C_SHELL_STACK1_SIZE,
++	i3c_tid[1] = k_thread_create(&thread[1], stack1, I3C_SHELL_STACK1_SIZE,
+ 				 (k_thread_entry_t)i3c_stress_daa_thread, (void *)dev,
+ 				 (void *)shell, INT_TO_POINTER(loop_cnt), 55, 0, K_FOREVER);
+ 
+-	k_thread_name_set(tid[1], "i3c_stress_daa");
+-	k_thread_start(tid[1]);
++	k_thread_name_set(i3c_tid[1], "i3c_stress_daa");
++	k_thread_start(i3c_tid[1]);
+ 
+ 	/* init private write data */
+ 	for (i = 0; i < 16; i++) {
+@@ -640,28 +640,28 @@ static int cmd_do_stress(const struct shell *shell, size_t argc, char **argv)
+ 	if (strcmp(k_thread_state_str(&thread[0]), "") == 0 ||
+ 	    strcmp(k_thread_state_str(&thread[0]), "dead") == 0) {
+ 		if (target_mode) {
+-			tid[0] = k_thread_create(&thread[0], stack0, I3C_SHELL_STACK0_SIZE,
++			i3c_tid[0] = k_thread_create(&thread[0], stack0, I3C_SHELL_STACK0_SIZE,
+ 						 (k_thread_entry_t)i3c_stress_target_thread,
+ 						 (void *)dev, (void *)shell,
+ 						 INT_TO_POINTER(loop_cnt), 55, 0, K_FOREVER);
+ 		} else {
+-			tid[0] = k_thread_create(&thread[0], stack0, I3C_SHELL_STACK0_SIZE,
++			i3c_tid[0] = k_thread_create(&thread[0], stack0, I3C_SHELL_STACK0_SIZE,
+ 						 (k_thread_entry_t)i3c_stress_main_thread,
+ 						 (void *)dev, (void *)shell,
+ 						 INT_TO_POINTER(loop_cnt), 55, 0, K_FOREVER);
+ 		}
+ 
+-		if (!tid[0]) {
+-			shell_print(shell, "thread creat failed = %d", tid[0]);
++		if (!i3c_tid[0]) {
++			shell_print(shell, "thread creat failed = %d", i3c_tid[0]);
+ 			return 1;
+ 		}
+ 
+ 		if (target_mode) {
+-			k_thread_name_set(tid[0], "i3c_stress_target");
++			k_thread_name_set(i3c_tid[0], "i3c_stress_target");
+ 		} else {
+-			k_thread_name_set(tid[0], "i3c_stress_main");
++			k_thread_name_set(i3c_tid[0], "i3c_stress_main");
+ 		}
+-		k_thread_start(tid[0]);
++		k_thread_start(i3c_tid[0]);
+ 	}
+ 
+ 	return 0;
+-- 
+2.25.1
+

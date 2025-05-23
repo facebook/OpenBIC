@@ -1,0 +1,48 @@
+From c498b72b38af63ed086a2f60c39d4ef96f479e22 Mon Sep 17 00:00:00 2001
+From: Zane Li <zane.li.wiwynn@gmail.com>
+Date: Wed, 5 Mar 2025 16:31:11 +0800
+Subject: [PATCH] Subject: [PATCH] spi-aspeed-support-10-dummy-cycle
+
+---
+ drivers/spi/spi_aspeed.c | 18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/spi/spi_aspeed.c b/drivers/spi/spi_aspeed.c
+index 85b2a3612fa..a3857124ec6 100644
+--- a/drivers/spi/spi_aspeed.c
++++ b/drivers/spi/spi_aspeed.c
+@@ -380,6 +380,7 @@ static void aspeed_spi_nor_transceive_user(const struct device *dev,
+ 	struct spi_context *ctx = &data->ctx;
+ 	uint32_t cs = ctx->config->slave;
+ 	uint8_t dummy[12] = {0};
++	uint32_t data_len;
+ 
+ #ifdef CONFIG_SPI_MONITOR_ASPEED
+ 	/* change internal MUX */
+@@ -420,9 +421,20 @@ static void aspeed_spi_nor_transceive_user(const struct device *dev,
+ 		(const uint8_t *)&op_info.addr, op_info.addr_len);
+ 
+ 	/* dummy */
+-	aspeed_spi_write_data(data->decode_addr[cs].start,
+-		(const uint8_t *)&dummy,
+-		(op_info.dummy_cycle / (8 / JESD216_GET_ADDR_BUSWIDTH(op_info.mode))));
++	if (op_info.dummy_cycle % 2 != 0) {
++		LOG_ERR("Invalid dummy cycle (%d)\n", op_info.dummy_cycle);
++	} else if (op_info.dummy_cycle % 8 != 0) {
++		sys_write32(data->cmd_mode[cs].user | aspeed_spi_io_mode_user(4),
++			    config->ctrl_base + SPI10_CE0_CTRL + cs * 4);
++		data_len = op_info.dummy_cycle / 2;
++		aspeed_spi_write_data(data->decode_addr[cs].start,
++				      (const uint8_t *)&dummy, data_len);
++	} else {
++		data_len = op_info.dummy_cycle / 8;
++		data_len *= JESD216_GET_ADDR_BUSWIDTH(op_info.mode);
++		aspeed_spi_write_data(data->decode_addr[cs].start,
++				      (const uint8_t *)&dummy, data_len);
++	}
+ 
+ 	/* data */
+ 	sys_write32(data->cmd_mode[cs].user |
+-- 
+2.25.1
+
