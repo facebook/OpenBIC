@@ -253,7 +253,7 @@ nct7363_init_arg nct7363_init_args[] = {
 	// Fan BD 1
 	[0] = { 
 		.is_init = false, 
-		.wdt_cfg = WDT_7_5_SEC,
+		.wdt_cfg = WDT_15_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
@@ -273,7 +273,7 @@ nct7363_init_arg nct7363_init_args[] = {
 	// Fan BD 2
 	[1] = { 
 		.is_init = false, 
-		.wdt_cfg = WDT_7_5_SEC,
+		.wdt_cfg = WDT_15_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
@@ -293,7 +293,7 @@ nct7363_init_arg nct7363_init_args[] = {
 	// fan BD 3
 	[2] = { 
 		.is_init = false, 
-		.wdt_cfg = WDT_7_5_SEC,
+		.wdt_cfg = WDT_15_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
@@ -313,7 +313,7 @@ nct7363_init_arg nct7363_init_args[] = {
 	// fan BD 4
 	[3] = { 
 		.is_init = false, 
-		.wdt_cfg = WDT_7_5_SEC,
+		.wdt_cfg = WDT_15_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
@@ -333,7 +333,7 @@ nct7363_init_arg nct7363_init_args[] = {
 	// fan BD 5
 	[4] = { 
 		.is_init = false, 
-		.wdt_cfg = WDT_7_5_SEC,
+		.wdt_cfg = WDT_15_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
@@ -353,7 +353,7 @@ nct7363_init_arg nct7363_init_args[] = {
 	// fan BD 6
 	[5] = { 
 		.is_init = false, 
-		.wdt_cfg = WDT_7_5_SEC,
+		.wdt_cfg = WDT_15_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
@@ -373,7 +373,7 @@ nct7363_init_arg nct7363_init_args[] = {
 	// fan BD 7
 	[6] = { 
 		.is_init = false, 
-		.wdt_cfg = WDT_7_5_SEC,
+		.wdt_cfg = WDT_15_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
@@ -393,7 +393,7 @@ nct7363_init_arg nct7363_init_args[] = {
 	// fan BD 8
 	[7] = { 
 		.is_init = false, 
-		.wdt_cfg = WDT_7_5_SEC,
+		.wdt_cfg = WDT_15_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
@@ -413,7 +413,7 @@ nct7363_init_arg nct7363_init_args[] = {
 	// fan BD 9
 	[8] = { 
 		.is_init = false, 
-		.wdt_cfg = WDT_7_5_SEC,
+		.wdt_cfg = WDT_15_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
@@ -433,7 +433,7 @@ nct7363_init_arg nct7363_init_args[] = {
 	// fan BD 10
 	[9] = { 
 		.is_init = false, 
-		.wdt_cfg = WDT_7_5_SEC,
+		.wdt_cfg = WDT_15_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
@@ -453,7 +453,7 @@ nct7363_init_arg nct7363_init_args[] = {
 	// fan BD 11
 	[10] = { 
 		.is_init = false, 
-		.wdt_cfg = WDT_7_5_SEC,
+		.wdt_cfg = WDT_15_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
@@ -473,7 +473,7 @@ nct7363_init_arg nct7363_init_args[] = {
 	// fan BD 12
 	[11] = { 
 		.is_init = false, 
-		.wdt_cfg = WDT_7_5_SEC,
+		.wdt_cfg = WDT_15_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
@@ -493,7 +493,7 @@ nct7363_init_arg nct7363_init_args[] = {
 	// fan BD 13
 	[12] = { 
 		.is_init = false, 
-		.wdt_cfg = WDT_7_5_SEC,
+		.wdt_cfg = WDT_15_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
@@ -513,7 +513,7 @@ nct7363_init_arg nct7363_init_args[] = {
 	// fan BD 14
 	[13] = { 
 		.is_init = false, 
-		.wdt_cfg = WDT_7_5_SEC,
+		.wdt_cfg = WDT_15_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
 		.gpio_00 = 1, //gpio out default value (active low)
 		.pin_type[NCT7363_10_PORT] = NCT7363_PIN_TPYE_GPIO_DEFAULT_OUTPUT,
@@ -533,7 +533,7 @@ nct7363_init_arg nct7363_init_args[] = {
 	// Pump BD 1
 	[14] = { 
 		.is_init = false,
-		.wdt_cfg = WDT_7_5_SEC,
+		.wdt_cfg = WDT_15_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_PWM, // pump pwm
 		.pin_type[NCT7363_2_PORT] = NCT7363_PIN_TPYE_PWM, // fan pwm
 		.pin_type[NCT7363_5_PORT] = NCT7363_PIN_TPYE_FANIN, // pump fanin
@@ -559,7 +559,7 @@ nct7363_init_arg nct7363_init_args[] = {
 	// Pump BD 2
 	[15] = { 
 		.is_init = false,
-		.wdt_cfg = WDT_7_5_SEC,
+		.wdt_cfg = WDT_15_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_PWM, // pump pwm
 		.pin_type[NCT7363_2_PORT] = NCT7363_PIN_TPYE_PWM, // fan pwm
 		.pin_type[NCT7363_5_PORT] = NCT7363_PIN_TPYE_FANIN, // pump fanin
@@ -585,7 +585,7 @@ nct7363_init_arg nct7363_init_args[] = {
 	// Pump BD 3
 	[16] = { 
 		.is_init = false,
-		.wdt_cfg = WDT_7_5_SEC,
+		.wdt_cfg = WDT_15_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_PWM, // pump pwm
 		.pin_type[NCT7363_2_PORT] = NCT7363_PIN_TPYE_PWM, // fan pwm
 		.pin_type[NCT7363_5_PORT] = NCT7363_PIN_TPYE_FANIN, // pump fanin
@@ -611,7 +611,7 @@ nct7363_init_arg nct7363_init_args[] = {
 	//Backplane BD
 	[17] = { 
 		.is_init = false,
-		.wdt_cfg = WDT_7_5_SEC,
+		.wdt_cfg = WDT_15_SEC,
 		.pin_type[NCT7363_1_PORT] = NCT7363_PIN_TPYE_PWM, // flow1 pwm
 		.pin_type[NCT7363_2_PORT] = NCT7363_PIN_TPYE_PWM, // flow2 pwm
 		.pin_type[NCT7363_3_PORT] = NCT7363_PIN_TPYE_PWM, // PUMP_ADD_WATER_PWM
@@ -1142,7 +1142,7 @@ static uint16_t get_fb_pwr_prsnt(void)
 	}
 
 	for (uint8_t i = 0; i < FB_PRSNT_NUM_PER_IOEXP; i++)
-		WRITE_BIT(prsnt, i * 2 + 1, !((msg.data[0] >> i) & 0x01));
+		WRITE_BIT(prsnt, i * 2, !((msg.data[0] >> i) & 0x01));
 
 	msg = construct_i2c_message(I2C_BUS9, FB_PWR_PRSNT_ADDR_ODD >> 1, 1, &input_reg,
 				    1); // read odd io expander
@@ -1152,7 +1152,7 @@ static uint16_t get_fb_pwr_prsnt(void)
 	}
 
 	for (uint8_t i = 0; i < FB_PRSNT_NUM_PER_IOEXP; i++)
-		WRITE_BIT(prsnt, i * 2, !((msg.data[0] >> i) & 0x01));
+		WRITE_BIT(prsnt, i * 2 + 1, !((msg.data[0] >> i) & 0x01));
 
 exit:
 	if (post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, NULL) == false)
