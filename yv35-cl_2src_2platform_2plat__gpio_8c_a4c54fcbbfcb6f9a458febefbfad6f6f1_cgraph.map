@@ -1,0 +1,11 @@
+<map id="vf_present_pin_monitor" name="vf_present_pin_monitor">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,163,83"/>
+<area shape="rect" id="node2" href="$libutil_8c.html#a143d81b4bb1c57a0fbba65823e309d11" title=" " alt="" coords="211,5,371,32"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="231,56,350,83"/>
+<area shape="rect" id="node5" href="$gt-cc_2src_2platform_2plat__mctp_8c.html#a998a1c1d667b48c6de3aef50f5dc86aa" title=" " alt="" coords="215,119,367,145"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="419,43,562,69"/>
+<area shape="rect" id="node6" href="$at-cb_2src_2platform_2plat__mctp_8c.html#aa91b2fdee8959aa54116d3b9b3b6c031" title=" " alt="" coords="419,93,563,120"/>
+<area shape="rect" id="node7" href="$pldm_8c.html#a90114495fe7507fbfbdcd388f02911aa" title=" " alt="" coords="431,144,550,171"/>
+<area shape="rect" id="node9" href="$pldm__oem_8c.html#acdcd72cd46e1f10b7be19781bb1b9866" title=" " alt="" coords="455,195,526,221"/>
+<area shape="rect" id="node8" href="$pldm_8c.html#a41d615349cd666a0f5372f4f4f0c9507" title=" " alt="" coords="611,144,773,171"/>
+</map>

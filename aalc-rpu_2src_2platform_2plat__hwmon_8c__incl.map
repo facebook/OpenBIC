@@ -1,0 +1,52 @@
+<map id="meta&#45;facebook/aalc&#45;rpu/src/platform/plat_hwmon.c" name="meta&#45;facebook/aalc&#45;rpu/src/platform/plat_hwmon.c">
+<area shape="rect" id="node1" title=" " alt="" coords="1225,5,1367,61"/>
+<area shape="rect" id="node2" title=" " alt="" coords="110,647,170,673"/>
+<area shape="rect" id="node3" title=" " alt="" coords="481,572,545,599"/>
+<area shape="rect" id="node4" title=" " alt="" coords="1419,109,1483,136"/>
+<area shape="rect" id="node5" href="$aalc-rpu_2src_2platform_2plat__i2c_8h.html" title=" " alt="" coords="2200,266,2277,293"/>
+<area shape="rect" id="node9" href="$sensor_8h.html" title=" " alt="" coords="778,266,849,293"/>
+<area shape="rect" id="node21" title=" " alt="" coords="1507,109,1602,136"/>
+<area shape="rect" id="node22" title=" " alt="" coords="1626,109,1699,136"/>
+<area shape="rect" id="node23" href="$aalc-rpu_2src_2platform_2plat__sensor__table_8h.html" title=" " alt="" coords="467,109,602,136"/>
+<area shape="rect" id="node26" href="$plat__modbus_8h.html" title=" " alt="" coords="275,184,381,211"/>
+<area shape="rect" id="node27" href="$modbus__server_8h.html" title=" " alt="" coords="1723,109,1845,136"/>
+<area shape="rect" id="node28" href="$aalc-rpu_2src_2platform_2plat__hwmon_8h.html" title=" " alt="" coords="1869,109,1971,136"/>
+<area shape="rect" id="node29" href="$adm1272_8h.html" title=" " alt="" coords="43,497,128,524"/>
+<area shape="rect" id="node30" href="$aalc-rpu_2src_2platform_2plat__log_8h.html" title=" " alt="" coords="365,109,443,136"/>
+<area shape="rect" id="node31" href="$aalc-rpu_2src_2platform_2plat__hook_8h.html" title=" " alt="" coords="1136,109,1224,136"/>
+<area shape="rect" id="node44" href="$plat__pwm_8h.html" title=" " alt="" coords="1996,109,2084,136"/>
+<area shape="rect" id="node45" href="$plat__status_8h.html" title=" " alt="" coords="1248,109,1344,136"/>
+<area shape="rect" id="node48" href="$aalc-rpu_2src_2platform_2plat__isr_8h.html" title=" " alt="" coords="2108,109,2183,136"/>
+<area shape="rect" id="node49" href="$aalc-rpu_2src_2platform_2plat__fru_8h.html" title=" " alt="" coords="2207,109,2281,136"/>
+<area shape="rect" id="node50" href="$plat__fsc_8h.html" title=" " alt="" coords="149,423,227,449"/>
+<area shape="rect" id="node6" href="$hal__i2c_8h.html" title=" " alt="" coords="1411,572,1485,599"/>
+<area shape="rect" id="node7" title=" " alt="" coords="1477,647,1569,673"/>
+<area shape="rect" id="node8" title=" " alt="" coords="1294,647,1453,673"/>
+<area shape="rect" id="node10" title=" " alt="" coords="596,497,671,524"/>
+<area shape="rect" id="node11" title=" " alt="" coords="899,348,965,375"/>
+<area shape="rect" id="node12" title=" " alt="" coords="822,497,901,524"/>
+<area shape="rect" id="node13" href="$sdr_8h.html" title=" " alt="" coords="659,423,709,449"/>
+<area shape="rect" id="node14" href="$pldm__monitor_8h.html" title=" " alt="" coords="1041,348,1151,375"/>
+<area shape="rect" id="node18" href="$libutil_8h.html" title=" " alt="" coords="1183,497,1246,524"/>
+<area shape="rect" id="node19" href="$sensor__shell_8h.html" title=" " alt="" coords="718,348,823,375"/>
+<area shape="rect" id="node15" href="$pldm_8h.html" title=" " alt="" coords="1066,423,1126,449"/>
+<area shape="rect" id="node17" href="$pdr_8h.html" title=" " alt="" coords="913,423,964,449"/>
+<area shape="rect" id="node16" href="$ipmb_8h.html" title=" " alt="" coords="1185,572,1245,599"/>
+<area shape="rect" id="node20" title=" " alt="" coords="733,423,824,449"/>
+<area shape="rect" id="node24" href="$pmbus_8h.html" title=" " alt="" coords="507,184,578,211"/>
+<area shape="rect" id="node25" title=" " alt="" coords="457,259,581,300"/>
+<area shape="rect" id="node32" href="$common__i2c__mux_8h.html" title=" " alt="" coords="954,184,1091,211"/>
+<area shape="rect" id="node33" href="$i2c-mux-pca954x_8h.html" title=" " alt="" coords="1115,184,1245,211"/>
+<area shape="rect" id="node34" href="$ina238_8h.html" title=" " alt="" coords="705,184,775,211"/>
+<area shape="rect" id="node35" href="$nct7363_8h.html" title=" " alt="" coords="851,184,930,211"/>
+<area shape="rect" id="node36" href="$nct214_8h.html" title=" " alt="" coords="1269,184,1339,211"/>
+<area shape="rect" id="node37" href="$ads112c_8h.html" title=" " alt="" coords="1363,184,1445,211"/>
+<area shape="rect" id="node38" href="$tmp461_8h.html" title=" " alt="" coords="1469,184,1544,211"/>
+<area shape="rect" id="node39" href="$hdc1080_8h.html" title=" " alt="" coords="1569,184,1650,211"/>
+<area shape="rect" id="node40" href="$ast__tach_8h.html" title=" " alt="" coords="1675,184,1757,211"/>
+<area shape="rect" id="node41" href="$xdp710_8h.html" title=" " alt="" coords="605,266,678,293"/>
+<area shape="rect" id="node42" href="$e50sn12051_8h.html" title=" " alt="" coords="1782,184,1885,211"/>
+<area shape="rect" id="node43" href="$bmr4922302__803_8h.html" title=" " alt="" coords="1909,184,2040,211"/>
+<area shape="rect" id="node46" href="$aalc-rpu_2src_2platform_2plat__util_8h.html" title=" " alt="" coords="2253,184,2331,211"/>
+<area shape="rect" id="node47" href="$plat__threshold_8h.html" title=" " alt="" coords="2115,184,2229,211"/>
+</map>
