@@ -36,6 +36,29 @@ typedef struct _add_vr_sel_info {
 	struct k_work_delayable add_sel_work;
 } add_vr_sel_info;
 
+typedef struct _vr_fault_info {
+	uint8_t vr_source;
+	uint8_t cpld_reg_data_idx;
+	uint8_t cpld_reg_bit;
+	bool is_pmbus_vr;
+	uint8_t vr_i2c_bus;
+	uint8_t vr_addr;
+	uint8_t vr_page;
+} vr_fault_info;
+
+typedef struct _cpld_reg_info {
+	uint8_t cpld_reg_i2c_bus;
+	uint8_t cpld_reg_addr;
+	uint8_t cpld_reg_offset;
+} cpld_reg_info;
+
+enum cpld_reg_info_idx {
+	CPLD_REG_INFO_IDX_0 = 0,
+	CPLD_REG_INFO_IDX_1,
+	CPLD_REG_INFO_IDX_2,
+	CPLD_REG_INFO_IDX_MAX
+};
+
 typedef struct _add_sel_info {
 	bool is_init;
 	uint8_t gpio_num;
@@ -62,18 +85,14 @@ void ISR_MB_THROTTLE();
 void ISR_SOC_THMALTRIP();
 void ISR_SYS_THROTTLE();
 void ISR_HSC_OC();
-void ISR_PVDDCR_CPU1_OCP();
-void ISR_PVDDCR_CPU0_OCP();
-void ISR_PVDD11_S3_PMALERT();
-void ISR_PVDDCR_CPU0_PMALERT();
-void ISR_PVDDCR_CPU1_PMALERT();
+void ISR_VR_PWR_FAULT();
 void ISR_UV_DETECT();
 void IST_PLTRST();
 void ISR_APML_ALERT();
 void ISR_CPU_SMERR_BIC();
 
 void init_vr_event_work();
-void process_vr_pmalert_ocp_sel(struct k_work *work_item);
+void process_vr_power_fault_sel(struct k_work *work_item);
 void init_event_work();
 void addsel_work_handler(struct k_work *work_item);
 void init_throttle_work_q();
