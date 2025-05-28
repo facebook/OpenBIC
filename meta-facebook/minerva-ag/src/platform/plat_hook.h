@@ -21,6 +21,7 @@
 
 #define VR_MAX_NUM 11
 #define VR_MUTEX_LOCK_TIMEOUT_MS 1000
+#define POWER_HISTORY_SIZE 10
 
 #include "plat_pldm_sensor.h"
 
@@ -133,6 +134,32 @@ enum PLAT_STRAP_INDEX_E {
 	STRAP_INDEX_MAX,
 };
 
+enum UBC_VR_RAIL_E {
+	UBC_VR_RAIL_E_UBC1,
+	UBC_VR_RAIL_E_UBC2,
+	UBC_VR_RAIL_E_P3V3,
+	UBC_VR_RAIL_E_P0V85_PVDD,
+	UBC_VR_RAIL_E_P0V75_PVDD_CH_N,
+	UBC_VR_RAIL_E_P0V75_MAX_PHY_N,
+	UBC_VR_RAIL_E_P0V75_PVDD_CH_S,
+	UBC_VR_RAIL_E_P0V75_MAX_PHY_S,
+	UBC_VR_RAIL_E_P0V75_TRVDD_ZONEA,
+	UBC_VR_RAIL_E_P1V8_VPP_HBM0_HBM2_HBM4,
+	UBC_VR_RAIL_E_P0V75_TRVDD_ZONEB,
+	UBC_VR_RAIL_E_P0V4_VDDQL_HBM0_HBM2_HBM4,
+	UBC_VR_RAIL_E_P1V1_VDDC_HBM0_HBM2_HBM4,
+	UBC_VR_RAIL_E_P0V75_VDDPHY_HBM0_HBM2_HBM4,
+	UBC_VR_RAIL_E_P0V9_TRVDD_ZONEA,
+	UBC_VR_RAIL_E_P1V8_VPP_HBM1_HBM3_HBM5,
+	UBC_VR_RAIL_E_P0V9_TRVDD_ZONEB,
+	UBC_VR_RAIL_E_P0V4_VDDQL_HBM1_HBM3_HBM5,
+	UBC_VR_RAIL_E_P1V1_VDDC_HBM1_HBM3_HBM5,
+	UBC_VR_RAIL_E_P0V75_VDDPHY_HBM1_HBM3_HBM5,
+	UBC_VR_RAIL_E_P0V8_VDDA_PCIE,
+	UBC_VR_RAIL_E_P1V2_VDDHTX_PCIE,
+	UBC_VR_RAIL_E_MAX,
+};
+
 typedef struct vr_vout_range_user_settings_struct {
 	uint16_t default_vout_max[STRAP_INDEX_MAX];
 	uint16_t default_vout_min[STRAP_INDEX_MAX];
@@ -229,6 +256,13 @@ typedef struct bootstrap_mapping_register {
 	bool reverse;
 } bootstrap_mapping_register;
 
+typedef struct ubc_vr_power_mapping_sensor {
+	uint8_t index;
+	uint8_t sensor_id;
+	uint8_t *sensor_name;
+	uint32_t power_history[POWER_HISTORY_SIZE];
+} ubc_vr_power_mapping_sensor;
+
 bool plat_get_vout_range(uint8_t rail, uint16_t *vout_max_millivolt, uint16_t *vout_min_millivolt);
 bool plat_set_vout_range_min(uint8_t rail, uint16_t *millivolt);
 bool plat_set_vout_range_max(uint8_t rail, uint16_t *millivolt);
@@ -283,5 +317,8 @@ bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting
 					   bool is_default);
 bool get_bootstrap_change_drive_level(int rail, int *drive_level);
 void init_temp_limit(void);
+bool ubc_vr_rail_name_get(uint8_t rail, uint8_t **name);
+bool ubc_vr_rail_enum_get(uint8_t *name, uint8_t *num);
+bool get_average_power(uint8_t rail, uint16_t *milliwatt);
 
 #endif
