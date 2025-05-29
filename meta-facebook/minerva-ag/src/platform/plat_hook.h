@@ -319,6 +319,6 @@ bool get_bootstrap_change_drive_level(int rail, int *drive_level);
 void init_temp_limit(void);
 bool ubc_vr_rail_name_get(uint8_t rail, uint8_t **name);
 bool ubc_vr_rail_enum_get(uint8_t *name, uint8_t *num);
-bool get_average_power(uint8_t rail, uint16_t *milliwatt);
+bool get_average_power(uint8_t rail, uint32_t *milliwatt);
 
 #endif

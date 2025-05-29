@@ -50,7 +50,7 @@ static int cmd_power_get(const struct shell *shell, size_t argc, char **argv)
 				continue;
 			}
 
-			int16_t average_power = 0;
+			uint32_t average_power = 0;
 			if (!get_average_power(i, &average_power)) {
 				shell_print(shell, "Can't find average_power by rail index: %d", i);
 				continue;
@@ -73,7 +73,7 @@ static int cmd_power_get(const struct shell *shell, size_t argc, char **argv)
 			return 0;
 		}
 
-		int16_t average_power = 0;
+		uint32_t average_power = 0;
 		if (!get_average_power(rail, &average_power)) {
 			shell_print(shell, "Can't find average_power by rail index: %d", rail);
 			return -1;

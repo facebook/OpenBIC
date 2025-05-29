@@ -38,6 +38,7 @@
 #include "plat_class.h"
 #include "pmbus.h"
 #include "plat_i2c_target.h"
+#include "pldm_sensor.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -220,25 +221,40 @@ bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading)
 	}
 
 	/* set reading val to 0 if reading val is negative */
-	sensor_val tmp_reading;
 	if (reading != NULL) {
-		tmp_reading.integer = (int16_t)(*reading & 0xFFFF);
-		tmp_reading.fraction = (int16_t)((*reading >> 16) & 0xFFFF);
+		float resolution = 0, offset = 0;
+		int cache_reading = 0;
+		int8_t unit_modifier = 0;
+		uint8_t sensor_operational_state = PLDM_SENSOR_STATUSUNKOWN;
+		pldm_sensor_get_info_via_sensor_id(cfg->num, &resolution, &offset, &unit_modifier,
+						   &cache_reading, &sensor_operational_state);
+		if (resolution == 0)
+			LOG_ERR("resolution is 0");
 
-		/* sensor_value = 1000 times of true value */
-		int32_t sensor_value = tmp_reading.integer * 1000 + tmp_reading.fraction;
+		int16_t integer = *reading & 0xFFFF;
+		float fraction = (float)(*reading >> 16) / 1000.0;
 
-		if (sensor_value < 0) {
-			LOG_DBG("Original sensor reading: integer = %d, fraction = %d (combined value * 1000: %d)",
-				tmp_reading.integer, tmp_reading.fraction, sensor_value);
+		if (integer < 0 && fraction > 0)
+			fraction = -fraction;
+
+		float tmp_reading = (float)integer + fraction;
+
+		if (tmp_reading < 0) {
+			tmp_reading = 0;
 			*reading = 0;
+			LOG_DBG("Original sensor reading: integer = %d, fraction = %f", integer,
+				fraction);
 			LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
 		}
+
+		int decoded_reading =
+			(int)((tmp_reading * power(10, -1 * unit_modifier) - offset) / resolution);
 
 		/* record power history */
 		for (int i = 0; i < UBC_VR_RAIL_E_MAX; i++) {
 			if (cfg->num == ubc_vr_power_table[i].sensor_id) {
-				ubc_vr_power_table[i].power_history[power_index[i]] = *reading;
+				ubc_vr_power_table[i].power_history[power_index[i]] =
+					decoded_reading;
 				power_index[i] = (power_index[i] + 1) % POWER_HISTORY_SIZE;
 				if (power_count[i] < POWER_HISTORY_SIZE) {
 					power_count[i]++;
@@ -574,27 +590,42 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 	}
 
 	/* set reading val to 0 if reading val is negative */
-	sensor_val tmp_reading;
 	if (reading != NULL) {
-		tmp_reading.integer = (int16_t)(*reading & 0xFFFF);
-		tmp_reading.fraction = (int16_t)((*reading >> 16) & 0xFFFF);
+		float resolution = 0, offset = 0;
+		int cache_reading = 0;
+		int8_t unit_modifier = 0;
+		uint8_t sensor_operational_state = PLDM_SENSOR_STATUSUNKOWN;
+		pldm_sensor_get_info_via_sensor_id(cfg->num, &resolution, &offset, &unit_modifier,
+						   &cache_reading, &sensor_operational_state);
+		if (resolution == 0)
+			LOG_ERR("resolution is 0");
 
-		/* sensor_value = 1000 times of true value */
-		int32_t sensor_value = tmp_reading.integer * 1000 + tmp_reading.fraction;
+		int16_t integer = *reading & 0xFFFF;
+		float fraction = (float)(*reading >> 16) / 1000.0;
 
-		if (sensor_value < 0) {
-			LOG_DBG("Original sensor reading: integer = %d, fraction = %d (combined value * 1000: %d)",
-				tmp_reading.integer, tmp_reading.fraction, sensor_value);
+		if (integer < 0 && fraction > 0)
+			fraction = -fraction;
+
+		float tmp_reading = (float)integer + fraction;
+
+		if (tmp_reading < 0) {
+			tmp_reading = 0;
 			*reading = 0;
+			LOG_DBG("Original sensor reading: integer = %d, fraction = %f", integer,
+				fraction);
 			LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
 		}
+
+		int decoded_reading =
+			(int)((tmp_reading * power(10, -1 * unit_modifier) - offset) / resolution);
 
 		/* record power history */
 		for (int i = 0; i < UBC_VR_RAIL_E_MAX; i++) {
 			if ((get_board_type() == MINERVA_AEGIS_BD) && (i == 2))
 				continue; // skip osfp p3v3 on AEGIS BD
 			if (cfg->num == ubc_vr_power_table[i].sensor_id) {
-				ubc_vr_power_table[i].power_history[power_index[i]] = *reading;
+				ubc_vr_power_table[i].power_history[power_index[i]] =
+					decoded_reading;
 				power_index[i] = (power_index[i] + 1) % POWER_HISTORY_SIZE;
 				if (power_count[i] < POWER_HISTORY_SIZE) {
 					power_count[i]++;
@@ -606,21 +637,53 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 	return true;
 }
 
-bool get_average_power(uint8_t rail, uint16_t *milliwatt)
+bool get_average_power(uint8_t rail, uint32_t *milliwatt)
 {
 	CHECK_NULL_ARG_WITH_RETURN(milliwatt, false);
 
 	if (rail >= UBC_VR_RAIL_E_MAX || power_count[rail] == 0) {
-		milliwatt = 0;
+		*milliwatt = 0;
 		return false;
 	}
 
-	uint64_t sum = 0;
+	int sum = 0;
 	for (int i = 0; i < power_count[rail]; i++) {
 		sum += ubc_vr_power_table[rail].power_history[i];
 	}
 
-	*milliwatt = (uint16_t)(sum / power_count[rail]);
+	float avg_sensor_value = sum / (float)power_count[rail];
+	if (avg_sensor_value < 0) {
+		LOG_ERR("avg_sensor_value is negative: %f", avg_sensor_value);
+		*milliwatt = 0;
+		return false;
+	}
+
+	uint8_t sensor_id = ubc_vr_power_table[rail].sensor_id;
+	float resolution = 0, offset = 0;
+	int cache_reading = 0;
+	int8_t unit_modifier = 0;
+	uint8_t sensor_operational_state = PLDM_SENSOR_STATUSUNKOWN;
+	pldm_sensor_get_info_via_sensor_id(sensor_id, &resolution, &offset, &unit_modifier,
+					   &cache_reading, &sensor_operational_state);
+	if (resolution == 0) {
+		*milliwatt = 0;
+		LOG_ERR("resolution is 0");
+		return false;
+	}
+
+	float real_power = (avg_sensor_value * resolution + offset) / power(10, -unit_modifier);
+
+	int16_t integer_part = (int16_t)real_power;
+	int16_t fraction_part = (int16_t)((real_power - integer_part) * 1000.0);
+
+	if (integer_part < 0 && fraction_part > 0) {
+		fraction_part = -fraction_part;
+	}
+
+	*milliwatt = ((uint16_t)fraction_part << 16) | (uint16_t)integer_part;
+
+	LOG_DBG("real_power = %f, integer_part = %d, fraction_part = %d, milliwatt = 0x%x",
+		real_power, integer_part, fraction_part, *milliwatt);
 
 	return true;
 }

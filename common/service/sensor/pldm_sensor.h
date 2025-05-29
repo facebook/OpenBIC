@@ -63,5 +63,8 @@ int plat_pldm_sensor_get_sensor_count(int thread_id);
 int pldm_sensor_polling_pre_check(pldm_sensor_info *pldm_snr_list, int sensor_num);
 int pldm_polling_sensor_reading(pldm_sensor_info *pldm_snr_list, int pldm_sensor_count,
 				int thread_id, int sensor_num);
+int pldm_sensor_get_info_via_sensor_id(uint16_t sensor_id, float *resolution, float *offset,
+				       int8_t *unit_modifier, int *cache,
+				       uint8_t *sensor_operational_state);
 
 #endif
