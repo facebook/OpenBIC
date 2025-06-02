@@ -43,7 +43,7 @@ void start_monitor_pmic_error_thread();
 void monitor_pmic_error_via_i3c_handler();
 void monitor_pmic_error_via_me_handler();
 int get_dimm_info(uint8_t dimm_id, uint8_t *bus, uint8_t *addr);
-int compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data, uint8_t pmic_err_data_len,
+int compare_pmic_error(uint8_t dimm_id, const uint8_t *pmic_err_data, uint8_t pmic_err_data_len,
 		       uint8_t read_path);
 void add_pmic_error_sel(uint8_t dimm_id, uint8_t error_type);
 int get_pmic_fault_status();

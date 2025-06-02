@@ -50,7 +50,7 @@ static const uint8_t pmic_err_pattern[MAX_COUNT_PMIC_ERROR_TYPE][MAX_COUNT_PMIC_
 	{ 0x02, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00 }, // SWBOUT_OV
 	{ 0x02, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00 }, // SWCOUT_OV
 	{ 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 }, // SWDOUT_OV
-	{ 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, // VIN_BULK_OV
+	{ 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00 }, // VIN_BULK_OV
 	{ 0x00, 0x00, 0x02, 0x00, 0x02, 0x00, 0x00 }, // VIN_MGMT_OV
 	{ 0x02, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00 }, // SWAOUT_UV
 	{ 0x02, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00 }, // SWBOUT_UV
@@ -168,7 +168,7 @@ void monitor_pmic_error_via_me_handler()
 	bool is_mps_unlock_region[MAX_COUNT_DIMM] = { false, false, false, false, false, false };
 	uint8_t cache_data[MAX_COUNT_PMIC_ERROR_OFFSET] = { 0 };
 	int cache_data_len = 0;
-	uint8_t mps_pmic_vender[2] = { 0x0B, 0x2A };
+	const uint8_t mps_pmic_vender[2] = { 0x0B, 0x2A };
 
 	// initialize PMIC error flag array
 	memset(is_pmic_error_flag, false, sizeof(is_pmic_error_flag));
@@ -264,7 +264,7 @@ void monitor_pmic_error_via_me_handler()
 	}
 }
 
-int compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data, uint8_t pmic_err_data_len,
+int compare_pmic_error(uint8_t dimm_id, const uint8_t *pmic_err_data, uint8_t pmic_err_data_len,
 		       uint8_t read_path)
 {
 	uint8_t err_index = 0, reg_index = 0, data_index = 0;
