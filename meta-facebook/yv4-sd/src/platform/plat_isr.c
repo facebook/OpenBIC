@@ -54,38 +54,7 @@ uint8_t hw_event_register[13] = { 0 };
 add_vr_sel_info vr_event_work_item[] = {
 	{
 		.is_init = false,
-		.gpio_num = PVDDCR_CPU0_OCP_N,
-		.vr_addr = ADDR_VR_CPU0,
-		.page_cnt = 2,
-		.is_asserted = 0,
-	},
-	{
-		.is_init = false,
-		.gpio_num = PVDDCR_CPU1_OCP_N,
-		.vr_addr = ADDR_VR_CPU1,
-		.page_cnt = 2,
-		.is_asserted = 0,
-	},
-	{
-		.is_init = false,
-		.gpio_num = PVDDCR_CPU0_PMALERT_N,
-		.vr_addr = ADDR_VR_CPU0,
-		.page_cnt = 2,
-		.is_asserted = 0,
-	},
-	{
-		.is_init = false,
-		.gpio_num = PVDDCR_CPU1_PMALERT_N,
-		.vr_addr = ADDR_VR_CPU1,
-		.page_cnt = 2,
-		.is_asserted = 0,
-	},
-	{
-		.is_init = false,
-		.gpio_num = PVDD11_S3_PMALERT_N,
-		.vr_addr = ADDR_VR_PVDD11,
-		.page_cnt = 1,
-		.is_asserted = 0,
+		.gpio_num = FM_SOL_UART_CH_SEL_R,
 	},
 };
 
@@ -582,241 +551,206 @@ void init_vr_event_work()
 	for (int index = 0; index < ARRAY_SIZE(vr_event_work_item); ++index) {
 		if (vr_event_work_item[index].is_init != true) {
 			k_work_init_delayable(&vr_event_work_item[index].add_sel_work,
-					      process_vr_pmalert_ocp_sel);
+					      process_vr_power_fault_sel);
 
 			vr_event_work_item[index].is_init = true;
 		}
 	}
 }
 
-void process_vr_pmalert_ocp_sel(struct k_work *work_item)
-{
-	int ret = -1;
-	uint8_t retry = 5;
+const vr_fault_info vr_fault_table[] = {
+	// { vr_source, cpld_reg_data_idx, cpld_reg_bit, is_pmbus_vr, vr_i2c_bus, vr_addr, vr_page }
+	{ P1V5_RETIMER_1, CPLD_REG_INFO_IDX_0, BIT(2), false, 0, 0, 0 },
+	{ P0V9_STBY_1, CPLD_REG_INFO_IDX_0, BIT(0), false, 0, 0, 0 },
+	{ PVDD11_S3, CPLD_REG_INFO_IDX_1, BIT(4), true, I2C_BUS4, ADDR_VR_PVDD11, 0 },
+	{ PVDDIO, CPLD_REG_INFO_IDX_1, BIT(3), true, I2C_BUS4, ADDR_VR_PVDDIO, 1 },
+	{ PVDDCR_SOC, CPLD_REG_INFO_IDX_1, BIT(2), true, I2C_BUS4, ADDR_VR_SOC, 1 },
+	{ PVDDCR_CPU0, CPLD_REG_INFO_IDX_1, BIT(1), true, I2C_BUS4, ADDR_VR_CPU0, 0 },
+	{ PVDDCR_CPU1, CPLD_REG_INFO_IDX_1, BIT(0), true, I2C_BUS4, ADDR_VR_CPU1, 0 },
+	{ P3V3_E1S_0, CPLD_REG_INFO_IDX_2, BIT(3), false, 0, 0, 0 },
+	{ P3V3_E1S_1, CPLD_REG_INFO_IDX_2, BIT(2), false, 0, 0, 0 },
+	{ P12V_E1S_0, CPLD_REG_INFO_IDX_2, BIT(1), false, 0, 0, 0 },
+	{ P12V_E1S_1, CPLD_REG_INFO_IDX_2, BIT(0), false, 0, 0, 0 },
+};
+const cpld_reg_info cpld_reg_table[CPLD_REG_INFO_IDX_MAX] = {
+	// { cpld_reg_i2c_bus, cpld_reg_addr, cpld_reg_offset }
+	{ CPLD_IO_I2C_BUS, CPLD_IO_I2C_ADDR, 0x13 }, // CPLD_REG_INFO_IDX_0
+	{ CPLD_IO_I2C_BUS, CPLD_IO_I2C_ADDR, 0x14 }, // CPLD_REG_INFO_IDX_1
+	{ CPLD_IO_I2C_BUS, CPLD_IO_I2C_ADDR, 0x15 }, // CPLD_REG_INFO_IDX_2
+};
+const uint8_t vr_reg_list[][9] = {
+	// MPS, RNS
+	{ PMBUS_STATUS_WORD, PMBUS_STATUS_BYTE, PMBUS_STATUS_VOUT, PMBUS_STATUS_IOUT,
+	  PMBUS_STATUS_INPUT, PMBUS_STATUS_TEMPERATURE, PMBUS_STATUS_CML,
+	  PMBUS_STATUS_MFR_SPECIFIC },
+	// TI
+	{ PMBUS_STATUS_WORD, PMBUS_STATUS_BYTE, PMBUS_STATUS_VOUT, PMBUS_STATUS_IOUT,
+	  PMBUS_STATUS_INPUT, PMBUS_STATUS_TEMPERATURE, PMBUS_STATUS_CML, PMBUS_STATUS_OTHER,
+	  PMBUS_STATUS_MFR_SPECIFIC },
+};
 
+void process_vr_power_fault_sel(struct k_work *work_item)
+{
 	struct k_work_delayable *dwork = k_work_delayable_from_work(work_item);
 	add_vr_sel_info *work_info = CONTAINER_OF(dwork, add_vr_sel_info, add_sel_work);
+	LOG_INF("[%s] Handle GPIO(%d) interrupt", __func__, work_info->gpio_num);
 
-	I2C_MSG msg = { 0 };
-	msg.bus = I2C_BUS4;
-	msg.target_addr = work_info->vr_addr;
+	uint8_t cpld_reg_data[CPLD_REG_INFO_IDX_MAX] = { 0 };
+	uint8_t retry = 5;
 
-	const uint8_t registers_to_read[] = { PMBUS_STATUS_BYTE,	PMBUS_STATUS_VOUT,
-					      PMBUS_STATUS_IOUT,	PMBUS_STATUS_INPUT,
-					      PMBUS_STATUS_TEMPERATURE, PMBUS_STATUS_CML };
-	const size_t num_registers = sizeof(registers_to_read) / sizeof(registers_to_read[0]);
-	size_t status_array_size = num_registers;
-	uint8_t vr_dev = sensor_dev_mp2856gut;
-
-	plat_pldm_sensor_get_vr_dev(&vr_dev);
-	switch (vr_dev) {
-	case sensor_dev_mp2856gut: // main-source: MPS
-		status_array_size = num_registers;
-		break;
-	case sensor_dev_raa229621: // 2nd-source: RNS
-		status_array_size = num_registers + 1;
-		break;
-	case sensor_dev_tps53689: // 3rd-source: TI
-		status_array_size = num_registers + 2;
-		break;
-	default: // other-source: MPS (Default)
-		vr_dev = sensor_dev_mp2856gut;
-		status_array_size = num_registers;
-		break;
-	}
-	uint8_t status_info[status_array_size];
-
-	for (int page = 0; page < work_info->page_cnt; ++page) {
-		disable_sensor_poll();
-		// wait 10ms for vr monitor stop
-		k_msleep(10);
-
-		/* set page for power rail */
-		msg.tx_len = 2;
-		msg.data[0] = PMBUS_PAGE;
-		msg.data[1] = page;
-		if (i2c_master_write(&msg, retry)) {
-			LOG_ERR("process_vr_pmalert_ocp_sel, set page fail");
-			continue;
-		}
-
-		/* read STATUS_WORD */
-		msg.tx_len = 1;
-		msg.rx_len = 2;
-		msg.data[0] = PMBUS_STATUS_WORD;
-		ret = i2c_master_read(&msg, retry);
-		if (ret != 0) {
-			LOG_ERR("Get vr status word fail, bus: 0x%x, addr: 0x%x", msg.bus,
-				msg.target_addr);
-			continue;
-		}
-
-		uint8_t status_word_lsb = msg.data[0];
-		uint8_t status_word_msb = msg.data[1];
-
-		LOG_WRN("STATUS_WORD MSB: 0x%x, LSB: 0x%x", status_word_msb, status_word_lsb);
-		if ((status_word_lsb & VR_FAULT_STATUS_LSB_MASK) == 0) {
-			if ((status_word_msb & VR_FAULT_STATUS_MSB_MASK) == 0) {
-				continue;
-			} else if ((status_word_msb & VR_FAULT_STATUS_MSB_MASK) ==
-				   VR_IOUT_FAULT_MASK) {
-				/* 1. check if trigger reason is IOUT fault */
-				/* 2. IOUT fault, check if OC Warning is set */
-				msg.tx_len = 1;
-				msg.rx_len = 1;
-				msg.data[0] = PMBUS_STATUS_IOUT;
-				ret = i2c_master_read(&msg, retry);
-				if (ret != 0) {
-					LOG_ERR("Get vr status iout fail, bus: 0x%x, addr: 0x%x",
-						msg.bus, msg.target_addr);
-					continue;
-				}
-				if (msg.data[0] == VR_TPS_OCW_MASK) {
-					/* only OC Warn is triggered, skip to prevent false event */
-					continue;
-				}
-			}
-		}
-
-		/* read other STATUS registers */
+	// collect CPLD power fault register data
+	for (int i = 0; i < CPLD_REG_INFO_IDX_MAX; i++) {
+		I2C_MSG msg = { 0 };
+		msg.bus = cpld_reg_table[i].cpld_reg_i2c_bus;
+		msg.target_addr = cpld_reg_table[i].cpld_reg_addr;
 		msg.tx_len = 1;
 		msg.rx_len = 1;
-		for (size_t reg_i = 0; reg_i < num_registers; ++reg_i) {
-			msg.data[0] = registers_to_read[reg_i];
-			ret = i2c_master_read(&msg, retry);
-			if (ret != 0) {
-				LOG_ERR("Get vr status fail, pmbus_reg: 0x%x, bus: 0x%x, addr: 0x%x",
-					registers_to_read[reg_i], msg.bus, msg.target_addr);
-				continue;
-			}
-			status_info[reg_i] = msg.data[0];
-			LOG_WRN("STATUS reg: 0x%x, info: 0x%x", registers_to_read[reg_i],
-				status_info[reg_i]);
+		msg.data[0] = cpld_reg_table[i].cpld_reg_offset;
+		if (i2c_master_read(&msg, retry)) {
+			LOG_ERR("[%s] Failed to get cpld reg, bus: 0x%x, addr: 0x%x, reg: 0x%x",
+				__func__, msg.bus, msg.target_addr,
+				cpld_reg_table[i].cpld_reg_offset);
+			cpld_reg_data[i] = 0x00;
+			continue;
 		}
-		if (vr_dev == sensor_dev_tps53689) { // 3rd-source: TI
-			msg.data[0] = PMBUS_STATUS_OTHER;
-			ret = i2c_master_read(&msg, retry);
-			if (ret != 0) {
-				LOG_ERR("Get vr status_other fail, bus: 0x%x, addr: 0x%x", msg.bus,
-					msg.target_addr);
-				continue;
-			}
-			status_info[status_array_size - 2] = msg.data[0];
-			LOG_WRN("STATUS reg: 0x%x, info: 0x%x", PMBUS_STATUS_OTHER,
-				status_info[status_array_size - 2]);
+		cpld_reg_data[i] = msg.data[0];
+		LOG_INF("[%s] Get cpld reg. bus: 0x%x, addr: 0x%x, reg: 0x%x, data: 0x%x", __func__,
+			msg.bus, msg.target_addr, cpld_reg_table[i].cpld_reg_offset,
+			cpld_reg_data[i]);
+	}
+
+	// check VR power rail
+	for (int i = 0; i < sizeof(vr_fault_table) / sizeof(vr_fault_table[0]); i++) {
+		if (vr_fault_table[i].cpld_reg_data_idx >= CPLD_REG_INFO_IDX_MAX) {
+			LOG_ERR("[%s] Invalid CPLD reg data index: %d", __func__,
+				vr_fault_table[i].cpld_reg_data_idx);
+			continue;
 		}
-		if ((vr_dev == sensor_dev_raa229621) ||
-		    (vr_dev == sensor_dev_tps53689)) { // 2nd-source: RNS or 3rd-source: TI
-			msg.data[0] = PMBUS_STATUS_MFR_SPECIFIC;
-			ret = i2c_master_read(&msg, retry);
-			if (ret != 0) {
-				LOG_ERR("Get vr status_mfr_specific fail, bus: 0x%x, addr: 0x%x",
-					msg.bus, msg.target_addr);
-				continue;
-			}
-			status_info[status_array_size - 1] = msg.data[0];
-			LOG_WRN("STATUS reg: 0x%x, info: 0x%x", PMBUS_STATUS_MFR_SPECIFIC,
-				status_info[status_array_size - 1]);
+		bool is_power_fault = (cpld_reg_data[vr_fault_table[i].cpld_reg_data_idx] &
+				       vr_fault_table[i].cpld_reg_bit) ?
+					      true :
+					      false;
+		LOG_INF("[%s] Check VR fault, src: %d, data: 0x%x, bitmask: 0x%x, is_power_fault: %d",
+			__func__, vr_fault_table[i].vr_source,
+			cpld_reg_data[vr_fault_table[i].cpld_reg_data_idx],
+			vr_fault_table[i].cpld_reg_bit, is_power_fault);
+		if (is_power_fault == false) {
+			continue;
 		}
 
-		enable_sensor_poll();
+		if (vr_fault_table[i].is_pmbus_vr == false) {
+			// non-PMBus VR
+			struct pldm_addsel_data sel_msg = { 0 };
 
-		struct pldm_addsel_data sel_msg = { 0 };
-
-		switch (work_info->gpio_num) {
-		case PVDDCR_CPU0_OCP_N:
-			sel_msg.event_type = VR_FAULT;
-			sel_msg.event_data_1 = PVDDCR_CPU0 + page;
-			break;
-		case PVDDCR_CPU1_OCP_N:
-			sel_msg.event_type = VR_FAULT;
-			sel_msg.event_data_1 = PVDDCR_CPU1 + page;
-			break;
-		case PVDDCR_CPU0_PMALERT_N:
-			sel_msg.event_type = PMALERT_ASSERT;
-			sel_msg.event_data_1 = PVDDCR_CPU0 + page;
-			break;
-		case PVDDCR_CPU1_PMALERT_N:
-			sel_msg.event_type = PMALERT_ASSERT;
-			sel_msg.event_data_1 = PVDDCR_CPU1 + page;
-			break;
-		case PVDD11_S3_PMALERT_N:
-			sel_msg.event_type = PMALERT_ASSERT;
-			sel_msg.event_data_1 = PVDD11_S3;
-			break;
-		default:
-			break;
-		}
-
-		if (gpio_get(work_info->gpio_num) == GPIO_HIGH) {
-			if (work_info->is_asserted & BIT(page)) {
-				sel_msg.assert_type = EVENT_DEASSERTED;
-				work_info->is_asserted &= ~BIT(page);
-			} else {
-				/* It's not asserted in previous status */
-				LOG_WRN("It's not asserted in previous status");
-				continue;
-			}
-		} else {
 			sel_msg.assert_type = EVENT_ASSERTED;
-
-			work_info->is_asserted |= BIT(page);
-		}
-
-		sel_msg.event_data_2 = status_word_msb;
-		sel_msg.event_data_3 = status_word_lsb;
-
-		if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
-			LOG_ERR("Failed to assert VR event log.");
-		}
-
-		for (size_t msg_i = 0; msg_i < status_array_size; ++msg_i) {
-			if ((vr_dev == sensor_dev_tps53689) && (msg_i == status_array_size - 2)) {
-				sel_msg.event_data_2 = PMBUS_STATUS_OTHER;
-			} else if (((vr_dev == sensor_dev_raa229621) ||
-				    (vr_dev == sensor_dev_tps53689)) &&
-				   (msg_i == status_array_size - 1)) {
-				sel_msg.event_data_2 = PMBUS_STATUS_MFR_SPECIFIC;
-			} else {
-				sel_msg.event_data_2 = registers_to_read[msg_i];
-			}
-			sel_msg.event_data_3 = status_info[msg_i];
+			sel_msg.event_type = VR_FAULT;
+			sel_msg.event_data_1 = vr_fault_table[i].vr_source;
 
 			if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
-				LOG_ERR("Failed to assert VR event log.");
+				LOG_ERR("[%s] Failed to send VR FAULT assert SEL, event data: 0x%x 0x%x 0x%x",
+					__func__, sel_msg.event_data_1, sel_msg.event_data_2,
+					sel_msg.event_data_3);
+			} else {
+				LOG_INF("[%s] Send VR FAULT assert SEL, event data: 0x%x 0x%x 0x%x",
+					__func__, sel_msg.event_data_1, sel_msg.event_data_2,
+					sel_msg.event_data_3);
+			}
+		} else {
+			// PMBus VR
+			I2C_MSG msg = { 0 };
+			msg.bus = vr_fault_table[i].vr_i2c_bus;
+			msg.target_addr = vr_fault_table[i].vr_addr;
+
+			uint8_t vr_reg_list_idx = 0;
+			uint8_t vr_reg_list_len = 0;
+			uint8_t vr_dev = sensor_dev_mp2856gut;
+
+			plat_pldm_sensor_get_vr_dev(&vr_dev);
+			switch (vr_dev) {
+			case sensor_dev_mp2856gut: // main-source: MPS
+			case sensor_dev_raa229621: // 2nd-source: RNS
+				vr_reg_list_idx = 0;
+				vr_reg_list_len = 8;
+				break;
+			case sensor_dev_tps53689: // 3rd-source: TI
+				vr_reg_list_idx = 1;
+				vr_reg_list_len = 9;
+				break;
+			default: // other-source: MPS (Default)
+				vr_reg_list_idx = 0;
+				vr_reg_list_len = 8;
+				break;
+			}
+
+			disable_sensor_poll();
+			// wait 10ms for vr monitor stop
+			k_msleep(10);
+
+			// set page for power rail
+			msg.tx_len = 2;
+			msg.data[0] = PMBUS_PAGE;
+			msg.data[1] = vr_fault_table[i].vr_page;
+			if (i2c_master_write(&msg, retry)) {
+				LOG_ERR("[%s] Failed to set VR page, bus: %d, addr: 0x%x, page: 0x%x",
+					__func__, vr_fault_table[i].vr_i2c_bus,
+					vr_fault_table[i].vr_addr, vr_fault_table[i].vr_page);
+				enable_sensor_poll();
+				continue;
+			}
+
+			// collect status data
+			struct pldm_addsel_data sel_msg[vr_reg_list_len];
+			memset(sel_msg, 0, sizeof(sel_msg));
+			uint8_t sel_msg_idx = 0;
+			for (int j = 0; j < vr_reg_list_len; j++) {
+				msg.tx_len = 1;
+				msg.rx_len = 1;
+				msg.data[0] = vr_reg_list[vr_reg_list_idx][j];
+				if (vr_reg_list[vr_reg_list_idx][j] == PMBUS_STATUS_WORD) {
+					msg.rx_len = 2;
+				}
+				if (i2c_master_read(&msg, retry)) {
+					LOG_ERR("[%s] Failed to get vr reg, bus: %d, addr: 0x%x, reg: 0x%x",
+						__func__, msg.bus, msg.target_addr,
+						vr_reg_list[vr_reg_list_idx][j]);
+					continue;
+				}
+
+				sel_msg[sel_msg_idx].assert_type = EVENT_ASSERTED;
+				sel_msg[sel_msg_idx].event_type = VR_FAULT;
+				sel_msg[sel_msg_idx].event_data_1 = vr_fault_table[i].vr_source;
+				sel_msg[sel_msg_idx].event_data_2 =
+					(vr_reg_list[vr_reg_list_idx][j] == PMBUS_STATUS_WORD) ?
+						msg.data[1] :
+						vr_reg_list[vr_reg_list_idx][j];
+				sel_msg[sel_msg_idx].event_data_3 = msg.data[0];
+
+				sel_msg_idx += 1;
+			}
+			enable_sensor_poll();
+
+			// Send SEL to BMC
+			for (int j = 0; j < sel_msg_idx; j++) {
+				if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg[j])) {
+					LOG_ERR("[%s] Failed to send VR FAULT assert SEL, event data: 0x%x 0x%x 0x%x",
+						__func__, sel_msg[j].event_data_1,
+						sel_msg[j].event_data_2, sel_msg[j].event_data_3);
+				} else {
+					LOG_INF("[%s] Send VR FAULT assert SEL, event data: 0x%x 0x%x 0x%x",
+						__func__, sel_msg[j].event_data_1,
+						sel_msg[j].event_data_2, sel_msg[j].event_data_3);
+				}
 			}
 		}
 	}
-	// make sure enable polling
-	enable_sensor_poll();
 }
 
-void ISR_PVDDCR_CPU0_OCP()
+void ISR_VR_PWR_FAULT()
 {
 	if (get_DC_status() == true) {
-		LOG_ERR("PVDDCR CPU0 OCP event triggered");
+		LOG_ERR("VR power fault event triggered");
 		hw_event_register[7]++;
 		k_work_schedule_for_queue(&plat_work_q, &vr_event_work_item[0].add_sel_work,
-					  K_MSEC(VR_EVENT_DELAY_MS));
-	}
-}
-
-void ISR_PVDDCR_CPU1_OCP()
-{
-	if (get_DC_status() == true) {
-		LOG_ERR("PVDDCR CPU1 OCP event triggered");
-		hw_event_register[6]++;
-		k_work_schedule_for_queue(&plat_work_q, &vr_event_work_item[1].add_sel_work,
-					  K_MSEC(VR_EVENT_DELAY_MS));
-	}
-}
-
-void ISR_PVDD11_S3_PMALERT()
-{
-	if (get_DC_status() == true) {
-		LOG_ERR("PVDD11 S3 PMALERT event triggered");
-		hw_event_register[8]++;
-		k_work_schedule_for_queue(&plat_work_q, &vr_event_work_item[4].add_sel_work,
 					  K_MSEC(VR_EVENT_DELAY_MS));
 	}
 }
@@ -932,24 +866,6 @@ void ISR_APML_ALERT()
 	hw_event_register[11]++;
 	LOG_INF("APML_ALERT detected");
 	k_work_schedule_for_queue(&plat_work_q, &APML_ALERT_work, K_NO_WAIT);
-}
-
-void ISR_PVDDCR_CPU0_PMALERT()
-{
-	if (get_DC_status() == true) {
-		LOG_ERR("PVDDCR CPU0 PMALERT event triggered");
-		k_work_schedule_for_queue(&plat_work_q, &vr_event_work_item[2].add_sel_work,
-					  K_MSEC(VR_EVENT_DELAY_MS));
-	}
-}
-
-void ISR_PVDDCR_CPU1_PMALERT()
-{
-	if (get_DC_status() == true) {
-		LOG_ERR("PVDDCR CPU1 PMALERT event triggered");
-		k_work_schedule_for_queue(&plat_work_q, &vr_event_work_item[3].add_sel_work,
-					  K_MSEC(VR_EVENT_DELAY_MS));
-	}
 }
 
 void ISR_CPU_SMERR_BIC()
