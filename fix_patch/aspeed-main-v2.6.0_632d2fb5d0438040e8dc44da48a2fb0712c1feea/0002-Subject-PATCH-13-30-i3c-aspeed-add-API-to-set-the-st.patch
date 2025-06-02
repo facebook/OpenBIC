@@ -1,0 +1,71 @@
+From ed6609bb7a9d3b28c271852088ab0c9cb4456446 Mon Sep 17 00:00:00 2001
+From: Zane Li <zane.li.wiwynn@gmail.com>
+Date: Wed, 5 Mar 2025 09:00:37 +0800
+Subject: [PATCH] Subject: [PATCH 13/30] i3c: aspeed: add API to set the static
+ address in slave  mode
+
+When the I3C controller runs in slave mode, it is necessary for the
+slave application to set the new static address according to different
+user scenario in run time.  For example, there are two AST1030 BIC
+boards with the same firmware attached on the same bus, it is needed to
+set different static addresses for these two BIC boards to avoid address
+confliction.  The firmware developer can refer to the sample code below
+to set the new address:
+
+```
+&i3c1 {
+	...
+	// the static address of i3c1 was 0x9
+	i3c1_smq:i3c-slave-mqueue@9 {
+		...
+		reg = <0x9>;
+	};
+};
+
+const struct device *slave_controller;
+uint8_t new_addr = 0x10
+
+slave_controller =
+device_get_binding(DT_BUS_LABEL(DT_NODELABEL(i3c1_smq)));
+
+ret = i3c_slave_set_static_addr(slave_controller, new_addr);
+```
+
+then the static address of i3c1 will be updated to 0x10.
+
+Signed-off-by: Dylan Hung <dylan_hung@aspeedtech.com>
+Change-Id: Ibeb698f76a90a3c4bce3b0ae2d766b8f7603ea85
+---
+ include/drivers/i3c/i3c.h | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/include/drivers/i3c/i3c.h b/include/drivers/i3c/i3c.h
+index 19dc12dadff..7eb1c7af0af 100644
+--- a/include/drivers/i3c/i3c.h
++++ b/include/drivers/i3c/i3c.h
+@@ -167,6 +167,14 @@ int i3c_aspeed_master_enable_ibi(struct i3c_dev_desc *i3cdev);
+ int i3c_aspeed_master_send_entdaa(struct i3c_dev_desc *i3cdev);
+ int i3c_aspeed_slave_register(const struct device *dev, struct i3c_slave_setup *slave_data);
+ 
++/**
++ * @brief set the static address of the i3c controller in slave mode
++ * @param dev the I3C controller in slave mode
++ * @param static_addr the new static address
++ * @return 0 if the static address is set
++ */
++int i3c_aspeed_slave_set_static_addr(const struct device *dev, uint8_t static_addr);
++
+ /**
+  * @brief get the assigned dynamic address of the i3c controller
+  * @param dev the I3C controller in slave mode
+@@ -249,6 +257,7 @@ int i3c_master_send_getbcr(const struct device *master, uint8_t addr, uint8_t *b
+ #define i3c_master_enable_ibi		i3c_aspeed_master_enable_ibi
+ #define i3c_master_send_entdaa		i3c_aspeed_master_send_entdaa
+ #define i3c_slave_register		i3c_aspeed_slave_register
++#define i3c_slave_set_static_addr	i3c_aspeed_slave_set_static_addr
+ #define i3c_slave_send_sir		i3c_aspeed_slave_send_sir
+ #define i3c_slave_hj_req		i3c_aspeed_slave_hj_req
+ #define i3c_slave_put_read_data		i3c_aspeed_slave_put_read_data
+-- 
+2.25.1
+
