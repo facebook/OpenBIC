@@ -32,6 +32,7 @@
 #include "plat_pmic.h"
 #include "plat_apml.h"
 #include "util_worker.h"
+#include "plat_ipmi.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -62,12 +63,76 @@ static void PROC_FAIL_handler(struct k_work *work)
 	}
 }
 
+static void read_vr_status_handler(struct k_work *work)
+{
+	const uint8_t vr_sensor_list[] = { SENSOR_NUM_VOL_PVDDCR_CPU0_VR,
+					   SENSOR_NUM_VOL_PVDDCR_CPU1_VR,
+					   SENSOR_NUM_VOL_PVDD11_S3_VR,
+					   SENSOR_NUM_VOL_PVDDCR_SOC_VR, SENSOR_NUM_VOL_PVDDIO_VR };
+	const uint8_t registers_to_read[] = { PMBUS_STATUS_VOUT, PMBUS_STATUS_IOUT,
+					      PMBUS_STATUS_INPUT, PMBUS_STATUS_TEMPERATURE };
+
+	for (int i = 0; i < ARRAY_SIZE(vr_sensor_list); i++) {
+		sensor_cfg *vr_sensor_cfg;
+		vr_sensor_cfg = plat_get_sensor_cfg_via_sensor_num(vr_sensor_list[i]);
+		if (!vr_sensor_cfg) {
+			continue;
+		}
+
+		// set page
+		if (vr_sensor_cfg->pre_sensor_read_hook(
+			    vr_sensor_cfg, vr_sensor_cfg->pre_sensor_read_args) == false) {
+			continue;
+		}
+
+		// STATUS_WORD
+		uint8_t retry = 5;
+		I2C_MSG msg = { 0 };
+		msg.bus = vr_sensor_cfg->port;
+		msg.target_addr = vr_sensor_cfg->target_addr;
+		msg.tx_len = 1;
+		msg.rx_len = 2;
+		msg.data[0] = PMBUS_STATUS_WORD;
+		if (i2c_master_read(&msg, retry)) {
+			LOG_ERR("read STATUS_WORD fail 0x%x", vr_sensor_list[i]);
+			continue;
+		}
+
+		uint8_t status_word_lsb = msg.data[0];
+		uint8_t status_word_msb = msg.data[1];
+		if ((status_word_lsb & VR_FAULT_STATUS_LSB_MASK) == 0) {
+			//continue;
+		}
+
+		oem_addsel_msg_t sel_msg = { 0 };
+		sel_msg.InF_target = BMC_IPMB;
+		sel_msg.event_data[0] = SENSOR_NUM_VR_ALERT;
+		sel_msg.event_data[1] = i;
+		sel_msg.event_data[2] = status_word_lsb;
+		sel_msg.event_data[3] = status_word_msb;
+
+		for (uint8_t reg_num = 0; reg_num < ARRAY_SIZE(registers_to_read); reg_num++) {
+			msg.tx_len = 1;
+			msg.rx_len = 1;
+			msg.data[0] = registers_to_read[reg_num];
+			if (i2c_master_read(&msg, retry)) {
+				LOG_ERR("read reg fail 0x%x", registers_to_read[reg_num]);
+				continue;
+			}
+			sel_msg.event_data[4 + reg_num] = msg.data[0];
+		}
+		plat_add_oem_sel_evt_record(&sel_msg);
+	}
+}
+
 K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_delayed_status);
 K_WORK_DELAYABLE_DEFINE(PROC_FAIL_work, PROC_FAIL_handler);
 K_WORK_DELAYABLE_DEFINE(read_pmic_critical_work, read_pmic_error_when_dc_off);
+K_WORK_DELAYABLE_DEFINE(read_vr_status_work, read_vr_status_handler);
 #define DC_ON_5_SECOND 5
 #define PROC_FAIL_START_DELAY_SECOND 10
 #define READ_PMIC_CRITICAL_ERROR_MS 100
+#define READ_VR_STATUS_MS 200
 void ISR_DC_ON()
 {
 	set_DC_status(PWRGD_CPU_LVC3);
@@ -104,6 +169,7 @@ void ISR_DC_ON()
 			}
 		}
 		k_work_schedule(&read_pmic_critical_work, K_MSEC(READ_PMIC_CRITICAL_ERROR_MS));
+		k_work_schedule(&read_vr_status_work, K_MSEC(READ_VR_STATUS_MS));
 	}
 }
 

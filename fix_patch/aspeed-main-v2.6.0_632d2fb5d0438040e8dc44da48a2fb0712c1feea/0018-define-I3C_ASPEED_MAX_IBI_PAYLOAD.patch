@@ -1,0 +1,26 @@
+From f755500cff255c97fd52bec408f4342ca8670b77 Mon Sep 17 00:00:00 2001
+From: Zane Li <zane.li.wiwynn@gmail.com>
+Date: Thu, 6 Mar 2025 13:32:53 +0800
+Subject: [PATCH] define I3C_ASPEED_MAX_IBI_PAYLOAD
+
+---
+ drivers/i3c/Kconfig.aspeed | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/i3c/Kconfig.aspeed b/drivers/i3c/Kconfig.aspeed
+index a1eab5b0a6d..261cbad1d44 100644
+--- a/drivers/i3c/Kconfig.aspeed
++++ b/drivers/i3c/Kconfig.aspeed
+@@ -8,3 +8,9 @@ config I3C_ASPEED
+ 	depends on SOC_FAMILY_ASPEED
+ 	help
+ 	  This option enables the I3C master driver for ASPEED SoCs.
++
++if I3C_ASPEED
++config I3C_ASPEED_MAX_IBI_PAYLOAD
++	int "max IBI payload length including MDB"
++	default 256
++endif
+-- 
+2.25.1
+

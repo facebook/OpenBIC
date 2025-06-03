@@ -22,4 +22,11 @@ enum REQ_GET_CARD_TYPE {
 	GET_2OU_CARD_TYPE,
 };
 
+typedef struct oem_addsel_msg_t {
+	uint8_t InF_target;
+	uint8_t event_data[13];
+} oem_addsel_msg_t;
+
+bool plat_add_oem_sel_evt_record(oem_addsel_msg_t *sel_msg);
+
 #endif

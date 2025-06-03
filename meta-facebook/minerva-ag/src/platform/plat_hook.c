@@ -38,6 +38,7 @@
 #include "plat_class.h"
 #include "pmbus.h"
 #include "plat_i2c_target.h"
+#include "pldm_sensor.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -59,6 +60,65 @@ static bool uart_pwr_event_is_enable = true;
 int32_t alert_level_mA_default = 110000;
 int32_t alert_level_mA_user_setting = 110000;
 bool alert_level_is_assert = false;
+
+static uint8_t power_index[UBC_VR_RAIL_E_MAX] = { 0 };
+static uint8_t power_count[UBC_VR_RAIL_E_MAX] = { 0 };
+
+// clang-format off
+ubc_vr_power_mapping_sensor ubc_vr_power_table[] = {
+	{ UBC_VR_RAIL_E_UBC1, UBC1_P12V_PWR_W,"UBC1_P12V_PWR_W", {0} },
+	{ UBC_VR_RAIL_E_UBC2, UBC2_P12V_PWR_W,"UBC2_P12V_PWR_W", {0} },
+	{ UBC_VR_RAIL_E_P3V3, VR_P3V3_PWR_W, "VR_P3V3_PWR_W", {0} },
+	{ UBC_VR_RAIL_E_P0V85_PVDD, VR_ASIC_P0V85_PVDD_PWR_W,"VR_ASIC_P0V85_PVDD_PWR_W", {0} },
+	{ UBC_VR_RAIL_E_P0V75_PVDD_CH_N, VR_ASIC_P0V75_PVDD_CH_N_PWR_W,"VR_ASIC_P0V75_PVDD_CH_N_PWR_W", {0} },
+	{ UBC_VR_RAIL_E_P0V75_MAX_PHY_N, VR_ASIC_P0V75_MAX_PHY_N_PWR_W,"VR_ASIC_P0V75_MAX_PHY_N_PWR_W", {0} },
+	{ UBC_VR_RAIL_E_P0V75_PVDD_CH_S, VR_ASIC_P0V75_PVDD_CH_S_PWR_W, "VR_ASIC_P0V75_PVDD_CH_S_PWR_W", {0} },
+	{ UBC_VR_RAIL_E_P0V75_MAX_PHY_S, VR_ASIC_P0V75_MAX_PHY_S_PWR_W, "VR_ASIC_P0V75_MAX_PHY_S_PWR_W", {0} },
+	{ UBC_VR_RAIL_E_P0V75_TRVDD_ZONEA, VR_ASIC_P0V75_TRVDD_ZONEA_PWR_W, "VR_ASIC_P0V75_TRVDD_ZONEA_PWR_W", {0} },
+	{ UBC_VR_RAIL_E_P1V8_VPP_HBM0_HBM2_HBM4, VR_ASIC_P1V8_VPP_HBM0_HBM2_HBM4_PWR_W, "VR_ASIC_P1V8_VPP_HBM0_HBM2_HBM4_PWR_W", {0} },
+	{ UBC_VR_RAIL_E_P0V75_TRVDD_ZONEB, VR_ASIC_P0V75_TRVDD_ZONEB_PWR_W, "VR_ASIC_P0V75_TRVDD_ZONEB_PWR_W", {0} },
+	{ UBC_VR_RAIL_E_P0V4_VDDQL_HBM0_HBM2_HBM4, VR_ASIC_P0V4_VDDQL_HBM0_HBM2_HBM4_PWR_W, "VR_ASIC_P0V4_VDDQL_HBM0_HBM2_HBM4_PWR_W", {0} },
+	{ UBC_VR_RAIL_E_P1V1_VDDC_HBM0_HBM2_HBM4, VR_ASIC_P1V1_VDDC_HBM0_HBM2_HBM4_PWR_W, "VR_ASIC_P1V1_VDDC_HBM0_HBM2_HBM4_PWR_W", {0} },
+	{ UBC_VR_RAIL_E_P0V75_VDDPHY_HBM0_HBM2_HBM4, VR_ASIC_P0V75_VDDPHY_HBM0_HBM2_HBM4_PWR_W, "VR_ASIC_P0V75_VDDPHY_HBM0_HBM2_HBM4_PWR_W", {0} },
+	{ UBC_VR_RAIL_E_P0V9_TRVDD_ZONEA, VR_ASIC_P0V9_TRVDD_ZONEA_PWR_W, "VR_ASIC_P0V9_TRVDD_ZONEA_PWR_W", {0} },
+	{ UBC_VR_RAIL_E_P1V8_VPP_HBM1_HBM3_HBM5, VR_ASIC_P1V8_VPP_HBM1_HBM3_HBM5_PWR_W, "VR_ASIC_P1V8_VPP_HBM1_HBM3_HBM5_PWR_W", {0} },
+	{ UBC_VR_RAIL_E_P0V9_TRVDD_ZONEB, VR_ASIC_P0V9_TRVDD_ZONEB_PWR_W, "VR_ASIC_P0V9_TRVDD_ZONEB_PWR_W", {0} },
+	{ UBC_VR_RAIL_E_P0V4_VDDQL_HBM1_HBM3_HBM5, VR_ASIC_P0V4_VDDQL_HBM1_HBM3_HBM5_PWR_W, "VR_ASIC_P0V4_VDDQL_HBM1_HBM3_HBM5_PWR_W", {0} },
+	{ UBC_VR_RAIL_E_P1V1_VDDC_HBM1_HBM3_HBM5, VR_ASIC_P1V1_VDDC_HBM1_HBM3_HBM5_PWR_W, "VR_ASIC_P1V1_VDDC_HBM1_HBM3_HBM5_PWR_W", {0} },
+	{ UBC_VR_RAIL_E_P0V75_VDDPHY_HBM1_HBM3_HBM5, VR_ASIC_P0V75_VDDPHY_HBM1_HBM3_HBM5_PWR_W, "VR_ASIC_P0V75_VDDPHY_HBM1_HBM3_HBM5_PWR_W", {0} },
+	{ UBC_VR_RAIL_E_P0V8_VDDA_PCIE, VR_ASIC_P0V8_VDDA_PCIE_PWR_W, "VR_ASIC_P0V8_VDDA_PCIE_PWR_W", {0} },
+	{ UBC_VR_RAIL_E_P1V2_VDDHTX_PCIE, VR_ASIC_P1V2_VDDHTX_PCIE_PWR_W, "VR_ASIC_P1V2_VDDHTX_PCIE_PWR_W", {0} }
+};
+// clang-format on
+
+bool ubc_vr_rail_name_get(uint8_t rail, uint8_t **name)
+{
+	CHECK_NULL_ARG_WITH_RETURN(name, false);
+
+	if (rail >= UBC_VR_RAIL_E_MAX) {
+		*name = NULL;
+		return false;
+	}
+
+	*name = (uint8_t *)ubc_vr_power_table[rail].sensor_name;
+	return true;
+}
+
+bool ubc_vr_rail_enum_get(uint8_t *name, uint8_t *num)
+{
+	CHECK_NULL_ARG_WITH_RETURN(name, false);
+	CHECK_NULL_ARG_WITH_RETURN(num, false);
+
+	for (int i = 0; i < UBC_VR_RAIL_E_MAX; i++) {
+		if (strcmp(name, ubc_vr_power_table[i].sensor_name) == 0) {
+			*num = i;
+			return true;
+		}
+	}
+
+	LOG_ERR("invalid rail name %s", name);
+	return false;
+}
 
 static uint8_t reverse_bits(uint8_t byte, uint8_t bit_cnt)
 {
@@ -161,19 +221,45 @@ bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading)
 	}
 
 	/* set reading val to 0 if reading val is negative */
-	sensor_val tmp_reading;
 	if (reading != NULL) {
-		tmp_reading.integer = (int16_t)(*reading & 0xFFFF);
-		tmp_reading.fraction = (int16_t)((*reading >> 16) & 0xFFFF);
+		float resolution = 0, offset = 0;
+		int cache_reading = 0;
+		int8_t unit_modifier = 0;
+		uint8_t sensor_operational_state = PLDM_SENSOR_STATUSUNKOWN;
+		pldm_sensor_get_info_via_sensor_id(cfg->num, &resolution, &offset, &unit_modifier,
+						   &cache_reading, &sensor_operational_state);
+		if (resolution == 0)
+			LOG_ERR("resolution is 0");
 
-		/* sensor_value = 1000 times of true value */
-		int32_t sensor_value = tmp_reading.integer * 1000 + tmp_reading.fraction;
+		int16_t integer = *reading & 0xFFFF;
+		float fraction = (float)(*reading >> 16) / 1000.0;
 
-		if (sensor_value < 0) {
-			LOG_DBG("Original sensor reading: integer = %d, fraction = %d (combined value * 1000: %d)",
-				tmp_reading.integer, tmp_reading.fraction, sensor_value);
+		if (integer < 0 && fraction > 0)
+			fraction = -fraction;
+
+		float tmp_reading = (float)integer + fraction;
+
+		if (tmp_reading < 0) {
+			tmp_reading = 0;
 			*reading = 0;
+			LOG_DBG("Original sensor reading: integer = %d, fraction = %f", integer,
+				fraction);
 			LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
+		}
+
+		int decoded_reading =
+			(int)((tmp_reading * power(10, -1 * unit_modifier) - offset) / resolution);
+
+		/* record power history */
+		for (int i = 0; i < UBC_VR_RAIL_E_MAX; i++) {
+			if (cfg->num == ubc_vr_power_table[i].sensor_id) {
+				ubc_vr_power_table[i].power_history[power_index[i]] =
+					decoded_reading;
+				power_index[i] = (power_index[i] + 1) % POWER_HISTORY_SIZE;
+				if (power_count[i] < POWER_HISTORY_SIZE) {
+					power_count[i]++;
+				}
+			}
 		}
 	}
 
@@ -504,19 +590,100 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 	}
 
 	/* set reading val to 0 if reading val is negative */
-	sensor_val tmp_reading;
-	tmp_reading.integer = (int16_t)(*reading & 0xFFFF);
-	tmp_reading.fraction = (int16_t)((*reading >> 16) & 0xFFFF);
+	if (reading != NULL) {
+		float resolution = 0, offset = 0;
+		int cache_reading = 0;
+		int8_t unit_modifier = 0;
+		uint8_t sensor_operational_state = PLDM_SENSOR_STATUSUNKOWN;
+		pldm_sensor_get_info_via_sensor_id(cfg->num, &resolution, &offset, &unit_modifier,
+						   &cache_reading, &sensor_operational_state);
+		if (resolution == 0)
+			LOG_ERR("resolution is 0");
 
-	/* sensor_value = 1000 times of true value */
-	int32_t sensor_value = tmp_reading.integer * 1000 + tmp_reading.fraction;
+		int16_t integer = *reading & 0xFFFF;
+		float fraction = (float)(*reading >> 16) / 1000.0;
 
-	if (sensor_value < 0) {
-		LOG_DBG("Original sensor reading: integer = %d, fraction = %d (combined value * 1000: %d)",
-			tmp_reading.integer, tmp_reading.fraction, sensor_value);
-		*reading = 0;
-		LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
+		if (integer < 0 && fraction > 0)
+			fraction = -fraction;
+
+		float tmp_reading = (float)integer + fraction;
+
+		if (tmp_reading < 0) {
+			tmp_reading = 0;
+			*reading = 0;
+			LOG_DBG("Original sensor reading: integer = %d, fraction = %f", integer,
+				fraction);
+			LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
+		}
+
+		int decoded_reading =
+			(int)((tmp_reading * power(10, -1 * unit_modifier) - offset) / resolution);
+
+		/* record power history */
+		for (int i = 0; i < UBC_VR_RAIL_E_MAX; i++) {
+			if ((get_board_type() == MINERVA_AEGIS_BD) && (i == 2))
+				continue; // skip osfp p3v3 on AEGIS BD
+			if (cfg->num == ubc_vr_power_table[i].sensor_id) {
+				ubc_vr_power_table[i].power_history[power_index[i]] =
+					decoded_reading;
+				power_index[i] = (power_index[i] + 1) % POWER_HISTORY_SIZE;
+				if (power_count[i] < POWER_HISTORY_SIZE) {
+					power_count[i]++;
+				}
+			}
+		}
 	}
+
+	return true;
+}
+
+bool get_average_power(uint8_t rail, uint32_t *milliwatt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(milliwatt, false);
+
+	if (rail >= UBC_VR_RAIL_E_MAX || power_count[rail] == 0) {
+		*milliwatt = 0;
+		return false;
+	}
+
+	int sum = 0;
+	for (int i = 0; i < power_count[rail]; i++) {
+		sum += ubc_vr_power_table[rail].power_history[i];
+	}
+
+	float avg_sensor_value = sum / (float)power_count[rail];
+	if (avg_sensor_value < 0) {
+		LOG_ERR("avg_sensor_value is negative: %f", avg_sensor_value);
+		*milliwatt = 0;
+		return false;
+	}
+
+	uint8_t sensor_id = ubc_vr_power_table[rail].sensor_id;
+	float resolution = 0, offset = 0;
+	int cache_reading = 0;
+	int8_t unit_modifier = 0;
+	uint8_t sensor_operational_state = PLDM_SENSOR_STATUSUNKOWN;
+	pldm_sensor_get_info_via_sensor_id(sensor_id, &resolution, &offset, &unit_modifier,
+					   &cache_reading, &sensor_operational_state);
+	if (resolution == 0) {
+		*milliwatt = 0;
+		LOG_ERR("resolution is 0");
+		return false;
+	}
+
+	float real_power = (avg_sensor_value * resolution + offset) / power(10, -unit_modifier);
+
+	int16_t integer_part = (int16_t)real_power;
+	int16_t fraction_part = (int16_t)((real_power - integer_part) * 1000.0);
+
+	if (integer_part < 0 && fraction_part > 0) {
+		fraction_part = -fraction_part;
+	}
+
+	*milliwatt = ((uint16_t)fraction_part << 16) | (uint16_t)integer_part;
+
+	LOG_DBG("real_power = %f, integer_part = %d, fraction_part = %d, milliwatt = 0x%x",
+		real_power, integer_part, fraction_part, *milliwatt);
 
 	return true;
 }

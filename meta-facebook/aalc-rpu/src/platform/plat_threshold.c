@@ -191,8 +191,7 @@ void set_hsc_fail_status()
 		set_status_flag(STATUS_FLAG_HSC_FAIL, HSC_FAIL_PUMP_3, 1);
 
 	for (uint8_t i = 0; i < 14; i++) {
-		if (fb_hsc_status(i))
-			set_status_flag(STATUS_FLAG_HSC_FAIL, HSC_FAIL_FB_1 + i, 1);
+		set_status_flag(STATUS_FLAG_HSC_FAIL, HSC_FAIL_FB_1 + i, fb_hsc_status(i));
 	}
 }
 

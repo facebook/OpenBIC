@@ -1,0 +1,25 @@
+From fb277a30dda9227786d092d0579751eb72937e3a Mon Sep 17 00:00:00 2001
+From: Zane Li <zane.li.wiwynn@gmail.com>
+Date: Thu, 6 Mar 2025 13:37:32 +0800
+Subject: [PATCH] disable CONFIG_UART_ASPEED
+
+---
+ boards/arm/ast1030_evb/ast1030_evb_defconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/boards/arm/ast1030_evb/ast1030_evb_defconfig b/boards/arm/ast1030_evb/ast1030_evb_defconfig
+index 71d3d50dc74..5d2395253ae 100644
+--- a/boards/arm/ast1030_evb/ast1030_evb_defconfig
++++ b/boards/arm/ast1030_evb/ast1030_evb_defconfig
+@@ -16,7 +16,7 @@ CONFIG_CONSOLE=y
+ CONFIG_UART_CONSOLE=y
+ CONFIG_SERIAL=y
+ CONFIG_UART_NS16550=y
+-CONFIG_UART_ASPEED=y
++CONFIG_UART_ASPEED=n
+ CONFIG_HEAP_MEM_POOL_SIZE=50000
+ CONFIG_ASSERT=y
+ # For CMSIS
+-- 
+2.25.1
+
