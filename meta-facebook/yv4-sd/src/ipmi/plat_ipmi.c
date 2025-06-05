@@ -575,3 +575,61 @@ exit:
 		LOG_ERR("Failed to lock I3C dimm MUX");
 	}
 }
+
+void OEM_GET_BOOT_ORDER(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 0) {
+		LOG_ERR("Failed to get boot order because of invalid length: 0x%x", msg->data_len);
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t ret = 0;
+	uint8_t length = BOOT_ORDER_LENGTH;
+
+	uint8_t *bootorder = (uint8_t *)malloc(sizeof(uint8_t) * length);
+	if (bootorder == NULL) {
+		LOG_ERR("Failed to allocate boot order buffer");
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	ret = plat_pldm_get_boot_order(BOOT_ORDER_LENGTH, bootorder);
+	if (ret != PLDM_SUCCESS) {
+		LOG_ERR("Failed to get boot order, ret: 0x%x", ret);
+		SAFE_FREE(bootorder);
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	msg->data_len = length;
+	memcpy(&msg->data[0], bootorder, length);
+	SAFE_FREE(bootorder);
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
+void OEM_SET_BOOT_ORDER(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 6) {
+		LOG_ERR("Failed to set boot order because of invalid length: 0x%x", msg->data_len);
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t ret = 0;
+	ret = plat_pldm_set_boot_order(msg->data);
+	if (ret != PLDM_SUCCESS) {
+		LOG_ERR("Failed to set boot order, ret: 0x%x", ret);
+		msg->completion_code = CC_UNSPECIFIED_ERROR;
+		return;
+	}
+
+	msg->completion_code = CC_SUCCESS;
+	msg->data_len = 0;
+	return;
+}
