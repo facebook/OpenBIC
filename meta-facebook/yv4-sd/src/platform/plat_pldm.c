@@ -211,3 +211,145 @@ uint8_t plat_pldm_get_http_boot_data(uint16_t offset, uint8_t *read_length, uint
 	SAFE_FREE(rbuf);
 	return PLDM_SUCCESS;
 }
+
+
+uint8_t plat_pldm_get_boot_order(uint8_t length, uint8_t *bootOrderData)
+{
+	CHECK_NULL_ARG_WITH_RETURN(bootOrderData, PLDM_ERROR);
+
+	pldm_msg pmsg = { 0 };
+	uint8_t bmc_bus = I2C_BUS_BMC;
+	uint8_t bmc_interface = pal_get_bmc_interface();
+	pmsg.ext_params.ep = MCTP_EID_BMC;
+
+	switch (bmc_interface) {
+	case BMC_INTERFACE_I3C:
+		bmc_bus = I3C_BUS_BMC;
+		pmsg.ext_params.type = MCTP_MEDIUM_TYPE_TARGET_I3C;
+		pmsg.ext_params.i3c_ext_params.addr = I3C_STATIC_ADDR_BMC;
+		break;
+	case BMC_INTERFACE_I2C:
+		bmc_bus = I2C_BUS_BMC;
+		pmsg.ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
+		pmsg.ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
+		break;
+	default:
+		return PLDM_ERROR_INVALID_DATA;
+	}
+
+	pmsg.hdr.rq = PLDM_REQUEST;
+	pmsg.hdr.pldm_type = PLDM_TYPE_OEM;
+	pmsg.hdr.cmd = PLDM_OEM_READ_FILE_IO;
+
+	struct pldm_oem_read_file_io_data_req *ptr =
+		(struct pldm_oem_read_file_io_data_req *)malloc(
+			sizeof(struct pldm_oem_read_file_io_data_req));
+	if (ptr == NULL) {
+		LOG_ERR("Fail to allocate ptr for reading file IO request: get boot order");
+		return PLDM_ERROR;
+	}
+
+	ptr->cmd_code = BOOT_ORDER;
+	ptr->read_option = READ_FILE_DATA;
+	ptr->read_info_length = 0;
+
+	pmsg.buf = (uint8_t *)ptr;
+	pmsg.len = sizeof(struct pldm_oem_read_file_io_data_req);
+	uint16_t resp_len = BMC_PLDM_DATA_MAXIMUM;
+	struct pldm_oem_read_file_io_data_resp *rbuf =
+		(struct pldm_oem_read_file_io_data_resp *)malloc(sizeof(uint8_t) * resp_len);
+	if (rbuf == NULL) {
+		LOG_ERR("Fail to allocate rbuf for getting boot order");
+		SAFE_FREE(ptr);
+		return PLDM_ERROR;
+	}
+
+	resp_len = mctp_pldm_read(find_mctp_by_bus(bmc_bus), &pmsg, (uint8_t *)rbuf, resp_len);
+	if (resp_len == 0) {
+		LOG_ERR("Fail to send command to get boot order");
+		SAFE_FREE(ptr);
+		SAFE_FREE(rbuf);
+		return PLDM_ERROR_INVALID_DATA;
+	}
+
+	SAFE_FREE(ptr);
+	if (rbuf->completion_code != PLDM_SUCCESS) {
+		LOG_ERR("Read boot order fail, cc: 0x%x", rbuf->completion_code);
+		SAFE_FREE(rbuf);
+		return PLDM_ERROR;
+	}
+
+	if (rbuf->read_info_length > length) {
+		LOG_ERR("Read info length exceeded buffer length, read length: 0x%x, buffer length: 0x%x",
+			rbuf->read_info_length, length);
+		SAFE_FREE(rbuf);
+		return PLDM_ERROR_INVALID_DATA;
+	}
+
+	memcpy(bootOrderData, &rbuf->read_info[0], rbuf->read_info_length);
+	SAFE_FREE(rbuf);
+	return PLDM_SUCCESS;
+}
+
+uint8_t plat_pldm_set_boot_order(uint8_t *bootOrderData)
+{
+	CHECK_NULL_ARG_WITH_RETURN(bootOrderData, PLDM_ERROR);
+
+	pldm_msg translated_msg = { 0 };
+	uint8_t bmc_bus = I2C_BUS_BMC;
+	uint8_t bmc_interface = pal_get_bmc_interface();
+	translated_msg.ext_params.ep = MCTP_EID_BMC;
+
+	switch (bmc_interface) {
+	case BMC_INTERFACE_I3C:
+		bmc_bus = I3C_BUS_BMC;
+		translated_msg.ext_params.type = MCTP_MEDIUM_TYPE_TARGET_I3C;
+		translated_msg.ext_params.i3c_ext_params.addr = I3C_STATIC_ADDR_BMC;
+		break;
+	case BMC_INTERFACE_I2C:
+		bmc_bus = I2C_BUS_BMC;
+		translated_msg.ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
+		translated_msg.ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
+		break;
+	default:
+		return PLDM_ERROR_INVALID_DATA;
+	}
+
+	translated_msg.hdr.rq = PLDM_REQUEST;
+	translated_msg.hdr.pldm_type = PLDM_TYPE_OEM;
+	translated_msg.hdr.cmd = PLDM_OEM_WRITE_FILE_IO;
+	
+	struct pldm_oem_write_file_io_req *ptr = (struct pldm_oem_write_file_io_req *)malloc(
+		sizeof(struct pldm_oem_write_file_io_req) + BOOT_ORDER_LENGTH);
+
+	if (ptr == NULL) {
+		LOG_ERR("Fail to allocate ptr for writing file IO request: set boot order");
+		return PLDM_ERROR;
+	}
+
+	ptr->cmd_code = BOOT_ORDER;
+	ptr->data_length = BOOT_ORDER_LENGTH;
+	memcpy(ptr->messages, bootOrderData, BOOT_ORDER_LENGTH);
+
+	translated_msg.buf = (uint8_t *)ptr;
+	translated_msg.len = sizeof(struct pldm_oem_write_file_io_req) + BOOT_ORDER_LENGTH;
+
+	uint8_t resp_len = sizeof(struct pldm_oem_write_file_io_resp);
+	uint8_t rbuf[resp_len];
+
+	if (!mctp_pldm_read(find_mctp_by_bus(bmc_bus), &translated_msg, rbuf, resp_len)) {
+		LOG_ERR("mctp_pldm_read fail");
+		SAFE_FREE(ptr);
+		return PLDM_ERROR;
+	}
+
+	struct pldm_oem_write_file_io_resp *resp = (struct pldm_oem_write_file_io_resp *)rbuf;
+	if (resp->completion_code != PLDM_SUCCESS) {
+		LOG_ERR("Check reponse completion code fail %x", resp->completion_code);
+		SAFE_FREE(ptr);
+		return PLDM_ERROR;
+	}
+
+	SAFE_FREE(ptr);
+	return PLDM_SUCCESS;
+}
