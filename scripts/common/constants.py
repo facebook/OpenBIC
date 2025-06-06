@@ -21,6 +21,7 @@ PLATFORM_NAME_MAP = {
     "obat-mc": "Artemis : Moose Creek",
     "obgt-cc": "Grand Teton : Cascade Creek",
     "obwc-mb": "Waimea Canyon : MainBoard",
+    "obgc-bs": "Grand Canyon : Barton Spring",
     "oby3-dl": "Yosemite v3 : Delta Lake",
     "oby3-vf": "Yosemite v3 : Vernal Falls",
     "oby35-bb": "Yosemite v3.5 : BaseBoard",
@@ -44,6 +45,7 @@ SUPPORTED_PLATFORMS = {
     "obat-mc",
     "obgt-cc",
     "obwc-mb",
+    "obgc-bs",
     "oby3-dl",
     "oby3-vf",
     "oby35-bb",
@@ -65,6 +67,7 @@ PLATFORM_RELEASE_MAPPINGS = {
     "gt-cc": "obgt-cc",
     "op2-op" : "oby35-op",
     "wc-mb": "obwc-mb",
+    "gc-bs": "obgc-bs",
     "yv3-dl": "oby3-dl",
     "yv3-vf": "oby3-vf",
     "yv35-bb": "oby35-bb",
@@ -85,6 +88,7 @@ PLATFORM_DIRECTORIES = {
     "gt-cc",
     "op2-op",
     "wc-mb",
+    "gc-bs",
     "yv3-dl",
     "yv3-vf",
     "yv35-bb",
@@ -131,6 +135,7 @@ TITLE_TAGS = {
     "sd:",
     "ff:",
     "wf:",
+    "bs:",
 }
 
 
