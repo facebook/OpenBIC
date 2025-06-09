@@ -141,6 +141,17 @@ typedef struct __attribute__((__packed__)) {
 	uint8_t set_value;
 } plat_control_sensor_polling;
 
+typedef struct voltage_rail_mapping_sensor {
+	uint8_t control_vol_reg;
+	uint8_t vr_rail_e;
+} voltage_rail_mapping_sensor;
+
+typedef struct __attribute__((__packed__)) {
+	struct k_work work;
+	uint8_t rail;
+	uint16_t set_value;
+} plat_control_voltage;
+
 static uint8_t bootstrap_pin;
 static uint8_t user_setting_level;
 
@@ -168,6 +179,19 @@ const struct _i2c_target_config I2C_TARGET_CONFIG_TABLE[MAX_TARGET_NUM] = {
 	{ 0xFF, 0xA },
 };
 
+// clang-format off
+voltage_rail_mapping_sensor voltage_rail_mapping_table[] = {
+	{ CONTROL_VOL_CB_VR_ASIC_P0V75_VDDPHY_HBM0_HBM2_HBM4_REG, VR_RAIL_E_P0V75_VDDPHY_HBM0_HBM2_HBM4 },
+	{ CONTROL_VOL_CB_VR_ASIC_P0V75_VDDPHY_HBM1_HBM3_HBM5_REG, VR_RAIL_E_P0V75_VDDPHY_HBM1_HBM3_HBM5 },
+	{ CONTROL_VOL_CB_VR_ASIC_P1V1_VDDC_HBM0_HBM2_HBM4_REG, VR_RAIL_E_P1V1_VDDC_HBM0_HBM2_HBM4 },
+	{ CONTROL_VOL_CB_VR_ASIC_P1V1_VDDC_HBM1_HBM3_HBM5_REG, VR_RAIL_E_P1V1_VDDC_HBM1_HBM3_HBM5 },
+	{ CONTROL_VOL_CB_VR_ASIC_P0V4_VDDQL_HBM0_HBM2_HBM4_REG, VR_RAIL_E_P0V4_VDDQL_HBM0_HBM2_HBM4 },
+	{ CONTROL_VOL_CB_VR_ASIC_P0V4_VDDQL_HBM1_HBM3_HBM5_REG, VR_RAIL_E_P0V4_VDDQL_HBM1_HBM3_HBM5 },
+	{ CONTROL_VOL_CB_VR_ASIC_P1V8_VPP_HBM0_HBM2_HBM4_REG, VR_RAIL_E_P1V8_VPP_HBM0_HBM2_HBM4 },
+	{ CONTROL_VOL_CB_VR_ASIC_P1V8_VPP_HBM1_HBM3_HBM5_REG, VR_RAIL_E_P1V8_VPP_HBM1_HBM3_HBM5 },
+};
+// clang-format on
+
 plat_sensor_init_data *sensor_init_data_table[DATA_TABLE_LENGTH_2] = { NULL };
 plat_sensor_reading *sensor_reading_table[DATA_TABLE_LENGTH_4] = { NULL };
 plat_inventory_ids *inventory_ids_table[DATA_TABLE_LENGTH_1] = { NULL };
@@ -191,6 +215,27 @@ void *allocate_table(void **buffer, size_t buffer_size)
 		return NULL;
 	}
 	return *buffer;
+}
+
+uint8_t get_vr_rail_by_control_vol_reg(uint8_t control_vol_reg)
+{
+	for (int i = 0; i < ARRAY_SIZE(voltage_rail_mapping_table); i++) {
+		if (voltage_rail_mapping_table[i].control_vol_reg == control_vol_reg) {
+			return voltage_rail_mapping_table[i].vr_rail_e;
+		}
+	}
+	return VR_RAIL_E_MAX;
+}
+
+void set_control_voltage_handler(struct k_work *work_item)
+{
+	const plat_control_voltage *sensor_data =
+		CONTAINER_OF(work_item, plat_control_voltage, work);
+	uint8_t rail = sensor_data->rail;
+	uint16_t millivolt = sensor_data->set_value;
+	LOG_DBG("Setting rail %x to %d mV", rail, millivolt);
+
+	plat_set_vout_command(rail, &millivolt, false, false);
 }
 
 bool get_fru_info_element(telemetry_info *telemetry_info, char **fru_element,
@@ -753,6 +798,23 @@ static bool command_reply_data_handle(void *arg)
 					data->target_rd_msg.msg[0] = 0xFF;
 				}
 			} break;
+			case CONTROL_VOL_CB_VR_ASIC_P0V75_VDDPHY_HBM0_HBM2_HBM4_REG:
+			case CONTROL_VOL_CB_VR_ASIC_P0V75_VDDPHY_HBM1_HBM3_HBM5_REG:
+			case CONTROL_VOL_CB_VR_ASIC_P1V1_VDDC_HBM0_HBM2_HBM4_REG:
+			case CONTROL_VOL_CB_VR_ASIC_P1V1_VDDC_HBM1_HBM3_HBM5_REG:
+			case CONTROL_VOL_CB_VR_ASIC_P0V4_VDDQL_HBM0_HBM2_HBM4_REG:
+			case CONTROL_VOL_CB_VR_ASIC_P0V4_VDDQL_HBM1_HBM3_HBM5_REG:
+			case CONTROL_VOL_CB_VR_ASIC_P1V8_VPP_HBM0_HBM2_HBM4_REG:
+			case CONTROL_VOL_CB_VR_ASIC_P1V8_VPP_HBM1_HBM3_HBM5_REG: {
+				uint8_t rail = get_vr_rail_by_control_vol_reg(reg_offset);
+				uint16_t vout = 0xFFFF;
+				if (!voltage_command_setting_get(rail, &vout)) {
+					LOG_ERR("Can't voltage_command setting_get by rail: 0x%02x",
+						rail);
+				}
+				memcpy(data->target_rd_msg.msg, &vout, sizeof(vout));
+				data->target_rd_msg.msg_length = 2;
+			} break;
 			default:
 				LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
 				data->target_rd_msg.msg_length = 1;
@@ -836,6 +898,28 @@ void plat_master_write_thread_handler()
 			sensor_data->write_len = payload_len;
 			memcpy(sensor_data->data, &rdata[4], payload_len);
 			k_work_init(&sensor_data->work, i2c_bridge_command_handler);
+			k_work_submit(&sensor_data->work);
+		} break;
+		case CONTROL_VOL_CB_VR_ASIC_P0V75_VDDPHY_HBM0_HBM2_HBM4_REG:
+		case CONTROL_VOL_CB_VR_ASIC_P0V75_VDDPHY_HBM1_HBM3_HBM5_REG:
+		case CONTROL_VOL_CB_VR_ASIC_P1V1_VDDC_HBM0_HBM2_HBM4_REG:
+		case CONTROL_VOL_CB_VR_ASIC_P1V1_VDDC_HBM1_HBM3_HBM5_REG:
+		case CONTROL_VOL_CB_VR_ASIC_P0V4_VDDQL_HBM0_HBM2_HBM4_REG:
+		case CONTROL_VOL_CB_VR_ASIC_P0V4_VDDQL_HBM1_HBM3_HBM5_REG:
+		case CONTROL_VOL_CB_VR_ASIC_P1V8_VPP_HBM0_HBM2_HBM4_REG:
+		case CONTROL_VOL_CB_VR_ASIC_P1V8_VPP_HBM1_HBM3_HBM5_REG: {
+			if (rlen != 3) {
+				LOG_ERR("Invalid length for offset: 0x%02x", reg_offset);
+				break;
+			}
+			plat_control_voltage *sensor_data = malloc(sizeof(plat_control_voltage));
+			if (!sensor_data) {
+				LOG_ERR("Memory allocation failed!");
+				break;
+			}
+			sensor_data->rail = get_vr_rail_by_control_vol_reg(reg_offset);
+			sensor_data->set_value = rdata[1] | (rdata[2] << 8);
+			k_work_init(&sensor_data->work, set_control_voltage_handler);
 			k_work_submit(&sensor_data->work);
 		} break;
 		case SET_SENSOR_POLLING_COMMAND_REG: {

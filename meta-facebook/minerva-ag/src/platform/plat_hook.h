@@ -320,5 +320,6 @@ void init_temp_limit(void);
 bool ubc_vr_rail_name_get(uint8_t rail, uint8_t **name);
 bool ubc_vr_rail_enum_get(uint8_t *name, uint8_t *num);
 bool get_average_power(uint8_t rail, uint32_t *milliwatt);
+bool voltage_command_setting_get(uint8_t rail, uint16_t *vout);
 
 #endif
