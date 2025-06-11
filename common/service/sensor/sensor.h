@@ -29,7 +29,7 @@
 
 #define sensor_name_to_num(x) #x,
 
-#define SENSOR_POLL_STACK_SIZE 2048
+#define SENSOR_POLL_STACK_SIZE 4096
 #define NONE 0
 
 #define GET_FROM_CACHE 0x00
