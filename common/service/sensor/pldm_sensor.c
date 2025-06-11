@@ -71,16 +71,34 @@ bool pldm_sensor_is_interval_ready(pldm_sensor_info *pldm_sensor_list)
 	return true;
 }
 
+pldm_sensor_thread *pldm_sensor_get_thread_info(int thread_id)
+{
+	if (thread_id < 0 || thread_id >= MAX_SENSOR_THREAD_ID) {
+		LOG_ERR("Invalid thread_id: %d", thread_id);
+		return NULL;
+	}
+
+	if (!pldm_sensor_thread_list) {
+		LOG_ERR("PLDM sensor thread list not initialized");
+		return NULL;
+	}
+
+	return &pldm_sensor_thread_list[thread_id];
+}
+
 int pldm_sensor_get_info_via_sensor_thread_and_sensor_pdr_index(
 	int thread_id, int sensor_pdr_index, uint16_t *sensor_id, real32_t *resolution,
 	real32_t *offset, int8_t *unit_modifier, real32_t *poll_time, uint32_t *update_time,
-	uint8_t *type, int *cache, uint8_t *cache_status, char *check_access)
+	uint32_t *update_time_ms, uint8_t *type, int *cache, uint8_t *cache_status,
+	char *check_access)
 {
 	CHECK_NULL_ARG_WITH_RETURN(sensor_id, -1);
 	CHECK_NULL_ARG_WITH_RETURN(resolution, -1);
 	CHECK_NULL_ARG_WITH_RETURN(offset, -1);
 	CHECK_NULL_ARG_WITH_RETURN(unit_modifier, -1);
 	CHECK_NULL_ARG_WITH_RETURN(poll_time, -1);
+	CHECK_NULL_ARG_WITH_RETURN(update_time, -1);
+	CHECK_NULL_ARG_WITH_RETURN(update_time_ms, -1);
 	CHECK_NULL_ARG_WITH_RETURN(type, -1);
 	CHECK_NULL_ARG_WITH_RETURN(cache, -1);
 	CHECK_NULL_ARG_WITH_RETURN(cache_status, -1);
@@ -109,6 +127,7 @@ int pldm_sensor_get_info_via_sensor_thread_and_sensor_pdr_index(
 
 	// Get from update time
 	*update_time = pldm_sensor_list[thread_id][sensor_pdr_index].update_time;
+	*update_time_ms = pldm_sensor_list[thread_id][sensor_pdr_index].update_time_ms;
 
 	// Get from sensor config
 	*type = pldm_sensor_list[thread_id][sensor_pdr_index].pldm_sensor_cfg.type;
@@ -200,10 +219,12 @@ uint8_t pldm_sensor_get_reading_from_cache(uint16_t sensor_id, int *reading,
 }
 
 void pldm_sensor_get_reading(sensor_cfg *pldm_sensor_cfg, uint32_t *update_time,
-			     int pldm_sensor_count, int thread_id, int sensor_num)
+			     uint32_t *update_time_ms, int pldm_sensor_count, int thread_id,
+			     int sensor_num)
 {
 	CHECK_NULL_ARG(pldm_sensor_list);
 	CHECK_NULL_ARG(update_time);
+	CHECK_NULL_ARG(update_time_ms);
 
 	int reading = 0;
 	uint8_t status = SENSOR_UNSPECIFIED_ERROR;
@@ -217,7 +238,8 @@ void pldm_sensor_get_reading(sensor_cfg *pldm_sensor_cfg, uint32_t *update_time,
 		if (!pldm_sensor_cfg->pre_sensor_read_hook(pldm_sensor_cfg,
 							   pldm_sensor_cfg->pre_sensor_read_args)) {
 			pldm_sensor_cfg->cache_status = PLDM_SENSOR_FAILED;
-			*update_time = (k_uptime_get_32() / 1000);
+			*update_time_ms = k_uptime_get_32();
+			*update_time = (*update_time_ms / 1000);
 			LOG_DBG("Failed to pre read sensor_num 0x%x of thread %d", sensor_num,
 				thread_id);
 			return;
@@ -230,7 +252,8 @@ void pldm_sensor_get_reading(sensor_cfg *pldm_sensor_cfg, uint32_t *update_time,
 		status = pldm_sensor_cfg->read(pldm_sensor_cfg, &reading);
 
 		if (pldm_sensor_cfg->type == sensor_dev_apml_mailbox) {
-			*update_time = (k_uptime_get_32() / 1000);
+			*update_time_ms = k_uptime_get_32();
+			*update_time = (*update_time_ms / 1000);
 
 			if (pldm_sensor_cfg->post_sensor_read_hook) {
 				if (!pldm_sensor_cfg->post_sensor_read_hook(
@@ -245,7 +268,8 @@ void pldm_sensor_get_reading(sensor_cfg *pldm_sensor_cfg, uint32_t *update_time,
 
 		if ((status != SENSOR_READ_SUCCESS) && (status != SENSOR_READ_ACUR_SUCCESS)) {
 			pldm_sensor_cfg->cache_status = PLDM_SENSOR_FAILED;
-			*update_time = (k_uptime_get_32() / 1000);
+			*update_time_ms = k_uptime_get_32();
+			*update_time = (*update_time_ms / 1000);
 			LOG_ERR("Failed to read sensor_num 0x%x of thread %d, status0x%x",
 				sensor_num, thread_id, status);
 
@@ -268,14 +292,16 @@ void pldm_sensor_get_reading(sensor_cfg *pldm_sensor_cfg, uint32_t *update_time,
 		if (!pldm_sensor_cfg->post_sensor_read_hook(
 			    pldm_sensor_cfg, pldm_sensor_cfg->post_sensor_read_args, &reading)) {
 			pldm_sensor_cfg->cache_status = PLDM_SENSOR_FAILED;
-			*update_time = (k_uptime_get_32() / 1000);
+			*update_time_ms = k_uptime_get_32();
+			*update_time = (*update_time_ms / 1000);
 			LOG_DBG("Failed to pose read sensor_num 0x%x of thread %d", sensor_num,
 				thread_id);
 			return;
 		}
 	}
 
-	*update_time = (k_uptime_get_32() / 1000);
+	*update_time_ms = k_uptime_get_32();
+	*update_time = (*update_time_ms / 1000);
 	pldm_sensor_cfg->cache = reading;
 	pldm_sensor_cfg->cache_status = PLDM_SENSOR_ENABLED;
 }
@@ -320,8 +346,9 @@ int pldm_sensor_polling_pre_check(pldm_sensor_info *pldm_snr_list, int sensor_nu
 	return 0;
 }
 
-int pldm_polling_sensor_reading(pldm_sensor_info *pldm_snr_list, int pldm_sensor_count,
-				int thread_id, int sensor_num)
+int pldm_polling_sensor_reading_optional_check(pldm_sensor_info *pldm_snr_list,
+					       int pldm_sensor_count, int thread_id, int sensor_num,
+					       bool interval_ready_check_en)
 {
 	CHECK_NULL_ARG_WITH_RETURN(pldm_snr_list, -1);
 
@@ -337,17 +364,25 @@ int pldm_polling_sensor_reading(pldm_sensor_info *pldm_snr_list, int pldm_sensor
 		return -1;
 	}
 
-	if (!pldm_sensor_is_interval_ready(pldm_snr_list)) {
+	if (interval_ready_check_en && !pldm_sensor_is_interval_ready(pldm_snr_list)) {
 		return -1;
 	}
 
 	pldm_sensor_get_reading(&pldm_snr_list->pldm_sensor_cfg, &pldm_snr_list->update_time,
-				pldm_sensor_count, thread_id, sensor_num);
+				&pldm_snr_list->update_time_ms, pldm_sensor_count, thread_id,
+				sensor_num);
 
 	LOG_DBG("sensor0x%x, value0x%x, status 0x%x", pldm_snr_list->pdr_numeric_sensor.sensor_id,
 		pldm_snr_list->pldm_sensor_cfg.cache, pldm_snr_list->pldm_sensor_cfg.cache_status);
 
 	return 0;
+}
+
+int pldm_polling_sensor_reading(pldm_sensor_info *pldm_snr_list, int pldm_sensor_count,
+				int thread_id, int sensor_num)
+{
+	return pldm_polling_sensor_reading_optional_check(pldm_snr_list, pldm_sensor_count,
+							  thread_id, sensor_num, true);
 }
 
 void pldm_sensor_polling_handler(void *arug0, void *arug1, void *arug2)
@@ -358,6 +393,7 @@ void pldm_sensor_polling_handler(void *arug0, void *arug1, void *arug2)
 	int ret = 0, sensor_num = 0;
 	int thread_id = (int)arug0;
 	int pldm_sensor_count = 0;
+	uint32_t poll_interval_ms = PLDM_SENSOR_POLL_TIME_DEFAULT_MS;
 
 	pldm_sensor_count = plat_pldm_sensor_get_sensor_count(thread_id);
 	if (pldm_sensor_count <= 0) {
@@ -372,10 +408,14 @@ void pldm_sensor_polling_handler(void *arug0, void *arug1, void *arug2)
 		return;
 	}
 
+	if (pldm_sensor_thread_list[thread_id].poll_interval_ms != 0) {
+		poll_interval_ms = pldm_sensor_thread_list[thread_id].poll_interval_ms;
+	}
+
 	while (1) {
 		// Check sensor poll enable
 		if (get_sensor_poll_enable_flag() == false) {
-			k_msleep(PLDM_SENSOR_POLL_TIME_DEFAULT_MS);
+			k_msleep(poll_interval_ms);
 			continue;
 		}
 
@@ -383,14 +423,23 @@ void pldm_sensor_polling_handler(void *arug0, void *arug1, void *arug2)
 			if (get_sensor_poll_enable_flag() == false) {
 				break;
 			}
-			if (pldm_polling_sensor_reading(&pldm_sensor_list[thread_id][sensor_num],
-							pldm_sensor_count, thread_id,
-							sensor_num) != 0) {
-				continue;
+
+			if (pldm_sensor_thread_list[thread_id].poll_interval_ms != 0) {
+				if (pldm_polling_sensor_reading_optional_check(
+					    &pldm_sensor_list[thread_id][sensor_num],
+					    pldm_sensor_count, thread_id, sensor_num, false) != 0) {
+					continue;
+				}
+			} else {
+				if (pldm_polling_sensor_reading(
+					    &pldm_sensor_list[thread_id][sensor_num],
+					    pldm_sensor_count, thread_id, sensor_num) != 0) {
+					continue;
+				}
 			}
 		}
 
-		k_msleep(PLDM_SENSOR_POLL_TIME_DEFAULT_MS);
+		k_msleep(poll_interval_ms);
 	}
 }
 
