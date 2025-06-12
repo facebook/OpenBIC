@@ -95,6 +95,75 @@ static void set_endpoint_resp_timeout(void *args)
 	LOG_DBG("Endpoint 0x%x set endpoint failed on bus %d", p->endpoint, p->bus);
 }
 
+bool check_cxl_eid(uint8_t cxl_id)
+{
+	uint8_t eid = plat_get_cxl_eid(cxl_id);
+	mctp *mctp_inst = NULL;
+	mctp_ext_params ext_params = { 0 };
+	if (get_mctp_info(eid, &mctp_inst, &ext_params) != MCTP_SUCCESS)
+		return false;
+
+	mctp_ctrl_msg msg = { 0 };
+	msg.hdr.rq = 1;
+	msg.hdr.cmd = MCTP_CTRL_CMD_GET_ENDPOINT_ID;
+	msg.ext_params = ext_params;
+
+	uint8_t resp_buf[8] = { 0 };
+	if (mctp_ctrl_read(mctp_inst, &msg, resp_buf, sizeof(resp_buf)) != MCTP_SUCCESS)
+		return false;
+
+	// Response[0] = completion code, must be 0x00
+	if (resp_buf[0] != 0x00)
+		return false;
+
+	return true;
+}
+
+bool set_cxl_eid(uint8_t cxl_id)
+{
+	if (cxl_id != CXL_ID_1 && cxl_id != CXL_ID_2) {
+		LOG_ERR("set_cxl_eid: invalid cxl_id=%d", cxl_id);
+		return false;
+	}
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(plat_mctp_route_tbl); i++) {
+		const mctp_route_entry *p = plat_mctp_route_tbl + i;
+		if (!p->set_endpoint)
+			continue;
+
+		if ((cxl_id == CXL_ID_1 && p->bus != I2C_BUS_CXL1) ||
+		    (cxl_id == CXL_ID_2 && p->bus != I2C_BUS_CXL2))
+			continue;
+
+		struct _set_eid_req req = { 0 };
+		req.op = SET_EID_REQ_OP_SET_EID;
+		req.eid = p->endpoint;
+
+		mctp_ctrl_msg msg;
+		memset(&msg, 0, sizeof(msg));
+		msg.ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
+		msg.ext_params.smbus_ext_params.addr = p->addr;
+
+		msg.hdr.cmd = MCTP_CTRL_CMD_SET_ENDPOINT_ID;
+		msg.hdr.rq = 1;
+
+		msg.cmd_data = (uint8_t *)&req;
+		msg.cmd_data_len = sizeof(req);
+
+		uint8_t rc = mctp_ctrl_send_msg(find_mctp_by_bus(p->bus), &msg);
+
+		if (!rc) {
+			LOG_INF("Send set EID command to CXL%d success", cxl_id + 1);
+			return true;
+		} else {
+			LOG_ERR("Fail to set EID %d for CXL%d", p->endpoint, cxl_id + 1);
+			return false;
+		}
+	}
+	LOG_ERR("No matching entry to set EID for CXL%d", cxl_id + 1);
+	return false;
+}
+
 static void set_dev_endpoint(void)
 {
 	bool set_eid[MAX_CXL_ID] = { false, false };

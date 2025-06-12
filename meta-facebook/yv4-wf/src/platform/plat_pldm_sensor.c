@@ -28,6 +28,7 @@
 #include "plat_pldm_sensor.h"
 #include "plat_isr.h"
 #include "plat_class.h"
+#include "plat_mctp.h"
 
 LOG_MODULE_REGISTER(plat_pldm_sensor);
 
@@ -6715,6 +6716,25 @@ void plat_set_dimm_cache(uint8_t *resp_buf, uint8_t cxl_id, uint8_t status)
 		cxl_dimm_temp[cxl_id][DIMMC_ID] = -1;
 		cxl_dimm_temp[cxl_id][DIMMD_ID] = -1;
 		return;
+	}
+	if (status != SENSOR_READ_SUCCESS) {
+		LOG_WRN("DIMM temp read fail, check EID for CXL%d", cxl_id + 1);
+
+		if (!check_cxl_eid(cxl_id)) {
+			LOG_WRN("CXL%d EID check fail, try to set EID", cxl_id + 1);
+
+			k_msleep(200);
+			set_cxl_eid(cxl_id);
+
+			k_msleep(PLAT_CXL_EID_RETRY_SLEEP_MS);
+			if (check_cxl_eid(cxl_id)) {
+				LOG_INF("CXL%d EID check after set EID: SUCCESS", cxl_id + 1);
+			} else {
+				LOG_ERR("CXL%d EID still not ready after set EID", cxl_id + 1);
+			}
+		} else {
+			LOG_INF("CXL%d EID check success, device is alive", cxl_id + 1);
+		}
 	}
 
 	for (int i = 0; i < MAX_DIMM_ID; i++) {

@@ -827,6 +827,20 @@ bool vr_status_name_get(uint8_t rail, uint8_t **name)
 vr_vout_user_settings user_settings = { 0 };
 struct vr_vout_user_settings default_settings = { 0 };
 vr_vout_range_user_settings_struct vout_range_user_settings = { 0 };
+struct vr_vout_user_settings voltage_command_get = { 0 };
+
+bool voltage_command_setting_get(uint8_t rail, uint16_t *vout)
+{
+	CHECK_NULL_ARG_WITH_RETURN(vout, false);
+
+	if (rail >= VR_RAIL_E_MAX) {
+		LOG_ERR("invalid rail %d", rail);
+		return false;
+	}
+
+	*vout = voltage_command_get.vout[rail];
+	return true;
+}
 
 bool vr_rail_enum_get(uint8_t *name, uint8_t *num)
 {
@@ -1145,6 +1159,8 @@ bool vr_vout_default_settings_init(void)
 		}
 		default_settings.vout[i] = vout;
 	}
+
+	memcpy(&voltage_command_get, &default_settings, sizeof(vr_vout_user_settings));
 
 	return true;
 }
@@ -1998,6 +2014,8 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default, b
 		user_settings.vout[rail] = setting_millivolt;
 		vr_vout_user_settings_set(&user_settings);
 	}
+
+	voltage_command_get.vout[rail] = setting_millivolt;
 
 	ret = true;
 err:

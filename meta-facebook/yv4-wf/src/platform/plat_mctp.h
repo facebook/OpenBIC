@@ -47,5 +47,8 @@ mctp_port *plat_get_mctp_port(uint8_t index);
 void create_set_dev_endpoint_thread();
 uint8_t plat_get_eid();
 mctp *find_mctp_by_bus(uint8_t bus);
+bool check_cxl_eid(uint8_t cxl_id);
+bool set_cxl_eid(uint8_t cxl_id);
+uint8_t plat_get_cxl_eid(uint8_t cxl_id);
 
 #endif /* _PLAT_MCTP_h */
