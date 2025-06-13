@@ -89,5 +89,6 @@ uint8_t get_board_stage();
 uint8_t get_board_type();
 uint8_t get_tmp_type();
 bool plat_read_cpld(uint8_t offset, uint8_t *data);
+void plat_i3c_set_pid();
 
 #endif

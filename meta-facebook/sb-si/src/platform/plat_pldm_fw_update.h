@@ -22,24 +22,17 @@
 #include "pldm_firmware_update.h"
 
 enum FIRMWARE_COMPONENT {
-	RB_COMPNT_BIC,
-	RB_COMPNT_MEDHA0_VDD,
-	RB_COMPNT_MEDHA1_VDD,
-	RB_COMPNT_P075_OWL_VDD,
-	RB_COMPNT_VDDQC_HBM1_HBM3_HBM5_HBM7,
-	RB_COMPNT_VDDPHY_HBM1_HBM3_HBM5_HBM7,
-	RB_COMPNT_P0V75_TRVDD,
-	RB_COMPNT_HAMSA_VDD,
-	RB_COMPNT_VPP_HBM0_HBM2_HBM4_HBM6,
-	RB_COMPNT_P0V85_VDDA_PCIE,
-	RB_COMPNT_VDDQC_HBM0_HBM2_HBM4_HBM6,
-	RB_COMPNT_VDDPHY_HBM0_HBM2_HBM4_HBM6,
+	SI_COMPNT_BIC,
+	SI_COMPNT_P0V895_PEX,
+	SI_COMPNT_P0V825_A0,
+	SI_COMPNT_P0V825_A1,
+	SI_COMPNT_P0V825_A2,
 };
 
 void load_pldmupdate_comp_config(void);
 void clear_pending_version(uint8_t activate_method);
 bool find_sensor_id_and_name_by_firmware_comp_id(uint8_t comp_identifier, uint8_t *sensor_id,
 						 char *sensor_name);
-int get_aegis_vr_compnt_mapping_sensor_table_count(void);
+int get_si_vr_compnt_mapping_sensor_table_count(void);
 
 #endif /* _PLAT_FWUPDATE_H_ */

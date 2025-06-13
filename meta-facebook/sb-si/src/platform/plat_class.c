@@ -23,6 +23,8 @@
 #include "plat_i2c.h"
 #include "plat_class.h"
 #include "plat_pldm_sensor.h"
+#include "hal_i3c.h"
+#include "plat_i3c.h"
 
 LOG_MODULE_REGISTER(plat_class);
 
@@ -85,4 +87,11 @@ void init_platform_config()
 {
 	init_vr_vendor_type();
 	init_tmp_type();
+}
+
+void plat_i3c_set_pid()
+{
+	I3C_MSG i3c_msg;
+	i3c_msg.bus = I3C_BUS6;
+	i3c_set_pid(&i3c_msg, BIC_PID);
 }

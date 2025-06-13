@@ -30,4 +30,6 @@
 
 #define I3C_BUS_MAX_NUM 6
 
+#define BIC_PID 0x567
+
 #endif
