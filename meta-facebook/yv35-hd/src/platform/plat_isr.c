@@ -101,7 +101,7 @@ static void read_vr_status_handler(struct k_work *work)
 		uint8_t status_word_lsb = msg.data[0];
 		uint8_t status_word_msb = msg.data[1];
 		if ((status_word_lsb & VR_FAULT_STATUS_LSB_MASK) == 0) {
-			//continue;
+			continue;
 		}
 
 		oem_addsel_msg_t sel_msg = { 0 };
@@ -120,6 +120,12 @@ static void read_vr_status_handler(struct k_work *work)
 				continue;
 			}
 			sel_msg.event_data[4 + reg_num] = msg.data[0];
+		}
+		msg.tx_len = 1;
+		msg.rx_len = 0;
+		msg.data[0] = PMBUS_CLEAR_FAULTS;
+		if (i2c_master_write(&msg, retry)) {
+			LOG_ERR("CLEAR_FAULTS fail 0x%x", vr_sensor_list[i]);
 		}
 		plat_add_oem_sel_evt_record(&sel_msg);
 	}

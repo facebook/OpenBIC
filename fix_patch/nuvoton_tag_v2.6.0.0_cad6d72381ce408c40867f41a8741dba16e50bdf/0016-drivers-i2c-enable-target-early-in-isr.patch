@@ -1,0 +1,194 @@
+From da457a6ef0e8a00299d3395ef9684a9d6a850073 Mon Sep 17 00:00:00 2001
+From: Tyrone Ting <kfting@nuvoton.com>
+Date: Tue, 10 Jun 2025 17:35:24 +0800
+Subject: [PATCH] drivers: i2c: enable target early in isr
+
+Enable i2c target early when the i2c master tx transaction is done.
+
+Signed-off-by: Tyrone Ting <kfting@nuvoton.com>
+---
+ drivers/i2c/i2c_npcm4xx.c | 99 +++++++++++++++++++++------------------
+ 1 file changed, 54 insertions(+), 45 deletions(-)
+
+diff --git a/drivers/i2c/i2c_npcm4xx.c b/drivers/i2c/i2c_npcm4xx.c
+index 4651fe620808..82919e62cae4 100755
+--- a/drivers/i2c/i2c_npcm4xx.c
++++ b/drivers/i2c/i2c_npcm4xx.c
+@@ -93,10 +93,12 @@ struct i2c_npcm4xx_data {
+ 	uint8_t *rx_msg_buf;
+ 	int err_code;
+ 	struct i2c_slave_config *slave_cfg[I2C_SLAVE_NUM];
++	uint8_t value[I2C_SLAVE_NUM];
+ 	enum i2c_npcm4xx_slave_addrno match_addr_no;
+ };
+ #pragma pack()
+ 
++
+ /* Driver convenience defines */
+ #define I2C_DRV_CONFIG(dev) ((const struct i2c_npcm4xx_config *)(dev)->config)
+ 
+@@ -379,6 +381,46 @@ static void i2c_npcm4xx_mutex_unlock(const struct device *dev)
+ 	k_sem_give(&data->lock_sem);
+ }
+ 
++static void i2c_conf_slave(const struct device *dev, int index, uint8_t value)
++{
++	struct i2c_reg *const inst = I2C_INSTANCE(dev);
++
++	switch (index) {
++		case 0:
++			inst->SMBnADDR1 = value;
++			break;
++		case 1:
++			inst->SMBnADDR2 = value;
++			break;
++		case 2:
++			inst->SMBnADDR3 = value;
++			break;
++		case 3:
++			inst->SMBnADDR4 = value;
++			break;
++		case 4:
++			inst->SMBnADDR5 = value;
++			break;
++		case 5:
++			inst->SMBnADDR6 = value;
++			break;
++		case 6:
++			inst->SMBnADDR7 = value;
++			break;
++		case 7:
++			inst->SMBnADDR8 = value;
++			break;
++		case 8:
++			inst->SMBnADDR9 = value;
++			break;
++		case 9:
++			inst->SMBnADDR10 = value;
++			break;
++	}
++}
++
++
++
+ static void i2c_npcm4xx_master_isr(const struct device *dev)
+ {
+ 	struct i2c_reg *const inst = I2C_INSTANCE(dev);
+@@ -483,9 +525,14 @@ static void i2c_npcm4xx_master_isr(const struct device *dev)
+ 			/* Transmit mode */
+ 			if (data->rx_cnt == 0) {
+ 				/* no need to receive data */
+-				i2c_npcm4xx_stop(dev);
++				int i;
+ 				data->master_oper_state = I2C_NPCM4XX_OPER_STA_IDLE;
+ 				i2c_npcm4xx_notify(dev, 0);
++				i2c_npcm4xx_stop(dev);
++				/* restore slave addr setting */
++				for (i = 0; i < I2C_SLAVE_NUM; i++) {
++					i2c_conf_slave(dev, i, data->value[i]);
++				}
+ 			} else {
+ 				data->master_oper_state = I2C_NPCM4XX_OPER_STA_READ;
+ 				i2c_npcm4xx_enable_stall(dev);
+@@ -494,6 +541,7 @@ static void i2c_npcm4xx_master_isr(const struct device *dev)
+ 			}
+ 		} else {
+ 			/* received mode */
++			int i;
+ 			i2c_npcm4xx_stop(dev);
+ 			data->master_oper_state = I2C_NPCM4XX_OPER_STA_IDLE;
+ 			data->rx_cnt = i2c_npcm4xx_get_DMA_cnt(dev);
+@@ -720,44 +768,6 @@ static uint8_t i2c_ret_slave(const struct device *dev, int index)
+ 	return 0;
+ }
+ 
+-static void i2c_conf_slave(const struct device *dev, int index, uint8_t value)
+-{
+-	struct i2c_reg *const inst = I2C_INSTANCE(dev);
+-
+-	switch (index) {
+-		case 0:
+-			inst->SMBnADDR1 = value;
+-			break;
+-		case 1:
+-			inst->SMBnADDR2 = value;
+-			break;
+-		case 2:
+-			inst->SMBnADDR3 = value;
+-			break;
+-		case 3:
+-			inst->SMBnADDR4 = value;
+-			break;
+-		case 4:
+-			inst->SMBnADDR5 = value;
+-			break;
+-		case 5:
+-			inst->SMBnADDR6 = value;
+-			break;
+-		case 6:
+-			inst->SMBnADDR7 = value;
+-			break;
+-		case 7:
+-			inst->SMBnADDR8 = value;
+-			break;
+-		case 8:
+-			inst->SMBnADDR9 = value;
+-			break;
+-		case 9:
+-			inst->SMBnADDR10 = value;
+-			break;
+-	}
+-}
+-
+ static void i2c_set_slave_addr(const struct device *dev, int index, uint8_t slave_addr)
+ {
+ 	struct i2c_reg *const inst = I2C_INSTANCE(dev);
+@@ -1057,7 +1067,6 @@ static int i2c_npcm4xx_transfer(const struct device *dev, struct i2c_msg *msgs,
+ 	const struct i2c_npcm4xx_config *const config = I2C_DRV_CONFIG(dev);
+ 	struct i2c_npcm4xx_data *const data = I2C_DRV_DATA(dev);
+ 	int i, ret;
+-	uint8_t value[I2C_SLAVE_NUM];
+ 	bool bus_busy;
+ 
+ 	if (i2c_npcm4xx_mutex_lock(dev, I2C_WAITING_TIME) != 0)
+@@ -1068,8 +1077,8 @@ static int i2c_npcm4xx_transfer(const struct device *dev, struct i2c_msg *msgs,
+ 		if (!bus_busy) {
+ 			/* save original slave addr setting and disable all the slave devices */
+ 			for (i = 0; i < I2C_SLAVE_NUM; i++) {
+-				value[i] = i2c_ret_slave(dev, i);
+-				i2c_conf_slave(dev, i, (value[i] & ~BIT(NPCM4XX_SMBnADDR_SAEN)));
++				data->value[i] = i2c_ret_slave(dev, i);
++				i2c_conf_slave(dev, i, (data->value[i] & ~BIT(NPCM4XX_SMBnADDR_SAEN)));
+ 			}
+ 			break;
+ 		}
+@@ -1092,7 +1101,7 @@ static int i2c_npcm4xx_transfer(const struct device *dev, struct i2c_msg *msgs,
+ 		i2c_npcm4xx_mutex_unlock(dev);
+ 		/* restore slave addr setting */
+ 		for (i = 0; i < I2C_SLAVE_NUM; i++) {
+-			i2c_conf_slave(dev, i, value[i]);
++			i2c_conf_slave(dev, i, data->value[i]);
+ 		}
+ 		return -EPROTONOSUPPORT;
+ 	}
+@@ -1104,7 +1113,7 @@ static int i2c_npcm4xx_transfer(const struct device *dev, struct i2c_msg *msgs,
+ 			i2c_npcm4xx_mutex_unlock(dev);
+ 			/* restore slave addr setting */
+ 			for (i = 0; i < I2C_SLAVE_NUM; i++) {
+-				i2c_conf_slave(dev, i, value[i]);
++				i2c_conf_slave(dev, i, data->value[i]);
+ 			}
+ 			return -EPROTONOSUPPORT;
+ 		}
+@@ -1144,7 +1153,7 @@ static int i2c_npcm4xx_transfer(const struct device *dev, struct i2c_msg *msgs,
+ 
+ 	/* restore slave addr setting */
+ 	for (i = 0; i < I2C_SLAVE_NUM; i++) {
+-		i2c_conf_slave(dev, i, value[i]);
++		i2c_conf_slave(dev, i, data->value[i]);
+ 	}
+ 
+ 	return ret;
+-- 
+2.17.1
+

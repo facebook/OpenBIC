@@ -38,31 +38,39 @@ typedef struct pldm_sensor_info {
 	PDR_numeric_sensor pdr_numeric_sensor;
 	uint32_t update_time;
 	sensor_cfg pldm_sensor_cfg;
+	uint32_t update_time_ms;
 } pldm_sensor_info;
 
 typedef struct pldm_sensor_thread {
 	int thread_id;
 	char *thread_name;
+	uint32_t poll_interval_ms;
 } pldm_sensor_thread;
 
 void pldm_sensor_monitor_init();
 void pldm_sensor_poll_thread_init();
 void pldm_sensor_polling_handler(void *arug0, void *arug1, void *arug2);
 void pldm_sensor_get_reading(sensor_cfg *pldm_sensor_cfg, uint32_t *update_time,
-			     int pldm_sensor_count, int thread_id, int sensor_num);
+			     uint32_t *update_time_ms, int pldm_sensor_count, int thread_id,
+			     int sensor_num);
 uint8_t pldm_sensor_get_reading_from_cache(uint16_t sensor_id, int *reading,
 					   uint8_t *sensor_operational_state);
 bool pldm_sensor_is_interval_ready(pldm_sensor_info *pldm_sensor_list);
 int pldm_sensor_get_info_via_sensor_thread_and_sensor_pdr_index(
 	int thread_id, int sensor_pdr_index, uint16_t *sensor_id, real32_t *resolution,
 	real32_t *offset, int8_t *unit_modifier, real32_t *poll_time, uint32_t *update_time,
-	uint8_t *type, int *cache, uint8_t *cache_status, char *check_access);
+	uint32_t *update_time_ms, uint8_t *type, int *cache, uint8_t *cache_status,
+	char *check_access);
 pldm_sensor_thread *plat_pldm_sensor_load_thread();
 pldm_sensor_info *plat_pldm_sensor_load(int thread_id);
 int plat_pldm_sensor_get_sensor_count(int thread_id);
 int pldm_sensor_polling_pre_check(pldm_sensor_info *pldm_snr_list, int sensor_num);
 int pldm_polling_sensor_reading(pldm_sensor_info *pldm_snr_list, int pldm_sensor_count,
 				int thread_id, int sensor_num);
+int pldm_polling_sensor_reading_optional_check(pldm_sensor_info *pldm_snr_list,
+					       int pldm_sensor_count, int thread_id, int sensor_num,
+					       bool interval_ready_check_en);
+pldm_sensor_thread *pldm_sensor_get_thread_info(int thread_id);
 int pldm_sensor_get_info_via_sensor_id(uint16_t sensor_id, float *resolution, float *offset,
 				       int8_t *unit_modifier, int *cache,
 				       uint8_t *sensor_operational_state);
