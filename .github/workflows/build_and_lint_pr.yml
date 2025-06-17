@@ -63,6 +63,7 @@ jobs:
       run: |
         pip install --user -U west
         pip install pyelftools
+        pip install setuptools
         
     - name: Init West Project
       run: |
