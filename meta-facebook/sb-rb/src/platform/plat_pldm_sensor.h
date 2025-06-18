@@ -1,0 +1,237 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef PLAT_PLDM_SENSOR_H
+#define PLAT_PLDM_SENSOR_H
+
+#include "pdr.h"
+#include "sensor.h"
+#define ADDR_UNKNOWN (0xFF >> 1)
+
+// sensor addr
+#define TOP_INLET_ADDR (0x92 >> 1)
+#define BOT_INLET_ADDR (0x94 >> 1)
+#define BOT_OUTLET_ADDR (0X96 >> 1)
+
+#define ASIC_MEDHA0_SENSOR0_ADDR (0x98 >> 1)
+#define ASIC_MEDHA0_SENSOR1_ADDR (0x98 >> 1)
+#define ASIC_OWL_W_ADDR (0x9A >> 1)
+#define ASIC_OWL_E_ADDR (0x9A >> 1)
+#define ASIC_HAMSA_CRM_ADDR (0x98 >> 1)
+#define ASIC_HAMSA_LS_ADDR (0x98 >> 1)
+#define ASIC_MEDHA1_SENSOR0_ADDR (0x9A >> 1)
+#define ASIC_MEDHA1_SENSOR1_ADDR (0x9A >> 1)
+
+#define ASIC_P0V85_MEDHA0_VDD_ADDR (0x4C >> 1)
+#define ASIC_P0V85_MEDHA1_VDD_ADDR (0x50 >> 1)
+#define ASIC_P0V9_OWL_E_TRVDD_ADDR (0xEE >> 1)
+#define ASIC_P0V75_OWL_E_TRVDD_ADDR (0xEE >> 1)
+#define ASIC_P0V75_MAX_M_VDD_ADDR (0xEA >> 1)
+#define ASIC_P0V75_VDDPHY_HBM1357_ADDR (0xEA >> 1)
+#define ASIC_P0V75_OWL_E_VDD_ADDR (0xE2 >> 1)
+#define ASIC_P0V4_VDDQL_HBM1357_ADDR (0xE2 >> 1)
+#define ASIC_P1V1_VDDQC_HBM1357_ADDR (0xEC >> 1)
+#define ASIC_P1V8_VPP_HBM1357_ADDR (0xEC >> 1)
+
+#define ASIC_P0V75_MAX_N_VDD_ADDR (0xF6 >> 1)
+#define ASIC_P0V8_HAMSA_AVDD_PCIE_ADDR (0xF6 >> 1)
+#define ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_ADDR (0xF2 >> 1)
+#define ASIC_P0V85_HAMSA_VDD_ADDR (0xF2 >> 1)
+#define ASIC_P1V1_VDDQC_HBM0246_ADDR (0xE0 >> 1)
+#define ASIC_P1V8_VPP_HBM0246_ADDR (0xE0 >> 1)
+#define ASIC_P0V4_VDDQL_HBM0246_ADDR (0xE4 >> 1)
+#define ASIC_P0V75_VDDPHY_HBM0246_ADDR (0xE4 >> 1)
+#define ASIC_P0V75_OWL_W_VDD_ADDR (0xE6 >> 1)
+#define ASIC_P0V75_MAX_S_VDD_ADDR (0xE6 >> 1)
+#define ASIC_P0V9_OWL_W_TRVDD_ADDR (0xF8 >> 1)
+#define ASIC_P0V75_OWL_W_TRVDD_ADDR (0xF8 >> 1)
+
+#define UBC1_ADDR (0x28 >> 1)
+#define UBC2_ADDR (0x34 >> 1)
+
+// sensor number
+/* Define sensors address(7 bit) */
+#define SENSOR_NUM_TOP_INLET_TEMP_C 0x01
+#define SENSOR_NUM_BOT_INLET_TEMP_C 0x02
+#define SENSOR_NUM_BOT_OUTLET_TEMP_C 0x03
+#define SENSOR_NUM_ASIC_MEDHA0_SENSOR0_TEMP_C 0x04
+#define SENSOR_NUM_ASIC_MEDHA0_SENSOR1_TEMP_C 0x05
+#define SENSOR_NUM_ASIC_OWL_W_TEMP_C 0x06
+#define SENSOR_NUM_ASIC_OWL_E_TEMP_C 0x07
+#define SENSOR_NUM_ASIC_MEDHA1_SENSOR0_TEMP_C 0x08
+#define SENSOR_NUM_ASIC_MEDHA1_SENSOR1_TEMP_C 0x09
+#define SENSOR_NUM_ASIC_HAMSA_CRM_TEMP_C 0x0A
+#define SENSOR_NUM_ASIC_HAMSA_LS_TEMP_C 0x0B
+
+#define SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_TEMP_C 0x0C
+#define SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_VOLT_V 0x0D
+#define SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_CURR_A 0x0E
+#define SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W 0x0F
+
+#define SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_TEMP_C 0x10
+#define SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_VOLT_V 0x11
+#define SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_CURR_A 0x12
+#define SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W 0x13
+
+#define SENSOR_NUM_ASIC_P0V9_OWL_E_TRVDD_TEMP_C 0x14
+#define SENSOR_NUM_ASIC_P0V9_OWL_E_TRVDD_VOLT_V 0x15
+#define SENSOR_NUM_ASIC_P0V9_OWL_E_TRVDD_CURR_A 0x16
+#define SENSOR_NUM_ASIC_P0V9_OWL_E_TRVDD_PWR_W 0x17
+
+#define SENSOR_NUM_ASIC_P0V75_OWL_E_TRVDD_TEMP_C 0x18
+#define SENSOR_NUM_ASIC_P0V75_OWL_E_TRVDD_VOLT_V 0x19
+#define SENSOR_NUM_ASIC_P0V75_OWL_E_TRVDD_CURR_A 0x1A
+#define SENSOR_NUM_ASIC_P0V75_OWL_E_TRVDD_PWR_W 0x1B
+
+#define SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_TEMP_C 0x1C
+#define SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_VOLT_V 0x1D
+#define SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_CURR_A 0x1E
+#define SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_PWR_W 0x1F
+
+#define SENSOR_NUM_ASIC_P0V9_OWL_W_TRVDD_TEMP_C 0x20
+#define SENSOR_NUM_ASIC_P0V9_OWL_W_TRVDD_VOLT_V 0x21
+#define SENSOR_NUM_ASIC_P0V9_OWL_W_TRVDD_CURR_A 0x22
+#define SENSOR_NUM_ASIC_P0V9_OWL_W_TRVDD_PWR_W 0x23
+
+#define SENSOR_NUM_ASIC_P0V75_OWL_W_TRVDD_TEMP_C 0x24
+#define SENSOR_NUM_ASIC_P0V75_OWL_W_TRVDD_VOLT_V 0x25
+#define SENSOR_NUM_ASIC_P0V75_OWL_W_TRVDD_CURR_A 0x26
+#define SENSOR_NUM_ASIC_P0V75_OWL_W_TRVDD_PWR_W 0x27
+
+#define SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_TEMP_C 0x28
+#define SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_VOLT_V 0x29
+#define SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_CURR_A 0x2A
+#define SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_PWR_W 0x2B
+
+#define SENSOR_NUM_ASIC_P0V75_MAX_M_VDD_TEMP_C 0x2C
+#define SENSOR_NUM_ASIC_P0V75_MAX_M_VDD_VOLT_V 0x2D
+#define SENSOR_NUM_ASIC_P0V75_MAX_M_VDD_CURR_A 0x2E
+#define SENSOR_NUM_ASIC_P0V75_MAX_M_VDD_PWR_W 0x2F
+
+#define SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_TEMP_C 0x30
+#define SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_VOLT_V 0x31
+#define SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_CURR_A 0x32
+#define SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_PWR_W 0x33
+
+#define SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_TEMP_C 0x34
+#define SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_VOLT_V 0x35
+#define SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_CURR_A 0x36
+#define SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_PWR_W 0x37
+
+#define SENSOR_NUM_ASIC_P0V8_HAMSA_AVDD_PCIE_TEMP_C 0x38
+#define SENSOR_NUM_ASIC_P0V8_HAMSA_AVDD_PCIE_VOLT_V 0x39
+#define SENSOR_NUM_ASIC_P0V8_HAMSA_AVDD_PCIE_CURR_A 0x3A
+#define SENSOR_NUM_ASIC_P0V8_HAMSA_AVDD_PCIE_PWR_W 0x3B
+
+#define SENSOR_NUM_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_TEMP_C 0x3C
+#define SENSOR_NUM_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_VOLT_V 0x3D
+#define SENSOR_NUM_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_CURR_A 0x3E
+#define SENSOR_NUM_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_PWR_W 0x3F
+
+#define SENSOR_NUM_ASIC_P0V85_HAMSA_VDD_TEMP_C 0x40
+#define SENSOR_NUM_ASIC_P0V85_HAMSA_VDD_VOLT_V 0x41
+#define SENSOR_NUM_ASIC_P0V85_HAMSA_VDD_CURR_A 0x42
+#define SENSOR_NUM_ASIC_P0V85_HAMSA_VDD_PWR_W 0x43
+
+#define SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_TEMP_C 0x44
+#define SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_VOLT_V 0x45
+#define SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_CURR_A 0x46
+#define SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_PWR_W 0x47
+
+#define SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_TEMP_C 0x48
+#define SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_VOLT_V 0x49
+#define SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_CURR_A 0x4A
+#define SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_PWR_W 0x4B
+
+#define SENSOR_NUM_ASIC_P1V1_VDDQC_HBM0246_TEMP_C 0x4C
+#define SENSOR_NUM_ASIC_P1V1_VDDQC_HBM0246_VOLT_V 0x4D
+#define SENSOR_NUM_ASIC_P1V1_VDDQC_HBM0246_CURR_A 0x4E
+#define SENSOR_NUM_ASIC_P1V1_VDDQC_HBM0246_PWR_W 0x4F
+
+#define SENSOR_NUM_ASIC_P1V8_VPP_HBM0246_TEMP_C 0x50
+#define SENSOR_NUM_ASIC_P1V8_VPP_HBM0246_VOLT_V 0x51
+#define SENSOR_NUM_ASIC_P1V8_VPP_HBM0246_CURR_A 0x52
+#define SENSOR_NUM_ASIC_P1V8_VPP_HBM0246_PWR_W 0x53
+
+#define SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_TEMP_C 0x54
+#define SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_VOLT_V 0x55
+#define SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_CURR_A 0x56
+#define SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_PWR_W 0x57
+
+#define SENSOR_NUM_ASIC_P0V4_VDDQL_HBM1357_TEMP_C 0x58
+#define SENSOR_NUM_ASIC_P0V4_VDDQL_HBM1357_VOLT_V 0x59
+#define SENSOR_NUM_ASIC_P0V4_VDDQL_HBM1357_CURR_A 0x5A
+#define SENSOR_NUM_ASIC_P0V4_VDDQL_HBM1357_PWR_W 0x5B
+
+#define SENSOR_NUM_ASIC_P1V1_VDDQC_HBM1357_TEMP_C 0x5C
+#define SENSOR_NUM_ASIC_P1V1_VDDQC_HBM1357_VOLT_V 0x5D
+#define SENSOR_NUM_ASIC_P1V1_VDDQC_HBM1357_CURR_A 0x5E
+#define SENSOR_NUM_ASIC_P1V1_VDDQC_HBM1357_PWR_W 0x5F
+
+#define SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_TEMP_C 0x60
+#define SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_VOLT_V 0x61
+#define SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_CURR_A 0x62
+#define SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_PWR_W 0x63
+
+#define SENSOR_NUM_UBC1_P12V_TEMP_C 0x64
+#define SENSOR_NUM_UBC1_P12V_VOLT_V 0x65
+#define SENSOR_NUM_UBC1_P12V_CURR_A 0x66
+#define SENSOR_NUM_UBC1_P12V_PWR_W 0x67
+#define SENSOR_NUM_UBC1_P52V_INPUT_VOLT_V 0x68
+
+#define SENSOR_NUM_UBC2_P12V_TEMP_C 0x69
+#define SENSOR_NUM_UBC2_P12V_VOLT_V 0x6A
+#define SENSOR_NUM_UBC2_P12V_CURR_A 0x6B
+#define SENSOR_NUM_UBC2_P12V_PWR_W 0x6C
+#define SENSOR_NUM_UBC2_P52V_INPUT_VOLT_V 0x6D
+
+#define SENSOR_NUM_NUMBERS 0x6E
+
+#define TMP75_TEMP_OFFSET 0x00
+#define UPDATE_INTERVAL_1S 1
+#define UPDATE_INTERVAL_5S 5
+#define UPDATE_INTERVAL_60S 60
+
+enum SENSOR_THREAD_LIST {
+	TEMP_SENSOR_THREAD_ID = 0,
+	VR_SENSOR_THREAD_ID,
+	UBC_SENSOR_THREAD_ID,
+	MAX_SENSOR_THREAD_ID,
+};
+
+int plat_pldm_sensor_get_sensor_count(int thread_id);
+sensor_cfg *get_sensor_cfg_by_sensor_id(uint8_t sensor_id);
+void plat_pldm_sensor_get_pdr_numeric_sensor(int thread_id, int sensor_num,
+					     PDR_numeric_sensor *numeric_sensor_table);
+bool is_dc_access(uint8_t sensor_num);
+void set_plat_sensor_polling_enable_flag(bool value);
+void set_plat_sensor_ubc_polling_enable_flag(bool value);
+void set_plat_sensor_temp_polling_enable_flag(bool value);
+void set_plat_sensor_vr_polling_enable_flag(bool value);
+bool get_plat_sensor_polling_enable_flag();
+bool get_plat_sensor_ubc_polling_enable_flag();
+bool get_plat_sensor_temp_polling_enable_flag();
+bool get_plat_sensor_vr_polling_enable_flag();
+bool is_ubc_access(uint8_t sensor_num);
+bool is_temp_access(uint8_t cfg_idx);
+bool is_vr_access(uint8_t sensor_num);
+bool is_osfp_3v3_access(uint8_t sensor_num);
+size_t char16_strlen(const char16_t *str);
+char16_t *char16_strcpy(char16_t *dest, const char16_t *src);
+char16_t *char16_strcat_char(char16_t *dest);
+
+bool get_raw_data_from_sensor_id(uint8_t sensor_id, uint8_t offset, uint8_t *val, uint8_t len);
+#endif
