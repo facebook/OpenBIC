@@ -218,13 +218,13 @@ void set_abr(uint8_t onoff)
 {
 	char cmd[20];
 
-	sprintf(cmd, "otp pb strap 0x2b %d", (onoff ? 1 : 0));
+	sprintf(cmd, "otp pb strap o 0x2b %d", (onoff ? 1 : 0));
 	shell_execute_cmd(shell_backend_uart_get_ptr(), cmd);
 
-	sprintf(cmd, "otp pb strap 0x2c %d", (onoff ? 1 : 0));
+	sprintf(cmd, "otp pb strap o 0x2c %d", (onoff ? 1 : 0));
 	shell_execute_cmd(shell_backend_uart_get_ptr(), cmd);
 
-	sprintf(cmd, "otp pb strap 0x2d %d", (onoff ? 1 : 0));
+	sprintf(cmd, "otp pb strap o 0x2d %d", (onoff ? 1 : 0));
 	shell_execute_cmd(shell_backend_uart_get_ptr(), cmd);
 
 	shell_execute_cmd(shell_backend_uart_get_ptr(), "");
