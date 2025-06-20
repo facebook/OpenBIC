@@ -1,0 +1,7 @@
+<map id="initialize_inventory_ids" name="initialize_inventory_ids">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,156,57"/>
+<area shape="rect" id="node2" href="$minerva-ag_2src_2platform_2plat__i2c__target_8c.html#afa8b065569e93487ac0e4cdfbbc91408" title=" " alt="" coords="204,5,307,32"/>
+<area shape="rect" id="node3" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#ad8887b1d0c4bbc7a6f1c25870a6d9051" title=" " alt="" coords="206,56,305,83"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="355,56,473,83"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="521,56,664,83"/>
+</map>

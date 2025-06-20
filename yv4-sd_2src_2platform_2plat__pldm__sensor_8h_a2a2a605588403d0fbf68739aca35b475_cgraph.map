@@ -1,0 +1,19 @@
+<map id="plat_init_pldm_sensor_table" name="plat_init_pldm_sensor_table">
+<area shape="rect" id="node1" title=" " alt="" coords="5,205,153,246"/>
+<area shape="rect" id="node2" href="$yv4-sd_2src_2platform_2plat__pldm__sensor_8c.html#aae661cd24426a918ece848fb3526596a" title=" " alt="" coords="209,74,367,115"/>
+<area shape="rect" id="node5" href="$yv4-sd_2src_2platform_2plat__pldm__sensor_8c.html#a8e628b32d145d7ffc4ac6fc18c813066" title=" " alt="" coords="201,9,375,50"/>
+<area shape="rect" id="node9" href="$yv4-sd_2src_2platform_2plat__pldm__sensor_8c.html#a7600e69c7b4005b37e023dd72845045b" title=" " alt="" coords="201,270,375,311"/>
+<area shape="rect" id="node13" href="$yv4-sd_2src_2platform_2plat__pldm__sensor_8c.html#a39b49d355a5667c2114b7934211eeab2" title=" " alt="" coords="201,139,375,181"/>
+<area shape="rect" id="node15" href="$yv4-sd_2src_2platform_2plat__pldm__sensor_8c.html#abeec376b2c612e29cb89aae6e238fc9f" title=" " alt="" coords="201,335,375,377"/>
+<area shape="rect" id="node16" href="$yv4-sd_2src_2platform_2plat__pldm__sensor_8c.html#a4b8d4a68c623ef7e35d38d158ac0fb66" title=" " alt="" coords="201,205,375,246"/>
+<area shape="rect" id="node17" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#ac71d31036cd1cc538a7d1bbe1c1882de" title=" " alt="" coords="201,401,375,442"/>
+<area shape="rect" id="node3" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a18272dc8dce4f373b85555817c2cc6f3" title=" " alt="" coords="434,107,583,149"/>
+<area shape="rect" id="node4" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a0598e5f3f941c5e62a5d827df4bd992f" title=" " alt="" coords="431,56,586,83"/>
+<area shape="rect" id="node6" href="$yv4-sd_2src_2platform_2plat__class_8c.html#a77fab2f8167a9eb32f8d848d1bb1ef53" title=" " alt="" coords="457,5,561,32"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="643,93,761,120"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="809,93,952,120"/>
+<area shape="rect" id="node10" href="$yv4-sd_2src_2platform_2plat__class_8c.html#abd9aa17f7f2d7fb0089ab4a8e991e419" title=" " alt="" coords="449,239,568,265"/>
+<area shape="rect" id="node12" href="$yv4-sd_2src_2platform_2plat__pldm__sensor_8c.html#ac253182fd27f3bebf05b7437ad7651da" title=" " alt="" coords="423,289,595,316"/>
+<area shape="rect" id="node11" href="$gt-cc_2src_2platform_2plat__class_8c.html#afe186fac51a057492906d49592f2046c" title=" " alt="" coords="643,239,761,265"/>
+<area shape="rect" id="node14" href="$yv4-sd_2src_2platform_2plat__pldm__sensor_8c.html#aea3527fc3a3d070decf9d110a20b112b" title=" " alt="" coords="434,173,583,214"/>
+</map>

@@ -1,0 +1,15 @@
+<map id="plat_get_temp_threshold" name="plat_get_temp_threshold">
+<area shape="rect" id="node1" title=" " alt="" coords="5,179,169,206"/>
+<area shape="rect" id="node2" href="$emc1413_8c.html#ad3dd748f3be55251661156f93c371745" title=" " alt="" coords="217,78,413,105"/>
+<area shape="rect" id="node7" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#acbdf6ec80f10c919325e5e571427cf6c" title=" " alt="" coords="218,150,413,177"/>
+<area shape="rect" id="node9" href="$tmp431_8c.html#a83a6025ff4c64bca905095ea20b65dc3" title=" " alt="" coords="222,209,409,235"/>
+<area shape="rect" id="node12" href="$tmp75_8c.html#a078d7cb804cbdcc09dcfd83f47733d46" title=" " alt="" coords="226,299,405,326"/>
+<area shape="rect" id="node3" href="$emc1413_8c.html#a4ef7ead1232dfe440e26e33421daf65f" title=" " alt="" coords="461,5,620,47"/>
+<area shape="rect" id="node6" href="$emc1413_8c.html#a98c6810e376ea8879e6f39050e597d80" title=" " alt="" coords="461,71,620,112"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="668,209,787,235"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="835,209,977,235"/>
+<area shape="rect" id="node8" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a18272dc8dce4f373b85555817c2cc6f3" title=" " alt="" coords="466,136,615,177"/>
+<area shape="rect" id="node10" href="$tmp431_8c.html#aa3970f9212c079479b3b4c21621a1564" title=" " alt="" coords="466,201,615,243"/>
+<area shape="rect" id="node11" href="$tmp431_8c.html#ab35450e69c53bc6f618036126a98d5c9" title=" " alt="" coords="466,267,615,308"/>
+<area shape="rect" id="node13" href="$tmp75_8c.html#ab20af6a7fac445aa0fb83f8f1f739b9c" title=" " alt="" coords="469,332,612,373"/>
+</map>

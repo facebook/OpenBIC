@@ -1,0 +1,4 @@
+<map id="cmd_get_fan_duty" name="cmd_get_fan_duty">
+<area shape="rect" id="node1" title=" " alt="" coords="5,5,133,32"/>
+<area shape="rect" id="node2" href="$plat__pwm_8c.html#a3e60a007a62c72b1912e18e79be48c34" title=" " alt="" coords="181,5,299,32"/>
+</map>
