@@ -127,9 +127,11 @@ uint8_t modbus_read_fruid_data(modbus_command_mapping *cmd)
 	EEPROM_ENTRY fru_entry;
 
 	fru_entry.config.dev_id = cmd->arg0; //fru id
+	printk("fru_entry.config.dev_id %d\n", fru_entry.config.dev_id);
 	fru_entry.offset = (cmd->start_addr - cmd->addr) * 2;
+	printk("fru_entry.offset %d\n", fru_entry.offset);
 	fru_entry.data_len = (cmd->data_len) * 2;
-
+	printk("fru_entry.data_len %d\n", fru_entry.data_len);
 	status = FRU_read(&fru_entry);
 	if (status != FRU_READ_SUCCESS)
 		return MODBUS_EXC_SERVER_DEVICE_FAILURE;
@@ -834,6 +836,63 @@ uint8_t modbus_set_fmc_wdt(modbus_command_mapping *cmd)
 	return MODBUS_EXC_NONE;
 }
 
+uint8_t modbus_get_fbpn(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	FRU_INFO *get_fbpn;
+	get_fbpn = get_single_fru_info(cmd->arg0);
+
+	if (get_fbpn) {
+		memset(cmd->data, 0, 16);
+		memcpy(cmd->data, get_fbpn->product.product_custom_data[0],
+		       strlen(get_fbpn->product.product_custom_data[0]));
+		regs_reverse(cmd->data_len, cmd->data);
+		free(get_fbpn);
+	} else
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_get_model(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	FRU_INFO *get_model;
+	get_model = get_single_fru_info(cmd->arg0);
+
+	if (get_model) {
+		memset(cmd->data, 0, 16);
+		memcpy(cmd->data, get_model->product.product_name,
+		       strlen(get_model->product.product_name));
+		regs_reverse(cmd->data_len, cmd->data);
+		free(get_model);
+	} else
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_get_serial(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	FRU_INFO *get_serial;
+	get_serial = get_single_fru_info(cmd->arg0);
+
+	if (get_serial) {
+		memset(cmd->data, 0, 16);
+		memcpy(cmd->data, get_serial->product.product_serial,
+		       strlen(get_serial->product.product_serial));
+		regs_reverse(cmd->data_len, cmd->data);
+		free(get_serial);
+	} else
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+
+	return MODBUS_EXC_NONE;
+}
+
 modbus_command_mapping modbus_command_table[] = {
 	// addr, write_fn, read_fn, arg0, arg1, arg2, size
 	{ MODBUS_BPB_RPU_COOLANT_FLOW_RATE_LPM_ADDR, NULL, modbus_get_senser_reading,
@@ -1391,10 +1450,11 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_GET_SET_SENSOR_POLL_ADDR, modbus_sensor_poll_set, modbus_sensor_poll_get, 0, 0, 0,
 	  1 },
 	// RPU FRU
-	{ MODBUS_RPU_FBPN_ADDR, NULL, NULL, 0, 0, 0, 8 },
-	{ MODBUS_RPU_MFR_MODEL_ADDR, NULL, NULL, 0, 0, 0, 8 },
+	{ MODBUS_RPU_FBPN_ADDR, NULL, modbus_get_fbpn, MB_FRU_ID, 0, 0, 8 },
+	{ MODBUS_RPU_MFR_MODEL_ADDR, NULL, modbus_get_model, MB_FRU_ID, 0, 0, 8 },
 	{ MODBUS_RPU_MFR_DATE_ADDR, NULL, NULL, 0, 0, 0, 4 },
 	{ MODBUS_RPU_MFR_SERIAL_ADDR, NULL, NULL, 0, 0, 0, 8 },
+	{ MODBUS_FRU_SERIAL_NUMBER_ADDR, NULL, modbus_get_serial, MB_FRU_ID, 0, 0, 9 },
 	{ MODBUS_RPU_WORKORDER_ADDR, NULL, NULL, 0, 0, 0, 4 },
 	{ MODBUS_RPU_HW_REVISION_ADDR, NULL, NULL, 0, 0, 0, 4 },
 	{ MODBUS_RPU_PLC_FW_REVISION_ADDR, NULL, modbus_get_fw_reversion, 0, 0, 0, 4 },
