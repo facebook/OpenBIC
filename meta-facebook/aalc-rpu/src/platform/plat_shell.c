@@ -26,6 +26,7 @@
 #include "plat_status.h"
 #include "plat_fsc.h"
 #include "plat_hwmon.h"
+#include "plat_fru.h"
 
 LOG_MODULE_REGISTER(plat_shell);
 
@@ -491,6 +492,12 @@ void cmd_test(const struct shell *shell, size_t argc, char **argv)
 	// test code
 }
 
+void fru_print_cmd(const struct shell *shell, size_t argc, char **argv)
+{
+	uint16_t board_fru_id = strtoul(argv[1], NULL, 16);
+	print_fru_info(board_fru_id);
+}
+
 /* Sub-command Level 3 of command test */
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_get_pwm_cmd,
 			       SHELL_CMD(pump, NULL, "get pump duty", cmd_get_pump_duty),
@@ -571,6 +578,8 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_modbus_cmd,
 			       SHELL_CMD(read, NULL, "modbus read command", cmd_modbus_read),
 			       SHELL_SUBCMD_SET_END);
 
+SHELL_CMD_REGISTER(fru_print, NULL, "fru_print", fru_print_cmd);
+
 /* Sub-command Level 1 of command test */
 SHELL_STATIC_SUBCMD_SET_CREATE(
 	sub_test_cmds, SHELL_CMD(pwm, &sub_pwm_cmd, "set/get pwm command", NULL),
@@ -582,7 +591,8 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 	SHELL_CMD(fsc, &sub_fsc_cmd, "fan speed control command", NULL),
 	SHELL_CMD(pump_redundant, &sub_pump_redundant_cmd, "pump redundant command", NULL),
 	SHELL_CMD(modbus, &sub_modbus_cmd, "modbus test command", NULL),
-	SHELL_CMD(test, NULL, "test command", cmd_test), SHELL_SUBCMD_SET_END);
+	SHELL_CMD(test, NULL, "test command", cmd_test),
+	SHELL_CMD(fru, NULL, "fru command", fru_print_cmd), SHELL_SUBCMD_SET_END);
 
 /* Root of command test */
 SHELL_CMD_REGISTER(test, &sub_test_cmds, "Test commands for AALC", NULL);
