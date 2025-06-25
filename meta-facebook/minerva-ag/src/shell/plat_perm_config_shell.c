@@ -106,6 +106,26 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 		}
 	}
 
+	uint8_t setting_data_for_throttle = 0xFF;
+	if (!get_user_settings_throttle_from_eeprom(&setting_data_for_throttle,
+						    sizeof(setting_data_for_throttle))) {
+		LOG_ERR("get throttle user settings failed");
+	} else {
+		if (setting_data_for_throttle != 0xFF) {
+			shell_print(shell, "throttle                            %s",
+				    ((setting_data_for_throttle == 0x00) ?
+					     "sense0 disable, sense1 disable" :
+				     (setting_data_for_throttle == 0x40) ?
+					     "sense0 disable, sense1 enable" :
+				     (setting_data_for_throttle == 0x80) ?
+					     "sense0 enable, sense1 disable" :
+				     (setting_data_for_throttle == 0xC0) ?
+					     "sense0 enable, sense1 enable" :
+					     "unknown"));
+			config_count++;
+		}
+	}
+
 	if (!config_count) {
 		shell_print(shell, "no perm parameter exist");
 	}
