@@ -32,7 +32,7 @@ jobs:
           yv4-sd,
           yv4-ff,
           yv4-wf,
-          sb-rb,
+          nuvoton-sb-rb,
         ]
         # Need to set this to false otherwise it will cancel all platform builds if one fails.
       fail-fast: false
@@ -107,15 +107,19 @@ jobs:
  
     - name: Apply Kernel Patches
       run: |
-        ${{ github.event.repository.name }}/scripts/build/apply_patches.py --source="${{ github.event.repository.name }}/fix_patch/" --destination="zephyr"
+        ${{ github.event.repository.name }}/scripts/build/apply_patches.py --source="${{ github.event.repository.name }}/fix_patch/aspeed-main-v2.6.0_632d2fb5d0438040e8dc44da48a2fb0712c1feea/" --destination="zephyr"
+        ${{ github.event.repository.name }}/scripts/build/apply_patches.py --source="${{ github.event.repository.name }}/fix_patch/nuvoton_tag_v2.6.0.0_cad6d72381ce408c40867f41a8741dba16e50bdf/" --destination="zephyr_nuvoton"
  
     - name: Build Platform
       id: build
       continue-on-error: true
       run: |
-        cd ${{ github.event.repository.name }} 
-        touch meta-facebook/${{ matrix.platform }}/CMakeLists.txt
-        west build -p auto -b ast1030_evb meta-facebook/${{ matrix.platform }}/
+        prjname=${{ matrix.platform }}
+        if [[ $prjname == nuvoton* ]]; then
+          west -z zephyr_nuvoton build -p auto -b npcm400f_evb ${{ github.event.repository.name }}/meta-facebook/${prjname#nuvoton-}/
+        else
+          west build -p auto -b ast1030_evb ${{ github.event.repository.name }}/meta-facebook/${{ matrix.platform }}/
+        fi
 
     - name: Get Build Status
       env:

@@ -25,11 +25,11 @@
 
 LOG_MODULE_REGISTER(plat_fru);
 
-#define AEGIS_FRU_START 0x0000
-#define AEGIS_FRU_SIZE 0x0400 // size 1KB
+#define FRU_START 0x0000
+#define FRU_SIZE 0x0400 // size 1KB
 
-#define AEGIS_CPLD_FRU_START 0x0000
-#define AEGIS_CPLD_FRU_SIZE 0x0400
+#define CPLD_FRU_START 0x0000
+#define CPLD_FRU_SIZE 0x0400
 
 const EEPROM_CFG plat_fru_config[] = {
 	{
@@ -47,8 +47,8 @@ const EEPROM_CFG plat_fru_config[] = {
 		I2C_BUS11,
 		CPLD_EEPROM_ADDR,
 		FRU_DEV_ACCESS_BYTE,
-		AEGIS_CPLD_FRU_START,
-		AEGIS_CPLD_FRU_SIZE,
+		CPLD_FRU_START,
+		CPLD_FRU_SIZE,
 	},
 };
 
@@ -175,12 +175,12 @@ bool plat_get_cpld_fru_data(uint8_t *data)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
-	const uint32_t total_size = AEGIS_CPLD_FRU_SIZE; // 0x0400
+	const uint32_t total_size = CPLD_FRU_SIZE; // 0x0400
 	const uint32_t chunk_size = 0x80; // 0x80 bytes per read
 	uint32_t offset = 0;
 
 	while (offset < total_size) {
-		if (!plat_cpld_fru_read(AEGIS_CPLD_FRU_START + offset, data + offset, chunk_size)) {
+		if (!plat_cpld_fru_read(CPLD_FRU_START + offset, data + offset, chunk_size)) {
 			LOG_ERR("Failed to read FRU chunk at offset 0x%x", offset);
 			return false;
 		}
@@ -246,7 +246,7 @@ bool init_fru_info(void)
 		return false;
 	}
 
-	uint8_t fru_data[AEGIS_CPLD_FRU_SIZE];
+	uint8_t fru_data[CPLD_FRU_SIZE];
 
 	/* Read FRU data from CPLD EEPROM */
 	if (!plat_get_cpld_fru_data(fru_data)) {
@@ -262,7 +262,7 @@ bool init_fru_info(void)
 	uint16_t product_offset = common_header[4] * 8;
 
 	/* --------------------- Parse Chassis Area --------------------- */
-	if (chassis_offset + 3 < AEGIS_CPLD_FRU_SIZE) {
+	if (chassis_offset + 3 < CPLD_FRU_SIZE) {
 		uint16_t area_len = fru_data[chassis_offset + 1] * 8;
 		plat_fru_info->chassis.chassis_type = fru_data[chassis_offset + 2];
 
@@ -309,7 +309,7 @@ bool init_fru_info(void)
 	}
 
 	/* --------------------- Parse Board Area --------------------- */
-	if (board_offset + 6 < AEGIS_CPLD_FRU_SIZE) {
+	if (board_offset + 6 < CPLD_FRU_SIZE) {
 		uint16_t area_len = fru_data[board_offset + 1] * 8;
 		plat_fru_info->board.language = fru_data[board_offset + 2];
 		parse_board_mfg_date(&fru_data[board_offset + 3],
@@ -391,7 +391,7 @@ bool init_fru_info(void)
 	}
 
 	/* --------------------- Parse Product Area --------------------- */
-	if (product_offset + 3 < AEGIS_CPLD_FRU_SIZE) {
+	if (product_offset + 3 < CPLD_FRU_SIZE) {
 		uint16_t area_len = fru_data[product_offset + 1] * 8;
 		plat_fru_info->product.language = fru_data[product_offset + 2];
 		int offset = product_offset + 3;

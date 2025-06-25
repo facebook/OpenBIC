@@ -5,9 +5,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-typedef struct _aegis_cpld_info_ aegis_cpld_info;
+typedef struct _cpld_info_ cpld_info;
 
-typedef struct _aegis_cpld_info_ {
+typedef struct _cpld_info_ {
 	uint8_t cpld_offset;
 	uint8_t dc_off_defaut;
 	uint8_t dc_on_defaut;
@@ -23,9 +23,9 @@ typedef struct _aegis_cpld_info_ {
 	//temp data for last polling
 	uint8_t last_polling_value;
 
-	bool (*status_changed_cb)(aegis_cpld_info *, uint8_t *);
+	bool (*status_changed_cb)(cpld_info *, uint8_t *);
 
-} aegis_cpld_info;
+} cpld_info;
 
 bool plat_read_cpld(uint8_t offset, uint8_t *data);
 
