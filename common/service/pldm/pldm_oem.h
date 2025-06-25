@@ -90,7 +90,8 @@ enum oem_event_type {
 	CXL1_HB,
 	CXL2_HB,
 	POST_STARTED,
-	POST_ENDED
+	POST_ENDED,
+	PROCHOT_TRIGGERED_BY_SENSOR_UCR
 };
 
 enum vr_event_source {
