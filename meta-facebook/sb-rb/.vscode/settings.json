@@ -1,0 +1,11 @@
+{
+  "files.associations": {
+    "*.c": "c",
+    "stdint.h": "c",
+    "plat_pldm_sensor.h": "c",
+    "plat_hook.h": "c",
+    "plat_i2c_target.h": "c",
+    "plat_led.h": "c",
+    "stdio.h": "c"
+  }
+}
