@@ -1,0 +1,92 @@
+From 25eab7dd328d945560e66c722d594597eb6b4ecf Mon Sep 17 00:00:00 2001
+From: Alan Yang <tyang1@nuvoton.com>
+Date: Thu, 5 Jun 2025 14:32:14 +0800
+Subject: [PATCH 1/2] drivers: clock_control: mpcm4xx: Update get system clock
+ rate method and default FIU divider
+
+Change:
+1. Get system clock rate from registers.
+2. Update FIU divider setting.
+
+Signed-off-by: Alan Yang <tyang1@nuvoton.com>
+---
+ drivers/clock_control/clock_control_npcm4xx.c | 31 +++++++++++++------
+ soc/arm/npcm4xx/common/soc_clock.h            |  4 +++
+ 2 files changed, 26 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/clock_control/clock_control_npcm4xx.c b/drivers/clock_control/clock_control_npcm4xx.c
+index e39aaaabc3..3164ec1e1f 100644
+--- a/drivers/clock_control/clock_control_npcm4xx.c
++++ b/drivers/clock_control/clock_control_npcm4xx.c
+@@ -63,30 +63,43 @@ static inline int npcm4xx_clock_control_off(const struct device *dev,
+ }
+ 
+ static int npcm4xx_clock_control_get_subsys_rate(const struct device *dev,
+-					      clock_control_subsys_t sub_system,
+-					      uint32_t *rate)
++						 clock_control_subsys_t sub_system, uint32_t *rate)
+ {
+-	ARG_UNUSED(dev);
++	struct cdcg_reg *const inst_cdcg = HAL_CDCG_INST(dev);
+ 	struct npcm4xx_clk_cfg *clk_cfg = (struct npcm4xx_clk_cfg *)(sub_system);
+ 
++	/* Get divider */
++	uint32_t hfcgp = inst_cdcg->HFCGP;
++	uint32_t hfcbcd = inst_cdcg->HFCBCD;
++	uint32_t hfcbcd1 = inst_cdcg->HFCBCD1;
++	uint32_t hfcbcd2 = inst_cdcg->HFCBCD2;
++
++	uint32_t ahb6_div = hfcgp & 0x3;
++	uint32_t fpred = (hfcgp >> 4) & 0xF;
++	uint32_t apb1_div = hfcbcd & 0xF;
++	uint32_t apb2_div = (hfcbcd >> 4) & 0xF;
++	uint32_t fiu_div = hfcbcd1 & 0x3;
++	uint32_t apb3_div = hfcbcd2 & 0xF;
++	uint32_t core_clk = OFMCLK / (fpred + 1);
++
+ 	switch (clk_cfg->bus) {
+ 	case NPCM4XX_CLOCK_BUS_APB1:
+-		*rate = NPCM4XX_APB_CLOCK(1);
++		*rate = APBSRC_CLK / (apb1_div + 1);
+ 		break;
+ 	case NPCM4XX_CLOCK_BUS_APB2:
+-		*rate = NPCM4XX_APB_CLOCK(2);
++		*rate = APBSRC_CLK / (apb2_div + 1);
+ 		break;
+ 	case NPCM4XX_CLOCK_BUS_APB3:
+-		*rate = NPCM4XX_APB_CLOCK(3);
++		*rate = APBSRC_CLK / (apb3_div + 1);
+ 		break;
+ 	case NPCM4XX_CLOCK_BUS_AHB6:
+-		*rate = CORE_CLK/(AHB6DIV_VAL + 1);
++		*rate = core_clk / (ahb6_div + 1);
+ 		break;
+ 	case NPCM4XX_CLOCK_BUS_FIU:
+-		*rate = CORE_CLK/(FIUDIV_VAL + 1);
++		*rate = core_clk / (fiu_div + 1);
+ 		break;
+ 	case NPCM4XX_CLOCK_BUS_CORE:
+-		*rate = CORE_CLK;
++		*rate = core_clk;
+ 		break;
+ 	case NPCM4XX_CLOCK_BUS_LFCLK:
+ 		*rate = LFCLK;
+diff --git a/soc/arm/npcm4xx/common/soc_clock.h b/soc/arm/npcm4xx/common/soc_clock.h
+index affac5e935..a1d81e5dd3 100644
+--- a/soc/arm/npcm4xx/common/soc_clock.h
++++ b/soc/arm/npcm4xx/common/soc_clock.h
+@@ -66,7 +66,11 @@ struct npcm4xx_clk_cfg {
+ /* AHB6 clock */
+ #define AHB6DIV_VAL 0 /* AHB6_CLK = CORE_CLK */
+ /* FIU clock divider */
++#if (CORE_CLK > 50000000)
++#define FIUDIV_VAL 1 /* FIU_CLK = CORE_CLK/2 */
++#else
+ #define FIUDIV_VAL 0 /* FIU_CLK = CORE_CLK */
++#endif
+ 
+ /* Get APB clock freq */
+ #define NPCM4XX_APB_CLOCK(no) (APBSRC_CLK / (APB##no##DIV_VAL + 1))
+-- 
+2.47.1
+
