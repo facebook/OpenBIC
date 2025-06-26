@@ -23,7 +23,9 @@
 #include "plat_mctp.h"
 #include "plat_hook.h"
 #include "plat_fru.h"
+#include "plat_adc.h"
 #include "flash_shell.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -50,6 +52,8 @@ void pal_post_init()
 {
 	plat_mctp_init();
 	init_fru_info();
+	plat_adc_init();
+	init_plat_config();
 	//init_load_eeprom_log();
 }
 

@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#define CPLD_OFFSET_VR_VENDER_TYPE 0x15
+
 typedef struct _aegis_cpld_info_ aegis_cpld_info;
 
 typedef struct _aegis_cpld_info_ {
