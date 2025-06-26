@@ -1,0 +1,128 @@
+From 7b27160c33fba469ad4be190c8664a0bbe2c7af4 Mon Sep 17 00:00:00 2001
+From: Alan Yang <tyang1@nuvoton.com>
+Date: Thu, 5 Jun 2025 14:59:35 +0800
+Subject: [PATCH 2/2] drivers: spi: npcm4xx: Support set spi-max-frequency in
+ FIU driver
+
+Configure the spi-max-frequency from the DTS. Since the FIU only
+supports division factors of 1, 2, or 4, the closest achievable
+frequency below the target will be set.
+
+Signed-off-by: Alan Yang <tyang1@nuvoton.com>
+---
+ drivers/spi/spi_npcm4xx_fiu.c | 45 +++++++++++++++++++++++++++++++++++
+ dts/arm/nuvoton/npcm4xx.dtsi  | 12 +++++-----
+ 2 files changed, 51 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/spi/spi_npcm4xx_fiu.c b/drivers/spi/spi_npcm4xx_fiu.c
+index 9f81f42981..e8f9c0b01e 100644
+--- a/drivers/spi/spi_npcm4xx_fiu.c
++++ b/drivers/spi/spi_npcm4xx_fiu.c
+@@ -31,6 +31,8 @@ enum npcm4xx_fiu_spi_nor_type {
+ struct npcm4xx_spi_fiu_config {
+ 	/* flash interface unit base address */
+ 	mm_reg_t base;
++	/* clock control base address */
++	mm_reg_t cdcg_base;
+ 	/* clock configuration */
+ 	struct npcm4xx_clk_cfg clk_cfg;
+ 	/* direct access memory for backup */
+@@ -57,6 +59,8 @@ struct npcm4xx_spi_fiu_data {
+ /* Driver convenience defines */
+ #define HAL_INSTANCE(dev)                                                                          \
+ 	((struct fiu_reg *)((const struct npcm4xx_spi_fiu_config *)(dev)->config)->base)
++#define HAL_CDCG_INSTANCE(dev)                                                                     \
++	((struct cdcg_reg *)((const struct npcm4xx_spi_fiu_config *)(dev)->config)->cdcg_base)
+ 
+ static inline void spi_npcm4xx_fiu_uma_lock(const struct device *dev)
+ {
+@@ -745,6 +749,46 @@ static int spi_nor_npcm4xx_fiu_read_init(const struct device *dev,
+ 	struct npcm4xx_spi_fiu_data *data = dev->data;
+ 	enum npcm4xx_fiu_spi_nor_type spi_nor_type = spi_cfg->slave;
+ 
++	const struct npcm4xx_spi_fiu_config *const config = dev->config;
++	const struct device *const clk_dev = device_get_binding(NPCM4XX_CLK_CTRL_NAME);
++	struct cdcg_reg *const cdcg_inst = HAL_CDCG_INSTANCE(dev);
++	uint32_t rate, target_freq, required_div_factor, target_div, div;
++	int ret;
++
++	/*
++	 * Get FIU_CLK and set frequency according to spi_max_frequency
++	 * The divider only supports /2 or /4 and the max freq = 50MHz.
++	 */
++	ret = clock_control_get_rate(clk_dev, (clock_control_subsys_t)&config->clk_cfg, &rate);
++	if (ret < 0) {
++		LOG_ERR("Get clock rate error %d", ret);
++		return ret;
++	}
++
++	target_freq = spi_cfg->frequency;
++	div = cdcg_inst->HFCBCD1 & 0x3;
++	rate = rate * (div + 1); /* Source frequency */
++
++	/* Only adjust divider if target frequency is less than current rate */
++	if (target_freq < rate) {
++		/* Calculate required divider based on target frequency */
++		required_div_factor = (rate + target_freq - 1) / target_freq; /* Ceiling division */
++
++		/* Map to hardware divider values: 0=/1, 1=/2, 3=/4 */
++		if (required_div_factor <= 1) {
++			target_div = 0; /* No division */
++		} else if (required_div_factor <= 2) {
++			target_div = 1; /* Divide by 2 */
++		} else {
++			target_div = 3; /* Divide by 4 */
++		}
++
++		/* Only update divider if we need a higher division */
++		if (target_div > div) {
++			cdcg_inst->HFCBCD1 = target_div & 0x3;
++		}
++	}
++
+ 	/* record read command from jesd216 */
+ 	memcpy(&data->read_op_info[spi_nor_type], &op_info, sizeof(op_info));
+ 
+@@ -825,6 +869,7 @@ static struct spi_driver_api spi_npcm4xx_fiu_api = {
+ #define NPCM4XX_FIU_INIT(inst)                                                                      \
+ 		static struct npcm4xx_spi_fiu_config npcm4xx_spi_fiu_config_##inst = {              \
+ 		.base = DT_INST_REG_ADDR_BY_NAME(inst, ctrl_reg),                                   \
++		.cdcg_base = DT_INST_REG_ADDR_BY_NAME(inst, cdcg_reg),                              \
+ 		.backup_mmap_base = DT_INST_REG_ADDR_BY_NAME(inst, backup_mmap),                    \
+ 		.share_mmap_base = DT_INST_REG_ADDR_BY_NAME(inst, share_mmap),                      \
+ 		.private_mmap_base = DT_INST_REG_ADDR_BY_NAME(inst, private_mmap),                  \
+diff --git a/dts/arm/nuvoton/npcm4xx.dtsi b/dts/arm/nuvoton/npcm4xx.dtsi
+index 735253852b..0d5700ab86 100644
+--- a/dts/arm/nuvoton/npcm4xx.dtsi
++++ b/dts/arm/nuvoton/npcm4xx.dtsi
+@@ -499,10 +499,10 @@
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+ 			ctrl-type = "nspi";
+-			reg-names = "ctrl_reg", "backup_mmap", "share_mmap", "private_mmap";
+-			reg = <0x40020000 0x100>, <0x60000000 0x10000000>,
++			reg-names = "ctrl_reg", "cdcg_reg", "backup_mmap", "share_mmap", "private_mmap";
++			reg = <0x40020000 0x100>, <0x400b5000 0x115>, <0x60000000 0x10000000>,
+ 				<0x70000000 0x10000000>, <0x80000000 0x10000000>;
+-			clocks = <&pcc NPCM4XX_CLOCK_BUS_APB3 NPCM4XX_PWDWN_CTL1 2>;
++			clocks = <&pcc NPCM4XX_CLOCK_BUS_FIU NPCM4XX_PWDWN_CTL1 2>;
+ 			pinctrl-0 = <&pinctrl_shd_spi_default &pinctrl_shd_spi_quad>;
+ 			spi-ctrl-caps-mask = <0x000c0f0c>;
+ 			label = "SPI_FIU0";
+@@ -548,10 +548,10 @@
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+ 			ctrl-type = "hspi";
+-			reg-names = "ctrl_reg", "backup_mmap", "share_mmap", "private_mmap";
+-                        reg = <0x40021000 0x100>, <0x60000000 0x10000000>,
++			reg-names = "ctrl_reg", "cdcg_reg", "backup_mmap", "share_mmap", "private_mmap";
++                        reg = <0x40021000 0x100>, < 0x400b5000 0x115 >, <0x60000000 0x10000000>,
+ 				<0x70000000 0x10000000>, <0x80000000 0x10000000>;
+-			clocks = <&pcc NPCM4XX_CLOCK_BUS_APB3 NPCM4XX_PWDWN_CTL1 2>;
++			clocks = <&pcc NPCM4XX_CLOCK_BUS_FIU NPCM4XX_PWDWN_CTL1 2>;
+ 			spi-ctrl-caps-mask = <0x000c0f0c>;
+ 			label = "SPI_FIU1";
+ 			status = "disabled";
+-- 
+2.47.1
+

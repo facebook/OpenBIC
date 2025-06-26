@@ -17,4 +17,24 @@
 #ifndef PLAT_CLASS_H
 #define PLAT_CLASS_H
 
+#include "stdint.h"
+
+enum VR_MODULE {
+	VR_MODULE_MPS,
+	VR_MODULE_RNS,
+	VR_MODULE_UNKNOWN,
+};
+
+enum UBC_MODULE {
+	UBC_MODULE_DELTA,
+	UBC_MODULE_MPS,
+	UBC_MODULE_FLEX,
+	UBC_MODULE_LUXSHARE,
+	UBC_MODULE_UNKNOWN,
+};
+
+void init_plat_config();
+uint8_t get_vr_module();
+uint8_t get_ubc_module();
+
 #endif

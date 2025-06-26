@@ -22,15 +22,15 @@ void cmd_spi_enable_hamsa(const struct shell *shell, size_t argc, char **argv)
 void cmd_spi_enable_medha0(const struct shell *shell, size_t argc, char **argv)
 {
 	gpio_set(SPI_MEDHA0_MUX_IN1, 1);
-	gpio_set(QSPI_CPLD_SEL_0, 0);
-	gpio_set(QSPI_CPLD_SEL_1, 1);
+	gpio_set(QSPI_CPLD_SEL_0, 1);
+	gpio_set(QSPI_CPLD_SEL_1, 0);
 }
 
 void cmd_spi_enable_medha1(const struct shell *shell, size_t argc, char **argv)
 {
 	gpio_set(SPI_MEDHA1_MUX_IN1, 1);
-	gpio_set(QSPI_CPLD_SEL_0, 1);
-	gpio_set(QSPI_CPLD_SEL_1, 0);
+	gpio_set(QSPI_CPLD_SEL_0, 0);
+	gpio_set(QSPI_CPLD_SEL_1, 1);
 }
 
 SHELL_STATIC_SUBCMD_SET_CREATE(

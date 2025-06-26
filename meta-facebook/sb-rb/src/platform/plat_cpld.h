@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#define CPLD_OFFSET_VR_VENDER_TYPE 0x15
+
 typedef struct _cpld_info_ cpld_info;
 
 typedef struct _cpld_info_ {

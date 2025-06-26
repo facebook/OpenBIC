@@ -134,6 +134,15 @@
     re-init-support;
 };
 
+&pcc {
+       clock-frequency = <DT_FREQ_M(96)>; /* OFMCLK runs at 96MHz */
+       core-prescaler = <1>; /* CORE_CLK runs at 96MHz */
+       apb1-prescaler = <8>; /* APB1_CLK runs at 12MHz */
+       apb2-prescaler = <1>; /* APB2_CLK runs at 96MHz */
+       apb3-prescaler = <1>; /* APB3_CLK runs at 96MHz */
+       fiu-prescaler = <4>; /* FIU_CLK runs at 24MHz */
+};
+
 &i3c5 {
 	status = "okay";
 	slave;
@@ -153,7 +162,7 @@
 		compatible = "i3c-slave-mqueue";
 		reg = <0x21>;
 		msg-size = <256>;
-		num-of-msgs = <4>;
+		num-of-msgs = <16>;
 		mandatory-data-byte = <0xbf>;
 		label = "I3C_SMQ_5";
 		status = "okay";
