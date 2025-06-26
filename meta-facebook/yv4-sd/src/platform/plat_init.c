@@ -153,4 +153,5 @@ void pal_set_sys_status()
 void pal_device_init()
 {
 	start_monitor_pmic_error_thread();
+	start_monitor_prochot_sensor_thread();
 }

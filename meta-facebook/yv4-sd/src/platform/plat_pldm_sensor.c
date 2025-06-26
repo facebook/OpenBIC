@@ -36,6 +36,9 @@
 
 LOG_MODULE_REGISTER(plat_pldm_sensor);
 static bool bootdrive_exist = false;
+K_THREAD_STACK_DEFINE(monitor_prochot_sensor_stack, MONITOR_PROCHOT_SENSOR_STACK_SIZE);
+struct k_thread monitor_prochot_sensor_thread;
+k_tid_t monitor_prochot_sensor_tid;
 
 static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = {
 	// thread id, thread name
@@ -7022,7 +7025,8 @@ void set_bootdrive_exist_status()
 		return;
 	} else {
 		bootdrive_exist = !(msg.data[0] & (1 << 6));
-		LOG_ERR("Return Value is %x, Bootdrive %s", msg.data[0], bootdrive_exist ? "exist" : "does not exist");
+		LOG_ERR("Return Value is %x, Bootdrive %s", msg.data[0],
+			bootdrive_exist ? "exist" : "does not exist");
 	}
 }
 
@@ -7034,11 +7038,166 @@ bool get_bootdrive_exist_status()
 bool bootdrive_access(uint8_t sensor_num)
 {
 	// If the bootdrice exist, wait for post_completed then start to monitor
-	if(get_bootdrive_exist_status())
-	{
+	if (get_bootdrive_exist_status()) {
 		return post_access(sensor_num);
 	}
 
 	// If the bootdrive does not exist, let the sensor do not stock in init status
 	return true;
+}
+
+void start_monitor_prochot_sensor_thread()
+{
+	LOG_INF("Start thread to monitor PROCHOT sensor");
+	monitor_prochot_sensor_tid =
+		k_thread_create(&monitor_prochot_sensor_thread, monitor_prochot_sensor_stack,
+				K_THREAD_STACK_SIZEOF(monitor_prochot_sensor_stack),
+				monitor_prochot_sensor_handler, NULL, NULL, NULL, K_PRIO_PREEMPT(1),
+				0, K_NO_WAIT);
+
+	k_thread_name_set(&monitor_prochot_sensor_thread, "monitor_prochot_sensor_thread");
+}
+
+const prochot_sensor_info prochot_sensor_table[PROCHOT_SENSOR_TABLE_LEN] = {
+	// { sensor_id, event_bit }
+	{ NUM_DIMM_A_TEMP, BIT(0) }, // DIMM_A0_TEMP_C
+	{ NUM_DIMM_B_TEMP, BIT(0) }, // DIMM_A1_TEMP_C
+	{ NUM_DIMM_C_TEMP, BIT(1) }, // DIMM_A2_TEMP_C
+	{ NUM_DIMM_D_TEMP, BIT(1) }, // DIMM_A3_TEMP_C
+	{ NUM_DIMM_E_TEMP, BIT(2) }, // DIMM_A4_TEMP_C
+	{ NUM_DIMM_F_TEMP, BIT(2) }, // DIMM_A5_TEMP_C
+	{ NUM_DIMM_G_TEMP, BIT(3) }, // DIMM_A6_TEMP_C
+	{ NUM_DIMM_H_TEMP, BIT(3) }, // DIMM_A7_TEMP_C
+	{ NUM_DIMM_I_TEMP, BIT(4) }, // DIMM_A8_TEMP_C
+	{ NUM_DIMM_J_TEMP, BIT(4) }, // DIMM_A9_TEMP_C
+	{ NUM_DIMM_K_TEMP, BIT(5) }, // DIMM_A10_TEMP_C
+	{ NUM_DIMM_L_TEMP, BIT(5) }, // DIMM_A11_TEMP_C
+	{ 0x0004, BIT(6) }, // MB_CPU_TEMP_C
+	{ 0x0013, BIT(7) }, // MB_VR_CPU0_TEMP_C
+	{ 0x0015, BIT(8) }, // MB_VR_CPU1_TEMP_C
+	{ 0x0017, BIT(9) }, // MB_VR_PVDD11_TEMP_C
+	{ 0x0016, BIT(10) }, // MB_VR_PVDDIO_TEMP_C
+	{ 0x0014, BIT(11) }, // MB_VR_SOC_TEMP_C
+};
+
+void monitor_prochot_sensor_handler()
+{
+	PDR_numeric_sensor sensor_pdr;
+	uint16_t sensor_id;
+	float critical_high;
+	float sensor_reading = 0, decimal = 0, resolution = 0, offset = 0;
+	int cache_reading = 0;
+	int8_t unit_modifier = 0;
+	int16_t integer = 0;
+	uint8_t sensor_operational_state = PLDM_SENSOR_STATUSUNKOWN;
+	static bool event_status[PROCHOT_SENSOR_TABLE_LEN] = { 0 };
+	uint16_t event_bit = 0;
+	static uint16_t event_bit_history = 0;
+
+	while (1) {
+		k_msleep(MONITOR_PROCHOT_SENSOR_TIME_MS);
+
+		// Check DC on
+		if (gpio_get(RST_PLTRST_BIC_N) == GPIO_LOW) {
+			continue;
+		}
+		// Check sensor poll enable
+		if (get_sensor_poll_enable_flag() == false) {
+			continue;
+		}
+
+		for (int i = 0; i < PROCHOT_SENSOR_TABLE_LEN; i++) {
+			sensor_id = prochot_sensor_table[i].sensor_id;
+			sensor_reading = 0;
+			sensor_operational_state = PLDM_SENSOR_STATUSUNKOWN;
+
+			if (pldm_sensor_get_info_via_sensor_id(sensor_id, &resolution, &offset,
+							       &unit_modifier, &cache_reading,
+							       &sensor_operational_state) != 0) {
+				LOG_ERR("sensor id: 0x%04x could not be found in pldm_sensor_list",
+					sensor_id);
+				// Keep previous status
+				continue;
+			}
+			if (sensor_operational_state != PLDM_SENSOR_ENABLED) {
+				// Keep previous status
+				continue;
+			}
+
+			// Convert two byte integer, two byte decimal sensor format to float
+			integer = cache_reading & 0xffff;
+			decimal = (float)(cache_reading >> 16) / 1000.0;
+
+			if (integer >= 0) {
+				sensor_reading = (float)integer + decimal;
+			} else {
+				sensor_reading = (float)integer - decimal;
+			}
+			// Filter abnormal reading
+			if (sensor_reading > 255) {
+				LOG_ERR("sensor id: 0x%04x, reading = %d is abnormal (over 255)",
+					sensor_id, (int)sensor_reading);
+				// Keep previous status
+				continue;
+			}
+
+			if (get_pdr_with_sensor_id(sensor_id, &sensor_pdr) != 0) {
+				LOG_ERR("sensor id: 0x%4x get pdr failed", sensor_id);
+				// Keep previous status
+				continue;
+			}
+
+			// Sensor support upperThresholdCritical
+			if ((sensor_pdr.supported_thresholds & BIT(1)) == 0) {
+				LOG_ERR("sensor id: 0x%04x unsupported upper critical threshold",
+					sensor_id);
+				// Keep previous status
+				continue;
+			}
+			critical_high =
+				sensor_pdr.critical_high * power(10, sensor_pdr.unit_modifier);
+
+			if (sensor_reading > critical_high) {
+				event_status[i] = true;
+			} else {
+				event_status[i] = false;
+			}
+		}
+
+		event_bit = 0;
+		for (size_t i = 0; i < PROCHOT_SENSOR_TABLE_LEN; i++) {
+			if (event_status[i]) {
+				event_bit |= prochot_sensor_table[i].event_bit;
+			}
+		}
+
+		if (event_bit != event_bit_history) {
+			event_bit_history = event_bit;
+
+			if (event_bit != 0) {
+				gpio_set(FM_BMC_DEBUG_ENABLE_R_N, GPIO_LOW);
+				LOG_INF("Set FM_BMC_DEBUG_ENABLE_R_N to low");
+			} else {
+				gpio_set(FM_BMC_DEBUG_ENABLE_R_N, GPIO_HIGH);
+				LOG_INF("Set FM_BMC_DEBUG_ENABLE_R_N to high");
+			}
+
+			struct pldm_addsel_data sel_msg = { 0 };
+
+			sel_msg.assert_type = (event_bit != 0) ? EVENT_ASSERTED : EVENT_DEASSERTED;
+			sel_msg.event_type = PROCHOT_TRIGGERED_BY_SENSOR_UCR;
+			sel_msg.event_data_2 = event_bit >> 8;
+			sel_msg.event_data_3 = event_bit & 0xFF;
+
+			if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
+				LOG_ERR("Failed to send sensor UCR triggered Prochot SEL, event data: 0x%02x 0x%02x 0x%02x",
+					sel_msg.event_data_1, sel_msg.event_data_2,
+					sel_msg.event_data_3);
+			} else {
+				LOG_INF("Send sensor UCR triggered Prochot SEL, event data: 0x%02x 0x%02x 0x%02x",
+					sel_msg.event_data_1, sel_msg.event_data_2,
+					sel_msg.event_data_3);
+			}
+		}
+	}
 }

@@ -165,5 +165,6 @@ int change_pdr_table_critical_low_with_sensor_id(uint32_t sensorID, float critic
 int get_pdr_table_critical_high_and_low_with_sensor_id(uint32_t sensorID, float *critical_high,
 						       float *critical_low);
 int check_supported_threshold_with_sensor_id(uint32_t sensorID);
+int get_pdr_with_sensor_id(uint32_t sensorID, PDR_numeric_sensor *numeric_sensor_pdr);
 
 #endif
