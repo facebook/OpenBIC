@@ -1,0 +1,13 @@
+<map id="pal_post_init" name="pal_post_init">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,100,83"/>
+<area shape="rect" id="node2" href="$minerva-ag_2src_2platform_2plat__fru_8c.html#a973e875cb4265fdd569d305558e850b6" title=" " alt="" coords="155,31,244,57"/>
+<area shape="rect" id="node11" href="$at-cb_2src_2platform_2plat__mctp_8c.html#af17d4e2997613e6dcb53131ba8ed0f65" title=" " alt="" coords="148,81,251,108"/>
+<area shape="rect" id="node3" href="$aalc-rpu_2src_2platform_2plat__fru_8c.html#a809921be4dec51ee0fe2eb4338379964" title=" " alt="" coords="321,5,429,32"/>
+<area shape="rect" id="node4" href="$aalc-rpu_2src_2platform_2plat__fru_8c.html#ab4c5a7e51838136967e93a3c3b361bf5" title=" " alt="" coords="299,56,452,83"/>
+<area shape="rect" id="node5" href="$aalc-rpu_2src_2platform_2plat__fru_8c.html#a1b9852758fc4664a9e1229ef943ade9f" title=" " alt="" coords="500,56,628,83"/>
+<area shape="rect" id="node6" href="$eeprom_8c.html#af84d506534770494cca55b2db24730ba" title=" " alt="" coords="676,31,773,57"/>
+<area shape="rect" id="node10" href="$fru_8c.html#a4694b8ef2f5e4e98917fc28fe989a2d9" title=" " alt="" coords="677,81,773,108"/>
+<area shape="rect" id="node7" href="$eeprom_8c.html#ac470cc411f066d8f6bc2c1d7a74c8a5a" title=" " alt="" coords="821,31,960,57"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="1008,31,1129,57"/>
+<area shape="rect" id="node9" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="1177,31,1320,57"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="cxl1_heartbeat_monitor_handler" name="cxl1_heartbeat_monitor_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,23,161,65"/>
+<area shape="rect" id="node2" href="$power__status_8c.html#a647e7f9c1247d6a1785d9b9502e7fd29" title=" " alt="" coords="237,5,345,32"/>
+<area shape="rect" id="node3" href="$pldm__oem_8h.html#abfa67ccc03b5a09b8503f95d5f8e5c5f" title=" " alt="" coords="209,56,372,83"/>
+</map>
