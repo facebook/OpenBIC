@@ -55,7 +55,7 @@ struct kcs_response {
 };
 
 void kcs_device_init(char **config, uint8_t size);
-void kcs_write(uint8_t index, uint8_t *buf, uint32_t buf_sz);
+int kcs_write(uint8_t index, uint8_t *buf, uint32_t buf_sz);
 bool get_kcs_ok();
 void reset_kcs_ok();
 
