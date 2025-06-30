@@ -85,4 +85,16 @@ bool bootdrive_access(uint8_t sensor_num);
 void set_bootdrive_exist_status();
 bool get_bootdrive_exist_status();
 
+#define MONITOR_PROCHOT_SENSOR_STACK_SIZE 1024
+void start_monitor_prochot_sensor_thread();
+
+#define PROCHOT_SENSOR_TABLE_LEN 18
+typedef struct _prochot_sensor_info {
+	uint16_t sensor_id;
+	uint16_t event_bit;
+} prochot_sensor_info;
+
+#define MONITOR_PROCHOT_SENSOR_TIME_MS (1 * 1000) // 1s
+void monitor_prochot_sensor_handler();
+
 #endif
