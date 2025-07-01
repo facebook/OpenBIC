@@ -823,6 +823,7 @@ bool vr_status_name_get(uint8_t rail, uint8_t **name)
 #define SOC_PCIE_PERST_USER_SETTINGS_OFFSET 0x8300
 #define BOOTSTRAP_USER_SETTINGS_OFFSET 0x8400
 #define THERMALTRIP_USER_SETTINGS_OFFSET 0x8500
+#define THROTTLE_USER_SETTINGS_OFFSET 0x8600
 
 vr_vout_user_settings user_settings = { 0 };
 struct vr_vout_user_settings default_settings = { 0 };
@@ -1446,6 +1447,89 @@ bool set_thermaltrip_user_settings(bool thermaltrip_enable, bool is_perm)
 	return true;
 }
 
+throttle_user_settings_struct throttle_user_settings = { 0xFF };
+#define CPLD_THROTTLE_SWITCH_ADDR 0x32
+
+bool get_user_settings_throttle_from_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 5;
+	msg.bus = I2C_BUS12;
+	msg.target_addr = 0xA0 >> 1;
+	msg.tx_len = 2;
+	msg.data[0] = THROTTLE_USER_SETTINGS_OFFSET >> 8;
+	msg.data[1] = THROTTLE_USER_SETTINGS_OFFSET & 0xff;
+	msg.rx_len = data_length;
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Failed to read eeprom, bus: %d, addr: 0x%x, reg: 0x%x%x", msg.bus,
+			msg.target_addr, msg.data[0], msg.data[1]);
+		return false;
+	}
+	memcpy(user_settings, msg.data, data_length);
+
+	LOG_HEXDUMP_DBG(msg.data, data_length, "EEPROM data read throttle");
+
+	return true;
+}
+
+bool set_user_settings_throttle_to_eeprom(void *throttle_user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(throttle_user_settings, false);
+
+	/* write the throttle_user_settings to eeprom */
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 5;
+	msg.bus = I2C_BUS12;
+	msg.target_addr = 0xA0 >> 1;
+	msg.tx_len = data_length + 2;
+	msg.data[0] = THROTTLE_USER_SETTINGS_OFFSET >> 8;
+	msg.data[1] = THROTTLE_USER_SETTINGS_OFFSET & 0xff;
+
+	memcpy(&msg.data[2], throttle_user_settings, data_length);
+	LOG_DBG("throttle user settings write into eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x, tx_len: %d",
+		msg.bus, msg.target_addr, msg.data[0], msg.data[1], msg.tx_len);
+
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("throttle user settings failed to write into eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x, tx_len: %d",
+			msg.bus, msg.target_addr, msg.data[0], msg.data[1], msg.tx_len);
+		return false;
+	}
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+
+bool set_throttle_user_settings(uint8_t *throttle_status_reg, bool is_perm)
+{
+	CHECK_NULL_ARG_WITH_RETURN(throttle_status_reg, false);
+
+	I2C_MSG msg = { 0 };
+	msg.bus = I2C_BUS5;
+	msg.target_addr = AEGIS_CPLD_ADDR;
+	msg.tx_len = 2;
+	msg.data[0] = CPLD_THROTTLE_SWITCH_ADDR;
+	msg.data[1] = *throttle_status_reg;
+
+	if (i2c_master_write(&msg, 3)) {
+		LOG_ERR("Failed to write to bus %d device: %x", msg.bus, msg.target_addr);
+		return false;
+	}
+
+	if (is_perm) {
+		throttle_user_settings.throttle_user_setting_value = *throttle_status_reg;
+
+		if (!set_user_settings_throttle_to_eeprom(&throttle_user_settings,
+							  sizeof(throttle_user_settings))) {
+			LOG_ERR("Failed to write throttle to eeprom error");
+			return false;
+		}
+	}
+	return true;
+}
+
 bool check_is_bootstrap_setting_value_valid(uint8_t rail, uint8_t value)
 {
 	int critical_value = 1 << bootstrap_table[rail].bit_count;
@@ -1543,6 +1627,27 @@ static bool thermaltrip_user_settings_init(void)
 	return true;
 }
 
+static bool throttle_user_settings_init(void)
+{
+	uint8_t setting_data = 0xFF;
+	if (!get_user_settings_throttle_from_eeprom(&setting_data, sizeof(setting_data))) {
+		LOG_ERR("get throttle user settings fail");
+		return false;
+	}
+
+	if (setting_data != 0xFF) {
+		if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_THROTTLE_SWITCH_ADDR,
+				    &setting_data, sizeof(setting_data))) {
+			LOG_ERR("Can't set throttle=%d by user settings", setting_data);
+			return false;
+		}
+
+		LOG_INF("set throttle=%x by user settings", setting_data);
+	}
+
+	return true;
+}
+
 static bool bootstrap_user_settings_init(void)
 {
 	if (bootstrap_user_settings_get(&bootstrap_user_settings) == false) {
@@ -1619,6 +1724,7 @@ void user_settings_init(void)
 	bootstrap_user_settings_init();
 	vr_vout_range_user_settings_init();
 	thermaltrip_user_settings_init();
+	throttle_user_settings_init();
 }
 
 bool get_bootstrap_change_drive_level(int rail, int *drive_level)
@@ -1883,6 +1989,14 @@ bool perm_config_clear(void)
 	uint8_t setting_value_for_thermaltrip = 0xFF;
 	if (!set_user_settings_thermaltrip_to_eeprom(&setting_value_for_thermaltrip,
 						     sizeof(setting_value_for_thermaltrip))) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
+	/* clear throttle perm parameter */
+	uint8_t setting_value_for_throttle = 0xFF;
+	if (!set_user_settings_throttle_to_eeprom(&setting_value_for_throttle,
+						  sizeof(setting_value_for_throttle))) {
 		LOG_ERR("The perm_config clear failed");
 		return false;
 	}
