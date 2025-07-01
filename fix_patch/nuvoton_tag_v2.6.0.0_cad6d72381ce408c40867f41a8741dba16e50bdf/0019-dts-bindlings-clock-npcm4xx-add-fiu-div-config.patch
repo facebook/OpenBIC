@@ -1,0 +1,63 @@
+From 0396835bd76e2f8a4d79f0082501893ba50329e6 Mon Sep 17 00:00:00 2001
+From: Alan Yang <tyang1@nuvoton.com>
+Date: Tue, 17 Jun 2025 14:36:49 +0800
+Subject: [PATCH] dts: bindlings: clock: npcm4xx: add fiu div config
+
+Add config to set fiu div on clock control init
+
+Signed-off-by: Alan Yang <tyang1@nuvoton.com>
+---
+ dts/bindings/clock/nuvoton,npcm4xx-pcc.yaml | 16 ++++++++++++++++
+ soc/arm/npcm4xx/common/soc_clock.h          |  4 ++++
+ 2 files changed, 20 insertions(+)
+
+diff --git a/dts/bindings/clock/nuvoton,npcm4xx-pcc.yaml b/dts/bindings/clock/nuvoton,npcm4xx-pcc.yaml
+index c7bb3a8b99..305b361ad8 100644
+--- a/dts/bindings/clock/nuvoton,npcm4xx-pcc.yaml
++++ b/dts/bindings/clock/nuvoton,npcm4xx-pcc.yaml
+@@ -205,6 +205,22 @@ properties:
+       - 9
+       - 10
+ 
++  fiu-prescaler:
++    type: int
++    description: |
++      FIU prescaler. It sets the FIU_CLK, by dividing
++      CORE_CLK and needs to meet the following requirements.
++      - If CORE_CLK > 50MHz, FIU_CLK must be set to
++        <= CORE_CLK / 2.
++      = Only the following values are allowed:
++        1, FIU_CLK = CORE_CLK
++        2, FIU_CLK = CORE_CLK / 2
++        4, FIU_CLK = CORE_CLK / 4
++    enum:
++      - 1
++      - 2
++      - 4
++
+   ram-pd-depth:
+     type: int
+     enum:
+diff --git a/soc/arm/npcm4xx/common/soc_clock.h b/soc/arm/npcm4xx/common/soc_clock.h
+index a1d81e5dd3..13de661a81 100644
+--- a/soc/arm/npcm4xx/common/soc_clock.h
++++ b/soc/arm/npcm4xx/common/soc_clock.h
+@@ -66,11 +66,15 @@ struct npcm4xx_clk_cfg {
+ /* AHB6 clock */
+ #define AHB6DIV_VAL 0 /* AHB6_CLK = CORE_CLK */
+ /* FIU clock divider */
++#if DT_NODE_HAS_PROP(DT_NODELABEL(pcc), fiu_prescaler)
++#define FIUDIV_VAL (DT_PROP(DT_NODELABEL(pcc), fiu_prescaler) - 1)
++#else
+ #if (CORE_CLK > 50000000)
+ #define FIUDIV_VAL 1 /* FIU_CLK = CORE_CLK/2 */
+ #else
+ #define FIUDIV_VAL 0 /* FIU_CLK = CORE_CLK */
+ #endif
++#endif
+ 
+ /* Get APB clock freq */
+ #define NPCM4XX_APB_CLOCK(no) (APBSRC_CLK / (APB##no##DIV_VAL + 1))
+-- 
+2.47.1
+
