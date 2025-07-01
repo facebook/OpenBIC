@@ -805,6 +805,17 @@ void cxl1_ready_handler()
 	LOG_ERR("CXL1 is not ready, check %s timeout, ret: %d", CXL1_HEART_BEAT_LABEL, ret);
 	switch_mux_to_bic(IOE_SWITCH_CXL1_VR_TO_BIC);
 	set_cxl_vr_access(CXL_ID_1, true);
+	if (cxl1_hb_state != HB_STATE_LOW) {
+		struct pldm_addsel_data sel_msg = { 0 };
+		sel_msg.event_type = CXL1_HB;
+		sel_msg.assert_type = EVENT_DEASSERTED;
+		LOG_INF("Deassert: CXL1 HB not detected after DC on");
+
+		if (send_event_log_to_bmc(sel_msg) != PLDM_SUCCESS) {
+			LOG_ERR("Failed to send assert event log");
+		}
+		cxl1_hb_state = HB_STATE_LOW;
+	}
 
 exit:
 	// Start delayable heartbeat monitor
@@ -861,6 +872,17 @@ void cxl2_ready_handler()
 	LOG_ERR("CXL2 is not ready, check %s timeout, ret: %d", CXL2_HEART_BEAT_LABEL, ret);
 	switch_mux_to_bic(IOE_SWITCH_CXL2_VR_TO_BIC);
 	set_cxl_vr_access(CXL_ID_2, true);
+	if (cxl2_hb_state != HB_STATE_LOW) {
+		struct pldm_addsel_data sel_msg = { 0 };
+		sel_msg.event_type = CXL2_HB;
+		sel_msg.assert_type = EVENT_DEASSERTED;
+		LOG_INF("Deassert: CXL2 HB not detected after DC on");
+
+		if (send_event_log_to_bmc(sel_msg) != PLDM_SUCCESS) {
+			LOG_ERR("Failed to send assert event log");
+		}
+		cxl2_hb_state = HB_STATE_LOW;
+	}
 
 exit:
 	// Start delayable heartbeat monitor
