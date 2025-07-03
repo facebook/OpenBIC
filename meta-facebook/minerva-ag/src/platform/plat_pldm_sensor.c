@@ -9330,7 +9330,7 @@ char16_t *char16_strcat_char(char16_t *dest)
 void plat_init_entity_aux_names_pdr_table()
 {
 	// Base name
-	const char16_t base_name[] = u"CB";
+	const char16_t base_name[] = u"Minerva_Aegis";
 
 	// Calculate the length of the base name
 	size_t base_len = char16_strlen(base_name);
