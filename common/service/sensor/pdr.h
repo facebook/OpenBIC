@@ -10,12 +10,12 @@
 #define TIMESTAMP104_SIZE 13 //A binary datetime type formatted as a series of 13 bytes
 #define MAX_LANGUAGE_TAG_LEN 3 //name language tag: "en"
 
-#ifndef NUMERIC_PDR_SIZE
-#define NUMERIC_PDR_SIZE 108
-#endif
-
 #ifndef MAX_AUX_SENSOR_NAME_LEN
 #define MAX_AUX_SENSOR_NAME_LEN 40
+#endif
+
+#ifndef NUMERIC_PDR_SIZE
+#define NUMERIC_PDR_SIZE (78 + MAX_AUX_SENSOR_NAME_LEN)
 #endif
 
 typedef float real32_t;
