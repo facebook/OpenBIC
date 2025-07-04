@@ -318,7 +318,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		{
 			.num = SENSOR_NUM_ASIC_MEDHA0_SENSOR0_TEMP_C,
 			.type = sensor_dev_tmp431,
-			.port = I2C_BUS2,
+			.port = I2C_BUS3,
 			.target_addr = ASIC_MEDHA0_SENSOR0_ADDR,
 			.offset = TMP432_REMOTE_TEMPERATRUE_1,
 			.access_checker = is_temp_access,
@@ -386,7 +386,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		{
 			.num = SENSOR_NUM_ASIC_MEDHA0_SENSOR1_TEMP_C,
 			.type = sensor_dev_tmp431,
-			.port = I2C_BUS2,
+			.port = I2C_BUS3,
 			.target_addr = ASIC_MEDHA0_SENSOR1_ADDR,
 			.offset = TMP432_REMOTE_TEMPERATRUE_2,
 			.access_checker = is_temp_access,
@@ -454,7 +454,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		{
 			.num = SENSOR_NUM_ASIC_OWL_W_TEMP_C,
 			.type = sensor_dev_tmp431,
-			.port = I2C_BUS2,
+			.port = I2C_BUS3,
 			.target_addr = ASIC_OWL_W_ADDR,
 			.offset = TMP432_REMOTE_TEMPERATRUE_1,
 			.access_checker = is_temp_access,
@@ -522,7 +522,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		{
 			.num = SENSOR_NUM_ASIC_OWL_E_TEMP_C,
 			.type = sensor_dev_tmp431,
-			.port = I2C_BUS2,
+			.port = I2C_BUS3,
 			.target_addr = ASIC_OWL_E_ADDR,
 			.offset = TMP432_REMOTE_TEMPERATRUE_2,
 			.access_checker = is_temp_access,
@@ -590,7 +590,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		{
 			.num = SENSOR_NUM_ASIC_MEDHA1_SENSOR0_TEMP_C,
 			.type = sensor_dev_tmp431,
-			.port = I2C_BUS3,
+			.port = I2C_BUS2,
 			.target_addr = ASIC_MEDHA1_SENSOR0_ADDR,
 			.offset = TMP432_REMOTE_TEMPERATRUE_1,
 			.access_checker = is_temp_access,
@@ -658,7 +658,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		{
 			.num = SENSOR_NUM_ASIC_MEDHA1_SENSOR1_TEMP_C,
 			.type = sensor_dev_tmp431,
-			.port = I2C_BUS3,
+			.port = I2C_BUS2,
 			.target_addr = ASIC_MEDHA1_SENSOR1_ADDR,
 			.offset = TMP432_REMOTE_TEMPERATRUE_2,
 			.access_checker = is_temp_access,
@@ -726,7 +726,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		{
 			.num = SENSOR_NUM_ASIC_HAMSA_CRM_TEMP_C,
 			.type = sensor_dev_tmp431,
-			.port = I2C_BUS3,
+			.port = I2C_BUS2,
 			.target_addr = ASIC_HAMSA_CRM_ADDR,
 			.offset = TMP432_REMOTE_TEMPERATRUE_1,
 			.access_checker = is_temp_access,
@@ -794,7 +794,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		{
 			.num = SENSOR_NUM_ASIC_HAMSA_LS_TEMP_C,
 			.type = sensor_dev_tmp431,
-			.port = I2C_BUS3,
+			.port = I2C_BUS2,
 			.target_addr = ASIC_HAMSA_LS_ADDR,
 			.offset = TMP432_REMOTE_TEMPERATRUE_2,
 			.access_checker = is_temp_access,

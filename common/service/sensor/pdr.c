@@ -386,3 +386,19 @@ int check_supported_threshold_with_sensor_id(uint32_t sensorID)
 
 	return -1;
 }
+
+int get_pdr_with_sensor_id(uint32_t sensorID, PDR_numeric_sensor *numeric_sensor_pdr)
+{
+	uint32_t numeric_sensor_pdr_count = 0;
+	numeric_sensor_pdr_count = plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR);
+
+	for (int i = 0; i < numeric_sensor_pdr_count; i++) {
+		if (numeric_sensor_table[i].sensor_id == sensorID) {
+			memcpy(numeric_sensor_pdr, &numeric_sensor_table[i],
+			       sizeof(PDR_numeric_sensor));
+			return 0;
+		}
+	}
+
+	return -1;
+}

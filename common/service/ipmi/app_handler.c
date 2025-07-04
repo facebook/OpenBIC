@@ -284,13 +284,14 @@ __weak void APP_GET_CAHNNEL_INFO(ipmi_msg *msg)
 	return;
 }
 
-__weak void frb2_wdt_timer_action(uint8_t action)
+__weak void frb2_wdt_timer_action(uint8_t action, uint8_t timer)
 {
 	LOG_INF("frb2 timer action not implement");
 }
 
 void frb2_wdt_handler(void *countdownValue, void *arug1, void *arug2)
 {
+	uint8_t timer = (timerUse & 0x07);
 	presentCountdownValue = POINTER_TO_UINT(countdownValue);
 	while (presentCountdownValue > 0) {
 		k_sleep(K_MSEC(FRB2_WDT_DELAY_MS));
@@ -302,17 +303,7 @@ void frb2_wdt_handler(void *countdownValue, void *arug1, void *arug2)
 	}
 
 	timerUseExpireFlags |= (uint8_t)(1 << (timerUse & 0x07));
-#ifdef ENABLE_EVENT_TO_BMC
-	/* FRB2 watchdog timeout */
-	LOG_ERR("frb2 wdt timeout");
-	struct pldm_addsel_data msg = { 0 };
-	msg.event_type = BIOS_FRB2_WDT_EXPIRE;
-	msg.assert_type = EVENT_ASSERTED;
-	if (PLDM_SUCCESS != send_event_log_to_bmc(msg)) {
-		LOG_ERR("Failed to assert FRB2 watchdog timeout event log.");
-	};
-#endif
-	frb2_wdt_timer_action(timerAction);
+	frb2_wdt_timer_action(timerAction, timer);
 }
 
 void init_frb2_wdt_thread(int16_t initCountdownValue)
