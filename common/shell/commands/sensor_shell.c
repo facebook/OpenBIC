@@ -174,6 +174,8 @@ static int pldm_sensor_access(const struct shell *shell, uint16_t thread_id,
 		return 0;
 	}
 
+	int name_width = MAX_AUX_SENSOR_NAME_LEN - 1;
+
 	if ((check_access == 'O') && (cache_status == PLDM_SENSOR_ENABLED)) {
 		sensor_val cache_reading;
 		cache_reading.integer = (int16_t)(cache & 0xFFFF);
@@ -195,9 +197,9 @@ static int pldm_sensor_access(const struct shell *shell, uint16_t thread_id,
 			float poll_time_float = (float)actual_poll_interval_ms / 1000.0f;
 			shell_print(
 				shell,
-				"[0x%-2x] %-45s: %-18s | access[%c] | poll %4.2f(%4.2f) sec | %-21s | %c%5d.%03d",
-				sensor_id, sensor_name, sensor_type_name[type], check_access,
-				diff_time_float, poll_time_float,
+				"[0x%-2x] %-*s: %-18s | access[%c] | poll %4.2f(%4.2f) sec | %-21s | %c%5d.%03d",
+				sensor_id, name_width, sensor_name, sensor_type_name[type],
+				check_access, diff_time_float, poll_time_float,
 				pldm_sensor_status_name[cache_status], sign, cache_reading.integer,
 				cache_reading.fraction);
 		} else {
@@ -205,9 +207,9 @@ static int pldm_sensor_access(const struct shell *shell, uint16_t thread_id,
 			int poll_time_sec = actual_poll_interval_ms / 1000;
 			shell_print(
 				shell,
-				"[0x%-2x] %-45s: %-18s | access[%c] | poll %4.2f(%4d) sec | %-21s | %c%5d.%03d",
-				sensor_id, sensor_name, sensor_type_name[type], check_access,
-				diff_time_float, poll_time_sec,
+				"[0x%-2x] %-*s: %-18s | access[%c] | poll %4.2f(%4d) sec | %-21s | %c%5d.%03d",
+				sensor_id, name_width, sensor_name, sensor_type_name[type],
+				check_access, diff_time_float, poll_time_sec,
 				pldm_sensor_status_name[cache_status], sign, cache_reading.integer,
 				cache_reading.fraction);
 		}
@@ -218,18 +220,18 @@ static int pldm_sensor_access(const struct shell *shell, uint16_t thread_id,
 			float poll_time_float = (float)actual_poll_interval_ms / 1000.0f;
 			shell_print(
 				shell,
-				"[0x%-2x] %-45s: %-18s | access[%c] | poll %4.2f(%4.2f) sec | %-21s | na",
-				sensor_id, sensor_name, sensor_type_name[type], check_access,
-				diff_time_float, poll_time_float,
+				"[0x%-2x] %-*s: %-18s | access[%c] | poll %4.2f(%4.2f) sec | %-21s | na",
+				sensor_id, name_width, sensor_name, sensor_type_name[type],
+				check_access, diff_time_float, poll_time_float,
 				pldm_sensor_status_name[cache_status]);
 		} else {
 			float diff_time_float = (float)diff_time_ms / 1000.0f;
 			int poll_time_sec = actual_poll_interval_ms / 1000;
 			shell_print(
 				shell,
-				"[0x%-2x] %-45s: %-18s | access[%c] | poll %4.2f(%4d) sec | %-21s | na",
-				sensor_id, sensor_name, sensor_type_name[type], check_access,
-				diff_time_float, poll_time_sec,
+				"[0x%-2x] %-*s: %-18s | access[%c] | poll %4.2f(%4d) sec | %-21s | na",
+				sensor_id, name_width, sensor_name, sensor_type_name[type],
+				check_access, diff_time_float, poll_time_sec,
 				pldm_sensor_status_name[cache_status]);
 		}
 	}
