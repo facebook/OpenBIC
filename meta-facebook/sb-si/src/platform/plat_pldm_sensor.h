@@ -89,8 +89,6 @@ sensor_cfg *get_sensor_cfg_by_sensor_id(uint8_t sensor_id);
 void plat_pldm_sensor_get_pdr_numeric_sensor(int thread_id, int sensor_num,
 					     PDR_numeric_sensor *numeric_sensor_table);
 uint8_t plat_pldm_sensor_get_vr_dev(uint8_t *vr_dev);
-void plat_pldm_sensor_change_vr_dev();
-void plat_pldm_sensor_change_cpu_bus();
 void plat_pldm_sensor_change_retimer_dev();
 bool is_dc_access(uint8_t sensor_num);
 void set_plat_sensor_polling_enable_flag(bool value);
@@ -101,7 +99,6 @@ bool get_plat_sensor_polling_enable_flag();
 bool get_plat_sensor_temp_polling_enable_flag();
 bool get_plat_sensor_vr_polling_enable_flag();
 bool get_plat_sensor_adc_polling_enable_flag();
-bool is_ubc_access(uint8_t sensor_num);
 bool is_temp_access(uint8_t cfg_idx);
 bool is_vr_access(uint8_t sensor_num);
 bool is_adc_access(uint8_t sensor_num);

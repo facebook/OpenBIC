@@ -36,12 +36,6 @@ static bool plat_sensor_adc_polling_enable_flag = true;
 static bool plat_sensor_temp_polling_enable_flag = true;
 static bool plat_sensor_vr_polling_enable_flag = true;
 
-void plat_pldm_sensor_change_vr_dev();
-void plat_pldm_sensor_change_vr_addr();
-void plat_pldm_sensor_change_temp_addr();
-void plat_pldm_sensor_change_temp_dev();
-void plat_pldm_sensor_change_adc_addr();
-void plat_pldm_sensor_change_adc_dev();
 void find_vr_addr_by_sensor_id(uint8_t sensor_id, uint8_t *vr_addr);
 typedef struct plat_sensor_vr_extend_info {
 	uint16_t sensor_id;
@@ -80,9 +74,6 @@ plat_sensor_vr_extend_info plat_sensor_vr_extend_table[] = {
 };
 
 plat_sensor_tmp_extend_info plat_sensor_tmp_extend_table[] = {
-	// { SENSOR_NUM_ON_DIE_1_TEMP_C, ON_DIE_1_TEMP_EMC1413_ADDR, EMC1413_REMOTE_TEMPERATRUE_1 },
-	// { SENSOR_NUM_ON_DIE_2_TEMP_C, ON_DIE_2_TEMP_EMC1413_ADDR, EMC1413_REMOTE_TEMPERATRUE_2 },
-	// { SENSOR_NUM_ON_DIE_3_TEMP_C, ON_DIE_3_TEMP_EMC1413_ADDR, EMC1413_REMOTE_TEMPERATRUE_1 },
 };
 
 static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = {
@@ -108,13 +99,13 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_THERMAL_SENSOR_1_TEMP_C, //uint16_t sensor_id;
-			0x0000, //uint16_t entity_type; //Need to check
+			0x0000, //uint16_t entity_type;
 			0x0001, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
-			0x00, //uint8_t sensor_init; //Need to check
+			0x00, //uint8_t sensor_init;
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
 			0x02, //uint8_t base_unit;  //unit
-			-3, //int8_t unit_modifier; //Need to check
+			-3, //int8_t unit_modifier;
 			0x00, //uint8_t rate_unit;
 			0x00, //uint8_t base_oem_unit_handle;
 			0x00, //uint8_t aux_unit;
@@ -134,10 +125,10 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0x00, //uint8_t range_field_support; //Need to check
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -176,13 +167,13 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_THERMAL_SENSOR_2_TEMP_C, //uint16_t sensor_id;
-			0x0000, //uint16_t entity_type; //Need to check
+			0x0000, //uint16_t entity_type;
 			0x0002, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
-			0x00, //uint8_t sensor_init; //Need to check
+			0x00, //uint8_t sensor_init;
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
 			0x02, //uint8_t base_unit;  //unit
-			-3, //int8_t unit_modifier; //Need to check
+			-3, //int8_t unit_modifier;
 			0x00, //uint8_t rate_unit;
 			0x00, //uint8_t base_oem_unit_handle;
 			0x00, //uint8_t aux_unit;
@@ -202,10 +193,10 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0x00, //uint8_t range_field_support; //Need to check
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -247,13 +238,13 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_VR_ASIC_P0V895_PEX_TEMP_C, //uint16_t sensor_id;
-			0x0000, //uint16_t entity_type; //Need to check
+			0x0000, //uint16_t entity_type;
 			0x0003, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
-			0x00, //uint8_t sensor_init; //Need to check
+			0x00, //uint8_t sensor_init;
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
 			0x02, //uint8_t base_unit;  //unit
-			-3, //int8_t unit_modifier; //Need to check
+			-3, //int8_t unit_modifier;
 			0x00, //uint8_t rate_unit;
 			0x00, //uint8_t base_oem_unit_handle;
 			0x00, //uint8_t aux_unit;
@@ -273,10 +264,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0x00, //uint8_t range_field_support; //Need to check
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -319,13 +310,13 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_VR_ASIC_P0V895_PEX_VOLT_V, //uint16_t sensor_id;
-			0x0000, //uint16_t entity_type; //Need to check
+			0x0000, //uint16_t entity_type;
 			0x0004, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
-			0x00, //uint8_t sensor_init; //Need to check
+			0x00, //uint8_t sensor_init;
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
 			0x05, //uint8_t base_unit;  //unit
-			-3, //int8_t unit_modifier; //Need to check
+			-3, //int8_t unit_modifier;
 			0x00, //uint8_t rate_unit;
 			0x00, //uint8_t base_oem_unit_handle;
 			0x00, //uint8_t aux_unit;
@@ -345,10 +336,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0x00, //uint8_t range_field_support; //Need to check
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -391,13 +382,13 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_VR_ASIC_P0V895_PEX_CURR_A, //uint16_t sensor_id;
-			0x0000, //uint16_t entity_type; //Need to check
+			0x0000, //uint16_t entity_type;
 			0x0005, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
-			0x00, //uint8_t sensor_init; //Need to check
+			0x00, //uint8_t sensor_init;
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
 			0x06, //uint8_t base_unit;  //unit
-			-3, //int8_t unit_modifier; //Need to check
+			-3, //int8_t unit_modifier;
 			0x00, //uint8_t rate_unit;
 			0x00, //uint8_t base_oem_unit_handle;
 			0x00, //uint8_t aux_unit;
@@ -413,23 +404,23 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0x00, //uint8_t supported_thresholds; //Need to check
+			0x00, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0x00, //uint8_t range_field_support; //Need to check
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
-			0x00000000, //uint32_t warning_high; //Need to check
-			0x00000000, //uint32_t warning_low; //Need to check
-			0x00000000, //uint32_t critical_high; //Need to check
-			0x00000000, //uint32_t critical_low; //Need to check
-			0x00000000, //uint32_t fatal_high; //Need to check
-			0x00000000, //uint32_t fatal_low; //Need to check
+			0x00000000, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00000000, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -463,13 +454,13 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_VR_ASIC_P0V895_PEX_PWR_W, //uint16_t sensor_id;
-			0x0000, //uint16_t entity_type; //Need to check
+			0x0000, //uint16_t entity_type;
 			0x0006, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
-			0x00, //uint8_t sensor_init; //Need to check
+			0x00, //uint8_t sensor_init;
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
 			0x07, //uint8_t base_unit;  //unit
-			-3, //int8_t unit_modifier; //Need to check
+			-3, //int8_t unit_modifier;
 			0x00, //uint8_t rate_unit;
 			0x00, //uint8_t base_oem_unit_handle;
 			0x00, //uint8_t aux_unit;
@@ -485,23 +476,23 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0x00, //uint8_t supported_thresholds; //Need to check
+			0x00, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0x00, //uint8_t range_field_support; //Need to check
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
-			0x00000000, //uint32_t warning_high; //Need to check
-			0x00000000, //uint32_t warning_low; //Need to check
-			0x00000000, //uint32_t critical_high; //Need to check
-			0x00000000, //uint32_t critical_low; //Need to check
-			0x00000000, //uint32_t fatal_high; //Need to check
-			0x00000000, //uint32_t fatal_low; //Need to check
+			0x00000000, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00000000, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -535,13 +526,13 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_VR_ASIC_P0V895_PEX_TEMP_C, //uint16_t sensor_id;
-			0x0000, //uint16_t entity_type; //Need to check
+			0x0000, //uint16_t entity_type;
 			0x0007, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
-			0x00, //uint8_t sensor_init; //Need to check
+			0x00, //uint8_t sensor_init;
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
 			0x02, //uint8_t base_unit;  //unit
-			-3, //int8_t unit_modifier; //Need to check
+			-3, //int8_t unit_modifier;
 			0x00, //uint8_t rate_unit;
 			0x00, //uint8_t base_oem_unit_handle;
 			0x00, //uint8_t aux_unit;
@@ -561,10 +552,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0x00, //uint8_t range_field_support; //Need to check
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -607,13 +598,13 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_VR_ASIC_P0V825_A0_VOLT_V, //uint16_t sensor_id;
-			0x0000, //uint16_t entity_type; //Need to check
+			0x0000, //uint16_t entity_type;
 			0x0008, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
-			0x00, //uint8_t sensor_init; //Need to check
+			0x00, //uint8_t sensor_init;
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
 			0x05, //uint8_t base_unit;  //unit
-			-3, //int8_t unit_modifier; //Need to check
+			-3, //int8_t unit_modifier;
 			0x00, //uint8_t rate_unit;
 			0x00, //uint8_t base_oem_unit_handle;
 			0x00, //uint8_t aux_unit;
@@ -633,10 +624,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0x00, //uint8_t range_field_support; //Need to check
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -679,13 +670,13 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_VR_ASIC_P0V825_A0_CURR_A, //uint16_t sensor_id;
-			0x0000, //uint16_t entity_type; //Need to check
+			0x0000, //uint16_t entity_type;
 			0x0009, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
-			0x00, //uint8_t sensor_init; //Need to check
+			0x00, //uint8_t sensor_init;
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
 			0x06, //uint8_t base_unit;  //unit
-			-3, //int8_t unit_modifier; //Need to check
+			-3, //int8_t unit_modifier;
 			0x00, //uint8_t rate_unit;
 			0x00, //uint8_t base_oem_unit_handle;
 			0x00, //uint8_t aux_unit;
@@ -701,23 +692,23 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0x00, //uint8_t supported_thresholds; //Need to check
+			0x00, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0x00, //uint8_t range_field_support; //Need to check
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
-			0x00000000, //uint32_t warning_high; //Need to check
-			0x00000000, //uint32_t warning_low; //Need to check
-			0x00000000, //uint32_t critical_high; //Need to check
-			0x00000000, //uint32_t critical_low; //Need to check
-			0x00000000, //uint32_t fatal_high; //Need to check
-			0x00000000, //uint32_t fatal_low; //Need to check
+			0x00000000, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00000000, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -751,13 +742,13 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_VR_ASIC_P0V825_A0_PWR_W, //uint16_t sensor_id;
-			0x0000, //uint16_t entity_type; //Need to check
+			0x0000, //uint16_t entity_type;
 			0x000A, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
-			0x00, //uint8_t sensor_init; //Need to check
+			0x00, //uint8_t sensor_init;
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
 			0x07, //uint8_t base_unit;  //unit
-			-3, //int8_t unit_modifier; //Need to check
+			-3, //int8_t unit_modifier;
 			0x00, //uint8_t rate_unit;
 			0x00, //uint8_t base_oem_unit_handle;
 			0x00, //uint8_t aux_unit;
@@ -773,23 +764,23 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0x00, //uint8_t supported_thresholds; //Need to check
+			0x00, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0x00, //uint8_t range_field_support; //Need to check
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
-			0x00000000, //uint32_t warning_high; //Need to check
-			0x00000000, //uint32_t warning_low; //Need to check
-			0x00000000, //uint32_t critical_high; //Need to check
-			0x00000000, //uint32_t critical_low; //Need to check
-			0x00000000, //uint32_t fatal_high; //Need to check
-			0x00000000, //uint32_t fatal_low; //Need to check
+			0x00000000, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00000000, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -823,13 +814,13 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_VR_ASIC_P0V825_A1_TEMP_C, //uint16_t sensor_id;
-			0x0000, //uint16_t entity_type; //Need to check
+			0x0000, //uint16_t entity_type;
 			0x000B, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
-			0x00, //uint8_t sensor_init; //Need to check
+			0x00, //uint8_t sensor_init;
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
 			0x02, //uint8_t base_unit;  //unit
-			-3, //int8_t unit_modifier; //Need to check
+			-3, //int8_t unit_modifier;
 			0x00, //uint8_t rate_unit;
 			0x00, //uint8_t base_oem_unit_handle;
 			0x00, //uint8_t aux_unit;
@@ -849,10 +840,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0x00, //uint8_t range_field_support; //Need to check
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -895,13 +886,13 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_VR_ASIC_P0V825_A1_VOLT_V, //uint16_t sensor_id;
-			0x0000, //uint16_t entity_type; //Need to check
+			0x0000, //uint16_t entity_type;
 			0x000C, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
-			0x00, //uint8_t sensor_init; //Need to check
+			0x00, //uint8_t sensor_init;
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
 			0x05, //uint8_t base_unit;  //unit
-			-3, //int8_t unit_modifier; //Need to check
+			-3, //int8_t unit_modifier;
 			0x00, //uint8_t rate_unit;
 			0x00, //uint8_t base_oem_unit_handle;
 			0x00, //uint8_t aux_unit;
@@ -921,10 +912,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0x00, //uint8_t range_field_support; //Need to check
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -967,13 +958,13 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_VR_ASIC_P0V825_A1_CURR_A, //uint16_t sensor_id;
-			0x0000, //uint16_t entity_type; //Need to check
+			0x0000, //uint16_t entity_type;
 			0x000D, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
-			0x00, //uint8_t sensor_init; //Need to check
+			0x00, //uint8_t sensor_init;
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
 			0x06, //uint8_t base_unit;  //unit
-			-3, //int8_t unit_modifier; //Need to check
+			-3, //int8_t unit_modifier;
 			0x00, //uint8_t rate_unit;
 			0x00, //uint8_t base_oem_unit_handle;
 			0x00, //uint8_t aux_unit;
@@ -989,23 +980,23 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0x00, //uint8_t supported_thresholds; //Need to check
+			0x00, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0x00, //uint8_t range_field_support; //Need to check
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
-			0x00000000, //uint32_t warning_high; //Need to check
-			0x00000000, //uint32_t warning_low; //Need to check
-			0x00000000, //uint32_t critical_high; //Need to check
-			0x00000000, //uint32_t critical_low; //Need to check
-			0x00000000, //uint32_t fatal_high; //Need to check
-			0x00000000, //uint32_t fatal_low; //Need to check
+			0x00000000, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00000000, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -1039,13 +1030,13 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_VR_ASIC_P0V825_A1_PWR_W, //uint16_t sensor_id;
-			0x0000, //uint16_t entity_type; //Need to check
+			0x0000, //uint16_t entity_type;
 			0x000E, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
-			0x00, //uint8_t sensor_init; //Need to check
+			0x00, //uint8_t sensor_init;
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
 			0x07, //uint8_t base_unit;  //unit
-			-3, //int8_t unit_modifier; //Need to check
+			-3, //int8_t unit_modifier;
 			0x00, //uint8_t rate_unit;
 			0x00, //uint8_t base_oem_unit_handle;
 			0x00, //uint8_t aux_unit;
@@ -1061,23 +1052,23 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0x00, //uint8_t supported_thresholds; //Need to check
+			0x00, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0x00, //uint8_t range_field_support; //Need to check
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
-			0x00000000, //uint32_t warning_high; //Need to check
-			0x00000000, //uint32_t warning_low; //Need to check
-			0x00000000, //uint32_t critical_high; //Need to check
-			0x00000000, //uint32_t critical_low; //Need to check
-			0x00000000, //uint32_t fatal_high; //Need to check
-			0x00000000, //uint32_t fatal_low; //Need to check
+			0x00000000, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00000000, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -1111,13 +1102,13 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_VR_ASIC_P0V825_A2_TEMP_C, //uint16_t sensor_id;
-			0x0000, //uint16_t entity_type; //Need to check
+			0x0000, //uint16_t entity_type;
 			0x000F, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
-			0x00, //uint8_t sensor_init; //Need to check
+			0x00, //uint8_t sensor_init;
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
 			0x02, //uint8_t base_unit;  //unit
-			-3, //int8_t unit_modifier; //Need to check
+			-3, //int8_t unit_modifier;
 			0x00, //uint8_t rate_unit;
 			0x00, //uint8_t base_oem_unit_handle;
 			0x00, //uint8_t aux_unit;
@@ -1137,10 +1128,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0x00, //uint8_t range_field_support; //Need to check
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1183,13 +1174,13 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_VR_ASIC_P0V825_A2_VOLT_V, //uint16_t sensor_id;
-			0x0000, //uint16_t entity_type; //Need to check
+			0x0000, //uint16_t entity_type;
 			0x0010, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
-			0x00, //uint8_t sensor_init; //Need to check
+			0x00, //uint8_t sensor_init;
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
 			0x05, //uint8_t base_unit;  //unit
-			-3, //int8_t unit_modifier; //Need to check
+			-3, //int8_t unit_modifier;
 			0x00, //uint8_t rate_unit;
 			0x00, //uint8_t base_oem_unit_handle;
 			0x00, //uint8_t aux_unit;
@@ -1209,10 +1200,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0x00, //uint8_t range_field_support; //Need to check
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
@@ -1255,13 +1246,13 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_VR_ASIC_P0V825_A2_CURR_A, //uint16_t sensor_id;
-			0x0000, //uint16_t entity_type; //Need to check
+			0x0000, //uint16_t entity_type;
 			0x0011, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
-			0x00, //uint8_t sensor_init; //Need to check
+			0x00, //uint8_t sensor_init;
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
 			0x06, //uint8_t base_unit;  //unit
-			-3, //int8_t unit_modifier; //Need to check
+			-3, //int8_t unit_modifier;
 			0x00, //uint8_t rate_unit;
 			0x00, //uint8_t base_oem_unit_handle;
 			0x00, //uint8_t aux_unit;
@@ -1277,23 +1268,23 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0x00, //uint8_t supported_thresholds; //Need to check
+			0x00, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0x00, //uint8_t range_field_support; //Need to check
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
-			0x00000000, //uint32_t warning_high; //Need to check
-			0x00000000, //uint32_t warning_low; //Need to check
-			0x00000000, //uint32_t critical_high; //Need to check
-			0x00000000, //uint32_t critical_low; //Need to check
-			0x00000000, //uint32_t fatal_high; //Need to check
-			0x00000000, //uint32_t fatal_low; //Need to check
+			0x00000000, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00000000, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -1327,13 +1318,13 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_VR_ASIC_P0V825_A2_PWR_W, //uint16_t sensor_id;
-			0x0000, //uint16_t entity_type; //Need to check
+			0x0000, //uint16_t entity_type;
 			0x0012, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
-			0x00, //uint8_t sensor_init; //Need to check
+			0x00, //uint8_t sensor_init;
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
 			0x07, //uint8_t base_unit;  //unit
-			-3, //int8_t unit_modifier; //Need to check
+			-3, //int8_t unit_modifier;
 			0x00, //uint8_t rate_unit;
 			0x00, //uint8_t base_oem_unit_handle;
 			0x00, //uint8_t aux_unit;
@@ -1349,23 +1340,23 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t plus_tolerance;
 			0x00, //uint8_t minus_tolerance;
 			0x00000000, //uint32_t hysteresis;
-			0x00, //uint8_t supported_thresholds; //Need to check
+			0x00, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t max_readable;
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
-			0x00, //uint8_t range_field_support; //Need to check
+			0x00, //uint8_t range_field_support;
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
 			0x00000000, //uint32_t normal_min;
-			0x00000000, //uint32_t warning_high; //Need to check
-			0x00000000, //uint32_t warning_low; //Need to check
-			0x00000000, //uint32_t critical_high; //Need to check
-			0x00000000, //uint32_t critical_low; //Need to check
-			0x00000000, //uint32_t fatal_high; //Need to check
-			0x00000000, //uint32_t fatal_low; //Need to check
+			0x00000000, //uint32_t warning_high;
+			0x00000000, //uint32_t warning_low;
+			0x00000000, //uint32_t critical_high;
+			0x00000000, //uint32_t critical_low;
+			0x00000000, //uint32_t fatal_high;
+			0x00000000, //uint32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -1402,13 +1393,13 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			/*** numeric sensor format ***/
 			0x0000, // uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_ADC_P12V_SCALED, // uint16_t sensor_id;
-			0x0000, // uint16_t entity_type; // Need to check
+			0x0000, // uint16_t entity_type;
 			0x0013, // uint16_t entity_instance_number;
 			0x0000, // uint16_t container_id;
-			0x00, // uint8_t sensor_init; // Need to check
+			0x00, // uint8_t sensor_init;
 			0x01, // uint8_t sensor_auxiliary_names_pdr;
 			0x02, // uint8_t base_unit;  // unit
-			-3, // int8_t unit_modifier; // Need to check
+			-3, // int8_t unit_modifier;
 			0x00, // uint8_t rate_unit;
 			0x00, // uint8_t base_oem_unit_handle;
 			0x00, // uint8_t aux_unit;
@@ -1424,23 +1415,23 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00, // uint8_t plus_tolerance;
 			0x00, // uint8_t minus_tolerance;
 			0x00000000, // uint32_t hysteresis;
-			0x00, // uint8_t supported_thresholds; // Need to check
+			0x00, // uint8_t supported_thresholds;
 			0x00, // uint8_t threshold_and_hysteresis_volatility;
 			0, // real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, // real32_t update_interval;
-			0x00000000, // uint32_t max_readable; // Need to check
+			0x00000000, // uint32_t max_readable;
 			0x00000000, // uint32_t min_readable;
 			0x04, // uint8_t range_field_format;
-			0x00, // uint8_t range_field_support; // Need to check
+			0x00, // uint8_t range_field_support;
 			0x00000000, // uint32_t nominal_value;
 			0x00000000, // uint32_t normal_max;
 			0x00000000, // uint32_t normal_min;
-			0x00000000, // uint32_t warning_high; // Need to check
-			0x00000000, // uint32_t warning_low; // Need to check
-			0x00000000, // uint32_t critical_high; // Need to check
-			0x00000000, // uint32_t critical_low; // Need to check
-			0x00000000, // uint32_t fatal_high; // Need to check
-			0x00000000, // uint32_t fatal_low; // Need to check
+			0x00000000, // uint32_t warning_high;
+			0x00000000, // uint32_t warning_low;
+			0x00000000, // uint32_t critical_high;
+			0x00000000, // uint32_t critical_low;
+			0x00000000, // uint32_t fatal_high;
+			0x00000000, // uint32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -1472,13 +1463,13 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			/*** numeric sensor format ***/
 			0x0000, // uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_ADC_P5V_STBY_SCALED, // uint16_t sensor_id;
-			0x0000, // uint16_t entity_type; // Need to check
+			0x0000, // uint16_t entity_type;
 			0x0014, // uint16_t entity_instance_number;
 			0x0000, // uint16_t container_id;
-			0x00, // uint8_t sensor_init; // Need to check
+			0x00, // uint8_t sensor_init;
 			0x01, // uint8_t sensor_auxiliary_names_pdr;
 			0x02, // uint8_t base_unit;  // unit
-			-3, // int8_t unit_modifier; // Need to check
+			-3, // int8_t unit_modifier;
 			0x00, // uint8_t rate_unit;
 			0x00, // uint8_t base_oem_unit_handle;
 			0x00, // uint8_t aux_unit;
@@ -1494,23 +1485,23 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00, // uint8_t plus_tolerance;
 			0x00, // uint8_t minus_tolerance;
 			0x00000000, // uint32_t hysteresis;
-			0x00, // uint8_t supported_thresholds; // Need to check
+			0x00, // uint8_t supported_thresholds;
 			0x00, // uint8_t threshold_and_hysteresis_volatility;
 			0, // real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, // real32_t update_interval;
-			0x00000000, // uint32_t max_readable; // Need to check
+			0x00000000, // uint32_t max_readable;
 			0x00000000, // uint32_t min_readable;
 			0x04, // uint8_t range_field_format;
-			0x00, // uint8_t range_field_support; // Need to check
+			0x00, // uint8_t range_field_support;
 			0x00000000, // uint32_t nominal_value;
 			0x00000000, // uint32_t normal_max;
 			0x00000000, // uint32_t normal_min;
-			0x00000000, // uint32_t warning_high; // Need to check
-			0x00000000, // uint32_t warning_low; // Need to check
-			0x00000000, // uint32_t critical_high; // Need to check
-			0x00000000, // uint32_t critical_low; // Need to check
-			0x00000000, // uint32_t fatal_high; // Need to check
-			0x00000000, // uint32_t fatal_low; // Need to check
+			0x00000000, // uint32_t warning_high;
+			0x00000000, // uint32_t warning_low;
+			0x00000000, // uint32_t critical_high;
+			0x00000000, // uint32_t critical_low;
+			0x00000000, // uint32_t fatal_high;
+			0x00000000, // uint32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -1542,13 +1533,13 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			/*** numeric sensor format ***/
 			0x0000, // uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_ADC_P3V3_AUX_SCALED, // uint16_t sensor_id;
-			0x0000, // uint16_t entity_type; // Need to check
+			0x0000, // uint16_t entity_type;
 			0x0015, // uint16_t entity_instance_number;
 			0x0000, // uint16_t container_id;
-			0x00, // uint8_t sensor_init; // Need to check
+			0x00, // uint8_t sensor_init;
 			0x01, // uint8_t sensor_auxiliary_names_pdr;
 			0x02, // uint8_t base_unit;  // unit
-			-3, // int8_t unit_modifier; // Need to check
+			-3, // int8_t unit_modifier;
 			0x00, // uint8_t rate_unit;
 			0x00, // uint8_t base_oem_unit_handle;
 			0x00, // uint8_t aux_unit;
@@ -1564,23 +1555,23 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00, // uint8_t plus_tolerance;
 			0x00, // uint8_t minus_tolerance;
 			0x00000000, // uint32_t hysteresis;
-			0x00, // uint8_t supported_thresholds; // Need to check
+			0x00, // uint8_t supported_thresholds;
 			0x00, // uint8_t threshold_and_hysteresis_volatility;
 			0, // real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, // real32_t update_interval;
-			0x00000000, // uint32_t max_readable; // Need to check
+			0x00000000, // uint32_t max_readable;
 			0x00000000, // uint32_t min_readable;
 			0x04, // uint8_t range_field_format;
-			0x00, // uint8_t range_field_support; // Need to check
+			0x00, // uint8_t range_field_support;
 			0x00000000, // uint32_t nominal_value;
 			0x00000000, // uint32_t normal_max;
 			0x00000000, // uint32_t normal_min;
-			0x00000000, // uint32_t warning_high; // Need to check
-			0x00000000, // uint32_t warning_low; // Need to check
-			0x00000000, // uint32_t critical_high; // Need to check
-			0x00000000, // uint32_t critical_low; // Need to check
-			0x00000000, // uint32_t fatal_high; // Need to check
-			0x00000000, // uint32_t fatal_low; // Need to check
+			0x00000000, // uint32_t warning_high;
+			0x00000000, // uint32_t warning_low;
+			0x00000000, // uint32_t critical_high;
+			0x00000000, // uint32_t critical_low;
+			0x00000000, // uint32_t fatal_high;
+			0x00000000, // uint32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -1612,13 +1603,13 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			/*** numeric sensor format ***/
 			0x0000, // uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_ADC_P1V5_PEX_SCALED, // uint16_t sensor_id;
-			0x0000, // uint16_t entity_type; // Need to check
+			0x0000, // uint16_t entity_type;
 			0x0016, // uint16_t entity_instance_number;
 			0x0000, // uint16_t container_id;
-			0x00, // uint8_t sensor_init; // Need to check
+			0x00, // uint8_t sensor_init;
 			0x01, // uint8_t sensor_auxiliary_names_pdr;
 			0x02, // uint8_t base_unit;  // unit
-			-3, // int8_t unit_modifier; // Need to check
+			-3, // int8_t unit_modifier;
 			0x00, // uint8_t rate_unit;
 			0x00, // uint8_t base_oem_unit_handle;
 			0x00, // uint8_t aux_unit;
@@ -1634,23 +1625,23 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00, // uint8_t plus_tolerance;
 			0x00, // uint8_t minus_tolerance;
 			0x00000000, // uint32_t hysteresis;
-			0x00, // uint8_t supported_thresholds; // Need to check
+			0x00, // uint8_t supported_thresholds;
 			0x00, // uint8_t threshold_and_hysteresis_volatility;
 			0, // real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, // real32_t update_interval;
-			0x00000000, // uint32_t max_readable; // Need to check
+			0x00000000, // uint32_t max_readable;
 			0x00000000, // uint32_t min_readable;
 			0x04, // uint8_t range_field_format;
-			0x00, // uint8_t range_field_support; // Need to check
+			0x00, // uint8_t range_field_support;
 			0x00000000, // uint32_t nominal_value;
 			0x00000000, // uint32_t normal_max;
 			0x00000000, // uint32_t normal_min;
-			0x00000000, // uint32_t warning_high; // Need to check
-			0x00000000, // uint32_t warning_low; // Need to check
-			0x00000000, // uint32_t critical_high; // Need to check
-			0x00000000, // uint32_t critical_low; // Need to check
-			0x00000000, // uint32_t fatal_high; // Need to check
-			0x00000000, // uint32_t fatal_low; // Need to check
+			0x00000000, // uint32_t warning_high;
+			0x00000000, // uint32_t warning_low;
+			0x00000000, // uint32_t critical_high;
+			0x00000000, // uint32_t critical_low;
+			0x00000000, // uint32_t fatal_high;
+			0x00000000, // uint32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -1682,13 +1673,13 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			/*** numeric sensor format ***/
 			0x0000, // uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_ADC_P1V2_PEX_SCALED, // uint16_t sensor_id;
-			0x0000, // uint16_t entity_type; // Need to check
+			0x0000, // uint16_t entity_type;
 			0x0017, // uint16_t entity_instance_number;
 			0x0000, // uint16_t container_id;
-			0x00, // uint8_t sensor_init; // Need to check
+			0x00, // uint8_t sensor_init;
 			0x01, // uint8_t sensor_auxiliary_names_pdr;
 			0x02, // uint8_t base_unit;  // unit
-			-3, // int8_t unit_modifier; // Need to check
+			-3, // int8_t unit_modifier;
 			0x00, // uint8_t rate_unit;
 			0x00, // uint8_t base_oem_unit_handle;
 			0x00, // uint8_t aux_unit;
@@ -1704,23 +1695,23 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00, // uint8_t plus_tolerance;
 			0x00, // uint8_t minus_tolerance;
 			0x00000000, // uint32_t hysteresis;
-			0x00, // uint8_t supported_thresholds; // Need to check
+			0x00, // uint8_t supported_thresholds;
 			0x00, // uint8_t threshold_and_hysteresis_volatility;
 			0, // real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, // real32_t update_interval;
-			0x00000000, // uint32_t max_readable; // Need to check
+			0x00000000, // uint32_t max_readable;
 			0x00000000, // uint32_t min_readable;
 			0x04, // uint8_t range_field_format;
-			0x00, // uint8_t range_field_support; // Need to check
+			0x00, // uint8_t range_field_support;
 			0x00000000, // uint32_t nominal_value;
 			0x00000000, // uint32_t normal_max;
 			0x00000000, // uint32_t normal_min;
-			0x00000000, // uint32_t warning_high; // Need to check
-			0x00000000, // uint32_t warning_low; // Need to check
-			0x00000000, // uint32_t critical_high; // Need to check
-			0x00000000, // uint32_t critical_low; // Need to check
-			0x00000000, // uint32_t fatal_high; // Need to check
-			0x00000000, // uint32_t fatal_low; // Need to check
+			0x00000000, // uint32_t warning_high;
+			0x00000000, // uint32_t warning_low;
+			0x00000000, // uint32_t critical_high;
+			0x00000000, // uint32_t critical_low;
+			0x00000000, // uint32_t fatal_high;
+			0x00000000, // uint32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -1752,13 +1743,13 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			/*** numeric sensor format ***/
 			0x0000, // uint16_t PLDM_terminus_handle;
 			SENSOR_NUM_ADC_P1V8_PEX_SCALED, // uint16_t sensor_id;
-			0x0000, // uint16_t entity_type; // Need to check
+			0x0000, // uint16_t entity_type;
 			0x0018, // uint16_t entity_instance_number;
 			0x0000, // uint16_t container_id;
-			0x00, // uint8_t sensor_init; // Need to check
+			0x00, // uint8_t sensor_init;
 			0x01, // uint8_t sensor_auxiliary_names_pdr;
 			0x02, // uint8_t base_unit;  // unit
-			-3, // int8_t unit_modifier; // Need to check
+			-3, // int8_t unit_modifier;
 			0x00, // uint8_t rate_unit;
 			0x00, // uint8_t base_oem_unit_handle;
 			0x00, // uint8_t aux_unit;
@@ -1774,23 +1765,23 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x00, // uint8_t plus_tolerance;
 			0x00, // uint8_t minus_tolerance;
 			0x00000000, // uint32_t hysteresis;
-			0x00, // uint8_t supported_thresholds; // Need to check
+			0x00, // uint8_t supported_thresholds;
 			0x00, // uint8_t threshold_and_hysteresis_volatility;
 			0, // real32_t state_transition_interval;
 			UPDATE_INTERVAL_1S, // real32_t update_interval;
-			0x00000000, // uint32_t max_readable; // Need to check
+			0x00000000, // uint32_t max_readable;
 			0x00000000, // uint32_t min_readable;
 			0x04, // uint8_t range_field_format;
-			0x00, // uint8_t range_field_support; // Need to check
+			0x00, // uint8_t range_field_support;
 			0x00000000, // uint32_t nominal_value;
 			0x00000000, // uint32_t normal_max;
 			0x00000000, // uint32_t normal_min;
-			0x00000000, // uint32_t warning_high; // Need to check
-			0x00000000, // uint32_t warning_low; // Need to check
-			0x00000000, // uint32_t critical_high; // Need to check
-			0x00000000, // uint32_t critical_low; // Need to check
-			0x00000000, // uint32_t fatal_high; // Need to check
-			0x00000000, // uint32_t fatal_low; // Need to check
+			0x00000000, // uint32_t warning_high;
+			0x00000000, // uint32_t warning_low;
+			0x00000000, // uint32_t critical_high;
+			0x00000000, // uint32_t critical_low;
+			0x00000000, // uint32_t fatal_high;
+			0x00000000, // uint32_t fatal_low;
 		},
 		.update_time = 0,
 		{
@@ -2292,16 +2283,13 @@ pldm_sensor_info *plat_pldm_sensor_load(int thread_id)
 {
 	switch (thread_id) {
 	case VR_SENSOR_THREAD_ID:
-		// plat_pldm_sensor_change_vr_dev();
-		// plat_pldm_sensor_change_vr_addr();
+
 		return plat_pldm_sensor_vr_table;
 	case TEMP_SENSOR_THREAD_ID:
-		// plat_pldm_sensor_change_temp_dev();
-		// plat_pldm_sensor_change_temp_addr();
+
 		return plat_pldm_sensor_temp_table;
 	case ADC_SENSOR_THREAD_ID:
-	// 	plat_pldm_sensor_change_adc_dev();
-	// 	plat_pldm_sensor_change_adc_addr();
+
 		return plat_pldm_sensor_adc_table;
 	default:
 		LOG_ERR("Unknow pldm sensor thread id %d", thread_id);
@@ -2473,129 +2461,6 @@ void find_tmp_addr_and_offset_by_sensor_id(uint8_t sensor_id, uint8_t *tmp_addr,
 	}
 }
 
-void plat_pldm_sensor_change_vr_addr()
-{
-	uint8_t vr_type = get_vr_type();
-	if (vr_type == VR_UNKNOWN) {
-		LOG_ERR("Unable to change the VR device due to its unknown status.");
-		return;
-	}
-
-	uint8_t addr;
-
-	if ((vr_type == VR_RNS_ISL69260_RAA228238) || (vr_type == VR_RNS_ISL69260_RAA228249)) {
-		LOG_INF("change vr addr for RNS_ISL69260_RAA228238");
-		for (int index = 0; index < plat_pldm_sensor_get_sensor_count(VR_SENSOR_THREAD_ID);
-		     index++) {
-			find_vr_addr_by_sensor_id(
-				plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.num, &addr);
-			plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.target_addr = addr;
-		}
-	} else if ((vr_type != VR_MPS_MP2971_MP2891) && (vr_type != VR_MPS_MP2971_MP29816A)) {
-		LOG_ERR("Unable to change the VR device due to its unknown status.");
-	}
-}
-
-void plat_pldm_sensor_change_vr_dev()
-{
-	uint8_t vr_type = get_vr_type();
-	if (vr_type == VR_UNKNOWN) {
-		LOG_ERR("Unable to change the VR device due to its unknown status.");
-		return;
-	}
-
-	if (vr_type == VR_MPS_MP2971_MP29816A) {
-		for (int index = 0; index < plat_pldm_sensor_get_sensor_count(VR_SENSOR_THREAD_ID);
-		     index++) {
-			if (plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type ==
-			    sensor_dev_mp2891)
-				plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type =
-					sensor_dev_mp29816a;
-		}
-	} else if (vr_type == VR_RNS_ISL69260_RAA228238) {
-		for (int index = 0; index < plat_pldm_sensor_get_sensor_count(VR_SENSOR_THREAD_ID);
-		     index++) {
-			if (plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type ==
-			    sensor_dev_mp2971)
-				plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type =
-					sensor_dev_isl69259;
-			else if (plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type ==
-				 sensor_dev_mp2891)
-				plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type =
-					sensor_dev_raa228238;
-		}
-	} else if (vr_type == VR_RNS_ISL69260_RAA228249) {
-		for (int index = 0; index < plat_pldm_sensor_get_sensor_count(VR_SENSOR_THREAD_ID);
-		     index++) {
-			if (plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type ==
-			    sensor_dev_mp2971)
-				plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type =
-					sensor_dev_isl69259;
-			else if (plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type ==
-				 sensor_dev_mp2891)
-				plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type =
-					sensor_dev_raa228249;
-			else if (plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type ==
-					sensor_dev_mp29816a)
-				plat_pldm_sensor_vr_table[index].pldm_sensor_cfg.type =
-					sensor_dev_raa228249;
-		}
-	} else if (vr_type != VR_MPS_MP2971_MP2891) {
-		LOG_ERR("Unable to change the VR device due to its unknown status.");
-	}
-}
-
-void plat_pldm_sensor_change_temp_addr()
-{
-	uint8_t temp_type = get_tmp_type();
-
-	if (temp_type == TMP_TYPE_UNKNOWN) {
-		LOG_ERR("Unable to change the temp device due to its unknown status.");
-		return;
-	}
-
-	// uint8_t addr;
-	// uint16_t offset;
-
-	if (temp_type == TMP_EMC1413) {
-		LOG_INF("change temp addr for EMC1413");
-		for (int index = 0; index < plat_pldm_sensor_get_sensor_count(TEMP_SENSOR_THREAD_ID); index++) {
-			if (plat_pldm_sensor_temp_table[index].pldm_sensor_cfg.type == sensor_dev_emc1413) {
-				LOG_INF("find_tmp_addr_and_offset_by_sensor_id function not used now");
-				// find_tmp_addr_and_offset_by_sensor_id(
-				// 	plat_pldm_sensor_temp_table[index].pldm_sensor_cfg.num,
-				// 	&addr, &offset);
-				// plat_pldm_sensor_temp_table[index].pldm_sensor_cfg.target_addr = addr;
-				// plat_pldm_sensor_temp_table[index].pldm_sensor_cfg.offset = offset;
-			}
-		}
-	} else if (temp_type != TMP_TMP432) {
-		LOG_ERR("Unable to change the temp device due to its unknown status.");
-	}
-}
-
-void plat_pldm_sensor_change_temp_dev()
-{
-	uint8_t temp_type = get_tmp_type();
-	if (temp_type == TMP_TYPE_UNKNOWN) {
-		LOG_ERR("Unable to change the temp device due to its unknown status.");
-		return;
-	}
-
-	if (temp_type == TMP_EMC1413) {
-		for (int index = 0;
-		     index < plat_pldm_sensor_get_sensor_count(TEMP_SENSOR_THREAD_ID); index++) {
-			if (plat_pldm_sensor_temp_table[index].pldm_sensor_cfg.type ==
-			    sensor_dev_tmp431) {
-				plat_pldm_sensor_temp_table[index].pldm_sensor_cfg.type =
-					sensor_dev_emc1413;
-			}
-		}
-	} else if (temp_type != TMP_TMP432) {
-		LOG_ERR("Unable to change the temp device due to its unknown status.");
-	}
-}
-
 void set_plat_sensor_polling_enable_flag(bool value)
 {
 	plat_sensor_polling_enable_flag = value;
@@ -2675,8 +2540,6 @@ bool is_temp_access(uint8_t cfg_idx)
 
 bool is_vr_access(uint8_t sensor_num)
 {
-	// return (is_dc_access(sensor_num) && get_plat_sensor_vr_polling_enable_flag() &&
-	// 	get_plat_sensor_polling_enable_flag());
 	return (get_plat_sensor_vr_polling_enable_flag() && get_plat_sensor_polling_enable_flag());
 }
 

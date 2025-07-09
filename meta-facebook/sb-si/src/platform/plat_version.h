@@ -20,7 +20,7 @@
 #include "version.h"
 
 #define PLATFORM_NAME "Santa Barbara"
-#define PROJECT_NAME "Rainbow"
+#define PROJECT_NAME "SITV3"
 #define PROJECT_STAGE POC
 
 #define BOARD_ID 0x01

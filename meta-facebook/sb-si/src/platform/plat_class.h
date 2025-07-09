@@ -17,78 +17,24 @@
 #ifndef PLAT_CLASS_H
 #define PLAT_CLASS_H
 
-enum GT_FIRMWARE_COMPONENT {
-	GT_COMPNT_VR0,
-	GT_COMPNT_VR1,
-	GT_COMPNT_BIC,
-	GT_COMPNT_PEX0,
-	GT_COMPNT_PEX1,
-	GT_COMPNT_PEX2,
-	GT_COMPNT_PEX3,
-	GT_COMPNT_CPLD,
-	GT_COMPNT_NIC0,
-	GT_COMPNT_NIC1,
-	GT_COMPNT_NIC2,
-	GT_COMPNT_NIC3,
-	GT_COMPNT_NIC4,
-	GT_COMPNT_NIC5,
-	GT_COMPNT_NIC6,
-	GT_COMPNT_NIC7,
-	GT_COMPNT_MAX,
-};
-
-typedef enum {
-	DELTA_UBC_AND_MPS_VR,
-	DELTA_UBC_AND_RNS_VR,
-	MPS_UBC_AND_MPS_VR,
-	MPS_UBC_AND_RNS_VR,
-	FLEX_UBC_AND_MPS_VR,
-	FLEX_UBC_AND_RNS_VR,
-	VR_VENDOR_UNKNOWN,
-} ag_vr_vendor_type_t;
-
 typedef enum {
 	VR_MPS_MP2971_MP2891,
 	VR_MPS_MP2971_MP29816A,
 	VR_RNS_ISL69260_RAA228238,
 	VR_RNS_ISL69260_RAA228249,
 	VR_UNKNOWN,
-} ag_vr_type_t;
-
-typedef enum {
-	UBC_DELTA_U50SU4P180PMDAFC,
-	UBC_FLEX_BMR313,
-	UBC_MPS_MPC12109,
-	UBC_UNKNOWN,
-} ag_ubc_type_t;
+} si_vr_type_t;
 
 typedef enum {
 	TMP_TMP432,
 	TMP_EMC1413,
 	TMP_TYPE_UNKNOWN,
-} ag_tmp_type_t;
-
-typedef enum {
-	FAB1_EVT,
-	FAB2_DVT,
-	FAB3_PVT,
-	FAB4_MP,
-	BOARD_STAGE_UNKNOWN,
-} ag_board_stage_t;
-
-typedef enum {
-	MINERVA_EVB_BD,
-	MINERVA_AEGIS_BD,
-	BOARD_TYPE_UNKNOWN,
-} ag_board_type_t;
+} si_tmp_type_t;
 
 void init_platform_config();
+void init_tmp_type();
 uint8_t get_vr_type();
-uint8_t get_ubc_type();
-uint8_t get_board_stage();
-uint8_t get_board_type();
 uint8_t get_tmp_type();
-bool plat_read_cpld(uint8_t offset, uint8_t *data);
 void plat_i3c_set_pid();
 
 #endif

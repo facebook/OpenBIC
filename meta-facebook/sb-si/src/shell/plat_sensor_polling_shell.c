@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <shell/shell.h>
 #include "plat_pldm_sensor.h"
+#include "plat_sensor_polling_shell.h"
 
 void cmd_set_plat_sensor_polling_all(const struct shell *shell, size_t argc, char **argv)
 {

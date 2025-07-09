@@ -55,15 +55,6 @@ enum PLAT_TEMP_INDEX_E {
 	TEMP_INDEX_MAX,
 };
 
-enum PLAT_TEMP_INDEX_THRESHOLD_TYPE_E {
-	THERMAL_SENSOR_1_TEMP_C_LOW_LIMIT,
-	THERMAL_SENSOR_1_TEMP_C_HIGH_LIMIT,
-	THERMAL_SENSOR_2_TEMP_C_LOW_LIMIT,
-	THERMAL_SENSOR_2_TEMP_C_HIGH_LIMIT,
-
-	PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX,
-};
-
 typedef struct vr_mapping_sensor {
 	uint8_t index;
 	uint8_t sensor_id;
@@ -97,12 +88,6 @@ typedef struct temp_mapping_sensor {
 } temp_mapping_sensor;
 
 extern vr_pre_proc_arg vr_pre_read_args[];
-
-typedef struct temp_threshold_user_settings_struct {
-	uint32_t temperature_reg_val[PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX];
-} temp_threshold_user_settings_struct;
-
-extern temp_threshold_user_settings_struct temp_threshold_user_settings;
 
 typedef struct temp_threshold_mapping_sensor {
 	uint8_t temp_index_threshold_type; //PLAT_TEMP_INDEX_THRESHOLD_TYPE_E
