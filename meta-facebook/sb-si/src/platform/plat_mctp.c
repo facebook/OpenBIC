@@ -162,10 +162,6 @@ void plat_mctp_init(void)
 	LOG_INF("plat_mctp_init");
 
 	/* init the mctp/pldm instance */
-	// for (uint8_t i = 0; i < ARRAY_SIZE(smbus_port); i++) {
-	// 	mctp_port *p = smbus_port + i;
-	// 	LOG_DBG("smbus port %d", i);
-	// 	LOG_DBG("bus = %x, addr = %x", p->conf.smbus_conf.bus, p->conf.smbus_conf.addr);
 	for (uint8_t i = 0; i < ARRAY_SIZE(i3c_port); i++) {
 		mctp_port *p = i3c_port + i;
 		LOG_DBG("i3c port %d", i);

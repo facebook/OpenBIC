@@ -141,22 +141,3 @@ void cmd_get_fw_version_vr(const struct shell *shell, size_t argc, char **argv)
 
 	return;
 }
-
-void cmd_get_fw_version_cpld(const struct shell *shell, size_t argc, char **argv)
-{
-    LOG_ERR("cmd_get_fw_version_cpld not use now");
-	// if (argc != 1) {
-	// 	shell_warn(shell, "Help: test get_fw_version cpld");
-	// 	return;
-	// }
-
-	// uint8_t data[4] = { 0 };
-	// uint32_t version = 0;
-	// if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, 0x44, data, 4)) {
-	// 	LOG_ERR("Failed to read cpld version from cpld");
-	// 	return;
-	// }
-	// version = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
-	// shell_print(shell, "The cpld version: %08x", version);
-	return;
-}
