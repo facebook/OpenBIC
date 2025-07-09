@@ -1726,3 +1726,11 @@ uint8_t fill_descriptor_into_buf(struct pldm_descriptor_string *descriptor, uint
 	*fill_length = descriptor_count;
 	return PLDM_SUCCESS;
 }
+
+bool is_update_state_download_phase()
+{
+	if (current_state == STATE_DOWNLOAD) {
+		return true;
+	}
+	return false;
+}
