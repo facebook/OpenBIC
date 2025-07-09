@@ -452,7 +452,7 @@ bool plat_get_fru_data(uint8_t *data, uint8_t board_fru_id)
 
 	while (offset < total_size) {
 		if (!plat_fru_read(AALC_FRU_START + offset, data + offset, chunk_size,
-					board_fru_id)) {
+				   board_fru_id)) {
 			LOG_ERR("Failed to read FRU chunk at offset 0x%x", offset);
 			return false;
 		}
