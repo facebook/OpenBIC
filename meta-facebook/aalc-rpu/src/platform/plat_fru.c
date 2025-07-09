@@ -70,19 +70,6 @@ const EEPROM_CFG plat_fru_config[] = {
 	},
 	{
 		NV_ATMEL_24C02,
-		SB_FRU_ID,
-		I2C_BUS9,
-		SB_FRU_ADDR,
-		FRU_DEV_ACCESS_BYTE,
-		AALC_FRU_START,
-		AALC_FRU_SIZE,
-		true,
-		SB_MUX_ADDR,
-		MUX_CHANNEL_1,
-		&i2c_9_PCA9546a_mutex,
-	},
-	{
-		NV_ATMEL_24C02,
 		PDB_FRU_ID,
 		I2C_BUS9,
 		PDB_FRU_ADDR,
@@ -92,6 +79,19 @@ const EEPROM_CFG plat_fru_config[] = {
 		true,
 		SB_MUX_ADDR,
 		MUX_CHANNEL_2,
+		&i2c_9_PCA9546a_mutex,
+	},
+	{
+		NV_ATMEL_24C02,
+		SB_FRU_ID,
+		I2C_BUS9,
+		SB_FRU_ADDR,
+		FRU_DEV_ACCESS_BYTE,
+		AALC_FRU_START,
+		AALC_FRU_SIZE,
+		true,
+		SB_MUX_ADDR,
+		MUX_CHANNEL_1,
 		&i2c_9_PCA9546a_mutex,
 	},
 	{
@@ -415,31 +415,8 @@ static void parse_board_mfg_date(const uint8_t *src, char *dest, int dest_size)
 }
 
 #define FRU_DATA_SIZE 0x0200
-#define FRU_DATA_LENGTH 256
-#define AEGIS_CPLD_FRU_START 0x0000
-#define AEGIS_CPLD_FRU_SIZE 0x0200
 
-bool plat_get_eeprom_fru_data(uint8_t *data, uint8_t board_id)
-{
-	CHECK_NULL_ARG_WITH_RETURN(data, false);
-
-	uint8_t status;
-	EEPROM_ENTRY fru_entry;
-
-	fru_entry.config.dev_id = board_id; //fru id
-	fru_entry.offset = 0;
-	fru_entry.data_len = FRU_DATA_LENGTH;
-
-	status = FRU_read(&fru_entry);
-	printk("fru read status %d\n", status);
-	if (status != FRU_READ_SUCCESS)
-		return false;
-
-	memcpy(data, &fru_entry.data[0], fru_entry.data_len);
-
-	return true;
-}
-bool plat_cpld_fru_read(uint32_t offset, uint8_t *data, uint16_t data_len, uint8_t board_fru_id)
+bool plat_fru_read(uint32_t offset, uint8_t *data, uint16_t data_len, uint8_t board_fru_id)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 	EEPROM_ENTRY entry;
@@ -465,16 +442,16 @@ bool plat_cpld_fru_read(uint32_t offset, uint8_t *data, uint16_t data_len, uint8
 
 	return true;
 }
-bool plat_get_cpld_fru_data(uint8_t *data, uint8_t board_fru_id)
+bool plat_get_fru_data(uint8_t *data, uint8_t board_fru_id)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
-	const uint32_t total_size = AEGIS_CPLD_FRU_SIZE; // 0x0200
+	const uint32_t total_size = FRU_DATA_SIZE; // 0x0200
 	const uint32_t chunk_size = 0x10; // 0x10 bytes per read
 	uint32_t offset = 0;
 
 	while (offset < total_size) {
-		if (!plat_cpld_fru_read(AEGIS_CPLD_FRU_START + offset, data + offset, chunk_size,
+		if (!plat_fru_read(AALC_FRU_START + offset, data + offset, chunk_size,
 					board_fru_id)) {
 			LOG_ERR("Failed to read FRU chunk at offset 0x%x", offset);
 			return false;
@@ -505,11 +482,11 @@ bool get_fru_info(uint8_t board_fru_id)
 		return false;
 	}
 
-	uint8_t fru_data[AEGIS_CPLD_FRU_SIZE];
+	uint8_t fru_data[FRU_DATA_SIZE];
 
-	/* Read MB FRU data from CPLD EEPROM */
-	if (!plat_get_cpld_fru_data(fru_data, board_fru_id)) {
-		printk("Failed to read CPLD FRU data\n");
+	/* Read FRU data from EEPROM */
+	if (!plat_get_fru_data(fru_data, board_fru_id)) {
+		printk("Failed to read FRU data\n");
 		return false;
 	}
 
@@ -521,7 +498,7 @@ bool get_fru_info(uint8_t board_fru_id)
 	uint16_t product_offset = common_header[4] * 8;
 
 	/* --------------------- Parse Chassis Area --------------------- */
-	if (chassis_offset + 3 < AEGIS_CPLD_FRU_SIZE) {
+	if (chassis_offset + 3 < FRU_DATA_SIZE) {
 		uint16_t area_len = fru_data[chassis_offset + 1] * 8;
 		plat_fru_info->chassis.chassis_type = fru_data[chassis_offset + 2];
 
@@ -568,7 +545,7 @@ bool get_fru_info(uint8_t board_fru_id)
 	}
 
 	/* --------------------- Parse Board Area --------------------- */
-	if (board_offset + 6 < AEGIS_CPLD_FRU_SIZE) {
+	if (board_offset + 6 < FRU_DATA_SIZE) {
 		uint16_t area_len = fru_data[board_offset + 1] * 8;
 		plat_fru_info->board.language = fru_data[board_offset + 2];
 		parse_board_mfg_date(&fru_data[board_offset + 3],
@@ -650,7 +627,7 @@ bool get_fru_info(uint8_t board_fru_id)
 	}
 
 	/* --------------------- Parse Product Area --------------------- */
-	if (product_offset + 3 < AEGIS_CPLD_FRU_SIZE) {
+	if (product_offset + 3 < FRU_DATA_SIZE) {
 		uint16_t area_len = fru_data[product_offset + 1] * 8;
 		plat_fru_info->product.language = fru_data[product_offset + 2];
 		int offset = product_offset + 3;
