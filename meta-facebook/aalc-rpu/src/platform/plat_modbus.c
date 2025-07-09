@@ -882,10 +882,12 @@ uint8_t modbus_get_serial(modbus_command_mapping *cmd)
 	get_serial = get_single_fru_info(cmd->arg0);
 
 	if (get_serial) {
-		char *serial = get_serial->product.product_serial;
 		//remove the 1st char Q (Quanta) in the serial number.
-		if (serial != NULL && strlen(serial) > 0) {
-			memmove(serial, serial + 1, strlen(serial));
+		if (get_serial->product.product_serial != NULL &&
+		    strlen(get_serial->product.product_serial) > 0) {
+			memmove(get_serial->product.product_serial,
+				get_serial->product.product_serial + 1,
+				strlen(get_serial->product.product_serial));
 		}
 
 		memset(cmd->data, 0, 16);
