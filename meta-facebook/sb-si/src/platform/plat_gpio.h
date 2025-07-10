@@ -27,8 +27,8 @@ void gpio_int_default();
 // dedicate gpio A0~A7, B0~B7, C0~C7, D0~D7, E0~E7, total 40 gpios
 // Default name: Reserve_GPIOH0
 #define name_gpio0	\
-	gpio_name_to_num(Reserve_GPIO00) \
-	gpio_name_to_num(Reserve_GPIO01) \
+	gpio_name_to_num(SPI_MUX_SEL) \
+	gpio_name_to_num(SPI_PEX_LV_OE) \
 	gpio_name_to_num(Reserve_GPIO02) \
 	gpio_name_to_num(Reserve_GPIO03) \
 	gpio_name_to_num(Reserve_GPIO04) \
