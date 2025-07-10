@@ -723,6 +723,7 @@ int get_device_single_descriptor_length(struct pldm_descriptor_string data);
 int get_device_descriptor_total_length(struct pldm_descriptor_string *table, uint8_t table_count);
 uint8_t fill_descriptor_into_buf(struct pldm_descriptor_string *descriptor, uint8_t *buf,
 				 uint8_t *fill_length, uint16_t current_length);
+bool is_update_state_download_phase();
 
 #ifdef __cplusplus
 }
