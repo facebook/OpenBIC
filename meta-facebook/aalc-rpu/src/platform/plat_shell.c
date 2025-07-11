@@ -187,8 +187,8 @@ void cmd_switch_pb_mux(const struct shell *shell, size_t argc, char **argv)
 	}
 
 	uint8_t sensor_num = (idx == 1) ? SENSOR_NUM_PB_1_PUMP_TACH_RPM :
-			     (idx == 2) ? SENSOR_NUM_PB_2_PUMP_TACH_RPM :
-					  SENSOR_NUM_PB_3_PUMP_TACH_RPM; // 1 base
+					  (idx == 2) ? SENSOR_NUM_PB_2_PUMP_TACH_RPM :
+						       SENSOR_NUM_PB_3_PUMP_TACH_RPM; // 1 base
 
 	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
 	mux_config *pre_args = (mux_config *)cfg->pre_sensor_read_args;
@@ -247,8 +247,8 @@ void cmd_nct7363_pb(const struct shell *shell, size_t argc, char **argv)
 	}
 
 	uint8_t sensor_num = (idx == 1) ? SENSOR_NUM_PB_1_PUMP_TACH_RPM :
-			     (idx == 2) ? SENSOR_NUM_PB_2_PUMP_TACH_RPM :
-					  SENSOR_NUM_PB_3_PUMP_TACH_RPM; // 1 base
+					  (idx == 2) ? SENSOR_NUM_PB_2_PUMP_TACH_RPM :
+						       SENSOR_NUM_PB_3_PUMP_TACH_RPM; // 1 base
 
 	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
 	nct7363_read_back_data(cfg, offset, &data);
@@ -494,7 +494,7 @@ void cmd_test(const struct shell *shell, size_t argc, char **argv)
 
 void fru_print_cmd(const struct shell *shell, size_t argc, char **argv)
 {
-	uint16_t board_fru_id = strtoul(argv[1], NULL, 16);
+	uint8_t board_fru_id = strtoul(argv[1], NULL, 10);
 	print_fru_info(board_fru_id);
 }
 
@@ -577,8 +577,6 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_modbus_cmd,
 			       SHELL_CMD(write, NULL, "modbus write command", cmd_modbus_write),
 			       SHELL_CMD(read, NULL, "modbus read command", cmd_modbus_read),
 			       SHELL_SUBCMD_SET_END);
-
-SHELL_CMD_REGISTER(fru_print, NULL, "fru_print", fru_print_cmd);
 
 /* Sub-command Level 1 of command test */
 SHELL_STATIC_SUBCMD_SET_CREATE(
