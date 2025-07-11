@@ -1,0 +1,91 @@
+From 47fb39a62acceba5a4aa36985b7558374a9bab4f Mon Sep 17 00:00:00 2001
+From: Alan Yang <tyang1@nuvoton.com>
+Date: Thu, 19 Jun 2025 10:35:36 +0800
+Subject: [PATCH] boards: arm: nuvotom: npcm4xx: Add i3c0 in dts
+
+Change:
+1. Add i3c_scl and i3c_sda pin define for pinctrl.
+2. Enable i3c0 in dts.
+
+Signed-off-by: Alan Yang <tyang1@nuvoton.com>
+---
+ boards/arm/npcm400f_evb/fun_def_list.h       |  4 ++++
+ boards/arm/npcm400f_evb/npcm400f_evb.dts     | 15 +++++++++++++++
+ dts/arm/nuvoton/npcm4xx/npcm4xx-pinctrl.dtsi |  1 +
+ soc/arm/npcm4xx/npcm400f/sig_def_list.h      |  7 +++++++
+ 4 files changed, 27 insertions(+)
+
+diff --git a/boards/arm/npcm400f_evb/fun_def_list.h b/boards/arm/npcm400f_evb/fun_def_list.h
+index 5377a145fa..2e63cd7df5 100644
+--- a/boards/arm/npcm400f_evb/fun_def_list.h
++++ b/boards/arm/npcm400f_evb/fun_def_list.h
+@@ -113,6 +113,10 @@ FUN_DEFINE(DT_NODELABEL(pinctrl_usbd_phy_iclk), USBD_PHY_ICLK)
+ FUN_DEFINE(DT_NODELABEL(pinctrl_usbd_phy_xclk), USBD_PHY_XCLK)
+ #endif
+ 
++#if DT_NODE_HAS_STATUS(DT_NODELABEL(i3c0), okay) && CONFIG_I3C_NPCM4XX
++FUN_DEFINE(DT_NODELABEL(pinctrl_i3c0_default), I3C1_SCL, I3C1_SDA)
++#endif
++
+ #if DT_NODE_HAS_STATUS(DT_NODELABEL(i3c4), okay) && CONFIG_I3C_NPCM4XX
+ FUN_DEFINE(DT_NODELABEL(pinctrl_i3c4_default), I3C5_SCL, I3C5_SDA)
+ #endif
+diff --git a/boards/arm/npcm400f_evb/npcm400f_evb.dts b/boards/arm/npcm400f_evb/npcm400f_evb.dts
+index c10b0c9896..b6954ce637 100644
+--- a/boards/arm/npcm400f_evb/npcm400f_evb.dts
++++ b/boards/arm/npcm400f_evb/npcm400f_evb.dts
+@@ -240,6 +240,21 @@
+ 	status = "okay";
+ };
+ 
++&i3c0 {
++	status = "okay";
++	assigned-address = <0x20>;
++	i2c-scl-hz = <100000>;
++	i3c-scl-hz = <12500000>;
++	/* part-id = <0x1234>; */
++	/* vendor-def-id = <0x567>; */
++	bcr = <0x66>;
++	dcr = <0xCC>;
++	dma-tx-channel = <4>;
++	dma-rx-channel = <10>;
++	busno = <0x0>;
++	pinctrl-0 = <&pinctrl_i3c0_default>;
++};
++
+ &i3c4 {
+ 	status = "okay";
+ 	assigned-address = <0x20>;
+diff --git a/dts/arm/nuvoton/npcm4xx/npcm4xx-pinctrl.dtsi b/dts/arm/nuvoton/npcm4xx/npcm4xx-pinctrl.dtsi
+index 0b27d00544..c18d91a334 100644
+--- a/dts/arm/nuvoton/npcm4xx/npcm4xx-pinctrl.dtsi
++++ b/dts/arm/nuvoton/npcm4xx/npcm4xx-pinctrl.dtsi
+@@ -44,6 +44,7 @@
+ 	pinctrl_vin3_default: vin3_default {};
+ 	pinctrl_spip1_default: spip1_default{};
+ 	pinctrl_spip1_quad: spip1_quad{};
++	pinctrl_i3c0_default: i3c0_default {};
+ 	pinctrl_i3c4_default: i3c4_default {};
+ 	pinctrl_i3c5_default: i3c5_default {};
+ 	pinctrl_usbd_phy_iclk: usbd_phy_iclk {};
+diff --git a/soc/arm/npcm4xx/npcm400f/sig_def_list.h b/soc/arm/npcm4xx/npcm400f/sig_def_list.h
+index a07b86f7c0..1d1990f731 100644
+--- a/soc/arm/npcm4xx/npcm400f/sig_def_list.h
++++ b/soc/arm/npcm4xx/npcm400f/sig_def_list.h
+@@ -330,6 +330,13 @@ SIG_DEFINE(USBD_PHY_ICLK, A4, SIG_DESC_SET(0x2e, 4), SIG_DESC_CLEAR(0x2e, 6))
+ SIG_DEFINE(USBD_PHY_XCLK, A4, SIG_DESC_SET(0x2e, 4), SIG_DESC_SET(0x2e, 6))
+ #endif
+ 
++#if DT_NODE_HAS_STATUS(DT_NODELABEL(i3c0), okay) && CONFIG_I3C_NPCM4XX
++/* DEVALT0.2=0 */
++SIG_DEFINE(I3C1_SCL, L4, SIG_DESC_CLEAR(0x10, 2))
++/* DEVALT10.6=1, DEVPD1.2=1 */
++SIG_DEFINE(I3C1_SDA, J5, SIG_DESC_SET(0x0B, 6), SIG_DESC_SET(0x29, 2))
++#endif
++
+ #if DT_NODE_HAS_STATUS(DT_NODELABEL(i3c4), okay) && CONFIG_I3C_NPCM4XX
+ /* DEVALTA.4=1 */
+ SIG_DEFINE(I3C5_SCL, B9, SIG_DESC_SET(0x1A, 4))
+-- 
+2.47.1
+
