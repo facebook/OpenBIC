@@ -361,15 +361,6 @@ void ISR_POST_COMPLETE()
 		read_cpuid();
 		LOG_INF("Post complete event assert");
 		hw_event_register[12]++;
-
-		add_sel_info *event_item = find_event_work_items(FM_BIOS_POST_CMPLT_BIC_N);
-		if (event_item == NULL) {
-			LOG_ERR("Fail to find event items, gpio num: 0x%x",
-				FM_BIOS_POST_CMPLT_BIC_N);
-			return;
-		}
-
-		k_work_schedule_for_queue(&plat_work_q, &event_item->add_sel_work, K_NO_WAIT);
 	} else {
 		if (get_DC_status()) { // Host is reset
 			k_work_submit(&switch_i3c_dimm_work);
