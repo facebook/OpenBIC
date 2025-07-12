@@ -1,0 +1,7 @@
+<map id="init_cxl_heartbeat_monitor_work" name="init_cxl_heartbeat_monitor_work">
+<area shape="rect" id="node1" title=" " alt="" coords="5,39,128,80"/>
+<area shape="rect" id="node2" href="$yv4-wf_2src_2platform_2plat__power__seq_8c.html#a90ab25ff515faf6819cd50d7598fc183" title=" " alt="" coords="176,5,332,47"/>
+<area shape="rect" id="node5" href="$yv4-wf_2src_2platform_2plat__power__seq_8c.html#ad3357454bd3ea7efee6e6d60b23fd778" title=" " alt="" coords="176,71,332,112"/>
+<area shape="rect" id="node3" href="$power__status_8c.html#a647e7f9c1247d6a1785d9b9502e7fd29" title=" " alt="" coords="407,17,515,43"/>
+<area shape="rect" id="node4" href="$pldm__oem_8h.html#abfa67ccc03b5a09b8503f95d5f8e5c5f" title=" " alt="" coords="380,71,543,98"/>
+</map>
