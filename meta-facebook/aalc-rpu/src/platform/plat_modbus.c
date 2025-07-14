@@ -529,11 +529,10 @@ uint8_t modbus_get_led_status(modbus_command_mapping *cmd)
 
 	uint16_t val = 0;
 
-	val = (get_led_status(LED_IDX_E_COOLANT) == LED_TURN_OFF) ?
-		      0 :
-		      (get_led_status(LED_IDX_E_COOLANT) == LED_TURN_ON) ?
-		      1 :
-		      (get_led_status(LED_IDX_E_COOLANT) == LED_START_BLINK) ? 3 : 0;
+	val = (get_led_status(LED_IDX_E_COOLANT) == LED_TURN_OFF)    ? 0 :
+	      (get_led_status(LED_IDX_E_COOLANT) == LED_TURN_ON)     ? 1 :
+	      (get_led_status(LED_IDX_E_COOLANT) == LED_START_BLINK) ? 3 :
+								       0;
 	WRITE_BIT(val, 2, (get_led_status(LED_IDX_E_LEAK) == LED_TURN_OFF) ? 0 : 1);
 	WRITE_BIT(val, 3, gpio_get(get_led_pin(LED_IDX_E_FAULT)));
 	WRITE_BIT(val, 4, gpio_get(get_led_pin(LED_IDX_E_POWER)));
@@ -811,8 +810,9 @@ uint8_t modbus_get_2nd_boot_update_flag(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
-	cmd->data[0] = (uint16_t)(
-		(get_status_flag(STATUS_FLAG_SPECIAL_MODE) >> SPECIAL_MODE_2ND_BOOT_UPDATE) & 0x01);
+	cmd->data[0] = (uint16_t)((get_status_flag(STATUS_FLAG_SPECIAL_MODE) >>
+				   SPECIAL_MODE_2ND_BOOT_UPDATE) &
+				  0x01);
 
 	return MODBUS_EXC_NONE;
 }
