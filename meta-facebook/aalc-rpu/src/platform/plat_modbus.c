@@ -882,6 +882,14 @@ uint8_t modbus_get_serial(modbus_command_mapping *cmd)
 	get_serial = get_single_fru_info(cmd->arg0);
 
 	if (get_serial) {
+		//remove the 1st char Q (Quanta) in the serial number.
+		if (get_serial->product.product_serial != NULL &&
+		    strlen(get_serial->product.product_serial) > 0) {
+			memmove(get_serial->product.product_serial,
+				get_serial->product.product_serial + 1,
+				strlen(get_serial->product.product_serial));
+		}
+
 		memset(cmd->data, 0, 16);
 		memcpy(cmd->data, get_serial->product.product_serial,
 		       strlen(get_serial->product.product_serial));
@@ -1453,8 +1461,7 @@ modbus_command_mapping modbus_command_table[] = {
 	{ MODBUS_RPU_FBPN_ADDR, NULL, modbus_get_fbpn, MB_FRU_ID, 0, 0, 8 },
 	{ MODBUS_RPU_MFR_MODEL_ADDR, NULL, modbus_get_model, MB_FRU_ID, 0, 0, 8 },
 	{ MODBUS_RPU_MFR_DATE_ADDR, NULL, NULL, 0, 0, 0, 4 },
-	{ MODBUS_RPU_MFR_SERIAL_ADDR, NULL, NULL, 0, 0, 0, 8 },
-	{ MODBUS_FRU_SERIAL_NUMBER_ADDR, NULL, modbus_get_serial, MB_FRU_ID, 0, 0, 9 },
+	{ MODBUS_RPU_MFR_SERIAL_ADDR, NULL, modbus_get_serial, 0, 0, 0, 8 },
 	{ MODBUS_RPU_WORKORDER_ADDR, NULL, NULL, 0, 0, 0, 4 },
 	{ MODBUS_RPU_HW_REVISION_ADDR, NULL, NULL, 0, 0, 0, 4 },
 	{ MODBUS_RPU_PLC_FW_REVISION_ADDR, NULL, modbus_get_fw_reversion, 0, 0, 0, 4 },
