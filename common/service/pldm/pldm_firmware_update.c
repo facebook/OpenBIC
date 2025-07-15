@@ -188,6 +188,18 @@ uint8_t pldm_bios_update(void *fw_update_param)
 	return pldm_fw_update(fw_update_param, pos);
 }
 
+uint8_t pldm_pcie_switch_update(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	int pos = pal_get_pcie_switch_flash_position();
+	if (pos == -1) {
+		return 1;
+	}
+
+	return pldm_fw_update(fw_update_param, pos);
+}
+
 uint8_t pldm_vr_update(void *fw_update_param)
 {
 	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);

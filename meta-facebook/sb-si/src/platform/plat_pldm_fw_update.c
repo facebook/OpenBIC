@@ -43,6 +43,8 @@ LOG_MODULE_REGISTER(plat_fwupdate);
 static uint8_t pldm_pre_vr_update(void *fw_update_param);
 static uint8_t pldm_post_vr_update(void *fw_update_param);
 static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
+static uint8_t plat_pldm_pre_pcie_switch_update(void *fw_update_param);
+static uint8_t plat_pldm_post_pcie_switch_update(void *fw_update_param);
 
 typedef struct si_compnt_mapping_sensor {
 	uint8_t firmware_comp_id;
@@ -131,6 +133,21 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.activate_method = COMP_ACT_AC_PWR_CYCLE,
 		.self_act_func = NULL,
 		.get_fw_version_fn = get_vr_fw_version,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = SI_COMPNT_PCIE_SWITCH,
+		.comp_classification_index = 0x00,
+		.pre_update_func = plat_pldm_pre_pcie_switch_update,
+		.update_func = pldm_pcie_switch_update,
+		.pos_update_func = plat_pldm_post_pcie_switch_update,
+		.inf = COMP_UPDATE_VIA_SPI,
+		.activate_method = COMP_ACT_DC_PWR_CYCLE,
+		.self_act_func = NULL,
+		.get_fw_version_fn = NULL,
 		.self_apply_work_func = NULL,
 		.comp_version_str = NULL,
 	},
@@ -232,6 +249,33 @@ void load_pldmupdate_comp_config(void)
 	}
 
 	comp_config_count = filtered_count;
+}
+
+static uint8_t plat_pldm_pre_pcie_switch_update(void *fw_update_param)
+{
+
+	int pos = pal_get_pcie_switch_flash_position();
+	if (pos == -1) {
+		return -1;
+	}
+
+	// Switch GPIO(pcie_switch SPI Selection Pin) to BIC
+	bool ret = pal_switch_pcie_switch_spi_mux(GPIO_HIGH);
+	if (!ret) {
+		return -1;
+	}
+
+	return 0;
+}
+
+static uint8_t plat_pldm_post_pcie_switch_update(void *fw_update_param)
+{
+	int ret = pal_switch_pcie_switch_spi_mux(GPIO_LOW);
+	if (!ret) {
+		return -1;
+	}
+	
+	return 0;
 }
 
 /* pldm pre-update func */
