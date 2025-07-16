@@ -220,6 +220,9 @@ bool pump_setting_set_pump_redundant(pump_reset_struct *data, uint8_t bit_val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
+	if (bit_val)
+		set_redundant_transform_phase(REDUNDANCY_TRANSFORM_DISABLE);
+
 	pump_redundant_enable(bit_val);
 
 	return true;
@@ -327,6 +330,43 @@ bool rpu_remote_power_cycle_function(pump_reset_struct *data, uint8_t bit_val)
 	return true;
 }
 
+void abnormal_pump_redundant_transform(uint32_t pump_sensor_num)
+{
+	uint32_t current_state = get_status_flag(STATUS_FLAG_PUMP_REDUNDANT);
+	printf("STATUS_FLAG_PUMP_REDUNDANT: %d\n", current_state);
+	if (get_status_flag(STATUS_FLAG_PUMP_REDUNDANT) != PUMP_REDUNDANT_DISABLE) {
+		printf("pump_sensor_num: %d\n", pump_sensor_num);
+		switch (pump_sensor_num) {
+		case SENSOR_NUM_PB_1_PUMP_TACH_RPM:
+			if (current_state == PUMP_REDUNDANT_MAX ||
+			    current_state == PUMP_REDUNDANT_12 ||
+			    current_state == PUMP_REDUNDANT_13)
+				set_status_flag(STATUS_FLAG_PUMP_REDUNDANT, 0xFF,
+						PUMP_REDUNDANT_23);
+			break;
+		case SENSOR_NUM_PB_2_PUMP_TACH_RPM:
+			if (current_state == PUMP_REDUNDANT_MAX ||
+			    current_state == PUMP_REDUNDANT_12 ||
+			    current_state == PUMP_REDUNDANT_23)
+				set_status_flag(STATUS_FLAG_PUMP_REDUNDANT, 0xFF,
+						PUMP_REDUNDANT_13);
+			break;
+		case SENSOR_NUM_PB_3_PUMP_TACH_RPM:
+			if (current_state == PUMP_REDUNDANT_13 ||
+			    current_state == PUMP_REDUNDANT_23)
+				set_status_flag(STATUS_FLAG_PUMP_REDUNDANT, 0xFF,
+						PUMP_REDUNDANT_12);
+			break;
+		default:
+			LOG_ERR("unknow pump_sensor_num %d when transform redundancy",
+				pump_sensor_num);
+		}
+	} else
+		LOG_ERR("transform failed due to disabled redundancy");
+
+	printf("STATUS_FLAG_PUMP_REDUNDANT_II: %d\n", get_status_flag(STATUS_FLAG_PUMP_REDUNDANT));
+}
+
 // pump redundant
 void pump_redundant_handler(struct k_timer *timer)
 {
@@ -362,8 +402,8 @@ void pump_redundant_enable(uint8_t onoff)
 	if (onoff) {
 		if (get_status_flag(STATUS_FLAG_PUMP_REDUNDANT) == PUMP_REDUNDANT_DISABLE)
 			k_timer_start(&pump_redundant_timer, K_NO_WAIT,
-				      K_HOURS(pump_redundant_switch_time *
-					      (pump_redundant_switch_time_type ? 1 : 24)));
+				      K_MINUTES(pump_redundant_switch_time *
+						(pump_redundant_switch_time_type ? 1 : 1440)));
 	} else {
 		k_timer_stop(&pump_redundant_timer);
 	}
