@@ -1,0 +1,156 @@
+&twd0 {
+	status = "disabled";
+};
+
+&adc0 {
+    status = "disabled";
+};
+
+&uart0 {
+	status = "okay";
+	current-speed = <57600>;
+};
+
+&i2c1a {
+	clock-frequency = <I2C_BITRATE_STANDARD>;
+	status = "okay";
+};
+
+&i2c1b {
+    status = "disabled";
+};
+
+&i2c2a {
+	clock-frequency = <I2C_BITRATE_STANDARD>;
+	status = "okay";
+};
+
+&i2c3a {
+	clock-frequency = <I2C_BITRATE_STANDARD>;
+	status = "okay";
+};
+
+&i2c4a {
+    status = "disabled";
+};
+
+&i2c4b {
+	clock-frequency = <I2C_BITRATE_STANDARD>;
+    wait_free_time = <1000>;
+	status = "okay";
+};
+
+&i2c5a {
+	status = "disabled";
+};
+
+&i2c6a {
+	status = "disabled";
+};
+
+&i2c6b {
+	status = "disabled";
+};
+
+&i2c7a {
+	status = "disabled";
+};
+
+&i2c8a {
+    clock-frequency = <I2C_BITRATE_STANDARD>;
+	status = "okay";
+};
+
+&i2c9a {
+    clock-frequency = <I2C_BITRATE_STANDARD>;
+	status = "okay";
+};
+
+&i2c10a {
+    clock-frequency = <I2C_BITRATE_STANDARD>;
+	status = "okay";
+};
+
+&i2c11a {
+    clock-frequency = <I2C_BITRATE_STANDARD>;
+	status = "okay";
+};
+
+&i2c12a {
+    clock-frequency = <I2C_BITRATE_STANDARD>;
+	status = "okay";
+};
+
+&spip1 {
+    status = "disabled";
+};
+
+&usbd0 {
+    status = "disabled";
+};
+
+&jtag1 {
+    status = "disabled";
+};
+
+&i3c0 {
+    status = "disabled";
+};
+
+&i3c4 {
+    status = "disabled";
+};
+
+&i3c5 {
+	status = "okay";
+	slave;
+	secondary;
+	assigned-address = <0x21>;
+	part-id = <0x1234>;
+	vendor-def-id = <0x567>;
+	bcr = <0x66>;
+	dcr = <0xCC>;
+	busno = <0x4>;
+	pinctrl-0 = <&pinctrl_i3c5_default>;
+	i2c-scl-hz = <100000>;
+	i3c-scl-hz = <12500000>;
+
+	i3c5_smq:i3c-slave-mqueue@21 {
+		compatible = "i3c-slave-mqueue";
+		reg = <0x21>;
+		msg-size = <256>;
+		num-of-msgs = <8>;
+		mandatory-data-byte = <0xAE>;
+		label = "I3C_SMQ_5";
+		status = "okay";
+	};
+};
+
+
+&peci0 {
+    status = "disabled";
+};
+
+&espi0 {
+    status = "disabled";
+};
+
+&kcs1 {
+    status = "disabled";
+};
+
+&kcs2 {
+    status = "disabled";
+};
+
+&kcs3 {
+    status = "disabled";
+};
+
+&kcs4 {
+    status = "disabled";
+};
+
+&spi_fiu0 {
+    status = "disabled";
+};
