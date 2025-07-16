@@ -29,15 +29,24 @@
 #include <stdlib.h>
 #include "plat_i2c_target.h"
 
+static bool command_reply_data_handle(void *arg);
+
 /* I2C target init-enable table */
 const bool I2C_TARGET_ENABLE_TABLE[MAX_TARGET_NUM] = {
 	TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE,
-	TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE,
+	TARGET_DISABLE, TARGET_ENABLE, TARGET_DISABLE, TARGET_DISABLE,
 	TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE,
 };
 
 /* I2C target init-config table */
 const struct _i2c_target_config I2C_TARGET_CONFIG_TABLE[MAX_TARGET_NUM] = {
-	{ 0xFF, 0xA }, { 0xFF, 0xA }, { 0xFF, 0xA }, { 0x40, 0xA }, { 0xFF, 0xA }, { 0x40, 0xA },
+	{ 0xFF, 0xA }, { 0xFF, 0xA }, { 0xFF, 0xA }, { 0x40, 0xA }, { 0xFF, 0xA }, { 0x40, 0xA, command_reply_data_handle},
 	{ 0xFF, 0xA }, { 0xFF, 0xA }, { 0xFF, 0xA }, { 0xFF, 0xA }, { 0xFF, 0xA }, { 0xFF, 0xA },
 };
+
+static bool command_reply_data_handle(void *arg)
+{
+	/*TODO: put board telemetry here*/
+
+	return false;
+}
