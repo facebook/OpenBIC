@@ -288,13 +288,10 @@ static uint8_t ctl_pwm_pump(uint8_t duty)
 
 	uint8_t ret = 0;
 	uint32_t redundant_mode = get_status_flag(STATUS_FLAG_PUMP_REDUNDANT);
-	uint8_t redundant_dev = (redundant_mode == PUMP_REDUNDANT_12) ?
-					PWM_DEVICE_E_PB_PUMB_3 :
-					(redundant_mode == PUMP_REDUNDANT_13) ?
-					PWM_DEVICE_E_PB_PUMB_2 :
-					(redundant_mode == PUMP_REDUNDANT_23) ?
-					PWM_DEVICE_E_PB_PUMB_1 :
-					PWM_DEVICE_E_MAX;
+	uint8_t redundant_dev = (redundant_mode == PUMP_REDUNDANT_12) ? PWM_DEVICE_E_PB_PUMB_3 :
+				(redundant_mode == PUMP_REDUNDANT_13) ? PWM_DEVICE_E_PB_PUMB_2 :
+				(redundant_mode == PUMP_REDUNDANT_23) ? PWM_DEVICE_E_PB_PUMB_1 :
+									PWM_DEVICE_E_MAX;
 	if (redundant_dev != PWM_DEVICE_E_MAX && redundant_dev_pre != redundant_dev) {
 		switch (redundant_phase) {
 		case REDUNDANCY_TRANSFORM_DISABLE:
