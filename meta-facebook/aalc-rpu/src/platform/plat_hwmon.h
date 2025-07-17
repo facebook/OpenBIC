@@ -60,7 +60,6 @@ bool pump_setting_set_pump_redundant(pump_reset_struct *data, uint8_t bit_val);
 bool modbus_pump_setting_unsupport_function(pump_reset_struct *data, uint8_t bit_val);
 bool set_all_pump_power(bool switch_val);
 bool rpu_remote_power_cycle_function(pump_reset_struct *data, uint8_t bit_val);
-void abnormal_pump_redundant_transform(uint32_t pump_sensor_num);
 uint8_t get_pump_redundant_switch_time();
 void set_pump_redundant_switch_time(uint8_t time);
 void set_pump_redundant_switch_time_type(uint8_t type);

@@ -776,8 +776,6 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 		error_log_event(sensor_num, IS_ABNORMAL_VAL);
 		if (pump_fail_check())
 			set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_TWO_PUMP_LCR, 1);
-		else
-			abnormal_pump_redundant_transform(sensor_num);
 		break;
 	case THRESHOLD_STATUS_UCR:
 		set_status_flag(STATUS_FLAG_FAILURE, pump_ucr, 1);
