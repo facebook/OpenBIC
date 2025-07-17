@@ -330,39 +330,6 @@ bool rpu_remote_power_cycle_function(pump_reset_struct *data, uint8_t bit_val)
 	return true;
 }
 
-void abnormal_pump_redundant_transform(uint32_t pump_sensor_num)
-{
-	uint32_t current_state = get_status_flag(STATUS_FLAG_PUMP_REDUNDANT);
-	if (get_status_flag(STATUS_FLAG_PUMP_REDUNDANT) != PUMP_REDUNDANT_DISABLE) {
-		switch (pump_sensor_num) {
-		case SENSOR_NUM_PB_1_PUMP_TACH_RPM:
-			if (current_state == PUMP_REDUNDANT_MAX ||
-			    current_state == PUMP_REDUNDANT_12 ||
-			    current_state == PUMP_REDUNDANT_13)
-				set_status_flag(STATUS_FLAG_PUMP_REDUNDANT, 0xFF,
-						PUMP_REDUNDANT_23);
-			break;
-		case SENSOR_NUM_PB_2_PUMP_TACH_RPM:
-			if (current_state == PUMP_REDUNDANT_MAX ||
-			    current_state == PUMP_REDUNDANT_12 ||
-			    current_state == PUMP_REDUNDANT_23)
-				set_status_flag(STATUS_FLAG_PUMP_REDUNDANT, 0xFF,
-						PUMP_REDUNDANT_13);
-			break;
-		case SENSOR_NUM_PB_3_PUMP_TACH_RPM:
-			if (current_state == PUMP_REDUNDANT_13 ||
-			    current_state == PUMP_REDUNDANT_23)
-				set_status_flag(STATUS_FLAG_PUMP_REDUNDANT, 0xFF,
-						PUMP_REDUNDANT_12);
-			break;
-		default:
-			LOG_ERR("unknow pump_sensor_num %d when transform redundancy",
-				pump_sensor_num);
-		}
-	} else
-		LOG_ERR("transform failed due to disabled redundancy");
-}
-
 // pump redundant
 void pump_redundant_handler(struct k_timer *timer)
 {
@@ -399,9 +366,7 @@ void pump_redundant_enable(uint8_t onoff)
 		if (get_status_flag(STATUS_FLAG_PUMP_REDUNDANT) == PUMP_REDUNDANT_DISABLE)
 			k_timer_start(&pump_redundant_timer, K_NO_WAIT,
 				      K_MINUTES(pump_redundant_switch_time *
-						(pump_redundant_switch_time_type ?
-							 1 :
-							 1440))); // 7 *24 * 60 mins = 7 days
+						(pump_redundant_switch_time_type ? 1 : 1440)));
 	} else {
 		k_timer_stop(&pump_redundant_timer);
 	}
@@ -468,19 +433,11 @@ uint8_t pwm_control(uint8_t group, uint8_t duty)
 
 	switch (group) {
 	case PWM_GROUP_E_PUMP:
+		abnormal_pump_redundant_transform();
 		if (get_manual_pwm_flag(MANUAL_PWM_E_PUMP)) {
-			plat_pwm_ctrl(PWM_DEVICE_E_PB_PUMB_1,
-				      (redundant_check == PUMP_REDUNDANT_23) ?
-					      0 :
-					      get_manual_pwm_cache(MANUAL_PWM_E_PUMP_1));
-			plat_pwm_ctrl(PWM_DEVICE_E_PB_PUMB_2,
-				      (redundant_check == PUMP_REDUNDANT_13) ?
-					      0 :
-					      get_manual_pwm_cache(MANUAL_PWM_E_PUMP_2));
-			plat_pwm_ctrl(PWM_DEVICE_E_PB_PUMB_3,
-				      (redundant_check == PUMP_REDUNDANT_12) ?
-					      0 :
-					      get_manual_pwm_cache(MANUAL_PWM_E_PUMP_3));
+			ctl_pwm_pump(get_manual_pwm_cache(MANUAL_PWM_E_PUMP_1),
+				     get_manual_pwm_cache(MANUAL_PWM_E_PUMP_2),
+				     get_manual_pwm_cache(MANUAL_PWM_E_PUMP_3));
 			return 0;
 		}
 		break;
