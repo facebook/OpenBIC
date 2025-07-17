@@ -35,6 +35,8 @@
 #include "plat_hook.h"
 #include "plat_mctp.h"
 #include "plat_gpio.h"
+#include "plat_i2c_target.h"
+#include <drivers/flash.h>
 
 LOG_MODULE_REGISTER(plat_mctp);
 
@@ -47,6 +49,8 @@ LOG_MODULE_REGISTER(plat_mctp);
 
 /* mctp endpoint */
 #define MCTP_EID_BMC 0x08
+
+void plat_init_set_eid();
 
 uint8_t plat_eid = MCTP_DEFAULT_ENDPOINT;
 
@@ -154,6 +158,8 @@ void plat_mctp_init(void)
 {
 	LOG_INF("plat_mctp_init");
 
+	plat_init_set_eid();
+
 	/* init the mctp/pldm instance */
 	for (uint8_t i = 0; i < ARRAY_SIZE(smbus_port); i++) {
 		mctp_port *p = smbus_port + i;
@@ -195,6 +201,27 @@ uint8_t plat_get_mctp_port_count()
 mctp_port *plat_get_mctp_port(uint8_t index)
 {
 	return smbus_port + index;
+}
+
+void plat_init_set_eid()
+{
+	const struct device *flash_dev;
+	uint32_t op_addr = EID_ADDRESS;
+	uint8_t read_back_buf = 255;
+	flash_dev = device_get_binding("spi_spim0_cs0");
+	if (flash_dev == NULL) {
+		printf("Failed to get device.\n");
+	}
+
+	if (flash_read(flash_dev, op_addr, &read_back_buf, 1) != 0) {
+		LOG_ERR("Failed to read %u.\n", op_addr);
+	}
+	if (read_back_buf != 255) {
+		plat_eid = read_back_buf;
+	}
+	LOG_INF("EID:%d get from flash", read_back_buf);
+	LOG_INF("EID:%d", plat_get_eid());
+	return;
 }
 
 uint8_t plat_get_eid()
