@@ -547,9 +547,9 @@ void abnormal_temp_do(uint32_t sensor_num, uint32_t status)
 {
 	uint8_t failure_status = (sensor_num == SENSOR_NUM_BPB_RPU_COOLANT_INLET_TEMP_C) ?
 					 PUMP_FAIL_ABNORMAL_COOLANT_INLET_TEMP :
-					 (sensor_num == SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C) ?
+				 (sensor_num == SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C) ?
 					 PUMP_FAIL_ABNORMAL_COOLANT_OUTLET_TEMP :
-					 (sensor_num == SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C) ?
+				 (sensor_num == SENSOR_NUM_MB_RPU_AIR_INLET_TEMP_C) ?
 					 PUMP_FAIL_ABNORMAL_AIR_INLET_TEMP :
 					 0xFF;
 
@@ -760,21 +760,16 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 	sensor_threshold const *thres_p = &threshold_tbl[thres_tbl_idx];
 	uint32_t sensor_num = thres_p->sensor_num;
 
-	uint8_t pump_ucr = (sensor_num == SENSOR_NUM_PB_1_PUMP_TACH_RPM) ?
-				   PUMP_FAIL_PUMP1_UCR :
-				   (sensor_num == SENSOR_NUM_PB_2_PUMP_TACH_RPM) ?
-				   PUMP_FAIL_PUMP2_UCR :
-				   (sensor_num == SENSOR_NUM_PB_3_PUMP_TACH_RPM) ?
-				   PUMP_FAIL_PUMP3_UCR :
-				   FAILURE_STATUS_MAX;
+	uint8_t pump_ucr = (sensor_num == SENSOR_NUM_PB_1_PUMP_TACH_RPM) ? PUMP_FAIL_PUMP1_UCR :
+			   (sensor_num == SENSOR_NUM_PB_2_PUMP_TACH_RPM) ? PUMP_FAIL_PUMP2_UCR :
+			   (sensor_num == SENSOR_NUM_PB_3_PUMP_TACH_RPM) ? PUMP_FAIL_PUMP3_UCR :
+									   FAILURE_STATUS_MAX;
 
-	uint8_t sensor_num_pump_ucr = (sensor_num == SENSOR_NUM_PB_1_PUMP_TACH_RPM) ?
-					      SENSOR_NUM_PB_1_PUMP_TACH_RPM_UCR :
-					      (sensor_num == SENSOR_NUM_PB_2_PUMP_TACH_RPM) ?
-					      SENSOR_NUM_PB_2_PUMP_TACH_RPM_UCR :
-					      (sensor_num == SENSOR_NUM_PB_3_PUMP_TACH_RPM) ?
-					      SENSOR_NUM_PB_3_PUMP_TACH_RPM_UCR :
-					      0xFF;
+	uint8_t sensor_num_pump_ucr =
+		(sensor_num == SENSOR_NUM_PB_1_PUMP_TACH_RPM) ? SENSOR_NUM_PB_1_PUMP_TACH_RPM_UCR :
+		(sensor_num == SENSOR_NUM_PB_2_PUMP_TACH_RPM) ? SENSOR_NUM_PB_2_PUMP_TACH_RPM_UCR :
+		(sensor_num == SENSOR_NUM_PB_3_PUMP_TACH_RPM) ? SENSOR_NUM_PB_3_PUMP_TACH_RPM_UCR :
+								0xFF;
 
 	switch (status) {
 	case THRESHOLD_STATUS_LCR:
