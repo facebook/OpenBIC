@@ -1,0 +1,11 @@
+<map id="common/dev/include/i2c&#45;mux&#45;pca984x.h" name="common/dev/include/i2c&#45;mux&#45;pca984x.h">
+<area shape="rect" id="node1" title=" " alt="" coords="372,5,515,47"/>
+<area shape="rect" id="node2" href="$i2c-mux-pca984x_8c.html" title=" " alt="" coords="106,102,253,143"/>
+<area shape="rect" id="node3" href="$at-mc_2src_2platform_2plat__fru_8h.html" title=" " alt="" coords="277,102,429,143"/>
+<area shape="rect" id="node8" href="$at-mc_2src_2platform_2plat__hook_8c.html" title=" " alt="" coords="453,102,618,143"/>
+<area shape="rect" id="node9" href="$at-mc_2src_2platform_2plat__sensor__table_8c.html" title=" " alt="" coords="643,95,809,151"/>
+<area shape="rect" id="node4" href="$at-mc_2src_2platform_2plat__dev_8c.html" title=" " alt="" coords="5,206,164,247"/>
+<area shape="rect" id="node5" href="$at-mc_2src_2platform_2plat__fru_8c.html" title=" " alt="" coords="189,206,341,247"/>
+<area shape="rect" id="node6" href="$at-mc_2src_2platform_2plat__isr_8c.html" title=" " alt="" coords="365,206,516,247"/>
+<area shape="rect" id="node7" href="$at-mc_2src_2platform_2plat__pldm__monitor_8c.html" title=" " alt="" coords="541,199,695,255"/>
+</map>
