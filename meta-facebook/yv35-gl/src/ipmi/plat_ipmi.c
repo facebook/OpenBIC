@@ -30,10 +30,13 @@
 #include "plat_ipmi.h"
 #include "plat_ipmb.h"
 #include "plat_class.h"
+#include "plat_sensor_table.h"
 #include <logging/log.h>
 #include "fru.h"
 #include "eeprom.h"
 #include "plat_fru.h"
+#include "vr_fault.h"
+#include "libipmi.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
@@ -327,6 +330,30 @@ void OEM_1S_WRITE_READ_DIMM(ipmi_msg *msg)
 exit:
 	if (k_mutex_unlock(&i3c_dimm_mutex)) {
 		LOG_ERR("Failed to lock I3C dimm MUX");
+	}
+}
+
+// Record VR power fault event to BMC SEL
+// error_type: which VR power rail occur VR power fault
+// vr_data1: VR PMBus command code
+// vr_data2: VR PMBus register value
+void pal_record_vr_power_fault(uint8_t event_type, uint8_t error_type, uint8_t vr_data1,
+			       uint8_t vr_data2)
+{
+	common_addsel_msg_t sel_msg;
+
+	sel_msg.InF_target = BMC_IPMB;
+	sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_OEM;
+	sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+	sel_msg.event_type = event_type;
+	sel_msg.event_data1 = error_type;
+	sel_msg.event_data2 = vr_data1;
+	sel_msg.event_data3 = vr_data2;
+
+	if (!common_add_sel_evt_record(&sel_msg)) {
+		LOG_ERR("Failed to add SEL to BMC, type: 0x%x data: 0x%02x%02x%02x",
+			(unsigned int)sel_msg.event_type, (unsigned int)sel_msg.event_data1,
+			(unsigned int)sel_msg.event_data2, (unsigned int)sel_msg.event_data3);
 	}
 }
 
