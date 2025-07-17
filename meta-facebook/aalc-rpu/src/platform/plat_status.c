@@ -93,7 +93,7 @@ uint16_t get_sensor_status_for_modbus_cmd(uint8_t status)
 			      PUMP_STATUS_DISABLE :
 		      (get_threshold_status(SENSOR_NUM_PB_1_PUMP_TACH_RPM)) ?
 			      PUMP_STATUS_ABNORMAL :
-		      (get_status_flag(STATUS_FLAG_PUMP_REDUNDANT) == PUMP_REDUNDANT_23) ?
+			      (get_status_flag(STATUS_FLAG_PUMP_REDUNDANT) == PUMP_REDUNDANT_23) ?
 			      PUMP_STATUS_REDAUNDANT :
 			      PUMP_STATUS_ENABLE;
 		break;
@@ -103,7 +103,7 @@ uint16_t get_sensor_status_for_modbus_cmd(uint8_t status)
 			      PUMP_STATUS_DISABLE :
 		      (get_threshold_status(SENSOR_NUM_PB_2_PUMP_TACH_RPM)) ?
 			      PUMP_STATUS_ABNORMAL :
-		      (get_status_flag(STATUS_FLAG_PUMP_REDUNDANT) == PUMP_REDUNDANT_13) ?
+			      (get_status_flag(STATUS_FLAG_PUMP_REDUNDANT) == PUMP_REDUNDANT_13) ?
 			      PUMP_STATUS_REDAUNDANT :
 			      PUMP_STATUS_ENABLE;
 		break;
@@ -113,7 +113,7 @@ uint16_t get_sensor_status_for_modbus_cmd(uint8_t status)
 			      PUMP_STATUS_DISABLE :
 		      (get_threshold_status(SENSOR_NUM_PB_3_PUMP_TACH_RPM)) ?
 			      PUMP_STATUS_ABNORMAL :
-		      (get_status_flag(STATUS_FLAG_PUMP_REDUNDANT) == PUMP_REDUNDANT_12) ?
+			      (get_status_flag(STATUS_FLAG_PUMP_REDUNDANT) == PUMP_REDUNDANT_12) ?
 			      PUMP_STATUS_REDAUNDANT :
 			      PUMP_STATUS_ENABLE;
 		break;
