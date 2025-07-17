@@ -301,18 +301,24 @@ static uint8_t ctl_pwm_pump(uint8_t duty)
 	if (redundant_dev != PWM_DEVICE_E_MAX && redundant_dev_pre != redundant_dev) {
 		switch (redundant_phase) {
 		case REDUNDANCY_TRANSFORM_DISABLE:
-			for (uint8_t i = PWM_DEVICE_E_PB_PUMB_1; i <= PWM_DEVICE_E_PB_PUMB_3; i++) {
-				if (i == redundant_dev_pre)
-					ret |= (plat_pwm_ctrl(i, 0) ? 1 : 0);
-				else
-					ret |= (plat_pwm_ctrl(i, 100) ? 1 : 0);
+			if (redundant_dev_pre != PWM_DEVICE_E_MAX) {
+				for (uint8_t i = PWM_DEVICE_E_PB_PUMB_1;
+				     i <= PWM_DEVICE_E_PB_PUMB_3; i++) {
+					if (i == redundant_dev_pre)
+						ret |= (plat_pwm_ctrl(i, 0) ? 1 : 0);
+					else
+						ret |= (plat_pwm_ctrl(i, 100) ? 1 : 0);
+				}
+				redundant_step1_count--;
+				if (redundant_step1_count == 0) {
+					redundant_phase = REDUNDANCY_TRANSFORM_STEP_1;
+					redundant_step1_count = REDUNDANT_STEP1_RETRY;
+				}
+				return ret;
+			} else {
+				redundant_dev_pre = redundant_dev;
+				break;
 			}
-			redundant_step1_count--;
-			if (redundant_step1_count == 0) {
-				redundant_phase = REDUNDANCY_TRANSFORM_STEP_1;
-				redundant_step1_count = REDUNDANT_STEP1_RETRY;
-			}
-			return ret;
 		case REDUNDANCY_TRANSFORM_STEP_1:
 			for (uint8_t i = PWM_DEVICE_E_PB_PUMB_1; i <= PWM_DEVICE_E_PB_PUMB_3; i++) {
 				if (i == redundant_dev)
