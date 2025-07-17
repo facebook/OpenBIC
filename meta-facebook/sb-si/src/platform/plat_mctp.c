@@ -201,3 +201,9 @@ uint8_t plat_get_eid()
 {
 	return plat_eid;
 }
+
+void plat_set_eid(int slot_eid)
+{
+	plat_eid = slot_eid;
+	return;
+}
