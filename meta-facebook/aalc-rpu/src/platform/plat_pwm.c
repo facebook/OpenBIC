@@ -254,13 +254,10 @@ static uint8_t ctl_pwm_dev(uint8_t index_start, uint8_t index_end, uint8_t duty)
 
 	uint8_t ret = 0;
 	uint32_t redundant_mode = get_status_flag(STATUS_FLAG_PUMP_REDUNDANT);
-	uint8_t redundant_dev = (redundant_mode == PUMP_REDUNDANT_12) ?
-					PWM_DEVICE_E_PB_PUMB_3 :
-					(redundant_mode == PUMP_REDUNDANT_13) ?
-					PWM_DEVICE_E_PB_PUMB_2 :
-					(redundant_mode == PUMP_REDUNDANT_23) ?
-					PWM_DEVICE_E_PB_PUMB_1 :
-					PWM_DEVICE_E_MAX;
+	uint8_t redundant_dev = (redundant_mode == PUMP_REDUNDANT_12) ? PWM_DEVICE_E_PB_PUMB_3 :
+				(redundant_mode == PUMP_REDUNDANT_13) ? PWM_DEVICE_E_PB_PUMB_2 :
+				(redundant_mode == PUMP_REDUNDANT_23) ? PWM_DEVICE_E_PB_PUMB_1 :
+									PWM_DEVICE_E_MAX;
 
 	for (uint8_t i = index_start; i <= index_end; i++) {
 		if (i == redundant_dev) {
@@ -291,13 +288,10 @@ static uint8_t ctl_pwm_pump(uint8_t duty)
 
 	uint8_t ret = 0;
 	uint32_t redundant_mode = get_status_flag(STATUS_FLAG_PUMP_REDUNDANT);
-	uint8_t redundant_dev = (redundant_mode == PUMP_REDUNDANT_12) ?
-					PWM_DEVICE_E_PB_PUMB_3 :
-					(redundant_mode == PUMP_REDUNDANT_13) ?
-					PWM_DEVICE_E_PB_PUMB_2 :
-					(redundant_mode == PUMP_REDUNDANT_23) ?
-					PWM_DEVICE_E_PB_PUMB_1 :
-					PWM_DEVICE_E_MAX;
+	uint8_t redundant_dev = (redundant_mode == PUMP_REDUNDANT_12) ? PWM_DEVICE_E_PB_PUMB_3 :
+				(redundant_mode == PUMP_REDUNDANT_13) ? PWM_DEVICE_E_PB_PUMB_2 :
+				(redundant_mode == PUMP_REDUNDANT_23) ? PWM_DEVICE_E_PB_PUMB_1 :
+									PWM_DEVICE_E_MAX;
 	if (redundant_dev != PWM_DEVICE_E_MAX && redundant_dev_pre != redundant_dev) {
 		switch (redundant_phase) {
 		case REDUNDANCY_TRANSFORM_DISABLE:
@@ -414,19 +408,14 @@ uint8_t get_pwm_cache(uint8_t idx)
 
 uint8_t manual_pwm_idx_to_pwm_idx(uint8_t idx)
 {
-	return (idx == MANUAL_PWM_E_PUMP_1) ?
-		       PWM_DEVICE_E_PB_PUMB_1 :
-		       (idx == MANUAL_PWM_E_PUMP_2) ?
-		       PWM_DEVICE_E_PB_PUMB_2 :
-		       (idx == MANUAL_PWM_E_PUMP_3) ?
-		       PWM_DEVICE_E_PB_PUMB_3 :
-		       (idx == MANUAL_PWM_E_PUMP_FAN_1) ?
-		       PWM_DEVICE_E_PB_PUMB_FAN_1 :
-		       (idx == MANUAL_PWM_E_PUMP_FAN_2) ?
-		       PWM_DEVICE_E_PB_PUMB_FAN_2 :
-		       (idx == MANUAL_PWM_E_PUMP_FAN_3) ?
-		       PWM_DEVICE_E_PB_PUMB_FAN_3 :
-		       (idx == MANUAL_PWM_E_RPU_PCB_FAN) ? PWM_DEVICE_E_BB_FAN : PWM_DEVICE_E_MAX;
+	return (idx == MANUAL_PWM_E_PUMP_1)	 ? PWM_DEVICE_E_PB_PUMB_1 :
+	       (idx == MANUAL_PWM_E_PUMP_2)	 ? PWM_DEVICE_E_PB_PUMB_2 :
+	       (idx == MANUAL_PWM_E_PUMP_3)	 ? PWM_DEVICE_E_PB_PUMB_3 :
+	       (idx == MANUAL_PWM_E_PUMP_FAN_1)	 ? PWM_DEVICE_E_PB_PUMB_FAN_1 :
+	       (idx == MANUAL_PWM_E_PUMP_FAN_2)	 ? PWM_DEVICE_E_PB_PUMB_FAN_2 :
+	       (idx == MANUAL_PWM_E_PUMP_FAN_3)	 ? PWM_DEVICE_E_PB_PUMB_FAN_3 :
+	       (idx == MANUAL_PWM_E_RPU_PCB_FAN) ? PWM_DEVICE_E_BB_FAN :
+						   PWM_DEVICE_E_MAX;
 }
 
 uint8_t get_manual_pwm_flag(uint8_t idx)
