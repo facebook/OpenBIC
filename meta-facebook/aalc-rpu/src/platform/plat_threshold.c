@@ -140,7 +140,7 @@ bool pump_fail_check()
 {
 	uint8_t fail_num = 0;
 	for (uint8_t i = 0; i < ARRAY_SIZE(pump_sensor_array); i++) {
-		if (get_threshold_status(pump_sensor_array[i]))
+		if (get_threshold_status(pump_sensor_array[i]) == THRESHOLD_STATUS_LCR)
 			fail_num++;
 	}
 

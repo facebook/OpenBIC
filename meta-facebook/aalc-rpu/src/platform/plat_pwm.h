@@ -18,7 +18,7 @@
 
 #define REDUNDANT_STEP1_RETRY                                                                      \
 	2 /*Current interval in zone_table is 5s. DISABLE-> STEP1 spent 5*2 s*/
-#define REDUNDANT_STEP2_RETRY 2 /*Current interval in zone_table is 5s. STEP1-> STEP2 spent 5*2 s*/
+#define REDUNDANT_STEP2_RETRY 12 /*Current interval in zone_table is 5s. STEP1-> STEP2 spent 5*2 s*/
 
 enum PWM_DEVICE_E {
 	PWM_DEVICE_E_FB_FAN_1 = 0,
