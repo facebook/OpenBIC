@@ -18,7 +18,8 @@
 
 #define REDUNDANT_STEP1_RETRY                                                                      \
 	2 /*Current interval in zone_table is 5s. DISABLE-> STEP1 spent 5*2 s*/
-#define REDUNDANT_STEP2_RETRY 12 /*Current interval in zone_table is 5s. STEP1-> STEP2 spent 5*2 s*/
+#define REDUNDANT_STEP2_RETRY                                                                      \
+	12 /*Current interval in zone_table is 5s. STEP1-> STEP2 spent 5*12 s*/
 
 enum PWM_DEVICE_E {
 	PWM_DEVICE_E_FB_FAN_1 = 0,
@@ -77,6 +78,8 @@ enum REDUNDANCY_TRANSFORM_E {
 void init_pwm_dev(void);
 int ast_pwm_set(int duty);
 uint8_t plat_pwm_ctrl(enum PWM_DEVICE_E dev, uint8_t duty);
+void abnormal_pump_redundant_transform();
+uint8_t ctl_pwm_pump(uint8_t pump1_duty, uint8_t pump2_duty, uint8_t pump3_duty);
 uint8_t get_redundant_transform_phase();
 void set_redundant_transform_phase(uint8_t redundant_transform_phase);
 uint8_t ctl_all_pwm_dev(uint8_t duty);
