@@ -35,6 +35,8 @@
 #include "plat_hook.h"
 #include "plat_mctp.h"
 #include "plat_gpio.h"
+#include "plat_i2c_target.h"
+#include <drivers/flash.h>
 
 LOG_MODULE_REGISTER(plat_mctp);
 
@@ -48,17 +50,12 @@ LOG_MODULE_REGISTER(plat_mctp);
 /* mctp endpoint */
 #define MCTP_EID_BMC 0x08
 
+void plat_init_set_eid();
+
 uint8_t plat_eid = MCTP_DEFAULT_ENDPOINT;
 
 static mctp_port smbus_port[] = {
 	{ .conf.smbus_conf.addr = I2C_ADDR_BIC, .conf.smbus_conf.bus = I2C_BUS_BMC },
-};
-
-static mctp_port i3c_port[] = {
-	{
-    	.conf.i3c_conf.addr = 0x21,
-    	.conf.i3c_conf.bus = I3C_BUS6,
-	}
 };
 
 mctp_route_entry mctp_route_tbl[] = {
@@ -161,11 +158,13 @@ void plat_mctp_init(void)
 {
 	LOG_INF("plat_mctp_init");
 
+	plat_init_set_eid();
+
 	/* init the mctp/pldm instance */
-	for (uint8_t i = 0; i < ARRAY_SIZE(i3c_port); i++) {
-		mctp_port *p = i3c_port + i;
-		LOG_DBG("i3c port %d", i);
-		LOG_DBG("bus = %x, addr = %x", p->conf.i3c_conf.bus, p->conf.i3c_conf.addr);
+	for (uint8_t i = 0; i < ARRAY_SIZE(smbus_port); i++) {
+		mctp_port *p = smbus_port + i;
+		LOG_DBG("smbus port %d", i);
+		LOG_DBG("bus = %x, addr = %x", p->conf.smbus_conf.bus, p->conf.smbus_conf.addr);
 
 		p->mctp_inst = mctp_init();
 		if (!p->mctp_inst) {
@@ -175,7 +174,7 @@ void plat_mctp_init(void)
 
 		LOG_DBG("mctp_inst = %p", p->mctp_inst);
 		uint8_t rc =
-			mctp_set_medium_configure(p->mctp_inst, MCTP_MEDIUM_TYPE_TARGET_I3C, p->conf);
+			mctp_set_medium_configure(p->mctp_inst, MCTP_MEDIUM_TYPE_SMBUS, p->conf);
 		LOG_DBG("mctp_set_medium_configure %s",
 			(rc == MCTP_SUCCESS) ? "success" : "failed");
 
@@ -196,15 +195,42 @@ int load_mctp_support_types(uint8_t *type_len, uint8_t *types)
 
 uint8_t plat_get_mctp_port_count()
 {
-	return ARRAY_SIZE(i3c_port);
+	return ARRAY_SIZE(smbus_port);
 }
 
 mctp_port *plat_get_mctp_port(uint8_t index)
 {
-	return i3c_port + index;
+	return smbus_port + index;
+}
+
+void plat_init_set_eid()
+{
+	const struct device *flash_dev;
+	uint32_t op_addr = EID_ADDRESS;
+	uint8_t read_back_buf = 255;
+	flash_dev = device_get_binding("spi_spim0_cs0");
+	if (flash_dev == NULL) {
+		printf("Failed to get device.\n");
+	}
+
+	if (flash_read(flash_dev, op_addr, &read_back_buf, 1) != 0) {
+		LOG_ERR("Failed to read %u.\n", op_addr);
+	}
+	if (read_back_buf != 255) {
+		plat_eid = read_back_buf;
+	}
+	LOG_INF("EID:%d get from flash", read_back_buf);
+	LOG_INF("EID:%d", plat_get_eid());
+	return;
 }
 
 uint8_t plat_get_eid()
 {
 	return plat_eid;
+}
+
+void plat_set_eid(int slot_eid)
+{
+	plat_eid = slot_eid;
+	return;
 }

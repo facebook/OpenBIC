@@ -45,7 +45,8 @@
 };
 
 &i2c6a {
-	status = "disabled";
+    clock-frequency = <I2C_BITRATE_STANDARD>;
+	status = "okay";
 };
 
 &i2c6b {
@@ -102,28 +103,7 @@
 };
 
 &i3c5 {
-	status = "okay";
-	slave;
-	secondary;
-	assigned-address = <0x21>;
-	part-id = <0x1234>;
-	vendor-def-id = <0x567>;
-	bcr = <0x66>;
-	dcr = <0xCC>;
-	busno = <0x4>;
-	pinctrl-0 = <&pinctrl_i3c5_default>;
-	i2c-scl-hz = <100000>;
-	i3c-scl-hz = <12500000>;
-
-	i3c5_smq:i3c-slave-mqueue@21 {
-		compatible = "i3c-slave-mqueue";
-		reg = <0x21>;
-		msg-size = <256>;
-		num-of-msgs = <8>;
-		mandatory-data-byte = <0xAE>;
-		label = "I3C_SMQ_5";
-		status = "okay";
-	};
+	status = "disabled";
 };
 
 
@@ -151,6 +131,21 @@
     status = "disabled";
 };
 
-&spi_fiu0 {
-    status = "disabled";
+&spi_fiu0 { 
+    status = "okay"; 
+    pinctrl-0 = < &pinctrl_shd_spi_default>; 
+}; 
+&spi_fiu0_cs1 { 
+	status = "okay"; 
+    spi-max-buswidth = < 1 >; 
+    spi-max-frequency = < 24000000 >; 
+    re-init-support; 
+}; 
+&pcc { 
+       clock-frequency = <DT_FREQ_M(96)>; /* OFMCLK runs at 96MHz */ 
+       core-prescaler = <1>; /* CORE_CLK runs at 96MHz */ 
+       apb1-prescaler = <8>; /* APB1_CLK runs at 12MHz */ 
+       apb2-prescaler = <1>; /* APB2_CLK runs at 96MHz */ 
+       apb3-prescaler = <1>; /* APB3_CLK runs at 96MHz */ 
+       fiu-prescaler = <4>; /* FIU_CLK runs at 24MHz */ 
 };

@@ -54,7 +54,9 @@ uint8_t get_fw_sha256(uint8_t *msg_buf, uint32_t offset, uint32_t length, uint8_
 
 int pal_get_bios_flash_position();
 int pal_get_prot_flash_position();
+int pal_get_pcie_switch_flash_position();
 bool pal_switch_bios_spi_mux(int gpio_status);
+bool pal_switch_pcie_switch_spi_mux(int gpio_status);
 int pal_get_cxl_flash_position();
 int do_update(const struct device *flash_device, off_t offset, uint8_t *buf, size_t len);
 void set_default_retry_count(int count);
