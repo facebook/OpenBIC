@@ -43,6 +43,8 @@ LOG_MODULE_REGISTER(plat_sensor_table);
 SET_GPIO_VALUE_CFG pre_bat_3v = { A_P3V_BAT_SCALED_EN_R, GPIO_HIGH };
 SET_GPIO_VALUE_CFG post_bat_3v = { A_P3V_BAT_SCALED_EN_R, GPIO_LOW };
 
+uint8_t vr_vender_type = VR_TYPE_UNKNOWN;
+
 sensor_poll_time_cfg diff_poll_time_sensor_table[] = {
 	// sensor_number, last_access_time
 	{ SENSOR_NUM_VOL_BAT3V, 0 },
@@ -83,8 +85,8 @@ sensor_cfg plat_sensor_config[] = {
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 
 	// NVME
-	{ SENSOR_NUM_TEMP_SSD0, sensor_dev_nvme, I2C_BUS2, SSD0_ADDR, SSD0_OFFSET, m2_access, 0,
-	  0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	{ SENSOR_NUM_TEMP_SSD0, sensor_dev_nvme, I2C_BUS2, SSD0_ADDR, SSD0_OFFSET, m2_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  pre_nvme_read, &mux_conf_addr_0xe2[1], NULL, NULL, NULL },
 
 	// PECI
@@ -470,6 +472,7 @@ void check_vr_type(uint8_t index)
 		sensor_config[index].type = sensor_dev_tps53689;
 	} else if ((msg.data[0] == 0x02) && (msg.data[2] == 0x8A)) {
 		sensor_config[index].type = sensor_dev_xdpe15284;
+		vr_vender_type = VR_TYPE_XDPE15284;
 		if (sensor_config[index].offset == VR_VOL_CMD) {
 			if (pre_ifx_vr_cache_crc(sensor_config, index) == false) {
 				LOG_ERR("XDPE15284 fails to cache the crc");
@@ -483,9 +486,16 @@ void check_vr_type(uint8_t index)
 		}
 	} else if ((msg.data[0] == 0x04) && (msg.data[1] == 0x00) && (msg.data[2] == 0x81) &&
 		   (msg.data[3] == 0xD2) && (msg.data[4] == 0x49)) {
+		vr_vender_type = VR_TYPE_ISL69259;
 	} else {
 		LOG_ERR("Unknown VR type");
+		vr_vender_type = VR_TYPE_UNKNOWN;
 	}
+}
+
+uint8_t pal_get_vr_vender_type()
+{
+	return vr_vender_type;
 }
 
 void check_outlet_temp_type(uint8_t index)

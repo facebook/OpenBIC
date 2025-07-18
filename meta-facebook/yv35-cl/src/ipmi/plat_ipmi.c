@@ -33,6 +33,7 @@
 #include "plat_sensor_table.h"
 #include "pmbus.h"
 #include "oem_1s_handler.h"
+#include "libipmi.h"
 
 #include "pldm.h"
 #include "plat_mctp.h"
@@ -490,4 +491,28 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		break;
 	}
 	return;
+}
+
+// Record VR power fault event to BMC SEL
+// error_type: which VR power rail occur VR power fault
+// vr_data1: VR PMBus command code
+// vr_data2: VR PMBus register value
+void pal_record_vr_power_fault(uint8_t event_type, uint8_t error_type, uint8_t vr_data1,
+			       uint8_t vr_data2)
+{
+	common_addsel_msg_t sel_msg;
+
+	sel_msg.InF_target = PLDM;
+	sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+	sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+	sel_msg.event_type = event_type;
+	sel_msg.event_data1 = error_type;
+	sel_msg.event_data2 = vr_data1;
+	sel_msg.event_data3 = vr_data2;
+
+	if (!mctp_add_sel_to_ipmi(&sel_msg)) {
+		LOG_ERR("Failed to add SEL to BMC, type: 0x%x data: 0x%02x%02x%02x",
+			(unsigned int)sel_msg.event_type, (unsigned int)sel_msg.event_data1,
+			(unsigned int)sel_msg.event_data2, (unsigned int)sel_msg.event_data3);
+	}
 }
