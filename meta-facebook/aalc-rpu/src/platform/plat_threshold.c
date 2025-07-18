@@ -61,7 +61,7 @@
 #define THRESHOLD_ARG0_TABLE_INDEX 0xFFFFFFFF
 
 #define HEX_FAN_NUM 14
-//static void fb_prsnt_handle(uint32_t thres_tbl_idx, uint32_t changed_status);
+static void fb_prsnt_handle(uint32_t thres_tbl_idx, uint32_t changed_status);
 void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status);
 void abnormal_flow_do(uint32_t thres_tbl_idx, uint32_t status);
 
