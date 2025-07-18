@@ -119,7 +119,7 @@ static bool adc_ucr_handler(uint8_t idx, bool state) // state is ucr or not
 }
 static void adc_ucr_work_handler(struct k_work *work)
 {
-	adc_info_t *adc = CONTAINER_OF(work, adc_info_t, ucr_work);
+	const adc_info_t *adc = CONTAINER_OF(work, adc_info_t, ucr_work);
 
 	uint8_t idx = adc - adc_info;
 	adc_ucr_handler(idx, adc->ucr_status);

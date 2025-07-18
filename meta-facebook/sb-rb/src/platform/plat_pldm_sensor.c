@@ -9808,10 +9808,10 @@ void change_sensor_cfg(uint8_t vr_module)
 		if (count < 0)
 			return;
 
-		for (uint8_t i = 0; i < count; i++) {
-			table[i].pldm_sensor_cfg.type = sensor_dev_raa228249;
-			table[i].pldm_sensor_cfg.target_addr =
-				convert_addr_to_rns(table[i].pldm_sensor_cfg.target_addr);
+		for (uint8_t j = 0; j < count; j++) {
+			table[j].pldm_sensor_cfg.type = sensor_dev_raa228249;
+			table[j].pldm_sensor_cfg.target_addr =
+				convert_addr_to_rns(table[j].pldm_sensor_cfg.target_addr);
 		}
 	}
 }

@@ -106,7 +106,7 @@ uint8_t get_mctp_info(uint8_t dest_endpoint, mctp **mctp_inst, mctp_ext_params *
 	uint32_t i;
 
 	for (i = 0; i < ARRAY_SIZE(mctp_route_tbl); i++) {
-		mctp_route_entry *p = mctp_route_tbl + i;
+		const mctp_route_entry *p = mctp_route_tbl + i;
 		if (!p) {
 			return MCTP_ERROR;
 		}
