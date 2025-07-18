@@ -99,7 +99,8 @@ enum oem_event_type {
 	OS_LOAD_WDT_EXPIRED,
 	OS_LOAD_WDT_HARD_RST,
 	OS_LOAD_WDT_PWR_DOWN,
-	OS_LOAD_WDT_PWR_CYCLE
+	OS_LOAD_WDT_PWR_CYCLE,
+	MTIA_VR_FAULT,
 };
 
 enum vr_event_source {
