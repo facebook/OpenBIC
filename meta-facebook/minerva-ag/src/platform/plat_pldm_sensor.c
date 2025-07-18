@@ -9723,6 +9723,13 @@ void plat_pldm_sensor_change_ubc_dev()
 			plat_pldm_sensor_ubc_table[index].pldm_sensor_cfg.type = sensor_dev_lx6301;
 		}
 		LOG_INF("UBC_LUXSHURE_LX6301 driver loaded");
+	} else if (ubc_type == UBC_DELTA_S54SS4P180PMDCF) {
+		for (int index = 0; index < plat_pldm_sensor_get_sensor_count(UBC_SENSOR_THREAD_ID);
+		     index++) {
+			plat_pldm_sensor_ubc_table[index].pldm_sensor_cfg.type =
+				sensor_dev_s54ss4p180pmdafc;
+		}
+		LOG_INF("UBC_DELTA_S54SS4P180PMDCF driver loaded");
 	} else if (ubc_type != UBC_DELTA_U50SU4P180PMDAFC) {
 		LOG_ERR("Unable to change the UBC device due to its unknown status.");
 	}
