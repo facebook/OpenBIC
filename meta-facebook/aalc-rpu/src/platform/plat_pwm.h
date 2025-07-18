@@ -80,7 +80,6 @@ int ast_pwm_set(int duty);
 uint8_t plat_pwm_ctrl(enum PWM_DEVICE_E dev, uint8_t duty);
 void abnormal_pump_redundant_transform();
 uint8_t ctl_pwm_pump(uint8_t pump1_duty, uint8_t pump2_duty, uint8_t pump3_duty);
-uint8_t get_redundant_transform_phase();
 void set_redundant_transform_phase(uint8_t redundant_transform_phase);
 uint8_t ctl_all_pwm_dev(uint8_t duty);
 uint8_t set_pwm_group(uint8_t group, uint8_t duty);

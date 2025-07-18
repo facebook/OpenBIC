@@ -36,10 +36,12 @@ static uint8_t fan_group_duty_cache[PWM_GROUP_E_MAX];
 static uint8_t fan_duty_cache[PWM_DEVICE_E_MAX];
 static uint8_t manual_pwm_flag[MANUAL_PWM_E_MAX];
 static uint8_t manual_pwm_cache[MANUAL_PWM_E_MAX];
+static uint8_t redundant_dev_now = PWM_DEVICE_E_MAX;
 static uint8_t redundant_dev_pre = PWM_DEVICE_E_MAX;
 static enum REDUNDANCY_TRANSFORM_E redundant_phase = REDUNDANCY_TRANSFORM_DISABLE;
 static uint8_t redundant_step1_count = REDUNDANT_STEP1_RETRY;
 static uint8_t redundant_step2_count = REDUNDANT_STEP2_RETRY;
+static bool is_redundant_transforming = false;
 
 struct nct_dev_info {
 	enum PWM_DEVICE_E dev;
@@ -322,6 +324,11 @@ void abnormal_pump_redundant_transform()
 	}
 }
 
+bool get_is_redundant_transforming()
+{
+	return is_redundant_transforming;
+}
+
 uint8_t ctl_pwm_pump(uint8_t pump1_duty, uint8_t pump2_duty, uint8_t pump3_duty)
 {
 	if (pump1_duty > MAX_FAN_DUTY_VALUE || pump2_duty > MAX_FAN_DUTY_VALUE ||
@@ -339,10 +346,15 @@ uint8_t ctl_pwm_pump(uint8_t pump1_duty, uint8_t pump2_duty, uint8_t pump3_duty)
 					(redundant_mode == PUMP_REDUNDANT_23) ?
 					PWM_DEVICE_E_PB_PUMB_1 :
 					PWM_DEVICE_E_MAX;
-	if (redundant_dev != PWM_DEVICE_E_MAX && redundant_dev_pre != redundant_dev) {
+
+	if (!get_is_redundant_transforming())
+		redundant_dev_now = redundant_dev;
+
+	if (redundant_dev_now != PWM_DEVICE_E_MAX && redundant_dev_pre != redundant_dev_now) {
 		switch (redundant_phase) {
 		case REDUNDANCY_TRANSFORM_DISABLE:
 			if (redundant_dev_pre != PWM_DEVICE_E_MAX) {
+				is_redundant_transforming = true;
 				for (uint8_t i = PWM_DEVICE_E_PB_PUMB_1;
 				     i <= PWM_DEVICE_E_PB_PUMB_3; i++) {
 					if (i == redundant_dev_pre)
@@ -357,12 +369,12 @@ uint8_t ctl_pwm_pump(uint8_t pump1_duty, uint8_t pump2_duty, uint8_t pump3_duty)
 				}
 				return ret;
 			} else {
-				redundant_dev_pre = redundant_dev;
+				redundant_dev_pre = redundant_dev_now;
 				break;
 			}
 		case REDUNDANCY_TRANSFORM_STEP_1:
 			for (uint8_t i = PWM_DEVICE_E_PB_PUMB_1; i <= PWM_DEVICE_E_PB_PUMB_3; i++) {
-				if (i == redundant_dev)
+				if (i == redundant_dev_now)
 					ret |= (plat_pwm_ctrl(i, 0) ? 1 : 0);
 				else
 					ret |= (plat_pwm_ctrl(i, 100) ? 1 : 0);
@@ -374,12 +386,13 @@ uint8_t ctl_pwm_pump(uint8_t pump1_duty, uint8_t pump2_duty, uint8_t pump3_duty)
 			}
 			return ret;
 		case REDUNDANCY_TRANSFORM_STEP_2:
-			redundant_dev_pre = redundant_dev;
+			redundant_dev_pre = redundant_dev_now;
+			is_redundant_transforming = false;
 			break;
 		}
 	} else {
 		redundant_phase = REDUNDANCY_TRANSFORM_DISABLE;
-		if (redundant_dev == PWM_DEVICE_E_MAX)
+		if (redundant_dev_now == PWM_DEVICE_E_MAX)
 			redundant_dev_pre = PWM_DEVICE_E_MAX;
 	}
 
@@ -390,11 +403,6 @@ uint8_t ctl_pwm_pump(uint8_t pump1_duty, uint8_t pump2_duty, uint8_t pump3_duty)
 	plat_pwm_ctrl(PWM_DEVICE_E_PB_PUMB_3,
 		      (redundant_mode == PUMP_REDUNDANT_12) ? 0 : pump3_duty);
 	return ret;
-}
-
-uint8_t get_redundant_transform_phase()
-{
-	return redundant_phase;
 }
 
 void set_redundant_transform_phase(uint8_t redundant_transform_phase)
