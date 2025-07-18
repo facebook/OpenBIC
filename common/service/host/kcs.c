@@ -67,10 +67,35 @@ void reset_kcs_ok()
 
 #ifdef ENABLE_PLDM
 #ifndef ENABLE_OEM_PLDM
+
+struct k_msgq add_sel_msgq;
+char __aligned(4) add_sel_msgq_buf[ADD_SEL_BUF_LEN * sizeof(add_sel_msg_t)];
+
+struct k_thread ADD_SEL_thread;
+static K_THREAD_STACK_DEFINE(ADD_SEL_thread_stack, 2048);
+
 enum cmd_app_get_sys_info_params {
 	LENGTH_INDEX = 0x05, // skip netfun, cmd code, paramter selctor, set selctor, encoding
 	VERIONS_START_INDEX = 0x06,
 };
+
+// Thread to read add sel message from msg queue and send to BMC via PLDM
+// This is to avoid BMC pldm busy when BIC send add sel command separate from KCS read task
+static void kcs_add_sel_handler(void *arug0, void *arug1, void *arug2)
+{
+	add_sel_msg_t msg_cfg;
+
+	while(1) {
+		if(!k_msgq_get(&add_sel_msgq, &msg_cfg, K_FOREVER)) {
+			pldm_platform_event_message_req(
+				find_mctp_by_bus(msg_cfg.bmc_bus),
+				msg_cfg.ext_params,
+				msg_cfg.event_class,
+				msg_cfg.event_data,
+				msg_cfg.event_data_length);
+		};
+	}
+}
 
 static uint8_t init_text_string_value(const char *new_text_string, char **text_strings)
 {
@@ -345,6 +370,11 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 
 					if (((req->netfn == NETFN_STORAGE_REQ) &&
 					     (req->cmd == CMD_STORAGE_ADD_SEL))) {
+						if (rc != ADD_SEL_EVENT_DATA_MAX_LEN) { // do not write kcs when data length error
+							LOG_ERR("ADD SEL event data length error, rc = %d", rc);
+							SAFE_FREE(kcs_buff);
+							break;
+						}
 						kcs_buff[3] = 0x00;
 						kcs_buff[4] = 0x00;
 						kcs_write(kcs_inst->index, kcs_buff, 5);
@@ -359,6 +389,10 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 			//Send SEL entry to BMC via PLDM command with OEM event class 0xFB
 			if ((req->netfn == NETFN_STORAGE_REQ) &&
 			    (req->cmd == CMD_STORAGE_ADD_SEL)) {
+				if (rc != ADD_SEL_EVENT_DATA_MAX_LEN) { // skip if data length error waiting for BIOS retry
+					LOG_ERR("ADD SEL event data length exceeds maximum size");
+					continue;
+				}
 				// Send SEL to BMC via PLDM over MCTP
 				mctp_ext_params ext_params = { 0 };
 				uint8_t pldm_event_length = rc - 4; // exclude netfn, cmd, record_id
@@ -376,9 +410,21 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 					ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
 					ext_params.ep = MCTP_EID_BMC;
 				}
-				pldm_platform_event_message_req(find_mctp_by_bus(bmc_bus),
-								ext_params, 0xFB, &ibuf[4],
-								pldm_event_length);
+
+				add_sel_msg_t add_sel_msg = { 0 };
+				add_sel_msg.ext_params = ext_params;
+				add_sel_msg.event_class = 0xFB; // OEM event class
+				add_sel_msg.event_data_length = pldm_event_length;
+				add_sel_msg.bmc_bus = bmc_bus;
+
+				memcpy(add_sel_msg.event_data, &ibuf[4], pldm_event_length); // exclude netfn, cmd, record_id
+				int ret = k_msgq_put(&add_sel_msgq, &add_sel_msg, K_NO_WAIT);
+				// respond to BIOS with success code
+				// If k_msgq_put fail, we still need to respond to BIOS with TIMEOUT code
+				if (ret != 0) {
+					LOG_ERR("Failed to put add_sel_msg into add_sel_msgq, ret = %d", ret);
+					continue;
+				}
 			}
 			// IPMI OEM command for crashdump, send crashdump data to BMC
 			if ((req->netfn == NETFN_OEM_REQ) && (req->cmd == CMD_OEM_CRASH_DUMP)) {
@@ -588,6 +634,20 @@ void kcs_device_init(char **config, uint8_t size)
 						  CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
 		k_thread_name_set(kcs[i].task_tid, kcs[i].task_name);
 	}
+
+#ifdef ENABLE_PLDM
+#ifndef ENABLE_OEM_PLDM
+
+	/* create msg queue and thread for add sel cmd avoid BMC pldm busy */
+	k_msgq_init(&add_sel_msgq, add_sel_msgq_buf, sizeof(add_sel_msg_t), ADD_SEL_BUF_LEN);
+	
+	k_thread_create(&ADD_SEL_thread, ADD_SEL_thread_stack, K_THREAD_STACK_SIZEOF(ADD_SEL_thread_stack),
+			kcs_add_sel_handler, NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+	k_thread_name_set(&ADD_SEL_thread, "ADD_SEL_thread");
+
+#endif
+#endif
+	
 	return;
 }
 
