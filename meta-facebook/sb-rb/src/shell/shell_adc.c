@@ -2,7 +2,6 @@
 #include <shell/shell.h>
 
 #include "plat_adc.h"
-#include "plat_class.h"
 
 void cmd_adc_poll_get(const struct shell *shell, size_t argc, char **argv)
 {
@@ -58,13 +57,11 @@ void cmd_adc_get_averge_val(const struct shell *shell, size_t argc, char **argv)
 		return;
 	}
 
-	float mV_to_A = (get_vr_module() == VR_MODULE_MPS) ? 0.796 : 0.797;
-
 	// real val(A) = raw data(mV) * 2 * mV_to_A
-	shell_warn(shell, "adc %d val: %f(A)", idx, get_adc_averge_val(idx) * 2 * mV_to_A);
+	shell_warn(shell, "adc %d val: %f(A)", idx, adc_raw_mv_to_apms(get_adc_averge_val(idx)));
 }
 
-void cmd_adc_get_buf(const struct shell *shell, size_t argc, char **argv)
+void cmd_adc_get_buf_raw(const struct shell *shell, size_t argc, char **argv)
 {
 	uint8_t idx = strtoul(argv[1], NULL, 10);
 	if (idx >= ADC_IDX_MAX) {
@@ -74,7 +71,7 @@ void cmd_adc_get_buf(const struct shell *shell, size_t argc, char **argv)
 
 	uint8_t len = get_adc_averge_times(idx);
 	uint16_t *buf = get_adc_buf(idx);
-	shell_warn(shell, "adc %d buf(len=%d): ", idx, len);
+	shell_warn(shell, "adc %d buf(len=%d)(unit=V): ", idx, len);
 	for (uint8_t i = 0; i < len; i++) {
 		shell_fprintf(shell, SHELL_NORMAL, "%04d ", buf[i]);
 		if ((i + 1) % 16 == 0) {
@@ -85,6 +82,52 @@ void cmd_adc_get_buf(const struct shell *shell, size_t argc, char **argv)
 	if (len % 16 != 0) {
 		shell_print(shell, "");
 	}
+}
+void cmd_adc_get_buf(const struct shell *shell, size_t argc, char **argv)
+{
+	uint8_t idx = strtoul(argv[1], NULL, 10);
+	if (idx >= ADC_IDX_MAX) {
+		shell_warn(shell, "adc invalid idx %d", idx);
+		return;
+	}
+
+	uint8_t len = get_adc_averge_times(idx);
+	uint16_t *buf = get_adc_buf(idx);
+	shell_warn(shell, "adc %d buf(len=%d)(unit=A)): ", idx, len);
+	for (uint8_t i = 0; i < len; i++) {
+		shell_fprintf(shell, SHELL_NORMAL, "%f ", adc_raw_mv_to_apms(buf[i]));
+		if ((i + 1) % 10 == 0) {
+			shell_print(shell, "");
+		}
+	}
+
+	if (len % 10 != 0) {
+		shell_print(shell, "");
+	}
+}
+
+void cmd_adc_get_ucr(const struct shell *shell, size_t argc, char **argv)
+{
+	uint8_t idx = strtoul(argv[1], NULL, 10);
+	if (idx >= ADC_IDX_MAX) {
+		shell_warn(shell, "adc invalid idx %d", idx);
+		return;
+	}
+
+	shell_warn(shell, "adc %d ucr %d(%s)", idx, get_adc_ucr(idx),
+		   (get_adc_ucr_status(idx) ? "ucr" : "normal"));
+}
+void cmd_adc_set_ucr(const struct shell *shell, size_t argc, char **argv)
+{
+	uint8_t idx = strtoul(argv[1], NULL, 10);
+	uint16_t ucr = strtoul(argv[2], NULL, 10);
+	if (idx >= ADC_IDX_MAX) {
+		shell_warn(shell, "adc invalid idx %d", idx);
+		return;
+	}
+
+	set_adc_ucr(idx, ucr);
+	shell_warn(shell, "set adc %d ucr to %d", idx, ucr);
 }
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_adc_poll_cmds,
@@ -97,12 +140,18 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_adc_averge_times_cmds,
 			       SHELL_CMD(set, NULL, "set adc averge times",
 					 cmd_adc_set_averge_times),
 			       SHELL_SUBCMD_SET_END);
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_adc_ucr_cmds,
+			       SHELL_CMD(get, NULL, "get adc ucr val", cmd_adc_get_ucr),
+			       SHELL_CMD(set, NULL, "set adc ucr val", cmd_adc_set_ucr),
+			       SHELL_SUBCMD_SET_END);
 
 SHELL_STATIC_SUBCMD_SET_CREATE(
 	sub_adc_test_cmds, SHELL_CMD(polling, &sub_adc_poll_cmds, "adc polling cmds", NULL),
 	SHELL_CMD(averge_times, &sub_adc_averge_times_cmds, "adc averge times cmds", NULL),
 	SHELL_CMD(val, NULL, "get adc averge val", cmd_adc_get_averge_val),
-	SHELL_CMD(buf, NULL, "get adc buf", cmd_adc_get_buf), SHELL_SUBCMD_SET_END);
+	SHELL_CMD(buf_raw, NULL, "get adc buf raw data", cmd_adc_get_buf_raw),
+	SHELL_CMD(buf, NULL, "get adc buf", cmd_adc_get_buf),
+	SHELL_CMD(ucr, &sub_adc_ucr_cmds, "adc ucr cmds", NULL), SHELL_SUBCMD_SET_END);
 
 /* Root of command test */
 SHELL_CMD_REGISTER(adc_test, &sub_adc_test_cmds, "adc test commands", NULL);
