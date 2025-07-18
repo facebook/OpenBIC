@@ -137,6 +137,12 @@ uint8_t pldm_get_sensor_reading(void *mctp_inst, uint8_t *buf, uint16_t len, uin
 	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
 
+#ifdef DISABLE_SENSOR_RESP_DURING_FW_UPDATE
+	if (is_update_state_download_phase()) {
+		return PLDM_LATER_RESP;
+	}
+#endif
+
 	struct pldm_get_sensor_reading_req *req_p = (struct pldm_get_sensor_reading_req *)buf;
 	struct pldm_get_sensor_reading_resp *res_p = (struct pldm_get_sensor_reading_resp *)resp;
 
