@@ -433,8 +433,8 @@ uint8_t pwm_control(uint8_t group, uint8_t duty)
 
 	switch (group) {
 	case PWM_GROUP_E_PUMP:
-		abnormal_pump_redundant_transform();
 		if (get_manual_pwm_flag(MANUAL_PWM_E_PUMP)) {
+			abnormal_pump_redundant_transform();
 			ctl_pwm_pump(get_manual_pwm_cache(MANUAL_PWM_E_PUMP_1),
 				     get_manual_pwm_cache(MANUAL_PWM_E_PUMP_2),
 				     get_manual_pwm_cache(MANUAL_PWM_E_PUMP_3));
