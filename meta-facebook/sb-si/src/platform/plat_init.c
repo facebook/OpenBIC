@@ -50,7 +50,6 @@ void pal_pre_init()
 	plat_led_init();
 	vr_mutex_init();
 	plat_i3c_set_pid();
-
 }
 
 void pal_set_sys_status()
@@ -61,9 +60,7 @@ void pal_set_sys_status()
 void pal_post_init()
 {
 	plat_mctp_init();
-
 }
-
 
 #define DEF_PROJ_GPIO_PRIORITY 78
 
