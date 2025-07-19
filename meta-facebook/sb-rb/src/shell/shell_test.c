@@ -19,12 +19,11 @@ void cmd_read_raw(const struct shell *shell, size_t argc, char **argv)
 
 	if (!len)
 		len = 1;
-
 	uint8_t data[len];
 	memset(data, 0, len);
 
 	if ((sensor_id == 0) || (sensor_id >= SENSOR_NUM_NUMBERS)) {
-		if (!plat_read_cpld(offset, data)) {
+		if (!plat_read_cpld(offset, data, 1)) {
 			shell_warn(shell, "cpld read 0x%02x fail", offset);
 			return;
 		}
@@ -39,9 +38,37 @@ void cmd_read_raw(const struct shell *shell, size_t argc, char **argv)
 	shell_print(shell, "");
 }
 
+void cmd_cpld_dump(const struct shell *shell, size_t argc, char **argv)
+{
+	if (argc != 3) {
+		shell_warn(shell, "Help: test cpld dump <offset> <length>");
+		return;
+	}
+
+	uint8_t offset = strtoul(argv[1], NULL, 16);
+	uint8_t len = strtoul(argv[2], NULL, 10);
+
+	if (!len)
+		len = 1;
+	uint8_t data[len];
+	memset(data, 0, len);
+
+	if (!plat_read_cpld(offset, data, len)) {
+		shell_warn(shell, "cpld read 0x%02x fail", offset);
+		return;
+	}
+
+	shell_hexdump(shell, data, len);
+	shell_print(shell, "");
+}
+
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_cpld_cmds, SHELL_CMD(dump, NULL, "cpld dump", cmd_cpld_dump),
+			       SHELL_SUBCMD_SET_END);
+
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_test_cmds, SHELL_CMD(test, NULL, "test command", cmd_test),
 			       SHELL_CMD(read_raw, NULL, "read raw data test command",
 					 cmd_read_raw),
+			       SHELL_CMD(cpld, &sub_cpld_cmds, "cpld commands", NULL),
 			       SHELL_SUBCMD_SET_END);
 
 /* Root of command test */

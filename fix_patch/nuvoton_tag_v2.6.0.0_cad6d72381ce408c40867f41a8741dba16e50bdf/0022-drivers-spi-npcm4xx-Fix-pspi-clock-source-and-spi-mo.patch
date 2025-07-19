@@ -1,0 +1,213 @@
+From 816d976d2c2df29981fb553bd2c66bf991e2b44c Mon Sep 17 00:00:00 2001
+From: Alan Yang <tyang1@nuvoton.com>
+Date: Tue, 8 Jul 2025 16:50:43 +0800
+Subject: [PATCH] drivers: spi: npcm4xx: Fix pspi clock source and spi mode
+ setting
+
+Change:
+1. Correct PSPI source to MCLK
+2. Add clock source MCLK in clock control
+3. Correct CPOL, CPHA setting to support spi mode 0-4
+
+Signed-off-by: Alan Yang <tyang1@nuvoton.com>
+---
+ drivers/clock_control/clock_control_npcm4xx.c |  3 +
+ drivers/spi/spi_npcm4xx_spip.c                | 71 ++++++++++++-------
+ dts/arm/nuvoton/npcm4xx.dtsi                  |  3 +-
+ include/dt-bindings/clock/npcm4xx_clock.h     |  1 +
+ 4 files changed, 52 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/clock_control/clock_control_npcm4xx.c b/drivers/clock_control/clock_control_npcm4xx.c
+index 3164ec1e1f..95c8cadc95 100644
+--- a/drivers/clock_control/clock_control_npcm4xx.c
++++ b/drivers/clock_control/clock_control_npcm4xx.c
+@@ -107,6 +107,9 @@ static int npcm4xx_clock_control_get_subsys_rate(const struct device *dev,
+ 	case NPCM4XX_CLOCK_BUS_FMCLK:
+ 		*rate = FMCLK;
+ 		break;
++	case NPCM4XX_CLOCK_BUS_MCLK:
++		*rate = OFMCLK;
++		break;
+ 	default:
+ 		*rate = 0U;
+ 		/* Invalid parameters */
+diff --git a/drivers/spi/spi_npcm4xx_spip.c b/drivers/spi/spi_npcm4xx_spip.c
+index effae81708..742e8dd2df 100644
+--- a/drivers/spi/spi_npcm4xx_spip.c
++++ b/drivers/spi/spi_npcm4xx_spip.c
+@@ -9,6 +9,7 @@
+ LOG_MODULE_REGISTER(spip_npcm4xx);
+ 
+ #include <drivers/clock_control.h>
++#include <dt-bindings/clock/npcm4xx_clock.h>
+ #include <drivers/spi.h>
+ #include <soc.h>
+ #include "spi_context.h"
+@@ -19,11 +20,13 @@ struct npcm4xx_spip_config {
+ 	uintptr_t base;
+ 	/* clock configuration */
+ 	struct npcm4xx_clk_cfg clk_cfg;
++	struct npcm4xx_clk_cfg clk_cfg_control;
+ };
+ 
+ /* Device run time data */
+ struct npcm4xx_spip_data {
+ 	struct spi_context ctx;
++	uint32_t mclk;
+ 	uint32_t apb3;
+ 	/* read/write init flags */
+ 	int rw_init;
+@@ -61,6 +64,8 @@ static int spip_npcm4xx_configure(const struct device *dev,
+ 	struct npcm4xx_spip_data *data = dev->data;
+ 	struct spip_reg *const inst = HAL_INSTANCE(dev);
+ 	uint32_t u32Div = 0;
++	uint32_t target_freq;
++	uint32_t source_clk;
+ 	int ret = 0;
+ 
+ 	if (SPI_WORD_SIZE_GET(config->operation) != 8) {
+@@ -73,16 +78,16 @@ static int spip_npcm4xx_configure(const struct device *dev,
+ 
+ 	if (SPI_MODE_GET(config->operation) & SPI_MODE_CPOL) {
+ 		inst->CTL |= BIT(NPCM4XX_CTL_CLKPOL);
+-		if (SPI_MODE_GET(config->operation) & SPI_MODE_CPHA) {
+-			inst->CTL &= ~BIT(NPCM4XX_CTL_TXNEG);
+-			inst->CTL &= ~BIT(NPCM4XX_CTL_RXNEG);
+-		} else {
+-			inst->CTL |= BIT(NPCM4XX_CTL_TXNEG);
+-			inst->CTL |= BIT(NPCM4XX_CTL_RXNEG);
+-		}
+ 	} else {
+ 		inst->CTL &= ~BIT(NPCM4XX_CTL_CLKPOL);
+ 	}
++	if (SPI_MODE_GET(config->operation) & SPI_MODE_CPHA) {
++		inst->CTL &= ~BIT(NPCM4XX_CTL_TXNEG);
++		inst->CTL |= BIT(NPCM4XX_CTL_RXNEG);
++	} else {
++		inst->CTL |= BIT(NPCM4XX_CTL_TXNEG);
++		inst->CTL &= ~BIT(NPCM4XX_CTL_RXNEG);
++	}
+ 
+ 	if (config->operation & SPI_TRANSFER_LSB) {
+ 		inst->CTL |= BIT(NPCM4XX_CTL_LSB);
+@@ -99,18 +104,27 @@ static int spip_npcm4xx_configure(const struct device *dev,
+ 
+ 	/* Set Bus clock */
+ 	if (config->frequency != 0) {
+-		if (config->frequency <= data->apb3) {
+-			u32Div = (data->apb3 / config->frequency) - 1;
+-			if (data->apb3 % config->frequency) {
+-				u32Div += 1;
+-			}
+-			if (u32Div > 0xFF) {
+-				u32Div = 0xFF;
+-			}
++		target_freq = config->frequency;
++		source_clk = data->mclk;
++
++		/* Clamp frequency to maximum supported by APB3 */
++		if (target_freq > data->apb3) {
++			LOG_WRN("Frequency %d is larger than APB3 clock %d, clamping to APB3",
++				target_freq, data->apb3);
++			target_freq = data->apb3;
++		}
++
++		/* Calculate divider with proper rounding */
++		u32Div = (source_clk + target_freq - 1) / target_freq - 1;
++
++		/* Clamp divider to maximum supported value */
++		if (u32Div > 0xF) {
++			LOG_WRN("Divider %d is larger than maximum 15, clamping to 15", u32Div);
++			u32Div = 0xF;
+ 		}
+ 	}
+ 
+-	inst->CLKDIV = (inst->CLKDIV & ~0xFF) | u32Div;
++	inst->CLKDIV = (inst->CLKDIV & ~0xF) | u32Div;
+ 
+ 	/* spip enable */
+ 	inst->CTL |= BIT(NPCM4XX_CTL_SPIEN);
+@@ -232,7 +246,8 @@ static int spip_npcm4xx_init(const struct device *dev)
+ 	struct npcm4xx_spip_data *data = dev->data;
+ 	const struct device *const clk_dev =
+ 		device_get_binding(NPCM4XX_CLK_CTRL_NAME);
+-	uint32_t spip_apb3;
++	uint32_t mclk;
++	uint32_t apb3;
+ 	int ret;
+ 
+ 	if (!device_is_ready(clk_dev)) {
+@@ -240,22 +255,27 @@ static int spip_npcm4xx_init(const struct device *dev)
+ 		return -ENODEV;
+ 	}
+ 	/* Turn on device clock first and get source clock freq. */
+-	ret = clock_control_on(clk_dev,
+-			       (clock_control_subsys_t)&cfg->clk_cfg);
++	ret = clock_control_on(clk_dev, (clock_control_subsys_t)&cfg->clk_cfg);
+ 	if (ret < 0) {
+ 		LOG_ERR("Turn on SPIP clock fail %d", ret);
+ 		return ret;
+ 	}
+ 
+-	ret = clock_control_get_rate(clk_dev, (clock_control_subsys_t *)
+-				     &cfg->clk_cfg, &spip_apb3);
+-
++	/* Get MCLK */
++	ret = clock_control_get_rate(clk_dev, (clock_control_subsys_t *)&cfg->clk_cfg, &mclk);
+ 	if (ret < 0) {
+-		LOG_ERR("Get ITIM clock rate error %d", ret);
++		LOG_ERR("Get MCLK clock rate error %d", ret);
+ 		return ret;
+ 	}
++	data->mclk = mclk;
+ 
+-	data->apb3 = spip_apb3;
++	/* Get APB3 as control source */
++	ret = clock_control_get_rate(clk_dev, (clock_control_subsys_t *)&cfg->clk_cfg_control, &apb3);
++	if (ret < 0) {
++		LOG_ERR("Get APB3 clock rate error %d", ret);
++		return ret;
++	}
++	data->apb3 = apb3;
+ 
+ 	spi_context_unlock_unconditionally(&data->ctx);
+ 	return 0;
+@@ -415,7 +435,8 @@ static const struct spi_driver_api spip_npcm4xx_driver_api = {
+ 
+ static const struct npcm4xx_spip_config spip_npcm4xx_config = {
+ 	.base = DT_INST_REG_ADDR(0),
+-	.clk_cfg = NPCM4XX_DT_CLK_CFG_ITEM(0),
++	.clk_cfg = NPCM4XX_DT_CLK_CFG_ITEM_BY_IDX(0, 0) // mclk
++	.clk_cfg_control = NPCM4XX_DT_CLK_CFG_ITEM_BY_IDX(0, 1) // apb3
+ };
+ 
+ static struct npcm4xx_spip_data spip_npcm4xx_dev_data = {
+diff --git a/dts/arm/nuvoton/npcm4xx.dtsi b/dts/arm/nuvoton/npcm4xx.dtsi
+index 2f7859a584..3c25e29e0e 100644
+--- a/dts/arm/nuvoton/npcm4xx.dtsi
++++ b/dts/arm/nuvoton/npcm4xx.dtsi
+@@ -562,7 +562,8 @@
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+ 			reg = <0x40016000 0x100>;
+-			clocks = <&pcc NPCM4XX_CLOCK_BUS_APB3 NPCM4XX_PWDWN_CTL4 7>;
++			clocks = <&pcc NPCM4XX_CLOCK_BUS_MCLK NPCM4XX_PWDWN_CTL4 7>,
++					<&pcc NPCM4XX_CLOCK_BUS_APB3 NPCM4XX_PWDWN_CTL4 7>;
+ 			spi-ctrl-caps-mask = <0x000f0f0c>;
+ 			pinctrl-0 = <&pinctrl_spip1_default &pinctrl_spip1_quad>;
+ 			label = "SPIP";
+diff --git a/include/dt-bindings/clock/npcm4xx_clock.h b/include/dt-bindings/clock/npcm4xx_clock.h
+index 65a3f811b2..24c5afb9b3 100644
+--- a/include/dt-bindings/clock/npcm4xx_clock.h
++++ b/include/dt-bindings/clock/npcm4xx_clock.h
+@@ -18,6 +18,7 @@
+ #define NPCM4XX_CLOCK_BUS_APB4        8
+ #define NPCM4XX_CLOCK_BUS_AHB6        9
+ #define NPCM4XX_CLOCK_BUS_FMCLK       10
++#define NPCM4XX_CLOCK_BUS_MCLK        11
+ 
+ /* clock enable/disable references */
+ #define NPCM4XX_PWDWN_CTL0            0
+-- 
+2.47.1
+

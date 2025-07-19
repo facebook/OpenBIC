@@ -3,6 +3,8 @@
 #include <logging/log.h>
 
 #include "plat_adc.h"
+#include "plat_class.h"
+#include "plat_cpld.h"
 
 LOG_MODULE_REGISTER(plat_adc);
 
@@ -16,12 +18,113 @@ K_THREAD_STACK_DEFINE(adc_thread_stack, ADC_STACK_SIZE);
 struct k_thread adc_poll_thread;
 
 static bool adc_poll_flag = true;
-static uint16_t adc_averge_times[ADC_IDX_MAX] = { 2, 6, 60, 80 }; // 10ms each time
 
-static uint16_t adc_buf[ADC_IDX_MAX][ADC_AVERGE_TIMES_MAX];
-static uint8_t adc_buf_idx[ADC_IDX_MAX] = { 0 };
-static uint16_t adc_averge_val[ADC_IDX_MAX] = { 0 };
-static uint32_t adc_sum[ADC_IDX_MAX] = { 0 };
+typedef struct {
+	uint16_t avg_times; // 20ms at a time
+	uint16_t buf[ADC_AVERGE_TIMES_MAX];
+	uint8_t buf_idx;
+	uint16_t avg_val;
+	uint32_t sum;
+	uint16_t ucr; // amps
+	bool ucr_status; // over current
+	struct k_work ucr_work;
+} adc_info_t;
+
+adc_info_t adc_info[ADC_IDX_MAX] = { { .avg_times = 1, .ucr = 980 },
+				     { .avg_times = 3, .ucr = 895 },
+				     { .avg_times = 30, .ucr = 538 },
+				     { .avg_times = 40, .ucr = 497 } };
+
+static void adc_poll_init()
+{
+	for (uint8_t i = ADC_IDX_MEDHA0_1; i < ADC_IDX_MAX; i++) {
+		adc_info[i].sum = 0;
+		adc_info[i].buf_idx = 0;
+		adc_info[i].avg_val = 0;
+		memset(adc_info[i].buf, 0, sizeof(adc_info[i].buf));
+	}
+}
+
+uint16_t get_adc_averge_val(uint8_t idx)
+{
+	return adc_info[idx].avg_val;
+}
+
+uint16_t *get_adc_buf(uint8_t idx)
+{
+	return adc_info[idx].buf;
+}
+
+uint16_t get_adc_averge_times(uint8_t idx)
+{
+	return adc_info[idx].avg_times;
+}
+void adc_set_averge_times(uint8_t idx, uint16_t time)
+{
+	if (time >= ADC_AVERGE_TIMES_MIN && time <= ADC_AVERGE_TIMES_MAX) {
+		adc_info[idx].avg_times = time;
+		adc_poll_init();
+	} else {
+		LOG_WRN("invalid adc %d poll times: %d\n", idx, time);
+	}
+}
+
+uint16_t get_adc_ucr(uint8_t idx)
+{
+	return adc_info[idx].ucr;
+}
+void set_adc_ucr(uint8_t idx, uint16_t ucr)
+{
+	adc_info[idx].ucr = ucr;
+}
+
+bool get_adc_ucr_status(uint8_t idx)
+{
+	return adc_info[idx].ucr_status;
+}
+void set_adc_ucr_status(uint8_t idx, bool status)
+{
+	adc_info[idx].ucr_status = status;
+}
+
+float adc_raw_mv_to_apms(uint16_t mv)
+{
+	return (get_vr_module() == VR_MODULE_MPS) ? 2 * mv * 0.796 : 2 * mv * 0.797;
+}
+
+static bool adc_ucr_handler(uint8_t idx, bool state) // state is ucr or not
+{
+	uint8_t data = 0;
+	if (!plat_read_cpld(CPLD_OFFSET_POWER_CLAMP, &data, 1))
+		return false;
+
+	uint8_t bit = (idx == ADC_IDX_MEDHA0_1) ? 7 :
+		      (idx == ADC_IDX_MEDHA1_1) ? 6 :
+		      (idx == ADC_IDX_MEDHA0_2) ? 5 :
+		      (idx == ADC_IDX_MEDHA1_2) ? 4 :
+						  0xFF;
+	if (bit == 0xFF)
+		return false;
+
+	// if ucr, pull up
+	if (state)
+		data |= (1 << bit);
+	else
+		data &= ~(1 << bit);
+
+	if (!plat_write_cpld(CPLD_OFFSET_POWER_CLAMP, &data))
+		return false;
+
+	return true;
+}
+static void adc_ucr_work_handler(struct k_work *work)
+{
+	const adc_info_t *adc = CONTAINER_OF(work, adc_info_t, ucr_work);
+
+	uint8_t idx = adc - adc_info;
+	adc_ucr_handler(idx, adc->ucr_status);
+}
+K_WORK_DEFINE(adc_ucr_work, adc_ucr_work_handler);
 
 static void plat_adc_read(void)
 {
@@ -46,49 +149,21 @@ static void plat_adc_read(void)
 	retval = adc_read(adc_dev, &sequence);
 
 	for (uint8_t i = ADC_IDX_MEDHA0_1; i < ADC_IDX_MAX; i++) {
-		adc_sum[i] -= adc_buf[i][adc_buf_idx[i]];
-		adc_buf[i][adc_buf_idx[i]] = ((i == ADC_IDX_MEDHA0_1) || (i == ADC_IDX_MEDHA0_2)) ?
-						     m_sample_buffer[1] :
-						     m_sample_buffer[0];
-		adc_sum[i] += adc_buf[i][adc_buf_idx[i]];
-		adc_averge_val[i] = adc_sum[i] / adc_averge_times[i];
-		adc_buf_idx[i] = (adc_buf_idx[i] + 1) % adc_averge_times[i];
-	}
-}
+		adc_info_t *adc = &adc_info[i];
+		adc->sum -= adc->buf[adc->buf_idx];
+		adc->buf[adc->buf_idx] = ((i == ADC_IDX_MEDHA0_1) || (i == ADC_IDX_MEDHA0_2)) ?
+						 m_sample_buffer[1] :
+						 m_sample_buffer[0];
+		adc->sum += adc->buf[adc->buf_idx];
+		adc->avg_val = adc->sum / adc->avg_times;
+		adc->buf_idx = (adc->buf_idx + 1) % adc->avg_times;
 
-uint16_t get_adc_averge_val(uint8_t idx)
-{
-	return adc_averge_val[idx];
-}
-
-uint16_t *get_adc_buf(uint8_t idx)
-{
-	return adc_buf[idx];
-}
-
-uint16_t get_adc_averge_times(uint8_t idx)
-{
-	return adc_averge_times[idx];
-}
-
-static void adc_poll_init()
-{
-	for (uint8_t i = ADC_IDX_MEDHA0_1; i < ADC_IDX_MAX; i++) {
-		adc_sum[i] = 0;
-		adc_buf_idx[i] = 0;
-		memset(adc_buf[i], 0, sizeof(adc_buf[i]));
-	}
-}
-
-void adc_set_averge_times(uint8_t idx, uint16_t time)
-{
-	if (time >= ADC_AVERGE_TIMES_MIN && time <= ADC_AVERGE_TIMES_MAX) {
-		adc_averge_times[idx] = time;
-		adc_sum[idx] = 0;
-		adc_buf_idx[idx] = 0;
-		memset(adc_buf[idx], 0, sizeof(adc_buf[idx]));
-	} else {
-		LOG_WRN("invalid adc %d poll times: %d\n", idx, time);
+		// check status
+		bool curr_status = (adc_raw_mv_to_apms(adc->avg_val) >= adc->ucr);
+		if (adc->ucr_status != curr_status) {
+			adc->ucr_status = curr_status;
+			k_work_submit(&adc->ucr_work);
+		}
 	}
 }
 
@@ -114,6 +189,10 @@ void adc_polling_handler(void *p1, void *p2, void *p3)
 
 void plat_adc_init(void)
 {
+	for (uint8_t i = 0; i < ADC_IDX_MAX; i++) {
+		k_work_init(&adc_info[i].ucr_work, adc_ucr_work_handler);
+	}
+
 	k_thread_create(&adc_poll_thread, adc_thread_stack, ADC_STACK_SIZE, adc_polling_handler,
 			NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
 

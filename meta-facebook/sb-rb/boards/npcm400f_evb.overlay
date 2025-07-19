@@ -22,11 +22,15 @@
 
 &i2c2a {
 	clock-frequency = <I2C_BITRATE_FAST>;
+	scllt = <65>;
+  sclht = <60>;
 	status = "okay";
 };
 
 &i2c3a {
 	clock-frequency = <I2C_BITRATE_FAST>;
+	scllt = <65>;
+  sclht = <60>;
 	status = "okay";
 };
 
@@ -45,7 +49,8 @@
 };
 
 &i2c6a {
-    status = "disabled";
+  clock-frequency = <I2C_BITRATE_STANDARD>;
+	status = "okay";
 };
 
 &i2c6b {
@@ -144,27 +149,5 @@
 };
 
 &i3c5 {
-	status = "okay";
-	slave;
-	secondary;
-    ibi-append-pec;
-	assigned-address = <0x21>;
-	part-id = <0x1234>;
-	vendor-def-id = <0x567>;
-	bcr = <0x66>;
-	dcr = <0xCC>;
-	busno = <0x4>;
-	pinctrl-0 = <&pinctrl_i3c5_default>;
-	i2c-scl-hz = <100000>;
-	i3c-scl-hz = <200000>;
-
-	i3c5_smq:i3c-slave-mqueue@21 {
-		compatible = "i3c-slave-mqueue";
-		reg = <0x21>;
-		msg-size = <256>;
-		num-of-msgs = <16>;
-		mandatory-data-byte = <0xbf>;
-		label = "I3C_SMQ_5";
-		status = "okay";
-	};
+	status = "disabled";
 };

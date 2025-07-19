@@ -29,6 +29,7 @@ enum FRU_ID {
 
 bool init_fru_info(void);
 void print_fru_info(void);
+bool plat_cpld_fru_read(uint32_t offset, uint8_t *data, uint16_t data_len);
 bool plat_eeprom_write(uint32_t offset, uint8_t *data, uint16_t data_len);
 bool plat_eeprom_read(uint32_t offset, uint8_t *data, uint16_t data_len);
 
