@@ -1746,3 +1746,11 @@ bool is_update_state_download_phase()
 	}
 	return false;
 }
+
+bool is_update_state_idle()
+{
+	if (current_state == STATE_IDLE) {
+		return true;
+	}
+	return false;
+}
