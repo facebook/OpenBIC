@@ -347,7 +347,7 @@ void pump_redundant_handler_disable(struct k_timer *timer)
 K_TIMER_DEFINE(pump_redundant_timer, pump_redundant_handler, pump_redundant_handler_disable);
 
 static uint8_t pump_redundant_switch_time = 7;
-static uint8_t pump_redundant_switch_time_type = 0; /* for test, 0: day, 1: hours */
+static uint8_t pump_redundant_switch_time_type = 0; /* for test, 0: day, 1: minute */
 uint8_t get_pump_redundant_switch_time()
 {
 	return pump_redundant_switch_time;
@@ -433,8 +433,8 @@ uint8_t pwm_control(uint8_t group, uint8_t duty)
 
 	switch (group) {
 	case PWM_GROUP_E_PUMP:
+		abnormal_pump_redundant_transform();
 		if (get_manual_pwm_flag(MANUAL_PWM_E_PUMP)) {
-			abnormal_pump_redundant_transform();
 			ctl_pwm_pump(get_manual_pwm_cache(MANUAL_PWM_E_PUMP_1),
 				     get_manual_pwm_cache(MANUAL_PWM_E_PUMP_2),
 				     get_manual_pwm_cache(MANUAL_PWM_E_PUMP_3));

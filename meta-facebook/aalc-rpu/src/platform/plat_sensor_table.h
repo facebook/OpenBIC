@@ -266,6 +266,9 @@ enum PLAT_DEF_SENSOR_E {
 #define SENSOR_NUM_PB_1_PUMP_TACH_RPM_UCR 0xE2
 #define SENSOR_NUM_PB_2_PUMP_TACH_RPM_UCR 0xE3
 #define SENSOR_NUM_PB_3_PUMP_TACH_RPM_UCR 0xE4
+#define SENSOR_NUM_PB_1_PUMP_NOT_ACCESS 0xE5
+#define SENSOR_NUM_PB_2_PUMP_NOT_ACCESS 0xE6
+#define SENSOR_NUM_PB_3_PUMP_NOT_ACCESS 0xE7
 
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
