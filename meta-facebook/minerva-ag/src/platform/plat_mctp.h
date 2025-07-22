@@ -19,6 +19,21 @@
 
 #include "storage_handler.h"
 #include "pldm_oem.h"
+#include "plat_i2c.h"
+
+/* i2c 8 bit address */
+#define I2C_ADDR_BIC 0x40
+#define I2C_ADDR_BMC 0x20
+
+/* i2c dev bus */
+#define I2C_BUS_BMC I2C_BUS4
+
+/* mctp endpoint */
+#define MCTP_EID_BMC 0x08
+
+/* I3C related defines */ //Not used in this platform
+#define I3C_BUS_BMC I2C_BUS4
+#define I3C_STATIC_ADDR_BMC 0x20
 
 struct mctp_to_ipmi_header_req {
 	uint8_t iana[IANA_LEN];
@@ -51,6 +66,9 @@ void plat_mctp_init(void);
 void send_cmd_to_dev(struct k_timer *timer);
 void send_cmd_to_dev_handler(struct k_work *work);
 bool mctp_add_sel_to_ipmi(common_addsel_msg_t *sel_msg);
+
+/* find mctp instance by bus */
+mctp *find_mctp_by_bus(uint8_t bus);
 
 extern struct pldm_variable_field nic_vesion[];
 

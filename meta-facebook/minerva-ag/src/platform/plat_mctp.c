@@ -37,16 +37,6 @@
 
 LOG_MODULE_REGISTER(plat_mctp);
 
-/* i2c 8 bit address */
-#define I2C_ADDR_BIC 0x40
-#define I2C_ADDR_BMC 0x20
-
-/* i2c dev bus */
-#define I2C_BUS_BMC I2C_BUS4
-
-/* mctp endpoint */
-#define MCTP_EID_BMC 0x08
-
 uint8_t plat_eid = MCTP_DEFAULT_ENDPOINT;
 
 static mctp_port smbus_port[] = {
@@ -75,6 +65,11 @@ static mctp *find_mctp_by_smbus(uint8_t bus)
 	return NULL;
 }
 
+mctp *find_mctp_by_bus(uint8_t bus)
+{
+	return find_mctp_by_smbus(bus);
+}
+
 uint8_t get_mctp_info(uint8_t dest_endpoint, mctp **mctp_inst, mctp_ext_params *ext_params)
 {
 	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
@@ -84,7 +79,7 @@ uint8_t get_mctp_info(uint8_t dest_endpoint, mctp **mctp_inst, mctp_ext_params *
 	uint32_t i;
 
 	for (i = 0; i < ARRAY_SIZE(mctp_route_tbl); i++) {
-		mctp_route_entry *p = mctp_route_tbl + i;
+		const mctp_route_entry *p = mctp_route_tbl + i;
 		if (!p) {
 			return MCTP_ERROR;
 		}
@@ -136,7 +131,7 @@ static uint8_t get_mctp_route_info(uint8_t dest_endpoint, void **mctp_inst,
 	uint32_t i;
 
 	for (i = 0; i < ARRAY_SIZE(mctp_route_tbl); i++) {
-		mctp_route_entry *p = mctp_route_tbl + i;
+		const mctp_route_entry *p = mctp_route_tbl + i;
 		if (p->endpoint == dest_endpoint) {
 			*mctp_inst = find_mctp_by_smbus(p->bus);
 			ext_params->type = MCTP_MEDIUM_TYPE_SMBUS;
