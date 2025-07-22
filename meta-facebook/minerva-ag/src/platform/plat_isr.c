@@ -272,52 +272,51 @@ void check_clk_buffer_handler()
 
 	uint8_t pwrgd_p3v3_and_p1v8 = (data[0] & GENMASK(4, 3)) >> 3;
 	if (pwrgd_p3v3_and_p1v8 == 3) {
-		memset(data, 0, sizeof(data));
-		memcpy(data, (uint8_t[]){ 0x01, 0x00 }, 2);
-		if (!plat_i2c_write(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U471_ADDR, 0x14, data, 2)) {
-			LOG_ERR("Failed to write 100M CLK BUFFER U471 reg 0x14");
+		uint8_t output_amplitude_value = 0;
+		if (!plat_i2c_read(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U471_ADDR, 0x11, data, 2)) {
+			LOG_ERR("Failed to read 100M CLK BUFFER U471 reg 0x14");
 			check_clk_buffer_handler_retry_count++;
 			if (check_clk_buffer_handler_retry_count > retry_max_count) {
-				LOG_ERR("100M CLK BUFFER init failed - U471 0x14 write failed");
+				LOG_ERR("100M CLK BUFFER init failed - U471 0x11 read failed");
 				check_clk_buffer_handler_retry_count = 0;
 			} else {
 				k_work_schedule(&check_clk_buffer_work, K_MSEC(10));
 			}
 			return;
 		}
-		memset(data, 0, sizeof(data));
-		memcpy(data, (uint8_t[]){ 0x01, 0x00 }, 2);
-		if (!plat_i2c_write(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U471_ADDR, 0x15, data, 2)) {
-			LOG_ERR("Failed to write 100M CLK BUFFER U471 reg 0x15");
+		output_amplitude_value = (data[1] & 0x0F) | 0xF0;
+		memcpy(data, (uint8_t[]){ data[0], output_amplitude_value }, 2);
+		if (!plat_i2c_write(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U471_ADDR, 0x11, data, 2)) {
+			LOG_ERR("Failed to write 100M CLK BUFFER U471 reg 0x11");
 			check_clk_buffer_handler_retry_count++;
 			if (check_clk_buffer_handler_retry_count > retry_max_count) {
-				LOG_ERR("100M CLK BUFFER init failed - U471 0x15 write failed");
+				LOG_ERR("100M CLK BUFFER init failed - U471 0x11 write failed");
 				check_clk_buffer_handler_retry_count = 0;
 			} else {
 				k_work_schedule(&check_clk_buffer_work, K_MSEC(10));
 			}
 			return;
 		}
+
 		memset(data, 0, sizeof(data));
-		memcpy(data, (uint8_t[]){ 0x01, 0x00 }, 2);
-		if (!plat_i2c_write(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U519_ADDR, 0x14, data, 2)) {
-			LOG_ERR("Failed to write 100M CLK BUFFER U519 reg 0x14");
+		if (!plat_i2c_read(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U519_ADDR, 0x11, data, 2)) {
+			LOG_ERR("Failed to read 100M CLK BUFFER U519 reg 0x11");
+			check_clk_buffer_handler_retry_count++;
+			if (check_clk_buffer_handler_retry_count > retry_max_count) {
+				LOG_ERR("100M CLK BUFFER init failed - U519 0x14 read failed");
+				check_clk_buffer_handler_retry_count = 0;
+			} else {
+				k_work_schedule(&check_clk_buffer_work, K_MSEC(10));
+			}
+			return;
+		}
+		output_amplitude_value = (data[1] & 0x0F) | 0xF0;
+		memcpy(data, (uint8_t[]){ data[0], output_amplitude_value }, 2);
+		if (!plat_i2c_write(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U519_ADDR, 0x11, data, 2)) {
+			LOG_ERR("Failed to write 100M CLK BUFFER U519 reg 0x11");
 			check_clk_buffer_handler_retry_count++;
 			if (check_clk_buffer_handler_retry_count > retry_max_count) {
 				LOG_ERR("100M CLK BUFFER init failed - U519 0x14 write failed");
-				check_clk_buffer_handler_retry_count = 0;
-			} else {
-				k_work_schedule(&check_clk_buffer_work, K_MSEC(10));
-			}
-			return;
-		}
-		memset(data, 0, sizeof(data));
-		memcpy(data, (uint8_t[]){ 0x01, 0x00 }, 2);
-		if (!plat_i2c_write(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U519_ADDR, 0x15, data, 2)) {
-			LOG_ERR("Failed to write 100M CLK BUFFER U519 reg 0x15");
-			check_clk_buffer_handler_retry_count++;
-			if (check_clk_buffer_handler_retry_count > retry_max_count) {
-				LOG_ERR("100M CLK BUFFER init failed - U519 0x15 write failed");
 				check_clk_buffer_handler_retry_count = 0;
 			} else {
 				k_work_schedule(&check_clk_buffer_work, K_MSEC(10));
