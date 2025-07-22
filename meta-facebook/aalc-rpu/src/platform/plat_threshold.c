@@ -757,6 +757,7 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 	if (thres_tbl_idx >= ARRAY_SIZE(threshold_tbl))
 		return;
 
+	static bool is_pump_not_access[3];
 	sensor_threshold const *thres_p = &threshold_tbl[thres_tbl_idx];
 	uint32_t sensor_num = thres_p->sensor_num;
 
@@ -777,9 +778,18 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 		(sensor_num == SENSOR_NUM_PB_3_PUMP_TACH_RPM) ? SENSOR_NUM_PB_3_PUMP_TACH_RPM_UCR :
 								0xFF;
 
+	uint8_t pump_not_access_idx =
+		(sensor_num == SENSOR_NUM_PB_1_PUMP_TACH_RPM) ? 0 :
+		(sensor_num == SENSOR_NUM_PB_2_PUMP_TACH_RPM) ? 1 :
+		(sensor_num == SENSOR_NUM_PB_3_PUMP_TACH_RPM) ? 2 :
+								0xFF;
+
 	switch (status) {
 	case THRESHOLD_STATUS_NOT_ACCESS:
-		error_log_event(sensor_num_pump_not_access, IS_ABNORMAL_VAL);
+		if (!is_pump_not_access[pump_not_access_idx]) {
+			error_log_event(sensor_num_pump_not_access, IS_ABNORMAL_VAL);
+			is_pump_not_access[pump_not_access_idx] = true;
+		}
 		if (pump_fail_check())
 			set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_TWO_PUMP_X, 1);
 		break;	

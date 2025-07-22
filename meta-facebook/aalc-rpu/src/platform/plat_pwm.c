@@ -293,24 +293,14 @@ void abnormal_pump_redundant_transform()
 
 	uint32_t current_state = get_status_flag(STATUS_FLAG_PUMP_REDUNDANT);
 	if (current_state != PUMP_REDUNDANT_DISABLE && exist_pump_work) {
-		if (get_threshold_status(SENSOR_NUM_PB_1_PUMP_TACH_RPM)) {
-			if (current_state == PUMP_REDUNDANT_MAX ||
-			    current_state == PUMP_REDUNDANT_12 ||
-			    current_state == PUMP_REDUNDANT_13)
-				set_status_flag(STATUS_FLAG_PUMP_REDUNDANT, 0xFF,
-						PUMP_REDUNDANT_23);
-		} else if (get_threshold_status(SENSOR_NUM_PB_2_PUMP_TACH_RPM)) {
-			if (current_state == PUMP_REDUNDANT_MAX ||
-			    current_state == PUMP_REDUNDANT_12 ||
-			    current_state == PUMP_REDUNDANT_23)
-				set_status_flag(STATUS_FLAG_PUMP_REDUNDANT, 0xFF,
-						PUMP_REDUNDANT_13);
-		} else if (get_threshold_status(SENSOR_NUM_PB_3_PUMP_TACH_RPM)) {
-			if (current_state == PUMP_REDUNDANT_13 ||
-			    current_state == PUMP_REDUNDANT_23)
-				set_status_flag(STATUS_FLAG_PUMP_REDUNDANT, 0xFF,
-						PUMP_REDUNDANT_12);
-		}
+		if (get_threshold_status(SENSOR_NUM_PB_1_PUMP_TACH_RPM))
+			set_status_flag(STATUS_FLAG_PUMP_REDUNDANT, 0xFF, PUMP_REDUNDANT_23);
+
+		if (get_threshold_status(SENSOR_NUM_PB_2_PUMP_TACH_RPM))
+			set_status_flag(STATUS_FLAG_PUMP_REDUNDANT, 0xFF, PUMP_REDUNDANT_13);
+
+		if (get_threshold_status(SENSOR_NUM_PB_3_PUMP_TACH_RPM))
+			set_status_flag(STATUS_FLAG_PUMP_REDUNDANT, 0xFF, PUMP_REDUNDANT_12);
 	}
 }
 
