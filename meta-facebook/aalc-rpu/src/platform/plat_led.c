@@ -221,7 +221,7 @@ bool fault_led_control(void)
 	}
 
 	// P1 status will not recovery
-	for (uint8_t i = PUMP_FAIL_EMERGENCY_BUTTON; i <= PUMP_FAIL_TWO_PUMP_LCR; i++) {
+	for (uint8_t i = PUMP_FAIL_EMERGENCY_BUTTON; i <= PUMP_FAIL_TWO_PUMP_X; i++) {
 		if ((get_status_flag(STATUS_FLAG_FAILURE) >> i) & 0x01) {
 			led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
 			return true;
