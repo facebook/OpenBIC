@@ -43,6 +43,7 @@ LOG_MODULE_REGISTER(plat_fwupdate);
 
 static uint8_t pldm_pre_vr_update(void *fw_update_param);
 static uint8_t pldm_post_vr_update(void *fw_update_param);
+static uint8_t pldm_pre_bic_update(void *fw_update_param);
 static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 
 typedef struct aegis_compnt_mapping_sensor {
@@ -78,7 +79,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
 		.comp_identifier = AG_COMPNT_BIC,
 		.comp_classification_index = 0x00,
-		.pre_update_func = NULL,
+		.pre_update_func = pldm_pre_bic_update,
 		.update_func = pldm_bic_update,
 		.pos_update_func = NULL,
 		.inf = COMP_UPDATE_VIA_SPI,
@@ -387,6 +388,16 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param)
 	/* Get bus and target address by sensor number in sensor configuration */
 	p->bus = bus;
 	p->addr = addr;
+
+	return 0;
+}
+
+static uint8_t pldm_pre_bic_update(void *fw_update_param)
+{
+	ARG_UNUSED(fw_update_param);
+
+	/* Stop sensor polling */
+	set_plat_sensor_polling_enable_flag(false);
 
 	return 0;
 }
