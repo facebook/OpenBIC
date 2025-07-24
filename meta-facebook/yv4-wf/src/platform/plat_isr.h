@@ -44,6 +44,10 @@
 
 #define SET_CLK_BUF_DELAY_MS 100
 
+#define VR_EVENT_DELAY_MS 10
+
+extern bool is_cxl_power_on_success;
+
 enum set_ioe4_cmd {
 	SET_CLK = 0,
 	SET_PE_RST,
@@ -63,18 +67,55 @@ typedef struct _add_vr_sel_info {
 	uint8_t vr_i2c_bus;
 	uint8_t vr_addr;
 	uint8_t page_cnt;
+	uint8_t gpio_num;
+	uint8_t vr_source;
 	struct k_work_delayable add_sel_work;
 } add_vr_sel_info;
+extern add_vr_sel_info vr_event_work_items[];
+
+#define PMBUS_DRMOS_FAULT 0x80 // MPS MP2971 PMBus Command
+
+typedef struct {
+	uint8_t vr_source;
+	uint8_t ioe_pin_num;
+	uint8_t vr_pwrgd_gpio;
+	uint8_t vr_mux_sel;
+	uint8_t vr_i2c_bus;
+	uint8_t vr_addr;
+	uint8_t vr_page;
+} vr_fault_info;
+
+typedef enum {
+	PMBUS_VR_IOE1_INT = 0,
+	NON_PMBUS_VR_PVTT_AB_ASIC1,
+	NON_PMBUS_VR_PVTT_AB_ASIC2,
+	NON_PMBUS_VR_PVTT_CD_ASIC1,
+	NON_PMBUS_VR_PVTT_CD_ASIC2,
+	NON_PMBUS_VR_PVPP_AB_ASIC1,
+	NON_PMBUS_VR_PVPP_AB_ASIC2,
+	NON_PMBUS_VR_PVPP_CD_ASIC1,
+	NON_PMBUS_VR_PVPP_CD_ASIC2,
+	NON_PMBUS_VR_P12V_E1S_0_R,
+	NON_PMBUS_VR_P3V3_E1S_0_R,
+} vr_event_index_t;
 
 void ISR_MB_DC_STAGUS_CHAGNE();
 void ISR_MB_PCIE_RST();
 void ISR_P3V3_E1S_PWR_CHANGE();
 void ISR_P12V_E1S_PWR_CHANGE();
 void ISR_CXL_PG_ON();
-void ISR_SET_CXL_LED();
+void ISR_PVTT_CD_ASIC1_PWR_CHANGE();
+void ISR_PVTT_CD_ASIC2_PWR_CHANGE();
 void ISR_IOE1_INT();
+void ISR_PVTT_AB_ASIC1_VR_FAULT();
+void ISR_PVTT_AB_ASIC2_VR_FAULT();
+void ISR_PVPP_AB_ASIC1_VR_FAULT();
+void ISR_PVPP_AB_ASIC2_VR_FAULT();
+void ISR_PVPP_CD_ASIC1_VR_FAULT();
+void ISR_PVPP_CD_ASIC2_VR_FAULT();
 
 void init_vr_event_work();
-void process_vr_event_handler(struct k_work *work_item);
+void process_pmbus_vr_event_handler(struct k_work *work_item);
+void process_non_pmbus_vr_event_handler(struct k_work *work_item);
 
 #endif
