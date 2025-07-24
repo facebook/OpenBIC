@@ -124,6 +124,7 @@ void set_cxl2_vr_access_delayed_status();
 bool cxl1_vr_access(uint8_t sensor_num);
 bool cxl2_vr_access(uint8_t sensor_num);
 void create_check_cxl_ready_thread();
+bool get_cxl_heartbeat(char *label);
 void cxl1_heartbeat_monitor_handler();
 void cxl2_heartbeat_monitor_handler();
 void init_cxl_heartbeat_monitor_work();
