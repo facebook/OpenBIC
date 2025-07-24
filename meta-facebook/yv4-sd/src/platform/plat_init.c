@@ -104,6 +104,7 @@ void pal_pre_init()
 	init_fastprochot_work_q();
 	init_event_work();
 	init_pmic_event_work();
+	init_post_timeout_event_work();
 	init_plat_worker(K_PRIO_PREEMPT(2)); // work queue for low priority jobs
 
 	plat_init_pldm_sensor_table();

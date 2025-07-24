@@ -101,6 +101,7 @@ enum oem_event_type {
 	OS_LOAD_WDT_PWR_DOWN,
 	OS_LOAD_WDT_PWR_CYCLE,
 	MTIA_VR_FAULT,
+	POST_TIMEOUTED,
 };
 
 enum vr_event_source {

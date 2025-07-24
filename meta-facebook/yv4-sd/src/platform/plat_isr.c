@@ -318,6 +318,35 @@ void init_throttle_work_q(void)
 			   SYS_THROTTLE_WORKQ_PRIORITY, NULL);
 }
 
+static struct k_work_delayable add_post_timeout_sel_work;
+void add_post_timeout_sel_work_handler(struct k_work *work)
+{
+	struct pldm_addsel_data sel_msg = { 0 };
+
+	sel_msg.assert_type = EVENT_ASSERTED;
+	sel_msg.event_type = POST_TIMEOUTED;
+
+	if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
+		LOG_ERR("[%s] Failed to send Post-Timeouted assert SEL", __func__);
+	} else {
+		LOG_INF("[%s] Send Post-Timeouted assert SEL", __func__);
+	}
+}
+
+void init_post_timeout_event_work(void)
+{
+	k_work_init_delayable(&add_post_timeout_sel_work, add_post_timeout_sel_work_handler);
+}
+
+#define POST_TIMEOUT_SECONDS 1200
+K_TIMER_DEFINE(power_on_timer, post_timeout_handler, NULL);
+void post_timeout_handler(struct k_timer *timer_id)
+{
+	LOG_INF("[%s] DC power on over %d seconds. Post timeout", __func__, POST_TIMEOUT_SECONDS);
+
+	k_work_schedule_for_queue(&plat_work_q, &add_post_timeout_sel_work, K_NO_WAIT);
+}
+
 #define DC_ON_5_SECOND 5
 #define PROC_FAIL_START_DELAY_SECOND 10
 #define VR_EVENT_DELAY_MS 10
@@ -335,7 +364,12 @@ void ISR_DC_ON()
 		k_work_submit(&switch_i3c_dimm_work);
 		k_work_schedule_for_queue(&plat_work_q, &PROC_FAIL_work,
 					  K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
+		k_timer_stop(&power_on_timer);
+		k_timer_start(&power_on_timer, K_SECONDS(POST_TIMEOUT_SECONDS), K_NO_WAIT);
+		LOG_INF("[%s] Start power on timer", __func__);
 	} else {
+		k_timer_stop(&power_on_timer);
+		LOG_INF("[%s] Stop power on timer", __func__);
 		if (k_work_cancel_delayable(&PROC_FAIL_work) != 0) {
 			LOG_ERR("Failed to cancel proc_fail delay work.");
 		}
@@ -361,6 +395,8 @@ void ISR_POST_COMPLETE()
 		read_cpuid();
 		LOG_INF("Post complete event assert");
 		hw_event_register[12]++;
+		k_timer_stop(&power_on_timer);
+		LOG_INF("[%s] Stop power on timer", __func__);
 	} else {
 		if (get_DC_status()) { // Host is reset
 			k_work_submit(&switch_i3c_dimm_work);
@@ -784,6 +820,10 @@ void IST_PLTRST()
 	k_work_schedule_for_queue(&plat_work_q, &ABORT_FRB2_WDT_THREAD, K_NO_WAIT);
 
 	k_work_schedule_for_queue(&plat_work_q, &event_item->add_sel_work, K_NO_WAIT);
+
+	k_timer_stop(&power_on_timer);
+	k_timer_start(&power_on_timer, K_SECONDS(POST_TIMEOUT_SECONDS), K_NO_WAIT);
+	LOG_INF("[%s] Start power on timer", __func__);
 }
 
 static void APML_ALERT_handler(struct k_work *work)
