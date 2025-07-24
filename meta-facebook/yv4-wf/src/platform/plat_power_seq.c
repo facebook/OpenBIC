@@ -42,7 +42,7 @@ K_TIMER_DEFINE(enable_asic1_rst_timer, enable_asic1_rst, NULL);
 K_TIMER_DEFINE(enable_asic2_rst_timer, enable_asic2_rst, NULL);
 
 #define CXL_READY_HANDLER_STACK_SIZE 1024
-
+#define VR_EVENT_WAIT_BIC_RESET_DELAY_MS (30 * 1000) // 30 seconds
 K_THREAD_STACK_DEFINE(cxl1_stack_area, CXL_READY_HANDLER_STACK_SIZE);
 struct k_thread cxl1_thread_data;
 
@@ -54,6 +54,7 @@ K_MUTEX_DEFINE(switch_ioe_mux_mutex);
 static bool is_cxl_power_on[MAX_CXL_ID] = { false, false };
 static bool is_cxl_ready[MAX_CXL_ID] = { false, false };
 static bool is_cxl_vr_accessible[MAX_CXL_ID] = { false, false };
+bool is_cxl_power_on_success = false;
 
 static k_tid_t cxl1_tid = NULL;
 static k_tid_t cxl2_tid = NULL;
@@ -160,6 +161,11 @@ void set_mb_dc_status(uint8_t gpio_num)
 	LOG_INF("MB DC (gpio num %d) status is %s", gpio_num, is_mb_dc_on ? "ON" : "OFF");
 }
 
+uint32_t get_uptime_secs(void)
+{
+	return k_uptime_get_32() / 1000U;
+}
+
 void execute_power_on_sequence()
 {
 	int ret = 0;
@@ -200,11 +206,28 @@ void execute_power_on_sequence()
 	}
 
 	if (is_cxl_power_on[CXL_ID_1] && is_cxl_power_on[CXL_ID_2]) {
+		is_cxl_power_on_success = true;
 		gpio_set(PG_CARD_OK, POWER_ON);
 		set_DC_status(PG_CARD_OK);
 		k_work_schedule(&set_dc_on_5s_work, K_SECONDS(DC_ON_DELAY5_SEC));
 
 		create_check_cxl_ready_thread();
+	} else {
+		LOG_INF("CXL power on failed, switch IOE mux to BIC");
+		switch_mux_to_bic(IOE_SWITCH_CXL1_VR_TO_BIC);
+		switch_mux_to_bic(IOE_SWITCH_CXL2_VR_TO_BIC);
+		uint32_t uptime = get_uptime_secs();
+		uint32_t delay_ms = VR_EVENT_DELAY_MS;
+
+		if (uptime < 30) { //wait longer for BIC reset
+			delay_ms = VR_EVENT_WAIT_BIC_RESET_DELAY_MS;
+			LOG_INF("pldm not ready yet, wait for %u seconds before checking VR",
+				(delay_ms / 1000U));
+		}
+
+		k_work_schedule_for_queue(&plat_work_q,
+					  &vr_event_work_items[PMBUS_VR_IOE1_INT].add_sel_work,
+					  K_MSEC(delay_ms));
 	}
 }
 
@@ -624,6 +647,9 @@ int check_powers_disabled(int cxl_id, int pwr_stage)
 static bool is_wf_ASIC1_vr_clear_fault_done = false;
 static bool is_wf_ASIC2_vr_clear_fault_done = false;
 
+static bool is_wf_IOE_INT_reset_done = false;
+extern uint8_t ioe_list[4];
+
 void clear_wf_ASIC1_vr_faults()
 {
 	//Clear VR_P0V85_ASIC1 fault bit
@@ -665,6 +691,12 @@ void switch_mux_to_bic(uint8_t value_to_write)
 		is_wf_ASIC2_vr_clear_fault_done = true;
 		k_msleep(1000);
 		clear_wf_ASIC2_vr_faults();
+	}
+
+	if (!is_wf_IOE_INT_reset_done) {
+		// Reset IO Expander INT#
+		reset_IOE_INT();
+		is_wf_IOE_INT_reset_done = true;
 	}
 
 	return;

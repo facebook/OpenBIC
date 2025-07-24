@@ -28,9 +28,12 @@
 #include "plat_i2c_target.h"
 #include "libutil.h"
 #include "plat_class.h"
+#include <logging/log.h>
 
 #define DEF_PLAT_CONFIG_PRIORITY 77
 #define DEF_PROJ_GPIO_PRIORITY 78
+
+LOG_MODULE_REGISTER(plat_init);
 
 SCU_CFG scu_cfg[] = {
 	//register    value

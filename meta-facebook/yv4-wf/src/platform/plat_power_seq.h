@@ -128,5 +128,5 @@ void cxl1_heartbeat_monitor_handler();
 void cxl2_heartbeat_monitor_handler();
 void init_cxl_heartbeat_monitor_work();
 void plat_pldm_sensor_clear_vr_fault(uint8_t vr_addr, uint8_t vr_bus, uint8_t page_cnt);
-
+void switch_mux_to_bic(uint8_t value_to_write);
 #endif
