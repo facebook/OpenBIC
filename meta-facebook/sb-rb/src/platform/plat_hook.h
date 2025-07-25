@@ -41,8 +41,8 @@ enum VR_INDEX_E {
 };
 
 enum VR_RAIL_E {
-	VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD = 0,
-	VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD,
+	VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD = 0,
+	VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD,
 	VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD,
 	VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD,
 	VR_RAIL_E_ASIC_P0V75_MAX_M_VDD,
@@ -66,14 +66,44 @@ enum VR_RAIL_E {
 	VR_RAIL_E_MAX,
 };
 
+enum VR_STAUS_E {
+	VR_STAUS_E_STATUS_BYTE = 0,
+	VR_STAUS_E_STATUS_WORD,
+	VR_STAUS_E_STATUS_VOUT,
+	VR_STAUS_E_STATUS_IOUT,
+	VR_STAUS_E_STATUS_INPUT,
+	VR_STAUS_E_STATUS_TEMPERATURE,
+	VR_STAUS_E_STATUS_CML,
+	VR_STAUS_E_MAX,
+};
+
+typedef struct vr_mapping_status {
+	uint8_t index;
+	uint16_t pmbus_reg;
+	uint8_t *vr_status_name;
+} vr_mapping_status;
+
 typedef struct _vr_pre_proc_arg {
 	void *mutex;
 	uint8_t vr_page;
 } vr_pre_proc_arg;
+
+typedef struct vr_mapping_sensor {
+	uint8_t index;
+	uint8_t sensor_id;
+	uint8_t *sensor_name;
+	int peak_value;
+} vr_mapping_sensor;
 
 bool pre_vr_read(sensor_cfg *cfg, void *args);
 bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
 bool is_mb_dc_on();
 void *vr_mutex_get(enum VR_INDEX_E vr_index);
 void vr_mutex_init(void);
+bool vr_rail_name_get(uint8_t rail, uint8_t **name);
+bool vr_status_name_get(uint8_t rail, uint8_t **name);
+bool vr_rail_enum_get(uint8_t *name, uint8_t *num);
+bool vr_status_enum_get(uint8_t *name, uint8_t *num);
+bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_status);
+bool plat_clear_vr_status(uint8_t rail);
 #endif

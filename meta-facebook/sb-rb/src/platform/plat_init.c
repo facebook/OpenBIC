@@ -26,6 +26,7 @@
 #include "plat_adc.h"
 #include "flash_shell.h"
 #include "plat_class.h"
+#include "plat_cpld.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -38,6 +39,7 @@ void pal_pre_init()
 				index, (struct _i2c_target_config *)&I2C_TARGET_CONFIG_TABLE[index],
 				1);
 	}
+	init_plat_config();
 	plat_led_init();
 	vr_mutex_init();
 	plat_i3c_set_pid();
@@ -52,8 +54,9 @@ void pal_post_init()
 {
 	plat_mctp_init();
 	init_fru_info();
+	uint8_t data = 0;
+	plat_write_cpld(CPLD_OFFSET_POWER_CLAMP, &data);
 	plat_adc_init();
-	init_plat_config();
 	//init_load_eeprom_log();
 }
 

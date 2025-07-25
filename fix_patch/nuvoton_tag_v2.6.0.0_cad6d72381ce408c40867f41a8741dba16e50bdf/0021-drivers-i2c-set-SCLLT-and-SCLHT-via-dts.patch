@@ -1,0 +1,78 @@
+From 9c47cd443d25f80711f40cd670eae1e21fc77bff Mon Sep 17 00:00:00 2001
+From: Tyrone Ting <kfting@nuvoton.com>
+Date: Wed, 2 Jul 2025 17:12:02 +0800
+Subject: [PATCH] drivers: i2c: set SCLLT and SCLHT via dts
+
+For example:
+&i2c1a {
+        clock-frequency = <I2C_BITRATE_STANDARD>;
+        scllt = <55>;
+        sclht = <50>;
+        status = "okay";
+};
+
+Signed-off-by: Tyrone Ting <kfting@nuvoton.com>
+---
+ drivers/i2c/i2c_npcm4xx.c                 | 15 +++++++++++++--
+ dts/bindings/i2c/nuvoton,npcm4xx-i2c.yaml |  8 ++++++++
+ 2 files changed, 21 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/i2c/i2c_npcm4xx.c b/drivers/i2c/i2c_npcm4xx.c
+index 972dc1b12ff9..588d03e88b25 100755
+--- a/drivers/i2c/i2c_npcm4xx.c
++++ b/drivers/i2c/i2c_npcm4xx.c
+@@ -74,6 +74,8 @@ struct i2c_npcm4xx_config {
+ 	uint32_t default_bitrate;
+ 	uint8_t irq;                    /* i2c controller irq */
+ 	uint32_t wait_free_time;
++	uint32_t scllt;
++	uint32_t sclht;
+ };
+ 
+ /*rx_buf and tx_buf address must 4-align for DMA */
+@@ -320,8 +322,13 @@ static void i2c_npcm4xx_set_baudrate(const struct device *dev, uint32_t bus_freq
+ 		inst->SMBnCTL3 |= BIT(NPCM4XX_SMBnCTL3_400K_MODE);
+ 		SET_FIELD(inst->SMBnCTL2, NPCM4XX_SMBnCTL2_SCLFRQ60_FIELD, 0);
+ 		SET_FIELD(inst->SMBnCTL3, NPCM4XX_SMBnCTL3_SCLFRQ87_FIELD, 0);
+-		inst->SMBnSCLHT = reg_tmp - 3;
+-		inst->SMBnSCLLT = reg_tmp - 1;
++		if ( (config->scllt == 0) || (config->sclht == 0) ) {
++			inst->SMBnSCLHT = reg_tmp - 3;
++			inst->SMBnSCLLT = reg_tmp - 1;
++		} else {
++			inst->SMBnSCLHT = config->sclht;
++			inst->SMBnSCLLT = config->scllt;
++		}
+ 
+ 		/* Set HLDT (48MHz, HLDT = 17, Hold Time = 360ns) */
+ 		if (data->source_clk >= 40000000) {
+@@ -1199,6 +1206,10 @@ static const struct i2c_driver_api i2c_npcm4xx_driver_api = {
+ 		.irq = DT_INST_IRQN(inst),					 \
+ 		.wait_free_time = DT_INST_PROP_OR(inst, wait_free_time,		 \
+ 				  I2C_WAITING_FREE_TIME),	 		 \
++		.scllt = DT_INST_PROP_OR(inst, scllt,		                 \
++				  0),	 		                         \
++		.sclht = DT_INST_PROP_OR(inst, sclht,		                 \
++				  0),	 		                         \
+ 	};									 \
+ 										 \
+ 	static struct i2c_npcm4xx_data i2c_npcm4xx_data_##inst;			 \
+diff --git a/dts/bindings/i2c/nuvoton,npcm4xx-i2c.yaml b/dts/bindings/i2c/nuvoton,npcm4xx-i2c.yaml
+index 3d53901d3725..ba8faac2edcf 100644
+--- a/dts/bindings/i2c/nuvoton,npcm4xx-i2c.yaml
++++ b/dts/bindings/i2c/nuvoton,npcm4xx-i2c.yaml
+@@ -18,3 +18,11 @@ properties:
+         type: int
+         required: false
+         description: time in unit of ms to wait for the bus to be idle
++    scllt:
++        type: int
++        required: false
++        description: value from 5 to 255
++    sclht:
++        type: int
++        required: false
++        description: value from 5 to 255
+-- 
+2.17.1
+

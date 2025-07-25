@@ -1,0 +1,441 @@
+From 5cdbb4cc7f0bd5f36e440884dba18c78cbe11fbb Mon Sep 17 00:00:00 2001
+From: Joseph Liu <kwliu@nuvoton.com>
+Date: Thu, 10 Jul 2025 11:40:33 +0800
+Subject: [PATCH] driver: spi: npcm4xx: Add multi-line support and fix
+ transceive in SPIP driver
+
+Change:
+1. Improved handling of TX/RX buffers and transfer context.
+2. Support for single, dual, and quad SPI line modes.
+3. Configurable word sizes: 8, 16, 24, and 32 bits per frame.
+4. Fix spi mode 2 and mode 3 setting.
+
+Signed-off-by: Joseph Liu <kwliu@nuvoton.com>
+Signed-off-by: Alan Yang <tyang1@nuvoton.com>
+---
+ drivers/spi/spi_npcm4xx_spip.c       | 319 ++++++++++++++++++++-------
+ soc/arm/npcm4xx/common/reg/reg_def.h |   4 +-
+ 2 files changed, 236 insertions(+), 87 deletions(-)
+
+diff --git a/drivers/spi/spi_npcm4xx_spip.c b/drivers/spi/spi_npcm4xx_spip.c
+index 742e8dd2df9..44618788364 100644
+--- a/drivers/spi/spi_npcm4xx_spip.c
++++ b/drivers/spi/spi_npcm4xx_spip.c
+@@ -14,6 +14,32 @@ LOG_MODULE_REGISTER(spip_npcm4xx);
+ #include <soc.h>
+ #include "spi_context.h"
+ 
++#define SPI_NPCM_SPIP_SINGLE                 0x0
++#define SPI_NPCM_SPIP_DUAL                   0x1
++#define SPI_NPCM_SPIP_QUAD                   0x2
++
++/* Transfer this NOP value when tx buf is null */
++#define SPI_NPCM_SPIP_TX_NOP                 0x00
++#define SPI_NPCM_SPIP_WAIT_STATUS_TIMEOUT_US 1000
++
++#if defined(CONFIG_ARCH_POSIX)
++#define Z_SPIN_DELAY(t) k_busy_wait(t)
++#else
++#define Z_SPIN_DELAY(t)
++#endif
++
++
++#define WAIT_FOR(expr, timeout, delay_stmt)                                                        \
++	({                                                                                         \
++		uint32_t _wf_cycle_count = k_us_to_cyc_ceil32(timeout);                            \
++		uint32_t _wf_start = k_cycle_get_32();                                             \
++		while (!(expr) && (_wf_cycle_count > (k_cycle_get_32() - _wf_start))) {            \
++			delay_stmt;                                                                \
++			Z_SPIN_DELAY(10);                                                          \
++		}                                                                                  \
++		(expr);                                                                            \
++	})
++
+ /* Device constant configuration parameters */
+ struct npcm4xx_spip_config {
+ 	/* SPIP reg base address */
+@@ -34,6 +60,8 @@ struct npcm4xx_spip_data {
+ 	struct spi_nor_op_info read_op_info;
+ 	/* write command data */
+ 	struct spi_nor_op_info write_op_info;
++	uint8_t bytes_per_frame;
++	uint8_t access_mode;
+ };
+ 
+ /* Driver convenience defines */
+@@ -67,39 +95,109 @@ static int spip_npcm4xx_configure(const struct device *dev,
+ 	uint32_t target_freq;
+ 	uint32_t source_clk;
+ 	int ret = 0;
++	uint16_t operation = config->operation;
++	uint8_t frame_size;
+ 
+-	if (SPI_WORD_SIZE_GET(config->operation) != 8) {
+-		LOG_ERR("Word sizes other than 8 bits are not supported");
+-		ret = -ENOTSUP;
+-	} else  {
+-		inst->CTL &= ~(0x1F << NPCM4XX_CTL_DWIDTH);
+-		inst->CTL |=  (SPI_WORD_SIZE_GET(config->operation) << NPCM4XX_CTL_DWIDTH);
++	if (SPI_OP_MODE_GET(operation) != SPI_OP_MODE_MASTER) {
++		LOG_ERR("Only SPI controller mode is supported");
++		return -ENOTSUP;
+ 	}
+ 
+-	if (SPI_MODE_GET(config->operation) & SPI_MODE_CPOL) {
+-		inst->CTL |= BIT(NPCM4XX_CTL_CLKPOL);
+-	} else {
+-		inst->CTL &= ~BIT(NPCM4XX_CTL_CLKPOL);
++	if (operation & SPI_MODE_LOOP) {
++		LOG_ERR("Loopback mode is not supported");
++		return -ENOTSUP;
++	}
++
++	/* Get the frame length */
++	frame_size = SPI_WORD_SIZE_GET(operation);
++
++	switch (frame_size) {
++		case 8:
++			data->bytes_per_frame = 1;
++			break;
++		case 16:
++			data->bytes_per_frame = 2;
++			break;
++		case 24:
++			data->bytes_per_frame = 3;
++			break;
++		case 32:
++			data->bytes_per_frame = 4;
++			break;
++		default:
++			LOG_ERR("Only support word sizes 8/16/32 bits");
++			return -ENOTSUP;
+ 	}
+-	if (SPI_MODE_GET(config->operation) & SPI_MODE_CPHA) {
+-		inst->CTL &= ~BIT(NPCM4XX_CTL_TXNEG);
+-		inst->CTL |= BIT(NPCM4XX_CTL_RXNEG);
++
++	if (frame_size == 32) {
++		SET_FIELD(inst->CTL, NPCM4XX_CTL_DWIDTH, 0x0);
+ 	} else {
+-		inst->CTL |= BIT(NPCM4XX_CTL_TXNEG);
+-		inst->CTL &= ~BIT(NPCM4XX_CTL_RXNEG);
++		SET_FIELD(inst->CTL, NPCM4XX_CTL_DWIDTH, frame_size);
++	}
++
++	switch (operation & SPI_LINES_MASK) {
++		case SPI_LINES_SINGLE:
++			inst->CTL &= ~BIT(NPCM4XX_CTL_DUALIOEN);
++			inst->CTL &= ~BIT(NPCM4XX_CTL_QUADIOEN);
++			data->access_mode = SPI_NPCM_SPIP_SINGLE;
++			break;
++		case SPI_LINES_DUAL:
++			inst->CTL |= BIT(NPCM4XX_CTL_DUALIOEN);
++			inst->CTL &= ~BIT(NPCM4XX_CTL_QUADIOEN);
++			data->access_mode = SPI_NPCM_SPIP_DUAL;
++			break;
++		case SPI_LINES_QUAD:
++			inst->CTL &= ~BIT(NPCM4XX_CTL_DUALIOEN);
++			inst->CTL |= BIT(NPCM4XX_CTL_QUADIOEN);
++			data->access_mode = SPI_NPCM_SPIP_QUAD;
++			break;
++		default:
++			LOG_ERR("Only single/dual/quad line mode is supported");
++			return -ENOTSUP;
+ 	}
+ 
+-	if (config->operation & SPI_TRANSFER_LSB) {
++	/* Set the endianness */
++	if (operation & SPI_TRANSFER_LSB) {
+ 		inst->CTL |= BIT(NPCM4XX_CTL_LSB);
+ 	} else {
+ 		inst->CTL &= ~BIT(NPCM4XX_CTL_LSB);
+ 	}
+ 
+-	if (config->operation & SPI_OP_MODE_SLAVE) {
+-		LOG_ERR("Slave mode is not supported");
+-		ret = -ENOTSUP;
++	/*
++	 * Set CPOL and CPHA.
++	 * The following is how to map npcm spip control register to CPOL and CPHA
++	 *   CPOL    CPHA  |  CLKPOL  TXNEG   RXNEG
++	 *   --------------------------------------
++	 *    0       0    |    0       1       0
++	 *    0       1    |    0       0       1
++	 *    1       0    |    1       0       1
++	 *    1       1    |    1       1       0
++	 */
++	if (SPI_MODE_GET(operation) & SPI_MODE_CPOL) {
++		inst->CTL |= BIT(NPCM4XX_CTL_CLKPOL);
++		if (SPI_MODE_GET(operation) & SPI_MODE_CPHA) {
++			inst->CTL |= BIT(NPCM4XX_CTL_TXNEG);
++			inst->CTL &= ~BIT(NPCM4XX_CTL_RXNEG);
++		} else {
++			inst->CTL &= ~BIT(NPCM4XX_CTL_TXNEG);
++			inst->CTL |= BIT(NPCM4XX_CTL_RXNEG);
++		}
+ 	} else {
+-		inst->CTL &= ~BIT(NPCM4XX_CTL_SLAVE);
++		inst->CTL &= ~BIT(NPCM4XX_CTL_CLKPOL);
++		if (SPI_MODE_GET(operation) & SPI_MODE_CPHA) {
++			inst->CTL &= ~BIT(NPCM4XX_CTL_TXNEG);
++			inst->CTL |= BIT(NPCM4XX_CTL_RXNEG);
++		} else {
++			inst->CTL |= BIT(NPCM4XX_CTL_TXNEG);
++			inst->CTL &= ~BIT(NPCM4XX_CTL_RXNEG);
++		}
++	}
++
++	/* Active high CS logic */
++	if (operation & SPI_CS_ACTIVE_HIGH) {
++		inst->SSCTL |= BIT(NPCM4XX_SSCTL_SSACTPOL);
++	} else {
++		inst->SSCTL &= ~BIT(NPCM4XX_SSCTL_SSACTPOL);
+ 	}
+ 
+ 	/* Set Bus clock */
+@@ -126,12 +224,91 @@ static int spip_npcm4xx_configure(const struct device *dev,
+ 
+ 	inst->CLKDIV = (inst->CLKDIV & ~0xF) | u32Div;
+ 
+-	/* spip enable */
+-	inst->CTL |= BIT(NPCM4XX_CTL_SPIEN);
++	data->ctx.config = config;
++
++	return ret;
++}
++
++static bool spi_npcm_spip_transfer_ongoing(struct npcm4xx_spip_data *data)
++{
++	return spi_context_tx_on(&data->ctx) || spi_context_rx_on(&data->ctx);
++}
++
++static int spi_npcm_spip_process_tx_buf(struct npcm4xx_spip_data *const data, uint32_t *tx_frame)
++{
++	int ret = 0;
++
++	/* Get the tx_frame from tx_buf only when tx_buf != NULL */
++	if (spi_context_tx_buf_on(&data->ctx)) {
++		*tx_frame = UNALIGNED_GET((uint8_t *)(data->ctx.tx_buf));
++	} else {
++		ret = -ENOBUFS;
++	}
++
++	/*
++	 * The update is ignored if TX is off (tx_len == 0).
++	 * Note: if tx_buf == NULL && tx_len != 0, the update still counts.
++	 */
++	spi_context_update_tx(&data->ctx, data->bytes_per_frame, 1);
+ 
+ 	return ret;
+ }
+ 
++static void spi_npcm_spip_process_rx_buf(struct npcm4xx_spip_data *const data, uint32_t rx_frame)
++{
++	if (spi_context_rx_buf_on(&data->ctx)) {
++		UNALIGNED_PUT(rx_frame, (uint8_t *)data->ctx.rx_buf);
++	}
++
++	spi_context_update_rx(&data->ctx, data->bytes_per_frame, 1);
++}
++
++static int spi_npcm_spip_xfer_frame(const struct device *dev)
++{
++	struct npcm4xx_spip_data *data = dev->data;
++	struct spip_reg *const inst = HAL_INSTANCE(dev);
++	uint32_t tx_frame = SPI_NPCM_SPIP_TX_NOP;
++	uint32_t rx_frame;
++	int ret;
++
++	if (WAIT_FOR(!IS_BIT_SET(inst->STATUS, NPCM4XX_STATUS_TXFULL),
++		     SPI_NPCM_SPIP_WAIT_STATUS_TIMEOUT_US, NULL) == false) {
++		LOG_ERR("Wait for TX empty Timeout");
++		return -ETIMEDOUT;
++	}
++
++	ret = spi_npcm_spip_process_tx_buf(data, &tx_frame);
++
++	if (WAIT_FOR(!IS_BIT_SET(inst->STATUS, NPCM4XX_STATUS_BUSY),
++		     SPI_NPCM_SPIP_WAIT_STATUS_TIMEOUT_US, NULL) == false) {
++		LOG_ERR("Check Status BUSY Timeout");
++		return -ETIMEDOUT;
++	}
++
++	if (data->access_mode != SPI_NPCM_SPIP_SINGLE) {
++		if (ret == -ENOBUFS) {
++			/* Input mode */
++			inst->CTL &= ~BIT(NPCM4XX_CTL_QDIODIR);
++		} else {
++			/* Output mode */
++			inst->CTL |= BIT(NPCM4XX_CTL_QDIODIR);
++		}
++	}
++
++	inst->TX = tx_frame;
++
++	if (WAIT_FOR(!IS_BIT_SET(inst->STATUS, NPCM4XX_STATUS_RXEMPTY),
++		     SPI_NPCM_SPIP_WAIT_STATUS_TIMEOUT_US, NULL) == false) {
++		LOG_ERR("Check Status RBF Timeout");
++		return -ETIMEDOUT;
++	}
++
++	rx_frame = inst->RX;
++	spi_npcm_spip_process_rx_buf(data, rx_frame);
++
++	return 0;
++}
++
+ static int spip_npcm4xx_transceive(const struct device *dev,
+ 				   const struct spi_config *config,
+ 				   const struct spi_buf_set *tx_bufs,
+@@ -140,8 +317,7 @@ static int spip_npcm4xx_transceive(const struct device *dev,
+ 	struct spip_reg *const inst = HAL_INSTANCE(dev);
+ 	struct npcm4xx_spip_data *data = dev->data;
+ 	struct spi_context *ctx = &data->ctx;
+-	int ret = 0, error = 0;
+-	uint8_t tx_done = 0;
++	int ret = 0;
+ 
+ 	spi_context_lock(ctx, false, NULL, config);
+ 	ctx->config = config;
+@@ -149,75 +325,43 @@ static int spip_npcm4xx_transceive(const struct device *dev,
+ 	/* Configure */
+ 	ret = spip_npcm4xx_configure(dev, config);
+ 	if (ret) {
+-		ret = -ENOTSUP;
+-		goto spip_transceive_done;
++		spi_context_release(ctx, ret);
++		return ret;
+ 	}
+ 
+ 	spi_context_buffers_setup(ctx, tx_bufs, rx_bufs, 1);
++	if (!spi_npcm_spip_transfer_ongoing(data)) {
++		spi_context_release(ctx, 0);
++		return 0;
++	}
+ 
+-	if (config->operation & SPI_OP_MODE_SLAVE) {
+-		/* Slave */
+-		LOG_ERR("Slave mode is not supported");
+-		ret = -ENOTSUP;
+-		goto spip_transceive_done;
+-	} else {
+-		/* Master */
+-		SPI_SET_SS0_LOW(dev);
+-		if (rx_bufs == NULL) {
+-			/* write data to SPI flash */
+-			while (spi_context_tx_buf_on(ctx)) {
+-				/*TX*/
+-				if ((inst->STATUS & BIT(NPCM4XX_STATUS_TXFULL)) == 0) {
+-					inst->TX = (uint8_t)*ctx->tx_buf;
+-					spi_context_update_tx(ctx, 1, 1);
+-				}
+-			}
+-		} else {
+-			inst->FIFOCTL |= BIT(NPCM4XX_FIFOCTL_RXRST);
+-			while (1) {
+-				/*TX*/
+-				if (spi_context_tx_buf_on(ctx)) {
+-					if (!(inst->STATUS & BIT(NPCM4XX_STATUS_TXFULL))) {
+-						inst->TX = (uint8_t)*ctx->tx_buf;
+-						spi_context_update_tx(ctx, 1, 1);
+-					}
+-				} else if (!(inst->STATUS & BIT(NPCM4XX_STATUS_BUSY))) {
+-					tx_done = 1;
+-				}
+-
+-				/*RX*/
+-				if (spi_context_rx_buf_on(ctx)) {
+-					if (!(inst->STATUS & BIT(NPCM4XX_STATUS_RXEMPTY))) {
+-						*ctx->rx_buf = (uint8_t)inst->RX;
+-						spi_context_update_rx(ctx, 1, 1);
+-					} else if (tx_done == 1) {
+-						ret = -EOVERFLOW;
+-						break;
+-					}
+-				} else   {
+-					if (tx_done == 1) {
+-						break;
+-					}
+-				}
+-			}
+-		}
+-
+-		do {
+-			if ((inst->STATUS & BIT(NPCM4XX_STATUS_BUSY)) == 0) {
+-				break;
+-			}
+-		} while (1);
++	/* Cleaning junk data in the buffer */
++	while (!IS_BIT_SET(inst->STATUS, NPCM4XX_STATUS_RXEMPTY)) {
++		uint8_t unused __attribute__((unused));
+ 
+-		SPI_SET_SS0_HIGH(dev);
++		unused = inst->RX;
+ 	}
+ 
+-spip_transceive_done:
+-	spi_context_release(ctx, error);
++	/* spip enable */
++	inst->FIFOCTL |= BIT(NPCM4XX_FIFOCTL_RXRST);
++	inst->FIFOCTL |= BIT(NPCM4XX_FIFOCTL_TXRST);
++	inst->CTL |= BIT(NPCM4XX_CTL_SPIEN);
+ 
+-	if (ret)
+-		return ret;
+-	else
+-		return error;
++	SPI_SET_SS0_LOW(dev);
++
++	do {
++		ret = spi_npcm_spip_xfer_frame(dev);
++		if (ret < 0)
++			break;
++	} while (spi_npcm_spip_transfer_ongoing(data));
++
++	SPI_SET_SS0_HIGH(dev);
++
++	/* spip disable */
++	inst->CTL &= ~BIT(NPCM4XX_CTL_SPIEN);
++	spi_context_release(ctx, ret);
++
++	return ret;
+ }
+ 
+ #ifdef CONFIG_SPI_ASYNC
+@@ -304,6 +448,8 @@ static void spi_nor_npcm4xx_spip_fifo_transceive(const struct device *dev,
+ 
+ 	normal_op_info = &op_info;
+ 
++	inst->CTL |= BIT(NPCM4XX_CTL_SPIEN);
++
+ 	/* clear tx/rx fifo buffer */
+ 	inst->FIFOCTL |= BIT(NPCM4XX_FIFOCTL_TXRST);
+ 	inst->FIFOCTL |= BIT(NPCM4XX_FIFOCTL_RXRST);
+@@ -365,6 +511,9 @@ static void spi_nor_npcm4xx_spip_fifo_transceive(const struct device *dev,
+ spi_nor_normal_done:
+ 
+ 	SPI_SET_SS0_HIGH(dev);
++
++	/* spip disable */
++	inst->CTL &= ~BIT(NPCM4XX_CTL_SPIEN);
+ }
+ 
+ static int spi_nor_npcm4xx_spip_transceive(const struct device *dev,
+diff --git a/soc/arm/npcm4xx/common/reg/reg_def.h b/soc/arm/npcm4xx/common/reg/reg_def.h
+index f33e280a048..8805d6a8ed7 100644
+--- a/soc/arm/npcm4xx/common/reg/reg_def.h
++++ b/soc/arm/npcm4xx/common/reg/reg_def.h
+@@ -553,8 +553,8 @@ struct spip_reg {
+ #define NPCM4XX_CTL_UNITIEN			(17)
+ #define NPCM4XX_CTL_TWOBIT			(16)
+ #define NPCM4XX_CTL_LSB				(13)
+-#define NPCM4XX_CTL_DWIDTH			(8)
+-#define NPCM4XX_CTL_SUSPITV			(4)
++#define NPCM4XX_CTL_DWIDTH			FIELD(8, 5)
++#define NPCM4XX_CTL_SUSPITV			FIELD(4, 4)
+ #define NPCM4XX_CTL_CLKPOL			(3)
+ #define NPCM4XX_CTL_TXNEG			(2)
+ #define NPCM4XX_CTL_RXNEG			(1)
+-- 
+2.47.1
+
