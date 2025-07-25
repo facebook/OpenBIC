@@ -659,6 +659,7 @@ bool mp29816a_get_vr_status(sensor_cfg *cfg, uint8_t rail, uint8_t vr_status_rai
 		val = (uint16_t)data[0];
 	} break;
 	case PMBUS_STATUS_INPUT: {
+		mp29816a_set_page(cfg->port, cfg->target_addr, 0);
 		uint8_t data[1] = { 0 };
 		if (!mp29816a_i2c_read(cfg->port, cfg->target_addr, PMBUS_STATUS_INPUT, data,
 				       sizeof(data))) {
@@ -675,6 +676,7 @@ bool mp29816a_get_vr_status(sensor_cfg *cfg, uint8_t rail, uint8_t vr_status_rai
 		val = (uint16_t)data[0];
 	} break;
 	case PMBUS_STATUS_CML: {
+		mp29816a_set_page(cfg->port, cfg->target_addr, 0);
 		uint8_t data[1] = { 0 };
 		if (!mp29816a_i2c_read(cfg->port, cfg->target_addr, PMBUS_STATUS_CML, data,
 				       sizeof(data))) {
