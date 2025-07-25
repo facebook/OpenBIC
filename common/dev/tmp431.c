@@ -33,6 +33,9 @@ LOG_MODULE_REGISTER(dev_tmp431);
 #define I2C_DATA_SIZE 5
 #define RANGE_0_127 0
 #define RANGE_m55_150 1
+#define TMP432_CONFIG_WRITE_REG1 0x09
+#define TMP432_CONFIG_READ_REG1 0x03
+#define TMP432_THERM_HYSTERESIS_REG 0x21
 
 static uint8_t temperature_range = 0xFF;
 
@@ -254,6 +257,58 @@ bool tmp432_set_temp_threshold(sensor_cfg *cfg, uint8_t temp_threshold_index,
 	}
 
 	return false;
+}
+
+bool tmp432_set_thermal_mode(sensor_cfg *cfg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 1;
+	msg.data[0] = TMP432_CONFIG_READ_REG1;
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Failed to read TMP432 register(0x%x)", TMP432_CONFIG_READ_REG1);
+		return false;
+	}
+
+	msg.tx_len = 2;
+	uint8_t data = msg.data[0];
+	data |= BIT(5);
+	msg.data[0] = TMP432_CONFIG_WRITE_REG1;
+	msg.data[1] = data;
+
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("Failed to write TMP432 register(0x%x)", TMP432_CONFIG_WRITE_REG1);
+		return false;
+	}
+
+	return true;
+}
+
+bool tmp432_set_therm_hysteresis(sensor_cfg *cfg, uint8_t temp_therm_hysteresis_val)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+
+	msg.data[0] = TMP432_THERM_HYSTERESIS_REG;
+	msg.data[1] = temp_therm_hysteresis_val;
+
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("Failed to write TMP432 register(0x%x)", TMP432_THERM_HYSTERESIS_REG);
+		return false;
+	}
+
+	return true;
 }
 
 uint8_t tmp431_read(sensor_cfg *cfg, int *reading)

@@ -51,6 +51,11 @@ __weak int plat_pldm_sensor_get_sensor_count(int thread_id)
 	return -1;
 }
 
+__weak void plat_pldm_sensor_post_load_init(int thread_id)
+{
+	return;
+}
+
 bool pldm_sensor_is_interval_ready(pldm_sensor_info *pldm_sensor_list)
 {
 	CHECK_NULL_ARG_WITH_RETURN(pldm_sensor_list, false);
@@ -411,6 +416,8 @@ void pldm_sensor_polling_handler(void *arug0, void *arug1, void *arug2)
 	if (pldm_sensor_thread_list[thread_id].poll_interval_ms != 0) {
 		poll_interval_ms = pldm_sensor_thread_list[thread_id].poll_interval_ms;
 	}
+
+	plat_pldm_sensor_post_load_init(thread_id);
 
 	while (1) {
 		// Check sensor poll enable

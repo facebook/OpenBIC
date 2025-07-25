@@ -30,6 +30,8 @@ LOG_MODULE_REGISTER(dev_emc1413);
 #define EMC1413_THERM_LIMIT_STATUS_REG 0x37
 #define EMC1413_DEFAULT_RESOLUTION 0.125
 #define EMC1413_TEMP_SHIFT_BIT 5
+#define EMC1413_CONFIG_REG1 0x03
+#define EMC1413_THERM_HYSTERESIS_REG 0x21
 
 typedef struct _temp_mapping_register {
 	uint8_t threshold_index;
@@ -71,7 +73,7 @@ bool get_emc1413_two_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
 	msg.data[0] = register_high;
 
 	if (i2c_master_read(&msg, retry)) {
-		LOG_ERR("Failed to write TMP431 register(0x%x)", temp_threshold_index);
+		LOG_ERR("Failed to write EMC1413 register(0x%x)", temp_threshold_index);
 		return false;
 	}
 
@@ -79,7 +81,7 @@ bool get_emc1413_two_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
 
 	msg.data[0] = register_low;
 	if (i2c_master_read(&msg, retry)) {
-		LOG_ERR("Failed to write TMP431 register(0x%x)", temp_threshold_index);
+		LOG_ERR("Failed to write EMC1413 register(0x%x)", temp_threshold_index);
 		return false;
 	}
 
@@ -106,7 +108,7 @@ bool get_emc1413_one_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
 	msg.data[0] = register_high;
 
 	if (i2c_master_read(&msg, retry)) {
-		LOG_ERR("Failed to write TMP431 register(0x%x)", temp_threshold_index);
+		LOG_ERR("Failed to write EMC1413 register(0x%x)", temp_threshold_index);
 		return false;
 	}
 
@@ -179,14 +181,14 @@ bool set_emc1413_two_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
 	msg.data[0] = register_high;
 	msg.data[1] = (uint8_t)(*millidegree_celsius / 1000);
 	if (i2c_master_write(&msg, retry)) {
-		LOG_ERR("Failed to write TMP431 register(0x%x)", temp_threshold_index);
+		LOG_ERR("Failed to write EMC1413 register(0x%x)", temp_threshold_index);
 		return false;
 	}
 
 	msg.data[0] = register_low;
 	msg.data[1] = (uint8_t)(((*millidegree_celsius % 1000) / 125) << 5);
 	if (i2c_master_write(&msg, retry)) {
-		LOG_ERR("Failed to write TMP431 register(0x%x)", temp_threshold_index);
+		LOG_ERR("Failed to write EMC1413 register(0x%x)", temp_threshold_index);
 		return false;
 	}
 
@@ -208,7 +210,7 @@ bool set_emc1413_one_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
 	msg.data[0] = register_high;
 	msg.data[1] = (uint8_t)(*millidegree_celsius / 1000);
 	if (i2c_master_write(&msg, retry)) {
-		LOG_ERR("Failed to write TMP431 register(0x%x)", temp_threshold_index);
+		LOG_ERR("Failed to write EMC1413 register(0x%x)", temp_threshold_index);
 		return false;
 	}
 
@@ -259,6 +261,58 @@ bool emc1413_set_temp_threshold(sensor_cfg *cfg, uint8_t temp_threshold_index,
 	}
 
 	return false;
+}
+
+bool emc1413_set_comparator_mode(sensor_cfg *cfg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 1;
+	msg.data[0] = EMC1413_CONFIG_REG1;
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Failed to read EMC1413 register(0x%x)", EMC1413_CONFIG_REG1);
+		return false;
+	}
+
+	msg.tx_len = 2;
+	uint8_t data = msg.data[0];
+	data |= BIT(5);
+	msg.data[0] = EMC1413_CONFIG_REG1;
+	msg.data[1] = data;
+
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("Failed to write EMC1413 register(0x%x)", EMC1413_CONFIG_REG1);
+		return false;
+	}
+
+	return true;
+}
+
+bool emc1413_set_therm_hysteresis(sensor_cfg *cfg, uint8_t temp_therm_hysteresis_val)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+
+	msg.data[0] = EMC1413_THERM_HYSTERESIS_REG;
+	msg.data[1] = temp_therm_hysteresis_val;
+
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("Failed to write EMC1413 register(0x%x)", EMC1413_THERM_HYSTERESIS_REG);
+		return false;
+	}
+
+	return true;
 }
 
 uint8_t emc1413_read(sensor_cfg *cfg, int *reading)

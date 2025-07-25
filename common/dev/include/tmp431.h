@@ -66,5 +66,7 @@ bool tmp432_get_temp_threshold(sensor_cfg *cfg, uint8_t temp_threshold_index,
 			       uint32_t *millidegree_celsius);
 bool tmp432_set_temp_threshold(sensor_cfg *cfg, uint8_t temp_threshold_index,
 			       uint32_t *millidegree_celsius);
+bool tmp432_set_thermal_mode(sensor_cfg *cfg);
+bool tmp432_set_therm_hysteresis(sensor_cfg *cfg, uint8_t temp_therm_hysteresis_val);
 
 #endif

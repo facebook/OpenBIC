@@ -57,5 +57,7 @@ bool emc1413_get_temp_threshold(sensor_cfg *cfg, uint8_t temp_threshold_index,
 				uint32_t *millidegree_celsius);
 bool emc1413_set_temp_threshold(sensor_cfg *cfg, uint8_t temp_threshold_index,
 				uint32_t *millidegree_celsius);
+bool emc1413_set_comparator_mode(sensor_cfg *cfg);
+bool emc1413_set_therm_hysteresis(sensor_cfg *cfg, uint8_t temp_therm_hysteresis_val);
 
 #endif
