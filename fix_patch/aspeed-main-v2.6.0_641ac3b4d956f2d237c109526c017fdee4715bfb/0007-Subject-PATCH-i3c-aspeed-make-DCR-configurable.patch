@@ -1,6 +1,6 @@
-From 61d490e9e1d56dc5547e3466ec2e1353a5695f77 Mon Sep 17 00:00:00 2001
+From c54d2633c85153a1f8bcb460e91ec2f990178a1d Mon Sep 17 00:00:00 2001
 From: Zane Li <zane.li.wiwynn@gmail.com>
-Date: Wed, 5 Mar 2025 15:16:35 +0800
+Date: Thu, 24 Jul 2025 10:14:21 +0800
 Subject: [PATCH] Subject: [PATCH] i3c: aspeed: make DCR configurable
 
 Make Device Characteristic Register configurable in dts.
@@ -11,7 +11,7 @@ See https://www.mipi.org/mipi_i3c_device_characteristics_register for detail.
  2 files changed, 9 insertions(+)
 
 diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
-index d6a3163ed4d..495962e76c6 100644
+index a7f79e3e23f..0389580e693 100644
 --- a/drivers/i3c/i3c_aspeed.c
 +++ b/drivers/i3c/i3c_aspeed.c
 @@ -505,6 +505,7 @@ struct i3c_aspeed_config {
@@ -22,7 +22,7 @@ index d6a3163ed4d..495962e76c6 100644
  	int inst_id;
  	int ibi_append_pec;
  	int priv_xfer_pec;
-@@ -1330,6 +1331,7 @@ static void i3c_aspeed_init_pid(struct i3c_aspeed_obj *obj)
+@@ -1358,6 +1359,7 @@ static void i3c_aspeed_init_pid(struct i3c_aspeed_obj *obj)
  
  	slave_char.value = i3c_register->slave_char.value;
  	slave_char.fields.bcr = 0x66;
@@ -30,7 +30,7 @@ index d6a3163ed4d..495962e76c6 100644
  	i3c_register->slave_char.value = slave_char.value;
  }
  
-@@ -2258,6 +2260,7 @@ static int i3c_aspeed_init(const struct device *dev)
+@@ -2305,6 +2307,7 @@ static int i3c_aspeed_init(const struct device *dev)
  		.i3c_scl_hz = DT_INST_PROP_OR(n, i3c_scl_hz, 0),                                   \
  		.secondary = DT_INST_PROP_OR(n, secondary, 0),                                     \
  		.assigned_addr = DT_INST_PROP_OR(n, assigned_address, 0),                          \

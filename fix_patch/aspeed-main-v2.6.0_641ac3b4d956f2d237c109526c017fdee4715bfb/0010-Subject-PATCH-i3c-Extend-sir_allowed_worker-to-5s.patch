@@ -1,6 +1,6 @@
-From dddc11efcc968d37f6e927fd5df892db36759f0f Mon Sep 17 00:00:00 2001
+From 91d3394c2ba3db197c1a69017d44f1c181613389 Mon Sep 17 00:00:00 2001
 From: Zane Li <zane.li.wiwynn@gmail.com>
-Date: Thu, 6 Mar 2025 10:30:02 +0800
+Date: Thu, 24 Jul 2025 10:16:14 +0800
 Subject: [PATCH] Subject: [PATCH] i3c: Extend sir_allowed_worker to 5s
 
 Based on Aspeed's suggestion, after the BIC is assigned a dynamic address,
@@ -10,10 +10,10 @@ it waits for 5 seconds to allow IBI transmission.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
-index 495962e76c6..255abca6b47 100644
+index 0389580e693..53d90463bf2 100644
 --- a/drivers/i3c/i3c_aspeed.c
 +++ b/drivers/i3c/i3c_aspeed.c
-@@ -2069,7 +2069,7 @@ static void sir_allowed_worker(struct k_work *work)
+@@ -2116,7 +2116,7 @@ static void sir_allowed_worker(struct k_work *work)
  {
  	struct i3c_aspeed_obj *obj = CONTAINER_OF(work, struct i3c_aspeed_obj, work);
  
