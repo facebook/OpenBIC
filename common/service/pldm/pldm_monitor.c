@@ -138,7 +138,7 @@ uint8_t pldm_get_sensor_reading(void *mctp_inst, uint8_t *buf, uint16_t len, uin
 	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
 
 #ifdef DISABLE_SENSOR_RESP_DURING_FW_UPDATE
-	if (is_update_state_download_phase()) {
+	if (is_update_state_idle() == false) {
 		return PLDM_LATER_RESP;
 	}
 #endif

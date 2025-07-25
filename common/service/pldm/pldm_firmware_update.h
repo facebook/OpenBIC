@@ -65,7 +65,10 @@ static const char hex_to_ascii[] = { '0', '1', '2', '3', '4', '5', '6', '7',
 
 #define PLDM_COMMON_ERR_STR 'E', 'R', 'R', 'O', 'R', ':'
 #define PLDM_COMMON_ERR_CODE 0
-#define PLDM_CREATE_ERR_STR_ARRAY(code) { PLDM_COMMON_ERR_STR, hex_to_ascii[code] }
+#define PLDM_CREATE_ERR_STR_ARRAY(code)                                                            \
+	{                                                                                          \
+		PLDM_COMMON_ERR_STR, hex_to_ascii[code]                                            \
+	}
 
 #define CHECK_PLDM_FW_UPDATE_RESULT_WITH_RETURN(component_id, offset, length, val, ret_val)                \
 	if (val != 0) {                                                                                    \
@@ -722,6 +725,7 @@ int get_device_descriptor_total_length(struct pldm_descriptor_string *table, uin
 uint8_t fill_descriptor_into_buf(struct pldm_descriptor_string *descriptor, uint8_t *buf,
 				 uint8_t *fill_length, uint16_t current_length);
 bool is_update_state_download_phase();
+bool is_update_state_idle();
 
 #ifdef __cplusplus
 }
