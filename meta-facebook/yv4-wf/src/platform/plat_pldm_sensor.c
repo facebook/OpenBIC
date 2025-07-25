@@ -29,6 +29,7 @@
 #include "plat_isr.h"
 #include "plat_class.h"
 #include "plat_mctp.h"
+#include "sq52205.h"
 
 LOG_MODULE_REGISTER(plat_pldm_sensor);
 
@@ -6663,6 +6664,9 @@ void plat_pldm_sensor_change_ina233_dev()
 	uint8_t reg = 0;
 
 	/*
+	 * Get remote sensor type from BOARD_ID3 (IOE3 P17)
+	 * Low - check the remote sensor type from BOARD_ID2
+	 * High - SQ52205 (3nd source)
 	 * Get remote sensor type from BOARD_ID2 (IOE3 P16)
 	 * Low - INA233 (main source)
 	 * High - RTQ6056 (2nd source)
@@ -6673,21 +6677,62 @@ void plat_pldm_sensor_change_ina233_dev()
 		return;
 	}
 
-	if (GETBIT(reg, IOE_P16)) {
+	if (GETBIT(reg, IOE_P17)) {
 		for (int index = 0;
 		     index < plat_pldm_sensor_get_sensor_count(INA233_SENSOR_THREAD_ID); index++) {
 			if (plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.type ==
 			    sensor_dev_ina233) {
 				plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.type =
-					sensor_dev_rtq6056;
+					sensor_dev_sq52205;
 
 				if (plat_pldm_sensor_ina233_table[index]
 					    .pldm_sensor_cfg.target_addr == ADDR_INA233_P12V_STBY) {
 					plat_pldm_sensor_ina233_table[index]
-						.pldm_sensor_cfg.init_args = &rtq6056_init_args[0];
+						.pldm_sensor_cfg.init_args = &sq52205_init_args[0];
 				} else {
 					plat_pldm_sensor_ina233_table[index]
-						.pldm_sensor_cfg.init_args = &rtq6056_init_args[1];
+						.pldm_sensor_cfg.init_args = &sq52205_init_args[1];
+				}
+
+				switch (plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.offset) {
+				case PMBUS_READ_VOUT:
+					plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.offset =
+						SQ52205_READ_VOL_OFFSET;
+					break;
+				case PMBUS_READ_IOUT:
+					plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.offset =
+						SQ52205_READ_CUR_OFFSET;
+					break;
+				case PMBUS_READ_POUT:
+					plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.offset =
+						SQ52205_READ_PWR_OFFSET;
+					break;
+				default:
+					continue;
+				}
+			}
+		}
+	} else {
+		if (GETBIT(reg, IOE_P16)) {
+			for (int index = 0;
+			     index < plat_pldm_sensor_get_sensor_count(INA233_SENSOR_THREAD_ID);
+			     index++) {
+				if (plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.type ==
+				    sensor_dev_ina233) {
+					plat_pldm_sensor_ina233_table[index].pldm_sensor_cfg.type =
+						sensor_dev_rtq6056;
+
+					if (plat_pldm_sensor_ina233_table[index]
+						    .pldm_sensor_cfg.target_addr ==
+					    ADDR_INA233_P12V_STBY) {
+						plat_pldm_sensor_ina233_table[index]
+							.pldm_sensor_cfg.init_args =
+							&rtq6056_init_args[0];
+					} else {
+						plat_pldm_sensor_ina233_table[index]
+							.pldm_sensor_cfg.init_args =
+							&rtq6056_init_args[1];
+					}
 				}
 			}
 		}
