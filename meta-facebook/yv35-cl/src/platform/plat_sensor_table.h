@@ -142,6 +142,8 @@ typedef struct _dimm_pmic_mapping_cfg {
 	uint8_t mapping_pmic_sensor_num;
 } dimm_pmic_mapping_cfg;
 
+enum VR_VENDER_TYPE { VR_TYPE_UNKNOWN = 0, VR_TYPE_XDPE15284, VR_TYPE_ISL69259 };
+
 uint8_t plat_get_config_size();
 uint8_t pal_get_extend_sensor_config();
 void load_sensor_config(void);

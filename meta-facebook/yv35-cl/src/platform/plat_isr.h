@@ -19,8 +19,19 @@
 
 #include <stdint.h>
 #include "ipmi.h"
+//#include "hal_i2c.h"
 
 #define DETECT_SMI_DELAY_90S 90
+
+#define VR_PWR_FAULT_DELAY_MS 10
+#define CPLD_VR_FAULT_REG 0x01
+// VR Address
+// Page 0: PVCCIN / Page 1: FIVRA
+#define PVCCIN_FIVRA_ADDR (0xC0 >> 1)
+// Page 0: PVCCD
+#define PVCCD_ADDR (0xC4 >> 1)
+// Page 0: FAON / Page 1: EHV
+#define FAON_EHV_ADDR (0xEC >> 1)
 
 enum GET_SET_M2_OPTION {
 	DEVICE_SET_POWER_OFF = 0x00,
@@ -29,6 +40,7 @@ enum GET_SET_M2_OPTION {
 };
 
 void send_gpio_interrupt(uint8_t gpio_num);
+void init_vr_pwr_fault_work();
 void ISR_PLTRST();
 void ISR_SLP3();
 void ISR_DC_ON();
@@ -52,5 +64,6 @@ void ISR_CPU_VPP_INT();
 void ISR_NMI();
 void ISR_RST_PLTRST_PLD();
 void ISR_SMI();
+void ISR_VR_PWR_FAULT();
 
 #endif
