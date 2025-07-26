@@ -1,0 +1,12 @@
+<map id="pal_set_sys_status" name="pal_set_sys_status">
+<area shape="rect" id="node1" title=" " alt="" coords="5,115,140,141"/>
+<area shape="rect" id="node2" href="$op2-op_2src_2platform_2plat__power__seq_8c.html#a553f1a0fa3836e65da9ef7cd5f2cfc75" title=" " alt="" coords="217,5,363,32"/>
+<area shape="rect" id="node3" href="$op2-op_2src_2platform_2plat__class_8c.html#ac761260dd4b60e1679fbfc06356a4bb6" title=" " alt="" coords="188,56,392,83"/>
+<area shape="rect" id="node8" href="$power__status_8c.html#a1a43a6cae7b7ec64b70d20ce91b82268" title=" " alt="" coords="221,107,359,149"/>
+<area shape="rect" id="node9" href="$power__status_8c.html#aa3406c25950a307fb61cec9e156605c3" title=" " alt="" coords="200,173,380,200"/>
+<area shape="rect" id="node10" href="$power__status_8c.html#a4482f69c1ee4e17e699b46c3ea5cf05e" title=" " alt="" coords="236,224,344,251"/>
+<area shape="rect" id="node4" href="$op2-op_2src_2platform_2plat__class_8c.html#aca87bd14572547091155c9d37bd79eec" title=" " alt="" coords="460,5,563,32"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="451,56,572,83"/>
+<area shape="rect" id="node7" href="$op2-op_2src_2platform_2plat__util_8c.html#a0df093a007e4716c238756c270f7d6cf" title=" " alt="" coords="440,107,583,149"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="631,56,773,83"/>
+</map>
