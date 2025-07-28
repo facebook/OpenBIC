@@ -1,7 +1,7 @@
-From 8aebcb694ed0b8a22dacb81035a246ca18435d66 Mon Sep 17 00:00:00 2001
+From dab49ef97fdf490814e089a01cc9d4bff35f27fc Mon Sep 17 00:00:00 2001
 From: Zane Li <zane.li.wiwynn@gmail.com>
-Date: Wed, 5 Mar 2025 10:24:14 +0800
-Subject: [PATCH] Subject: [PATCH 29/30] i3c: aspeed: Separates the event of
+Date: Thu, 24 Jul 2025 10:06:07 +0800
+Subject: [PATCH] Subject: [PATCH 29/30] i3c: aspeed: Separates the event of 
  ibi and data  consume.
 
 The interrupt resp_q_ready indicate the event of ibi transfer done, data
@@ -20,10 +20,10 @@ Change-Id: I2f741d2031efc27d1611050db924116983f4ba64
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
-index c27f83dfcb9..8a0a87a58c3 100644
+index abb2bba73e8..2a61f997fe4 100644
 --- a/drivers/i3c/i3c_aspeed.c
 +++ b/drivers/i3c/i3c_aspeed.c
-@@ -1759,9 +1759,10 @@ static int i3c_aspeed_slave_wait_data_consume(const struct device *dev)
+@@ -1787,9 +1787,10 @@ static int i3c_aspeed_slave_wait_data_consume(const struct device *dev)
  	struct i3c_aspeed_obj *obj = DEV_DATA(dev);
  	union i3c_intr_s events;
  

@@ -11,7 +11,7 @@ manifest:
     - name: zephyr
       remote: aspeed
       path: zephyr
-      revision: 632d2fb5d0438040e8dc44da48a2fb0712c1feea
+      revision: 641ac3b4d956f2d237c109526c017fdee4715bfb
       import: 
         name-allowlist:
           - cmsis
