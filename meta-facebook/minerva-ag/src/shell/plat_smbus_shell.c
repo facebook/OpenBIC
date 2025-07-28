@@ -47,19 +47,9 @@ static int cmd_repeat_read(const struct shell *shell, size_t argc, char **argv)
 	}
 
 	msg.target_addr = strtol(argv[2], NULL, 16);
-	msg.tx_len = 1;
-	msg.rx_len = 1;
-	msg.data[0] = strtol(argv[3], NULL, 16); //cmd
-
-	if (i2c_master_read(&msg, 5)) {
-		shell_error(shell, "Failed to read from bus %d device: %x", msg.bus,
-			    msg.target_addr);
-		return -1;
-	}
 	int repeat_times = strtol(argv[5], NULL, 16);
 
 	for (int i = 0; i < repeat_times; i++) {
-		// read again with the length from the first byte
 		msg.tx_len = 1;
 		msg.rx_len = strtol(argv[4], NULL, 16); //read_bytes
 		msg.data[0] = strtol(argv[3], NULL, 16); //cmd
@@ -164,7 +154,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 	SHELL_CMD_ARG(block_read, &dsub_device_name, "smbus block_read      <bus> <devaddr> <cmd> ",
 		      cmd_block_read, 4, 0),
 	SHELL_CMD_ARG(repeat_read, &dsub_device_name,
-		      "smbus cmd_block_read      <bus> <devaddr> <cmd> <read_bytes> <repeat_times>",
+		      "smbus repeat_read      <bus> <devaddr> <cmd> <read_bytes> <repeat_times>",
 		      cmd_repeat_read, 6, 0),
 	SHELL_SUBCMD_SET_END);
 
