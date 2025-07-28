@@ -87,6 +87,33 @@ rtq6056_init_arg rtq6056_init_args[] = {
 	},
 };
 
+sq52205_init_arg sq52205_init_args[] = {
+	[0] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005,
+	.config = {
+			.operating_mode =0b111,
+			.shunt_volt_time = 0b100,
+			.bus_volt_time = 0b100,
+			.aver_mode = 0b011, //set 64 average times
+			.rsvd = 0b000,
+			.reset_bit = 0b0,
+	},
+	.is_need_accum_config_init = false,
+	.is_need_set_alert_threshold = false,
+	},
+	[1] = { .is_init = false, .current_lsb = 0.001, .r_shunt = 0.005,
+	.config = {
+			.operating_mode =0b111,
+			.shunt_volt_time = 0b100,
+			.bus_volt_time = 0b100,
+			.aver_mode = 0b011, //set 64 average times
+			.rsvd = 0b000,
+			.reset_bit = 0b0,
+	},
+	.is_need_accum_config_init = false,
+	.is_need_set_alert_threshold = false,
+	},
+};
+
 vr_pre_read_arg vr_pre_read_args[] = {
 	[0] = { 0x0 },
 	[1] = { 0x1 },
@@ -136,7 +163,7 @@ bool pre_vr_read(sensor_cfg *cfg, void *args)
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
-	vr_pre_read_arg *pre_read_args = (vr_pre_read_arg *)args;
+	const vr_pre_read_arg *pre_read_args = (vr_pre_read_arg *)args;
 	uint8_t retry = 5;
 	I2C_MSG msg;
 	/* set page */
