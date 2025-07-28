@@ -62,7 +62,7 @@ static int cmd_vr_status_get(const struct shell *shell, size_t argc, char **argv
 						continue;
 					}
 
-					shell_print(shell, "    %-10s:%2x", vr_status_name,
+					shell_print(shell, "    %-10s:0x%02x", vr_status_name,
 						    vr_status);
 				}
 			} else {
@@ -82,8 +82,8 @@ static int cmd_vr_status_get(const struct shell *shell, size_t argc, char **argv
 					return -1;
 				}
 
-				shell_print(shell, "[%-2x]%-50s %-10s:%2x", i, rail_name, argv[2],
-					    vr_status);
+				shell_print(shell, "[%-2x]%-50s %-10s:0x%02x", i, rail_name,
+					    argv[2], vr_status);
 			}
 		}
 		return 0;
@@ -117,7 +117,7 @@ static int cmd_vr_status_get(const struct shell *shell, size_t argc, char **argv
 					continue;
 				}
 
-				shell_print(shell, "[%-2x]%-50s %-10s:%2x", rail, argv[1],
+				shell_print(shell, "[%-2x]%-50s %-10s:0x%02x", rail, argv[1],
 					    vr_status_name, vr_status);
 			}
 			return 0;
@@ -136,9 +136,8 @@ static int cmd_vr_status_get(const struct shell *shell, size_t argc, char **argv
 				return -1;
 			}
 
-			shell_print(shell, "[%-2x]%-50s %-10s:%2x", rail, argv[1], argv[2],
+			shell_print(shell, "[%-2x]%-50s %-10s:0x%02x", rail, argv[1], argv[2],
 				    vr_status);
-
 			return 0;
 		}
 	}
