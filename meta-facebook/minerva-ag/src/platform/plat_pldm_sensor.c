@@ -469,8 +469,8 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			15000, //uint32_t critical_high;
-			9500, //uint32_t critical_low;
+			13770, //uint32_t critical_high;
+			11730, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
 		},
@@ -606,7 +606,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0x00000000, //uint32_t warning_high; //Need to check
 			0x00000000, //uint32_t warning_low; //Need to check
-			693000, //uint32_t critical_high; //Need to check
+			736000, //uint32_t critical_high; //Need to check
 			0x00000000, //uint32_t critical_low; //Need to check
 			0x00000000, //uint32_t fatal_high; //Need to check
 			0x00000000, //uint32_t fatal_low; //Need to check
@@ -811,8 +811,8 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			15000, //uint32_t critical_high;
-			9500, //uint32_t critical_low;
+			13770, //uint32_t critical_high;
+			11370, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
 		},
@@ -948,7 +948,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0x00000000, //uint32_t warning_high; //Need to check
 			0x00000000, //uint32_t warning_low; //Need to check
-			693000, //uint32_t critical_high; //Need to check
+			736000, //uint32_t critical_high; //Need to check
 			0x00000000, //uint32_t critical_low; //Need to check
 			0x00000000, //uint32_t fatal_high; //Need to check
 			0x00000000, //uint32_t fatal_low; //Need to check
@@ -6351,8 +6351,8 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			848, //uint32_t critical_high;
-			752, //uint32_t critical_low;
+			885, //uint32_t critical_high;
+			784, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
 		},
@@ -6423,7 +6423,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0x00000000, //uint32_t warning_high; //Need to check
 			0x00000000, //uint32_t warning_low; //Need to check
-			4800, //uint32_t critical_high; //Need to check
+			4950, //uint32_t critical_high; //Need to check
 			0x00000000, //uint32_t critical_low; //Need to check
 			0x00000000, //uint32_t fatal_high; //Need to check
 			0x00000000, //uint32_t fatal_low; //Need to check
@@ -6495,7 +6495,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0x00000000, //uint32_t warning_high; //Need to check
 			0x00000000, //uint32_t warning_low; //Need to check
-			3840, //uint32_t critical_high; //Need to check
+			4100, //uint32_t critical_high; //Need to check
 			0x00000000, //uint32_t critical_low; //Need to check
 			0x00000000, //uint32_t fatal_high; //Need to check
 			0x00000000, //uint32_t fatal_low; //Need to check
@@ -7138,7 +7138,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			105000, //uint32_t critical_high;
+			90000, //uint32_t critical_high;
 			5000, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
@@ -7206,7 +7206,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			105000, //uint32_t critical_high;
+			90000, //uint32_t critical_high;
 			5000, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
@@ -7274,7 +7274,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			105000, //uint32_t critical_high;
+			90000, //uint32_t critical_high;
 			5000, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
@@ -7342,7 +7342,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			105000, //uint32_t critical_high;
+			90000, //uint32_t critical_high;
 			5000, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
