@@ -54,9 +54,7 @@ typedef struct si_compnt_mapping_sensor {
 
 si_compnt_mapping_sensor si_vr_compnt_mapping_sensor_table[] = {
 	{ SI_COMPNT_P0V895_PEX, SENSOR_NUM_VR_ASIC_P0V895_PEX_TEMP_C, "SI_P0V895_PEX" },
-	{ SI_COMPNT_P0V825_A0, SENSOR_NUM_VR_ASIC_P0V825_A0_TEMP_C, "SI_P0V825_A0" },
 	{ SI_COMPNT_P0V825_A1, SENSOR_NUM_VR_ASIC_P0V825_A1_TEMP_C, "SI_P0V825_A1" },
-	{ SI_COMPNT_P0V825_A2, SENSOR_NUM_VR_ASIC_P0V825_A2_TEMP_C, "SI_P0V825_A2" },
 };
 
 /* PLDM FW update table */
@@ -94,37 +92,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 	{
 		.enable = true,
 		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
-		.comp_identifier = SI_COMPNT_P0V825_A0,
-		.comp_classification_index = 0x00,
-		.pre_update_func = pldm_pre_vr_update,
-		.update_func = pldm_vr_update,
-		.pos_update_func = pldm_post_vr_update,
-		.inf = COMP_UPDATE_VIA_I2C,
-		.activate_method = COMP_ACT_AC_PWR_CYCLE,
-		.self_act_func = NULL,
-		.get_fw_version_fn = get_vr_fw_version,
-		.self_apply_work_func = NULL,
-		.comp_version_str = NULL,
-	},
-	{
-		.enable = true,
-		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
 		.comp_identifier = SI_COMPNT_P0V825_A1,
-		.comp_classification_index = 0x00,
-		.pre_update_func = pldm_pre_vr_update,
-		.update_func = pldm_vr_update,
-		.pos_update_func = pldm_post_vr_update,
-		.inf = COMP_UPDATE_VIA_I2C,
-		.activate_method = COMP_ACT_AC_PWR_CYCLE,
-		.self_act_func = NULL,
-		.get_fw_version_fn = get_vr_fw_version,
-		.self_apply_work_func = NULL,
-		.comp_version_str = NULL,
-	},
-	{
-		.enable = true,
-		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
-		.comp_identifier = SI_COMPNT_P0V825_A2,
 		.comp_classification_index = 0x00,
 		.pre_update_func = pldm_pre_vr_update,
 		.update_func = pldm_vr_update,
@@ -329,13 +297,7 @@ static struct k_mutex *get_vr_mutex_by_comp_id(uint8_t comp_id)
 	case SI_COMPNT_P0V895_PEX:
 		vr_mutex_id = VR_INDEX_E_P0V895;
 		break;
-	case SI_COMPNT_P0V825_A0:
-		vr_mutex_id = VR_INDEX_E_P0V825;
-		break;
 	case SI_COMPNT_P0V825_A1:
-		vr_mutex_id = VR_INDEX_E_P0V825;
-		break;
-	case SI_COMPNT_P0V825_A2:
 		vr_mutex_id = VR_INDEX_E_P0V825;
 		break;
 	default:
