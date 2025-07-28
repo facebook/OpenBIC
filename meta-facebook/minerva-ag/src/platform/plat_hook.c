@@ -44,14 +44,6 @@ LOG_MODULE_REGISTER(plat_hook);
 
 #define ALERT_LEVEL_USER_SETTINGS_OFFSET 0x8200
 
-#ifndef TMP432_CONFIG_WRITE_REG1
-#define TMP432_CONFIG_WRITE_REG1 0x09
-#endif
-
-#ifndef TMP432_CONFIG_READ_REG1
-#define TMP432_CONFIG_READ_REG1 0x03
-#endif
-
 static struct k_mutex vr_mutex[VR_MAX_NUM];
 static struct k_mutex pwrlevel_mutex;
 
@@ -1717,8 +1709,6 @@ void user_settings_init(void)
 	alert_level_user_settings_init();
 	vr_vout_default_settings_init();
 	vr_vout_user_settings_init();
-	temp_threshold_default_settings_init();
-	temp_threshold_user_settings_init();
 	soc_pcie_perst_user_settings_init();
 	bootstrap_default_settings_init();
 	bootstrap_user_settings_init();
@@ -2351,11 +2341,8 @@ bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 	return true;
 }
 
-#define PLAT_TMP432_THERM_HYSTERESIS_VAL 0x64 //100
-
-#ifndef TMP432_THERM_HYSTERESIS_REG
-#define TMP432_THERM_HYSTERESIS_REG 0x21
-#endif
+#define PLAT_TMP432_THERM_HYSTERESIS_VAL 0x5A //90
+#define PLAT_EMC1413_THERM_HYSTERESIS_VAL 0x5A //90
 
 void init_temp_alert_mode(void)
 {
@@ -2370,43 +2357,53 @@ void init_temp_alert_mode(void)
 			continue;
 		}
 
-		const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+		sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
 		if (cfg == NULL) {
 			LOG_ERR("Failed to get sensor config for sensor %s (0x%x)", name,
 				sensor_id);
 			continue;
 		}
 
-		//set to temp alert mode
-		uint8_t data = 0;
-		if (!plat_i2c_read(cfg->port, cfg->target_addr, TMP432_CONFIG_READ_REG1, &data,
-				   1)) {
-			LOG_ERR("Failed to read TMP432 config for sensor %s (0x%x), set TMP432_CONFIG_WRITE_REG1 to %lx ",
-				name, sensor_id, BIT(5));
+		switch (cfg->type) {
+		case sensor_dev_tmp431: {
+			//set to temp alert mode
+			if (!tmp432_set_thermal_mode(cfg)) {
+				LOG_ERR("Failed to set TMP432 to temp alert mode for sensor %s (0x%x)",
+					name, sensor_id);
+				continue;
+			}
+			//set therm hysteresis
+			uint8_t data = PLAT_TMP432_THERM_HYSTERESIS_VAL;
+			if (!tmp432_set_therm_hysteresis(cfg, data)) {
+				LOG_ERR("Failed to set TMP432 therm hysteresis to %d for sensor %s (0x%x)",
+					data, name, sensor_id);
+				continue;
+			}
+			LOG_INF("Sensor %s (0x%x) init therm hysteresis to %d successfully", name,
+				sensor_id, data);
+		} break;
+		case sensor_dev_emc1413: {
+			//set to temp alert mode
+			if (!emc1413_set_comparator_mode(cfg)) {
+				LOG_ERR("Failed to set EMC1413 to temp alert mode for sensor %s (0x%x)",
+					name, sensor_id);
+				continue;
+			}
+			//set therm hysteresis
+			uint8_t data = PLAT_EMC1413_THERM_HYSTERESIS_VAL;
+			if (!emc1413_set_therm_hysteresis(cfg, data)) {
+				LOG_ERR("Failed to set EMC1413 therm hysteresis to %d for sensor %s (0x%x)",
+					data, name, sensor_id);
+				continue;
+			}
+			LOG_INF("Sensor %s (0x%x) init therm hysteresis to %d successfully", name,
+				sensor_id, data);
+		} break;
+		default:
+			LOG_ERR("Unsupport temp type(%x)", cfg->type);
 		}
-
-		data |= BIT(5);
-		if (!plat_i2c_write(cfg->port, cfg->target_addr, TMP432_CONFIG_WRITE_REG1, &data,
-				    1)) {
-			LOG_ERR("Failed to set TMP432 to temp alert mode for sensor %s (0x%x)",
-				name, sensor_id);
-		} else {
-			LOG_INF("Sensor %s (0x%x) init temp alert mode successfully", name,
-				sensor_id);
-		}
-
-		//set therm hysteresis
-		data = PLAT_TMP432_THERM_HYSTERESIS_VAL;
-		if (!plat_i2c_write(cfg->port, cfg->target_addr, TMP432_THERM_HYSTERESIS_REG, &data,
-				    1)) {
-			LOG_ERR("Failed to set TMP432 therm hysteresis to %d for sensor %s (0x%x)",
-				PLAT_TMP432_THERM_HYSTERESIS_VAL, name, sensor_id);
-			continue;
-		}
-
-		LOG_INF("Sensor %s (0x%x) init therm hysteresis to %d successfully", name,
-			sensor_id, PLAT_TMP432_THERM_HYSTERESIS_VAL);
 	}
+	LOG_INF("temp alert mode done");
 }
 
 void init_temp_limit(void)
@@ -2499,4 +2496,15 @@ void init_temp_limit(void)
 	}
 
 	LOG_INF("temp limit init done");
+}
+
+void plat_pldm_sensor_post_load_init(int thread_id)
+{
+	if (thread_id == TEMP_SENSOR_THREAD_ID) {
+		init_temp_alert_mode();
+		init_temp_limit(); //should be before temp_threshold_default_settings_init() and after pldm sensor init
+		temp_threshold_default_settings_init();
+		temp_threshold_user_settings_init();
+	}
+	LOG_INF("plat_pldm_sensor_post_load init done");
 }
