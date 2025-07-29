@@ -1392,7 +1392,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 
 			/*** numeric sensor format ***/
 			0x0000, // uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_ADC_P12V_SCALED, // uint16_t sensor_id;
+			SENSOR_NUM_ADC_P12V_SCALED_VOLT_V, // uint16_t sensor_id;
 			0x0000, // uint16_t entity_type;
 			0x0013, // uint16_t entity_instance_number;
 			0x0000, // uint16_t container_id;
@@ -1435,7 +1435,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_ADC_P12V_SCALED,
+			.num = SENSOR_NUM_ADC_P12V_SCALED_VOLT_V,
 			.type = sensor_dev_ads7830,
 			.port = I2C_BUS1,
 			.target_addr = ADS7830_I2C_ADDR,
@@ -1462,7 +1462,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 
 			/*** numeric sensor format ***/
 			0x0000, // uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_ADC_P5V_STBY_SCALED, // uint16_t sensor_id;
+			SENSOR_NUM_ADC_P5V_STBY_SCALED_VOLT_V, // uint16_t sensor_id;
 			0x0000, // uint16_t entity_type;
 			0x0014, // uint16_t entity_instance_number;
 			0x0000, // uint16_t container_id;
@@ -1505,7 +1505,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_ADC_P5V_STBY_SCALED,
+			.num = SENSOR_NUM_ADC_P5V_STBY_SCALED_VOLT_V,
 			.type = sensor_dev_ads7830,
 			.port = I2C_BUS1,
 			.target_addr = ADS7830_I2C_ADDR,
@@ -1532,7 +1532,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 
 			/*** numeric sensor format ***/
 			0x0000, // uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_ADC_P3V3_AUX_SCALED, // uint16_t sensor_id;
+			SENSOR_NUM_ADC_P3V3_AUX_SCALED_VOLT_V, // uint16_t sensor_id;
 			0x0000, // uint16_t entity_type;
 			0x0015, // uint16_t entity_instance_number;
 			0x0000, // uint16_t container_id;
@@ -1575,7 +1575,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_ADC_P3V3_AUX_SCALED,
+			.num = SENSOR_NUM_ADC_P3V3_AUX_SCALED_VOLT_V,
 			.type = sensor_dev_ads7830,
 			.port = I2C_BUS1,
 			.target_addr = ADS7830_I2C_ADDR,
@@ -1602,7 +1602,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 
 			/*** numeric sensor format ***/
 			0x0000, // uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_ADC_P1V5_PEX_SCALED, // uint16_t sensor_id;
+			SENSOR_NUM_ADC_P1V5_PEX_SCALED_VOLT_V, // uint16_t sensor_id;
 			0x0000, // uint16_t entity_type;
 			0x0016, // uint16_t entity_instance_number;
 			0x0000, // uint16_t container_id;
@@ -1645,7 +1645,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_ADC_P1V5_PEX_SCALED,
+			.num = SENSOR_NUM_ADC_P1V5_PEX_SCALED_VOLT_V,
 			.type = sensor_dev_ads7830,
 			.port = I2C_BUS1,
 			.target_addr = ADS7830_I2C_ADDR,
@@ -1672,7 +1672,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 
 			/*** numeric sensor format ***/
 			0x0000, // uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_ADC_P1V2_PEX_SCALED, // uint16_t sensor_id;
+			SENSOR_NUM_ADC_P1V2_PEX_SCALED_VOLT_V, // uint16_t sensor_id;
 			0x0000, // uint16_t entity_type;
 			0x0017, // uint16_t entity_instance_number;
 			0x0000, // uint16_t container_id;
@@ -1715,7 +1715,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_ADC_P1V2_PEX_SCALED,
+			.num = SENSOR_NUM_ADC_P1V2_PEX_SCALED_VOLT_V,
 			.type = sensor_dev_ads7830,
 			.port = I2C_BUS1,
 			.target_addr = ADS7830_I2C_ADDR,
@@ -1742,7 +1742,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 
 			/*** numeric sensor format ***/
 			0x0000, // uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_ADC_P1V8_PEX_SCALED, // uint16_t sensor_id;
+			SENSOR_NUM_ADC_P1V8_PEX_SCALED_VOLT_V, // uint16_t sensor_id;
 			0x0000, // uint16_t entity_type;
 			0x0018, // uint16_t entity_instance_number;
 			0x0000, // uint16_t container_id;
@@ -1785,7 +1785,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_ADC_P1V8_PEX_SCALED,
+			.num = SENSOR_NUM_ADC_P1V8_PEX_SCALED_VOLT_V,
 			.type = sensor_dev_ads7830,
 			.port = I2C_BUS1,
 			.target_addr = ADS7830_I2C_ADDR,
@@ -2137,11 +2137,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_ADC_P12V_SCALED,
+		.sensor_id = SENSOR_NUM_ADC_P12V_SCALED_VOLT_V,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"ADC_P12V_SCALED",
+		.sensorName = u"ADC_P12V_SCALED_VOLT_V",
 	},
 	{
 
@@ -2155,11 +2155,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_ADC_P5V_STBY_SCALED,
+		.sensor_id = SENSOR_NUM_ADC_P5V_STBY_SCALED_VOLT_V,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"ADC_P5V_STBY_SCALED",
+		.sensorName = u"ADC_P5V_STBY_SCALED_VOLT_V",
 	},
 	{
 
@@ -2173,11 +2173,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_ADC_P3V3_AUX_SCALED,
+		.sensor_id = SENSOR_NUM_ADC_P3V3_AUX_SCALED_VOLT_V,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"ADC_P3V3_AUX_SCALED",
+		.sensorName = u"ADC_P3V3_AUX_SCALED_VOLT_V",
 	},
 	{
 
@@ -2191,11 +2191,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_ADC_P1V5_PEX_SCALED,
+		.sensor_id = SENSOR_NUM_ADC_P1V5_PEX_SCALED_VOLT_V,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"ADC_P1V5_PEX_SCALED",
+		.sensorName = u"ADC_P1V5_PEX_SCALED_VOLT_V",
 	},
 	{
 
@@ -2209,11 +2209,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_ADC_P1V2_PEX_SCALED,
+		.sensor_id = SENSOR_NUM_ADC_P1V2_PEX_SCALED_VOLT_V,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"ADC_P1V2_PEX_SCALED",
+		.sensorName = u"ADC_P1V2_PEX_SCALED_VOLT_V",
 	},
 	{
 
@@ -2227,11 +2227,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_ADC_P1V8_PEX_SCALED,
+		.sensor_id = SENSOR_NUM_ADC_P1V8_PEX_SCALED_VOLT_V,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"ADC_P1V8_PEX_SCALED",
+		.sensorName = u"ADC_P1V8_PEX_SCALED_VOLT_V",
 	},
 };
 
@@ -2577,8 +2577,8 @@ bool get_sensor_info_by_sensor_id(uint8_t sensor_id, uint8_t *vr_bus, uint8_t *v
 				return true;
 			}
 		}
-	} else if (sensor_id >= SENSOR_NUM_ADC_P12V_SCALED &&
-		   sensor_id <= SENSOR_NUM_ADC_P1V8_PEX_SCALED) {
+	} else if (sensor_id >= SENSOR_NUM_ADC_P12V_SCALED_VOLT_V &&
+		   sensor_id <= SENSOR_NUM_ADC_P1V8_PEX_SCALED_VOLT_V) {
 		pldm_sensor_count = plat_pldm_sensor_get_sensor_count(ADC_SENSOR_THREAD_ID);
 		for (int index = 0; index < pldm_sensor_count; index++) {
 			if (plat_pldm_sensor_adc_table[index].pldm_sensor_cfg.num == sensor_id) {
@@ -2614,8 +2614,8 @@ sensor_cfg *get_sensor_cfg_by_sensor_id(uint8_t sensor_id)
 				return &plat_pldm_sensor_vr_table[index].pldm_sensor_cfg;
 			}
 		}
-	} else if (sensor_id >= SENSOR_NUM_ADC_P12V_SCALED &&
-		   sensor_id <= SENSOR_NUM_ADC_P1V8_PEX_SCALED) {
+	} else if (sensor_id >= SENSOR_NUM_ADC_P12V_SCALED_VOLT_V &&
+		   sensor_id <= SENSOR_NUM_ADC_P1V8_PEX_SCALED_VOLT_V) {
 		pldm_sensor_count = plat_pldm_sensor_get_sensor_count(ADC_SENSOR_THREAD_ID);
 		for (int index = 0; index < pldm_sensor_count; index++) {
 			if (plat_pldm_sensor_adc_table[index].pldm_sensor_cfg.num == sensor_id) {

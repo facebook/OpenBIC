@@ -22,7 +22,7 @@
 
 #define MAX_SLOT 4
 
-#define EID_ADDRESS 0x0FF000
+#define FLASH_EID_ADDRESS 0x0FF000
 #define FLASH_SECTOR 0x1000
 
 static const uint8_t eid_table[MAX_SLOT] = {

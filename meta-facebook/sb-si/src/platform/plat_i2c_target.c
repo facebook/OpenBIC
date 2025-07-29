@@ -119,7 +119,7 @@ void set_eid_handle(struct k_work *work)
 	struct mmc_info *info = CONTAINER_OF(work, struct mmc_info, set_eid_work);
 	uint8_t slot = info->slot;
 	uint8_t eid = eid_table[slot];
-	uint32_t op_addr = EID_ADDRESS;
+	uint32_t op_addr = FLASH_EID_ADDRESS;
 	uint32_t erase_sz = FLASH_SECTOR;
 	uint8_t write_buf = eid;
 	uint8_t read_back_buf = 0xFF;

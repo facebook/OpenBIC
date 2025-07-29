@@ -206,7 +206,7 @@ mctp_port *plat_get_mctp_port(uint8_t index)
 void plat_init_set_eid()
 {
 	const struct device *flash_dev;
-	uint32_t op_addr = EID_ADDRESS;
+	uint32_t op_addr = FLASH_EID_ADDRESS;
 	uint8_t read_back_buf = 255;
 	flash_dev = device_get_binding("spi_spim0_cs0");
 	if (flash_dev == NULL) {
