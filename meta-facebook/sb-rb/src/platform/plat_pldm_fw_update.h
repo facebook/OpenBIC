@@ -19,6 +19,21 @@
 
 enum FIRMWARE_COMPONENT {
 	COMPNT_BIC,
+	COMPNT_VR_1,
+	COMPNT_VR_2,
+	COMPNT_VR_3,
+	COMPNT_VR_4,
+	COMPNT_VR_5,
+	COMPNT_VR_6,
+	COMPNT_VR_7,
+	COMPNT_VR_8,
+	COMPNT_VR_9,
+	COMPNT_VR_10,
+	COMPNT_VR_11,
+	COMPNT_VR_12,
 };
+
+bool find_sensor_id_and_name_by_firmware_comp_id(uint8_t comp_identifier, uint8_t *sensor_id,
+						 char *sensor_name);
 
 #endif /* _PLAT_FWUPDATE_H_ */

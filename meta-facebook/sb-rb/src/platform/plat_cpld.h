@@ -6,6 +6,8 @@
 #include <stdint.h>
 
 #define CPLD_OFFSET_VR_VENDER_TYPE 0x15
+#define CPLD_OFFSET_POWER_CLAMP 0x25
+#define CPLD_OFFSET_USERCODE 0x32
 
 typedef struct _cpld_info_ cpld_info;
 
@@ -29,6 +31,7 @@ typedef struct _cpld_info_ {
 
 } cpld_info;
 
-bool plat_read_cpld(uint8_t offset, uint8_t *data);
+bool plat_read_cpld(uint8_t offset, uint8_t *data, uint8_t len);
+bool plat_write_cpld(uint8_t offset, uint8_t *data);
 
 #endif

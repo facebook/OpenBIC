@@ -36,5 +36,6 @@ enum UBC_MODULE {
 void init_plat_config();
 uint8_t get_vr_module();
 uint8_t get_ubc_module();
+uint8_t get_mmc_slot();
 
 #endif

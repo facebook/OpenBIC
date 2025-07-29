@@ -35,8 +35,8 @@
 #define ASIC_MEDHA1_SENSOR0_ADDR (0x9A >> 1)
 #define ASIC_MEDHA1_SENSOR1_ADDR (0x9A >> 1)
 
-#define ASIC_P0V85_MEDHA0_VDD_ADDR (0x4C >> 1)
-#define ASIC_P0V85_MEDHA1_VDD_ADDR (0x50 >> 1)
+#define ASIC_P0V85_MEDHA0_VDD_ADDR (0x50 >> 1)
+#define ASIC_P0V85_MEDHA1_VDD_ADDR (0x4C >> 1)
 #define ASIC_P0V9_OWL_E_TRVDD_ADDR (0xEE >> 1)
 #define ASIC_P0V75_OWL_E_TRVDD_ADDR (0xEE >> 1)
 #define ASIC_P0V75_MAX_M_VDD_ADDR (0xEA >> 1)
@@ -58,6 +58,31 @@
 #define ASIC_P0V75_MAX_S_VDD_ADDR (0xE6 >> 1)
 #define ASIC_P0V9_OWL_W_TRVDD_ADDR (0xF8 >> 1)
 #define ASIC_P0V75_OWL_W_TRVDD_ADDR (0xF8 >> 1)
+
+// VR_MODULE_RNS module addr
+#define ASIC_P0V85_MEDHA0_VDD_RNS_ADDR (0xEC >> 1)
+#define ASIC_P0V85_MEDHA1_VDD_RNS_ADDR (0xE4 >> 1)
+#define ASIC_P0V9_OWL_E_TRVDD_RNS_ADDR (0xC4 >> 1)
+#define ASIC_P0V75_OWL_E_TRVDD_RNS_ADDR (0xC4 >> 1)
+#define ASIC_P0V75_MAX_M_VDD_RNS_ADDR (0xE8 >> 1)
+#define ASIC_P0V75_VDDPHY_HBM1357_RNS_ADDR (0xE8 >> 1)
+#define ASIC_P0V75_OWL_E_VDD_RNS_ADDR (0xC2 >> 1)
+#define ASIC_P0V4_VDDQL_HBM1357_RNS_ADDR (0xC2 >> 1)
+#define ASIC_P1V1_VDDQC_HBM1357_RNS_ADDR (0xC6 >> 1)
+#define ASIC_P1V8_VPP_HBM1357_RNS_ADDR (0xC6 >> 1)
+
+#define ASIC_P0V75_MAX_N_VDD_RNS_ADDR (0xC2 >> 1)
+#define ASIC_P0V8_HAMSA_AVDD_PCIE_RNS_ADDR (0xC2 >> 1)
+#define ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_RNS_ADDR (0xC6 >> 1)
+#define ASIC_P0V85_HAMSA_VDD_RNS_ADDR (0xC6 >> 1)
+#define ASIC_P1V1_VDDQC_HBM0246_RNS_ADDR (0xC0 >> 1)
+#define ASIC_P1V8_VPP_HBM0246_RNS_ADDR (0xC0 >> 1)
+#define ASIC_P0V4_VDDQL_HBM0246_RNS_ADDR (0xE8 >> 1)
+#define ASIC_P0V75_VDDPHY_HBM0246_RNS_ADDR (0xE8 >> 1)
+#define ASIC_P0V75_OWL_W_VDD_RNS_ADDR (0xC4 >> 1)
+#define ASIC_P0V75_MAX_S_VDD_RNS_ADDR (0xC4 >> 1)
+#define ASIC_P0V9_OWL_W_TRVDD_RNS_ADDR (0xC6 >> 1)
+#define ASIC_P0V75_OWL_W_TRVDD_RNS_ADDR (0xC6 >> 1)
 
 #define UBC1_ADDR (0x28 >> 1)
 #define UBC2_ADDR (0x34 >> 1)
@@ -208,6 +233,7 @@
 enum SENSOR_THREAD_LIST {
 	TEMP_SENSOR_THREAD_ID = 0,
 	VR_SENSOR_THREAD_ID,
+	QUICK_VR_SENSOR_THREAD_ID,
 	UBC_SENSOR_THREAD_ID,
 	MAX_SENSOR_THREAD_ID,
 };
@@ -234,4 +260,6 @@ char16_t *char16_strcpy(char16_t *dest, const char16_t *src);
 char16_t *char16_strcat_char(char16_t *dest);
 
 bool get_raw_data_from_sensor_id(uint8_t sensor_id, uint8_t offset, uint8_t *val, uint8_t len);
+void change_sensor_cfg(uint8_t vr_module);
+uint8_t convert_addr_to_rns(uint8_t addr);
 #endif

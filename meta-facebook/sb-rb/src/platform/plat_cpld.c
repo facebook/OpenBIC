@@ -9,7 +9,12 @@
 
 LOG_MODULE_REGISTER(plat_cpld);
 
-bool plat_read_cpld(uint8_t offset, uint8_t *data)
+bool plat_read_cpld(uint8_t offset, uint8_t *data, uint8_t len)
 {
-	return plat_i2c_read(I2C_BUS_CPLD, CPLD_ADDR, offset, data, 1);
+	return plat_i2c_read(I2C_BUS_CPLD, CPLD_ADDR, offset, data, len);
+}
+
+bool plat_write_cpld(uint8_t offset, uint8_t *data)
+{
+	return plat_i2c_write(I2C_BUS_CPLD, CPLD_ADDR, offset, data, 1);
 }
