@@ -30,15 +30,16 @@
 #include <logging/log.h>
 #include "plat_i2c_target.h"
 #include "plat_mctp.h"
+#include "plat_class.h"
 #include <drivers/flash.h>
 
 LOG_MODULE_REGISTER(plat_i2c_target);
 
 static bool command_reply_data_handle(void *arg);
-static void command_set_eid_handle(void *arg);
-void set_eid_handle(struct k_work *work);
-void plat_set_eid_init(int slot_id);
-K_WORK_DELAYABLE_DEFINE(set_eid_work, set_eid_handle);
+static void command_set_slot_handle(void *arg);
+void set_slot_handle(struct k_work *work);
+void plat_set_slot_init(int slot_id);
+K_WORK_DELAYABLE_DEFINE(set_slot_work, set_slot_handle);
 
 /* I2C target init-enable table */
 const bool I2C_TARGET_ENABLE_TABLE[MAX_TARGET_NUM] = {
@@ -59,7 +60,7 @@ const struct _i2c_target_config I2C_TARGET_CONFIG_TABLE[MAX_TARGET_NUM] = {
 	{ 0xFF, 0xA },
 	{ 0xFF, 0xA },
 	{ 0xFF, 0xA },
-	{ 0x42, 0xA, NULL, command_set_eid_handle },
+	{ 0x42, 0xA, NULL, command_set_slot_handle },
 	{ 0xFF, 0xA },
 };
 
@@ -70,7 +71,7 @@ static bool command_reply_data_handle(void *arg)
 	return false;
 }
 
-static void command_set_eid_handle(void *arg)
+static void command_set_slot_handle(void *arg)
 {
 	struct i2c_target_data *data = (struct i2c_target_data *)arg;
 	data->skip_msg_wr = true;
@@ -87,18 +88,26 @@ static void command_set_eid_handle(void *arg)
 		LOG_INF("Received reg_offset: 0x%02x", reg_offset);
 
 		switch (reg_offset) {
-		case SLOT_0_I2C_SET_EID_REG:
-			plat_set_eid_init(0);
+		case SLOT_0_I2C_SET_SLOT_REG: {
+			const mmc_info_t *cfg = &mmc_info_table[0];
+			plat_set_slot_init(cfg->slot);
 			break;
-		case SLOT_1_I2C_SET_EID_REG:
-			plat_set_eid_init(1);
+		}
+		case SLOT_1_I2C_SET_SLOT_REG: {
+			const mmc_info_t *cfg = &mmc_info_table[1];
+			plat_set_slot_init(cfg->slot);
 			break;
-		case SLOT_2_I2C_SET_EID_REG:
-			plat_set_eid_init(2);
+		}
+		case SLOT_2_I2C_SET_SLOT_REG: {
+			const mmc_info_t *cfg = &mmc_info_table[2];
+			plat_set_slot_init(cfg->slot);
 			break;
-		case SLOT_3_I2C_SET_EID_REG:
-			plat_set_eid_init(3);
+		}
+		case SLOT_3_I2C_SET_SLOT_REG: {
+			const mmc_info_t *cfg = &mmc_info_table[3];
+			plat_set_slot_init(cfg->slot);
 			break;
+		}
 		default:
 			LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
 			data->target_rd_msg.msg_length = 1;
@@ -114,14 +123,20 @@ static void command_set_eid_handle(void *arg)
 	return;
 }
 
-void set_eid_handle(struct k_work *work)
+void set_slot_handle(struct k_work *work)
 {
-	struct mmc_info *info = CONTAINER_OF(work, struct mmc_info, set_eid_work);
+	mmc_work_info_t *info = CONTAINER_OF(work, mmc_work_info_t, set_slot_work);
 	uint8_t slot = info->slot;
-	uint8_t eid = eid_table[slot];
-	uint32_t op_addr = FLASH_EID_ADDRESS;
+	uint8_t eid = mmc_info_table[slot].eid;
+
+	if (slot >= MAX_SLOT) {
+		LOG_ERR("Invalid slot_id: %d", slot);
+		free(info);
+		return;
+	}
+	uint32_t op_addr = FLASH_SLOT_ADDRESS;
 	uint32_t erase_sz = FLASH_SECTOR;
-	uint8_t write_buf = eid;
+	uint8_t write_buf = slot;
 	uint8_t read_back_buf = 0xFF;
 	uint32_t ret = 0;
 
@@ -132,7 +147,6 @@ void set_eid_handle(struct k_work *work)
 	}
 
 	LOG_INF("Setting EID %d for slot %d", eid, slot);
-
 	plat_set_eid(eid);
 	LOG_INF("EID after set: %d", plat_get_eid());
 
@@ -163,7 +177,7 @@ void set_eid_handle(struct k_work *work)
 		LOG_ERR("Failed to read %u.\n", op_addr);
 	}
 
-	LOG_INF("EID:%d get from flash", read_back_buf);
+	LOG_INF("SLOT:%d get from flash", read_back_buf);
 
 	if (memcmp(&write_buf, &read_back_buf, 1) != 0) {
 		LOG_ERR("Failed to write flash at 0x%x.", op_addr);
@@ -175,15 +189,15 @@ void set_eid_handle(struct k_work *work)
 	return;
 }
 
-void plat_set_eid_init(int slot_id)
+void plat_set_slot_init(int slot_id)
 {
-	struct mmc_info *info = malloc(sizeof(struct mmc_info));
+	mmc_work_info_t *info = malloc(sizeof(mmc_work_info_t));
 	if (!info) {
 		LOG_ERR("Failed to allocate memory for mmc_info");
 		return;
 	}
 
 	info->slot = slot_id;
-	k_work_init(&info->set_eid_work, set_eid_handle);
-	k_work_submit(&info->set_eid_work);
+	k_work_init(&info->set_slot_work, set_slot_handle);
+	k_work_submit(&info->set_slot_work);
 }

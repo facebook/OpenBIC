@@ -25,14 +25,24 @@
 #include "plat_pldm_sensor.h"
 #include "hal_i3c.h"
 #include "plat_i3c.h"
+#include <drivers/flash.h>
 
 LOG_MODULE_REGISTER(plat_class);
 
 #define I2C_BUS_TMP I2C_BUS1
 #define TMP_EMC1413_SMSC_ID_DEFAULT 0x5D
 
+uint16_t BIC_PID = PLAT_DEFAULT_PID;
+
 static uint8_t vr_type = VR_UNKNOWN;
 static uint8_t tmp_type = TMP_TYPE_UNKNOWN;
+
+const mmc_info_t mmc_info_table[MAX_SLOT] = {
+	{ .slot = 0, .eid = MCTP_DEFAULT_ENDPOINT, .pid = PLAT_DEFAULT_PID },
+	{ .slot = 1, .eid = 0x14, .pid = 0x520 },
+	{ .slot = 2, .eid = 0x1E, .pid = 0x530 },
+	{ .slot = 3, .eid = 0x28, .pid = 0x540 },
+};
 
 void init_vr_vendor_type(void)
 {
@@ -91,7 +101,28 @@ void init_platform_config()
 
 void plat_i3c_set_pid()
 {
-	I3C_MSG i3c_msg;
+	const struct device *flash_dev = device_get_binding("spi_spim0_cs0");
+	if (!flash_dev) {
+		LOG_ERR("Failed to get flash device for PID setting.");
+		return;
+	}
+
+	uint8_t slot_id = 0xFF;
+	uint32_t op_addr = FLASH_SLOT_ADDRESS;
+
+	if (flash_read(flash_dev, op_addr, &slot_id, 1) != 0) {
+		LOG_ERR("Failed to read slot_id from flash.");
+		return;
+	}
+
+	if (slot_id < MAX_SLOT) {
+		BIC_PID = mmc_info_table[slot_id].pid;
+		LOG_INF("Slot ID %d valid, set BIC_PID = 0x%02x", slot_id, BIC_PID);
+	} else {
+		LOG_WRN("Invalid slot ID (%d), keep default BIC_PID = 0x%02x", slot_id, BIC_PID);
+	}
+
+	I3C_MSG i3c_msg = { 0 };
 	i3c_msg.bus = I3C_BUS6;
 	i3c_set_pid(&i3c_msg, BIC_PID);
 }

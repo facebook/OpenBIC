@@ -20,27 +20,15 @@
 #include <drivers/i2c.h>
 #include "hal_i2c_target.h"
 
-#define MAX_SLOT 4
-
-#define FLASH_EID_ADDRESS 0x0FF000
-#define FLASH_SECTOR 0x1000
-
-static const uint8_t eid_table[MAX_SLOT] = {
-	10, // SLOT 0
-	20, // SLOT 1
-	30, // SLOT 2
-	40 // SLOT 3
-};
-
-struct mmc_info {
-	struct k_work set_eid_work;
+typedef struct {
+	struct k_work set_slot_work;
 	int slot;
-};
+} mmc_work_info_t;
 
-#define SLOT_0_I2C_SET_EID_REG 0x40
-#define SLOT_1_I2C_SET_EID_REG 0x41
-#define SLOT_2_I2C_SET_EID_REG 0x42
-#define SLOT_3_I2C_SET_EID_REG 0x43
+#define SLOT_0_I2C_SET_SLOT_REG 0x40
+#define SLOT_1_I2C_SET_SLOT_REG 0x41
+#define SLOT_2_I2C_SET_SLOT_REG 0x42
+#define SLOT_3_I2C_SET_SLOT_REG 0x43
 
 #define TARGET_ENABLE 1
 #define TARGET_DISABLE 0

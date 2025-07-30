@@ -17,6 +17,10 @@
 #ifndef PLAT_CLASS_H
 #define PLAT_CLASS_H
 
+#define MAX_SLOT 4
+#define FLASH_SLOT_ADDRESS 0x0FF000
+#define FLASH_SECTOR 0x1000
+
 typedef enum {
 	VR_MPS_MP2971_MP2891,
 	VR_MPS_MP2971_MP29816A,
@@ -24,6 +28,14 @@ typedef enum {
 	VR_RNS_ISL69260_RAA228249,
 	VR_UNKNOWN,
 } si_vr_type_t;
+
+typedef struct {
+	uint8_t slot;
+	uint8_t eid;
+	uint16_t pid;
+} mmc_info_t;
+
+extern const mmc_info_t mmc_info_table[MAX_SLOT];
 
 typedef enum {
 	TMP_TMP432,

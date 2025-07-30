@@ -30,6 +30,6 @@
 
 #define I3C_BUS_MAX_NUM 6
 
-#define BIC_PID 0x567
+#define PLAT_DEFAULT_PID 0x510
 
 #endif

@@ -35,6 +35,7 @@
 #include "plat_hook.h"
 #include "plat_mctp.h"
 #include "plat_gpio.h"
+#include "plat_class.h"
 #include "plat_i2c_target.h"
 #include <drivers/flash.h>
 
@@ -206,22 +207,30 @@ mctp_port *plat_get_mctp_port(uint8_t index)
 void plat_init_set_eid()
 {
 	const struct device *flash_dev;
-	uint32_t op_addr = FLASH_EID_ADDRESS;
-	uint8_t read_back_buf = 255;
+	uint32_t op_addr = FLASH_SLOT_ADDRESS;
+	uint8_t slot_id = 0xFF;
+
 	flash_dev = device_get_binding("spi_spim0_cs0");
 	if (flash_dev == NULL) {
-		printf("Failed to get device.\n");
+		LOG_ERR("Failed to get flash device.");
+		return;
 	}
 
-	if (flash_read(flash_dev, op_addr, &read_back_buf, 1) != 0) {
-		LOG_ERR("Failed to read %u.\n", op_addr);
+	if (flash_read(flash_dev, op_addr, &slot_id, 1) != 0) {
+		LOG_ERR("Failed to read slot ID from flash at 0x%x", op_addr);
+		return;
 	}
-	if (read_back_buf != 255) {
-		plat_eid = read_back_buf;
+
+	if (slot_id >= MAX_SLOT) {
+		LOG_ERR("Invalid slot ID (%d) read from flash, fallback to default EID", slot_id);
+		slot_id = 0;
 	}
-	LOG_INF("EID:%d get from flash", read_back_buf);
-	LOG_INF("EID:%d", plat_get_eid());
-	return;
+
+	const mmc_info_t *cfg = &mmc_info_table[slot_id];
+	plat_set_eid(cfg->eid);
+
+	LOG_INF("Slot ID %d read from flash", slot_id);
+	LOG_INF("Set EID to 0x%02x for slot %d", cfg->eid, slot_id);
 }
 
 uint8_t plat_get_eid()
