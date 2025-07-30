@@ -348,7 +348,7 @@ const cpld_vr_reg_t cpld_vr_reg_table = { I2C_BUS1, CPLD_ADDR, CPLD_VR_FAULT_REG
 
 bool pal_skip_pmbus_cmd_code(uint8_t vendor_type, uint8_t cmd, uint8_t page)
 {
-	if ((vendor_type == VR_TYPE_XDPE15284) && (cmd == PMBUS_STATUS_OTHER)) {
+	if ((vendor_type == VR_TYPE_ISL69259) && (cmd == PMBUS_STATUS_OTHER)) {
 		return true;
 	}
 
