@@ -48,5 +48,6 @@ void init_tmp_type();
 uint8_t get_vr_type();
 uint8_t get_tmp_type();
 void plat_i3c_set_pid();
+uint8_t get_slot_id();
 
 #endif

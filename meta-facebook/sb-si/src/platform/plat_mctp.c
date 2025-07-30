@@ -206,30 +206,16 @@ mctp_port *plat_get_mctp_port(uint8_t index)
 
 void plat_init_set_eid()
 {
-	const struct device *flash_dev;
-	uint32_t op_addr = FLASH_SLOT_ADDRESS;
-	uint8_t slot_id = 0xFF;
-
-	flash_dev = device_get_binding("spi_spim0_cs0");
-	if (flash_dev == NULL) {
-		LOG_ERR("Failed to get flash device.");
-		return;
-	}
-
-	if (flash_read(flash_dev, op_addr, &slot_id, 1) != 0) {
-		LOG_ERR("Failed to read slot ID from flash at 0x%x", op_addr);
-		return;
-	}
+	uint8_t slot_id = get_slot_id();
 
 	if (slot_id >= MAX_SLOT) {
-		LOG_ERR("Invalid slot ID (%d) read from flash, fallback to default EID", slot_id);
+		LOG_ERR("Invalid slot ID (%d), fallback to slot 0 EID", slot_id);
 		slot_id = 0;
 	}
 
 	const mmc_info_t *cfg = &mmc_info_table[slot_id];
 	plat_set_eid(cfg->eid);
 
-	LOG_INF("Slot ID %d read from flash", slot_id);
 	LOG_INF("Set EID to 0x%02x for slot %d", cfg->eid, slot_id);
 }
 

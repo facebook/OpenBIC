@@ -85,29 +85,26 @@ static void command_set_slot_handle(void *arg)
 
 	if (data->wr_buffer_idx == 1) {
 		uint8_t reg_offset = data->target_wr_msg.msg[0];
+		const mmc_info_t *cfg = &mmc_info_table[0];
 		LOG_INF("Received reg_offset: 0x%02x", reg_offset);
 
 		switch (reg_offset) {
-		case SLOT_0_I2C_SET_SLOT_REG: {
-			const mmc_info_t *cfg = &mmc_info_table[0];
+		case SLOT_0_I2C_SET_SLOT_REG:
+			cfg = &mmc_info_table[0];
 			plat_set_slot_init(cfg->slot);
 			break;
-		}
-		case SLOT_1_I2C_SET_SLOT_REG: {
-			const mmc_info_t *cfg = &mmc_info_table[1];
+		case SLOT_1_I2C_SET_SLOT_REG:
+			cfg = &mmc_info_table[1];
 			plat_set_slot_init(cfg->slot);
 			break;
-		}
-		case SLOT_2_I2C_SET_SLOT_REG: {
-			const mmc_info_t *cfg = &mmc_info_table[2];
+		case SLOT_2_I2C_SET_SLOT_REG:
+			cfg = &mmc_info_table[2];
 			plat_set_slot_init(cfg->slot);
 			break;
-		}
-		case SLOT_3_I2C_SET_SLOT_REG: {
-			const mmc_info_t *cfg = &mmc_info_table[3];
+		case SLOT_3_I2C_SET_SLOT_REG:
+			cfg = &mmc_info_table[3];
 			plat_set_slot_init(cfg->slot);
 			break;
-		}
 		default:
 			LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
 			data->target_rd_msg.msg_length = 1;
@@ -146,10 +143,6 @@ void set_slot_handle(struct k_work *work)
 		return;
 	}
 
-	LOG_INF("Setting EID %d for slot %d", eid, slot);
-	plat_set_eid(eid);
-	LOG_INF("EID after set: %d", plat_get_eid());
-
 	const struct device *flash_dev = device_get_binding("spi_spim0_cs0");
 	if (!flash_dev) {
 		LOG_ERR("Failed to get flash device.");
@@ -184,6 +177,10 @@ void set_slot_handle(struct k_work *work)
 		LOG_ERR("to be written:%d", write_buf);
 		LOG_ERR("readback:%d", read_back_buf);
 	}
+
+	LOG_INF("Setting EID %d for slot %d", eid, slot);
+	plat_set_eid(eid);
+	LOG_INF("EID after set: %d", plat_get_eid());
 
 	free(info);
 	return;

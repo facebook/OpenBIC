@@ -31,6 +31,7 @@ LOG_MODULE_REGISTER(plat_class);
 
 #define I2C_BUS_TMP I2C_BUS1
 #define TMP_EMC1413_SMSC_ID_DEFAULT 0x5D
+#define INVALID_SLOT_ID 0xFF
 
 uint16_t BIC_PID = PLAT_DEFAULT_PID;
 
@@ -101,19 +102,7 @@ void init_platform_config()
 
 void plat_i3c_set_pid()
 {
-	const struct device *flash_dev = device_get_binding("spi_spim0_cs0");
-	if (!flash_dev) {
-		LOG_ERR("Failed to get flash device for PID setting.");
-		return;
-	}
-
-	uint8_t slot_id = 0xFF;
-	uint32_t op_addr = FLASH_SLOT_ADDRESS;
-
-	if (flash_read(flash_dev, op_addr, &slot_id, 1) != 0) {
-		LOG_ERR("Failed to read slot_id from flash.");
-		return;
-	}
+	uint8_t slot_id = get_slot_id();
 
 	if (slot_id < MAX_SLOT) {
 		BIC_PID = mmc_info_table[slot_id].pid;
@@ -125,4 +114,29 @@ void plat_i3c_set_pid()
 	I3C_MSG i3c_msg = { 0 };
 	i3c_msg.bus = I3C_BUS6;
 	i3c_set_pid(&i3c_msg, BIC_PID);
+}
+
+uint8_t get_slot_id()
+{
+	const struct device *flash_dev = device_get_binding("spi_spim0_cs0");
+	if (!flash_dev) {
+		LOG_ERR("Failed to get flash device for slot ID.");
+		return INVALID_SLOT_ID;
+	}
+
+	uint8_t slot_id = INVALID_SLOT_ID;
+	uint32_t op_addr = FLASH_SLOT_ADDRESS;
+
+	if (flash_read(flash_dev, op_addr, &slot_id, 1) != 0) {
+		LOG_ERR("Failed to read slot ID from flash at 0x%x", op_addr);
+		return INVALID_SLOT_ID;
+	}
+
+	if (slot_id >= MAX_SLOT) {
+		LOG_ERR("Slot ID read from flash is invalid: %d", slot_id);
+		return INVALID_SLOT_ID;
+	}
+
+	LOG_INF("Read slot ID %d from flash", slot_id);
+	return slot_id;
 }
