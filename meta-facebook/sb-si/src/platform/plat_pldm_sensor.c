@@ -2387,23 +2387,27 @@ char16_t *char16_strcpy(char16_t *dest, const char16_t *src)
 }
 
 // Custom function to concatenate a char16_t character to a string
-char16_t *char16_strcat_char(char16_t *dest)
+char16_t *char16_strcat_char(char16_t *dest, char16_t ch)
 {
 	size_t len = char16_strlen(dest);
-	dest[len] = u'\0';
+	dest[len] = ch;
+	dest[len + 1] = u'\0';
 	return dest;
 }
 
 void plat_init_entity_aux_names_pdr_table()
 {
 	// Base name
-	const char16_t base_name[] = u"SI";
+	const char16_t base_name[] = u"SI_SLOT_";
+
+	// Get slot ID
+	uint8_t slot_id = get_slot_id();
 
 	// Calculate the length of the base name
 	size_t base_len = char16_strlen(base_name);
 
-	// Calculate the required length for the final string (base name + null terminator)
-	size_t total_len = base_len + 1; // +1 for the null terminator
+	// Calculate the required length for the final string (base name + 1 digit + null terminator)
+	size_t total_len = base_len + 2; // +2 for the slot ID digit and null terminator
 
 	// Ensure the final length does not exceed MAX_AUX_SENSOR_NAME_LEN
 	if (total_len > MAX_AUX_SENSOR_NAME_LEN) {
@@ -2418,7 +2422,7 @@ void plat_init_entity_aux_names_pdr_table()
 
 	// Append slot ID as a character, ensuring it fits within the buffer
 	if (base_len + 1 < MAX_AUX_SENSOR_NAME_LEN) {
-		char16_strcat_char(full_name);
+		char16_strcat_char(full_name, u'0' + slot_id);
 	}
 
 	// Now copy the full name to the entityName field of your structure
