@@ -108,7 +108,7 @@ jobs:
  
     - name: Apply Kernel Patches
       run: |
-        ${{ github.event.repository.name }}/scripts/build/apply_patches.py --source="${{ github.event.repository.name }}/fix_patch/aspeed-main-v2.6.0_632d2fb5d0438040e8dc44da48a2fb0712c1feea/" --destination="zephyr"
+        ${{ github.event.repository.name }}/scripts/build/apply_patches.py --source="${{ github.event.repository.name }}/fix_patch/aspeed-main-v2.6.0_641ac3b4d956f2d237c109526c017fdee4715bfb/" --destination="zephyr"
         ${{ github.event.repository.name }}/scripts/build/apply_patches.py --source="${{ github.event.repository.name }}/fix_patch/nuvoton_tag_v2.6.0.0_cad6d72381ce408c40867f41a8741dba16e50bdf/" --destination="zephyr_nuvoton"
  
     - name: Build Platform
