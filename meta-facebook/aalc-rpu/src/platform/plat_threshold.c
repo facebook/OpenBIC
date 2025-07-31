@@ -62,6 +62,8 @@
 
 #define HEX_FAN_NUM 14
 static void fb_prsnt_handle(uint32_t thres_tbl_idx, uint32_t changed_status);
+void abnormal_press_do(uint32_t thres_tbl_idx, uint32_t status);
+void abnormal_press_log(uint32_t thres_tbl_idx, uint32_t status);
 void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status);
 void abnormal_flow_do(uint32_t thres_tbl_idx, uint32_t status);
 
@@ -531,18 +533,6 @@ void rpu_internal_fan_failure_do(uint32_t sensor_num, uint32_t status)
 	}
 }
 
-void abnormal_press_do(uint32_t unused, uint32_t status)
-{
-	static bool is_abnormal = false;
-	if (status == THRESHOLD_STATUS_UCR) {
-		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_ABNORMAL_PRESS, 1);
-		if (!is_abnormal) {
-			is_abnormal = true;
-			error_log_event(SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA, IS_ABNORMAL_VAL);
-		}
-	}
-}
-
 void abnormal_temp_do(uint32_t sensor_num, uint32_t status)
 {
 	uint8_t failure_status = (sensor_num == SENSOR_NUM_BPB_RPU_COOLANT_INLET_TEMP_C) ?
@@ -718,7 +708,7 @@ sensor_threshold threshold_tbl[] = {
 	{ SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA, THRESHOLD_ENABLE_LCR, -50, 0, sensor_log,
 	  SENSOR_NUM_BPB_RPU_COOLANT_INLET_P_KPA, 3 },
 	{ SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA, THRESHOLD_ENABLE_UCR, 0, 300, abnormal_press_do,
-	  0, 3 },
+	  THRESHOLD_ARG0_TABLE_INDEX, 3 },
 	{ SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM, THRESHOLD_ENABLE_LCR, 10, 0, abnormal_flow_do,
 	  THRESHOLD_ARG0_TABLE_INDEX, 20 },
 	{ SENSOR_NUM_BPB_RACK_LEVEL_1, THRESHOLD_ENABLE_LCR, 0.1, 0, level_sensor_do, 0, 5 },
@@ -728,10 +718,10 @@ sensor_threshold threshold_tbl[] = {
 	  THRESHOLD_ARG0_TABLE_INDEX, 1 },
 	{ SENSOR_NUM_HEX_EXTERNAL_Y_FILTER, THRESHOLD_ENABLE_UCR, 0, 30, sensor_log,
 	  SENSOR_NUM_HEX_EXTERNAL_Y_FILTER, 3 },
-	{ SENSOR_NUM_BPB_RACK_PRESSURE_3_P_KPA, THRESHOLD_ENABLE_UCR, 0, 300, sensor_log,
-	  SENSOR_NUM_BPB_RACK_PRESSURE_3_P_KPA, 3 },
-	{ SENSOR_NUM_BPB_RACK_PRESSURE_4_P_KPA, THRESHOLD_ENABLE_UCR, 0, 300, sensor_log,
-	  SENSOR_NUM_BPB_RACK_PRESSURE_4_P_KPA, 3 },
+	{ SENSOR_NUM_BPB_RACK_PRESSURE_3_P_KPA, THRESHOLD_ENABLE_UCR, 0, 300, abnormal_press_log,
+	  THRESHOLD_ARG0_TABLE_INDEX, 3 },
+	{ SENSOR_NUM_BPB_RACK_PRESSURE_4_P_KPA, THRESHOLD_ENABLE_UCR, 0, 300, abnormal_press_log,
+	  THRESHOLD_ARG0_TABLE_INDEX, 3 },
 	{ SENSOR_NUM_SB_HEX_PRESSURE_1_P_KPA, THRESHOLD_ENABLE_UCR, 0, 200, sensor_log,
 	  SENSOR_NUM_SB_HEX_PRESSURE_1_P_KPA, 3 },
 	{ SENSOR_NUM_SB_HEX_PRESSURE_2_P_KPA, THRESHOLD_ENABLE_UCR, 0, 200, sensor_log,
@@ -750,6 +740,49 @@ sensor_threshold *find_threshold_tbl_entry(uint8_t sensor_num)
 	}
 
 	return NULL;
+}
+
+
+void abnormal_press_do(uint32_t thres_tbl_idx, uint32_t status)
+{
+	static bool is_abnormal = false;
+
+	if (thres_tbl_idx >= ARRAY_SIZE(threshold_tbl))
+		return;
+	
+	if (status == THRESHOLD_STATUS_UCR) {
+		sensor_threshold *thres_p = &threshold_tbl[thres_tbl_idx];
+		float flow_rate_val = 0.0;
+		get_sensor_reading_to_real_val(SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM,
+					       &flow_rate_val);
+		if (flow_rate_val < 10.0) {
+			set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_ABNORMAL_PRESS, 1);
+			if (!is_abnormal) {
+				is_abnormal = true;
+				error_log_event(SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA,
+						IS_ABNORMAL_VAL);
+			}
+		} else
+			thres_p->last_status = THRESHOLD_STATUS_NORMAL;
+	}
+}
+
+void abnormal_press_log(uint32_t thres_tbl_idx, uint32_t status)
+{
+	if (thres_tbl_idx >= ARRAY_SIZE(threshold_tbl))
+		return;
+
+	if (status == THRESHOLD_STATUS_UCR) {
+		sensor_threshold *thres_p = &threshold_tbl[thres_tbl_idx];
+		uint32_t sensor_num = thres_p->sensor_num;
+		float flow_rate_val = 0.0;
+		get_sensor_reading_to_real_val(SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM,
+					       &flow_rate_val);
+		if (flow_rate_val < 10.0)
+			error_log_event(sensor_num, IS_ABNORMAL_VAL);
+		else
+			thres_p->last_status = THRESHOLD_STATUS_NORMAL;
+	}
 }
 
 void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)

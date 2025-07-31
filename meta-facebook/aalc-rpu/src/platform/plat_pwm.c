@@ -383,10 +383,10 @@ uint8_t ctl_pwm_pump(uint8_t pump1_duty, uint8_t pump2_duty, uint8_t pump3_duty)
 			return ret;
 		case REDUNDANCY_TRANSFORM_STEP_2B:
 			redundant_dev_pre = redundant_dev_now;
-			set_is_redundant_transforming(false);
 			break;
 		}
 	} else {
+		set_is_redundant_transforming(false);		
 		redundant_phase = REDUNDANCY_TRANSFORM_DISABLE;
 		if (redundant_dev_now == PWM_DEVICE_E_MAX)
 			redundant_dev_pre = PWM_DEVICE_E_MAX;
