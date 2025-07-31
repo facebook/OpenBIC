@@ -55,20 +55,55 @@ const struct _i2c_target_config I2C_TARGET_CONFIG_TABLE[MAX_TARGET_NUM] = {
 	{ 0xFF, 0xA },
 	{ 0x40, 0xA },
 	{ 0xFF, 0xA },
-	{ 0x40, 0xA, command_reply_data_handle },
+	{ 0x40, 0xA },
 	{ 0xFF, 0xA },
 	{ 0xFF, 0xA },
 	{ 0xFF, 0xA },
 	{ 0xFF, 0xA },
-	{ 0x42, 0xA, NULL, command_set_slot_handle },
+	{ 0x42, 0xA, command_reply_data_handle, command_set_slot_handle },
 	{ 0xFF, 0xA },
 };
 
 static bool command_reply_data_handle(void *arg)
 {
-	/*TODO: put board telemetry here*/
+	struct i2c_target_data *data = (struct i2c_target_data *)arg;
 
-	return false;
+	if (data->wr_buffer_idx < 1) {
+		LOG_ERR("No register offset received before read");
+		data->target_rd_msg.msg_length = 1;
+		data->target_rd_msg.msg[0] = 0xFF;
+		return false;
+	}
+
+	uint8_t reg_offset = data->target_wr_msg.msg[0];
+
+	switch (reg_offset) {
+	case GET_MMC_INFO_REG: {
+		uint8_t slot = get_slot_id();
+		if (slot == 0xFF) {
+			data->target_rd_msg.msg_length = 1;
+			data->target_rd_msg.msg[0] = 0xFF;
+			return false;
+		}
+
+		uint8_t eid = plat_get_eid();
+
+		data->target_rd_msg.msg_length = 2;
+		data->target_rd_msg.msg[0] = slot;
+		data->target_rd_msg.msg[1] = eid;
+
+		LOG_DBG("Reply SLOT=%d, EID=%d", slot, eid);
+		break;
+	}
+
+	default:
+		LOG_WRN("Unsupported read register: 0x%02x", reg_offset);
+		data->target_rd_msg.msg_length = 1;
+		data->target_rd_msg.msg[0] = 0xFF;
+		break;
+	}
+
+	return true;
 }
 
 static void command_set_slot_handle(void *arg)
