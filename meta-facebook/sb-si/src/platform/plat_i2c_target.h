@@ -30,6 +30,8 @@ typedef struct {
 #define SLOT_2_I2C_SET_SLOT_REG 0x42
 #define SLOT_3_I2C_SET_SLOT_REG 0x43
 
+#define GET_MMC_INFO_REG 0x50
+
 #define TARGET_ENABLE 1
 #define TARGET_DISABLE 0
 
