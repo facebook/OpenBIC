@@ -221,7 +221,6 @@ void load_pldmupdate_comp_config(void)
 
 static uint8_t plat_pldm_pre_pcie_switch_update(void *fw_update_param)
 {
-
 	int pos = pal_get_pcie_switch_flash_position();
 	if (pos == -1) {
 		return -1;
@@ -242,7 +241,7 @@ static uint8_t plat_pldm_post_pcie_switch_update(void *fw_update_param)
 	if (!ret) {
 		return -1;
 	}
-	
+
 	return 0;
 }
 
