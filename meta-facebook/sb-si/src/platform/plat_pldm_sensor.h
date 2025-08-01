@@ -59,12 +59,12 @@ enum SENSOR_NUM_LIST {
 	SENSOR_NUM_VR_ASIC_P0V825_A2_VOLT_V,
 	SENSOR_NUM_VR_ASIC_P0V825_A2_CURR_A,
 	SENSOR_NUM_VR_ASIC_P0V825_A2_PWR_W,
-	SENSOR_NUM_ADC_P12V_SCALED,
-	SENSOR_NUM_ADC_P5V_STBY_SCALED,
-	SENSOR_NUM_ADC_P3V3_AUX_SCALED,
-	SENSOR_NUM_ADC_P1V5_PEX_SCALED,
-	SENSOR_NUM_ADC_P1V2_PEX_SCALED,
-	SENSOR_NUM_ADC_P1V8_PEX_SCALED,
+	SENSOR_NUM_ADC_P12V_SCALED_VOLT_V,
+	SENSOR_NUM_ADC_P5V_STBY_SCALED_VOLT_V,
+	SENSOR_NUM_ADC_P3V3_AUX_SCALED_VOLT_V,
+	SENSOR_NUM_ADC_P1V5_PEX_SCALED_VOLT_V,
+	SENSOR_NUM_ADC_P1V2_PEX_SCALED_VOLT_V,
+	SENSOR_NUM_ADC_P1V8_PEX_SCALED_VOLT_V,
 };
 
 #define TMP75_TEMP_OFFSET 0x00
@@ -106,6 +106,6 @@ bool get_sensor_info_by_sensor_id(uint8_t sensor_id, uint8_t *vr_bus, uint8_t *v
 				  uint8_t *sensor_dev);
 size_t char16_strlen(const char16_t *str);
 char16_t *char16_strcpy(char16_t *dest, const char16_t *src);
-char16_t *char16_strcat_char(char16_t *dest);
+char16_t *char16_strcat_char(char16_t *dest, char16_t ch);
 
 #endif
