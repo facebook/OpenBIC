@@ -490,6 +490,7 @@ uint8_t pwm_control(uint8_t group, uint8_t duty)
 	}
 
 	if (group == PWM_GROUP_E_PUMP) {
+		set_pwm_group_cache(group, duty);
 		if (!ctl_pwm_pump(duty, duty, duty))
 			return 0;
 	} else {

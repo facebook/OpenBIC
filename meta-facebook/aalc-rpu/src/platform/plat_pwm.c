@@ -460,6 +460,12 @@ uint8_t get_pwm_group_cache(uint8_t group)
 	return fan_group_duty_cache[group];
 }
 
+
+void set_pwm_group_cache(uint8_t group, uint8_t duty)
+{
+	fan_group_duty_cache[group] = duty;	
+}
+
 uint8_t get_pwm_cache(uint8_t idx)
 {
 	if (idx >= PWM_DEVICE_E_MAX)
