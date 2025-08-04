@@ -29,9 +29,13 @@ typedef struct _cpld_info_ {
 
 	bool (*status_changed_cb)(cpld_info *, uint8_t *);
 
+	uint8_t bit_check_mask; //bit check mask
+
 } cpld_info;
 
 bool plat_read_cpld(uint8_t offset, uint8_t *data, uint8_t len);
 bool plat_write_cpld(uint8_t offset, uint8_t *data);
+void init_cpld_polling(void);
+void check_cpld_polling_alert_status(void);
 
 #endif

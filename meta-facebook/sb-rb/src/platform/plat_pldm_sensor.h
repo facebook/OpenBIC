@@ -81,8 +81,8 @@
 #define ASIC_P0V75_VDDPHY_HBM0246_RNS_ADDR (0xE8 >> 1)
 #define ASIC_P0V75_OWL_W_VDD_RNS_ADDR (0xC4 >> 1)
 #define ASIC_P0V75_MAX_S_VDD_RNS_ADDR (0xC4 >> 1)
-#define ASIC_P0V9_OWL_W_TRVDD_RNS_ADDR (0xC6 >> 1)
-#define ASIC_P0V75_OWL_W_TRVDD_RNS_ADDR (0xC6 >> 1)
+#define ASIC_P0V9_OWL_W_TRVDD_RNS_ADDR (0xEA >> 1)
+#define ASIC_P0V75_OWL_W_TRVDD_RNS_ADDR (0xEA >> 1)
 
 #define UBC1_ADDR (0x28 >> 1)
 #define UBC2_ADDR (0x34 >> 1)
@@ -254,10 +254,9 @@ bool get_plat_sensor_vr_polling_enable_flag();
 bool is_ubc_access(uint8_t sensor_num);
 bool is_temp_access(uint8_t cfg_idx);
 bool is_vr_access(uint8_t sensor_num);
-bool is_osfp_3v3_access(uint8_t sensor_num);
 size_t char16_strlen(const char16_t *str);
 char16_t *char16_strcpy(char16_t *dest, const char16_t *src);
-char16_t *char16_strcat_char(char16_t *dest);
+char16_t *char16_strcat_char(char16_t *dest, char16_t ch);
 
 bool get_raw_data_from_sensor_id(uint8_t sensor_id, uint8_t offset, uint8_t *val, uint8_t len);
 void change_sensor_cfg(uint8_t vr_module);

@@ -27,6 +27,7 @@
 #include "flash_shell.h"
 #include "plat_class.h"
 #include "plat_cpld.h"
+#include "plat_log.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -57,7 +58,8 @@ void pal_post_init()
 	uint8_t data = 0;
 	plat_write_cpld(CPLD_OFFSET_POWER_CLAMP, &data);
 	plat_adc_init();
-	//init_load_eeprom_log();
+	init_load_eeprom_log();
+	init_cpld_polling();
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78
