@@ -420,7 +420,7 @@ static void cmd_pump_redundant_switch_day_set(const struct shell *shell, size_t 
 
 	set_pump_redundant_switch_time_type(type);
 	set_pump_redundant_switch_time(time);
-	shell_warn(shell, "set pump redundant to %d %s", time, (type ? "hours" : "day"));
+	shell_warn(shell, "set pump redundant to %d %s", time, (type ? "minute" : "day"));
 }
 
 // modbus
@@ -444,6 +444,19 @@ static void cmd_modbus_write(const struct shell *shell, size_t argc, char **argv
 	}
 	if (!num)
 		num = 1;
+
+	switch (addr) {
+	case MODBUS_ENABLE_ABR_ADDR:
+	case MODBUS_GET_SET_2ND_BOOT_UPDATE_FLAG_ADDR:
+	case MODBUS_SET_FMC_WDT_ADDR:
+	case MODBUS_DISABLE_ABR_ADDR:
+		shell_warn(shell, "modbus write command 0x%04x not allowed, please use wedge400",
+			   addr);
+		return;
+		break;
+	default:
+		break;
+	}
 
 	uint16_t data[num];
 	memset(data, 0, num);
