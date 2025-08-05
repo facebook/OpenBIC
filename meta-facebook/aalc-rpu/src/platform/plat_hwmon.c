@@ -333,9 +333,9 @@ bool rpu_remote_power_cycle_function(pump_reset_struct *data, uint8_t bit_val)
 void abnormal_pump_redundant_transform(uint32_t pump_sensor_num)
 {
 	uint32_t current_state = get_status_flag(STATUS_FLAG_PUMP_REDUNDANT);
-	printf("STATUS_FLAG_PUMP_REDUNDANT: %d\n", current_state);
+	printf("STATUS_FLAG_PUMP_REDUNDANT: %u\n", current_state);
 	if (get_status_flag(STATUS_FLAG_PUMP_REDUNDANT) != PUMP_REDUNDANT_DISABLE) {
-		printf("pump_sensor_num: %d\n", pump_sensor_num);
+		printf("pump_sensor_num: %u\n", pump_sensor_num);
 		switch (pump_sensor_num) {
 		case SENSOR_NUM_PB_1_PUMP_TACH_RPM:
 			if (current_state == PUMP_REDUNDANT_MAX ||
@@ -364,7 +364,7 @@ void abnormal_pump_redundant_transform(uint32_t pump_sensor_num)
 	} else
 		LOG_ERR("transform failed due to disabled redundancy");
 
-	printf("STATUS_FLAG_PUMP_REDUNDANT_II: %d\n", get_status_flag(STATUS_FLAG_PUMP_REDUNDANT));
+	printf("STATUS_FLAG_PUMP_REDUNDANT_II: %u\n", get_status_flag(STATUS_FLAG_PUMP_REDUNDANT));
 }
 
 // pump redundant
