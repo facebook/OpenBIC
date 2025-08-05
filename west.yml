@@ -16,6 +16,7 @@ manifest:
         name-allowlist:
           - cmsis
           - mcuboot
+          - mbedtls
 
     - name: zephyr_nuvoton
       remote: nuvoton
