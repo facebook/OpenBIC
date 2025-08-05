@@ -56,16 +56,24 @@ compnt_mapping_sensor vr_compnt_mapping_sensor_table[] = {
 	{ COMPNT_VR_12, SENSOR_NUM_ASIC_P0V9_OWL_W_TRVDD_TEMP_C, "ASIC_P0V9_OWL_W_TRVDD" },
 };
 
+// clang-format off
 #define VR_COMPONENT_DEF(comp_id)                                                                  \
 	{                                                                                          \
-		.enable = true, .comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,                 \
-		.comp_identifier = comp_id, .comp_classification_index = 0x00,                     \
-		.pre_update_func = pldm_pre_vr_update, .update_func = pldm_vr_update,              \
-		.pos_update_func = pldm_post_vr_update, .inf = COMP_UPDATE_VIA_I2C,                \
-		.activate_method = COMP_ACT_AC_PWR_CYCLE, .self_act_func = NULL,                   \
-		.get_fw_version_fn = get_vr_fw_version, .self_apply_work_func = NULL,              \
+		.enable = true,                                                                    \
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,                                 \
+		.comp_identifier = comp_id,                                                        \
+		.comp_classification_index = 0x00,                                                 \
+		.pre_update_func = pldm_pre_vr_update,                                             \
+		.update_func = pldm_vr_update,                                                     \
+		.pos_update_func = pldm_post_vr_update,                                            \
+		.inf = COMP_UPDATE_VIA_I2C,                                                        \
+		.activate_method = COMP_ACT_AC_PWR_CYCLE,                                          \
+		.self_act_func = NULL,                                                             \
+		.get_fw_version_fn = get_vr_fw_version,                                            \
+		.self_apply_work_func = NULL,                                                      \
 		.comp_version_str = NULL,                                                          \
 	}
+// clang-format on
 
 /* PLDM FW update table */
 pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
@@ -200,6 +208,7 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param)
 
 	/* Stop sensor polling */
 	set_plat_sensor_polling_enable_flag(false);
+	k_msleep(100);
 
 	uint8_t sensor_id = 0;
 	char sensor_name[MAX_AUX_SENSOR_NAME_LEN] = { 0 };

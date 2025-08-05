@@ -9688,17 +9688,21 @@ char16_t *char16_strcpy(char16_t *dest, const char16_t *src)
 }
 
 // Custom function to concatenate a char16_t character to a string
-char16_t *char16_strcat_char(char16_t *dest)
+char16_t *char16_strcat_char(char16_t *dest, char16_t ch)
 {
 	size_t len = char16_strlen(dest);
-	dest[len] = u'\0';
+	dest[len] = ch;
+	dest[len + 1] = u'\0';
 	return dest;
 }
 
 void plat_init_entity_aux_names_pdr_table()
 {
 	// Base name
-	const char16_t base_name[] = u"CB";
+	const char16_t base_name[] = u"RB";
+
+	// Get slot ID
+	uint8_t slot_id = get_mmc_slot() + 1;
 
 	// Calculate the length of the base name
 	size_t base_len = char16_strlen(base_name);
@@ -9719,9 +9723,8 @@ void plat_init_entity_aux_names_pdr_table()
 
 	// Append slot ID as a character, ensuring it fits within the buffer
 	if (base_len + 1 < MAX_AUX_SENSOR_NAME_LEN) {
-		char16_strcat_char(full_name);
+		char16_strcat_char(full_name, u'0' + slot_id);
 	}
-
 	// Now copy the full name to the entityName field of your structure
 	char16_strcpy(plat_pdr_entity_aux_names_table[0].entityName, full_name);
 
@@ -9877,10 +9880,4 @@ bool is_vr_access(uint8_t sensor_num)
 {
 	return (is_dc_access(sensor_num) && get_plat_sensor_vr_polling_enable_flag() &&
 		get_plat_sensor_polling_enable_flag());
-}
-
-bool is_osfp_3v3_access(uint8_t sensor_num)
-{
-	/* OSFP 3V3 is only accessible on EVB */
-	return is_vr_access(sensor_num);
 }

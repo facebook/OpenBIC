@@ -366,7 +366,11 @@ static uint8_t mp29816a_do_update(struct cfg_data *cfg_data_list, uint32_t cfg_c
 				// write page1@cc with 0x1200
 				if (!mp29816a_set_page(bus, addr, 1))
 					return 1;
+#ifdef MP29816C_MTP_MUTI_CONFIG_PROGRAM_ENABLE
+				memcpy(data, (uint8_t[]){ 0x00, 0x02 }, 2);
+#else
 				memcpy(data, (uint8_t[]){ 0x00, 0x12 }, 2);
+#endif
 				mp29816a_i2c_write(bus, addr, 0xcc, data, 2);
 
 				// write page0@17\n");
@@ -419,7 +423,11 @@ static uint8_t mp29816a_do_update(struct cfg_data *cfg_data_list, uint32_t cfg_c
 	// write page1@cc with 0x1200
 	if (!mp29816a_set_page(bus, addr, 1))
 		return 1;
+#ifdef MP29816C_MTP_MUTI_CONFIG_PROGRAM_ENABLE
+	memcpy(data, (uint8_t[]){ 0x00, 0x02 }, 2);
+#else
 	memcpy(data, (uint8_t[]){ 0x00, 0x12 }, 2);
+#endif
 	mp29816a_i2c_write(bus, addr, 0xcc, data, 2);
 
 	// write page0@17
