@@ -54,6 +54,11 @@ void check_ubc_delayed_timer_handler(struct k_timer *timer)
 	k_work_submit(&check_ubc_delayed_work);
 }
 
+void cancel_ubc_delayed_timer_handler()
+{
+	k_work_cancel(&check_ubc_delayed_work);
+}
+
 K_THREAD_STACK_DEFINE(cpld_polling_stack, POLLING_CPLD_STACK_SIZE);
 struct k_thread cpld_polling_thread;
 k_tid_t cpld_polling_tid;
@@ -392,6 +397,11 @@ void get_vr_vout_handler(struct k_work *work)
 bool is_ubc_enabled_delayed_enabled(void)
 {
 	return ubc_enabled_delayed_status;
+}
+
+void set_ubc_enabled_delayed_enabled(bool status)
+{
+	ubc_enabled_delayed_status = status;
 }
 
 void reset_error_log_states(uint8_t err_type)
