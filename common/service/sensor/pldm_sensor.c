@@ -348,6 +348,10 @@ int pldm_sensor_polling_pre_check(pldm_sensor_info *pldm_snr_list, int sensor_nu
 		}
 	}
 
+	if (pldm_snr_list->pldm_sensor_cfg.access_checker(sensor_num) == false) {
+		return -1;
+	}
+
 	return 0;
 }
 
