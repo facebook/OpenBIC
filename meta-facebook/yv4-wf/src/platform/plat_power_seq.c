@@ -485,6 +485,7 @@ void execute_power_off_sequence()
 		LOG_INF("CXL 1 power off success");
 	} else {
 		is_cxl_power_on[CXL_ID_1] = true;
+		set_cxl_vr_access(CXL_ID_1, true);
 		LOG_ERR("CXL 1 power off fail");
 	}
 
@@ -494,6 +495,7 @@ void execute_power_off_sequence()
 		LOG_INF("CXL 2 power off success");
 	} else {
 		is_cxl_power_on[CXL_ID_2] = true;
+		set_cxl_vr_access(CXL_ID_2, true);
 		LOG_ERR("CXL 2 power off fail");
 	}
 
@@ -1026,6 +1028,11 @@ bool cxl1_vr_access(uint8_t sensor_num)
 bool cxl2_vr_access(uint8_t sensor_num)
 {
 	return is_cxl_vr_accessible[CXL_ID_2];
+}
+
+bool get_cxl_vr_access_status(uint8_t cxl_id)
+{
+	return is_cxl_vr_accessible[cxl_id];
 }
 
 void set_cxl_ready_status(uint8_t cxl_id, bool value)

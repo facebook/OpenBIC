@@ -559,6 +559,12 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	uint8_t value = 0x0;
 	uint8_t vr_comp_id = p->comp_identifier;
 
+	if (get_cxl_vr_access_status(CXL_ID_1) == false ||
+	    get_cxl_vr_access_status(CXL_ID_2) == false) {
+		LOG_WRN("CXL VR access is not allowed");
+		return false;
+	}
+
 	get_ioe_value(ADDR_IOE2, TCA9555_OUTPUT_PORT_REG_0, &value);
 	switch (vr_comp_id) {
 	case WF_COMPNT_VR_PVDDQ_AB_ASIC1:
