@@ -92,11 +92,20 @@ void pal_pre_init()
 		printf("Error to set daa\n");
 	}
 
+	uint16_t i3c_hub_type = I3C_HUB_TYPE_UNKNOWN;
 	i3c_attach(&i3c_msg);
+	init_i3c_hub_type();
+	i3c_hub_type = get_i3c_hub_type();
 
 	// Initialize I3C HUB
-	if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, LDO_VOLT, 0xF0)) {
-		printk("failed to initialize 1ou rg3mxxb12\n");
+	if(i3c_hub_type == P3H2840_DEVICE_INFO) {
+		if (!p3h284x_i3c_mode_only_init(&i3c_msg, p3h284x_cmd_initial, P3H284X_CMD_INITIAL_SIZE)) {
+			printk("failed to initialize 1ou p3h284x\n");
+		}
+	} else {
+		if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, rg3mxxb12_cmd_initial, RG3MXXB12_CMD_INITIAL_SIZE)) {
+			printk("failed to initialize 1ou rg3mxxb12\n");
+		}
 	}
 
 	init_vr_event_work();
