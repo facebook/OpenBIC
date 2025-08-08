@@ -8,6 +8,31 @@
 
 LOG_MODULE_REGISTER(plat_i3c);
 
+const uint8_t rg3mxxb12_cmd_initial[][2] = {
+	{ RG3MXXB12_VOLT_LDO_SETTING, LDO_VOLT },
+	{ RG3MXXB12_SSPORTS_AGENT_ENABLE, 0x0 },
+	{ RG3MXXB12_SSPORTS_GPIO_ENABLE, 0x0 },
+	{ RG3MXXB12_SLAVE_PORT_ENABLE, 0x0 },
+	{ RG3MXXB12_SSPORTS_PULLUP_SETTING, rg3mxxb12_pullup_500_ohm },
+	{ RG3MXXB12_SSPORTS_PULLUP_ENABLE, 0xFF },
+	{ RG3MXXB12_SSPORTS_OD_ONLY, 0x0 },
+	{ RG3MXXB12_SLAVE_PORT_ENABLE, 0xFF },
+	{ RG3MXXB12_SSPORTS_HUB_NETWORK_CONNECTION, 0xFF },
+};
+
+const uint8_t p3h284x_cmd_initial[][2] = {
+	// VCCIO LDO Setting
+	{ P3H284X_VOLT_LDO_SETTING, P3H2840_I3C_LDO_VOLT },
+	// On-die LDO Enable and Pull up Resistor Value Setting
+	{ P3H284X_TARGET_PORTS_PULLUP_SETTING, 0xA0 },
+	// Target Port Enable
+	{ P3H284X_TARGET_PORT_ENABLE, 0xC5 },
+	// Target Port Hub Network Connection Enable
+	{ P3H284X_TARGET_PORTSHUB_NETWORK_CONNECTION, 0xC5 },
+	// Target Port Pull Up Enable
+	{ P3H284X_TARGET_PORTS_PULLUP_ENABLE, 0xFF },
+};
+
 void init_i3c_hub()
 {
 	I3C_MSG i3c_msg = { 0 };
@@ -35,7 +60,8 @@ void init_i3c_hub()
 
 	switch (i3c_hub_type) {
 	case RG3M87B12_DEVICE_INFO:
-		if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, LDO_VOLT, rg3mxxb12_pullup_500_ohm)) {
+		if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, rg3mxxb12_cmd_initial,
+						  RG3MXXB12_CMD_INITIAL_SIZE)) {
 			LOG_ERR("Failed to initialize rg3mxxb12 i3c hub");
 		}
 
@@ -45,7 +71,8 @@ void init_i3c_hub()
 		}
 		break;
 	case P3H2840_DEVICE_INFO:
-		if (!p3h284x_i3c_mode_only_init(&i3c_msg, P3H2840_I3C_LDO_VOLT)) {
+		if (!p3h284x_i3c_mode_only_init(&i3c_msg, p3h284x_cmd_initial,
+						P3H284X_CMD_INITIAL_SIZE)) {
 			LOG_ERR("Failed to initialize p3h284x i3c hub");
 		}
 
