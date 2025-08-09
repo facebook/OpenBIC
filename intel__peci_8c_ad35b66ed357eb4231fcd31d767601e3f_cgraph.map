@@ -1,0 +1,9 @@
+<map id="read_cpu_power" name="read_cpu_power">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,123,83"/>
+<area shape="rect" id="node2" href="$intel__peci_8c.html#a54462c00ab8b011feac9510595f8f1a2" title=" " alt="" coords="185,5,319,32"/>
+<area shape="rect" id="node3" href="$intel__peci_8c.html#a1d2d02542788b2785b278afa11de6b3d" title=" " alt="" coords="183,56,321,83"/>
+<area shape="rect" id="node4" href="$intel__peci_8c.html#a491309b10d0bd79c4647e05a6073a9d4" title=" " alt="" coords="171,107,333,133"/>
+<area shape="rect" id="node5" href="$hal__peci_8c.html#a6ffff8eba702bfb4fd26a8b057d32915" title=" " alt="" coords="381,107,460,133"/>
+<area shape="rect" id="node6" href="$hal__peci_8c.html#a8e95a227994066af673414f44c4a1f61" title=" " alt="" coords="508,107,615,133"/>
+<area shape="rect" id="node7" href="$hal__peci_8c.html#a83241209febf9da926be7e30afd9cc46" title=" " alt="" coords="663,107,811,133"/>
+</map>

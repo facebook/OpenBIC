@@ -1,0 +1,11 @@
+<map id="monitor_prochot_sensor_handler" name="monitor_prochot_sensor_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,150,167,191"/>
+<area shape="rect" id="node2" href="$pdr_8c.html#a68ebb1959f36e910de522d31f023c7c4" title=" " alt="" coords="228,5,387,32"/>
+<area shape="rect" id="node4" href="$sensor_8c.html#ab9a824489ded146dddedddfb3d2b5a5c" title=" " alt="" coords="215,56,400,83"/>
+<area shape="rect" id="node5" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="272,107,343,133"/>
+<area shape="rect" id="node6" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="272,157,343,184"/>
+<area shape="rect" id="node7" href="$pldm__sensor_8h.html#ad761b1574688382f146351732f7df5ad" title=" " alt="" coords="233,209,382,250"/>
+<area shape="rect" id="node8" href="$libutil_8c.html#ab48a9c42e1d3d8deb40b3a5f9cd3ab9a" title=" " alt="" coords="279,275,336,301"/>
+<area shape="rect" id="node9" href="$pldm__oem_8h.html#abfa67ccc03b5a09b8503f95d5f8e5c5f" title=" " alt="" coords="226,325,389,352"/>
+<area shape="rect" id="node3" href="$pdr_8c.html#ac8f9c0927877dcf9df6ec1534d005077" title=" " alt="" coords="448,5,571,32"/>
+</map>
