@@ -1,0 +1,61 @@
+From 2442dca0d8c21e2c9494b16bbc12b03ce9667d1a Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Fri, 1 Aug 2025 18:22:30 +0800
+Subject: [PATCH] i3c: Flush the RX FIFO when no callback function is
+ registered
+
+Replace the __ASSERT with LOG_WRN to warn the user that the slave has
+received data when no userspace application is present to handle it and
+flush the hardware rx fifo.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: Ib6f158a6c535084200f04288da7cc340045b73be
+---
+ drivers/i3c/i3c_aspeed.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index 07bb50de0e0..efbbc7b05bf 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -751,20 +751,24 @@ static void i3c_aspeed_rd_rx_fifo(struct i3c_aspeed_obj *obj, uint8_t *bytes, in
+ 	int i;
+ 
+ 	for (i = 0; i < nwords; i++) {
+-		*dst++ = i3c_register->rx_tx_data_port;
++		uint32_t val = i3c_register->rx_tx_data_port;
++		if (dst)
++			dst[i] = val;
+ 	}
+ 
+ 	if (nbytes & 0x3) {
+ 		uint32_t tmp;
+ 
+ 		tmp = i3c_register->rx_tx_data_port;
+-		memcpy(bytes + (nbytes & ~0x3), &tmp, nbytes & 3);
++		if (bytes != NULL)
++			memcpy(bytes + (nbytes & ~0x3), &tmp, nbytes & 3);
+ 	}
+ 	if (obj->config->priv_xfer_pec) {
+ 		ret = pec_valid(obj->dev, bytes, nbytes);
+ 		if (ret) {
+ 			LOG_ERR("PEC error");
+-			memset(bytes, 0, nbytes);
++			if (bytes != NULL)
++				memset(bytes, 0, nbytes);
+ 		}
+ 	}
+ }
+@@ -931,7 +935,8 @@ static void i3c_aspeed_slave_resp_handler(struct i3c_aspeed_obj *obj, union i3c_
+ 		if (resp.fields.data_length && !resp.fields.err_status &&
+ 		    resp.fields.tid == SLAVE_TID_MASTER_WRITE_DATA) {
+ 			if (!cb) {
+-				__ASSERT(0, "flush rx fifo is TBD");
++				LOG_WRN("Miss callbacks: flush the rx fifo");
++				i3c_aspeed_rd_rx_fifo(obj, NULL, resp.fields.data_length);
+ 				continue;
+ 			}
+ 			if (cb->write_requested) {
+-- 
+2.25.1
+
