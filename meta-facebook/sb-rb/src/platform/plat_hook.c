@@ -28,9 +28,7 @@
 
 LOG_MODULE_REGISTER(plat_hook);
 
-static struct k_mutex vr_mutex[VR_MAX_NUM];
-
-#define EEPROM_MAX_WRITE_TIME 5 // the BR24G512 eeprom max write time is 3.5 ms
+static struct k_mutex vr_mutex[VR_INDEX_MAX];
 
 vr_pre_proc_arg vr_pre_read_args[] = {
 	{ .mutex = vr_mutex + 0, .vr_page = 0x0 },  { .mutex = vr_mutex + 0, .vr_page = 0x1 },
@@ -45,6 +43,11 @@ vr_pre_proc_arg vr_pre_read_args[] = {
 	{ .mutex = vr_mutex + 9, .vr_page = 0x0 },  { .mutex = vr_mutex + 9, .vr_page = 0x1 },
 	{ .mutex = vr_mutex + 10, .vr_page = 0x0 }, { .mutex = vr_mutex + 10, .vr_page = 0x1 },
 	{ .mutex = vr_mutex + 11, .vr_page = 0x0 }, { .mutex = vr_mutex + 11, .vr_page = 0x1 },
+	{ .mutex = vr_mutex + 12, .vr_page = 0x0 }, { .mutex = vr_mutex + 12, .vr_page = 0x1 },
+};
+
+mp2971_init_arg mp2971_init_args[] = {
+	[0] = { .vout_scale_enable = true },
 };
 
 void *vr_mutex_get(enum VR_INDEX_E vr_index)
