@@ -329,6 +329,9 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	if (cfg->type == sensor_dev_mp2891 || cfg->type == sensor_dev_mp29816a) {
 		*len += bin2hex((uint8_t *)&version, 2, buf_p, 4);
 		buf_p += 4;
+	} else if (cfg->type == sensor_dev_raa228249 || cfg->type == sensor_dev_mp2971) {
+		*len += bin2hex((uint8_t *)&version, 4, buf_p, 8);
+		buf_p += 8;
 	} else {
 		LOG_ERR("Unsupport VR type(%d)", cfg->type);
 	}
