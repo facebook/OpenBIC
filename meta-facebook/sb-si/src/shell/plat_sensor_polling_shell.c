@@ -36,7 +36,7 @@ void cmd_set_plat_sensor_polling_all(const struct shell *shell, size_t argc, cha
 	shell_print(shell, "set_sensor_polling all -> %d ,success!", value);
 	shell_print(shell, "Flag: all -> %d , adc-> %d , vr-> %d , temp-> %d",
 		    get_plat_sensor_polling_enable_flag(),
-			get_plat_sensor_adc_polling_enable_flag(),
+		    get_plat_sensor_adc_polling_enable_flag(),
 		    get_plat_sensor_vr_polling_enable_flag(),
 		    get_plat_sensor_temp_polling_enable_flag());
 	return;
