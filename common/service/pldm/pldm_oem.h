@@ -35,6 +35,7 @@ extern "C" {
 #define PLDM_OEM_IPMI_BRIDGE 0x01
 #define PLDM_OEM_WRITE_FILE_IO 0x02
 #define PLDM_OEM_READ_FILE_IO 0x03
+#define PLDM_OEM_SENSOR_POLLING_CMD 0x04
 
 #define POWER_CONTROL_LEN 0x01
 
@@ -244,6 +245,17 @@ struct pldm_addsel_data {
 	uint8_t event_data_1;
 	uint8_t event_data_2;
 	uint8_t event_data_3;
+} __attribute__((packed));
+
+struct _sensor_polling_cmd_req {
+	uint8_t iana[IANA_LEN];
+	uint8_t set_value;
+} __attribute__((packed));
+
+struct _sensor_polling_cmd_resp {
+	uint8_t completion_code;
+	uint8_t iana[IANA_LEN];
+	uint8_t set_value;
 } __attribute__((packed));
 
 uint8_t check_iana(const uint8_t *iana);
