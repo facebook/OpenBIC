@@ -25,7 +25,8 @@
 #define CPLD_OFFSET_POWER_CLAMP 0x25
 #define CPLD_OFFSET_USERCODE 0x32
 #define CPLD_OFFSET_ASIC_BOARD_ID 0x3C
-
+#define CPLD_ADDR (0x4C >> 1)
+#define I2C_BUS_CPLD I2C_BUS11
 typedef struct _cpld_info_ cpld_info;
 
 typedef struct _cpld_info_ {
