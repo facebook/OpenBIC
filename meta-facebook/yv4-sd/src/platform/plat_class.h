@@ -56,6 +56,12 @@ enum RETIMER_TYPE {
 	RETIMER_TYPE_BROADCOM,
 };
 
+enum I3C_HUB_TYPE {
+	I3C_HUB_TYPE_RNS,
+	I3C_HUB_TYPE_NXP,
+	I3C_HUB_TYPE_UNKNOWN,
+};
+
 bool get_adc_voltage(int channel, float *voltage);
 bool get_board_rev(uint8_t *board_rev);
 uint8_t get_slot_eid();
@@ -64,5 +70,7 @@ bool get_blade_config(uint8_t *blade_config);
 void init_platform_config();
 uint8_t get_retimer_type();
 void init_retimer_type();
+uint16_t get_i3c_hub_type();
+void init_i3c_hub_type();
 
 #endif

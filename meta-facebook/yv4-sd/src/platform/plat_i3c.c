@@ -25,6 +25,33 @@ k_tid_t tid;
 K_THREAD_STACK_DEFINE(send_setaasa_stack, SEND_SETAASA_STACK_SIZE);
 struct k_thread send_setaasa_thread;
 
+const uint8_t rg3mxxb12_cmd_initial[][2] = {
+	{ RG3MXXB12_SLAVE_PORT_ENABLE, 0x0 },
+	{ RG3MXXB12_VOLT_LDO_SETTING, LDO_VOLT },
+	{ RG3MXXB12_SSPORTS_AGENT_ENABLE, 0x0 },
+	{ RG3MXXB12_SSPORTS_GPIO_ENABLE, 0x0 },
+	{ RG3MXXB12_SSPORTS_PULLUP_SETTING, 0xF0 },
+	{ RG3MXXB12_SSPORTS_PULLUP_ENABLE, 0xFF },
+	{ RG3MXXB12_SSPORTS_OD_ONLY, 0x0 },
+	{ RG3MXXB12_SSPORTS_HUB_NETWORK_CONNECTION, 0x01 },
+	{ RG3MXXB12_SLAVE_PORT_ENABLE, 0x01 },
+};
+
+const uint8_t p3h284x_cmd_initial[][2] = {
+	// Target Port Enable
+	{ P3H284X_TARGET_PORT_ENABLE, 0x0 },
+	// VCCIO LDO Setting
+	{ P3H284X_VOLT_LDO_SETTING, LDO_VOLT },
+	// On-die LDO Enable and Pull up Resistor Value Setting
+	{ P3H284X_TARGET_PORTS_PULLUP_SETTING, 0xF0 },
+	// Target Port Pull Up Enable
+	{ P3H284X_TARGET_PORTS_PULLUP_ENABLE, 0xFF },
+	// Target Port Hub Network Connection Enable
+	{ P3H284X_TARGET_PORTSHUB_NETWORK_CONNECTION, 0x01 },
+	// Target Port Enable
+	{ P3H284X_TARGET_PORT_ENABLE, 0x01 },
+};
+
 void start_setaasa()
 {
 	LOG_INF("Start a thread to send setaasa");

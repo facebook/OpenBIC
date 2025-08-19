@@ -18,15 +18,22 @@
 #define PLAT_I3C_H
 
 #include "rg3mxxb12.h"
+#include "p3h284x.h"
 
 #define I3C_BUS3 2
 
 #define SEND_SETAASA_STACK_SIZE 1024
 #define SEND_SETAASA_TIME_MS 5000
 
+#define RG3MXXB12_CMD_INITIAL_SIZE 9
+#define P3H284X_CMD_INITIAL_SIZE 6
+
 #define LDO_VOLT                                                                                   \
 	V_LDO_SETTING(rg3mxxb12_ldo_1_2_volt, rg3mxxb12_ldo_1_2_volt, rg3mxxb12_ldo_1_2_volt,      \
 		      rg3mxxb12_ldo_1_2_volt)
+
+extern const uint8_t rg3mxxb12_cmd_initial[][2];
+extern const uint8_t p3h284x_cmd_initial[][2];
 
 void start_setaasa();
 void send_setaasa();
