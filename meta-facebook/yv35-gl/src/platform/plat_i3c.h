@@ -20,10 +20,17 @@
 #include "hal_i3c.h"
 
 #define RSTDAA_COUNT 2
+
+#define RG3MXXB12_CMD_INITIAL_SIZE 9
+#define P3H284X_CMD_INITIAL_SIZE 9
+
 #define LDO_VOLT                                                                                   \
 	V_LDO_SETTING(rg3mxxb12_ldo_1_0_volt, rg3mxxb12_ldo_1_8_volt, rg3mxxb12_ldo_1_2_volt,      \
 		      rg3mxxb12_ldo_1_2_volt)
 #define DEFAULT_SLAVE_PORT_SETTING 0x3F
+
+extern const uint8_t rg3mxxb12_cmd_initial[][2];
+extern const uint8_t p3h284x_cmd_initial[][2];
 
 void init_i3c_hub();
 
