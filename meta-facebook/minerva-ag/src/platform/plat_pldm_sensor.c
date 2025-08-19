@@ -9929,3 +9929,47 @@ bool is_osfp_3v3_access(uint8_t sensor_num)
 	/* OSFP 3V3 is only accessible on EVB */
 	return (get_board_type() == MINERVA_AEGIS_BD) ? false : is_vr_access(sensor_num);
 }
+
+uint8_t sensor_polling_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id,
+			   uint8_t *resp, uint16_t *resp_len, void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
+
+	struct _sensor_polling_cmd_req *req_p = (struct _sensor_polling_cmd_req *)buf;
+	struct _sensor_polling_cmd_resp *resp_p = (struct _sensor_polling_cmd_resp *)resp;
+
+	if (len < (sizeof(*req_p) - 1)) {
+		LOG_WRN("request len %d is invalid", len);
+		resp_p->completion_code = PLDM_ERROR_INVALID_LENGTH;
+		set_iana(resp_p->iana, sizeof(resp_p->iana));
+		goto exit;
+	}
+
+	if (check_iana(req_p->iana) == PLDM_ERROR) {
+		resp_p->completion_code = PLDM_ERROR_INVALID_DATA;
+		set_iana(resp_p->iana, sizeof(resp_p->iana));
+		goto exit;
+	}
+
+	if (!(req_p->set_value == 1 || req_p->set_value == 0)) {
+		LOG_ERR("set sensor_polling:%x is out of range", req_p->set_value);
+		resp_p->completion_code = PLDM_ERROR_INVALID_DATA;
+		set_iana(resp_p->iana, sizeof(resp_p->iana));
+		goto exit;
+	}
+
+	set_plat_sensor_polling_enable_flag(req_p->set_value);
+
+	LOG_INF("set sensor_polling:%x success", req_p->set_value);
+	resp_p->completion_code = PLDM_SUCCESS;
+	set_iana(resp_p->iana, sizeof(resp_p->iana));
+	resp_p->set_value = req_p->set_value;
+
+exit:
+	*resp_len = sizeof(struct _sensor_polling_cmd_resp);
+	return PLDM_SUCCESS;
+}
