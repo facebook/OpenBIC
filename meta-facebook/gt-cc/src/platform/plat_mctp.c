@@ -127,6 +127,7 @@ uint8_t get_mctp_info(uint8_t dest_endpoint, mctp **mctp_inst, mctp_ext_params *
 			*mctp_inst = find_mctp_by_smbus(p->bus);
 			ext_params->type = MCTP_MEDIUM_TYPE_SMBUS;
 			ext_params->smbus_ext_params.addr = p->addr;
+			ext_params->ep = p->endpoint;
 			rc = MCTP_SUCCESS;
 			break;
 		}
