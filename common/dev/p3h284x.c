@@ -231,7 +231,7 @@ out:
 	return ret;
 }
 
-bool p3h284x_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt)
+bool p3h284x_i3c_mode_only_init(I3C_MSG *i3c_msg, const uint8_t (*cmd_initial)[2], int cmd_count)
 {
 	bool ret = false;
 
@@ -239,33 +239,15 @@ bool p3h284x_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt)
 	const uint8_t cmd_unprotect[2] = { P3H284X_PROTECTION_REG, P3H284X_PROTECTION_UNLOCK };
 	const uint8_t cmd_protect[2] = { P3H284X_PROTECTION_REG, P3H284X_PROTECTION_LOCK };
 
-	uint8_t cmd_initial[][2] = {
-		/*
-		 * Refer to p3h284x datasheet page 8 and 9, LDO voltage depends
-		 * on each project's hard design
-		 */
-		// VCCIO LDO Setting
-		{ P3H284X_VOLT_LDO_SETTING, ldo_volt },
-		// On-die LDO Enable and Pull up Resistor Value Setting
-		{ P3H284X_TARGET_PORTS_PULLUP_SETTING, 0xA0 },
-		// Target Port Enable
-		{ P3H284X_TARGET_PORT_ENABLE, 0xC5 },
-		// Target Port Hub Network Connection Enable
-		{ P3H284X_TARGET_PORTSHUB_NETWORK_CONNECTION, 0xC5 },
-		// Target Port Pull Up Enable
-		{ P3H284X_TARGET_PORTS_PULLUP_ENABLE, 0xFF },
-	};
-
 	i3c_msg->tx_len = 2;
 	memcpy(i3c_msg->data, cmd_unprotect, 2);
-	int initial_cmd_size = sizeof(cmd_initial) / sizeof(cmd_initial[0]);
 
 	// Unlock protected regsiter
 	if (i3c_controller_write(i3c_msg) != 0) {
 		goto out;
 	}
 
-	for (int cmd = 0; cmd < initial_cmd_size; cmd++) {
+	for (int cmd = 0; cmd < cmd_count; cmd++) {
 		i3c_msg->tx_len = 2;
 		memcpy(i3c_msg->data, cmd_initial[cmd], 2);
 		if (i3c_controller_write(i3c_msg) != 0) {
@@ -280,7 +262,8 @@ bool p3h284x_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt)
 out:
 	memcpy(i3c_msg->data, cmd_protect, 2);
 	if (i3c_controller_write(i3c_msg) != 0) {
-		goto out;
+		LOG_ERR("Failed to set protect. offset = 0x%02x, value = 0x%02x", cmd_protect[0],
+			cmd_protect[1]);
 	}
 
 	return ret;
