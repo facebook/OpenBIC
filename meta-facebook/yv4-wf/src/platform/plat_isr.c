@@ -434,6 +434,7 @@ void ISR_MB_DC_STAGUS_CHAGNE()
 		k_work_schedule_for_queue(&plat_work_q, &set_clk_buf_bypass_work,
 					  K_MSEC(SET_CLK_BUF_DELAY_MS));
 	} else {
+		set_cxl_vr_access(MAX_CXL_ID, false);
 		k_work_submit(&cxl_power_off_work);
 	}
 }
