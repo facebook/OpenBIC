@@ -63,6 +63,9 @@ void set_default_retry_count(int count);
 int ckeck_flash_device_isinit(const struct device *flash_device, uint8_t flash_position);
 char *get_flash_device_string_by_index(uint8_t flash_index);
 
+int cmd_erase_bios(int platform_id);
+extern volatile uint8_t bios_erase_progress;
+
 enum FIRMWARE_UPDATE_RETURN_CODE {
 	FWUPDATE_SUCCESS,
 	FWUPDATE_OUT_OF_HEAP,
