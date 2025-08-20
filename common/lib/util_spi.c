@@ -40,6 +40,10 @@ LOG_MODULE_REGISTER(util_spi);
 
 #define IS25WP256D_ID 0x9D7019
 
+#define BIOS_MAX_SIZE_BYTES   (64 * 1024 * 1024UL)
+
+volatile uint8_t bios_erase_progress = 0;
+
 static int default_retry_count = FW_UPDATE_RETRY_MAX_COUNT;
 
 static struct {
@@ -504,4 +508,70 @@ __weak bool pal_switch_bios_spi_mux(int gpio_status)
 __weak bool pal_switch_pcie_switch_spi_mux(int gpio_status)
 {
 	return true;
+}
+
+int erase_entire_flash(const struct device *flash_dev)
+{
+    CHECK_NULL_ARG_WITH_RETURN(flash_dev, -EINVAL);
+
+    const uint32_t blk_sz = flash_get_write_block_size(flash_dev);
+    const uint32_t flash_sz = flash_get_flash_size(flash_dev);
+
+    if (flash_sz == 0 || flash_sz > BIOS_MAX_SIZE_BYTES) {
+        LOG_ERR("Unexpected flash size: 0x%x", flash_sz);
+        return -EINVAL;
+    }
+
+    bios_erase_progress = 0;
+
+    for (uint32_t off = 0; off < flash_sz; off += blk_sz) {
+        int rc = flash_erase(flash_dev, off, blk_sz);
+        if (rc) {
+            LOG_ERR("Erase failed at 0x%x (rc=%d)", off, rc);
+            return rc;
+        }
+		// Print once per 1MB and update progress
+        if ((off % (1024 * 1024)) == 0) {
+            LOG_INF("Erasing... 0x%x / 0x%x", off, flash_sz);
+            bios_erase_progress = ((uint64_t)off * 100) / flash_sz;
+			LOG_INF("bios_erase_progress  %d%% ", bios_erase_progress);
+        }
+    }
+    bios_erase_progress = 100;
+    LOG_INF("Full-chip erase OK (%u bytes)", flash_sz);
+    return 0;
+}
+
+
+int cmd_erase_bios(int platform_id)
+{
+	int pos = pal_get_bios_flash_position();
+	if (pos < 0) {
+		LOG_ERR("Unknown BIOS flash position");
+		return -EINVAL;
+	}
+
+	if (!pal_switch_bios_spi_mux(1)) {
+		LOG_ERR("SPI mux switch failed");
+		return -EIO;
+	}
+
+	const struct device *flash_dev = device_get_binding(get_flash_device_string_by_index(pos));
+	if (!flash_dev) {
+		LOG_ERR("device_get_binding() failed");
+		pal_switch_bios_spi_mux(0);
+		return -ENODEV;
+	}
+
+	int rc = ckeck_flash_device_isinit(flash_dev, pos);
+
+	if (!rc) {
+		spi_nor_config_4byte_mode(flash_dev, true);
+		rc = erase_entire_flash(flash_dev);
+	}
+
+	pal_switch_bios_spi_mux(0);
+
+	LOG_INF("Erase BIOS %s", rc ? "FAILED" : "done");
+	return rc;
 }
