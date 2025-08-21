@@ -63,6 +63,14 @@ enum GT_NIC_CONFIG {
 #define NIC6_FRU_PORT 0x0C
 #define NIC7_FRU_PORT 0x0D
 
+typedef struct {
+	char product_manufacturer[32];
+	char product_name[32];
+	char product_part_number[32];
+	char product_version[32];
+} ProductInfo;
+
 uint8_t check_nic_type_by_fru();
+bool get_first_nic_manufacturer(char *manufacturer, uint8_t manufacturer_size);
 
 #endif
