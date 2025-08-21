@@ -194,6 +194,7 @@ enum SENSOR_DEV {
 	sensor_dev_lx6301 = 0x4C,
 	sensor_dev_ads7830 = 0x4D,
 	sensor_dev_s54ss4p180pmdafc = 0x4E,
+	sensor_dev_pex90144 = 0x4F,
 	sensor_dev_max
 };
 
@@ -404,6 +405,15 @@ typedef struct _pex89000_init_arg {
 	bool is_init;
 
 } pex89000_init_arg;
+
+typedef struct _pex90144_init_arg {
+	uint8_t idx;
+	struct k_mutex brcm_pciesw;
+
+	/* Initialize function will set following arguments, no need to give value */
+	bool is_init;
+
+} pex90144_init_arg;
 
 typedef struct _ltc4282_init_arg {
 	/* value to get/set ILIM ADJUST register */
