@@ -189,6 +189,11 @@ static void set_dev_endpoint(void)
 	}
 }
 
+void plat_set_dev_endpoint(void)
+{
+	set_dev_endpoint();
+}
+
 static void get_dev_firmware_resp_timeout(void *args)
 {
 	mctp_route_entry *p = (mctp_route_entry *)args;

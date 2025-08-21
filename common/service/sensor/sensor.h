@@ -752,6 +752,7 @@ typedef struct _cx7_init_arg {
 	bool is_init;
 	uint8_t endpoint;
 	uint16_t sensor_id;
+	void (*re_init_eid_fn)(void);
 } cx7_init_arg;
 
 typedef struct _max11617_init_arg {
