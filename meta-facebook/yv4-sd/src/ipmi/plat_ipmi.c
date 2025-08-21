@@ -553,8 +553,8 @@ void OEM_1S_WRITE_READ_DIMM(ipmi_msg *msg)
 	i2c_msg.tx_len = msg->data_len - 3;
 	i2c_msg.rx_len = msg->data[2];
 
-	// Check offset byte count: SPD_NVM has 2 bytes offset
-	if (device_type == DIMM_SPD_NVM) {
+	// Check offset byte count: SPD_NVM and SPD_CACHE have 2 bytes offset
+	if (device_type == DIMM_SPD_NVM || device_type == DIMM_SPD_CACHE) {
 		if (i2c_msg.tx_len < 2) {
 			msg->completion_code = CC_INVALID_DATA_FIELD;
 			return;
@@ -615,6 +615,43 @@ void OEM_1S_WRITE_READ_DIMM(ipmi_msg *msg)
 			msg->completion_code = CC_SUCCESS;
 		}
 		break;
+	case DIMM_SPD_CACHE: {
+		if (i2c_msg.tx_len < 2) {
+			msg->completion_code = CC_INVALID_DATA_FIELD;
+			break;
+		}
+
+		uint16_t offset = (uint16_t)i2c_msg.data[1] << 8 | i2c_msg.data[0];
+		uint8_t read_len = i2c_msg.rx_len;
+
+		// Basic bounds
+		if (offset >= SPD_RAW_LEN || (offset + read_len) > SPD_RAW_LEN) {
+			msg->completion_code = CC_PARAM_OUT_OF_RANGE;
+			break;
+		}
+
+		// Read from cache, no mux/I2C
+		uint8_t *buf = NULL;
+		bool ready = false;
+		int pret = plat_get_spd_raw(dimm_id, &buf, &ready);
+		if (pret == -2) {
+			msg->completion_code = CC_SENSOR_NOT_PRESENT;
+			break;
+		}
+		if (pret != 0) {
+			msg->completion_code = CC_UNSPECIFIED_ERROR;
+			break;
+		}
+		if (!ready) {
+			msg->completion_code = CC_NOT_SUPP_IN_CURR_STATE;
+			break;
+		}
+
+		memcpy(&msg->data[0], &buf[offset], read_len);
+		msg->data_len = read_len;
+		msg->completion_code = CC_SUCCESS;
+		break;
+	}
 	default:
 		msg->completion_code = CC_INVALID_DATA_FIELD;
 		break;
