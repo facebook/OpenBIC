@@ -40,6 +40,7 @@ static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = 
 };
 
 extern vr_pre_proc_arg vr_pre_read_args[];
+extern mpc12109_init_arg mpc12109_init_args[];
 
 static bool is_quick_vr_sensor(uint8_t sensor_num)
 {
@@ -10176,7 +10177,8 @@ err:
 }
 
 #define SENSOR_CFG_NO_CHANGE 0xFF
-static void change_sensor_cfg_from_thread(uint8_t thread, uint8_t type, uint8_t addr)
+static void change_sensor_cfg_from_thread(uint8_t thread, uint8_t type, uint8_t addr,
+					  void *init_args)
 {
 	pldm_sensor_info *table = plat_pldm_sensor_load(thread);
 	if (table == NULL)
@@ -10191,6 +10193,8 @@ static void change_sensor_cfg_from_thread(uint8_t thread, uint8_t type, uint8_t 
 			table[j].pldm_sensor_cfg.type = type;
 		if (addr != SENSOR_CFG_NO_CHANGE)
 			table[j].pldm_sensor_cfg.target_addr = addr;
+		if (init_args != NULL)
+			table[j].pldm_sensor_cfg.init_args = init_args;
 	}
 }
 
@@ -10198,7 +10202,7 @@ void change_sensor_cfg(uint8_t vr_module, uint8_t ubc_module)
 {
 	// vr sensor
 	for (uint8_t i = VR_SENSOR_THREAD_ID; i <= QUICK_VR_SENSOR_THREAD_ID; i++) {
-		if (vr_module == VR_MODULE_RNS)
+		if (vr_module == VR_MODULE_MPS)
 			continue;
 
 		pldm_sensor_info *table = plat_pldm_sensor_load(i);
@@ -10219,13 +10223,13 @@ void change_sensor_cfg(uint8_t vr_module, uint8_t ubc_module)
 	// ubc sensor, default: UBC_MODULE_DELTA
 	if (ubc_module == UBC_MODULE_MPS)
 		change_sensor_cfg_from_thread(UBC_SENSOR_THREAD_ID, sensor_dev_mpc12109,
-					      SENSOR_CFG_NO_CHANGE);
+					      SENSOR_CFG_NO_CHANGE, &mpc12109_init_args[0]);
 	else if (ubc_module == UBC_MODULE_FLEX)
 		change_sensor_cfg_from_thread(UBC_SENSOR_THREAD_ID, sensor_dev_bmr316,
-					      SENSOR_CFG_NO_CHANGE);
+					      SENSOR_CFG_NO_CHANGE, NULL);
 	else if (ubc_module == UBC_MODULE_LUXSHARE)
 		change_sensor_cfg_from_thread(UBC_SENSOR_THREAD_ID, sensor_dev_lx6301,
-					      SENSOR_CFG_NO_CHANGE);
+					      SENSOR_CFG_NO_CHANGE, NULL);
 }
 
 bool is_dc_access(uint8_t sensor_num)

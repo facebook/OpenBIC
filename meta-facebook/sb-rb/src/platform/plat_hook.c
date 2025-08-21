@@ -50,6 +50,10 @@ mp2971_init_arg mp2971_init_args[] = {
 	[0] = { .vout_scale_enable = true },
 };
 
+mpc12109_init_arg mpc12109_init_args[] = {
+	[0] = { .iout_lsb = 0.5, .pout_lsb = 2 },
+};
+
 void *vr_mutex_get(enum VR_INDEX_E vr_index)
 {
 	if (vr_index >= VR_INDEX_MAX) {
