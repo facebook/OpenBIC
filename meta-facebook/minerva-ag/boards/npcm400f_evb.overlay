@@ -38,6 +38,7 @@
 	clock-frequency = <I2C_BITRATE_STANDARD>;
     wait_free_time = <1000>;
 	status = "okay";
+    multi-master = <1>;
 };
 
 &i2c5a {
