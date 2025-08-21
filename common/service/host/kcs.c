@@ -68,34 +68,15 @@ void reset_kcs_ok()
 #ifdef ENABLE_PLDM
 #ifndef ENABLE_OEM_PLDM
 
-struct k_msgq add_sel_msgq;
-char __aligned(4) add_sel_msgq_buf[ADD_SEL_BUF_LEN * sizeof(add_sel_msg_t)];
-
-struct k_thread ADD_SEL_thread;
-static K_THREAD_STACK_DEFINE(ADD_SEL_thread_stack, 2048);
+K_THREAD_STACK_DEFINE(kcs_stack_area, KCS_WORKER_STACK_SIZE);
+static struct k_work_q kcs_work_q;
+static struct k_mutex mutex_use_count;
+static uint8_t work_count = 0;
 
 enum cmd_app_get_sys_info_params {
 	LENGTH_INDEX = 0x05, // skip netfun, cmd code, paramter selctor, set selctor, encoding
 	VERIONS_START_INDEX = 0x06,
 };
-
-// Thread to read add sel message from msg queue and send to BMC via PLDM
-// This is to avoid BMC pldm busy when BIC send add sel command separate from KCS read task
-static void kcs_add_sel_handler(void *arug0, void *arug1, void *arug2)
-{
-	add_sel_msg_t msg_cfg;
-
-	while(1) {
-		if(!k_msgq_get(&add_sel_msgq, &msg_cfg, K_FOREVER)) {
-			pldm_platform_event_message_req(
-				find_mctp_by_bus(msg_cfg.bmc_bus),
-				msg_cfg.ext_params,
-				msg_cfg.event_class,
-				msg_cfg.event_data,
-				msg_cfg.event_data_length);
-		};
-	}
-}
 
 static uint8_t init_text_string_value(const char *new_text_string, char **text_strings)
 {
@@ -301,8 +282,147 @@ static int send_crashdump_to_bmc(const uint8_t *data, uint8_t data_length)
 	return 0;
 }
 
-#endif
+static void kcs_add_sel_handler(struct k_work *kcs_pldm_work)
+{
+	struct kcs_work_info *kcs_work = CONTAINER_OF(kcs_pldm_work, struct kcs_work_info, work);
+	// Send SEL to BMC via PLDM over MCTP
+	mctp_ext_params ext_params = { 0 };
+	uint8_t pldm_event_length = kcs_work->data_length - 4; // exclude netfn, cmd, record_id
+	uint8_t bmc_bus = I2C_BUS_BMC, bmc_interface = BMC_INTERFACE_I2C;
 
+	bmc_interface = pal_get_bmc_interface();
+	if (bmc_interface == BMC_INTERFACE_I3C) {
+		bmc_bus = I3C_BUS_BMC;
+		ext_params.type = MCTP_MEDIUM_TYPE_TARGET_I3C;
+		ext_params.i3c_ext_params.addr = I3C_STATIC_ADDR_BMC;
+		ext_params.ep = MCTP_EID_BMC;
+	} else {
+		bmc_bus = I2C_BUS_BMC;
+		ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
+		ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
+		ext_params.ep = MCTP_EID_BMC;
+	}
+	pldm_platform_event_message_req(find_mctp_by_bus(bmc_bus),
+					ext_params, 0xFB, &kcs_work->ibuf[4],
+					pldm_event_length);
+
+	k_mutex_lock(&mutex_use_count, K_MSEC(1000));
+	work_count--;
+	k_mutex_unlock(&mutex_use_count);
+	SAFE_FREE(kcs_work);
+}
+
+static void kcs_crash_dump_handler(struct k_work *kcs_pldm_work)
+{
+	struct kcs_work_info *kcs_work = CONTAINER_OF(kcs_pldm_work, struct kcs_work_info, work);
+	LOG_HEXDUMP_DBG(&kcs_work->ibuf[0], kcs_work->data_length, "host KCS read dump data:");
+	int ret = send_crashdump_to_bmc(&kcs_work->ibuf[2],
+		 (kcs_work->data_length - 2)); // exclude netfn, cmd
+	if (ret) {
+		LOG_ERR("Failed to send crashdump data to BMC, rc = %d", ret);
+	}
+
+	k_mutex_lock(&mutex_use_count, K_MSEC(1000));
+	work_count--;
+	k_mutex_unlock(&mutex_use_count);
+	SAFE_FREE(kcs_work);
+}
+
+static void kcs_oem_post_start_end_handler(struct k_work *kcs_pldm_work)
+{
+	struct kcs_work_info *kcs_work = CONTAINER_OF(kcs_pldm_work, struct kcs_work_info, work);
+
+	struct pldm_addsel_data msg = { 0 };
+	// ibuf[0] is netfn, ibuf[1] is cmd
+	if (kcs_work->ibuf[1] == CMD_OEM_POST_START) {
+		msg.event_type = POST_STARTED;
+	} else {
+		msg.event_type = POST_ENDED;
+	}
+	msg.assert_type = EVENT_ASSERTED;
+	if (send_event_log_to_bmc(msg) != PLDM_SUCCESS) {
+		LOG_ERR("Failed to assert POST log");
+	};
+
+	k_mutex_lock(&mutex_use_count, K_MSEC(1000));
+	work_count--;
+	k_mutex_unlock(&mutex_use_count);
+	SAFE_FREE(kcs_work);
+}
+
+static void kcs_bios_fw_version_handler(struct k_work *kcs_pldm_work)
+{
+	struct kcs_work_info *kcs_work = CONTAINER_OF(kcs_pldm_work, struct kcs_work_info, work);
+
+	const char *bios_version = kcs_work->ibuf + VERIONS_START_INDEX;
+	uint8_t length = kcs_work->ibuf[LENGTH_INDEX];
+	int ret = update_bios_information(bios_version, length);
+	if (ret < 0) {
+		LOG_ERR("Failed to update bios information, rc = %d", ret);
+	}
+
+	ret = send_bios_version_to_bmc(bios_version, length);
+	if (ret < 0) {
+		LOG_ERR("Failed to send bios version to bmc, rc = %d", ret);
+	}
+
+	k_mutex_lock(&mutex_use_count, K_MSEC(1000));
+	work_count--;
+	k_mutex_unlock(&mutex_use_count);
+	SAFE_FREE(kcs_work);
+}
+
+static int schedule_kcs_work_handle(k_work_handler_t handler,
+									uint8_t *kcs_buff,
+									kcs_dev *kcs_inst,
+									uint8_t *buf,
+									int data_length)
+{
+	// BIC return C3 to BIOS when kcs work queue is full or schedule work fail
+	// do next loop and waiting for BIOS retry
+	struct kcs_work_info *kcs_work = malloc(sizeof(struct kcs_work_info));
+	if (kcs_work == NULL) {
+		LOG_ERR("Failed to malloc for kcs_work");
+		SAFE_FREE(kcs_buff);
+		return -1;
+	}
+	kcs_work->data_length = data_length;
+	memcpy(kcs_work->ibuf, &buf[0], kcs_work->data_length); // include netfn, cmd, record_id
+
+	if (work_count >= MAX_KCS_WORK_COUNT) {
+		LOG_ERR("kcs_work queue is full, work count = %d", work_count);
+		kcs_buff[2] = CC_TIMEOUT;
+		kcs_write(kcs_inst->index, kcs_buff, 3);
+		SAFE_FREE(kcs_work);
+		SAFE_FREE(kcs_buff);
+		return -1;
+	}
+	// POST Start/End send event log to BMC only if kcs_write was successful
+	if (((kcs_work->ibuf[0] == NETFN_OEM_REQ) && (kcs_work->ibuf[1] == CMD_OEM_POST_START)) ||
+		((kcs_work->ibuf[0] == NETFN_OEM_REQ) && (kcs_work->ibuf[1] == CMD_OEM_POST_END))){
+		if (kcs_write(kcs_inst->index, kcs_buff, 3) != 0) {
+			SAFE_FREE(kcs_work);
+			SAFE_FREE(kcs_buff);
+			return -1;
+		}
+	}
+	// put work in kcs work queue
+	k_work_init_delayable(&kcs_work->work.delay_work, handler);
+	if (k_work_schedule_for_queue(&kcs_work_q, &kcs_work->work.delay_work, K_NO_WAIT) < 1) {
+		LOG_ERR("Failed to schedule work, netfn = %x, cmd = %x", kcs_buff[0], kcs_buff[1]);
+		kcs_buff[2] = CC_TIMEOUT;
+		kcs_write(kcs_inst->index, kcs_buff, 3);
+		SAFE_FREE(kcs_work);
+		SAFE_FREE(kcs_buff);
+		return -1;
+	}
+	k_mutex_lock(&mutex_use_count, K_MSEC(1000));
+	work_count++;
+	k_mutex_unlock(&mutex_use_count);
+	return 0;
+}
+
+#endif
 #endif
 
 static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
@@ -356,153 +476,60 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 				current_msg.buffer.data_len);
 			notify_ipmi_client(&current_msg);
 		} else { // default command for BMC, should add BIC firmware update, BMC reset, real time sensor read in future
+			uint8_t *kcs_buff;
+			kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
+			if (kcs_buff == NULL) {
+				LOG_ERR("Failed to malloc for kcs_buff");
+				continue;
+			}
+			kcs_buff[0] = (req->netfn | BIT(0)) << 2;
+			kcs_buff[1] = req->cmd;
+			kcs_buff[2] = CC_SUCCESS;
 			if (pal_immediate_respond_from_HOST(req->netfn, req->cmd)) {
-				do { // break if malloc fail.
-					uint8_t *kcs_buff;
-					kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
-					if (kcs_buff == NULL) {
-						LOG_ERR("Failed to malloc for kcs_buff");
-						break;
+				if (((req->netfn == NETFN_STORAGE_REQ) &&
+					 (req->cmd == CMD_STORAGE_ADD_SEL))) {
+					if (rc != ADD_SEL_EVENT_DATA_MAX_LEN) { // do not write kcs when data length error
+						LOG_ERR("ADD SEL event data length error, rc = %d", rc);
+						SAFE_FREE(kcs_buff);
+						continue;
 					}
-					kcs_buff[0] = (req->netfn | BIT(0)) << 2;
-					kcs_buff[1] = req->cmd;
-					kcs_buff[2] = CC_SUCCESS;
-
-					if (((req->netfn == NETFN_STORAGE_REQ) &&
-					     (req->cmd == CMD_STORAGE_ADD_SEL))) {
-						if (rc != ADD_SEL_EVENT_DATA_MAX_LEN) { // do not write kcs when data length error
-							LOG_ERR("ADD SEL event data length error, rc = %d", rc);
-							SAFE_FREE(kcs_buff);
-							break;
-						}
-						kcs_buff[3] = 0x00;
-						kcs_buff[4] = 0x00;
-						kcs_write(kcs_inst->index, kcs_buff, 5);
-					} else {
-						kcs_write(kcs_inst->index, kcs_buff, 3);
+					kcs_buff[3] = 0x00;
+					kcs_buff[4] = 0x00;
+#ifdef ENABLE_PLDM
+#ifndef ENABLE_OEM_PLDM
+					if (schedule_kcs_work_handle(kcs_add_sel_handler, kcs_buff, 
+						kcs_inst, ibuf, rc) != 0) {
+						continue;
 					}
-					SAFE_FREE(kcs_buff);
-				} while (0);
+#endif
+#endif
+					kcs_write(kcs_inst->index, kcs_buff, 5);
+				} else {
+					kcs_write(kcs_inst->index, kcs_buff, 3);
+				}
 			}
 #ifdef ENABLE_PLDM
 #ifndef ENABLE_OEM_PLDM
-			//Send SEL entry to BMC via PLDM command with OEM event class 0xFB
-			if ((req->netfn == NETFN_STORAGE_REQ) &&
-			    (req->cmd == CMD_STORAGE_ADD_SEL)) {
-				if (rc != ADD_SEL_EVENT_DATA_MAX_LEN) { // skip if data length error waiting for BIOS retry
-					LOG_ERR("ADD SEL event data length exceeds maximum size");
-					continue;
-				}
-				// Send SEL to BMC via PLDM over MCTP
-				mctp_ext_params ext_params = { 0 };
-				uint8_t pldm_event_length = rc - 4; // exclude netfn, cmd, record_id
-				uint8_t bmc_bus = I2C_BUS_BMC, bmc_interface = BMC_INTERFACE_I2C;
-
-				bmc_interface = pal_get_bmc_interface();
-				if (bmc_interface == BMC_INTERFACE_I3C) {
-					bmc_bus = I3C_BUS_BMC;
-					ext_params.type = MCTP_MEDIUM_TYPE_TARGET_I3C;
-					ext_params.i3c_ext_params.addr = I3C_STATIC_ADDR_BMC;
-					ext_params.ep = MCTP_EID_BMC;
-				} else {
-					bmc_bus = I2C_BUS_BMC;
-					ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
-					ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
-					ext_params.ep = MCTP_EID_BMC;
-				}
-
-				add_sel_msg_t add_sel_msg = { 0 };
-				add_sel_msg.ext_params = ext_params;
-				add_sel_msg.event_class = 0xFB; // OEM event class
-				add_sel_msg.event_data_length = pldm_event_length;
-				add_sel_msg.bmc_bus = bmc_bus;
-
-				memcpy(add_sel_msg.event_data, &ibuf[4], pldm_event_length); // exclude netfn, cmd, record_id
-				int ret = k_msgq_put(&add_sel_msgq, &add_sel_msg, K_NO_WAIT);
-				// respond to BIOS with success code
-				// If k_msgq_put fail, we still need to respond to BIOS with TIMEOUT code
-				if (ret != 0) {
-					LOG_ERR("Failed to put add_sel_msg into add_sel_msgq, ret = %d", ret);
-					continue;
-				}
-			}
 			// IPMI OEM command for crashdump, send crashdump data to BMC
 			if ((req->netfn == NETFN_OEM_REQ) && (req->cmd == CMD_OEM_CRASH_DUMP)) {
-				LOG_HEXDUMP_DBG(&ibuf[0], rc, "host KCS read dump data:");
-				int ret = send_crashdump_to_bmc(&ibuf[2],
-								(rc - 2)); // exclude netfn, cmd
-				if (ret) {
-					LOG_ERR("Failed to send crashdump data to BMC, rc = %d",
-						ret);
+				if (schedule_kcs_work_handle(kcs_crash_dump_handler, kcs_buff, 
+					kcs_inst, ibuf, rc) != 0) {
+					continue;
 				}
-
-				uint8_t *kcs_buff;
-				kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
-				if (kcs_buff == NULL) {
-					LOG_ERR("Failed to malloc for kcs_buff");
-					break;
-				}
-				kcs_buff[0] = (req->netfn | BIT(0)) << 2;
-				kcs_buff[1] = req->cmd;
-				kcs_buff[2] = CC_SUCCESS;
-				// When recieve control(0x80), get_state(0x01), BMC need to reply to BIOS
-				// With PLDM implementation, we need to it by BIC.
 				if (ibuf[6] == 0x80 && ibuf[10] == 0x01) {
 					kcs_buff[3] = 0x02; // state wait_data(0x02)
 					kcs_write(kcs_inst->index, kcs_buff, 4);
 				} else {
 					kcs_write(kcs_inst->index, kcs_buff, 3);
 				}
-				SAFE_FREE(kcs_buff);
 			}
 			// IPMI OEM command for POST Start/End. Send SEL to BMC
 			if (((req->netfn == NETFN_OEM_REQ) && (req->cmd == CMD_OEM_POST_START)) ||
 			    ((req->netfn == NETFN_OEM_REQ) && (req->cmd == CMD_OEM_POST_END))) {
-				mctp_ext_params ext_params = { 0 };
-				uint8_t bmc_bus = I2C_BUS_BMC, bmc_interface = BMC_INTERFACE_I2C;
-
-				bmc_interface = pal_get_bmc_interface();
-				if (bmc_interface == BMC_INTERFACE_I3C) {
-					bmc_bus = I3C_BUS_BMC;
-					ext_params.type = MCTP_MEDIUM_TYPE_TARGET_I3C;
-					ext_params.i3c_ext_params.addr = I3C_STATIC_ADDR_BMC;
-					ext_params.ep = MCTP_EID_BMC;
-				} else {
-					bmc_bus = I2C_BUS_BMC;
-					ext_params.type = MCTP_MEDIUM_TYPE_SMBUS;
-					ext_params.smbus_ext_params.addr = I2C_ADDR_BMC;
-					ext_params.ep = MCTP_EID_BMC;
+				if (schedule_kcs_work_handle(kcs_oem_post_start_end_handler, kcs_buff, 
+					kcs_inst, ibuf, rc) != 0) {
+					continue;
 				}
-
-				// return cc_success to bios
-				uint8_t *kcs_buff;
-				kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
-				if (kcs_buff == NULL) {
-					LOG_ERR("Failed to malloc for kcs_buff");
-					break;
-				}
-				kcs_buff[0] = (req->netfn | BIT(0)) << 2;
-				kcs_buff[1] = req->cmd;
-				kcs_buff[2] = CC_SUCCESS;
-				int kcs_rc = kcs_write(kcs_inst->index, kcs_buff, 3);
-				if (kcs_rc != 0) {
-					SAFE_FREE(kcs_buff);
-					break;
-				}
-
-				// Send event log to BMC only if kcs_write was successful
-				struct pldm_addsel_data msg = { 0 };
-				if (req->cmd == CMD_OEM_POST_START) {
-					msg.event_type = POST_STARTED;
-				} else {
-					msg.event_type = POST_ENDED;
-				}
-				msg.assert_type = EVENT_ASSERTED;
-				if (send_event_log_to_bmc(msg) != PLDM_SUCCESS) {
-					LOG_ERR("Failed to assert POST log");
-				};
-
-				SAFE_FREE(kcs_buff);
 			}
 #endif
 #endif
@@ -515,29 +542,12 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 				}
 #ifdef ENABLE_PLDM
 #ifndef ENABLE_OEM_PLDM
-				const char *bios_version = ibuf + VERIONS_START_INDEX;
-				uint8_t length = ibuf[LENGTH_INDEX];
-				ret = update_bios_information(bios_version, length);
-				if (ret < 0) {
-					LOG_ERR("Failed to update bios information, rc = %d", ret);
+				if (schedule_kcs_work_handle(kcs_bios_fw_version_handler, kcs_buff, 
+					kcs_inst, ibuf, rc) != 0) {
+					continue;
+				} else {
+					kcs_write(kcs_inst->index, kcs_buff, 3);
 				}
-
-				ret = send_bios_version_to_bmc(bios_version, length);
-				if (ret < 0) {
-					LOG_ERR("Failed to send bios version to bmc, rc = %d", ret);
-				}
-
-				uint8_t *kcs_buff;
-				kcs_buff = malloc(KCS_BUFF_SIZE * sizeof(uint8_t));
-				if (kcs_buff == NULL) {
-					LOG_ERR("Failed to malloc for kcs_buff");
-					break;
-				}
-				kcs_buff[0] = (req->netfn | BIT(0)) << 2;
-				kcs_buff[1] = req->cmd;
-				kcs_buff[2] = CC_SUCCESS;
-				kcs_write(kcs_inst->index, kcs_buff, 3);
-				SAFE_FREE(kcs_buff);
 #endif
 #endif
 			}
@@ -549,6 +559,7 @@ static void kcs_read_task(void *arvg0, void *arvg1, void *arvg2)
 					LOG_ERR("Set dimm presence status fail");
 				}
 			}
+			SAFE_FREE(kcs_buff); // SAFE FREE kcs_buff
 #if (!defined(ENABLE_PLDM) || defined(ENABLE_OEM_PLDM))
 			bridge_msg.data_len = rc - 2; // exclude netfn, cmd
 			bridge_msg.seq_source = 0xff; // No seq for KCS
@@ -634,20 +645,15 @@ void kcs_device_init(char **config, uint8_t size)
 						  CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
 		k_thread_name_set(kcs[i].task_tid, kcs[i].task_name);
 	}
-
 #ifdef ENABLE_PLDM
 #ifndef ENABLE_OEM_PLDM
-
-	/* create msg queue and thread for add sel cmd avoid BMC pldm busy */
-	k_msgq_init(&add_sel_msgq, add_sel_msgq_buf, sizeof(add_sel_msg_t), ADD_SEL_BUF_LEN);
-	
-	k_thread_create(&ADD_SEL_thread, ADD_SEL_thread_stack, K_THREAD_STACK_SIZEOF(ADD_SEL_thread_stack),
-			kcs_add_sel_handler, NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
-	k_thread_name_set(&ADD_SEL_thread, "ADD_SEL_thread");
-
+		k_work_queue_start(&kcs_work_q, kcs_stack_area,
+			   K_THREAD_STACK_SIZEOF(kcs_stack_area), CONFIG_MAIN_THREAD_PRIORITY, NULL);
+		k_thread_name_set(&kcs_work_q.thread, "kcs_worker");
+		k_mutex_init(&mutex_use_count);
 #endif
 #endif
-	
+
 	return;
 }
 

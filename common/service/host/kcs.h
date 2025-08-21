@@ -33,7 +33,8 @@
 #define CMD_DIMM_LOCATION 0x01
 #define KCS_TASK_NAME_LEN 32
 
-#define ADD_SEL_BUF_LEN 5
+#define MAX_KCS_WORK_COUNT 5
+#define KCS_WORKER_STACK_SIZE 2048
 #define ADD_SEL_EVENT_DATA_MAX_LEN 18
 
 typedef struct _kcs_dev {
@@ -56,6 +57,15 @@ struct kcs_response {
 	uint8_t cmd;
 	uint8_t cmplt_code;
 	uint8_t data[0];
+};
+
+struct kcs_work_info {
+	union {
+		struct k_work normal_work;
+		struct k_work_delayable delay_work;
+	} work;
+	uint8_t ibuf[KCS_BUFF_SIZE];
+	uint32_t data_length;
 };
 
 typedef struct _add_sel_msg_t {
