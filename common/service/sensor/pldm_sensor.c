@@ -330,6 +330,12 @@ int pldm_sensor_polling_pre_check(pldm_sensor_info *pldm_snr_list, int sensor_nu
 		}
 	}
 
+	if (sensor_drive_tbl[pldm_snr_list->pldm_sensor_cfg.type].init == NULL) {
+		LOG_ERR("Sensor number 0x%x, has no init function",
+			pldm_snr_list->pdr_numeric_sensor.sensor_id);
+		return -1;
+	}
+
 	ret = sensor_drive_tbl[pldm_snr_list->pldm_sensor_cfg.type].init(
 		&pldm_snr_list->pldm_sensor_cfg);
 	if (ret != SENSOR_INIT_SUCCESS) {
