@@ -157,7 +157,7 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(lx6301)
 	sensor_name_to_num(ads7830)
 	sensor_name_to_num(s54ss4p180pmdafc)
-	sensor_name_to_num(pec90144)
+	sensor_name_to_num(pex90144)
 };
 // clang-format on
 
