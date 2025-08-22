@@ -1,0 +1,13 @@
+<map id="pal_pre_init" name="pal_pre_init">
+<area shape="rect" id="node1" title=" " alt="" coords="5,183,93,209"/>
+<area shape="rect" id="node2" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="370,56,441,83"/>
+<area shape="rect" id="node3" href="$hal__i2c__target_8c.html#a0735e316a62a2116e6c3311aa8e9e9f8" title=" " alt="" coords="150,5,275,32"/>
+<area shape="rect" id="node5" href="$expansion__board_8c.html#afd6ec665cec55b4f32cd118da224a25a" title=" " alt="" coords="145,107,280,133"/>
+<area shape="rect" id="node7" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#a7daa50ed158c928d07b4fadb67775951" title=" " alt="" coords="160,157,265,184"/>
+<area shape="rect" id="node8" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#a1aea4f4b75086009863553a4b049e583" title=" " alt="" coords="161,208,264,235"/>
+<area shape="rect" id="node9" href="$minerva-ag_2src_2platform_2plat__led_8c.html#a1fef3b2dc83568fefd8d63567c11ab0e" title=" " alt="" coords="167,259,258,285"/>
+<area shape="rect" id="node10" href="$minerva-ag_2src_2platform_2plat__hook_8c.html#aec23c0c85db41c28c74b286d17e0853d" title=" " alt="" coords="141,309,284,336"/>
+<area shape="rect" id="node11" href="$minerva-ag_2src_2platform_2plat__hook_8c.html#a464ddcbdb80616d061d88894d5167968" title=" " alt="" coords="163,360,262,387"/>
+<area shape="rect" id="node4" href="$hal__i2c__target_8c.html#a2f708033f90c1afa66581d9ca8a965fb" title=" " alt="" coords="332,5,479,32"/>
+<area shape="rect" id="node6" href="$expansion__board_8c.html#af66fedc722e9e8c84c7563940e2ef678" title=" " alt="" coords="344,107,467,133"/>
+</map>

@@ -1,0 +1,7 @@
+<map id="cxl2_heartbeat_monitor_handler" name="cxl2_heartbeat_monitor_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,74,161,115"/>
+<area shape="rect" id="node2" href="$yv4-wf_2src_2platform_2plat__power__seq_8c.html#af9ac51794f6eac91ccb1da6d2908a205" title=" " alt="" coords="229,5,353,32"/>
+<area shape="rect" id="node3" href="$power__status_8c.html#a647e7f9c1247d6a1785d9b9502e7fd29" title=" " alt="" coords="237,56,345,83"/>
+<area shape="rect" id="node4" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="255,107,326,133"/>
+<area shape="rect" id="node5" href="$pldm__oem_8h.html#abfa67ccc03b5a09b8503f95d5f8e5c5f" title=" " alt="" coords="209,157,372,184"/>
+</map>
