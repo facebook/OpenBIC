@@ -52,6 +52,10 @@ static bool uart_pwr_event_is_enable = true;
 int32_t alert_level_mA_default = 110000;
 int32_t alert_level_mA_user_setting = 110000;
 bool alert_level_is_assert = false;
+uint16_t ath_vdd_power = 0;
+int ath_vdd_polling_counter = 0;
+int comparator_counter_max = 0;
+void power_capping_comparator_handler();
 
 static uint8_t power_index[UBC_VR_RAIL_E_MAX] = { 0 };
 static uint8_t power_count[UBC_VR_RAIL_E_MAX] = { 0 };
@@ -624,6 +628,17 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 				}
 			}
 		}
+
+		if (cfg->num == VR_ASIC_P0V85_PVDD_PWR_W) {
+			update_plat_power_capping_table();
+			ath_vdd_power = (int)tmp_reading;
+			ath_vdd_polling_counter++;
+			// LOG_INF("counter:%d/%d", ath_vdd_polling_counter, comparator_counter_max);
+			if (ath_vdd_polling_counter >= comparator_counter_max) {
+				ath_vdd_polling_counter = 0;
+				power_capping_comparator_handler();
+			}
+		}
 	}
 
 	return true;
@@ -817,6 +832,7 @@ bool vr_status_name_get(uint8_t rail, uint8_t **name)
 #define BOOTSTRAP_USER_SETTINGS_OFFSET 0x8400
 #define THERMALTRIP_USER_SETTINGS_OFFSET 0x8500
 #define THROTTLE_USER_SETTINGS_OFFSET 0x8600
+#define POWER_CAPPING_USER_SETTINGS_OFFSET 0x8650
 
 vr_vout_user_settings user_settings = { 0 };
 struct vr_vout_user_settings default_settings = { 0 };
@@ -1704,20 +1720,6 @@ static bool bootstrap_default_settings_init(void)
 	return true;
 }
 
-/* init the user & default settings value by shell command */
-void user_settings_init(void)
-{
-	alert_level_user_settings_init();
-	vr_vout_default_settings_init();
-	vr_vout_user_settings_init();
-	soc_pcie_perst_user_settings_init();
-	bootstrap_default_settings_init();
-	bootstrap_user_settings_init();
-	vr_vout_range_user_settings_init();
-	thermaltrip_user_settings_init();
-	throttle_user_settings_init();
-}
-
 bool get_bootstrap_change_drive_level(int rail, int *drive_level)
 {
 	CHECK_NULL_ARG_WITH_RETURN(drive_level, false);
@@ -1932,67 +1934,6 @@ err:
 		}
 	}
 	return ret;
-}
-
-/* If any perm parameter are added, remember to update this function accordingly.　*/
-bool perm_config_clear(void)
-{
-	/* clear all vout perm parameters */
-	memset(user_settings.vout, 0xFF, sizeof(user_settings.vout));
-	if (!vr_vout_user_settings_set(&user_settings)) {
-		LOG_ERR("The perm_config clear failed");
-		return false;
-	}
-
-	/* clear all temp_threshold perm parameters */
-	memset(temp_threshold_user_settings.temperature_reg_val, 0xFF,
-	       sizeof(temp_threshold_user_settings.temperature_reg_val));
-	if (!temp_threshold_user_settings_set(&temp_threshold_user_settings)) {
-		LOG_ERR("The perm_config clear failed");
-		return false;
-	}
-
-	int32_t setting_value = 0xffffffff;
-	char setting_data[4] = { 0 };
-	memcpy(setting_data, &setting_value, sizeof(setting_data));
-	if (set_user_settings_alert_level_to_eeprom(setting_data, sizeof(setting_data)) != 0) {
-		LOG_ERR("The perm_config clear failed");
-		return false;
-	}
-
-	/* clear soc_pcie_perst perm parameter */
-	uint8_t setting_value_for_soc_pcie_perst = 0xFF;
-	if (!set_user_settings_soc_pcie_perst_to_eeprom(&setting_value_for_soc_pcie_perst,
-							sizeof(setting_value_for_soc_pcie_perst))) {
-		LOG_ERR("The perm_config clear failed");
-		return false;
-	}
-
-	/* clear all bootstrap perm parameters */
-	memset(bootstrap_user_settings.user_setting_value, 0xFF,
-	       sizeof(bootstrap_user_settings.user_setting_value));
-	if (!bootstrap_user_settings_set(&bootstrap_user_settings)) {
-		LOG_ERR("The perm_config clear failed");
-		return false;
-	}
-
-	/* clear thermaltrip perm parameter */
-	uint8_t setting_value_for_thermaltrip = 0xFF;
-	if (!set_user_settings_thermaltrip_to_eeprom(&setting_value_for_thermaltrip,
-						     sizeof(setting_value_for_thermaltrip))) {
-		LOG_ERR("The perm_config clear failed");
-		return false;
-	}
-
-	/* clear throttle perm parameter */
-	uint8_t setting_value_for_throttle = 0xFF;
-	if (!set_user_settings_throttle_to_eeprom(&setting_value_for_throttle,
-						  sizeof(setting_value_for_throttle))) {
-		LOG_ERR("The perm_config clear failed");
-		return false;
-	}
-
-	return true;
 }
 
 bool plat_get_vout_command(uint8_t rail, uint16_t *millivolt)
@@ -2508,4 +2449,365 @@ void plat_pldm_sensor_post_load_init(int thread_id)
 		temp_threshold_user_settings_init();
 	}
 	LOG_INF("plat_pldm_sensor_post_load init done");
+}
+
+#define CPLD_MTIA_HC_LC_SETTING_ADDR 0x26
+#define MTIA_HC_LC_ENABLE 1
+#define MTIA_HC_LC_DISENABLE 0
+bool power_capping_enable_flag = true;
+bool power_capping_user_setting_flag = false;
+
+power_capping_mapping_sensor power_capping_rail_table[] = {
+	{ POWER_CAPPING_INDEX_HC, "HC" },
+	{ POWER_CAPPING_INDEX_LC, "LC" },
+	{ POWER_CAPPING_INDEX_INTERVAL, "Interval_ms" },
+};
+
+power_capping_user_settings_struct power_capping_user_settings = { 0 };
+
+bool power_capping_rail_name_get(uint8_t rail, uint8_t **name)
+{
+	CHECK_NULL_ARG_WITH_RETURN(name, false);
+
+	if (rail >= POWER_CAPPING_INDEX_MAX) {
+		*name = NULL;
+		return false;
+	}
+
+	*name = (uint8_t *)power_capping_rail_table[rail].sensor_name;
+	return true;
+}
+
+bool power_capping_rail_enum_get(uint8_t *name, uint8_t *num)
+{
+	CHECK_NULL_ARG_WITH_RETURN(name, false);
+	CHECK_NULL_ARG_WITH_RETURN(num, false);
+
+	for (int i = 0; i < POWER_CAPPING_INDEX_MAX; i++) {
+		if (strcmp(name, power_capping_rail_table[i].sensor_name) == 0) {
+			*num = i;
+			return true;
+		}
+	}
+
+	LOG_ERR("invalid rail name %s", name);
+	return false;
+}
+
+void update_comparator_counter_max(void)
+{
+	uint16_t power_capping_interval_ms =
+		power_capping_user_settings.user_setting_value[POWER_CAPPING_INDEX_INTERVAL];
+
+	if (power_capping_interval_ms == 0xFFFF) {
+		power_capping_interval_ms = ATH_VDD_INTERVAL_MS;
+		LOG_ERR("Invalid interval, set to default: %d ms", ATH_VDD_INTERVAL_MS);
+	}
+
+	comparator_counter_max = power_capping_interval_ms / ATH_VDD_INTERVAL_MS;
+	if (comparator_counter_max == 0) {
+		comparator_counter_max = 1;
+	}
+	ath_vdd_polling_counter = 0;
+}
+
+bool get_user_settings_power_capping_from_eeprom(void *user_settings)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 5;
+	msg.bus = I2C_BUS12;
+	msg.target_addr = 0xA0 >> 1;
+	msg.tx_len = 2;
+	msg.data[0] = POWER_CAPPING_USER_SETTINGS_OFFSET >> 8;
+	msg.data[1] = POWER_CAPPING_USER_SETTINGS_OFFSET & 0xff;
+	msg.rx_len = sizeof(struct power_capping_user_settings_struct);
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Failed to read eeprom, bus: %d, addr: 0x%x, reg: 0x%x%x", msg.bus,
+			msg.target_addr, msg.data[0], msg.data[1]);
+		return false;
+	}
+	memcpy(user_settings, msg.data, sizeof(struct power_capping_user_settings_struct));
+
+	LOG_HEXDUMP_DBG(msg.data, sizeof(struct power_capping_user_settings_struct),
+			"EEPROM data read power capping");
+
+	return true;
+}
+
+bool set_user_settings_power_capping_to_eeprom(void *power_capping_user_settings)
+{
+	CHECK_NULL_ARG_WITH_RETURN(power_capping_user_settings, false);
+
+	/* write the power_capping_user_settings to eeprom */
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 5;
+	msg.bus = I2C_BUS12;
+	msg.target_addr = 0xA0 >> 1;
+	msg.tx_len = sizeof(struct power_capping_user_settings_struct) + 2;
+	msg.data[0] = POWER_CAPPING_USER_SETTINGS_OFFSET >> 8;
+	msg.data[1] = POWER_CAPPING_USER_SETTINGS_OFFSET & 0xff;
+
+	memcpy(&msg.data[2], power_capping_user_settings,
+	       sizeof(struct power_capping_user_settings_struct));
+	// LOG_DBG("power capping user settings write into eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x, tx_len: %d",
+	// 	msg.bus, msg.target_addr, msg.data[0], msg.data[1], msg.tx_len);
+
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("power capping user settings failed to write into eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x, tx_len: %d",
+			msg.bus, msg.target_addr, msg.data[0], msg.data[1], msg.tx_len);
+		return false;
+	}
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+
+bool plat_set_power_capping_command(uint8_t rail, uint16_t *set_value)
+{
+	CHECK_NULL_ARG_WITH_RETURN(set_value, false);
+
+	power_capping_user_settings.user_setting_value[rail] = *set_value;
+
+	if (!set_user_settings_power_capping_to_eeprom(&power_capping_user_settings)) {
+		LOG_ERR("Failed to write power capping to eeprom error");
+		return false;
+	}
+
+	if (rail == POWER_CAPPING_INDEX_INTERVAL) {
+		update_comparator_counter_max();
+	}
+
+	return true;
+}
+
+bool power_capping_user_settings_init(void)
+{
+	if (get_user_settings_power_capping_from_eeprom(&power_capping_user_settings) == false) {
+		LOG_ERR("get power capping user settings fail");
+		return false;
+	}
+
+	for (int i = 0; i < POWER_CAPPING_INDEX_MAX; i++) {
+		if (power_capping_user_settings.user_setting_value[i] != 0xffff) {
+			/* write value */
+			uint16_t set_value = power_capping_user_settings.user_setting_value[i];
+			if (!plat_set_power_capping_command(i, &set_value)) {
+				LOG_ERR("Can't set value[%d]=%x by user settings", i, set_value);
+				return false;
+			}
+			LOG_INF("set [%x]%s: %d", i, power_capping_rail_table[i].sensor_name,
+				power_capping_user_settings.user_setting_value[i]);
+		}
+	}
+
+	return true;
+}
+
+bool set_HC_LC_enable_flag(uint8_t rail, bool status)
+{
+	uint8_t data = 0;
+	if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_MTIA_HC_LC_SETTING_ADDR, &data, 1)) {
+		LOG_ERR("Can't find MTIA HC/LC setting by cpld");
+		return false;
+	}
+
+	if (rail == POWER_CAPPING_INDEX_HC) {
+		if (status == MTIA_HC_LC_ENABLE)
+			data |= BIT(1);
+		else
+			data &= ~BIT(1);
+	} else if (rail == POWER_CAPPING_INDEX_LC) {
+		if (status == MTIA_HC_LC_ENABLE)
+			data |= BIT(0);
+		else
+			data &= ~BIT(0);
+	} else {
+		LOG_ERR("Invalid rail index: %d", rail);
+		return false;
+	}
+
+	if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_MTIA_HC_LC_SETTING_ADDR, &data, 1)) {
+		LOG_ERR("Can't set MTIA HC/LC setting = 0x%02x to cpld", data);
+		return false;
+	}
+
+	return true;
+}
+
+void check_power_capping_status(void)
+{
+	uint8_t data = 0;
+	if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_MTIA_HC_LC_SETTING_ADDR, &data, 1)) {
+		LOG_ERR("Can't find MTIA HC/LC enable/disable by cpld");
+		power_capping_enable_flag = false;
+	}
+	if ((data & (BIT(7) | BIT(6))) == (BIT(7) | BIT(6))) {
+		power_capping_enable_flag = true;
+	} else {
+		power_capping_enable_flag = false;
+	}
+}
+
+void check_power_capping_user_setting_status(void)
+{
+	if (power_capping_user_settings.user_setting_value[POWER_CAPPING_INDEX_HC] == 0xffff ||
+	    power_capping_user_settings.user_setting_value[POWER_CAPPING_INDEX_LC] == 0xffff ||
+	    power_capping_user_settings.user_setting_value[POWER_CAPPING_INDEX_INTERVAL] ==
+		    0xffff) {
+		power_capping_user_setting_flag = false;
+	} else {
+		power_capping_user_setting_flag = true;
+	}
+}
+
+void power_capping_comparator_handler()
+{
+	check_power_capping_status();
+	check_power_capping_user_setting_status();
+
+	if (!power_capping_enable_flag) {
+		// LOG_INF("no compare");
+		return;
+	}
+
+	if (!power_capping_user_setting_flag) {
+		// LOG_INF("no compare");
+		return;
+	}
+
+	uint16_t hc = power_capping_user_settings.user_setting_value[POWER_CAPPING_INDEX_HC];
+	uint16_t lc = power_capping_user_settings.user_setting_value[POWER_CAPPING_INDEX_LC];
+
+	if (ath_vdd_power > hc) {
+		if (!set_HC_LC_enable_flag(POWER_CAPPING_INDEX_HC, MTIA_HC_LC_ENABLE)) {
+			LOG_ERR("Failed to set MTIA HC enable");
+			return;
+		}
+		if (!set_HC_LC_enable_flag(POWER_CAPPING_INDEX_LC, MTIA_HC_LC_ENABLE)) {
+			LOG_ERR("Failed to set MTIA LC enable");
+			return;
+		}
+		// LOG_INF("power>HC");
+	} else {
+		if (ath_vdd_power > lc) {
+			if (!set_HC_LC_enable_flag(POWER_CAPPING_INDEX_HC, MTIA_HC_LC_DISENABLE)) {
+				LOG_ERR("Failed to set MTIA HC disable");
+				return;
+			}
+			if (!set_HC_LC_enable_flag(POWER_CAPPING_INDEX_LC, MTIA_HC_LC_ENABLE)) {
+				LOG_ERR("Failed to set MTIA LC enable");
+				return;
+			}
+
+			// LOG_INF("HC>power>LC");
+		} else {
+			if (!set_HC_LC_enable_flag(POWER_CAPPING_INDEX_HC, MTIA_HC_LC_DISENABLE)) {
+				LOG_ERR("Failed to set MTIA HC disable");
+				return;
+			}
+			if (!set_HC_LC_enable_flag(POWER_CAPPING_INDEX_LC, MTIA_HC_LC_DISENABLE)) {
+				LOG_ERR("Failed to set MTIA LC disable");
+				return;
+			}
+			// LOG_INF("LC>power");
+		}
+	}
+	return;
+}
+
+/* If any perm parameter are added, remember to update this function accordingly.　*/
+bool perm_config_clear(void)
+{
+	/* clear all vout perm parameters */
+	memset(user_settings.vout, 0xFF, sizeof(user_settings.vout));
+	if (!vr_vout_user_settings_set(&user_settings)) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
+	/* clear all temp_threshold perm parameters */
+	memset(temp_threshold_user_settings.temperature_reg_val, 0xFF,
+	       sizeof(temp_threshold_user_settings.temperature_reg_val));
+	if (!temp_threshold_user_settings_set(&temp_threshold_user_settings)) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
+	int32_t setting_value = 0xffffffff;
+	char setting_data[4] = { 0 };
+	memcpy(setting_data, &setting_value, sizeof(setting_data));
+	if (set_user_settings_alert_level_to_eeprom(setting_data, sizeof(setting_data)) != 0) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
+	/* clear soc_pcie_perst perm parameter */
+	uint8_t setting_value_for_soc_pcie_perst = 0xFF;
+	if (!set_user_settings_soc_pcie_perst_to_eeprom(&setting_value_for_soc_pcie_perst,
+							sizeof(setting_value_for_soc_pcie_perst))) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
+	/* clear all bootstrap perm parameters */
+	memset(bootstrap_user_settings.user_setting_value, 0xFF,
+	       sizeof(bootstrap_user_settings.user_setting_value));
+	if (!bootstrap_user_settings_set(&bootstrap_user_settings)) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
+	/* clear thermaltrip perm parameter */
+	uint8_t setting_value_for_thermaltrip = 0xFF;
+	if (!set_user_settings_thermaltrip_to_eeprom(&setting_value_for_thermaltrip,
+						     sizeof(setting_value_for_thermaltrip))) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
+	/* clear throttle perm parameter */
+	uint8_t setting_value_for_throttle = 0xFF;
+	if (!set_user_settings_throttle_to_eeprom(&setting_value_for_throttle,
+						  sizeof(setting_value_for_throttle))) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
+	/* clear power capping perm parameter and reset power capping interval */
+	memset(power_capping_user_settings.user_setting_value, 0xFF,
+	       sizeof(power_capping_user_settings.user_setting_value));
+	if (!set_user_settings_power_capping_to_eeprom(&power_capping_user_settings)) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+	if (power_capping_user_settings.user_setting_value[POWER_CAPPING_INDEX_INTERVAL] ==
+	    0xffff) {
+		power_capping_user_settings.user_setting_value[POWER_CAPPING_INDEX_INTERVAL] =
+			ATH_VDD_INTERVAL_MS;
+		if (!set_user_settings_power_capping_to_eeprom(&power_capping_user_settings)) {
+			LOG_ERR("After perm_config clear reset power capping interval failed");
+			return false;
+		}
+		update_comparator_counter_max();
+	}
+
+	return true;
+}
+
+/* init the user & default settings value by shell command */
+void user_settings_init(void)
+{
+	alert_level_user_settings_init();
+	vr_vout_default_settings_init();
+	vr_vout_user_settings_init();
+	soc_pcie_perst_user_settings_init();
+	bootstrap_default_settings_init();
+	bootstrap_user_settings_init();
+	vr_vout_range_user_settings_init();
+	thermaltrip_user_settings_init();
+	throttle_user_settings_init();
+	power_capping_user_settings_init();
 }
