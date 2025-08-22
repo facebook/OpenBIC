@@ -17,6 +17,7 @@
 #include <logging/log.h>
 #include "pmbus.h"
 #include "ads7830.h"
+#include "pex90144.h"
 #include "pdr.h"
 #include "tmp431.h"
 #include "sensor.h"
@@ -218,7 +219,76 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 		},
-	}
+	},
+	{
+		{
+			// PCIE_SWITCH_TEMP_C
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			SENSOR_NUM_PCIE_SWITCH_TEMP_C, //uint16_t sensor_id;
+			0x0000, //uint16_t entity_type;
+			0x0002, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init;
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x02, //uint8_t base_unit;  //unit
+			-3, //int8_t unit_modifier;
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x4, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			UP_THRESHOLD_CRIT | LOW_THRESHOLD_CRIT, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x00000000, //uint32_t max_readable;
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0x00, //uint8_t range_field_support;
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0, //uint32_t warning_high;
+			0, //uint32_t warning_low;
+			80000, //uint32_t critical_high;
+			5000, //uint32_t critical_low;
+			0, //uint32_t fatal_high;
+			0, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.num = SENSOR_NUM_PCIE_SWITCH_TEMP_C,
+			.type = sensor_dev_pex90144,
+			.port = I2C_BUS4,
+			.target_addr = PCIE_SWITCH_ADDR,
+			.offset = PEX_TEMP,
+			.access_checker = is_pcie_switch_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.init_args = &pex_sensor_init_args[0],
+		},
+	},
 };
 
 pldm_sensor_info plat_pldm_sensor_vr_table[] = {
@@ -1838,6 +1908,24 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 	},
 	{
 
+		// SENSOR_NUM_PCIE_SWITCH_TEMP_C
+		/*** PDR common header***/
+		{
+			.record_handle = 0x00000000,
+			.PDR_header_version = 0x01,
+			.PDR_type = PLDM_SENSOR_AUXILIARY_NAMES_PDR,
+			.record_change_number = 0x0000,
+			.data_length = 0x0000,
+		},
+		.terminus_handle = 0x0000,
+		.sensor_id = SENSOR_NUM_PCIE_SWITCH_TEMP_C,
+		.sensor_count = 0x1,
+		.nameStringCount = 0x1,
+		.nameLanguageTag = "en",
+		.sensorName = u"PCIE_SWITCH_TEMP_C",
+	},
+	{
+
 		// VR_ASIC_P0V895_PEX_TEMP_C
 		/*** PDR common header***/
 		{
@@ -2543,6 +2631,12 @@ bool is_temp_access(uint8_t cfg_idx)
 		get_plat_sensor_polling_enable_flag());
 }
 
+bool is_pcie_switch_access(uint8_t cfg_idx)
+{
+	return (get_plat_sensor_temp_polling_enable_flag() &&
+		get_plat_sensor_polling_enable_flag());
+}
+
 bool is_vr_access(uint8_t sensor_num)
 {
 	return (get_plat_sensor_vr_polling_enable_flag() && get_plat_sensor_polling_enable_flag());
@@ -2558,7 +2652,7 @@ bool get_sensor_info_by_sensor_id(uint8_t sensor_id, uint8_t *vr_bus, uint8_t *v
 	int pldm_sensor_count = 0;
 
 	if (sensor_id >= SENSOR_NUM_THERMAL_SENSOR_1_TEMP_C &&
-	    sensor_id <= SENSOR_NUM_THERMAL_SENSOR_2_TEMP_C) {
+	    sensor_id <= SENSOR_NUM_PCIE_SWITCH_TEMP_C) {
 		pldm_sensor_count = plat_pldm_sensor_get_sensor_count(TEMP_SENSOR_THREAD_ID);
 		for (int index = 0; index < pldm_sensor_count; index++) {
 			if (plat_pldm_sensor_temp_table[index].pldm_sensor_cfg.num == sensor_id) {
@@ -2605,7 +2699,7 @@ sensor_cfg *get_sensor_cfg_by_sensor_id(uint8_t sensor_id)
 	int pldm_sensor_count = 0;
 
 	if (sensor_id >= SENSOR_NUM_THERMAL_SENSOR_1_TEMP_C &&
-	    sensor_id <= SENSOR_NUM_THERMAL_SENSOR_2_TEMP_C) {
+	    sensor_id <= SENSOR_NUM_PCIE_SWITCH_TEMP_C) {
 		pldm_sensor_count = plat_pldm_sensor_get_sensor_count(TEMP_SENSOR_THREAD_ID);
 		for (int index = 0; index < pldm_sensor_count; index++) {
 			if (plat_pldm_sensor_temp_table[index].pldm_sensor_cfg.num == sensor_id) {
