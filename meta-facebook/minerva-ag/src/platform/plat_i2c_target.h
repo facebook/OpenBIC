@@ -71,6 +71,15 @@
 #define CONTROL_VOL_Minerva_Aegis_VR_ASIC_P1V8_VPP_HBM0_HBM2_HBM4_REG 0x86
 #define CONTROL_VOL_Minerva_Aegis_VR_ASIC_P1V8_VPP_HBM1_HBM3_HBM5_REG 0x87
 
+#define POWER_CAPPING_SET_VALUE_REG 0x90
+#define POWER_CAPPING_GET_VR_ASIC_P0V85_PVDD_PWR_W_REG 0x91
+#define POWER_CAPPING_GET_VR_ASIC_P0V4_VDDQL_HBM0_HBM2_HBM4_PWR_W_REG 0x92
+#define POWER_CAPPING_GET_VR_ASIC_P0V75_VDDPHY_HBM0_HBM2_HBM4_PWR_W_REG 0x93
+#define POWER_CAPPING_GET_VR_ASIC_P0V4_VDDQL_HBM1_HBM3_HBM5_PWR_W_REG 0x94
+#define POWER_CAPPING_GET_VR_ASIC_P0V75_VDDPHY_HBM1_HBM3_HBM5_PWR_W_REG 0x95
+#define POWER_CAPPING_GET_VR_ASIC_P0V75_MAX_PHY_N_PWR_W_REG 0x96
+#define POWER_CAPPING_GET_VR_ASIC_P0V75_MAX_PHY_S_PWR_W_REG 0x97
+
 #define SET_SENSOR_POLLING_COMMAND_REG 0xF0
 
 typedef enum i2c_bridge_command_error {
@@ -82,6 +91,7 @@ typedef enum i2c_bridge_command_error {
 void update_sensor_reading_table(void);
 void update_strap_capability_table(void);
 void plat_telemetry_table_init(void);
+void update_plat_power_capping_table(void);
 
 typedef struct _telemetry_info_ telemetry_info;
 
