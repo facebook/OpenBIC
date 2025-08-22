@@ -37,12 +37,15 @@
 #include "pldm_sensor.h"
 #include "mp29816a.h"
 #include "plat_hook.h"
+#include "sensor.h"
+#include "pex90144.h"
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
 static uint8_t pldm_pre_vr_update(void *fw_update_param);
 static uint8_t pldm_post_vr_update(void *fw_update_param);
 static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
+static bool get_pcie_switch_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 static uint8_t plat_pldm_pre_pcie_switch_update(void *fw_update_param);
 static uint8_t plat_pldm_post_pcie_switch_update(void *fw_update_param);
 
@@ -55,6 +58,10 @@ typedef struct si_compnt_mapping_sensor {
 si_compnt_mapping_sensor si_vr_compnt_mapping_sensor_table[] = {
 	{ SI_COMPNT_P0V895_PEX, SENSOR_NUM_VR_ASIC_P0V895_PEX_TEMP_C, "SI_P0V895_PEX" },
 	{ SI_COMPNT_P0V825_A1, SENSOR_NUM_VR_ASIC_P0V825_A1_TEMP_C, "SI_P0V825_A1" },
+};
+
+si_compnt_mapping_sensor si_pcie_switch_compnt_mapping_sensor_table[] = {
+	{ SI_COMPNT_PCIE_SWITCH, SENSOR_NUM_PCIE_SWITCH_TEMP_C, "SI_PCIE_SWITCH" },
 };
 
 /* PLDM FW update table */
@@ -115,7 +122,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.inf = COMP_UPDATE_VIA_SPI,
 		.activate_method = COMP_ACT_DC_PWR_CYCLE,
 		.self_act_func = NULL,
-		.get_fw_version_fn = NULL,
+		.get_fw_version_fn = get_pcie_switch_fw_version,
 		.self_apply_work_func = NULL,
 		.comp_version_str = NULL,
 	},
@@ -307,6 +314,44 @@ static struct k_mutex *get_vr_mutex_by_comp_id(uint8_t comp_id)
 	return vr_mutex_get(vr_mutex_id);
 }
 
+static bool get_pcie_switch_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(info_p, false);
+	CHECK_NULL_ARG_WITH_RETURN(buf, false);
+	CHECK_NULL_ARG_WITH_RETURN(len, false);
+
+	pldm_fw_update_info_t *p = (pldm_fw_update_info_t *)info_p;
+
+	uint8_t sensor_id = 0;
+	char sensor_name[MAX_AUX_SENSOR_NAME_LEN] = { 0 };
+	uint8_t bus = 0, addr = 0;
+	uint8_t sensor_dev = 0;
+
+	if (!find_sensor_id_and_name_by_firmware_comp_id(p->comp_identifier, &sensor_id,
+							 sensor_name)) {
+		LOG_ERR("Can't find sensor id and name by comp id: 0x%x", p->comp_identifier);
+		return false;
+	}
+
+	if (!get_sensor_info_by_sensor_id(sensor_id, &bus, &addr, &sensor_dev)) {
+		LOG_ERR("Can't find PCIe switch addr and bus by sensor id: 0x%x", sensor_id);
+		return false;
+	}
+
+	uint32_t version = 0;
+	if (pex90144_access_engine(bus, addr, 0, pex_access_sbr_ver, &version)) {
+		LOG_ERR("PEX90144 SBR version read failed");
+		return false;
+	}
+
+	version = sys_cpu_to_be32(version);
+	*len = bin2hex((uint8_t *)&version, 4, buf, 8);
+
+	LOG_DBG("PEX90144 %s SBR version: 0x%08x", log_strdup(sensor_name), version);
+
+	return true;
+}
+
 static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 {
 	CHECK_NULL_ARG_WITH_RETURN(info_p, false);
@@ -488,6 +533,18 @@ bool find_sensor_id_and_name_by_firmware_comp_id(uint8_t comp_identifier, uint8_
 		if (si_vr_compnt_mapping_sensor_table[i].firmware_comp_id == comp_identifier) {
 			*sensor_id = si_vr_compnt_mapping_sensor_table[i].plat_pldm_sensor_id;
 			strncpy(sensor_name, si_vr_compnt_mapping_sensor_table[i].sensor_name,
+				MAX_AUX_SENSOR_NAME_LEN);
+			return true;
+		}
+	}
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(si_pcie_switch_compnt_mapping_sensor_table); i++) {
+		if (si_pcie_switch_compnt_mapping_sensor_table[i].firmware_comp_id ==
+		    comp_identifier) {
+			*sensor_id =
+				si_pcie_switch_compnt_mapping_sensor_table[i].plat_pldm_sensor_id;
+			strncpy(sensor_name,
+				si_pcie_switch_compnt_mapping_sensor_table[i].sensor_name,
 				MAX_AUX_SENSOR_NAME_LEN);
 			return true;
 		}
