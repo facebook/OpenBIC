@@ -18,3 +18,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include "plat_event.h"
+#include <plat_gpio.h>
+#include <plat_log.h>
+#include <plat_hook.h>
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(plat_event);
+
+
+void get_vr_vout_handler(struct k_work *work);
+K_WORK_DEFINE(vr_vout_work, get_vr_vout_handler);

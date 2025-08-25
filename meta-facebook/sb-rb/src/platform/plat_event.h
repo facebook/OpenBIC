@@ -13,3 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef PLAT_EVENT_H
+#define PLAT_EVENT_H
+#include <stdbool.h>
+
+
+ #endif

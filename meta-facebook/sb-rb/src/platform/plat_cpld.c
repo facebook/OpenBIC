@@ -127,6 +127,11 @@ void check_ubc_delayed(struct k_work *work)
 	} */
 }
 
+bool is_ubc_enabled_delayed_enabled(void)
+{
+	return ubc_enabled_delayed_status;
+}
+
 void reset_error_log_states(uint8_t err_type)
 {
 	// Reset cpld_info_table
@@ -273,6 +278,8 @@ void init_cpld_polling(void)
 {
 	check_cpld_polling_alert_status();
 
+	k_timer_start(&init_ubc_delayed_timer, K_MSEC(1000), K_NO_WAIT);
+	
 	cpld_polling_tid =
 		k_thread_create(&cpld_polling_thread, cpld_polling_stack,
 				K_THREAD_STACK_SIZEOF(cpld_polling_stack), poll_cpld_registers,

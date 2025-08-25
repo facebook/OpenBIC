@@ -25,6 +25,8 @@
 #include "mp2971.h"
 #include "mp29816a.h"
 #include "raa228249.h"
+#include "plat_user_setting.h"
+#include "plat_fru.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -149,50 +151,81 @@ void vr_mutex_init(void)
 
 /* the order is following enum VR_RAIL_E */
 vr_mapping_sensor vr_rail_table[] = {
-	{ VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD, SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_VOLT_V,
-	  "CB_ASIC_P0V85_MEDHA0_VDD", 0xffffffff },
-	{ VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD, SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_VOLT_V,
-	  "CB_ASIC_P0V85_MEDHA1_VDD", 0xffffffff },
-	{ VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD, SENSOR_NUM_ASIC_P0V9_OWL_E_TRVDD_VOLT_V,
-	  "CB_ASIC_P0V9_OWL_E_TRVDD", 0xffffffff },
-	{ VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD, SENSOR_NUM_ASIC_P0V75_OWL_E_TRVDD_VOLT_V,
-	  "CB_ASIC_P0V75_OWL_E_TRVDD", 0xffffffff },
-	{ VR_RAIL_E_ASIC_P0V75_MAX_M_VDD, SENSOR_NUM_ASIC_P0V75_MAX_M_VDD_VOLT_V,
-	  "CB_ASIC_P0V75_MAX_M_VDD", 0xffffffff },
-	{ VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357, SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_VOLT_V,
-	  "CB_ASIC_P0V75_VDDPHY_HBM1357", 0xffffffff },
-	{ VR_RAIL_E_ASIC_P0V75_OWL_E_VDD, SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_VOLT_V,
-	  "CB_ASIC_P0V75_OWL_E_VDD", 0xffffffff },
-	{ VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357, SENSOR_NUM_ASIC_P0V4_VDDQL_HBM1357_VOLT_V,
-	  "CB_ASIC_P0V4_VDDQL_HBM1357", 0xffffffff },
-	{ VR_RAIL_E_ASIC_P1V1_VDDQC_HBM1357, SENSOR_NUM_ASIC_P1V1_VDDQC_HBM1357_VOLT_V,
-	  "CB_ASIC_P1V1_VDDQC_HBM1357", 0xffffffff },
-	{ VR_RAIL_E_ASIC_P1V8_VPP_HBM1357, SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_VOLT_V,
-	  "CB_ASIC_P1V8_VPP_HBM1357", 0xffffffff },
-	{ VR_RAIL_E_ASIC_P0V75_MAX_N_VDD, SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_VOLT_V,
-	  "CB_ASIC_P0V75_MAX_N_VDD", 0xffffffff },
-	{ VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE, SENSOR_NUM_ASIC_P0V8_HAMSA_AVDD_PCIE_VOLT_V,
-	  "CB_ASIC_P0V8_HAMSA_AVDD_PCIE", 0xffffffff },
-	{ VR_RAIL_E_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE, SENSOR_NUM_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_VOLT_V,
-	  "CB_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE", 0xffffffff },
-	{ VR_RAIL_E_ASIC_P0V85_HAMSA_VDD, SENSOR_NUM_ASIC_P0V85_HAMSA_VDD_VOLT_V,
-	  "CB_ASIC_P0V85_HAMSA_VDD", 0xffffffff },
-	{ VR_RAIL_E_ASIC_P1V1_VDDQC_HBM0246, SENSOR_NUM_ASIC_P1V1_VDDQC_HBM0246_VOLT_V,
-	  "CB_ASIC_P1V1_VDDQC_HBM0246", 0xffffffff },
-	{ VR_RAIL_E_ASIC_P1V8_VPP_HBM0246, SENSOR_NUM_ASIC_P1V8_VPP_HBM0246_VOLT_V,
-	  "CB_ASIC_P1V8_VPP_HBM0246", 0xffffffff },
-	{ VR_RAIL_E_ASIC_P0V4_VDDQL_HBM0246, SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_VOLT_V,
-	  "CB_ASIC_P0V4_VDDQL_HBM0246", 0xffffffff },
-	{ VR_RAIL_EASIC_P0V75_VDDPHY_HBM0246, SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_VOLT_V,
-	  "CB_ASIC_P0V75_VDDPHY_HBM0246", 0xffffffff },
-	{ VR_RAIL_E_ASIC_P0V75_OWL_W_VDD, SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_VOLT_V,
-	  "CB_ASIC_P0V75_OWL_W_VDD", 0xffffffff },
-	{ VR_RAIL_E_ASIC_P0V75_MAX_S_VDD, SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_VOLT_V,
-	  "CB_ASIC_P0V75_MAX_S_VDD", 0xffffffff },
-	{ VR_RAIL_E_ASIC_P0V9_OWL_W_TRVDD, SENSOR_NUM_ASIC_P0V9_OWL_W_TRVDD_VOLT_V,
-	  "CB_ASIC_P0V9_OWL_W_TRVDD", 0xffffffff },
-	{ VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD, SENSOR_NUM_ASIC_P0V75_OWL_W_TRVDD_VOLT_V,
-	  "CB_ASIC_P0V75_OWL_W_TRVDD", 0xffffffff },
+	/*
+	ASIC_P0V4_VDDQL_HBM0246_VOLT_V
+	ASIC_P0V4_VDDQL_HBM1357_VOLT_V
+	ASIC_P0V75_MAX_M_VDD_VOLT_V
+	ASIC_P0V75_MAX_N_VDD_VOLT_V
+	ASIC_P0V75_MAX_S_VDD_VOLT_V
+	ASIC_P0V75_OWL_E_TRVDD_VOLT_V
+	ASIC_P0V75_OWL_E_VDD_VOLT_V
+	ASIC_P0V75_OWL_W_TRVDD_VOLT_V
+	ASIC_P0V75_OWL_W_VDD_VOLT_V
+	ASIC_P0V75_VDDPHY_HBM0246_VOLT_V
+	ASIC_P0V75_VDDPHY_HBM1357_VOLT_V
+	ASIC_P0V85_HAMSA_VDD_VOLT_V
+	ASIC_P0V85_MEDHA0_VDD_VOLT_V
+	ASIC_P0V85_MEDHA1_VDD_VOLT_V
+	ASIC_P0V8_HAMSA_AVDD_PCIE_VOLT_V
+	ASIC_P0V9_OWL_E_TRVDD_VOLT_V
+	ASIC_P0V9_OWL_W_TRVDD_VOLT_V
+	ASIC_P1V1_VDDQC_HBM0246_VOLT_V
+	ASIC_P1V1_VDDQC_HBM1357_VOLT_V
+	ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_VOLT_V
+	ASIC_P1V8_VPP_HBM0246_VOLT_V
+	ASIC_P1V8_VPP_HBM1357_VOLT_V
+	P3V3_OSFP_VOLT_V
+	UBC1_P12V_VOLT_V
+	UBC1_P52V_INPUT_VOLT_V
+	UBC2_P12V_VOLT_V
+	UBC2_P52V_INPUT_VOLT_V
+	*/
+	{ ASIC_P0V4_VDDQL_HBM0246_VOLT_V, SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_VOLT_V,
+	  "ASIC_P0V75_VDDPHY_HBM0246_VOLT_V", 0xffffffff },
+	{ ASIC_P0V4_VDDQL_HBM1357_VOLT_V, SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_VOLT_V,
+	  "ASIC_P0V75_VDDPHY_HBM1357_VOLT_V", 0xffffffff },
+	{ ASIC_P0V75_MAX_M_VDD_VOLT_V, SENSOR_NUM_ASIC_P0V75_MAX_M_VDD_VOLT_V,
+	  "ASIC_P0V75_MAX_M_VDD_VOLT_V", 0xffffffff },
+	{ ASIC_P0V75_MAX_N_VDD_VOLT_V, SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_VOLT_V,
+	  "ASIC_P0V75_MAX_N_VDD_VOLT_V", 0xffffffff },
+	{ ASIC_P0V75_MAX_S_VDD_VOLT_V, SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_VOLT_V,
+	  "ASIC_P0V75_MAX_S_VDD_VOLT_V", 0xffffffff },
+	{ ASIC_P0V75_OWL_E_TRVDD_VOLT_V, SENSOR_NUM_ASIC_P0V75_OWL_E_TRVDD_VOLT_V,
+	  "ASIC_P0V75_OWL_E_TRVDD_VOLT_V", 0xffffffff },
+	{ ASIC_P0V75_OWL_E_VDD_VOLT_V, SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_VOLT_V,
+	  "ASIC_P0V75_OWL_E_VDD_VOLT_V", 0xffffffff },	
+	{ ASIC_P0V75_OWL_W_TRVDD_VOLT_V, SENSOR_NUM_ASIC_P0V75_OWL_W_TRVDD_VOLT_V,
+	  "ASIC_P0V75_OWL_W_TRVDD_VOLT_V", 0xffffffff },
+	{ ASIC_P0V75_OWL_W_VDD_VOLT_V, SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_VOLT_V,
+	  "ASIC_P0V75_OWL_W_VDD_VOLT_V", 0xffffffff },
+	{ ASIC_P0V75_VDDPHY_HBM0246_VOLT_V, SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_VOLT_V,
+	  "ASIC_P0V75_VDDPHY_HBM0246_VOLT_V", 0xffffffff },
+	{ ASIC_P0V75_VDDPHY_HBM1357_VOLT_V, SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_VOLT_V,
+	  "ASIC_P0V75_VDDPHY_HBM1357_VOLT_V", 0xffffffff },
+	{ ASIC_P0V85_HAMSA_VDD_VOLT_V, SENSOR_NUM_ASIC_P0V85_HAMSA_VDD_VOLT_V,
+	  "ASIC_P0V85_HAMSA_VDD_VOLT_V", 0xffffffff },
+	{ ASIC_P0V85_MEDHA0_VDD_VOLT_V, SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_VOLT_V,
+	  "ASIC_P0V85_MEDHA0_VDD_VOLT_V", 0xffffffff },
+	{ ASIC_P0V85_MEDHA1_VDD_VOLT_V, SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_VOLT_V,
+	  "ASIC_P0V85_MEDHA1_VDD_VOLT_V", 0xffffffff },
+	{ ASIC_P0V8_HAMSA_AVDD_PCIE_VOLT_V, SENSOR_NUM_ASIC_P0V8_HAMSA_AVDD_PCIE_VOLT_V,
+	  "ASIC_P0V8_HAMSA_AVDD_PCIE_VOLT_V", 0xffffffff },
+	{ ASIC_P0V9_OWL_E_TRVDD_VOLT_V, SENSOR_NUM_ASIC_P0V9_OWL_E_TRVDD_VOLT_V,
+	  "ASIC_P0V9_OWL_E_TRVDD_VOLT_V", 0xffffffff },
+	{ ASIC_P0V9_OWL_W_TRVDD_VOLT_V, SENSOR_NUM_ASIC_P0V9_OWL_W_TRVDD_VOLT_V,
+	  "ASIC_P0V9_OWL_W_TRVDD_VOLT_V", 0xffffffff },
+	{ ASIC_P1V1_VDDQC_HBM0246_VOLT_V, SENSOR_NUM_ASIC_P1V1_VDDQC_HBM0246_VOLT_V,
+	  "ASIC_P1V1_VDDQC_HBM0246_VOLT_V", 0xffffffff },
+	{ ASIC_P1V1_VDDQC_HBM1357_VOLT_V, SENSOR_NUM_ASIC_P1V1_VDDQC_HBM1357_VOLT_V,
+	  "ASIC_P1V1_VDDQC_HBM1357_VOLT_V", 0xffffffff },
+	{ ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_VOLT_V, SENSOR_NUM_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_VOLT_V,
+	  "ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_VOLT_V", 0xffffffff },
+	{ ASIC_P1V8_VPP_HBM0246_VOLT_V, SENSOR_NUM_ASIC_P1V8_VPP_HBM0246_VOLT_V,
+	  "ASIC_P1V8_VPP_HBM0246_VOLT_V", 0xffffffff },
+	{ ASIC_P1V8_VPP_HBM1357_VOLT_V, SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_VOLT_V,
+	  "ASIC_P1V8_VPP_HBM1357_VOLT_V", 0xffffffff },
+	{ P3V3_OSFP_VOLT_V, SENSOR_NUM_P3V3_OSFP_VOLT_V,
+	  "P3V3_OSFP_VOLT_V", 0xffffffff },
 };
 
 vr_mapping_status vr_status_table[] = {
@@ -367,6 +400,149 @@ err:
 	if (cfg->post_sensor_read_hook) {
 		if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) == false) {
 			LOG_ERR("%d clear vr status post hook fail!", sensor_id);
+		}
+	}
+	return ret;
+}
+
+#define EEPROM_MAX_WRITE_TIME 5
+bool plat_get_vout_command(uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	bool ret = false;
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	vr_pre_proc_arg *pre_proc_args = vr_pre_read_args + rail;
+
+	if (cfg->pre_sensor_read_hook) {
+		if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
+			LOG_ERR("sensor id: 0x%x pre-read fail", sensor_id);
+			goto err;
+		}
+	}
+
+	switch (cfg->type) {
+	case sensor_dev_mp2971:
+		if (!mp2971_get_vout_command(cfg, pre_proc_args->vr_page, millivolt)) {
+			LOG_ERR("The VR MPS2971 vout reading failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_mp29816a:
+		if (!mp29816a_get_vout_command(cfg, pre_proc_args->vr_page, millivolt)) {
+			LOG_ERR("The VR MPS29816a vout reading failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_raa228249:
+		if (!raa228249_get_vout_command(cfg, pre_proc_args->vr_page, millivolt)) {
+			LOG_ERR("The VR RAA228249 vout reading failed");
+			goto err;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport VR type(%x)", cfg->type);
+		goto err;
+	}
+
+	ret = true;
+err:
+	if (cfg->post_sensor_read_hook) {
+		if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) == false) {
+			LOG_ERR("sensor id: 0x%x post-read fail", sensor_id);
+		}
+	}
+	return ret;
+}
+
+bool vr_vout_user_settings_set(void *user_settings)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+	if (!plat_eeprom_write(VR_VOUT_USER_SETTINGS_OFFSET, user_settings, sizeof(struct vr_vout_user_settings)))
+	{
+		LOG_ERR("Failed to write vr vout user_settings to eeprom");
+		return false;
+	}
+	
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+
+vr_vout_user_settings user_settings = { 0 };
+struct vr_vout_user_settings default_settings = { 0 };
+struct vr_vout_user_settings voltage_command_get = { 0 };
+bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default, bool is_perm)
+{
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	bool ret = false;
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	uint16_t setting_millivolt = *millivolt;
+
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	vr_pre_proc_arg *pre_proc_args = vr_pre_read_args + rail;
+
+	if (cfg->pre_sensor_read_hook) {
+		if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
+			LOG_ERR("sensor id: 0x%x pre-read fail", sensor_id);
+			goto err;
+		}
+	}
+
+	if (is_default) {
+		*millivolt = default_settings.vout[rail];
+		setting_millivolt = default_settings.vout[rail];
+	}
+
+	switch (cfg->type) {
+	case sensor_dev_mp2971:
+		if (!mp2971_set_vout_command(cfg, pre_proc_args->vr_page, millivolt)) {
+			LOG_ERR("The VR MPS2971 vout setting failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_mp29816a:
+		if (!mp29816a_set_vout_command(cfg, pre_proc_args->vr_page, millivolt)) {
+			LOG_ERR("The VR MPS29816a vout setting failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_raa228249:
+		if (!raa228249_set_vout_command(cfg, pre_proc_args->vr_page, millivolt)) {
+			LOG_ERR("The VR RAA228249 vout setting failed");
+			goto err;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport VR type(%x)", cfg->type);
+		goto err;
+	}
+
+	if (is_perm) {
+		user_settings.vout[rail] = setting_millivolt;
+		vr_vout_user_settings_set(&user_settings);
+	}
+
+	voltage_command_get.vout[rail] = setting_millivolt;
+
+	ret = true;
+err:
+	if (cfg->post_sensor_read_hook) {
+		if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) == false) {
+			LOG_ERR("sensor id: 0x%x post-read fail", sensor_id);
 		}
 	}
 	return ret;
