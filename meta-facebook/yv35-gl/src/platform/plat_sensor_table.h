@@ -126,6 +126,8 @@ typedef struct _dimm_pmic_mapping_cfg {
 	uint8_t mapping_pmic_sensor_num;
 } dimm_pmic_mapping_cfg;
 
+enum VR_VENDER_TYPE { VR_TYPE_UNKNOWN = 0, VR_TYPE_MP2985, VR_TYPE_XDPE15284, VR_TYPE_ISL69259 };
+
 uint8_t get_dimm_status(uint8_t dimm_index);
 
 #endif
