@@ -58,11 +58,14 @@ static int cmd_voltage_get_all(const struct shell *shell, size_t argc, char **ar
 	return 0;
 }
 
-vr_vout_range_user_settings_struct vout_range_user_settings = { 0 };
+vr_vout_range_user_settings_struct vout_settings_data = { 0 };
 static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 {
 	bool is_default = false;
 	bool is_perm = false;
+	
+	LOG_WRN("cmd_voltage_set not use now");
+	return 0;
 
 	/* is_ubc_enabled_delayed_enabled() is to wait for all VR to be enabled  */
 	/* (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) is to shut down polling immediately when UBC is disabled */
@@ -93,8 +96,8 @@ static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 		shell_info(shell, "Set %s(%d) to default, %svolatile\n", argv[1], rail,
 			   (argc == 4) ? "non-" : "");
 	} else {
-		uint16_t vout_max_millivolt = vout_range_user_settings.change_vout_max[rail];
-		uint16_t vout_min_millivolt = vout_range_user_settings.change_vout_min[rail];
+		uint16_t vout_max_millivolt = vout_settings_data.change_vout_max[rail];
+		uint16_t vout_min_millivolt = vout_settings_data.change_vout_min[rail];
 		if (millivolt < vout_min_millivolt || millivolt > vout_max_millivolt) {
 			shell_error(shell, "vout[%d] cannot be less than %dmV or greater than %dmV",
 				    rail, vout_min_millivolt, vout_max_millivolt);

@@ -27,6 +27,7 @@
 #include "raa228249.h"
 #include "plat_user_setting.h"
 #include "plat_fru.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -462,10 +463,10 @@ err:
 	return ret;
 }
 
-bool vr_vout_user_settings_set(void *user_settings)
+bool vr_vout_user_settings_set(void *user_settings_value)
 {
-	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
-	if (!plat_eeprom_write(VR_VOUT_USER_SETTINGS_OFFSET, user_settings, sizeof(struct vr_vout_user_settings)))
+	CHECK_NULL_ARG_WITH_RETURN(user_settings_value, false);
+	if (!plat_eeprom_write(VR_VOUT_USER_SETTINGS_OFFSET, user_settings_value, sizeof(struct vr_vout_user_settings)))
 	{
 		LOG_ERR("Failed to write vr vout user_settings to eeprom");
 		return false;
@@ -479,6 +480,7 @@ bool vr_vout_user_settings_set(void *user_settings)
 vr_vout_user_settings user_settings = { 0 };
 struct vr_vout_user_settings default_settings = { 0 };
 struct vr_vout_user_settings voltage_command_get = { 0 };
+vr_vout_range_user_settings_struct vout_range_user_settings = { 0 };
 bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default, bool is_perm)
 {
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
@@ -546,4 +548,173 @@ err:
 		}
 	}
 	return ret;
+}
+
+bool vr_rail_voltage_peak_get(uint8_t *name, int *peak_value)
+{
+	CHECK_NULL_ARG_WITH_RETURN(name, false);
+	CHECK_NULL_ARG_WITH_RETURN(peak_value, false);
+
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		if (strcmp(name, vr_rail_table[i].sensor_name) == 0) {
+			*peak_value = vr_rail_table[i].peak_value;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool vr_rail_voltage_peak_clear(uint8_t rail_index)
+{
+	if (rail_index >= VR_RAIL_E_MAX) {
+		return false;
+	}
+
+	vr_rail_table[rail_index].peak_value = 0xffffffff;
+
+	return true;
+}
+
+bool plat_set_vout_range_min(uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	vout_range_user_settings.change_vout_min[rail] = *millivolt;
+	return true;
+}
+
+bool plat_set_vout_range_max(uint8_t rail, uint16_t *millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	vout_range_user_settings.change_vout_max[rail] = *millivolt;
+	return true;
+}
+
+bool vr_vout_default_settings_init(void)
+{
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		if ((get_asic_board_id() == ASIC_BOARD_ID_EVB) && (i == 0)) {
+			default_settings.vout[i] = 0xffff;
+			continue; // skip osfp p3v3 on AEGIS BD
+		}
+		uint16_t vout = 0;
+		if (!plat_get_vout_command(i, &vout)) {
+			LOG_ERR("Can't find vout default by rail index: %d", i);
+			return false;
+		}
+		default_settings.vout[i] = vout;
+	}
+
+	memcpy(&voltage_command_get, &default_settings, sizeof(vr_vout_user_settings));
+
+	return true;
+}
+
+bool vr_vout_user_settings_init(void)
+{
+	if (vr_vout_user_settings_get(&user_settings) == false) {
+		LOG_ERR("get vout user settings fail");
+		return false;
+	}
+
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		if (user_settings.vout[i] != 0xffff) {
+			/* write vout */
+			uint16_t millivolt = user_settings.vout[i];
+			if (!plat_set_vout_command(i, &millivolt, false, false)) {
+				LOG_ERR("Can't set vout[%d]=%x by user settings", i, millivolt);
+				return false;
+			}
+			LOG_INF("set [%x]%s: %dmV", i, vr_rail_table[i].sensor_name,
+				user_settings.vout[i]);
+		}
+	}
+
+	return true;
+}
+bool plat_get_vout_range(uint8_t rail, uint16_t *vout_max_millivolt, uint16_t *vout_min_millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(vout_max_millivolt, false);
+	CHECK_NULL_ARG_WITH_RETURN(vout_min_millivolt, false);
+
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	if (check_supported_threshold_with_sensor_id(sensor_id) != 0) {
+		LOG_ERR("sensor id: 0x%x unsupported thresholds", sensor_id);
+		return false;
+	}
+
+	float critical_high, critical_low;
+	if (get_pdr_table_critical_high_and_low_with_sensor_id(sensor_id, &critical_high,
+							       &critical_low) != 0) {
+		LOG_ERR("sensor id: 0x%x get threshold failed", sensor_id);
+		return false;
+	}
+
+	*vout_max_millivolt = (uint16_t)(critical_high * 1000.0);
+	*vout_min_millivolt = (uint16_t)(critical_low * 1000.0);
+	return true;
+}
+
+bool vr_vout_user_settings_get(void *user_settings)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	/* read the user_settings from eeprom */
+	if (!plat_eeprom_read(VR_VOUT_USER_SETTINGS_OFFSET, user_settings,
+			      sizeof(struct vr_vout_user_settings))) {
+		LOG_ERR("Failed to write thermaltrip to eeprom");
+		return false;
+	}
+
+	return true;
+}
+
+bool vr_vout_range_user_settings_init(void)
+{
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		if ((get_asic_board_id() == ASIC_BOARD_ID_EVB) && (i == 0)) {
+			vout_range_user_settings.default_vout_max[i] = 0xffff;
+			vout_range_user_settings.default_vout_min[i] = 0xffff;
+			vout_range_user_settings.change_vout_max[i] = 0xffff;
+			vout_range_user_settings.change_vout_min[i] = 0xffff;
+			continue; // skip osfp p3v3 on AEGIS BD
+		}
+		uint16_t vout_max = 0;
+		uint16_t vout_min = 0;
+		if (!plat_get_vout_range(i, &vout_max, &vout_min)) {
+			LOG_ERR("Can't find vout range default by rail index: %d", i);
+			return false;
+		}
+		vout_range_user_settings.default_vout_max[i] = vout_max;
+		vout_range_user_settings.default_vout_min[i] = vout_min;
+		vout_range_user_settings.change_vout_max[i] = vout_max;
+		vout_range_user_settings.change_vout_min[i] = vout_min;
+	}
+
+	return true;
 }

@@ -29,6 +29,7 @@
 #include "sensor.h"
 #include "tmp75.h"
 #include "tmp431.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_user_setting);
 
@@ -49,7 +50,20 @@ bool set_user_settings_thermaltrip_to_eeprom(void *thermaltrip_user_settings, ui
 
 	return true;
 }
+bool get_user_settings_thermaltrip_from_eeprom(void *thermaltrip_user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(thermaltrip_user_settings, false);
 
+	if (!plat_eeprom_read(THERMALTRIP_USER_SETTINGS_OFFSET, thermaltrip_user_settings,
+			       data_length)) {
+		LOG_ERR("Failed to write thermaltrip to eeprom");
+		return false;
+	}
+
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
 thermaltrip_user_settings_struct thermaltrip_user_settings = { 0xFF };
 bool set_thermaltrip_user_settings(bool thermaltrip_enable, bool is_perm)
 {
@@ -71,7 +85,24 @@ bool set_thermaltrip_user_settings(bool thermaltrip_enable, bool is_perm)
 	}
 	return true;
 }
+static bool thermaltrip_user_settings_init(void)
+{
+	uint8_t setting_data = 0xFF;
+	if (!get_user_settings_thermaltrip_from_eeprom(&setting_data, sizeof(setting_data))) {
+		LOG_ERR("get thermaltrip user settings fail");
+		return false;
+	}
 
+	if (setting_data != 0xFF) {
+		if (!plat_write_cpld(CPLD_THERMALTRIP_SWITCH_ADDR, &setting_data)) 
+		{
+			LOG_ERR("Can't set thermaltrip=%d by user settings", setting_data);
+			return false;
+		}
+	}
+	
+	return true;
+}
 temp_mapping_sensor temp_index_table[] = {
 	{ TEMP_INDEX_TOP_INLET, SENSOR_NUM_TOP_INLET_TEMP_C, "SB_RB_TOP_INLET_TEMP" },
 	{ TEMP_INDEX_BOT_INLET, SENSOR_NUM_BOT_INLET_TEMP_C, "SB_RB_BOT_INLET_TEMP" },
@@ -393,4 +424,17 @@ bool plat_clear_temp_status(uint8_t rail)
 	ret = true;
 err:
 	return ret;
+}
+
+void user_settings_init(void)
+{
+	//alert_level_user_settings_init();
+	vr_vout_default_settings_init();
+	vr_vout_user_settings_init();
+	//soc_pcie_perst_user_settings_init();
+	//bootstrap_default_settings_init();
+	//bootstrap_user_settings_init();
+	vr_vout_range_user_settings_init();
+	thermaltrip_user_settings_init();
+	//throttle_user_settings_init();
 }

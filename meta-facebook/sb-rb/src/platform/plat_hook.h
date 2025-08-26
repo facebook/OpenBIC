@@ -130,10 +130,8 @@ typedef struct vr_vout_range_user_settings_struct {
 	uint16_t change_vout_min[STRAP_INDEX_MAX];
 } vr_vout_range_user_settings_struct;
 
-typedef struct vr_vout_user_settings {
-	uint16_t vout[VR_RAIL_E_MAX];
-} vr_vout_user_settings;
-
+extern vr_vout_range_user_settings_struct vout_range_user_settings;
+extern vr_mapping_sensor vr_rail_table[];
 bool pre_vr_read(sensor_cfg *cfg, void *args);
 bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
 bool is_mb_dc_on();
@@ -147,4 +145,13 @@ bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_statu
 bool plat_clear_vr_status(uint8_t rail);
 bool plat_get_vout_command(uint8_t rail, uint16_t *millivolt);
 bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default, bool is_perm);
+bool vr_rail_voltage_peak_get(uint8_t *name, int *peak_value);
+bool vr_rail_voltage_peak_clear(uint8_t rail_index);
+bool plat_set_vout_range_min(uint8_t rail, uint16_t *millivolt);
+bool plat_set_vout_range_max(uint8_t rail, uint16_t *millivolt);
+bool vr_vout_user_settings_get(void *user_settings);
+void user_settings_init(void);
+bool vr_vout_range_user_settings_init(void);
+bool vr_vout_default_settings_init(void);
+bool vr_vout_user_settings_init(void);
 #endif
