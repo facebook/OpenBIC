@@ -69,6 +69,8 @@ bool post_ltc4286_read(sensor_cfg *cfg, void *args, int *reading);
 
 struct k_mutex *find_bus_mutex(sensor_cfg *cfg);
 void ssd_drive_reinit(void);
+void nic_drive_reinit_for_pollara(void);
+void nic_optics_drive_reinit_for_pollara(void);
 bool is_mb_dc_on();
 void set_cx7_init_arg_to_thor2();
 

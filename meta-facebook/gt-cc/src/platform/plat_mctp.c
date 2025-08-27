@@ -36,6 +36,7 @@
 #include "plat_gpio.h"
 #include "plat_ncsi.h"
 #include "plat_fru.h"
+#include "plat_sensor_table.h"
 
 LOG_MODULE_REGISTER(plat_mctp);
 
@@ -67,8 +68,10 @@ LOG_MODULE_REGISTER(plat_mctp);
 
 #define NVIDIA_NIC_MANUFACTURER "Nvidia"
 #define BROADCOM_NIC_MANUFACTURER "Broadcom"
+#define AMD_NIC_MANUFACTURER "AMD"
 
 static uint8_t nic_config = NIC_CONFIG_UNKNOWN;
+static bool is_nic_config_set = false;
 
 K_TIMER_DEFINE(send_cmd_timer, send_cmd_to_dev, NULL);
 K_WORK_DEFINE(send_cmd_work, send_cmd_to_dev_handler);
@@ -532,17 +535,29 @@ void check_nic_config(void)
 		LOG_INF("Broadcom NIC detected");
 		set_cx7_init_arg_to_thor2();
 		config = NIC_CONFIG_THOR2;
+	} else if (strncmp(nic_manufacturer, AMD_NIC_MANUFACTURER,
+			   sizeof(AMD_NIC_MANUFACTURER) - 1) == 0) {
+		LOG_INF("AMD NIC detected");
+		config = NIC_CONFIG_POLLARA;
 	} else {
 		LOG_INF("Unknown NIC manufacturer: %s", nic_manufacturer);
 	}
 
 	nic_config = config;
-	LOG_INF("NIC config is %d, 0: UNKNOWN, 1: CX7, 2: IB_CX7, 3: THOR2", nic_config);
+	LOG_INF("NIC config is %d, 0: UNKNOWN, 1: CX7, 2: IB_CX7, 3: THOR2, 4: POLLARA",
+		nic_config);
+
+	is_nic_config_set = true;
 }
 
 uint8_t get_nic_config(void)
 {
 	return nic_config;
+}
+
+bool get_is_nic_config_set(void)
+{
+	return is_nic_config_set;
 }
 
 void send_cmd_to_dev_handler(struct k_work *work)
@@ -552,6 +567,10 @@ void send_cmd_to_dev_handler(struct k_work *work)
 
 	/* check nic config by ncsi */
 	check_nic_config();
+	// Update NIC sensor configurations if POLLARA is detected
+	update_nic_sensor_config_for_pollara();
+	nic_drive_reinit_for_pollara();
+	nic_optics_drive_reinit_for_pollara();
 
 	/* init mellanox cx7 ncsi */
 	if ((nic_config == NIC_CONFIG_IB_CX7) || (nic_config == NIC_CONFIG_CX7))

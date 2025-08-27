@@ -29,6 +29,9 @@
 #include "nvme.h"
 #include "plat_pldm_monitor.h"
 #include "plat_mctp.h"
+#include "plat_fru.h"
+#include "plat_class.h"
+#include "tmp75.h"
 
 #include <logging/log.h>
 
@@ -1264,7 +1267,57 @@ void ssd_drive_reinit(void)
 			LOG_ERR("sensor number 0x%x cfg->read not init, do reinit", cfg->num);
 		}
 
-		if (!nvme_init(cfg)) {
+		if (nvme_init(cfg)) {
+			LOG_ERR("sensor number 0x%x cfg->read reinit fail", cfg->num);
+		}
+	}
+	enable_sensor_poll();
+}
+
+void nic_drive_reinit_for_pollara(void)
+{
+	if (get_nic_config() != NIC_CONFIG_POLLARA)
+		return;
+
+	LOG_INF("NIC_CONFIG_POLLARA detected, do nic drive reinit");
+
+	disable_sensor_poll();
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(nic_temp_sensor_table); i++) {
+		uint8_t sensor_num = nic_temp_sensor_table[i];
+		sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+
+		if (!cfg) {
+			LOG_ERR("The pointer to sensor number 0x%x cfg is NULL", sensor_num);
+			continue;
+		}
+
+		if (tmp75_init(cfg)) {
+			LOG_ERR("sensor number 0x%x cfg->read reinit fail", cfg->num);
+		}
+	}
+	enable_sensor_poll();
+}
+
+void nic_optics_drive_reinit_for_pollara(void)
+{
+	if (get_nic_config() != NIC_CONFIG_POLLARA)
+		return;
+
+	LOG_INF("NIC_CONFIG_POLLARA detected, do nic optics drive reinit");
+
+	disable_sensor_poll();
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(nic_optics_sensor_table); i++) {
+		uint8_t sensor_num = nic_optics_sensor_table[i];
+		sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+
+		if (!cfg) {
+			LOG_ERR("The pointer to sensor number 0x%x cfg is NULL", sensor_num);
+			continue;
+		}
+
+		if (tmp75_init(cfg)) {
 			LOG_ERR("sensor number 0x%x cfg->read reinit fail", cfg->num);
 		}
 	}
