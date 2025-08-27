@@ -34,10 +34,21 @@ enum GET_SET_M2_OPTION {
 #define MB_THROTTLE_DELAY_US 4
 
 #define CPLD_ADDR 0x21 // 7-bit address
+#define CPLD_VR_FAULT_REG 0x01
 #define CPLD_1OU_VPP_POWER_STATUS 0x11
 #define MAX_1OU_M2_COUNT 4
 
+#define VR_PWR_FAULT_DELAY_MS 10
+// VR Address
+// Page 0: PVCCIN / Page 1: EHV
+#define PVCCIN_EHV_ADDR (0xC0 >> 1)
+// Page 0: FIVRA / Page 1: PVCCINF
+#define FIVRA_PVCCINF_ADDR (0xC4 >> 1)
+// Page 0: PVCCD0 / Page 1: PVCCD1
+#define PVCCD0_PVCCD1_ADDR (0xE4 >> 1)
+
 void send_gpio_interrupt(uint8_t gpio_num);
+void init_vr_pwr_fault_work();
 void ISR_SLP3();
 void PWRGD_CPU_ACTIVE_HANDLE();
 void ISR_BMC_PRDY();
@@ -52,6 +63,7 @@ void ISR_HSC_OC();
 void ISR_CPU_MEMHOT();
 void ISR_CPUVR_HOT();
 void ISR_RMCA();
+void ISR_VR_PWR_FAULT();
 void ISR_POST_COMPLETE(uint8_t gpio_value);
 void ISR_FM_ADR_MODE0(uint8_t gpio_value);
 
