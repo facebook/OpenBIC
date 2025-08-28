@@ -68,17 +68,17 @@ int cmd_power_capping_set(const struct shell *shell, size_t argc, char **argv)
 			return -1;
 		}
 	} else if (argc == 3) {
-		if (!strcmp(argv[1], "interval")) {
+		if (!strcmp(argv[1], "interval_ms")) {
 			long interval_val = strtol(argv[2], NULL, 10);
 			if (interval_val < ATH_VDD_INTERVAL_MS) {
 				shell_error(
 					shell,
-					"The interval value is smaller than the ATH_VDD polling interval, which is %d ms",
+					"The interval_ms value is smaller than the ATH_VDD polling interval_ms, which is %d ms",
 					ATH_VDD_INTERVAL_MS);
 				return -1;
 			}
 			if (interval_val > 0xFFFF) {
-				shell_error(shell, "The interval value is too large (max %d)",
+				shell_error(shell, "The interval_ms value is too large (max %d)",
 					    0xFFFF);
 				return -1;
 			}
@@ -90,9 +90,9 @@ int cmd_power_capping_set(const struct shell *shell, size_t argc, char **argv)
 					    POWER_CAPPING_INDEX_INTERVAL);
 				return -1;
 			}
-			shell_print(shell, "set interval value: %d successfully", set_value);
+			shell_print(shell, "set interval_ms value: %d successfully", set_value);
 		} else {
-			shell_error(shell, "only support interval");
+			shell_error(shell, "only support interval_ms");
 			return -1;
 		}
 	}
@@ -101,10 +101,10 @@ int cmd_power_capping_set(const struct shell *shell, size_t argc, char **argv)
 }
 
 static const struct shell_static_entry power_capping_name_entries[] = {
-	{ .syntax = "interval",
+	{ .syntax = "interval_ms",
 	  .handler = NULL,
 	  .subcmd = NULL,
-	  .help = "set <interval> <interval_value>" },
+	  .help = "set interval_ms <interval_value>" },
 	{ .syntax = "HC_LC",
 	  .handler = NULL,
 	  .subcmd = NULL,
@@ -131,7 +131,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 	sub_power_capping_cmds,
 	SHELL_CMD(get, &sub_voltage_get_cmds, "get power capping all ", NULL),
 	SHELL_CMD_ARG(set, &power_capping_rname,
-		      "set <interval|HC_LC> <interval_value|HC_value> <LC_value>",
+		      "set <interval_ms|HC_LC> <interval_value|HC_value> <LC_value>",
 		      cmd_power_capping_set, 3, 1),
 	SHELL_SUBCMD_SET_END);
 

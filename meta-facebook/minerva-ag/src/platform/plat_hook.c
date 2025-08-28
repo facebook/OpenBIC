@@ -2460,7 +2460,7 @@ bool power_capping_user_setting_flag = false;
 power_capping_mapping_sensor power_capping_rail_table[] = {
 	{ POWER_CAPPING_INDEX_HC, "HC" },
 	{ POWER_CAPPING_INDEX_LC, "LC" },
-	{ POWER_CAPPING_INDEX_INTERVAL, "Interval_ms" },
+	{ POWER_CAPPING_INDEX_INTERVAL, "interval_ms" },
 };
 
 power_capping_user_settings_struct power_capping_user_settings = { 0 };
@@ -2501,7 +2501,7 @@ void update_comparator_counter_max(void)
 
 	if (power_capping_interval_ms == 0xFFFF) {
 		power_capping_interval_ms = ATH_VDD_INTERVAL_MS;
-		LOG_ERR("Invalid interval, set to default: %d ms", ATH_VDD_INTERVAL_MS);
+		LOG_ERR("Invalid interval_ms, set to default: %d ms", ATH_VDD_INTERVAL_MS);
 	}
 
 	comparator_counter_max = power_capping_interval_ms / ATH_VDD_INTERVAL_MS;
@@ -2590,6 +2590,12 @@ bool power_capping_user_settings_init(void)
 		return false;
 	}
 
+	if (power_capping_user_settings.user_setting_value[POWER_CAPPING_INDEX_INTERVAL] ==
+	    0xFFFF) {
+		power_capping_user_settings.user_setting_value[POWER_CAPPING_INDEX_INTERVAL] =
+			ATH_VDD_INTERVAL_MS;
+	}
+
 	for (int i = 0; i < POWER_CAPPING_INDEX_MAX; i++) {
 		if (power_capping_user_settings.user_setting_value[i] != 0xffff) {
 			/* write value */
@@ -2616,14 +2622,14 @@ bool set_HC_LC_enable_flag(uint8_t rail, bool status)
 
 	if (rail == POWER_CAPPING_INDEX_HC) {
 		if (status == MTIA_HC_LC_ENABLE)
-			data |= BIT(1);
-		else
-			data &= ~BIT(1);
-	} else if (rail == POWER_CAPPING_INDEX_LC) {
-		if (status == MTIA_HC_LC_ENABLE)
 			data |= BIT(0);
 		else
 			data &= ~BIT(0);
+	} else if (rail == POWER_CAPPING_INDEX_LC) {
+		if (status == MTIA_HC_LC_ENABLE)
+			data |= BIT(1);
+		else
+			data &= ~BIT(1);
 	} else {
 		LOG_ERR("Invalid rail index: %d", rail);
 		return false;
@@ -2776,7 +2782,7 @@ bool perm_config_clear(void)
 		return false;
 	}
 
-	/* clear power capping perm parameter and reset power capping interval */
+	/* clear power capping perm parameter and reset power capping interval_ms */
 	memset(power_capping_user_settings.user_setting_value, 0xFF,
 	       sizeof(power_capping_user_settings.user_setting_value));
 	if (!set_user_settings_power_capping_to_eeprom(&power_capping_user_settings)) {
@@ -2788,7 +2794,7 @@ bool perm_config_clear(void)
 		power_capping_user_settings.user_setting_value[POWER_CAPPING_INDEX_INTERVAL] =
 			ATH_VDD_INTERVAL_MS;
 		if (!set_user_settings_power_capping_to_eeprom(&power_capping_user_settings)) {
-			LOG_ERR("After perm_config clear reset power capping interval failed");
+			LOG_ERR("After perm_config clear reset power capping interval_ms failed");
 			return false;
 		}
 		update_comparator_counter_max();
