@@ -152,6 +152,18 @@ typedef struct __attribute__((__packed__)) {
 	uint16_t set_value;
 } plat_control_voltage;
 
+typedef struct __attribute__((__packed__)) {
+	uint8_t power_capping_reg;
+	uint8_t sensor_id;
+	uint16_t sensor_value; // Sensor value (2 bytes)
+} plat_power_capping;
+
+typedef struct __attribute__((__packed__)) {
+	struct k_work work;
+	uint16_t set_value_HC;
+	uint16_t set_value_LC;
+} plat_power_capping_set;
+
 static uint8_t bootstrap_pin;
 static uint8_t user_setting_level;
 
@@ -189,6 +201,16 @@ voltage_rail_mapping_sensor voltage_rail_mapping_table[] = {
 	{ CONTROL_VOL_Minerva_Aegis_VR_ASIC_P0V4_VDDQL_HBM1_HBM3_HBM5_REG, VR_RAIL_E_P0V4_VDDQL_HBM1_HBM3_HBM5 },
 	{ CONTROL_VOL_Minerva_Aegis_VR_ASIC_P1V8_VPP_HBM0_HBM2_HBM4_REG, VR_RAIL_E_P1V8_VPP_HBM0_HBM2_HBM4 },
 	{ CONTROL_VOL_Minerva_Aegis_VR_ASIC_P1V8_VPP_HBM1_HBM3_HBM5_REG, VR_RAIL_E_P1V8_VPP_HBM1_HBM3_HBM5 },
+};
+
+plat_power_capping plat_power_capping_table[] = {
+	{ POWER_CAPPING_GET_VR_ASIC_P0V85_PVDD_PWR_W_REG, VR_ASIC_P0V85_PVDD_PWR_W, 0x0000 },
+	{ POWER_CAPPING_GET_VR_ASIC_P0V4_VDDQL_HBM0_HBM2_HBM4_PWR_W_REG, VR_ASIC_P0V4_VDDQL_HBM0_HBM2_HBM4_PWR_W, 0x0000 },
+	{ POWER_CAPPING_GET_VR_ASIC_P0V75_VDDPHY_HBM0_HBM2_HBM4_PWR_W_REG, VR_ASIC_P0V75_VDDPHY_HBM0_HBM2_HBM4_PWR_W, 0x0000 },
+	{ POWER_CAPPING_GET_VR_ASIC_P0V4_VDDQL_HBM1_HBM3_HBM5_PWR_W_REG, VR_ASIC_P0V4_VDDQL_HBM1_HBM3_HBM5_PWR_W, 0x0000 },
+	{ POWER_CAPPING_GET_VR_ASIC_P0V75_VDDPHY_HBM1_HBM3_HBM5_PWR_W_REG, VR_ASIC_P0V75_VDDPHY_HBM1_HBM3_HBM5_PWR_W, 0x0000 },
+	{ POWER_CAPPING_GET_VR_ASIC_P0V75_MAX_PHY_N_PWR_W_REG, VR_ASIC_P0V75_MAX_PHY_N_PWR_W, 0x0000 },
+	{ POWER_CAPPING_GET_VR_ASIC_P0V75_MAX_PHY_S_PWR_W_REG, VR_ASIC_P0V75_MAX_PHY_S_PWR_W, 0x0000 },
 };
 // clang-format on
 
@@ -236,6 +258,18 @@ void set_control_voltage_handler(struct k_work *work_item)
 	LOG_DBG("Setting rail %x to %d mV", rail, millivolt);
 
 	plat_set_vout_command(rail, &millivolt, false, false);
+}
+
+void set_power_capping_handler(struct k_work *work_item)
+{
+	const plat_power_capping_set *sensor_data =
+		CONTAINER_OF(work_item, plat_power_capping_set, work);
+
+	uint16_t set_value_HC = sensor_data->set_value_HC;
+	uint16_t set_value_LC = sensor_data->set_value_LC;
+	plat_set_power_capping_command(POWER_CAPPING_INDEX_HC, &set_value_HC);
+	plat_set_power_capping_command(POWER_CAPPING_INDEX_LC, &set_value_LC);
+	// LOG_DBG("Power capping set HC: %d, LC: %d", set_value_HC, set_value_LC);
 }
 
 bool get_fru_info_element(telemetry_info *telemetry_info, char **fru_element,
@@ -660,6 +694,31 @@ void update_strap_capability_table()
 	}
 }
 
+void update_plat_power_capping_table()
+{
+	for (int i = 0; i < ARRAY_SIZE(plat_power_capping_table); i++) {
+		int sensor_number = plat_power_capping_table[i].sensor_id;
+		uint8_t status = SENSOR_UNAVAILABLE;
+		int reading = 0; // unit: mW
+		uint8_t sensor_operational_state = PLDM_SENSOR_STATUSUNKOWN;
+		status = pldm_sensor_get_reading_from_cache(sensor_number, &reading,
+							    &sensor_operational_state);
+		uint16_t transfer_reading;
+
+		if (status == SENSOR_READ_SUCCESS) {
+			float watt = reading / 1000.0f;
+			if (watt < 0) {
+				transfer_reading = 0xFFFF;
+			} else {
+				transfer_reading = (uint16_t)watt;
+			}
+		} else {
+			transfer_reading = 0xFFFF;
+		}
+		plat_power_capping_table[i].sensor_value = transfer_reading;
+	}
+}
+
 // clang-format off
 telemetry_info telemetry_info_table[] = {
 	{ SENSOR_INIT_DATA_0_REG, 0x00, .telemetry_table_init = initialize_sensor_data },
@@ -694,6 +753,13 @@ telemetry_info telemetry_info_table[] = {
 	{ FRU_PRODUCT_ASSET_TAG_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
 	{ FRU_PRODUCT_CUSTOM_DATA_1_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
 	{ FRU_PRODUCT_CUSTOM_DATA_2_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ POWER_CAPPING_GET_VR_ASIC_P0V85_PVDD_PWR_W_REG, 0x00},
+	{ POWER_CAPPING_GET_VR_ASIC_P0V4_VDDQL_HBM0_HBM2_HBM4_PWR_W_REG, 0x00 },
+	{ POWER_CAPPING_GET_VR_ASIC_P0V75_VDDPHY_HBM0_HBM2_HBM4_PWR_W_REG, 0x00 },
+	{ POWER_CAPPING_GET_VR_ASIC_P0V4_VDDQL_HBM1_HBM3_HBM5_PWR_W_REG, 0x00 },
+	{ POWER_CAPPING_GET_VR_ASIC_P0V75_VDDPHY_HBM1_HBM3_HBM5_PWR_W_REG },
+	{ POWER_CAPPING_GET_VR_ASIC_P0V75_MAX_PHY_N_PWR_W_REG, 0x00 },
+	{ POWER_CAPPING_GET_VR_ASIC_P0V75_MAX_PHY_S_PWR_W_REG, 0x00 },
 };
 // clang-format on
 
@@ -815,6 +881,21 @@ static bool command_reply_data_handle(void *arg)
 				memcpy(data->target_rd_msg.msg, &vout, sizeof(vout));
 				data->target_rd_msg.msg_length = 2;
 			} break;
+			case POWER_CAPPING_GET_VR_ASIC_P0V85_PVDD_PWR_W_REG:
+			case POWER_CAPPING_GET_VR_ASIC_P0V4_VDDQL_HBM0_HBM2_HBM4_PWR_W_REG:
+			case POWER_CAPPING_GET_VR_ASIC_P0V75_VDDPHY_HBM0_HBM2_HBM4_PWR_W_REG:
+			case POWER_CAPPING_GET_VR_ASIC_P0V4_VDDQL_HBM1_HBM3_HBM5_PWR_W_REG:
+			case POWER_CAPPING_GET_VR_ASIC_P0V75_VDDPHY_HBM1_HBM3_HBM5_PWR_W_REG:
+			case POWER_CAPPING_GET_VR_ASIC_P0V75_MAX_PHY_N_PWR_W_REG:
+			case POWER_CAPPING_GET_VR_ASIC_P0V75_MAX_PHY_S_PWR_W_REG: {
+				uint16_t power =
+					plat_power_capping_table
+						[reg_offset -
+						 POWER_CAPPING_GET_VR_ASIC_P0V85_PVDD_PWR_W_REG]
+							.sensor_value;
+				memcpy(data->target_rd_msg.msg, &power, sizeof(power));
+				data->target_rd_msg.msg_length = sizeof(power);
+			} break;
 			default:
 				LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
 				data->target_rd_msg.msg_length = 1;
@@ -920,6 +1001,22 @@ void plat_master_write_thread_handler()
 			sensor_data->rail = get_vr_rail_by_control_vol_reg(reg_offset);
 			sensor_data->set_value = rdata[1] | (rdata[2] << 8);
 			k_work_init(&sensor_data->work, set_control_voltage_handler);
+			k_work_submit(&sensor_data->work);
+		} break;
+		case POWER_CAPPING_SET_VALUE_REG: {
+			if (rlen != 5) {
+				LOG_ERR("Invalid length for offset: 0x%02x", reg_offset);
+				break;
+			}
+			plat_power_capping_set *sensor_data =
+				malloc(sizeof(plat_power_capping_set));
+			if (!sensor_data) {
+				LOG_ERR("Memory allocation failed!");
+				break;
+			}
+			sensor_data->set_value_HC = rdata[1] | (rdata[2] << 8);
+			sensor_data->set_value_LC = rdata[3] | (rdata[4] << 8);
+			k_work_init(&sensor_data->work, set_power_capping_handler);
 			k_work_submit(&sensor_data->work);
 		} break;
 		case SET_SENSOR_POLLING_COMMAND_REG: {

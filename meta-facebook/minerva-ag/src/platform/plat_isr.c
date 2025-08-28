@@ -66,16 +66,14 @@ void ISR_GPIO_RST_ATH_PWR_ON_PLD_R1_N()
 
 void ISR_GPIO_ATH_CURRENT_SENSE_0_NPCM_R()
 {
-	LOG_DBG("gpio_%d_isr called, val=%d , dir= %d", ATH_CURRENT_SENSE_0_NPCM_R,
-		gpio_get(ATH_CURRENT_SENSE_0_NPCM_R),
-		gpio_get_direction(ATH_CURRENT_SENSE_0_NPCM_R));
+	LOG_DBG("gpio_%d_isr called, val=%d , dir= %d", ATH_CURRENT_SENSE_0_LC,
+		gpio_get(ATH_CURRENT_SENSE_0_LC), gpio_get_direction(ATH_CURRENT_SENSE_0_LC));
 }
 
 void ISR_GPIO_ATH_CURRENT_SENSE_1_NPCM_R()
 {
-	LOG_DBG("gpio_%d_isr called, val=%d , dir= %d", ATH_CURRENT_SENSE_1_NPCM_R,
-		gpio_get(ATH_CURRENT_SENSE_1_NPCM_R),
-		gpio_get_direction(ATH_CURRENT_SENSE_1_NPCM_R));
+	LOG_DBG("gpio_%d_isr called, val=%d , dir= %d", ATH_CURRENT_SENSE_1_HC,
+		gpio_get(ATH_CURRENT_SENSE_1_HC), gpio_get_direction(ATH_CURRENT_SENSE_1_HC));
 }
 
 void ISR_GPIO_FM_ATH_HBM3_CATTRIP_ALARM_LV33_R()
